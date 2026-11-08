@@ -198,9 +198,10 @@ def coeffs(variant):
     E.MUT = None                       # this script's flags are not that script's mutations
     b = sp.symbols("b0:5")
     co = E.eeg_coeffs(list(b), corrected=(variant != "printed"))
-    if variant == "pi3x1.01":
-        co["Om3"] = sp.expand(co["Om3"] + 2 * b[0] * sp.Rational(1, 100) * co["Pi3"])
-        co["Pi3"] = sp.expand(co["Pi3"] * sp.Rational(101, 100))
+    if variant.startswith("pi3x"):                 # the control: Pi_3 scaled by s, in Pi and in Omega_3
+        s = sp.Rational(variant[4:])
+        co["Om3"] = sp.expand(co["Om3"] + 2 * b[0] * (s - 1) * co["Pi3"])
+        co["Pi3"] = sp.expand(co["Pi3"] * s)
     fn = {k: sp.lambdify((E.x,) + tuple(b), co[k], "numpy") for k in co}
     _COEF[variant] = fn
     return fn
@@ -272,8 +273,16 @@ def fit_exponent(eps, R):
                 local=loc)
 
 
-def run_compare(recs, variants, label, verbose=True):
-    """residual table and exponent fits for each model; recs: list of field dicts (real or planted)"""
+def fits_of(recs, table, dmin, drop=()):
+    use = [i for i, r in enumerate(recs) if r["D"] >= dmin and i not in drop]
+    eps = [1.0 / (recs[i]["D"] - 1.0) for i in use]
+    return {name: {k: fit_exponent(eps, [rows[i][k]["max"] for i in use]) for k in FIELDS}
+            for name, rows in table.items()}
+
+
+def run_compare(recs, variants, label, verbose=True, dmin=40.0, drop=()):
+    """residual table for each model on every state; exponent fits over D >= dmin (the main fit) and over D >= 20,
+    leaving out the states in drop (indices into recs sorted by D)"""
     recs = sorted(recs, key=lambda r: r["D"])
     eps = [1.0 / (r["D"] - 1.0) for r in recs]
     table = {}
@@ -283,20 +292,60 @@ def run_compare(recs, variants, label, verbose=True):
             e, bt = beta_tilde(r)
             rows.append(residuals(r, model_fields(e, bt, r["xs"], variant, order)))
         table[name] = rows
-    fits = {name: {k: fit_exponent(eps, [row[k]["max"] for row in rows]) for k in FIELDS} for name, rows in table.items()}
+    fits = fits_of(recs, table, dmin, drop)
+    fits20 = fits_of(recs, table, 20.0, drop)
     if verbose:
         print(f"\n== {label}: maximal residual over 0 <= x <= 1 and the tau grid", flush=True)
         for name, rows in table.items():
             print(f"  {name}")
             print("    D        " + "".join(f"{k:>12s}" for k in FIELDS) + "      (x of the max)")
-            for r, row in zip(recs, rows):
+            for i, (r, row) in enumerate(zip(recs, rows)):
                 print(f"    {r['D']:8.3f} " + "".join(f"{row[k]['max']:12.3e}" for k in FIELDS)
-                      + "      " + " ".join(f"{row[k]['x_at']:.2f}" for k in FIELDS))
-            print("    exponent " + "".join(f"{fits[name][k]['p']:12.3f}" for k in FIELDS) + "   (a + p ln eps + b eps)")
+                      + "      " + " ".join(f"{row[k]['x_at']:.2f}" for k in FIELDS) + ("  dropped" if i in drop else ""))
+            print(f"    exponent " + "".join(f"{fits[name][k]['p']:12.3f}" for k in FIELDS)
+                  + f"   (a + p ln eps + b eps, D >= {dmin:g}: the main fit)")
+            print("    b        " + "".join(f"{fits[name][k]['b']:12.2f}" for k in FIELDS))
             print("    pure     " + "".join(f"{fits[name][k]['p_pure']:12.3f}" for k in FIELDS) + "   (a + p ln eps)")
+            print("    D >= 20  " + "".join(f"{fits20[name][k]['p']:12.3f}" for k in FIELDS) + "   (a + p ln eps + b eps)")
             print("    last two " + "".join(f"{fits[name][k]['local'][0]:12.3f}" for k in FIELDS)
                   + "   (local, two largest D)")
-    return recs, eps, table, fits
+    return recs, eps, table, fits, fits20
+
+
+def state_floor(r):
+    """the state's own field error, in field units: continuity of the centre and horizon series against the nodes,
+    and the horizon block's quad-double residual scaled to Omega (2 (n - 1)/x^2 at x = 0.7)"""
+    c = r.get("info", {}).get("cont")
+    if not c:
+        return 0.0
+    n = r["D"] - 2
+    return max(max(c["centre"].values()), max(c["horizon"].values()), 2 * (n - 1) / 0.49 * c["horizon_block"])
+
+
+def spread(recs, dirs, table):
+    """the corrected NNLO's residual field from other chains' states at the same D, against these: max over the grid
+    of |(F - F_E)_this - (F - F_E)_other| relative to this state's R(D), per field"""
+    out = []
+    byD = {round(r["D"], 4): (i, r) for i, r in enumerate(recs)}
+    for d in dirs:
+        for f in sorted(os.listdir(d)):
+            if not f.endswith(".npz"):
+                continue
+            o = load_fields(os.path.join(d, f))
+            key = round(o["D"], 4)
+            if key not in byD:
+                continue
+            i, r = byD[key]
+            e, bt = beta_tilde(r)
+            eo, bto = beta_tilde(o)
+            m = model_fields(e, bt, r["xs"], "corrected", 3)
+            mo = model_fields(eo, bto, o["xs"], "corrected", 3)
+            row = dict(D=r["D"], other=o["info"]["source"])
+            for k in FIELDS:
+                row[k] = float(np.abs((r[k] - m[k]) - (o[k] - mo[k])).max() / table["NNLO corrected"][i][k]["max"])
+            row["Delta_diff"] = r["Delta"] - o["Delta"]
+            out.append(row)
+    return out
 
 
 def verdicts(fits, expect, names):
@@ -334,16 +383,44 @@ def cmd_compare(argv, recs=None, label="solutions"):
     js = next((a.split("=", 1)[1] for a in argv if a.startswith("--json=")), None)
     mut = next((a.split("=", 1)[1] for a in argv if a.startswith("--mutate=")), None)
     files = [a for a in argv if not a.startswith("--")]
+    dmax = float(next((a.split("=", 1)[1] for a in argv if a.startswith("--dmax=")), 1e9))
     if recs is None:
         recs = [load_fields(f) for f in files]
+    recs = [r for r in recs if r["D"] <= dmax]
     variants = dict(MODELS)
     names = ["NNLO corrected"]
     expect = dict(EXPECT)
-    if mut == "pi3x1.01":
-        variants["NNLO corrected, Pi3 x 1.01"] = ("pi3x1.01", 3)
-        expect["NNLO corrected, Pi3 x 1.01"] = EXPECT["NNLO corrected"]
-        names = ["NNLO corrected, Pi3 x 1.01"]
-    recs, eps, table, fits = run_compare(recs, variants, label + (f", mutation {mut}" if mut else ""))
+    if mut and mut.startswith("pi3x"):
+        mname = f"NNLO corrected, Pi3 x {mut[4:]}"
+        variants[mname] = (mut, 3)
+        expect[mname] = EXPECT["NNLO corrected"]
+        names = [mname]
+    dmin = float(next((a.split("=", 1)[1] for a in argv if a.startswith("--dmin=")), 40))
+    dirs = next((a.split("=", 1)[1].split(",") for a in argv if a.startswith("--spread=")), [])
+    recs, eps, table, fits, fits20 = run_compare(recs, variants, label + (f", mutation {mut}" if mut else ""),
+                                                 verbose=False, dmin=dmin)
+    # C6: the state's own error below 1% of the corrected NNLO's residual, else the state leaves the fit
+    floors = []
+    drop = []
+    for i, r in enumerate(recs):
+        fl = state_floor(r)
+        ratio = max(fl / table["NNLO corrected"][i][k]["max"] for k in FIELDS)
+        floors.append(dict(D=r["D"], floor=fl, ratio=ratio))
+        if ratio > 0.01:
+            drop.append(i)
+    sp = spread(recs, dirs, table) if dirs else []
+    for row in sp:
+        i = [j for j, r in enumerate(recs) if round(r["D"], 4) == round(row["D"], 4)][0]
+        if max(row[k] for k in FIELDS) > 0.01 and i not in drop:
+            drop.append(i)
+    recs, eps, table, fits, fits20 = run_compare(recs, variants, label + (f", mutation {mut}" if mut else ""),
+                                                 dmin=dmin, drop=drop)
+    print("\n== C6, the states' own error: max over fields of floor/R (corrected NNLO); > 0.01 drops the state")
+    print("    " + "  ".join(f"{f['D']:.1f}:{f['ratio']:.0e}" for f in floors))
+    for row in sp:
+        print(f"    spread at D {row['D']:.1f} against {os.path.relpath(row['other'], os.path.dirname(row['other']) + '/../..')}: "
+              + " ".join(f"{k} {row[k]:.1e}" for k in FIELDS) + f"  (of R; Delta differs by {row['Delta_diff']:.1e})")
+    print(f"    dropped: {[recs[i]['D'] for i in drop] if drop else 'none'}")
     ver = verdicts(fits, expect, list(MODELS) if not mut else names)
     print("\n== verdicts (fitted exponent within %.2f of the expected, farther than %.2f from one order lower)" % (TOL, SEP))
     for v in ver:
@@ -361,14 +438,16 @@ def cmd_compare(argv, recs=None, label="solutions"):
             json.dump(dict(label=label, mutation=mut, D=[r["D"] for r in recs], eps=eps, Delta=[r["Delta"] for r in recs],
                            sources=[r.get("info", {}).get("source", r.get("path")) for r in recs],
                            continuity=[r.get("info", {}).get("cont") for r in recs],
-                           table=table, fits=fits, verdicts=ver, fig5=rows, tol=TOL, sep=SEP, expect=expect), fh, indent=1)
+                           table=table, fits=fits, fits_D20=fits20, dmin=dmin, floors=floors, spread=sp,
+                           dropped=[recs[i]["D"] for i in drop], verdicts=ver, fig5=rows, tol=TOL, sep=SEP,
+                           expect=expect), fh, indent=1)
         print(f"\nwrote {js}")
     # main run: every model's verdict must hold; mutation run: the corrected-with-mutation verdict must fail for Pi
     # and Omega (exit 0 when it does) and hold for f and Psi
-    if mut == "pi3x1.01":
+    if mut and mut.startswith("pi3x"):
         broke = all(not v["ok"] for v in ver if v["field"] in ("Pi", "Om"))
         kept = all(v["ok"] for v in ver if v["field"] in ("f", "Psi"))
-        print(f"\nmutation pi3x1.01: Pi and Omega scaling broken: {broke}; f and Psi kept: {kept}  -> "
+        print(f"\nmutation {mut}: Pi and Omega scaling broken: {broke}; f and Psi kept: {kept}  -> "
               f"{'the control fires (exit 0)' if broke and kept else 'CONTROL FAILED (exit 1)'}")
         return 0 if (broke and kept) else 1
     ok = all(v["ok"] for v in ver)
@@ -380,16 +459,16 @@ def cmd_compare(argv, recs=None, label="solutions"):
 PLANT = dict(f=4.0, Om=4.0, Pi=3.5, Psi=3.5)
 
 
-def planted_records(recs, plant):
+def planted_records(recs, plant, scale=1.0):
     """each state's fields replaced by the corrected NNLO of its own beta~ (same eps, Delta, grid) plus
-    (1 + 4 eps + 20 eps^2) eps^p g with known shapes g; Pi's g vanishes at x = 0, so beta~ is unchanged"""
+    scale (1 + 4 eps + 20 eps^2) eps^p g with known shapes g; Pi's g vanishes at x = 0, so beta~ is unchanged"""
     out = []
     for r in recs:
         e, bt = beta_tilde(r)
         X = r["xs"][:, None]
         B0, B1 = bt[0][None, :], bt[1][None, :]
         m = model_fields(e, bt, r["xs"], "corrected", 3)
-        cf = 1 + 4 * e + 20 * e ** 2
+        cf = scale * (1 + 4 * e + 20 * e ** 2)
         g = dict(f=0.3 * (1 - X ** 2) * B0 ** 4, Om=0.5 * X ** 2 * B0 ** 2 * (B0 ** 2 + B1),
                  Pi=0.4 * X ** 2 * B0 * (B0 ** 2 - B1), Psi=0.4 * (B0 + B1) * (1 + X ** 2))
         q = dict(r)
@@ -408,11 +487,15 @@ def cmd_planted(argv):
     mut = next((a.split("=", 1)[1] for a in argv if a.startswith("--mutate=")), None)
     js = next((a.split("=", 1)[1] for a in argv if a.startswith("--json=")), None)
     files = [a for a in argv if not a.startswith("--")]
-    recs = planted_records([load_fields(f) for f in files], plant)
+    scale = float(next((a.split("=", 1)[1] for a in argv if a.startswith("--plant_scale=")), 1.0))
+    recs = planted_records([load_fields(f) for f in files], plant, scale)
     variants = {"NNLO corrected": ("corrected", 3), "NNLO printed": ("printed", 3)}
-    if mut == "pi3x1.01":
-        variants["NNLO corrected, Pi3 x 1.01"] = ("pi3x1.01", 3)
-    recs, eps, table, fits = run_compare(recs, variants, f"planted {plant}" + (f", mutation {mut}" if mut else ""))
+    mname = f"NNLO corrected, Pi3 x {mut[4:]}" if mut and mut.startswith("pi3x") else None
+    if mname:
+        variants[mname] = (mut, 3)
+    dmin = float(next((a.split("=", 1)[1] for a in argv if a.startswith("--dmin=")), 40))
+    recs, eps, table, fits, _ = run_compare(recs, variants, f"planted {plant}" + (f", mutation {mut}" if mut else ""),
+                                            dmin=dmin)
     # P1: the corrected model recovers the planted exponents (within 0.1)
     # P2: the printed model against the planted data shows its own error, 2.5 for Pi and 3 for f, Omega (within TOL),
     #     unless Pi's plant is lower than 2.5 + SEP
@@ -424,9 +507,9 @@ def cmd_planted(argv):
     for k, pe in (("f", 3.0), ("Om", 3.0), ("Pi", 2.5)):
         p = fits["NNLO printed"][k]["p"]
         ver.append(dict(check="P2 printed shows its error", field=k, p=p, expected=pe, ok=bool(abs(p - pe) <= TOL)))
-    if mut == "pi3x1.01":
+    if mname:
         for k in ("Pi", "Om"):
-            p = fits["NNLO corrected, Pi3 x 1.01"][k]["p"]
+            p = fits[mname][k]["p"]
             ver.append(dict(check="P3 the mutation breaks the plant", field=k, p=p, expected=plant[k],
                             ok=bool(abs(p - plant[k]) > TOL)))
     print("\n== planted verdicts")
@@ -435,20 +518,100 @@ def cmd_planted(argv):
               f"{'PASS' if v['ok'] else 'FAIL'}")
     if js:
         with open(js, "w") as fh:
-            json.dump(dict(plant=plant, mutation=mut, D=[r["D"] for r in recs], table=table, fits=fits, verdicts=ver), fh,
-                      indent=1)
+            json.dump(dict(plant=plant, plant_scale=scale, mutation=mut, D=[r["D"] for r in recs], table=table, fits=fits,
+                           verdicts=ver), fh, indent=1)
         print(f"wrote {js}")
     ok = all(v["ok"] for v in ver)
     print(f"\n{'ALL PASS' if ok else 'FAILED'}")
     return 0 if ok else 1
 
 
+# ------------------------------------------------------------------ Figs. 4-5: D-independent model profiles
+EQ16 = dict(A=3.8455, q=0.0551, delta=0.0985)       # arXiv:2611.07007v1 Eq. (16) and (S61)-(S62), as printed
+
+
+def dinf_ratios(path=None):
+    """F_nu/F_1 (nu = 1, 3, ..., 25) of the tuned D = infinity profile at A = 2.71918, the J 1500 block of
+    solver/eeg_profile/data/tuned_profile_A2.71918.txt (EEG_PROFILE.md 3.3; #133's [4/3] fit reproduces it to 1e-6)"""
+    path = path or os.path.join(REPO, "solver", "eeg_profile", "data", "tuned_profile_A2.71918.txt")
+    txt = open(path).read()
+    block = txt[txt.index("J 1500"):]
+    out = {}
+    for line in block.splitlines()[3:]:
+        w = line.split()
+        if len(w) < 3 or not w[0].isdigit():
+            break
+        out[int(w[0])] = float(w[1]) * np.exp(1j * float(w[2]))
+    return out
+
+
+def model_profile(kind, r):
+    """beta~ on the state's tau grid from a D-independent profile, its fundamental's phase aligned with the state's
+    beta~ (EEG fix the time origin by the fundamental, EEG_PROFILE.md 1); tau derivatives with the state's Delta.
+    kind eq16: Eq. (16) with the printed (A_*, q, delta), our gauge's ratios B_{nu+2}/B_nu = w = q e^{i delta}
+    (EEG_PROFILE.md 3.1); kind dinf: the tuned D = infinity profile, beta~ = sqrt2 F with |F_1| = A/2, A = 2.71918."""
+    eps, bt = beta_tilde(r)
+    M = len(bt[0])
+    phs = np.angle(np.fft.rfft(np.r_[bt[0], -bt[0]])[1])          # the state's fundamental, of e^{i theta}
+    # coefficients of e^{i nu theta} in our gauge, F_1 = -i A/2 (EEG_PROFILE.md 3.1)
+    if kind == "eq16":
+        w = EQ16["q"] * np.exp(1j * EQ16["delta"])
+        coef = {2 * k + 1: -1j * (EQ16["A"] / 2) * w ** k for k in range(12)}
+    elif kind == "dinf":
+        coef = {nu: -1j * R2 * (2.71918 / 2) * v for nu, v in dinf_ratios().items()}
+    else:
+        raise ValueError(kind)
+    ts = phs - np.angle(coef[1])                                     # theta -> theta + ts aligns the fundamentals
+    th = 2 * np.pi * np.arange(M) / (2 * M)
+    b = sum(2 * np.real(cf * np.exp(1j * nu * (th + ts))) for nu, cf in coef.items())
+    return eps, tau_derivs(b, r["Delta"])
+
+
+def cmd_figs(argv):
+    js = next((a.split("=", 1)[1] for a in argv if a.startswith("--json=")), None)
+    files = [a for a in argv if not a.startswith("--")]
+    recs = sorted([load_fields(f) for f in files], key=lambda r: r["D"])
+    out = {}
+    for kind in ("exact", "eq16", "dinf"):
+        rows = []
+        for r in recs:
+            e, bt = beta_tilde(r) if kind == "exact" else model_profile(kind, r)
+            mp_ = model_fields(e, bt, r["xs"], "printed", 3)
+            mc = model_fields(e, bt, r["xs"], "corrected", 3)
+            m2 = model_fields(e, bt, r["xs"], "corrected", 2)
+            row = dict(D=r["D"], profile_rel_rms=float(np.sqrt(np.mean((bt[0] - beta_tilde(r)[1][0]) ** 2)) /
+                                                         np.sqrt(np.mean(beta_tilde(r)[1][0] ** 2))))
+            for k in FIELDS:
+                ref = (1 - r[k]) if k == "f" else r[k]
+                nrm = np.sqrt(np.mean(ref ** 2))
+                row[k] = dict(printed=float(np.sqrt(np.mean((r[k] - mp_[k]) ** 2)) / nrm),
+                              corrected=float(np.sqrt(np.mean((r[k] - mc[k]) ** 2)) / nrm),
+                              change=float(np.sqrt(np.mean((mp_[k] - mc[k]) ** 2)) / nrm),
+                              nlo=float(np.sqrt(np.mean((r[k] - m2[k]) ** 2)) / nrm))
+            rows.append(row)
+        out[kind] = rows
+        print(f"\n== profile {kind}: relative rms deviation (Fig. 5's measure; f relative to rms(1 - f)): "
+              "NLO / NNLO printed / NNLO corrected / change printed - corrected", flush=True)
+        print("    D       profile " + "".join(f"{k:>41s}" for k in FIELDS))
+        for row in rows:
+            print(f"    {row['D']:7.3f} {row['profile_rel_rms']:8.1e}" + "".join(
+                f"  {row[k]['nlo']:9.2e} {row[k]['printed']:9.2e} {row[k]['corrected']:9.2e} {row[k]['change']:9.2e}"
+                for k in FIELDS))
+    if js:
+        with open(js, "w") as fh:
+            json.dump(dict(D=[r["D"] for r in recs], eq16=EQ16, figs=out), fh, indent=1)
+        print(f"wrote {js}")
+    return 0
+
+
 if __name__ == "__main__":
-    if len(sys.argv) < 2 or sys.argv[1] not in ("extract", "compare", "planted"):
+    if len(sys.argv) < 2 or sys.argv[1] not in ("extract", "compare", "planted", "figs"):
         print(__doc__)
         sys.exit(2)
     cmd, rest = sys.argv[1], sys.argv[2:]
     if cmd == "extract":
         cmd_extract(rest)
         sys.exit(0)
+    if cmd == "figs":
+        sys.exit(cmd_figs(rest))
     sys.exit(cmd_compare(rest) if cmd == "compare" else cmd_planted(rest))
