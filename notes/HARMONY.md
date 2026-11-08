@@ -15,7 +15,7 @@ other fields know to 4–7 digits, to 25–55 digits, in minutes of CPU each.
 
 | # | from | what | status |
 |---|---|---|---|
-| 1 | embedded solitons (van den Berg–King 2010; Baldomá–Guardia–Pelinovsky 2025) | zeros of S₁ arise where the two ends of its Borel arc interfere, as paired Stokes lines do; this predicts the spacing of zeros, not A₀ | a second zero of the Borel–Padé sums at A² ≈ 12.755 + 1.118i (ω∞), extrapolated real near ω/ω∞ ≈ 1.10 (A ≈ 3.68, Δ ≈ 1.49): a candidate second selected solution; test T153 (macm3) |
+| 1 | embedded solitons (van den Berg–King 2010; Baldomá–Guardia–Pelinovsky 2025) | zeros of S₁ arise where the two ends of its Borel arc interfere, as paired Stokes lines do; this predicts the spacing of zeros, not A₀ | a second zero of the Borel–Padé sums at A² ≈ 12.755 + 1.118i (ω∞), extrapolated real near ω/ω∞ ≈ 1.10 (A ≈ 3.68, Δ ≈ 1.49): a second selected solution, its crossing confirmed at ω/ω∞ ≈ 1.0989 by the K 45 test with both controls passing (#82, below) |
 | 2 | self-gravitating Brownian particles (Sire–Chavanis 2002) | why their 1/D expansion selects an exponent and ours (Proposition 1) does not | both meet a Weber (Hermite) layer at x ~ √D. Theirs has a real index, and 1/Γ(−ν) vanishes at ν = 1 (α = 2). Ours has a complex index, and 1/Γ(1 + iμω) never vanishes. Proposed text below |
 | 3 | implosion (Buckmaster–Cao-Labora–Gómez-Serrano) | their explicit resonance brackets | do not transfer: our characteristic exponents are complex, with min over j of \|Λ(ω∞) − j\| = 3.82 (μ = 1); DINF_ANALYTIC §5a corrected |
 | 4 | implosion; Larson–Penston (Guo–Hadžić–Jang–Schrecker) | existence of the M = 5 zero by a sign or degree argument (Poincaré–Miranda on the box faces, or a winding number of S₁ over (A, ω)), with C⁰ enclosures only; or large validated Taylor discs in place of about 2000 Lohner steps | passed to the M = 5 builder (wip/m5-second-order), with a test that separates wrapping from curvature in T33's logs |
@@ -47,6 +47,17 @@ and, in [5/11], 1.0698, against a tolerance of 0.005. With the crossing planted 
 1.1248, while the other sums correctly report none. So at 17 coefficients the method resolves a crossing to about
 ±0.006 at best, and [5/11] is unreliable. The candidate second selected solution near ω/ω∞ ≈ 1.10 (Δ ≈ 1.50) stays a
 candidate. More coefficients at the bracketing nodes would settle it.
+
+**The test at K 45 (#82, 2026-11-08).** win2 computed σ₀…σ₂₂ (K 45, J 1500, 1280 bits) at ω/ω∞ = 1.09, 1.10 and 1.11
+(raw `I82-win2/`, accc88c). `second_zero_nodes.py RAW --k45` tracks x₁ in the sums [m/(22 − m)], m = 8…14. Both
+controls, set before the runs, now pass. The crossing planted at 1.095 is found at 1.0950 in every ring-free sum, and
+the one planted at 1.15 shows no sign change in 1.09–1.11. On the data, all seven sums are ring-free and Im x₁ changes
+sign in each, at ω/ω∞ = 1.0988–1.0989. Im x₁ is +0.105, −0.013 and −0.131 at the three nodes, linear to the printed
+digits, so the interpolation between nodes does not limit the crossing; x₁ ≈ 13.465 − 0.013i at 1.10 (A ≈ 3.67). So
+S₁ has a second zero near ω/ω∞ = 1.0989, x₁ ≈ 13.46, and the D = ∞ inner problem a second selected solution there,
+with Δ = Δ∞/1.0989 ≈ 1.496. This is numerical evidence from the Borel–Padé sums of the amplitude expansion, conditional
+on the selection rule (Conjecture 1); the solution's stability is not known. The σ of the 1.10 node agree with macm3's
+K 33 J 1000 run at the same node to 20 digits through σ₅ and to 1.2×10⁻¹⁵ at σ₁₆ (#82).
 
 ## What we can give them
 
