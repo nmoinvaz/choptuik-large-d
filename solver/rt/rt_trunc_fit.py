@@ -177,7 +177,11 @@ def report(D, d, at, eeg, measured_D):
         a_, p_ = rg[x]
         print(f"| {x:g} | {p_[0]:+.2e} to {p_[1]:+.2e} | {a_[0]:+.2e} to {a_[1]:+.2e} |")
     ver = {}
-    dm = d[np.argmin(np.abs(np.asarray(D) - measured_D))]
+    i = int(np.argmin(np.abs(np.asarray(D) - measured_D)))
+    if abs(D[i] - measured_D) > 1e-6:
+        print(f"\nno record at D = {measured_D}; the verdict needs it")
+        return fits, ranges(fits, at), None, None
+    dm = d[i]
     print("\nEEG's departure d_EEG = Delta_EEG - Delta_ours (window mean, +- its standard error from the rounding scatter, "
           "not a bound) against delta:")
     print("| centre | window | rows | d_EEG | delta (measured at 60, else primary range; all-fit range) | verdict "
@@ -202,6 +206,34 @@ def report(D, d, at, eeg, measured_D):
     print(f"\noverall (primary set): {overall(ver)}")
     print(f"overall (all fits): {overall(ver_all)}")
     return fits, rg, ver, ver_all
+
+
+def beyond(D, d, paths, compare, half=5.0):
+    """Outside the criteria: measured delta past the fit window against the 12 fits' extrapolation to the same D and
+    against EEG's departure averaged over D +- half (its standard error from the rounding scatter)."""
+    R = {}
+    for p in paths.split(","):
+        R.update({x: r for x, r in load(p).items() if x > WINDOWS[0][1]})
+    if not R:
+        return
+    Db = sorted(R)
+    fits, _, _ = fit_all(D, d, Db)
+    rg = ranges(fits, Db)
+    rows = []
+    with open(compare) as f:
+        for r in csv.DictReader(f):
+            if r["published_ref"] == "EEG2026":
+                rows.append((float(r["D"]), -float(r["diff"])))
+    print("\npast the fit window (outside the criteria): measured delta, the fits' extrapolation, EEG's departure")
+    print("| D | delta measured | primary range | all-fit range | d_EEG (D +- 5) | rows | delta / d_EEG |")
+    print("|---|---|---|---|---|---|---|")
+    for x in Db:
+        v = [e for (De, e) in rows if abs(De - x) <= half]
+        m, se = (float(np.mean(v)), float(np.std(v, ddof=1) / math.sqrt(len(v)))) if len(v) > 1 else (float("nan"), 0)
+        a_, p_ = rg[x]
+        dm = R[x]["diff"]
+        print(f"| {x} | {dm:+.3e} | {p_[0]:+.2e} to {p_[1]:+.2e} | {a_[0]:+.2e} to {a_[1]:+.2e} | {m:+.2e} +- {se:.1e} |"
+              f" {len(v)} | {dm / m:.2f} |")
 
 
 def planted(mutate):
@@ -272,6 +304,8 @@ def main():
     ap.add_argument("--at", default="80,100,150,190")
     ap.add_argument("--check_D", default="20.043653,40.020065,60.001952")
     ap.add_argument("--compare", default=os.path.join(REPO, "hp", "data", "delta_published_compare.csv"))
+    ap.add_argument("--beyond", default="", help="records past D = 60 (outside the criteria): measured delta against "
+                    "the fits' extrapolation and EEG's departure near each D")
     ap.add_argument("--planted", action="store_true")
     ap.add_argument("--mutate", default=None, choices=["rate"])
     a = ap.parse_args()
@@ -285,7 +319,7 @@ def main():
         print("no converged records")
         sys.exit(1)
     Bs = [load(p) for p in a.second.split(",") if p]
-    D = np.array(sorted(A))
+    D = np.array(sorted(x for x in A if x <= WINDOWS[0][1]))        # the fits use D <= 60 only
     d = np.array([A[x]["diff"] for x in D])
     grid = next(iter(A.values()))["grid"]
     print(f"grid {grid[0]}x{grid[1]}, {len(D)} converged D from {D[0]} to {D[-1]} ({a.path})")
@@ -316,6 +350,8 @@ def main():
             print(f"| {x} | {A[x]['diff']:+.3e} | no second start | | |")
     eeg = eeg_windows(a.compare)
     report(D, d, at, eeg, checks[-1])
+    if a.beyond:
+        beyond(D, d, a.beyond, a.compare)
     print(f"exit {1 if failed else 0}")
     sys.exit(1 if failed else 0)
 
