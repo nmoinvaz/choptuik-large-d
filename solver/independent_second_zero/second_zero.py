@@ -4,16 +4,16 @@
     python3 second_zero.py planted --wp 1.095 --seeds 1,2,3,4,5 [--out FILE]
     python3 second_zero.py planted --wp 1.15 --seeds 1,2,3,4,5 [--out FILE]
 
-Estimator (fixed before the controls and the real data were run).  At each node every approximant of lapl.run_node is
-tried; a member is one approximant (kind, degrees, number of coefficients used) admitted at all three nodes.  For each
-member, Im x1 at the three nodes is interpolated by the quadratic through them, and its root in [1.09, 1.11] is that
-member's crossing (none if it has no root there).  The primary set is the qhp members that use all 23 coefficients.
+Estimator (fixed on a development family, w_p 1.105 seed 99, before the controls and the real data were run).  At each
+node every approximant of lapl.run_node is tried and admitted or not by lapl.admissible.  The primary set at a node is
+its admitted qhp approximants that use all 23 coefficients.
   x1 at a node      = median (real and imaginary parts separately) over the primary set;
                       +- = half the range over the primary set (a spread over degree choices, not an error bound);
-  the crossing      = median of the primary members' crossings, reported when more than half of them have one;
-                      +- = half their range (spread over degree choices);
-  order shift       = the same medians from the qhp members using 22 and 21 coefficients (a truncation indicator);
-  cross-check       = the same from the linear Pade members (23 coefficients).
+  the crossing      = the root in [1.09, 1.11] of the quadratic through the three medians of Im x1;
+  its envelope      = the roots for the 8 shifts of the three medians by +- their half-ranges (spread over degrees);
+  order shift       = the same from the qhp sets using 22 and 21 coefficients (a truncation indicator);
+  cross-check       = the same from the linear Pade sets (23, 22, 21 coefficients).
+Approximants admitted at all three nodes give their own crossings too (information only).
 Exit status: planted mode exits 1 when its control fails (P1: |w_c - w_p| > 0.005 for any seed or no crossing;
 P2: a sign change of the primary median Im x1 in 1.09-1.11 for any seed).
 """
@@ -54,37 +54,46 @@ def members(node_out):
 
 
 def summarize(node_out, kind, nd, ws=WS):
-    mem = {k: v for k, v in members(node_out).items() if k[0] == kind and k[2] == nd}
-    if not mem:
-        return {"n": 0}
+    """Per node: median and half-range of x1 over the admitted approximants of (kind, nd) at that node.  Crossing: the
+    root in [1.09, 1.11] of the quadratic through the three per-node medians of Im x1; its envelope: the roots for
+    the 8 shifts of the medians by +-(their half-range).  Members admitted at all three nodes: their own crossings
+    (information only)."""
+    import itertools
     wsf = [float(w) for w in ws]
-    xs = {w: [] for w in ws}
-    cross = []
-    nsign = 0
+    node = {}
+    for w, recs in zip(ws, node_out):
+        xs = [r["x1"] for r in recs if r.get("ok") and r["kind"] == kind and r["nd"] == nd]
+        if not xs:
+            return {"n": 0, "empty_node": w}
+        re = [x[0] for x in xs]
+        im = [x[1] for x in xs]
+        node[w] = {"n": len(xs), "re": statistics.median(re), "im": statistics.median(im),
+                   "re_half_range": (max(re) - min(re)) / 2, "im_half_range": (max(im) - min(im)) / 2}
+    med_im = [node[w]["im"] for w in ws]
+    hr = [node[w]["im_half_range"] for w in ws]
+    out = {"n": min(node[w]["n"] for w in ws), "node": node}
+    rts = quad_root(wsf, med_im)
+    if rts:
+        out["cross"] = rts[0]
+    env = []
+    for s in itertools.product([-1, 1], repeat=3):
+        r = quad_root(wsf, [m + si * h for m, si, h in zip(med_im, s, hr)])
+        env.append(r[0] if r else None)
+    out["cross_envelope"] = [min(e for e in env if e is not None), max(e for e in env if e is not None)] \
+        if any(e is not None for e in env) else None
+    out["envelope_all_cross"] = all(e is not None for e in env)
+    out["median_im_sign_change"] = (min(med_im) < 0 < max(med_im))
+    mem = {k: v for k, v in members(node_out).items() if k[0] == kind and k[2] == nd}
     per = []
     for k, recs in mem.items():
-        ys = [r["x1"][1] for r in recs]
-        for w, r in zip(ws, recs):
-            xs[w].append(r["x1"])
-        rts = quad_root(wsf, ys)
-        sign_change = (ys[0] > 0) != (ys[-1] > 0) or len(rts) > 0
-        if rts:
-            nsign += 1
-            cross.append(rts[0])
-        per.append({"deg": list(k[1]), "x1": [r["x1"] for r in recs], "cross": rts, "sign_change": sign_change})
-    node = {}
-    for w in ws:
-        re = [x[0] for x in xs[w]]
-        im = [x[1] for x in xs[w]]
-        node[w] = {"re": statistics.median(re), "im": statistics.median(im),
-                   "re_half_range": (max(re) - min(re)) / 2, "im_half_range": (max(im) - min(im)) / 2}
-    out = {"n": len(mem), "node": node, "n_cross": nsign, "members": per}
-    if nsign * 2 > len(mem):
-        out["cross"] = statistics.median(cross)
-        out["cross_half_range"] = (max(cross) - min(cross)) / 2
-        out["cross_range"] = [min(cross), max(cross)]
-    med_im = [node[w]["im"] for w in ws]
-    out["median_im_sign_change"] = (min(med_im) < 0 < max(med_im))
+        r = quad_root(wsf, [x["x1"][1] for x in recs])
+        per.append({"deg": list(k[1]), "x1": [x["x1"] for x in recs], "cross": r})
+    out["members"] = per
+    cr = [p["cross"][0] for p in per if p["cross"]]
+    out["n_members"] = len(per)
+    out["n_members_cross"] = len(cr)
+    if cr:
+        out["members_cross_range"] = [min(cr), max(cr)]
     return out
 
 
@@ -112,14 +121,17 @@ def fmt_summary(res, log=print):
     for name in ["primary", "qhp22", "qhp21", "pade23", "pade22", "pade21"]:
         s = res[name]
         if not s["n"]:
-            log(f"  {name}: no member admitted at all three nodes")
+            log(f"  {name}: no approximant admitted at node {s.get('empty_node')}")
             continue
-        nodes = "  ".join(f"{w}: {s['node'][w]['re']:.5f} {s['node'][w]['im']:+.5f}i "
+        nodes = "  ".join(f"{w} (n {s['node'][w]['n']}): {s['node'][w]['re']:.5f} {s['node'][w]['im']:+.5f}i "
                           f"(+-{s['node'][w]['re_half_range']:.1e}, +-{s['node'][w]['im_half_range']:.1e}i)" for w in WS)
-        cr = (f"crossing {s['cross']:.5f} +- {s['cross_half_range']:.5f} (range {s['cross_range'][0]:.5f}-"
-              f"{s['cross_range'][1]:.5f})" if "cross" in s else "no majority crossing")
-        log(f"  {name}: {s['n']} members, {s['n_cross']} with a root in 1.09-1.11; {cr}; median Im sign change "
-            f"{s['median_im_sign_change']}")
+        env = s["cross_envelope"]
+        cr = (f"crossing {s['cross']:.5f}" if "cross" in s else "no crossing of the medians") + \
+             (f", envelope {env[0]:.5f}-{env[1]:.5f}{'' if s['envelope_all_cross'] else ' (some shifts: none)'}"
+              if env else ", envelope: no crossing")
+        mc = (f"; members at all nodes {s['n_members']}, {s['n_members_cross']} cross"
+              + (f" in {s['members_cross_range'][0]:.5f}-{s['members_cross_range'][1]:.5f}" if s['n_members_cross'] else ""))
+        log(f"  {name}: {cr}; median Im sign change {s['median_im_sign_change']}{mc}")
         log(f"     x1 {nodes}")
 
 
