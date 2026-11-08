@@ -90,7 +90,7 @@ def main():
     nU = nL = 0.0
     for i in range(n):
         sh, sl_ = dd_dot(M[i, i + 1:], zero[i + 1:], wh[i + 1:], wl[i + 1:])
-        vh[i], vl[i] = mps.md.dd_add(np.array([wh[i]]), np.array([wl[i]]), np.array([sh]), np.array([sl_]))
+        vh[i], vl[i] = mps._dd_sub(wh[i], wl[i], -sh, -sl_)       # w_i + sum
         nL = max(nL, 1.0 + float(np.abs(M[i, i + 1:]).sum()))
         nU = max(nU, float(np.abs(M[i, :i + 1]).sum()))
     for i in range(n):
