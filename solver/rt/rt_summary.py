@@ -84,6 +84,19 @@ def main():
             print(f"| {r['D']:g} | {r['grid'][0]}x{r['grid'][1]} | {r['L']} | {src} | {r['prec']} | "
                   f"{r['sigma_max']:.2e} | {r['sigma_min']:.2e} | {r['kappa']:.2e} | {r['resolved']} | "
                   f"{w.get('field', '')} h{w.get('harmonic_of_Delta', '')} | {ls} | {r['secs']} |")
+    sm = rows(os.path.join(d, "solve_mapped2.jsonl"))
+    if sm:
+        seen += 1
+        print("\nNewton from our state mapped onto an RT grid (rt_solve_mapped.py, solve_mapped2.jsonl): the first full "
+              "f64 step")
+        print("| D | grid | L | mapped residual | first step max|dz| | its change of Delta | residual after it | "
+              "kappa after that step (f64) | solved |")
+        print("|---|---|---|---|---|---|---|---|---|")
+        for r in sorted(sm, key=lambda r: (r["D"], r["L"])):
+            s = r["first_step"]
+            print(f"| {r['D']:g} | {r['grid'][0]}x{r['grid'][1]} | {r['L']} | {r['F_mapped']:.1e} | {s['max_dz']:.1e} | "
+                  f"{s['dDelta']:+.1e} | {s['F_after']:.1e} | {(format(s["kappa"], ".1e") if "kappa" in s else "–")} | "
+                  f"{'yes, Delta ' + format(r['diff'], '+.1e') + ' from ours' if r['converged'] else 'no'} |")
     ok = rows(os.path.join(d, "ours_kappa.jsonl"))
     if ok:
         seen += 1

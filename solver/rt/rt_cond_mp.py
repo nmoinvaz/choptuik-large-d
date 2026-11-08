@@ -83,7 +83,7 @@ def to_arb_mat(J_obj, prec):
 def jac_arb(rm, z):
     """Columns (F(z + e_k) - F(z - e_k)) / 2 in arb (exact for the quadratic residual)."""
     from rt_mp import obj
-    zo = obj(z)
+    zo = z if z.dtype == object else obj(z)             # an arb state is used as it is
     L = len(z)
     J = np.empty((L, L), dtype=object)
     one = arb(1)

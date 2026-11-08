@@ -7,8 +7,10 @@ folder `I91-mac/` of the raw-data repository.
 RT prototype as an independent check of Δ(D) at moderate D, and RT's quadratic framework for a certified solution at
 one D. Do not adopt the global Fourier × Chebyshev Newton for the chain. It does not avoid our horizon wall. The
 horizon's singular branch is nearly a polynomial, and the Chebyshev system's smallest singular value falls like a power
-of the resolution whose exponent grows by about 1.4 per unit of D, so its arithmetic must lengthen with D as ours does,
-on 14 to 24 times our unknowns in a dense LU. The quadratic form of the equations is not what sets the conditioning.
+of the resolution whose exponent grows by about 1.4 per unit of D. A coarse grid keeps κ modest but does not hold the
+solution (Newton from our solution runs away at D = 20–40), and a grid that does needs κ beyond f64 already at D = 10,
+so the resolution and the arithmetic must both grow with D, on 14 to 24 times our unknowns in a dense LU. The
+quadratic form of the equations is not what sets the conditioning.
 
 What was run: the D-dimensional RT equations checked in sympy against the covariant ones (section 2), the map checked
 against RT's 80-digit μ (7.7×10⁻²⁸), a collocation prototype that reproduces our Δ at D = 4 and 10 to 1.5×10⁻¹³ and
@@ -93,9 +95,12 @@ its control `--mutate=n`, n in place of n − 1, exits 1): from our D = 4 double
 the differences are our truncation in M, the enclosure's radius being negligible). The rest of the map follows from
 the metric: ξ = (w⁺ − w⁻)/(w⁺ + w⁻), t = (4π/Δ)τ − ln((w⁺ + w⁻)/2)/μ, e^{−ζ} = μ e^{−τ} a ((w⁺ + w⁻)/2) / √(−w⁺_x w⁻_x),
 and D^± = A^±(∂_τ + (x ± c)∂_x) with A^± = −μ(w⁺ + w⁻)/(2c w^∓_x), which gives the ω's from (a, c, p, m):
-ω₄⁺ = √2 A⁺ c p / x, ω₄⁻ = −√2 A⁻ c m / x, ω₂^± = μ/ξ ∓ A^± c / x, ω₃^± = D^± ζ ∓ μ.
-
-MAP_PLACEHOLDER
+ω₄⁺ = √2 A⁺ c p / x, ω₄⁻ = −√2 A⁻ c m / x, ω₂^± = μ/ξ ∓ A^± c / x, ω₃^± = D^± ζ ∓ μ. The transport equations are
+solved by Fourier × Chebyshev collocation in our (τ, x), with the rows w⁻_x(τ, 1) = −h(τ, 1) fixing w⁻'s scale (they
+also exclude a spurious regular solution carried by the Nyquist mode of the even τ grid). The map is exercised as the
+first guess of every RT solve below: at D = 4 Newton converges from it, and at D = 20–100 the mapped fields satisfy the
+RT equations on a 24 × 21 grid to 10⁻⁷ (section 4), an independent check of the map's formulas (they and the RT
+equations share no code).
 
 ## 3. The prototype and its checks
 
@@ -182,7 +187,43 @@ At D = 10 this is already f64's limit: on the 48 × 81 grid (κ = 1.7×10¹⁵),
 with Δ 3.3×10⁻⁴ off, and the same start polished with the arb residual lands 1.1×10⁻¹² from ours (section 3). The f64
 error is rounding along the weak direction, which carries Δ.
 
-COND_ARB_PLACEHOLDER
+**At D = 20 to 100, in arb.** No RT solution was continued past D = 10 here (that needs a multiprecision LU on grids
+that resolve Δ, question 3). Instead our states at D = 20.04, 30.07, 40.02, 60.00 (double-double, M = 32) and 100
+(the chain's pinned quad-double state) were mapped onto a coarse 24 × 21 grid, where the mapped fields leave an RT
+residual of only 10⁻⁷ to 4×10⁻⁷, and the Jacobian there was measured in arb at two precisions
+(`I91-mac/kappa_mp.jsonl`):
+
+| D | state | mapped residual | σ_max | σ_min | κ | weakest |
+|---|---|---|---|---|---|---|
+| 20.04 | up2_D20.0437 (dd, M = 32) | 3.8×10⁻⁷ | 382 | 1.3×10⁻¹¹ | 3.0×10¹³ | ω₃, harmonic 0 |
+| 30.07 | up6_D30.0688 (dd, M = 32) | 3.5×10⁻⁷ | 932 | 1.3×10⁻¹¹ | 6.9×10¹³ | ω₃, harmonic 0 |
+| 40.02 | up7_D40.0201 (dd, M = 32) | 1.2×10⁻⁷ | 1,722 | 1.2×10⁻¹² | 1.4×10¹⁵ | ω₃, harmonic 0 |
+| 60.00 | up13_D60.0020 (dd, M = 32) | 1.0×10⁻⁷ | 4,048 | 2.3×10⁻¹³ | 1.8×10¹⁶ | ω₃, harmonic 0 |
+| 100 | T139 anm_pin3_D100.0000 (qd, pinned) | 4.7×10⁻⁷ | 11,670 | 8.2×10⁻¹⁴ | 1.4×10¹⁷ | ω₃, harmonic 0 |
+
+The weakest direction carries 0.1% to 1% of its norm in μ. The others found are ω₃ at harmonic 2 and the
+collocation's Nyquist mode (harmonic 24, a periodic field at the top t frequency, whose discrete derivative is zero), an
+artifact of even N_t that RT's coefficient space does not have. σ_max grows like D², from the coefficients
+(D − 3)(D − 2)μ/2 and the like, and σ_min falls by 2.2 orders from D = 20 to 100 at this N (κ by 3.7, about 0.05 digit
+per unit of D), far slower than the 1.3 digits per unit of D at N = 61 for D = 4–10. At D = 100 f64 is at its end on
+this grid (it says 1.36×10¹⁷).
+
+**A coarse grid does not hold the solution.** The coarse grid's κ is modest, but its discrete solution is not near the
+true one. Newton started from our solution sampled on the grid (`solver/rt/rt_solve_mapped.py`, records
+`I91-mac/solve_mapped*.jsonl`) runs away at every D tried: on 24 × 21 and 24 × 31 at D = 20 and 30, and on 24 × 21
+at D = 40, f64 Newton starts at a residual of 1–4×10⁻⁷, ends after 15 steps at 2×10⁻⁷ to 5×10⁻⁵ without
+converging, and leaves Δ off by 0.3 to 2.4. The first full Newton step from our solution tells why
+(`solve_mapped2.jsonl`, printed by `rt_summary.py`):
+
+FIRST_STEP_TABLE_PLACEHOLDER
+
+The control is D = 10 on 32 × 61, where the continuation of section 3 found a discrete solution: there the first step
+is 4×10⁻⁷, about the map's own error, the residual falls from 1.1×10⁻⁷ to 1.1×10⁻¹² (quadratically), and the solve
+lands on the continuation's Δ to all digits (+1.7×10⁻⁷ from ours). On a grid too coarse for its D the first step is
+10⁻² and moves Δ by 0.1 to 1, the residual after it is larger than before, and Newton never recovers: the discrete
+solution is not near ours. Refining the grid brings it back, at a price. At D = 20 the 32 × 41 grid holds it (the step
+is 7.5×10⁻⁶, the residual falls to 5×10⁻¹⁰, and Δ moves by 10⁻⁴, about that grid's error), but its κ near 10¹⁶ leaves
+f64 Newton unable to finish. FINER_PLACEHOLDER So the accuracy demands N, and N brings κ.
 
 **At matched resolution.** Matched in τ harmonics (our M = 32 against RT's N_t = 64) the comparison is RT's κ at any
 N_t, since RT's does not depend on it. Matched in accuracy of Δ the two meet at D = 10: RT's 48 × 81 grid gives Δ to
@@ -193,7 +234,13 @@ has LU pivots spanning 6.9×10¹⁹ at D = 100 and 5×10³⁹ at D = 200 (folder
 `T138-win2/chain_o/`, `anm_run.jsonl`: the ratio of the largest to the smallest LU pivot, an estimate of κ, not an
 SVD).
 
-COND_COMPARE_PLACEHOLDER
+So the two cannot be compared beyond D = 10 at matched accuracy with these data. At D = 10 RT needs κ = 1.7×10¹⁵ on
+13,777 unknowns for Δ to 10⁻¹², ours κ = 1.2×10¹³ on 2,113 unknowns for Δ to 10⁻¹⁶. At D = 20–60 the coarse RT grid
+has κ = 3×10¹³ to 2×10¹⁶ against ours 4.6×10¹⁹ to 1.7×10³¹, but that grid does not hold the solution, and the grid that
+would has a κ larger by the factor N^p of the table above, with p growing with D. Ours is dominated by p₁'s top τ
+harmonics, a weakness of the shooting parametrization (the centre data reach the matching point only through
+exponentially small couplings) that RT's global unknowns do not show at the resolutions tried; RT's is dominated by
+the horizon branch, which our series removes exactly.
 
 ## 5. The three questions
 
@@ -238,7 +285,21 @@ accuracy, and the discrete operator has a near-null vector made of it. This is t
 collocation of the horizon block (notes/QUAD_DOUBLE.md 13.3, 13.7: 14 near-null directions at D = 40 with 16 to 24
 points, Δ undetermined at 10⁻⁹ to 10⁻⁶), now in RT's global discretization, and section 4 measures it.
 
-Q2_DATA_PLACEHOLDER
+The measurements of section 4 bear this out. RT's σ_min falls like N^(−p) with p growing by about 1.4 per unit of D,
+the weakest direction carries μ and so Δ, and at D = 10 its κ already exceeds what f64 can resolve on a grid that
+gives Δ to 10⁻¹². Where our formulation pays digits for the horizon data's accuracy (the series' radius law,
+LARGE_D_WALL.md), RT's pays them for the smallest singular value of the polynomial system, and in both the digits grow
+about linearly with D. EEG's own words fit this: their earlier shooting code stopped at D = 5.5 because the branches
+became hard to tell apart, and their spectral code needs "increasingly higher precision" as D grows.
+
+At D = 20–60 the same mechanism shows from the other side. A coarse grid (24 × 21) has a modest κ there, but it does
+not hold the solution: Newton from our solution sampled on it runs away (section 4), because the grid's truncation
+residual is far above its σ_min. A grid that holds the solution needs its truncation residual below σ_min, and σ_min
+falls with N faster the larger D is. EEG's fixed 40 × 80 grid fits this picture: their six decimals agree with ours
+to within their rounding up to D ≈ 40 and depart by 5×10⁻⁷ at D = 60–100 and by 3×10⁻⁶ to 4×10⁻⁶ at D = 150–200
+(`hp/data/delta_published_compare.csv`), against their statement that for D > 28 "we trust all displayed digits".
+That is consistent with a truncation error growing with D at fixed N; it is not proved by it, since their code was
+not run here.
 
 ### (3) What would a Fourier × Chebyshev Newton cost at the digits our chain carries?
 
@@ -262,7 +323,12 @@ core, and at L = 18,369 (our harmonic content, N = 81) 19 and 51 hours (`rt_summ
 flint's blocking may do somewhat better at large L). EEG's 392 steps of 1/2 from 4 to 200, with "typically" four Newton iterations each, need that
 LU about 1,600 times. Our chain's step at D = 200 took 460 s on 18 threads, mostly the 24 Taylor coefficients in
 octo-double (T138-win2 `chain_o/anm_run.jsonl`: t_coef 415 s, the corrector 29 s, the re-seed 14 s). The precision
-the RT system needs is set by section 4: Q3_PREC_PLACEHOLDER
+the RT system needs is κ at a grid that holds the solution (section 4). That was measured only to
+D = 10, where Δ to 10⁻¹² takes the 48 × 81 grid with κ = 1.7×10¹⁵, already past f64, on 6.5 times our unknowns at that
+D (13,777 against 2,113). Beyond D = 10 the grid must grow and σ_min falls with it at a rate that grows with D, so
+both L and the precision grow. A number for D = 200 would need these laws carried far past the measured range, and
+it is not given here. What the data do say is that RT's form buys no digits: at the one D where both were run to the
+same accuracy, it needs more precision on more unknowns than ours.
 
 ## 5b. What to adopt, and what not
 
@@ -274,18 +340,22 @@ Adopt:
   `hp/data/delta_published_compare.csv` as the D = 4 reference.
 - **The RT prototype as an independent check of Δ(D) at moderate D.** It shares nothing with `hp/` but the first guess
   at D = 4 (another gauge, other unknowns, a global discretization, no series), and it reproduces Δ(10) to 1.1×10⁻¹² of
-  ours. With a double-double or quad-double LU it can check our values at D = 12–30, where the published ones (EEG,
-  six decimals) are far less precise than ours.
+  ours. With a double-double or quad-double LU, continued in D on grids fine enough to hold the solution (a coarse
+  grid does not, section 4), it can check our values at D = 12–30, where the published ones (EEG, six decimals) are
+  far less precise than ours.
 - **RT's framework for a certified solution at one D** (PROOF.md item 7). The quadratic structure is what makes the
   Newton–Kantorovich bounds of a computer-assisted proof simple, and RT's code did it at D = 4. Section 4 says what it
   would cost at larger D: the near-null direction makes the inverse's norm grow with D, so the proof's constants (and
   the precision of its arithmetic) grow as κ does.
 
 Do not adopt: the global Fourier × Chebyshev Newton as the chain's solver. The horizon wall comes back as the
-conditioning of the polynomial system (question 2, section 4), so its arithmetic must lengthen with D as ours does,
-with 14 to 24 times our unknowns in a dense LU (question 3), and its truncation error at fixed resolution grows with D
-(the prototype's on a fixed grid, section 3; EEG's six decimals leave ours by 3×10⁻⁶ to 4×10⁻⁶ at D = 150–200,
-`hp/data/delta_published_compare.csv`, beyond their last digit, which is consistent with that and does not prove it).
+conditioning of the polynomial system (question 2, section 4). A grid that holds the solution needs its truncation
+residual below σ_min, and σ_min falls with N faster the larger D is, so both the resolution and the arithmetic must
+grow with D, on 14 to 24 times our unknowns in a dense LU (question 3). At D = 10, the one D where both were run to
+the same accuracy, RT needs more precision (κ = 1.7×10¹⁵ against 1.2×10¹³) on 6.5 times the unknowns. Its error at a
+fixed resolution grows with D (the prototype's on 32 × 61 from 1.2×10⁻⁹ at D = 4 to 1.7×10⁻⁷ at D = 10, section 3),
+and EEG's six decimals leave ours by 3×10⁻⁶ to 4×10⁻⁶ at D = 150–200, beyond their last digit, which is consistent with
+that and does not prove it.
 
 ## 6. Proposed entries for notes/LIT_REVIEW.md
 
@@ -321,9 +391,10 @@ To be added under the 2026-10-21 addendum's EEG entry and as a new entry (the co
 A sentence for the bullet "The large-D wall" of "Limits and open problems", after its first sentence:
 
 > Ecker, Ecker and Grumiller reach D = 200 with Reiterer and Trubowitz's formulation, quadratic first-order equations
-> discretized globally by Fourier and Chebyshev series with no horizon series. It meets the same wall in another form:
-> the horizon's singular branch, of exponent near (D − 4)/2, is nearly a polynomial, so the Chebyshev system's
-> condition number grows README_RATE_PLACEHOLDER, and the arithmetic must lengthen with D as ours does
+> discretized globally by Fourier and Chebyshev series with no horizon series. It meets the same wall in another form.
+> The horizon's singular branch, whose exponent grows linearly in D, is nearly a polynomial, so the Chebyshev system's
+> smallest singular value falls like a power of the resolution whose exponent grows by about 1.4 per unit of D
+> (1.3 digits per unit of D at 61 Chebyshev points for D = 4–10), and the arithmetic must lengthen with D as ours does
 > ([notes/RT_FORMULATION.md](notes/RT_FORMULATION.md)).
 
 ## 8. Reproduction
