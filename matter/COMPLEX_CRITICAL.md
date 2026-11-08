@@ -22,8 +22,8 @@ is.
   single unstable mode.
 - **No count changes with D**, so there is no crossover dimension, and the complex scalar's critical exponent is the
   real scalar's, γ(D) = 1/λ_phys(D) → 1/2.
-- Every count passes a planted zero and a mutated equation that changes it; HE95b's text and the arXiv listing disagree
-  on γ at D = 4 (§5).
+- Each method's counts pass a planted zero, which is counted, and a mutated equation, which changes the count; HE95b's
+  text and the arXiv listing disagree on γ at D = 4 (§5).
 
 ## 1. The two counts
 
@@ -172,10 +172,11 @@ in double precision rounding excites the mass mode, whose coefficients grow like
 the coefficients past order 15 are that mode (|c₁₀₀| ≈ 10²⁹); fed into the test field's series this left the
 background's (p, m) a null vector of M(0) only to 3×10⁻⁴.
 
-**Checks** (`complex_imag.py check`, records in the raw folder's `imag/checks.jsonl`, printed by
-`complex_table.py`; the D = 60 column from the first round, `checks.jsonl`, the others from `checks2.jsonl`). States: `lowDn_D4.0000_M48` (11 nodes 0.01 … 0.7, the layout GHOST_ADMIXTURE.md §4 found free of
-the 9-node layout's artefacts; copied into the raw folder's `states/`), `hp/data/states/up_D10.0000` (M 48),
-`up2_D20.0437` (M 32), `up13_D60.0020` (M 32, nodes 0.3 … 0.7).
+**Checks** (`complex_imag.py check`, printed by `complex_table.py`; the D = 60 column from the raw folder's
+`imag/checks.jsonl`, the others from `imag/checks2.jsonl`, the second round with the tolerance test). States:
+`lowDn_D4.0000_M48` (11 nodes 0.01 … 0.7, the layout GHOST_ADMIXTURE.md §4 found free of the 9-node layout's artefacts;
+copied into the raw folder's `states/`), `hp/data/states/up_D10.0000` (M 48), `up2_D20.0437` (M 32), `up13_D60.0020`
+(M 32, nodes 0.3 … 0.7).
 
 | check | D = 4 | D = 10 | D = 20.04 | D = 60.00 |
 |---|---|---|---|---|
@@ -275,7 +276,7 @@ Unstable directions (modes with Re λ > 0, a complex pair counting two), symmetr
 | 10 | 1 (2.1950) | 0 | **1** | 2.1646154815 | 0.42514655 ± 4.99934510i | **3** |
 | 20 | 1 (2.1108, D = 20.04) | 0 | **1** | [TBD] | 0.47996170 ± 6.06910951i | **3** |
 | 40 | | | | [TBD] | 0.5077925 ± 6.8452800i | **3** |
-| 60 | 1 (2.0442) | 0 | **1** | 2.0395953299 (D = 60.99) | 0.51754131 ± 7.17416570i (D = 60.99) | **3** |
+| 60 | 1 (2.0442) | 0 | **1** | 2.0395953299 (D = 60.99) | 0.51754131 ± 7.17416570i (D = 60.99) | 3 (track, not box-counted) |
 | 80 | | | | [TBD] | 0.52199898 ± 7.33689470i | **3** |
 
 Sources. Real DSS, real sector: notes/MODE_COUNT.md (complex-λ counts at D = 30.07, 45.05, 61.03 with exactly one
@@ -306,7 +307,9 @@ not make the two exponents equal at finite D: at D = 20 they are 1/λ = 0.477 (C
 **Status.** *Numerical evidence*: winding counts in finite boxes (|Im λ| < 3ω/2 and Re λ < 6 for the imaginary
 sector; Re λ < 5 and Im λ below Im λ_osc + 1.5 for the CSS), each passing its planted and mutated controls. Not covered:
 growth rates outside the boxes, perturbations with τ-harmonics above the layout's (M = 32–48, and 13 at the centre at
-D = 60), non-spherical perturbations, and D = ∞ itself.
+D = 60), non-spherical perturbations, and D = ∞ itself. Open: the 1/n fits give Im λ_osc / ω → 1.9935 with no visible
+spread, not 2; whether the limit is 2 with a slower correction (a log, or a non-analytic term) is not decided by
+D ≤ 80.
 
 ## 5. Discrepancies
 
@@ -318,8 +321,6 @@ D = 60), non-spherical perturbations, and D = ∞ itself.
   pair, by contrast, agrees with the text within its errors (§2).
 - **complex_imag.py at D = 60.** Not a disagreement but a limit: the independent double-precision determinant is
   rounding noise there (§3), so the D = 60 count rests on hp/modecount_cx alone.
-- **Re λ_osc and Im λ_osc / ω at D = ∞.** The 1/n fits give Im λ_osc / ω → 1.9935 with no visible spread, not 2. Whether
-  the limit is 2 with a slower correction (a log, or a non-analytic term) is not decided by D ≤ 80.
 
 ## 6. Proposed text for matter/CSS.md, matter/STRUCTURE.md and the README
 
@@ -377,16 +378,18 @@ this checkout; the queue scripts that ran are in it, with their logs).
 To reproduce from the repository root, with RAW = ../choptuik-large-d-raw/I95-mac:
 
 ```
-python3 solver/matter/complex_imag_eqs.py
-python3 solver/matter/complex_css.py root 4 0.2587+3.5022j
-python3 solver/matter/complex_css.py track 4 80 0.2586698339+3.5022487970j,2.5832751746 --h=0.1 --hmax=1 --out=F
-python3 solver/matter/complex_css.py boxes 4 0.25866983+3.50224880j --out=F
-python3 solver/matter/complex_imag.py count hp/data/states/up2_D20.0437.npz B0 U0 FULL --out=F --evlog=E
-python3 solver/matter/complex_osc_fit.py $RAW
+python3 solver/matter/complex_imag_eqs.py                    # "all checks pass"
+python3 solver/matter/complex_css.py selftest
+python3 solver/matter/complex_css.py root 4 0.2587+3.5022j      # 0.2586698339 + 3.5022487970i at both radii
+python3 solver/matter/complex_css.py boxes 4 0.25866983+3.50224880j --R=0.85 --names=C   # winding 1
+python3 solver/matter/complex_imag.py selftest
+python3 solver/matter/complex_imag.py count hp/data/states/up2_D20.0437.npz B0 U0 FULL   # 1, 0, 0
+python3 solver/matter/complex_osc_fit.py $RAW                  # Re -> 0.5364-0.5365, Im/omega -> 1.9935
 python3 solver/matter/complex_table.py $RAW
 ```
 
-The track was run as `track 4 80 … --h=0.1 --hmax=1` to D = 24.12 and resumed as `track 24 80
+The track (`complex_css.py track 4 80 0.2586698339+3.5022487970j,2.5832751746 --h=0.1 --hmax=1 --out=FILE`, about an
+hour) was run to D = 24.12 and resumed as `track 24 80
 0.489177+6.303256j,2.08473 --h=0.25 --hmax=2 --spread=1e-6`, the first run having slowed to steps of 10⁻³ in D at
 the 10⁻⁸ radius criterion. complex_imag.py needs hpkernel only for its comparison of the θ-derivative matrix (check);
 it runs with numpy, scipy and mpmath. The D = 60 count needs the crate: `PYTHONPATH=<main checkout>/hp/modecount_cx/build
@@ -402,8 +405,8 @@ python3 hp/modecount_test.py hp/data/states/up13_D60.0020.npz --boxes=B0,full --
    to 10⁻³ rad on every sample; the counts of B0, U0 and FULL equal the crate's; a planted pair is counted and
    `--mutate=coupling` changes B0. Depends on: nothing.
 2. **The CSS's oscillatory mode at D = ∞.** What: the perturbation spectrum of the κ = 0 inner CSS solution
-   (css_inner.py), to see whether Im λ_osc/ω → 2 and Re λ_osc → a limit near 0.53. Why: the finite-D track (§2)
-   suggests both; a limit would make the CSS's instability exact at D = ∞, not only up to D = 80. Acceptance: the
+   (css_inner.py), to see whether Re λ_osc → 0.536 and Im λ_osc/ω → 1.9935 (the 1/n fits) or 2. Why: a limit with
+   Re λ_osc > 0 would make the CSS's instability exact at D = ∞, not only up to D = 80. Acceptance: the
    inner problem's λ = 2 mode is found (its control), and λ_osc(∞) lies within the 1/n extrapolation's spread of the
    finite-D values. Depends on: nothing.
 3. **The κ-model's stability change in D.** What: follow the oscillatory mode in κ at fixed D (D = 4, 6, 10, 20, 40)
