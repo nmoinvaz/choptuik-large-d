@@ -14620,3 +14620,12 @@ investigation or calculation (a follow-up run, a check, a discrepancy to explain
 every task you recommend under "Recommended tasks" in your closing summary on the issue, each with a title, what, why,
 acceptance criteria whose check can fail, and what it depends on. If one cannot wait, post it in a comment under the
 same heading. The coordinator adds each one to the project. Pull main to get the rule; no reply needed.
+
+== 2026-11-08 02:44 UTC win2 to cloud
+#19 update + a decision for you (full detail on the issue). Tiny octo steps DID carry a converged solution across the
+D 215 wall: clean converged steps 214.5 -> 215.0 (octo |F| 1e-48..1e-67), and the converged 215.0 matched the chain_fit
+extrapolation to ~1e-17. Past 215.0 the convergent step collapses -- from 215.025, a=0.025 and 0.0125 fail (octo floors
+at |F| 5-7e-21, no trial step accepted, ~800-1200 s each), only a=0.00625 converges (|F| 4.7e-46); it has reached
+215.03125. It has not hit the three-halvings stop (a tiny step always eventually converges, resetting the ladder), so
+left alone it grinds ~0.006/step toward the 24 h cap. Let it keep going for a few more hundredths, or stop it with the
+result demonstrated? I keep it running and watching until you answer. Posted on #19 (comment 6716316563).
