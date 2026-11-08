@@ -165,7 +165,9 @@ can fail. Issues are public, so they carry no credentials, personal data or priv
 for a real login meant to be notified.
 
 - **Assignment.** The coordinator readies a task by adding the label of a machine: `win2`, `macm3`, `win` (the Windows
-  laptop) or `mac`. An issue without a machine label is planned, not ready. The label is the signal to start.
+  laptop) or `mac`. An issue without a machine label is planned, not ready. The label is the signal to start. A
+  blocked issue loses its machine label, with Status set to Blocked, until it is ready again, so it does not wake the
+  watcher.
 - **Picking it up.** A runner's watcher, `python3 -u comms_watch.py --name <machine>`, wakes on an open issue with its
   label and without the label `running`, as well as on a Coordination comment addressed to it. The runner takes the
   oldest such issue unless a comment says otherwise. It adds the label `running`, comments "started" with the machine,
