@@ -51,10 +51,13 @@ def read_log(fn):
 class Tally:
     def __init__(self):
         self.n, self.miss, self.ratio, self.sep = 0, [], 0.0, 0.0
+        self.inside = 0
         self.rows = []
 
     def add(self, name, mine, ref):
         self.n += 1
+        if ref[0] <= mine[0] and mine[1] <= ref[1]:
+            self.inside += 1                # the review's enclosure lies inside the stored one
         ok = S.overlaps(mine, ref)
         if not ok:
             self.miss.append(name)
@@ -108,8 +111,11 @@ def cmp_b1(log, ray, row, opts):
         row_ = dict(tag=tag, where=where, overlap=ok, n=t.n, missed=t.miss[:6], r_review=rm, r_stored=rr,
                     worst_ratio=t.ratio, worst_sep=t.sep)
         out.append(row_)
-        print(f"{tag:10s} {where:38s} overlap {ok!s:5s} ({t.n - len(t.miss)}/{t.n}); max radius review {rm:.2e}, "
-              f"stored {rr:.2e}; worst radius ratio {t.ratio:.2e}; worst |mid diff|/(r+r) {t.sep:.2e}")
+        tot.inside += t.inside
+        row_["inside"] = t.inside
+        print(f"{tag:10s} {where:38s} overlap {ok!s:5s} ({t.n - len(t.miss)}/{t.n}); inside {t.inside}/{t.n}; max "
+              f"radius review {rm:.2e}, stored {rr:.2e}; worst radius ratio {t.ratio:.2e}; worst |mid diff|/(r+r) "
+              f"{t.sep:.2e}")
     return finish(out, allok and failed is None and len(out) > 0, tot, failed, stops, opts)
 
 
@@ -150,6 +156,8 @@ def cmp_a(log, bfile, opts):
                 r_review=rJ, r_stored=rB)]
     tot.n, tot.miss = tx.n + tb.n, tx.miss + tb.miss
     tot.ratio, tot.sep = max(tx.ratio, tb.ratio), max(tx.sep, tb.sep)
+    tot.inside = tx.inside + tb.inside
+    print(f"inside the stored enclosure: X {tx.inside}/{tx.n}, B {tb.inside}/{tb.n}")
     return finish(out, not tot.miss and failed is None, tot, failed, stops, opts)
 
 
@@ -202,14 +210,16 @@ def finish(out, ok, tot, failed, stops, opts):
     expect = opts.get("expect", "overlap")
     if failed:
         print(f"CAPD run: {failed}")
-    print(f"ALL COMPONENTS OVERLAP: {ok} ({tot.n - len(tot.miss)}/{tot.n} overlap; worst radius ratio review/stored "
-          f"{tot.ratio:.2e}; worst |mid diff|/(r+r) {tot.sep:.2e})")
+    print(f"ALL COMPONENTS OVERLAP: {ok} ({tot.n - len(tot.miss)}/{tot.n} overlap; {tot.inside}/{tot.n} of the review's "
+          f"enclosures inside the stored ones; worst radius ratio review/stored {tot.ratio:.2e}; worst |mid diff|/(r+r) "
+          f"{tot.sep:.2e})")
     passed = ok if expect == "overlap" else not ok
     print(f"VERDICT ({'clean run: every component must overlap' if expect == 'overlap' else 'mutation: some component must miss'}): "
           f"{'PASS' if passed else 'FAIL'}")
     if "json" in opts:
         with open(opts["json"], "w") as fh:
-            json.dump(dict(ok=ok, expect=expect, passed=passed, n=tot.n, missed=len(tot.miss), worst_ratio=tot.ratio,
+            json.dump(dict(ok=ok, expect=expect, passed=passed, n=tot.n, missed=len(tot.miss), inside=tot.inside,
+                           worst_ratio=tot.ratio,
                            worst_sep=tot.sep, failed=failed, rows=out, stops=stops), fh, indent=1)
     return 0 if passed else 3
 
