@@ -13,8 +13,9 @@ its spread over three windows of D (all, first half, second half): a spread over
 
 Models (stated, then fitted):
 - products per Newton step k(D) = a + b D, from the first Newton step of each D (fresh preconditioner) and from the mean.
-- log10 |Delta_N - Delta_{N+20}| = c_N + d_N D for each pair of grids; r(D) = log10 delta_N - log10 delta_{N+20}, the
-  decades gained per 20 Chebyshev points, linear in D where two pairs overlap. N(D) is the smallest N of the ladder whose
+- log10 |Delta_N - Delta_{N+20}| = c_N + d_N D for each pair of grids (model exp), or delta itself linear in D (model
+  lin); r(D) = log10 delta_N - log10 delta_{N+20}, the decades gained per 20 Chebyshev points, from the two largest
+  pairs under the same model. N(D) is the smallest N of the ladder whose
   delta_N(D) < --tol (1e-12), with delta_N for N above the largest pair continued at the rate r(D).
 - seconds per product p(N) and per preconditioner application q(N) as powers of N + 1 through the measured grids; the
   rest of a Newton step (orthogonalization, line search) as e k^2 L.
@@ -118,7 +119,7 @@ def analyse(G, old, tol=1e-12, project=(), table=False, say=print, delta_from=No
             continue
         x, y = [p[0] for p in pts], [math.log10(p[1]) for p in pts]
         fs = fit_spread(x, y)
-        res["delta"][(g[1], h[1])] = dict(fits=fs, pts=pts)
+        res["delta"][(g[1], h[1])] = dict(fits=fs, fits_lin=fit_spread(x, [p[1] for p in pts]), pts=pts)
         cross = {w: (math.log10(tol) - c[0]) / c[1] if c[1] > 0 else float("inf") for w, c in fs.items()}
         say(f"  N {g[1]} - {h[1]} D {x[0]:g}..{x[-1]:g} ({len(x)} D), last {pts[-1][1]:.2e}: " + "; ".join(
             f"{w}: c {c[0]:.2f}, d {c[1]:.4f} decades per unit D, crosses {tol:g} at D {cross[w]:.1f}"
@@ -175,8 +176,34 @@ def analyse(G, old, tol=1e-12, project=(), table=False, say=print, delta_from=No
     return res
 
 
+def log_delta(res, pair, model, w, D):
+    """log10 |Delta_N - Delta_N'| of the pair at D: model exp (log10 delta linear in D) or lin (delta linear in D)."""
+    if model == "exp":
+        c = res["delta"][pair]["fits"][w]
+        return c[0] + c[1] * D
+    c = res["delta"][pair]["fits_lin"][w]
+    v = c[0] + c[1] * D
+    return math.log10(v) if v > 0 else -300.0
+
+
+def N_of(res, pairs, model, w, D, tol):
+    """The smallest N of the ladder with delta_N(D) < tol: delta of the largest pair, continued past it at r(D)
+    decades per 20 points, r from the two largest pairs (window all); None when the model gives no N."""
+    top = pairs[-1]
+    ld = log_delta(res, top, model, w, D)
+    r = None
+    if len(pairs) >= 2:
+        (n0, _), (n1, _) = pairs[-2], pairs[-1]
+        r = (log_delta(res, pairs[-2], model, "all", D) - log_delta(res, top, model, "all", D)) * 20 / (n1 - n0)
+    N = top[0]
+    while ld >= math.log10(tol) and r and r > 0 and N < 2001:
+        ld -= r
+        N += 20
+    return N if ld < math.log10(tol) else None
+
+
 def projection(res, targets, tol, say):
-    """An extrapolation of the fits (see the module docstring)."""
+    """An extrapolation of the fits (see the module docstring), for both models of delta(D) and every window."""
     out = {}
     tg = sorted(res["time"])
     if not tg or not res["delta"] or "alpha_p" not in res:
@@ -186,50 +213,32 @@ def projection(res, targets, tol, say):
     T = res["time"][gT]
     Nt = gT[0]
     pairs = sorted(res["delta"])
-    top = pairs[-1]                                        # the largest pair: delta_N for N = top[0]
     fk = res["k"].get((tg[0], "mean")) or res["k"].get((tg[0], "first"))
-    # decades per 20 points, r(D), from the two largest overlapping pairs (else held at the top pair's value)
-    rD = None
-    if len(pairs) >= 2:
-        (n0, _), (n1, _) = pairs[-2], pairs[-1]
-        f0, f1 = res["delta"][pairs[-2]]["fits"]["all"], res["delta"][pairs[-1]]["fits"]["all"]
-        rD = lambda D: ((f0[0] + f0[1] * D) - (f1[0] + f1[1] * D)) * 20 / (n1 - n0)   # noqa: E731
-    say(f"\nprojection (an extrapolation of the fits above, not a measurement); delta_N from the pair {top}, "
-        f"r(D) from {pairs[-2:] if rD else 'none'}:")
-    say("| D | window | N(D) | L | k per Newton step | s per Newton step | s per D step | hours from D 30 | "
-        "f64 Jacobian GB |")
-    say("|---|---|---|---|---|---|---|---|---|")
+    say(f"\nprojection (an extrapolation of the fits above, not a measurement); delta_N from the pair {pairs[-1]}, "
+        f"r(D) from {pairs[-2:] if len(pairs) > 1 else 'none'}; models: exp (log10 delta linear in D), lin (delta "
+        f"linear in D):")
+    say("| D | delta model | window | N(D) | L | k per Newton step | s per Newton step | s per D step | "
+        "hours from D 30 | f64 Jacobian GB |")
+    say("|---|---|---|---|---|---|---|---|---|---|")
     for D in targets:
-        for w, cd in res["delta"][top]["fits"].items():
-            ld = cd[0] + cd[1] * D                          # log10 delta at N = top[0]
-            r = rD(D) if rD else None
-            N = top[0]
-            while ld >= math.log10(tol) and r and r > 0 and N < 2001:
-                ld -= r
-                N += 20
-            if ld >= math.log10(tol):
-                say(f"| {D:g} | {w} | beyond the model | | | | | | |")
-                continue
-            ab = fk.get(w, fk["all"])
-            hours = 0.0
-            for Dk in np.arange(30.0, D + 1e-9, 1.0):      # the D steps of 1 from 30, each at that D's cost
-                hours += step_secs(res, T, gT, Nt, N_at(res, top, rD, Dk, tol, w), ab[0] + ab[1] * Dk) / 3600
-            k = ab[0] + ab[1] * D
-            s_step, s_newton, L = step_secs(res, T, gT, Nt, N, k, parts=True)
-            out[(D, w)] = dict(N=N, L=L, k=k, s_newton=s_newton, s_step=s_step, hours=hours, mem=8 * L * L / 2 ** 30)
-            say(f"| {D:g} | {w} | {N} | {L} | {k:.0f} | {s_newton:.0f} | {s_step:.0f} | {hours:.1f} | "
-                f"{8 * L * L / 2 ** 30:.1f} |")
+        for model in ("exp", "lin"):
+            for w in res["delta"][pairs[-1]]["fits"]:
+                N = N_of(res, pairs, model, w, D, tol)
+                if N is None:
+                    say(f"| {D:g} | {model} | {w} | beyond the model | | | | | | |")
+                    continue
+                ab = fk.get(w, fk["all"])
+                hours = 0.0
+                for Dk in np.arange(30.0, D + 1e-9, 1.0):  # the D steps of 1 from 30, each at that D's cost
+                    Nk = N_of(res, pairs, model, w, Dk, tol) or N
+                    hours += step_secs(res, T, gT, Nt, Nk, ab[0] + ab[1] * Dk) / 3600
+                k = ab[0] + ab[1] * D
+                s_step, s_newton, L = step_secs(res, T, gT, Nt, N, k, parts=True)
+                out[(D, model, w)] = dict(N=N, L=L, k=k, s_newton=s_newton, s_step=s_step, hours=hours,
+                                          mem=8 * L * L / 2 ** 30)
+                say(f"| {D:g} | {model} | {w} | {N} | {L} | {k:.0f} | {s_newton:.0f} | {s_step:.0f} | {hours:.1f} | "
+                    f"{8 * L * L / 2 ** 30:.1f} |")
     return out
-
-
-def N_at(res, top, rD, D, tol, w):
-    cd = res["delta"][top]["fits"][w]
-    ld, N = cd[0] + cd[1] * D, top[0]
-    r = rD(D) if rD else None
-    while ld >= math.log10(tol) and r and r > 0 and N < 2001:
-        ld -= r
-        N += 20
-    return N
 
 
 def step_secs(res, T, gT, Nt, N, k, parts=False):
@@ -282,7 +291,7 @@ def planted(mutate=None):
         ld, r, N = c[121] + d[121] * D, (c[101] + d[101] * D) - (c[121] + d[121] * D), 121
         while ld >= -12:
             ld, N = ld - r, N + 20
-        got = pr.get((D, "all"), {}).get("N", float("nan"))          # nan: beyond the model
+        got = pr.get((D, "exp", "all"), {}).get("N", float("nan"))   # nan: beyond the model
         ok.append((f"N({D:g}) = {N}", got == N, got))
     for name, good, val in ok:
         print(f"planted {name}: {val:.4f} {'ok' if good else 'FAIL'}")
