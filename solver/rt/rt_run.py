@@ -82,8 +82,10 @@ def main():
     ap.add_argument("--mp", type=int, default=0, help="bits of the arb residual (f64 solver: final solves only, 0: none;"
                     " mp solver: every solve, default 192)")
     ap.add_argument("--max_products", type=int, default=80)
-    ap.add_argument("--refresh_dz", type=float, default=1e-6,
+    ap.add_argument("--refresh_dz", type=float, default=1e-3,
                     help="mp solver: rebuild the f64 Jacobian and LU after a Newton step with max|dz| above this")
+    ap.add_argument("--refresh_products", type=int, default=25,
+                    help="mp solver: rebuild them after an inner solve with more products than this")
     a = ap.parse_args()
     if (a.profile is None) == (a.start is None):
         ap.error("give one of --profile and --start")
@@ -127,7 +129,8 @@ def main():
         make = lambda zz: mps.LUdd(rt.jacobian(mps.to_f64(zz)), overwrite=True)
         # newton_mp holds the only reference, so a rebuild frees the old factors first
         zm, ok, info = mps.newton_mp(rm, z, held.pop(), tol=1e-40, it_max=12, max_products=a.max_products,
-                                     make_prec=make, refresh_dz=a.refresh_dz, log=say)
+                                     make_prec=make, refresh_dz=a.refresh_dz, refresh_products=a.refresh_products,
+                                     log=say)
         d0, d1 = rm.delta_m(zm)
         parts = delta_hp_parts(D)
         diff = None
