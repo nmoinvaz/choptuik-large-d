@@ -178,9 +178,11 @@ for a real login meant to be notified.
 - **Raw output** goes to the raw-data repository as before, in a folder `I<issue>-<machine>/` (for example `I37-win2/`),
   whose README.md starts `# I<issue>-<machine>: <what it holds>`, then the machine and the issue's URL. The comms-era
   `T<n>-<machine>/` folders stay as they are.
-- **Posts.** The work is recorded on the issue: progress posts (hourly, with cpu and memory), results, discrepancies and
-  recommended tasks are comments there. Questions, commands and other coordination go by Remote Control between the
-  runner and the coordinator; whatever they decide about a task is written on its issue as well, so the issue stays
+- **Posts.** The work is recorded on the issue, by the agent that did it: progress posts (hourly, with cpu and memory),
+  results, discrepancies and recommended tasks are comments there, posted by the runner or subagent itself. A message to
+  the coordinator by Remote Control never replaces the issue post; a result sent to the coordinator is also posted on
+  its issue by its sender (Nathan, 2026-11-08). Questions, commands and other coordination go by Remote Control between
+  the runner and the coordinator; whatever they decide about a task is written on its issue as well, so the issue stays
   complete. The Coordination issue (below) is the fallback for a machine Remote Control cannot reach.
 - **Finishing.** The last comment is a summary of the results: what ran and its exits, the numbers the task asked for,
   each control's verdict, the raw folder and its commit, anything that failed or disagrees with the text
