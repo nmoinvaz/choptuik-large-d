@@ -4,24 +4,27 @@
 The fields of a state (hp/src/model.rs: p, m odd, a, c even, on the half tau grid of M points), with n = D - 2,
 eps = 1/(D - 1) and the map of SECOND_ORDER.md section 1 (solver/supercrit/eqmap.py; b = a^2 in model.rs),
     f = c,   Omega = (n - 1)(a^2 - 1)/x^2,   Pi = (p - m)/(sqrt2 x),   Psi = (p + m)/(sqrt2 x^2),
-on x in [0, 1]: from the centre series (x <= nodes[0]; the divisions by x done on its coefficients), Taylor
-integration from the nearest node below (nodes[0] < x < nodes[-1]), and the horizon series in u = 1 - x
-(x >= nodes[-1]), as hp/largeD_profiles.py. beta~ = Pi(tau, 0)/sqrt(eps) is the state's exact central profile (S34);
-its tau derivatives are spectral (d/dtau = omega d/dtheta, omega = 2 pi/Delta). EEG's coefficients are those of
-second_order_eeg.py (printed, and with the correction of its check D).
+on x in [0, 1]: from the centre series in double-double (x <= nodes[0]; the divisions by x done on its coefficients),
+Taylor integration in double-double from the nearest node below (nodes[0] < x < nodes[-1]), and the horizon series in
+u = 1 - x in quad-double (x >= nodes[-1]; horizon_q). beta~ = Pi(tau, 0)/sqrt(eps) is the state's exact central
+profile (S34); its tau derivatives are spectral (d/dtau = omega d/dtheta, omega = 2 pi/Delta). EEG's coefficients are
+those of second_order_eeg.py (printed, and with the correction of its check D).
 
 Truncations: LO, NLO ((S40)-(S43)), NNLO printed ((S44)-(S51)), NNLO corrected, and the control NNLO corrected with
-Pi_3 scaled by 1.01 (in Pi and in Omega_3 = 2 beta~ Pi_3 + ...; f_3 unchanged). The maximal residual
-max |F_sol - F_model| over the (tau, x) grid is fitted as ln R = a + p ln eps + b eps (least squares over the D used).
+Pi_3 scaled by s (--mutate=pi3x<s>, in Pi and in Omega_3 = 2 beta~ Pi_3 + ...; f_3 unchanged). The maximal residual
+max |F_sol - F_model| over the (tau, x) grid is fitted as ln R = a + p ln eps + b eps (least squares, D >= --dmin).
 
     python3 nnlo_vs_solution.py extract OUT_DIR STATE.npz ...       # fields of each state -> OUT_DIR/fields_D*.npz
-    python3 nnlo_vs_solution.py compare OUT_DIR/fields_D*.npz [--json=F] [--mutate=pi3x1.01]
-    python3 nnlo_vs_solution.py planted OUT_DIR/fields_D*.npz [--json=F] [--plant_pi=3.5] [--mutate=pi3x1.01]
+    python3 nnlo_vs_solution.py compare FIELDS... [--json=F] [--spread=DIR,...] [--mutate=pi3x1.01] [--dmin=40]
+                                         [--dmax=]
+    python3 nnlo_vs_solution.py planted FIELDS... [--json=F] [--plant_pi=3.5] [--plant_scale=1] [--mutate=pi3x1.01]
+    python3 nnlo_vs_solution.py figs FIELDS... [--json=F]             # Figs. 4-5 measures, exact / Eq. (16) / D = inf
 
-extract needs the compiled kernel (hpkernel, hp/build.sh). compare and planted exit 1 when an acceptance criterion
-(notes/SECOND_ORDER.md 1.1, written before the runs) fails. planted replaces each state's fields by the corrected NNLO
-of its own beta~ plus known terms, (1 + 4 eps + 20 eps^2) eps^p g(tau, x) with p = 4 (f, Omega), 3.5 (Pi, Psi), so
-the same code must return those exponents; --plant_pi=3 plants Pi's term at eps^3 (a second answer the fit must find).
+extract needs the compiled kernel with Solver.residual_q (hpkernel, hp/build.sh). compare and planted exit 1 when an
+acceptance criterion (raw folder I126-mac/README.md, written before the runs) fails; compare with a mutation exits 0
+when the control fires. planted replaces each state's fields by the corrected NNLO of its own beta~ plus known terms,
+scale (1 + 4 eps + 20 eps^2) eps^p g(tau, x) with p = 4 (f, Omega), 3.5 (Pi, Psi), so the same code must return those
+exponents; --plant_pi=3 plants Pi's term at eps^3 (a second answer the fit must find).
 """
 import json
 import os
@@ -587,6 +590,7 @@ def cmd_figs(argv):
                 row[k] = dict(printed=float(np.sqrt(np.mean((r[k] - mp_[k]) ** 2)) / nrm),
                               corrected=float(np.sqrt(np.mean((r[k] - mc[k]) ** 2)) / nrm),
                               change=float(np.sqrt(np.mean((mp_[k] - mc[k]) ** 2)) / nrm),
+                              change_max=float(np.abs(mp_[k] - mc[k]).max() / np.abs(ref).max()),
                               nlo=float(np.sqrt(np.mean((r[k] - m2[k]) ** 2)) / nrm))
             # f normalised by rms(f) instead of rms(1 - f) (Fig. 5 does not say which)
             nf = np.sqrt(np.mean(r["f"] ** 2))
