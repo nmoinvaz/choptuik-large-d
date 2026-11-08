@@ -14,7 +14,7 @@ of $`\theta`$. It is the echo's asymmetry under time reversal, and the sign of $
 
 Eq. (16) is the repository's own "leading structure" form (README, math paper "The shape of the echo"). Mapped to our
 variables, EEG's fitted $`(q, \delta) = (0.0551, 0.0985)`$ is the first ratio $`F_3/F_1`$ of the $`D = \infty`$ tuned
-profile at A = 2.72, $`0.05509\,e^{0.0988i}`$. That profile comes from the inner equations alone, while EEG extrapolated
+profile at A = 2.72, $`0.05508\,e^{0.0988i}`$. That profile comes from the inner equations alone, while EEG extrapolated
 solutions to D = 200, so the two share no code. Applied to our tuned profile, EEG's own fitting procedure returns
 $`(0.05510, 0.09866)`$ (*numerical evidence*).
 
