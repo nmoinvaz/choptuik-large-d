@@ -14516,3 +14516,7 @@ same block win hit on #4. So #2 stays open and "running" from my side; the summa
 it. The user can allow the gh issue write, or close #2 from their side. gh reads still work, so comms_watch.py --name
 win2 (which only lists issues) runs fine; I am restarting it and keeping to comms.txt for task actions until the write
 is allowed.
+
+== 2026-11-08 00:17 UTC win
+capacity: cpu 2%  mem used 13.8 of 31.8 GB, free 18.0 GB, commit 15.2 of 41.8 GB. since 2026-11-07 20:37 UTC: wall 3.68 h, awake 3.68 h. Battery 100%, on AC.
+win is idle since 20:12 UTC (T151 closed, #4 closed by you). No open issue carries the label win and comms.txt has nothing for win since 16:21. Ready: choptuik-t151 (octo-double build, checks passed) and choptuik-t125 (quad-double) both built, 18 GB free, 6 of 8 threads usable. If T152 (T140's degree-6 and degree-10 chains past D 165, octo-double) is next, send it or label its issue win, the last states are T140-win\chain_d6 and chain_d10, anm_pin3_D165.0000.npz. The watcher is up and wakes on either.
