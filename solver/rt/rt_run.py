@@ -10,6 +10,20 @@ coefficient (D - 3)(D - 2)/2 of Omega_3 by 1 + 1e-3; the run must then exit 1 wi
 --mp BITS polishes the start and end solves with the residual in arb (rt_mp.py) and the f64 Jacobian; without it the
 f64 rounding along the weak direction moves Delta by 3e-4 at D = 10 on the 48x81 grid. The continuation itself is f64.
 mu at D = 4 is also compared with Reiterer and Trubowitz's enclosure (arXiv:1203.3766v1, Eq. (3), radius 1e-80).
+
+--solver mp (issue #105) does every solve, the continuation's included, with rt_mpsolve.newton_mp: the residual in arb
+at --mp bits (default 192), each Newton step by flexible GMRES in arb preconditioned by the f64 LU of the f64 Jacobian
+(built once per D, at the predictor) applied with double-double triangular solves. It continues past D = 10, where
+kappa(J) exceeds 2^53 on grids that resolve Delta.
+
+    python3 solver/rt/rt_run.py --start STATE.npz --grids 32x81 --solver mp --D_to 30 \
+        --D_extra 20.043653,29.984746 --check_D 15,20.043653,29.984746 --tol 1e-10 --out DIR --tag TAG [--mutate=coef]
+
+--start: an rt_run.py state (any grid, resampled to the first of --grids), solved first at --D_start (default its D).
+--D_extra adds D values to the steps of --dD (the hp rows nearest 20 and 30); the predictor is linear in D through the
+two previous solutions. --check_D lists where |Delta_RT - Delta_hp| <= --tol is checked (the start D always is, when
+hp/data/delta_all.csv has that D). States are saved with their double-double parts (zh, zl; z = zh). Without --D_to only
+the start D is solved: with --mutate=coef from an unmutated state, Delta must move by more than 1e-6 and the run exit 1.
 """
 import os
 for _v in ("VECLIB_MAXIMUM_THREADS", "OMP_NUM_THREADS", "OPENBLAS_NUM_THREADS"):
@@ -23,33 +37,56 @@ import numpy as np
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from rt_model import RT
-from gg_to_rt import GGMap
 
 MU_RT4 = 0.16830707896344996951013497904285742072100199080892966476395293134873313662587505
 REPO = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..")
 
 
-def delta_hp(D):
+def delta_hp_parts(D):
+    """(Delta_q0, Delta_q1) of the hp/data/delta_all.csv row at D, or None."""
     with open(os.path.join(REPO, "hp", "data", "delta_all.csv")) as f:
         for r in csv.DictReader(f):
             if abs(float(r["D"]) - D) < 1e-9:
-                return float(r["Delta_q0"]) + float(r["Delta_q1"] or 0.0)
+                return float(r["Delta_q0"]), float(r["Delta_q1"] or 0.0)
     return None
+
+
+def delta_hp(D):
+    p = delta_hp_parts(D)
+    return None if p is None else p[0] + p[1]
+
+
+def load_state(path):
+    d = np.load(path)
+    zh = d["zh"] if "zh" in d else d["z"]
+    zl = d["zl"] if "zl" in d else np.zeros_like(zh)
+    return zh, zl, float(d["D"]), int(d["Nt"]), int(d["N"])
 
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("--profile", required=True)
+    ap.add_argument("--profile", default=None)
+    ap.add_argument("--start", default=None, help="an rt_run.py state to start from (instead of --profile)")
+    ap.add_argument("--D_start", type=float, default=None, help="with --start: the first D solved (default its D)")
     ap.add_argument("--grids", default="32x41")
     ap.add_argument("--cont_grid", default=None, help="grid of the continuation (default: the first)")
     ap.add_argument("--D_to", type=float, default=None)
     ap.add_argument("--dD", type=float, default=0.5)
+    ap.add_argument("--D_extra", default="", help="extra D values of the continuation, comma separated")
+    ap.add_argument("--check_D", default=None, help="D values to check against hp (default: the start and D_to)")
     ap.add_argument("--tol", type=float, default=1e-8)
     ap.add_argument("--out", required=True)
     ap.add_argument("--tag", default="rt")
     ap.add_argument("--mutate", default=None)
-    ap.add_argument("--mp", type=int, default=0, help="bits of the arb residual for the final solves (0: f64 only)")
+    ap.add_argument("--solver", default="f64", choices=["f64", "mp"])
+    ap.add_argument("--mp", type=int, default=0, help="bits of the arb residual (f64 solver: final solves only, 0: none;"
+                    " mp solver: every solve, default 192)")
+    ap.add_argument("--max_products", type=int, default=80)
     a = ap.parse_args()
+    if (a.profile is None) == (a.start is None):
+        ap.error("give one of --profile and --start")
+    if a.solver == "mp" and not a.mp:
+        a.mp = 192
     os.makedirs(a.out, exist_ok=True)
     coef = 1.0 + 1e-3 if a.mutate == "coef" else 1.0
     tag = a.tag + ("_mutcoef" if a.mutate == "coef" else "")
@@ -62,13 +99,52 @@ def main():
         log.flush()
 
     grids = [tuple(int(v) for v in g.split("x")) for g in a.grids.split(",")]
-    g = GGMap(a.profile, verbose=False)
-    D0 = g.D
-    say(f"== {time.strftime('%Y-%m-%d %H:%M:%S', time.gmtime())} UTC  profile {a.profile} D {D0} grids {grids} "
-        f"mutate {a.mutate}  map: lam {g.lam:.15f} mu {g.mu:.15f} {g.check}")
-    failed = False
+    if a.solver == "mp":
+        import flint
+        from rt_mp import RTmp
+        import rt_mpsolve as mps
+
+    def save(z, D, rt):
+        f = os.path.join(a.out, f"{tag}_D{D:.4f}_{rt.Nt}x{rt.N}.npz")
+        if z.dtype == object:
+            zh, zl = mps.to_dd(z)
+            np.savez(f, z=zh, zh=zh, zl=zl, D=D, Nt=rt.Nt, N=rt.N)
+        else:
+            np.savez(f, z=z, D=D, Nt=rt.Nt, N=rt.N)
+
+    def solve_mp(rt, z, D, label):
+        """rt_mpsolve.newton_mp at D on rt's grid from z (f64 or arb). Returns (z_arb, ok, record)."""
+        t0 = time.time()
+        rm = RTmp(D, rt.Nt, rt.N, prec=a.mp, coef_mut=coef)
+        zf = mps.to_f64(z) if z.dtype == object else z
+        J = rt.jacobian(zf)
+        t_jac = time.time() - t0
+        P = mps.LUdd(J, overwrite=True)
+        del J
+        zm, ok, info = mps.newton_mp(rm, z, P, tol=1e-40, it_max=12, max_products=a.max_products, log=say)
+        d0, d1 = rm.delta_m(zm)
+        parts = delta_hp_parts(D)
+        diff = None
+        if parts is not None:
+            diff = float((d0 - flint.arb(parts[0]) - flint.arb(parts[1])).mid())
+        r = dict(D=D, grid=[rt.Nt, rt.N], L=rt.L, solver="mp", prec=a.mp, mu=float(zm[-1].mid()),
+                 Delta_xi0=float(d0.mid()), Delta_xi1=float(d1.mid()), Delta_str=d0.mid().str(30, radius=False),
+                 Delta_hp=(parts[0] + parts[1]) if parts else None, diff=diff, newton=info["res"],
+                 products=info["products"], dz=info["dz"], lam=info["lam"], pivot_ratio=P.pivot_ratio, ok=bool(ok),
+                 t_jac=round(t_jac, 1), t_lu=round(P.secs, 1), t_newton=round(sum(info["secs"]), 1),
+                 secs=round(time.time() - t0, 1), label=label, mutate=a.mutate)
+        rec.write(json.dumps(r) + "\n")
+        rec.flush()
+        say(f"  {label} D {D:.6f} grid {rt.Nt}x{rt.N} L {rt.L}: {len(info['res']) - 1} Newton steps, max|F| "
+            f"{info['res'][0]:.1e} -> {info['res'][-1]:.1e}, products {info['products']}, mu {float(zm[-1].mid()):.15f}, "
+            f"Delta {d0.mid().str(20, radius=False)} (xi=1: {float(d1.mid()):.15f}), hp {r['Delta_hp']}, diff "
+            f"{diff if diff is not None else float('nan'):.2e}, LU pivot ratio {P.pivot_ratio:.1e}, J {t_jac:.0f} s, "
+            f"LU {P.secs:.0f} s, Newton {r['t_newton']:.0f} s")
+        return zm, ok, r
 
     def solve(rt, z, D, label):
+        if a.solver == "mp":
+            return solve_mp(rt, z, D, label)
         t0 = time.time()
         z, ok, hist = rt.newton(z, tol=1e-11, it_max=15, verbose=False)
         d0, d1 = rt.delta(z)
@@ -95,43 +171,77 @@ def main():
             f"{(d0 - ref) if ref is not None else float('nan'):.2e}, {r['secs']} s")
         return z, ok, r
 
+    failed = False
+
     def check(r, where):
         nonlocal failed
         if r["Delta_hp"] is None:
+            if a.solver == "mp":
+                say(f"  CHECK {where}: no hp row at D = {r['D']}; FAIL")
+                failed = True
             return
         bad = abs(r["diff"]) > a.tol or not r["ok"]
         say(f"  CHECK {where}: |Delta_RT - Delta_hp| = {abs(r['diff']):.2e} {'>' if bad else '<='} {a.tol:g}"
             f" {'FAIL' if bad else 'ok'}")
         failed |= bad
 
-    # ------------------------------------------------ start D: map, then each grid
-    rt = RT(D0, *grids[0], coef_mut=coef)
-    z, err, s = g.to_rt_phased(rt)
-    say(f"  mapped initial guess: inversion error {err:.1e}, t shift {s:.4f}, max|F(z0)| "
-        f"{np.abs(rt.residual(z)[0]).max():.2e}")
+    # ------------------------------------------------ start D: map (or load), then each grid
+    if a.start:
+        zh, zl, Ds, Nts, Ns = load_state(a.start)
+        D0 = a.D_start if a.D_start is not None else Ds
+        src = RT(Ds, Nts, Ns)
+        say(f"== {time.strftime('%Y-%m-%d %H:%M:%S', time.gmtime())} UTC  start {a.start} (D {Ds}, {Nts}x{Ns}) "
+            f"D_start {D0} grids {grids} solver {a.solver} prec {a.mp} mutate {a.mutate}")
+        rt = RT(D0, *grids[0], coef_mut=coef)
+        z = zh if (Nts, Ns) == grids[0] else src.resample_to(zh, rt)
+        zlo = zl if (Nts, Ns) == grids[0] else src.resample_to(zl, rt)
+        if a.solver == "mp":
+            flint.ctx.prec = a.mp
+            z = mps.from_dd(z, zlo)
+    else:
+        from gg_to_rt import GGMap
+        g = GGMap(a.profile, verbose=False)
+        D0 = g.D
+        say(f"== {time.strftime('%Y-%m-%d %H:%M:%S', time.gmtime())} UTC  profile {a.profile} D {D0} grids {grids} "
+            f"mutate {a.mutate}  map: lam {g.lam:.15f} mu {g.mu:.15f} {g.check}")
+        rt = RT(D0, *grids[0], coef_mut=coef)
+        z, err, s = g.to_rt_phased(rt)
+        say(f"  mapped initial guess: inversion error {err:.1e}, t shift {s:.4f}, max|F(z0)| "
+            f"{np.abs(rt.residual(z)[0]).max():.2e}")
     states = {}
     for i, gr in enumerate(grids):
         if i > 0:
             new = RT(D0, *gr, coef_mut=coef)
-            z = rt.resample_to(z, new)
+            zf = mps.to_f64(z) if z.dtype == object else z
+            z = rt.resample_to(zf, new)
             rt = new
         z, ok, r = solve(rt, z, D0, "start")
         states[gr] = z
+        if a.solver == "mp":
+            check(r, f"D = {D0} grid {gr[0]}x{gr[1]}")
+    zlast = mps.to_f64(z) if z.dtype == object else z
     if abs(D0 - 4) < 1e-12:
-        say(f"  mu - mu_RT(D=4) = {z[-1] - MU_RT4:.2e}")
-    check(r, f"D = {D0}")
-    np.savez(os.path.join(a.out, f"{tag}_D{D0:.4f}_{rt.Nt}x{rt.N}.npz"), z=z, D=D0, Nt=rt.Nt, N=rt.N)
+        say(f"  mu - mu_RT(D=4) = {zlast[-1] - MU_RT4:.2e}")
+    if a.solver == "f64":
+        check(r, f"D = {D0}")
+    save(z, D0, rt)
     if a.D_to is None:
+        say(f"== exit {1 if failed else 0}")
         sys.exit(1 if failed else 0)
 
     # ------------------------------------------------ continuation in D
     cg = tuple(int(v) for v in a.cont_grid.split("x")) if a.cont_grid else grids[0]
     rtc = RT(D0, *cg, coef_mut=coef)
-    zc = states[cg] if cg in states else rt.resample_to(z, rtc)
+    if cg in states:
+        zc = states[cg]
+    else:
+        zc = rt.resample_to(zlast, rtc)
     hist = [(D0, zc)]
+    Ds_ = list(np.arange(D0 + a.dD, a.D_to + 1e-9, a.dD)) + [a.D_to] + [float(v) for v in a.D_extra.split(",") if v]
+    Ds_ = sorted(set(round(float(v), 9) for v in Ds_ if D0 + 1e-9 < v <= a.D_to + 1e-9))
+    checks = [float(v) for v in a.check_D.split(",")] if a.check_D else None
     D = D0
-    while D < a.D_to - 1e-12:
-        Dn = min(D + a.dD, a.D_to)
+    for Dn in Ds_:
         if len(hist) >= 2:
             (Da, za), (Db, zb) = hist[-2], hist[-1]
             zg = zb + (zb - za) * (Dn - Db) / (Db - Da)
@@ -143,19 +253,32 @@ def main():
             say("  continuation step failed; stopping")
             failed = True
             break
-        hist.append((Dn, zc))
+        if checks is not None and any(abs(Dn - c) < 1e-9 for c in checks):
+            check(r, f"D = {Dn} grid {cg[0]}x{cg[1]}")
+        hist = hist[-1:] + [(Dn, zc)]
         D = Dn
-        np.savez(os.path.join(a.out, f"{tag}_D{D:.4f}_{rtc.Nt}x{rtc.N}.npz"), z=zc, D=D, Nt=rtc.Nt, N=rtc.N)
+        save(zc, D, rtc)
     # ------------------------------------------------ the end point on every grid
-    z, rt = zc, rtc
-    for gr in grids:
-        if gr == cg:
-            zz, ok, r = solve(rtc, zc, D, "end")
-        else:
+    if a.solver == "mp":
+        for gr in grids:
+            if gr == cg:
+                continue
             new = RT(D, *gr, coef_mut=coef)
-            zz, ok, r = solve(new, rtc.resample_to(zc, new), D, "end")
-            np.savez(os.path.join(a.out, f"{tag}_D{D:.4f}_{gr[0]}x{gr[1]}.npz"), z=zz, D=D, Nt=gr[0], N=gr[1])
-    check(r, f"D = {D}")
+            zz, ok, r = solve(new, rtc.resample_to(mps.to_f64(zc), new), D, "end")
+            save(zz, D, new)
+            if checks is None or any(abs(D - c) < 1e-9 for c in checks):
+                check(r, f"D = {D} grid {gr[0]}x{gr[1]}")
+        if checks is None and not failed:
+            check(r, f"D = {D}")
+    else:
+        for gr in grids:
+            if gr == cg:
+                zz, ok, r = solve(rtc, zc, D, "end")
+            else:
+                new = RT(D, *gr, coef_mut=coef)
+                zz, ok, r = solve(new, rtc.resample_to(zc, new), D, "end")
+                save(zz, D, new)
+        check(r, f"D = {D}")
     say(f"== exit {1 if failed else 0}")
     sys.exit(1 if failed else 0)
 
