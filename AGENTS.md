@@ -201,8 +201,9 @@ for a real login meant to be notified.
 - **gh.** A runner needs the gh CLI logged in with access to this repository (`gh auth status`). The repository's
   `.claude/settings.json` allows the `gh issue` list, view, comment, edit and close commands (Nathan, 2026-11-08).
   Without it the watcher says so and watches only the comms.txt archive, so a runner cannot work without gh.
-- **Subagents** work only on an existing issue: every task goes to the project, subagent work included. A subagent
-  posts its progress on the issue, and the coordinator posts the closing summary after review (Nathan, 2026-11-08).
+- **Subagents** work only on an existing issue: every task goes to the project, subagent work included. A subagent posts
+  its progress and its closing summary on the issue itself and leaves the issue open; the coordinator reviews the work,
+  merges it and closes the issue (Nathan, 2026-11-08).
 - **Recommended tasks go to the coordinator.** When a task needs further investigation or calculation (a follow-up
   run, a check, a discrepancy to explain), the agent processing it, runner or subagent, does not open an issue itself.
   It lists every task it recommends under "Recommended tasks" in its closing summary (or in a comment, if the need
