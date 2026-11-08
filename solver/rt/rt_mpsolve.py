@@ -345,7 +345,8 @@ def newton_mp(rm, z, prec, tol=1e-40, it_max=12, inner_tol=1e-30, max_products=8
     with residual given). Stops when max|F| < tol, or when max|F| stops falling (at the precision's floor: max|F| > 0.5
     of the previous after step 3), or after it_max steps. A step that does not lower max|F| is halved up to six times.
     Returns (z, ok, info) with z an arb object array; info["dz"] is max|dz| of each step and info["refresh"] the steps
-    after which prec was rebuilt."""
+    after which prec was rebuilt. info["t_prod"] and info["t_prec"] are each step's seconds in products and in the
+    preconditioner."""
     say = log or (lambda s: None)
     residual = residual or rm.residual_m
     apply = apply or (lambda zz, u: jv_central(residual, zz, u))
@@ -353,7 +354,8 @@ def newton_mp(rm, z, prec, tol=1e-40, it_max=12, inner_tol=1e-30, max_products=8
         z = obj(z)
     F = residual(z)
     r = amax(F)
-    info = dict(res=[r], products=[], inner_res=[], lam=[], secs=[], dz=[], refresh=[], t_refresh=0.0)
+    info = dict(res=[r], products=[], inner_res=[], lam=[], secs=[], dz=[], refresh=[], t_refresh=0.0, t_prod=[],
+                t_prec=[])
     ok = r < tol
     base = None                                            # products of the first solve with the current prec
     for it in range(it_max):
@@ -385,6 +387,8 @@ def newton_mp(rm, z, prec, tol=1e-40, it_max=12, inner_tol=1e-30, max_products=8
         info["inner_res"].append(gi["res"][-1] if gi["res"] else None)
         info["lam"].append(float(lam.mid()))
         info["secs"].append(round(time.time() - t0, 2))
+        info["t_prod"].append(round(gi["t_prod"], 2))
+        info["t_prec"].append(round(gi["t_prec"], 2))
         info["dz"].append(amax(dz) * float(lam.mid()))
         ir = info["inner_res"][-1]
         say(f"    newton_mp it {it}: max|F| {r:.3e} -> {rn:.3e}, {gi['products']} products to "

@@ -24,6 +24,14 @@ kappa(J) exceeds 2^53 on grids that resolve Delta.
 two previous solutions. --check_D lists where |Delta_RT - Delta_hp| <= --tol is checked (the start D always is, when
 hp/data/delta_all.csv has that D). States are saved with their double-double parts (zh, zl; z = zh). Without --D_to only
 the start D is solved: with --mutate=coef from an unmutated state, Delta must move by more than 1e-6 and the run exit 1.
+
+Issue #145 adds three options. --start_prev A.npz,B.npz names older states (increasing D, before --start's), resampled
+to the continuation grid, that seed the predictor's history, so a continuation restarts from its last saved states.
+--pred_order k predicts by Lagrange extrapolation in D through the last k + 1 solutions (1, the default, is EEG's
+linear predictor; 2 at --dD 1 starts at the residual of the linear one at --dD 0.5, 1.8e-4 at D = 30 on 32x101).
+--extras_off_path solves the --D_extra points off the path: each is predicted from the steps of --dD and is not used
+to predict later steps. Each record also carries the seconds in products and in the preconditioner per Newton step and
+the process's peak resident memory (rss_peak_gb).
 """
 import os
 for _v in ("VECLIB_MAXIMUM_THREADS", "OMP_NUM_THREADS", "OPENBLAS_NUM_THREADS"):
@@ -56,6 +64,30 @@ def delta_hp(D):
     return None if p is None else p[0] + p[1]
 
 
+def rss_peak_gb():
+    import resource
+    m = resource.getrusage(resource.RUSAGE_SELF).ru_maxrss
+    return round(m / (2 ** 30 if sys.platform == "darwin" else 2 ** 20), 2)     # bytes on macOS, KiB on Linux
+
+
+def predict(hist, Dn, order):
+    """The guess at Dn: Lagrange extrapolation in D through the last order + 1 entries (D, z) of hist."""
+    pts = hist[-(order + 1):]
+    if len(pts) == 1:
+        return pts[0][1]
+    if len(pts) == 2:                                   # EEG's linear predictor, as in issue #105's runs
+        (Da, za), (Db, zb) = pts
+        return zb + (zb - za) * (Dn - Db) / (Db - Da)
+    zg = None
+    for i, (Di, zi) in enumerate(pts):
+        w = 1.0
+        for j, (Dj, _) in enumerate(pts):
+            if j != i:
+                w *= (Dn - Dj) / (Di - Dj)
+        zg = zi * w if zg is None else zg + zi * w
+    return zg
+
+
 def load_state(path):
     d = np.load(path)
     zh = d["zh"] if "zh" in d else d["z"]
@@ -86,11 +118,20 @@ def main():
                     help="mp solver: rebuild the f64 Jacobian and LU after a Newton step with max|dz| above this")
     ap.add_argument("--refresh_ratio", type=float, default=1.5,
                     help="mp solver: rebuild them after an inner solve with this many times the products of the first")
+    ap.add_argument("--start_prev", default="", help="with --start: older states, comma separated in increasing D, "
+                    "that seed the predictor's history")
+    ap.add_argument("--pred_order", type=int, default=1,
+                    help="predictor: Lagrange extrapolation in D through the last pred_order + 1 solutions")
+    ap.add_argument("--extras_off_path", action="store_true",
+                    help="solve the --D_extra points off the path (not used to predict later steps)")
     a = ap.parse_args()
     if (a.profile is None) == (a.start is None):
         ap.error("give one of --profile and --start")
     if a.solver == "mp" and not a.mp:
         a.mp = 192
+    if a.start_prev and not a.start:
+        ap.error("--start_prev needs --start")
+    checks = [float(v) for v in a.check_D.split(",")] if a.check_D else None
     os.makedirs(a.out, exist_ok=True)
     coef = 1.0 + 1e-3 if a.mutate == "coef" else 1.0
     tag = a.tag + ("_mutcoef" if a.mutate == "coef" else "")
@@ -142,7 +183,8 @@ def main():
                  products=info["products"], dz=info["dz"], lam=info["lam"], refresh=info["refresh"],
                  pivot_ratio=pivot_ratio, ok=bool(ok), t_jac=round(t_jac, 1), t_lu=round(t_lu, 1),
                  t_refresh=round(info["t_refresh"], 1), t_newton=round(sum(info["secs"]), 1),
-                 secs=round(time.time() - t0, 1), label=label, mutate=a.mutate)
+                 secs=round(time.time() - t0, 1), label=label, mutate=a.mutate, step_secs=info["secs"],
+                 t_prod=info["t_prod"], t_prec=info["t_prec"], pred_order=a.pred_order, rss_peak_gb=rss_peak_gb())
         rec.write(json.dumps(r) + "\n")
         rec.flush()
         say(f"  {label} D {D:.6f} grid {rt.Nt}x{rt.N} L {rt.L}: {len(info['res']) - 1} Newton steps, max|F| "
@@ -227,7 +269,8 @@ def main():
             rt = new
         z, ok, r = solve(rt, z, D0, "start")
         states[gr] = z
-        if a.solver == "mp":
+        # the start D is checked when hp has its row, or when --check_D lists it
+        if a.solver == "mp" and (r["Delta_hp"] is not None or (checks and any(abs(D0 - c) < 1e-9 for c in checks))):
             check(r, f"D = {D0} grid {gr[0]}x{gr[1]}")
     zlast = mps.to_f64(z) if z.dtype == object else z
     if abs(D0 - 4) < 1e-12:
@@ -246,28 +289,36 @@ def main():
         zc = states[cg]
     else:
         zc = rt.resample_to(zlast, rtc)
-    hist = [(D0, zc)]
-    Ds_ = list(np.arange(D0 + a.dD, a.D_to + 1e-9, a.dD)) + [a.D_to] + [float(v) for v in a.D_extra.split(",") if v]
+    hist = []
+    for path in [p for p in a.start_prev.split(",") if p]:      # older states seed the predictor's history
+        ph, pl, Dp_, Ntp, Np = load_state(path)
+        src = RT(Dp_, Ntp, Np)
+        if (Ntp, Np) != cg:
+            ph, pl = src.resample_to(ph, rtc), src.resample_to(pl, rtc)
+        hist.append((Dp_, mps.from_dd(ph, pl) if a.solver == "mp" else ph))
+        say(f"  predictor history: {path} (D {Dp_}, {Ntp}x{Np})")
+    hist.append((D0, zc))
+    extras = [round(float(v), 9) for v in a.D_extra.split(",") if v]
+    Ds_ = list(np.arange(D0 + a.dD, a.D_to + 1e-9, a.dD)) + [a.D_to] + extras
     Ds_ = sorted(set(round(float(v), 9) for v in Ds_ if D0 + 1e-9 < v <= a.D_to + 1e-9))
-    checks = [float(v) for v in a.check_D.split(",")] if a.check_D else None
     D = D0
     for Dn in Ds_:
-        if len(hist) >= 2:
-            (Da, za), (Db, zb) = hist[-2], hist[-1]
-            zg = zb + (zb - za) * (Dn - Db) / (Db - Da)
-        else:
-            zg = hist[-1][1]
-        rtc = RT(Dn, *cg, coef_mut=coef)
-        zc, ok, r = solve(rtc, zg, Dn, "cont")
+        off = a.extras_off_path and Dn in extras
+        zg = predict(hist, Dn, a.pred_order)
+        rtn = RT(Dn, *cg, coef_mut=coef)
+        zn, ok, r = solve(rtn, zg, Dn, "extra" if off else "cont")
         if not ok:
             say("  continuation step failed; stopping")
             failed = True
             break
         if checks is not None and any(abs(Dn - c) < 1e-9 for c in checks):
             check(r, f"D = {Dn} grid {cg[0]}x{cg[1]}")
-        hist = hist[-1:] + [(Dn, zc)]
+        save(zn, Dn, rtn)
+        if off:
+            continue
+        zc, rtc = zn, rtn
+        hist = hist[-a.pred_order:] + [(Dn, zc)]
         D = Dn
-        save(zc, D, rtc)
     # ------------------------------------------------ the end point on every grid
     if a.solver == "mp":
         for gr in grids:
