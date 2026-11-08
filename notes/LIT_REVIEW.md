@@ -253,6 +253,56 @@ The year range is unrestricted unless a year is named.
 - **Bibliographic searches** (about 45 queries, used for REF_CHECK.md, e.g. "Ecker Grumiller Jechtl critical spacetime
   crystal continuous dimension SciPost" and "Gundlach Hilditch Martín-García \"Critical phenomena in gravitational
   collapse\" Living Reviews in Relativity 2025"). Several of them also served as recall checks.
+- **2026-11-08, issue #172 (the forms of arXiv:2611.07007's Eq. (16)).** `WebSearch` in standard mode unless marked,
+  and the INSPIRE REST API through `WebFetch`. The queries are verbatim; what each surfaced is in the raw-data
+  repository, `I172-mac/search_log.md` (commit 4e33763).
+  - Critical collapse: "Choptuik critical solution Fourier coefficients odd harmonics decay echo profile analytic
+    approximation"; "Hirschmann Eardley critical collapse complex scalar field discretely self-similar echoing time
+    dependence Fourier analytic"; "critical collapse echoing \"Fourier coefficients\" \"decay exponentially\" complex
+    tau singularity strip Choptuik spacetime analyticity harmonics geometric ratio"; "\"Poisson kernel\" critical
+    collapse OR \"discretely self-similar\" OR echoing Fourier harmonics model".
+  - Large D: "\"2611.07007\" critical collapse discretely self-similar large D"; "Emparan Suzuki Tanabe large D
+    effective theory non-uniform black string profile analytic solution Fourier"; "Ecker Grumiller large D echo profile
+    \"damping constant\" geometric Fourier coefficients model q delta 2026".
+  - Echoes in other fields: "gravitational wave echoes exotic compact objects transfer function geometric series 1/(1 -
+    R e^{2i omega}) template"; "Mark Zimmerman Du Chen \"A recipe for echoes from exotic compact objects\" transfer
+    function geometric series Physical Review D 2017"; "Fabry-Perot field transmission geometric series multiple
+    reflections 1/(1 - r1 r2 e^{-2i phi}) Airy distribution Ismail Optics Express 2016"; "Ismail Kores Geskus Pollnau
+    \"Fabry-Pérot resonator: spectral line shapes, generic and related Airy distributions\" Optics Express 24 16366";
+    "Fabry-Perot transmitted field amplitude \"t_1 t_2\" e^{-i\phi} \"1 - r_1 r_2 e^{-2i\phi}\" sum over round trips
+    derivation arXiv"; "ccrma Julius Smith feedback comb filter amplitude response \"1 + a_M\" cos transfer function
+    H(z) = b0/(1 + aM z^-M)".
+  - Breathers, period doubling and log-periodicity: "sine-Gordon breather Fourier series in time odd harmonics geometric
+    arctan sin"; "sine-Gordon breather Fourier expansion in time harmonics coefficients sech exact \"breather\"
+    \"Fourier coefficients\" decay exponentially odd harmonics"; "Birnir McKean Weinstein \"rigidity of sine-Gordon
+    breathers\" Fourier series time harmonics"; "Segur Kruskal nonexistence of small-amplitude breather solutions phi^4
+    harmonics expansion exponentially small 1987 Physical Review Letters"; "Akhmediev breather analytic Fourier spectrum
+    geometric decay harmonics closed form Dudley Genty Dias Kibler Akhmediev 2009 Optics Express"; "Akhmediev breather
+    spectrum \"geometric\" sidebands amplitude ratio analytic \"triangular\" spectrum log scale modulation instability";
+    "Feigenbaum onset spectrum of turbulence period doubling subharmonics amplitude ratio geometric 1979 Physics Letters
+    A"; "Sornette discrete scale invariance log-periodic oscillations harmonics Fourier series amplitudes decay
+    geometric \"log-periodic\" higher harmonics"; "\"discretely self-similar\" OR \"log-periodic\" profile \"geometric
+    series\" harmonics closed form rational function Fourier \"single pole\" model".
+  - Identities: "Gradshteyn Ryzhik 1.447 sum p^k sin kx = p sin x/(1 - 2p cos x + p^2) Fourier series"; "conjugate
+    Poisson kernel Fourier series sum r^|n| sign(n) e^{in theta} = 2 r sin theta/(1 - 2 r cos theta + r^2) textbook";
+    "encyclopediaofmath conjugate Poisson integral kernel \"conjugate Poisson kernel\" circle r sin / (1 - 2r cos +
+    r^2)"; "Fourier series \"arctan\" \"2r sin\" \"1-r^2\" sum r^(2n+1) sin((2n+1)x)/(2n+1) identity"; "hippopede Booth
+    lemniscate inverse of ellipse with respect to its centre MacTutor famous curves"; "Geer \"rational trigonometric
+    approximations using Fourier series partial sums\" Journal of Scientific Computing 1995 Fourier-Padé"; "periodic
+    function times trigonometric polynomial equals trigonometric polynomial Fourier coefficients linear recurrence
+    constant coefficients rational generating function theorem"; "Koepf \"trigonometric holonomic\" Fourier coefficients
+    recurrence linear differential equation arXiv"; "Sulem Sulem Frisch tracing complex singularities with spectral
+    methods analyticity strip Fourier coefficients exponential decay rate 1983".
+  - The forms themselves: "\"inverse of an ellipse\" Fourier series harmonics \"1/(e^{-i\theta}\" OR \"reciprocal of
+    an ellipse\" complex parametrization geometric series odd harmonics"; "echo profile \"odd harmonics\" \"geometric\"
+    amplitudes constant ratio \"phase\" self-similar periodic profile Fourier fit closed form \"1 + q^2 + 2q cos\""
+    (extended); "Fourier series \"cos x/(1 + a cos 2x)\" OR \"cos θ/(1 + ε cos 2θ)\" odd harmonics geometric
+    coefficients closed form"; "periodic waveform \"harmonics in geometric progression\" odd harmonics closed form sum
+    \"1 - 2a cos 2\" signal \"only odd harmonics\" geometric".
+  - INSPIRE: `q=arxiv 2611.07007` (recid 3223940, 0 citations); `q=arxiv 2601.14358` and `q=refersto:recid:3109820`
+    (5 citing records); `q=arxiv gr-qc/0304070` and `q=refersto:recid:617314` (49); `q=arxiv 1807.10283` and
+    `q=refersto:recid:1684230` (13). The API ignores the form `refersto:arxiv:<id>` and then returns an unfiltered list,
+    so the recid form is the one to repeat.
 
 ## 6. Read ledger
 
@@ -286,6 +336,24 @@ The year range is unrestricted unless a year is named.
   - the reference lists of EEG and EEGJ, so EEG's [16, 17, 25, 29] and EEGJ's [12] are unidentified;
   - Olde Daalhuis's large-parameter hypergeometric papers;
   - Lombardi; Xie–Tanveer; Tanveer–Xie; Baldomá et al. (both); Costin's works; Dingle.
+- **2026-11-08, issue #172** (through `WebFetch`; quotes and URLs in the raw-data repository,
+  `I172-mac/read_log.md`, commit 4e33763):
+  - Full extraction: Price–Pullin (ar5iv); Lai–Wen; Emparan–Suzuki–Tanabe 1506.06772; Rozali–Way Sec. 2.3; EEG
+    2601.14358 (HTML v1); EEG 2611.07007v1 (HTML, Eq. (16) and (S57)–(S58)); Fratini et al. 1410.5972 (with the
+    supplement); Lu–Cuevas-Maraver–Kevrekidis 1406.3082; Ryazanov 1711.02717; DLMF §1.15, §18.12 and §4.24; the two
+    CCRMA feedback-comb pages of Smith's *Physical Audio Signal Processing*; Coffman's lemniscates page; MathWorld,
+    *Hippopede*; Wikipedia, *Fabry–Pérot interferometer* (a secondary source).
+  - Partial: Martín-García–Gundlach 2003 (characters 0–100000 of 143647); Gundlach 1997 (0–100000 of 130156);
+    Reiterer–Trubowitz (0–100000 of 118188); EEGJ v2 (0–100000 of 214015; App. C.3 and Fig. 22 unread); the 2025
+    review (0–200000 of 317589); Wu 2610.20705 (0–200000 of 209108); Testa–Pani (0–100000 of 121374); Mark et al.
+    (0–100000 of 137091); Fodor 1911.03340 (0–100000 and 190000–290000 of 291274); Benoit–Brisebarre–Salvy
+    2604.26944 (to Sec. 7.2).
+  - Abstract or record only: Hirschmann–Eardley gr-qc/9412066 (ar5iv conversion failed); Wu 2606.17135; Dudley et al.
+    0910.1930; Geer's ICASE report 93-68 (NTRS); arXiv journal-ref pages of Testa–Pani, Mark et al., Fratini et al.,
+    Emparan–Suzuki–Tanabe and Lu et al.
+  - Failed (FULL-TEXT-UNREAD): PDFs that came back as binary (Reiterer–Trubowitz, Dudley et al., a course copy of
+    Gradshteyn–Ryzhik's series tables); Optica pages (loading placeholder); HAL and PMC (bot checks); MacTutor
+    *Hippopede* (404); the Springer page of Koepf–Nana Chiadjeu (login); arXiv:2312.01320 (no HTML).
 
 ## 7. Citation chains
 
@@ -396,3 +464,140 @@ of `solver/inner_amp/amp_flint_par.py` and `hp/src/linalg.rs`; it is in the git 
   (2007) for D = 3.02: Δ = 0.1379 ± 0.0042, "suggesting a faster falloff" (the thesis itself not read for it).
   Recorded in `hp/data/published_lowD_limits.json` for `hp/plot_lowD_limits.py`. Their numerical values are already
   `hp/data/published_delta.csv` (their repository's DeltaList.dat, 3.046 ≤ D ≤ 5.5).
+
+## Addendum (2026-11-08, issue #172): the rewritten forms of arXiv:2611.07007's Eq. (16)
+
+**Question.** Do the rewritten forms of Eq. (16) of Ecker, Ecker and Grumiller (arXiv:2611.07007v1, here EEG26b)
+appear elsewhere, as the same function or as the same idea applied to an echo, a self-similar profile or another
+periodic profile? The forms are defined in notes/EEG_PROFILE.md §2, whose labels are given in brackets:
+- **A**, the reciprocal of an ellipse, 1/(e^{−iθ} + w e^{iθ}) with w = q e^{iδ} (§2 (H));
+- **B**, the real form (cos θ + q cos(θ+δ))/(1 + q² + 2q cos(2θ+δ)) (§2 (R));
+- **C**, the odd-harmonic Fourier series with the single complex ratio −w (§2 (F));
+- **D**, the linear equation (d²/dθ² + 1)[(1 + q² + 2q cos(2θ+δ)) β̃] = 0 (§2 (ODE));
+- **E**, the arctan closed form of the antiderivative (§2 (INT)).
+
+**How.**
+- **Searches.** 35 web queries and 7 INSPIRE queries, all on 2026-11-08, listed verbatim in §5.
+- **Reads.** 32 sources opened, some in part and some as abstracts, and about 15 fetches that failed, listed in §6.
+  Quotes and URLs are in the raw-data repository, folder `I172-mac/`, commit 4e33763.
+- **Inferences.** Statements of content come from pages opened in this session. Inferences are marked *inferred*.
+- **Identity check.** Four identities that tie the forms to the sources are *inferred* and *checked numerically* by
+  `I172-mac/identity_check.py` (30 digits, 41 points, exit 0). Its sign mutation makes all four fail (exit 1).
+- **Scope.** No numbers from the D = ∞ tuned profile are used.
+- **Verdict classes**, fixed before the search: found, with the source and its equation; found as a general identity
+  only; not found in the sources searched.
+
+### Closest works
+
+Grades as in §1, against the statement "this form appears elsewhere".
+
+| Work | Bears on | Grade | What it contains | What it does not contain |
+|---|---|---|---|---|
+| **EEG26b**, arXiv:2611.07007v1 (INSPIRE recid 3223940), HTML v1 | B, C | **P5** (the source) | Eq. (16), "β̃(θ) = A∗ Re[ e^{iθ} / (1 + q e^{i(2θ+δ)}) ]"; (S58), the series "A∗ Σ_{n≥0} (−q)^n cos[(2n+1)θ + nδ]" and the real form; after Eq. (16), amplitudes "exponentially suppressed as e^{-αn}, where α = −ln q ≈ 2.90". | The reciprocal form A, an equation like D, an antiderivative like E (arctan appears only in the phase definition (S57)), a citation for the geometric model, the Poisson kernel. This agrees with #165. |
+| **J. M. Martín-García, C. Gundlach**, PRD 68, 024011 (2003), gr-qc/0304070 (verified in REF_CHECK.md §1), ar5iv, characters 0–100000 of 143647 | B, C | **P3**: the same idea applied to the echo, at D = 4 | Sec. IV.1.1: metric fields have only even k, matter fields only odd k. Sec. IV.2: the Fourier coefficients in τ decay exponentially, "the decay exponent a ranges from 0.28 for f_c at the center to 2.04 for U_p at the past lightcone"; the phases of the high modes "tend to a linear dependence on k at a given point x". So the high harmonics have a nearly constant complex ratio (*inferred*). Then "the high frequency behaviour of our fields Z is similar to that of the function" Σ_k e^{−a\|k\|} e^{4πikτ/Δ} = sinh a/(cosh a − cos(4πτ/Δ)), Eq. (59), the Poisson kernel with r = e^{−a}. | A fit. The model has a real ratio, sums all k, and has no first-harmonic numerator and no phase parameter. The forms A, D and E are absent. "We have not found an explanation for this behavior, but it seems to be of dynamical origin." |
+| **M. Rozali, B. Way**, JHEP 11 (2018) 106, arXiv:1807.10283 (verified), ar5iv Sec. 2.3 | E at δ = 0; B at δ = 0 | **P3** for E, P2 for B | Eq. (10), φ₀ = tanh⁻¹(ε e^{−ω²r²/2} sin(ωτ − τ₀)), and δ₀ = ε²e^{−ω²r²}cos²(ωτ−τ₀)/(1 − ε²e^{−ω²r²}sin²(ωτ−τ₀)). At fixed r, φ₀ is form E at δ = 0 up to a constant (already in EEG_PROFILE.md §2 (INT)). *Inferred* and checked: ∂_τφ₀ is ω·2√q times form B at δ = 0 (with A* = 1), where ε e^{−ω²r²/2} = 2√q/(1+q). | ∂_τφ₀ written out, a harmonic expansion ("Since this oscillation is a single frequency, this solution describes the large D version of an oscillaton"), δ ≠ 0, self-similarity. |
+| **Fabry–Pérot transmitted field**: Wikipedia, *Fabry–Pérot interferometer* (secondary; it cites O. Svelto, *Principles of Lasers*, 5th ed. (2010), ch. 4.5.1, *(unverified)*); F. Fratini et al., PRL 113, 243601 (2014), arXiv:1410.5972, supplement Eq. (S.2) | A, C | **P3**: the same function, in another variable | The round-trip sum E_trans,1 = −E_inc t1 t2 e^(−iφ), E_trans,m+1 = E_trans,m r1 r2 e^(−i2φ), so E_trans/E_inc = −t1 t2 e^(−iφ)/(1 − r1 r2 e^(−i2φ)) (Wikipedia). Fratini et al. write the same sum with a complex round-trip ratio √(R1R2) e^{2ikL}e^{i(θ1+θ2)}. *Inferred* and checked: with θ = −φ and w = −r1r2, this is Eq. (16)'s complex function up to a constant, and the round-trip sum is series C in φ. | A time profile. φ is the single-pass optical phase, a frequency variable. The real part is not the observable, and the ellipse reading, D and E are absent. |
+| **Sine-Gordon breather**, in N. Lu, J. Cuevas-Maraver, P. G. Kevrekidis, J. Phys. A 47, 455101 (2014), arXiv:1406.3082, Eq. (2) | E at δ = π; B at δ = π | P2 | b_o(x,t) = 4 arctan[σ sin(at)/(a cosh σx)], σ = √(1−a²). *Inferred* and checked: at x = 0 this is form E at δ = π up to a constant, with σ/a = 2√q/(1−q), and its time derivative is 4a·2√q times form B at δ = π (with A* = 1). | A harmonic series in closed form (their Appendix Eq. (17) is a numerical Fourier expansion with k_m = 15), δ ∉ {0, π}, an echo. |
+| **Gravitational-wave echo templates**: Z. Mark, A. Zimmerman, S. M. Du, Y. Chen, PRD 96, 084002 (2017), arXiv:1706.06155, Eqs. (20), (29); A. Testa, P. Pani, PRD 98, 044018 (2018), arXiv:1806.04253, Eqs. (10), (37), (38) | A, C | P2: the summation idea applied to echoes, a different function | The transfer function 𝒦 = 𝒯_BH ℛ e^{−2iωx₀}/(1 − ℛ_BH ℛ e^{−2iωx₀}) as a geometric sum over echoes, the n-th carrying (ℛ_BH ℛ)^{n−1}; its poles are the object's quasinormal modes. | Periodicity in ω (the reflectivities depend on ω), the odd-only structure, a real part, an arctan. |
+| **Feedback comb filter**: J. O. Smith III, *Physical Audio Signal Processing* (W3K, 2010), the CCRMA pages "Feedback Comb Filters" and "Feedback Comb Filter Amplitude Response" | C | P2 | "a computational physical model of a series of echoes, exponentially decaying and uniformly spaced in time"; H(z) = 1/(1 − g z^{−M}); the variant y(n) = b_M x(n−M) − a_M y(n−M). | Eq. (16)'s complex function. *Inferred*: it is z^{−1}/(1 + w z^{−2}) at z = e^{−iθ}, a loop with a one-step forward delay and a two-step feedback, which the pages do not write. |
+| **Odd harmonics of the Choptuik solution**: C. Gundlach, PRD 55, 695 (1997), Sec. II.3; Martín-García–Gundlach 2003, Sec. IV.1.1; M. Reiterer, E. Trubowitz, CMP 368, 143 (2019), Secs. 1.1, 3; EEGJ, SciPost Phys. 20, 176 (2026), Sec. 4.1; C. Ecker, F. Ecker, D. Grumiller, PRL 136, 191401 (2026), HTML v1 (all verified in REF_CHECK.md) | C (its odd-harmonic part) | P2 | Gundlach: "X± only of odd frequency terms", a "reflection-type symmetry". Reiterer–Trubowitz: the antiperiodic class has "v_mn = 0 for all even m", with coefficients "𝒪((κ1)^−\|m\|(κ2)^−\|n\|)" and κ1 = 65/64, a rigorous bound. Ecker et al. (PRL): "the frequencies of higher modes are odd integer multiples of the fundamental frequency", from finite-D numerics. | A constant complex ratio from the first harmonic on, or a closed form. |
+| **The identities**: DLMF 1.15.12, 18.12.7–18.12.10 and 4.24.3; V. Ryazanov, arXiv:1711.02717, Eqs. (3.1), (4.1); A. Coffman, *Lemniscates* (web page); J. F. Geer, ICASE Report 93-68 (1993) | A, B, C, D, E as general identities | P2 | 1.15.12: P(r,θ) = (1 − r²)/(1 − 2r cos θ + r²) = Σ r^{\|n\|} e^{inθ}. 18.12.7–18.12.10: the Chebyshev generating functions, the geometric Fourier series at x = cos θ. 4.24.3: arctan z = z − z³/3 + z⁵/5 − ⋯. Ryazanov: P_r and the conjugate kernel Q_r(Θ) = 2r sin Θ/(1 − 2r cos Θ + r²). Coffman: the elliptic lemniscate of Booth "is the image of an ellipse under inversion with respect to its center". Geer: an approximation that "is the quotient of a trigonometric polynomial of degree N" and one of degree M, matched to Fourier coefficients. *Inferred* and checked: B = ½[(1 + P_q(φ)) cos θ − Q_q(φ) sin θ] with φ = 2θ + δ + π. | Any application to an echo or a self-similar profile. |
+
+Negative reads, which contain none of the forms:
+- Price–Pullin, gr-qc/9601009: one frequency, "If, in fact, we take F~ to be a sinusoidal oscillation of amplitude
+  unity".
+- Lai–Wen, arXiv:2610.04960, Eq. (4), and EEG's PRL, Eq. (21): the two-mode model cos 2πτ + sin(6πτ)/15.9476.
+- Wu, arXiv:2610.20705: "Any smooth periodic β(T) gives a leading-order DSS solution".
+- Emparan–Suzuki–Tanabe, PRL 115, 091102 (2015), arXiv:1506.06772: the only analytic profile is a Gaussian blob, Eq.
+  (22).
+- EEGJ, the 2025 review, and Fodor's oscillon review (arXiv:1911.03340), in the parts read.
+- Abstract only: Hirschmann–Eardley, PRD 51, 4198 (1995) (continuously self-similar); Wu, PRD 114, 044092 (2026).
+
+### Verdicts per form
+
+**A, the reciprocal of an ellipse. Found as the same complex function in optics. The ellipse reading is found as a
+general identity only.**
+- The complex function e^{iθ}/(1 + w e^{2iθ}) = 1/(e^{−iθ} + w e^{iθ}) is the Fabry–Pérot transmitted field, summed
+  over round trips, with θ = −φ and w = −r1r2 (Wikipedia, citing Svelto *(unverified)*; Fratini et al., supplement Eq.
+  (S.2)). Its variable there is the optical phase, not time.
+- EEG26b write the ratio, not the reciprocal.
+- The inverse of a centred ellipse is Booth's elliptic lemniscate (Coffman). *Inferred*: since 1/h = h̄/|h|², the curve
+  of g = 1/h is that lemniscate reflected in the real axis.
+- Not found in the sources searched: the reciprocal of an ellipse used for an echo or a self-similar profile.
+
+**B, the real form. Found in EEG26b (S58). Elsewhere it is found only at δ = 0 and δ = π, implicitly, and as a
+general identity.**
+- At δ = 0 it is, up to a constant, the time derivative of Rozali and Way's oscillaton at a fixed radius. At δ = π it
+  is, up to a constant, the time derivative of the sine-Gordon breather at its centre. Both are *inferred*, since the
+  sources write the field, not its derivative.
+- Its denominator is the Poisson kernel's (DLMF 1.15.12; EEG_PROFILE.md §2 (P)), and B is a combination of P_q and Q_q
+  (*inferred*, table above).
+- The closest work in critical collapse is Martín-García and Gundlach's Eq. (59), a Poisson-kernel sum offered as a
+  model of the D = 4 echo's high harmonics. It is not fitted, and its ratio is real.
+- Not found in the sources searched: B with a general δ outside EEG26b.
+
+**C, the odd-harmonic series with ratio −w. Found in EEG26b (S58). Its parts are older.**
+- Only odd harmonics in the scalar field of the Choptuik solution: Gundlach (1997), Sec. II.3, and the later works in
+  the table.
+- Exponential decay of the echo's harmonics with phases linear in k, so a nearly constant complex ratio at high k:
+  Martín-García and Gundlach (2003), Sec. IV.2, observed at D = 4 and not explained there. EEG26b cite no source for
+  their geometric law.
+- The same series appears as a sum of echoes in the Fabry–Pérot round trips, in the optical phase. It is also the
+  frequency response of a delayed feedback comb (*inferred*).
+- As an identity, it is the geometric series (DLMF 1.15.12, 18.12.7–18.12.10).
+- Not found in the sources searched: a profile, outside EEG26b, whose odd harmonics have one complex ratio from the
+  first harmonic on.
+
+**D, the linear equation. Not found in the sources searched. Found as a general method only.**
+- The equation says that the profile times a positive trigonometric polynomial of degree 2 is a first harmonic.
+- Two general methods lie behind it. One is the Fourier–Padé form, a quotient of trigonometric polynomials matched to
+  the Fourier coefficients (Geer 1993). The other turns a linear ODE with trigonometric coefficients into a recurrence
+  for the Fourier coefficients (Koepf and Nana Chiadjeu, Math. Comput. Sci. 9 (2015) 365–389 *(unverified)*, not read).
+- No source searched writes a differential equation of this kind for an echo or another periodic profile.
+
+**E, the arctan integral. Found as a general identity, and at δ = 0 and δ = π. Not found for general δ.**
+- The identity is the termwise integral of series C with the arctan series (DLMF 4.24.3).
+- At δ = 0 it is Rozali and Way's oscillaton at fixed r, Eq. (10), with ε e^{−ω²r²/2} = 2√q/(1+q).
+- At δ = π it is the sine-Gordon breather at its centre, 4 arctan(k sin at), with k = 2√q/(1−q) (*inferred*).
+- Both are exact single-mode solutions of other problems, not echo profiles.
+- It is not in EEG26b (#165).
+
+### Citation chains (INSPIRE, 2026-11-08)
+
+- **Forward from EEG26b** (recid 3223940): no citations yet.
+- **Forward from EEG's PRL** (recid 3109820): 5 citing records, Lai–Wen, EEG26b, EEGJ and Wu's two papers. The four
+  besides EEG26b were read in whole, in part or in abstract, and contain no form.
+- **Forward from Martín-García–Gundlach 2003** (recid 617314): 49 titles. None but EEG's PRL suggests an analytic
+  model of the time dependence. This rests on titles only.
+- **Forward from Rozali–Way** (recid 1684230): 13 titles. Of these, Fodor's review was read in part.
+- **Backward from EEG26b**: no source is cited for the geometric model.
+
+### Gap statement
+
+- **Textbooks not opened.** Gradshteyn–Ryzhik 1.447–1.448 (the entry numbers come from search summaries only,
+  *(unverified)*); Born–Wolf, Hecht, Svelto and Siegman for the Fabry–Pérot sum; Zygmund or Katznelson for the
+  conjugate kernel.
+- **PDF-only sources not read.** The fetch tool returned PDFs as binary, and no PDF text extractor was available. So
+  the analytic spectra of Akhmediev breathers (Dudley et al. 2009; Akhmediev et al. 2011), the lecture notes, and
+  Feigenbaum's period-doubling spectrum were not read. The Akhmediev-breather spectrum is a likely further instance of
+  a geometric harmonic law from a rational periodic profile *(unverified)*.
+- **Partly read.** Martín-García–Gundlach 2003 beyond character 100000; the body of Hirschmann–Eardley; the account of
+  Koepf–Nana Chiadjeu by Benoit, Brisebarre and Salvy (arXiv:2604.26944); Sulem–Sulem–Frisch (the pole-to-decay method
+  in fluids, background only).
+- **Channels.** Forward chains were run on INSPIRE for four records only. There were no per-author sweeps, no Google
+  Scholar queries and no non-English sources.
+- **Rounds.** Round 1 covered the named areas. Round 2 covered synonyms, identities and forward chains, and added the
+  Fabry–Pérot, comb-filter and breather instances, so the search is not dry.
+
+### Discrepancies and proposed text (for the coordinator)
+
+- **Price–Pullin.** notes/EEG_PROFILE.md §5 marks its content *(unverified)*. It has now been read (ar5iv, full
+  extraction), and it keeps a single sinusoid. Proposed: "The full text (ar5iv) keeps one frequency (their Eq. (43) and
+  Sec. IV) and has no profile of this form."
+- **Credit for the geometric law.** Martín-García and Gundlach found at D = 4 that the echo's Fourier coefficients decay
+  exponentially in τ with phases linear in k, and compared them with a Poisson-kernel sum. EEG26b do not cite this.
+  Where the repository states its leading structure (README, "Leading structure and a prediction"; the math paper,
+  "The shape of the echo"), proposed: "At D = 4, Martín-García and Gundlach found the Fourier coefficients of the
+  critical solution to decay exponentially in τ with phases linear in k, and compared them with the sum
+  Σ e^{−a|k|} e^{4πikτ/Δ} [MG03, Sec. IV.2, Eq. (59)]."
+- **No novelty sentence** was added by this task. The strongest statement made is "not found in the sources searched".
