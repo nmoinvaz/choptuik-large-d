@@ -30,7 +30,9 @@ to the continuation grid, that seed the predictor's history, so a continuation r
 --pred_order k predicts by Lagrange extrapolation in D through the last k + 1 solutions (1, the default, is EEG's
 linear predictor; 2 at --dD 1 starts at the residual of the linear one at --dD 0.5, 1.8e-4 at D = 30 on 32x101).
 --extras_off_path solves the --D_extra points off the path: each is predicted from the steps of --dD and is not used
-to predict later steps. Each record also carries the seconds in products and in the preconditioner per Newton step and
+to predict later steps. --patient lets Newton continue through a stalled max|F| far above the tolerance, up to
+--it_max steps (#105's rule stops it after step 3, which ended 32x121 solves at D = 32 at max|F| = 1.5e-26 while
+max|dz| still fell). Each record also carries the seconds in products and in the preconditioner per Newton step and
 the process's peak resident memory (rss_peak_gb).
 """
 import os
@@ -122,6 +124,9 @@ def main():
                     "that seed the predictor's history")
     ap.add_argument("--pred_order", type=int, default=1,
                     help="predictor: Lagrange extrapolation in D through the last pred_order + 1 solutions")
+    ap.add_argument("--it_max", type=int, default=12, help="mp solver: Newton steps at most")
+    ap.add_argument("--patient", action="store_true",
+                    help="mp solver: a stalled max|F| stops Newton only near the tolerance (else after step 3)")
     ap.add_argument("--extras_off_path", action="store_true",
                     help="solve the --D_extra points off the path (not used to predict later steps)")
     a = ap.parse_args()
@@ -169,9 +174,9 @@ def main():
         pivot_ratio, t_lu = held[0].pivot_ratio, held[0].secs
         make = lambda zz: mps.LUdd(rt.jacobian(mps.to_f64(zz)), overwrite=True)
         # newton_mp holds the only reference, so a rebuild frees the old factors first
-        zm, ok, info = mps.newton_mp(rm, z, held.pop(), tol=1e-40, it_max=12, max_products=a.max_products,
+        zm, ok, info = mps.newton_mp(rm, z, held.pop(), tol=1e-40, it_max=a.it_max, max_products=a.max_products,
                                      make_prec=make, refresh_dz=a.refresh_dz, refresh_ratio=a.refresh_ratio,
-                                     log=say)
+                                     log=say, stall_any=not a.patient)
         d0, d1 = rm.delta_m(zm)
         parts = delta_hp_parts(D)
         diff = None

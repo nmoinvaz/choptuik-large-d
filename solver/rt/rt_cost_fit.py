@@ -42,14 +42,19 @@ def L_of(Nt, N):
 
 
 def load(paths):
-    """{(Nt, N): {D: record}}, the last converged mp record of each grid and D."""
+    """{(Nt, N): {D: record}}, the last converged mp record of each grid and D. A restart's re-solve of its start state
+    (label start) does not replace the step that made that state."""
     out = {}
     for p in paths:
         with open(p) as f:
             for line in f:
                 r = json.loads(line)
                 if r.get("solver") == "mp" and r.get("ok") and not r.get("mutate"):
-                    out.setdefault(tuple(r["grid"]), {})[round(r["D"], 9)] = r
+                    g = out.setdefault(tuple(r["grid"]), {})
+                    D = round(r["D"], 9)
+                    if r.get("label") == "start" and D in g and g[D].get("label") != "start":
+                        continue
+                    g[D] = r
     return out
 
 
@@ -87,7 +92,9 @@ def analyse(G, old, tol=1e-12, project=(), table=False, say=print):
     for g in grids:
         for kind in ("first", "mean"):
             R = {**old.get(g, {}), **G[g]} if kind == "first" else G[g]
-            Ds = sorted(D for D, r in R.items() if r["products"] and r.get("label") != "start")
+            # first: continuation steps only (a fresh preconditioner at the predictor); mean: every solve, the
+            # followers' re-solves from a resampled coarser state included
+            Ds = sorted(D for D, r in R.items() if r["products"] and (kind == "mean" or r.get("label") != "start"))
             if len(Ds) < 3:
                 continue
             y = [R[D]["products"][0] if kind == "first" else np.mean(R[D]["products"]) for D in Ds]
@@ -126,7 +133,8 @@ def analyse(G, old, tol=1e-12, project=(), table=False, say=print):
         q = np.median([tq / k for r in R for tq, k in zip(r["t_prec"], r["products"])])
         e = np.median([(s - tp - tq) / (k * k * r["L"]) for r in R
                        for s, tp, tq, k in zip(r["step_secs"], r["t_prod"], r["t_prec"], r["products"])])
-        nst = np.median([len(r["products"]) for r in R if r.get("label") == "cont"] or [0])
+        nst = np.median([len(r["products"]) for r in R if r.get("label") == "cont"]
+                        or [len(r["products"]) for r in R])
         jl = np.median([r["t_jac"] + r["t_lu"] for r in R])
         mem = max(r.get("rss_peak_gb", 0) for r in R)
         res["time"][g] = dict(p=p, q=q, e=e, newton=nst, jl=jl, L=R[0]["L"], mem=mem)

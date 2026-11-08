@@ -334,7 +334,7 @@ def gcr(apply, precond, b, tol=1e-30, max_products=80):
 
 # ------------------------------------------------------------------------------------------------ Newton
 def newton_mp(rm, z, prec, tol=1e-40, it_max=12, inner_tol=1e-30, max_products=80, residual=None, apply=None,
-              inner=fgmres, make_prec=None, refresh_dz=1e-3, refresh_ratio=1.5, log=None):
+              inner=fgmres, make_prec=None, refresh_dz=1e-3, refresh_ratio=1.5, log=None, stall_any=True):
     """Newton with the residual in arb and each step solved by `inner` (fgmres) in arb, products by jv_central unless
     apply is given, preconditioned by prec (an LUdd of an f64 Jacobian near z). With make_prec (z -> a new
     preconditioner), prec is rebuilt at the new z after a step with max|dz| > refresh_dz, or after an inner solve that
@@ -343,7 +343,7 @@ def newton_mp(rm, z, prec, tol=1e-40, it_max=12, inner_tol=1e-30, max_products=8
     products (76 against 10 after a step of 8e-2 at D = 12, I105-mac/pilot); the count itself grows with D (about 10
     at D = 10, 25 at D = 20 on 32x81), so a fixed threshold rebuilds on every step there. rm: an rt_mp.RTmp (or None
     with residual given). Stops when max|F| < tol, or when max|F| stops falling (at the precision's floor: max|F| > 0.5
-    of the previous after step 3), or after it_max steps. A step that does not lower max|F| is halved up to six times.
+    of the previous after step 3; with stall_any=False only once max|F| < 1e6 tol), or after it_max steps. A step that does not lower max|F| is halved up to six times.
     Returns (z, ok, info) with z an arb object array; info["dz"] is max|dz| of each step and info["refresh"] the steps
     after which prec was rebuilt. info["t_prod"] and info["t_prec"] are each step's seconds in products and in the
     preconditioner."""
@@ -399,7 +399,9 @@ def newton_mp(rm, z, prec, tol=1e-40, it_max=12, inner_tol=1e-30, max_products=8
         if r < tol:
             ok = True
             break
-        if it >= 3 and r > 0.5 * prev:
+        # the precision's floor; with stall_any=False only near tol, since far above it a step along a weak
+        # direction can leave max|F| nearly unchanged and the next ones still converge (32x121 at D = 32, I145-mac)
+        if it >= 3 and r > 0.5 * prev and (stall_any or r < 1e6 * tol):
             ok = r < 1e6 * tol
             break
     return z, ok, info
