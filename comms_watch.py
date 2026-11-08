@@ -133,8 +133,8 @@ def main():
     handled = len(headers(git("show", "HEAD:comms.txt")))
     end = time.time() + 60 * a.max_minutes
     coord = None if a.no_issues else coord_issue(a.repo)
-    print(f"watching for {a.name}: the Coordination issue #{coord} after {last or 'its start'}, the task issues, and "
-          f"origin/main comms.txt after the {handled} entries in HEAD", flush=True)
+    where = f"the Coordination issue #{coord} after {last or 'its start'}, the task issues, and " if coord else ""
+    print(f"watching for {a.name}: {where}origin/main comms.txt after the {handled} entries in HEAD", flush=True)
     while True:
         if coord is not None:
             cs = coord_comments(a.repo, coord)
