@@ -334,7 +334,8 @@ def gcr(apply, precond, b, tol=1e-30, max_products=80):
 
 # ------------------------------------------------------------------------------------------------ Newton
 def newton_mp(rm, z, prec, tol=1e-40, it_max=12, inner_tol=1e-30, max_products=80, residual=None, apply=None,
-              inner=fgmres, make_prec=None, refresh_dz=1e-3, refresh_ratio=1.5, log=None, stall_any=True):
+              inner=fgmres, make_prec=None, refresh_dz=1e-3, refresh_ratio=1.5, log=None, stall_any=True,
+              full_below=None):
     """Newton with the residual in arb and each step solved by `inner` (fgmres) in arb, products by jv_central unless
     apply is given, preconditioned by prec (an LUdd of an f64 Jacobian near z). With make_prec (z -> a new
     preconditioner), prec is rebuilt at the new z after a step with max|dz| > refresh_dz, or after an inner solve that
@@ -343,7 +344,12 @@ def newton_mp(rm, z, prec, tol=1e-40, it_max=12, inner_tol=1e-30, max_products=8
     products (76 against 10 after a step of 8e-2 at D = 12, I105-mac/pilot); the count itself grows with D (about 10
     at D = 10, 25 at D = 20 on 32x81), so a fixed threshold rebuilds on every step there. rm: an rt_mp.RTmp (or None
     with residual given). Stops when max|F| < tol, or when max|F| stops falling (at the precision's floor: max|F| > 0.5
-    of the previous after step 3; with stall_any=False only once max|F| < 1e6 tol), or after it_max steps. A step that does not lower max|F| is halved up to six times.
+    of the previous after step 3; with stall_any=False only once max|F| < 1e6 tol), or after it_max steps. A step that
+    does not lower max|F| is halved up to six times, unless full_below is given and the step's max|dz| is below it.
+    For the quadratic residual a full step dz leaves F = B(dz, dz) exactly, so a small full step cannot raise max|F|
+    by much. Near a nearly singular root Newton then reduces the error along the weak direction by about half per
+    step, while halving the step makes almost no progress (32x101 at D = 34: max|F| near 3e-25, steps of 1/32 with
+    max|dz| 7e-15, I145-mac).
     Returns (z, ok, info) with z an arb object array; info["dz"] is max|dz| of each step and info["refresh"] the steps
     after which prec was rebuilt. info["t_prod"] and info["t_prec"] are each step's seconds in products and in the
     preconditioner."""
@@ -373,11 +379,12 @@ def newton_mp(rm, z, prec, tol=1e-40, it_max=12, inner_tol=1e-30, max_products=8
         t0 = time.time()
         dz, gi = inner(lambda u: apply(z, u), prec, mids(-F), tol=inner_tol, max_products=max_products)
         lam = arb(1)
+        small = full_below is not None and amax(dz) < full_below
         for _ in range(7):
             zn = mids(z + lam * dz)
             Fn = residual(zn)
             rn = amax(Fn)
-            if rn < r:
+            if rn < r or small:                            # a small full step is taken even if max|F| grows
                 break
             lam = lam / 2
         z, F = zn, Fn

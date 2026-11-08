@@ -32,7 +32,8 @@ linear predictor; 2 at --dD 1 starts at the residual of the linear one at --dD 0
 --extras_off_path solves the --D_extra points off the path: each is predicted from the steps of --dD and is not used
 to predict later steps. --patient lets Newton continue through a stalled max|F| far above the tolerance, up to
 --it_max steps (#105's rule stops it after step 3, which ended 32x121 solves at D = 32 at max|F| = 1.5e-26 while
-max|dz| still fell). Each record also carries the seconds in products and in the preconditioner per Newton step and
+max|dz| still fell). --full_below X takes every Newton step with max|dz| < X in full, without halving it. Each record
+also carries the seconds in products and in the preconditioner per Newton step and
 the process's peak resident memory (rss_peak_gb).
 """
 import os
@@ -127,6 +128,8 @@ def main():
     ap.add_argument("--it_max", type=int, default=12, help="mp solver: Newton steps at most")
     ap.add_argument("--patient", action="store_true",
                     help="mp solver: a stalled max|F| stops Newton only near the tolerance (else after step 3)")
+    ap.add_argument("--full_below", type=float, default=None,
+                    help="mp solver: take the full Newton step when its max|dz| is below this (no step halving)")
     ap.add_argument("--extras_off_path", action="store_true",
                     help="solve the --D_extra points off the path (not used to predict later steps)")
     a = ap.parse_args()
@@ -176,7 +179,7 @@ def main():
         # newton_mp holds the only reference, so a rebuild frees the old factors first
         zm, ok, info = mps.newton_mp(rm, z, held.pop(), tol=1e-40, it_max=a.it_max, max_products=a.max_products,
                                      make_prec=make, refresh_dz=a.refresh_dz, refresh_ratio=a.refresh_ratio,
-                                     log=say, stall_any=not a.patient)
+                                     log=say, stall_any=not a.patient, full_below=a.full_below)
         d0, d1 = rm.delta_m(zm)
         parts = delta_hp_parts(D)
         diff = None
