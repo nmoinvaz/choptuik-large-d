@@ -14,8 +14,14 @@ make a check fail.
           e_2 and e_1 e_2, d/dlambda, a parameter direction), M = 3, at xi = 0.04 e^{0.3 i}.
           Shares the module, not the code path (series recursion vs right-hand side). Mutation 'rhs2' (the e^2 term
           of the y equation dropped in the right-hand side only).
+  modes   the exact mode of the model at every order of 1/n, lambda = 0 (theta shift, f = F_n'): the truncation
+          commutes with it, so second_order_run.lam2_step, run at lambda* = 0 with the model's own null vectors
+          (M = 3, from the stored selection in --raw=DIR), must return |lambda_1| <= 1e-4 and |lambda_2| <= 4e-2
+          (ten times the spread of the lambda ~ 2 mode's lambda_1, lambda_2 over two matching radii). lambda = 1
+          (time translation) is reported only: in the light-cone gauge it is not exact at finite n.
+          Mutation 'pgauge2' (the perturbation's second gauge datum dc_2(0) dropped).
 
-    python3 second_order_checks.py [outer] [rhs] [--mutate=NAME]
+    python3 second_order_checks.py [outer] [rhs] [modes --raw=DIR] [--mutate=NAME]
 """
 import os
 import sys
@@ -30,9 +36,10 @@ import second_order_jet as SJ  # noqa: E402
 from second_order_jet import JetModel2, Dir, W0, F2h  # noqa: E402
 
 MUT = next((a.split("=", 1)[1] for a in sys.argv[1:] if a.startswith("--mutate=")), None)
-if MUT in ("eps2y", "phi", "pol"):
+if MUT in ("eps2y", "phi", "pol", "lamj"):
     SJ.MUTATE.add(MUT)
 FAILS = []
+RAW = next((a.split("=", 1)[1] for a in sys.argv[1:] if a.startswith("--raw=")), os.path.join(HERE, "data"))
 
 
 def verdict(name, value, thr):
@@ -136,13 +143,39 @@ def check_rhs():
     verdict("worst relative deviation", worst, 1e-8)
 
 
+def check_modes(M=3, xi1=0.2):
+    import json
+    import first_order_run as R
+    import second_order_run as S2
+    first = json.load(open(os.path.join(HERE, "data", f"first_order_M{M}_xi{xi1:g}.json")))
+    sec = json.load(open(os.path.join(RAW, f"second_order_M{M}_xi{xi1:g}.json")))
+    x, dx, dx2 = np.array(first["x"]), np.array(first["dx"]), np.array(sec["dx2"])
+    if MUT == "pgauge2":
+        S2.MUTATE.add("pgauge2")
+    for lam in (0.0, 1.0):
+        S0, dS0, _ = R.pert_matrix(x, M, xi1, lam)
+        f0, ell, sv = R.null_vectors(S0)
+        f0 = f0 / f0[np.argmax(np.abs(f0[:2]))]
+        den = float(ell @ dS0 @ f0)
+        out = S2.lam2_step(x, M, xi1, dx, dx2, lam, f0, ell, 0.0, den, lam1_free=True)
+        print(f"modes: lambda* = {lam:g} (Schur sv {sv}): lambda_1 = {out['lam1_used']:+.3e}, "
+              f"lambda_2 = {out['lam2']:+.3e}", flush=True)
+        if lam == 0.0:
+            # thresholds: 10x the spread of lambda_1 and lambda_2 of the lambda ~ 2 mode over two matching radii
+            verdict("lambda = 0: |lambda_1|", abs(out["lam1_used"]), 1e-4)
+            verdict("lambda = 0: |lambda_2|", abs(out["lam2"]), 4e-2)
+        else:
+            print("   (lambda = 1, the time translation, is not exact at finite n in this gauge: the mean of its "
+                  "dc(x = 1) is not a reparametrization of the form e^tau g(theta); reported, not checked)")
+
+
 if __name__ == "__main__":
     which = [a for a in sys.argv[1:] if not a.startswith("--")] or ["outer", "rhs"]
     if MUT:
         print(f"MUTATION '{MUT}' active: some check below must FAIL\n")
     for wch in which:
         t = time.time()
-        {"outer": check_outer, "rhs": check_rhs}[wch]()
+        {"outer": check_outer, "rhs": check_rhs, "modes": check_modes}[wch]()
         print(f"   ({wch}: {time.time() - t:.0f} s)\n", flush=True)
     print("FAILED: " + ", ".join(FAILS) if FAILS else "ALL PASS")
     sys.exit(1 if FAILS else 0)

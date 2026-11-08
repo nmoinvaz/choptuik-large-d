@@ -30,7 +30,7 @@ import numpy as np
 
 from first_order_jet import JetModel, Dir, W0, Fh_from, dFh, F2h, demix_matrix, ri  # noqa: F401
 
-MUTATE = set()   # 'eps2y': drop the O(e^2) term of the y equation; 'phi': (1 - E) -> 1 in Phi; 'pol': e^2 = e_1 e_2
+MUTATE = set()   # 'eps2y': no O(e^2) term in the y equation; 'phi': (1 - E) -> 1 in Phi; 'pol': e^2 = e_1 e_2; 'lamj'
 
 
 class JetModel2(JetModel):
@@ -51,7 +51,7 @@ class JetModel2(JetModel):
                 self.wj[self.idx[m]] = self.wj.get(self.idx[m], 0) + v
         # lambda jet on the perturbation components
         self.lamjl = []
-        for m, v in (lamj or {}).items():
+        for m, v in ({} if "lamj" in MUTATE else (lamj or {})).items():
             for i, mi in enumerate(self.masks):
                 if mi & self.pertbits and not mi & m and (mi | m) in self.idx:
                     self.lamjl.append((i, self.idx[mi | m], v))

@@ -17,6 +17,17 @@ Planted truth (--planted), run before the real data, with the criteria fixed bef
       the free fits on the same data.
   P3  control, must fire: with Delta_1 held 0.027 too high (the M = 5 derivation's distance from the fit), every fixed
       fit misses the residual criterion (max|res| > 1e-13) or moves Delta_inf by more than 1.5e-8.
+  P4  lambda_2: on 1/gamma from the README's rational gamma(D) at the double-double growth-rate points (as
+      first_order_fits.py --planted, noise 1e-12), the estimator's fits (LAM_DEGS on D >= 24, 30, lambda_inf = 2
+      fixed) recover the planted 1/n^2 coefficient within 0.02 (criterion fixed before the first run of P4).
+History. The first run of P1-P3 (log second_order_fits_planted_first.log in the raw folder) FAILED P1 on the two
+degree-18 fits on D >= 16 (errors 4.7e-3 and 1.35e-2; every other fit within 2.7e-3 of which those meeting the
+residual criterion within 4.8e-4): 19 parameters on the shortest range overfit the noise, as degree 20 did at first
+order. The estimator was changed (degree 18 dropped for D >= 16, DEG_MAX16), not the threshold, and the test rerun.
+The second run (second_order_fits_planted_second.log) passed P1-P3 and FAILED P4 on the degree-9 fit on D >= 24
+(error 0.027; 0.011-0.015 for the other degree 9-10 fits, all of the same sign and falling with the degree, the
+failing fit's max|res| 11 times the noise): the second coefficient needs one more resolved term than the first. The
+estimator was changed to degrees 10-11 (LAM_DEGS), not the threshold, and the test rerun.
 The real-data part (default) fits Delta_2, then holds (Delta_1, Delta_2) fixed at the fitted centre, at the derived
 values of the truncation sequence given with --fixed=D1,D2[;D1,D2...], and reports Delta_inf and max|res|.
 
@@ -39,6 +50,12 @@ from first_order_fits import polyfit, DEGS  # noqa: E402
 
 mp.mp.dps = 60
 RES = mp.mpf("1e-13")
+DEG_MAX16 = 16          # the highest degree on D >= 16 (see History above)
+LAM_DEGS = (10, 11)     # the lambda_2 estimator's degrees (see History above)
+
+
+def degs_for(Dmin):
+    return [d for d in DEGS if Dmin < 16 or d <= DEG_MAX16]
 
 
 def fixedfit(ts, ys, deg, d1, d2):
@@ -57,7 +74,7 @@ def free_rows(Ds, vals, verbose=True, label=""):
     rows = []
     for var, tf in (("1/n", lambda D: 1 / (mp.mpf(D) - 2)), ("1/D", lambda D: 1 / mp.mpf(D))):
         for Dmin in (10, 12, 16):
-            for deg in DEGS:
+            for deg in degs_for(Dmin):
                 sel = [d for d in Ds if d >= Dmin]
                 coef, res = polyfit([tf(d) for d in sel], [vals[d] for d in sel], deg)
                 d0, d1, d2 = coef[0], coef[1], coef[2]
@@ -73,7 +90,7 @@ def free_rows(Ds, vals, verbose=True, label=""):
 def fixed_rows(Ds, vals, d1, d2, verbose=True, label=""):
     rows = []
     for Dmin in (10, 12, 16):
-        for deg in DEGS:
+        for deg in degs_for(Dmin):
             sel = [d for d in Ds if d >= Dmin]
             ts = [1 / (mp.mpf(d) - 2) for d in sel]
             d0, res = fixedfit(ts, [vals[d] for d in sel], deg, d1, d2)
@@ -82,6 +99,37 @@ def fixed_rows(Ds, vals, d1, d2, verbose=True, label=""):
                 print(f"  {label}fixed D >= {Dmin:2d} deg {deg:2d}: Delta_inf {mp.nstr(d0, 13)}  max|res| {mp.nstr(res, 2)}",
                       flush=True)
     return rows
+
+
+def lam_points():
+    rows = {}
+    for f in (os.path.join(HP, "data", "gamma_dd.jsonl"), os.path.join(HP, "data", "local", "gamma_dd.jsonl")):
+        for l in open(f):
+            r = json.loads(l)
+            if r.get("lam"):
+                rows[round(r["D"], 6)] = r
+    good = {}
+    for d in sorted(rows):
+        if rows[d]["F"] <= 1e-20 and all(abs(d - e) >= 0.5 for e in good):
+            good[d] = rows[d]
+    return good
+
+
+def lam_rows(good, ysel=None, verbose=True, label=""):
+    """polynomials in 1/n with lambda_inf = 2 fixed, degrees 8-12, D >= 20, 24, 30 (as first_order_fits.py)"""
+    out = []
+    Ds = sorted(good)
+    for Dmin in (20, 24, 30):
+        sel = [d for d in Ds if d >= Dmin]
+        ts = [1 / (mp.mpf(d) - 2) for d in sel]
+        ys = [ysel(d, t) if ysel else mp.mpf(good[d]["lam"]) for d, t in zip(sel, ts)]
+        for deg in (8, 9, 10, 11, 12):
+            c, res = polyfit(ts, ys, deg, fix0=mp.mpf(2))
+            out.append(dict(Dmin=Dmin, deg=deg, L1=c[1], L2=c[2], res=res))
+            if verbose:
+                print(f"  {label}lambda D >= {Dmin} deg {deg:2d}: lambda_1 {mp.nstr(c[1], 9)}  lambda_2 {mp.nstr(c[2], 7)}  "
+                      f"max|res| {mp.nstr(res, 2)}", flush=True)
+    return out
 
 
 def spread(vals):
@@ -139,7 +187,25 @@ def planted():
     for r in fx3:
         print(f"  fixed D >= {r['Dmin']:2d} deg {r['deg']:2d}: Delta_inf - planted {mp.nstr(r['D0'] - D0t, 3):>10s}  max|res| {mp.nstr(r['res'], 2)}")
     print(f"P3: {'fires (PASS)' if fired else 'does not fire (FAIL)'}")
-    allok = p1 and p2 and fired
+    print(f"P4: lambda_2 from 1/gamma of the rational gamma(D), noise 1e-12, degree {LAM_DEGS} fits on D >= 24, 30", flush=True)
+    e = [mp.mpf(v) for v in C["e"]]
+    f = [mp.mpf(1)] + [mp.mpf(v) for v in C["f"]]
+    lam = lambda t: sum(c * t ** k for k, c in enumerate(f)) / sum(c * t ** k for k, c in enumerate(e))
+    lt = mp.taylor(lam, 0, 3)
+    print(f"  planted: lambda_inf {mp.nstr(lt[0], 10)}  lambda_1 {mp.nstr(lt[1], 10)}  lambda_2 {mp.nstr(lt[2], 10)}")
+    good = lam_points()
+    lr = lam_rows(good, ysel=lambda d, t: lam(t) + mp.mpf(random.gauss(0, 1e-12)), verbose=False)
+    p4 = True
+    for r in lr:
+        err = r["L2"] - lt[2]
+        flag = ""
+        if r["deg"] in LAM_DEGS and r["Dmin"] >= 24:
+            flag = "ok" if abs(err) <= 0.02 else "MISS"
+            p4 &= abs(err) <= 0.02
+        print(f"  D >= {r['Dmin']} deg {r['deg']:2d}: lambda_2 - planted {mp.nstr(err, 3):>10s}  lambda_1 - planted "
+              f"{mp.nstr(r['L1'] - lt[1], 3):>10s}  max|res| {mp.nstr(r['res'], 2)}  {flag}")
+    print(f"P4: {'PASS' if p4 else 'FAIL'}")
+    allok = p1 and p2 and fired and p4
     print("PLANTED: PASS" if allok else "PLANTED: FAIL")
     return allok
 
@@ -159,6 +225,10 @@ def real(fixed_sets):
     d1c = (min(r["D1"] for r in good) + max(r["D1"] for r in good)) / 2
     d2s = sorted(r["D2"] for r in good)
     d2c = d2s[len(d2s) // 2]
+    print("lambda = 1/gamma: double-double growth rates", flush=True)
+    lr = lam_rows(lam_points())
+    l2 = [r["L2"] for r in lr if r["deg"] in LAM_DEGS and r["Dmin"] >= 24]
+    print(f"  lambda_2 (degrees {LAM_DEGS}, D >= 24, 30): [{mp.nstr(min(l2), 6)}, {mp.nstr(max(l2), 6)}]")
     sets = [("fitted (centre of D_1's range, median D_2)", d1c, d2c)] + fixed_sets
     lo0, hi0 = spread([r["D0"] for r in good])
     print(f"  free fits: Delta_inf in [{mp.nstr(lo0, 12)}, {mp.nstr(hi0, 12)}] (width {mp.nstr(hi0 - lo0, 3)})")

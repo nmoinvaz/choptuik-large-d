@@ -32,6 +32,7 @@ import first_order_run as R  # noqa: E402
 from second_order_jet import JetModel2, Dir, Fh_from, dFh, W0, F2h  # noqa: E402
 
 T0 = time.time()
+MUTATE = set()        # 'pgauge2': the perturbation's second gauge datum dropped (second_order_checks.py modes)
 
 
 def log(*a):
@@ -109,15 +110,16 @@ def verify_omega2(x, M, xi1, dx, dx2, gscale=1.0):
     return Rr[jm.idx[e1]], Rr[jm.idx[e1 | e2]]
 
 
-def lam2_step(x, M, xi1, dx, dx2, lam, f0vec, ell, lam1, ellJel):
+def lam2_step(x, M, xi1, dx, dx2, lam, f0vec, ell, lam1, ellJel, lam1_free=False, gscale=1.0):
+    """lam1_free: lambda_1 is computed here from the p e_1 jump (-ell . J_p1 / ell . dS f_0) instead of given"""
     Fh = Fh_from(x, M)
     w = W0 * x[1]
     f0 = R.profile_of(f0vec, M)
-    gauge1, gauge2 = gauge_bg(x, M, dx)
+    gauge1, gauge2 = gauge_bg(x, M, dx, gscale)
     # the perturbation's first gauge datum: dc_1(0) = -dg_1 (xi^2 coefficient of dc_0)
     pre = JetModel2(M, w, Fh, [Dir("pert", lam=lam)], [0, 1], {1: (f0, {})})
     pre.series_at(1.0, 3, stop=False)
-    dgauge1 = harm_dict(-pre.ser["G"][1][1], pre.L, 0, M)
+    dgauge1 = harm_dict(-gscale * pre.ser["G"][1][1], pre.L, 0, M)
 
     def run(f1vec, dgauge2, top):
         dirs, masks, data, wextra, (e1, e2) = bg_dirs(x, M, dx, gauge1, gauge2, dx2=dx2, with_params=False)
@@ -137,6 +139,10 @@ def lam2_step(x, M, xi1, dx, dx2, lam, f0vec, ell, lam1, ellJel):
     S0, dS0, _ = R.pert_matrix(x, M, xi1, lam)
     jm, Rr, (p, e1, e2) = run(np.zeros(len(f0vec)), None, False)
     Jp1 = Rr[jm.idx[p | e1]]
+    if lam1_free:
+        lam1 = -float(ell @ Jp1) / ellJel
+        jm, Rr, (p, e1, e2) = run(np.zeros(len(f0vec)), None, False)
+        Jp1 = Rr[jm.idx[p | e1]]
     ellJp1 = float(ell @ Jp1)
     sol, res, rk, sv = np.linalg.lstsq(S0[:, 1:], -Jp1, rcond=None)
     f1vec = np.concatenate([[0.0], sol])
@@ -147,13 +153,16 @@ def lam2_step(x, M, xi1, dx, dx2, lam, f0vec, ell, lam1, ellJel):
     pre = JetModel2(M, w, Fh, [Dir("pert", lam=lam), Dir("e1", q1=True, omega=W0 * dx[1])], [0, 1, 2, 3],
                     {1: (f0, {}), 2: (prof_of_dx(dx, M), gauge1), 3: (f1, dgauge1)}, lamj={2: lam1})
     pre.series_at(1.0, 3, stop=False)
-    dgauge2 = harm_dict(-(pre.ser["G"][2][pre.idx[1]] + pre.ser["G"][1][pre.idx[3]]), pre.L, 0, M)
+    dgauge2 = harm_dict(-gscale * (pre.ser["G"][2][pre.idx[1]] + pre.ser["G"][1][pre.idx[3]]), pre.L, 0, M)
+    if "pgauge2" in MUTATE:
+        dgauge2 = {}
     jm, Rr, (p, e1, e2) = run(f1vec, dgauge2, True)
     Jp1b = Rr[jm.idx[p | e1]]
     Jp12 = Rr[jm.idx[p | e1 | e2]]
     num = float(ell @ (Jp12 / 2))
     lam2 = -num / ellJel
-    return dict(lam2=lam2, lam2_num=num, f1vec=f1vec.tolist(), ellJp1=ellJp1, Jp1_after=float(np.linalg.norm(Jp1b)),
+    return dict(lam2=lam2, lam2_num=num, f1vec=f1vec.tolist(), ellJp1=ellJp1, lam1_used=lam1,
+                Jp1_norm=float(np.linalg.norm(Jp1)), Jp1_after=float(np.linalg.norm(Jp1b)),
                 Jp12=Jp12.tolist(), dgauge1={str(k): [v.real, v.imag] for k, v in dgauge1.items()},
                 dgauge2={str(k): [v.real, v.imag] for k, v in dgauge2.items()})
 
@@ -228,6 +237,16 @@ def main():
     if "lam2" in out:
         log(f"   check: ell . J_p1 {out['ellJp1']:.2e}; |J_p1| after f_1 {out['Jp1_after']:.2e}")
         log(f"LAMBDA2: lambda = {out['lam']:.9f} + ({out['lam1']:.5f})/n + ({out['lam2']:.4f})/n^2")
+    if "lam2" in out and "lam2_gauge0" not in out and "dx2_gauge0" in out and "--no-gauge" not in opts:
+        # every gauge datum 0 (background and perturbation), with the gauge-0 selections; lambda_1 recomputed
+        f0vec, ell = np.array(first["fvec"]), np.array(first["ell"])
+        g0 = lam2_step(x, M, xi1, np.array(first["dx_gauge0"]), np.array(out["dx2_gauge0"]), out["lam"], f0vec, ell,
+                       0.0, out["ellJel"], lam1_free=True, gscale=0.0)
+        out.update(lam1_gauge0=g0["lam1_used"], lam2_gauge0=g0["lam2"])
+        save()
+    if "lam2_gauge0" in out:
+        log(f"GAUGE: lambda_1 {out['lam1']:.5f}, lambda_2 {out['lam2']:.4f} (light-cone gauge) against "
+            f"{out['lam1_gauge0']:.5f}, {out['lam2_gauge0']:.4f} (all gauge data 0)")
     log(f"wrote {fn}")
 
 
