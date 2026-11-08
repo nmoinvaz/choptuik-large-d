@@ -403,8 +403,11 @@ def main():
         bands = precision_bands(args.raw, lowd)
         for i, (D0, D1, med, (big, bigD), name, kind) in enumerate(bands):     # the blocks first, the labels after
             a, b = A.sx(max(D0, A.xr[0])), A.sx(min(D1, A.xr[1]))
+            how = "the median" if med > 0 else "below the estimator's resolution: the median difference is 0"
+            title = (f"D = {D0:g} to {D1:g}: Δ known to {abs(med):.1e} ({how}; the largest error is {big:.1e}, "
+                     f"at D = {bigD:g}). {name}; {kind}")
             svg.add(f'<rect x="{a:.1f}" y="{A.py:.1f}" width="{b - a:.1f}" height="{A.ph:.1f}" fill="{BAND if i % 2 == 0 else BAND2}">'
-                    f'<title>{esc(f"D = {D0:g} to {D1:g}: Δ known to {abs(med):.1e} (" + ("the median" if med > 0 else "below the estimator's resolution: the median difference is 0") + f"; the largest error is {big:.1e}, at D = {bigD:g}). {name}; {kind}")}</title></rect>')
+                    f'<title>{esc(title)}</title></rect>')
         for i, (D0, D1, med, (big, bigD), name, kind) in enumerate(bands):
             a, b = A.sx(max(D0, A.xr[0])), A.sx(min(D1, A.xr[1]))
             label = ("Δ to " if med > 0 else "Δ to <") + sci(abs(med))
