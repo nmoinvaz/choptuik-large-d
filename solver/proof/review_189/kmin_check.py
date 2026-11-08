@@ -41,13 +41,18 @@ def main():
     allok = True
     for name, kw in configs():
         res = {}
-        for prec in (320, 640):
-            ctx.prec = prec
-            x = [acb(v) for v in xs]
-            FP.Maj.BOX = False
-            out = FPM.run_M(x, M, prec=prec, verbose=False, mutate=opts.get("mutate"), **kw)
-            comps = out["comps"]
-            res[prec] = (out["N"], out["kmins"], out["ok"], out["low_ok"], out["struct_ok"])
+        try:
+            for prec in (320, 640):
+                ctx.prec = prec
+                x = [acb(v) for v in xs]
+                FP.Maj.BOX = False
+                out = FPM.run_M(x, M, prec=prec, verbose=False, mutate=opts.get("mutate"), **kw)
+                res[prec] = (out["N"], out["kmins"], out["ok"], out["low_ok"], out["struct_ok"])
+        except ValueError as e:
+            # run_M refuses (e.g. the weight exponent exceeds the detected forcing orders): the orders are not structural
+            print(f"{name}: run_M refused ({e}); not structural")
+            allok = False
+            continue
         N3, km3, ok3, low3, st3 = res[320]
         N6, km6, ok6, low6, st6 = res[640]
         # kmins are ordered as run_M builds them: (p, v) per odd mu, then c per even nu
