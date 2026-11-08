@@ -188,20 +188,21 @@ with Δ 3.3×10⁻⁴ off, and the same start polished with the arb residual lan
 error is rounding along the weak direction, which carries Δ.
 
 **At D = 20 to 100, in arb.** No RT solution was continued past D = 10 here (that needs a multiprecision LU on grids
-that resolve Δ, question 3). Instead our states at D = 20.04, 30.07, 40.02, 60.00 (double-double, M = 32) and 100
-(the chain's pinned quad-double state) were mapped onto a coarse 24 × 21 grid, where the mapped fields leave an RT
-residual of only 10⁻⁷ to 4×10⁻⁷, and the Jacobian there was measured in arb at two precisions
+that resolve Δ, question 3). Instead our states at D = 10 (M = 48), 20.04, 30.07, 40.02, 60.00 (double-double, M = 32)
+and 100 (the chain's pinned quad-double state) were mapped onto a coarse 24 × 21 grid, where the mapped fields leave an
+RT residual of only 10⁻⁷ to 4×10⁻⁷, and the Jacobian there was measured in arb at two precisions
 (`I91-mac/kappa_mp.jsonl`):
 
 | D | state | mapped residual | σ_max | σ_min | κ | weakest |
 |---|---|---|---|---|---|---|
+| 10 | up_D10.0000 (dd, M = 48) | 2.4×10⁻⁶ | 78.7 | 8.2×10⁻⁸ | 9.6×10⁸ | ω₃, harmonic 0 (below it the Nyquist artifact, 1.3×10⁻⁸) |
 | 20.04 | up2_D20.0437 (dd, M = 32) | 3.8×10⁻⁷ | 382 | 1.3×10⁻¹¹ | 3.0×10¹³ | ω₃, harmonic 0 |
 | 30.07 | up6_D30.0688 (dd, M = 32) | 3.5×10⁻⁷ | 932 | 1.3×10⁻¹¹ | 6.9×10¹³ | ω₃, harmonic 0 |
 | 40.02 | up7_D40.0201 (dd, M = 32) | 1.2×10⁻⁷ | 1,722 | 1.2×10⁻¹² | 1.4×10¹⁵ | ω₃, harmonic 0 |
 | 60.00 | up13_D60.0020 (dd, M = 32) | 1.0×10⁻⁷ | 4,048 | 2.3×10⁻¹³ | 1.8×10¹⁶ | ω₃, harmonic 0 |
 | 100 | T139 anm_pin3_D100.0000 (qd, pinned) | 4.7×10⁻⁷ | 11,670 | 8.2×10⁻¹⁴ | 1.4×10¹⁷ | ω₃, harmonic 0 |
 
-The weakest direction carries 0.1% to 1% of its norm in μ. The others found are ω₃ at harmonic 2 and the
+The weakest direction carries 0.07% to 1.4% of its norm in μ. The others found are ω₃ at harmonic 2 and the
 collocation's Nyquist mode (harmonic 24, a periodic field at the top t frequency, whose discrete derivative is zero), an
 artifact of even N_t that RT's coefficient space does not have. σ_max grows like D², from the coefficients
 (D − 3)(D − 2)μ/2 and the like, and σ_min falls by 2.2 orders from D = 20 to 100 at this N (κ by 3.7, about 0.05 digit
@@ -215,15 +216,31 @@ at D = 40, f64 Newton starts at a residual of 1–4×10⁻⁷, ends after 15 ste
 converging, and leaves Δ off by 0.3 to 2.4. The first full Newton step from our solution tells why
 (`solve_mapped2.jsonl`, printed by `rt_summary.py`):
 
-FIRST_STEP_TABLE_PLACEHOLDER
+| D | grid | mapped residual | first step max\|dz\| | its change of Δ | residual after it | κ after it |
+|---|---|---|---|---|---|---|
+| 10 | 24 × 21 | 2.4×10⁻⁶ | 1.5×10⁻² | +8.9×10⁻² | 2.6×10⁻³ | |
+| 10 | 32 × 61 | 1.1×10⁻⁷ | 4.2×10⁻⁷ | +2.0×10⁻⁶ | 1.1×10⁻¹² | 3.2×10¹⁴ at the solution |
+| 20.04 | 24 × 21 | 3.8×10⁻⁷ | 4.5×10⁻² | +0.93 | 8.9×10⁻³ | |
+| 20.04 | 24 × 31 | 3.8×10⁻⁷ | 8.8×10⁻³ | +0.16 | 4.9×10⁻⁴ | |
+| 20.04 | 32 × 41 | 1.6×10⁻⁷ | 7.5×10⁻⁶ | +1.0×10⁻⁴ | 5.0×10⁻¹⁰ | 6.4×10¹⁵ |
+| 40.02 | 24 × 21 | 1.2×10⁻⁷ | 5.7×10⁻² | −0.62 | 7.8×10⁻⁴ | |
+| 40.02 | 32 × 41 | 8.4×10⁻⁸ | 9.4×10⁻⁵ | +5.5×10⁻⁴ | 9.6×10⁻⁸ | |
+| 40.02 | 32 × 61 | 8.4×10⁻⁸ | 5.2×10⁻⁵ | +3.8×10⁻⁴ | 5.1×10⁻⁸ | |
+| 60.00 | 32 × 41 | 1.1×10⁻⁷ | 7.4×10⁻⁵ | +4.3×10⁻⁴ | 3.9×10⁻⁸ | 7.4×10¹⁶ |
+| 60.00 | 32 × 61 | 1.1×10⁻⁷ | 5.4×10⁻⁵ | +5.0×10⁻⁵ | 4.0×10⁻⁸ | 3.7×10¹⁶ |
+| 100 | 32 × 41 | 1.3×10⁻⁷ | 2.9×10⁻⁵ | +2.8×10⁻⁴ | 2.1×10⁻⁸ | 1.9×10¹⁷ |
+| 100 | 32 × 61 | 2.3×10⁻⁷ | 4.7×10⁻⁵ | −7.5×10⁻⁵ | 1.1×10⁻⁷ | 1.2×10¹⁷ |
 
 The control is D = 10 on 32 × 61, where the continuation of section 3 found a discrete solution: there the first step
 is 4×10⁻⁷, about the map's own error, the residual falls from 1.1×10⁻⁷ to 1.1×10⁻¹² (quadratically), and the solve
 lands on the continuation's Δ to all digits (+1.7×10⁻⁷ from ours). On a grid too coarse for its D the first step is
 10⁻² and moves Δ by 0.1 to 1, the residual after it is larger than before, and Newton never recovers: the discrete
 solution is not near ours. Refining the grid brings it back, at a price. At D = 20 the 32 × 41 grid holds it (the step
-is 7.5×10⁻⁶, the residual falls to 5×10⁻¹⁰, and Δ moves by 10⁻⁴, about that grid's error), but its κ near 10¹⁶ leaves
-f64 Newton unable to finish. FINER_PLACEHOLDER So the accuracy demands N, and N brings κ.
+is 7.5×10⁻⁶, the residual falls to 5×10⁻¹⁰, and Δ moves by 10⁻⁴, about that grid's error), but its κ there,
+6.4×10¹⁵, leaves f64 Newton unable to finish. At D = 40, 60 and 100 the 32 × 41 and 32 × 61 grids give first steps of
+3×10⁻⁵ to 10⁻⁴ that move Δ by 5×10⁻⁵ to 6×10⁻⁴, and the residual after them changes only from 1–2×10⁻⁷ to 2–11×10⁻⁸.
+These grids sit at the edge, with κ past f64's limit (4×10¹⁶ to 2×10¹⁷ after the step), so f64 cannot tell whether
+they hold the solution, and Δ on them would be off by about 10⁻⁴ if they do. So the accuracy demands N, and N brings κ.
 
 **At matched resolution.** Matched in τ harmonics (our M = 32 against RT's N_t = 64) the comparison is RT's κ at any
 N_t, since RT's does not depend on it. Matched in accuracy of Δ the two meet at D = 10: RT's 48 × 81 grid gives Δ to
@@ -318,17 +335,17 @@ On this machine a dense arb solve (`solver/rt/lu_cost.py`, python-flint's approx
 |---|---|---|---|---|---|
 | seconds / L³ | 3.8×10⁻⁹ | 6.4×10⁻⁹ | 1.1×10⁻⁸ | 3.0×10⁻⁸ | 8.2×10⁻⁸ |
 
-So one Newton step's LU at EEG's L = 11,200 takes about 4.2 hours at 512 bits and 11.5 hours at 1024 bits on one
-core, and at L = 18,369 (our harmonic content, N = 81) 19 and 51 hours (`rt_summary.py`, estimates from the L³ law;
-flint's blocking may do somewhat better at large L). EEG's 392 steps of 1/2 from 4 to 200, with "typically" four Newton iterations each, need that
-LU about 1,600 times. Our chain's step at D = 200 took 460 s on 18 threads, mostly the 24 Taylor coefficients in
-octo-double (T138-win2 `chain_o/anm_run.jsonl`: t_coef 415 s, the corrector 29 s, the re-seed 14 s). The precision
-the RT system needs is κ at a grid that holds the solution (section 4). That was measured only to
-D = 10, where Δ to 10⁻¹² takes the 48 × 81 grid with κ = 1.7×10¹⁵, already past f64, on 6.5 times our unknowns at that
-D (13,777 against 2,113). Beyond D = 10 the grid must grow and σ_min falls with it at a rate that grows with D, so
-both L and the precision grow. A number for D = 200 would need these laws carried far past the measured range, and
-it is not given here. What the data do say is that RT's form buys no digits: at the one D where both were run to the
-same accuracy, it needs more precision on more unknowns than ours.
+So one Newton step's LU at EEG's L = 11,200 takes about 4.2 hours at 512 bits and 11.5 hours at 1024 bits on one core,
+and at L = 18,369 (our harmonic content, N = 81) 19 and 51 hours (`rt_summary.py`, estimates from the L³ law; flint's
+blocking may do somewhat better at large L). EEG's 392 steps of 1/2 from 4 to 200, with "typically" four Newton
+iterations each, need that LU about 1,600 times. Our chain's step at D = 200 took 460 s on 18 threads, mostly the 24
+Taylor coefficients in octo-double (T138-win2 `chain_o/anm_run.jsonl`: t_coef 415 s, the corrector 29 s, the re-seed 14
+s). The precision the RT system needs is κ at a grid that holds the solution (section 4). That was measured only to D =
+10, where Δ to 10⁻¹² takes the 48 × 81 grid with κ = 1.7×10¹⁵, already past f64, on 6.5 times our unknowns at that D
+(13,777 against 2,113). Beyond D = 10 the grid must grow and σ_min falls with it at a rate that grows with D, so both L
+and the precision grow. A number for D = 200 would need these laws carried far past the measured range, and it is not
+given here. What the data do say is that RT's form buys no digits: at the one D where both were run to the same
+accuracy, it needs more precision on more unknowns than ours.
 
 ## 5b. What to adopt, and what not
 
@@ -374,17 +391,17 @@ To be added under the 2026-10-21 addendum's EEG entry and as a new entry (the co
   on a dense block plus a Neumann series (Secs. 1.3, 5). What it does not contain: other dimensions, perturbations
   (no γ), or any statement about how the method's cost grows with D.
 - **Ecker, Ecker & Grumiller**, arXiv:2611.07007v1 (4 Nov 2026), the existing entry, extended: Sec. II uses RT's gauge
-  and variables in D dimensions (Eqs. (2)–(5)); "the equations are at most quadratic in the unknowns", "so the linearized
-  operator depends linearly on the background solution", which "adds to the numerical stability of their scheme"
-  (supplement VII.1); Δ = 4πμ/(1 − ⟨ψ₋₁²⟩) (Eq. (3)); Sec. III: Fourier × Chebyshev on [0, 4π] × [−1, 1] with 40 and 80
-  modes, bilinear convolutions in spectral space, 11,200 unknowns, Newton in GMP dyadic arithmetic with rounding only
-  at the Jacobian's inversion and "increasingly higher precision" with D, residuals near 10⁻²⁵ after about four steps,
-  D from 4 to 200 in steps of 1/2 with a linear predictor; that "the singular branch becomes increasingly difficult to
-  distinguish numerically from the regular one", which stopped their earlier shooting code at D = 5.5; "the results for
-  D>28 have sufficient accuracy so that we trust all displayed digits", from varying the mode numbers; supplement
-  VII.2 maps RT gauge to the gauge of their earlier work by integrating characteristics. Not stated: the precision used
-  at large D, mode numbers other than 40 and 80, or an error bar on Δ. Their Eq. (5) holds for Ric = (D − 2) dφ dφ,
-  their Eq. (1) has Ric = 2 dφ dφ (section 2 above).
+  and variables in D dimensions (Eqs. (2)–(5)); "the equations are at most quadratic in the unknowns", "so the
+  linearized operator depends linearly on the background solution", which "adds to the numerical stability of their
+  scheme" (supplement VII.1); Δ = 4πμ/(1 − ⟨ψ₋₁²⟩) (Eq. (3)); Sec. III: Fourier × Chebyshev on [0, 4π] × [−1, 1] with 40
+  and 80 modes, bilinear convolutions in spectral space, 11,200 unknowns, Newton in GMP dyadic arithmetic with rounding
+  only at the Jacobian's inversion and "increasingly higher precision" with D, residuals near 10⁻²⁵ after about four
+  steps, D from 4 to 200 in steps of 1/2 with a linear predictor; that "the singular branch becomes increasingly
+  difficult to distinguish numerically from the regular one", which stopped their earlier shooting code at D = 5.5; "the
+  results for D>28 have sufficient accuracy so that we trust all displayed digits", from varying the mode numbers;
+  supplement VII.2 maps RT gauge to the gauge of their earlier work by integrating characteristics. Not stated: the
+  precision used at large D, mode numbers other than 40 and 80, or an error bar on Δ. Their Eq. (5) holds for Ric = (D −
+  2) dφ dφ, their Eq. (1) has Ric = 2 dφ dφ (section 2 above).
 
 ## 7. Proposed text for the README ("The large-D wall")
 
@@ -414,6 +431,14 @@ python3 solver/rt/rt_run.py --profile PROF4.npz --grids 32x61,48x81 --cont_grid 
 python3 solver/rt/rt_cond.py --selftest              # --mutate=transpose must exit 1
 python3 solver/rt/rt_cond_mp.py --selftest           # --mutate=lowprec must exit 1
 python3 solver/rt/rt_cond.py OUT.jsonl OUTDIR/accept_D10.0000_32x61.npz [--grid=64x61]
-python3 solver/rt/rt_cond_mp.py OUT.jsonl --profile PROF.npz --grid 16x21 --prec 512
+python3 solver/rt/rt_cond.py OUT.jsonl OUTDIR/accept_D10.0000_48x81.npz --grid=16x41       # and 16x51 ... 16x81
+python3 solver/rt/rt_cond_mp.py OUT.jsonl --profile PROF.npz --grid 24x21 --prec 512
+python3 solver/rt/rt_solve_mapped.py OUT.jsonl --profile PROF.npz --grids 24x21,32x41 --mp 192
+python3 solver/rt/lu_cost.py OUT.jsonl                # --mutate=perturb must exit 1
+python3 solver/rt/rt_summary.py RAW/I91-mac           # every table of this note from the records
 cd hp && python3 stall_margin.py OUT.jsonl STATE.npz --k 2 --threads 2      # OUT inside a raw-data folder
 ```
+
+PROF.npz files are `gg_to_rt.py profile` dumps of hp states (`I91-mac/profiles/`: up_D10.0000, up2_D20.0437,
+up6_D30.0688, up7_D40.0201 and up13_D60.0020 from `hp/data/states` of the main checkout, T139-macm3's
+anm_pin3_D100.0000).

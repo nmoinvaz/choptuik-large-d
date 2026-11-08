@@ -92,7 +92,8 @@ def main():
         print("| D | grid | L | mapped residual | first step max|dz| | its change of Delta | residual after it | "
               "kappa after that step (f64) | solved |")
         print("|---|---|---|---|---|---|---|---|---|")
-        for r in sorted(sm, key=lambda r: (r["D"], r["L"])):
+        last = {(r["D"], tuple(r["grid"])): r for r in sm}           # a rerun replaces the earlier record
+        for r in sorted(last.values(), key=lambda r: (r["D"], r["L"])):
             s = r["first_step"]
             print(f"| {r['D']:g} | {r['grid'][0]}x{r['grid'][1]} | {r['L']} | {r['F_mapped']:.1e} | {s['max_dz']:.1e} | "
                   f"{s['dDelta']:+.1e} | {s['F_after']:.1e} | {(format(s["kappa"], ".1e") if "kappa" in s else "–")} | "
