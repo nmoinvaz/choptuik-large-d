@@ -137,6 +137,11 @@ def lam2_step(x, M, xi1, dx, dx2, lam, f0vec, ell, lam1, ellJel, lam1_free=False
         return jm, Rr, (p, e1, e2)
     # f_1
     S0, dS0, _ = R.pert_matrix(x, M, xi1, lam)
+    # the denominator ell . dS/dlambda f_0, from this model's own d/dlambda direction (the value passed in is only
+    # compared: the stored first-order 'Jel' of data/first_order_M3_xi0.2.json does not match its 'ell')
+    ellJel_in = ellJel
+    ellJel = float(ell @ dS0 @ f0vec)
+    log(f"   ell . dS/dlambda f_0 = {ellJel:.6e} (passed in: {ellJel_in:.6e})")
     jm, Rr, (p, e1, e2) = run(np.zeros(len(f0vec)), None, False)
     Jp1 = Rr[jm.idx[p | e1]]
     if lam1_free:
@@ -161,7 +166,7 @@ def lam2_step(x, M, xi1, dx, dx2, lam, f0vec, ell, lam1, ellJel, lam1_free=False
     Jp12 = Rr[jm.idx[p | e1 | e2]]
     num = float(ell @ (Jp12 / 2))
     lam2 = -num / ellJel
-    return dict(lam2=lam2, lam2_num=num, f1vec=f1vec.tolist(), ellJp1=ellJp1, lam1_used=lam1,
+    return dict(lam2=lam2, lam2_num=num, f1vec=f1vec.tolist(), ellJp1=ellJp1, lam1_used=lam1, ellJel_used=ellJel,
                 Jp1_norm=float(np.linalg.norm(Jp1)), Jp1_after=float(np.linalg.norm(Jp1b)),
                 Jp12=Jp12.tolist(), dgauge1={str(k): [v.real, v.imag] for k, v in dgauge1.items()},
                 dgauge2={str(k): [v.real, v.imag] for k, v in dgauge2.items()})
@@ -189,7 +194,7 @@ def main():
     fn = os.path.join(raw, f"second_order_{tag}.json")
     out = json.load(open(fn)) if os.path.exists(fn) else dict(M=M, xi1=xi1, rtol=R.RTOL)
     for key in (opts.get("--redo", "").split(",") if "--redo" in opts else []):
-        for k2 in {"omega2": ["dx2"], "gauge": ["omega2_gauge0"], "lam2": ["lam2"]}[key]:
+        for k2 in {"omega2": ["dx2"], "gauge": ["omega2_gauge0"], "lam2": ["lam2", "lam2_gauge0"]}[key]:
             out.pop(k2, None)
 
     def save():
@@ -232,7 +237,8 @@ def main():
         lam, lam1 = first["lam"], first["lam1"]
         f0vec, ell = np.array(first["fvec"]), np.array(first["ell"])
         ellJel = float(ell @ np.array(first["Jel"]))
-        out.update(lam2_step(x, M, xi1, dx, dx2, lam, f0vec, ell, lam1, ellJel), lam=lam, lam1=lam1, ellJel=ellJel)
+        res = lam2_step(x, M, xi1, dx, dx2, lam, f0vec, ell, lam1, ellJel)
+        out.update(res, lam=lam, lam1=lam1, ellJel=res["ellJel_used"], ellJel_first_json=ellJel)
         save()
     if "lam2" in out:
         log(f"   check: ell . J_p1 {out['ellJp1']:.2e}; |J_p1| after f_1 {out['Jp1_after']:.2e}")

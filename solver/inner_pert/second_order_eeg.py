@@ -292,6 +292,18 @@ def check_C():
     b = sp.Function("b")(tau)
     Om2_1 = eeg_coeffs([b] + [b.diff(tau, k) for k in range(1, 5)])["Om2"].subs(x, 1)
     print(f"   Omega_2(tau, 1) = {sp.expand(Om2_1)}  ->  <Omega_2(1)> = -<beta~'^2> - <beta~^4>")
+    # numbers: N0 = <beta~_0^2> = 2 <F^2> of the tuned D = infinity profile (solver/eeg_profile/tuned_profile.py,
+    # data/tuned_profile_A2.71918.txt), Delta_0 = 1.643893746 (README), Delta_1 = 10.37528 (first_order_fits.py)
+    import os
+    import re
+    here = os.path.dirname(os.path.abspath(__file__))
+    txt = open(os.path.join(here, "..", "eeg_profile", "data", "tuned_profile_A2.71918.txt")).read()
+    N0v = float(re.search(r"<bt\^2> = N0 = ([0-9.]+)", txt).group(1))
+    D0v, D1v = 1.643893746, 10.37528
+    mu0 = D0v / (4 * float(sp.pi))
+    mu1 = (D1v - D0v * N0v) / (4 * float(sp.pi))
+    print(f"   numbers: N0 = {N0v} (tuned profile), mu_0 = Delta_0/(4 pi) = {mu0:.7f} (EEG fit 0.130818), "
+          f"mu_1 = (Delta_1 - Delta_0 N0)/(4 pi) = {mu1:.5f} (EEG fit -0.1449)")
 
 
 def check_D():

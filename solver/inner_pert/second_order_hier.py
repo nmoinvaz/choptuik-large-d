@@ -169,7 +169,7 @@ def main():
     fn = os.path.join(raw, f"second_order_hier_{tag}.json")
     out = json.load(open(fn)) if os.path.exists(fn) else dict(M=M, xi1=xi1, rtol=R.RTOL)
     for key in (opts.get("--redo", "").split(",") if "--redo" in opts else []):
-        for k2 in {"omega2": ["dx2"], "gauge": ["omega2_gauge0"], "lam2": ["lam2"]}[key]:
+        for k2 in {"omega2": ["dx2"], "gauge": ["omega2_gauge0"], "lam2": ["lam2", "lam2_gauge0"]}[key]:
             out.pop(k2, None)
 
     def save():
