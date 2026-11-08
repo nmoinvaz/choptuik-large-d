@@ -672,3 +672,297 @@ python3 solver/rt/rt_grids.py RAW/I105-mac/controls/res_32x121_all.jsonl RAW/I10
 python3 solver/rt/rt_mp_cost.py OUT.jsonl --state RAW/I105-mac/cont/cont_32x81_D15.0000_32x81.npz --grid 32x81
                                                               # 9.5; --mutate=perturb must exit 1
 ```
+
+## 10. Past D = 30: the Chebyshev N against D, and the cost
+
+Issue #145. Subagent of the coordinator on the Mac, 2026-11-08. Code in `solver/rt/`: new options of `rt_run.py`
+(`--start_prev`, `--pred_order`, `--extras_off_path`, `--patient`, `--it_max`, `--full_below`, `--newton_tol`) and of
+`rt_mpsolve.newton_mp` (`stall_any`, `full_below`), and the new `rt_cost_fit.py`, `rt_pred_check.py` and
+`rt_roots.py`. Raw output is in folder `I145-mac/` of the raw-data repository.
+
+**Result.** The acceptance is met at the rows nearest 40 and 50 and missed at the one nearest 60. On 32 × 101
+the prototype reproduces our Δ to 3.5×10⁻¹⁵ at D = 40.02, 3.3×10⁻¹⁵ at 50.01 and 2.1×10⁻¹⁴ at 55.00, and misses by
+1.27×10⁻¹² at 60.00. No grid on the ladder does better there. From D ≈ 40 refining the Chebyshev grid makes Δ worse:
+32 × 141 is 3.8×10⁻¹² off at D = 45 and 3.0×10⁻⁷ at 55, and 32 × 121 is 2.9×10⁻¹² off at 50 and 3.5×10⁻¹¹ at 60. The
+finer grids' roots are not unique along the weak direction of section 4. Meanwhile 32 × 81 was already 1.2×10⁻⁹ off at
+D = 30 (#105). So the criterion for N written before the runs fails from D = 50. With this collocation on N_t = 32,
+no grid tried holds Δ to 10⁻¹² at D = 60. A grid between 81 and 101 points was not tried.
+
+The cost stays modest. A unit of D took 3 to 11 min on one core at L = 11,425. The products of a Newton step with
+fresh factors grew about 0.4 per unit of D from 30 to 60, after 2 per unit from 10 to 30. The Newton steps per D step
+grew about 0.12 per unit of D. Staying on 32 × 101 would cost about 13 to 16 hours from D = 30 to 100 and 110 to 170
+hours to 215 (an extrapolation, cost only). #91's verdict on the chain should stand on its conditioning ground, not
+its cost ground (10.7).
+
+### 10.1 The protocol
+
+The solver is #105's (9.1), at 192 bits with N_t = 32. Five things changed, each after a run showed the need. The
+criteria for N were written down before the main runs (`I145-mac/README.md`).
+
+- **Steps of 1 with a cubic predictor.** `--dD 1 --pred_order 3` extrapolates in D through the last four solutions
+  by Lagrange's formula, and `--start_prev` seeds them, so a run restarts from its saved states. On #105's states at
+  D = 30 on 32 × 101 (`rt_pred_check.py`), the linear predictor at steps of 1/2 starts at max|F| = 1.8×10⁻⁴, the
+  quadratic at steps of 1 at 1.8×10⁻⁴ and the cubic at 4.9×10⁻⁵. The main run used the quadratic one to D = 33 and
+  the cubic one from there.
+- **One rebuild per D step.** In the pilot (D 30 → 30.5), a Newton step took 45 products with factors fresh at the
+  predictor and 64 after the first step of 4×10⁻⁵. #105's relative rule (1.5 times the first count) does not fire
+  there, so the runs rebuild after any step larger than 10⁻⁵ (`--refresh_dz 1e-5`).
+- **Patient Newton.** #105's rule stops Newton when max|F| stays above half its previous value after step 3, meant for
+  the precision's floor. Near this nearly singular root it fires far above that floor while max|dz| still falls. It
+  ended a 32 × 121 solve at D = 32 at max|F| = 1.5×10⁻²⁶ and the 32 × 101 step to D = 34 at 1.2×10⁻²⁶.
+  `--patient --it_max 20` applies the rule only within 10⁶ of the target.
+- **Small steps taken in full.** Halving a step whenever max|F| grew stalled Newton too. At D = 35, a full step of
+  3.4×10⁻⁹ was halved to 1/128 for 8 steps while max|F| crept from 4.4×10⁻¹⁹ to 2.2×10⁻¹⁸. For the quadratic residual
+  a full step dz leaves F = B(dz, dz) exactly, so `--full_below 1e-4` takes every step below 10⁻⁴ in full. Steps then
+  raise max|F| once or twice, by up to 10⁹, before the quadratic phase.
+- **Newton's target.** Up to D = 53 it is #105's 10⁻⁴⁰, with stalls accepted below 10⁻³⁴. From D = 54 it is 10⁻³⁸
+  and from D = 57 10⁻³⁶ (`--newton_tol`), with stalls accepted below 10⁻³² and 10⁻³⁰. The D = 54 step had bounced for
+  15 Newton steps between max|F| = 6×10⁻³⁵ and 1.2×10⁻³³, at max|dz| = 1–3×10⁻¹⁸. The D = 57 step bounced between
+  1.2×10⁻³² and 1.0×10⁻³¹, at max|dz| up to 1.2×10⁻¹⁶. That is a floor set by the weak direction, not by the precision.
+  It rises with D, and a step of 10⁻¹⁶ moves Δ by about 10⁻¹⁵. Both steps were stopped by hand and redone from the
+  last saved state.
+
+The stalled D = 34 solve shows why Δ is fixed only in Newton's quadratic phase. At max|F| = 1.2×10⁻²⁶ its Δ was
+1.9292728794391906, 2.0×10⁻¹² from the converged 1.9292728794411864.
+
+**The grid above the continuation's is a follower.** A continuation on 32 × 121 diverged at its first step, D 30 →
+31 (`cont/cont_32x121.*`). It started at max|F| = 1.5×10⁻⁴, the same as on 32 × 101, but the first Newton step was
+6.6×10⁻³, and after 4 steps and 3 rebuilds max|F| was 3.6×10⁻⁵. So the 32 × 121 and 32 × 141 values are re-solves:
+the coarser grid's state at the same D, resampled and solved by Newton (`rt_run.py --start STATE --grids 32xN`,
+queued by `run_worker*.sh`). They start at max|F| = 1–3×10⁻¹³.
+
+### 10.2 Δ on three grids
+
+At each check D, Δ − Δ_hp on 32 × 101 (the continuation), 32 × 121 and 32 × 141. hp is the double-double row of
+`hp/data/delta_all.csv` (runs up6, up7, up8, up10, up13), with err 1×10⁻¹⁶ at 34.99 and 2×10⁻¹⁵ from 40 on. Two
+entries in a cell are two roots of that grid from different starts. Every value is converged, to max|F| below 10⁻³².
+
+| D | 32 × 101 | 32 × 121 | 32 × 141 |
+|---|---|---|---|
+| 34.993266 | +9.9×10⁻¹⁶ | −3.9×10⁻¹⁸ | +3.1×10⁻¹⁸ |
+| 40.020065 | +3.5×10⁻¹⁵ (twice) | +1.5×10⁻¹⁵ (twice) | +1.0×10⁻¹⁴, +1.7×10⁻¹⁴ |
+| 44.963411 | +2.9×10⁻¹⁵ (twice) | −8.5×10⁻¹⁵, +3.2×10⁻¹⁵ | +3.8×10⁻¹² |
+| 50.007491 | +3.3×10⁻¹⁵, +7.5×10⁻¹⁵ | −2.9×10⁻¹² (twice), +4.5×10⁻¹² | −4.1×10⁻¹¹ |
+| 54.996085 | −2.1×10⁻¹⁴, +1.5×10⁻¹⁴ | +8.5×10⁻¹², +9.7×10⁻¹³ | −3.0×10⁻⁷ |
+| 60.001952 | **−1.27×10⁻¹², −2.33×10⁻¹²** | **+3.5×10⁻¹¹** | not run |
+
+From D = 40 the finer grids are no closer to hp. The best grid falls with D: at least 141 at D = 35, 121 at 40, 101
+from 45. A grid past its best has an error growing about 0.5 decade per unit of D: 32 × 141 from 1.0×10⁻¹⁴ at 40.02 to
+3.8×10⁻¹² at 44.96, and 32 × 121 from 8.5×10⁻¹⁵ at 44.96 to 2.9×10⁻¹² at 50.01. On 48 × 141 at 40.02, Δ moves by
+1.3×10⁻²⁰ from 32 × 141, so N_t = 32 is not the cause there.
+
+**The criterion for N fails from D = 50, and it is reported, not changed.** It defined N(D) as the smallest N whose Δ
+agrees with N + 20 to 10⁻¹², and moved the continuation up a grid at 10⁻¹³. `rt_grids.py --tol 1e-12` on the 101 and
+121 records exits 0 at D 34.99 and 40.02 (exit 1 with `--mutate=shift`). It exits 1 at 50.01, where |Δ_101 − Δ_121| =
+2.9×10⁻¹². Read literally, 101 no longer resolves Δ and the run should move to 121. But 121 is the grid that misses
+hp. The criterion's premise, that the finer grid is the better reference, fails from D ≈ 45. The continuation stayed
+on 32 × 101, and its verdicts are taken against hp.
+
+### 10.3 Why: the roots along the weak direction
+
+Each grid was re-solved at the check D from a second start, another grid's root resampled (`run_roots.sh`,
+`run_worker4.sh`), and `rt_roots.py` compares the two roots (`controls/roots_*.log`). The spread is the difference of
+the two converged Δ. It is a lower bound on how far the grid leaves Δ undetermined.
+
+| D | 32 × 101 | 32 × 121 | 32 × 141 |
+|---|---|---|---|
+| 40.020065 | 5.5×10⁻²³ | 4.6×10⁻²⁰ | 6.4×10⁻¹⁵ |
+| 44.963411 | 1.9×10⁻²⁰ | 1.2×10⁻¹⁴ | |
+| 50.007491 | 4.2×10⁻¹⁵ | 5.4×10⁻¹⁵ (starts 4.2×10⁻¹⁵ apart), 7.4×10⁻¹² (the 141 start) | |
+| 54.996085 | 3.6×10⁻¹⁴ | 7.6×10⁻¹² (starts 3.6×10⁻¹⁴ apart) | |
+| 60.001952 | 1.1×10⁻¹² | | |
+
+The second 101 start is the 121 root resampled. The 121 starts are the 101 roots and, where marked, the 141 root.
+
+The two 32 × 141 roots at 40.02 reach max|F| = 5.4×10⁻⁵² and 2.5×10⁻⁴⁷ in the runs, and their states differ by max|z₂
+− z₁| = 4.3×10⁻¹⁶. The difference is mostly μ and harmonic 0 of every field, spread evenly over ξ: section 4's weakest
+direction. For the quadratic residual F(z₂) − F(z₁) = J(z_m)(z₂ − z₁) exactly, with z_m the midpoint. So the runs'
+residuals bound |J(z_m)e|/|e| below 6×10⁻³² in the max norm along that difference. (The script evaluates the residuals
+of the states stored in double-double, about 10⁻³⁰, and so prints the weaker bound 5.7×10⁻¹⁵.) At 50.01 the two
+32 × 121 roots from the two 32 × 101 roots lie 2.9×10⁻¹² below hp, and the one from 32 × 141's root lies 4.5×10⁻¹² above
+it. Their states differ by 6.5×10⁻¹³. Which root Newton finds depends on where it starts.
+
+This is section 4's mechanism, now seen as error on solved grids. σ_min(J) falls like a power of N whose exponent
+grows with D, because the horizon's singular branch is nearly a polynomial. The part of a grid's truncation residual
+along the weak direction is divided by that σ_min. Past some N it falls more slowly than σ_min does, so refining N
+makes Δ worse, and nearly equal roots appear along that direction. The 101 grid reaches the same regime: its root
+spread grows from 5.5×10⁻²³ at D = 40 to 4.2×10⁻¹⁵ at 50, 3.6×10⁻¹⁴ at 55 and 1.1×10⁻¹² at 60, about 0.5 decade per
+unit of D (`fit/cost_fit.log`; a fit through five points). Below 101 the truncation is too large, since #105's 32 × 81
+missed by 1.2×10⁻⁹ at D = 30.
+
+### 10.4 Cost against D
+
+All times are on the shared Mac (Apple M5 with 4 performance and 6 efficiency cores, at nice 15, with up to three
+other agents' jobs). They are single measurements, and the same step varied by up to 1.5 times with the load. The arb
+parts use one thread and BLAS two. From `rt_cost_fit.py --table` on `cont/cont_32x101.jsonl` (32 × 101, L = 11,425):
+
+| D | Newton steps | products per Newton step | s for the D step |
+|---|---|---|---|
+| 31 | 5 | 46–53 | 248 |
+| 35 | 6 | 45–75 | 193 |
+| 40 | 7 | 49–85 | 337 |
+| 45 | 8 | 51–91 | 435 |
+| 50 | 7 | 53–87 | 385 |
+| 51 | 12 | 56–104 | 660 |
+| 53 | 10 | 53–114 | 604 |
+| 55 | 11 | 54–105 | 621 |
+| 57 | 9 | 55–108 | 518 |
+| 60 | 8 | 57–104 | 403 |
+
+- **Products per Newton step.** The first Newton step of each D step uses factors fresh at the predictor. Its count
+  grew about 2 per unit of D from D = 10 to 30 (#105) and about 0.4 per unit from 30 to 60: 46 at D = 31, 57 at 60.
+  The fit over all 77 D from 10.5 to 60 gives 0.89 per unit (windows: 1.8 for the first half, 0.36 for the second, a
+  spread over fit windows). The mean over a D step's Newton steps, which includes the steps on stale factors, grows
+  0.92 per unit of D from 30 to 60 (0.45 to 1.5 over the windows).
+- **Newton steps per D step.** These grew from 5 at D 31–36 to 7–12 at D 48–60. The fit over D 30–60 gives 0.12 per
+  unit of D (0.11 for the first half; the second half is biased by the change of target, 10.5). The extra steps are
+  Newton's jumps along the weak direction. A step from max|F| below 10⁻¹⁷ moves by 10⁻⁷ to 2×10⁻⁶ there and raises
+  max|F| to 10⁻¹¹ before the quadratic phase resumes.
+- **Seconds.** A product takes 0.48 s on 32 × 101, 0.65 s on 32 × 121 and 0.83 s on 32 × 141 (medians, L = 11,425,
+  13,665, 15,905), about (N + 1)^1.7. A preconditioner application takes a quarter of that. The f64 Jacobian and its
+  LU take 15, 24 and 33 s. The peak resident memory is 1.5, 1.9 and 2.5 GB, and 5.1 GB for 48 × 141 (L = 23,857). A D
+  step took 190–350 s at D 31–41 and 380–680 s at D 45–60. By #105's linear predictor at steps of 1/2, one unit of D
+  near D = 30 took about 7 min (2 × 256 s with its frequent rebuilds). Here it took 4 min, from the steps of 1 with
+  the cubic predictor and one rebuild per D step.
+
+### 10.5 Projection to D = 100 and 215 (an extrapolation)
+
+`rt_cost_fit.py --project 60,100,215 --fixed_N 101` continues the two linear fits, products per Newton step and
+Newton steps per D step, at 32 × 101's measured seconds per product. It gives the cost of continuing on 32 × 101
+alone. It is an extrapolation over a factor of 2 to 4 in D beyond the data, and it is the cost only.
+
+| D | window | products per Newton step | Newton steps per D step | s per D step | hours from D = 30 |
+|---|---|---|---|---|---|
+| 60 | all | 80 | 9.3 | 554 | 3.3 |
+| 60 | first half | 92 | 8.8 | 625 | 3.4 |
+| 100 | all | 116 | 13.9 | 1,269 | 13.2 |
+| 100 | first half | 152 | 13.1 | 1,665 | 15.7 |
+| 215 | all | 222 | 27.3 | 5,625 | 114 |
+| 215 | first half | 323 | 25.4 | 8,918 | 166 |
+
+The windows are those of the two fits: all D from 30 to 60, and the first half. The second half (D 45–60) gives
+falling Newton steps (−0.09 per unit of D). That window is biased by the change of Newton's target for the steps
+from D = 54 and 57, which dropped the last one or two Newton steps, so it is left out. Its rows are in
+`fit/cost_fit.log`. The 30 measured steps from D = 31 to 60 took 3.35 hours in all, against 3.3 from the fits, with
+the check points and the restarts not counted.
+
+N(D) is not projected. The method planned, the grid differences fitted in D and continued in N at the measured rate
+per 20 points, needs Δ_N − Δ_{N+20} to measure truncation. From D ≈ 40 it measures the finer grid's error along the
+weak direction instead. With N held at 101, the error reaches 1.3×10⁻¹² at D = 60, and with N raised it is larger.
+So the projection above prices a grid that no longer holds Δ to 10⁻¹² past D ≈ 60. A grid that does, if one exists,
+needs a different discretization (10.7). For
+scale, our chain's step at D = 200 took 460 s on 18 threads (section 5(3)).
+
+### 10.6 Controls
+
+| control | expected | result | log |
+|---|---|---|---|
+| `rt_run.py --mutate=coef` at D = 60.001952 from the unmutated 32 × 101 state | Δ moves by > 10⁻⁶, exit 1 | Δ moved by 5.3×10⁻⁴, exit 1 | `controls/coef_D60*` |
+| the same at D = 54.996085 | Δ moves by > 10⁻⁶, exit 1 | Δ moved by 3.8×10⁻², exit 1 | `controls/coef_D54*` |
+| `rt_grids.py --tol 1e-12`, 32 × 101 and 32 × 121 at D 34.99, 40.02 | exit 0 | exit 0 | `fit/grids_101_121_D35_40.log` |
+| the same with `--mutate=shift` (2×10⁻¹² added to one Δ) | exit 1 | exit 1 | `fit/grids_101_121_D35_40_mutate_shift.log` |
+| `rt_grids.py --tol 1e-12` at D 40.02, 44.96, 50.01 | (the acceptance on N and N + 20) | exit 1, at 50.01 | `fit/grids_101_121_D40_50.log` |
+| `rt_grids.py --tol 1e-12`, the two 32 × 101 roots at D 40.02–60.00 | (the acceptance on 101) | exit 1, at 60.00 (−1.27×10⁻¹² and −2.33×10⁻¹²) | `fit/grids_101_roots.log` |
+| `rt_mpsolve.py --selftest` at this code | error < 10⁻³⁰, exit 0 | 6.9×10⁻⁴⁰, exit 0 | `controls/planted.log` |
+| `rt_cost_fit.py --planted` (slopes, N(D), the root-spread fit and the fixed-N cost recovered) | exit 0 | exit 0 | `fit/planted.log` |
+| its `--mutate=rate` and `--mutate=slope` | exit 1 | exit 1, exit 1 | `fit/planted_mutate_*.log` |
+| `rt_pred_check.py` (a planted cubic path predicted exactly at order 3) and its `--mutate=order` | exit 0, exit 1 | exit 0, exit 1 | `fit/pred_check*.log` |
+| `rt_roots.py` (a planted 10⁻²⁰ difference along μ recovered) and its `--mutate=same` | exit 0, exit 1 | exit 0, exit 1 | `controls/roots_*.log` |
+
+Neither mutated solve converged in its 20 Newton steps: max|F| fell from 4.1×10⁻⁴ to 6.0×10⁻⁸ at D = 60 and to
+1.5×10⁻⁹ at 54.996, with Newton jumping along the weak direction. In #105 the same mutation converged at D = 15 and
+29.98 and moved Δ by 3.75×10⁻⁴ and 3.06×10⁻³. The control still fires, through the check against hp, and its Δ
+moved far more than the 10⁻⁶ required. But at D ≥ 55 a solve from 10⁻³ away no longer reaches the mutated root in 20
+steps.
+
+### 10.7 What this says about #91's verdict
+
+#91 advised against adopting the global Fourier × Chebyshev Newton for the chain, for two reasons. The first was cost,
+a dense extended-precision LU at hours per step. #105 refuted it, and this run confirms that: a unit of D costs 3 to
+11 min on one core at L = 11,425 up to D = 60. Even continued at its fitted growth, staying on 32 × 101 would cost
+13 to 16 hours from D = 30 to 100 (an extrapolation). The second reason was conditioning. A grid that holds the
+solution needs its truncation below σ_min, and σ_min falls with N faster the larger D is. That reason stands, and it
+is now measured as error in Δ on solved grids rather than inferred from κ:
+
+- From D ≈ 40 refinement makes Δ worse. 32 × 141 is 1.0×10⁻¹⁴ off hp at D = 40.02, 3.8×10⁻¹² at 44.96 and 4.1×10⁻¹¹ at
+  50.01. 32 × 121 is 2.9×10⁻¹² and 4.5×10⁻¹² off at 50.01, from different starts, and 3.5×10⁻¹¹ at 60.00. Meanwhile
+  32 × 101 stays within 7.5×10⁻¹⁵ to D = 50 and 2.1×10⁻¹⁴ at 55, and misses by 1.27×10⁻¹² at 60.
+- The finer grids' roots come in close sets along the weak direction, and the start decides which one Newton finds.
+- Below the optimum the truncation is too large: 32 × 81 missed hp by 1.2×10⁻⁹ at D = 30 (#105).
+- The optimal N falls with D: at least 141 at D = 35, 121 at 40, 101 at 45 to 55. The window of N that holds Δ to
+  10⁻¹² therefore narrows with D, and at D = 60 it holds no N of the ladder (101 misses by 1.27×10⁻¹², 121 by
+  3.5×10⁻¹¹). An N between 81 and 101 was not tried.
+
+So the verdict on the chain should stay "do not adopt", with its reason restated. The obstacle is not the linear
+algebra, which this solver makes cheap, but the discretization. A polynomial basis that does not exclude the
+horizon's singular branch cannot fix Δ once the branch is smooth enough to pass for a polynomial at the resolution
+needed for the rest of the solution. This is consistent with section 5(2): the same wall as our horizon series'
+radius, met from the other side.
+
+One thing could change the reading. A discretization that imposes the regular horizon behaviour explicitly, with
+rows or a basis that remove the singular branch, might reopen the window. Whether it can do so without inheriting our
+series' wall is open (Recommended tasks). What the prototype already gives is an independent check of Δ to about
+10⁻¹⁴ up to D ≈ 55 on 32 × 101, by another gauge, other unknowns and another discretization. At D = 40 and 50 it lies
+within 3.5×10⁻¹⁵ of our double-double rows.
+
+### 10.8 Discrepancies (reported, not fixed)
+
+- **The criterion for N, written before the runs, fails from D = 50.** |Δ_101 − Δ_121| = 2.9×10⁻¹² there, and its rule
+  (move up a grid once the difference passes 10⁻¹³) would have moved the run to the grid that misses hp. The criterion
+  assumed that refinement converges. From D ≈ 45 it does not (10.2, 10.3).
+- **hp's row at D = 40.020065 (up7, err 2×10⁻¹⁵) sits 1.5–3.5×10⁻¹⁵ below the 32 × 101 and 32 × 121 values,** which
+  agree with each other to 2.0×10⁻¹⁵ and whose roots are unique to 5×10⁻²³ and 5×10⁻²⁰. That is inside hp's stated
+  error, so it is no disagreement, but the RT values do not test hp below 10⁻¹⁵ there.
+- **The acceptance at the row nearest 60 is missed:** Δ_RT − Δ_hp = −1.27×10⁻¹² on 32 × 101 at D = 60.001952 (second
+  root −2.33×10⁻¹²), against 10⁻¹². hp's row there (up13, err 2×10⁻¹⁵) is not in question. Every RT grid tried is
+  further off, so the miss is the RT discretization's.
+- **Section 9.7's estimate for #106** had the 32 × 101 count of products reaching 80 near D = 45, at about 2 more per
+  unit of D. The first-step count grew only about 0.4 per unit of D from 30 to 60: 46 at D = 31, 57 at 60. The cost
+  grew through extra Newton steps instead (10.4).
+- **Section 5(2)'s mechanism, σ_min falling with N faster at larger D, now shows as error in Δ** on grids that hold the
+  solution, not only as κ. The sentence of 5b that a grid fine enough to hold the solution "can check our values at D
+  = 12–30" holds and extends to D ≈ 55 at 10⁻¹⁴. The README sentence proposed in section 7 stays correct.
+- **Timings vary by up to 1.5 times** with the load on the shared Mac, for the same step: the pilot's step took 25 s
+  and then 46 s per Newton step. The fits of seconds are fits of these.
+
+### 10.9 Proposed text for the README
+
+For the coordinator, after the RT sentence of "The large-D wall" (sections 7 and 9.8):
+
+> Continued past D = 30 on 32 × 101, the RT prototype reproduces our Δ to 3×10⁻¹⁵ at D = 40 and 50 and to 2×10⁻¹⁴ at
+> 55. It misses by 1.3×10⁻¹² at 60. There it also shows the wall in its own form. From D ≈ 40, refining the Chebyshev
+> grid makes Δ worse (32 × 141 is 4×10⁻¹² off at D = 45, 32 × 121 3×10⁻¹² at D = 50), and the finer grids' roots are
+> not unique along the horizon's near-polynomial singular branch. The usable resolution therefore narrows with D, and
+> on these grids it closes for 10⁻¹² near D = 60 ([notes/RT_FORMULATION.md](notes/RT_FORMULATION.md) section 10).
+
+### 10.10 Reproduction
+
+From the repository root, with the raw-data repository cloned beside it (RAW = `../choptuik-large-d-raw`). On the
+Mac, use `/Users/nathan/venv-qd/bin/python` with the MULTIDOUBLE_SITE of 9.9. The drivers in `RAW/I145-mac/` hold the
+exact commands of the runs: `run_cont.sh` (the continuation; its five restarts are listed in the folder's README),
+`run_worker*.sh` (the re-solves), `run_roots.sh`, `run_roots_logs.sh`, `run_coef.sh` and `run_final60.sh`.
+
+```
+python3 solver/rt/rt_pred_check.py RAW/I105-mac/cont cont_32x101 --grid 32x101   # 10.1; --mutate=order must exit 1
+RAW/I145-mac/run_cont.sh 101 RAW/I105-mac/cont/cont_32x101_D30.0000_32x101.npz \
+    RAW/I105-mac/cont/cont_32x101_D28.0000_32x101.npz,RAW/I105-mac/cont/cont_32x101_D29.0000_32x101.npz cont_32x101
+                                                     # the continuation's first leg (quadratic predictor)
+python3 solver/rt/rt_run.py --start RAW/I145-mac/cont/cont_32x101_D40.0201_32x101.npz --grids 32x141 --solver mp \
+    --tol 1e-12 --max_products 250 --refresh_dz 1e-5 --patient --it_max 20 --full_below 1e-4 --out OUT --tag t
+                                                     # one re-solve (10.2): Delta 1.65e-14 from hp, exit 0
+python3 solver/rt/rt_roots.py RAW/I145-mac/fol/fol_32x141_D40.0201_32x141.npz \
+    RAW/I145-mac/controls/from101_32x141_D40.0201_32x141.npz   # 10.3: Delta_2 - Delta_1 = +6.4e-15; --mutate=same exit 1
+python3 solver/rt/rt_grids.py RAW/I145-mac/cont/cont_32x101.jsonl RAW/I145-mac/fol/fol_32x121.jsonl \
+    --D 34.993266,40.020065 --tol 1e-12              # exit 0; with --mutate=shift exit 1
+python3 solver/rt/rt_grids.py RAW/I145-mac/cont/cont_32x101.jsonl RAW/I145-mac/fol/fol_32x121.jsonl \
+    --D 40.020065,44.963411,50.007491 --tol 1e-12    # exit 1, at 50.007491
+python3 solver/rt/rt_grids.py RAW/I145-mac/cont/cont_32x101.jsonl RAW/I145-mac/fit/roots101_second.jsonl \
+    --D 40.020065,44.963411,50.007491,54.996085,60.001952 --tol 1e-12   # exit 1, at 60.001952
+python3 solver/rt/rt_cost_fit.py --planted           # exit 0; --mutate=rate and --mutate=slope exit 1
+python3 solver/rt/rt_cost_fit.py RAW/I145-mac/cont/cont_32x101.jsonl RAW/I145-mac/fol/fol_32x121.jsonl \
+    RAW/I145-mac/fol/fol_32x141.jsonl --old RAW/I105-mac/cont/cont_32x101.jsonl --table --project 60,100,215 \
+    --fixed_N 101 --alt RAW/I145-mac/fit/roots101_second.jsonl,RAW/I145-mac/controls/from141_32x121.jsonl,\
+RAW/I145-mac/fol/from141_32x121.jsonl,RAW/I145-mac/fol/from101b_32x121.jsonl,RAW/I145-mac/controls/from101_32x141.jsonl
+                                                     # 10.2-10.5 (fit/cost_fit.log)
+RAW/I145-mac/run_coef.sh D60.0020                    # 10.6: must exit 1
+```
