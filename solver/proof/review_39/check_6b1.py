@@ -30,7 +30,8 @@ compared with the stored t lists), with the tiles glued row by row; see `cover`.
     python3 check_6b1.py discs --inputs=<dir> --rows=17,16 --out=<dir> [--mutate=sign] [--discs=0,5] [--r_scale=1.01]
     python3 check_6b1.py cover --runs=<stored run dir> --mine=<dir of disc verdicts> [--json=f] [--mutate=drop:9,5 |
         radius:9 | g0]
-Exit status 0 only if every requested disc certifies (discs) or every condition holds (cover).
+    python3 check_6b1.py summary --mine=<dir> --inputs=<dir> --runs=<stored run dir>     the per-row table
+Exit status 0 only if every requested disc certifies (discs, summary) or every condition holds (cover).
 """
 import json
 import math
@@ -643,6 +644,38 @@ def cmd_cover(opts):
     return 0 if ok else 3
 
 
+def cmd_summary(opts):
+    """per-row table: the review's verdicts against the original's on the regenerated inputs and the stored rows"""
+    rows = design()
+    print("| row | \\|u\\| | r, n | discs | review certifies | review max Λ | original max Λ (rerun) | stored max Λ | "
+          "max (orig − review)/orig | box radii equal to stored | rerun Λ − stored Λ |")
+    print("|---|---|---|---|---|---|---|---|---|---|---|")
+    tot = dict(d=0, ok=0, eq=0)
+    worst = 0.0
+    for rw in rows:
+        j = rw["j"]
+        with open(os.path.join(opts["mine"], f"row_{j:02d}.json")) as fh:
+            mine = json.load(fh)
+        with open(os.path.join(opts["inputs"], f"row_{j:02d}.json")) as fh:
+            inp = json.load(fh)
+        with open(os.path.join(opts["runs"], f"row_{j:02d}.json")) as fh:
+            st = json.load(fh)
+        nd_ = len(rw["t"])
+        ok = sum(1 for d in mine["discs"] if d["ok"])
+        eq = sum(1 for a, d in zip(inp["box_rad"], st["discs"]) if a == d["box_rad"])
+        rel = max((d["orig_Lam"] - d["Lam_f"]) / d["orig_Lam"] for d in mine["discs"])
+        dst = max(abs(a["orig"]["Lam"] - d["Lam"]) for a, d in zip(inp["discs"], st["discs"]))
+        worst = max(worst, max(d["Lam_f"] for d in mine["discs"]))
+        tot["d"] += nd_
+        tot["ok"] += ok
+        tot["eq"] += eq
+        print(f"| {j} | {rw['rho']:g} | {rw['r']}, {rw['n']} | {nd_} | {ok} | "
+              f"{max(d['Lam_f'] for d in mine['discs']):.4f} | {max(d['orig']['Lam'] for d in inp['discs']):.4f} | "
+              f"{max(d['Lam'] for d in st['discs']):.4f} | {rel:+.3f} | {eq} of {nd_} | {dst:.1e} |")
+    print(f"| all | | | {tot['d']} | {tot['ok']} | {worst:.4f} | | | | {tot['eq']} of {tot['d']} | |")
+    return 0 if tot["ok"] == tot["d"] else 3
+
+
 def main():
     args = [a for a in sys.argv[1:] if not a.startswith("--")]
     opts = {a.split("=", 1)[0][2:]: (a.split("=", 1)[1] if "=" in a else "1") for a in sys.argv[1:] if a.startswith("--")}
@@ -651,6 +684,8 @@ def main():
         return cmd_discs(opts)
     if cmd == "cover":
         return cmd_cover(opts)
+    if cmd == "summary":
+        return cmd_summary(opts)
     raise SystemExit(f"unknown command {cmd}")
 
 
