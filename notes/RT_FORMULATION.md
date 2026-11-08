@@ -810,7 +810,7 @@ parts use one thread and BLAS two. From `rt_cost_fit.py --table` on `cont/cont_3
 | 60 | 8 | 57–104 | 403 |
 
 - **Products per Newton step.** The first Newton step of each D step uses factors fresh at the predictor. Its count
-  grew about 2 per unit of D from D = 10 to 30 (#105) and about 0.5 per unit from 30 to 55: 46 at D = 31, 56 at 51.
+  grew about 2 per unit of D from D = 10 to 30 (#105) and about 0.4 per unit from 30 to 60: 46 at D = 31, 57 at 60.
   The fit over all 77 D from 10.5 to 60 gives 0.89 per unit (windows: 1.8 for the first half, 0.36 for the second, a
   spread over fit windows). The mean over a D step's Newton steps, which includes the steps on stale factors, grows
   0.92 per unit of D from 30 to 60 (0.45 to 1.5 over the windows).
@@ -821,7 +821,7 @@ parts use one thread and BLAS two. From `rt_cost_fit.py --table` on `cont/cont_3
 - **Seconds.** A product takes 0.48 s on 32 × 101, 0.65 s on 32 × 121 and 0.83 s on 32 × 141 (medians, L = 11,425,
   13,665, 15,905), about (N + 1)^1.7. A preconditioner application takes a quarter of that. The f64 Jacobian and its
   LU take 15, 24 and 33 s. The peak resident memory is 1.5, 1.9 and 2.5 GB, and 5.1 GB for 48 × 141 (L = 23,857). A D
-  step took 190–350 s at D 31–41 and 380–680 s at D 45–55. By #105's linear predictor at steps of 1/2, one unit of D
+  step took 190–350 s at D 31–41 and 380–680 s at D 45–60. By #105's linear predictor at steps of 1/2, one unit of D
   near D = 30 took about 7 min (2 × 256 s with its frequent rebuilds). Here it took 4 min, from the steps of 1 with
   the cubic predictor and one rebuild per D step.
 
@@ -841,15 +841,16 @@ alone. It is an extrapolation over a factor of 2 to 4 in D beyond the data, and 
 | 215 | first half | 323 | 25.4 | 8,918 | 166 |
 
 The windows are those of the two fits: all D from 30 to 60, and the first half. The second half (D 45–60) gives
-falling Newton steps (−0.09 per unit of D). That window is biased by the change of Newton's target at D = 53 and 56,
-which dropped the last one or two steps, so it is left out. Its rows are in `fit/cost_fit.log`. The 30
+falling Newton steps (−0.09 per unit of D). That window is biased by the change of Newton's target for the steps
+from D = 54 and 57, which dropped the last one or two Newton steps, so it is left out. Its rows are in `fit/cost_fit.log`. The 30
 measured steps from D = 31 to 60 took 3.35 hours in all, against 3.3 from the fits, with the check points and the
 restarts not counted.
 
 N(D) is not projected. The method planned, the grid differences fitted in D and continued in N at the measured rate
 per 20 points, needs Δ_N − Δ_{N+20} to measure truncation. From D ≈ 40 it measures the finer grid's error along the
-weak direction instead. With N held at 101, the error past D ≈ 55 is the open question. With N raised, the measured
-error grows. So the projection above is a lower bound on what a grid that holds Δ would cost, if one exists. For
+weak direction instead. With N held at 101, the error reaches 1.3×10⁻¹² at D = 60, and with N raised it is larger.
+So the projection above prices a grid that no longer holds Δ to 10⁻¹² past D ≈ 60. A grid that does, if one exists,
+needs a different discretization (10.7). For
 scale, our chain's step at D = 200 took 460 s on 18 threads (section 5(3)).
 
 ### 10.6 Controls
@@ -870,9 +871,9 @@ scale, our chain's step at D = 200 took 460 s on 18 threads (section 5(3)).
 ### 10.7 What this says about #91's verdict
 
 #91 advised against adopting the global Fourier × Chebyshev Newton for the chain, for two reasons. The first was cost,
-a dense extended-precision LU at hours per step. #105 refuted it and this run confirms that: a unit of D costs 4 to
-11 min on one core at L = 11,425 up to D = 55. Even continued at its fitted growth, staying on 32 × 101 would cost
-about 18 hours from D = 30 to 100 (an extrapolation). The second reason was conditioning. A grid that holds the
+a dense extended-precision LU at hours per step. #105 refuted it, and this run confirms that: a unit of D costs 3 to
+11 min on one core at L = 11,425 up to D = 60. Even continued at its fitted growth, staying on 32 × 101 would cost
+13 to 16 hours from D = 30 to 100 (an extrapolation). The second reason was conditioning. A grid that holds the
 solution needs its truncation below σ_min, and σ_min falls with N faster the larger D is. That reason stands, and it
 is now measured as error in Δ on solved grids rather than inferred from κ:
 
@@ -888,15 +889,14 @@ is now measured as error in Δ on solved grids rather than inferred from κ:
 So the verdict on the chain should stay "do not adopt", with its reason restated. The obstacle is not the linear
 algebra, which this solver makes cheap, but the discretization. A polynomial basis that does not exclude the
 horizon's singular branch cannot fix Δ once the branch is smooth enough to pass for a polynomial at the resolution
-needed for the rest of the solution. That is the same wall as our horizon series' radius, met from the other side
-(section 5(2)). Two things would change the reading:
+needed for the rest of the solution. This is consistent with section 5(2): the same wall as our horizon series'
+radius, met from the other side.
 
-- A discretization that imposes the regular horizon behaviour explicitly, with rows or a basis that remove the
-  singular branch, could reopen the window. Whether it can without inheriting our series' wall is open
-  (Recommended tasks).
-- What the prototype does provide is an independent check of Δ to about 10⁻¹⁴ up to D ≈ 55 on 32 × 101, by another
-  gauge, other unknowns and another discretization. That is already within 3.5×10⁻¹⁵ of our double-double rows at D =
-  40 and 50.
+One thing could change the reading. A discretization that imposes the regular horizon behaviour explicitly, with
+rows or a basis that remove the singular branch, might reopen the window. Whether it can do so without inheriting our
+series' wall is open (Recommended tasks). What the prototype already gives is an independent check of Δ to about
+10⁻¹⁴ up to D ≈ 55 on 32 × 101, by another gauge, other unknowns and another discretization. At D = 40 and 50 it lies
+within 3.5×10⁻¹⁵ of our double-double rows.
 
 ### 10.8 Discrepancies (reported, not fixed)
 
@@ -906,9 +906,12 @@ needed for the rest of the solution. That is the same wall as our horizon series
 - **hp's row at D = 40.020065 (up7, err 2×10⁻¹⁵) sits 1.5–3.5×10⁻¹⁵ below the 32 × 101 and 32 × 121 values,** which
   agree with each other to 2.0×10⁻¹⁵ and whose roots are unique to 5×10⁻²³ and 5×10⁻²⁰. That is inside hp's stated
   error, so it is no disagreement, but the RT values do not test hp below 10⁻¹⁵ there.
-- **Section 9.7's estimate for #106** had the 32 × 101 count of products reaching 80 near D = 45 at about 2 more per
-  unit of D. The first-step count grew only about 0.5 per unit of D from 30 to 55: 56 at D = 51, 54 at 55. The
-  cost grew through extra Newton steps instead (10.4).
+- **The acceptance at the row nearest 60 is missed:** Δ_RT − Δ_hp = −1.27×10⁻¹² on 32 × 101 at D = 60.001952 (second
+  root −2.33×10⁻¹²), against 10⁻¹². hp's row there (up13, err 2×10⁻¹⁵) is not in question. Every RT grid tried is
+  further off, so the miss is the RT discretization's.
+- **Section 9.7's estimate for #106** had the 32 × 101 count of products reaching 80 near D = 45, at about 2 more per
+  unit of D. The first-step count grew only about 0.4 per unit of D from 30 to 60: 46 at D = 31, 57 at 60. The cost
+  grew through extra Newton steps instead (10.4).
 - **Section 5(2)'s mechanism, σ_min falling with N faster at larger D, now shows as error in Δ** on grids that hold the
   solution, not only as κ. The sentence of 5b that a grid fine enough to hold the solution "can check our values at D
   = 12–30" holds and extends to D ≈ 55 at 10⁻¹⁴. The README sentence proposed in section 7 stays correct.
@@ -919,11 +922,11 @@ needed for the rest of the solution. That is the same wall as our horizon series
 
 For the coordinator, after the RT sentence of "The large-D wall" (sections 7 and 9.8):
 
-> Continued to D = 55 on 32 × 101, the RT prototype reproduces our Δ to 2×10⁻¹⁴ (3×10⁻¹⁵ at D = 40 and 50). There it
-> also shows the wall in its own form. From D ≈ 40, refining the Chebyshev grid makes Δ worse (32 × 141 is 4×10⁻¹² off
-> at D = 45, 32 × 121 3×10⁻¹² at D = 50), and the finer grids' roots are not unique along the horizon's near-polynomial
-> singular branch. The usable resolution therefore narrows with D ([notes/RT_FORMULATION.md](notes/RT_FORMULATION.md)
-> section 10).
+> Continued past D = 30 on 32 × 101, the RT prototype reproduces our Δ to 3×10⁻¹⁵ at D = 40 and 50 and to 2×10⁻¹⁴ at
+> 55. It misses by 1.3×10⁻¹² at 60. There it also shows the wall in its own form. From D ≈ 40, refining the Chebyshev
+> grid makes Δ worse (32 × 141 is 4×10⁻¹² off at D = 45, 32 × 121 3×10⁻¹² at D = 50), and the finer grids' roots are
+> not unique along the horizon's near-polynomial singular branch. The usable resolution therefore narrows with D, and
+> on these grids it closes for 10⁻¹² near D = 60 ([notes/RT_FORMULATION.md](notes/RT_FORMULATION.md) section 10).
 
 ### 10.10 Reproduction
 
