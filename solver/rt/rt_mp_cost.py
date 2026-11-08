@@ -7,9 +7,12 @@ multidouble's dense double-double LU solve (dd_solve) at small sizes, as seconds
         [--mutate=perturb]
 
 Controls: the dd_solve of a random well-conditioned system must return its planted solution to 1e-28 relative, and
-the LUdd solve of the f64 Jacobian must satisfy J x = b to 1e-28 relative in arb; a failure exits 1. --mutate=perturb
-changes one entry of each matrix by 1e-10 after the right-hand side is formed; both checks must then fail (exit 1).
-Needs MULTIDOUBLE_SITE as rt_mpsolve does.
+the LUdd solve must have a normwise backward error below 1e-26 against the factors it applies,
+|U^T L^T P^T x - b| / (|U^T| |L^T| |x| + |b|) in the infinity norm, the products in double-double. (Against J64 itself
+the residual is that of E x, |E| near 2^-53 |J|, which is not the solve's error: the first version of this check used
+J64 and failed with 2.5e-14, I105-mac/controls/mp_cost_32x81.log.) A failure exits 1. --mutate=perturb changes one
+entry of the dd_solve matrix by 1e-10 after the right-hand side is formed, and the first pivot of the LU factors by
+1e-10 relative after the solve; both checks must then fail (exit 1). Needs MULTIDOUBLE_SITE as rt_mpsolve does.
 """
 import os
 for _v in ("VECLIB_MAXIMUM_THREADS", "OMP_NUM_THREADS", "OPENBLAS_NUM_THREADS"):
@@ -70,26 +73,39 @@ def main():
     t = time.time(); rt.residual(z); t_f = time.time() - t
     t = time.time(); rm.residual_m(zo); t_m = time.time() - t
     t = time.time(); J = rt.jacobian(z); t_j = time.time() - t
-    Jc = J.copy()
     t = time.time(); P = mps.LUdd(J, overwrite=True); t_lu = time.time() - t
     del J
     u = mps.obj(rng.normal(size=rt.L))
     t = time.time(); b = mps.jv_central(rm.residual_m, zo, u); t_p = time.time() - t
+    bh, bl = mps.to_dd(b)
+    t = time.time(); xh, xl = P.solve_dd(bh, bl); t_s = time.time() - t
     if a.mutate:
-        P.M[0, 0] += 1e-10
-    t = time.time(); x = P(b); t_s = time.time() - t
-    # J64 x = b in arb (J64 is exact as a matrix of f64 numbers): the LU solve's accuracy
-    Jx = mps.from_dd(*mps.md.dd_matvec(Jc, np.zeros_like(Jc), *mps.to_dd(x)))
-    rel = mps.amax(Jx - b) / mps.amax(b)
-    ok = rel < 1e-28
+        P.M[0, 0] *= 1 + 1e-10
+    # the backward error against the factors: y = U^T (L^T (P^T x)) in double-double, row by row
+    M, n, dd_dot = P.M, rt.L, mps.md._dd_dot
+    zero = np.zeros(n)
+    wh, wl = xh[P.perm], xl[P.perm]
+    vh, vl = np.empty(n), np.empty(n)
+    yh, yl = np.empty(n), np.empty(n)
+    nU = nL = 0.0
+    for i in range(n):
+        sh, sl_ = dd_dot(M[i, i + 1:], zero[i + 1:], wh[i + 1:], wl[i + 1:])
+        vh[i], vl[i] = mps.md.dd_add(np.array([wh[i]]), np.array([wl[i]]), np.array([sh]), np.array([sl_]))
+        nL = max(nL, 1.0 + float(np.abs(M[i, i + 1:]).sum()))
+        nU = max(nU, float(np.abs(M[i, :i + 1]).sum()))
+    for i in range(n):
+        yh[i], yl[i] = dd_dot(M[i, :i + 1], zero[:i + 1], vh[:i + 1], vl[:i + 1])
+    rh, rl = mps.md.dd_add(yh, yl, -bh, -bl)
+    eta = float(np.max(np.abs(rh + rl))) / (nU * nL * float(np.max(np.abs(xh + xl))) + float(np.max(np.abs(bh))))
+    ok = eta < 1e-26
     bad |= not ok
     recs.append(dict(what="rt", grid=[Nt, N], L=rt.L, prec=a.prec, t_residual_f64=round(t_f, 4),
                      t_residual_arb=round(t_m, 3), t_jacobian_f64=round(t_j, 2), t_lu_f64=round(t_lu, 2),
-                     t_ludd_solve=round(t_s, 3), t_product=round(t_p, 3), ludd_rel_residual=rel, ok=ok,
+                     t_ludd_solve=round(t_s, 3), t_product=round(t_p, 3), ludd_backward_error=eta, ok=ok,
                      pivot_ratio=P.pivot_ratio))
     print(f"RT {Nt}x{N} L {rt.L}: f64 residual {t_f:.4f} s, arb residual ({a.prec} bits) {t_m:.3f} s, f64 Jacobian "
-          f"{t_j:.2f} s, f64 LU {t_lu:.2f} s, dd triangular solves {t_s:.3f} s (|J x - b| / |b| = {rel:.1e}, "
-          f"{'ok' if ok else 'FAIL'}), product J u {t_p:.3f} s")
+          f"{t_j:.2f} s, f64 LU {t_lu:.2f} s, dd triangular solves {t_s:.3f} s (backward error {eta:.1e}, "
+          f"{'ok' if ok else 'FAIL'}), product J u {t_p:.3f} s, LU pivot ratio {P.pivot_ratio:.1e}")
     with open(a.out, "a") as f:
         for r in recs:
             r["mutate"] = a.mutate
