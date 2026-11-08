@@ -51,6 +51,34 @@ def main():
             print("%5g %s R=%.2f wind %+.4f step %.2f ev %d plant %s mutate %s osc %.8f%+.8fi" % (
                 r["D"], r["box_name"], r["R_over_xh"], r["winding"], r["largest_step"], r["evaluations"], r["plant"],
                 r["mutate"], r["lam_osc"][0], r["lam_osc"][1]))
+    if bx:
+        tab = {}
+        for r in bx:
+            if r["plant"] is None and r["mutate"] is None:
+                tab.setdefault(r["D"], {})[(r["box_name"], r["R_over_xh"])] = r
+        print("\n| D | A | B | C | S (R = 0.85 x_h) | S (R = 0.6 x_h) | largest step | determinants |")
+        print("|---|---|---|---|---|---|---|---|")
+        for D in sorted(tab):
+            t = tab[D]
+            g = lambda nm, R: ("%d" % round(t[(nm, R)]["winding"])) if (nm, R) in t else "-"
+            both = lambda nm: g(nm, 0.85) if g(nm, 0.85) == g(nm, 0.6) else "%s / %s" % (g(nm, 0.85), g(nm, 0.6))
+            print("| %g | %s | %s | %s | %s | %s | %.2f rad | %d |" % (D, both("A"), both("B"), both("C"), g("S", 0.85),
+                  g("S", 0.6), max(v["largest_step"] for v in t.values()), sum(v["evaluations"] for v in t.values())))
+    loc = rows(os.path.join(R, "css/locate_k0.jsonl"))
+    if loc:
+        print("\nStrip S located (complex_css.py locate): D, zeros found at R = 0.85 x_h / winding, displacement at R = 0.6 x_h")
+        byD = {}
+        for r in loc:
+            byD.setdefault(r["D"], []).append(r)
+        for D in sorted(byD):
+            ws = sum(round(r["winding"]) for r in byD[D])
+            roots = [(q, o[0]) for r in byD[D] for q, o in zip(r["roots"], r["at_other_radii"])]
+            mv = [m[4] for q, m in roots]
+            print("D %g: winding %d, located %d: %s; displacement at 0.6 x_h min %.1e max %.1e" % (
+                D, ws, len(roots), ", ".join("%.4f%+.4fi" % tuple(q) for q, m in roots), min(mv) if mv else float("nan"),
+                max(mv) if mv else float("nan")))
+    for r in rows(os.path.join(R, "css/scan_k0.jsonl")):
+        print("collocation D=%g: %s" % (r.get("D"), {k: r[k] for k in r if k not in ("D",)} if len(str(r)) < 600 else str(r)[:600]))
     for r in rows(os.path.join(R, "css/roots_k0.jsonl")):
         print("root D=%g R=%.2f lambda = %.10f %+.10fi converged %s" % (r["D"], r["R_over_xh"], r["lam"][0], r["lam"][1],
                                                                        r["converged"]))

@@ -7,7 +7,23 @@ exactly one unstable mode. This page counts the unstable modes of both in D.
 
 Conventions as in matter/CSS.md: D = n + 2, τ = −ln(−t), perturbations ∝ $`e^{\lambda\tau}`$, γ = 1/λ (radius exponent).
 
-**Result in brief.** [TBD]
+**Result in brief.** The real DSS is the critical solution of the complex scalar at every D checked, and the CSS never
+is.
+
+- **The CSS keeps its second unstable mode.** Its oscillatory pair, λ_osc = 0.2586698 ± 3.5022488i at D = 4 (HE95b:
+  0.25867 ± 3.50224i, within their errors), was followed continuously to D = 80. Its real part rises, to 0.5220 at
+  D = 80 (0.536 extrapolated), and Im λ_osc / ω rises from 1.83 to 1.986. So the CSS has three unstable directions at
+  every D (λ_phys and the pair) and is never critical. Box counts at D = 4, 5, 6, 8, 10, 20, 40, 80 find these and
+  λ = 1 and nothing else, away from the resonance strip of the jump method (§2).
+- **The real DSS's imaginary sector has no unstable mode.** It is a free test field on the DSS metric (derived in
+  sympy from □ψ = 0). Winding counts of its determinant find only the exact λ = 0 phase rotation in −0.05 < Re λ < 6,
+  |Im λ| < 3ω/2, at D = 4, 10, 20 (new code, double precision) and D = 60 (hp/modecount_cx, double-double); the
+  repository's earlier counts with the crate found the same at D = 8.25–67. So the real DSS keeps the real scalar's
+  single unstable mode.
+- **No count changes with D**, so there is no crossover dimension, and the complex scalar's critical exponent is the
+  real scalar's, γ(D) = 1/λ_phys(D) → 1/2.
+- Every count passes a planted zero and a mutated equation that changes it; HE95b's text and the arXiv listing disagree
+  on γ at D = 4 (§5).
 
 ## 1. The two counts
 
@@ -98,7 +114,29 @@ Re λ_osc → 0.5364–0.5365 and Im λ_osc / ω → 1.9935 (spreads over fit ch
 `data/css_bg_k0.jsonl`'s by 2×10⁻⁷, and the radius spread of λ_osc is 6×10⁻⁷: the selection's sensitivity |∂J/∂ω|
 falls like e^{−0.2n} (CSS.md §3), so D = 80 is near the end of what double precision resolves.
 
-[TBD: box counts]
+**Box counts** (`complex_css.py boxes D LAM_OSC`, raw `css/boxes_k0.jsonl`, both radii; every phase step ≤ 0.5 rad
+after bisection; the table is printed by `complex_table.py`):
+
+[TBD: CSS box table]
+
+A, B and C give the same count at both radii and the expected one: B holds λ = 1 and λ_phys, C holds λ_osc, A holds
+nothing. The strip S holds 6, 5, 4, 3, 2, … zeros at both radii, the jump method's resonance artefacts:
+`complex_css.py locate` cuts S into sub-boxes of width 0.5, locates each sub-box's zeros by secant and refines each at
+R = 0.6 x_h, and every located zero moves (raw `css/locate_k0.jsonl`):
+
+[TBD: locate table]
+
+The located zeros form a ladder along Im λ ≈ ω with spacing ≈ κ_s in Re λ, at λ ≈ κ_s(μ − k), where the irregular
+exponent μ_pert(λ) = μ − λ/κ_s is an integer (CSS.md §3): an irregular branch with integer exponent is analytic, so
+the jump vanishes without a growth rate. [TBD: collocation]
+
+**Controls**, each seen to fire (D = 4, R = 0.85 x_h): a zero planted at 1.0 + 3.0i makes C count 2 (1 without);
+`--mutate=nometric` (the metric perturbation not fed back) makes B count 0 (2 without) and C count 0 (1 without);
+`selftest` (zeros at 0.3 + 0.4i, 0.7 − 0.2i and 0.98 + 0.5i, 0.02 inside an edge, and 1.02 + 0.1i outside, with the
+trend $`e^{30\lambda + 2i\lambda^2}`$) counts 3 through the detrended path and 1 with one sample per edge.
+
+A first version of the box counts, without the trend removal, gave the same D = 4 planted count (2) with 828
+determinants against 92 (raw `css/boxes_k0_v1_notrend.jsonl`); it was stopped and rerun with the trend removed.
 
 ## 3. The real DSS: the imaginary sector
 
@@ -135,7 +173,7 @@ the coefficients past order 15 are that mode (|c₁₀₀| ≈ 10²⁹); fed int
 background's (p, m) a null vector of M(0) only to 3×10⁻⁴.
 
 **Checks** (`complex_imag.py check`, records in the raw folder's `imag/checks.jsonl`, printed by
-`complex_table.py`). States: `lowDn_D4.0000_M48` (11 nodes 0.01 … 0.7, the layout GHOST_ADMIXTURE.md §4 found free of
+`complex_table.py`; the D = 60 column from the first round, `checks.jsonl`, the others from `checks2.jsonl`). States: `lowDn_D4.0000_M48` (11 nodes 0.01 … 0.7, the layout GHOST_ADMIXTURE.md §4 found free of
 the 9-node layout's artefacts; copied into the raw folder's `states/`), `hp/data/states/up_D10.0000` (M 48),
 `up2_D20.0437` (M 32), `up13_D60.0020` (M 32, nodes 0.3 … 0.7).
 
@@ -145,7 +183,8 @@ the 9-node layout's artefacts; copied into the raw folder's `states/`), `hp/data
 | light-cone series (34 digits) at the last node vs the stored node | 4.4×10⁻¹⁶ | 2.2×10⁻¹⁶ | 4.4×10⁻¹⁶ | 4.4×10⁻¹⁶ |
 | background (p, m) as a null vector of M(0): \|M(0) z\| / \|z\| | 1.2×10⁻¹² | 1.7×10⁻⁹ | 7.0×10⁻¹¹ | 1.5×10⁻³ |
 | smallest and next singular value of M(0) (largest 3–5) | 1.2×10⁻¹⁴, 6.0×10⁻⁷ | 6.6×10⁻¹², 6.9×10⁻¹² | 8.5×10⁻¹⁷, 2.2×10⁻¹⁶ | 6.1×10⁻¹⁷, 2.3×10⁻¹⁶ |
-| Cauchy–Riemann on ln det M at 1.3 + 0.4i, h = 10⁻³ (anti-analytic control) | 2.8×10⁻⁹ (2.0) | 2.3×10⁻⁵ (2.0) | [TBD] | 2.4 (1.2): fails |
+| Cauchy–Riemann on ln det M at 1.3 + 0.4i, h = 10⁻³ (anti-analytic control) | 2.8×10⁻⁹ (2.0) | 4.9×10⁻⁷ (2.0) | 1.4×10⁻⁴ (2.0) | 2.4 (1.2): fails |
+| ln det M at rtol 10⁻⁹ and 10⁻¹³ against 10⁻¹¹, largest phase change at 4 points | 2.4×10⁻⁸ rad | 9.3×10⁻⁹ rad | 4.9×10⁻⁷ rad | not run |
 | det M(λ̄) − conj det M(λ) in ln | 7×10⁻¹⁵ | 5×10⁻¹³ | 3×10⁻¹³ | 2×10⁻¹³ |
 | θ-derivative matrix vs hpkernel's dmat_odd | 3.4×10⁻¹³ | 3.4×10⁻¹³ | 8.8×10⁻¹⁴ | 8.8×10⁻¹⁴ |
 
@@ -156,7 +195,7 @@ noise is smaller at some λ but still O(1) near the real axis (the run was stopp
 conditioning of the matching at large D: the multiple-shooting propagators have singular values down to 5×10⁻⁹ per
 segment at D = 60, and matching nearer the light cone is worse (from x = 0.7 to 0.9 the irregular branch u^σ is damped by
 3×10⁻¹⁹). hp works in double-double there. At D = 4–20 the phase of det M agrees between integration tolerances 10⁻⁹,
-10⁻¹¹ and 10⁻¹³ to 10⁻⁶ rad or better (development runs; the counts' own steps are below π/4). **D = 60 is therefore
+10⁻¹¹ and 10⁻¹³ to 5×10⁻⁷ rad or better (table), far below the counts' steps of up to π/4. **D = 60 is therefore
 counted with hp/modecount_cx (double-double), as in GHOST_ADMIXTURE.md**, and complex_imag.py is the independent
 check at D = 4, 10, 20.
 
@@ -190,11 +229,15 @@ two mutated equations that break the λ = 0 mode: `--mutate=coupling` (the p equ
 | 4 | lowDn_D4.0000_M48 | 1 | 0 | 0 (2) | 0.73 rad | 162 |
 | 10 | up_D10.0000, M 48 | 1 | 0 | 0 (10) | 0.72 rad | 186 |
 | 20.04 | up2_D20.0437, M 32 | 1 | 0 | 0 (16) | 0.65 rad | 210 |
-| 60.00 | up13_D60.0020, M 32, kfreeze 13: hp/modecount_cx, double-double | [TBD] | | [TBD] | | |
+| 60.00 | up13_D60.0020, M 32, kfreeze 13: hp/modecount_cx, double-double | 1 | (in full) | 0 (14) | 0.16 rad | 67 |
 
-In every box wind(g) equals the number of expected zeros, so each box holds exactly its expected zeros and every
-candidate pole inside FULL is a pole. **The imaginary sector has no growth rate with Re λ > −0.05 other than λ = 0, in
-|Im λ| < 3ω/2 (both θ-parity sectors) and Re λ < 6, at D = 4, 10, 20 (and 60, [TBD]).**
+The D = 60 row is `hp/modecount_test.py … --boxes=B0,full` (raw `imag/crate/`, log `imag/queue4.log`): its B0 is
+−0.15 < Re λ < 0.135, |Im λ| < ω/2, and its "full" box 0.135 < Re λ < 6.11, |Im λ| < 3ω/2, so it covers U0 and FULL
+together; it divides λ = 0 out of g, and wind(g) = 0 in both boxes means det M has exactly λ = 0 in B0 and no zero in
+full (det M winds −14 there, the 14 candidate poles). In every box wind(g) equals the number of expected zeros, so
+each box holds exactly its expected zeros and every candidate pole inside is a pole. **The imaginary sector has no
+growth rate with Re λ > −0.05 other than λ = 0, in |Im λ| < 3ω/2 (both θ-parity sectors) and Re λ < 6, at D = 4, 10,
+20 and 60.**
 
 **Controls**, each seen to fire:
 
@@ -207,6 +250,7 @@ candidate pole inside FULL is a pole. **The imaginary sector has no growth rate 
 | `--mutate=noG` | 20.04 | B0 | 1 → 0 |
 | `--mutate=noG` | 4 | B0 | 1 → 0 |
 | selftest, one sample per edge | synthetic | FULL | 4 → 2 (must differ) |
+| pair planted at 3.1 ± 1.0i, hp/modecount_cx | 60.00 | full | 0 → 2 (B0 unchanged) |
 
 **The λ = 0 mode located.** Secant on det M (`complex_imag.py root`) from 0.03 + 0.02i at D = 20.04 converges to
 λ = 3.8×10⁻⁸ + 5.4×10⁻⁸i, i.e. to 0 within the determinant's noise (about 10⁻⁶ in ln det M). The null vector of M(0)
@@ -220,7 +264,30 @@ imaginary sector. The two codes share the stored states and the equations, nothi
 
 ## 4. Verdict
 
-[TBD: table]
+Unstable directions (modes with Re λ > 0, a complex pair counting two), symmetry and gauge modes excluded:
+
+| D | real DSS: real sector | real DSS: imaginary sector | **real DSS** | CSS: λ_phys | CSS: λ_osc | **CSS** |
+|---|---|---|---|---|---|---|
+| 4 | 1 (λ_phys = 2.6741) | 0 | **1** | 2.5832751746 | 0.25866983 ± 3.50224880i | **3** |
+| 5 | | | | 2.3510570103 | 0.31456395 ± 3.79011718i | **3** |
+| 6 | | | | 2.2695762470 | 0.35168333 ± 4.09789715i | **3** |
+| 8 | | | | 2.1991500463 | 0.39771899 ± 4.60920800i | **3** |
+| 10 | 1 (2.1950) | 0 | **1** | 2.1646154815 | 0.42514655 ± 4.99934510i | **3** |
+| 20 | 1 (2.1108, D = 20.04) | 0 | **1** | [TBD] | 0.47996170 ± 6.06910951i | **3** |
+| 40 | | | | [TBD] | 0.5077925 ± 6.8452800i | **3** |
+| 60 | 1 (2.0442) | 0 | **1** | 2.0395953299 (D = 60.99) | 0.51754131 ± 7.17416570i (D = 60.99) | **3** |
+| 80 | | | | [TBD] | 0.52199898 ± 7.33689470i | **3** |
+
+Sources. Real DSS, real sector: notes/MODE_COUNT.md (complex-λ counts at D = 30.07, 45.05, 61.03 with exactly one
+physical zero; the real-axis scan at D = 4) and `hp/data/gamma_dd.jsonl` (λ_phys and one sign change of det M on the
+real axis at D = 10, 20.04, 60.00); not recounted here. Imaginary sector: §3 (complex_imag.py at D = 4, 10, 20;
+hp/modecount_cx at 60). CSS: §2; λ_phys at D = 4–10 from `complex_css.py follow` (radius spread ≤ 3×10⁻¹²), λ_osc from
+`boxes` (secant at R = 0.85 x_h; at D = 40 it stopped short of its 10⁻¹¹ tolerance, and the value differs from the
+track's interpolation by 2×10⁻⁵), D = 60.99 from the track; the counts of boxes A, B, C at every D listed. The
+collocation (css_scan.py, an independent discretization, raw `css/scan_k0.jsonl`) finds three unstable directions at
+D = 4 and 5 (λ_phys = 2.583275174, 2.351057388; λ_osc = 0.25866985 ± 3.50224881i, 0.31456382 ± 3.79011783i, 2×10⁻⁷ and
+7×10⁻⁷ from the values above); at D = 6 and 8 its two resolutions no longer agree to 10⁻⁶ on the pair, as matter/CSS.md
+§3 explains, but the unconverged pair sits at 0.3517 ± 4.0979i and 0.3988 ± 4.6082i.
 
 **The real DSS is the critical solution of the free complex scalar at every D checked, D = 4 to 67, and nothing in
 the trends points to a change at larger D.** Its imaginary sector adds no unstable mode, only the marginal phase
@@ -295,7 +362,36 @@ metric, has no growing mode, while Hirschmann and Eardley's CSS keeps a second, 
 
 ## 8. Scripts, data and how to reproduce
 
-[TBD]
+All in `solver/matter/`, run under `nice -n 10` on the Mac (Apple M5); times per evaluation are for one process there.
+Raw output: [choptuik-large-d-raw](https://github.com/nmoinvaz/choptuik-large-d-raw), folder `I95-mac/` (clone it beside
+this checkout; the queue scripts that ran are in it, with their logs).
+
+| script | what it does | cost |
+|---|---|---|
+| `complex_imag_eqs.py [--mutate]` | sympy: the imaginary sector from □ψ = 0, the stress tensor's linear term, the λ = 0 mode, the series' indicial structure (§3) | 30 s |
+| `complex_imag.py check / det / root / count / selftest` | the imaginary sector's det M on an hp state, its checks and winding counts (§3); `--plant`, `--mutate=coupling\|noG`, `--kf`, `--evlog` (a cache) | 0.5 s (D 20, M 32) to 3.5 s (D 4, M 48, 11 nodes) per determinant; 1–6 min per box |
+| `complex_css.py root / follow / track / count / boxes / locate / selftest` | the κ = 0 CSS's growth rates through css_pert.py: secant roots at two radii, the adaptive track in D, box counts, location of a box's zeros and their R-test (§2); `--plant`, `--mutate=nometric\|hamsign` | 0.1–1 s per determinant; 15–70 s per box |
+| `complex_osc_fit.py RAW` | 1/n fits of λ_osc with a planted control (§2) | seconds |
+| `complex_table.py RAW` | prints this page's tables from the raw records | seconds |
+
+To reproduce from the repository root, with RAW = ../choptuik-large-d-raw/I95-mac:
+
+```
+python3 solver/matter/complex_imag_eqs.py
+python3 solver/matter/complex_css.py root 4 0.2587+3.5022j
+python3 solver/matter/complex_css.py track 4 80 0.2586698339+3.5022487970j,2.5832751746 --h=0.1 --hmax=1 --out=F
+python3 solver/matter/complex_css.py boxes 4 0.25866983+3.50224880j --out=F
+python3 solver/matter/complex_imag.py count hp/data/states/up2_D20.0437.npz B0 U0 FULL --out=F --evlog=E
+python3 solver/matter/complex_osc_fit.py $RAW
+python3 solver/matter/complex_table.py $RAW
+```
+
+The track was run as `track 4 80 … --h=0.1 --hmax=1` to D = 24.12 and resumed as `track 24 80
+0.489177+6.303256j,2.08473 --h=0.25 --hmax=2 --spread=1e-6`, the first run having slowed to steps of 10⁻³ in D at
+the 10⁻⁸ radius criterion. complex_imag.py needs hpkernel only for its comparison of the θ-derivative matrix (check);
+it runs with numpy, scipy and mpmath. The D = 60 count needs the crate: `PYTHONPATH=<main checkout>/hp/modecount_cx/build
+python3 hp/modecount_test.py hp/data/states/up13_D60.0020.npz --boxes=B0,full --data=$RAW/imag/crate --tag=D60.0020_M32`
+(`hp/modecount_build.sh` builds it; it was not rebuilt here).
 
 ## 9. Recommended tasks
 
