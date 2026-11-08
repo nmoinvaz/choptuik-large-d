@@ -82,6 +82,8 @@ def main():
     ap.add_argument("--mp", type=int, default=0, help="bits of the arb residual (f64 solver: final solves only, 0: none;"
                     " mp solver: every solve, default 192)")
     ap.add_argument("--max_products", type=int, default=80)
+    ap.add_argument("--refresh_dz", type=float, default=1e-6,
+                    help="mp solver: rebuild the f64 Jacobian and LU after a Newton step with max|dz| above this")
     a = ap.parse_args()
     if (a.profile is None) == (a.start is None):
         ap.error("give one of --profile and --start")
@@ -119,9 +121,13 @@ def main():
         zf = mps.to_f64(z) if z.dtype == object else z
         J = rt.jacobian(zf)
         t_jac = time.time() - t0
-        P = mps.LUdd(J, overwrite=True)
+        held = [mps.LUdd(J, overwrite=True)]
         del J
-        zm, ok, info = mps.newton_mp(rm, z, P, tol=1e-40, it_max=12, max_products=a.max_products, log=say)
+        pivot_ratio, t_lu = held[0].pivot_ratio, held[0].secs
+        make = lambda zz: mps.LUdd(rt.jacobian(mps.to_f64(zz)), overwrite=True)
+        # newton_mp holds the only reference, so a rebuild frees the old factors first
+        zm, ok, info = mps.newton_mp(rm, z, held.pop(), tol=1e-40, it_max=12, max_products=a.max_products,
+                                     make_prec=make, refresh_dz=a.refresh_dz, log=say)
         d0, d1 = rm.delta_m(zm)
         parts = delta_hp_parts(D)
         diff = None
@@ -130,16 +136,17 @@ def main():
         r = dict(D=D, grid=[rt.Nt, rt.N], L=rt.L, solver="mp", prec=a.mp, mu=float(zm[-1].mid()),
                  Delta_xi0=float(d0.mid()), Delta_xi1=float(d1.mid()), Delta_str=d0.mid().str(30, radius=False),
                  Delta_hp=(parts[0] + parts[1]) if parts else None, diff=diff, newton=info["res"],
-                 products=info["products"], dz=info["dz"], lam=info["lam"], pivot_ratio=P.pivot_ratio, ok=bool(ok),
-                 t_jac=round(t_jac, 1), t_lu=round(P.secs, 1), t_newton=round(sum(info["secs"]), 1),
+                 products=info["products"], dz=info["dz"], lam=info["lam"], refresh=info["refresh"],
+                 pivot_ratio=pivot_ratio, ok=bool(ok), t_jac=round(t_jac, 1), t_lu=round(t_lu, 1),
+                 t_refresh=round(info["t_refresh"], 1), t_newton=round(sum(info["secs"]), 1),
                  secs=round(time.time() - t0, 1), label=label, mutate=a.mutate)
         rec.write(json.dumps(r) + "\n")
         rec.flush()
         say(f"  {label} D {D:.6f} grid {rt.Nt}x{rt.N} L {rt.L}: {len(info['res']) - 1} Newton steps, max|F| "
             f"{info['res'][0]:.1e} -> {info['res'][-1]:.1e}, products {info['products']}, mu {float(zm[-1].mid()):.15f}, "
             f"Delta {d0.mid().str(20, radius=False)} (xi=1: {float(d1.mid()):.15f}), hp {r['Delta_hp']}, diff "
-            f"{diff if diff is not None else float('nan'):.2e}, LU pivot ratio {P.pivot_ratio:.1e}, J {t_jac:.0f} s, "
-            f"LU {P.secs:.0f} s, Newton {r['t_newton']:.0f} s")
+            f"{diff if diff is not None else float('nan'):.2e}, LU pivot ratio {pivot_ratio:.1e}, J {t_jac:.0f} s, "
+            f"LU {t_lu:.0f} s, Newton {r['t_newton']:.0f} s (rebuilds {len(info['refresh'])}, {info['t_refresh']:.0f} s)")
         return zm, ok, r
 
     def solve(rt, z, D, label):

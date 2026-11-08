@@ -318,12 +318,15 @@ def gcr(apply, precond, b, tol=1e-30, max_products=80):
 
 # ------------------------------------------------------------------------------------------------ Newton
 def newton_mp(rm, z, prec, tol=1e-40, it_max=12, inner_tol=1e-30, max_products=80, residual=None, apply=None,
-              inner=fgmres, log=None):
+              inner=fgmres, make_prec=None, refresh_dz=1e-6, log=None):
     """Newton with the residual in arb and each step solved by `inner` (fgmres) in arb, products by jv_central unless
-    apply is given, preconditioned by prec (an LUdd of an f64 Jacobian near z, fixed for the whole solve). rm: an
-    rt_mp.RTmp (or None with residual given). Stops when max|F| < tol, or when max|F| stops falling (at the precision's
-    floor: max|F| > 0.5 of the previous after step 3), or after it_max steps. A step that does not lower max|F| is
-    halved up to six times. Returns (z, ok, info) with z an arb object array; info["dz"] is max|dz| of each step."""
+    apply is given, preconditioned by prec (an LUdd of an f64 Jacobian near z). With make_prec (z -> a new
+    preconditioner), prec is rebuilt at the new z after a step with max|dz| > refresh_dz: a preconditioner from a point
+    that far away is no longer the identity plus a low-rank term on J (z), and GMRES then needs several times the
+    products. rm: an rt_mp.RTmp (or None with residual given). Stops when max|F| < tol, or when max|F| stops falling (at
+    the precision's floor: max|F| > 0.5 of the previous after step 3), or after it_max steps. A step that does not lower
+    max|F| is halved up to six times. Returns (z, ok, info) with z an arb object array; info["dz"] is max|dz| of each
+    step and info["refresh"] the steps after which prec was rebuilt."""
     say = log or (lambda s: None)
     residual = residual or rm.residual_m
     apply = apply or (lambda zz, u: jv_central(residual, zz, u))
@@ -331,11 +334,18 @@ def newton_mp(rm, z, prec, tol=1e-40, it_max=12, inner_tol=1e-30, max_products=8
         z = obj(z)
     F = residual(z)
     r = amax(F)
-    info = dict(res=[r], products=[], inner_res=[], lam=[], secs=[], dz=[])
+    info = dict(res=[r], products=[], inner_res=[], lam=[], secs=[], dz=[], refresh=[], t_refresh=0.0)
     ok = r < tol
     for it in range(it_max):
         if ok:
             break
+        if make_prec is not None and info["dz"] and info["dz"][-1] > refresh_dz:
+            t = time.time()
+            prec = None                                    # free the old factors first
+            prec = make_prec(z)
+            info["refresh"].append(it)
+            info["t_refresh"] += time.time() - t
+            say(f"    newton_mp: preconditioner rebuilt at step {it} ({time.time() - t:.1f} s)")
         t0 = time.time()
         dz, gi = inner(lambda u: apply(z, u), prec, mids(-F), tol=inner_tol, max_products=max_products)
         lam = arb(1)
