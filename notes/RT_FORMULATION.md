@@ -29,7 +29,8 @@ with the null coordinates u^± = −(1 ± ξ) e^{−μt}. The self-similarity ma
 e^{−2πμ}. The centre is ξ = 0 and the self-similarity horizon is ξ = 1. RT show (Sec. 1.4, from three facts about germs
 of diffeomorphisms) that an ingoing null coordinate with du ≠ 0 across the critical light cone and a linear action of Θ
 is unique up to a constant factor, so μ is a geometric invariant and the gauge has no freedom left but a shift of t.
-The unknowns are μ and seven null derivatives, which RT and EEG define in Eq. (8) and Eq. (4):
+The unknowns are μ and seven frame quantities, six of them null derivatives, which RT and EEG define in Eq. (8) and
+Eq. (4):
 
     ω₁ = 2ξQ + ω₂⁺ + ω₂⁻,  ω₂^± = D^±(ζ + ln(μ + Qξ²)) ∓ μ,  ω₃^± = D^± ζ ∓ μ,  ω₄^± = D^± φ,
     D^± = ±∂_t + μ(1 ± ξ)∂_ξ.
@@ -75,7 +76,8 @@ At the horizon w⁻ = (1 − x) h with h_τ = (λ − 1 + c_x(τ, 1)) h, and a p
 
     Δ = 4πμ / (1 − (n − 1)⟨a_h² − 1⟩),
 
-our form of EEG's Eq. (3) (⟨ψ₋₁²⟩ there). Numerical check: from our D = 4 double-double state at M = 192 (folder
+our form of EEG's Eq. (3) (⟨ψ₋₁²⟩ there). Numerical check (`solver/rt/mu_check.py`, log `I91-mac/mu_check.log`;
+its control `--mutate=n`, n in place of n − 1, exits 1): from our D = 4 double-double state at M = 192 (folder
 `T45-win/hp/data/lowD_states/`), μ comes out 7.7×10⁻²⁸ from RT's enclosure 0.168307078963449969510134979042857…
 (radius 10⁻⁸⁰), and Δ is 3.1×10⁻²⁶ from their 2K. The M = 160 state gives 8.4×10⁻²⁵ and 1.1×10⁻²² (numerical evidence;
 the differences are our truncation in M, the enclosure's radius being negligible). The rest of the map follows from
@@ -87,11 +89,70 @@ MAP_PLACEHOLDER
 
 ## 3. The prototype and its checks
 
-PROTO_PLACEHOLDER
+`solver/rt/rt_model.py` discretizes the square system of section 1 by collocation rather than RT's coefficient space:
+N_t points in t on [0, 2π) with exact Fourier derivatives (integer wavenumbers for ω₁, ω₂, ω₃, half-integer for ω₄)
+and the Chebyshev–Gauss–Lobatto points ξ_j = cos(πj/N) with N odd, so that ξ = 0 is not a point and ξ = ±1 are.
+L = N_t(N + 1)/2 + 3N_t(N + 1) + 1 unknowns. No row imposes a boundary condition: at ξ = −1 the collocated equation,
+whose D⁺ has no ξ component there, is the only regularity condition. The residual is exactly quadratic in (μ, ω), so
+each Jacobian column is an exact central difference with unit step. The first guess comes from our D = 4 double-double
+state at M = 48 (folder `T106-mac/m48_states/`, whose own Δ is 3.9×10⁻⁷ off at that M), mapped by `gg_to_rt.py`;
+Newton converges from it in three steps although the mapped state's residual is 1.2, largest in the Ω₃ rows at the
+horizon (the map's ω₃⁺ there needs second x-derivatives of w⁻ at its singular point). The continuation in
+D follows EEG's protocol (steps of 1/2, a linear predictor). `rt_mp.py` evaluates the same residual in arb (160 bits)
+and iterates with the f64 Jacobian; that converges while κ(J)·2⁻⁵³ < 1 and removes f64's rounding along the weak
+direction (section 4).
+
+**Planted truth first** (`rt_planted.py`, exit 0; logs `I91-mac/planted*.log`). Smooth random fields with the
+unknowns' symmetries and μ* = 0.17, the forcing f* = F(z*), Newton from z* + 10⁻³: the residual's third difference is
+1.2×10⁻¹⁴ of max|F| (it is exactly quadratic), and z* comes back to 2×10⁻¹⁴, 6×10⁻¹¹ and 8×10⁻¹² at D = 4, 10 and 20,
+μ* to 10⁻¹³ or better. The criteria were revised once after the first run, with the reason in the script's docstring:
+the start 10⁻² lay outside the basin of the random D = 10 state (its Jacobian has σ_min = 7×10⁻⁶), and a test of the
+convergence order from the residual history was dropped after it failed on quadratic histories. Both earlier logs are
+in the folder. The controls `--mutate=coef` (the solve's coefficient scaled by 1 + 10⁻³) and `--mutate=cubic` (a cubic
+term added) exit 1.
+
+**Δ against ours** (`rt_run.py`, records `I91-mac/accept/accept.jsonl`, `D4/res4.jsonl`, `cont/cont10.jsonl`):
+
+PROTO_TABLE_PLACEHOLDER
 
 ## 4. The Jacobian's condition number against D
 
-COND_PLACEHOLDER
+κ = σ_max/σ_min of the matrix each Newton factors, in the 2-norm, at a solved or mapped state (a measured value;
+no error bar beyond the stated resolution checks). Scripts: `solver/rt/rt_cond.py` (f64; σ_max by power iteration,
+σ_min by inverse iteration with the LU, planted selftest at κ = 10¹⁰, control `--mutate=transpose`), and
+`solver/rt/rt_cond_mp.py` (the Jacobian in arb from exact central differences of the arb residual, σ_min from an arb
+inverse and block power iteration at two precisions that must agree, planted selftest at κ = 10⁴⁰, control
+`--mutate=lowprec`); ours from `hp/stall_margin.py` (T76's script: the double-double Jacobian, σ_max from its SVD, σ_min
+by Rayleigh–Ritz on the weak subspace). Ruiz equilibration (rows and columns scaled to unit max norm) changes RT's κ by
+less than a factor 3 (κ_eq in the records), so the growth is not a scaling artifact of the collocation.
+
+**What sets RT's κ.** Three measurements in f64 at solved states (`I91-mac/rt_kappa*.jsonl`):
+
+- It does not depend on the t resolution: at D = 4, κ = 9.28×10⁶ with N = 81 for N_t = 16, 32 and 48; at D = 10,
+  3.2×10¹⁴ with N = 61 for N_t = 32 and 64. The weakest direction is a low harmonic (ω₃ or ω₂ at harmonic 0 of Δ, ω₄
+  at harmonic 1), with about 1% of its norm in μ, spread over ξ rather than at one end. Our κ is the opposite: it is
+  set by the highest τ harmonic kept (the weak directions are p₁'s top harmonics, LARGE_D_WALL.md).
+- It grows with the ξ resolution N. σ_max grows like N² (the Chebyshev derivative), and σ_min falls with N, faster at
+  larger D: N_SCALING_PLACEHOLDER
+- It grows fast with D at fixed N: σ_min at N = 61 is 2.1×10⁻⁴, 1.2×10⁻⁷, 2.6×10⁻¹⁰ and 1.7×10⁻¹² at D = 4, 6, 8 and
+  10, about 1.3 digits per unit of D.
+
+At D = 10 this is already f64's limit: on the 48 × 81 grid (κ = 1.7×10¹⁵), Newton in f64 stalls at a residual of 10⁻¹⁰
+with Δ 3.3×10⁻⁴ off, and the same start polished with the arb residual lands 1.1×10⁻¹² from ours (section 3). The f64
+error is rounding along the weak direction, which carries Δ.
+
+COND_ARB_PLACEHOLDER
+
+**At matched resolution.** Matched in τ harmonics (our M = 32 against RT's N_t = 64) the comparison is RT's κ at any
+N_t, since RT's does not depend on it. Matched in accuracy of Δ the two meet at D = 10: RT's 48 × 81 grid gives Δ to
+1.1×10⁻¹² with κ = 1.7×10¹⁵, and our M = 48 state (Δ to about 10⁻¹⁶) has κ = 1.2×10¹³ (`hp/stall_margin.py`,
+`I91-mac/ours_kappa.jsonl`). Ours then grows to 4.6×10¹⁹ at D = 20.04 (M = 32, every harmonic free) and 1.7×10³¹ at
+D = 60 (M = 32, harmonics above 13 frozen, folder `T76/kappa_states.jsonl`), and the pinned system the chain solves
+has LU pivots spanning 6.9×10¹⁹ at D = 100 and 5×10³⁹ at D = 200 (folders `T139-macm3/chain/` and
+`T138-win2/chain_o/`, `anm_run.jsonl`: the ratio of the largest to the smallest LU pivot, an estimate of κ, not an
+SVD).
+
+COND_COMPARE_PLACEHOLDER
 
 ## 5. The three questions
 
@@ -119,7 +180,57 @@ from forward-mode duals), and the Newton–Kantorovich constants of a computer-a
 B(x_corr, x_corr) has a fixed bound (RT Sec. 1.2). That is RT's use of it, and it is the relevant one for PROOF.md's
 item 7 (a certified solution at one large D).
 
-QUESTIONS_REST_PLACEHOLDER
+### (2) Does a global Chebyshev discretization through the horizon avoid our horizon-series wall?
+
+No. It moves the wall from the series' radius into the conditioning of the polynomial system.
+
+RT's Chebyshev domain ends at the horizon: in the parity-extended form the horizon is the endpoint ξ = −1 of the +
+equations (and ξ = 1 of the − equations); the discretization is not "through" it, although RT prove analyticity
+beyond it (ξ < 41/40). Regularity there is not imposed by any row. It is left to the basis: a polynomial cannot
+contain the singular branch exactly. The singular branch at the horizon has an exponent with real part near
+(D − 4)/2 (EEG: it "becomes increasingly difficult to distinguish numerically from the regular one"; EEGJ's "less
+and less singular"; the toy of notes/LARGE_D_LITERATURE.md 2(e), whose integral form needs (D − 4)/2 subtracted
+Taylor terms). A function (1 + ξ)^s with Re s ≫ 1 is C^⌊Re s⌋ and its Chebyshev coefficients fall like n^(−2 Re s − 1)
+(Boyd, Math. Comp. 37 (1981) 155, cited in LARGE_D_LITERATURE.md 2(b)), so the degree-N polynomials contain it to that
+accuracy, and the discrete operator has a near-null vector made of it. This is the mechanism that failed our own
+collocation of the horizon block (notes/QUAD_DOUBLE.md 13.3, 13.7: 14 near-null directions at D = 40 with 16 to 24
+points, Δ undetermined at 10⁻⁹ to 10⁻⁶), now in RT's global discretization, and section 4 measures it.
+
+Q2_DATA_PLACEHOLDER
+
+### (3) What would a Fourier × Chebyshev Newton cost at the digits our chain carries?
+
+The unknowns are L = 3.5 N_t N (EEG: 11,200 at N_t = 40, N = 80). To carry our M = 32 odd harmonics of Δ, ω₄ needs
+N_t = 64, and with N = 81 that is L = 18,369, against our L = 769 in the chain. In coefficient space (RT, EEG) the
+products of fields are convolutions and the Jacobian is dense; in our collocation the products are diagonal and the
+derivatives Kronecker products, but an LU of such a two-dimensional spectral matrix fills in, and the prototype factors
+it densely. RT's approximate inverse exploits that their matrix is close to banded (Sec. 1.3) and still needed a few
+thousand CPU hours at D = 4. A dense LU costs about L³/3 multiply-adds per Newton step.
+
+Q3_DATA_PLACEHOLDER
+
+## 5b. What to adopt, and what not
+
+Adopt:
+
+- **The map and its Δ–μ identity** (`gg_to_rt.py`, `mu_check.py`). They tie our horizon data to RT's geometric
+  invariant. At D = 4 RT's enclosure of 2K (radius 2×10⁻⁸⁰) is a reference for our Δ in place of MGG2003's ±3×10⁻⁹:
+  our M = 192 point agrees with it to 3.1×10⁻²⁶ (`mu_check.py`), against 2.3×10⁻¹⁰ with MGG2003. Proposed: add it to
+  `hp/data/delta_published_compare.csv` as the D = 4 reference.
+- **The RT prototype as an independent check of Δ(D) at moderate D.** It shares nothing with `hp/` but the first guess
+  at D = 4 (another gauge, other unknowns, a global discretization, no series), and it reproduces Δ(10) to 1.1×10⁻¹² of
+  ours. With a double-double or quad-double LU it can check our values at D = 12–30, where the published ones (EEG,
+  six decimals) are far less precise than ours.
+- **RT's framework for a certified solution at one D** (PROOF.md item 7). The quadratic structure is what makes the
+  Newton–Kantorovich bounds of a computer-assisted proof simple, and RT's code did it at D = 4. Section 4 says what it
+  would cost at larger D: the near-null direction makes the inverse's norm grow with D, so the proof's constants (and
+  the precision of its arithmetic) grow as κ does.
+
+Do not adopt: the global Fourier × Chebyshev Newton as the chain's solver. The horizon wall comes back as the
+conditioning of the polynomial system (question 2, section 4), so its arithmetic must lengthen with D as ours does,
+with 14 to 24 times our unknowns in a dense LU (question 3), and its truncation error at fixed resolution grows with D
+(the prototype's on a fixed grid, section 3; EEG's six decimals leave ours by 3×10⁻⁶ to 4×10⁻⁶ at D = 150–200,
+`hp/data/delta_published_compare.csv`, beyond their last digit, which is consistent with that and does not prove it).
 
 ## 6. Proposed entries for notes/LIT_REVIEW.md
 
@@ -152,7 +263,13 @@ To be added under the 2026-10-21 addendum's EEG entry and as a new entry (the co
 
 ## 7. Proposed text for the README ("The large-D wall")
 
-README_PLACEHOLDER
+A sentence for the bullet "The large-D wall" of "Limits and open problems", after its first sentence:
+
+> Ecker, Ecker and Grumiller reach D = 200 with Reiterer and Trubowitz's formulation, quadratic first-order equations
+> discretized globally by Fourier and Chebyshev series with no horizon series. It meets the same wall in another form:
+> the horizon's singular branch, of exponent near (D − 4)/2, is nearly a polynomial, so the Chebyshev system's
+> condition number grows README_RATE_PLACEHOLDER, and the arithmetic must lengthen with D as ours does
+> ([notes/RT_FORMULATION.md](notes/RT_FORMULATION.md)).
 
 ## 8. Reproduction
 

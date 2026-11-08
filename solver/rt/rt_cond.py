@@ -1,6 +1,7 @@
 """Condition number of the RT prototype's Jacobian at solved states (rt_run.py's npz files).
 
-    python3 solver/rt/rt_cond.py OUT.jsonl STATE.npz ... [--svd]     (one record per state)
+    python3 solver/rt/rt_cond.py OUT.jsonl STATE.npz ... [--svd] [--grid=NtxN]   (one record per state; --grid
+                                                                   resamples each state to that grid first)
     python3 solver/rt/rt_cond.py --selftest [--mutate=transpose]      (planted matrices; must pass, and fail mutated)
 
 kappa = sigma_max / sigma_min of J (the matrix Newton factors: rows as rt_model.residual, columns the unknowns),

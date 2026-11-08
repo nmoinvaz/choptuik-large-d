@@ -28,25 +28,48 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 arb, arb_mat = flint.arb, flint.arb_mat
 
 
-def norm2_inv(A, prec, it=40, seed=0):
-    """|A^-1|_2 at prec bits: X = A^-1 (approximate, arb), then power iteration on X^T X."""
+def norm2_inv(A, prec, it=40, seed=0, k=4):
+    """|A^-1|_2 at prec bits: X = A^-1 (approximate, arb), then block power iteration on X^T X with k vectors,
+    orthonormalized in arb. Returns the largest; norm2_inv.all holds the k largest singular values of X (the k
+    smallest of A, inverted) and norm2_inv.vecs the corresponding right singular vectors of A (unit, f64)."""
     flint.ctx.prec = prec
     L = A.nrows()
     I = arb_mat(L, L, [1 if i == j else 0 for i in range(L) for j in range(L)])
     X = A.solve(I, algorithm="approx")
     XT = X.transpose()
     rng = np.random.default_rng(seed)
-    v = arb_mat(L, 1, [arb(float(x)) for x in rng.normal(size=L)])
-    nrm = None
+    V = [arb_mat(L, 1, [arb(float(x)) for x in rng.normal(size=L)]) for _ in range(k)]
+    dot = lambda u, v: (u.transpose() * v)[0, 0]
+
+    def orth(W):
+        Q = []
+        for w in W:
+            for q in Q:
+                w = w - q * dot(q, w)
+            Q.append(w * (1 / dot(w, w).sqrt()))
+        return Q
+    V = orth(V)
     for _ in range(it):
-        w = XT * (X * v)
-        s = sum((w[i, 0] ** 2 for i in range(L)), arb(0)).sqrt()
-        v = w * (1 / s)
-        nrm = s
-    Xv = X * v
-    nrm = float(sum((Xv[i, 0] ** 2 for i in range(L)), arb(0)).sqrt().mid())
-    norm2_inv.weak = np.array([float(Xv[i, 0].mid()) for i in range(L)]) / nrm   # J weakest right vector
-    return nrm
+        V = orth([XT * (X * v) for v in V])
+    XV = [X * v for v in V]
+    # the converged, Gram-Schmidt ordered block: |X v_j| are the k largest singular values of X in order (no
+    # Rayleigh-Ritz rotation: their ratios can exceed f64's range of an eigensolver)
+    sig = [dot(x, x).sqrt() for x in XV]
+    norm2_inv.all = [float(s.mid()) for s in sig]
+    norm2_inv.vecs = []
+    for x, s in zip(XV, sig):
+        u = np.array([float((x[i, 0] / s).mid()) for i in range(L)])
+        norm2_inv.vecs.append(u / np.linalg.norm(u))
+    norm2_inv.weak = norm2_inv.vecs[0]
+    # the largest, directly in arb (no f64 Gram matrix): |X v_1|
+    return float(dot(XV[0], XV[0]).sqrt().mid())
+
+
+def phys_kappa(smax, lowest, Nt):
+    """kappa with the smallest singular value whose vector is not the Nyquist artifact of the collocation (a periodic
+    field at t harmonic Nt / 2, i.e. harmonic Nt of Delta, whose discrete t derivative is zero), or None."""
+    ph = [l for l in lowest if not (l["weakest"]["field"] != "omega_4" and l["weakest"]["harmonic_of_Delta"] == Nt)]
+    return float(smax / ph[0]["sigma"]) if ph else None
 
 
 def to_arb_mat(J_obj, prec):
@@ -134,10 +157,13 @@ def main():
     n1 = norm2_inv(to_arb_mat(Jo, a.prec), a.prec)
     n2 = norm2_inv(to_arb_mat(Jo, a.prec + 128), a.prec + 128)
     smin = 1 / n2
+    lowest = [dict(sigma=1 / s, loc=localize(rt, v), weakest=weakest_label(rt, v))
+              for s, v in zip(norm2_inv.all, norm2_inv.vecs)]
     rec = dict(src=src, D=D, grid=[Nt, N], L=rt.L, F_f64=F, prec=a.prec, sigma_max=float(smax), sigma_min=smin,
                sigma_min_at_prec=1 / n1, kappa=float(smax * n2), kappa_f64=float(smax / smin_f64),
-               resolved=bool(abs(n1 / n2 - 1) < 1e-6), loc=localize(rt, norm2_inv.weak),
+               resolved=bool(abs(n1 / n2 - 1) < 1e-6), lowest=lowest, loc=localize(rt, norm2_inv.weak),
                weakest=weakest_label(rt, norm2_inv.weak), secs=round(time.time() - t0, 1),
+               kappa_phys=phys_kappa(smax, lowest, Nt),
                secs_inverse=round(time.time() - t1, 1))
     with open(a.out, "a") as f:
         f.write(json.dumps(rec) + "\n")

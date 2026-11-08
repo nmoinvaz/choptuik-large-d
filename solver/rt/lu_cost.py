@@ -40,7 +40,7 @@ def main():
             err = max(abs(float((x[i, 0] - xs[i, 0]).mid())) for i in range(L)) / max(abs(x0))
             ok = err < 2.0 ** (-P / 2)
             bad |= not ok
-            rec = dict(L=L, prec=P, seconds=dt, per_L3=dt / L ** 3, err=err, ok=ok)
+            rec = dict(L=L, prec=P, seconds=dt, per_L3=dt / L ** 3, err=float(err), ok=bool(ok))
             with open(out, "a") as f:
                 f.write(json.dumps(rec) + "\n")
             print(f"L {L} prec {P}: {dt:.2f} s, {dt / L ** 3:.2e} s per L^3, error {err:.1e} {'ok' if ok else 'FAIL'}",

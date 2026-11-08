@@ -2,10 +2,13 @@
 D with EEG's protocol (steps of 1/2, the initial guess linearly extrapolated from the two previous solutions), and
 compare Delta with hp/data/delta_all.csv.
 
-    python3 solver/rt/rt_run.py --profile PROFILE.npz --grids 32x41,48x61 --D_to 10 --out DIR [--mutate=coef]
+    python3 solver/rt/rt_run.py --profile PROFILE.npz --grids 32x61,48x81 --cont_grid 32x61 --D_to 10 --mp 160 \
+        --out DIR [--mutate=coef]
 
 Exits 1 when |Delta_RT - Delta_hp| > --tol (1e-8) at the start D or at D_to, on the last grid. --mutate=coef scales the
 coefficient (D - 3)(D - 2)/2 of Omega_3 by 1 + 1e-3; the run must then exit 1 with Delta moved by more than 1e-6.
+--mp BITS polishes the start and end solves with the residual in arb (rt_mp.py) and the f64 Jacobian; without it the
+f64 rounding along the weak direction moves Delta by 3e-4 at D = 10 on the 48x81 grid. The continuation itself is f64.
 mu at D = 4 is also compared with Reiterer and Trubowitz's enclosure (arXiv:1203.3766v1, Eq. (3), radius 1e-80).
 """
 import os
