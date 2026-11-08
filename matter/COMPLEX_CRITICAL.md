@@ -15,6 +15,23 @@ Conventions as in matter/CSS.md: D = n + 2, τ = −ln(−t), perturbations ∝ 
 
 ## 2. The CSS: its second unstable mode in D
 
+**D = 4 against Hirschmann and Eardley.** Read (WebSearch, then WebFetch of the arXiv listing, of the ar5iv rendering of
+arXiv v3 and of the v3 PDF's first page, 2026-11-08): HE95b write perturbations as $`e^{-i\sigma\tau}`$ with
+τ = log(−t), so that "Eigenvalues in the lower half plane Im σ < 0 belong to unstable (growing) normal modes", and
+γ = −1/Im σ. Their Section VII ("Results"), eqs. (33)–(34): "The third solution also lies on the negative imaginary
+axis, at σ = −2.58324i ± 0.00002i", and "The fourth and fifth solutions form a conjugate pair lying at
+σ = ±(3.50224 ± 0.00001) − (0.25867 ± 0.00001)i", with "γ = 0.387111 ± 0.000003". Our τ is −log(−t), so λ = iσ.
+
+| mode | HE95b (λ = iσ) | here, `complex_css.py root 4` (R = 0.85 x_h; R = 0.6 x_h) | difference / their error |
+|---|---|---|---|
+| oscillatory pair | 0.25867 ± 3.50224i (± 0.00001 each) | 0.2586698339 + 3.5022487970i (0.2586698339 + 3.5022487970i) | 0.0 in Re, 0.9 in Im |
+| black-hole mode | 2.58324 ± 0.00002 | 2.5832751746 (2.5832751746) | 1.8 |
+
+The radii agree to 2×10⁻¹¹ (oscillatory) and 6×10⁻¹³ (real). These are spreads between two settings of one method,
+not error bounds; the collocation of matter/CSS.md §4 (an independent code) gives 0.2586698 ± 3.5022488i and 2.5832752.
+**The oscillatory mode matches HE95b within their error bars.** The black-hole mode is 3.5×10⁻⁵ above theirs, 1.8 of
+their quoted errors (§5).
+
 **Method.** The growth rates of the κ = 0 CSS are the zeros of css_pert.py's det M(λ): complex-path shooting, the
 perturbation's jump across the self-similarity horizon on circles of radius R = 0.85 x_h and 0.6 x_h (matter/CSS.md
 §2). A growth rate is a zero at every R; the jump method's artefacts move with R and sit near the resonance line
@@ -78,7 +95,27 @@ background's (p, m) a null vector of M(0) only to 3×10⁻⁴.
 
 **Checks** (`complex_imag.py check`, records in the raw folder's `imag/checks.jsonl`): [TBD]
 
-**Counting.** [TBD]
+**Counting.** As in notes/MODE_COUNT.md §2: the phase of g(λ) = det M(λ) ∏(λ − p_j) e^{−q(λ)} is followed around a box,
+with p_j the candidate poles (the eigenvalues of −(ω d_θ + κ_k), κ_k = (1 + c₁)(k + 1) − n/2, k = 0 … 100, on
+Im λ = ±ω, ±3ω, …) within 2 of the box in Re λ and 2ω in Im λ, and q a real quadratic fitted to ln|g| at the box's
+corners and edge midpoints (det M grows like $`e^{60\lambda}`$ at D = 20 and $`e^{300\lambda}`$ at D = 4). Each
+pole is at most simple, so wind(g) is an upper bound on the number of zeros inside, with equality when every candidate
+inside is a pole. Edges are sampled at spacing 0.25 and bisected until every phase step is at most π/4 and the two
+halves of each step add up to it. Symmetric boxes use det M(λ̄) = conj det M(λ) (the background is real): their
+winding is the phase change along the upper half divided by π. The boxes hold every growth rate of both θ-parity
+sectors with −0.05 < Re λ < 6, by the 2iω periodicity of the folded layout (MODE_COUNT.md §1):
+
+| box | region | expected |
+|---|---|---|
+| B0 | −0.05 < Re λ < 0.3, \|Im λ\| < ω/2 | λ = 0, the phase rotation |
+| U0 | −0.05 < Re λ < 0.3, ω/2 < Im λ < 3ω/2 | none |
+| FULL | 0.3 < Re λ < 6, \|Im λ\| < 3ω/2 | none |
+
+Controls: `selftest` (a synthetic det with zeros at 0, 1.2 ± 0.7i, 5.98 ± 0.2i, 0.02 inside FULL's right edge, and 3 ± 9i
+outside, with the growth $`e^{40\lambda + 1.5\lambda^2}`$, through count_box itself: counts 1, 0, 4, and 1, 0, 6 with a
+pair planted at 2 ± i; with one sample per edge and no bisection FULL counts 2, so the control fires), `--plant`, and
+two mutated equations that break the λ = 0 mode: `--mutate=coupling` (the p equation's (n/2) c (P + Q) times 1.1) and
+`--mutate=noG` (G dropped).
 
 ## 4. Verdict
 
@@ -94,7 +131,18 @@ background's (p, m) a null vector of M(0) only to 3×10⁻⁴.
 
 ## 7. Proposed notes/LIT_REVIEW.md entries
 
-[TBD]
+- **[HE95b] E. W. Hirschmann, D. M. Eardley, "Critical exponents and stability at the black hole threshold for a
+  complex scalar field", PRD 52, 5850 (1995), arXiv:gr-qc/9506078** (read 2026-11-08: the arXiv listing, the ar5iv
+  rendering of v3, the v3 PDF's first page). Contains: the linear perturbations of their D = 4 CSS solution, five zeros
+  of det A in the lower half σ plane (σ = 0 and −i gauge, the black-hole mode σ = −2.58324i ± 0.00002i, the pair
+  σ = ±(3.50224 ± 0.00001) − (0.25867 ± 0.00001)i), γ = 0.387111 ± 0.000003, and the statement that the solution is
+  "unstable via a growing oscillatory mode", so not critical. The listing's abstract gives γ ≈ 0.387106 instead
+  (versions 1 and 2 were withdrawn). Does not contain: any dimension other than 4, κ ≠ 0 (that is HE97), or the real
+  DSS solution's perturbations as a complex field.
+- **Gundlach, PRD 55, 695 (1997), arXiv:gr-qc/9604019**, as quoted in notes/GHOST_ADMIXTURE.md through the review
+  arXiv:gr-qc/9712084: of the Choptuik solution's perturbations as a free complex scalar "only one of them, purely real,
+  has Re λ > 0". Not reread here; the body of the 1997 paper has still not been read in this repository, so the entry
+  should stay marked as read through the review only.
 
 ## 8. Scripts, data and how to reproduce
 
@@ -102,4 +150,19 @@ background's (p, m) a null vector of M(0) only to 3×10⁻⁴.
 
 ## 9. Recommended tasks
 
-[TBD]
+1. **An independent imaginary-sector count at large D.** What: complex_imag.py's propagators and LU in double-double
+   (or arb) so that D ≥ 30 has a second implementation besides hp/modecount_cx. Why: in double precision det M is
+   rounding noise at D = 60, with or without the kfreeze-13 cut (§3), so the large-D counts rest on one code.
+   Acceptance: at D = 30.07, 45.05 and 60.00 the phase of det M agrees between integration tolerances 10⁻¹² and 10⁻¹⁴
+   to 10⁻³ rad on every sample; the counts of B0, U0 and FULL equal the crate's; a planted pair is counted and
+   `--mutate=coupling` changes B0. Depends on: nothing.
+2. **The CSS's oscillatory mode at D = ∞.** What: the perturbation spectrum of the κ = 0 inner CSS solution
+   (css_inner.py), to see whether Im λ_osc/ω → 2 and Re λ_osc → a limit near 0.53. Why: the finite-D track (§2)
+   suggests both; a limit would make the CSS's instability exact at D = ∞, not only up to D = 80. Acceptance: the
+   inner problem's λ = 2 mode is found (its control), and λ_osc(∞) lies within the 1/n extrapolation's spread of the
+   finite-D values. Depends on: nothing.
+3. **The κ-model's stability change in D.** What: follow the oscillatory mode in κ at fixed D (D = 4, 6, 10, 20, 40)
+   to the κ_c(D) where Re λ_osc = 0. Why: HE97 find κ_c ≈ 0.0754 at D = 4, above which the CSS is critical; matter/CSS.md
+   finds the κ = 1 CSS critical up to D = 80, and κ = 0 is not critical at any D here, so κ_c(D) is between. Acceptance:
+   κ_c(4) reproduces HE97 to their digits; the crossing is a sign change of Re λ_osc seen at both circle radii.
+   Depends on: backgrounds at intermediate κ (css_lateral.py cont).

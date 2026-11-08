@@ -618,7 +618,7 @@ def main():
         sv = np.linalg.svd(A0, compute_uv=False)
         # analyticity (Cauchy-Riemann) of ln det M at l0, and its control: ln det M(conj lam), anti-analytic;
         # conjugation symmetry det M(conj lam) = conj det M(lam) (real background)
-        l0, hh = 1.3 + 0.4j, 1e-5
+        l0, hh = 1.3 + 0.4j, 1e-3      # det M is accurate to about 1e-6 (integration), so h = 1e-5 is too small
         f = tf.lndet
         dre = (f(l0 + hh) - f(l0 - hh)) / (2 * hh)
         dim = (f(l0 + 1j * hh) - f(l0 - 1j * hh)) / (2j * hh)
