@@ -1,6 +1,6 @@
 """An upper bound on the smallest gain of the RT Jacobian at a state, and the direction that attains it (issue #163).
 
-    python3 solver/rt/rt_sigma.py STATE.npz [--starts 3] [--prec 192] [--horizon K] [--max_products 250]
+    python3 solver/rt/rt_sigma.py STATE.npz [--starts 3] [--rough] [--prec 192] [--horizon K] [--max_products 250]
     python3 solver/rt/rt_sigma.py --planted [--mutate=shift]
 
 For each of --starts smooth random right-hand sides v (max|v| = 1) it solves J x = v with rt_mpsolve's flexible GMRES
@@ -9,7 +9,9 @@ relative residual 1e-30). Then max|J x| / max|x| = 1 / max|x| bounds the smalles
 above (a bound, not an SVD; it is near sigma_min when v is not nearly orthogonal to the weakest left singular vector),
 and x is dominated by the weakest right singular directions. Printed per start: max|x|, the bound, the solve's
 residual max|J x - v|, and x's content in mu, by field, by harmonic and at xi = +1, near 0 and -1. Repeated inverse
-iteration is not used: J is not normal, and J^-1 applied to its weakest right vector need not be large.
+iteration is not used: J is not normal, and J^-1 applied to its weakest right vector need not be large. --rough draws
+each entry of v independently (normal), instead of smooth fields: a weak direction whose left vector is rough on the
+grid (as for a polynomial copy of a horizon branch) is then seen, while smooth v miss it.
 Planted check: a diagonal operator A = diag(s) with s log-uniform in [1e-3, 1] and one entry 1e-22, through the same
 fgmres and LUdd (the f64 LU is exact for it); the best bound over three starts must lie in [1e-22, 1e-20], with x
 along that entry to 1e-6. (Revised after the first run of this version, whose window was a factor 3: the bound's
@@ -93,6 +95,7 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("state", nargs="?")
     ap.add_argument("--starts", type=int, default=3)
+    ap.add_argument("--rough", action="store_true", help="v with independent normal entries instead of smooth fields")
     ap.add_argument("--prec", type=int, default=192)
     ap.add_argument("--horizon", type=int, default=None, help="default: the state's own")
     ap.add_argument("--max_products", type=int, default=250)
@@ -112,7 +115,13 @@ def main():
     print(f"{a.state.rsplit('/', 1)[-1]}: D {D} {Nt}x{N} K {K}, max|F| {mps.amax(F):.2e}")
     P = mps.LUdd(rt.jacobian(mps.to_f64(z)), overwrite=True)
     apply = lambda u: mps.jv_central(rm.residual_m, z, u)
-    res = bounds(apply, P, [mps.obj(smooth_start(rt, seed=163 + i)) for i in range(a.starts)], a.max_products)
+    if a.rough:
+        rng = np.random.default_rng(163)
+        vs = [mps.obj(rng.normal(size=rt.L)) for _ in range(a.starts)]
+    else:
+        vs = [mps.obj(smooth_start(rt, seed=163 + i)) for i in range(a.starts)]
+    print(f"  right-hand sides: {'rough (independent normal entries)' if a.rough else 'smooth fields'}")
+    res = bounds(apply, P, vs, a.max_products)
     for i, (b, x) in enumerate(res):
         print(f"  start {i}, x / max|x|: " + describe(rt, mps.to_f64(x)))
     best = min(r[0] for r in res)
