@@ -184,6 +184,14 @@ for a real login meant to be notified.
 - **gh.** A runner needs the gh CLI logged in with access to this repository (`gh auth status`). The repository's
   `.claude/settings.json` allows the `gh issue` list, view, comment, edit and close commands (Nathan, 2026-11-08).
   Without it the watcher says so and watches comms.txt only.
+- **Subagents** work only on an existing issue: every task goes to the project, subagent work included. A subagent
+  posts its progress on the issue, and the coordinator posts the closing summary after review (Nathan, 2026-11-08).
+- **New tasks from any agent.** Any agent, runner, subagent or coordinator, may open a new issue when the task it is
+  processing needs further investigation or calculation: a follow-up run, a check, a discrepancy to explain. Write it
+  like the others (what, why, acceptance criteria whose check can fail, files), add it to the project
+  (`gh project item-add 1 --owner nmoinvaz --url <issue URL>`) with Status Todo, Area set and Depends on naming the
+  issue it came from, and link it in a comment on that issue. Leave the machine label off: only the coordinator readies a
+  task (Nathan, 2026-11-08).
 - **The coordinator** writes the issues, sets Sprint, Owner and Depends on, adds a machine label when a task's
   dependencies are done, reads each closing summary, merges results into the notes, and checks the raw folder with
   `raw_check.py`.
