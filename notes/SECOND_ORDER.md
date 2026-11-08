@@ -25,7 +25,42 @@ Contents
 
 ## Summary
 
-SUMMARY_PLACEHOLDER
+The O(1/n²) inner selection gives both second coefficients, in the M-harmonic truncation, against the double-double
+fits:
+
+| | M = 1 | M = 3 | M = 5 | fit (double-double) |
+|---|---|---|---|---|
+| Δ₂ | −45.86 | −44.42 | −50.06 ± 0.18 | −49.1685 [−49.16867, −49.16780] |
+| λ₂ | −141.05 | −43.76 | L5_SUMMARY | −34.38 (± about 0.1) |
+
+with Δ = Δ* + Δ₁/n + Δ₂/n² + … and λ = 1/γ = λ* + λ₁/n + λ₂/n² + …, n = D − 2. At M = 5 the derived values are 1.8%
+(Δ₂) and 2.0% (λ₂) from the fits. From M = 3 to M = 5 each error changes sign and shrinks, by factors of 5 and 14, and
+each fitted value lies between the M = 3 and M = 5 values, as for every first-order coefficient. The ± of the M = 5
+values is half the spread of three runs (numerical error); the bracket of the fitted Δ₂ is the spread over fit
+choices; the ± of the fitted λ₂ is the largest miss of its planted test, which failed its 0.02 criterion (§5).
+
+**EEG's expansion.** Under the map f = c, x²Ω = (n − 1)(b − 1), Π = y/(√2 x), Ψ = (p + m)/(√2 x²), ε = 1/(n + 1), with
+β̃ the exact central profile, EEG's large-D expansion is Proposition 1's. Their NLO agrees term by term. Their printed
+NNLO does not: Π₃ (S46) violates their own (S39) at ε^{5/2}, and Ω₃ and f₃ inherit the error. The corrected NNLO (§1)
+agrees with Proposition 1 and satisfies their equations. *Checked symbolically*, with controls that fail.
+
+**Method.** In inner variables the exact equations close with one slaved function, which gives the O(1/n²) inner
+equations in a few terms (§2). Second-order jets by polarization (two nilpotent 1/n directions) carry the selection one
+order further (§3): the O(1/n²) inner series equals the outer expansion's next-to-next-to-top coefficients to 6.5×10⁻¹³,
+and the θ-shift mode keeps λ₁ = λ₂ = 0 through the whole growth-rate step. The multiplier's 1/n² part must vanish; that
+fixes ω₂ (Δ₂), and second-order perturbation theory gives λ₂ (§4).
+
+**Δ∞ with Δ₁ and Δ₂ held fixed.** On planted data, holding the true coefficients fixed shrinks the spread of Δ∞ from
+6.8×10⁻⁹ to 2.5×10⁻¹¹. On the real points the derived values are too far off: Δ₁ must be known to about 3×10⁻⁶ for that
+gain, and at M = 5 it is off by 0.027, so no fixed fit reaches the points' precision (§5).
+
+**EEG's e^{−1/ε}** (§6, a reading): the inner problem's Stokes jump is $`e^{-n\Phi(x)}`$ in the outer variables, an
+instanton-type term invisible to every order of their expansion. Its cancellation fixes Δ's power-series
+coefficients order by order (Δ₁, Δ₂ here). It is not an additive term in Δ(D), for which the fits find no evidence.
+
+**Status.** EEG's check and the O(1/n²) equations are *checked symbolically*; the selection at O(1/n²) is
+*conditional* on Conjecture 1 and the lemma chain one order further; the numbers are *numerical evidence* from truncated
+models, whose M → ∞ limit is not computed (truncation error at M = 5 about 2%).
 
 ## 1. EEG's expansion against Proposition 1
 
@@ -104,8 +139,9 @@ c_6 &= \tfrac{1}{16}\tilde\beta^6 - \tfrac{11}{12}\tilde\beta^4 - \tfrac{37}{24}
 - **The controls.** The mutations `c0` (S48's 17/48 → 18/48), `Pi3` (S46's 24 → 23), `Psi2` (S43's 11 → 10),
   `Omega3` (S45's −7 → −6) and `map` (ε = 1/n instead of 1/(n + 1)) each make the default run exit 1 (logs
   `second_order_eeg_mut_*.log`, summary `second_order_eeg_mutations.txt`).
-- **What it changes.** EEG's Fig. 4 and Fig. 5 compare the NNLO fields with their D ≤ 200 solutions; the corrected Π₃
-  changes Π, Ω and f at ε^{5/2} and ε³. Whether their figures used the printed expressions is not known from the paper.
+- **What it changes.** EEG compare their perturbative fields with the D = 200 solution (their Fig. 4; EEG_PROFILE.md §1
+  reads Fig. 5 the same way for D = 25–200). The corrected Π₃ changes Π at ε^{5/2} and Ω, f at ε³, that is at relative
+  order ε² against the leading terms. Whether their figures used the printed expressions is not known from the paper.
 
 **μ.** Expanding the gauge identity in ε (check C):
 
@@ -266,7 +302,14 @@ reparametrization symmetry falls fast with M, and at M = 5 it is a third of the 
 −49.17). The truncation error of the M = 5 value is therefore about 2%, from the M = 3 to M = 5 step, not from the
 gauge spread.
 
-LAMBDA_TEXT_PLACEHOLDER
+**λ₂.** Differences from the fitted −34.38: −106.7, −9.39, +0.69 for M = 1, 3, 5 (2.0% at M = 5). From M = 3 to
+M = 5 the error changes sign and shrinks by a factor of 14 (ratio −0.073), and the fit lies between the two values,
+7% of the way from M = 5. The readings give −34.17 (r = −0.05) and −35.37 (r = −0.2). LAM5_ROBUST The gauge data
+change λ₂ by 120 and 4.9 at M = 1 and 3 (the M = 5 gauge-0 run was not done); at M = 3 the two gauges
+(−43.76, −38.86) do not bracket the fit. The precision of λ₂ at M = 5 is limited, as λ₁'s was, by the deflation of
+the perturbation's 1/n² component: its own higher-harmonic jump falls from 1.2×10¹⁴ only to 11, so its Schur
+correction carries a part of the result; and λ₁ itself enters with the stored first-order value, whose own error
+(±0.001) shows as $`\ell\cdot J_{p1}`$ = −83 against $`\lambda_1\,\ell\cdot\partial_\lambda\mathcal S f_0`$ = 1.8×10⁵.
 
 ## 5. Against the fits, and Δ∞ with Δ₁ and Δ₂ held fixed
 
@@ -306,8 +349,14 @@ coefficients in 1/n known: Δ₂ = −49.1016, λ₂ = −34.4434), noise 10⁻�
 **Δ∞ with Δ₁ and Δ₂ held fixed** (real points). Held at the fitted centre (Δ₁ = 10.375283, Δ₂ = −49.1685), one fixed
 fit reaches the residual criterion, Δ∞ = 1.64389375259, inside the free fits' range 1.64389374563–1.64389375483
 (circular, as the fixed values come from the same points). Held at the derived values, no fit reaches it:
-FIXED_PLACEHOLDER
-P3 shows why: Δ∞ moves by about 4–7×10⁻³ times the error of Δ₁. To keep Δ∞ within the README's 1.5×10⁻⁸, Δ₁ would have to
+
+| held fixed | Δ₁ | Δ₂ | smallest max \|residual\| of the 11 fixed fits | Δ∞ of the fits |
+|---|---|---|---|---|
+| M = 5 | 10.4023 | −50.056 | 1.5×10⁻⁹ | 1.643739–1.643792 |
+| M → ∞ reading, r = −0.05 | 10.378 | −49.787 | 6.3×10⁻¹² | 1.6438883–1.6438911 |
+| M → ∞ reading, r = −0.2 | 10.316 | −49.117 | 3.7×10⁻⁹ | 1.644134–1.644279 |
+
+(log `second_order_fits.log`). P3 shows why: Δ∞ moves by about 4–7×10⁻³ times the error of Δ₁. To keep Δ∞ within the README's 1.5×10⁻⁸, Δ₁ would have to
 be known to about 3×10⁻⁶ (3×10⁻⁷ relative) and Δ₂ correspondingly; the M = 5 values are 0.26% and about 2% off. So
 holding the derived coefficients fixed does not sharpen Δ∞ at this truncation; with exact Δ₁ and Δ₂ it would
 (P2: spread 2.5×10⁻¹¹ instead of 6.8×10⁻⁹).
@@ -321,7 +370,7 @@ power-law expansion in ε". This is a stated reading, not a claim.
   re-parametrized by the exact central profile, with the period free).
 - **The exponentially small sector is the inner problem's Stokes jump.** The inner fast modes are
   $`e^{-\phi(\xi)/\xi^2}`$-type; at $`\xi = x/\sqrt n`$ they are $`e^{-n\Phi(x)}`$ in the outer region, with the singulant
-  Φ of Proposition 4 and Lemma B5.1 ($`\Phi = -\tfrac12\ln(1 - x^{-2}) \pm i\pi/2`$ without gravity). With
+  Φ of Proposition 4 and Lemma B5.1 ($`\Phi = -\tfrac12\ln(1 - x^{-2}) \pm i\pi/2`$ for x > 1, without gravity). With
   $`n = 1/\varepsilon - 1`$ these are $`e^{-\Phi/\varepsilon}`$ times powers: instanton-type terms with an x-dependent
   action, invisible at every order of EEG's expansion, and tied to its factorial divergence (Proposition 4). The
   multiplier S is their coefficient; Conjecture 1 sets it to zero.
@@ -332,9 +381,8 @@ power-law expansion in ε". This is a stated reading, not a claim.
 - **What the data say about an additive term.** The transseries test (DINF_FITS.md) finds no such term in Δ(D) for
   a ≥ 0.5: its coefficient is the scatter a planted c = 0 also gives, and Δ∞ moves by at most 1.3×10⁻⁷. The test does
   not cover a < 0.5 or factors of ln ε, and the selection condition imposed as a formal series in 1/n does not exclude
-  exponentially small corrections to Δ(D) of its own (the multiplier's own subleading exponentials). Δ's coefficients,
-  Δ₂/Δ₁ = −4.74, are what a convergent series with the singularity near D ≈ −9 to −11 gives, not a factorially
-  divergent one; nothing in them asks for a Borel-type completion.
+  exponentially small corrections to Δ(D) of its own (the multiplier's own subleading exponentials). Nothing found
+  here needs one: Δ₁ and Δ₂ come out of the power-series selection within the truncation error.
 
 ## 7. What is rigorous, what is numerical, what is truncated
 
@@ -369,11 +417,12 @@ Reported, not fixed:
    7.757, 3.080, 3.080, and `ell @ Jel` is 172, 5.1×10⁸, 5.1×10⁸ against `ellJel` −65257 (M = 3). The `lam1` values
    themselves are right: the second-order jets reproduce them ($`\ell\cdot J_{p1}`$ ≈ 0, §4), with the denominator
    taken from the model's own d/dλ direction. A first run of `second_order_run.py` that took the denominator from
-   `ell @ Jel` gave λ₂ = 0.6 and 0.006; it was found by the gauge-0 run and replaced (logs `second_order_run_M1.log`,
-   `second_order_run_M3.log` keep it).
-3. **λ₂** of the truncated models: LAMBDA_DISCREPANCY_PLACEHOLDER
-4. **The λ₂ fit's planted test failed** (P4, §5); the fitted λ₂ is an estimator range with an uncertainty of about 0.1
+   `ell @ Jel` gave λ₂ = 0.6 and 0.006 (posted on the issue as preliminary); the gauge-0 run exposed it, and it was
+   replaced (logs `second_order_run_M1.log`, `second_order_run_M3.log` keep it).
+3. **The λ₂ fit's planted test failed** (P4, §5); the fitted λ₂ is an estimator range with an uncertainty of about 0.1
    read from the planted misses.
+4. **Not a discrepancy, a data change:** the first-order Δ₁ fit used 819 points, today's file gives 1159 (D to 67.8).
+   The fitted Δ₁ range is now 10.375281–10.375285 over 15 fits, inside FIRST_ORDER.md's 10.375279–10.375321.
 
 ## 9. Proposed text
 
@@ -391,8 +440,9 @@ For the coordinator (agents do not edit the README or other notes).
 **README, Proposition 1, after "Consequence"**, something like:
 
 > The coefficients are nevertheless fixed order by order by the D = ∞ inner selection: the vanishing of the inner
-> multiplier at O(1/n) gives Δ₁ ([notes/FIRST_ORDER.md](notes/FIRST_ORDER.md)) and at O(1/n²) gives Δ₂, M5_SENTENCE
-> ([notes/SECOND_ORDER.md](notes/SECOND_ORDER.md)). The exponentially small terms that do this are the inner problem's
+> multiplier at O(1/n) gives Δ₁ ([notes/FIRST_ORDER.md](notes/FIRST_ORDER.md)) and at O(1/n²) gives Δ₂: with five
+> harmonics −50.06 against the fitted −49.17, and λ₂ = L5_SUMMARY against −34.38, the fits lying between the three-
+> and five-harmonic values ([notes/SECOND_ORDER.md](notes/SECOND_ORDER.md)). The exponentially small terms that do this are the inner problem's
 > Stokes jump, e^{−nΦ(x)} in the outer variables; in this reading they are the "instanton corrections e^{−1/ε}" that
 > Ecker, Ecker and Grumiller expect, and not a term in Δ(D) itself.
 
@@ -415,7 +465,7 @@ For the coordinator (agents do not edit the README or other notes).
 | `second_order_jet.py` | module: the second-order jets (polarization, ω and λ jets) | |
 | `second_order_checks.py [outer] [rhs] [modes --raw=DIR] [--mutate=NAME]` | §3: the checks; exit 1 on failure | 1 s; modes 2.5 min |
 | `second_order_run.py M [--xi1=] [--raw=DIR] [--redo=omega2,gauge,lam2]` | §4, M = 1, 3: ω₂, the gauge diagnostic, λ₂ (and its gauge-0 value) | 1–3 min |
-| `second_order_hier.py 5 [--xi1=] [--rtol=] [--raw=DIR] [--omega-only] [--no-gauge]` | §4, M = 5, deflated | ω₂ 2–5 min; λ₂ LAM5_TIME |
+| `second_order_hier.py 5 [--xi1=] [--rtol=] [--raw=DIR] [--omega-only] [--no-gauge]` | §4, M = 5, deflated | ω₂ 2–5 min; λ₂ 6 min |
 | `second_order_table.py DIR` | the tables of §4 from the JSON files | 1 s |
 | `second_order_fits.py [--planted] [--fixed=D1,D2;...]` | §5: the fitted Δ₂, λ₂ and the fixed fits; `--planted` exits 1 (P4) | 5–10 min |
 

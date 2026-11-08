@@ -85,18 +85,21 @@ def omega2_deflated(x, M, xi1, dx, K, L, gscale=1.0):
                      J12H_pass1=float(np.linalg.norm(rows0[2][2:])))
 
 
-def lam2_deflated(x, M, xi1, dx, dx2, first):
-    lam, lam1 = first["lam"], first["lam1"]
+def lam2_deflated(x, M, xi1, dx, dx2, first, gscale=1.0):
+    """gscale = 0: every gauge datum 0 (background and perturbation), with dx, dx2 the gauge-0 selections and
+    lambda_1 the stored gauge-0 value (first_order_hier.py --lam-gauge)"""
+    lam = first["lam"]
+    lam1 = first["lam1"] if gscale else first["lam1_gauge0"]
     f0vec = np.array(first["fvec"])
     ll = np.array(first["ell_l"])
     den = first["lam_den"]
     Fh = Fh_from(x, M)
     w = W0 * x[1]
     f0 = R.profile_of(f0vec, M)
-    gauge1, gauge2 = S2.gauge_bg(x, M, dx)
+    gauge1, gauge2 = S2.gauge_bg(x, M, dx, gscale)
     pre = JetModel2(M, w, Fh, [Dir("pert", lam=lam)], [0, 1], {1: (f0, {})})
     pre.series_at(1.0, 3, stop=False)
-    dgauge1 = S2.harm_dict(-pre.ser["G"][1][1], pre.L, 0, M)
+    dgauge1 = S2.harm_dict(-gscale * pre.ser["G"][1][1], pre.L, 0, M)
     S, _, _ = R.pert_matrix(x, M, xi1, lam)
     Lp = H.Lin(S)
     Sch, Cm, _, resH = H.sch_lam(x, M, xi1, lam, S=S)
@@ -142,7 +145,7 @@ def lam2_deflated(x, M, xi1, dx, dx2, first):
     pre = JetModel2(M, w, Fh, [Dir("pert", lam=lam), Dir("e1", q1=True, omega=W0 * dx[1])], [0, 1, 2, 3],
                     {1: (f0, {}), 2: (S2.prof_of_dx(dx, M), gauge1), 3: (vec_prof(f1vec), dgauge1)}, lamj={2: lam1})
     pre.series_at(1.0, 3, stop=False)
-    dgauge2 = S2.harm_dict(-(pre.ser["G"][2][pre.idx[1]] + pre.ser["G"][1][pre.idx[3]]), pre.L, 0, M)
+    dgauge2 = S2.harm_dict(-gscale * (pre.ser["G"][2][pre.idx[1]] + pre.ser["G"][1][pre.idx[3]]), pre.L, 0, M)
 
     def run2(Cin):
         fv = np.concatenate([[0.0, 0.0], Cin[0]])
@@ -208,6 +211,13 @@ def main():
         save()
     log(f"   p e1 deflation {out['p1_hist']}; p e1 e2 deflation {out['p12_hist']}; |corr(J_p1)| after f_1 {out['Jp1_after']:.2e}")
     log(f"LAMBDA2: lambda = {out['lam']:.9f} + ({out['lam1']:.5f})/n + ({out['lam2']:.4f})/n^2")
+    if "--lam-gauge" in opts and "lam2_gauge0" not in out and "dx2_gauge0" in out:
+        g0 = lam2_deflated(x, M, xi1, np.array(first["dx_gauge0"]), np.array(out["dx2_gauge0"]), first, gscale=0.0)
+        out.update(lam2_gauge0=g0["lam2"], lam1_gauge0=g0["lam1"], ellJp1_gauge0=g0["ellJp1"])
+        save()
+    if "lam2_gauge0" in out:
+        log(f"GAUGE: lambda_2 {out['lam2']:.4f} (light-cone gauge) against {out['lam2_gauge0']:.4f} (every gauge datum 0, "
+            f"with the stored gauge-0 lambda_1 {out['lam1_gauge0']:.4f}; ell_l . corr(J_p1) {out['ellJp1_gauge0']:.2e})")
     log(f"wrote {fn}")
 
 
