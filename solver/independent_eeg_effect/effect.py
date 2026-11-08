@@ -154,7 +154,7 @@ def main():
 
     e = beta_check()
     rep['beta_deriv_relerr'] = e
-    verdict['beta'] = e < 1e-10
+    verdict['beta'] = bool(e < 1e-10)
     print(f'Fourier vs sympy derivatives of Eq. (16), max rel err {e:.2e}')
 
     fn = build()
@@ -176,7 +176,7 @@ def main():
             print(f'D {D:>4} {k:>3}: recomputed {v:8.4g}  claimed {c:<5g}  d {100 * d:+6.2f}%  '
                   f'{"within 2%" if abs(d) <= 0.02 else "OUTSIDE 2%":10s}  r {rnd}')
     rep['table_worst_reldiff'] = worst
-    verdict['table'] = worst <= 0.02
+    verdict['table'] = bool(worst <= 0.02)
     print(f'worst |d| {100 * worst:.2f}% (pass <= 2%)')
 
     print('\nAlternative readings, in %:')
