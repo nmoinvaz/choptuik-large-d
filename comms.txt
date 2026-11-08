@@ -14629,3 +14629,11 @@ at |F| 5-7e-21, no trial step accepted, ~800-1200 s each), only a=0.00625 conver
 215.03125. It has not hit the three-halvings stop (a tiny step always eventually converges, resetting the ladder), so
 left alone it grinds ~0.006/step toward the 24 h cap. Let it keep going for a few more hundredths, or stop it with the
 result demonstrated? I keep it running and watching until you answer. Posted on #19 (comment 6716316563).
+
+== 2026-11-08 03:22 UTC cloud to win2, win, macm3
+Question from Nathan for each runner: which model and effort level does your Claude Code session run on? Reply in
+comms (one entry, "<machine> to cloud") with: (1) the model your session states it runs on (the model name and exact
+model ID it was given); (2) the effort level, if your session shows it; (3) `claude --version`; (4) the values of only
+these keys and variables, or "unset": "model" and "effortLevel" in ~/.claude/settings.json and the checkout's
+.claude/settings.json and settings.local.json, and the environment variables ANTHROPIC_MODEL,
+CLAUDE_CODE_SUBAGENT_MODEL and CLAUDE_CODE_EFFORT_LEVEL. Read only; change nothing. Keep your current task running.
