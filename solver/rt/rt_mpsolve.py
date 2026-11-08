@@ -154,52 +154,68 @@ def _dd_div(ah, al, p):
 
 
 class LUdd:
-    """r -> (LU)^-1 P r: the f64 LU of J64 (LAPACK getrf, partial pivoting), its triangular solves in double-double, each
-    row a dd_dot of the f64 row with the dd solution so far. A fixed operator to about 2^-106 (n / 8) of the sums."""
+    """r -> J_f^-1 r, J_f the product of the f64 factors of J64: LAPACK getrf (partial pivoting) of J64^T, so
+    J64^T = P L U and J64 = U^T L^T P^T, with the triangular solves in double-double, each row a dd_dot of the f64 row
+    with the dd solution so far. A fixed operator to about 2^-106 (n / 8) of the sums. J64^T of a C-order J64 is
+    F-contiguous, so with overwrite the factors replace J64 in its own buffer (one copy of the matrix in memory), and the
+    rows of U^T and L^T are rows of that C-order buffer: M[i, :i + 1] is row i of U^T, M[i, i + 1:] row i of L^T (unit
+    diagonal)."""
 
     def __init__(self, J64, overwrite=False):
         t = time.time()
+        A = J64 if (overwrite and J64.flags.c_contiguous) else np.array(J64, order="C")
         with warnings.catch_warnings():
             warnings.simplefilter("ignore")
-            lu, piv = sl.lu_factor(J64, overwrite_a=overwrite, check_finite=False)
-        self.LU = np.ascontiguousarray(lu)
-        del lu
+            f, piv = sl.lu_factor(A.T, overwrite_a=True, check_finite=False)
+        if not np.shares_memory(f, A):                    # not factored in place: keep the factors' C-order transpose
+            A = np.ascontiguousarray(f.T)
+        del f
+        self.M = A
         n = len(piv)
         perm = np.arange(n)
-        for i, p in enumerate(piv):
+        for i, p in enumerate(piv):                       # P^T b = b[perm] (LAPACK's interchanges, in order)
             perm[i], perm[p] = perm[p], perm[i]
         self.perm = perm
         self.z = np.zeros(n)
-        d = np.abs(np.diag(self.LU))
+        d = np.abs(np.diag(self.M))
         self.pivot_ratio = float(d.max() / d.min())     # an estimate of kappa, not an SVD
         self.secs = time.time() - t
 
     def solve_dd(self, bh, bl):
-        bh, bl = bh[self.perm], bl[self.perm]
+        """J_f x = b: U^T y = b, L^T w = y, x = P w."""
         n = len(bh)
-        LU, z, dd_dot = self.LU, self.z, md._dd_dot
+        M, z, dd_dot = self.M, self.z, md._dd_dot
         yh, yl = np.zeros(n), np.zeros(n)
         for i in range(n):
-            sh, sl_ = dd_dot(LU[i, :i], z[:i], yh[:i], yl[:i])
-            yh[i], yl[i] = _dd_sub(bh[i], bl[i], sh, sl_)
-        xh, xl = np.zeros(n), np.zeros(n)
+            sh, sl_ = dd_dot(M[i, :i], z[:i], yh[:i], yl[:i])
+            th, tl = _dd_sub(bh[i], bl[i], sh, sl_)
+            yh[i], yl[i] = _dd_div(th, tl, M[i, i])
+        wh, wl = np.zeros(n), np.zeros(n)
         for i in range(n - 1, -1, -1):
-            sh, sl_ = dd_dot(LU[i, i + 1:], z[i + 1:], xh[i + 1:], xl[i + 1:])
-            th, tl = _dd_sub(yh[i], yl[i], sh, sl_)
-            xh[i], xl[i] = _dd_div(th, tl, LU[i, i])
+            sh, sl_ = dd_dot(M[i, i + 1:], z[i + 1:], wh[i + 1:], wl[i + 1:])
+            wh[i], wl[i] = _dd_sub(yh[i], yl[i], sh, sl_)
+        xh, xl = np.empty(n), np.empty(n)
+        xh[self.perm], xl[self.perm] = wh, wl
         return xh, xl
 
     def __call__(self, r):
         return from_dd(*self.solve_dd(*to_dd(r)))
 
 
-class LUf64(LUdd):
-    """The same f64 LU, its triangular solves in f64 on the f64 rounding of r (variant; see the module docstring)."""
+class LUf64:
+    """The f64 LU of J64, its triangular solves in f64 on the f64 rounding of r (variant; see the module docstring)."""
+
+    def __init__(self, J64, overwrite=False):
+        t = time.time()
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore")
+            self.lu = sl.lu_factor(J64, overwrite_a=overwrite, check_finite=False)
+        d = np.abs(np.diag(self.lu[0]))
+        self.pivot_ratio = float(d.max() / d.min())
+        self.secs = time.time() - t
 
     def __call__(self, r):
-        if not hasattr(self, "LUF"):
-            self.LUF = np.asfortranarray(self.LU)
-        return obj(sl.lu_solve((self.LUF, np.arange(len(self.perm))), to_f64(r)[self.perm], check_finite=False))
+        return obj(sl.lu_solve(self.lu, to_f64(r), check_finite=False))
 
 
 class InvDD:

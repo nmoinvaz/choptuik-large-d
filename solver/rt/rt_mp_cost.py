@@ -76,7 +76,7 @@ def main():
     u = mps.obj(rng.normal(size=rt.L))
     t = time.time(); b = mps.jv_central(rm.residual_m, zo, u); t_p = time.time() - t
     if a.mutate:
-        P.LU[0, 0] += 1e-10
+        P.M[0, 0] += 1e-10
     t = time.time(); x = P(b); t_s = time.time() - t
     # J64 x = b in arb (J64 is exact as a matrix of f64 numbers): the LU solve's accuracy
     Jx = mps.from_dd(*mps.md.dd_matvec(Jc, np.zeros_like(Jc), *mps.to_dd(x)))
