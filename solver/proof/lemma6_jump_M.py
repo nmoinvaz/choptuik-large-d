@@ -55,7 +55,20 @@ import fixed_point_M as FPM  # noqa: E402
 from flint import arb, acb, acb_mat, ctx  # noqa: E402
 
 
+def enc_arb(a):
+    """a ball as [midpoint, radius] strings that reload to the same midpoint and a radius larger by about 1e-9"""
+    n = int(ctx.prec * 0.302) + 10
+    return [a.mid().str(n, radius=False, more=True), a.rad().str(25, radius=False, more=True)]
+
+
+def enc(z):
+    return [enc_arb(z.real), enc_arb(z.imag)]
+
+
 def parse(p):
+    """a stored complex ball: [[mid, rad], [mid, rad]], or the older arb short form, whose rounded midpoints widen it"""
+    if isinstance(p[0], list):
+        return acb(arb(*p[0]), arb(*p[1]))
     return acb(arb(p[0]), arb(p[1]))
 
 
@@ -181,12 +194,10 @@ def main():
         else:
             V, X, steps, sec = backward(M, H, xi1, xia, verbose="verbose" in opts)
             if "save-B" in opts:
-                def sj(z):
-                    return [z.real.str(80, radius=True), z.imag.str(80, radius=True)]
                 with open(opts["save-B"], "w") as fh:
                     json.dump({"M": M, "xi1": xi1, "xia": xia, "steps": steps, "sec": sec,
-                               "X": [sj(z) for z in X[:nd]], "B": [[sj(V[i, j]) for j in range(nd)] for i in range(nd)]},
-                              fh)
+                               "X": [enc(z) for z in X[:nd]],
+                               "B": [[enc(V[i, j]) for j in range(nd)] for i in range(nd)]}, fh)
     except RuntimeError as e:
         print(f"backward integration failed ({e}): lemma 6a NOT established"
               + (f"   [MUTATION {mutate}: failure expected]" if mutate else ""))
