@@ -42,7 +42,10 @@ choices; the ± of the fitted λ₂ is the largest miss of its planted test, whi
 **EEG's expansion.** Under the map f = c, x²Ω = (n − 1)(b − 1), Π = y/(√2 x), Ψ = (p + m)/(√2 x²), ε = 1/(n + 1), with
 β̃ the exact central profile, EEG's large-D expansion is Proposition 1's. Their NLO agrees term by term. Their printed
 NNLO does not: Π₃ (S46) violates their own (S39) at ε^{5/2}, and Ω₃ and f₃ inherit the error. The corrected NNLO (§1)
-agrees with Proposition 1 and satisfies their equations. *Checked symbolically*, with controls that fail.
+agrees with Proposition 1 and satisfies their equations. *Checked symbolically*, with controls that fail. Against 63
+solutions from D = 15 to 215 the corrected NNLO's largest error falls like ε⁴ (f, Ω) and ε^{7/2} (Π), and the printed
+one's like ε³ and ε^{5/2}. In EEG's Figs. 4 and 5, which use the D-independent profile of their Eq. (16), the error is
+small next to the profile's own (§1.1, *numerical evidence*).
 
 **Method.** In inner variables the exact equations close with one slaved function, which gives the O(1/n²) inner
 equations in a few terms (§2). Second-order jets by polarization (two nilpotent 1/n directions) carry the selection one
@@ -156,6 +159,112 @@ $`\langle\Omega_2(\tau,1)\rangle = -\langle\tilde\beta'^2\rangle - \langle\tilde
 N₀ = 2⟨F²⟩ = 7.416425 of the tuned D = ∞ profile (EEG_PROFILE.md §3.5), Δ∞ = 1.643893746 and Δ₁ = 10.37528:
 μ₀ = 0.1308169 and μ₁ = −0.14456, against EEG's fits 0.130818 and −0.1449 (*numerical evidence*; the 0.2% in μ₁ is
 within what their printed digits of Δ₁ allow).
+
+### 1.1 EEG's NNLO against the finite-D solutions (issue #126)
+
+**Verdict.** The comparison used 63 states from D = 15 to 215, with β̃ the exact central profile of each state, as
+EEG's (S34) fixes it. The corrected NNLO's maximal residual on 0 ≤ x ≤ 1 falls like ε⁴ for f and Ω and like ε^{7/2}
+for Π. The printed NNLO's residual falls like ε³ and ε^{5/2}, the orders of its first wrong terms. This confirms the
+symbolic finding above numerically. The code shares only EEG's coefficients and the correction with
+`second_order_eeg.py`, and none of Proposition 1's recursion. *Numerical evidence.*
+
+In EEG's own figures the error is hard to see. Those figures put the D-independent profile of their Eq. (16) into the
+NNLO. The rms deviations quoted in Fig. 5 move by about 3% or less, except f at D = 25 (25%) and 50 (9%). The
+surfaces of Fig. 5 differ by up to 18% of max |Ω| at D = 25, 5% at D = 50 and 0.4–0.5% at D = 200. In the centre
+profiles of Fig. 4 only f differs, by 0.18% of max |1 − f| at D = 200. With the exact profile the printed NNLO's rms
+deviation is 2.2 times the corrected one's at D = 60, and 6–7 times for Ω and Π at D = 200.
+
+**Fields from a state** (`nnlo_vs_solution.py extract`):
+
+- **Representations.** Centre series in double-double for x ≤ 0.3, Taylor steps in double-double from the nearest node
+  for 0.3 < x < 0.7, and the horizon series in quad-double for x ≥ 0.7 (hp/src/model.rs layout, as
+  hp/largeD_profiles.py).
+- **The horizon wall.** The double-double series (`Solver.series`) loses every digit near x = 1 at D = 200: it misses
+  the node at 0.7 by 7×10⁻³ in p. So the series is evaluated as the horizon block of `Solver.residual_q` on a two-node
+  solver whose node states are zero. There it reproduces the stored node at 0.7 to 5×10⁻²⁶.
+- **The map.** f = c, Ω = (n − 1)(a² − 1)/x² (b = a² in model.rs), Π = (p − m)/(√2 x) and Ψ = (p + m)/(√2 x²), with
+  ε = 1/(D − 1). Below x = 0.3 the divisions by x are done on the series coefficients, and a − 1 is formed part by part.
+- **The profile.** β̃ = Π(τ, 0)/√ε. Its τ derivatives are spectral, with ω = 2π/Δ of the state.
+- **The grid.** x = 0, 0.01, …, 1, and the state's 32 τ points per half period.
+
+The states are the double-double states of hp/data/states (D 15–60, full system) and T81's quad-double state at 73.
+They also include the held-on-fit chain T138-win2 (`chain/` 80–170, `chain_o/` 180–215), whose held harmonics are
+pinned (HELD_HARMONICS.md). Each state's own error is at most 10⁻⁶ of the residual R it is compared with: continuity at
+the nodes 5×10⁻¹², and the quad-double horizon block 8×10⁻¹⁹. Other chains at equal D (T140-win d6 and d10, I13-win)
+give residual fields up to 6.8% of R apart at D = 180. Their held harmonics differ along near-null directions that the
+states' residual (10⁻²²) does not fix, and the high τ derivatives of the NNLO amplify them. By the criterion written
+first (C6, raw README), D = 150 and 180 leave the fit. With D ≤ 140 only, the exponents move by at most 0.04.
+
+**Exponents** of R(D) = max |F_sol − F_model|. The fit is ln R = a + p ln ε + b ε over D ≥ 40. The expected value
+is the first omitted or wrong order. Each verdict asks for agreement within 0.25 and for a fit farther than 0.5 from
+one order lower (criteria C1–C3, written before the runs):
+
+| model | f | Ω | Π | Ψ | expected (f, Ω, Π, Ψ) | verdict |
+|---|---|---|---|---|---|---|
+| LO | 1.986 | 1.982 | 1.493 | 2.490 | 2, 2, 1.5, 2.5 | pass |
+| NLO | 2.957 | 2.975 | 2.484 | 3.473 | 3, 3, 2.5, 3.5 | pass |
+| NNLO printed | 3.044 | 2.986 | 2.484 | 3.473 | 3, 3, 2.5, 3.5 | pass |
+| NNLO corrected | 3.971 | 3.967 | 3.442 | 3.473 | 4, 4, 3.5, 3.5 | pass |
+
+The local exponent between the two largest D is 3.998, 3.986, 3.469 and 3.453 for the corrected NNLO, and 3.171,
+3.111, 2.493 and 3.453 for the printed one. The fits over D ≥ 73 agree with the main fit to 0.03. Over D ≥ 20 they
+agree to 0.05 for both NNLO, and to 0.08 for NLO's f. Ψ₃ is "not needed" in EEG, so Ψ is the same in both versions.
+
+**The size of the terms.** R/ε^p agrees between D = 60 and 200 to 8% or better. For Π it is 51, 825 and 2.8×10⁴ at
+LO, NLO and NNLO. For Ω it is 320, 6.0×10³ and 1.6×10⁵, and for f 105, 1.2×10³ and 2.4×10⁴. So each order costs a
+factor of 12–34, and the expansion's effective parameter is about 25ε. A reading of the cause: each order brings τ
+derivatives of β̃, that is powers of νω on the harmonics ν = 3, 5. Below D ≈ 37 for Π, 31 for Ω and 22 for f, the
+corrected NNLO's maximal residual is larger than NLO's. At D = 25 its Π residual is 0.46 against NLO's 0.29. At D =
+200 the printed Π₃ removes only 5% of NLO's maximal Π residual (783 against 825 ε^{5/2}). The corrected Π₃ removes 83%.
+
+**Controls.**
+
+- **Planted truth (C5), run first.** Each state's fields were replaced by the corrected NNLO of its own β̃ plus
+  (1 + 4ε + 20ε²)ε^p g. The same code returned p = 4.008, 4.006, 3.491 and 3.492 against the planted 4, 4, 3.5 and
+  3.5. It returned 2.991 for a plant at ε³ in Π. The printed NNLO's fit on the planted data was 2.95, 2.92 and 2.52.
+  The mutation broke the plant. All runs pass.
+- **Π₃ × 1.01 (C4) did not fire on the solutions.** The Π exponent moved from 3.442 to 3.386 and Ω's from 3.967 to
+  3.942, inside the tolerance (exit 1). The cause is the size of the true ε^{7/2} term, whose coefficient is about 30
+  times Π₃'s. So 1% of Π₃ is only 2–7% of R over D = 40–215, and it would dominate only near D ≈ 3000. A planted run
+  whose plant is as large as the real residual (`--plant_scale=1000`) stays just as silent, while the default plant is
+  1000 times smaller and lets the control fire. The test resolves Π₃ × 1.05 (Π 3.22) and × 1.2 (Π 2.94, Ω 3.63). The
+  printed Π₃'s error is of the order of Π₃ itself, far above that resolution. The tolerance was not changed.
+
+**Figs. 4 and 5.** Relative rms deviation rms(F_sol − F)/rms(F_sol) over the (τ, x) grid, for f relative to
+rms(1 − f), printed / corrected. The profile is either EEG's Eq. (16) model, A* = 3.8455, q = 0.0551, δ = 0.0985,
+phase-aligned on the fundamental with θ = 2πτ/Δ(D), or the exact profile. The last column is
+max |F_printed − F_corrected| over max |F_sol| with Eq. (16), and for f over max |1 − f|:
+
+| D | Eq. (16): f | Ω | Π | exact: f | Ω | Π | max change, Eq. (16): f, Ω, Π |
+|---|---|---|---|---|---|---|---|
+| 25.08 | 0.148 / 0.186 | 0.308 / 0.318 | 0.185 / 0.188 | 0.589 / 0.400 | 0.266 / 0.178 | 0.105 / 0.088 | 0.115, 0.181, 0.132 |
+| 50.01 | 0.145 / 0.158 | 0.180 / 0.185 | 0.105 / 0.105 | 0.065 / 0.034 | 0.038 / 0.019 | 0.021 / 0.011 | 0.028, 0.056, 0.051 |
+| 60.00 | 0.132 / 0.141 | 0.155 / 0.158 | 0.089 / 0.090 | 0.040 / 0.018 | 0.024 / 0.011 | 0.014 / 0.0062 | 0.020, 0.041, 0.039 |
+| 100.0 | 0.092 / 0.095 | 0.100 / 0.101 | 0.056 / 0.056 | 0.011 / 0.0035 | 0.0075 / 0.0023 | 0.0050 / 0.0014 | 0.0070, 0.016, 0.016 |
+| 200.0 | 0.051 / 0.052 | 0.053 / 0.053 | 0.029 / 0.029 | 0.0023 / 0.00041 | 0.0017 / 0.00029 | 0.0012 / 0.00018 | 0.0018, 0.0044, 0.0046 |
+
+All entries are measured on states, none extrapolated (Fig. 5's D are 25, 50, 100 and 200). With Eq. (16) the
+deviations are set by the profile. The D-independent profile misses the exact one by 5–6ε in rms (3.0% at D = 200,
+21% at D = 25). The printed and corrected curves then differ by little compared with the deviation. Our rms definition
+and the phase alignment are assumptions, since EEG give no formula (Fig. 5 caption: "relative RMS deviations over the
+(τ,x) domain"). With f normalized by rms(f) instead, its Eq. (16) entries at D = 25 are 0.0175 and 0.0220. Fig. 4
+shows the profiles at x = 0, where Π₃ and Ω₃ vanish and Ψ₃ is not used. There only f differs, through c₀. At D = 200
+the change is 1.8×10⁻³ of max |1 − f|, against a deviation of 4.4×10⁻² from the solution with Eq. (16). With the exact
+profile the change is 2.0×10⁻³, and the printed and corrected deviations are 2.2×10⁻³ and 4.8×10⁻⁴.
+
+**The D = ∞ profile in the corrected NNLO** (the issue's extended scope, a first step). The tuned D = ∞ profile
+(EEG_PROFILE.md §3.3; #133's rational fits reproduce it to 10⁻⁶) goes into the corrected NNLO. Its relative rms
+residual at D = 40, 60, 100 and 200 is 0.22, 0.16, 0.10 and 0.053 for Ω, and 0.127, 0.090, 0.056 and 0.029 for Π.
+These are within 2% of Eq. (16)'s, because both are set by the profile's own 1/n dependence. A closed form accurate to
+O(ε³) also needs the profile's 1/n terms, F_n = F + K₁/(2n) + K₂/(2n²) + … (§1), which are known here only in the
+M-harmonic truncation.
+
+**The issue's wording.** #126 asks the corrected NNLO's residual to fall like ε³ (Ω, f) and ε^{5/2} (Π). Those are
+the printed one's orders. For the absolute residual the corrected one falls one order faster, as measured. Relative to
+the leading terms, which are O(ε) for 1 − f and Ω and O(√ε) for Π, the corrected residual is O(ε³) for all three.
+
+Raw output: folder `I126-mac/` of the raw-data repository (fields of every state, logs, JSON, the commands in
+`*.cmd`, exits in `exits.txt`).
 
 ## 2. The inner equations to second order
 
@@ -429,6 +538,13 @@ Reported, not fixed:
    read from the planted misses.
 4. **Not a discrepancy, a data change:** the first-order Δ₁ fit used 819 points, today's file gives 1159 (D to 67.8).
    The fitted Δ₁ range is now 10.375281–10.375285 over 15 fits, inside FIRST_ORDER.md's 10.375279–10.375321.
+5. **Issue #126's acceptance exponents** (ε³ for Ω and f, ε^{5/2} for Π, for the corrected NNLO) are the printed NNLO's
+   orders. The corrected one's absolute residual falls one order faster, as measured (§1.1).
+6. **#126's control Π₃ × 1.01 did not fire** on the solutions (§1.1). The exponent test resolves Π₃ errors of about 5%
+   and more. The criterion was left as written, so the run exits 1.
+7. **Chains at equal D disagree in the NNLO residual** by up to 6.8% of R at D = 180 (T138-win2 against I13-win
+   chain_d10), although each state's residual is about 10⁻²². That is the held harmonics' freedom, seen through the
+   NNLO's high τ derivatives (§1.1).
 
 ## 9. Proposed text
 
@@ -442,6 +558,11 @@ For the coordinator (agents do not edit the README or other notes).
 > agrees term by term. The printed next-to-next-to-leading Π₃ does not satisfy their own equation (S39) at ε^{5/2},
 > and Ω₃ and f₃ inherit the error; the corrected terms agree with Proposition 1
 > (notes/SECOND_ORDER.md §1).
+> Against the solutions from D = 15 to 215, with β̃ each solution's central profile, the corrected expansion's
+> largest error on 0 ≤ x ≤ 1 falls like ε⁴ for f and Ω and ε^{7/2} for Π, and the printed one's like ε³ and ε^{5/2}.
+> At D = 200 the printed expansion's rms deviation is 6–7 times the corrected one's. In their own Figs. 4 and 5,
+> which use the D-independent profile of Eq. (16), the error moves the quoted rms deviations by about 3% or less,
+> except f at D = 25 and 50 (notes/SECOND_ORDER.md §1.1).
 
 **README, Proposition 1, after "Consequence"**, something like:
 
@@ -467,6 +588,10 @@ For the coordinator (agents do not edit the README or other notes).
 | script | what it does | time (Apple M5, one process) |
 |---|---|---|
 | `second_order_eeg.py [--printed] [--mutate=NAME]` | §1: EEG's NLO and NNLO against Proposition 1, in their own equations, the μ map; exit 1 on failure | 20 s |
+| `nnlo_vs_solution.py extract OUT STATES...` | §1.1: f, Ω, Π, Ψ of each state on 0 ≤ x ≤ 1 (needs hpkernel with `Solver.residual_q`) | 3 s per state |
+| `nnlo_vs_solution.py compare FIELDS... [--spread=DIRS] [--mutate=pi3xS] [--dmin=] [--dmax=]` | §1.1: residuals, exponent fits, C1–C4, C6; exit 1 on failure | 1 min |
+| `nnlo_vs_solution.py planted FIELDS... [--plant_pi=] [--plant_scale=] [--mutate=pi3xS]` | §1.1: planted truth (C5) | 1 min |
+| `nnlo_vs_solution.py figs FIELDS...` | §1.1: Figs. 4–5 measures with the exact, Eq. (16) and D = ∞ profiles | 1 min |
 | `second_order_equations.py [--mutate=phi]` | §2: the exact inner equations, the slaved u, the O(1/n²) system, the reparametrization symmetry | 1 s |
 | `second_order_jet.py` | module: the second-order jets (polarization, ω and λ jets) | |
 | `second_order_checks.py [outer] [rhs] [modes --raw=DIR] [--mutate=NAME]` | §3: the checks; exit 1 on failure | 1 s; modes 2.5 min |
@@ -491,3 +616,17 @@ python3 second_order_fits.py "--fixed=10.4023,-50.06"
 ```
 
 The first-order inputs are the JSON files of `solver/inner_pert/data/` (FIRST_ORDER.md §8).
+
+§1.1, from the repository's root, with RAW the raw-data repository's checkout. The extraction reads the chain states
+there and writes `RAW/I126-mac/fields/`. The exact state lists and runs are `RAW/I126-mac/*.cmd`, and their exits
+are in `exits.txt`.
+
+```
+zsh RAW/I126-mac/extract.cmd        # the paths W, R, PY at its top name this machine's checkouts
+python3 solver/inner_pert/nnlo_vs_solution.py planted RAW/I126-mac/fields/fields_D*.npz            # ALL PASS, exit 0
+python3 solver/inner_pert/nnlo_vs_solution.py compare RAW/I126-mac/fields/fields_D*.npz \
+    --spread=RAW/I126-mac/fields_t140_d6,RAW/I126-mac/fields_t140_d10                             # ALL PASS, exit 0
+python3 solver/inner_pert/nnlo_vs_solution.py compare RAW/I126-mac/fields/fields_D*.npz --mutate=pi3x1.01   # exit 1
+python3 solver/inner_pert/nnlo_vs_solution.py compare RAW/I126-mac/fields/fields_D*.npz --mutate=pi3x1.2    # exit 0
+python3 solver/inner_pert/nnlo_vs_solution.py figs RAW/I126-mac/fields/fields_D*.npz
+```
