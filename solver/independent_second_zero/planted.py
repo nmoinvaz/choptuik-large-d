@@ -35,10 +35,11 @@ def load_fit(path=os.path.join(HERE, "kummer_fit.json")):
 
 
 class Family:
-    def __init__(self, wp, fit=None):
+    def __init__(self, wp, fit=None, eps=EPS):
         mp.mp.dps = 50
         self.fit = fit or load_fit()
         self.wp = mp.mpf(wp)
+        self.eps = mp.mpf(eps)
         self.da = mp.mpc(0)
         # da: S(13.5; w_p) = 0, from da = 0 by the secant method
         self.da = mp.findroot(lambda d: self._S(X_PLANT, self.wp, d), (mp.mpc(0), mp.mpc("0.01", "0.01")),
@@ -49,7 +50,7 @@ class Family:
         za, zp, a, b = _params(w, self.fit)
         dz = zp - za
         a1 = a + da
-        return mp.exp(za * x) * (mp.hyp1f1(a1, b, dz * x) + EPS * mp.hyp1f1(a1 + 1, b + mp.mpf(3) / 2, dz * x)) / (1 + EPS)
+        return mp.exp(za * x) * (mp.hyp1f1(a1, b, dz * x) + self.eps * mp.hyp1f1(a1 + 1, b + mp.mpf(3) / 2, dz * x)) / (1 + self.eps)
 
     def S(self, x, w):
         return self._S(x, w)
@@ -62,7 +63,7 @@ class Family:
         k1 = [mp.rf(a1, m) * dz ** m / (mp.rf(b, m) * mp.factorial(m)) for m in range(K + 1)]
         k2 = [mp.rf(a1 + 1, m) * dz ** m / (mp.rf(b + mp.mpf(3) / 2, m) * mp.factorial(m)) for m in range(K + 1)]
         e = [za ** j / mp.factorial(j) for j in range(K + 1)]
-        s = [mp.fsum(e[n - m] * (k1[m] + EPS * k2[m]) for m in range(n + 1)) / (1 + EPS) for n in range(K + 1)]
+        s = [mp.fsum(e[n - m] * (k1[m] + self.eps * k2[m]) for m in range(n + 1)) / (1 + self.eps) for n in range(K + 1)]
         return s
 
     def x1(self, w, x0=None):

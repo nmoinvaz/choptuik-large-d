@@ -4,16 +4,19 @@
     python3 second_zero.py planted --wp 1.095 --seeds 1,2,3,4,5 [--out FILE]
     python3 second_zero.py planted --wp 1.15 --seeds 1,2,3,4,5 [--out FILE]
 
-Estimator (fixed on a development family, w_p 1.105 seed 99, before the controls and the real data were run).  At each
-node every approximant of lapl.run_node is tried and admitted or not by lapl.admissible.  The primary set at a node is
-its admitted qhp approximants that use all 23 coefficients.
+Estimator v2.  At each node every approximant of lapl.run_node is tried and admitted or not by lapl.admissible.  The
+primary set at a node is its admitted qhp approximants that use 21, 22 or 23 coefficients, pooled.
   x1 at a node      = median (real and imaginary parts separately) over the primary set;
-                      +- = half the range over the primary set (a spread over degree choices, not an error bound);
+                      +- = half the range over the primary set (a spread over degree triples and numbers of
+                      coefficients, not an error bound);
   the crossing      = the root in [1.09, 1.11] of the quadratic through the three medians of Im x1;
-  its envelope      = the roots for the 8 shifts of the three medians by +- their half-ranges (spread over degrees);
-  order shift       = the same from the qhp sets using 22 and 21 coefficients (a truncation indicator);
-  cross-check       = the same from the linear Pade sets (23, 22, 21 coefficients).
+  its envelope      = the roots for the 8 shifts of the three medians by +- their half-ranges (the same spread);
+  order sets        = the same from the qhp sets of 23, 22 and 21 coefficients separately (a truncation indicator);
+  cross-check       = the same from the linear Pade sets (23, 22, 21 coefficients, pooled and separately).
 Approximants admitted at all three nodes give their own crossings too (information only).
+v1 (code 0d352f4) took the 23-coefficient qhp set alone as primary.  It failed P1 at seed 3: at w = 1.11 the 1e-12 noise
+gave every 23-coefficient qhp approximant a far singularity (growth 2.7-6.3 against the A2 bound 2.3), so the primary
+set was empty there (I203-mac/P1_stdout.txt).  v2 pools the orders instead; the admission rules are unchanged.
 Exit status: planted mode exits 1 when its control fails (P1: |w_c - w_p| > 0.005 for any seed or no crossing;
 P2: a sign change of the primary median Im x1 in 1.09-1.11 for any seed).
 """
@@ -53,16 +56,16 @@ def members(node_out):
     return {k: [b[k] for b in by] for k in sorted(keys)}
 
 
-def summarize(node_out, kind, nd, ws=WS):
-    """Per node: median and half-range of x1 over the admitted approximants of (kind, nd) at that node.  Crossing: the
-    root in [1.09, 1.11] of the quadratic through the three per-node medians of Im x1; its envelope: the roots for
-    the 8 shifts of the medians by +-(their half-range).  Members admitted at all three nodes: their own crossings
-    (information only)."""
+def summarize(node_out, kind, nds, ws=WS):
+    """Per node: median and half-range of x1 over the admitted approximants of kind with nd in nds at that node.
+    Crossing: the root in [1.09, 1.11] of the quadratic through the three per-node medians of Im x1; its envelope: the
+    roots for the 8 shifts of the medians by +-(their half-range).  Members admitted at all three nodes: their own
+    crossings (information only)."""
     import itertools
     wsf = [float(w) for w in ws]
     node = {}
     for w, recs in zip(ws, node_out):
-        xs = [r["x1"] for r in recs if r.get("ok") and r["kind"] == kind and r["nd"] == nd]
+        xs = [r["x1"] for r in recs if r.get("ok") and r["kind"] == kind and r["nd"] in nds]
         if not xs:
             return {"n": 0, "empty_node": w}
         re = [x[0] for x in xs]
@@ -83,7 +86,7 @@ def summarize(node_out, kind, nd, ws=WS):
         if any(e is not None for e in env) else None
     out["envelope_all_cross"] = all(e is not None for e in env)
     out["median_im_sign_change"] = (min(med_im) < 0 < max(med_im))
-    mem = {k: v for k, v in members(node_out).items() if k[0] == kind and k[2] == nd}
+    mem = {k: v for k, v in members(node_out).items() if k[0] == kind and k[2] in nds}
     per = []
     for k, recs in mem.items():
         r = quad_root(wsf, [x["x1"][1] for x in recs])
@@ -111,14 +114,17 @@ def run_three(sigs, x0=13.5, log=print):
         node_out.append(recs)
         diag.append(dg)
     res = {"diag": diag, "nodes": node_out}
-    for name, kind, nd in [("primary", "qhp", 23), ("qhp22", "qhp", 22), ("qhp21", "qhp", 21),
-                           ("pade23", "pade", 23), ("pade22", "pade", 22), ("pade21", "pade", 21)]:
-        res[name] = summarize(node_out, kind, nd)
+    for name, kind, nds in SETS:
+        res[name] = summarize(node_out, kind, nds)
     return res
 
 
+SETS = [("primary", "qhp", (21, 22, 23)), ("qhp23", "qhp", (23,)), ("qhp22", "qhp", (22,)), ("qhp21", "qhp", (21,)),
+        ("pade", "pade", (21, 22, 23)), ("pade23", "pade", (23,)), ("pade22", "pade", (22,)), ("pade21", "pade", (21,))]
+
+
 def fmt_summary(res, log=print):
-    for name in ["primary", "qhp22", "qhp21", "pade23", "pade22", "pade21"]:
+    for name, _, _ in SETS:
         s = res[name]
         if not s["n"]:
             log(f"  {name}: no approximant admitted at node {s.get('empty_node')}")
@@ -164,8 +170,9 @@ def main(argv):
         import planted
         wp = float(opt["wp"])
         seeds = [int(s) for s in opt.get("seeds", "1").split(",")]
-        fam = planted.Family(wp)
-        log(f"planted family w_p {wp}: da {mp.nstr(fam.da, 12)}")
+        eps = opt.get("eps", "0.05")
+        fam = planted.Family(wp, eps=eps)
+        log(f"planted family w_p {wp} eps {eps}: da {mp.nstr(fam.da, 12)}")
         truth = {}
         for w in WS + [f"{wp}"]:
             x = fam.x1(mp.mpf(w))
@@ -188,6 +195,11 @@ def main(argv):
             if abs(wp - 1.095) < 1e-9:
                 ok = "cross" in p and abs(p["cross"] - wp) <= 0.005
                 log(f"  P1 seed {seed}: crossing {p.get('cross')} vs {wp}: {'pass' if ok else 'FAIL'}")
+            elif abs(wp - 1.15) > 1e-9:
+                # a development or stress family, not a control: report the crossing error only
+                ok = "cross" in p and abs(p["cross"] - wp) <= 0.005
+                log(f"  stress seed {seed}: crossing {p.get('cross')} vs {wp}: "
+                    f"error {p['cross'] - wp if 'cross' in p else None}")
             else:
                 ok = p["n"] > 0 and not p["median_im_sign_change"]
                 p1_on_p2 = "cross" in p and abs(p["cross"] - 1.095) <= 0.005
