@@ -18,26 +18,10 @@ import numpy as np
 import flint
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from rt_mp import RTmp
+from rt_mp import RTmp, interp_matrix
 import rt_mpsolve as mps
 
 arb = flint.arb
-
-
-def interp_matrix(xs, xt, N):
-    """Barycentric interpolation from the Lobatto points xs (arb) to xt (arb): (len(xt), N + 1) object."""
-    w = [arb((-1) ** j) * (arb(1) / 2 if j in (0, N) else 1) for j in range(N + 1)]
-    M = np.empty((len(xt), N + 1), dtype=object)
-    for i, x0 in enumerate(xt):
-        d = [x0 - xj for xj in xs]
-        hit = [j for j in range(N + 1) if abs(float(d[j].mid())) < 1e-40]
-        if hit:
-            M[i, :] = [arb(1) if j == hit[0] else arb(0) for j in range(N + 1)]
-            continue
-        r = [w[j] / d[j] for j in range(N + 1)]
-        sr = sum(r, arb(0))
-        M[i, :] = [v / sr for v in r]
-    return M
 
 
 def main():

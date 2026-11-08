@@ -145,6 +145,34 @@ class RTmp(RT):
         return d0, d1
 
 
+def interp_matrix(xs, xt, N):
+    """Barycentric interpolation from the Lobatto points xs (arb) to xt (arb): (len(xt), N + 1) object."""
+    w = [arb((-1) ** j) * (arb(1) / 2 if j in (0, N) else 1) for j in range(N + 1)]
+    M = np.empty((len(xt), N + 1), dtype=object)
+    for i, x0 in enumerate(xt):
+        d = [x0 - xj for xj in xs]
+        hit = [j for j in range(N + 1) if abs(float(d[j].mid())) < 1e-40]
+        if hit:
+            M[i, :] = [arb(1) if j == hit[0] else arb(0) for j in range(N + 1)]
+            continue
+        r = [w[j] / d[j] for j in range(N + 1)]
+        sr = sum(r, arb(0))
+        M[i, :] = [v / sr for v in r]
+    return M
+
+
+def resample_xi_m(zh, zl, D, Nt, N, Np, prec=192):
+    """A double-double state (zh, zl) on Nt x N resampled exactly in xi to Nt x Np, in arb (issue #163). rt_model's
+    resample_to works in f64 and leaves a rounding of about 1e-17, which the horizon rows amplify to about 1e-11."""
+    flint.ctx.prec = prec
+    src, tgt = RTmp(D, Nt, N, prec=prec), RTmp(D, Nt, Np, prec=prec)
+    z = np.array([arb(float(h)) + arb(float(l)) for h, l in zip(zh, zl)], dtype=object)
+    w1, w2, w3, w4, mu = src.unpack_m(z)
+    M = interp_matrix(list(src.xm), list(tgt.xm), N)
+    f = [g.dot(M.T) for g in (w1, w2, w3, w4)]
+    return tgt.pack(f[0], f[1], f[2], f[3], mu)
+
+
 def to_f64(z):
     return np.array([float(v.mid()) for v in z])
 

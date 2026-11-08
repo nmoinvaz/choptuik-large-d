@@ -40,7 +40,8 @@ resident memory (rss_peak_gb) and newton_tol.
 Issue #163 adds --horizon K: the discretization with K Taylor rows at the horizon (rt_model.py's horizon rows, which
 exclude a singular branch s^lambda with Re lambda < K). The default 0 is the collocation of the issues above. States
 and records carry `horizon`. --mutate=norows runs the same command with the rows dropped (K = 0), the control that
-must bring back the collocation's miss.
+must bring back the collocation's miss. --resample_mp resamples the start in xi exactly in arb (rt_mp.resample_xi_m)
+instead of in f64, whose rounding of about 1e-17 the horizon rows amplify to a residual of about 1e-11.
 """
 import os
 for _v in ("VECLIB_MAXIMUM_THREADS", "OMP_NUM_THREADS", "OPENBLAS_NUM_THREADS"):
@@ -119,6 +120,8 @@ def main():
     ap.add_argument("--out", required=True)
     ap.add_argument("--tag", default="rt")
     ap.add_argument("--mutate", default=None)
+    ap.add_argument("--resample_mp", action="store_true",
+                    help="mp solver: resample --start in xi exactly in arb (same N_t only), not in f64")
     ap.add_argument("--horizon", type=int, default=0,
                     help="issue #163: K > 0 replaces the collocated rows of Omega_2,3,4 at the K points next to xi = -1 "
                     "by the Taylor coefficients of orders 1..K at xi = -1 (rt_model.py); --mutate=norows drops them")
@@ -269,7 +272,12 @@ def main():
         zlo = zl if (Nts, Ns) == grids[0] else src.resample_to(zl, rt)
         if a.solver == "mp":
             flint.ctx.prec = a.mp
-            z = mps.from_dd(z, zlo)
+            if a.resample_mp and Nts == grids[0][0] and Ns != grids[0][1]:
+                from rt_mp import resample_xi_m
+                z = resample_xi_m(zh, zl, Ds, Nts, Ns, grids[0][1], prec=a.mp)
+                say(f"  start resampled exactly in xi (arb) from {Nts}x{Ns}")
+            else:
+                z = mps.from_dd(z, zlo)
     else:
         from gg_to_rt import GGMap
         g = GGMap(a.profile, verbose=False)
