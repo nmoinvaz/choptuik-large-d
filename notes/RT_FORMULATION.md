@@ -966,3 +966,220 @@ RAW/I145-mac/fol/from141_32x121.jsonl,RAW/I145-mac/fol/from101b_32x121.jsonl,RAW
                                                      # 10.2-10.5 (fit/cost_fit.log)
 RAW/I145-mac/run_coef.sh D60.0020                    # 10.6: must exit 1
 ```
+
+## 12. EEG's resolution: the truncation of their 40 × 80 grid against D
+
+Issue #106. Subagent of the coordinator on the Mac, 2026-11-08. Code in `solver/rt/`: the new `rt_trunc_fit.py`;
+the runs use #145's `rt_run.py` unchanged. Raw output is in folder `I106-mac/` of the raw-data repository, whose README
+holds the criteria, written before the main runs.
+
+### 12.1 Their grid and ours
+
+EEG expand each field as Σ g_nm exp(i n t/2 + i m θ), θ = arccos ξ, on (t, ξ) ∈ [0, 4π] × [−1, 1], with
+N_Fourier = 40 and N_Chebyshev = 80. They count 40 · 80 · 2 · (1/4 + 1/2 + 1/2 + 1/2) = 11,200 real unknowns
+(arXiv:2611.07007v1, Sec. III). Their infrastructure is RT's (their words: "directly adopted from Sec. 3 in [31]"). RT
+count non-negative indices, "0 ≤ m < 250" Fourier and "0 ≤ n < 750" Chebyshev, with the negative ones following from
+reality and evenness in θ (arXiv:1203.3766v1, Sec. 1.3 and 3). So 40 × 80 means the following.
+
+- In t, each 2π-periodic field keeps the even n, which are the frequencies 0 to 19 of e^{ikt}. The antiperiodic ω₄ keeps
+  the odd n, the frequencies 1/2 to 39/2.
+- In ξ, the Chebyshev degrees are 0 to 79, in ξ itself with no map.
+
+`rt_run.py --grids NtxN` is N_t collocation points in t on [0, 2π) and the N + 1 Chebyshev–Gauss–Lobatto points
+ξ_j = cos(πj/N). N must be odd (`rt_model.RT` asserts it), so that ξ = 0, where the equations are divided by ξ, is not a
+point. The unknowns number L = 3.5 N_t (N + 1) + 1. EEG's 40 × 80 is therefore `--grids 40x79`. It has L = 11,201,
+which is EEG's 11,200 plus μ. It shares their polynomial degree in ξ, their frequencies in t and the halving of the odd
+ω₁. It also shares their independent equations ((1 + P)Ω₁, Ω₂⁺, Ω₃⁺, Ω₄⁺, "similarly to RT"), their phase condition
+Re(ω₄⁻)₁,₀ = 0, the absence of boundary rows, and Δ from their Eq. (3). Their 40 × 80 written as N = 80 (`40x80`) is not
+a valid grid here.
+
+What no NtxN can match:
+
+- **The projection.** EEG truncate in coefficient space. Products are exact convolutions, and the residual's retained
+  Fourier–Chebyshev coefficients are set to zero, which is a Galerkin projection. The prototype collocates: the residual
+  vanishes at the 40 × 80 points, so its truncation error carries aliasing that theirs does not.
+- **The division by ξ.** The prototype divides the collocated equations by ξ at the points. RT's coefficient-space S is
+  the regularized left inverse (f − f(0))/ξ (their Eq. (18e)). EEG do not state theirs.
+- **The Nyquist mode.** On an even N_t each periodic field also carries a cosine at frequency 20, with its t-derivative
+  set to zero. EEG's index set has no such mode.
+- **The path.** The prototype starts at D = 20 and steps by about 1 with a cubic predictor. EEG run from D = 4 in steps
+  of 1/2 with a linear predictor. Roots are not unique along the weak direction (section 10.3), so the path can decide
+  which root is found.
+
+So the neighbouring grids on both sides in N, 40 × 77 and 40 × 81, were run as well. They show how much Δ at this
+resolution depends on the details of the discretization.
+
+### 12.2 The protocol
+
+The solver is #105's (9.1) with #145's options (10.1): `rt_run.py --solver mp` at 192 bits, `--max_products 250
+--refresh_dz 1e-5 --patient --it_max 20 --full_below 1e-4`, Newton's target 10⁻⁴⁰ below D = 54 and 10⁻³⁶ from
+D = 54.996. The criteria were written into the raw folder's README before the main runs and were not changed. They are
+the control, the two starts at each D, the fit models and windows, EEG's window means and the verdict rule.
+
+- **Start A**, the continuation on 40 × 79, starts from #105's 32 × 81 state at D = 20.043653, resampled. It lands on
+  the hp row nearest each integer D from 21 to 60 (41 points), with a cubic predictor through the last four solutions.
+- **Start B** at D = 20.043653, 40.020065 and 60.001952 is the 32 × 101 state of #105 or #145 at that D, resampled to
+  40 × 79 and solved by Newton.
+- **The control** is 32 × 121 at D = 20.04 and 40.02, and 32 × 101 at 60.00 from #145's 32 × 121 root. Each must lie
+  within 10⁻⁹ of hp.
+- **δ(D) = Δ(40 × 79) − Δ_hp**, where Δ_hp is the double-double row of `hp/data/delta_all.csv` (err 10⁻¹⁶ to
+  2 × 10⁻¹⁵). Each difference is taken in arb from Δ_RT's 30-digit string. It is a measured difference between two
+  discretizations, not a bound.
+- **The fit** (`rt_trunc_fit.py`) fits ln|δ| by three models: E, a + bD (exponential); P, a + b ln D (power); and Q,
+  a + bD + cD². It uses four windows, [20, 60], [30, 60], [40, 60] and [50, 60], each on the points at and above the
+  last sign change of δ. The spread of the 12 extrapolations is an estimator range, not an error bar. E and P on
+  [30, 60] and [40, 60] are the primary set.
+- **EEG's departure** d_EEG = Δ_EEG − Δ_ours is taken from `hp/data/delta_published_compare.csv` and averaged over the
+  windows 55–65, 90–110, 140–160 and 180–200. The ± of each mean is its standard error from the scatter of the
+  six-decimal rounding, not a bound.
+- **The verdict at each D.** δ "reproduces" d_EEG when it is positive and overlaps [d_EEG/3, 3 d_EEG]. It is "far
+  below" when its upper end lies under d_EEG/10, which includes any δ of the opposite sign, and "far above" when its
+  lower end exceeds 10 d_EEG.
+
+The continuation's step from 21.91 to 23.04 did not converge. After the first Newton step the steps were halved to
+1/128, and max|F| crept from 5 × 10⁻⁸ to 10⁻⁶ over 20 steps. The predictor ran through the resampled 32 × 81 state at
+D = 19, which is not a root of 40 × 79. Solved directly from #105's 32 × 101 state at D = 23 (`diag/`), the 40 × 79 root
+at 23.043278 converged in 9 steps and lies 1.29 × 10⁻⁹ below hp. So the root exists, and the failure was the start. The
+continuation then restarted from that root with only 40 × 79 roots in its history (`run_cont2.sh`). Every later step
+converged in 4 to 7 Newton steps.
+
+### 12.3 Δ at their grid, D = 20, 40 and 60
+
+δ = Δ(40 × 79) − Δ_hp. Every root converged to max|F| below 10⁻⁴⁰. The two starts are A (the continuation) and B (#105's or
+#145's 32 × 101 state, resampled).
+
+| D | δ (A) | δ (B) | A − B | control (grid) | control − Δ_hp |
+|---|---|---|---|---|---|
+| 20.043653 | −5.56×10⁻¹⁰ | −5.56×10⁻¹⁰ | 0 to 30 digits | 32 × 121 | +1.7×10⁻²⁰ |
+| 40.020065 | −7.13×10⁻⁹ | −7.13×10⁻⁹ | 4.9×10⁻²⁷ | 32 × 121 | +1.5×10⁻¹⁵ |
+| 60.001952 | +5.80×10⁻⁸ | +5.80×10⁻⁸ | 9.9×10⁻²¹ | 32 × 101 | −2.3×10⁻¹² |
+
+A third start at D = 60, #91's map of hp's own up13 state solved on 40 × 79 (`res/M_40x79_D60.0020`), lands 1.6×10⁻²⁰ from
+A. At D = 40 the same kind of start (`M_40x79_D40.0201`) did not converge in 20 Newton steps (Δ 8.4×10⁻⁴ off). So the
+40 × 79 roots are unique among the starts that converged, to 10⁻²⁰ or better. That is far below δ, unlike #145's finer
+grids. The controls hold: all three lie within 10⁻⁹ of hp, and they repeat #105's and #145's values. The coefficient
+mutation on 40 × 79 at D = 20.04 moves Δ by −1.14×10⁻⁴ and exits 1. On 32 × 79, Δ is the same as on 40 × 79 to all 20
+printed digits at D = 40.02 and to 5×10⁻¹⁸ at 60.00, so the t resolution plays no part at this N.
+
+### 12.4 Along the path, and on the neighbouring grids
+
+The continuation gives δ on 41 hp rows from 20.04 to 60.00 (`fit/trunc_fit.log`). The neighbouring grids are re-solves
+from the 40 × 79 roots at the same D (`res/`).
+
+| D | 40 × 75 | 40 × 77 | 40 × 79 | 40 × 81 | 40 × 83 |
+|---|---|---|---|---|---|
+| 20.04 | −7.5×10⁻⁹ | +2.1×10⁻⁹ | −5.6×10⁻¹⁰ | +1.4×10⁻¹⁰ | −3.3×10⁻¹¹ |
+| 25.08 | | +7.1×10⁻⁹ | −2.0×10⁻⁹ | +5.4×10⁻¹⁰ | |
+| 29.98 | | +1.4×10⁻⁸ | −4.3×10⁻⁹ | +1.2×10⁻⁹ | |
+| 34.99 | | +1.9×10⁻⁸ | −6.7×10⁻⁹ | +2.1×10⁻⁹ | |
+| 40.02 | +1.9×10⁻⁹ | +1.4×10⁻⁸ | −7.1×10⁻⁹ | +2.6×10⁻⁹ | −8.3×10⁻¹⁰ |
+| 44.96 | | −1.1×10⁻⁸ | −3.3×10⁻⁹ | +2.3×10⁻⁹ | |
+| 50.01 | | −6.7×10⁻⁸ | +7.5×10⁻⁹ | +4.9×10⁻¹⁰ | |
+| 55.00 | | −1.6×10⁻⁷ | +2.7×10⁻⁸ | −3.4×10⁻⁹ | |
+| 60.00 | +1.4×10⁻⁶ | −3.0×10⁻⁷ | +5.8×10⁻⁸ | −9.9×10⁻⁹ | +1.3×10⁻⁹ |
+
+Each column is smooth in D and crosses zero once in this range. Its zero moves up with N: between 20 and 40 for 75, near
+42 for 77, at 46.5 for 79 (−1.75×10⁻⁹ at 46.00, +7.4×10⁻¹¹ at 47.01) and between 50 and 55 for 81. Away from these
+zeros the sign alternates from one grid to the next, and the size falls by a factor of 3 to 8 per step of 2 in N. So
+the sign of the error at N = 79 and a given D is set by where that D falls relative to the zero of the column. The size
+is the robust part, about 10⁻⁹ at D = 20, 10⁻⁸ at 30 to 45 and 10⁻⁷ at 60 for N near 79. A Galerkin projection at the
+same degree, like EEG's, has its own zeros, so the collocation measures the scale of their truncation, not its sign.
+
+### 12.5 The growth in D: the criteria's fit, and δ itself
+
+**The fit as written** (criteria 3 and 6, `fit/trunc_fit.log`). Only the points at and above the last sign change enter,
+so all four windows reduce to the 14 points from D = 47.0 to 60.0, or 11 for [50, 60]. The fits of ln|δ| there measure
+the climb out of the zero at 46.5, not the growth: E and P on the 14 points leave an rms of 0.9 in ln|δ|. Their
+extrapolations span 10⁻⁴⁵ to 10¹³ at D = 100–190.
+
+| D | primary set (E, P on [30, 60], [40, 60]) | all 12 fits | d_EEG | verdict (primary) |
+|---|---|---|---|---|
+| 60 | +5.80×10⁻⁸ (measured) | | +2.1×10⁻⁷ ± 0.8×10⁻⁷ | between |
+| 100 | +2.0×10⁻³ to +1.6×10⁻¹ | +5.8×10⁻⁴⁵ to +1.6×10⁻¹ | +9.4×10⁻⁷ ± 0.8×10⁻⁷ | far above |
+| 150 | +4.6 to +7.6×10⁶ | | +2.8×10⁻⁶ ± 0.8×10⁻⁷ | far above |
+| 190 | +4.2×10² to +1.0×10¹³ | | +4.1×10⁻⁶ ± 0.9×10⁻⁷ | far above |
+
+By the rule as written the verdict is "not decided". The ranges are a spread over fit choices, not error bars. The ± of
+d_EEG is the standard error of a window mean from EEG's six-decimal rounding.
+
+**δ itself, outside the criteria.** δ is smooth in D through its zero. Polynomials in D of degree 2 and 3 on [40, 60],
+[47, 60] and [50, 60] fit it to an rms of 5×10⁻¹⁰ down to 2×10⁻¹² (`fit/signed_prediction.log`). Degree 1 fits it only to
+2×10⁻⁹ to 6×10⁻⁹. Their extrapolations, written into the raw README before the extension past D = 60 had produced any
+data (raw b532e34), are these:
+
+| D | 70 | 80 | 90 | 100 | 150 | 190 |
+|---|---|---|---|---|---|---|
+| δ, degree 2–3 | 1.4–1.6×10⁻⁷ | 2.7–3.3×10⁻⁷ | 4.2–5.9×10⁻⁷ | 6.2–9.5×10⁻⁷ | 2.1–4.9×10⁻⁶ | 4.0–11.5×10⁻⁶ |
+| d_EEG | | | | 9.4×10⁻⁷ | 2.8×10⁻⁶ | 4.1×10⁻⁶ |
+
+The test written with them, which can fail: the measured δ at 70, 80, 90 and 100 must lie within [½ × the lower end, 2 ×
+the upper end].
+
+### 12.6 Past D = 60 (outside the criteria)
+
+(in progress: the extension of 40 x 79 to D = 100.)
+
+### 12.7 Controls
+
+| control | expected | result | log |
+|---|---|---|---|
+| 32 × 121 at D = 20.043653, from #105's 32 × 101 state | within 10⁻⁹ of hp, exit 0 | +1.68×10⁻²⁰, exit 0 | `controls/C_32x121_D20.0437*` |
+| 32 × 121 at D = 40.020065, from #145's 32 × 101 state | within 10⁻⁹ of hp, exit 0 | +1.54×10⁻¹⁵, exit 0 | `controls/C_32x121_D40.0201*` |
+| 32 × 101 at D = 60.001952, from #145's 32 × 121 root | within 10⁻⁹ of hp, exit 0 | −2.33×10⁻¹², exit 0 | `controls/C_32x101_D60.0020*` |
+| `rt_run.py --mutate=coef` on 40 × 79 at D = 20.04, from root A | Δ moves by > 10⁻⁶, exit 1 | −1.14×10⁻⁴, exit 1 | `controls/coef_40x79_D20.0437*` |
+| `rt_trunc_fit.py --planted` (rates, extrapolation, window means, verdict classes, signed fit) | exit 0 | exit 0 | `fit/planted.log` |
+| the same with `--mutate=rate` | exit 1 | exit 1 | `fit/planted_mutate_rate.log` |
+| 32 × 79 against 40 × 79 at D = 40.02 and 60.00 | (t resolution) | equal to 20 digits, 5×10⁻¹⁸ | `res/Nt_32x79_*` |
+
+The three controls repeat #105's and #145's values (1.7×10⁻²⁰, 1.5×10⁻¹⁵, and #145's second root at 60, −2.33×10⁻¹²).
+The planted test's first run exited 1 because its own expectation was wrong (`fit/planted_first_run.log`). It had a
+negative δ planted as "between", while the rule as written makes it "far below". The planted case was corrected and
+the rule left as it was, before any real data were fitted.
+
+### 12.8 Discrepancies (reported, not fixed)
+
+- **The criteria's fit cannot answer the question.** It fits ln|δ| on the points past the last sign change, and δ at
+  N = 79 crosses zero at D = 46.5. So it fits the climb out of a zero, and its extrapolations span 58 decades at D = 190.
+  The verdict as written is "not decided". The analysis of δ itself (12.5, 12.6) was added after seeing the data. Its
+  prediction for D > 60 was written down before the extension ran.
+- **The continuation's first leg** failed at D = 23.04. Its cubic predictor ran through a 32 × 81 state, resampled,
+  that is not a 40 × 79 root. The root exists (12.2). A predictor's history should hold roots of the grid it predicts
+  on. `run_cont2.sh` did that from then on.
+- **Section 9.7's expectation** had N ≈ 80's error growing about ninefold per 10 units of D past 30, which would reach
+  EEG's departure between D = 50 and 60. At N = 79 it grows from 4.3×10⁻⁹ at D = 30 to 7.1×10⁻⁹ at 40, crosses zero at
+  46.5, and reaches +5.8×10⁻⁸ at 60. At N = 77 it is 3.0×10⁻⁷ at 60. 32 × 81's ninefold growth from 20 to 30 was one
+  N's curve on its way to a zero, not a law in D.
+- **The issue's control** names N = 121 at N_t = 40. The coordinator's brief replaced it with 32 × 121 at D 20 and 40 and
+  32 × 101 at 60, and that is what ran. N_t does not matter at this precision (12.3; #105, #145).
+- **EEG's bump at D 21–27.** Their table lies 1.4×10⁻⁵ to 2×10⁻³ above ours at D = 21–22.5 and 23.5–27, and back within
+  10⁻⁶ at 23.0 and from 27.5 (`hp/data/delta_published_compare.csv`). At their resolution in collocation, the root near
+  ours is smooth through D = 21–27. δ goes from −7.5×10⁻¹⁰ to −3.3×10⁻⁹ there, and every step converged once the
+  predictor held only 40 × 79 roots. So the bump is not a property of the resolution as collocation sees it. A second
+  root of their Galerkin system there was not looked for.
+- **D = 100 straight from #91's map of the chain state** did not converge in 20 Newton steps (`res/X_40x79_D100`).
+  After one step to max|F| = 8×10⁻¹⁴, Newton jumped 6.7×10⁻⁵ along the weak direction and ended 3×10⁻² off. The
+  continuation reached D = 100 instead (12.6).
+
+### 12.10 Reproduction
+
+From the repository root, with the raw-data repository cloned beside it (RAW = `../choptuik-large-d-raw`). On the Mac,
+use `/Users/nathan/venv-qd/bin/python` with the MULTIDOUBLE_SITE of 9.9. The drivers in `RAW/I106-mac/` hold the exact
+commands of the runs. `run_cont2.sh` is the continuation with its restarts, and `run_ext.sh` takes it past D = 60.
+`run_worker*.sh` hold the re-solves, `run_diag.sh` the D = 23.04 diagnosis, and the folder's README their order.
+OPTS stands for `--solver mp --max_products 250 --refresh_dz 1e-5 --patient --it_max 20 --full_below 1e-4`.
+
+```
+python3 solver/rt/rt_trunc_fit.py --planted                 # exit 0; --mutate=rate exits 1
+python3 solver/rt/rt_run.py --start RAW/I105-mac/cont/cont_32x101_D20.0437_32x101.npz --grids 40x79 OPTS \
+    --newton_tol 1e-40 --tol 1e-4 --out OUT --tag b20      # 12.3: start B at D 20.04, delta -5.56e-10, exit 0
+python3 solver/rt/rt_run.py --start RAW/I106-mac/cont/cont_40x79_D20.0437_40x79.npz --grids 40x79 OPTS \
+    --newton_tol 1e-40 --tol 1e-4 --mutate=coef --out OUT --tag coef   # 12.7: Delta moves by -1.14e-4, exit 1
+python3 solver/rt/rt_run.py --start RAW/I145-mac/fol/fol_32x121_D60.0020_32x121.npz --grids 32x101 OPTS \
+    --newton_tol 1e-36 --tol 1e-9 --out OUT --tag c60      # 12.3: the control at D 60, -2.33e-12, exit 0
+python3 solver/rt/rt_trunc_fit.py RAW/I106-mac/cont/cont_40x79.jsonl --second \
+    RAW/I106-mac/res/B_40x79_D20.0437.jsonl,RAW/I106-mac/res/B_40x79_D40.0201.jsonl,\
+RAW/I106-mac/res/B_40x79_D60.0020.jsonl,RAW/I106-mac/res/M_40x79_D60.0020.jsonl
+                                                            # 12.3 and 12.5 (fit/trunc_fit.log), exit 0
+python3 solver/rt/rt_trunc_fit.py RAW/I106-mac/cont/cont_40x79.jsonl --at 70,80,90,100,150,190 \
+    --beyond RAW/I106-mac/cont/ext_40x79.jsonl              # 12.5 and 12.6: delta past D = 60 against the fits
+```
