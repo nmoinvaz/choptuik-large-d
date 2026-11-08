@@ -8,6 +8,11 @@
         lemma 6a: the C^1 run's final hull (HBOX xia) against B.json "X", and its monodromy (JAC xia) against "B":
         dy_i/dy_j = J[2i][2j] + i J[2i+1][2j] = J[2i+1][2j+1] - i J[2i][2j+1] (Cauchy-Riemann), all four real
         enclosures against Re B_ij and Im B_ij
+    compare.py logs <a.log> <b.log> [--expect=...] [--json=f.json]
+        two runs in the BOX/HBOX format (e.g. capd_m5 and orig_mut.py under the same mutation): every tag of a.log
+        other than start that b.log also has
+    compare.py BB <a_B.json> <b_B.json> [--expect=...] [--json=f.json]
+        two lemma 6a B files (lemma6_jump_M --save-B format, e.g. orig_mut.py a --save-B against I103's): X and B
 A comparison passes when every component overlaps. --expect=miss (a mutation) inverts the exit status: the run
 passes only if some component fails to overlap (or the CAPD run failed). Also reported: the largest ratio of the
 review's radius to the stored one, and the largest |mid difference| / (r_review + r_stored).
@@ -148,6 +153,51 @@ def cmp_a(log, bfile, opts):
     return finish(out, not tot.miss and failed is None, tot, failed, stops, opts)
 
 
+def cmp_logs(la, lb, opts):
+    ba, _, sa, fa = read_log(la)
+    bb, _, sb, fb = read_log(lb)
+    out, allok, tot = [], True, Tally()
+    common = [t for t in ba if t != "start" and t in bb]
+    for tag in common:
+        t = Tally()
+        for i in sorted(ba[tag]):
+            if i in bb[tag]:
+                t.add(f"{tag}:{i}", ba[tag][i], bb[tag][i])
+        ok = not t.miss
+        allok = allok and ok
+        tot.n += t.n
+        tot.miss += t.miss
+        tot.ratio, tot.sep = max(tot.ratio, t.ratio), max(tot.sep, t.sep)
+        out.append(dict(tag=tag, overlap=ok, n=t.n, missed=t.miss[:6], worst_ratio=t.ratio, worst_sep=t.sep))
+        print(f"{tag:10s} overlap {ok!s:5s} ({t.n - len(t.miss)}/{t.n}); worst radius ratio a/b {t.ratio:.2e}; worst "
+              f"|mid diff|/(r+r) {t.sep:.2e}")
+    failed = fa or fb
+    return finish(out, allok and failed is None and len(common) > 0, tot, failed, sa + sb, opts)
+
+
+def cmp_BB(fa, fb, opts):
+    with open(fa) as fh:
+        a = json.load(fh)
+    with open(fb) as fh:
+        b = json.load(fh)
+    tot = Tally()
+    tx, tb = Tally(), Tally()
+    for k in range(19):
+        for q in (0, 1):
+            tx.add(f"X{k}.{q}", S.midrad(a["X"][k][q]), S.midrad(b["X"][k][q]))
+    for i in range(19):
+        for j in range(19):
+            for q in (0, 1):
+                tb.add(f"B{i},{j}.{q}", S.midrad(a["B"][i][j][q]), S.midrad(b["B"][i][j][q]))
+    print(f"X: overlap {not tx.miss} ({tx.n - len(tx.miss)}/{tx.n}), worst |mid diff|/(r+r) {tx.sep:.2e}")
+    print(f"B: overlap {not tb.miss} ({tb.n - len(tb.miss)}/{tb.n}), worst |mid diff|/(r+r) {tb.sep:.2e}")
+    tot.n, tot.miss = tx.n + tb.n, tx.miss + tb.miss
+    tot.ratio, tot.sep = max(tx.ratio, tb.ratio), max(tx.sep, tb.sep)
+    out = [dict(what="X", overlap=not tx.miss, missed=tx.miss[:8]), dict(what="B", overlap=not tb.miss,
+                                                                         missed=tb.miss[:8])]
+    return finish(out, not tot.miss, tot, None, [], opts)
+
+
 def finish(out, ok, tot, failed, stops, opts):
     expect = opts.get("expect", "overlap")
     if failed:
@@ -171,6 +221,10 @@ def main():
         return cmp_b1(args[1], args[2], args[3], opts)
     if args[0] == "a":
         return cmp_a(args[1], args[2], opts)
+    if args[0] == "logs":
+        return cmp_logs(args[1], args[2], opts)
+    if args[0] == "BB":
+        return cmp_BB(args[1], args[2], opts)
     print(__doc__)
     return 2
 
