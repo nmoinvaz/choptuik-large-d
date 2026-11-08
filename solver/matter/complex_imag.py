@@ -627,11 +627,21 @@ def main():
         cim = (fc(l0 + 1j * hh) - fc(l0 - 1j * hh)) / (2j * hh)
         wr = lambda z: complex(z.real, math.remainder(z.imag, 2 * math.pi))
         conj_sym = abs(wr(f(np.conj(l0)) - np.conj(f(l0))))
+        # integration-tolerance sensitivity: ln det M at rtol 1e-9 and 1e-13 against the default 1e-11
+        tl = [0.1 + 0.3j, 1.3 + 0.4j, 3.0 + 1.0j, 5.0 + 0.5 * bg.omega]
+        base = [f(l) for l in tl]
+        tol_dev = {}
+        for rt in (1e-9, 1e-13):
+            tf2 = TestField(bg, mutate, rtol=rt, kf=tf.kf)
+            dv = [wr(tf2.lndet(l) - b) for l, b in zip(tl, base)]
+            tol_dev[str(rt)] = dict(max_dphase=float(max(abs(d.imag) for d in dv)),
+                                    max_dlnabs=float(max(abs(d.real) for d in dv)))
         rec = dict(kind="check", **info, background_mismatch=mm, series_at_last_node=bg.mismatch_series_last,
                    centre_symmetry=sym, dmat_vs_hpkernel=ddiff,
                    null_residual_bg=r0, sv_min=float(sv[-1]), sv_next=float(sv[-2]), sv_max=float(sv[0]),
                    horizon_tail=tf.last_tail, cauchy_riemann=float(abs(dre - dim) / abs(dre)),
-                   cauchy_riemann_control=float(abs(cre - cim) / abs(cre)), conj_symmetry=float(conj_sym))
+                   cauchy_riemann_control=float(abs(cre - cim) / abs(cre)), conj_symmetry=float(conj_sym),
+                   tolerance_points=[[l.real, l.imag] for l in tl], tolerance_deviation=tol_dev)
         emit(rec)
         return
 

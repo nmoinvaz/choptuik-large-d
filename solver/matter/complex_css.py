@@ -5,8 +5,12 @@
     python3 complex_css.py root D LAM [--R=0.85,0.6]                  secant root of det M from LAM, at each radius
     python3 complex_css.py follow DLIST LAM1[,LAM2..] [--R=0.85,0.6] [--out=F]
                                                                      each root followed through the backgrounds DLIST
+    python3 complex_css.py track D0 D1 LAM1[,LAM2..] [--h=0.1] [--hmax=1] [--spread=1e-8] [--out=F]
+                                                                     background and roots continued in D (adaptive)
     python3 complex_css.py count D RE0 RE1 IM0 IM1 [--R=0.85] [--plant=Z] [--mutate=M] [--K=12] [--out=F]
                                                                      zeros of det M in RE0 < Re < RE1, IM0 < Im < IM1
+    python3 complex_css.py boxes D LAMOSC [--R=0.85,0.6] [--names=A,B,C,S] [--plant=Z] [--mutate=M] [--out=F]
+                                                                     the standard boxes A, B, C, S at each radius
     python3 complex_css.py selftest                                  the winding code on a synthetic function
 
 Backgrounds: data/css_bg_k0.jsonl (css_lateral.py cont 0 ...), --bg for another file.  Growth rates are zeros of
@@ -138,6 +142,27 @@ def winding(F, corners, K=12, tol=0.5, maxdepth=30):
     return total / (2 * np.pi), big, nint
 
 
+def detrended(det, bx):
+    """det M exp(-q), q the quadratic in mu = lam - (box centre) whose real part fits ln|det M| at the box's corners
+    and edge midpoints (5 real parameters, 8 points): exp(-q) has no zeros, so the winding is unchanged, but most of
+    det M's phase drift along the edges (its growth in lam) goes, and with it most of the bisections."""
+    re0, re1, im0, im1 = bx
+    c = complex(0.5 * (re0 + re1), 0.5 * (im0 + im1))
+    pts = [complex(a, b) for a in (re0, 0.5 * (re0 + re1), re1) for b in (im0, 0.5 * (im0 + im1), im1)
+           if not (a == 0.5 * (re0 + re1) and b == 0.5 * (im0 + im1))]
+    mu = np.array(pts) - c
+    A = np.stack([np.ones(len(mu)), mu.real, -mu.imag, (mu * mu).real, -(mu * mu).imag], axis=1)
+    y = np.array([np.log(abs(det(p))) for p in pts])
+    k = np.linalg.lstsq(A, y, rcond=None)[0]
+    c0, c1, c2 = complex(k[0], 0), complex(k[1], k[2]), complex(k[3], k[4])
+
+    def F(lam):
+        m = lam - c
+        return np.exp(np.log(det(lam)) - (c0 + c1 * m + c2 * m * m))
+    F.trend = [k.tolist()]
+    return F
+
+
 def box(re0, re1, im0, im1):
     return [complex(re0, im0), complex(re1, im0), complex(re1, im1), complex(re0, im1)]
 
@@ -184,7 +209,8 @@ def main():
 
         def F(l):
             return np.exp(30 * l + 2j * l * l) * np.prod([l - z for z in zs])
-        w, big, ni = winding(F, box(0, 1, -0.6, 0.6))
+        Fd = detrended(F, (0, 1, -0.6, 0.6))           # the path the counts take
+        w, big, ni = winding(Fd, box(0, 1, -0.6, 0.6), K=6)
         wc, bigc, nic = winding(F, box(0, 1, -0.6, 0.6), K=1, tol=10.0, maxdepth=0)
         ok = abs(w - 3) < 1e-6 and big < 0.5
         ctl = abs(wc - 3) > 1e-6
@@ -310,11 +336,11 @@ def main():
         re0, re1, im0, im1 = [float(s) for s in pos[2:6]]
         Rf = float(o.get("R", "0.85"))
         plant = complex(o["plant"].replace(" ", "")) if "plant" in o else None
-        K = int(o.get("K", "12"))
+        K = int(o.get("K", "6"))
         r = bg[D]
         det = Det(r, Rf, plant)
         t = time.time()
-        w, big, ni = winding(det, box(re0, re1, im0, im1), K=K)
+        w, big, ni = winding(detrended(det, (re0, re1, im0, im1)), box(re0, re1, im0, im1), K=K)
         emit(dict(kind="count", D=D, box=[re0, re1, im0, im1], R_over_xh=Rf, winding=w, largest_step=big,
                   intervals=ni, evaluations=det.nev, seconds=round(time.time() - t, 1), plant=None if plant is None
                   else [plant.real, plant.imag], mutate=mutate, omega=r["omega"],
@@ -345,7 +371,8 @@ def main():
                 bx = allb[nm]
                 det = Det(r, Rf, plant)
                 t = time.time()
-                w, big, ni = winding(det, box(*bx), K=int(o.get("K", "12")))
+                F = detrended(det, bx)
+                w, big, ni = winding(F, box(*bx), K=int(o.get("K", "6")))
                 emit(dict(kind="box", D=D, box_name=nm, box=list(bx), R_over_xh=Rf, winding=w, largest_step=big,
                           intervals=ni, evaluations=det.nev, seconds=round(time.time() - t, 1),
                           lam_osc=[lo.real, lo.imag], lam_osc_converged=ok, omega=om,

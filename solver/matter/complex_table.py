@@ -62,6 +62,9 @@ def main():
                   r["D"], r["M"], max(m["maxdiff"] for m in r["background_mismatch"]), r["series_at_last_node"],
                   r["null_residual_bg"], r["sv_min"], r["sv_next"], r["sv_max"], r["cauchy_riemann"],
                   r["cauchy_riemann_control"], r["conj_symmetry"]))
+        if "tolerance_deviation" in r:
+            print("    ln det M at rtol 1e-9, 1e-13 vs 1e-11, max phase / ln|det| change: %s" % (
+                {k: ("%.1e" % v["max_dphase"], "%.1e" % v["max_dlnabs"]) for k, v in r["tolerance_deviation"].items()}))
     print("\nImaginary sector counts (complex_imag.py count): D, kf, box, plant, mutate, winding of g, largest step, "
           "evaluations, candidate poles inside")
     for r in rows(os.path.join(R, "imag/counts.jsonl")):
