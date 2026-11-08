@@ -88,6 +88,15 @@ def main():
                 print(f"| {D} | {r['grid'][0]}x{r['grid'][1]} | {d.mid().str(20, radius=False)} | {fmt(r['diff'])} | "
                       f"{fmt(vb)} | {len(r['products'])} | {r['products']} | {path.rsplit('/', 1)[-1]} |")
     if a.table:
+        print("\ntotals per file:")
+        for R, path in ((A, a.a), (B, a.b)):
+            rs = list(R.values())
+            piv = [r["pivot_ratio"] for r in rs]
+            print(f"  {path.rsplit('/', 1)[-1]}: {len(rs)} D, {sum(r['secs'] for r in rs) / 60:.0f} min, "
+                  f"{sum(len(r['products']) for r in rs)} Newton steps, {sum(sum(r['products']) for r in rs)} products, "
+                  f"{sum(len(r['refresh']) for r in rs)} rebuilds ({sum(r['t_refresh'] for r in rs) / 60:.0f} min), "
+                  f"LU pivot ratio {min(piv):.1e} to {max(piv):.1e}, final max|F| at most "
+                  f"{max(r['newton'][-1] for r in rs):.1e}")
         print("\nevery D in both files:")
         print("| D | A - hp | B - hp | A - B | Newton steps A, B | products A | products B | s per Newton step A, B |"
               " s per D A, B |")
