@@ -1,10 +1,11 @@
 """Costs of the pieces of a multiprecision Newton step of the RT prototype on this machine, for the choice of
 rt_mpsolve's design (notes/RT_FORMULATION.md): on an RT grid, the f64 residual, the arb residual, the f64 Jacobian,
 its f64 LU, one double-double triangular solve pair (rt_mpsolve.LUdd) and one product J u (rt_mpsolve.jv_central); and
-multidouble's dense double-double LU solve (dd_solve) at small sizes, as seconds / L^3.
+the dense alternatives, multidouble's double-double LU solve (dd_solve) and python-flint's arb_mat.solve at --prec, at
+small sizes as seconds / L^3, with their estimates at the grid's L from the L^3 law.
 
     python3 solver/rt/rt_mp_cost.py OUT.jsonl --state RT.npz --grid 32x81 [--prec 192] [--sizes 500,1000,2000]
-        [--mutate=perturb]
+        [--arb_sizes 150,300] [--mutate=perturb]
 
 Controls: the dd_solve of a random well-conditioned system must return its planted solution to 1e-28 relative, and
 the LUdd solve must have a normwise backward error below 1e-26 against the factors it applies,
@@ -39,6 +40,7 @@ def main():
     ap.add_argument("--grid", default="32x81")
     ap.add_argument("--prec", type=int, default=192)
     ap.add_argument("--sizes", default="500,1000,2000")
+    ap.add_argument("--arb_sizes", default="150,300")
     ap.add_argument("--mutate", default=None, choices=["perturb"])
     a = ap.parse_args()
     bad = False
@@ -60,6 +62,17 @@ def main():
         bad |= not ok
         recs.append(dict(what="dd_solve", n=n, secs=round(dt, 3), per_L3=dt / n ** 3, err=err, ok=ok))
         print(f"dd_solve n {n}: {dt:.3f} s, {dt / n ** 3:.2e} s/L^3, error {err:.1e} ({'ok' if ok else 'FAIL'})")
+    # ------------------------------------------------ dense arb LU (python-flint arb_mat.solve, approx) at --prec
+    flint.ctx.prec = a.prec
+    for n in [int(v) for v in a.arb_sizes.split(",") if v]:
+        A0 = rng.normal(size=(n, n)) + np.sqrt(n) * np.eye(n)
+        A = flint.arb_mat(n, n, [float(v) for v in A0.ravel()])
+        b = flint.arb_mat(n, 1, [float(v) for v in rng.normal(size=n)])
+        t = time.time()
+        A.solve(b, algorithm="approx")
+        dt = time.time() - t
+        recs.append(dict(what="arb_solve", n=n, prec=a.prec, secs=round(dt, 3), per_L3=dt / n ** 3))
+        print(f"arb_mat solve n {n} at {a.prec} bits: {dt:.3f} s, {dt / n ** 3:.2e} s/L^3")
     # ------------------------------------------------ the RT pieces on one grid
     d = np.load(a.state)
     src = RT(float(d["D"]), int(d["Nt"]), int(d["N"]))
@@ -106,6 +119,14 @@ def main():
     print(f"RT {Nt}x{N} L {rt.L}: f64 residual {t_f:.4f} s, arb residual ({a.prec} bits) {t_m:.3f} s, f64 Jacobian "
           f"{t_j:.2f} s, f64 LU {t_lu:.2f} s, dd triangular solves {t_s:.3f} s (backward error {eta:.1e}, "
           f"{'ok' if ok else 'FAIL'}), product J u {t_p:.3f} s, LU pivot ratio {P.pivot_ratio:.1e}")
+    # the dense alternatives at this L, from the L^3 law of the largest size timed (an estimate, not a run)
+    for what in ("dd_solve", "arb_solve"):
+        rr = [r for r in recs if r["what"] == what]
+        if rr:
+            r = max(rr, key=lambda r: r["n"])
+            est = r["per_L3"] * rt.L ** 3
+            print(f"  {what} at L {rt.L}, estimated from n {r['n']} by L^3: {est:.0f} s ({est / 60:.0f} min)")
+            next(x for x in recs if x["what"] == "rt")[f"est_{what}_secs"] = round(est, 1)
     with open(a.out, "a") as f:
         for r in recs:
             r["mutate"] = a.mutate
