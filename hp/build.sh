@@ -14,8 +14,10 @@ PY=${PY:-$(command -v python3 || command -v python)}
 # --break-system-packages (a system python on macOS) is unknown to pip before 23.0.1 (T108, a Windows venv's pip 21)
 BSP=""
 case "$("$PY" -m pip install --help)" in *--break-system-packages*) BSP=--break-system-packages ;; esac
-RUSTFLAGS="-C target-cpu=native" nice -n 2 maturin build --release --out "$ROOT/dist"
-"$PY" -m pip install $BSP --force-reinstall --no-deps "$ROOT"/dist/hpkernel-0.1.0-*.whl
+# build for this interpreter and install only its wheel: dist/ may hold wheels of other Pythons (#179)
+TAG=$("$PY" -c "import sys; print(f'cp{sys.version_info[0]}{sys.version_info[1]}')")
+RUSTFLAGS="-C target-cpu=native" nice -n 2 maturin build --release -i "$PY" --out "$ROOT/dist"
+"$PY" -m pip install $BSP --force-reinstall --no-deps "$ROOT"/dist/hpkernel-0.1.0-"$TAG"-*.whl
 # the driver's double-double helpers: multidouble's Python package at the commit pyproject.toml names (needs Rust).
 # Its version number does not change between commits, so pip would keep an installed older one ("already
 # satisfied"): reinstall it every time (T63, comms 2026-10-26 02:04 UTC).
