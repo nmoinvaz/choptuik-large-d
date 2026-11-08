@@ -4,11 +4,14 @@ Newton step against D, of the grid difference against D, and of the seconds per 
 application against N; and from them a projection of N, L, the products and the seconds to larger D. The projection is
 an extrapolation of fits over the measured range, not a measurement.
 
-    python3 solver/rt/rt_cost_fit.py A.jsonl [B.jsonl ...] [--old I105.jsonl,...] [--project 60,100,215] [--table]
+    python3 solver/rt/rt_cost_fit.py A.jsonl [B.jsonl ...] [--old I105.jsonl,...] [--alt C.jsonl,...]
+        [--project 60,100,215] [--table]
     python3 solver/rt/rt_cost_fit.py --planted [--mutate=slope]
 
 Records are grouped by grid; for each grid and D the last converged record is used. --old adds records (#105's
-continuations) to the products and grid-difference fits only, since they lack the per-step times. Each fit is quoted with
+continuations) to the products and grid-difference fits only, since they lack the per-step times. --alt names records of
+second roots of the same grids from other starts (rt_run.py --start from another grid's state); their Delta against the
+main records' gives the root spread per grid and D. Each fit is quoted with
 its spread over three windows of D (all, first half, second half): a spread over fit choices, not an error bar.
 
 Models (stated, then fitted):
@@ -85,7 +88,7 @@ def ddiff(ra, rb):
     return float((arb(ra["Delta_str"]) - arb(rb["Delta_str"])).mid())
 
 
-def analyse(G, old, tol=1e-12, project=(), table=False, say=print, delta_from=None):
+def analyse(G, old, tol=1e-12, project=(), table=False, say=print, delta_from=None, alt=None):
     res = {}
     grids = sorted(G)
     # ------------------------------------------------ products per Newton step against D
@@ -171,9 +174,32 @@ def analyse(G, old, tol=1e-12, project=(), table=False, say=print, delta_from=No
                 sp = r["t_newton"] / max(1, len(r["products"]))
                 say(f"| {D:g} | {g[0]}x{g[1]} | {r['L']} | {len(r['products'])} | {r['products']} | {sp:.0f} | "
                     f"{r['secs']:.0f} | {arb(r['Delta_str']).mid().str(20, radius=False)} | {hp} | {dn} |")
+    if alt:
+        res["spread"] = root_spread(G, alt, tol, say)
     if project:
         res["project"] = projection(res, project, tol, say)
     return res
+
+
+def root_spread(G, alt, tol, say):
+    """|Delta_alt - Delta_main| per grid and D, where alt holds second roots of the same grids from other starts, and
+    a fit of its log10 against D through the points (an extrapolation past them)."""
+    say("root spread |Delta_2 - Delta_1| of two converged roots of one grid from different starts:")
+    out = {}
+    for g in sorted(alt):
+        if g not in G:
+            continue
+        pts = [(D, abs(ddiff(alt[g][D], G[g][D]))) for D in sorted(set(alt[g]) & set(G[g]))]
+        out[g] = pts
+        line = ", ".join(f"D {D:g}: {v:.1e}" for D, v in pts)
+        fit = ""
+        good = [(D, v) for D, v in pts if v > 0]
+        if len(good) >= 2:
+            c = lsq([q[0] for q in good], [math.log10(q[1]) for q in good])
+            cross = (math.log10(tol) - c[0]) / c[1] if c[1] > 0 else float("inf")
+            fit = f"; log10 fit through them: {c[1]:.2f} decades per unit D, reaches {tol:g} at D {cross:.1f}"
+        say(f"  {g[0]}x{g[1]}: {line}{fit}")
+    return out
 
 
 def log_delta(res, pair, model, w, D):
@@ -295,6 +321,17 @@ def planted(mutate=None):
         ok.append((f"N({D:g}) = {N}", got == N, got))
     for name, good, val in ok:
         print(f"planted {name}: {val:.4f} {'ok' if good else 'FAIL'}")
+    # the root spread: second roots on 32x101 offset by 10^(-20 + 0.8 (D - 40)), so the fit crosses 1e-12 at D = 50
+    alt = {(32, 101): {}}
+    for D in (40.0, 45.0, 55.0):
+        r = dict(G[(32, 101)][D])
+        r["Delta_str"] = (arb(r["Delta_str"]) + arb(10.0 ** (-20 + 0.8 * (D - 40)))).mid().str(40, radius=False)
+        alt[(32, 101)][D] = r
+    sp = root_spread(G, alt, 1e-12, lambda s: None)[(32, 101)]
+    c = lsq([q[0] for q in sp], [math.log10(q[1]) for q in sp])
+    cross = (-12 - c[0]) / c[1]
+    ok.append(("root-spread crossing at D 50", abs(cross - 50) < 0.1, cross))
+    print(f"planted {ok[-1][0]}: {cross:.4f} {'ok' if ok[-1][1] else 'FAIL'}")
     passed = all(g for _, g, _ in ok)
     print("PASS" if passed else "FAIL")
     return passed
@@ -304,6 +341,7 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("files", nargs="*")
     ap.add_argument("--old", default="")
+    ap.add_argument("--alt", default="", help="records of second roots (other starts) of the same grids, comma separated")
     ap.add_argument("--project", default="")
     ap.add_argument("--tol", type=float, default=1e-12)
     ap.add_argument("--delta_from", type=float, default=None,
@@ -316,7 +354,8 @@ def main():
         sys.exit(0 if planted(a.mutate) else 1)
     G = load(a.files)
     old = load([p for p in a.old.split(",") if p])
-    analyse(G, old, tol=a.tol, project=[float(v) for v in a.project.split(",") if v], table=a.table,
+    alt = load([p for p in a.alt.split(",") if p])
+    analyse(G, old, tol=a.tol, project=[float(v) for v in a.project.split(",") if v], table=a.table, alt=alt,
             delta_from=a.delta_from)
 
 
