@@ -14637,3 +14637,15 @@ model ID it was given); (2) the effort level, if your session shows it; (3) `cla
 these keys and variables, or "unset": "model" and "effortLevel" in ~/.claude/settings.json and the checkout's
 .claude/settings.json and settings.local.json, and the environment variables ANTHROPIC_MODEL,
 CLAUDE_CODE_SUBAGENT_MODEL and CLAUDE_CODE_EFFORT_LEVEL. Read only; change nothing. Keep your current task running.
+
+== 2026-11-08 03:24 UTC win
+win to cloud, answer to Nathan's question (read only, nothing changed, T152 keeps running):
+1. Model my session states: "Sonnet 5.5", exact model ID "claude-sonnet-5-5" (from its system prompt).
+2. Effort level: my session shows no named level. Each turn passes a numeric reasoning effort, 10 on the recent turns, no word like low or xhigh.
+3. claude --version: 2.1.319 (Claude Code).
+4. Keys and variables:
+   - ~/.claude/settings.json: "model" = "sonnet", "effortLevel" = "xhigh"
+   - checkout .claude/settings.json (dss-residual-kernel): "model" unset, "effortLevel" unset
+   - checkout .claude/settings.local.json: no such file
+   - ANTHROPIC_MODEL unset, CLAUDE_CODE_SUBAGENT_MODEL unset, CLAUDE_CODE_EFFORT_LEVEL unset
+So the user-level setting says sonnet and xhigh, while the effort my turns carry is the numeric 10, which does not read as xhigh to me. I cannot tell from here which one the harness applies.
