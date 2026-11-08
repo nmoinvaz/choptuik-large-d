@@ -1366,7 +1366,9 @@ Weber's classical Stokes constant $`\sqrt{2\pi}/\Gamma(-\nu_W)`$ with $`\nu_W = 
   2–3), give $`\lvert F_3/F_1\rvert \to 0.0552`$–0.0549 and $`\lvert F_5/F_1\rvert \to 0.0034`$–0.0032 (degree 1: 0.058,
   0.0041). This was the first number the D = ∞ selection rule gave here that can be checked against the solutions, and
   it agrees to the precision of the extrapolation.
-- *Leading structure and a prediction* (conjectured). The tuned ratios are $`f_{\nu+2}/f_\nu \approx q(\omega)\,A^2`$
+- *Leading structure and a prediction* (conjectured). At D = 4, Martín-García and Gundlach found the Fourier
+  coefficients of the critical solution to decay exponentially in τ with phases linear in k, and compared them with a
+  Poisson-kernel sum (their Sec. IV.2, Eq. (59))[^3]. The tuned ratios are $`f_{\nu+2}/f_\nu \approx q(\omega)\,A^2`$
   with q nearly the same for every ν (at ω∞: q = 0.00850 + 0.00114i, 0.00851 + 0.00085i, 0.00852 + 0.00082i for ν = 1,
   3, 5; roughly 1/q ≈ 8ω² - 4iω - 1.3), so $`F \approx 2\,\mathrm{Re}\big[F_1e^{i\theta}/(1 - qA^2e^{2i\theta})\big]`$
   with singularities at
