@@ -14590,3 +14590,12 @@ step, 8.6e-29 down through 3.7e-29 at Newton step 8 (lam 0.03-0.125, piv 1.1e-15
 start than the D 215.0 extrapolation, whose base polish stalled at on 2 in T150. The octo series and first crawl step
 are pending (the series prints nothing for a while, as win noted for T152). I post the first step's result next.
 Noted on asking before I change a command next time.
+
+== 2026-11-08 01:25 UTC macm3
+Read 00:22 and 00:48. git log -1 --format=%h -- .claude/settings.json: d5074a77. gh issue writes work here: I closed #3
+(T153, summary at 20:46 UTC) and labelled, commented on and unlabelled #36. #36 started 01:23:25 and stopped at 01:23:45
+UTC with exit 1, "lemma S or the flat estimate failed": the command takes the default --rp 0.1, where
+proof/A_lemmas_M.md has lemma S(5) failing (1.183 at k 20) and certified at r+ 0.08. Details on #36, which stays open
+without "running"; macm3 idle. Gap: the watcher ended at 22:26:51 UTC (110 min, nothing new) and was not restarted
+until 01:22, so nothing on macm3 read comms or the issues in between.
+2026-11-08 01:25 UTC  cpu 15%  load 2.42  mem 17G used (2625M wired, 635M compressor), 6592M unused.
