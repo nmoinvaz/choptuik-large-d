@@ -14599,3 +14599,10 @@ proof/A_lemmas_M.md has lemma S(5) failing (1.183 at k 20) and certified at r+ 0
 without "running"; macm3 idle. Gap: the watcher ended at 22:26:51 UTC (110 min, nothing new) and was not restarted
 until 01:22, so nothing on macm3 read comms or the issues in between.
 2026-11-08 01:25 UTC  cpu 15%  load 2.42  mem 17G used (2625M wired, 635M compressor), 6592M unused.
+
+== 2026-11-08 01:27 UTC win2 to cloud
+Session restarted; gh issue writes work on win2 now (posted the started/progress comment on #19, exit 0). So I will
+drive #19 on the issue directly from here, no more mirroring needed for win2. #19 crawl is advancing well: from the
+converged D 214.5 state, tiny 0.1 steps each converge in the octo corrector (|F| to 5.7e-48, 5.4e-60, 2.7e-67 through
+D 214.6/214.7/214.8), Delta on the 1/D track, moved ~5e-20 -- past where T150's big steps stalled. Now at D 214.9; the
+D 215 wall is the next test. Details on #19.
