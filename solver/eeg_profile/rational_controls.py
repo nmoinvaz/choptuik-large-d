@@ -2,11 +2,11 @@
 """Runs every check of rational_fit.py once unmutated (must pass) and once per mutation (must fail)
 (notes/EEG_PROFILE.md section 8).
 
-    python3 rational_controls.py
+    python3 rational_controls.py [--log=FILE]
 
 Exit status 1 if any unmutated check fails or any mutation passes. The planted meromorphic profile (--plant=poles)
 enters with its first half only, "not marching", which must pass. Its second half, "converged", fails as stated
-(|theta_2(4) - theta_2(3)| = 0.025 against 0.02; notes/EEG_PROFILE.md 8.5), and that run's exit status is not used.
+(|theta_2(4) - theta_2(3)| = 0.025 against 0.02; notes/EEG_PROFILE.md 8.3), and that run's exit status is not used.
 The real-data runs use --fast (pade and ls only).
 """
 import os
@@ -15,6 +15,15 @@ import sys
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 PY = sys.executable
+LOG = next((a.split("=", 1)[1] for a in sys.argv[1:] if a.startswith("--log=")), None)
+logf = open(LOG, "w") if LOG else None
+
+
+def say(msg):
+    print(msg, flush=True)
+    if logf:
+        logf.write(msg + "\n")
+        logf.flush()
 
 
 def run(*a):
@@ -47,9 +56,8 @@ for a, want, must_pass, must_fail in cases:
     ok = want is None or (code == 0) == (want == 0)
     ok &= all(verdict.get(n) is True for n in must_pass) and all(verdict.get(n) is False for n in must_fail)
     bad += not ok
-    print(f"{'ok  ' if ok else 'BAD '} rational_fit.py {' '.join(a)}: exit {code}"
-          + (f", expected {'0' if want == 0 else 'non-zero'}" if want is not None else ", not used")
-          + (f"; must pass {must_pass}" if must_pass else "") + (f"; must fail {must_fail}" if must_fail else ""),
-          flush=True)
-print(f"\n{'all controls behave' if not bad else f'{bad} control(s) misbehave'}")
+    say(f"{'ok  ' if ok else 'BAD '} rational_fit.py {' '.join(a)}: exit {code}"
+        + (f", expected {'0' if want == 0 else 'non-zero'}" if want is not None else ", not used")
+        + (f"; must pass {must_pass}" if must_pass else "") + (f"; must fail {must_fail}" if must_fail else ""))
+say(f"\n{'all controls behave' if not bad else f'{bad} control(s) misbehave'}")
 sys.exit(1 if bad else 0)
