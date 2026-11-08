@@ -172,9 +172,10 @@ for a real login meant to be notified.
   loses its machine label, with Status set to Blocked, until it is ready again (Nathan, 2026-11-08).
 - **Picking it up.** The runner adds the label `running`, comments "started" on the issue with the machine, the checkout
   and the threads, sets the project's Status to In Progress, and replies to the coordinator by Remote Control
-  (`SendMessage` to `coordinator`) that it started. A runner that Remote Control cannot reach (its session does not
-  appear in the coordinator's list) keeps the fallback: its watcher, `python3 -u comms_watch.py --name <machine>`, wakes
-  on an open issue with its label and without `running`, and on a Coordination comment addressed to it.
+  (`SendMessage` to `choptuik-large-d-coordinator`) that it started. A runner that Remote Control cannot reach (its
+  session does not appear in the coordinator's list) keeps the fallback: its watcher, `python3 -u comms_watch.py --name
+  <machine>`, wakes on an open issue with its label and without `running`, and on a Coordination comment addressed to
+  it.
 - **Raw output** goes to the raw-data repository as before, in a folder `I<issue>-<machine>/` (for example `I37-win2/`),
   whose README.md starts `# I<issue>-<machine>: <what it holds>`, then the machine and the issue's URL. The comms-era
   `T<n>-<machine>/` folders stay as they are.
@@ -209,18 +210,19 @@ for a real login meant to be notified.
 
 - **Thread budget on the local 8-thread machine:** 4–6 threads at below-normal priority; one process per thread. It has
   4 physical cores, so with 6 busy threads a job runs about 4× slower than on 2 cloud cores; scale cloud estimates.
-- **Coordination:** from 2026-11-08 the coordinator (session name `coordinator`) and the runners talk by Remote Control:
-  commands, task assignments, questions and answers go as messages between the Claude Code sessions, and every result,
-  decision and follow-up task about a task is also written on its issue ("Tasks: the GitHub project" above). A message
-  by Remote Control is not confirmed as read, so the receiver acknowledges it (a reply, or the "started" comment). The
-  pinned Coordination issue, [#98](https://github.com/nmoinvaz/choptuik-large-d/issues/98), is the fallback for a
-  machine Remote Control cannot reach: each comment starts with the header line `<sender> to <recipients>`
-  (`coordinator`, `win2`, `win`, `macm3`, `mac`, or `all`), and that machine's session waits with `python3 -u
-  comms_watch.py --name <machine>` (the coordinator with `--name coordinator`), which exits 0 on a comment addressed to
-  it, on a task issue labelled for it, or on an archive entry, and exits 3 after 110 min with nothing new. `comms.txt`
-  is the archive of the messages up to 2026-11-08 (entries before 2026-10-24 22:25 UTC are in PDT, and the laptop's say
-  `local`); it takes no new entries. The machines are the Windows laptop (`win`), a Windows desktop (`win2`), an M3 Mac
-  (`macm3`) and the Apple M5 Mac (`mac`), where the coordinator runs. Times come from a clock (`date -u '+%Y-%m-%d
-  %H:%M'`), not guessed. A queued task states its commands, its thread count, its stop conditions and what to push.
+- **Coordination:** from 2026-11-08 the coordinator (session name `choptuik-large-d-coordinator`, `coordinator` before
+  2026-11-08 05:30 UTC) and the runners talk by Remote Control: commands, task assignments, questions and answers go as
+  messages between the Claude Code sessions, and every result, decision and follow-up task about a task is also written
+  on its issue ("Tasks: the GitHub project" above). A message by Remote Control is not confirmed as read, so the
+  receiver acknowledges it (a reply, or the "started" comment). The pinned Coordination issue,
+  [#98](https://github.com/nmoinvaz/choptuik-large-d/issues/98), is the fallback for a machine Remote Control cannot
+  reach: each comment starts with the header line `<sender> to <recipients>` (`coordinator`, `win2`, `win`, `macm3`,
+  `mac`, or `all`), and that machine's session waits with `python3 -u comms_watch.py --name <machine>` (the coordinator
+  with `--name coordinator`), which exits 0 on a comment addressed to it, on a task issue labelled for it, or on an
+  archive entry, and exits 3 after 110 min with nothing new. `comms.txt` is the archive of the messages up to 2026-11-08
+  (entries before 2026-10-24 22:25 UTC are in PDT, and the laptop's say `local`); it takes no new entries. The machines
+  are the Windows laptop (`win`), a Windows desktop (`win2`), an M3 Mac (`macm3`) and the Apple M5 Mac (`mac`), where
+  the coordinator runs. Times come from a clock (`date -u '+%Y-%m-%d %H:%M'`), not guessed. A queued task states its
+  commands, its thread count, its stop conditions and what to push.
 - **Long jobs start with a pilot:** a short run of the hardest case, with a stop condition, before an overnight run
   (the T30 pilot stopped a sweep that would have failed after hours).
