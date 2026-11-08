@@ -17,6 +17,9 @@ acts along e with max|B(e, e)| / max|e| (up to the residuals). Otherwise the res
 1e-30) hides B(e, e). Its planted check: the pair z, z (1 + 1e-12) must give B(e, e) = 1e-24 B(z, z) to 1e-6, with
 B(z, z) = (F(2 z) - 2 F(z) + F(0)) / 2 by another route. --mutate=mid takes zm = z1 + 0.45 e, and the planted check must
 then fail (exit 1).
+
+Issue #163: the residual is that of the discretization the states were solved with, their `horizon` K (rt_run.py
+--horizon; 0 when the state has no such field), and two states with different K are refused.
 """
 import os
 import sys
@@ -34,6 +37,12 @@ arb = flint.arb
 def load(path):
     d = np.load(path)
     return mps.from_dd(d["zh"], d["zl"] if "zl" in d else np.zeros_like(d["zh"])), float(d["D"]), int(d["Nt"]), int(d["N"])
+
+
+def horizon_of(path):
+    """The horizon rows K the state was solved with (issue #163; 0 for states without the field)."""
+    d = np.load(path)
+    return int(d["horizon"]) if "horizon" in d else 0
 
 
 def pair_B(rm, z1, z2, s):
@@ -56,7 +65,12 @@ def main():
     if (D, Nt, N) != (Db, Ntb, Nb):
         print(f"the states differ in D or grid: {(D, Nt, N)} and {(Db, Ntb, Nb)}; exit 1")
         sys.exit(1)
-    rm = RTmp(D, Nt, N, prec=a.prec)
+    K = horizon_of(a.a)
+    if horizon_of(a.b if a.mutate != "same" else a.a) != K:
+        print(f"the states were solved with different horizon rows; exit 1")
+        sys.exit(1)
+    print(f"horizon rows K = {K}")
+    rm = RTmp(D, Nt, N, prec=a.prec, horizon=K)
     # planted: z and z + 1e-20 along mu
     zp = za.copy()
     zp[-1] = zp[-1] + arb("1e-20")

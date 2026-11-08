@@ -18,7 +18,7 @@ import flint
 import scipy.linalg as sl
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from rt_model import RT
+from rt_model import RT, horizon_series
 
 arb = flint.arb
 
@@ -28,8 +28,8 @@ def obj(a):
 
 
 class RTmp(RT):
-    def __init__(self, D, Nt, N, prec=160, coef_mut=1.0):
-        super().__init__(D, Nt, N, coef_mut=coef_mut)
+    def __init__(self, D, Nt, N, prec=160, coef_mut=1.0, horizon=0, taylor_mut=1.0):
+        super().__init__(D, Nt, N, coef_mut=coef_mut, horizon=horizon, taylor_mut=taylor_mut)
         flint.ctx.prec = prec
         self.prec = prec
         pi = arb.pi()
@@ -75,6 +75,15 @@ class RTmp(RT):
         r = [w[j] / (0 - x[j]) for j in range(N + 1)]
         sr = sum(r, arb(0))
         self.r0m = np.array([v / sr for v in r], dtype=object)
+        if self.K:
+            # issue #163: the Taylor rows at xi = -1 in arb (row N of Dx^n over n!), the f64 path's scales exactly
+            r = np.array([arb(0)] * N + [arb(1)], dtype=object)
+            rows = [r]
+            for n in range(1, self.K + 1):
+                rows.append(self.DxT.dot(rows[-1]) / n)
+            self.TRmT = np.array(rows, dtype=object).T.copy()
+            self.tscale_m = [arb(float(v)) for v in self.tscale]
+            self.tm_m = arb(taylor_mut)
 
     # ---------------------------------------------------------------- object-array versions
     def unpack_m(self, z):
@@ -112,7 +121,20 @@ class RTmp(RT):
               - X * h * (D - 2) * (p4 * m2 + m4 * p2))
         E1 = ((O1 + P(O1)) / X)[:, self.pos]
         ph = (w4 * self.phase_wm).sum()
-        return np.concatenate([E1.ravel(), (O2 / X).ravel(), (O3 / X).ravel(), (O4 / X).ravel(), [ph]])
+        E2, E3, E4 = O2 / X, O3 / X, O4 / X
+        if self.K:
+            for E, R in zip((E2, E3, E4), self.horizon_rows_m(w1, w2, w3, w4, mu)):
+                for n, j in enumerate(self.hrows, start=1):
+                    E[:, j] = self.tscale_m[n] * R[:, n]
+        return np.concatenate([E1.ravel(), E2.ravel(), E3.ravel(), E4.ravel(), [ph]])
+
+    def horizon_rows_m(self, w1, w2, w3, w4, mu):
+        """rt_model.RT.horizon_rows in arb: each (Nt, K + 1)."""
+        T = lambda f: f.dot(self.TRmT)
+        P = lambda f: f[:, self.rev]
+        nn = np.array([arb(n) for n in range(self.K + 1)], dtype=object)[None, :]
+        Dp = lambda S, anti=False: (self.Dant if anti else self.Dper).dot(S) + mu * nn * S
+        return horizon_series(T(w2), T(w3), T(w4), T(-P(w2)), T(-P(w4)), T(w1), mu, self.Dm, self.cm, Dp, self.tm_m)
 
     def delta_m(self, z):
         w1, w2, w3, w4, mu = self.unpack_m(z)
