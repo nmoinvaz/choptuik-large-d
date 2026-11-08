@@ -128,23 +128,22 @@ Conventions for the Claude sessions (cloud and local) that run computations here
   never lives only on a machine's disk, and it is never written outside that repository (the cloud continuation runs
   up–up21 wrote theirs to `/home/claude/dss/hp_scan`, which was never pushed, and their records are missing). Clone it
   once beside your checkout, `git clone https://github.com/nmoinvaz/choptuik-large-d-raw ../choptuik-large-d-raw`.
-  Before the run, make the folder `<task>-<machine>/` (for example `T82-win/`) with a `README.md` whose first line is
-  `# <folder>: <what it holds>`, then the machine and the comms entry, and point the run's output paths into the
-  folder. At each post and at the end, from that repository's root: `python3 make_index.py && git add <folder> INDEX.md
-  && git commit -m "<folder>: ..." && git pull --no-rebase && git push`. Only this project's task output goes there:
-  nothing from another project's directories, no credentials or personal files, no file over 90 MB; add to your own
-  folder only, and never force-push. Raw output is never committed to this repository. Main gets only what the
+  Before the run, make the folder `<task>-<machine>/` (for example `T82-win/`) with a `README.md` whose first line is `#
+  <folder>: <what it holds>`, then the machine and the issue that set the task, and point the run's output paths into
+  the folder. At each post and at the end, from that repository's root: `python3 make_index.py && git add <folder>
+  INDEX.md && git commit -m "<folder>: ..." && git pull --no-rebase && git push`. Only this project's task output goes
+  there: nothing from another project's directories, no credentials or personal files, no file over 90 MB; add to your
+  own folder only, and never force-push. Raw output is never committed to this repository. Main gets only what the
   coordinator derives from it (CSVs, graphs, notes), with the folder and commit named in the note or script that used
-  it. A script in main that reads raw output takes its directory as an argument, and a documented command that needs
-  one states the clone step. The old `raw/<name>` branches were moved into folders of the same name on 2026-10-27 with
-  their commits, so a citation "raw/T76 7ca90fe" means folder `T76/`, at commit `7ca90fe` of the raw-data repository;
-  its INDEX.md lists every folder.
-  The long-running writers (`hp/scan_hp.py`, `hp/lowD_highM.py` with `--states`, `hp/gamma_batch.py`,
-  `hp/modecount_test_zeros.py`, `hp/modecount_test_axis.py`, `hp/relayout.py`, `hp/scan_qd.py`, `hp/qd_planted.py`,
-  `hp/lowD_highM_leg.py`, `solver/inner_amp/amp_flint_par.py`, `scan_omega.py`) refuse an output path outside a task
-  folder of that repository (`hp/raw_out.py`; `--allow_unraw` for tests and scratch only). The coordinator checks each
-  post that reports a run with `python3 raw_check.py <folder> PATTERN ...`, which fails when the folder or a named file
-  is not on GitHub.
+  it. A script in main that reads raw output takes its directory as an argument, and a documented command that needs one
+  states the clone step. The old `raw/<name>` branches were moved into folders of the same name on 2026-10-27 with their
+  commits, so a citation "raw/T76 7ca90fe" means folder `T76/`, at commit `7ca90fe` of the raw-data repository; its
+  INDEX.md lists every folder. The long-running writers (`hp/scan_hp.py`, `hp/lowD_highM.py` with `--states`,
+  `hp/gamma_batch.py`, `hp/modecount_test_zeros.py`, `hp/modecount_test_axis.py`, `hp/relayout.py`, `hp/scan_qd.py`,
+  `hp/qd_planted.py`, `hp/lowD_highM_leg.py`, `solver/inner_amp/amp_flint_par.py`, `scan_omega.py`) refuse an output
+  path outside a task folder of that repository (`hp/raw_out.py`; `--allow_unraw` for tests and scratch only). The
+  coordinator checks each post that reports a run with `python3 raw_check.py <folder> PATTERN ...`, which fails when the
+  folder or a named file is not on GitHub.
 - **Shared cores:** the cloud machine has 2 cores, usually shared by several agents. Run single-process under
   `nice -n 10`, put anything longer than a few minutes in the background with a log file, and keep single runs short.
 - **Web access:** WebSearch reaches any site; to target one, pass `allowed_domains`. WebFetch opens only URLs that
@@ -168,14 +167,14 @@ for a real login meant to be notified.
 - **Assignment.** The coordinator readies a task by adding the label of a machine: `win2`, `macm3`, `win` (the Windows
   laptop) or `mac`. An issue without a machine label is planned, not ready. The label is the signal to start.
 - **Picking it up.** A runner's watcher, `python3 -u comms_watch.py --name <machine>`, wakes on an open issue with its
-  label and without the label `running`, as well as on comms.txt entries addressed to it. The runner takes the oldest
-  such issue unless a comment says otherwise. It adds the label `running`, comments "started" with the machine, the
-  checkout and the threads, and sets the project's Status to In Progress.
+  label and without the label `running`, as well as on a Coordination comment addressed to it. The runner takes the
+  oldest such issue unless a comment says otherwise. It adds the label `running`, comments "started" with the machine,
+  the checkout and the threads, and sets the project's Status to In Progress.
 - **Raw output** goes to the raw-data repository as before, in a folder `I<issue>-<machine>/` (for example `I37-win2/`),
   whose README.md starts `# I<issue>-<machine>: <what it holds>`, then the machine and the issue's URL. The comms-era
   `T<n>-<machine>/` folders stay as they are.
-- **Posts.** Progress posts (as before: hourly, with cpu and memory) and questions are comments on the issue. comms.txt
-  stays for coordination that belongs to no single task.
+- **Posts.** Progress posts (as before: hourly, with cpu and memory) and questions are comments on the issue.
+  Coordination that belongs to no single task goes on the Coordination issue (below).
 - **Finishing.** The last comment is a summary of the results: what ran and its exits, the numbers the task asked for,
   each control's verdict, the raw folder and its commit, anything that failed or disagrees with the text
   (discrepancies are reported, not fixed), and the recommended tasks (below). Then the runner removes `running` and
@@ -183,7 +182,7 @@ for a real login meant to be notified.
   says why in a comment, removes `running` and leaves the issue open, so the coordinator can reassign it.
 - **gh.** A runner needs the gh CLI logged in with access to this repository (`gh auth status`). The repository's
   `.claude/settings.json` allows the `gh issue` list, view, comment, edit and close commands (Nathan, 2026-11-08).
-  Without it the watcher says so and watches comms.txt only.
+  Without it the watcher says so and watches only the comms.txt archive, so a runner cannot work without gh.
 - **Subagents** work only on an existing issue: every task goes to the project, subagent work included. A subagent
   posts its progress on the issue, and the coordinator posts the closing summary after review (Nathan, 2026-11-08).
 - **Recommended tasks go to the coordinator.** When a task needs further investigation or calculation (a follow-up
@@ -200,15 +199,19 @@ for a real login meant to be notified.
 
 - **Thread budget on the local 8-thread machine:** 4–6 threads at below-normal priority; one process per thread. It has
   4 physical cores, so with 6 busy threads a job runs about 4× slower than on 2 cloud cores; scale cloud estimates.
-- **Coordination:** the cloud and local sessions talk through `comms.txt` (append only; pull before writing; commit only
-  `comms.txt` in comms commits; header `== <date time> UTC cloud|win|mac`, with the time from a clock
-  (`date -u '+%Y-%m-%d %H:%M'`), not guessed; entries before 2026-10-24 22:25 UTC are in PDT). There are two local
-  machines: the Windows laptop (`win`; its entries before then say `local`) and a Mac with an Apple M5 (`mac`). The
-  cloud's entries name their recipients (`cloud to win`, `cloud to mac`, `cloud to win, mac`). Each local machine's
-  Claude Code session waits with `python3 -u comms_watch.py --name win|win2|macm3|mac` run as a background command (it
-  fetches every 60 s and exits only when an entry addressed to it arrives or a task issue carries its label, or after
-  110 min with nothing new), handles them, and starts it again; it costs nothing while it waits. The runners are now
-  win2 (a Windows desktop) and macm3 (an M3 Mac) as well. Tasks are issues of the GitHub project ("Tasks: the GitHub
-  project" above); a queued task states its commands, its thread count, its stop conditions and what to push.
+- **Coordination:** from 2026-11-08 the coordinator (`cloud`) and the runners talk on the pinned Coordination issue,
+  [#98](https://github.com/nmoinvaz/choptuik-large-d/issues/98), when a message belongs to no single task; a message
+  about one task goes on that task's issue. Each comment starts with the header line `<sender> to <recipients>`
+  (`cloud`, `win2`, `win`, `macm3`, `mac`, or `all`; for example `cloud to win2, macm3` or `win to cloud`), since every
+  machine posts from the same GitHub account; times come from a clock (`date -u '+%Y-%m-%d %H:%M'`), not guessed.
+  `comms.txt` is the archive of the messages up to 2026-11-08 (entries before 2026-10-24 22:25 UTC are in PDT, and the
+  laptop's say `local`); it takes no new entries. The machines are the Windows laptop (`win`), a Windows desktop
+  (`win2`), an M3 Mac (`macm3`) and the Apple M5 Mac (`mac`), where the coordinator runs. Each machine's Claude Code
+  session waits with `python3 -u comms_watch.py --name win|win2|macm3|mac` (the coordinator with `--name cloud`) run as
+  a background command. It checks every 60 s and exits 0 on a Coordination comment addressed to it (printing it and
+  recording it as handled), on a task issue labelled for it, or on an archive entry addressed to it, and exits 3 after
+  110 min with nothing new; the session handles what it printed and starts it again, and it costs nothing while it
+  waits. Tasks are issues of the GitHub project ("Tasks: the GitHub project" above); a queued task states its commands,
+  its thread count, its stop conditions and what to push.
 - **Long jobs start with a pilot:** a short run of the hardest case, with a stop condition, before an overnight run
   (the T30 pilot stopped a sweep that would have failed after hours).
