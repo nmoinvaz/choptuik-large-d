@@ -966,3 +966,227 @@ RAW/I145-mac/fol/from141_32x121.jsonl,RAW/I145-mac/fol/from101b_32x121.jsonl,RAW
                                                      # 10.2-10.5 (fit/cost_fit.log)
 RAW/I145-mac/run_coef.sh D60.0020                    # 10.6: must exit 1
 ```
+
+## 11. Between 81 and 101 Chebyshev points at D = 55 and 60
+
+Issue #164. Subagent of the coordinator on the Mac, 2026-11-08. The solver is #145's (`rt_run.py --solver mp`,
+`rt_grids.py`), unchanged. `rt_roots.py` has a new pair test (11.4). Raw output is in folder `I164-mac/` of the
+raw-data repository.
+
+**Result.** Yes. On 32 × 95 the prototype holds Δ to 10⁻¹² at D = 60.001952. It lies −6.4×10⁻¹³ and −5.9×10⁻¹³ from
+hp from the two starts of the criteria, the two roots agree to 5.3×10⁻¹⁴, and `rt_grids.py --tol 1e-12` exits 0. Of
+the seven grids run at both D from both starts (85 to 97), it is the only one. Two further starts land within
+1.2×10⁻¹⁵ of the first root. Outside the criteria, 32 × 99 holds too, at −3.5×10⁻¹³ and −2.7×10⁻¹³. At D = 54.996085,
+32 × 95 lies −5.5×10⁻¹³ from hp and 32 × 97 +1.25×10⁻¹³.
+
+The odd N fall into two families by N mod 4. The family sets the sign of the truncation and, at D = 60, how far apart
+the grid's roots lie.
+
+- **Truncation.** From 87 to 97, Δ_N − Δ_hp has the sign of (−1)^((N−1)/2), and within a family it falls about a
+  decade per step of 4 in N. From D = 55 to 60 it changes by less than a factor 1.7, for example 2.9×10⁻¹¹ and
+  2.5×10⁻¹¹ at N = 89. The sign rule was written down before five of its results, and all five followed it.
+- **Pairs of roots.** At D = 54.996085 the two starts give the same root to 2×10⁻¹⁴ on every grid from 85 to 97. At
+  D = 60.001952 the two starts find two distinct roots on 89, 93, 95, 97 and 99: the residual between them rises to
+  10⁻²⁸ to 10⁻²⁴, against 2×10⁻³¹ at the roots. The roots of the N ≡ 1 mod 4 grids (89, 93, 97, and #145's 101) differ
+  by 4.6×10⁻¹³ to 1.1×10⁻¹² in Δ. Those of 95 and 99 differ by only 5.3×10⁻¹⁴ and 7.5×10⁻¹⁴.
+
+So 32 × 97 misses at D = 60 by its pair (+8×10⁻¹⁴ and +1.08×10⁻¹² from hp), not by its truncation. #145's ladder,
+N = 81, 101, 121 and 141, lies entirely in the family N ≡ 1 mod 4. Its reading that refinement makes Δ worse from
+D ≈ 40 rests on that family alone (11.6).
+
+### 11.1 The protocol
+
+The criteria were written into `I164-mac/README.md` before the main runs (raw commit c1f1669), and not changed.
+
+- Options as #145 at D = 55–60: `--solver mp --tol 1e-12 --max_products 250 --refresh_dz 1e-5 --patient --it_max 20
+  --full_below 1e-4`, with `--newton_tol 1e-38` at D = 54.996085 and 1e-36 at 60.001952. A root counts when its record
+  has ok true.
+- Two starts per grid and D, each resampled to 32 × N and solved there at the same D. Start a is #145's 32 × 101
+  continuation state (−1.27×10⁻¹² from hp at D = 60.001952). Start b is #145's 32 × 121 root solved from it
+  (+3.5×10⁻¹¹). Their Δ differ by 3.6×10⁻¹¹ at D = 60 and 8.6×10⁻¹² at 55. Resampled to 85–99, both start at max|F| =
+  4×10⁻¹⁴ to 1.2×10⁻¹³.
+- Pass for grid N at D = 60.001952: `rt_grids.py` on its two roots with `--tol 1e-12` exits 0, that is both converged,
+  both within 10⁻¹² of hp, and within 10⁻¹² of each other. The verdict of #164 is yes when some grid passes.
+- hp is the double-double row of `hp/data/delta_all.csv` (up10 at 54.996085, up13 at 60.001952, err 2×10⁻¹⁵).
+- Grids. The main runs were N = 85, 91 and 95. The rule for more, written beforehand, fired on their D = 60 results:
+  the smallest error, 6.4×10⁻¹³ at 95, was below 10⁻¹¹, and 95 beat 101. So 87, 89, 93 and 97 were run too. After the
+  D = 60 results of 93 and 97, two additions outside the verdict were run. One is 32 × 99 from both starts, the one odd
+  N between 97 and 101 not yet run. The other is 32 × 95 from two more starts on the other side of hp, the start-b
+  roots of 93 and 97 resampled.
+
+Every 32 × N solve converged in 4 to 7 Newton steps. The first step takes max|F| to 2×10⁻²⁹–5×10⁻²³. A later step
+then moves the state by 10⁻¹⁴ to 2.4×10⁻¹⁰, by more on the coarser grids (3×10⁻¹¹ on 85, 10⁻¹⁴ to 3×10⁻¹² on 97),
+while max|F| stays put or rises. Newton then converges quadratically. That step is the move along the weak direction to
+the grid's own root.
+
+### 11.2 Δ against N
+
+Δ_RT − Δ_hp for each start, and the spread Δ_b − Δ_a of the two roots. The spread is a lower bound on how far the grid
+leaves Δ undetermined, not an error bar. The 101 and 121 rows are #145's (10.2, 10.3), whose second roots came from
+other starts. From `fit/table_32xN.log` and `fit/verdict_32xN.log` (`rt_grids.py`).
+
+| N | N mod 4 | D = 54.996085, a | b | spread | D = 60.001952, a | b | spread | at D = 60 |
+|---|---|---|---|---|---|---|---|---|
+| 85 | 1 | +1.89×10⁻¹⁰ | +1.89×10⁻¹⁰ | −2×10⁻²⁰ | −3.42×10⁻¹¹ | −3.42×10⁻¹¹ | −1.0×10⁻¹⁵ | fail |
+| 87 | 3 | −8.65×10⁻¹¹ | −8.65×10⁻¹¹ | +2.0×10⁻¹⁴ | −5.24×10⁻¹¹ | −5.24×10⁻¹¹ | +2.2×10⁻¹⁵ | fail |
+| 89 | 1 | +2.88×10⁻¹¹ | +2.88×10⁻¹¹ | +8×10⁻¹⁹ | +2.58×10⁻¹¹ | +2.51×10⁻¹¹ | −7.1×10⁻¹³ | fail |
+| 91 | 3 | −8.32×10⁻¹² | −8.32×10⁻¹² | +1.2×10⁻¹⁶ | −8.37×10⁻¹² | −8.37×10⁻¹² | +2.3×10⁻¹⁵ | fail |
+| 93 | 1 | +2.20×10⁻¹² | +2.20×10⁻¹² | +9.4×10⁻¹⁶ | +2.35×10⁻¹² | +2.81×10⁻¹² | +4.6×10⁻¹³ | fail |
+| 95 | 3 | −5.46×10⁻¹³ | −5.46×10⁻¹³ | −1.1×10⁻¹⁶ | **−6.38×10⁻¹³** | **−5.85×10⁻¹³** | +5.3×10⁻¹⁴ | **pass** |
+| 97 | 1 | +1.25×10⁻¹³ | +1.25×10⁻¹³ | −5×10⁻¹⁷ | +8.4×10⁻¹⁴ | +1.08×10⁻¹² | +1.0×10⁻¹² | fail |
+| 99 | 3 | not run | | | −3.45×10⁻¹³ | −2.70×10⁻¹³ | +7.5×10⁻¹⁴ | pass (outside the criteria) |
+| 101 (#145) | 1 | −2.1×10⁻¹⁴ | +1.5×10⁻¹⁴ | +3.6×10⁻¹⁴ | −1.27×10⁻¹² | −2.33×10⁻¹² | −1.1×10⁻¹² | fail |
+| 121 (#145) | 1 | +8.5×10⁻¹² | +9.7×10⁻¹³ | −7.6×10⁻¹² | +3.5×10⁻¹¹ | | | fail |
+
+The 28 solves of the criteria, 85–97, converged to a final max|F| of at most 7.8×10⁻³³, in 104 to 316 s on one core.
+Each needed at most one rebuild of the preconditioner and peaked at 1.0 to 1.3 GB of resident memory. The four solves
+added afterwards took 3 to 4 min each. The further starts of 32 × 95 at D = 60.001952 give −6.37×10⁻¹³ (from 97's
+root) and −6.39×10⁻¹³ (from 93's root), within 1.2×10⁻¹⁵ of start a's root (`fit/verdict_32x95_a_*.log`, both exit 0).
+Three of the four starts find one root, and start b finds the other root of 95's pair, 5.3×10⁻¹⁴ away.
+
+At D = 54.996085 every grid from 85 to 97 has its two roots within 2×10⁻¹⁴, and the error is the truncation alone.
+There 97 holds 1.25×10⁻¹³ and #145's 101 holds 2×10⁻¹⁴. At D = 60.001952 the error of 95 and 99 is still of the size
+their truncation trend gives, and their pairs are 10 to 20 times closer than those of 93, 97 and 101.
+
+### 11.3 Truncation: two families by N mod 4
+
+The magnitudes, at D = 54.996085 and then 60.001952 (both roots where they differ):
+
+| N | 85 | 87 | 89 | 91 | 93 | 95 | 97 | 99 |
+|---|---|---|---|---|---|---|---|---|
+| (−1)^((N−1)/2) | + | − | + | − | + | − | + | − |
+| D = 54.996085 | +1.89×10⁻¹⁰ | −8.65×10⁻¹¹ | +2.88×10⁻¹¹ | −8.32×10⁻¹² | +2.20×10⁻¹² | −5.46×10⁻¹³ | +1.25×10⁻¹³ | |
+| D = 60.001952 | −3.42×10⁻¹¹ | −5.24×10⁻¹¹ | +2.5–2.6×10⁻¹¹ | −8.37×10⁻¹² | +2.4–2.8×10⁻¹² | −5.9–6.4×10⁻¹³ | +0.08–1.08×10⁻¹² | −2.7–3.5×10⁻¹³ |
+
+Within each family the error falls by 1.0 to 1.25 decades per step of 4 at D = 55 (87 → 91 → 95 and 89 → 93 → 97),
+and by 0.8 to 1.1 at D = 60 up to 95. Across the families the magnitudes interleave, so |Δ_N − Δ_hp| falls about 0.27
+decade per point of N, while its sign alternates with each step of 2. From 95 to 99 at D = 60 it falls only by a factor
+1.7 to 2.2.
+
+The sign rule was recorded in `I164-mac/README.md` at 14:02 UTC (raw commit cc8728c), from the D = 60 results of 89 to
+97 and the D = 55 results of 85, 91 and 95. It named the signs of 87 at D = 60 and of 87, 89, 93 and 97 at D = 55
+before they ran, and all five came out as named. 85 at D = 60 breaks it. So does 101 at both D, where the spread of
+#145's roots is as large as the error. A second prediction, recorded at 14:06 UTC (raw commit 9d6d3e1), gave 32 × 99
+at D = 60 a negative error of about 5×10⁻¹⁴ to 10⁻¹³ with its roots within 10⁻¹³. The sign and the spread came out as
+predicted, the size did not (−2.7×10⁻¹³ and −3.5×10⁻¹³).
+
+A reading, not tested here: the equations are divided by ξ (RT's S), and ξ = 0 lies between two grid points for odd N.
+The leading neglected Chebyshev term there carries T_{N+1}(0) = (−1)^((N+1)/2), whose sign flips with each step of 2
+in N. That is the observed pattern up to an overall sign. The error is not the interpolation of ω₃ to ξ = 0, since Δ
+evaluated at ξ = 1 equals Δ at ξ = 0 to f64 rounding on every grid (the records' Delta_xi1 and Delta_xi0). It is in
+the discrete solution itself.
+
+### 11.4 Pairs of roots at D = 60
+
+`rt_roots.py` now tests whether two roots are distinct. For the quadratic residual, F at the midpoint zm of z1 and z2
+is (F(z1) + F(z2))/2 − B(e, e)/4, with e = z2 − z1. So along the line through them F is the parabola
+−s(1 − s) B(e, e), up to the roots' residuals. When max|F(zm)| is far above both roots' residuals, they are two
+distinct roots of the discrete system. Then J at either root acts along e with max|B(e, e)|/max|e|, an upper bound on
+how strongly it acts in its weakest direction (max norms). The states are stored in double-double, so their residuals
+are about 2×10⁻³¹. The test's planted pair, z and z(1 + 10⁻¹²), recovers B(e, e) = 10⁻²⁴ B(z, z) to 10⁻³⁰, where
+B(z, z) comes from F at 0, z and 2z (`fit/roots_*.log`).
+
+| N, D = 60.001952 | max\|z₂ − z₁\| | Δ₂ − Δ₁ | max\|F(zm)\| | max\|B(e, e)\|/max\|e\| | verdict |
+|---|---|---|---|---|---|
+| 85 | 1.0×10⁻¹⁶ | −1.0×10⁻¹⁵ | 5.8×10⁻³¹ | | hidden by the floor |
+| 87 | 1.9×10⁻¹⁶ | +2.2×10⁻¹⁵ | 5.9×10⁻³¹ | | hidden by the floor |
+| 89 | 1.07×10⁻¹³ | −7.1×10⁻¹³ | 8.6×10⁻²⁵ | 3.2×10⁻¹¹ | two roots |
+| 91 | 1.5×10⁻¹⁶ | +2.3×10⁻¹⁵ | 2.4×10⁻³¹ | | hidden by the floor |
+| 93 | 4.7×10⁻¹⁴ | +4.6×10⁻¹³ | 1.1×10⁻²⁵ | 9.7×10⁻¹² | two roots |
+| 95 | 7.7×10⁻¹⁵ | +5.3×10⁻¹⁴ | 4.4×10⁻²⁷ | 2.3×10⁻¹² | two roots |
+| 97 | 7.0×10⁻¹⁴ | +1.0×10⁻¹² | 3.5×10⁻²⁷ | 2.0×10⁻¹³ | two roots |
+| 99 | 4.9×10⁻¹⁵ | +7.5×10⁻¹⁴ | 1.8×10⁻²⁸ | 1.5×10⁻¹³ | two roots |
+
+At D = 54.996085 every pair of 85–97 is hidden by the floor, with max|z₂ − z₁| at most 1.5×10⁻¹⁵ (87) and below
+2×10⁻¹⁶ on the others. The further starts of 95 at D = 60 lie 3×10⁻¹⁷ and 10⁻¹⁶ from start a's root, also hidden.
+
+What the pairs are made of. The difference of each pair is mostly μ and harmonic 0 of ω₂, ω₃ and ω₄, spread over ξ
+with no peak at the ends ξ = ±1, where the horizon lies in the parity-extended form. μ is the largest component on
+93, 97 and 99, and 13% of the largest on 89. That is section 4's weakest direction. The strength of J along e at the
+roots falls from 3.2×10⁻¹¹ at 89 to 1.5×10⁻¹³ at 99, about two decades over 10 points, as section 4's σ_min falls
+with N.
+
+So past D = 55 the discrete systems from N = 89 up have two nearby roots along their weakest direction, a nearly
+degenerate pair such as a quadratic system has close to a fold, and the start decides which one Newton finds. The pair
+is 10 to 20 times tighter for N ≡ 3 mod 4 (95, 99) than for its neighbours N ≡ 1 mod 4 (93, 97). Whether the two
+families differ because the truncation, whose sign depends on the family (11.3), pushes the system toward the fold in
+one and away from it in the other, is a hypothesis not tested here. For #163 (horizon regularity), the measurable
+targets are the pair's max|z₂ − z₁| and max|B(e, e)|/max|e| on the same grids at D = 60, with and without rows that
+impose the regular horizon behaviour.
+
+### 11.5 Controls
+
+| control | expected | result | log |
+|---|---|---|---|
+| `rt_run.py --mutate=coef` at D = 60.001952 on 32 × 91 from its unmutated start-a root | Δ moves by > 10⁻⁶, exit 1 | Δ moved by 1.31×10⁻², exit 1 | `controls/coef_32x91_mutcoef*` |
+| `rt_grids.py --mutate=shift` on 32 × 95's two roots at D = 60.001952 | exit 1 | exit 1 | `fit/verdict_32x95_mutate_shift.log` |
+| `rt_roots.py --mutate=same` on 32 × 95's roots at D = 60.001952 | exit 1 | exit 1 | `fit/roots_32x95_D60.0020_mutate_same.log` |
+| `rt_roots.py --mutate=mid` on 32 × 97's roots at D = 60.001952 (the pair test's planted check) | exit 1 | exit 1, B(e, e) off by 2×10¹¹ relative | `fit/roots_32x97_D60.0020_mutate_mid.log` |
+| 48 × 95 against 32 × 95, both from start a at D = 60.001952 (`nt_check.py`) | \|difference\| < 10⁻¹³ | +1.5×10⁻¹⁶, exit 0 | `fit/nt_48x95.log` |
+| the same check with a tolerance of 10⁻¹⁷ | exit 1 | exit 1 | `fit/nt_48x95_tol1e-17.log` |
+
+The mutated solve did not converge in its 20 Newton steps (max|F| from 4.1×10⁻⁴ to 1.1×10⁻⁸, 14 rebuilds), as in
+#145 at D = 55 and 60 (10.6). It fires through the check against hp. The 48 × 95 solve started at max|F| = 7.6×10⁻¹⁰,
+since resampling from 32 to 48 points in t leaves a larger residual than resampling in ξ (4×10⁻¹⁴). Newton then moved
+along the weak direction by up to 8.8×10⁻⁷ for six steps, with max|F| between 10⁻¹³ and 7×10⁻¹¹, before it converged
+in 12 steps (26 min, 2.5 GB). Its Δ lies 1.5×10⁻¹⁶ from 32 × 95's, so N_t = 32 is not what sets 32 × 95's error.
+
+### 11.6 Discrepancies (reported, not fixed)
+
+- **Section 10's reading of refinement rests on one family.** 10.2, 10.3 and 10.7 conclude that from D ≈ 40 refining
+  the Chebyshev grid makes Δ worse and that the finer grids' roots are not unique along the weak direction. Every grid
+  of that ladder (81, 101, 121, 141) has N ≡ 1 mod 4. At D = 60 the grids N ≡ 3 mod 4 run here (87, 91, 95, 99) have
+  roots unique to the floor or paired within 7.5×10⁻¹⁴, and 95 and 99 hold 10⁻¹², while 93, 97 and 101 do not.
+  Whether the family N ≡ 3 mod 4 keeps converging past 99, and how it behaves from D = 40 to 55, was not measured. Its
+  gain from 95 to 99 at D = 60 is only a factor 2, so it may stall near 3×10⁻¹³ there (an extrapolation). The
+  coordinator decides whether 10.7's reading of the discretization changes (Recommended tasks).
+- **10.9's proposed README sentence** says that on these grids the usable resolution "closes for 10⁻¹² near D = 60".
+  32 × 95 and 32 × 99 hold 10⁻¹² at D = 60.001952, so the sentence needs the qualification of 11.7.
+- **The issue's premise** (from #145) is that the finer grids fail because the horizon's singular branch makes the
+  roots non-unique. That does not explain a dependence on N mod 4, since the part of the branch that degree-N
+  polynomials miss changes smoothly with N. The sign of the truncation does depend on N mod 4 (11.3), so the
+  separation of the pairs may come from how the truncation meets the weak direction (the hypothesis of 11.4).
+- **The size of the prediction for 32 × 99 failed** (11.3). Its error is −2.7×10⁻¹³ to −3.5×10⁻¹³, not 5×10⁻¹⁴ to
+  10⁻¹³. Its sign and the closeness of its roots came out as predicted.
+- **32 × 85 at D = 60** breaks the sign rule (−3.42×10⁻¹¹ where 87–97 predict +). Its error changes by a factor 5.5
+  with a change of sign from D = 55, where every other grid changes by less than 1.7. Its two roots agree to
+  10⁻¹⁵. No cause was found.
+- **Two of the checks ran wrong first, and were redone.** The first `nt_check.py` compared the 48 × 95 record at
+  D = 60 with 32 × 95's last record, at D = 55, and failed (`checks.stdout`). It now takes the record at the same D.
+  `run_checks.sh` reached the third start of 95 before its solve had finished, and `run_checks_c97.sh` redid that part.
+- **hp's rows** are not in question. The closest RT values lie on both sides of them: 97 and 101 at D = 55
+  (+1.25×10⁻¹³, −2.1×10⁻¹⁴ and +1.5×10⁻¹⁴), and 99 and 97 at D = 60 (−2.7×10⁻¹³, +8×10⁻¹⁴).
+
+### 11.7 Proposed text for the README
+
+For the coordinator, in place of the last sentence of 10.9's text:
+
+> Between 85 and 99 Chebyshev points, Δ's truncation error alternates in sign with N mod 4 and falls about a decade per
+> 4 points, nearly the same at D = 55 and 60. At D = 60 the 32 × 95 and 32 × 99 grids hold Δ to 6×10⁻¹³ and 3.5×10⁻¹³.
+> At D = 60 most grids of 89 points and more have two roots close together along the weak direction, and the start
+> decides which one Newton finds. These pairs are 4.6×10⁻¹³ to 1.1×10⁻¹² apart in Δ for N ≡ 1 mod 4 (93, 97, 101) and
+> 10 to 20 times closer for N ≡ 3 mod 4 (95, 99). Every grid #145 refined (81, 101, 121, 141) has N ≡ 1 mod 4
+> ([notes/RT_FORMULATION.md](notes/RT_FORMULATION.md) section 11).
+
+### 11.8 Reproduction
+
+From the repository root, with the raw-data repository cloned beside it (RAW = `../choptuik-large-d-raw`). On the
+Mac, use `/Users/nathan/venv-qd/bin/python` with the MULTIDOUBLE_SITE of 9.9. The drivers in `RAW/I164-mac/` hold the
+exact commands: `run_main.sh` (one start, a list of grids, both D), `run_queue.sh` (the added grids, 48 × 95 and the
+coefficient mutation), `run_extra.sh` and `run_extra_a.sh` (32 × 99 and the further starts of 32 × 95), and
+`run_checks.sh` with `run_checks_c97.sh` (every `rt_grids.py`, `rt_roots.py` and `nt_check.py` log of `fit/`). Their
+CODE line names the checkout.
+
+```
+python3 solver/rt/rt_run.py --start RAW/I145-mac/cont/cont_32x101_D60.0020_32x101.npz --grids 32x95 --solver mp \
+    --tol 1e-12 --max_products 250 --refresh_dz 1e-5 --patient --it_max 20 --full_below 1e-4 --newton_tol 1e-36 \
+    --out OUT --tag a101_32x95                   # 11.2: Delta -6.38e-13 from hp, exit 0 (about 5 min)
+python3 solver/rt/rt_grids.py RAW/I164-mac/roots/a101_32x95.jsonl RAW/I164-mac/roots/b121_32x95.jsonl \
+    --D 60.001952 --tol 1e-12                    # the verdict: exit 0; with --mutate=shift exit 1
+python3 solver/rt/rt_grids.py RAW/I164-mac/roots/a101_32x97.jsonl RAW/I164-mac/roots/b121_32x97.jsonl \
+    --D 60.001952 --tol 1e-12                    # exit 1 (start b +1.08e-12)
+python3 solver/rt/rt_roots.py RAW/I164-mac/roots/a101_32x97_D60.0020_32x97.npz \
+    RAW/I164-mac/roots/b121_32x97_D60.0020_32x97.npz   # 11.4: two roots; --mutate=mid and --mutate=same exit 1
+python3 RAW/I164-mac/nt_check.py RAW/I164-mac/roots/a101_48x95.jsonl RAW/I164-mac/roots/a101_32x95.jsonl
+                                                 # 11.5: +1.5e-16, exit 0; with --tol 1e-17 exit 1
+```
