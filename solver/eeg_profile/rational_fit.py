@@ -383,12 +383,17 @@ def report_poles(res, nmin):
 
 def check_datafile(paths, A):
     """D: |F_nu/F_1| and arg F_nu/F_1 against data/tuned_profile_A2.72.txt, for each input"""
-    blocks = open(DATAFILE).read().split("\n== ")
+    blocks = [b for b in open(DATAFILE).read().split("== ") if b.strip()]
     ok, worst = True, (0.0, 0.0)
-    for path, blk in zip(paths, blocks):
+    for path in paths:
+        name = os.path.join(os.path.basename(os.path.dirname(path)), os.path.basename(path))
+        blk = [b for b in blocks if name in b.splitlines()[0]]
+        if len(blk) != 1:               # each input has exactly one block in the file
+            return False, (float("nan"), float("nan"))
         K, J, f = load_f(path)
         F, _ = harmonics(f, K, A)
-        for line in blk.splitlines():
+        nrow = 0
+        for line in blk[0].splitlines():
             t = line.split()
             if len(t) > 3 and t[0].isdigit() and t[1][0].isdigit() and "e" in t[1]:
                 nu, mag, ang = int(t[0]), float(t[1]), float(t[2])
@@ -396,6 +401,8 @@ def check_datafile(paths, A):
                 dm, da = abs(float(abs(x)) / mag - 1), abs(float(mp.arg(x)) - ang)
                 worst = (max(worst[0], dm), max(worst[1], da))
                 ok &= dm < 2e-6 and da < 2e-5
+                nrow += 1
+        ok &= nrow == 13                # nu = 1, 3, .., 25, every row compared
     return ok, worst
 
 
