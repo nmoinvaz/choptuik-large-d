@@ -685,8 +685,8 @@ the prototype reproduces our Δ to 3.5×10⁻¹⁵ at D = 40.02, 3.3×10⁻¹⁵
 1.27×10⁻¹² at 60.00. No grid on the ladder does better there. From D ≈ 40 refining the Chebyshev grid makes Δ worse:
 32 × 141 is 3.8×10⁻¹² off at D = 45 and 3.0×10⁻⁷ at 55, and 32 × 121 is 2.9×10⁻¹² off at 50 and 3.5×10⁻¹¹ at 60. The
 finer grids' roots are not unique along the weak direction of section 4. Meanwhile 32 × 81 was already 1.2×10⁻⁹ off at
-D = 30 (#105). So the criterion for N written before the runs fails from D = 50, and with this collocation on N_t = 32
-no N holds Δ to 10⁻¹² at D = 60.
+D = 30 (#105). So the criterion for N written before the runs fails from D = 50. With this collocation on N_t = 32,
+no grid tried holds Δ to 10⁻¹² at D = 60. A grid between 81 and 101 points was not tried.
 
 The cost stays modest. A unit of D took 3 to 11 min on one core at L = 11,425. The products of a Newton step with
 fresh factors grew about 0.4 per unit of D from 30 to 60, after 2 per unit from 10 to 30. The Newton steps per D step
@@ -842,9 +842,9 @@ alone. It is an extrapolation over a factor of 2 to 4 in D beyond the data, and 
 
 The windows are those of the two fits: all D from 30 to 60, and the first half. The second half (D 45–60) gives
 falling Newton steps (−0.09 per unit of D). That window is biased by the change of Newton's target for the steps
-from D = 54 and 57, which dropped the last one or two Newton steps, so it is left out. Its rows are in `fit/cost_fit.log`. The 30
-measured steps from D = 31 to 60 took 3.35 hours in all, against 3.3 from the fits, with the check points and the
-restarts not counted.
+from D = 54 and 57, which dropped the last one or two Newton steps, so it is left out. Its rows are in
+`fit/cost_fit.log`. The 30 measured steps from D = 31 to 60 took 3.35 hours in all, against 3.3 from the fits, with
+the check points and the restarts not counted.
 
 N(D) is not projected. The method planned, the grid differences fitted in D and continued in N at the measured rate
 per 20 points, needs Δ_N − Δ_{N+20} to measure truncation. From D ≈ 40 it measures the finer grid's error along the
@@ -857,7 +857,8 @@ scale, our chain's step at D = 200 took 460 s on 18 threads (section 5(3)).
 
 | control | expected | result | log |
 |---|---|---|---|
-| `rt_run.py --mutate=coef` at D = 60.001952 from the unmutated 32 × 101 state | Δ moves by > 10⁻⁶, exit 1 | COEF_RESULT | `controls/coef_D60*` |
+| `rt_run.py --mutate=coef` at D = 60.001952 from the unmutated 32 × 101 state | Δ moves by > 10⁻⁶, exit 1 | Δ moved by 5.3×10⁻⁴, exit 1 | `controls/coef_D60*` |
+| the same at D = 54.996085 | Δ moves by > 10⁻⁶, exit 1 | Δ moved by 3.8×10⁻², exit 1 | `controls/coef_D54*` |
 | `rt_grids.py --tol 1e-12`, 32 × 101 and 32 × 121 at D 34.99, 40.02 | exit 0 | exit 0 | `fit/grids_101_121_D35_40.log` |
 | the same with `--mutate=shift` (2×10⁻¹² added to one Δ) | exit 1 | exit 1 | `fit/grids_101_121_D35_40_mutate_shift.log` |
 | `rt_grids.py --tol 1e-12` at D 40.02, 44.96, 50.01 | (the acceptance on N and N + 20) | exit 1, at 50.01 | `fit/grids_101_121_D40_50.log` |
@@ -867,6 +868,12 @@ scale, our chain's step at D = 200 took 460 s on 18 threads (section 5(3)).
 | its `--mutate=rate` and `--mutate=slope` | exit 1 | exit 1, exit 1 | `fit/planted_mutate_*.log` |
 | `rt_pred_check.py` (a planted cubic path predicted exactly at order 3) and its `--mutate=order` | exit 0, exit 1 | exit 0, exit 1 | `fit/pred_check*.log` |
 | `rt_roots.py` (a planted 10⁻²⁰ difference along μ recovered) and its `--mutate=same` | exit 0, exit 1 | exit 0, exit 1 | `controls/roots_*.log` |
+
+Neither mutated solve converged in its 20 Newton steps: max|F| fell from 4.1×10⁻⁴ to 6.0×10⁻⁸ at D = 60 and to
+1.5×10⁻⁹ at 54.996, with Newton jumping along the weak direction. In #105 the same mutation converged at D = 15 and
+29.98 and moved Δ by 3.75×10⁻⁴ and 3.06×10⁻³. The control still fires, through the check against hp, and its Δ
+moved far more than the 10⁻⁶ required. But at D ≥ 55 a solve from 10⁻³ away no longer reaches the mutated root in 20
+steps.
 
 ### 10.7 What this says about #91's verdict
 
