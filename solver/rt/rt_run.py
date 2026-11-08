@@ -25,16 +25,17 @@ two previous solutions. --check_D lists where |Delta_RT - Delta_hp| <= --tol is 
 hp/data/delta_all.csv has that D). States are saved with their double-double parts (zh, zl; z = zh). Without --D_to only
 the start D is solved: with --mutate=coef from an unmutated state, Delta must move by more than 1e-6 and the run exit 1.
 
-Issue #145 adds three options. --start_prev A.npz,B.npz names older states (increasing D, before --start's), resampled
+Issue #145 adds these options. --start_prev A.npz,B.npz names older states (increasing D, before --start's), resampled
 to the continuation grid, that seed the predictor's history, so a continuation restarts from its last saved states.
 --pred_order k predicts by Lagrange extrapolation in D through the last k + 1 solutions (1, the default, is EEG's
 linear predictor; 2 at --dD 1 starts at the residual of the linear one at --dD 0.5, 1.8e-4 at D = 30 on 32x101).
 --extras_off_path solves the --D_extra points off the path: each is predicted from the steps of --dD and is not used
 to predict later steps. --patient lets Newton continue through a stalled max|F| far above the tolerance, up to
 --it_max steps (#105's rule stops it after step 3, which ended 32x121 solves at D = 32 at max|F| = 1.5e-26 while
-max|dz| still fell). --full_below X takes every Newton step with max|dz| < X in full, without halving it. Each record
-also carries the seconds in products and in the preconditioner per Newton step and
-the process's peak resident memory (rss_peak_gb).
+max|dz| still fell). --full_below X takes every Newton step with max|dz| < X in full, without halving it.
+--newton_tol (default 1e-40, #105's) is Newton's target max|F|; with --patient a stall within 1e6 of it is accepted.
+Each record also carries the seconds in products and in the preconditioner per Newton step, the process's peak
+resident memory (rss_peak_gb) and newton_tol.
 """
 import os
 for _v in ("VECLIB_MAXIMUM_THREADS", "OMP_NUM_THREADS", "OPENBLAS_NUM_THREADS"):
@@ -126,6 +127,7 @@ def main():
     ap.add_argument("--pred_order", type=int, default=1,
                     help="predictor: Lagrange extrapolation in D through the last pred_order + 1 solutions")
     ap.add_argument("--it_max", type=int, default=12, help="mp solver: Newton steps at most")
+    ap.add_argument("--newton_tol", type=float, default=1e-40, help="mp solver: Newton stops at max|F| below this")
     ap.add_argument("--patient", action="store_true",
                     help="mp solver: a stalled max|F| stops Newton only near the tolerance (else after step 3)")
     ap.add_argument("--full_below", type=float, default=None,
@@ -177,7 +179,7 @@ def main():
         pivot_ratio, t_lu = held[0].pivot_ratio, held[0].secs
         make = lambda zz: mps.LUdd(rt.jacobian(mps.to_f64(zz)), overwrite=True)
         # newton_mp holds the only reference, so a rebuild frees the old factors first
-        zm, ok, info = mps.newton_mp(rm, z, held.pop(), tol=1e-40, it_max=a.it_max, max_products=a.max_products,
+        zm, ok, info = mps.newton_mp(rm, z, held.pop(), tol=a.newton_tol, it_max=a.it_max, max_products=a.max_products,
                                      make_prec=make, refresh_dz=a.refresh_dz, refresh_ratio=a.refresh_ratio,
                                      log=say, stall_any=not a.patient, full_below=a.full_below)
         d0, d1 = rm.delta_m(zm)
@@ -192,7 +194,8 @@ def main():
                  pivot_ratio=pivot_ratio, ok=bool(ok), t_jac=round(t_jac, 1), t_lu=round(t_lu, 1),
                  t_refresh=round(info["t_refresh"], 1), t_newton=round(sum(info["secs"]), 1),
                  secs=round(time.time() - t0, 1), label=label, mutate=a.mutate, step_secs=info["secs"],
-                 t_prod=info["t_prod"], t_prec=info["t_prec"], pred_order=a.pred_order, rss_peak_gb=rss_peak_gb())
+                 t_prod=info["t_prod"], t_prec=info["t_prec"], pred_order=a.pred_order, rss_peak_gb=rss_peak_gb(),
+                 newton_tol=a.newton_tol)
         rec.write(json.dumps(r) + "\n")
         rec.flush()
         say(f"  {label} D {D:.6f} grid {rt.Nt}x{rt.N} L {rt.L}: {len(info['res']) - 1} Newton steps, max|F| "
