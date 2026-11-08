@@ -18,8 +18,9 @@ Models (stated, then fitted):
   delta_N(D) < --tol (1e-12), with delta_N for N above the largest pair continued at the rate r(D).
 - seconds per product p(N) and per preconditioner application q(N) as powers of N + 1 through the measured grids; the
   rest of a Newton step (orthogonalization, line search) as e k^2 L.
-- seconds per D step = Newton steps x (k (p + q) + e k^2 L) + 2 (f64 Jacobian + LU) (one rebuild), the Jacobian scaled as
-  L (N + 1)^2 and the LU as L^3, and the memory of the f64 Jacobian 8 L^2 bytes.
+- seconds per D step = Newton steps x (k (p + q) + e k^2 L) + 2 (f64 Jacobian + LU) (one rebuild), with the median
+  Newton steps of the continuation steps, both Jacobian and LU scaled as L^3 (an upper bound for the Jacobian), and
+  the memory of the f64 Jacobian 8 L^2 bytes.
 
 --planted runs the same fits on synthetic records with known a, b, c, d and exponents, plus noise, and exits 1 unless
 they come back within the stated tolerances, the projected N(100) and N(215) among them; --mutate=slope (the products'
@@ -83,7 +84,7 @@ def ddiff(ra, rb):
     return float((arb(ra["Delta_str"]) - arb(rb["Delta_str"])).mid())
 
 
-def analyse(G, old, tol=1e-12, project=(), table=False, say=print):
+def analyse(G, old, tol=1e-12, project=(), table=False, say=print, delta_from=None):
     res = {}
     grids = sorted(G)
     # ------------------------------------------------ products per Newton step against D
@@ -111,7 +112,7 @@ def analyse(G, old, tol=1e-12, project=(), table=False, say=print):
         if g[0] != h[0]:
             continue
         Ds = sorted(set(allG[g]) & set(allG[h]))
-        pts = [(D, abs(ddiff(allG[g][D], allG[h][D]))) for D in Ds]
+        pts = [(D, abs(ddiff(allG[g][D], allG[h][D]))) for D in Ds if delta_from is None or D >= delta_from]
         pts = [(D, v) for D, v in pts if v > 0]
         if len(pts) < 3:
             continue
@@ -141,6 +142,11 @@ def analyse(G, old, tol=1e-12, project=(), table=False, say=print):
         say(f"  {g[0]}x{g[1]} L {R[0]['L']}: p {p:.3f} s, q {q:.3f} s, e {e:.2e} s, Newton steps per D step {nst:g}, "
             f"Jacobian + LU {jl:.1f} s, peak memory {mem:.2f} GB")
     tg = sorted(res["time"])
+    # Newton steps per D step: the continuation's (label cont), not the followers' re-solves from resampled states
+    nc = [len(r["products"]) for g in grids for r in G[g].values() if r.get("label") == "cont"]
+    res["newton_cont"] = float(np.median(nc)) if nc else float("nan")
+    say(f"  Newton steps per continuation step: median {res['newton_cont']:g} over {len(nc)} steps"
+        + (f", range {min(nc)}-{max(nc)}" if nc else ""))
     if len(tg) >= 2:
         g0, g1 = tg[0], tg[-1]
         lr = math.log((g1[1] + 1) / (g0[1] + 1))
@@ -231,7 +237,7 @@ def step_secs(res, T, gT, Nt, N, k, parts=False):
     s = (N + 1) / n0
     p, q = T["p"] * s ** res["alpha_p"], T["q"] * s ** res["alpha_q"]
     s_newton = k * (p + q) + T["e"] * k * k * L
-    s_step = T["newton"] * s_newton + 2 * T["jl"] * (L / L0) ** 3
+    s_step = res["newton_cont"] * s_newton + 2 * T["jl"] * (L / L0) ** 3
     return (s_step, s_newton, L) if parts else s_step
 
 
@@ -291,6 +297,8 @@ def main():
     ap.add_argument("--old", default="")
     ap.add_argument("--project", default="")
     ap.add_argument("--tol", type=float, default=1e-12)
+    ap.add_argument("--delta_from", type=float, default=None,
+                    help="fit the grid differences from this D on (81 - 101 changes sign near D = 13)")
     ap.add_argument("--table", action="store_true")
     ap.add_argument("--planted", action="store_true")
     ap.add_argument("--mutate", default=None, choices=["slope", "rate"])
@@ -299,7 +307,8 @@ def main():
         sys.exit(0 if planted(a.mutate) else 1)
     G = load(a.files)
     old = load([p for p in a.old.split(",") if p])
-    analyse(G, old, tol=a.tol, project=[float(v) for v in a.project.split(",") if v], table=a.table)
+    analyse(G, old, tol=a.tol, project=[float(v) for v in a.project.split(",") if v], table=a.table,
+            delta_from=a.delta_from)
 
 
 if __name__ == "__main__":
