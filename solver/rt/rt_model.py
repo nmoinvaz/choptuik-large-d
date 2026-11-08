@@ -14,6 +14,16 @@ regularity condition. The residual is exactly quadratic in (mu, omega), so the J
 differences with unit step (RT Sec. 1.2: C(x) = A x + B(x, x)).
 
 Delta = 4 pi mu - 2 int_0^{2 pi} omega_3^-(t, 0) dt (RT Eq. (15b), Delta = 2K), and the same with xi = 1.
+
+Horizon rows (issue #163, `horizon=K`, default 0 = the collocation above). At xi = -1 the equations Omega_{2,3,4}^+ / xi
+are regular-singular in s = 1 + xi: D^+ = d_t + mu s d_s, and their linearization there is lower triangular in
+(omega_2, omega_4, omega_3) with exponents lambda_2 = -<a_2>/mu, lambda_4 = -<a_4>/mu and lambda_3 = -1, each shifted by
+-i k / mu for harmonic k (rt_horizon.py, sympy). A branch s^lambda with Re lambda > 0 is bounded and is excluded only
+by analyticity, which degree-N polynomials see to N^(-2 Re lambda - 1). With K > 0 the collocated rows of Omega_{2,3,4}^+
+at the K points next to xi = -1 (j = N - 1 .. N - K) are replaced by the Taylor coefficients of orders 1..K of the same
+residuals at xi = -1 (order 0 is the row at xi = -1 itself), computed from the fields' Taylor coefficients there by
+truncated series products. An analytic solution satisfies them; a branch with Re lambda < K violates the order
+ceil(Re lambda) row. The residual stays exactly quadratic. Row n is scaled so that its largest entry is N^2.
 """
 import numpy as np
 
@@ -49,8 +59,39 @@ def cheb_interp_row(xg, x0):
     return r / r.sum()
 
 
+def smul(a, b):
+    """Cauchy product of two truncated Taylor series stored along the last axis (float or object arrays)."""
+    K1 = a.shape[-1]
+    return np.stack([sum(a[..., j] * b[..., n - j] for j in range(n + 1)) for n in range(K1)], axis=-1)
+
+
+def xmul(a):
+    """xi a = (s - 1) a for a series in s = 1 + xi."""
+    out = -a
+    out[..., 1:] = out[..., 1:] + a[..., :-1]
+    return out
+
+
+def horizon_series(m2, m3, m4, p2, p4, a1, mu, D, cm, Dp, tm=1.0):
+    """Taylor coefficients in s = 1 + xi at xi = -1 of Omega_{2,3,4}^+ / xi, from those of the fields (last axis):
+    m = omega^- (the unknowns), p = omega^+ = -P omega^-, a1 = omega_1. The formulas are rt_model.RT.omegas with
+    products as series products; Dp(S, anti) is D^+ on a series (d_t + mu n on order n). tm scales the coefficient
+    2 (D - 1) of Omega_2 (the planted check's control)."""
+    X = xmul
+    O2 = (X(Dp(m2) + mu * m2) + mu * ((D - 3) * a1 + p2 + m2)
+          + X((D - 3) * (smul(a1, a1) + smul(p2, p2) + smul(m2, m2) - 2 * smul(a1, p2 + m2))
+              - 2 * (D - 1) * tm * smul(p2, m2)) / 4)
+    O3 = (X(Dp(m3) + mu * m3) - mu / 2 * (D - 3) * (D - 2) * cm * a1
+          + X((D - 2) * ((D - 3) * (smul(p2 + m2, a1) - smul(a1, a1) / 2 - smul(p2 - m2, p2 - m2) / 2)
+                         - 2 * smul(p4, m4))) / 4)
+    O4 = (X(Dp(m4, True) + mu * m4) + mu / 2 * (D - 2) * (p4 + m4)
+          - X((D - 2) * (smul(p4, m2) + smul(m4, p2))) / 2)
+    # 1 / xi = -(1 + s + s^2 + ...)
+    return [-np.cumsum(O, axis=-1) for O in (O2, O3, O4)]
+
+
 class RT:
-    def __init__(self, D, Nt, N, coef_mut=1.0):
+    def __init__(self, D, Nt, N, coef_mut=1.0, horizon=0, taylor_mut=1.0):
         assert Nt % 2 == 0 and N % 2 == 1
         self.D, self.Nt, self.N = float(D), Nt, N
         self.coef_mut = coef_mut           # the --mutate=coef control: one coefficient of Omega_3 scaled
@@ -71,6 +112,42 @@ class RT:
         cw[0] = cw[-1] = np.pi / (2 * N)
         self.phase_w = np.outer(np.cos(self.t / 2), cw)  # Re (omega_4)_{1,0} up to a constant factor
         self.r0 = cheb_interp_row(self.xi, 0.0)
+        self.K = int(horizon)
+        self.taylor_mut = taylor_mut
+        if self.K:
+            self._horizon_setup()
+
+    def _horizon_setup(self):
+        """TR[n] . f = f^(n)(-1) / n! for Lobatto values f (row N of Dx^n over n!), and the row scales. The rows are
+        computed at 200 bits (mpmath) and rounded: repeated f64 products with Dx lose up to 1e-2 at order 7."""
+        import mpmath
+        K, N = self.K, self.N
+        assert 1 <= K < N // 2, "horizon rows: 1 <= K < N / 2"
+        with mpmath.workprec(200):
+            x = [mpmath.cos(mpmath.pi * j / N) for j in range(N + 1)]
+            c = [(2 if j in (0, N) else 1) * (-1) ** j for j in range(N + 1)]
+            Dm = [[mpmath.mpf(c[i]) / c[j] / (x[i] - x[j]) if i != j else 0 for j in range(N + 1)] for i in range(N + 1)]
+            for i in range(N + 1):
+                Dm[i][i] = -mpmath.fsum(Dm[i][j] for j in range(N + 1) if j != i)
+            r = [mpmath.mpf(0)] * N + [mpmath.mpf(1)]
+            rows = [[float(v) for v in r]]
+            for n in range(1, K + 1):
+                r = [mpmath.fsum(r[i] * Dm[i][j] for i in range(N + 1)) / n for j in range(N + 1)]
+                rows.append([float(v) for v in r])
+        rows = [np.array(v) for v in rows]
+        self.TR = np.array(rows)
+        # the largest entry of the scaled row n is N^2, as for a collocated derivative near the ends
+        self.tscale = np.array([1.0] + [float(N) ** 2 / np.abs(rows[n]).max() for n in range(1, K + 1)])
+        self.hrows = N - np.arange(1, K + 1)             # collocation points replaced by orders 1..K
+
+    def horizon_rows(self, z):
+        """The Taylor coefficients R_n (n = 0..K) at xi = -1 of Omega_{2,3,4}^+ / xi, each (B, Nt, K + 1)."""
+        w1, w2, w3, w4, mu = self.unpack(z)
+        T = lambda f: f @ self.TR.T
+        nn = np.arange(self.K + 1)[None, None, :]
+        Dp = lambda S, anti=False: self.dt(S, anti) + mu * nn * S
+        return horizon_series(T(w2), T(w3), T(w4), T(-self.P(w2)), T(-self.P(w4)), T(w1), mu, self.D,
+                              self.coef_mut, Dp, self.taylor_mut)
 
     # ---------------------------------------------------------------- layout
     def unpack(self, z):
@@ -135,8 +212,13 @@ class RT:
         E1 = ((O1 + self.P(O1)) / X)[:, :, self.pos]
         B = E1.shape[0]
         ph = np.einsum("bij,ij->b", w4, self.phase_w)
-        F = np.concatenate([E1.reshape(B, -1), (O2 / X).reshape(B, -1), (O3 / X).reshape(B, -1),
-                            (O4 / X).reshape(B, -1), ph[:, None]], axis=1)
+        E2, E3, E4 = O2 / X, O3 / X, O4 / X
+        if self.K:
+            for E, R in zip((E2, E3, E4), self.horizon_rows(z)):
+                for n, j in enumerate(self.hrows, start=1):
+                    E[:, :, j] = self.tscale[n] * R[:, :, n]
+        F = np.concatenate([E1.reshape(B, -1), E2.reshape(B, -1), E3.reshape(B, -1),
+                            E4.reshape(B, -1), ph[:, None]], axis=1)
         if forcing is not None:
             F = F - forcing[None, :]
         return F

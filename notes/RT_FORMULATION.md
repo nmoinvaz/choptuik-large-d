@@ -1496,3 +1496,357 @@ RAW/I106-mac/res/B_40x79_D60.0020.jsonl,RAW/I106-mac/res/M_40x79_D60.0020.jsonl
 python3 solver/rt/rt_trunc_fit.py RAW/I106-mac/cont/cont_40x79.jsonl --at 70,80,90,100,150,190 \
     --beyond RAW/I106-mac/cont/ext_40x79.jsonl              # 12.5 and 12.6: delta past D = 60 against the fits
 ```
+
+## 13. Horizon rows: Taylor conditions at ξ = −1 in place of collocation
+
+Issue #163. Subagent of the coordinator on the Mac, 2026-11-08. Code in `solver/rt/`:
+
+- the option `horizon=K` of `rt_model.py` and `rt_mp.py`, used through `rt_run.py --horizon K`, `--mutate=norows` and
+  `--resample_mp`;
+- the new `rt_horizon.py`, `rt_resample_res.py`, `rt_pair_fine.py`, `rt_sigma.py`, `rt_branch_cheb.py` and
+  `rt_constraint.py`;
+- `rt_grids.py --tol_ab`, and `rt_roots.py`, which now evaluates the residual that a state was solved with.
+
+Raw output is in folder `I163-mac/` of the raw-data repository. Its README holds the criteria, written before the main
+runs (raw e843f14). python-flint 0.9.0, sympy 1.14.0, mpmath 1.3.0.
+
+**Result. The acceptance fails.** The new rows replace the collocation at the K points next to ξ = −1 by the Taylor
+coefficients of orders 1 to K of the equations there. With K = 7, at D = 50.007491:
+
+- 32 × 121 lands −1.86×10⁻¹² and −1.97×10⁻¹² from hp from the two starts, and 32 × 123 lands −4.29×10⁻¹² and
+  −4.14×10⁻¹². The acceptance asks for 10⁻¹⁴ from hp and 10⁻¹⁸ between the starts.
+- The control without the rows misses by −2.89×10⁻¹² and −2.90×10⁻¹² (32 × 121) and −5.74×10⁻¹² and −5.73×10⁻¹²
+  (32 × 123), so it fires.
+- The rows remove a quarter to a third of the miss. They widen the spread of the two starts from 9×10⁻¹⁵ to
+  1.1–1.4×10⁻¹³.
+
+At D = 60.001952 the rows remove the pair of 32 × 93 and leave two roots on 95, 97 and 99. There they are 7 to 12
+times farther apart on 95 and 99 than without the rows, and about as far apart on 97.
+
+**What the rows exclude, and what they do not.**
+
+- The sympy derivation (13.1) gives two bounded horizon branches: ω₂'s, with exponent λ₂ = 5.3 to 5.9 at D = 40–60,
+  and the scalar's, with λ₄ = 21 to 31.
+- K = 7 excludes λ₂'s branch for every harmonic. The misses survive that, so they are not λ₂'s.
+- λ₄'s branch would need rows of order 27 to 32. The f64-LU preconditioner fails already at order 30.
+
+**What the weak directions are.** Two kinds were measured (13.7).
+
+- Newton's jumps between nearby roots go along a smooth direction: μ plus harmonic 0 of ω₂, ω₃ and ω₄, the same as
+  the pair differences of #145 and #164. Along it the Jacobian's gain is at most 10⁻²⁴ to 10⁻²¹ at D = 50.
+- Rough right-hand sides find gains of at most 9×10⁻³⁵ to 2×10⁻³³ on 32 × 101 to 32 × 141. Those directions are
+  dominated by ω₄ near ξ = 0, at the frequencies 3/2 and 5/2. On 32 × 101 the bound is the same at D = 40 and D = 50
+  (1.7×10⁻³³ and 1.5×10⁻³³). A polynomial copy of λ₄'s branch would change by about six decades between those D.
+
+Neither kind is shown to be the horizon branch that the issue blamed. The issue's premise is not confirmed, and the
+origin of both directions is open (Recommended tasks of #163).
+
+### 13.1 The horizon's branches, symbolically
+
+`rt_horizon.py symbolic` (sympy, about 1 min, exit 0) starts from EEG's Eq. (5) as `rt_eqs_check.py` transcribes and
+checks it. In the parity-extended form the collocated equations are Ω₂,₃,₄⁺/ξ, in which D⁺ acts on the unknowns
+ω_i⁻. At ξ = −1, D⁺ = ∂_t + μ s ∂_s with s = 1 + ξ, so each equation reads D⁺ω_i⁻ + G_i(ω⁻, ω⁺, ω₁). The script
+derives A = ∂G/∂ω⁻ at s = 0. It finds A lower triangular in the order (ω₂, ω₄, ω₃), with the diagonal
+
+    a₂ = ((D − 3)(ω₂⁻ − ω₁) − (D − 1) ω₂⁺)/2,   a₄ = −((D − 4) μ + (D − 2) ω₂⁺)/2,   a₃ = μ,
+
+all at ξ = −1. A Frobenius solution of the linearization, ω_j⁻ ~ s^λ v(t), therefore has
+
+    λ_j = −(⟨a_j⟩ + i k)/μ   for harmonic k,   v = e^{ikt} exp(−∫ (a_j − ⟨a_j⟩) dt),
+
+with ⟨·⟩ the mean over t. For ω₃ this gives λ₃ = −1 − ik/μ, which is unbounded and so excluded by any polynomial.
+At order n of the Taylor series in s, the operator on the n-th coefficient is ∂_t + μn + A (checked on a series to
+order 3). So the analytic solution is fixed order by order, except at a resonance n = λ_j, which needs k = 0. ω₁'s own
+equation, (1 + P)Ω₁⁺/ξ = 2(∂_t + μξ∂_ξ + μ)ω₁ + …, is characteristic at the centre, not at the horizon.
+
+The check compares A with rt_model's Jacobian entries at ξ = −1. Those entries are exactly A, since (1 + ξ) and the
+diagonals of the Fourier matrices vanish there. On the D = 50.007491 root resampled to 16 × 41 they agree to
+3.9×10⁻¹⁵ at all t. `--mutate=a4` (a₄ scaled by 1 + 10⁻³) gives 7.7×10⁻⁴ and exits 1 (`checks/symbolic*.log`).
+
+The real parts at k = 0, from the solved states (`rt_horizon.py exponents`, `checks/exponents.log`, a measured value
+at each state):
+
+| D | 4 | 6 | 8 | 10 | 15 | 20 | 30 | 40 | 45 | 50.01 | 55.00 | 60.00 |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| λ₂ | −0.41 | 0.25 | 1.08 | 1.78 | 3.02 | 3.82 | 4.77 | 5.32 | 5.52 | 5.68 | 5.82 | 5.94 |
+| λ₄ | 0.63 | 2.19 | 3.59 | 4.88 | 7.85 | 10.63 | 15.94 | 21.12 | 23.68 | 26.23 | 28.76 | 31.30 |
+
+- λ₄ is the scalar's branch. At D = 40 it is 21.1, the exponent notes/QUAD_DOUBLE.md 13.7 finds in our variables,
+  and it grows by about 0.51 per unit of D.
+- Section 4's slopes of σ_min against N at D = 4 to 10 (2 Re s + 1 = 1.8, 4.9, 7.7, 10.2) give Re s = 0.4, 2.0, 3.4
+  and 4.6. These are close to λ₄ (0.63, 2.19, 3.59, 4.88) and not to λ₂.
+- λ₂ is ω₂'s branch. It grows slowly and crosses the integers, where harmonic 0 is resonant: 4 at D = 21.5 (4.001),
+  5 between D = 33 and 34 (4.965, 5.024), and 6 near D = 62 by extrapolation (`diag/exponents_crossings.log`).
+
+### 13.2 The horizon rows
+
+`--horizon K` replaces the collocated rows of Ω₂,₃,₄⁺/ξ at the K points next to ξ = −1 (j = N − 1, …, N − K) by the
+Taylor coefficients of orders 1 to K of the same residuals at ξ = −1. The row at ξ = −1 itself is order 0.
+
+- The coefficients come from those of the fields there by truncated series products. The fields' coefficients are the
+  rows of Dⁿ/n! at ξ = −1, computed at 200 bits. So the residual stays exactly quadratic (third difference 7×10⁻⁵¹ in
+  arb).
+- Row n is scaled so that its largest entry is N², the size of a collocated derivative near the ends.
+- An analytic solution satisfies every row. A branch s^λ with Re λ < K violates the row of order ⌈Re λ⌉, where its
+  derivative is singular.
+- A row of order n amplifies the rounding and the truncation of the regular part by about N²ⁿ. So K must stay small.
+  K = 7 excludes λ₂ at every D from 40 to 62, for every harmonic (they share its real part), but not λ₄.
+- `--horizon 0`, the default, is the collocation of sections 3 to 12. Its residual is bit-identical, checked in f64
+  and arb.
+
+The rows also amplify the f64 rounding of `rt_model.resample_to` (about 10⁻¹⁷) to a residual of about 10⁻¹¹. So every
+run here resamples its start exactly in arb (`--resample_mp`, barycentric interpolation of the double-double state).
+
+### 13.3 Planted checks
+
+`rt_horizon.py planted` (exit 0, `checks/planted.log`), with its criteria in its docstring before the first run:
+
+- (a) The manufactured state is analytic: Chebyshev degree ≤ 9 in ξ, harmonics ≤ 2 and 5/2 in t, μ = 0.13, D =
+  50.007491, on 16 × 41. Its rows of orders 0 to 7 equal sympy's Taylor coefficients at ξ = −1 of Ω₂,₃,₄⁺/ξ of the
+  closed forms, to 1.9×10⁻⁴⁷ in arb (criterion 10⁻³⁰). In f64, scaled as in the residual, they agree to 3.3×10⁻¹⁴ of
+  N² (criterion 10⁻¹²).
+- (b) newton_mp with the LUdd preconditioner solves the forced system at the D = 50 root, resampled to 16 × 41, with
+  K = 7. It returns the planted root to 3.5×10⁻⁴⁰ in 6 Newton steps (criterion 10⁻³⁰ in 10).
+- (c) The order-0 row equals the collocated row at ξ = −1 to 4.1×10⁻⁵⁶.
+- `--mutate=taylor` scales one series coefficient by 1 + 10⁻³. Then (a) gives 7.8×10⁻⁴ and (c) 3.2×10⁻³, and the
+  script exits 1.
+
+The f64 criterion of (a) was revised once, after the first run. That run's criterion was a relative error of 10⁻⁹ on
+the unscaled rows, and it gave 4.6×10⁻⁵. Those rows have entries up to 10¹³ at order 7, and they were built by
+repeated f64 products, which lose 10⁻² there. The rows are now rounded from 200 bits, and the criterion is on the rows
+as the residual scales them. The f64 rows only build the preconditioner.
+
+### 13.4 The protocol
+
+The criteria are in `I163-mac/README.md`, written at 21:45 UTC before the main runs and not changed since. The options
+are #145's (`--solver mp --tol 1e-12 --max_products 250 --refresh_dz 1e-5 --patient --it_max 20 --full_below 1e-4`,
+Newton's target 10⁻⁴⁰ at D = 50.007491 and 10⁻³⁶ at 60.001952), with K = 7 and `--resample_mp`.
+
+- At D = 50.007491, start a is #145's 32 × 101 continuation state (+3.3×10⁻¹⁵ from hp). Start b is #145's 32 × 141
+  root (−4.1×10⁻¹¹).
+- At D = 60.001952, the starts are #164's: the 32 × 101 continuation state (−1.27×10⁻¹²) and #145's 32 × 121 root
+  (+3.5×10⁻¹¹).
+- hp is the double-double row of `hp/data/delta_all.csv` (up8 and up13, err 2×10⁻¹⁵).
+
+Two pilots at D = 54.996085 on 32 × 121 came first (`pilot/`):
+
+- K = 30, which would also pass λ₄ there (28.8): GMRES reached only 6.1×10⁻³ in 250 products at the first Newton step,
+  and the run was stopped.
+- K = 7 from #145's 32 × 101 state, resampled in f64: the start's residual is 1.9×10⁻¹¹, and Newton then moved by
+  10⁻⁷ to 6.5×10⁻⁵ per step for six steps. It was stopped, and `--resample_mp` was added.
+- K = 7 from #145's 32 × 121 root: one step of 1.8×10⁻²⁰, landing on that root (+8.54×10⁻¹²).
+- K = 7 from the 32 × 101 state, resampled exactly: one jump of 3.4×10⁻¹¹, landing −4.38×10⁻¹⁰ from hp.
+
+The README's predictions (P1, P2) were written after these pilots.
+
+All 16 main solves converged, to a final max|F| of at most 6.4×10⁻⁴³ at D = 50 and 7.7×10⁻⁴⁰ at D = 60. Each took
+1.5 to 7 min on one core and peaked at 2.0 GB or less.
+
+### 13.5 The acceptance at D = 50.007491
+
+Δ − Δ_hp from `rt_grids.py` (`fit/acc_*.log`). The difference a − b is taken from the 30-digit Δ strings.
+
+| grid | N mod 4 | rows | start a | start b | a − b | verdict |
+|---|---|---|---|---|---|---|
+| 32 × 121 | 1 | K = 7 | −1.86×10⁻¹² | −1.97×10⁻¹² | +1.12×10⁻¹³ | criterion 1 fails |
+| 32 × 121 | 1 | none (`--mutate=norows`) | −2.89×10⁻¹² | −2.90×10⁻¹² | +8.8×10⁻¹⁵ | control fires (> 10⁻¹²) |
+| 32 × 123 | 3 | K = 7 | −4.29×10⁻¹² | −4.14×10⁻¹² | −1.43×10⁻¹³ | criterion 3 fails |
+| 32 × 123 | 3 | none | −5.74×10⁻¹² | −5.73×10⁻¹² | −8.7×10⁻¹⁵ | control fires |
+
+- Both families fail, with or without rows. The rows move each root by a quarter to a third of its miss toward hp,
+  and they separate the two starts' roots by 1.1–1.4×10⁻¹³ in Δ instead of 9×10⁻¹⁵.
+- The pair test (`fit/roots_acc_*.log`) finds both pairs at D = 50 hidden by the residual floor. The roots lie 7×10⁻¹⁵
+  apart (rows) and 7×10⁻¹⁶ apart (none) in max|z₂ − z₁|. With the rows the stored states' floor is 5×10⁻²⁹ rather
+  than 7×10⁻³¹, since the rows amplify the double-double rounding.
+- Neither start found the root nearest hp. #145's 32 × 101 root, +3.3×10⁻¹⁵ from hp, is a root of the 32 × 121 system
+  to the floor of its double-double storage (13.7). But from it, Newton on 32 × 121 jumps 2.3×10⁻¹³ (no rows) or
+  1.5×10⁻¹³ (rows) and lands near −2.9×10⁻¹² or −1.9×10⁻¹².
+- Prediction P1 failed. It had start a staying within 10⁻¹³ of +3.3×10⁻¹⁵.
+
+### 13.6 The pairs at D = 60.001952
+
+`rt_roots.py` on each pair (`fit/pair_*.log`). The values without rows are #164's roots, re-evaluated by this code,
+and they repeat 11.4. max|B(e, e)|/max|e| is the strength of J along e at either root (max norms).
+
+| N | N mod 4 | max\|z₂ − z₁\|, none | with K = 7 | max\|B(e,e)\|/max\|e\|, none | with K = 7 | Δ₂ − Δ₁, none | with K = 7 | verdict, none → K = 7 |
+|---|---|---|---|---|---|---|---|---|
+| 93 | 1 | 4.65×10⁻¹⁴ | 2.2×10⁻¹⁶ | 9.7×10⁻¹² | 1.3×10⁻¹⁴ | +4.62×10⁻¹³ | −3.6×10⁻¹⁵ | two roots → hidden by the floor |
+| 95 | 3 | 7.7×10⁻¹⁵ | 5.2×10⁻¹⁴ | 2.3×10⁻¹² | 7.8×10⁻¹² | +5.3×10⁻¹⁴ | +8.32×10⁻¹³ | two roots → two roots |
+| 97 | 1 | 7.0×10⁻¹⁴ | 8.0×10⁻¹⁴ | 2.0×10⁻¹³ | 7.5×10⁻¹² | +9.96×10⁻¹³ | +1.33×10⁻¹² | two roots → two roots |
+| 99 | 3 | 4.9×10⁻¹⁵ | 5.7×10⁻¹⁴ | 1.5×10⁻¹³ | 7.5×10⁻¹² | +7.5×10⁻¹⁴ | +9.69×10⁻¹³ | two roots → two roots |
+
+Δ − Δ_hp with the rows (`fit/pair_grids_*.log`):
+
+- 93: +1.65×10⁻¹² from both starts.
+- 95, 97, 99: start a gives −1.27×10⁻¹² on all three, which is the start's own Δ. Newton took one step of 4×10⁻²¹
+  there, so the 32 × 101 root is a root of these three K = 7 systems.
+- 95, 97, 99: start b gives −4.35×10⁻¹³, +5.9×10⁻¹⁴ and −2.99×10⁻¹³.
+
+What the rows change at D = 60:
+
+- They remove the pair on 93 only.
+- The pairs of 95 and 99 (N ≡ 3 mod 4) grow 6.7 and 11.7 times apart. With the rows, all three remaining pairs are
+  5–8×10⁻¹⁴ apart, so the family difference of 11.4 disappears.
+- Prediction P2 had every factor below 10. It fails on 93 (a factor of 210, the other way) and on 99 (11.7).
+
+### 13.7 Where the weak directions live
+
+These diagnostics are outside the criteria (`diag/`). Every bound below is an upper bound on the Jacobian's smallest
+gain in the max norm, not an SVD.
+
+**Newton's jumps.** Each main solve starts at a root of another grid, which the first step brings to max|F| = 10⁻³⁵
+to 10⁻²⁷. The next step is then 1.5×10⁻¹³ to 3.2×10⁻¹² long, and the step after that converges. A Newton step solves
+J dz = −F to GMRES's 10⁻³⁰, so the gain of J along that step is at most |F|/|dz|:
+
+- 6×10⁻²⁴ to 8×10⁻²² at D = 50, with or without the rows;
+- 6×10⁻²¹ to 10⁻¹⁵ at D = 60 with the rows.
+
+The direction of each jump is the one #145 and #164 found between pairs of roots: mostly μ, with harmonic 0 of ω₂, ω₃
+and ω₄.
+
+**The pair differences are the same on finer grids.** `rt_pair_fine.py` resamples both roots of a pair exactly and
+evaluates J(z₁)e on finer grids.
+
+- For #145's 32 × 121 pair at D = 50 it gives 4.60×10⁻¹¹ on 121, 141 and 181 points.
+- For #164's 32 × 97 pair at D = 60 it gives 2.00×10⁻¹³ on 97, 141 and 181 points.
+- Both roots keep their stored residual (8×10⁻³¹ and 2×10⁻³¹) on every finer grid.
+- Each difference has Chebyshev coefficients that fall geometrically to the floor by m = 30, and no structure at
+  ξ = ±1.
+- The control `--mutate=f64` resamples in f64. It raises the residual on 141 to 2.8×10⁻¹³ and exits 1.
+
+`rt_resample_res.py` gives the same for single roots. #145's 32 × 101 root at D = 50 and 60, and its 32 × 121 root at
+D = 50, keep 2–8×10⁻³¹ on every finer grid. Its control `--mutate=perturb` exits 1.
+
+**Smoothness does not exclude λ₄.** `rt_branch_cheb.py` (`diag/branch_cheb*.log`) prints the Chebyshev coefficients
+of s^λ cos(ω ln s), relative to the maximum:
+
+- s^5.68 (λ₂ at D = 50) falls only algebraically: 10⁻¹⁴ at m = 30, 2×10⁻¹⁸ at m = 60, 4×10⁻²² at m = 120.
+- s^26.23 (λ₄ at D = 50, k = 0) falls through 9×10⁻²³ at m = 30, 2×10⁻⁴² at m = 60 and 4×10⁻⁵⁹ at m = 120. With
+  k = 1/2 (ω = 3.87): 2×10⁻¹⁹, 5×10⁻³⁸ and 3×10⁻⁵⁵.
+- Degree-N interpolants hold s^26.23 to 7×10⁻⁴³ at N = 61 and 5×10⁻⁵⁹ at N = 121. At D = 40 (λ₄ = 21.12), N = 101
+  holds the branch to 1.0×10⁻⁴⁸ (k = 0) and
+  4.6×10⁻⁴⁴ (k = 1/2), against 8.0×10⁻⁵⁵ and 6.5×10⁻⁵⁰ at D = 50, six decades apart
+  (`diag/branch_cheb_D40.log`).
+
+Up to m ≈ 60 the scalar's branch falls faster than the background itself, which reaches 4×10⁻³⁸ at m = 60. So a copy
+of it in a difference vector cannot be seen in the coefficients, nor in residuals at the double-double floor. The
+planted check (`--planted`, integer exponents) gives coefficients beyond the degree below 10⁻¹²⁰ and exits 0.
+
+**The smallest gain, from J x = v.** `rt_sigma.py` solves J x = v in arb and bounds the smallest gain by 1/max|x|, for
+smooth right-hand sides (low-degree fields) and rough ones (independent normal entries). It is not an inverse
+iteration, since J is not normal. Its planted check, a diagonal operator with one entry 10⁻²², gives a bound of
+1.4×10⁻²¹ and exits 0. Its control, that entry raised to 10⁻²⁰, gives 1.4×10⁻¹⁹ and exits 1
+(`diag/sigma2_planted*.log`). Two starts of the rough bound agree within a factor 1 to 2.2, except on 32 × 121 with
+the rows (7.1), where one start reached the cap of 250 products. The solve residual max|J x − v| is at most 4×10⁻¹⁴
+with the rows and 5×10⁻¹⁸ without them.
+
+| state | rows | bound, smooth v | bound, rough v (best of 2 starts) |
+|---|---|---|---|
+| #145's 32 × 101 root, D = 40.020065 | none | 5.9×10⁻¹⁸ (1 start) | 1.7×10⁻³³ |
+| #145's 32 × 101 root, D = 50.007491 | none | 4.5×10⁻¹⁸ (1 start) | 1.5×10⁻³³ |
+| this task's 32 × 121 root (start a), D = 50.007491 | none | 2.9×10⁻¹⁹ (best of 3) | 1.2×10⁻³⁴ |
+| #145's 32 × 141 root, D = 50.007491 | none | 8.7×10⁻²⁰ (best of 3) | 9.2×10⁻³⁵ |
+| this task's 32 × 121 root (start a), D = 50.007491 | K = 7 | 2.7×10⁻³³ (best of 3) | 4.9×10⁻³⁴ |
+
+What x is in each case:
+
+- With rough v, x is dominated by ω₄ near ξ = 0, at the frequencies 3/2 and 5/2. μ is 1% to 34% of its maximum, and
+  ω₄ at ξ = ±1 is 10% to 40% of it.
+- With smooth v and the rows, x is μ plus harmonic 0 of every field, the direction of the pairs and the jumps.
+
+Reading these numbers:
+
+- The weakest directions that rough v finds have bounds of 9×10⁻³⁵ to 2×10⁻³³. Two starts agree within a factor 2.2,
+  so these bounds are probably near the smallest singular value.
+- On 32 × 101 the bound does not change from D = 40 to 50. From N = 101 to 141 it falls by a factor 16. So these
+  directions do not follow either horizon branch: a polynomial copy of λ₄'s would weaken by about six decades from
+  D = 40 to 50 at N = 101, and the rows exclude λ₂'s. With the rows the rough bound on 32 × 121 is 4.9×10⁻³⁴, about
+  what it is without them.
+- Smooth v reach them only weakly (9×10⁻²⁰ to 6×10⁻¹⁸ without the rows), so their left vectors are rough on the
+  grid.
+- With the rows, smooth v do reach a direction of that strength, at 2.7×10⁻³³ (three starts within a factor 2.1),
+  and it is the smooth direction of the pairs.
+
+What these directions are is not identified here.
+
+**The constraint.** Ω₅⁺, which the square system does not impose, differs between #145's two 32 × 121 roots by
+2.8×10⁻²¹ (`rt_constraint.py`, `diag/constraint_D50.log`). So it does not tell them apart.
+
+**Each grid's own root is stable.** Newton from a stored root on its own grid takes one step of 1–3×10⁻²⁴ and
+stops. This holds for #145's 32 × 101 root at D = 50 (+3.4×10⁻¹⁵ from hp) and for this task's 32 × 121 root without
+rows (`diag/again_*.stdout`). So the jumps belong to the points where one grid's root sits in another grid's system,
+not to the roots themselves.
+
+### 13.8 What this says about sections 10 and 11
+
+- **Section 10's mechanism.** Section 10 reads the finer grids' error as truncation along a weak direction divided
+  by σ_min, and that reading stands. The measured gains, 10⁻³⁴ to 10⁻²¹, lie far below the double-double floor of
+  stored states. So a residual difference of 10⁻³⁴ between two grids, invisible at that floor, can move a root by
+  10⁻¹³.
+- **Section 10's cause.** Section 10 attributes the weak direction to the horizon's singular branch. That is not
+  confirmed. The rows exclude λ₂'s branch without changing the outcome, λ₄'s branch cannot be told apart from smooth
+  at these N, and the weakest directions measured (13.7) do not follow either exponent in D.
+- **Section 11's N mod 4 families.** They depend on the collocation rows near ξ = −1. With K = 7 Taylor rows there,
+  the difference between the families' pairs disappears at D = 60 (13.6).
+- **Starts.** A root of one grid is a root of the next to about 10⁻³⁰. From it, Newton on the other grid jumps to a
+  root 10⁻¹³ to 10⁻¹¹ away, so the re-solves of #145 and #164 measured those roots. #145's continuation on 32 × 101
+  stays within 2×10⁻¹⁴ of hp to D = 55. The continuation and the hp chain agree there; the re-solves do not show
+  whether this is a property of the 101 grid or of continuing along the path.
+
+### 13.9 Discrepancies (reported, not fixed)
+
+- **The acceptance of #163 fails.** At D = 50.007491, 32 × 121 with K = 7 lands 1.9×10⁻¹² from hp, against 10⁻¹⁴,
+  and its two starts agree to 1.1×10⁻¹³, against 10⁻¹⁸. 32 × 123 does the same. The control fires.
+- **Both predictions written before the main runs failed** (13.5, 13.6). P1 had start a staying at the 32 × 101 root.
+  P2 had the rows changing every pair's separation by less than a factor 10.
+- **The issue's premise** (#145, section 10.7: the horizon's singular branch makes the roots non-unique) is not
+  confirmed (13.8).
+- **My progress posts on #163 were wrong in two places.** The 21:52 UTC post read "exact in ξ" as "the weak
+  direction is not the horizon's". That test only reaches the double-double floor, and λ₄'s branch is invisible there
+  (13.7). The 21:22 and 21:52 posts also quoted J along #164's 32 × 97 pair as 1.7×10⁻¹² on finer grids. That value
+  came from an f64 resampling of the root; resampled exactly, it is 2.0×10⁻¹³ on every grid.
+- **The f64 resampling of `rt_model.resample_to`** leaves a residual of about 10⁻¹³ in the plain collocation and
+  10⁻¹¹ with the rows. #145's and #164's re-solves started from it. With exact resampling, the landing roots repeat
+  to 10⁻¹⁴ (32 × 121 at D = 50: −2.89×10⁻¹² here, −2.9×10⁻¹² in #145). The exception is #145's start from the
+  32 × 141 root, which reached +4.5×10⁻¹² there and reaches −2.90×10⁻¹² here.
+- **Two planted criteria were revised once each, after their first runs**: the f64 tolerance of `rt_horizon.py
+  planted` (13.3), and `rt_sigma.py`'s planted window (a factor 3 at first, then 100, its docstring). The
+  inverse-iteration version of `rt_sigma.py` ran first and gave meaningless second iterates, since J is not normal.
+  Its logs (`diag/sigma_*.log`, code 2862224) are kept, and only their first solve, which is the smooth-v bound of the
+  table, is used.
+- **rt_grids' `--mutate=shift`** on the 32 × 121 acceptance exits 1, but so does the unmutated check, so here it shows
+  nothing. That control was demonstrated in #145 and #164.
+
+### 13.10 Proposed text for the README
+
+For the coordinator, after section 11.7's text:
+
+> Taylor conditions at the horizon in place of the nearest collocation rows (#163) exclude the branch of ω₂, whose
+> exponent is 5.3 to 5.9 at D = 40–60. They do not restore uniqueness: at D = 50 on 32 × 121 the miss falls only from
+> 2.9×10⁻¹² to 1.9×10⁻¹². The Jacobian there has directions with gains below 10⁻³³, which do not follow the horizon
+> branches' exponents in D, so the cause of the non-uniqueness is open
+> ([notes/RT_FORMULATION.md](notes/RT_FORMULATION.md) section 13).
+
+### 13.11 Reproduction
+
+From the repository root, with the raw-data repository cloned beside it (RAW = `../choptuik-large-d-raw`). On the
+Mac, use `/Users/nathan/venv-qd/bin/python` with the MULTIDOUBLE_SITE of 9.9. The drivers in `RAW/I163-mac/` hold the
+exact commands: `run_one.sh` (one solve), `queue_A.txt` to `queue_D.txt` (the main runs), `run_checks.sh`,
+`run_verdicts.sh`, `chain_diag.sh` and `chain_sigma*.sh`.
+
+```
+python3 solver/rt/rt_horizon.py symbolic RAW/I145-mac/cont/cont_32x101_D50.0075_32x101.npz   # exit 0; --mutate=a4 exit 1
+python3 solver/rt/rt_horizon.py planted --raw RAW            # exit 0; --mutate=taylor exits 1
+python3 solver/rt/rt_run.py --start RAW/I145-mac/cont/cont_32x101_D50.0075_32x101.npz --grids 32x121 --solver mp \
+    --tol 1e-12 --max_products 250 --refresh_dz 1e-5 --patient --it_max 20 --full_below 1e-4 --newton_tol 1e-40 \
+    --horizon 7 --resample_mp --out OUT --tag a_32x121        # 13.5: -1.86e-12 from hp, exit 1 (about 7 min)
+python3 solver/rt/rt_grids.py RAW/I163-mac/acc/a_32x121.jsonl RAW/I163-mac/acc/b_32x121.jsonl --D 50.007491 \
+    --tol 1e-14 --tol_ab 1e-18                               # criterion 1: exit 1
+python3 solver/rt/rt_roots.py RAW/I163-mac/pair/a_32x93_D60.0020_32x93.npz RAW/I163-mac/pair/b_32x93_D60.0020_32x93.npz
+                                                             # 13.6: hidden by the floor
+python3 solver/rt/rt_pair_fine.py RAW/I145-mac/fol/fol_32x121_D50.0075_32x121.npz \
+    RAW/I145-mac/fol/from141_32x121_D50.0075_32x121.npz 121,141,181   # 13.7: 4.60e-11 on each; --mutate=f64 exit 1
+python3 solver/rt/rt_branch_cheb.py --lam 5.68,26.23,26.23 --om 0,0,3.87   # 13.7; --planted exits 0
+python3 solver/rt/rt_sigma.py RAW/I145-mac/cont/cont_32x101_D50.0075_32x101.npz --rough --starts 2
+                                                             # 13.7: 1.5e-33 (about 4 min); --planted exits 0
+```

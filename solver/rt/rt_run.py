@@ -36,6 +36,12 @@ max|dz| still fell). --full_below X takes every Newton step with max|dz| < X in 
 --newton_tol (default 1e-40, #105's) is Newton's target max|F|; with --patient a stall within 1e6 of it is accepted.
 Each record also carries the seconds in products and in the preconditioner per Newton step, the process's peak
 resident memory (rss_peak_gb) and newton_tol.
+
+Issue #163 adds --horizon K: the discretization with K Taylor rows at the horizon (rt_model.py's horizon rows, which
+exclude a singular branch s^lambda with Re lambda < K). The default 0 is the collocation of the issues above. States
+and records carry `horizon`. --mutate=norows runs the same command with the rows dropped (K = 0), the control that
+must bring back the collocation's miss. --resample_mp resamples the start in xi exactly in arb (rt_mp.resample_xi_m)
+instead of in f64, whose rounding of about 1e-17 the horizon rows amplify to a residual of about 1e-11.
 """
 import os
 for _v in ("VECLIB_MAXIMUM_THREADS", "OMP_NUM_THREADS", "OPENBLAS_NUM_THREADS"):
@@ -114,6 +120,11 @@ def main():
     ap.add_argument("--out", required=True)
     ap.add_argument("--tag", default="rt")
     ap.add_argument("--mutate", default=None)
+    ap.add_argument("--resample_mp", action="store_true",
+                    help="mp solver: resample --start in xi exactly in arb (same N_t only), not in f64")
+    ap.add_argument("--horizon", type=int, default=0,
+                    help="issue #163: K > 0 replaces the collocated rows of Omega_2,3,4 at the K points next to xi = -1 "
+                    "by the Taylor coefficients of orders 1..K at xi = -1 (rt_model.py); --mutate=norows drops them")
     ap.add_argument("--solver", default="f64", choices=["f64", "mp"])
     ap.add_argument("--mp", type=int, default=0, help="bits of the arb residual (f64 solver: final solves only, 0: none;"
                     " mp solver: every solve, default 192)")
@@ -144,7 +155,8 @@ def main():
     checks = [float(v) for v in a.check_D.split(",")] if a.check_D else None
     os.makedirs(a.out, exist_ok=True)
     coef = 1.0 + 1e-3 if a.mutate == "coef" else 1.0
-    tag = a.tag + ("_mutcoef" if a.mutate == "coef" else "")
+    HK = 0 if a.mutate == "norows" else a.horizon          # --mutate=norows drops the horizon rows
+    tag = a.tag + (f"_mut{a.mutate}" if a.mutate in ("coef", "norows") else "")
     log = open(os.path.join(a.out, f"{tag}.log"), "a")
     rec = open(os.path.join(a.out, f"{tag}.jsonl"), "a")
 
@@ -163,14 +175,14 @@ def main():
         f = os.path.join(a.out, f"{tag}_D{D:.4f}_{rt.Nt}x{rt.N}.npz")
         if z.dtype == object:
             zh, zl = mps.to_dd(z)
-            np.savez(f, z=zh, zh=zh, zl=zl, D=D, Nt=rt.Nt, N=rt.N)
+            np.savez(f, z=zh, zh=zh, zl=zl, D=D, Nt=rt.Nt, N=rt.N, horizon=rt.K)
         else:
-            np.savez(f, z=z, D=D, Nt=rt.Nt, N=rt.N)
+            np.savez(f, z=z, D=D, Nt=rt.Nt, N=rt.N, horizon=rt.K)
 
     def solve_mp(rt, z, D, label):
         """rt_mpsolve.newton_mp at D on rt's grid from z (f64 or arb). Returns (z_arb, ok, record)."""
         t0 = time.time()
-        rm = RTmp(D, rt.Nt, rt.N, prec=a.mp, coef_mut=coef)
+        rm = RTmp(D, rt.Nt, rt.N, prec=a.mp, coef_mut=coef, horizon=HK)
         zf = mps.to_f64(z) if z.dtype == object else z
         J = rt.jacobian(zf)
         t_jac = time.time() - t0
@@ -195,7 +207,7 @@ def main():
                  t_refresh=round(info["t_refresh"], 1), t_newton=round(sum(info["secs"]), 1),
                  secs=round(time.time() - t0, 1), label=label, mutate=a.mutate, step_secs=info["secs"],
                  t_prod=info["t_prod"], t_prec=info["t_prec"], pred_order=a.pred_order, rss_peak_gb=rss_peak_gb(),
-                 newton_tol=a.newton_tol)
+                 newton_tol=a.newton_tol, horizon=rt.K)
         rec.write(json.dumps(r) + "\n")
         rec.flush()
         say(f"  {label} D {D:.6f} grid {rt.Nt}x{rt.N} L {rt.L}: {len(info['res']) - 1} Newton steps, max|F| "
@@ -215,7 +227,7 @@ def main():
         if a.mp and label in ("start", "end"):
             # the residual in arb (rt_mp.py), f64 Jacobian: removes f64's rounding along the weak direction
             from rt_mp import RTmp, newton_mixed, to_f64
-            rm = RTmp(D, rt.Nt, rt.N, prec=a.mp, coef_mut=coef)
+            rm = RTmp(D, rt.Nt, rt.N, prec=a.mp, coef_mut=coef, horizon=HK)
             zm, ok, mp_hist = newton_mixed(rm, z, tol=1e-28, it_max=40, log=lambda s: None)
             dm0, dm1 = rm.delta_m(zm)
             d0, d1 = float(dm0.mid()), float(dm1.mid())
@@ -254,27 +266,32 @@ def main():
         D0 = a.D_start if a.D_start is not None else Ds
         src = RT(Ds, Nts, Ns)
         say(f"== {time.strftime('%Y-%m-%d %H:%M:%S', time.gmtime())} UTC  start {a.start} (D {Ds}, {Nts}x{Ns}) "
-            f"D_start {D0} grids {grids} solver {a.solver} prec {a.mp} mutate {a.mutate}")
-        rt = RT(D0, *grids[0], coef_mut=coef)
+            f"D_start {D0} grids {grids} solver {a.solver} prec {a.mp} mutate {a.mutate} horizon {HK}")
+        rt = RT(D0, *grids[0], coef_mut=coef, horizon=HK)
         z = zh if (Nts, Ns) == grids[0] else src.resample_to(zh, rt)
         zlo = zl if (Nts, Ns) == grids[0] else src.resample_to(zl, rt)
         if a.solver == "mp":
             flint.ctx.prec = a.mp
-            z = mps.from_dd(z, zlo)
+            if a.resample_mp and Nts == grids[0][0] and Ns != grids[0][1]:
+                from rt_mp import resample_xi_m
+                z = resample_xi_m(zh, zl, Ds, Nts, Ns, grids[0][1], prec=a.mp)
+                say(f"  start resampled exactly in xi (arb) from {Nts}x{Ns}")
+            else:
+                z = mps.from_dd(z, zlo)
     else:
         from gg_to_rt import GGMap
         g = GGMap(a.profile, verbose=False)
         D0 = g.D
         say(f"== {time.strftime('%Y-%m-%d %H:%M:%S', time.gmtime())} UTC  profile {a.profile} D {D0} grids {grids} "
             f"mutate {a.mutate}  map: lam {g.lam:.15f} mu {g.mu:.15f} {g.check}")
-        rt = RT(D0, *grids[0], coef_mut=coef)
+        rt = RT(D0, *grids[0], coef_mut=coef, horizon=HK)
         z, err, s = g.to_rt_phased(rt)
         say(f"  mapped initial guess: inversion error {err:.1e}, t shift {s:.4f}, max|F(z0)| "
             f"{np.abs(rt.residual(z)[0]).max():.2e}")
     states = {}
     for i, gr in enumerate(grids):
         if i > 0:
-            new = RT(D0, *gr, coef_mut=coef)
+            new = RT(D0, *gr, coef_mut=coef, horizon=HK)
             zf = mps.to_f64(z) if z.dtype == object else z
             z = rt.resample_to(zf, new)
             rt = new
@@ -295,7 +312,7 @@ def main():
 
     # ------------------------------------------------ continuation in D
     cg = tuple(int(v) for v in a.cont_grid.split("x")) if a.cont_grid else grids[0]
-    rtc = RT(D0, *cg, coef_mut=coef)
+    rtc = RT(D0, *cg, coef_mut=coef, horizon=HK)
     if cg in states:
         zc = states[cg]
     else:
@@ -316,7 +333,7 @@ def main():
     for Dn in Ds_:
         off = a.extras_off_path and Dn in extras
         zg = predict(hist, Dn, a.pred_order)
-        rtn = RT(Dn, *cg, coef_mut=coef)
+        rtn = RT(Dn, *cg, coef_mut=coef, horizon=HK)
         zn, ok, r = solve(rtn, zg, Dn, "extra" if off else "cont")
         if not ok:
             say("  continuation step failed; stopping")
@@ -335,7 +352,7 @@ def main():
         for gr in grids:
             if gr == cg:
                 continue
-            new = RT(D, *gr, coef_mut=coef)
+            new = RT(D, *gr, coef_mut=coef, horizon=HK)
             zz, ok, r = solve(new, rtc.resample_to(mps.to_f64(zc), new), D, "end")
             save(zz, D, new)
             if checks is None or any(abs(D - c) < 1e-9 for c in checks):
@@ -347,7 +364,7 @@ def main():
             if gr == cg:
                 zz, ok, r = solve(rtc, zc, D, "end")
             else:
-                new = RT(D, *gr, coef_mut=coef)
+                new = RT(D, *gr, coef_mut=coef, horizon=HK)
                 zz, ok, r = solve(new, rtc.resample_to(zc, new), D, "end")
                 save(zz, D, new)
         check(r, f"D = {D}")

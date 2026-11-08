@@ -9,7 +9,7 @@ either file, when |Delta_RT - Delta_hp| >= tol on either grid, or when |Delta_A 
 are taken from the records' 30-digit Delta_str in arb, so they are not limited by f64. --table prints every D both
 files have. --extra F1,F2,... prints, for the check D, the records of further files (other grids) against hp and
 against B, outside the exit criteria. --mutate=shift adds 2 tol to grid B's Delta at the first D; the check must then
-exit 1.
+exit 1. --tol_ab (issue #163) sets a separate tolerance on |Delta_A - Delta_B| (default --tol).
 """
 import sys
 import json
@@ -36,6 +36,8 @@ def main():
     ap.add_argument("b")
     ap.add_argument("--D", default="15,20.043653,29.984746")
     ap.add_argument("--tol", type=float, default=1e-10)
+    ap.add_argument("--tol_ab", type=float, default=None,
+                    help="tolerance on |Delta_A - Delta_B| (default: --tol); issue #163's acceptance uses 1e-18")
     ap.add_argument("--mutate", default=None, choices=["shift"])
     ap.add_argument("--table", action="store_true")
     ap.add_argument("--extra", default="")
@@ -56,7 +58,8 @@ def main():
         return da, db, ea, rb_e, float((da - db).mid())
 
     failed = False
-    print(f"grids A {ga} ({a.a}), B {gb} ({a.b}), tol {a.tol:g}, mutate {a.mutate}")
+    tol_ab = a.tol if a.tol_ab is None else a.tol_ab
+    print(f"grids A {ga} ({a.a}), B {gb} ({a.b}), tol {a.tol:g}, tol_ab {tol_ab:g}, mutate {a.mutate}")
     print(f"| D | Delta_RT (A) | A - hp | B - hp | A - B | verdict |")
     print("|---|---|---|---|---|---|")
     for i, D in enumerate(Ds):
@@ -65,7 +68,7 @@ def main():
             failed = True
             continue
         da, db, ea, eb, dab = row(D, 2 * a.tol if (a.mutate == "shift" and i == 0) else 0.0)
-        bad = ea is None or eb is None or abs(ea) >= a.tol or abs(eb) >= a.tol or abs(dab) >= a.tol
+        bad = ea is None or eb is None or abs(ea) >= a.tol or abs(eb) >= a.tol or abs(dab) >= tol_ab
         failed |= bad
         fmt = lambda v: "n/a" if v is None else f"{v:+.2e}"
         print(f"| {D} | {da.mid().str(16, radius=False)} | {fmt(ea)} | {fmt(eb)} | {dab:+.2e} | "

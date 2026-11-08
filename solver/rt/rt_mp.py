@@ -18,7 +18,7 @@ import flint
 import scipy.linalg as sl
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from rt_model import RT
+from rt_model import RT, horizon_series
 
 arb = flint.arb
 
@@ -28,8 +28,8 @@ def obj(a):
 
 
 class RTmp(RT):
-    def __init__(self, D, Nt, N, prec=160, coef_mut=1.0):
-        super().__init__(D, Nt, N, coef_mut=coef_mut)
+    def __init__(self, D, Nt, N, prec=160, coef_mut=1.0, horizon=0, taylor_mut=1.0):
+        super().__init__(D, Nt, N, coef_mut=coef_mut, horizon=horizon, taylor_mut=taylor_mut)
         flint.ctx.prec = prec
         self.prec = prec
         pi = arb.pi()
@@ -75,6 +75,15 @@ class RTmp(RT):
         r = [w[j] / (0 - x[j]) for j in range(N + 1)]
         sr = sum(r, arb(0))
         self.r0m = np.array([v / sr for v in r], dtype=object)
+        if self.K:
+            # issue #163: the Taylor rows at xi = -1 in arb (row N of Dx^n over n!), the f64 path's scales exactly
+            r = np.array([arb(0)] * N + [arb(1)], dtype=object)
+            rows = [r]
+            for n in range(1, self.K + 1):
+                rows.append(self.DxT.dot(rows[-1]) / n)
+            self.TRmT = np.array(rows, dtype=object).T.copy()
+            self.tscale_m = [arb(float(v)) for v in self.tscale]
+            self.tm_m = arb(taylor_mut)
 
     # ---------------------------------------------------------------- object-array versions
     def unpack_m(self, z):
@@ -112,7 +121,20 @@ class RTmp(RT):
               - X * h * (D - 2) * (p4 * m2 + m4 * p2))
         E1 = ((O1 + P(O1)) / X)[:, self.pos]
         ph = (w4 * self.phase_wm).sum()
-        return np.concatenate([E1.ravel(), (O2 / X).ravel(), (O3 / X).ravel(), (O4 / X).ravel(), [ph]])
+        E2, E3, E4 = O2 / X, O3 / X, O4 / X
+        if self.K:
+            for E, R in zip((E2, E3, E4), self.horizon_rows_m(w1, w2, w3, w4, mu)):
+                for n, j in enumerate(self.hrows, start=1):
+                    E[:, j] = self.tscale_m[n] * R[:, n]
+        return np.concatenate([E1.ravel(), E2.ravel(), E3.ravel(), E4.ravel(), [ph]])
+
+    def horizon_rows_m(self, w1, w2, w3, w4, mu):
+        """rt_model.RT.horizon_rows in arb: each (Nt, K + 1)."""
+        T = lambda f: f.dot(self.TRmT)
+        P = lambda f: f[:, self.rev]
+        nn = np.array([arb(n) for n in range(self.K + 1)], dtype=object)[None, :]
+        Dp = lambda S, anti=False: (self.Dant if anti else self.Dper).dot(S) + mu * nn * S
+        return horizon_series(T(w2), T(w3), T(w4), T(-P(w2)), T(-P(w4)), T(w1), mu, self.Dm, self.cm, Dp, self.tm_m)
 
     def delta_m(self, z):
         w1, w2, w3, w4, mu = self.unpack_m(z)
@@ -121,6 +143,34 @@ class RTmp(RT):
         d0 = 4 * pi * mu - 2 * (2 * pi / self.Nt) * w30.sum()
         d1 = 4 * pi * mu - 2 * (2 * pi / self.Nt) * w3[:, 0].sum()
         return d0, d1
+
+
+def interp_matrix(xs, xt, N):
+    """Barycentric interpolation from the Lobatto points xs (arb) to xt (arb): (len(xt), N + 1) object."""
+    w = [arb((-1) ** j) * (arb(1) / 2 if j in (0, N) else 1) for j in range(N + 1)]
+    M = np.empty((len(xt), N + 1), dtype=object)
+    for i, x0 in enumerate(xt):
+        d = [x0 - xj for xj in xs]
+        hit = [j for j in range(N + 1) if abs(float(d[j].mid())) < 1e-40]
+        if hit:
+            M[i, :] = [arb(1) if j == hit[0] else arb(0) for j in range(N + 1)]
+            continue
+        r = [w[j] / d[j] for j in range(N + 1)]
+        sr = sum(r, arb(0))
+        M[i, :] = [v / sr for v in r]
+    return M
+
+
+def resample_xi_m(zh, zl, D, Nt, N, Np, prec=192):
+    """A double-double state (zh, zl) on Nt x N resampled exactly in xi to Nt x Np, in arb (issue #163). rt_model's
+    resample_to works in f64 and leaves a rounding of about 1e-17, which the horizon rows amplify to about 1e-11."""
+    flint.ctx.prec = prec
+    src, tgt = RTmp(D, Nt, N, prec=prec), RTmp(D, Nt, Np, prec=prec)
+    z = np.array([arb(float(h)) + arb(float(l)) for h, l in zip(zh, zl)], dtype=object)
+    w1, w2, w3, w4, mu = src.unpack_m(z)
+    M = interp_matrix(list(src.xm), list(tgt.xm), N)
+    f = [g.dot(M.T) for g in (w1, w2, w3, w4)]
+    return tgt.pack(f[0], f[1], f[2], f[3], mu)
 
 
 def to_f64(z):
