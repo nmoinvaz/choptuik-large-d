@@ -220,15 +220,63 @@ imaginary sector. The two codes share the stored states and the equations, nothi
 
 ## 4. Verdict
 
-[TBD]
+[TBD: table]
+
+**The real DSS is the critical solution of the free complex scalar at every D checked, D = 4 to 67, and nothing in
+the trends points to a change at larger D.** Its imaginary sector adds no unstable mode, only the marginal phase
+rotation, so it keeps the real scalar's single unstable mode. The CSS has three unstable directions at every D from
+4 to 80 (λ_phys and the oscillatory pair), and the pair moves away from Re λ = 0 as D grows (Re λ_osc → 0.536 by
+extrapolation). Neither count changes with D, so there is no crossover dimension.
+
+**What it means for the critical exponent.** At the threshold of black-hole formation in a one-parameter family of
+complex-scalar data, the evolution approaches the real DSS rotated by some phase e^{iα} (α set by the data; the phase
+mode is marginal, so α is a modulus, not a source of scaling). The scaling comes from λ_phys alone, so the complex
+scalar's γ(D) is the real scalar's γ(D) = 1/λ_phys(D), with γ∞ = 1/2 (GAMMA.md), and the mass exponent is (D − 3)γ.
+The CSS's exponent 1/λ_phys(κ = 0) (0.3871 at D = 4, 0.4923 at D = 80 from the table of §2) is not observed for
+generic families, because reaching the CSS takes tuning three parameters. That the CSS's λ_phys also tends to 2 does
+not make the two exponents equal at finite D: at D = 20 they are 1/λ = 0.477 (CSS, κ = 0) and [TBD] (DSS).
+
+**Status.** *Numerical evidence*: winding counts in finite boxes (|Im λ| < 3ω/2 and Re λ < 6 for the imaginary
+sector; Re λ < 5 and Im λ below Im λ_osc + 1.5 for the CSS), each passing its planted and mutated controls. Not covered:
+growth rates outside the boxes, perturbations with τ-harmonics above the layout's (M = 32–48, and 13 at the centre at
+D = 60), non-spherical perturbations, and D = ∞ itself.
 
 ## 5. Discrepancies
 
-[TBD]
+- **HE95b's black-hole mode.** The v3 text gives σ = −2.58324i ± 0.00002i and γ = 0.387111 ± 0.000003; the arXiv
+  listing's abstract gives γ ≈ 0.387106. This page's λ_phys = 2.5832751746 (complex-path shooting, two radii
+  agreeing to 6×10⁻¹³) and matter/CSS.md's collocation 2.5832752 give γ = 0.3871055, which matches the listing and is
+  1.8 of HE95b's quoted errors from their text. matter/CSS.md §4 quotes "γ = 0.387106 [HE95b] (λ = 2.58327)", from the
+  listing, while matter/LITERATURE.md §7.2 quotes 0.387111, from the text: the repository quotes both. The oscillatory
+  pair, by contrast, agrees with the text within its errors (§2).
+- **complex_imag.py at D = 60.** Not a disagreement but a limit: the independent double-precision determinant is
+  rounding noise there (§3), so the D = 60 count rests on hp/modecount_cx alone.
+- **Re λ_osc and Im λ_osc / ω at D = ∞.** The 1/n fits give Im λ_osc / ω → 1.9935 with no visible spread, not 2. Whether
+  the limit is 2 with a slower correction (a log, or a non-analytic term) is not decided by D ≤ 80.
 
 ## 6. Proposed text for matter/CSS.md, matter/STRUCTURE.md and the README
 
-[TBD]
+For matter/CSS.md §11, replacing the bullet "**κ = 0 (free complex scalar)**":
+
+> - **κ = 0 (free complex scalar)**: ω(D) and |f(0)|(D) were computed to D = 80 and extrapolated (§7). Its second,
+>   oscillatory unstable mode (λ = 0.2587 ± 3.5022i at D = 4, HE95b's σ = ±3.50224 − 0.25867i) was followed to D = 80
+>   in [COMPLEX_CRITICAL.md](COMPLEX_CRITICAL.md): Re λ_osc rises to 0.522 (0.536 extrapolated), so the κ = 0 CSS has
+>   three unstable directions at every D and is never critical; the real DSS is (its imaginary sector adds no unstable
+>   mode).
+
+For matter/CSS.md §4, the row "κ = 0: λ (real)": "γ = 0.387106 [HE95b abstract on arXiv]; their text gives
+σ = −2.58324i ± 0.00002i, γ = 0.387111 ± 0.000003", and the row "κ = 0: oscillatory mode": "σ = ±(3.50224 ± 0.00001)
+− (0.25867 ± 0.00001)i [HE95b, Sec. VII], i.e. λ = 0.25867 ± 3.50224i".
+
+For matter/STRUCTURE.md §7, after "(conjecture; in D = 4 the free complex scalar's CSS solution has more than one
+unstable mode, so it is not critical for κ = 0, while it is for κ ≳ 0.075)": "The same holds at every D up to 80, where
+its oscillatory pair has Re λ = 0.52 (matter/COMPLEX_CRITICAL.md); the free complex scalar's critical solution is the
+real DSS, whose imaginary sector has no unstable mode."
+
+For the README, in "What is known about the selection, and what is open", one sentence: "For a free complex scalar the
+critical solution is the real DSS at every D checked (4–67): its imaginary sector, a free test field on the DSS
+metric, has no growing mode, while Hirschmann and Eardley's CSS keeps a second, oscillatory unstable mode to D = 80
+(matter/COMPLEX_CRITICAL.md)."
 
 ## 7. Proposed notes/LIT_REVIEW.md entries
 

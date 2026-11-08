@@ -347,6 +347,44 @@ def main():
                   resonance_Im=r["kappa_s"] * r["mu"][1]))
         return
 
+    if pos[0] == "locate":
+        # complex_css.py locate D RE0 RE1 IM0 IM1 [--w=0.5] [--R=0.85,0.6] [--out=F]
+        # the zeros in a box, located and tested against the second radius: the box is cut into sub-boxes of width w
+        # in Re; each is counted at the first radius; in a sub-box with k >= 1 zeros the secant iteration starts from a
+        # 4 x 3 grid and keeps the distinct converged roots inside it; each root is then refined at every other radius.
+        # A growth rate converges to the same lambda at every radius; an artefact of the jump method moves (CSS.md 6).
+        D = float(pos[1])
+        re0, re1, im0, im1 = [float(s) for s in pos[2:6]]
+        w = float(o.get("w", "0.5"))
+        Rfs = [float(s) for s in o.get("R", "0.85,0.6").split(",")]
+        r = bg[D]
+        det1 = Det(r, Rfs[0])
+        a = re0
+        while a < re1 - 1e-12:
+            b = min(a + w, re1)
+            bx = (a, b, im0, im1)
+            wnd, big, ni = winding(detrended(det1, bx), box(*bx), K=4)
+            k = int(round(wnd))
+            roots = []
+            if k >= 1:
+                for sa in np.linspace(a, b, 6)[1:-1]:
+                    for sb in np.linspace(im0, im1, 5)[1:-1]:
+                        lam, ok = secant(det1, complex(sa, sb))
+                        if ok and a < lam.real < b and im0 < lam.imag < im1 and all(abs(lam - q) > 1e-6 for q in roots):
+                            roots.append(lam)
+            other = []
+            for lam in roots:
+                moved = []
+                for Rf in Rfs[1:]:
+                    l2, ok2 = secant(Det(r, Rf), lam)
+                    moved.append([Rf, l2.real, l2.imag, bool(ok2), abs(l2 - lam)])
+                other.append(moved)
+            emit(dict(kind="locate", D=D, subbox=list(bx), R_over_xh=Rfs[0], winding=wnd, largest_step=big,
+                      roots=[[q.real, q.imag] for q in roots], at_other_radii=other, omega=r["omega"],
+                      mutate=mutate))
+            a = b
+        return
+
     if pos[0] == "boxes":
         # complex_css.py boxes D LAMOSC [--R=0.85,0.6] [--names=A,B,C,S] [--plant=Z] [--mutate=M] [--out=F]
         # the standard boxes of matter/COMPLEX_CRITICAL.md section 2 (omega from the background, eps = 0.25):
