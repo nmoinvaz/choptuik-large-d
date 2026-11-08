@@ -362,3 +362,247 @@ For the physics paper Sec. V, after "a rate of 1.43 per harmonic":
 > single pole pair. Its ratio is the first tuned ratio, $`F_3/F_1 = 0.0551\,e^{0.0988i}`$, while the later ratios rise
 > to $`0.0575\,e^{0.073i}`$, which sets the singularities at $`|\mathrm{Im}\,\theta| = 1.428`$ rather than the model's
 > 1.449.
+
+## 8. Rational profiles beyond Eq. (16) (issue #133)
+
+**Verdict.** The family $`\tilde\beta = A_*\,\mathrm{Re}[e^{i\theta}P_L(e^{2i\theta})/Q_N(e^{2i\theta})]`$ reaches
+10⁻⁶ at every $`\nu \le 19`$ first at $`L + N = 7`$, for [4/3], [3/4] and [2/5] fitted by least squares or minimax.
+That is 8 complex parameters for 10 complex harmonics. Padé matching reaches it for no $`L + N \le 8`$ on the data as
+stored: [4/4] is off by 1.15×10⁻⁶ at $`\nu = 19`$, where the data's own truncation is 5.4×10⁻⁷. The error falls by about
+a factor 7 per added complex parameter, so the family converges, but it does not compress the profile at 10⁻⁶
+(*numerical evidence*).
+
+Every fit with $`L + N \ge 5`$ puts its nearest pole on the profile's singularity, 1.5344 ∓ 1.4284i in the paper's
+gauge, and the fits that reach 10⁻⁶ agree on it to 2×10⁻⁵. The other poles are not a second singularity. They pair
+with zeros, carry small residues and move toward the nearest pole as the order grows, as Padé poles do on the cut of
+a branch point. The ratios also approach their limit as a power of $`\nu`$, which no single further pole gives. So the
+nearest singularity is a simple pole with a weaker branch at the same point, likely logarithmic, rather than an
+isolated pole (*numerical evidence*). The issue's reading of the $`\nu^{-3}`$ law, "a simple nearest pole pair", holds
+for the leading term only.
+
+Scripts: [`solver/eeg_profile/rational_fit.py`](../solver/eeg_profile/rational_fit.py) and
+[`rational_controls.py`](../solver/eeg_profile/rational_controls.py). Raw output: folder `I133-mac/` of the raw-data
+repository.
+
+### 8.1 The family and the fits
+
+In $`u = e^{2i\theta}`$ (paper's gauge) the model is $`G(u) = P_L(u)/Q_N(u)`$ with $`Q_N(0) = 1`$. Its Taylor
+coefficients are the harmonic ratios $`c_k = C_{2k+1}/C_1`$, with $`C_\nu = i^\nu F_\nu`$ (§3.1). Eq. (16) is [0/1],
+$`G = 1/(1 + wu)`$, and §3.3's one-zero form is [1/1]. A fit has $`L + N + 1`$ complex parameters, among them the
+amplitude $`p_0 = A_*e^{i\varphi}/2C_1`$. The phase $`\varphi`$ is fitted. It is at the level of the fit's error,
+1.9×10⁻² for Eq. (16) by least squares and at most 2.8×10⁻⁷ for the fits that reach 10⁻⁶.
+
+The fits use $`k = 0, \dots, 9`$, that is $`\nu \le 19`$, at 60 digits:
+
+- **Padé**, exact on $`c_0, \dots, c_{L+N}`$ [Padé 1892]. With $`L + N \le 8`$, at least $`\nu = 19`$ is out of
+  sample.
+- **Least squares** of the relative residuals $`m_k/c_k - 1`$ with every weight 1, so each harmonic counts alike.
+  It runs Levenberg–Marquardt from the Padé fit [Levenberg 1944; Marquardt 1963].
+- **Minimax**: the largest relative residual is minimized by Lawson's reweighted least squares [Lawson 1961], started
+  from the least-squares fit. It keeps the best iterate, so its column is an upper bound on the true minimax error.
+
+The error is $`e_k = |m_k/c_k - 1|`$, complex, so it bounds the modulus and the phase together. §3.3 quotes moduli
+only. Its 2.9% for [1/1] at $`\nu = 19`$ is 2.83% here as a modulus error and 4.7% as a complex one.
+
+### 8.2 The data's precision
+
+The f coefficients are doubles, and the A series stops at K = 45. The remainder of each harmonic's series is
+estimated as the geometric tail of its last two terms. That is an estimator, not a bound:
+
+| $`\nu`$ | 11 | 13 | 15 | 17 | 19 | 21 | 23 | 25 |
+|---|---|---|---|---|---|---|---|---|
+| remainder estimate, relative | 1.1×10⁻¹⁰ | 1.0×10⁻⁹ | 9.0×10⁻⁹ | 7.2×10⁻⁸ | 5.4×10⁻⁷ | 3.8×10⁻⁶ | 2.6×10⁻⁵ | 1.6×10⁻⁴ |
+
+So at $`\nu = 19`$ the 10⁻⁶ target is within a factor 2 of the data's resolution. `--tail` adds the estimate to the
+data, and every verdict below is checked both ways.
+
+Between the two J (1250, 1500), no maximum error changes by more than 4×10⁻⁶ of itself and no nearest pole by more
+than 4×10⁻¹¹ (Padé and least squares). The harmonics reproduce `data/tuned_profile_A2.72.txt` to its printed digits
+(check D: 2.9×10⁻⁷ in modulus, 4.7×10⁻⁶ in argument).
+
+### 8.3 Planted truth and the controls
+
+The criteria are in the script's docstring, committed (e973bb9) before the first run. The planted profiles enter as
+f coefficients of the A series, rounded to doubles, and go through the same loader, gauge map and fits.
+
+| run | criterion | result |
+|---|---|---|
+| planted [2/3]: poles 1.5344 − 1.4284i, 1.47 − 1.72i, 1.68 − 1.95i | P1: no $`L + N \le 4`$ reaches 10⁻⁶, and at 5 only (2, 3) does. P2: its error ≤ 10⁻¹². P3: poles and zeros recovered to 10⁻⁸ | pass. Error 2.3×10⁻¹⁵ (Padé), 5.6×10⁻¹⁷ (least squares). Poles recovered to 3.3×10⁻¹⁴, zeros to 6.1×10⁻¹⁴ |
+| the same, `--mutate=gauge` ($`C_\nu = F_\nu`$) | P3 must fail | fails, poles off by 1.5. P1 and P2 pass, since a gauge only rotates $`u`$ |
+| the same, `--mutate=drop` ($`\nu = 11`$ dropped) | P1 or P2 must fail | all fail. The [2/3] error is 3.0×10⁹ (Padé), 18 (least squares) |
+| planted pole with a logarithm (`--plant=branch`) | marching | pass. $`\theta_2`$ moves 0.293 inward from [3/3] to [4/4] |
+| planted meromorphic profile, six poles (`--plant=poles`) | not marching, and converged ($`\lvert\theta_2(4) - \theta_2(3)\rvert \lt 0.02`$, within 0.02 of the planted pole) | **fails, reported.** Not marching passes. Converged fails: the step is 0.025, though $`\theta_2(4)`$ lies 0.002 from the planted pole |
+| real data, check S | nearest pole within 10⁻³ of 1.5344 − 1.4284i, every fit with $`L + N \ge 5`$ | pass, 78 of 78. `--mutate=gauge` fails it |
+| real data, check D | the data file to its digits | pass. `--mutate=A` (A = 2.7203) fails it |
+
+The pole-march test takes $`\theta_2(n)`$, the pole second nearest the real axis in the Padé [n/n] for n = 2, 3, 4.
+It calls the sequence *marching* when $`\lvert\mathrm{Im}\,\theta_2\rvert`$ falls at each step and the last step
+exceeds 0.05, and *converged* when the last step is below 0.02.
+
+- **The converged half fails its meromorphic plant as stated.** The plant's further poles lie only 0.3 apart in
+  $`\mathrm{Im}\,\theta`$, so four orders do not settle the second one. The threshold has not been loosened. As
+  written, the test certifies marching but not convergence.
+- **The marching half separates the two plants.** The branch plant marches. The meromorphic plant's second pole moves
+  outward, toward its planted position.
+- **Check D first passed for the wrong reason.** The data file begins with a blank line, so the inputs were paired
+  one block off and the first input was compared with nothing. Its mutation passed, which exposed this, and ed08568
+  fixed the pairing.
+
+`rational_controls.py` runs every row above and prints "all controls behave". mutation_controls.py does not call it
+yet. That is a proposal for the coordinator.
+
+### 8.4 The maximum error against (L, N)
+
+Least squares, $`\max_{\nu \le 19} e_\nu`$, rows L, columns N:
+
+| L \ N | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 |
+|---|---|---|---|---|---|---|---|---|
+| 0 | 3.50×10⁻² | 6.63×10⁻³ | 1.87×10⁻³ | 6.40×10⁻⁴ | 2.40×10⁻⁴ | 8.98×10⁻⁵ | 3.86×10⁻⁵ | 1.62×10⁻⁵ |
+| 1 | 5.19×10⁻³ | 7.82×10⁻⁴ | 1.54×10⁻⁴ | 3.53×10⁻⁵ | 9.08×10⁻⁶ | 2.43×10⁻⁶ | 5.82×10⁻⁷ | |
+| 2 | 1.45×10⁻³ | 1.19×10⁻⁴ | 1.60×10⁻⁵ | 2.75×10⁻⁶ | 5.08×10⁻⁷ | 1.29×10⁻⁷ | | |
+| 3 | 5.13×10⁻⁴ | 2.37×10⁻⁵ | 2.39×10⁻⁶ | 2.80×10⁻⁷ | 6.62×10⁻⁸ | | | |
+| 4 | 1.98×10⁻⁴ | 5.99×10⁻⁶ | 3.99×10⁻⁷ | 6.18×10⁻⁸ | | | | |
+| 5 | 7.61×10⁻⁵ | 1.67×10⁻⁶ | 1.03×10⁻⁷ | | | | | |
+| 6 | 2.85×10⁻⁵ | 4.37×10⁻⁷ | | | | | | |
+| 7 | 1.27×10⁻⁵ | | | | | | | |
+
+The best family at each total degree for the three fits (the full Padé and minimax tables are in the log):
+
+| L + N | complex parameters | Padé | least squares | minimax |
+|---|---|---|---|---|
+| 1 | 2 | [0/1] 3.28×10⁻¹ | [0/1] 3.50×10⁻² | [0/1] 2.16×10⁻² |
+| 2 | 3 | [1/1] 4.69×10⁻² | [1/1] 5.19×10⁻³ | [1/1] 3.37×10⁻³ |
+| 3 | 4 | [1/2] 7.75×10⁻³ | [1/2] 7.82×10⁻⁴ | [1/2] 5.17×10⁻⁴ |
+| 4 | 5 | [2/2] 1.66×10⁻³ | [2/2] 1.19×10⁻⁴ | [2/2] 9.26×10⁻⁵ |
+| 5 | 6 | [2/3] 3.12×10⁻⁴ | [2/3] 1.60×10⁻⁵ | [2/3] 1.22×10⁻⁵ |
+| 6 | 7 | [3/3] 5.27×10⁻⁵ | [3/3] 2.39×10⁻⁶ | [3/3] 1.78×10⁻⁶ |
+| 7 | 8 | [3/4] 5.82×10⁻⁶ | [3/4] 2.80×10⁻⁷ | [3/4] 2.17×10⁻⁷ |
+| 8 | 9 | [4/4] 1.15×10⁻⁶ | [4/4] 6.18×10⁻⁸ | [3/5] 4.97×10⁻⁸ |
+
+- **The smallest family.** At $`L + N = 7`$, least squares and minimax reach 10⁻⁶ with [3/4] (2.80×10⁻⁷, 2.17×10⁻⁷),
+  [4/3] (3.99×10⁻⁷, 2.96×10⁻⁷) and [2/5] (5.08×10⁻⁷, 3.78×10⁻⁷). [5/2] and [1/6] miss it. At $`L + N = 6`$ nothing
+  reaches it, and the best is minimax [3/3] at 1.78×10⁻⁶.
+- **The verdict does not depend on the data's tail.** With `--tail` the smallest family is again at $`L + N = 7`$,
+  with the same three members ([3/4] by least squares 2.25×10⁻⁷), and $`L + N = 6`$ still misses (minimax [3/3]
+  1.70×10⁻⁶). Padé then reaches 10⁻⁶ at $`L + N = 8`$ with [4/4] (3.13×10⁻⁷), [3/5], [5/3] and [2/6]. At A = 2.71918,
+  the paper's $`A_*/\sqrt2`$, the verdicts are unchanged.
+- **Out of sample.** The passing fits predict the stored $`\nu = 21`$ within 4.0×10⁻⁶ and $`\nu`$ = 23, 25 within
+  3.2×10⁻⁵ and 1.5×10⁻⁴, the size of those harmonics' remainder estimates. With the tail added the residuals shrink:
+  [4/4] by least squares is off by 4.0×10⁻⁷, 1.5×10⁻⁶ and 5.0×10⁻⁶ at $`\nu`$ = 21, 23, 25. That is consistent with
+  the tail estimate. It is not an independent check, since the tail also enters the fitted $`\nu \le 19`$.
+- **The rate.** Along the best family, each added complex parameter lowers the least-squares error by a factor of
+  6.6–8.5 ($`L + N`$ = 1–7). With a single pole the gain is slower: [L/1] falls by a factor of 2.2–3.6 per added L,
+  to 1.27×10⁻⁵ at [7/1].
+- **Eq. (16) and its one-zero form.** Fitted by least squares, [0/1] is within 3.5% of every harmonic. As a Padé fit
+  with $`w = r_1`$ its modulus error at $`\nu = 19`$ is 28% (33% with the phase). That is §3.3's 39% measured the
+  other way, $`|m|/|c|`$ instead of $`|c|/|m|`$. [1/1] by least squares is within 5.2×10⁻³, nine times better than
+  Padé's 4.7×10⁻².
+
+### 8.5 The poles
+
+Least-squares fits, in $`\theta`$ (paper's gauge). The residue is relative to the nearest pole's, and "zero at" is
+the distance to the nearest zero.
+
+| fit | max error | nearest pole | second pole (residue; zero at) | third pole (residue; zero at) |
+|---|---|---|---|---|
+| [2/2] | 1.19×10⁻⁴ | 1.53431 − 1.42842i | 1.59177 − 1.99185i (0.057; 0.035) | |
+| [3/3] | 2.39×10⁻⁶ | 1.53437 − 1.42839i | 1.55443 − 1.72609i (0.014; 0.0045) | 1.61405 − 2.32282i (0.084; 0.083) |
+| [4/3] | 3.99×10⁻⁷ | 1.53438 − 1.42839i | 1.54965 − 1.67595i (0.0097; 0.0025) | 1.58293 − 2.13143i (0.052; 0.042) |
+| [3/4] | 2.80×10⁻⁷ | 1.53438 − 1.42839i | 1.55241 − 1.66439i (0.0087; 0.0021) | 1.59145 − 2.07882i (0.043; 0.032) |
+| [4/4] | 6.18×10⁻⁸ | 1.53439 − 1.42839i | 1.56393 − 1.61076i (0.0052; 0.0010) | 1.59349 − 1.92134i (0.025; 0.014) |
+
+Farther out, [3/4] has a fourth pole at 1.73326 − 3.01063i, and [2/5] has two at 0.67032 − 3.17169i and 2.63067 −
+3.16372i, with residues of 0.11–0.17. They lie 1.6–1.7 farther from the axis, and they are not the same from one fit
+to the next.
+
+- **The nearest pole.** Every one of the 78 fits with $`L + N \ge 5`$ (all three methods, A = 2.72) puts it at
+  1.53412–1.53439 − (1.42839–1.42848)i. The 18 that reach 10⁻⁶ put it at 1.53437–1.53439 − 1.42839i. That is the
+  profile's 1.5344 ∓ 1.4284i (§3.3, from $`r_{19}`$), and its 1.4284 is §3.3's late decay rate, 0.05745 per pair. In
+  the repository's gauge, $`\theta = \theta_{\rm EEG} + \pi/2`$, it is 3.1049–3.1052 ∓ 1.4284i. At A = 2.71918 its
+  imaginary part moves to −1.42866 to −1.42875.
+- **The further poles march.** The second pole of the Padé [n/n] moves from 1.60680 − 2.11295i (n = 2) to
+  1.55974 − 1.77480i (n = 3) and 1.54256 − 1.64552i (n = 4). The last step is 0.130, so it is marching, like the
+  branch plant (0.293) and unlike the meromorphic plant, whose pole moves outward and lands within 0.002 of its
+  planted position. Least squares shows the same: the second pole's $`\lvert\mathrm{Im}\,\theta\rvert`$ is 1.99,
+  1.73, 1.66–1.68 and 1.61 at $`L + N`$ = 4, 6, 7, 8.
+- **The further poles pair with zeros.** Each has a zero 0.001–0.08 away, nearer for the poles nearer the singularity,
+  and a residue of 0.5–8% of the nearest pole's. They line up along $`\mathrm{Re}\,\theta \approx 1.55`$–1.61,
+  outward from the singularity. That is how Padé approximants represent a cut from a branch point [Stahl 1997]. For a
+  function meromorphic in a larger disk their poles converge to its poles instead [de Montessus de Ballore 1902].
+- **The ratios approach their limit as a power.** Let $`r_k = c_{k+1}/c_k`$, so $`r_k`$ is §3.3's $`r_\nu`$ at
+  $`\nu = 2k + 1`$. With the tail added, $`(k + 1.5)^4\,\lvert r_{k+1} - r_k\rvert`$ is 0.01124 for $`\nu`$ = 11–17 to
+  four digits, and 0.01154 at $`\nu = 3`$. As stored, the last two values are 0.01142 and 0.00926, an effect of the
+  truncation at $`\nu`$ = 19 and 21. A single further pole would make $`\lvert r_{k+1} - r_k\rvert`$ a geometric
+  sequence $`\rho^k`$. The second difference of $`\ln[(k + 1.5)^4\rho^k]`$ is about $`-4/(k + 1.5)^2`$ whatever
+  $`\rho`$ is, near −0.07 here. The data are constant to the four printed digits, so theirs is below 2×10⁻³.
+- **What kind of branch.** A $`\nu^{-3}`$ approach of the ratio is a $`\nu^{-2}`$ correction to the pole's
+  coefficients. A term $`(\theta - \theta_0)\ln(\theta - \theta_0)`$ beside the pole gives exactly that: the
+  coefficients of $`(1 - x)\ln(1 - x)`$ are $`1/(k(k-1))`$. Ten harmonics do not exclude an algebraic
+  $`(\theta - \theta_0)^\alpha`$ with $`\alpha`$ near 1.
+
+*Status:* **numerical evidence**, conditional on the selection rule as in §3.3. The fits and their controls are
+reproducible. The branch point is read from ten harmonics, one Padé signature and one power law, and no analysis of
+the inner equations near the singularity has confirmed it.
+
+### 8.6 What it means for #137 and #138
+
+**#137, the mapped Fourier basis.**
+
+- **Where to tie the map.** The map can be tied to 1.5344 ∓ 1.4284i in the paper's gauge, one singularity pair per
+  half period at $`\mathrm{Re}\,\theta = 1.5344 + k\pi`$. In the repository's gauge that is 3.1052 ∓ 1.4284i. All
+  the fits agree on the location to 3×10⁻⁴, so #137 can take it from here at $`D = \infty`$. At finite D it must
+  come from the states (#136, #93).
+- **A conformal map, not a pole subtraction.** Subtracting the pole does not widen the strip, since the branch point
+  stays at the same distance. A conformal map needs only the location. The fits find nothing closer to the axis, and
+  the further structure lies outward on the same vertical line.
+- **The control.** The control #137 asks for, a map tied to the wrong poles, can be the pole moved by
+  $`\pi/2`$. That is what this note's gauge mutation does.
+
+**#138, the rational trial solution.**
+
+- **The [L/1] route gains slowly.** By least squares [1/1] reproduces the harmonics to 5.2×10⁻³, and each further L
+  gains a factor of 2.2–3.6, reaching 1.3×10⁻⁵ at [7/1]. With one pole the family has to imitate a branch point.
+- **Grow the family diagonally.** Adding poles and zeros in turn ([1/2], [2/2], [2/3], ...) gains about a factor 7
+  per complex parameter. The natural next form has the logarithm built in, a pole plus
+  $`(\theta - \theta_0)\ln(\theta - \theta_0)`$. It is not tested here.
+- **How far a few parameters go.** By least squares [1/1] and [1/2] match the profile to 5.2×10⁻³ and 7.8×10⁻⁴
+  (4.7×10⁻² and 7.8×10⁻³ as Padé). So they can return ω∞ only as precisely as the selection is sensitive to the
+  profile at that level.
+- **Starting values.** Every fit's P and Q, to 30 digits, is in `I133-mac/real_A2.72.json`.
+
+### 8.7 Reproduction
+
+From `solver/eeg_profile`, with mpmath. Each real-data run takes about a minute on one core.
+
+```
+python3 rational_fit.py                        # 8.4-8.5 at A = 2.72, both J; checks S and D pass, exit 0
+python3 rational_fit.py --tail                 # the same with the A series' tail estimate added
+python3 rational_fit.py --A 2.71918            # at the paper's A_*/sqrt 2 (check D skipped)
+python3 rational_fit.py --plant=rational       # planted [2/3]: P1-P3 pass, exit 0
+python3 rational_fit.py --plant=rational --mutate=gauge   # P3 fails, exit 1 (and --mutate=drop)
+python3 rational_fit.py --plant=branch         # marching, exit 0
+python3 rational_fit.py --plant=poles          # the converged half fails as stated (8.3), exit 1
+python3 rational_controls.py                   # every row of 8.3, "all controls behave", exit 0
+```
+
+### 8.8 Proposed text (for the coordinator)
+
+For the math paper's "The shape of the echo", after the model of [EEG26b]:
+
+> Eq. (16) of [EEG26b] is the first member of the rational family
+> $`A_*\mathrm{Re}[e^{i\theta}P_L(e^{2i\theta})/Q_N(e^{2i\theta})]`$. Fitted to the tuned harmonics through
+> $`\nu = 19`$, the family's error falls by about a factor 7 per complex parameter, from 3.5% for Eq. (16) to
+> $`3\times10^{-7}`$ with 8 parameters for 10 harmonics. Every fit puts the nearest singularity at
+> $`1.5344 \mp 1.4284i`$. The further poles pair with zeros and move toward it as the order grows, and the harmonic
+> ratios approach their limit like $`\nu^{-3}`$. Both signs point to a pole with a weaker branch at the same point,
+> not an isolated pole.
+
+References for this section, each checked against the publisher's or a catalog record:
+
+- H. Padé, Ann. Sci. Éc. Norm. Supér. (3) 9 (1892) S3–S93, doi:10.24033/asens.378.
+- K. Levenberg, Q. Appl. Math. 2 (1944) 164–168, doi:10.1090/qam/10666.
+- D. W. Marquardt, J. SIAM 11 (1963) 431–441, doi:10.1137/0111030.
+- C. L. Lawson, *Contributions to the theory of linear least maximum approximation*, PhD thesis, UCLA (1961), from the
+  Mathematics Genealogy Project record.
+- H. Stahl, J. Approx. Theory 91 (1997) 139–204, doi:10.1006/jath.1997.3141.
+- R. de Montessus de Ballore, Bull. Soc. Math. France 30 (1902) 28–36, doi:10.24033/bsmf.653.
