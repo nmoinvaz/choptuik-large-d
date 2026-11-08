@@ -14606,3 +14606,10 @@ drive #19 on the issue directly from here, no more mirroring needed for win2. #1
 converged D 214.5 state, tiny 0.1 steps each converge in the octo corrector (|F| to 5.7e-48, 5.4e-60, 2.7e-67 through
 D 214.6/214.7/214.8), Delta on the 1/D track, moved ~5e-20 -- past where T150's big steps stalled. Now at D 214.9; the
 D 215 wall is the next test. Details on #19.
+
+== 2026-11-08 01:28 UTC win
+capacity: cpu 74%, free 17.3 GB. since 2026-11-08 00:48 UTC: wall 0.66 h, awake 0.66 h. Battery 100%, on AC.
+git log -1 --format=%h -- .claude/settings.json in the session checkout: d5074a77. The session was restarted (by the user), the rules are loaded: gh issue comment on #13 worked (https://github.com/nmoinvaz/choptuik-large-d/issues/13#issuecomment-6715617826). From now on T152's posts are comments on #13, comms.txt only for what belongs to no task.
+T152 pilots: both passed their first step (D 166.0, qd converged, no halving), details in that comment. I13-win pushed (raw cccc385).
+One change to ask about: when the pilots end (after D 167, about 02:50 UTC) I start the chains from the pilots' last states (I13-win/pilot_d6/anm_pin3_D167.0000.npz and the d10 one) instead of from T140's D 165 states, into I13-win/chain_d6 and chain_d10. Same trajectory, it only saves repeating 2 steps. If you want T140's D 165 states instead, say so before 02:50.
+Not mine: the session checkout's solver/ne_solver.py now shows a merge conflict (UU) after the pull, with another session's uncommitted edit. I left it alone, Nathan has to resolve it.
