@@ -305,8 +305,13 @@ x_K 0.6 state, against the quoted 0.3739610, which is step-converged). There is 
 resonance λ = 0.386, so it is not a pole, as expected. This covers only the symmetric sector's real growth rates at
 D = 4; a zero of even multiplicity would not change the sign (`hp/data/modecount_check.jsonl`, record "realscan").
 
-**Lower D with complex λ** (D = 16.76 and 8.25 have states in `hp/data/states`; D = 4 needs a double-double state
-first, `hp/modecount_lowD.py`) is proposed for the local machine (section 7).
+**D = 4, double-double, complex λ** (#70 job 3, macm3, 2026-11-08). The count ran on the stored converged state
+`hp/data/lowD_states/lowDn_D4.0000_M48.npz` (M 48, Δ 3.4454526615874, 2.6×10⁻⁷ above the M 80 value 3.4454524022410
+of notes/LOW_D.md, which is M 48's truncation; setup |F| 3.8×10⁻³¹). wind(g) = 0 in all 8 boxes, every edge resolved
+(largest step 0.372 rad, 0 verification mismatches), and det M changes sign on the real axis only at λ_g ≈ 0.614 and
+λ_phys ≈ 2.674: one unstable mode, as at every other D counted (raw `I70-macm3/job3/`, 79387b9). Reseeding from the
+f64 state (`hp/modecount_lowD.py`) does not reach this state: M 32 is 3.5×10⁻⁵ off in Δ and M 48 does not converge.
+D = 16.76 and 8.25 were counted in #69.
 
 ## 6. Coverage and limits
 
@@ -314,8 +319,7 @@ first, `hp/modecount_lowD.py`) is proposed for the local machine (section 7).
   in the continuum) this holds every growth rate of both symmetry sectors with Re λ in that range. Not covered:
   Re λ > 6.6. The physical growth rate is near 2 and tends to 2 as D → ∞; nothing here rules out a mode with
   Re λ > 6.6, but nothing points to one either (ln|g| is flat out to the right edge).
-- **Dimensions.** Complex-λ counts at D = 30.07, 45.05 and 61.03; at D = 4 a real-axis scan only. D = 16.76 and 8.25
-  have states and are local tasks 1 and 2; D = 4 with complex λ is task 3.
+- **Dimensions.** Complex-λ counts at D = 4 (M 48), 8.25, 16.76, 30.07, 45.05 and 61.03 (#69, #70).
 - **Harmonics.** A count covers the perturbations the layout represents once their growth rate is shifted into the
   strip: τ-harmonics up to 31 at M = 32, and for the centre data only up to 13 from D = 35 on (the cut is part of the
   production formulation there). A perturbation oscillating much faster in τ than the background is outside every
