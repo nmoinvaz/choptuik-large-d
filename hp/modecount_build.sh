@@ -10,8 +10,19 @@ cd "$ROOT/modecount_cx"
 EXTRA=""
 [ "$(uname)" = Darwin ] && EXTRA="-C link-arg=-undefined -C link-arg=dynamic_lookup"
 RUSTFLAGS="-C target-cpu=native $EXTRA" nice -n 10 cargo build --release --offline
+# the active venv's python (as hp/build.sh), else python3 on PATH
+PY=""
+if [ -n "${VIRTUAL_ENV:-}" ]; then
+  for c in "$VIRTUAL_ENV/bin/python" "$VIRTUAL_ENV/Scripts/python.exe"; do [ -x "$c" ] && PY=$c && break; done
+fi
+PY=${PY:-$(command -v python3 || command -v python)}
+# name the module with the interpreter's ABI tag (modecount_cx.cpython-314-darwin.so): each Python imports its own
+# build, and a build for another version is never loaded (a cp313 build segfaults under 3.14, #179)
+EXT=$("$PY" -c "import sysconfig; print(sysconfig.get_config_var('EXT_SUFFIX'))")
 mkdir -p build
+# an untagged module from before would be imported by any interpreter without its own build: set it aside
+[ -f build/modecount_cx.so ] && mv build/modecount_cx.so build/modecount_cx.so.untagged
 for f in target/release/libmodecount_cx.so target/release/libmodecount_cx.dylib; do
-  if [ -f "$f" ]; then cp "$f" build/modecount_cx.so; fi
+  if [ -f "$f" ]; then cp "$f" "build/modecount_cx$EXT"; fi
 done
-python3 -c "import sys; sys.path.insert(0, 'build'); import modecount_cx; print('modecount_cx ok', modecount_cx.__file__)"
+"$PY" -c "import sys; sys.path.insert(0, 'build'); import modecount_cx; print('modecount_cx ok', modecount_cx.__file__)"

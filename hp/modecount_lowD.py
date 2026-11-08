@@ -21,6 +21,8 @@ import numpy as np
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, HERE)
+# the f64 solver's directory, for seed_from_f64 when hpkernel is installed from a wheel (as lowD_dd.py does)
+os.environ.setdefault("DSS_SOLVER_DIR", os.path.normpath(os.path.join(HERE, "..", "solver")))
 from hpkernel.driver import make_solver, seed_from_f64, newton_solve, save, resample_z  # noqa: E402
 
 NL = [0.02, 0.05, 0.1, 0.16, 0.23, 0.3, 0.4, 0.5, 0.6]
