@@ -181,8 +181,9 @@ for a real login meant to be notified.
   (discrepancies are reported, not fixed). Then the runner removes `running` and closes the issue (`gh issue close
   <n> --comment ...`), which moves it to Done in the project. A run that stops early says why in a comment, removes
   `running` and leaves the issue open, so the coordinator can reassign it.
-- **gh.** A runner needs the gh CLI logged in with access to this repository (`gh auth status`). Without it the watcher
-  says so and watches comms.txt only.
+- **gh.** A runner needs the gh CLI logged in with access to this repository (`gh auth status`). The repository's
+  `.claude/settings.json` allows the `gh issue` list, view, comment, edit and close commands (Nathan, 2026-11-08).
+  Without it the watcher says so and watches comms.txt only.
 - **The coordinator** writes the issues, sets Sprint, Owner and Depends on, adds a machine label when a task's
   dependencies are done, reads each closing summary, merges results into the notes, and checks the raw folder with
   `raw_check.py`.

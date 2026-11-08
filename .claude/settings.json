@@ -4,5 +4,17 @@
     "commit": "",
     "pr": "",
     "sessionUrl": false
+  },
+  "permissions": {
+    "allow": [
+      "Bash(gh issue list *)",
+      "Bash(gh issue view *)",
+      "Bash(gh issue comment *)",
+      "Bash(gh issue edit *)",
+      "Bash(gh issue close *)",
+      "Bash(gh project item-list *)",
+      "Bash(gh project item-edit *)",
+      "Bash(gh project field-list *)"
+    ]
   }
 }
