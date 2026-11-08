@@ -80,9 +80,11 @@ Conventions for the Claude sessions (cloud and local) that run computations here
   New certificate code gets an independent review and, ideally, a second implementation before its claim is relied on.
 - **Reproducing a certificate on another machine or build** (#111): the rerun passes when its own bound passes, and the
   stored enclosures cross-load, so that each machine's enclosure gives the same conclusion on the other. A bound
-  assembled from upper bounds (`arb.upper()`, mag) depends on the ball arithmetic's radius bookkeeping, which differs
-  between FLINT builds, so it is not the enclosure of one number, and its balls from two builds may be disjoint while
-  both are valid (lemma 6a(5): #104, #110). Record the python-flint and FLINT versions with every certificate run.
+  assembled from upper bounds (`arb.upper()`, mag) moves with every radius: with the integration path, which can differ
+  between machines in the last digits, and with each reload of a stored enclosure, since arb rounds a stored radius up
+  to its 30-bit mag. So it is not the enclosure of one number, and its balls from two runs may be disjoint while both
+  are valid (lemma 6a(5): #104, #110, where both machines ran FLINT 3.6.0). Record the python-flint and FLINT versions
+  with every certificate run.
 - **Quoted numbers:** after changing a number in the README, the paper or the proof notes, run
   `python3 check_numbers.py --selftest`; when a new headline number has a machine-readable source, add a check for it.
   Never quote a number that is not in a file in the repository with a script that produces it.
