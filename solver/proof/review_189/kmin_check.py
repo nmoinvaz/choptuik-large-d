@@ -7,7 +7,9 @@ zeros only if kmin is the structural order: N - 1 for the c rows (c_N is missing
 
 This runs fixed_point_M.run_M (the original code) at the point for the M = 5 configurations Theorem A(5) uses, at 320 and
 at 640 bits, and checks that the detected orders are the structural ones at both precisions. Exit 0 only if they are.
-    kmin_check.py [--x=<centre, comma-separated>]
+    kmin_check.py [--x=<centre, comma-separated>] [--mutate=series]
+--mutate=series (the control): one coefficient of the top harmonic's series off by a relative 1e-6 (run_M's own
+mutation), so a residual numerator no longer vanishes below its structural order; the check must FAIL.
 """
 import os
 import sys
@@ -43,7 +45,7 @@ def main():
             ctx.prec = prec
             x = [acb(v) for v in xs]
             FP.Maj.BOX = False
-            out = FPM.run_M(x, M, prec=prec, verbose=False, **kw)
+            out = FPM.run_M(x, M, prec=prec, verbose=False, mutate=opts.get("mutate"), **kw)
             comps = out["comps"]
             res[prec] = (out["N"], out["kmins"], out["ok"], out["low_ok"], out["struct_ok"])
         N3, km3, ok3, low3, st3 = res[320]
@@ -64,7 +66,10 @@ def main():
             for (t, mu), k, s in zip(names, km3, struct):
                 if k != s:
                     print(f"   {t}{mu:+d}: detected {k}, structural {s}")
-    print(f"KMIN CHECK: {'PASS' if allok else 'FAIL'}")
+    print(f"KMIN CHECK: {'PASS' if allok else 'FAIL'}" + (f"   [MUTATION {opts['mutate']}: must FAIL]"
+                                                          if opts.get("mutate") else ""))
+    if opts.get("mutate"):
+        return 0 if not allok else 3
     return 0 if allok else 3
 
 
