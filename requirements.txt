@@ -1,0 +1,8 @@
+# Python packages for choptuik-large-d. Setup, system requirements and optional tools: SETUP.md.
+# Python 3.13 or 3.14 (the runners use 3.14.10). Install into a venv with:  uv pip install -r requirements.txt
+numpy==2.5.4
+scipy==1.18.1
+mpmath==1.3.0
+sympy==1.14.0
+python-flint==0.9.0   # bundles FLINT 3.6.0; certificate runs record both versions (AGENTS.md)
+maturin==1.16.0       # builds the Rust kernels: pip install . and hp/build.sh

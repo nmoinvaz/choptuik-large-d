@@ -159,6 +159,7 @@ Contents
   - [GAMMA.md](GAMMA.md): why γ∞ = 1/2: the inner problem as a nonlinear heat equation, whose r²-shift symmetry
     gives λ = 2
   - [SOFTWARE.md](SOFTWARE.md): the Rust kernel, its backends, the build and the file layout
+  - [SETUP.md](SETUP.md): system and software requirements, and the setup steps
   - [notes/README_PLAN.md](notes/README_PLAN.md): the plan of this README's reorganization
 
 ---
@@ -1906,7 +1907,8 @@ moves with model, degree, fit range, cleaning and data snapshot.
 
 The kernel, its backends, its use from Python, the double-double residual, the exact Jacobian and growth-mode
 matrix, the build and tests, the performance notes, the file layout and the limits are in [SOFTWARE.md](SOFTWARE.md).
-To build:
+The requirements and setup steps are in [SETUP.md](SETUP.md), with the Python packages in
+[requirements.txt](requirements.txt). To build:
 
 ```sh
 pip install .                     # maturin build, enables the python feature

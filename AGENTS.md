@@ -57,9 +57,10 @@ Conventions for the Claude sessions (cloud and local) that run computations here
 - **python-flint pitfall (0.9.0):** `arb(0, r)**k` returns NaN for a ball that contains 0 with r > 0 and k = 2 or 3,
   while `x*x` is correct. Write powers of balls that may contain 0 as products. (`solver/proof/` is unaffected: its
   powers are of exact positive balls. Found by the BootLoops review, notes/BOOTLOOPS.md.)
-- **Dependencies:** numpy, scipy, mpmath, sympy and python-flint (needed by `check_numbers.py`, `solver/proof/`,
-  `solver/inner_amp/`, `solver/inner_borel/`). The Rust kernels (`pip install .`, `hp/build.sh`) are optional for
-  most scripts. CAPD (`solver/proof/capd_check/build.sh`) needs the MPFR and GMP development headers.
+- **Dependencies:** [requirements.txt](requirements.txt) pins the Python packages, and [SETUP.md](SETUP.md) gives the
+  system and software requirements and the setup steps (uv, Python 3.14). A new venv is made with uv beside the
+  existing interpreters, changing no system Python or package manager. The Rust kernels (`pip install .`,
+  `hp/build.sh`) are optional for most scripts.
 
 ## How results are checked
 
