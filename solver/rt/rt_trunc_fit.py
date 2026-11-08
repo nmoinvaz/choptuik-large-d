@@ -208,6 +208,43 @@ def report(D, d, at, eeg, measured_D):
     return fits, rg, ver, ver_all
 
 
+SIGNED_WINDOWS = ((40, 60.5), (47, 60.5), (50, 60.5))
+
+
+def fit_signed(D, d, at, degrees=(1, 2, 3)):
+    """Outside the criteria: delta itself (signed) as a polynomial in D of each degree on SIGNED_WINDOWS, least squares,
+    extrapolated to at. Returns a list of dicts and the (min, max) over them at each D."""
+    D, d = np.asarray(D, float), np.asarray(d, float)
+    out = []
+    for deg in degrees:
+        for lo, hi in SIGNED_WINDOWS:
+            sel = (D >= lo) & (D <= hi)
+            if sel.sum() < deg + 2:
+                continue
+            x0 = 50.0
+            c = np.polyfit(D[sel] - x0, d[sel], deg)
+            res = float(np.sqrt(np.mean((np.polyval(c, D[sel] - x0) - d[sel]) ** 2)))
+            out.append(dict(deg=deg, lo=lo, n=int(sel.sum()), rms=res,
+                            ext={float(x): float(np.polyval(c, x - x0)) for x in at}))
+    rg = {x: (min(f["ext"][x] for f in out), max(f["ext"][x] for f in out)) for x in at}
+    return out, rg
+
+
+def report_signed(D, d, at, eeg):
+    fits, rg = fit_signed(D, d, at)
+    print("\noutside the criteria: delta itself (signed) as a polynomial in D, extrapolated (an estimator range over "
+          "fit choices, not an error bar):")
+    print("| degree | window | n | rms | " + " | ".join(f"delta({x:g})" for x in at) + " |")
+    print("|---|---|---|---|" + "---|" * len(at))
+    for f in fits:
+        print(f"| {f['deg']} | [{f['lo']}, 60] | {f['n']} | {f['rms']:.1e} | " +
+              " | ".join(f"{f['ext'][x]:+.2e}" for x in at) + " |")
+    print("| range | | | | " + " | ".join(f"{rg[x][0]:+.2e} to {rg[x][1]:+.2e}" for x in at) + " |")
+    print("| d_EEG | | | | " + " | ".join(
+        f"{eeg[c][0]:+.2e}" if (c := min(eeg, key=lambda t: abs(t - x))) and abs(c - x) < 6 else "" for x in at) + " |")
+    return fits, rg
+
+
 def beyond(D, d, paths, compare, half=5.0):
     """Outside the criteria: measured delta past the fit window against the 12 fits' extrapolation to the same D and
     against EEG's departure averaged over D +- half (its standard error from the rounding scatter)."""
@@ -219,21 +256,23 @@ def beyond(D, d, paths, compare, half=5.0):
     Db = sorted(R)
     fits, _, _ = fit_all(D, d, Db)
     rg = ranges(fits, Db)
+    _, rs = fit_signed(D, d, Db)
     rows = []
     with open(compare) as f:
         for r in csv.DictReader(f):
             if r["published_ref"] == "EEG2026":
                 rows.append((float(r["D"]), -float(r["diff"])))
     print("\npast the fit window (outside the criteria): measured delta, the fits' extrapolation, EEG's departure")
-    print("| D | delta measured | primary range | all-fit range | d_EEG (D +- 5) | rows | delta / d_EEG |")
-    print("|---|---|---|---|---|---|---|")
+    print("| D | delta measured | primary range | all-fit range | signed-polynomial range | d_EEG (D +- 5) | rows | "
+          "delta / d_EEG |")
+    print("|---|---|---|---|---|---|---|---|")
     for x in Db:
         v = [e for (De, e) in rows if abs(De - x) <= half]
         m, se = (float(np.mean(v)), float(np.std(v, ddof=1) / math.sqrt(len(v)))) if len(v) > 1 else (float("nan"), 0)
         a_, p_ = rg[x]
         dm = R[x]["diff"]
-        print(f"| {x} | {dm:+.3e} | {p_[0]:+.2e} to {p_[1]:+.2e} | {a_[0]:+.2e} to {a_[1]:+.2e} | {m:+.2e} +- {se:.1e} |"
-              f" {len(v)} | {dm / m:.2f} |")
+        print(f"| {x} | {dm:+.3e} | {p_[0]:+.2e} to {p_[1]:+.2e} | {a_[0]:+.2e} to {a_[1]:+.2e} | {rs[x][0]:+.2e} to "
+              f"{rs[x][1]:+.2e} | {m:+.2e} +- {se:.1e} | {len(v)} | {dm / m:.2f} |")
 
 
 def planted(mutate):
@@ -265,6 +304,15 @@ def planted(mutate):
     print(f"planted power: exponent {f['rate']:.4f} against {p} ({'ok' if ok_r else 'FAIL'}), tail from D = {Dt}; "
           f"delta(190) {f['ext'][190.0]:.3e} against {true190:.3e} ({'ok' if ok_x else 'FAIL'})")
     failed |= not (ok_r and ok_x)
+    # 2b. the signed fit (outside the criteria): a planted quadratic through zero near D = 47 comes back at 100 and 190
+    q = lambda x: 2e-10 * (x - 47.0) * (x - 30.0)
+    d = np.array([q(x) for x in D]) * (1 + 0.01 * rng.standard_normal(len(D)))
+    sf, _ = fit_signed(D, d, at)
+    f2 = next(f for f in sf if f["deg"] == 2 and f["lo"] == 40)
+    ok = all(abs(f2["ext"][x] / q(x) - 1) < 0.1 for x in (100.0, 190.0))
+    print(f"planted signed quadratic: delta(100) {f2['ext'][100.0]:.3e} against {q(100.0):.3e}, delta(190) "
+          f"{f2['ext'][190.0]:.3e} against {q(190.0):.3e} ({'ok' if ok else 'FAIL'})")
+    failed |= not ok
     # 3. EEG window means: a planted departure g(D) on our values, rounded to six decimals as EEG print
     ours = {}
     with open(os.path.join(REPO, "hp", "data", "delta_published_compare.csv")) as fh:
@@ -350,6 +398,7 @@ def main():
             print(f"| {x} | {A[x]['diff']:+.3e} | no second start | | |")
     eeg = eeg_windows(a.compare)
     report(D, d, at, eeg, checks[-1])
+    report_signed(D, d, at, eeg)
     if a.beyond:
         beyond(D, d, a.beyond, a.compare)
     print(f"exit {1 if failed else 0}")
