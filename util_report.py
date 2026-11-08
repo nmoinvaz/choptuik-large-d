@@ -1,29 +1,19 @@
 #!/usr/bin/env python3
-"""Machine utilization for the runners' posts, and a memory guard for a run that is allowed to die.
+"""Machine utilization for the runners' posts.
 
     python3 util_report.py                       one report: the time, cpu busy % (a 1 s sample), memory used, free and
                                                  total in GB (swap on macOS), then every python process (pid, working
                                                  set GB, cpu seconds, the command's head) and their total
-    python3 util_report.py --guard MIN_FREE_GB --log FILE [--interval S] PID...
-                                                 every S seconds (default 300) append the report's first line to FILE;
-                                                 when free memory is below MIN_FREE_GB, kill the process trees of the
-                                                 PIDs (and only those), append a "stopped" line and exit 3; exit 0 when
-                                                 every PID has ended on its own
-    python3 util_report.py --selftest            the guard fires on a sleeping child when the threshold is above the
-                                                 machine's RAM (exit 3, the child is dead) and does not fire at 0 (the
-                                                 child is alive); exits 1 if either is otherwise
 
 Windows: GlobalMemoryStatusEx and GetSystemTimes through ctypes, Win32_Process for the per-process lines (PowerShell).
 macOS: top -l 2 and vm.swapusage. Linux: /proc/meminfo and /proc/stat. Standard library only, so it runs in every
 runner's venv. The per-process figure is the resident set, which undercounts a process that is partly swapped out (the
-Mac's T94 workers: 1 GB resident, 4-5 GB footprint); the free-memory figure is the one the guard reads. Every comms
-post from a runner carries the report (the coordinator's entry of 2026-11-01 to win, mac and win2), so that idle
-capacity is seen and filled.
+Mac's T94 workers: 1 GB resident, 4-5 GB footprint). Every comms post from a runner carries the report (the
+coordinator's entry of 2026-11-01 to win, mac and win2), so that idle capacity is seen and filled.
 """
 import os
 import platform
 import re
-import signal
 import subprocess
 import sys
 import time
@@ -173,102 +163,7 @@ def report():
     return "\n".join(lines)
 
 
-def alive(pid):
-    if WIN:
-        out = subprocess.run(["tasklist", "/FI", f"PID eq {pid}", "/NH"], capture_output=True, text=True).stdout
-        return str(pid) in out
-    try:
-        os.kill(pid, 0)
-        return True
-    except ProcessLookupError:
-        return False
-    except PermissionError:
-        return True
-
-
-def kill_tree(pid):
-    """the process and its descendants (spawn workers outlive a killed main otherwise)"""
-    if WIN:
-        subprocess.run(["taskkill", "/T", "/F", "/PID", str(pid)], capture_output=True)
-        return
-    out = subprocess.run(["pgrep", "-P", str(pid)], capture_output=True, text=True).stdout
-    for child in out.split():
-        kill_tree(int(child))
-    try:
-        os.kill(pid, signal.SIGKILL)
-    except ProcessLookupError:
-        pass
-
-
-def guard(min_free_gb, log, interval, pids, max_iter=None):
-    """0 every PID ended, 3 fired (the PIDs' trees killed)"""
-    n = 0
-    while max_iter is None or n < max_iter:
-        n += 1
-        total, used, free, extra = memory()
-        line = report_line()
-        with open(log, "a") as f:
-            f.write(line + "\n")
-        if free < min_free_gb:
-            for pid in pids:
-                kill_tree(pid)
-            with open(log, "a") as f:
-                f.write(f"stopped {' '.join(map(str, pids))}: free {free:.1f} GB < {min_free_gb} GB\n")
-            return 3
-        if not any(alive(p) for p in pids):
-            with open(log, "a") as f:
-                f.write("guarded processes ended\n")
-            return 0
-        if max_iter is None or n < max_iter:
-            time.sleep(interval)
-    return 0
-
-
-def selftest():
-    import tempfile
-    total = memory()[0]
-    with tempfile.TemporaryDirectory() as d:
-        log = os.path.join(d, "guard.log")
-        child = subprocess.Popen([sys.executable, "-c", "import time; time.sleep(120)"])
-        time.sleep(0.5)
-        fired = guard(total + 1.0, log, 0, [child.pid], max_iter=1)
-        for _ in range(50):
-            if child.poll() is not None:
-                break
-            time.sleep(0.1)
-        dead = child.poll() is not None
-        child2 = subprocess.Popen([sys.executable, "-c", "import time; time.sleep(120)"])
-        time.sleep(0.5)
-        quiet = guard(0.0, log, 0, [child2.pid], max_iter=1)
-        alive2 = child2.poll() is None
-        kill_tree(child2.pid)
-        child2.wait()
-        with open(log) as f:
-            lines = f.read().count("\n")
-    print(f"selftest: threshold above RAM -> exit {fired} (want 3), child dead {dead} (want True); "
-          f"threshold 0 -> exit {quiet} (want 0), child alive {alive2} (want True); {lines} log lines")
-    return 0 if (fired, dead, quiet, alive2) == (3, True, 0, True) else 1
-
-
 def main(argv):
-    if "--selftest" in argv:
-        return selftest()
-    if "--guard" in argv:
-        args = argv[1:]
-        min_free = float(args[args.index("--guard") + 1])
-        log = args[args.index("--log") + 1]
-        interval = float(args[args.index("--interval") + 1]) if "--interval" in args else 300.0
-        skip = set()
-        for flag in ("--guard", "--log", "--interval"):
-            if flag in args:
-                i = args.index(flag)
-                skip.update((i, i + 1))
-        pids = [int(a) for i, a in enumerate(args) if i not in skip]
-        if not pids:
-            print(__doc__)
-            return 2
-        print(f"guard: stop {pids} when free memory < {min_free} GB, every {interval:.0f} s, log {log}", flush=True)
-        return guard(min_free, log, interval, pids)
     if len(argv) > 1:
         print(__doc__)
         return 2
