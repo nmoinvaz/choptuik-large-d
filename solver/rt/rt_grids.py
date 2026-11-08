@@ -7,7 +7,9 @@ grids, and the two grids against each other.
 For each D the last converged record of each file is used (labels start, cont, end). Exits 1 when a D is missing from
 either file, when |Delta_RT - Delta_hp| >= tol on either grid, or when |Delta_A - Delta_B| >= tol. Delta differences
 are taken from the records' 30-digit Delta_str in arb, so they are not limited by f64. --table prints every D both
-files have. --mutate=shift adds 2 tol to grid B's Delta at the first D; the check must then exit 1.
+files have. --extra F1,F2,... prints, for the check D, the records of further files (other grids) against hp and
+against B, outside the exit criteria. --mutate=shift adds 2 tol to grid B's Delta at the first D; the check must then
+exit 1.
 """
 import sys
 import json
@@ -36,6 +38,7 @@ def main():
     ap.add_argument("--tol", type=float, default=1e-10)
     ap.add_argument("--mutate", default=None, choices=["shift"])
     ap.add_argument("--table", action="store_true")
+    ap.add_argument("--extra", default="")
     a = ap.parse_args()
     A, B = load(a.a), load(a.b)
     Ds = [round(float(v), 9) for v in a.D.split(",")]
@@ -67,6 +70,23 @@ def main():
         fmt = lambda v: "n/a" if v is None else f"{v:+.2e}"
         print(f"| {D} | {da.mid().str(16, radius=False)} | {fmt(ea)} | {fmt(eb)} | {dab:+.2e} | "
               f"{'FAIL' if bad else 'ok'} |")
+    if a.extra:
+        rows = [(A, a.a), (B, a.b)]
+        for path in a.extra.split(","):
+            rows.append((load(path), path))
+        print("\nthe check D on every grid (extra files outside the exit criteria):")
+        print("| D | grid | Delta_RT | - hp | - B | Newton steps | products | file |")
+        print("|---|---|---|---|---|---|---|---|")
+        for D in Ds:
+            for R, path in rows:
+                if D not in R:
+                    continue
+                r = R[D]
+                d = arb(r["Delta_str"])
+                vb = float((d - arb(B[D]["Delta_str"])).mid()) if D in B else None
+                fmt = lambda v: "n/a" if v is None else f"{v:+.2e}"
+                print(f"| {D} | {r['grid'][0]}x{r['grid'][1]} | {d.mid().str(20, radius=False)} | {fmt(r['diff'])} | "
+                      f"{fmt(vb)} | {len(r['products'])} | {r['products']} | {path.rsplit('/', 1)[-1]} |")
     if a.table:
         print("\nevery D in both files:")
         print("| D | A - hp | B - hp | A - B | Newton steps A, B | products A | products B |")
