@@ -588,6 +588,18 @@ def cmd_figs(argv):
                               corrected=float(np.sqrt(np.mean((r[k] - mc[k]) ** 2)) / nrm),
                               change=float(np.sqrt(np.mean((mp_[k] - mc[k]) ** 2)) / nrm),
                               nlo=float(np.sqrt(np.mean((r[k] - m2[k]) ** 2)) / nrm))
+            # f normalised by rms(f) instead of rms(1 - f) (Fig. 5 does not say which)
+            nf = np.sqrt(np.mean(r["f"] ** 2))
+            row["f_by_f"] = dict(printed=float(np.sqrt(np.mean((r["f"] - mp_["f"]) ** 2)) / nf),
+                                 corrected=float(np.sqrt(np.mean((r["f"] - mc["f"]) ** 2)) / nf))
+            # Fig. 4: the centre profiles, x = 0. Pi_3 and Omega_3 vanish there and Psi_3 is not used, so printed and
+            # corrected differ in f alone (through c_0); the others' differences are recorded as a check
+            i0 = int(np.argmin(np.abs(r["xs"])))
+            row["centre"] = {k: dict(change_max=float(np.abs(mp_[k][i0] - mc[k][i0]).max()),
+                                     dev_printed=float(np.abs(r[k][i0] - mp_[k][i0]).max()),
+                                     dev_corrected=float(np.abs(r[k][i0] - mc[k][i0]).max()),
+                                     scale=float(np.abs((1 - r[k][i0]) if k == "f" else r[k][i0]).max()))
+                             for k in FIELDS}
             rows.append(row)
         out[kind] = rows
         print(f"\n== profile {kind}: relative rms deviation (Fig. 5's measure; f relative to rms(1 - f)): "
@@ -597,6 +609,14 @@ def cmd_figs(argv):
             print(f"    {row['D']:7.3f} {row['profile_rel_rms']:8.1e}" + "".join(
                 f"  {row[k]['nlo']:9.2e} {row[k]['printed']:9.2e} {row[k]['corrected']:9.2e} {row[k]['change']:9.2e}"
                 for k in FIELDS))
+        print(f"  centre x = 0 (Fig. 4): max |printed - corrected| / max |1 - f| and max deviation of printed, "
+              "corrected / max |1 - f|; other fields' max |printed - corrected| (must be 0)")
+        for row in rows:
+            c = row["centre"]
+            sc = c["f"]["scale"]
+            print(f"    {row['D']:7.3f}  f: change {c['f']['change_max'] / sc:9.2e}  deviation printed "
+                  f"{c['f']['dev_printed'] / sc:9.2e} corrected {c['f']['dev_corrected'] / sc:9.2e}   "
+                  + " ".join(f"{k} {c[k]['change_max']:.0e}" for k in ("Om", "Pi", "Psi")))
     if js:
         with open(js, "w") as fh:
             json.dump(dict(D=[r["D"] for r in recs], eq16=EQ16, figs=out), fh, indent=1)
