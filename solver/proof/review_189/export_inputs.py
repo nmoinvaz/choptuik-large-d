@@ -6,8 +6,8 @@
         V = cV + (QV qV) (complex columns, one per parameter) and dx = +-1.01e-18, written as the doubleton
         x + C r0: x = the box of c + Q q, C = V (real coordinates, 39 x 6), r0 = dx
     export_inputs.py path6b1 <ray.json> <row.json> <out> [--legs=K]
-        the ray legs |u| = rho_{j-1} -> rho_j (tags ray1 .. ray17), then the arc of the row with a stop at each disc
-        time t_k (tags arc<j>_<k>); --legs=K keeps the first K ray legs only (no arc)
+        the ray legs |u| = rho_{i-1} -> rho_i up to the row's radius (tags ray1 .. ray<j>), then the arc of row j with a
+        stop at each disc time t_k (tags arc<j>_<k>); --legs=K keeps the first K ray legs only (no arc unless K = j)
     export_inputs.py start6a <box.json> <out> --wf=<decimal> [--h=<decimal>] [--perturb=i:delta]
         lemma 6a's backward start: the hull of y (the box file's yX_xi1) and sigma(y) (mu -> -mu with conjugation), and
         w = W0 (wf +- h), W0 = 2 pi / 1.64389375
@@ -109,19 +109,19 @@ def path6b1(ray, row, out, opts):
     with open(row) as fh:
         r = json.load(fh)
     rho = d["rho"]
-    K = int(opts.get("legs", str(len(rho) - 1)))
     j = int(r["j"])
+    K = int(opts.get("legs", str(j)))
     assert abs(float(r["rho"]) - rho[j]) < 1e-12
     lines = []
     for i in range(1, K + 1):
         lines.append(f"ray {rho[i - 1]!r} {rho[i]!r} ray{i}")
-    if K == len(rho) - 1:
+    if K == j:
         ts = r["t"]
         # the exact binary value of each stop time (on the 2^-30 grid), as a finite decimal
         lines.append(f"arc {rho[j]!r} " + " ".join(f"{Decimal(float(t))} arc{j}_{k}" for k, t in enumerate(ts)))
     with open(out, "w") as fh:
         fh.write("\n".join(lines) + "\n")
-    print(f"path6b1: {K} ray legs" + (f", arc of row {j} at |u| = {rho[j]} with {len(r['t'])} stops" if K == len(rho) - 1
+    print(f"path6b1: {K} ray legs" + (f", arc of row {j} at |u| = {rho[j]} with {len(r['t'])} stops" if K == j
                                       else ""))
 
 
