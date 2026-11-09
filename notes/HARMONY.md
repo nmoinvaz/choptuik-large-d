@@ -71,6 +71,10 @@ transform F(t) = Σ n! σ_n tⁿ continued by quadratic Hermite–Padé approxim
 only the σ coefficients and the pipeline that made them. The crossing needs σ_n to about 10⁻¹⁰ relative: 10⁻⁶ noise
 moves it to 1.1008.
 
+**The last coefficients against J (#213).** win2 recomputed the three nodes at J 1250 (K 45, 1280 bits; raw
+`I213-win2/`, 159b2af). Over n = 18–22, max |σ_n(J 1250) − σ_n(J 1500)|/|σ_n| is 4.1×10⁻¹⁴ at ω/ω∞ = 1.09, 4.4×10⁻¹⁵ at
+1.10 and 1.7×10⁻¹⁴ at 1.11, against the 10⁻¹⁰ the crossing needs. So the J truncation is not what limits the crossing.
+
 **Controls on a family that is not Kummer (#214).** The planted controls of #203 used a Kummer family. #214 repeated
 them on a Laplace integral over a curved arc with a non-Beta density, fitted to the three nodes' σ₁…σ₂₂ to 9×10⁻⁵ in log
 (Kummer: 9×10⁻³), and planted by a shift in ω (`solver/independent_second_zero/arc_family.py`). Both controls pass on
