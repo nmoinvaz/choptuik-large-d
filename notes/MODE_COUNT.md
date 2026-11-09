@@ -369,6 +369,17 @@ while λ_phys moves 2×10⁵ to 5×10⁵ times less. The extras multiply and mov
 A mode whose eigenfunction has weight in the centre harmonics 22–23 would move too, so the third resolution (#231)
 decides. The U zeros are not located.
 
+**The series' radii, and M = 64 (#141; raw `I141-mac/`, 76fbf9b).** The centre series (x = 0 to the first node) takes
+one d/dτ per order, and its radius of convergence falls as M rises. At D = 30 without the cut it is 0.435, 0.324, 0.278
+and 0.225 at M = 32, 48, 64 and 80, so from M = 64 on it diverges at the first node 0.3. The |F| of 2–3×10⁵ that stopped
+#68 at M = 64 was its truncated sum. `hp/modecount_common.py` now adds a node at half the first node, or raises the
+horizon order, until both series converge to 10⁻¹⁵, and refuses a layout where they do not (`hp/modecount_probe.py
+--selftest`, whose mutation `nofit` fails). The layouts of all 22 states counted so far pass unchanged. M = 64 then
+converges, to |F| = 2.5×10⁻²⁶ at D = 30 and 8.5×10⁻²¹ at D = 61 with kf 23. At M = 48 without the cut, the centre
+series converges at x = 0.3 with ratio 0.93 per order, and that background's Δ is 1.4×10⁻¹² from M = 32, while with a
+node at 0.15 it agrees with M = 32 and M = 64 to 10⁻¹⁷. The extra pair of the D = 30 count at M = 48 without the cut was
+found on that background, so it is recounted on the fitted layout.
+
 **Other D at M = 48, kf 23 (#232; raw `I232-macm3/`, 8c625c3).** Every edge resolved, with 0 mismatches, and both setups
 passed the gate (|F| 2.3×10⁻¹⁹ and 1.6×10⁻¹⁹):
 
