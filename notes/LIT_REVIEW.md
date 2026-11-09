@@ -303,6 +303,30 @@ The year range is unrestricted unless a year is named.
     (5 citing records); `q=arxiv gr-qc/0304070` and `q=refersto:recid:617314` (49); `q=arxiv 1807.10283` and
     `q=refersto:recid:1684230` (13). The API ignores the form `refersto:arxiv:<id>` and then returns an unfiltered list,
     so the recid form is the one to repeat.
+- **2026-11-09, issue #198 (Fabry–Pérot and nonlinear cavities, Fratini et al.'s later work).** `WebSearch` in
+  standard mode, and the INSPIRE REST API through `WebFetch`. The queries are verbatim in the raw-data repository,
+  `I198-mac/search_log.md` (commit a3abcb5), with what each surfaced; shortened here.
+  - The linear cavity: Ismail–Kores–Geskus–Pollnau's title with "arXiv"; "Fabry-Perot plane-parallel Gaussian beam
+    transmission sum over round trips diffraction walk-off amplitude power law Airy function modified"; the
+    Gires–Tournois all-pass formula; "\"generic Airy distribution\" Fabry-Perot \"Lorentzian finesse\" Pollnau"; the
+    Wikipedia article's mode-profile and frequency-dependent-reflectivity sections; the Optica page of Opt. Express 24,
+    16366 (allowed domains); Marques's angular Airy function; Madsen–Zhao's book with "z-transform ARMA poles zeros
+    coupled cavities"; "multilayer thin film stack equal optical thickness layers transmission coefficient all-pole
+    z-transform digital filter analogy" (nothing on thin films).
+  - Nonlinear cavities: the titles of Ikeda (1979), Coen–Haelterman (1997), Hansson–Wabnitz (2015), Lugiato–Lefever
+    (1987), Haelterman–Trillo–Wabnitz (1992), Ikeda–Daido–Akimoto (1980) and Felber–Marburger (1978); "Parra-Rivas
+    Gomila Gelens Lugiato-Lefever numerical continuation AUTO bifurcation diagram ... period-doubling arXiv";
+    Chembo–Yu's modal expansion; "Gomila Scroggie Firth ... saddle-loop homoclinic period diverges logarithmically
+    unstable cavity soliton separatrix"; "optical bistability middle branch unstable saddle switching time
+    logarithmic divergence critical slowing down" (no logarithmic law); "Hill's method Floquet-Fourier-Hill
+    Lugiato-Lefever stability" (no LLE paper with Hill's method); Deconinck–Kutz (2006) with "spurious eigenvalues
+    convergence"; "Kerr microresonator breather soliton periodic orbit numerical continuation Floquet multipliers Newton
+    shooting harmonic balance"; "Ikeda map period-two state fixed point of the twice-iterated map ... Floquet
+    stability fiber ring cavity".
+  - Fratini et al.: "Filippo Fratini later work nonlinear Fabry-Perot quantum mirror rectification ... Google Scholar"
+    (no Google Scholar page surfaced).
+  - INSPIRE: `q=arxiv 1410.5972` (recid 3025790, 57 citations); `q=refersto:recid:3025790` (57 records);
+    `q=a F.Fratini.1 or a Fratini, Filippo` (17); `q=refersto:recid:3027964` (21).
 
 ## 6. Read ledger
 
@@ -354,6 +378,23 @@ The year range is unrestricted unless a year is named.
   - Failed (FULL-TEXT-UNREAD): PDFs that came back as binary (Reiterer–Trubowitz, Dudley et al., a course copy of
     Gradshteyn–Ryzhik's series tables); Optica pages (loading placeholder); HAL and PMC (bot checks); MacTutor
     *Hippopede* (404); the Springer page of Koepf–Nana Chiadjeu (login); arXiv:2312.01320 (no HTML).
+- **2026-11-09, issue #198** (through `WebFetch`; PDFs that came back as binary were extracted with pypdf from the copy
+  the tool saved; quotes and URLs in the raw-data repository, `I198-mac/read_log.md`, commit a3abcb5):
+  - Full extraction: Pollnau–Eichhorn 2020 (KITopen PDF; Secs. 3.5–4.3 closely, the reference list); Sánchez-Soto–
+    Monzón–Leuchs 1610.06163 (ar5iv); Marques–Guggenheim–Munro 2021 (UCL PDF, 7 pages); Hansson–Wabnitz 1503.03274
+    (ar5iv, Secs. II–V); Conforti et al. 1405.6041 (ar5iv); Parra-Rivas et al. 2010.03375 (ar5iv, 0–193242 in two
+    fetches); Gomila–Matías–Colet nlin/0411047 (ar5iv); Maitland et al. 2004.14095 (ar5iv); Fratini et al. 1410.5972
+    (ar5iv, with the supplement); Fratini–Ghobadi 1510.01968, Mascarenhas et al. 1510.01472 and Almeida–Werlang–Valente
+    1902.10181 (ar5iv).
+  - Partial: Wikipedia, *Fabry–Pérot interferometer*, Secs. 3.5, 3.8 and 3.9 (a secondary source).
+  - Abstract or list only: Chembo–Menyuk 1210.8210; Roy 1611.05050; Dai et al. 1510.04494; Manasi–Roy 1712.04474;
+    Zheng et al. 1605.01135; Fratini's publication page; the arXiv pages of Hansson–Wabnitz, Conforti et al.,
+    Parra-Rivas et al. and Gomila et al. (journal fields); the INSPIRE records and citation lists.
+  - Records only: Ismail et al. 2016 (search listing of the Optica page); Ikeda 1979 (a library record); Ikeda–Daido–
+    Akimoto 1980; Lugiato–Lefever 1987; Coen–Haelterman 1997; Haelterman–Trillo–Wabnitz 1992; Felber–Marburger 1978;
+    Chembo–Yu 2010; Madsen–Zhao 1999.
+  - Failed (FULL-TEXT-UNREAD): the Optica pages of Ismail et al. (loading placeholder) and its scispace copy (empty);
+    the UCL "pp" mirror (403); scilit (403); a Czech library record (bot check); a Kyoto repository PDF (empty).
 
 ## 7. Citation chains
 
@@ -601,3 +642,216 @@ general identity.**
   critical solution to decay exponentially in τ with phases linear in k, and compared them with the sum
   Σ e^{−a|k|} e^{4πikτ/Δ} [MG03, Sec. IV.2, Eq. (59)]."
 - **No novelty sentence** was added by this task. The strongest statement made is "not found in the sources searched".
+
+## Addendum (2026-11-09, issue #198): Fabry–Pérot cavities, nonlinear cavities and Fratini et al.'s later work
+
+**Question.** #172 found that Eq. (16) of EEG26b, A* Re[e^{iθ}/(1 + w e^{2iθ})], is, up to a factor, the field a
+Fabry–Pérot cavity transmits, e^{−iφ}/(1 − r₁r₂e^{−2iφ}) with θ = −φ and w = −r₁r₂. Issue #198 asks whether optics has
+results or methods this project can use:
+- **Q1, the linear cavity.** Do its line shapes and their deformations (losses, dispersion, extra zeros and poles)
+  match #133's rational extensions (notes/EEG_PROFILE.md §8) or the branch point at the profile's pole (§3.3, §8.5)?
+- **Q2, nonlinear cavities.** Kerr cavities, the Ikeda round-trip map and the Lugiato–Lefever equation (LLE). Do their
+  methods give tools for a fixed point of a one-period map with one unstable direction: Floquet stability,
+  continuation, harmonic balance, period doubling?
+- **Q3, Fratini et al.'s later work.** Nonlinear transport or rectification models whose stationary states are
+  geometric sums with a nonlinear ratio.
+
+**How.**
+- **Searches.** 25 web queries and 4 INSPIRE queries, all on 2026-11-09, listed in §5.
+- **Reads.** 19 sources opened, 13 in full or in part and 6 as abstracts or publication lists, and the bibliographic
+  records of 9 more, listed in §6. Quotes and URLs are in the raw-data repository, folder `I198-mac/`, commit
+  a3abcb5.
+- **PDFs.** Where `WebFetch` returned a PDF as binary, the copy it saved was extracted with pypdf 7.0.0 in a scratch
+  environment. That opened Pollnau–Eichhorn (2020) and Marques et al. (2021).
+- **Identities.** Four identities and two asymptotic laws that tie the sources to Eq. (16) are *inferred* and
+  *checked numerically* by `I198-mac/identity_check.py` (mpmath, 30 digits, exit 0). Its mutation makes all six fail
+  (exit 1).
+- **Numbers.** EEG26b's q = 0.0551 comes from their extrapolation of finite-D solutions. The tuned D = ∞ profile's
+  numbers (its singularity at 1.5344 ∓ 1.4284i, its line of Padé poles, the k^{−4} law of its ratio differences) assume
+  the selection rule, Conjecture 1 of the math paper, and are marked *conditional*.
+- **Verdict classes**, fixed before the search: a usable result or method, named with its equation; an analogy only;
+  nothing found in the sources searched.
+
+### Closest works
+
+| Work | Bears on | What it contains | What it does not contain |
+|---|---|---|---|
+| **M. Pollnau, M. Eichhorn**, Prog. Quantum Electron. 72, 100255 (2020), KITopen PDF, Secs. 3.5–4.3 | Q1 | Eq. (99): each longitudinal mode profile is a Lorentzian, written as a pole pair "1/(δ − i(2ϕ − 2πq)) + 1/(δ + i(2ϕ − 2πq))". Summed with Eq. (100), Σ 1/(x − q) = π cot πx, they give the Airy distribution exactly, Eq. (108), with e^{−δ} = √(R₁R₂). Eq. (114): the Lorentzian linewidth equals the free spectral range at R₁R₂ = e^{−2π}. Eq. (118): the Airy linewidth (FWHM) is undefined below R₁R₂ = 17 − 12√2 ≈ 0.02944. With frequency-dependent reflectivities "the mode profiles are not Lorentzian-shaped anymore" and the Airy distributions "become distorted" (citing Ismail et al.). Propagation loss multiplies R₁R₂ by e^{−2α ℓ} (Eqs. (111)–(112)). | A functional form of a frequency-dependent reflectivity, poles off the round-trip lattice, zeros, branch points, a nonlinear cavity. |
+| **N. Ismail, C. C. Kores, D. Geskus, M. Pollnau**, Opt. Express 24, 16366 (2016) | Q1 | The source the issue names. Known here only through Pollnau–Eichhorn and Wikipedia's *Fabry–Pérot interferometer*, Secs. 3.5 and 3.8 (secondary). | FULL-TEXT-UNREAD: Optica returned a loading page. |
+| **L. L. Sánchez-Soto, J. J. Monzón, G. Leuchs**, Eur. J. Phys. 37, 064001 (2016), arXiv:1610.06163 | Q1 | Eq. (2.1), the round-trip sum; Eq. (2.13), the self-consistent field A(0) = A(0)r²e^{−2iφ} + t′A_in; "its poles and zeros provide full information of the response of the system"; Eq. (2.16), the impulse response, a pulse train decaying by r² per round trip; Eq. (3.7), the Airy distribution as (1−r²)/(1+r²) Σ_m (Γ/2)/((φ − mπ)² + (Γ/2)²), Γ = ln(1/r²). | Losses ("we assume that such a mirror is lossless"), coupled cavities, nonlinear effects. The poles are not listed. |
+| **D. M. Marques, J. A. Guggenheim, P. R. T. Munro**, Opt. Express 29, 24144 (2021) | Q1 (the branch point) | Eq. (1): transmission √(1−R₁)√(1−R₂)e^{iφ/2}/(1 − √(R₁R₂)e^{iφ}), and reflection a ratio of first-degree expressions in e^{iφ} (a zero and a pole), φ = 4πNh cos θ/λ. Eq. (3), the angular Airy function Ê_fp(θ, ϕ) = Ê_i(θ, ϕ)A(θ): each plane-wave component of a beam has its own round-trip phase. It explains "the asymmetry, broadening and visibility reduction" of focused Gaussian beams; the asymmetry arises because only on one side of resonance do further components "enter the filtering condition". | The analytic structure of the averaged line, a closed form, a law for the amplitude of the m-th round trip. |
+| **T. Hansson, S. Wabnitz**, JOSA B 32, 1259 (2015), arXiv:1503.03274 | Q2, Q3 | Eqs. (1)–(2), the Ikeda map. Eq. (4), its fixed point E = ρe^{iφ}E + √θE_in with φ = δ₀ − γL_eff\|E\|², so the stationary field is the round-trip geometric sum with a ratio that depends on the field (*inferred*). Eq. (5), the Airy function of the nonlinear phase; "Either one or three stationary states" for small rotation, more at larger. Sec. IV: the one-round-trip matrix Q, unstable "whenever the modulus of an eigenvalue of Q is larger than unity"; Eq. (11), q± = √(1−θ)(p ± √(p² − 1)), where q₋ "gives rise to a period doubling instability". The LLE is the round-trip average of the map and misses these states and the period doubling. | Newton iteration or continuation of the fixed points (they come from Eq. (5) and a graphical construction), harmonic balance. |
+| **M. Conforti, A. Mussot, A. Kudlinski, S. Trillo**, Opt. Lett. 39, 4200 (2014), arXiv:1405.6041 | Q2 | The 2×2 one-round-trip matrix from two initial conditions; its eigenvalues are the Floquet multipliers, unstable for \|λ\| > 1 with gain ln\|λ\|/Λ; "MI if \|Δ\|>(1+W)", Δ the Floquet discriminant and W the Wronskian; a pulse train "reproduced identical after two round-trips". | Continuation, harmonic balance, Hill's method. |
+| **D. Gomila, M. A. Matías, P. Colet**, PRL 94, 063905 (2005), arXiv:nlin/0411047 | Q2 | In the 2D LLE, the middle-branch localized structure "has a single unstable direction". Near the saddle-loop bifurcation the period obeys T ∝ −(1/λ₁) ln(θ_c − θ), λ₁ "the unstable eigenvalue of the saddle point": 1/λ₁ = 5.65 against a fitted slope of 5.60. | How λ₁ was computed (deferred to an earlier paper). |
+| **P. Parra-Rivas, E. Knobloch, L. Gelens, D. Gomila**, arXiv:2010.03375 (review) | Q2 | LLE stationary states by "numerical path continuation" with "a predictor-corrector approach"; stability from "the eigenvalues of the Jacobian matrix obtained from L after spatial discretization"; breathers born at a Hopf bifurcation, then "a period-doubling bifurcation (PD)", chaos, and a boundary crisis with "the infinite-dimensional saddle". | Continuation of the periodic orbits, their Floquet multipliers, the software. |
+| **C. Maitland, M. Conforti, A. Mussot, F. Biancalana**, Phys. Rev. Research 2, 043195 (2020), arXiv:2004.14095 | Q2 | Two fibre loops, "the output of each is fed into the other". One-round-trip fixed points; a 4×4 Floquet matrix with eigenvalue pairs ±λ₁, ±λ₂; period-two and period-four trains in simulations. | A reduction by the swap symmetry (a half map composed with the swap); their period doubling is "outside the scope". |
+| **F. Fratini et al.**, PRL 113, 243601 (2014), arXiv:1410.5972 | Q3 | (S.2), the round-trip sum with the ratio √(R₁R₂)e^{2ikL}e^{i(θ₁+θ₂)}; Eq. (1), the reflectance of an emitter falls with the power p at it; (S.7), the powers at the emitters "appear both at the right- and the left-hand sides", solved numerically. So the stationary state is a geometric sum whose ratio depends on the field it sums. | Multiple solutions, bistability, any stability analysis. |
+| **Its successors**: Fratini–Ghobadi, PRA 93, 023818 (2016); Mascarenhas–Santos–Auffèves–Gerace, PRA 93, 043821 (2016); Almeida–Werlang–Valente, JOSA B 36, 3357 (2019) | Q3 | Full-quantum models: a master equation with Bloch–Langevin equations; a quantum stochastic master equation; a single-excitation Schrödinger equation with a transfer-matrix limit. "the quantumness reduces the nonlinearity of the system"; "the Fabry-Perot approach overestimates the diode efficiency". | A round-trip sum, a self-consistent geometric series, bistability, a stability analysis. |
+
+### The identities
+
+*Inferred*, and *checked numerically* by `I198-mac/identity_check.py`:
+1. **The δ = 0 profile is a carrier times the Airy distribution.** With 𝒜(φ) = 1/(1 + F sin²φ) and the coefficient of
+   finesse F = 4q/(1−q)² (Sánchez-Soto et al., Eqs. (3.1)–(3.2), with r² = q),
+   β̃ = A*(1+q)/(1−q)² · cos θ · 𝒜(θ + π/2). For any δ, Re(1/h) = Re(h̄)/|h|², so the profile is a first harmonic
+   times 1/|h|², which is EEG_PROFILE.md §2 (R) in the cavity's terms. #172 already matched that denominator to the
+   Poisson kernel.
+2. **The hump threshold is F = 1.** The δ = 0 profile has a single maximum per half period exactly when F < 1, so
+   EEG_PROFILE.md §2's q_c = 3 − 2√2 is F = 1. The same condition gives Pollnau–Eichhorn's Eq. (118):
+   (3 − 2√2)² = 17 − 12√2 is the reflectivity product below which the Airy peaks have no full width at half maximum.
+3. **The Lorentzian half-width is the pole distance.** In Eq. (3.7) of Sánchez-Soto et al., Γ/2 = ½ ln(1/q) is
+   Eq. (16)'s σ, 1.4493 at the paper's q. The cavity's "Lorentzian linewidth equals the round-trip decay rate" is
+   EEG_PROFILE.md §2's "strip of analyticity equals the decay rate per harmonic".
+4. **Eq. (114) is 2σ = π**, at q = e^{−π} = 0.0432.
+5. **A pole smeared over a spread of round-trip phase.** A paraxial Gaussian beam in two transverse dimensions has a
+   density of phase deficits that is finite at zero deficit (*inferred* from Marques et al., Eqs. (2)–(3)). That gives
+   coefficients w^k[1 + b s₀/(1 + 2iks₀)], a logarithm at the pole, and ratio differences |r_{k+1} − r_k| falling like
+   k^{−3}.
+6. **A pole smeared over a spread of round-trip loss**, with a density that vanishes linearly at the pole's own loss,
+   gives w^k[1 + b/((k+1)(k+2))] and differences falling like k^{−4}. That is the law EEG_PROFILE.md §8.5 reads from
+   the tuned profile (*conditional*), and the pole with a (θ − θ₀)ln(θ − θ₀) term proposed there. A phase spread with
+   a linear edge also gives k^{−4}.
+
+At EEG26b's q = 0.0551 the echo is a low-finesse cavity: F = 0.247 < 1, so in Pollnau–Eichhorn's terms its Airy
+linewidth is undefined, and its Lorentzian finesse π/(2σ) = 1.084 lies just above their Eq. (114) threshold.
+
+### Verdicts
+
+**Q1, the linear cavity: an analogy only.**
+- **Line shapes.** The Airy distribution and its Lorentzian (pole-pair) decomposition are the cavity's version of
+  facts EEG_PROFILE.md §2 already states: the Poisson-kernel denominator, one pole pair per half period, and the pole
+  distance equal to the decay rate. Identities 1–4 rename those facts and add no tool. Per Koppelmann, as quoted by
+  Pollnau–Eichhorn, the exact decomposition goes back to Bayer-Helms, Z. Angew. Phys. 15, 330 (1963) *(unverified)*.
+- **Losses** only multiply the round-trip ratio by e^{−2α ℓ}, so the line keeps Eq. (16)'s [0/1] form.
+- **Extra zeros and poles.** The field a Fabry–Pérot reflects has one zero and one pole in the round-trip
+  exponential (Marques et al., Eq. (1)). Apart from the single-pass factor e^{iθ}, that is the structure of
+  EEG_PROFILE.md §3.3's one-zero [1/1] form (*inferred*). Cavities with more mirrors or stages give rational functions
+  of e^{2iφ} of higher degree, which Madsen and Zhao's book organizes as moving-average, autoregressive and ARMA
+  architectures (*inferred* from its table of contents only). So #133's [L/N] family is the class of multi-stage
+  cavity transfer functions. No source gives a reason for particular L, N or coefficients.
+- **Dispersion.** A frequency-dependent reflectivity distorts the mode profiles and the Airy distributions
+  (Pollnau–Eichhorn; Wikipedia, Sec. 3.8), but no source read gives a form for it or for its poles.
+- **The branch point.** The one optical mechanism found that turns a pole into a branch point is an average over a
+  spread of round-trip phases, the angular Airy function of Marques et al. (Eq. (3)). *Inferred*: a phase spread moves
+  the pole along Re θ, so its cut runs parallel to the real axis, while a spread of round-trip loss moves it along
+  Im θ. The tuned profile's further Padé poles lie along Re θ ≈ 1.55–1.61, outward in |Im θ| (EEG_PROFILE.md §8.5,
+  *conditional*), which is the loss direction. The Gaussian beam's finite-edge density also gives the wrong power
+  (identity 5, k^{−3} against the profile's k^{−4}). No source read treats a spread of round-trip loss. So optics
+  supplies a mechanism of the right kind, a smeared pole, but not the one the profile shows.
+
+**Q2, nonlinear cavities: an analogy only.** The methods exist, and the project already has their counterparts.
+- **The fixed point.** The Ikeda map's stationary state (Hansson–Wabnitz, Eqs. (4)–(5)) is the round-trip geometric
+  sum with a field-dependent ratio, solved as one algebraic equation for |E|², with one or three roots. The echo's
+  ratio also depends on the amplitude at leading order (w ≈ qA², EEG_PROFILE.md §3.1), but it is set by the Stokes
+  conditions, not by a closed equation for the sum (*inferred*).
+- **Stability.** The cavity papers take the eigenvalues of the linearized one-round-trip map (Hansson–Wabnitz,
+  Eq. (11); Conforti et al., |Δ| > 1 + W). Their background is homogeneous, so perturbations separate by sideband
+  frequency and each matrix is 2×2. The echo's background varies in τ, so its harmonics couple. The project's
+  det M(λ) with its winding count (notes/MODE_COUNT.md) is that Floquet analysis for a non-homogeneous fixed point
+  (*inferred*), and no source read offers a replacement.
+- **The one unstable direction.** Gomila et al.'s middle-branch structure "has a single unstable direction", and the
+  time spent near it scales as −(1/λ₁) ln(θ_c − θ), measured at 5.60 against 1/λ₁ = 5.65. That is the mechanism behind
+  γ = 1/λ in critical collapse [KoikeHaraAdachi1995], seen in a cavity.
+- **Continuation.** Predictor–corrector continuation with the eigenvalues of the discretized Jacobian (Parra-Rivas et
+  al.). The project's continuation, the asymptotic numerical method (notes/LARGE_D_LITERATURE.md), is of higher order.
+- **Harmonic balance.** Kerr-comb models use a modal (Galerkin) expansion (Chembo–Yu, records only) or the LLE in
+  space and time, which Chembo–Menyuk find "significantly more suitable" for wide combs (abstract). The project
+  collocates in τ, which corresponds to the second choice (*inferred*).
+- **Averaging.** The LLE is the round-trip average of the Ikeda map. It needs each round trip to change the field
+  little and fails for an O(1) nonlinear phase per pass (Hansson–Wabnitz). With F = 0.247 the echo is far from that
+  regime (*inferred*), so averaging gives no continuous-time model here.
+- **Period doubling.** In the cavities it is a bifurcation: a Floquet multiplier crosses −1 (*inferred* for
+  Hansson–Wabnitz, who tie it to q₋ without naming the sign; the breathers of Parra-Rivas et al.). The echo's
+  odd-harmonic structure, F(θ + π) = −F(θ), is a symmetry instead. Its cavity analogue would be a fixed point of a
+  half-period map composed with a sign flip. The coupled-loop resonator of Maitland et al. has eigenvalue pairs ±λ
+  but makes no such reduction. The split of cavity instabilities into
+  period-one (q₊) and period-two (q₋) matches MODE_COUNT.md's two symmetry sectors of the perturbations (*inferred*).
+
+**Q3, Fratini et al.'s later work: nothing found in the sources searched.**
+- Within this line, Fratini et al. (2014) is the only source read whose stationary state is a geometric sum with a
+  nonlinear ratio, (S.2) and (S.7). It is solved numerically, with no count of solutions and no stability analysis.
+- The line's later papers replace the round-trip sum by full-quantum models: Fratini–Ghobadi (2016), Mascarenhas et
+  al. (2016) and Almeida et al. (2019) in full, and Dai et al. (2015), Roy (2017), Manasi–Roy (2018) and Zheng et al.
+  in abstract. None contains a round-trip sum or a self-consistent geometric series.
+- The classical antecedents with the same structure are the Ikeda fixed point (Q2) and the Kerr-filled Fabry–Pérot
+  of Felber and Marburger, PRA 17, 335 (1978), whose field is solved "exactly ... in terms of elliptic functions"
+  according to a search summary of its abstract. It was not read.
+
+### Citation chains (INSPIRE, 2026-11-09)
+
+- **Forward from Fratini et al.** (recid 3025790): 57 citing records, listed in `I198-mac/fratini_citations.md`. Six
+  were opened (three in full, three as abstracts). The other 51 rest on titles, which are about waveguide QED and
+  nonreciprocity.
+- **Forward from Fratini–Ghobadi** (recid 3027964): 21 records, 6 of them not in the first list; Zheng et al. was
+  opened as an abstract.
+- **Fratini's own later work**: 17 INSPIRE records. After 2014 this line continues only in Fratini–Ghobadi. His web
+  page adds an optical transistor with a quantum dot in a photonic wire, PRB 97, 201106(R) (2018), not opened.
+- **Backward from Pollnau–Eichhorn**: Ismail et al. [2], Koppelmann [51] and Bayer-Helms [52] *(unverified)*.
+- **Backward from Marques et al.**: La Penna et al., Opt. Commun. 162, 267 (1999); Nichelatti–Salvetti, Appl. Opt.
+  34, 4703 (1995); Lee–Hahn–Lee, JOSA A 19, 973 (2002), on finite beams in plane-parallel cavities. Not opened, all
+  *(unverified)*.
+
+### References checked
+
+| Entry | Checked against | Verdict |
+|---|---|---|
+| Pollnau, Eichhorn, Prog. Quantum Electron. 72, 100255 (2020), doi:10.1016/j.pquantelec.2020.100255 | the publisher's PDF on KITopen (running footer) and the Surrey repository record | OK |
+| Ismail, Kores, Geskus, Pollnau, Opt. Express 24(15), 16366–16389 (2016), doi:10.1364/OE.24.016366 | the search listing of the Optica abstract page (the page itself did not load) and Pollnau–Eichhorn's reference [2] | PARTIAL |
+| Sánchez-Soto, Monzón, Leuchs, Eur. J. Phys. 37, 064001 (2016), doi:10.1088/0143-0807/37/6/064001 | the arXiv page of 1610.06163 (journal-ref, DOI) | OK |
+| Marques, Guggenheim, Munro, Opt. Express 29(15), 24144–24150 (2021), doi:10.1364/OE.431362 | the typeset PDF on UCL Discovery (header) | OK |
+| Hansson, Wabnitz, JOSA B 32(7), 1259–1266 (2015), doi:10.1364/JOSAB.32.001259 | the arXiv page (related DOI) and the Chalmers record (volume, issue, pages) | OK |
+| Conforti, Mussot, Kudlinski, Trillo, Opt. Lett. 39, 4200 (2014), doi:10.1364/OL.39.004200 | the arXiv page of 1405.6041 (related DOI); volume and page read from the DOI | PARTIAL |
+| Gomila, Matías, Colet, PRL 94, 063905 (2005), doi:10.1103/PhysRevLett.94.063905 | the arXiv page of nlin/0411047 (journal-ref, DOI) | OK |
+| Parra-Rivas, Knobloch, Gelens, Gomila, arXiv:2010.03375 | the arXiv page (no journal-ref); IMA J. Appl. Math. per a search listing *(unverified)* | PARTIAL |
+| Maitland, Conforti, Mussot, Biancalana, Phys. Rev. Research 2, 043195 (2020) | the arXiv page of 2004.14095 (journal-ref, DOI) | OK |
+| Chembo, Menyuk, PRA 87, 053852 (2013), arXiv:1210.8210 | the arXiv page (related DOI 10.1103/PhysRevA.87.053852); the year read from the volume | PARTIAL |
+| Fratini et al., PRL 113, 243601 (2014); Fratini, Ghobadi, PRA 93, 023818 (2016); Mascarenhas et al., PRA 93, 043821 (2016); Almeida, Werlang, Valente, JOSA B 36, 3357 (2019); Dai et al., PRA 92, 063848 (2015); Roy, PRA 96, 033838 (2017); Manasi, Roy, PRA 98, 023802 (2018) | INSPIRE records (recids in `I198-mac/fratini_citations.md`); arXiv pages for the last three | OK |
+| Ikeda, Opt. Commun. 30, 257–261 (1979); Ikeda, Daido, Akimoto, PRL 45, 709–712 (1980); Lugiato, Lefever, PRL 58, 2209–2211 (1987); Coen, Haelterman, PRL 79, 4139–4142 (1997); Haelterman, Trillo, Wabnitz, Opt. Commun. 91, 401–407 (1992); Felber, Marburger, PRA 17, 335–342 (1978); Chembo, Yu, PRA 82, 033801 (2010); Madsen, Zhao, *Optical Filter Design and Analysis* (Wiley, 1999) | search listings and library records only | UNVERIFIABLE here, cited as not read |
+
+### Gap statement
+
+- **Not read.** Ismail et al. (2016), the source the issue names (Optica returned a loading page). The classical
+  papers on nonlinear cavities: Ikeda (1979), Ikeda–Daido–Akimoto (1980), Felber–Marburger (1978), Lugiato–Lefever
+  (1987), Haelterman–Trillo–Wabnitz (1992), Coen–Haelterman (1997). Madsen–Zhao's book. The textbooks (Born–Wolf,
+  Siegman, Svelto, Vaughan). The finite-beam papers behind Marques et al.
+- **Not from the cavity sources.** Hill's method and its convergence theory (Deconinck–Kutz 2006; Curtis–Deconinck;
+  Johnson–Zumbrun) surfaced in a search but in no cavity source read, so they were not opened. They bear on
+  MODE_COUNT.md's extra pair at M = 48 more than on this issue.
+- **Channels.** Google Scholar's cited-by list was not reached, so the forward chains rest on INSPIRE, which may miss
+  optics journals. Of the 57 records citing Fratini et al., 51 rest on titles.
+- **Rounds.** Round 1 covered the three named topics. Round 2 followed the INSPIRE chains and the angular-Airy and
+  excitability leads. The search is not dry: the finite-beam papers and any optical treatment of a spread of
+  round-trip loss remain open.
+
+### Discrepancies and proposed text (for the coordinator)
+
+- **No discrepancy** with the repository's text was found.
+- **A pointer.** #172 recorded Wikipedia's citation of Svelto's *Principles of Lasers*, 5th ed., as "ch. 4.5.1
+  *(unverified)*". Pollnau–Eichhorn cite the same edition as "pp. 169–171. Ch. 5.3" for the Airy linewidth. They may
+  cite different passages, and neither was checked against the book.
+- **Proposed text** for notes/EEG_PROFILE.md §2, after the hump threshold: "At δ = 0 the profile is cos θ times the
+  Airy distribution of a Fabry–Pérot cavity, A*(1+q)/(1−q)² · cos θ/(1 + F cos²θ), with coefficient of finesse
+  F = 4q/(1−q)². The threshold q_c = 3 − 2√2 is F = 1, the reflectivity below which the Airy peaks have no full width
+  at half maximum [Pollnau–Eichhorn 2020, Eq. (118)]." Its check is `I198-mac/identity_check.py`.
+- **No novelty sentence** was added by this task. The strongest statement made is "not found in the sources searched".
+
+### Recommended tasks (for the coordinator to file)
+
+1. **The direction of the echo's branch cut: a planted test with smeared poles.**
+   - *What.* Add two plants to `solver/eeg_profile/rational_fit.py`'s planted-truth path: a pole smeared over a spread
+     of round-trip loss and one smeared over a spread of round-trip phase, both with a linearly vanishing edge
+     (identities 5–6). Run the Padé pole march of EEG_PROFILE.md §8.3 on both, then on the tuned data.
+   - *Why.* The one optical mechanism for a branch point at a pole (Q1) predicts the direction of the cut. The test
+     says which class of smeared pole the profile belongs to, for #150.
+   - *Acceptance.* On the loss plant the second Padé pole marches with |ΔRe θ₂| < 0.3 |ΔIm θ₂| (n = 2 to 4), and on
+     the phase plant with |ΔIm θ₂| < 0.3 |ΔRe θ₂|. The test fails if both plants march the same way, and the
+     real-data verdict is then void. Report the tuned profile's direction, *conditional* on Conjecture 1.
+   - *Depends on.* #133, #198. A few minutes on one core.
+2. **Read the cavity sources that did not open.**
+   - *What.* Ismail et al. (2016), Felber–Marburger (1978), Ikeda (1979) and Coen–Haelterman (1997), through a channel
+     that renders Optica and APS pages, logged in §6.
+   - *Why.* The Q1 and Q2 verdicts rest on secondary accounts of these four.
+   - *Acceptance.* Each is read in full and its content recorded. The task fails, and says so, if one of them
+     contains a closed form for a frequency-dependent reflectivity, a branch point at a cavity pole, or a stability
+     method for a non-homogeneous fixed point that the verdicts above miss.
+   - *Depends on.* #198.
