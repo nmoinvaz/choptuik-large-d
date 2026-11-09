@@ -3,6 +3,12 @@
     python3 second_zero.py real --dir <raw clone>/I82-win2 [--out FILE]
     python3 second_zero.py planted --wp 1.095 --seeds 1,2,3,4,5 [--out FILE]
     python3 second_zero.py planted --wp 1.15 --seeds 1,2,3,4,5 [--out FILE]
+    python3 second_zero.py planted --family arc --wp 1.095 --seeds 1,...,10 [--noise 1e-12] [--mutate_wshift DW]
+
+--family kummer (default) is planted.py's family (#203).  --family arc is arc_family.py's (#214), the arc integral fitted
+to the data to 1e-4 and planted by a shift in w.  --noise sets the relative noise on each sigma_n (default 1e-12, the
+controls' level).  --mutate_wshift DW (arc only) is a mutation control.  The family's zero then crosses at w_p + DW while
+the criteria still test w_p, so P1 must fail for |DW| > 0.005.
 
 Estimator v2.  At each node every approximant of lapl.run_node is tried and admitted or not by lapl.admissible.  The
 primary set at a node is its admitted qhp approximants that use 21, 22 or 23 coefficients, pooled.
@@ -171,8 +177,17 @@ def main(argv):
         wp = float(opt["wp"])
         seeds = [int(s) for s in opt.get("seeds", "1").split(",")]
         eps = opt.get("eps", "0.05")
-        fam = planted.Family(wp, eps=eps)
-        log(f"planted family w_p {wp} eps {eps}: da {mp.nstr(fam.da, 12)}")
+        family = opt.get("family", "kummer")
+        noise = float(opt.get("noise", "1e-12"))
+        if family == "arc":
+            import arc_family
+            dw = mp.mpf(opt.get("mutate_wshift", "0"))
+            fam = arc_family.Family(mp.mpf(wp) + dw)
+            log(f"planted family arc, w_p {wp}" + (f" MUTATED: zero planted at w_p + {mp.nstr(dw, 6)}" if dw else "")
+                + f": w_nat {mp.nstr(fam.wnat, 15)}, shift {mp.nstr(fam.shift, 12)}; noise {noise:g}")
+        else:
+            fam = planted.Family(wp, eps=eps)
+            log(f"planted family w_p {wp} eps {eps}: da {mp.nstr(fam.da, 12)}; noise {noise:g}")
         truth = {}
         for w in WS + [f"{wp}"]:
             x = fam.x1(mp.mpf(w))
@@ -183,10 +198,10 @@ def main(argv):
         log(f"  true Im x1 sign change in 1.09-1.11: {true_sign_change}")
         exact = [fam.sigma(mp.mpf(w)) for w in WS]
         ok_all = True
-        allres = {"wp": wp, "truth": truth, "seeds": {}}
+        allres = {"wp": wp, "family": family, "noise": noise, "truth": truth, "seeds": {}}
         for seed in seeds:
             mp.mp.dps = 50
-            sigs = [planted.noisy(s, seed + 1000 * j) for j, s in enumerate(exact)]
+            sigs = [planted.noisy(s, seed + 1000 * j, noise) for j, s in enumerate(exact)]
             mp.mp.dps = lapl.DPS
             log(f" seed {seed}")
             res = run_three(sigs, log=log)
