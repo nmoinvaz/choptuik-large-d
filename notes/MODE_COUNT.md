@@ -311,6 +311,23 @@ The entries are wind(g), the zeros beyond the expected ones. det M changes sign 
 and |Im λ| < ω/2. If they were modes they would be extra growth rates. They are absent at M = 32 with the same cuts
 (#160, #168).
 
+**Other D at M = 48, kf 23 (#232; raw `I232-macm3/`, 8c625c3).** Every edge resolved, with 0 mismatches, and both setups
+passed the gate (|F| 2.3×10⁻¹⁹ and 1.6×10⁻¹⁹):
+
+| D | B0 | U0 | B1a | B1b | B1c | B1 | U | full |
+|---|---|---|---|---|---|---|---|---|
+| 45.05 (#211) | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 |
+| 50.01 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 |
+| 55.04 | +2 | +1 | 0 | 0 | 0 | 0 | +1 | +2 |
+| 61.03 (#212) | 0 | 0 | 0 | +6 | +2 | +8 | +8 | +24 |
+
+So the extras begin between D = 50 and 55. At D = 55 they are in the left column (−0.1 < Re λ < 0.3) and the strips,
+and none is in B1. At D = 61 none is in the left column. The counts cannot tell whether the D = 61 zeros are D = 55's
+moved to larger Re λ or a second set. On the real axis det M changes sign only at λ_g and λ_phys at both D. If the
+layout's 2iω periodicity holds, conjugation maps each strip onto itself, reflected about Im λ = ω, so an odd winding of
+U or U0 puts one zero on Im λ = ω. That would be a real growth rate of the other symmetry sector, an inference from the
+counts and not a located zero.
+
 **The same cut scan at D = 45, M = 48.** One extra real zero, at λ = 1.14 ± 0.03, appears at kf 21 only. It is absent
 at kf 13 to 19 (#178) and at kf 23, 25 and 27 (#190), and the full count at kf 23 is 0 in all 8 boxes (#211).
 
@@ -318,7 +335,8 @@ at kf 13 to 19 (#178) and at kf 23, 25 and 27 (#190), and the full count at kf 2
 the cut cannot be lowered to 13 because the background then does not converge. Three readings remain: weak directions
 that M = 48 resolves and M = 32 cannot, genuine modes that need M = 48, or a defect of the D = 61 state. Until they are
 told apart, the one-unstable-mode count at D = 61 holds at M = 32 only. The tasks that separate them are #230 (locate
-the zeros), #231 (a third resolution, after #141) and #232 (counts at D = 50 and 55 for the onset).
+the zeros), #231 (a third resolution, after #141), #237 (the onset between D = 50 and 55, and D = 55 at M = 32)
+and #238 (locate the D = 55 zeros).
 
 **D = 4, f64 solver, real λ.** On 0.02 < λ < 6.47 (130 determinants of the Rust kernel's exact mode matrix, step 0.05)
 det M changes sign exactly twice: at λ = 0.6138559 (λ_g = 1 + ⟨c₁⟩ = 0.6138550 from the state's a_h; in the f64 RK4
