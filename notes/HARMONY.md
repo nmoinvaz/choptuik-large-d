@@ -57,14 +57,14 @@ digits, so the interpolation between nodes does not limit the crossing; x₁ ≈
 has a second zero near ω/ω∞ = 1.0989, x₁ ≈ 13.46, and the D = ∞ inner problem a second selected solution there, with Δ =
 Δ∞/1.0989 ≈ 1.496. This is numerical evidence from the Borel–Padé sums of the amplitude expansion, conditional on the
 selection rule (Conjecture 1); the solution's stability is not known. The σ of the 1.10 node agree with macm3's K 33 J
-1000 run at the same node to 20 digits through σ₅ and to 1.2×10⁻¹⁵ at σ₁₆ (#82). A discrepancy, open: #202 found the
-1.10 node's distance from K 33 above both neighbours' at n = 6, 7, 15 and 16 (by up to 2.8×, at most 1.2×10⁻¹⁵
-relative), while win2's and macm3's K 33 files agree through σ₁₅ (they differ at σ₁₆ by 1.5×10⁻¹⁹, which follows the
-process count, #229). Summing the workers' products in a fixed order gives a third value: across the three orders σ₁₆ of
-K 33 spreads over 1.4×10⁻¹⁸, and σ₀–σ₁₅ do not move (#236, #247), so the summation order does not explain the excess.
-The cause is not known. 1.10 is the node whose run died in libflint on the old firmware and was rerun. The excess is
-five orders below the 10⁻¹⁰ the crossing needs, but σ₁₇–σ₂₂ have no K 33 comparison. The rerun is #228, and a test of
-the process count is #229.
+1000 run at the same node to 20 digits through σ₅ and to 1.2×10⁻¹⁵ at σ₁₆ (#82). A discrepancy, now explained: #202
+found the 1.10 node's distance from K 33 above both neighbours' at n = 6, 7, 15 and 16 (by up to 2.8×, at most 1.2×10⁻¹⁵
+relative). It is the J 1000 truncation of the comparison files, not the K 45 node (#256; raw `I256-win2/`, e8b8e02).
+Going from K 33 to K 39 changes σ₁…σ₁₅ by exactly 0 at all three nodes (σ_n needs the orders up to 2n + 1 only). At n =
+16, |σ(J 1000) − σ(J 1500)| is 3.5×10⁻¹⁶, 1.2×10⁻¹⁵ and 4.4×10⁻¹⁶ at 1.09, 1.10 and 1.11, while #213's J 1250 on the new
+firmware agrees with #82's J 1500 to 9.4×10⁻¹⁷, 4.9×10⁻¹⁷ and 5.2×10⁻¹⁷. #228's rerun of the 1.10 node on the new
+firmware reproduces #82's log line by line through order 35. The worker count and the summation order move σ₁₆ of K 33
+by at most 1.4×10⁻¹⁸ and leave σ₀–σ₁₅ unchanged (#229, #236, #247).
 
 **An independent check (#203).** A second agent, given only the σ data, summed S₁ by a different route: the Laplace
 transform F(t) = Σ n! σ_n tⁿ continued by quadratic Hermite–Padé approximants, then S₁ = Σ c̃_n xⁿ/n! to n = 220
