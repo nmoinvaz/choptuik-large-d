@@ -59,6 +59,13 @@ with Δ = Δ∞/1.0989 ≈ 1.496. This is numerical evidence from the Borel–Pa
 on the selection rule (Conjecture 1); the solution's stability is not known. The σ of the 1.10 node agree with macm3's
 K 33 J 1000 run at the same node to 20 digits through σ₅ and to 1.2×10⁻¹⁵ at σ₁₆ (#82).
 
+**An independent check (#203).** A second agent, given only the σ data, summed S₁ by a different route: the Laplace
+transform F(t) = Σ n! σ_n tⁿ continued by quadratic Hermite–Padé approximants, then S₁ = Σ c̃_n xⁿ/n! to n = 220
+(`solver/independent_second_zero/`). It finds the crossing at ω/ω∞ = 1.09884 (spread over approximant choices
+1.09873–1.09894) and x₁ = 13.46562 − 0.01372i at 1.10, and its planted controls pass on ten seeds. The two methods share
+only the σ coefficients and the pipeline that made them. The crossing needs σ_n to about 10⁻¹⁰ relative: 10⁻⁶ noise moves
+it to 1.1008.
+
 ## What we can give them
 
 | field | their open item | our pilot (agreement between runs) | next step, cost |
