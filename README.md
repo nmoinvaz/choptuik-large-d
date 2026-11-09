@@ -576,7 +576,10 @@ footnotes.
 - **Earlier formulas.** No earlier formula for Δ(D) was found ([notes/LIT_REVIEW.md](notes/LIT_REVIEW.md), addendum).
   For γ, Bland et al. (2005) fitted γ ≈ 0.466(1 − e^{−0.408 D}) on 3.5 ≤ D ≤ 14, a different form whose limit, 0.466, is
   not 1/2. Sorkin and Oren (2005) read their D ≤ 11 values as γ reaching a maximum and Δ a minimum around D = 11–13; the
-  points here show neither, as Δ decreases and γ increases monotonically to D = 61. Taves and Kunstatter (2011) give
+  points here show neither, as Δ decreases and γ increases monotonically to D = 61. Emparan and Herzog's review fits the
+  published values by γ ≈ ½(1 − 1/D) (RMP 92, 045005 (2020), Sec. X.3); at D = 20–60 it misses the values here by
+  1.3–3.1×10⁻³, and its large-D deficit, 1/(2D), is two-thirds of the computed 0.758/(D − 2) (raw
+  `I200-mac/identity_check.py`, #200). Taves and Kunstatter (2011) give
   values for D = 4–8 without a formula. Kol's 2π/Δ = √((10 − D)/(D − 2)) (2005) is for the black-string merger, not for
   scalar collapse. The rational formula here is an empirical fit, a ratio of polynomials with 11 fitted coefficients for
   Δ and 9 for γ, not a law derived from the equations. What it adds is one function for all D ≥ 4 that matches the
