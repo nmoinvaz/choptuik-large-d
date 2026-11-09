@@ -329,6 +329,10 @@ The onset in (53.79, 54.04] holds in one region. Between D = 54.04 and 55.04 the
 B1a, so it moves to larger Re λ as D grows. Where the two contours overlap their windings agree. The one difference,
 U0 at D = 54.04, puts one zero of the strip at −0.150 < Re λ < −0.096.
 
+![The extra zeros at D = 55 and 61: M 48's zeros, the M 40 circles at their places that wind 0, M 40's own zeros, and the D 61 row at the cuts kf 21 and kf 23, with lambda_phys as the control](../hp/modecount_extras.svg)
+
+`python3 hp/plot_modecount_extras.py <raw-data clone>` draws it from the circle and moment records of I238-macm3, I231-macm3 and I230-mac.
+
 **Positions at D = 54 and 55 (#238; raw `I238-macm3/`, d44579f).** Each zero is confirmed by a circle winding +1, and
 the λ_phys circles wind +1 at both D:
 
