@@ -397,7 +397,9 @@ while with a node at 0.15 it agrees with M = 32 and M = 64 to 10⁻¹⁷. The ex
 without the cut was found on that background. On the fitted layout (nodes 0.15, 0.3, …, 0.7, |F| = 2.4×10⁻²⁶) the circle
 |λ − (4.267 + 1.324i)| = 0.35 winds 0, with every step below 0.06 rad, while the λ_phys circle on the same state winds
 +1 and the circle on October's state and cache still winds +1 (#250; raw `I250-mac/`). So the pair belonged to the old
-layout's unconverged background, not to M = 48.
+layout's unconverged background, not to M = 48. The full count on that state, with the alias rule, is 0 in all 8 boxes,
+with every edge resolved and no alias bisection (#260; raw `I260-macm3/`, 395e680), so at D = 30 the count at M = 48
+without the cut agrees with M = 32.
 
 **Other D at M = 48, kf 23 (#232; raw `I232-macm3/`, 8c625c3).** Every edge resolved, with 0 mismatches, and both setups
 passed the gate (|F| 2.3×10⁻¹⁹ and 1.6×10⁻¹⁹):

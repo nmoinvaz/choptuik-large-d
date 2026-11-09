@@ -1828,14 +1828,14 @@ What is known about the selection, and what is open:
   of the formulation at λ = 1 + ⟨c₁⟩ (a change of time coordinate that keeps the light cone at x = 1). A planted-zero
   test runs a synthetic determinant through the same code and counts what was planted in all 8 cases. A second
   resolution (M = 48) without the high-harmonic cut found one extra pair at D = 30, but on a layout whose centre series
-  barely converged, and on a fitted layout it is absent (#250). Open: at D = 54, 55 and 61 (not at 45 to 53.8), zeros
-  beyond the expected ones in the M = 48 counts, absent at M = 32, at D = 61 24 at the cut 21 and 30 at the cut 23, 8 of
-  them with Re λ between 1.27 and 6.6, so possibly growth rates, and at M = 48 a pair crosses into Re λ > 0 between
-  D = 54 and 55; at D = 55 and 61 a third resolution, M = 40, has extras of its own that are not at M = 48's places, the
-  behaviour of truncation artifacts, with M = 64 running (notes/MODE_COUNT.md section 5); lower D with complex λ;
-  Re λ > 6.6; non-spherical perturbations; and no collapse has been evolved above D = 14, so a continuously self-similar
-  solution (Clark and Pimentel, [arXiv:2504.10590](https://arxiv.org/abs/2504.10590)) taking over the threshold is not
-  excluded.
+  barely converged; on a fitted layout the full count is 0 in every box (#250, #260). Open: at D = 54, 55 and 61 (not at
+  45 to 53.8), zeros beyond the expected ones in the M = 48 counts, absent at M = 32, at D = 61 24 at the cut 21 and 30
+  at the cut 23, 8 of them with Re λ between 1.27 and 6.6, so possibly growth rates, and at M = 48 a pair crosses into
+  Re λ > 0 between D = 54 and 55; at D = 55 and 61 a third resolution, M = 40, has extras of its own that are not at M =
+  48's places, the behaviour of truncation artifacts, with M = 64 running (notes/MODE_COUNT.md section 5); lower D with
+  complex λ; Re λ > 6.6; non-spherical perturbations; and no collapse has been evolved above D = 14, so a continuously
+  self-similar solution (Clark and Pimentel, [arXiv:2504.10590](https://arxiv.org/abs/2504.10590)) taking over the
+  threshold is not excluded.
 
 ![Why the critical exponent tends to 1/2: lambda = 1/gamma against 1/(D-2) for 67 double-double points with the fit carried to lambda = 2 at D = infinity, and free fits of lambda_inf - 2 falling with the number of powers](solver/gamma.svg)
 
