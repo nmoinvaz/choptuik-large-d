@@ -717,7 +717,7 @@ macro_rules! make_ctx {
                 f64_dd: 0,
                 horizon_alpha: 0,
             }) as Box<dyn CApi>, )*
-            _ => return Err(PyValueError::new_err("M must be one of 16, 32, 48, 64")),
+            _ => return Err(PyValueError::new_err("M must be one of 16, 32, 40, 48, 64")),
         }
     };
 }
@@ -792,7 +792,7 @@ impl CSolver {
             _ => None,
         };
         let mn = match_node.unwrap_or(nodes.len() - 1).min(nodes.len() - 1);
-        let mut api: Box<dyn CApi> = make_ctx!(m / 8, n, dh, dl, ph, pl, nodes.clone(), kt, kc, ks, plow, mn, [2, 4, 6, 8]);
+        let mut api: Box<dyn CApi> = make_ctx!(m / 8, n, dh, dl, ph, pl, nodes.clone(), kt, kc, ks, plow, mn, [2, 4, 5, 6, 8]);
         api.set_segs(segs).map_err(PyValueError::new_err)?;
         let t = if threads == 0 { std::thread::available_parallelism().map(|v| v.get()).unwrap_or(1) } else { threads };
         let pool = Arc::new(rayon::ThreadPoolBuilder::new().num_threads(t).build().unwrap());
