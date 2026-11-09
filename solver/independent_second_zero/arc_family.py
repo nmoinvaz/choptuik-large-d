@@ -159,6 +159,7 @@ def noisy(sig, seed, rel=1e-12):
 if __name__ == "__main__":
     # python3 arc_family.py <dir with I82-win2's sigF_*.json>: the family's exact zero, w_nat, checks, fit vs data
     import sys
+    sys.path.insert(0, HERE)
     import lapl
     mp.mp.dps = 50
     D = sys.argv[1]
