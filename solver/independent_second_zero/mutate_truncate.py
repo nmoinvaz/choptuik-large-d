@@ -1,7 +1,9 @@
 """Mutation control for P1 (issue #203): the same zero search and crossing on the planted family, with the continuation
 removed (c~_n = 0 for n > 22, the plain partial sum of sigma_n x^n).  It must fail P1's criterion; exits 0 when it does.
 
-    python3 mutate_truncate.py [seed]
+    python3 mutate_truncate.py [seed] [--family arc]
+
+--family arc runs it on arc_family.py's family (#214) instead of planted.py's.
 """
 import os
 import sys
@@ -14,8 +16,14 @@ import lapl  # noqa: E402
 import planted  # noqa: E402
 from second_zero import WS, quad_root  # noqa: E402
 
-seed = int(sys.argv[1]) if len(sys.argv) > 1 else 1
-fam = planted.Family(1.095)
+args = [a for a in sys.argv[1:] if a not in ("--family", "arc", "kummer")]
+seed = int(args[0]) if args else 1
+if "arc" in sys.argv[1:]:
+    import arc_family  # noqa: E402
+    fam = arc_family.Family(1.095)
+    print(f"family arc, w_nat {mp.nstr(fam.wnat, 12)}, shift {mp.nstr(fam.shift, 6)}")
+else:
+    fam = planted.Family(1.095)
 ims = []
 for j, w in enumerate(WS):
     mp.mp.dps = 50
