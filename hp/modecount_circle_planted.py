@@ -2,9 +2,9 @@
 """Planted-truth test of the small-circle winding and position (hp/modecount_circle.py, function circle) on the
 synthetic det M of hp/modecount_moment_planted.py (the D 61.03, M 48, kf 23 structure).
 
-    python3 modecount_circle_planted.py [--mutate=nodiv|offset]   exit 1 if a criterion fails (seconds)
-    python3 modecount_circle_planted.py --controls                 the test and both mutations: exit 0 only if the
-                                                                   test passes and each mutation fails
+    python3 modecount_circle_planted.py [--mutate=nodiv|offset|flat]   exit 1 if a criterion fails (seconds)
+    python3 modecount_circle_planted.py --controls                      the test and the three mutations: exit 0 only
+                                                                        if the test passes and each mutation fails
 
 Planted extra zeros (with their conjugates): 1.80+0.60i, 2.20+0.90i and 3.02+0.05i. Circles with n0 = 20 and tol
 pi/4, as on the real data (--n0=16 tests 16 points):
@@ -23,6 +23,13 @@ n0 = 16 only: errors 6.3e-5, estimates 1.3e-3 (the zeros lie at 0.71 R, where th
 converge slowly). At n0 = 20 every case passed, so the real circles use n0 = 20 and the test runs it by default.
 Controls, each must make the test fail: --mutate=nodiv leaves out the division by (lam - c)^W in the position sums;
 --mutate=offset plants the zero of case one 0.01 from where the criteria expect it.
+
+Alias cases (#257, the alias rule of #242 on the circle's arcs). A pair of zeros 0.008 apart along the circle, 0.002
+inside (in) or outside (out) the circle of case empty (3.5+0.8i, R 0.2), centred at the fraction f = 0.3, 0.5, 0.7 of
+the fourth arc of the initial grid: the pair turns the phase by about 2 pi - 0.26 rad between two samples, so the step
+test alone sees a small step. Pass: winding +2 (in) or 0 (out) to 1e-6, and every circle resolved (steps <= tol, no
+mismatch, every arc within the alias rule). --mutate=flat restores the old rule (no alias rule, one verification
+pass) and must fail at least one alias case; --controls runs it too.
 """
 import math
 import os
@@ -41,6 +48,40 @@ CASES = [("one", 1.84 + 0.57j, 0.2, 1, [ZEROS[0]]), ("phys", P.LP + 0.03j, 0.2, 
          ("edge", 1.92 + 0.60j, 0.2, 1, [ZEROS[0]]), ("empty", 3.5 + 0.8j, 0.2, 0, None),
          ("two", 2.0 + 0.75j, 0.35, 2, ZEROS[:2]), ("pair", 3.0 + 0j, 0.2, 2, [ZEROS[2], ZEROS[2].conjugate()]),
          ("pole", POLE, 0.2, -1, None)]
+ALIAS_C, ALIAS_R, ALIAS_ARC, ALIAS_D, ALIAS_SEP = 3.5 + 0.8j, 0.2, 3, 0.002, 0.008
+
+
+def alias_pair(side, f, n0):
+    """two zeros ALIAS_SEP apart along the circle of case empty, ALIAS_D inside (side -1) or outside (+1), centred at
+    the fraction f of arc ALIAS_ARC of the n0-point grid"""
+    t = 2 * math.pi * (ALIAS_ARC + f) / n0
+    u = complex(math.cos(t), math.sin(t))
+    mid = ALIAS_C + (ALIAS_R + side * ALIAS_D) * u
+    return [mid - 0.5j * ALIAS_SEP * u, mid + 0.5j * ALIAS_SEP * u]
+
+
+def alias_test(mutate=None):
+    """the alias cases; True when every one passes"""
+    ok = True
+    for side, name, want in ((-1, "in", 2), (1, "out", 0)):
+        for fr in (0.3, 0.5, 0.7):
+            f = P.det_for(list(ZEROS) + alias_pair(side, fr, N0))
+
+            def det(lam):
+                la, arg, _, _ = f(lam.real, lam.imag)
+                return la, arg
+            rec = C.circle(det, ALIAS_C, ALIAS_R, math.pi / 4, N0, mutate)
+            bad = []
+            if abs(rec["winding"] - want) > 1e-6:
+                bad.append(f"winding {rec['winding']:+.6f}, planted {want}")
+            if not rec["resolved"]:
+                bad.append("unresolved")
+            ok &= not bad
+            print(f"{'PASS' if not bad else 'FAIL'} n0 {N0} pair {name} f {fr}: winding {rec['winding']:+.6f}, "
+                  f"{rec['points']} points, max step {rec['max_step']:.3f}, alias bisections {rec['alias_bisections']}, "
+                  f"largest arc*scale {rec['max_scale_h']:.2f}" + ("" if not bad else "  <- " + "; ".join(bad)),
+                  flush=True)
+    return ok
 
 
 def test(mutate=None):
@@ -55,7 +96,7 @@ def test(mutate=None):
     ok = True
     for n0 in (N0,):
         for name, c, R, want, z in CASES:
-            rec = C.circle(det, c, R, math.pi / 4, n0, "nodiv" if mutate == "nodiv" else None)
+            rec = C.circle(det, c, R, math.pi / 4, n0, mutate if mutate in ("nodiv", "flat") else None)
             bad = []
             if abs(rec["winding"] - want) > 1e-6:
                 bad.append(f"winding {rec['winding']:+.6f}, planted {want}")
@@ -74,6 +115,7 @@ def test(mutate=None):
                 bad.append("no positions")
             ok &= not bad
             print(f"{'PASS' if not bad else 'FAIL'} {line}" + ("" if not bad else "  <- " + "; ".join(bad)), flush=True)
+    ok &= alias_test("flat" if mutate == "flat" else None)
     print(("all cases pass" if ok else "SOME CASES FAIL") + (f" (mutate={mutate})" if mutate else ""), flush=True)
     return ok
 
@@ -83,10 +125,11 @@ def main():
     args, opts = parse(sys.argv[1:])
     N0 = int(opts.get("n0", 20))
     if "controls" in opts:
-        res = {m: test(m) for m in (None, "nodiv", "offset")}
-        good = res[None] and not res["nodiv"] and not res["offset"]
+        res = {m: test(m) for m in (None, "nodiv", "offset", "flat")}
+        good = res[None] and not res["nodiv"] and not res["offset"] and not res["flat"]
         print(f"controls: test {'passes' if res[None] else 'FAILS'}, nodiv {'fails' if not res['nodiv'] else 'PASSES'}, "
-              f"offset {'fails' if not res['offset'] else 'PASSES'} -> {'ok' if good else 'NOT OK'}")
+              f"offset {'fails' if not res['offset'] else 'PASSES'}, flat {'fails' if not res['flat'] else 'PASSES'}"
+              f" -> {'ok' if good else 'NOT OK'}")
         sys.exit(0 if good else 1)
     sys.exit(0 if test(opts.get("mutate")) else 1)
 
