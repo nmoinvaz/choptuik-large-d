@@ -1,7 +1,10 @@
 #!/usr/bin/env python3
 """Locate the zeros of g found by a count, from the count's own samples (no new determinants).
 
-    python3 modecount_moment.py TAG STATE.npz [BOX ...] [--data=DIR] [--out=FILE] [--mutate=nok]
+    python3 modecount_moment.py TAG STATE.npz [BOX ...] [--data=DIR] [--out=FILE] [--wtol=1e-6] [--mutate=nok]
+
+--wtol: how far the contour's quadrature winding may sit from an integer (default 1e-6). Long strips come out a few
+1e-6 off (4.000004 in #249), a missed turn about 1 off, so 1e-4 there still refuses a wrong winding.
 
 BOX: any box of the count, B0, B1a, B1b, B1c (default), B1, full, U0 or U. TAG names the count: DIR/modecount_results.jsonl (its last record with that tag) and
 DIR/modecount_<TAG>_evals.jsonl (DIR defaults to hp/data). STATE is the state the count ran on; the candidate poles of g
@@ -250,14 +253,14 @@ def match(a, b):
     return [b[j] for j in best[1]]
 
 
-def solve(r, lng, box, mode, mutate=None):
+def solve(r, lng, box, mode, mutate=None, wtol=1e-6):
     """the zeros of g inside one contour by the three cubic stencils (bias 0, -1, +1): W, N, {bias: roots}, info"""
     pieces, c = contour(r, box, mode, lng)
     cont = unwrap(pieces)
     W, _ = power_sums(cont, c, 0)
     N = int(round(W))
     info = dict(centre=[c.real, c.imag], winding=W, samples=sum(len(p) for p, _ in cont))
-    if abs(W - N) > 1e-6 or N < 0 or N > 12:
+    if abs(W - N) > wtol or N < 0 or N > 12:
         return W, None, None, info
     roots = {}
     for bias in (0, -1, 1):
@@ -268,7 +271,7 @@ def solve(r, lng, box, mode, mutate=None):
     return W, N, roots, info
 
 
-def locate(r, ev, Q, box, mutate=None):
+def locate(r, ev, Q, box, mutate=None, wtol=1e-6):
     """the zeros of g in one box (symmetric boxes: those in the upper half; U, U0: those in the strip), a dict for the
     record. Reported: the central-stencil roots of the mirrored whole box (sym; for U and U0 the strip). spread: the
     largest distance from a reported root to the same zero by the other two stencils and, where the count has real-axis
@@ -278,7 +281,7 @@ def locate(r, ev, Q, box, mutate=None):
     _, _, kind, real = box_spec(r, box)
     strip = kind == "strip"
     modes = ("strip",) if strip else ("sym", "half") if real else ("sym",)
-    sol = {m: solve(r, lng, box, m, mutate) for m in modes}
+    sol = {m: solve(r, lng, box, m, mutate, wtol) for m in modes}
     for m in modes:
         W, N, roots, info = sol[m]
         out[m] = dict(info, N=N, roots={str(b): [[z.real, z.imag] for z in zs] for b, zs in (roots or {}).items()})
@@ -349,7 +352,7 @@ def main():
         raise SystemExit("ln g does not reproduce the record's samples: wrong state, cache or record")
     res = []
     for b in boxes:
-        x = locate(r, ev, Q, b, opts.get("mutate"))
+        x = locate(r, ev, Q, b, opts.get("mutate"), float(opts.get("wtol", 1e-6)))
         print(show(tag, x), flush=True)
         res.append(dict(x, tag=tag, data=os.path.abspath(data), state=os.path.basename(statefile),
                         stored_check=chk, mutate=opts.get("mutate")))
