@@ -331,7 +331,8 @@ U0 at D = 54.04, puts one zero of the strip at −0.150 < Re λ < −0.096.
 
 ![The extra zeros at D = 55 and 61: M 48's zeros, the M 40 circles at their places that wind 0, M 40's own zeros, and the D 61 row at the cuts kf 21 and kf 23, with lambda_phys as the control](../hp/modecount_extras.svg)
 
-`python3 hp/plot_modecount_extras.py <raw-data clone>` draws it from the circle and moment records of I238-macm3, I231-macm3 and I230-mac.
+`python3 hp/plot_modecount_extras.py <raw-data clone>` draws it from the circle and moment records of I238-macm3,
+I231-macm3 and I230-mac.
 
 **Positions at D = 54 and 55 (#238; raw `I238-macm3/`, d44579f).** Each zero is confirmed by a circle winding +1, and
 the λ_phys circles wind +1 at both D:
@@ -377,12 +378,15 @@ decides. The U zeros are not located.
 one d/dτ per order, and its radius of convergence falls as M rises. At D = 30 without the cut it is 0.435, 0.324, 0.278
 and 0.225 at M = 32, 48, 64 and 80, so from M = 64 on it diverges at the first node 0.3. The |F| of 2–3×10⁵ that stopped
 #68 at M = 64 was its truncated sum. `hp/modecount_common.py` now adds a node at half the first node, or raises the
-horizon order, until both series converge to 10⁻¹⁵, and refuses a layout where they do not (`hp/modecount_probe.py
---selftest`, whose mutation `nofit` fails). The layouts of all 22 states counted so far pass unchanged. M = 64 then
-converges, to |F| = 2.5×10⁻²⁶ at D = 30 and 8.5×10⁻²¹ at D = 61 with kf 23. At M = 48 without the cut, the centre
-series converges at x = 0.3 with ratio 0.93 per order, and that background's Δ is 1.4×10⁻¹² from M = 32, while with a
-node at 0.15 it agrees with M = 32 and M = 64 to 10⁻¹⁷. The extra pair of the D = 30 count at M = 48 without the cut was
-found on that background, so it is recounted on the fitted layout.
+horizon order, until both series converge to 10⁻¹⁵, and refuses a layout where they do not
+(`hp/modecount_probe.py --selftest`, whose mutation `nofit` fails). The layouts of all 22 states counted so far pass
+unchanged. M = 64 then converges, to |F| = 2.5×10⁻²⁶ at D = 30 and 8.5×10⁻²¹ at D = 61 with kf 23. At M = 48 without the
+cut, the centre series converges at x = 0.3 with ratio 0.93 per order, and that background's Δ is 1.4×10⁻¹² from M = 32,
+while with a node at 0.15 it agrees with M = 32 and M = 64 to 10⁻¹⁷. The extra pair of the D = 30 count at M = 48
+without the cut was found on that background. On the fitted layout (nodes 0.15, 0.3, …, 0.7, |F| = 2.4×10⁻²⁶) the circle
+|λ − (4.267 + 1.324i)| = 0.35 winds 0, with every step below 0.06 rad, while the λ_phys circle on the same state winds
++1 and the circle on October's state and cache still winds +1 (#250; raw `I250-mac/`). So the pair belonged to the old
+layout's unconverged background, not to M = 48.
 
 **Other D at M = 48, kf 23 (#232; raw `I232-macm3/`, 8c625c3).** Every edge resolved, with 0 mismatches, and both setups
 passed the gate (|F| 2.3×10⁻¹⁹ and 1.6×10⁻¹⁹):

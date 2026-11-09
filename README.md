@@ -1826,14 +1826,14 @@ What is known about the selection, and what is open:
   holds the growth rates of both symmetry sectors ([notes/MODE_COUNT.md](notes/MODE_COUNT.md); at D = 61 also to
   Im λ = 3.5ω and to Re λ = 12, figure below). Besides λ_phys there are only the τ translation (λ = 0) and a gauge mode
   of the formulation at λ = 1 + ⟨c₁⟩ (a change of time coordinate that keeps the light cone at x = 1). A planted-zero
-  test runs a synthetic determinant through the same code and counts what was planted in all 8 cases. Open: a second
-  resolution (M = 48) shows one extra pair at D = 30, absent at M = 32 and in the full M = 48 count with the
-  high-harmonic cut, and taken as a truncation artifact pending M = 64; at D = 54, 55 and 61 (not at 45 to 53.8), zeros
+  test runs a synthetic determinant through the same code and counts what was planted in all 8 cases. A second
+  resolution (M = 48) without the high-harmonic cut found one extra pair at D = 30, but on a layout whose centre series
+  barely converged, and on a fitted layout it is absent (#250). Open: at D = 54, 55 and 61 (not at 45 to 53.8), zeros
   beyond the expected ones in the M = 48 counts, absent at M = 32, at D = 61 24 at the cut 21 and 30 at the cut 23, 8 of
   them with Re λ between 1.27 and 6.6, so possibly growth rates, and at M = 48 a pair crosses into Re λ > 0 between
   D = 54 and 55; at D = 55 a third resolution, M = 40, has other extras and none of M = 48's, the behaviour of
-  truncation artifacts, with D = 61 at M = 40 pending (notes/MODE_COUNT.md section 5); lower D with complex λ; Re λ >
-  6.6; non-spherical perturbations; and no collapse has been evolved above D = 14, so a continuously self-similar
+  truncation artifacts, with D = 61 at M = 40 pending (notes/MODE_COUNT.md section 5); lower D with complex λ;
+  Re λ > 6.6; non-spherical perturbations; and no collapse has been evolved above D = 14, so a continuously self-similar
   solution (Clark and Pimentel, [arXiv:2504.10590](https://arxiv.org/abs/2504.10590)) taking over the threshold is not
   excluded.
 
