@@ -316,6 +316,22 @@ is subject to the same limit. det M changes sign on the real axis only at λ_g a
 and |Im λ| < ω/2. If they were modes they would be extra growth rates. They are absent at M = 32 with the same cuts
 (#160, #168).
 
+**Positions at D = 61 (#230).** The extras in B1b and B1c lie on one row, from 1.31 + 1.42i down to 3.02 ± 0.10i, each
+zero confirmed by a small circle winding +1 (`hp/modecount_circle.py`; raw `I230-mac/`, e7dc533):
+
+| zero | kf 21 | kf 23 | shift |
+|---|---|---|---|
+| λ_phys (control) | 2.0435325 | 2.0435328 | 3×10⁻⁷ |
+| 1 | 1.3560 + 1.4385i | 1.3065 + 1.4158i | 0.054 |
+| 2 | 2.0869 + 0.9897i | 2.0073 + 0.9727i | 0.081 |
+| 3 | 2.6897 + 0.4761i (B1c) | 2.5584 + 0.5825i (B1b) | 0.169 |
+| 4 | none | 3.0196 ± 0.0958i (B1c) | new |
+
+Raising the cut moves every member toward smaller Re λ, by more along the row, and adds a pair near the real axis,
+while λ_phys moves 2×10⁵ to 5×10⁵ times less. The extras multiply and move with the cut, which points to the truncation.
+A mode whose eigenfunction has weight in the centre harmonics 22–23 would move too, so the third resolution (#231)
+decides. The U zeros are not located.
+
 **Other D at M = 48, kf 23 (#232; raw `I232-macm3/`, 8c625c3).** Every edge resolved, with 0 mismatches, and both setups
 passed the gate (|F| 2.3×10⁻¹⁹ and 1.6×10⁻¹⁹):
 
@@ -426,8 +442,8 @@ starts).
 | `hp/modecount_planted.py` | the planted-zero test → `hp/data/modecount_planted.log` |
 | `hp/modecount_f64.py` | D = 4: `--realscan` (Rust f64, real λ); the complex central-difference path is not used |
 | `hp/modecount_table.py` | the tables of section 3 from the results file |
-| `hp/modecount_circle.py` | winding of det M on small circles, with a local linear detrending → `hp/data/modecount_circles.jsonl` |
-| `hp/modecount_moment.py` | locates the zeros inside a box from a count's own samples (first moment) |
+| `hp/modecount_circle.py` | winding of det M on small circles, with a local linear detrending, and the positions of up to three zeros inside → `<data>/modecount_circles.jsonl`, `--data` a raw task folder (`--allow_unraw` for hp/data); planted test `hp/modecount_circle_planted.py --controls` |
+| `hp/modecount_moment.py` | locates the zeros inside any box of a count from the count's own samples (power sums and Newton's identities; `--data`); planted test `hp/modecount_moment_planted.py --controls`. Its spread flags a usable root, it is not an error bar, and B0 positions need circles |
 | `hp/modecount_local.sh` | the runs proposed for the local machine (section 7) |
 | `hp/modecount_lowD.py` | a double-double state at low D from an f64 state (for the local D = 4 task) |
 | `hp/modecount_jobs.sh`, `hp/modecount_queue.sh` | the job list as run here (resumable, commits after each job) |
