@@ -294,9 +294,31 @@ mode stays at the same λ while an artifact of the truncation moves or multiplie
 So the statement this count supports is: **no extra unstable mode among perturbations with τ-harmonics up to about
 30** (both sectors, 0 < Re λ < 6), with the M = 48 pair as the one open item.
 
-**M = 48 at D = 61, with the cut (as in the production run).** The resampled state reaches only |F| = 2.7×10⁻¹⁵ after
-Levenberg–Marquardt (kept in `hp/data/modecount_state_D61.0264_M48_kf13.npz`), above the 10⁻¹⁵ accepted for a
-count, so no count was run on it. Continuing the convergence and the count is local task 6.
+**M = 48 at D = 61, with the cut (as in the production run).** With the production cut at kf 13 the resampled state
+reaches only |F| = 2.7×10⁻¹⁵ after Levenberg–Marquardt (kept in `hp/data/modecount_state_D61.0264_M48_kf13.npz`), above
+the 10⁻¹⁵ accepted for a count, so no count was run on it. Raising the cut lowers the floor, to 1.4×10⁻¹⁵ at kf 17 and
+1.3×10⁻¹⁹ at kf 21, where the count runs (#159). It finds zeros beyond the expected ones. So does the count at kf 23
+(#212; raw `I212-macm3/`, 6e2e394), with every edge resolved and 0 verification mismatches:
+
+| cut | B0 | U0 | B1a | B1b | B1c | B1 | U | full |
+|---|---|---|---|---|---|---|---|---|
+| kf 21 (#159, re-evaluated with `--resolve=last` in #212) | 0 | 0 | 0 | +4 | +2 | +6 | +9 | +24 |
+| kf 23 (#212) | 0 | 0 | 0 | +6 | +2 | +8 | +8 | +24 |
+| M = 32, kf 21 (#168) | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 |
+
+The entries are wind(g), the zeros beyond the expected ones. det M changes sign on the real axis only at λ_g and
+λ_phys, so the extras come in conjugate pairs off the axis. Eight of them lie in B1b and B1c, with 1.27 < Re λ < 6.6
+and |Im λ| < ω/2. If they were modes they would be extra growth rates. They are absent at M = 32 with the same cuts
+(#160, #168).
+
+**The same cut scan at D = 45, M = 48.** One extra real zero, at λ = 1.14 ± 0.03, appears at kf 21 only. It is absent
+at kf 13 to 19 (#178) and at kf 23, 25 and 27 (#190), and the full count at kf 23 is 0 in all 8 boxes (#211).
+
+**Reading, open.** At D = 45 the extra zero belongs to one cut. At D = 61 the extras stay through kf 21 and kf 23, and
+the cut cannot be lowered to 13 because the background then does not converge. Three readings remain: weak directions
+that M = 48 resolves and M = 32 cannot, genuine modes that need M = 48, or a defect of the D = 61 state. Until they are
+told apart, the one-unstable-mode count at D = 61 holds at M = 32 only. The tasks that separate them are #230 (locate
+the zeros), #231 (a third resolution, after #141) and #232 (counts at D = 50 and 55 for the onset).
 
 **D = 4, f64 solver, real λ.** On 0.02 < λ < 6.47 (130 determinants of the Rust kernel's exact mode matrix, step 0.05)
 det M changes sign exactly twice: at λ = 0.6138559 (λ_g = 1 + ⟨c₁⟩ = 0.6138550 from the state's a_h; in the f64 RK4

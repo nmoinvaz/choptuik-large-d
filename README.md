@@ -1821,15 +1821,17 @@ What is known about the selection, and what is open:
   the amplitude series beyond its twenty-two computed orders across ω), to see whether the harmonic-1 condition lands
   exactly on ω∞, and to prove the working hypothesis that this is the selection rule. That would be an equation for ω∞
   and F∞ alone, from which Δ∞ would follow to any precision.
-- **Checked at D = 30, 45 and 61: one physical unstable mode.** The zeros of the growth-mode determinant
-  were counted by the argument principle in −0.08 < Re λ < 6.18 and a full period in Im λ, which holds the growth rates
-  of both symmetry sectors ([notes/MODE_COUNT.md](notes/MODE_COUNT.md); at D = 61 also to Im λ = 3.5ω and to Re λ = 12,
-  figure below). Besides λ_phys there are only the τ translation (λ = 0) and a gauge mode of the formulation at λ = 1 +
-  ⟨c₁⟩ (a change of time coordinate that keeps the light cone at x = 1). A planted-zero test runs a synthetic
-  determinant through the same code and counts what was planted in all 8 cases. Open: a second resolution (M = 48) shows
-  one extra pair at D = 30, absent at M = 32 and in the full M = 48 count with the high-harmonic cut, and taken as a
-  truncation artifact pending M = 64; lower D with complex λ; Re λ > 6.6; non-spherical perturbations; and no collapse
-  has been evolved above D = 14, so a continuously self-similar solution (Clark and Pimentel,
+- **Checked at D = 30 and 45, and at D = 61 at one resolution: one physical unstable mode.** The zeros of the
+  growth-mode determinant were counted by the argument principle in −0.08 < Re λ < 6.18 and a full period in Im λ, which
+  holds the growth rates of both symmetry sectors ([notes/MODE_COUNT.md](notes/MODE_COUNT.md); at D = 61 also to
+  Im λ = 3.5ω and to Re λ = 12, figure below). Besides λ_phys there are only the τ translation (λ = 0) and a gauge mode
+  of the formulation at λ = 1 + ⟨c₁⟩ (a change of time coordinate that keeps the light cone at x = 1). A planted-zero
+  test runs a synthetic determinant through the same code and counts what was planted in all 8 cases. Open: a second
+  resolution (M = 48) shows one extra pair at D = 30, absent at M = 32 and in the full M = 48 count with the
+  high-harmonic cut, and taken as a truncation artifact pending M = 64; at D = 61, 24 zeros beyond the expected ones in
+  the M = 48 counts, absent at M = 32 (8 of them with Re λ between 1.27 and 6.6, so possibly growth rates; what they are
+  is open, notes/MODE_COUNT.md section 5); lower D with complex λ; Re λ > 6.6; non-spherical perturbations; and no
+  collapse has been evolved above D = 14, so a continuously self-similar solution (Clark and Pimentel,
   [arXiv:2504.10590](https://arxiv.org/abs/2504.10590)) taking over the threshold is not excluded.
 
 ![Why the critical exponent tends to 1/2: lambda = 1/gamma against 1/(D-2) for 67 double-double points with the fit carried to lambda = 2 at D = infinity, and free fits of lambda_inf - 2 falling with the number of powers](solver/gamma.svg)
