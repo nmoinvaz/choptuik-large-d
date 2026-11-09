@@ -422,7 +422,11 @@ changes sign only at λ_g and λ_phys at both D. An odd winding of U or U0 had s
 rate of the other sector, but #238 found none there (below).
 
 **The same cut scan at D = 45, M = 48.** One extra real zero, at λ = 1.14 ± 0.03, appears at kf 21 only. It is absent
-at kf 13 to 19 (#178) and at kf 23, 25 and 27 (#190), and the full count at kf 23 is 0 in all 8 boxes (#211).
+at kf 13 to 19 (#178) and at kf 23, 25 and 27 (#190), and the full count at kf 23 is 0 in all 8 boxes (#211). The kf 21
+background it was found on is itself suspect: its centre series is truncated at 2.4×10⁻⁸ (ratio 0.967 per order at
+x = 0.3), and its solve stalled at |F| = 8.2×10⁻¹⁷ (#254; raw `I254-mac/`, ef59bf4). Refitted with a node at 0.15 the
+series converges but the solve still stalls, so whether the zero comes from the cut, the truncation or the stall is
+open (#264). #141's series gate runs before the solve, so a fresh setup would accept that background (#265).
 
 **Reading, open.** At D = 45 the extra zero belongs to one cut. At D = 61 the extras stay through kf 21 and kf 23, and
 the cut cannot be lowered to 13 because the background then does not converge. Three readings remain: weak directions
