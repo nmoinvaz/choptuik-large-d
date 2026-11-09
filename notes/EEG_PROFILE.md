@@ -129,6 +129,13 @@ $`\tilde\beta = A_*\,[\cos\theta + q\cos(\theta+\delta)]\,P_q(2\theta+\delta+\pi
 $`z/(1+wz^2) = [1/(1-az) - 1/(1+az)]/(2a)`$ with $`a = i\sqrt w`$. This is the odd part of one geometric series in
 $`az`$.
 
+**(SEC) A secant, and its pole series** (*checked numerically*, raw `I221-mac/identity_check.py`, #221). With
+$`\sigma = \tfrac12\ln(1/q)`$ and $`\varphi = \theta + \delta/2`$, $`\tilde\beta = (A_*/2\sqrt q)\,\mathrm{Re}[e^{-i\delta/2}\sec(\varphi + i\sigma)]`$.
+Its Mittag-Leffler series is an alternating sum of Lorentzians of half-width σ centred at $`(k+\tfrac12)\pi - \delta/2`$,
+dispersive at δ = 0 and turned toward absorptive by δ/2. Pollnau and Eichhorn sum same-sign absorptive Lorentzians of
+the same width to the Airy distribution (Prog. Quantum Electron. 72, 100255 (2020), Eqs. (99)–(108)); the alternation
+here comes from the odd harmonics.
+
 **(INT) The antiderivative**, which by their Eq. (12) is the leading-order central scalar field up to the factor
 $`\Delta_0/2\pi`$ (*checked symbolically*; at $`\delta = 0`$ *numerically*, mutation `atanh`):
 
@@ -162,7 +169,8 @@ maximum splits into two humps. The paper's $`q`$ is a third of that. At $`\delta
 times the Airy distribution of a Fabry–Pérot cavity, $`A_*(1+q)/(1-q)^2\cdot\cos\theta/(1 + F\cos^2\theta)`$, with
 coefficient of finesse $`F = 4q/(1-q)^2`$. So $`q_c`$ is $`F = 1`$, the reflectivity below which the Airy peaks have no
 full width at half maximum (Pollnau and Eichhorn, Prog. Quantum Electron. 72, 100255 (2020), Eq. (118); checked by
-raw `I198-mac/identity_check.py`, #198). The norm is
+raw `I198-mac/identity_check.py`, #198). The coincidence holds at δ = 0 only: at δ = 0.0985, $`q_c = 0.21328`$, while
+the Airy factor's half-maximum breakdown stays at $`3 - 2\sqrt2`$ for every δ (#221). The norm is
 $`\langle\tilde\beta^2\rangle = A_*^2/(2(1-q^2))`$ for every $`\delta`$ (their (S60)).
 
 **The parameters.**
