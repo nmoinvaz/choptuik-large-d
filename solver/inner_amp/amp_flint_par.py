@@ -16,7 +16,9 @@ What changed against amp_flint.py (details in the docstrings below):
 3. Nothing else is approximated: the tuned f_nu is computed in acb at full precision (the serial code rounds it to 50
    digits), so the two codes differ only at the level of the serial code's own rounding.
 The output depends on --procs in its last digits (sigma_16 of K 33 at w 1.10 by 1.5e-19 relative, #229), while equal
-counts gave equal bits on two machines. Compare two files bit for bit only at the same --procs.
+counts gave equal bits on two machines. Compare two files bit for bit only at the same --procs. The cause is the order
+in which _products adds the workers' partial products: summed in task order, every count gives the bits of --procs 1
+(K 25, #236).
 
 Threads do not help: python-flint keeps the GIL during a product (two threads take 2.3x one product).  Processes are
 started with 'spawn', so this runs the same way on Windows; keep calls under an  if __name__ == "__main__":  guard.
