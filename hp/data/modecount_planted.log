@@ -1,9 +1,40 @@
-PASS none: B0 0, U0 0, B1a 0, B1b 0, B1c 0, B1 0, U 0, full 0; 94 evaluations, max step 0.013
-PASS B1c, complex pair: B0 0, U0 0, B1a 0, B1b 0, B1c 2, B1 2, U 0, full 2; 202 evaluations, max step 0.397
-PASS B1c, real: B0 0, U0 0, B1a 0, B1b 0, B1c 1, B1 1, U 0, full 1; 183 evaluations, max step 0.390
-PASS U, other-sector real mode: B0 0, U0 0, B1a 0, B1b 0, B1c 0, B1 0, U 1, full 2; 100 evaluations, max step 0.391
-PASS U, near the top edge: B0 0, U0 0, B1a 0, B1b 0, B1c 0, B1 0, U 1, full 2; 101 evaluations, max step 0.392
-PASS B0, slowly growing pair: B0 2, U0 0, B1a 0, B1b 0, B1c 0, B1 0, U 0, full 0; 136 evaluations, max step 0.387
-PASS B1b, second mode next to lam_phys: B0 0, U0 0, B1a 0, B1b 2, B1c 0, B1 2, U 0, full 2; 236 evaluations, max step 0.444
-PASS B1a, near an edge (0.05 from Re = aL): B0 0, U0 0, B1a 2, B1b 0, B1c 0, B1 2, U 0, full 2; 134 evaluations, max step 0.392
-all cases pass
+PASS D30 none: B0 0, U0 0, B1a 0, B1b 0, B1c 0, B1 0, U 0, full 0; 94 evaluations, max step 0.013
+PASS D30 B1c, complex pair: B0 0, U0 0, B1a 0, B1b 0, B1c 2, B1 2, U 0, full 2; 204 evaluations, max step 0.390
+PASS D30 B1c, real: B0 0, U0 0, B1a 0, B1b 0, B1c 1, B1 1, U 0, full 1; 183 evaluations, max step 0.390
+PASS D30 U, other-sector real mode: B0 0, U0 0, B1a 0, B1b 0, B1c 0, B1 0, U 1, full 2; 100 evaluations, max step 0.391
+PASS D30 U, near the top edge: B0 0, U0 0, B1a 0, B1b 0, B1c 0, B1 0, U 1, full 2; 105 evaluations, max step 0.392
+PASS D30 B0, slowly growing pair: B0 2, U0 0, B1a 0, B1b 0, B1c 0, B1 0, U 0, full 0; 136 evaluations, max step 0.387
+PASS D30 B1b, second mode next to lam_phys: B0 0, U0 0, B1a 0, B1b 2, B1c 0, B1 2, U 0, full 2; 239 evaluations, max step 0.390
+PASS D30 B1a, near an edge (0.05 from Re = aL): B0 0, U0 0, B1a 2, B1b 0, B1c 0, B1 2, U 0, full 2; 143 evaluations, max step 0.392
+PASS D61 random0: B0 0, U0 0, B1a 0, B1b 4, B1c 2, B1 6, U 8, full 22; 519 evaluations, max step 0.393
+PASS D61 random4: B0 0, U0 0, B1a 0, B1b 2, B1c 4, B1 6, U 3, full 12; 691 evaluations, max step 0.392
+PASS D61 random7: B0 0, U0 0, B1a 0, B1b 4, B1c 2, B1 6, U 4, full 14; 498 evaluations, max step 0.390
+PASS D61 held1: B0 0, U0 0, B1a 0, B1b 6, B1c 4, B1 10, U 4, full 18; 469 evaluations, max step 0.392
+PASS D61 held5: B0 0, U0 0, B1a 0, B1b 2, B1c 2, B1 4, U 9, full 22; 436 evaluations, max step 0.392
+PASS D61 held9: B0 0, U0 0, B1a 0, B1b 4, B1c 4, B1 8, U 4, full 16; 658 evaluations, max step 0.392
+PASS D61 pair H2 f0.5: B0 0, U0 0, B1a 0, B1b 4, B1c 0, B1 4, U 0, full 4; 196 evaluations, max step 0.387
+PASS D61 pair H2 f0.25: B0 0, U0 0, B1a 0, B1b 4, B1c 0, B1 4, U 0, full 4; 209 evaluations, max step 0.391
+PASS D61 pair T f0.5: B0 0, U0 0, B1a 0, B1b 0, B1c 0, B1 0, U 2, full 4; 137 evaluations, max step 0.384
+PASS D61 pair T f0.25: B0 0, U0 0, B1a 0, B1b 0, B1c 0, B1 0, U 2, full 4; 138 evaluations, max step 0.384
+PASS D61 pair T f0.1: B0 0, U0 0, B1a 0, B1b 0, B1c 0, B1 0, U 2, full 4; 142 evaluations, max step 0.386
+PASS D61 row k2 d0.15: B0 0, U0 0, B1a 0, B1b 0, B1c 0, B1 0, U 22, full 44; 545 evaluations, max step 0.385
+PASS D61 row k4 d0.08: B0 0, U0 0, B1a 0, B1b 0, B1c 0, B1 0, U 44, full 88; 1029 evaluations, max step 0.392
+PASS D61 long row k2 d0.15: B0 0, U0 1, B1a 0, B1b 0, B1c 0, B1 0, U 22, full 44; 490 evaluations, max step 0.391
+PASS D61 long row k2 d0.3: B0 0, U0 1, B1a 0, B1b 0, B1c 0, B1 0, U 22, full 44; 495 evaluations, max step 0.391
+PASS D61 long row k4 d0.1: B0 0, U0 3, B1a 0, B1b 0, B1c 0, B1 0, U 44, full 88; 913 evaluations, max step 0.385
+PASS D61 h242_0: B0 0, U0 0, B1a 0, B1b 6, B1c 2, B1 8, U 4, full 16; 516 evaluations, max step 0.393
+PASS D61 h242_1: B0 0, U0 0, B1a 0, B1b 6, B1c 4, B1 10, U 2, full 14; 865 evaluations, max step 0.392
+PASS D61 h242_2: B0 0, U0 0, B1a 0, B1b 6, B1c 2, B1 8, U 3, full 14; 433 evaluations, max step 0.391
+PASS D61 h242_3: B0 0, U0 0, B1a 0, B1b 2, B1c 4, B1 6, U 7, full 20; 685 evaluations, max step 0.379
+PASS D61 h242_4: B0 0, U0 0, B1a 0, B1b 4, B1c 2, B1 6, U 3, full 12; 445 evaluations, max step 0.389
+PASS D61 h242_5: B0 0, U0 0, B1a 0, B1b 2, B1c 2, B1 4, U 8, full 20; 552 evaluations, max step 0.391
+PASS D61 h242_6: B0 0, U0 0, B1a 0, B1b 2, B1c 2, B1 4, U 6, full 16; 354 evaluations, max step 0.390
+PASS D61 h242_7: B0 0, U0 0, B1a 0, B1b 4, B1c 4, B1 8, U 9, full 26; 621 evaluations, max step 0.389
+PASS D61 hpair0: B0 0, U0 0, B1a 0, B1b 0, B1c 0, B1 0, U 2, full 4; 150 evaluations, max step 0.373
+PASS D61 hpair1: B0 0, U0 0, B1a 0, B1b 4, B1c 0, B1 4, U 0, full 4; 512 evaluations, max step 0.392
+PASS D61 hpair2: B0 0, U0 0, B1a 0, B1b 4, B1c 0, B1 4, U 0, full 4; 194 evaluations, max step 0.382
+PASS D61 hpair3: B0 0, U0 0, B1a 0, B1b 4, B1c 0, B1 4, U 0, full 4; 297 evaluations, max step 0.392
+PASS D61 hrow0: B0 0, U0 1, B1a 0, B1b 0, B1c 0, B1 0, U 22, full 44; 506 evaluations, max step 0.379
+PASS D61 hrow1: B0 0, U0 2, B1a 0, B1b 0, B1c 0, B1 0, U 44, full 88; 933 evaluations, max step 0.390
+PASS D61 hrow2: B0 0, U0 1, B1a 0, B1b 0, B1c 0, B1 0, U 22, full 44; 521 evaluations, max step 0.393
+all cases pass (16353 evaluations)
