@@ -228,7 +228,7 @@ lemma and Braaksma's theorem, exactly one simple zero of the D-jump function in 
 half-width 10⁻¹⁰, with A ∈ [2.7185791892117, 2.7185791892118] and ω/ω∞ ∈ [0.99922840320656, 0.99922840320657]. The
 same code reproduces Theorem A(M = 1) and the M = 3 certificate on boxes 10² to 2×10⁴ times larger. An independent
 review with its own integrator (proof/A_M2_review.md) finds the claim holds; its issues are in the controls. Theorem
-Lemmas 6a(5) (at the certificate's p̂, #184, after the review #39 found the first run centred on x̂) and 6b₁(5) (independently reviewed, #39) are certified, so A(M = 5) holds under the same assumptions; a second validated integrator (CAPD, #189) reproduces the flows of both lemmas. An independent review (proof/A_M_review.md) confirms the
+Lemmas 6a(5) (at the certificate's p̂, #184, after the review #39 found the first run centred on x̂) and 6b₁(5) (independently reviewed, #39) are certified, so A(M = 5) holds under the same assumptions; a second validated integrator (CAPD, #189, #208) reproduces the flows of both lemmas, every row of 6b₁(5) included. An independent review (proof/A_M_review.md) confirms the
 M = 3 point certificate, H1–H3 and lemma 6a; the majorant code of lemmas S and 6b₀ and the 6b₁ disc certificates are
 not yet reviewed.
 
