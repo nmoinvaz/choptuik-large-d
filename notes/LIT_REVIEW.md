@@ -327,6 +327,40 @@ The year range is unrestricted unless a year is named.
     (no Google Scholar page surfaced).
   - INSPIRE: `q=arxiv 1410.5972` (recid 3025790, 57 citations); `q=refersto:recid:3025790` (57 records);
     `q=a F.Fratini.1 or a Fratini, Filippo` (17); `q=refersto:recid:3027964` (21).
+- **2026-11-09, issue #200 (the superconducting threshold, mean-field exponents, RG limit cycles and viscosity).**
+  `WebSearch` in standard mode, and the INSPIRE REST API through `WebFetch`. The queries are verbatim in the raw-data
+  repository, `I200-mac/search_log.md` (commit f583bbd), with what each surfaced; shortened here.
+  - Q1: Mariño–Reis's title with "BCS gap non-perturbative perturbative series ground state energy"; the titles of BCS
+    (1957) and Cooper (1956) with "pdf" (records only); "\"beyond all orders\" OR \"exponential asymptotics\"
+    superconductivity gap equation Stokes phenomenon trans-series BCS essential singularity resummation" (nothing on
+    the gap equation itself).
+  - Q2 and Q3: Thouless's 1960 title with "pair susceptibility divergence T-matrix pole" (secondary sources only);
+    "Vollhardt review infinite dimensions mean-field theory exact \"1/sqrt(d)\" hopping scaling Metzner Vollhardt 1989
+    Ising model Weiss mean field exact d to infinity arXiv"; "upper critical dimension mean-field exponents exact above
+    d=4 Ginzburg criterion large-N saddle point exponent 1/2 order parameter beta=1/2 why"; "Penrose criterion plasma
+    instability argument principle winding number Nyquist count unstable modes dielectric function zeros upper half
+    plane" (lecture notes only).
+  - Q4: "holographic superconductor large D limit 1/D expansion critical temperature analytic"; "dynamical formation
+    of hairy black hole holographic superconductor critical behavior threshold scaling law Choptuik-like time evolution
+    charged scalar AdS" (no threshold-scaling study).
+  - Q5: "\"Russian doll\" renormalization group superconductivity LeClair Roman Sierra limit cycle BCS".
+  - Q6: "critical collapse viscous fluid black hole threshold self-similar bulk viscosity shear viscosity critical
+    exponent" (nothing on viscous critical collapse); "Emparan Suzuki Tanabe large D effective theory black brane
+    viscous fluid shear viscosity eta/s = 1/4pi \"large D\" hydrodynamics"; "holographic superfluids Landau criterion
+    quasinormal mode crosses real axis instability critical velocity Amado Arean Jimenez-Alba Landsteiner"; "Landau
+    criterion superfluidity critical velocity onset of dissipation review Leggett \"Superfluidity\" Reviews of Modern
+    Physics 1999" (Leggett's review did not surface).
+  - INSPIRE: `q=t viscous and t collapse and (t critical or t self-similar or t threshold)` (1 record);
+    `q=(t viscosity or t viscous or t dissipative or t "Israel-Stewart") and (t "critical collapse" or t "critical
+    phenomena" or t "gravitational collapse")` (25); `q=refersto:recid:371808 and (t viscous or t viscosity or t
+    dissipative or t heat or t kinetic or t Vlasov or t collisionless or t anisotropic)` (2); `q=(t Choptuik or t
+    "critical collapse" or t "critical gravitational collapse" or t "critical phenomena") and (t superconductor or t
+    superconducting or t superfluid or t hairy or t hair)` (2); `q=(t "limit cycle" or t "limit cycles" or t "discrete
+    scale invariance" or t Efimov or t "Russian doll") and (t superconductor or t superconductivity or t BCS or t
+    "Cooper pair" or t "Cooper pairs")` (5); `q=refersto:recid:1267488` (45); `q=refersto:recid:1684230` (13);
+    `q=refersto:recid:1736509` (38); `q=(t "large D" or t "large dimension" or t "infinite dimensions" or t "1/D
+    expansion") and (t collapse or t "horizon formation" or t "mean field" or t threshold or t critical)` (7); and three
+    batches of `q=arxiv <id> or ...` for the bibliographic records.
 
 ## 6. Read ledger
 
@@ -395,6 +429,24 @@ The year range is unrestricted unless a year is named.
     Chembo–Yu 2010; Madsen–Zhao 1999.
   - Failed (FULL-TEXT-UNREAD): the Optica pages of Ismail et al. (loading placeholder) and its scispace copy (empty);
     the UCL "pp" mirror (403); scilit (403); a Czech library record (bot check); a Kyoto repository PDF (empty).
+- **2026-11-09, issue #200** (through `WebFetch`; Kol's PDF, which came back as binary, was extracted with pypdf from
+  the copy the tool saved; quotes and URLs in the raw-data repository, `I200-mac/read_log.md`, commit f583bbd):
+  - Full extraction: Mariño–Reis 1905.09569; Polchinski hep-th/9210046; LeClair–Román–Sierra cond-mat/0211338;
+    Kaplan–Lee–Son–Stephanov 0905.4752; Kol hep-th/0502033v3 (PDF); Hartnoll–Herzog–Horowitz 0803.3295; Emparan–Tanabe
+    1312.1108; Hartnoll–Horowitz–Kruthoff–Santos 2008.12786; Camps–Emparan–Haddad 1003.3636; Rozali–Way from Sec. 3 to
+    the end; Amado et al. 1307.8100; Koike–Hara–Adachi gr-qc/9503007; Maison gr-qc/9504008; Evans–Coleman
+    gr-qc/9402041; Kovtun–Son–Starinets hep-th/0405231; Marsiglio–Beach–Gooding 1203.5122; Emparan–Herzog 2003.11394
+    (characters 0–300000 of 302723, Sec. X.3 included).
+  - Partial: Braaten–Hammer (0–200000 of 248219); Hara–Koike–Adachi gr-qc/9607010 (0–100000 of 216312); Larkin–Varlamov
+    (0–200000 of 224656); Vollhardt 2210.06072 (0–100000 of 172147); Emparan–Izumi–Luna–Suzuki–Tanabe 1602.05752
+    (0–100000 of 117569); Emparan–Rafecas-Ventosa–Way 2512.14186 (0–100000 of 197383); Yuwen et al. 2606.26532
+    (0–100000 of 122393); Schmitt 1404.1284 (0–100000 of 244179); the 2025 review 2507.07636 (0–100000, Secs. II.5–II.7
+    and a keyword search); Wikipedia, *Ginzburg criterion* (a secondary source).
+  - Abstract or record only: Georges–Kotliar–Krauth–Rozenberg cond-mat/9510091; Glazek–Wilson hep-th/0203088;
+    Mariño–Reis 2010.16174; Müller–Schäfer 1710.00136; Rein–Rendall–Schaeffer gr-qc/9804040; Olabarrieta–Choptuik
+    gr-qc/0107076; Chavanis 1002.0291; Silveira, EPL 149, 49001 (2025) (INSPIRE record).
+  - Failed (FULL-TEXT-UNREAD): Cooper (1956), a scan that returned 404; BCS (1957) and Thouless (1960), no full text
+    surfaced; Beekman–Rademaker–van Wezel 1909.01820, whose Chapter 5 (Landau theory) the extraction did not reach.
 
 ## 7. Citation chains
 
@@ -855,3 +907,316 @@ linewidth is undefined, and its Lorentzian finesse π/(2σ) = 1.084 lies just ab
      contains a closed form for a frequency-dependent reflectivity, a branch point at a cavity pole, or a stability
      method for a non-homogeneous fixed point that the verdicts above miss.
    - *Depends on.* #198.
+
+## Addendum (2026-11-09, issue #200): the superconducting threshold, mean-field exponents, RG limit cycles and viscosity
+
+**Question.** Issue #200 asks whether critical collapse at large D shares mathematical structure with the
+superconducting threshold and with viscosity, read toward the selection rule (Conjecture 1 of the math paper), γ∞ = 1/2
+and the mode count:
+- **Q1, results beyond all orders.** The BCS gap Δ ∝ ω_D e^{−1/(N(0)V)} beside the period, which Proposition 1 leaves
+  free to every order in 1/D. Do the methods that resolve the BCS essential singularity apply to the selection rule?
+- **Q2, mean-field exponents.** γ → 1/2 at D = ∞ (Proposition 5) beside the exponents 1/2 of Ginzburg–Landau and
+  mean-field theory.
+- **Q3, the threshold as one unstable mode.** The Cooper or Thouless criterion beside the critical solution's one
+  unstable mode: how each counts its modes, and the growth rate near threshold.
+- **Q4, holographic superconductors at large D.** Methods for the 1/D expansion of a threshold.
+- **Q5, discrete scale invariance.** Efimov physics and RG limit cycles, and whether superconductivity uses them.
+- **Q6, viscosity.** (a) Superfluidity. (b) Large-D horizons as viscous fluids, η/s = 1/4π, and whether that effective
+  theory describes the threshold or the black hole formed past it. (c) Whether viscosity changes the perfect-fluid
+  critical solution or its universality class. Viscous fingering, already PROOF.md's template, was not re-read.
+
+**How.**
+- **Searches.** 15 web queries and 13 INSPIRE queries, all on 2026-11-09, listed in §5.
+- **Reads.** 36 sources opened: 17 in full, 10 in part (one of them secondary), 8 as abstracts or records, and one
+  whose relevant chapter did not come through. Three more were not found. All are listed in §6, with quotes and URLs in
+  the raw-data repository, folder `I200-mac/`, commit f583bbd.
+- **Identities.** Six relations that tie the sources to the project are *inferred*, two of them by checking a source's
+  equations against each other. They are *checked numerically or symbolically* by `I200-mac/identity_check.py`
+  (mpmath and sympy, exit 0), and its mutation makes all six fail (exit 1).
+- **Numbers.** γ∞ = 1/2 to about 5×10⁻⁷ and λ = 2 + 3.0324/n are numerical evidence from the double-double γ (README,
+  "The formula"). That λ = 2 is a growth rate of the D = ∞ critical solution is *conditional* on Conjecture 1
+  (Proposition 5(iii) and its corollary). No number from the selection rule itself is used.
+- **Verdict classes**, fixed before the search: a shared mathematical structure, named with the equations on both
+  sides; an analogy only; nothing found in the sources searched.
+
+### Closest works
+
+| Work | Bears on | What it contains | What it does not contain |
+|---|---|---|---|
+| **M. Mariño, T. Reis**, *Resurgence for superconductors*, J. Stat. Mech. (2019), arXiv:1905.09569; and *Three roads to the energy gap*, PRB 106, 125142 (2022), arXiv:2010.16174 (abstract) | Q1 | The ground-state energy's series in the coupling γ is "factorially divergent and non-Borel summable", with its first Borel singularity at the strength A of Δ² ~ e^{−A/γ} (Eq. 1.1). In the Gaudin–Yang model c_k ~ −(1/π)(π²)^{−k+1}Γ(k−1) (Eq. 4.6), "precisely twice the strength of the exponentially small term in the energy gap"; the energy is π²/12 − γ/2 − 2π²e^{−π²/γ} (Eq. 2.45). "the Borel singularity is of the renormalon type", from ring diagrams and the logarithm of the Lindhard function, and they argue it is not instanton-driven. A trans-series with C₁ = ±i (Eq. 4.18), which "plays the rôle of a Stokes parameter". The 2022 paper gets the gap from the Bethe ansatz, from resurgence and from the RG: "The three methods lead to the same answer." | A parameter selected by a Stokes multiplier; the critical temperature; the Thouless criterion. |
+| **J. Polchinski**, *Effective field theory and the Fermi surface*, TASI 92, hep-th/9210046 | Q1, Q2 | E∂_E V = NV² + O(V³) (Eq. 28), V(E) = V/(1 + NV ln(E₀/E)) (Eq. 29), which blows up at E_c = E₁e^{−1/(λ−μ*)} (Eq. 32). "The gap and the critical temperature are indeed of the form (32)", but the RG "does not get the O(1) coefficient". The effective potential "sums up the 'cactus' graphs, the same as in large-N O(N) models and mean field theory". | An exponentially small selection condition. |
+| **A. Larkin, A. Varlamov**, *Fluctuation phenomena in superconductors*, cond-mat/0109177 (part); **F. Marsiglio, K. S. D. Beach, R. J. Gooding**, Can. J. Phys. 90, 889 (2012), arXiv:1203.5122 | Q3, Q2 | Fluctuation Cooper pairs live τ_GL = πħ/[8k_B(T − T_c)] (Eq. 2). The TDGL propagator is L(p, Ω) = (−iγ_GLΩ + ε_p)^{−1} (Eq. 106) with ε_p = αT_c(ε + ξ²p²) (Eq. 108); ν = 1/2 in the GL region, 1/2 + ε/10 near d = 4 (ε = 4 − d) and 3/5 at d = 3. Thouless "tracked the BCS instability from above (in temperature) by monitoring the two particle propagator", g₂ = χ₀/(1 − \|U\|χ₀) (Eq. 1): "a single pole passes from the lower half-plane to the upper-half-plane in complex frequency". | A count of unstable modes beyond the first crossing; the microscopic TDGL (Larkin–Varlamov Sec. 5, not reached). Thouless (1960) itself was not read. |
+| **T. Koike, T. Hara, S. Adachi**, PRL 74, 5170 (1995); **T. Hara, T. Koike, S. Adachi**, gr-qc/9607010 (part); **D. Maison**, PLB 366, 82 (1996) | Q3, Q5, Q6c | The critical solution as an RG fixed point, and for DSS "replacing “fixed point” with “limit cycle”". β_BH = β/κ with κ "the unique positive eigenvalue"; "if U∗ has a unique relevant mode, then (S1) and (U1) hold". For the radiation fluid κ ≃ 2.81055255 and β ≃ 0.35580192, with "no other relevant (or marginal) eigenmodes in the range 0≤Re κ≤15, \|Im κ\|≤14" (method not stated). Maison: "the critical index depends rather strongly on the value of k, hence it is not universal", 0.1143 to 0.8157 for k = 0.01 to 0.888, uniqueness of the mode assumed. | Mean field, Landau theory, BCS, viscosity; a symmetry behind the relevant mode. |
+| **S. A. Hartnoll, C. P. Herzog, G. T. Horowitz**, PRL 101, 031601 (2008), arXiv:0803.3295 | Q2, Q4 | ⟨𝒪⟩ ∝ (1 − T/T_c)^{1/2} (Eqs. 11–12), "a square root behaviour that is typical of second order phase transitions". Continuous transitions in 2+1 dimensions "are only possible ... in the large N limit (i.e. the classical gravity limit of our model), where fluctuations are suppressed." | A zero-mode criterion for T_c, which they read off the nonlinear solutions. |
+| **R. Emparan, K. Tanabe**, *Holographic superconductivity in the large D expansion*, JHEP 01 (2014) 145, arXiv:1312.1108 | Q4 | Probe limit, n = D − 1, m̂ = m/n, 𝖱 = (r/r₀)ⁿ. A hypergeometric near zone (Eq. 2.27) and a Bessel far zone (Eq. 2.30), matched to Ai(−δμ̂) = 0 (Eq. 2.39), a zero-energy bound state in a triangular well. T_c in closed form with the term a₁(λ/2 − n/4)^{1/3} (Eq. 2.42), "better than 15%" at n = 4. Exponentially small terms in n are dropped; "we cannot determine the critical exponent at this level of approximation". | A beyond-all-orders effect; the nonlinear condensate. |
+| **R. Emparan, C. P. Herzog**, RMP 92, 045005 (2020), arXiv:2003.11394, Secs. I, III.6, IV.4.5, V, VII.2, X.1–X.3 | Q2, Q4, Q6b | Large D as "mean field-like": "when the coordination number of a lattice diverges, one recovers a mean field theory". X.1: holographic "hair condenses just outside the near-horizon zone", so the large-D gains are "meager". X.3, unread before: γ is "well approximated by" ½(1 − 1/D), or ½(1 − 1/(D+1)) at larger D, from the data of Sorkin–Oren and Bland et al.; Rozali–Way's solutions are "not self-similar, and it is not a collapse"; critical collapse calls for a large-D approach "going beyond the scope of the effective membrane theory"; the period's D dependence "is less clear". | Δ(D); a selection mechanism. |
+| **D. Vollhardt**, *Why calculate in infinite dimensions?*, Jülich lecture notes (2022), arXiv:2210.06072 (part); **A. Georges, G. Kotliar, W. Krauth, M. J. Rozenberg**, RMP 68, 13 (1996) (abstract) | Q2 | J = J*/Z (Eq. 11). The local field's fluctuation is a sum of Z terms over Z, so it falls like 1/√Z (Eq. 12), and "The Weiss mean-field theory is seen to become exact in the limit of infinite coordination number Z". Fermions need t = t*/√d (Eq. 27). DMFT "is exact in the limit of large lattice coordination (or infinite spatial dimensions)". | Critical exponents at d = ∞, in the parts read. |
+| **A. LeClair, J. M. Román, G. Sierra**, PRB 69, 020505 (2004), cond-mat/0211338; **E. Braaten, H.-W. Hammer**, Phys. Rep. 428, 259 (2006) (part); **S. D. Glazek, K. G. Wilson**, PRL 89, 230401 (2002) (abstract) | Q5, Q1 | A reduced BCS model with a time-reversal-breaking coupling θ: dg/ds = g² + θ² (Eq. 15), g = θ tan[θs + tan⁻¹(g₀/θ)] (Eq. 16), period π/θ (Eq. 17), and a tower of gaps Δ_n = ω/sinh(t₀ + nπ/θ) (Eq. 10). θ → 0 gives Δ₀ ∼ 2ωe^{−1/g}, "recovering the standard BCS result"; the regime "reduces at one loop to the Kosterlitz-Thouless flow". Braaten–Hammer: "one of the signatures of an RG limit cycle is discrete scale invariance"; Efimov's s₀ ≈ 1.00624 from Eq. (35), "so eπ/s0≈22.7"; LeClair et al.'s "gap equation ... has multiple solutions related by a discrete scaling symmetry". | Gravity; a period fixed by a nonlinear selection. |
+| **D. B. Kaplan, J.-W. Lee, D. T. Son, M. A. Stephanov**, *Conformality lost*, PRD 80, 125005 (2009); **B. Kol**, JHEP 10 (2006) 017, hep-th/0502033v3 | Q5, Q2 | Fixed points g± = g* ± √(α − α*) (Eq. 3) merge and turn complex: one side has Λ_IR/Λ_UV ≃ e^{−π/√(α*−α)} (Eq. 4), the other a limit cycle. The 1/r² potential's ν± = −(d−2)/2 ± √(α − α*) (Eq. 12) "can explain the Efimov effect", and the merger is tied to violating the BF bound. Kol: the double cone's perturbation ε = ρ^{s±}, s± = ((D−2)/2)(−1 ± i√(8/(D−2) − 1)) (Eq. 2.5), real for D ≥ 10; −1/s = γ(1 ± 2πi/Δ) (Eq. 3.16) gives 2π/Δ = √((10−D)/(D−2)) (Eq. 3.20) and γ = ¼(1 + √((D−10)/(D−2))) (Eq. 3.21). | Kaplan et al.: BCS, critical collapse. Kol: the scalar field's Δ, which Sorkin–Oren found (3.20) does not estimate. |
+| **J. Camps, R. Emparan, N. Haddad**, JHEP 05 (2010) 042; **R. Emparan, K. Izumi, R. Luna, R. Suzuki, K. Tanabe**, JHEP 06 (2016) 117 (part); **R. Emparan, J. Rafecas-Ventosa, B. Way**, JHEP 04 (2026) 034 (part); **P. Kovtun, D. T. Son, A. O. Starinets**, PRL 94, 111601 (2005) | Q6b | η = s/4π, ζ = 2η(1/p − c_s²), c_s² = −1/(n+1) (Eqs. 1.3–1.4); "Sound waves in the effective fluid are unstable", and at large n Ω̃ = k̃(1 − k̃/(4πT)), "the exact limiting relation valid for all wavenumbers". The large-D brane is a compressible viscous fluid with η = ρ and s = 4πρ (Eqs. 2.18–2.21); it "reconstructs only a region of radial extent ∼1/D above the horizon", with vacuum and gauge charges only. The general equations "form a parabolic system with a well-posed initial value problem", and "Time-dependent horizon fluctuations with amplitudes of O(D⁰) lie outside the regime of applicability". η/s = ħ/4πk_B for theories with gravity duals, from η = σ_abs(0)/16πG (Eq. 7). | Horizon formation, collapse, scalar matter, critical phenomena. |
+| **M. Rozali, B. Way**, JHEP 11 (2018) 106, from Sec. 3 to the end (unread before) | Q6b, Q2 | "While black hole collapse does not occur in the large D limit"; "this horizonless large D limit can be joined with the well-developed large D limit of black holes", proposed, not done; their time scaling "has not yet appeared in any large D study of black holes"; "The metric we have chosen cannot have the continuous or discrete self-similarity"; "These equations are parabolic in character". | A construction of the critical solution. |
+| **I. Amado et al.**, *Holographic superfluids and the Landau criterion*, JHEP 02 (2014) 063; **A. Schmitt**, *Introduction to superfluidity*, Lect. Notes Phys. 888 (2015) (part) | Q6a | The Landau criterion v_c = min_p ε_p/p (Schmitt, Eq. 3; Amado et al., Eq. 2) is an energetic threshold. In holographic superfluids the dynamical instability, a QNM leaving the lower half plane, appears beyond it and is "strongest at finite wavelength"; the QNMs come from "the determinant method". Only the superfluid component flows through a thin tube, and "only the normal fluid carries entropy". | A threshold with one unstable mode at a finite rate; gravitational collapse. |
+| **C. R. Evans, J. S. Coleman**, PRL 72, 1782 (1994); **C. Gundlach, D. Hilditch, J. M. Martín-García**, arXiv:2507.07636, Secs. II.5–II.7; **Z.-Y. Yuwen, C. Joana, S.-J. Wang, R.-G. Cai**, PRD 114, L081309 (2026) (part); Rein–Rendall–Schaeffer, PRD 58, 044007 (1998), and Olabarrieta–Choptuik, PRD 65, 024007 (2002) (abstracts) | Q6c | Evans–Coleman: a perfect fluid, with n "an eigenvalue of the nonlinear system" and β = 0.36. The review: dimensionful parameters "become irrelevant", dimensionless ones such as k "do change the universality class", and "a fixed point of the renormalisation group cannot have a preferred length scale". Yuwen et al.: Eckart bulk viscosity Π = −ϵρ^{1/2}Θ, "ϵ is the dimensionless viscosity strength"; fitted γ at w = 1/3 of 0.37 and 0.28 (two profiles) at ϵ = 0 and 0.34 and 0.26 at ϵ = 0.01 (Table 3), "the γ parameter remains at a similar order of magnitude"; shear neglected. Collisionless matter: "a discontinuity in the mass of the black hole", and "the critical behavior in this model is Type I". | A viscous critical solution, its modes or its exponent. |
+
+Negative reads:
+- Hartnoll–Horowitz–Kruthoff–Santos, SciPost Phys. 10, 009 (2021): inside the hairy black hole the amplitude
+  c₅ = A sin(B/(1−T/T_c) + C) (Eq. 25), so the temperatures at which the Kasner inversions diverge accumulate at T_c
+  like 1/n (*inferred*), not geometrically. No DSS or limit cycle.
+- Abstracts or records: Müller–Schäfer (viscous matter falling into an existing black hole); Silveira, EPL 149, 49001
+  (2025) (Jeans-type collapse with shear viscosity); Chavanis, EPJB 85, 229 (2012) (the Nyquist method for
+  self-gravitating systems).
+- Wikipedia, *Ginzburg criterion* (secondary): the upper critical dimension "comes out to be 4".
+
+### The identities
+
+*Inferred*, and *checked* by `I200-mac/identity_check.py`:
+1. **Kol's merger is a fixed-point merger.** His Eq. (2.5) is the root pair of s² + (D−2)s + 2(D−2) = 0. That is
+   Kaplan et al.'s Eq. (12) with d = D, α = −2(D−2) and α* = −(D−2)²/4, so α − α* = (D−2)(D−10)/4 and the merger sits
+   at D* = 10. His Eqs. (3.19)–(3.21) follow from Eq. (3.16).
+2. **Kol's merger also has γ → 1/2.** λ = −s₊ = 2 + 4/n + 16/n² + O(n⁻³), with n = D − 2. At D = ∞ the indicial
+   equation, divided by n, becomes first order and gives s = −2. The 1/n coefficient is 4, against 3.0324 here.
+3. **Emparan–Herzog's fits miss the computed γ above D = 20.** Against README's Values, ½(1 − 1/D) and
+   ½(1 − 1/(D+1)) miss by at least 1.3×10⁻³ at D = 20, 30, 40, 50 and 60. Their large-D deficit 1/(2D) is 0.66 of the
+   computed 0.758/(D − 2).
+4. **The Russian-doll flow is a limit cycle.** Integrating dg/ds = g² + θ² gives poles spaced by π/θ; Eq. (16)
+   solves Eq. (15); the gap ratio tends to e^{−π/θ}; and θ → 0 gives Δ₀ → 2ωe^{−1/g}.
+5. **The superconducting rate passes through zero at T_c.** The pole of Larkin–Varlamov's L(0, Ω) lies at
+   Ω = −i(8/π)(T − T_c), the inverse of their τ_GL. Below T_c the p = 0 mode grows at (8/π)(T_c − T).
+6. **The gravity-free inner problem is the massless φ⁴ gradient flow.** With c = 1 the inner equations of Proposition
+   5(i) give Y_s = Y_tt − Y³/4 = −δF/δY, with F = ∫(Y_t²/2 + Y⁴/16) dt and s the flow time. That is the real
+   Ginzburg–Landau equation at T = T_c in one "space" dimension, t. Under (t, s, Y) → (at, a²s, Y/a) a mass term −rY
+   needs r → r/a², the weight 2 of the s-shift. With gravity, c_s = cY²/4 couples c back in.
+
+### Verdicts
+
+**Q1, results beyond all orders: an analogy only.** The two share resurgence as a language, which the project already
+uses, and differ in mechanism.
+- **What both share.** The perturbative series cannot see the answer. The BCS energy's series is that of the normal
+  state, and the condensation energy −2π²e^{−π²/γ} lies beyond it (Mariño–Reis, Eq. 2.45; *inferred* reading). Here
+  every period has a formal 1/D solution (Proposition 1).
+- **What lies beyond all orders.** In BCS it is the answer itself, the gap. Here the answer Δ is O(1) and, if
+  analytic in 1/D, has an ordinary expansion. The exponentially small object is the condition that selects it, the
+  Stokes multiplier of a fast mode (Propositions 2–4).
+- **Where the exponential comes from.** BCS's e^{−1/g} comes from the logarithmic flow of a marginal coupling, which
+  reaches a pole after ln(E₀/E) = 1/g (Polchinski, Eq. 29), and its Borel singularity is "of the renormalon type". The
+  light-cone obstruction is a WKB exponent nΦ(x) of a fast mode (Proposition 3), an instanton-like exponent
+  (*inferred* classification), the kind Mariño–Reis argue against for BCS.
+- **The methods.** Of the three roads to the gap (Bethe ansatz, resurgence, RG), only resurgence has a counterpart
+  here: the late orders of the 1/D series encode C(n,s) as a Stokes multiplier (Propositions 3–4). The gap equation
+  is a self-consistency for a scale with a closed-form solution (Δ = ω/sinh(1/g) at θ = 0 in LeClair et al., Eqs.
+  10–11), while the selection condition is a connection problem with no closed form. The Cooper instability is a pole
+  at an exponentially small binding energy, not a zero of a multiplier that fixes an O(1) parameter.
+- No source read gives a tool for Conjecture 1 beyond the Borel summation and resurgence that PROOF.md and
+  proof/B3_borel.md already take from exponential asymptotics.
+
+**Q2, mean-field exponents: an analogy only, through a weight 2 under parabolic scaling. Within gravity, a candidate
+shared structure with Kol's merger.**
+- **The common weight.** Both exponents are the inverse of a weight 2. In Ginzburg–Landau the control parameter adds
+  to the squared wavenumber, ε_p = αT_c(ε + ξ²p²) (Larkin–Varlamov, Eq. 108), so the correlation length goes like
+  ε^{−1/2}. In Proposition 5 the unstable mode is the shift of s = r²/(2n), so r_BH² ∝ p − p*. Identity 6 makes the
+  parallel exact for the inner problem without gravity, the massless φ⁴ flow, where a mass and the s-shift both have
+  weight 2.
+- **Different mechanisms.** The mean-field 1/2 holds for every d above 4 and fails below it by the Ginzburg criterion
+  (Wikipedia; Larkin–Varlamov give ν = 1/2 + ε/10 with ε = 4 − d, and 3/5 at d = 3). γ(D) moves at every finite D,
+  γ = 1/2 − 0.758/n + … (numerical evidence), with no upper critical dimension on 3.04 ≤ D ≤ 61. Its 1/2 comes from an
+  exact symmetry of the D = ∞ equations, broken at O(1/n), and is a growth rate of the critical solution only given
+  Conjecture 1 (*conditional*).
+- **Not a saddle-point limit.** Mean-field exactness at infinite coordination is a central-limit cancellation of the
+  local field's fluctuations (Vollhardt, Eq. 12). HHH's square root comes from the classical bulk, "where fluctuations
+  are suppressed". Critical collapse is classical at every D, yet γ(4) = 0.374. Emparan–Herzog call large D "mean
+  field-like" by the coordination analogy, but the inner limit comes from the dominance of the radial term (*inferred*),
+  which makes the equations "parabolic in character" (Rozali–Way; Proposition 5(i)).
+- **Within gravity.** Kol's merger has γ → 1/2 by the same first-order limit, s² + ns + 2n = 0 tending to s = −2
+  (identity 2), with a different 1/n coefficient, 4 against 3.0324. No source says whether its −2 is the weight of a
+  symmetry, as Proposition 5's 2 is. Recommended task 1 tests it.
+
+**Q3, the threshold as one unstable mode: an analogy only. The two thresholds are different kinds of instability.**
+- **The superconducting threshold** is a bifurcation of the normal state. "a single pole passes from the lower
+  half-plane to the upper-half-plane" (Marsiglio et al.), and its rate passes through zero, (8/π)(T − T_c) (identity 5),
+  so τ_GL diverges at T_c. Below T_c the unstable modes form a band in p, wherever ε + ξ²p² < 0, most unstable at p = 0
+  (*inferred* from Eq. 108).
+- **The collapse threshold** is the codimension-one stable manifold of a saddle that has one unstable mode at a finite
+  rate (Koike–Hara–Adachi; Hara–Koike–Adachi, Claim 1). p − p* sets the mode's amplitude, not its rate, and γ = 1/λ.
+  The statistical-mechanics counterpart is an RG fixed point's single relevant direction, the reading those papers
+  use, not the Thouless instability.
+- **Counting.** The Thouless criterion detects the first crossing by a real sign change at one point,
+  1 − |U|χ₀(0, 0) (Marsiglio et al., Eq. 1). It does not count. In critical collapse, Koike–Hara–Adachi report no
+  further mode in 0 ≤ Re κ ≤ 15, |Im κ| ≤ 14 without stating the method, and Maison assumes uniqueness. Holographic
+  QNM studies use "the determinant method" (Amado et al.) without a winding count. MODE_COUNT.md's argument-principle
+  count of det M(λ) has no counterpart in the sources read.
+- **The rate near threshold** vanishes at a bifurcation (critical slowing down) and stays finite at a saddle, λ = 2 +
+  O(1/n) here. #198's cavity saddle (Gomila et al.) remains the closer analogue.
+
+**Q4, holographic superconductors at large D: an analogy only. Their threshold is visible order by order in 1/n.**
+- **The method.** Emparan–Tanabe find T_c by near–far matching of a linear problem, a hypergeometric near zone joined
+  to a Bessel far zone at a turning point, Ai(−δμ̂) = 0 (Eq. 2.39). The threshold has a 1/n expansion, with powers
+  n^{1/3} from the Airy zero (Eq. 2.42), and the exponentially small terms are dropped. That is the opposite of
+  Proposition 1, where the period is invisible at every order.
+- **Tools already in the project.** Proposition 2 is also a hypergeometric connection problem, at the light cone,
+  solved by Gauss's formula (*inferred* comparison). The holographic condensate itself is left to numerics, since the
+  hair "condenses just outside the near-horizon zone" (Emparan–Herzog X.1), and the critical exponent is not obtained at
+  large D (Emparan–Tanabe).
+- **One difference worth a test.** A turning point makes fractional powers of n. The project's analyticity tests added
+  D^{−1/2}, D^{−3/2}, ln D/D, ln D/D² and e^{−D/4} terms and series in n^{−1/2} (README, "Is the period analytic in
+  1/D?"), not n^{−1/3} or n^{−2/3}. Recommended task 2.
+
+**Q5, discrete scale invariance: found in superconductivity as an RG limit cycle. A shared structure with Kol's merger,
+not with the Choptuik solution.**
+- **In superconductivity.** The Russian-doll BCS model has an RG limit cycle, dg/ds = g² + θ², with period π/θ and
+  gaps in the ratio e^{−π/θ} (LeClair et al.; identity 4). Its mechanism is that of conformality lost, which explains
+  the Efimov effect: a pair of fixed points pushed into the complex plane, g = ±iθ here and g* ± √(α − α*) in Kaplan et
+  al. (*inferred* from the two beta functions, which have the same form with θ² = α* − α). As θ → 0
+  the period diverges and BCS's single gap e^{−1/g} returns. *Inferred*: BCS's marginal flow dg/ds = g² is the merger
+  point θ = 0 of that family.
+- **Kol's double cone** has exactly this structure, with D in the role of α. Identity 1 maps his Eq. (2.5) onto
+  Kaplan et al.'s Eq. (12), α − α* = (D − 2)(D − 10)/4, and his 2π/Δ = √((10 − D)/(D − 2)) is the cycle's period. This
+  is a shared mathematical structure, named with the equations on both sides, but it belongs to the linear
+  perturbations of the merger system.
+- **The Choptuik solution** is a limit cycle of the self-similarity RG (Hara–Koike–Adachi; the 2025 review, II.5), but
+  its period is the eigenvalue of a nonlinear problem, as Evans–Coleman's n is "an eigenvalue of the nonlinear system",
+  and at large D it is selected beyond all orders (Proposition 1). No complex pair of fixed points is known for it. A
+  merger would make Δ diverge like (D − D*)^{−1/2}. The computed Δ(D) is finite on 3.04 ≤ D ≤ 78, with its maximum at
+  D = 3.755725 (README), so no merger of that kind occurs in the computed range (*inferred*).
+- The superconductivity sources read do not use Efimov physics. One title joins them (*Efimov trimers and Cooper
+  pairs*, NJP 21, 073051 (2019), arXiv:1904.01939), not opened.
+- **Follow-up.** For the Choptuik solution, none. Recommended task 1 rederives identity 1 from Kol's ansatz.
+
+**Q6a, superfluidity: nothing found in the sources searched beyond the analogy of a threshold.**
+- The Landau criterion is an energetic threshold, ε_p + p·v_s < 0 (Schmitt, Eqs. 2–3). In holographic superfluids the
+  dynamical instability follows beyond it, at finite wavelength (Amado et al.).
+- Zero viscosity belongs to the superfluid component, while the normal component carries the entropy and a finite shear
+  viscosity (Schmitt; Kovtun et al.).
+- Neither the onset of superfluidity nor the critical velocity is a codimension-one saddle with one unstable mode, and
+  no source read ties either to critical collapse.
+
+**Q6b, large-D horizons as viscous fluids: by its own stated limits the effective theory cannot describe the
+threshold. An analogy only for the black hole past it.**
+- **Scope.** The theory needs an existing horizon, a near zone of thickness 1/D, horizon gradients of order 1/√D and
+  fluctuations of amplitude O(1/D): "Time-dependent horizon fluctuations with amplitudes of O(D⁰) lie outside the regime
+  of applicability" (Emparan–Rafecas-Ventosa–Way). Emparan–Herzog X.3 place critical collapse "beyond the scope of the
+  effective membrane theory", and Rozali–Way leave the join of the horizonless and black-hole limits open.
+- **The threshold.** The critical solution has no horizon, and past the threshold the horizon grows from zero radius,
+  an O(1) change (*inferred*). The scalar field that forms and feeds it is outside the theory, which carries vacuum and
+  gauge charges only (Emparan et al. 2016).
+- **Where viscosity sets a large-D threshold.** It sets the Gregory–Laflamme band edge, from Ω̃ = k̃(1 − k̃/(4πT)) with
+  η/s = 1/4π (Camps–Emparan–Haddad), k_GL = 1 − 1/(2n) + … in Emparan–Herzog Sec. V. That threshold is a mode crossing
+  zero at k_GL, a bifurcation like the superconducting one of Q3, not a saddle with one unstable mode.
+- **Parabolic equations on both sides.** The membrane equations are parabolic in real time (Emparan–Rafecas-Ventosa–
+  Way), and the inner problem is parabolic in s = r²/(2n) (Proposition 5(i)). No source maps one onto the other.
+
+**Q6c, viscosity and the perfect-fluid critical solution: nothing found in the sources searched.**
+- No source read constructs a viscous critical solution or its modes. INSPIRE's 25 records on viscous or dissipative
+  gravitational collapse are, by title, dissipative-collapse models and Jeans-type clouds, not thresholds.
+- The one threshold study with viscosity, Yuwen et al. (2026, primordial black holes, Eckart bulk viscosity), fits γ
+  with and without it. Its two profiles give 0.37 and 0.28 at ϵ = 0 and w = 1/3, where universality and
+  Koike–Hara–Adachi's 0.3558 predict one value. So its fits cannot resolve a change of γ by ϵ = 0.01 (*inferred*).
+- **The review's rule sorts the cases** (*inferred* application of Gundlach–Hilditch–Martín-García, II.6–II.7). Take
+  a viscosity coefficient ∝ ρ^q. On a self-similar background of scale L, ρ ∝ L^{−2} (G = c = 1), so the viscous stress
+  over the pressure scales like ϵL^{1−2q}.
+  - q = 1/2, Yuwen et al.'s choice, is scale-free. ϵ is then a dimensionless parameter like k, which can change the
+    universality class, as k does over γ = 0.11–0.82 (Maison).
+  - q < 1/2 is irrelevant on small scales and keeps the perfect-fluid class.
+  - q > 1/2 grows on small scales and breaks self-similarity there. η = s/4π for a conformal fluid in four dimensions
+    has q = 3/4 once ħ sets the entropy (*inferred*), so it would matter only near the scale where hydrodynamics itself
+    fails.
+- At the other end of the mean free path, collisionless matter is type I with a mass gap (Rein–Rendall–Schaeffer;
+  Olabarrieta–Choptuik), so the class does change between zero and infinite mean free path. None of this bears on the
+  scalar field, which has no viscosity.
+
+### Citation chains (INSPIRE, 2026-11-09)
+
+- **Forward from Emparan–Tanabe** (recid 1267488): 45 records. By title, only arXiv:1502.03616 and 2001.08358 continue
+  holographic superconductors at large D. Not opened.
+- **Forward from Rozali–Way** (recid 1684230): 13 records, #172's list plus Emparan–Rafecas-Ventosa–Way (opened).
+- **Forward from Mariño–Reis** (recid 1736509): 38 records, none about gravity, selection or Stokes multipliers by
+  title. *Three roads to the energy gap* was opened as an abstract.
+- **Forward from Evans–Coleman** (recid 371808, 365 citations), restricted to viscous, dissipative, kinetic or
+  collisionless titles: 2 records, both read.
+- **Backward.** Braaten–Hammer cite Wilson (1971), Glazek–Wilson and LeClair et al. for limit cycles. LeClair et al.
+  cite Bedaque–Hammer–van Kolck and Bernard–LeClair. Kol cites Sorkin–Oren for the test of his Eq. (3.20).
+
+### References checked
+
+| Entry | Checked against | Verdict |
+|---|---|---|
+| Mariño, Reis, *Resurgence for superconductors*, J. Stat. Mech. (2019), doi:10.1088/1742-5468/ab4802 | the arXiv page (related DOI) and INSPIRE recid 1736509 (DOI, no journal fields); the article number 123102 from a search summary only | PARTIAL: article number *(unverified)* |
+| Mariño, Reis, PRB 106, 125142 (2022), arXiv:2010.16174 | the arXiv page (related DOI 10.1103/PhysRevB.106.125142) | OK |
+| Polchinski, TASI 92, pp. 235–276, hep-th/9210046 | INSPIRE recid 339181 | OK |
+| Larkin, Varlamov, cond-mat/0109177, a chapter of *Handbook on Superconductivity: Conventional and Unconventional Superconductors* (Springer, 2002) | the arXiv comments field, where the first editor's name is a broken link; no INSPIRE record | PARTIAL: editors and pages *(unverified)* |
+| Marsiglio, Beach, Gooding, Can. J. Phys. 90, 889 (2012), arXiv:1203.5122 | the arXiv journal-ref; the page's related DOI points to an IEEE record, so no DOI is given | PARTIAL |
+| Koike, Hara, Adachi, PRL 74, 5170–5173 (1995), doi:10.1103/PhysRevLett.74.5170; Hara, Koike, Adachi, gr-qc/9607010 | INSPIRE recids 393236 and 420411 (the second without a journal) | OK; the second as a preprint |
+| Maison, PLB 366, 82–84 (1996), doi:10.1016/0370-2693(95)01381-4; Evans, Coleman, PRL 72, 1782–1785 (1994), doi:10.1103/PhysRevLett.72.1782 | INSPIRE recids 394036 and 371808 | OK |
+| Hartnoll, Herzog, Horowitz, PRL 101, 031601 (2008); Emparan, Tanabe, JHEP 01 (2014) 145; Hartnoll, Horowitz, Kruthoff, Santos, SciPost Phys. 10, 009 (2021) | INSPIRE recids 781888, 1267488 and 1814043 (DOIs) | OK |
+| Vollhardt, in *Dynamical Mean-Field Theory of Correlated Electrons*, Modeling and Simulation vol. 12 (Forschungszentrum Jülich, 2022), arXiv:2210.06072 | INSPIRE recid 2164807 | OK |
+| Georges, Kotliar, Krauth, Rozenberg, RMP 68, 13–125 (1996), doi:10.1103/RevModPhys.68.13 | INSPIRE recid 439061, whose published title, *Dynamical mean-field theory of strongly correlated fermion systems and the limit of infinite dimensions*, differs from the arXiv title | OK |
+| LeClair, Román, Sierra, PRB 69, 020505 (2004); Braaten, Hammer, Phys. Rep. 428, 259–390 (2006), doi:10.1016/j.physrep.2006.03.001; Glazek, Wilson, PRL 89, 230401 (2002), erratum PRL 92, 139901 (2004) | INSPIRE recids 602538, 662213 and 583936; the arXiv pages of the last two | OK |
+| Kaplan, Lee, Son, Stephanov, PRD 80, 125005 (2009), doi:10.1103/PhysRevD.80.125005; Kol, JHEP 10 (2006) 017, doi:10.1088/1126-6708/2006/10/017 | INSPIRE recids 821642 and 676109 | OK |
+| Camps, Emparan, Haddad, JHEP 05 (2010) 042; Emparan, Izumi, Luna, Suzuki, Tanabe, JHEP 06 (2016) 117; Emparan, Rafecas-Ventosa, Way, JHEP 04 (2026) 034 | INSPIRE recids 849250, 1422195 and 3093279 (DOIs) | OK |
+| Kovtun, Son, Starinets, PRL 94, 111601 (2005), doi:10.1103/PhysRevLett.94.111601; Amado et al., JHEP 02 (2014) 063; Schmitt, Lect. Notes Phys. 888, 1–155 (2015), doi:10.1007/978-3-319-07947-9 | INSPIRE recids 651094, 1245296 and 1288720 | OK |
+| Yuwen, Joana, Wang, Cai, PRD 114, L081309 (2026), doi:10.1103/x8p6-4zwv; Rein, Rendall, Schaeffer, PRD 58, 044007 (1998); Olabarrieta, Choptuik, PRD 65, 024007 (2002) | INSPIRE recids 3173008, 469333 and 560433, and the arXiv pages | OK |
+| Müller, Schäfer, EPJA 54, 30 (2018); Silveira, EPL 149, 49001 (2025), doi:10.1209/0295-5075/adae2f; Chavanis, EPJB 85, 229 (2012) | INSPIRE recids 1628075 and 2896111; the arXiv page of 1002.0291 | OK |
+| Cooper, PR 104, 1189–1190 (1956); Bardeen, Cooper, Schrieffer, PR 108, 1175–1204 (1957); Thouless, Ann. Phys. 10, 553 (1960); Metzner, Vollhardt (1989); Ginzburg (1961) | search listings and the citing sources (Marsiglio et al. for Thouless; Wikipedia for Ginzburg) | UNVERIFIABLE here, cited as not read |
+
+### Gap statement
+
+- **Not read.** Cooper (1956), BCS (1957), Thouless (1960), Metzner–Vollhardt (1989), Ginzburg (1961) and a textbook
+  account of Landau theory. The large-D holographic-superconductor follow-ups (arXiv:1502.03616, 2001.08358). The
+  Efimov-and-Cooper-pairs paper (arXiv:1904.01939). Penrose's criterion (1960), which counts unstable plasma modes by
+  the argument principle and surfaced only through lecture notes.
+- **Partly read.** Larkin–Varlamov Sec. 5, Hara–Koike–Adachi's DSS section, Braaten–Hammer Secs. 5–8, Beekman et al.'s
+  Chapter 5, and Yuwen et al. and the 2025 review beyond character 100000.
+- **Channels.** INSPIRE misses condensed-matter journals, so the forward chains of Larkin–Varlamov, Marsiglio et al.
+  and Schmitt were not run. There were no Google Scholar queries and no per-author sweeps.
+- **Rounds.** Round 1 covered the six questions. Round 2 followed the INSPIRE chains and the mode-count lead, and added
+  Marsiglio et al., Emparan–Rafecas-Ventosa–Way and the "three roads", so the search is not dry.
+
+### Discrepancies and proposed text (for the coordinator)
+
+- **Emparan–Herzog's fit of γ(D).** Their Sec. X.3 fits the D ≤ 14 values of Sorkin–Oren and Bland et al. by
+  γ ≈ ½(1 − 1/D), or ½(1 − 1/(D+1)) at larger D. Against the double-double values both miss by 1.3×10⁻³ to 3.1×10⁻³ at
+  D = 20–60, and their large-D deficit 1/(2D) is 0.66 of the computed asymptotic 0.758/(D − 2) (identity 3). This is an
+  approximate published fit that the computed values leave by more than 10⁻³ from D = 20 on, not a disagreement
+  with the repository's text. Proposed text for
+  the README's "Earlier formulas", after the Sorkin–Oren sentence: "Emparan and Herzog's review fits the published
+  values by γ ≈ ½(1 − 1/D) [RMP 92, 045005 (2020), Sec. X.3]; at D = 20–60 it misses the values here by 1.3–3.1×10⁻³,
+  and its large-D deficit, 1/(2D), is two-thirds of the computed 0.758/(D − 2)." Its check is
+  `I200-mac/identity_check.py`, item 3.
+- **FULL-TEXT-UNREAD marks.** §1 and §6 mark Emparan–Herzog Sec. X.C and Rozali–Way beyond Sec. 2.3 as unread. Both are
+  now read (X.C is Sec. X.3 in the arXiv numbering), and neither changes a grade. Emparan–Herzog stay P2, with no
+  Stokes reading, no selection and no Δ(D). Rozali–Way stay P4 for C4 and C5: "The metric we have chosen cannot have
+  the continuous or discrete self-similarity".
+- **Yuwen et al.'s γ** at ϵ = 0 depends on the initial profile (0.37 and 0.28 at w = 1/3), where the radiation-fluid
+  exponent is 0.3558 (Koike–Hara–Adachi; Maison). This is an inconsistency inside a source, recorded because it limits
+  the Q6c verdict.
+- **No novelty sentence** was added by this task. The strongest statement made is "not found in the sources searched".
+
+### Recommended tasks (for the coordinator to file)
+
+1. **Kol's merger at D = ∞: is its λ = 2 the weight of a symmetry?**
+   - *What.* From Kol's ansatz (his Eqs. (2.3)–(2.4)), derive the double cone's perturbation equation in sympy, take
+     n = D − 2 → ∞, and test whether the leading mode ε ∝ ρ^{−2} is generated by a symmetry of the D = ∞ equations, as
+     Proposition 5's mode is by the shift of r².
+   - *Why.* If it is, two gravitational thresholds share the mechanism behind γ∞ = 1/2 (identity 2), which bears on
+     how robust Proposition 5's corollary is. If not, their common 2 is only the first-order limit of an indicial
+     equation.
+   - *Acceptance.* The derived indicial equation must be s² + (D−2)s + 2(D−2) = 0, reproducing Kol's Eq. (2.5) at
+     three finite D to 10⁻²⁰ and so identity 1 from the ansatz rather than from his result; if not, the task stops. Then
+     a yes or no on the symmetry, with the generator written out if yes, and the expansion λ = 2 + 4/n + 16/n² recovered
+     from the derived equation.
+   - *Depends on.* #200. Minutes on one core.
+2. **Turning-point powers in the analyticity tests of Δ(D) and γ(D).**
+   - *What.* Add n^{−1/3} and n^{−2/3} terms, one at a time, to the 1/D fits of README, "Is the period analytic in
+     1/D?", through the planted-truth path first (`hp/planted_dinf.py`), then `hp/dd_fits_mp.py --mixed`.
+   - *Why.* Emparan–Tanabe's large-D threshold carries n^{1/3} from an Airy zero at a turning point (their Eq. 2.42),
+     and the tests so far tried other non-analytic terms only.
+   - *Acceptance.* On planted data with an n^{−2/3} term of the size the real fits allow, the fit recovers its
+     coefficient within 30% and shifts Δ∞ by the planted amount; if not, the real-data verdict is void. Then report the
+     real-data coefficient and the shift of Δ∞, with the spread over fit choices named as such.
+   - *Depends on.* #200. Under an hour on one core.
+3. **Read the primary sources that did not open.**
+   - *What.* Cooper (1956), BCS (1957), Thouless (1960), Metzner–Vollhardt (1989) and Penrose (1960), logged in §6.
+   - *Why.* Q1 and Q3 rest on later accounts of the first four (Mariño–Reis, Polchinski, Marsiglio et al.). Penrose's
+     argument-principle count, once read, would be the citation for MODE_COUNT.md's winding method.
+   - *Acceptance.* Each is read in full and recorded. The task fails, and says so, if one of them changes a verdict
+     above.
+   - *Depends on.* #200.
