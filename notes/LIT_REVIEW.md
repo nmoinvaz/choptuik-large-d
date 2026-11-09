@@ -361,6 +361,25 @@ The year range is unrestricted unless a year is named.
     `q=refersto:recid:1736509` (38); `q=(t "large D" or t "large dimension" or t "infinite dimensions" or t "1/D
     expansion") and (t collapse or t "horizon formation" or t "mean field" or t threshold or t critical)` (7); and three
     batches of `q=arxiv <id> or ...` for the bibliographic records.
+- **2026-11-09, issue #221 (Pollnau and Eichhorn's resonator work).** `WebSearch` in standard mode, and the OpenAlex,
+  Europe PMC, Unpaywall and INSPIRE REST APIs through `WebFetch`. The queries are verbatim in the raw-data repository,
+  `I221-mac/search_log.md` (commit 5970d46), with what each surfaced; shortened here.
+  - Part II and later work: `Pollnau Eichhorn "Spectral coherence, Part II"`, the same with "factor of two threshold"
+    and with "Progress in Quantum Electronics 2021 2022 2023", and "Markus Pollnau laser linewidth 2021 OR ... 2025"
+    (Part I only, each time).
+  - Ismail et al.: the full title with "pdf"; the title with the Twente and KTH repository domains; the SPIE companion
+    paper's title. Europe PMC `DOI:10.1364/OE.24.016366` (PMID 27464090); Unpaywall (the KTH DiVA copy).
+  - Line shapes and thresholds: "Fabry-Perot resonator transmission \"branch point\" OR \"branch cut\" pole complex
+    frequency frequency-dependent mirror reflectivity analytic continuation line shape" (nothing on branch points);
+    "laser threshold pole crosses real axis complex frequency \"gain equals loss\" ... Pollnau spectral-coherence
+    factor" (the S-matrix-pole picture of threshold, not opened); the title and authors of Vujnović et al. (no arXiv
+    copy).
+  - OpenAlex: Part I (W3010732843) and `filter=cites:` (43 records); Ismail et al. (W2461253794, 305 citations) and
+    `filter=cites:` with a title search for pole, singularity, analytic, Lorentzian, Airy, line shape, Fano, zero,
+    threshold or branch (16 records); Pollnau's works since 2017 (60) and with "spectral coherence" in the title (10,
+    Part I the only one of this line); Eichhorn's works since 2016 with resonator or linewidth words (20).
+  - INSPIRE: `q=a Pollnau` (0 records); the `refersto:doi:` form is ignored by the API (an unfiltered list), so INSPIRE
+    gives no chain for this line of work.
 
 ## 6. Read ledger
 
@@ -447,6 +466,20 @@ The year range is unrestricted unless a year is named.
     gr-qc/0107076; Chavanis 1002.0291; Silveira, EPL 149, 49001 (2025) (INSPIRE record).
   - Failed (FULL-TEXT-UNREAD): Cooper (1956), a scan that returned 404; BCS (1957) and Thouless (1960), no full text
     surfaced; Beekman–Rademaker–van Wezel 1909.01820, whose Chapter 5 (Landau theory) the extraction did not reach.
+- **2026-11-09, issue #221** (PDFs that `WebFetch` returned as binary were extracted page by page with macOS PDFKit
+  from the copy the tool saved; one page was read as text through Claude in Chrome; quotes and URLs in the raw-data
+  repository, `I221-mac/read_log.md`, commit 5970d46):
+  - Full extraction: Pollnau–Eichhorn 2020 (KITopen PDF, all 67 pages, Secs. 2–4 and 6–10 closely); Ismail–Kores–
+    Geskus–Pollnau 2016 (the published version in KTH DiVA, all 25 pages).
+  - Partial: Vujnović–Kralj–Karuža, Photonics 13, 721 (2026), Sections 1–6 (characters 0–50000 of 80809, through
+    Chrome; Appendices A–D and the references unread).
+  - Abstract or record only: Eichhorn, Appl. Phys. B 128 (2022); He–Lu–Zhao, Opt. Express 27, 17876 (2019); Atvars,
+    JOSA B 38, 3116 (2021); Zhou et al., JLT 43, 1007; Pollnau, Opt. Lett. 43, 5033 (2018); Kores et al., IEEE
+    Photonics J. (2018) and CLEO/Europe (2019); Yeung–Pollnau, SPIE (2020); Pollnau, ICTON (2019) (OpenAlex records);
+    Ismail et al., SPIE 10090 (2017) (search listings).
+  - Failed (FULL-TEXT-UNREAD): the scispace copy of Ismail et al. (empty) and its Optica pages (loading placeholder);
+    the SPIE page of the 2017 paper (empty); MDPI through `WebFetch` (HTTP 403, read through Chrome instead); the
+    Pollnau–Ismail book chapter (2018), of which only a university proxy mirror surfaced, not used.
 
 ## 7. Citation chains
 
@@ -1220,3 +1253,233 @@ threshold. An analogy only for the black hole past it.**
    - *Acceptance.* Each is read in full and recorded. The task fails, and says so, if one of them changes a verdict
      above.
    - *Depends on.* #200.
+
+## Addendum (2026-11-09, issue #221): Pollnau and Eichhorn's resonator work
+
+**Question.** #198 found that Eq. (16) of EEG26b is, at δ = 0, a cavity's Airy distribution times cos θ, and that its
+hump threshold q_c = 3 − 2√2 is the point where Pollnau and Eichhorn's Airy linewidth breaks down, their Eq. (118).
+Issue #221 asks what else their line of work shares with this project:
+- **Q1, line shapes and singularities.** Their split of the Airy distribution into Lorentzian pole pairs, Eqs.
+  (99)–(108), and the breakdown at R₁R₂ = 17 − 12√2, against the profile's pole pairs, its decay rate as a pole
+  distance and its hump threshold. Do they treat deformed line shapes, extra zeros or poles, or a branch point near a
+  pole (#133, #216)?
+- **Q2, thresholds.** A laser at threshold beside the critical solution's single unstable mode with γ = 1/λ
+  (notes/MODE_COUNT.md) and #200's superconducting threshold.
+- **Q3, method.** Their rederivation of the Schawlow–Townes linewidth from classical physics, beside this project's
+  derivations.
+- **Q4, their later work.** Part II and later parts, Ismail et al. (2016), their other resonator and threshold papers,
+  and the works that cite them.
+
+**How.**
+- **Searches.** 11 web queries and 12 queries of the OpenAlex, Europe PMC, Unpaywall and INSPIRE APIs, all on
+  2026-11-09, listed in §5.
+- **Reads.** Pollnau–Eichhorn (2020) and Ismail et al. (2016) in full, Vujnović et al. (2026) through Sec. 6, and the
+  records or abstracts of 10 more, listed in §6. Quotes and URLs are in the raw-data repository, folder `I221-mac/`,
+  commit 5970d46.
+- **PDFs.** The two full texts came back from `WebFetch` as binary and were extracted page by page with macOS PDFKit.
+  Ismail et al., which #198 could not open, is the published version deposited in KTH DiVA, found through Unpaywall.
+- **Identities.** Six relations that tie the sources to Eq. (16) are *inferred* and *checked numerically* by
+  `I221-mac/identity_check.py` (mpmath, 30 digits, exit 0). Its mutation makes all six fail (exit 1).
+- **Numbers.** EEG26b's (q, δ) = (0.0551, 0.0985) come from their extrapolation of finite-D solutions. The tuned D = ∞
+  profile's numbers (its first ratios, the [1/1] form of EEG_PROFILE.md §3.3) assume the selection rule, Conjecture 1
+  of the math paper, and are marked *conditional*.
+- **Verdict classes**, fixed before the search: a shared structure, named with the equations on both sides; an
+  analogy only; nothing found in the sources searched.
+
+### Closest works
+
+| Work | Bears on | What it contains | What it does not contain |
+|---|---|---|---|
+| **M. Pollnau, M. Eichhorn**, Prog. Quantum Electron. 72, 100255 (2020), KITopen PDF, read in full | Q1–Q3 | Eq. (62): the Airy distribution integrated over one free spectral range is 1/(1 − R₁R₂e^{−2α ℓ}). Eq. (91): the reflected field (r₁ − r₂e^{−αℓ}e^{−2iϕ})/(1 − r₁r₂e^{−αℓ}e^{−2iϕ}), the direct reflection plus the cavity's leakage. Eqs. (99)–(108): the mode profile 2δ/(δ² + (2ϕ − 2πq)²) as a pole pair, summed with Σ 1/(x − q) = π cot πx to the Airy distribution, "over the intensity mode profiles ... rather than over the electric fields". Eqs. (113)–(119): Lorentzian and Airy finesse; Fig. 19, the Airy linewidth jumps to infinity "When the minimum of the Airy distribution crosses half its maximum". Eqs. (142)–(146): gain lowers the decay rate, 1/τ_L = 1/τ_c − cg, and Λ = 1/(1 − cgτ_c) diverges at threshold. Eq. (156): in a cw laser "the gain ... is smaller than the losses", by the spontaneous rate. Sec. 7.5: the four approximations that take their linewidth to Schawlow–Townes. | The word "pole" (the text never uses it), complex frequency, zeros beyond Eq. (94), branch points, a functional form of a frequency-dependent reflectivity, a growth law or build-up time above threshold. |
+| **N. Ismail, C. C. Kores, D. Geskus, M. Pollnau**, Opt. Express 24, 16366 (2016), KTH DiVA, read in full | Q1 | Secs. 2–4: the lossless version of the above, with the cot sum in Appendix C. Sec. 5: reflectivities as "general functions of frequency, Ri(ν)", so τ_c(ν) becomes local, "thereby losing its meaning as the FWHM linewidth"; a numerical example with a multilayer mirror (98% at 300 THz, shown only in Fig. 9), where the nearest mode profile and the Airy distribution "become strongly asymmetric". The truncated mode sum converges like M⁻¹; per-mode Lorentzians with frozen widths leave an error that "would converge to a constant value". | A closed form for Ri(ν), complex frequency, poles, zeros, branch points. |
+| **V. Vujnović, N. Kralj, M. Karuža**, Photonics 13, 721 (2026), Secs. 1–6 | Q1, Q4 | Cites Ismail et al. Poles of a cavity with internal reflectors as zeros of a reduced denominator, Eqs. (23)–(25); a one-pole form with a "self-energy", Eq. (29); a weak reflector's first-order complex pole shift, δω̃ = i(c/2L)ζ, whose imaginary and real parts are the frequency pulling and the linewidth change, Eqs. (39)–(41); the three-mirror denominator, Eq. (54); pole tracking by continuation, Eq. (56), which "applies to a simple pole". | Zeros of the response, branch points, non-geometric harmonic laws. Its Appendix D on non-simple poles was not read. |
+| **Pollnau's other work since 2017** (60 OpenAlex records) and **Eichhorn's** (20) | Q4 | Counter-propagating modes ±q as independent modes (Opt. Lett. 43, 5033 (2018)); distributed phase shifts in distributed-feedback resonators (2018–2019); exact fields in Bragg mirrors by a recursive circulating-field method (2020); laser photon statistics with a beam-splitter output coupler (Eichhorn, Appl. Phys. B 128 (2022)). Abstracts only. | Part II, line-shape singularities, threshold laws. |
+
+### The identities
+
+*Inferred*, and *checked numerically* by `I221-mac/identity_check.py`; σ = ½ ln(1/q) and φ = θ + δ/2:
+1. **Eq. (16) is the field-level Mittag-Leffler sum.** β̃ = (A*/2√q) Re[e^{−iδ/2} sec(φ + iσ)]. Expanded over the
+   poles of sec, it is a sum over k of (−1)^{k+1}[cos(δ/2)(φ − c_k) − sin(δ/2)σ]/((φ − c_k)² + σ²), with
+   c_k = (k + ½)π. So each pole pair is a Lorentzian of half-width σ, dispersive at δ = 0 and turned toward an
+   absorptive one by the angle δ/2, and successive pairs alternate in sign. Pollnau–Eichhorn's Eq. (108) sums
+   same-sign absorptive Lorentzians of the same half-width (their δ/2 is σ) through the cot series. The alternating
+   series is the csc series, Σ(−1)^q/(x − q) = π/sin πx, and it describes the transmitted field itself:
+   t₁t₂e^{−iϕ}/(1 − ρe^{−2iϕ}) = (t₁t₂/2i√ρ) Σ_q (−1)^q/(ϕ − πq − iσ). The coherent sum has the Airy shape as well,
+   |Σ_q (−1)^q/(ϕ − πq − iσ)|² = (2σ/sinh 2σ) Σ_q 1/((ϕ − πq)² + σ²). So the cross terms between modes do not vanish
+   but add the constant factor sinh(2σ)/2σ, 1 + O(σ²) at high finesse and 3.12 at EEG26b's q.
+2. **The norm is the integrated Airy distribution.** ⟨β̃²⟩ = (A*²/2) A_circ,FSR with R₁R₂e^{−2αℓ} = q², which by their
+   Eq. (62) is A*²/(2(1 − q²)), EEG26b's (S60), for every δ. EEG26b's A* = [2(1 − q²)𝒩₀]^{1/2} is this relation.
+3. **Reading check of their Eqs. (114), (117) and (118).** Eq. (117) gives Δν_Airy/Δν_c = 1.001, 1.022, 1.132, 1.717 at
+   R₁ = R₂ = 0.9, 0.6, 0.32, 0.172, the values of their Fig. 12, and the two thresholds are e^{−2π} = 0.001867
+   (R = 4.32%) and 17 − 12√2 = 0.02944 (R = 17.2%).
+4. **The hump threshold is the Airy breakdown only at δ = 0.** The Airy factor 1/D_q has min/max ((1 − q)/(1 + q))² for
+   every δ, so it crosses ½, their Fig. 19 criterion, at q = 3 − 2√2 whatever δ is. The profile's second local maximum
+   per half period appears where dβ̃/dθ has a double zero: at q_c = 3 − 2√2 for δ = 0, and at q_c = 0.21328, θ =
+   −0.3565 (paper's gauge), for δ = 0.0985. The two criteria differ (half maximum against a turning point of cos θ
+   times the Airy factor), and they meet at F = 1 only when δ = 0. EEG26b's q is 0.26 of q_c(0.0985).
+5. **The one-zero [1/1] form is their two-path reflection, Eq. (91).** (1 + bu)/(1 + wu) = b/w + (1 − b/w)/(1 + wu), a
+   direct term of weight b/w plus a round-trip train. Their reflection has b/w = 1/R₁ ≥ 1, the direct reflection
+   dominating. The tuned profile's [1/1] (EEG_PROFILE.md §3.3: w = r₃, b = r₃ − r₁) has |b/w| = 0.0419 and
+   arg(b/w) = −0.477 (*conditional*). So its zero is not a passive reflector's: in these terms the profile is a
+   transmission train with a weak direct admixture, which is §3.3's "geometric tail ... plus a first ratio about 4%
+   smaller" read as two paths.
+6. **Gain moves the pole.** With the round-trip amplitude ρ_L = ρ_c e^{gℓ}, their spectral-coherence factor
+   Λ = 1/(1 − cgτ_c) is σ_c/σ_L, the ratio of the passive and active pole distances, and their threshold, Λ → ∞, is
+   ρ_L → 1, that is q → 1 in Eq. (16), where its poles reach the real axis.
+
+At EEG26b's q the echo is a low-finesse cavity on both of their measures: F = 0.247 < 1, so the Airy linewidth is
+undefined, and the Lorentzian finesse π/2σ = 1.084 is just above their Eq. (114) limit (#198).
+
+### Verdicts
+
+**Q1, line shapes and singularities: a shared structure for the undeformed line, the Mittag-Leffler expansion over one
+pole pair per round-trip period. Nothing found for deformed lines, zeros or branch points.**
+- **The shared structure.** Their Eqs. (99)–(101) and (107)–(108) on one side, and identity 1 on the other, are the
+  same partial-fraction expansion over the lattice of longitudinal modes, at two levels. Theirs is the intensity, same
+  sign, cot. Eq. (16) is a field, alternating, csc or sec, because the echo is antiperiodic (odd harmonics). The
+  half-width of every term is σ on both sides, the decay rate per harmonic. The echo's δ, its time asymmetry, is the
+  dispersive-to-absorptive mixing angle δ/2 of every term, which their absorptive Lorentzians do not have. Identity 2
+  (the norm) and identity 4 (the threshold) are corollaries.
+- **The threshold correspondence holds at δ = 0 only.** #198's statement, which EEG_PROFILE.md §2 makes at δ = 0, is
+  right as stated. At EEG26b's δ the hump threshold moves to 0.21328 while the Airy breakdown stays at 0.17157
+  (identity 4), so the coincidence is one of the δ = 0 family, not of the cavity.
+- **Deformed line shapes.** Ismail et al., Sec. 5, the source #198 could not open, treats frequency-dependent
+  reflectivity only numerically, with a local decay time τ_c(ν). It gives no form for Ri(ν) and no poles, zeros or
+  branch points; Pollnau–Eichhorn's p. 24 repeats its conclusion. Propagation loss again only rescales the round-trip
+  ratio, R₁R₂ → R₁R₂e^{−2αℓ}, so the line keeps Eq. (16)'s [0/1] form.
+- **Extra zeros.** Their reflected field, Eq. (91), is the one-zero form, and identity 5 places the tuned profile
+  outside the passive range (*conditional*). Extra poles come from internal reflectors (Vujnović et al., Eq. (54)), a
+  rational function of higher degree, which #198 already matched to #133's [L/N] family. With meromorphic
+  reflectivities such cavities stay meromorphic, so they cannot make the branch point of #133 and #216 (*inferred*).
+- **A branch point near a pole.** None of the sources read has one. Vujnović et al.'s pole continuation, Eq. (56), is
+  stated for simple poles, and its non-simple case (Appendix D) was not read.
+
+**Q2, thresholds: an analogy only. The laser threshold is a bifurcation, like #200's superconducting threshold.**
+- **The laser threshold** is the active mode's pole reaching the real axis (identity 6). Below it Λ is finite. Their
+  cw laser never reaches it, since the spontaneous rate keeps the gain below the losses (Eq. (156)). Above it the
+  mode grows, Λ < 0, a regime they call "temporally unsustainable" and treat only as transient (Sec. 7.3). Its rate
+  passes through zero at threshold, as the superconducting rate does at T_c (#200, identity 5).
+- **The collapse threshold** is the stable manifold of a saddle whose one unstable mode keeps a finite rate, λ = 2.08 at
+  D = 30 (MODE_COUNT.md) and λ → 2 as D → ∞ (numerical evidence; a growth rate of the critical solution only given
+  Conjecture 1). p − p* sets the mode's amplitude, not its rate. No source read gives the laser counterpart of
+  γ = 1/λ, a build-up time ∝ ln(1/|p − p*|)/λ: Pollnau–Eichhorn have no build-up law, and #198's cavity saddle of
+  Gomila et al. remains the closest optical analogue.
+- **In Eq. (16)'s terms** the threshold would be q → 1. EEG26b's q = 0.055 is far below it, so nothing in the echo is
+  near a threshold of this kind (*inferred*). The single unstable mode and the profile's pole pairs are different
+  objects: one is a growth rate in τ, the other a singularity of the profile in complex θ.
+- Their Sec. 6.2 recalls Blaquière's comparison of the maser with "a nuclear reactor in a subcritical, critical, or
+  supercritical state". That shares the vocabulary of critical collapse, and the source was not read.
+
+**Q3, method: an analogy only.**
+- **Their move.** A linewidth attributed to quantum noise is rederived as the decay rate of the active mode, a pole
+  distance, from a classical rate balance. The Schawlow–Townes formula is then recovered by four named approximations.
+  Earlier, a known discrepancy (the Airy linewidth exceeding the Lorentzian one) is explained as the overlap of
+  neighbouring modes in their sum, not as an approximation (Sec. 3.5, against Svelto).
+- **The parallel here.** EEG_PROFILE.md §2 reads EEG26b's fitted "damping constant" q as a pole distance: the strip
+  of analyticity equals the decay rate per harmonic. That is the same move, a fitted rate explained by the location of
+  a pole. They verify the Airy sum numerically (31 modes in their Fig. 14, 6 × 10⁶ in Ismail et al.), without
+  planted truth or a mutation.
+- **No tool to adopt.** Their physics claims about the phase of stimulated emission and about quantum theories of
+  the linewidth are outside this project. Responses to them were not read, so this review takes no position on them.
+
+**Q4, their later work: Part II not found. The closest later work is a pole-based treatment of composite cavities,
+with nothing on branch points.**
+- **Part II.** Pollnau–Eichhorn promise it twice (Sec. 2.2 on counter-propagating modes; Sec. 10 on the factor of two
+  near threshold). Four web searches and Pollnau's OpenAlex record (works with "spectral coherence" in the title)
+  find only Part I.
+- **Their own later work** (abstracts only) moves to distributed-feedback resonators and Bragg mirrors, mode counting
+  in a Fabry–Pérot resonator, laser photon statistics, and a statistical principle for bosons. None is about the
+  analytic structure of a line shape or about a threshold law.
+- **Citing works.** OpenAlex lists 43 for Part I and 305 for Ismail et al., 16 of them with a line-shape word in the
+  title. Vujnović et al. (2026) is the closest. It gives the first-order complex pole shift of a weak internal
+  reflector and continuation of the poles. The rest are reflection Airy distributions, Fano devices, analytic
+  (Hilbert-transform) spectra and laser engineering, by title or abstract.
+
+### Citation chains (OpenAlex, 2026-11-09)
+
+- **Forward from Pollnau–Eichhorn** (W3010732843): 43 records, listed in `I221-mac/search_log.md`. None was opened in
+  full. By title, the nearest are Atvars (2021, abstract read), Khurgin–Noginov (2021) on the laser threshold, and a
+  degenerate coherent perfect absorber (Science, 2022), which are titles only.
+- **Forward from Ismail et al.** (W2461253794): 305 records, filtered by title to 16. Vujnović et al. was read through
+  Sec. 6, and He–Lu–Zhao (2019) and Zhou et al. (JLT 43) as abstracts.
+- **Their own works**: Pollnau (A5031372095), 60 records since 2017; Eichhorn (A5060333217), 20 resonator or linewidth
+  records since 2016.
+- **INSPIRE** has no record of this line of work (`a Pollnau`: 0), so no INSPIRE chain exists.
+- **Backward from Pollnau–Eichhorn** for the decomposition: Koppelmann [51] and Bayer-Helms [52], whose exactness they
+  quote, and Remmert [54] for the cot series, all *(unverified)*. Suter–Dietiker, Appl. Opt. 53, 7004 (2014), proposed
+  the Lorentzian finesse earlier [58] *(unverified)*.
+
+### References checked
+
+| Entry | Checked against | Verdict |
+|---|---|---|
+| Pollnau, Eichhorn, Prog. Quantum Electron. 72, 100255 (2020), doi:10.1016/j.pquantelec.2020.100255 | the KITopen record and the PDF's running footer; OpenAlex W3010732843 | OK. The PDF says "Available online 9 March 2020", and the KITopen record "published online 11.08.2020" |
+| Ismail, Kores, Geskus, Pollnau, Opt. Express 24(15), 16366–16389 (2016), doi:10.1364/OE.24.016366 | the published PDF's header in KTH DiVA (diva2:948682) and Europe PMC (PMID 27464090) | OK (upgrades #198's PARTIAL) |
+| Vujnović, Kralj, Karuža, Photonics 13(8), 721 (2026), doi:10.3390/photonics13080721 | the MDPI article page and OpenAlex | OK |
+| Ismail, Kores, Geskus, Pollnau, Proc. SPIE 10090, 1009011 (2017), doi:10.1117/12.2252740 | OpenAlex (title, DOI) and search listings; the SPIE page was empty | PARTIAL |
+| Eichhorn, Appl. Phys. B 128(10) (2022), doi:10.1007/s00340-022-07897-6; He, Lu, Zhao, Opt. Express 27(13), 17876 (2019), doi:10.1364/OE.27.017876; Atvars, JOSA B 38(10), 3116 (2021), doi:10.1364/JOSAB.419993; Zhou, Fu, Chen, Tsai, Jun, J. Lightwave Technol. 43(3), 1007–1016, doi:10.1109/JLT.2024.3485574; Pollnau, Opt. Lett. 43, 5033–5036 (2018), doi:10.1364/OL.43.005033 | OpenAlex records (authors, volume, issue, pages, DOI); Opt. Lett. also Pollnau–Eichhorn's ref. [1] | PARTIAL: Eichhorn's article number and Zhou et al.'s year *(unverified)* |
+| Koppelmann, Progress in Optics 7 (1969); Bayer-Helms, Z. Angew. Phys. 15, 330–338 (1963); Remmert, *Theory of Complex Functions* (Springer, 1998); Suter, Dietiker, Appl. Opt. 53, 7004 (2014); Blaquière, C. R. Acad. Sci. 255, 3141 (1962) | Pollnau–Eichhorn's and Ismail et al.'s reference lists only | UNVERIFIABLE here, cited as not read |
+
+### Gap statement
+
+- **Not read.** Part II, which was not found. The appendices and references of Vujnović et al. The SPIE paper of 2017
+  and the Pollnau–Ismail chapter of 2018, which repeat the 2016 paper by their abstracts and titles. The S-matrix-pole
+  treatments of the laser threshold that surfaced in a search (Stone's group; Beenakker, arXiv:0904.1432). Koppelmann
+  and Bayer-Helms. Responses to Pollnau–Eichhorn's claims about quantum theories of the linewidth.
+- **Channels.** OpenAlex for the forward chains, since INSPIRE does not index this line. Google Scholar was not reached.
+  Of the 43 and 305 citing records, 4 were opened, one in part and three as abstracts; the others rest on titles.
+- **Rounds.** Round 1 covered the four questions and the two named papers. Round 2 followed the OpenAlex chains and
+  read the closest citing work. The search is not dry for Q1's branch point, since no optical source on a pole
+  merged with a logarithmic branch has surfaced in #198 or here.
+
+### Discrepancies and proposed text (for the coordinator)
+
+- **No discrepancy** with the repository's text was found. The issue's phrase "its hump threshold q_c = 3 − 2√2, which
+  is the same point" holds at δ = 0, as EEG_PROFILE.md §2 states it; at EEG26b's δ the two separate (identity 4).
+- **#198's Svelto pointer resolved.** #198 noted that #172 recorded Wikipedia's citation of Svelto's *Principles of
+  Lasers*, 5th ed., as ch. 4.5.1, and that Pollnau–Eichhorn cite it as ch. 5.3. They cite both: [18], ch. 4.5.1,
+  pp. 142–146, for the round-trip-decay derivation and the approximate Airy linewidth, and [19], ch. 5.3,
+  pp. 169–171, for Svelto's account of the Airy–Lorentzian difference. Neither passage was checked against the book.
+- **Ismail et al.** is now read, and #198's Q1 verdict stands: no closed form for a frequency-dependent reflectivity,
+  and no poles, zeros or branch points.
+- **Proposed text** for notes/EEG_PROFILE.md §2, after (PF): "**(SEC) A secant, and its pole series** (*checked
+  numerically*). With σ = ½ ln(1/q) and φ = θ + δ/2, β̃ = (A*/2√q) Re[e^{−iδ/2} sec(φ + iσ)]. Its Mittag-Leffler
+  series is an alternating sum of Lorentzians of half-width σ centred at (k + ½)π − δ/2, each dispersive at δ = 0 and
+  turned toward an absorptive one by δ/2. Pollnau and Eichhorn sum same-sign absorptive Lorentzians of the same width
+  to the Airy distribution [Prog. Quantum Electron. 72, 100255 (2020), Eqs. (99)–(108)]; the alternation here comes
+  from the odd harmonics." And after the hump threshold: "At δ = 0.0985, q_c = 0.21328; the Airy factor's half-maximum
+  breakdown stays at 3 − 2√2 for every δ." Both checks are raw `I221-mac/identity_check.py`, items 1 and 4.
+- **No novelty sentence** was added by this task. The strongest statement made is "not found in the sources searched".
+
+### Recommended tasks (for the coordinator to file)
+
+1. **Put the pole-series and threshold identities into `forms_check.py`.**
+   - *What.* Add identity 1 (the secant form and its alternating pole series), identity 2 (the norm as the integrated
+     Airy distribution) and identity 4 (q_c(δ) against the δ-independent Airy breakdown) to
+     `solver/eeg_profile/forms_check.py`, each with its own mutation, and q_c(0.0985) to EEG_PROFILE.md §2.
+   - *Why.* They are the shared structure of Q1, and §2 is where a reader of the profile looks for them.
+   - *Acceptance.* forms_check.py passes, and each new mutation (the sign alternation dropped, R₁R₂ = q, δ set to 0)
+     makes its check fail. q_c(0.0985) from the double-zero solve and from a direct count of extrema on a grid agree
+     to 10⁻⁵, or the task stops.
+   - *Depends on.* #221. Minutes on one core.
+2. **Subtract the pole series from the tuned profile and measure what remains.**
+   - *What.* Fit the nearest pole pair's location and residue, subtract its full Mittag-Leffler series (identity 1,
+     with the fitted σ, δ and residue) from the tuned harmonics, and fit the remainder's harmonics to
+     w_∞^k k^{−p}(a + b ln k). Run it first on `rational_fit.py`'s branch plant and on its meromorphic plant.
+   - *Why.* EEG_PROFILE.md §8.5 reads a pole with a weaker logarithmic branch at the same point from a ν⁻³ law of the
+     ratios. Subtracting the pole series leaves the branch alone, so its exponent and coefficient can be measured
+     directly, for #150 and #216.
+   - *Acceptance.* On the branch plant the remainder's planted exponent and coefficient come back within 5%. On the
+     meromorphic plant the remainder falls geometrically, with no power law. If either fails, the real-data numbers
+     are void. Then report p and a for the tuned profile, *conditional* on Conjecture 1, with the spread over the
+     fitted harmonic windows named as such.
+   - *Depends on.* #133, #216, #221. Under an hour on one core.
+3. **Read what did not open.**
+   - *What.* Vujnović et al.'s Appendices A–D (non-simple poles) and references; the SPIE paper of 2017 and the
+     Pollnau–Ismail chapter of 2018; the S-matrix-pole papers on the laser threshold that surfaced (Stone's group;
+     Beenakker, arXiv:0904.1432), logged in §6.
+   - *Why.* Q1's branch-point verdict and Q2's threshold verdict rest partly on sources read through abstracts.
+   - *Acceptance.* Each is read and recorded. The task fails, and says so, if one of them contains a branch point at a
+     cavity pole, a closed form for a frequency-dependent reflectivity, or a growth or build-up law at a laser
+     threshold that the verdicts above miss.
+   - *Depends on.* #221.
