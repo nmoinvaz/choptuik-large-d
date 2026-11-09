@@ -12,6 +12,8 @@ Conventions for the Claude sessions (cloud and local) that run computations here
   and wrecks σ₆–σ₈), e.g. `amp_flint_par.py 1.0 15 750 640 --procs 6 --fit phys --mf 6:12`, and compare two J.
   Check `sigma_err` in the JSON. `--mf LO:HI` is the range of terms per family the fit scans for its plateau, not a top
   harmonic. `amp_flint.py` stays as the serial reference for checks.
+  Its last digits depend on `--procs` (the order in which the workers' sums are added, #236), so compare two files
+  bit for bit only at the same `--procs`.
 - **Inner selection with M harmonics:** use `solver/inner_stokes/hier.py` (hierarchical solve; required for M ≥ 5, where
   `full_M.py`'s homotopy stalls), or `nested.py` for M = 3. Never a joint solve of all conditions: it is ill-conditioned
   (about 10¹⁰) and stops on false near-zeros. hier.py uses 2 processes at most (`--procs 2`), so fill the thread budget
