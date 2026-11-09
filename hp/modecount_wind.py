@@ -7,6 +7,8 @@ principle (notes/MODE_COUNT.md), for one saved double-double state.
                               [--alias=1.5708]
 
 --fmax: the largest background residual accepted (default 1e-20, as hp/gamma_dd.py; a count needs far less).
+--centre_tol=T: with --M, the centre series' tolerance in modecount_common.fit_nodes (default 1e-15). A smaller T adds
+inner nodes to a layout that passes the series gate (#270), and the state is kept under its own name (_ct<T>).
 --tag names the run (log, record); --cache names the evaluation cache (default: the tag), so that runs on the same
 state and layout with other boxes can share evaluations.
 
@@ -405,7 +407,8 @@ def main():
 
     kf = "default" if "kf" not in opts else (None if opts["kf"] == "none" else int(opts["kf"]))
     st = setup(path, M=int(opts["M"]) if "M" in opts else None, threads=threads, kf=kf, log=log,
-               fmax=float(opts.get("fmax", 1e-20)))
+               fmax=float(opts.get("fmax", 1e-20)),
+               centre_tol=float(opts["centre_tol"]) if "centre_tol" in opts else None)
     D, M = st.D, st.M
     tag = opts.get("tag", f"D{D:.4f}_M{M}")
     logf = os.path.join(data, f"modecount_{tag}.log")

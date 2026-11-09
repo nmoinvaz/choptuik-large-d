@@ -3,10 +3,12 @@
 its initial residual by block and field, and the truncation of the centre and horizon series at the end nodes.
 
     python3 hp/modecount_probe.py STATE.npz [--M=48,64,80] [--kf=none|N] [--kc=N] [--ks=N] [--rows=6] [--expect=M:F]
-        [--json=F]
+        [--json=F] [--centre_tol=T]
     python3 hp/modecount_probe.py STATE.npz --M=64 --setup [--fmax=1e-15] [--nofit] [--threads=1] [--setup_json=F]
+        [--data=DIR] [--centre_tol=T]
     python3 hp/modecount_probe.py --selftest [--mutate=nofit]
     python3 hp/modecount_probe.py --gatecheck --raw=RAWDIR [--mutate=nogate_after|tight] [--json=F]
+    python3 hp/modecount_probe.py --tolcheck [--mutate=nocentretol] [--json=F]
 
 For each M: the layout of the state's nodes ("state nodes") and, if modecount_common.fit_nodes adds nodes, the fitted
 layout ("fitted"). Printed per layout: |F| (max norm), for each residual block (the centre series minus node 0, the
@@ -34,6 +36,13 @@ series' |F| grows with its order, a converged one's does not).
   stored layout and cut. --mutate=nogate_after drops the gate after the solve, so (1) must fail. --mutate=tight sets the
   gate to 1e-16, so (2) must fail (D 30, M 48 without the cut has 4.8e-16). Either mutation exits 1. Nothing is solved,
   and the state setup saves goes to a temporary directory.
+--centre_tol=T: the centre series' tolerance in fit_nodes, for the probe's fitted layout and setup (default
+  SERIES_TAIL). A smaller T forces inner nodes on a layout that passes the gate (#270).
+--tolcheck (#270): the D = 61 seed (M 32) resampled to M = 48 with kf 23, as setup prepares it. (1) With
+  --centre_tol=TOLCHECK_TOL it must get one node at 0.15 and keep ks, with both series within SERIES_TAIL, and setup's
+  saved name must carry _ct<T>. (2) Without it the layout must stay as it is (the centre series passes at 0.3).
+  --mutate=nocentretol drops the option on its way to fit_nodes, so (1) must fail and the check exit 1. Nothing is
+  solved.
 """
 import json
 import os
@@ -91,7 +100,7 @@ def probe(meta, zh, zl, kf, rows=6, log=print):
     return rec
 
 
-def run(path, Ms, kf="default", rows=6, log=print, nmax=mc.NODES_ADDED_MAX, orders=None):
+def run(path, Ms, kf="default", rows=6, log=print, nmax=mc.NODES_ADDED_MAX, orders=None, centre_tol=None):
     zh0, zl0, meta0 = load(path)
     meta0 = dict(meta0, **(orders or {}))
     D = meta0["D"]
@@ -109,7 +118,7 @@ def run(path, Ms, kf="default", rows=6, log=print, nmax=mc.NODES_ADDED_MAX, orde
         rec = dict(state=os.path.basename(path), D=D, M0=meta0["M"], M=M, kf=kf, layout="state nodes")
         rec.update(probe(meta, zh, zl, kf, rows, log))
         out.append(rec)
-        fh, fl, fm, _ = mc.fit_nodes(meta, zh, zl, kf, log=lambda m: log("  " + m), nmax=nmax)
+        fh, fl, fm, _ = mc.fit_nodes(meta, zh, zl, kf, log=lambda m: log("  " + m), nmax=nmax, tol_centre=centre_tol)
         if fm["nodes"] != meta["nodes"] or fm.get("ks") != meta.get("ks"):
             log(f"  fitted nodes {fm['nodes']}, ks {fm.get('ks')}")
             rec = dict(state=os.path.basename(path), D=D, M0=meta0["M"], M=M, kf=kf, layout="fitted")
@@ -177,6 +186,9 @@ GATE_RAW = ["I211-macm3/hp_data_after/modecount_state_D45.0507_M48_kf23.npz",
             "I68-macm3/hp_data_after_control_fresh/modecount_state_D30.0688_M48.npz"]
 # #170's D 45, M 48, kf 21 solution (byte-identical copies in I178-macm3 and I190-macm3)
 GATE_D45 = "I170-macm3/hp_data_after/modecount_state_D45.0507_M48_kf21.npz"
+# --tolcheck's centre_tol. The D = 61 seed resampled to M = 48 with kf 23 has centre truncation 1.4e-92 at x = 0.3 and
+# 3.0e-219 at 0.15 (#270), so this forces one node at 0.15 and no more.
+TOLCHECK_TOL = 1e-150
 
 
 def state_kf(path, D):
@@ -271,6 +283,50 @@ def gatecheck(opts):
     return 1 if bad else 0
 
 
+def tolcheck(opts):
+    import tempfile
+    mutate = opts.get("mutate", "")
+    checks, recs = [], []
+
+    def check(name, ok, detail):
+        checks.append(dict(check=name, passed=bool(ok), detail=detail))
+        print(f"  {'PASS' if ok else 'FAIL'}  {name}: {detail}", flush=True)
+
+    fit, data = mc.fit_nodes, mc.DATA
+    if mutate == "nocentretol":
+        mc.fit_nodes = lambda *a, tol_centre=None, **k: fit(*a, **k)
+    seed = os.path.join(HERE, "data", "seeds", "local", "up23_D61.0264.npz")
+    log = lambda m: print(m, flush=True)  # noqa: E731
+    try:
+        with tempfile.TemporaryDirectory() as tmp:
+            mc.DATA = tmp
+            out = {}
+            for name, ctol in (("option", TOLCHECK_TOL), ("default", None)):
+                zh, zl, meta, kf, saved = mc.prepare(seed, 48, kf=23, log=log, centre_tol=ctol)
+                s = mc.build_solver(meta, zh, zl, 48, kf)
+                t = [mc.series_tail(s, zh, zl, meta, w) for w in (0, 1)]
+                out[name] = dict(nodes=meta["nodes"], ks=meta.get("ks"), saved=os.path.basename(saved), tails=t)
+                print(f"  centre_tol {ctol}: nodes {meta['nodes']}, ks {meta.get('ks')}, {mc.tails_text(t)}, saved as "
+                      f"{os.path.basename(saved)}", flush=True)
+    finally:
+        mc.fit_nodes, mc.DATA = fit, data
+    o, d = out["option"], out["default"]
+    recs.append(out)
+    check(f"(1) D 61, M 48, kf 23 with centre_tol {TOLCHECK_TOL:.0e}: one node at 0.15, ks kept",
+          o["nodes"] == [0.15] + d["nodes"] and o["ks"] == d["ks"]
+          and max(x["tail"] for x in o["tails"]) <= mc.SERIES_TAIL and o["saved"].endswith(f"_ct{TOLCHECK_TOL:.0e}.npz"),
+          f"nodes {o['nodes']}, ks {o['ks']}, centre {o['tails'][0]['tail']:.1e} at {o['tails'][0]['x']:g}, saved "
+          f"{o['saved']}")
+    check("(2) the same without it: the layout kept", d["nodes"] == [0.3, 0.4, 0.5, 0.6, 0.7] and d["ks"] == 127,
+          f"nodes {d['nodes']}, ks {d['ks']}, centre {d['tails'][0]['tail']:.1e} at {d['tails'][0]['x']:g}")
+    if "json" in opts:
+        json.dump(dict(checks=checks, records=recs), open(opts["json"], "w"), indent=1, default=str)
+    bad = [x for x in checks if not x["passed"]]
+    mut = f" (mutate {mutate})" if mutate else ""
+    print(f"centre_tol check: {len(checks) - len(bad)}/{len(checks)} passed{mut}")
+    return 1 if bad else 0
+
+
 def main():
     args = [a for a in sys.argv[1:] if not a.startswith("--")]
     opts = dict((a[2:].partition("=")[0], a[2:].partition("=")[2] or True) for a in sys.argv[1:] if a.startswith("--"))
@@ -278,12 +334,15 @@ def main():
         return selftest(opts)
     if "gatecheck" in opts:
         return gatecheck(opts)
+    if "tolcheck" in opts:
+        return tolcheck(opts)
     if "data" in opts:
         mc.DATA = opts["data"]
     kf = "default" if "kf" not in opts else (None if opts["kf"] == "none" else int(opts["kf"]))
     Ms = [int(v) for v in opts["M"].split(",")] if "M" in opts else None
     orders = {k: int(opts[k]) for k in ("kc", "ks") if k in opts}
-    out = run(args[0], Ms, kf, int(opts.get("rows", 6)), orders=orders)
+    ctol = float(opts["centre_tol"]) if "centre_tol" in opts else None
+    out = run(args[0], Ms, kf, int(opts.get("rows", 6)), orders=orders, centre_tol=ctol)
     if "json" in opts:
         json.dump(out, open(opts["json"], "w"), indent=1, default=str)
     if "expect" in opts:
@@ -294,20 +353,22 @@ def main():
         return 0 if ok else 1
     if "setup" in opts:
         return run_setup(args[0], Ms, kf, float(opts.get("fmax", 1e-15)), "nofit" not in opts,
-                         int(opts.get("threads", 1)), opts.get("setup_json"))
+                         int(opts.get("threads", 1)), opts.get("setup_json"), ctol)
     return 0
 
 
-def run_setup(path, Ms, kf, fmax, fit, threads, out=None):
+def run_setup(path, Ms, kf, fmax, fit, threads, out=None, centre_tol=None):
     """modecount_common.setup at each M, as a count runs it (Newton, then Levenberg-Marquardt; the re-converged state
     is saved in hp/data); exit 1 if any setup raises"""
     import time
     recs, bad = [], 0
     for M in Ms or [None]:
         t0 = time.time()
-        print(f"setup {os.path.basename(path)} M {M} kf {kf} fmax {fmax:.0e} fit {fit}:", flush=True)
+        print(f"setup {os.path.basename(path)} M {M} kf {kf} fmax {fmax:.0e} fit {fit} centre_tol {centre_tol}:",
+              flush=True)
         try:
-            st = mc.setup(path, M=M, threads=threads, kf=kf, fmax=fmax, log=lambda m: print(m, flush=True), fit=fit)
+            st = mc.setup(path, M=M, threads=threads, kf=kf, fmax=fmax, log=lambda m: print(m, flush=True), fit=fit,
+                          centre_tol=centre_tol)
         except RuntimeError as e:
             print(f"  setup raised: {e}", flush=True)
             recs.append(dict(M=M, kf=kf, fit=fit, error=str(e), seconds=round(time.time() - t0)))

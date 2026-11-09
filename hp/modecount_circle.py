@@ -4,6 +4,10 @@ the position of a single zero inside.
 
     python3 modecount_circle.py STATE.npz RE,IM,R [RE,IM,R ...] [--M=N] [--kf=none|13] [--tol=0.785] [--n0=16]
                                 [--data=hp/data] [--res=<data>/modecount_circles.jsonl] [--allow_unraw]
+                                [--fmax=1e-20] [--centre_tol=T]
+
+--centre_tol=T: with --M, the centre series' tolerance in modecount_common.fit_nodes (default 1e-15). A smaller T adds
+inner nodes to a layout that passes the series gate (#270), and the state is kept under its own name (_ct<T>).
 
 The phase of det M(lambda) exp(-beta (lambda - c)) is followed around each circle lambda = c + R e^{i t}, with beta
 the slope of ln det M between c - 2R and c + 2R (removing the exponential growth of det M; the winding is that of
@@ -161,7 +165,8 @@ def main():
     res_file = opts.get("res", os.path.join(data, "modecount_circles.jsonl"))
     kf = "default" if "kf" not in opts else (None if opts["kf"] == "none" else int(opts["kf"]))
     st = setup(path, M=int(opts["M"]) if "M" in opts else None, threads=int(opts.get("threads", 1)), kf=kf,
-               fmax=float(opts.get("fmax", 1e-20)))
+               fmax=float(opts.get("fmax", 1e-20)),
+               centre_tol=float(opts["centre_tol"]) if "centre_tol" in opts else None)
     tag = opts.get("tag", f"D{st.D:.4f}_M{st.M}" + ("" if "kf" not in opts else f"_kf{opts['kf']}"))
     tol = float(opts.get("tol", math.pi / 4))
     n0 = int(opts.get("n0", 16))
