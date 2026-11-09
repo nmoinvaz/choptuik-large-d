@@ -70,6 +70,17 @@ transform F(t) = Σ n! σ_n tⁿ continued by quadratic Hermite–Padé approxim
 only the σ coefficients and the pipeline that made them. The crossing needs σ_n to about 10⁻¹⁰ relative: 10⁻⁶ noise moves
 it to 1.1008.
 
+**Controls on a family that is not Kummer (#214).** The planted controls of #203 used a Kummer family. #214 repeated
+them on a Laplace integral over a curved arc with a non-Beta density, fitted to the three nodes' σ₁…σ₂₂ to 9×10⁻⁵ in
+log (Kummer: 9×10⁻³), and planted by a shift in ω (`solver/independent_second_zero/arc_family.py`). Both controls pass
+on ten seeds at 10⁻¹² noise (the crossing planted at 1.095 is found to 1.0×10⁻⁵, the one at 1.15 gives no sign change),
+and both mutations fire. The spread rule fixed before the runs is not met: the real data's spread over approximants
+is up to 4.2 times the planted family's in Im x₁, outside the allowed 1/3–3. So the planted accuracy is not an error bar
+for the crossing, whose uncertainty stays #203's spread over approximants, 1.09873–1.09894. The planted family reaches the
+real data's spread only with about 3×10⁻¹² relative noise, while added noise of 10⁻¹² widens the real data's own spread
+about sevenfold, so the real σ do not carry random error at that level. The excess spread comes from the data's
+structure or from smooth errors in the σ.
+
 ## What we can give them
 
 | field | their open item | our pilot (agreement between runs) | next step, cost |
