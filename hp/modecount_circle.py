@@ -12,15 +12,17 @@ bisected once more and checked against the whole. --kf=13 gives the tag a "_kf13
 Each evaluation goes to <data>/modecount_<tag>_evals.jsonl (the same cache as modecount_wind.py for that state), and
 the log and the record go to <data> too, which must be a task folder of the raw-data repository (hp/raw_out.py).
 
-Position. When the winding is 1, h(lam) = det M exp(-beta (lam - c)) / (lam - c) has no winding, so ln h is periodic
-on the circle, and the zero z inside is
+Positions. When the winding W is 1, 2 or 3, h(lam) = det M exp(-beta (lam - c)) / (lam - c)^W has no winding, so
+ln h is periodic on the circle, and the power sums of the zeros z_j inside are (integration by parts)
 
-    z = c - (1 / 2 pi i) closed int ln h d lam = c - (R / n) sum_j ln h(lam_j) e^{i t_j}     (t_j = 2 pi j / n),
+    s_k = sum_j (z_j - c)^k = -(k / 2 pi i) closed int (lam - c)^(k-1) ln h d lam
+        = -(k R^k / n) sum_j ln h(lam_j) e^{i k t_j}                        (t_j = 2 pi j / n, k = 1 .. W),
 
 the second form the trapezoid rule on the n0 equally spaced points, which converges geometrically for a periodic
-analytic integrand. The same sum on every other point (n0 / 2) gives a second value; their distance is the error
-estimate (conservative, since the n0 / 2 sum is the less accurate; hp/modecount_circle_planted.py tests it).
---mutate=nodiv leaves out the division by lam - c (the planted test's control).
+analytic integrand; Newton's identities give the zeros (for W = 1, z = c + s_1). The same sums on every other point
+(n0 / 2) give second values; their distance is the error estimate (conservative, since the n0 / 2 sums are the less
+accurate; hp/modecount_circle_planted.py tests it). --mutate=nodiv leaves out the division by (lam - c)^W (the
+planted test's control).
 """
 import json
 import math
@@ -75,8 +77,9 @@ def circle(det, c, R, tol=math.pi / 4, n0=16, mutate=None):
     w = sum(steps) / (2 * math.pi)
     rec = dict(center=[c.real, c.imag], R=R, winding=w, points=len(ts) - 1, beta=[beta.real, beta.imag],
                max_step=max(abs(s) for s in steps), verify_mismatch=bad, min_lndet=min(v[0] for v in vals.values()))
-    if abs(w - 1) < 1e-6:
-        # ln h on the n0 base points: the phase continued through every sample, less that of lam - c (2 pi t)
+    W = int(round(w))
+    if abs(w - W) < 1e-6 and 1 <= W <= 3:
+        # ln h on the n0 base points: the phase continued through every sample, less that of (lam - c)^W
         phase, cont = vals[0.0][1], {0.0: vals[0.0][1]}
         for a, b in zip(ts[:-1], ts[1:]):
             phase += step(a, b)
@@ -86,14 +89,21 @@ def circle(det, c, R, tol=math.pi / 4, n0=16, mutate=None):
             t = i / n0
             v = complex(vals[t][0], cont[t])
             if mutate != "nodiv":
-                v -= complex(math.log(R), 2 * math.pi * t)
+                v -= W * complex(math.log(R), 2 * math.pi * t)
             lnh.append(v)
 
-        def zsum(idx):
-            return c - (R / len(idx)) * sum(lnh[i] * complex(math.cos(2 * math.pi * i / n0), math.sin(2 * math.pi * i / n0))
-                                            for i in idx)
-        z, z2 = zsum(range(n0)), zsum(range(0, n0, 2))
-        rec.update(zero=[z.real, z.imag], zero_est=abs(z - z2), zero_half=[z2.real, z2.imag], zero_n=n0)
+        def zeros(idx):
+            # s_k = sum (z_j - c)^k = -(k R^k / n) sum_j ln h_j e^{i k t_j}, then Newton's identities
+            from modecount_moment import newton_roots
+            s = [-(k * R ** k / len(idx)) * sum(lnh[i] * complex(math.cos(2 * math.pi * k * i / n0),
+                                                                  math.sin(2 * math.pi * k * i / n0)) for i in idx)
+                 for k in range(1, W + 1)]
+            return sorted(newton_roots(s, c), key=lambda z: (z.real, z.imag))
+        z, z2 = zeros(range(n0)), zeros(range(0, n0, 2))
+        from modecount_moment import match
+        z2 = match(z, z2)
+        rec.update(zeros=[[x.real, x.imag] for x in z], zeros_est=[abs(a - b) for a, b in zip(z, z2)],
+                   zeros_half=[[x.real, x.imag] for x in z2], zeros_n=n0)
     return rec
 
 
@@ -144,8 +154,9 @@ def main():
         rec = circle(det, complex(cr, ci), R, tol, n0, opts.get("mutate"))
         rec = dict(D=st.D, M=st.M, kfreeze=st.kf, F=st.F, tag=tag, **rec, time=time.strftime("%Y-%m-%d %H:%M:%S"))
         pos = ""
-        if "zero" in rec:
-            pos = f"; the zero inside at {rec['zero'][0]:.6f} {rec['zero'][1]:+.6f}i (estimate {rec['zero_est']:.1e})"
+        if "zeros" in rec:
+            pos = "; zeros inside " + ", ".join(f"{a:.6f} {b:+.6f}i (estimate {e:.1e})"
+                                                for (a, b), e in zip(rec["zeros"], rec["zeros_est"]))
         log(f"  circle |lam - ({cr:.6f} {ci:+.6f}i)| = {R}: winding of det M {rec['winding']:+.6f}, {rec['points']} points "
             f"(+2 for beta), max step {rec['max_step']:.3f} rad, verification mismatches {rec['verify_mismatch']}" + pos)
         with open(res_file, "a") as fo:
