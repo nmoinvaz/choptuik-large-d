@@ -6,6 +6,7 @@ its initial residual by block and field, and the truncation of the centre and ho
         [--json=F]
     python3 hp/modecount_probe.py STATE.npz --M=64 --setup [--fmax=1e-15] [--nofit] [--threads=1] [--setup_json=F]
     python3 hp/modecount_probe.py --selftest [--mutate=nofit]
+    python3 hp/modecount_probe.py --gatecheck --raw=RAWDIR [--mutate=nogate_after|tight] [--json=F]
 
 For each M: the layout of the state's nodes ("state nodes") and, if modecount_common.fit_nodes adds nodes, the fitted
 layout ("fitted"). Printed per layout: |F| (max norm), for each residual block (the centre series minus node 0, the
@@ -24,7 +25,15 @@ series' |F| grows with its order, a converged one's does not).
 --setup: after the probe, modecount_common.setup at each M with --fmax (default 1e-15, the counts' value) and
   --threads, which re-converges and saves the state in hp/data as a count does (needs hp/modecount_cx); exit 1 if a
   setup raises. --nofit passes fit=False (the state's nodes and ks), where setup must refuse a divergent series.
-  --setup_json=F records each setup's |F|, nodes, ks, Delta and truncations.
+  --setup_json=F records each setup's |F|, nodes, ks, Delta and truncations. --data=DIR: where setup keeps the
+  re-converged states (modecount_common.DATA, default hp/data).
+--gatecheck (#265; needs RAWDIR, a directory laid out as the raw-data repository, holding at least the files in
+  GATE_RAW): (1) setup at D 45, M 48, kf 21 from the M 32 state, with the solve replaced by its result in #170 (the
+  I170-macm3 state, on the same layout), must refuse the solution, whose centre series is truncated at 2.4e-8, although
+  its start passes (#254: 7.4e-74); (2) the series gate passes on the 22 states #141 checked (GATE_STATES), each on its
+  stored layout and cut. --mutate=nogate_after drops the gate after the solve, so (1) must fail. --mutate=tight sets the
+  gate to 1e-16, so (2) must fail (D 30, M 48 without the cut has 4.8e-16). Either mutation exits 1. Nothing is solved,
+  and the state setup saves goes to a temporary directory.
 """
 import json
 import os
@@ -150,11 +159,127 @@ def selftest(opts):
     return 1 if bad else 0
 
 
+# #141's 22 states (I141-mac/probe/gate_states.log): the code repository's (under hp/data) and the raw-data
+# repository's (under RAWDIR, I141-mac/inputs/SOURCES.txt)
+GATE_STATES = ["states/up_D8.2500.npz", "states/up2_D16.7600.npz", "states/up6_D30.0688.npz", "states/up7_D45.0507.npz",
+               "states/up10_D53.7914.npz", "states/up10_D54.0414.npz", "states/up10_D55.0351.npz",
+               "seeds/local/up23_D61.0264.npz", "modecount_state_D8.2500_M32.npz", "modecount_state_D30.0688_M48.npz",
+               "modecount_state_D30.0688_M48_kf13.npz", "modecount_state_D61.0264_M48_kf13.npz",
+               "lowD_states/lowDn_D4.0000_M48.npz"]
+GATE_RAW = ["I211-macm3/hp_data_after/modecount_state_D45.0507_M48_kf23.npz",
+            "I232-macm3/D50/hp_data_after/modecount_state_D50.0075_M48_kf23.npz",
+            "I237-macm3/D52/hp_data_after/modecount_state_D52.0414_M48_kf23.npz",
+            "I237-macm3/D53/hp_data_after/modecount_state_D53.7914_M48_kf23.npz",
+            "I240-macm3/hp_data_after/modecount_state_D54.0414_M48_kf23.npz",
+            "I232-macm3/D55/hp_data_after/modecount_state_D55.0351_M48_kf23.npz",
+            "I159-macm3/hp_data_after_kf21/modecount_state_D61.0264_M48_kf21.npz",
+            "I212-macm3/hp_data_after/modecount_state_D61.0264_M48_kf23.npz",
+            "I68-macm3/hp_data_after_control_fresh/modecount_state_D30.0688_M48.npz"]
+# #170's D 45, M 48, kf 21 solution (byte-identical copies in I178-macm3 and I190-macm3)
+GATE_D45 = "I170-macm3/hp_data_after/modecount_state_D45.0507_M48_kf21.npz"
+
+
+def state_kf(path, D):
+    """the cut setup gives a stored state: _kfN in its name, else setup's default (13 from D = 35 on)"""
+    import re
+    m = re.search(r"_kf(\d+)", os.path.basename(path))
+    return int(m.group(1)) if m else (13 if D >= 35 else None)
+
+
+def gatecheck(opts):
+    import tempfile
+    raw = opts.get("raw")
+    if not isinstance(raw, str) or not os.path.isdir(raw):
+        print("--gatecheck needs --raw=RAWDIR (a directory laid out as choptuik-large-d-raw)")
+        return 2
+    mutate = opts.get("mutate", "")
+    checks, recs = [], []
+
+    def check(name, ok, detail):
+        checks.append(dict(check=name, passed=bool(ok), detail=detail))
+        print(f"  {'PASS' if ok else 'FAIL'}  {name}: {detail}", flush=True)
+
+    gate, newton, lm, data, tail = mc.series_gate, mc.newton_solve, mc.lm_solve, mc.DATA, mc.SERIES_TAIL
+    if mutate == "nogate_after":
+        def gate_mut(s, zh, zl, meta, when, log=None):
+            if when != "solution":
+                return gate(s, zh, zl, meta, when, log)
+            return [mc.series_tail(s, zh, zl, meta, w) for w in (0, 1)]
+        mc.series_gate = gate_mut
+    elif mutate == "tight":
+        mc.SERIES_TAIL = 1e-16
+    try:
+        # (1) the start passes and the solution does not; the solve is planted with its result in #170
+        zs, zls, ms = load(os.path.join(raw, GATE_D45))
+        seed = os.path.join(HERE, "data", "states", "up7_D45.0507.npz")
+        solves = []
+
+        def planted(s, zh, zl, **kw):
+            solves.append(len(zh))
+            return zs.copy(), zls.copy(), []
+        mc.newton_solve = mc.lm_solve = planted
+        with tempfile.TemporaryDirectory() as tmp:
+            mc.DATA = tmp
+            zh0, zl0, m0, _, _ = mc.prepare(seed, 48, kf=21, log=lambda m: print(m, flush=True))
+            s0 = mc.build_solver(m0, zh0, zl0, 48, 21)
+            t0 = [mc.series_tail(s0, zh0, zl0, m0, w) for w in (0, 1)]
+            keys = ("M", "nodes", "kt", "kc", "ks")
+            same = all(m0.get(k) == ms.get(k) for k in keys) and len(zh0) == len(zs)
+            print(f"  D 45 kf 21 start: {mc.tails_text(t0)}; layout of #170's solution "
+                  f"{'the same' if same else 'DIFFERENT'} ({ {k: ms.get(k) for k in keys} })", flush=True)
+            err = None
+            try:
+                st = mc.setup(seed, M=48, kf=21, fmax=1e-15, log=lambda m: print(m, flush=True))
+                print(f"  setup accepted: |F| {st.F:.1e}, {mc.tails_text(st.tails)}", flush=True)
+            except RuntimeError as e:
+                err = str(e)
+                print(f"  setup raised: {err}", flush=True)
+        recs.append(dict(check=1, start_tails=t0, same_layout=same, solves=len(solves), error=err))
+        check("(1) D 45, M 48, kf 21: setup refuses #170's solution, whose start passes",
+              same and solves and max(t["tail"] for t in t0) <= mc.SERIES_TAIL and err is not None
+              and "(solution;" in err,
+              f"start {t0[0]['tail']:.1e} / {t0[1]['tail']:.1e}, planted solves {len(solves)}, "
+              + (f"refused: {err[:60]}..." if err else "accepted"))
+        mc.newton_solve, mc.lm_solve = newton, lm
+        # (2) the series gate on #141's 22 states, as setup's gate after the solve sees a stored solution
+        paths = [os.path.join(HERE, "data", p) for p in GATE_STATES] + [os.path.join(raw, p) for p in GATE_RAW]
+        worst, refused = 0.0, []
+        for p in paths:
+            zh, zl, meta = load(p)
+            kf = state_kf(p, meta["D"])
+            s = mc.build_solver(meta, zh, zl, meta["M"], kf)
+            try:
+                t = mc.series_gate(s, zh, zl, meta, "solution")
+                ok = True
+            except RuntimeError:
+                t = [mc.series_tail(s, zh, zl, meta, w) for w in (0, 1)]
+                ok = False
+                refused.append(os.path.basename(p))
+            w = max(x["tail"] for x in t)
+            worst = max(worst, w)
+            recs.append(dict(check=2, state=p, D=meta["D"], M=meta["M"], kf=kf, tails=t, passed=ok))
+            print(f"    {os.path.basename(p):42s} D {meta['D']:8.4f} M {meta['M']:3d} kf {str(kf):4s}: "
+                  f"{mc.tails_text(t)}  {'ok' if ok else 'REFUSED'}", flush=True)
+        check(f"(2) the gate passes #141's {len(paths)} states", len(paths) == 22 and not refused,
+              f"worst {worst:.1e}" + (f", refused {refused}" if refused else ""))
+    finally:
+        mc.series_gate, mc.newton_solve, mc.lm_solve, mc.DATA, mc.SERIES_TAIL = gate, newton, lm, data, tail
+    if "json" in opts:
+        json.dump(dict(checks=checks, records=recs), open(opts["json"], "w"), indent=1, default=str)
+    bad = [x for x in checks if not x["passed"]]
+    print(f"gate check: {len(checks) - len(bad)}/{len(checks)} passed" + (f" (mutate {mutate})" if mutate else ""))
+    return 1 if bad else 0
+
+
 def main():
     args = [a for a in sys.argv[1:] if not a.startswith("--")]
     opts = dict((a[2:].partition("=")[0], a[2:].partition("=")[2] or True) for a in sys.argv[1:] if a.startswith("--"))
     if "selftest" in opts:
         return selftest(opts)
+    if "gatecheck" in opts:
+        return gatecheck(opts)
+    if "data" in opts:
+        mc.DATA = opts["data"]
     kf = "default" if "kf" not in opts else (None if opts["kf"] == "none" else int(opts["kf"]))
     Ms = [int(v) for v in opts["M"].split(",")] if "M" in opts else None
     orders = {k: int(opts[k]) for k in ("kc", "ks") if k in opts}
