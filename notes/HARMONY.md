@@ -83,8 +83,8 @@ both mutations fire. The spread rule fixed before the runs is not met: the real 
 4.2 times the planted family's in Im x₁, outside the allowed 1/3–3. So the planted accuracy is not an error bar for the
 crossing, whose uncertainty stays #203's spread over approximants, 1.09873–1.09894. The planted family reaches the real
 data's spread only with about 3×10⁻¹² relative noise, while added noise of 10⁻¹² widens the real data's own spread about
-sevenfold, so the real σ do not carry random error at that level. The excess spread comes from the data's structure or
-from smooth errors in the σ.
+sevenfold, so the real σ do not carry random error at that level. #213's J differences, about 10⁻¹⁴, are far below
+3×10⁻¹², so the excess spread comes from the data's structure, not from J truncation errors in the σ (#233).
 
 ## What we can give them
 
