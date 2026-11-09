@@ -8,7 +8,13 @@ the position of a single zero inside.
 The phase of det M(lambda) exp(-beta (lambda - c)) is followed around each circle lambda = c + R e^{i t}, with beta
 the slope of ln det M between c - 2R and c + 2R (removing the exponential growth of det M; the winding is that of
 det M), starting from n0 equal steps and bisecting until every step is at most tol, then every step above tol / 2 is
-bisected once more and checked against the whole. --kf=13 gives the tag a "_kf13" suffix.
+bisected once more and checked against the whole, repeated until a verification adds nothing. Alias rule (#242, as
+modecount_wind.py's edges): an arc is also bisected while its length times the local scale of ln h exceeds pi/2,
+the scale being the largest |Delta ln h| / arc of the arc itself and 3 arcs each side (cyclically), so that a close
+pair of zeros between two samples, which turns the phase by nearly 2 pi and leaves a small step, is resolved (#257).
+A circle is resolved when every step is at most tol, no halves mismatched and every arc meets the rule.
+--mutate=flat restores the old rule (no alias rule, one verification pass; the control of
+hp/modecount_circle_planted.py). --kf=13 gives the tag a "_kf13" suffix.
 Each evaluation goes to <data>/modecount_<tag>_evals.jsonl (the same cache as modecount_wind.py for that state), and
 the log and the record go to <data> too, which must be a task folder of the raw-data repository (hp/raw_out.py).
 
@@ -34,8 +40,12 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, HERE)
 from modecount_wind import parse, wrap, DATA  # noqa: E402
 
+# the alias rule's threshold on arc * scale and its neighbourhood, as in modecount_wind (#242)
+ALIAS = math.pi / 2
+NB = 3
 
-def circle(det, c, R, tol=math.pi / 4, n0=16, mutate=None):
+
+def circle(det, c, R, tol=math.pi / 4, n0=16, mutate=None, alias=ALIAS):
     """winding of det M on |lam - c| = R, det(lam) -> (ln|det M|, arg det M); with winding 1 also the zero inside"""
     pt = lambda s: c + R * complex(math.cos(2 * math.pi * s), math.sin(2 * math.pi * s))
     # local detrending: beta = (ln det(c + 2R) - ln det(c - 2R)) / 4R, from two points outside the circle;
@@ -54,29 +64,64 @@ def circle(det, c, R, tol=math.pi / 4, n0=16, mutate=None):
     def step(a, b):
         return wrap(vals[b][1] - vals[a][1])
 
-    changed = True
-    while changed:
-        changed = False
+    # alias rule (#242, as modecount_wind's edge): an arc is also held against the local scale |Delta ln h| / arc of
+    # itself and NB arcs each side, cyclically; flat (the control) restores the old rule, one verification pass
+    flat = mutate == "flat"
+    alias = 0.0 if flat else alias
+    L = 2 * math.pi * R
+
+    def scales(ts):
+        return [abs(complex(vals[b][0] - vals[a][0], step(a, b))) / ((b - a) * L) for a, b in zip(ts[:-1], ts[1:])]
+
+    def local(sc, i):
+        return max(sc[(i + j) % len(sc)] for j in range(-NB, NB + 1))
+
+    checked, bad, nver, passes, nalias = set(), 0, 0, 0, 0
+    while True:
+        changed = True
+        while changed:
+            changed = False
+            ts = sorted(vals)
+            sc = scales(ts) if alias > 0 else None
+            for i, (a, b) in enumerate(zip(ts[:-1], ts[1:])):
+                if (b - a) * L <= 1e-6:
+                    continue
+                split = abs(step(a, b)) > tol
+                if not split and alias > 0:
+                    split = (b - a) * L * local(sc, i) > alias
+                    nalias += split
+                if split:
+                    m = 0.5 * (a + b)
+                    vals[m] = gdet(pt(m))
+                    changed = True
+        # verification: every arc with |step| > tol / 2 is bisected once and its halves must add up to it; a half
+        # above tol, or one the alias rule flags, goes back to the bisection, until a pass adds nothing
         ts = sorted(vals)
+        added = False
+        passes += 1
         for a, b in zip(ts[:-1], ts[1:]):
-            if abs(step(a, b)) > tol and (b - a) * 2 * math.pi * R > 1e-6:
+            d = step(a, b)
+            if abs(d) > tol / 2 and (a, b) not in checked:
+                checked.add((a, b))
                 m = 0.5 * (a + b)
                 vals[m] = gdet(pt(m))
-                changed = True
-    ts = sorted(vals)
-    bad = 0
-    for a, b in zip(ts[:-1], ts[1:]):
-        d = step(a, b)
-        if abs(d) > tol / 2:
-            m = 0.5 * (a + b)
-            vals[m] = gdet(pt(m))
-            if abs(wrap(vals[m][1] - vals[a][1]) + wrap(vals[b][1] - vals[m][1]) - d) > 1e-6:
-                bad += 1
+                nver += 1
+                added = True
+                if abs(wrap(vals[m][1] - vals[a][1]) + wrap(vals[b][1] - vals[m][1]) - d) > 1e-6:
+                    bad += 1
+        if not added or flat:
+            break
     ts = sorted(vals)
     steps = [step(a, b) for a, b in zip(ts[:-1], ts[1:])]
     w = sum(steps) / (2 * math.pi)
+    # arcs below the floor that do not meet the rule are counted (a zero within about 1e-6 of the circle)
+    sc = scales(ts)
+    hs = [(b - a) * L * local(sc, i) for i, (a, b) in enumerate(zip(ts[:-1], ts[1:]))]
+    alias_left = sum(h > alias for h in hs) if alias > 0 else 0
     rec = dict(center=[c.real, c.imag], R=R, winding=w, points=len(ts) - 1, beta=[beta.real, beta.imag],
-               max_step=max(abs(s) for s in steps), verify_mismatch=bad, min_lndet=min(v[0] for v in vals.values()))
+               max_step=max(abs(s) for s in steps), verify_mismatch=bad, min_lndet=min(v[0] for v in vals.values()),
+               verified=nver, passes=passes, alias=alias, alias_bisections=nalias, alias_left=alias_left,
+               max_scale_h=max(hs), resolved=max(abs(s) for s in steps) <= tol and bad == 0 and alias_left == 0)
     W = int(round(w))
     if abs(w - W) < 1e-6 and 1 <= W <= 3:
         # ln h on the n0 base points: the phase continued through every sample, less that of (lam - c)^W
@@ -158,7 +203,9 @@ def main():
             pos = "; zeros inside " + ", ".join(f"{a:.6f} {b:+.6f}i (estimate {e:.1e})"
                                                 for (a, b), e in zip(rec["zeros"], rec["zeros_est"]))
         log(f"  circle |lam - ({cr:.6f} {ci:+.6f}i)| = {R}: winding of det M {rec['winding']:+.6f}, {rec['points']} points "
-            f"(+2 for beta), max step {rec['max_step']:.3f} rad, verification mismatches {rec['verify_mismatch']}" + pos)
+            f"(+2 for beta), max step {rec['max_step']:.3f} rad, verification mismatches {rec['verify_mismatch']}, alias "
+            f"bisections {rec['alias_bisections']} (largest arc*scale {rec['max_scale_h']:.2f})"
+            + ("" if rec["resolved"] else "  UNRESOLVED") + pos)
         with open(res_file, "a") as fo:
             fo.write(json.dumps(rec) + "\n")
 
