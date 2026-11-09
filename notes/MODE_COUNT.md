@@ -367,7 +367,10 @@ and vanish as M changes, which is how truncation artifacts behave and not how a 
 At D = 61 (#231; raw `I231-macm3/`) the M = 40 count finds U0 +1, B1b +4, B1c +4, B1 +8, U +8 and full +24, against B1b
 +6, B1c +2, B1 +8, U +11 and full +30 at M = 48. On the M = 40 state, circles at three of #230's four positions wind 0,
 and the fourth (2.0073 + 0.9727i) holds a zero 0.19 away, at 2.0426 + 1.1507i, while the λ_phys circle winds +1. So at
-both D the extras appear at M = 40 and 48 and not at M = 32, and they do not keep their λ as M changes.
+both D the extras appear at M = 40 and 48 and not at M = 32, and they do not keep their λ as M changes. With the cut at
+D = 61, M = 40, three of four M = 40 zeros exist at kf 23 only, absent at kf 21 and kf 25, and the fourth moves by 0.20
+between kf 23 and 25, while λ_phys winds +1 at all three cuts (#262; raw `I262-macm3/`). The circles also show the
+moments' spreads to be optimistic by a factor of 2 to 5 for these zeros.
 
 **Positions at D = 61 (#230).** The extras in B1b and B1c lie on one row, from 1.31 + 1.42i down to 3.02 ± 0.10i, each
 zero confirmed by a small circle winding +1 (`hp/modecount_circle.py`; raw `I230-mac/`, e7dc533):
