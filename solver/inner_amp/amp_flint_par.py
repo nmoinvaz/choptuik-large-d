@@ -15,10 +15,10 @@ What changed against amp_flint.py (details in the docstrings below):
    at harmonic nu, and E, <F^2> use orders below k), so tuning order matches the serial code.
 3. Nothing else is approximated: the tuned f_nu is computed in acb at full precision (the serial code rounds it to 50
    digits), so the two codes differ only at the level of the serial code's own rounding.
-The output depends on --procs in its last digits (sigma_16 of K 33 at w 1.10 by 1.5e-19 relative, #229), while equal
-counts gave equal bits on two machines. Compare two files bit for bit only at the same --procs. The cause is the order
-in which _products adds the workers' partial products: summed in task order, every count gives the bits of --procs 1
-(K 25, #236).
+The products of an order are summed in NBLOCK fixed blocks of tasks, and the block sums are added in block order, so
+the output does not depend on --procs (#246). Files made before this change depend on --procs in their last digits
+(sigma_16 of K 33 at w 1.10 by 1.5e-19 relative, #229), because the workers' partial sums were added in an order that
+followed the worker count (#236). Compare such files bit for bit only at the same --procs.
 
 Threads do not help: python-flint keeps the GIL during a product (two threads take 2.3x one product).  Processes are
 started with 'spawn', so this runs the same way on Windows; keep calls under an  if __name__ == "__main__":  guard.
@@ -232,6 +232,10 @@ def _worker(conn, prec):
             return
 
 
+# Tasks of an order are summed in this many fixed blocks (a multiple of 1, 2, 3, 4 and 6 workers), see _products.
+NBLOCK = 12
+
+
 def _add_rows(A, B):
     return [[x + y for x, y in zip(a, b)] for a, b in zip(A, B)]
 
@@ -326,23 +330,22 @@ class AmpPar(Amp):
 
     def _products(self, k, tasks):
         J = self.J
+        # fixed blocks of tasks (same cost per task at fixed k, so dealt out in turn), whatever the worker count
+        blocks = [b for b in (tasks[i::NBLOCK] for i in range(NBLOCK)) if b]
         if not self.workers:
-            res = _products(self.ctab, k, J, tasks)
+            parts = [_products(self.ctab, k, J, b) for b in blocks]
         else:
             nw = len(self.workers)
-            # balance: same cost per task at fixed k, so deal them out in turn
-            busy = []
-            for i, (p, conn) in enumerate(self.workers):
-                chunk = tasks[i::nw]
-                if chunk:
-                    conn.send_bytes(pickle.dumps(("prod", k, J, chunk), protocol=pickle.HIGHEST_PROTOCOL))
-                    busy.append(conn)
-            res = {}
-            for conn in busy:
-                part = pickle.loads(conn.recv_bytes())
-                for g, blob in part.items():
-                    T = _de_rows(blob)
-                    res[g] = T if g not in res else _add_rows(res[g], T)
+            for i, b in enumerate(blocks):
+                self.workers[i % nw][1].send_bytes(pickle.dumps(("prod", k, J, b), protocol=pickle.HIGHEST_PROTOCOL))
+            # each worker answers in the order it was sent, so the replies come back in block order
+            parts = [{g: _de_rows(blob) for g, blob in pickle.loads(self.workers[i % nw][1].recv_bytes()).items()}
+                     for i in range(len(blocks))]
+        # block sums added in block order: the association of the sum does not depend on --procs
+        res = {}
+        for part in parts:
+            for g, T in part.items():
+                res[g] = T if g not in res else _add_rows(res[g], T)
         zero = [[ZERO] * (k + 1) for _ in range(J + 1)]
         return {g: self.expand(res.get(g, zero), k) for g in set(t[0] for t in tasks) | set(res)}
 
