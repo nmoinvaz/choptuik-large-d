@@ -184,6 +184,15 @@ per edge and box, the largest phase step of g, the largest phase step of det M i
 the boundary (how close the boundary comes to an unaccounted zero or pole of g), and the distances from the boundary
 to the nearest candidate pole and expected zero.
 
+**Alias rule (#242).** A step that looks small can hide whole turns: #212's kf 23 count left two intervals of the edge
+Im λ = 3ω/2 at the initial spacing, whose steps of +0.04 and +0.23 rad hid +19.1 rad (#230). So each interval's length
+h is also held against the local scale of g, |Δ ln g| / h (the change of ln|g|, which does not wrap, with the wrapped
+phase step). The scale is taken on the interval, on 3 intervals each side and, at a corner, on the other edges' 3
+intervals there. An interval is bisected while h × scale > π/2 (`--alias`; `--mutate=flat` restores the old rule). The
+planted test (`hp/modecount_planted.py --controls`) holds the cases the old rule miscounts: close pairs of zeros between
+two samples, the moment test's random configurations, and rows of zeros along Im λ = 3ω/2, where the old rule counted
+U = 0 for 22 zeros with every edge resolved (raw `I242-mac/`, aecff4d).
+
 ## 3. Counts
 
 Per state: wind(g) for every box (expected 0), and in brackets the winding of det M itself, wind(g) + (expected zeros
@@ -306,13 +315,12 @@ the 10⁻¹⁵ accepted for a count, so no count was run on it. Raising the cut 
 | kf 23 (#212, with the edge Im λ = 3ω/2 re-sampled in #230) | 0 | 0 | 0 | +6 | +2 | +8 | +11 | +30 |
 | M = 32, kf 21 (#168) | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 |
 
-The entries are wind(g), the zeros beyond the expected ones. #212 recorded U +8 and full +24 at kf 23. #230 re-sampled
-a stretch of the edge Im λ = 3ω/2 (Re λ from 1.157 to 0.300) that the count had left at its initial spacing, and found
+The entries are wind(g), the zeros beyond the expected ones. #212 recorded U +8 and full +24 at kf 23. #230 re-sampled a
+stretch of the edge Im λ = 3ω/2 (Re λ from 1.157 to 0.300) that the count had left at its initial spacing, and found
 three turns of g hidden there (+19.1 rad where the count's two steps gave +0.27; raw `I230-mac/`). So the extras
-multiply as the cut rises, 24 at kf 21 and 30 at kf 23. The count's resolution test bisects only steps that look large,
-so an interval that looks flat at the initial spacing is never checked, and a count can miss turns there. A count of 0
-is subject to the same limit. det M changes sign on the real axis only at λ_g and
-λ_phys, so the extras come in conjugate pairs off the axis. Eight of them lie in B1b and B1c, with 1.27 < Re λ < 6.6
+multiply as the cut rises, 24 at kf 21 and 30 at kf 23. The count's sampling now holds every interval against the local
+scale of g (#242), and with it no other box of any count changes (#243). det M changes sign on the real axis only at λ_g
+and λ_phys, so the extras come in conjugate pairs off the axis. Eight of them lie in B1b and B1c, with 1.27 < Re λ < 6.6
 and |Im λ| < ω/2. If they were modes they would be extra growth rates. They are absent at M = 32 with the same cuts
 (#160, #168).
 
@@ -452,7 +460,11 @@ D = 16.76 and 8.25 were counted in #69.
 - **Sampling.** Steps of g at most 0.38 rad (M = 32) and 0.50 rad (M = 48) against the π/4 tolerance. A zero within
   about 0.2 of an edge, or a zero–pole pair near an edge, would show as a large step or a dip of ln|g|, and none did
   (ln|g| ≥ −1.5). Two zeros of g hidden between the same two samples (about 0.4 apart) and adding a full turn would be
-  missed; the halving checks found no such case where steps exceeded π/8, but not every interval was halved.
+  missed by the halving checks alone. Every count was re-checked with the alias rule (#243; raw `I243-mac/`, aecff4d):
+  only #212's kf 23 U and full change. The counts of 0 behind the one-unstable-mode statements (M = 32 at D = 30, 45 and
+  61, M = 48 kf 23 at D = 45, M = 48 kf 13 at D = 30) and D = 53.79 were also sampled once more, at the golden-section
+  point of every interval, a check that does not use the rule: no interval was flagged, and the largest piece was 0.26
+  rad.
 - **Accuracy of det M.** Double-double throughout; the complex and real LUs agree to 4×10⁻¹⁰ in ln|det M| at D = 61,
   where max |M| = 2×10⁹. Phases are therefore good to far better than 10⁻⁶ rad on every edge.
 - **What the gauge zero means.** λ_g is a coordinate mode of the formulation that pins the light cone to x = 1 (section
