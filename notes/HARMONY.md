@@ -53,16 +53,18 @@ candidate. More coefficients at the bracketing nodes would settle it.
 controls, set before the runs, now pass. The crossing planted at 1.095 is found at 1.0950 in every ring-free sum, and
 the one planted at 1.15 shows no sign change in 1.09–1.11. On the data, all seven sums are ring-free and Im x₁ changes
 sign in each, at ω/ω∞ = 1.0988–1.0989. Im x₁ is +0.105, −0.013 and −0.131 at the three nodes, linear to the printed
-digits, so the interpolation between nodes does not limit the crossing; x₁ ≈ 13.465 − 0.013i at 1.10 (A ≈ 3.67). So
-S₁ has a second zero near ω/ω∞ = 1.0989, x₁ ≈ 13.46, and the D = ∞ inner problem a second selected solution there,
-with Δ = Δ∞/1.0989 ≈ 1.496. This is numerical evidence from the Borel–Padé sums of the amplitude expansion, conditional
-on the selection rule (Conjecture 1); the solution's stability is not known. The σ of the 1.10 node agree with macm3's
-K 33 J 1000 run at the same node to 20 digits through σ₅ and to 1.2×10⁻¹⁵ at σ₁₆ (#82). A discrepancy, open: #202 found
-the 1.10 node's distance from K 33 above both neighbours' at n = 6, 7, 15 and 16 (by up to 2.8×, at most 1.2×10⁻¹⁵
+digits, so the interpolation between nodes does not limit the crossing; x₁ ≈ 13.465 − 0.013i at 1.10 (A ≈ 3.67). So S₁
+has a second zero near ω/ω∞ = 1.0989, x₁ ≈ 13.46, and the D = ∞ inner problem a second selected solution there, with Δ =
+Δ∞/1.0989 ≈ 1.496. This is numerical evidence from the Borel–Padé sums of the amplitude expansion, conditional on the
+selection rule (Conjecture 1); the solution's stability is not known. The σ of the 1.10 node agree with macm3's K 33 J
+1000 run at the same node to 20 digits through σ₅ and to 1.2×10⁻¹⁵ at σ₁₆ (#82). A discrepancy, open: #202 found the
+1.10 node's distance from K 33 above both neighbours' at n = 6, 7, 15 and 16 (by up to 2.8×, at most 1.2×10⁻¹⁵
 relative), while win2's and macm3's K 33 files agree through σ₁₅ (they differ at σ₁₆ by 1.5×10⁻¹⁹, which follows the
-process count, #229). The cause is not known. 1.10 is the node whose run
-died in libflint on the old firmware and was rerun. The excess is five orders below the 10⁻¹⁰ the crossing needs, but
-σ₁₇–σ₂₂ have no K 33 comparison. The rerun is #228, and a test of the process count is #229.
+process count, #229). Summing the workers' products in a fixed order gives a third value: across the three orders σ₁₆ of
+K 33 spreads over 1.4×10⁻¹⁸, and σ₀–σ₁₅ do not move (#236, #247), so the summation order does not explain the excess.
+The cause is not known. 1.10 is the node whose run died in libflint on the old firmware and was rerun. The excess is
+five orders below the 10⁻¹⁰ the crossing needs, but σ₁₇–σ₂₂ have no K 33 comparison. The rerun is #228, and a test of
+the process count is #229.
 
 **An independent check (#203).** A second agent, given only the σ data, summed S₁ by a different route: the Laplace
 transform F(t) = Σ n! σ_n tⁿ continued by quadratic Hermite–Padé approximants, then S₁ = Σ c̃_n xⁿ/n! to n = 220
