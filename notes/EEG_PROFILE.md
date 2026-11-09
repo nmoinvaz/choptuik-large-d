@@ -158,7 +158,11 @@ first harmonic on gives exactly this profile.
 **Zeros, extrema, norm** (*checked numerically*; mutation `norm`). The zeros are at
 $`\theta_0 = \pi/2 - \arg(1+w) + k\pi`$ (1.565659 at the paper's values), two per period. While $`q < q_c(\delta)`$
 there is one maximum and one minimum per period. At $`\delta = 0`$, $`q_c = 3 - 2\sqrt2 = 0.1716`$, above which the
-maximum splits into two humps. The paper's $`q`$ is a third of that. The norm is
+maximum splits into two humps. The paper's $`q`$ is a third of that. At $`\delta = 0`$ the profile is $`\cos\theta`$
+times the Airy distribution of a Fabry–Pérot cavity, $`A_*(1+q)/(1-q)^2\cdot\cos\theta/(1 + F\cos^2\theta)`$, with
+coefficient of finesse $`F = 4q/(1-q)^2`$. So $`q_c`$ is $`F = 1`$, the reflectivity below which the Airy peaks have no
+full width at half maximum (Pollnau and Eichhorn, Prog. Quantum Electron. 72, 100255 (2020), Eq. (118); checked by
+raw `I198-mac/identity_check.py`, #198). The norm is
 $`\langle\tilde\beta^2\rangle = A_*^2/(2(1-q^2))`$ for every $`\delta`$ (their (S60)).
 
 **The parameters.**
