@@ -51,7 +51,9 @@ edge back to the bisection, and the two steps repeat until a verification adds n
 edge shows only in those halves: at D = 4 a single verification pass left steps of 1.8 rad and missed a pair 0.0017
 inside, notes/GHOST_ADMIXTURE.md). An edge is resolved when every step is at most tol and no halves mismatched (the
 spacing floor hmin, default 1e-4, can stop it short); a box is resolved when all its edges are, and an unresolved box's
-count is not a count. --mutate=one_verify restores the single verification pass (the control). Every evaluation is
+count is not a count. --mutate=one_verify restores the single verification pass (the control). --resolve=last
+counts an edge resolved when its last verification pass finds no mismatch (earlier ones refined away); the default,
+--resolve=any, requires none in any pass (#169). Every evaluation is
 appended to <data>/modecount_<tag>_evals.jsonl and reused on restart; --data (default hp/data) holds the cache, the log
 and the record, and must be in a raw-data folder (raw_out.py; --allow_unraw writes anyway).
 """
@@ -174,6 +176,7 @@ def count(det_fn, info, poles, opts, log, tag, res_file, expected=None, boxes_on
         n = max(2, int(math.ceil(L / h0)))
         vals = {i / n: g(z0 + (i / n) * (z1 - z0)) for i in range(n + 1)}
         checked, bad, nver, passes = set(), 0, 0, 0
+        bad_last = 0          # mismatches found in the last verification pass
         while True:
             changed = True
             while changed:
@@ -191,6 +194,7 @@ def count(det_fn, info, poles, opts, log, tag, res_file, expected=None, boxes_on
             ts = sorted(vals)
             added = False
             passes += 1
+            bad_last = 0
             for a, b in zip(ts[:-1], ts[1:]):
                 dphi = wrap(vals[b][1] - vals[a][1])
                 if abs(dphi) > tol / 2 and (b - a) * L >= hmin and (a, b) not in checked:
@@ -201,6 +205,7 @@ def count(det_fn, info, poles, opts, log, tag, res_file, expected=None, boxes_on
                     added = True
                     if abs(wrap(vals[m][1] - vals[a][1]) + wrap(vals[b][1] - vals[m][1]) - dphi) > 1e-6:
                         bad += 1
+                        bad_last += 1
             if not added or opts.get("mutate") == "one_verify":
                 break
         ts = sorted(vals)
@@ -212,12 +217,15 @@ def count(det_fn, info, poles, opts, log, tag, res_file, expected=None, boxes_on
                  min_hspace=min(b - a for a, b in zip(ts[:-1], ts[1:])) * L,
                  min_lng=min(v[0] for v in vals.values()), max_lng=max(v[0] for v in vals.values()),
                  min_lndet=min(v[2] for v in vals.values()), verified=nver, verify_mismatch=bad, passes=passes,
-                 resolved=max(abs(s) for s in steps) <= tol and bad == 0,
+                 verify_mismatch_last=bad_last,
+                 # --resolve=any (default): no mismatch in any pass; --resolve=last: none in the final pass, whose
+                 # bisections leave every interval within tol (earlier mismatches were refined away, #169)
+                 resolved=max(abs(s) for s in steps) <= tol and (bad_last if opts.get("resolve") == "last" else bad) == 0,
                  samples=[[round(t, 10), round(vals[t][0], 6), round(vals[t][1], 6), round(vals[t][2], 6),
                            round(vals[t][3], 6)] for t in ts])
         log(f"  edge {name}: {len(ts)} points, phase change of g {e['dphi']:+.6f}, max step {e['max_step']:.3f} rad "
             f"(det M itself: {e['max_raw_step']:.3f}), spacing {e['min_hspace']:.2e}..{e['max_hspace']:.2e}, ln|g| "
-            f"{e['min_lng']:.2f}..{e['max_lng']:.2f}, verified {nver} (mismatch {bad}) in {passes} passes"
+            f"{e['min_lng']:.2f}..{e['max_lng']:.2f}, verified {nver} (mismatch {bad}, last pass {bad_last}) in {passes} passes"
             + ("" if e["resolved"] else "  UNRESOLVED"))
         return e
 
