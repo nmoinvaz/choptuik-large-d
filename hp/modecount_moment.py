@@ -25,10 +25,14 @@ Contours, each counter-clockwise:
          and g likewise), so no real-axis sample is used. Its zeros are the z_j of the upper half and their
          conjugates, so the polynomial has degree 2 W_half and real coefficients; c is the box's centre (real).
   strip  U: H3, H2, H1 reversed, R2, T, L2 reversed; c is its centre.
-Quadrature, on each straight piece of the contour: the trapezoid rule, and the rule that integrates the cubic through
-the four samples around each interval. The cubic rule's roots are reported. The quadrature error estimate of a root is
-its distance from the trapezoid rule's root (an estimate, not a bound; hp/modecount_moment_planted.py tests it against
-planted zeros). --mutate=nok drops the factor k of the integration by parts (the planted test's control).
+Quadrature, on each straight piece of the contour: on each interval the cubic through four neighbouring samples,
+integrated exactly, with the central stencil (samples i - 1 .. i + 2) and the two shifted ones (i - 2 .. i + 1 and
+i .. i + 3). Reported, for B1b and B1c: the zeros in the upper half from the sym contour's central stencil. Their
+spread is the largest distance to the same zero by the other stencils of sym and the three stencils of half; for U,
+by the other stencils. The spread is an estimator range over quadrature choices, not a bound. Its first version, the
+distance to the trapezoid rule's root, failed the planted test as too pessimistic, by 10 to 100 times
+(hp/modecount_moment_planted.py, which also tests this one). --mutate=nok drops the factor k of the integration by
+parts (the planted test's control).
 """
 import itertools
 import json
@@ -167,18 +171,16 @@ def unwrap(pieces):
     return out
 
 
-def piece_integral(p, f, rule):
-    """integral of f d lam along a straight piece sampled at p (any spacing): trapezoid or local cubic"""
+def piece_integral(p, f, bias=0):
+    """integral of f d lam along a straight piece sampled at p (any spacing): on each interval (s_i, s_i+1) the cubic
+    through the samples i - 1 + bias .. i + 2 + bias (moved inside the piece at its ends), integrated exactly"""
     s = np.abs(p - p[0])
-    L = s[-1]
-    u = (p[-1] - p[0]) / L
-    if rule == "trap" or len(p) == 2:
-        return u * np.sum(0.5 * (f[1:] + f[:-1]) * np.diff(s))
+    u = (p[-1] - p[0]) / s[-1]
     m = len(p) - 1
     nn = min(4, m + 1)
     tot = 0j
     for i in range(m):
-        j0 = min(max(i - 1, 0), m + 1 - nn)
+        j0 = min(max(i - 1 + bias, 0), m + 1 - nn)
         h = s[i + 1] - s[i]
         x = (s[j0:j0 + nn] - s[i]) / h
         # weights of the interpolant through these nodes, integrated over (0, 1): V^T w = (1, 1/2, 1/3, ...)
@@ -188,14 +190,14 @@ def piece_integral(p, f, rule):
     return u * tot
 
 
-def power_sums(cont, c, kmax, rule, mutate=None):
+def power_sums(cont, c, kmax, bias=0, mutate=None):
     """W and s_k = sum (z_j - c)^k, k = 1 .. kmax, from the unwrapped contour values"""
     lam0 = cont[0][0][0]
     dL = cont[-1][1][-1] - cont[0][1][0]          # 2 pi i W, to rounding
     W = dL.imag / (2 * math.pi)
     s = []
     for k in range(1, kmax + 1):
-        I = sum(piece_integral(p, (p - c) ** (k - 1) * v, rule) for p, v in cont)
+        I = sum(piece_integral(p, (p - c) ** (k - 1) * v, bias) for p, v in cont)
         fac = 1 if mutate == "nok" else k
         s.append((lam0 - c) ** k * dL / (2j * math.pi) - fac * I / (2j * math.pi))
     return W, s
@@ -230,42 +232,78 @@ def match(a, b):
     return [b[j] for j in best[1]]
 
 
-def locate(r, ev, Q, box, mode, mutate=None):
-    """the zeros of g inside one contour, by both quadrature rules; a dict for the record"""
-    lng = LnG(r, ev, Q)
+def solve(r, lng, box, mode, mutate=None):
+    """the zeros of g inside one contour by the three cubic stencils (bias 0, -1, +1): W, N, {bias: roots}, info"""
     pieces, c = contour(r, box, mode, lng)
     cont = unwrap(pieces)
-    W, _ = power_sums(cont, c, 0, "trap")
+    W, _ = power_sums(cont, c, 0)
     N = int(round(W))
-    out = dict(box=box, mode=mode, centre=[c.real, c.imag], winding=W, samples=sum(len(p) for p, _ in cont))
+    info = dict(centre=[c.real, c.imag], winding=W, samples=sum(len(p) for p, _ in cont))
     if abs(W - N) > 1e-6 or N < 0 or N > 12:
-        out.update(ok=False, why=f"winding {W:.6f} is not a small non-negative integer")
-        return out
+        return W, None, None, info
     roots = {}
-    for rule in ("cubic", "trap"):
-        _, s = power_sums(cont, c, N, rule, mutate)
-        roots[rule] = newton_roots(s, c)
-        if rule == "cubic":
-            out["power_sums"] = [[x.real, x.imag] for x in s]
-    zc = list(roots["cubic"])
-    zt = match(zc, list(roots["trap"]))
-    est = [abs(a - b) for a, b in zip(zc, zt)]
-    order = sorted(range(N), key=lambda i: (zc[i].real, zc[i].imag))
-    out.update(ok=True, N=N, roots=[[zc[i].real, zc[i].imag] for i in order],
-               roots_trap=[[zt[i].real, zt[i].imag] for i in order], est=[est[i] for i in order])
-    if mode == "sym":
-        # the polynomial's coefficients are real (the contour is its own mirror image), so the roots pair up
-        out["upper"] = [i for i, j in enumerate(order) if zc[j].imag > 0]
+    for bias in (0, -1, 1):
+        _, s = power_sums(cont, c, N, bias, mutate)
+        roots[bias] = list(newton_roots(s, c))
+        if bias == 0:
+            info["power_sums"] = [[x.real, x.imag] for x in s]
+    return W, N, roots, info
+
+
+def locate(r, ev, Q, box, mutate=None):
+    """the zeros of g in one box (B1b, B1c: those in the upper half; U: those in the strip), a dict for the record.
+    Reported: the central-stencil roots of the mirrored whole box (sym; for U the strip). spread: the largest distance
+    from a reported root to the same zero by the other two stencils and, for B1b and B1c, by the half contour's three."""
+    lng = LnG(r, ev, Q)
+    out = dict(box=box)
+    modes = ("strip",) if box == "U" else ("sym", "half")
+    sol = {m: solve(r, lng, box, m, mutate) for m in modes}
+    for m in modes:
+        W, N, roots, info = sol[m]
+        out[m] = dict(info, N=N, roots={str(b): [[z.real, z.imag] for z in zs] for b, zs in (roots or {}).items()})
+    W, N, roots, _ = sol[modes[0]]
+    if N is None:
+        out.update(ok=False, why=f"winding {W:.6f} of the {modes[0]} contour is not a small non-negative integer")
+        return out
+    rep = roots[0] if box == "U" else [z for z in roots[0] if z.imag > 0]
+    others = [roots[-1], roots[1]]
+    if box != "U":
+        # the sym polynomial has real coefficients (the contour is its own mirror image): its roots pair up
+        if N % 2 or len(rep) != N // 2:
+            out.update(ok=False, why=f"the sym contour's {N} roots do not pair into {N // 2} conjugate pairs")
+            return out
+        others = [[z for z in o if z.imag > 0] for o in others]
+        Wh, Nh, rh, _ = sol["half"]
+        if Nh != N // 2:
+            out.update(ok=False, why=f"winding {Wh:.6f} of the half contour is not half of {W:.6f}")
+            return out
+        others += [rh[0], rh[-1], rh[1]]
+        if any(len(o) != len(rep) for o in others):
+            out.update(ok=False, why="a stencil's sym roots do not pair up")
+            return out
+    spread = [0.0] * len(rep)
+    for o in others:
+        for i, z in enumerate(match(rep, o)):
+            spread[i] = max(spread[i], abs(z - rep[i]))
+    order = sorted(range(len(rep)), key=lambda i: (rep[i].real, rep[i].imag))
+    out.update(ok=True, N=len(rep), roots=[[rep[i].real, rep[i].imag] for i in order],
+               spread=[spread[i] for i in order])
+    if box != "U":
+        out["roots_half"] = [[z.real, z.imag] for z in match([rep[i] for i in order], rh[0])]
     return out
 
 
 def show(tag, x):
-    head = f"{tag} {x['box']} ({x['mode']}): {x['samples']} samples, winding of g {x['winding']:+.6f}"
+    m = "strip" if x["box"] == "U" else "sym"
+    head = f"{tag} {x['box']}: winding of g {x[m]['winding']:+.6f} ({m}, {x[m]['samples']} samples)"
+    if "half" in x:
+        head += f", {x['half']['winding']:+.6f} (half, {x['half']['samples']} samples)"
     if not x["ok"]:
         return head + f"; NOT LOCATED: {x['why']}"
-    lines = [head + f", {x['N']} zeros of g inside (centre {x['centre'][0]:.4f} {x['centre'][1]:+.4f}i)"]
-    for (re, im), e in zip(x["roots"], x["est"]):
-        lines.append(f"    {re:9.5f} {im:+9.5f}i   quadrature error estimate {e:.1e}")
+    lines = [head + f"; {x['N']} zeros of g" + ("" if x["box"] == "U" else " in the upper half")]
+    for i, ((re, im), e) in enumerate(zip(x["roots"], x["spread"])):
+        h = "" if x["box"] == "U" else f"   (half contour {x['roots_half'][i][0]:.5f} {x['roots_half'][i][1]:+.5f}i)"
+        lines.append(f"    {re:9.5f} {im:+9.5f}i   spread {e:.1e}{h}")
     return "\n".join(lines)
 
 
@@ -290,11 +328,10 @@ def main():
         raise SystemExit("ln g does not reproduce the record's samples: wrong state, cache or record")
     res = []
     for b in boxes:
-        for mode in (("strip",) if b == "U" else ("half", "sym")):
-            x = locate(r, ev, Q, b, mode, opts.get("mutate"))
-            print(show(tag, x), flush=True)
-            res.append(dict(x, tag=tag, data=os.path.abspath(data), state=os.path.basename(statefile),
-                            stored_check=chk, mutate=opts.get("mutate")))
+        x = locate(r, ev, Q, b, opts.get("mutate"))
+        print(show(tag, x), flush=True)
+        res.append(dict(x, tag=tag, data=os.path.abspath(data), state=os.path.basename(statefile),
+                        stored_check=chk, mutate=opts.get("mutate")))
     if "out" in opts:
         with open(opts["out"], "a") as fo:
             for x in res:
