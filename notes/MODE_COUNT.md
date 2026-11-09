@@ -303,10 +303,15 @@ the 10⁻¹⁵ accepted for a count, so no count was run on it. Raising the cut 
 | cut | B0 | U0 | B1a | B1b | B1c | B1 | U | full |
 |---|---|---|---|---|---|---|---|---|
 | kf 21 (#159, re-evaluated with `--resolve=last` in #212) | 0 | 0 | 0 | +4 | +2 | +6 | +9 | +24 |
-| kf 23 (#212) | 0 | 0 | 0 | +6 | +2 | +8 | +8 | +24 |
+| kf 23 (#212, with the edge Im λ = 3ω/2 re-sampled in #230) | 0 | 0 | 0 | +6 | +2 | +8 | +11 | +30 |
 | M = 32, kf 21 (#168) | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 |
 
-The entries are wind(g), the zeros beyond the expected ones. det M changes sign on the real axis only at λ_g and
+The entries are wind(g), the zeros beyond the expected ones. #212 recorded U +8 and full +24 at kf 23. #230 re-sampled
+a stretch of the edge Im λ = 3ω/2 (Re λ from 1.157 to 0.300) that the count had left at its initial spacing, and found
+three turns of g hidden there (+19.1 rad where the count's two steps gave +0.27; raw `I230-mac/`). So the extras
+multiply as the cut rises, 24 at kf 21 and 30 at kf 23. The count's resolution test bisects only steps that look large,
+so an interval that looks flat at the initial spacing is never checked, and a count can miss turns there. A count of 0
+is subject to the same limit. det M changes sign on the real axis only at λ_g and
 λ_phys, so the extras come in conjugate pairs off the axis. Eight of them lie in B1b and B1c, with 1.27 < Re λ < 6.6
 and |Im λ| < ω/2. If they were modes they would be extra growth rates. They are absent at M = 32 with the same cuts
 (#160, #168).
