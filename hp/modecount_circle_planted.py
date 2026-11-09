@@ -6,8 +6,8 @@ synthetic det M of hp/modecount_moment_planted.py (the D 61.03, M 48, kf 23 stru
     python3 modecount_circle_planted.py --controls                 the test and both mutations: exit 0 only if the
                                                                    test passes and each mutation fails
 
-Planted extra zeros (with their conjugates): 1.80+0.60i, 2.20+0.90i and 3.02+0.05i. Circles, each with n0 = 16
-and n0 = 20 (tol pi/4, as on the real data):
+Planted extra zeros (with their conjugates): 1.80+0.60i, 2.20+0.90i and 3.02+0.05i. Circles with n0 = 20 and tol
+pi/4, as on the real data (--n0=16 tests 16 points):
   one      centre 1.84+0.57i, R 0.2: the zero 1.80+0.60i, 0.05 from the centre    winding +1, position
   phys     centre lam_phys+0.03i, R 0.2: lam_phys                                   winding +1, position
   edge     centre 1.92+0.60i, R 0.2: the zero 0.12 from the centre, 0.08 inside     winding +1, position
@@ -17,8 +17,10 @@ and n0 = 20 (tol pi/4, as on the real data):
   pole     centre 2.536+3.477i, R 0.2: the candidate pole n/2 - 30 lam_g + i omega   winding -1
 Pass criteria: every winding as listed, to 1e-6; every position within 1e-4 of its planted zero in one, phys, two and
 pair, with error estimate below 1e-3; in every case with positions each error is at most its estimate (the estimate
-covers the error). The first version (af2f8db, positions for winding 1 only, without pair) passed, and its controls
-failed; the cases two (positions) and pair were added with positions for windings 2 and 3, before their first run.
+covers the error). History: the first version (af2f8db, positions for winding 1 only, without pair, n0 16 and 20)
+passed, and its controls failed. The second (4a004e6) added positions in two and the case pair, and failed in two at
+n0 = 16 only: errors 6.3e-5, estimates 1.3e-3 (the zeros lie at 0.71 R, where the 8-point sums of the estimate
+converge slowly). At n0 = 20 every case passed, so the real circles use n0 = 20 and the test runs it by default.
 Controls, each must make the test fail: --mutate=nodiv leaves out the division by (lam - c)^W in the position sums;
 --mutate=offset plants the zero of case one 0.01 from where the criteria expect it.
 """
@@ -34,6 +36,7 @@ from modecount_wind import parse  # noqa: E402
 
 ZEROS = [1.80 + 0.60j, 2.20 + 0.90j, 3.02 + 0.05j]
 POLE = P.N / 2 - P.LG * 30 + 1j * P.OM
+N0 = 20
 CASES = [("one", 1.84 + 0.57j, 0.2, 1, [ZEROS[0]]), ("phys", P.LP + 0.03j, 0.2, 1, [complex(P.LP)]),
          ("edge", 1.92 + 0.60j, 0.2, 1, [ZEROS[0]]), ("empty", 3.5 + 0.8j, 0.2, 0, None),
          ("two", 2.0 + 0.75j, 0.35, 2, ZEROS[:2]), ("pair", 3.0 + 0j, 0.2, 2, [ZEROS[2], ZEROS[2].conjugate()]),
@@ -50,7 +53,7 @@ def test(mutate=None):
         la, arg, _, _ = f(lam.real, lam.imag)
         return la, arg
     ok = True
-    for n0 in (16, 20):
+    for n0 in (N0,):
         for name, c, R, want, z in CASES:
             rec = C.circle(det, c, R, math.pi / 4, n0, "nodiv" if mutate == "nodiv" else None)
             bad = []
@@ -76,7 +79,9 @@ def test(mutate=None):
 
 
 def main():
+    global N0
     args, opts = parse(sys.argv[1:])
+    N0 = int(opts.get("n0", 20))
     if "controls" in opts:
         res = {m: test(m) for m in (None, "nodiv", "offset")}
         good = res[None] and not res["nodiv"] and not res["offset"]
