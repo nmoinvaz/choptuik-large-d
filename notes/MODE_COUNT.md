@@ -316,6 +316,19 @@ is subject to the same limit. det M changes sign on the real axis only at λ_g a
 and |Im λ| < ω/2. If they were modes they would be extra growth rates. They are absent at M = 32 with the same cuts
 (#160, #168).
 
+**With one fixed left column (#241; raw `I241-macm3/`, d473b30).** Recounted with `--aLL=-0.096 --aL=0.124` at all three
+D, reusing the earlier samples:
+
+| D | B0 | U0 | B1a | B1 | U | full |
+|---|---|---|---|---|---|---|
+| 53.79 | 0 | 0 | 0 | 0 | 0 | 0 |
+| 54.04 | +2 | +1 | 0 | 0 | 0 | 0 |
+| 55.04 | 0 | +1 | +2 | +2 | +1 | +4 |
+
+The onset in (53.79, 54.04] holds in one region. Between D = 54.04 and 55.04 the B0 pair crosses Re λ = 0.124 into
+B1a, so it moves to larger Re λ as D grows. Where the two contours overlap their windings agree. The one difference,
+U0 at D = 54.04, puts one zero of the strip at −0.150 < Re λ < −0.096.
+
 **Positions at D = 61 (#230).** The extras in B1b and B1c lie on one row, from 1.31 + 1.42i down to 3.02 ± 0.10i, each
 zero confirmed by a small circle winding +1 (`hp/modecount_circle.py`; raw `I230-mac/`, e7dc533):
 
