@@ -4,6 +4,7 @@ principle (notes/MODE_COUNT.md), for one saved double-double state.
 
     python3 modecount_wind.py STATE.npz [--M=N] [--kf=none|13] [--threads=N] [--tag=NAME] [--h0=0.4] [--tol=0.785]
                               [--Im2=1.5] [--aR=..] [--aL=..] [--aLL=..] [--cache=TAG] [--res=hp/data/modecount_results.jsonl]
+                              [--alias=1.5708]
 
 --fmax: the largest background residual accepted (default 1e-20, as hp/gamma_dd.py; a count needs far less).
 --tag names the run (log, record); --cache names the evaluation cache (default: the tag), so that runs on the same
@@ -49,7 +50,22 @@ is at most tol (default pi/4); then every interval whose phase change exceeds to
 halves are checked to add up to the whole (a hidden 2 pi turn would show as a mismatch). A half above tol sends the
 edge back to the bisection, and the two steps repeat until a verification adds nothing new (a zero just inside an
 edge shows only in those halves: at D = 4 a single verification pass left steps of 1.8 rad and missed a pair 0.0017
-inside, notes/GHOST_ADMIXTURE.md). An edge is resolved when every step is at most tol and no halves mismatched (the
+inside, notes/GHOST_ADMIXTURE.md).
+
+Alias rule (#242). A step that looks small can hide whole turns: the edge Im = y2 of #212's kf 23 count left two
+intervals at the initial spacing whose steps of +0.04 and +0.23 rad hid +19.1 rad (#230). So the bisection also holds
+every interval's length h against the local scale of g, estimated by |Delta ln g| / h (the change of ln|g|, which does
+not wrap, and the wrapped phase step) on the interval itself and up to 3 intervals each side. At the first and last 3
+intervals of an edge the same scale of the other edges' 3 intervals at that corner is included, since |(ln g)'| does not
+depend on the direction (by Cauchy-Riemann the phase rate along an edge is the normal slope of ln|g|, which a
+perpendicular edge sees unaliased). An interval is bisected while h * scale > --alias (default pi/2). The edges are
+sampled in sweeps that pass the corner scales round until none grows. A hidden turn then needs the rate inside an
+interval to exceed about 3.5 times the largest one seen within 3 intervals of it. Planted cases (modecount_planted.py)
+that the old rule miscounts: a close pair of zeros between two samples (caught through ln|g|), and a row of zeros along
+the whole of Im = y2 (caught through the corners, the old rule counted U 0 for 22 zeros). --mutate=flat restores the
+old rule, --mutate=nolng drops ln|g| from the scale, --mutate=nocorner the corners (the controls).
+
+An edge is resolved when every step is at most tol, every interval meets the alias rule and no halves mismatched (the
 spacing floor hmin, default 1e-4, can stop it short); a box is resolved when all its edges are, and an unresolved box's
 count is not a count. --mutate=one_verify restores the single verification pass (the control). --resolve=last
 counts an edge resolved when its last verification pass finds no mismatch (earlier ones refined away); the default,
@@ -171,21 +187,48 @@ def count(det_fn, info, poles, opts, log, tag, res_file, expected=None, boxes_on
         return v.real, wrap(v.imag), la, arg
 
     # ---- adaptive edges
-    def edge(z0, z1, name):
+    # alias rule (#242): an interval whose step of g looks small can still hold whole turns, so its length is also
+    # held against the local scale |d ln g / d lam|, estimated by |Delta ln g| / h (ln|g| and the wrapped phase) on
+    # itself and NB intervals each side, and at a corner on the other edges' NB intervals next to it (the modulus of
+    # (ln g)' does not depend on the direction). An interval is bisected while h * scale > alias.
+    alias = 0.0 if opts.get("mutate") == "flat" else float(opts.get("alias", math.pi / 2))
+    NB = 3
+
+    def scales(ts, vals, L):
+        """|Delta ln g| / h per interval: ln|g| does not wrap, the phase step is the wrapped one"""
+        out = []
+        for a, b in zip(ts[:-1], ts[1:]):
+            dl = vals[b][0] - vals[a][0] if opts.get("mutate") != "nolng" else 0.0
+            out.append(abs(complex(dl, wrap(vals[b][1] - vals[a][1]))) / ((b - a) * L))
+        return out
+
+    def edge(z0, z1, name, ends=(0.0, 0.0)):
+        """ends: the largest scale of the other edges' intervals at z0 and at z1 (the corners)"""
         L = abs(z1 - z0)
         n = max(2, int(math.ceil(L / h0)))
         vals = {i / n: g(z0 + (i / n) * (z1 - z0)) for i in range(n + 1)}
         checked, bad, nver, passes = set(), 0, 0, 0
         bad_last = 0          # mismatches found in the last verification pass
+        nalias = 0            # bisections made by the alias rule only
         while True:
             changed = True
             while changed:
                 changed = False
                 ts = sorted(vals)
-                for a, b in zip(ts[:-1], ts[1:]):
+                sc = scales(ts, vals, L) if alias > 0 else None
+                for i, (a, b) in enumerate(zip(ts[:-1], ts[1:])):
                     if (b - a) * L < hmin:
                         continue
-                    if abs(wrap(vals[b][1] - vals[a][1])) > tol:
+                    split = abs(wrap(vals[b][1] - vals[a][1])) > tol
+                    if not split and alias > 0:
+                        s = max(sc[max(i - NB, 0):i + NB + 1])
+                        if i < NB:
+                            s = max(s, ends[0])
+                        if i >= len(sc) - NB:
+                            s = max(s, ends[1])
+                        split = (b - a) * L * s > alias
+                        nalias += split
+                    if split:
                         m = 0.5 * (a + b)
                         vals[m] = g(z0 + m * (z1 - z0))
                         changed = True
@@ -211,23 +254,45 @@ def count(det_fn, info, poles, opts, log, tag, res_file, expected=None, boxes_on
         ts = sorted(vals)
         steps = [wrap(vals[b][1] - vals[a][1]) for a, b in zip(ts[:-1], ts[1:])]
         raw = [wrap(vals[b][3] - vals[a][3]) for a, b in zip(ts[:-1], ts[1:])]
+        # the alias rule at the end: intervals above the spacing floor all meet it (the loop above), those below it
+        # that do not are counted (a zero of g within about hmin of the edge), and make the edge unresolved
+        sc = scales(ts, vals, L)
+        alias_left = 0
+        if alias > 0:
+            for i, (a, b) in enumerate(zip(ts[:-1], ts[1:])):
+                s = max([*sc[max(i - NB, 0):i + NB + 1]] + ([ends[0]] if i < NB else []) +
+                        ([ends[1]] if i >= len(sc) - NB else []))
+                alias_left += (b - a) * L * s > alias
         e = dict(name=name, z0=[z0.real, z0.imag], z1=[z1.real, z1.imag], points=len(ts), dphi=sum(steps),
                  max_step=max(abs(s) for s in steps), max_raw_step=max(abs(s) for s in raw),
                  max_hspace=max(b - a for a, b in zip(ts[:-1], ts[1:])) * L,
                  min_hspace=min(b - a for a, b in zip(ts[:-1], ts[1:])) * L,
                  min_lng=min(v[0] for v in vals.values()), max_lng=max(v[0] for v in vals.values()),
                  min_lndet=min(v[2] for v in vals.values()), verified=nver, verify_mismatch=bad, passes=passes,
-                 verify_mismatch_last=bad_last,
+                 verify_mismatch_last=bad_last, alias=alias, alias_bisections=nalias, alias_left=alias_left,
+                 corner_scales=list(ends), max_scale_h=max(((b - a) * L * s for (a, b), s in
+                                                            zip(zip(ts[:-1], ts[1:]), sc)), default=0.0),
                  # --resolve=any (default): no mismatch in any pass; --resolve=last: none in the final pass, whose
                  # bisections leave every interval within tol (earlier mismatches were refined away, #169)
-                 resolved=max(abs(s) for s in steps) <= tol and (bad_last if opts.get("resolve") == "last" else bad) == 0,
+                 resolved=max(abs(s) for s in steps) <= tol and (bad_last if opts.get("resolve") == "last" else bad) == 0
+                 and alias_left == 0,
                  samples=[[round(t, 10), round(vals[t][0], 6), round(vals[t][1], 6), round(vals[t][2], 6),
                            round(vals[t][3], 6)] for t in ts])
-        log(f"  edge {name}: {len(ts)} points, phase change of g {e['dphi']:+.6f}, max step {e['max_step']:.3f} rad "
-            f"(det M itself: {e['max_raw_step']:.3f}), spacing {e['min_hspace']:.2e}..{e['max_hspace']:.2e}, ln|g| "
-            f"{e['min_lng']:.2f}..{e['max_lng']:.2f}, verified {nver} (mismatch {bad}, last pass {bad_last}) in {passes} passes"
-            + ("" if e["resolved"] else "  UNRESOLVED"))
+        e["_log"] = (f"  edge {name}: {len(ts)} points, phase change of g {e['dphi']:+.6f}, max step {e['max_step']:.3f} rad "
+                     f"(det M itself: {e['max_raw_step']:.3f}), spacing {e['min_hspace']:.2e}..{e['max_hspace']:.2e}, ln|g| "
+                     f"{e['min_lng']:.2f}..{e['max_lng']:.2f}, verified {nver} (mismatch {bad}, last pass {bad_last}) in "
+                     f"{passes} passes, alias bisections {nalias}" + (f" ({alias_left} below hmin)" if alias_left else "")
+                     + ("" if e["resolved"] else "  UNRESOLVED"))
         return e
+
+    def end_scale(e, at_start):
+        """largest scale of the NB intervals of edge e next to its start (or end)"""
+        z0, z1 = complex(*e["z0"]), complex(*e["z1"])
+        S = e["samples"]
+        ts = [s[0] for s in S]
+        v = {s[0]: (s[1], s[2]) for s in S}
+        sc = scales(ts, v, abs(z1 - z0))
+        return max(sc[:NB] if at_start else sc[-NB:])
 
     specs = [("R1", complex(aR, 0), complex(aR, y1), "Re=aR, Im 0->y1"),
              ("V2", complex(a2, 0), complex(a2, y1), "Re=a2, Im 0->y1"),
@@ -257,10 +322,31 @@ def count(det_fn, info, poles, opts, log, tag, res_file, expected=None, boxes_on
     }
     sel = list(box_def) if boxes_only is None else list(boxes_only)
     need = {e for b in sel for e in box_def[b][0]}
-    E = {}
-    for name, z0, z1, label in specs:
-        if name in need:
-            E[name] = edge(z0, z1, label)
+    # the edges are sampled in sweeps: each sweep passes every edge the largest scale that the other edges meeting at
+    # its corners showed so far (kept monotone, so the samples only grow), until no corner scale grows
+    corner = {}           # (corner point, edge name) -> largest scale of that edge's intervals next to the corner
+    sweeps = 0
+    while True:
+        sweeps += 1
+        E = {}
+        for name, z0, z1, label in specs:
+            if name in need:
+                ends = tuple(max([s for (p, nm), s in corner.items() if p == z and nm != name] + [0.0])
+                             for z in (z0, z1)) if alias > 0 and opts.get("mutate") != "nocorner" else (0.0, 0.0)
+                E[name] = edge(z0, z1, label, ends)
+        grew = False
+        for name, z0, z1, label in specs:
+            if name in need and alias > 0:
+                for z, start in ((z0, True), (z1, False)):
+                    s = end_scale(E[name], start)
+                    if s > corner.get((z, name), 0.0) * (1 + 1e-12):
+                        corner[(z, name)] = s
+                        grew = True
+        if not grew:
+            break
+    for name in E:
+        log(E[name].pop("_log"))
+    log(f"  edges sampled in {sweeps} sweeps (alias rule {'off' if alias == 0 else f'h * scale <= {alias:.4f}'})")
     boxes = {b: (sum(sg * E[e]["dphi"] for e, sg in box_def[b][0].items()) / box_def[b][1], box_def[b][2],
                  list(box_def[b][0])) for b in sel}
 
@@ -291,7 +377,8 @@ def count(det_fn, info, poles, opts, log, tag, res_file, expected=None, boxes_on
             f"inside {len(kin)}, candidate poles inside {len(pin)} -> winding of det M {wi + len(kin) - len(pin)}, zeros of "
             f"det M <= {wi + len(kin)}; max phase step {out[b]['max_step']:.3f} rad, nearest pole / expected zero to the "
             f"edge {dmin:.3f} / {dz:.3f}" + ("" if out[b]["resolved"] else "; UNRESOLVED: not a count"))
-    rec = dict(info, tag=tag, aLL=aLL, aL=aL, a1=a1, a2=a2, aR=aR, y1=y1, y2=y2, h0=h0, tol=tol, trend=list(pc),
+    rec = dict(info, tag=tag, aLL=aLL, aL=aL, a1=a1, a2=a2, aR=aR, y1=y1, y2=y2, h0=h0, tol=tol, alias=alias, sweeps=sweeps,
+               trend=list(pc),
                expected_zeros=[[z.real, z.imag] for z in K], n_candidate_poles_factored=len(Q),
                real_axis=[[x, la, s] for x, la, s in real], real_sign_changes=sign_changes,
                evaluations=len(cache), new_evaluations=nev[0], sec_per_eval=(nev[1] / nev[0] if nev[0] else None),
