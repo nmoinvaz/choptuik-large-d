@@ -21,6 +21,9 @@ Cases. The first three were seen while the estimator was chosen (development cas
            least 0.1 from its box's edges, 0.25 from the others and lam_phys, and 0.2 from the candidate poles (seen
            in the second version, below).
   held0 .. held11, drawn in the same way with seed 231, first run with the criteria below (held-out cases).
+  left     B0 0.10+0.80i; U0 0.11+2.60i; U 2.00+2.60i (the boxes of the D 55 extras, #232)
+  left0 .. left5, drawn with seed 232: 1-2 zeros in the upper half of B0 (at least 0.25 from lam = 0), 0-2 in U0,
+           0-3 in U, 0-2 in the upper half of B1b, with the margins above; first run with criterion (e).
 
 Pass criteria (third version):
   (a) the count: in the boxes of |Im| < y1 (B0, B1a, B1b, B1c, B1) wind(g) equals the number of planted zeros inside
@@ -31,7 +34,10 @@ Pass criteria (third version):
       minimises the largest distance). Every root with spread below 0.05 lies within 0.05 of its planted zero (the
       accuracy that centring circles of radius 0.1 or more needs), and at least half of all planted zeros of B1b and
       B1c, over the cases, have a root with spread below 0.05;
-  (d) ln g recomputed by the moment code agrees with the samples stored in the count's record to 1e-4.
+  (d) ln g recomputed by the moment code agrees with the samples stored in the count's record to 1e-4;
+  (e) B0, and U0 where the count's U0 winding is right: (b) and the first part of (c) hold as for B1b and B1c (B0 has
+      no half contour: the count has no real-axis samples left of aL). Added for the left column (#238) with the left
+      cases, before their first run.
   U is printed, not tested; U's roots are not used on real data.
 Controls, each must make the test fail: --mutate=nok drops the factor k of the integration by parts in the moment code;
 --mutate=shift plants every extra zero 0.1 to the right of where the criteria expect it.
@@ -97,8 +103,35 @@ def random_cases(seed=230, n=8, prefix="random"):
     return cases
 
 
+def left_cases(seed=232, n=6):
+    rng = np.random.default_rng(seed)
+    near = [p for p in POLES if abs(p.imag) < Y2 + 0.5 and -1 < p.real < 8]
+    aLL, aL = LAYOUT["aLL"], LAYOUT["aL"]
+
+    def draw(k, r0, r1, i0, i1, taken):
+        out = []
+        while len(out) < k:
+            z = complex(rng.uniform(r0 + 0.1, r1 - 0.1), rng.uniform(i0 + 0.1, i1 - 0.1))
+            if (all(abs(z - w) > 0.25 for w in taken + out) and abs(z - LP) > 0.25 and abs(z) > 0.25
+                    and all(abs(z - p) > 0.2 for p in near)):
+                out.append(z)
+        return out
+    cases = {}
+    for i in range(n):
+        n0, nu0, nu, nb = (int(rng.integers(1, 3)), int(rng.integers(0, 3)), int(rng.integers(0, 4)),
+                           int(rng.integers(0, 3)))
+        z = draw(n0, aLL, aL, 0.0, Y1, [])
+        z += draw(nu0, aLL, aL, Y1, Y2, z)
+        z += draw(nu, aL, LAYOUT["aR"], Y1, Y2, z)
+        z += draw(nb, LAYOUT["a1"], LAYOUT["a2"], 0.0, Y1, z)
+        cases[f"left{i}"] = z
+    return cases
+
+
 CASES.update(random_cases())
 CASES.update(random_cases(231, 12, "held"))
+CASES["left"] = [0.10 + 0.80j, 0.11 + 2.60j, 2.00 + 2.60j]
+CASES.update(left_cases())
 GATED = ("B0", "B1a", "B1b", "B1c", "B1")
 GATED_EDGES = ("L1", "H0", "V0", "V1", "H3", "V2", "H2", "R1", "H1")
 
@@ -142,18 +175,22 @@ def run_case(name, extra, mutate, tmp):
     if chk > 1e-4:
         bad.append(f"(d) ln g against the stored samples {chk:.1e}")
     lines, n_planted, n_conf = [], 0, 0
-    for box in ("B1b", "B1c", "U"):
+    u0_ok = rec["boxes"]["U0"]["winding_g_int"] == len(inside(rec["boxes"]["U0"]["rect"], planted))
+    for box in ("B1b", "B1c", "U", "B0", "U0"):
+        tested = box in ("B1b", "B1c", "B0") or (box == "U0" and u0_ok)
         x = MM.locate(r, ev, Q, box, mutate if mutate == "nok" else None)
         rect = rec["boxes"][box]["rect"]
-        upper = inside(rect if box == "U" else (rect[0], rect[1], 0.0, rect[3]), planted)
-        if box != "U":
+        strip = box in ("U", "U0")
+        upper = inside(rect if strip else (rect[0], rect[1], 0.0, rect[3]), planted)
+        if box in ("B1b", "B1c"):
             n_planted += len(upper)
-            for m, want in (("sym", inside(rect, planted)), ("half", upper)):
-                if abs(x[m]["winding"] - len(want)) > 1e-6:
+        if tested:
+            for m, want in ((("strip", upper),) if strip else (("sym", inside(rect, planted)), ("half", upper))):
+                if m in x and abs(x[m]["winding"] - len(want)) > 1e-6:
                     bad.append(f"(b) {box} {m}: winding {x[m]['winding']:+.6f}, planted {len(want)}")
         if not x["ok"]:
             lines.append(f"    {box}: not located, {x['why']}")
-            if box != "U" and not any(b.startswith(f"(b) {box}") for b in bad):
+            if tested and not any(b.startswith(f"(b) {box}") for b in bad):
                 bad.append(f"(b) {box}: {x['why']}")
             continue
         got = [complex(*z) for z in x["roots"]]
@@ -168,13 +205,13 @@ def run_case(name, extra, mutate, tmp):
             if sp < TOL:
                 conf += 1
                 worst_conf = max(worst_conf, d)
-                if d > TOL and box != "U":
+                if d > TOL and tested:
                     bad.append(f"(c) {box}: root {z:.4f} with spread {sp:.1e} is {d:.3f} from the planted {w:.4f}")
-        if box != "U":
+        if box in ("B1b", "B1c"):
             n_conf += conf
         lines.append(f"    {box:3s}: {x['N']} roots, {conf} with spread < {TOL}; largest distance to the planted "
                      f"{worst:.1e} (of those {worst_conf:.1e}), largest spread {max(x['spread'] + [0.0]):.1e}"
-                     + ("  (U: printed, not tested)" if box == "U" else ""))
+                     + ("" if tested else "  (printed, not tested)"))
     if ungated:
         lines.append("    count, not tested: " + "; ".join(ungated))
     return bad, lines, rec, n_planted, n_conf

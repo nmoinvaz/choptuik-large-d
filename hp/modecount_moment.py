@@ -3,7 +3,7 @@
 
     python3 modecount_moment.py TAG STATE.npz [BOX ...] [--data=DIR] [--out=FILE] [--mutate=nok]
 
-BOX: B1b, B1c (default) or U. TAG names the count: DIR/modecount_results.jsonl (its last record with that tag) and
+BOX: any box of the count, B0, B1a, B1b, B1c (default), B1, full, U0 or U. TAG names the count: DIR/modecount_results.jsonl (its last record with that tag) and
 DIR/modecount_<TAG>_evals.jsonl (DIR defaults to hp/data). STATE is the state the count ran on; the candidate poles of g
 are recomputed from it as the count did, and ln g is checked against the samples the record stores.
 
@@ -46,7 +46,18 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, HERE)
 
 DATA = os.path.join(HERE, "data")
-BOXES = ("B1b", "B1c", "U")
+# the boxes of modecount_wind.count: edges (name, reversed) counter-clockwise (for a symmetric box its upper half,
+# from the real axis at the right back to it at the left), the left and right Re, and the kind
+BOXES = {
+    "B0": ([("L1", False), ("H0", False), ("V0", True)], "aLL", "aL", "sym"),
+    "B1a": ([("V1", False), ("H3", False), ("L1", True)], "aL", "a1", "sym"),
+    "B1b": ([("V2", False), ("H2", False), ("V1", True)], "a1", "a2", "sym"),
+    "B1c": ([("R1", False), ("H1", False), ("V2", True)], "a2", "aR", "sym"),
+    "B1": ([("R1", False), ("H1", False), ("H2", False), ("H3", False), ("L1", True)], "aL", "aR", "sym"),
+    "full": ([("R1", False), ("R2", False), ("T", False), ("L2", True), ("L1", True)], "aL", "aR", "sym"),
+    "U0": ([("H0", True), ("L2", False), ("T0", False), ("V0b", True)], "aLL", "aL", "strip"),
+    "U": ([("H3", True), ("H2", True), ("H1", True), ("R2", False), ("T", False), ("L2", True)], "aL", "aR", "strip"),
+}
 
 
 def load_count(data, tag):
@@ -121,25 +132,32 @@ def stored_check(r, lng, names):
     return worst
 
 
+def box_spec(r, box):
+    """the box's edges (name, reversed) counter-clockwise, its rectangle (upper half for the symmetric boxes), its
+    kind, and the real-axis interval of the half contour (None: the count has no real-axis samples there)"""
+    if box not in BOXES:
+        raise SystemExit(f"box {box}: one of {', '.join(BOXES)}")
+    spec, left, right, kind = BOXES[box]
+    lo, hi = (r["y1"], r["y2"]) if kind == "strip" else (0.0, r["y2"] if box == "full" else r["y1"])
+    a, b = r[left], r[right]
+    real = None
+    if kind == "sym":
+        xs = [x for x, _, _ in r["real_axis"]]
+        if any(abs(x - a) < 1e-12 for x in xs) and any(abs(x - b) < 1e-12 for x in xs):
+            real = (a, b)
+    return spec, (a, b, lo, hi), kind, real
+
+
 def contour(r, box, mode, lng):
     """the closed contour as straight pieces [(points, ln g values)], counter-clockwise, and the centre c"""
-    if box == "U":
-        spec = [("H3", True), ("H2", True), ("H1", True), ("R2", False), ("T", False), ("L2", True)]
-        rect = (r["aL"], r["aR"], r["y1"], r["y2"])
-        real = None
-    elif box == "B1b":
-        spec = [("V2", False), ("H2", False), ("V1", True)]
-        rect, real = (r["a1"], r["a2"], 0.0, r["y1"]), (r["a1"], r["a2"])
-    elif box == "B1c":
-        spec = [("R1", False), ("H1", False), ("V2", True)]
-        rect, real = (r["a2"], r["aR"], 0.0, r["y1"]), (r["a2"], r["aR"])
-    else:
-        raise SystemExit(f"box {box}: one of {', '.join(BOXES)}")
+    spec, rect, kind, real = box_spec(r, box)
+    if (mode == "strip") != (kind == "strip") or (mode == "half" and real is None):
+        raise SystemExit(f"box {box}: no {mode} contour")
     pieces = []
     for name, rev in spec:
         p = edge_points(r, name, rev)
         pieces.append((p, [lng(z) for z in p]))
-    if box == "U":
+    if kind == "strip":
         c = complex(0.5 * (rect[0] + rect[1]), 0.5 * (rect[2] + rect[3]))
     elif mode == "half":
         p = real_points(r, *real)
@@ -251,12 +269,15 @@ def solve(r, lng, box, mode, mutate=None):
 
 
 def locate(r, ev, Q, box, mutate=None):
-    """the zeros of g in one box (B1b, B1c: those in the upper half; U: those in the strip), a dict for the record.
-    Reported: the central-stencil roots of the mirrored whole box (sym; for U the strip). spread: the largest distance
-    from a reported root to the same zero by the other two stencils and, for B1b and B1c, by the half contour's three."""
+    """the zeros of g in one box (symmetric boxes: those in the upper half; U, U0: those in the strip), a dict for the
+    record. Reported: the central-stencil roots of the mirrored whole box (sym; for U and U0 the strip). spread: the
+    largest distance from a reported root to the same zero by the other two stencils and, where the count has real-axis
+    samples at both ends of the box (not B0), by the half contour's three."""
     lng = LnG(r, ev, Q)
     out = dict(box=box)
-    modes = ("strip",) if box == "U" else ("sym", "half")
+    _, _, kind, real = box_spec(r, box)
+    strip = kind == "strip"
+    modes = ("strip",) if strip else ("sym", "half") if real else ("sym",)
     sol = {m: solve(r, lng, box, m, mutate) for m in modes}
     for m in modes:
         W, N, roots, info = sol[m]
@@ -265,19 +286,20 @@ def locate(r, ev, Q, box, mutate=None):
     if N is None:
         out.update(ok=False, why=f"winding {W:.6f} of the {modes[0]} contour is not a small non-negative integer")
         return out
-    rep = roots[0] if box == "U" else [z for z in roots[0] if z.imag > 0]
+    rep = roots[0] if strip else [z for z in roots[0] if z.imag > 0]
     others = [roots[-1], roots[1]]
-    if box != "U":
+    if not strip:
         # the sym polynomial has real coefficients (the contour is its own mirror image): its roots pair up
         if N % 2 or len(rep) != N // 2:
             out.update(ok=False, why=f"the sym contour's {N} roots do not pair into {N // 2} conjugate pairs")
             return out
         others = [[z for z in o if z.imag > 0] for o in others]
-        Wh, Nh, rh, _ = sol["half"]
-        if Nh != N // 2:
-            out.update(ok=False, why=f"winding {Wh:.6f} of the half contour is not half of {W:.6f}")
-            return out
-        others += [rh[0], rh[-1], rh[1]]
+        if "half" in sol:
+            Wh, Nh, rh, _ = sol["half"]
+            if Nh != N // 2:
+                out.update(ok=False, why=f"winding {Wh:.6f} of the half contour is not half of {W:.6f}")
+                return out
+            others += [rh[0], rh[-1], rh[1]]
         if any(len(o) != len(rep) for o in others):
             out.update(ok=False, why="a stencil's sym roots do not pair up")
             return out
@@ -288,21 +310,21 @@ def locate(r, ev, Q, box, mutate=None):
     order = sorted(range(len(rep)), key=lambda i: (rep[i].real, rep[i].imag))
     out.update(ok=True, N=len(rep), roots=[[rep[i].real, rep[i].imag] for i in order],
                spread=[spread[i] for i in order])
-    if box != "U":
+    if "half" in sol:
         out["roots_half"] = [[z.real, z.imag] for z in match([rep[i] for i in order], rh[0])]
     return out
 
 
 def show(tag, x):
-    m = "strip" if x["box"] == "U" else "sym"
+    m = "strip" if "strip" in x else "sym"
     head = f"{tag} {x['box']}: winding of g {x[m]['winding']:+.6f} ({m}, {x[m]['samples']} samples)"
     if "half" in x:
         head += f", {x['half']['winding']:+.6f} (half, {x['half']['samples']} samples)"
     if not x["ok"]:
         return head + f"; NOT LOCATED: {x['why']}"
-    lines = [head + f"; {x['N']} zeros of g" + ("" if x["box"] == "U" else " in the upper half")]
+    lines = [head + f"; {x['N']} zeros of g" + ("" if m == "strip" else " in the upper half")]
     for i, ((re, im), e) in enumerate(zip(x["roots"], x["spread"])):
-        h = "" if x["box"] == "U" else f"   (half contour {x['roots_half'][i][0]:.5f} {x['roots_half'][i][1]:+.5f}i)"
+        h = "" if "roots_half" not in x else f"   (half contour {x['roots_half'][i][0]:.5f} {x['roots_half'][i][1]:+.5f}i)"
         lines.append(f"    {re:9.5f} {im:+9.5f}i   spread {e:.1e}{h}")
     return "\n".join(lines)
 
@@ -319,8 +341,7 @@ def main():
         raise SystemExit(f"{len(Q)} candidate poles from {statefile}, the count factored "
                          f"{r['n_candidate_poles_factored']}: not the count's state")
     lng = LnG(r, ev, Q)
-    names = sorted({n for b in boxes for n in {"B1b": ("V1", "V2", "H2"), "B1c": ("R1", "H1", "V2"),
-                                                "U": ("H1", "H2", "H3", "R2", "T", "L2")}[b]})
+    names = sorted({n for b in boxes for n, _ in box_spec(r, b)[0]})
     chk = stored_check(r, lng, names)
     print(f"{tag}: {len(ev)} cached determinants, {len(Q)} candidate poles; ln g recomputed against the record's "
           f"stored samples on {', '.join(names)}: largest difference {chk:.1e}")
