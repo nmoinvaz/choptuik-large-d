@@ -329,6 +329,22 @@ The onset in (53.79, 54.04] holds in one region. Between D = 54.04 and 55.04 the
 B1a, so it moves to larger Re λ as D grows. Where the two contours overlap their windings agree. The one difference,
 U0 at D = 54.04, puts one zero of the strip at −0.150 < Re λ < −0.096.
 
+**Positions at D = 54 and 55 (#238; raw `I238-macm3/`, d44579f).** Each zero is confirmed by a circle winding +1, and
+the λ_phys circles wind +1 at both D:
+
+| D | zero (upper half) | box |
+|---|---|---|
+| 54.04 | −0.0220 + 0.9365i | B0 |
+| 54.04 | −0.1310 + 2.6426i, +0.0711 + 4.5045i | U0 |
+| 55.04 | +0.1996 + 0.2548i | B1a (fixed column), B0 (automatic) |
+| 55.04 | +0.3189 + 3.3314i | U |
+| 55.04 | +0.0612 + 3.8526i, −0.2267 + 4.2800i | U0 and left of it |
+
+The B0 pair at D = 54.04 and the B1a pair at D = 55.04 are one pair. Its Re λ goes from −0.022 to +0.200 and its Im λ
+from 0.94 to 0.25, so at M = 48 it crosses Re λ = 0 between D = 54.04 and 55.04 and heads for the real axis. A pair of
+growth rates crossing into Re λ > 0 is how a new unstable mode would appear, if it is genuine. None of the strip zeros
+lies on Im λ = ω (3.44 at D = 55). Whether the pair exists at M = 40 and 64 is #231 and #141.
+
 **Positions at D = 61 (#230).** The extras in B1b and B1c lie on one row, from 1.31 + 1.42i down to 3.02 ± 0.10i, each
 zero confirmed by a small circle winding +1 (`hp/modecount_circle.py`; raw `I230-mac/`, e7dc533):
 
@@ -364,9 +380,8 @@ not the same region at every D. A recount with fixed edges is #241. At M = 32 wi
 every box (#237; raw `I237-macm3/`, f23993e), so its extras, like D = 61's, are present at M = 48 only. At D = 55 they
 are in the left column (−0.1 < Re λ < 0.3) and the strips, and none is in B1. At D = 61 none is in the left column. The
 counts cannot tell whether the D = 61 zeros are D = 55's moved to larger Re λ or a second set. On the real axis det M
-changes sign only at λ_g and λ_phys at both D. If the layout's 2iω periodicity holds, conjugation maps each strip onto
-itself, reflected about Im λ = ω, so an odd winding of U or U0 puts one zero on Im λ = ω. That would be a real growth
-rate of the other symmetry sector, an inference from the counts and not a located zero.
+changes sign only at λ_g and λ_phys at both D. An odd winding of U or U0 had suggested a zero on Im λ = ω, a real growth
+rate of the other sector, but #238 found none there (below).
 
 **The same cut scan at D = 45, M = 48.** One extra real zero, at λ = 1.14 ± 0.03, appears at kf 21 only. It is absent
 at kf 13 to 19 (#178) and at kf 23, 25 and 27 (#190), and the full count at kf 23 is 0 in all 8 boxes (#211).
