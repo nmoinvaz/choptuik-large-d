@@ -343,7 +343,15 @@ the λ_phys circles wind +1 at both D:
 The B0 pair at D = 54.04 and the B1a pair at D = 55.04 are one pair. Its Re λ goes from −0.022 to +0.200 and its Im λ
 from 0.94 to 0.25, so at M = 48 it crosses Re λ = 0 between D = 54.04 and 55.04 and heads for the real axis. A pair of
 growth rates crossing into Re λ > 0 is how a new unstable mode would appear, if it is genuine. None of the strip zeros
-lies on Im λ = ω (3.44 at D = 55). Whether the pair exists at M = 40 and 64 is #231 and #141.
+lies on Im λ = ω (3.44 at D = 55). At M = 40 it does not exist (#231, below).
+
+**A third resolution at D = 55 (#231, interim; raw `I231-macm3/`, a0f232a).** At M = 40 with kf 23 the count finds
+B0 +2, U0 +1, B1a +2, B1 +2, U +3 and full +8 (every edge resolved, 0 mismatches, setup |F| 3.3×10⁻¹⁹), against 0 in
+every box at M = 32 and B0 +2, U0 +1, U +1, full +2 at M = 48. On the M = 40 state, circles around the three M = 48
+zeros, the crossing pair at +0.1996 + 0.2548i, the U zero and the U0 zero, wind 0, while the λ_phys circle winds +1.
+M = 40 has zeros of its own instead, one of them confirmed by a circle at 0.4773 + 1.4533i. So at D = 55 the extras
+move, multiply and vanish as M changes, which is how truncation artifacts behave and not how a mode behaves, since a
+mode keeps its λ. This rests on one D, and the D = 61 count at M = 40 is running.
 
 **Positions at D = 61 (#230).** The extras in B1b and B1c lie on one row, from 1.31 + 1.42i down to 3.02 ± 0.10i, each
 zero confirmed by a small circle winding +1 (`hp/modecount_circle.py`; raw `I230-mac/`, e7dc533):

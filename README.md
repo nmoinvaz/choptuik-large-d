@@ -1831,9 +1831,11 @@ What is known about the selection, and what is open:
   high-harmonic cut, and taken as a truncation artifact pending M = 64; at D = 54, 55 and 61 (not at 45 to 53.8), zeros
   beyond the expected ones in the M = 48 counts, absent at M = 32, at D = 61 24 at the cut 21 and 30 at the cut 23, 8 of
   them with Re λ between 1.27 and 6.6, so possibly growth rates, and at M = 48 a pair crosses into Re λ > 0 between
-  D = 54 and 55 (what they are is open, notes/MODE_COUNT.md section 5); lower D with complex λ; Re λ > 6.6;
-  non-spherical perturbations; and no collapse has been evolved above D = 14, so a continuously self-similar solution
-  (Clark and Pimentel, [arXiv:2504.10590](https://arxiv.org/abs/2504.10590)) taking over the threshold is not excluded.
+  D = 54 and 55; at D = 55 a third resolution, M = 40, has other extras and none of M = 48's, the behaviour of
+  truncation artifacts, with D = 61 at M = 40 pending (notes/MODE_COUNT.md section 5); lower D with complex λ; Re λ >
+  6.6; non-spherical perturbations; and no collapse has been evolved above D = 14, so a continuously self-similar
+  solution (Clark and Pimentel, [arXiv:2504.10590](https://arxiv.org/abs/2504.10590)) taking over the threshold is not
+  excluded.
 
 ![Why the critical exponent tends to 1/2: lambda = 1/gamma against 1/(D-2) for 67 double-double points with the fit carried to lambda = 2 at D = infinity, and free fits of lambda_inf - 2 falling with the number of powers](solver/gamma.svg)
 
