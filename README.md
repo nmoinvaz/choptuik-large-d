@@ -1828,7 +1828,7 @@ What is known about the selection, and what is open:
   of the formulation at λ = 1 + ⟨c₁⟩ (a change of time coordinate that keeps the light cone at x = 1). A planted-zero
   test runs a synthetic determinant through the same code and counts what was planted in all 8 cases. Open: a second
   resolution (M = 48) shows one extra pair at D = 30, absent at M = 32 and in the full M = 48 count with the
-  high-harmonic cut, and taken as a truncation artifact pending M = 64; at D = 55 and 61 (not at 45 to 53.8), zeros
+  high-harmonic cut, and taken as a truncation artifact pending M = 64; at D = 54, 55 and 61 (not at 45 to 53.8), zeros
   beyond the expected ones in the M = 48 counts, absent at M = 32, at D = 61 24 in number, 8 of them with Re λ between
   1.27 and 6.6, so possibly growth rates (what they are is open, notes/MODE_COUNT.md section 5); lower D with complex λ;
   Re λ > 6.6; non-spherical perturbations; and no collapse has been evolved above D = 14, so a continuously self-similar
