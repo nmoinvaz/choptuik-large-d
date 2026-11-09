@@ -57,7 +57,11 @@ digits, so the interpolation between nodes does not limit the crossing; x₁ ≈
 S₁ has a second zero near ω/ω∞ = 1.0989, x₁ ≈ 13.46, and the D = ∞ inner problem a second selected solution there,
 with Δ = Δ∞/1.0989 ≈ 1.496. This is numerical evidence from the Borel–Padé sums of the amplitude expansion, conditional
 on the selection rule (Conjecture 1); the solution's stability is not known. The σ of the 1.10 node agree with macm3's
-K 33 J 1000 run at the same node to 20 digits through σ₅ and to 1.2×10⁻¹⁵ at σ₁₆ (#82).
+K 33 J 1000 run at the same node to 20 digits through σ₅ and to 1.2×10⁻¹⁵ at σ₁₆ (#82). A discrepancy, open: #202 found
+the 1.10 node's distance from K 33 above both neighbours' at n = 6, 7, 15 and 16 (by up to 2.8×, at most 1.2×10⁻¹⁵
+relative), while win2's and macm3's K 33 files agree through σ₁₅. The cause is not known. 1.10 is the node whose run
+died in libflint on the old firmware and was rerun. The excess is five orders below the 10⁻¹⁰ the crossing needs, but
+σ₁₇–σ₂₂ have no K 33 comparison. The rerun is #228, and a test of the process count is #229.
 
 **An independent check (#203).** A second agent, given only the σ data, summed S₁ by a different route: the Laplace
 transform F(t) = Σ n! σ_n tⁿ continued by quadratic Hermite–Padé approximants, then S₁ = Σ c̃_n xⁿ/n! to n = 220
