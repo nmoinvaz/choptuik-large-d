@@ -395,15 +395,16 @@ As D → ∞ (ε → 0):
 
 γ∞ = 1/2 is imposed in both γ fits (their constant term is fixed), not derived. Unconstrained fits of the f64 γ on D ≥
 8–12 give γ∞ = 0.4996–0.4998. The double-double γ (`hp/gamma_dd.py`: the exact growth-mode matrix M(λ) in double-double
-and the root of det M(λ); 67 points, D = 8.25–61, about 10⁻¹² for D = 16–58, matching the f64 values to 10⁻⁸–10⁻¹²;
-`hp/data/gamma_dd.jsonl` and `hp/data/local/gamma_dd.jsonl`) pins it much more tightly. In free fits in powers of 1/n,
-λ∞ − 2 (λ = 1/γ) falls by a factor of about 3.5 with each added power: on D ≥ 30, 2.4×10⁻⁴, 6.7×10⁻⁵, 1.9×10⁻⁵, 5.5×10⁻⁶
-and (1.6 ± 2.2)×10⁻⁶ for four to eight powers
-(`cd hp && python3 gamma_compare.py data/gamma_dd.jsonl data/local/gamma_dd.jsonl`), with no sign of levelling off;
-fixing λ∞ = 2 fits better with the same number of parameters. So γ∞ = 1/2 to about 5×10⁻⁷ (a spread over fit choices,
-not a bound), and λ = 2 + 3.0324/n − 34.3/n² + … (γ = 1/2 − 0.7581/n + …). The rational γ formula is within 1.2×10⁻⁹ of
-these points for D ≤ 30 and off by 1.0×10⁻⁷ at D = 61, where it extrapolates. 1/2 is also the value conjectured in the
-literature ([below](#relation-to-published-work)), and like Δ∞ it is not fixed at any finite order of the 1/n expansion
+and the root of det M(λ); 67 points, D = 8.25–61, about 10⁻¹² for D = 16–58 (from M = 32 to 48 λ moves by less than the
+root's resolution, 10⁻¹⁴ at D = 50 and 5×10⁻¹³ at D = 58; `hp/gamma_m48_gap.py`, raw I266-mac), matching the f64 values
+to 10⁻⁸–10⁻¹²; `hp/data/gamma_dd.jsonl` and `hp/data/local/gamma_dd.jsonl`) pins it much more tightly. In free fits in
+powers of 1/n, λ∞ − 2 (λ = 1/γ) falls by a factor of about 3.5 with each added power: on D ≥ 30, 2.4×10⁻⁴, 6.7×10⁻⁵,
+1.9×10⁻⁵, 5.5×10⁻⁶ and (1.6 ± 2.2)×10⁻⁶ for four to eight powers (`cd hp && python3 gamma_compare.py data/gamma_dd.jsonl
+data/local/gamma_dd.jsonl`), with no sign of levelling off; fixing λ∞ = 2 fits better with the same number of
+parameters. So γ∞ = 1/2 to about 5×10⁻⁷ (a spread over fit choices, not a bound), and λ = 2 + 3.0324/n − 34.3/n² + … (γ
+= 1/2 − 0.7581/n + …). The rational γ formula is within 1.2×10⁻⁹ of these points for D ≤ 30 and off by 1.0×10⁻⁷ at
+D = 61, where it extrapolates. 1/2 is also the value conjectured in the literature
+([below](#relation-to-published-work)), and like Δ∞ it is not fixed at any finite order of the 1/n expansion
 ([Proposition 5](#proposition-5-the-unstable-mode-at-infinite-d-is-exact)).
 
 Δ∞ comes from fits of all the double-double points ([Is the period analytic in 1/D?](#is-the-period-analytic-in-1d),

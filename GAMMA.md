@@ -22,8 +22,9 @@ Contents
 
 γ(D) has been computed in double-double precision at 67 points, D = 8.25–61 (`hp/gamma_dd.py`: the root of the
 determinant of the exact growth-mode matrix M(λ); `hp/data/gamma_dd.jsonl`, `hp/data/local/gamma_dd.jsonl`). The points
-are good to about 10⁻¹² for D = 16–58 and agree with the independent f64 values to 10⁻⁸–10⁻¹². Free fits of λ = 1/γ
-in powers of 1/n (`cd hp && python3 gamma_compare.py data/gamma_dd.jsonl data/local/gamma_dd.jsonl`):
+are good to about 10⁻¹² for D = 16–58 (from M = 32 to 48 λ moves by less than the root's resolution, 10⁻¹⁴ at D = 50 and
+5×10⁻¹³ at D = 58; `hp/gamma_m48_gap.py`, raw I266-mac) and agree with the independent f64 values to 10⁻⁸–10⁻¹². Free
+fits of λ = 1/γ in powers of 1/n (`cd hp && python3 gamma_compare.py data/gamma_dd.jsonl data/local/gamma_dd.jsonl`):
 
 | Fit range | 4 powers | 5 powers | 6 powers | 7 powers | 8 powers |
 |---|---|---|---|---|---|

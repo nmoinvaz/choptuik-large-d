@@ -593,11 +593,13 @@ tangents only, as they must; the kfreeze-13 cut is applied from D = 35, so γ is
 as Δ. Limits: λ is an f64 root (10⁻¹⁴, enough for the quoted 10⁻¹²), and two roots inside one bracket would cancel in
 the sign test (the bracket starts at ±3×10⁻⁴). I did not rerun it.
 
-**Coordinator's note, a discrepancy (#254, 2026-11-09).** At D = 50, gamma_dd's M = 48 self-convergence gives
-ΔΔ = +1.2×10⁻¹¹ and Δλ = +6.9×10⁻¹³ against M = 32, with both series converged, while this review's M = 48 at the same
-layout moved Δ by 3×10⁻²⁰. Two M = 48 solutions with |F| ≈ 10⁻²⁴ differ, which looks like a weak direction reached
-from the f64 resample, not convergence in M. The README's "about 10⁻¹² for D = 16–58" for γ may rest on it. Open:
-#266.
+**Coordinator's note (#254, #266, 2026-11-09).** At D = 50, gamma_dd's M = 48 record (ΔΔ = +1.2×10⁻¹¹, Δλ = +6.9×10⁻¹³
+against M = 32) measures a stopped iteration, not convergence in M: its Newton stopped one step short (its tolerance,
+4.2×10⁻²⁴, sat above the residual it reached), along the weak directions of p1's τ-harmonics 13, 11 and 9 (singular
+values 5×10⁻²¹ to 3×10⁻¹⁷). Polished in quad-double, it and this review's M = 48 state reach one solution to 10⁻³⁶,
+with Δ(48) − Δ(32) = −2.4×10⁻²⁴ and λ(48) − λ(32) = −1.6×10⁻¹⁵, inside the root's resolution of about 10⁻¹⁴ (at D = 58,
++8.9×10⁻¹⁴ against 5×10⁻¹³). So the README's "about 10⁻¹² for D = 16–58" stands (`hp/gamma_m48_gap.py`; raw
+`I266-mac/`, 7b04cb4).
 
 ## 6. What I could not check
 
