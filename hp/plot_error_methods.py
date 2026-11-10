@@ -24,7 +24,7 @@ import sys
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, HERE)
 import data_graphs as dg  # noqa: E402
-from data_graphs import GRID, INK, INK_SOFT, SERIES, SHAPES, SURFACE, Svg, axes, better_hint, callout, esc, footnote, marker  # noqa: E402,E501
+from data_graphs import GRID, INK, INK_SOFT, SERIES, SHAPES, SURFACE, Svg, axes, better_arrow, callout, esc, footnote, marker  # noqa: E402,E501
 
 REPO = "https://github.com/nmoinvaz/choptuik-large-d"
 KINDS = [("two", "spread between two computations", SERIES[0]),
@@ -168,7 +168,10 @@ def table_col(path, col):
     return out
 
 
-def fig_sizes(path):
+def sizes_panel(svg, x, y, w, h, xaxis=(3, 220, "log")):
+    """the plot of error_sizes.svg in the box (x, y, w, h) of svg, with its legend to the right: every series over the
+    D range of xaxis, points below it left out. Prints the plotted numbers and returns the x map."""
+    lo_D = xaxis[0]
     rows = list(csv.DictReader(open(os.path.join(HERE, "data", "delta_all.csv"))))
     pub = list(csv.DictReader(open(os.path.join(HERE, "data", "delta_published_compare.csv"))))
     spread = table_col(os.path.join(HERE, "data", "published_vs_series.txt"), 3)
@@ -204,18 +207,19 @@ def fig_sizes(path):
     for D, v in steps:
         print(f"| chain_fit bias, release step | {D:g} | {v:.3e} |")
 
-    W, x, y, w, h = 1040, 92, 92, 700, 470
-    svg = Svg(W)
-    svg.text(16, 24, "The size of each error, against D", size=14, fill=INK, weight="bold")
-    svg.text(16, 42, "Markers are measured differences, dashed segments the uncertainty a source states. Ours: the "
-             "largest err in each D bin, shape by kind.", size=11)
     dg.Axis = DecadeAxis
-    xm, ym = axes(svg, x, y, w, h, (3, 220, "log"), (1e-30, 1e-2, "log"), "spacetime dimension D",
+    xm, ym = axes(svg, x, y, w, h, xaxis, (1e-30, 1e-2, "log"), "spacetime dimension D",
                   "error or difference in Δ (lower is better)", xfmt=lambda v: f"{v:g}",
                   yfmt=lambda v: f"1e{round(math.log10(v))}")
     for ref, (a, b, u) in stated.items():
+        if b <= lo_D:
+            continue
+        a = max(a, lo_D)
         svg.add(f'<line x1="{xm(a):.1f}" y1="{ym(u):.1f}" x2="{xm(b):.1f}" y2="{ym(u):.1f}" stroke="{col[ref]}" '
                 f'stroke-width="2" stroke-dasharray="6 4"/>')
+    spread, shift, steps = ([q for q in t if q[0] >= lo_D] for t in (spread, shift, steps))
+    ours = [q for q in ours if q[0] >= lo_D]
+    diffs = {ref: [q for q in pts if q[0] >= lo_D] for ref, pts in diffs.items()}
     pts = " ".join(f"{xm(D):.1f},{ym(v):.1f}" for D, v in spread)
     svg.add(f'<polyline points="{pts}" fill="none" stroke="{SERIES[-1]}" stroke-width="2"/>')
     for D, e, k, ek in ours:
@@ -233,12 +237,17 @@ def fig_sizes(path):
     svg.add(f'<polyline points="{pts}" fill="none" stroke="{SERIES[5]}" stroke-width="2"/>')
     for D, v in steps:
         marker(svg, "triangle-down", xm(D), ym(v), SERIES[5], f"D {D:g}: release step |dDelta| {v:.3e}")
-    runs = min((r for r in ours if r[3] == "runs" and r[2] == "chain_fit"), key=lambda r: r[0])
-    callout(svg, xm(22.5), ym(2.01e-3), "a bump at D 21–27", dx=40, dy=10)
-    callout(svg, xm(3.2), ym(2.47e-6), "outside its stated 1e-6", dx=30, dy=-22)
-    callout(svg, xm(runs[0]), ym(runs[1]), "two step paths: float64 held values", dx=-30, dy=-40)
-    callout(svg, xm(79.77), ym(5.0074e-8), "bias removed by the held fit", dx=-30, dy=36)
-    better_hint(svg, x, y, w, h, "right", label="smaller", reverse=True)
+    if lo_D <= 3.2:
+        callout(svg, xm(22.5), ym(2.01e-3), "a bump at D 21–27", dx=40, dy=10)
+        callout(svg, xm(3.2), ym(2.47e-6), "outside its stated 1e-6", dx=30, dy=-22)
+    # the spread between two step paths is in the table only where no fit spread replaced it
+    runs = [r for r in ours if r[3] == "runs" and r[2] == "chain_fit"]
+    if runs:
+        callout(svg, xm(runs[0][0]), ym(runs[0][1]), "two step paths: float64 held values", dx=-30, dy=-40)
+    if lo_D <= 79.77:
+        callout(svg, xm(79.77), ym(5.0074e-8), "bias removed by the held fit", dx=-30 if lo_D <= 3.2 else 36, dy=36)
+    # a long arrow in the right margin, above the legend: down is better on this axis
+    better_arrow(svg, x + w + 22, y + 6, x + w + 22, y + 126, label="better")
     # legend at the right of the plot
     lx, ly = x + w + 46, y + 140
     items = [(SERIES[0], "ours, err column", "marker"), (SERIES[1], name["EEG2026"], "marker"),
@@ -262,6 +271,16 @@ def fig_sizes(path):
     svg.add(f'<line x1="{lx - 2}" y1="{ly - 4}" x2="{lx + 12}" y2="{ly - 4}" stroke="{INK_SOFT}" stroke-width="2" '
             f'stroke-dasharray="6 4"/>')
     svg.text(lx + 18, ly, "stated uncertainty", size=11, fill=INK)
+    return xm
+
+
+def fig_sizes(path):
+    W, x, y, w, h = 1040, 92, 92, 700, 470
+    svg = Svg(W)
+    svg.text(16, 24, "The size of each error, against D", size=14, fill=INK, weight="bold")
+    svg.text(16, 42, "Markers are measured differences, dashed segments the uncertainty a source states. Ours: the "
+             "largest err in each D bin, shape by kind.", size=11)
+    sizes_panel(svg, x, y, w, h)
     hgt = footnote(svg, ["hp/data/delta_all.csv and delta_published_compare.csv (raw 987f15c)",
                          "published_vs_series.txt", "chain_fit_shift.txt", "release_steps.csv"], "", [], y + h + 44, REPO)
     open(path, "w").write(svg.finish(hgt))

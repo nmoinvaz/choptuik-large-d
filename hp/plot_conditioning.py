@@ -24,7 +24,7 @@ import sys
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, HERE)
 import data_graphs as dg  # noqa: E402
-from data_graphs import INK, INK_SOFT, SERIES, Svg, axes, better_hint, callout, footnote, marker  # noqa: E402
+from data_graphs import INK, INK_SOFT, SERIES, Svg, axes, better_arrow, callout, footnote, marker  # noqa: E402
 
 REPO = "https://github.com/nmoinvaz/choptuik-large-d"
 PIVOTS = os.path.join(HERE, "data", "chain_pivots.csv")
@@ -143,7 +143,8 @@ def main():
     knee = 170.0
     callout(svg, xm(knee), ym(at(cond, knee) / c0), "the smallest pivot starts to fall", dx=30, dy=44)
     callout(svg, xm(wall), ym(at(cond, wall) / c0), "D 215.03, where the chain had stopped", dx=-64, dy=8)
-    better_hint(svg, x, y, w, h, "right", label="smaller", reverse=True)
+    # a long arrow in the right margin: down is better on this axis
+    better_arrow(svg, x + w + 26, y + 24, x + w + 26, y + 184, label="better")
     lx, ly = x + 22, y + 24
     for col, s in ((SERIES[1], "Jacobian's condition, largest / smallest pivot"), (SERIES[0], "error bar on Δ")):
         svg.line(lx - 2, ly - 4, lx + 12, ly - 4, col, 2)

@@ -85,7 +85,7 @@
 <circle cx="807.1" cy="260.6" r="10" fill="none" stroke="#0b0b0b" stroke-width="1.5"/>
 <line x1="797.1" y1="261.9" x2="743.1" y2="268.6" stroke="#0b0b0b" stroke-width="1"/>
 <text x="739.1" y="272.6" font-size="11" fill="#0b0b0b" text-anchor="end" font-weight="bold">D 215.03, where the chain had stopped</text>
-<g opacity="0.35"><line x1="982.0" y1="126.0" x2="982.0" y2="182.0" stroke="#52514e" stroke-width="2"/><polygon points="982.0,188.0 978.0,179.0 986.0,179.0" fill="#52514e"/><text x="982.0" y="150.0" font-size="11" fill="#52514e" text-anchor="middle" transform="rotate(90.0 982.0 157.0)">smaller</text></g>
+<g opacity="0.35"><line x1="990.0" y1="120.0" x2="990.0" y2="274.0" stroke="#52514e" stroke-width="2"/><polygon points="990.0,280.0 986.0,271.0 994.0,271.0" fill="#52514e"/><text x="990.0" y="193.0" font-size="11" fill="#52514e" text-anchor="middle" transform="rotate(90.0 990.0 200.0)">better</text></g>
 <line x1="104.0" y1="116.0" x2="118.0" y2="116.0" stroke="#eb6834" stroke-width="2"/>
 <g><circle cx="111.0" cy="116.0" r="5.5" fill="#eb6834" stroke="#fcfcfb" stroke-width="2"/><title>Jacobian's condition, largest / smallest pivot</title></g>
 <text x="126.0" y="120.0" font-size="11" fill="#0b0b0b" text-anchor="start" font-weight="normal">Jacobian's condition, largest / smallest pivot</text>
