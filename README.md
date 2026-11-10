@@ -193,25 +193,25 @@ Contents
 **Reading the graph.** The echo period Δ(D) and the critical exponent γ(D), for every dimension computed.
 
 - **Dots:** the f64 solver in [`solver/`](solver/), whose residual is the Rust kernel of
-  [Software](#software-the-rust-kernel). Its points are "step-converged": the integration-step error is extrapolated
+  [Software](#software-the-rust-kernel). Its points are "step-converged". The integration-step error is extrapolated
   out, the solver's near-null directions are resolved, and low D gets enough Fourier modes in time. Hollow points are
   held out of the fit.
 - **Dashed curves:** one rational formula in 1/(D−2) for every D ≥ 4 ([below](#the-formula)), fitted on the f64 points
   4 ≤ D ≤ 30.2.
 - **Green diamonds:** the double-double solver in [`hp/`](hp/), from D = 3.045 to 67.77. Below D = 4 the formula does
-  not apply; above D = 30.2 it matches them to 5.8×10⁻⁸.
-- **Amber diamonds:** the pinned double-double runs. T73 and T75 cover D = 67.74 to 73.27 (Δ after one full-system
-  Newton step), and the formula matches them to 4.3×10⁻⁸. T85 continues past 73.27 in a layout with the last node moved
+  not apply, and above D = 30.2 it matches them to 5.8×10⁻⁸.
+- **Amber diamonds:** the pinned double-double runs. T73 and T75 cover D = 67.74 to 73.27, with Δ after one full-system
+  Newton step, and the formula matches them to 4.3×10⁻⁸. T85 continues past 73.27 in a layout with the last node moved
   toward the horizon, where Δ is known only to about 10⁻⁶ ([notes/QUAD_DOUBLE.md](notes/QUAD_DOUBLE.md), section 12.3).
-- **Shading:** how well Δ is known in each range, the median of the range's error estimate (the change from the next
-  resolution, the nearby checks, or the difference between two runs; hover for the largest). The grey trace is that
-  error at every point, on the log axis at the right.
+- **Shading:** how well Δ is known in each range. It is the median of the range's error estimate, which is the change
+  from the next resolution, the nearby checks, or the difference between two runs. Hover for the largest. The grey
+  trace is that error at every point, on the log axis at the right.
 - **Limits:** as D → ∞, γ → 1/2 (imposed in the γ fit) and Δ → Δ∞ = 1.643893746 ± 0.000000015 if Δ is analytic in 1/D,
-  from the double-double points (both limits are discussed [below](#the-formula)).
+  from the double-double points. Both limits are discussed [below](#the-formula).
 
 Details of the points are in [Values](#values) and [notes/SOLVER_HP.md](notes/SOLVER_HP.md). Regenerate with
-`cd solver/data && python3 ../plot_delta.py --raw ../../../choptuik-large-d-raw` (the pinned runs are in the
-[raw data](#raw-data)).
+`cd solver/data && python3 ../plot_delta.py --raw ../../../choptuik-large-d-raw`. The pinned runs are in the
+[raw data](#raw-data).
 
 ![The echo itself: the centre field over one period at D = 3.044, 4, 8, 16.76, 45.05, 60.96 and 73.27, each scaled to its peak, with a pure first harmonic as the limit shape](hp/echo_shapes.svg)
 
