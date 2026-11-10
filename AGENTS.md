@@ -145,8 +145,12 @@ Conventions for the Claude sessions (cloud and local) that run computations here
   the folder. At each post and at the end, from that repository's root: `python3 make_index.py && git add <folder>
   INDEX.md && git commit -m "<folder>: ..." && git pull --rebase && git push`. The rebase keeps its history linear,
   with no merge commits; on a conflict in INDEX.md, `python3 make_index.py && git add INDEX.md && git rebase
-  --continue`. Only this project's task output goes there: nothing from another project's directories, no credentials
-  or personal files, no file over 90 MB; add to your own folder only, and never force-push. Raw output is never committed to this repository. Main gets only what the
+  --continue`. A pull, rebase or reset rewrites files on disk, so while a job writes into the clone, commit and push
+  from a separate worktree of it (`git worktree add`), with the job's files copied in, and leave the live folder alone
+  until the job ends (win and win2 lost a live log and an unpushed commit's files this way on 2026-11-10). Only this
+  project's task output goes there: nothing from another project's directories, no credentials or personal files, no
+  file over 90 MB; add to your own folder only, and never force-push. Raw output is never committed to this
+  repository. Main gets only what the
   coordinator derives from it (CSVs, graphs, notes), with the folder and commit named in the note or script that used
   it. A script in main that reads raw output takes its directory as an argument, and a documented command that needs one
   states the clone step. The old `raw/<name>` branches were moved into folders of the same name on 2026-10-27 with their
