@@ -1304,55 +1304,72 @@ phase, is invertible should continue to critical solutions for all large n.
 <details>
 <summary>The argument for the conjecture, and where rigour fails</summary>
 
-The inner problem resums the outer series' top-degree terms (checked to 2×10⁻¹³ through order 10); the outer series'
-light-cone exponential is fixed by the inner singularity at x = ∞ (exact in the linear case: the outer late-order
-constant of Proposition 4 is the inner Weber Stokes constant); the switched exponential reaches the light cone through
-an invertible map; and analyticity at the light cone forces C = 0, hence S = 0.
+The argument has four links:
 
-The invertible map S ↦ C is, at leading order in 1/n, a composition of three maps: (1) inner–outer matching on 1 ≪ x ≪
-√n, where the inner fast mode $`e^{-1/(2\xi^2)}\xi^{2\langle F^2\rangle}e^{\Pi(\theta)}S(\theta_0)`$, θ₀ = θ − 2ω ln ξ,
-matches the outer WKB mode $`e^{-n\Phi}A`$ on the branch above the real axis x > 1 (there Φ = ln(x/√(x² − 1)) + iπ/2);
-(2) the outer transport of Proposition 3 along x > 1 with real θ, which has real coefficients while εx²F² ≪ 1 and acts
-along real characteristics as multiplication by a non-vanishing function composed with a shift, so it is invertible on
-Fourier sequences of at most exponential growth; (3) the half-monodromy at the regular singular point x = 1, continuing
-the singular Floquet branch $`(1-x)^{\Lambda}\varphi(\theta - \omega'\ln(1-x))`$ (ω' = ω/(1 − ⟨G(1)⟩)) from x > 1 to x <
-1, which multiplies harmonic μ by $`e^{-i\pi\Lambda}e^{\pm\pi\mu\omega'}`$, a diagonal map with non-zero entries. So C ≡
-0 ⇔ S ≡ 0 at leading order. In the linear case this is exact (Proposition 2 and the large-n form of C(n,s), with the
-constant proved in Proposition 4).
+- The inner problem resums the outer series' top-degree terms (checked to 2×10⁻¹³ through order 10).
+- The outer series' light-cone exponential is fixed by the inner singularity at x = ∞. This is exact in the linear
+  case, where the outer late-order constant of Proposition 4 is the inner Weber Stokes constant.
+- The switched exponential reaches the light cone through an invertible map.
+- Analyticity at the light cone forces C = 0, hence S = 0.
 
-Where rigour fails: (a) Borel summability of the nonlinear series is not proved. For a fixed number of harmonics it is
-not needed: the selection theorem below works with actual solutions and fixed-order truncations
-([proof/B3_borel.md](proof/B3_borel.md) §1). Recomputed in ball arithmetic, the outer late orders show no singularity
-near the positive real axis at one and three harmonics; at three there is an x-independent one near the negative real
-axis (ζ ≈ −1.2), which does not obstruct summation along ℝ⁺ but may approach the origin as the number of harmonics grows
-(B3_borel.md §5). (b) Uniformity in the harmonic index: the weights $`e^{\pi\lvert\mu\rvert\omega/2}`$ grow like
-e^{6.0|μ|} while F's harmonics decay only like e^{−1.4|μ|}, so an O(1/n) relative error in a high harmonic is amplified
-when it mixes into low harmonics through $`e^{\Pi}`$; the leading-order equivalence holds harmonic by harmonic, but the
-n at which it becomes accurate may grow with the number of harmonics (the same mechanism that defeated fixed-M
-truncation); a proof needs a function-space formulation, e.g. on the strip $`\lvert\mathrm{Im}\,\theta\rvert < \sigma`$
-with σ < 1.4 and the weights in a dual norm. (c) Uniformity at x = 1: the outer WKB amplitude is singular there (A ∝ (1
-− x)⁻¹) and must be matched to the Frobenius solution on 1/n ≪ |1 − x| ≪ 1; the exponents agree (Λ = n/2 − 1 − s + ⟨F²⟩
-+ O(1/n) on both sides), but the matching has not been written out.
+The invertible map S ↦ C is, at leading order in 1/n, a composition of three maps:
 
-Status of these gaps ([PROOF.md](PROOF.md)): for a model truncated to M harmonics the selection theorem is written out
+1. Inner–outer matching on 1 ≪ x ≪ √n. The inner fast mode
+   $`e^{-1/(2\xi^2)}\xi^{2\langle F^2\rangle}e^{\Pi(\theta)}S(\theta_0)`$, θ₀ = θ − 2ω ln ξ, matches the outer WKB mode
+   $`e^{-n\Phi}A`$ on the branch above the real axis x > 1, where Φ = ln(x/√(x² − 1)) + iπ/2.
+2. The outer transport of Proposition 3 along x > 1 with real θ. It has real coefficients while εx²F² ≪ 1, and it acts
+   along real characteristics as multiplication by a non-vanishing function composed with a shift. So it is invertible
+   on Fourier sequences of at most exponential growth.
+3. The half-monodromy at the regular singular point x = 1. It continues the singular Floquet branch
+   $`(1-x)^{\Lambda}\varphi(\theta - \omega'\ln(1-x))`$ (ω' = ω/(1 − ⟨G(1)⟩)) from x > 1 to x < 1, which multiplies
+   harmonic μ by $`e^{-i\pi\Lambda}e^{\pm\pi\mu\omega'}`$, a diagonal map with non-zero entries.
+
+So C ≡ 0 ⇔ S ≡ 0 at leading order. In the linear case this is exact (Proposition 2 and the large-n form of C(n,s), with
+the constant proved in Proposition 4).
+
+Where rigour fails:
+
+- **(a) Borel summability of the nonlinear series is not proved.** For a fixed number of harmonics it is not needed,
+  since the selection theorem below works with actual solutions and fixed-order truncations
+  ([proof/B3_borel.md](proof/B3_borel.md) §1). Recomputed in ball arithmetic, the outer late orders show no singularity
+  near the positive real axis at one and three harmonics. At three there is an x-independent one near the negative real
+  axis (ζ ≈ −1.2), which does not obstruct summation along ℝ⁺ but may approach the origin as the number of harmonics
+  grows (B3_borel.md §5).
+- **(b) Uniformity in the harmonic index.** The weights $`e^{\pi\lvert\mu\rvert\omega/2}`$ grow like e^{6.0|μ|} while
+  F's harmonics decay only like e^{−1.4|μ|}. So an O(1/n) relative error in a high harmonic is amplified when it mixes
+  into low harmonics through $`e^{\Pi}`$. The leading-order equivalence holds harmonic by harmonic, but the n at which
+  it becomes accurate may grow with the number of harmonics, the same mechanism that defeated fixed-M truncation. A
+  proof needs a function-space formulation, e.g. on the strip $`\lvert\mathrm{Im}\,\theta\rvert < \sigma`$ with σ < 1.4
+  and the weights in a dual norm.
+- **(c) Uniformity at x = 1.** The outer WKB amplitude is singular there (A ∝ (1 − x)⁻¹) and must be matched to the
+  Frobenius solution on 1/n ≪ |1 − x| ≪ 1. The exponents agree (Λ = n/2 − 1 − s + ⟨F²⟩ + O(1/n) on both sides), but the
+  matching has not been written out.
+
+Status of these gaps ([PROOF.md](PROOF.md)). For a model truncated to M harmonics the selection theorem is written out
 lemma by lemma ([proof/C_selection.md](proof/C_selection.md)), on published templates (Xie–Tanveer;
-Baldomá–Fontich–Guardia–Seara). Gap (c) reduces to Olver's error control up to a routine step, and the inner half of gap
-(a) to Braaksma's summability theorem; the outer half is not needed at fixed M. Its status, and that of the one-harmonic
-theorem, is under [Limits and open problems](#limits-and-open-problems). Gap (b) is narrower than stated above
-([proof/B_tail.md](proof/B_tail.md)). Stated without harmonics, the condition is S(θ₀) ≡ 0 on the real label circle and
-uses F only on the real line; the weights $`e^{\pi\lvert\nu\rvert\omega/2}`$ are the linear connection coefficients of
-each label harmonic and cancel in every tuning equation. The data agree: the tuning ratio is the same for every ν to six
-digits (|q|A² = 0.0633), and the neighbour-family amplitudes fall by 10⁴–10⁸ per harmonic pair instead of growing. The
-weights do come back under naive Galerkin truncation (σ₆ from a five-harmonic projection is −1371 against −0.0003 −
-0.0011i), so a tail lemma must be stated for the jump-conditioned truncation (`hier.py --schur`). The tail it must bound
-looks provable: about 4–6 in r₁ above M = 5 and 0.2–0.35 above M = 7, against about 4 needed for a 10⁻³ box. A
-computer-assisted certificate of the inner zero has a concrete route ([proof/A_certify.md](proof/A_certify.md),
-[proof/D_entire.md](proof/D_entire.md)), and for the one-harmonic model it is done. **Theorem A(M = 1)**
-([proof/A_certify.md](proof/A_certify.md) §12.6): assuming Braaksma's 1-summability theorem (the one fact taken from the
-literature), the one-harmonic selection condition has exactly one zero in the box (2.5421480475, 0.7769940136) ± 10⁻⁹ in
-(A, ω/ω∞) (here ω∞ is the codes' reference value 2π/1.64389375, which differs from 2π/Δ∞ by 2.4×10⁻⁹ relative), it is
-simple, and it lies at A ∈ [2.54214804761338, 2.54214804761975], ω/ω∞ ∈ [0.776994013607438, 0.776994013612010]. The
-proof is computer-assisted in ball arithmetic:
+Baldomá–Fontich–Guardia–Seara).
+
+- Gap (c) reduces to Olver's error control up to a routine step.
+- The inner half of gap (a) reduces to Braaksma's summability theorem, and the outer half is not needed at fixed M. Its
+  status, and that of the one-harmonic theorem, is under [Limits and open problems](#limits-and-open-problems).
+- Gap (b) is narrower than stated above ([proof/B_tail.md](proof/B_tail.md)). Stated without harmonics, the condition is
+  S(θ₀) ≡ 0 on the real label circle and uses F only on the real line. The weights $`e^{\pi\lvert\nu\rvert\omega/2}`$
+  are the linear connection coefficients of each label harmonic and cancel in every tuning equation. The data agree. The
+  tuning ratio is the same for every ν to six digits (|q|A² = 0.0633), and the neighbour-family amplitudes fall by
+  10⁴–10⁸ per harmonic pair instead of growing.
+- The weights do come back under naive Galerkin truncation (σ₆ from a five-harmonic projection is −1371 against −0.0003
+  − 0.0011i), so a tail lemma must be stated for the jump-conditioned truncation (`hier.py --schur`). The tail it must
+  bound looks provable. It is about 4–6 in r₁ above M = 5 and 0.2–0.35 above M = 7, against about 4 needed for a 10⁻³
+  box.
+
+A computer-assisted certificate of the inner zero has a concrete route ([proof/A_certify.md](proof/A_certify.md),
+[proof/D_entire.md](proof/D_entire.md)), and for the one-harmonic model it is done.
+
+**Theorem A(M = 1)** ([proof/A_certify.md](proof/A_certify.md) §12.6). Assume Braaksma's 1-summability theorem, the one
+fact taken from the literature. Then the one-harmonic selection condition has exactly one zero in the box (2.5421480475,
+0.7769940136) ± 10⁻⁹ in (A, ω/ω∞), it is simple, and it lies at A ∈ [2.54214804761338, 2.54214804761975], ω/ω∞ ∈
+[0.776994013607438, 0.776994013612010]. Here ω∞ is the codes' reference value 2π/1.64389375, which differs from 2π/Δ∞ by
+2.4×10⁻⁹ relative. The proof is computer-assisted in ball arithmetic:
 - a validated Lohner integrator and Krawczyk's test certify one jump component at one radius (§9, redone on a lower
   path in §11);
 - an independent review checked it ([proof/A_review.md](proof/A_review.md)), and a separate C++ implementation with CAPD
@@ -1364,23 +1381,26 @@ proof is computer-assisted in ball arithmetic:
 The disc covering has not yet been independently re-implemented. The model is the one-harmonic truncation, not the full
 selection condition.
 
-**Theorem A(M = 3)** ([proof/A_M.md](proof/A_M.md), [proof/A_lemmas_M.md](proof/A_lemmas_M.md) §7): assuming Braaksma's
-theorem, the three-harmonic selection condition (S₁ = S₃ = 0) has exactly one zero in a box of half-width 10⁻¹⁰ about A
-= 2.7264758856, ω/ω∞ = 1.0156030949 (with B₃, C₃ about 0.1444194785, 0.0110874259), and it is simple: A ∈
-[2.72647588563032, 2.72647588563144], ω/ω∞ ∈ [1.01560309485743, 1.01560309485804]. Unlike the one-harmonic zero (29%
-from the selected period), this one is 1.6% above ω∞, with the measured amplitude (2.70–2.72). The same steps carry
-over: a point certificate with four real jump conditions, and lemmas S, 6a, 6b₀ and 6b₁ for M harmonics, certified on
-boxes containing it (6a with ρ₆ₐ = 0.041, 6b₁ by 183 discs). An independent review
-([proof/A_M_review.md](proof/A_M_review.md)) re-derived the Krawczyk inclusion in exact rational intervals from the
-saved box, checked single Lohner steps and the start values against 60–75-digit references, confirmed hypotheses H1–H3
-and reran lemma 6a, and found no error that changes a number or a verdict. Not yet reviewed, here or at M = 1: the
-majorant code of lemmas S and 6b₀ and the 6b₁ disc certificates. At M = 5 the same certificate fails (the interval
-enclosures grow too fast along the arc); it needs a second-order design ([proof/A_M.md](proof/A_M.md)). The first
-coefficient σ₁ of the untruncated condition is also enclosed rigorously (±3.5×10⁻⁵).
+**Theorem A(M = 3)** ([proof/A_M.md](proof/A_M.md), [proof/A_lemmas_M.md](proof/A_lemmas_M.md) §7). Assume Braaksma's
+theorem. Then the three-harmonic selection condition (S₁ = S₃ = 0) has exactly one zero in a box of half-width 10⁻¹⁰
+about A = 2.7264758856, ω/ω∞ = 1.0156030949 (with B₃, C₃ about 0.1444194785, 0.0110874259), and it is simple. It lies at
+A ∈ [2.72647588563032, 2.72647588563144], ω/ω∞ ∈ [1.01560309485743, 1.01560309485804].
 
-Evidence beyond the linear case: the conditions $`S_\nu = 0`$ for |ν| ≥ 3 alone predict the echo's shape as
-extrapolated from the solutions, and the predicted finite harmonic decay rate of about 1.4 agrees with the data,
-consistent with (H1) (both in the amplitude expansion, [next subsection](#the-inner-problem-at-large-x)).
+- Unlike the one-harmonic zero, which is 29% from the selected period, this one is 1.6% above ω∞, with the measured
+  amplitude (2.70–2.72).
+- The same steps carry over. They are a point certificate with four real jump conditions, and lemmas S, 6a, 6b₀ and 6b₁
+  for M harmonics, certified on boxes containing it (6a with ρ₆ₐ = 0.041, 6b₁ by 183 discs).
+- An independent review ([proof/A_M_review.md](proof/A_M_review.md)) re-derived the Krawczyk inclusion in exact rational
+  intervals from the saved box, checked single Lohner steps and the start values against 60–75-digit references,
+  confirmed hypotheses H1–H3 and reran lemma 6a. It found no error that changes a number or a verdict.
+- Not yet reviewed, here or at M = 1, are the majorant code of lemmas S and 6b₀ and the 6b₁ disc certificates.
+- At M = 5 the same certificate fails, because the interval enclosures grow too fast along the arc. It needs a
+  second-order design ([proof/A_M.md](proof/A_M.md)).
+- The first coefficient σ₁ of the untruncated condition is also enclosed rigorously (±3.5×10⁻⁵).
+
+Evidence beyond the linear case comes from the amplitude expansion ([next subsection](#the-inner-problem-at-large-x)).
+The conditions $`S_\nu = 0`$ for |ν| ≥ 3 alone predict the echo's shape as extrapolated from the solutions. The
+predicted finite harmonic decay rate of about 1.4 agrees with the data, consistent with (H1).
 
 </details>
 
