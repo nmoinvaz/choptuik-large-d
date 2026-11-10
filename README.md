@@ -1906,44 +1906,46 @@ near-null band in the Jacobian and an unexplained drift of the gauge mode's root
 ## Limits and open problems
 
 - **The large-D wall.** The double-double continuation stalls near D = 73 in its working layout and near 78 with the
-  last node moved toward the horizon: the horizon series' radius of convergence falls with the accuracy of the horizon
-  data, R = R₀ + C ln(1/δ)/(n − 1), so Newton needs a guess good to about e^{−0.3 n} and no predictor from stored points
-  supplies it ([notes/LARGE_D_WALL.md](notes/LARGE_D_WALL.md); [notes/QUAD_DOUBLE.md](notes/QUAD_DOUBLE.md), sections
-  12–13). An exact Taylor continuation in D (the asymptotic numerical method, with the dimension entered as a jet
-  through the kernel) with a quad-double corrector carries the chain to D = 85.7, but only with harmonics 5–13 of the
-  centre profile held on a trend, and those values lie 5×10⁻⁸ to 1.4×10⁻⁷ below the 1/D series (section 13.19 there).
-  The wall is the digits the horizon block needs, which grow linearly with D, not the horizon series itself. In a toy
-  of the horizon's two branches (`hp/horizon_toy.py`), the series keeps the full precision up to D ≈ 200, while an
-  integral equation from the horizon converges only after its first (D − 4)/2 Taylor terms are subtracted, and
-  shooting outward from near the horizon loses about 0.7 digits per unit of D
-  ([notes/LARGE_D_LITERATURE.md](notes/LARGE_D_LITERATURE.md), section 1(e)). Integral formulations are the tool for a
-  certified horizon block, a contraction with explicit bounds, not for more digits.
-- **The analyticity assumption.** Δ∞ = 1.643893746 ± 1.5×10⁻⁸ assumes that Δ is analytic in 1/D; the points support
-  it (held-out predictions, a planted-truth test, a transseries term excluded over a range) but do not prove it
+  last node moved toward the horizon. The horizon series' radius of convergence falls with the accuracy of the horizon
+  data, R = R₀ + C ln(1/δ)/(n − 1), so Newton needs a guess good to about e^{−0.3 n}, and no predictor from stored
+  points supplies it ([notes/LARGE_D_WALL.md](notes/LARGE_D_WALL.md); [notes/QUAD_DOUBLE.md](notes/QUAD_DOUBLE.md),
+  sections 12–13).
+  - An exact Taylor continuation in D (the asymptotic numerical method, with the dimension entered as a jet through the
+    kernel) with a quad-double corrector carries the chain to D = 85.7. It does so only with harmonics 5–13 of the
+    centre profile held on a trend, and those values lie 5×10⁻⁸ to 1.4×10⁻⁷ below the 1/D series (section 13.19 there).
+  - The wall is the digits the horizon block needs, which grow linearly with D, not the horizon series itself. In a toy
+    of the horizon's two branches (`hp/horizon_toy.py`), the series keeps the full precision up to D ≈ 200. An integral
+    equation from the horizon converges only after its first (D − 4)/2 Taylor terms are subtracted, and shooting outward
+    from near the horizon loses about 0.7 digits per unit of D
+    ([notes/LARGE_D_LITERATURE.md](notes/LARGE_D_LITERATURE.md), section 1(e)).
+  - Integral formulations are the tool for a certified horizon block, a contraction with explicit bounds, not for more
+    digits.
+- **The analyticity assumption.** Δ∞ = 1.643893746 ± 1.5×10⁻⁸ assumes that Δ is analytic in 1/D. The points support it
+  (held-out predictions, a planted-truth test, a transseries term excluded over a range) but do not prove it
   ([Is the period analytic in 1/D?](#is-the-period-analytic-in-1d), [notes/DINF_FITS.md](notes/DINF_FITS.md)).
-- **The limit D → 3.** Our polynomial in √(D − 3) keeps Δ(3) finite, between 1.72 and 1.80 over the fit degrees; Ecker
+- **The limit D → 3.** Our polynomial in √(D − 3) keeps Δ(3) finite, between 1.72 and 1.80 over the fit degrees. Ecker
   et al. read a power law Δ → 0. The readings separate below D ≈ 3.04, where the lowest converged point so far is
   3.04375 ([The formula](#the-formula), the limit graph).
-- **The proof status.** The selection rule is a conjecture with hypotheses H1–H2 and gaps (a)–(c); the one-harmonic
+- **The proof status.** The selection rule is a conjecture with hypotheses H1–H2 and gaps (a)–(c). The one-harmonic
   theorem B(1) is certified assuming Braaksma's theorem, with a threshold n ≥ e^{89.75} far beyond any computed D, so it
   does not yet identify the computed branch ([PROOF.md](PROOF.md), [notes/PROOF_QUEUE.md](notes/PROOF_QUEUE.md)).
 
 ![Where the large-D continuation stalls: the step collapse and u times kappa with the predicted crossings](hp/large_d_dropoffs.svg)
 
-The drop-offs of the continuation (`hp/plot_dropoffs.py`): where the solver's steps collapse against D, with the
-product u·κ of the horizon series that predicts the crossings; the reading is in
+The drop-offs of the continuation (`hp/plot_dropoffs.py`). The graph shows where the solver's steps collapse against D,
+with the product u·κ of the horizon series that predicts the crossings. The reading is in
 [notes/LARGE_D_WALL.md](notes/LARGE_D_WALL.md).
 
 What is known about the selection, and what is open:
 
-- **The expansion diverges**, factorially, dominated by ever-higher harmonics, at a rate set by the amplitude and
-  ω: the setting of exponential asymptotics, where Borel-type remainders carry the selection
+- **The expansion diverges**, factorially, dominated by ever-higher harmonics, at a rate set by the amplitude and ω.
+  That is the setting of exponential asymptotics, where Borel-type remainders carry the selection
   ([notes/INNER_STOKES.md](notes/INNER_STOKES.md), the last section).
-- **The weak directions look like the selection, measured:** the Jacobian's near-null directions are F's high
-  harmonics, and their singular values fall like n^(−1.6k) in the harmonic k
+- **The weak directions look like the selection, measured.** The Jacobian's near-null directions are F's high harmonics,
+  and their singular values fall like n^(−1.6k) in the harmonic k
   ([notes/BEYOND_LIGHT_CONE.md](notes/BEYOND_LIGHT_CONE.md)).
 - **F's singularities recede to a finite distance,** so F∞ is likely not entire.
-- **The nonlinear late orders are dominated by something else** than the light-cone fast mode: an x-independent
+- **The nonlinear late orders are dominated by something else** than the light-cone fast mode, namely an x-independent
   Borel singularity per harmonic that moves toward 0 as the harmonic grows ([proof/B3_borel.md](proof/B3_borel.md) §5).
 - **The selection theorem for a truncated model (layer B).** For M harmonics the theorem is reduced to lemmas
   ([proof/C_selection.md](proof/C_selection.md)). For M = 1 the two contraction arguments are certified in ball
@@ -1960,39 +1962,44 @@ What is known about the selection, and what is open:
   threshold is far beyond any D a solver reaches, so the theorem does not yet identify the computed branch
   ([notes/PROOF_QUEUE.md](notes/PROOF_QUEUE.md), P7). The canonical status, link by link, is C_selection.md §13.
 - **The critical exponent, and why γ∞ = 1/2: [Proposition 5](#proposition-5-the-unstable-mode-at-infinite-d-is-exact).**
-  λ = 1/γ is also selected beyond all orders; in the inner problem λ = 0, 1 and 2 are exact, from symmetries, and the λ
+  λ = 1/γ is also selected beyond all orders. In the inner problem λ = 0, 1 and 2 are exact, from symmetries, and the λ
   = 2 mode, from the r²-shift of the inner heat equation, explains γ∞ = 1/2. The 1/n coefficient 3.0324 is reproduced to
   0.3% by the five-harmonic O(1/n) inner problem. Open: that λ = 2 is the only unstable mode at D = ∞.
 - **Open:** the D = ∞ selection rule itself. Without gravity the multiplier is C(n,s) (Proposition 2), asymptotically a
   $`{}_2F_0`$ Stokes constant (the inner problem), and propagation inside the light cone cannot change whether it
   vanishes (Proposition 3). With gravity, their vanishing with three and five harmonics, and without truncation, selects
   ω ever closer to ω∞ (to within 5×10⁻⁵ without truncation, at twenty-two orders), with the measured shape
-  ([above](#the-inner-problem-at-large-x)). What remains is to converge these further (M = 9 and radius checks of M = 7;
-  the amplitude series beyond its twenty-two computed orders across ω), to see whether the harmonic-1 condition lands
-  exactly on ω∞, and to prove the working hypothesis that this is the selection rule. That would be an equation for ω∞
-  and F∞ alone, from which Δ∞ would follow to any precision.
+  ([above](#the-inner-problem-at-large-x)). What remains:
+  - to converge these further (M = 9 and radius checks of M = 7; the amplitude series beyond its twenty-two computed
+    orders across ω);
+  - to see whether the harmonic-1 condition lands exactly on ω∞;
+  - to prove the working hypothesis that this is the selection rule.
+
+  That would be an equation for ω∞ and F∞ alone, from which Δ∞ would follow to any precision.
 - **Checked at D = 30 and 45, and at D = 61 at one resolution: one physical unstable mode.** The zeros of the
   growth-mode determinant were counted by the argument principle in −0.08 < Re λ < 6.18 and a full period in Im λ, which
-  holds the growth rates of both symmetry sectors ([notes/MODE_COUNT.md](notes/MODE_COUNT.md); at D = 61 also to
-  Im λ = 3.5ω and to Re λ = 12, figure below). Besides λ_phys there are only the τ translation (λ = 0) and a gauge mode
-  of the formulation at λ = 1 + ⟨c₁⟩ (a change of time coordinate that keeps the light cone at x = 1). A planted-zero
-  test runs a synthetic determinant through the same code and counts what was planted in all 8 cases. A second
-  resolution (M = 48) without the high-harmonic cut found one extra pair at D = 30, but on a layout whose centre series
-  barely converged; on a fitted layout the full count is 0 in every box (#250, #260). Open: at D = 54, 55 and 61 (not at
-  45 to 53.8), zeros beyond the expected ones in the M = 48 counts, absent at M = 32, at D = 61 24 at the cut 21 and 30
-  at the cut 23, 8 of them with Re λ between 1.27 and 6.6, so possibly growth rates, and at M = 48 a pair crosses into
-  Re λ > 0 between D = 54 and 55; at D = 55 and 61 a third resolution, M = 40, has extras of its own that are not at M =
-  48's places, and at M = 64 none of the 11 tested positions holds a zero, the behaviour of truncation artifacts
-  (notes/MODE_COUNT.md section 5); lower D with complex λ; Re λ > 6.6; non-spherical perturbations; and no collapse has
-  been evolved above D = 14, so a continuously self-similar solution (Clark and Pimentel,
-  [arXiv:2504.10590](https://arxiv.org/abs/2504.10590)) taking over the threshold is not excluded.
+  holds the growth rates of both symmetry sectors ([notes/MODE_COUNT.md](notes/MODE_COUNT.md); at D = 61 also to Im λ =
+  3.5ω and to Re λ = 12, figure below). Besides λ_phys there are only the τ translation (λ = 0) and a gauge mode of the
+  formulation at λ = 1 + ⟨c₁⟩ (a change of time coordinate that keeps the light cone at x = 1). A planted-zero test runs
+  a synthetic determinant through the same code and counts what was planted in all 8 cases. A second resolution (M = 48)
+  without the high-harmonic cut found one extra pair at D = 30, but on a layout whose centre series barely converged. On
+  a fitted layout the full count is 0 in every box (#250, #260). Open:
+  - Extra zeros at D = 54, 55 and 61 (not at 45 to 53.8). The M = 48 counts have zeros beyond the expected ones, absent
+    at M = 32. At D = 61 there are 24 at the cut 21 and 30 at the cut 23, 8 of them with Re λ between 1.27 and 6.6, so
+    possibly growth rates. At M = 48 a pair crosses into Re λ > 0 between D = 54 and 55. At D = 55 and 61 a third
+    resolution, M = 40, has extras of its own that are not at M = 48's places, and at M = 64 none of the 11 tested
+    positions holds a zero. That is the behaviour of truncation artifacts (notes/MODE_COUNT.md section 5).
+  - Lower D with complex λ.
+  - Re λ > 6.6.
+  - Non-spherical perturbations.
+  - No collapse has been evolved above D = 14, so a continuously self-similar solution (Clark and Pimentel, [arXiv:2504.10590](https://arxiv.org/abs/2504.10590)) taking over the threshold is not excluded.
 
 ![Why the critical exponent tends to 1/2: lambda = 1/gamma against 1/(D-2) for 67 double-double points with the fit carried to lambda = 2 at D = infinity, and free fits of lambda_inf - 2 falling with the number of powers](solver/gamma.svg)
 
 **Why γ∞ = 1/2** (`solver/plot_gamma.py`). Left: λ = 1/γ against 1/n for the 67 double-double points, with a fit that
 fixes λ∞ = 2, carried to D = ∞, where λ = 2 is exact (the r²-shift symmetry of the inner heat equation,
-[GAMMA.md](GAMMA.md)); dashed, the leading term 2 + 3.03/n. Right: with λ∞ left free, the fitted λ∞ − 2 falls about
-3.5-fold with each added power of 1/n, toward 0, for three fit ranges.
+[GAMMA.md](GAMMA.md)). The dashed line is the leading term 2 + 3.03/n. Right: with λ∞ left free, the fitted λ∞ − 2 falls
+about 3.5-fold with each added power of 1/n, toward 0, for three fit ranges.
 
 ![Counting the unstable modes: the lambda plane at D = 61 with the counting boxes, zeros and poles, and the real growth rates against 1/D](hp/modecount.svg)
 
