@@ -169,9 +169,9 @@ Conventions for the Claude sessions (cloud and local) that run computations here
 ## Tasks: GitHub issues
 
 Every task is an issue. A task whose result backs a number or a claim of this repository is an issue of this
-repository (nmoinvaz/choptuik-large-d), which is public so that anyone can review the results. A task is filed in the
-private tracker nmoinvaz/agent-tasks instead, with the label `choptuik-large-d`, when any of these holds (Nathan,
-2026-11-10):
+repository (nmoinvaz/choptuik-large-d), which is public so that anyone can review the results. A task is filed as an
+issue of the private repository nmoinvaz/agent-comms instead, with the label `choptuik-large-d`, when any of these
+holds (Nathan, 2026-11-10):
 
 - its subject is outside the README's scope, such as another field or another physical system;
 - it assesses a named author's published result, until Nathan says the authors have been told;
