@@ -140,7 +140,7 @@ Conventions for the Claude sessions (cloud and local) that run computations here
   up–up21 wrote theirs to `/home/claude/dss/hp_scan`, which was never pushed, and their records are missing). Clone it
   once beside your checkout, `git clone https://github.com/nmoinvaz/choptuik-large-d-raw ../choptuik-large-d-raw`.
   Before the run, make the folder `<task>-<machine>/` (for example `T82-win/`) with a `README.md` whose first line is `#
-  <folder>: <what it holds>`, then the machine and the task that set it, and point the run's output paths into
+  <folder>: <what it holds>`, then the machine and the issue that set the task, and point the run's output paths into
   the folder. At each post and at the end, from that repository's root: `python3 make_index.py && git add <folder>
   INDEX.md && git commit -m "<folder>: ..." && git pull --no-rebase && git push`. Only this project's task output goes
   there: nothing from another project's directories, no credentials or personal files, no file over 90 MB; add to your
@@ -166,62 +166,57 @@ Conventions for the Claude sessions (cloud and local) that run computations here
 - **Commit messages** carry no attribution trailer: no `Co-Authored-By` line of any kind and no session link. The author
   is Nathan Moinvaziri (`.claude/settings.json` sets this; follow it even if a session prompt suggests otherwise).
 
-## Tasks: the GitHub project
+## Tasks: GitHub issues
 
-From 2026-11-10 every task is an item of the project "choptuik-large-d" of the user nmoinvaz
-(https://github.com/users/nmoinvaz/projects/1, private), with weekly sprints and the fields Status, Owner, Area,
-Estimate and Depends on. A task is a project-only item (a draft item), not an issue of this repository, and agents open
-no issues here (Nathan, 2026-11-10). The item's title is `#<n> <title>`, with n the task's number. Its body is the task:
-its commands, threads, stop conditions, what to push, and acceptance criteria whose check can fail. Items carry no
-credentials, personal data or private correspondence.
+Every task is an issue of this repository (nmoinvaz/choptuik-large-d). The issue's body is the task: its commands,
+threads, stop conditions, what to push, and acceptance criteria whose check can fail, with a line for its estimate and
+one for what it depends on. Issues are public, so they carry no credentials, personal data or private correspondence,
+and an @ handle only for a real login meant to be notified. No GitHub project is used: the project that held these
+tasks' fields until 2026-11-10 is closed, and its fields are on the issues as labels, milestones and body lines
+(Nathan, 2026-11-10).
 
-- **`task.py`** reads and writes the items, from the repository root: `python3 task.py list --owner <machine>`,
-  `show <n>`, `start <n> --by <machine> "<text>"`, `log <n> --by <machine> "<text>"` (or `--file F`),
-  `summary <n> --by <machine> --file F`, `done <n>` and `status <n> Todo|"In Progress"|Blocked|Done`. The coordinator
-  also uses `new` and `set` (its docstring). `python3 task.py --selftest` checks its edits of a body, and
-  `--mutate=twolog` must make that fail.
-- **Numbers.** Tasks 2 to 297 were issues of this repository from 2026-11-07 to 2026-11-10 and keep their numbers, so
-  "#61" in the notes still names that task. New tasks count from 1001, so a task's number never meets a number the
-  repository gives to an issue or a pull request.
-- **Tasks that are still issues.** An issue that had comments on 2026-11-10 stays an issue until it is moved into the
-  project. `task.py` takes the same commands for it: its entries become comments on the issue, and `done` also closes
-  it. Labels are no longer used: the Owner field marks the owner, and a running task has Status In Progress.
+- **Labels and milestones.** A label names who runs the task: `win2`, `macm3`, `win`, `mac`, `coordinator` or
+  `subagent`. `running` marks a task that a runner has started, and `blocked` one that waits for another task or a
+  decision. An `area: ...` label names the part of the work, and a sprint is a milestone ("Sprint 1", weekly from
+  2026-11-08). An open issue without `running` or `blocked` is to do, and a closed issue is done.
 - **Assignment.** The coordinator tells each runner which task to take next with a message on the agent-comms channel
-  ("The local machine" below). The message names the task and repeats its commands, and the item's body stays the record
-  of the task. At the same time the coordinator sets the item's Owner to the machine. A runner takes up a task only when
-  the coordinator's message names it, not from the Owner field alone. A blocked task has Status Blocked and no Owner
-  until it is ready again.
-- **Picking it up.** `python3 task.py start <n> --by <machine> "<machine, checkout, threads>"` sets Status to In
-  Progress and writes the first entry of the item's log. The runner then answers the coordinator's message that it
-  started.
-- **Raw output** goes to the raw-data repository as before, in a folder `I<n>-<machine>/` (for example `I37-win2/`),
-  whose README.md starts `# I<n>-<machine>: <what it holds>`, then the machine and the task's number and title. The
-  comms-era `T<n>-<machine>/` folders stay as they are.
-- **Posts.** The work is recorded on the item, by the agent that did it. `task.py log` appends a dated entry to the
-  "## Log" section of the item's body: progress (hourly, with cpu and memory), results and discrepancies. An entry is a
-  few lines. Long tables and output go into the raw folder's README.md, which the entry names, because a body holds at
-  most 60 000 characters. A message to the coordinator never replaces the log entry: a result sent to the coordinator is
-  also logged on its item by its sender. Questions, commands and other coordination go by message between the runner
-  and the coordinator, and whatever they decide about a task is logged on its item as well, so the item stays complete.
-- **Finishing.** `task.py summary` appends the closing summary: what ran and its exits, the numbers the task asked for,
+  ("The local machine" below). The message names the issue and repeats its commands; the issue's body stays the record
+  of the task. At the same time the coordinator adds the machine's label, which marks the owner. A runner takes up a
+  task only when the coordinator's message names it, not from a label alone, since a label may only say which machine a
+  task is planned for. A blocked issue gets `blocked` until it is ready again.
+- **Picking it up.** The runner adds the label `running`, comments "started" on the issue with the machine, the checkout
+  and the threads, and answers the coordinator's message that it started.
+- **Raw output** goes to the raw-data repository as before, in a folder `I<issue>-<machine>/` (for example `I37-win2/`),
+  whose README.md starts `# I<issue>-<machine>: <what it holds>`, then the machine and the issue's URL. The comms-era
+  `T<n>-<machine>/` folders stay as they are.
+- **Posts.** The work is recorded on the issue, by the agent that did it: progress posts (hourly, with cpu and memory),
+  results, discrepancies and recommended tasks are comments there, posted by the runner or subagent itself. A message to
+  the coordinator never replaces the issue post: a result sent to the coordinator is also posted on its issue by its
+  sender (Nathan, 2026-11-08). Questions, commands and other coordination go by message between the runner and the
+  coordinator; whatever they decide about a task is written on its issue as well, so the issue stays complete.
+- **Finishing.** The last comment is a summary of the results: what ran and its exits, the numbers the task asked for,
   each control's verdict, the raw folder and its commit, anything that failed or disagrees with the text
-  (discrepancies are reported, not fixed), and the recommended tasks (below). Then `python3 task.py done <n>` sets
-  Status to Done. A run that stops early logs why and sets `status <n> Todo`, so the coordinator can reassign it. Either
-  way the runner then tells the coordinator, so it can name the next task at once.
-- **gh.** A runner needs the gh CLI logged in with the `project` scope (`gh auth status` lists the scopes, and
-  `gh auth refresh -s project` adds it). Without it `task.py` stops with gh's error, so a runner cannot work without it.
-- **Subagents** work only on an existing task: every task goes to the project, subagent work included. A subagent logs
-  its progress and its closing summary on the item itself and leaves Status at In Progress. The coordinator reviews the
-  work, merges it and sets Done (Nathan, 2026-11-08).
+  (discrepancies are reported, not fixed), and the recommended tasks (below). Then the runner removes `running` and
+  closes the issue (`gh issue close <n> --comment ...`). A run that stops early says why in a comment, removes
+  `running` and leaves the issue open, so the coordinator can reassign it. Either way the runner then tells the
+  coordinator, so it can name the next task at once.
+- **Numbers.** The tasks that had no comment on 2026-11-10 were made again as issues that day and have new numbers.
+  [notes/ISSUE_NUMBERS.md](notes/ISSUE_NUMBERS.md) lists each old number with its new one, for a "#<n>" written before.
+- **gh.** A runner needs the gh CLI logged in with access to this repository (`gh auth status`). The repository's
+  `.claude/settings.json` allows the `gh issue` list, view, comment, edit and close commands. A runner cannot work
+  without gh.
+- **Subagents** work only on an existing issue, subagent work included among the tasks. A subagent posts its progress
+  and its closing summary on the issue itself and leaves the issue open; the coordinator reviews the work, merges it
+  and closes the issue (Nathan, 2026-11-08).
 - **Recommended tasks go to the coordinator.** When a task needs further investigation or calculation (a follow-up
-  run, a check, a discrepancy to explain), the agent processing it, runner or subagent, does not create an item itself.
-  It lists every task it recommends under "Recommended tasks" in its closing summary (or in a log entry, if the need
+  run, a check, a discrepancy to explain), the agent processing it, runner or subagent, does not open an issue itself.
+  It lists every task it recommends under "Recommended tasks" in its closing summary (or in a comment, if the need
   arises earlier), each with a title, what, why, acceptance criteria whose check can fail, and what it depends on. The
-  coordinator adds each one to the project with `task.py new`, with Depends on naming the task it came from (Nathan,
-  2026-11-08).
-- **The coordinator** writes the items, sets Sprint, Owner and Depends on, assigns each ready task by message, reads
-  each closing summary, merges results into the notes, adds the recommended tasks, and checks the raw folder with
-  `raw_check.py`.
+  coordinator opens an issue for each one, with its "Depends on" line naming the issue it came from, and links it
+  there (Nathan, 2026-11-08).
+- **The coordinator** writes the issues, sets their labels and milestone, assigns each ready task by message with its
+  machine label, reads each closing summary, merges results into the notes, files the recommended tasks, and checks the
+  raw folder with `raw_check.py`.
 
 ## The local machine
 
@@ -231,7 +226,7 @@ credentials, personal data or private correspondence.
   private repository nmoinvaz/agent-comms, where each message is one file. Its README is the protocol, so read it
   before sending or waiting: `gh api repos/nmoinvaz/agent-comms/readme -H "Accept: application/vnd.github.raw"`.
   Commands, task assignments, questions and answers go as messages there, and every result, decision and follow-up task
-  about a task is also logged on its item ("Tasks: the GitHub project" above). A message that asks for something is
+  about a task is also written on its issue ("Tasks: GitHub issues" above). A message that asks for something is
   answered with `re` set, which is the only receipt its sender gets. `comms.txt` is the archive of the messages up to
   2026-11-08 (entries before 2026-10-24 22:25 UTC are in PDT, and the laptop's say `local`); it takes no new entries.
   The machines are the Windows laptop (`win`), a Windows desktop (`win2`), an M3 Mac (`macm3`) and the Apple M5 Mac
