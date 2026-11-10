@@ -37,12 +37,15 @@ x, s, b, R = C.x, C.s, C.b, C.R
 T0 = time.time()
 
 MUTATIONS = {
-    'Psi3': "Psi3: x^4 coefficient of b0^2 b2 -> +1; enters (S38) at eps^(5/2)",
-    'Psi3c': "Psi3: x^0 coefficient of b0^3 b1 -> +1; enters (S38) at eps^(5/2)",
-    'Pi4': "Pi4: x^6 coefficient of b6 -> +1/48; enters (S39) at eps^(7/2)",
-    'Pi4b': "Pi4: x^2 coefficient of b0^5 -> +1; enters (S39) at eps^(7/2)",
-    'Omega4': "Omega4: x^2 coefficient of b0^4 -> +1; enters (S36) at eps^3",
-    'f4': "f4: x^0 coefficient of b0^8 -> +1; enters (S37) at eps^4",
+    'Psi3': "Psi3: x^4 coefficient of b0^2 b2, -47/4 -> -43/4; enters (S38) at eps^(5/2)",
+    'Psi3c': "Psi3: x^0 coefficient of b0^4 b1, -1/8 -> 7/8; enters (S38) at eps^(5/2)",
+    'Pi4': "Pi4: x^6 coefficient of b6, 1/48 -> 2/48; enters (S39) at eps^(7/2)",
+    'Pi4b': "Pi4: x^2 coefficient of b0^3, -1 -> 0; enters (S39) at eps^(7/2)",
+    'Pi4c': "Pi4: x^0 term b0 added; breaks (S34) Pi4(0) = 0 and enters (S36) at eps^3, not (S39)",
+    'Omega4': "Omega4: x^2 coefficient of b0^4, -23 -> -22; enters (S36) at eps^3",
+    'f4': "f4: x^2 coefficient of b0^8, -5/32 -> 27/32; enters (S37) at eps^4",
+    'f4c': "f4: x^0 coefficient of b0^8, 35/128 -> 163/128; breaks (S29) f4(1) = 0 only",
+    'eqS36': "this file's (S36): (1 - 2 eps) Pi^2 -> (1 - 3 eps) Pi^2; a transcription error, for --crosscheck",
 }
 MUT = set()
 
@@ -116,46 +119,53 @@ def fields(t):
 
 # Last power of s each equation's residual is formed to. It is exact there: every product is truncated only above it.
 KTOP = {'S36': 8, 'S37': 10, 'S38': 7, 'S39': 9}
-# Last power of s the given terms (through Psi_3, Pi_4, Omega_4, f_4) fix. KTOP is the next order, which needs a term
-# not given (Omega_5 and Pi_5, f_5, Psi_4, Pi_5).
+# Last power of s the given terms (through Psi_3, Pi_4, Omega_4, f_4) fix. KTOP is the next power of the same parity,
+# which needs a term not given (Omega_5 and Pi_5, f_5, Psi_4, Pi_5) and must be nonzero.
 FIXED = {'S36': 6, 'S37': 8, 'S38': 5, 'S39': 7}
+assert all(KTOP[q] == FIXED[q] + 2 for q in KTOP)
 
 
-def residuals(t):
+def residuals(t, eqs=('S36', 'S37', 'S38', 'S39')):
     """LHS - RHS of (S36)-(S39), typed from the paper's HTML rendering (2026-11-10), as truncated series in s:
       (S36) x d_x Omega + x^2 Omega^2 = (1/eps)((1 - 2 eps) Pi^2 - Omega) + Omega (Pi^2 x^2 + x^4 Psi^2)
                                         + (1/eps - 2) x^2 Psi^2
       (S37) (1/x) d_x ln f = Omega
       (S38) (d_tau + x d_x) Pi = f x d_x Psi + f (1/eps + x^2 Omega) Psi - Pi
-      (S39) (d_tau + x d_x) Psi = f (1/x) d_x Pi + f Omega Pi - 2 Psi"""
+      (S39) (d_tau + x d_x) Psi = f (1/x) d_x Pi + f Omega Pi - 2 Psi
+    Only the equations named in eqs are formed."""
     f, Om, Pi, Psi = fields(t)
-    K = KTOP['S36']
-    Pi2 = smul(Pi, Pi, K + 2)
-    Psi2 = smul(Psi, Psi, K + 2)
-    r36 = sadd((1, xdx(Om)), (x**2, smul(Om, Om, K)),
-               (-1, sshift(sadd((1, Pi2), (-2, sshift(Pi2, 2)), (-1, Om)), -2)),
-               (-1, smul(Om, sadd((x**2, Pi2), (x**4, Psi2)), K)),
-               (-x**2, sshift(Psi2, -2)), (2 * x**2, Psi2))
-    r36 = {k: v for k, v in r36.items() if k <= K}
-    # (S37): ln f = sum_{j<=5} (-1)^(j+1) u^j / j, u = f - 1 = O(s^2); exact through s^10.
-    K = KTOP['S37']
-    u = {k: v for k, v in f.items() if k > 0}
-    L, up = {}, {0: sp.Integer(1)}
-    for j in range(1, 6):
-        up = smul(up, u, K)
-        L = sadd((1, L), (sp.Rational((-1)**(j + 1), j), up))
-    r37 = sadd((1, smap(lambda v: sp.diff(v, x) / x, L)), (-1, Om))
-    r37 = {k: v for k, v in r37.items() if k <= K}
-    K = KTOP['S38']
-    fPsi = smul(f, Psi, K + 2)
-    r38 = sadd((1, dt(Pi)), (1, xdx(Pi)), (-1, smul(f, xdx(Psi), K)), (-1, sshift(fPsi, -2)),
-               (-x**2, smul(Om, fPsi, K)), (1, Pi))
-    r38 = {k: v for k, v in r38.items() if k <= K}
-    K = KTOP['S39']
-    r39 = sadd((1, dt(Psi)), (1, xdx(Psi)), (-1, smul(f, smap(lambda v: sp.diff(v, x) / x, Pi), K)),
-               (-1, smul(f, smul(Om, Pi, K), K)), (2, Psi))
-    r39 = {k: v for k, v in r39.items() if k <= K}
-    return {'S36': r36, 'S37': r37, 'S38': r38, 'S39': r39}
+    out = {}
+    if 'S36' in eqs:
+        K = KTOP['S36']
+        Pi2 = smul(Pi, Pi, K + 2)
+        Psi2 = smul(Psi, Psi, K + 2)
+        r = sadd((1, xdx(Om)), (x**2, smul(Om, Om, K)),
+                 (-1, sshift(sadd((1, Pi2), (-3 if 'eqS36' in MUT else -2, sshift(Pi2, 2)), (-1, Om)), -2)),
+                 (-1, smul(Om, sadd((x**2, Pi2), (x**4, Psi2)), K)),
+                 (-x**2, sshift(Psi2, -2)), (2 * x**2, Psi2))
+        out['S36'] = {k: v for k, v in r.items() if k <= K}
+    if 'S37' in eqs:
+        # ln f = sum_{j<=5} (-1)^(j+1) u^j / j, u = f - 1 = O(s^2), exact through s^10.
+        K = KTOP['S37']
+        u = {k: v for k, v in f.items() if k > 0}
+        L, up = {}, {0: sp.Integer(1)}
+        for j in range(1, 6):
+            up = smul(up, u, K)
+            L = sadd((1, L), (sp.Rational((-1)**(j + 1), j), up))
+        r = sadd((1, smap(lambda v: sp.diff(v, x) / x, L)), (-1, Om))
+        out['S37'] = {k: v for k, v in r.items() if k <= K}
+    if 'S38' in eqs:
+        K = KTOP['S38']
+        fPsi = smul(f, Psi, K + 2)
+        r = sadd((1, dt(Pi)), (1, xdx(Pi)), (-1, smul(f, xdx(Psi), K)), (-1, sshift(fPsi, -2)),
+                 (-x**2, smul(Om, fPsi, K)), (1, Pi))
+        out['S38'] = {k: v for k, v in r.items() if k <= K}
+    if 'S39' in eqs:
+        K = KTOP['S39']
+        r = sadd((1, dt(Psi)), (1, xdx(Psi)), (-1, smul(f, smap(lambda v: sp.diff(v, x) / x, Pi), K)),
+                 (-1, smul(f, smul(Om, Pi, K), K)), (2, Psi))
+        out['S39'] = {k: v for k, v in r.items() if k <= K}
+    return out
 
 
 def order_label(k):
@@ -163,12 +173,71 @@ def order_label(k):
 
 
 # --------------------------------------------------------------------------------------------------------------
-# The closed forms (b_k = k-th tau-derivative of beta-tilde). Filled from --print, then checked against the
+# The closed forms (b_k = k-th tau-derivative of beta-tilde), generated from --print and checked against the
 # derivation in the default mode.
 
 def closed():
+    """Psi_3, Pi_4, Omega_4, f_4, generated from --print (sympy output, grouped by powers of x). The bump terms
+    are the mutations."""
     b0, b1, b2, b3, b4, b5, b6 = b[:7]
-    raise NotImplementedError
+    S3 = (
+        (-b0**5/8 - b0**4*b1/8 - b0**3/2 + b0**2*b1/4 + b0**2*b2/4 + 3*b0*b1**2/4 + b0*b1*b2/4
+            + bump('Psi3c') * b0**4*b1)
+        + x**2 * (-b0**5 - b0**4*b1 + 23*b0**3/2 + 75*b0**2*b1/4 + 5*b0**2*b2 + 3*b0**2*b3/4 + 11*b0*b1**2/2 +
+            2*b0*b1*b2 - 6*b0 + b1**3/2 - 11*b1 - 6*b2 - b3)
+        + x**4 * (3*b0**5 + 3*b0**4*b1 - 17*b0**3 - 38*b0**2*b1 - 47*b0**2*b2/4 - 5*b0**2*b3/4 - 63*b0*b1**2/4 -
+            17*b0*b1*b2/4 + 15*b0 - b1**3 + 137*b1/4 + 225*b2/8 + 85*b3/8 + 15*b4/8 + b5/8
+            + bump('Psi3') * b0**2*b2))
+    P4 = (
+        bump('Pi4c') * b0
+        + x**2 * (bump('Pi4b') * b0**3
+            - b0**3 - b0**2*b1/2 + 3*b0**2*b2/8 + b0**2*b3/8 + 17*b0*b1**2/8 + 2*b0*b1*b2 + b0*b1*b3/8 +
+            b0*b2**2/4 + 3*b1**3/8 + b1**2*b2/8)
+        + x**4 * (-5*b0**5 - 6*b0**4*b1 - b0**4*b2 - 2*b0**3*b1**2 + 63*b0**3/4 + 69*b0**2*b1/2 + 107*b0**2*b2/8
+            + 21*b0**2*b3/8 + b0**2*b4/4 + 117*b0*b1**2/8 + 29*b0*b1*b2/4 + 7*b0*b1*b3/8 + b0*b2**2/2 - 6*b0 +
+            15*b1**3/8 + 7*b1**2*b2/8 - 25*b1/2 - 35*b2/4 - 5*b3/2 - b4/4)
+        + x**6 * (-5*b0**7/16 + 139*b0**5/24 + 485*b0**4*b1/48 + 71*b0**4*b2/48 + 17*b0**3*b1**2/6 - 121*b0**3/6
+            - 1289*b0**2*b1/24 - 1075*b0**2*b2/48 - 17*b0**2*b3/4 - 5*b0**2*b4/16 - 359*b0*b1**2/12 -
+            173*b0*b1*b2/12 - 9*b0*b1*b3/8 - 7*b0*b2**2/8 + 15*b0 - 29*b1**3/8 - 29*b1**2*b2/24 + 147*b1/4 +
+            203*b2/6 + 245*b3/16 + 175*b4/48 + 7*b5/16 + b6/48 + bump('Pi4', R(1, 48)) * b6))
+    O4 = (
+        x**2 * (bump('Omega4') * b0**4
+            - 23*b0**4 - 15*b0**3*b1 - 13*b0**3*b2/4 + b0**3*b3/4 + 5*b0**2*b1**2/4 + 4*b0**2*b1*b2 +
+            b0**2*b1*b3/4 + b0**2*b2**2/2 + 12*b0**2 + 3*b0*b1**3/4 + b0*b1**2*b2/4 + 16*b0*b1 + 8*b0*b2 - 4*b1**2)
+        + x**4 * (-18*b0**6 - 14*b0**5*b1 - 5*b0**5*b2/2 - 9*b0**4*b1**2/2 + 147*b0**4/2 + 140*b0**3*b1 +
+            179*b0**3*b2/4 + 21*b0**3*b3/4 + b0**3*b4/2 + 177*b0**2*b1**2/4 + 18*b0**2*b1*b2 + 7*b0**2*b1*b3/4 +
+            3*b0**2*b2**2/2 - 48*b0**2 + 21*b0*b1**3/4 + 9*b0*b1**2*b2/4 - 101*b0*b1 - 70*b0*b2 - 19*b0*b3 - 2*b0*b4
+            - 5*b1**2/2 - 3*b1*b2 + b1*b3 - 3*b2**2/2)
+        + x**6 * (-b0**8 + 46*b0**6/3 + 79*b0**5*b1/3 + 13*b0**5*b2/3 + 20*b0**4*b1**2/3 - 148*b0**4/3 -
+            398*b0**3*b1/3 - 325*b0**3*b2/6 - 39*b0**3*b3/4 - 3*b0**3*b4/4 - 461*b0**2*b1**2/6 - 221*b0**2*b1*b2/6 -
+            9*b0**2*b1*b3/4 - 11*b0**2*b2**2/4 + 36*b0**2 - 41*b0*b1**3/4 - 41*b0*b1**2*b2/12 + 95*b0*b1 +
+            953*b0*b2/12 + 265*b0*b3/8 + 181*b0*b4/24 + 7*b0*b5/8 + b0*b6/24 + 75*b1**2/4 + 155*b1*b2/8 + 15*b1*b3/4
+            + 3*b1*b4/8 + 35*b2**2/8 + 5*b2*b3/4 + b2*b4/8))
+    f4 = (
+        (bump('f4c') * b0**8
+            + 35*b0**8/128 + 27*b0**6/16 - 163*b0**5*b1/96 - 29*b0**5*b2/96 - b0**4*b1**2/8 - b0**4/2 - 10*b0**3*b1/3
+            + 5*b0**3*b2/16 + 47*b0**3*b3/96 + b0**3*b4/32 + 241*b0**2*b1**2/96 + 11*b0**2*b1*b2/12 -
+            7*b0**2*b1*b3/96 + b0**2*b2**2/48 + b0**2/2 + 7*b0*b1**3/32 - b0*b1**2*b2/96 + 23*b0*b1/24 - 25*b0*b2/96
+            - 187*b0*b3/192 - 39*b0*b4/64 - 7*b0*b5/64 - b0*b6/192 - 89*b1**2/96 - 123*b1*b2/64 - 61*b1*b3/96 -
+            3*b1*b4/64 - 19*b2**2/64 - 5*b2*b3/32 - b2*b4/64)
+        + x**2 * (bump('f4') * b0**8
+            - 5*b0**8/32 - 11*b0**6/12 + 31*b0**5*b1/48 + 7*b0**5*b2/48 + b0**4*b1**2/24 - 5*b0**4/24 +
+            17*b0**3*b1/24 - b0**3*b2/16 - 5*b0**3*b3/24 - b0**3*b4/48 - 5*b0**2*b1**2/16 - b0**2*b1*b2/8 -
+            b0**2*b2**2/48)
+        + x**4 * (-3*b0**8/64 - 5*b0**6/8 - b0**5*b1/8 - b0**4*b1**2/8 - 33*b0**4/8 - 5*b0**3*b1/2 -
+            5*b0**3*b2/16 + b0**3*b3/16 - 3*b0**2*b1**2/8 + 5*b0**2*b1*b2/8 + b0**2*b1*b3/16 + b0**2*b2**2/16 +
+            3*b0**2 + 3*b0*b1**3/16 + b0*b1**2*b2/16 + 4*b0*b1 + 2*b0*b2 - b1**2)
+        + x**6 * (-b0**8/32 - 17*b0**6/12 - 17*b0**5*b1/16 - 7*b0**5*b2/48 - 11*b0**4*b1**2/24 + 247*b0**4/24 +
+            481*b0**3*b1/24 + 283*b0**3*b2/48 + 2*b0**3*b3/3 + b0**3*b4/16 + 117*b0**2*b1**2/16 + 23*b0**2*b1*b2/8 +
+            7*b0**2*b1*b3/24 + 11*b0**2*b2**2/48 - 8*b0**2 + 7*b0*b1**3/8 + 3*b0*b1**2*b2/8 - 101*b0*b1/6 -
+            35*b0*b2/3 - 19*b0*b3/6 - b0*b4/3 - 5*b1**2/12 - b1*b2/2 + b1*b3/6 - b2**2/4)
+        + x**8 * (-5*b0**8/128 + 61*b0**6/48 + 215*b0**5*b1/96 + 29*b0**5*b2/96 + 2*b0**4*b1**2/3 - 131*b0**4/24
+            - 179*b0**3*b1/12 - 35*b0**3*b2/6 - 97*b0**3*b3/96 - 7*b0**3*b4/96 - 877*b0**2*b1**2/96 -
+            103*b0**2*b1*b2/24 - 9*b0**2*b1*b3/32 - 7*b0**2*b2**2/24 + 9*b0**2/2 - 41*b0*b1**3/32 -
+            41*b0*b1**2*b2/96 + 95*b0*b1/8 + 953*b0*b2/96 + 265*b0*b3/64 + 181*b0*b4/192 + 7*b0*b5/64 + b0*b6/192 +
+            75*b1**2/32 + 155*b1*b2/64 + 15*b1*b3/32 + 3*b1*b4/64 + 35*b2**2/64 + 5*b2*b3/32 + b2*b4/64))
+
+    return dict(S3=S3, P4=P4, O4=O4, f4=f4)
 
 
 def nnlo():
@@ -188,7 +257,7 @@ def full_set():
 # Order-by-order solution, with the residual of this file.
 
 def coef_fun(eq, k):
-    return lambda tt: residuals(tt)[eq].get(k, 0)
+    return lambda tt: residuals(tt, (eq,))[eq].get(k, 0)
 
 
 def derive():
@@ -210,11 +279,33 @@ def uniqueness(t):
                            ('f4', 'S37', 8, 'xinv_dx')):
         t1 = dict(t)
         t1[key] = t[key] + d
-        diff = sp.expand(residuals(t1)[eq].get(k, 0) - residuals(t)[eq].get(k, 0))
+        diff = sp.expand(residuals(t1, (eq,))[eq].get(k, 0) - residuals(t, (eq,))[eq].get(k, 0))
         L = sp.diff(d, x) / x if op == 'xinv_dx' else d
         a = sp.simplify(diff / L)
         out[key] = dict(eq=eq, order=order_label(k), operator=('(1/x) d/dx' if op == 'xinv_dx' else 'identity'),
                         factor=str(a), linear=bool(a.free_symbols <= set(b) and a != 0))
+    return out
+
+
+def linear_parts(cl):
+    """The part of Psi_3 and Pi_4 linear in beta-tilde against the hand derivation (posted on the issue before the
+    scripts ran). Linearized, (S38) gives S_k = (D + x d_x + 1) P_k - x d_x S_(k-1) and (S39) gives
+    (1/x) d_x P_(k+1) = (D + x d_x + 2) S_k, D = d/dtau, P_1 = beta-tilde. Hence
+      Psi_3 lin = x^4/8 (D+1)...(D+5) bt - x^2 (D+1)(D+2)(D+3) bt,
+      Pi_4 lin  = x^6/48 (D+1)...(D+6) bt - x^4/4 (D+1)...(D+4) bt."""
+    Dv = sp.Symbol('Dop')
+
+    def op(n):
+        """(D+1)...(D+n) applied to beta-tilde, as a combination of the b_k"""
+        p = sp.Poly(sp.prod([Dv + j for j in range(1, n + 1)]), Dv)
+        return sum(c * b[k] for (k,), c in p.terms())
+
+    want = dict(S3=x**4 / 8 * op(5) - x**2 * op(3), P4=x**6 / 48 * op(6) - x**4 / 4 * op(4))
+    out = {}
+    for key, w in want.items():
+        e = sp.Poly(sp.expand(cl[key]), *b[:8])
+        lin = sum(c * sp.prod([b[k]**q for k, q in enumerate(mm)]) for mm, c in e.terms() if sum(mm) == 1)
+        out[key] = bool(sp.expand(lin - w) == 0)
     return out
 
 
@@ -286,6 +377,7 @@ def main():
     ap.add_argument('--numeric', action='store_true')
     ap.add_argument('--crosscheck', action='store_true')
     ap.add_argument('--print', action='store_true', dest='prn')
+    ap.add_argument('--quick', action='store_true', help='residuals, boundary and linear part only')
     ap.add_argument('--mutate', default='', help=', '.join('%s (%s)' % kv for kv in MUTATIONS.items()))
     ap.add_argument('--json', default='')
     a = ap.parse_args()
@@ -315,10 +407,10 @@ def main():
             ct = C.coeffs(theirs[eq], C.KMAX[eq])
             for k in range(-4, C.KMAX[eq] + 1):
                 if sp.expand(mine[eq].get(k, 0) - ct.get(k, 0)) != 0:
-                    bad.append((eq, order_label(k)))
+                    bad.append((order_label(k), eq))
         print('crosscheck against check.py residuals (NNLO set, powers up to check.py KMAX): %s'
               % ('PASS' if not bad else 'FAIL at %s' % bad))
-        report['crosscheck_fails'] = bad
+        report['crosscheck'] = dict(fails=bad)
         rc = 1 if bad else 0
     elif a.numeric:
         t = full_set()
@@ -346,7 +438,9 @@ def main():
             cells = []
             for k in range(min(list(r) + [0]), KTOP[eq] + 1):
                 c = r.get(k, 0)
-                if k <= FIXED[eq]:
+                if k < KTOP[eq]:
+                    # Every power below the next order vanishes: the fixed ones, and the ones of the other
+                    # parity, which (S35) never populates.
                     st = '0' if c == 0 else 'FAIL(%d)' % len(sp.Add.make_args(c))
                     if c != 0:
                         fails.append((order_label(k), eq))
@@ -358,17 +452,31 @@ def main():
             print('  %s  %s' % (eq, '  '.join(cells)))
         print('  key: 0 = coefficient vanishes; FAIL(n) = nonzero at a fixed order; open(n) = nonzero at the next')
         print('       order, which needs a term not given (it must be nonzero).')
+        cl = closed()
+        bc = dict(P4_at_0=sp.expand(cl['P4'].subs(x, 0)), f4_at_1=sp.expand(cl['f4'].subs(x, 1)))
+        print('boundary: Pi4(tau,0) = %s   f4(tau,1) = %s' % (bc['P4_at_0'], bc['f4_at_1']))
+        lin = linear_parts(cl)
+        print('linear parts against the hand derivation: %s' % lin)
+        bad = []
+        if fails:
+            bad.append('residual nonzero at %s' % fails)
+        if open_zero:
+            bad.append('next order vanishes at %s' % open_zero)
+        if bc['P4_at_0'] != 0 or bc['f4_at_1'] != 0:
+            bad.append('boundary condition fails')
+        if not all(lin.values()):
+            bad.append('linear part differs from the hand derivation for %s' % [k for k, v in lin.items() if not v])
+        report['psi3'] = dict(fails=fails, open_zero=open_zero, boundary={k: str(v) for k, v in bc.items()},
+                              linear=lin)
+    if not (a.prn or a.crosscheck or a.numeric or a.quick):
         t_der = dict(nnlo())
         der = derive()
         t_der.update(der)
-        cl = closed()
         same = {k: sp.expand(der[k] - cl[k]) == 0 for k in der}
         print('\nderived == closed form: %s [%.0f s]' % (same, time.time() - T0), flush=True)
         for k in der:
             if not same[k]:
                 print('  closed - derived %s = %s' % (k, sp.factor(sp.expand(cl[k] - der[k]))))
-        bc = dict(P4_at_0=sp.expand(cl['P4'].subs(x, 0)), f4_at_1=sp.expand(cl['f4'].subs(x, 1)))
-        print('boundary: Pi4(tau,0) = %s   f4(tau,1) = %s' % (bc['P4_at_0'], bc['f4_at_1']))
         reg = regular(t_der)
         print('regularity of the derived terms: %s' % reg)
         uq = uniqueness(t_der)
@@ -376,22 +484,15 @@ def main():
         for k, v in uq.items():
             print('  %s at (%s) %s: R(U+delta)-R(U) = %s * %s[delta]  linear=%s'
                   % (k, v['eq'], v['order'], v['factor'], v['operator'], v['linear']))
-        bad = []
-        if fails:
-            bad.append('residual nonzero at %s' % fails)
-        if open_zero:
-            bad.append('next order vanishes at %s' % open_zero)
         if not all(same.values()):
             bad.append('closed form != derived for %s' % [k for k, v in same.items() if not v])
-        if bc['P4_at_0'] != 0 or bc['f4_at_1'] != 0:
-            bad.append('boundary condition fails')
         if not all(v['polynomial'] and v['even'] for v in reg.values()):
             bad.append('a derived term is not an even polynomial in x')
         if not all(v['linear'] for v in uq.values()):
             bad.append('a residual is not affine in its unknown')
+        report['psi3'].update(same={k: bool(v) for k, v in same.items()}, regular=reg, uniqueness=uq)
+    if not (a.prn or a.crosscheck or a.numeric):
         print('\nverdict: %s' % ('PASS' if not bad else 'FAIL: ' + '; '.join(bad)))
-        report.update(fails=fails, open_zero=open_zero, same={k: bool(v) for k, v in same.items()},
-                      boundary={k: str(v) for k, v in bc.items()}, regular=reg, uniqueness=uq)
         rc = 1 if bad else 0
     report['exit'] = rc
     if a.json:
