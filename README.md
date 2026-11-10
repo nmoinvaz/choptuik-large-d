@@ -1665,17 +1665,22 @@ The estimates as a log distance from the finite-D answer (solver/selection_zoom.
 
 ### Proposition 5: the unstable mode at infinite D is exact
 
-Proposition 1 holds for perturbations too, so the growth rate λ = 1/γ, like ω, is selected beyond all orders, by the
-same kind of fast-mode multiplier: the 1/n expansion of growing perturbations $`e^{\lambda\tau}`$ of the formal solution
+Proposition 1 holds for perturbations too. So the growth rate λ = 1/γ, like ω, is selected beyond all orders, by the
+same kind of fast-mode multiplier. The 1/n expansion of growing perturbations $`e^{\lambda\tau}`$ of the formal solution
 gives no condition on λ, since Proposition 1's parity induction goes through with every τ-derivative of a perturbation
-replaced by $`\lambda + \omega\partial_\theta`$ (`solver/inner_pert/expand_pert.py`, sympy, through order 2). In the
-inner problem, though, three growth rates are exact, from symmetries: λ = 0 (a shift of θ; `pert_check.py`, to
-6×10⁻³⁰), λ = 1 (a shift of the time of the singularity, $`\delta Z = (\xi\partial_\xi + \omega\partial_\theta)Z`$;
-`pert_check2.py`, with gravity, to 10⁻¹⁷⁷), the D = ∞ limit of the solver's gauge mode $`1 - \langle G(1)\rangle`$, and
-λ = 2, the one the data show (λ∞ = 2 to about 10⁻⁶ from the double-double γ, `hp/gamma_dd.py`;
-[The formula](#the-formula)), which this proposition derives. Write the inner problem in physical inner variables:
-ρ = r/√n and the time t, so that ξ = ρ/(−t), $`L = \rho\,\partial_t`$ at fixed ρ and
-$`\xi\partial_\xi = \rho\partial_\rho`$ at fixed t, and put
+replaced by $`\lambda + \omega\partial_\theta`$ (`solver/inner_pert/expand_pert.py`, sympy, through order 2).
+
+In the inner problem, though, three growth rates are exact, from symmetries:
+
+- λ = 0, a shift of θ (`pert_check.py`, to 6×10⁻³⁰);
+- λ = 1, a shift of the time of the singularity, $`\delta Z = (\xi\partial_\xi + \omega\partial_\theta)Z`$
+  (`pert_check2.py`, with gravity, to 10⁻¹⁷⁷). It is the D = ∞ limit of the solver's gauge mode
+  $`1 - \langle G(1)\rangle`$;
+- λ = 2, the one the data show (λ∞ = 2 to about 10⁻⁶ from the double-double γ, `hp/gamma_dd.py`;
+  [The formula](#the-formula)), which this proposition derives.
+
+Write the inner problem in physical inner variables, ρ = r/√n and the time t, so that ξ = ρ/(−t),
+$`L = \rho\,\partial_t`$ at fixed ρ and $`\xi\partial_\xi = \rho\partial_\rho`$ at fixed t, and put
 
 ```math
 s = \frac{\rho^2}{2} = \frac{r^2}{2n}, \qquad y = \sqrt{s}\,Y, \qquad \sigma = \sqrt2\,s\,S .
@@ -1759,11 +1764,11 @@ the third order.
 
 </details>
 
-*Consequences.* The mode is physical, not gauge: the time reparametrization is pure gauge, and t-translation (λ = 1)
-shifts the accumulation time, but s-translation shifts r², and r is the areal radius. A supercritical evolution
+*Consequences.* The mode is physical, not gauge. The time reparametrization is pure gauge, and t-translation (λ = 1)
+shifts the accumulation time. But s-translation shifts r², and r is the areal radius. A supercritical evolution
 therefore forms its horizon at $`r_{\rm BH}^2 \propto p - p^*`$, so $`r_{\rm BH} \propto (p - p^*)^{1/2}`$ and γ = 1/2.
-This is Rozali and Way's estimate (arXiv:1807.10283), which came from the divergence of their oscillating solutions;
-here it is the discretely self-similar counterpart, exact at D = ∞ under the conditions of the corollary below.
+This is Rozali and Way's estimate (arXiv:1807.10283), which came from the divergence of their oscillating solutions.
+Here it is the discretely self-similar counterpart, exact at D = ∞ under the conditions of the corollary below.
 
 **Corollary.** Suppose Conjecture 1 holds, the D = ∞ critical solution has no unstable mode other than λ = 2 and the
 gauge mode λ = 1, and λ(D) is continuous at 1/n = 0. Then γ∞ = 1/2.
@@ -1773,9 +1778,9 @@ broken and the mode survives as an ordinary unstable mode with λ = 2 + O(1/n). 
 (γ = 1/2 − 0.758/n).
 
 **The 1/n coefficients from the inner problem** ([notes/FIRST_ORDER.md](notes/FIRST_ORDER.md)). The inner equations
-carry O(1/n) corrections, in integer powers only; in the heat form they are the only place where s = r²/(2n) appears
+carry O(1/n) corrections, in integer powers only. In the heat form they are the only place where s = r²/(2n) appears
 explicitly, so they are what breaks the r²-shift. Requiring the multiplier of the O(1/n) inner solution to vanish gives
-the frequency's coefficient ω₁ (the outer region contributes only invertible factors at this order), and first-order
+the frequency's coefficient ω₁, since the outer region contributes only invertible factors at this order. First-order
 perturbation theory, $`\lambda_1 = -S_{1/n}/\partial_\lambda S`$, gives λ₁. In the M-harmonic truncations, with exact
 derivatives (ω = ω* + ω₁/n, Δ = Δ* + Δ₁/n, λ = λ* + λ₁/n):
 
@@ -1785,21 +1790,22 @@ derivatives (ω = ω* + ω₁/n, Δ = Δ* + Δ₁/n, λ = λ* + λ₁/n):
 | Δ₁ | 15.00 | 9.886 | 10.402 | 10.375 |
 | λ₁ | 7.76 | 3.080 | 3.023 | 3.0324 |
 
-The sequences converge like the truncation sequence of ω* itself, and every fitted value lies between the M = 3 and
-M = 5 values; at M = 5 the differences are 0.1% (ω₁) and 0.3% (Δ₁, λ₁). This is numerical evidence from truncated
-models, conditional on Conjecture 1 carried one order further; M = 7 and an untruncated computation are not done.
+The sequences converge like the truncation sequence of ω* itself, and every fitted value lies between the M = 3 and M =
+5 values. At M = 5 the differences are 0.1% (ω₁) and 0.3% (Δ₁, λ₁). This is numerical evidence from truncated models,
+conditional on Conjecture 1 carried one order further. M = 7 and an untruncated computation are not done.
 
 ![The first 1/D corrections from the D = infinity theory against the measured values, keeping M harmonics](solver/first_order.svg)
 
-**One order further** (`solver/plot_first_order.py`). How far each quantity computed from the D = ∞ equations misses
-the value measured on the solutions, as harmonics are added: the echo frequency itself (to M = 7) and its first 1/D
-corrections ω₁, Δ₁ and λ₁ (to M = 5). All four fall 10–20 times per pair of harmonics.
+**One order further** (`solver/plot_first_order.py`). The graph shows how far each quantity computed from the D = ∞
+equations misses the value measured on the solutions, as harmonics are added. The quantities are the echo frequency
+itself (to M = 7) and its first 1/D corrections ω₁, Δ₁ and λ₁ (to M = 5). All four fall 10–20 times per pair of
+harmonics.
 
 Still open:
 - that λ = 2 is the only physical unstable mode at D = ∞;
 - the 1/n coefficients without truncation, and a proof of the O(1/n) matching.
 
-The one-harmonic model's root, λ = 1.765, is not a counterexample, for two reasons: its background is not the D = ∞
+The one-harmonic model's root, λ = 1.765, is not a counterexample, for two reasons. Its background is not the D = ∞
 solution, and Galerkin truncation does not commute with the gauge step, which multiplies by P(θ). More in
 [GAMMA.md](GAMMA.md).
 
@@ -1809,7 +1815,7 @@ Does the mechanism behind γ∞ = 1/2 carry over to other matter? A literature s
 ([matter/LITERATURE.md](matter/LITERATURE.md)) found none, and we know of no large-D study of critical collapse for any
 matter other than the real scalar. A symbolic analysis ([matter/STRUCTURE.md](matter/STRUCTURE.md), scripts
 `solver/matter/struct_*.py`) works out the large-D structure of several models. The deciding term is a centrifugal or
-potential term V/r² in the field equation: in the inner variable s = r²/(2n) it becomes V/(2ns), so a V of order n
+potential term V/r² in the field equation. In the inner variable s = r²/(2n) it becomes V/(2ns), so a V of order n
 leaves an order-one 1/s term that breaks the s-translation of Proposition 5.
 
 | model | D = ∞ inner problem | s-translation | prediction for γ∞ |
