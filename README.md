@@ -25,46 +25,58 @@ precision, across spacetime dimensions D from 3.044 to about 78.
 ## The problem, prior work and what is new
 
 When a collapsing shell of scalar field is tuned exactly to the threshold between dispersing and forming a black hole,
-it approaches a universal solution, Choptuik's critical solution, which repeats itself on ever smaller scales: each
-"echo" is a copy of the last, shrunk by a factor e^Δ. Just above the threshold, the black hole's size scales like
-(p − p*)^γ in the tuning parameter p (its mass like (p − p*)^{(D−3)γ}; in four dimensions both exponents are γ). The
-echo period Δ and the critical exponent γ are universal numbers, the same for any initial data, but they depend on the
+it approaches a universal solution, Choptuik's critical solution. The solution repeats itself on ever smaller scales,
+and each "echo" is a copy of the last, shrunk by a factor e^Δ. Just above the threshold, the black hole's size scales
+like (p − p*)^γ in the tuning parameter p. Its mass scales like (p − p*)^{(D−3)γ}, and in four dimensions both exponents
+are γ.
+
+The echo period Δ and the critical exponent γ are universal numbers, the same for any initial data. They depend on the
 number of spacetime dimensions D, and no formula for them is known. In D = 4, Δ ≈ 3.445 and γ ≈ 0.374.
 
-Choptuik discovered critical collapse in four dimensions in 1993[^1]. The scaling was soon explained by
-the critical solution's single unstable mode, γ = 1/λ[^2], and the solution was computed directly as a periodic
-eigenvalue problem, with Δ now known to ten digits in four dimensions[^3]; a computer-assisted proof shows that the
-D = 4 solution exists[^10]. Other dimensions were studied numerically for 3.5 ≤ D ≤ 14[^4], and near D = 4 to about six
-digits[^5]. At large D, the leading-order equations (which are the D = ∞ inner problem used here), their heat-equation
-character and an estimate γ = 1/2 came first[^6], followed by continuously self-similar solutions[^7] and analytic
-echoing solutions, with the leading-order freedom of the period and the conjecture Δ → 0[^8]. A recent review is
-Gundlach, Hilditch and Martín-García[^9]. This work builds on all of these, and on published proof templates[^11].
+Prior work:
+
+- Choptuik discovered critical collapse in four dimensions in 1993[^1].
+- The scaling was soon explained by the critical solution's single unstable mode, γ = 1/λ[^2].
+- The solution was computed directly as a periodic eigenvalue problem, and Δ is now known to ten digits in four
+  dimensions[^3]. A computer-assisted proof shows that the D = 4 solution exists[^10].
+- Other dimensions were studied numerically for 3.5 ≤ D ≤ 14[^4], and near D = 4 to about six digits[^5].
+- At large D, the leading-order equations, their heat-equation character and an estimate γ = 1/2 came first[^6]. Those
+  equations are the D = ∞ inner problem used here. Continuously self-similar solutions followed[^7], and then analytic
+  echoing solutions, with the leading-order freedom of the period and the conjecture Δ → 0[^8].
+- A recent review is Gundlach, Hilditch and Martín-García[^9].
+
+This work builds on all of these, and on published proof templates[^11].
 
 This project asks three questions:
 
 1. **What are Δ(D) and γ(D),** to high precision across dimensions, and is there a formula for them?
-2. **What happens as D → ∞?** It has been conjectured that the echo period shrinks to zero; does it, or does it tend
-   to a finite limit?
-3. **Can that limit be derived from first principles,** from the equations at D = ∞ alone rather than by extrapolating
+2. **What happens as D → ∞?** The echo period has been conjectured to shrink to zero. Does it, or does it tend to a
+   finite limit?
+3. **Can that limit be derived from first principles,** from the equations at D = ∞ alone and not by extrapolating
    computed values, and eventually proved?
 
-What is new: not found in the literature searched ([notes/LIT_REVIEW.md](notes/LIT_REVIEW.md)):
-- Δ(D) to D = 61 at about 15 digits, and the finite limit Δ∞ = 1.643893746 against the Δ → 0 conjecture;
-- a single formula for Δ(D) and γ(D) for all D ≥ 4 (an empirical rational fit; the only earlier fit, Bland et al.'s
-  exponential for γ, has a different form and limit);
-- Propositions 1–4: the 1/D expansion never fixes the period; the closed-form light-cone obstruction; its reading as a
-  Stokes multiplier;
-- the selection rule (Conjecture 1) and the value Δ∞ ≈ 1.644 it gives from the D = ∞ equations alone;
-- the symmetry argument of Proposition 5 for γ∞ = 1/2 in the discretely self-similar solution;
-- the computer-assisted certificate in the one-harmonic model.
+What is new, in that the literature searched does not have it ([notes/LIT_REVIEW.md](notes/LIT_REVIEW.md)):
 
-How: Choptuik's solution is computed as a periodic boundary-value problem in self-similar variables. An f64 solver in
-[`solver/`](solver/), with a Rust kernel for its residual (this crate), covers D = 3.6–40, and a separate double-double
-(about 32-digit) solver in [`hp/`](hp/) reaches D = 67.77 (73.27 with the pinned runs, and 78.12 in a layout where Δ is
-known to about 10⁻⁶). The theory (the large-D expansion, its Stokes multipliers and the inner problem at D = ∞) is in
-the Large-D section, with the scripts that check each step. The physics is in this file; the software is described at
-the end. The computations, derivations and text were produced by Claude (Anthropic) under Nathan Moinvaziri's direction
-and have not yet been reviewed by an expert ([How this work was done](#how-this-work-was-done)).
+- Δ(D) to D = 61 at about 15 digits, and the finite limit Δ∞ = 1.643893746 against the Δ → 0 conjecture.
+- A single formula for Δ(D) and γ(D) for all D ≥ 4, an empirical rational fit. The only earlier fit, Bland et al.'s
+  exponential for γ, has a different form and limit.
+- Propositions 1–4. The 1/D expansion never fixes the period, the light-cone obstruction has a closed form, and it reads
+  as a Stokes multiplier.
+- The selection rule (Conjecture 1) and the value Δ∞ ≈ 1.644 it gives from the D = ∞ equations alone.
+- The symmetry argument of Proposition 5 for γ∞ = 1/2 in the discretely self-similar solution.
+- The computer-assisted certificate in the one-harmonic model.
+
+How it is done:
+
+- **Solvers.** Choptuik's solution is computed as a periodic boundary-value problem in self-similar variables. An f64
+  solver in [`solver/`](solver/), with a Rust kernel for its residual (this crate), covers D = 3.6–40. A separate
+  double-double (about 32-digit) solver in [`hp/`](hp/) reaches D = 67.77. It reaches 73.27 with the pinned runs, and
+  78.12 in a layout where Δ is known to about 10⁻⁶.
+- **Theory.** The large-D expansion, its Stokes multipliers and the inner problem at D = ∞ are in the Large-D section,
+  with the scripts that check each step.
+- **Layout.** The physics is in this file, and the software is described at the end.
+- **Authorship.** The computations, derivations and text were produced by Claude (Anthropic) under Nathan Moinvaziri's
+  direction, and have not yet been reviewed by an expert ([How this work was done](#how-this-work-was-done)).
 
 ## Main results
 
@@ -459,12 +471,11 @@ including Ecker, Ecker and Grumiller's table to D = 200[^23], is compared with o
 [`hp/data/delta_published_compare.csv`](hp/data/delta_published_compare.csv). The kinds are the full system in
 double-double (D ≤ 67.77) or quad-double (68.5–73), the pinned double-double runs after one full-system step
 (67.77–73.27), and the large-D chain from 74. The chain holds harmonics 5–13 of p1 on a fit of the full-system states
-(kind chain_fit), which agrees with the 1/D series of the double-double points to within the series' own spread, to
-D = 215. Its error column is the spread over the fit's degree where a rerun on the fits of degree 6 and 10 reached a D
-([notes/QUAD_DOUBLE.md](notes/QUAD_DOUBLE.md), 13.25). How the held harmonics' bias was found, removed and measured is in
-[notes/BIAS.md](notes/BIAS.md).
-`cd hp && python3 export_delta_all.py ../../choptuik-large-d-raw` rebuilds it, and `--verify` checks every row against
-its source.
+(kind chain_fit), which agrees with the 1/D series of the double-double points to within the series' own spread, to D =
+215. Its error column is the spread over the fit's degree where a rerun on the fits of degree 6 and 10 reached a D
+([notes/QUAD_DOUBLE.md](notes/QUAD_DOUBLE.md), 13.25). How the held harmonics' bias was found, removed and measured is
+in [notes/BIAS.md](notes/BIAS.md). `cd hp && python3 export_delta_all.py ../../choptuik-large-d-raw` rebuilds it, and
+`--verify` checks every row against its source.
 
 Δ for D = 10–60 is double-double, interpolated to 10⁻¹⁴ from that file's double-double rows where D is not itself a
 computed point. Δ and γ for D = 5–8 are double-double, from the run T79 (M = 48, 22 points from D = 8.25 down to 4 in
