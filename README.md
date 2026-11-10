@@ -1176,7 +1176,7 @@ order one.
 
 ### Proposition 4: late orders of the leading-order series
 
-A divergent series records the exponentially small terms it switches on in its late orders[^14]: if the switched-on term
+A divergent series records the exponentially small terms it switches on in its late orders[^14]. If the switched-on term
 is $`n^{-g}e^{-n\chi(x)}`$, the coefficients behave like $`y_k \sim K\,Q(x)\,\Gamma(k-g)/\chi(x)^{k-g}`$. At leading
 order this can be checked exactly, because the 1/n expansion of $`x\,{}_2F_1`$ from Proposition 2 is explicit.
 `solver/largeD_linear_late.py` computes it to order 122 at 90 digits and reads χ and g off consecutive ratios of
@@ -1189,21 +1189,27 @@ $`y_k`$:
 | 0.8 | 0.291 - 1.5704i | 0.288 - 1.571i | −0.55 − 4.27i |
 | 0.9 | 0.728 - 1.5694i | 0.725 - 1.571i | −0.47 − 4.26i |
 
-So the singulant is χ(x) = Φ(x) - iπ/2 to the accuracy of 120 orders (for 0.066 < x < 0.998; see Proposition 4). The
-exponent read off two ratios carries a 1/k error; with the constant below fixed, the data are consistent with
-$`g = -(s + \tfrac12) = -0.5 - 3.82i`$ exactly, the power $`n^{s+1/2}`$ that C(n,s) carries for large n. Below
-$`x = 1/\sqrt2`$ the readings scatter. The next singulant, Φ + iπ/2, has the same modulus but a small weight (8×10⁻⁵ at
-x = 0.5, $`e^{-\pi\omega} \approx 6\times10^{-6}`$ at $`1/\sqrt2`$, $`e^{-2\pi\omega}`$ as x → 1); the two-ratio
-estimator amplifies it by about $`k\,\lvert e^{i\varphi}-1\rvert^2`$, and at x = 0.6, k ≥ 110 the direct series also
-loses 70–84 of its 90 digits to cancellation. The prefactor and the constant are predicted too (next subsection); the
-full form, with χ = τ₀, is the one stated in Proposition 4 below. `solver/largeD_dingle_K.py` divides the measured
-$`y_k`$ (orders 92–122) by that form and extrapolates in 1/k:
+So the singulant is χ(x) = Φ(x) - iπ/2 to the accuracy of 120 orders (for 0.066 < x < 0.998; see Proposition 4).
+
+The exponent read off two ratios carries a 1/k error. With the constant below fixed, the data are consistent with
+$`g = -(s + \tfrac12) = -0.5 - 3.82i`$ exactly, the power $`n^{s+1/2}`$ that C(n,s) carries for large n.
+
+Below $`x = 1/\sqrt2`$ the readings scatter, for two reasons:
+
+- The next singulant, Φ + iπ/2, has the same modulus but a small weight (8×10⁻⁵ at x = 0.5,
+  $`e^{-\pi\omega} \approx 6\times10^{-6}`$ at $`1/\sqrt2`$, $`e^{-2\pi\omega}`$ as x → 1). The two-ratio estimator
+  amplifies it by about $`k\,\lvert e^{i\varphi}-1\rvert^2`$.
+- At x = 0.6, k ≥ 110 the direct series also loses 70–84 of its 90 digits to cancellation.
+
+The prefactor and the constant are predicted too (next subsection). The full form, with χ = τ₀, is the one stated in
+Proposition 4 below. `solver/largeD_dingle_K.py` divides the measured $`y_k`$ (orders 92–122) by that form and
+extrapolates in 1/k:
 
 | x | 0.6 | $`1/\sqrt2`$ | 0.8 | 0.9 | 0.95 |
 |---|---|---|---|---|---|
 | $`K_{\text{measured}}/K`$ | 1.08 + 0.06i | 1.01 - 0.10i | 0.9936 + 0.0022i | 1.0006 - 0.0002i | 1.0010 - 0.0015i |
 
-(the first two columns carry the estimator's interference). The singulant, the exponent and the constant are proved:
+The first two columns carry the estimator's interference. The singulant, the exponent and the constant are proved:
 
 **Proposition 4 (late orders of the leading-order series).**[^14] Let 0 < x < 1, Φ = ln x − ½ ln(1 − x²),
 $`\tau_\ell = \Phi - i\pi(\ell+\tfrac12)`$, and let $`y = x\,{}_2F_1(\alpha,\beta;\kappa;x^2)`$ with κ = (n+1)/2, α =
@@ -1248,38 +1254,41 @@ singularities ±iπ.
    closed form (with $`e^{2\tau_0} = z/(z-1)`$ the factors reduce to $`x^2(1-x^2)^{-1-s}`$ times K) gives the statement.
    If $`\lvert\tau_0\rvert > \pi`$, then R = π and step 3 applies to ±iπ instead. ∎
 
-This proof replaces an earlier derivation by a pole sum in κ and Poisson summation, which left five gaps. Its
-exactness was checked numerically: `solver/largeD_linear_poles.py` gives the pole sum equal to the direct series to
-10⁻⁴⁹–10⁻⁹¹ at x = 0.3, 0.5, 0.6, k ≤ 60, and `solver/largeD_linear_poisson.py` splits it into the singulant tower at
-x = 0.5, k = 30 within 10⁻¹⁹. The integral representation holds for every 0 < x < 1, and the explicit constants settle
-which singularity dominates.
+This proof replaces an earlier derivation by a pole sum in κ and Poisson summation, which left five gaps. Its exactness
+was checked numerically. `solver/largeD_linear_poles.py` gives the pole sum equal to the direct series to 10⁻⁴⁹–10⁻⁹¹ at
+x = 0.3, 0.5, 0.6, k ≤ 60, and `solver/largeD_linear_poisson.py` splits it into the singulant tower at x = 0.5, k = 30
+within 10⁻¹⁹. The integral representation holds for every 0 < x < 1, and the explicit constants settle which singularity
+dominates.
 
 </details>
 
-*Check* (`solver/largeD_prop4/`: `euler_late.py`, `kcheck.py`, `switch2.py`). At x = 0.9, $`y_k`$/prediction − 1
-extrapolates to (−0.9 − 2.3i)×10⁻³ over k = 100–122; the derived constant equals K to 1 + 3.65/k at x = 0.5, 0.8, 0.9;
-and at x = 0.999 and 0.9999 the measured singulant is −3.135i → −iπ, not Φ − iπ/2, as the statement predicts. Closer to
-the light cone than x = 0.998 the late orders are dominated by the x-independent singularities ±iπ, which come from the
-Γ-function prefactor and the endpoint factor $`(1-e^{-2\tau})^{\beta-1}`$; their exponentials $`e^{\mp i\pi n}`$ are
-pure phases, not exponentially small terms, so they do not affect the Stokes-line argument below, which concerns the
-$`\tau_\ell`$.
+*Check* (`solver/largeD_prop4/`: `euler_late.py`, `kcheck.py`, `switch2.py`).
+
+- At x = 0.9, $`y_k`$/prediction − 1 extrapolates to (−0.9 − 2.3i)×10⁻³ over k = 100–122.
+- The derived constant equals K to 1 + 3.65/k at x = 0.5, 0.8, 0.9.
+- At x = 0.999 and 0.9999 the measured singulant is −3.135i → −iπ, not Φ − iπ/2, as the statement predicts.
+
+Closer to the light cone than x = 0.998 the late orders are dominated by the x-independent singularities ±iπ, which come
+from the Γ-function prefactor and the endpoint factor $`(1-e^{-2\tau})^{\beta-1}`$. Their exponentials
+$`e^{\mp i\pi n}`$ are pure phases, not exponentially small terms. So they do not affect the Stokes-line argument below,
+which concerns the $`\tau_\ell`$.
 
 What this says:
 
 - $`e^{-n\chi} = e^{in\pi/2}\,x^{-n}(1-x^2)^{n/2}`$ is the fast mode of Proposition 3, and $`x^2(1-x^2)^{-1-s}`$ is its
   transported amplitude at F = 0. The divergence of the 1/n series and the non-analytic piece are the same object.
-- χ vanishes only at x = ∞ (Φ(∞) = iπ/2 on this branch): the fast mode is born at the outer singular point
-  of the equations, not in 0 ≤ x ≤ 1.
+- χ vanishes only at x = ∞ (Φ(∞) = iπ/2 on this branch). So the fast mode is born at the outer singular point of the
+  equations, not in 0 ≤ x ≤ 1.
 - Its Stokes line ($`\mathrm{Im}\,\chi = 0`$, $`\mathrm{Re}\,\chi > 0`$) is the real axis x > 1 approached from above,
   where $`\chi = \ln\big(x/\sqrt{x^2-1}\big)`$. On 0 < x < 1, $`\mathrm{Im}\,\chi = -\pi/2`$, so nothing is switched on
-  there (as Consequence 3 requires). The Stokes line ends at the light cone, so a loop around x = 1 crosses it, and that
-  is where the branch $`(1-x^2)^{n/2-1-s}`$ and its coefficient C(n,s), the Stokes multiplier, come from.
-  ($`\mathrm{Im}\,\chi = 0`$ also on the imaginary axis, but there $`\mathrm{Re}\,\chi < 0`$, so it does not switch this
-  exponential.)
-- Directly: the 1/n series truncated near its smallest term reproduces the exact $`x\,{}_2F_1`$ inside 0 < x < 1 to far
-  below the size the singular branch would have there (`solver/largeD_linear_truncation.py`): at x = 0.9, n = 60 the
-  smallest difference is 4×10⁻⁴⁰ against $`\lvert C\rvert\times\text{branch} = 7\times10^{-21}`$; at x = 0.8, n = 40,
-  10⁻²³ against 2×10⁻⁷. So the regular solution carries no fast mode inside the light cone.
+  there, as Consequence 3 requires. The Stokes line ends at the light cone, so a loop around x = 1 crosses it. That is
+  where the branch $`(1-x^2)^{n/2-1-s}`$ and its coefficient C(n,s), the Stokes multiplier, come from.
+  $`\mathrm{Im}\,\chi = 0`$ holds on the imaginary axis too, but there $`\mathrm{Re}\,\chi < 0`$, so it does not switch
+  this exponential.
+- A direct test agrees. The 1/n series truncated near its smallest term reproduces the exact $`x\,{}_2F_1`$ inside 0 < x
+  < 1 to far below the size the singular branch would have there (`solver/largeD_linear_truncation.py`). At x = 0.9, n =
+  60 the smallest difference is 4×10⁻⁴⁰ against $`\lvert C\rvert\times\text{branch} = 7\times10^{-21}`$, and at x = 0.8,
+  n = 40 it is 10⁻²³ against 2×10⁻⁷. So the regular solution carries no fast mode inside the light cone.
 
 With gravity this suggests a **working hypothesis**, stated precisely:
 
