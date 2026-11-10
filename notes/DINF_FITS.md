@@ -21,7 +21,7 @@ transseries in ε rather than a series (a = 1 for a one-instanton sector). It wa
   leaves the series alone missing the held-out points by 9×10⁻⁹. The test does not cover a < 0.5 or factors of ln ε.
 
 Data range: the cloud runs reach D = 60.06 (and a few points at 60.96–60.97); the climb above that was done mostly on a
-second machine (runs in [`hp/data/local/`](../hp/data/local/), coordinated through [`comms.txt`](../comms.txt)), to D =
+second machine (runs in [`hp/data/local/`](../hp/data/local/), coordinated through `comms.txt`), to D =
 61.03. It was stopped there because the steps in D had shrunk to 0.0015–0.005 and further points add little to Δ∞; why
 the steps shrink, and the solver options used (`hp/scan_hp.py --junk_hold`, `--junk_trend`, `--corrector dnp`), are in
 [`solver/notes.md`](../solver/notes.md).

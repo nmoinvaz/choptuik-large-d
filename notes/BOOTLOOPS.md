@@ -73,7 +73,7 @@ our proof certificate, our $`\Delta_\infty`$ error bar and our README numbers.
   disclose it: their "Status, provenance and responsible use" ([README][readme]) corresponds to our
   [How this work was done](../README.md#how-this-work-was-done).
   - **BootLoops** is one agent, a toolkit and protocols, with the human approving a plan before anything runs.
-  - **We** coordinate cloud and local sessions through [`comms.txt`](../comms.txt), agents in worktrees, and
+  - **We** coordinate cloud and local sessions through `comms.txt`, agents in worktrees, and
     [AGENTS.md](../AGENTS.md) conventions.
   - BootLoops has no inter-agent channel, no cloud/local split and no orchestration. Turnstile is the only overlap
     (item 6).
