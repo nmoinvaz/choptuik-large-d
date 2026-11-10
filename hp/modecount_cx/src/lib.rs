@@ -33,7 +33,8 @@ use hpk::dd::DD;
 use hpk::dv::DV;
 use hpk::field::{cs, cs_range, cs_w, horner, DMat, FieldSolve, Fl, State};
 use hpk::lane::{BaseLane, Dc};
-use hpk::linalg::{clu_logdet, ld_for, DDLu};
+use hpk::linalg::{clu_logdet, ld_for, DDLu, QDLu};
+use hpk::qd::QD;
 use hpk::model::{self as hm, series_scale, Ctx};
 use numpy::ndarray::Array2;
 use numpy::{IntoPyArray, PyArray1, PyArray2, PyReadonlyArray1, PyReadonlyArray2};
@@ -59,6 +60,8 @@ pub const ACC_QD_HORNER: u8 = 1;
 pub const ACC_QD_CAUCHY: u8 = 2;
 /// `Cx::acc`: as ACC_QD_CAUCHY, and the series' d/dtau matrix products (D f) in quad-double
 pub const ACC_QD_DMAT: u8 = 3;
+/// `Cx::acc`: only the horizon series' tangent solves (li != 0), by quad-double LU of the same matrices
+pub const ACC_QD_SOLVE: u8 = 4;
 
 /// The largest |tangent term| c_k u^k of the centre (0) and horizon (1) series' Horner sums, as f64 bits, recorded
 /// when `Cx::diag` is set (#259 step 1)
@@ -133,7 +136,7 @@ fn cs_q<const B: usize>(x: &[Fl<Dc, B>], y: &[Fl<Dc, B>], k: usize, lo: usize, h
     out
 }
 
-/// The series' Cauchy products: hpkernel's (double-double) or cs_q (Cx::acc >= ACC_QD_CAUCHY)
+/// The series' Cauchy products: hpkernel's (double-double) or cs_q (Cx::acc ACC_QD_CAUCHY or ACC_QD_DMAT)
 #[inline(always)]
 fn ccs<const B: usize>(q: bool, x: &[Fl<Dc, B>], y: &[Fl<Dc, B>], k: usize) -> Fl<Dc, B> {
     if q {
@@ -186,10 +189,10 @@ fn dmat_q<const B: usize>(d: &DMat<B>, f: &Fl<Dc, B>) -> Fl<Dc, B> {
     out
 }
 
-/// d/dtau in the series (dtau_c, with D f in quad-double when Cx::acc >= ACC_QD_DMAT)
+/// d/dtau in the series (dtau_c, with D f in quad-double when Cx::acc is ACC_QD_DMAT)
 #[inline(always)]
 fn dtau_s<const B: usize>(cx: &Cx<B>, x: &Fl<Dc, B>, omega: Dc) -> Fl<Dc, B> {
-    if cx.acc < ACC_QD_DMAT {
+    if cx.acc != ACC_QD_DMAT {
         return dtau_c(cx, x, omega);
     }
     let mut r = dmat_q(&cx.ctx.d, x).mul_t(omega);
@@ -228,7 +231,7 @@ fn dtau_c<const B: usize>(cx: &Cx<B>, x: &Fl<Dc, B>, omega: Dc) -> Fl<Dc, B> {
 // ---------------------------------------------------------------------------------------------------------------
 fn centre_series_c<const B: usize>(cx: &Cx<B>, p1: &Fl<Dc, B>, c0: &Fl<Dc, B>, omega: Dc) -> [Vec<Fl<Dc, B>>; 4] {
     let ctx = cx.ctx;
-    let q = cx.acc >= ACC_QD_CAUCHY;
+    let q = cx.acc == ACC_QD_CAUCHY || cx.acc == ACC_QD_DMAT;
     let sig = series_scale(ctx.nodes[0]);
     let n = ctx.n;
     let n1 = n - DD::ONE;
@@ -323,7 +326,7 @@ fn series_sum<const B: usize>(cx: &Cx<B>, s: &[Vec<Fl<Dc, B>>; 4], h: DD, which:
         }
         TERM_MAX[which].fetch_max(big.to_bits(), Ordering::Relaxed);
     }
-    if cx.acc == ACC_DD {
+    if cx.acc == ACC_DD || cx.acc == ACC_QD_SOLVE {
         [horner(&s[0], h), horner(&s[1], h), horner(&s[2], h), horner(&s[3], h)]
     } else {
         [horner_qd(&s[0], h), horner_qd(&s[1], h), horner_qd(&s[2], h), horner_qd(&s[3], h)]
@@ -439,7 +442,9 @@ fn taylor_path_c<const B: usize>(cx: &Cx<B>, s0: &State<Dc, B>, xs: &[f64], omeg
 
 /// LU factors of the real 2M x 2M form of (omega D + diag kappa_kk + lambda), kk = 0..=ks:
 /// [[A + lr, -li], [li, A + lr]] acting on (f_re, f_im).
-fn horizon_lus_c<const B: usize>(ctx: &Ctx<B>, a0: &Fl<DV, B>, delta: DD, lr: DD, li: DD, par: bool) -> Result<Vec<DDLu>, String> {
+/// With qd, also quad-double LU factors of the same (double-double) matrices.
+#[allow(clippy::type_complexity)]
+fn horizon_lus_c<const B: usize>(ctx: &Ctx<B>, a0: &Fl<DV, B>, delta: DD, lr: DD, li: DD, qd: bool, par: bool) -> Result<Vec<(DDLu, Option<QDLu>)>, String> {
     let m = Ctx::<B>::M;
     let m2 = 2 * m;
     let ld = ld_for(m2);
@@ -468,7 +473,7 @@ fn horizon_lus_c<const B: usize>(ctx: &Ctx<B>, a0: &Fl<DV, B>, delta: DD, lr: DD
         base_l[j * ld + j + m] = li.lo;
     }
     let nh = ctx.n.mul_f(0.5);
-    let one_kk = |kk: usize| -> Result<DDLu, String> {
+    let one_kk = |kk: usize| -> Result<(DDLu, Option<QDLu>), String> {
         let mut h = base_h.clone();
         let mut l = base_l.clone();
         for i in 0..m {
@@ -479,7 +484,8 @@ fn horizon_lus_c<const B: usize>(ctx: &Ctx<B>, a0: &Fl<DV, B>, delta: DD, lr: DD
                 l[ii * ld + ii] = v.lo;
             }
         }
-        DDLu::factor(m2, ld, h, l, false)
+        let q = if qd { Some(QDLu::factor(m2, ld, [h.clone(), l.clone(), vec![0.0; ld * m2], vec![0.0; ld * m2]], false)?) } else { None };
+        Ok((DDLu::factor(m2, ld, h, l, false)?, q))
     };
     if par {
         (0..=ctx.ks).into_par_iter().map(one_kk).collect()
@@ -490,10 +496,12 @@ fn horizon_lus_c<const B: usize>(ctx: &Ctx<B>, a0: &Fl<DV, B>, delta: DD, lr: DD
 
 /// The horizon solves' factors: `lus` at the values; `lus_t` = A + lr (M x M, model::horizon_lus with shift lr; for
 /// the tangents when li = 0, then empty when lr = 0 too: `lus` serves); `lus2` the 2M x 2M form when li != 0.
+/// `lus2q`: quad-double factors of lus2's matrices (Cx::acc ACC_QD_SOLVE, li != 0 only).
 struct HLus {
     lus: Vec<DDLu>,
     lus_t: Vec<DDLu>,
     lus2: Vec<DDLu>,
+    lus2q: Vec<QDLu>,
 }
 
 impl HLus {
@@ -503,14 +511,20 @@ impl HLus {
         let delta = DD { hi: zh[l - 1], lo: zl[l - 1] };
         let ah = ctx.fld(zh, zl, ctx.off_ah());
         let lus = hm::horizon_lus(ctx, &ah, delta, par, DD::ZERO)?;
+        let mut lus2q = Vec::new();
         let (lus_t, lus2) = if cx.li.hi != 0.0 {
-            (Vec::new(), horizon_lus_c(ctx, &ah, delta, cx.lr, cx.li, par)?)
+            let mut lus2 = Vec::new();
+            for (d, q) in horizon_lus_c(ctx, &ah, delta, cx.lr, cx.li, cx.acc == ACC_QD_SOLVE, par)? {
+                lus2.push(d);
+                lus2q.extend(q);
+            }
+            (Vec::new(), lus2)
         } else if cx.lr.hi != 0.0 {
             (hm::horizon_lus(ctx, &ah, delta, par, cx.lr)?, Vec::new())
         } else {
             (Vec::new(), Vec::new())
         };
-        Ok(HLus { lus, lus_t, lus2 })
+        Ok(HLus { lus, lus_t, lus2, lus2q })
     }
 }
 
@@ -537,7 +551,15 @@ fn psolve_c<const B: usize>(h: &HLus, kk: usize, kappa: &Fl<Dc, B>, rhs: &Fl<Dc,
     for i in 0..m {
         b[i + m] = DD { hi: hh[i], lo: ll[i] };
     }
-    h.lus2[kk].solve(&mut b);
+    if h.lus2q.is_empty() {
+        h.lus2[kk].solve(&mut b);
+    } else {
+        let mut bq: Vec<QD> = b.iter().map(|&x| QD::from_dd(x)).collect();
+        h.lus2q[kk].solve(&mut bq);
+        for (x, q) in b.iter_mut().zip(&bq) {
+            *x = q.to_dd();
+        }
+    }
     for i in 0..m {
         hh[i] = b[i].hi;
         ll[i] = b[i].lo;
@@ -553,7 +575,7 @@ fn psolve_c<const B: usize>(h: &HLus, kk: usize, kappa: &Fl<Dc, B>, rhs: &Fl<Dc,
 
 fn horizon_series_c<const B: usize>(cx: &Cx<B>, m0: &Fl<Dc, B>, a0: &Fl<Dc, B>, omega: Dc, hl: &HLus) -> [Vec<Fl<Dc, B>>; 4] {
     let ctx = cx.ctx;
-    let q = cx.acc >= ACC_QD_CAUCHY;
+    let q = cx.acc == ACC_QD_CAUCHY || cx.acc == ACC_QD_DMAT;
     let sig = series_scale(ctx.u0().hi);
     let isig = 1.0 / sig;
     let n1 = ctx.n - DD::ONE;
@@ -1013,9 +1035,10 @@ impl CSolver {
         Ok((to2(&rh, n, ld).into_pyarray(py), to2(&rl, n, ld).into_pyarray(py), to2(&ih, n, ld).into_pyarray(py), to2(&il, n, ld).into_pyarray(py)))
     }
 
-    /// The mode matrix with only the series blocks' columns computed (#259), their sums as acc says (0 double-double,
-    /// 1 the final Horner sums in quad-double, 2 also the Cauchy products, 3 also D f): (re_hi, re_lo, im_hi, im_lo, largest |tangent term| of the centre
-    /// series' Horner sums, the same for the horizon series).
+    /// The mode matrix with only the series blocks' columns computed (#259), with acc's arithmetic (Cx::acc: 0
+    /// double-double; 1 the final Horner sums in quad-double, 2 also the Cauchy products, 3 also D f; 4 only the
+    /// horizon's tangent solves): (re_hi, re_lo, im_hi, im_lo, largest |tangent term| of the centre series' Horner
+    /// sums, the same for the horizon series).
     #[allow(clippy::type_complexity)]
     #[pyo3(signature = (zh, zl, lr, li, acc=0))]
     fn series_matrix<'py>(
@@ -1028,8 +1051,8 @@ impl CSolver {
         acc: u8,
     ) -> PyResult<(Bound<'py, PyArray2<f64>>, Bound<'py, PyArray2<f64>>, Bound<'py, PyArray2<f64>>, Bound<'py, PyArray2<f64>>, f64, f64)> {
         let (h, l) = (slice(&zh, "zh")?, slice(&zl, "zl")?);
-        if acc > ACC_QD_DMAT {
-            return Err(PyValueError::new_err(format!("acc must be 0 to 3, not {acc}")));
+        if acc > ACC_QD_SOLVE {
+            return Err(PyValueError::new_err(format!("acc must be 0 to 4, not {acc}")));
         }
         let (api, pool) = (&self.api, &self.pool);
         let n = api.len() - 1;
