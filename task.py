@@ -194,6 +194,8 @@ def selftest(mutate=None):
 
 
 def main(argv):
+    for stream in (sys.stdout, sys.stderr):
+        stream.reconfigure(encoding="utf-8")        # Windows' cp1252 console cannot print a body's Δ or λ
     opt, args, i = {}, [], 0
     while i < len(argv):
         a = argv[i]
