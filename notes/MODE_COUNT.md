@@ -375,8 +375,11 @@ moments' spreads to be optimistic by a factor of 2 to 5 for these zeros. At M = 
 every step below π/4 and 0 mismatches (#252; raw `I252-mac/`, 8f94aa4). Its λ_phys controls wind +1 but place λ_phys up
 to 5.4×10⁻⁴ off at D = 61, against the 10⁻⁵ gate set first. The cause is measured: at M = 64 the series blocks' entries
 carry non-smooth error on a near-singular mode matrix, which leaves windings unaffected and limits positions. The
-circles were read under a gate restated against that floor (#259 is the fix). So no extra zero tested keeps its λ across
-M = 40, 48 and 64. The circles cover discs only, and no full M = 64 count was made (#274).
+circles were read under a gate restated against that floor. The loss is in the series' terms, not their sums: the
+largest tangent term of the centre series grows from 1.8×10⁶ at M = 48 to 2.5×10¹¹ at M = 64 (D = 55), and summing in
+quad-double improves the entries by at most 4× where 100× is needed (#259; raw `I259-mac/`, 22628f7). A fix needs the
+terms themselves in quad-double, that is, a complex quad-double lane in multidouble. So no extra zero tested keeps its λ
+across M = 40, 48 and 64. The circles cover discs only, and no full M = 64 count was made (#274).
 
 **Positions at D = 61 (#230).** The extras in B1b and B1c lie on one row, from 1.31 + 1.42i down to 3.02 ± 0.10i, each
 zero confirmed by a small circle winding +1 (`hp/modecount_circle.py`; raw `I230-mac/`, e7dc533):
