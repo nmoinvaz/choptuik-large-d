@@ -15,11 +15,16 @@ rebuilt layout (up to N Newton steps, default 4; the up6 states at D = 27-35 com
 not change). States whose residual still exceeds --fmax (default 1e-20) are skipped and recorded as such.
 
     python3 gamma_dd.py out.jsonl STATE.npz [STATE.npz ...] [--threads=N] [--M48 | --Mhi=64] [--kf=none|13|auto] [--fmax=1e-20] [--polish[=N]]
+        [--mutate=old_rule]
 
---M48 (or --Mhi=N) also resamples the state to M = 48 (N) tau points, re-converges it (Newton, then Levenberg-Marquardt
-if Newton stalls) and repeats the root search, bracketed afresh from the formula (self-convergence; the record's M48
-field). The M = 48 solve uses the kfreeze-13 cut from D = 35 on (without it Newton from the resampled state stalls at
-D = 40), with the resampled p1 projected onto the cut first; --kf48=none|13 overrides.
+--M48 (or --Mhi=N) also resamples the state to M = 48 (N) tau points, re-converges it and repeats the root search,
+bracketed afresh from the formula (self-convergence; the record's M48 field). The M = 48 solve uses the kfreeze-13 cut
+from D = 35 on (without it Newton from the resampled state stalls at D = 40), with the resampled p1 projected onto the
+cut first; --kf48=none|13 overrides. The resampling is in double-double (resample_hi) and Newton runs to the floor,
+until a step no longer lowers |F| (solve_hi; Levenberg-Marquardt if that stops above --fmax). The record holds the
+Newton step's Delta component at the solution (est), and the floor check wants |est| <= EST_MAX; the exit status is 1
+when it fails. --mutate=old_rule restores the path before #271, the resampling in f64 with lo dropped and Newton to
+max(10 |F|, 1e-27), which at D 50 stopped one step short along p1's harmonics 13 and 11 (Delta 1.2e-11 off, #266).
 Needs the hpkernel wheel built from this tree (hp/build.sh) for mode_det.
 """
 import json
@@ -28,12 +33,18 @@ import os
 import sys
 import time
 
+import mpmath as mp
 import numpy as np
 from scipy.optimize import brentq
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, HERE)
-from hpkernel.driver import make_solver, load, lm_solve, newton_solve, plow_odd, resample_z  # noqa: E402
+sys.path.insert(0, os.path.join(HERE, "review"))
+from hpkernel.driver import dd_from_mp, make_solver, load, lm_solve, newton_solve, plow_odd, resample_z  # noqa: E402
+
+# The largest |Newton step's Delta component| accepted at a re-converged high-M state. At the floor it is 2e-19 (D 50)
+# and 5e-18 (D 58) (#266); Newton stopped one step short gives 1.2e-11 at D 50.
+EST_MAX = 1e-15
 
 # README rational formula for gamma (solver/formula_all.py), used only for the starting guess
 E = [0.5, 1.8083629635e1, 1.5241588758e2, -5.2341588541e1, 9.9259594505, -9.8386450353e1, 7.4529506074e1,
@@ -87,12 +98,70 @@ def find_lam(s, zh, zl, lam0, log=None):
     return None, 0, len(cache)
 
 
+def project_p1_dd(zh, zl, M, kf):
+    """p1 (the first M entries) projected onto its odd harmonics k <= kf (plow_odd), at 40 digits, rounded to
+    double-double"""
+    a_, b_ = plow_odd(M, kf)
+    zh, zl = np.array(zh, float), np.array(zl, float)
+    with mp.workdps(40):
+        v = [mp.mpf(float(h)) + mp.mpf(float(l)) for h, l in zip(zh[:M], zl[:M])]
+        out = [mp.fsum(v[j] * (mp.mpf(float(a_[i, j])) + mp.mpf(float(b_[i, j]))) for j in range(M)) for i in range(M)]
+        zh[:M], zl[:M] = dd_from_mp(out)
+    return zh, zl
+
+
+def resample_hi(zh, zl, M0, M, K, kf, mutate=""):
+    """The state on M tau points, with p1 projected onto the cut kf (if set). Trigonometric interpolation at 40 digits
+    (rv2_resolve.resample_dd), the projection in double-double. mutate=old_rule: resample_z in f64 with lo dropped and
+    the projection in f64 (the path before #271), which leaves 1e-16 in the weak directions."""
+    if mutate == "old_rule":
+        hh, hl = resample_z(np.asarray(zh) + np.asarray(zl), M0, M, K)
+        if kf:
+            a_, b_ = plow_odd(M, int(kf))
+            hh[:M] = (a_ + b_) @ hh[:M]
+        return hh, hl
+    from rv2_resolve import resample_dd
+    hh, hl = resample_dd(np.asarray(zh), np.asarray(zl), M0, M, K)
+    if kf:
+        hh, hl = project_p1_dd(hh, hl, M, int(kf))
+    return np.ascontiguousarray(hh), np.ascontiguousarray(hl)
+
+
+def solve_hi(s, zh, zl, F_ref, fmax, verbose=True, mutate=""):
+    """Re-converge a resampled state on the solver s. Newton to tol 1e-40, so it stops at the floor, where the line
+    search finds no step that lowers |F| (as #266's R2 path), then Levenberg-Marquardt if that is above fmax.
+    mutate=old_rule: tol max(10 F_ref, 1e-27), the rule before #271. Returns zh, zl and a record: |F|, the steps, the
+    stop, and the Newton step at the solution (its Delta component est, the linearised Delta correction)."""
+    tol = max(10 * F_ref, 1e-27) if mutate == "old_rule" else 1e-40
+    zh, zl, hist = newton_solve(s, zh, zl, tol=tol, it_max=12, verbose=verbose)
+    rec = dict(tol=tol, newton=sum("lam" in h for h in hist))
+    if hist[-1]["F"] > fmax:
+        if verbose:
+            print("  Newton stalled; Levenberg-Marquardt", flush=True)
+        zh, zl, hist = lm_solve(s, zh, zl, tol=tol, it_max=20, verbose=verbose, newton_after=1e-22)
+        rec["lm"] = sum(1 for h in hist if h.get("lm"))
+        rec["newton_after_lm"] = sum("lam" in h for h in hist)
+    last = hist[-1]
+    # floor: the line search found no decrease; lm: LM ended without handing over; other: it_max or a step below 1e-31
+    rec["stop"] = ("floor" if last.get("failed") else "lm" if last.get("lm") else "tol" if "lam" not in last
+                   else "other")
+    zh, zl = np.ascontiguousarray(zh), np.ascontiguousarray(zl)
+    # the Newton step at the solution, with a fresh LU there: its Delta component is how far one more step moves Delta
+    dh, dl, fh, fl, pmin, pmax = s.newton(zh, zl)
+    rec.update(F=float(np.abs(np.asarray(fh) + np.asarray(fl)).max()), est=float(dh[-1] + dl[-1]),
+               step=float(np.abs(np.asarray(dh) + np.asarray(dl)).max()))
+    rec["floor"] = "ok" if abs(rec["est"]) <= EST_MAX else "ABOVE"
+    return zh, zl, rec
+
+
 def main():
     args = [a for a in sys.argv[1:] if not a.startswith("--")]
     opts = dict(a[2:].split("=", 1) if "=" in a else (a[2:], "1") for a in sys.argv[1:] if a.startswith("--"))
     threads = int(opts.get("threads", 1))
+    mutate = opts.get("mutate", "")
     out = args[0]
     log = lambda m: print(m, flush=True)
+    status = 0
     for f in args[1:]:
         zh, zl, meta = load(f)
         D = meta["D"]
@@ -122,33 +191,36 @@ def main():
                    n_signchanges=nch, n_det=nev, state=os.path.basename(f), seconds=round(time.time() - t0, 1))
         if ("M48" in opts or "Mhi" in opts) and lam:
             # self-convergence: resample to Mhi (default 48) collocation points in tau, re-converge, find lam
+            t1 = time.time()
+            rec.update(Delta=float(zh[-1]), Delta_lo=float(zl[-1]))
             Mhi = int(opts.get("Mhi", 48))
             K = len(meta["nodes"])
-            z48h, z48l = resample_z(np.asarray(zh) + np.asarray(zl), meta["M"], Mhi, K)
             m48 = dict(meta, M=Mhi)
             kf48 = opts.get("kf48", "13" if D >= 35 else "none")  # at D = 40 Newton from the resampled state stalls without the cut
-            if kf48 != "none":
-                # the frozen formulation pins p1's harmonics above the cut: project the resampled p1 onto k <= kf
-                a_, b_ = plow_odd(Mhi, int(kf48))
-                z48h[:Mhi] = (a_ + b_) @ z48h[:Mhi]
-            s48, F48, kf48 = best_solver(m48, z48h, z48l, threads, M=Mhi, force=kf48)
-            log(f"  M = {Mhi}: resampled |F| {F48:.1e} (kfreeze {kf48}); Newton")
-            z48h, z48l, hist = newton_solve(s48, z48h, z48l, tol=max(10 * F, 1e-27), it_max=12, verbose=True)
-            if hist[-1]["F"] > fmax:
-                log("  Newton stalled; Levenberg-Marquardt")
-                z48h, z48l, hist = lm_solve(s48, z48h, z48l, tol=max(10 * F, 1e-27), it_max=20, verbose=True,
-                                            newton_after=1e-22)
-            fh, fl = s48.residual(z48h, z48l)
-            F48 = float(np.abs(np.asarray(fh) + np.asarray(fl)).max())
+            # the frozen formulation pins p1's harmonics above the cut: the resampled p1 is projected onto k <= kf
+            z48h, z48l = resample_hi(zh, zl, meta["M"], Mhi, K, None if kf48 == "none" else int(kf48), mutate)
+            s48, F48s, kf48 = best_solver(m48, z48h, z48l, threads, M=Mhi, force=kf48)
+            log(f"  M = {Mhi}: resampled ({'f64' if mutate == 'old_rule' else 'double-double'}) |F| {F48s:.1e} "
+                f"(kfreeze {kf48}); Newton")
+            z48h, z48l, sol = solve_hi(s48, z48h, z48l, F, fmax, verbose=True, mutate=mutate)
+            F48, est, floor = sol.pop("F"), sol.pop("est"), sol.pop("floor")
+            log(f"  M = {Mhi}: |F| {F48:.1e} ({sol['stop']}); Newton step at the solution: Delta {est:+.2e}, "
+                f"max {sol['step']:.1e}; floor check {floor} (|est| <= {EST_MAX:.0e})")
             lam48 = None
             if F48 <= fmax:
                 lam48, nch48, _ = find_lam(s48, z48h, z48l, lam0, log)  # bracketed independently of lam
-            rec.update(M48=dict(M=Mhi, kfreeze=kf48, F=F48, Delta_diff=float((z48h[-1] - zh[-1]) + (z48l[-1] - zl[-1])),
-                                lam=lam48, lam_diff=(lam48 - lam) if lam48 else None))
+            rec.update(M48=dict(M=Mhi, kfreeze=kf48, resample="f64" if mutate == "old_rule" else "dd", F_start=F48s,
+                                F=F48, solve=sol, est=est, floor=floor, Delta=float(z48h[-1]), Delta_lo=float(z48l[-1]),
+                                Delta_diff=float((z48h[-1] - zh[-1]) + (z48l[-1] - zl[-1])),
+                                lam=lam48, lam_diff=(lam48 - lam) if lam48 else None,
+                                seconds=round(time.time() - t1, 1), **({"mutate": mutate} if mutate else {})))
+            if rec["M48"]["floor"] != "ok":
+                status = 1
         log(json.dumps(rec))
         with open(out, "a") as fh_:
             fh_.write(json.dumps(rec) + "\n")
+    return status
 
 
 if __name__ == "__main__":
-    main()
+    sys.exit(main())
