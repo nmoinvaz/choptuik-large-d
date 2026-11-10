@@ -531,32 +531,36 @@ The physics figure below and the candidate test use these values. The double-dou
 
 The same two numbers, read as physics (`solver/plot_physics.py`):
 
-- **Each echo is a factor $`e^{\Delta}`$ smaller than the last:** 31 at D = 4, 12 at D = 10, 5.2 at D = ∞. In higher
-  dimensions the echoes come closer together in scale.
+- **Each echo is a factor $`e^{\Delta}`$ smaller than the last.** The factor is 31 at D = 4, 12 at D = 10 and 5.2 at D =
+  ∞. In higher dimensions the echoes come closer together in scale.
 - **One more echo costs $`\Delta/(\gamma\ln 10)`$ digits of fine-tuning.** A collapse whose initial strength p is tuned
   to $`\lvert p - p^*\rvert`$ makes about $`\gamma\ln(1/\lvert p - p^*\rvert)/\Delta`$ echoes before it either forms a
-  black hole or disperses, so each extra echo needs $`\lvert p - p^*\rvert`$ smaller by $`e^{\Delta/\gamma}`$: 4.0
-  digits at D = 4, 2.4 at D = 10, 1.43 at D = ∞.
-- **The field and its gravity weaken as D grows:** the centre slope of the field falls like $`2.72/\sqrt n`$ and the
-  departure of spacetime from flat at the centre like 3.65/n (double-double solutions, D = 20–60). At D = ∞ the
-  echo is a free wave on flat space, which on its own cannot echo (Proposition 2); the selection of Δ is gravity's
-  doing even there ([Large D](#large-d-what-the-1d-expansion-can-and-cannot-see)).
+  black hole or disperses. So each extra echo needs $`\lvert p - p^*\rvert`$ smaller by $`e^{\Delta/\gamma}`$, which is
+  4.0 digits at D = 4, 2.4 at D = 10 and 1.43 at D = ∞.
+- **The field and its gravity weaken as D grows.** The centre slope of the field falls like $`2.72/\sqrt n`$, and the
+  departure of spacetime from flat at the centre like 3.65/n (double-double solutions, D = 20–60). At D = ∞ the echo is
+  a free wave on flat space, which on its own cannot echo (Proposition 2). The selection of Δ is gravity's doing even
+  there ([Large D](#large-d-what-the-1d-expansion-can-and-cannot-see)).
 
-The phenomenon is the same at every D ≥ 4: the same echoing structure and a smooth Δ(D), with one unstable mode
-as in four dimensions (assumed here: only that mode's growth rate is computed, not the full spectrum). Only the numbers
-change.
+The phenomenon is the same at every D ≥ 4, with the same echoing structure, a smooth Δ(D), and one unstable mode as in
+four dimensions. The single mode is assumed here, since only that mode's growth rate is computed and not the full
+spectrum. Only the numbers change.
 
 **A second scalar field adds no unstable mode** ([notes/GHOST_ADMIXTURE.md](notes/GHOST_ADMIXTURE.md)). Add a second
-massless scalar ψ that vanishes in the critical solution, either a ghost or an ordinary field: at linear order its
+massless scalar ψ that vanishes in the critical solution, either a ghost or an ordinary field. At linear order its
 perturbations do not act back on the metric, and they obey the wave equation on the critical spacetime, the same for
-either sign. A growth rate with Re λ > 0 would be a second unstable mode of the critical solution. An argument-principle
-count of the test field's growth rates (`hp/modecount_test.py`, edges refined until their verification adds nothing)
-finds only the exact zero λ = 0, the rotation of the background's own field into ψ. That holds at D = 8.25, 16.76, 30.07
-and 45.05 for −0.06 < Re λ < 6.18 (the boxes reach −0.15 and 6.70 at some D) and |Im λ| < 1.5ω, in two node layouts
-each, and at D = 4 near the imaginary
-axis (−0.114 < Re λ < 0.193, |Im λ| < 6.38) in the second of two layouts (numerical evidence). The first layout at
-D = 4 showed zeros with Re λ > 0 that the second does not, artifacts of that discretization; the real decaying mode at
-λ = −0.3651 is in both.
+either sign. A growth rate with Re λ > 0 would be a second unstable mode of the critical solution.
+
+An argument-principle count of the test field's growth rates (`hp/modecount_test.py`, edges refined until their
+verification adds nothing) finds only the exact zero λ = 0, the rotation of the background's own field into ψ. This is
+numerical evidence, and it covers:
+
+- D = 8.25, 16.76, 30.07 and 45.05, for −0.06 < Re λ < 6.18 and |Im λ| < 1.5ω, in two node layouts each. The boxes reach
+  −0.15 and 6.70 at some D.
+- D = 4 near the imaginary axis (−0.114 < Re λ < 0.193, |Im λ| < 6.38), in the second of two layouts.
+
+The first layout at D = 4 showed zeros with Re λ > 0 that the second does not, artifacts of that discretization. The
+real decaying mode at λ = −0.3651 is in both.
 
 An earlier figure of the echo over several periods (the centre slope at D = 4, 10, 20 and 60, `solver/echo.svg`) is
 in [notes/SOLVER_HP.md](notes/SOLVER_HP.md).
