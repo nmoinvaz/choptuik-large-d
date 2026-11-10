@@ -39,7 +39,7 @@ use numpy::ndarray::Array2;
 use numpy::{IntoPyArray, PyArray1, PyArray2, PyReadonlyArray1, PyReadonlyArray2};
 use pyo3::exceptions::PyValueError;
 use pyo3::prelude::*;
-use hpk::qv::QV;
+use hpk::qv::{QDotAcc, QV};
 use rayon::prelude::*;
 use std::sync::atomic::{AtomicU64, Ordering};
 use std::sync::Arc;
@@ -55,6 +55,10 @@ pub const TEST_MUT: u8 = 2;
 pub const ACC_DD: u8 = 0;
 /// `Cx::acc`: the series' final Horner sums in quad-double, from the same double-double coefficients (#259 step 1)
 pub const ACC_QD_HORNER: u8 = 1;
+/// `Cx::acc`: as ACC_QD_HORNER, and the series' Cauchy products with exact products and quad-double sums
+pub const ACC_QD_CAUCHY: u8 = 2;
+/// `Cx::acc`: as ACC_QD_CAUCHY, and the series' d/dtau matrix products (D f) in quad-double
+pub const ACC_QD_DMAT: u8 = 3;
 
 /// The largest |tangent term| c_k u^k of the centre (0) and horizon (1) series' Horner sums, as f64 bits, recorded
 /// when `Cx::diag` is set (#259 step 1)
@@ -105,6 +109,103 @@ fn recip_int(k: usize) -> DD {
     DD::ONE / DD::from_f64(k as f64)
 }
 
+/// sum_{j=lo..=hi} w(j) x[j] y[k-j] with exact products and a quad-double sum, rounded once (#259)
+fn cs_q<const B: usize>(x: &[Fl<Dc, B>], y: &[Fl<Dc, B>], k: usize, lo: usize, hi: usize, w: impl Fn(usize) -> f64) -> Fl<Dc, B> {
+    let mut out = Fl::<Dc, B>::zero();
+    if hi < lo {
+        return out;
+    }
+    for b in 0..B {
+        let (mut av, mut ar, mut ai) = (QDotAcc::zero(), QDotAcc::zero(), QDotAcc::zero());
+        for j in lo..=hi {
+            let (p, q) = (x[j].0[b], y[k - j].0[b]);
+            let wj = w(j);
+            let (pv, pr, pi) = (QV::from_dv(p.v).mul_f(wj), QV::from_dv(p.r).mul_f(wj), QV::from_dv(p.i).mul_f(wj));
+            let (qv, qr, qi) = (QV::from_dv(q.v), QV::from_dv(q.r), QV::from_dv(q.i));
+            av.add_prod_mut(&pv, &qv);
+            ar.add_prod_mut(&pv, &qr);
+            ar.add_prod_mut(&pr, &qv);
+            ai.add_prod_mut(&pv, &qi);
+            ai.add_prod_mut(&pi, &qv);
+        }
+        out.0[b] = Dc { v: av.finish().to_dv(), r: ar.finish().to_dv(), i: ai.finish().to_dv() };
+    }
+    out
+}
+
+/// The series' Cauchy products: hpkernel's (double-double) or cs_q (Cx::acc >= ACC_QD_CAUCHY)
+#[inline(always)]
+fn ccs<const B: usize>(q: bool, x: &[Fl<Dc, B>], y: &[Fl<Dc, B>], k: usize) -> Fl<Dc, B> {
+    if q {
+        cs_q(x, y, k, 0, k, |_| 1.0)
+    } else {
+        cs(x, y, k)
+    }
+}
+
+#[inline(always)]
+fn ccs_range<const B: usize>(q: bool, x: &[Fl<Dc, B>], y: &[Fl<Dc, B>], k: usize, lo: usize, hi: usize) -> Fl<Dc, B> {
+    if q {
+        cs_q(x, y, k, lo, hi, |_| 1.0)
+    } else {
+        cs_range(x, y, k, lo, hi)
+    }
+}
+
+#[inline(always)]
+fn ccs_w<const B: usize>(
+    q: bool,
+    x: &[Fl<Dc, B>],
+    y: &[Fl<Dc, B>],
+    k: usize,
+    lo: usize,
+    hi: usize,
+    w: impl Fn(usize) -> f64 + Sync,
+) -> Fl<Dc, B> {
+    if q {
+        cs_q(x, y, k, lo, hi, w)
+    } else {
+        cs_w(x, y, k, lo, hi, w)
+    }
+}
+
+/// D f with exact products and quad-double sums, rounded once (#259)
+fn dmat_q<const B: usize>(d: &DMat<B>, f: &Fl<Dc, B>) -> Fl<Dc, B> {
+    let mut out = Fl::<Dc, B>::zero();
+    for b in 0..B {
+        let (mut av, mut ar, mut ai) = (QDotAcc::zero(), QDotAcc::zero(), QDotAcc::zero());
+        for j in 0..8 * B {
+            let s = f.0[j / 8];
+            let c = QV::from_dv(d.cols[j].0[b]);
+            av.add_prod_mut(&c, &QV::from_dv(s.v.bcast(j % 8)));
+            ar.add_prod_mut(&c, &QV::from_dv(s.r.bcast(j % 8)));
+            ai.add_prod_mut(&c, &QV::from_dv(s.i.bcast(j % 8)));
+        }
+        out.0[b] = Dc { v: av.finish().to_dv(), r: ar.finish().to_dv(), i: ai.finish().to_dv() };
+    }
+    out
+}
+
+/// d/dtau in the series (dtau_c, with D f in quad-double when Cx::acc >= ACC_QD_DMAT)
+#[inline(always)]
+fn dtau_s<const B: usize>(cx: &Cx<B>, x: &Fl<Dc, B>, omega: Dc) -> Fl<Dc, B> {
+    if cx.acc < ACC_QD_DMAT {
+        return dtau_c(cx, x, omega);
+    }
+    let mut r = dmat_q(&cx.ctx.d, x).mul_t(omega);
+    if cx.lr.hi == 0.0 && cx.li.hi == 0.0 {
+        return r;
+    }
+    let a = DV::splat(cx.lr);
+    let b = DV::splat(cx.li);
+    for k in 0..B {
+        let t = x.0[k];
+        r.0[k].r = r.0[k].r + (t.r * a - t.i * b);
+        r.0[k].i = r.0[k].i + (t.i * a + t.r * b);
+    }
+    r
+}
+
 /// d/dtau = omega D, plus lambda on the (complex) tangent. With li = 0 the same operations as model.rs's dtau.
 #[inline(always)]
 fn dtau_c<const B: usize>(cx: &Cx<B>, x: &Fl<Dc, B>, omega: Dc) -> Fl<Dc, B> {
@@ -127,6 +228,7 @@ fn dtau_c<const B: usize>(cx: &Cx<B>, x: &Fl<Dc, B>, omega: Dc) -> Fl<Dc, B> {
 // ---------------------------------------------------------------------------------------------------------------
 fn centre_series_c<const B: usize>(cx: &Cx<B>, p1: &Fl<Dc, B>, c0: &Fl<Dc, B>, omega: Dc) -> [Vec<Fl<Dc, B>>; 4] {
     let ctx = cx.ctx;
+    let q = cx.acc >= ACC_QD_CAUCHY;
     let sig = series_scale(ctx.nodes[0]);
     let n = ctx.n;
     let n1 = n - DD::ONE;
@@ -148,25 +250,25 @@ fn centre_series_c<const B: usize>(cx: &Cx<B>, p1: &Fl<Dc, B>, c0: &Fl<Dc, B>, o
     let invc = Fl::<Dc, B>::splat(DD::ONE) / cc[0];
     for k in 2..=kmax {
         let kf = k as f64;
-        q2[k] = cs(&pp, &pp, k) + cs(&mm, &mm, k);
-        a2[k] = cs(&aa, &aa, k); // aa[k] still 0
-        let s = cs(&aa, &q2, k);
-        let t3 = cs(&aa, &a2, k);
+        q2[k] = ccs(q, &pp, &pp, k) + ccs(q, &mm, &mm, k);
+        a2[k] = ccs(q, &aa, &aa, k); // aa[k] still 0
+        let s = ccs(q, &aa, &q2, k);
+        let t3 = ccs(q, &aa, &a2, k);
         aa[k] = (s.mulf(0.5) - t3.muls(n1.mul_f(0.5))).muls(DD::ONE / (DD::from_f64(kf) + n1));
         cx.hold_a(&mut aa[k]);
-        a2[k] = cs(&aa, &aa, k);
-        cc[k] = cs_range(&cc, &a2, k, 0, k - 1).muls(n1 * recip_int(k));
+        a2[k] = ccs(q, &aa, &aa, k);
+        cc[k] = ccs_range(q, &cc, &a2, k, 0, k - 1).muls(n1 * recip_int(k));
         cx.hold_c(&mut cc[k]);
-        let dp = dtau_c(cx, &pp[k - 1], omega).mul_pwr2(sig);
-        let dm = dtau_c(cx, &mm[k - 1], omega).mul_pwr2(sig);
-        let s1p = cs_w(&cc, &pp, k, 1, k - 1, |i| (k - i) as f64);
-        let s1m = cs_w(&cc, &mm, k, 1, k - 1, |i| (k - i) as f64);
+        let dp = dtau_s(cx, &pp[k - 1], omega).mul_pwr2(sig);
+        let dm = dtau_s(cx, &mm[k - 1], omega).mul_pwr2(sig);
+        let s1p = ccs_w(q, &cc, &pp, k, 1, k - 1, |i| (k - i) as f64);
+        let s1m = ccs_w(q, &cc, &mm, k, 1, k - 1, |i| (k - i) as f64);
         let xpx = pp[k - 1].mulf(kf - 1.0).mul_pwr2(sig) - s1p;
         let xmx = mm[k - 1].mulf(kf - 1.0).mul_pwr2(sig) + s1m;
-        let xcxp = cs_w(&cc, &pp, k, 1, k, |j| j as f64);
-        let xcxm = cs_w(&cc, &mm, k, 1, k, |j| j as f64);
-        let cp = cs(&cc, &pp, k);
-        let cm = cs(&cc, &mm, k);
+        let xcxp = ccs_w(q, &cc, &pp, k, 1, k, |j| j as f64);
+        let xcxm = ccs_w(q, &cc, &mm, k, 1, k, |j| j as f64);
+        let cp = ccs(q, &cc, &pp, k);
+        let cm = ccs(q, &cc, &mm, k);
         let cpm = cp + cm;
         let r3 = (((dp + xpx) - xcxp) + cp) - cpm.muls(nh);
         let r4 = (((dm + xmx) + xcxm) - cm) + cpm.muls(nh);
@@ -451,6 +553,7 @@ fn psolve_c<const B: usize>(h: &HLus, kk: usize, kappa: &Fl<Dc, B>, rhs: &Fl<Dc,
 
 fn horizon_series_c<const B: usize>(cx: &Cx<B>, m0: &Fl<Dc, B>, a0: &Fl<Dc, B>, omega: Dc, hl: &HLus) -> [Vec<Fl<Dc, B>>; 4] {
     let ctx = cx.ctx;
+    let q = cx.acc >= ACC_QD_CAUCHY;
     let sig = series_scale(ctx.u0().hi);
     let isig = 1.0 / sig;
     let n1 = ctx.n - DD::ONE;
@@ -476,7 +579,7 @@ fn horizon_series_c<const B: usize>(cx: &Cx<B>, m0: &Fl<Dc, B>, a0: &Fl<Dc, B>, 
     cc[0] = one;
     mm[0] = *m0;
     a2[0] = aa[0] * aa[0];
-    dm[0] = dtau_c(cx, &mm[0], omega);
+    dm[0] = dtau_s(cx, &mm[0], omega);
     let sone = one.mul_pwr2(sig);
     let wfun = |c: &Vec<Fl<Dc, B>>, i: usize| -> Fl<Dc, B> {
         match i {
@@ -498,34 +601,34 @@ fn horizon_series_c<const B: usize>(cx: &Cx<B>, m0: &Fl<Dc, B>, a0: &Fl<Dc, B>, 
     for kk in 0..=ks {
         let kf = kk as f64;
         let ik1 = recip_int(kk + 1);
-        let ca1 = cs(&cc, &a2, kk) - cc[kk];
+        let ca1 = ccs(q, &cc, &a2, kk) - cc[kk];
         cc[kk + 1] = (cc[kk].mulf(kf) - ca1.muls(n1)).muls(ik1).mul_pwr2(sig);
         cx.hold_c(&mut cc[kk + 1]);
         ww[kk + 1] = wfun(&cc, kk + 1) - wfun(&cc, kk).mul_pwr2(sig);
         vv[kk] = cc[kk + 1].mulf((kk + 1) as f64).mul_pwr2(isig) - cc[kk].mulf(kf);
         zc[kk + 1] = zfun(&cc, kk + 1) - zfun(&cc, kk).mul_pwr2(sig);
         pm[kk] = pp[kk] + mm[kk];
-        let wpu = cs_w(&pp, &ww, kk + 1, 0, kk, |i| i as f64).mul_pwr2(isig);
+        let wpu = ccs_w(q, &pp, &ww, kk + 1, 0, kk, |i| i as f64).mul_pwr2(isig);
         let tau = if kk >= 1 { -dp[kk - 1].mul_pwr2(sig) } else { z };
-        let r = (((tau - wpu) + cs(&vv, &pp, kk)) + cs(&cc, &pp, kk)) - cs(&cc, &pm, kk).muls(nh);
+        let r = (((tau - wpu) + ccs(q, &vv, &pp, kk)) + ccs(q, &cc, &pp, kk)) - ccs(q, &cc, &pm, kk).muls(nh);
         let c1 = cc[1].mul_pwr2(isig);
         let kappa = ((c1 + one).mulf(kf) + c1 + one).adds(-nh);
         pp[kk] = psolve_c(hl, kk, &kappa, &(-r));
-        dp[kk] = dtau_c(cx, &pp[kk], omega);
-        q2[kk] = cs(&pp, &pp, kk) + cs(&mm, &mm, kk);
+        dp[kk] = dtau_s(cx, &pp[kk], omega);
+        q2[kk] = ccs(q, &pp, &pp, kk) + ccs(q, &mm, &mm, kk);
         if kk == ks {
             break;
         }
-        let ag = cs(&aa, &q2, kk) + (aa[kk] - cs(&aa, &a2, kk)).muls(n1);
+        let ag = ccs(q, &aa, &q2, kk) + (aa[kk] - ccs(q, &aa, &a2, kk)).muls(n1);
         aa[kk + 1] = (aa[kk].mulf(kf) - ag.mulf(0.5)).muls(ik1).mul_pwr2(sig);
         cx.hold_a(&mut aa[kk + 1]);
-        a2[kk + 1] = cs(&aa, &aa, kk + 1);
+        a2[kk + 1] = ccs(q, &aa, &aa, kk + 1);
         let tau = if kk >= 1 { dm[kk] - dm[kk - 1].mul_pwr2(sig) } else { dm[kk] };
         pm[kk] = pp[kk] + mm[kk];
-        let zmu = cs_w(&mm, &zc, kk + 1, 0, kk, |i| i as f64).mul_pwr2(isig);
-        let rest = (((tau - zmu) - cs(&vv, &mm, kk)) - cs(&cc, &mm, kk)) + cs(&cc, &pm, kk).muls(nh);
+        let zmu = ccs_w(q, &mm, &zc, kk + 1, 0, kk, |i| i as f64).mul_pwr2(isig);
+        let rest = (((tau - zmu) - ccs(q, &vv, &mm, kk)) - ccs(q, &cc, &mm, kk)) + ccs(q, &cc, &pm, kk).muls(nh);
         mm[kk + 1] = (rest * izc0).muls(ik1).mul_pwr2(sig);
-        dm[kk + 1] = dtau_c(cx, &mm[kk + 1], omega);
+        dm[kk + 1] = dtau_s(cx, &mm[kk + 1], omega);
     }
     pp.truncate(ks + 1);
     mm.truncate(ks + 1);
@@ -911,7 +1014,7 @@ impl CSolver {
     }
 
     /// The mode matrix with only the series blocks' columns computed (#259), their sums as acc says (0 double-double,
-    /// 1 the final Horner sums in quad-double): (re_hi, re_lo, im_hi, im_lo, largest |tangent term| of the centre
+    /// 1 the final Horner sums in quad-double, 2 also the Cauchy products, 3 also D f): (re_hi, re_lo, im_hi, im_lo, largest |tangent term| of the centre
     /// series' Horner sums, the same for the horizon series).
     #[allow(clippy::type_complexity)]
     #[pyo3(signature = (zh, zl, lr, li, acc=0))]
@@ -925,8 +1028,8 @@ impl CSolver {
         acc: u8,
     ) -> PyResult<(Bound<'py, PyArray2<f64>>, Bound<'py, PyArray2<f64>>, Bound<'py, PyArray2<f64>>, Bound<'py, PyArray2<f64>>, f64, f64)> {
         let (h, l) = (slice(&zh, "zh")?, slice(&zl, "zl")?);
-        if acc > ACC_QD_HORNER {
-            return Err(PyValueError::new_err(format!("acc must be 0 or 1, not {acc}")));
+        if acc > ACC_QD_DMAT {
+            return Err(PyValueError::new_err(format!("acc must be 0 to 3, not {acc}")));
         }
         let (api, pool) = (&self.api, &self.pool);
         let n = api.len() - 1;
