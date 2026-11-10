@@ -39,7 +39,9 @@ use numpy::ndarray::Array2;
 use numpy::{IntoPyArray, PyArray1, PyArray2, PyReadonlyArray1, PyReadonlyArray2};
 use pyo3::exceptions::PyValueError;
 use pyo3::prelude::*;
+use hpk::qv::QV;
 use rayon::prelude::*;
+use std::sync::atomic::{AtomicU64, Ordering};
 use std::sync::Arc;
 
 /// `Cx::test`: the full linearisation
@@ -49,12 +51,27 @@ pub const TEST_ON: u8 = 1;
 /// `Cx::test`: the control (c tangents zeroed, a's kept)
 pub const TEST_MUT: u8 = 2;
 
+/// `Cx::acc`: the series blocks summed as everywhere else (double-double)
+pub const ACC_DD: u8 = 0;
+/// `Cx::acc`: the series' final Horner sums in quad-double, from the same double-double coefficients (#259 step 1)
+pub const ACC_QD_HORNER: u8 = 1;
+
+/// The largest |tangent term| c_k u^k of the centre (0) and horizon (1) series' Horner sums, as f64 bits, recorded
+/// when `Cx::diag` is set (#259 step 1)
+static TERM_MAX: [AtomicU64; 2] = [AtomicU64::new(0), AtomicU64::new(0)];
+
 /// The layout (hpkernel's Ctx), the complex growth rate and the sector (TEST_*).
 pub struct Cx<'a, const B: usize> {
     pub ctx: &'a Ctx<B>,
     pub lr: DD,
     pub li: DD,
     pub test: u8,
+    /// summation of the series blocks (ACC_*)
+    pub acc: u8,
+    /// only the series blocks' columns (the segments' columns hold only the -1 of their target)
+    pub only_series: bool,
+    /// record TERM_MAX
+    pub diag: bool,
 }
 
 impl<const B: usize> Cx<'_, B> {
@@ -167,7 +184,48 @@ fn centre_series_c<const B: usize>(cx: &Cx<B>, p1: &Fl<Dc, B>, c0: &Fl<Dc, B>, o
 fn centre_state_c<const B: usize>(cx: &Cx<B>, p1: &Fl<Dc, B>, c0: &Fl<Dc, B>, omega: Dc) -> State<Dc, B> {
     let s = centre_series_c(cx, p1, c0, omega);
     let x = DD::from_f64(cx.ctx.nodes[0]).mul_pwr2(1.0 / series_scale(cx.ctx.nodes[0]));
-    [horner(&s[0], x), horner(&s[1], x), horner(&s[2], x), horner(&s[3], x)]
+    series_sum(cx, &s, x, 0)
+}
+
+/// sum_k c_k h^k, each lane's value and tangent summed in quad-double from the double-double c_k, then rounded
+fn horner_qd<const B: usize>(s: &[Fl<Dc, B>], h: DD) -> Fl<Dc, B> {
+    let hv = DV::splat(h);
+    let mut out = Fl::<Dc, B>::zero();
+    for b in 0..B {
+        let (mut v, mut r, mut i) = (QV::zero(), QV::zero(), QV::zero());
+        for c in s.iter().rev() {
+            let c = c.0[b];
+            v = v.mul_dv(hv).add_dv(c.v);
+            r = r.mul_dv(hv).add_dv(c.r);
+            i = i.mul_dv(hv).add_dv(c.i);
+        }
+        out.0[b] = Dc { v: v.to_dv(), r: r.to_dv(), i: i.to_dv() };
+    }
+    out
+}
+
+/// The series' state at h (centre: which 0; horizon: 1), summed as `Cx::acc` says
+fn series_sum<const B: usize>(cx: &Cx<B>, s: &[Vec<Fl<Dc, B>>; 4], h: DD, which: usize) -> State<Dc, B> {
+    if cx.diag {
+        let m = 8 * B;
+        let mut big = 0.0f64;
+        for q in s.iter() {
+            let mut hk = 1.0;
+            for c in q.iter() {
+                let (tr, ti) = (c.tan_re(), c.tan_im());
+                for j in 0..m {
+                    big = big.max(tr.get(j).hi.abs() * hk).max(ti.get(j).hi.abs() * hk);
+                }
+                hk *= h.hi;
+            }
+        }
+        TERM_MAX[which].fetch_max(big.to_bits(), Ordering::Relaxed);
+    }
+    if cx.acc == ACC_DD {
+        [horner(&s[0], h), horner(&s[1], h), horner(&s[2], h), horner(&s[3], h)]
+    } else {
+        [horner_qd(&s[0], h), horner_qd(&s[1], h), horner_qd(&s[2], h), horner_qd(&s[3], h)]
+    }
 }
 
 // ---------------------------------------------------------------------------------------------------------------
@@ -488,7 +546,7 @@ fn block_state_c<const B: usize>(cx: &Cx<B>, b: usize, inp: &[Fl<Dc, B>], delta:
     } else {
         let s = horizon_series_c(cx, &inp[0], &inp[1], omega, hl);
         let u = ctx.u0().mul_pwr2(1.0 / series_scale(ctx.u0().hi));
-        [horner(&s[0], u), horner(&s[1], u), horner(&s[2], u), horner(&s[3], u)]
+        series_sum(cx, &s, u, 1)
     }
 }
 
@@ -522,6 +580,9 @@ pub fn mode_matrix_c<const B: usize>(cx: &Cx<B>, zh: &[f64], zl: &[f64], par: bo
     let nb = ctx.k() + 1;
     let mut tasks: Vec<(usize, usize, usize)> = Vec::new();
     for b in 0..nb {
+        if cx.only_series && b != 0 && b != ctx.k() {
+            continue;
+        }
         let ins = ctx.block_inputs(b);
         for f in 0..ins.len() {
             if cx.test != TEST_OFF && !psi_input(ctx, b, f) {
@@ -650,6 +711,8 @@ trait CApi: Send + Sync {
     fn set_segs(&mut self, segs: Vec<Vec<f64>>) -> Result<(), String>;
     fn mode_matrix_c(&self, zh: &[f64], zl: &[f64], lr: DD, li: DD, par: bool) -> Result<CMat, String>;
     fn test_matrix_c(&self, zh: &[f64], zl: &[f64], lr: DD, li: DD, test: u8, par: bool) -> Result<CMat, String>;
+    #[allow(clippy::type_complexity)]
+    fn series_matrix_c(&self, zh: &[f64], zl: &[f64], lr: DD, li: DD, acc: u8, par: bool) -> Result<(CMat, [f64; 2]), String>;
     fn psi_index(&self) -> (Vec<usize>, Vec<usize>);
 }
 
@@ -671,10 +734,17 @@ impl<const B: usize> CApi for Ctx<B> {
         Ok(())
     }
     fn mode_matrix_c(&self, zh: &[f64], zl: &[f64], lr: DD, li: DD, par: bool) -> Result<CMat, String> {
-        mode_matrix_c(&Cx { ctx: self, lr, li, test: TEST_OFF }, zh, zl, par)
+        mode_matrix_c(&Cx { ctx: self, lr, li, test: TEST_OFF, acc: ACC_DD, only_series: false, diag: false }, zh, zl, par)
     }
     fn test_matrix_c(&self, zh: &[f64], zl: &[f64], lr: DD, li: DD, test: u8, par: bool) -> Result<CMat, String> {
-        test_matrix_c(&Cx { ctx: self, lr, li, test }, zh, zl, par)
+        test_matrix_c(&Cx { ctx: self, lr, li, test, acc: ACC_DD, only_series: false, diag: false }, zh, zl, par)
+    }
+    fn series_matrix_c(&self, zh: &[f64], zl: &[f64], lr: DD, li: DD, acc: u8, par: bool) -> Result<(CMat, [f64; 2]), String> {
+        for t in TERM_MAX.iter() {
+            t.store(0, Ordering::Relaxed);
+        }
+        let m = mode_matrix_c(&Cx { ctx: self, lr, li, test: TEST_OFF, acc, only_series: true, diag: true }, zh, zl, par)?;
+        Ok((m, [f64::from_bits(TERM_MAX[0].load(Ordering::Relaxed)), f64::from_bits(TERM_MAX[1].load(Ordering::Relaxed))]))
     }
     fn psi_index(&self) -> (Vec<usize>, Vec<usize>) {
         psi_index(self)
@@ -838,6 +908,32 @@ impl CSolver {
             .detach(|| pool.install(|| api.mode_matrix_c(h, l, DD::from_f64(lr), DD::from_f64(li), true)))
             .map_err(PyValueError::new_err)?;
         Ok((to2(&rh, n, ld).into_pyarray(py), to2(&rl, n, ld).into_pyarray(py), to2(&ih, n, ld).into_pyarray(py), to2(&il, n, ld).into_pyarray(py)))
+    }
+
+    /// The mode matrix with only the series blocks' columns computed (#259), their sums as acc says (0 double-double,
+    /// 1 the final Horner sums in quad-double): (re_hi, re_lo, im_hi, im_lo, largest |tangent term| of the centre
+    /// series' Horner sums, the same for the horizon series).
+    #[allow(clippy::type_complexity)]
+    #[pyo3(signature = (zh, zl, lr, li, acc=0))]
+    fn series_matrix<'py>(
+        &self,
+        py: Python<'py>,
+        zh: PyReadonlyArray1<'py, f64>,
+        zl: PyReadonlyArray1<'py, f64>,
+        lr: f64,
+        li: f64,
+        acc: u8,
+    ) -> PyResult<(Bound<'py, PyArray2<f64>>, Bound<'py, PyArray2<f64>>, Bound<'py, PyArray2<f64>>, Bound<'py, PyArray2<f64>>, f64, f64)> {
+        let (h, l) = (slice(&zh, "zh")?, slice(&zl, "zl")?);
+        if acc > ACC_QD_HORNER {
+            return Err(PyValueError::new_err(format!("acc must be 0 or 1, not {acc}")));
+        }
+        let (api, pool) = (&self.api, &self.pool);
+        let n = api.len() - 1;
+        let ((rh, rl, ih, il, ld), t) = py
+            .detach(|| pool.install(|| api.series_matrix_c(h, l, DD::from_f64(lr), DD::from_f64(li), acc, true)))
+            .map_err(PyValueError::new_err)?;
+        Ok((to2(&rh, n, ld).into_pyarray(py), to2(&rl, n, ld).into_pyarray(py), to2(&ih, n, ld).into_pyarray(py), to2(&il, n, ld).into_pyarray(py), t[0], t[1]))
     }
 
     /// The test field's det M_psi(lam) (mode 1; 2 the control, a's tangent kept): (ln|det|, arg det, min |u_kk|,
