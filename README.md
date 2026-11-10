@@ -1841,19 +1841,23 @@ D = 8.544. Hollow marks (σ-model, D ≥ 10) are preliminary.
 <summary>The four models in detail (the model notes in matter/ hold the full record)</summary>
 
 **Axion–dilaton and complex scalar** ([matter/CSS.md](matter/CSS.md)). The critical solution rotates in phase and is
-continuously self-similar (CSS), so it solves ordinary differential equations. The D = 4 values are reproduced: ω =
-1.176952724 and γ = 0.2641066 for the axion–dilaton (Hamadé, Horne and Stewart), and ω = 1.9154447 and γ = 0.3871055 for
-the free complex scalar (Hirschmann and Eardley). Followed to D = 80, the axion–dilaton's γ rises from 0.264 to 0.490.
-Free fits put λ∞ − 2 at 10⁻⁵ and falling about threefold per added power of 1/n, and fits with λ∞ = 2 imposed fit better
-at every order: γ = 1/2 − 0.900/n + …, against 1/2 − 0.758/n for the real scalar. As predicted, the solution has the
-real scalar's large-D structure: weak gravity inside the light cone and an n-free inner region at x ~ √n whose
-equations, with the target curvature included, have no explicit s, so the r²-shift gives λ = 2. A winding-number count
-finds a single unstable mode besides the gauge mode at D = 4, 10, 20 and 40. The selection rule agrees with a second,
-truncation-free test: the D = ∞ Stokes zero gives ω∞ = 3.1998939 for the axion–dilaton and 3.9789695 for the free
-complex scalar, and the finite-D frequencies extrapolate to 3.1994 and 3.9784 (agreement 1.6×10⁻⁴ and 1.3×10⁻⁴,
-relative). Clark and Pimentel's large-D CSS solution, whose radius exponents go to 0, is a different solution: a real
-scalar with no regular centre and no analytic light cone. So the γ∞ = 1/2 mechanism needs a regular centre, an analytic
-light cone and the inner scaling, as well as no 1/r² term.
+continuously self-similar (CSS), so it solves ordinary differential equations.
+
+- The D = 4 values are reproduced: ω = 1.176952724 and γ = 0.2641066 for the axion–dilaton (Hamadé, Horne and Stewart),
+  and ω = 1.9154447 and γ = 0.3871055 for the free complex scalar (Hirschmann and Eardley).
+- Followed to D = 80, the axion–dilaton's γ rises from 0.264 to 0.490. Free fits put λ∞ − 2 at 10⁻⁵ and falling about
+  threefold per added power of 1/n, and fits with λ∞ = 2 imposed fit better at every order. They give γ = 1/2 − 0.900/n
+  + …, against 1/2 − 0.758/n for the real scalar.
+- As predicted, the solution has the real scalar's large-D structure, with weak gravity inside the light cone and an
+  n-free inner region at x ~ √n. The inner equations, with the target curvature included, have no explicit s, so the
+  r²-shift gives λ = 2.
+- A winding-number count finds a single unstable mode besides the gauge mode at D = 4, 10, 20 and 40.
+- The selection rule agrees with a second, truncation-free test. The D = ∞ Stokes zero gives ω∞ = 3.1998939 for the
+  axion–dilaton and 3.9789695 for the free complex scalar, and the finite-D frequencies extrapolate to 3.1994 and 3.9784
+  (agreement 1.6×10⁻⁴ and 1.3×10⁻⁴, relative).
+- Clark and Pimentel's large-D CSS solution, whose radius exponents go to 0, is a different solution, a real scalar with
+  no regular centre and no analytic light cone. So the γ∞ = 1/2 mechanism needs a regular centre, an analytic light cone
+  and the inner scaling, as well as no 1/r² term.
 
 **Scalar multiplet with ℓ = 1** ([matter/ELL.md](matter/ELL.md)). The repository's DSS solver, adapted to the
 ℓ-multiplet and checked against the main solver at ℓ = 0 (Δ to 9×10⁻¹⁴), reproduces the published D = 4 values: Δ =
@@ -1865,33 +1869,37 @@ Followed up in D:
 | Δ | 0.4598611 | 0.7833439 | 0.9115281 | 0.9639878 | 0.9837905 | 0.988205 |
 | γ | 0.118900 | 0.215509 | 0.265565 | 0.295733 | 0.316203 | 0.331286 |
 
-Beyond D = 9 the period is selected ever more weakly (|dΔ/dF| ≈ 4×10⁵, a level the ℓ = 0 solution reaches only near
-D = 21), and continuation needs steps of 0.05 in D, so the run stops there. Six points do not decide γ∞: free fits put
-λ∞ anywhere from 0.55 to 3.95, and fixing λ∞ = 2 fits as well. Compared with ℓ = 0 at the same D, λ₁ − λ₀ falls roughly
-like 5.6/n, and windowed fits of its limit bracket λ₁∞ − 2 heuristically in 0.09–0.31 (γ ≈ 0.43–0.48). That leans toward
-the predicted γ∞ ≠ 1/2, but it is not a result. Δ peaks near 0.988 at D ≈ 9 and then falls, so its limit looks finite
-and below the ℓ = 0 value of 1.6439. Settling γ∞ needs ℓ = 1 out to D ≈ 15–20, which needs the double-double solver's
-tools (frozen harmonics, nonlinear elimination). At ℓ = 2, an evolution gives Δ = 0.1193 at D = 4 (published
-0.119 ± 0.003), but the periodic solve did not converge.
+Beyond D = 9 the period is selected ever more weakly (|dΔ/dF| ≈ 4×10⁵, a level the ℓ = 0 solution reaches only near D =
+21), and continuation needs steps of 0.05 in D, so the run stops there.
+
+Six points do not decide γ∞. Free fits put λ∞ anywhere from 0.55 to 3.95, and fixing λ∞ = 2 fits as well. Compared with
+ℓ = 0 at the same D, λ₁ − λ₀ falls roughly like 5.6/n, and windowed fits of its limit bracket λ₁∞ − 2 heuristically in
+0.09–0.31 (γ ≈ 0.43–0.48). That leans toward the predicted γ∞ ≠ 1/2, but it is not a result.
+
+Δ peaks near 0.988 at D ≈ 9 and then falls, so its limit looks finite and below the ℓ = 0 value of 1.6439. Settling γ∞
+needs ℓ = 1 out to D ≈ 15–20, which needs the double-double solver's tools (frozen harmonics, nonlinear elimination). At
+ℓ = 2, an evolution gives Δ = 0.1193 at D = 4 (published 0.119 ± 0.003), but the periodic solve did not converge.
 
 **σ-model, self-similar (CSS) branch** ([matter/SIGMA.md](matter/SIGMA.md)). The D-dimensional equations are checked
 against Bizoń and Wasserman's at D = 4, and the D = 4 values are reproduced: λ ≈ 5.14, γ ≈ 0.18, and the horizon
 thresholds. Continued in D at fixed coupling η = 0.14, γ rises from 0.188 at D = 4 to 0.513 at a fold at D = 8.544,
 where the branch ends. In flat space it collapses onto a singular cone (u ≡ π/2) as D → 8, with λ → 2. So this branch
-never reaches large D and cannot test γ∞: its γ ends near 1/2 for a different reason. The test of the prediction needs
-the σ-model's DSS branch. A by-product supports the selection rule in a second model: at
-η = 0.14 the zero of the D = ∞ Stokes multiplier for the CSS ground state, A₀ = 1.9225686, matches the finite-D ground
-state extrapolated to D = ∞, 1.9226 ± 0.0003.
+never reaches large D and cannot test γ∞. Its γ ends near 1/2 for a different reason. The test of the prediction needs
+the σ-model's DSS branch.
+
+A by-product supports the selection rule in a second model. At η = 0.14 the zero of the D = ∞ Stokes multiplier for the
+CSS ground state, A₀ = 1.9225686, matches the finite-D ground state extrapolated to D = ∞, 1.9226 ± 0.0003.
 
 **σ-model, echoing (DSS) branch** ([matter/SIGMA_DSS.md](matter/SIGMA_DSS.md)). Continued in 1/η from the ℓ = 1
 solution (the σ-model's limit as η → ∞), the branch reproduces Husa et al.'s D = 4 values: Δ to 0.6% or better for
 η ≥ 0.225 and γ to about 10⁻³, with the DSS–CSS transition at η_c = 0.170 (Lechner et al.: about 0.17), and one
 physical unstable mode at D = 6. Continued in D at η = 1 and η = 0.3 (15 Fourier modes; 23 change λ by at most 10⁻⁴),
 it shows no fold to D = 10.5 and 11. From D = 4 to 9 its γ lies below the ℓ = 1 value by a nearly D-independent offset,
-about −0.003 at η = 1 and −0.015 to −0.017 at η = 0.3, growing as η falls, the direction the prediction expects. γ∞ is
-not established: fits of λ(D) on 5 ≤ D ≤ 9 give γ∞ from 0.36 to 0.57 (a spread over fit choices), fit about as well with
-λ∞ = 2 imposed, and get worse when D = 10 is added; the points above D ≈ 10 are preliminary (a near-null band in the
-Jacobian and an unexplained drift of the gauge mode's root).
+about −0.003 at η = 1 and −0.015 to −0.017 at η = 0.3, growing as η falls, the direction the prediction expects.
+
+γ∞ is not established. Fits of λ(D) on 5 ≤ D ≤ 9 give γ∞ from 0.36 to 0.57 (a spread over fit choices), fit about as
+well with λ∞ = 2 imposed, and get worse when D = 10 is added. The points above D ≈ 10 are preliminary, because of a
+near-null band in the Jacobian and an unexplained drift of the gauge mode's root.
 
 </details>
 
