@@ -2059,14 +2059,23 @@ No human expert has reviewed it. The results should be read with that in mind, a
 ## Reproduce
 
 `./reproduce.sh` reruns the headline numbers and prints PASS / FAIL / SKIP for each check, with the expected value next
-to the computed one: the data and the Values table, the rational formula, Δ∞ from five analytic fits on all cleaned
-points, the held-out test (fit on D ≤ 45, predict 45–61), and the theory checks of Propositions 1–3, the Stokes constant
-C(n,s) and both inner-multiplier methods (14 checks; about 6 minutes on a busy 2-core machine, 2–3 on an idle laptop;
-`--full` adds the Proposition 4 check). It needs numpy, scipy, mpmath and sympy. python-flint (the Borel–Darboux check)
-and the compiled double-double kernel (the checks on saved solutions; build it with `hp/build.sh`, which needs Rust and
-maturin) are optional and skipped if missing. The saved solutions in `hp/data/states/` (53 states, about one per unit of
-D from 8.25 to 60, about 1 MB) are what the profile scripts read (`hp/states.py`). `hp/dinf_budget.py` tabulates how Δ∞
-moves with model, degree, fit range, cleaning and data snapshot.
+to the computed one. Its 14 checks are:
+
+- the data and the Values table;
+- the rational formula;
+- Δ∞ from five analytic fits on all cleaned points;
+- the held-out test (fit on D ≤ 45, predict 45–61);
+- the theory checks of Propositions 1–3, the Stokes constant C(n,s) and both inner-multiplier methods.
+
+It takes about 6 minutes on a busy 2-core machine and 2–3 on an idle laptop, and `--full` adds the Proposition 4 check.
+
+It needs numpy, scipy, mpmath and sympy. Two parts are optional and skipped if missing. They are python-flint (the
+Borel–Darboux check) and the compiled double-double kernel (the checks on saved solutions), which is built with
+`hp/build.sh` and needs Rust and maturin.
+
+The saved solutions in `hp/data/states/` (53 states, about one per unit of D from 8.25 to 60, about 1 MB) are what the
+profile scripts read (`hp/states.py`). `hp/dinf_budget.py` tabulates how Δ∞ moves with model, degree, fit range,
+cleaning and data snapshot.
 
 ### Software: the Rust kernel
 
