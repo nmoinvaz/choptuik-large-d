@@ -11,13 +11,16 @@ Papers (drafts, not yet reviewed):
   computer-assisted proof*](paper/math/dss_math.pdf). Propositions 1–5 with proofs, the selection rule (Conjecture 1)
   and Theorems A(M = 1) and A(M = 3).
 
-Choptuik's critical solution, the universal threshold between dispersal and black-hole formation for a massless scalar
-field, is computed as a periodic boundary-value problem in self-similar variables, in double-double precision, across
-spacetime dimensions D from 3.044 to about 78. One rational formula in 1/(D − 2) fits its echo period Δ(D) and critical
-exponent γ(D) for every D ≥ 4. If Δ is analytic in 1/D its limit is Δ∞ = 1.643893746 ± 1.5×10⁻⁸, finite, against the
-published conjecture Δ → 0; γ → 1/2 is explained by an exact symmetry of the D = ∞ equations; and a selection rule
-derived at D = ∞ reproduces Δ∞ to about 10⁻⁴ without the finite-D solutions. The rule's proof is in progress, and
-certified for a one-harmonic model.
+Choptuik's critical solution is the universal threshold between dispersal and black-hole formation for a massless
+scalar field. It is computed here as a periodic boundary-value problem in self-similar variables, in double-double
+precision, across spacetime dimensions D from 3.044 to about 78.
+
+- One rational formula in 1/(D − 2) fits its echo period Δ(D) and critical exponent γ(D) for every D ≥ 4.
+- If Δ is analytic in 1/D, its limit is Δ∞ = 1.643893746 ± 1.5×10⁻⁸. That is finite, against the published
+  conjecture Δ → 0.
+- γ → 1/2 is explained by an exact symmetry of the D = ∞ equations.
+- A selection rule derived at D = ∞ reproduces Δ∞ to about 10⁻⁴ without the finite-D solutions. Its proof is in
+  progress, and certified for a one-harmonic model.
 
 ## The problem, prior work and what is new
 
