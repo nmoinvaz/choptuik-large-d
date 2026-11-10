@@ -172,7 +172,7 @@ Every task is an issue of this repository (nmoinvaz/choptuik-large-d). The issue
 threads, stop conditions, what to push, and acceptance criteria whose check can fail, with a line for its estimate and
 one for what it depends on. Issues are public, so they carry no credentials, personal data or private correspondence,
 and an @ handle only for a real login meant to be notified. No GitHub project is used: the project that held these
-tasks' fields until 2026-11-10 is closed, and its fields are on the issues as labels, milestones and body lines
+tasks' fields until 2026-11-10 was removed, and its fields are on the issues as labels, milestones and body lines
 (Nathan, 2026-11-10).
 
 - **Labels and milestones.** A label names who runs the task: `win2`, `macm3`, `win`, `mac`, `coordinator` or
