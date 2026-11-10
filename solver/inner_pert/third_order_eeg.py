@@ -19,8 +19,10 @@ Checks (exit status 1 if any fails):
   N  each new term enters its order: with it set to zero, the comparison at that order fails.
 Mutations (each must make the run exit 1): --mutate=Psi3, Pi4, Omega4, f4 (one coefficient of a new term, as in
 psi3.py), K3 (beta~ without K_3, a map error at the new order only), map (eps_E = e instead of e/(1 + e)).
+--controls runs every mutation in a subprocess and compares its exit and failing (field, order) pairs with CONTROLS,
+written before the first run; it exits 0 only if every row matches.
 
-    python3 third_order_eeg.py [--mutate=NAME]
+    python3 third_order_eeg.py [--mutate=NAME | --controls]
 """
 import os
 import sys
@@ -30,11 +32,12 @@ import sympy as sp
 
 T0 = time.time()
 ARGS = [a for a in sys.argv[1:]]
+CONTROLS_MODE = ARGS == ["--controls"]
 MUTS = {'Psi3', 'Pi4', 'Omega4', 'f4', 'K3', 'map'}
 MUT = next((a.split("=", 1)[1] for a in ARGS if a.startswith("--mutate=")), None)
 if MUT is not None and MUT not in MUTS:
     sys.exit(f"unknown mutation {MUT}; choose from {', '.join(sorted(MUTS))}")
-if any(not a.startswith("--mutate=") for a in ARGS):
+if not CONTROLS_MODE and any(not a.startswith("--mutate=") for a in ARGS):
     sys.exit(__doc__)
 sys.argv = sys.argv[:1]                  # second_order_eeg reads sys.argv at import; it must see no flags
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
@@ -42,6 +45,21 @@ import second_order_eeg as soe  # noqa: E402
 
 soe.MUT = None
 FAILS = []
+FAILED_ORDERS = []      # (field, power of e) of every failed comparison in check A
+
+# (mutation, expected exit, expected failed (field, order) pairs of check A), written before the first run.
+CONTROLS = [
+    (None, 0, set()),
+    ("Psi3", 1, {("Psi", 3)}),
+    ("Pi4", 1, {("Pi", 3)}),
+    ("Omega4", 1, {("Om", 4)}),
+    ("f4", 1, {("f", 4)}),
+    # K_3 enters beta~ at e^3: Pi/sqrt(e) at e^3, and f, Omega through eps_E beta~^2 at e^4. Psi/sqrt(e) needs
+    # beta~ only to e^2.
+    ("K3", 1, {("Pi", 3), ("f", 4), ("Om", 4)}),
+    ("map", 1, {("f", 2), ("f", 3), ("f", 4), ("Om", 2), ("Om", 3), ("Om", 4), ("Pi", 1), ("Pi", 2), ("Pi", 3),
+                ("Psi", 2), ("Psi", 3)}),
+]
 
 x, e = soe.x, soe.e
 w0, w1, w2, w3 = soe.w0, soe.w1, soe.w2, soe.w3
@@ -138,8 +156,63 @@ def outer(NO=4):
 
 # ------------------------------------------------------------------ the new terms (closed forms)
 def new_terms(bb):
-    """Psi_3, Pi_4, Omega_4, f_4 as polynomials in bb = [beta~, beta~', ...] and x"""
-    raise NotImplementedError
+    """Psi_3, Pi_4, Omega_4, f_4 as polynomials in bb = [beta~, beta~', ...] and x (the sympy output of
+    psi3.py --print, grouped by powers of x). The bump terms are the mutations."""
+    b0, b1, b2, b3, b4, b5, b6 = bb[:7]
+    S3 = (
+        (-b0**5/8 - b0**4*b1/8 - b0**3/2 + b0**2*b1/4 + b0**2*b2/4 + 3*b0*b1**2/4 + b0*b1*b2/4)
+        + x**2 * (-b0**5 - b0**4*b1 + 23*b0**3/2 + 75*b0**2*b1/4 + 5*b0**2*b2 + 3*b0**2*b3/4 + 11*b0*b1**2/2 +
+            2*b0*b1*b2 - 6*b0 + b1**3/2 - 11*b1 - 6*b2 - b3)
+        + x**4 * (3*b0**5 + 3*b0**4*b1 - 17*b0**3 - 38*b0**2*b1 - 47*b0**2*b2/4 - 5*b0**2*b3/4 - 63*b0*b1**2/4 -
+            17*b0*b1*b2/4 + 15*b0 - b1**3 + 137*b1/4 + 225*b2/8 + 85*b3/8 + 15*b4/8 + b5/8
+            + bump('Psi3') * b0**2*b2))
+    P4 = (
+        x**2 * (-b0**3 - b0**2*b1/2 + 3*b0**2*b2/8 + b0**2*b3/8 + 17*b0*b1**2/8 + 2*b0*b1*b2 + b0*b1*b3/8 +
+            b0*b2**2/4 + 3*b1**3/8 + b1**2*b2/8)
+        + x**4 * (-5*b0**5 - 6*b0**4*b1 - b0**4*b2 - 2*b0**3*b1**2 + 63*b0**3/4 + 69*b0**2*b1/2 + 107*b0**2*b2/8
+            + 21*b0**2*b3/8 + b0**2*b4/4 + 117*b0*b1**2/8 + 29*b0*b1*b2/4 + 7*b0*b1*b3/8 + b0*b2**2/2 - 6*b0 +
+            15*b1**3/8 + 7*b1**2*b2/8 - 25*b1/2 - 35*b2/4 - 5*b3/2 - b4/4)
+        + x**6 * (-5*b0**7/16 + 139*b0**5/24 + 485*b0**4*b1/48 + 71*b0**4*b2/48 + 17*b0**3*b1**2/6 - 121*b0**3/6
+            - 1289*b0**2*b1/24 - 1075*b0**2*b2/48 - 17*b0**2*b3/4 - 5*b0**2*b4/16 - 359*b0*b1**2/12 -
+            173*b0*b1*b2/12 - 9*b0*b1*b3/8 - 7*b0*b2**2/8 + 15*b0 - 29*b1**3/8 - 29*b1**2*b2/24 + 147*b1/4 +
+            203*b2/6 + 245*b3/16 + 175*b4/48 + 7*b5/16 + b6/48 + bump('Pi4', R(1, 48)) * b6))
+    O4 = (
+        x**2 * (bump('Omega4') * b0**4
+            - 23*b0**4 - 15*b0**3*b1 - 13*b0**3*b2/4 + b0**3*b3/4 + 5*b0**2*b1**2/4 + 4*b0**2*b1*b2 +
+            b0**2*b1*b3/4 + b0**2*b2**2/2 + 12*b0**2 + 3*b0*b1**3/4 + b0*b1**2*b2/4 + 16*b0*b1 + 8*b0*b2 - 4*b1**2)
+        + x**4 * (-18*b0**6 - 14*b0**5*b1 - 5*b0**5*b2/2 - 9*b0**4*b1**2/2 + 147*b0**4/2 + 140*b0**3*b1 +
+            179*b0**3*b2/4 + 21*b0**3*b3/4 + b0**3*b4/2 + 177*b0**2*b1**2/4 + 18*b0**2*b1*b2 + 7*b0**2*b1*b3/4 +
+            3*b0**2*b2**2/2 - 48*b0**2 + 21*b0*b1**3/4 + 9*b0*b1**2*b2/4 - 101*b0*b1 - 70*b0*b2 - 19*b0*b3 - 2*b0*b4
+            - 5*b1**2/2 - 3*b1*b2 + b1*b3 - 3*b2**2/2)
+        + x**6 * (-b0**8 + 46*b0**6/3 + 79*b0**5*b1/3 + 13*b0**5*b2/3 + 20*b0**4*b1**2/3 - 148*b0**4/3 -
+            398*b0**3*b1/3 - 325*b0**3*b2/6 - 39*b0**3*b3/4 - 3*b0**3*b4/4 - 461*b0**2*b1**2/6 - 221*b0**2*b1*b2/6 -
+            9*b0**2*b1*b3/4 - 11*b0**2*b2**2/4 + 36*b0**2 - 41*b0*b1**3/4 - 41*b0*b1**2*b2/12 + 95*b0*b1 +
+            953*b0*b2/12 + 265*b0*b3/8 + 181*b0*b4/24 + 7*b0*b5/8 + b0*b6/24 + 75*b1**2/4 + 155*b1*b2/8 + 15*b1*b3/4
+            + 3*b1*b4/8 + 35*b2**2/8 + 5*b2*b3/4 + b2*b4/8))
+    f4 = (
+        (35*b0**8/128 + 27*b0**6/16 - 163*b0**5*b1/96 - 29*b0**5*b2/96 - b0**4*b1**2/8 - b0**4/2 - 10*b0**3*b1/3
+            + 5*b0**3*b2/16 + 47*b0**3*b3/96 + b0**3*b4/32 + 241*b0**2*b1**2/96 + 11*b0**2*b1*b2/12 -
+            7*b0**2*b1*b3/96 + b0**2*b2**2/48 + b0**2/2 + 7*b0*b1**3/32 - b0*b1**2*b2/96 + 23*b0*b1/24 - 25*b0*b2/96
+            - 187*b0*b3/192 - 39*b0*b4/64 - 7*b0*b5/64 - b0*b6/192 - 89*b1**2/96 - 123*b1*b2/64 - 61*b1*b3/96 -
+            3*b1*b4/64 - 19*b2**2/64 - 5*b2*b3/32 - b2*b4/64)
+        + x**2 * (bump('f4') * b0**8
+            - 5*b0**8/32 - 11*b0**6/12 + 31*b0**5*b1/48 + 7*b0**5*b2/48 + b0**4*b1**2/24 - 5*b0**4/24 +
+            17*b0**3*b1/24 - b0**3*b2/16 - 5*b0**3*b3/24 - b0**3*b4/48 - 5*b0**2*b1**2/16 - b0**2*b1*b2/8 -
+            b0**2*b2**2/48)
+        + x**4 * (-3*b0**8/64 - 5*b0**6/8 - b0**5*b1/8 - b0**4*b1**2/8 - 33*b0**4/8 - 5*b0**3*b1/2 -
+            5*b0**3*b2/16 + b0**3*b3/16 - 3*b0**2*b1**2/8 + 5*b0**2*b1*b2/8 + b0**2*b1*b3/16 + b0**2*b2**2/16 +
+            3*b0**2 + 3*b0*b1**3/16 + b0*b1**2*b2/16 + 4*b0*b1 + 2*b0*b2 - b1**2)
+        + x**6 * (-b0**8/32 - 17*b0**6/12 - 17*b0**5*b1/16 - 7*b0**5*b2/48 - 11*b0**4*b1**2/24 + 247*b0**4/24 +
+            481*b0**3*b1/24 + 283*b0**3*b2/48 + 2*b0**3*b3/3 + b0**3*b4/16 + 117*b0**2*b1**2/16 + 23*b0**2*b1*b2/8 +
+            7*b0**2*b1*b3/24 + 11*b0**2*b2**2/48 - 8*b0**2 + 7*b0*b1**3/8 + 3*b0*b1**2*b2/8 - 101*b0*b1/6 -
+            35*b0*b2/3 - 19*b0*b3/6 - b0*b4/3 - 5*b1**2/12 - b1*b2/2 + b1*b3/6 - b2**2/4)
+        + x**8 * (-5*b0**8/128 + 61*b0**6/48 + 215*b0**5*b1/96 + 29*b0**5*b2/96 + 2*b0**4*b1**2/3 - 131*b0**4/24
+            - 179*b0**3*b1/12 - 35*b0**3*b2/6 - 97*b0**3*b3/96 - 7*b0**3*b4/96 - 877*b0**2*b1**2/96 -
+            103*b0**2*b1*b2/24 - 9*b0**2*b1*b3/32 - 7*b0**2*b2**2/24 + 9*b0**2/2 - 41*b0*b1**3/32 -
+            41*b0*b1**2*b2/96 + 95*b0*b1/8 + 953*b0*b2/96 + 265*b0*b3/64 + 181*b0*b4/192 + 7*b0*b5/64 + b0*b6/192 +
+            75*b1**2/32 + 155*b1*b2/64 + 15*b1*b3/32 + 3*b1*b4/64 + 35*b2**2/64 + 5*b2*b3/32 + b2*b4/64))
+
+    return dict(S3=S3, P4=P4, O4=O4, f4=f4)
 
 
 # ------------------------------------------------------------------ truncated series in e
@@ -265,6 +338,8 @@ def check_A(our):
             new = " (new order)" if k == TOP[key] else ""
             verdict(f"{NAMES[key]}, order e^{k}{new}", d == 0,
                     f"({nterms} terms in ours)" if d == 0 else f"difference has {len(sp.Add.make_args(d))} terms")
+            if d != 0:
+                FAILED_ORDERS.append((key, k))
 
 
 def check_N(our):
@@ -275,7 +350,28 @@ def check_N(our):
         verdict(f"{drop} = 0 breaks {NAMES[key]} at e^{TOP[key]}", d != 0)
 
 
+def run_controls():
+    """each CONTROLS row in a subprocess; its last 'failed orders:' line gives the failed pairs"""
+    import ast
+    import subprocess
+    bad = 0
+    for mut, rc_exp, exp in CONTROLS:
+        cmd = [sys.executable, os.path.abspath(__file__)] + ([f"--mutate={mut}"] if mut else [])
+        p = subprocess.run(cmd, capture_output=True, text=True)
+        line = [q for q in p.stdout.splitlines() if q.startswith("failed orders:")]
+        got = set(ast.literal_eval(line[-1].split(":", 1)[1].strip())) if line else None
+        ok = p.returncode == rc_exp and got == exp
+        bad += not ok
+        print(f"{'ok ' if ok else 'BAD'} --mutate={mut}  exit {p.returncode} (expected {rc_exp})  "
+              f"failed {sorted(got) if got is not None else '?'}" + ("" if ok else f"  expected {sorted(exp)}"),
+              flush=True)
+    print(f"\n{len(CONTROLS) - bad} of {len(CONTROLS)} controls as expected")
+    return 1 if bad else 0
+
+
 if __name__ == "__main__":
+    if CONTROLS_MODE:
+        sys.exit(run_controls())
     print(f"mutation: {MUT}" if MUT else "no mutation", flush=True)
     S, D, G, B = outer(4)
     print(f"   outer expansion done [{time.time() - T0:.0f} s]", flush=True)
@@ -284,5 +380,6 @@ if __name__ == "__main__":
     check_A(our)
     if MUT is None:
         check_N(our)
+    print(f"failed orders: {sorted(FAILED_ORDERS)}")
     print(f"\n{'ALL PASS' if not FAILS else 'FAILED: ' + ', '.join(FAILS)}  [{time.time() - T0:.0f} s]")
     sys.exit(1 if FAILS else 0)
