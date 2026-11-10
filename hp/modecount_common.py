@@ -16,7 +16,8 @@ d/dtau per order, and their radius of convergence falls as M rises (#141). At D 
 series' radius is 0.43, 0.32, 0.28 and 0.23 at M = 32, 48, 64 and 80, so at M >= 64 it diverges at the first node
 0.3 and |F| is the truncated divergent sum (3.4e5 at kc 414). A resampled layout therefore gets a node inside the
 centre series' radius and a higher horizon order ks where its series converge too slowly (fit_nodes), and setup
-refuses a layout whose series do not converge to SERIES_TAIL (series_tail).
+refuses a layout whose series do not converge to SERIES_TAIL (series_gate), at the start and at the solution. A start
+can pass while its solution does not (#265). At D = 45, M = 48, kf 21 the start has 7.4e-74 and the solution 2.4e-8.
 """
 import os
 import sys
@@ -41,6 +42,8 @@ NODES_ADDED_MAX = 3
 # pivots 3e-14 to 5e6 and the sign change. The mass mode, x^-(n-1), shrinks by (0.7/0.85)^(n-1) = 1e-5 over that
 # segment at every tau point.
 KS_FACTOR = 1.5
+# where setup keeps the re-converged resampled states, modecount_state_D<D>_M<M>[_kf<kf>][_ct<centre_tol>].npz
+DATA = os.path.join(HERE, "data")
 
 
 class Setup:
@@ -142,17 +145,19 @@ def add_node(s, zh, zl, meta, which):
     return zn, np.zeros_like(zn), dict(meta, nodes=nodes, nodes_added=added)
 
 
-def fit_nodes(meta, zh, zl, kf, threads=1, log=print, tol=SERIES_TAIL, nmax=NODES_ADDED_MAX):
+def fit_nodes(meta, zh, zl, kf, threads=1, log=print, tol=SERIES_TAIL, nmax=NODES_ADDED_MAX, tol_centre=None):
     """While the centre series' truncation estimate exceeds tol, add a node at half the first node (at most nmax); while
     the horizon series' does and it converges (ratio < 1), raise ks by KS_FACTOR (at most nmax times). A divergent
-    horizon series is left to setup's gate (see KS_FACTOR). Returns zh, zl, meta and the last tails (centre,
-    horizon)."""
+    horizon series is left to setup's gate (see KS_FACTOR). tol_centre, if given, replaces tol for the centre series
+    alone. A value below SERIES_TAIL forces inner nodes on a layout that passes the gate, and leaves ks as it is
+    (#270). Returns zh, zl, meta and the last tails (centre, horizon)."""
     M = meta["M"]
+    tols = (tol if tol_centre is None else tol_centre, tol)
     added = [0, 0]
     while True:
         s = build_solver(meta, zh, zl, M, kf, threads)
         tails = [series_tail(s, zh, zl, meta, w) for w in (0, 1)]
-        which = next((w for w in (0, 1) if tails[w]["tail"] > tol and added[w] < nmax
+        which = next((w for w in (0, 1) if tails[w]["tail"] > tols[w] and added[w] < nmax
                       and (w == 0 or tails[w]["ratio"] < 1)), None)
         if which is None:
             return zh, zl, meta, tails
@@ -174,9 +179,24 @@ def tails_text(tails):
                      for n, t in zip(("centre", "horizon"), tails))
 
 
-def setup(path, M=None, threads=1, kf="default", fmax=1e-20, log=print, fit=True):
-    """Load a state, rebuild the layout (optionally resampled to M tau points, fitted where a series does not converge
-    (fit_nodes), and re-converged), polish. fit=False keeps the state's nodes and ks (the control of fit_nodes)."""
+def series_gate(s, zh, zl, meta, when, log=None):
+    """Both series' truncation (series_tail) on the layout of s, logged if log is given. RuntimeError if either exceeds
+    SERIES_TAIL. when names the state checked, 'start' before the solve or 'solution' after it. Returns the tails."""
+    tails = [series_tail(s, zh, zl, meta, w) for w in (0, 1)]
+    if log:
+        log(f"  series truncation ({when}): {tails_text(tails)}")
+    if max(t["tail"] for t in tails) > SERIES_TAIL:
+        # a layout whose series do not converge at its end nodes does not represent the equations (#141: the centre
+        # series at x = 0.3 diverges at M = 64 and |F| is its truncated sum)
+        raise RuntimeError(f"series not converged in this layout ({when}; M = {meta['M']}, nodes {meta['nodes']}): "
+                           f"{tails_text(tails)}; more than {SERIES_TAIL:.0e}")
+    return tails
+
+
+def prepare(path, M=None, threads=1, kf="default", log=print, fit=True, centre_tol=None):
+    """The state setup starts from. It is the state as loaded, or resampled to M tau points and fitted (fit_nodes with
+    tol_centre = centre_tol), or the re-converged state an earlier setup saved in DATA. Returns zh, zl, meta, kf and
+    the path setup saves to (None at the state's own M)."""
     zh, zl, meta = load(path)
     D = meta["D"]
     if kf == "default":
@@ -184,23 +204,31 @@ def setup(path, M=None, threads=1, kf="default", fmax=1e-20, log=print, fit=True
     M0 = meta["M"]
     saved = None
     if M is not None and M != M0:
-        # a state resampled to M tau points is re-converged once and kept in hp/data/modecount_state_D<D>_M<M>.npz
-        saved = os.path.join(HERE, "data", f"modecount_state_D{D:.4f}_M{M}" + (f"_kf{kf}" if kf else "") + ".npz")
+        # a state resampled to M tau points is re-converged once and kept in DATA (hp/data)
+        saved = os.path.join(DATA, f"modecount_state_D{D:.4f}_M{M}" + (f"_kf{kf}" if kf else "")
+                             + (f"_ct{centre_tol:.0e}" if centre_tol is not None else "") + ".npz")
         if os.path.exists(saved):
             zh, zl, meta = load(saved)
             log(f"  resampled state from {os.path.basename(saved)}")
         else:
             zh, zl, meta = resample_state(zh, zl, meta, M, kf)
             if fit:
-                zh, zl, meta, _ = fit_nodes(meta, zh, zl, kf, threads, log)
+                zh, zl, meta, _ = fit_nodes(meta, zh, zl, kf, threads, log, tol_centre=centre_tol)
+    elif centre_tol is not None:
+        log("  centre_tol ignored: a layout is fitted only when the state is resampled (M)")
+    return zh, zl, meta, kf, saved
+
+
+def setup(path, M=None, threads=1, kf="default", fmax=1e-20, log=print, fit=True, centre_tol=None):
+    """Load a state, rebuild the layout (optionally resampled to M tau points, fitted where a series does not converge
+    (fit_nodes), and re-converged), polish. fit=False keeps the state's nodes and ks (the control of fit_nodes).
+    centre_tol is the centre series' tolerance in fit_nodes (default SERIES_TAIL). A smaller one forces inner nodes
+    (#270). Both series must pass SERIES_TAIL on the start and on the solution (series_gate)."""
+    zh, zl, meta, kf, saved = prepare(path, M, threads, kf, log, fit, centre_tol)
+    D = meta["D"]
     M = meta["M"]
     s, c = build_pair(meta, zh, zl, M, kf, threads)
-    tails = [series_tail(s, zh, zl, meta, w) for w in (0, 1)]
-    if max(t["tail"] for t in tails) > SERIES_TAIL:
-        # a layout whose series do not converge at its end nodes does not represent the equations (#141: the centre
-        # series at x = 0.3 diverges at M = 64 and |F| is its truncated sum)
-        raise RuntimeError(f"series not converged in this layout (M = {M}, nodes {meta['nodes']}): {tails_text(tails)};"
-                           f" more than {SERIES_TAIL:.0e}")
+    series_gate(s, zh, zl, meta, "start")
     F = resid(s, zh, zl)
     F_in = F
     if F > fmax:
@@ -218,11 +246,13 @@ def setup(path, M=None, threads=1, kf="default", fmax=1e-20, log=print, fit=True
         # a count on a background that does not solve the equations of this layout means nothing (the M = 16
         # resampling at D = 61 stalled at |F| = 1.3e-9 and gave a spurious real sign change)
         raise RuntimeError(f"background not converged in this layout: |F| = {F:.1e} > {fmax:.0e} (M = {M})")
+    # the solution passes the gate too. A start can pass while its solution does not (#254, D 45 kf 21: the resampled
+    # start 7.4e-74, the solution 2.4e-8).
+    tails = series_gate(s, zh, zl, meta, "solution", log)
     st = Setup()
     st.path, st.meta, st.D, st.M, st.kf = path, meta, D, M, kf
     st.zh, st.zl, st.s, st.c, st.F, st.F_in = np.ascontiguousarray(zh), np.ascontiguousarray(zl), s, c, F, F_in
-    st.tails = [series_tail(s, st.zh, st.zl, meta, w) for w in (0, 1)]
-    log(f"  series truncation: {tails_text(st.tails)}")
+    st.tails = tails
     n = D - 2
     K = len(meta["nodes"])
     st.n, st.K = n, K
