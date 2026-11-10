@@ -322,8 +322,8 @@ with each other. The growth-rate solve is not reliable there.
 
 ### Below D = 4 and the limit D → 3
 
-**Δ peaks at D ≈ 3.7557.** Below D = 4 the formula is not fitted (a separate fit for 3 < D ≤ 4 is below), and Δ(D)
-turns over:
+**Δ peaks at D ≈ 3.7557.** The formula is not fitted below D = 4, where Δ(D) turns over. A separate fit for 3 < D ≤ 4 is
+below.
 
 | source | D of the maximum | Δ there |
 |---|---|---|
@@ -331,11 +331,11 @@ turns over:
 | the 47-mode f64 points | 3.75570 | 3.466774 |
 | the rational formula, extended outside its range | 3.75558 | 3.466781 |
 
-The double-double maximum's spread over the fits is 10⁻⁶ in D and 6×10⁻⁹ in Δ, and the M = 80 truncation is about
-10⁻⁹. It agrees with Ecker, Ecker, Grumiller & Jechtl 2026 ([below](#relation-to-published-work)). The f64 value is
-2×10⁻⁶ high, the size of their bias there (converged values below D = 4: [notes/LOW_D.md](notes/LOW_D.md)). The
-continuation below D = 3.4, with its runs, node changes and resolution steps and the figures hp/lowD.svg,
-hp/lowD_errors.svg and hp/lowD_sqrt.svg, is in [notes/LOW_D.md](notes/LOW_D.md), section 11.
+The double-double maximum's spread over the fits is 10⁻⁶ in D and 6×10⁻⁹ in Δ, and the M = 80 truncation is about 10⁻⁹.
+It agrees with Ecker, Ecker, Grumiller & Jechtl 2026 ([below](#relation-to-published-work)). The f64 value is 2×10⁻⁶
+high, the size of those points' bias there. The converged values below D = 4 are in [notes/LOW_D.md](notes/LOW_D.md).
+The continuation below D = 3.4 is in [notes/LOW_D.md](notes/LOW_D.md), section 11, with its runs, node changes and
+resolution steps and the figures hp/lowD.svg, hp/lowD_errors.svg and hp/lowD_sqrt.svg.
 
 ![Below D = 4: every double-double value of Delta and gamma so far against the sqrt(D - 3) formula, and how much Delta moves when the tau resolution is raised](hp/lowD_values.svg)
 
@@ -354,8 +354,8 @@ hp/lowD_errors.svg and hp/lowD_sqrt.svg, is in [notes/LOW_D.md](notes/LOW_D.md),
 - **Right panel:** how much Δ moves when M is raised. The step from M = 80 to 96 grows a hundredfold from D = 3.7 to
   3.4, while M = 96 → 128 stays at 1–2×10⁻⁹ down to D = 3.4.
 
-**A formula for 3 < D ≤ 4** (`hp/lowD_formula.py`), fitted to Ecker, Ecker, Grumiller & Jechtl's published values for
-3.046 ≤ D ≤ 4, which are not included here. The variable that works is s = √(D − 3):
+**A formula for 3 < D ≤ 4** (`hp/lowD_formula.py`). It is fitted to Ecker, Ecker, Grumiller & Jechtl's published values
+for 3.046 ≤ D ≤ 4, which are not included here. The variable that works is s = √(D − 3):
 
 ```math
 \Delta \approx 1.752403 + 2.486429\,s + 8.257623\,s^2 - 29.245836\,s^3 + 44.944706\,s^4 - 45.106964\,s^5 + 30.660868\,s^6 - 12.653060\,s^7 + 2.349289\,s^8 ,
@@ -418,38 +418,50 @@ As D → ∞ (ε → 0):
 \gamma_\infty = \frac{1}{2} .
 ```
 
-γ∞ = 1/2 is imposed in both γ fits (their constant term is fixed), not derived. Unconstrained fits of the f64 γ on D ≥
-8–12 give γ∞ = 0.4996–0.4998. The double-double γ (`hp/gamma_dd.py`: the exact growth-mode matrix M(λ) in double-double
-and the root of det M(λ); 67 points, D = 8.25–61, about 10⁻¹² for D = 16–58 (from M = 32 to 48 λ moves by less than the
-root's resolution, 10⁻¹⁴ at D = 50 and 5×10⁻¹³ at D = 58; `hp/gamma_m48_gap.py`, raw I266-mac), matching the f64 values
-to 10⁻⁸–10⁻¹²; `hp/data/gamma_dd.jsonl` and `hp/data/local/gamma_dd.jsonl`) pins it much more tightly. In free fits in
-powers of 1/n, λ∞ − 2 (λ = 1/γ) falls by a factor of about 3.5 with each added power: on D ≥ 30, 2.4×10⁻⁴, 6.7×10⁻⁵,
-1.9×10⁻⁵, 5.5×10⁻⁶ and (1.6 ± 2.2)×10⁻⁶ for four to eight powers (`cd hp && python3 gamma_compare.py data/gamma_dd.jsonl
-data/local/gamma_dd.jsonl`), with no sign of levelling off; fixing λ∞ = 2 fits better with the same number of
-parameters. So γ∞ = 1/2 to about 5×10⁻⁷ (a spread over fit choices, not a bound), and λ = 2 + 3.0324/n − 34.3/n² + …
-(γ = 1/2 − 0.7581/n + …). The rational γ formula is within 1.2×10⁻⁹ of these points for D ≤ 30 and
-off by 1.0×10⁻⁷ at D = 61, where it extrapolates. 1/2 is also the value conjectured in the literature
-([below](#relation-to-published-work)), and like Δ∞ it is not fixed at any finite order of the 1/n expansion
-([Proposition 5](#proposition-5-the-unstable-mode-at-infinite-d-is-exact)).
+γ∞ = 1/2 is imposed in both γ fits, whose constant term is fixed. It is not derived there. The evidence for it:
 
-Δ∞ comes from fits of all the double-double points ([Is the period analytic in 1/D?](#is-the-period-analytic-in-1d),
-where the fits, their residuals and the error bar are given). The f64 points gave 1.64395 ± 0.00008, and this
-formula's own limit is a₀ = 1.643898, 4×10⁻⁶ high, which its fitting range could not see. The coefficients of one fit
-are not physical constants (they are correlated); only the function is.
+- Unconstrained fits of the f64 γ on D ≥ 8–12 give γ∞ = 0.4996–0.4998.
+- The double-double γ pins it much more tightly. `hp/gamma_dd.py` builds the exact growth-mode matrix M(λ) in
+  double-double and takes the root of det M(λ), at 67 points, D = 8.25–61 (`hp/data/gamma_dd.jsonl` and
+  `hp/data/local/gamma_dd.jsonl`). The values are good to about 10⁻¹² for D = 16–58, and match the f64 values to
+  10⁻⁸–10⁻¹². From M = 32 to 48, λ moves by less than the root's resolution, 10⁻¹⁴ at D = 50 and 5×10⁻¹³ at D = 58
+  (`hp/gamma_m48_gap.py`, raw I266-mac).
+- In free fits in powers of 1/n, λ∞ − 2 (λ = 1/γ) falls by a factor of about 3.5 with each added power. On D ≥ 30 it is
+  2.4×10⁻⁴, 6.7×10⁻⁵, 1.9×10⁻⁵, 5.5×10⁻⁶ and (1.6 ± 2.2)×10⁻⁶ for four to eight powers, with no sign of levelling off
+  (`cd hp && python3 gamma_compare.py data/gamma_dd.jsonl data/local/gamma_dd.jsonl`). Fixing λ∞ = 2 fits better with
+  the same number of parameters.
+
+So γ∞ = 1/2 to about 5×10⁻⁷, a spread over fit choices and not a bound, and λ = 2 + 3.0324/n − 34.3/n² + … (γ = 1/2 −
+0.7581/n + …). The rational γ formula is within 1.2×10⁻⁹ of these points for D ≤ 30 and off by 1.0×10⁻⁷ at D = 61, where
+it extrapolates.
+
+1/2 is also the value conjectured in the literature ([below](#relation-to-published-work)). Like Δ∞, it is not fixed at
+any finite order of the 1/n expansion ([Proposition 5](#proposition-5-the-unstable-mode-at-infinite-d-is-exact)).
+
+Δ∞ comes from fits of all the double-double points. The fits, their residuals and the error bar are in
+[Is the period analytic in 1/D?](#is-the-period-analytic-in-1d). The f64 points gave 1.64395 ± 0.00008. This formula's
+own limit is a₀ = 1.643898, 4×10⁻⁶ high, which its fitting range could not see. The coefficients of one fit are
+correlated, so they are not physical constants. Only the function is.
 
 **The limit rests on an assumption, which the double-double points now support.** Δ∞ = 1.643893746 holds if Δ(D) is
-analytic in 1/D at D = ∞: no half-integer powers $`n^{-1/2}`$, no $`\log n`$, and no new scale far beyond the computed
-range. The f64 data could not test that. Formulas with those features reproduce every f64 point from D = 4 to 40 (fit
-and held out) just as well: a series in $`n^{-1/2}`$ gives limits from 1.607 to 1.691 depending on its degree; adding
-one $`n^{-1/2}`$ or $`\log n / n`$ term to the 1/D series moves the limit to 1.6437–1.6448; and the rational form with
-its limit forced to π²/6 or $`\sqrt e`$ fits too, by placing a pole at D ≈ −440 or −5900, a slow bend that starts in the
-hundreds. All of these agree with the formula above to 10⁻⁵ up to D ≈ 60 and fan out above D ≈ 100. The
-double-double points up to D = 61 test it and favour the analytic form strongly; the held-out tests, and why analyticity
-is still an assumption, are in [Is the period analytic in 1/D?](#is-the-period-analytic-in-1d).
+analytic in 1/D at D = ∞. That means no half-integer powers $`n^{-1/2}`$, no $`\log n`$, and no new scale far beyond the
+computed range.
+
+The f64 data could not test that. Formulas with those features reproduce every f64 point from D = 4 to 40, fitted and
+held out, just as well:
+
+- A series in $`n^{-1/2}`$ gives limits from 1.607 to 1.691, depending on its degree.
+- Adding one $`n^{-1/2}`$ or $`\log n / n`$ term to the 1/D series moves the limit to 1.6437–1.6448.
+- The rational form with its limit forced to π²/6 or $`\sqrt e`$ fits too. It does so by placing a pole at D ≈ −440 or
+  −5900, a slow bend that starts in the hundreds.
+
+All of these agree with the formula above to 10⁻⁵ up to D ≈ 60 and fan out above D ≈ 100. The double-double points up to
+D = 61 test it and favour the analytic form strongly. The held-out tests, and why analyticity is still an assumption,
+are in [Is the period analytic in 1/D?](#is-the-period-analytic-in-1d).
 
 ![Formulas that fit the f64 points, extended to D = 100000; the double-double points rule out all but the analytic ones](solver/extrapolation.svg)
 
-`solver/plot_extrapolation.py` draws the graph; the faded curves are the ones the double-double points rule out.
+`solver/plot_extrapolation.py` draws the graph. The faded curves are the ones the double-double points rule out.
 
 ### Values
 
