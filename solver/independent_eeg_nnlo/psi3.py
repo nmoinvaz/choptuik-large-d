@@ -14,6 +14,7 @@ Usage (from the repository root):
   python3 solver/independent_eeg_nnlo/psi3.py --numeric       # eps-scaling of all four residuals, mpmath
   python3 solver/independent_eeg_nnlo/psi3.py --crosscheck    # this file's residuals == check.py's on the NNLO set
   python3 solver/independent_eeg_nnlo/psi3.py --print         # the derived terms, as Python and LaTeX
+  python3 solver/independent_eeg_nnlo/psi3.py --quick         # residuals, boundary values, linear part only
   ... --mutate=NAME                                           # perturb one coefficient of a closed form
   ... --json=PATH                                             # write the results as JSON
 
