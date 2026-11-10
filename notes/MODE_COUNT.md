@@ -381,6 +381,35 @@ quad-double improves the entries by at most 4× where 100× is needed (#259; raw
 terms themselves in quad-double, that is, a complex quad-double lane in multidouble. So no extra zero tested keeps its λ
 across M = 40, 48 and 64. The circles cover discs only, and no full M = 64 count was made (#274).
 
+**D = 56 to 59 at M = 48, kf 23 (#249; raw `I249-macm3/`, 896d8fc).** With the fixed left column of #241, every setup
+passing the gate (|F| ≤ 4.4×10⁻¹⁹):
+
+| D | B0 | U0 | B1a | B1b | B1c | B1 | U | full |
+|---|---|---|---|---|---|---|---|---|
+| 56.01 | +2 | +2 | +2 | 0 | 0 | +2 | +4 | +10 |
+| 57.03 | 0 | +1 | +4 | 0 | 0 | +4 | +4 | +12 |
+| 58.01 | 0 | +1 | +4 | +4 | 0 | +8 | +1 | +10 |
+| 59.03 | 0 | +1 | +4 | +6 | 0 | +10 | +9 | +28 |
+
+D = 56.01 and 58.01 resolve only under `--resolve=last` (one and two early-pass mismatches, none in the last pass).
+The real axis has only the two expected sign changes at every D, and every circled zero has Im λ ≥ 0.03, so no extra
+zero reaches the real axis. The zeros nearest the axis, each confirmed by a circle winding +1, are −0.090 + 0.033i
+(D = 56.01), 0.363 + 0.589i (57.03), 0.637 + 0.236i (58.01) and 1.608 + 0.200i (59.03). They do not form a monotone
+path, so the pair of #238 cannot be followed across steps of 1 in D. The zero at D = 56.01 sits 0.0065 from the box
+edge and 0.095 from the expected zero at λ = 0.
+
+**More cuts and the inner node at D = 61 (#244, #270; raw `I244-macm3/`, `I270-macm3/`, 896d8fc).** Zeros 1 to 3 of
+the table below keep moving with the cut: at kf 25 they are at 1.2685 + 1.3933i, 1.9489 + 0.9436i and
+2.4725 + 0.5757i. kf 22 reproduces kf 21, because both cuts keep the same odd harmonics. The pair at 3.0196 ± 0.0958i
+exists at kf 23 only: its circle winds 0 at kf 22 and at kf 25. λ_phys itself moves by 4.7×10⁻⁶ from kf 23 to kf 25,
+more than the 3.5×10⁻⁷ from kf 21 to 23. On a layout with an inner node at 0.15 (|F| = 1.3×10⁻¹⁹, both series far below
+the gate) the four circles wind +1, +1, +1 and +2 at the same positions to 10⁻⁵. So, unlike D = 30's pair, these zeros
+do not come from the centre series' layout. They follow M and the cut.
+
+**A centre node at M = 64 (#275; raw `I275-macm3/`).** At D = 55 the λ_phys circle on the M = 64 state with a node at
+0.15 misses λ_phys by 1.1×10⁻⁵, against 2.3×10⁻⁵ without the node (#252). Both lie inside the circle's own estimate
+(1.6×10⁻⁵), so the node does not cure the M = 64 noise, and a halving is not established.
+
 **Positions at D = 61 (#230).** The extras in B1b and B1c lie on one row, from 1.31 + 1.42i down to 3.02 ± 0.10i, each
 zero confirmed by a small circle winding +1 (`hp/modecount_circle.py`; raw `I230-mac/`, e7dc533):
 
