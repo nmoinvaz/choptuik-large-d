@@ -2,12 +2,13 @@
 """Runs every check of rational_fit.py once unmutated (must pass) and once per mutation (must fail)
 (notes/EEG_PROFILE.md section 8).
 
-    python3 rational_controls.py [--log=FILE]
+    python3 rational_controls.py [--log=FILE] [--unmutate=NAME]
 
 Exit status 1 if any unmutated check fails or any mutation passes. The planted meromorphic profile (--plant=poles)
 enters with its first half only, "not marching", which must pass. Its second half, "converged", fails as stated
 (|theta_2(4) - theta_2(3)| = 0.025 against 0.02; notes/EEG_PROFILE.md 8.3), and that run's exit status is not used.
-The real-data runs use --fast (pade and ls only).
+The real-data runs use --fast (pade and ls only). --unmutate=NAME (gauge, drop or A) is the control of this script: it
+runs the cases of that mutation without applying it, with what they expect unchanged, so the script must exit 1.
 """
 import os
 import subprocess
@@ -16,6 +17,7 @@ import sys
 HERE = os.path.dirname(os.path.abspath(__file__))
 PY = sys.executable
 LOG = next((a.split("=", 1)[1] for a in sys.argv[1:] if a.startswith("--log=")), None)
+UNMUTATE = next((a.split("=", 1)[1] for a in sys.argv[1:] if a.startswith("--unmutate=")), None)
 logf = open(LOG, "w") if LOG else None
 
 
@@ -46,8 +48,11 @@ cases = [
     (("--fast", "--mutate=gauge"), 1, [], ["S"]),
     (("--fast", "--mutate=A"), 1, [], ["D"]),
 ]
+if UNMUTATE and not any(f"--mutate={UNMUTATE}" in a for a, *_ in cases):
+    sys.exit(f"--unmutate={UNMUTATE}: no case has this mutation")
 bad = 0
 for a, want, must_pass, must_fail in cases:
+    a = tuple(x for x in a if x != f"--mutate={UNMUTATE}")  # the named mutation is not applied
     code, out = run(*a)
     verdict = {}
     for ln in lines(out, "check "):
