@@ -490,28 +490,39 @@ are in [Is the period analytic in 1/D?](#is-the-period-analytic-in-1d).
 value), the kind of computation, an error estimate and what that estimate is, a published value at that D where one
 exists (with our Δ minus it), and the source run and state in the [raw data](#raw-data). Every published value,
 including Ecker, Ecker and Grumiller's table to D = 200[^23], is compared with ours in
-[`hp/data/delta_published_compare.csv`](hp/data/delta_published_compare.csv). The kinds are the full system in
-double-double (D ≤ 67.77) or quad-double (68.5–73), the pinned double-double runs after one full-system step
-(67.77–73.27), and the large-D chain from 74. The chain holds harmonics 5–13 of p1 on a fit of the full-system states
-(kind chain_fit), which agrees with the 1/D series of the double-double points to within the series' own spread, to D =
-215. Its error column is the spread over the fit's degree where a rerun on the fits of degree 6 and 10 reached a D
-([notes/QUAD_DOUBLE.md](notes/QUAD_DOUBLE.md), 13.25). How the held harmonics' bias was found, removed and measured is
-in [notes/BIAS.md](notes/BIAS.md). `cd hp && python3 export_delta_all.py ../../choptuik-large-d-raw` rebuilds it, and
-`--verify` checks every row against its source.
+[`hp/data/delta_published_compare.csv`](hp/data/delta_published_compare.csv).
 
-Δ for D = 10–60 is double-double, interpolated to 10⁻¹⁴ from that file's double-double rows where D is not itself a
-computed point. Δ and γ for D = 5–8 are double-double, from the run T79 (M = 48, 22 points from D = 8.25 down to 4 in
-steps of 0.25, records `hp/data/lowD_dd_t79.jsonl` and `hp/data/lowD_gamma_t79.jsonl`; the
-change from M = 48 to 64 is 8.7×10⁻¹² at D = 5, 3×10⁻¹⁴ at 6 and 10⁻²⁰ at 8, and Δ(7), checked at M = 48 only, is
-quoted to 10⁻¹¹; γ is quoted to 10⁻⁹, its M = 48 value). D = 4 is from the low-D double-double runs (M = 192,
-[notes/LOW_D.md](notes/LOW_D.md)). γ for D = 10–60 is double-double, a computed point at D = 10, 12 and 15 and
-interpolated elsewhere, given to the digits the interpolation supports; γ(70), γ(100) and γ(1000) extrapolate the
-double-double λ = 1/γ with λ∞ = 2 fixed, to within 1.3×10⁻⁶ over fit choices (`cd hp && python3 values_table.py`).
-Δ(70) and Δ(100) are extrapolations that every model fitting the double-double points agrees on,
-to 10⁻¹¹ and 2×10⁻⁸ (the half-integer series included). D = 1000 and ∞ assume analyticity in
-1/D; the half-integer series differ there by 3×10⁻⁶ and more.
+The kinds of computation are:
 
-The physics figure below and the candidate test use these values; the double-double points behind them are described in
+- the full system in double-double (D ≤ 67.77) or quad-double (68.5–73);
+- the pinned double-double runs after one full-system step (67.77–73.27);
+- the large-D chain from 74. The chain holds harmonics 5–13 of p1 on a fit of the full-system states (kind chain_fit).
+  It agrees with the 1/D series of the double-double points to within the series' own spread, to D = 215. Its error
+  column is the spread over the fit's degree where a rerun on the fits of degree 6 and 10 reached a D
+  ([notes/QUAD_DOUBLE.md](notes/QUAD_DOUBLE.md), 13.25).
+
+How the held harmonics' bias was found, removed and measured is in [notes/BIAS.md](notes/BIAS.md).
+`cd hp && python3 export_delta_all.py ../../choptuik-large-d-raw` rebuilds the file, and `--verify` checks every row
+against its source.
+
+Where the values in the table come from:
+
+- **Δ for D = 10–60** is double-double, interpolated to 10⁻¹⁴ from that file's double-double rows where D is not itself
+  a computed point.
+- **Δ and γ for D = 5–8** are double-double, from the run T79 (M = 48, 22 points from D = 8.25 down to 4 in steps of
+  0.25, records `hp/data/lowD_dd_t79.jsonl` and `hp/data/lowD_gamma_t79.jsonl`). The
+  change from M = 48 to 64 is 8.7×10⁻¹² at D = 5, 3×10⁻¹⁴ at 6 and 10⁻²⁰ at 8. Δ(7), checked at M = 48 only, is quoted
+  to 10⁻¹¹. γ is quoted to 10⁻⁹, its M = 48 value.
+- **D = 4** is from the low-D double-double runs (M = 192, [notes/LOW_D.md](notes/LOW_D.md)).
+- **γ for D = 10–60** is double-double, a computed point at D = 10, 12 and 15 and interpolated elsewhere, given to the
+  digits the interpolation supports.
+- **γ(70), γ(100) and γ(1000)** extrapolate the double-double λ = 1/γ with λ∞ = 2 fixed, to within 1.3×10⁻⁶ over fit
+  choices (`cd hp && python3 values_table.py`).
+- **Δ(70) and Δ(100)** are extrapolations that every model fitting the double-double points agrees on, to 10⁻¹¹ and
+  2×10⁻⁸, the half-integer series included.
+- **D = 1000 and ∞** assume analyticity in 1/D. The half-integer series differ there by 3×10⁻⁶ and more.
+
+The physics figure below and the candidate test use these values. The double-double points behind them are described in
 [How the points are computed](#how-the-points-are-computed).
 
 ### What the numbers mean physically
