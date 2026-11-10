@@ -12,7 +12,8 @@ state there (the node itself at u0), and its equations are the m and a rows of t
     python3 reseed.py check STATE.npz [--threads 2] [--levels 5] [--rows ma|pm|all] [--mutate none|skip|wrongu]
         [--plan_tol 1e-32] [--out OUT.jsonl] [--delta_h 1e-6] [--seed 1] [--floor_rule stall|abs|rel]
     python3 reseed.py jac STATE.npz
-    python3 reseed.py checkq PRED.npz [--threads 4] [--legacy 1] [--rule136 1]
+    python3 reseed.py checkq PRED.npz [--threads 4] [--legacy 1] [--rule136 1] [--sweeps 1]
+    python3 reseed.py truthq STATE.npz [--threads 4] [--sweeps 1] [--delta 1e-32] [--seed 1]
     python3 reseed.py checkstart PRED.npz [--threads 4] [--start_F 1e-6] [--budget 900]
 
 `check` is the unit check and the stepper check (notes/RESEED.md 3.1, 3.2): the converged state's own node re-seeded
@@ -22,8 +23,10 @@ mutations must make 3.1 fail: skip (only the last rung, u0), wrongu (each rung's
 target at u); --plan_tol 1e-12 must make 3.2 fail. `jac` prints the singular values of the horizon block's m_h, a_h
 columns by row groups (notes/RESEED.md 2.1). `checkq` re-seeds a stored prediction (anm_run.py --save_pred 1) with
 the quad-double polish and must converge; --legacy 1, the earlier polish rule, must make it fail where that rule fell
-short (its docstring). `checkstart` runs the corrector on a stored prediction after its re-seed and must end
-within a budget; --start_F 0 must make it fail on a prediction whose start projection fails (its docstring).
+short (its docstring), and --sweeps 1 past D 210. `truthq` plants an error in a converged state's horizon data and
+the re-seed must remove it (its docstring). `checkstart` runs the corrector on a stored prediction after its re-seed
+and must end within a budget; --start_F 0 must make it fail on a prediction whose start projection fails (its
+docstring).
 """
 import json
 import os
@@ -285,7 +288,20 @@ class Reseeder:
         hist.append(dict(it=len(hist), R=nR))
         return dh, dl, hist, conv
 
-    def invert_q(self, z4, d4, it_max=16, refactor_max=3, R_stop=1e-34, pre="am", take_all=True, rise_max=1e12):
+    def invert_q(self, z4, d4, it_max=16, refactor_max=3, R_stop=1e-34, pre="am", take_all=True, rise_max=1e12,
+                 sweeps=3):
+        """the u0 rung in quad-double (polish_q), run again from d4 with the block steps of pre repeated while it does
+        not converge: pre once, then twice, up to sweeps times. Past D 209 one pass of the a_h and m_h steps leaves the
+        iterate outside Newton's basin, and a second pass brings it in (#446). An iteration that converges on its
+        first run is unchanged, and sweeps=1 never repeats. Returns the last run's d4, history and whether it
+        converged."""
+        for k in range(1, max(1, sweeps) + 1):
+            d, hist, conv = self.polish_q(z4, d4, it_max, refactor_max, R_stop, pre * k, take_all, rise_max)
+            if conv or not pre:
+                break
+        return d, hist, conv
+
+    def polish_q(self, z4, d4, it_max=16, refactor_max=3, R_stop=1e-34, pre="am", take_all=True, rise_max=1e12):
         """the u0 rung in quad-double: Newton on the 2M horizon data d4 (four parts) so that the horizon series at u0
         matches the last node of z4 (four parts) in the rung rows. The residual is Solver.residual_q and the step solves
         the rung rows' block of the quad-double Jacobian (Solver.jacobian_q) with multidouble's QDLu: the double-double
@@ -706,8 +722,9 @@ def checkq(argv):
     """the re-seed with its quad-double polish (reseed, qd) on a stored prediction (anm_run.py --save_pred 1, at its D):
     it must converge, the u0 rung's quad-double residual below 1e-24 (notes/QUAD_DOUBLE.md 13.26); exit 1 otherwise.
     The control --legacy 1 (the polish with it_max 6 and one factoring, the earlier rule) must fail on a prediction
-    where that rule stopped short, as T118's at D 152.93 did."""
-    opt = parse(argv, dict(threads=4, legacy=0, rule136=0))
+    where that rule stopped short, as T118's at D 152.93 did. The control --sweeps 1 (one pass of the block steps, never
+    repeated) must fail on a prediction past D 210, as I215-win's d6 prediction at D 215.0 does (#446)."""
+    opt = parse(argv, dict(threads=4, legacy=0, rule136=0, sweeps=0))
     z4, meta = load_q(argv[0])
     D = mp.mpf(meta["D_str"])
     rs = Reseeder(meta, D, threads=opt["threads"], qd=True)
@@ -715,6 +732,9 @@ def checkq(argv):
         inv = rs.invert_q
         kw0 = dict(pre="", take_all=False) if opt["rule136"] else dict(pre="", take_all=False, it_max=6, refactor_max=0)
         rs.invert_q = lambda z, d, **kw: inv(z, d, **kw0)
+    elif opt["sweeps"]:
+        inv = rs.invert_q
+        rs.invert_q = lambda z, d, **kw: inv(z, d, **dict(kw, sweeps=opt["sweeps"]))
     t0 = time.time()
     _, diag = rs.reseed(z4, verbose=True)
     q = [r for r in diag["rungs"] if r.get("qd")]
@@ -722,6 +742,40 @@ def checkq(argv):
     rule = 'legacy rule' if opt['legacy'] else ('13.26 rule' if opt['rule136'] else 'a_h, m_h steps and Newton')
     print(f"checkq {argv[0]}: D {mp.nstr(D, 12)}, {rule}: re-seed "
           f"{'ok' if diag['ok'] else 'FAILED'}, u0 quad-double |R| {q[-1]['R'] if q else float('nan'):.2e}, "
+          f"{time.time() - t0:.0f} s: {'PASS' if ok else 'FAIL'}", flush=True)
+    return 0 if ok else 1
+
+
+def truthq(argv):
+    """planted truth for the quad-double polish (#446): a converged chain state (its first four parts, load_q) with its
+    horizon data rounded to double-double and moved by --delta (relative, random signs), as the double-double ladder
+    leaves them. The re-seed must converge and return the state's own a_h and m_h, each within 1e-3 delta of them in
+    the max norm relative to the block's largest entry; exit 1 otherwise. The control --sweeps 1 (the block steps never
+    repeated) must fail on a state past D 210: the planted error is then left where it was. A moved node is no control
+    here, because the horizon data follow the node only through the mass mode's inverse gain, about 1e-33 at D 215."""
+    opt = parse(argv, dict(threads=4, sweeps=0, delta=1e-32, seed=1))
+    z4, meta = load_q(argv[0])
+    D = mp.mpf(meta["D_str"])
+    rs = Reseeder(meta, D, threads=opt["threads"], qd=True)
+    if opt["sweeps"]:
+        inv = rs.invert_q
+        rs.invert_q = lambda z, d, **kw: inv(z, d, **dict(kw, sweeps=opt["sweeps"]))
+    M, o = rs.M, rs.off
+    sl_ = slice(o["mh"], o["mh"] + 2 * M)
+    truth = [np.ascontiguousarray(np.asarray(p, dtype=float)[sl_]) for p in z4]
+    start = [np.array(p, dtype=float) for p in z4]
+    start[1][sl_] += opt["delta"] * start[0][sl_] * np.random.default_rng(opt["seed"]).choice([-1.0, 1.0], 2 * M)
+    start[2][sl_] = 0.0
+    start[3][sl_] = 0.0
+    t0 = time.time()
+    zr, diag = rs.reseed(tuple(np.ascontiguousarray(p) for p in start), verbose=True)
+    got = [np.ascontiguousarray(np.asarray(p, dtype=float)[sl_]) for p in zr]
+    d = qd_axpy(-1.0, *truth, *got)
+    d = np.abs(np.asarray(d[0]) + np.asarray(d[1]))
+    em, ea = float(np.max(d[:M]) / np.max(np.abs(truth[0][:M]))), float(np.max(d[M:]) / np.max(np.abs(truth[0][M:])))
+    ok = bool(diag["ok"]) and max(em, ea) <= 1e-3 * opt["delta"]
+    print(f"truthq {argv[0]}: D {mp.nstr(D, 12)}, planted {opt['delta']:.0e}: re-seed "
+          f"{'ok' if diag['ok'] else 'FAILED'}, error left in m_h {em:.2e}, in a_h {ea:.2e} (limit {1e-3 * opt['delta']:.0e}), "
           f"{time.time() - t0:.0f} s: {'PASS' if ok else 'FAIL'}", flush=True)
     return 0 if ok else 1
 
@@ -771,6 +825,8 @@ if __name__ == "__main__":
         sys.exit(check(sys.argv[2:]))
     if len(sys.argv) > 2 and sys.argv[1] == "checkq":
         sys.exit(checkq(sys.argv[2:]))
+    if len(sys.argv) > 2 and sys.argv[1] == "truthq":
+        sys.exit(truthq(sys.argv[2:]))
     if len(sys.argv) > 2 and sys.argv[1] == "checkstart":
         sys.exit(checkstart(sys.argv[2:]))
     if len(sys.argv) > 2 and sys.argv[1] == "jac":

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""The step history of the re-seed's quad-double u0 polish on a stored prediction (#278).
+"""The step history of the re-seed's quad-double u0 polish on a stored prediction (#446).
 
     python3 reseed_hist.py PRED.npz [--threads 4] [--hp HP_DIR]
 
