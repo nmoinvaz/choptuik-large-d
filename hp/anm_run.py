@@ -15,7 +15,7 @@ formulation of hp/pinning.py; their coefficients are zero).
         [--accept_stall 1e-19] [--junk_only 0] [--threads 4] [--w 24] [--trend T75] [--tol_qd 1e-28] [--accept_stall_qd 0]
         [--qd_it 12] [--qd_w 0] [--refine 1] [--probe 0 --probe_c C] [--plan_tol 1e-32] [--fix1 0] [--F_pred_max 0]
         [--horizon_alpha 0] [--fix1_qlu 0] [--jet_q 0] [--reseed 0] [--pred_q 0] [--reseed_q 0] [--save_pred 0]
-        [--jet_o 0] [--corrector od --tol_od 1e-40] [--base_adopt 0] [--held_fit FILE]
+        [--jet_o 0] [--corrector od --tol_od 1e-40] [--base_adopt 0] [--base_polish 1] [--held_fit FILE]
 
 --corrector qd runs the quad-double Newton of the kernel (hpkernel.driver.newton_qd, Solver.newton_q) on the pinned
 system (pinning.PinnedQ: the held harmonics' offset subtracted from the quad-double residual and added to the step, as
@@ -93,7 +93,10 @@ base is polished from all its stored parts (eight from a state saved by it), wit
 base's D (the quad-double polish runs without the projection). A base polish that neither converges nor lowers its
 max |F| is not adopted: the stored state stays the base, and the line "base polish not adopted" says so (#461, where
 a polish took the D 215.03125 state from 4.4e-36 to 1.5e-18 and the series of that base had |z_N| 1e-10 against
-2e-30). --base_adopt 1 adopts every polish, which is the control of that rule. Its states are saved in eight parts
+2e-30). --base_adopt 1 adopts every polish, which is the control of that rule. --base_polish 0 skips the polish, so
+the stored state is the base as it stands: a state reloaded near D 215 starts about 4e-36 off in the held rows
+(their values are taken again from its first two parts), and its polish costs 12 octo-double steps before it is
+dropped. Its states are saved in eight parts
 (octo_corrector.save_o: save_q's four, which load_q reads, and four more), and the series of the next base (--jet_o)
 is taken at all eight. M = 32 only; --accept_stall_qd does not apply. --od_junk w freezes, in every step of that
 corrector, the junk among the w weakest directions of its first Jacobian (octo_corrector.junk_subspace_o: no Delta
@@ -239,6 +242,7 @@ def main():
                save_pred=0, jet_o=0)
     opt.update(tol_od=1e-40, od_junk=0)  # --corrector od (hp/octo_corrector.py); --od_junk w freezes junk (13.30)
     opt.update(base_adopt=0)            # --base_adopt 1: the base's od polish is adopted whatever it did
+    opt.update(base_polish=1)           # --base_polish 0: no polish, the stored state is the base
     opt.update(held_fit="")             # --held_fit FILE (pinning.HeldFit; notes/HELD_HARMONICS.md)
     for k in list(opt):
         f = "--" + k
@@ -418,7 +422,9 @@ def main():
     # the held harmonics as directions to freeze in the quad-double Newton: unit band fields in the p1 block
     Fh, Fl = sp.residual(zh, zl)
     F0 = float(rnorm(Fh, Fl))
-    if F0 > opt["tol"]:
+    if F0 > opt["tol"] and not opt["base_polish"]:
+        print("base polish skipped (--base_polish 0): the stored state is the base", flush=True)
+    elif F0 > opt["tol"]:
         # the quad-double polish starts from all four stored parts: from the first two alone it starts eps_dd G off the
         # root, outside the basin past D ~ 131 (the restart of T113 at 135.06, notes/QUAD_DOUBLE.md 13.22)
         z4_base = tuple(np.ascontiguousarray(np.asarray(p)) for p in load_q(os.path.join(raw, opt["state"]))[0])
