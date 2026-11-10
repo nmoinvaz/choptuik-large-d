@@ -128,7 +128,8 @@ Conventions for the Claude sessions (cloud and local) that run computations here
 
 - **Worktrees:** agents making changes work in a git worktree, not the main checkout, and write only the files their
   task names. The coordinating session merges into main and edits the README and the papers; agents propose text for
-  those in their notes.
+  those in their notes. A merge into main is a rebase merge: the branch is rebased onto main and main is
+  fast-forwarded (`git merge --ff-only`), so main gets no merge commits (Nathan, 2026-11-10).
 - **The container can restart without warning** and kill every running process, and it can be reclaimed with its disk.
   Commit work in progress in your worktree at each milestone and before any run longer than about 10 minutes, then back
   it up to GitHub: `git push -f origin HEAD:refs/heads/wip/<topic>` (a branch name the coordinator gives you). Write
