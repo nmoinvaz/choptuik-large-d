@@ -266,6 +266,143 @@ the leading terms, which are O(ε) for 1 − f and Ω and O(√ε) for Π, the c
 Raw output: folder `I126-mac/` of the raw-data repository (fields of every state, logs, JSON, the commands in
 `*.cmd`, exits in `exits.txt`).
 
+### 1.2 The closed-form large-D solution (agent-comms#42)
+
+**Verdict.** The corrected NNLO with Proposition 1's profile to O(1/n²),
+
+```math
+\tilde\beta_D(\theta) = \sqrt{2(1 + 1/n)}\,\Big(F + \frac{K_1}{2n} + \frac{K_2}{2n^2}\Big), \qquad
+\theta = \frac{2\pi\tau}{\Delta(n)}, \qquad \Delta(n) = \Delta_\infty + \frac{\Delta_1}{n} + \frac{\Delta_2}{n^2},
+```
+
+gives f, Ω, Π and Ψ on 0 ≤ x ≤ 1 from three D-independent functions and three numbers. Its relative rms residual for
+Ω against the stored solutions is 0.039, 0.011, 0.0023 and 2.8×10⁻⁴ at D = 40, 60, 100 and 200. It falls like
+ε^{3.02}, ε = 1/(D − 1). This is the corrected NNLO's own floor: with each state's exact profile the residual is 0.038,
+0.011, 0.0023 and 2.9×10⁻⁴. With K₁ alone the exponent is 2.46, and with F alone 0.88. All criteria written before the
+runs pass (the started comment of agent-comms#42). F is the tuned D = ∞ profile, so the closed form is *conditional* on
+the selection rule (Conjecture 1). K₁ and K₂ are fitted from the states' central profiles, so they are *numerical
+evidence*. With F fitted as well, the closed form uses no D = ∞ input, and its exponent is 3.05.
+
+**The closed form's data** (`solver/inner_pert/data/closed_form_K.json`, every odd ν ≤ 31). The coefficients c_ν are
+those of $`b = \sum_\nu 2\,\mathrm{Re}(c_\nu e^{i\nu\theta})`$, in the gauge where the fundamental of every profile is
+a positive multiple of sin θ (F₁ = −iA/2). F is the J 1500 block of
+`solver/eeg_profile/data/tuned_profile_A2.71918.txt`. Each ± is the largest deviation over nine fit choices (a spread
+over fit choices, below).
+
+| ν | F_ν | K₁,ν | K₂,ν |
+|---|---|---|---|
+| 1 | −1.35959i | −14.529i ± 0.007 | 32.84i ± 1.8 |
+| 3 | 0.007383 − 0.074488i | −0.6247 − 4.9710i ± 0.0018 | 5.33 − 11.21i ± 0.36 |
+| 5 | 0.000756 − 0.004212i | −0.0294 − 0.7766i ± 0.0004 | −0.249 − 11.07i ± 0.09 |
+| 7 | 0.0000613 − 0.0002377i | 0.0051 − 0.0869i ± 0.0002 | −0.129 − 2.955i ± 0.07 |
+
+So the fundamental's amplitude is A(n) = 2.71918 + 14.529/n − 32.84/n² + …. The period is Δ∞ = 1.643893746 (README),
+Δ₁ = 10.3753 (FIRST_ORDER.md, the fit row) and Δ₂ = −49.1685 (Summary above), all from the double-double fits. The time
+origin is aligned on each state's fundamental, one gauge number per state. K₂'s higher harmonics are large next to
+F's: |K₂,₇|/(2n²) exceeds |F₇| for n below about 78, so the 1/n series of the high harmonics converges slowly. Their
+absolute size stays small, 7×10⁻⁴ of |F₁| at D = 40.
+
+**Method** (`solver/inner_pert/nnlo_closed_form.py`, which imports `nnlo_vs_solution.py`):
+
+- **Profiles.** For each of the 63 states of §1.1, $`F_n = \tilde\beta/\sqrt{2(1+1/n)}`$ with β̃ = Π(τ, 0)/√ε. Its
+  harmonics are taken by FFT and rotated in time so that the fundamental is −i|c₁|.
+- **The fit.** Harmonic by harmonic, $`F_{n,\nu} - F_\nu = \sum_{k=1}^{6} a_k n^{-k}`$ by least squares over the
+  states with D ≥ 20, leaving out the four test states, and K_k = 2a_k. K₃–K₆ are fitted and dropped.
+- **The closed form.** β̃_D as above, rotated back to the state's time origin, its τ derivatives taken spectrally with
+  ω = 2π/Δ(n), and put into `model_fields` (corrected, order 3).
+- **The measure.** R = rms(F_sol − F_cf)/rms(F_sol) over the (τ, x) grid (f relative to rms(1 − f)), as in §1.1's
+  Fig. 5 measure. Its exponent p is the least-squares slope of ln R against ln ε over the four test D. The profile's
+  own error is rms(β̃_cf − β̃_sol)/rms(β̃_sol).
+
+**Results.** R(Ω), its exponent, and the profile's own error at D = 200 with its exponent:
+
+| β̃ in the corrected NNLO | D 40 | D 60 | D 100 | D 200 | p(Ω) | profile, D 200 | p(profile) |
+|---|---|---|---|---|---|---|---|
+| √2 F (agent-comms#5, §1.1) | 0.222 | 0.158 | 0.101 | 0.0530 | 0.88 | 0.030 | 0.94 |
+| F | 0.203 | 0.145 | 0.0923 | 0.0484 | 0.88 | 0.028 | 0.94 |
+| F + K₂/2n² (the control K₁ = 0) | 0.216 | 0.151 | 0.0946 | 0.0490 | 0.91 | 0.028 | 0.96 |
+| F + K₁/2n | 0.0393 | 0.0125 | 0.00339 | 7.1×10⁻⁴ | 2.46 | 3.1×10⁻⁴ | 1.81 |
+| the closed form | 0.0388 | 0.0108 | 0.00226 | 2.81×10⁻⁴ | 3.02 | 2.5×10⁻⁵ | 2.84 |
+| the closed form, K₂ × (−1) | 0.0499 | 0.0177 | 0.00564 | 1.35×10⁻³ | 2.20 | 6.5×10⁻⁴ | 1.89 |
+| the closed form, F fitted too | 0.0409 | 0.0110 | 0.00227 | 2.80×10⁻⁴ | 3.05 | 2.2×10⁻⁵ | 2.87 |
+| each state's exact profile (§1.1) | 0.0383 | 0.0108 | 0.00229 | 2.85×10⁻⁴ | 3.01 | 0 | |
+
+The other fields of the closed form, at D = 40, 60, 100 and 200:
+
+| field | D 40 | D 60 | D 100 | D 200 | p |
+|---|---|---|---|---|---|
+| f (relative to rms(1 − f)) | 0.069 | 0.017 | 0.0033 | 3.8×10⁻⁴ | 3.20 |
+| Π | 0.021 | 0.0062 | 0.0014 | 1.8×10⁻⁴ | 2.93 |
+| Ψ | 0.087 | 0.039 | 0.014 | 0.0035 | 1.96 |
+
+Ψ₃ is "not needed" in EEG, so Ψ is right to relative order ε² only, with any profile. Since Ω ∝ β̃², twice the
+profile's own error estimates its share of R(Ω). With K₁ and K₂ that is 13–18% of the NNLO floor, so the residual is
+the NNLO's. With K₁ alone the missing K₂ term matches the floor at D = 100 and dominates above it.
+
+**Error bars.** The spread over fit choices (k_max = 5, 6, 7 and D_lo = 15, 20, 30) moves p(Ω) within 3.01–3.27 for the
+closed form, 2.45–2.48 with K₁ and 0.91–0.92 with K₁ = 0. Every choice passes C1, C2 and C3. The high values of the
+closed form come from a larger residual at D = 40 (up to 0.059 at k_max 7, D_lo 30), where the fitted K₂ of the
+higher harmonics is least determined. At D = 200 the residual moves by 1.5%. The fundamental's 1/n coefficients range
+over A₁ = 14.522–14.534 and A₂ = −34.63 to −31.39.
+
+**Controls** (commands as run in `planted.cmd` and `compare.cmd` of raw `AC42-mac/`, exits in its `exits.txt`):
+
+- **Planted truth, run first.** Each state's fields were replaced by the corrected NNLO of a planted profile, a
+  rational function of 1/n whose series does not terminate, sized from the README's profile table, shifted in time by
+  a known phase per state, plus §1.1's planted remainder. The same code recovered K₁ to 3×10⁻⁵ and K₂ to 1.1×10⁻³ for
+  ν = 1, 3. Its exponents were 0.914 (K₁ = 0), 1.926 (K₁), 3.193 (K₁ and K₂) and 1.998 (K₂ × (−1)), each within 0.044
+  of those with the planted K. The mutations `k1x0`, `k2x-1` and `k2x1.1` are detected. All exits 0. With the remainder
+  at the real floor's size (`--plant_scale=740`, information) the K₁ exponent rises to 2.70 and the closed form's is
+  3.22. The floor then hides the missing K₂ term at low D, as on the real data.
+- **K₁ = 0 (`--mutate=k1x0`) and K₂ × (−1) (`--mutate=k2x-1`)** fire: 0.913 ≤ 1.2 and 2.202 < 2.6. F alone gives 0.882.
+- **The pipeline.** √2 F reproduces agent-comms#5's numbers (I126-mac/figs.json) to 3×10⁻¹⁵.
+- **What the test resolves** (scan, information). The closed form's exponent falls below 2.6 for K₁ × 0.99, 1.02 and
+  1.05, and stays above it for K₁ × 1.01 (2.606). For K₂ it falls below only at × 2 (2.548) and × (−1). It stays above
+  at × 0.5 (2.751), 1.1 (3.005) and 1.5 (2.784). So the test resolves K₁ to about 1% and K₂ only to its own size. The
+  fitted K₂'s spread of 5% is far inside that.
+
+**Cross-checks** (information):
+
+- **The D = ∞ profile.** With the intercept fitted too, the states extrapolate to A = 2.719209 (spread over fit choices
+  2.7192055–2.7192530), against the tuned profile's 2.71918. That value is EEG's A*/√2. The M = 7 zero is 2.71922
+  (EEG_PROFILE.md 3.5). Harmonics 3 and 5 of the fitted F agree with the tuned ones to 1.3×10⁻⁵ and 8.7×10⁻⁵. So the
+  finite-D states extrapolate to the tuned profile's shape and to an amplitude about 1×10⁻⁵ above the paper's.
+- **K₁ from the inner problem.** The fitted A₁ = 14.529 (14.519 with F fitted) against the M = 5 inner run's 14.4532
+  (FIRST_ORDER.md 6, which writes F_n = F + K₁/n). The M = 5 value is 0.5% low, half the 1% that the test resolves.
+  The M = 5 run shares none of the finite-D machinery.
+- **The period.** With each state's own Δ in place of Δ(n) the exponent is 3.019, against 3.023.
+- **Chains at equal D.** At D = 100, the T140-win chains d6 and d10 change R(Ω) by 1.3×10⁻⁷ and 3.0×10⁻⁷ relative.
+
+**What it shares and what it does not show.** The closed form shares with §1.1 the fields of the states and
+`nnlo_vs_solution.py`'s NNLO coefficients. Its K₁ and K₂ come from the same family of states it is compared with. The
+four test states are left out of the fit, but their neighbours are not. So this shows that three D-independent functions
+describe the solutions to O(ε³) relative across D = 40–200. It is not a prediction from the field equations. A
+first-principles K₁ and K₂ need the inner problem at O(1/n) and O(1/n²) with enough harmonics (FIRST_ORDER.md, §4).
+The chain states above D = 73 hold p1's harmonics 5–13 at `hp/data/held_fit.json`, a fit over D 38–73. For those
+harmonics above D = 73 both the fit and the comparison see that fit's extrapolation.
+
+**Proposed README text** (for the coordinator, near Proposition 1 or the relation to EEG):
+
+> *A closed-form large-D solution.* EEG's NNLO with the correction above, with β̃ = √(2(1 + 1/n)) (F + K₁/2n + K₂/2n²)
+> from Proposition 1, gives f, Ω, Π and Ψ on the whole interior from three D-independent functions. F is the tuned
+> D = ∞ profile, and K₁, K₂ are fitted from the solutions' central profiles. Its relative rms error in Ω is 3.9%,
+> 1.1%, 0.23% and 0.028% at D = 40, 60, 100 and 200 and falls like ε³, as with each solution's exact profile
+> (notes/SECOND_ORDER.md 1.2). It is *conditional* on the selection rule for F, and *numerical evidence* for K₁, K₂.
+
+**Reproduction.** From `solver/inner_pert/`, with the raw-data repository cloned beside the checkout (`git clone
+https://github.com/nmoinvaz/choptuik-large-d-raw ../choptuik-large-d-raw`), each command takes under a second:
+
+```
+python3 nnlo_closed_form.py planted ../../../choptuik-large-d-raw/I126-mac/fields/fields_D*.npz
+python3 nnlo_closed_form.py compare ../../../choptuik-large-d-raw/I126-mac/fields/fields_D*.npz \
+    --figs=../../../choptuik-large-d-raw/I126-mac/figs.json      # C1, C2, C5: exit 0
+python3 nnlo_closed_form.py controls ../../../choptuik-large-d-raw/I126-mac/fields/fields_D*.npz \
+    --figs=../../../choptuik-large-d-raw/I126-mac/figs.json      # C3, C4: exit 0
+```
+
+Raw output: folder `AC42-mac/` of the raw-data repository, at its commit 07f93760 (logs, JSON, the commands in `*.cmd`,
+exits in `exits.txt`).
+
 ## 2. The inner equations to second order
 
 In the inner variables the exact equations close with one slaved function, u = (n − 1)(b − 1)
