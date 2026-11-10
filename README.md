@@ -2027,30 +2027,30 @@ The other references are the footnotes below.
 
 Nathan Moinvaziri chose the problem, set the direction at each step and ran the long computations on his own machines
 (two Windows computers and two Macs). The code, the computations, the derivations, the proofs and the text in this
-repository were produced by Claude, Anthropic's AI model, working as a set of coordinated agents: cloud sessions at
-first, then a coordinating session on one Mac, runner sessions on the other machines, and subagents for separate
-tasks. The commits up to 5 November 2026 are marked as co-authored. He has not checked the mathematics himself.
+repository were produced by Claude, Anthropic's AI model, working as a set of coordinated agents. These were cloud
+sessions at first, then a coordinating session on one Mac, runner sessions on the other machines, and subagents for
+separate tasks. The commits up to 5 November 2026 are marked as co-authored. He has not checked the mathematics himself.
 
 What has been checked, and how:
 
-- **Numerics:** two independent solvers (f64 and double-double) agree where they overlap; two machines with separate
-  builds agree to 7×10⁻¹⁸ rms; an independent review re-derived the solver's equations, re-evaluated its residual in
-  200-bit arithmetic and tested the Δ∞ fits ([notes/NUMERICS_REVIEW.md](notes/NUMERICS_REVIEW.md)); every fit table
+- **Numerics.** Two independent solvers (f64 and double-double) agree where they overlap. Two machines with separate
+  builds agree to 7×10⁻¹⁸ rms. An independent review re-derived the solver's equations, re-evaluated its residual in
+  200-bit arithmetic and tested the Δ∞ fits ([notes/NUMERICS_REVIEW.md](notes/NUMERICS_REVIEW.md)). Every fit table
   reproduces from the data with the command given next to it.
-- **Derivations:** Propositions 1–3 and the inner equations were re-derived by separate agents that had not written them
-  (sympy where possible); the inner Stokes multiplier was computed by two implementations that share no code.
-- **Against the literature:** agreement with the published values at D = 4 and at the maximum of Δ
+- **Derivations.** Propositions 1–3 and the inner equations were re-derived by separate agents that had not written them
+  (sympy where possible). The inner Stokes multiplier was computed by two implementations that share no code.
+- **Against the literature.** The values agree with the published ones at D = 4 and at the maximum of Δ
   ([Relation to published work](#relation-to-published-work)).
 - **A referee pass** by an agent that had not seen the work, whose findings were applied.
-- **The computer-assisted certificate:** an independent code review re-derived every input of its final test and found
-  no error, and narrowed the claim to what is proved ([proof/A_review.md](proof/A_review.md)); a second implementation
+- **The computer-assisted certificate.** An independent code review re-derived every input of its final test and found
+  no error, and narrowed the claim to what is proved ([proof/A_review.md](proof/A_review.md)). A second implementation
   in C++ with CAPD, sharing no integration or test code, confirms it (§10 of [proof/A_certify.md](proof/A_certify.md)).
   Eight deliberately broken versions of the final test fail or pass exactly as predicted
   (`solver/proof/mutation_controls.py`).
-- **The Δ∞ error bar:** a planted-truth test with known limits ([above](#is-the-period-analytic-in-1d)).
-- **Quoted numbers:** `check_numbers.py` ties more than 800 quoted numbers to their source files, and a self-test shows
+- **The Δ∞ error bar.** A planted-truth test with known limits ([above](#is-the-period-analytic-in-1d)).
+- **Quoted numbers.** `check_numbers.py` ties more than 800 quoted numbers to their source files, and a self-test shows
   each check would catch a one-digit change.
-- **References and novelty:** every citation was checked against publisher or arXiv records
+- **References and novelty.** Every citation was checked against publisher or arXiv records
   ([notes/REF_CHECK.md](notes/REF_CHECK.md)), and every novelty claim against the closest prior papers, read rather than
   recalled ([notes/LIT_REVIEW.md](notes/LIT_REVIEW.md)).
 
