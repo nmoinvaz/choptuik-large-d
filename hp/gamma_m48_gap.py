@@ -11,7 +11,7 @@ lies in, and which of them is converged.
 
 solve: an M = 32 state taken to M = 48 by one of two paths, saved as OUTDIR/<stem>_M<M>_<path>.npz with a record in
   OUTDIR/solve.jsonl.
-  gamma: gamma_dd.py --M48's path, call for call (resample_z in f64 with lo dropped, p1 projected onto the cut, Newton to
+  gamma: gamma_dd.py --M48's path before #271 (its --mutate=old_rule), call for call (resample_z in f64 with lo dropped, p1 projected onto the cut, Newton to
     max(10 |F_32|, 1e-27), Levenberg-Marquardt when Newton stops above 1e-20).
   r2: review R2's path (hp/review/rv2_resolve.py --M 48 --corrector dnp: resample_dd at 40 digits, deflated Newton to
     1e-40 with w = 16, then Newton to 1e-40).

@@ -15,9 +15,11 @@ parts (z2, z3; the quad- and octo-double chains) is read as double-double, its u
   stores kfreeze has that, and any other is cut as gamma_dd.py cuts it (13 from D = 35 on).
 --kc, --ks: the series orders instead of the state's (a run that changed them, e.g. ks 200 in large_d/m48_diag).
 --polish=N: up to N Newton steps first (gamma_batch.py passes --polish=4 to gamma_dd.py).
---Mhi=N: the state resampled to N tau points as gamma_dd.py --Mhi does (resample_z, p1 projected onto the cut) and
-  re-converged as it does (Newton to max(10 |F|, 1e-27), Levenberg-Marquardt when Newton stops above --fmax), then the
-  same measures and Delta's change. --resample_only measures the resampled state without solving (for paths whose
+--Mhi=N: the state resampled to N tau points as gamma_dd.py --Mhi does (gamma_dd.resample_hi: double-double, p1
+  projected onto the cut) and re-converged as it does (gamma_dd.solve_hi: Newton to the floor, Levenberg-Marquardt when
+  that stops above --fmax), then the same measures, Delta's change and the Newton step's Delta component at the
+  solution (est). --mutate=old_rule restores gamma_dd's path before #271 (f64 resampling, Newton to max(10 |F|,
+  1e-27)). --resample_only measures the resampled state without solving (for paths whose
   solve did not converge). --save=DIR keeps the re-converged state there.
 --fit: where a truncation exceeds the gate, modecount_common.fit_nodes refits the layout (a node at half the first
   node, or ks x 1.5), the state is re-converged there, and Delta's change is reported: a measured estimate of how far
@@ -38,8 +40,9 @@ import numpy as np
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, HERE)
-from hpkernel.driver import load, save, newton_solve, lm_solve, plow_odd, resample_z  # noqa: E402
+from hpkernel.driver import load, save, newton_solve  # noqa: E402
 import modecount_common as mc  # noqa: E402
+from gamma_dd import resample_hi, solve_hi  # noqa: E402
 
 GATE = mc.SERIES_TAIL
 
@@ -87,15 +90,13 @@ def measure(meta, zh, zl, kf, threads=1, mutate=""):
     return s, F, tails
 
 
-def converge(s, zh, zl, F_ref, fmax, log):
-    """gamma_dd.py's M48 solve: Newton to max(10 F_ref, 1e-27), then Levenberg-Marquardt if above fmax"""
-    tol = max(10 * F_ref, 1e-27)
-    zh, zl, hist = newton_solve(s, zh, zl, tol=tol, it_max=12, verbose=False)
-    how = f"Newton {len(hist) - 1} steps"
-    if hist[-1]["F"] > fmax:
-        zh, zl, hist = lm_solve(s, zh, zl, tol=tol, it_max=20, verbose=False, newton_after=1e-22)
-        how += f", LM {len(hist) - 1} steps"
-    return np.ascontiguousarray(zh), np.ascontiguousarray(zl), how
+def converge(s, zh, zl, F_ref, fmax, log, mutate=""):
+    """gamma_dd.py's M48 solve (solve_hi): Newton to the floor, then Levenberg-Marquardt if above fmax. Returns zh, zl,
+    a summary and solve_hi's record"""
+    zh, zl, sol = solve_hi(s, zh, zl, F_ref, fmax, verbose=False, mutate=mutate)
+    how = (f"Newton {sol['newton']} steps" + (f", LM {sol['lm']} steps" if "lm" in sol else "")
+           + f", stop {sol['stop']}; Newton step's Delta {sol['est']:+.1e}")
+    return zh, zl, how, sol
 
 
 def tails_rec(tails):
@@ -126,7 +127,7 @@ def fit_and_solve(meta, zh, zl, kf, F_ref, fmax, threads, log, want_lam):
     t = time.time()
     fh, fl, fm, _ = mc.fit_nodes(meta, zh, zl, kf, threads, log=lambda m: log("    fit:" + m))
     s, F0, _ = measure(fm, fh, fl, kf, threads)
-    fh, fl, how = converge(s, fh, fl, F_ref, fmax, log)
+    fh, fl, how, _ = converge(s, fh, fl, F_ref, fmax, log)
     s, F, tails = measure(fm, fh, fl, kf, threads)
     rec = dict(nodes=fm["nodes"], ks=fm.get("ks"), F_start=F0, F=F, solve=how, tails=tails_rec(tails),
                Delta=float(fh[-1]), Delta_lo=float(fl[-1]), seconds=round(time.time() - t, 1))
@@ -170,19 +171,17 @@ def run_state(path, opts, log=print):
         Mhi = int(opts["Mhi"])
         t = time.time()
         K = len(meta["nodes"])
-        hh, hl = resample_z(np.asarray(zh) + np.asarray(zl), meta["M"], Mhi, K)
+        hh, hl = resample_hi(zh, zl, meta["M"], Mhi, K, kf, mutate)
         mh = dict(meta, M=Mhi)
-        if kf:
-            a_, b_ = plow_odd(Mhi, int(kf))
-            hh[:Mhi] = (a_ + b_) @ hh[:Mhi]
         s2, F0, tails0 = measure(mh, hh, hl, kf, threads, mutate)
         hi = dict(M=Mhi, F_start=F0, tails_start=tails_rec(tails0))
         log(line("resampled", mh, kf, F0, tails0))
         if "resample_only" not in opts:
-            hh, hl, how = converge(s2, hh, hl, F, fmax, log)
+            hh, hl, how, sol = converge(s2, hh, hl, F, fmax, log, mutate)
             F2 = mc.resid(s2, hh, hl)
             _, _, tails2 = measure(mh, hh, hl, kf, threads, mutate)
-            hi.update(F=F2, solve=how, tails=tails_rec(tails2), verdict=verdict(tails2), Delta=float(hh[-1]),
+            hi.update(F=F2, solve=how, est=sol["est"], floor=sol["floor"],
+                      resample="f64" if mutate == "old_rule" else "dd", tails=tails_rec(tails2), verdict=verdict(tails2), Delta=float(hh[-1]),
                       Delta_lo=float(hl[-1]), Delta_diff=float((hh[-1] - zh[-1]) + (hl[-1] - zl[-1])),
                       seconds=round(time.time() - t, 1))
             log(line(f"M {Mhi}", mh, kf, F2, tails2, f"  ({how}; Delta minus own M {hi['Delta_diff']:+.3e}, "
