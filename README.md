@@ -567,17 +567,19 @@ in [notes/SOLVER_HP.md](notes/SOLVER_HP.md).
 
 ### Closed forms tested and excluded
 
-Nine constants were tried as the limit, first on the f64 points and then on the double-double points: five that a
-product search placed inside the window of the f64 estimate (about nine such coincidences are expected by chance in that
-search) and four classical constants. None of them passes the second test, so none of them is
-Δ∞, given that Δ is analytic in 1/D (which the double-double points support,
-[below](#is-the-period-analytic-in-1d)).
+Nine constants were tried as the limit, first on the f64 points and then on the double-double points. Five are constants
+that a product search placed inside the window of the f64 estimate, where about nine such coincidences are expected by
+chance in that search. Four are classical constants. None of them passes the second test. So none of them is Δ∞, given
+that Δ is analytic in 1/D, which the double-double points support ([below](#is-the-period-analytic-in-1d)).
 
-The closest sits 1.3×10⁻⁵ from the limit, about 840 times its uncertainty, and forcing any of them makes the fit
-predict the unseen points at least 100 times worse. Nor is Δ∞ a product of two of the listed constants with rational
-prefactor i/j (i, j ≤ 12) and exponents ±1/2, ±1, ±2: none of those 514 332 expressions lies in the double-double
-window, where about 0.02 would be expected by chance, so this null has little power. At eight known digits no
-integer-relation search could support a closed form; whether Δ∞ has one is open
+The closest sits 1.3×10⁻⁵ from the limit, about 840 times its uncertainty, and forcing any of them makes the fit predict
+the unseen points at least 100 times worse.
+
+Nor is Δ∞ a product of two of the listed constants with rational prefactor i/j (i, j ≤ 12) and exponents ±1/2, ±1, ±2.
+None of those 514 332 expressions lies in the double-double window. About 0.02 would be expected by chance, so this null
+has little power.
+
+At eight known digits no integer-relation search could support a closed form. Whether Δ∞ has one is open
 ([notes/REFEREE_SIM.md](notes/REFEREE_SIM.md) §4), and the D → ∞ limit of the equations is the way to find out.
 
 The candidate closed forms tested, the table, the influence function and the search are in
