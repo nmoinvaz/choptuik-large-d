@@ -724,17 +724,24 @@ double-, quad- and octo-double number types, and why their precision has to grow
 </details>
 
 - **How good the values are.** The points themselves fit smooth curves to about 4×10⁻¹⁵ (degree 18–20) all the way to D
-  = 60.1, not 10⁻²⁰. Points between D = 27 and 35.2, solved before the freezing, carry up to 10⁻¹⁴ from the weak
-  directions; about 25 of them sit visibly off their neighbours and `hp/dd_fits_mp.py --clean` drops them (25 on today's
-  file with `--dmax=60.1`). The cleaning leaves errors up to 5×10⁻¹⁵ there. The frozen points carry the cut's smooth
-  error, up to 5×10⁻¹⁵ from 35.35 to 37 and about 10⁻¹⁵ from 40 to 60, while their scatter about smooth local fits is
-  only 3–7×10⁻¹⁸ at D = 45–60.1. Below D = 27 the error is about 10⁻¹⁶; the 94 points above 60.1, solved to the looser
-  tolerance, carry up to about 3×10⁻¹⁵.
-- **The f64 points.** Against the double-double values they are within about 6×10⁻¹¹ at D = 15.6–21 (quoted
-  3×10⁻¹¹), typically 3.6×10⁻⁹ and at most 6.4×10⁻⁹ (D = 24.5) at 22–29.3 (quoted
-  1.5–2×10⁻⁹), 1.8×10⁻⁸ at 30.1 and
-  7×10⁻⁸ at 34.2, and 0.6–2.1×10⁻⁶ high from 35 to 40.3 (quoted 1–3×10⁻⁶). How well the
-  rational formula holds against these points is in [The formula](#the-formula).
+  = 60.1, not 10⁻²⁰.
+  - Points between D = 27 and 35.2, solved before the freezing, carry up to 10⁻¹⁴ from the weak directions. About 25 of
+    them sit visibly off their neighbours, and `hp/dd_fits_mp.py --clean` drops them (25 on today's file with
+    `--dmax=60.1`). The cleaning leaves errors up to 5×10⁻¹⁵ there.
+  - The frozen points carry the cut's smooth error, up to 5×10⁻¹⁵ from 35.35 to 37 and about 10⁻¹⁵ from 40 to 60. Their
+    scatter about smooth local fits is only 3–7×10⁻¹⁸ at D = 45–60.1.
+  - Below D = 27 the error is about 10⁻¹⁶.
+  - The 94 points above 60.1, solved to the looser tolerance, carry up to about 3×10⁻¹⁵.
+- **The f64 points.** Their distance from the double-double values is in the table. How well the rational formula holds
+  against these points is in [The formula](#the-formula).
+
+| D | distance from the double-double value | quoted |
+|---|---|---|
+| 15.6–21 | within about 6×10⁻¹¹ | 3×10⁻¹¹ |
+| 22–29.3 | typically 3.6×10⁻⁹ and at most 6.4×10⁻⁹ (D = 24.5) | 1.5–2×10⁻⁹ |
+| 30.1 | 1.8×10⁻⁸ | |
+| 34.2 | 7×10⁻⁸ | |
+| 35–40.3 | 0.6–2.1×10⁻⁶ high | 1–3×10⁻⁶ |
 
 ### Is the period analytic in 1/D?
 
@@ -742,7 +749,7 @@ Yes, as far as the points up to D = 61 can tell. Each model below is a polynomia
 on the cleaned double-double points 10 ≤ D ≤ 45 (or ≤ 37.5) and compared with every point above, up to D = 60.1, which
 it never saw. The table and the figure use the points up to D = 60.1, the data when they were made
 (`hp/dd_fits_mp.py 10 45 --clean --dmax=60.1`, and `10 37.5 --clean --dmax=60.1` for the fourth column, on today's
-file). The 94 points above 60.1, solved to a looser tolerance, are tested separately: they lie within 2.6×10⁻¹⁵ of the
+file). The 94 points above 60.1, solved to a looser tolerance, are tested separately. They lie within 2.6×10⁻¹⁵ of the
 degree-18 fit on D ≤ 60.1 (checks table above).
 
 ![How well each model predicts double-double points it never saw](hp/heldout.svg)
@@ -755,25 +762,29 @@ degree-18 fit on D ≤ 60.1 (checks table above).
 | $`(D-2)^{-1/2}`$, degree 20 | 4.0×10⁻¹⁵ | 1.3×10⁻¹¹ | 6.6×10⁻¹⁰ | 1.638 |
 | $`D^{-1/2}`$, degree 20 | 3.9×10⁻¹⁵ | 1.4×10⁻¹⁰ | 5.3×10⁻⁹ | 1.556 |
 
-Every model fits its range to the level of the points, so the fit alone decides nothing; the unseen points do. Fitted on
-D ≤ 45, the 1/D series predicts Δ fifteen units of D ahead to 6×10⁻¹³, about 100 times the noise of the points, while
-the series in half-integer powers miss by 20 to 250 times more. Their limits also jump with the degree (1.644 to 1.677
-for $`(D-2)^{-1/2}`$ and 1.64 to 2.63 for $`D^{-1/2}`$ at degree 20–24 on the points to D = 60.1), so they give no
-usable Δ∞. Adding one non-analytic term ($`D^{-1/2}`$, $`D^{-3/2}`$, $`\ln D / D`$, $`\ln D / D^2`$ or $`e^{-D/4}`$) to
-the degree-16 series does not degrade the prediction (1.2–3.2×10⁻¹³ at D = 60) and keeps the limit within the quoted bar
-(1.643893736 to 1.643893754), and the term's coefficient is not determined: $`D^{-1/2}`$ gets 3×10⁻⁵ at degree 14 and
-6×10⁻⁷ at degree 16 (`hp/dd_fits_mp.py 10 45 --clean --mixed --dmax=60.1`).
+Every model fits its range to the level of the points, so the fit alone decides nothing. The unseen points do.
+
+- Fitted on D ≤ 45, the 1/D series predicts Δ fifteen units of D ahead to 6×10⁻¹³, about 100 times the noise of the
+  points. The series in half-integer powers miss by 20 to 250 times more.
+- Their limits also jump with the degree, from 1.644 to 1.677 for $`(D-2)^{-1/2}`$ and from 1.64 to 2.63 for
+  $`D^{-1/2}`$ at degree 20–24 on the points to D = 60.1. So they give no usable Δ∞.
+- Adding one non-analytic term ($`D^{-1/2}`$, $`D^{-3/2}`$, $`\ln D / D`$, $`\ln D / D^2`$ or $`e^{-D/4}`$) to the
+  degree-16 series does not degrade the prediction (1.2–3.2×10⁻¹³ at D = 60) and keeps the limit within the quoted bar
+  (1.643893736 to 1.643893754). The term's coefficient is not determined, since $`D^{-1/2}`$ gets 3×10⁻⁵ at degree 14
+  and 6×10⁻⁷ at degree 16 (`hp/dd_fits_mp.py 10 45 --clean --mixed --dmax=60.1`).
 
 The transseries test and the data range of these fits are in [notes/DINF_FITS.md](notes/DINF_FITS.md).
 
-Fitted on all the cleaned points, power series in 1/D of degree 16–20 and in 1/(D-2) of degree 18–20 (the ones that fit
-to the noise; 1/(D-2) at degree 16 leaves 4×10⁻¹³) fit the points from D = 10 to 61.03 to 4.3×10⁻¹⁵
-(8.6×10⁻¹⁵ for 1/D at degree 16, 1.5×10⁻¹⁴ for 1/(D-2) at degree 18) and give limits from 1.643893744 to 1.643893753 on
-10 ≤ D ≤ 60.1 (`hp/dd_fits_mp.py 10 1e9 --clean --dmax=60.1`) and from 1.643893745 to 1.643893752 on all 823
-cleaned points to D = 61.03. Over 48 choices of model (1/D, 1/(D-2)), degree (the two lowest that reach the noise),
-lower and upper fit ends (D ≥ 10, 12, 15; D ≤ 60.1, 61.03) and cleaning on or off, the limit ranges over
-1.643893744–1.643893763 (`hp/dinf_budget.py`), centred on 1.643893754; fitting on D ≤ 45 alone pins it only to
-2.5×10⁻⁷. In synthetic data with a known limit (below) that centre comes out 0.8×10⁻⁸ too high every time, so the
+Fitted on all the cleaned points, the power series that fit to the noise are those in 1/D of degree 16–20 and in 1/(D-2)
+of degree 18–20 (1/(D-2) at degree 16 leaves 4×10⁻¹³). They fit the points from D = 10 to 61.03 to 4.3×10⁻¹⁵ (8.6×10⁻¹⁵
+for 1/D at degree 16, 1.5×10⁻¹⁴ for 1/(D-2) at degree 18). Their limits run from 1.643893744 to 1.643893753 on 10 ≤ D ≤
+60.1 (`hp/dd_fits_mp.py 10 1e9 --clean --dmax=60.1`) and from 1.643893745 to 1.643893752 on all 823 cleaned points to D
+= 61.03.
+
+The quoted limit comes from 48 fit choices. They vary the model (1/D, 1/(D-2)), the degree (the two lowest that reach
+the noise), the lower and upper fit ends (D ≥ 10, 12, 15; D ≤ 60.1, 61.03) and cleaning on or off. Over them the limit
+ranges over 1.643893744–1.643893763 (`hp/dinf_budget.py`), centred on 1.643893754. Fitting on D ≤ 45 alone pins it only
+to 2.5×10⁻⁷. In synthetic data with a known limit (below) that centre comes out 0.8×10⁻⁸ too high every time, so the
 quoted value is the centre less 0.8×10⁻⁸:
 
 ```math
@@ -782,14 +793,16 @@ quoted value is the centre less 0.8×10⁻⁸:
 
 The bar is an estimator range, not a calibrated error. It contains the planted limit in every graded case of both tests
 and the whole 48-fit range except its top 2×10⁻⁹, which comes from an under-resolved fit. An independent review
-([notes/NUMERICS_REVIEW.md](notes/NUMERICS_REVIEW.md)) found it fragile: other reasonable rules for choosing the fits,
+([notes/NUMERICS_REVIEW.md](notes/NUMERICS_REVIEW.md)) found it fragile. Other reasonable rules for choosing the fits,
 or removing the 168 points the runs themselves flag, widen it to 0.7–1×10⁻⁷.
 
-The analytic form is the natural default (the large-D expansion of the equations has no other scale, and the
-only structure the data show is a singularity on the negative D axis, near D ≈ −9 to −11), and nothing in the points
-up to D = 61 asks for anything else. But it is not proven: the period is selected by an exponentially small effect
-that the 1/D expansion never sees, and Ecker, Ecker and Grumiller conjecture Δ → 0
-([above](#relation-to-ecker-ecker--grumiller)). A proof needs the D → ∞ equations themselves.
+The analytic form is the natural default. The large-D expansion of the equations has no other scale, and the only
+structure the data show is a singularity on the negative D axis, near D ≈ −9 to −11. Nothing in the points up to D = 61
+asks for anything else.
+
+But it is not proven. The period is selected by an exponentially small effect that the 1/D expansion never sees, and
+Ecker, Ecker and Grumiller conjecture Δ → 0 ([above](#relation-to-ecker-ecker--grumiller)). A proof needs the D → ∞
+equations themselves.
 
 A planted-truth test checks that bar ([`hp/planted_dinf.py`](hp/planted_dinf.py), log in
 [`hp/data/planted_dinf.log`](hp/data/planted_dinf.log)). Synthetic Δ(D) with a known limit was put on the real D grid,
@@ -798,9 +811,10 @@ pair and a log branch point near the data, plus one term outside the fitted mode
 the same 48-fit procedure, and in all six the known limit lands inside the reported range. The range's centre sits
 0.79–0.88×10⁻⁸ above it every time, which is the correction applied above. A second test with a truth not made by the
 fitting code (the rational formula, carrying the real data's residual pattern) finds the same offset, 0.78×10⁻⁸
-([`hp/review/rv2_planted.py`](hp/review/rv2_planted.py)). One of the pre-set criteria failed in every case: the cleaning
-step missed one of the 20 planted junk points, the one placed at its 10⁻¹⁵ threshold. That is a limit of the cleaning,
-not of the bar.
+([`hp/review/rv2_planted.py`](hp/review/rv2_planted.py)).
+
+One of the pre-set criteria failed in every case. The cleaning step missed one of the 20 planted junk points, the one
+placed at its 10⁻¹⁵ threshold. That is a limit of the cleaning, not of the bar.
 
 These limits are the Δ∞ quoted in [The formula](#the-formula) and [Values](#values).
 
