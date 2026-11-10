@@ -15,7 +15,7 @@ formulation of hp/pinning.py; their coefficients are zero).
         [--accept_stall 1e-19] [--junk_only 0] [--threads 4] [--w 24] [--trend T75] [--tol_qd 1e-28] [--accept_stall_qd 0]
         [--qd_it 12] [--qd_w 0] [--refine 1] [--probe 0 --probe_c C] [--plan_tol 1e-32] [--fix1 0] [--F_pred_max 0]
         [--horizon_alpha 0] [--fix1_qlu 0] [--jet_q 0] [--reseed 0] [--pred_q 0] [--reseed_q 0] [--save_pred 0]
-        [--jet_o 0] [--corrector od --tol_od 1e-40] [--held_fit FILE]
+        [--jet_o 0] [--corrector od --tol_od 1e-40] [--base_adopt 0] [--held_fit FILE]
 
 --corrector qd runs the quad-double Newton of the kernel (hpkernel.driver.newton_qd, Solver.newton_q) on the pinned
 system (pinning.PinnedQ: the held harmonics' offset subtracted from the quad-double residual and added to the step, as
@@ -90,7 +90,10 @@ rule on the octo-double kernel (PinnedO: Solver.newton_o, olu_solve and residual
 on max |F| in at most --qd_it steps, with --reseed 2 inside ElimO (ElimQ's quad-double projection put back in eight
 parts). Under --jet_o 1 it starts from the octo-double prediction in all eight parts, its horizon data re-seeded. The
 base is polished from all its stored parts (eight from a state saved by it), with --reseed 2 inside ElimO at the
-base's D (the quad-double polish runs without the projection). Its states are saved in eight parts
+base's D (the quad-double polish runs without the projection). A base polish that neither converges nor lowers its
+max |F| is not adopted: the stored state stays the base, and the line "base polish not adopted" says so (#461, where
+a polish took the D 215.03125 state from 4.4e-36 to 1.5e-18 and the series of that base had |z_N| 1e-10 against
+2e-30). --base_adopt 1 adopts every polish, which is the control of that rule. Its states are saved in eight parts
 (octo_corrector.save_o: save_q's four, which load_q reads, and four more), and the series of the next base (--jet_o)
 is taken at all eight. M = 32 only; --accept_stall_qd does not apply. --od_junk w freezes, in every step of that
 corrector, the junk among the w weakest directions of its first Jacobian (octo_corrector.junk_subspace_o: no Delta
@@ -235,6 +238,7 @@ def main():
                refine=1, probe=0, probe_c=0.0, plan_tol=1e-32, fix1=0, F_pred_max=0.0, horizon_alpha=0, fix1_qlu=0, jet_q=0, reseed=0, pred_q=0, reseed_q=0,
                save_pred=0, jet_o=0)
     opt.update(tol_od=1e-40, od_junk=0)  # --corrector od (hp/octo_corrector.py); --od_junk w freezes junk (13.30)
+    opt.update(base_adopt=0)            # --base_adopt 1: the base's od polish is adopted whatever it did
     opt.update(held_fit="")             # --held_fit FILE (pinning.HeldFit; notes/HELD_HARMONICS.md)
     for k in list(opt):
         f = "--" + k
@@ -291,6 +295,8 @@ def main():
             Fh, Fl = spx.residual(z8[0], z8[1])
             Fc = float(rnorm(Fh, Fl))
             fo = float(hist[-1]["F"]) if hist else float("nan")
+            # max |F| at the start and after the last step, for the base's adoption rule
+            last_q["od_F"] = (float(hist[0]["F"]), float(hist[-1].get("F_new", hist[-1]["F"]))) if hist else None
             print(f"      octo-double Newton: {len(hist)} steps, max|F| {fo:.1e}, {'converged' if conv else 'not converged'}; double-double |F| "
                   f"of its first two parts {Fc:.1e}", flush=True)
             return np.asarray(z8[0]), np.asarray(z8[1]), Fc, len(hist), bool(conv), 0.0
@@ -423,8 +429,17 @@ def main():
             if opt["reseed"] == 2:
                 elim["rs"] = Reseeder(dict(M=M, nodes=nodes, kt=kt, kc=kc, ks=ks), D, threads=opt["threads"],
                                       horizon_alpha=opt["horizon_alpha"], qd=bool(opt["reseed_q"]))
-            zh, zl, F0, _, _, _ = correct(sp, zh, zl, opt["tol"], z8_start=load_o(os.path.join(raw, opt["state"]))[0])
+            zh_p, zl_p, F0_p, _, conv_p, _ = correct(sp, zh, zl, opt["tol"],
+                                                     z8_start=load_o(os.path.join(raw, opt["state"]))[0])
             elim["rs"] = None
+            Fs = last_q.get("od_F")
+            if conv_p or Fs is None or Fs[1] < Fs[0] or opt["base_adopt"]:
+                zh, zl, F0 = zh_p, zl_p, F0_p
+            else:
+                # the stored state stays the base: the series and the first prediction load it again
+                last_q.pop("z8", None)
+                last_q.pop("z4", None)
+                print(f"base polish not adopted (max|F| {Fs[0]:.1e} -> {Fs[1]:.1e}): the stored state is the base", flush=True)
         else:
             zh, zl, F0, _, _, _ = correct(sp, zh, zl, opt["tol"], z4_base if opt["corrector"] == "qd" else None)
     print(f"base {opt['state']}: D {mp.nstr(D, 12)}, M {M}, pin {kf} (held {ks_held}), |F| {F0:.1e}; N {N}, eps {opt['eps']}, h_max {opt['h_max']}, "
