@@ -401,9 +401,9 @@ to 10⁻⁸–10⁻¹²; `hp/data/gamma_dd.jsonl` and `hp/data/local/gamma_dd.js
 powers of 1/n, λ∞ − 2 (λ = 1/γ) falls by a factor of about 3.5 with each added power: on D ≥ 30, 2.4×10⁻⁴, 6.7×10⁻⁵,
 1.9×10⁻⁵, 5.5×10⁻⁶ and (1.6 ± 2.2)×10⁻⁶ for four to eight powers (`cd hp && python3 gamma_compare.py data/gamma_dd.jsonl
 data/local/gamma_dd.jsonl`), with no sign of levelling off; fixing λ∞ = 2 fits better with the same number of
-parameters. So γ∞ = 1/2 to about 5×10⁻⁷ (a spread over fit choices, not a bound), and λ = 2 + 3.0324/n − 34.3/n² + … (γ
-= 1/2 − 0.7581/n + …). The rational γ formula is within 1.2×10⁻⁹ of these points for D ≤ 30 and off by 1.0×10⁻⁷ at
-D = 61, where it extrapolates. 1/2 is also the value conjectured in the literature
+parameters. So γ∞ = 1/2 to about 5×10⁻⁷ (a spread over fit choices, not a bound), and λ = 2 + 3.0324/n − 34.3/n² + …
+(γ = 1/2 − 0.7581/n + …). The rational γ formula is within 1.2×10⁻⁹ of these points for D ≤ 30 and
+off by 1.0×10⁻⁷ at D = 61, where it extrapolates. 1/2 is also the value conjectured in the literature
 ([below](#relation-to-published-work)), and like Δ∞ it is not fixed at any finite order of the 1/n expansion
 ([Proposition 5](#proposition-5-the-unstable-mode-at-infinite-d-is-exact)).
 
