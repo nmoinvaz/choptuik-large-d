@@ -693,13 +693,9 @@ Their supercritical branch and its continuously self-similar checks are in
 
 ## How the points are computed
 
-The points are computed by [`hp/`](hp/) (crate `hpkernel`), in double-double and, where the large-D chain needs them,
-in quad- and octo-double, with its arithmetic from the crate [multidouble](https://github.com/nmoinvaz/multidouble).
-Its points are used in [The formula](#the-formula) (agreement and Δ∞), [Values](#values), the [candidate
-test](#closed-forms-tested-and-excluded), the [analyticity tests](#is-the-period-analytic-in-1d) and the large-D scaling
-([How the solution scales with D](#how-the-solution-scales-with-d)).
+The points are computed by [`hp/`](hp/) (crate `hpkernel`), in double-double and, where the large-D chain needs them, in quad- and octo-double. Its arithmetic comes from the crate [multidouble](https://github.com/nmoinvaz/multidouble). Its points are used in [The formula](#the-formula) (agreement and Δ∞), [Values](#values), the [candidate test](#closed-forms-tested-and-excluded), the [analyticity tests](#is-the-period-analytic-in-1d) and the large-D scaling ([How the solution scales with D](#how-the-solution-scales-with-d)).
 
-[ALGORITHM.md](ALGORITHM.md) explains how the solver works, at a high level and down to its data types: the
+[ALGORITHM.md](ALGORITHM.md) explains how the solver works, at a high level and down to its data types. It covers the
 unknowns and the residual, Newton's method, the continuation in D with its predictor, re-seed and corrector, the
 double-, quad- and octo-double number types, and why their precision has to grow with D.
 
