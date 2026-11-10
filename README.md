@@ -994,8 +994,8 @@ through terms smaller than any power of 1/n.
 
 ### Proposition 2: the leading-order problem, solved exactly
 
-At leading order the equations are linear (the scalar wave equation on flat space in self-similar form, c = b = 1).
-For one harmonic $`e^{i\mu\theta}`$, put s = iμω.
+At leading order the equations are linear. They are the scalar wave equation on flat space in self-similar form, with c
+= b = 1. For one harmonic $`e^{i\mu\theta}`$, put s = iμω.
 
 **Proposition 2.**[^12][^13] The solution regular at the centre is, up to a constant,
 
@@ -1044,9 +1044,9 @@ are μω/2, μω/2, μω ≠ 0. $`\square`$
 
 *Check.* At 40 digits (mpmath), the formula satisfies the original first-order equations to 10⁻⁴⁰ for n = 18–1000. For
 the fundamental at ω = ω∞, $`\lvert C\rvert = 0.0121,\ 0.0114,\ 0.0124,\ 0.0192,\ 0.0405`$ at n = 18, 38, 58, 200, 1000.
-It grows like $`\sqrt n`$ ($`\lvert C\rvert/\sqrt n = 0.00128`$ at n = 1000, tending to
-$`2\pi\,2^{-1/2}e^{-\pi\omega}/\lvert\Gamma(\alpha)\Gamma(\beta)\rvert = 0.00126`$), small only through the factor of
-order $`e^{-\pi\mu\omega/2}`$.
+It grows like $`\sqrt n`$, with $`\lvert C\rvert/\sqrt n = 0.00128`$ at n = 1000, tending to
+$`2\pi\,2^{-1/2}e^{-\pi\omega}/\lvert\Gamma(\alpha)\Gamma(\beta)\rvert = 0.00126`$. It is small only through the factor
+of order $`e^{-\pi\mu\omega/2}`$.
 
 The free wave equation in similarity coordinates has been analysed in 3+1 dimensions before, which contains the D = 4
 case[^12], and the coefficient follows from Gauss's connection formula for the hypergeometric function[^13]. What
@@ -1061,9 +1061,9 @@ it has to happen instead.
 
 ### Proposition 3: what gravity does to the non-analytic piece
 
-The non-analytic piece is a fast WKB mode: in the exact solution of Proposition 2 it is
-$`x^{2-n}(1-x^2)^{n/2-1-s}`$, which varies on the scale 1/n. Linearize the field equations around the formal solution
-of Proposition 1 and look for perturbations of that kind.
+The non-analytic piece is a fast WKB mode. In the exact solution of Proposition 2 it is $`x^{2-n}(1-x^2)^{n/2-1-s}`$,
+which varies on the scale 1/n. Linearize the field equations around the formal solution of Proposition 1 and look for
+perturbations of that kind.
 
 **Proposition 3.** Let F(θ) and ω be given and c = 1 - ε F²(1-x²) + O(ε²), as in
 Proposition 1. Put
@@ -1114,8 +1114,8 @@ and $`\int (1+x)/(x(1-x^2))\,dx = \ln\big(x/(1-x)\big)`$ gives the prefactor. $`
 </details>
 
 Without gravity, a harmonic $`A = \alpha(x)e^{i\mu\theta}`$ gives $`\alpha = x(1-x)^{-1}(1-x^2)^{-s}`$ and
-$`\delta p - \delta m = 2x^{2-n}(1-x^2)^{n/2-1-s}`$: exactly the second solution of Proposition 2, with its exponents at
-the centre and at the light cone.
+$`\delta p - \delta m = 2x^{2-n}(1-x^2)^{n/2-1-s}`$. That is exactly the second solution of Proposition 2, with its
+exponents at the centre and at the light cone.
 
 *Check.* `solver/largeD_fast_transport.py` integrates the linearized equations (b = 1, c = 1 - F²(1-x²)/n,
 $`F = 2.72\sin\theta + 0.22\sin3\theta`$, ω = ω∞, 64 points in θ) from x = 0.9 to 0.72, starting
@@ -1128,17 +1128,22 @@ from the WKB data, and compares the result with the transported A:
 | relative error, full background (b, G, p of Proposition 1, with δ b, δ c) | 0.62 | 0.28 | 0.135 | 0.066 | 0.032 |
 
 All fall like 1/n. Over this interval gravity multiplies the fast mode by about 40. The last row is
-`solver/largeD_fast_transport_full.py`. `solver/largeD_transport_sympy.py` repeats the derivation symbolically from the
-exact equations with δ b and δ c kept: they come out at order $`\varepsilon^{3/2}e^{-n\Phi}`$, the half-integer orders
-vanish, the leading order gives B = A(1-x)/(1+x), a₁, b₁ drop out of the projection, and the projected order-1 equation
-is −2/(1+x) times the transport equation.
+`solver/largeD_fast_transport_full.py`.
+
+`solver/largeD_transport_sympy.py` repeats the derivation symbolically from the exact equations, with δ b and δ c kept:
+
+- they come out at order $`\varepsilon^{3/2}e^{-n\Phi}`$;
+- the half-integer orders vanish;
+- the leading order gives B = A(1-x)/(1+x);
+- a₁, b₁ drop out of the projection;
+- the projected order-1 equation is −2/(1+x) times the transport equation.
 
 **Consequences.**
 
 1. Gravity acts on the non-analytic piece at order 1, not at order 1/n, through a factor that contains every power of
    F². Near the light cone the characteristic winds through all phases, F² averages, and the factor behaves like
-   $`(1-x^2)^{\langle F^2\rangle}`$: the light-cone exponent becomes $`n/2 - 1 - s + \langle F^2\rangle`$. The exact
-   local analysis at x = 1 agrees: there $`x - c = -(1-x)\,(1 - c_x(1))`$ with $`c_x(1) = G(1)`$ (because c(1) = 1), m
+   $`(1-x^2)^{\langle F^2\rangle}`$. So the light-cone exponent becomes $`n/2 - 1 - s + \langle F^2\rangle`$. The exact
+   local analysis at x = 1 agrees. There $`x - c = -(1-x)\,(1 - c_x(1))`$ with $`c_x(1) = G(1)`$ (because c(1) = 1), m
    enters only one power later, and periodicity in θ gives the exponent
    $`(n/2 - 1 - s + \langle G(1)\rangle)/(1 - \langle G(1)\rangle)`$. On the double-double solutions
    (`hp/largeD_exponent.py`; $`\lvert c_x(1) - G(1)\rvert \le 1.7\times10^{-14}`$):
@@ -1149,15 +1154,16 @@ is −2/(1+x) times the transport equation.
    | $`\langle F^2\rangle`$ | 6.162 | 5.218 | 4.804 | 4.568 | 4.416 | 3.70–3.73 |
    | exponent shift, real part | 2.63 | 2.95 | 3.12 | 3.23 | 3.30 | |
 
-   The two agree only in the limit (both extrapolate to about 3.70); at finite D the 1/n corrections are large. With
-   a shift of about 3.7 at D = ∞, an expansion in the amplitude of the wave is not a route to the selection.
+   The two agree only in the limit, where both extrapolate to about 3.70. At finite D the 1/n corrections are large.
+   With a shift of about 3.7 at D = ∞, an expansion in the amplitude of the wave is not a route to the selection.
 2. The factor never vanishes. Gravity rescales the fast mode along each characteristic, but it cannot cancel it on the
-   way to the light cone; the light-cone coefficient is zero only where the mode is never created.
+   way to the light cone. The light-cone coefficient is zero only where the mode is never created.
 3. Every characteristic $`\theta = \theta_0 + \omega\ln(1-x^2)`$ reaches the centre, and there the fast mode is the
    singular branch $`x^{2-n}`$ (the second solution of Proposition 2). A solution regular at x = 0 therefore has A₀ = 0
-   on every characteristic: at any order of this WKB expansion it carries no fast mode on 0 < x < 1. (A size argument,
-   $`e^{-n\Phi}`$ being exponentially large for $`x < 1/\sqrt2`$, would not exclude an exponentially small A₀;
-   regularity does.) The non-analytic piece comes from a Stokes phenomenon, which the next subsection locates.
+   on every characteristic. At any order of this WKB expansion it carries no fast mode on 0 < x < 1. A size argument
+   would not exclude an exponentially small A₀, since it only says that $`e^{-n\Phi}`$ is exponentially large for
+   $`x < 1/\sqrt2`$. Regularity does. The non-analytic piece comes from a Stokes phenomenon, which the next subsection
+   locates.
 
 ![The past light cone of the singularity with the solver's node rays, beside the size of the fast mode exp(-n Phi(x)) along x for D = 20, 40 and 60, equal to 1 at x = 1/sqrt 2 for every D](hp/light_cone.svg)
 
