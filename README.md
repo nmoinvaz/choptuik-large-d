@@ -261,10 +261,10 @@ with these coefficients:
 | 7 | +3.2695252782 × 10² |  | −4.8272358903 × 10¹ |  |
 | 8 | −1.6050467699 × 10² |  |  |  |
 
-Eleven numbers for Δ and nine for γ, with no singularity at any physical D (the denominators vanish only
-at D = −3.2, −11.0 and D = −13.3, −20.4). Fitted on every computed point 4 ≤ D ≤ 30.2 (`solver/formula_all.py`;
-`solver/rational_fit.py` searches the forms: for Δ one numerator term beyond the smallest adequate form makes it
-ten times tighter), they reproduce each point within its own precision:
+That is eleven numbers for Δ and nine for γ. Neither has a singularity at any physical D, since the denominators vanish
+only at D = −3.2, −11.0 and D = −13.3, −20.4. They are fitted on every computed point 4 ≤ D ≤ 30.2
+(`solver/formula_all.py`). `solver/rational_fit.py` searches the forms, and for Δ one numerator term beyond the smallest
+adequate form makes the fit ten times tighter. They reproduce each point within its own precision:
 
 | D | Δ: formula − computed | precision of the points | γ: formula − computed | precision of the points |
 |---|---|---|---|---|
@@ -274,10 +274,10 @@ ten times tighter), they reproduce each point within its own precision:
 | 30.2 – 67.77, never seen by the fit | ≤ 5.8×10⁻⁸ | ≤ 10⁻¹⁴ (double-double) | ≤ 5×10⁻⁷ up to D = 35.8 | |
 
 The coefficients are the fit of 2026-10-19, kept in `solver/data/formula_coefficients.json`, which every script here
-evaluates (`solver/formula_all.py`). The weighted least squares has a flat valley: refitted on the same points in
+evaluates (`solver/formula_all.py`). The weighted least squares has a flat valley. Refitted on the same points in
 another environment, the coefficients move by up to 0.7% and the values by 10⁻⁹ on the fitted range and about 10⁻⁷ at
-D = 80 (`python3 ../formula_all.py --refit` from `solver/data` prints the fresh fit and its distance), so the table, not
-a refit, is the formula, and that spread is the extrapolation's own uncertainty.
+D = 80 (`python3 ../formula_all.py --refit` from `solver/data` prints the fresh fit and its distance). So the table,
+not a refit, is the formula, and that spread is the extrapolation's own uncertainty.
 
 The shorter forms of the formula for each range of D, and the earlier power series with its table, are in
 [notes/FORMULA_FORMS.md](notes/FORMULA_FORMS.md).
@@ -297,25 +297,28 @@ Cauchy integral over that cut:
 Its 29 coefficients ([`hp/data/formula_cut.json`](hp/data/formula_cut.json), fitted at 256 bits by
 `hp/formula_cut_fit.py`) reproduce all 1214 points within 3.47 times their errors, and give Δ∞ = 1.643893745. It is a
 fit, not a law. ρ is the series' continuation onto the cut, large and oscillating, and Δ(3) is not determined (1.87–2.13
-across forms). The integral states the analytic structure the series assumes: Δ analytic in D everywhere except on that
-cut, with a finite limit at D = ∞. An independent computation of the jump across the cut, which nobody has, would give Δ
-with no fit. `hp/formula_cut.py` evaluates both forms and checks them; the details and the planted tests are in
-[notes/FORMULA_FORMS.md](notes/FORMULA_FORMS.md).
+across forms). The integral states the analytic structure the series assumes, which is that Δ is analytic in D
+everywhere except on that cut, with a finite limit at D = ∞. An independent computation of the jump across the cut,
+which nobody has, would give Δ with no fit. `hp/formula_cut.py` evaluates both forms and checks them. The details and
+the planted tests are in [notes/FORMULA_FORMS.md](notes/FORMULA_FORMS.md).
 
 An independent double-double computation ([below](#how-the-points-are-computed)) agrees with the formula to
 2.7×10⁻⁹ or better on 8.25 ≤ D ≤ 21, 7.5×10⁻⁹ up to D = 30, and 5.8×10⁻⁸ from there to
-D = 61, which the fit never saw. It also shows that the f64 points at D ≈ 8–10 (23 Fourier modes in time)
-sit up to 4×10⁻¹⁰ above the true values (from 1.3×10⁻¹¹ to 3.7×10⁻¹⁰ on 8.25–9.9; within
-3×10⁻¹¹ on 10–15.2 and about 6×10⁻¹¹ on 15.6–21), so their quoted 3×10⁻¹¹ was optimistic
-there; that is below the formula's tolerance and does not change it.
+D = 61, which the fit never saw.
+
+It also shows that the f64 points at D ≈ 8–10, which use 23 Fourier modes in time, sit up to 4×10⁻¹⁰ above the true
+values. The excess is 1.3×10⁻¹¹ to 3.7×10⁻¹⁰ on 8.25–9.9, within 3×10⁻¹¹ on 10–15.2, and about 6×10⁻¹¹ on 15.6–21. So
+their quoted 3×10⁻¹¹ was optimistic there. That is below the formula's tolerance and does not change it.
 
 At D = 4 the formula gives Δ = 3.4454524 and γ = 0.3739610, the accepted four-dimensional values
 ([Relation to published work](#relation-to-published-work)).
-Near D = 4 the points themselves set the limit: the solution needs many Fourier modes in time there, and Δ(4)
-moves by −4.3×10⁻⁴, −3.4×10⁻⁵ and −2.8×10⁻⁶ from 23 to 31 to 39 to 47 modes, so the points
-below D = 5 are extrapolations in the mode count. Above D ≈ 36 the computed γ scatter by up to
-6×10⁻⁵ around both this formula and the power series below, which agree with each other; the growth-rate solve
-is not reliable there.
+
+Near D = 4 the points themselves set the limit. The solution needs many Fourier modes in time there, and Δ(4) moves by
+−4.3×10⁻⁴, −3.4×10⁻⁵ and −2.8×10⁻⁶ from 23 to 31 to 39 to 47 modes. So the points below D = 5 are extrapolations in the
+mode count.
+
+Above D ≈ 36 the computed γ scatter by up to 6×10⁻⁵ around both this formula and the power series below, which agree
+with each other. The growth-rate solve is not reliable there.
 
 ### Below D = 4 and the limit D → 3
 
