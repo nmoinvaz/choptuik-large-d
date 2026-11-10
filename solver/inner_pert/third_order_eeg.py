@@ -17,8 +17,11 @@ Checks (exit status 1 if any fails):
      equal Proposition 1's c, u/x^2, y/(sqrt 2 x) and (p + m)/(sqrt 2 x^2) coefficient by coefficient. The orders
      e^4 (f, Omega) and e^3 (Pi, Psi) are the ones the new terms enter; the lower ones repeat second_order_eeg.py.
   N  each new term enters its order: with it set to zero, the comparison at that order fails.
+  I  the NLO and NNLO taken from second_order_eeg.py equal those of solver/independent_eeg_nnlo/check.py (its claimed
+     set), the other transcription. check.py is read only for this comparison.
 Mutations (each must make the run exit 1): --mutate=Psi3, Pi4, Omega4, f4 (one coefficient of a new term, as in
-psi3.py), K3 (beta~ without K_3, a map error at the new order only), map (eps_E = e instead of e/(1 + e)).
+psi3.py), K3 (beta~ without K_3, a map error at the new order only), map (eps_E = e instead of e/(1 + e)), Psi2
+(second_order_eeg's mutation of (S43), 11 -> 10, which check I must catch too).
 --controls runs every mutation in a subprocess and compares its exit and failing (field, order) pairs with CONTROLS,
 written before the first run; it exits 0 only if every row matches.
 
@@ -33,7 +36,7 @@ import sympy as sp
 T0 = time.time()
 ARGS = [a for a in sys.argv[1:]]
 CONTROLS_MODE = ARGS == ["--controls"]
-MUTS = {'Psi3', 'Pi4', 'Omega4', 'f4', 'K3', 'map'}
+MUTS = {'Psi3', 'Pi4', 'Omega4', 'f4', 'K3', 'map', 'Psi2'}
 MUT = next((a.split("=", 1)[1] for a in ARGS if a.startswith("--mutate=")), None)
 if MUT is not None and MUT not in MUTS:
     sys.exit(f"unknown mutation {MUT}; choose from {', '.join(sorted(MUTS))}")
@@ -43,7 +46,7 @@ sys.argv = sys.argv[:1]                  # second_order_eeg reads sys.argv at im
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import second_order_eeg as soe  # noqa: E402
 
-soe.MUT = None
+soe.MUT = "Psi2" if MUT == "Psi2" else None     # Psi2: second_order_eeg's own mutation of (S43), 11 -> 10
 FAILS = []
 FAILED_ORDERS = []      # (field, power of e) of every failed comparison in check A
 
@@ -59,6 +62,8 @@ CONTROLS = [
     ("K3", 1, {("Pi", 3), ("f", 4), ("Om", 4)}),
     ("map", 1, {("f", 2), ("f", 3), ("f", 4), ("Om", 2), ("Om", 3), ("Om", 4), ("Pi", 1), ("Pi", 2), ("Pi", 3),
                 ("Psi", 2), ("Psi", 3)}),
+    # A lower-order input changed: Psi_2 enters Psi/sqrt(e) at e^2 and, through eps_E^2, at e^3. Check I fails too.
+    ("Psi2", 1, {("Psi", 2), ("Psi", 3)}),
 ]
 
 x, e = soe.x, soe.e
@@ -342,6 +347,18 @@ def check_A(our):
                 FAILED_ORDERS.append((key, k))
 
 
+def check_I():
+    print("I. the lower orders against check.py's claimed set", flush=True)
+    sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "independent_eeg_nnlo"))
+    import check as C
+    t = C.build_set("claimed")
+    co = soe.eeg_coeffs(list(C.b), corrected=True)
+    pairs = dict(f2="f2", O2="Om2", P2="Pi2", S2="Psi2", f3="f3", O3="Om3", P3="Pi3")
+    same = [k for k, v in pairs.items() if sp.expand(t[k] - co[v].subs(x, C.x)) == 0]
+    verdict("f2, Omega2, Pi2, Psi2, f3, Omega3, Pi3 equal check.py's", len(same) == len(pairs),
+            "" if len(same) == len(pairs) else f"equal only {same}")
+
+
 def check_N(our):
     print("N. each new term is needed at its order", flush=True)
     for drop, key in (("S3", "Psi"), ("P4", "Pi"), ("O4", "Om"), ("f4", "f")):
@@ -380,6 +397,7 @@ if __name__ == "__main__":
     check_A(our)
     if MUT is None:
         check_N(our)
+    check_I()
     print(f"failed orders: {sorted(FAILED_ORDERS)}")
     print(f"\n{'ALL PASS' if not FAILS else 'FAILED: ' + ', '.join(FAILS)}  [{time.time() - T0:.0f} s]")
     sys.exit(1 if FAILS else 0)
