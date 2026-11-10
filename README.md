@@ -1406,11 +1406,15 @@ predicted finite harmonic decay rate of about 1.4 agrees with the data, consiste
 
 ### The inner problem at large x
 
-Near x = ∞ the large-n expansion is not uniform: at $`x \sim \sqrt n`$, ε x²F² = O(1), so c - 1 = O(1) (gravity is no
-longer weak); $`p \approx \varepsilon^{1/2}xF = O(1)`$; and $`e^{-n\Phi} \to e^{\mp in\pi/2}e^{-n/(2x^2)}`$, so fast and
-slow modes are no longer separated. Put $`\xi = x/\sqrt n`$, y = p - m (unscaled, as in Propositions 2 and 4; `Dd` in
-the scripts), $`\sigma = \sqrt n\,(p+m)`$, b - 1 = η/n, and $`L = \xi^2\partial_\xi + \omega\xi\,\partial_\theta`$. The
-difference and sum of the p, m equations and the b, c equations give, at leading order,
+Near x = ∞ the large-n expansion is not uniform. At $`x \sim \sqrt n`$:
+
+- ε x²F² = O(1), so c - 1 = O(1) and gravity is no longer weak;
+- $`p \approx \varepsilon^{1/2}xF = O(1)`$;
+- $`e^{-n\Phi} \to e^{\mp in\pi/2}e^{-n/(2x^2)}`$, so fast and slow modes are no longer separated.
+
+Put $`\xi = x/\sqrt n`$, y = p - m (unscaled, as in Propositions 2 and 4; `Dd` in the scripts),
+$`\sigma = \sqrt n\,(p+m)`$, b - 1 = η/n, and $`L = \xi^2\partial_\xi + \omega\xi\,\partial_\theta`$. The difference and
+sum of the p, m equations and the b, c equations give, at leading order,
 
 ```math
 L\,y = c\,\sigma, \qquad
@@ -1418,11 +1422,16 @@ L\,\sigma = c\,\xi\,\partial_\xi{y} + c\,\big(\tfrac12 y^2 - 1\big)\,{y}, \qquad
 \xi\,\partial_\xi c = \tfrac12\,c\,{y}^2 , \qquad \eta = \tfrac12 y^2 .
 ```
 
-No large parameter is left: this problem is the same for every n. Up to a change of variables it is Rozali and Way's
-leading-order large-D system[^6] (see Proposition 5). (Derivation: in the difference equation the terms of order
-$`\sqrt n`$ are $`x^2\partial_x{y}`$, $`\omega x\,\partial_\theta{y}`$ and n c (p+m); in the sum, the order-1 terms are
-$`x^2\partial_x(p+m)`$, $`x c\,\partial_x{y}`$, $`\omega x\,\partial_\theta(p+m)`$ and $`(G - c)\,y`$ with G = cη; the b
-equation becomes algebraic, η = p² + m².)
+No large parameter is left, so this problem is the same for every n. Up to a change of variables it is Rozali and Way's
+leading-order large-D system[^6] (see Proposition 5).
+
+The derivation, term by term:
+
+- In the difference equation the terms of order $`\sqrt n`$ are $`x^2\partial_x{y}`$, $`\omega x\,\partial_\theta{y}`$
+  and n c (p+m).
+- In the sum, the order-1 terms are $`x^2\partial_x(p+m)`$, $`x c\,\partial_x{y}`$, $`\omega x\,\partial_\theta(p+m)`$
+  and $`(G - c)\,y`$ with G = cη.
+- The b equation becomes algebraic, η = p² + m².
 
 The inner problem's properties (resummation, Kummer, the Borel structure) and the M = 1, 3, 5, 7 computations in
 detail are in [notes/INNER_STOKES.md](notes/INNER_STOKES.md).
@@ -1434,16 +1443,20 @@ light-cone exponent of Proposition 2):
 C(n,s) = -2\pi i\,\frac{2^{-s-1/2}}{\Gamma(\alpha)\Gamma(\beta)}\,(n+1)^{s+1/2}\,e^{-i\pi\Lambda}\,\big(1 + O(s^2/n)\big), \qquad \Lambda = \tfrac n2 - 1 - s .
 ```
 
-`solver/largeD_stokes_C.py`: the ratio of the two sides is 1.00014 at n = 10⁵ for μ = 1 (1.0013 for μ = 3), with
-$`n\,(\text{ratio} - 1) \to 13.9 - 7.6i`$, of the size of $`\lvert s^2\rvert = 14.6`$. At D = 20–60 the ratio is still
-about 2.1–1.27 for μ = 1: the asymptotics need μ²ω² ≪ n. So, asymptotically for large n, the light-cone coefficient of
-Proposition 2 is the n-independent Stokes constant $`2^{-s-1/2}/(\Gamma(\alpha)\Gamma(\beta))`$ of a $`{}_2F_0`$ times
-$`(n+1)^{s+1/2}`$ and a phase.
+*Check* (`solver/largeD_stokes_C.py`). The ratio of the two sides is 1.00014 at n = 10⁵ for μ = 1 (1.0013 for μ = 3),
+with $`n\,(\text{ratio} - 1) \to 13.9 - 7.6i`$, of the size of $`\lvert s^2\rvert = 14.6`$. At D = 20–60 the ratio is
+still about 2.1–1.27 for μ = 1, because the asymptotics need μ²ω² ≪ n.
+
+So, asymptotically for large n, the light-cone coefficient of Proposition 2 is the n-independent Stokes constant
+$`2^{-s-1/2}/(\Gamma(\alpha)\Gamma(\beta))`$ of a $`{}_2F_0`$ times $`(n+1)^{s+1/2}`$ and a phase.
 
 **First computation with gravity** (harmonics $`\lvert\mu\rvert \le M`$), by two independent implementations that share
-no code: *lateral solutions* (`solver/inner_stokes/`: the inner equations integrated from just above and just below the
-Stokes line and differenced) and *Borel–Darboux* (`solver/inner_borel/`, ball arithmetic with python-flint: the late
-orders of the inner series fitted with the predicted fast-mode exponents).
+no code:
+
+- *Lateral solutions* (`solver/inner_stokes/`). The inner equations are integrated from just above and just below the
+  Stokes line and differenced.
+- *Borel–Darboux* (`solver/inner_borel/`, ball arithmetic with python-flint). The late orders of the inner series are
+  fitted with the predicted fast-mode exponents.
 
 **Without truncation: the amplitude expansion** (`solver/inner_amp/`).
 
@@ -1454,9 +1467,9 @@ $`\phi = \theta + \omega\ln t`$, $`L = -\partial_t`$ at fixed φ, and eliminatin
 y'' + \Big(c^2t - \frac{c'}{c}\Big)\,y' + c^2\Big[\omega\,\partial_\phi y + \big(1 - \tfrac12 y^2\big)\,y\Big] = 0, \qquad t\,c' + \omega\,\partial_\phi c = -\tfrac12\,c\,y^2
 ```
 
-($`' = \partial_t`$ at fixed φ): along each characteristic, a softening anharmonic oscillator with friction c²t. Without
-gravity, $`w = t^{-s}y`$ obeys Hermite's equation $`w'' + tw' + (1+s)\,w = 0`$, and $`w = e^{-t^2/4}v`$ gives Weber's
-$`v'' + (\tfrac12 + s - \tfrac14t^2)\,v = 0`$. By the duplication formula
+Here $`' = \partial_t`$ at fixed φ. Along each characteristic this is a softening anharmonic oscillator with friction
+c²t. Without gravity, $`w = t^{-s}y`$ obeys Hermite's equation $`w'' + tw' + (1+s)\,w = 0`$, and $`w = e^{-t^2/4}v`$
+gives Weber's $`v'' + (\tfrac12 + s - \tfrac14t^2)\,v = 0`$. By the duplication formula
 $`2^{-s-1/2}/(\Gamma(\alpha)\Gamma(\beta)) = 1/(\sqrt{2\pi}\,\Gamma(1+s))`$ (checked numerically for ν = 1, 3), so the
 large-n coefficient is
 
@@ -1464,16 +1477,16 @@ large-n coefficient is
 C(n,s) \approx -\,i\,\frac{\sqrt{2\pi}}{\Gamma(1+s)}\,(n+1)^{s+1/2}\,e^{-i\pi\Lambda},
 ```
 
-Weber's classical Stokes constant $`\sqrt{2\pi}/\Gamma(-\nu_W)`$ with $`\nu_W = -1-s`$.
+This is Weber's classical Stokes constant $`\sqrt{2\pi}/\Gamma(-\nu_W)`$ with $`\nu_W = -1-s`$.
 
 <details>
 <summary>The amplitude expansion in detail: every harmonic exact, the shape, the harmonic-1 condition and where its zero is real, the planted test, twenty-two orders</summary>
 
 - *Every harmonic exact.* Put $`F = A\sin\theta + \sum_{\nu\ge3} f_\nu(A)\,e^{i\nu\theta}`$ (+ c.c.). Harmonic μ first
-  appears at order $`A^{\lvert\mu\rvert}`$, so keeping $`\lvert\mu\rvert \le K`$ at each order in A is exact: no
-  truncation error, unlike fixed M (`amp_series.py` matches `solver/largeD_inner.py` to 2–4×10⁻¹⁶ at orders 0–3). The
+  appears at order $`A^{\lvert\mu\rvert}`$, so keeping $`\lvert\mu\rvert \le K`$ at each order in A is exact. There is
+  no truncation error, unlike fixed M (`amp_series.py` matches `solver/largeD_inner.py` to 2–4×10⁻¹⁶ at orders 0–3). The
   late orders of each harmonic are normalized by its exact linear form Γ(α + j - δ/2) Γ(β + j - δ/2),
-  $`\delta = \langle F^2\rangle`$, and de-mixed by $`e^{-\Pi}`$; without that, harmonics ≥ 5 never reach their
+  $`\delta = \langle F^2\rangle`$, and de-mixed by $`e^{-\Pi}`$. Without that, harmonics ≥ 5 never reach their
   asymptotic regime (corrections ~(νω)²/j), which is probably part of why fixed-M truncation misbehaves.
 - *The higher-harmonic conditions predict F∞'s shape* (computed; compared with data). Tuning $`f_\nu`$ order by order so
   that $`S_\nu = 0`$ for $`\lvert\nu\rvert \ge 3`$ (residuals ≤ 10⁻⁹ of the linear sizes), at A = 2.72 and ω = ω∞, gives
@@ -1490,10 +1503,11 @@ Weber's classical Stokes constant $`\sqrt{2\pi}/\Gamma(-\nu_W)`$ with $`\nu_W = 
   with singularities at
   $`\lvert\mathrm{Im}\,\theta\rvert \approx \tfrac12\ln\big(1/\lvert q\rvert A^2\big) \approx 1.4`$, well inside πω/2 ≈
   6. If so, F∞ is not entire, and the harmonic decay rate (1.02 at D = 60, growing) levels off near 1.4 instead of
-  growing like $`\tfrac14\ln n`$. The data support this: the measured ratios $`\lvert F_{\nu+2}/F_\nu\rvert`$, ν = 1, …,
-  9, are 0.080, 0.106, 0.118, 0.125, 0.129 at D = 60 and extrapolate (degree 3 in 1/n) to 0.055, 0.059, 0.065, 0.069,
-  0.072: finite, close to each other and to $`\lvert q\rvert A^2 \approx 0.063`$, i.e. a decay rate of 1.3–1.45 per
-  harmonic. The extrapolations are not fully converged (they still fall by 0.003–0.004 from degree 2 to 3).
+     growing like $`\tfrac14\ln n`$. The data support this. The measured ratios $`\lvert F_{\nu+2}/F_\nu\rvert`$, ν = 1,
+     …, 9, are 0.080, 0.106, 0.118, 0.125, 0.129 at D = 60 and extrapolate (degree 3 in 1/n) to 0.055, 0.059, 0.065,
+     0.069, 0.072. These are finite, close to each other and to $`\lvert q\rvert A^2 \approx 0.063`$, i.e. a decay rate
+     of 1.3–1.45 per harmonic. The extrapolations are not fully converged (they still fall by 0.003–0.004 from degree 2
+     to 3).
 - *The harmonic-1 condition* (`solver/inner_amp/amp_flint_par.py --fit phys`, python-flint at 640 bits;
   `zero_selection.py`, `arg_crossing.py`). With the higher harmonics tuned,
   $`S_1/S_1^{(1)} = 1 + \sigma_1A^2 + \sigma_2A^4 + \ldots`$. The late orders of harmonic ν at order k contain every
@@ -1558,12 +1572,17 @@ Weber's classical Stokes constant $`\sqrt{2\pi}/\Gamma(-\nu_W)`$ with $`\nu_W = 
   calibrated on the plants, it put the zero at 0.99992–1.00019, provided S₁ has no zeros besides x₀ within |x| ≈ 9;
   twelve coefficients could not exclude those, and functions with exactly the real σ₀…σ₁₂ have their zero anywhere in
   0.996–1.002, the far cases hiding a ring of zeros. The estimates also need every σₖ to about 10⁻¹⁰.
-- *Orders fifteen to twenty-two.* Each new coefficient σ_K converges at 960 or 1280 bits (a 1280-bit run agrees with
-  the 960-bit one to 10⁻²⁶ or better), the arg crossing keeps falling toward 1, every ring of zeros built from the
-  known coefficients mispredicts the next one and is rejected while the ring-free Borel–Padé sums predict it to
-  10⁻⁹–10⁻⁷, and the estimator range (arc plants, the Borel–Padé family, the ring-free sums, calibrated on planted
-  functions) narrows order by order. The order-by-order record, with the ring tests, the calibrations and the
-  detectors, is [notes/PLANTED_SELECTION.md](notes/PLANTED_SELECTION.md) §7–14; its numbers:
+- *Orders fifteen to twenty-two.* At each new order:
+  - the new coefficient σ_K converges at 960 or 1280 bits (a 1280-bit run agrees with the 960-bit one to 10⁻²⁶ or
+    better);
+  - the arg crossing keeps falling toward 1;
+  - every ring of zeros built from the known coefficients mispredicts the next one and is rejected, while the ring-free
+    Borel–Padé sums predict it to 10⁻⁹–10⁻⁷;
+  - the estimator range (arc plants, the Borel–Padé family, the ring-free sums, calibrated on planted functions)
+    narrows.
+
+  The order-by-order record, with the ring tests, the calibrations and the detectors, is
+  [notes/PLANTED_SELECTION.md](notes/PLANTED_SELECTION.md) §7–14. Its numbers:
 
   | orders | σ_K converged to (relative) | arg crossing | ring-free sums' zero | estimator range |
   |---|---|---|---|---|
@@ -1596,19 +1615,19 @@ Weber's classical Stokes constant $`\sqrt{2\pi}/\Gamma(-\nu_W)`$ with $`\nu_W = 
   the twenty-two-order estimator range is 0.9999988–1.0000004 ([notes/PLANTED_SELECTION.md](notes/PLANTED_SELECTION.md)
   §14).
 
-  Taken together over the last nine orders,
-**ω*/ω∞ = 0.999975–1.00005, Δ∞ = 1.64387 ± 0.00006 (1.64381–1.64393) from the D = ∞ inner equations alone**
-(the last two orders alone give 0.9999984–1.0000016). This is an estimator range over nine orders, the planted
-functions and the ring-free completions, not a bound, and it uses no input from the finite-D solutions. Their
-value, 1.643893746, lies inside it. The range assumes no zeros of S₁ nearer than x₀; every ring that put zeros
-there was rejected, and the rings just beyond x₀ fitted to all the known coefficients, which survived one
-coefficient at a time through σ₁₆, are rejected by σ₁₇, rebuilt from σ₀…σ₁₇ by σ₁₈, rebuilt from σ₀…σ₁₈ by σ₁₉,
-and rebuilt from σ₀…σ₁₉ by σ₂₀ (one of them by the bracket detector alone), rebuilt from σ₀…σ₂₀ by σ₂₁, and rebuilt
-from σ₀…σ₂₁ by σ₂₂. The
-rule itself is
-still a conjecture (hypotheses H1–H2, gaps (a)–(c)). Tightening the number needs more orders, approximants that model
-the competing singularity explicitly (differential or algebraic approximants), or M = 7, which evaluates the
-multiplier at real amplitude with no series to resum (done: 1.000022).
+  Taken together over the last nine orders, **ω*/ω∞ = 0.999975–1.00005, Δ∞ = 1.64387 ± 0.00006 (1.64381–1.64393) from
+  the D = ∞ inner equations alone** (the last two orders alone give 0.9999984–1.0000016). This is an estimator range
+  over nine orders, the planted functions and the ring-free completions, not a bound. It uses no input from the finite-D
+  solutions, and their value, 1.643893746, lies inside it.
+
+  The range assumes no zeros of S₁ nearer than x₀. Every ring that put zeros there was rejected. The rings just beyond
+  x₀ fitted to all the known coefficients survived one coefficient at a time through σ₁₆. They were then rejected by
+  σ₁₇, and each rebuilt set by the next coefficient: rebuilt from σ₀…σ₁₇ by σ₁₈, from σ₀…σ₁₈ by σ₁₉, from σ₀…σ₁₉ by σ₂₀
+  (one of them by the bracket detector alone), from σ₀…σ₂₀ by σ₂₁, and from σ₀…σ₂₁ by σ₂₂.
+
+  The rule itself is still a conjecture (hypotheses H1–H2, gaps (a)–(c)). Tightening the number needs more orders,
+  approximants that model the competing singularity explicitly (differential or algebraic approximants), or M = 7, which
+  evaluates the multiplier at real amplitude with no series to resum (done: 1.000022).
 - *Shape.* The shape predictions at A = 2.72 are F₃/F₁ = 0.0551, F₅/F₁ = 0.00314 (data: above), and the D = ∞
   relation evaluated at each D's own amplitude and ω tracks the measured F₃/F₁ at D = 20–60 to within 0.004–0.006
   (0.126, 0.099, 0.087, 0.080, 0.075 against 0.130, 0.105, 0.093, 0.085, 0.080; `harm_pred.py`, heuristic).
@@ -1617,27 +1636,32 @@ multiplier at real amplitude with no series to resum (done: 1.000022).
 
 ![The selection rule evaluated from the D = infinity inner problem alone: the order-by-order bracket on omega, the truncation sequence and the effective exponent](solver/selection.svg)
 
-**The selection rule from the inner problem alone** (`solver/plot_selection.py`). Top: where the harmonic-1 multiplier
-has a real zero, order by order in the amplitude expansion. The simple-zero estimates (arg τ_k = π) come down from
-above, the floating-exponent estimates come up from below, and the shaded bracket between them narrows onto the line at
-1, which is ω∞ from the finite-D solutions; the Padé approximants (ranges) and the factored series land inside it
-through k = 13; at k = 14 and 15 the Padé ranges reach just above its top edge, and at k = 15 the factored series lies
-inside it. Bottom left: keeping M harmonics, the error alternates in sign and shrinks fifteen- to twentyfold per pair; M
-= 7 lands inside the range predicted from M ≤ 5 (dashed). Bottom right: the effective exponent of the zero tends to 1, a
-simple zero, which is why the estimates from above are the asymptotically correct ones.
+**The selection rule from the inner problem alone** (`solver/plot_selection.py`).
+
+- **Top:** where the harmonic-1 multiplier has a real zero, order by order in the amplitude expansion. The simple-zero
+  estimates (arg τ_k = π) come down from above, the floating-exponent estimates come up from below, and the shaded
+  bracket between them narrows onto the line at 1, which is ω∞ from the finite-D solutions. The Padé approximants
+  (ranges) and the factored series land inside it through k = 13. At k = 14 and 15 the Padé ranges reach just above its
+  top edge, and at k = 15 the factored series lies inside it.
+- **Bottom left:** keeping M harmonics, the error alternates in sign and shrinks fifteen- to twentyfold per pair. M = 7
+  lands inside the range predicted from M ≤ 5 (dashed).
+- **Bottom right:** the effective exponent of the zero tends to 1, a simple zero, which is why the estimates from above
+  are the asymptotically correct ones.
 
 The estimates as a log distance from the finite-D answer (solver/selection_zoom.svg) are in
 [notes/PLANTED_SELECTION.md](notes/PLANTED_SELECTION.md), its last section.
 
 ![The echo's harmonic spectrum: amplitude of each odd harmonic for D = 4 to 60 with the D = infinity prediction, and the decay rate per harmonic against 1/(D-2)](solver/spectrum.svg)
 
-**The prediction against the spectrum** (`solver/plot_spectrum.py`). Left: the amplitude |F_ν| of each odd harmonic (log
-scale) for D = 4 to 60, darker for larger D, with the D = ∞ prediction dashed (F₃ and F₅ computed; beyond that the
-leading-order ratio |q|A² ≈ 0.063, conjectured). Right: the decay rate per harmonic, ½ ln|F_ν/F_ν₊₂|, against 1/(D−2),
-with extrapolations from D ≥ 20. The rate grows from about 0.4 at D = 4 to about 1.0 at D = 60 and levels off: for ν = 1
-it extrapolates to 1.45, on the predicted 1.38–1.45; for ν = 5 and 9 to 1.34–1.37 and 1.29–1.31, still rising with the
-fit degree, so approaching the predicted band but not converged. (From D = 35 the double-double runs pin harmonics above
-13 to zero, so the D = 40 and 60 lines stop at ν = 13.)
+**The prediction against the spectrum** (`solver/plot_spectrum.py`).
+
+- **Left:** the amplitude |F_ν| of each odd harmonic (log scale) for D = 4 to 60, darker for larger D, with the D = ∞
+  prediction dashed (F₃ and F₅ computed; beyond that the leading-order ratio |q|A² ≈ 0.063, conjectured).
+- **Right:** the decay rate per harmonic, ½ ln|F_ν/F_ν₊₂|, against 1/(D−2), with extrapolations from D ≥ 20. The rate
+  grows from about 0.4 at D = 4 to about 1.0 at D = 60 and levels off. For ν = 1 it extrapolates to 1.45, on the
+  predicted 1.38–1.45. For ν = 5 and 9 it extrapolates to 1.34–1.37 and 1.29–1.31, still rising with the fit degree, so
+  approaching the predicted band but not converged. From D = 35 the double-double runs pin harmonics above 13 to zero,
+  so the D = 40 and 60 lines stop at ν = 13.
 
 ### Proposition 5: the unstable mode at infinite D is exact
 
