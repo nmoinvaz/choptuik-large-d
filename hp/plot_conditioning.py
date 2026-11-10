@@ -30,7 +30,7 @@ REPO = "https://github.com/nmoinvaz/choptuik-large-d"
 PIVOTS = os.path.join(HERE, "data", "chain_pivots.csv")
 # the chain's logs in the order of its backbone; a D printed by two of them keeps the first
 LOGS = ["T138-win2/chain.log", "T138-win2/chain_o.log", "I19-win2/crawl.log", "I461-win2/crawlB2.log",
-        "I461-win2/crawlB3.log"]
+        "I461-win2/crawlB3.log", "I461-win2/crawlB4.log", "I461-win2/crawlB5.log", "I461-win2/crawlC.log"]
 STEP = re.compile(r"^step \d+: D ([0-9.]+), pivots ([0-9.e+-]+)\.\.([0-9.e+-]+),")
 D0 = 100.0   # both lines are 1 here
 BIN = 8.0
@@ -120,7 +120,10 @@ def main():
     svg.text(16, 58, "The error bar is the spread of Δ over the held fit's degree. The condition is the largest over "
              "the smallest pivot of the Jacobian at each base of the chain.", size=11)
     dg.Axis = DecadeAxis
-    xm, ym = axes(svg, x, y, w, h, (D0, 225), (0.1, 1e30, "log"), "spacetime dimension D",
+    # the axes follow the data: D to the next multiple of 5 past the last base, the growth to the next fourth decade
+    x_hi = 5 * math.ceil((top + 2) / 5)
+    y_hi = 10.0 ** (4 * math.ceil((math.log10(cond[-1][1] / at(cond, D0)) + 1) / 4))
+    xm, ym = axes(svg, x, y, w, h, (D0, x_hi), (0.1, y_hi, "log"), "spacetime dimension D",
                   f"factor of growth since D {D0:g} (lower is better)", xfmt=lambda v: f"{v:g}",
                   yfmt=lambda v: f"1e{round(math.log10(v))}")
     e0, c0 = at(err, D0), at(cond, D0)
