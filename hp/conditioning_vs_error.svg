@@ -1,0 +1,92 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1040" height="652" viewBox="0 0 1040 652" font-family="system-ui, sans-serif">
+<style>@media (prefers-color-scheme: dark){[fill="#fcfcfb"]{fill:#201f1d}[stroke="#fcfcfb"]{stroke:#201f1d}[fill="#0b0b0b"]{fill:#e8e6e3}[stroke="#0b0b0b"]{stroke:#e8e6e3}[fill="#52514e"]{fill:#a8a49d}[stroke="#52514e"]{stroke:#a8a49d}[fill="#e7e6e2"]{fill:#343230}[stroke="#e7e6e2"]{stroke:#343230}[fill="#c98500"]{fill:#d69a2d}[stroke="#c98500"]{stroke:#d69a2d}[fill="#eb6834"]{fill:#dd5c26}[stroke="#eb6834"]{stroke:#dd5c26}[fill="#eda100"]{fill:#c08800}[stroke="#eda100"]{stroke:#c08800}[fill="#e87ba4"]{fill:#d1678f}[stroke="#e87ba4"]{stroke:#d1678f}[fill="#4a3aa7"]{fill:#7263cf}[stroke="#4a3aa7"]{stroke:#7263cf}[fill="#a6339a"]{fill:#c257b5}[stroke="#a6339a"]{stroke:#c257b5}[fill="#7a7668"]{fill:#948e82}[stroke="#7a7668"]{stroke:#948e82}}</style>
+<rect width="1040" height="652" fill="#fcfcfb"/>
+<text x="16.0" y="24.0" font-size="14" fill="#0b0b0b" text-anchor="start" font-weight="bold">The chain's error bar on Δ and the difficulty of its solve, against D</text>
+<text x="16.0" y="42.0" font-size="11" fill="#52514e" text-anchor="start" font-weight="normal">Each line is the factor by which the quantity has grown since D 100, so a steeper line grows faster.</text>
+<text x="16.0" y="58.0" font-size="11" fill="#52514e" text-anchor="start" font-weight="normal">The error bar is the spread of Δ over the held fit's degree. The condition is the largest over the smallest pivot of the Jacobian at each base of the chain.</text>
+<line x1="84.0" y1="96.0" x2="84.0" y2="566.0" stroke="#e7e6e2" stroke-width="1"/>
+<text x="84.0" y="581.0" font-size="11" fill="#52514e" text-anchor="middle" font-weight="normal" font-variant-numeric="tabular-nums">100</text>
+<line x1="436.0" y1="96.0" x2="436.0" y2="566.0" stroke="#e7e6e2" stroke-width="1"/>
+<text x="436.0" y="581.0" font-size="11" fill="#52514e" text-anchor="middle" font-weight="normal" font-variant-numeric="tabular-nums">150</text>
+<line x1="788.0" y1="96.0" x2="788.0" y2="566.0" stroke="#e7e6e2" stroke-width="1"/>
+<text x="788.0" y="581.0" font-size="11" fill="#52514e" text-anchor="middle" font-weight="normal" font-variant-numeric="tabular-nums">200</text>
+<line x1="84.0" y1="550.8" x2="964.0" y2="550.8" stroke="#e7e6e2" stroke-width="1"/>
+<text x="78.0" y="554.8" font-size="11" fill="#52514e" text-anchor="end" font-weight="normal" font-variant-numeric="tabular-nums">1e0</text>
+<line x1="84.0" y1="490.2" x2="964.0" y2="490.2" stroke="#e7e6e2" stroke-width="1"/>
+<text x="78.0" y="494.2" font-size="11" fill="#52514e" text-anchor="end" font-weight="normal" font-variant-numeric="tabular-nums">1e4</text>
+<line x1="84.0" y1="429.5" x2="964.0" y2="429.5" stroke="#e7e6e2" stroke-width="1"/>
+<text x="78.0" y="433.5" font-size="11" fill="#52514e" text-anchor="end" font-weight="normal" font-variant-numeric="tabular-nums">1e8</text>
+<line x1="84.0" y1="368.9" x2="964.0" y2="368.9" stroke="#e7e6e2" stroke-width="1"/>
+<text x="78.0" y="372.9" font-size="11" fill="#52514e" text-anchor="end" font-weight="normal" font-variant-numeric="tabular-nums">1e12</text>
+<line x1="84.0" y1="308.3" x2="964.0" y2="308.3" stroke="#e7e6e2" stroke-width="1"/>
+<text x="78.0" y="312.3" font-size="11" fill="#52514e" text-anchor="end" font-weight="normal" font-variant-numeric="tabular-nums">1e16</text>
+<line x1="84.0" y1="247.6" x2="964.0" y2="247.6" stroke="#e7e6e2" stroke-width="1"/>
+<text x="78.0" y="251.6" font-size="11" fill="#52514e" text-anchor="end" font-weight="normal" font-variant-numeric="tabular-nums">1e20</text>
+<line x1="84.0" y1="187.0" x2="964.0" y2="187.0" stroke="#e7e6e2" stroke-width="1"/>
+<text x="78.0" y="191.0" font-size="11" fill="#52514e" text-anchor="end" font-weight="normal" font-variant-numeric="tabular-nums">1e24</text>
+<line x1="84.0" y1="126.3" x2="964.0" y2="126.3" stroke="#e7e6e2" stroke-width="1"/>
+<text x="78.0" y="130.3" font-size="11" fill="#52514e" text-anchor="end" font-weight="normal" font-variant-numeric="tabular-nums">1e28</text>
+<line x1="84.0" y1="566.0" x2="964.0" y2="566.0" stroke="#52514e" stroke-width="1"/>
+<line x1="84.0" y1="96.0" x2="84.0" y2="566.0" stroke="#52514e" stroke-width="1"/>
+<text x="524.0" y="600.0" font-size="12" fill="#0b0b0b" text-anchor="middle" font-weight="normal">spacetime dimension D</text>
+<text x="40.5" y="331.0" font-size="12" fill="#0b0b0b" text-anchor="middle" transform="rotate(-90 40.5 331.0)">factor of growth since D 100 (lower is better)</text>
+<polyline points="84.0,550.8 91.0,550.0 98.1,547.4 105.1,543.0 112.2,541.7 119.2,539.4 126.2,537.6 133.3,534.7 140.3,532.8 147.4,529.9 154.4,526.6 161.4,524.9 168.5,521.4 175.5,519.8 182.6,516.5 189.6,515.2 196.6,512.0 203.7,511.2 210.7,507.2 217.8,507.8 224.8,504.5 231.8,501.7 238.9,499.9 245.9,496.2 253.0,494.2 260.0,490.9 267.0,489.3 274.1,486.0 281.1,484.4 288.2,481.2 295.2,480.6 302.2,476.4 309.3,475.3 316.3,472.3 323.4,469.9 330.4,467.1 337.4,465.1 344.5,462.8 351.5,460.4 358.6,457.8 365.6,455.8 372.6,453.3 379.7,451.2 386.7,448.8 393.8,447.6 400.8,444.5 407.8,444.0 414.9,440.0 421.9,436.5 429.0,434.7 436.0,431.5 443.0,429.4 450.1,426.3 457.1,424.2 464.2,421.2 471.2,418.8 478.2,416.1 485.3,413.2 492.3,410.8 499.4,407.5 506.4,405.8 513.4,401.7 520.5,400.0 527.5,397.8 534.6,394.0 541.6,391.0 548.6,387.7 555.7,385.4 562.7,380.7 569.8,379.4 576.8,373.6 583.8,370.8 590.9,367.4 597.9,365.7 601.4,362.5 605.0,360.7 612.0,357.4 619.0,353.2 626.1,349.3 633.1,345.7 640.2,341.3 647.2,339.8 654.2,333.4 661.3,329.8 668.3,327.2 675.4,324.4 682.4,317.7 689.4,312.7 696.5,309.1 703.5,306.6 710.6,299.7 717.6,296.6 721.1,292.8 728.2,292.0 735.2,285.8 742.2,281.2 749.3,275.5 756.3,271.1 763.4,264.9 766.9,263.2 770.4,261.0 773.9,261.2 781.0,252.2 788.0,249.9 795.0,242.7 802.1,238.1 809.1,232.1 816.2,226.4 823.2,223.5 830.2,215.4 837.3,211.2 844.3,204.1 851.4,198.8 854.9,198.3 861.9,189.9 869.0,184.7 876.0,177.8 883.0,171.5 890.1,167.3 890.8,164.9 891.5,164.0 892.2,163.5 892.9,162.8 893.6,162.1 893.8,162.1 893.8,162.1 894.5,161.7 901.6,155.0 908.6,149.8 915.6,143.2 922.7,135.9 929.7,130.1 936.8,122.4" fill="none" stroke="#eb6834" stroke-width="2"/>
+<g><circle cx="84.0" cy="550.8" r="5.5" fill="#eb6834" stroke="#fcfcfb" stroke-width="2"/><title>D 100: condition 7.3e+19, 1.0e+00 of its value at D 100</title></g>
+<g><circle cx="119.2" cy="539.4" r="5.5" fill="#eb6834" stroke="#fcfcfb" stroke-width="2"/><title>D 105: condition 4.1e+20, 5.6e+00 of its value at D 100</title></g>
+<g><circle cx="154.4" cy="526.6" r="5.5" fill="#eb6834" stroke="#fcfcfb" stroke-width="2"/><title>D 110: condition 2.9e+21, 4.0e+01 of its value at D 100</title></g>
+<g><circle cx="189.6" cy="515.2" r="5.5" fill="#eb6834" stroke="#fcfcfb" stroke-width="2"/><title>D 115: condition 1.6e+22, 2.2e+02 of its value at D 100</title></g>
+<g><circle cx="224.8" cy="504.5" r="5.5" fill="#eb6834" stroke="#fcfcfb" stroke-width="2"/><title>D 120: condition 8.3e+22, 1.1e+03 of its value at D 100</title></g>
+<g><circle cx="260.0" cy="490.9" r="5.5" fill="#eb6834" stroke="#fcfcfb" stroke-width="2"/><title>D 125: condition 6.6e+23, 9.0e+03 of its value at D 100</title></g>
+<g><circle cx="295.2" cy="480.6" r="5.5" fill="#eb6834" stroke="#fcfcfb" stroke-width="2"/><title>D 130: condition 3.1e+24, 4.3e+04 of its value at D 100</title></g>
+<g><circle cx="330.4" cy="467.1" r="5.5" fill="#eb6834" stroke="#fcfcfb" stroke-width="2"/><title>D 135: condition 2.4e+25, 3.3e+05 of its value at D 100</title></g>
+<g><circle cx="365.6" cy="455.8" r="5.5" fill="#eb6834" stroke="#fcfcfb" stroke-width="2"/><title>D 140: condition 1.4e+26, 1.8e+06 of its value at D 100</title></g>
+<g><circle cx="400.8" cy="444.5" r="5.5" fill="#eb6834" stroke="#fcfcfb" stroke-width="2"/><title>D 145: condition 7.6e+26, 1.0e+07 of its value at D 100</title></g>
+<g><circle cx="436.0" cy="431.5" r="5.5" fill="#eb6834" stroke="#fcfcfb" stroke-width="2"/><title>D 150: condition 5.4e+27, 7.4e+07 of its value at D 100</title></g>
+<g><circle cx="471.2" cy="418.8" r="5.5" fill="#eb6834" stroke="#fcfcfb" stroke-width="2"/><title>D 155: condition 3.7e+28, 5.1e+08 of its value at D 100</title></g>
+<g><circle cx="506.4" cy="405.8" r="5.5" fill="#eb6834" stroke="#fcfcfb" stroke-width="2"/><title>D 160: condition 2.7e+29, 3.7e+09 of its value at D 100</title></g>
+<g><circle cx="541.6" cy="391.0" r="5.5" fill="#eb6834" stroke="#fcfcfb" stroke-width="2"/><title>D 165: condition 2.6e+30, 3.5e+10 of its value at D 100</title></g>
+<g><circle cx="576.8" cy="373.6" r="5.5" fill="#eb6834" stroke="#fcfcfb" stroke-width="2"/><title>D 170: condition 3.6e+31, 4.9e+11 of its value at D 100</title></g>
+<g><circle cx="612.0" cy="357.4" r="5.5" fill="#eb6834" stroke="#fcfcfb" stroke-width="2"/><title>D 175: condition 4.2e+32, 5.8e+12 of its value at D 100</title></g>
+<g><circle cx="647.2" cy="339.8" r="5.5" fill="#eb6834" stroke="#fcfcfb" stroke-width="2"/><title>D 180: condition 6.1e+33, 8.3e+13 of its value at D 100</title></g>
+<g><circle cx="682.4" cy="317.7" r="5.5" fill="#eb6834" stroke="#fcfcfb" stroke-width="2"/><title>D 185: condition 1.8e+35, 2.4e+15 of its value at D 100</title></g>
+<g><circle cx="717.6" cy="296.6" r="5.5" fill="#eb6834" stroke="#fcfcfb" stroke-width="2"/><title>D 190: condition 4.3e+36, 5.9e+16 of its value at D 100</title></g>
+<g><circle cx="788.0" cy="249.9" r="5.5" fill="#eb6834" stroke="#fcfcfb" stroke-width="2"/><title>D 200: condition 5.2e+39, 7.1e+19 of its value at D 100</title></g>
+<g><circle cx="823.2" cy="223.5" r="5.5" fill="#eb6834" stroke="#fcfcfb" stroke-width="2"/><title>D 205: condition 2.9e+41, 3.9e+21 of its value at D 100</title></g>
+<g><circle cx="893.6" cy="162.1" r="5.5" fill="#eb6834" stroke="#fcfcfb" stroke-width="2"/><title>D 215: condition 3.2e+45, 4.4e+25 of its value at D 100</title></g>
+<g><circle cx="936.8" cy="122.4" r="5.5" fill="#eb6834" stroke="#fcfcfb" stroke-width="2"/><title>D 221.131: condition 1.3e+48, 1.8e+28 of its value at D 100</title></g>
+<polyline points="105.1,550.8 161.4,547.4 217.8,544.8 274.1,543.1 330.4,541.2 386.7,539.5 429.0,538.1 499.4,536.6 541.6,535.7 605.0,534.5 661.3,533.6 703.5,533.0 781.0,532.0 823.2,531.5 890.1,530.9" fill="none" stroke="#2a78d6" stroke-width="2"/>
+<g><circle cx="105.1" cy="550.8" r="5.5" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D 103: error bar 1.6e-12, 1.0e+00 of its value at D 100</title></g>
+<g><circle cx="161.4" cy="547.4" r="5.5" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D 111: error bar 2.7e-12, 1.7e+00 of its value at D 100</title></g>
+<g><circle cx="217.8" cy="544.8" r="5.5" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D 119: error bar 4.0e-12, 2.5e+00 of its value at D 100</title></g>
+<g><circle cx="274.1" cy="543.1" r="5.5" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D 127: error bar 5.2e-12, 3.2e+00 of its value at D 100</title></g>
+<g><circle cx="330.4" cy="541.2" r="5.5" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D 135: error bar 6.9e-12, 4.3e+00 of its value at D 100</title></g>
+<g><circle cx="386.7" cy="539.5" r="5.5" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D 143: error bar 9.0e-12, 5.6e+00 of its value at D 100</title></g>
+<g><circle cx="429.0" cy="538.1" r="5.5" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D 149: error bar 1.1e-11, 6.9e+00 of its value at D 100</title></g>
+<g><circle cx="499.4" cy="536.6" r="5.5" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D 159: error bar 1.4e-11, 8.8e+00 of its value at D 100</title></g>
+<g><circle cx="541.6" cy="535.7" r="5.5" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D 165: error bar 1.6e-11, 1.0e+01 of its value at D 100</title></g>
+<g><circle cx="605.0" cy="534.5" r="5.5" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D 174: error bar 1.9e-11, 1.2e+01 of its value at D 100</title></g>
+<g><circle cx="661.3" cy="533.6" r="5.5" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D 182: error bar 2.2e-11, 1.4e+01 of its value at D 100</title></g>
+<g><circle cx="703.5" cy="533.0" r="5.5" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D 188: error bar 2.4e-11, 1.5e+01 of its value at D 100</title></g>
+<g><circle cx="781.0" cy="532.0" r="5.5" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D 199: error bar 2.8e-11, 1.8e+01 of its value at D 100</title></g>
+<g><circle cx="823.2" cy="531.5" r="5.5" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D 205: error bar 3.0e-11, 1.9e+01 of its value at D 100</title></g>
+<g><circle cx="890.1" cy="530.9" r="5.5" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D 214.5: error bar 3.3e-11, 2.1e+01 of its value at D 100</title></g>
+<text x="436.0" y="524.1" font-size="11" fill="#0b0b0b" text-anchor="start" font-weight="bold">error bar on Δ: one decade per 90 in D</text>
+<text x="281.1" y="462.4" font-size="11" fill="#0b0b0b" text-anchor="end" font-weight="bold">one decade per 6.3 in D</text>
+<text x="920.8" y="126.4" font-size="11" fill="#0b0b0b" text-anchor="end" font-weight="bold">one decade per 2.4 in D</text>
+<circle cx="576.8" cy="373.6" r="10" fill="none" stroke="#0b0b0b" stroke-width="1.5"/>
+<line x1="582.4" y1="381.8" x2="606.8" y2="417.6" stroke="#0b0b0b" stroke-width="1"/>
+<text x="610.8" y="421.6" font-size="11" fill="#0b0b0b" text-anchor="start" font-weight="bold">the smallest pivot starts to fall</text>
+<circle cx="893.8" cy="162.1" r="10" fill="none" stroke="#0b0b0b" stroke-width="1.5"/>
+<line x1="883.9" y1="163.4" x2="829.8" y2="170.1" stroke="#0b0b0b" stroke-width="1"/>
+<text x="825.8" y="174.1" font-size="11" fill="#0b0b0b" text-anchor="end" font-weight="bold">D 215.03, where the chain had stopped</text>
+<g opacity="0.35"><line x1="982.0" y1="126.0" x2="982.0" y2="182.0" stroke="#52514e" stroke-width="2"/><polygon points="982.0,188.0 978.0,179.0 986.0,179.0" fill="#52514e"/><text x="982.0" y="150.0" font-size="11" fill="#52514e" text-anchor="middle" transform="rotate(90.0 982.0 157.0)">smaller</text></g>
+<line x1="104.0" y1="116.0" x2="118.0" y2="116.0" stroke="#eb6834" stroke-width="2"/>
+<g><circle cx="111.0" cy="116.0" r="5.5" fill="#eb6834" stroke="#fcfcfb" stroke-width="2"/><title>Jacobian's condition, largest / smallest pivot</title></g>
+<text x="126.0" y="120.0" font-size="11" fill="#0b0b0b" text-anchor="start" font-weight="normal">Jacobian's condition, largest / smallest pivot</text>
+<line x1="104.0" y1="136.0" x2="118.0" y2="136.0" stroke="#2a78d6" stroke-width="2"/>
+<g><circle cx="111.0" cy="136.0" r="5.5" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>error bar on Δ</title></g>
+<text x="126.0" y="140.0" font-size="11" fill="#0b0b0b" text-anchor="start" font-weight="normal">error bar on Δ</text>
+<text x="16.0" y="640.0" font-size="10" fill="#52514e" text-anchor="start" font-weight="normal">chain run on win2, Intel Core Ultra 7 265K, 18 threads</text>
+<text x="16.0" y="626.0" font-size="10" fill="#52514e" text-anchor="start" font-weight="normal">error bar: hp/data/delta_all.csv (chain_fit, err_kind fits)  ·  pivots: hp/data/chain_pivots.csv from the chain's logs (raw 51c1533)</text>
+<a href="https://github.com/nmoinvaz/choptuik-large-d"><text x="1024" y="640" font-size="10" fill="#52514e" text-anchor="end" text-decoration="underline">github.com/nmoinvaz/choptuik-large-d</text></a>
+</svg>
