@@ -15,7 +15,7 @@ formulation of hp/pinning.py; their coefficients are zero).
         [--accept_stall 1e-19] [--junk_only 0] [--threads 4] [--w 24] [--trend T75] [--tol_qd 1e-28] [--accept_stall_qd 0]
         [--qd_it 12] [--qd_w 0] [--refine 1] [--probe 0 --probe_c C] [--plan_tol 1e-32] [--fix1 0] [--F_pred_max 0]
         [--horizon_alpha 0] [--fix1_qlu 0] [--jet_q 0] [--reseed 0] [--pred_q 0] [--reseed_q 0] [--save_pred 0]
-        [--jet_o 0] [--corrector od --tol_od 1e-40] [--base_adopt 0] [--base_polish 1] [--held_fit FILE]
+        [--jet_o 0] [--corrector od --tol_od 1e-40] [--base_adopt 0] [--base_polish 1] [--keep_plan 1] [--held_fit FILE]
         [--held_o 0] [--reseed_o 0]
 
 --corrector qd runs the quad-double Newton of the kernel (hpkernel.driver.newton_qd, Solver.newton_q) on the pinned
@@ -97,7 +97,8 @@ a polish took the D 215.03125 state from 4.4e-36 to 1.5e-18 and the series of th
 2e-30). --base_adopt 1 adopts every polish, which is the control of that rule. --base_polish 0 skips the polish, so
 the stored state is the base as it stands: a state reloaded near D 215 starts about 4e-36 off in the held rows
 (their values are taken again from its first two parts), and its polish costs 12 octo-double steps before it is
-dropped. Its states are saved in eight parts
+dropped. A state is saved with the plan of the run that converged it, and a run started from it keeps that plan
+(--keep_plan 0 plans again at the state, the control). Its states are saved in eight parts
 (octo_corrector.save_o: save_q's four, which load_q reads, and four more), and the series of the next base (--jet_o)
 is taken at all eight. M = 32 only; --accept_stall_qd does not apply. --od_junk w freezes, in every step of that
 corrector, the junk among the w weakest directions of its first Jacobian (octo_corrector.junk_subspace_o: no Delta
@@ -248,6 +249,7 @@ def main():
     opt.update(tol_od=1e-40, od_junk=0)  # --corrector od (hp/octo_corrector.py); --od_junk w freezes junk (13.30)
     opt.update(base_adopt=0)            # --base_adopt 1: the base's od polish is adopted whatever it did
     opt.update(base_polish=1)           # --base_polish 0: no polish, the stored state is the base
+    opt.update(keep_plan=1)             # --keep_plan 0: plan the base again even when its state stores a plan
     opt.update(held_fit="")             # --held_fit FILE (pinning.HeldFit; notes/HELD_HARMONICS.md)
     # --held_o 1: the held values and their Taylor coefficients as mpf instead of floats, and the held field in eight
     # parts instead of two (with --held_fit and --corrector od); --reseed_o K: K octo-double corrections of the
@@ -444,7 +446,19 @@ def main():
         h = band_field(held_at(Dx), ks_held, M, parts=hparts)
         return PinnedSolver(sx, M, h[0], h[1], h_rest=h[2:])
     wrap = lambda sx: wrap_at(sx, D)  # noqa: E731
-    s = mk(D); segs = s.plan(zh, zl, opt["plan_tol"], 0.05); s.set_segs(segs); sp = wrap(s)
+    # a state saved with its plan keeps it. A run plans once, at its first base (a prediction is planned again only
+    # when its double-double |F| is below 1e-6, which it is not past D ~ 130), so a restart that plans again changes
+    # the steps: that leaves the state 5e-36 off its own equations at D 226, and past D 230 the weak direction turns
+    # it into a first correction of 1e-15 (#461)
+    segs = m.get("segs") if opt["keep_plan"] else None
+    if segs:
+        print(f"the base keeps its stored plan ({sum(len(sg) - 1 for sg in segs)} steps)", flush=True)
+    else:
+        segs = None
+    s = mk(D)
+    if not segs:
+        segs = s.plan(zh, zl, opt["plan_tol"], 0.05)
+    s.set_segs(segs); sp = wrap(s)
     Kb = (len(zh) - 1) // (4 * M) - 1                                   # the horizon block
     rows = slice(Kb * 4 * M, Kb * 4 * M + M)
     # the held harmonics as directions to freeze in the quad-double Newton: unit band fields in the p1 block
@@ -797,7 +811,8 @@ def main():
         # re-base the trend on the new state (its harmonics sit on the trend's values at D, to the corrector's floor)
         base_coeffs = coeffs_of(zh, zl)
         n0 = float(D) - 2.0
-        meta_out = dict(D=float(D), D_str=str(D), M=M, nodes=nodes, kt=kt, kc=kc, ks=ks, kfreeze=kf, pin_held=ks_held, N=N, a=a, source=opt["state"])
+        meta_out = dict(D=float(D), D_str=str(D), M=M, nodes=nodes, kt=kt, kc=kc, ks=ks, kfreeze=kf, pin_held=ks_held, N=N, a=a, source=opt["state"],
+                        segs=[[float(x) for x in sg] for sg in segs])       # the run's plan, which the state solves
         if opt["corrector"] == "qd" and "z4" in last_q:
             save_q(os.path.join(out, f"anm_pin{kf}_D{float(D):.4f}.npz"), last_q["z4"], meta_out)
         elif opt["corrector"] == "od" and "z8" in last_q:
