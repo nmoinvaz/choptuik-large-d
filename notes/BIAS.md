@@ -83,3 +83,10 @@ Each refinement answered the one before it:
 
 - **Range.** The chain stops at 215, where the octo-double corrector's weakest pivot reaches 7e-16
   (`T138-win2/chain_od.log`). T150 reruns it with the junk frozen in the corrector, toward D 400.
+  The crawl past the wall (I19-win2, D = 214.6 to 215.03, 7 rows of delta_all.csv) accepted its steps with 4 junk
+  directions frozen. Reloaded with the crawl's options and no step, 1 of its 7 saved states and 1 of 3 saved
+  predictions converge again, and those two give the crawl's Δ and correction to the printed digits. The other 8 stop
+  at 10⁻¹⁸ to 10⁻²², with no junk direction frozen (#268; raw `I268-win2/`). So the octo-double convergence there is
+  not reproduced from the saved files, while no run contradicts the Δ rows. A rerun of the crawl's first step is #287.
+  The chains with the harmonics held on fits of degree 6 and 10 stopped at D = 214.75 and 214.5 (#215): their attempts
+  at D = 215.0 start at residuals of 10⁻⁹ and accept no step.
