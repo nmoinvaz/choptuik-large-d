@@ -15,7 +15,7 @@ rebuilt layout (up to N Newton steps, default 4; the up6 states at D = 27-35 com
 not change). States whose residual still exceeds --fmax (default 1e-20) are skipped and recorded as such.
 
     python3 gamma_dd.py out.jsonl STATE.npz [STATE.npz ...] [--threads=N] [--M48 | --Mhi=64] [--kf=none|13|auto] [--fmax=1e-20] [--polish[=N]]
-        [--mutate=old_rule]
+        [--series_override] [--mutate=old_rule|no_tail_gate]
 
 --M48 (or --Mhi=N) also resamples the state to M = 48 (N) tau points, re-converges it and repeats the root search,
 bracketed afresh from the formula (self-convergence; the record's M48 field). The M = 48 solve uses the kfreeze-13 cut
@@ -25,6 +25,9 @@ until a step no longer lowers |F| (solve_hi; Levenberg-Marquardt if that stops a
 Newton step's Delta component at the solution (est), and the floor check wants |est| <= EST_MAX; the exit status is 1
 when it fails. --mutate=old_rule restores the path before #271, the resampling in f64 with lo dropped and Newton to
 max(10 |F|, 1e-27), which at D 50 stopped one step short along p1's harmonics 13 and 11 (Delta 1.2e-11 off, #266).
+The record also holds both series' truncation (modecount_common.series_tail) at the resampled start and at the
+solution, and a state where either exceeds SERIES_TAIL (1e-15) is refused there (no lam; refused gives the reason; exit
+status 1) unless --series_override, which records the override (#267). --mutate=no_tail_gate removes that check.
 Needs the hpkernel wheel built from this tree (hp/build.sh) for mode_det.
 """
 import json
@@ -41,6 +44,7 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, HERE)
 sys.path.insert(0, os.path.join(HERE, "review"))
 from hpkernel.driver import dd_from_mp, make_solver, load, lm_solve, newton_solve, plow_odd, resample_z  # noqa: E402
+import modecount_common as mc  # noqa: E402
 
 # The largest |Newton step's Delta component| accepted at a re-converged high-M state. At the floor it is 2e-19 (D 50)
 # and 5e-18 (D 58) (#266); Newton stopped one step short gives 1.2e-11 at D 50.
@@ -154,6 +158,21 @@ def solve_hi(s, zh, zl, F_ref, fmax, verbose=True, mutate=""):
     return zh, zl, rec
 
 
+def tails_of(s, zh, zl, meta):
+    """both series' truncation on the layout of s (modecount_common.series_tail): the centre series at the first node,
+    the horizon series at the last"""
+    return [mc.series_tail(s, zh, zl, meta, w) for w in (0, 1)]
+
+
+def tail_gate(tails, when, mutate=""):
+    """None when both series' truncation is at most SERIES_TAIL (1e-15), else the reason for refusing the state.
+    mutate=no_tail_gate removes the check (its control: a planted state above the gate is then accepted)."""
+    worst = max(t["tail"] for t in tails)
+    if mutate == "no_tail_gate" or worst <= mc.SERIES_TAIL:
+        return None
+    return f"series truncation {worst:.1e} > {mc.SERIES_TAIL:.0e} at the {when} ({mc.tails_text(tails)})"
+
+
 def main():
     args = [a for a in sys.argv[1:] if not a.startswith("--")]
     opts = dict(a[2:].split("=", 1) if "=" in a else (a[2:], "1") for a in sys.argv[1:] if a.startswith("--"))
@@ -200,21 +219,41 @@ def main():
             # the frozen formulation pins p1's harmonics above the cut: the resampled p1 is projected onto k <= kf
             z48h, z48l = resample_hi(zh, zl, meta["M"], Mhi, K, None if kf48 == "none" else int(kf48), mutate)
             s48, F48s, kf48 = best_solver(m48, z48h, z48l, threads, M=Mhi, force=kf48)
+            hi = dict(M=Mhi, kfreeze=kf48, resample="f64" if mutate == "old_rule" else "dd", F_start=F48s,
+                      tails_start=tails_of(s48, z48h, z48l, m48), **({"mutate": mutate} if mutate else {}))
             log(f"  M = {Mhi}: resampled ({'f64' if mutate == 'old_rule' else 'double-double'}) |F| {F48s:.1e} "
-                f"(kfreeze {kf48}); Newton")
-            z48h, z48l, sol = solve_hi(s48, z48h, z48l, F, fmax, verbose=True, mutate=mutate)
-            F48, est, floor = sol.pop("F"), sol.pop("est"), sol.pop("floor")
-            log(f"  M = {Mhi}: |F| {F48:.1e} ({sol['stop']}); Newton step at the solution: Delta {est:+.2e}, "
-                f"max {sol['step']:.1e}; floor check {floor} (|est| <= {EST_MAX:.0e})")
-            lam48 = None
-            if F48 <= fmax:
-                lam48, nch48, _ = find_lam(s48, z48h, z48l, lam0, log)  # bracketed independently of lam
-            rec.update(M48=dict(M=Mhi, kfreeze=kf48, resample="f64" if mutate == "old_rule" else "dd", F_start=F48s,
-                                F=F48, solve=sol, est=est, floor=floor, Delta=float(z48h[-1]), Delta_lo=float(z48l[-1]),
-                                Delta_diff=float((z48h[-1] - zh[-1]) + (z48l[-1] - zl[-1])),
-                                lam=lam48, lam_diff=(lam48 - lam) if lam48 else None,
-                                seconds=round(time.time() - t1, 1), **({"mutate": mutate} if mutate else {})))
-            if rec["M48"]["floor"] != "ok":
+                f"(kfreeze {kf48}); series truncation {mc.tails_text(hi['tails_start'])}")
+            # the series gate (#267): a layout whose series are truncated above SERIES_TAIL is refused at the start
+            # and at the solution, unless --series_override
+            why = tail_gate(hi["tails_start"], "start", mutate)
+            if why and "series_override" not in opts:
+                hi.update(refused=why, lam=None, lam_diff=None)
+            else:
+                if why:
+                    hi["override"] = [why]
+                z48h, z48l, sol = solve_hi(s48, z48h, z48l, F, fmax, verbose=True, mutate=mutate)
+                F48, est, floor = sol.pop("F"), sol.pop("est"), sol.pop("floor")
+                log(f"  M = {Mhi}: |F| {F48:.1e} ({sol['stop']}); Newton step at the solution: Delta {est:+.2e}, "
+                    f"max {sol['step']:.1e}; floor check {floor} (|est| <= {EST_MAX:.0e})")
+                hi.update(F=F48, solve=sol, est=est, floor=floor, tails=tails_of(s48, z48h, z48l, m48),
+                          Delta=float(z48h[-1]), Delta_lo=float(z48l[-1]),
+                          Delta_diff=float((z48h[-1] - zh[-1]) + (z48l[-1] - zl[-1])))
+                log(f"  M = {Mhi}: series truncation at the solution {mc.tails_text(hi['tails'])}")
+                why = tail_gate(hi["tails"], "solution", mutate)
+                if why and "series_override" not in opts:
+                    hi.update(refused=why, lam=None, lam_diff=None)
+                else:
+                    if why:
+                        hi["override"] = hi.get("override", []) + [why]
+                    lam48 = None
+                    if F48 <= fmax:
+                        lam48, nch48, _ = find_lam(s48, z48h, z48l, lam0, log)  # bracketed independently of lam
+                    hi.update(lam=lam48, lam_diff=(lam48 - lam) if lam48 else None)
+            if "refused" in hi:
+                log(f"  M = {Mhi}: refused, {hi['refused']}; --series_override accepts it")
+            hi["seconds"] = round(time.time() - t1, 1)
+            rec["M48"] = hi
+            if "refused" in hi or hi.get("floor", "ok") != "ok":
                 status = 1
         log(json.dumps(rec))
         with open(out, "a") as fh_:
