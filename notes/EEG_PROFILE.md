@@ -318,6 +318,162 @@ The agreement within $`4\times10^{-5}`$ is therefore partly luck. At $`A = 2.719
 $`\langle\tilde\beta^2\rangle = 2\langle F^2\rangle = 7.4164`$, against the paper's $`\mathcal N_0 = 7.4158`$ and the
 model's $`A_*^2/(2(1-q^2)) = 7.4165`$.
 
+#### 3.5.1 The states' D = ∞ amplitude against the selection's (agent-comms#54)
+
+The finite-D states extrapolate to A∞ = 2.71920535. The M = 7 zero, 2.719219, lies 1.4×10⁻⁵ above it. The zero's limit
+in M lies 1.2–6.5×10⁻⁵ below it, depending on how the M sequence of A continues. In units of the pre-registered spread
+over fit choices, s = 4.7×10⁻⁵, the gaps to the grid's median are +0.28 s for the zero and −0.74 s for its geometric
+limit. So the two agree. The comparison is limited by the selection's amplitude, not by the states. The M = 7 zero
+carries ±2×10⁻⁵ of noise, and its truncation tail in A is larger still, while the states fix A∞ to about 10⁻⁷. *Status:*
+the states' A∞ is **numerical evidence**. A₇, its limit and the gaps are **conditional** on the selection rule
+(Conjecture 1).
+
+**Method** (`solver/inner_pert/ainf_from_states.py`). A_n = 2|c₁(n)| is the fundamental amplitude of
+F_n = β̃/√(2(1 + 1/n)) at each of the 63 states of D 15–215. The map is the one of §3.1, in the gauge F₁ = −iA/2
+(`nnlo_closed_form.profile`). A∞ is the intercept of a least-squares fit of A_n in powers 1 to kmax of 1/n, over the
+states with D ≥ dlo. This is `fit_K` with a free intercept, #42's "F fitted too". The grid has kmax 5–9, dlo 15, 20 and
+30, and the test states 40.02, 60.00, 100 and 200 held out or included, which makes 30 choices. The criteria were posted
+on the issue before any run. The pre-registered central value is the median over the grid, 2.7192060. The spread
+s = max |A∞ − median| = 4.7×10⁻⁵ is a spread over fit choices, not an error bar. The kmax 6, D ≥ 20 choice with the test
+states held out reproduces #42's 2.7192088. #42's nine choices reproduce its range 2.7192055–2.7192530, to 4×10⁻⁸ (R0).
+
+| kmax | D ≥ 15 | D ≥ 20 | D ≥ 30 |
+|---|---|---|---|
+| 5 | 2.719251064 | 2.719221520 | 2.719209496 |
+| 6 | 2.719215490 | 2.719208812 | 2.719206017 |
+| 7 | 2.719207794 | 2.719206136 | 2.719205460 |
+| 8 | 2.719205970 | 2.719205511 | 2.719205356 |
+| 9 | 2.719205494 | 2.719205375 | 2.719205338 |
+
+The table uses all states. Holding out the test states changes an entry by at most 1.9×10⁻⁶, at kmax 5 and D ≥ 15. The
+fits converge with the degree and the low end of D. The spread s is set by the low degrees at low D, which carry the
+truncation of the 1/n series. Chosen after the run, from the planted calibration below, the converged choices are kmax
+9–12 at D ≥ 20 and 30 and kmax 8 at D ≥ 30 and 40, with all states. They give 2.719205332–2.719205375, which is the A∞
+quoted above. Their half-range, 2×10⁻⁸, is a spread over fit choices.
+
+**Planted truth, run first.** Each state's central Π is replaced by the tuned profile scaled to a known A_pl(n), at a
+known time shift, and passed through the same code. Every family has A∞ = 2.7180, A₁ = 14.52 and A₂ = −33 (#42's fit),
+with a non-terminating tail. In `alt12` the tail is A₂t²/(1 + 12t), with t = 1/n. In `cpx7` it is
+A₂t²/(1 − 7t + 49t²). These two are sized so that their low-degree offsets match the real grid's. `alt20` is harsher
+than the data. The fit's errors:
+
+| family | median | kmax 5, D ≥ 15 | kmax 6, D ≥ 20 | kmax 9, D ≥ 30 | converged choices | criterion |
+|---|---|---|---|---|---|---|
+| alt12 | +5.9×10⁻⁷ | +4.5×10⁻⁵ | +3.2×10⁻⁶ | +2.5×10⁻⁹ | ≤ 2.7×10⁻⁸ | P1, median ≤ 2×10⁻⁶: pass |
+| cpx7 | −5.8×10⁻¹⁰ | +6.8×10⁻⁵ | −3.6×10⁻⁶ | −5.8×10⁻¹⁰ | ≤ 1.6×10⁻⁸ | P1: pass |
+| alt20 | +3.8×10⁻⁶ | +1.2×10⁻⁴ | +1.4×10⁻⁵ | +4.6×10⁻⁸ | ≤ 3.6×10⁻⁷ | information (misses 2×10⁻⁶) |
+
+`alt12` reproduces the real grid's pattern. Measured from the kmax 9, D ≥ 30 entry, the real offsets are 4.8×10⁻⁵ and
+3.5×10⁻⁶ at the first two choices, against 4.5×10⁻⁵ and 3.2×10⁻⁶ planted. On `alt12` the median is 5.9×10⁻⁷ high,
+which is why the converged choices are quoted. With Gaussian noise of the real fit's residual added (8.9×10⁻¹⁰, 20
+seeds), the median's error is 5.9×10⁻⁷ for `alt12` and 2.0×10⁻⁸ for `cpx7` (P3, pass). The control `--mutate=offset`
+compares the planted runs against the truth plus 5×10⁻⁶, and P1 then fails, as it must.
+
+**The data.** The reference fit (kmax 8, D ≥ 20, all states) leaves an rms residual of 8.9×10⁻¹⁰ in A_n. The mean
+residual of each group of states (D ≤ 60, 73, 80–170, 180–215) is below 2.3×10⁻¹⁰. The held-harmonic chains above D 73
+are not offset from the trend below, since a step fitted at D 76.5 comes out at −4.5×10⁻⁹. With the T140 chains d6 and
+d10 in place of the main chain at D 100, 150 and 180, A_n moves by at most 7.7×10⁻¹⁰ and A∞ by 2.5×10⁻⁹. One factor at a
+time around the reference, A∞ moves as follows.
+
+| change | A∞ moves by |
+|---|---|
+| variable 1/(D − 1) in place of 1/n | −8.7×10⁻⁸ |
+| prefactor √2 in place of √(2(1 + 1/n)) | −6.5×10⁻⁹ |
+| D ≥ 40 | −1.7×10⁻⁷ |
+| kmax 10, 11, 12 | −1.7×10⁻⁷, −1.8×10⁻⁷, −1.8×10⁻⁷ |
+| kmax 4 | +8.6×10⁻⁵ |
+
+**Controls.** All of them behave (`controls`, exit 0).
+
+| control | criterion | measured |
+|---|---|---|
+| C, every A_n + 1×10⁻⁵ in the field Π(τ, 0) | every choice moves by 1×10⁻⁵ within 20% | 1.000×10⁻⁵, relative deviation 5.9×10⁻⁹ |
+| slope, A_n + 1×10⁻³/n | every choice moves by ≤ 1×10⁻⁸ | 6.4×10⁻¹⁴ |
+| step, A_n + 1×10⁻⁵ for D ≥ 76.5 | the step fit recovers it within 20% | relative deviation 1×10⁻¹⁰ |
+| each criterion on another mutation (C on step, slope on shift, step on slope) | must fail | all three fail |
+
+Under the step mutation the plain grid moves by −2.2×10⁻⁵ to +1.4×10⁻⁴. A chain offset of 10⁻⁵ would therefore show,
+and none is there.
+
+**The selection's A** (conditional). The affine fit of the ten M = 7 logs (`m7_outer.py`'s fit) gives
+A₇ = 2.719219254 and ω/ω∞ = 1.000021738. This reproduces proof/B_tail_M7.md's 2.719219 and 1.000022 (R1). Its noise is
+±2×10⁻⁵, a noise estimate from the scatter of repeated solves, not an enclosure. The notes give a truncation error for ω
+only, the M > 7 tail of about 4×10⁻⁵ (B_tail_M7.md §3). For A it is computed here from the same sequence and estimator
+(`trunc_seq_M7.py`). The A sequence is 2.542148, 2.726476, 2.718579 and 2.719219 for M = 1, 3, 5 and 7. Its ratios per
+pair are −0.043 and −0.081. They have not settled, unlike ω's −0.069 and −0.048. The same code reproduces ω's limit,
+0.999985 (R2). The limit of A depends on the ratios past M = 7.
+
+| ratios past M = 7 | limit of A | tail past M = 7 | limit minus the states' A∞ |
+|---|---|---|---|
+| held at −0.081 (the geometric estimate L_A) | 2.719171 | −4.8×10⁻⁵ | −3.4×10⁻⁵ |
+| back to −0.043 | 2.719193 | −2.6×10⁻⁵ | −1.2×10⁻⁵ |
+| ω's −0.048 | 2.719190 | −3.0×10⁻⁵ | −1.6×10⁻⁵ |
+| the drift continued, \|ratio\| ≤ 1/4 | 2.719141 | −7.9×10⁻⁵ | −6.5×10⁻⁵ |
+| −1/4 throughout | 2.719091 | −1.3×10⁻⁴ | −1.1×10⁻⁴ |
+
+The estimator's error formula, |A₇ − L_A|(|e| + 0.05)/(1 − |κ|) = 4.9×10⁻⁵, uses the measured drift e = 0.89 of the
+ratio. That is far outside the ±0.1 at which `trunc_seq_M7.py --planted` tested it. It covers the first four scenarios,
+not the last.
+
+**The gap** (conditional). Each gap is the selection's value minus the grid's median, 2.7192060, with s = 4.7×10⁻⁵. The
+combined scale is √(s² + noise² + tail²). The tail is |L_A − A₇| for A₇ and the error formula for L_A.
+
+| selection's A | gap | in units of s | in units of the combined scale |
+|---|---|---|---|
+| A₇ = 2.719219 | +1.3×10⁻⁵ | +0.28 | +0.19 |
+| L_A = 2.719171 | −3.5×10⁻⁵ | −0.74 | −0.49 |
+
+The two agree under the criterion posted before the runs, which asks for |gap| ≤ 2 × the combined scale. Against the
+converged A∞ the gaps are +1.4×10⁻⁵ for A₇ and those of the scenario table. The states' value lies between A₅ and A₇,
+where an alternating sequence's limit must lie. It is the limit if the next ratio of the A sequence is −0.021. With A₇
+moved by its noise, that ratio lies between −0.053 and +0.011. This range includes ω's −0.048 but not A's last ratio,
+−0.081. The states' A∞ is 2.5×10⁻⁵ above the tuned profile's 2.71918, which is EEG's A*/√2. Times √2 the grid's median
+is 3.845538, which rounds to EEG's printed 3.8455.
+
+**What it shares and what it does not show.** The states' extrapolation and the M = 7 selection share no code and no
+method. One fits the finite-D solutions of the field equations, and the other solves the inner problem's matching
+conditions with seven harmonics. They share the definition of A, F = √n ∂ₓp(0) with F₁ = −iA/2 (§3.1). The
+extrapolation shares `profile` and `fit_K` with #42, whose number R0 reproduces. To test Conjecture 1's amplitude at
+the 10⁻⁵ level, the selection's A must be known to 10⁻⁵. M = 9 would shrink the tail by about one more ratio per pair,
+and the noise would have to fall below the present ±2×10⁻⁵.
+
+**Discrepancies (reported, not fixed).**
+
+- SECOND_ORDER.md §1.2, "Cross-checks", says the states extrapolate "to an amplitude about 1×10⁻⁵ above the paper's".
+  For #42's 2.719209 the difference from 2.71918 is 2.9×10⁻⁵ absolute, which is 1.1×10⁻⁵ relative. For the converged
+  A∞ it is 2.5×10⁻⁵ absolute.
+- #42's 2.719209 is its kmax 6, D ≥ 20 choice. The higher degrees converge 3.5×10⁻⁶ lower. #42's range
+  2.7192055–2.7192530 measures the low degrees' truncation, not an uncertainty of the extrapolation.
+- §3.5 above and the math paper's "Seven harmonics" quote A = 2.71922 without a truncation error in A. Its noise,
+  ±2×10⁻⁵, is smaller than the A tail past M = 7, which is 2.6–7.9×10⁻⁵ under the first four scenarios.
+
+**Proposed text** (for the coordinator, SECOND_ORDER.md §1.2's first cross-check):
+
+> With the intercept fitted too, the states extrapolate to A = 2.71920535. The fits of degree 8–12 in 1/n that have
+> converged span 2.719205332–2.719205375, and the 30 fit choices of EEG_PROFILE.md 3.5.1 span 2.7192053–2.7192530, the
+> spread of the low degrees. That is 2.5×10⁻⁵ above the tuned profile's 2.71918, which is EEG's A*/√2. The M = 7 zero,
+> 2.719219 ± 2×10⁻⁵, lies 1.4×10⁻⁵ above it, and its limit in M lies 1.2–6.5×10⁻⁵ below it, depending on the ratio of
+> the A sequence past M = 7 (*conditional*).
+
+**Reproduction.** From `solver/inner_pert/`, with the raw-data repository cloned beside the checkout, each command takes
+a few seconds. `data/ainf_from_states.json` is the summary these numbers come from.
+
+```
+F=../../../choptuik-large-d-raw/I126-mac
+python3 ainf_from_states.py planted $F/fields/fields_D*.npz --summary=data/ainf_from_states.json     # P1: exit 0
+python3 ainf_from_states.py planted $F/fields/fields_D*.npz --family=alt12,cpx7 --mutate=offset \
+    --summary=data/ainf_from_states.json                                    # Pm: P1 fails, exit 0
+python3 ainf_from_states.py states $F/fields/fields_D*.npz --chains=$F/fields_t140_d6,$F/fields_t140_d10 \
+    --summary=data/ainf_from_states.json                                    # R0, R1, R2: exit 0
+python3 ainf_from_states.py controls $F/fields/fields_D*.npz --summary=data/ainf_from_states.json    # exit 0
+python3 ainf_from_states.py planted $F/fields/fields_D*.npz --family=alt12,cpx7 --noise=8.85e-10 \
+    --summary=data/ainf_from_states.json                                    # P3: exit 0
+python3 ainf_from_states.py selection                                       # R1, R2: exit 0
+```
+
+Raw output: folder `AC54-mac/` of the raw-data repository, at its commit 7b3077a8 (logs, JSON, the commands as run in
+`run_all.cmd`, exits in `exits.txt`).
+
 ## 4. What this means
 
 - Eq. (16) is the one-pole-pair (geometric) truncation of the $`D = \infty`$ echo. Its $`w`$ is the first harmonic
