@@ -427,10 +427,17 @@ class Lohner:
             t = t + hs                    # exact: both multiples of 2^-30, below 1
             steps += 1
             h = min(hs * 1.25, hmax)
-            if verbose and steps % 20 == 0:
+            if verbose and (steps % 20 == 0 or t >= 1.0):
                 X = self.box()
                 rad = max(max(float(x.real.rad()), float(x.imag.rad())) for x in X[:self.s.nd])
-                print(f"   {leg.kind} t {t:.6f} h {hs:.2e}  max state radius {rad:.2e}  [{time.time() - T0:.0f} s]", flush=True)
+                radV = ""
+                if self.var is not None:
+                    # C^1 part: the derivative columns' largest radius over the dynamical rows
+                    V = self.var_box()
+                    radV = max(rad_of(V[i, j]) for i in range(self.s.nd) for j in range(V.ncols()))
+                    radV = f"  max derivative radius {radV:.2e}"
+                print(f"   {leg.kind} t {t:.6f} h {hs:.2e}  max state radius {rad:.2e}{radV}  "
+                      f"[{time.time() - T0:.0f} s]", flush=True)
         return steps
 
 
