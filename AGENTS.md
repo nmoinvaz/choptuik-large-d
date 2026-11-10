@@ -168,9 +168,19 @@ Conventions for the Claude sessions (cloud and local) that run computations here
 
 ## Tasks: GitHub issues
 
-Every task is an issue of this repository (nmoinvaz/choptuik-large-d). The issue's body is the task: its commands,
-threads, stop conditions, what to push, and acceptance criteria whose check can fail, with a line for its estimate and
-one for what it depends on. Issues are public, so they carry no credentials, personal data or private correspondence,
+Every task is an issue. A task whose result backs a number or a claim of this repository is an issue of this
+repository (nmoinvaz/choptuik-large-d), which is public so that anyone can review the results. A task is filed in the
+private tracker nmoinvaz/agent-tasks instead, with the label `choptuik-large-d`, when any of these holds (Nathan,
+2026-11-10):
+
+- its subject is outside the README's scope, such as another field or another physical system;
+- it assesses a named author's published result, until Nathan says the authors have been told;
+- it is housekeeping about the agents, the tracker or a standing chore;
+- it answers a question Nathan asked in chat that is not yet a task of the project.
+
+Nothing from a private task is merged into this repository until Nathan says so. The issue's body is the task: its
+commands, threads, stop conditions, what to push, and acceptance criteria whose check can fail, with a line for its
+estimate and one for what it depends on. Public issues carry no credentials, personal data or private correspondence,
 and an @ handle only for a real login meant to be notified. No GitHub project is used: the project that held these
 tasks' fields until 2026-11-10 was removed, and its fields are on the issues as labels, milestones and body lines
 (Nathan, 2026-11-10).
