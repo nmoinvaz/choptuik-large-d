@@ -820,31 +820,31 @@ These limits are the Δ∞ quoted in [The formula](#the-formula) and [Values](#v
 
 ## Large D: what the 1/D expansion can and cannot see
 
-The double-double points fix Δ∞ = 1.643893746 numerically. This section asks where the number comes from
-in the equations. The answer so far: **the period is not determined at any finite order of the 1/D expansion of
-the field equations** (within the natural ansatz of Proposition 1: integer powers of 1/n with the measured scalings),
-so the period is selected by effects smaller than every power of 1/D. Finding that selection rule is open; the last
-part of the section lists what is known about it.
+The double-double points fix Δ∞ = 1.643893746 numerically. This section asks where the number comes from in the
+equations. The answer so far is that **the period is not determined at any finite order of the 1/D expansion of the
+field equations**. That holds within the natural ansatz of Proposition 1, integer powers of 1/n with the measured
+scalings. So the period is selected by effects smaller than every power of 1/D. Finding that selection rule is open, and
+the last part of the section lists what is known about it.
 
 The results, in order:
 
 - [Proposition 1](#proposition-1-the-1n-expansion-never-fixes-the-period): the 1/n expansion can be carried to all
   orders for any period and any time profile, so it never selects the period.
 - [Proposition 2](#proposition-2-the-leading-order-problem-solved-exactly): without gravity the problem is solved by
-  hypergeometric functions, and the solution is never analytic at the light cone; the obstruction is a coefficient
+  hypergeometric functions, and the solution is never analytic at the light cone. The obstruction is a coefficient
   C(n,s) in closed form.
 - [Proposition 3](#proposition-3-what-gravity-does-to-the-non-analytic-piece): gravity rescales the non-analytic piece
   by an n-independent factor that never vanishes (about 40 over the tested interval), so inside 0 < x < 1 it cannot
   cancel it on the way to the light cone.
 - [Proposition 4](#proposition-4-late-orders-of-the-leading-order-series): a proof (Euler integral, Watson's lemma,
-  Darboux's method) that the divergence of the 1/n series without gravity is that piece; its singulant, exponent and
+  Darboux's method) that the divergence of the 1/n series without gravity is that piece. Its singulant, exponent and
   constant are derived and checked numerically, which identifies C(n,s) as the Stokes multiplier of a mode born at x =
   ∞.
 - [The inner problem at large x](#the-inner-problem-at-large-x): near $`x \sim \sqrt n`$ the equations lose n
-  altogether; without gravity they reduce to Kummer's equation, whose Stokes constant gives C(n,s) asymptotically (times
+  altogether. Without gravity they reduce to Kummer's equation, whose Stokes constant gives C(n,s) asymptotically (times
   a power of n and a phase). With gravity, the working hypothesis is that this multiplier vanishing is the selection
-  rule (Conjecture 1); computed without truncation to twenty-two orders in the amplitude, it selects ω within 5×10⁻⁵
-  of ω∞, given an assumption about the selection function's other zeros (within 0.4% without it).
+  rule (Conjecture 1). Computed without truncation to twenty-two orders in the amplitude, it selects ω within 5×10⁻⁵ of
+  ω∞, given an assumption about the selection function's other zeros (within 0.4% without it).
 - [Proposition 5](#proposition-5-the-unstable-mode-at-infinite-d-is-exact): in s = r²/(2n) the inner problem is a
   nonlinear heat equation, and its shift symmetry in r² gives an exact unstable mode with λ = 2, which explains
   γ∞ = 1/2.
@@ -853,13 +853,18 @@ Everything below uses the scaling measured on the double-double solutions in
 [How the solution scales with D](#how-the-solution-scales-with-d), and the results are checked against those solutions
 where possible.
 
-Notation: n = D - 2, ε = 1/n, ω = 2π/Δ. The solution depends on two variables: x, the self-similar radius (radius over
-time to the singularity, normalized so that the past light cone of the singularity is at x = 1; the code and the solver
-sections call that surface the "horizon"), and $`\tau = -\ln(-t)`$, the logarithm of the time to the singularity, or the
-phase θ = ωτ of the echoing (period 2π). p and m are the derivatives of the scalar field along the two radial null
-directions (scaled), a is the radial metric function (b = a²), and c is the lapse-type function that sets the light
-cones (the past light cone is where x = c). The equations are the ones at the top of
-[`hp/src/model.rs`](hp/src/model.rs), with $`G = (n-1)\,c\,(b-1)`$:
+Notation:
+
+- n = D - 2, ε = 1/n, ω = 2π/Δ.
+- x is the self-similar radius, the radius over the time to the singularity. It is normalized so that the past light
+  cone of the singularity is at x = 1. The code and the solver sections call that surface the "horizon".
+- $`\tau = -\ln(-t)`$ is the logarithm of the time to the singularity, and θ = ωτ is the phase of the echoing, with
+  period 2π.
+- p and m are the scaled derivatives of the scalar field along the two radial null directions.
+- a is the radial metric function, with b = a².
+- c is the lapse-type function that sets the light cones. The past light cone is where x = c.
+
+The equations are the ones at the top of [`hp/src/model.rs`](hp/src/model.rs), with $`G = (n-1)\,c\,(b-1)`$:
 
 ```math
 x c_x = (n-1)\,c\,(b-1), \qquad
@@ -870,9 +875,14 @@ x(x-c)\,p_x = -\omega x\,p_\theta + G p - c p + \tfrac{n}{2}\,c\,(p+m), \qquad
 x(x+c)\,m_x = -\omega x\,m_\theta - G m + c m - \tfrac{n}{2}\,c\,(p+m),
 ```
 
-on 0 ≤ x ≤ 1, with only odd harmonics of θ in p, m and only even ones in b, c ("odd" and "even" for
-functions of θ refer to harmonics below; for polynomials in x they refer to parity in x), regular at the centre
-x = 0, analytic at the past light cone x = 1, and c(1) = 1 (the gauge that puts the light cone at x = 1).
+on 0 ≤ x ≤ 1. The conditions are:
+
+- only odd harmonics of θ in p, m, and only even ones in b, c;
+- regular at the centre x = 0;
+- analytic at the past light cone x = 1;
+- c(1) = 1, the gauge that puts the light cone at x = 1.
+
+Below, "odd" and "even" refer to harmonics for functions of θ, and to parity in x for polynomials in x.
 
 ### How the solution scales with D
 
@@ -909,12 +919,17 @@ x\,c\,\partial_x \Delta_P - c\,\Delta_P = x^2 \partial_x S + \omega x\,\partial_
 S = \varepsilon\,\frac{x^2 \partial_x \Delta_P - x c\,\partial_x S + \omega x\,\partial_\theta \Delta_P}{c\,(1-\varepsilon)\,b} .
 ```
 
-The ansatz (integer powers of ε, $`p, m \propto \varepsilon^{1/2}`$, c - 1 = O(ε), b - 1 = O(ε²)) is the
-scaling measured in the table above; Proposition 1 and its consequence hold within it. The scaling is forced by one
-measured fact, c − 1 = O(1/n) (gravity weak; n(1 − ⟨c(0)⟩) → 3.65): E2 gives b − 1 ≈ (p² + m²)/(n − 1); E1 then gives
-c − 1 = O(n(b − 1)) = O(p²), so c − 1 = O(1/n) requires p = O(n^{−1/2}); and the O(n) terms of E3–E4 force
-p + m = O(p/n), the measured p + m = O(n^{−3/2}). Integer powers of ε beyond the overall ε^{1/2} are an assumption
-(analyticity in 1/n), consistent with the held-out tests on Δ(D) but not implied by them.
+The ansatz is the scaling measured in the table above: integer powers of ε, $`p, m \propto \varepsilon^{1/2}`$, c - 1 =
+O(ε) and b - 1 = O(ε²). Proposition 1 and its consequence hold within it.
+
+The scaling is forced by one measured fact, c − 1 = O(1/n), which says that gravity is weak (n(1 − ⟨c(0)⟩) → 3.65):
+
+- E2 gives b − 1 ≈ (p² + m²)/(n − 1).
+- E1 then gives c − 1 = O(n(b − 1)) = O(p²), so c − 1 = O(1/n) requires p = O(n^{−1/2}).
+- The O(n) terms of E3–E4 force p + m = O(p/n), the measured p + m = O(n^{−3/2}).
+
+Integer powers of ε beyond the overall ε^{1/2} are an assumption (analyticity in 1/n). It is consistent with the
+held-out tests on Δ(D) but not implied by them.
 
 **Proposition 1.** Let F(θ) be any smooth 2π-periodic function with odd harmonics only, ω₀ ≠ 0 (the
 hypothesis only excludes the static case; the proof does not use it),
@@ -924,7 +939,7 @@ $`S_k`$ is an even polynomial in x starting at x², $`D_k - xK_k`$ is an odd pol
 and $`B_{k+1}`$ are even polynomials (B starting at x²) with $`G_k(1) = 0`$. Every order is regular at the centre and
 analytic at the light cone, and m(x) = p(-x) holds order by order.
 
-The leading-order part of this freedom, any periodic profile with any period, is in Ecker, Ecker and Grumiller[^8]; the
+The leading-order part of this freedom, any periodic profile with any period, is in Ecker, Ecker and Grumiller[^8]. The
 all-orders statement was not found in the literature searched.
 
 <details>
@@ -969,13 +984,13 @@ with F taken from the D = 60 solution. The relative residual of every equation f
 n = 50, …, 800, both for ω₀ = 2π/1.64389 and for a wrong ω₀ = 2π/1.4. The expansion is right
 to that order, and it does not care what the period is.
 
-**Consequence.** If Δ(D) is analytic in 1/D, as the double-double points support, it has a 1/D expansion, but its
-coefficients cannot be computed order by order from the field equations (within the ansatz above). The selection works
+**Consequence.** If Δ(D) is analytic in 1/D, as the double-double points support, it has a 1/D expansion. But its
+coefficients cannot be computed order by order from the field equations, within the ansatz above. The selection works
 through terms smaller than any power of 1/n.
 
 *Comparison.* Ecker, Ecker & Grumiller (PRL 136, 191401 (2026)) derive a next-to-leading-order condition on the period
-(their Eq. (20)). It turns out not to select Δ, and Proposition 1 stands; see
-[Relation to published work](#relation-to-ecker-ecker--grumiller).
+(their Eq. (20)). It turns out not to select Δ, and Proposition 1 stands
+([Relation to published work](#relation-to-ecker-ecker--grumiller)).
 
 ### Proposition 2: the leading-order problem, solved exactly
 
