@@ -15,11 +15,14 @@ used, so that a module importing this one runs on the older packages the runners
     python3 octo_corrector.py planted RAW STATE.npz [--threads 3] [--rel 1e-12] [--seed 1] [--qd 1] [--od 1]
         [--Delta_ref D] [--last 0] [--mutate_offset qd] [--mutate 10] [--out PREFIX]
     python3 octo_corrector.py wall RAW PRED.npz [--threads 3] [--qd 0] [--F_max 1e-36] [--mutate_offset qd]
-        [--mutate 10] [--out PREFIX]
+        [--mutate 10] [--out PREFIX] [--reseed_o 0] [--held_o 0]
+    python3 octo_corrector.py horizon RAW STATE.npz [--threads 3] [--steps 3] [--mutate_h sign]
 
 `planted` is check (a) of notes/OCTO_DOUBLE.md 5 (a converged state moved by a known amount, corrected in
 octo-double and in quad-double), `wall` check (b) (a stored prediction where the quad-double corrector stalls). The
-controls --mutate_offset qd and --mutate 10 must make them fail. Each exits 1 when its check fails."""
+controls --mutate_offset qd and --mutate 10 must make them fail. `horizon` is the planted check of
+Reseeder.refine_o (its docstring); --steps 0 and --mutate_h sign must make it fail. Each exits 1 when its check
+fails."""
 import json
 
 import numpy as np
@@ -77,20 +80,24 @@ class PinnedO:
     eight parts. newton_o returns (dz, F hi, F lo, pivots) as Solver.newton_o does, with dz + J^-1 c in octo-double and
     F - c formed from an octo-double residual_o: the kernel's F there is rounded to double-double, 2^-106 |c| ~ 1e-35
     on the held rows (|c| ~ 8e-4), above the tolerance. mutate_offset (the control): 'qd' adds J^-1 c through the
-    quad-double LU at the point's quad-double rounding instead of the octo-double one."""
+    quad-double LU at the point's quad-double rounding instead of the octo-double one. c8: the offset in eight parts
+    (PinnedSolver's c8, anm_run.py --held_o 1), used instead of ch, cl in residual_o and in the step."""
 
-    def __init__(self, s, ch, cl, mutate_offset=""):
+    def __init__(self, s, ch, cl, mutate_offset="", c8=None):
         self.s = s
         self.ch, self.cl = np.ascontiguousarray(ch), np.ascontiguousarray(cl)
         self.zero = np.zeros(len(self.ch))
         self.mutate_offset = mutate_offset
+        self.c8 = None if c8 is None else o8(c8)
 
     def __getattr__(self, name):
         return getattr(self.s, name)
 
     def residual_o(self, z, mutate=0):
-        from multidouble import od_add_dd
+        from multidouble import od_add_dd, od_axpy
         F = self.s.residual_o(list(o8(z)), mutate=mutate)
+        if self.c8 is not None:
+            return o8(od_axpy(-1.0, *self.c8, *o8(F)))
         return o8(od_add_dd(*o8(F), -self.ch, -self.cl))
 
     def newton_o(self, z, mutate=0):
@@ -100,6 +107,8 @@ class PinnedO:
         if self.mutate_offset == "qd":
             self.s.newton_q(*q4_of_o(z), mutate=mutate)
             x = o8_of_q(self.s.qlu_solve(self.ch, self.cl, self.zero, self.zero))
+        elif self.c8 is not None:
+            x = o8(self.s.olu_solve(list(self.c8)))
         else:
             x = o8(self.s.olu_solve([self.ch, self.cl] + [self.zero] * 6))        # J^-1 c
         d = o8(od_axpy(1.0, *x, *o8(d)))
@@ -210,11 +219,15 @@ def newton_od(s, z, tol=1e-40, it_max=12, max_halvings=8, verbose=True, mutate=0
 
 def with_horizon(z8, z4, rs):
     """z8 (eight parts) with its horizon data (m_h, a_h) taken from z4 (four parts), their parts 4-7 zero: a re-seed or
-    projection (rs, a reseed.Reseeder of the layout, changes only those) put back on an octo-double point"""
+    projection (rs, a reseed.Reseeder of the layout, changes only those) put back on an octo-double point. With
+    rs.od > 0 the data are then corrected in octo-double against the point's own eight parts (Reseeder.refine_o), and
+    the rung residuals of that are kept in rs.last_o."""
     sl = slice(rs.off["mh"], rs.off["mh"] + 2 * rs.M)
     out = [np.array(p, dtype=float) for p in o8(z8)]
     for q in range(8):
         out[q][sl] = np.asarray(z4[q])[sl] if q < 4 else 0.0
+    if getattr(rs, "od", 0):
+        out, rs.last_o = rs.refine_o(out)
     return o8(out)
 
 
@@ -266,9 +279,10 @@ class ElimO:
         return (o8(od_axpy(1.0, *disp, *st[0])), *st[1:])
 
 
-def pinned_o(meta, z, threads=2, plan_tol=1e-32, mutate_offset=""):
+def pinned_o(meta, z, threads=2, plan_tol=1e-32, mutate_offset="", held_exact=False):
     """reseed.pinned's solver at the state's D, with the segments planned at z at plan_tol, and its PinnedO wrapper:
-    (s, PinnedSolver, PinnedQ, PinnedO)"""
+    (s, PinnedSolver, PinnedQ, PinnedO). The held values are z's own, as floats, or with held_exact taken from all
+    of z's parts and carried in eight (anm_run.py --held_o 1)."""
     import mpmath as mp
     from hpkernel.driver import make_solver
     from pinning import PinnedQ, PinnedSolver, band_coeffs, band_field
@@ -278,9 +292,11 @@ def pinned_o(meta, z, threads=2, plan_tol=1e-32, mutate_offset=""):
                     threads=threads, kfreeze=meta["kfreeze"])
     s.set_segs(s.plan(np.asarray(z[0]), np.asarray(z[1]), plan_tol, 0.05))
     ks_held = [k for k in range(int(meta["kfreeze"]) + 1, 14) if k % 2 == 1]
-    hh, hl = band_field(band_coeffs(np.asarray(z[0])[:M], np.asarray(z[1])[:M], M, ks_held), ks_held, M)
-    sp = PinnedSolver(s, M, hh, hl)
-    return s, sp, PinnedQ(s, sp.ch, sp.cl), PinnedO(s, sp.ch, sp.cl, mutate_offset=mutate_offset)
+    co = band_coeffs(np.asarray(z[0])[:M], np.asarray(z[1])[:M], M, ks_held, exact=held_exact,
+                     rest=[np.asarray(p)[:M] for p in z[2:]] if held_exact else ())
+    h = band_field(co, ks_held, M, parts=8 if held_exact else 2)
+    sp = PinnedSolver(s, M, h[0], h[1], h_rest=h[2:])
+    return s, sp, PinnedQ(s, sp.ch, sp.cl), PinnedO(s, sp.ch, sp.cl, mutate_offset=mutate_offset, c8=sp.c8)
 
 
 
@@ -420,17 +436,24 @@ def wall(argv):
     from hpkernel.driver import load_q
     from reseed import Reseeder
     raw, path = argv[0], argv[1]
-    opt = _parse(argv[2:], dict(threads=3, mutate_offset="", mutate=0, it_max=12, qd=0, tol=1e-40, out="", F_max=1e-36, junk=0))
+    opt = _parse(argv[2:], dict(threads=3, mutate_offset="", mutate=0, it_max=12, qd=0, tol=1e-40, out="", F_max=1e-36, junk=0,
+                                reseed_o=0, held_o=0))
     z4, meta = load_q(os.path.join(raw, path))
     D = mp.mpf(meta["D_str"])
-    rs = Reseeder(meta, D, threads=opt["threads"], qd=True)
+    rs = Reseeder(meta, D, threads=opt["threads"], qd=True, od=opt["reseed_o"])
     t0 = time.time()
     zr, diag = rs.reseed(o8(z4))
     zr = o8(zr)
-    s, sp, sq, so = pinned_o(meta, zr, threads=opt["threads"], mutate_offset=opt["mutate_offset"])
+    s, sp, sq, so = pinned_o(meta, zr, threads=opt["threads"], mutate_offset=opt["mutate_offset"],
+                             held_exact=bool(opt["held_o"]))
     print(f"wall {path}: D {mp.nstr(D, 12)}, re-seed {'ok' if diag['ok'] else 'FAILED'} ({diag['seconds']} s), pinned max|F| (octo) "
           f"{omax(so.residual_o(o8_of_q(zr))):.2e}; mutate_offset '{opt['mutate_offset']}', mutate {opt['mutate']}", flush=True)
-    zo, ho, co, Fo, counts = _run_od(so, rs, o8_of_q(zr), opt)
+    start = o8_of_q(zr)
+    if rs.od:
+        # as anm_run.py does at the prediction: the re-seeded horizon data refined before the corrector starts
+        start, hr = rs.refine_o(start)
+        print("  horizon data refined in octo-double, rung max|R| " + " -> ".join(f"{r:.2e}" for r in hr), flush=True)
+    zo, ho, co, Fo, counts = _run_od(so, rs, start, opt)
     Do = _delta(zo)
     print(f"  od: {len(ho)} steps, {'converged' if co else 'NOT converged'}, pinned max|F| (octo) {Fo:.2e}, Delta {mp.nstr(Do, 40)}, "
           f"projections {counts}, {time.time() - t0:.0f} s", flush=True)
@@ -459,11 +482,64 @@ def wall(argv):
     return 0 if ok else 1
 
 
+def horizon(argv):
+    """the planted check of Reseeder.refine_o. The truth is built from a converged eight-part state RAW/STATE (anm_run.py
+    --corrector od): its horizon data refined until the rung residual stops falling, so that they solve the rung's
+    equations far below the state's own residual (the state's data solve them only to its residual, and along the
+    block's weak directions that leaves them 1e-62 from the rung's solution at D 221). The truth's data are then
+    rounded to quad-double (parts 4-7 zero, what with_horizon makes of the best quad-double re-seed) and refined
+    again. Pass, fixed before the run: the plant shows (the rung's max |R| at the rounded data is at least 1e6 times
+    the truth's and at least 1e-36; exit 2 if not, since nothing is tested then), the refined residual is at most
+    1e-10 of the rounded one, and the data's distance from the truth's falls to at most 1e-10 of the rounding's.
+    Controls: --steps 0 (no correction) and --mutate_h sign (each correction with the wrong sign) must fail. Exit 1 on
+    failure."""
+    import os
+    import time
+    import mpmath as mp
+    from reseed import Reseeder
+    raw, path = argv[0], argv[1]
+    opt = _parse(argv[2:], dict(threads=3, steps=3, mutate_h=""))
+    if not has_o(os.path.join(raw, path)):
+        print(f"horizon {path}: not an eight-part state, nothing to test")
+        return 2
+    z8, meta = load_o(os.path.join(raw, path))
+    D = mp.mpf(meta["D_str"])
+    rs = Reseeder(meta, D, threads=opt["threads"], qd=True, od=opt["steps"])
+    sl = slice(rs.off["mh"], rs.off["mh"] + 2 * rs.M)
+    t0 = time.time()
+    R_state = rs.refine_o(o8(z8), 0)[1][0]
+    zt, ht = rs.refine_o(o8(z8), 4)
+    zq = [np.array(p) for p in zt]
+    for q in range(4, 8):
+        zq[q][sl] = 0.0
+    zr, hist = rs.refine_o(zq, opt["steps"], mutate=opt["mutate_h"])
+
+    def dist(z):
+        """the largest distance of z's horizon data from the truth's, relative to the largest datum"""
+        with mp.workdps(160):
+            v = [abs(sum(mp.mpf(float(z[q][i])) for q in range(8)) - sum(mp.mpf(float(zt[q][i])) for q in range(8)))
+                 for i in range(sl.start, sl.stop)]
+            top = max(abs(mp.mpf(float(zt[0][i]))) for i in range(sl.start, sl.stop))
+            return float(max(v) / top)
+    e_q, e_r = dist(zq), dist(zr)
+    print(f"horizon {path}: D {mp.nstr(D, 12)}, steps {opt['steps']}, mutate_h '{opt['mutate_h']}', {time.time() - t0:.0f} s", flush=True)
+    print(f"  rung max|R|: the state's own {R_state:.2e}; the truth's {ht[-1]:.2e}; rounded to quad-double {hist[0]:.2e}; after "
+          "each correction " + (", ".join(f"{r:.2e}" for r in hist[1:]) or "none"), flush=True)
+    print(f"  horizon data's distance from the truth's: rounded {e_q:.2e}, refined {e_r:.2e}", flush=True)
+    if not (hist[0] >= 1e6 * ht[-1] and hist[0] >= 1e-36):
+        print("  the plant does not show in the rung residual: nothing tested", flush=True)
+        return 2
+    ok = bool(np.isfinite(hist[-1]) and hist[-1] <= 1e-10 * hist[0] and e_r <= 1e-10 * e_q)
+    print(f"  {'PASS' if ok else 'FAIL'}: residual {hist[-1]:.2e} against 1e-10 x {hist[0]:.2e}, distance {e_r:.2e} against "
+          f"1e-10 x {e_q:.2e}", flush=True)
+    return 0 if ok else 1
+
+
 if __name__ == "__main__":
     import os
     import sys
     sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-    if len(sys.argv) > 3 and sys.argv[1] in ("planted", "wall"):
-        sys.exit((planted if sys.argv[1] == "planted" else wall)(sys.argv[2:]))
+    if len(sys.argv) > 3 and sys.argv[1] in ("planted", "wall", "horizon"):
+        sys.exit(dict(planted=planted, wall=wall, horizon=horizon)[sys.argv[1]](sys.argv[2:]))
     print(__doc__)
     sys.exit(2)

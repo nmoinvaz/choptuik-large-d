@@ -79,7 +79,7 @@ class Reseeder:
     is the stepper's error estimate (a plan at check_tol with steps at most hmax / 2, at Taylor order check_kt)."""
 
     def __init__(self, meta, D, threads=2, levels=5, rows="ma", plan_tol=1e-32, hmax=0.05, check_tol=1e-36,
-                 check_kt=None, it_max=30, horizon_alpha=0, mutate="none", floor_rule="stall", qd=False):
+                 check_kt=None, it_max=30, horizon_alpha=0, mutate="none", floor_rule="stall", qd=False, od=0):
         self.M, self.nodes = int(meta["M"]), list(meta["nodes"])
         self.K = len(self.nodes)
         self.kt, self.kc, self.ks = meta.get("kt", 36), meta.get("kc", 146), meta.get("ks", 130)
@@ -98,6 +98,9 @@ class Reseeder:
         # node to the quad-double floor eps_qd G rather than eps_dd G (the double-double rung's floor exceeds what the
         # corrector tolerates past D ~ 128, notes/QUAD_DOUBLE.md 13.22)
         self.qd = qd
+        # od: the number of octo-double corrections of the horizon data after the quad-double polish (refine_o), taken
+        # where the data are put on an eight-part point (octo_corrector.with_horizon); 0: none
+        self.od = int(od)
         self.x_node = self.nodes[-1]
         u0 = 1.0 - self.x_node
         # the rungs u0 / 2^j, j = J..0 (exact in f64: u0 is the f64 value 1 - x_K-1 and the divisions are by powers of 2)
@@ -412,6 +415,58 @@ class Reseeder:
         return d, hist, steps > 0 and nR < 1e-24
 
     # ------------------------------------------------------------------ the re-seed
+    def refine_o(self, z8, steps=None, mutate=""):
+        """the u0 rung's horizon data in octo-double: z8 (eight parts) with its 2M horizon data moved by steps Newton
+        corrections. The residual is the rung rows of Solver.residual_o at all eight parts, and each step solves the
+        rung block of the quad-double Jacobian at the point's quad-double rounding (QDLu, factored once). The
+        quad-double polish (polish_q) leaves the data eps_qd from those the node asks for, which the mass mode
+        amplifies to about eps_qd G in the corrector's residual, 1e-31 at D 216 and 1e-29 at D 226 (#461); a
+        correction lowers that remainder by about eps_qd times the block's condition. Returns (z8', hist): hist is
+        the rung's max |R| before each correction and after the last. A residual that is not finite returns the
+        point as it stands. mutate 'sign' applies each correction with the wrong sign (the control of
+        octo_corrector.py horizon)."""
+        from multidouble import od_axpy
+        steps = self.od if steps is None else int(steps)
+        M, a, o = self.M, self.aoff, self.off
+        s = self.rung_solver(self.us[-1])
+        rows = self.rung_rows()
+        cols = np.r_[a["mh"]:a["mh"] + 2 * M]
+        n0, n1, nk = o["node"](0), o["node"](1), o["node"](self.K - 1)
+        sl_ = slice(o["mh"], o["mh"] + 2 * M)
+        z8 = [np.array(p, dtype=float) for p in z8]
+        # the two-node layout of the rung: the centre data, node 0, the last node as node 1, and Delta
+        base = [np.zeros(a["L"]) for _ in range(8)]
+        for q in range(8):
+            base[q][:2 * M] = z8[q][:2 * M]
+            base[q][a["node"](0):a["node"](1)] = z8[q][n0:n1]
+            base[q][a["node"](1):a["node"](1) + 4 * M] = z8[q][nk:nk + 4 * M]
+            base[q][-1] = z8[q][-1]
+
+        def put(d, parts):
+            v = [b.copy() for b in base[:parts]]
+            for q in range(parts):
+                v[q][cols] = d[q]
+            return [np.ascontiguousarray(x) for x in v]
+
+        d = [np.ascontiguousarray(z8[q][sl_]) for q in range(8)]
+        zero = np.zeros(2 * M)
+        hist, lu = [], None
+        for k in range(steps + 1):
+            F = s.residual_o(put(d, 8))
+            R = [np.ascontiguousarray(np.asarray(F[q])[rows]) for q in range(8)]
+            hist.append(float(np.max(np.abs(R[0] + R[1]))))
+            if k == steps or not np.isfinite(hist[-1]):
+                break
+            if lu is None:
+                J = s.jacobian_q(*put(d, 4))
+                lu = QDLu(*[np.asarray(J[q])[np.ix_(rows, cols)] for q in range(4)])
+            x = [np.ascontiguousarray(np.asarray(p)) for p in lu.solve(*[-r for r in R[:4]])]
+            d = [np.ascontiguousarray(np.asarray(p))
+                 for p in od_axpy(-1.0 if mutate == "sign" else 1.0, *x, *([zero] * 4), *d)]
+        for q in range(8):
+            z8[q][sl_] = d[q]
+        return tuple(np.ascontiguousarray(p) for p in z8), hist
+
     def reseed(self, z, verbose=False):
         """z: a state of two or four parts (hi, lo[, z2, z3]). Returns (z', diag): z' has the same parts with m_h and a_h
         replaced (their lower parts zero), diag the per-rung records; diag['ok'] is False when a rung's Newton did not

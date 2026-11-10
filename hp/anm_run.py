@@ -16,6 +16,7 @@ formulation of hp/pinning.py; their coefficients are zero).
         [--qd_it 12] [--qd_w 0] [--refine 1] [--probe 0 --probe_c C] [--plan_tol 1e-32] [--fix1 0] [--F_pred_max 0]
         [--horizon_alpha 0] [--fix1_qlu 0] [--jet_q 0] [--reseed 0] [--pred_q 0] [--reseed_q 0] [--save_pred 0]
         [--jet_o 0] [--corrector od --tol_od 1e-40] [--base_adopt 0] [--base_polish 1] [--held_fit FILE]
+        [--held_o 0] [--reseed_o 0]
 
 --corrector qd runs the quad-double Newton of the kernel (hpkernel.driver.newton_qd, Solver.newton_q) on the pinned
 system (pinning.PinnedQ: the held harmonics' offset subtracted from the quad-double residual and added to the step, as
@@ -209,15 +210,19 @@ def coefficients_o(s, zo, N, held=None):
     coefficients, added in octo-double (od_add_dd). No refinement: the LU is the exact Jacobian's in octo-double."""
     # the octo-double helpers are in multidouble's Python package from f092018 on; imported here so that the other
     # paths run on the older packages the runners have
-    from multidouble import od_add_dd
+    from multidouble import od_add_dd, od_axpy
     Zo, norms = [o8(zo)], [float(dd_norm(zo[0], zo[1]))]
     for k in range(1, N + 1):
         F = s.residual_jet_o(list(Zo), k + 1)
         b = [-np.asarray(p) for p in F[k]]
         if held is not None:
             fn, rows = held
-            th, tl = fn(k)
-            r = od_add_dd(*(np.ascontiguousarray(p[rows]) for p in b), np.asarray(th), np.asarray(tl))
+            t = fn(k)
+            if len(t) == 2:
+                r = od_add_dd(*(np.ascontiguousarray(p[rows]) for p in b), np.asarray(t[0]), np.asarray(t[1]))
+            else:
+                # the held field's order-k coefficient in eight parts (--held_o 1)
+                r = od_axpy(1.0, *(np.ascontiguousarray(np.asarray(v)) for v in t), *(np.ascontiguousarray(p[rows]) for p in b))
             for p, v in zip(b, r):
                 p[rows] = v
         Zo.append(o8(s.olu_solve([np.ascontiguousarray(p) for p in b])))
@@ -244,6 +249,10 @@ def main():
     opt.update(base_adopt=0)            # --base_adopt 1: the base's od polish is adopted whatever it did
     opt.update(base_polish=1)           # --base_polish 0: no polish, the stored state is the base
     opt.update(held_fit="")             # --held_fit FILE (pinning.HeldFit; notes/HELD_HARMONICS.md)
+    # --held_o 1: the held values and their Taylor coefficients as mpf instead of floats, and the held field in eight
+    # parts instead of two (with --held_fit and --corrector od); --reseed_o K: K octo-double corrections of the
+    # re-seeded horizon data (reseed.Reseeder.refine_o)
+    opt.update(held_o=0, reseed_o=0)
     for k in list(opt):
         f = "--" + k
         if f in args:
@@ -282,7 +291,7 @@ def main():
         corrector's start in four parts (--pred_q), else (ph, pl). z8_start: the octo-double corrector's in eight"""
         if opt["corrector"] == "od":
             # --corrector od: the octo-double Newton (hp/octo_corrector.py), with --reseed 2 inside ElimO
-            so = PinnedO(spx.s, spx.ch, spx.cl)
+            so = PinnedO(spx.s, spx.ch, spx.cl, c8=spx.c8)
             if elim.get("rs") is not None:
                 so = ElimO(so, elim["rs"])
             z0 = z8_start if z8_start is not None else o8_of_q(z4_start if z4_start is not None else qparts(ph, pl))
@@ -353,7 +362,23 @@ def main():
     mk = lambda Dx: make_solver(Dx, M, nodes=nodes, kt=kt, kc=kc, ks=ks, threads=opt["threads"], kfreeze=kf,  # noqa: E731
                                 horizon_alpha=opt["horizon_alpha"])
     ks_held = [k for k in range(kf + 1, 14) if k % 2 == 1]
-    base_coeffs = band_coeffs(zh[:M], zl[:M], M, ks_held)         # [(a_k, b_k)] at the base, exact there
+    if opt["held_o"] and not (opt["held_fit"] and opt["corrector"] == "od" and opt["jet_o"]):
+        raise SystemExit("--held_o 1 needs --held_fit, --corrector od and --jet_o 1")
+    held_x = bool(opt["held_o"])
+    hparts = 8 if held_x else 2
+
+    def coeffs_of(zh_, zl_):
+        """[(a_k, b_k)] of the base's held harmonics, exact there: floats, or with --held_o mpf from all the parts the
+        base has (the corrector's eight, or the stored state's)"""
+        rest = ()
+        if held_x:
+            z8b = last_q.get("z8")
+            if z8b is None and has_o(os.path.join(raw, opt["state"])):
+                z8b = load_o(os.path.join(raw, opt["state"]))[0]
+            if z8b is not None:
+                rest = [np.asarray(p)[:M] for p in z8b[2:]]
+        return band_coeffs(zh_[:M], zl_[:M], M, ks_held, exact=held_x, rest=rest)
+    base_coeffs = coeffs_of(zh, zl)
     # the trend: exponents s of |v| ~ n^s per held coefficient, from the stored states of --trend (0 = held constant)
     slopes = [[0.0, 0.0] for _ in ks_held]
     if opt["trend"]:
@@ -389,7 +414,10 @@ def main():
     def held_at(Dx):
         """the held coefficients at D = Dx on the trend, relative to the base"""
         if hfit is not None:
-            return [(float(mp.mpf(a) + da), float(mp.mpf(b) + db)) for (a, b), (da, db) in zip(base_coeffs, hfit.increment(D, Dx, ks_held))]
+            # a float here is half an ulp from the fit's value, 1e-18 on the largest held coefficient, which the
+            # corrector's first step then answers with a move 1 / (smallest pivot) times larger (#461)
+            num = (lambda v: v) if held_x else float
+            return [(num(mp.mpf(a) + da), num(mp.mpf(b) + db)) for (a, b), (da, db) in zip(base_coeffs, hfit.increment(D, Dx, ks_held))]
         r = float(Dx) - 2.0
         return [(a * (r / n0) ** sa, b * (r / n0) ** sb) for (a, b), (sa, sb) in zip(base_coeffs, slopes)]
 
@@ -399,7 +427,7 @@ def main():
             key = str(D)
             if key not in hfit_jets:
                 hfit_jets.clear()
-                hfit_jets[key] = hfit.jets(D, N, ks_held)
+                hfit_jets[key] = hfit.jets(D, N, ks_held, exact=held_x)
             return hfit_jets[key][j]
         out = []
         for (a, b), (sa, sb) in zip(base_coeffs, slopes):
@@ -413,8 +441,8 @@ def main():
         return out
 
     def wrap_at(sx, Dx):
-        hh, hl = band_field(held_at(Dx), ks_held, M)
-        return PinnedSolver(sx, M, hh, hl)
+        h = band_field(held_at(Dx), ks_held, M, parts=hparts)
+        return PinnedSolver(sx, M, h[0], h[1], h_rest=h[2:])
     wrap = lambda sx: wrap_at(sx, D)  # noqa: E731
     s = mk(D); segs = s.plan(zh, zl, opt["plan_tol"], 0.05); s.set_segs(segs); sp = wrap(s)
     Kb = (len(zh) - 1) // (4 * M) - 1                                   # the horizon block
@@ -434,7 +462,7 @@ def main():
             # alone (its quadratic term there; 1e-41 in the others), which the projection removes
             if opt["reseed"] == 2:
                 elim["rs"] = Reseeder(dict(M=M, nodes=nodes, kt=kt, kc=kc, ks=ks), D, threads=opt["threads"],
-                                      horizon_alpha=opt["horizon_alpha"], qd=bool(opt["reseed_q"]))
+                                      horizon_alpha=opt["horizon_alpha"], qd=bool(opt["reseed_q"]), od=opt["reseed_o"])
             zh_p, zl_p, F0_p, _, conv_p, _ = correct(sp, zh, zl, opt["tol"],
                                                      z8_start=load_o(os.path.join(raw, opt["state"]))[0])
             elim["rs"] = None
@@ -630,7 +658,8 @@ def main():
         if D >= opt["D_max"]:
             break
         t0 = time.time()
-        held_arg = (lambda j: band_field(held_jet(j), ks_held, M), rows) if (any(any(sl) for sl in slopes) or hfit is not None) else None
+        held_arg = ((lambda j: band_field(held_jet(j), ks_held, M, parts=hparts if opt["jet_o"] else 2), rows)
+                    if (any(any(sl) for sl in slopes) or hfit is not None) else None)
         fix1 = None
         Zo = None
         if opt["jet_o"]:
@@ -699,7 +728,7 @@ def main():
                     # --reseed 1: the prediction's horizon data from its last node (hp/reseed.py); 2: also eliminated
                     # inside the corrector
                     rs_n = Reseeder(dict(M=M, nodes=nodes, kt=kt, kc=kc, ks=ks), Dn, threads=opt["threads"],
-                                    horizon_alpha=opt["horizon_alpha"], qd=bool(opt["reseed_q"]))
+                                    horizon_alpha=opt["horizon_alpha"], qd=bool(opt["reseed_q"]), od=opt["reseed_o"])
                     if opt["save_pred"] and pred4 is not None:
                         # the prediction before its re-seed, for testing the re-seed on it (13.26)
                         save_q(os.path.join(out, f"pred_pin{kf}_D{float(Dn):.4f}.npz"), pred4,
@@ -718,6 +747,9 @@ def main():
                         pred4 = tuple(np.ascontiguousarray(np.asarray(v)) for v in zr)
                     if pred8 is not None and rsd["ok"]:
                         pred8 = with_horizon(pred8, zr, rs_n)          # the re-seeded horizon data in eight parts
+                        if rs_n.od:
+                            print("      horizon data refined in octo-double, rung max|R| "
+                                  + " -> ".join(f"{r:.2e}" for r in rs_n.last_o), flush=True)
                 sn = mk(Dn)
                 segs_n = segs
                 sn.set_segs(segs_n)
@@ -763,7 +795,7 @@ def main():
             break
         D, zh, zl, s, sp, segs = Dn, ch, cl, sn, spn, segs_n
         # re-base the trend on the new state (its harmonics sit on the trend's values at D, to the corrector's floor)
-        base_coeffs = band_coeffs(zh[:M], zl[:M], M, ks_held)
+        base_coeffs = coeffs_of(zh, zl)
         n0 = float(D) - 2.0
         meta_out = dict(D=float(D), D_str=str(D), M=M, nodes=nodes, kt=kt, kc=kc, ks=ks, kfreeze=kf, pin_held=ks_held, N=N, a=a, source=opt["state"])
         if opt["corrector"] == "qd" and "z4" in last_q:
