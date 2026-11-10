@@ -14,12 +14,17 @@ import numpy as np
 from hpkernel.driver import dd_add, dd_from_mp, qd_axpy   # noqa: F401 (dd_add re-exported for scan_hp)
 
 
-def band_coeffs(f_hi, f_lo, M, ks, dps=40):
+def band_coeffs(f_hi, f_lo, M, ks, dps=40, exact=False, rest=()):
     """cos/sin coefficients (a_k, b_k) of an odd (antiperiodic) field on the half grid of N = 2M points, k in ks,
-    from double-double samples: f(theta_j) = sum_k a_k cos(k theta_j) + b_k sin(k theta_j)"""
-    with mp.workdps(dps):
+    from double-double samples: f(theta_j) = sum_k a_k cos(k theta_j) + b_k sin(k theta_j). They are returned as
+    floats, or with exact as mpf at the samples' precision (a float is half an ulp, 1e-16 of the coefficient, from
+    the field's own value). rest: the samples' further parts (an eight-part state's parts 2 to 7), summed in at 160
+    digits."""
+    with mp.workdps(160 if len(rest) else dps):
         N = 2 * M
         f = [mp.mpf(float(h)) + mp.mpf(float(l)) for h, l in zip(f_hi, f_lo)]
+        for p in rest:
+            f = [v + mp.mpf(float(x)) for v, x in zip(f, p)]
         out = []
         for k in ks:
             a = b = mp.mpf(0)
@@ -28,13 +33,15 @@ def band_coeffs(f_hi, f_lo, M, ks, dps=40):
                 # full grid: f(theta + pi) = -f(theta); both halves contribute equally for odd k
                 a += 2 * f[j] * mp.cos(k * th)
                 b += 2 * f[j] * mp.sin(k * th)
-            out.append((float(a * 2 / N), float(b * 2 / N)))
+            out.append((a * 2 / N, b * 2 / N) if exact else (float(a * 2 / N), float(b * 2 / N)))
     return out
 
 
-def band_field(coeffs, ks, M, dps=40):
-    """double-double samples (hi, lo) on the half grid of sum_k a_k cos(k theta) + b_k sin(k theta)"""
-    with mp.workdps(dps):
+def band_field(coeffs, ks, M, dps=40, parts=2):
+    """double-double samples (hi, lo) on the half grid of sum_k a_k cos(k theta) + b_k sin(k theta), or with parts > 2
+    that many parts of each sample, formed at 160 digits. The rounding of a sample is not in the band: it is a field
+    of every harmonic, 1e-34 of the largest in double-double, which reaches the rows of the free harmonics (#461)."""
+    with mp.workdps(dps if parts == 2 else 160):
         N = 2 * M
         vals = []
         for j in range(M):
@@ -43,17 +50,30 @@ def band_field(coeffs, ks, M, dps=40):
             for (a, b), k in zip(coeffs, ks):
                 v += mp.mpf(a) * mp.cos(k * th) + mp.mpf(b) * mp.sin(k * th)
             vals.append(v)
-        return dd_from_mp(vals)
+        if parts == 2:
+            return dd_from_mp(vals)
+        out = [np.zeros(M) for _ in range(parts)]
+        for j, v in enumerate(vals):
+            for q in range(parts):
+                out[q][j] = float(v)
+                v -= mp.mpf(out[q][j])
+        return out
 
 
 class PinnedSolver:
-    def __init__(self, s, M, h_hi, h_lo):
+    def __init__(self, s, M, h_hi, h_lo, h_rest=()):
         self.s = s
         L = s.size
         K = (L - 1) // (4 * M) - 1          # horizon block index
         self.ch, self.cl = np.zeros(L), np.zeros(L)
         self.ch[K * 4 * M:K * 4 * M + M] = h_hi
         self.cl[K * 4 * M:K * 4 * M + M] = h_lo
+        # h_rest: the held field's parts 2 to 7; c8 is then the offset in eight parts, for the octo-double methods
+        self.c8 = None
+        if len(h_rest):
+            self.c8 = [self.ch, self.cl] + [np.zeros(L) for _ in h_rest]
+            for c, h in zip(self.c8[2:], h_rest):
+                c[K * 4 * M:K * 4 * M + M] = h
 
     def __getattr__(self, name):
         return getattr(self.s, name)
@@ -168,7 +188,9 @@ class HeldFit:
         s0, s1 = self._series(D0, 0), self._series(D, 0)
         return [(s1[f"{k}a"][0] - s0[f"{k}a"][0], s1[f"{k}b"][0] - s0[f"{k}b"][0]) for k in ks]
 
-    def jets(self, D0, N, ks):
-        """[[(a_k, b_k)'s Taylor coefficients of order j in D - D0, for k in ks] for j in 0..N], floats"""
+    def jets(self, D0, N, ks, exact=False):
+        """[[(a_k, b_k)'s Taylor coefficients of order j in D - D0, for k in ks] for j in 0..N], floats, or mpf with
+        exact"""
         s = self._series(D0, N)
-        return [[(float(s[f"{k}a"][j]), float(s[f"{k}b"][j])) for k in ks] for j in range(N + 1)]
+        num = (lambda v: v) if exact else float
+        return [[(num(s[f"{k}a"][j]), num(s[f"{k}b"][j])) for k in ks] for j in range(N + 1)]
