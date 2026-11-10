@@ -336,8 +336,7 @@ at ε^{7/2}.
 
 ### Proposed text
 
-For notes/SECOND_ORDER.md §1, after the corrected NNLO (for the coordinator; that file was not edited here). The task
-is private, so this waits for Nathan's word.
+For notes/SECOND_ORDER.md §1, after the corrected NNLO, where the coordinator put it on the merge.
 
 > **One order further.** (S38) at ε^{5/2}, (S39) at ε^{7/2}, (S36) at ε³ and (S37) at ε⁴ fix Ψ₃, Π₄, Ω₄ and f₄
 > uniquely under (S29) and (S34). They are written in `solver/independent_eeg_nnlo/psi3.py` (`closed()`, derived there
@@ -350,13 +349,12 @@ comparison of the N³LO with the states would test Ψ₃ there (recommended task
 
 ### Files and commits
 
-- Branch `wip/ac40-psi3` of the worktree `/Users/nathan/Source/choptuik-ac40`, local only, not pushed. Commits 7781543
-  (scaffold), 1e67b36 (`psi3.py`, `controls.py`), 70ac34e (`third_order_eeg.py`) and the commit of this section, which
-  also adds check I and the `Psi2` control to `third_order_eeg.py`.
-- The logs of the final runs are in the session's scratchpad on the Mac: `controls.py --full`, `psi3.py` default and
-  `--print` and `second_order_eeg.py` at commit 70ac34e, and `third_order_eeg.py` default and `--controls` after
-  check I. They were not put in the raw-data repository, which is public. Every log is reproducible in about 25
-  minutes.
+- Code: `psi3.py` and the new rows of `controls.py` in this folder, and `solver/inner_pert/third_order_eeg.py` with its
+  check I and `Psi2` control.
+- Raw output: folder `AC40-mac/` of the raw-data repository, at its commit 1e23b197. `final/` holds the logs of the
+  final runs (`controls.py --full`, `psi3.py` default and `--print`, `second_order_eeg.py`, `third_order_eeg.py` default
+  and `--controls`), and `coordinator_rerun/` the coordinator's rerun of every command below, each exit 0. Every log is
+  reproducible in about 25 minutes.
 
 ### Commands (from the repository root)
 
@@ -381,9 +379,8 @@ python3 solver/independent_eeg_nnlo/controls.py --full       # 40 of 40, 20 min
    Π₄ coefficient moves the Π exponent out of its window. The near-null held harmonics at D ≥ 150 (§1.1, criterion C6)
    enter through six τ-derivatives here and may limit the fit. Depends on: this issue, the states of I126-mac and
    T138-win2. Whether it is public or private is the coordinator's decision, since it extends the check of EEG's NNLO.
-2. **Merge and the notes' text.** Review `wip/ac40-psi3`, merge it when Nathan allows, add the proposed paragraph to
-   notes/SECOND_ORDER.md §1, and give this run's logs a private home. Acceptance: on main, `controls.py --full` gives
-   40 of 40 and `third_order_eeg.py --controls` gives 8 of 8. Depends on: Nathan's word, since the task is private.
+2. **Merge and the notes' text.** Done on the merge: the paragraph is in notes/SECOND_ORDER.md §1, the logs are in raw
+   `AC40-mac/`, and on main `controls.py --full` gives 40 of 40 and `third_order_eeg.py --controls` 8 of 8.
 3. **Orders further, and their growth (low priority).** `psi3.py`'s truncated solve is generic in the order. Carry it
    to Π₆ and f₆, checking each order against (S36)–(S39) and Proposition 1, and evaluate each order's largest
    coefficient on the tuned D = ∞ profile. Why: the notes measure a factor of 12–34 per order (§1.1), and the exact

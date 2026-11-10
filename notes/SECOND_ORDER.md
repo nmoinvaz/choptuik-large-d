@@ -146,6 +146,12 @@ c_6 &= \tfrac{1}{16}\tilde\beta^6 - \tfrac{11}{12}\tilde\beta^4 - \tfrac{37}{24}
 - **What it changes.** EEG compare their perturbative fields with the D = 200 solution (their Fig. 4; EEG_PROFILE.md §1
   reads Fig. 5 the same way for D = 25–200). The corrected Π₃ changes Π at ε^{5/2} and Ω, f at ε³, that is at relative
   order ε² against the leading terms. Whether their figures used the printed expressions is not known from the paper.
+- **One order further (agent-comms#40).** (S38) at ε^{5/2}, (S39) at ε^{7/2}, (S36) at ε³ and (S37) at ε⁴ fix Ψ₃, Π₄,
+  Ω₄ and f₄ uniquely under (S29) and (S34). They are written in `solver/independent_eeg_nnlo/psi3.py` (`closed()`,
+  derived there from EEG's equations) and its REPORT.md. EEG's series with them equals Proposition 1 through 1/n⁴ for f
+  and Ω and through 1/n³ for Π/√ε and Ψ/√ε (`solver/inner_pert/third_order_eeg.py`). *Checked symbolically.* Their
+  linear parts are (x⁴/8)(D+1)⋯(D+5)β̃ − x²(D+1)(D+2)(D+3)β̃ in Ψ₃ and (x⁶/48)(D+1)⋯(D+6)β̃ − (x⁴/4)(D+1)⋯(D+4)β̃ in
+  Π₄. Raw output: folder `AC40-mac/` of the raw-data repository, at its commit 1e23b197.
 
 **μ.** Expanding the gauge identity in ε (check C):
 
