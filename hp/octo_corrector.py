@@ -15,7 +15,7 @@ used, so that a module importing this one runs on the older packages the runners
     python3 octo_corrector.py planted RAW STATE.npz [--threads 3] [--rel 1e-12] [--seed 1] [--qd 1] [--od 1]
         [--Delta_ref D] [--last 0] [--mutate_offset qd] [--mutate 10] [--out PREFIX]
     python3 octo_corrector.py wall RAW PRED.npz [--threads 3] [--qd 0] [--F_max 1e-36] [--mutate_offset qd]
-        [--mutate 10] [--out PREFIX] [--reseed_o 0] [--held_o 0]
+        [--mutate 10] [--out PREFIX] [--reseed_o 0] [--held_o 0] [--junk 0] [--junk_f64 0]
     python3 octo_corrector.py horizon RAW STATE.npz [--threads 3] [--steps 3] [--mutate_h sign]
 
 `planted` is check (a) of notes/OCTO_DOUBLE.md 5 (a converged state moved by a known amount, corrected in
@@ -142,7 +142,54 @@ def junk_subspace_o(s, w, delta_max=1e-2, iters=6, seed=0):
     return (np.linalg.qr(X[:, keep])[0] if keep.any() else np.zeros((L, 0))), sig[keep], sig[~keep]
 
 
-def newton_od(s, z, tol=1e-40, it_max=12, max_halvings=8, verbose=True, mutate=0, junk_w=0, delta_max=1e-2, tol_dz=1e-45):
+def junk_refine_o(s, V, iters=8):
+    """junk_subspace_o's columns refined in octo-double: inverse iteration on J^T J through olu_solve with all eight
+    parts, orthonormalized at 160 digits after each pass. junk_subspace_o finds the directions in the leading part,
+    1e-16 from the singular vectors, and a projector built from that leaves 1e-16 of a step's component along them.
+    That component is the direction's residual over its singular value, 3e-4 at D 239, so the leak is 1e-20 and the
+    projected Newton never falls below it (#461). Returns the columns as lists of mpf and the largest change of the
+    last pass."""
+    import mpmath as mp
+    with mp.workdps(160):
+        def vec(parts):
+            return [mp.fsum(mp.mpf(float(p[i])) for p in parts) for i in range(len(parts[0]))]
+
+        def parts(v):
+            out = [np.zeros(len(v)) for _ in range(8)]
+            for i, x in enumerate(v):
+                for q in range(8):
+                    out[q][i] = float(x)
+                    x = x - mp.mpf(out[q][i])
+            return out
+
+        def ortho(cols):
+            out = []
+            for v in cols:
+                for u in out:
+                    c = mp.fsum(a * b for a, b in zip(u, v))
+                    v = [a - c * b for a, b in zip(v, u)]
+                n = mp.sqrt(mp.fsum(a * a for a in v))
+                out.append([a / n for a in v])
+            return out
+        cols = ortho([[mp.mpf(float(x)) for x in V[:, j]] for j in range(V.shape[1])])
+        change = mp.mpf(1)
+        for _ in range(iters):
+            new = []
+            for v in cols:
+                n = max(abs(a) for a in v)
+                y = s.olu_solve(parts([a / n for a in v]), True)
+                x = vec(s.olu_solve([np.ascontiguousarray(np.asarray(p)) for p in y], False))
+                new.append(x)
+            new = ortho(new)
+            # a singular vector is fixed up to its sign
+            change = max(min(max(abs(a - b) for a, b in zip(u, v)), max(abs(a + b) for a, b in zip(u, v)))
+                         for u, v in zip(new, cols))
+            cols = new
+        return cols, float(change)
+
+
+def newton_od(s, z, tol=1e-40, it_max=12, max_halvings=8, verbose=True, mutate=0, junk_w=0, delta_max=1e-2, tol_dz=1e-45,
+              junk_exact=True):
     """Newton in octo-double from the eight-part state z on s (PinnedO, or ElimO around it): newton_qd's mode 'full'
     one level up (hpkernel.driver.newton_qd, its acceptance rule). A trial z + lam dz (lam = 1, 1/2, ...,
     2^-max_halvings) is accepted when the Newton correction there, with its own Jacobian, is smaller than dz (max norms
@@ -151,26 +198,54 @@ def newton_od(s, z, tol=1e-40, it_max=12, max_halvings=8, verbose=True, mutate=0
     converged), hist one record per step as newton_qd's. junk_w > 0: as newton_qd's junk mode, the junk among the
     junk_w weakest directions of the first Jacobian (junk_subspace_o: no Delta content) is removed from every step and
     every correction it is judged by, and the iteration also ends converged when that projected correction falls below
-    tol_dz (the residual left is the junk's)."""
+    tol_dz (the residual left is the junk's). junk_exact: the frozen directions refined in octo-double and projected
+    out at 160 digits (junk_refine_o); False is the projector in the leading part, the control. A state converged with
+    junk frozen is off the solution along each frozen direction by about that direction's residual over its singular
+    value, and its Delta by that times the direction's Delta component: both are printed."""
     import time
     from multidouble import od_axpy
     z = o8(z)
     st = s.newton_o(z, mutate=mutate)
     hist = []
-    V = None
+    V = Vo = None
     if junk_w:
         V, sk, sd = junk_subspace_o(s, junk_w, delta_max)
         if verbose:
             print(f"  od: {V.shape[1]} junk directions frozen (sigma {sk.min() if len(sk) else 0:.0e}..{sk.max() if len(sk) else 0:.0e}), "
                   f"{len(sd)} weak ones with Delta content kept", flush=True)
+        if junk_exact and V.shape[1]:
+            Vo, change = junk_refine_o(s, V)
+            if verbose:
+                print(f"  od: frozen directions refined in octo-double (last pass moved them {change:.1e}), their Delta "
+                      "components " + " ".join(f"{float(abs(v[-1])):.1e}" for v in Vo), flush=True)
     zero8 = np.zeros(len(z[0]))
+
+    def along(d):
+        """the components of the eight-part step d along the refined frozen directions (mpf)"""
+        import mpmath as mp
+        with mp.workdps(160):
+            x = [mp.fsum(mp.mpf(float(p[i])) for p in d) for i in range(len(d[0]))]
+            return [mp.fsum(a * b for a, b in zip(v, x)) for v in Vo], x
 
     def proj(d):
         """the eight-part step with its components along V removed"""
         if V is None or V.shape[1] == 0:
             return d
-        c = V @ (V.T @ (np.asarray(d[0]) + np.asarray(d[1])))
-        return o8(od_axpy(-1.0, np.ascontiguousarray(c), *([zero8] * 7), *o8(d)))
+        if Vo is None:
+            c = V @ (V.T @ (np.asarray(d[0]) + np.asarray(d[1])))
+            return o8(od_axpy(-1.0, np.ascontiguousarray(c), *([zero8] * 7), *o8(d)))
+        import mpmath as mp
+        with mp.workdps(160):
+            x = [mp.fsum(mp.mpf(float(p[i])) for p in d) for i in range(len(d[0]))]
+            for v in Vo:
+                c = mp.fsum(a * b for a, b in zip(v, x))
+                x = [a - c * b for a, b in zip(x, v)]
+            out = [np.zeros(len(x)) for _ in range(8)]
+            for i, a in enumerate(x):
+                for q in range(8):
+                    out[q][i] = float(a)
+                    a = a - mp.mpf(out[q][i])
+        return o8(out)
 
     for it in range(it_max + 1):
         nf = omax(st[1:3])
@@ -178,6 +253,11 @@ def newton_od(s, z, tol=1e-40, it_max=12, max_halvings=8, verbose=True, mutate=0
             if verbose:
                 print(f"  on {it}: projected correction below {tol_dz:.0e} with the junk frozen: converged at |F| {nf:.2e}, "
                       f"Delta {z[0][-1]:.17f} {z[1][-1]:+.4e}", flush=True)
+                if Vo is not None:
+                    # what the full Newton step would still move along each frozen direction, and Delta's share of it
+                    cs = along(st[0])[0]
+                    print("  frozen directions: offset along each " + " ".join(f"{float(abs(c)):.1e}" for c in cs)
+                          + ", Delta's share " + " ".join(f"{float(abs(c * v[-1])):.1e}" for c, v in zip(cs, Vo)), flush=True)
             hist.append(dict(it=it, F=nf, dz=float(np.abs(proj(st[0])[0]).max()), mode="sel", junk_floor=True))
             return z, hist, True
         if nf <= tol:
@@ -320,7 +400,8 @@ def _run_od(so, rs, z8, opt):
     """ElimO around so (PinnedO), newton_od to opt's tol and it_max; the final point (its projection, the point whose
     residual converged), the history, converged, the octo-double pinned max |F| there and the projections"""
     el = ElimO(so, rs)
-    z, hist, conv = newton_od(el, z8, tol=opt["tol"], it_max=opt["it_max"], mutate=opt["mutate"], junk_w=opt.get("junk", 0))
+    z, hist, conv = newton_od(el, z8, tol=opt["tol"], it_max=opt["it_max"], mutate=opt["mutate"], junk_w=opt.get("junk", 0),
+                              junk_exact=not opt.get("junk_f64", 0))
     z = el.project(z)
     return z, hist, conv, omax(so.residual_o(z)), dict(el.counts)
 
@@ -437,7 +518,7 @@ def wall(argv):
     from reseed import Reseeder
     raw, path = argv[0], argv[1]
     opt = _parse(argv[2:], dict(threads=3, mutate_offset="", mutate=0, it_max=12, qd=0, tol=1e-40, out="", F_max=1e-36, junk=0,
-                                reseed_o=0, held_o=0))
+                                reseed_o=0, held_o=0, junk_f64=0))
     z4, meta = load_q(os.path.join(raw, path))
     D = mp.mpf(meta["D_str"])
     rs = Reseeder(meta, D, threads=opt["threads"], qd=True, od=opt["reseed_o"])
