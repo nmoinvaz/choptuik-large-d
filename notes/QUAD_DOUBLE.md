@@ -565,7 +565,7 @@ double-double Jacobian's rounding, u·σ_max ≈ 10⁻²¹, exceeds its weakest 
 Jacobian or LU resolves that direction. Done on `wip/qd-horizon` (be10434, 37468e6): `residual_qd`, the residual with
 every block in quad-double (kernel test `residual_qd_agrees`), `QdSolver` (Newton–GCR on it, preconditioned by the
 double-double LU) and `hp/full_step_check.py`. At D = 72.80 one such step with 60 GCR products (not converged) raised
-|F| from 6×10⁻²² to 10⁻¹⁷, and Newton with line search made no progress (`raw/T76` 7ca90fe, ab929a7).
+|F| from 6×10⁻²² to 10⁻¹⁷, and Newton with line search made no progress (`raw/T76` 84517a1, 1e59a76).
 
 **First, the deciding experiment.** The same step with GCR converged (up to 300 products):
 - if it lowers |F|, the linear solve was the limit: Newton–GCR on `residual_qd` is the solver, no quad-double Jacobian;
@@ -649,7 +649,7 @@ plan until D moves --replan (0.5).
 **Bit-identity of the bump from multidouble 1.5.1 to 1.7.0.** `highm_check.py ref` and `scaled` were saved with a
 build of main (6014cb1, 1.5.1) and compared with a build of this branch (086a95e, 1.7.0), on the Mac. All 168 `ref`
 outputs (M = 8 to 128) and all 22 `scaled` outputs (M = 192 and 256) are bit-identical, and the `scaled` control
-(the scale wrong at order 7) fires. The logs and hashes are on raw/T81 (fd8e038).
+(the scale wrong at order 7) fires. The logs and hashes are on raw/T81 (14cac15).
 
 ### 12.2 What stops the continuation past D = 73: the horizon block (2026-10-27, raw/T81)
 
@@ -956,7 +956,7 @@ more numerics, and the quad-double points are its test when it exists.
 With the pinned double-double scan of T84 and T85 (`scan_hp.py` of wip/qd-horizon, patched on wip/t101-mac 0129a65 so
 that a solve raising on the predicted state counts as a failed step), from two starts, the Lagrange predictor through
 the waypoints each start has, and the scan's own halving from the full jump (folder T101-mac of the raw-data
-repository, 2a21d20; its README has the expectation written before the runs and every attempt):
+repository, 7c06884; its README has the expectation written before the runs and every attempt):
 
 | start | jump | result |
 |---|---|---|
@@ -1205,7 +1205,7 @@ basin test and the prototype's a-field profile near u_pole will show.
 double-double states load as DSSMulti states (the same layout; their f64 residual floors are 3×10⁻⁹ at D 40, 9×10⁻⁹ at
 50 and 3×10⁻⁶ at 67.7, all in the horizon block), and the collocation values come from the kernel's own horizon series
 summed at the points in 40-digit arithmetic. `solver/colloc_tests.py` runs the tests; the records and logs are in the
-raw-data repository's `route1-mac/colloc/` (2233e8c). Everything below is at D = 40.02 (`up7_D40.0201`), M = 32, f64.
+raw-data repository's `route1-mac/colloc/` (c19d668). Everything below is at D = 40.02 (`up7_D40.0201`), M = 32, f64.
 
 - **T1 passes.** On the double-double samples the collocation rows are 10⁻¹³ to 2×10⁻¹² at N_u = 16, 24, 32, 48 (D 40
   and 50), against the series block's own f64 floor of 3×10⁻⁹: the block's equations are right.
@@ -2054,7 +2054,7 @@ keeps the start (its rung stops at 3.9×10⁻¹³), and `wrongu` diverges. **The
 128.5559 state, `--reseed 2 --reseed_q 1 --pred_q 1 --h_max 2.5`. Pass: a step of 1.25 or more converges; otherwise the
 elimination gains nothing over T113's steps of 0.5 and T113 stays the route.
 
-**The pilot's result (2026-11-05 17:45 UTC; raw-data repository `anm-mac/elimq_pilot/`, commit 7e88b80).** Two steps
+**The pilot's result (2026-11-05 17:45 UTC; raw-data repository `anm-mac/elimq_pilot/`, commit d24b259).** Two steps
 of 2.5 converged, 128.56 → 131.06 → 133.56, so the pilot passes its criterion. The third does not. At 133.56 the
 series' first ratios |z_(k−1)|/|z_k| are 6.7, 0.9, 1.1 and 1.1, so a_max is 0.725. The re-seeds at 0.725 and 0.3625
 then fail at the u₀ rung (7.1×10⁻⁵ and 5.8×10⁻¹⁰), and the corrector takes no step. Three signs put the start at the
@@ -2147,7 +2147,7 @@ on the faster build.
 
 `hp/export_delta_all.py` writes `hp/data/delta_all.csv`, one row per D with Δ in up to four parts, the kind of
 computation, an error estimate and its kind, the source record and the state (columns and precedence in its docstring;
-the README's Values section describes the file). It read the raw-data repository at 78d562c. Its 2295 rows:
+the README's Values section describes the file). It read the raw-data repository at cb5bcab. Its 2295 rows:
 
 | kind | rows | D | err, its kind and range |
 |---|---|---|---|
@@ -2178,7 +2178,7 @@ few ulps apart (macm3, comms 2026-11-07 06:26 UTC). That is far below chain_fit'
 (notes/HELD_HARMONICS.md). T140 (win, `T140-win/`) reruns its path from 73.0 with the harmonics held on the fits of
 degree 6 and 10 (chain_fit's is 8). Where it reached a D, err is the larger difference (err_kind fits), a spread over
 the fit's degree: 1.4e-15 at 74, 1.5e-13 at 85, 1.2e-12 at 100, 1.1e-11 at 150 and 1.6e-11 at 165, with degree 6
-above chain_fit and degree 10 below it at every D (raw 78d562c).
+above chain_fit and degree 10 below it at every D (raw cb5bcab).
 
 **T85-mac below 78.1, replaced by chain_fit.** chain_fit, interpolated through nine of its rows, agrees with T75's
 pin 7 and pin 5 rows at 73.10–73.26 to 5.3e-13 or better (the interpolation's own spread, from dropping its end points,
@@ -2226,7 +2226,7 @@ at 75.27–80.27. The double-double `run_trend_pin3_cont` differs from the quad-
 
 T118 (win2) stopped at 152.93. At every attempt the re-seed failed at the rung u 0.3, and the plain prediction it kept
 did not converge. Replaying T118's step from its 152.93 state on the Mac found two defects (raw-data repository
-`anm-mac/stall153/`, 45ad089).
+`anm-mac/stall153/`, a2fa875).
 
 **The u0 rung's quad-double polish** (`reseed.py` `invert_q`) factored its Jacobian once, allowed 6 steps and stopped
 at the first step that did not halve |R|. At 152.93 + 0.5 it falls by about 10⁻⁴·⁵ every two steps from the
@@ -2260,7 +2260,7 @@ meet that start in these runs (none failed). `anm_run.py --save_pred 1` now stor
 so a check can run on predictions.
 
 **The check.** `reseed.py checkq PRED.npz` re-seeds a stored prediction with the quad-double polish and passes when it
-converges. On the prediction at 152.93 + 0.5 (`anm-mac/stall153/pred_pin3_D153.4309.npz`, c2371f9) the new rule
+converges. On the prediction at 152.93 + 0.5 (`anm-mac/stall153/pred_pin3_D153.4309.npz`, b2db086) the new rule
 passes (|R| 2.25e-37 in 12 steps), and its control `--legacy 1`, the earlier rule, fails at 3.60e-23 with exit 1:
 
     cd hp && python3 reseed.py checkq ../../choptuik-large-d-raw/anm-mac/stall153/pred_pin3_D153.4309.npz [--legacy 1]
@@ -2277,7 +2277,7 @@ for bit equal, since the builds differ and each chain re-bases its held values o
 T122 (win2, main 23d9448) took the chain from 152.93 to 162.31 in 22 steps, mostly of a = 0.5, with healthy series
 to the end (|z_N| 3.7e-25, a_max 2.07). It stopped at 162.31: the re-seed failed at every a from 0.25 to 0.031 (the
 polish from the double-double rung's 8e-8 to 1.2e-7), 9 of 10 projections failed, and the corrector stalled at 2e-20 to
-1.2e-19. The cause is neither the series nor the precision (raw-data repository `anm-mac/stall162/`, 036c6b2):
+1.2e-19. The cause is neither the series nor the precision (raw-data repository `anm-mac/stall162/`, 94c59da):
 
 - The rung block's quad-double Jacobian equals the octo-double one to 1.2e-36, and the octo-double LU gives the same
   polish steps.
@@ -2311,7 +2311,7 @@ and the corrector carried. On the Mac its stored predictions fail the same way, 
 the cause (win2's prediction at 162.81 differs from the Mac's by up to 1.3e-14, through the plans). Each failure ended
 after the block steps and one Newton step, which raised |R| more than the 1e6-fold the divergence guard allowed. With
 the guard at 1e12 the predictions at 162.81, 163.31 and 163.81 converge (9.0e-39, 2.0e-39, 1.7e-39), the Mac's still
-pass, and checkq's control still fails (`anm-mac/stall162/guard_test.log`, 9c24d53). The guard is now 1e12 (`rise_max`);
+pass, and checkq's control still fails (`anm-mac/stall162/guard_test.log`, 3abd306). The guard is now 1e12 (`rise_max`);
 plain Newton's divergence from the double-double rung (to 9.4e11 from 1.3e-7) still stops it.
 
 ### 13.28 Past 188: the hang, the quad-double floor and the octo-double corrector (2026-11-06 21:00 UTC)
@@ -2331,7 +2331,7 @@ the quad-double LU, whose smallest pivot drifts below the octo-double one (6.4e-
 octo-double corrector (chain5, `--corrector od`), which converges each step to 1e-41 or below.
 
 **What a stall costs Δ, measured.** The octo-double corrector polished stall-rule states at 195.52 to convergence
-(macm3, `T134-macm3/`, cde16ce): chain4's state (stall 2.55e-28) moved by +1.15e-17, T134's (2.5e-28) by +2.46e-19,
+(macm3, `T134-macm3/`, 3194c6c): chain4's state (stall 2.55e-28) moved by +1.15e-17, T134's (2.5e-28) by +2.46e-19,
 and the two polished values agree to 4e-21. So the 1.1e-17 between the two second paths was chain4's stall, and the
 stall rule's cost there is up to about 1e-17, far below the held harmonics' bias.
 
@@ -2341,7 +2341,7 @@ Ecker, Ecker and Grumiller's table to D = 200 (notes/LIT_REVIEW.md; `hp/data/del
 our values within its printed digits up to D 80, except a bump at D 21–27 in their table, and lies above our chain by an
 amount growing to 7.4e-6 at D 200. Two measurements locate it.
 
-**Releasing the held harmonics fails in octo-double too** (`T136-mac/`, 91fa7c4). Its control passed (the chain's own
+**Releasing the held harmonics fails in octo-double too** (`T136-mac/`, d75ed99). Its control passed (the chain's own
 system polished in octo-double moved Δ by −1.7e-26), but the full-system release at 79.77 took the same first step as
 the quad-double release of 13.19, a correction of 0.51 along a near-null direction damped to 1/128, with max |F| rising
 from 4.3e-18 to 5.9e-4. The obstacle is the full system's conditioning, not the arithmetic, so the bias cannot be
@@ -2378,7 +2378,7 @@ chain states. Its Δ component is the held harmonics' bias, from neither the ser
 
 T138's rerun on the fit (chain_fit − chain, each interpolated through nine of its states) moves Δ by +5.007e-8 at 79.77,
 +4.775e-7 at 100.12, +1.8947e-6 at 149.56, +2.5325e-6 at 173.5 and +3.1579e-6 at 200.27 (`hp/chain_fit_shift.py`,
-`hp/data/chain_fit_shift.txt`, raw 8f40bb8). The interpolation's spread is 1.5e-14 or less, and `--plant=1e-9` moves
+`hp/data/chain_fit_shift.txt`, raw 9943776). The interpolation's spread is 1.5e-14 or less, and `--plant=1e-9` moves
 every shift by 1.0e-9. That is the series − chain column to its last digit, and it is notes/HELD_HARMONICS.md's
 first-order correction made exact.
 
@@ -2387,7 +2387,7 @@ that of a linear estimate. With three methods agreeing, the chain's gap to the s
 rest of the gap to arXiv:2611.07007, about +4e-6 at D 200, is on the published side. T138 reran the chain with the
 harmonics held on the 1/n fit, and its rows replace the chain's (13.25).
 
-**The step from chain_fit's states (2026-11-07 09:52 UTC).** T141 (win2, `T141-win2/`, raw f06d3af) took the same step
+**The step from chain_fit's states (2026-11-07 09:52 UTC).** T141 (win2, `T141-win2/`, raw 6e13ee5) took the same step
 from T138's states. Its control, T137's state at 79.77, moved Δ by +5.029e-8 again. The series column is the release
 log's, the 1/D fit of degree 20.
 
@@ -2406,9 +2406,9 @@ is inside the series' own spread (9.1e-11 at 100 and 1.5e-9 at 173.5, notes/HELD
 the series no longer resolves chain_fit's error and the step does. The iteration took 3–4 steps without converging at
 80 and 100 and accepted no trial step at 150–215, so each value is a linear estimate, as T137's were.
 
-T143 and T145 (win2, `T143-win2/`, `T145-win2/`, raw 5d2c061 and 0e024f0) took the step at 24 more states, so the
+T143 and T145 (win2, `T143-win2/`, `T145-win2/`, raw d6ac834 and 94f7338) took the step at 24 more states, so the
 29 cover every 5 in D from 80 to 215. T143's control matched T141's log line for line. macm3 (`T142-macm3/`, raw
-7047e85) ran the control and D 130 on another machine: its control printed T141's lines through the fourth step before
+95d2426) ran the control and D 130 on another machine: its control printed T141's lines through the fourth step before
 its time limit, and its D 130 gives +5.6900e-13, as win2's does. `hp/release_steps.py RAW` collects the logs into
 `hp/data/release_steps.csv`, checks every control against T137's +5.03e-8 within 2% and every state in two logs for
 agreement within 2% (`--mutate=control` and `--mutate=duplicate` scale one by 1.03, and each fails). The step rises from
@@ -2416,7 +2416,7 @@ agreement within 2% (`--mutate=control` and `--mutate=duplicate` scale one by 1.
 215, smoothly at every one of the 29 states. A smooth curve is the held fit's error,
 not noise in the step. Whether the step resolves biases this small is the planted test `hp/release_planted.py` (T144).
 
-**The planted test (T144, win2, `T144-win2/`, raw 509782a).** `hp/release_planted.py` solves a chain_fit state's pinned
+**The planted test (T144, win2, `T144-win2/`, raw 9232fff).** `hp/release_planted.py` solves a chain_fit state's pinned
 system again with held harmonic 5's cosine moved by δ, which moves the pinned Δ by a known bias b. The full system holds
 nothing, so the step from the moved state must be smaller by b. The criterion, set before the run, is that this
 difference r matches −b within 2%. Its control (`--mutate 1`, r from the unmoved state) fails, and each run's step from
@@ -2436,11 +2436,11 @@ Where the moved state solved, the step returns the bias to about 1e-5 of itself,
 dΔ/dδ 9.2204e-3 at 80 and 1.1066e-2 at 100 (notes/HELD_HARMONICS.md: 9.197e-3 at 79.77). The other moves did not
 solve, which is a limit of the test, not of the step. The quad-double Newton's residual after its first step is
 quadratic in δ (3e8 δ² at 80), so it converged from 3e-9 at 80 but only from 1e-11 at 100, and at 200 the quad-double LU
-cannot solve it. T146 (`T146-macm3/`, `T146-win2/`, raw fb646d6 and 224b0a5) made the move in steps of 1e-11, which
+cannot solve it. T146 (`T146-macm3/`, `T146-win2/`, raw ef8db8b and c61a017) made the move in steps of 1e-11, which
 re-solves at 80 and 100 (the rows marked T146). At 150 and 200 it does not, in quad-double or octo-double, with either
 acceptance rule or the junk frozen: no fraction of the first Newton step lowers |F| from a move of 1e-11.
 
-**The step on the other fits' states fails the 2% criterion (T147, win2, `T147-win2/`, raw 98300d3).** T140's chains
+**The step on the other fits' states fails the 2% criterion (T147, win2, `T147-win2/`, raw 987f15c).** T140's chains
 are converged pinned states at chain_fit's D with the harmonics held on the fits of degree 6 and 10, so with no
 re-solve their steps must differ from chain_fit's by b, the difference of the pinned Δs (`hp/release_pairs.py RAW`,
 `hp/data/release_pairs.csv`; `--mutate=pair` fails). The criterion was set before the run.
@@ -2459,8 +2459,8 @@ remainder does not change sign with b. The moves of harmonic 5's cosine alone re
 the remainder comes from the other held harmonics or from the junk directions the step freezes. Until the cause is
 known, the step is a measurement of chain_fit's bias to about 1e-13, not a correction.
 
-**The step's response per held coefficient (T148, win2, `T148-win2/`, raw 732d9ef; T149, macm3, `T149-macm3/`, raw
-33acc7f).** `release_planted.py --harm --part` moves one coefficient by 1e-11 and solves the pinned system again. The
+**The step's response per held coefficient (T148, win2, `T148-win2/`, raw dce0ace; T149, macm3, `T149-macm3/`, raw
+f3cbbe8).** `release_planted.py --harm --part` moves one coefficient by 1e-11 and solves the pinned system again. The
 ratio is the step's response over the planted bias, and s is the bias per unit move (dΔ/dh), both from the runs'
 result lines. Harmonic 5's cosine is T144's.
 
@@ -2478,11 +2478,11 @@ result lines. Harmonic 5's cosine is T144's.
 | 13 sin | +7.2384e-7 | 0.644 | — |
 
 The step returns moves of harmonics 5 and 7 to 1e-4 or better, at both D. It misses most of the highest cosines'
-response, whose sensitivities are 10³–10⁴ times smaller. The sines of 11 and 13 (macm3, T148 part 1b, raw b410b29) miss
+response, whose sensitivities are 10³–10⁴ times smaller. The sines of 11 and 13 (macm3, T148 part 1b, raw 379916c) miss
 too, at biases of 3e-17 and 7e-18. The highest harmonics are among the directions in which the degree-6, 8 and 10 fits
 differ, so they are a likely source of T147's remainder.
 
-**The step against the number of frozen junk directions** (T148 part 2, win2, raw de18686). `full_release.py --junk w`
+**The step against the number of frozen junk directions** (T148 part 2, win2, raw 81f97e8). `full_release.py --junk w`
 for w = 2, 3, 5 and 6 on the three D 100 states. `hp/release_pairs.py RAW --tasks=T147-win2,T148-win2` pairs each
 degree-6 and degree-10 run with chain_fit's at the same w. The step is flat from w = 2 to 3 and grows 4–5 times at 5
 and 6, where the frozen set takes in directions with singular values near 8e-21. The detector labels them Δ-free, yet

@@ -70,6 +70,6 @@
 <g><text x="500.0" y="442.0" font-size="12" fill="#0b0b0b" text-anchor="middle">the trial point is re-seeded at u₀ before its residual is judged</text><animate attributeName="opacity" values="0;0;1;1;0;0" keyTimes="0.0000;0.3714;0.3929;0.4857;0.5071;1.0000" dur="14.0s" repeatCount="indefinite"/></g>
 <g><text x="500.0" y="442.0" font-size="12" fill="#0b0b0b" text-anchor="middle">and again, until max |F| is below the tolerance</text><animate attributeName="opacity" values="0;0;1;1;0;0" keyTimes="0.0000;0.4857;0.5071;0.6857;0.7071;1.0000" dur="14.0s" repeatCount="indefinite"/></g>
 <g><text x="500.0" y="442.0" font-size="12" fill="#0b0b0b" text-anchor="middle">the converged state is the next base</text><animate attributeName="opacity" values="0;0;1;1;0;0" keyTimes="0.0000;0.6857;0.7071;0.9500;0.9714;1.0000" dur="14.0s" repeatCount="indefinite"/></g>
-<text x="16.0" y="468.0" font-size="10" fill="#52514e" text-anchor="start" font-weight="normal">anm-mac/elimq_pilot (anm_run.jsonl, .log) of the raw-data repository at 7e88b80  ·  hp/plot_algorithm.py  ·  Apple M5, 32 GB, macOS 27.0.1</text>
+<text x="16.0" y="468.0" font-size="10" fill="#52514e" text-anchor="start" font-weight="normal">anm-mac/elimq_pilot (anm_run.jsonl, .log) of the raw-data repository at d24b259  ·  hp/plot_algorithm.py  ·  Apple M5, 32 GB, macOS 27.0.1</text>
 <a href="https://github.com/nmoinvaz/choptuik-large-d"><text x="984" y="468" font-size="10" fill="#52514e" text-anchor="end" text-decoration="underline">github.com/nmoinvaz/choptuik-large-d</text></a>
 </svg>

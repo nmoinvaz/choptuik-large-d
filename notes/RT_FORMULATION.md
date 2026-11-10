@@ -996,7 +996,7 @@ D ≈ 40 rests on that family alone (11.6).
 
 ### 11.1 The protocol
 
-The criteria were written into `I164-mac/README.md` before the main runs (raw commit c1f1669), and not changed.
+The criteria were written into `I164-mac/README.md` before the main runs (raw commit f1447e6), and not changed.
 
 - Options as #145 at D = 55–60: `--solver mp --tol 1e-12 --max_products 250 --refresh_dz 1e-5 --patient --it_max 20
   --full_below 1e-4`, with `--newton_tol 1e-38` at D = 54.996085 and 1e-36 at 60.001952. A root counts when its record
@@ -1063,10 +1063,10 @@ and by 0.8 to 1.1 at D = 60 up to 95. Across the families the magnitudes interle
 decade per point of N, while its sign alternates with each step of 2. From 95 to 99 at D = 60 it falls only by a factor
 1.7 to 2.2.
 
-The sign rule was recorded in `I164-mac/README.md` at 14:02 UTC (raw commit cc8728c), from the D = 60 results of 89 to
+The sign rule was recorded in `I164-mac/README.md` at 14:02 UTC (raw commit 014f3f4), from the D = 60 results of 89 to
 97 and the D = 55 results of 85, 91 and 95. It named the signs of 87 at D = 60 and of 87, 89, 93 and 97 at D = 55
 before they ran, and all five came out as named. 85 at D = 60 breaks it. So does 101 at both D, where the spread of
-#145's roots is as large as the error. A second prediction, recorded at 14:06 UTC (raw commit 9d6d3e1), gave 32 × 99
+#145's roots is as large as the error. A second prediction, recorded at 14:06 UTC (raw commit 3b92a77), gave 32 × 99
 at D = 60 a negative error of about 5×10⁻¹⁴ to 10⁻¹³ with its roots within 10⁻¹³. The sign and the spread came out as
 predicted, the size did not (−2.7×10⁻¹³ and −3.5×10⁻¹³).
 
@@ -1352,7 +1352,7 @@ d_EEG is the standard error of a window mean from EEG's six-decimal rounding.
 **δ itself, outside the criteria.** δ is smooth in D through its zero. Polynomials in D of degree 2 and 3 on [40, 60],
 [47, 60] and [50, 60] fit it to an rms of 5×10⁻¹⁰ down to 2×10⁻¹² (`fit/signed_prediction.log`). Degree 1 fits it only
 to 2×10⁻⁹ to 6×10⁻⁹. Their extrapolations, written into the raw README before the extension past D = 60 had produced any
-data (raw b532e34), are these:
+data (raw 686cece), are these:
 
 | D | 70 | 80 | 90 | 100 | 150 | 190 |
 |---|---|---|---|---|---|---|
@@ -1508,7 +1508,7 @@ Issue #163. Subagent of the coordinator on the Mac, 2026-11-08. Code in `solver/
 - `rt_grids.py --tol_ab`, and `rt_roots.py`, which now evaluates the residual that a state was solved with.
 
 Raw output is in folder `I163-mac/` of the raw-data repository. Its README holds the criteria, written before the main
-runs (raw e843f14). python-flint 0.9.0, sympy 1.14.0, mpmath 1.3.0.
+runs (raw a38ea6c). python-flint 0.9.0, sympy 1.14.0, mpmath 1.3.0.
 
 **Result. The acceptance fails.** The new rows replace the collocation at the K points next to ξ = −1 by the Taylor
 coefficients of orders 1 to K of the equations there. With K = 7, at D = 50.007491:

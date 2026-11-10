@@ -86,7 +86,7 @@ with OUT the task's folder in the raw-data repository (queued as T90 on the Mac,
 measurement is the mixed-system box run of design 3 at the failed run's (h, w), which the refinement's mixed mode
 almost provides, to see the outer rows' margin without the harmonic-5 rows.
 
-**Result** (T90, 2026-10-28 12:19–12:33 UTC, 821 s beside two other jobs; raw-data repository `P3-mac/` at 0a6d80a,
+**Result** (T90, 2026-10-28 12:19–12:33 UTC, 821 s beside two other jobs; raw-data repository `P3-mac/` at 934ebcf,
 `A_M_point_M5.log`). Derivative radii at the five places, the point run beside the box run of section 2 (the point
 run prints every 25 steps, so its arc value is the last printed line, t = 0.95 of 1):
 

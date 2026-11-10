@@ -255,7 +255,7 @@ The year range is unrestricted unless a year is named.
   collapse\" Living Reviews in Relativity 2025"). Several of them also served as recall checks.
 - **2026-11-08, issue #172 (the forms of arXiv:2611.07007's Eq. (16)).** `WebSearch` in standard mode unless marked,
   and the INSPIRE REST API through `WebFetch`. The queries are verbatim; what each surfaced is in the raw-data
-  repository, `I172-mac/search_log.md` (commit 4e33763).
+  repository, `I172-mac/search_log.md` (commit 46443de).
   - Critical collapse: "Choptuik critical solution Fourier coefficients odd harmonics decay echo profile analytic
     approximation"; "Hirschmann Eardley critical collapse complex scalar field discretely self-similar echoing time
     dependence Fourier analytic"; "critical collapse echoing \"Fourier coefficients\" \"decay exponentially\" complex
@@ -305,7 +305,7 @@ The year range is unrestricted unless a year is named.
     so the recid form is the one to repeat.
 - **2026-11-09, issue #198 (Fabry–Pérot and nonlinear cavities, Fratini et al.'s later work).** `WebSearch` in
   standard mode, and the INSPIRE REST API through `WebFetch`. The queries are verbatim in the raw-data repository,
-  `I198-mac/search_log.md` (commit a3abcb5), with what each surfaced; shortened here.
+  `I198-mac/search_log.md` (commit 92526ac), with what each surfaced; shortened here.
   - The linear cavity: Ismail–Kores–Geskus–Pollnau's title with "arXiv"; "Fabry-Perot plane-parallel Gaussian beam
     transmission sum over round trips diffraction walk-off amplitude power law Airy function modified"; the
     Gires–Tournois all-pass formula; "\"generic Airy distribution\" Fabry-Perot \"Lorentzian finesse\" Pollnau"; the
@@ -329,7 +329,7 @@ The year range is unrestricted unless a year is named.
     `q=a F.Fratini.1 or a Fratini, Filippo` (17); `q=refersto:recid:3027964` (21).
 - **2026-11-09, issue #200 (the superconducting threshold, mean-field exponents, RG limit cycles and viscosity).**
   `WebSearch` in standard mode, and the INSPIRE REST API through `WebFetch`. The queries are verbatim in the raw-data
-  repository, `I200-mac/search_log.md` (commit f583bbd), with what each surfaced; shortened here.
+  repository, `I200-mac/search_log.md` (commit 61bc23f), with what each surfaced; shortened here.
   - Q1: Mariño–Reis's title with "BCS gap non-perturbative perturbative series ground state energy"; the titles of BCS
     (1957) and Cooper (1956) with "pdf" (records only); "\"beyond all orders\" OR \"exponential asymptotics\"
     superconductivity gap equation Stokes phenomenon trans-series BCS essential singularity resummation" (nothing on
@@ -363,7 +363,7 @@ The year range is unrestricted unless a year is named.
     batches of `q=arxiv <id> or ...` for the bibliographic records.
 - **2026-11-09, issue #221 (Pollnau and Eichhorn's resonator work).** `WebSearch` in standard mode, and the OpenAlex,
   Europe PMC, Unpaywall and INSPIRE REST APIs through `WebFetch`. The queries are verbatim in the raw-data repository,
-  `I221-mac/search_log.md` (commit 5970d46), with what each surfaced; shortened here.
+  `I221-mac/search_log.md` (commit 4ecb5c2), with what each surfaced; shortened here.
   - Part II and later work: `Pollnau Eichhorn "Spectral coherence, Part II"`, the same with "factor of two threshold"
     and with "Progress in Quantum Electronics 2021 2022 2023", and "Markus Pollnau laser linewidth 2021 OR ... 2025"
     (Part I only, each time).
@@ -414,7 +414,7 @@ The year range is unrestricted unless a year is named.
   - Olde Daalhuis's large-parameter hypergeometric papers;
   - Lombardi; Xie–Tanveer; Tanveer–Xie; Baldomá et al. (both); Costin's works; Dingle.
 - **2026-11-08, issue #172** (through `WebFetch`; quotes and URLs in the raw-data repository,
-  `I172-mac/read_log.md`, commit 4e33763):
+  `I172-mac/read_log.md`, commit 46443de):
   - Full extraction: Price–Pullin (ar5iv); Lai–Wen; Emparan–Suzuki–Tanabe 1506.06772; Rozali–Way Sec. 2.3; EEG
     2601.14358 (HTML v1); EEG 2611.07007v1 (HTML, Eq. (16) and (S57)–(S58)); Fratini et al. 1410.5972 (with the
     supplement); Lu–Cuevas-Maraver–Kevrekidis 1406.3082; Ryazanov 1711.02717; DLMF §1.15, §18.12 and §4.24; the two
@@ -432,7 +432,7 @@ The year range is unrestricted unless a year is named.
     Gradshteyn–Ryzhik's series tables); Optica pages (loading placeholder); HAL and PMC (bot checks); MacTutor
     *Hippopede* (404); the Springer page of Koepf–Nana Chiadjeu (login); arXiv:2312.01320 (no HTML).
 - **2026-11-09, issue #198** (through `WebFetch`; PDFs that came back as binary were extracted with pypdf from the copy
-  the tool saved; quotes and URLs in the raw-data repository, `I198-mac/read_log.md`, commit a3abcb5):
+  the tool saved; quotes and URLs in the raw-data repository, `I198-mac/read_log.md`, commit 92526ac):
   - Full extraction: Pollnau–Eichhorn 2020 (KITopen PDF; Secs. 3.5–4.3 closely, the reference list); Sánchez-Soto–
     Monzón–Leuchs 1610.06163 (ar5iv); Marques–Guggenheim–Munro 2021 (UCL PDF, 7 pages); Hansson–Wabnitz 1503.03274
     (ar5iv, Secs. II–V); Conforti et al. 1405.6041 (ar5iv); Parra-Rivas et al. 2010.03375 (ar5iv, 0–193242 in two
@@ -449,7 +449,7 @@ The year range is unrestricted unless a year is named.
   - Failed (FULL-TEXT-UNREAD): the Optica pages of Ismail et al. (loading placeholder) and its scispace copy (empty);
     the UCL "pp" mirror (403); scilit (403); a Czech library record (bot check); a Kyoto repository PDF (empty).
 - **2026-11-09, issue #200** (through `WebFetch`; Kol's PDF, which came back as binary, was extracted with pypdf from
-  the copy the tool saved; quotes and URLs in the raw-data repository, `I200-mac/read_log.md`, commit f583bbd):
+  the copy the tool saved; quotes and URLs in the raw-data repository, `I200-mac/read_log.md`, commit 61bc23f):
   - Full extraction: Mariño–Reis 1905.09569; Polchinski hep-th/9210046; LeClair–Román–Sierra cond-mat/0211338;
     Kaplan–Lee–Son–Stephanov 0905.4752; Kol hep-th/0502033v3 (PDF); Hartnoll–Herzog–Horowitz 0803.3295; Emparan–Tanabe
     1312.1108; Hartnoll–Horowitz–Kruthoff–Santos 2008.12786; Camps–Emparan–Haddad 1003.3636; Rozali–Way from Sec. 3 to
@@ -468,7 +468,7 @@ The year range is unrestricted unless a year is named.
     surfaced; Beekman–Rademaker–van Wezel 1909.01820, whose Chapter 5 (Landau theory) the extraction did not reach.
 - **2026-11-09, issue #221** (PDFs that `WebFetch` returned as binary were extracted page by page with macOS PDFKit
   from the copy the tool saved; one page was read as text through Claude in Chrome; quotes and URLs in the raw-data
-  repository, `I221-mac/read_log.md`, commit 5970d46):
+  repository, `I221-mac/read_log.md`, commit 4ecb5c2):
   - Full extraction: Pollnau–Eichhorn 2020 (KITopen PDF, all 67 pages, Secs. 2–4 and 6–10 closely); Ismail–Kores–
     Geskus–Pollnau 2016 (the published version in KTH DiVA, all 25 pages).
   - Partial: Vujnović–Kralj–Karuža, Photonics 13, 721 (2026), Sections 1–6 (characters 0–50000 of 80809, through
@@ -605,7 +605,7 @@ periodic profile? The forms are defined in notes/EEG_PROFILE.md §2, whose label
 **How.**
 - **Searches.** 35 web queries and 7 INSPIRE queries, all on 2026-11-08, listed verbatim in §5.
 - **Reads.** 32 sources opened, some in part and some as abstracts, and about 15 fetches that failed, listed in §6.
-  Quotes and URLs are in the raw-data repository, folder `I172-mac/`, commit 4e33763.
+  Quotes and URLs are in the raw-data repository, folder `I172-mac/`, commit 46443de.
 - **Inferences.** Statements of content come from pages opened in this session. Inferences are marked *inferred*.
 - **Identity check.** Four identities that tie the forms to the sources are *inferred* and *checked numerically* by
   `I172-mac/identity_check.py` (30 digits, 41 points, exit 0). Its sign mutation makes all four fail (exit 1).
@@ -745,7 +745,7 @@ results or methods this project can use:
 - **Searches.** 25 web queries and 4 INSPIRE queries, all on 2026-11-09, listed in §5.
 - **Reads.** 19 sources opened, 13 in full or in part and 6 as abstracts or publication lists, and the bibliographic
   records of 9 more, listed in §6. Quotes and URLs are in the raw-data repository, folder `I198-mac/`, commit
-  a3abcb5.
+  92526ac.
 - **PDFs.** Where `WebFetch` returned a PDF as binary, the copy it saved was extracted with pypdf 7.0.0 in a scratch
   environment. That opened Pollnau–Eichhorn (2020) and Marques et al. (2021).
 - **Identities.** Four identities and two asymptotic laws that tie the sources to Eq. (16) are *inferred* and
@@ -962,7 +962,7 @@ and the mode count:
 - **Searches.** 15 web queries and 13 INSPIRE queries, all on 2026-11-09, listed in §5.
 - **Reads.** 36 sources opened: 17 in full, 10 in part (one of them secondary), 8 as abstracts or records, and one
   whose relevant chapter did not come through. Three more were not found. All are listed in §6, with quotes and URLs in
-  the raw-data repository, folder `I200-mac/`, commit f583bbd.
+  the raw-data repository, folder `I200-mac/`, commit 61bc23f.
 - **Identities.** Six relations that tie the sources to the project are *inferred*, two of them by checking a source's
   equations against each other. They are *checked numerically or symbolically* by `I200-mac/identity_check.py`
   (mpmath and sympy, exit 0), and its mutation makes all six fail (exit 1).
@@ -1275,7 +1275,7 @@ Issue #221 asks what else their line of work shares with this project:
   2026-11-09, listed in §5.
 - **Reads.** Pollnau–Eichhorn (2020) and Ismail et al. (2016) in full, Vujnović et al. (2026) through Sec. 6, and the
   records or abstracts of 10 more, listed in §6. Quotes and URLs are in the raw-data repository, folder `I221-mac/`,
-  commit 5970d46.
+  commit 4ecb5c2.
 - **PDFs.** The two full texts came back from `WebFetch` as binary and were extracted page by page with macOS PDFKit.
   Ismail et al., which #198 could not open, is the published version deposited in KTH DiVA, found through Unpaywall.
 - **Identities.** Six relations that tie the sources to Eq. (16) are *inferred* and *checked numerically* by

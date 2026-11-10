@@ -424,6 +424,6 @@
 <text x="856.0" y="460.0" font-size="11" fill="#0b0b0b" text-anchor="start" font-weight="normal">chain_fit</text>
 <line x1="836" y1="484" x2="850" y2="484" stroke="#52514e" stroke-width="2" stroke-dasharray="6 4"/>
 <text x="856.0" y="488.0" font-size="11" fill="#0b0b0b" text-anchor="start" font-weight="normal">stated uncertainty</text>
-<text x="16.0" y="622.0" font-size="10" fill="#52514e" text-anchor="start" font-weight="normal">hp/data/delta_all.csv and delta_published_compare.csv (raw 7b52e58)  ·  published_vs_series.txt  ·  chain_fit_shift.txt  ·  release_steps.csv</text>
+<text x="16.0" y="622.0" font-size="10" fill="#52514e" text-anchor="start" font-weight="normal">hp/data/delta_all.csv and delta_published_compare.csv (raw 987f15c)  ·  published_vs_series.txt  ·  chain_fit_shift.txt  ·  release_steps.csv</text>
 <a href="https://github.com/nmoinvaz/choptuik-large-d"><text x="1024" y="622" font-size="10" fill="#52514e" text-anchor="end" text-decoration="underline">github.com/nmoinvaz/choptuik-large-d</text></a>
 </svg>

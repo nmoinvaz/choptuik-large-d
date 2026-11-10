@@ -181,7 +181,7 @@ section finds why, and adds the same corrector one level up, `--corrector od`.
 
 Every test starts from stored converged chain states (`T129-win2/chain/` and `chain2/`), on the pinned system of
 `reseed.pinned` (the state's own held values, the segments planned at the state). The scripts and logs are in the
-raw-data repository's `od-corrector-mac/` (bcad91a).
+raw-data repository's `od-corrector-mac/` (6b3a1a7).
 
 **The residual is accurate.** `step0_res.py RAW PLAN_TOL STATES` evaluates the pinned residual in quad-double and in
 octo-double at the state's four parts (`step0_res.log`). Their difference is the quad-double residual's own error.

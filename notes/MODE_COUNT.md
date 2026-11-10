@@ -191,7 +191,7 @@ phase step). The scale is taken on the interval, on 3 intervals each side and, a
 intervals there. An interval is bisected while h × scale > π/2 (`--alias`; `--mutate=flat` restores the old rule). The
 planted test (`hp/modecount_planted.py --controls`) holds the cases the old rule miscounts: close pairs of zeros between
 two samples, the moment test's random configurations, and rows of zeros along Im λ = 3ω/2, where the old rule counted
-U = 0 for 22 zeros with every edge resolved (raw `I242-mac/`, aecff4d).
+U = 0 for 22 zeros with every edge resolved (raw `I242-mac/`, 17afb41).
 
 ## 3. Counts
 
@@ -307,7 +307,7 @@ So the statement this count supports is: **no extra unstable mode among perturba
 reaches only |F| = 2.7×10⁻¹⁵ after Levenberg–Marquardt (kept in `hp/data/modecount_state_D61.0264_M48_kf13.npz`), above
 the 10⁻¹⁵ accepted for a count, so no count was run on it. Raising the cut lowers the floor, to 1.4×10⁻¹⁵ at kf 17 and
 1.3×10⁻¹⁹ at kf 21, where the count runs (#159). It finds zeros beyond the expected ones. So does the count at kf 23
-(#212; raw `I212-macm3/`, 6e2e394), with every edge resolved and 0 verification mismatches:
+(#212; raw `I212-macm3/`, ecdd11a), with every edge resolved and 0 verification mismatches:
 
 | cut | B0 | U0 | B1a | B1b | B1c | B1 | U | full |
 |---|---|---|---|---|---|---|---|---|
@@ -324,7 +324,7 @@ and λ_phys, so the extras come in conjugate pairs off the axis. Eight of them l
 and |Im λ| < ω/2. If they were modes they would be extra growth rates. They are absent at M = 32 with the same cuts
 (#160, #168).
 
-**With one fixed left column (#241; raw `I241-macm3/`, d473b30).** Recounted with `--aLL=-0.096 --aL=0.124` at all three
+**With one fixed left column (#241; raw `I241-macm3/`, b2d1c68).** Recounted with `--aLL=-0.096 --aL=0.124` at all three
 D, reusing the earlier samples:
 
 | D | B0 | U0 | B1a | B1 | U | full |
@@ -342,7 +342,7 @@ U0 at D = 54.04, puts one zero of the strip at −0.150 < Re λ < −0.096.
 `python3 hp/plot_modecount_extras.py <raw-data clone>` draws it from the circle and moment records of I238-macm3,
 I231-macm3 and I230-mac.
 
-**Positions at D = 54 and 55 (#238; raw `I238-macm3/`, d44579f).** Each zero is confirmed by a circle winding +1, and
+**Positions at D = 54 and 55 (#238; raw `I238-macm3/`, 7331239).** Each zero is confirmed by a circle winding +1, and
 the λ_phys circles wind +1 at both D:
 
 | D | zero (upper half) | box |
@@ -358,7 +358,7 @@ from 0.94 to 0.25, so at M = 48 it crosses Re λ = 0 between D = 54.04 and 55.04
 growth rates crossing into Re λ > 0 is how a new unstable mode would appear, if it is genuine. None of the strip zeros
 lies on Im λ = ω (3.44 at D = 55). At M = 40 it does not exist (#231, below).
 
-**A third resolution at D = 55 (#231, interim; raw `I231-macm3/`, a0f232a).** At M = 40 with kf 23 the count finds B0
+**A third resolution at D = 55 (#231, interim; raw `I231-macm3/`, b9b2608).** At M = 40 with kf 23 the count finds B0
 +2, U0 +1, B1a +2, B1 +2, U +3 and full +8 (every edge resolved, 0 mismatches, setup |F| 3.3×10⁻¹⁹), against 0 in every
 box at M = 32 and B0 +2, U0 +1, U +1, full +2 at M = 48. On the M = 40 state, circles around the three M = 48 zeros, the
 crossing pair at +0.1996 + 0.2548i, the U zero and the U0 zero, wind 0, while the λ_phys circle winds +1. M = 40 has
@@ -372,16 +372,16 @@ D = 61, M = 40, three of four M = 40 zeros exist at kf 23 only, absent at kf 21 
 between kf 23 and 25, while λ_phys winds +1 at all three cuts (#262; raw `I262-macm3/`). The circles also show the
 moments' spreads to be optimistic by a factor of 2 to 5 for these zeros. At M = 64, on #141's fitted layout, circles (R
 0.2–0.3) at all 8 M = 48 positions (#230 at D = 61, #238 at D = 55) and at 3 of the M = 40 positions (#231) wind 0, with
-every step below π/4 and 0 mismatches (#252; raw `I252-mac/`, 8f94aa4). Its λ_phys controls wind +1 but place λ_phys up
+every step below π/4 and 0 mismatches (#252; raw `I252-mac/`, 0cc43ce). Its λ_phys controls wind +1 but place λ_phys up
 to 5.4×10⁻⁴ off at D = 61, against the 10⁻⁵ gate set first. The cause is measured: at M = 64 the series blocks' entries
 carry non-smooth error on a near-singular mode matrix, which leaves windings unaffected and limits positions. The
 circles were read under a gate restated against that floor. The loss is in the series' terms, not their sums: the
 largest tangent term of the centre series grows from 1.8×10⁶ at M = 48 to 2.5×10¹¹ at M = 64 (D = 55), and summing in
-quad-double improves the entries by at most 4× where 100× is needed (#259; raw `I259-mac/`, 22628f7). A fix needs the
+quad-double improves the entries by at most 4× where 100× is needed (#259; raw `I259-mac/`, 1d6a393). A fix needs the
 terms themselves in quad-double, that is, a complex quad-double lane in multidouble. So no extra zero tested keeps its λ
 across M = 40, 48 and 64. The circles cover discs only, and no full M = 64 count was made (#274).
 
-**D = 56 to 59 at M = 48, kf 23 (#249; raw `I249-macm3/`, 896d8fc).** With the fixed left column of #241, every setup
+**D = 56 to 59 at M = 48, kf 23 (#249; raw `I249-macm3/`, 6f5a46c).** With the fixed left column of #241, every setup
 passing the gate (|F| ≤ 4.4×10⁻¹⁹):
 
 | D | B0 | U0 | B1a | B1b | B1c | B1 | U | full |
@@ -398,7 +398,7 @@ zero reaches the real axis. The zeros nearest the axis, each confirmed by a circ
 path, so the pair of #238 cannot be followed across steps of 1 in D. The zero at D = 56.01 sits 0.0065 from the box
 edge and 0.095 from the expected zero at λ = 0.
 
-**More cuts and the inner node at D = 61 (#244, #270; raw `I244-macm3/`, `I270-macm3/`, 896d8fc).** Zeros 1 to 3 of
+**More cuts and the inner node at D = 61 (#244, #270; raw `I244-macm3/`, `I270-macm3/`, 6f5a46c).** Zeros 1 to 3 of
 the table below keep moving with the cut: at kf 25 they are at 1.2685 + 1.3933i, 1.9489 + 0.9436i and
 2.4725 + 0.5757i. kf 22 reproduces kf 21, because both cuts keep the same odd harmonics. The pair at 3.0196 ± 0.0958i
 exists at kf 23 only: its circle winds 0 at kf 22 and at kf 25. λ_phys itself moves by 4.7×10⁻⁶ from kf 23 to kf 25,
@@ -411,7 +411,7 @@ do not come from the centre series' layout. They follow M and the cut.
 (1.6×10⁻⁵), so the node does not cure the M = 64 noise, and a halving is not established.
 
 **Positions at D = 61 (#230).** The extras in B1b and B1c lie on one row, from 1.31 + 1.42i down to 3.02 ± 0.10i, each
-zero confirmed by a small circle winding +1 (`hp/modecount_circle.py`; raw `I230-mac/`, e7dc533):
+zero confirmed by a small circle winding +1 (`hp/modecount_circle.py`; raw `I230-mac/`, 95906de):
 
 | zero | kf 21 | kf 23 | shift |
 |---|---|---|---|
@@ -426,7 +426,7 @@ while λ_phys moves 2×10⁵ to 5×10⁵ times less. The extras multiply and mov
 A mode whose eigenfunction has weight in the centre harmonics 22–23 would move too, so the third resolution (#231)
 decides. The U zeros are not located.
 
-**The series' radii, and M = 64 (#141; raw `I141-mac/`, 76fbf9b).** The centre series (x = 0 to the first node) takes
+**The series' radii, and M = 64 (#141; raw `I141-mac/`, 5eff98e).** The centre series (x = 0 to the first node) takes
 one d/dτ per order, and its radius of convergence falls as M rises. At D = 30 without the cut it is 0.435, 0.324, 0.278
 and 0.225 at M = 32, 48, 64 and 80, so from M = 64 on it diverges at the first node 0.3. The |F| of 2–3×10⁵ that stopped
 #68 at M = 64 was its truncated sum. `hp/modecount_common.py` now adds a node at half the first node, or raises the
@@ -439,10 +439,10 @@ without the cut was found on that background. On the fitted layout (nodes 0.15, 
 |λ − (4.267 + 1.324i)| = 0.35 winds 0, with every step below 0.06 rad, while the λ_phys circle on the same state winds
 +1 and the circle on October's state and cache still winds +1 (#250; raw `I250-mac/`). So the pair belonged to the old
 layout's unconverged background, not to M = 48. The full count on that state, with the alias rule, is 0 in all 8 boxes,
-with every edge resolved and no alias bisection (#260; raw `I260-macm3/`, 395e680), so at D = 30 the count at M = 48
+with every edge resolved and no alias bisection (#260; raw `I260-macm3/`, b5b1b32), so at D = 30 the count at M = 48
 without the cut agrees with M = 32.
 
-**Other D at M = 48, kf 23 (#232; raw `I232-macm3/`, 8c625c3).** Every edge resolved, with 0 mismatches, and both setups
+**Other D at M = 48, kf 23 (#232; raw `I232-macm3/`, 80df1f1).** Every edge resolved, with 0 mismatches, and both setups
 passed the gate (|F| 2.3×10⁻¹⁹ and 1.6×10⁻¹⁹):
 
 | D | B0 | U0 | B1a | B1b | B1c | B1 | U | full |
@@ -455,10 +455,10 @@ passed the gate (|F| 2.3×10⁻¹⁹ and 1.6×10⁻¹⁹):
 | 55.04 | +2 | +1 | 0 | 0 | 0 | 0 | +1 | +2 |
 | 61.03 (#212) | 0 | 0 | 0 | +6 | +2 | +8 | +8 | +24 |
 
-So the extras begin between D = 53.79 and 54.04 (#240; raw `I240-macm3/`, fb28f66). The automatic contour moves the left
+So the extras begin between D = 53.79 and 54.04 (#240; raw `I240-macm3/`, 6df6aa9). The automatic contour moves the left
 edges with D (B0 spans Re λ from −0.150 to 0.124 at D = 54.04 and from −0.096 to 0.300 at D = 55.04), so B0 and U0 are
 not the same region at every D. A recount with fixed edges is #241. At M = 32 with the same cut, D = 55.04 counts 0 in
-every box (#237; raw `I237-macm3/`, f23993e), so its extras, like D = 61's, are present at M = 48 only. At D = 55 they
+every box (#237; raw `I237-macm3/`, f6afae0), so its extras, like D = 61's, are present at M = 48 only. At D = 55 they
 are in the left column (−0.1 < Re λ < 0.3) and the strips, and none is in B1. At D = 61 none is in the left column. The
 counts cannot tell whether the D = 61 zeros are D = 55's moved to larger Re λ or a second set. On the real axis det M
 changes sign only at λ_g and λ_phys at both D. An odd winding of U or U0 had suggested a zero on Im λ = ω, a real growth
@@ -467,7 +467,7 @@ rate of the other sector, but #238 found none there (below).
 **The same cut scan at D = 45, M = 48.** One extra real zero, at λ = 1.14 ± 0.03, appears at kf 21 only. It is absent
 at kf 13 to 19 (#178) and at kf 23, 25 and 27 (#190), and the full count at kf 23 is 0 in all 8 boxes (#211). The kf 21
 background it was found on is itself suspect: its centre series is truncated at 2.4×10⁻⁸ (ratio 0.967 per order at
-x = 0.3), and its solve stalled at |F| = 8.2×10⁻¹⁷ (#254; raw `I254-mac/`, ef59bf4). Refitted with a node at 0.15 the
+x = 0.3), and its solve stalled at |F| = 8.2×10⁻¹⁷ (#254; raw `I254-mac/`, 38e8b7d). Refitted with a node at 0.15 the
 series converges but the solve still stalls, so whether the zero comes from the cut, the truncation or the stall is
 open (#264). #141's series gate runs before the solve, so a fresh setup would accept that background (#265).
 
@@ -489,7 +489,7 @@ D = 4; a zero of even multiplicity would not change the sign (`hp/data/modecount
 `hp/data/lowD_states/lowDn_D4.0000_M48.npz` (M 48, Δ 3.4454526615874, 2.6×10⁻⁷ above the M 80 value 3.4454524022410
 of notes/LOW_D.md, which is M 48's truncation; setup |F| 3.8×10⁻³¹). wind(g) = 0 in all 8 boxes, every edge resolved
 (largest step 0.372 rad, 0 verification mismatches), and det M changes sign on the real axis only at λ_g ≈ 0.614 and
-λ_phys ≈ 2.674: one unstable mode, as at every other D counted (raw `I70-macm3/job3/`, 79387b9). Reseeding from the
+λ_phys ≈ 2.674: one unstable mode, as at every other D counted (raw `I70-macm3/job3/`, c4635f9). Reseeding from the
 f64 state (`hp/modecount_lowD.py`) does not reach this state: M 32 is 3.5×10⁻⁵ off in Δ and M 48 does not converge.
 D = 16.76 and 8.25 were counted in #69.
 
@@ -510,7 +510,7 @@ D = 16.76 and 8.25 were counted in #69.
 - **Sampling.** Steps of g at most 0.38 rad (M = 32) and 0.50 rad (M = 48) against the π/4 tolerance. A zero within
   about 0.2 of an edge, or a zero–pole pair near an edge, would show as a large step or a dip of ln|g|, and none did
   (ln|g| ≥ −1.5). Two zeros of g hidden between the same two samples (about 0.4 apart) and adding a full turn would be
-  missed by the halving checks alone. Every count was re-checked with the alias rule (#243; raw `I243-mac/`, aecff4d):
+  missed by the halving checks alone. Every count was re-checked with the alias rule (#243; raw `I243-mac/`, 17afb41):
   only #212's kf 23 U and full change. The counts of 0 behind the one-unstable-mode statements (M = 32 at D = 30, 45 and
   61, M = 48 kf 23 at D = 45, M = 48 kf 13 at D = 30) and D = 53.79 were also sampled once more, at the golden-section
   point of every interval, a check that does not use the rule: no interval was flagged, and the largest piece was 0.26

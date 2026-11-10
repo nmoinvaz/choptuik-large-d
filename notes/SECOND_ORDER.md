@@ -400,7 +400,7 @@ python3 nnlo_closed_form.py controls ../../../choptuik-large-d-raw/I126-mac/fiel
     --figs=../../../choptuik-large-d-raw/I126-mac/figs.json      # C3, C4: exit 0
 ```
 
-Raw output: folder `AC42-mac/` of the raw-data repository, at its commit 07f93760 (logs, JSON, the commands in `*.cmd`,
+Raw output: folder `AC42-mac/` of the raw-data repository, at its commit 443c504f (logs, JSON, the commands in `*.cmd`,
 exits in `exits.txt`).
 
 ## 2. The inner equations to second order

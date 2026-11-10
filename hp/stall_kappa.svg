@@ -144,7 +144,7 @@
 <line x1="798.5" y1="613.6" x2="737.7" y2="587.5" stroke="#0b0b0b" stroke-width="1"/>
 <text x="733.7" y="591.5" font-size="11" fill="#0b0b0b" text-anchor="end" font-weight="bold">D = 67.5: 0.19, above the floor</text>
 <text x="16.0" y="934.0" font-size="10" fill="#52514e" text-anchor="start" font-weight="normal">runs: cloud, Windows i7-1185G7, Mac Apple M5</text>
-<text x="16.0" y="920.0" font-size="10" fill="#52514e" text-anchor="start" font-weight="normal">hp/stall_margin.py runs on raw/T76 f3cd2f6  ·  states: hp/data/states, seeds, large_d/up70_* (D 40-67.74); raw/T73, raw/T75 (D 70.6-73)</text>
+<text x="16.0" y="920.0" font-size="10" fill="#52514e" text-anchor="start" font-weight="normal">hp/stall_margin.py runs on raw/T76 d60afa5  ·  states: hp/data/states, seeds, large_d/up70_* (D 40-67.74); raw/T73, raw/T75 (D 70.6-73)</text>
 <text x="16.0" y="904.0" font-size="10" fill="#c98500" text-anchor="start" font-weight="normal">⚠</text>
 <text x="30.0" y="904.0" font-size="10" fill="#52514e" text-anchor="start" font-weight="normal">full-system points at D ≤ 67.74 with the double-double horizon, at 70.98 and the pinned ones with the quad-double horizon</text>
 <a href="https://github.com/nmoinvaz/choptuik-large-d"><text x="1064" y="934" font-size="10" fill="#52514e" text-anchor="end" text-decoration="underline">github.com/nmoinvaz/choptuik-large-d</text></a>

@@ -124,8 +124,8 @@ def main():
     callout(svg, xm(cross["0.8"][k4]), ym(0.20), f"4×10⁻⁹ off crosses u₀ = 0.20 at D {cross['0.8'][k4]:.0f}", dx=60, dy=-60)
     better_hint(svg, X, y, W, H, where="right", label="converges")
     legend(svg, X + W, y - 10, [(DEV[k], cols[k]) for k in KEYS[1:]] + [(DEV["0e+00"], cols["0e+00"])])
-    srcs = ["T84-mac/horizon_radius.jsonl 326ceb8 (horizon_radius.py, the 0.7-layout states, ks 100-130)",
-            "walls: T84-mac/basin.jsonl, T85-mac/*_attempts.jsonl cb397f3, T101-mac 2a21d20, hp/data/delta_dd.csv"]
+    srcs = ["T84-mac/horizon_radius.jsonl f18a936 (horizon_radius.py, the 0.7-layout states, ks 100-130)",
+            "walls: T84-mac/basin.jsonl, T85-mac/*_attempts.jsonl 3b6572f, T101-mac 7c06884, hp/data/delta_dd.csv"]
     warns = ["fits of 9 points at D 40-73 extrapolated to 200", "the deviation scale 4e-5 per unit of dD is 12.2's estimate"]
     height = footnote(svg, srcs, host_specs(), warns, y + H + 50, REPO)
     with open(svg_path, "w") as fh:

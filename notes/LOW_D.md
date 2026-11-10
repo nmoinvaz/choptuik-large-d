@@ -339,7 +339,7 @@ reached D = 3.045 at M = 320/384, Δ = 2.4464747274662, with the step from M = 3
 the run then stopped on its own time rule, and the legs `down25b` and `down25c` in the same folder went for D = 3.0425:
 there the M = 320 Newton solve from the 7640-step Taylor plan (5082 steps at 3.045) started at |F| 0.34 and damped twice
 (line-search factors 0.125 and 0.031), on which the script gave up and the run was stopped on 2026-11-01
-(T82-win/down25c.log, commit 28545dc of the raw-data repository); whether the leg goes on is open. A first attempt that
+(T82-win/down25c.log, commit d3af9a4 of the raw-data repository); whether the leg goes on is open. A first attempt that
 went from 3.05 to 3.045 in one step of 0.005 crawled in Newton at M = 320 and was stopped (T82-win/down5.log).
 
 <details>
@@ -436,12 +436,12 @@ of the 2026-11-03 02:15 UTC entry): stop the tree, post the lines, no relaunch; 
 script's own, and a process above 8 GB. Expected cost: A and B about 1.5 h; the first point 3–8 h by N*; the 17 targets
 with their halvings several days.
 
-**A and B (2026-11-04 06:55 UTC, win2; `T105-win2/` at 746ef43).** A passes (5 of 5, the mutation fails cases 2–4). B:
+**A and B (2026-11-04 06:55 UTC, win2; `T105-win2/` at 7b848f3).** A passes (5 of 5, the mutation fails cases 2–4). B:
 `newton_mixed` at M 320 takes 377.5, 236.8, 201.5 and 205.1 s at 4, 8, 12 and 16 threads, so a call saturates near 12
 threads at 1.87× the 4-thread time (T98: 384 and 240 s at 4 and 8); N* = 12. `scaled` passes at 4 and 16 threads with
 the control firing: the kernel is bit-identical across the thread count. C started at 06:57 UTC at 12 threads.
 
-**C, the first point (2026-11-04 15:51 and 16:15 UTC, win2; `T105-win2/` at 92eb104).** D 3.04375 converged from the
+**C, the first point (2026-11-04 15:51 and 16:15 UTC, win2; `T105-win2/` at ec4cbe6).** D 3.04375 converged from the
 predictor at M 320 (|F| 6.4×10⁻²⁹) and M 384 (5.7×10⁻²⁸), so the stall of section 12 was the stale checkpoint, the pass
 case above. Δ = 2.4364591133608267 at M 320 and 2.436459113272686 at M 384, a change of 8.8×10⁻¹¹ (the leg's err_est in
 `down25f.jsonl`). The point took 9.28 h, 10051 s at M 320 and 22169 s at M 384, and the M 256 helper failed as at every
@@ -497,7 +497,7 @@ Pass on 1–4: the predictor goes into the leg's driver (a later change, with it
 and 2 passing: the coefficients are right but the branch's radius or the M 320 truncation limits the steps; the
 ratios of 5 say which. Expected cost: A about 1 h, B about 1 h, C minutes, D 3–5 h by T.
 
-**A and B (2026-11-04 09:37 UTC, win2; `T106-win2/` at 4c4034f of the raw-data repository).** The build took 119 min
+**A and B (2026-11-04 09:37 UTC, win2; `T106-win2/` at 84014e3 of the raw-data repository).** The build took 119 min
 (`hp_build/build.log`), its LTO stage one rustc at up to 19.2 GB (the 09:02 UTC entry), against 52 min for main's
 hpkernel on the same machine in T98 (`T98-win2/hp_build/build.log`): the jet lanes at all 14 block sizes cost the build
 more than double, so branch `feat/jet-run-sizes` keeps them at M 32, 48, 64, 320 and 384, the sizes the runs use. `ref`
@@ -594,7 +594,7 @@ call, so it fails, the half step converges and the leg still reaches both target
 `leg.jsonl`). `const` replaces the prediction by the base state, so the check fails at the first target (exit 1). On
 win2 the same three runs come first, with the same outcomes.
 
-The Mac's run (2026-11-05, driver at 10b2fd8, raw-data repository `T107-mac/` at 095fd91) has all three outcomes. The
+The Mac's run (2026-11-05, driver at 10b2fd8, raw-data repository `T107-mac/` at 1900dbd) has all three outcomes. The
 plain run reaches 3.99 and 3.98 in one attempt each, Newton to 3.4×10⁻³⁰ and 8.5×10⁻³¹ with full steps, the predictions
 at 2.1×10⁻⁷ against the base state's 5.5×10⁻³. With `halve` every base's first attempt fails, its half step converges,
 and the leg reaches both targets by halving its way in. `const` stops at the first target with exit 1.
@@ -675,7 +675,7 @@ s on win2). n = 0 is the base state itself on the target's solver.
 **Control:** `--cap 0.001` reports every case capped (exit 1). On the Mac at M 48 from `lowD_D4.0000_M48.npz`, targets
 3.99 and 3.98, every case plans (exit 0) and the control exits 1.
 
-**Result** (T135, win, M 384, `T135-win/`, raw e095343). Criteria 1 and 2 pass. The case (3.0425, n 3) is capped at x
+**Result** (T135, win, M 384, `T135-win/`, raw 153ca7b). Criteria 1 and 2 pass. The case (3.0425, n 3) is capped at x
 0.013725225625, 8.3e-8 from the M 320 value, and the norms of z_1..z_3 match T115's to better than 0.1%, 0.14% and
 0.57%. The twelve cases (capped ones with their frozen x):
 

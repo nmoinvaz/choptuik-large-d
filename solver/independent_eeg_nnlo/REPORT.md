@@ -104,7 +104,7 @@ The derived solution and the residual checks share one residual routine. The num
 ## Files and commits
 
 - `solver/independent_eeg_nnlo/check.py` and `controls.py`, commit a006244 on branch `wip/i142`.
-- Raw logs and JSON: folder `I142-mac/` of the raw-data repository, commit ce5f6e7. The paper's PDF is not stored, only its SHA-256.
+- Raw logs and JSON: folder `I142-mac/` of the raw-data repository, commit 551833a. The paper's PDF is not stored, only its SHA-256.
 - `solver/independent_eeg_nnlo/REPORT.md` is not written. The subagent harness refused the file ("Subagents should return findings as text, not write report files"), and I did not route around that. Its intended text is this comment from the first heading on.
 
 ## Recommended tasks

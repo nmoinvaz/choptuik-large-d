@@ -143,7 +143,7 @@ def fig_methods(path):
             if j:
                 arrow(svg, xs[j] + cols[j][1] + 3, xs[j + 1] - 3, cy)
         y += rh + rg
-    h = footnote(svg, ["notes/LIT_REVIEW.md", "notes/DINF_ANALYTIC.md", "README.md", "hp/data/delta_all.csv (raw 7b52e58)"],
+    h = footnote(svg, ["notes/LIT_REVIEW.md", "notes/DINF_ANALYTIC.md", "README.md", "hp/data/delta_all.csv (raw 987f15c)"],
                  "", [], y, REPO)
     open(path, "w").write(svg.finish(h))
 
@@ -262,7 +262,7 @@ def fig_sizes(path):
     svg.add(f'<line x1="{lx - 2}" y1="{ly - 4}" x2="{lx + 12}" y2="{ly - 4}" stroke="{INK_SOFT}" stroke-width="2" '
             f'stroke-dasharray="6 4"/>')
     svg.text(lx + 18, ly, "stated uncertainty", size=11, fill=INK)
-    hgt = footnote(svg, ["hp/data/delta_all.csv and delta_published_compare.csv (raw 7b52e58)",
+    hgt = footnote(svg, ["hp/data/delta_all.csv and delta_published_compare.csv (raw 987f15c)",
                          "published_vs_series.txt", "chain_fit_shift.txt", "release_steps.csv"], "", [], y + h + 44, REPO)
     open(path, "w").write(svg.finish(hgt))
 

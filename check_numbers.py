@@ -685,7 +685,7 @@ def k19_amend2():
 @check
 def k21_gate():
     """T94's pilot (a) at wf 1.00, K 43, J 1250, 1280 bits (notes/PLANTED_SELECTION.md section 13.0's gate reading; the
-    file in solver/inner_amp/scan43J1250 from the raw-data repository's T94-mac at a769589): err21 from sigma_err_fit.py
+    file in solver/inner_amp/scan43J1250 from the raw-data repository's T94-mac at 630fbda): err21 from sigma_err_fit.py
     (a1 from the 960-bit scan39J1000 file), its margin under 1e-10, the strings equal to the K 41 file, |sigma_21| against
     P5's K = 20 bound (the wf 1.0 node line of solver/proof/logs/entire_cert_K21.log, the unrounded bound; proof/P5_scope.md)."""
     import re
@@ -713,7 +713,7 @@ def k21_gate():
 @check
 def k21_hedge_nodes():
     """win2's J 1500 node files at wf 0.99 and 1.01 (K 43, 1280 bits; solver/inner_amp/scan43J1500 from the raw-data
-    repository's T94-win2 at 16368ed), the context of notes/PLANTED_SELECTION.md section 13.2: err21 from sigma_err_fit.py
+    repository's T94-win2 at 2e49f99), the context of notes/PLANTED_SELECTION.md section 13.2: err21 from sigma_err_fit.py
     (a1 from the 960-bit scan39J1000 files), sigma_21 against the J 1250 node files, the strings equal to the K 41 files,
     the run times."""
     d = os.path.join(ROOT, "solver/inner_amp")

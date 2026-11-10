@@ -102,7 +102,7 @@ the strips U count none in the other sector.
 **Planted controls** on the same det M_ψ (`--plant`, the evaluations shared), D = 8.25: a pair planted at 3.1 ± 1.0i
 is counted in B1c, B1 and full (2 each, 0 elsewhere); a pair at 1.0 ± 3.0i in U (1, its upper member) and full (2).
 
-**Recounted with refined edges, and in a second layout** (T78, the Mac, 2026-10-27; `raw/T78` bdc6627). The count
+**Recounted with refined edges, and in a second layout** (T78, the Mac, 2026-10-27; `raw/T78` 6f8e7d4). The count
 now refines each edge until a verification pass adds nothing new (`hp/modecount_wind.py`, main 5c76ade); at D = 4 it
 finds the pair −0.1123 ± 0.1003i in B0 that the single pass missed, and `--mutate=one_verify` restores the miss
 (`raw/T77`). Each state was recounted in its own layout and moved to a second node layout by `hp/relayout.py`

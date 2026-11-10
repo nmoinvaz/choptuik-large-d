@@ -220,7 +220,7 @@ is numerical evidence for both. It is not a bound. For 13.29 it means our side o
 held harmonic 5: with it corrected, our values lie on the series, and the published table lies above both by the
 published-minus-series column there (+8.6e-8 at 80 to +4.3e-6 at 200).
 
-**The rerun on the fit** (T138, win2, `T138-win2/chain` at raw 1ff7c6b; QUAD_DOUBLE.md 13.25). The chain was rerun
+**The rerun on the fit** (T138, win2, `T138-win2/chain` at raw 247b1ec; QUAD_DOUBLE.md 13.25). The chain was rerun
 from T81's full-system state at 73.0 with `--held_fit data/held_fit.json`, in steps of 1.0 to 173.5. It is the
 nonlinear chain, not the first-order correction. `chain_vs_series.py RAW --folders=T138-win2/chain` compares each of
 its 101 states with the six series fits (`hp/data/chain_fit_vs_series.txt`):

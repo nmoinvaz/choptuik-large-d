@@ -599,7 +599,7 @@ against M = 32) measures a stopped iteration, not convergence in M: its Newton s
 values 5×10⁻²¹ to 3×10⁻¹⁷). Polished in quad-double, it and this review's M = 48 state reach one solution to 10⁻³⁶,
 with Δ(48) − Δ(32) = −2.4×10⁻²⁴ and λ(48) − λ(32) = −1.6×10⁻¹⁵, inside the root's resolution of about 10⁻¹⁴ (at D = 58,
 +8.9×10⁻¹⁴ against 5×10⁻¹³). So the README's "about 10⁻¹² for D = 16–58" stands (`hp/gamma_m48_gap.py`; raw
-`I266-mac/`, 7b04cb4).
+`I266-mac/`, cc8bcfa).
 
 ## 6. What I could not check
 

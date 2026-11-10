@@ -35,7 +35,7 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 RESOLVED = 1e-8
 # task folders of the raw-data repository whose *points*.jsonl are read, with the commit the CSV was last built from:
 # T82-win, the continuation below D = 3.05 at steps of 0.0025 (lowD_highM.py from T45's states, the Windows machine),
-# 2bf3a7f (2026-10-31, D 3.045 at M 320/384)
+# 83e99d6 (2026-10-31, D 3.045 at M 320/384)
 RAW_ROOT = os.path.join(HERE, "..", "..", "choptuik-large-d-raw")
 RAW_TASKS = ("T82-win", "T100-win2", "T105-win2")
 # converged solutions that picked up content along the near-null directions (centre-series tail 1e-9 to 1e-10 where

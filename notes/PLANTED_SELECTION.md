@@ -1367,7 +1367,7 @@ synthetic σ₁₇ (D-G, D-arg), which says nothing about the real one. No stage
 coordinator's stage runner (a shell word split), outside the procedure.
 
 The stages ran on 2026-10-28 07:21–07:30 UTC on the Mac, with the σ₁₇ scans of T86 (raw-data repository `T86-mac/` at
-acc84cd) committed to `scan35J1000/` and `scan35J1250/` first. Records `planted_results_k17.jsonl`, stored checks
+435b557) committed to `scan35J1000/` and `scan35J1250/` first. Records `planted_results_k17.jsonl`, stored checks
 `planted_checks_k17.json`; the stage logs and the four convergence mutations are in the raw-data repository's
 `planted-k17-mac/`. All 62 checks passed. No stage code changed between the dry run and this run, and the author's
 decision on D-bracket did not come before the first estimate, so item 4 stands as written.
@@ -1621,7 +1621,7 @@ synthetic data D-bracket fires on the "real" series itself (its Padé mid lies a
 nothing about the real σ₁₈. No stage code changed.
 
 The real stages ran on 2026-10-28 13:16–13:26 UTC on the Mac, beside T88, from the four T87 scan files committed as
-`solver/inner_amp/scan37J1000` and `scan37J1250` (raw-data repository T87-mac at 906916e); the logs are in the
+`solver/inner_amp/scan37J1000` and `scan37J1250` (raw-data repository T87-mac at b5e0e70); the logs are in the
 raw-data repository's `planted-k18-mac/` root. The first real K = 18 estimate was computed at 13:22 UTC; no decision on
 D-bracket had come, so item 4 stands as written.
 
@@ -1907,7 +1907,7 @@ committed before any K = 19 estimate; the `converge` stage runs as written on th
 is kept in the log.
 
 **Amendment of item 1 (2026-10-29 02:12 UTC), after T91 landed at 02:01 UTC.** Pilot (d), J 1250 at 960 bits
-(`scan39J1250p960/`, from the raw-data repository's T91-mac at 4ce5097), puts σ₁₉ at 1.85×10⁻²⁷ from (a) and
+(`scan39J1250p960/`, from the raw-data repository's T91-mac at 5796266), puts σ₁₉ at 1.85×10⁻²⁷ from (a) and
 1.94×10⁻²⁷ from (b), with its own plateau error 1.85×10⁻²⁷ (`pilot_agreement.py 39`): the J truncation and the
 precision each move σ₁₉ by about two thirds of (a)'s plateau error, and the two add to the 3.39×10⁻²⁷ of the gate.
 Neither is the S_1 family's plateau step, which is what `sigma_err` measures. The route is in the files: at 1280 bits
@@ -2228,7 +2228,7 @@ moves by at most 2.6×10⁻¹⁰. Run 05:11 UTC (`nodes/project.log`; "K19 proje
 
 Written and committed before any estimator ran at K = 20, on any input. Already known at this point (2026-10-30,
 16:20 UTC): T89's two wf 1.00 runs at K 41 landed, (a) J 1250 at 1280 bits (03:03 UTC, (a) 12.4 h on two processes) and
-(b) J 1500 at 1280 bits (03:41 UTC, (b) 13.0 h), copied from the raw-data repository's T89-mac at 55ed38a into
+(b) J 1500 at 1280 bits (03:41 UTC, (b) 13.0 h), copied from the raw-data repository's T89-mac at a991965 into
 `scan41J1250/` and `scan41J1500/`; the node runs at wf 0.99 and 1.01 (K 41, J 1250, 1280 bits) are at order 25 of 41
 and land about 23:30 UTC; the K = 19 stages past `converge` (sections 11.2–11.9) have not run, they wait for the same
 node files (section 11.0's amendment). What the two wf 1.00 files say was read before this section was written, by the
@@ -2528,7 +2528,7 @@ beyond err21 is posted and not a stop; and (a)'s σ₀…σ₂₀ bitwise `scan4
 that gate says when the pilots land is added to this paragraph with its date, before any estimator runs at K = 21: it
 is the gate's reading, not an estimate. **Gate reading (2026-11-02 03:30 UTC), pilot (a) only:** (a) landed
 2026-11-02 02:18 UTC (140246 s of its clock, 39.0 h wall on two processes with the Mac's sleep inside it; raw-data
-repository T94-mac/scan43J1250 at a769589, copied into `scan43J1250/`): err21(a) = 1.351×10⁻³⁰, 1.02×10⁻¹² of |σ₂₁|
+repository T94-mac/scan43J1250 at 630fbda, copied into `scan43J1250/`): err21(a) = 1.351×10⁻³⁰, 1.02×10⁻¹² of |σ₂₁|
 (the 10⁻¹⁰ gate passes with a margin of 98); (a)'s σ₀…σ₂₀ are bitwise `scan41J1250`'s wf 1.00 file's,
 21 of 21 strings; its run log equals T89's K 41 log at all 21 common orders, 1–41 (`log_compare.py`), and win's T97
 replica log at the 5 orders that had (the amendment of 21:35 UTC below). Ruling 1 passes, so J 1250 is used at this
@@ -2541,7 +2541,7 @@ landed 2026-11-02 03:26 UTC (144358 s, 40.1 h wall; T94-mac/scan43J1500, copied 
 push follows its end post): err21(b) = 1.389×10⁻³¹, 1.05×10⁻¹³ of |σ₂₁|; |σ₂₁(a) − σ₂₁(b)| = 1.591×10⁻³¹, 0.118 of
 (a)'s err21, so ruling 2's case (a difference beyond err21, posted and not a stop) did not arise; at σ₁₆ the two differ
 by 1.01 times (a)'s plateau error, the Mf step known from K = 20, and at σ₁₇…σ₂₀ by 0.011–0.013 of it. The node files
-(wf 0.99 and 1.01, K 43, J 1250, 1280 bits) landed 03:41 UTC on win2 (T94-win2/scan43J1250 at 8676d14, 553 min each on
+(wf 0.99 and 1.01, K 43, J 1250, 1280 bits) landed 03:41 UTC on win2 (T94-win2/scan43J1250 at 0ef400a, 553 min each on
 four processes; their logs equal T89's K 41 node logs at all 21 common orders) and are copied into `scan43J1250/`;
 their convergence is item 1's reading, by the converge stage (section 13.2). The K = 20 stages are complete (sections
 12.1–12.10), so everything this section needs from the lower orders is on record: the K = 20 records
@@ -2670,7 +2670,7 @@ reported as context in the convergence stage's report. Its follow-on, the same r
 `planted_k21_dry.py` wrote the three node files and the pilot file with the real σ₀…σ₂₀ (the 1280-bit node data of
 section 12) and σ₂₁ = the C20-BP [6/14] sum's (section 12.7's first ring-free, type-passing sum; zero at 1.000000028),
 err21 = 10⁻¹² |σ₂₁| and the pilot term zero; the eight stages ran on them 2026-10-31 09:24–09:58 UTC (logs in the
-raw-data repository's `planted-k21-mac/dry/`, f85d3d0; the scripts are commit 49a1041), after section 13.0 was
+raw-data repository's `planted-k21-mac/dry/`, 5d2bc69; the scripts are commit 49a1041), after section 13.0 was
 committed (32f958d). Every check passes (converge 10, plants 4, real 4, ring 72, calib 1), and each of the five
 converge mutations fires (`low` on the wf 0.99 node's bitwise check, the new form of item 1(b)). In the ring test the
 planted sum's σ₂₁ error is at most 2.9×10⁻²⁰ and its τ₂₁ error at most 1.5×10⁻¹⁸ (the 20-digit format), it survives
@@ -2709,7 +2709,7 @@ section 13.0.
 - **Cost.** The pilots' times are in section 13.0 (39.0 and 40.1 h of wall time on the Mac, which slept for most of it);
   the nodes took 553 min each on win2 with four processes.
 - **The J 1500 node files (context, 2026-11-02 22:30 UTC).** win2's hedge runs at wf 0.99 and 1.01 (K 43, J 1500,
-  1280 bits, two processes each beside the J 1250 nodes; `T94-win2/scan43J1500` at 16368ed, copied into
+  1280 bits, two processes each beside the J 1250 nodes; `T94-win2/scan43J1500` at 2e49f99, copied into
   `scan43J1500/`) ended 18:04 and 20:53 UTC after 17.7 and 17.1 h. Both pass the gate, err21 = 2.10×10⁻¹³ and
   2.30×10⁻¹⁵ of |σ₂₁|, and their σ₂₁ differ from the J 1250 nodes' by 7.1×10⁻¹⁴ and 1.5×10⁻¹⁴ of |σ₂₁|, inside
   the nodes' err21 (the table). 8 of 21 strings equal the K 41 J 1250 files' at each node, the differences in the last
@@ -2718,7 +2718,7 @@ section 13.0.
   0252384; --procs 2, 1031.6 min of its clock from 04:34 to 21:46 UTC with the Mac's sleep inside) reproduces win2's
   file in all 22 strings and its log at all 22 common orders, 1–43 (`log_compare.py`, 2026-11-02 23:00 UTC): the
   cross-machine identity of section 13.0's amendment holds at J 1500 and at the top order as well. win's replica of
-  pilot (a), T97 (`T97-win/scan43J1250`, raw-data repository 48f9ffe), ended 2026-11-02 23:29 UTC after 122719 s on
+  pilot (a), T97 (`T97-win/scan43J1250`, raw-data repository f829fd8), ended 2026-11-02 23:29 UTC after 122719 s on
   two processes and was posted on 2026-11-05 01:39 UTC, its watcher having stopped. Its 22 σ strings, err21 and
   fit_info equal the Mac's (a) file's, and its log equals the Mac's at all 22 common orders, 1–43, and T89's K 41 log
   at all 21, 1–41 (`log_compare.py`, exit 0). So the amendment's comparison is 22 of 22, and no record reopens. Its
@@ -3000,7 +3000,7 @@ replica lands after them (the Mac sleeps, so it will), until the cause is record
 criterion and is reported as context in the convergence stage's report.
 
 **Stage 1 and the replica (2026-11-03 13:37 UTC):** the three J 1250 node files landed on win2 at about 13:00 UTC
-(T99-win2/scan45J1250 at bb6154c, 860–862 min each on three processes under the affinity cap of 2026-11-03 02:13 UTC)
+(T99-win2/scan45J1250 at 48a941e, 860–862 min each on three processes under the affinity cap of 2026-11-03 02:13 UTC)
 and are copied into `scan45J1250/`. Ruling 1 on (a): `sigma_err_fit.py` exit 0, err22 = 1.297×10⁻³¹ = 1.43×10⁻¹²
 |σ₂₂|, a margin of 70 under 10⁻¹⁰ (a1 = 46.62 from the 960-bit scan39J1000 file); the nodes give 1.28×10⁻¹² (wf 0.99)
 and 1.59×10⁻¹² (wf 1.01). Each file's σ₀…σ₂₁ are bitwise the `scan43J1250` file's at that wf, 22 of 22 strings, and
@@ -3034,7 +3034,7 @@ posting, if the swap in use passes 12 GB; a stopped replica is recorded here and
 `planted_k22_dry.py` wrote the three node files and the pilot file with the real σ₀…σ₂₁ (the 1280-bit node data of
 section 13) and σ₂₂ = the C21-BP [6/15] sum's (section 13.7's first ring-free, type-passing sum; zero at 1.000000009),
 err22 = 10⁻¹² |σ₂₂| and the pilot term zero; the eight stages ran on them 2026-11-03 13:38–14:09 UTC (logs in the
-raw-data repository's `planted-k22-mac/dry/`, b4eabd1; the scripts are commit f1853f6), after section 14.0 was
+raw-data repository's `planted-k22-mac/dry/`, 16aa064; the scripts are commit f1853f6), after section 14.0 was
 committed (bd5528e) and its stage-1 reading (f1853f6). Every check passes (converge 10, plants 4, real 4, ring 80,
 calib 1), and each of the five converge mutations fires (`low` on the wf 0.99 node's bitwise check at k = 21, `pilot`
 on σ₁₉ of (b), `err` and `amend` on item 1(a), `ratiolaw` on the wf 1.01 node). In the ring test the planted sum's σ₂₂
@@ -3061,13 +3061,13 @@ win2) rest on win2's (b) with this partial replica agreement to order 39, and th
 when it lands. The stop is recorded, not hidden: a replica that stops is a replica that stopped.
 
 **Pilot (b) landed (2026-11-04 06:19 UTC, win2; comms 06:22 and 06:29 UTC, raw folders `T99-win2/scan45J1500/` at
-8934057 and `T104-win2/` at 84769d4).** K 45, J 1500, wf 1.00, 998.2 min. The gate of 14.0 passes: `sigma_err_fit.py`
+8934057 and `T104-win2/` at 2e364c0).** K 45, J 1500, wf 1.00, 998.2 min. The gate of 14.0 passes: `sigma_err_fit.py`
 gives err₂₂ = 2.965×10⁻³² = 3.27×10⁻¹³ of |σ₂₂| against the 10⁻¹⁰ threshold. Its log is identical to T94's K 43, J 1500
 run at all 22 common orders (1–43), and against T94's J 1250 run 9 of the 22 strings are equal, the largest relative
 difference 1.2×10⁻¹³ (the J dependence, within the error). T104's first stage (`converge`) passes at wf 0.99, 1.00 and
 1.01, with |σ₂₂(a) − σ₂₂(b)| = 9.0×10⁻³³ and err₂₂ margins of 73 and 65; the remaining stages run as queued.
 
-**Stage 2 landed (2026-11-04 14:10 UTC, win2; comms 14:10 UTC, raw folder `T99-win2/scan45J1500/` at 2e4e391).** The
+**Stage 2 landed (2026-11-04 14:10 UTC, win2; comms 14:10 UTC, raw folder `T99-win2/scan45J1500/` at e1e0be6).** The
 hedge nodes wf 0.99 and 1.01 (K 45, J 1500, 1280 bits, two processes each) took 1459.6 and 1451.5 min. Both pass the
 gate of 14.0: `sigma_err_fit.py` gives err₂₂ = 2.725×10⁻³² (2.92×10⁻¹³ of |σ₂₂|) and 3.224×10⁻³² (3.65×10⁻¹³) against
 10⁻¹⁰, and `log_compare.py` finds both logs identical to T94's K 43, J 1500 logs (`T94-win2/scan43J1500/`) at all 22

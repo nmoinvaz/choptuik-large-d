@@ -149,8 +149,9 @@ Conventions for the Claude sessions (cloud and local) that run computations here
   coordinator derives from it (CSVs, graphs, notes), with the folder and commit named in the note or script that used
   it. A script in main that reads raw output takes its directory as an argument, and a documented command that needs one
   states the clone step. The old `raw/<name>` branches were moved into folders of the same name on 2026-10-27 with their
-  commits, so a citation "raw/T76 7ca90fe" means folder `T76/`, at commit `7ca90fe` of the raw-data repository; its
-  INDEX.md lists every folder. The long-running writers (`hp/scan_hp.py`, `hp/lowD_highM.py` with `--states`,
+  commits, so a citation "raw/T76 84517a1" means folder `T76/`, at commit `84517a1` of the raw-data repository; its
+  INDEX.md lists every folder. Its history was made linear on 2026-11-10, which changed every hash, so a raw hash cited
+  before then (in an issue, a comment or an older commit) is found in its HASH_MAP.csv. The long-running writers (`hp/scan_hp.py`, `hp/lowD_highM.py` with `--states`,
   `hp/gamma_batch.py`, `hp/modecount_test_zeros.py`, `hp/modecount_test_axis.py`, `hp/relayout.py`, `hp/scan_qd.py`,
   `hp/qd_planted.py`, `hp/lowD_highM_leg.py`, `solver/inner_amp/amp_flint_par.py`, `scan_omega.py`) refuse an output
   path outside a task folder of that repository (`hp/raw_out.py`; `--allow_unraw` for tests and scratch only). The

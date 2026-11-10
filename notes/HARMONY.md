@@ -40,7 +40,7 @@ Here that exponent is O(n)."
 
 **The second-zero test (2026-11-07).** T155 (win2) and T153 (macm3) computed σ₀…σ₁₆ at ω/ω∞ = 1.06, 1.08, 1.09, 1.10,
 1.11, 1.12 and 1.14. `solver/harmony/stokes/second_zero_nodes.py RAW` tracks the zero x₁ of every Borel–Padé sum
-[m/(16 − m)], m = 5…9, across the nodes (raw `harmony-mac/stokes/second_zero_nodes.log`, e870b95). On the data Im x₁
+[m/(16 − m)], m = 5…9, across the nodes (raw `harmony-mac/stokes/second_zero_nodes.log`, a711a2d). On the data Im x₁
 changes sign in every sum, at ω/ω∞ = 1.0962–1.1001 (x₁ ≈ 13.4, A ≈ 3.66), so the criterion set in comms holds. Its two
 controls, set at the same time, fail. With x₁ planted to cross at 1.095, the sums place the crossing at 1.0962, 1.1013
 and, in [5/11], 1.0698, against a tolerance of 0.005. With the crossing planted at 1.15, [5/11] reports a false one at
@@ -49,7 +49,7 @@ and, in [5/11], 1.0698, against a tolerance of 0.005. With the crossing planted 
 candidate. More coefficients at the bracketing nodes would settle it.
 
 **The test at K 45 (#82, 2026-11-08).** win2 computed σ₀…σ₂₂ (K 45, J 1500, 1280 bits) at ω/ω∞ = 1.09, 1.10 and 1.11
-(raw `I82-win2/`, accc88c). `second_zero_nodes.py RAW --k45` tracks x₁ in the sums [m/(22 − m)], m = 8…14. Both
+(raw `I82-win2/`, fc926b6). `second_zero_nodes.py RAW --k45` tracks x₁ in the sums [m/(22 − m)], m = 8…14. Both
 controls, set before the runs, now pass. The crossing planted at 1.095 is found at 1.0950 in every ring-free sum, and
 the one planted at 1.15 shows no sign change in 1.09–1.11. On the data, all seven sums are ring-free and Im x₁ changes
 sign in each, at ω/ω∞ = 1.0988–1.0989. Im x₁ is +0.105, −0.013 and −0.131 at the three nodes, linear to the printed
@@ -59,7 +59,7 @@ has a second zero near ω/ω∞ = 1.0989, x₁ ≈ 13.46, and the D = ∞ inner 
 selection rule (Conjecture 1); the solution's stability is not known. The σ of the 1.10 node agree with macm3's K 33 J
 1000 run at the same node to 20 digits through σ₅ and to 1.2×10⁻¹⁵ at σ₁₆ (#82). A discrepancy, now explained: #202
 found the 1.10 node's distance from K 33 above both neighbours' at n = 6, 7, 15 and 16 (by up to 2.8×, at most 1.2×10⁻¹⁵
-relative). It is the J 1000 truncation of the comparison files, not the K 45 node (#256; raw `I256-win2/`, e8b8e02).
+relative). It is the J 1000 truncation of the comparison files, not the K 45 node (#256; raw `I256-win2/`, b99c5e6).
 Going from K 33 to K 39 changes σ₁…σ₁₅ by exactly 0 at all three nodes (σ_n needs the orders up to 2n + 1 only). At n =
 16, |σ(J 1000) − σ(J 1500)| is 3.5×10⁻¹⁶, 1.2×10⁻¹⁵ and 4.4×10⁻¹⁶ at 1.09, 1.10 and 1.11, while #213's J 1250 on the new
 firmware agrees with #82's J 1500 to 9.4×10⁻¹⁷, 4.9×10⁻¹⁷ and 5.2×10⁻¹⁷. #228's rerun of the 1.10 node on the new
@@ -74,7 +74,7 @@ only the σ coefficients and the pipeline that made them. The crossing needs σ_
 moves it to 1.1008.
 
 **The last coefficients against J (#213).** win2 recomputed the three nodes at J 1250 (K 45, 1280 bits; raw
-`I213-win2/`, 159b2af). Over n = 18–22, max |σ_n(J 1250) − σ_n(J 1500)|/|σ_n| is 4.1×10⁻¹⁴ at ω/ω∞ = 1.09, 4.4×10⁻¹⁵ at
+`I213-win2/`, 6f7d14c). Over n = 18–22, max |σ_n(J 1250) − σ_n(J 1500)|/|σ_n| is 4.1×10⁻¹⁴ at ω/ω∞ = 1.09, 4.4×10⁻¹⁵ at
 1.10 and 1.7×10⁻¹⁴ at 1.11, against the 10⁻¹⁰ the crossing needs. So the J truncation is not what limits the crossing.
 
 **Controls on a family that is not Kummer (#214).** The planted controls of #203 used a Kummer family. #214 repeated

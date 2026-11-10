@@ -10,7 +10,7 @@ Four statements need fixing. A* is not a fitted parameter. "None of these points
 **What ran.** `check.py` exit 0 (28 pass, 3 expected fails that document discrepancies), and `controls.py` exit 0 (5 planted profiles, then 15 mutations). Each run takes about 6 s on one core under `nice -n 10`, using under 0.3 GB. The paper was read in full: the v1 PDF, all 14 pages including (S1)–(S62) and Table I, with display equations checked against the HTML. Shared input: `solver/eeg_profile/data/tuned_profile_A2.72.txt` only.
 
 - Code: `solver/independent_eeg_eq16/check.py`, `controls.py`, on `wip/i165` at a03671f.
-- Raw: choptuik-large-d-raw `I165-mac/` at 7b9e1cc (merged as c729263).
+- Raw: choptuik-large-d-raw `I165-mac/` at a11a092 (merged as a11a092).
 - REPORT.md was not written, because the session's tooling refuses report files from subagents. Its content is this comment.
 
 ### Claims

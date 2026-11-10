@@ -112,7 +112,7 @@
 <text x="594.5" y="94.0" font-size="11" fill="#0b0b0b" text-anchor="end" font-weight="normal">4×10⁻¹³ off</text>
 <circle cx="514.3" cy="90" r="4.5" fill="#2a78d6"/>
 <text x="16.0" y="620.0" font-size="10" fill="#52514e" text-anchor="start" font-weight="normal">Apple M5, 32 GB, macOS 27.0.1</text>
-<text x="16.0" y="606.0" font-size="10" fill="#52514e" text-anchor="start" font-weight="normal">T84-mac/horizon_radius.jsonl 326ceb8 (horizon_radius.py, the 0.7-layout states, ks 100-130)  ·  walls: T84-mac/basin.jsonl, T85-mac/*_attempts.jsonl cb397f3, T101-mac 2a21d20, hp/data/delta_dd.csv</text>
+<text x="16.0" y="606.0" font-size="10" fill="#52514e" text-anchor="start" font-weight="normal">T84-mac/horizon_radius.jsonl f18a936 (horizon_radius.py, the 0.7-layout states, ks 100-130)  ·  walls: T84-mac/basin.jsonl, T85-mac/*_attempts.jsonl 3b6572f, T101-mac 7c06884, hp/data/delta_dd.csv</text>
 <text x="16.0" y="590.0" font-size="10" fill="#c98500" text-anchor="start" font-weight="normal">⚠</text>
 <text x="30.0" y="590.0" font-size="10" fill="#52514e" text-anchor="start" font-weight="normal">fits of 9 points at D 40-73 extrapolated to 200 · the deviation scale 4e-5 per unit of dD is 12.2's estimate</text>
 <a href="https://github.com/nmoinvaz/choptuik-large-d"><text x="1064" y="620" font-size="10" fill="#52514e" text-anchor="end" text-decoration="underline">github.com/nmoinvaz/choptuik-large-d</text></a>

@@ -788,7 +788,7 @@ RSS of 2.9 GB. That is the end of T45's grid.
 ### 9.7 The kernel on a third machine (T98, win2)
 
 The hp build on the Windows desktop win2 (Core Ultra 7 265K, AVX2 without AVX-512; comms 2026-11-02 09:50–11:49 UTC;
-raw T98-win2 824b26e, `hp_build/`) at main 0f0e20c, multidouble 1.8.0 and its package at 00c6dfd: `cargo test
+raw T98-win2 868d38c, `hp_build/`) at main 0f0e20c, multidouble 1.8.0 and its package at 00c6dfd: `cargo test
 --release --lib` 9 passed, 0 failed, 2 ignored; `highm_check.py controls` (both mutations fire), `block` and `converge`
 pass (`controls.log`, `block.log`, `converge.log`). Bit identity across the three instruction sets, at the resolutions
 whose plan is stored (M = 48, 64, 80, `ref --compare --Ms=48,64,80`): all 72 outputs equal to win's AVX-512 file

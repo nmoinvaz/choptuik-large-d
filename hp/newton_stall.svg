@@ -1731,7 +1731,7 @@
 <line x1="914.9" y1="840.7" x2="884.8" y2="837.6" stroke="#0b0b0b" stroke-width="1"/>
 <text x="880.8" y="841.6" font-size="11" fill="#0b0b0b" text-anchor="end" font-weight="bold">D = 67.75: T48 stopped; T73 pins and corrects</text>
 <text x="16.0" y="934.0" font-size="10" fill="#52514e" text-anchor="start" font-weight="normal">runs: cloud, Windows i7-1185G7, Mac, Apple M5</text>
-<text x="16.0" y="920.0" font-size="10" fill="#52514e" text-anchor="start" font-weight="normal">top: the model F(t) = F₀ − σt + ½ct², no data  ·  bottom: hp/data/delta_dd.csv, large_d/up70.jsonl, pilot_cloud/pilotB.jsonl, raw/T73 83c5659</text>
+<text x="16.0" y="920.0" font-size="10" fill="#52514e" text-anchor="start" font-weight="normal">top: the model F(t) = F₀ − σt + ½ct², no data  ·  bottom: hp/data/delta_dd.csv, large_d/up70.jsonl, pilot_cloud/pilotB.jsonl, raw/T73 c8d91e5</text>
 <text x="16.0" y="904.0" font-size="10" fill="#c98500" text-anchor="start" font-weight="normal">⚠</text>
 <text x="30.0" y="904.0" font-size="10" fill="#52514e" text-anchor="start" font-weight="normal">the top panel is a model of one weak direction, not a measurement · the runs used different settings and machines</text>
 <a href="https://github.com/nmoinvaz/choptuik-large-d"><text x="1064" y="934" font-size="10" fill="#52514e" text-anchor="end" text-decoration="underline">github.com/nmoinvaz/choptuik-large-d</text></a>

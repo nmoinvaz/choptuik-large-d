@@ -1933,7 +1933,7 @@ The raw output of the runs (solver states, per-point records, attempts files, ch
 repository, [choptuik-large-d-raw](https://github.com/nmoinvaz/choptuik-large-d-raw), one folder per task and
 machine. Its [INDEX.md](https://github.com/nmoinvaz/choptuik-large-d-raw/blob/main/INDEX.md) says what each folder
 holds and which task produced it. This repository keeps the code and what is derived from the runs (CSVs, graphs,
-notes), plus the raw files that its scripts and checks read in place. A note or script that cites "raw/T76 7ca90fe"
+notes), plus the raw files that its scripts and checks read in place. A note or script that cites "raw/T76 84517a1"
 means folder `T76/` at that commit of the raw-data repository. Commands that need raw data clone it beside this
 repository:
 

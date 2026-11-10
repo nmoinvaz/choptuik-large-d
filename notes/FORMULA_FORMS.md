@@ -130,7 +130,7 @@ new information. ρ is the series' continuation onto the cut, where no data lie:
 reaches 3.6×10⁹ and changes sign 23 times, so it is not a spectral density. Two-sided Padé (Stieltjes) bounds do not
 exist either, because a Stieltjes function would be monotone for D > 3, and Δ peaks near D 3.76.
 
-**How it was found** (raw-data repository, `formula-mac/` at ef97c2f, the work of two coordinator subagents). No form
+**How it was found** (raw-data repository, `formula-mac/` at 0673055, the work of two coordinator subagents). No form
 without a series reaches the points' precision (`v2/closed_part1.log`):
 
 | form | parameters | largest miss, D ≥ 10 | largest miss, all D |

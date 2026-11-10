@@ -201,7 +201,7 @@ certifies one zero in the same discs at each node with (δ + tail)/min |P| = 0.1
    closed-form node-count formula (gain 1/R per node) overestimated the count by five nodes and was replaced by the
    brute-force count on the single-pole function; and √|a₂/a₄| as a second radius estimate aliases by a third for a pole
    at t = 1.5 and became a consistency check against its own aliasing instead. Output: `solver/proof/logs/homega_interp.json`.
-   **Result (2026-10-31 11:24 UTC; T93-mac ee58c71, raw_check passed, the two files copied into `scan39J1250p960/`).** The
+   **Result (2026-10-31 11:24 UTC; T93-mac 05b9c87, raw_check passed, the two files copied into `scan39J1250p960/`).** The
    three-node interpolation error halfway between the nodes rises from 9.2×10⁻⁸ of σ₁ to 1.52×10⁻⁵ and 1.55×10⁻⁵ of σ₁₉
    (at 0.995 and 1.005), above 10⁻⁶ from k = 5 on: the three nodes 0.01 apart fix σ_k(ω) between them to 10⁻⁵, not
    better, which is the (H_ω) error of the present setup. The four-node error at the centre is 5.5×10⁻¹⁰ of σ₁ and

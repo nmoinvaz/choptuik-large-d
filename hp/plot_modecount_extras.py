@@ -211,7 +211,7 @@ def main(argv):
         callout(svg, xm2(new[0][0]), ym2(new[0][1]), "new pair at kf 23", dx=-40, dy=-40)
 
     hgt = footnote(svg, ["hp/modecount_circle.py, hp/modecount_moment.py (main 7035fa0)",
-                         "raw I238-macm3 d44579f, I231-macm3 a0f232a, I230-mac e7dc533"],
+                         "raw I238-macm3 7331239, I231-macm3 b9b2608, I230-mac 95906de"],
                    "circles on macm3 (Apple M3) and mac (Apple M5), double-double det M", [], y + h + 44, REPO)
     open(a.o, "w").write(svg.finish(hgt))
     print(f"wrote {a.o}")

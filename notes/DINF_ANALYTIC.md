@@ -21,7 +21,7 @@ $`1.7\times10^{-5}`$ above the finite-$`D`$ limit of eq. (4), a discrepancy reco
 the physics paper's.)
 
 Scripts: `solver/inner_analytic/`. Logs of the runs quoted here are in the raw-data repository's `dinf-analytic-mac/`
-(f0a8a7a); every number below is printed by a command in §7.
+(5cf0b00); every number below is printed by a command in §7.
 
 ## 0. The question and what "without numerics" can mean
 

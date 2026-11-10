@@ -5,7 +5,7 @@ Every number, date and quotation in the paper, with the file or command it comes
 - **Code repository:** paths are relative to its root. Counts are at 07eff89 (2026-11-06 18:26 UTC). Items marked
   *(main)* come from origin/main at 80d928f, which adds the octo-double corrector (c496ac8) and later `comms.txt` entries.
   "comms DATE TIME SENDER" is the entry of `comms.txt` with that header (PDT before 2026-10-24 22:25 UTC).
-- **Raw-data repository:** `raw:` is the clone of github.com/nmoinvaz/choptuik-large-d-raw at d0f3311
+- **Raw-data repository:** `raw:` is the clone of github.com/nmoinvaz/choptuik-large-d-raw at 8b9db42
   (2026-11-06 18:24:53 UTC), read only.
 - **Transcripts:** `tx:` is a session transcript (`.jsonl`) of this project in Claude Code's projects folder on the Mac,
   named by the first 8 characters of its id, read with jq and a merge script. Prompts are `type == "user"` records that
