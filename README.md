@@ -587,78 +587,78 @@ The candidate closed forms tested, the table, the influence function and the sea
 
 ### Relation to published work
 
-From a literature search (October 2026); the references are in [Further references](#further-references) and the
-footnotes.
+This comes from a literature search (October 2026). The references are in [Further references](#further-references) and
+the footnotes.
 
 <details>
 <summary>Point by point: D = 4, the maximum below 4, D = 5, below 4, large D, earlier formulas, the large-D theory</summary>
 
-- **D = 4.** Δ = 3.445452402(3) (Martín-García & Gundlach, PRD 68, 024011 (2003); see also Gundlach, PRD 55, 695
-  (1997)) and γ = 0.373961 ± 10⁻⁶ (Ecker, Ecker, Grumiller & Jechtl 2026, who also give Δ = 3.445453). The formula's
-  3.4454524 and 0.3739610 agree to about 10⁻⁸ and 10⁻⁷. The double-double solver gives Δ = 3.4454524022278213499715
-  at M = 192 τ points on 15 shooting nodes; the changes from M = 80 to 96, 128, 160 and 192 are −1.3×10⁻¹¹, −9.0×10⁻¹⁴,
-  −2.8×10⁻¹⁸ and +1.1×10⁻²², and the last is the error estimate (an estimator, not a bound;
-  `hp/data/lowD_highM/lift_D4_points.jsonl`).
-- **The maximum below D = 4.** Ecker et al. 2026, Eq. (70): D = 3.755726 ± 10⁻⁶, Δ = 3.466772 ± 10⁻⁶. The double-double
-  points here give D = 3.755725, Δ = 3.46677169 (agreement within their ±10⁻⁶).
+- **D = 4.** The published values are Δ = 3.445452402(3) (Martín-García & Gundlach, PRD 68, 024011 (2003); see also
+  Gundlach, PRD 55, 695 (1997)) and γ = 0.373961 ± 10⁻⁶ (Ecker, Ecker, Grumiller & Jechtl 2026, who also give Δ =
+  3.445453). The formula's 3.4454524 and 0.3739610 agree to about 10⁻⁸ and 10⁻⁷. The double-double solver gives Δ =
+  3.4454524022278213499715 at M = 192 τ points on 15 shooting nodes. The changes from M = 80 to 96, 128, 160 and 192 are
+  −1.3×10⁻¹¹, −9.0×10⁻¹⁴, −2.8×10⁻¹⁸ and +1.1×10⁻²², and the last is the error estimate, an estimator and not a bound
+  (`hp/data/lowD_highM/lift_D4_points.jsonl`).
+- **The maximum below D = 4.** Ecker et al. 2026, Eq. (70), give D = 3.755726 ± 10⁻⁶, Δ = 3.466772 ± 10⁻⁶. The
+  double-double points here give D = 3.755725, Δ = 3.46677169, in agreement within their ±10⁻⁶.
 - **D = 5: a resolution effect in the published value.** Ecker et al. 2026 give Δ = 3.22176, γ = 0.41322, which are
-  5.8×10⁻⁵ and 9.3×10⁻⁵ above the values here. Our Δ(5) = 3.2217019446 comes from two independent codes: the f64
-  solver at 31, 39 and 47 Fourier modes (3.221701945 ± 7×10⁻¹¹ extrapolated) and the double-double solver at
-  M = 48 and 64 collocation points (3.22170194461806, 3.22170194462672), which agree to 10⁻¹¹
-  (`hp/compare/dd_D5.py`, log in `hp/compare/dd_D5.log`). Their published data
-  ([github.com/EckerChristian/CriticalSpacetimeCrystal](https://github.com/EckerChristian/CriticalSpacetimeCrystal),
-  compared by `hp/compare/cmp_ecker.py`) show their D = 5 value still moving by −1.66×10⁻⁴ between 256 and 512 modes,
-  toward ours, in the range above D ≈ 4.8 where their paper notes that the light-cone expansion order has to be
-  increased. Their offset from our values grows smoothly with D, from 2.7×10⁻⁷ at D = 4 (within their stated ±10⁻⁶;
-  ours matches Martín-García & Gundlach to 7×10⁻⁹) to 5×10⁻⁴ at D = 5.5. Their γ list has no points for
-  4.79 < D < 5.49, the range where they report that their perturbation method fails, so their γ(5) is not a direct
-  computation in the published data; ours, 0.41312694 (stable to 10⁻⁷ across resolutions), agrees with Bland &
-  Kunstatter's 0.4131 ± 0.0001. No difference of convention: at D = 3.7 the two agree to 8×10⁻⁸.
-- **Below D = 4.** The double-double solver, with its first node moved to x = 0.005 and its last to 0.8 (the series
-  there converge ever more slowly as D falls), gives Δ(3.7) = 3.46520048 ± 3×10⁻⁸ and γ(3.7) = 0.34865019 ± 8×10⁻⁸,
-  converged in the τ resolution (48, 64 and 80 points) and in the node layout
-  ([notes/LOW_D.md](notes/LOW_D.md)); Ecker et al. (2026) give 3.4652005 and 0.3486503 there. The f64 points below
-  D = 4 (47 Fourier modes) are 2–5×10⁻⁶ high in Δ. Extrapolated from 3.64 ≤ D ≤ 4, γ(3.5) = 0.3235 ± 0.0030, in
-  agreement with Ecker et al.'s 0.32239 and not with Bland et al.'s 0.349 ± 0.003. The modes needed grow from about 73
-  at D = 4 to about 110 at 3.5 and several hundred near 3.05, and at D = 3 the scalar decouples from gravity in these
-  equations, so the family cannot reach a regular D = 3 limit.
-- **Large D.** Ecker, Ecker & Grumiller (2026) and Ecker et al. (2026) conjecture Δ → 0 as D → ∞; Bland's 2007
-  PhD thesis (University of Manitoba) hypothesizes Δ∞ = 5/2, which the data exclude (Δ(14) = 2.29 and
-  decreasing). The double-double points give a finite Δ∞ = 1.643893746 if Δ is analytic in 1/D. Up to D = 61
-  they show no sign of a turn toward 0, but they cannot exclude non-analytic behaviour beyond the data. γ∞ = 1/2
-  agrees with the conjectures there; it is not new.
+  5.8×10⁻⁵ and 9.3×10⁻⁵ above the values here.
+  - Our Δ(5) = 3.2217019446 comes from two independent codes, which agree to 10⁻¹¹ (`hp/compare/dd_D5.py`, log in
+    `hp/compare/dd_D5.log`). They are the f64 solver at 31, 39 and 47 Fourier modes (3.221701945 ± 7×10⁻¹¹ extrapolated)
+    and the double-double solver at M = 48 and 64 collocation points (3.22170194461806, 3.22170194462672).
+  - Their published data ([github.com/EckerChristian/CriticalSpacetimeCrystal](https://github.com/EckerChristian/CriticalSpacetimeCrystal), compared by `hp/compare/cmp_ecker.py`) show their D = 5 value still moving by −1.66×10⁻⁴ between 256 and 512 modes, toward ours. That is in the range above D ≈ 4.8 where their paper notes that the light-cone expansion order has to be increased.
+  - Their offset from our values grows smoothly with D, from 2.7×10⁻⁷ at D = 4 to 5×10⁻⁴ at D = 5.5. The first is within
+    their stated ±10⁻⁶, and ours matches Martín-García & Gundlach to 7×10⁻⁹ there.
+  - Their γ list has no points for 4.79 < D < 5.49, the range where they report that their perturbation method fails. So
+    their γ(5) is not a direct computation in the published data. Ours, 0.41312694 (stable to 10⁻⁷ across resolutions),
+    agrees with Bland & Kunstatter's 0.4131 ± 0.0001.
+  - There is no difference of convention, since at D = 3.7 the two agree to 8×10⁻⁸.
+- **Below D = 4.** The double-double solver gives Δ(3.7) = 3.46520048 ± 3×10⁻⁸ and γ(3.7) = 0.34865019 ± 8×10⁻⁸,
+  converged in the τ resolution (48, 64 and 80 points) and in the node layout ([notes/LOW_D.md](notes/LOW_D.md)). Its
+  first node is moved to x = 0.005 and its last to 0.8, because the series there converge ever more slowly as D falls.
+  Ecker et al. (2026) give 3.4652005 and 0.3486503 there. The f64 points below D = 4 (47 Fourier modes) are 2–5×10⁻⁶
+  high in Δ. Extrapolated from 3.64 ≤ D ≤ 4, γ(3.5) = 0.3235 ± 0.0030, in agreement with Ecker et al.'s 0.32239 and not
+  with Bland et al.'s 0.349 ± 0.003. The modes needed grow from about 73 at D = 4 to about 110 at 3.5 and several
+  hundred near 3.05. At D = 3 the scalar decouples from gravity in these equations, so the family cannot reach a regular
+  D = 3 limit.
+- **Large D.** Ecker, Ecker & Grumiller (2026) and Ecker et al. (2026) conjecture Δ → 0 as D → ∞. Bland's 2007 PhD
+  thesis (University of Manitoba) hypothesizes Δ∞ = 5/2, which the data exclude (Δ(14) = 2.29 and decreasing). The
+  double-double points give a finite Δ∞ = 1.643893746 if Δ is analytic in 1/D. Up to D = 61 they show no sign of a turn
+  toward 0, but they cannot exclude non-analytic behaviour beyond the data. γ∞ = 1/2 agrees with the conjectures there,
+  and it is not new.
 - **Earlier formulas.** No earlier formula for Δ(D) was found ([notes/LIT_REVIEW.md](notes/LIT_REVIEW.md), addendum).
-  For γ, Bland et al. (2005) fitted γ ≈ 0.466(1 − e^{−0.408 D}) on 3.5 ≤ D ≤ 14, a different form whose limit, 0.466, is
-  not 1/2. Sorkin and Oren (2005) read their D ≤ 11 values as γ reaching a maximum and Δ a minimum around D = 11–13; the
-  points here show neither, as Δ decreases and γ increases monotonically to D = 61. Emparan and Herzog's review fits the
-  published values by γ ≈ ½(1 − 1/D) (RMP 92, 045005 (2020), Sec. X.3); at D = 20–60 it misses the values here by
-  1.3–3.1×10⁻³, and its large-D deficit, 1/(2D), is two-thirds of the computed 0.758/(D − 2) (raw
-  `I200-mac/identity_check.py`, #200). Taves and Kunstatter (2011) give
-  values for D = 4–8 without a formula. Kol's 2π/Δ = √((10 − D)/(D − 2)) (2005) is for the black-string merger, not for
-  scalar collapse. The rational formula here is an empirical fit, a ratio of polynomials with 11 fitted coefficients for
-  Δ and 9 for γ, not a law derived from the equations. What it adds is one function for all D ≥ 4 that matches the
-  points to their precision and predicts the double-double points it never saw up to D = 61.
-- **The large-D theory.** That at leading order any periodic profile with any period solves the equations is in
-  Ecker, Ecker & Grumiller 2026 (Proposition 1). The free wave equation in similarity coordinates was analysed in 3+1 by
-  Donninger (2008), which contains the D = 4 case of Proposition 2; its light-cone coefficient follows from Gauss's
-  connection formula once the mode equation is recognised as hypergeometric. Proposition 4 is an instance of standard
-  late-order (Dingle) analysis. The inner equations are, up to a change of variables, Rozali and Way's leading-order
-  large-D system (2018), whose heat-equation character they noted; Proposition 5 is the discretely self-similar
-  counterpart of their estimate γ = 1/2. Ecker, Ecker & Grumiller's next-to-leading-order condition is discussed next.
+  - For γ, Bland et al. (2005) fitted γ ≈ 0.466(1 − e^{−0.408 D}) on 3.5 ≤ D ≤ 14, a different form whose limit, 0.466,
+    is not 1/2.
+  - Sorkin and Oren (2005) read their D ≤ 11 values as γ reaching a maximum and Δ a minimum around D = 11–13. The points
+    here show neither, as Δ decreases and γ increases monotonically to D = 61.
+  - Emparan and Herzog's review fits the published values by γ ≈ ½(1 − 1/D) (RMP 92, 045005 (2020), Sec. X.3). At D =
+    20–60 it misses the values here by 1.3–3.1×10⁻³, and its large-D deficit, 1/(2D), is two-thirds of the computed
+    0.758/(D − 2) (raw `I200-mac/identity_check.py`, #200).
+  - Taves and Kunstatter (2011) give values for D = 4–8 without a formula.
+  - Kol's 2π/Δ = √((10 − D)/(D − 2)) (2005) is for the black-string merger, not for scalar collapse.
+  - The rational formula here is an empirical fit, a ratio of polynomials with 11 fitted coefficients for Δ and 9 for γ,
+    not a law derived from the equations. What it adds is one function for all D ≥ 4 that matches the points to their
+    precision and predicts the double-double points it never saw up to D = 61.
+- **The large-D theory.**
+  - Ecker, Ecker & Grumiller 2026 already have that at leading order any periodic profile with any period solves the
+    equations (Proposition 1).
+  - Donninger (2008) analysed the free wave equation in similarity coordinates in 3+1, which contains the D = 4 case of
+    Proposition 2. Its light-cone coefficient follows from Gauss's connection formula once the mode equation is
+    recognised as hypergeometric.
+  - Proposition 4 is an instance of standard late-order (Dingle) analysis.
+  - The inner equations are, up to a change of variables, Rozali and Way's leading-order large-D system (2018), whose
+    heat-equation character they noted. Proposition 5 is the discretely self-similar counterpart of their estimate γ =
+    1/2.
+  - Ecker, Ecker & Grumiller's next-to-leading-order condition is discussed next.
 
 </details>
 
 #### Relation to Ecker, Ecker & Grumiller
 
-Ecker, Ecker & Grumiller (PRL 136, 191401 (2026), [arXiv:2601.14358](https://arxiv.org/abs/2601.14358)) use the same gauge in
-their large-D expansion: their f = α/a is our c, with f = 1 at the self-similarity horizon x = 1 for all τ. At leading
-order they find the same freedom as Proposition 1: any periodic profile
-$`\beta(\tau) = \Pi(0,\tau) \approx \sqrt{2/n}\,F(\omega\tau)`$, with any period. At next order they require f ≤ 1 near
-the horizon at the zeros of β, which gives β'' + 3β' = 0 there (their Eq. (20)); in our variables, ω²F'' + 3ω F' = 0 at
-the zeros of F.
+Ecker, Ecker & Grumiller (PRL 136, 191401 (2026), [arXiv:2601.14358](https://arxiv.org/abs/2601.14358)) use the same gauge in their large-D expansion. Their f = α/a is our c, with f = 1 at the self-similarity horizon x = 1 for all τ. At leading order they find the same freedom as Proposition 1, which is any periodic profile $`\beta(\tau) = \Pi(0,\tau) \approx \sqrt{2/n}\,F(\omega\tau)`$, with any period. At next order they require f ≤ 1 near the horizon at the zeros of β, which gives β'' + 3β' = 0 there (their Eq. (20)). In our variables that is ω²F'' + 3ω F' = 0 at the zeros of F.
 
 The inequality f ≤ 1 holds for every regular solution, whatever the period. From $`x b_x = b(p^2+m^2) - (n-1)b(b-1)`$
-with b(0) = 1, b can never drop below 1, since at b = 1 the slope is p²+m² ≥ 0; then $`x c_x = (n-1)c(b-1) \ge 0`$, so c
+with b(0) = 1, b can never drop below 1, since at b = 1 the slope is p²+m² ≥ 0. Then $`x c_x = (n-1)c(b-1) \ge 0`$, so c
 ≤ c(1) = 1. Its apparent violation at next-to-leading order comes from truncating a perfect square in a window of width
 O(1/n) around each zero. In the formal family of Proposition 1,
 
@@ -666,28 +666,26 @@ O(1/n) around each zero. In the formal family of Proposition 1,
 b - 1 = 2\varepsilon^2x^2F(\theta-\delta\theta)^2 + 2\varepsilon^4\omega^2x^4F'^2 + \ldots, \qquad \delta\theta(x) = -\varepsilon\omega x^2\,\frac{3F'+\omega F''}{2F'} .
 ```
 
-Their next-to-leading-order term is the cross term, which shifts the field's zero; the square term arrives one order
+Their next-to-leading-order term is the cross term, which shifts the field's zero. The square term arrives one order
 later. The discriminant 16ω²x⁶F'⁴ is positive for every F and ω. The double-double solutions bear this out:
 
-- They violate Eq. (20) completely: (ω²F''+3ω F')/(3ω F') = 0.98–1.06 at D = 12–60, since F is nearly
-  antisymmetric about its zeros.
-- The zero line of p - m tilts as δθ(x) predicts: measured over predicted at x = 1 is 0.69, 0.78, 0.84, 0.88 at
-  D = 20, 30, 45, 60, and the agreement is about 1% for x ≤ 0.3.
-- The maximum of c at the centre approaches 1 - (ε³/2) ω²F'², their Eq. (22) in this scaling (ratio 0.36
-  rising to 0.86 from D = 20 to 60).
+- They are far from Eq. (20). The ratio (ω²F''+3ω F')/(3ω F') is 0.98–1.06 at D = 12–60, since F is nearly antisymmetric
+  about its zeros.
+- The zero line of p - m tilts as δθ(x) predicts. Measured over predicted at x = 1 is 0.69, 0.78, 0.84, 0.88 at D = 20,
+  30, 45, 60, and the agreement is about 1% for x ≤ 0.3.
+- The maximum of c at the centre approaches 1 - (ε³/2) ω²F'², their Eq. (22) in this scaling. The ratio rises from 0.36
+  to 0.86 from D = 20 to 60.
 
-So Eq. (20) does not select Δ, and Proposition 1 stands. Lai and Wen
-([arXiv:2610.04960](https://arxiv.org/abs/2610.04960)) adopt the same next-to-leading-order condition as selecting the
-period; the argument above applies to that use too.
+So Eq. (20) does not select Δ, and Proposition 1 stands. Lai and Wen ([arXiv:2610.04960](https://arxiv.org/abs/2610.04960)) adopt the same next-to-leading-order condition as selecting the period, and the argument above applies to that use too.
 
 Their conjecture Δ → 0 comes with no rate. Fitted on 10 ≤ D ≤ 45 and compared with 45 < D ≤ 61:
 
-- a power-law approach to 0 ($`D^{-p}`$ times a series in 1/D, p ≥ 0.01) misses the held-out points by 6×10⁻⁸ or
-  more, against 7×10⁻¹³ for the analytic series;
-- a series in $`1/\ln D`$ with zero limit misses them by 1.3×10⁻¹¹ and still gives Δ ≈ 0.88 at D = 10³⁰;
-- adding a $`c/\ln D`$ term to the analytic series gives c ≈ 4×10⁻⁷ and leaves the limit at 1.6438937.
+- A power-law approach to 0 ($`D^{-p}`$ times a series in 1/D, p ≥ 0.01) misses the held-out points by 6×10⁻⁸ or more,
+  against 7×10⁻¹³ for the analytic series.
+- A series in $`1/\ln D`$ with zero limit misses them by 1.3×10⁻¹¹ and still gives Δ ≈ 0.88 at D = 10³⁰.
+- Adding a $`c/\ln D`$ term to the analytic series gives c ≈ 4×10⁻⁷ and leaves the limit at 1.6438937.
 
-A power-law approach to 0 is excluded; a logarithmic one is disfavoured but cannot be excluded from D ≤ 61 alone.
+A power-law approach to 0 is excluded. A logarithmic one is disfavoured but cannot be excluded from D ≤ 61 alone.
 Scripts: [`solver/eeg20/`](solver/eeg20/).
 
 Their supercritical branch and its continuously self-similar checks are in
