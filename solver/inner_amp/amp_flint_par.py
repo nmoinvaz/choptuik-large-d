@@ -16,7 +16,8 @@ What changed against amp_flint.py (details in the docstrings below):
 3. Nothing else is approximated: the tuned f_nu is computed in acb at full precision (the serial code rounds it to 50
    digits), so the two codes differ only at the level of the serial code's own rounding.
 The products of an order are summed in NBLOCK fixed blocks of tasks, and the block sums are added in block order, so
-the output does not depend on --procs (#246). Files made before this change depend on --procs in their last digits
+the output does not depend on --procs (#246; equal bits at K 17 for 1 to 4 workers and at K 33, J 1000 for 2 and 3,
+#263, at 1 to 4% more wall time than the sum it replaced). Files made before this change depend on --procs in their last digits
 (sigma_16 of K 33 at w 1.10 by 1.5e-19 relative, #229), because the workers' partial sums were added in an order that
 followed the worker count (#236). Compare such files bit for bit only at the same --procs.
 
