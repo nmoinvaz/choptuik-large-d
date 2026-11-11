@@ -176,7 +176,10 @@ def main():
     clock.group(svg, strip_axes("B", BY, BH, 1.15, "cos 5θ", lambda v: f"{v:g}"), S2[0] + 0.2, S2[1])
     xB, yB = holder["B"]
     cos5 = [(xB(t), yB(math.cos(5 * t))) for t in th]
-    clock.group(svg, [f'<path d="{pa.path_d(cos5)}" fill="none" stroke="{INK_SOFT}" stroke-width="1.6"/>'], S2[0] + 0.4, S2[1])
+    clock.group(svg, [f'<path d="{pa.path_d(cos5)}" fill="none" stroke="{INK_SOFT}" stroke-width="1.6"/>',
+                      f'<text x="{LX + LW + 8}" y="{BY + BH / 2 - 2}" font-size="11" fill="{INK_SOFT}">the same</text>',
+                      f'<text x="{LX + LW + 8}" y="{BY + BH / 2 + 12}" font-size="11" fill="{INK_SOFT}">at every D</text>'],
+                S2[0] + 0.4, S2[1])
     plim = max(float(np.max(np.abs(wave(c, th) * np.cos(5 * th)))) for _, c in ex) * 1.15
     clock.group(svg, strip_axes("C", CY, CH, plim, "p1 · cos 5θ", lambda v: f"{v:.2f}"), S2[0] + 0.4, S2[1])
     xC, yC = holder["C"]
@@ -192,13 +195,16 @@ def main():
         mean = float(np.mean(wave(c, thm) * np.cos(5 * thm)))
         pl = [(xC(t), yC(v)) for t, v in zip(th, prod)]
         area = pa.path_d([(xC(0), yC(0))] + pl + [(xC(2 * np.pi), yC(0))]) + " Z"
-        body = [f'<path d="{area}" fill="{cols[i]}" fill-opacity="0.18" stroke="none"/>',
-                f'<path d="{pa.path_d(pl)}" fill="none" stroke="{cols[i]}" stroke-width="1.6"/>']
-        grp(body, [(0, 0), (s0 + 0.6, 0), (s0 + 0.9, 1), (s1 - 0.3, 1), (s1, 0), (T, 0)])
+        # each D's product stays, faded, once the next one is drawn; only its shading and its numbers are cleared
+        grp([f'<path d="{area}" fill="{cols[i]}" fill-opacity="0.18" stroke="none"/>'],
+            [(0, 0), (s0 + 0.6, 0), (s0 + 0.9, 1), (s1 - 0.3, 1), (s1, 0), (T, 0)])
+        grp([f'<path d="{pa.path_d(pl)}" fill="none" stroke="{cols[i]}" stroke-width="1.6"/>'],
+            [(0, 0), (s0 + 0.6, 0), (s0 + 0.9, 1), (s1 - 0.3, 1), (s1, 0.35), (S2[1] - 0.3, 0.35), (S2[1], 0), (T, 0)])
         y_mean = yC(mean)
         t_mean = s0 + (2.6 if i == 0 else 0.9)
-        grp([f'<line x1="{LX}" y1="{y_mean:.1f}" x2="{LX + LW}" y2="{y_mean:.1f}" stroke="{INK}" stroke-width="1.6" stroke-dasharray="6 3"/>',
-             f'<text x="{LX + LW}" y="{CY - 6}" text-anchor="end" font-size="11" fill="{INK}">dashed: the average, {mean:.5f}; a5 = 2 × average = {2 * mean:.5f}</text>'],
+        grp([f'<line x1="{LX}" y1="{y_mean:.1f}" x2="{LX + LW}" y2="{y_mean:.1f}" stroke="{cols[i]}" stroke-width="1.6" stroke-dasharray="6 3"/>'],
+            [(0, 0), (t_mean, 0), (t_mean + 0.3, 1), (s1 - 0.3, 1), (s1, 0.35), (S2[1] - 0.3, 0.35), (S2[1], 0), (T, 0)])
+        grp([f'<text x="{LX + LW}" y="{CY - 6}" text-anchor="end" font-size="11" fill="{INK}">D {D:.1f}: dashed average {mean:.5f}; a5 = 2 × average = {2 * mean:.5f}</text>'],
             [(0, 0), (t_mean, 0), (t_mean + 0.3, 1), (s1 - 0.3, 1), (s1, 0), (T, 0)])
         dot = pa.capture(svg, lambda: marker(svg, "circle", xR(D), yR(c[5][0]), cols[i], f"D {D:.1f}: a5 {c[5][0]:.6e}"))
         grp(dot, [(0, 0), (s1 - 0.6, 0), (s1 - 0.3, 1), (S4[1], 1), (S4[1] + 0.3, 0), (T, 0)])
