@@ -5,7 +5,8 @@
 
 fit_steps.svg plays five steps on a loop (SMIL, as plot_algorithm.py's figures):
   1. the full-system solutions below D 73: p1 over one echo period at six of them;
-  2. harmonic 5 read from each wave (drawn magnified), its cosine coefficient a5 becoming a point against D;
+  2. harmonic 5 measured in each wave: the wave times cos 5 theta, averaged over the period, is a5 / 2, and a5 becomes a
+     point against D;
   3. the least-squares fit of degree 8 drawn through all 138 points (held_fit.py, data/held_fit.json);
   4. the fit extended to D 240, beside the fits of degree 6 and 10, and its value at the chain's front setting
      harmonic 5 of the wave there;
@@ -36,14 +37,14 @@ FRONT = "I461-win2/crawlG/anm_pin3_D232.6312.npz"
 CHAIN_LOGS = ["I461-win2/crawlG.log", "I461-win2/crawlH.log", "I461-win2/crawlI.log"]
 JSONL = "I461-win2/crawlG/anm_run.jsonl"
 BASE_D = 228.13125
-T = 44.0
-STEPS = [(0.0, 7.0), (7.0, 17.0), (17.0, 23.0), (23.0, 31.0), (31.0, 44.0)]
+T = 54.0
+STEPS = [(0.0, 7.0), (7.0, 26.0), (26.0, 32.0), (32.0, 41.0), (41.0, 54.0)]
 TITLES = [
     ("1. Take the full solutions", "Below D 73 every harmonic can still be solved. Here is p1 at the centre over one echo period, at six of the 138."),
-    ("2. Read harmonic 5 from each", "Each wave contains a small harmonic-5 part (drawn 40 times larger). Its cosine coefficient a5 becomes one point against D."),
+    ("2. Measure harmonic 5 in each", "Multiply the wave by cos 5θ and average over the period. Twice the average is a5, the amount of cos 5θ in the wave: one point against D."),
     ("3. Fit a polynomial through the points", "A least-squares polynomial of degree 8 in 1/(D−2), times 1/√(D−2), passes within 10⁻¹² of all 138 points."),
-    ("4. Extend it to larger D", "Past D 73 the polynomial gives the held value. At D 232.6 it sets harmonic 5 of the wave. Fits of degree 6 and 10 differ by 3×10⁻⁹ there."),
-    ("5. Step in D with calculus", "At a solved D the chain computes the derivatives of the whole solution in D, 24 of them. Their Taylor sum predicts the next D; Newton then corrects it."),
+    ("4. Extend it to larger D", "Past D 73 the polynomial gives the held value. At D 232.6 it sets the wave's harmonic-5 part. Fits of degree 6 and 10 differ by 3×10⁻⁹ there."),
+    ("5. Step in D with calculus", "Δ looks straight, but its slope changes. At a solved D the chain computes 24 derivatives of the whole solution; their Taylor sum predicts the next D."),
 ]
 EXAMPLE_D = [38.02, 45.0, 52.0, 59.0, 66.0, 73.0]
 
@@ -116,15 +117,19 @@ def main():
     print(f"full states {len(pts)}; examples at D {[round(d, 2) for d, _ in ex]}; front D {D_front:g}, a5 {co_front[5][0]:.6e}")
     print(f"chain points {len(chain)}; base D {BASE_D}, step a {step}; |z_k| a^k: " + " ".join(f"{t:.1e}" for t in terms))
 
-    W, H = 1040, 640
+    W = 1040
     svg = Svg(W)
     svg.text(16, 26, "How the held harmonics are fitted, and how the chain steps in D", size=15, fill=INK, weight="bold")
     svg.text(16, 44, "The animation loops through five steps. Without animation every step shows at once.", size=11, fill=INK_SOFT)
-    LX, LY, LW, LH = 74, 96, 400, 250
-    RX, RY, RW, RH = 590, 96, 400, 250
+    LX, LW = 74, 400
+    AY, AH = 96, 130          # strip A: the wave p1
+    BY, BH = 268, 64          # strip B: cos 5θ, or the harmonic-5 part
+    CY, CH = 390, 74          # strip C: p1 · cos 5θ and its average
+    LY, LH = AY, CY + CH - AY  # step 5's left panel, the whole column
+    RX, RY, RW, RH = 590, 96, 400, CY + CH - 96
     th = np.linspace(0, 2 * np.pi, 361)
+    thm = np.linspace(0, 2 * np.pi, 4096, endpoint=False)
     ymax = max(float(np.max(np.abs(wave(c, th)))) for _, c in ex) * 1.15
-    MAG = 40.0
     pi_fmt = {0.0: "0", np.pi / 2: "π/2", np.pi: "π", 3 * np.pi / 2: "3π/2", 2 * np.pi: "2π"}
 
     import data_graphs as dg
@@ -139,87 +144,149 @@ def main():
             return super().ticks()
     dg.Axis = Ax
 
-    # steps 1 to 4: the wave panel and the a5 panel
+    def grp(body, pts_):
+        """a group with an explicit opacity schedule [(t, opacity)]"""
+        body = "".join(body) if isinstance(body, list) else body
+        pts_ = sorted(pts_)
+        if clock.frame is None:
+            svg.add(f"<g>{body}{clock.sched(pts_)}</g>")
+        elif clock.at(pts_, clock.frame) > 0:
+            svg.add(f'<g opacity="{clock.at(pts_, clock.frame):.2f}">{body}</g>')
+
+    def strip_axes(key, y, h, lim, ylab, yfmt):
+        def f():
+            holder[key] = axes(svg, LX, y, LW, h, (0, 2 * np.pi), (-lim, lim), "θ, one echo period", ylab,
+                               xfmt=lambda v: pi_fmt.get(v, f"{v:.2f}"), yfmt=yfmt)
+        return pa.capture(svg, f)
+
+    # steps 1 to 4: the strips on the left, a5 against D on the right
+    S1, S2, S3, S4, S5 = STEPS
     lo5 = min(min(a5[8]), min(c[5][0] for _, c in ex)) * 0.85
     hi5 = max(r["c"]["5a"] for r in pts) * 1.08
     holder = {}
-
-    def left_axes():
-        holder["L"] = axes(svg, LX, LY, LW, LH, (0, 2 * np.pi), (-ymax, ymax), "one echo period (θ)", "p1 at the centre",
-                           xfmt=lambda v: pi_fmt.get(v, f"{v:.2f}"), yfmt=lambda v: f"{v:.1f}")
+    clock.group(svg, strip_axes("A", AY, AH, ymax, "p1, the wave", lambda v: f"{v:.1f}"), 0.0, S4[1])
 
     def right_axes():
-        holder["R"] = axes(svg, RX, RY, RW, RH, (30, 240), (lo5, hi5), "spacetime dimension D", "a5, harmonic 5's cosine",
+        holder["R"] = axes(svg, RX, RY, RW, RH, (30, 240), (lo5, hi5), "spacetime dimension D", "a5: the amount of cos 5θ in p1",
                            xfmt=lambda v: f"{v:g}", yfmt=lambda v: f"{v:.4f}")
-    clock.group(svg, pa.capture(svg, left_axes) + pa.capture(svg, right_axes), 0.0, STEPS[3][1])
-    xL, yL = holder["L"]
+    clock.group(svg, pa.capture(svg, right_axes), 0.0, S4[1])
+    xA, yA = holder["A"]
     xR, yR = holder["R"]
     cols = SERIES[:6]
-    t_wave = np.linspace(STEPS[0][0] + 0.3, STEPS[0][1] - 1.2, len(ex))
-    t_read = np.linspace(STEPS[1][0] + 0.2, STEPS[1][1] - 2.2, len(ex))
-    for i, (D, c) in enumerate(ex):
-        line = [(xL(t), yL(v)) for t, v in zip(th, wave(c, th))]
-        body = [f'<path d="{pa.path_d(line)}" fill="none" stroke="{cols[i]}" stroke-width="1.8"/>',
-                f'<text x="{LX + LW + 8}" y="{LY + 14 + 14 * i}" font-size="11" fill="{cols[i]}">D {D:.1f}</text>']
-        clock.group(svg, body, float(t_wave[i]), STEPS[1][1], dim=0.25, t_dim=float(t_read[i]))
-        h5 = [(xL(t), yL(MAG * v)) for t, v in zip(th, wave({5: c[5]}, th))]
-        clock.group(svg, [f'<path d="{pa.path_d(h5)}" fill="none" stroke="{cols[i]}" stroke-width="2.4" stroke-dasharray="5 3"/>',
-                          f'<text x="{LX + 6}" y="{LY + LH - 8}" font-size="11" fill="{cols[i]}">harmonic 5 at D {D:.1f}, ×{MAG:g}</text>'],
-                    float(t_read[i]), float(t_read[i] + 1.4))
+    clock.group(svg, strip_axes("B", BY, BH, 1.15, "cos 5θ", lambda v: f"{v:g}"), S2[0] + 0.2, S2[1])
+    xB, yB = holder["B"]
+    cos5 = [(xB(t), yB(math.cos(5 * t))) for t in th]
+    clock.group(svg, [f'<path d="{pa.path_d(cos5)}" fill="none" stroke="{INK_SOFT}" stroke-width="1.6"/>'], S2[0] + 0.4, S2[1])
+    plim = max(float(np.max(np.abs(wave(c, th) * np.cos(5 * th)))) for _, c in ex) * 1.15
+    clock.group(svg, strip_axes("C", CY, CH, plim, "p1 · cos 5θ", lambda v: f"{v:.2f}"), S2[0] + 0.4, S2[1])
+    xC, yC = holder["C"]
+    slots = [(S2[0] + 0.8, S2[0] + 6.8)] + [(S2[0] + 6.8 + 2.2 * j, S2[0] + 9.0 + 2.2 * j) for j in range(len(ex) - 1)]
+    t_wave = np.linspace(S1[0] + 0.3, S1[1] - 1.2, len(ex))
+    for i, ((D, c), (s0, s1)) in enumerate(zip(ex, slots)):
+        line = [(xA(t), yA(v)) for t, v in zip(th, wave(c, th))]
+        grp([f'<path d="{pa.path_d(line)}" fill="none" stroke="{cols[i]}" stroke-width="1.8"/>',
+             f'<text x="{LX + LW + 8}" y="{AY + 14 + 14 * i}" font-size="11" fill="{cols[i]}">D {D:.1f}</text>'],
+            [(0, 0), (t_wave[i], 0), (t_wave[i] + 0.3, 1), (S2[0], 1), (S2[0] + 0.3, 0.2), (s0, 0.2), (s0 + 0.3, 1),
+             (s1 - 0.3, 1), (s1, 0.2), (S2[1] - 0.3, 0.2), (S2[1], 0), (T, 0)])
+        prod = wave(c, th) * np.cos(5 * th)
+        mean = float(np.mean(wave(c, thm) * np.cos(5 * thm)))
+        pl = [(xC(t), yC(v)) for t, v in zip(th, prod)]
+        area = pa.path_d([(xC(0), yC(0))] + pl + [(xC(2 * np.pi), yC(0))]) + " Z"
+        body = [f'<path d="{area}" fill="{cols[i]}" fill-opacity="0.18" stroke="none"/>',
+                f'<path d="{pa.path_d(pl)}" fill="none" stroke="{cols[i]}" stroke-width="1.6"/>']
+        grp(body, [(0, 0), (s0 + 0.6, 0), (s0 + 0.9, 1), (s1 - 0.3, 1), (s1, 0), (T, 0)])
+        y_mean = yC(mean)
+        t_mean = s0 + (2.6 if i == 0 else 0.9)
+        grp([f'<line x1="{LX}" y1="{y_mean:.1f}" x2="{LX + LW}" y2="{y_mean:.1f}" stroke="{INK}" stroke-width="1.6" stroke-dasharray="6 3"/>',
+             f'<text x="{LX + LW}" y="{CY - 6}" text-anchor="end" font-size="11" fill="{INK}">dashed: the average, {mean:.5f}; a5 = 2 × average = {2 * mean:.5f}</text>'],
+            [(0, 0), (t_mean, 0), (t_mean + 0.3, 1), (s1 - 0.3, 1), (s1, 0), (T, 0)])
         dot = pa.capture(svg, lambda: marker(svg, "circle", xR(D), yR(c[5][0]), cols[i], f"D {D:.1f}: a5 {c[5][0]:.6e}"))
-        clock.group(svg, dot, float(t_read[i] + 0.9), STEPS[3][1])
+        grp(dot, [(0, 0), (s1 - 0.6, 0), (s1 - 0.3, 1), (S4[1], 1), (S4[1] + 0.3, 0), (T, 0)])
+        print(f"D {D:.2f}: a5 from the state {c[5][0]:.6e}, 2 x average of p1 cos 5θ {2 * mean:.6e}")
     alldots = pa.capture(svg, lambda: [marker(svg, "circle", xR(float(r["D"])), yR(r["c"]["5a"]), SERIES[2],
                                               f"D {float(r['D']):.2f}: a5 {r['c']['5a']:.6e}") for r in pts])
-    clock.group(svg, alldots, STEPS[1][1] - 1.6, STEPS[3][1], dim=0.55, t_dim=STEPS[2][0] + 3)
+    clock.group(svg, alldots, S2[1] - 1.6, S4[1], dim=0.55, t_dim=S3[0] + 3)
     inside = [(xR(D), yR(v)) for D, v in zip(Dgrid, a5[8]) if D <= 73.0]
     outside = [(xR(D), yR(v)) for D, v in zip(Dgrid, a5[8]) if D >= 73.0]
-    clock.group(svg, draw_in(clock, inside, SERIES[1], 2.6, STEPS[2][0] + 0.4, STEPS[2][0] + 3.0), STEPS[2][0], STEPS[3][1])
-    clock.group(svg, draw_in(clock, outside, SERIES[1], 2.6, STEPS[3][0] + 0.3, STEPS[3][0] + 3.0), STEPS[3][0], STEPS[3][1])
+    clock.group(svg, draw_in(clock, inside, SERIES[1], 2.6, S3[0] + 0.4, S3[0] + 3.0), S3[0], S4[1])
+    clock.group(svg, draw_in(clock, outside, SERIES[1], 2.6, S4[0] + 0.3, S4[0] + 3.0), S4[0], S4[1])
     for deg, col in ((6, SERIES[3]), (10, SERIES[4])):
         line = [(xR(D), yR(v)) for D, v in zip(Dgrid, a5[deg]) if D >= 73.0]
         clock.group(svg, [f'<path d="{pa.path_d(line)}" fill="none" stroke="{col}" stroke-width="1.2" stroke-dasharray="3 3"/>'],
-                    STEPS[3][0] + 3.2, STEPS[3][1])
+                    S4[0] + 3.2, S4[1])
     clock.group(svg, [f'<text x="{RX + RW - 4}" y="{RY + 16}" text-anchor="end" font-size="11" fill="{SERIES[1]}">fit of degree 8</text>',
                       f'<text x="{RX + RW - 4}" y="{RY + 30}" text-anchor="end" font-size="11" fill="{INK_SOFT}">dashed: degrees 6 and 10, on top of it</text>'],
-                STEPS[2][0] + 1.0, STEPS[3][1])
+                S3[0] + 1.0, S4[1])
     fx, fy = xR(D_front), yR(co_front[5][0])
     front = pa.capture(svg, lambda: marker(svg, "diamond", fx, fy, SERIES[0], f"D {D_front:g}: a5 {co_front[5][0]:.6e}"))
     front.append(f'<text x="{fx - 8}" y="{fy - 14}" text-anchor="end" font-size="11" fill="{INK}">held value at D {D_front:.1f}</text>')
-    clock.group(svg, front, STEPS[3][0] + 3.4, STEPS[3][1])
-    wl = [(xL(t), yL(v)) for t, v in zip(th, wave(co_front, th))]
-    h5f = [(xL(t), yL(MAG * v)) for t, v in zip(th, wave({5: co_front[5]}, th))]
+    clock.group(svg, front, S4[0] + 3.4, S4[1])
+    wl = [(xA(t), yA(v)) for t, v in zip(th, wave(co_front, th))]
     clock.group(svg, [f'<path d="{pa.path_d(wl)}" fill="none" stroke="{SERIES[0]}" stroke-width="2"/>',
-                      f'<path d="{pa.path_d(h5f)}" fill="none" stroke="{SERIES[0]}" stroke-width="2.4" stroke-dasharray="5 3"/>',
-                      f'<text x="{LX + LW - 4}" y="{LY + 14}" text-anchor="end" font-size="11" fill="{SERIES[0]}">D {D_front:.1f}: wave, and harmonic 5 ×{MAG:g}</text>'],
-                STEPS[3][0] + 4.4, STEPS[3][1])
+                      f'<text x="{LX + LW - 4}" y="{AY + 14}" text-anchor="end" font-size="11" fill="{SERIES[0]}">the wave at D {D_front:.1f}</text>'],
+                S4[0] + 4.4, S4[1])
+    h5 = wave({5: co_front[5]}, th)
+    hlim = float(np.max(np.abs(h5))) * 1.25
+    clock.group(svg, strip_axes("B4", BY, BH, hlim, "its harmonic 5", lambda v: f"{v:.0e}" if v else "0"), S4[0] + 4.4, S4[1])
+    xB4, yB4 = holder["B4"]
+    h5l = [(xB4(t), yB4(v)) for t, v in zip(th, h5)]
+    clock.group(svg, [f'<path d="{pa.path_d(h5l)}" fill="none" stroke="{SERIES[0]}" stroke-width="2"/>',
+                      f'<text x="{LX + LW - 4}" y="{BY + 12}" text-anchor="end" font-size="11" fill="{INK}">a5 cos 5θ + b5 sin 5θ, set by the fit</text>'],
+                S4[0] + 4.8, S4[1])
 
     # step 5: the calculus of one chain step
-    cD = [d for d, _ in chain]
-    cV = [v for _, v in chain]
-    i0 = min(range(len(cD)), key=lambda i: abs(cD[i] - BASE_D))
-    slope = (cV[i0 + 1] - cV[i0 - 1]) / (cD[i0 + 1] - cD[i0 - 1])
+    cD = np.array([d for d, _ in chain])
+    cV = np.array([v for _, v in chain])
+    i0 = int(np.argmin(np.abs(cD - BASE_D)))
+    # Delta along the chain as one polynomial (degree 6 through the chain's points): the slope dDelta/dD at each point
+    poly = np.polynomial.Polynomial.fit(cD, cV, 6)
+    dpoly = poly.deriv()
+    slopes = dpoly(cD)
+    slope = float(slopes[i0])
+    print(f"base D {cD[i0]:g}: slope {slope:.6e}; slopes from {slopes[0]:.4e} at D {cD[0]:g} to {slopes[-1]:.4e} at D {cD[-1]:g}")
+    TH_, BH_ = 150, 150
+    BY_ = LY + LH - BH_
 
     def left5():
-        holder["L5"] = axes(svg, LX, LY, LW, LH, (214, 236), (min(cV) - 0.0003, max(cV) + 0.0003), "spacetime dimension D",
+        holder["L5"] = axes(svg, LX, LY, LW, TH_, (214, 236), (cV.min() - 0.0003, cV.max() + 0.0003), "spacetime dimension D",
                             "Δ, the echo period", xfmt=lambda v: f"{v:g}", yfmt=lambda v: f"{v:.4f}")
+
+    def left5b():
+        pad = (slopes.max() - slopes.min()) * 0.15
+        holder["L5b"] = axes(svg, LX, BY_, LW, BH_, (214, 236), (slopes.min() - pad, slopes.max() + pad), "spacetime dimension D",
+                             "slope dΔ/dD (×10⁻⁴)", xfmt=lambda v: f"{v:g}", yfmt=lambda v: f"{v * 1e4:.1f}")
 
     def right5():
         holder["R5"] = axes(svg, RX, RY, RW, RH, (0, 25), (1e-32, 1e-2, "log"), "order k of the Taylor term",
                             "size of the term |z_k| aᵏ", xfmt=lambda v: f"{v:g}", yfmt=lambda v: f"1e{round(math.log10(v))}")
-    clock.group(svg, pa.capture(svg, left5) + pa.capture(svg, right5), STEPS[4][0], T - 0.7)
+    clock.group(svg, pa.capture(svg, left5) + pa.capture(svg, right5), S5[0], T - 0.7)
     x5, y5 = holder["L5"]
     xb, yb = holder["R5"]
     cdots = pa.capture(svg, lambda: [marker(svg, "circle", x5(d), y5(v), SERIES[0], f"D {d:g}: Δ {v:.12f}") for d, v in chain])
-    clock.group(svg, cdots, STEPS[4][0] + 0.2, T - 0.7)
+    clock.group(svg, cdots, S5[0] + 0.2, T - 0.7)
     bx, by = x5(cD[i0]), y5(cV[i0])
     base = pa.capture(svg, lambda: marker(svg, "diamond", bx, by, SERIES[1], f"base D {cD[i0]:g}"))
     base.append(f'<text x="{bx - 10}" y="{by + 4}" text-anchor="end" font-size="11" fill="{INK}">solved at D {cD[i0]:.2f}</text>')
-    clock.group(svg, base, STEPS[4][0] + 1.0, T - 0.7)
-    tang = [(x5(cD[i0] - 3), y5(cV[i0] - 3 * slope)), (x5(cD[i0] + step + 3), y5(cV[i0] + (step + 3) * slope))]
-    clock.group(svg, draw_in(clock, tang, SERIES[1], 1.4, STEPS[4][0] + 1.6, STEPS[4][0] + 3.0, dash="4 3"), STEPS[4][0] + 1.6, T - 0.7)
-    clock.group(svg, [f'<text x="{LX + LW - 6}" y="{LY + 18}" text-anchor="end" font-size="11" fill="{SERIES[1]}">dashed: the first derivative, the tangent</text>'],
-                STEPS[4][0] + 2.6, T - 0.7)
-    t_bar = np.linspace(STEPS[4][0] + 3.2, STEPS[4][1] - 4.0, len(terms))
+    clock.group(svg, base, S5[0] + 1.0, T - 0.7)
+    # the slope at every point: a short tangent through each, drawn along the chain
+    t_tan = np.linspace(S5[0] + 1.4, S5[0] + 3.4, len(cD))
+    for d, v, sl, tk in zip(cD, cV, slopes, t_tan):
+        seg = f'<line x1="{x5(d - 0.7):.1f}" y1="{y5(v - 0.7 * sl):.1f}" x2="{x5(d + 0.7):.1f}" y2="{y5(v + 0.7 * sl):.1f}" stroke="{SERIES[1]}" stroke-width="2"/>'
+        clock.group(svg, [seg], float(tk), T - 0.7)
+    clock.group(svg, [f'<text x="{LX + LW - 6}" y="{LY + 18}" text-anchor="end" font-size="11" fill="{SERIES[1]}">at each point its tangent: the first derivative there</text>',
+                      f'<text x="{LX + LW - 6}" y="{LY + 34}" text-anchor="end" font-size="11" fill="{INK_SOFT}">at this scale Δ looks straight</text>'],
+                S5[0] + 2.0, T - 0.7)
+    # the bend the tangent misses
+    clock.group(svg, pa.capture(svg, left5b), S5[0] + 3.6, T - 0.7)
+    xr, yr = holder["L5b"]
+    rdots = pa.capture(svg, lambda: [marker(svg, "circle", xr(d), yr(v), SERIES[1], f"D {d:g}: slope {v:.5e}")
+                                     for d, v in zip(cD, slopes)])
+    rline = [(xr(d), yr(float(dpoly(d)))) for d in np.linspace(cD[0], cD[-1], 80)]
+    rdots.append(f'<path d="{pa.path_d(rline)}" fill="none" stroke="{SERIES[1]}" stroke-width="1.2"/>')
+    rdots.append(f'<text x="{LX + LW - 6}" y="{BY_ + 14}" text-anchor="end" font-size="11" fill="{INK}">the slope is not constant: it changes along the line,</text>')
+    rdots.append(f'<text x="{LX + LW - 6}" y="{BY_ + 28}" text-anchor="end" font-size="11" fill="{INK}">and its change is the second derivative</text>')
+    clock.group(svg, rdots, S5[0] + 4.0, T - 0.7)
+    t_bar = np.linspace(S5[0] + 4.6, S5[1] - 3.6, len(terms))
     bw = 0.62 * (xb(1) - xb(0))
     for k, (tk, v) in enumerate(zip(t_bar, terms), start=1):
         top = yb(max(v, 1e-32))
@@ -227,12 +294,14 @@ def main():
                           f'fill="{SERIES[1] if k == 1 else SERIES[3]}"><title>order {k}: {v:.2e}</title></rect>'], float(tk), T - 0.7)
     nx, ny = x5(cD[i0 + 1]), y5(cV[i0 + 1])
     pred = pa.capture(svg, lambda: marker(svg, "circle", nx, ny, SERIES[4], f"prediction and solution at D {cD[i0 + 1]:g}"))
-    pred.append(f'<text x="{LX + LW - 6}" y="{LY + 34}" text-anchor="end" font-size="11" fill="{SERIES[4]}">24 terms summed: the prediction at D {cD[i0 + 1]:.2f}</text>')
-    pred.append(f'<text x="{LX + LW - 6}" y="{LY + 50}" text-anchor="end" font-size="11" fill="{INK_SOFT}">Newton corrects it by about 10⁻³¹ in 3 steps</text>')
-    clock.group(svg, pred, STEPS[4][1] - 3.6, T - 0.7)
-    clock.group(svg, [f'<text x="{RX + RW - 4}" y="{RY + 16}" text-anchor="end" font-size="11" fill="{INK}">each order 10 to 300 times smaller</text>',
-                      f'<text x="{xb(1) + 10:.1f}" y="{yb(terms[0]) + 12:.1f}" font-size="11" fill="{SERIES[1]}">order 1: the tangent</text>'],
-                STEPS[4][0] + 4.0, T - 0.7)
+    pred.append(f'<text x="{LX + LW - 6}" y="{LY + 50}" text-anchor="end" font-size="11" fill="{SERIES[4]}">24 terms summed: the prediction at D {cD[i0 + 1]:.2f}</text>')
+    pred.append(f'<text x="{LX + LW - 6}" y="{LY + 66}" text-anchor="end" font-size="11" fill="{INK_SOFT}">Newton corrects it by about 10⁻³¹ in 3 steps</text>')
+    clock.group(svg, pred, S5[1] - 3.4, T - 0.7)
+    clock.group(svg, [f'<text x="{RX + RW - 4}" y="{RY + 16}" text-anchor="end" font-size="11" fill="{INK}">terms of the whole solution, all 769 numbers</text>',
+                      f'<text x="{RX + RW - 4}" y="{RY + 30}" text-anchor="end" font-size="11" fill="{INK_SOFT}">each order 10 to 300 times smaller</text>',
+                      f'<text x="{xb(1) + 10:.1f}" y="{yb(terms[0]) + 12:.1f}" font-size="11" fill="{SERIES[1]}">order 1: the tangent</text>',
+                      f'<text x="{xb(2) + 10:.1f}" y="{yb(terms[1]) + 12:.1f}" font-size="11" fill="{SERIES[3]}">order 2 and up: the bend</text>'],
+                S5[0] + 5.0, T - 0.7)
 
     # the step titles under the panels
     for (t0, t1), (title, text) in zip(STEPS, TITLES):
