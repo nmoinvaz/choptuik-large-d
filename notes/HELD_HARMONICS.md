@@ -318,9 +318,26 @@ solving 5 and 7 removes the chain's gap of −5.002e-8.
 
 Past 80 the step 2⁻⁴⁰ is worse. At 150 the residual's cubic term along dz_j outweighs S, and S at eps/2 is a quarter
 of S at eps in every value. With `--eps_pow=70` the differences resolve harmonics 5 and 7 at 100 and 150, and agree
-with the exact S there to 3e-4 and 4e-6. The exact values at 100 and 150 are in `hp/data/held_grip.csv`. Past D 190
-quad-double is not enough: at 200 and 232.6 (pivots up to 10²⁸ and 10³³) its S breaks the cosine-sine pairs, by 20%
-at 200 and a factor of 4 or more at 232.6, which `held_grip.py` refuses.
+with the exact S there to 3e-4 and 4e-6. Past D 150 quad-double is not enough: at 200 and 232.6 (pivots up to 10²⁸ and
+10³³) its S breaks the cosine-sine pairs, which `held_grip.py` refuses. `--od` does the same in octo-double. At 150 it
+gives the quad-double exact values in every printed digit, with the differences at 2⁻¹⁰⁰ agreeing to 7e-22. The grip
+on harmonic 5 falls to 3.0e-17 at 200 and 1.1e-24 at 232.6, below the check's floor of 1e-14, which was set from the
+states near 80. `--sigma_min=1e-25` lowers it for those two. The control `--mutate=pinned_rows` at 200 still fails
+(σ₁ 1.3e-33). At 232.6 the differences need the step 2⁻¹¹⁰: at 2⁻¹⁰⁰ they agree with the exact S only to 1.1e-3.
+
+| D | harmonic 5 | 7 | 9 | 11 | 13 | arithmetic, difference step | exact against differences |
+|---|---|---|---|---|---|---|---|
+| 79.77 | 7.42e-13 | 2.46e-16 | 1.68e-19 | 2.88e-22 | 1.36e-24 | quad, 2⁻⁷⁰ | 7.5e-10 |
+| 100 | 3.14e-13 | 5.93e-17 | 1.95e-20 | 1.17e-23 | 1.25e-26 | quad, 2⁻⁷⁰ | 2.8e-4 |
+| 150 | 1.73e-13 | 2.79e-17 | 7.44e-21 | 5.22e-24 | 6.42e-27 | quad, 2⁻⁷⁰ (octo, 2⁻¹⁰⁰: the same values) | 4.4e-6 (6.7e-22) |
+| 175 | 2.63e-14 | 1.29e-17 | 1.18e-20 | 1.93e-23 | 5.07e-26 | octo, 2⁻¹⁰⁰ | 1.6e-18 |
+| 200 | 2.98e-17 | 5.01e-20 | 1.68e-22 | 9.66e-25 | 8.30e-27 | octo, 2⁻¹⁰⁰ | 6.1e-13 |
+| 232.6 | 1.06e-24 | 3.45e-26 | 1.70e-27 | 1.05e-28 | 7.07e-30 | octo, 2⁻¹¹⁰ | 1.5e-9 |
+
+Each value is one of its cosine-sine pair, which agree to 1e-3 or better (raw `I479-mac/` e3b67c22,
+`hp/data/held_grip.csv`). Past 175 the grip on every held harmonic falls fast with D: harmonic 5's by 900 times from 175
+to 200 and by 3×10⁷ from 200 to 232.6. The fall from one harmonic to the next flattens there, to 15–30 times at
+232.6.
 
 ### 4.4 Not run
 

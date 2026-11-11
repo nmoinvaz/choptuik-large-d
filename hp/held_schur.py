@@ -13,7 +13,7 @@ the directions the full equations determine and holds the rest: dh_tau = -sum ov
 v_i (u_i . g) / sigma_i, a linear estimate of "solve the well-determined held directions, hold the near-null ones".
 
     cd hp && python3 held_schur.py RAWDIR STATE [--threads=2] [--mutate=pinned_rows|jac_scale] [--plant=5a:1e-8,13a:1e-6]
-        [--jac=exact] [--eps_pow=40] [--od] [--json=OUT]
+        [--jac=exact] [--eps_pow=40] [--od] [--sigma_min=1e-14] [--json=OUT]
 
 --plant adds a held error dh to the state in the linear model (g + S dh): the planted truth at a full-system state,
 where g = 0, is that the truncated step recovers the planted error's Delta in the solved directions and leaves the
@@ -34,6 +34,9 @@ differences in quad-double's range there. --od does everything in octo-double (n
 jacobian_o; od_axpy from multidouble's Python package), from the state's eight parts (octo_corrector.load_o; a
 four-part state gets zero lower parts). Past D 190, where the pinned LU's pivots span 10^42 and more, quad-double
 breaks the cosine-sine pairs of S's singular values; the chain itself is corrected in octo-double there.
+--sigma_min sets the floor of "a full system that sees its held rows" (sigma_1 > 1e-14 by default, set from the
+states near D 80). The full equations' grip on harmonic 5 falls to 3e-17 at D 200, so past D 190 the floor is 1e-25,
+still eight orders above the control --mutate=pinned_rows (sigma_1 about 1e-33).
 """
 import json
 import os
@@ -167,7 +170,8 @@ def main():
     U2, sig2, V2 = mp.svd_r(S[2])
     smax = sig1[0]
     agree = max([abs(sig1[i] - sig2[i]) / sig1[i] for i in range(10) if sig1[i] > 1e-12 * smax] or [mp.inf])
-    ok_fd = bool(smax > 1e-14 and agree < 1e-6)
+    sig_min = float(opts.get("sigma_min", 1e-14))
+    ok_fd = bool(smax > sig_min and agree < 1e-6)
     print(f"  singular values of S (eps): " + " ".join(mp.nstr(v, 4) for v in sig1))
     print(f"  singular values of S (eps/2): " + " ".join(mp.nstr(v, 4) for v in sig2))
     print(f"  eps vs eps/2, relative difference per singular value: " + " ".join(mp.nstr(abs(sig1[i] - sig2[i]) / sig1[i], 2) for i in range(10)))
@@ -177,7 +181,7 @@ def main():
         U, sig, V = mp.svd_r(S[3])
         resolved = [i for i in range(10) if abs(sig1[i] - sig2[i]) / sig1[i] < 1e-3]
         agree_x = max([abs(sig[i] - sig1[i]) / sig[i] for i in resolved] or [mp.inf])
-        ok = bool(sig[0] > 1e-14 and resolved and agree_x < 1e-3)
+        ok = bool(sig[0] > sig_min and resolved and agree_x < 1e-3)
         print(f"  singular values of S (exact): " + " ".join(mp.nstr(v, 4) for v in sig))
         print(f"  exact vs eps, relative difference per singular value: " + " ".join(mp.nstr(abs(sig[i] - sig1[i]) / sig[i], 2) for i in range(10)))
         print(f"  exact vs eps: largest relative difference {mp.nstr(agree_x, 3)} over the {len(resolved)} values that eps and eps/2 "

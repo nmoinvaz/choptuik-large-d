@@ -188,7 +188,7 @@ def main():
     _, y, x, w, h = cell(2, 0)
     claim(2, 0, "3.", "Past D 73 the equations barely fix", "the higher harmonics")
     sig = [float(r["sigma_exact"]) for r in grip]
-    lo, hi = 10 ** math.floor(math.log10(min(sig))), 10 ** math.ceil(math.log10(max(sig)))
+    lo, hi = 10 ** math.floor(math.log10(min(sig))), 10 ** (math.ceil(math.log10(max(sig))) + 6)   # room for the note
     TICKS[(4, 14)] = [5, 7, 9, 11, 13]
     xg, yg = axes(svg, x, y, w, h, (4, 14), (lo, hi, "log"), "held harmonic k", "the equations' grip on it",
                   xfmt=lambda v: f"{v:g}", yfmt=p10)
@@ -205,15 +205,18 @@ def main():
         for k in ks:
             for v in by_k[k]:
                 marker(svg, "circle", xg(k), yg(v), SERIES[i], f"D {D:g}, harmonic {k}: σ {v:.3e}")
-        svg.text(x + 8, y + h - 8 - 13 * (len(gD) - 1 - i), f"D {D:.1f}", size=10, fill=SERIES[i])
+        lab = lambda d: f"{d:.1f}".rstrip("0").rstrip(".")  # noqa: E731
+        lx = x + 22 + sum(len(lab(d)) * 6.0 + 10 for d in gD[:i])       # one row under the axis title
+        svg.text(lx, y + h + 52, lab(D), size=10, fill=SERIES[i])
     D3 = gD[0]
     h13 = [r for r in grip if float(r["D"]) == D3 and int(r["harmonic"]) == 13]
     move13 = max(abs(float(r["newton_step"])) for r in h13)
     size13 = math.hypot(*fit.values(D3, [13])[0])
-    for j, line in enumerate([f"each harmonic {min(per):.0f} to {max(per):.0f}×", "weaker than the one before;",
-                              f"at D {D3:.1f} a full Newton step", f"would move harmonic 13 by {move13:.2f},",
-                              f"where its size is {sci(size13)}"]):
-        svg.text(x + w - 6, y + 14 + 13 * j, line, size=10, fill=INK, anchor="end")
+    svg.text(x + 8, y + h + 52, "D", size=10, fill=INK_SOFT)
+    for j, line in enumerate([f"each harmonic {min(per):.0f} to {max(per):.0f}× weaker than the last;",
+                              f"at D {D3:.1f}, Newton would move harmonic 13",
+                              f"by {move13:.2f}, {pa.pow10(round(math.log10(move13 / size13)))} times its size ({sci(size13)})"]):
+        svg.text(x + 8, y + 12 + 13 * j, line, size=10, fill=INK)
     print(f"3. weaker per harmonic {min(per):.0f}x to {max(per):.0f}x; D {D3:g}: harmonic 13's full Newton move {move13:.3f}, "
           f"its size on the fit {size13:.2e}")
 
