@@ -50,6 +50,7 @@ name = "hpkernel"
 version = "0.1.0"
 dependencies = [
  "multidouble",
+ "multishoot",
  "rayon",
 ]
 
@@ -86,6 +87,16 @@ version = "4.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "d09d9b1de6a67f678907303619342725e24acf3d9f1c853996e15506ee892f34"
 dependencies = [
+ "rayon",
+]
+
+[[package]]
+name = "multishoot"
+version = "1.2.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "c3aab6b9de78fdf16e13a00c5f43407924ea224bf23ca951db267723bb63207b"
+dependencies = [
+ "multidouble",
  "rayon",
 ]
 

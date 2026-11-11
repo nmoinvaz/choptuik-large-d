@@ -6,10 +6,8 @@
 pub use multidouble::dual::Lane as BaseLane;
 pub use multidouble::field::MatLane;
 pub use multidouble::native::{Dc, Dtn, Du, Fu, Fun, Jet, OJet, Ou, QJet, Qu, F8};
-use multidouble::simd::Native;
 
 /// multidouble's lanes on the compile-time backend (`Native`), with the tau-derivative product (`MatLane::dmat_apply`:
-/// the double-double columns through the dot accumulator, the f64 lanes the columns' f64 copy)
-pub trait Lane: MatLane<S = Native> {}
-
-impl<T: MatLane<S = Native>> Lane for T {}
+/// the double-double columns through the dot accumulator, the f64 lanes the columns' f64 copy): multishoot's `Lane`,
+/// the bound of its `Equations`
+pub use multishoot::lane::Lane;

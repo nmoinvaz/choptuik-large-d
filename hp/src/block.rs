@@ -24,18 +24,22 @@
 //! generic names: `ColumnGroup` with `param` for the Delta copy, row0 for the phase row): each step's factorization is
 //! `linalg::lu_rect_f64`, LAPACK's blocked right-looking getrf (Anderson et al., LAPACK Users' Guide, 3rd ed., SIAM
 //! 1999) restricted to the first np columns of a rectangular block, and the solves round as `DDLu`'s own do.
+//! The fill and factorization of the blocks are multishoot's `Shooting::jacobian_staircase` (model::jacobian_block),
+//! on this layout.
 pub use multidouble::linalg::{ColumnGroup as Group, StaircaseControl, StaircaseLu as BlockLu};
+use multishoot::control::Control;
 
 /// Deliberate breakage for the controls (hp/highm_check.py): 1 one pivot of the middle step scaled by 1 + 1e-6;
 /// 2 the link rows replaced by delta_s = 0 (the copies are no longer tied to Delta).
 pub const MUT_PIVOT: u8 = 1;
 pub const MUT_LINK: u8 = 2;
 
-/// The staircase LU's control for a mutate value (MUT_PIVOT, MUT_LINK; any other value: none)
-pub fn control(mutate: u8) -> StaircaseControl {
+/// The engine's control of the staircase LU for a mutate value (MUT_PIVOT, MUT_LINK; any other value: none):
+/// multishoot's `Control::StaircasePivot` and `Control::StaircaseLink`, multidouble's `StaircaseControl`
+pub fn control(mutate: u8) -> Control {
     match mutate {
-        MUT_PIVOT => StaircaseControl::Pivot,
-        MUT_LINK => StaircaseControl::Link,
-        _ => StaircaseControl::None,
+        MUT_PIVOT => Control::StaircasePivot,
+        MUT_LINK => Control::StaircaseLink,
+        _ => Control::None,
     }
 }

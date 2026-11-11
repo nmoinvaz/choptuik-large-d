@@ -53,6 +53,8 @@ pub mod qv {
 mod qd_residual;
 #[cfg(test)]
 mod jvp_tests;
+#[cfg(test)]
+mod mode_tests;
 
 #[cfg(feature = "python")]
 mod python;
