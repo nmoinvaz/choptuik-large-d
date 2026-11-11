@@ -16,7 +16,7 @@ formulation of hp/pinning.py; their coefficients are zero).
         [--qd_it 12] [--qd_w 0] [--refine 1] [--probe 0 --probe_c C] [--plan_tol 1e-32] [--fix1 0] [--F_pred_max 0]
         [--horizon_alpha 0] [--fix1_qlu 0] [--jet_q 0] [--reseed 0] [--pred_q 0] [--reseed_q 0] [--save_pred 0]
         [--jet_o 0] [--corrector od --tol_od 1e-40] [--base_adopt 0] [--base_polish 1] [--keep_plan 1] [--held_fit FILE]
-        [--held_o 0] [--reseed_o 0] [--a0 0] [--a_grow 2] [--a_hold 0] [--lam_stall 0]
+        [--held_o 0] [--reseed_o 0] [--a0 0] [--a_grow 2] [--a_hold 0] [--lam_stall 0] [--save_base 0]
 
 --corrector qd runs the quad-double Newton of the kernel (hpkernel.driver.newton_qd, Solver.newton_q) on the pinned
 system (pinning.PinnedQ: the held harmonics' offset subtracted from the quad-double residual and added to the step, as
@@ -107,6 +107,8 @@ with the plan of the run that converged it, and a run started from it keeps that
 is taken at all eight. M = 32 only; --accept_stall_qd does not apply. --od_junk w freezes, in every step of that
 corrector, the junk among the w weakest directions of its first Jacobian (octo_corrector.junk_subspace_o: no Delta
 content; p1's highest harmonics past D ~ 210, notes/QUAD_DOUBLE.md 13.30), as newton_qd's junk mode does.
+--save_base 1 saves the base after its octo-double polish as OUTDIR/base_pin<k>_D<D>.npz (eight parts, its meta
+recording the polish), when the polish was adopted; with --steps 0 the polish alone is the run (#489).
 """
 import json
 import os
@@ -260,6 +262,7 @@ def main():
     # parts instead of two (with --held_fit and --corrector od); --reseed_o K: K octo-double corrections of the
     # re-seeded horizon data (reseed.Reseeder.refine_o)
     opt.update(held_o=0, reseed_o=0)
+    opt.update(save_base=0)             # --save_base 1: the polished base saved (with --corrector od)
     for k in list(opt):
         f = "--" + k
         if f in args:
@@ -489,6 +492,13 @@ def main():
             Fs = last_q.get("od_F")
             if conv_p or Fs is None or Fs[1] < Fs[0] or opt["base_adopt"]:
                 zh, zl, F0 = zh_p, zl_p, F0_p
+                if opt["save_base"] and "z8" in last_q:
+                    p = os.path.join(out, f"base_pin{kf}_D{float(D):.4f}.npz")
+                    save_o(p, last_q["z8"], dict(D=float(D), D_str=str(D), M=M, nodes=nodes, kt=kt, kc=kc, ks=ks, kfreeze=kf,
+                                                 pin_held=ks_held, N=N, source=opt["state"], parts=8,
+                                                 segs=[[float(x) for x in sg] for sg in segs],
+                                                 base_polish=dict(converged=bool(conv_p), max_F=Fs, tol_od=opt["tol_od"])))
+                    print(f"base polish saved as {p}", flush=True)
             else:
                 # the stored state stays the base: the series and the first prediction load it again
                 last_q.pop("z8", None)
