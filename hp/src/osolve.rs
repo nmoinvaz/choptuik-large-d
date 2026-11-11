@@ -17,14 +17,17 @@
 //!     state read in quad-double); the jet summed against the residual at n + h (control: the dimension frozen); the
 //!     jet's order 1 resolving a change of 2^-300 (controls: the state read in quad-double, the solves unrefined)
 //! ```
-use crate::dd::DD;
-use crate::field::{Fl, State};
-use crate::lane::{BaseLane, OJet, Ou};
-use crate::linalg::{ld_for, DDLu, ODLu};
-use crate::model::{block_state, delta_of, horizon_lus, jac_tasks, Ctx};
+use crate::field::Fl;
+use crate::linalg::ODLu;
+use crate::model::Ctx;
+use crate::xsolve;
 use multidouble::native::OV;
-use multidouble::od::{OdAcc, OD};
-use rayon::prelude::*;
+use multidouble::od::OD;
+use multidouble::precision::Octo;
+#[cfg(test)]
+use crate::{dd::DD, linalg::ld_for};
+#[cfg(test)]
+use multidouble::od::OdAcc;
 
 /// `Ctx::mutate` for osolve (the control of its precision checks): the state read in its quad-double part only (its
 /// first four parts)
@@ -32,75 +35,13 @@ pub const OD_MUT_STATE_QD: u8 = 10;
 
 /// A field from the eight parts of an octo-double state (only the first four with OD_MUT_STATE_QD)
 pub fn fld_o<const B: usize>(ctx: &Ctx<B>, z: [&[f64]; 8], off: usize) -> Fl<OV, B> {
-    let m = Ctx::<B>::M;
-    let zero = [0.0; 512];
-    let parts: [&[f64]; 8] = std::array::from_fn(|q| if ctx.mutate == OD_MUT_STATE_QD && q >= 4 { &zero[..m] } else { &z[q][off..off + m] });
-    Fl::load_parts_od(parts)
-}
-
-/// Delta, the state's last entry, renormalized from its eight parts (the first four with OD_MUT_STATE_QD)
-fn delta_o<const B: usize>(ctx: &Ctx<B>, z: [&[f64]; 8]) -> OD {
-    let l = z[0].len() - 1;
-    OD::new(std::array::from_fn(|q| if ctx.mutate == OD_MUT_STATE_QD && q >= 4 { 0.0 } else { z[q][l] }))
-}
-
-/// the phase row sum_j w_j p1_j in octo-double
-fn phase_o<const B: usize>(ctx: &Ctx<B>, p1: &Fl<OV, B>) -> OD {
-    let mut acc = OdAcc::zero();
-    for i in 0..Ctx::<B>::M {
-        acc = acc.add_prod(OD::from_dd(ctx.phase.get(i)), p1.get(i));
-    }
-    acc.finish()
-}
-
-fn check<const B: usize>(ctx: &Ctx<B>, z: [&[f64]; 8]) -> Result<(), String> {
-    let l = ctx.len();
-    if z.iter().any(|p| p.len() != l) {
-        return Err(format!("z0..z7 must have length {l}"));
-    }
-    if ctx.lam.hi != 0.0 {
-        return Err("osolve: no mode-matrix shift (lam) supported".into());
-    }
-    Ok(())
-}
-
-/// the horizon LUs at the state's double-double part: the preconditioners of the refined horizon solves
-fn lus_of<const B: usize>(ctx: &Ctx<B>, z: [&[f64]; 8], par: bool) -> Result<Vec<DDLu>, String> {
-    horizon_lus(ctx, &ctx.fld(z[0], z[1], ctx.off_ah()), delta_of(z[0], z[1]), par, DD::ZERO)
+    xsolve::fld::<Octo, B>(ctx, &z, off)
 }
 
 /// The residual with every block in octo-double, one OD per row. Each block reads its inputs, Delta and its target in
 /// all eight parts; the freeze projection and the phase row are octo-double too.
 pub fn residual_parts_o<const B: usize>(ctx: &Ctx<B>, z: [&[f64]; 8], par: bool) -> Result<Vec<OD>, String> {
-    check(ctx, z)?;
-    let l = ctx.len();
-    let m = Ctx::<B>::M;
-    let lus = lus_of(ctx, z, par)?;
-    let dq = OV::splat(delta_o(ctx, z));
-    let one_block = |b: usize| -> State<OV, B> {
-        let inq: Vec<Fl<OV, B>> = ctx.block_inputs(b).iter().map(|&o| fld_o(ctx, z, o)).collect();
-        block_state::<OV, B>(ctx, b, &inq, dq, &lus, &lus)
-    };
-    let nb = ctx.k() + 1;
-    let states: Vec<State<OV, B>> = if par { (0..nb).into_par_iter().map(one_block).collect() } else { (0..nb).map(one_block).collect() };
-    let p1 = fld_o(ctx, z, 0);
-    let mut f = vec![OD::ZERO; l];
-    let kb = ctx.k();
-    for (b, s) in states.iter().enumerate() {
-        let t = ctx.block_target(b);
-        for q in 0..4 {
-            let mut d = s[q] - fld_o(ctx, z, t + q * m);
-            if let (true, 0, Some((lo, hi))) = (b == kb, q, &ctx.freeze) {
-                d = lo.apply(&d) + hi.apply(&p1);
-            }
-            let o = b * 4 * m + q * m;
-            for i in 0..m {
-                f[o + i] = d.get(i);
-            }
-        }
-    }
-    f[l - 1] = phase_o(ctx, &p1);
-    Ok(f)
+    xsolve::residual_parts::<Octo, B>(ctx, &z, par)
 }
 
 /// `residual_parts_o` with each row rounded to double-double (F is small, so the rounding is relative to F): (F hi,
@@ -111,142 +52,19 @@ pub fn residual_o<const B: usize>(ctx: &Ctx<B>, z: [&[f64]; 8], par: bool) -> Re
 }
 
 /// The residual on a jet state z(h) = sum_k z_k h^k in octo-double (`OJet<N>` lanes), with the dimension n + h as the
-/// jet variable: qsolve::residual_jet_q with every block, the freeze projection and the phase row in octo-double and
-/// each z_k in eight parts. zs holds at most N coefficient vectors; the result is F's coefficients of orders 0..nout-1
-/// (nout <= N), one OD per row. The horizon LUs are those of z_0's double-double part, the preconditioners of the
-/// refined solves (model::psolve). The D-dependent constants are formed in the jet's parameter arithmetic
-/// (`OSeries<N>`, octo-double), where residual_parts_o forms them in double-double, so order 0 is residual_parts_o's
-/// residual up to that rounding.
+/// jet variable (xsolve::residual_jet at `Octo`): each z_k in eight parts, at most N of them, F's coefficients of
+/// orders 0..nout-1 (nout <= N), one OD per row. The D-dependent constants are formed in the jet's parameter
+/// arithmetic (`OSeries<N>`), so order 0 is residual_parts_o's residual up to that rounding.
 pub fn residual_jet_o<const N: usize, const B: usize>(ctx: &Ctx<B>, zs: &[[&[f64]; 8]], par: bool, nout: usize) -> Result<Vec<Vec<OD>>, String> {
-    if zs.is_empty() || zs.len() > N || nout == 0 || nout > N {
-        return Err(format!("residual_jet_o: 1..={N} coefficient vectors and 1..={N} outputs, not {} and {nout}", zs.len()));
-    }
-    for z in zs {
-        check(ctx, *z)?;
-    }
-    let l = ctx.len();
-    let m = Ctx::<B>::M;
-    let lus = lus_of(ctx, zs[0], par)?;
-    // the coefficient-k field at offset o: z_k's, zero past the given vectors
-    let fld_k = |k: usize, o: usize| -> Fl<OV, B> { if k < zs.len() { fld_o(ctx, zs[k], o) } else { Fl::zero() } };
-    let fld_jet = |o: usize| -> Fl<OJet<N>, B> {
-        let mut f = Fl::<OJet<N>, B>::zero();
-        for k in 0..zs.len() {
-            f.set_coef_od(k, &fld_k(k, o));
-        }
-        f
-    };
-    let mut dj = <OJet<N> as BaseLane>::zero();
-    for (k, z) in zs.iter().enumerate() {
-        dj.set_coef_od(k, OV::splat(delta_o(ctx, *z)));
-    }
-    let one_block = |b: usize| -> State<OJet<N>, B> {
-        let inp: Vec<Fl<OJet<N>, B>> = ctx.block_inputs(b).iter().map(|&o| fld_jet(o)).collect();
-        block_state::<OJet<N>, B>(ctx, b, &inp, dj, &lus, &lus)
-    };
-    let nb = ctx.k() + 1;
-    let states: Vec<State<OJet<N>, B>> = if par { (0..nb).into_par_iter().map(one_block).collect() } else { (0..nb).map(one_block).collect() };
-    let mut out = vec![vec![OD::ZERO; l]; nout];
-    let kb = ctx.k();
-    for (b, s) in states.iter().enumerate() {
-        let t = ctx.block_target(b);
-        for q in 0..4 {
-            for (k, o_k) in out.iter_mut().enumerate() {
-                let mut d = s[q].coef_od(k) - fld_k(k, t + q * m);
-                if let (true, 0, Some((lo, hi))) = (b == kb, q, &ctx.freeze) {
-                    d = lo.apply(&d) + hi.apply(&fld_k(k, 0));
-                }
-                let o = b * 4 * m + q * m;
-                for i in 0..m {
-                    o_k[o + i] = d.get(i);
-                }
-            }
-        }
-    }
-    for (k, o_k) in out.iter_mut().enumerate() {
-        o_k[l - 1] = phase_o(ctx, &fld_k(k, 0));
-    }
-    Ok(out)
-}
-
-/// One column task (model::jac_tasks): block b's output state differentiated along a unit tangent on lane j of input
-/// field f (Delta for f = usize::MAX), with `Ou` lanes, in octo-double; the freeze projection applied as in
-/// model::jac_column. The seed is multidouble's `Fl::from_vt_od` with the tangent `Fl::unit(j)`.
-fn jac_column_o<const B: usize>(ctx: &Ctx<B>, z: [&[f64]; 8], dq: OD, lus: &[DDLu], (b, f, j): (usize, usize, usize)) -> Vec<OD> {
-    let m = Ctx::<B>::M;
-    let inp: Vec<Fl<Ou, B>> = ctx
-        .block_inputs(b)
-        .iter()
-        .enumerate()
-        .map(|(fi, &o)| {
-            let t = if fi == f { Fl::<OV, B>::unit(j) } else { Fl::zero() };
-            Fl::<Ou, B>::from_vt_od(&fld_o(ctx, z, o), &t)
-        })
-        .collect();
-    let d = Ou { v: OV::splat(dq), d: if f == usize::MAX { OV::splat(OD::ONE) } else { OV::zero() } };
-    let s = block_state::<Ou, B>(ctx, b, &inp, d, lus, lus);
-    let mut out = Vec::with_capacity(4 * m);
-    for q in 0..4 {
-        let mut t = s[q].coef_od(1);
-        if let (true, 0, Some((lo, _))) = (b == ctx.k(), q, &ctx.freeze) {
-            t = lo.apply(&t);
-        }
-        for i in 0..m {
-            out.push(t.get(i));
-        }
-    }
-    out
+    let zs: Vec<Vec<&[f64]>> = zs.iter().map(|z| z.to_vec()).collect();
+    xsolve::residual_jet::<Octo, N, B>(ctx, &zs, par, nout, "residual_jet_o")
 }
 
 /// The exact Jacobian dF/dz in octo-double by forward-mode duals (`Ou` lanes, one evaluation per column), assembled as
 /// qsolve::jacobian_q does: column-major with leading dimension ld_for(L), part q of entry (i, j) at c[q][j ld + i].
 pub fn jacobian_o<const B: usize>(ctx: &Ctx<B>, z: [&[f64]; 8], par: bool) -> Result<([Vec<f64>; 8], usize), String> {
-    check(ctx, z)?;
-    let l = ctx.len();
-    let m = Ctx::<B>::M;
-    let ld = ld_for(l);
-    let lus = lus_of(ctx, z, par)?;
-    let dq = delta_o(ctx, z);
-    let tasks = jac_tasks(ctx);
-    let column = |t: &(usize, usize, usize)| jac_column_o(ctx, z, dq, &lus, *t);
-    let cols: Vec<Vec<OD>> = if par { tasks.par_iter().map(column).collect() } else { tasks.iter().map(column).collect() };
-    let mut c: [Vec<f64>; 8] = std::array::from_fn(|_| vec![0.0; ld * l]);
-    let add = |c: &mut [Vec<f64>; 8], idx: usize, v: OD| {
-        let s = OD { x: std::array::from_fn(|q| c[q][idx]) } + v;
-        for q in 0..8 {
-            c[q][idx] = s.x[q];
-        }
-    };
-    for (&(b, f, j), col) in tasks.iter().zip(&cols) {
-        let cj = if f == usize::MAX { l - 1 } else { ctx.block_inputs(b)[f] + j };
-        for (r, v) in col.iter().enumerate() {
-            for q in 0..8 {
-                c[q][cj * ld + b * 4 * m + r] = v.x[q];
-            }
-        }
-    }
-    for b in 0..ctx.k() + 1 {
-        let t = ctx.block_target(b);
-        for r in 0..4 * m {
-            let row = b * 4 * m + r;
-            if let (true, Some((lo, hi))) = (b == ctx.k() && r < m, &ctx.freeze) {
-                // p rows of the horizon block: -Pi_low on the target node's p, +Pi_high on p1
-                for jj in 0..m {
-                    add(&mut c, (t + jj) * ld + row, -OD::from_dd(lo.cols[jj].get(r)));
-                    add(&mut c, jj * ld + row, OD::from_dd(hi.cols[jj].get(r)));
-                }
-                continue;
-            }
-            add(&mut c, (t + r) * ld + row, -OD::ONE);
-        }
-    }
-    for i in 0..m {
-        let w = ctx.phase.get(i);
-        let o = i * ld + l - 1;
-        c[0][o] = w.hi;
-        c[1][o] = w.lo;
-    }
-    Ok((c, ld))
+    let (c, ld) = xsolve::jacobian::<Octo, B>(ctx, &z, par)?;
+    Ok((c.try_into().expect("eight parts"), ld))
 }
 
 /// An octo-double Newton step: dz = -J^-1 F (eight parts), F (hi, lo), the LU (kept by the Python binding for
@@ -261,24 +79,8 @@ pub struct OStep {
 
 /// The Newton step in octo-double at z
 pub fn newton_o<const B: usize>(ctx: &Ctx<B>, z: [&[f64]; 8], par: bool) -> Result<OStep, String> {
-    let l = ctx.len();
-    let mut t = [0.0f64; 4];
-    let t0 = std::time::Instant::now();
-    let f = residual_parts_o(ctx, z, par)?;
-    t[0] = t0.elapsed().as_secs_f64();
-    let t0 = std::time::Instant::now();
-    let (c, ld) = jacobian_o(ctx, z, par)?;
-    t[1] = t0.elapsed().as_secs_f64();
-    let t0 = std::time::Instant::now();
-    let lu = ODLu::factor(l, ld, c, par)?;
-    t[2] = t0.elapsed().as_secs_f64();
-    let t0 = std::time::Instant::now();
-    let mut b: Vec<OD> = f.iter().map(|&v| -v).collect();
-    lu.solve(&mut b);
-    t[3] = t0.elapsed().as_secs_f64();
-    let dz = std::array::from_fn(|q| b.iter().map(|v| v.x[q]).collect());
-    let (fh, fl) = f.iter().map(|v| v.to_dd()).map(|d| (d.hi, d.lo)).unzip();
-    Ok(OStep { dz, fh, fl, lu, t })
+    let s = xsolve::newton::<Octo, B>(ctx, &z, par)?;
+    Ok(OStep { dz: s.dz.try_into().expect("eight parts"), fh: s.fh, fl: s.fl, lu: s.lu, t: s.t })
 }
 
 #[cfg(test)]
