@@ -9,8 +9,10 @@ and the target D, the step a, whether it was accepted, the Newton steps, the sma
 the first |dz|, the horizon refinement's last rung residual, the base's series (|z_N|, a_max, fourth ratio, smallest
 pivot), Delta to 17 digits plus its low part, the seconds of computing, the cumulative hours of computing of the
 chain, and a verdict per check (OK, WATCH, BAD by BOUNDS) with the step's overall verdict, the worst of them.
-OUTDIR/errorbar.csv has the error bar on Delta against D: the spread over the held fit's degree from
-data/delta_all.csv, and the difference of the degree-6 and degree-10 chains at equal D from their logs.
+OUTDIR/errorbar.csv has the error bar on Delta against D, the spread over the held fit's degree: |d8 - d6| and
+|d8 - d10|, each with how it was taken (at that D, or interpolated from the neighbouring D of that chain), and their
+larger (error_bar), from data/delta_fits.csv (export_delta_all.py), then past its last D the same at equal D from the
+chains' logs (the clean chain against win's d6 and d10).
 
 --selftest parses a planted log with one accepted and one refused attempt, checks every field and verdict, and with
 --mutate=lam reads lam wrongly, which must fail. Exit 1 on a failed check.
@@ -159,21 +161,31 @@ def rows_of(attempts):
 
 
 def errorbar(rows):
-    """the error bar on Delta against D: the fit spread of delta_all.csv, then d6 minus d10 at equal D"""
+    """the error bar on Delta against D: |d8 - d6| and |d8 - d10| of data/delta_fits.csv (each at that D or
+    interpolated, export_delta_all.py) and their larger, then the same at equal D from the chains' logs past its last
+    D"""
     out = []
-    with open(os.path.join(HERE, "data", "delta_all.csv")) as f:
+    with open(os.path.join(HERE, "data", "delta_fits.csv")) as f:
         for r in csv.DictReader(f):
-            if r["kind"] == "chain_fit" and r["err_kind"] == "fits" and float(r["D"]) >= 100:
-                out.append(dict(D=r["D"], error_bar=r["err"], source="fit spread, delta_all.csv"))
-    seen = {float(x["D"]) for x in out}
+            if float(r["D"]) >= 100:
+                e = {k: f"{abs(float(r['diff_' + k])):.4e}" if r["diff_" + k] else "" for k in ("d6", "d10")}
+                out.append(dict(D=r["D"], d6=e["d6"], d6_how=r["how_d6"], d10=e["d10"], d10_how=r["how_d10"],
+                                error_bar=max((v for v in e.values() if v), key=float), source="delta_fits.csv"))
+    last = max((float(x["D"]) for x in out), default=-math.inf)
     d = {}
     for r in rows:
-        if r["accepted"] and r["chain"] in ("win d6", "win d10") and r["Delta"]:
+        if r["accepted"] and r["chain"] in ("win2 clean chain", "win d6", "win d10") and r["Delta"]:
             from decimal import Decimal
-            d.setdefault(r["D_to"], {})[r["chain"]] = Decimal(r["Delta"]) + Decimal(r["Delta_lo"] or "0")
-    for D, v in sorted(d.items(), key=lambda kv: float(kv[0])):
-        if len(v) == 2 and float(D) not in seen:
-            out.append(dict(D=D, error_bar=f"{abs(v['win d6'] - v['win d10']):.4e}", source="d6 minus d10, I462-win logs"))
+            d.setdefault(round(float(r["D_to"]), 6), {})[r["chain"]] = (r["D_to"], Decimal(r["Delta"])
+                                                                         + Decimal(r["Delta_lo"] or "0"))
+    for D, v in sorted(d.items()):
+        if D <= last + 1e-9 or "win2 clean chain" not in v or len(v) == 1:
+            continue
+        D_to, d8 = v["win2 clean chain"]
+        e = {k: f"{abs(v['win ' + k][1] - d8):.4e}" if "win " + k in v else "" for k in ("d6", "d10")}
+        out.append(dict(D=D_to, d6=e["d6"], d6_how="direct" if e["d6"] else "", d10=e["d10"],
+                        d10_how="direct" if e["d10"] else "", error_bar=max((x for x in e.values() if x), key=float),
+                        source="logs"))
     return out
 
 
