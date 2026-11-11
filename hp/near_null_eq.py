@@ -21,14 +21,19 @@ tolerances). "Curtis-Reid" is Curtis and Reid's scaling [2]: rho, gamma minimize
 squares). The problem is linear in the logs and its solution is unique up to D_r t, D_c / t on a connected pattern,
 so D_r J D_c does not depend on the scales of J's rows and columns. "Curtis-Reid + Ruiz", the result, is Ruiz's
 iteration started from the Curtis-Reid scaling: its start does not depend on those scales, so neither does its fixed
-point, and every row and column of J_eq has max-norm 1 to --tol.
+point, and every row and column of J_eq has max-norm 1 to --tol. The 2-norm (doubly stochastic) scaling is unique
+too, but on these Jacobians, whose entries span 1e-43 to 1e37, Ruiz's 2-norm iteration converges only like 1/k and
+Newton's method for it has a Hessian singular in f64 (#502), so it is not used.
 
 Check (exit 1 on failure), --plant=SEED: a planted column scaling. J S with S_j = 10^u_j, u_j uniform in [-20, 20]
 (numpy default_rng(SEED)), is scaled from |J_0| S by the same three methods, and its sigma come from the same
 subspace iteration (the same start) with the solves (J S)^-1 b = S^-1 J^-1 b and (J S)^-T b = J^-T S^-1 b. The
 result's sigma_1..k of J S must equal those of J to 1e-3 relative. The other two scalings' are printed beside them and
-are not part of the check. Control: --mutate=rows_only scales the rows only (rho alone in Curtis-Reid, rows alone in
-Ruiz), for J and for J S, and the check must fail.
+are not part of the check. At D 242.36 the result's agree to 1e-14 at both layouts, and Ruiz's from J differ by 0.97
+to 1.0. Control: --mutate=rows_only scales the rows only (rho alone in Curtis-Reid, rows alone in Ruiz), for J and for
+J S, and the check must fail. It does, and the rows-only J S is so ill-scaled that its solves leave the f64 range,
+so the iteration prints its sigma as 0. Curtis-Reid alone shows the leak in range, 8.3e-60 for J and 2.2e-76 for J S
+at 0.3-0.7.
 
 Check (exit 1 on failure), --jv=1: ||J_eq v_1|| / sigma_1 within 1e-2 of 1 for the result, as near_null.py checks it.
 v_1 is refined by --refine steps of inverse iteration through the LU with the scalings applied at 140 digits (mpmath),
