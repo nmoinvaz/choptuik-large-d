@@ -59,6 +59,19 @@ def harmonics(f, parity):
     return out
 
 
+def subspace(solve, L, k, its, seed=1):
+    """the k weakest right singular vectors of the factored J by subspace iteration on (J^T J)^-1, with solve(b,
+    transpose) applying J^-1 or J^-T to an f64 vector: (V, the estimates of sigma at each iteration)"""
+    rng = np.random.default_rng(seed)
+    V = np.linalg.qr(rng.standard_normal((L, k)))[0]
+    hist = []
+    for _ in range(its):
+        X = np.column_stack([solve(solve(V[:, i], True)) for i in range(k)])
+        hist.append(1 / np.sqrt(np.linalg.norm(X, axis=0)))
+        V = np.linalg.qr(X)[0]
+    return V, hist
+
+
 def main():
     args = [a for a in sys.argv[1:] if not a.startswith("--")]
     opts = dict(a[2:].split("=", 1) for a in sys.argv[1:] if a.startswith("--") and "=" in a)
@@ -87,14 +100,7 @@ def main():
         x = s.olu_solve([np.ascontiguousarray(b * scale)] + [zero] * 7, transpose)
         return np.asarray(x[0]) + np.asarray(x[1])
 
-    rng = np.random.default_rng(1)
-    V = np.linalg.qr(rng.standard_normal((L, k)))[0]
-    hist = []
-    for it in range(its):
-        X = np.column_stack([solve(solve(V[:, i], True)) for i in range(k)])
-        norms = np.linalg.norm(X, axis=0)
-        hist.append(1 / np.sqrt(norms))
-        V = np.linalg.qr(X)[0]
+    V, hist = subspace(solve, L, k, its)
     sig = hist[-1]
     conv = np.abs(hist[-1] - hist[-2]) / hist[-1]
     # v_1 refined in octo-double, then ||J v_1|| from the exact Jacobian at 140 digits: it must be sigma_1
