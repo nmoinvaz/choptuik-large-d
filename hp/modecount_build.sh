@@ -22,7 +22,7 @@ EXT=$("$PY" -c "import sysconfig; print(sysconfig.get_config_var('EXT_SUFFIX'))"
 mkdir -p build
 # an untagged module from before would be imported by any interpreter without its own build: set it aside
 [ -f build/modecount_cx.so ] && mv build/modecount_cx.so build/modecount_cx.so.untagged
-for f in target/release/libmodecount_cx.so target/release/libmodecount_cx.dylib; do
+for f in target/release/libmodecount_cx.so target/release/libmodecount_cx.dylib target/release/modecount_cx.dll; do
   if [ -f "$f" ]; then cp "$f" "build/modecount_cx$EXT"; fi
 done
 "$PY" -c "import sys; sys.path.insert(0, 'build'); import modecount_cx; print('modecount_cx ok', modecount_cx.__file__)"
