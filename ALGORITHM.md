@@ -92,6 +92,8 @@ in `hp/pinning.py`, [notes/HELD_HARMONICS.md](notes/HELD_HARMONICS.md)):
 4. At any larger D, evaluate the series and divide by √n. The chain adds the fit's change from its base to the base's
    own value, and the series' Taylor coefficients in D enter the predictor.
 
+![The fit and the step, animated: full solutions below D 73, harmonic 5 read from each wave, the polynomial through the points, its extension to D 232.6, and the chain's Taylor step in D with the size of each term](hp/fit_steps.svg)
+
 Inside D 38–73 fits of degree 6, 8 and 10 agree to about 10⁻¹² in a₅. Past it they part, and chains run on the three
 fits give Δ's error bar, about 3×10⁻¹¹ near D 200–215 (err_kind "fits" in `hp/data/delta_all.csv`,
 [notes/BIAS.md](notes/BIAS.md)). Each step has a predictor, an optional re-seed and a corrector, and a failed
