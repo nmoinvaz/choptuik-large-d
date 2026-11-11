@@ -226,7 +226,7 @@ def main():
     fx, fy = xR(D_front), yR(co_front[5][0])
     front = pa.capture(svg, lambda: marker(svg, "diamond", fx, fy, SERIES[0], f"D {D_front:g}: a5 {co_front[5][0]:.6e}"))
     front.append(f'<text x="{fx - 8}" y="{fy - 28}" text-anchor="end" font-size="11" fill="{INK}">held value at D {D_front:.1f}: a5 = {co_front[5][0]:.4e},</text>')
-    front.append(f'<text x="{fx - 8}" y="{fy - 14}" text-anchor="end" font-size="11" fill="{INK}">the fit's value there, which the chain keeps fixed</text>')
+    front.append(f'<text x="{fx - 8}" y="{fy - 14}" text-anchor="end" font-size="11" fill="{INK}">the value of the fit there, which the chain keeps fixed</text>')
     clock.group(svg, front, S4[0] + 3.4, S4[1])
     wl = [(xA(t), yA(v)) for t, v in zip(th, wave(co_front, th))]
     clock.group(svg, [f'<path d="{pa.path_d(wl)}" fill="none" stroke="{SERIES[0]}" stroke-width="2"/>',
