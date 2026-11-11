@@ -186,6 +186,36 @@ Contents
   - [SETUP.md](SETUP.md): system and software requirements, and the setup steps
   - [notes/README_PLAN.md](notes/README_PLAN.md): the plan of this README's reorganization
 
+### What is proved, and how
+
+Every formal result, with its status in the words above, how it is established, what it assumes and who has checked
+it. [PROOF.md](PROOF.md) and the notes in [proof/](proof/) are the full account. This table only points to them.
+
+| Result | What it says | Status | How | Assumes | Reviews | Where |
+|---|---|---|---|---|---|---|
+| Proposition 1 | the 1/n expansion of the self-similar equations can be carried to all orders for any profile F and any ω, so no order fixes the period | proved; checked symbolically (`solver/largeD_expand.py`, `solver/largeD_formal_check.py`) | parity induction on the formal series | — | — | [Proposition 1](#proposition-1-the-1n-expansion-never-fixes-the-period) |
+| Proposition 2 | the leading-order problem, without gravity, is solved by a hypergeometric function, and its light-cone coefficient C(n, s) is explicit and non-zero | proved | exact solution | — | — | [Proposition 2](#proposition-2-the-leading-order-problem-solved-exactly) |
+| Proposition 3 | with gravity, the fast WKB mode is carried inside the light cone by an invertible map | proved; checked symbolically (`solver/largeD_transport_sympy.py`) | characteristics of a first-order transport equation | — | — | [Proposition 3](#proposition-3-what-gravity-does-to-the-non-analytic-piece) |
+| Proposition 4 | the late orders of the leading-order series carry the light-cone coefficient as a Stokes multiplier, for 0.066 < x < 0.998 | proved | Euler integral, Watson's lemma, Darboux | — | — | [Proposition 4](#proposition-4-late-orders-of-the-leading-order-series) |
+| Inner linear constant | the inner Weber Stokes constant equals the outer one | proved; checked numerically to 6×10⁻²⁷ | the duplication formula; Borel–Darboux | — | — | [PROOF.md](PROOF.md) 2 |
+| Exact inner modes | the inner growth rates λ = 0 (θ shift) and λ = 1 (time shift) are exact | proved | symmetries | — | — | [PROOF.md](PROOF.md) 2 |
+| Proposition 5 | the inner problem is an autonomous nonlinear heat equation in s = r²/(2n), and its r² shift is an exact λ = 2 mode | proved; checked symbolically (`solver/inner_pert/heat_form.py`, `expand_pert.py`, `rw_map.py`) | symmetry, explicit series, Borel sums that commute with the generator | — | — | [Proposition 5](#proposition-5-the-unstable-mode-at-infinite-d-is-exact) |
+| γ∞ = 1/2 | the critical exponent's limit | conditional on Conjecture 1 and one unstable mode | Proposition 5 | Conjecture 1; uniqueness of the unstable mode | — | [Proposition 5](#proposition-5-the-unstable-mode-at-infinite-d-is-exact) |
+| Conjecture 1 | the selection rule: Δ∞ is set by the zero of the inner Stokes multiplier | conjecture; its value 1.64387 ± 0.00006 numerical evidence | the amplitude expansion of the D = ∞ inner problem | — | — | [The inner problem at large x](#the-inner-problem-at-large-x) |
+| Lemmas A.1, A.2, A.4 | the three computer-assisted steps of Theorem A: the start-value lemma, a start from the formal series with its derivatives in the parameters (A.1), the validated integration to the matching radius (A.2) and the Krawczyk test (A.4) | certified (M = 1, 3, 5; `fixed_point.py`, `fixed_point_M.py`, `validated_int.py`, `krawczyk.py`) | contraction in a weighted ball; Lohner-type integration in ball arithmetic; interval Newton | — | as Theorem A(M) below | [PROOF.md](PROOF.md) 4, [proof/A_lemmas_M.md](proof/A_lemmas_M.md) 2 |
+| Lemma A.3 | a bound on how much the omitted harmonics |ν| > M move the zero, which Theorem A(∞) needs | open | | | | [PROOF.md](PROOF.md) 4, [proof/B_tail.md](proof/B_tail.md) |
+| Lemmas S, 6b₀ | start values on a domain that reaches the real axis; y⁺ analytic near ξ = 0 | certified (M = 1, 3, 5) | majorants in ball arithmetic | — | M = 3 majorant code not yet reviewed | [proof/A_lemmas_M.md](proof/A_lemmas_M.md) 3 |
+| Lemma 6a | one component of the jump vanishing forces the whole jump to vanish | certified (M = 1, 3, 5) | contraction for y⁺ − y⁻ | — | M = 3: proof/A_M_review.md; M = 5: #184 after #39 | [proof/A_lemmas_M.md](proof/A_lemmas_M.md) 4 |
+| Lemma 6b₁ | y⁺ is analytic on the annular sector, so the continuation is the Borel sum | certified (M = 1: 178 discs; M = 3; M = 5: 366 discs) | validated Taylor discs | — | M = 5: #39 disc by disc, CAPD flows (#189, #208); M = 1: a re-implementation of the covering not yet done; M = 3: not yet reviewed | [proof/A_certify.md](proof/A_certify.md) 12, [proof/A_lemmas_M.md](proof/A_lemmas_M.md) 5 |
+| Theorem A(M = 1) | the one-harmonic selection condition has exactly one zero in the box, and it is simple | certified | Lohner integration (`validated_int.py`), Krawczyk test (`krawczyk.py`), lemmas above | Braaksma's summability theorem | proof/A_review.md; CAPD re-implementation | [proof/A_certify.md](proof/A_certify.md) |
+| Theorem A(M = 3) | the same with three harmonics | certified | point certificate, lemmas above | Braaksma's theorem | proof/A_M_review.md (point certificate, H1–H3, lemma 6a) | [proof/A_M.md](proof/A_M.md) |
+| Theorem A(M = 5) | the same with five harmonics, ω/ω∞ ∈ [0.99922840320656, 0.99922840320657] | certified | second-order chart with C² enclosures | Braaksma's theorem and the start-value lemma | proof/A_M2_review.md; CAPD (#189, #208) | [proof/A_M2.md](proof/A_M2.md) |
+| Lemma B.3 | inner–outer matching: the outer late-order constant equals the inner Stokes multiplier | proved in the linear case (Proposition 4 with the Weber constant); the nonlinear matching is open | Euler integral, Watson's lemma; Baldomá–Fontich–Guardia–Seara for the nonlinear case | — | — | [PROOF.md](PROOF.md) 5 |
+| Lemma B2 | the outer system's fast eigenvalues, with no turning points on the real axis | checked symbolically (`solver/proof/fast_eigenvalues.py`) | sympy | — | — | [PROOF.md](PROOF.md) 5 |
+| Lemmas L, B5(2), P, LC, J; B7 | the links of Theorem B(1) | certified (python-flint) | contractions and a Krawczyk test | — | B7, LC, J re-implemented by two reviews | [proof/B_chain.md](proof/B_chain.md) |
+| Theorem B(1) | for n ≥ e^{89.75}, exactly one parameter in Theorem A's box gives a solution analytic at the light cone, within e^{67.84}/n of Theorem A's zero | certified | the lemmas above | Braaksma's theorem | proof/P2_review.md, proof/P2b_review.md | [proof/B_chain.md](proof/B_chain.md) 15 |
+| Theorem B(M), Corollary C | the selection theorem for M harmonics, and Δ∞ from it | open | | | | [PROOF.md](PROOF.md) 5–7 |
+
 ---
 
 ## Results
