@@ -177,7 +177,9 @@
       const acc = steps.filter((r) => r.chain === 'win2 clean chain' && r.accepted === '1');
       if (!acc.length || !errorbar.length) return [];
       const last = acc[acc.length - 1];
-      const bar = errorbar[errorbar.length - 1];
+      // the last row with both differences; a one-sided row (one comparison chain short of that D) understates it
+      const full = errorbar.filter((r) => r.complete !== '0');
+      const bar = (full.length ? full : errorbar)[(full.length ? full : errorbar).length - 1];
       const err = +bar.error_bar;
       const digits = Math.floor(-Math.log10(err)) + 1;
       const [whole, frac] = last.Delta.split('.');

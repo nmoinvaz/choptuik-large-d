@@ -11,7 +11,7 @@ pivot), Delta to 17 digits plus its low part, the seconds of computing, the cumu
 chain, and a verdict per check (OK, WATCH, BAD by BOUNDS) with the step's overall verdict, the worst of them.
 OUTDIR/errorbar.csv has the error bar on Delta against D, the spread over the held fit's degree: |d8 - d6| and
 |d8 - d10|, each with how it was taken (at that D, or interpolated from the neighbouring D of that chain), and their
-larger (error_bar), from data/delta_fits.csv (export_delta_all.py), then past its last D the same at equal D from the
+larger (error_bar), with complete 1 when both differences are there (0: one-sided), from data/delta_fits.csv (export_delta_all.py), then past its last D the same at equal D from the
 chains' logs (the clean chain against win's d6 and d10).
 
 --selftest parses a planted log with one accepted and one refused attempt, checks every field and verdict, and with
@@ -171,7 +171,8 @@ def errorbar(rows):
             if float(r["D"]) >= 100:
                 e = {k: f"{abs(float(r['diff_' + k])):.4e}" if r["diff_" + k] else "" for k in ("d6", "d10")}
                 out.append(dict(D=r["D"], d6=e["d6"], d6_how=r["how_d6"], d10=e["d10"], d10_how=r["how_d10"],
-                                error_bar=max((v for v in e.values() if v), key=float), source="delta_fits.csv"))
+                                error_bar=max((v for v in e.values() if v), key=float),
+                                complete="1" if all(e.values()) else "0", source="delta_fits.csv"))
     last = max((float(x["D"]) for x in out), default=-math.inf)
     d = {}
     for r in rows:
@@ -186,7 +187,7 @@ def errorbar(rows):
         e = {k: f"{abs(v['win ' + k][1] - d8):.4e}" if "win " + k in v else "" for k in ("d6", "d10")}
         out.append(dict(D=D_to, d6=e["d6"], d6_how="direct" if e["d6"] else "", d10=e["d10"],
                         d10_how="direct" if e["d10"] else "", error_bar=max((x for x in e.values() if x), key=float),
-                        source="logs"))
+                        complete="1" if all(e.values()) else "0", source="logs"))
     return out
 
 

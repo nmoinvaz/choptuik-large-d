@@ -43,7 +43,8 @@ precedence where two share a D:
           one of its runs reached the same D, or, from D 191.5 on (where the degree-6 chain stepped at integer D and
           the degree-10 chain at half-integer D), interpolated from the six states of that fit's chain nearest D by
           the polynomial of degree 5 in 1/(D - 2) (Lagrange, mpmath), when they bracket D. err_kind names the fit
-          and how: "fits d6", "fits d10", "fits d6 interp", "fits d10 interp". Each fit's difference is also written
+          and how: "fits d6", "fits d10", "fits d6 interp", "fits d10 interp", with " one-sided" appended where
+          only some of the comparison fits reach that D (the frontier of a comparison chain). Each fit's difference is also written
           to data/delta_fits.csv (D, then per fit the signed Delta of that fit minus chain_fit's, how and the states).
   chain   the chain with the harmonics held on T75's trend (notes/QUAD_DOUBLE.md 13.17-13.24), its backbone traced
           the same way back to T75's pin 7 state at 73.27; double-double states to 79.27, quad-double after. Its rows at
@@ -295,6 +296,9 @@ def chain_rows(keep=False, quiet=False):
             if big:
                 ek = max(big, key=big.get)
                 err = f"{float(big[ek]):.1e}"
+                # some comparison fits reach this D and others do not: the spread is over fewer fits than its neighbours'
+                if kind == "chain_fit" and 0 < sum(f"diff_{lab}" in frow for lab in FITS.values()) < len(FITS):
+                    ek += " one-sided"
             if frow:
                 fits.append({c: "" for c in FITS_COLS} | frow | {"D": fmt(m["D"])})
             rows.append(dict(D=fmt(m["D"]), Delta_q0=parts[0], Delta_q1=parts[1], Delta_q2=parts[2], Delta_q3=parts[3],
