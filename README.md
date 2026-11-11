@@ -1676,9 +1676,10 @@ This is Weber's classical Stokes constant $`\sqrt{2\pi}/\Gamma(-\nu_W)`$ with $`
 
 </details>
 
-![The selection rule evaluated from the D = infinity inner problem alone: the order-by-order bracket on omega, the truncation sequence and the effective exponent](solver/selection.svg)
+![The selection rule evaluated from the D = infinity inner problem alone, animated: the order-by-order bracket on omega closing in, the truncation sequence and the effective exponent](solver/selection.svg)
 
-**The selection rule from the inner problem alone** (`solver/plot_selection.py`).
+**The selection rule from the inner problem alone** (`solver/plot_selection.py`). The figure is animated: the orders
+one at a time, then the truncation sequence, then the effective exponent, and then all of it together.
 
 - **Top:** where the harmonic-1 multiplier has a real zero, order by order in the amplitude expansion. The simple-zero
   estimates (arg τ_k = π) come down from above, the floating-exponent estimates come up from below, and the shaded
