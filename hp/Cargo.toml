@@ -16,7 +16,7 @@ pyo3 = { version = "0.30", features = ["extension-module"], optional = true }
 numpy = { version = "0.30", optional = true }
 rayon = "1.10"
 # double-double / quad-double arithmetic, dual lanes and LU (split out of this crate; crates.io)
-multidouble = "=4.0.0"  # 1.8.0: the pieces moved there from hp (PR #25); 1.9.0: the jet lanes and the parameter arithmetic (PR #26, notes/QUAD_DOUBLE.md 13.15); 2.0.0: the quad-double jet QJet (PR #29); 2.1.0: the jet solves and helpers moved from hp (PR #30); 3.0.0: octo-double (PR #32); 3.1.0: quad-double parts summed in any order (PR #33); 3.2.0: in-place Cauchy sums and accumulation (PR #35); 4.0.0: the octo-double jet OJet, its series and solve, and the octo-double dual Ou (PRs #36, #38-#40)
+multidouble = "=4.1.0"  # 1.8.0: the pieces moved there from hp (PR #25); 1.9.0: the jet lanes and the parameter arithmetic (PR #26, notes/QUAD_DOUBLE.md 13.15); 2.0.0: the quad-double jet QJet (PR #29); 2.1.0: the jet solves and helpers moved from hp (PR #30); 3.0.0: octo-double (PR #32); 3.1.0: quad-double parts summed in any order (PR #33); 3.2.0: in-place Cauchy sums and accumulation (PR #35); 4.0.0: the octo-double jet OJet, its series and solve, and the octo-double dual Ou (PRs #36, #38-#40); 4.1.0: the Precision trait (Double, Quad, Octo; PRs #41, #42)
 
 [profile.release]
 opt-level = 3
