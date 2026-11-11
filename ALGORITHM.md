@@ -73,9 +73,16 @@ double-double (`newton_mixed`). Its procedures are in [notes/LOW_D.md](notes/LOW
 ## 3. The continuation in D
 
 Past D ≈ 73 the chain is carried in D by an exact Taylor continuation, the asymptotic numerical method[^2]
-(`hp/anm_run.py`). It continues the pinned system, in which p₁'s harmonics 5–13 are held on a power-law trend in D
-(notes/QUAD_DOUBLE.md 13.18). Each step has a predictor, an optional re-seed and a corrector, and a failed correction
-halves the step, three times at most, keeping the series.
+(`hp/anm_run.py`). It continues the pinned system. Of a solution's 769 unknowns all are solved at every step except
+the cosine and sine coefficients of p₁'s harmonics 5–13, which are held at values from a fit, and p₁'s harmonics 15
+and up, which are set to zero. Each held coefficient times √n (n = D − 2) is a least-squares Chebyshev series of degree
+8 in 1/n through the 138 full-system solutions at D 38–73, extended to larger D (`--held_fit`, `HeldFit` in
+`hp/pinning.py`, [notes/HELD_HARMONICS.md](notes/HELD_HARMONICS.md)). Inside D 38–73 fits of degree 6, 8 and 10 agree
+to about 10⁻¹² in a₅. Past it they part, and chains run on the three fits give Δ's error bar, about 3×10⁻¹¹ near
+D 200–215 (err_kind "fits" in `hp/data/delta_all.csv`, [notes/BIAS.md](notes/BIAS.md)). Each step has a predictor, an
+optional re-seed and a corrector, and a failed correction halves the step, three times at most, keeping the series.
+
+![The held harmonics: the size of each odd harmonic of p1 at D 232.63 with its role (1 and 3 solved, 5 to 13 held, 15 and up set to zero), harmonic 5's cosine coefficient in the 138 full solutions and the fits of degree 6, 8 and 10 that extend them, and how far those fits part past D 73](hp/harmonics_held.svg)
 
 ![One step of the continuation in D: base, quad-double jets, step, prediction, re-seed, corrector, then a new base or a halved step](hp/algo_step.svg)
 
