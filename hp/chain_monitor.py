@@ -142,7 +142,8 @@ def rows_of(attempts):
             "first_dz": verdict("first_dz", first_dz),
             "series": max((verdict("z_N", b["z_N"]),
                            "OK" if b["a_max"] > 2.5 else ("WATCH" if b["a_max"] >= 2.0 else "BAD"),
-                           "OK" if b["ratio4"] > 150 else ("WATCH" if b["ratio4"] >= 100 else "BAD")),
+                           # the fourth ratio is a diagnostic: its fall from D 231 on comes with clean steps (#461)
+                           "OK" if b["ratio4"] > 150 else "WATCH"),
                           key=["", "OK", "WATCH", "BAD"].index),
         }
         overall = max((x for x in v.values()), key=["", "OK", "WATCH", "BAD"].index)
