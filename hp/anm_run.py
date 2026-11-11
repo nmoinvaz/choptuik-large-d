@@ -295,14 +295,14 @@ def main():
 
     last_q = {}
     elim = {}             # --reseed 2: the attempt's Reseeder, for ElimQ in the corrector
-    att = {}              # the attempt in progress (its target D and step), for --save_dz0
+    dz0_at = {}           # the attempt in progress (its target D and step), for --save_dz0
 
     def save_dz0(z, d):
         """--save_dz0 1: the corrector's start and first Newton step of the attempt, eight parts each (#499)"""
-        name = f"dz0_pin{kf}_D{att.get('D', 0.0):.4f}_a{att.get('a', 0.0):.6f}.npz"
+        name = f"dz0_pin{kf}_D{dz0_at.get('D', 0.0):.4f}_a{dz0_at.get('a', 0.0):.6f}.npz"
         np.savez(os.path.join(out, name), **{f"z{q}": np.asarray(z[q]) for q in range(8)},
                  **{f"d{q}": np.asarray(d[q]) for q in range(8)},
-                 meta=json.dumps(dict(D=att.get("D"), a=att.get("a"), M=M, nodes=nodes, kfreeze=kf, source=opt["state"])))
+                 meta=json.dumps(dict(D=dz0_at.get("D"), D_str=dz0_at.get("D_str"), a=dz0_at.get("a"), M=M, nodes=nodes, kfreeze=kf, source=opt["state"])))
         print(f"      saved the start and first step as {name}", flush=True)
 
     def correct(spx, ph, pl, tol, z4_start=None, z8_start=None):
@@ -769,7 +769,7 @@ def main():
                     # inside the corrector
                     rs_n = Reseeder(dict(M=M, nodes=nodes, kt=kt, kc=kc, ks=ks), Dn, threads=opt["threads"],
                                     horizon_alpha=opt["horizon_alpha"], qd=bool(opt["reseed_q"]), od=opt["reseed_o"])
-                    att.update(D=float(Dn), a=float(a))
+                    dz0_at.update(D=float(Dn), D_str=str(Dn), a=float(a))
                     if opt["save_pred"] and pred4 is not None:
                         # the prediction before its re-seed, for testing the re-seed on it (13.26)
                         save_q(os.path.join(out, f"pred_pin{kf}_D{float(Dn):.4f}.npz"), pred4,
