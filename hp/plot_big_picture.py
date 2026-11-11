@@ -89,7 +89,7 @@ def main():
     dchain = sorted((float(r["D"]), float(r["Delta_q0"])) for r in rows if r["kind"] == "chain_fit")
     d4 = min(dfull, key=lambda p: abs(p[0] - 4.0))
     err_full = sorted((float(r["D"]), float(r["err"])) for r in rows if r["kind"] == "dd" and r["err_kind"] == "check")
-    err_chain = sorted((float(r["D"]), float(r["err"])) for r in rows if r["kind"] == "chain_fit" and r["err_kind"] == "fits"
+    err_chain = sorted((float(r["D"]), float(r["err"])) for r in rows if r["kind"] == "chain_fit" and r["err_kind"].startswith("fits")
                        and float(r["err"]) > 0)
     zf, mf = load_q(os.path.join(a.raw, FRONT))
     f = np.asarray(zf[0], float) + np.asarray(zf[1], float)

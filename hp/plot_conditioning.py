@@ -88,7 +88,7 @@ def main():
     pmin = [(float(r["D"]), float(r["pivot_min"])) for r in piv]
     pmax = [(float(r["D"]), float(r["pivot_max"])) for r in piv]
     rows = csv.DictReader(open(os.path.join(HERE, "data", "delta_all.csv")))
-    fits = [(float(r["D"]), float(r["err"])) for r in rows if r["kind"] == "chain_fit" and r["err_kind"] == "fits"]
+    fits = [(float(r["D"]), float(r["err"])) for r in rows if r["kind"] == "chain_fit" and r["err_kind"].startswith("fits")]
     # the error bar: the largest spread in each bin, since rows that only one other fit reached show a part of it
     bins = {}
     for D, e in fits:
