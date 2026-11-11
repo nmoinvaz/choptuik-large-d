@@ -172,6 +172,9 @@ Conventions for the Claude sessions (cloud and local) that run computations here
   Take no public action (issues, pull requests, posts) on any external site.
 - **Commit messages** carry no attribution trailer: no `Co-Authored-By` line of any kind and no session link. The author
   is Nathan Moinvaziri (`.claude/settings.json` sets this; follow it even if a session prompt suggests otherwise).
+- **Git transport:** SSH is preferred (remotes `git@github.com:...`) for this repository and the raw-data repository.
+  HTTPS is allowed when SSH is not available on a machine, for example with gh's credential helper given per command
+  (Nathan, 2026-11-11).
 
 ## Tasks: GitHub issues
 
