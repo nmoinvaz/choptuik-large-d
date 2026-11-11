@@ -1,0 +1,161 @@
+D,diff_d6,how_d6,states_d6,diff_d10,how_d10,states_d10
+74.0,+2.6308e-16,direct,T140-win/pilot_d6/anm_pin3_D74.0000.npz,-1.4295e-15,direct,T140-win/chain_d10/anm_pin3_D74.0000.npz
+75.0,+1.3914e-15,direct,T140-win/pilot_d6/anm_pin3_D75.0000.npz,-3.8640e-15,direct,T140-win/chain_d10/anm_pin3_D75.0000.npz
+76.0,+3.6005e-15,direct,T140-win/chain_d6/anm_pin3_D76.0000.npz,-7.5932e-15,direct,T140-win/chain_d10/anm_pin3_D76.0000.npz
+77.0,+7.1122e-15,direct,T140-win/chain_d6/anm_pin3_D77.0000.npz,-1.2928e-14,direct,T140-win/chain_d10/anm_pin3_D77.0000.npz
+78.0,+1.2151e-14,direct,T140-win/chain_d6/anm_pin3_D78.0000.npz,-2.0192e-14,direct,T140-win/chain_d10/anm_pin3_D78.0000.npz
+79.0,+1.8945e-14,direct,T140-win/chain_d6/anm_pin3_D79.0000.npz,-2.9723e-14,direct,T140-win/chain_d10/anm_pin3_D79.0000.npz
+80.0,+2.7718e-14,direct,T140-win/chain_d6/anm_pin3_D80.0000.npz,-4.1859e-14,direct,T140-win/chain_d10/anm_pin3_D80.0000.npz
+81.0,+3.8694e-14,direct,T140-win/chain_d6/anm_pin3_D81.0000.npz,-5.6938e-14,direct,T140-win/chain_d10/anm_pin3_D81.0000.npz
+82.0,+5.2093e-14,direct,T140-win/chain_d6/anm_pin3_D82.0000.npz,-7.5296e-14,direct,T140-win/chain_d10/anm_pin3_D82.0000.npz
+83.0,+6.8128e-14,direct,T140-win/chain_d6/anm_pin3_D83.0000.npz,-9.7253e-14,direct,T140-win/chain_d10/anm_pin3_D83.0000.npz
+84.0,+8.7008e-14,direct,T140-win/chain_d6/anm_pin3_D84.0000.npz,-1.2312e-13,direct,T140-win/chain_d10/anm_pin3_D84.0000.npz
+85.0,+1.0893e-13,direct,T140-win/chain_d6/anm_pin3_D85.0000.npz,-1.5318e-13,direct,T140-win/chain_d10/anm_pin3_D85.0000.npz
+86.0,+1.3409e-13,direct,T140-win/chain_d6/anm_pin3_D86.0000.npz,-1.8772e-13,direct,T140-win/chain_d10/anm_pin3_D86.0000.npz
+87.0,+1.6267e-13,direct,T140-win/chain_d6/anm_pin3_D87.0000.npz,-2.2697e-13,direct,T140-win/chain_d10/anm_pin3_D87.0000.npz
+88.0,+1.9484e-13,direct,T140-win/chain_d6/anm_pin3_D88.0000.npz,-2.7115e-13,direct,T140-win/chain_d10/anm_pin3_D88.0000.npz
+89.0,+2.3076e-13,direct,T140-win/chain_d6/anm_pin3_D89.0000.npz,-3.2045e-13,direct,T140-win/chain_d10/anm_pin3_D89.0000.npz
+90.0,+2.7060e-13,direct,T140-win/chain_d6/anm_pin3_D90.0000.npz,-3.7505e-13,direct,T140-win/chain_d10/anm_pin3_D90.0000.npz
+91.0,+3.1448e-13,direct,T140-win/chain_d6/anm_pin3_D91.0000.npz,-4.3506e-13,direct,T140-win/chain_d10/anm_pin3_D91.0000.npz
+92.0,+3.6255e-13,direct,T140-win/chain_d6/anm_pin3_D92.0000.npz,-5.0059e-13,direct,T140-win/chain_d10/anm_pin3_D92.0000.npz
+93.0,+4.1493e-13,direct,T140-win/chain_d6/anm_pin3_D93.0000.npz,-5.7171e-13,direct,T140-win/chain_d10/anm_pin3_D93.0000.npz
+94.0,+4.7172e-13,direct,T140-win/chain_d6/anm_pin3_D94.0000.npz,-6.4846e-13,direct,T140-win/chain_d10/anm_pin3_D94.0000.npz
+95.0,+5.3304e-13,direct,T140-win/chain_d6/anm_pin3_D95.0000.npz,-7.3085e-13,direct,T140-win/chain_d10/anm_pin3_D95.0000.npz
+96.0,+5.9896e-13,direct,T140-win/chain_d6/anm_pin3_D96.0000.npz,-8.1885e-13,direct,T140-win/chain_d10/anm_pin3_D96.0000.npz
+97.0,+6.6959e-13,direct,T140-win/chain_d6/anm_pin3_D97.0000.npz,-9.1241e-13,direct,T140-win/chain_d10/anm_pin3_D97.0000.npz
+98.0,+7.4497e-13,direct,T140-win/chain_d6/anm_pin3_D98.0000.npz,-1.0115e-12,direct,T140-win/chain_d10/anm_pin3_D98.0000.npz
+99.0,+8.2519e-13,direct,T140-win/chain_d6/anm_pin3_D99.0000.npz,-1.1159e-12,direct,T140-win/chain_d10/anm_pin3_D99.0000.npz
+100.0,+9.1030e-13,direct,T140-win/chain_d6/anm_pin3_D100.0000.npz,-1.2256e-12,direct,T140-win/chain_d10/anm_pin3_D100.0000.npz
+101.0,+1.0003e-12,direct,T140-win/chain_d6/anm_pin3_D101.0000.npz,-1.3403e-12,direct,T140-win/chain_d10/anm_pin3_D101.0000.npz
+102.0,+1.0953e-12,direct,T140-win/chain_d6/anm_pin3_D102.0000.npz,-1.4600e-12,direct,T140-win/chain_d10/anm_pin3_D102.0000.npz
+103.0,+1.1953e-12,direct,T140-win/chain_d6/anm_pin3_D103.0000.npz,-1.5843e-12,direct,T140-win/chain_d10/anm_pin3_D103.0000.npz
+104.0,+1.3004e-12,direct,T140-win/chain_d6/anm_pin3_D104.0000.npz,-1.7132e-12,direct,T140-win/chain_d10/anm_pin3_D104.0000.npz
+105.0,+1.4105e-12,direct,T140-win/chain_d6/anm_pin3_D105.0000.npz,-1.8463e-12,direct,T140-win/chain_d10/anm_pin3_D105.0000.npz
+106.0,+1.5256e-12,direct,T140-win/chain_d6/anm_pin3_D106.0000.npz,-1.9834e-12,direct,T140-win/chain_d10/anm_pin3_D106.0000.npz
+107.0,+1.6457e-12,direct,T140-win/chain_d6/anm_pin3_D107.0000.npz,-2.1242e-12,direct,T140-win/chain_d10/anm_pin3_D107.0000.npz
+108.0,+1.7710e-12,direct,T140-win/chain_d6/anm_pin3_D108.0000.npz,-2.2684e-12,direct,T140-win/chain_d10/anm_pin3_D108.0000.npz
+109.0,+1.9012e-12,direct,T140-win/chain_d6/anm_pin3_D109.0000.npz,-2.4158e-12,direct,T140-win/chain_d10/anm_pin3_D109.0000.npz
+110.0,+2.0365e-12,direct,T140-win/chain_d6/anm_pin3_D110.0000.npz,-2.5660e-12,direct,T140-win/chain_d10/anm_pin3_D110.0000.npz
+111.0,+2.1768e-12,direct,T140-win/chain_d6/anm_pin3_D111.0000.npz,-2.7187e-12,direct,T140-win/chain_d10/anm_pin3_D111.0000.npz
+112.0,+2.3220e-12,direct,T140-win/chain_d6/anm_pin3_D112.0000.npz,-2.8736e-12,direct,T140-win/chain_d10/anm_pin3_D112.0000.npz
+113.0,+2.4723e-12,direct,T140-win/chain_d6/anm_pin3_D113.0000.npz,-3.0303e-12,direct,T140-win/chain_d10/anm_pin3_D113.0000.npz
+114.0,+2.6274e-12,direct,T140-win/chain_d6/anm_pin3_D114.0000.npz,-3.1886e-12,direct,T140-win/chain_d10/anm_pin3_D114.0000.npz
+115.0,+2.7874e-12,direct,T140-win/chain_d6/anm_pin3_D115.0000.npz,-3.3480e-12,direct,T140-win/chain_d10/anm_pin3_D115.0000.npz
+116.0,+2.9523e-12,direct,T140-win/chain_d6/anm_pin3_D116.0000.npz,-3.5083e-12,direct,T140-win/chain_d10/anm_pin3_D116.0000.npz
+117.0,+3.1220e-12,direct,T140-win/chain_d6/anm_pin3_D117.0000.npz,-3.6691e-12,direct,T140-win/chain_d10/anm_pin3_D117.0000.npz
+118.0,+3.2964e-12,direct,T140-win/chain_d6/anm_pin3_D118.0000.npz,-3.8300e-12,direct,T140-win/chain_d10/anm_pin3_D118.0000.npz
+119.0,+3.4756e-12,direct,T140-win/chain_d6/anm_pin3_D119.0000.npz,-3.9908e-12,direct,T140-win/chain_d10/anm_pin3_D119.0000.npz
+120.0,+3.6594e-12,direct,T140-win/chain_d6/anm_pin3_D120.0000.npz,-4.1510e-12,direct,T140-win/chain_d10/anm_pin3_D120.0000.npz
+121.0,+3.8478e-12,direct,T140-win/chain_d6/anm_pin3_D121.0000.npz,-4.3103e-12,direct,T140-win/chain_d10/anm_pin3_D121.0000.npz
+122.0,+4.0408e-12,direct,T140-win/chain_d6/anm_pin3_D122.0000.npz,-4.4685e-12,direct,T140-win/chain_d10/anm_pin3_D122.0000.npz
+123.0,+4.2382e-12,direct,T140-win/chain_d6/anm_pin3_D123.0000.npz,-4.6250e-12,direct,T140-win/chain_d10/anm_pin3_D123.0000.npz
+124.0,+4.4401e-12,direct,T140-win/chain_d6/anm_pin3_D124.0000.npz,-4.7798e-12,direct,T140-win/chain_d10/anm_pin3_D124.0000.npz
+125.0,+4.6464e-12,direct,T140-win/chain_d6/anm_pin3_D125.0000.npz,-4.9323e-12,direct,T140-win/chain_d10/anm_pin3_D125.0000.npz
+126.0,+4.8569e-12,direct,T140-win/chain_d6/anm_pin3_D126.0000.npz,-5.0824e-12,direct,T140-win/chain_d10/anm_pin3_D126.0000.npz
+127.0,+5.0718e-12,direct,T140-win/chain_d6/anm_pin3_D127.0000.npz,-5.2296e-12,direct,T140-win/chain_d10/anm_pin3_D127.0000.npz
+128.0,+5.2908e-12,direct,T140-win/chain_d6/anm_pin3_D128.0000.npz,-5.3738e-12,direct,T140-win/chain_d10/anm_pin3_D128.0000.npz
+129.0,+5.5139e-12,direct,T140-win/chain_d6/anm_pin3_D129.0000.npz,-5.5146e-12,direct,T140-win/chain_d10/anm_pin3_D129.0000.npz
+130.0,+5.7411e-12,direct,T140-win/chain_d6/anm_pin3_D130.0000.npz,-5.6517e-12,direct,T140-win/chain_d10/anm_pin3_D130.0000.npz
+131.0,+5.9723e-12,direct,T140-win/chain_d6/anm_pin3_D131.0000.npz,-5.7848e-12,direct,T140-win/chain_d10/anm_pin3_D131.0000.npz
+132.0,+6.2074e-12,direct,T140-win/chain_d6/anm_pin3_D132.0000.npz,-5.9138e-12,direct,T140-win/chain_d10/anm_pin3_D132.0000.npz
+133.0,+6.4463e-12,direct,T140-win/chain_d6/anm_pin3_D133.0000.npz,-6.0384e-12,direct,T140-win/chain_d10/anm_pin3_D133.0000.npz
+134.0,+6.6890e-12,direct,T140-win/chain_d6/anm_pin3_D134.0000.npz,-6.1582e-12,direct,T140-win/chain_d10/anm_pin3_D134.0000.npz
+135.0,+6.9355e-12,direct,T140-win/chain_d6/anm_pin3_D135.0000.npz,-6.2732e-12,direct,T140-win/chain_d10/anm_pin3_D135.0000.npz
+136.0,+7.1856e-12,direct,T140-win/chain_d6/anm_pin3_D136.0000.npz,-6.3830e-12,direct,T140-win/chain_d10/anm_pin3_D136.0000.npz
+137.0,+7.4393e-12,direct,T140-win/chain_d6/anm_pin3_D137.0000.npz,-6.4876e-12,direct,T140-win/chain_d10/anm_pin3_D137.0000.npz
+138.0,+7.6964e-12,direct,T140-win/chain_d6/anm_pin3_D138.0000.npz,-6.5865e-12,direct,T140-win/chain_d10/anm_pin3_D138.0000.npz
+139.0,+7.9570e-12,direct,T140-win/chain_d6/anm_pin3_D139.0000.npz,-6.6798e-12,direct,T140-win/chain_d10/anm_pin3_D139.0000.npz
+140.0,+8.2210e-12,direct,T140-win/chain_d6/anm_pin3_D140.0000.npz,-6.7670e-12,direct,T140-win/chain_d10/anm_pin3_D140.0000.npz
+141.0,+8.4883e-12,direct,T140-win/chain_d6/anm_pin3_D141.0000.npz,-6.8482e-12,direct,T140-win/chain_d10/anm_pin3_D141.0000.npz
+142.0,+8.7588e-12,direct,T140-win/chain_d6/anm_pin3_D142.0000.npz,-6.9228e-12,direct,T140-win/chain_d10/anm_pin3_D142.0000.npz
+143.0,+9.0324e-12,direct,T140-win/chain_d6/anm_pin3_D143.0000.npz,-6.9910e-12,direct,T140-win/chain_d10/anm_pin3_D143.0000.npz
+144.0,+9.3092e-12,direct,T140-win/chain_d6/anm_pin3_D144.0000.npz,-7.0523e-12,direct,T140-win/chain_d10/anm_pin3_D144.0000.npz
+145.0,+9.5890e-12,direct,T140-win/chain_d6/anm_pin3_D145.0000.npz,-7.1066e-12,direct,T140-win/chain_d10/anm_pin3_D145.0000.npz
+146.0,+9.8717e-12,direct,T140-win/chain_d6/anm_pin3_D146.0000.npz,-7.1535e-12,direct,T140-win/chain_d10/anm_pin3_D146.0000.npz
+147.0,+1.0157e-11,direct,T140-win/chain_d6/anm_pin3_D147.0000.npz,-7.1930e-12,direct,T140-win/chain_d10/anm_pin3_D147.0000.npz
+148.0,+1.0446e-11,direct,T140-win/chain_d6/anm_pin3_D148.0000.npz,-7.2248e-12,direct,T140-win/chain_d10/anm_pin3_D148.0000.npz
+149.0,+1.0737e-11,direct,T140-win/chain_d6/anm_pin3_D149.0000.npz,-7.2485e-12,direct,T140-win/chain_d10/anm_pin3_D149.0000.npz
+150.0,+1.1031e-11,direct,T140-win/chain_d6/anm_pin3_D150.0000.npz,-7.2644e-12,direct,T140-win/chain_d10/anm_pin3_D150.0000.npz
+151.0,+1.1328e-11,direct,T140-win/chain_d6/anm_pin3_D151.0000.npz,-7.2717e-12,direct,T140-win/chain_d10/anm_pin3_D151.0000.npz
+152.0,+1.1627e-11,direct,T140-win/chain_d6/anm_pin3_D152.0000.npz,-7.2708e-12,direct,T140-win/chain_d10/anm_pin3_D152.0000.npz
+153.0,+1.1929e-11,direct,T140-win/chain_d6/anm_pin3_D153.0000.npz,-7.2611e-12,direct,T140-win/chain_d10/anm_pin3_D153.0000.npz
+154.0,+1.2233e-11,direct,T140-win/chain_d6/anm_pin3_D154.0000.npz,-7.2428e-12,direct,T140-win/chain_d10/anm_pin3_D154.0000.npz
+155.0,+1.2540e-11,direct,T140-win/chain_d6/anm_pin3_D155.0000.npz,-7.2156e-12,direct,T140-win/chain_d10/anm_pin3_D155.0000.npz
+156.0,+1.2849e-11,direct,T140-win/chain_d6/anm_pin3_D156.0000.npz,-7.1794e-12,direct,T140-win/chain_d10/anm_pin3_D156.0000.npz
+157.0,+1.3161e-11,direct,T140-win/chain_d6/anm_pin3_D157.0000.npz,-7.1344e-12,direct,T140-win/chain_d10/anm_pin3_D157.0000.npz
+158.0,+1.3475e-11,direct,T140-win/chain_d6/anm_pin3_D158.0000.npz,-7.0801e-12,direct,T140-win/chain_d10/anm_pin3_D158.0000.npz
+159.0,+1.3791e-11,direct,T140-win/chain_d6/anm_pin3_D159.0000.npz,-7.0171e-12,direct,T140-win/chain_d10/anm_pin3_D159.0000.npz
+160.0,+1.4109e-11,direct,T140-win/chain_d6/anm_pin3_D160.0000.npz,-6.9447e-12,direct,T140-win/chain_d10/anm_pin3_D160.0000.npz
+161.0,+1.4429e-11,direct,T140-win/chain_d6/anm_pin3_D161.0000.npz,-6.8638e-12,direct,T140-win/chain_d10/anm_pin3_D161.0000.npz
+162.0,+1.4752e-11,direct,T140-win/chain_d6/anm_pin3_D162.0000.npz,-6.7734e-12,direct,T140-win/chain_d10/anm_pin3_D162.0000.npz
+163.0,+1.5076e-11,direct,T140-win/chain_d6/anm_pin3_D163.0000.npz,-6.6747e-12,direct,T140-win/chain_d10/anm_pin3_D163.0000.npz
+164.0,+1.5403e-11,direct,T140-win/chain_d6/anm_pin3_D164.0000.npz,-6.5670e-12,direct,T140-win/chain_d10/anm_pin3_D164.0000.npz
+165.0,+1.5731e-11,direct,T140-win/chain_d6/anm_pin3_D165.0000.npz,-6.4508e-12,direct,T140-win/chain_d10/anm_pin3_D165.0000.npz
+166.0,+1.6061e-11,direct,I13-win/pilot_d6/anm_pin3_D166.0000.npz,-6.3265e-12,direct,I13-win/pilot_d10/anm_pin3_D166.0000.npz
+167.0,+1.6393e-11,direct,I13-win/pilot_d6/anm_pin3_D167.0000.npz,-6.1935e-12,direct,I13-win/pilot_d10/anm_pin3_D167.0000.npz
+168.0,+1.6727e-11,direct,I13-win/chain_d6/anm_pin3_D168.0000.npz,-6.0533e-12,direct,I13-win/chain_d10/anm_pin3_D168.0000.npz
+169.0,+1.7063e-11,direct,I13-win/chain_d6/anm_pin3_D169.0000.npz,-5.9046e-12,direct,I13-win/chain_d10/anm_pin3_D169.0000.npz
+170.0,+1.7399e-11,direct,I13-win/chain_d6/anm_pin3_D170.0000.npz,-5.7491e-12,direct,I13-win/chain_d10/anm_pin3_D170.0000.npz
+171.0,+1.7738e-11,direct,I13-win/chain_d6/anm_pin3_D171.0000.npz,-5.5862e-12,direct,I13-win/chain_d10/anm_pin3_D171.0000.npz
+172.0,+1.8078e-11,direct,I13-win/chain_d6/anm_pin3_D172.0000.npz,-5.4163e-12,direct,I13-win/chain_d10/anm_pin3_D172.0000.npz
+173.0,+1.8419e-11,direct,I13-win/chain_d6/anm_pin3_D173.0000.npz,-5.2403e-12,direct,I13-win/chain_d10/anm_pin3_D173.0000.npz
+174.0,+1.8762e-11,direct,I13-win/chain_d6/anm_pin3_D174.0000.npz,-5.0574e-12,direct,I13-win/chain_d10/anm_pin3_D174.0000.npz
+175.0,+1.9106e-11,direct,I13-win/chain_d6/anm_pin3_D175.0000.npz,-4.8693e-12,direct,I13-win/chain_d10/anm_pin3_D175.0000.npz
+176.0,+1.9451e-11,direct,I13-win/chain_d6/anm_pin3_D176.0000.npz,-4.6749e-12,direct,I13-win/chain_d10/anm_pin3_D176.0000.npz
+177.0,+1.9797e-11,direct,I13-win/chain_d6/anm_pin3_D177.0000.npz,-4.4758e-12,direct,I13-win/chain_d10/anm_pin3_D177.0000.npz
+178.0,+2.0144e-11,direct,I13-win/chain_d6/anm_pin3_D178.0000.npz,-4.2714e-12,direct,I13-win/chain_d10/anm_pin3_D178.0000.npz
+179.0,+2.0492e-11,direct,I13-win/chain_d6/anm_pin3_D179.0000.npz,-4.0621e-12,direct,I13-win/chain_d10/anm_pin3_D179.0000.npz
+180.0,+2.0841e-11,direct,I13-win/chain_d6/anm_pin3_D180.0000.npz,-3.8489e-12,direct,I13-win/chain_d10/anm_pin3_D180.0000.npz
+181.0,+2.1190e-11,direct,I13-win/chain_d6/anm_pin3_D181.0000.npz,-3.6305e-12,direct,I13-win/chain_d10/anm_pin3_D181.0000.npz
+182.0,+2.1540e-11,direct,I13-win/chain_d6/anm_pin3_D182.0000.npz,-3.4090e-12,direct,I13-win/chain_d10/anm_pin3_D182.0000.npz
+183.0,+2.1891e-11,direct,I13-win/chain_d6/anm_pin3_D183.0000.npz,-3.1828e-12,direct,I13-win/chain_d10/anm_pin3_D183.0000.npz
+184.0,+2.2243e-11,direct,I13-win/chain_d6/anm_pin3_D184.0000.npz,-2.9530e-12,direct,I13-win/chain_d10/anm_pin3_D184.0000.npz
+185.0,+2.2594e-11,direct,I13-win/chain_d6/anm_pin3_D185.0000.npz,-2.7196e-12,direct,I13-win/chain_d10/anm_pin3_D185.0000.npz
+186.0,+2.2947e-11,direct,I13-win/chain_d6/anm_pin3_D186.0000.npz,-2.4814e-12,direct,I13-win/chain_d10/anm_pin3_D186.0000.npz
+187.0,+2.3299e-11,direct,I13-win/chain_d6/anm_pin3_D187.0000.npz,-2.2403e-12,direct,I13-win/chain_d10/anm_pin3_D187.0000.npz
+188.0,+2.3652e-11,direct,I13-win/chain_d6/anm_pin3_D188.0000.npz,-1.9936e-12,direct,I13-win/chain_d10/anm_pin3_D188.0000.npz
+189.0,+2.4005e-11,direct,I13-win/chain_d6/anm_pin3_D189.0000.npz,-1.7430e-12,direct,I13-win/chain_d10/anm_pin3_D189.0000.npz
+190.0,+2.4358e-11,direct,I13-win/chain_d6/anm_pin3_D190.0000.npz,-1.4872e-12,direct,I13-win/chain_d10/anm_pin3_D190.0000.npz
+191.5,+2.4889e-11,interp,I13-win/chain_d6/anm_pin3_D189.0000.npz .. I215-win/chain_d6/anm_pin3_D194.0000.npz,-1.0920e-12,direct,I13-win/chain_d10/anm_pin3_D191.5000.npz
+192.5,+2.5242e-11,interp,I13-win/chain_d6/anm_pin3_D190.0000.npz .. I215-win/chain_d6/anm_pin3_D195.0000.npz,-8.2009e-13,direct,I215-win/chain_d10/anm_pin3_D192.5000.npz
+193.5,+2.5597e-11,interp,I13-win/chain_d6/anm_pin3_D191.0000.npz .. I215-win/chain_d6/anm_pin3_D196.0000.npz,-5.3963e-13,direct,I215-win/chain_d10/anm_pin3_D193.5000.npz
+194.5,+2.5951e-11,interp,I13-win/chain_d6/anm_pin3_D192.0000.npz .. I215-win/chain_d6/anm_pin3_D197.0000.npz,-2.5197e-13,direct,I215-win/chain_d10/anm_pin3_D194.5000.npz
+195.5,+2.6306e-11,interp,I215-win/chain_d6/anm_pin3_D193.0000.npz .. I215-win/chain_d6/anm_pin3_D198.0000.npz,+4.8605e-14,direct,I215-win/chain_d10/anm_pin3_D195.5000.npz
+196.5,+2.6661e-11,interp,I215-win/chain_d6/anm_pin3_D194.0000.npz .. I215-win/chain_d6/anm_pin3_D199.0000.npz,+3.5822e-13,direct,I215-win/chain_d10/anm_pin3_D196.5000.npz
+197.0,+2.6839e-11,direct,I215-win/chain_d6/anm_pin3_D197.0000.npz,+5.1875e-13,interp,I215-win/chain_d10/anm_pin3_D194.5000.npz .. I215-win/chain_d10/anm_pin3_D199.5000.npz
+197.5,+2.7017e-11,interp,I215-win/chain_d6/anm_pin3_D195.0000.npz .. I215-win/chain_d6/anm_pin3_D200.0000.npz,+6.8306e-13,direct,I215-win/chain_d10/anm_pin3_D197.5000.npz
+198.0,+2.7195e-11,direct,I215-win/chain_d6/anm_pin3_D198.0000.npz,+8.5105e-13,interp,I215-win/chain_d10/anm_pin3_D195.5000.npz .. I215-win/chain_d10/anm_pin3_D200.5000.npz
+199.0,+2.7552e-11,direct,I215-win/chain_d6/anm_pin3_D199.0000.npz,+1.1978e-12,interp,I215-win/chain_d10/anm_pin3_D196.5000.npz .. I215-win/chain_d10/anm_pin3_D201.5000.npz
+200.0,+2.7910e-11,direct,I215-win/chain_d6/anm_pin3_D200.0000.npz,+1.5641e-12,interp,I215-win/chain_d10/anm_pin3_D197.5000.npz .. I215-win/chain_d10/anm_pin3_D202.5000.npz
+201.0,+2.8270e-11,direct,I215-win/chain_d6/anm_pin3_D201.0000.npz,+1.9497e-12,interp,I215-win/chain_d10/anm_pin3_D198.5000.npz .. I215-win/chain_d10/anm_pin3_D203.5000.npz
+202.0,+2.8630e-11,direct,I215-win/chain_d6/anm_pin3_D202.0000.npz,+2.3573e-12,interp,I215-win/chain_d10/anm_pin3_D199.5000.npz .. I215-win/chain_d10/anm_pin3_D204.5000.npz
+203.0,+2.8993e-11,direct,I215-win/chain_d6/anm_pin3_D203.0000.npz,+2.7912e-12,interp,I215-win/chain_d10/anm_pin3_D200.5000.npz .. I215-win/chain_d10/anm_pin3_D205.5000.npz
+204.0,+2.9357e-11,direct,I215-win/chain_d6/anm_pin3_D204.0000.npz,+3.2498e-12,interp,I215-win/chain_d10/anm_pin3_D201.5000.npz .. I215-win/chain_d10/anm_pin3_D206.5000.npz
+205.0,+2.9725e-11,direct,I215-win/chain_d6/anm_pin3_D205.0000.npz,+3.7402e-12,interp,I215-win/chain_d10/anm_pin3_D202.5000.npz .. I215-win/chain_d10/anm_pin3_D207.5000.npz
+206.0,+3.0094e-11,direct,I215-win/chain_d6/anm_pin3_D206.0000.npz,+4.2598e-12,interp,I215-win/chain_d10/anm_pin3_D203.5000.npz .. I215-win/chain_d10/anm_pin3_D208.5000.npz
+207.0,+3.0465e-11,direct,I215-win/chain_d6/anm_pin3_D207.0000.npz,+4.8130e-12,interp,I215-win/chain_d10/anm_pin3_D204.5000.npz .. I215-win/chain_d10/anm_pin3_D209.5000.npz
+208.0,+3.0842e-11,direct,I215-win/chain_d6/anm_pin3_D208.0000.npz,+5.4047e-12,interp,I215-win/chain_d10/anm_pin3_D205.5000.npz .. I215-win/chain_d10/anm_pin3_D210.5000.npz
+209.0,+3.1223e-11,direct,I215-win/chain_d6/anm_pin3_D209.0000.npz,+6.0311e-12,interp,I215-win/chain_d10/anm_pin3_D206.5000.npz .. I215-win/chain_d10/anm_pin3_D211.5000.npz
+209.5,+3.1413e-11,interp,I215-win/chain_d6/anm_pin3_D207.0000.npz .. I215-win/chain_d6/anm_pin3_D212.0000.npz,+6.3577e-12,direct,I215-win/chain_d10/anm_pin3_D209.5000.npz
+210.5,+3.1793e-11,interp,I215-win/chain_d6/anm_pin3_D208.0000.npz .. I215-win/chain_d6/anm_pin3_D213.0000.npz,+7.0393e-12,direct,I215-win/chain_d10/anm_pin3_D210.5000.npz
+211.5,+3.2179e-11,interp,I215-win/chain_d6/anm_pin3_D209.0000.npz .. I215-win/chain_d6/anm_pin3_D214.0000.npz,+7.7530e-12,direct,I215-win/chain_d10/anm_pin3_D211.5000.npz
+212.5,+3.2588e-11,interp,I215-win/chain_d6/anm_pin3_D211.0000.npz .. I215-win/chain_d6/anm_pin3_D214.7500.npz,+8.5317e-12,direct,I215-win/chain_d10/anm_pin3_D212.5000.npz
+213.5,+3.3002e-11,interp,I215-win/chain_d6/anm_pin3_D212.0000.npz .. I462-win/chain_d6/anm_pin3_D215.0000.npz,+9.3422e-12,direct,I215-win/chain_d10/anm_pin3_D213.5000.npz
+214.5,+3.3356e-11,direct,I215-win/chain_d6/anm_pin3_D214.5000.npz,+1.0121e-11,direct,I215-win/chain_d10/anm_pin3_D214.5000.npz
+214.6,+3.3419e-11,interp,I215-win/chain_d6/anm_pin3_D214.0000.npz .. I462-win/chain_d6/anm_pin3_D216.1312.npz,+1.0228e-11,interp,I215-win/chain_d10/anm_pin3_D213.5000.npz .. I462-win/chain_d10/anm_pin3_D215.1312.npz
+214.7,+3.3459e-11,interp,I215-win/chain_d6/anm_pin3_D214.0000.npz .. I462-win/chain_d6/anm_pin3_D216.1312.npz,+1.0313e-11,interp,I215-win/chain_d10/anm_pin3_D213.5000.npz .. I462-win/chain_d10/anm_pin3_D215.1312.npz
+214.8,+3.3500e-11,interp,I215-win/chain_d6/anm_pin3_D214.0000.npz .. I462-win/chain_d6/anm_pin3_D216.1312.npz,+1.0399e-11,interp,I215-win/chain_d10/anm_pin3_D213.5000.npz .. I462-win/chain_d10/anm_pin3_D215.1312.npz
+214.9,+3.3540e-11,interp,I215-win/chain_d6/anm_pin3_D214.0000.npz .. I462-win/chain_d6/anm_pin3_D216.1312.npz,+1.0485e-11,interp,I215-win/chain_d10/anm_pin3_D214.5000.npz .. I462-win/chain_d10/anm_pin3_D216.1312.npz
+215.0,+3.3581e-11,direct,I462-win/chain_d6/anm_pin3_D215.0000.npz,+1.0571e-11,direct,I276-win/chain_d10/anm_pin3_D215.0000.npz
+215.025,+3.3591e-11,interp,I215-win/chain_d6/anm_pin3_D214.0000.npz .. I462-win/chain_d6/anm_pin3_D216.1312.npz,+1.0593e-11,interp,I215-win/chain_d10/anm_pin3_D214.5000.npz .. I462-win/chain_d10/anm_pin3_D216.1312.npz
+215.03125,+3.3594e-11,interp,I215-win/chain_d6/anm_pin3_D214.0000.npz .. I462-win/chain_d6/anm_pin3_D216.1312.npz,+1.0598e-11,interp,I215-win/chain_d10/anm_pin3_D214.5000.npz .. I462-win/chain_d10/anm_pin3_D216.1312.npz
+215.13125,+3.3634e-11,direct,I462-win/chain_d6/anm_pin3_D215.1312.npz,+1.0684e-11,direct,I462-win/chain_d10/anm_pin3_D215.1312.npz
+216.13125,+3.4042e-11,direct,I462-win/chain_d6/anm_pin3_D216.1312.npz,+1.1555e-11,direct,I462-win/chain_d10/anm_pin3_D216.1312.npz
+217.13125,+3.4455e-11,direct,I462-win/chain_d6/anm_pin3_D217.1312.npz,+1.2447e-11,direct,I462-win/chain_d10/anm_pin3_D217.1312.npz
+218.13125,+3.4871e-11,direct,I462-win/chain_d6/anm_pin3_D218.1312.npz,+1.3351e-11,direct,I462-win/chain_d10/anm_pin3_D218.1312.npz
+219.13125,+3.5288e-11,direct,I462-win/chain_d6/anm_pin3_D219.1312.npz,+1.4250e-11,direct,I462-win/chain_d10/anm_pin3_D219.1312.npz
+220.13125,+3.5708e-11,direct,I462-win/chain_d6/anm_pin3_D220.1312.npz,+1.5136e-11,direct,I462-win/chain_d10/anm_pin3_D220.1312.npz
+221.13125,+3.6128e-11,direct,I462-win/chain_d6/anm_pin3_D221.1312.npz,+1.5989e-11,direct,I462-win/chain_d10/anm_pin3_D221.1312.npz
+222.13125,+3.6546e-11,direct,I462-win/chain_d6/anm_pin3_D222.1312.npz,+1.6788e-11,direct,I462-win/chain_d10/anm_pin3_D222.1312.npz
+223.13125,,,,+1.7498e-11,direct,I462-win/chain_d10/anm_pin3_D223.1312.npz
+224.13125,,,,+1.8107e-11,direct,I462-win/chain_d10/anm_pin3_D224.1312.npz
