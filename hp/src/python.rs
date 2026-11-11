@@ -9,7 +9,7 @@ use crate::osolve;
 use crate::qd::QD;
 use crate::qsolve;
 use multidouble::od::OD;
-use crate::model::{self, Ctx, TWork};
+use crate::model::{self, Ctx};
 use crate::v8::V8;
 use numpy::ndarray::Array2;
 use numpy::{IntoPyArray, PyArray1, PyArray2, PyReadonlyArray1, PyReadonlyArray2};
@@ -208,7 +208,7 @@ impl<const B: usize> Api for Ctx<B> {
         let delta = DD { hi: zh[zh.len() - 1], lo: zl[zl.len() - 1] };
         let omega = DV::splat(DD::TWO_PI / delta);
         let s = state_of::<B>(sh, sl);
-        let mut w = TWork::<DV, B>::new(self.kt);
+        let mut w = model::work::<DV, B>(self.kt);
         store_state(&model::taylor_path(self, &s, xs, omega, &mut w))
     }
     /// which = 0: centre series coefficients (kc+1, 4, M); 1: horizon series (ks+1, 4, M)
@@ -223,10 +223,10 @@ impl<const B: usize> Api for Ctx<B> {
         let delta = DD { hi: zh[zh.len() - 1], lo: zl[zl.len() - 1] };
         let omega = DV::splat(DD::TWO_PI / delta);
         let s = if which == 0 {
-            model::centre_series(self, &self.fld(zh, zl, 0), &self.fld(zh, zl, 8 * B), omega)
+            model::centre_series(self, &self.fld(zh, zl, 0), &self.fld(zh, zl, 8 * B), omega, &multishoot::Rate::ZERO)
         } else {
-            let lus = model::horizon_lus(self, &self.fld(zh, zl, self.off_ah()), delta, true, DD::ZERO)?;
-            model::horizon_series(self, &self.fld(zh, zl, self.off_mh()), &self.fld(zh, zl, self.off_ah()), omega, &lus, &lus)
+            let prep = model::HPrep::of(model::horizon_lus(self, &self.fld(zh, zl, self.off_ah()), delta, true, DD::ZERO)?);
+            model::horizon_series(self, &self.fld(zh, zl, self.off_mh()), &self.fld(zh, zl, self.off_ah()), omega, &prep)
         };
         let m = 8 * B;
         let nk = s[0].len();
@@ -248,19 +248,7 @@ impl<const B: usize> Api for Ctx<B> {
         Ok((h, l))
     }
     fn mode_matrix(&mut self, zh: &[f64], zl: &[f64], lam: DD) -> Result<(Vec<f64>, Vec<f64>, usize), String> {
-        self.lam = lam;
-        let r = model::jacobian(self, zh, zl, true);
-        self.lam = DD::ZERO;
-        let (jh, jl, ld) = r?;
-        let n = Ctx::<B>::len(self) - 1;
-        let ld2 = crate::linalg::ld_for(n);
-        let mut h = vec![0.0; ld2 * n];
-        let mut l = vec![0.0; ld2 * n];
-        for c in 0..n {
-            h[c * ld2..c * ld2 + n].copy_from_slice(&jh[c * ld..c * ld + n]);
-            l[c * ld2..c * ld2 + n].copy_from_slice(&jl[c * ld..c * ld + n]);
-        }
-        Ok((h, l, ld2))
+        model::mode_matrix(self, zh, zl, lam, true)
     }
     fn jacobian_block(&mut self, zh: &[f64], zl: &[f64], how: F64Jac, mutate: u8, jac_mutate: u8) -> Result<BlockLu, String> {
         if how.hdd != 0 {

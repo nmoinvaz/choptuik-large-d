@@ -12,7 +12,8 @@ use crate::dd::DD;
 use crate::dv::{DotAcc, DV};
 use crate::field::{DMat, FieldSolve, Fl, State};
 use multidouble::dual::{take_counts, Counted, COUNTED_OPS};
-use crate::model::{block_state, centre_state, horizon_lus, residual, taylor_path, Ctx, TWork};
+use crate::model::{centre_state, horizon_lus, residual, taylor_path, work, Ctx, HPrep};
+use multishoot::Rate;
 use crate::qd::QD;
 use crate::qv::{QDotAcc, QV};
 use crate::v8::V8;
@@ -69,8 +70,8 @@ pub(crate) fn synth() -> (Ctx<1>, Vec<f64>, Vec<f64>) {
     zl[l - 1] = delta.lo;
     let omega = DV::splat(DD::TWO_PI / delta);
     let put = |zh: &mut Vec<f64>, zl: &mut Vec<f64>, off: usize, f: &Fl<DV, 1>| f.store(&mut zh[off..off + m], &mut zl[off..off + m]);
-    let mut s: State<DV, 1> = centre_state(&ctx, &ctx.fld(&zh, &zl, 0), &ctx.fld(&zh, &zl, m), omega);
-    let mut w = TWork::<DV, 1>::new(ctx.kt);
+    let mut s: State<DV, 1> = centre_state(&ctx, &ctx.fld(&zh, &zl, 0), &ctx.fld(&zh, &zl, m), omega, &Rate::ZERO);
+    let mut w = work::<DV, 1>(ctx.kt);
     for b in 0..k {
         if b > 0 {
             s = taylor_path(&ctx, &s, &ctx.segs[b - 1], omega, &mut w);
@@ -89,14 +90,15 @@ pub(crate) fn synth() -> (Ctx<1>, Vec<f64>, Vec<f64>) {
 fn qv_vs_dv<const B: usize>(ctx: &Ctx<B>, zh: &[f64], zl: &[f64], rel: f64) -> f64 {
     let l = zh.len();
     let delta = DD { hi: zh[l - 1], lo: zl[l - 1] };
-    let lus = horizon_lus(ctx, &ctx.fld(zh, zl, ctx.off_ah()), delta, false, DD::ZERO).unwrap();
+    let prep = HPrep::of(horizon_lus(ctx, &ctx.fld(zh, zl, ctx.off_ah()), delta, false, DD::ZERO).unwrap());
+    let sh = ctx.shooting();
     let mut worst = 0.0f64;
     for b in 0..ctx.k() + 1 {
         let inp: Vec<Fl<DV, B>> = ctx.block_inputs(b).iter().map(|&o| ctx.fld(zh, zl, o)).collect();
-        let sd = block_state::<DV, B>(ctx, b, &inp, DV::splat(delta), &lus, &lus);
+        let sd = sh.block_state::<DV>(b, &inp, &[DV::splat(delta)], &prep);
         let inq: Vec<Fl<QV, B>> = inp.iter().map(Fl::cst).collect();
         let dq = QV::splat(QD::from_dd(delta) + QD::from_f64(delta.hi * rel));
-        let sq = block_state::<QV, B>(ctx, b, &inq, dq, &lus, &lus);
+        let sq = sh.block_state::<QV>(b, &inq, &[dq], &prep);
         for q in 0..4 {
             for j in 0..Ctx::<B>::M {
                 let (a, c) = (sd[q].get(j), sq[q].0[j / 8].lane(j % 8));
@@ -238,6 +240,7 @@ fn run_residual<const B: usize>(v: &[f64]) {
     });
     let mut lus = Vec::new();
     let t_lus = secs(3, || lus = horizon_lus(&ctx, &ah, delta, false, DD::ZERO).unwrap());
+    let sh = ctx.shooting();
     // one horizon solve (double-double, scalar), as in psolve
     let f = ctx.fld(&zh, &zl, ctx.off_ah());
     let t_solve = secs(5, || {
@@ -251,18 +254,19 @@ fn run_residual<const B: usize>(v: &[f64]) {
     println!("{:>6} {:>10} {:>10} {:>10} {:>10} {:>10} {:>7}   operations (8-lane) by type", "block", "dd s", "qd lanes s", "ratio", "model dd", "model qd", "solves");
     let mut tot = [0.0f64; 4];
     let mut counts_tot = [0u64; NC];
+    let prep = HPrep::of(lus);
     for b in 0..nb {
         let inp = inputs(b);
         let td = secs(3, || {
-            std::hint::black_box(block_state::<DV, B>(&ctx, b, &inp, DV::splat(delta), &lus, &lus));
+            std::hint::black_box(sh.block_state::<DV>(b, &inp, &[DV::splat(delta)], &prep));
         });
         let inq: Vec<Fl<QV, B>> = inp.iter().map(Fl::cst).collect();
         let tq = secs(3, || {
-            std::hint::black_box(block_state::<QV, B>(&ctx, b, &inq, QV::splat(QD::from_dd(delta)), &lus, &lus));
+            std::hint::black_box(sh.block_state::<QV>(b, &inq, &[QV::splat(QD::from_dd(delta))], &prep));
         });
         let inc: Vec<Fl<CDV, B>> = inp.iter().map(Fl::cst).collect();
         take_counts();
-        std::hint::black_box(block_state::<CDV, B>(&ctx, b, &inc, Counted(DV::splat(delta)), &lus, &lus));
+        std::hint::black_box(sh.block_state::<CDV>(b, &inc, &[Counted(DV::splat(delta))], &prep));
         let c = take_counts();
         let solves = if b == ctx.k() { ctx.ks + 1 } else { 0 };
         // model: counts x per-operation cost, plus the double-double solves (their cost measured above)

@@ -1,5 +1,5 @@
-//! The DSS critical-solution equations in double-double: centre series, Taylor stepping in x, horizon series, and
-//! the multiple-shooting residual and its exact Jacobian.
+//! The DSS critical-solution equations in double-double: centre series, Taylor stepping in x, horizon series, as
+//! multishoot's `Equations` (`Dss`), and the kernel's entry points on multishoot's engine (`Shooting`).
 //!
 //! Fields p, m (odd), a, c (even) on the half tau grid; d/dtau = omega d/dtheta, omega = 2 pi / Delta. With x the
 //! self-similar radius (horizon at x = 1, where c = 1):
@@ -13,16 +13,27 @@
 //! p, m, a, c (4M); horizon data m_h, a_h (M each); Delta. Residual blocks: centre series at node 0 minus node 0;
 //! Taylor integration node b-1 -> node b minus node b (b = 1..K-1); horizon series at u = 1 - x_{K-1} minus node
 //! K-1; and a phase row (sum_j w_j p1_j). All in physical values on the grid.
+//!
+//! This is multishoot's layout with NF = 4 fields, NL = 2 (p1, c0) and NR = 2 (m_h, a_h) endpoint fields, one global
+//! (Delta) and one extra row (the phase row): `Ctx::shooting` gives the engine's problem, whose residual, exact
+//! Jacobians (double-double, quad-, octo-double, f64 lanes, staircase storage), jets, Jacobian-vector product and mode
+//! matrix serve the kernel. `Dss` supplies the equations: the Taylor recursion, the centre and horizon series as the
+//! endpoint maps, and the horizon LUs as the preparation of an evaluation.
 use crate::dd::DD;
 use crate::dv::DV;
 use crate::field::{cs, cs_range, cs_w, horner, DMat, Fl, State, TangentTail};
-use crate::lane::{BaseLane, Dtn, Du, F8, Fu, Fun, Jet, Lane};
+use crate::lane::{Dc, Fu, Fun, Lane, F8};
+use crate::linalg::{ld_for, DDLu};
 use crate::qv::QV;
 use multidouble::dual::Param;
-use multidouble::native::OV;
+use multidouble::native::{Dtn, OV};
+use multidouble::precision::{Double, Precision};
+use multidouble::simd::Native;
+use multishoot::jacobian::Seed;
+use multishoot::{Equations, ExtraRow, Rate, Shooting, Work};
 use crate::field::FieldSolve;
-use crate::linalg::{ld_for, DDLu};
 use rayon::prelude::*;
+use std::any::Any;
 
 pub struct Ctx<const B: usize> {
     pub n: DD,
@@ -49,8 +60,9 @@ pub struct Ctx<const B: usize> {
     /// horizon side. Segments b <= match_node run outward (node b-1 -> node b); segments b > match_node run inward
     /// (node b -> node b-1). nodes.len() - 1 (the default) is the all-outward layout.
     pub match_node: usize,
-    /// Growth rate for the mode matrix: with lam != 0, every tau-derivative of a tangent (perturbation) gains + lam
-    /// (perturbations ~ exp(lam tau)); values are unaffected. Zero for the residual and the ordinary Jacobian.
+    /// Growth rate of a mode matrix in the layout of hp/modecount_cx, which reads it; hp's own mode matrix passes its
+    /// rate to the engine (`mode_matrix`, multishoot's `Rate`), and hp's equations take the rate from the engine
+    /// (`Work::rate`, `HPrep::rate`), so this stays zero here.
     pub lam: DD,
     /// Deliberate breakage of the f64 lanes only (`jacobian_f64`), for the control of the Jacobian-agreement check
     /// (hp/mixed_check.py --mutate): 0 none, 1 no tau derivative, 2 omega scaled by 1 + 1e-9, 3 the horizon solves'
@@ -114,6 +126,9 @@ pub const HALPHA_ON: u8 = 1;
 /// formed from a = 1 + alpha as without it (the cancellation put back); the results are those of 0 bit for bit.
 pub const HALPHA_MUT: u8 = 2;
 
+/// the scratch series of the Taylor recursion (`Work::aux`): a2, q2, g, h, pth, mth, ww, vv
+const N_AUX: usize = 8;
+
 impl<const B: usize> Ctx<B> {
     pub const M: usize = 8 * B;
     pub fn k(&self) -> usize {
@@ -165,6 +180,16 @@ impl<const B: usize> Ctx<B> {
     pub fn u0(&self) -> DD {
         DD::ONE - DD::from_f64(self.nodes[self.k() - 1])
     }
+    /// The engine's problem on this context: `Dss` on the nodes, segments, Taylor order and matching node, with the
+    /// phase row as its one extra row. Its layout is this context's (multishoot's `Shooting` with NL = 2, NF = 4,
+    /// NR = 2 and the global Delta last).
+    pub fn shooting(&self) -> Shooting<Dss<'_, B>, B> {
+        let mut s = Shooting::new(Dss(self), self.nodes.clone(), self.kt);
+        s.segs = self.segs.clone();
+        s.match_node = self.match_node;
+        s.extra = vec![ExtraRow { terms: (0..Self::M).map(|i| (i, self.phase.get(i))).collect(), rhs: DD::ZERO }];
+        s
+    }
 }
 
 #[inline(always)]
@@ -172,28 +197,25 @@ fn recip_int(k: usize) -> DD {
     DD::ONE / DD::from_f64(k as f64)
 }
 
-/// d/dtau = omega D, plus lam on the tangent part (perturbations ~ exp(lam tau); see Ctx::lam).
+/// d/dtau = omega D, its tangents shifted by the growth rate of a mode-matrix evaluation (multishoot's `Rate::shift`:
+/// perturbations ~ exp(lambda tau) gain lambda times themselves; values are unaffected; zero rate: unchanged)
 #[inline(always)]
-fn dtau<T: Lane, const B: usize>(ctx: &Ctx<B>, x: &Fl<T, B>, omega: T) -> Fl<T, B> {
+fn dtau<T: Lane, const B: usize>(ctx: &Ctx<B>, x: &Fl<T, B>, omega: T, rate: &Rate) -> Fl<T, B> {
     if T::TAN_F64 && ctx.mutate == 1 {
         return Fl::zero();
     }
-    let r = ctx.d.apply(x).mul_t(omega);
-    if T::TANGENT && ctx.lam.hi != 0.0 {
-        if T::TAN_F64 {
-            // every f64 tangent gains lam (hi part) times itself
-            let (mut r, l) = (r, crate::v8::V8::splat(ctx.lam.hi));
-            for b in 0..B {
-                for k in 0..T::NT {
-                    let t = x.0[b].tan64(k).fma(l, r.0[b].tan64(k));
-                    r.0[b].set_tan64(k, t);
-                }
-            }
-            return r;
-        }
-        r + Fl::from_vt(&Fl::zero(), &x.tan().muls(ctx.lam))
+    rate.shift(x, ctx.d.apply(x).mul_t(omega))
+}
+
+/// omega = 2 pi / Delta in the lane, from the global Delta (with the f64 lanes' control ctx.mutate 2, scaled by
+/// 1 + 1e-9)
+#[inline(always)]
+fn omega_of<T: Lane, const B: usize>(ctx: &Ctx<B>, delta: T) -> T {
+    let omega = T::splat(DD::TWO_PI) / delta;
+    if T::TAN_F64 && ctx.mutate == 2 {
+        omega.mulf(1.0 + 1e-9)
     } else {
-        r
+        omega
     }
 }
 
@@ -234,8 +256,9 @@ fn tail_of<T: Lane>(r: f64) -> TangentTail {
 pub use multidouble::dd::pow2_near as series_scale;
 
 /// Centre-series coefficients of p, m, a, c in the scaled variable x / sigma, sigma = series_scale(nodes[0]): entry k
-/// is c_k sigma^k (multiply by sigma^-k for the coefficients in x).
-pub fn centre_series<T: Lane, const B: usize>(ctx: &Ctx<B>, p1: &Fl<T, B>, c0: &Fl<T, B>, omega: T) -> [Vec<Fl<T, B>>; 4] {
+/// is c_k sigma^k (multiply by sigma^-k for the coefficients in x). rate: the growth rate of a mode-matrix
+/// evaluation (`Rate::ZERO` otherwise).
+pub fn centre_series<T: Lane, const B: usize>(ctx: &Ctx<B>, p1: &Fl<T, B>, c0: &Fl<T, B>, omega: T, rate: &Rate) -> [Vec<Fl<T, B>>; 4] {
     let sig = series_scale(ctx.nodes[0]);
     let n = dim::<T, B>(ctx);
     let n1 = n - T::P::one();
@@ -272,8 +295,8 @@ pub fn centre_series<T: Lane, const B: usize>(ctx: &Ctx<B>, p1: &Fl<T, B>, c0: &
         // in the scaled variable every term of the x^(k-1) equation carries sigma^k: those built from order k - 1
         // alone (the d/dtau and x p' terms) gain one factor sigma, the Cauchy sums of index sum k none
         let sk = if T::TAN_F64 && ctx.mutate == 6 && k == 7 { 2.0 * sig } else { sig };
-        let dp = dtau(ctx, &pp[k - 1], omega).mul_pwr2(sk);
-        let dm = dtau(ctx, &mm[k - 1], omega).mul_pwr2(sk);
+        let dp = dtau(ctx, &pp[k - 1], omega, rate).mul_pwr2(sk);
+        let dm = dtau(ctx, &mm[k - 1], omega, rate).mul_pwr2(sk);
         let s1p = cs_w(&cc, &pp, k, 1, k - 1, |i| (k - i) as f64);
         let s1m = cs_w(&cc, &mm, k, 1, k - 1, |i| (k - i) as f64);
         let xpx = pp[k - 1].mulf(kf - 1.0).mul_pwr2(sk) - s1p;
@@ -303,8 +326,8 @@ pub fn centre_series<T: Lane, const B: usize>(ctx: &Ctx<B>, p1: &Fl<T, B>, c0: &
     [pp, mm, aa, cc]
 }
 
-pub fn centre_state<T: Lane, const B: usize>(ctx: &Ctx<B>, p1: &Fl<T, B>, c0: &Fl<T, B>, omega: T) -> State<T, B> {
-    let s = centre_series(ctx, p1, c0, omega);
+pub fn centre_state<T: Lane, const B: usize>(ctx: &Ctx<B>, p1: &Fl<T, B>, c0: &Fl<T, B>, omega: T, rate: &Rate) -> State<T, B> {
+    let s = centre_series(ctx, p1, c0, omega, rate);
     let x = DD::from_f64(ctx.nodes[0]).mul_pwr2(1.0 / series_scale(ctx.nodes[0]));
     [horner(&s[0], x), horner(&s[1], x), horner(&s[2], x), horner(&s[3], x)]
 }
@@ -312,99 +335,89 @@ pub fn centre_state<T: Lane, const B: usize>(ctx: &Ctx<B>, p1: &Fl<T, B>, c0: &F
 // ---------------------------------------------------------------------------------------------------------------
 // Taylor stepping in x
 // ---------------------------------------------------------------------------------------------------------------
-pub struct TWork<T: Lane, const B: usize> {
-    pub p: Vec<Fl<T, B>>,
-    pub m: Vec<Fl<T, B>>,
-    pub a: Vec<Fl<T, B>>,
-    pub c: Vec<Fl<T, B>>,
-    a2: Vec<Fl<T, B>>,
-    q2: Vec<Fl<T, B>>,
-    g: Vec<Fl<T, B>>,
-    h: Vec<Fl<T, B>>,
-    pth: Vec<Fl<T, B>>,
-    mth: Vec<Fl<T, B>>,
-    ww: Vec<Fl<T, B>>,
-    vv: Vec<Fl<T, B>>,
-}
 
-impl<T: Lane, const B: usize> TWork<T, B> {
-    pub fn new(kt: usize) -> Self {
-        let v = || vec![Fl::<T, B>::zero(); kt + 2];
-        TWork { p: v(), m: v(), a: v(), c: v(), a2: v(), q2: v(), g: v(), h: v(), pth: v(), mth: v(), ww: v(), vv: v() }
-    }
-}
-
-/// Taylor coefficients 0..=kt of the state about x0 (in w.p, w.m, w.a, w.c)
-pub fn taylor_coeffs<T: Lane, const B: usize>(ctx: &Ctx<B>, s: &State<T, B>, x0: f64, omega: T, w: &mut TWork<T, B>) {
-    let kt = ctx.kt;
+/// Taylor coefficients 1..=w.kt of the state about x0, order 0 in w.c[0..4] (p, m, a, c): the recursion of
+/// `Dss::taylor_coeffs` at the given omega, its tau derivatives shifted by `w.rate`
+pub fn taylor_coeffs<T: Lane, const B: usize>(ctx: &Ctx<B>, x0: f64, omega: T, w: &mut Work<T, B>) {
+    let kt = w.kt;
+    let rate = w.rate;
+    let [p, m, a, c] = &mut w.c[..] else { unreachable!("four fields") };
+    let [a2, q2, g, h, pth, mth, ww, vv] = &mut w.aux[..] else { unreachable!("eight scratch series") };
     let n1 = dim::<T, B>(ctx) - T::P::one();
     let nh = dim::<T, B>(ctx).mul_f(0.5);
     let x0d = DD::from_f64(x0);
     let inv_x0 = DD::ONE / x0d;
     let x2 = [x0d * x0d, x0d.mul_f(2.0), DD::ONE];
-    w.p[0] = s[0];
-    w.m[0] = s[1];
-    w.a[0] = s[2];
-    w.c[0] = s[3];
     let mut iw0 = Fl::<T, B>::zero();
     let mut iv0 = Fl::<T, B>::zero();
     for k in 0..kt {
         let kf = k as f64;
-        w.a2[k] = cs(&w.a, &w.a, k);
-        w.q2[k] = cs(&w.p, &w.p, k) + cs(&w.m, &w.m, k);
-        w.g[k] = (cs(&w.c, &w.a2, k) - w.c[k]).mulp(n1);
-        w.h[k] = cs(&w.a, &w.q2, k) + (w.a[k] - cs(&w.a, &w.a2, k)).mulp(n1);
-        w.pth[k] = dtau(ctx, &w.p[k], omega);
-        w.mth[k] = dtau(ctx, &w.m[k], omega);
-        let mut xp = w.pth[k].muls(x0d);
-        let mut xm = w.mth[k].muls(x0d);
+        a2[k] = cs(a, a, k);
+        q2[k] = cs(p, p, k) + cs(m, m, k);
+        g[k] = (cs(c, a2, k) - c[k]).mulp(n1);
+        h[k] = cs(a, q2, k) + (a[k] - cs(a, a2, k)).mulp(n1);
+        pth[k] = dtau(ctx, &p[k], omega, &rate);
+        mth[k] = dtau(ctx, &m[k], omega, &rate);
+        let mut xp = pth[k].muls(x0d);
+        let mut xm = mth[k].muls(x0d);
         if k > 0 {
-            xp = xp + w.pth[k - 1];
-            xm = xm + w.mth[k - 1];
+            xp = xp + pth[k - 1];
+            xm = xm + mth[k - 1];
         }
-        let cp = cs(&w.c, &w.p, k);
-        let cm = cs(&w.c, &w.m, k);
+        let cp = cs(c, p, k);
+        let cm = cs(c, m, k);
         let cpm = cp + cm;
-        let rp = ((cs(&w.g, &w.p, k) - xp) - cp) + cpm.mulp(nh);
-        let rm = ((cm - xm) - cs(&w.g, &w.m, k)) - cpm.mulp(nh);
+        let rp = ((cs(g, p, k) - xp) - cp) + cpm.mulp(nh);
+        let rm = ((cm - xm) - cs(g, m, k)) - cpm.mulp(nh);
         let ik = inv_x0 * recip_int(k + 1);
-        w.c[k + 1] = (w.g[k] - w.c[k].mulf(kf)).muls(ik);
-        w.a[k + 1] = (w.h[k].mulf(0.5) - w.a[k].mulf(kf)).muls(ik);
+        c[k + 1] = (g[k] - c[k].mulf(kf)).muls(ik);
+        a[k + 1] = (h[k].mulf(0.5) - a[k].mulf(kf)).muls(ik);
         // W = x (x - c), V = x (x + c)
-        let mut xc = w.c[k].muls(x0d);
+        let mut xc = c[k].muls(x0d);
         if k > 0 {
-            xc = xc + w.c[k - 1];
+            xc = xc + c[k - 1];
         }
         if k <= 2 {
-            w.ww[k] = (-xc).adds(x2[k]);
-            w.vv[k] = xc.adds(x2[k]);
+            ww[k] = (-xc).adds(x2[k]);
+            vv[k] = xc.adds(x2[k]);
         } else {
-            w.ww[k] = -xc;
-            w.vv[k] = xc;
+            ww[k] = -xc;
+            vv[k] = xc;
         }
         if k == 0 {
-            iw0 = Fl::<T, B>::splat(DD::ONE) / w.ww[0];
-            iv0 = Fl::<T, B>::splat(DD::ONE) / w.vv[0];
+            iw0 = Fl::<T, B>::splat(DD::ONE) / ww[0];
+            iv0 = Fl::<T, B>::splat(DD::ONE) / vv[0];
         }
         let ik1 = recip_int(k + 1);
         let (sp, sm) = if k >= 1 {
-            (cs_w(&w.ww, &w.p, k + 1, 1, k, |j| (k + 1 - j) as f64), cs_w(&w.vv, &w.m, k + 1, 1, k, |j| (k + 1 - j) as f64))
+            (cs_w(ww, p, k + 1, 1, k, |j| (k + 1 - j) as f64), cs_w(vv, m, k + 1, 1, k, |j| (k + 1 - j) as f64))
         } else {
             (Fl::zero(), Fl::zero())
         };
-        w.p[k + 1] = ((rp - sp) * iw0).muls(ik1);
-        w.m[k + 1] = ((rm - sm) * iv0).muls(ik1);
+        p[k + 1] = ((rp - sp) * iw0).muls(ik1);
+        m[k + 1] = ((rm - sm) * iv0).muls(ik1);
     }
 }
 
-pub fn taylor_step<T: Lane, const B: usize>(ctx: &Ctx<B>, s: &State<T, B>, x0: f64, x1: f64, omega: T, w: &mut TWork<T, B>) -> State<T, B> {
-    taylor_coeffs(ctx, s, x0, omega, w);
-    let h = DD::from_f64(x1) - DD::from_f64(x0);
-    let kt = ctx.kt;
-    [horner(&w.p[..=kt], h), horner(&w.m[..=kt], h), horner(&w.a[..=kt], h), horner(&w.c[..=kt], h)]
+/// Work for one Taylor step of the four fields at order kt
+pub fn work<T: Lane, const B: usize>(kt: usize) -> Work<T, B> {
+    Work::new(4, N_AUX, kt)
 }
 
-pub fn taylor_path<T: Lane, const B: usize>(ctx: &Ctx<B>, s0: &State<T, B>, xs: &[f64], omega: T, w: &mut TWork<T, B>) -> State<T, B> {
+/// One Taylor step of the state s from x0 to x1 at the given omega (multishoot's `taylor::taylor_step` with the
+/// Delta of the evaluation replaced by its omega)
+pub fn taylor_step<T: Lane, const B: usize>(ctx: &Ctx<B>, s: &State<T, B>, x0: f64, x1: f64, omega: T, w: &mut Work<T, B>) -> State<T, B> {
+    for (f, sf) in s.iter().enumerate() {
+        w.c[f][0] = *sf;
+    }
+    taylor_coeffs(ctx, x0, omega, w);
+    let h = DD::from_f64(x1) - DD::from_f64(x0);
+    let kt = w.kt;
+    std::array::from_fn(|f| horner(&w.c[f][..=kt], h))
+}
+
+/// Taylor steps through the points xs (the first the start) at the given omega
+pub fn taylor_path<T: Lane, const B: usize>(ctx: &Ctx<B>, s0: &State<T, B>, xs: &[f64], omega: T, w: &mut Work<T, B>) -> State<T, B> {
     let mut s = *s0;
     for i in 0..xs.len() - 1 {
         s = taylor_step(ctx, &s, xs[i], xs[i + 1], omega, w);
@@ -413,14 +426,16 @@ pub fn taylor_path<T: Lane, const B: usize>(ctx: &Ctx<B>, s0: &State<T, B>, xs: 
 }
 
 /// max over fields and lanes of |coefficient k| (hi part, value)
-fn coef_norm<T: Lane, const B: usize>(w: &TWork<T, B>, k: usize) -> f64 {
-    [&w.p, &w.m, &w.a, &w.c].iter().map(|q| q[k].val().amax()).fold(0.0, f64::max)
+fn coef_norm<T: Lane, const B: usize>(w: &Work<T, B>, k: usize) -> f64 {
+    w.c.iter().map(|q| q[k].val().amax()).fold(0.0, f64::max)
 }
 
 /// Adaptive step points from xa to xb for a state s (values): h from the last two Taylor coefficients so that the
-/// truncation term is ~ tol (absolute; the fields are O(1)), capped at hmax.
+/// truncation term is ~ tol (absolute; the fields are O(1)), capped at hmax. hp's planner, kept for its plans' bits:
+/// multishoot's `plan_path` takes its roots from `kth_root` instead of `powf` and stops at the end exactly, so its
+/// plans differ from these in the last bits.
 pub fn plan_path<const B: usize>(ctx: &Ctx<B>, s0: &State<DV, B>, xa: f64, xb: f64, omega: DV, tol: f64, hmax: f64) -> Vec<f64> {
-    let mut w = TWork::<DV, B>::new(ctx.kt);
+    let mut w = work::<DV, B>(ctx.kt);
     let kt = ctx.kt;
     // HP_PLAN_TRACE=N prints the position, step and time every N steps and at the end (diagnosis only)
     let trace = std::env::var("HP_PLAN_TRACE").ok().and_then(|v| v.parse::<usize>().ok()).unwrap_or(0);
@@ -430,7 +445,10 @@ pub fn plan_path<const B: usize>(ctx: &Ctx<B>, s0: &State<DV, B>, xa: f64, xb: f
     let mut s = *s0;
     let dir = if xb > xa { 1.0 } else { -1.0 };
     while (xb - x) * dir > 1e-15 {
-        taylor_coeffs(ctx, &s, x, omega, &mut w);
+        for (f, sf) in s.iter().enumerate() {
+            w.c[f][0] = *sf;
+        }
+        taylor_coeffs(ctx, x, omega, &mut w);
         let e1 = coef_norm(&w, kt - 1).max(1e-300);
         let e2 = coef_norm(&w, kt).max(1e-300);
         let h1 = (tol / e1).powf(1.0 / (kt - 1) as f64);
@@ -443,7 +461,9 @@ pub fn plan_path<const B: usize>(ctx: &Ctx<B>, s0: &State<DV, B>, xa: f64, xb: f
             h = 0.5 * rest; // two near-equal last steps instead of a sliver
         }
         let xn = if h == rest { xb } else { x + dir * h };
-        s = taylor_step(ctx, &s, x, xn, omega, &mut w);
+        // the step's sum from the coefficients just formed (they depend on s and x only)
+        let hd = DD::from_f64(xn) - DD::from_f64(x);
+        s = std::array::from_fn(|f| horner(&w.c[f][..=kt], hd));
         x = xn;
         xs.push(x);
         if trace > 0 && (xs.len() - 1) % trace == 0 {
@@ -467,12 +487,7 @@ pub fn horizon_lus<const B: usize>(ctx: &Ctx<B>, a0: &Fl<DV, B>, delta: DD, par:
     let ld = ld_for(m);
     let omega = DD::TWO_PI / delta;
     let n1 = ctx.n - DD::ONE;
-    let c1 = if ctx.horizon_alpha == HALPHA_ON {
-        let al = *a0 - Fl::<DV, B>::splat(DD::ONE);
-        -(al.mulf(2.0) + al * al).muls(n1)
-    } else {
-        (Fl::<DV, B>::splat(DD::ONE) - *a0 * *a0).muls(n1)
-    };
+    let c1 = c1_of(ctx, a0, n1);
     let c1s: Vec<DD> = (0..m).map(|i| c1.get(i)).collect();
     // omega D (column-major, ld)
     let mut base_h = vec![0.0; ld * m];
@@ -500,13 +515,115 @@ pub fn horizon_lus<const B: usize>(ctx: &Ctx<B>, a0: &Fl<DV, B>, delta: DD, par:
     }
 }
 
+/// c1 = (n - 1)(1 - a_h^2), in alpha = a_h - 1 with HALPHA_ON
+fn c1_of<const B: usize>(ctx: &Ctx<B>, a0: &Fl<DV, B>, n1: DD) -> Fl<DV, B> {
+    if ctx.horizon_alpha == HALPHA_ON {
+        let al = *a0 - Fl::<DV, B>::splat(DD::ONE);
+        -(al.mulf(2.0) + al * al).muls(n1)
+    } else {
+        (Fl::<DV, B>::splat(DD::ONE) - *a0 * *a0).muls(n1)
+    }
+}
+
+/// LU factors of the real 2M x 2M form of (omega D + diag kappa_kk + lambda), kk = 0..=ks, at a complex growth rate
+/// lambda = lr + i li: [[A + lr, -li], [li, A + lr]] acting on (f_re, f_im) (hp/modecount_cx's horizon_lus_c)
+pub fn horizon_lus_c<const B: usize>(ctx: &Ctx<B>, a0: &Fl<DV, B>, delta: DD, lr: DD, li: DD, par: bool) -> Result<Vec<DDLu>, String> {
+    let m = Ctx::<B>::M;
+    let m2 = 2 * m;
+    let ld = ld_for(m2);
+    let omega = DD::TWO_PI / delta;
+    let n1 = ctx.n - DD::ONE;
+    let c1 = c1_of(ctx, a0, n1);
+    let c1s: Vec<DD> = (0..m).map(|i| c1.get(i)).collect();
+    let mut base_h = vec![0.0; ld * m2];
+    let mut base_l = vec![0.0; ld * m2];
+    for j in 0..m {
+        let col = ctx.d.cols[j].muls(omega);
+        let mut h = vec![0.0; m];
+        let mut l = vec![0.0; m];
+        col.store(&mut h, &mut l);
+        for i in 0..m {
+            // top-left and bottom-right blocks: omega D
+            base_h[j * ld + i] = h[i];
+            base_l[j * ld + i] = l[i];
+            base_h[(j + m) * ld + i + m] = h[i];
+            base_l[(j + m) * ld + i + m] = l[i];
+        }
+        // top-right: -li I (column j + m, row j); bottom-left: +li I (column j, row j + m)
+        base_h[(j + m) * ld + j] = -li.hi;
+        base_l[(j + m) * ld + j] = -li.lo;
+        base_h[j * ld + j + m] = li.hi;
+        base_l[j * ld + j + m] = li.lo;
+    }
+    let nh = ctx.n.mul_f(0.5);
+    let one_kk = |kk: usize| -> Result<DDLu, String> {
+        let mut h = base_h.clone();
+        let mut l = base_l.clone();
+        for i in 0..m {
+            let kap = (c1s[i] + DD::ONE).mul_f(kk as f64) + c1s[i] + DD::ONE - nh + lr;
+            for &ii in &[i, i + m] {
+                let v = DD { hi: h[ii * ld + ii], lo: l[ii * ld + ii] } + kap;
+                h[ii * ld + ii] = v.hi;
+                l[ii * ld + ii] = v.lo;
+            }
+        }
+        DDLu::factor(m2, ld, h, l, false)
+    };
+    if par {
+        (0..=ctx.ks).into_par_iter().map(one_kk).collect()
+    } else {
+        (0..=ctx.ks).map(one_kk).collect()
+    }
+}
+
+/// The preparation of one evaluation (multishoot's `Equations::Prep`): the horizon LUs at the state's double-double
+/// a_h and Delta, and for a mode-matrix evaluation its growth rate with the factors it changes.
+#[derive(Default)]
+pub struct HPrep {
+    /// (omega D + diag kappa_kk), kk = 0..=ks
+    pub lus: Vec<DDLu>,
+    /// the same plus lr, for the tangents at a real rate lr (empty: `lus` serve)
+    pub lus_t: Vec<DDLu>,
+    /// the 2M x 2M real form at a complex rate (`horizon_lus_c`; empty at a real rate)
+    pub lus2: Vec<DDLu>,
+    pub rate: Rate,
+}
+
+impl HPrep {
+    /// the preparation of the LUs alone (rate zero)
+    pub fn of(lus: Vec<DDLu>) -> Self {
+        HPrep { lus, ..Default::default() }
+    }
+}
+
+/// a preparation that failed (a horizon LU with a zero or non-finite pivot) panics with this prefix; `guard` returns
+/// it as the entry point's error, as before the engine
+const PREP_PANIC: &str = "hp horizon LUs: ";
+
+/// The result of f, with a failed preparation's panic (PREP_PANIC) as its error; any other panic goes on unwinding
+fn guard<R>(f: impl FnOnce() -> Result<R, String>) -> Result<R, String> {
+    match std::panic::catch_unwind(std::panic::AssertUnwindSafe(f)) {
+        Ok(r) => r,
+        Err(e) => match e.downcast_ref::<String>().and_then(|s| s.strip_prefix(PREP_PANIC)) {
+            Some(msg) => Err(msg.to_string()),
+            None => std::panic::resume_unwind(e),
+        },
+    }
+}
+
+fn prep_ok(r: Result<Vec<DDLu>, String>) -> Vec<DDLu> {
+    r.unwrap_or_else(|e| std::panic::panic_any(format!("{PREP_PANIC}{e}")))
+}
+
 /// (omega D + diag kappa) f = r with the LU at the values; for tangents the derivative of the system:
-/// A_t f_d = r_d - omega_d D f_v - kappa_d f_v, with A_t = A + lam (lu_t; the same LU when lam = 0).
-fn psolve<T: Lane, const B: usize>(ctx: &Ctx<B>, lu: &DDLu, lu_t: &DDLu, kappa: &Fl<T, B>, rhs: &Fl<T, B>, omega: T) -> Fl<T, B> {
+/// A_t f_d = r_d - omega_d D f_v - kappa_d f_v, with A_t = A + lambda (`HPrep::lus_t`; the same LU at rate zero).
+fn psolve<T: Lane, const B: usize>(ctx: &Ctx<B>, prep: &HPrep, kk: usize, kappa: &Fl<T, B>, rhs: &Fl<T, B>, omega: T) -> Fl<T, B> {
+    let lu = &prep.lus[kk];
+    let lu_t = if prep.lus_t.is_empty() { lu } else { &prep.lus_t[kk] };
     if T::NJ > 0 && T::VAL_OD {
         // an octo-double jet (multidouble 4.0.0's OJet): as the quad-double jet below, the right-hand side of order k
         // in octo-double and each order's solve refined to octo-double, with twice the steps
-        debug_assert!(ctx.lam.hi == 0.0);
+        debug_assert!(prep.rate.is_zero());
         let steps = match ctx.mutate {
             QD_MUT_NOREFINE => 0,
             QD_MUT_REFINE4 => 8,
@@ -534,7 +651,7 @@ fn psolve<T: Lane, const B: usize>(ctx: &Ctx<B>, lu: &DDLu, lu_t: &DDLu, kappa: 
     if T::NJ > 0 && T::VAL_QD {
         // a quad-double jet: order by order as below, the right-hand side of order k in quad-double and each order's
         // solve refined to quad-double with the lane's omega_0 and kappa_0 (as the branch after this one)
-        debug_assert!(ctx.lam.hi == 0.0);
+        debug_assert!(prep.rate.is_zero());
         let steps = match ctx.mutate {
             QD_MUT_NOREFINE => 0,
             QD_MUT_REFINE4 => 4,
@@ -564,8 +681,8 @@ fn psolve<T: Lane, const B: usize>(ctx: &Ctx<B>, lu: &DDLu, lu_t: &DDLu, kappa: 
     }
     if T::NJ > 0 {
         // a jet: order by order with the LU at the values, the tangent branch below continued past order 1,
-        // A_0 f_k = r_k - sum_{j=1..k} (omega_j D + kappa_j) f_{k-j}; no mode-matrix shift (lam) with jets
-        debug_assert!(ctx.lam.hi == 0.0);
+        // A_0 f_k = r_k - sum_{j=1..k} (omega_j D + kappa_j) f_{k-j}; no mode-matrix shift with jets
+        debug_assert!(prep.rate.is_zero());
         return lu.solve_lanes_jet(rhs, |j, x, r| {
             let dfv = ctx.d.apply::<DV>(x);
             let od = Fl::<DV, B>([omega.coef(j); B]);
@@ -598,6 +715,11 @@ fn psolve<T: Lane, const B: usize>(ctx: &Ctx<B>, lu: &DDLu, lu_t: &DDLu, kappa: 
         }
         return out;
     }
+    if T::TANGENT {
+        if let Some(f) = psolve_dc(ctx, prep, kk, kappa, rhs, omega) {
+            return f;
+        }
+    }
     let fv = lu.solve_lanes(&rhs.val());
     if !T::TANGENT {
         return Fl::from_vt(&fv, &Fl::zero());
@@ -609,16 +731,48 @@ fn psolve<T: Lane, const B: usize>(ctx: &Ctx<B>, lu: &DDLu, lu_t: &DDLu, kappa: 
     Fl::from_vt(&fv, &fd)
 }
 
+/// psolve on complex tangents (`Dc`, the lanes of multishoot's mode matrix; None for any other lane): the value as
+/// psolve's, each tangent part with psolve's operations on the real tangent, A_t f_d = r_d - omega_d D f_v -
+/// kappa_d f_v; at a real rate the M x M solves of A + lr for the real and imaginary parts, at a complex one the
+/// 2M x 2M real form (`HPrep::lus2`)
+fn psolve_dc<T: Lane, const B: usize>(ctx: &Ctx<B>, prep: &HPrep, kk: usize, kappa: &Fl<T, B>, rhs: &Fl<T, B>, omega: T) -> Option<Fl<T, B>> {
+    let kappa = (kappa as &dyn Any).downcast_ref::<Fl<Dc, B>>()?;
+    let rhs = (rhs as &dyn Any).downcast_ref::<Fl<Dc, B>>()?;
+    let omega = (&omega as &dyn Any).downcast_ref::<Dc>()?;
+    let m = Ctx::<B>::M;
+    let lu = &prep.lus[kk];
+    let lu_t = if prep.lus_t.is_empty() { lu } else { &prep.lus_t[kk] };
+    let fv = lu.solve_lanes(&rhs.val());
+    let dfv = ctx.d.apply::<DV>(&fv);
+    let (or, oi) = (Fl::<DV, B>([omega.r; B]), Fl::<DV, B>([omega.i; B]));
+    let rr = (rhs.tan_re() - dfv * or) - kappa.tan_re() * fv;
+    let ri = (rhs.tan_im() - dfv * oi) - kappa.tan_im() * fv;
+    let out = if prep.lus2.is_empty() || ctx.mutate == MODE_MUT_REAL_SOLVE {
+        Fl::<Dc, B>::from_vri(&fv, &lu_t.solve_lanes(&rr), &lu_t.solve_lanes(&ri))
+    } else {
+        let mut hh = vec![0.0; m];
+        let mut ll = vec![0.0; m];
+        let mut b = vec![DD::ZERO; 2 * m];
+        for (part, f) in [&rr, &ri].into_iter().enumerate() {
+            f.store(&mut hh, &mut ll);
+            for i in 0..m {
+                b[part * m + i] = DD { hi: hh[i], lo: ll[i] };
+            }
+        }
+        prep.lus2[kk].solve(&mut b);
+        let part = |o: usize| {
+            let (h, l): (Vec<f64>, Vec<f64>) = b[o..o + m].iter().map(|v| (v.hi, v.lo)).unzip();
+            Fl::<DV, B>::load(&h, &l)
+        };
+        Fl::<Dc, B>::from_vri(&fv, &part(0), &part(m))
+    };
+    (&out as &dyn Any).downcast_ref::<Fl<T, B>>().copied()
+}
+
 /// Horizon-series coefficients of p, m, a, c in the scaled variable u / sigma, sigma = series_scale(u0) (u = 1 - x):
-/// entry kk is c_kk sigma^kk, as for centre_series.
-pub fn horizon_series<T: Lane, const B: usize>(
-    ctx: &Ctx<B>,
-    m0: &Fl<T, B>,
-    a0: &Fl<T, B>,
-    omega: T,
-    lus: &[DDLu],
-    lus_t: &[DDLu],
-) -> [Vec<Fl<T, B>>; 4] {
+/// entry kk is c_kk sigma^kk, as for centre_series. prep: the horizon LUs (and the rate of a mode-matrix evaluation).
+pub fn horizon_series<T: Lane, const B: usize>(ctx: &Ctx<B>, m0: &Fl<T, B>, a0: &Fl<T, B>, omega: T, prep: &HPrep) -> [Vec<Fl<T, B>>; 4] {
+    let rate = &prep.rate;
     let sig = series_scale(ctx.u0().hi);
     let isig = 1.0 / sig;
     let n1 = dim::<T, B>(ctx) - T::P::one();
@@ -656,7 +810,7 @@ pub fn horizon_series<T: Lane, const B: usize>(
         af[0] = aa[0] + one;
         af2[0] = af[0] * af[0];
     }
-    dm[0] = dtau(ctx, &mm[0], omega);
+    dm[0] = dtau(ctx, &mm[0], omega, rate);
     // the scaled coefficients (sigma^i times) of w = (1 - u) - c and z = c + (1 - u); `sone` is the u term's sigma
     let sone = one.mul_pwr2(sig);
     let wfun = |c: &Vec<Fl<T, B>>, i: usize| -> Fl<T, B> {
@@ -704,8 +858,8 @@ pub fn horizon_series<T: Lane, const B: usize>(
         // kappa (and the LUs of horizon_lus) take the unscaled first-order coefficient
         let c1 = cc[1].mul_pwr2(isig);
         let kappa = ((c1 + one).mulf(kf) + c1 + one).addp(-nh_kappa);
-        pp[kk] = psolve(ctx, &lus[kk], &lus_t[kk], &kappa, &(-r), omega);
-        dp[kk] = dtau(ctx, &pp[kk], omega);
+        pp[kk] = psolve(ctx, prep, kk, &kappa, &(-r), omega);
+        dp[kk] = dtau(ctx, &pp[kk], omega, rate);
         q2[kk] = cs(&pp, &pp, kk) + cs(&mm, &mm, kk);
         if kk == ks || (cut && tail.done(kk, &[&pp[kk], &mm[kk], &aa[kk], &cc[kk]])) {
             last = kk;
@@ -731,7 +885,7 @@ pub fn horizon_series<T: Lane, const B: usize>(
         let zmu = cs_w(&mm, &zc, kk + 1, 0, kk, |i| i as f64).mul_pwr2(isig);
         let rest = (((tau - zmu) - cs(&vv, &mm, kk)) - cs(&cc, &mm, kk)) + cs(&cc, &pm, kk).mulp(nh);
         mm[kk + 1] = (rest * izc0).muls(ik1).mul_pwr2(sig);
-        dm[kk + 1] = dtau(ctx, &mm[kk + 1], omega);
+        dm[kk + 1] = dtau(ctx, &mm[kk + 1], omega, rate);
     }
     if alpha {
         aa[0] = *a0;
@@ -743,30 +897,135 @@ pub fn horizon_series<T: Lane, const B: usize>(
     [pp, mm, aa, cc]
 }
 
-pub fn horizon_state<T: Lane, const B: usize>(ctx: &Ctx<B>, m0: &Fl<T, B>, a0: &Fl<T, B>, omega: T, lus: &[DDLu], lus_t: &[DDLu]) -> State<T, B> {
-    let s = horizon_series(ctx, m0, a0, omega, lus, lus_t);
+pub fn horizon_state<T: Lane, const B: usize>(ctx: &Ctx<B>, m0: &Fl<T, B>, a0: &Fl<T, B>, omega: T, prep: &HPrep) -> State<T, B> {
+    let s = horizon_series(ctx, m0, a0, omega, prep);
     let u = ctx.u0().mul_pwr2(1.0 / series_scale(ctx.u0().hi));
     [horner(&s[0], u), horner(&s[1], u), horner(&s[2], u), horner(&s[3], u)]
 }
 
 // ---------------------------------------------------------------------------------------------------------------
-// blocks, residual, Jacobian
+// the equations for multishoot
 // ---------------------------------------------------------------------------------------------------------------
-pub fn block_state<T: Lane, const B: usize>(ctx: &Ctx<B>, b: usize, inp: &[Fl<T, B>], delta: T, lus: &[DDLu], lus_t: &[DDLu]) -> State<T, B> {
-    let mut omega = T::splat(DD::TWO_PI) / delta;
-    if T::TAN_F64 && ctx.mutate == 2 {
-        omega = omega.mulf(1.0 + 1e-9);
+
+/// hp's equations as multishoot's `Equations`: the fields p, m, a, c (NF = 4), the centre data p1, c0 (NL = 2), the
+/// horizon data m_h, a_h (NR = 2) and Delta (NG = 1), on the context's constants and controls
+pub struct Dss<'a, const B: usize>(pub &'a Ctx<B>);
+
+impl<const B: usize> Equations<B> for Dss<'_, B> {
+    const NF: usize = 4;
+    const NL: usize = 2;
+    const NR: usize = 2;
+    const NG: usize = 1;
+    const NAUX: usize = N_AUX;
+    type Prep = HPrep;
+
+    fn prepare(&self, zh: &[f64], zl: &[f64]) -> HPrep {
+        self.prepare_rate(zh, zl, Rate::ZERO)
     }
-    let k = ctx.k();
-    if b == 0 {
-        centre_state(ctx, &inp[0], &inp[1], omega)
-    } else if b < k {
-        let mut w = TWork::<T, B>::new(ctx.kt);
-        taylor_path(ctx, &[inp[0], inp[1], inp[2], inp[3]], &ctx.segs[b - 1], omega, &mut w)
-    } else {
-        horizon_state(ctx, &inp[0], &inp[1], omega, lus, lus_t)
+
+    /// the horizon LUs at the state's double-double a_h and Delta (the preconditioners of the refined solves in quad-
+    /// and octo-double), and at a nonzero rate the factors of the shifted solves (hp/modecount_cx's HLus)
+    fn prepare_rate(&self, zh: &[f64], zl: &[f64], rate: Rate) -> HPrep {
+        let ctx = self.0;
+        let ah = ctx.fld(zh, zl, ctx.off_ah());
+        let delta = delta_of(zh, zl);
+        let lus = prep_ok(horizon_lus(ctx, &ah, delta, true, DD::ZERO));
+        let (lus_t, lus2) = if rate.im.hi != 0.0 {
+            (Vec::new(), prep_ok(horizon_lus_c(ctx, &ah, delta, rate.re, rate.im, true)))
+        } else if rate.re.hi != 0.0 {
+            (prep_ok(horizon_lus(ctx, &ah, delta, true, rate.re)), Vec::new())
+        } else {
+            (Vec::new(), Vec::new())
+        };
+        HPrep { lus, lus_t, lus2, rate }
+    }
+
+    fn taylor_coeffs<T: Lane>(&self, x0: f64, g: &[T], w: &mut Work<T, B>) {
+        taylor_coeffs(self.0, x0, omega_of(self.0, g[0]), w);
+    }
+
+    fn left_state<T: Lane>(&self, _x: f64, data: &[Fl<T, B>], g: &[T], prep: &HPrep) -> multishoot::State<T, B> {
+        centre_state(self.0, &data[0], &data[1], omega_of(self.0, g[0]), &prep.rate).to_vec()
+    }
+
+    fn right_state<T: Lane>(&self, _x: f64, data: &[Fl<T, B>], g: &[T], prep: &HPrep) -> multishoot::State<T, B> {
+        horizon_state(self.0, &data[0], &data[1], omega_of(self.0, g[0]), prep).to_vec()
     }
 }
+
+// ---------------------------------------------------------------------------------------------------------------
+// hp's freeze projection (Ctx::freeze) on the engine's results
+// ---------------------------------------------------------------------------------------------------------------
+
+/// a field from M scalars of a precision (their parts as they are)
+fn field_of<P: Precision<Native>, const B: usize>(v: &[P::Scalar]) -> Fl<P::V, B> {
+    let parts: Vec<Vec<f64>> = (0..P::PARTS).map(|q| v.iter().map(|&x| P::part(x, q)).collect()).collect();
+    P::load_field(&parts.iter().map(|p| p.as_slice()).collect::<Vec<_>>())
+}
+
+/// the M rows of the horizon block's p, Pi_low d + Pi_high y, with d the rows' mismatch and y the p1 field: rows
+/// r0..r0 + M of f
+fn freeze_rows<P: Precision<Native>, const B: usize>(ctx: &Ctx<B>, f: &mut [P::Scalar], y: &Fl<P::V, B>) {
+    if let Some((lo, hi)) = &ctx.freeze {
+        let m = Ctx::<B>::M;
+        let r0 = ctx.k() * 4 * m;
+        let d = lo.apply(&field_of::<P, B>(&f[r0..r0 + m])) + hi.apply(y);
+        for i in 0..m {
+            f[r0 + i] = P::field_get(&d, i);
+        }
+    }
+}
+
+/// The freeze projection on a Jacobian or mode matrix in the parts of P (column-major, ld): the horizon block's p
+/// rows of its input columns (`cols`) times Pi_low, -Pi_low on the target node's p and +Pi_high on p1, where those
+/// rows had the target's -1 and nothing (as model::jacobian formed them before the engine)
+fn freeze_matrix<P: Precision<Native>, const B: usize>(ctx: &Ctx<B>, c: &mut [Vec<f64>], ld: usize, cols: &[usize]) {
+    let Some((lo, hi)) = &ctx.freeze else { return };
+    let m = Ctx::<B>::M;
+    let r0 = ctx.k() * 4 * m;
+    for &cj in cols {
+        let o = cj * ld + r0;
+        let t = P::load_field::<B>(&c.iter().map(|p| &p[o..o + m]).collect::<Vec<_>>());
+        let e = lo.apply(&t);
+        for i in 0..m {
+            let v = P::field_get(&e, i);
+            for (q, cq) in c.iter_mut().enumerate() {
+                cq[o + i] = P::part(v, q);
+            }
+        }
+    }
+    let zero = P::from_raw(&vec![0.0; P::PARTS]);
+    let tg = ctx.block_target(ctx.k());
+    for r in 0..m {
+        for j in 0..m {
+            for (idx, v) in [((tg + j) * ld + r0 + r, zero + (-P::from_dd(lo.cols[j].get(r)))), (j * ld + r0 + r, zero + P::from_dd(hi.cols[j].get(r)))] {
+                for (q, cq) in c.iter_mut().enumerate() {
+                    cq[idx] = P::part(v, q);
+                }
+            }
+        }
+    }
+}
+
+/// the horizon block's input columns: m_h, a_h, and Delta when the matrix has it
+fn horizon_cols<const B: usize>(ctx: &Ctx<B>, delta: bool) -> Vec<usize> {
+    let l = ctx.len();
+    (ctx.off_mh()..ctx.off_mh() + 2 * Ctx::<B>::M).chain(if delta { Some(l - 1) } else { None }).collect()
+}
+
+/// freeze_matrix on an f64 matrix: each entry as a double-double with lo zero, rounded back to f64
+fn freeze_f64<const B: usize>(ctx: &Ctx<B>, c: &mut Vec<f64>, ld: usize) {
+    if ctx.freeze.is_none() {
+        return;
+    }
+    let mut parts = vec![std::mem::take(c), vec![0.0; ld * ctx.len()]];
+    freeze_matrix::<Double, B>(ctx, &mut parts, ld, &horizon_cols(ctx, true));
+    *c = parts.swap_remove(0);
+}
+
+// ---------------------------------------------------------------------------------------------------------------
+// residual, Jacobian (multishoot's, with hp's freeze projection)
+// ---------------------------------------------------------------------------------------------------------------
 
 pub(crate) fn delta_of(zh: &[f64], zl: &[f64]) -> DD {
     let l = zh.len();
@@ -781,37 +1040,17 @@ pub fn phase_row<const B: usize>(ctx: &Ctx<B>, p1: &Fl<DV, B>) -> DD {
     acc
 }
 
+fn split(f: &[DD]) -> (Vec<f64>, Vec<f64>) {
+    f.iter().map(|v| (v.hi, v.lo)).unzip()
+}
+
 /// Residual (hi, lo), length L.
 pub fn residual<const B: usize>(ctx: &Ctx<B>, zh: &[f64], zl: &[f64], par: bool) -> Result<(Vec<f64>, Vec<f64>), String> {
-    let l = ctx.len();
-    let m = Ctx::<B>::M;
-    assert_eq!(zh.len(), l);
-    let delta = delta_of(zh, zl);
-    let lus = horizon_lus(ctx, &ctx.fld(zh, zl, ctx.off_ah()), delta, par, DD::ZERO)?;
-    let one_block = |b: usize| -> State<DV, B> {
-        let inp: Vec<Fl<DV, B>> = ctx.block_inputs(b).iter().map(|&o| ctx.fld(zh, zl, o)).collect();
-        block_state::<DV, B>(ctx, b, &inp, DV::splat(delta), &lus, &lus)
-    };
-    let nb = ctx.k() + 1;
-    let states: Vec<State<DV, B>> = if par { (0..nb).into_par_iter().map(one_block).collect() } else { (0..nb).map(one_block).collect() };
-    let mut fh = vec![0.0; l];
-    let mut fl = vec![0.0; l];
-    let kb = ctx.k();
-    for (b, s) in states.iter().enumerate() {
-        let t = ctx.block_target(b);
-        for q in 0..4 {
-            let mut d = s[q] - ctx.fld(zh, zl, t + q * m);
-            if let (true, 0, Some((lo, hi))) = (b == kb, q, &ctx.freeze) {
-                d = lo.apply(&d) + hi.apply(&ctx.fld(zh, zl, 0));
-            }
-            let o = b * 4 * m + q * m;
-            d.store(&mut fh[o..o + m], &mut fl[o..o + m]);
-        }
-    }
-    let ph = phase_row(ctx, &ctx.fld(zh, zl, 0));
-    fh[l - 1] = ph.hi;
-    fl[l - 1] = ph.lo;
-    Ok((fh, fl))
+    let sh = ctx.shooting();
+    let z = [zh, zl];
+    let mut f = guard(|| sh.residual::<Double>(&z, par))?;
+    freeze_rows::<Double, B>(ctx, &mut f, &ctx.fld(zh, zl, 0));
+    Ok(split(&f))
 }
 
 /// The residual on a jet state z(h) = sum_k z_k h^k with the dimension n + h as the jet variable: zs are the
@@ -820,310 +1059,162 @@ pub fn residual<const B: usize>(ctx: &Ctx<B>, zh: &[f64], zl: &[f64], par: bool)
 /// side of order k of the Taylor continuation in D (notes/QUAD_DOUBLE.md 13.15). The horizon LUs are those of the
 /// values (z_0); psolve continues them order by order.
 pub fn residual_jet<const N: usize, const B: usize>(ctx: &Ctx<B>, zs: &[(&[f64], &[f64])], par: bool, nout: usize) -> Result<Vec<(Vec<f64>, Vec<f64>)>, String> {
-    let l = ctx.len();
-    let m = Ctx::<B>::M;
-    if zs.is_empty() || zs.len() > N || nout == 0 || nout > N {
-        return Err(format!("residual_jet: 1..={N} coefficient vectors and 1..={N} outputs, not {} and {nout}", zs.len()));
+    let zp: Vec<Vec<&[f64]>> = zs.iter().map(|&(h, lo)| vec![h, lo]).collect();
+    let f = residual_jet_p::<Double, N, B>(ctx, &ctx.shooting(), &zp, par, nout)?;
+    Ok(f.iter().map(|v| split(v)).collect())
+}
+
+/// residual_jet in the precision P on the engine's problem sh (its control set by the caller): the engine's jet
+/// residual with hp's freeze projection, each coefficient's p1 read as the engine reads z_k
+pub(crate) fn residual_jet_p<P: Precision<Native>, const N: usize, const B: usize>(
+    ctx: &Ctx<B>,
+    sh: &Shooting<Dss<'_, B>, B>,
+    zs: &[Vec<&[f64]>],
+    par: bool,
+    nout: usize,
+) -> Result<Vec<Vec<P::Scalar>>, String> {
+    let mut f = guard(|| sh.residual_jet::<P, N>(zs, par, nout))?;
+    for (k, fk) in f.iter_mut().enumerate() {
+        let y = if k < zs.len() { sh.load::<P>(&zs[k], 0) } else { Fl::zero() };
+        freeze_rows::<P, B>(ctx, fk, &y);
     }
-    if zs.iter().any(|(h, lo)| h.len() != l || lo.len() != l) {
-        return Err(format!("z_k must have length {l}"));
-    }
-    if ctx.lam.hi != 0.0 {
-        return Err("residual_jet: no mode-matrix shift (lam) supported".into());
-    }
-    let (zh, zl) = zs[0];
-    let delta = delta_of(zh, zl);
-    let lus = horizon_lus(ctx, &ctx.fld(zh, zl, ctx.off_ah()), delta, par, DD::ZERO)?;
-    // the coefficient-k field at offset o: z_k's, zero past the given vectors
-    let fld_k = |k: usize, o: usize| -> Fl<DV, B> { if k < zs.len() { ctx.fld(zs[k].0, zs[k].1, o) } else { Fl::zero() } };
-    let fld_jet = |o: usize| -> Fl<Jet<N>, B> {
-        let mut f = Fl::<Jet<N>, B>::zero();
-        for k in 0..zs.len() {
-            f.set_coef(k, &fld_k(k, o));
-        }
-        f
-    };
-    let mut dj = Jet::<N>::zero();
-    for (k, (h, lo)) in zs.iter().enumerate() {
-        dj.set_coef(k, DV::splat(delta_of(h, lo)));
-    }
-    let one_block = |b: usize| -> State<Jet<N>, B> {
-        let inp: Vec<Fl<Jet<N>, B>> = ctx.block_inputs(b).iter().map(|&o| fld_jet(o)).collect();
-        block_state::<Jet<N>, B>(ctx, b, &inp, dj, &lus, &lus)
-    };
-    let nb = ctx.k() + 1;
-    let states: Vec<State<Jet<N>, B>> = if par { (0..nb).into_par_iter().map(one_block).collect() } else { (0..nb).map(one_block).collect() };
-    let mut out: Vec<(Vec<f64>, Vec<f64>)> = (0..nout).map(|_| (vec![0.0; l], vec![0.0; l])).collect();
-    let kb = ctx.k();
-    for (b, s) in states.iter().enumerate() {
-        let t = ctx.block_target(b);
-        for q in 0..4 {
-            for (k, o_k) in out.iter_mut().enumerate() {
-                let mut d = s[q].coef(k) - fld_k(k, t + q * m);
-                if let (true, 0, Some((lo, hi))) = (b == kb, q, &ctx.freeze) {
-                    d = lo.apply(&d) + hi.apply(&fld_k(k, 0));
-                }
-                let o = b * 4 * m + q * m;
-                d.store(&mut o_k.0[o..o + m], &mut o_k.1[o..o + m]);
-            }
-        }
-    }
-    for (k, o_k) in out.iter_mut().enumerate() {
-        let ph = phase_row(ctx, &fld_k(k, 0));
-        o_k.0[l - 1] = ph.hi;
-        o_k.1[l - 1] = ph.lo;
-    }
-    Ok(out)
+    Ok(f)
 }
 
 /// Exact Jacobian dF/dz by forward-mode duals, column-major with leading dimension ld_for(L): (hi, lo, ld).
 pub fn jacobian<const B: usize>(ctx: &Ctx<B>, zh: &[f64], zl: &[f64], par: bool) -> Result<(Vec<f64>, Vec<f64>, usize), String> {
-    jacobian_lanes::<Du, B>(ctx, zh, zl, par)
+    let (mut c, ld) = jacobian_p::<Double, B>(ctx, &ctx.shooting(), &[zh, zl], par)?;
+    let jl = c.pop().expect("two parts");
+    let jh = c.pop().expect("two parts");
+    Ok((jh, jl, ld))
+}
+
+/// The exact Jacobian in the precision P on the engine's problem sh, with hp's freeze projection: (PARTS part
+/// arrays, ld)
+pub(crate) fn jacobian_p<P: Precision<Native>, const B: usize>(ctx: &Ctx<B>, sh: &Shooting<Dss<'_, B>, B>, z: &[&[f64]], par: bool) -> Result<(Vec<Vec<f64>>, usize), String> {
+    let (mut c, ld) = guard(|| sh.jacobian::<P>(z, par))?;
+    freeze_matrix::<P, B>(ctx, &mut c, ld, &horizon_cols(ctx, true));
+    Ok((c, ld))
+}
+
+/// The residual in the precision P on the engine's problem sh, with hp's freeze projection
+pub(crate) fn residual_p<P: Precision<Native>, const B: usize>(ctx: &Ctx<B>, sh: &Shooting<Dss<'_, B>, B>, z: &[&[f64]], par: bool) -> Result<Vec<P::Scalar>, String> {
+    let mut f = guard(|| sh.residual::<P>(z, par))?;
+    if z.len() == P::PARTS {
+        freeze_rows::<P, B>(ctx, &mut f, &sh.load::<P>(z, 0));
+    }
+    Ok(f)
 }
 
 /// The Jacobian in plain f64 (the same columns with `Fu` lanes: constants and the base state rounded to f64, the
 /// horizon solves with the hi parts of the double-double LU factors), column-major with leading dimension
 /// ld_for(L): (J, ld). For the mixed-precision Newton step (double-double residual, f64 Jacobian).
 pub fn jacobian_f64<const B: usize>(ctx: &Ctx<B>, zh: &[f64], zl: &[f64], par: bool) -> Result<(Vec<f64>, usize), String> {
-    let (jh, _, ld) = jacobian_lanes::<Fu, B>(ctx, zh, zl, par)?;
-    Ok((jh, ld))
+    jacobian_f64_lanes::<Fu, B>(ctx, zh, zl, par)
 }
 
 /// The f64 Jacobian with `Dtn<N>` lanes: a double-double base trajectory and N f64 tangents per evaluation (N
 /// columns of one block at a time), column-major with leading dimension ld_for(L): (J, ld).
 pub fn jacobian_dtn<const N: usize, const B: usize>(ctx: &Ctx<B>, zh: &[f64], zl: &[f64], par: bool) -> Result<(Vec<f64>, usize), String> {
-    let (jh, _, ld) = jacobian_lanes::<Dtn<N>, B>(ctx, zh, zl, par)?;
-    Ok((jh, ld))
+    jacobian_f64_lanes::<Dtn<N>, B>(ctx, zh, zl, par)
 }
 
 /// The f64 Jacobian with `Fun<N>` lanes: an f64 base trajectory and N f64 tangents per evaluation: (J, ld).
 pub fn jacobian_fun<const N: usize, const B: usize>(ctx: &Ctx<B>, zh: &[f64], zl: &[f64], par: bool) -> Result<(Vec<f64>, usize), String> {
-    let (jh, _, ld) = jacobian_lanes::<Fun<N>, B>(ctx, zh, zl, par)?;
-    Ok((jh, ld))
+    jacobian_f64_lanes::<Fun<N>, B>(ctx, zh, zl, par)
 }
 
-/// Several column tasks of one block from one evaluation with T::NT f64 tangents (TAN_F64 lanes): tangent k carries
-/// task g[k]; unused tangents stay zero. Returns the columns in the order of g.
-pub fn jac_columns_n<T: Lane, const B: usize>(
-    ctx: &Ctx<B>,
-    zh: &[f64],
-    zl: &[f64],
-    delta: DD,
-    lus: &[DDLu],
-    lus_t: &[DDLu],
-    g: &[(usize, usize, usize)],
-) -> Vec<Vec<DD>> {
-    assert!(T::TAN_F64 && !g.is_empty() && g.len() <= T::NT && g.iter().all(|t| t.0 == g[0].0));
-    let m = Ctx::<B>::M;
-    let b = g[0].0;
-    let z = Fl::<DV, B>::zero();
-    let inp: Vec<Fl<T, B>> = ctx
-        .block_inputs(b)
-        .iter()
-        .enumerate()
-        .map(|(fi, &o)| {
-            let mut x = Fl::<T, B>::from_vt(&ctx.fld(zh, zl, o), &z);
-            for (k, &(_, f, j)) in g.iter().enumerate() {
-                if f == fi {
-                    let mut e = [0.0; 8];
-                    e[j % 8] = 1.0;
-                    x.0[j / 8].set_tan64(k, crate::v8::V8::from_array(e));
-                }
-            }
-            x
-        })
-        .collect();
-    let mut d = T::from_vt(DV::splat(delta), DV::zero());
-    for (k, t) in g.iter().enumerate() {
-        if t.1 == usize::MAX {
-            d.set_tan64(k, crate::v8::V8::splat(1.0));
-        }
+/// The f64 Jacobian with T::NT tangents per evaluation (TAN_F64 lanes): multishoot's `jacobian_f64`, with hp's
+/// freeze projection; with Ctx::f64_dd's HDD_BLOCK, HDD_LASTSEG or HDD_DTN some blocks' columns on other lanes
+/// (`jacobian_f64_hdd`).
+fn jacobian_f64_lanes<T: Lane, const B: usize>(ctx: &Ctx<B>, zh: &[f64], zl: &[f64], par: bool) -> Result<(Vec<f64>, usize), String> {
+    if ctx.f64_dd & (HDD_BLOCK | HDD_LASTSEG | HDD_DTN) != 0 {
+        return jacobian_f64_hdd::<T, B>(ctx, zh, zl, par);
     }
-    let s = block_state::<T, B>(ctx, b, &inp, d, lus, lus_t);
-    (0..g.len())
-        .map(|k| {
-            let mut out = Vec::with_capacity(4 * m);
-            for q in 0..4 {
-                let mut t = Fl::<DV, B>::zero();
-                for bb in 0..B {
-                    t.0[bb].hi = s[q].0[bb].tan64(k);
-                }
-                if let (true, 0, Some((lo, _))) = (b == ctx.k(), q, &ctx.freeze) {
-                    t = lo.apply(&t);
-                }
-                for i in 0..m {
-                    out.push(t.get(i));
-                }
-            }
-            out
-        })
-        .collect()
+    let sh = ctx.shooting();
+    let (mut c, ld) = guard(|| sh.jacobian_f64::<T>(&[zh, zl], par))?;
+    freeze_f64(ctx, &mut c, ld);
+    Ok((c, ld))
 }
 
-/// a[idx] = f(a[idx]) on a (hi, lo) matrix; an empty lo means lo parts zero and not kept
-#[inline(always)]
-fn upd(jh: &mut [f64], jl: &mut [f64], idx: usize, f: impl Fn(DD) -> DD) {
-    let keep = !jl.is_empty();
-    let v = f(DD { hi: jh[idx], lo: if keep { jl[idx] } else { 0.0 } });
-    jh[idx] = v.hi;
-    if keep {
-        jl[idx] = v.lo;
-    }
-}
-
-/// The Jacobian's column tasks: (block, input field index or usize::MAX for Delta, lane).
-pub fn jac_tasks<const B: usize>(ctx: &Ctx<B>) -> Vec<(usize, usize, usize)> {
-    let mut tasks: Vec<(usize, usize, usize)> = Vec::new();
-    for b in 0..ctx.k() + 1 {
-        let ins = ctx.block_inputs(b);
-        for f in 0..ins.len() {
-            for j in 0..Ctx::<B>::M {
-                tasks.push((b, f, j));
-            }
-        }
-        tasks.push((b, usize::MAX, 0));
-    }
-    tasks
-}
-
-/// One column task: block b's output state (4M values, before the -1 of the target node) differentiated along a
-/// unit tangent on lane j of input field f (Delta for f = usize::MAX), with dual lanes T.
-pub fn jac_column<T: Lane, const B: usize>(
-    ctx: &Ctx<B>,
-    zh: &[f64],
-    zl: &[f64],
-    delta: DD,
-    lus: &[DDLu],
-    lus_t: &[DDLu],
-    (b, f, j): (usize, usize, usize),
-) -> Vec<DD> {
-    let m = Ctx::<B>::M;
-    let ins = ctx.block_inputs(b);
-    let inp: Vec<Fl<T, B>> = ins
-        .iter()
-        .enumerate()
-        .map(|(fi, &o)| {
-            let v = ctx.fld(zh, zl, o);
-            let mut t = Fl::<DV, B>::zero();
-            if fi == f {
-                let mut th = vec![0.0; m];
-                let tl = vec![0.0; m];
-                th[j] = 1.0;
-                t = Fl::load(&th, &tl);
-            }
-            Fl::<T, B>::from_vt(&v, &t)
-        })
-        .collect();
-    let dt = if f == usize::MAX { DV::splat(DD::ONE) } else { DV::zero() };
-    let d = T::from_vt(DV::splat(delta), dt);
-    let s = block_state::<T, B>(ctx, b, &inp, d, lus, lus_t);
-    let mut out = Vec::with_capacity(4 * m);
-    for q in 0..4 {
-        let mut t = s[q].tan();
-        if let (true, 0, Some((lo, _))) = (b == ctx.k(), q, &ctx.freeze) {
-            t = lo.apply(&t);
-        }
-        for i in 0..m {
-            out.push(t.get(i));
-        }
-    }
-    out
-}
-
-/// Jacobian columns by forward-mode duals of the dual lane type T (one evaluation per column, a unit tangent on one
-/// unknown), assembled column-major with leading dimension ld_for(L): (hi, lo, ld). Du: the exact double-double
-/// Jacobian. Fu: f64; lo is then empty.
-fn jacobian_lanes<T: Lane, const B: usize>(ctx: &Ctx<B>, zh: &[f64], zl: &[f64], par: bool) -> Result<(Vec<f64>, Vec<f64>, usize), String> {
+/// The f64 Jacobian with some blocks' column tasks on other lanes (Ctx::f64_dd): `Du` (double-double, rounded to f64
+/// when stored) for the horizon block (HDD_BLOCK) or the last segment (HDD_LASTSEG), `Dtn<4>` for the horizon block
+/// (HDD_DTN), the other tasks with T in groups of T::NT; every column from multishoot's column evaluations, assembled
+/// as `jacobian_f64` does, the freeze projection on the double-double columns before their rounding.
+fn jacobian_f64_hdd<T: Lane, const B: usize>(ctx: &Ctx<B>, zh: &[f64], zl: &[f64], par: bool) -> Result<(Vec<f64>, usize), String> {
     let l = ctx.len();
     let m = Ctx::<B>::M;
     let ld = ld_for(l);
-    let delta = delta_of(zh, zl);
-    let lus = horizon_lus(ctx, &ctx.fld(zh, zl, ctx.off_ah()), delta, par, DD::ZERO)?;
-    // the shifted LUs only for a mode matrix (lam != 0); otherwise the same factors, not a copy (at M = 384 and
-    // ks = 250 one set is 0.6 GB)
-    let lus_shift = if ctx.lam.hi != 0.0 { Some(horizon_lus(ctx, &ctx.fld(zh, zl, ctx.off_ah()), delta, par, ctx.lam)?) } else { None };
-    let lus_t: &[DDLu] = lus_shift.as_deref().unwrap_or(&lus);
-    let nb = ctx.k() + 1;
-    let tasks = jac_tasks(ctx);
-    let cols: Vec<Vec<DD>> = if T::TAN_F64 && ctx.f64_dd & (HDD_BLOCK | HDD_LASTSEG | HDD_DTN) != 0 {
-        // the f64 Jacobian with some blocks' tasks on other lanes (Ctx::f64_dd): Du (double-double, rounded to f64
-        // when stored below) or Dtn<4>; the other tasks as in the branches below
-        let k = ctx.k();
-        let du = |b: usize| (ctx.f64_dd & HDD_BLOCK != 0 && b == k) || (ctx.f64_dd & HDD_LASTSEG != 0 && k >= 2 && b == k - 1);
-        let dtn = |b: usize| ctx.f64_dd & HDD_DTN != 0 && b == k && !du(b);
-        // (lane kind, tasks): 0 T in groups of NT (one task per unit when NT = 1), 1 Du, 2 Dtn<4>
-        let mut units: Vec<(u8, Vec<(usize, usize, usize)>)> = Vec::new();
-        for &t in &tasks {
-            let (kind, cap) = if du(t.0) { (1u8, 1) } else if dtn(t.0) { (2, 4) } else { (0, T::NT.max(1)) };
-            match units.last_mut() {
-                Some((kd, g)) if *kd == kind && g.len() < cap && g[0].0 == t.0 => g.push(t),
-                _ => units.push((kind, vec![t])),
-            }
-        }
-        let unit = |u: &(u8, Vec<(usize, usize, usize)>)| -> Vec<Vec<DD>> {
-            match u.0 {
-                1 => vec![jac_column::<Du, B>(ctx, zh, zl, delta, &lus, lus_t, u.1[0])],
-                2 => jac_columns_n::<Dtn<4>, B>(ctx, zh, zl, delta, &lus, lus_t, &u.1),
-                _ if T::NT > 1 => jac_columns_n::<T, B>(ctx, zh, zl, delta, &lus, lus_t, &u.1),
-                _ => vec![jac_column::<T, B>(ctx, zh, zl, delta, &lus, lus_t, u.1[0])],
-            }
-        };
-        let gc: Vec<Vec<Vec<DD>>> = if par { units.par_iter().map(unit).collect() } else { units.iter().map(unit).collect() };
-        gc.into_iter().flatten().collect()
-    } else if T::TAN_F64 && T::NT > 1 {
-        // several tangents per evaluation: the tasks of each block in groups of NT, in task order
-        let mut groups: Vec<Vec<(usize, usize, usize)>> = Vec::new();
-        for &t in &tasks {
-            match groups.last_mut() {
-                Some(g) if g.len() < T::NT && g[0].0 == t.0 => g.push(t),
-                _ => groups.push(vec![t]),
-            }
-        }
-        let group = |g: &Vec<(usize, usize, usize)>| jac_columns_n::<T, B>(ctx, zh, zl, delta, &lus, lus_t, g);
-        let gc: Vec<Vec<Vec<DD>>> = if par { groups.par_iter().map(group).collect() } else { groups.iter().map(group).collect() };
-        gc.into_iter().flatten().collect()
-    } else {
-        let column = |t: &(usize, usize, usize)| -> Vec<DD> { jac_column::<T, B>(ctx, zh, zl, delta, &lus, lus_t, *t) };
-        if par {
-            tasks.par_iter().map(column).collect()
-        } else {
-            tasks.iter().map(column).collect()
-        }
-    };
-    let keep_lo = !T::TAN_F64;
-    let mut jh = vec![0.0; ld * l];
-    let mut jl = if keep_lo { vec![0.0; ld * l] } else { Vec::new() };
-    for (&(b, f, j), col) in tasks.iter().zip(&cols) {
-        let c = if f == usize::MAX { l - 1 } else { ctx.block_inputs(b)[f] + j };
-        for (r, v) in col.iter().enumerate() {
-            jh[c * ld + b * 4 * m + r] = v.hi;
-            if keep_lo {
-                jl[c * ld + b * 4 * m + r] = v.lo;
-            }
+    let sh = ctx.shooting();
+    let z = [zh, zl];
+    let g = sh.globals::<Double>(&z);
+    let prep = guard(|| Ok(sh.eq.prepare(zh, zl)))?;
+    let tasks = sh.jac_tasks();
+    let k = ctx.k();
+    let du = |b: usize| (ctx.f64_dd & HDD_BLOCK != 0 && b == k) || (ctx.f64_dd & HDD_LASTSEG != 0 && k >= 2 && b == k - 1);
+    let dtn = |b: usize| ctx.f64_dd & HDD_DTN != 0 && b == k && !du(b);
+    // (lane kind, tasks): 0 T in groups of NT, 1 Du, 2 Dtn<4>
+    let mut units: Vec<(u8, Vec<(usize, Seed)>)> = Vec::new();
+    for &t in &tasks {
+        let (kind, cap) = if du(t.0) { (1u8, 1) } else if dtn(t.0) { (2, 4) } else { (0, T::NT.max(1)) };
+        match units.last_mut() {
+            Some((kd, gr)) if *kd == kind && gr.len() < cap && gr[0].0 == t.0 => gr.push(t),
+            _ => units.push((kind, vec![t])),
         }
     }
-    for b in 0..nb {
+    let f64_cols = |c: Vec<Vec<f64>>| -> Vec<Vec<DD>> { c.into_iter().map(|v| v.into_iter().map(DD::from_f64).collect()).collect() };
+    let unit = |u: &(u8, Vec<(usize, Seed)>)| -> Vec<Vec<DD>> {
+        let mut cols = match u.0 {
+            1 => vec![sh.jac_column::<Double>(&z, &g, &prep, u.1[0])],
+            2 => f64_cols(sh.jac_columns_f64::<Dtn<4>>(&z, &g, &prep, &u.1)),
+            _ => f64_cols(sh.jac_columns_f64::<T>(&z, &g, &prep, &u.1)),
+        };
+        if let (true, Some((lo, _))) = (u.1[0].0 == k, &ctx.freeze) {
+            for col in cols.iter_mut() {
+                let (h, lw): (Vec<f64>, Vec<f64>) = col[..m].iter().map(|v| (v.hi, v.lo)).unzip();
+                let t = lo.apply(&Fl::<DV, B>::load(&h, &lw));
+                for (i, v) in col[..m].iter_mut().enumerate() {
+                    *v = t.get(i);
+                }
+            }
+        }
+        cols
+    };
+    let gc: Vec<Vec<Vec<DD>>> = guard(|| Ok(if par { units.par_iter().map(unit).collect() } else { units.iter().map(unit).collect() }))?;
+    let cols: Vec<Vec<DD>> = gc.into_iter().flatten().collect();
+    let mut jh = vec![0.0; ld * l];
+    for (&(b, seed), col) in tasks.iter().zip(&cols) {
+        let c = sh.seed_columns(b, seed)[0];
+        for (r, v) in col.iter().enumerate() {
+            jh[c * ld + b * 4 * m + r] = v.hi;
+        }
+    }
+    for b in 0..=k {
         let t = ctx.block_target(b);
         for r in 0..4 * m {
-            if let (true, Some((lo, hi))) = (b == ctx.k() && r < m, &ctx.freeze) {
-                // p rows of the horizon block: -Pi_low on the target node's p, +Pi_high on p1
-                for j in 0..m {
-                    upd(&mut jh, &mut jl, (t + j) * ld + b * 4 * m + r, |v| v - lo.cols[j].get(r));
-                    upd(&mut jh, &mut jl, j * ld + b * 4 * m + r, |v| v + hi.cols[j].get(r));
-                }
+            if b == k && r < m && ctx.freeze.is_some() {
                 continue;
             }
-            upd(&mut jh, &mut jl, (t + r) * ld + b * 4 * m + r, |v| v - DD::ONE);
+            let idx = (t + r) * ld + b * 4 * m + r;
+            jh[idx] = (DD { hi: jh[idx], lo: 0.0 } - DD::ONE).hi;
+        }
+    }
+    if let Some((lo, hi)) = &ctx.freeze {
+        // p rows of the horizon block: -Pi_low on the target node's p, +Pi_high on p1
+        let (t, r0) = (ctx.block_target(k), k * 4 * m);
+        for r in 0..m {
+            for j in 0..m {
+                let a = (t + j) * ld + r0 + r;
+                jh[a] = (DD { hi: jh[a], lo: 0.0 } - lo.cols[j].get(r)).hi;
+                let b = j * ld + r0 + r;
+                jh[b] = (DD { hi: jh[b], lo: 0.0 } + hi.cols[j].get(r)).hi;
+            }
         }
     }
     for i in 0..m {
-        let w = ctx.phase.get(i);
-        jh[i * ld + l - 1] = w.hi;
-        if keep_lo {
-            jl[i * ld + l - 1] = w.lo;
-        }
+        jh[i * ld + l - 1] = ctx.phase.get(i).hi;
     }
-    Ok((jh, jl, ld))
+    Ok((jh, ld))
 }
 
 /// Deliberate breakage of `jvp`, for the controls of hp/largeD_mixed_check.py: the Delta tangent scaled by
@@ -1145,6 +1236,9 @@ fn dim<T: Lane, const B: usize>(ctx: &Ctx<B>) -> T::P {
         <T::P as Param>::var(ctx.n)
     }
 }
+/// the control of the complex-rate mode matrix's check (mode_tests): the horizon solves of complex tangents with the
+/// M x M factors of the values (lus_t, here lus) at every rate, the 2M x 2M form ignored
+pub const MODE_MUT_REAL_SOLVE: u8 = 23;
 /// `jvp` control: the horizon block's state tangent dropped
 pub const JVP_MUT_HORIZON: u8 = 2;
 /// `jvp` control: the phase row's product dropped
@@ -1152,9 +1246,9 @@ pub const JVP_MUT_PHASE: u8 = 3;
 
 /// Exact Jacobian-vector product J v in double-double: the tangent of the residual along v, by one forward-mode
 /// pass per block (`Du` lanes, the lanes of the double-double Jacobian) with the block's inputs and Delta carrying
-/// v's entries as their tangent. It equals the double-double Jacobian times v to double-double rounding, for a cost of
-/// about K + 1 Jacobian columns. Returns (Jv hi, Jv lo, F hi, F lo): the residual comes with it. mutate: JVP_MUT_*
-/// (controls; 0 none).
+/// v's entries as their tangent (multishoot's `jvp`). It equals the double-double Jacobian times v to double-double
+/// rounding, for a cost of about K + 1 Jacobian columns. Returns (Jv hi, Jv lo, F hi, F lo): the residual comes with
+/// it. mutate: JVP_MUT_* (controls; 0 none).
 #[allow(clippy::type_complexity)]
 pub fn jvp<const B: usize>(ctx: &Ctx<B>, zh: &[f64], zl: &[f64], vh: &[f64], vl: &[f64], par: bool, mutate: u8) -> Result<(Vec<f64>, Vec<f64>, Vec<f64>, Vec<f64>), String> {
     let l = ctx.len();
@@ -1165,125 +1259,64 @@ pub fn jvp<const B: usize>(ctx: &Ctx<B>, zh: &[f64], zl: &[f64], vh: &[f64], vl:
     if ctx.lam.hi != 0.0 {
         return Err("jvp: no mode-matrix shift (lam) supported".into());
     }
-    let delta = delta_of(zh, zl);
-    let mut dv = delta_of(vh, vl);
+    // JVP_MUT_DELTA: the Delta tangent dv + dv 1e-20
+    let mut vd = (vh.to_vec(), vl.to_vec());
     if mutate == JVP_MUT_DELTA {
-        dv = dv + dv * DD::from_f64(1e-20);
+        let dv = delta_of(vh, vl);
+        let dv = dv + dv * DD::from_f64(1e-20);
+        (vd.0[l - 1], vd.1[l - 1]) = (dv.hi, dv.lo);
     }
-    let lus = horizon_lus(ctx, &ctx.fld(zh, zl, ctx.off_ah()), delta, par, DD::ZERO)?;
-    let one_block = |b: usize| -> State<Du, B> {
-        let inp: Vec<Fl<Du, B>> = ctx.block_inputs(b).iter().map(|&o| Fl::from_vt(&ctx.fld(zh, zl, o), &ctx.fld(vh, vl, o))).collect();
-        block_state::<Du, B>(ctx, b, &inp, Du::from_vt(DV::splat(delta), DV::splat(dv)), &lus, &lus)
-    };
-    let nb = ctx.k() + 1;
-    // the blocks are few (K + 1) and unequal; with par, each runs on its own task
-    let states: Vec<State<Du, B>> = if par { (0..nb).into_par_iter().map(one_block).collect() } else { (0..nb).map(one_block).collect() };
-    let (mut jh, mut jl) = (vec![0.0; l], vec![0.0; l]);
-    let (mut fh, mut fl) = (vec![0.0; l], vec![0.0; l]);
+    let sh = ctx.shooting();
+    let (mut jv, mut f) = guard(|| sh.jvp::<Double>(&[zh, zl], &[vd.0.as_slice(), vd.1.as_slice()], par))?;
     let kb = ctx.k();
-    for (b, s) in states.iter().enumerate() {
-        let t = ctx.block_target(b);
+    if mutate == JVP_MUT_HORIZON {
+        let (t, r0) = (ctx.block_target(kb), kb * 4 * m);
         for q in 0..4 {
-            let mut d = s[q].tan() - ctx.fld(vh, vl, t + q * m);
-            let mut f = s[q].val() - ctx.fld(zh, zl, t + q * m);
-            if mutate == JVP_MUT_HORIZON && b == kb {
-                d = -ctx.fld(vh, vl, t + q * m);
+            let d = -ctx.fld(vh, vl, t + q * m);
+            for i in 0..m {
+                jv[r0 + q * m + i] = d.get(i);
             }
-            if let (true, 0, Some((lo, hi))) = (b == kb, q, &ctx.freeze) {
-                d = lo.apply(&d) + hi.apply(&ctx.fld(vh, vl, 0));
-                f = lo.apply(&f) + hi.apply(&ctx.fld(zh, zl, 0));
-            }
-            let o = b * 4 * m + q * m;
-            d.store(&mut jh[o..o + m], &mut jl[o..o + m]);
-            f.store(&mut fh[o..o + m], &mut fl[o..o + m]);
         }
     }
-    let ph = if mutate == JVP_MUT_PHASE { DD::ZERO } else { phase_row(ctx, &ctx.fld(vh, vl, 0)) };
-    jh[l - 1] = ph.hi;
-    jl[l - 1] = ph.lo;
-    let pf = phase_row(ctx, &ctx.fld(zh, zl, 0));
-    fh[l - 1] = pf.hi;
-    fl[l - 1] = pf.lo;
+    freeze_rows::<Double, B>(ctx, &mut jv, &ctx.fld(vh, vl, 0));
+    freeze_rows::<Double, B>(ctx, &mut f, &ctx.fld(zh, zl, 0));
+    if mutate == JVP_MUT_PHASE {
+        jv[l - 1] = DD::ZERO;
+    }
+    let (jh, jl) = split(&jv);
+    let (fh, fl) = split(&f);
     Ok((jh, jl, fh, fl))
 }
 
 /// The Newton system of the mixed-precision step in block storage: the f64 Jacobian (TAN_F64 lanes T: `Fu`,
-/// `Fun<N>` or `Dtn<N>`), built block by block and factored by the staircase LU (`block::BlockLu`) without forming
-/// the dense matrix. Each residual block's columns are computed (in parallel when par) by the same functions as in
-/// `jacobian_lanes`, so its entries are those of the dense f64 Jacobian; then the block's step is factored. Not for
-/// the frozen-harmonics layout (Ctx::freeze couples the horizon block to p1) or a mode matrix (lam != 0).
+/// `Fun<N>` or `Dtn<N>`) built block by block and factored by the staircase LU (multishoot's `jacobian_staircase`,
+/// multidouble's `StaircaseLu`) without forming the dense matrix; its entries are those of the dense f64 Jacobian.
+/// Not for the frozen-harmonics layout (Ctx::freeze couples the horizon block to p1) or a mode matrix (lam != 0).
 /// mutate: block::MUT_* (controls).
 pub fn jacobian_block<T: Lane, const B: usize>(ctx: &Ctx<B>, zh: &[f64], zl: &[f64], par: bool, mutate: u8) -> Result<crate::block::BlockLu, String> {
-    use crate::block::{BlockLu, Group};
     if ctx.freeze.is_some() {
         return Err("block storage does not support the frozen-harmonics layout (kfreeze)".into());
     }
     if ctx.lam.hi != 0.0 || !T::TAN_F64 {
         return Err("block storage is for the f64 Jacobian only".into());
     }
-    let m = Ctx::<B>::M;
-    let k = ctx.k();
-    let l = ctx.len();
-    let delta = delta_of(zh, zl);
-    let lus = horizon_lus(ctx, &ctx.fld(zh, zl, ctx.off_ah()), delta, par, DD::ZERO)?;
-    let mut groups = vec![Group { param: false, zoff: 0, zlen: 2 * m }];
-    for t in 0..k {
-        groups.push(Group { param: true, zoff: ctx.off_node(t), zlen: 4 * m });
-    }
-    groups.push(Group { param: true, zoff: ctx.off_mh(), zlen: 2 * m });
-    let rblocks: Vec<(usize, usize)> = (0..=k).map(|b| (b * 4 * m, 4 * m)).collect();
-    let tasks = jac_tasks(ctx);
-    let gs = groups.clone();
-    let fill = |b: usize, w: &mut [f64], ld: usize, r0: usize| -> Result<(), String> {
-        let (p, q) = (gs[b], gs[b + 1]);
-        let np = p.len();
-        // column of z index zi within this step (panel group p, right group q; Delta -> q's copy)
-        let pos = |zi: usize| -> Result<usize, String> {
-            if zi == l - 1 {
-                Ok(np)
-            } else if zi >= p.zoff && zi < p.zoff + p.zlen {
-                Ok(p.param as usize + zi - p.zoff)
-            } else if zi >= q.zoff && zi < q.zoff + q.zlen {
-                Ok(np + q.param as usize + zi - q.zoff)
-            } else {
-                Err(format!("block {b}: unknown {zi} outside its two groups"))
-            }
-        };
-        let bt: Vec<(usize, usize, usize)> = tasks.iter().filter(|t| t.0 == b).cloned().collect();
-        let cols: Vec<Vec<DD>> = if T::NT > 1 {
-            let groups_b: Vec<&[(usize, usize, usize)]> = bt.chunks(T::NT).collect();
-            let one = |g: &&[(usize, usize, usize)]| jac_columns_n::<T, B>(ctx, zh, zl, delta, &lus, &lus, g);
-            let gc: Vec<Vec<Vec<DD>>> = if par { groups_b.par_iter().map(one).collect() } else { groups_b.iter().map(one).collect() };
-            gc.into_iter().flatten().collect()
-        } else {
-            let one = |t: &(usize, usize, usize)| jac_column::<T, B>(ctx, zh, zl, delta, &lus, &lus, *t);
-            if par {
-                bt.par_iter().map(one).collect()
-            } else {
-                bt.iter().map(one).collect()
-            }
-        };
-        let ins = ctx.block_inputs(b);
-        for (&(_, f, j), col) in bt.iter().zip(&cols) {
-            let c = if f == usize::MAX { np } else { pos(ins[f] + j)? };
-            for (r, v) in col.iter().enumerate() {
-                w[c * ld + r0 + r] = v.hi;
-            }
-        }
-        let t = ctx.block_target(b);
-        for r in 0..4 * m {
-            let c = pos(t + r)?;
-            let o = c * ld + r0 + r;
-            w[o] = (DD { hi: w[o], lo: 0.0 } - DD::ONE).hi;
-        }
-        if b == 0 {
-            for i in 0..m {
-                w[pos(i)? * ld + r0 - 1] = ctx.phase.get(i).hi;
-            }
-        }
-        Ok(())
-    };
-    BlockLu::factor_control(l, groups, &rblocks, l - 1, l - 1, fill, par, crate::block::control(mutate))
+    let mut sh = ctx.shooting();
+    sh.set_control(crate::block::control(mutate));
+    guard(|| sh.jacobian_staircase::<T>(&[zh, zl], par))
+}
+
+/// The mode matrix M(lam) at a real growth rate lam: the linearization of the residual for perturbations
+/// ~ exp(lam tau), Delta held fixed, over the block rows and the unknowns before Delta (multishoot's `mode_matrix`,
+/// its real part), with hp's freeze projection. Column-major with leading dimension ld_for(L-1): (hi, lo, ld).
+pub fn mode_matrix<const B: usize>(ctx: &Ctx<B>, zh: &[f64], zl: &[f64], lam: DD, par: bool) -> Result<(Vec<f64>, Vec<f64>, usize), String> {
+    let sh = ctx.shooting();
+    let mm = guard(|| sh.mode_matrix(&[zh, zl], Rate::new(lam, DD::ZERO), par))?;
+    let ld = mm.ld;
+    let mut re = mm.re;
+    freeze_matrix::<Double, B>(ctx, &mut re, ld, &horizon_cols(ctx, false));
+    let l = re.pop().expect("two parts");
+    let h = re.pop().expect("two parts");
+    Ok((h, l, ld))
 }
 
 /// A solver context read from a file written by hp/dump_ctx.py (Rust benches and data-driven tests).
@@ -1332,24 +1365,27 @@ pub(crate) mod ctxfile {
 mod bench {
     use super::*;
     use crate::field::cs;
+    use crate::lane::Du;
     use std::time::Instant;
 
-    /// seconds per column for the sample tasks (one block), one evaluation per column (T::NT <= 1) or groups of
-    /// T::NT columns per evaluation (the sample is then extended to whole groups of consecutive lanes)
-    fn time_cols<T: Lane, const B: usize>(ctx: &Ctx<B>, zh: &[f64], zl: &[f64], lus: &[DDLu], tasks: &[(usize, usize, usize)]) -> f64 {
-        let delta = delta_of(zh, zl);
+    /// seconds per column for the sample tasks (one block), one evaluation per column (`Du`) or groups of T::NT
+    /// columns per evaluation (f64 lanes; the sample is then extended to whole groups of consecutive lanes)
+    fn time_cols<T: Lane, const B: usize>(ctx: &Ctx<B>, zh: &[f64], zl: &[f64], prep: &HPrep, tasks: &[(usize, Seed)]) -> f64 {
+        let sh = ctx.shooting();
+        let z = [zh, zl];
+        let g = sh.globals::<Double>(&z);
         let mut s = 0.0;
         let t0 = Instant::now();
-        let n = if T::TAN_F64 && T::NT > 1 {
+        let n = if T::TAN_F64 {
             let mut n = 0;
-            for g in tasks.chunks(T::NT) {
-                s += jac_columns_n::<T, B>(ctx, zh, zl, delta, lus, lus, g)[0][3].hi;
-                n += g.len();
+            for gr in tasks.chunks(T::NT) {
+                s += sh.jac_columns_f64::<T>(&z, &g, prep, gr)[0][3];
+                n += gr.len();
             }
             n
         } else {
             for &t in tasks {
-                s += jac_column::<T, B>(ctx, zh, zl, delta, lus, lus, t)[3].hi;
+                s += sh.jac_column::<Double>(&z, &g, prep, t)[3].hi;
             }
             tasks.len()
         };
@@ -1391,7 +1427,7 @@ mod bench {
     fn run<const B: usize>(v: &[f64]) {
         let (ctx, zh, zl) = ctxfile::load::<B>(v);
         let delta = delta_of(&zh, &zl);
-        let lus = horizon_lus(&ctx, &ctx.fld(&zh, &zl, ctx.off_ah()), delta, false, DD::ZERO).unwrap();
+        let prep = HPrep::of(horizon_lus(&ctx, &ctx.fld(&zh, &zl, ctx.off_ah()), delta, false, DD::ZERO).unwrap());
         println!("M = {}, L = {}, single thread; seconds for all columns of a block (from a sample)", 8 * B, ctx.len());
         prim::<Du, B>(&ctx, "Du");
         prim::<Fu, B>(&ctx, "Fu");
@@ -1399,23 +1435,23 @@ mod bench {
         prim::<Dtn<1>, B>(&ctx, "Dtn<1>");
         prim::<Dtn<4>, B>(&ctx, "Dtn<4>");
         prim::<Dtn<8>, B>(&ctx, "Dtn<8>");
-        let all = jac_tasks(&ctx);
+        let all = ctx.shooting().jac_tasks();
         let nb = ctx.k() + 1;
         let names = ["Du", "Fu", "Fun<2>", "Fun<4>", "Fun<8>", "Dtn<1>", "Dtn<4>", "Dtn<8>"];
         let mut tot = [0.0; 8];
         for b in 0..nb {
             let ncol = all.iter().filter(|t| t.0 == b).count() as f64;
             // 16 consecutive lanes of the second input field (each evaluation group within one field)
-            let sample: Vec<(usize, usize, usize)> = all.iter().filter(|t| t.0 == b && t.1 == 1 && t.2 < 16).cloned().collect();
+            let sample: Vec<(usize, Seed)> = all.iter().filter(|t| t.0 == b && matches!(t.1, Seed::Field(1, j) if j < 16)).cloned().collect();
             let ts = [
-                time_cols::<Du, B>(&ctx, &zh, &zl, &lus, &sample[..4]),
-                time_cols::<Fu, B>(&ctx, &zh, &zl, &lus, &sample[..8]),
-                time_cols::<Fun<2>, B>(&ctx, &zh, &zl, &lus, &sample[..8]),
-                time_cols::<Fun<4>, B>(&ctx, &zh, &zl, &lus, &sample[..8]),
-                time_cols::<Fun<8>, B>(&ctx, &zh, &zl, &lus, &sample),
-                time_cols::<Dtn<1>, B>(&ctx, &zh, &zl, &lus, &sample[..4]),
-                time_cols::<Dtn<4>, B>(&ctx, &zh, &zl, &lus, &sample[..8]),
-                time_cols::<Dtn<8>, B>(&ctx, &zh, &zl, &lus, &sample),
+                time_cols::<Du, B>(&ctx, &zh, &zl, &prep, &sample[..4]),
+                time_cols::<Fu, B>(&ctx, &zh, &zl, &prep, &sample[..8]),
+                time_cols::<Fun<2>, B>(&ctx, &zh, &zl, &prep, &sample[..8]),
+                time_cols::<Fun<4>, B>(&ctx, &zh, &zl, &prep, &sample[..8]),
+                time_cols::<Fun<8>, B>(&ctx, &zh, &zl, &prep, &sample),
+                time_cols::<Dtn<1>, B>(&ctx, &zh, &zl, &prep, &sample[..4]),
+                time_cols::<Dtn<4>, B>(&ctx, &zh, &zl, &prep, &sample[..8]),
+                time_cols::<Dtn<8>, B>(&ctx, &zh, &zl, &prep, &sample),
             ];
             let steps = if b > 0 && b < ctx.k() { ctx.segs[b - 1].len() - 1 } else { 0 };
             let mut line = format!("  block {b:2} ({ncol} columns, {steps:2} steps):");
