@@ -13,94 +13,28 @@
 //!     perturbation of 2^-180, below double-double resolution, seen by the residual and undone by Newton (control: the
 //!     state read in double-double)
 //! ```
-use crate::dd::DD;
-use crate::field::{Fl, State};
-use crate::lane::{BaseLane, QJet, Qu};
-use crate::linalg::{ld_for, DDLu, QDLu};
-use crate::model::{block_state, delta_of, horizon_lus, jac_tasks, Ctx};
-use crate::qd::{QdAcc, QD};
+use crate::field::Fl;
+use crate::linalg::QDLu;
+use crate::model::Ctx;
+use crate::qd::QD;
 use crate::qv::QV;
-use rayon::prelude::*;
+use crate::xsolve;
+use multidouble::precision::Quad;
+#[cfg(test)]
+use crate::{dd::DD, qd::QdAcc};
 
 /// `Ctx::mutate` for qsolve (the control of its precision checks): the state read in its double-double part only
 pub const QD_MUT_STATE_DD: u8 = 9;
 
 /// A field from the four parts of a quad-double state (only the first two with QD_MUT_STATE_DD)
 pub fn fld_q<const B: usize>(ctx: &Ctx<B>, z: [&[f64]; 4], off: usize) -> Fl<QV, B> {
-    let r = off..off + Ctx::<B>::M;
-    if ctx.mutate == QD_MUT_STATE_DD {
-        let zero = [0.0; 512];
-        let n = Ctx::<B>::M;
-        return Fl::load_parts(&z[0][r.clone()], &z[1][r], &zero[..n], &zero[..n]);
-    }
-    Fl::load_parts(&z[0][r.clone()], &z[1][r.clone()], &z[2][r.clone()], &z[3][r])
-}
-
-fn delta_q<const B: usize>(ctx: &Ctx<B>, z: [&[f64]; 4]) -> QD {
-    let l = z[0].len() - 1;
-    if ctx.mutate == QD_MUT_STATE_DD {
-        return QD::new(z[0][l], z[1][l], 0.0, 0.0);
-    }
-    QD::new(z[0][l], z[1][l], z[2][l], z[3][l])
-}
-
-/// the phase row sum_j w_j p1_j in quad-double
-fn phase_q<const B: usize>(ctx: &Ctx<B>, p1: &Fl<QV, B>) -> QD {
-    let mut acc = QdAcc::zero();
-    for i in 0..Ctx::<B>::M {
-        acc = acc.add_prod(QD::from_dd(ctx.phase.get(i)), p1.get(i));
-    }
-    acc.finish()
-}
-
-fn check<const B: usize>(ctx: &Ctx<B>, z: [&[f64]; 4]) -> Result<(), String> {
-    let l = ctx.len();
-    if z.iter().any(|p| p.len() != l) {
-        return Err(format!("z0..z3 must have length {l}"));
-    }
-    if ctx.lam.hi != 0.0 {
-        return Err("qsolve: no mode-matrix shift (lam) supported".into());
-    }
-    Ok(())
-}
-
-/// the horizon LUs at the state's double-double part: the preconditioners of the refined horizon solves
-fn lus_of<const B: usize>(ctx: &Ctx<B>, z: [&[f64]; 4], par: bool) -> Result<Vec<DDLu>, String> {
-    horizon_lus(ctx, &ctx.fld(z[0], z[1], ctx.off_ah()), delta_of(z[0], z[1]), par, DD::ZERO)
+    xsolve::fld::<Quad, B>(ctx, &z, off)
 }
 
 /// The residual with every block in quad-double, one QD per row. Each block reads its inputs, Delta and its target
 /// in all four parts; the freeze projection and the phase row are quad-double too.
 pub fn residual_parts<const B: usize>(ctx: &Ctx<B>, z: [&[f64]; 4], par: bool) -> Result<Vec<QD>, String> {
-    check(ctx, z)?;
-    let l = ctx.len();
-    let m = Ctx::<B>::M;
-    let lus = lus_of(ctx, z, par)?;
-    let dq = QV::splat(delta_q(ctx, z));
-    let one_block = |b: usize| -> State<QV, B> {
-        let inq: Vec<Fl<QV, B>> = ctx.block_inputs(b).iter().map(|&o| fld_q(ctx, z, o)).collect();
-        block_state::<QV, B>(ctx, b, &inq, dq, &lus, &lus)
-    };
-    let nb = ctx.k() + 1;
-    let states: Vec<State<QV, B>> = if par { (0..nb).into_par_iter().map(one_block).collect() } else { (0..nb).map(one_block).collect() };
-    let p1 = fld_q(ctx, z, 0);
-    let mut f = vec![QD::ZERO; l];
-    let kb = ctx.k();
-    for (b, s) in states.iter().enumerate() {
-        let t = ctx.block_target(b);
-        for q in 0..4 {
-            let mut d = s[q] - fld_q(ctx, z, t + q * m);
-            if let (true, 0, Some((lo, hi))) = (b == kb, q, &ctx.freeze) {
-                d = lo.apply(&d) + hi.apply(&p1);
-            }
-            let o = b * 4 * m + q * m;
-            for i in 0..m {
-                f[o + i] = d.get(i);
-            }
-        }
-    }
-    f[l - 1] = phase_q(ctx, &p1);
-    Ok(f)
+    xsolve::residual_parts::<Quad, B>(ctx, &z, par)
 }
 
 /// `residual_parts` with each row rounded to double-double (F is small, so the rounding is relative to F): (F hi,
@@ -111,151 +45,19 @@ pub fn residual_q<const B: usize>(ctx: &Ctx<B>, z: [&[f64]; 4], par: bool) -> Re
 }
 
 /// The residual on a jet state z(h) = sum_k z_k h^k in quad-double (`QJet<N>` lanes), with the dimension n + h as
-/// the jet variable: model::residual_jet with every block, the freeze projection and the phase row in quad-double
-/// and each z_k in four parts. zs holds at most N coefficient vectors; the result is F's coefficients of orders
-/// 0..nout-1 (nout <= N), one QD per row. The horizon LUs are those of z_0's double-double part, the preconditioners
-/// of the refined solves (model::psolve). The D-dependent constants are formed in the jet's parameter arithmetic
-/// (`QSeries<N>`, quad-double), where residual_parts forms them in double-double, so order 0 is residual_parts'
-/// residual up to that rounding.
+/// the jet variable (xsolve::residual_jet at `Quad`): each z_k in four parts, at most N of them, F's coefficients of
+/// orders 0..nout-1 (nout <= N), one QD per row. The D-dependent constants are formed in the jet's parameter
+/// arithmetic (`QSeries<N>`), so order 0 is residual_parts' residual up to that rounding.
 pub fn residual_jet_q<const N: usize, const B: usize>(ctx: &Ctx<B>, zs: &[[&[f64]; 4]], par: bool, nout: usize) -> Result<Vec<Vec<QD>>, String> {
-    if zs.is_empty() || zs.len() > N || nout == 0 || nout > N {
-        return Err(format!("residual_jet_q: 1..={N} coefficient vectors and 1..={N} outputs, not {} and {nout}", zs.len()));
-    }
-    for z in zs {
-        check(ctx, *z)?;
-    }
-    let l = ctx.len();
-    let m = Ctx::<B>::M;
-    let lus = lus_of(ctx, zs[0], par)?;
-    // the coefficient-k field at offset o: z_k's, zero past the given vectors
-    let fld_k = |k: usize, o: usize| -> Fl<QV, B> { if k < zs.len() { fld_q(ctx, zs[k], o) } else { Fl::zero() } };
-    let fld_jet = |o: usize| -> Fl<QJet<N>, B> {
-        let mut f = Fl::<QJet<N>, B>::zero();
-        for k in 0..zs.len() {
-            f.set_coef_qd(k, &fld_k(k, o));
-        }
-        f
-    };
-    let mut dj = <QJet<N> as BaseLane>::zero();
-    for (k, z) in zs.iter().enumerate() {
-        dj.set_coef_qd(k, QV::splat(delta_q(ctx, *z)));
-    }
-    let one_block = |b: usize| -> State<QJet<N>, B> {
-        let inp: Vec<Fl<QJet<N>, B>> = ctx.block_inputs(b).iter().map(|&o| fld_jet(o)).collect();
-        block_state::<QJet<N>, B>(ctx, b, &inp, dj, &lus, &lus)
-    };
-    let nb = ctx.k() + 1;
-    let states: Vec<State<QJet<N>, B>> = if par { (0..nb).into_par_iter().map(one_block).collect() } else { (0..nb).map(one_block).collect() };
-    let mut out = vec![vec![QD::ZERO; l]; nout];
-    let kb = ctx.k();
-    for (b, s) in states.iter().enumerate() {
-        let t = ctx.block_target(b);
-        for q in 0..4 {
-            for (k, o_k) in out.iter_mut().enumerate() {
-                let mut d = s[q].coef_qd(k) - fld_k(k, t + q * m);
-                if let (true, 0, Some((lo, hi))) = (b == kb, q, &ctx.freeze) {
-                    d = lo.apply(&d) + hi.apply(&fld_k(k, 0));
-                }
-                let o = b * 4 * m + q * m;
-                for i in 0..m {
-                    o_k[o + i] = d.get(i);
-                }
-            }
-        }
-    }
-    for (k, o_k) in out.iter_mut().enumerate() {
-        o_k[l - 1] = phase_q(ctx, &fld_k(k, 0));
-    }
-    Ok(out)
-}
-
-/// One column task (model::jac_tasks): block b's output state differentiated along a unit tangent on lane j of input
-/// field f (Delta for f = usize::MAX), with `Qu` lanes, in quad-double; the freeze projection applied as in
-/// model::jac_column.
-fn jac_column_q<const B: usize>(ctx: &Ctx<B>, z: [&[f64]; 4], dq: QD, lus: &[DDLu], (b, f, j): (usize, usize, usize)) -> Vec<QD> {
-    let m = Ctx::<B>::M;
-    let inp: Vec<Fl<Qu, B>> = ctx
-        .block_inputs(b)
-        .iter()
-        .enumerate()
-        .map(|(fi, &o)| {
-            let v = fld_q(ctx, z, o);
-            let mut r = [<Qu as BaseLane>::zero(); B];
-            for bb in 0..B {
-                r[bb].v = v.0[bb];
-            }
-            if fi == f {
-                let mut e = [QD::ZERO; 8];
-                e[j % 8] = QD::ONE;
-                r[j / 8].d = QV::from_lanes(&e);
-            }
-            Fl(r)
-        })
-        .collect();
-    let d = Qu { v: QV::splat(dq), d: if f == usize::MAX { QV::splat(QD::ONE) } else { QV::zero() } };
-    let s = block_state::<Qu, B>(ctx, b, &inp, d, lus, lus);
-    let mut out = Vec::with_capacity(4 * m);
-    for q in 0..4 {
-        let mut t = Fl::<QV, B>(s[q].0.map(|x| x.d));
-        if let (true, 0, Some((lo, _))) = (b == ctx.k(), q, &ctx.freeze) {
-            t = lo.apply(&t);
-        }
-        for i in 0..m {
-            out.push(t.get(i));
-        }
-    }
-    out
+    let zs: Vec<Vec<&[f64]>> = zs.iter().map(|z| z.to_vec()).collect();
+    xsolve::residual_jet::<Quad, N, B>(ctx, &zs, par, nout, "residual_jet_q")
 }
 
 /// The exact Jacobian dF/dz in quad-double by forward-mode duals (`Qu` lanes, one evaluation per column), assembled
 /// as model::jacobian does: column-major with leading dimension ld_for(L), part q of entry (i, j) at c[q][j ld + i].
 pub fn jacobian_q<const B: usize>(ctx: &Ctx<B>, z: [&[f64]; 4], par: bool) -> Result<([Vec<f64>; 4], usize), String> {
-    check(ctx, z)?;
-    let l = ctx.len();
-    let m = Ctx::<B>::M;
-    let ld = ld_for(l);
-    let lus = lus_of(ctx, z, par)?;
-    let dq = delta_q(ctx, z);
-    let tasks = jac_tasks(ctx);
-    let column = |t: &(usize, usize, usize)| jac_column_q(ctx, z, dq, &lus, *t);
-    let cols: Vec<Vec<QD>> = if par { tasks.par_iter().map(column).collect() } else { tasks.iter().map(column).collect() };
-    let mut c: [Vec<f64>; 4] = std::array::from_fn(|_| vec![0.0; ld * l]);
-    let add = |c: &mut [Vec<f64>; 4], idx: usize, v: QD| {
-        let s = QD { x: std::array::from_fn(|q| c[q][idx]) } + v;
-        for q in 0..4 {
-            c[q][idx] = s.x[q];
-        }
-    };
-    for (&(b, f, j), col) in tasks.iter().zip(&cols) {
-        let cj = if f == usize::MAX { l - 1 } else { ctx.block_inputs(b)[f] + j };
-        for (r, v) in col.iter().enumerate() {
-            for q in 0..4 {
-                c[q][cj * ld + b * 4 * m + r] = v.x[q];
-            }
-        }
-    }
-    for b in 0..ctx.k() + 1 {
-        let t = ctx.block_target(b);
-        for r in 0..4 * m {
-            let row = b * 4 * m + r;
-            if let (true, Some((lo, hi))) = (b == ctx.k() && r < m, &ctx.freeze) {
-                // p rows of the horizon block: -Pi_low on the target node's p, +Pi_high on p1
-                for jj in 0..m {
-                    add(&mut c, (t + jj) * ld + row, -QD::from_dd(lo.cols[jj].get(r)));
-                    add(&mut c, jj * ld + row, QD::from_dd(hi.cols[jj].get(r)));
-                }
-                continue;
-            }
-            add(&mut c, (t + r) * ld + row, -QD::ONE);
-        }
-    }
-    for i in 0..m {
-        let w = ctx.phase.get(i);
-        let o = i * ld + l - 1;
-        c[0][o] = w.hi;
-        c[1][o] = w.lo;
-    }
-    Ok((c, ld))
+    let (c, ld) = xsolve::jacobian::<Quad, B>(ctx, &z, par)?;
+    Ok((c.try_into().expect("four parts"), ld))
 }
 
 /// A quad-double Newton step: dz = -J^-1 F (four parts), F (hi, lo), the LU, and the seconds of the residual, the
@@ -270,24 +72,8 @@ pub struct QStep {
 
 /// The Newton step in quad-double at z
 pub fn newton_q<const B: usize>(ctx: &Ctx<B>, z: [&[f64]; 4], par: bool) -> Result<QStep, String> {
-    let l = ctx.len();
-    let mut t = [0.0f64; 4];
-    let t0 = std::time::Instant::now();
-    let f = residual_parts(ctx, z, par)?;
-    t[0] = t0.elapsed().as_secs_f64();
-    let t0 = std::time::Instant::now();
-    let (c, ld) = jacobian_q(ctx, z, par)?;
-    t[1] = t0.elapsed().as_secs_f64();
-    let t0 = std::time::Instant::now();
-    let lu = QDLu::factor(l, ld, c, par)?;
-    t[2] = t0.elapsed().as_secs_f64();
-    let t0 = std::time::Instant::now();
-    let mut b: Vec<QD> = f.iter().map(|&v| -v).collect();
-    lu.solve(&mut b);
-    t[3] = t0.elapsed().as_secs_f64();
-    let dz = std::array::from_fn(|q| b.iter().map(|v| v.x[q]).collect());
-    let (fh, fl) = f.iter().map(|v| v.to_dd()).map(|d| (d.hi, d.lo)).unzip();
-    Ok(QStep { dz, fh, fl, lu, t })
+    let s = xsolve::newton::<Quad, B>(ctx, &z, par)?;
+    Ok(QStep { dz: s.dz.try_into().expect("four parts"), fh: s.fh, fl: s.fl, lu: s.lu, t: s.t })
 }
 
 #[cfg(test)]

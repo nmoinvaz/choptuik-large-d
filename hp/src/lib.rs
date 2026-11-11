@@ -11,6 +11,7 @@
 //! * `model`: centre series, Taylor stepping in x, horizon series, residual and Jacobian (double-double or f64).
 //! * `qsolve`: the residual, its exact Jacobian and the Newton step in quad-double (notes/QUAD_DOUBLE.md, section 12).
 //! * `osolve`: the same in octo-double, with the jet in the dimension (notes/OCTO_DOUBLE.md).
+//! * `xsolve`: the code of both, written once over multidouble's `Precision` (`Quad`, `Octo`).
 //! * `qd`: scalar quad-double (~64 digits); `qv`: 8-lane quad-double built on `v8`, bitwise the same per lane; `exact`:
 //!   exact dyadic and decimal arithmetic for their decimal input/output and their tests. Not used by the solver yet
 //!   (notes/QUAD_DOUBLE.md).
@@ -24,6 +25,7 @@ pub mod lane;
 pub mod model;
 pub mod osolve;
 pub mod qsolve;
+pub mod xsolve;
 
 // The arithmetic, the dual lanes and the dense LU live in the multidouble crate (crates.io; github.com/nmoinvaz/multidouble),
 // split out of this one; re-exported under their old paths so the solver code reads as before. Its lane types are
