@@ -33,6 +33,12 @@ Every state of the solver is one vector z, laid out as in `hp/python/hpkernel/dr
 
 The length is L = 4M(K + 1) + 1 for K nodes. The large-D chain uses M = 32 and five nodes at x = 0.3 to 0.7, so L = 769.
 
+A field's Fourier coefficients are its harmonics over one echo period: harmonic k is the part of the field that runs k
+times through the period. p₁ changes sign after half a period, so only its odd harmonics occur, and they shrink quickly
+with k.
+
+![One echo period of the centre field p1 at D 232.63, the sum of its harmonics, and harmonics 1, 3, 5 and 13 drawn alone, each on its own scale](hp/echo_harmonics.svg)
+
 ![The unknown vector z of the large-D chain, to scale: 64 centre numbers, five nodes of 128 numbers each (p, m, a, c with 32 Fourier coefficients each), 64 horizon numbers, and Δ](hp/explain_layout.svg)
 
 ### The residual
@@ -75,12 +81,21 @@ double-double (`newton_mixed`). Its procedures are in [notes/LOW_D.md](notes/LOW
 Past D ≈ 73 the chain is carried in D by an exact Taylor continuation, the asymptotic numerical method[^2]
 (`hp/anm_run.py`). It continues the pinned system. Of a solution's 769 unknowns all are solved at every step except
 the cosine and sine coefficients of p₁'s harmonics 5–13, which are held at values from a fit, and p₁'s harmonics 15
-and up, which are set to zero. Each held coefficient times √n (n = D − 2) is a least-squares Chebyshev series of degree
-8 in 1/n through the 138 full-system solutions at D 38–73, extended to larger D (`--held_fit`, `HeldFit` in
-`hp/pinning.py`, [notes/HELD_HARMONICS.md](notes/HELD_HARMONICS.md)). Inside D 38–73 fits of degree 6, 8 and 10 agree
-to about 10⁻¹² in a₅. Past it they part, and chains run on the three fits give Δ's error bar, about 3×10⁻¹¹ near
-D 200–215 (err_kind "fits" in `hp/data/delta_all.csv`, [notes/BIAS.md](notes/BIAS.md)). Each step has a predictor, an
-optional re-seed and a corrector, and a failed correction halves the step, three times at most, keeping the series.
+and up, which are set to zero. The held values come from a fit (`hp/held_fit.py fit`, held by `--held_fit`, `HeldFit`
+in `hp/pinning.py`, [notes/HELD_HARMONICS.md](notes/HELD_HARMONICS.md)):
+
+1. Take the 138 full-system solutions between D 38 and 73, where every harmonic is solved.
+2. Read the ten held coefficients of each, a₅, b₅, …, a₁₃, b₁₃, from its p₁ by a discrete Fourier sum.
+3. For each coefficient, multiply by √n with n = D − 2, the centre's scaling, and fit a Chebyshev series in x = 1/n
+   by least squares through the 138 points: degree 8, and degree 4 for harmonics 11 and 13, whose computed values carry
+   noise of 10⁻⁸ to 10⁻⁷.
+4. At any larger D, evaluate the series and divide by √n. The chain adds the fit's change from its base to the base's
+   own value, and the series' Taylor coefficients in D enter the predictor.
+
+Inside D 38–73 fits of degree 6, 8 and 10 agree to about 10⁻¹² in a₅. Past it they part, and chains run on the three
+fits give Δ's error bar, about 3×10⁻¹¹ near D 200–215 (err_kind "fits" in `hp/data/delta_all.csv`,
+[notes/BIAS.md](notes/BIAS.md)). Each step has a predictor, an optional re-seed and a corrector, and a failed
+correction halves the step, three times at most, keeping the series.
 
 ![The held harmonics: the size of each odd harmonic of p1 at D 232.63 with its role (1 and 3 solved, 5 to 13 held, 15 and up set to zero), harmonic 5's cosine coefficient in the 138 full solutions and the fits of degree 6, 8 and 10 that extend them, and how far those fits part past D 73](hp/harmonics_held.svg)
 
