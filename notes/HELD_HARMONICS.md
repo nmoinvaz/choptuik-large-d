@@ -295,6 +295,33 @@ truncated steps that solve 5 or 5–7 change by less than 1e-3 relative, and the
 control `--mutate=pinned_rows` reads g and S from the pinned kernel's own rows, which do not contain the dropped
 matching. There σ₁ is 1.3e-33 and the check fails, exit 1.
 
+**The exact Jacobian (#479).** `held_schur.py --jac=exact` forms S without differences, as the horizon p rows of the
+full system's exact quad-double Jacobian (`Solver.jacobian_q`) applied to each dz_j. `--eps_pow=70` takes the
+differences with a step 2³⁰ times smaller than above. At 79.77 the two agree to 8e-10 in all ten singular values, and
+S at eps and eps/2 agree to 6e-9, so the check fixed beforehand now passes (raw `I479-mac/`,
+`schur_D79.7657_exact_e70.log`). The controls fire: `--mutate=jac_scale` (the exact rows times 1.01) and
+`--mutate=pinned_rows` both exit 1. The values of harmonics 5 and 7 above stand. Those of 9, 11 and 13 were off,
+13's by a factor of 11 to 16:
+
+| harmonic | σ, exact (its cosine-sine pair) | σ from the differences at 2⁻⁴⁰, above |
+|---|---|---|
+| 5 | 7.422e-13, 7.420e-13 | 7.42e-13, 7.42e-13 |
+| 7 | 2.461e-16, 2.461e-16 | 2.46e-16, 2.46e-16 |
+| 9 | 1.682e-19, 1.682e-19 | 1.75e-19, 1.69e-19 |
+| 11 | 2.877e-22, 2.876e-22 | 3.37e-22, 2.52e-22 |
+| 13 | 1.364e-24, 1.362e-24 | 2.24e-23, 1.45e-23 |
+
+The full Newton step along harmonic 13's pair is 0.44 and 0.10, not 0.06–0.08. The truncated steps from the exact S
+move Δ by +5.031e-8 (solving 5), +5.002e-8 (5 and 7), +5.028e-8 (5–9), +2.68e-8 (5–11) and +1.15e-7 (all). The
+conclusions above stand: the grip falls by 200 to 3000 per harmonic, 11 and 13 are the near-null directions, and
+solving 5 and 7 removes the chain's gap of −5.002e-8.
+
+Past 80 the step 2⁻⁴⁰ is worse. At 150 the residual's cubic term along dz_j outweighs S, and S at eps/2 is a quarter
+of S at eps in every value. With `--eps_pow=70` the differences resolve harmonics 5 and 7 at 100 and 150, and agree
+with the exact S there to 3e-4 and 4e-6. The exact values at 100 and 150 are in `hp/data/held_grip.csv`. Past D 190
+quad-double is not enough: at 200 and 232.6 (pivots up to 10²⁸ and 10³³) its S breaks the cosine-sine pairs, by 20%
+at 200 and a factor of 4 or more at 232.6, which `held_grip.py` refuses.
+
 ### 4.4 Not run
 
 - **A junk-only deflated Newton on the full system** (`newton_qd`'s `junk` mode, from a chain state). Section 4.3

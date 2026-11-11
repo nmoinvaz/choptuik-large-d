@@ -13,7 +13,8 @@ Papers (drafts, not yet reviewed):
 
 Choptuik's critical solution is the universal threshold between dispersal and black-hole formation for a massless
 scalar field. It is computed here as a periodic boundary-value problem in self-similar variables, in double-double
-precision, across spacetime dimensions D from 3.044 to about 78.
+precision across spacetime dimensions D from 3.044 to 73, and past 73 by a chain in quad- and octo-double that holds
+harmonics 5–13 of the centre field on a fit, to D = 222.
 
 - One rational formula in 1/(D − 2) fits its echo period Δ(D) and critical exponent γ(D) for every D ≥ 4.
 - If Δ is analytic in 1/D, its limit is Δ∞ = 1.643893746 ± 1.5×10⁻⁸. That is finite, against the published
@@ -71,7 +72,8 @@ How it is done:
 - **Solvers.** Choptuik's solution is computed as a periodic boundary-value problem in self-similar variables. An f64
   solver in [`solver/`](solver/), with a Rust kernel for its residual (this crate), covers D = 3.6–40. A separate
   double-double (about 32-digit) solver in [`hp/`](hp/) reaches D = 67.77. It reaches 73.27 with the pinned runs, and
-  78.12 in a layout where Δ is known to about 10⁻⁶.
+  78.12 in a layout where Δ is known to about 10⁻⁶. Past 73 the same residual is continued in D in quad- and
+  octo-double, with harmonics 5–13 of the centre field held on a fit of the full solutions, to D = 222.
 - **Theory.** The large-D expansion, its Stokes multipliers and the inner problem at D = ∞ are in the Large-D section,
   with the scripts that check each step.
 - **Layout.** The physics is in this file, and the software is described at the end.
@@ -695,9 +697,11 @@ Their supercritical branch and its continuously self-similar checks are in
 
 The points are computed by [`hp/`](hp/) (crate `hpkernel`), in double-double and, where the large-D chain needs them, in quad- and octo-double. Its arithmetic comes from the crate [multidouble](https://github.com/nmoinvaz/multidouble). Its points are used in [The formula](#the-formula) (agreement and Δ∞), [Values](#values), the [candidate test](#closed-forms-tested-and-excluded), the [analyticity tests](#is-the-period-analytic-in-1d) and the large-D scaling ([How the solution scales with D](#how-the-solution-scales-with-d)).
 
-[ALGORITHM.md](ALGORITHM.md) explains how the solver works, at a high level and down to its data types. It covers the
-unknowns and the residual, Newton's method, the continuation in D with its predictor, re-seed and corrector, the
-double-, quad- and octo-double number types, and why their precision has to grow with D.
+[ALGORITHM.md](ALGORITHM.md) explains how the solver works, at a high level and down to its data types. Its first
+figure puts the large-D computation in one picture: what is computed, why harmonics 5–13 of the centre field cannot be
+solved past D 73, and how a fit of the full solutions stands in for them. It covers the unknowns and the residual,
+Newton's method, the continuation in D with its predictor, re-seed and corrector, the double-, quad- and octo-double
+number types, and why their precision has to grow with D.
 
 ## Validation and controls
 
@@ -905,6 +909,14 @@ The profile $`F = \sqrt n\, \partial_x p\,(x = 0)`$ converges as D grows:
 | ∞ (extrapolated) | ≈ 2.72 | | | ≈ 3.65 | ≈ 3.7 |
 
 The last two columns approach the same limit, as Proposition 1 predicts (c = 1 - ε F² (1-x²) + …).
+
+![The solutions of all D as one family, animated: p1 over one echo period swept from D 38 to 232.6, the waves times √(D−2) nearly coinciding, each odd harmonic a nearly fixed factor smaller than the one before, and p over the radius and the echo phase with p1 its slope at the centre](hp/wave_family.svg)
+
+**The family to D 232.6** (`hp/plot_wave_family.py`). Times √(D−2), the first harmonic of p1 falls by 10% from D 38
+to 232.6 (3.106 to 2.782), against 65% without the factor, on its way to the extrapolated 2.72. Within one wave each odd
+harmonic is a nearly fixed factor smaller than the one before: from harmonic 1 to 3 by 10.5 at D 38 and 16.3 at D
+232.6. Above D 73 harmonics 5–13 are held on a fit ([ALGORITHM.md](ALGORITHM.md), section 3), so there only harmonics
+1 and 3 are solved values.
 
 ### Proposition 1: the 1/n expansion never fixes the period
 

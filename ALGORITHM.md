@@ -17,6 +17,20 @@ periodic with period Δ, and the solver finds the fields and Δ together. Three 
    in D. Each number is therefore stored as a sum of 2, 4 or 8 ordinary doubles, and the larger D gets, the more parts
    each stage needs.
 
+![The large-D computation in six panels: Δ for every D; a solution as a wave of odd harmonics; the full equations' grip on harmonics 5 to 13 past D 73, hundreds to thousands of times weaker per harmonic; the smooth family that a fit of the full solutions carries past D 73; the size of each Taylor term of one chain step; and Δ's error bar, from about 10⁻¹⁵ for the full system to 3×10⁻¹¹ on the chain](hp/big_picture.svg)
+
+**The large-D computation in one picture** (`hp/plot_big_picture.py`). The top row is the problem, and the bottom row
+is how a fit gets around it. Each panel is explained in detail here:
+
+1. Δ for every D: the README's [Results](README.md#results).
+2. A solution as a wave of odd harmonics: [The unknowns](#the-unknowns).
+3. Why harmonics 5–13 are held: [3. The continuation in D](#3-the-continuation-in-d), and
+   [notes/HELD_HARMONICS.md](notes/HELD_HARMONICS.md) 4.3.
+4. The smooth family: the README's [How the solution scales with D](README.md#how-the-solution-scales-with-d), and
+   the fit in [3. The continuation in D](#3-the-continuation-in-d).
+5. The chain's step: [3. The continuation in D](#3-the-continuation-in-d).
+6. The error bar: [notes/BIAS.md](notes/BIAS.md).
+
 ![One step of the large-D chain: Taylor series and prediction in octo-double, the re-seed's rungs in double-double and its polish in quad-double, Newton in quad-double or octo-double, then a new base, or a halved step if Newton fails](hp/explain_step.svg)
 
 ## 1. The problem as data
@@ -91,6 +105,13 @@ in `hp/pinning.py`, [notes/HELD_HARMONICS.md](notes/HELD_HARMONICS.md)):
    noise of 10⁻⁸ to 10⁻⁷.
 4. At any larger D, evaluate the series and divide by √n. The chain adds the fit's change from its base to the base's
    own value, and the series' Taylor coefficients in D enter the predictor.
+
+The harmonics are held because the full equations barely fix them. At D 79.77 the Schur complement of their rows
+(`hp/held_schur.py --jac=exact`, [hp/data/held_grip.csv](hp/data/held_grip.csv)) has singular values from 7.4×10⁻¹³
+for harmonic 5 down to 1.4×10⁻²⁴ for harmonic 13. A full Newton step would move harmonic 13 by 0.44, where its size is
+3.7×10⁻⁷. A fit can stand in for them because the solutions form a smooth family in D: times √(D−2) the centre field
+hardly changes from D 38 to 232.6 (the README's
+[How the solution scales with D](README.md#how-the-solution-scales-with-d)).
 
 ![The fit and the step, animated: full solutions below D 73, harmonic 5 read from each wave, the polynomial through the points, its extension to D 232.6, and the chain's Taylor step in D with the size of each term](hp/fit_steps.svg)
 
