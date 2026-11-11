@@ -39,6 +39,10 @@ import numpy as np  # noqa: E402
 from hpkernel.driver import make_solver, load_q, qparts, qmax  # noqa: E402
 from multidouble import QDLu, dd_add, dd_solve, qd_add_dd, qd_axpy  # noqa: E402
 
+# refine_o: the corrections allowed past the requested steps at most, the least reduction of |R| per correction under
+# which the rung block's LU is factored again, and the |R| at the arithmetic's floor, below which it is not
+OD_EXTRA, OD_REFACTOR, OD_FLOOR = 6, 1e-4, 1e-80
+
 mp.mp.dps = 50
 
 
@@ -421,10 +425,13 @@ class Reseeder:
         rung block of the quad-double Jacobian at the point's quad-double rounding (QDLu, factored once). The
         quad-double polish (polish_q) leaves the data eps_qd from those the node asks for, which the mass mode
         amplifies to about eps_qd G in the corrector's residual, 1e-31 at D 216 and 1e-29 at D 226 (#461); a
-        correction lowers that remainder by about eps_qd times the block's condition. Returns (z8', hist): hist is
+        correction lowers that remainder by about eps_qd times the block's condition. The LU is factored again at the
+        point reached when a correction lowers |R| by less than OD_REFACTOR, and each LU gets the requested number of
+        corrections (at most OD_EXTRA more in all, none when steps is 0). Returns (z8', hist): hist is
         the rung's max |R| before each correction and after the last. A residual that is not finite returns the
         point as it stands. mutate 'sign' applies each correction with the wrong sign (the control of
-        octo_corrector.py horizon)."""
+        octo_corrector.py horizon); 'badlu' factors the first LU with the block's first column times 1.01, which
+        the refactoring must recover from, and 'badlu_keep' keeps that LU throughout (its control)."""
         from multidouble import od_axpy
         steps = self.od if steps is None else int(steps)
         M, a, o = self.M, self.aoff, self.off
@@ -450,19 +457,31 @@ class Reseeder:
 
         d = [np.ascontiguousarray(z8[q][sl_]) for q in range(8)]
         zero = np.zeros(2 * M)
-        hist, lu = [], None
-        for k in range(steps + 1):
+        hist, lu, since = [], None, 0
+        # Each LU gets the requested number of corrections (since: those made with the current one), at most OD_EXTRA
+        # beyond steps in all, and none when steps is 0. A correction that lowers |R| by less than OD_REFACTOR
+        # refactors the LU at the point reached, above the floor OD_FLOOR. At some points the first correction from the once-factored LU raised
+        # |R| 200 times and the next ones gained 1e-8 each, ending near 1e-40 where the others end near 1e-76 (#461,
+        # a 0.0625 at D 242.48).
+        last = steps + (OD_EXTRA if steps > 0 else 0)
+        for k in range(last + 1):
             F = s.residual_o(put(d, 8))
             R = [np.ascontiguousarray(np.asarray(F[q])[rows]) for q in range(8)]
             hist.append(float(np.max(np.abs(R[0] + R[1]))))
-            if k == steps or not np.isfinite(hist[-1]):
+            if k == last or not np.isfinite(hist[-1]) or since >= steps:
                 break
-            if lu is None:
+            if lu is None or (k > 0 and hist[-1] > OD_REFACTOR * hist[-2] and hist[-1] > OD_FLOOR
+                                and mutate != "badlu_keep"):
                 J = s.jacobian_q(*put(d, 4))
-                lu = QDLu(*[np.asarray(J[q])[np.ix_(rows, cols)] for q in range(4)])
+                blk = [np.array(np.asarray(J[q])[np.ix_(rows, cols)]) for q in range(4)]
+                if lu is None and mutate in ("badlu", "badlu_keep"):
+                    for q in range(4):
+                        blk[q][:, 0] *= 1.01         # the plant: a first LU whose chord steps gain only about 1e-2
+                lu, since = QDLu(*[np.ascontiguousarray(b) for b in blk]), 0
             x = [np.ascontiguousarray(np.asarray(p)) for p in lu.solve(*[-r for r in R[:4]])]
             d = [np.ascontiguousarray(np.asarray(p))
                  for p in od_axpy(-1.0 if mutate == "sign" else 1.0, *x, *([zero] * 4), *d)]
+            since += 1
         for q in range(8):
             z8[q][sl_] = d[q]
         return tuple(np.ascontiguousarray(p) for p in z8), hist

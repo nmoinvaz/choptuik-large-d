@@ -21,7 +21,8 @@ used, so that a module importing this one runs on the older packages the runners
 `planted` is check (a) of notes/OCTO_DOUBLE.md 5 (a converged state moved by a known amount, corrected in
 octo-double and in quad-double), `wall` check (b) (a stored prediction where the quad-double corrector stalls). The
 controls --mutate_offset qd and --mutate 10 must make them fail. `horizon` is the planted check of
-Reseeder.refine_o (its docstring); --steps 0 and --mutate_h sign must make it fail. Each exits 1 when its check
+Reseeder.refine_o (its docstring); --steps 0, --mutate_h sign and --mutate_h badlu_keep must make it fail, and
+--mutate_h badlu (a poor first LU that refine_o refactors) must pass. Each exits 1 when its check
 fails."""
 import json
 
