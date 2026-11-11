@@ -8,12 +8,14 @@ The steps, in order:
 1. export_qd.py RAWDIR writes data/delta_qd.csv.
 2. export_lowD.py --raw RAWDIR writes data/delta_dd_lowD.csv.
 3. export_dd.py --raw RAWDIR writes data/delta_dd.csv, which takes the low-D rows.
-4. export_delta_all.py RAWDIR writes data/delta_all.csv.
+4. export_delta_all.py RAWDIR writes data/delta_all.csv and data/delta_fits.csv.
 5. export_delta_all.py --verify checks the master table.
 6. Each --mutate control runs and must fail by its check (one per kind, and held, frontier and t85 for the chains'
-   checks). A kind with no rows has nothing to mutate, and its control is reported as skipped. The master table is then
-   restored and verified again.
-7. compare_published.py writes data/delta_published_compare.csv, every published value against ours.
+   checks, fits and fits_table for the error bar over the held fit's degree). A kind with no rows has nothing to mutate,
+   and its control is reported as skipped. The master table is then restored and verified again.
+7. export_delta_all.py --interp_check checks the interpolation of the comparison fits at D 186 to 190, and its control
+   --mutate=interp must fail.
+8. compare_published.py writes data/delta_published_compare.csv, every published value against ours.
 
 It prints each table's row count before and after, and the master table's new and changed rows. It exits 1 if a step
 fails, a control passes or a row is gone (other than rows that chain_fit replaces). A low-D task with new points must first be added to export_lowD.py's RAW_TASKS, and the
@@ -28,7 +30,7 @@ from export_delta_all import COLS, fit_span, replaced
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 DATA = os.path.join(HERE, "data")
-TABLES = ["delta_qd.csv", "delta_dd_lowD.csv", "delta_dd.csv", "delta_all.csv"]
+TABLES = ["delta_qd.csv", "delta_dd_lowD.csv", "delta_dd.csv", "delta_all.csv", "delta_fits.csv"]
 
 
 def rows(name):
@@ -71,11 +73,13 @@ def main():
         built = f.read()
     print("checks of the master table:", flush=True)
     ok &= run(["export_delta_all.py", raw, "--verify"])
-    for m in ("dd", "qd", "pinned", "chain_fit", "chain", "held", "frontier", "t85"):
+    for m in ("dd", "qd", "pinned", "chain_fit", "chain", "held", "frontier", "t85", "fits", "fits_table"):
         ok &= run(["export_delta_all.py", raw, "--verify", f"--mutate={m}"], expect=1)
     with open(master, "wb") as f:
         f.write(built)
     ok &= run(["export_delta_all.py", raw, "--verify"])
+    ok &= run(["export_delta_all.py", raw, "--interp_check"])
+    ok &= run(["export_delta_all.py", raw, "--interp_check", "--mutate=interp"], expect=1)
     ok &= run(["compare_published.py"])
     print("tables:", flush=True)
     for t in TABLES:

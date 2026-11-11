@@ -2,15 +2,22 @@
 """Every computed value of Delta in one table, hp/data/delta_all.csv, one row per D from the low-D runs to the large-D
 chain's frontier, with the kind of computation, an error estimate and what that estimate is.
 
-    cd hp && python3 export_delta_all.py RAWDIR [--verify] [--mutate=dd|qd|pinned|chain_fit|chain|held|frontier|t85]
+    cd hp && python3 export_delta_all.py RAWDIR [--verify] [--mutate=dd|qd|pinned|chain_fit|chain|held|frontier|t85
+                                                                   |fits|fits_table]
+    cd hp && python3 export_delta_all.py RAWDIR --interp_check [--mutate=interp]
 
 RAWDIR is a clone of the raw-data repository (git clone https://github.com/nmoinvaz/choptuik-large-d-raw). --verify
-re-reads every row of the written CSV from the source and state its row names and exits 1 on any difference;
---mutate changes one row of that kind by one unit in its second part before the verification (the control, which
-must fail; it exits 2 when the table has no row of that kind); --mutate=held labels the last chain_fit row chain, and
---mutate=frontier moves the first chain row below the chain_fit frontier (or, when chain_fit replaces every chain row,
-puts the chain's last row back), and --mutate=t85 gives the first chain_fit row a T85-mac source (the controls of the
-chains' checks).
+re-reads every row of the written CSV from the source and state its row names, rebuilds the chains' err, err_kind and
+data/delta_fits.csv, and exits 1 on any difference; --mutate changes one row of that kind by one unit in its second
+part before the verification (the control, which must fail; it exits 2 when the table has no row of that kind);
+--mutate=held labels the last chain_fit row chain, and --mutate=frontier moves the first chain row below the chain_fit
+frontier (or, when chain_fit replaces every chain row, puts the chain's last row back), and --mutate=t85 gives the first
+chain_fit row a T85-mac source (the controls of the chains' checks); --mutate=fits gives the first chain_fit row whose
+err is interpolated the other fit's direct difference instead, the value an export that compares only at equal D
+writes, and --mutate=fits_table drops that row's interpolated entry from data/delta_fits.csv.
+--interp_check is the interpolation's control: at D 186 to 190, where every chain has a state, each comparison fit's
+Delta interpolated from its other states (as below) must equal its state's to 1e-14. It exits 1 otherwise;
+--mutate=interp interpolates in D instead of 1/(D - 2), whose truncation error the check must catch.
 
 Columns: D; Delta in up to four parts, Delta = q0 + q1 + q2 + q3 (each an f64; q2 and q3 are empty where the value is
 double-double); kind; err and err_kind; the source record; published_ref, published_Delta and published_diff, the most
@@ -31,8 +38,13 @@ precedence where two share a D:
   chain_fit  the asymptotic numerical method's chain (anm_run.py) with harmonics 5-13 of p1 held on a 1/n fit of the
           full-system states (--held_fit, notes/HELD_HARMONICS.md), its backbone traced from its highest-D state back
           through each run's start state to T81's quad-double state at 73.0. err as for chain, or, where a run with
-          the harmonics held on a fit of another degree (T140: 6 and 10, against chain_fit's 8) reached the same D and
-          differs by more, the largest such difference (err_kind "fits"), a spread over the fit's degree, not a bound.
+          the harmonics held on a fit of another degree (T140: 6 and 10, against chain_fit's 8) differs by more, the
+          largest such difference, a spread over the fit's degree, not a bound. Each fit's difference is taken where
+          one of its runs reached the same D, or, from D 191.5 on (where the degree-6 chain stepped at integer D and
+          the degree-10 chain at half-integer D), interpolated from the six states of that fit's chain nearest D by
+          the polynomial of degree 5 in 1/(D - 2) (Lagrange, mpmath), when they bracket D. err_kind names the fit
+          and how: "fits d6", "fits d10", "fits d6 interp", "fits d10 interp". Each fit's difference is also written
+          to data/delta_fits.csv (D, then per fit the signed Delta of that fit minus chain_fit's, how and the states).
   chain   the chain with the harmonics held on T75's trend (notes/QUAD_DOUBLE.md 13.17-13.24), its backbone traced
           the same way back to T75's pin 7 state at 73.27; double-double states to 79.27, quad-double after. Its rows at
           or below the chain_fit frontier are left out, since chain_fit replaces them. Where another run reached the
@@ -62,6 +74,16 @@ FIT_REPLACES = ("T85-mac/",)
 PINNED = (("T73/t73/pin7.jsonl", "T73/t73/pin5.jsonl", "pins"), ("T75/pin7.jsonl", "T75/pin5.jsonl", "pins"),
           ("T85-mac/x80.jsonl", "T85-mac/x85.jsonl", "layouts"))
 TOL_D = 1e-9
+# the fits that chain_fit's (degree 8) is compared with, T140's, and their labels in err_kind
+FITS = {"data/held_fit_d6.json": "d6", "data/held_fit_d10.json": "d10"}
+FITS_OUT = os.path.join(HERE, "data", "delta_fits.csv")
+FITS_COLS = ["D"] + [f"{c}_{lab}" for lab in FITS.values() for c in ("diff", "how", "states")]
+# from this D on, a fit with no state at a chain_fit row's D is interpolated there (#478)
+INTERP_FROM = 191.5
+INTERP_N = 6
+# the interpolation's control: leave-one-out at these D, where every chain has a state
+CONTROL_D = (186.0, 187.0, 188.0, 189.0, 190.0)
+CONTROL_TOL = 1e-14
 
 
 def total(parts):
@@ -163,12 +185,51 @@ def chain_states():
 
 
 def backbone(states, by_dir, held, kind):
-    """the states from the highest-D state of the runs whose harmonics are held as kind says, traced back through each
-    run's start state"""
-    mine = [r for r in states if held[os.path.dirname(r)][0] == HELD[kind]]
+    """the states from the highest-D state of the runs whose harmonics are held as kind says (chain_fit: on a fit other
+    than the comparison fits), traced back through each run's start state"""
+    mine = [r for r in states if held[os.path.dirname(r)][0] == HELD[kind] and held[os.path.dirname(r)][1] not in FITS]
     if not mine:
         return []
-    top = max(mine, key=lambda r: states[r][0]["D"])
+    return trace(states, by_dir, held, max(mine, key=lambda r: states[r][0]["D"]), kind)
+
+
+def fit_chains(states, by_dir, held):
+    """each comparison fit's chain: (D, Delta, state) of the states from that fit's highest-D state traced back"""
+    out = {}
+    for f, lab in FITS.items():
+        mine = [r for r in states if held[os.path.dirname(r)] == ("fit", f)]
+        if mine:
+            bb = trace(states, by_dir, held, max(mine, key=lambda r: states[r][0]["D"]), f"fit {lab}")
+            out[f] = [(mp.mpf(states[r][0]["D"]), total(states[r][1]), r) for r in bb]
+    return out
+
+
+def lagrange(pts, x):
+    """the polynomial through pts [(x_i, y_i)] at x"""
+    out = mp.mpf(0)
+    for i, (xi, yi) in enumerate(pts):
+        w = mp.mpf(1)
+        for j, (xj, _) in enumerate(pts):
+            if j != i:
+                w *= (x - xj) / (xi - xj)
+        out += w * yi
+    return out
+
+
+def interp(chain, D, var="1/n"):
+    """Delta of a fit's chain [(D, Delta, state)] at D: the polynomial of degree INTERP_N - 1 in 1/(D - 2) (var "D": in
+    D) through its INTERP_N states nearest D, other than one at D; (value, first state, last state), or None where
+    they do not bracket D"""
+    D = mp.mpf(D)
+    near = sorted(sorted((p for p in chain if abs(p[0] - D) >= TOL_D), key=lambda p: (abs(p[0] - D), p[0]))[:INTERP_N])
+    if len(near) < INTERP_N or not near[0][0] < D < near[-1][0]:
+        return None
+    t = (lambda d: d) if var == "D" else (lambda d: 1 / (d - 2))
+    return lagrange([(t(d), v) for d, v, _ in near], t(D)), near[0][2], near[-1][2]
+
+
+def trace(states, by_dir, held, top, kind):
+    """the states from top traced back through each run's start state"""
     bb, cur, upper = [], os.path.dirname(top), states[top][0]["D"]
     while True:
         seg = [r for r in by_dir[cur] if states[r][0]["D"] <= upper + TOL_D]
@@ -185,41 +246,86 @@ def backbone(states, by_dir, held, kind):
     return bb
 
 
-def chain_rows(keep=False):
-    """the chain_fit backbone's rows and the chain's above its frontier (every chain row with keep)"""
+def chain_rows(keep=False, quiet=False):
+    """the chain_fit backbone's rows and the chain's above its frontier (every chain row with keep), and the rows of
+    data/delta_fits.csv"""
     states, by_dir = chain_states()
     held = {d: held_of(d) for d in by_dir}
     fit = backbone(states, by_dir, held, "chain_fit")
     trend = backbone(states, by_dir, held, "chain")
+    chains = fit_chains(states, by_dir, held)
     on = set(fit) | set(trend)
     front = max((states[r][0]["D"] for r in fit), default=-np.inf)
-    rows = []
+    rows, fits = [], []
     for kind, bb in (("chain_fit", fit), ("chain", [r for r in trend if keep or states[r][0]["D"] > front + TOL_D])):
         for rel in bb:
             m, parts = states[rel]
             v, err, ek = total(parts), "", ""
             sysk = (held[os.path.dirname(rel)], parts[3] != "")
-            spread = {"runs": [], "fits": []}
+            # runs: the same held harmonics and precision; a comparison fit's (T140) states at this D
+            spread = {"runs": [], **{f: [] for f in FITS}}
             for o, (mo, po) in states.items():
                 if o in on or abs(mo["D"] - m["D"]) >= TOL_D:
                     continue
                 osys = (held[os.path.dirname(o)], po[3] != "")
-                # runs: the same held harmonics and precision; fits: the harmonics held on another fit (T140)
                 if osys == sysk:
-                    spread["runs"].append((float(total(po) - v), o))
-                elif kind == "chain_fit" and osys[0][0] == "fit" and osys[1] == sysk[1]:
-                    spread["fits"].append((float(total(po) - v), o))
-            for k, ds in spread.items():
-                for d, o in ds:
-                    print(f"  check D {m['D']:.4f} ({k}): {o} - {rel} = {d:+.3e}")
-            big = {k: max(abs(d) for d, _ in ds) for k, ds in spread.items() if ds}
+                    spread["runs"].append((total(po) - v, o))
+                elif kind == "chain_fit" and osys[0][0] == "fit" and osys[0][1] in FITS and osys[1] == sysk[1]:
+                    spread[osys[0][1]].append((total(po) - v, o))
+            big, frow = {}, {}
+            if spread["runs"]:
+                big["runs"] = max(abs(d) for d, _ in spread["runs"])
+            for f, lab in (FITS.items() if kind == "chain_fit" else ()):
+                if spread[f]:
+                    d, o = max(spread[f], key=lambda t: abs(t[0]))
+                    how, src = "direct", o
+                elif m["D"] >= INTERP_FROM - TOL_D and f in chains and (ip := interp(chains[f], m["D"])):
+                    d, how, src = ip[0] - v, "interp", f"{ip[1]} .. {ip[2]}"
+                else:
+                    continue
+                big[f"fits {lab}" + (" interp" if how == "interp" else "")] = abs(d)
+                frow.update({f"diff_{lab}": f"{float(d):+.4e}", f"how_{lab}": how, f"states_{lab}": src})
+            if not quiet:
+                for d, o in spread["runs"]:
+                    print(f"  check D {m['D']:.4f} (runs): {o} - {rel} = {float(d):+.3e}")
+                for lab in FITS.values():
+                    if f"diff_{lab}" in frow:
+                        print(f"  check D {m['D']:.4f} (fits {lab}, {frow[f'how_{lab}']}): {frow[f'states_{lab}']}"
+                              f" - {rel} = {frow[f'diff_{lab}']}")
             if big:
                 ek = max(big, key=big.get)
-                err = f"{big[ek]:.1e}"
+                err = f"{float(big[ek]):.1e}"
+            if frow:
+                fits.append({c: "" for c in FITS_COLS} | frow | {"D": fmt(m["D"])})
             rows.append(dict(D=fmt(m["D"]), Delta_q0=parts[0], Delta_q1=parts[1], Delta_q2=parts[2], Delta_q3=parts[3],
                              kind=kind, err=err, err_kind=ek,
                              source=os.path.join(os.path.dirname(rel), "anm_run.jsonl"), state=rel))
-    return rows
+    return rows, fits
+
+
+def interp_check(var="1/n"):
+    """the interpolation's control: at CONTROL_D each comparison fit's chain interpolated from its other states against
+    its state there; True when every difference is within CONTROL_TOL"""
+    states, by_dir = chain_states()
+    held = {d: held_of(d) for d in by_dir}
+    chains = fit_chains(states, by_dir, held)
+    bad, n = 0, 0
+    for f, lab in FITS.items():
+        for D in CONTROL_D:
+            at = [p for p in chains.get(f, []) if abs(p[0] - D) < TOL_D]
+            ip = interp(chains.get(f, []), D, var)
+            n += 1
+            if not at or ip is None:
+                bad += 1
+                print(f"DIFFERS: {lab} D {D}: {'no state' if not at else 'not bracketed'}")
+                continue
+            d = float(ip[0] - at[0][1])
+            ok = abs(d) <= CONTROL_TOL
+            bad += not ok
+            print(f"  {'ok  ' if ok else 'DIFFERS:'} {lab} D {D}: interpolated ({var}, {ip[1]} .. {ip[2]}) - state"
+                  f" = {d:+.3e}")
+    print(f"verify: {n - bad} of {n} interpolated values within {CONTROL_TOL:g} of their states")
+    return bad == 0
 
 
 def held_of(folder):
@@ -288,7 +394,7 @@ def replaced(r, span):
 def build():
     dd = dd_rows()
     dmax = max(float(r["D"]) for r in dd)
-    chain = chain_rows()
+    chain, fits = chain_rows()
     span = fit_span(chain)
     rows = {}
     for r in qd_rows() + dd + [r for r in pinned_rows(dmax) if not replaced(r, span)] + chain:
@@ -296,12 +402,30 @@ def build():
         if k not in rows or RANK[r["kind"]] < RANK[rows[k]["kind"]]:
             rows[k] = r
     pub = published()
-    return [{**rows[k], **published_cols(rows[k], pub)} for k in sorted(rows)]
+    return [{**rows[k], **published_cols(rows[k], pub)} for k in sorted(rows)], fits
 
 
 def verify(rows, mutate=""):
-    """each row against the source it names, read anew"""
-    if mutate == "held":
+    """each row against the source it names, read anew; the chains' err and data/delta_fits.csv rebuilt"""
+    ftab = list(csv.DictReader(open(FITS_OUT))) if os.path.exists(FITS_OUT) else []
+    if mutate in ("fits", "fits_table"):
+        # the first row with an interpolated fit: the other fit's direct difference only, as an export comparing at
+        # equal D only writes it
+        hit = next(((r, t) for r in rows if r["kind"] == "chain_fit" and r["err_kind"].endswith(" interp")
+                    for t in ftab if t["D"] == r["D"]), None)
+        if hit is None:
+            print("no interpolated fits rows, so nothing to mutate")
+            sys.exit(2)
+        r, t = hit
+        lab = r["err_kind"].split()[1]
+        if mutate == "fits":
+            other = next(x for x in FITS.values() if x != lab and t[f"how_{x}"] == "direct")
+            r["err"], r["err_kind"] = f"{abs(float(t[f'diff_{other}'])):.1e}", f"fits {other}"
+            print(f"mutated: the chain_fit row at D {r['D']} given err {r['err']} ({r['err_kind']}), {lab} left out")
+        else:
+            t.update({f"{c}_{lab}": "" for c in ("diff", "how", "states")})
+            print(f"mutated: the {lab} entry of delta_fits.csv at D {r['D']} dropped")
+    elif mutate == "held":
         r = [r for r in rows if r["kind"] == "chain_fit"][-1]
         r["kind"] = "chain"
         print(f"mutated: the chain_fit row at D {r['D']} labelled chain")
@@ -315,7 +439,7 @@ def verify(rows, mutate=""):
         print(f"mutated: the first chain row moved to D {r['D']}")
     elif mutate == "frontier":
         # chain_fit replaces every chain row, so the chain's last row is put back
-        r = [x for x in chain_rows(keep=True) if x["kind"] == "chain"][-1]
+        r = [x for x in chain_rows(keep=True, quiet=True)[0] if x["kind"] == "chain"][-1]
         rows.append({**r, **published_cols(r, published())})
         print(f"mutated: the chain row at D {r['D']}, below the frontier, put back")
     elif mutate and not any(r["kind"] == mutate for r in rows):
@@ -360,7 +484,25 @@ def verify(rows, mutate=""):
     if low:
         bad += len(low)
         print(f"DIFFERS: {len(low)} rows that chain_fit replaces (span {span}): {low[:3]}")
-    print(f"verify: {len(rows) - bad} of {len(rows)} rows equal their sources")
+    # the chains' err and err_kind, and every row of data/delta_fits.csv, rebuilt from the states
+    crow, cfits = chain_rows(quiet=True)
+    want = {r["D"]: r for r in crow}
+    for r in rows:
+        w = want.get(r["D"]) if r["kind"] in HELD else None
+        if w and (r["err"], r["err_kind"]) != (w["err"], w["err_kind"]):
+            bad += 1
+            print(f"DIFFERS: {r['kind']} D {r['D']}: err {r['err']} ({r['err_kind']}) against {w['err']}"
+                  f" ({w['err_kind']})")
+    have = {t["D"]: t for t in ftab}
+    for t in cfits:
+        if have.pop(t["D"], None) != t:
+            bad += 1
+            print(f"DIFFERS: delta_fits.csv D {t['D']}: against {t}")
+    for d in have:
+        bad += 1
+        print(f"DIFFERS: delta_fits.csv D {d}: no chain_fit row has it")
+    print(f"verify: {len(rows) - bad} of {len(rows)} rows equal their sources, {len(cfits)} rows of delta_fits.csv"
+          " rebuilt")
     return bad == 0
 
 
@@ -370,14 +512,18 @@ if __name__ == "__main__":
     if not args:
         sys.exit(__doc__)
     RAW = os.path.abspath(args[0])
+    if "interp_check" in opts:
+        sys.exit(0 if interp_check("D" if opts.get("mutate") == "interp" else "1/n") else 1)
     if "verify" in opts or "mutate" in opts:
         rows = list(csv.DictReader(open(OUT)))
         sys.exit(0 if verify(rows, opts.get("mutate", "")) else 1)
-    rows = build()
-    with open(OUT, "w", newline="") as fh:
-        w = csv.DictWriter(fh, fieldnames=COLS)
-        w.writeheader()
-        w.writerows(rows)
+    rows, fits = build()
+    for path, cols, rs in ((OUT, COLS, rows), (FITS_OUT, FITS_COLS, fits)):
+        with open(path, "w", newline="") as fh:
+            w = csv.DictWriter(fh, fieldnames=cols)
+            w.writeheader()
+            w.writerows(rs)
+    print(f"{len(fits)} rows -> {FITS_OUT}")
     n = defaultdict(int)
     for r in rows:
         n[r["kind"]] += 1
