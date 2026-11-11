@@ -16,7 +16,7 @@ formulation of hp/pinning.py; their coefficients are zero).
         [--qd_it 12] [--qd_w 0] [--refine 1] [--probe 0 --probe_c C] [--plan_tol 1e-32] [--fix1 0] [--F_pred_max 0]
         [--horizon_alpha 0] [--fix1_qlu 0] [--jet_q 0] [--reseed 0] [--pred_q 0] [--reseed_q 0] [--save_pred 0]
         [--jet_o 0] [--corrector od --tol_od 1e-40] [--base_adopt 0] [--base_polish 1] [--keep_plan 1] [--held_fit FILE]
-        [--held_o 0] [--reseed_o 0]
+        [--held_o 0] [--reseed_o 0] [--a0 0] [--a_grow 2] [--a_hold 0] [--lam_stall 0]
 
 --corrector qd runs the quad-double Newton of the kernel (hpkernel.driver.newton_qd, Solver.newton_q) on the pinned
 system (pinning.PinnedQ: the held harmonics' offset subtracted from the quad-double residual and added to the step, as
@@ -97,7 +97,11 @@ a polish took the D 215.03125 state from 4.4e-36 to 1.5e-18 and the series of th
 2e-30). --base_adopt 1 adopts every polish, which is the control of that rule. --base_polish 0 skips the polish, so
 the stored state is the base as it stands: a state reloaded near D 215 starts about 4e-36 off in the held rows
 (their values are taken again from its first two parts), and its polish costs 12 octo-double steps before it is
-dropped. A state is saved with the plan of the run that converged it, and a run started from it keeps that plan
+dropped. The step: the first is --a0 (h_max when 0), a refused attempt halves it, and after an accepted step the next is
+--a_grow times longer, up to h_max; with --a_hold 1 it grows only after a step accepted at its first attempt, so a
+step found by halving is kept (past D 232 steps of 1.0 are refused at every base and 0.5 accepted, #461).
+--lam_stall L ends an attempt, as refused, when two Newton steps in a row had lam at or below L. A state is saved
+with the plan of the run that converged it, and a run started from it keeps that plan
 (--keep_plan 0 plans again at the state, the control). Its states are saved in eight parts
 (octo_corrector.save_o: save_q's four, which load_q reads, and four more), and the series of the next base (--jet_o)
 is taken at all eight. M = 32 only; --accept_stall_qd does not apply. --od_junk w freezes, in every step of that
@@ -250,6 +254,7 @@ def main():
     opt.update(base_adopt=0)            # --base_adopt 1: the base's od polish is adopted whatever it did
     opt.update(base_polish=1)           # --base_polish 0: no polish, the stored state is the base
     opt.update(keep_plan=1)             # --keep_plan 0: plan the base again even when its state stores a plan
+    opt.update(a0=0.0, a_grow=2.0, a_hold=0, lam_stall=0.0)    # the step's start, growth and hold; the corrector's stall rule
     opt.update(held_fit="")             # --held_fit FILE (pinning.HeldFit; notes/HELD_HARMONICS.md)
     # --held_o 1: the held values and their Taylor coefficients as mpf instead of floats, and the held field in eight
     # parts instead of two (with --held_fit and --corrector od); --reseed_o K: K octo-double corrections of the
@@ -298,7 +303,8 @@ def main():
                 so = ElimO(so, elim["rs"])
             z0 = z8_start if z8_start is not None else o8_of_q(z4_start if z4_start is not None else qparts(ph, pl))
             try:
-                z8, hist, conv = newton_od(so, z0, tol=opt["tol_od"], it_max=opt["qd_it"], verbose=True, junk_w=opt["od_junk"])
+                z8, hist, conv = newton_od(so, z0, tol=opt["tol_od"], it_max=opt["qd_it"], verbose=True, junk_w=opt["od_junk"],
+                                           lam_stall=opt["lam_stall"])
             except StartNotProjected as e:
                 print(f"      elim projections {e.args[0]}: the start's projection failed, attempt stopped", flush=True)
                 Fh, Fl = spx.residual(z0[0], z0[1])
@@ -667,7 +673,7 @@ def main():
             f.write(json.dumps(out) + "\n")
         return code
 
-    a = None
+    a = opt["a0"] or None
     for step in range(opt["steps"]):
         if D >= opt["D_max"]:
             break
@@ -819,7 +825,8 @@ def main():
             save_o(os.path.join(out, f"anm_pin{kf}_D{float(D):.4f}.npz"), last_q["z8"], dict(meta_out, parts=8))
         else:
             save(os.path.join(out, f"anm_pin{kf}_D{float(D):.4f}.npz"), zh, zl, meta_out)
-        a = min(2 * a, opt["h_max"])          # the next step may grow again
+        if not opt["a_hold"] or attempt == 0:
+            a = min(opt["a_grow"] * a, opt["h_max"])          # the next step may grow again
     print("done", flush=True)
 
 

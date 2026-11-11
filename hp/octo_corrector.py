@@ -142,7 +142,8 @@ def junk_subspace_o(s, w, delta_max=1e-2, iters=6, seed=0):
     return (np.linalg.qr(X[:, keep])[0] if keep.any() else np.zeros((L, 0))), sig[keep], sig[~keep]
 
 
-def newton_od(s, z, tol=1e-40, it_max=12, max_halvings=8, verbose=True, mutate=0, junk_w=0, delta_max=1e-2, tol_dz=1e-45):
+def newton_od(s, z, tol=1e-40, it_max=12, max_halvings=8, verbose=True, mutate=0, junk_w=0, delta_max=1e-2, tol_dz=1e-45,
+              lam_stall=0.0):
     """Newton in octo-double from the eight-part state z on s (PinnedO, or ElimO around it): newton_qd's mode 'full'
     one level up (hpkernel.driver.newton_qd, its acceptance rule). A trial z + lam dz (lam = 1, 1/2, ...,
     2^-max_halvings) is accepted when the Newton correction there, with its own Jacobian, is smaller than dz (max norms
@@ -151,7 +152,9 @@ def newton_od(s, z, tol=1e-40, it_max=12, max_halvings=8, verbose=True, mutate=0
     converged), hist one record per step as newton_qd's. junk_w > 0: as newton_qd's junk mode, the junk among the
     junk_w weakest directions of the first Jacobian (junk_subspace_o: no Delta content) is removed from every step and
     every correction it is judged by, and the iteration also ends converged when that projected correction falls below
-    tol_dz (the residual left is the junk's)."""
+    tol_dz (the residual left is the junk's). lam_stall > 0: the iteration also stops, not converged, when two
+    accepted steps in a row had lam at or below lam_stall: past D 232 a step that is too long creeps at lam 1/64 to
+    1/32 with max |F| falling one percent per iteration, and it_max of those cost an hour (#461)."""
     import time
     from multidouble import od_axpy
     z = o8(z)
@@ -164,6 +167,7 @@ def newton_od(s, z, tol=1e-40, it_max=12, max_halvings=8, verbose=True, mutate=0
             print(f"  od: {V.shape[1]} junk directions frozen (sigma {sk.min() if len(sk) else 0:.0e}..{sk.max() if len(sk) else 0:.0e}), "
                   f"{len(sd)} weak ones with Delta content kept", flush=True)
     zero8 = np.zeros(len(z[0]))
+    small = 0
 
     def proj(d):
         """the eight-part step with its components along V removed"""
@@ -214,6 +218,11 @@ def newton_od(s, z, tol=1e-40, it_max=12, max_halvings=8, verbose=True, mutate=0
         if verbose:
             print(f"  on {it}: |F| {nf:.2e} -> {rec['F_new']:.2e}, |dz| {nd:.1e} -> {rec['dz_new']:.1e}, lam {lam:g}, "
                   f"dDelta {rec['dDelta']:+.2e}, piv {st[3]:.1e}..{st[4]:.1e}, {rec['seconds']} s", flush=True)
+        small = small + 1 if (lam_stall and lam <= lam_stall) else 0
+        if small >= 2:
+            if verbose:
+                print(f"  on {it}: lam at or below {lam_stall:g} twice in a row, stopping (stalled)", flush=True)
+            return z, hist, False
     return z, hist, False
 
 
