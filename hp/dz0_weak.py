@@ -116,6 +116,123 @@ def reduced(s, z0, X, a, L, k, h, seed, rec):
     return ok
 
 
+def cubic(s, z0, X, a, L, k, hs, seed, rec):
+    """--cubic=1: the third-order reduced system at z0, g(c) = B (c - a) + 1/6 T(c, c, c), with T_ijlm =
+    u_i . F'''(x_j, x_l, x_m). Q = U^T F'' is left out: at h = 1e-20, 1e-22, 1e-24 it is c h^2 exactly, the
+    truncation of the second differences (#499). The directional third derivative D3(v) = F'''(v, v, v) is the
+    antisymmetric difference [F(z+2hv) - 2F(z+hv) + 2F(z-hv) - F(z-2hv)] / 2h^3, and the mixed terms come by
+    polarization: T(x, x, y) = [D3(x+y) - D3(x-y) - 2 D3(y)] / 6 and T(x, y, w) = sum over e2, e3 = +-1 of
+    e2 e3 D3(x + e2 y + e3 w) / 24. T is formed at each h of hs; the check is that the last two agree to 1e-2 (a T
+    that falls as h^2 is the truncation again). Returns whether they agree."""
+    zero = np.zeros(L)
+    Um, Rm = mgs([mpv(o8(s.olu_solve(list(parts8(x)), True)), range(L)) for x in X])
+    B = (mp.matrix(Rm) ** -1).T
+
+    def at(c):
+        p = [mp.fsum(mp.mpf(cj) * X[j][r] for j, cj in c.items()) for r in range(L)]
+        return o8(s.residual_o(list(o8(od_axpy(1.0, *parts8(p), *z0)))))
+
+    def d3(c, hh):
+        """U^T F'''(v, v, v) for v = sum_j c_j x_j, by the antisymmetric four-point difference at step hh"""
+        acc = [zero] * 8
+        for w, t in ((1, 2), (-2, 1), (2, -1), (-1, -2)):
+            F = at({j: t * hh * cj for j, cj in c.items()})
+            acc = o8(od_axpy(float(w), *F, *acc))
+        dv = [x / (2 * mp.mpf(hh) ** 3) for x in mpv(acc, range(L))]
+        return [mp.fsum(u * f for u, f in zip(Um[i], dv)) for i in range(k)]
+
+    def tensor(hh):
+        T = {}
+        D = {}
+
+        def D3(key):
+            if key not in D:
+                D[key] = d3(dict(key), hh)
+            return D[key]
+        for j in range(k):
+            T[(j, j, j)] = D3(((j, 1),))
+        for j in range(k):
+            for q in range(k):
+                if q != j:
+                    plus, minus, yy = D3(((j, 1), (q, 1))), D3(((j, 1), (q, -1))), D3(((q, 1),))
+                    T[(j, j, q)] = [(p - m - 2 * y) / 6 for p, m, y in zip(plus, minus, yy)]
+        for j in range(k):
+            for q in range(j + 1, k):
+                for w in range(q + 1, k):
+                    acc = [mp.mpf(0)] * k
+                    for e2 in (1, -1):
+                        for e3 in (1, -1):
+                            v = D3(((j, 1), (q, e2), (w, e3)))
+                            acc = [x + e2 * e3 * y for x, y in zip(acc, v)]
+                    T[(j, q, w)] = [x / 24 for x in acc]
+        full = {}
+        for j in range(k):
+            for q in range(k):
+                for w in range(k):
+                    idx = tuple(sorted((j, q, w)))
+                    jj, qq, ww = idx
+                    if jj == qq == ww:
+                        full[(j, q, w)] = T[(jj, jj, jj)]
+                    elif jj == qq:
+                        full[(j, q, w)] = T[(jj, jj, ww)]
+                    elif qq == ww:
+                        full[(j, q, w)] = T[(qq, qq, jj)]
+                    else:
+                        full[(j, q, w)] = T[idx]
+        return full, len(D)
+
+    t0 = time.time()
+    Ts = [tensor(hh) for hh in hs]
+    tmax = [max(abs(x) for v in T.values() for x in v) for T, _ in Ts]
+    T, nres = Ts[-1]
+    dt = max(abs(x - y) for key in T for x, y in zip(Ts[-1][0][key], Ts[-2][0][key])) / tmax[-1]
+    ok = bool(dt < mp.mpf("1e-2"))
+    am = mp.matrix(a)
+    nBa = mp.sqrt(sum(x ** 2 for x in B * am))
+    scale = mp.cbrt(6 * nBa / tmax[-1])
+    print("  cubic term max|U^T F'''| by h: " + ", ".join(f"{hh:.0e}: {mp.nstr(t, 4)}" for hh, t in zip(hs, tmax))
+          + f"; the last two agree to {mp.nstr(dt, 2)} (bound 1e-2): {'pass' if ok else 'FAIL'} "
+          f"({4 * nres} residuals per h, {time.time() - t0:.0f} s)", flush=True)
+
+    def g(c):
+        return [mp.fsum(B[i, j] * (c[j] - a[j]) for j in range(k))
+                + mp.fsum(T[(j, q, w)][i] * c[j] * c[q] * c[w] for j in range(k) for q in range(k) for w in range(k)) / 6
+                for i in range(k)]
+
+    def jg(c):
+        return mp.matrix([[B[i, j] + mp.fsum(T[(j, q, w)][i] * c[q] * c[w] for q in range(k) for w in range(k)) / 2
+                           for j in range(k)] for i in range(k)])
+
+    rng = np.random.default_rng(seed)
+    starts = [[mp.mpf(0)] * k, list(a)] + [[mp.mpf(float(x)) * scale for x in rng.standard_normal(k)] for _ in range(24)]
+    roots, best = [], mp.inf
+    for c in starts:
+        ng = mp.inf
+        for _ in range(200):
+            gv = g(c)
+            ng = mp.sqrt(mp.fsum(x * x for x in gv))
+            best = min(best, ng)
+            if ng < mp.mpf("1e-30") * nBa:
+                break
+            try:
+                dc = mp.lu_solve(jg(c), mp.matrix(gv))
+            except ZeroDivisionError:
+                break
+            c = [c[j] - dc[j] for j in range(k)]
+        if ng < mp.mpf("1e-30") * nBa and not any(max(abs(x - y) for x, y in zip(c, r)) < mp.mpf("1e-6") * scale for r in roots):
+            roots.append(c)
+    roots.sort(key=lambda r: mp.sqrt(mp.fsum(x * x for x in r)))
+    print(f"  cubic reduced system: |B a| {mp.nstr(nBa, 3)}, |a| {mp.nstr(mp.sqrt(mp.fsum(x * x for x in a)), 3)}, "
+          f"root scale (6 |B a| / |T|)^(1/3) {mp.nstr(scale, 3)}", flush=True)
+    for r in roots[:6]:
+        print(f"  root |c| {mp.nstr(mp.sqrt(mp.fsum(x * x for x in r)), 3)}: " + ", ".join(mp.nstr(x, 3) for x in r), flush=True)
+    print(f"  {len(roots)} real roots from {len(starts)} starts; the smallest |g| reached {mp.nstr(best / nBa, 3)} of |B a|",
+          flush=True)
+    rec.update(cubic=dict(hs=list(hs), Tmax=[float(t) for t in tmax], agree=float(dt), ok=ok, Ba=float(nBa),
+                          scale=float(scale), roots=[[float(x) for x in r] for r in roots], best=float(best / nBa)))
+    return ok
+
+
 def main():
     args = [a for a in sys.argv[1:] if not a.startswith("--")]
     opts = dict(a[2:].split("=", 1) for a in sys.argv[1:] if a.startswith("--") and "=" in a)
@@ -191,6 +308,10 @@ def main():
     if opts.get("reduced", "0") != "0":
         ok_q = reduced(s, z0, X, a, L, k, float(opts.get("h", 1e-20)), int(opts.get("seed", 3)), rec)
         ok = ok and ok_q
+    if opts.get("cubic", "0") != "0":
+        hs = [float(x) for x in opts.get("hs", "1e-22,1e-23,1e-24").split(",")]
+        ok_t = cubic(s, z0, X, a, L, k, hs, int(opts.get("seed", 3)), rec)
+        ok = ok and ok_t
     print("check:", "pass" if ok else "FAIL")
     if opts.get("json"):
         with open(opts["json"], "w") as fh:
