@@ -7,7 +7,7 @@ updated after every new result.
 The steps, in order:
 1. export_qd.py RAWDIR writes data/delta_qd.csv.
 2. export_lowD.py --raw RAWDIR writes data/delta_dd_lowD.csv.
-3. export_dd.py writes data/delta_dd.csv, which takes the low-D rows.
+3. export_dd.py --raw RAWDIR writes data/delta_dd.csv, which takes the low-D rows.
 4. export_delta_all.py RAWDIR writes data/delta_all.csv.
 5. export_delta_all.py --verify checks the master table.
 6. Each --mutate control runs and must fail by its check (one per kind, and held, frontier and t85 for the chains'
@@ -62,7 +62,7 @@ def main():
     print("exports:", flush=True)
     ok &= run(["export_qd.py", raw])
     ok &= run(["export_lowD.py", "--raw", raw])
-    ok &= run(["export_dd.py"])
+    ok &= run(["export_dd.py", "--raw", raw])
     ok &= run(["export_delta_all.py", raw])
     if not ok:
         return 1

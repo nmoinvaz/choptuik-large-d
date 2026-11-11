@@ -1,7 +1,9 @@
 #!/usr/bin/env python3
 """Collect the double-double points from the continuation runs into hp/data/delta_dd.csv.
 
-    python3 export_dd.py [scan_dir] [--allow_drop]
+    python3 export_dd.py [scan_dir] [--allow_drop] [--raw ROOT]
+
+ROOT is the raw-data clone the low-D rows are read from (export_lowD.py, whose default it is otherwise).
 
 scan_dir: the cloud runs' scan_up*.jsonl. Those records stayed on the cloud disk (/home/claude/dss/hp_scan) and are
 missing since 2026-10-26. Without scan_dir their rows come from data/large_d/cloud_scan_rows.csv, the D, Delta,
@@ -46,7 +48,8 @@ import json
 import os
 import sys
 
-args = [v for v in sys.argv[1:] if v != "--allow_drop"]
+raw = sys.argv[sys.argv.index("--raw") + 1] if "--raw" in sys.argv else None
+args = [v for i, v in enumerate(sys.argv[1:], 1) if v not in ("--allow_drop", "--raw") and sys.argv[i - 1] != "--raw"]
 scan = args[0] if args else None
 rows = {}
 here = os.path.dirname(os.path.abspath(__file__))
@@ -70,7 +73,7 @@ for f, prefix in files:
 # data/delta_dd_lowD.csv. The fits use D >= 10 and do not see these rows.
 sys.path.insert(0, here)
 import export_lowD  # noqa: E402
-for r in export_lowD.build():
+for r in export_lowD.build(raw or export_lowD.RAW_ROOT):
     if r["best"] and round(r["D"], 6) not in rows:
         rec = dict(D=r["D"], Delta=r["Delta_hi"], Delta_lo=r["Delta_lo"], F=r["F"], sens=[r["sens_max"] or float("nan")],
                    dDelta_est=r["dDelta_est"], err=r["change_from_lower_M"])
