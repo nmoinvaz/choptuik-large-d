@@ -28,7 +28,8 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 # the chains, each a lineage of logs in the order they ran (relative to RAWDIR)
 CHAINS = [
     ("win2 clean chain", "win2", 8, ["I461-win2/crawlG.log", "I461-win2/crawlH.log", "I461-win2/crawlI.log",
-                                     "I461-win2/crawlJ.log", "I461-win2/crawlK.log"]),
+                                     "I461-win2/crawlJ.log", "I461-win2/crawlK.log", "I461-win2/probe125.log",
+                                     "I461-win2/probe0625.log", "I461-win2/probe03125.log", "I461-win2/crawlL.log"]),
     ("win d6", "win", 6, ["I462-win/chain_d6.log"]),
     ("win d10", "win", 10, ["I462-win/chain_d10.log"]),
     ("win2 first chain", "win2", 8, ["I461-win2/crawlB2.log", "I461-win2/crawlB3.log", "I461-win2/crawlB4.log",
