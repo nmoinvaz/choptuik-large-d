@@ -85,7 +85,8 @@ is reseed.py's default 'stall' (amendment 10), which converged in 19 of 20 trial
 converged in 3; a re-seed that fails keeps the prediction, and the attempt then usually fails. With --reseed 2 the
 step's solution, stored and carried on as the next base, is the projection of the corrector's last iterate, whose
 residual is the one the corrector converged (notes/QUAD_DOUBLE.md 13.26). --save_pred 1 stores each prediction before
-its re-seed as pred_pin<k>_D<D>.npz, an input for testing the re-seed (13.26).
+its re-seed as pred_pin<k>_D<D>.npz, an input for testing the re-seed (13.26). --save_dz0 1 (with --corrector od)
+stores each attempt's corrector start and first Newton step as dz0_pin<k>_D<D>_a<a>.npz, for #499.
 --corrector od is the corrector in octo-double (hp/octo_corrector.py, notes/OCTO_DOUBLE.md 5): newton_od, newton_qd's
 rule on the octo-double kernel (PinnedO: Solver.newton_o, olu_solve and residual_o with the held offset), to --tol_od
 on max |F| in at most --qd_it steps, with --reseed 2 inside ElimO (ElimQ's quad-double projection put back in eight
@@ -251,7 +252,7 @@ def main():
     opt = dict(state="T75/pin7_D73.2657.npz", kfreeze=3, N=24, eps=1e-16, h_max=2.0, steps=20, D_max=200.0, corrector="dnp",
                tol=1e-20, tol_growth=1.45, accept_stall=1e-17, junk_only=0, threads=4, w=24, trend="", tol_qd=1e-28, accept_stall_qd=0.0, qd_it=12, qd_w=0,
                refine=1, probe=0, probe_c=0.0, plan_tol=1e-32, fix1=0, F_pred_max=0.0, horizon_alpha=0, fix1_qlu=0, jet_q=0, reseed=0, pred_q=0, reseed_q=0,
-               save_pred=0, jet_o=0)
+               save_pred=0, jet_o=0, save_dz0=0)
     opt.update(tol_od=1e-40, od_junk=0)  # --corrector od (hp/octo_corrector.py); --od_junk w freezes junk (13.30)
     opt.update(base_adopt=0)            # --base_adopt 1: the base's od polish is adopted whatever it did
     opt.update(base_polish=1)           # --base_polish 0: no polish, the stored state is the base
@@ -294,6 +295,15 @@ def main():
 
     last_q = {}
     elim = {}             # --reseed 2: the attempt's Reseeder, for ElimQ in the corrector
+    att = {}              # the attempt in progress (its target D and step), for --save_dz0
+
+    def save_dz0(z, d):
+        """--save_dz0 1: the corrector's start and first Newton step of the attempt, eight parts each (#499)"""
+        name = f"dz0_pin{kf}_D{att.get('D', 0.0):.4f}_a{att.get('a', 0.0):.6f}.npz"
+        np.savez(os.path.join(out, name), **{f"z{q}": np.asarray(z[q]) for q in range(8)},
+                 **{f"d{q}": np.asarray(d[q]) for q in range(8)},
+                 meta=json.dumps(dict(D=att.get("D"), a=att.get("a"), M=M, nodes=nodes, kfreeze=kf, source=opt["state"])))
+        print(f"      saved the start and first step as {name}", flush=True)
 
     def correct(spx, ph, pl, tol, z4_start=None, z8_start=None):
         """T75's corrector (scan_hp.py dnp): deflated Newton, then plain Newton steps from below 1e-12 if they lower |F|;
@@ -307,7 +317,7 @@ def main():
             z0 = z8_start if z8_start is not None else o8_of_q(z4_start if z4_start is not None else qparts(ph, pl))
             try:
                 z8, hist, conv = newton_od(so, z0, tol=opt["tol_od"], it_max=opt["qd_it"], verbose=True, junk_w=opt["od_junk"],
-                                           lam_stall=opt["lam_stall"])
+                                           lam_stall=opt["lam_stall"], on_first=save_dz0 if opt["save_dz0"] else None)
             except StartNotProjected as e:
                 print(f"      elim projections {e.args[0]}: the start's projection failed, attempt stopped", flush=True)
                 Fh, Fl = spx.residual(z0[0], z0[1])
@@ -759,6 +769,7 @@ def main():
                     # inside the corrector
                     rs_n = Reseeder(dict(M=M, nodes=nodes, kt=kt, kc=kc, ks=ks), Dn, threads=opt["threads"],
                                     horizon_alpha=opt["horizon_alpha"], qd=bool(opt["reseed_q"]), od=opt["reseed_o"])
+                    att.update(D=float(Dn), a=float(a))
                     if opt["save_pred"] and pred4 is not None:
                         # the prediction before its re-seed, for testing the re-seed on it (13.26)
                         save_q(os.path.join(out, f"pred_pin{kf}_D{float(Dn):.4f}.npz"), pred4,

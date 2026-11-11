@@ -144,7 +144,7 @@ def junk_subspace_o(s, w, delta_max=1e-2, iters=6, seed=0):
 
 
 def newton_od(s, z, tol=1e-40, it_max=12, max_halvings=8, verbose=True, mutate=0, junk_w=0, delta_max=1e-2, tol_dz=1e-45,
-              lam_stall=0.0):
+              lam_stall=0.0, on_first=None):
     """Newton in octo-double from the eight-part state z on s (PinnedO, or ElimO around it): newton_qd's mode 'full'
     one level up (hpkernel.driver.newton_qd, its acceptance rule). A trial z + lam dz (lam = 1, 1/2, ...,
     2^-max_halvings) is accepted when the Newton correction there, with its own Jacobian, is smaller than dz (max norms
@@ -155,7 +155,8 @@ def newton_od(s, z, tol=1e-40, it_max=12, max_halvings=8, verbose=True, mutate=0
     every correction it is judged by, and the iteration also ends converged when that projected correction falls below
     tol_dz (the residual left is the junk's). lam_stall > 0: the iteration also stops, not converged, when two
     accepted steps in a row had lam at or below lam_stall: past D 232 a step that is too long creeps at lam 1/64 to
-    1/32 with max |F| falling one percent per iteration, and it_max of those cost an hour (#461)."""
+    1/32 with max |F| falling one percent per iteration, and it_max of those cost an hour (#461). on_first: called
+    once as on_first(z, dz) with the start and its first Newton step (eight parts each), before any trial."""
     import time
     from multidouble import od_axpy
     z = o8(z)
@@ -193,6 +194,8 @@ def newton_od(s, z, tol=1e-40, it_max=12, max_halvings=8, verbose=True, mutate=0
         if it == it_max:
             break
         d = proj(st[0])
+        if it == 0 and on_first is not None:
+            on_first(z, d)
         nd = float(np.abs(d[0]).max())
         t0 = time.time()
         rec = dict(it=it, F=nf, dz=nd, dDelta=float(d[0][-1] + d[1][-1]), piv=[st[3], st[4]], mode="sel" if V is not None else "full")
