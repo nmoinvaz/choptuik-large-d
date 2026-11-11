@@ -1,0 +1,436 @@
+<meta name="dash-one-writer">
+<style>
+  .cm { display: grid; gap: var(--cds-gap-xl); font-family: var(--font-anthropic-sans); color: var(--color-fg); }
+  .cm-title { font-family: var(--font-anthropic-serif); font-weight: 400; font-size: var(--cds-font-size-title); margin: 0; text-wrap: balance; }
+  .cm-lead { margin: var(--cds-gap-sm) 0 0; max-width: 70ch; line-height: 1.5; }
+  .cm-mono { font-variant-numeric: tabular-nums; font-family: ui-monospace, "SF Mono", Menlo, monospace; }
+  .cm h2 { font-size: var(--cds-font-size-heading); font-weight: var(--cds-font-weight-medium); margin: 0; }
+  .cm-note { color: var(--color-fg-muted); font-size: var(--cds-font-size-caption); margin: var(--cds-gap-xs) 0 var(--cds-gap-md); max-width: 75ch; line-height: 1.45; }
+  .cm-cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: var(--cds-gap-md); }
+  .cm-card { background: var(--color-panel); border: 1px solid var(--color-border-line); border-radius: var(--cds-radius); padding: var(--cds-pad-lg); display: grid; gap: var(--cds-gap-xs); min-width: 0; }
+  .cm-card.is-old { opacity: .62; }
+  .cm-card-name { font-weight: var(--cds-font-weight-medium); }
+  .cm-card-sub { color: var(--color-fg-muted); font-size: var(--cds-font-size-caption); }
+  .cm-card-d { font-family: var(--font-anthropic-serif); font-weight: 400; font-size: var(--cds-font-size-title); font-variant-numeric: tabular-nums; }
+  .cm-card-meta { color: var(--color-fg-muted); font-size: var(--cds-font-size-caption); font-variant-numeric: tabular-nums; line-height: 1.5; }
+  .cm-marks { display: flex; gap: 6px; font-size: 15px; letter-spacing: 0; }
+  .cm-mk { display: inline-grid; place-items: center; width: 22px; height: 22px; border-radius: 6px; font-weight: 600; }
+  .cm-mk.v-OK { color: var(--color-ok); background: color-mix(in srgb, var(--color-ok) 14%, transparent); }
+  .cm-mk.v-WATCH { color: var(--color-warn); background: color-mix(in srgb, var(--color-warn) 16%, transparent); }
+  .cm-mk.v-BAD { color: var(--color-bad); background: color-mix(in srgb, var(--color-bad) 14%, transparent); }
+  .cm-pill { display: inline-block; padding: 1px 8px; border-radius: 999px; font-size: var(--cds-font-size-caption); font-weight: 600; }
+  .cm-pill.v-OK { color: var(--color-ok); background: color-mix(in srgb, var(--color-ok) 14%, transparent); }
+  .cm-pill.v-WATCH { color: var(--color-warn); background: color-mix(in srgb, var(--color-warn) 16%, transparent); }
+  .cm-pill.v-BAD { color: var(--color-bad); background: color-mix(in srgb, var(--color-bad) 14%, transparent); }
+  .cm-key { color: var(--color-fg-muted); font-size: var(--cds-font-size-caption); display: flex; flex-wrap: wrap; gap: var(--cds-gap-xs) var(--cds-gap-md); margin-bottom: var(--cds-gap-sm); }
+  .cm-key span { display: inline-flex; align-items: center; gap: 6px; }
+  .cm-sw { width: 14px; height: 3px; border-radius: 2px; display: inline-block; }
+  .cm-chart { position: relative; min-height: 270px; }
+  .cm-chart svg { display: block; overflow: visible; }
+  .cm-chart .tick text { fill: var(--cds-text-secondary); font-size: var(--cds-font-size-caption); }
+  .cm-chart .tick line, .cm-chart .domain { stroke: var(--cds-chart-axis); }
+  .cm-chart .grid line { stroke: var(--cds-chart-grid); }
+  .cm-chart .grid .domain { display: none; }
+  .cm-axis-label { fill: var(--cds-text-secondary); font-size: var(--cds-font-size-caption); }
+  .cm-tip { position: absolute; pointer-events: none; background: var(--cds-surface-popover); border: 1px solid var(--cds-border); box-shadow: var(--cds-shadow-popover); border-radius: var(--cds-radius); padding: 6px 9px; font-size: var(--cds-font-size-caption); line-height: 1.45; white-space: nowrap; z-index: 2; }
+  .cm-tip b { font-weight: 600; }
+  .cm-row { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: var(--cds-gap-sm); }
+  .cm-table-wrap { overflow-x: auto; }
+  .cm-table { border-collapse: collapse; width: 100%; font-size: var(--cds-font-size-caption); font-variant-numeric: tabular-nums; }
+  .cm-table th { text-align: left; font-weight: var(--cds-font-weight-medium); color: var(--color-fg-muted); padding: 6px 8px; border-bottom: 1px solid var(--color-border-line); white-space: nowrap; }
+  .cm-table td { padding: 5px 8px; border-bottom: 1px solid var(--color-border-line); white-space: nowrap; }
+  .cm-table td.c-mk { text-align: center; }
+  .cm-bounds { border-collapse: collapse; font-size: var(--cds-font-size-caption); margin-top: var(--cds-gap-sm); }
+  .cm-bounds th, .cm-bounds td { text-align: left; padding: 4px 10px 4px 0; border-bottom: 1px solid var(--color-border-line); }
+  .cm details summary { cursor: pointer; color: var(--color-fg-muted); }
+  [data-dash-source-state=refreshing] { opacity: .5; }
+</style>
+
+<div class="cm">
+  <header id="summary">
+    <h1 class="cm-title">Large-D chain monitor</h1>
+    <p class="cm-lead">The clean chain on win2 is at D <b class="cm-mono" data-draw="lead-d" data-source="chain_status" data-field="D_last" data-where="chain=win2 clean chain">—</b>, and its last step was <span data-draw="lead-v">—</span>. There, Δ = <b class="cm-mono" data-draw="lead-delta" data-source="delta_front" data-field="Delta_cut" data-row="0">—</b>, uncertain by ±<span class="cm-mono" data-draw="lead-pm" data-source="delta_front" data-field="pm" data-row="0">—</span> in the last digit shown.</p>
+  </header>
+
+  <section id="chains">
+    <h2>Where each chain is</h2>
+    <p class="cm-note">The six marks are the checks of the chain's last accepted step, in this order: Newton steps, step length, final residual, start residual, first move, series. ✓ is fine, ~ is worth watching, ✗ is bad. Each chain steps up in D toward 400.</p>
+    <div class="cm-cards" data-draw="cards" data-source="chain_status"></div>
+  </section>
+
+  <section id="progress">
+    <h2>Progress in D against computing time</h2>
+    <p class="cm-note">Each point is one corrector attempt. A flat stretch is time spent on refused attempts (✗). The time is the chain's own computing time, counted from its first step past D 215.</p>
+    <div class="cm-key">
+      <span><i class="cm-sw" data-draw="sw0"></i>win2 clean chain</span>
+      <span><i class="cm-sw" data-draw="sw1"></i>win d6</span>
+      <span><i class="cm-sw" data-draw="sw2"></i>win d10</span>
+      <span><i class="cm-sw" data-draw="sw3"></i>win2 first chain, before the fixes</span>
+    </div>
+    <div class="cm-chart" data-draw="progress" data-source="steps"></div>
+  </section>
+
+  <section id="newton">
+    <h2>Newton steps per step</h2>
+    <p class="cm-note">How hard each step was. Three or four is a healthy step; the bands mark 5 to 8 as worth watching and more than 8 as bad. A ✗ is a refused attempt.</p>
+    <div class="cm-chart" data-draw="newton" data-source="steps"></div>
+  </section>
+
+  <section id="errorbar">
+    <h2>Error bar on Δ</h2>
+    <p class="cm-note">The result's own uncertainty: how much Δ moves when the held harmonics follow a fit of degree 6 or 10 instead of 8. It is a spread between two computations, not a bound. Lower is better.</p>
+    <div class="cm-key">
+      <span><i class="cm-sw" data-draw="sw-eb0"></i>fit spread, from the results table</span>
+      <span><i class="cm-sw" data-draw="sw-eb1"></i>d6 minus d10, measured now</span>
+    </div>
+    <div class="cm-chart" data-draw="eb" data-source="errorbar"></div>
+  </section>
+
+  <section id="steps">
+    <div class="cm-row">
+      <h2>Recent steps</h2>
+      <select class="dash-select" id="pick" aria-label="Chain" data-draw="pick" data-source="chain_status"></select>
+    </div>
+    <p class="cm-note">The latest attempts of the chosen chain, newest first.</p>
+    <div class="cm-table-wrap">
+      <table class="cm-table" data-source="steps" data-row-key="n">
+        <thead>
+          <tr>
+            <th data-field="D_to">Step to D</th>
+            <th data-field="a">Size</th>
+            <th data-field="verdict">Verdict</th>
+            <th data-field="v_newton">Newton</th>
+            <th data-field="v_lam">Length</th>
+            <th data-field="v_final">Final</th>
+            <th data-field="v_start">Start</th>
+            <th data-field="v_first_dz">First move</th>
+            <th data-field="v_series">Series</th>
+            <th data-field="newton">Newton steps</th>
+            <th data-field="final_F">Final residual</th>
+            <th data-field="first_dz">First move</th>
+          </tr>
+        </thead>
+        <tbody data-draw="rows"></tbody>
+      </table>
+    </div>
+  </section>
+
+  <details id="bounds">
+    <summary>How each check is judged</summary>
+    <table class="cm-bounds">
+      <thead><tr><th>Check</th><th>✓ fine</th><th>~ watch</th><th>✗ bad</th></tr></thead>
+      <tbody>
+        <tr><td>Newton steps of an accepted step</td><td>3 to 4</td><td>5 to 8</td><td>more than 8, or refused</td></tr>
+        <tr><td>Step length (lam)</td><td>1 throughout</td><td>down to 0.25</td><td>below 0.25, or stalled</td></tr>
+        <tr><td>Final residual</td><td>below 1e-60</td><td>1e-60 to 1e-40</td><td>above 1e-40, or not converged</td></tr>
+        <tr><td>Start residual</td><td>below 1e-33</td><td>1e-33 to 1e-25</td><td>above 1e-25</td></tr>
+        <tr><td>First move</td><td>below 1e-29</td><td>1e-29 to 1e-26</td><td>above 1e-26</td></tr>
+        <tr><td>Series of the base</td><td>|z_N| below 1e-27, a_max above 2.5, fourth ratio above 150</td><td>between</td><td>|z_N| above 1e-24, a_max below 2, or ratio below 100</td></tr>
+      </tbody>
+    </table>
+  </details>
+</div>
+
+<script>
+  const ORDER = ['win2 clean chain', 'win d6', 'win d10', 'win2 first chain'];
+  window.cmOrder = ORDER;
+  window.cmMark = { OK: '✓', WATCH: '~', BAD: '✗', '': '·' };
+
+  dash.calc('chain_status', {
+    title: 'Each chain\'s last step',
+    description: 'For each chain, its last accepted step, the checks of that step, and its pace.',
+    inputs: ['steps'],
+    fn: (steps) => {
+      const order = ['win2 clean chain', 'win d6', 'win d10', 'win2 first chain'];
+      const mark = { OK: '✓', WATCH: '~', BAD: '✗', '': '·' };
+      const out = [];
+      for (const chain of order) {
+        const rows = steps.filter((r) => r.chain === chain);
+        const acc = rows.filter((r) => r.accepted === '1');
+        if (!acc.length) continue;
+        const last = acc[acc.length - 1];
+        const hours = Math.max(...rows.map((r) => +r.hours));
+        const d0 = +rows[0].D_from;
+        out.push({
+          chain,
+          runner: last.runner,
+          fit_degree: +last.fit_degree,
+          D_last: +last.D_to,
+          verdict: last.verdict,
+          marks: ['v_newton', 'v_lam', 'v_final', 'v_start', 'v_first_dz', 'v_series'].map((k) => last[k]).join(' '),
+          accepted: acc.length,
+          refused: rows.length - acc.length,
+          hours: +hours.toFixed(2),
+          D_per_hour: +((+last.D_to - d0) / hours).toFixed(2),
+        });
+      }
+      return out;
+    },
+  });
+
+  dash.calc('delta_front', {
+    title: 'Δ at the clean chain\'s front, cut at the error bar',
+    description: 'Δ of the clean chain\'s last accepted step, written to the digits the latest measured error bar allows.',
+    inputs: ['steps', 'errorbar'],
+    fn: (steps, errorbar) => {
+      const acc = steps.filter((r) => r.chain === 'win2 clean chain' && r.accepted === '1');
+      if (!acc.length || !errorbar.length) return [];
+      const last = acc[acc.length - 1];
+      const bar = errorbar[errorbar.length - 1];
+      const err = +bar.error_bar;
+      const digits = Math.floor(-Math.log10(err)) + 1;
+      const [whole, frac] = last.Delta.split('.');
+      return [{
+        D: +last.D_to,
+        Delta_cut: whole + '.' + frac.slice(0, digits),
+        pm: Math.round(err * 10 ** digits),
+        error_bar: err,
+        error_bar_at_D: +bar.D,
+        digits,
+      }];
+    },
+  });
+
+  const COLOR = (i) => (i === 3 ? 'var(--cds-chart-muted)' : dash.colors[i % dash.colors.length]);
+  const fmtE = (v) => (Number.isFinite(+v) ? (+v).toExponential(1) : '—');
+
+  ['sw0', 'sw1', 'sw2', 'sw3'].forEach((name, i) => dash.draw(name, (el) => { el.style.background = COLOR(i); }));
+  dash.draw('sw-eb0', (el) => { el.style.background = dash.colors[0]; });
+  dash.draw('sw-eb1', (el) => { el.style.background = dash.colors[1]; });
+
+  function rowOf(id, chain) {
+    const s = dash.data(id);
+    return s.status === 'ok' ? (s.data || []).find((r) => r.chain === chain) : null;
+  }
+
+  dash.draw('lead-d', (el) => {
+    const r = rowOf('chain_status', 'win2 clean chain');
+    el.textContent = r ? String(r.D_last) : '—';
+  });
+  dash.draw('lead-v', (el) => {
+    const r = rowOf('chain_status', 'win2 clean chain');
+    el.replaceChildren();
+    if (!r) { el.textContent = '—'; return; }
+    const p = document.createElement('span');
+    p.className = 'cm-pill v-' + r.verdict;
+    p.textContent = { OK: 'fine', WATCH: 'worth watching', BAD: 'bad' }[r.verdict] || r.verdict;
+    p.dataset.source = 'chain_status'; p.dataset.field = 'verdict'; p.dataset.where = 'chain=win2 clean chain';
+    el.append(p);
+  });
+  dash.draw('lead-delta', (el) => {
+    const s = dash.data('delta_front');
+    el.textContent = s.status === 'ok' && s.data && s.data[0] ? s.data[0].Delta_cut : '—';
+  });
+  dash.draw('lead-pm', (el) => {
+    const s = dash.data('delta_front');
+    el.textContent = s.status === 'ok' && s.data && s.data[0] ? String(s.data[0].pm) : '—';
+  });
+
+  const LABEL = {
+    'win2 clean chain': ['win2 · clean chain', 'fit degree 8, every fix on since D 215.13'],
+    'win d6': ['win · d6 chain', 'fit degree 6, for the error bar'],
+    'win d10': ['win · d10 chain', 'fit degree 10, for the error bar'],
+    'win2 first chain': ['win2 · first chain', 'fit degree 8, before the fixes; ended at D 240.16'],
+  };
+
+  dash.draw('cards', (el) => {
+    const s = dash.data('chain_status');
+    el.replaceChildren();
+    if (s.status !== 'ok' || !s.data) { el.textContent = s.status === 'error' ? 'Failed to load' : '—'; return; }
+    for (const r of s.data) {
+      const card = document.createElement('div');
+      card.className = 'cm-card' + (r.chain === 'win2 first chain' ? ' is-old' : '');
+      const where = 'chain=' + r.chain;
+      const add = (cls, text, field) => {
+        const d = document.createElement('div');
+        d.className = cls; d.textContent = text;
+        if (field) { d.dataset.source = 'chain_status'; d.dataset.field = field; d.dataset.where = where; }
+        card.append(d); return d;
+      };
+      add('cm-card-name', LABEL[r.chain] ? LABEL[r.chain][0] : r.chain);
+      add('cm-card-sub', LABEL[r.chain] ? LABEL[r.chain][1] : '');
+      const d = add('cm-card-d', 'D ');
+      const dv = document.createElement('span');
+      dv.textContent = String(r.D_last); dv.dataset.source = 'chain_status'; dv.dataset.field = 'D_last'; dv.dataset.where = where;
+      d.append(dv);
+      const marks = document.createElement('div');
+      marks.className = 'cm-marks';
+      marks.setAttribute('aria-label', 'checks of the last step: ' + r.marks);
+      r.marks.split(' ').forEach((v) => {
+        const m = document.createElement('span');
+        m.className = 'cm-mk v-' + v; m.textContent = window.cmMark[v] ?? '·';
+        marks.append(m);
+      });
+      card.append(marks);
+      const meta = document.createElement('div');
+      meta.className = 'cm-card-meta';
+      const part = (text, field) => {
+        const sp = document.createElement('span');
+        sp.textContent = text; sp.dataset.source = 'chain_status'; sp.dataset.field = field; sp.dataset.where = where;
+        return sp;
+      };
+      meta.append(part(String(r.accepted), 'accepted'), ' steps accepted, ', part(String(r.refused), 'refused'), ' refused', document.createElement('br'),
+        part(String(r.D_per_hour), 'D_per_hour'), ' units of D per hour, over ', part(String(r.hours), 'hours'), ' h of computing');
+      card.append(meta);
+      el.append(card);
+    }
+  });
+
+  function tip(el) {
+    let t = el.querySelector('.cm-tip');
+    if (!t) { t = document.createElement('div'); t.className = 'cm-tip'; t.hidden = true; el.append(t); }
+    return {
+      show(ev, lines) {
+        t.replaceChildren();
+        lines.forEach(([b, rest], i) => {
+          if (i) t.append(document.createElement('br'));
+          const bb = document.createElement('b'); bb.textContent = b; t.append(bb, rest ? ' ' + rest : '');
+        });
+        t.hidden = false;
+        const box = el.getBoundingClientRect();
+        let x = ev.clientX - box.left + 12, y = ev.clientY - box.top + 12;
+        if (x + t.offsetWidth > box.width) x = Math.max(0, ev.clientX - box.left - t.offsetWidth - 12);
+        t.style.left = x + 'px'; t.style.top = y + 'px';
+      },
+      hide() { t.hidden = true; },
+    };
+  }
+
+  function stepRows() {
+    const s = dash.data('steps');
+    return s.status === 'ok' ? s.data : null;
+  }
+
+  function frame(el, h, x, y, xLabel, yLabel, yFmt) {
+    const W = el.clientWidth || 600;
+    const m = { t: 10, r: 14, b: 38, l: 58 };
+    const svg = d3.select(el).append('svg').attr('width', '100%').attr('viewBox', `0 0 ${W} ${h}`).attr('role', 'img');
+    x.range([m.l, W - m.r]); y.range([h - m.b, m.t]);
+    svg.append('g').attr('class', 'grid').attr('transform', `translate(${m.l},0)`).call(d3.axisLeft(y).ticks(5).tickSize(-(W - m.l - m.r)).tickFormat(''));
+    svg.append('g').attr('transform', `translate(0,${h - m.b})`).call(d3.axisBottom(x).ticks(Math.max(2, Math.floor(W / 110))));
+    svg.append('g').attr('transform', `translate(${m.l},0)`).call(d3.axisLeft(y).ticks(5, yFmt));
+    svg.append('text').attr('class', 'cm-axis-label').attr('x', W - m.r).attr('y', h - 4).attr('text-anchor', 'end').text(xLabel);
+    svg.append('text').attr('class', 'cm-axis-label').attr('x', m.l).attr('y', m.t - 1).attr('text-anchor', 'start').attr('dy', '-0.2em').text('');
+    svg.append('text').attr('class', 'cm-axis-label').attr('transform', `translate(12,${(h - m.b + m.t) / 2}) rotate(-90)`).attr('text-anchor', 'middle').text(yLabel);
+    return svg;
+  }
+
+  dash.draw('progress', (el) => {
+    el.replaceChildren();
+    const rows = stepRows();
+    if (!rows) { el.textContent = dash.data('steps').status === 'error' ? 'Failed to load' : '—'; return; }
+    const pts = rows.map((r) => ({ r, chain: r.chain, x: +r.hours, y: r.accepted === '1' ? +r.D_to : +r.D_from, ok: r.accepted === '1' }));
+    const x = d3.scaleLinear().domain([0, d3.max(pts, (p) => p.x) * 1.03]).nice();
+    const y = d3.scaleLinear().domain(d3.extent(pts, (p) => p.y)).nice();
+    const svg = frame(el, 280, x, y, 'hours of computing', 'D reached', null);
+    svg.attr('aria-label', 'D reached by each chain against its hours of computing');
+    const tp = tip(el);
+    ORDER.forEach((chain, i) => {
+      const ps = pts.filter((p) => p.chain === chain);
+      if (!ps.length) return;
+      svg.append('path').datum(ps).attr('fill', 'none').style('stroke', COLOR(i)).attr('stroke-width', i === 3 ? 1.5 : 2)
+        .attr('stroke-dasharray', i === 3 ? '4 3' : null).attr('d', d3.line().x((p) => x(p.x)).y((p) => y(p.y)));
+      const g = svg.append('g');
+      g.selectAll('circle').data(ps.filter((p) => p.ok)).join('circle').attr('cx', (p) => x(p.x)).attr('cy', (p) => y(p.y)).attr('r', 2.6).style('fill', COLOR(i));
+      g.selectAll('text').data(ps.filter((p) => !p.ok)).join('text').attr('x', (p) => x(p.x)).attr('y', (p) => y(p.y)).attr('dy', '0.35em').attr('text-anchor', 'middle')
+        .attr('font-size', 11).style('fill', 'var(--cds-chart-status-critical)').text('✗');
+    });
+    const last = ORDER.map((c) => pts.filter((p) => p.chain === c && p.ok)).filter((a) => a.length).map((a) => a[a.length - 1]);
+    svg.append('g').selectAll('circle').data(last).join('circle').attr('cx', (p) => x(p.x)).attr('cy', (p) => y(p.y)).attr('r', 4.5)
+      .style('fill', (p) => COLOR(ORDER.indexOf(p.chain))).style('stroke', 'var(--color-bg)').attr('stroke-width', 1.5);
+    svg.append('rect').attr('x', 0).attr('y', 0).attr('width', '100%').attr('height', 280).attr('fill', 'transparent')
+      .on('mousemove', (ev) => {
+        const [mx, my] = d3.pointer(ev);
+        const p = d3.least(pts, (q) => (x(q.x) - mx) ** 2 + (y(q.y) - my) ** 2);
+        if (!p) return;
+        tp.show(ev, [[p.chain], [(p.ok ? 'accepted' : 'refused') + ' step to D ' + p.r.D_to, ''], ['after', p.x.toFixed(2) + ' h of computing'], ['verdict', p.r.verdict]]);
+      })
+      .on('mouseleave', () => tp.hide());
+  });
+
+  dash.draw('newton', (el) => {
+    el.replaceChildren();
+    const rows = stepRows();
+    if (!rows) { el.textContent = dash.data('steps').status === 'error' ? 'Failed to load' : '—'; return; }
+    const pts = rows.filter((r) => r.newton !== '').map((r) => ({ r, chain: r.chain, x: +r.D_to, y: +r.newton, ok: r.accepted === '1' }));
+    const x = d3.scaleLinear().domain(d3.extent(pts, (p) => p.x)).nice();
+    const y = d3.scaleLinear().domain([0, Math.max(14, d3.max(pts, (p) => p.y) + 1)]);
+    const svg = frame(el, 260, x, y, 'D of the step', 'Newton steps', 'd');
+    svg.attr('aria-label', 'Newton steps of each corrector attempt against D, with bands for fine, watch and bad');
+    const [x0, x1] = x.range();
+    [[0, 4.5, 'var(--color-ok)'], [4.5, 8.5, 'var(--color-warn)'], [8.5, y.domain()[1], 'var(--color-bad)']].forEach(([a, b, c]) => {
+      svg.insert('rect', ':first-child').attr('x', x0).attr('width', x1 - x0).attr('y', y(b)).attr('height', y(a) - y(b)).style('fill', c).attr('fill-opacity', 0.07);
+    });
+    const tp = tip(el);
+    ORDER.forEach((chain, i) => {
+      const ps = pts.filter((p) => p.chain === chain);
+      const g = svg.append('g');
+      g.selectAll('circle').data(ps.filter((p) => p.ok)).join('circle').attr('cx', (p) => x(p.x)).attr('cy', (p) => y(p.y)).attr('r', 3.2)
+        .style('fill', COLOR(i)).attr('fill-opacity', i === 3 ? 0.55 : 0.9);
+      g.selectAll('text').data(ps.filter((p) => !p.ok)).join('text').attr('x', (p) => x(p.x)).attr('y', (p) => y(p.y)).attr('dy', '0.35em').attr('text-anchor', 'middle')
+        .attr('font-size', 12).style('fill', COLOR(i)).text('✗');
+    });
+    svg.append('rect').attr('x', 0).attr('y', 0).attr('width', '100%').attr('height', 260).attr('fill', 'transparent')
+      .on('mousemove', (ev) => {
+        const [mx, my] = d3.pointer(ev);
+        const p = d3.least(pts, (q) => (x(q.x) - mx) ** 2 + (y(q.y) - my) ** 2);
+        if (!p) return;
+        tp.show(ev, [[p.chain], [(p.ok ? 'accepted' : 'refused') + ' step to D ' + p.r.D_to, ''], ['Newton steps', String(p.y)], ['first move', fmtE(p.r.first_dz)]]);
+      })
+      .on('mouseleave', () => tp.hide());
+  });
+
+  dash.draw('eb', (el) => {
+    el.replaceChildren();
+    const s = dash.data('errorbar');
+    if (s.status !== 'ok') { el.textContent = s.status === 'error' ? 'Failed to load' : '—'; return; }
+    const pts = s.data.map((r) => ({ r, x: +r.D, y: +r.error_bar, now: r.source.startsWith('d6') })).filter((p) => p.y > 0);
+    const x = d3.scaleLinear().domain(d3.extent(pts, (p) => p.x)).nice();
+    const y = d3.scaleLog().domain([d3.min(pts, (p) => p.y) / 2, d3.max(pts, (p) => p.y) * 2]);
+    const svg = frame(el, 260, x, y, 'D', 'error bar on Δ', '.0e');
+    svg.attr('aria-label', 'The error bar on Delta against D, from the fit spread and from the d6 and d10 chains');
+    const tp = tip(el);
+    svg.append('g').selectAll('circle').data(pts).join('circle').attr('cx', (p) => x(p.x)).attr('cy', (p) => y(p.y)).attr('r', (p) => (p.now ? 4 : 2.6))
+      .style('fill', (p) => (p.now ? dash.colors[1] : dash.colors[0]));
+    svg.append('rect').attr('x', 0).attr('y', 0).attr('width', '100%').attr('height', 260).attr('fill', 'transparent')
+      .on('mousemove', (ev) => {
+        const [mx, my] = d3.pointer(ev);
+        const p = d3.least(pts, (q) => (x(q.x) - mx) ** 2 + (y(q.y) - my) ** 2);
+        if (!p) return;
+        tp.show(ev, [['D ' + p.r.D], ['error bar', fmtE(p.y)], [p.now ? 'd6 minus d10' : 'fit spread', '']]);
+      })
+      .on('mouseleave', () => tp.hide());
+  });
+
+  window.cmPick = window.cmPick || 'win2 clean chain';
+  dash.draw('pick', (sel) => {
+    const s = dash.data('chain_status');
+    const chains = s.status === 'ok' && s.data ? s.data.map((r) => r.chain) : [];
+    sel.replaceChildren(...chains.map((c) => new Option(LABEL[c] ? LABEL[c][0] : c, c)));
+    sel.value = window.cmPick;
+    sel.onchange = () => { window.cmPick = sel.value; dash.draw('rows'); };
+  });
+
+  dash.draw('rows', (tb) => {
+    tb.replaceChildren();
+    const rows = stepRows();
+    if (!rows) return;
+    const pick = rows.filter((r) => r.chain === window.cmPick).slice(-14).reverse();
+    for (const r of pick) {
+      const tr = document.createElement('tr');
+      tr.dataset.key = r.n;
+      const td = (text, cls) => { const c = document.createElement('td'); c.textContent = text; if (cls) c.className = cls; tr.append(c); return c; };
+      td(r.D_from + ' → ' + r.D_to);
+      td((+r.a).toFixed(3));
+      const v = td(''); const pill = document.createElement('span'); pill.className = 'cm-pill v-' + r.verdict;
+      pill.textContent = r.accepted === '1' ? ({ OK: 'fine', WATCH: 'watch', BAD: 'bad' }[r.verdict] || r.verdict) : 'refused'; v.append(pill);
+      ['v_newton', 'v_lam', 'v_final', 'v_start', 'v_first_dz', 'v_series'].forEach((k) => {
+        const c = td('', 'c-mk'); const m = document.createElement('span'); m.className = 'cm-mk v-' + r[k]; m.textContent = window.cmMark[r[k]] ?? '·'; c.append(m);
+      });
+      td(r.newton);
+      td(fmtE(r.final_F));
+      td(fmtE(r.first_dz));
+      tb.append(tr);
+    }
+  });
+</script>
