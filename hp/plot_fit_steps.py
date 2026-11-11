@@ -44,7 +44,7 @@ TITLES = [
     ("2. Measure harmonic 5 in each", "Multiply the wave by cos 5θ and average over the period. Twice the average is a5, the amount of cos 5θ in the wave: one point against D."),
     ("3. Fit a polynomial through the points", "A least-squares polynomial of degree 8 in 1/(D−2), times 1/√(D−2), passes within 10⁻¹² of all 138 points."),
     ("4. Extend it to larger D", "Past D 73 the polynomial gives the held value. At D 232.6 it sets the wave's harmonic-5 part. Fits of degree 6 and 10 differ by 3×10⁻⁹ there."),
-    ("5. Step in D with calculus", "Δ looks straight, but its slope changes. At a solved D the chain computes 24 derivatives of the whole solution; their Taylor sum predicts the next D."),
+    ("5. Step in D with calculus", "Δ looks straight, but zoomed in it bends. At a solved D the chain computes 24 derivatives of the whole solution; their Taylor sum predicts the next D."),
 ]
 EXAMPLE_D = [38.02, 45.0, 52.0, 59.0, 66.0, 73.0]
 
@@ -225,7 +225,8 @@ def main():
                 S3[0] + 1.0, S4[1])
     fx, fy = xR(D_front), yR(co_front[5][0])
     front = pa.capture(svg, lambda: marker(svg, "diamond", fx, fy, SERIES[0], f"D {D_front:g}: a5 {co_front[5][0]:.6e}"))
-    front.append(f'<text x="{fx - 8}" y="{fy - 14}" text-anchor="end" font-size="11" fill="{INK}">held value at D {D_front:.1f}</text>')
+    front.append(f'<text x="{fx - 8}" y="{fy - 28}" text-anchor="end" font-size="11" fill="{INK}">held value at D {D_front:.1f}: a5 = {co_front[5][0]:.4e},</text>')
+    front.append(f'<text x="{fx - 8}" y="{fy - 14}" text-anchor="end" font-size="11" fill="{INK}">the fit's value there, which the chain keeps fixed</text>')
     clock.group(svg, front, S4[0] + 3.4, S4[1])
     wl = [(xA(t), yA(v)) for t, v in zip(th, wave(co_front, th))]
     clock.group(svg, [f'<path d="{pa.path_d(wl)}" fill="none" stroke="{SERIES[0]}" stroke-width="2"/>',
@@ -248,14 +249,23 @@ def main():
     poly = np.polynomial.Polynomial.fit(cD, cV, 6)
     dpoly = poly.deriv()
     slopes = dpoly(cD)
-    slope = float(slopes[i0])
-    print(f"base D {cD[i0]:g}: slope {slope:.6e}; slopes from {slopes[0]:.4e} at D {cD[0]:g} to {slopes[-1]:.4e} at D {cD[-1]:g}")
+    chord = (cV[-1] - cV[0]) / (cD[-1] - cD[0])
+    bend = cV - (cV[0] + chord * (cD - cD[0]))          # Delta minus the straight line through its two ends
+    print(f"base D {cD[i0]:g}: slope {slopes[i0]:.6e}; slopes {slopes[0]:.4e} to {slopes[-1]:.4e}; "
+          f"largest bend from the chord {np.max(np.abs(bend)):.3e}")
     TH_, BH_ = 150, 150
     BY_ = LY + LH - BH_
+    t_zoom = S5[0] + 3.8
+    z0 = S5[0]
 
     def left5():
         holder["L5"] = axes(svg, LX, LY, LW, TH_, (214, 236), (cV.min() - 0.0003, cV.max() + 0.0003), "spacetime dimension D",
                             "Δ, the echo period", xfmt=lambda v: f"{v:g}", yfmt=lambda v: f"{v:.4f}")
+
+    def left5z():
+        span = float(bend.max() - bend.min())
+        holder["L5z"] = axes(svg, LX, LY, LW, TH_, (214, 236), (bend.min() - 0.15 * span, bend.max() + 0.55 * span), "spacetime dimension D",
+                             "Δ minus a straight line", xfmt=lambda v: f"{v:g}", yfmt=lambda v: f"{v:.0e}" if v else "0")
 
     def left5b():
         pad = (slopes.max() - slopes.min()) * 0.15
@@ -265,49 +275,57 @@ def main():
     def right5():
         holder["R5"] = axes(svg, RX, RY, RW, RH, (0, 25), (1e-32, 1e-2, "log"), "order k of the Taylor term",
                             "size of the term |z_k| aᵏ", xfmt=lambda v: f"{v:g}", yfmt=lambda v: f"1e{round(math.log10(v))}")
-    clock.group(svg, pa.capture(svg, left5) + pa.capture(svg, right5), S5[0], T - 0.7)
+    # the plain view: Delta looks straight, and so do its tangents
+    clock.group(svg, pa.capture(svg, left5), z0, t_zoom)
+    clock.group(svg, pa.capture(svg, right5), z0, T - 0.7)
     x5, y5 = holder["L5"]
     xb, yb = holder["R5"]
-    cdots = pa.capture(svg, lambda: [marker(svg, "circle", x5(d), y5(v), SERIES[0], f"D {d:g}: Δ {v:.12f}") for d, v in chain])
-    clock.group(svg, cdots, S5[0] + 0.2, T - 0.7)
-    bx, by = x5(cD[i0]), y5(cV[i0])
-    base = pa.capture(svg, lambda: marker(svg, "diamond", bx, by, SERIES[1], f"base D {cD[i0]:g}"))
-    base.append(f'<text x="{bx - 10}" y="{by + 4}" text-anchor="end" font-size="11" fill="{INK}">solved at D {cD[i0]:.2f}</text>')
-    clock.group(svg, base, S5[0] + 1.0, T - 0.7)
-    # the slope at every point: a short tangent through each, drawn along the chain
-    t_tan = np.linspace(S5[0] + 1.4, S5[0] + 3.4, len(cD))
-    for d, v, sl, tk in zip(cD, cV, slopes, t_tan):
-        seg = f'<line x1="{x5(d - 0.7):.1f}" y1="{y5(v - 0.7 * sl):.1f}" x2="{x5(d + 0.7):.1f}" y2="{y5(v + 0.7 * sl):.1f}" stroke="{SERIES[1]}" stroke-width="2"/>'
-        clock.group(svg, [seg], float(tk), T - 0.7)
+    plain = pa.capture(svg, lambda: [marker(svg, "circle", x5(d), y5(v), SERIES[0], f"D {d:g}: Δ {v:.12f}") for d, v in chain])
+    clock.group(svg, plain, z0 + 0.2, t_zoom)
+    for d, v, sl, tk in zip(cD, cV, slopes, np.linspace(z0 + 1.0, z0 + 2.6, len(cD))):
+        clock.group(svg, [f'<line x1="{x5(d - 0.7):.1f}" y1="{y5(v - 0.7 * sl):.1f}" x2="{x5(d + 0.7):.1f}" y2="{y5(v + 0.7 * sl):.1f}" '
+                          f'stroke="{SERIES[1]}" stroke-width="2"/>'], float(tk), t_zoom)
     clock.group(svg, [f'<text x="{LX + LW - 6}" y="{LY + 18}" text-anchor="end" font-size="11" fill="{SERIES[1]}">at each point its tangent: the first derivative there</text>',
-                      f'<text x="{LX + LW - 6}" y="{LY + 34}" text-anchor="end" font-size="11" fill="{INK_SOFT}">at this scale Δ looks straight</text>'],
-                S5[0] + 2.0, T - 0.7)
-    # the bend the tangent misses
-    clock.group(svg, pa.capture(svg, left5b), S5[0] + 3.6, T - 0.7)
+                      f'<text x="{LX + LW - 6}" y="{LY + 34}" text-anchor="end" font-size="11" fill="{INK_SOFT}">at this scale Δ and its tangents look straight</text>'],
+                z0 + 1.6, t_zoom)
+    # the zoom: the straight line through the ends taken away, the bend shows, and the tangents turn
+    clock.group(svg, pa.capture(svg, left5z), t_zoom, T - 0.7)
+    xz, yz = holder["L5z"]
+    zoomed = pa.capture(svg, lambda: [marker(svg, "circle", xz(d), yz(v), SERIES[0], f"D {d:g}: Δ minus the line {v:.3e}")
+                                      for d, v in zip(cD, bend)])
+    zoomed.append(f'<line x1="{LX}" y1="{yz(0):.1f}" x2="{LX + LW}" y2="{yz(0):.1f}" stroke="{INK_SOFT}" stroke-width="1" stroke-dasharray="4 3"/>')
+    zoomed.append(f'<text x="{LX + LW - 6}" y="{LY + 18}" text-anchor="end" font-size="11" fill="{INK}">zoomed in: the straight line through the ends taken away</text>')
+    zoomed.append(f'<text x="{LX + LW - 6}" y="{LY + 34}" text-anchor="end" font-size="11" fill="{INK}">Δ bends by up to {np.max(np.abs(bend)):.0e}, and the tangents turn</text>')
+    clock.group(svg, zoomed, t_zoom + 0.2, T - 0.7)
+    for d, v, sl, tk in zip(cD, bend, slopes - chord, np.linspace(t_zoom + 0.6, t_zoom + 2.2, len(cD))):
+        clock.group(svg, [f'<line x1="{xz(d - 0.7):.1f}" y1="{yz(v - 0.7 * sl):.1f}" x2="{xz(d + 0.7):.1f}" y2="{yz(v + 0.7 * sl):.1f}" '
+                          f'stroke="{SERIES[1]}" stroke-width="2"/>'], float(tk), T - 0.7)
+    bz = pa.capture(svg, lambda: marker(svg, "diamond", xz(cD[i0]), yz(bend[i0]), SERIES[1], f"base D {cD[i0]:g}"))
+    clock.group(svg, bz, t_zoom + 2.4, T - 0.7)
+    # the slope itself against D
+    clock.group(svg, pa.capture(svg, left5b), t_zoom + 2.6, T - 0.7)
     xr, yr = holder["L5b"]
     rdots = pa.capture(svg, lambda: [marker(svg, "circle", xr(d), yr(v), SERIES[1], f"D {d:g}: slope {v:.5e}")
                                      for d, v in zip(cD, slopes)])
     rline = [(xr(d), yr(float(dpoly(d)))) for d in np.linspace(cD[0], cD[-1], 80)]
     rdots.append(f'<path d="{pa.path_d(rline)}" fill="none" stroke="{SERIES[1]}" stroke-width="1.2"/>')
-    rdots.append(f'<text x="{LX + LW - 6}" y="{BY_ + 14}" text-anchor="end" font-size="11" fill="{INK}">the slope is not constant: it changes along the line,</text>')
+    rdots.append(f'<text x="{LX + LW - 6}" y="{BY_ + 14}" text-anchor="end" font-size="11" fill="{INK}">the slope changes along the line,</text>')
     rdots.append(f'<text x="{LX + LW - 6}" y="{BY_ + 28}" text-anchor="end" font-size="11" fill="{INK}">and its change is the second derivative</text>')
-    clock.group(svg, rdots, S5[0] + 4.0, T - 0.7)
-    t_bar = np.linspace(S5[0] + 4.6, S5[1] - 3.6, len(terms))
+    clock.group(svg, rdots, t_zoom + 2.8, T - 0.7)
+    t_bar = np.linspace(z0 + 2.0, S5[1] - 3.0, len(terms))
     bw = 0.62 * (xb(1) - xb(0))
     for k, (tk, v) in enumerate(zip(t_bar, terms), start=1):
         top = yb(max(v, 1e-32))
         clock.group(svg, [f'<rect x="{xb(k) - bw / 2:.1f}" y="{top:.1f}" width="{bw:.1f}" height="{yb(1e-32) - top:.1f}" '
                           f'fill="{SERIES[1] if k == 1 else SERIES[3]}"><title>order {k}: {v:.2e}</title></rect>'], float(tk), T - 0.7)
-    nx, ny = x5(cD[i0 + 1]), y5(cV[i0 + 1])
-    pred = pa.capture(svg, lambda: marker(svg, "circle", nx, ny, SERIES[4], f"prediction and solution at D {cD[i0 + 1]:g}"))
-    pred.append(f'<text x="{LX + LW - 6}" y="{LY + 50}" text-anchor="end" font-size="11" fill="{SERIES[4]}">24 terms summed: the prediction at D {cD[i0 + 1]:.2f}</text>')
-    pred.append(f'<text x="{LX + LW - 6}" y="{LY + 66}" text-anchor="end" font-size="11" fill="{INK_SOFT}">Newton corrects it by about 10⁻³¹ in 3 steps</text>')
-    clock.group(svg, pred, S5[1] - 3.4, T - 0.7)
     clock.group(svg, [f'<text x="{RX + RW - 4}" y="{RY + 16}" text-anchor="end" font-size="11" fill="{INK}">terms of the whole solution, all 769 numbers</text>',
                       f'<text x="{RX + RW - 4}" y="{RY + 30}" text-anchor="end" font-size="11" fill="{INK_SOFT}">each order 10 to 300 times smaller</text>',
                       f'<text x="{xb(1) + 10:.1f}" y="{yb(terms[0]) + 12:.1f}" font-size="11" fill="{SERIES[1]}">order 1: the tangent</text>',
                       f'<text x="{xb(2) + 10:.1f}" y="{yb(terms[1]) + 12:.1f}" font-size="11" fill="{SERIES[3]}">order 2 and up: the bend</text>'],
-                S5[0] + 5.0, T - 0.7)
+                z0 + 3.0, T - 0.7)
+    clock.group(svg, [f'<text x="{RX + RW - 4}" y="{RY + RH * 0.42:.0f}" text-anchor="end" font-size="11" fill="{SERIES[4]}">all 24 summed: the prediction one step ahead,</text>',
+                      f'<text x="{RX + RW - 4}" y="{RY + RH * 0.42 + 14:.0f}" text-anchor="end" font-size="11" fill="{SERIES[4]}">which Newton corrects by about 10⁻³¹ in 3 steps</text>'],
+                S5[1] - 2.8, T - 0.7)
 
     # the step titles under the panels
     for (t0, t1), (title, text) in zip(STEPS, TITLES):
