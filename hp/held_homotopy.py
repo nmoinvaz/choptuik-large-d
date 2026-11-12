@@ -38,8 +38,8 @@ Trace (the rules, fixed before the first real run and written on #562):
 - The trace stops (exit 3) after 12 refusals in a row, or when the next h is below 1e-6 t: the signature of a fold
   of the path, where the weakest singular value of J(z) falls to zero and |tau| grows without bound (both recorded
   at every rung, the four weakest sigma by 4 steps of subspace iteration from the last rung's basis).
-- h0: --h0, or the largest h of the probe's ladder (+ side) whose chord correction, and every smaller h's, is at
-  most 0.1 h max|tau0|, capped at h_max.
+- h0: --h0, or the largest h of the probe's ladder (+ side) whose chord correction, and that of every ladder h in the
+  four decades below it, is at most 0.1 h max|tau0|, capped at h_max.
 - At t = 1 Newton continues until max|H| <= 1e-60 or a correction stops contracting (the endpoint polish).
 Each rung's record (OUT.jsonl, written as it goes): t, h, the corrections, max|H|, Delta(t) to 40 digits, Delta(t) -
 Delta(0), |z(t) - z0| (2-norm and max), V^T (z(t) - z0) on z0's V and its share of |z(t) - z0|.
@@ -336,12 +336,13 @@ def main():
                 print(f"    {e['h']:+.0e}  not finite", flush=True)
         good = [e for e in lad if e["h"] > 0]
         good.sort(key=lambda e: e["h"])
+        # the largest h whose ratio, and that of every ladder h in the four decades below it, is at most 0.1: at
+        # the smallest h the residual's rounding floor, amplified by J^-1, can raise the ratio again
+        lin = lambda e: bool(e.get("ok")) and e["ratio"] <= 0.1  # noqa: E731
         h0 = 0.0
         for e in good:
-            if e.get("ok") and e["ratio"] <= 0.1:
+            if lin(e) and all(lin(f) for f in good if e["h"] * 1e-4 <= f["h"] <= e["h"]):
                 h0 = e["h"]
-            else:
-                break
         h0 = min(a.h0 or h0, a.h_max)
         rec["h0"] = h0
         print(f"  h0 {h0:.1e} ({'--h0' if a.h0 else 'the ladder rule'}, h_max {a.h_max:g})", flush=True)
