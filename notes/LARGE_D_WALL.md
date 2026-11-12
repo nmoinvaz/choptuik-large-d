@@ -134,11 +134,18 @@ with a the first move's coefficients.
 **The jump after the first move is quadratic in the move and sits in the strong rows.** The residual after the move is
 7.27×10⁻²⁶ for a move of 8.32×10⁻³⁰ and 2.02×10⁻²⁶ for one of 4.45×10⁻³⁰. Their ratio, 3.60, is the square of the
 moves' ratio, 3.50, so max|F| ≈ 1.0×10³³ |c|². At both points the weak rows' residual is of the order of
-|B a| = 9.8×10⁻⁵⁶, 30 orders below, so this residual is in the strong rows. Two points only, so this is numerical
-evidence. Correcting it moves the strong unknowns, and their
-curvature fed back into the weak rows is the term S of the reduced coefficient T − 3S (Kuznetsov's form,
-[LIT_REVIEW.md](LIT_REVIEW.md), #527). #499 measured T alone. #528 measures S, and #530 tests a corrector that solves
-the strong rows before the weak ones.
+|B a| = 9.8×10⁻⁵⁶, 30 orders below, so this residual is in the strong rows.
+
+A third point comes from newton_od's first step from the weak-first start (`I499-mac/` at af80d7a1). That step again
+lies entirely on the weak directions (2-norm 3.69×10⁻³⁰, 3.0×10⁻⁵⁶ off them). The law predicts 1.43×10⁻²⁶ after it,
+and the run reached 1.35×10⁻²⁶. The coupling back runs through the mixed curvature UᵀF″(Vc, x) with x strong. The
+first move's 0.4% off the weak directions raises the weak residual from 0.004 to 0.52 of |B a|, which UᵀJx = 0 cannot
+do. So each weak correction raises the strong rows quadratically, and each strong correction feeds back into the weak
+rows. Three points, so numerical evidence.
+
+That feedback is the term S of the reduced coefficient T − 3S (Kuznetsov's form, [LIT_REVIEW.md](LIT_REVIEW.md),
+#527). #499 measured T alone. #528 measures S, #529 the mixed block, and #530 tests a corrector that solves the strong
+rows before the weak ones.
 
 **Where the weakness lives in the layout.** Raw singular values are not comparable across layouts, since a node's
 rows carry its own gain. With rows and columns equilibrated (`hp/near_null_eq.py`, #502; `I502-mac/` at 811bbed3), the
