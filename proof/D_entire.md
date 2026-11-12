@@ -399,3 +399,40 @@ Two tests:
 Test 2 is the most promising route to a proof of the type. A k-fold convolution of a bounded kernel over the unit
 simplex is bounded by M^k/(k−1)!, which is exactly a type bound, with constants that can be made explicit from the
 order-1 and order-2 Borel transforms.
+
+### 7.4 The poles at k = 6–11 against planted cuts (#541)
+
+`solver/inner_amp/pade_geometry.py` computes the [k/k] poles for k = 6–11 from σ₀–σ₂₂ (`scan45J1250`, 120 digits). It
+does the same for continuous plants matched to σ₀–σ₁₂ to the conventions of notes/PLANTED_SELECTION.md 2.2.
+
+- **chord2** has its density on the chord P0 → κ⋆, so exactly two branch points.
+- **arcjump** has its density on the arc of 7.1 with steps, so branch points along the arc.
+
+The records are in the raw-data repository's `I541-mac/`. The figure is `solver/inner_amp/pade_geometry.svg`, drawn
+by `plot_pade_geometry.py`, which also prints the tables quoted here. Each ± is a noise spread at the measured
+per-order errors, not a bound. Nothing here is rigorous.
+
+The arc fraction R_k projects the poles' offsets from the chord onto the arc's profile. It is 1 on the arc and 0 on the
+chord.
+
+| k | 6 | 7 | 8 | 9 | 10 | 11 |
+|---|---|---|---|---|---|---|
+| real, ω∞ | 1.000 | 0.826 | 0.701 | 0.405 | −0.057 ± 0.05 | 0.33 ± 0.47 |
+| chord2 | 0.996 | 0.788 | 0.721 | 0.774 | 0.695 | 0.496 |
+| arcjump | 0.911 | 0.748 | 0.714 | 0.699 | 0.703 | 0.609 |
+
+- **The [6/6] bow is not evidence of an arc.** chord2 matches σ₀–σ₁₂ to 3.6×10⁻⁵, and its [6/6] poles bow 0.114 off
+  the chord. The real ones bow 0.116.
+- **Twenty-three coefficients do not separate the plants.** Both fall from about 1 toward the chord, at nearly the
+  same rate. The frozen separation test failed at every node, so #541's frozen verdict is indecisive.
+- **The real poles reach the chord sooner than either plant.** At k = 10 the poles with s ≤ 0.71 lie within 0.015 of
+  the chord, and the last one, at s = 0.88, lies 0.074 from it, on the side away from the arc. J 1250 and J 1500 agree to
+  0.03 in R. k = 11 is not determined by the data.
+- **A discrepancy with sections 1 and 7.1.** From k = 8 on, each real approximant has a pole past κ⋆, at
+  1.355 + 1.051i, 1.407 + 1.061i and 1.457 + 1.069i for k = 8, 9 and 10. Their moduli are 1.715, 1.762 and 1.806. The
+  three ω give them to within 0.005, and J 1500 reproduces them. Their pole–zero gaps are 2×10⁻⁴ to 2×10⁻⁵.
+- **No plant has a pole past s = 0.97.** Every plant has its far end at κ⋆.
+- **The ratio law moves outward too.** Over k = 12–21 it gives κ = 1.457 + 1.112i, of modulus 1.833. On the plants,
+  that window overshoots the planted κ⋆ by 0.10–0.14, so the shift alone does not decide.
+- **Together, these are numerical evidence** that the far end of the singular support, and with it the type, lies
+  past |κ⋆| = 1.675.
