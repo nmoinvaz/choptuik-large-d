@@ -43,6 +43,7 @@ from flint import arb, arb_series, ctx  # noqa: E402
 
 PREC = 256
 NR = 40                     # 13.6's ratio-test window
+NDS = 60                    # orders in the Domb-Sykes fit (pole_test.py)
 KMIN = 30                   # fewest reliable orders for a reading
 FLOOR_MARGIN = 100.0        # signal over noise floor for an order to count
 ETA = 2.0 ** -104           # the double-double unit, the relative perturbation of floor (2)
@@ -178,7 +179,7 @@ def fits(rows, n, key):
 
 
 # ------------------------------------------------------------------ one perturbed state
-def analyse(f0, f1, nk, u0, sig, mutate, rng):
+def analyse(f0, f1, nk, u0, sig, mutate, rng, n=None):
     """f0, f1: dict of field lanes (p, m, a, c) from the two modes. Returns per-variable radii and the where-test."""
     w = (u0 / sig) ** np.arange(nk)
     d0 = derive(f0["a"], f0["c"], nk, mutate)
@@ -195,19 +196,69 @@ def analyse(f0, f1, nk, u0, sig, mutate, rng):
         rec[v] = radius(t, fl, u0)
     rs = [rec[v]["R"] for v in NEW]
     rec["new"] = dict(R=min(rs) if all(r is not None for r in rs) else None)
-    # where: x - c and B on the real u axis, inside the radius each is read to
-    where = {}
-    Rc = rec["c"]["R"] or rec["a"]["R"]
-    if Rc:
-        uz, fe = first_zero(f0["c"], sig, 0.95 * Rc, shift=lambda u: -(1.0 - u), skip=0.02 * Rc)
-        # first_zero sums c(u) - (1 - u) = -(x - c): its sign change is the zero of x - c
-        where.update(u_sonic=uz, xc_end=-fe, u_sonic_range=0.95 * Rc)
-    RB = rec["B"]["R"]
-    if RB:
-        uz, fe = first_zero(d0["B"], sig, 0.95 * RB)
-        where.update(u_Bzero=uz, B_range=0.95 * RB)
-    rec["where"] = where
+    rec["where"] = where_test(f0, d0, rec, sig, n) if n else {}
+    if rec["B"]["K"]:
+        mean = np.array([np.mean([float(cs[k].mid()) for cs in d0["B"]]) for k in range(rec["B"]["K"] + 1)])
+        rec["B"]["ds"] = domb_sykes(mean, sig)
     return rec, d0
+
+
+def domb_sykes(mean, sig):
+    """pole_test.domb_sykes on a tau-mean in the scaled variable: rho_k = A + B/k over the last NDS orders"""
+    rho = mean[1:] / mean[:-1] / sig
+    ks = np.arange(1, len(mean))
+    ok = np.isfinite(rho) & (mean[1:] != 0) & (mean[:-1] != 0)
+    ks, rho = ks[ok][-NDS:], rho[ok][-NDS:]
+    if len(ks) < 10:
+        return None
+    Bf, A = np.polyfit(1.0 / ks, rho, 1)
+    return dict(R_ds=float(1 / A) if A else None, alpha=float(1 + Bf / A) if A else None, neg=float(np.mean(rho < 0)),
+                orders=[int(ks[0]), int(ks[-1])])
+
+
+def sum_at(cs, u, sig, K):
+    """f(u) and f'(u) from the orders 0..K of a scaled series"""
+    co = np.array([float(x.mid()) for x in cs[:K + 1]])
+    s = u / sig
+    return float(np.polyval(co[::-1], s)), float(np.polyval((np.arange(len(co)) * co)[1:][::-1], s) / sig)
+
+
+def where_test(f0, d0, rec, sig, n):
+    """B and x - c on the real u axis at u1 = R min(0.95, 1 - 5/K) of each variable (orders 0..K summed), per lane:
+    the first zero inside, the value closest to zero at u1, and the zero each extrapolates to with the mass mode,
+    1 - B and the growing part of x - c taken proportional to x^-(n-1) = (1 - u)^-(n-1) from u1 on. conv: the change
+    of the sum at u1 when its last 20 orders are dropped (the summation's own error)."""
+    out = {}
+    for v, lanes, shift in (("B", d0["B"], None), ("xc", f0["c"], True)):
+        r = rec["B"] if v == "B" else rec["c"]
+        if not r["R"] or not r["K"]:
+            continue
+        K = r["K"]
+        u1 = r["R"] * min(0.95, 1 - 5 / K)
+        uz, _ = first_zero([cs[:K + 1] for cs in lanes], sig, u1, shift=(lambda u: -(1.0 - u)) if shift else None,
+                           skip=0.02 * u1 if shift else 0.0)
+        best, ext, conv = None, None, 0.0
+        for cs in lanes:
+            f, df = sum_at(cs, u1, sig, K)
+            f20, _ = sum_at(cs, u1, sig, K - 20)
+            conv = max(conv, abs(f - f20))
+            if shift:
+                g, dg = (1.0 - u1) - f, -1.0 - df          # x - c and its u-derivative
+                best = g if best is None else max(best, g)
+                # g = A + beta (1 - u)^-(n-1): its zero beyond u1
+                beta = dg * (1 - u1) ** n / (n - 1)
+                A = g - beta * (1 - u1) ** -(n - 1)
+                if A < 0 < beta:
+                    e = 1 - (-A / beta) ** (-1.0 / (n - 1))
+                    ext = e if ext is None else min(ext, e)
+            else:
+                best = f if best is None else min(best, f)
+                if 0 < f < 1:
+                    e = 1 - (1 - u1) * (1 - f) ** (1.0 / (n - 1))
+                    ext = e if ext is None else min(ext, e)
+        key = "AH" if v == "B" else "sonic"
+        out.update({f"u1_{v}": u1, f"{v}_at_u1": best, f"u_{key}_zero": uz, f"u_{key}_extrap": ext, f"conv_{v}": conv})
+    return out
 
 
 # ------------------------------------------------------------------ planted truth
@@ -245,7 +296,7 @@ def planted(mutate):
                     f[mode][v].append(dd)
                 f[mode]["p"].append([arb(0)] * nk)
                 f[mode]["m"].append([arb(0)] * nk)
-        rec, _ = analyse(f[0], f[1], nk, u0, sig, mutate, rng)
+        rec, _ = analyse(f[0], f[1], nk, u0, sig, mutate, rng, n=38.0)
         exp = dict(a=up0, b=up0, B=Rg, C=Rc, c=min(Rg, Rc))
         for v in ("a", "b", "B", "C", "c"):
             r = rec[v]
@@ -263,8 +314,8 @@ def planted(mutate):
             rg = f"[{r['lo']:.3f}, {r['hi']:.3f}]" if r.get("lo") else ""
             print(f"{up0:6.2f} {v:>3} {r['R'] if r['R'] else float('nan'):7.3f} {rg:>15} {r['K'] if r['K'] is not None else -1:4d} "
                   f"{r['W'] or 0:3d} {exp[v]:7.3f}  {verdict}", flush=True)
-        uz = rec["where"].get("u_Bzero")
-        if uz is not None or (rec["B"]["R"] and up0 < 0.95 * rec["B"]["R"]):
+        uz = rec["where"].get("u_AH_zero")
+        if uz is not None or up0 < rec["where"].get("u1_B", 0.0):
             ok = uz is not None and abs(uz - up0) <= 0.01 * up0
             print(f"{up0:6.2f} B's first real zero {uz if uz else float('nan'):.4f} against {up0:.4f}: {'OK' if ok else 'FAIL'}")
             if not ok:
@@ -288,9 +339,11 @@ def run_states(out, paths, mutate, threads, ref):
                     refR[(r["state"], r["delta"])] = r["R"]
     rng = np.random.default_rng(538)
     verdict = []
-    hdr = "R: per-variable ratio test (reliable orders only); R136: 13.6's estimator; new = min(p, m, B, C)"
+    hdr = ("R: per-variable ratio test (reliable orders only); R136: 13.6's estimator; new = min(p, m, B, C); "
+           "B(u1), x-c(u1): the value closest to zero over lanes at u1 ~ 0.95 R; AH, sonic: the zeros of B and x - c "
+           "extrapolated with the mass mode; Rds_B: Domb-Sykes of B's tau-mean")
     print(f"{'D':>8} {'delta':>7} {'R136':>6} {'a':>6} {'b':>6} {'B':>6} {'C':>6} {'p':>6} {'m':>6} {'c':>6} {'new':>6} "
-          f"{'K_B':>4} {'u_xc0':>6} {'u_B0':>6}   ({hdr})", flush=True)
+          f"{'K_B':>4} {'B(u1)':>6} {'xc(u1)':>7} {'AH':>6} {'sonic':>6} {'Rds_B':>6}   ({hdr})", flush=True)
     with open(out, "a") as fo:
         for path in paths:
             zh, zl, meta = load(path)
@@ -320,7 +373,7 @@ def run_states(out, paths, mutate, threads, ref):
                 nk = min(len(ser[0][0]), len(ser[1][0]))
                 R136, _ = ratio_radius(ser[0][0] + ser[0][1], u0, sig)
                 f = [{v: lanes_of(h[:nk], l[:nk], q) for q, v in enumerate(FIELDS)} for h, l in ser]
-                rec, _ = analyse(f[0], f[1], nk, u0, sig, mutate, rng)
+                rec, _ = analyse(f[0], f[1], nk, u0, sig, mutate, rng, n=n)
                 row = dict(state=name, D=D, n=n, u0=u0, ks=ks, nk=nk, delta=delta, mutate=mutate, R136=R136,
                            R136_ref=refR.get((name, delta)), **{v: rec[v] for v in FIELDS + DERIVED + ("new",)},
                            where=rec["where"])
@@ -332,8 +385,10 @@ def run_states(out, paths, mutate, threads, ref):
                 wz = rec["where"]
                 print(f"{D:8.4f} {delta:7.0e} {g(R136)} {g(rec['a']['R'])} {g(rec['b']['R'])} {g(rec['B']['R'])} "
                       f"{g(rec['C']['R'])} {g(rec['p']['R'])} {g(rec['m']['R'])} {g(rec['c']['R'])} {g(rec['new']['R'])} "
-                      f"{rec['B']['K'] if rec['B']['K'] is not None else -1:4d} {g(wz.get('u_sonic'))} {g(wz.get('u_Bzero'))}",
-                      flush=True)
+                      f"{rec['B']['K'] if rec['B']['K'] is not None else -1:4d} {g(wz.get('B_at_u1'))} "
+                      f"{wz['xc_at_u1'] if wz.get('xc_at_u1') is not None else float('nan'):+7.3f} "
+                      f"{g(wz.get('u_AH_zero') or wz.get('u_AH_extrap'))} {g(wz.get('u_sonic_zero') or wz.get('u_sonic_extrap'))} "
+                      f"{g((rec['B'].get('ds') or {}).get('R_ds'))}", flush=True)
                 if row["R136_ref"] is not None and R136 is not None and abs(R136 - row["R136_ref"]) > 1e-3:
                     print(f"  R136 {R136:.4f} does not reproduce pole_test.jsonl {row['R136_ref']:.4f}", flush=True)
                     verdict.append((D, delta, "R136 reproduction"))
