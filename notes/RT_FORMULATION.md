@@ -1209,8 +1209,9 @@ roots' |Δ_RT − Δ_hp|, from both starts (raw `I404-win/` at 373ee026):
 | 123 | 1.5×10⁻¹⁵ | 3.3×10⁻¹¹ | 1.2×10⁻⁹ | 1.6×10⁻⁷ |
 | the two roots distinct from N | none to 123 | 111 | 107 | 99 |
 
-- At D = 40 the ladder falls below 10⁻¹⁴ at 99 and stays, on a plateau of +1.55×10⁻¹⁵, inside hp's own error
-  (2×10⁻¹⁵).
+- At D = 40 the ladder falls below 10⁻¹⁴ at 99 and stays, on a plateau of +1.55×10⁻¹⁵ from hp's row. That offset is
+  the kf 13 cut's: hp's quad-double Δ of the uncut problem lies within 3×10⁻¹⁸ to 1.7×10⁻¹⁷ of the plateau, and the
+  cut moves hp's Δ by 1.557×10⁻¹⁵ (#610; `I610-mac/` at f2bf5331).
 - At D = 50 it reaches 3.0×10⁻¹⁵ at 103, and 103 and 107 pass.
 - At D = 55 and 60 it stops falling at 99, and no grid passes 10⁻¹⁴.
 - The rise is a family of nearly degenerate roots: residuals below 10⁻³⁰, spread over Δ by 10⁻¹² to 10⁻⁷. Its onset
