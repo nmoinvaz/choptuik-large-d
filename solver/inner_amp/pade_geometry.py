@@ -17,6 +17,7 @@ integral to every digit used, not a finite exponential sum.
   arcjump  gamma = the cubic arc of planted_plants.Arc, density times a step weight (1, 2, 1, 2) on four equal
            pieces of s. Each step is a log branch point on the arc, so the singular support is the arc.  plant (b)
   arcmid   the arc with one step at s = 1/2 (a third branch point at the apex). Context.
+  arcsteps the arc with steps of one sign, weight (1, 2, 3, 4). Post-freeze context, only with --noise=measured.
   arc      the arc with no step (P-ARC as a continuous integral; its density continues off the arc). Context.
   repo-arc, repo-chord   P-ARC and P-ARC-B chord of planted_plants.py itself (64-node exponential sums). Context.
 
@@ -28,6 +29,7 @@ pole offsets on the arc's offset profile: 0 on the chord, 1 on the arc.
     python3 pade_geometry.py selftest
     python3 pade_geometry.py plants OUTDIR [--mutate=sigma7] [--allow_unraw]
     python3 pade_geometry.py real OUTDIR [--mutate=sigma7] [--allow_unraw]
+    ... [--noise=measured]     post-freeze: noise of err_k/|sigma_k| per order (sigma_err_fit.py) instead of 2e-12
 
 `real` reads OUTDIR/plants.json (the frozen tolerance comes from the plants). Exit 1 when a check fails.
 """
@@ -111,7 +113,8 @@ class Plant:
         self.P0, self.P1 = self.arc.P0, self.arc.P1
         self.ex = pp.mpc(pp.BETA[wf]) - 1
         pieces = {"chord2": [(0, 1, 1)], "arc": [(0, 1, 1)], "arcmid": [(0, 0.5, 1), (0.5, 1, 2)],
-                  "arcjump": [(0, 0.25, 1), (0.25, 0.5, 2), (0.5, 0.75, 1), (0.75, 1, 2)]}[kind]
+                  "arcjump": [(0, 0.25, 1), (0.25, 0.5, 2), (0.5, 0.75, 1), (0.75, 1, 2)],
+                  "arcsteps": [(0, 0.25, 1), (0.25, 0.5, 2), (0.5, 0.75, 3), (0.75, 1, 4)]}[kind]
         self.pieces = pieces
         rule = ts_rule()
         nodes = []
@@ -235,11 +238,33 @@ def geometry(poles, fr):
 
 
 def noisy(sig, seed, eps=NOISE_REL):
+    """relative complex Gaussian noise on sigma_k, k >= 1; eps a number or a list per k"""
     rng = random.Random(seed)
-    return [sig[0]] + [z * (1 + eps * mp.mpc(rng.gauss(0, 1), rng.gauss(0, 1)) / mp.sqrt(2)) for z in sig[1:]]
+    e = eps if isinstance(eps, list) else [eps] * len(sig)
+    return [sig[0]] + [z * (1 + e[j + 1] * mp.mpc(rng.gauss(0, 1), rng.gauss(0, 1)) / mp.sqrt(2))
+                       for j, z in enumerate(sig[1:])]
 
 
-def analyse(sig, fr, noise=True):
+NOISE_MODE = "frozen"               # post-freeze option --noise=measured: the per-order plateau errors
+
+
+def noise_eps(wf):
+    """frozen: NOISE_REL on every order. measured (post-freeze): err_k/|sigma_k| of the scan45J1250 file at wf, from
+    sigma_err_fit.py with a1 from the scan39J1000 file (notes/PLANTED_SELECTION.md 14.0 item 1(a))."""
+    if NOISE_MODE == "frozen":
+        return NOISE_REL
+    import sigma_err_fit as se
+    r = json.load(open(os.path.join(REAL["J1250"], f"sigF_w{wf:.4f}_K45_J1250_p1280.json")))
+    r2 = json.load(open(os.path.join(HERE, "scan39J1000", f"sigF_w{wf:.4f}_K39_J1000_p960.json")))
+    rows = se.recompute(r, se.a1_of(r2))
+    return [float(e / abs(s)) if abs(s) > 0 else 0.0 for _, s, e, _ in rows] + [NOISE_REL] * 4
+
+
+def suffix(mut):
+    return (f"_mutate_{mut}" if mut else "") + ("_noise_measured" if NOISE_MODE == "measured" else "")
+
+
+def analyse(sig, fr, noise=True, eps=NOISE_REL):
     """[k/k] geometry for k in KS, with the noise spread of R and of each geometry pole"""
     mp.mp.dps = DPS_PADE
     sig = [mp.mpc(z) for z in sig]
@@ -249,7 +274,7 @@ def analyse(sig, fr, noise=True):
         if noise:
             dR, dmax = 0.0, 0.0
             for seed in range(NSEED):
-                gn = geometry(pade(noisy(sig, 1000 * k + seed), k), fr)
+                gn = geometry(pade(noisy(sig, 1000 * k + seed, eps), k), fr)
                 if g["R"] is not None and gn["R"] is not None:
                     dR = max(dR, abs(gn["R"] - g["R"]))
                 tn = [complex(*r["t"]) for r in gn["poles"]]
@@ -367,13 +392,13 @@ def run_plants(outdir, mut):
     real = load_scan(REAL["J1250"])
     rec = {"frozen": FROZEN, "mutate": mut, "plants": {}}
     frames = {wf: Frame(wf) for wf in NODES}
-    kinds = ("chord2", "arcjump", "arcmid", "arc")
+    kinds = ("chord2", "arcjump", "arcmid", "arc") + (("arcsteps",) if NOISE_MODE == "measured" else ())
     for kind in kinds:
         for wf in (NODES if kind in ("chord2", "arcjump") else (1.0,)):
             pl = Plant(wf, kind, real[wf])
             sig = mutate(pl.sigma(), mut)
             mp.mp.dps = DPS_PADE
-            res = analyse(sig, frames[wf])
+            res = analyse(sig, frames[wf], eps=noise_eps(wf))
             kap, beta = ratio_kappa(sig)
             near, far = extrapolate(res, "near"), extrapolate(res, "far")
             P0, P1 = complex(pl.P0), complex(pl.P1)
@@ -391,7 +416,7 @@ def run_plants(outdir, mut):
     for kind in ("arc", "chord"):
         sigs, fam = repo_plant(kind)
         sig = mutate(sigs[1.0], mut)
-        res = analyse(sig, frames[1.0])
+        res = analyse(sig, frames[1.0], eps=noise_eps(1.0))
         rec["plants"].setdefault("repo-" + kind, {})[1.0] = {"info": {"fit_resid_max": max(fam.resid[1.0])},
                                                              "summary": summary(res), "orders": res}
         table(f"repo-{kind} 1.0", res)
@@ -411,20 +436,20 @@ def run_plants(outdir, mut):
         v[wf] = {"T1": t1, "T2": t2, "T3": t3, "S": S, "T4": t4, "nu": nu, "tau": max(S / 3, 3 * nu)}
         print(f"wf {wf}: T1 {t1}  T2 {t2}  T3 {t3} (S = {S:.3f})  T4 {t4}  nu {nu:.1e}  tau {v[wf]['tau']:.3f}")
     rec["verdict"] = v
-    name = "plants.json" if not mut else f"plants_mutate_{mut}.json"
+    name = f"plants{suffix(mut)}.json"
     json.dump(jsonable(rec), open(os.path.join(outdir, name), "w"), indent=1)
     return all(x["T1"] and x["T2"] and x["T3"] and x["T4"] for x in v.values())
 
 
 def run_real(outdir, mut):
-    plants = json.load(open(os.path.join(outdir, "plants.json")))
+    plants = json.load(open(os.path.join(outdir, f"plants{suffix(None)}.json")))
     frames = {wf: Frame(wf) for wf in NODES}
     rec = {"frozen": FROZEN, "mutate": mut, "real": {}}
     for lab, d in REAL.items():
         data = load_scan(d)
         for wf, sig in data.items():
             sig = mutate(sig[:2 * max(KS) + 1], mut)
-            res = analyse(sig, frames[wf], noise=(lab == "J1250"))
+            res = analyse(sig, frames[wf], noise=(lab == "J1250"), eps=noise_eps(wf))
             kap, beta = ratio_kappa(sig)
             rec["real"].setdefault(lab, {})[wf] = {"summary": summary(res), "orders": res, "kappa_ratio": kap,
                                                    "beta_ratio": beta, "near_inf": extrapolate(res, "near"),
@@ -462,7 +487,7 @@ def run_real(outdir, mut):
               f"(max {max(dist['arcjump'][k] for k in (9, 10, 11)):.3f}); converge {conv}; "
               f"{'PASS' if verdict[wf]['PASS'] else 'FAIL'}")
     rec["verdict"] = verdict
-    name = "real.json" if not mut else f"real_mutate_{mut}.json"
+    name = f"real{suffix(mut)}.json"
     json.dump(jsonable(rec), open(os.path.join(outdir, name), "w"), indent=1)
     return verdict[1.0]["PASS"]
 
@@ -472,7 +497,9 @@ def main():
     from raw_out import pop_allow, require_raw
     allow = pop_allow(argv)
     mut = next((a.split("=", 1)[1] for a in argv if a.startswith("--mutate=")), None)
-    argv = [a for a in argv if not a.startswith("--mutate=")]
+    global NOISE_MODE
+    NOISE_MODE = next((a.split("=", 1)[1] for a in argv if a.startswith("--noise=")), "frozen")
+    argv = [a for a in argv if not a.startswith("--mutate=") and not a.startswith("--noise=")]
     if not argv or argv[0] == "selftest":
         sys.exit(0 if selftest() else 1)
     stage, outdir = argv[0], argv[1]
