@@ -1,12 +1,13 @@
 #!/usr/bin/env python3
 """The weakest directions of the chain's Newton system at a stored state, and where in the unknowns they live.
 
-    cd hp && python3 near_null.py RAWDIR STATE [--k=4] [--its=16] [--threads=2] [--kfreeze=K] [--keep_plan=1]
+    cd hp && python3 near_null.py RAWDIR STATE [--k=4] [--its=16] [--threads=2] [--kfreeze=K] [--keep_plan=0]
         [--json=OUT] [--planted=1 [--w=1e-20]] [--mutate=scale_p1|sigma|scale_block]
 
 The pinned system (the state's kfreeze, as anm_run.py solves it) is factored once in octo-double (Solver.newton_o, the
-LU kept), on a plan made again at the state (Solver.plan at 1e-32, 0.05); --keep_plan=1 takes the state's stored plan
-instead, the one anm_run.py's base polish keeps. Subspace iteration on (J^T J)^-1 = J^-1 J^-T, each step one
+LU kept), on the state's stored plan, the one anm_run.py's base polish keeps; --keep_plan=0 makes the plan again at
+the state (Solver.plan at 1e-32, 0.05), which at #501's starts adds 5.6e-34 in the n0>n1 rows and a first step the
+polish's own system does not have (#563). A state without a stored plan gets a new one, and a line says so. Subspace iteration on (J^T J)^-1 = J^-1 J^-T, each step one
 transpose solve and one solve per vector (Solver.olu_solve), with the vectors orthonormalized in f64, converges to the
 right singular vectors of the k smallest singular values; sigma_i is 1 / sqrt(|x_i|) for the normalized v_i, and the
 change of sigma_i over the last two iterations is printed as its convergence. Each vector is then split over the
@@ -159,7 +160,10 @@ def main():
     kf = int(opts.get("kfreeze", m.get("kfreeze", 3)))
     s = make_solver(D, M, nodes=nodes, kt=m.get("kt", 36), kc=m.get("kc", 146), ks=m.get("ks", 130),
                     threads=int(opts.get("threads", 2)), kfreeze=kf)
-    keep_plan = opts.get("keep_plan") == "1"
+    # the stored plan by default, the one the polish keeps (#563); a state saved without one gets a new plan
+    keep_plan = opts.get("keep_plan", "1") == "1" and "segs" in m
+    if opts.get("keep_plan", "1") == "1" and not keep_plan:
+        print("the state has no stored plan: the plan is made again at the state", flush=True)
     s.set_segs(m["segs"] if keep_plan else s.plan(z[0], z[1], 1e-32, 0.05))
     L = len(z[0])
     t0 = time.time()
