@@ -42,7 +42,10 @@ Conventions for the Claude sessions (cloud and local) that run computations here
   cloud machine's 6.27 GB, and with `CARGO_PROFILE_RELEASE_LTO=false CARGO_PROFILE_RELEASE_CODEGEN_UNITS=16` it peaked
   at 6.09 GB on 2026-10-25 (5.7 GB with multidouble 1.0.0), so Nathan's rule: build hp's release module only on the
   local machines (the Mac or Windows), never on the cloud; `cargo check` and multidouble's own tests are fine there, and
-  for a pull request the CI is the build check. γ(D) comes from `hp/gamma_dd.py` / `hp/gamma_batch.py --procs N`. Its
+  for a pull request the CI is the build check. Since #523 (multishoot) the release build takes about 31 min and
+  24 GB on the Mac and on Linux (dh370), but about 150 min and 29–31 GB on Windows (win2), with fat LTO or the
+  low-memory recipe alike, and the two give the same bits (#600, #604): build it on Windows only when a task needs it
+  there. γ(D) comes from `hp/gamma_dd.py` / `hp/gamma_batch.py --procs N`. Its
   root search is local (around the formula's value): to count unstable modes, use a winding count of det M(λ)
   (notes/MODE_COUNT.md, if present).
 - **Octo-double kernel:** `Solver.residual_o`, `residual_jet_o`, `jacobian_o`, `newton_o` and `olu_solve` (sequences of
