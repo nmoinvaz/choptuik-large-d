@@ -228,8 +228,22 @@ def cubic(s, z0, X, a, L, k, hs, seed, rec):
         print(f"  root |c| {mp.nstr(mp.sqrt(mp.fsum(x * x for x in r)), 3)}: " + ", ".join(mp.nstr(x, 3) for x in r), flush=True)
     print(f"  {len(roots)} real roots from {len(starts)} starts; the smallest |g| reached {mp.nstr(best / nBa, 3)} of |B a|",
           flush=True)
+    # each root against the actual weak residual, U^T [F(z0 + V c) - F(z0)] - B a, with every order of F in it: small
+    # against |B a| where the cubic model holds at that root (the held offset cancels in the difference)
+    F0 = o8(s.residual_o(list(z0)))
+    Ba = B * am
+    actual = []
+    for r in roots[:4]:
+        acc = o8(od_axpy(-1.0, *F0, *at({j: r[j] for j in range(k)})))
+        dv = mpv(acc, range(L))
+        gv = [mp.fsum(u * f for u, f in zip(Um[i], dv)) - Ba[i] for i in range(k)]
+        rel = mp.sqrt(mp.fsum(x * x for x in gv)) / nBa
+        actual.append(float(rel))
+        print(f"  root |c| {mp.nstr(mp.sqrt(mp.fsum(x * x for x in r)), 3)}: the actual weak residual there is "
+              f"{mp.nstr(rel, 3)} of |B a|", flush=True)
     rec.update(cubic=dict(hs=list(hs), Tmax=[float(t) for t in tmax], agree=float(dt), ok=ok, Ba=float(nBa),
-                          scale=float(scale), roots=[[float(x) for x in r] for r in roots], best=float(best / nBa)))
+                          scale=float(scale), roots=[[float(x) for x in r] for r in roots], best=float(best / nBa),
+                          actual=actual))
     return ok
 
 
