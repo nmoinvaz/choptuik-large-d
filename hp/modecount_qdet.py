@@ -2,7 +2,8 @@
 """det M(lambda) of the double-double mode matrix in ball arithmetic, beside the double-double LU's (#584).
 
     cd hp && python3 modecount_qdet.py STATE.npz RE,IM [RE,IM ...] [--M=N] [--kf=none|13] [--data=hp/data]
-                                       [--fmax=1e-20] [--threads=N] [--prec=320] [--ulp] [--draws=0] [--json=out.json]
+                                       [--fmax=1e-20] [--threads=N] [--prec=320] [--ulp] [--ulps=1,2,4,8] [--draws=0]
+                                       [--json=out.json]
     python3 hp/modecount_qdet.py --selftest [--mutate=no_lo]
 
 At each lambda the matrix that mode_det factors (CSolver.mode_matrix, four double-double parts) is converted exactly
@@ -13,6 +14,8 @@ from mode_det's is the double-double LU's rounding alone, apart from the matrix'
 --ulp also takes both at Re lambda moved up by one f64 ulp, the step of #585. When the exact determinants of the two
 matrices differ as much as mode_det's do, the noise is in the matrix entries (their assembly in double-double), and a
 quad-double LU cannot remove it. When they agree and mode_det's differ, it is the LU's.
+--ulps=K1,K2,... takes the exact determinant at Re lambda moved by each K f64 ulps up and down (#605): a phase change
+that grows like K is a derivative, one that does not is noise in the matrix's assembly at the ulp scale.
 --draws=N adds N determinants of the matrix with every entry moved by a uniform relative amount in [-u, u],
 u = 2^-106 (double-double's rounding): how much one rounding per entry moves arg det. It is a lower bound on the
 matrix's own noise, since the assembly rounds many times per entry.
@@ -228,6 +231,21 @@ def main():
             print(f"  one ulp up in Re: double-double d arg {u['dd_darg']:+.3e}, d ln|det| {u['dd_dlndet']:+.3e}; "
                   f"exact det of the two matrices d arg {u['ball_darg']:+.3e}, d ln|det| {u['ball_dlndet']:+.3e}; "
                   f"{u['entries_differ']} of {4 * n * n} parts differ", flush=True)
+        if "ulps" in opts:
+            # the exact determinant at Re lambda moved by k f64 ulps, up and down (#605): a derivative grows like k,
+            # noise at the ulp scale does not; ball dets only, each against the point's own
+            rows = []
+            for k in (int(x) for x in opts["ulps"].split(",")):
+                for sgn in (1, -1):
+                    re_k = re_
+                    for _ in range(k):
+                        re_k = float(np.nextafter(re_k, sgn * np.inf))
+                    Ak = [np.ascontiguousarray(x) for x in st.c.mode_matrix(st.zh, st.zl, re_k, im_)]
+                    bk = ball_det(*Ak, prec)
+                    dl, da = ball_diff(bk, b)
+                    rows.append(dict(ulps=sgn * k, re=re_k, darg=da, dlndet=dl, rad_arg=bk[3]))
+                    print(f"  {sgn * k:+d} ulp in Re: exact det d arg {da:+.3e}, d ln|det| {dl:+.3e}", flush=True)
+            r["ulps"] = rows
         if draws:
             ds = []
             for k in range(draws):
