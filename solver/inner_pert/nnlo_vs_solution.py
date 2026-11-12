@@ -14,17 +14,27 @@ Truncations: LO, NLO ((S40)-(S43)), NNLO printed ((S44)-(S51)), NNLO corrected, 
 Pi_3 scaled by s (--mutate=pi3x<s>, in Pi and in Omega_3 = 2 beta~ Pi_3 + ...; f_3 unchanged). The maximal residual
 max |F_sol - F_model| over the (tau, x) grid is fitted as ln R = a + p ln eps + b eps (least squares, D >= --dmin).
 
+With --n3lo (agent-comms#53) the order past the NNLO is added as the model N3LO: Psi_3, Pi_4, Omega_4, f_4 of
+solver/independent_eeg_nnlo/psi3.py (closed(), agent-comms#40), on the corrected NNLO, with up to six tau derivatives
+of beta~. Its controls scale one term (--mutate=psi3x<s>, pi4x<s>, om4x<s>, f4x<s>) or apply one of psi3.py's
+coefficient mutations (--mutate=Pi4, Psi3, Omega4, f4, ...); each changes one field only. With --n3lo the states'
+floor and the chain spread (C6) are measured against N3LO's residual, and a measured D that fails cuts the fit there.
+
     python3 nnlo_vs_solution.py extract OUT_DIR STATE.npz ...       # fields of each state -> OUT_DIR/fields_D*.npz
     python3 nnlo_vs_solution.py compare FIELDS... [--json=F] [--spread=DIR,...] [--mutate=pi3x1.01] [--dmin=40]
-                                         [--dmax=]
+                                         [--dmax=] [--n3lo]
     python3 nnlo_vs_solution.py planted FIELDS... [--json=F] [--plant_pi=3.5] [--plant_scale=1] [--mutate=pi3x1.01]
+                                         [--n3lo] [--dmax=]
     python3 nnlo_vs_solution.py figs FIELDS... [--json=F]             # Figs. 4-5 measures, exact / Eq. (16) / D = inf
+    python3 nnlo_vs_solution.py seam [--mutate=Pi3]                  # this NNLO == the one psi3.py builds N3LO on
 
 extract needs the compiled kernel with Solver.residual_q (hpkernel, hp/build.sh). compare and planted exit 1 when an
 acceptance criterion (raw folder I126-mac/README.md, written before the runs) fails; compare with a mutation exits 0
 when the control fires. planted replaces each state's fields by the corrected NNLO of its own beta~ plus known terms,
 scale (1 + 4 eps + 20 eps^2) eps^p g(tau, x) with p = 4 (f, Omega), 3.5 (Pi, Psi), so the same code must return those
-exponents; --plant_pi=3 plants Pi's term at eps^3 (a second answer the fit must find).
+exponents; --plant_pi=3 plants Pi's term at eps^3 (a second answer the fit must find). planted --n3lo plants on N3LO
+at p = 5 (f, Omega), 4.5 (Pi, Psi). seam exits 0 when the NNLO and LO here equal check.py's claimed set term by term
+(psi3.py derives N3LO on that set); with --mutate=Pi3 (second_order_eeg.py's mutation) it must exit 1.
 """
 import json
 import os
@@ -175,8 +185,9 @@ def load_fields(path):
     return r
 
 
-def tau_derivs(b, Delta, nder=4):
-    """b on the half grid of an antiperiodic field (b(theta + pi) = -b(theta)), its tau derivatives 0..nder"""
+def tau_derivs(b, Delta, nder=6):
+    """b on the half grid of an antiperiodic field (b(theta + pi) = -b(theta)), its tau derivatives 0..nder
+    (NNLO uses 0..4, N3LO 0..6; each row is computed on its own, so rows 0..4 do not depend on nder)"""
     M = len(b)
     full = np.r_[b, -b]
     c = np.fft.rfft(full)
@@ -210,8 +221,98 @@ def coeffs(variant):
     return fn
 
 
+# ------------------------------------------------------------------ the order past the NNLO (agent-comms#53)
+N3_SCALE = dict(psi3x="S3", pi4x="P4", om4x="O4", f4x="f4")        # --mutate=<prefix><s>: that term times s
+N3_FIELD = dict(S3="Psi", P4="Pi", O4="Om", f4="f")                 # the field each term enters
+N3_COEF_MUT = dict(Psi3="S3", Psi3c="S3", Pi4="P4", Pi4b="P4", Pi4c="P4", Omega4="O4", f4="f4", f4c="f4")
+
+
+def _psi3():
+    """solver/independent_eeg_nnlo/psi3.py, whose closed() holds Psi_3, Pi_4, Omega_4, f_4 (agent-comms#40)"""
+    d = os.path.join(REPO, "solver", "independent_eeg_nnlo")
+    if d not in sys.path:
+        sys.path.insert(0, d)
+    import psi3
+    return psi3
+
+
+def n3lo_mut_field(mut):
+    """the field a N3LO mutation changes, or None if mut is not one"""
+    if not mut:
+        return None
+    if mut in N3_COEF_MUT:
+        return N3_FIELD[N3_COEF_MUT[mut]]
+    for pre, key in N3_SCALE.items():
+        if mut.startswith(pre):
+            return N3_FIELD[key]
+    return None
+
+
+def seam(eeg_mut=None):
+    """the LO and NNLO of model_fields (second_order_eeg.eeg_coeffs, corrected) against check.py's claimed set, on
+    which psi3.py derived N3LO: a list of the terms that differ (empty when they agree). eeg_mut is one of
+    second_order_eeg.py's mutations (the control)."""
+    import sympy as sp
+    P = _psi3()
+    sys.path.insert(0, HERE)
+    import second_order_eeg as E
+    t = P.C.build_set("claimed")
+    b = sp.symbols("b0:5")
+    E.MUT = eeg_mut
+    try:
+        co = E.eeg_coeffs(list(b), corrected=True)
+    finally:
+        E.MUT = None
+    sub = {E.x: P.C.x}
+    sub.update({b[k]: P.C.b[k] for k in range(5)})
+    X, B = P.C.x, P.C.b
+    mine = dict(f1=-(1 - X ** 2) / 2 * B[0] ** 2, O1=B[0] ** 2, P1=B[0], S1=B[1] + B[0])     # model_fields' LO
+    mine.update({q: co[k].subs(sub) for k, q in (("f2", "f2"), ("f3", "f3"), ("Om2", "O2"), ("Om3", "O3"),
+                                                   ("Pi2", "P2"), ("Pi3", "P3"), ("Psi2", "S2"))})
+    return [q for q, v in mine.items() if sp.expand(v - t[q]) != 0]
+
+
+_COEF4 = {}
+
+
+def coeffs4(variant):
+    """numpy functions (x, b0..b6) -> S3, P4, O4, f4 (Psi_3, Pi_4, Omega_4, f_4 of psi3.closed()), for variant
+    corrected, a scaled term (psi3x<s>, pi4x<s>, om4x<s>, f4x<s>) or one of psi3.py's coefficient mutations"""
+    if variant in _COEF4:
+        return _COEF4[variant]
+    import sympy as sp
+    bad = seam()
+    if bad:
+        raise SystemExit(f"N3LO: this script's NNLO differs from check.py's claimed set in {bad}")
+    P = _psi3()
+    if variant != "corrected" and n3lo_mut_field(variant) is None:
+        raise SystemExit(f"unknown N3LO variant {variant}")
+    P.MUT.clear()
+    if variant in N3_COEF_MUT:
+        P.MUT.add(variant)
+    try:
+        cl = P.closed()
+    finally:
+        P.MUT.clear()
+    for pre, key in N3_SCALE.items():
+        if variant.startswith(pre):
+            cl[key] = sp.expand(cl[key] * sp.Rational(variant[len(pre):]))
+    fn = {k: sp.lambdify((P.C.x,) + tuple(P.C.b[:7]), cl[k], "numpy") for k in ("S3", "P4", "O4", "f4")}
+    _COEF4[variant] = fn
+    return fn
+
+
+def n3lo_terms(bt, xs, variant="corrected"):
+    """Psi_3, Pi_4, Omega_4, f_4 on (xs, tau), without their powers of eps"""
+    X = xs[:, None]
+    B = [v[None, :] for v in bt]
+    g = coeffs4(variant)
+    return {k: g[k](X, *B[:7]) + 0 * X * B[0] for k in g}
+
+
 def model_fields(eps, bt, xs, variant, order):
-    """EEG's fields on (xs, tau) from beta~ and its derivatives bt (5, T); order 1 (LO), 2 (NLO), 3 (NNLO)"""
+    """EEG's fields on (xs, tau) from beta~ and its derivatives bt (5 or more rows, T); order 1 (LO), 2 (NLO),
+    3 (NNLO), 4 (N3LO: the corrected NNLO plus psi3.closed(), variant corrected or a N3LO mutation; bt needs 7 rows)"""
     X = xs[:, None]
     B = [v[None, :] for v in bt]
     se = np.sqrt(eps)
@@ -220,8 +321,11 @@ def model_fields(eps, bt, xs, variant, order):
     Pi = se * (B[0] + 0 * X)
     Psi = se * eps * (B[1] + B[0]) + 0 * X
     if order >= 2:
-        fn = coeffs(variant)
-        ev = lambda k: fn[k](X, *B) + 0 * X * B[0]
+        nv = variant if (variant == "printed" or variant.startswith("pi3x")) else "corrected"
+        if order >= 4 and nv != "corrected":
+            raise ValueError(f"N3LO is built on the corrected NNLO, not {variant}")
+        fn = coeffs(nv)
+        ev = lambda k: fn[k](X, *B[:5]) + 0 * X * B[0]
         f = f + eps ** 2 * ev("f2")
         Om = Om + eps ** 2 * ev("Om2")
         Pi = Pi + se * eps * ev("Pi2")
@@ -230,6 +334,12 @@ def model_fields(eps, bt, xs, variant, order):
             f = f + eps ** 3 * ev("f3")
             Om = Om + eps ** 3 * ev("Om3")
             Pi = Pi + se * eps ** 2 * ev("Pi3")
+        if order >= 4:
+            t4 = n3lo_terms(bt, xs, variant)
+            f = f + eps ** 4 * t4["f4"]
+            Om = Om + eps ** 4 * t4["O4"]
+            Pi = Pi + se * eps ** 3 * t4["P4"]
+            Psi = Psi + se * eps ** 3 * t4["S3"]
     return dict(f=f, Om=Om, Pi=Pi, Psi=Psi)
 
 
@@ -245,6 +355,7 @@ MODELS = {"LO": ("corrected", 1), "NLO": ("corrected", 2), "NNLO printed": ("pri
           "NNLO corrected": ("corrected", 3)}
 EXPECT = {"LO": dict(f=2, Om=2, Pi=1.5, Psi=2.5), "NLO": dict(f=3, Om=3, Pi=2.5, Psi=3.5),
           "NNLO printed": dict(f=3, Om=3, Pi=2.5, Psi=3.5), "NNLO corrected": dict(f=4, Om=4, Pi=3.5, Psi=3.5)}
+EXPECT4 = dict(f=5, Om=5, Pi=4.5, Psi=4.5)        # N3LO (--n3lo; agent-comms#53)
 TOL = 0.25          # |p_fit - p_expected| allowed (criterion C1-C3)
 SEP = 0.5           # the fit must be farther than this from the competing order (one order lower)
 
@@ -325,9 +436,9 @@ def state_floor(r):
     return max(max(c["centre"].values()), max(c["horizon"].values()), 2 * (n - 1) / 0.49 * c["horizon_block"])
 
 
-def spread(recs, dirs, table):
-    """the corrected NNLO's residual field from other chains' states at the same D, against these: max over the grid
-    of |(F - F_E)_this - (F - F_E)_other| relative to this state's R(D), per field"""
+def spread(recs, dirs, table, ref="NNLO corrected", spec=("corrected", 3)):
+    """the residual field of model ref (spec = (variant, order)) from other chains' states at the same D, against
+    these: max over the grid of |(F - F_E)_this - (F - F_E)_other| relative to this state's R(D), per field"""
     out = []
     byD = {round(r["D"], 4): (i, r) for i, r in enumerate(recs)}
     for d in dirs:
@@ -341,11 +452,11 @@ def spread(recs, dirs, table):
             i, r = byD[key]
             e, bt = beta_tilde(r)
             eo, bto = beta_tilde(o)
-            m = model_fields(e, bt, r["xs"], "corrected", 3)
-            mo = model_fields(eo, bto, o["xs"], "corrected", 3)
+            m = model_fields(e, bt, r["xs"], *spec)
+            mo = model_fields(eo, bto, o["xs"], *spec)
             row = dict(D=r["D"], other=o["info"]["source"])
             for k in FIELDS:
-                row[k] = float(np.abs((r[k] - m[k]) - (o[k] - mo[k])).max() / table["NNLO corrected"][i][k]["max"])
+                row[k] = float(np.abs((r[k] - m[k]) - (o[k] - mo[k])).max() / table[ref][i][k]["max"])
             row["Delta_diff"] = r["Delta"] - o["Delta"]
             out.append(row)
     return out
@@ -382,53 +493,143 @@ def rms_change(recs):
     return rows
 
 
+def term_sizes(recs, idx):
+    """the N3LO terms against the NNLO at the states idx: max |Pi_4|/max |Pi_3| over the grid (coefficients, without
+    their powers of eps; SECOND_ORDER.md 1.1 estimates about 30), each new term with its power of eps over the NNLO's
+    maximal residual of its field, and the share of that residual N3LO removes, 1 - R_N3LO/R_NNLO"""
+    fn = coeffs("corrected")
+    rows = []
+    for i in idx:
+        r = recs[i]
+        e, bt = beta_tilde(r)
+        X = r["xs"][:, None]
+        B = [v[None, :] for v in bt]
+        pi3 = fn["Pi3"](X, *B[:5]) + 0 * X * B[0]
+        t4 = n3lo_terms(bt, r["xs"])
+        m3 = model_fields(e, bt, r["xs"], "corrected", 3)
+        m4 = model_fields(e, bt, r["xs"], "corrected", 4)
+        se = np.sqrt(e)
+        add = dict(f=e ** 4 * t4["f4"], Om=e ** 4 * t4["O4"], Pi=se * e ** 3 * t4["P4"], Psi=se * e ** 3 * t4["S3"])
+        row = dict(D=r["D"], pi4_over_pi3=float(np.abs(t4["P4"]).max() / np.abs(pi3).max()))
+        for k in FIELDS:
+            R3 = float(np.abs(r[k] - m3[k]).max())
+            row[k] = dict(term_over_R3=float(np.abs(add[k]).max() / R3),
+                          removed=float(1 - np.abs(r[k] - m4[k]).max() / R3))
+        rows.append(row)
+    return rows
+
+
 def cmd_compare(argv, recs=None, label="solutions"):
     js = next((a.split("=", 1)[1] for a in argv if a.startswith("--json=")), None)
     mut = next((a.split("=", 1)[1] for a in argv if a.startswith("--mutate=")), None)
+    n3 = "--n3lo" in argv
     files = [a for a in argv if not a.startswith("--")]
     dmax = float(next((a.split("=", 1)[1] for a in argv if a.startswith("--dmax=")), 1e9))
     if recs is None:
         recs = [load_fields(f) for f in files]
     recs = [r for r in recs if r["D"] <= dmax]
     variants = dict(MODELS)
-    names = ["NNLO corrected"]
     expect = dict(EXPECT)
+    ref = "NNLO corrected"                 # the model C6 measures the states' error against
+    if n3:
+        variants["N3LO"] = ("corrected", 4)
+        expect["N3LO"] = EXPECT4
+        ref = "N3LO"
+    names = [ref]
+    mfield = None
     if mut and mut.startswith("pi3x"):
         mname = f"NNLO corrected, Pi3 x {mut[4:]}"
         variants[mname] = (mut, 3)
         expect[mname] = EXPECT["NNLO corrected"]
         names = [mname]
+    elif mut and n3 and n3lo_mut_field(mut):
+        mfield = n3lo_mut_field(mut)
+        mname = f"N3LO, mutation {mut}"
+        variants[mname] = (mut, 4)
+        expect[mname] = EXPECT4
+        names = [mname]
+    elif mut:
+        raise SystemExit(f"unknown mutation {mut}" + ("" if n3 else " (N3LO mutations need --n3lo)"))
     dmin = float(next((a.split("=", 1)[1] for a in argv if a.startswith("--dmin=")), 40))
     dirs = next((a.split("=", 1)[1].split(",") for a in argv if a.startswith("--spread=")), [])
     recs, eps, table, fits, fits20 = run_compare(recs, variants, label + (f", mutation {mut}" if mut else ""),
                                                  verbose=False, dmin=dmin)
-    # C6: the state's own error below 1% of the corrected NNLO's residual, else the state leaves the fit
+    # C6: the state's own error below 1% of the reference model's residual, else the state leaves the fit
     floors = []
     drop = []
     for i, r in enumerate(recs):
         fl = state_floor(r)
-        ratio = max(fl / table["NNLO corrected"][i][k]["max"] for k in FIELDS)
+        ratio = max(fl / table[ref][i][k]["max"] for k in FIELDS)
         floors.append(dict(D=r["D"], floor=fl, ratio=ratio))
         if ratio > 0.01:
             drop.append(i)
-    sp = spread(recs, dirs, table) if dirs else []
+    sp = spread(recs, dirs, table, ref, variants[ref]) if dirs else []
     for row in sp:
         i = [j for j, r in enumerate(recs) if round(r["D"], 4) == round(row["D"], 4)][0]
         if max(row[k] for k in FIELDS) > 0.01 and i not in drop:
             drop.append(i)
+    # with --n3lo a measured D that fails C6 cuts the fit there (every chain state above D 73 holds the same
+    # harmonics, so the unmeasured D above it are no better); the #126 rule (drop the failing D only) is information
+    cut = None
+    drop_126 = list(drop)
+    fail_D = sorted({row["D"] for row in sp if max(row[k] for k in FIELDS) > 0.01})
+    if n3 and fail_D:
+        cut = fail_D[0]
+        drop = sorted(set(drop) | {i for i, r in enumerate(recs) if r["D"] >= cut - 1e-9})
+    info = {}
+    if n3:
+        lab = dict(c6_126=drop_126, d73=sorted(set(drop) | {i for i, r in enumerate(recs) if r["D"] > 73.5}))
+        for key, dr in lab.items():
+            f_ = fits_of(recs, table, dmin, dr)
+            info[key] = dict(dropped=[recs[i]["D"] for i in dr], fits=f_)
+        info["D60"] = dict(dropped=[recs[i]["D"] for i in drop], fits=fits_of(recs, table, 60.0, drop))
     recs, eps, table, fits, fits20 = run_compare(recs, variants, label + (f", mutation {mut}" if mut else ""),
                                                  dmin=dmin, drop=drop)
-    print("\n== C6, the states' own error: max over fields of floor/R (corrected NNLO); > 0.01 drops the state")
+    print(f"\n== C6, the states' own error: max over fields of floor/R ({ref}); > 0.01 drops the state")
     print("    " + "  ".join(f"{f['D']:.1f}:{f['ratio']:.0e}" for f in floors))
     for row in sp:
         print(f"    spread at D {row['D']:.1f} against {os.path.relpath(row['other'], os.path.dirname(row['other']) + '/../..')}: "
               + " ".join(f"{k} {row[k]:.1e}" for k in FIELDS) + f"  (of R; Delta differs by {row['Delta_diff']:.1e})")
+    if cut is not None:
+        print(f"    the chain spread fails at D {fail_D}: the fit is cut at D < {cut:g}")
     print(f"    dropped: {[recs[i]['D'] for i in drop] if drop else 'none'}")
-    ver = verdicts(fits, expect, list(MODELS) if not mut else names)
+    ver = verdicts(fits, expect, (list(MODELS) + (["N3LO"] if n3 else [])) if not mut else names)
     print("\n== verdicts (fitted exponent within %.2f of the expected, farther than %.2f from one order lower)" % (TOL, SEP))
     for v in ver:
         print(f"   {v['model']:28s} {v['field']:4s} p = {v['p']:6.3f}  expected {v['expected']:4.1f}  "
               f"{'PASS' if v['ok'] else 'FAIL'}")
+    ctl, sizes, coef = [], [], {}
+    if n3:
+        for key, txt in (("c6_126", "C6 as #126 (drop the failing D only)"), ("d73", "D <= 73 (no held harmonics)"),
+                         ("D60", "D >= 60, cut as the main fit")):
+            print(f"   information, {txt}: N3LO p = " + " ".join(f"{k} {info[key]['fits']['N3LO'][k]['p']:.3f}"
+                                                            for k in FIELDS)
+                  + f"  (dropped {len(info[key]['dropped'])})")
+        if not mut:
+            # C4' (control of the window): the corrected NNLO judged against N3LO's expected exponents must fail
+            ctl = verdicts(fits, {"NNLO corrected": EXPECT4}, ["NNLO corrected"])
+            print("   control C4': NNLO corrected against N3LO's window (must FAIL for every field): "
+                  + " ".join(f"{v['field']} {'PASS' if v['ok'] else 'FAIL'}" for v in ctl))
+            use = [i for i, r in enumerate(recs) if r["D"] >= dmin and i not in drop]
+            sizes = term_sizes(recs, use)
+            print("\n== the new terms against the NNLO: max|Pi_4|/max|Pi_3| (coefficients); per field, the new term "
+                  "(with its eps power) over R_NNLO, and the share of R_NNLO that N3LO removes")
+            for row in sizes:
+                if any(abs(row["D"] - d) < 0.5 for d in (40.02, 60.0, 80, 100, 140, 200, 215)) or row is sizes[-1]:
+                    print(f"    D {row['D']:7.2f}  Pi4/Pi3 {row['pi4_over_pi3']:7.2f}   " + "  ".join(
+                        f"{k} {row[k]['term_over_R3']:6.3f} {row[k]['removed']:6.3f}" for k in FIELDS))
+            q = [row["pi4_over_pi3"] for row in sizes]
+            print(f"    Pi4/Pi3 over the fit's {len(q)} states: {min(q):.2f} to {max(q):.2f}")
+            # R/eps^p at a few D: the size of the first omitted order of each model
+            for name in ("NNLO corrected", "N3LO"):
+                coef[name] = []
+                for d in (60.0, 100.0, 200.0):
+                    i = min(range(len(recs)), key=lambda j: abs(recs[j]["D"] - d))
+                    e = 1.0 / (recs[i]["D"] - 1)
+                    coef[name].append(dict(D=recs[i]["D"], **{k: table[name][i][k]["max"] / e ** expect[name][k]
+                                                               for k in FIELDS}))
+                print(f"    R/eps^p, {name}: " + "  ".join(f"D {c['D']:.0f}: " + " ".join(f"{k} {c[k]:.2e}" for k in FIELDS)
+                                                       for c in coef[name]))
     rows = rms_change(recs)
     print("\n== Fig. 5's measure, relative rms deviation rms(F_sol - F)/rms(F_sol): printed / corrected / "
           "change printed - corrected")
@@ -443,10 +644,22 @@ def cmd_compare(argv, recs=None, label="solutions"):
                            continuity=[r.get("info", {}).get("cont") for r in recs],
                            table=table, fits=fits, fits_D20=fits20, dmin=dmin, floors=floors, spread=sp,
                            dropped=[recs[i]["D"] for i in drop], verdicts=ver, fig5=rows, tol=TOL, sep=SEP,
-                           expect=expect), fh, indent=1)
+                           expect=expect, n3lo=n3, ref=ref, cut=cut, spread_fail_D=fail_D, information=info,
+                           control_window=ctl, term_sizes=sizes, R_over_eps_p=coef), fh, indent=1)
         print(f"\nwrote {js}")
     # main run: every model's verdict must hold; mutation run: the corrected-with-mutation verdict must fail for Pi
     # and Omega (exit 0 when it does) and hold for f and Psi
+    if mfield:
+        # N3LO mutation: the field it changes leaves its window, the others keep theirs (exit 0 when so)
+        broke = all(not v["ok"] for v in ver if v["field"] == mfield)
+        kept = all(v["ok"] for v in ver if v["field"] != mfield)
+        print(f"\nmutation {mut}: {mfield} broken: {broke}; the other fields kept: {kept}  -> "
+              f"{'the control fires (exit 0)' if broke and kept else 'CONTROL FAILED (exit 1)'}")
+        return 0 if (broke and kept) else 1
+    if n3:
+        ok = all(v["ok"] for v in ver) and all(not v["ok"] for v in ctl)
+        print("\nALL PASS (the verdicts, and the control C4' fires)" if ok else "\nFAILED")
+        return 0 if ok else 1
     if mut and mut.startswith("pi3x"):
         broke = all(not v["ok"] for v in ver if v["field"] in ("Pi", "Om"))
         kept = all(v["ok"] for v in ver if v["field"] in ("f", "Psi"))
@@ -460,17 +673,20 @@ def cmd_compare(argv, recs=None, label="solutions"):
 
 # ------------------------------------------------------------------ planted truth
 PLANT = dict(f=4.0, Om=4.0, Pi=3.5, Psi=3.5)
+PLANT4 = dict(f=5.0, Om=5.0, Pi=4.5, Psi=4.5)          # planted --n3lo (agent-comms#53)
+PLANT_TOL4 = 0.25                                       # agent-comms#53: the plants recovered within 0.25
 
 
-def planted_records(recs, plant, scale=1.0):
-    """each state's fields replaced by the corrected NNLO of its own beta~ (same eps, Delta, grid) plus
-    scale (1 + 4 eps + 20 eps^2) eps^p g with known shapes g; Pi's g vanishes at x = 0, so beta~ is unchanged"""
+def planted_records(recs, plant, scale=1.0, order=3):
+    """each state's fields replaced by the corrected NNLO (order 3) or N3LO (order 4) of its own beta~ (same eps,
+    Delta, grid) plus scale (1 + 4 eps + 20 eps^2) eps^p g with known shapes g; Pi's g vanishes at x = 0, so beta~ is
+    unchanged"""
     out = []
     for r in recs:
         e, bt = beta_tilde(r)
         X = r["xs"][:, None]
         B0, B1 = bt[0][None, :], bt[1][None, :]
-        m = model_fields(e, bt, r["xs"], "corrected", 3)
+        m = model_fields(e, bt, r["xs"], "corrected", order)
         cf = scale * (1 + 4 * e + 20 * e ** 2)
         g = dict(f=0.3 * (1 - X ** 2) * B0 ** 4, Om=0.5 * X ** 2 * B0 ** 2 * (B0 ** 2 + B1),
                  Pi=0.4 * X ** 2 * B0 * (B0 ** 2 - B1), Psi=0.4 * (B0 + B1) * (1 + X ** 2))
@@ -482,7 +698,75 @@ def planted_records(recs, plant, scale=1.0):
     return out
 
 
+def cmd_planted4(argv):
+    """planted --n3lo: each state's fields replaced by N3LO of its own beta~ plus the known remainder at
+    p = 5, 5, 4.5, 4.5 (f, Omega, Pi, Psi), through the same fit as compare (D >= --dmin, D <= --dmax).
+    Q1: N3LO recovers each plant within 0.25 (agent-comms#53); Q2: the corrected NNLO shows its own first omitted
+    order, within TOL of 4, 4, 3.5, 3.5; Q3 (with --mutate): the mutated field's fit is farther than 0.25 from its
+    plant and the other fields recover theirs within 0.25"""
+    plant = dict(PLANT4)
+    pp = next((a.split("=", 1)[1] for a in argv if a.startswith("--plant_pi=")), None)
+    if pp is not None:
+        plant["Pi"] = float(pp)
+    mut = next((a.split("=", 1)[1] for a in argv if a.startswith("--mutate=")), None)
+    js = next((a.split("=", 1)[1] for a in argv if a.startswith("--json=")), None)
+    files = [a for a in argv if not a.startswith("--")]
+    scale = float(next((a.split("=", 1)[1] for a in argv if a.startswith("--plant_scale=")), 1.0))
+    dmax = float(next((a.split("=", 1)[1] for a in argv if a.startswith("--dmax=")), 1e9))
+    recs = planted_records([r for r in (load_fields(f) for f in files) if r["D"] <= dmax], plant, scale, order=4)
+    variants = {"N3LO": ("corrected", 4), "NNLO corrected": ("corrected", 3)}
+    mfield = n3lo_mut_field(mut)
+    if mut and not mfield:
+        raise SystemExit(f"unknown N3LO mutation {mut}")
+    mname = f"N3LO, mutation {mut}" if mut else None
+    if mname:
+        variants[mname] = (mut, 4)
+    dmin = float(next((a.split("=", 1)[1] for a in argv if a.startswith("--dmin=")), 40))
+    recs, eps, table, fits, _ = run_compare(recs, variants, f"planted N3LO {plant}" + (f", mutation {mut}" if mut else ""),
+                                            dmin=dmin)
+    ver = []
+    for k in FIELDS:
+        p = fits["N3LO"][k]["p"]
+        ver.append(dict(check="Q1 N3LO recovers the plant", field=k, p=p, expected=plant[k],
+                        ok=bool(abs(p - plant[k]) <= PLANT_TOL4), within_0_1=bool(abs(p - plant[k]) <= 0.1)))
+    for k in FIELDS:
+        pe = min(plant[k], EXPECT["NNLO corrected"][k])
+        p = fits["NNLO corrected"][k]["p"]
+        ver.append(dict(check="Q2 NNLO shows its own order", field=k, p=p, expected=pe, ok=bool(abs(p - pe) <= TOL)))
+    if mname:
+        for k in FIELDS:
+            p = fits[mname][k]["p"]
+            if k == mfield:
+                ver.append(dict(check="Q3 the mutation breaks the plant", field=k, p=p, expected=plant[k],
+                                ok=bool(abs(p - plant[k]) > PLANT_TOL4)))
+            else:
+                ver.append(dict(check="Q3 the other fields recover", field=k, p=p, expected=plant[k],
+                                ok=bool(abs(p - plant[k]) <= PLANT_TOL4)))
+    print("\n== planted N3LO verdicts")
+    for v in ver:
+        print(f"   {v['check']:36s} {v['field']:4s} p = {v['p']:6.3f}  planted/expected {v['expected']:4.2f}  "
+              f"{'PASS' if v['ok'] else 'FAIL'}" + (f"  (within 0.1: {v['within_0_1']})" if "within_0_1" in v else ""))
+    if js:
+        with open(js, "w") as fh:
+            json.dump(dict(plant=plant, plant_scale=scale, mutation=mut, dmin=dmin, dmax=dmax, D=[r["D"] for r in recs],
+                           table=table, fits=fits, verdicts=ver), fh, indent=1)
+        print(f"wrote {js}")
+    ok = all(v["ok"] for v in ver)
+    print(f"\n{'ALL PASS' if ok else 'FAILED'}")
+    return 0 if ok else 1
+
+
+def cmd_seam(argv):
+    mut = next((a.split("=", 1)[1] for a in argv if a.startswith("--mutate=")), None)
+    bad = seam(mut)
+    print(f"seam: LO and NNLO of model_fields against check.py's claimed set (psi3.py's base)"
+          + (f", second_order_eeg mutation {mut}" if mut else "") + f": {'equal' if not bad else 'DIFFER in ' + str(bad)}")
+    return 0 if not bad else 1
+
+
 def cmd_planted(argv):
+    if "--n3lo" in argv:
+        return cmd_planted4(argv)
     plant = dict(PLANT)
     pp = next((a.split("=", 1)[1] for a in argv if a.startswith("--plant_pi=")), None)
     if pp is not None:
@@ -629,7 +913,7 @@ def cmd_figs(argv):
 
 
 if __name__ == "__main__":
-    if len(sys.argv) < 2 or sys.argv[1] not in ("extract", "compare", "planted", "figs"):
+    if len(sys.argv) < 2 or sys.argv[1] not in ("extract", "compare", "planted", "figs", "seam"):
         print(__doc__)
         sys.exit(2)
     cmd, rest = sys.argv[1], sys.argv[2:]
@@ -638,4 +922,6 @@ if __name__ == "__main__":
         sys.exit(0)
     if cmd == "figs":
         sys.exit(cmd_figs(rest))
+    if cmd == "seam":
+        sys.exit(cmd_seam(rest))
     sys.exit(cmd_compare(rest) if cmd == "compare" else cmd_planted(rest))

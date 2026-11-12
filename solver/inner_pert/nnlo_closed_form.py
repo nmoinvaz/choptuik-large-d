@@ -25,6 +25,17 @@ Criteria C1-C6 were posted on agent-comms#42 before the first run (the started c
 compare exits 1 when C1, C2 or C5 fails; with a mutation it exits 0 only when the control fires (k1x0: p <= 1.2,
 otherwise p < 2.6). planted exits 1 when a P criterion fails; with --mutate it adds P2m, which asks the mutated closed
 form's p(Omega) to differ from the true-K closed form's by more than 0.1.
+
+--n3lo (agent-comms#53) adds the order past the NNLO (nnlo_vs_solution.model_fields order 4: Psi_3, Pi_4, Omega_4,
+f_4 of psi3.closed()) as further rows: the closed form with it, and each state's exact profile with it. compare then
+also asks C7 (exact profile with N3LO: p(Psi) >= 2.6) and its control C7c (exact profile with the NNLO, where Psi_3 is
+absent: p(Psi) < 2.6). --n3lo_mut=M1,M2 adds the exact profile with N3LO mutations (information, as
+nnlo_vs_solution's --mutate). planted --n3lo plants on N3LO with nnlo_vs_solution.PLANT4 and adds P5 (exact profile
+with N3LO recovers the plant's relative orders 4, 4, 4, 3 within 0.25) and P6 (exact profile with the NNLO gives
+Psi's relative order 2 within 0.25).
+
+    python3 nnlo_closed_form.py compare FIELDS... --figs=figs.json --n3lo [--n3lo_mut=psi3x0.5,Psi3]
+    python3 nnlo_closed_form.py planted FIELDS... --n3lo
 """
 import json
 import os
@@ -129,9 +140,9 @@ def cf_profile(r, prof, F, a, kscale, pref="full", delta="series"):
     return NV.tau_derivs(b, Dl)
 
 
-def cf_fields(r, prof, F, a, kscale, pref="full", delta="series"):
-    """the closed-form fields f, Omega, Pi, Psi at state r (corrected NNLO)"""
-    return NV.model_fields(prof["eps"], cf_profile(r, prof, F, a, kscale, pref, delta), r["xs"], "corrected", 3)
+def cf_fields(r, prof, F, a, kscale, pref="full", delta="series", order=3):
+    """the closed-form fields f, Omega, Pi, Psi at state r (corrected NNLO, or N3LO with order 4)"""
+    return NV.model_fields(prof["eps"], cf_profile(r, prof, F, a, kscale, pref, delta), r["xs"], "corrected", order)
 
 
 def profile_err(r, prof, F, a, kscale, pref="full", delta="series"):
@@ -149,8 +160,9 @@ def rel_rms(r, m):
     return out
 
 
-def variants(mut):
-    """name -> (kscale, pref, delta); the closed form is K1K2 (with --mutate its K1 or K2 is scaled)"""
+def variants(mut, n3=False):
+    """name -> (kscale, pref, delta[, order]); the closed form is K1K2 (with --mutate its K1 or K2 is scaled); order
+    is 3 (corrected NNLO) unless given; --n3lo adds the closed form with N3LO (order 4)"""
     v = {"sqrt2 F (#5, state Delta)": ({}, "sqrt2", "state"),
          "F": ({}, "full", "series"),
          "K1 = 0 (C3)": ({2: 1}, "full", "series"),
@@ -161,6 +173,10 @@ def variants(mut):
          "K1K2K3": ({1: 1, 2: 1, 3: 1}, "full", "series")}
     if mut:
         v[f"K1K2, mutation {mut}"] = (mutated(mut), "full", "series")
+    if n3:
+        v["K1, N3LO"] = ({1: 1}, "full", "series", 4)
+        v["K1K2, N3LO"] = ({1: 1, 2: 1}, "full", "series", 4)
+        v["K1K2K3, N3LO"] = ({1: 1, 2: 1, 3: 1}, "full", "series", 4)
     return v
 
 
@@ -177,19 +193,26 @@ def exponent(D, R):
     return NV.fit_exponent(eps, R)
 
 
-def evaluate(recs, profs, F, a, vs, test, exact=True):
+def evaluate(recs, profs, F, a, vs, test, exact=True, n3=False, n3mut=()):
     """R per variant and field at the test states, the profile's own error (field 'beta'), and the exponents
-    (p_pure is the main fit)"""
+    (p_pure is the main fit); n3: also each state's exact profile with N3LO, and with each N3LO mutation in n3mut"""
     idx = [i for i, r in enumerate(recs) if any(abs(r["D"] - t) < 1e-6 for t in test)]
     if len(idx) != len(test):
         raise SystemExit(f"test states missing: have {[recs[i]['D'] for i in idx]}, want {list(test)}")
     tab = {}
-    for name, (ks, pref, dl) in vs.items():
-        tab[name] = [dict(rel_rms(recs[i], cf_fields(recs[i], profs[i], F, a, ks, pref, dl)),
+    for name, spec in vs.items():
+        ks, pref, dl = spec[:3]
+        order = spec[3] if len(spec) > 3 else 3
+        tab[name] = [dict(rel_rms(recs[i], cf_fields(recs[i], profs[i], F, a, ks, pref, dl, order)),
                           beta=profile_err(recs[i], profs[i], F, a, ks, pref, dl)) for i in idx]
     if exact:
         tab["exact profile (floor)"] = [dict(rel_rms(recs[i], NV.model_fields(*NV.beta_tilde(recs[i]), recs[i]["xs"],
                                                                                "corrected", 3)), beta=0.0) for i in idx]
+        if n3:
+            for v in ("corrected",) + tuple(n3mut):
+                name = "exact profile, N3LO" + ("" if v == "corrected" else f", mutation {v}")
+                tab[name] = [dict(rel_rms(recs[i], NV.model_fields(*NV.beta_tilde(recs[i]), recs[i]["xs"], v, 4)),
+                                  beta=0.0) for i in idx]
     Ds = [recs[i]["D"] for i in idx]
     fits = {name: {k: exponent(Ds, [row[k] for row in rows]) for k in FIELDS + ("beta",) if rows[0][k] > 0}
             for name, rows in tab.items()}
@@ -234,8 +257,10 @@ def run(recs, profs, F, argv, label, a_true=None):
     kmax, dlo = int(arg(argv, "kmax", 6)), float(arg(argv, "dlo", 20))
     test = [float(v) for v in arg(argv, "test", ",".join(str(t) for t in TEST_D)).split(",")]
     fit = fit_K(profs, F, kmax, dlo, hold=test)
-    vs = variants(mut)
-    Ds, tab, fits = evaluate(recs, profs, F, fit["a"], vs, test)
+    n3 = "--n3lo" in argv
+    n3mut = tuple(m for m in arg(argv, "n3lo_mut", "").split(",") if m)
+    vs = variants(mut, n3)
+    Ds, tab, fits = evaluate(recs, profs, F, fit["a"], vs, test, n3=n3, n3mut=n3mut)
     # information: F fitted as the intercept too, so that the closed form uses no D = infinity input
     ff = fit_K(profs, F, kmax, dlo, hold=test, free=True)
     _, tf, fif = evaluate(recs, profs, ff["F_fit"], ff["a"], {"K1K2, F fitted (no D = inf input)":
@@ -245,7 +270,7 @@ def run(recs, profs, F, argv, label, a_true=None):
     print_table(Ds, tab, fits, f"{label}; K fit k_max {kmax}, D >= {dlo:g}, test states held out "
                                f"({fit['n_states']} states, max residual {fit['max_res']:.1e})")
     out = dict(label=label, mutation=mut, kmax=kmax, dlo=dlo, test=Ds, fit_states=fit["D"], fit_max_res=fit["max_res"],
-               table=tab, fits=fits, K=k_summary(fit["a"], "main", F))
+               table=tab, fits=fits, K=k_summary(fit["a"], "main", F), n3lo=n3, n3lo_mut=list(n3mut))
     # the spread over fit choices: K1, K2 (nu = 1, 3, 5) and p(Omega) of the main variants
     sp = []
     for (k, d) in FIT_CHOICES:
@@ -263,7 +288,7 @@ def run(recs, profs, F, argv, label, a_true=None):
               f"K2_3 {fmt_c(K['K2_3'])}  p: " + "  ".join(f"{n.split(' (')[0]} {v:.3f}" for n, v in s["p"].items())
               + f"  (fit res {s['max_res']:.1e})")
     if a_true is not None:
-        _, tt, ft = evaluate(recs, profs, F, a_true, vs, test, exact=False)
+        _, tt, ft = evaluate(recs, profs, F, a_true, vs, test, exact=False, n3=n3)
         print_table(Ds, tt, ft, f"{label}: the same with the planted (true) K")
         out["table_trueK"], out["fits_trueK"] = tt, ft
         out["fit_a"] = fit["a"]
@@ -309,8 +334,9 @@ def check_c5(tab, Ds, figs_path):
     return bool(ok), out
 
 
-def chain_spread(recs, profs, F, a, dirs, test):
-    """the closed form's R(Omega) against other chains' states at a test D (held harmonics differ there)"""
+def chain_spread(recs, profs, F, a, dirs, test, n3=False):
+    """the closed form's R(Omega) against other chains' states at a test D (held harmonics differ there); n3: also
+    R of every field with each state's exact profile and N3LO"""
     out = []
     for d in dirs:
         for f in sorted(os.listdir(d)):
@@ -322,8 +348,15 @@ def chain_spread(recs, profs, F, a, dirs, test):
             ks = {1: 1, 2: 1}
             R_o = rel_rms(o, cf_fields(o, po, F, a, ks))["Om"]
             R_m = rel_rms(recs[i], cf_fields(recs[i], profs[i], F, a, ks))["Om"]
-            out.append(dict(D=o["D"], dir=d, R_other=R_o, R_main=R_m, Delta_diff=o["Delta"] - recs[i]["Delta"]))
+            row = dict(D=o["D"], dir=d, R_other=R_o, R_main=R_m, Delta_diff=o["Delta"] - recs[i]["Delta"])
             print(f"   chain spread at D {o['D']:.0f}: R(Omega) {R_o:.4e} ({os.path.basename(d)}) against {R_m:.4e}")
+            if n3:
+                e_o = rel_rms(o, NV.model_fields(*NV.beta_tilde(o), o["xs"], "corrected", 4))
+                e_m = rel_rms(recs[i], NV.model_fields(*NV.beta_tilde(recs[i]), recs[i]["xs"], "corrected", 4))
+                row["exact_n3lo"] = {k: dict(other=e_o[k], main=e_m[k], rel=abs(e_o[k] / e_m[k] - 1)) for k in FIELDS}
+                print("      exact profile with N3LO, |R_other/R_main - 1|: "
+                      + " ".join(f"{k} {row['exact_n3lo'][k]['rel']:.1e}" for k in FIELDS))
+            out.append(row)
     return out
 
 
@@ -370,6 +403,16 @@ def verdict_lines(fits, mut):
     return v
 
 
+def verdict_n3(fits):
+    """C7 (agent-comms#53): the exact profile with N3LO gives p(Psi) >= 2.6; C7c, its control: with the NNLO (Psi_3
+    absent) p(Psi) < 2.6"""
+    p = lambda name: fits[name]["Psi"]["p_pure"]
+    return [dict(c="C7 exact profile, N3LO: p(Psi) >= 2.6", p=p("exact profile, N3LO"),
+                 ok=bool(p("exact profile, N3LO") >= 2.6)),
+            dict(c="C7c exact profile, NNLO: p(Psi) < 2.6", p=p("exact profile (floor)"),
+                 ok=bool(p("exact profile (floor)") < 2.6))]
+
+
 def cmd_compare(argv, controls=False):
     files = [a for a in argv if not a.startswith("--")]
     recs, profs = load(files)
@@ -382,14 +425,17 @@ def cmd_compare(argv, controls=False):
     ok5, c5 = check_c5(out["table"], test, figs_path)
     out["C5"] = dict(ok=ok5, rows=c5)
     dirs = [d for d in arg(argv, "spread", "").split(",") if d]
+    n3 = "--n3lo" in argv
     if dirs:
         print("\n== the closed form against other chains at the test D")
-        out["chain_spread"] = chain_spread(recs, profs, F, fit["a"], dirs, test)
+        out["chain_spread"] = chain_spread(recs, profs, F, fit["a"], dirs, test, n3=n3)
     kout = arg(argv, "kout")
     if kout:
         write_K(kout, fit, F, out, profs)
     ver = verdict_lines(out["fits"], mut)
     ver.append(dict(c="C5 pipeline: sqrt2 F reproduces figs.json within 1%", p=float("nan"), ok=ok5))
+    if n3:
+        ver += verdict_n3(out["fits"])
     out["verdicts"] = ver
     print("\n== verdicts (p = slope of ln R(Omega) against ln eps over the test D)")
     for v in ver:
@@ -405,10 +451,15 @@ def cmd_compare(argv, controls=False):
         print(f"\ncontrols C3 (K1 = 0, F alone) and C4 (K2 x -1): {'both fire (exit 0)' if fired else 'FAILED (exit 1)'}")
         return 0 if fired else 1
     if mut:
-        fired = ver[-2]["ok"]
+        fired = next(v["ok"] for v in ver if v["c"].startswith("mutation"))
         print(f"\nmutation {mut}: {'the control fires (exit 0)' if fired else 'CONTROL FAILED (exit 1)'}")
         return 0 if fired else 1
     ok = by["C1"] and by["C2"] and ok5
+    if n3:
+        ok7 = all(v["ok"] for v in ver if v["c"].startswith("C7"))
+        ok = ok and ok7
+        print(f"\n{'C1, C2, C5, C7, C7c PASS' if ok else 'FAILED'}")
+        return 0 if ok else 1
     print(f"\n{'C1, C2, C5 PASS' if ok else 'FAILED'}")
     return 0 if ok else 1
 
@@ -431,9 +482,10 @@ def plant_profile(F, n):
     return F * (1 + (rho / n) * np.exp(1j * psi) / (1 + SHRINK * rho / n))
 
 
-def planted_records(recs, F, scale):
-    """each state's fields replaced by the corrected NNLO of sqrt(2 (1 + 1/n)) F_n^pl, shifted in time by a known
-    phase, plus the known remainder of nnlo_vs_solution.planted_records (the state's Delta in the tau derivatives)"""
+def planted_records(recs, F, scale, order=3):
+    """each state's fields replaced by the corrected NNLO (order 3; N3LO with order 4) of sqrt(2 (1 + 1/n)) F_n^pl,
+    shifted in time by a known phase, plus the known remainder of nnlo_vs_solution.planted_records (PLANT, or PLANT4
+    with order 4; the state's Delta in the tau derivatives)"""
     out = []
     i0 = int(np.argmin(np.abs(recs[0]["xs"])))
     for r in recs:
@@ -445,7 +497,7 @@ def planted_records(recs, F, scale):
         q = dict(r)
         q["Pi"] = r["Pi"].copy()
         q["Pi"][i0] = np.sqrt(eps) * b
-        out.append(NV.planted_records([q], NV.PLANT, scale)[0])
+        out.append(NV.planted_records([q], NV.PLANT4 if order == 4 else NV.PLANT, scale, order=order)[0])
     return out
 
 
@@ -454,7 +506,9 @@ def cmd_planted(argv):
     scale = float(arg(argv, "plant_scale", 1.0))
     mut = arg(argv, "mutate")
     F = tuned_F()
-    recs = planted_records(sorted([NV.load_fields(f) for f in files], key=lambda r: r["D"]), F, scale)
+    n3 = "--n3lo" in argv
+    recs = planted_records(sorted([NV.load_fields(f) for f in files], key=lambda r: r["D"]), F, scale,
+                           order=4 if n3 else 3)
     profs = [profile(r) for r in recs]
     a_true = plant_a(F)
     out, fit = run(recs, profs, F, argv, f"planted (plant_scale {scale})", a_true=a_true)
@@ -479,6 +533,15 @@ def cmd_planted(argv):
         name = f"K1K2, mutation {mut}"
         d = abs(out["fits"][name]["Om"]["p_pure"] - out["fits_trueK"]["K1K2 (C2)"]["Om"]["p_pure"])
         ver.append(dict(c=f"P2m mutation {mut} moves p by more than 0.1", p=float(d), ok=d > 0.1))
+    if n3:
+        # P5: the exact profile with N3LO sees the plant's relative orders (plant minus each field's leading order:
+        # f and Omega eps^1, Pi eps^(1/2), Psi eps^(3/2)); P6: with the NNLO it sees Psi_3 missing, relative eps^2
+        rel = dict(f=NV.PLANT4["f"] - 1, Om=NV.PLANT4["Om"] - 1, Pi=NV.PLANT4["Pi"] - 0.5, Psi=NV.PLANT4["Psi"] - 1.5)
+        for k in FIELDS:
+            q = out["fits"]["exact profile, N3LO"][k]["p_pure"]
+            ver.append(dict(c=f"P5 exact profile, N3LO, {k}: |p - {rel[k]:g}| <= 0.25", p=q, ok=abs(q - rel[k]) <= 0.25))
+        q = out["fits"]["exact profile (floor)"]["Psi"]["p_pure"]
+        ver.append(dict(c="P6 exact profile, NNLO, Psi: |p - 2| <= 0.25", p=q, ok=abs(q - 2) <= 0.25))
     for v in ver:
         v["ok"] = bool(v["ok"])
     print("\n== planted: K's recovered (fundamental and nu = 3), true against fitted")
