@@ -16,7 +16,8 @@ state's own coefficients of p1's harmonics (kfreeze, 13], in eight parts, on the
 with a and b chosen so that the start z0 solves H(z0, 0) = 0 exactly.
 - real: a = 0, b = r0 = F(z0) - c, the start's pinned residual. t = 1 is the pinned system itself.
 - control: a = r0 - rho, b = rho, with rho the b of a real run (--rho, its OUT_setup.npz) kept on the horizon block's
-  p rows. The target moves by -rho from the one z0 solves, as the real mode's moves by -r0.
+  p rows, times --rho_scale (1). The target moves by -rho from the one z0 solves, as the real mode's moves by -r0;
+  with --rho_scale -1 it moves by +rho, toward the rows with the exact freeze projector (r0 is its rounding).
 - planted: zP = z0 + w, w = eps tau0 / |tau0| (tau0 = -J^-1 r0, the real mode's first tangent; eps signed), a =
   F(zP) - c, b = F(z0) - F(zP). Then zP solves H(z, 1) = 0: the known answer.
 --mutate sign uses -b in H, so that z0 no longer solves H(z, 0) = 0, and the t = 0 check must fail. --mutate tsign
@@ -182,6 +183,7 @@ def main():
     ap.add_argument("--mode", default="real", choices=("real", "control", "planted"))
     ap.add_argument("--threads", type=int, default=4)
     ap.add_argument("--rho", default="")
+    ap.add_argument("--rho_scale", type=float, default=1.0)
     ap.add_argument("--eps", type=float, default=0.0)
     ap.add_argument("--mutate", default="", choices=("", "sign", "tsign"))
     ap.add_argument("--probe_only", type=int, default=0)
@@ -241,7 +243,7 @@ def main():
             rho = [np.array(rf[f"b{q}"]) for q in range(8)]
             mask = np.zeros(L)
             mask[hrows] = 1.0
-            rho = o8([p * mask for p in rho])
+            rho = o8([p * mask * a.rho_scale for p in rho])
             a8, b8 = add(rho, r0, -1.0), rho
             print(f"  rho from {a.rho}: max {mx(rho):.3e} on the horizon block's p rows (the rest of that b, "
                   f"{float(np.abs(f64([np.array(rf[f'b{q}']) for q in range(8)]) * (1 - mask)).max()):.2e}, dropped)",
