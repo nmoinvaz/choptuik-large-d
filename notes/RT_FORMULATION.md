@@ -1191,6 +1191,40 @@ python3 RAW/I164-mac/nt_check.py RAW/I164-mac/roots/a101_48x95.jsonl RAW/I164-ma
                                                  # 11.5: +1.5e-16, exit 0; with --tol 1e-17 exit 1
 ```
 
+### 11.9 The N ≡ 3 mod 4 ladder past 99 (#404)
+
+Issue #404, run on win (Windows, Python 3.10), 2026-11-12, with #164's solver and options. The criteria were written
+into `I404-win/README.md` before the first solve (raw d9bef65e). The question was whether the family that held Δ at
+D = 60 on 95 and 99 keeps converging as N grows. It does at D = 40, not at D ≥ 55. E(N) is the larger of the two
+roots' |Δ_RT − Δ_hp|, from both starts (raw `I404-win/` at 373ee026):
+
+| N | D = 40.020065 | D = 50.007491 | D = 54.996085 | D = 60.001952 |
+|---|---|---|---|---|
+| 99 | 8.2×10⁻¹⁵ | 2.3×10⁻¹⁴ | 3.8×10⁻¹⁴ | 1.8×10⁻¹² |
+| 103 | 1.2×10⁻¹⁵ | 3.0×10⁻¹⁵ | 7.5×10⁻¹⁴ | 4.9×10⁻¹¹ |
+| 107 | 1.5×10⁻¹⁵ | 7.5×10⁻¹⁵ | 5.4×10⁻¹² | 1.3×10⁻¹⁰ |
+| 111 | 1.6×10⁻¹⁵ | 6.6×10⁻¹⁴ | 6.9×10⁻¹² | 5.7×10⁻¹⁰ |
+| 115 | 1.6×10⁻¹⁵ | 3.1×10⁻¹³ | 8.5×10⁻¹¹ | 2.1×10⁻¹¹ |
+| 119 | 1.6×10⁻¹⁵ | 2.6×10⁻¹² | 2.3×10⁻¹⁰ | 1.0×10⁻¹¹ |
+| 123 | 1.5×10⁻¹⁵ | 3.3×10⁻¹¹ | 1.2×10⁻⁹ | 1.6×10⁻⁷ |
+| the two roots distinct from N | none to 123 | 111 | 107 | 99 |
+
+- At D = 40 the ladder falls below 10⁻¹⁴ at 99 and stays, on a plateau of +1.55×10⁻¹⁵, inside hp's own error
+  (2×10⁻¹⁵).
+- At D = 50 it reaches 3.0×10⁻¹⁵ at 103, and 103 and 107 pass.
+- At D = 55 and 60 it stops falling at 99, and no grid passes 10⁻¹⁴.
+- The rise is a family of nearly degenerate roots: residuals below 10⁻³⁰, spread over Δ by 10⁻¹² to 10⁻⁷. Its onset
+  falls with D, from above 123 at D = 40 to 111, 107 and 99 at D = 50, 55 and 60.
+
+So the N ≡ 3 mod 4 family has a usable resolution up to about D = 50 and not past it. Section 11's reading, that
+refining makes Δ worse only in the other family, holds below that onset and fails above it. `rt_grids.py
+--mutate=shift`, `rt_roots.py --mutate=mid` and `--mutate=same` exit 1 at D = 60, as they must.
+
+**Discrepancies.** At D = 60, 32 × 99's root b is −1.80×10⁻¹² on win against −2.70×10⁻¹³ on the Mac (#164), while root a
+agrees to 10⁻¹⁵. That is the size of the root family's own spread. The RT code needed three stand-ins on win's
+Python 3.10 (`multidouble._dd_dot`, `math.fma`, the Unix `resource` module), with no repository file changed, recorded
+in the raw README. #405 (past D = 60 on 95 and 99) is closed, since the family degenerates there already.
+
 ## 12. EEG's resolution: the truncation of their 40 × 80 grid against D
 
 Issue #106. Subagent of the coordinator on the Mac, 2026-11-08. Code in `solver/rt/`: the new `rt_trunc_fit.py`;
