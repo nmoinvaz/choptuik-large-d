@@ -143,7 +143,7 @@ def junk_subspace_o(s, w, delta_max=1e-2, iters=6, seed=0):
 
 
 def newton_od(s, z, tol=1e-40, it_max=12, max_halvings=8, verbose=True, mutate=0, junk_w=0, delta_max=1e-2, tol_dz=1e-45,
-              lam_stall=0.0):
+              lam_stall=0.0, scale_c=None, trace=None):
     """Newton in octo-double from the eight-part state z on s (PinnedO, or ElimO around it): newton_qd's mode 'full'
     one level up (hpkernel.driver.newton_qd, its acceptance rule). A trial z + lam dz (lam = 1, 1/2, ...,
     2^-max_halvings) is accepted when the Newton correction there, with its own Jacobian, is smaller than dz (max norms
@@ -154,10 +154,23 @@ def newton_od(s, z, tol=1e-40, it_max=12, max_halvings=8, verbose=True, mutate=0
     every correction it is judged by, and the iteration also ends converged when that projected correction falls below
     tol_dz (the residual left is the junk's). lam_stall > 0: the iteration also stops, not converged, when two
     accepted steps in a row had lam at or below lam_stall: past D 232 a step that is too long creeps at lam 1/64 to
-    1/32 with max |F| falling one percent per iteration, and it_max of those cost an hour (#461)."""
+    1/32 with max |F| falling one percent per iteration, and it_max of those cost an hour (#461).
+
+    scale_c (f64, one per unknown): the test compares the corrections in the unknowns y = D_c^-1 z of the equilibrated
+    system D_r J D_c (near_null_eq.py, #504), max |D_c^-1 dz_trial| < max |D_c^-1 dz| instead of the leading parts' max
+    norms. A row scaling does not change the Newton correction, a column scaling does. Each record then also carries
+    dz_eq, dz_eq_new and every trial (lam, max |F|, both sides of both tests). verbose >= 2 prints every trial. trace: a
+    list that gets each trial's leading parts of dz and of its correction (#504's planted check)."""
     import time
     from multidouble import od_axpy
     z = o8(z)
+    eq = scale_c is not None
+    if eq:
+        scale_c = np.asarray(scale_c, dtype=float)
+
+    def size(d, scaled=eq):
+        """the max norm the test compares: of the leading part, or of D_c^-1 times it"""
+        return float(np.abs(np.asarray(d[0]) / scale_c).max()) if scaled else float(np.abs(d[0]).max())
     st = s.newton_o(z, mutate=mutate)
     hist = []
     V = None
@@ -192,32 +205,57 @@ def newton_od(s, z, tol=1e-40, it_max=12, max_halvings=8, verbose=True, mutate=0
         if it == it_max:
             break
         d = proj(st[0])
-        nd = float(np.abs(d[0]).max())
+        nd = size(d)
         t0 = time.time()
-        rec = dict(it=it, F=nf, dz=nd, dDelta=float(d[0][-1] + d[1][-1]), piv=[st[3], st[4]], mode="sel" if V is not None else "full")
+        rec = dict(it=it, F=nf, dz=float(np.abs(d[0]).max()) if eq else nd, dDelta=float(d[0][-1] + d[1][-1]), piv=[st[3], st[4]],
+                   mode="sel" if V is not None else "full")
+        if eq:
+            rec.update(dz_eq=nd, trials=[])
         lam = 1.0
         for _ in range(max_halvings + 1):
             zt = o8(od_axpy(lam, *d, *z))
+            t1 = time.time()
             try:
                 stt = s.newton_o(zt, mutate=mutate)
                 good = np.isfinite(stt[0][0]).all() and np.isfinite(stt[1]).all()
             except ValueError:          # a non-finite or singular Jacobian at the trial point
                 good = False
-            if good and (float(np.abs(proj(stt[0])[0]).max()) < nd or omax(stt[1:3]) <= tol):
+            ok = good and (size(proj(stt[0])) < nd or omax(stt[1:3]) <= tol)
+            if eq or verbose >= 2 or trace is not None:
+                dt = proj(stt[0]) if good else None
+                tr = dict(lam=lam, good=bool(good), accepted=bool(ok), F=omax(stt[1:3]) if good else float("nan"),
+                          dz=rec["dz"], dz_t=size(dt, False) if good else float("nan"), seconds=round(time.time() - t1, 2))
+                if eq:
+                    tr.update(dz_eq=nd, dz_eq_t=size(dt, True) if good else float("nan"))
+                    rec["trials"].append(tr)
+                if verbose >= 2:
+                    line = (f"    on {it} trial lam {lam:g}: max|F| {tr['F']:.2e}; raw |dz_t| {tr['dz_t']:.3e} vs |dz| {tr['dz']:.3e}"
+                            f" ({'<' if tr['dz_t'] < tr['dz'] else 'not <'})")
+                    if eq:
+                        line += (f"; eq |dz_t/D_c| {tr['dz_eq_t']:.3e} vs |dz/D_c| {nd:.3e} "
+                                 f"({'<' if tr['dz_eq_t'] < nd else 'not <'})")
+                    print(line + f"; {'accepted' if ok else 'refused'}, {tr['seconds']} s", flush=True)
+                if trace is not None:
+                    trace.append(dict(it=it, lam=lam, accepted=bool(ok), F=tr["F"], d=np.array(d[0]),
+                                      dt=np.array(dt[0]) if good else None))
+            if ok:
                 break
             lam *= 0.5
         else:
             rec.update(lam=0.0, seconds=round(time.time() - t0, 2))
             hist.append(rec)
             if verbose:
-                print(f"  on {it}: |F| {nf:.2e}, |dz| {nd:.1e}: no trial step accepted, stopping", flush=True)
+                print(f"  on {it}: |F| {nf:.2e}, |dz| {rec['dz']:.1e}: no trial step accepted, stopping", flush=True)
             return z, hist, False
         z, st = zt, stt
         rec.update(lam=lam, F_new=omax(st[1:3]), dz_new=float(np.abs(proj(st[0])[0]).max()), seconds=round(time.time() - t0, 2))
+        if eq:
+            rec["dz_eq_new"] = size(proj(st[0]))
         hist.append(rec)
         if verbose:
-            print(f"  on {it}: |F| {nf:.2e} -> {rec['F_new']:.2e}, |dz| {nd:.1e} -> {rec['dz_new']:.1e}, lam {lam:g}, "
-                  f"dDelta {rec['dDelta']:+.2e}, piv {st[3]:.1e}..{st[4]:.1e}, {rec['seconds']} s", flush=True)
+            print(f"  on {it}: |F| {nf:.2e} -> {rec['F_new']:.2e}, |dz| {rec['dz']:.1e} -> {rec['dz_new']:.1e}, lam {lam:g}, "
+                  f"dDelta {rec['dDelta']:+.2e}, piv {st[3]:.1e}..{st[4]:.1e}, {rec['seconds']} s"
+                  + (f"; |dz/D_c| {nd:.1e} -> {rec['dz_eq_new']:.1e}" if eq else ""), flush=True)
         small = small + 1 if (lam_stall and lam <= lam_stall) else 0
         if small >= 2:
             if verbose:
@@ -345,6 +383,21 @@ def _run_qd(sq, so, rs, z4, tol, it_max):
     return o8(z), hist, conv, omax(so.residual_o(o8_of_q(z))), dict(el.counts)
 
 
+def plant_start(z4, rs, rel, seed, last):
+    """planted's start (four parts) from the converged four-part state z4 and the number n of moved unknowns: the
+    centre data and the nodes but the last (last: all nodes) moved by rel r relative, r uniform in +-[0.5, 1] (seed). A
+    last node moved by 1e-12 leaves the regular family by G 1e-12 at the horizon, and its projection fails (180.5246,
+    2026-11-06)"""
+    from hpkernel.driver import qd_axpy
+    n = rs.off["mh"] if last else rs.off["node"](rs.K - 1)
+    rng = np.random.default_rng(seed)
+    r = rng.uniform(0.5, 1.0, n) * rng.choice([-1.0, 1.0], n)
+    dz = np.zeros(len(z4[0]))
+    dz[:n] = rel * r * z4[0][:n]
+    zero = np.zeros(len(dz))
+    return o8(qd_axpy(1.0, dz, zero, zero, zero, *z4)), n
+
+
 def planted(argv):
     """check (a): the converged chain state RAW/STATE with its centre data and nodes but the last (--last 1: all
     nodes; not m_h, a_h, Delta) moved by rel r relative, r uniform in +-[0.5, 1] (--seed), is the start. Pass, fixed
@@ -359,7 +412,7 @@ def planted(argv):
     import os
     import time
     import mpmath as mp
-    from hpkernel.driver import load_q, qd_axpy
+    from hpkernel.driver import load_q
     from reseed import Reseeder
     raw, path = argv[0], argv[1]
     opt = _parse(argv[2:], dict(threads=3, rel=1e-12, seed=1, mutate_offset="", mutate=0, it_max=12, qd=1, tol=1e-40, out="",
@@ -369,15 +422,7 @@ def planted(argv):
     D = mp.mpf(meta["D_str"])
     s, sp, sq, so = pinned_o(meta, z4, threads=opt["threads"], mutate_offset=opt["mutate_offset"])
     rs = Reseeder(meta, D, threads=opt["threads"], qd=True)
-    # the moved unknowns: the centre data and the nodes but the last (--last 1: all nodes). A last node moved by 1e-12
-    # leaves the regular family by G 1e-12 at the horizon, and its projection fails (180.5246, 2026-11-06)
-    n = rs.off["mh"] if opt["last"] else rs.off["node"](rs.K - 1)
-    rng = np.random.default_rng(opt["seed"])
-    r = rng.uniform(0.5, 1.0, n) * rng.choice([-1.0, 1.0], n)
-    dz = np.zeros(len(z4[0]))
-    dz[:n] = opt["rel"] * r * z4[0][:n]
-    zero = np.zeros(len(dz))
-    zs = o8(qd_axpy(1.0, dz, zero, zero, zero, *z4))
+    zs, n = plant_start(z4, rs, opt["rel"], opt["seed"], opt["last"])
     print(f"planted {path}: D {mp.nstr(D, 12)}, start = truth moved by {opt['rel']:.0e} relative in [0, {n}); pinned max|F| (octo) "
           f"truth {omax(so.residual_o(o8_of_q(z4))):.2e}, start {omax(so.residual_o(o8_of_q(zs))):.2e}; mutate_offset "
           f"'{opt['mutate_offset']}', mutate {opt['mutate']}", flush=True)
