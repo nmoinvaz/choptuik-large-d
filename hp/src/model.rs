@@ -23,13 +23,14 @@ use crate::dd::DD;
 use crate::dv::DV;
 use crate::field::{cs, cs_range, cs_w, horner, DMat, Fl, State, TangentTail};
 use crate::lane::{Dc, Fu, Fun, Lane, F8};
-use crate::linalg::{ld_for, DDLu};
+use crate::linalg::{ld_for, DDLu, StaircaseLu};
 use crate::qv::QV;
 use multidouble::dual::Param;
 use multidouble::native::{Dtn, OV};
 use multidouble::precision::{Double, Precision};
 use multidouble::simd::Native;
 use multishoot::jacobian::Seed;
+use multishoot::control::Control;
 use multishoot::periodic::Parity;
 use multishoot::{Equations, ExtraRow, ProjectedRows, Rate, Shooting, Work};
 use crate::field::FieldSolve;
@@ -71,8 +72,8 @@ pub struct Ctx<const B: usize> {
     /// (hp/mixed_check.py --mutate): 0 none, 1 no tau derivative, 2 omega scaled by 1 + 1e-9, 3 the horizon solves'
     /// kappa tangent term dropped; 6 the centre series' scale wrong at one order (twice sigma for the order-7 terms
     /// built from order 6), the control of the scaled series' bit-identity (hp/highm_check.py scaled). The
-    /// double-double lanes never read it. The quad-double lanes read QD_MUT_NOREFINE and QD_MUT_REFINE4 only (and `qsolve`
-    /// QD_MUT_STATE_DD), and the octo-double lanes the same two (and `osolve` OD_MUT_STATE_QD).
+    /// double-double lanes never read it. The quad-double lanes read QD_MUT_NOREFINE and QD_MUT_REFINE4 only (and
+    /// `residual_in` QD_MUT_STATE_DD), and the octo-double lanes the same two (and `residual_in` OD_MUT_STATE_QD).
     pub mutate: u8,
     /// Parts of the f64 Jacobian (TAN_F64 lanes) computed in double-double instead, rounded to f64; bit flags HDD_*
     /// (notes/LARGE_D_MIXED.md). 0, the default, changes nothing. The double-double lanes never read it.
@@ -87,7 +88,7 @@ pub struct Ctx<const B: usize> {
 /// `Ctx::f64_dd`: the horizon series' periodic solves (`psolve`) in double-double for the f64 lanes, value and
 /// tangents, with the full double-double LU factors instead of their hi parts
 pub const HDD_SOLVE: u8 = 1;
-/// `Ctx::mutate` for the quad-double and octo-double lanes (the control of qsolve's and osolve's checks): the horizon
+/// `Ctx::mutate` for the quad-double and octo-double lanes (the control of their precision checks): the horizon
 /// solves without their refinement, so only to the double-double LU's accuracy
 pub const QD_MUT_NOREFINE: u8 = 7;
 /// `Ctx::mutate` for the quad-double lanes: four refinement steps, the reference of the refinement's convergence check;
@@ -1021,37 +1022,77 @@ pub fn residual<const B: usize>(ctx: &Ctx<B>, zh: &[f64], zl: &[f64], par: bool)
 /// values (z_0); psolve continues them order by order.
 pub fn residual_jet<const N: usize, const B: usize>(ctx: &Ctx<B>, zs: &[(&[f64], &[f64])], par: bool, nout: usize) -> Result<Vec<(Vec<f64>, Vec<f64>)>, String> {
     let zp: Vec<Vec<&[f64]>> = zs.iter().map(|&(h, lo)| vec![h, lo]).collect();
-    let f = residual_jet_p::<Double, N, B>(ctx, &ctx.shooting(), &zp, par, nout)?;
+    let f = residual_jet_in::<Double, N, B>(ctx, &zp, par, nout)?;
     Ok(f.iter().map(|v| split(v)).collect())
-}
-
-/// residual_jet in the precision P on the engine's problem sh (its control set by the caller)
-pub(crate) fn residual_jet_p<P: Precision<Native>, const N: usize, const B: usize>(
-    _ctx: &Ctx<B>,
-    sh: &Shooting<Dss<'_, B>, B>,
-    zs: &[Vec<&[f64]>],
-    par: bool,
-    nout: usize,
-) -> Result<Vec<Vec<P::Scalar>>, String> {
-    guard(|| sh.residual_jet::<P, N>(zs, par, nout))
 }
 
 /// Exact Jacobian dF/dz by forward-mode duals, column-major with leading dimension ld_for(L): (hi, lo, ld).
 pub fn jacobian<const B: usize>(ctx: &Ctx<B>, zh: &[f64], zl: &[f64], par: bool) -> Result<(Vec<f64>, Vec<f64>, usize), String> {
-    let (mut c, ld) = jacobian_p::<Double, B>(ctx, &ctx.shooting(), &[zh, zl], par)?;
+    let (mut c, ld) = jacobian_in::<Double, B>(ctx, &[zh, zl], par)?;
     let jl = c.pop().expect("two parts");
     let jh = c.pop().expect("two parts");
     Ok((jh, jl, ld))
 }
 
-/// The exact Jacobian in the precision P on the engine's problem sh: (PARTS part arrays, ld)
-pub(crate) fn jacobian_p<P: Precision<Native>, const B: usize>(_ctx: &Ctx<B>, sh: &Shooting<Dss<'_, B>, B>, z: &[&[f64]], par: bool) -> Result<(Vec<Vec<f64>>, usize), String> {
-    guard(|| sh.jacobian::<P>(z, par))
+// ---------------------------------------------------------------------------------------------------------------
+// the residual, its jet, the exact Jacobian and the Newton step in any precision (quad-double: notes/QUAD_DOUBLE.md
+// section 12; octo-double: notes/OCTO_DOUBLE.md): multishoot's at multidouble's `Precision` (`Double`, `Quad`, `Octo`),
+// the state in PARTS parts, the horizon solves refined to the lanes' precision (psolve, `Lane::VAL_QD`,
+// `Lane::VAL_OD`), the model's constants double-double, so that the discrete system is the double-double solver's
+// ---------------------------------------------------------------------------------------------------------------
+
+/// `Ctx::mutate` for the quad-double entry points (the control of their precision checks): the state read in its
+/// double-double part only (multishoot's `Control::HalfParts`)
+pub const QD_MUT_STATE_DD: u8 = 9;
+/// `Ctx::mutate` for the octo-double entry points: the state read in its quad-double part only (its first four parts)
+pub const OD_MUT_STATE_QD: u8 = 10;
+
+impl<const B: usize> Ctx<B> {
+    /// `shooting` for an evaluation in P: the state read in its lower half of parts (multishoot's
+    /// `Control::HalfParts`) under P's state mutation, QD_MUT_STATE_DD or OD_MUT_STATE_QD
+    pub fn shooting_in<P: Precision<Native>>(&self) -> Shooting<Dss<'_, B>, B> {
+        let mut s = self.shooting();
+        let code = match P::PARTS {
+            4 => QD_MUT_STATE_DD,
+            8 => OD_MUT_STATE_QD,
+            _ => 0,
+        };
+        if code != 0 && self.mutate == code {
+            s.set_control(Control::HalfParts);
+        }
+        s
+    }
 }
 
-/// The residual in the precision P on the engine's problem sh
-pub(crate) fn residual_p<P: Precision<Native>, const B: usize>(_ctx: &Ctx<B>, sh: &Shooting<Dss<'_, B>, B>, z: &[&[f64]], par: bool) -> Result<Vec<P::Scalar>, String> {
-    guard(|| sh.residual::<P>(z, par))
+/// The residual with every block in the precision P, one scalar per row: each block reads its inputs, Delta and its
+/// target in all parts, and the projected rows and the phase row are in P too
+pub fn residual_in<P: Precision<Native>, const B: usize>(ctx: &Ctx<B>, z: &[&[f64]], par: bool) -> Result<Vec<P::Scalar>, String> {
+    guard(|| ctx.shooting_in::<P>().residual::<P>(z, par))
+}
+
+/// The residual on a jet state z(h) = sum_k z_k h^k in P (`P::J<N>` lanes), with the dimension n + h as the jet
+/// variable: at most N coefficient vectors, each in PARTS parts, and F's coefficients of orders 0..nout-1 (nout <= N).
+/// The horizon LUs are those of z_0's double-double part, the preconditioners of the refined solves; the D-dependent
+/// constants are formed in the jet's parameter arithmetic, so order 0 is residual_in's residual up to that rounding.
+pub fn residual_jet_in<P: Precision<Native>, const N: usize, const B: usize>(
+    ctx: &Ctx<B>,
+    zs: &[Vec<&[f64]>],
+    par: bool,
+    nout: usize,
+) -> Result<Vec<Vec<P::Scalar>>, String> {
+    guard(|| ctx.shooting_in::<P>().residual_jet::<P, N>(zs, par, nout))
+}
+
+/// The exact Jacobian in P by forward-mode duals (`P::U` lanes, one evaluation per column): (PARTS column-major part
+/// arrays with leading dimension ld_for(L), ld), part q of entry (i, j) at c[q][j ld + i]
+pub fn jacobian_in<P: Precision<Native>, const B: usize>(ctx: &Ctx<B>, z: &[&[f64]], par: bool) -> Result<(Vec<Vec<f64>>, usize), String> {
+    guard(|| ctx.shooting_in::<P>().jacobian::<P>(z, par))
+}
+
+/// The Newton step in P at z: dz = -J^-1 F in PARTS parts, F, the dense LU in P and the seconds of the residual, the
+/// Jacobian, the factorization and the solve (multishoot's `newton_step`)
+pub fn newton_in<P: Precision<Native>, const B: usize>(ctx: &Ctx<B>, z: &[&[f64]], par: bool) -> Result<multishoot::newton::Step<P>, String> {
+    guard(|| ctx.shooting_in::<P>().newton_step::<P>(z, par))
 }
 
 /// The Jacobian in plain f64 (the same columns with `Fu` lanes: constants and the base state rounded to f64, the
@@ -1247,8 +1288,8 @@ pub fn jvp<const B: usize>(ctx: &Ctx<B>, zh: &[f64], zl: &[f64], vh: &[f64], vl:
 /// `Fun<N>` or `Dtn<N>`) built block by block and factored by the staircase LU (multishoot's `jacobian_staircase`,
 /// multidouble's `StaircaseLu`) without forming the dense matrix; its entries are those of the dense f64 Jacobian.
 /// Not for the frozen-harmonics layout (Ctx::freeze couples the horizon block to p1) or a mode matrix (lam != 0).
-/// mutate: block::MUT_* (controls).
-pub fn jacobian_block<T: Lane, const B: usize>(ctx: &Ctx<B>, zh: &[f64], zl: &[f64], par: bool, mutate: u8) -> Result<crate::block::BlockLu, String> {
+/// mutate: MUT_PIVOT, MUT_LINK (controls).
+pub fn jacobian_block<T: Lane, const B: usize>(ctx: &Ctx<B>, zh: &[f64], zl: &[f64], par: bool, mutate: u8) -> Result<StaircaseLu, String> {
     if ctx.freeze.is_some() {
         return Err("block storage does not support the frozen-harmonics layout (kfreeze)".into());
     }
@@ -1256,9 +1297,19 @@ pub fn jacobian_block<T: Lane, const B: usize>(ctx: &Ctx<B>, zh: &[f64], zl: &[f
         return Err("block storage is for the f64 Jacobian only".into());
     }
     let mut sh = ctx.shooting();
-    sh.set_control(crate::block::control(mutate));
+    sh.set_control(match mutate {
+        MUT_PIVOT => Control::StaircasePivot,
+        MUT_LINK => Control::StaircaseLink,
+        _ => Control::None,
+    });
     guard(|| sh.jacobian_staircase::<T>(&[zh, zl], par))
 }
+
+/// `jacobian_block`'s deliberate breakage for the controls (hp/highm_check.py): one pivot of the staircase LU's middle
+/// step scaled by 1 + 1e-6 (multishoot's `Control::StaircasePivot`)
+pub const MUT_PIVOT: u8 = 1;
+/// the link rows replaced by delta_s = 0, the copies of Delta no longer tied to it (`Control::StaircaseLink`)
+pub const MUT_LINK: u8 = 2;
 
 /// The mode matrix M(lam) at a real growth rate lam: the linearization of the residual for perturbations
 /// ~ exp(lam tau), Delta held fixed, over the block rows and the unknowns before Delta (multishoot's `mode_matrix`,

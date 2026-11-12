@@ -8,24 +8,21 @@
 //!   (f64 value, N tangents) and `Dtn<N>` (double-double value, N f64 tangents).
 //! * `field`: a tau field on the half grid (M = 8 B points) as B lane vectors; Cauchy products, d/dtheta.
 //! * `linalg`: dense double-double LU with partial pivoting (periodic solves, Newton), and the same blocked LU in f64.
-//! * `model`: centre series, Taylor stepping in x, horizon series, residual and Jacobian (double-double or f64).
-//! * `qsolve`: the residual, its exact Jacobian and the Newton step in quad-double (notes/QUAD_DOUBLE.md, section 12).
-//! * `osolve`: the same in octo-double, with the jet in the dimension (notes/OCTO_DOUBLE.md).
-//! * `xsolve`: the code of both, written once over multidouble's `Precision` (`Quad`, `Octo`).
+//! * `model`: the equations (centre series, Taylor stepping in x, horizon series) as multishoot's `Equations`, and the
+//!   kernel's entry points on multishoot's engine: residual, Jacobians (double-double, f64, staircase storage), jets,
+//!   Jacobian-vector product, mode matrix, and the residual, Jacobian, Newton step and jet in quad-double
+//!   (notes/QUAD_DOUBLE.md, section 12) and octo-double (notes/OCTO_DOUBLE.md).
 //! * `qd`: scalar quad-double (~64 digits); `qv`: 8-lane quad-double built on `v8`, bitwise the same per lane; `exact`:
 //!   exact dyadic and decimal arithmetic for their decimal input/output and their tests. Not used by the solver yet
 //!   (notes/QUAD_DOUBLE.md).
 //!
 //! `v8`, `dd`, `dv`, `qd`, `qv`, `exact` and `linalg`, the lane types, the field arithmetic (`field`, with the early
-//! end of a series for the tangents and the refined horizon solves) and the staircase LU (`block`) are the
-//! multidouble crate's; this crate adds the model and the layout of its Newton system.
-pub mod block;
+//! end of a series for the tangents and the refined horizon solves) and the staircase LU are the multidouble crate's;
+//! the layout, the residual, the Jacobians, the jets and Newton's step are the multishoot crate's; this crate adds the
+//! equations.
 pub mod field;
 pub mod lane;
 pub mod model;
-pub mod osolve;
-pub mod qsolve;
-pub mod xsolve;
 
 // The arithmetic, the dual lanes and the dense LU live in the multidouble crate (crates.io; github.com/nmoinvaz/multidouble),
 // split out of this one; re-exported under their old paths so the solver code reads as before. Its lane types are
@@ -57,6 +54,8 @@ mod jvp_tests;
 mod mode_tests;
 #[cfg(test)]
 mod freeze_tests;
+#[cfg(test)]
+mod prec_tests;
 
 #[cfg(feature = "python")]
 mod python;
