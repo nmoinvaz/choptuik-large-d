@@ -47,7 +47,7 @@ neighbouring question with the same tools; P4 overlaps part of a claim; P5 conta
 | **S.-H. Lai, W.-Y. Wen**, *Polyakov backreaction in large D discretely self-similar collapse*, arXiv:2610.04960 (October 2026) ([HTML](https://arxiv.org/html/2610.04960)) | P3 for C1 and C8 | Full text (HTML) | Builds on EEG: "Following Ref. [12], we work in the past patch of the critical spacetime" (Sec. II.A). "the next-to-leading large-D consistency condition selects $`\Delta = 1`$" (Sec. II.A, unit normalisation). "Uniqueness of the echoing period is not a leading-order statement." (Sec. II.B). The period is "a modulus" fixed by subleading conditions (Sec. IV.C). It does not cite Rozali–Way or this project. **A 2026 paper relies on the NLO selection that C8 disputes.** |
 | **C. R. Clark, G. L. Pimentel**, *Black hole critical collapse in infinite dimensions: continuous self-similar solutions*, JHEP 11 (2025) 017, arXiv:2504.10590 ([Springer](https://link.springer.com/article/10.1007/JHEP11(2025)017), [PDF](https://arxiv.org/pdf/2504.10590)) | P3 for C1, C5 and C6 | Full text (PDF extraction) | Large-$`D`$ matched asymptotics for the CSS critical solution, with $`\epsilon = 1/(D-2)`$ (Eq. (2.8)) and regions A/B/C in self-similar time. Footnote 1: "it has not yet been proven that there are no further restrictions from the 'matching' of these asymptotics". CSS-breaking mass exponent: "γ = 2(D−3)/(D−2) ≈ 2 − 2/D" (Eq. (1.5)), with $`M \sim (p-p^*)^\gamma`$ (Eq. (2.1)). The introduction cites [28] for the exponent possibly approaching 1/2. The DSS solution is "only known approximately and numerically" (footnote 5). There is no heat-equation form and no beyond-all-orders discussion. **Not cited in the paper or the README.** |
 | **C.-H. Wu**, *Quantum critical collapse in the large D limit*, arXiv:2610.20705 (14 Oct 2026) ([abs](https://arxiv.org/abs/2610.20705)) | P2 | Abstract only | Quantum $`s`$-wave growth in CSS and DSS critical spacetimes at large $`D`$; no $`\Delta`$, $`\gamma`$ or Stokes content in the abstract. |
-| **C. Gundlach, D. Hilditch, J. M. Martín-García**, *Critical Phenomena in Gravitational Collapse*, arXiv:2507.07636 ([HTML](https://arxiv.org/html/2507.07636v1)) | P2 | Full text (HTML) | No large-$`D`$ results and no limits of $`\Delta`$ or $`\gamma`$. It does not mention Rozali–Way, Clark–Pimentel or Ecker et al. Sec. IV.A.2: Kol "claims to obtain analytic estimates for γ and Δ in arbitrary dimension". Sec. III.C: the critical solution "was determined accurately in [43] by assuming analyticity at the centre of spherical symmetry and at the past light cone". No exponential asymptotics. |
+| **C. Gundlach, D. Hilditch, J. M. Martín-García**, *Critical Phenomena in Gravitational Collapse*, arXiv:2507.07636 ([HTML](https://arxiv.org/html/2507.07636v1)) | P2 | Full text (HTML); read again in full from the arXiv source in the addendum of issue #380, which supersedes this row | No large-$`D`$ results and no limits of $`\Delta`$ or $`\gamma`$. It does not mention Rozali–Way, Clark–Pimentel or Ecker et al. Sec. IV.A.2: Kol "claims to obtain analytic estimates for γ and Δ in arbitrary dimension". Sec. III.C: the critical solution "was determined accurately in [43] by assuming analyticity at the centre of spherical symmetry and at the past light cone". No exponential asymptotics. |
 | **B. Kol**, *Choptuik scaling and the merger transition*, hep-th/0502033, DOI 10.1088/1126-6708/2006/10/017 ([PDF v3](https://arxiv.org/pdf/hep-th/0502033v3)) | P2 | Full text (PDF extraction) | For the black-string merger system: Eq. (3.20) "$`\frac{2\pi}{\Delta} = \sqrt{\frac{10 - D}{D - 2}}`$"; Eq. (3.21) "$`\gamma = \frac{1}{4} \left( 1 + \sqrt{\frac{D - 10}{D - 2}} \right)`$" for $`D \ge 10`$. *Inferred (my arithmetic):* $`\gamma\to1/2`$ there too, as $`D\to\infty`$. There is no formula for Choptuik's $`\Delta(D)`$. |
 | **R. Emparan, C. P. Herzog**, RMP 92, 045005 (2020) ([PDF](https://arxiv.org/pdf/2003.11394)) | P2 | Partial: the text extraction stops at Sec. V. **Sec. X.C "Critical collapse and Choptuik scaling" is FULL-TEXT-UNREAD**, so this grade is a ceiling. | Sec. III.F: "The breakdown is non-perturbative in 1/n"; "non-perturbative corrections = O(n^{-n})"; quasinormal modes as "non-perturbative, or trans-series, corrections". Sec. IV.E.1: "resemble (inhomogeneous) heat equations" (black-brane effective equations). The large-$`D`$ community already knows trans-series effects in $`1/D`$, and heat-like effective equations. |
 | **R. Donninger**, J. Evol. Equ. 9, 511 (2009), arXiv:0809.5177 ([PDF](https://arxiv.org/pdf/0809.5177)) | P3 for C2 | Full text (PDF extraction) | "We consider the radial wave equation in similarity coordinates within the semigroup formalism"; "the long time behaviour of the solution is governed by the analytic eigenfunctions". This is 3+1 only, with explicit eigenfunctions $`(1-\rho)^{1-\lambda}-(1+\rho)^{1-\lambda}`$. It gives no connection coefficients and no general $`d`$. |
@@ -1827,3 +1827,78 @@ Since #527, #529 resolved Q at h = 10⁻³¹ (largest entry 5.4×10⁴ and 2.75�
    - *Acceptance.* As #531's: the task fails, and says so, if one of them analyses a corrector for a nearly singular
      root whose reduced quadratic term vanishes that #527's designs miss.
    - *Depends on.* #531.
+
+## Addendum (2026-11-12, issue #380): the 2025 critical-phenomena review, read in full
+
+**Question.** What does Gundlach, Hilditch and Martín-García's 2025 review contain, and not contain, on the topics of
+the claims C1–C10 of §0 and on our other results? §1's row for it was read through `WebFetch` extractions, and the
+#200 addendum read its first 100000 characters and a keyword search. The statement-by-statement comparison with our
+values is
+[REVIEW_GHMG25.md](REVIEW_GHMG25.md), which is the canonical place for it; this entry records what was read.
+
+**How.**
+- **Read in full.** The arXiv source of v1 (`critphen_lrr_maintext.tex`, all 5122 lines, and the `.bbl`), downloaded
+  with curl on 2026-11-12. Quotes are verbatim from the LaTeX source, with math rewritten in Unicode, so this channel
+  has no extraction limit, unlike the `WebFetch` quotes of §1.
+- **Abstracts read** (arXiv pages): Garfinkle–Cutler–Duncan 1999, Birukou et al. 2002, Husain et al. 2003,
+  Bland–Kunstatter 2007, Gundlach 1998, Martín-García–Gundlach 1999, Brady–Ottewill 1998, Berczi–Saffin–Zhou 2022.
+- **Source read in part:** Porto Veronese–Gundlach 2022 (arXiv source), for its D = 5 values and its 8+1 appendix.
+- **Inferences** are marked *inferred*.
+
+### Closest works
+
+| Work | Bears on | What it contains | What it does not contain |
+|---|---|---|---|
+| **C. Gundlach, D. Hilditch, J. M. Martín-García**, *Critical Phenomena in Gravitational Collapse*, arXiv:2507.07636v1 (2025), read in full | C6, C9, C10; the mode count; matter/ | **D = 4.** "Δ = 3.445452402(3) from a numerical construction of the critical solution based on exact self-similarity and analyticity", which "agrees with the leading digits" of Reiterer and Trubowitz's (III B). A critical solution has "exactly one λᵢ with positive real part (in fact it is purely real)", and the λ = 1 time shift is unphysical (II C); all non-spherical modes of the Choptuik solution decay (V A 1). **Other D.** γ ≃ 0.424 at D = 6, γ = 0.4131 ± 0.0001 at D = 5, Birukou et al.'s 0.36, 0.41, 0.44 and 0.52, Kol's estimates, and work "in noninteger dimension up to 14" and in 8+1 (IV A 2); 2+1 with Λ < 0 (IV A 1). **Proofs.** Reiterer–Trubowitz's existence proof, "the only DSS one so far" (VII C), from a Fourier × Chebyshev approximation in rational arithmetic, analytic "from Γ through to somewhat to the future of C₀⁻" (VII D 7); CSS Einstein–scalar solutions are only $`C^{1,\epsilon}`$ at the past light cone (VII D 3). **Surface gravity.** ν_SH,Choptuik ≃ 0.6138 from Reiterer–Trubowitz's μ and Δ (VII G, Eq. (125)). **Counting.** Gundlach 1998 counted the fluid solution's modes "using numerical contour integration in the complex plane of potential mode frequencies" (VI E). **Matter.** The κ-model (critical CSS for κ > 0.0754, three unstable modes below), the S³ σ-model's thresholds and its CSS–DSS transition, the ℓ-multiplet, Yang–Mills, Bianchi IX, charge (δ ≃ 0.88) and ghosts (IV A 3–5, V A 2, III E, IV D). | Large D in any form: Rozali–Way, Emparan–Herzog and Clark–Pimentel are not cited, and Ecker et al.'s papers appeared after it. Δ at any D ≠ 4. The limit D → 3⁺. Any formula or mechanism for Δ; Stokes phenomena or exponential asymptotics. Mode counts at D ≠ 4. Ghost or wormhole thresholds. |
+
+### Verdicts on the claims of §0
+
+- **C1–C5, C8.** The review has nothing on large D, so it neither supports nor contradicts them, and §2's verdicts
+  stand. C3's "Not found" list already counted it (as "the 2025 review: none"); the full reading confirms it.
+- **C6.** No Δ(D) is quoted for D ≠ 4, and no limit of Δ or γ. The higher-D work it cites (Sorkin–Oren, Bland et al.,
+  Taves–Kunstatter, Porto Veronese–Gundlach) stops at D = 14. C6's implicit priority above D = 14 stands as far as the
+  review goes.
+- **C7.** The review predates Ecker et al.'s D = 5 value, so it is silent.
+- **C9.** Survives as worded, since the sentence is scoped to the two Stokes-constant templates. Reiterer–Trubowitz's
+  unknown is also a function of (τ, x), periodic in τ (VII D 7), in a computer-assisted proof without Stokes
+  multipliers. Proposed: name them in PROOF.md's sentence as the two-variable precedent, so its scope reads plainly.
+- **C10.** The review confirms §2's verdict: Reiterer–Trubowitz's proof is the existence proof of the D = 4 DSS
+  solution, with Δ enclosed. PROOF.md's wording already follows that verdict.
+
+### References checked
+
+| Entry | Checked against | Verdict |
+|---|---|---|
+| Gundlach, Hilditch, Martín-García, arXiv:2507.07636 (2025) | the arXiv abstract page (v1 only, 10 July 2025, comment "Major update to the living review"); INSPIRE, 2026-11-12 | OK as a preprint; no journal publication listed |
+| Birukou, Husain, Kunstatter, Vaz, Olivier, PRD 65, 104036 (2002), gr-qc/0201026 | INSPIRE | OK |
+| Porto Veronese, Gundlach, PRD 106, 104044 (2022), arXiv:2209.08404 | INSPIRE | OK |
+| Martín-García, Gundlach, PRD 59, 064031 (1999), gr-qc/9809059 | INSPIRE; the arXiv page | OK |
+| Gundlach, PRD 57, R7075 (1998), gr-qc/9710066 | INSPIRE (DOI 10.1103/PhysRevD.57.R7075) | OK; the review's entry gives page 7075 |
+| Gundlach, Martín-García, PRD 54, 7353 (1996), gr-qc/9606072 | INSPIRE | OK |
+| Berczi, Saffin, Zhou, JHEP 02 (2022) 183, arXiv:2111.11400 | INSPIRE | OK |
+| Brady, Ottewill, PRD 58, 024006 (1998), gr-qc/9804058 | INSPIRE | OK |
+| Marouda, Cors, Rüter, Atteneder, Hilditch, PRD 109, 124042 (2024), arXiv:2402.06724 | INSPIRE | OK; the review cites the preprint only |
+| Cors, Renkhoff, Rüter, Hilditch, Brügmann, PRD 108, 124021 (2023), arXiv:2308.01812 | INSPIRE (the APS DOI) | MINOR: INSPIRE's free-text field says 124035 |
+
+### Gap statement
+
+- **Not read.** The primary sources behind the review's numbers: Garfinkle–Cutler–Duncan 1999 and Birukou et al. 2002
+  beyond their abstracts, Hirschmann–Eardley 1997, Bizoń–Wasserman 2000, Gundlach 1998's method, the axisymmetric
+  complex-scalar papers. The review's statements stand in for them, which is the residual risk of REVIEW_GHMG25.md's
+  rows 6, 9–11, 22, 24 and 29.
+- **The published version.** The review invited feedback until October 2025 for "the version to be published", which
+  was not available on 2026-11-12. A later version may change any row.
+
+### Discrepancies and proposed text (for the coordinator)
+
+- **This file's Q3 (addendum #200).** "MODE_COUNT.md's argument-principle count of det M(λ) has no counterpart in the
+  sources read" is contradicted by the review's Sec. VI E (Gundlach 1998, contour integration). Reported, not changed;
+  REVIEW_GHMG25.md D6 and its task R1.
+- **§1's row for the review** is superseded by this addendum. Its content agrees with what was read here.
+- The comparison's seven discrepancies, the citations to add and the proposed README text are in
+  [REVIEW_GHMG25.md](REVIEW_GHMG25.md) §3, §5 and §7.
+- **No novelty sentence** was added by this task.
+
+### Recommended tasks (for the coordinator to file)
+
+REVIEW_GHMG25.md §6 (R1–R5).
