@@ -542,6 +542,23 @@ def cmd_planted(argv):
             ver.append(dict(c=f"P5 exact profile, N3LO, {k}: |p - {rel[k]:g}| <= 0.25", p=q, ok=abs(q - rel[k]) <= 0.25))
         q = out["fits"]["exact profile (floor)"]["Psi"]["p_pure"]
         ver.append(dict(c="P6 exact profile, NNLO, Psi: |p - 2| <= 0.25", p=q, ok=abs(q - 2) <= 0.25))
+        # information: R's numerator (the plant's rms) and denominator (the field's rms; f: 1 - f) apart, as local
+        # exponents between neighbouring test D, so that a miss of P5 can be traced to one of them
+        tst = [r for r in recs if any(abs(r["D"] - t) < 1e-6 for t in out["test"])]
+        parts = []
+        for r in tst:
+            e, bt = NV.beta_tilde(r)
+            m = NV.model_fields(e, bt, r["xs"], "corrected", 4)
+            parts.append((e, {k: (np.sqrt(np.mean((r[k] - m[k]) ** 2)),
+                                  np.sqrt(np.mean(((1 - r[k]) if k == "f" else r[k]) ** 2))) for k in FIELDS}))
+        print("\n== P5's parts: local exponents of the plant's rms and of the field's rms between neighbouring test D")
+        out["P5_parts"] = {}
+        for k in FIELDS:
+            loc = [[float(np.log(parts[i][1][k][j] / parts[i + 1][1][k][j]) / np.log(parts[i][0] / parts[i + 1][0]))
+                    for i in range(len(parts) - 1)] for j in (0, 1)]
+            out["P5_parts"][k] = dict(numerator=loc[0], denominator=loc[1])
+            print(f"   {k:4s} numerator " + " ".join(f"{v:.3f}" for v in loc[0]) + "   denominator "
+                  + " ".join(f"{v:.3f}" for v in loc[1]))
     for v in ver:
         v["ok"] = bool(v["ok"])
     print("\n== planted: K's recovered (fundamental and nu = 3), true against fitted")

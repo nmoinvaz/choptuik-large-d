@@ -610,26 +610,42 @@ def cmd_compare(argv, recs=None, label="solutions"):
             ctl = verdicts(fits, {"NNLO corrected": EXPECT4}, ["NNLO corrected"])
             print("   control C4': NNLO corrected against N3LO's window (must FAIL for every field): "
                   + " ".join(f"{v['field']} {'PASS' if v['ok'] else 'FAIL'}" for v in ctl))
-            use = [i for i, r in enumerate(recs) if r["D"] >= dmin and i not in drop]
+            use = [i for i, r in enumerate(recs) if r["D"] >= dmin]
             sizes = term_sizes(recs, use)
-            print("\n== the new terms against the NNLO: max|Pi_4|/max|Pi_3| (coefficients); per field, the new term "
-                  "(with its eps power) over R_NNLO, and the share of R_NNLO that N3LO removes")
-            for row in sizes:
-                if any(abs(row["D"] - d) < 0.5 for d in (40.02, 60.0, 80, 100, 140, 200, 215)) or row is sizes[-1]:
-                    print(f"    D {row['D']:7.2f}  Pi4/Pi3 {row['pi4_over_pi3']:7.2f}   " + "  ".join(
-                        f"{k} {row[k]['term_over_R3']:6.3f} {row[k]['removed']:6.3f}" for k in FIELDS))
-            q = [row["pi4_over_pi3"] for row in sizes]
+            print("\n== the new terms against the NNLO, every D >= dmin (* = outside the fit): max|Pi_4|/max|Pi_3| "
+                  "(coefficients); per field, the new term (with its eps power) over R_NNLO, and the share of R_NNLO "
+                  "that N3LO removes")
+            for i, row in zip(use, sizes):
+                row["in_fit"] = i not in drop
+                print(f"    D {row['D']:7.2f}{' ' if row['in_fit'] else '*'} Pi4/Pi3 {row['pi4_over_pi3']:7.2f}   "
+                      + "  ".join(f"{k} {row[k]['term_over_R3']:6.3f} {row[k]['removed']:6.3f}" for k in FIELDS))
+            q = [row["pi4_over_pi3"] for row in sizes if row["in_fit"]]
             print(f"    Pi4/Pi3 over the fit's {len(q)} states: {min(q):.2f} to {max(q):.2f}")
-            # R/eps^p at a few D: the size of the first omitted order of each model
-            for name in ("NNLO corrected", "N3LO"):
+            # the lowest D from which on N3LO's maximal residual stays below the NNLO's
+            cross = {}
+            for k in FIELDS:
+                worse = [row["D"] for row in sizes if row[k]["removed"] <= 0]
+                above = [row["D"] for row in sizes if not worse or row["D"] > max(worse)]
+                cross[k] = above[0] if above else None
+            print("    N3LO below the NNLO from D = " + " ".join(f"{k} {cross[k]}" for k in FIELDS)
+                  + f" on (states D >= {dmin:g})")
+            coef["crossover_D"] = cross
+            # R/eps^p at a few D: the size of the first omitted order of each model, and the factor each order costs
+            for name in ("LO", "NLO", "NNLO corrected", "N3LO"):
                 coef[name] = []
-                for d in (60.0, 100.0, 200.0):
+                for d in (60.0, 100.0, 140.0, 200.0):
                     i = min(range(len(recs)), key=lambda j: abs(recs[j]["D"] - d))
                     e = 1.0 / (recs[i]["D"] - 1)
                     coef[name].append(dict(D=recs[i]["D"], **{k: table[name][i][k]["max"] / e ** expect[name][k]
                                                                for k in FIELDS}))
                 print(f"    R/eps^p, {name}: " + "  ".join(f"D {c['D']:.0f}: " + " ".join(f"{k} {c[k]:.2e}" for k in FIELDS)
                                                        for c in coef[name]))
+            print("    factor per order (R/eps^p of a model over the previous model's; Psi's NNLO equals its NLO):")
+            for j, d in enumerate((60.0, 100.0, 140.0, 200.0)):
+                print(f"      D {coef['LO'][j]['D']:.0f}: " + "  ".join(
+                    f"{k} " + " ".join(f"{coef[b][j][k] / coef[a][j][k]:.0f}" for a, b in
+                                      (("LO", "NLO"), ("NLO", "NNLO corrected"), ("NNLO corrected", "N3LO")))
+                    for k in FIELDS))
     rows = rms_change(recs)
     print("\n== Fig. 5's measure, relative rms deviation rms(F_sol - F)/rms(F_sol): printed / corrected / "
           "change printed - corrected")
