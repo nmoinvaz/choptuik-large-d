@@ -15,7 +15,11 @@ rebuilt layout (up to N Newton steps, default 4; the up6 states at D = 27-35 com
 not change). States whose residual still exceeds --fmax (default 1e-20) are skipped and recorded as such.
 
     python3 gamma_dd.py out.jsonl STATE.npz [STATE.npz ...] [--threads=N] [--M48 | --Mhi=64] [--kf=none|13|auto] [--fmax=1e-20] [--polish[=N]]
-        [--newton_it=12] [--lm_it=20] [--series_override] [--mutate=old_rule|no_tail_gate]
+        [--newton_it=12] [--lm_it=20] [--bracket=A,B] [--xtol=1e-14] [--series_override] [--mutate=old_rule|no_tail_gate]
+
+--bracket=A,B searches the root of det M in [A, B] only, at every M, instead of the grids about the formula's value,
+and a bracket without a sign change gives lam None and exit status 1 (#458: the root's resolution is the spread of lam
+over brackets). --xtol is brentq's absolute tolerance (its relative tolerance is 1e-15).
 
 --M48 (or --Mhi=N) also resamples the state to M = 48 (N) tau points, re-converges it and repeats the root search,
 bracketed afresh from the formula (self-convergence; the record's M48 field). The M = 48 solve uses the kfreeze-13 cut
@@ -76,7 +80,9 @@ def best_solver(meta, zh, zl, threads, M=None, force=None):
     return s, F, kf
 
 
-def find_lam(s, zh, zl, lam0, log=None):
+def find_lam(s, zh, zl, lam0, log=None, bracket=None, xtol=1e-14):
+    """the root of det M near lam0, from the widening grids about lam0, or in bracket (a, b) when given (#458: the
+    root's resolution as its spread over brackets); None when the bracket has no sign change"""
     cache = {}
 
     def sd(lam):
@@ -88,6 +94,13 @@ def find_lam(s, zh, zl, lam0, log=None):
                 log(f"    lam {lam:.12f}: sign {sg:+.0f} ln|det| {la:.6f} pivots {pmin:.2e}..{pmax:.2e} ({time.time() - t:.1f} s)")
         return cache[lam]
 
+    if bracket:
+        a, b = bracket
+        if sd(a)[0] == sd(b)[0]:
+            return None, 0, len(cache)
+        ref = 0.5 * (sd(a)[1] + sd(b)[1])
+        f = lambda l: sd(l)[0] * math.exp(sd(l)[1] - ref)
+        return brentq(f, a, b, xtol=xtol, rtol=1e-15, maxiter=80), 1, len(cache)
     for w in (3e-4, 2e-3, 1e-2, 4e-2):
         grid = [lam0 - w, lam0, lam0 + w]
         sg = [sd(l)[0] for l in grid]
@@ -97,7 +110,7 @@ def find_lam(s, zh, zl, lam0, log=None):
             a, b = grid[i], grid[i + 1]
             ref = 0.5 * (sd(a)[1] + sd(b)[1])
             f = lambda l: sd(l)[0] * math.exp(sd(l)[1] - ref)
-            lam = brentq(f, a, b, xtol=1e-14, rtol=1e-15, maxiter=60)
+            lam = brentq(f, a, b, xtol=xtol, rtol=1e-15, maxiter=60)
             return lam, len(ch), len(cache)
     return None, 0, len(cache)
 
@@ -179,6 +192,9 @@ def main():
     opts = dict(a[2:].split("=", 1) if "=" in a else (a[2:], "1") for a in sys.argv[1:] if a.startswith("--"))
     threads = int(opts.get("threads", 1))
     mutate = opts.get("mutate", "")
+    bracket = tuple(float(x) for x in opts["bracket"].split(",")) if "bracket" in opts else None
+    xtol = float(opts.get("xtol", 1e-14))
+    root = dict(bracket=list(bracket) if bracket else None, xtol=xtol)
     out = args[0]
     log = lambda m: print(m, flush=True)
     status = 0
@@ -206,9 +222,13 @@ def main():
             with open(out, "a") as fh_:
                 fh_.write(json.dumps(rec) + "\n")
             continue
-        lam, nch, nev = find_lam(s, zh, zl, lam0, log)
+        lam, nch, nev = find_lam(s, zh, zl, lam0, log, bracket, xtol)
         rec = dict(D=D, M=meta["M"], kfreeze=kf, F=F, **({"F_in": F_in} if "polish" in opts else {}), lam=lam, gamma=(1 / lam if lam else None), lam_formula=lam0,
-                   n_signchanges=nch, n_det=nev, state=os.path.basename(f), seconds=round(time.time() - t0, 1))
+                   n_signchanges=nch, n_det=nev, state=os.path.basename(f), seconds=round(time.time() - t0, 1),
+                   **(root if bracket or "xtol" in opts else {}))
+        if bracket and lam is None:
+            log(f"  no sign change of det M in the bracket {bracket}")
+            status = 1
         if ("M48" in opts or "Mhi" in opts) and lam:
             # self-convergence: resample to Mhi (default 48) collocation points in tau, re-converge, find lam
             t1 = time.time()
@@ -249,7 +269,10 @@ def main():
                         hi["override"] = hi.get("override", []) + [why]
                     lam48 = None
                     if F48 <= fmax:
-                        lam48, nch48, _ = find_lam(s48, z48h, z48l, lam0, log)  # bracketed independently of lam
+                        lam48, nch48, _ = find_lam(s48, z48h, z48l, lam0, log, bracket, xtol)  # independently of lam
+                        if bracket and lam48 is None:
+                            log(f"  M = {Mhi}: no sign change of det M in the bracket {bracket}")
+                            status = 1
                     hi.update(lam=lam48, lam_diff=(lam48 - lam) if lam48 else None)
             if "refused" in hi:
                 log(f"  M = {Mhi}: refused, {hi['refused']}; --series_override accepts it")
