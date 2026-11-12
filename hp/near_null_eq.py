@@ -2,7 +2,7 @@
 """The weakest directions of the chain's Newton system with its rows and columns equilibrated, at a stored state (#502).
 
     cd hp && python3 near_null_eq.py RAWDIR STATE [--k=4] [--its=16] [--threads=2] [--tol=1e-12] [--plant=SEED]
-        [--refine=3] [--jv=1] [--json=OUT] [--mutate=rows_only|sigma]
+        [--refine=3] [--jv=1] [--cr_floor=0] [--json=OUT] [--mutate=rows_only|sigma]
 
 The pinned system is factored once in octo-double exactly as near_null.py does it (the same make_solver call and plan,
 Solver.newton_o, the LU kept), and J is the exact octo-double Jacobian (Solver.jacobian_o), whose f64 leading part
@@ -24,6 +24,12 @@ iteration started from the Curtis-Reid scaling: its start does not depend on tho
 point, and every row and column of J_eq has max-norm 1 to --tol. The 2-norm (doubly stochastic) scaling is unique
 too, but on these Jacobians, whose entries span 1e-43 to 1e37, Ruiz's 2-norm iteration converges only like 1/k and
 Newton's method for it has a Hessian singular in f64 (#502), so it is not used.
+
+--cr_floor=F (default 0, the scaling as before): Curtis-Reid's fit leaves out every entry of |J| below F times the
+smaller of its row's and its column's max-norm. At F = 0 the fit's equal weight on every nonzero log|J_ij| lets
+entries 40 orders below their row steer the scales: at #489's 0.8 start, dropping the 168 entries below 1e-40 of
+their row max moves D_c by 2 orders (#504, hp/eq_test.py sensitivity). A floor of 1e-12 leaves only entries that
+matter to the scale (#580).
 
 Check (exit 1 on failure), --plant=SEED: a planted column scaling. J S with S_j = 10^u_j, u_j uniform in [-20, 20]
 (numpy default_rng(SEED)), is scaled from |J_0| S by the same three methods, and its sigma come from the same
@@ -81,10 +87,15 @@ def ruiz(A, tol, dr=None, dc=None, cols=True, itmax=1000):
     return dr, dc, it, float(err)
 
 
-def curtis_reid(A, cols=True):
+def curtis_reid(A, cols=True, floor=0.0):
     """Curtis and Reid's scaling of the nonnegative f64 matrix A: (D_r, D_c) = (e^-rho, e^-gamma) with rho, gamma
-    minimizing the sum over the nonzeros of (log a_ij - rho_i - gamma_j)^2. cols=False fits rho alone (gamma = 0)."""
+    minimizing the sum over the nonzeros of (log a_ij - rho_i - gamma_j)^2. cols=False fits rho alone (gamma = 0).
+    floor > 0 leaves out of the fit every entry below floor times the smaller of its row's and its column's max-norm,
+    so that entries negligible in both do not steer the scales (#580); each row's and column's largest entry is kept."""
     P = A > 0
+    if floor > 0:
+        r, c = A.max(axis=1), A.max(axis=0)
+        P &= A >= floor * np.minimum(r[:, None], c[None, :])
     lA = np.where(P, np.log(np.where(P, A, 1.0)), 0.0)
     nr, nc = P.sum(axis=1), P.sum(axis=0)
     if not cols:
@@ -96,10 +107,11 @@ def curtis_reid(A, cols=True):
     return np.exp(-x[:n]), np.exp(-x[n:])
 
 
-def scalings(A, tol, cols=True):
-    """{method: (D_r, D_c, Ruiz iterations, the largest |1 - max-norm| of a row or column of D_r A D_c)}"""
+def scalings(A, tol, cols=True, floor=0.0):
+    """{method: (D_r, D_c, Ruiz iterations, the largest |1 - max-norm| of a row or column of D_r A D_c)}; floor is
+    curtis_reid's"""
     out = {"Ruiz": ruiz(A, tol, cols=cols)}
-    dr, dc = curtis_reid(A, cols)
+    dr, dc = curtis_reid(A, cols, floor)
     B = A * dr[:, None] * dc[None, :]
     out["Curtis-Reid"] = (dr, dc, 0, float(max(np.abs(1 - B.max(axis=1)).max(), np.abs(1 - B.max(axis=0)).max())))
     out[RESULT] = ruiz(A, tol, dr, dc, cols=cols)
@@ -174,6 +186,7 @@ def main():
         sys.exit(__doc__)
     raw, st = args
     k, its, tol = int(opts.get("k", 4)), int(opts.get("its", 16)), float(opts.get("tol", 1e-12))
+    floor = float(opts.get("cr_floor", 0.0))
     mutate = opts.get("mutate", "")
     if mutate not in ("", "rows_only", "sigma"):
         sys.exit(f"--mutate={mutate}: rows_only or sigma")
@@ -208,10 +221,10 @@ def main():
             print(f"  {tag}, {name}: {n_it} Ruiz iterations, largest |1 - max-norm| {err:.1e}; D_r {dr.min():.2e}.."
                   f"{dr.max():.2e}, D_c {dc.min():.2e}..{dc.max():.2e}", flush=True)
 
-    rec = dict(state=st, D=float(m["D"]), L=L, pivots=[out[3], out[4]], tol=tol, k=k, its=its, mutate=mutate,
+    rec = dict(state=st, D=float(m["D"]), L=L, pivots=[out[3], out[4]], tol=tol, cr_floor=floor, k=k, its=its, mutate=mutate,
                methods={})
     t0 = time.time()
-    eqs = scalings(A, tol, cols)
+    eqs = scalings(A, tol, cols, floor)
     print(f"  scalings {time.time() - t0:.1f} s", flush=True)
     show("J", eqs)
     res = {}
@@ -235,7 +248,7 @@ def main():
             ladder[t] = spread(ruiz(A, t, cols=cols), ruiz(AS, t, cols=cols), S)
         print("  Ruiz from J, spread of the scalings under S by tolerance: "
               + ", ".join(f"tol {t:.0e} {v:.2e}" for t, v in ladder.items()), flush=True)
-        eqS = scalings(AS, tol, cols)
+        eqS = scalings(AS, tol, cols, floor)
         show("J S", eqS)
         plant = {}
         for name, (dr, dc, n_it, err) in eqS.items():
