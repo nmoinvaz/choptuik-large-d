@@ -2,6 +2,7 @@
 """The weakest directions of the chain's Newton system with its rows and columns equilibrated, at a stored state (#502).
 
     cd hp && python3 near_null_eq.py RAWDIR STATE [--k=4] [--its=16] [--threads=2] [--tol=1e-12] [--plant=SEED]
+        [--cr_sets]   (with --plant and --cr_floor: compare the floored fit's kept sets for J and J S, #613)
         [--refine=3] [--jv=1] [--cr_floor=0] [--json=OUT] [--mutate=rows_only|sigma]
 
 The pinned system is factored once in octo-double exactly as near_null.py does it (the same make_solver call and plan,
@@ -119,22 +120,23 @@ def median_polish(A, P, cols=True, it=30):
     return np.exp(-rho), np.exp(-gam)
 
 
-def curtis_reid(A, cols=True, floor=0.0, legacy_floor=False):
+def curtis_reid(A, cols=True, floor=0.0, legacy_floor=False, return_set=False):
     """Curtis and Reid's scaling of the nonnegative f64 matrix A: (D_r, D_c) = (e^-rho, e^-gamma) with rho, gamma
     minimizing the sum over the nonzeros of (log a_ij - rho_i - gamma_j)^2. cols=False fits rho alone (gamma = 0).
     floor > 0 leaves out of the fit the entries negligible in the equilibrated matrix B = D_r A D_c: those below floor
     times the smaller of their row's and column's max-norm in B. The first set comes from Tukey's median polish
-    (covariant under scaling, and robust to a minority of negligible entries), then Curtis-Reid is refitted until the
-    set no longer changes. B, and so
+    (covariant under scaling, and robust to a minority of negligible entries), then Curtis-Reid is refitted, the set
+    only shrinking, until it no longer changes. B, and so
     the set, is the same for A and for any row and column scaling of A, so the result scales with it (#580, #613);
     each row's and column's largest entry is kept. legacy_floor=True applies the floor to A's own max-norms, the rule
     before #613, which a column scaling of A changes (the control of cr_floor_check.py's invariance test)."""
     P0 = A > 0
     if floor > 0 and legacy_floor:
         r, c = A.max(axis=1), A.max(axis=0)
-        return _cr_fit(A, P0 & (A >= floor * np.minimum(r[:, None], c[None, :])), cols)
+        P = P0 & (A >= floor * np.minimum(r[:, None], c[None, :]))
+        return _cr_fit(A, P, cols) + ((P,) if return_set else ())
     if floor <= 0:
-        return _cr_fit(A, P0, cols)
+        return _cr_fit(A, P0, cols) + ((P0,) if return_set else ())
     # the first set from Tukey's median polish of log a_ij over the nonzeros: its row and column effects absorb any
     # row and column scaling exactly, and a minority of negligible entries cannot move a median; then Curtis-Reid
     # is refitted on the entries not negligible in its own B
@@ -144,14 +146,17 @@ def curtis_reid(A, cols=True, floor=0.0, legacy_floor=False):
     P = P0 & (B >= floor * np.minimum(r[:, None], c[None, :]))
     dr, dc = _cr_fit(A, P, cols)
     for _ in range(FLOOR_IT):
+        # the set only shrinks, so the loop cannot cycle between two sets (#613's one window); the maxima are over
+        # the entries still in it, so each row's and column's largest one stays
         B = A * dr[:, None] * dc[None, :]
-        r, c = B.max(axis=1), B.max(axis=0)
-        Pn = P0 & (B >= floor * np.minimum(r[:, None], c[None, :]))
+        Bk = np.where(P, B, 0.0)
+        r, c = Bk.max(axis=1), Bk.max(axis=0)
+        Pn = P & (B >= floor * np.minimum(r[:, None], c[None, :]))
         if np.array_equal(Pn, P):
             break
         P = Pn
         dr, dc = _cr_fit(A, P, cols)
-    return dr, dc
+    return (dr, dc, P) if return_set else (dr, dc)
 
 
 def scalings(A, tol, cols=True, floor=0.0):
@@ -306,6 +311,22 @@ def main():
             print(f"  planted, {name}: max_i |sigma_i(J S) / sigma_i(J) - 1| = {rel:.2e}; spread of the scalings "
                   f"{sp:.1e}", flush=True)
             plant[name] = dict(rel=rel, spread=sp, iterations=n_it, err=err, vectors=vecs)
+        if floor > 0 and "cr_sets" in opts:
+            # the floored fit's kept sets for J and for J S, which a covariant floor makes equal; the entries where
+            # they differ, with their margin B / (floor min(row max, col max)) in J's equilibrated frame (#613)
+            drA, dcA, PA = curtis_reid(A, cols, floor, return_set=True)
+            _, _, PS = curtis_reid(AS, cols, floor, return_set=True)
+            nz = A > 0
+            dif = PA ^ PS
+            print(f"  floored sets: J drops {int((nz & ~PA).sum())}, J S drops {int((nz & ~PS).sum())}, they differ at "
+                  f"{int(dif.sum())} entries", flush=True)
+            if dif.any():
+                B = A * drA[:, None] * dcA[None, :]
+                Bk = np.where(PA, B, 0.0)
+                thr = floor * np.minimum(Bk.max(axis=1)[:, None], Bk.max(axis=0)[None, :])
+                mg = (B / thr)[dif]
+                print(f"  their margins in J's frame: {np.sort(mg)[:10]} (1 is the threshold)", flush=True)
+            rec["cr_sets"] = dict(drop_J=int((nz & ~PA).sum()), drop_JS=int((nz & ~PS).sum()), differ=int(dif.sum()))
         ok_p = bool(plant[RESULT]["rel"] < 1e-3)
         print(f"  check (planted column scaling, {RESULT}, bound 1e-3): {'pass' if ok_p else 'FAIL'}"
               + (" [control rows_only]" if not cols else ""), flush=True)
