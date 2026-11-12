@@ -13,7 +13,8 @@ down by two sizes of perturbation:
   * part lo: one unit in the last place of the double-double value, the low part moved by spacing(hi) 2^-53, a
     relative change of about u_lo = 2^-106, the size of double-double's own rounding.
 For each part and shift the change of ln|u_kk| in elimination order is compared with the plain LU: the total change of
-ln|det|, how many pivots carry 90% of the summed |change|, their sizes against 1e3 u_part ||M||_F (the perturbation's
+ln|det| and of arg det (wrapped to (-pi, pi], the quantity a winding count reads), how many pivots carry 90% of the
+summed |change|, their sizes against 1e3 u_part ||M||_F (the perturbation's
 own scale) and how many pivot rows differ. Verdict, per part and shift:
   * localized: at most 5% of the pivots carry 90% of the summed |change|, and each of them is below 1e3 u_part ||M||_F;
   * global: more than half of the pivots are needed for 90%;
@@ -46,15 +47,21 @@ U_PART = {"hi": 2.0 ** -53, "lo": 2.0 ** -106}
 MOVED = 1e-3
 
 
+def wrap(x):
+    """an angle difference in (-pi, pi]"""
+    return float(-((-x + np.pi) % (2 * np.pi) - np.pi))
+
+
 def compare(p, q, n, mnorm, u=U_PART["hi"]):
     """the change of the LU q against the plain LU p: a dict of the numbers and the verdict"""
     d = np.asarray(q[4]) - np.asarray(p[4])
     total = q[0] - p[0]
+    darg = wrap(q[1] - p[1])
     a = np.abs(d)
     order = np.argsort(-a, kind="stable")
     s = a.sum()
     if s == 0.0:
-        return dict(total=total, moved=0, carry90=0, rows_differ=int(np.count_nonzero(np.asarray(p[6]) != np.asarray(q[6]))),
+        return dict(total=total, darg=darg, moved=0, carry90=0, rows_differ=int(np.count_nonzero(np.asarray(p[6]) != np.asarray(q[6]))),
                     top=[], verdict="none")
     cum = np.cumsum(a[order]) / s
     k90 = int(np.searchsorted(cum, 0.9) + 1)
@@ -71,8 +78,8 @@ def compare(p, q, n, mnorm, u=U_PART["hi"]):
     else:
         verdict = "between"
     top = [dict(k=int(k), row_plain=int(p[6][k]), row_shift=int(q[6][k]), u_plain=float(np.exp(p[4][k])),
-                u_shift=float(np.exp(q[4][k])), dln=float(d[k])) for k in order[:10]]
-    return dict(total=total, moved=moved, carry90=k90, carriers_below_thr=small,
+                u_shift=float(np.exp(q[4][k])), dln=float(d[k]), darg_u=wrap(q[5][k] - p[5][k])) for k in order[:10]]
+    return dict(total=total, darg=darg, moved=moved, carry90=k90, carriers_below_thr=small,
                 thr=thr, rows_differ=int(np.count_nonzero(np.asarray(p[6]) != np.asarray(q[6]))), top=top,
                 verdict=verdict)
 
@@ -184,13 +191,15 @@ def main():
     for part, sh in (("hi", 1), ("hi", -1), ("lo", 1), ("lo", -1)):
         q = csolver(st, sh, entry, threads, part).mode_pivots(st.zh, st.zl, re_, im_)
         c = compare(p, q, n, mnorm, U_PART[part])
-        rec["shifts"][f"{part}{sh:+d}"] = dict(c, lndet=q[0], pmin=q[2])
-        print(f"  part {part}, shift {sh:+d}: ln|det| {q[0]:.6f} (change {c['total']:+.3f}), pmin {q[2]:.3e}; pivots moved by more "
+        rec["shifts"][f"{part}{sh:+d}"] = dict(c, lndet=q[0], arg=q[1], pmin=q[2])
+        print(f"  part {part}, shift {sh:+d}: ln|det| {q[0]:.6f} (change {c['total']:+.3f}), arg det {q[1]:+.6f} (change "
+              f"{c['darg']:+.4f} rad), pmin {q[2]:.3e}; pivots moved by more "
               f"than {MOVED:g} in ln: {c['moved']} of {n}; 90% of the summed |change| in {c['carry90']} pivots "
               f"(all below 1e3 u_{part} ||M|| = {c.get('thr', 0):.1e}: {c.get('carriers_below_thr')}); rows differ at "
               f"{c['rows_differ']}; verdict {c['verdict']}", flush=True)
         for t in c["top"]:
-            print(f"    k {t['k']:4d}: |u| {t['u_plain']:.3e} -> {t['u_shift']:.3e}, d ln {t['dln']:+.3f}, rows "
+            print(f"    k {t['k']:4d}: |u| {t['u_plain']:.3e} -> {t['u_shift']:.3e}, d ln {t['dln']:+.3f}, "
+                  f"d arg {t['darg_u']:+.3f}, rows "
                   f"{t['row_plain']} -> {t['row_shift']}")
     print("check:", "pass" if ok else "FAIL", f"({time.time() - t0:.0f} s)")
     if opts.get("json"):
