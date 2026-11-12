@@ -19,7 +19,8 @@ with a and b chosen so that the start z0 solves H(z0, 0) = 0 exactly.
   p rows. The target moves by -rho from the one z0 solves, as the real mode's moves by -r0.
 - planted: zP = z0 + w, w = eps tau0 / |tau0| (tau0 = -J^-1 r0, the real mode's first tangent; eps signed), a =
   F(zP) - c, b = F(z0) - F(zP). Then zP solves H(z, 1) = 0: the known answer.
---mutate sign uses -b in H, so that z0 no longer solves H(z, 0) = 0, and the t = 0 check must fail.
+--mutate sign uses -b in H, so that z0 no longer solves H(z, 0) = 0, and the t = 0 check must fail. --mutate tsign
+uses -(1 + t) b, exact at t = 0 but moving the target the wrong way, and the planted check must fail.
 
 Probe, at z0 with its octo-double LU (Solver.newton_o): the t = 0 check, the first tangent tau0 = -J^-1 b, the k = 4
 weakest right singular vectors V (near_null.subspace), Delta's linear response by block of b, and a chord ladder:
@@ -32,8 +33,11 @@ Trace (the rules, fixed before the first real run and written on #562):
   converges when a correction's max falls to tol = max(1e-12 (t' - t) max|tau|, 1e-70). The rung is refused when the
   first correction exceeds half the predicted move (t' - t) max|tau|, when a correction exceeds half the one before,
   when a Jacobian or correction is not finite, or after 8 corrections.
-- Refused: h <- (t' - t) / 4 from the same z and tau; 12 refusals in a row stop the trace (exit 3).
+- Refused: h <- (t' - t) / 4 from the same z and tau.
 - Accepted after n corrections: h <- 4 (t' - t) if n <= 3, (t' - t) if n <= 5, else (t' - t) / 2; h <= h_max.
+- The trace stops (exit 3) after 12 refusals in a row, or when the next h is below 1e-6 t: the signature of a fold
+  of the path, where the weakest singular value of J(z) falls to zero and |tau| grows without bound (both recorded
+  at every rung, the four weakest sigma by 4 steps of subspace iteration from the last rung's basis).
 - h0: --h0, or the largest h of the probe's ladder (+ side) whose chord correction, and every smaller h's, is at
   most 0.1 h max|tau0|, capped at h_max.
 - At t = 1 Newton continues until max|H| <= 1e-60 or a correction stops contracting (the endpoint polish).
@@ -91,22 +95,26 @@ def dist(z8, z08):
 
 
 class System:
-    """H(z, t) = F(z) - c - a - (1 - t) b (sign -1: + (1 - t) b, the control --mutate sign) on the solver s"""
+    """H(z, t) = F(z) - c - a - (1 - t) b on the solver s. sign -1: + (1 - t) b (the control --mutate sign); tdir -1:
+    - (1 + t) b, exact at t = 0 but moving the target the wrong way (the control --mutate tsign)"""
 
-    def __init__(self, s, c8, a8, b8, sign=1.0):
-        self.s, self.ca8, self.b8, self.sign = s, add(a8, c8), o8(b8), sign
+    def __init__(self, s, c8, a8, b8, sign=1.0, tdir=1.0):
+        self.s, self.ca8, self.b8, self.sign, self.tdir = s, add(a8, c8), o8(b8), sign, tdir
         self.cab8 = add(self.b8, self.ca8, sign)                     # c + a + sign b, the offset at t = 0
 
     def at(self, t):
         """PinnedO with the offset at t: c + a + sign b - sign t b below t = 1/2, where the float 1 - t would drop t
         below 1e-16, and c + a + sign (1 - t) b above it (1 - t exact there)"""
-        off = add(self.b8, self.cab8, -self.sign * t) if t < 0.5 else add(self.b8, self.ca8, self.sign * (1.0 - t))
+        if t < 0.5 or self.tdir < 0:
+            off = add(self.b8, self.cab8, -self.sign * self.tdir * t)
+        else:
+            off = add(self.b8, self.ca8, self.sign * (1.0 - t))
         return PinnedO(self.s, off[0], off[1], c8=off)
 
     def tangent(self):
-        """dz/dt = -J^-1 b by the current LU (sign as H's)"""
+        """dz/dt = -J^-1 b by the current LU (sign and tdir as H's)"""
         x = o8(self.s.olu_solve(list(self.b8)))
-        return add(x, zero8(len(x[0])), -self.sign)
+        return add(x, zero8(len(x[0])), -self.sign * self.tdir)
 
 
 def correct(so, zp, tol, first_max, it_max=8):
@@ -175,7 +183,7 @@ def main():
     ap.add_argument("--threads", type=int, default=4)
     ap.add_argument("--rho", default="")
     ap.add_argument("--eps", type=float, default=0.0)
-    ap.add_argument("--mutate", default="", choices=("", "sign"))
+    ap.add_argument("--mutate", default="", choices=("", "sign", "tsign"))
     ap.add_argument("--probe_only", type=int, default=0)
     ap.add_argument("--h0", type=float, default=0.0)
     ap.add_argument("--h_max", type=float, default=0.05)
@@ -188,6 +196,7 @@ def main():
     if not a.allow_unraw:
         require_raw(a.out + ".jsonl")
     T0 = time.time()
+    signs = (-1.0 if a.mutate == "sign" else 1.0, -1.0 if a.mutate == "tsign" else 1.0)
     z0, m = load_o(os.path.join(a.raw, a.state))
     M, nodes, kf = int(m["M"]), list(m["nodes"]), int(m.get("kfreeze", 3))
     K, L = len(nodes), len(z0[0])
@@ -200,6 +209,11 @@ def main():
     c8 = o8(pin.c8)
     r0 = o8(pin.residual_o(z0))                                  # F(z0) - c, eight parts
     D0 = delta_mp(z0)
+
+    def solve(v, transpose=False):
+        """J^-1 v (J^-T v) in f64 by the solver's last octo-double LU"""
+        x = s.olu_solve([np.ascontiguousarray(v)] + [np.zeros(L)] * 7, transpose)
+        return np.asarray(x[0]) + np.asarray(x[1])
     log = open(a.out + ".jsonl", "a" if a.resume else "w")
 
     def emit(rec):
@@ -215,7 +229,7 @@ def main():
         tau0 = o8([st[f"tau{q}"] for q in range(8)])
         V = st["V"]
         zP = o8([st[f"zP{q}"] for q in range(8)]) if "zP0" in st else None
-        sysH = System(s, c8, a8, b8, -1.0 if a.mutate == "sign" else 1.0)
+        sysH = System(s, c8, a8, b8, *signs)
         h0 = float(st["h0"])
     else:
         # ---- the system's a and b
@@ -232,13 +246,18 @@ def main():
             print(f"  rho from {a.rho}: max {mx(rho):.3e} on the horizon block's p rows (the rest of that b, "
                   f"{float(np.abs(f64([np.array(rf[f'b{q}']) for q in range(8)]) * (1 - mask)).max()):.2e}, dropped)",
                   flush=True)
+        if a.mode != "planted":
+            # the t = 0 check before the LU, so that the control --mutate sign costs no factorization
+            H00 = System(s, c8, a8, b8, *signs).at(0.0).residual_o(z0)
+            if mx(H00) > 1e-20 * mx(b8):
+                emit(dict(kind="probe", state=a.state, mode=a.mode, mutate=a.mutate, H00=mx(H00), b_max=mx(b8),
+                          t0_check=False))
+                print(f"  t = 0 check: max|H(z0, 0)| {mx(H00):.3e} against 1e-20 max|b| = {1e-20 * mx(b8):.2e}: FAIL")
+                print("check: FAIL (t = 0 is not exact)")
+                return 1
         t1 = time.time()
         pin.newton_o(z0)                                              # the LU at z0
         print(f"  octo-double LU at z0 {time.time() - t1:.0f} s", flush=True)
-
-        def solve(v, transpose=False):
-            x = s.olu_solve([np.ascontiguousarray(v)] + [np.zeros(L)] * 7, transpose)
-            return np.asarray(x[0]) + np.asarray(x[1])
         tau_r = add(o8(s.olu_solve(list(r0))), zero8(L), -1.0)      # -J^-1 r0, the real mode's first tangent
         if a.mode == "planted":
             w = a.eps * f64(tau_r) / float(np.linalg.norm(f64(tau_r)))
@@ -249,7 +268,7 @@ def main():
             b8 = add(FP, Fz, -1.0)                                    # F(z0) - F(zP)
             print(f"  planted zP = z0 + eps tau0/|tau0|, eps {a.eps:+.3e}: max|w| {float(np.abs(w).max()):.3e}, Delta "
                   f"part {w[-1]:+.3e}; max|b| {mx(b8):.3e}", flush=True)
-        sysH = System(s, c8, a8, b8, -1.0 if a.mutate == "sign" else 1.0)
+        sysH = System(s, c8, a8, b8, *signs)
         tau0 = sysH.tangent()
         t1 = time.time()
         V, hist = subspace(solve, L, 4, 16)
@@ -347,6 +366,7 @@ def main():
         print(f"  resumed at rung {k}, t {t:.6e}, h {h:.3e}", flush=True)
     else:
         z, tau, t, h, k = z0, tau0, 0.0, h0, 0
+    Vp = V.copy()
     refusals = 0
     ok_trace = False
     while k < a.rungs and time.time() - T0 < a.hours * 3600:
@@ -366,8 +386,9 @@ def main():
             emit(rec)
             print(f"  rung {k}: t {t:.4e} -> {t2:.4e} refused ({why}; corrections "
                   + ", ".join(f"{c_['dz']:.1e}" for c_ in corr) + f"), h -> {h:.2e} [{refusals}]", flush=True)
-            if refusals >= 12:
-                print(f"trace stopped: 12 refusals in a row at t {t:.6e}")
+            if refusals >= 12 or (t > 0 and h < 1e-6 * t):
+                print(f"trace stopped at t {t:.6e}: {refusals} refusals in a row, the next step {h:.2e} "
+                      f"({'below 1e-6 t' if h < 1e-6 * t else '12 refusals'})")
                 np.savez(ck, **{f"z{q}": np.asarray(z[q]) for q in range(8)}, **{f"tau{q}": np.asarray(tau[q]) for q in range(8)},
                          t=t, h=h, k=k)
                 return 3
@@ -377,16 +398,29 @@ def main():
         z_prev, z = z, zn
         t = t2
         tau = sysH.tangent()                                          # the LU at z is the corrector's last
+        # the four weakest singular values of J(z), 4 steps of subspace iteration from the last rung's basis: at a fold
+        # of the path the weakest falls to zero and |tau| grows without bound
+        Vp = np.linalg.qr(np.column_stack([solve(solve(Vp[:, i], True)) for i in range(4)]))[0]
+        for _ in range(3):
+            X = np.column_stack([solve(solve(Vp[:, i], True)) for i in range(4)])
+            Vp = np.linalg.qr(X)[0]
+        sig_z = sorted(float(x) for x in 1 / np.sqrt(np.linalg.norm(X, axis=0)))
         rec.update(describe(z, z0, V, D0), n=n, move=float(np.linalg.norm(dist(z, z_prev))),
-                   pred_err=float(np.linalg.norm(dist(z, zp))))
+                   pred_err=float(np.linalg.norm(dist(z, zp))), sigma_z=sig_z, tau_norm=float(np.linalg.norm(f64(tau))))
         emit(rec)
         print(f"  rung {k}: t {rec['t_new']:.4e} (h {dt:.2e}), {n} corrections " + ", ".join(f"{c_['dz']:.1e}" for c_ in corr)
               + f"; |H| {corr[-1]['F']:.2e}; Delta - Delta0 {rec['dDelta']:+.4e}; |z - z0| {rec['dist']:.4e} (max "
               f"{rec['dist_max']:.3e}), share on V {rec['share']:.4f}, V^T " + " ".join(f"{x:+.2e}" for x in rec["VT"])
-              + f" ({rec['seconds']} s)", flush=True)
+              + f"; sigma(J) " + ", ".join(f"{x:.2e}" for x in sig_z) + f", |tau| {rec['tau_norm']:.3e} ({rec['seconds']} s)",
+              flush=True)
         k += 1
         h = (4 * dt if n <= 3 else dt if n <= 5 else dt / 2)
         h = min(h, a.h_max)
+        if t < 1.0 and h < 1e-6 * t:
+            print(f"trace stalled at t {t:.6e}: the next step {h:.2e} is below 1e-6 t (a fold of the path?)")
+            np.savez(ck, **{f"z{q}": np.asarray(z[q]) for q in range(8)}, **{f"tau{q}": np.asarray(tau[q]) for q in range(8)},
+                     t=t, h=h, k=k)
+            return 3
         np.savez(ck, **{f"z{q}": np.asarray(z[q]) for q in range(8)}, **{f"tau{q}": np.asarray(tau[q]) for q in range(8)},
                  t=t, h=h, k=k)
         if t >= 1.0:
