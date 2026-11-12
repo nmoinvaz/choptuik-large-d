@@ -17,13 +17,14 @@ used, so that a module importing this one runs on the older packages the runners
     python3 octo_corrector.py wall RAW PRED.npz [--threads 3] [--qd 0] [--F_max 1e-36] [--mutate_offset qd]
         [--mutate 10] [--out PREFIX] [--reseed_o 0] [--held_o 0]
     python3 octo_corrector.py horizon RAW STATE.npz [--threads 3] [--steps 3] [--mutate_h sign]
+    python3 octo_corrector.py digits [--mutate 2]
 
 `planted` is check (a) of notes/OCTO_DOUBLE.md 5 (a converged state moved by a known amount, corrected in
 octo-double and in quad-double), `wall` check (b) (a stored prediction where the quad-double corrector stalls). The
 controls --mutate_offset qd and --mutate 10 must make them fail. `horizon` is the planted check of
 Reseeder.refine_o (its docstring); --steps 0, --mutate_h sign and --mutate_h badlu_keep must make it fail, and
 --mutate_h badlu (a poor first LU that refine_o refactors) must pass. Each exits 1 when its check
-fails."""
+fails. `digits` checks delta_digits, the 40-digit Delta anm_run.py prints (#556); --mutate 2 must make it fail."""
 import json
 
 import numpy as np
@@ -53,6 +54,44 @@ def q4_of_o(zo):
 def omax(F):
     """max |F| of a residual in parts (two, four or eight), to f64 accuracy"""
     return float(np.abs(np.asarray(F[0]) + np.asarray(F[1])).max())
+
+
+def delta_digits(z, digits=40, parts=None):
+    """Delta, the last unknown, as the exact sum of the last entries of all parts of z (or of the first `parts`), to
+    `digits` significant digits (#556). The sum is taken at 64 x 53 bits, beyond any exponent spread that matters
+    at 40 digits."""
+    import mpmath as mp
+    with mp.workprec(64 * 53):
+        s = mp.fsum(mp.mpf(float(np.asarray(p)[-1])) for p in list(z)[:parts])
+        return mp.nstr(s, digits, strip_zeros=False)
+
+
+def digits_check(argv):
+    """delta_digits on a planted eight-part value (140 digits split greedily into doubles) must give its first 40
+    digits, and the first two parts alone must give a different value (the print reads more than double-double).
+    One ulp of the last part does not show at 40 digits (it is about 1e-128 relative), which is printed. --mutate 2
+    sums only two parts, and the check must then fail."""
+    import mpmath as mp
+    mutate = int(argv[argv.index("--mutate") + 1]) if "--mutate" in argv else None
+    mp.mp.dps = 150
+    x = mp.pi / 2 + mp.e * mp.mpf(10) ** -37
+    r, z = x, []
+    for _ in range(8):
+        h = float(r)
+        z.append(np.array([0.0, h]))
+        r -= mp.mpf(h)
+    want = mp.nstr(x, 40, strip_zeros=False)
+    got = delta_digits(z, parts=mutate)
+    two = delta_digits(z, parts=2)
+    z_ulp = list(z)
+    z_ulp[7] = np.array([0.0, float(np.nextafter(z[7][-1], np.inf))])
+    ulp = delta_digits(z_ulp)
+    ok = got == want and two != want
+    print(f"  planted {want}\n  printed {got}{'  (--mutate ' + str(mutate) + ')' if mutate else ''}\n"
+          f"  two parts {two}\n  last part one ulp up {ulp} ({'same' if ulp == delta_digits(z) else 'differs'} at 40 digits)", flush=True)
+    print(f"  {'PASS' if ok else 'FAIL'}: the print equals the planted value to 40 digits and the two-part sum differs",
+          flush=True)
+    return 0 if ok else 1
 
 
 def save_o(path, z, meta):
@@ -597,6 +636,8 @@ if __name__ == "__main__":
     import os
     import sys
     sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+    if len(sys.argv) > 1 and sys.argv[1] == "digits":
+        sys.exit(digits_check(sys.argv[2:]))
     if len(sys.argv) > 3 and sys.argv[1] in ("planted", "wall", "horizon"):
         sys.exit(dict(planted=planted, wall=wall, horizon=horizon)[sys.argv[1]](sys.argv[2:]))
     print(__doc__)

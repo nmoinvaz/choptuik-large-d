@@ -125,7 +125,7 @@ from hpkernel.driver import make_solver, newton_solve, deflated_newton, delta_co
 from multidouble import dd_add, dd_horner, dd_scale, dd_norm, qd_add_dd  # noqa: E402
 from pinning import HeldFit, PinnedQ, PinnedSolver, band_coeffs, band_field, qd_axpy  # noqa: E402
 from raw_out import require_raw  # noqa: E402
-from octo_corrector import ElimO, PinnedO, has_o, load_o, newton_od, o8, o8_of_q, omax, q4_of_o, save_o, with_horizon  # noqa: E402,F401
+from octo_corrector import ElimO, PinnedO, delta_digits, has_o, load_o, newton_od, o8, o8_of_q, omax, q4_of_o, save_o, with_horizon  # noqa: E402,F401
 from reseed import ElimQ, Reseeder, StartNotProjected  # noqa: E402
 from taylor_predict import formula_delta  # noqa: E402
 
@@ -854,6 +854,7 @@ def main():
             save_q(os.path.join(out, f"anm_pin{kf}_D{float(D):.4f}.npz"), last_q["z4"], meta_out)
         elif opt["corrector"] == "od" and "z8" in last_q:
             save_o(os.path.join(out, f"anm_pin{kf}_D{float(D):.4f}.npz"), last_q["z8"], dict(meta_out, parts=8))
+            print(f"      Delta of the saved state, its eight parts summed exactly: {delta_digits(last_q['z8'])}", flush=True)
         else:
             save(os.path.join(out, f"anm_pin{kf}_D{float(D):.4f}.npz"), zh, zl, meta_out)
         if not opt["a_hold"] or attempt == 0:
