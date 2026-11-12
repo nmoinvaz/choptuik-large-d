@@ -1,0 +1,130 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1000" height="484" viewBox="0 0 1000 484" font-family="system-ui, sans-serif">
+<style>@media (prefers-color-scheme: dark){[fill="#fcfcfb"]{fill:#201f1d}[stroke="#fcfcfb"]{stroke:#201f1d}[fill="#0b0b0b"]{fill:#e8e6e3}[stroke="#0b0b0b"]{stroke:#e8e6e3}[fill="#52514e"]{fill:#a8a49d}[stroke="#52514e"]{stroke:#a8a49d}[fill="#e7e6e2"]{fill:#343230}[stroke="#e7e6e2"]{stroke:#343230}[fill="#c98500"]{fill:#d69a2d}[stroke="#c98500"]{stroke:#d69a2d}[fill="#eb6834"]{fill:#dd5c26}[stroke="#eb6834"]{stroke:#dd5c26}[fill="#eda100"]{fill:#c08800}[stroke="#eda100"]{stroke:#c08800}[fill="#e87ba4"]{fill:#d1678f}[stroke="#e87ba4"]{stroke:#d1678f}[fill="#4a3aa7"]{fill:#7263cf}[stroke="#4a3aa7"]{stroke:#7263cf}[fill="#a6339a"]{fill:#c257b5}[stroke="#a6339a"]{stroke:#c257b5}[fill="#7a7668"]{fill:#948e82}[stroke="#7a7668"]{stroke:#948e82}}</style>
+<rect width="1000" height="484" fill="#fcfcfb"/>
+<text x="16.0" y="22.0" font-size="12" fill="#0b0b0b" text-anchor="start" font-weight="normal">Arc fraction R_k of the [k/k] Borel-Padé poles, wf 1.00</text>
+<text x="16.0" y="38.0" font-size="10" fill="#52514e" text-anchor="start" font-weight="normal">1 = on the arc through the [6/6] poles, 0 = on the chord P0 → κ⋆; bars: noise spread at the measured errors</text>
+<line x1="108.3" y1="90.0" x2="108.3" y2="390.0" stroke="#e7e6e2" stroke-width="1"/>
+<text x="108.3" y="405.0" font-size="11" fill="#52514e" text-anchor="middle" font-weight="normal" font-variant-numeric="tabular-nums">6</text>
+<line x1="221.7" y1="90.0" x2="221.7" y2="390.0" stroke="#e7e6e2" stroke-width="1"/>
+<text x="221.7" y="405.0" font-size="11" fill="#52514e" text-anchor="middle" font-weight="normal" font-variant-numeric="tabular-nums">8</text>
+<line x1="335.0" y1="90.0" x2="335.0" y2="390.0" stroke="#e7e6e2" stroke-width="1"/>
+<text x="335.0" y="405.0" font-size="11" fill="#52514e" text-anchor="middle" font-weight="normal" font-variant-numeric="tabular-nums">10</text>
+<line x1="80.0" y1="323.3" x2="420.0" y2="323.3" stroke="#e7e6e2" stroke-width="1"/>
+<text x="74.0" y="327.3" font-size="11" fill="#52514e" text-anchor="end" font-weight="normal" font-variant-numeric="tabular-nums">0.0</text>
+<line x1="80.0" y1="240.0" x2="420.0" y2="240.0" stroke="#e7e6e2" stroke-width="1"/>
+<text x="74.0" y="244.0" font-size="11" fill="#52514e" text-anchor="end" font-weight="normal" font-variant-numeric="tabular-nums">0.5</text>
+<line x1="80.0" y1="156.7" x2="420.0" y2="156.7" stroke="#e7e6e2" stroke-width="1"/>
+<text x="74.0" y="160.7" font-size="11" fill="#52514e" text-anchor="end" font-weight="normal" font-variant-numeric="tabular-nums">1.0</text>
+<line x1="80.0" y1="390.0" x2="420.0" y2="390.0" stroke="#52514e" stroke-width="1"/>
+<line x1="80.0" y1="90.0" x2="80.0" y2="390.0" stroke="#52514e" stroke-width="1"/>
+<text x="250.0" y="424.0" font-size="12" fill="#0b0b0b" text-anchor="middle" font-weight="normal">Padé order k ([k/k], σ₀…σ₂ₖ)</text>
+<text x="42.9" y="240.0" font-size="12" fill="#0b0b0b" text-anchor="middle" transform="rotate(-90 42.9 240.0)">arc fraction R_k</text>
+<line x1="80.0" y1="323.3" x2="420.0" y2="323.3" stroke="#52514e" stroke-width="1"/>
+<polyline points="101.3,156.6 158.0,185.7 214.7,206.5 271.3,255.8 328.0,332.9 384.7,269.1" fill="none" stroke="#2a78d6" stroke-width="1.5"/>
+<line x1="101.3" y1="156.6" x2="101.3" y2="156.6" stroke="#2a78d6" stroke-width="1.5"/>
+<g><circle cx="101.3" cy="156.6" r="5.5" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>real S₁, k = 6: R = +1.000 ± 8.1e-11</title></g>
+<line x1="158.0" y1="185.7" x2="158.0" y2="185.7" stroke="#2a78d6" stroke-width="1.5"/>
+<g><circle cx="158.0" cy="185.7" r="5.5" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>real S₁, k = 7: R = +0.826 ± 6.1e-09</title></g>
+<line x1="214.7" y1="206.5" x2="214.7" y2="206.5" stroke="#2a78d6" stroke-width="1.5"/>
+<g><circle cx="214.7" cy="206.5" r="5.5" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>real S₁, k = 8: R = +0.701 ± 1.5e-06</title></g>
+<line x1="271.3" y1="255.9" x2="271.3" y2="255.7" stroke="#2a78d6" stroke-width="1.5"/>
+<g><circle cx="271.3" cy="255.8" r="5.5" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>real S₁, k = 9: R = +0.405 ± 4.5e-04</title></g>
+<line x1="328.0" y1="341.7" x2="328.0" y2="324.1" stroke="#2a78d6" stroke-width="1.5"/>
+<g><circle cx="328.0" cy="332.9" r="5.5" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>real S₁, k = 10: R = -0.057 ± 5.3e-02</title></g>
+<line x1="384.7" y1="346.9" x2="384.7" y2="191.4" stroke="#2a78d6" stroke-width="1.5"/>
+<g><circle cx="384.7" cy="269.1" r="5.5" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>real S₁, k = 11: R = +0.325 ± 4.7e-01</title></g>
+<polyline points="108.3,157.4 165.0,192.1 221.7,203.2 278.3,194.4 335.0,207.4 391.7,240.7" fill="none" stroke="#eb6834" stroke-width="1.5"/>
+<line x1="108.3" y1="157.4" x2="108.3" y2="157.4" stroke="#eb6834" stroke-width="1.5"/>
+<g><rect x="102.8" y="151.9" width="11.0" height="11.0" fill="#eb6834" stroke="#fcfcfb" stroke-width="2"/><title>chord2, two branch points, k = 6: R = +0.996 ± 1.4e-09</title></g>
+<line x1="165.0" y1="192.1" x2="165.0" y2="192.1" stroke="#eb6834" stroke-width="1.5"/>
+<g><rect x="159.5" y="186.6" width="11.0" height="11.0" fill="#eb6834" stroke="#fcfcfb" stroke-width="2"/><title>chord2, two branch points, k = 7: R = +0.788 ± 8.8e-07</title></g>
+<line x1="221.7" y1="203.3" x2="221.7" y2="203.2" stroke="#eb6834" stroke-width="1.5"/>
+<g><rect x="216.2" y="197.7" width="11.0" height="11.0" fill="#eb6834" stroke="#fcfcfb" stroke-width="2"/><title>chord2, two branch points, k = 8: R = +0.721 ± 3.3e-04</title></g>
+<line x1="278.3" y1="289.8" x2="278.3" y2="99.0" stroke="#eb6834" stroke-width="1.5"/>
+<g><rect x="272.8" y="188.9" width="11.0" height="11.0" fill="#eb6834" stroke="#fcfcfb" stroke-width="2"/><title>chord2, two branch points, k = 9: R = +0.774 ± 5.7e-01</title></g>
+<line x1="335.0" y1="233.8" x2="335.0" y2="181.0" stroke="#eb6834" stroke-width="1.5"/>
+<g><rect x="329.5" y="201.9" width="11.0" height="11.0" fill="#eb6834" stroke="#fcfcfb" stroke-width="2"/><title>chord2, two branch points, k = 10: R = +0.695 ± 1.6e-01</title></g>
+<line x1="391.7" y1="302.1" x2="391.7" y2="179.4" stroke="#eb6834" stroke-width="1.5"/>
+<g><rect x="386.2" y="235.2" width="11.0" height="11.0" fill="#eb6834" stroke="#fcfcfb" stroke-width="2"/><title>chord2, two branch points, k = 11: R = +0.496 ± 3.7e-01</title></g>
+<polyline points="115.3,171.4 172.0,198.6 228.7,204.4 285.3,206.9 342.0,206.1 398.7,221.8" fill="none" stroke="#1baf7a" stroke-width="1.5"/>
+<line x1="115.3" y1="171.4" x2="115.3" y2="171.4" stroke="#1baf7a" stroke-width="1.5"/>
+<g><polygon points="115.3,164.9 121.8,171.4 115.3,177.9 108.8,171.4" fill="#1baf7a" stroke="#fcfcfb" stroke-width="2"/><title>arcjump, branch points on the arc, k = 6: R = +0.911 ± 7.1e-10</title></g>
+<line x1="172.0" y1="198.6" x2="172.0" y2="198.6" stroke="#1baf7a" stroke-width="1.5"/>
+<g><polygon points="172.0,192.1 178.5,198.6 172.0,205.1 165.5,198.6" fill="#1baf7a" stroke="#fcfcfb" stroke-width="2"/><title>arcjump, branch points on the arc, k = 7: R = +0.748 ± 5.9e-07</title></g>
+<line x1="228.7" y1="204.4" x2="228.7" y2="204.3" stroke="#1baf7a" stroke-width="1.5"/>
+<g><polygon points="228.7,197.9 235.2,204.4 228.7,210.9 222.2,204.4" fill="#1baf7a" stroke="#fcfcfb" stroke-width="2"/><title>arcjump, branch points on the arc, k = 8: R = +0.714 ± 3.4e-04</title></g>
+<line x1="285.3" y1="299.6" x2="285.3" y2="114.3" stroke="#1baf7a" stroke-width="1.5"/>
+<g><polygon points="285.3,200.4 291.8,206.9 285.3,213.4 278.8,206.9" fill="#1baf7a" stroke="#fcfcfb" stroke-width="2"/><title>arcjump, branch points on the arc, k = 9: R = +0.699 ± 5.6e-01</title></g>
+<line x1="342.0" y1="221.6" x2="342.0" y2="190.6" stroke="#1baf7a" stroke-width="1.5"/>
+<g><polygon points="342.0,199.6 348.5,206.1 342.0,212.6 335.5,206.1" fill="#1baf7a" stroke="#fcfcfb" stroke-width="2"/><title>arcjump, branch points on the arc, k = 10: R = +0.703 ± 9.3e-02</title></g>
+<line x1="398.7" y1="247.1" x2="398.7" y2="196.6" stroke="#1baf7a" stroke-width="1.5"/>
+<g><polygon points="398.7,215.3 405.2,221.8 398.7,228.3 392.2,221.8" fill="#1baf7a" stroke="#fcfcfb" stroke-width="2"/><title>arcjump, branch points on the arc, k = 11: R = +0.609 ± 1.5e-01</title></g>
+<circle cx="328.0" cy="332.9" r="10" fill="none" stroke="#0b0b0b" stroke-width="1.5"/>
+<line x1="322.0" y1="340.9" x2="298.0" y2="372.9" stroke="#0b0b0b" stroke-width="1"/>
+<text x="294.0" y="376.9" font-size="11" fill="#0b0b0b" text-anchor="end" font-weight="bold">real k = 10: on the chord</text>
+<g opacity="0.35"><line x1="438.0" y1="182.0" x2="438.0" y2="126.0" stroke="#52514e" stroke-width="2"/><polygon points="438.0,120.0 442.0,129.0 434.0,129.0" fill="#52514e"/><text x="438.0" y="144.0" font-size="11" fill="#52514e" text-anchor="middle" transform="rotate(-90.0 438.0 151.0)">arc</text></g>
+<text x="980.0" y="62.0" font-size="11" fill="#0b0b0b" text-anchor="end" font-weight="normal">arcjump, branch points on the arc</text>
+<circle cx="759.5" cy="58" r="4.5" fill="#1baf7a"/>
+<text x="743.5" y="62.0" font-size="11" fill="#0b0b0b" text-anchor="end" font-weight="normal">chord2, two branch points</text>
+<circle cx="574.0" cy="58" r="4.5" fill="#eb6834"/>
+<text x="558.0" y="62.0" font-size="11" fill="#0b0b0b" text-anchor="end" font-weight="normal">real S₁</text>
+<circle cx="503.3" cy="58" r="4.5" fill="#2a78d6"/>
+<line x1="606.2" y1="90.0" x2="606.2" y2="390.0" stroke="#e7e6e2" stroke-width="1"/>
+<text x="606.2" y="405.0" font-size="11" fill="#52514e" text-anchor="middle" font-weight="normal" font-variant-numeric="tabular-nums">0.0</text>
+<line x1="760.0" y1="90.0" x2="760.0" y2="390.0" stroke="#e7e6e2" stroke-width="1"/>
+<text x="760.0" y="405.0" font-size="11" fill="#52514e" text-anchor="middle" font-weight="normal" font-variant-numeric="tabular-nums">0.5</text>
+<line x1="913.8" y1="90.0" x2="913.8" y2="390.0" stroke="#e7e6e2" stroke-width="1"/>
+<text x="913.8" y="405.0" font-size="11" fill="#52514e" text-anchor="middle" font-weight="normal" font-variant-numeric="tabular-nums">1.0</text>
+<line x1="560.0" y1="390.0" x2="960.0" y2="390.0" stroke="#e7e6e2" stroke-width="1"/>
+<text x="554.0" y="394.0" font-size="11" fill="#52514e" text-anchor="end" font-weight="normal" font-variant-numeric="tabular-nums">-0.20</text>
+<line x1="560.0" y1="304.3" x2="960.0" y2="304.3" stroke="#e7e6e2" stroke-width="1"/>
+<text x="554.0" y="308.3" font-size="11" fill="#52514e" text-anchor="end" font-weight="normal" font-variant-numeric="tabular-nums">-0.10</text>
+<line x1="560.0" y1="218.6" x2="960.0" y2="218.6" stroke="#e7e6e2" stroke-width="1"/>
+<text x="554.0" y="222.6" font-size="11" fill="#52514e" text-anchor="end" font-weight="normal" font-variant-numeric="tabular-nums">0.00</text>
+<line x1="560.0" y1="132.9" x2="960.0" y2="132.9" stroke="#e7e6e2" stroke-width="1"/>
+<text x="554.0" y="136.9" font-size="11" fill="#52514e" text-anchor="end" font-weight="normal" font-variant-numeric="tabular-nums">0.10</text>
+<line x1="560.0" y1="390.0" x2="960.0" y2="390.0" stroke="#52514e" stroke-width="1"/>
+<line x1="560.0" y1="90.0" x2="560.0" y2="390.0" stroke="#52514e" stroke-width="1"/>
+<text x="760.0" y="424.0" font-size="12" fill="#0b0b0b" text-anchor="middle" font-weight="normal">chord coordinate s (0 = P0, 1 = κ⋆)</text>
+<text x="510.1" y="240.0" font-size="12" fill="#0b0b0b" text-anchor="middle" transform="rotate(-90 510.1 240.0)">offset from the chord d (t units)</text>
+<line x1="560.0" y1="218.6" x2="960.0" y2="218.6" stroke="#52514e" stroke-width="1"/>
+<polyline points="606.2,218.6 607.6,216.5 609.1,214.4 610.6,212.3 612.1,210.3 613.6,208.2 615.1,206.3 616.6,204.3 618.1,202.4 619.6,200.4 621.1,198.6 622.6,196.7 624.1,194.9 625.6,193.1 627.1,191.3 628.6,189.5 630.1,187.8 631.6,186.0 633.1,184.4 634.6,182.7 636.1,181.1 637.6,179.4 639.1,177.9 640.7,176.3 642.2,174.7 643.7,173.2 645.2,171.7 646.7,170.3 648.2,168.8 649.8,167.4 651.3,166.0 652.8,164.6 654.3,163.3 655.9,161.9 657.4,160.6 658.9,159.4 660.4,158.1 662.0,156.9 663.5,155.7 665.0,154.5 666.6,153.3 668.1,152.2 669.6,151.0 671.2,149.9 672.7,148.9 674.2,147.8 675.8,146.8 677.3,145.8 678.8,144.8 680.4,143.9 681.9,142.9 683.5,142.0 685.0,141.1 686.6,140.2 688.1,139.4 689.6,138.6 691.2,137.8 692.7,137.0 694.3,136.2 695.8,135.5 697.4,134.8 698.9,134.1 700.5,133.4 702.0,132.8 703.6,132.1 705.1,131.5 706.7,130.9 708.2,130.4 709.8,129.8 711.3,129.3 712.9,128.8 714.4,128.3 716.0,127.9 717.6,127.4 719.1,127.0 720.7,126.6 722.2,126.2 723.8,125.9 725.3,125.5 726.9,125.2 728.4,124.9 730.0,124.7 731.6,124.4 733.1,124.2 734.7,124.0 736.2,123.8 737.8,123.6 739.4,123.4 740.9,123.3 742.5,123.2 744.0,123.1 745.6,123.0 747.2,123.0 748.7,122.9 750.3,122.9 751.9,122.9 753.4,123.0 755.0,123.0 756.5,123.1 758.1,123.1 759.7,123.2 761.2,123.4 762.8,123.5 764.4,123.7 765.9,123.8 767.5,124.0 769.0,124.3 770.6,124.5 772.2,124.7 773.7,125.0 775.3,125.3 776.9,125.6 778.4,125.9 780.0,126.3 781.5,126.6 783.1,127.0 784.7,127.4 786.2,127.8 787.8,128.3 789.3,128.7 790.9,129.2 792.5,129.7 794.0,130.2 795.6,130.7 797.2,131.2 798.7,131.8 800.3,132.4 801.8,133.0 803.4,133.6 804.9,134.2 806.5,134.9 808.1,135.5 809.6,136.2 811.2,136.9 812.7,137.6 814.3,138.3 815.8,139.1 817.4,139.8 819.0,140.6 820.5,141.4 822.1,142.2 823.6,143.1 825.2,143.9 826.7,144.8 828.3,145.6 829.8,146.5 831.4,147.4 832.9,148.4 834.5,149.3 836.0,150.3 837.6,151.2 839.1,152.2 840.7,153.2 842.2,154.3 843.8,155.3 845.3,156.3 846.8,157.4 848.4,158.5 849.9,159.6 851.5,160.7 853.0,161.8 854.6,163.0 856.1,164.1 857.6,165.3 859.2,166.5 860.7,167.7 862.2,168.9 863.8,170.1 865.3,171.4 866.8,172.6 868.4,173.9 869.9,175.2 871.4,176.5 873.0,177.8 874.5,179.2 876.0,180.5 877.6,181.9 879.1,183.2 880.6,184.6 882.1,186.0 883.6,187.4 885.2,188.9 886.7,190.3 888.2,191.8 889.7,193.3 891.2,194.7 892.8,196.2 894.3,197.7 895.8,199.3 897.3,200.8 898.8,202.4 900.3,203.9 901.8,205.5 903.3,207.1 904.8,208.7 906.3,210.3 907.8,211.9 909.3,213.6 910.8,215.2 912.3,216.9 913.8,218.6" fill="none" stroke="#7a7668" stroke-width="2" stroke-dasharray="5 3"/>
+<text x="744.6" y="111.4" font-size="10" fill="#52514e" text-anchor="middle" font-weight="normal">arc through the [6/6] poles</text>
+<text x="667.7" y="232.6" font-size="10" fill="#52514e" text-anchor="start" font-weight="normal">chord</text>
+<g><circle cx="580.3" cy="222.6" r="5.5" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>real S₁, [10/10]: t = 0.7086+0.0750i, s = -0.084, d = -0.0047, pole-zero gap 3.4e-03</title></g>
+<g><circle cx="628.1" cy="230.2" r="5.5" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>real S₁, [10/10]: t = 0.7986+0.2143i, s = 0.071, d = -0.0136, pole-zero gap 4.1e-02</title></g>
+<g><circle cx="683.0" cy="206.9" r="5.5" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>real S₁, [10/10]: t = 0.8696+0.3932i, s = 0.250, d = +0.0136, pole-zero gap 1.1e-01</title></g>
+<g><circle cx="741.8" cy="211.6" r="5.5" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>real S₁, [10/10]: t = 0.9757+0.5673i, s = 0.441, d = +0.0081, pole-zero gap 1.2e-01</title></g>
+<g><circle cx="768.9" cy="216.3" r="5.5" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>real S₁, [10/10]: t = 1.0271+0.6462i, s = 0.529, d = +0.0027, pole-zero gap 7.3e-02</title></g>
+<g><circle cx="822.6" cy="230.9" r="5.5" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>real S₁, [10/10]: t = 1.1342+0.7992i, s = 0.703, d = -0.0144, pole-zero gap 2.7e-02</title></g>
+<g><circle cx="877.7" cy="282.1" r="5.5" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>real S₁, [10/10]: t = 1.2811+0.9355i, s = 0.883, d = -0.0741, pole-zero gap 2.3e-03</title></g>
+<g><circle cx="936.2" cy="356.0" r="5.5" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>real S₁, [10/10]: t = 1.4566+1.0685i, s = 1.073, d = -0.1603, pole-zero gap 2.5e-05</title></g>
+<g><rect x="600.8" y="207.7" width="11.0" height="11.0" fill="#eb6834" stroke="#fcfcfb" stroke-width="2"/><title>chord2, two branch points, [10/10]: t = 0.7439+0.1587i, s = 0.001, d = +0.0062, pole-zero gap 1.1e-02</title></g>
+<g><rect x="613.1" y="208.0" width="11.0" height="11.0" fill="#eb6834" stroke="#fcfcfb" stroke-width="2"/><title>chord2, two branch points, [10/10]: t = 0.7653+0.1954i, s = 0.041, d = +0.0059, pole-zero gap 2.5e-02</title></g>
+<g><rect x="650.8" y="183.8" width="11.0" height="11.0" fill="#eb6834" stroke="#fcfcfb" stroke-width="2"/><title>chord2, two branch points, [10/10]: t = 0.8057+0.3228i, s = 0.163, d = +0.0342, pole-zero gap 3.6e-02</title></g>
+<g><rect x="682.3" y="164.9" width="11.0" height="11.0" fill="#eb6834" stroke="#fcfcfb" stroke-width="2"/><title>chord2, two branch points, [10/10]: t = 0.8409+0.4287i, s = 0.265, d = +0.0562, pole-zero gap 7.3e-02</title></g>
+<g><rect x="718.6" y="151.5" width="11.0" height="11.0" fill="#eb6834" stroke="#fcfcfb" stroke-width="2"/><title>chord2, two branch points, [10/10]: t = 0.8897+0.5456i, s = 0.383, d = +0.0719, pole-zero gap 7.2e-02</title></g>
+<g><rect x="757.0" y="145.6" width="11.0" height="11.0" fill="#eb6834" stroke="#fcfcfb" stroke-width="2"/><title>chord2, two branch points, [10/10]: t = 0.9500+0.6646i, s = 0.508, d = +0.0787, pole-zero gap 5.1e-02</title></g>
+<g><rect x="794.8" y="148.1" width="11.0" height="11.0" fill="#eb6834" stroke="#fcfcfb" stroke-width="2"/><title>chord2, two branch points, [10/10]: t = 1.0176+0.7768i, s = 0.631, d = +0.0758, pole-zero gap 2.9e-02</title></g>
+<g><rect x="829.2" y="159.0" width="11.0" height="11.0" fill="#eb6834" stroke="#fcfcfb" stroke-width="2"/><title>chord2, two branch points, [10/10]: t = 1.0879+0.8741i, s = 0.743, d = +0.0631, pole-zero gap 9.5e-03</title></g>
+<g><rect x="878.9" y="178.2" width="11.0" height="11.0" fill="#eb6834" stroke="#fcfcfb" stroke-width="2"/><title>chord2, two branch points, [10/10]: t = 1.1930+1.0126i, s = 0.904, d = +0.0407, pole-zero gap 1.5e-03</title></g>
+<g><polygon points="604.8,214.1 611.3,220.6 604.8,227.1 598.3,220.6" fill="#1baf7a" stroke="#fcfcfb" stroke-width="2"/><title>arcjump, branch points on the arc, [10/10]: t = 0.7487+0.1496i, s = -0.005, d = -0.0024, pole-zero gap 1.6e-02</title></g>
+<g><polygon points="616.8,194.2 623.3,200.7 616.8,207.2 610.3,200.7" fill="#1baf7a" stroke="#fcfcfb" stroke-width="2"/><title>arcjump, branch points on the arc, [10/10]: t = 0.7493+0.1975i, s = 0.035, d = +0.0209, pole-zero gap 4.3e-02</title></g>
+<g><polygon points="642.2,170.3 648.7,176.8 642.2,183.3 635.7,176.8" fill="#1baf7a" stroke="#fcfcfb" stroke-width="2"/><title>arcjump, branch points on the arc, [10/10]: t = 0.7689+0.2878i, s = 0.117, d = +0.0487, pole-zero gap 4.8e-02</title></g>
+<g><polygon points="692.1,155.2 698.6,161.7 692.1,168.2 685.6,161.7" fill="#1baf7a" stroke="#fcfcfb" stroke-width="2"/><title>arcjump, branch points on the arc, [10/10]: t = 0.8395+0.4466i, s = 0.279, d = +0.0663, pole-zero gap 7.2e-02</title></g>
+<g><polygon points="730.2,155.6 736.7,162.1 730.2,168.6 723.7,162.1" fill="#1baf7a" stroke="#fcfcfb" stroke-width="2"/><title>arcjump, branch points on the arc, [10/10]: t = 0.9054+0.5609i, s = 0.403, d = +0.0658, pole-zero gap 7.5e-02</title></g>
+<g><polygon points="755.4,140.4 761.9,146.9 755.4,153.4 748.9,146.9" fill="#1baf7a" stroke="#fcfcfb" stroke-width="2"/><title>arcjump, branch points on the arc, [10/10]: t = 0.9336+0.6458i, s = 0.485, d = +0.0836, pole-zero gap 5.8e-02</title></g>
+<g><polygon points="802.7,145.5 809.2,152.0 802.7,158.5 796.2,152.0" fill="#1baf7a" stroke="#fcfcfb" stroke-width="2"/><title>arcjump, branch points on the arc, [10/10]: t = 1.0201+0.7852i, s = 0.639, d = +0.0777, pole-zero gap 2.5e-02</title></g>
+<g><polygon points="847.5,164.4 854.0,170.9 847.5,177.4 841.0,170.9" fill="#1baf7a" stroke="#fcfcfb" stroke-width="2"/><title>arcjump, branch points on the arc, [10/10]: t = 1.1165+0.9091i, s = 0.785, d = +0.0556, pole-zero gap 8.3e-03</title></g>
+<g><polygon points="873.0,204.2 879.5,210.7 873.0,217.2 866.5,210.7" fill="#1baf7a" stroke="#fcfcfb" stroke-width="2"/><title>arcjump, branch points on the arc, [10/10]: t = 1.2006+0.9626i, s = 0.867, d = +0.0092, pole-zero gap 1.5e-03</title></g>
+<circle cx="936.2" cy="356.0" r="10" fill="none" stroke="#0b0b0b" stroke-width="1.5"/>
+<line x1="929.9" y1="348.2" x2="896.2" y2="306.0" stroke="#0b0b0b" stroke-width="1"/>
+<text x="892.2" y="310.0" font-size="11" fill="#0b0b0b" text-anchor="end" font-weight="bold">|t| = 1.81, beyond κ⋆</text>
+<text x="500.0" y="22.0" font-size="12" fill="#0b0b0b" text-anchor="start" font-weight="normal">[10/10] poles in chord coordinates, wf 1.00</text>
+<text x="500.0" y="38.0" font-size="10" fill="#52514e" text-anchor="start" font-weight="normal">s along P0 → κ⋆, d the offset; the dashed curve is the arc</text>
+<g opacity="0.35"><line x1="978.0" y1="182.0" x2="978.0" y2="126.0" stroke="#52514e" stroke-width="2"/><polygon points="978.0,120.0 982.0,129.0 974.0,129.0" fill="#52514e"/><text x="978.0" y="144.0" font-size="11" fill="#52514e" text-anchor="middle" transform="rotate(-90.0 978.0 151.0)">arc</text></g>
+<text x="16.0" y="472.0" font-size="10" fill="#52514e" text-anchor="start" font-weight="normal">pade_geometry.py 1aa47dc  ·  σ₀…σ₂₂ scan45J1250 (K 45, J 1250, 1280 bits)  ·  raw I541-mac  ·  Apple M5, 32 GB, macOS 27.0.1</text>
+<text x="16.0" y="456.0" font-size="10" fill="#c98500" text-anchor="start" font-weight="normal">⚠</text>
+<text x="30.0" y="456.0" font-size="10" fill="#52514e" text-anchor="start" font-weight="normal">the real k = 11 geometry is not determined by the data (noise spread 0.47, J 1250 against J 1500: 0.31)</text>
+<a href="https://github.com/nmoinvaz/choptuik-large-d"><text x="984" y="472" font-size="10" fill="#52514e" text-anchor="end" text-decoration="underline">github.com/nmoinvaz/choptuik-large-d</text></a>
+</svg>
