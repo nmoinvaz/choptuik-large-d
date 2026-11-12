@@ -261,7 +261,11 @@ def verdict(argv):
             and len({(r["rel"], r["seed"]) for r in recs}) == 1):
         raise SystemExit("the four runs do not share the start and S")
     shows = _lams(d) != _lams(a)
-    print(f"control (D raw under S against A raw): {'changed, the plant shows' if shows else 'unchanged'}")
+    la, ld = _lams(a)[0], _lams(d)[0]
+    k = next((i for i, (x, y) in enumerate(zip(la, ld)) if x != y), min(len(la), len(ld)))
+    print(f"control (D raw under S against A raw): {'changed, the plant shows' if shows else 'unchanged'}"
+          + (f"; first at step {k}: lam {la[k] if k < len(la) else '-'} against {ld[k] if k < len(ld) else '-'}"
+             + (f" (D ran {d['it_max']} steps)" if d["it_max"] < a["it_max"] else "") if shows else ""))
     if not shows:
         print("the plant does not show: nothing tested")
         return 2
