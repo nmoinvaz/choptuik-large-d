@@ -2,7 +2,7 @@
 """The weakest directions of the chain's Newton system at a stored state, and where in the unknowns they live.
 
     cd hp && python3 near_null.py RAWDIR STATE [--k=4] [--its=16] [--threads=2] [--kfreeze=K] [--keep_plan=1]
-        [--json=OUT] [--planted=1 [--w=1e-30]] [--mutate=scale_p1|sigma|scale_block]
+        [--json=OUT] [--planted=1 [--w=1e-20]] [--mutate=scale_p1|sigma|scale_block]
 
 The pinned system (the state's kfreeze, as anm_run.py solves it) is factored once in octo-double (Solver.newton_o, the
 LU kept), on a plan made again at the state (Solver.plan at 1e-32, 0.05); --keep_plan=1 takes the state's stored plan
@@ -35,14 +35,14 @@ of a few percent: --mutate=scale_p1, the p1 rows of every right-hand side times 
 (1.0058 at D 242.36), because the weakest vector hardly changes; a single row times 1.01 moves it less (#488).
 
 --planted=1 checks the printed step against a planted one (exit 1 on failure, #501). With w = |w| (v_1 + g) / sqrt(2),
-g a random unit vector (seed 2) and |w| from --w, the system G(x) = F(x) - F(z) has the root z exactly. At the planted
-start z - w (od_axpy, exact in eight parts) its residual is -J w + H(w, w) / 2, a chosen vector in the Jacobian's range,
-and its Newton step newton_o(z - w).dz + J^-1 F(z) (the LU at z - w, F(z) from residual_o in eight parts) is w + J^-1
-H(w, w) / 2, whatever F(z) is. That step goes through the pinned step's path (dz + J^-1 c, with c = F(z) on every row)
-and is printed. For every block the printed step, its norm, max and harmonics, and its Delta component and V^T dz,
-must equal w's to 1e-10 relative. Its verdict has its own line, "planted check:", and the last line, "check:", then
-reads pass only if both checks pass. Control: --mutate=scale_block multiplies the m_h block of every printed step by
-1.01, and the planted check must fail.
+g a random unit vector (seed 2) and |w| from --w, the offset c = F(z) + J w (F from residual_o, J from jacobian_o, J w
+summed by columns with od_axpy, all in eight parts) leaves the residual F - c = -J w at z, a chosen vector in the
+Jacobian's range. Its Newton step dz + J^-1 c, through the pinned step's path and the same LU, is w to rounding, and is
+printed. For every block the printed step, its norm, max and harmonics, and its Delta component and V^T dz, must equal
+w's to 1e-10 relative. Its verdict has its own line, "planted check:", and the last line, "check:", then reads pass
+only if both checks pass. Control: --mutate=scale_block multiplies the m_h block of every printed step by 1.01, and
+the planted check must fail. A planted start moved to z - w is not used. At D 242.36 the horizon rows' quadratic term
+is about 1e30 |w| of their linear one (7.7e-11 at |w| 1e-40), and at |w| 1e-30 the step at z - w was 4e38 |w| off w.
 """
 import json
 import os
@@ -228,21 +228,23 @@ def main():
         print_step(label, rec[key])
     ok_p = True
     if opts.get("planted") == "1":
-        # G(x) = F(x) - F(z) has the root z; its Newton step at z - w is w to first order (docstring)
-        wn = float(opts.get("w", 1e-30))
+        # the offset c = F(z) + J w leaves the residual F - c = -J w, so the Newton step at z is w (docstring)
+        wn = float(opts.get("w", 1e-20))
         g = np.random.default_rng(2).standard_normal(L)
         w = (V[:, 0] + g / np.linalg.norm(g)) * (wn / np.sqrt(2))
-        w8 = [np.ascontiguousarray(w)] + [zero] * 7
         F8 = [np.ascontiguousarray(np.asarray(p)) for p in s.residual_o(z)]
-        zp = [np.ascontiguousarray(p) for p in od_axpy(-1.0, *w8, *z)]
         t2 = time.time()
-        outp = s.newton_o(zp)
-        dp8 = od_axpy(1.0, *[np.asarray(p) for p in s.olu_solve(F8)], *[np.asarray(p) for p in outp[0]])
+        Jw = [zero] * 8
+        for c in range(L):
+            Jw = od_axpy(float(w[c]), *[np.ascontiguousarray(J[q][:, c]) for q in range(8)], *Jw)
+        cp8 = [np.ascontiguousarray(np.asarray(p)) for p in od_axpy(1.0, *Jw, *F8)]
+        dp8 = od_axpy(1.0, *[np.asarray(p) for p in s.olu_solve(cp8)], *dz8)
         dp = printed(dp8, blocks, M, mut)
         rp = step_report(dp, V, blocks, M)
-        print(f"  planted start z - w, |w| {np.linalg.norm(w):.3e} (v_1 and a random unit vector), max|F(z)| "
-              f"{np.abs(F8[0]).max():.2e}, octo-double LU {time.time() - t2:.0f} s", flush=True)
-        print_step("planted step newton_o(z - w).dz + J^-1 F(z)", rp)
+        print(f"  planted residual -J w, |w| {np.linalg.norm(w):.3e} (v_1 and a random unit vector), max|F(z)| "
+              f"{np.abs(F8[0]).max():.2e}, max|J w| {np.abs(np.asarray(Jw[0])).max():.2e} ({time.time() - t2:.0f} s)",
+              flush=True)
+        print_step("planted step dz + J^-1 (F(z) + J w)", rp)
         err = planted_errors(dp, rp, w, V, blocks, M)
         worst = sorted(err.items(), key=lambda x: -x[1])
         ok_p = bool(worst[0][1] <= 1e-10)
