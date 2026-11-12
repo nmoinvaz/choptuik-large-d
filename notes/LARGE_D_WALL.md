@@ -106,3 +106,73 @@ What the solver has shown:
   1.0×10⁻⁸ (7–13 held). The residual the runs reach is 0.04–0.05 × u·σ_max·|z| (|z| ≈ 19.5) at every state from
   D 40 to 64 (0.11 and 0.2 at 66.0 and 67.5), the rounding floor of evaluating F at a double-double z; σ_max grows
   1.36 times per unit of D at D = 60.
+
+## The octo-double wall near D 232–242
+
+The octo-double chains refuse steps near D 242.5 (win2's crawlJ and its probes) and, on one of two held fits, at
+D 231.13 → 232.13 (win_d10; win_d6 accepted the same step). Raw folders below are in the raw-data repository; each
+item names its issue.
+
+**Where the first move goes.** Every first Newton move of a corrector attempt lies on the four weakest directions of
+the pinned system: share 1.0 for accepted and refused attempts alike, at D 242.5 and at D 232.13 (`hp/dz0_weak.py`,
+#499 and #513; `I499-mac/` at ea4cd55e and fe30a3c6). Its rebuild check passes on every attempt, and its control,
+the kernel rebuilt at D + 10⁻⁶, fails on every attempt.
+
+**The weak rows are not the obstacle.** On those four directions the reduced system is B(c − a) + T(c, c, c)/6 = 0,
+with a the first move's coefficients.
+- Its quadratic term Q = UᵀF″(vⱼ, vₖ) is truncation of the differences only: it falls like h² (6.3×10²⁰, 10¹⁶ and
+  10¹² at h = 10⁻²⁰, 10⁻²² and 10⁻²⁴). That bound is about 6×10⁹ times looser than the scale where Q would matter
+  (inferred, #527), and #529 takes it to smaller h.
+- The cubic term is resolved: max|UᵀF‴| is 1.63×10³³ at D 242.55 and 4.46×10³¹ at D 232.13, the same at h = 10⁻²³ and
+  10⁻²⁴ to 3×10⁻¹⁸.
+- At D 242.55 the root nearest the move is real, at about half of |a|, where the actual weak residual is 0.4% of
+  |B a|. At D 232.13 the root is the linear guess (4×10⁻⁹ and 3×10⁻¹¹ of |B a|), and win_d10 refused there anyway.
+- A corrector that first puts the weak part on that root (`hp/weak_corrector.py`, #499; `I499-mac/` at 19958783)
+  is refused like newton_od. The control reproduces the attempt's sequence, 9.04×10⁻³⁶ → 7.27×10⁻²⁶ → 3.63×10⁻²⁶ →
+  3.18×10⁻²⁶ with no trial accepted. The weak-first start stands at 2.02×10⁻²⁶ and stops at 1.35×10⁻²⁶.
+
+**The jump after the first move is quadratic in the move and sits in the strong rows.** The residual after the move is
+7.27×10⁻²⁶ for a move of 8.32×10⁻³⁰ and 2.02×10⁻²⁶ for one of 4.45×10⁻³⁰. Their ratio, 3.60, is the square of the
+moves' ratio, 3.50, so max|F| ≈ 1.0×10³³ |c|². At both points the weak rows' residual is of the order of
+|B a| = 9.8×10⁻⁵⁶, 30 orders below, so this residual is in the strong rows. Two points only, so this is numerical
+evidence. Correcting it moves the strong unknowns, and their
+curvature fed back into the weak rows is the term S of the reduced coefficient T − 3S (Kuznetsov's form,
+[LIT_REVIEW.md](LIT_REVIEW.md), #527). #499 measured T alone. #528 measures S, and #530 tests a corrector that solves
+the strong rows before the weak ones.
+
+**Where the weakness lives in the layout.** Raw singular values are not comparable across layouts, since a node's
+rows carry its own gain. With rows and columns equilibrated (`hp/near_null_eq.py`, #502; `I502-mac/` at 811bbed3), the
+0.3–0.8 layout lifts σ₁ by 7.6×10⁴ (1.88×10⁻⁶¹ to 1.42×10⁻⁵⁶). That is the reverse of the raw reading, 2.55×10⁻²⁷ to
+8.43×10⁻³⁸ (#493). One node moved at a time at D 242.36 (#537; `I537-win2/` at 923c87c1):
+
+| move | shift of ln σ₃, raw | equilibrated | fast mode between nodes | G^p |
+|---|---|---|---|---|
+| first node 0.3 → 0.35 | 0.00 | 0.00 | +41 | 0 |
+| last node 0.7 → 0.72 | −8.96 | −2.20 | −13.7 | positive |
+
+All four σ shift together, so the last segment sets a common scale of the weak directions, and neither model holds.
+The −13.7 is n[Φ(0.72) − Φ(0.7)], the node law that matched max|∂Δ/∂F| over 13 orders at D 40–61 (above). At
+D 242.36 the raw shift is 65% of it. #543 measures σ against the last node's position, and #544 moves each interior
+node.
+
+**The weak σ oscillate in D.** The equilibrated σ₁ and σ₂ oscillate with a period that shortens as D falls: 2.715 at
+D 232.6, 2.525 at 221.6 and 2.440 at 212.8 (#525; `I525-win2/` at 5037ec07). σ₃ and σ₄ have periods of 2.13–2.14
+over D 210–215.6.
+A drift quadratic in D fits the 51 states D 210–237 to 0.0060 and 0.0052 in ln for σ₁ and σ₂ (#533; `I533-win2/` at
+f01f08fe). One of its four hold-outs misses the 0.014 bound (0.0173). It predicts σ₁'s period over D 204–209.6 as
+2.404 (sd 0.021, noise only), which #535 tests.
+
+**The held fit's share in one step.** Swapping the held fits between the degree-6 and degree-10 chains for the step
+D 229.13 → 230.13 moves Δ by ±1.175×10⁻¹³, equal and opposite. That is 0.506% of the 2.32×10⁻¹¹ gap between the chains
+(#514; `I514-win/` at d2208e68).
+
+**The horizon pole is not an apparent horizon.** The variables B = 1/a² and C = c a² keep the pole of
+[QUAD_DOUBLE.md](QUAD_DOUBLE.md) 13.6 (`hp/pole_bc.py`, #538; `I538-mac/` at 651f29e6).
+- p, m, B and C all have the radius of a. Their log-slope in ln(1/δ) is 0.997–1.000 of 13.6's at D 40–73, and 0.93 at
+  D 242.36.
+- B stays at 0.90–0.98 near the radius, so no trapped sphere forms there. That contradicts 13.1's reading of the pole
+  as g_rr → ∞ at an apparent horizon. The law itself holds.
+- The zero of x − c, where the p-equation is singular, extrapolates to 1–12% beyond the radius (numerical evidence,
+  under a mass-mode form). #545 tests it.
+- 13.6's C depends on the series' order count: 0.918, 0.935 and 0.942 at 100, 130 and 160 orders at D 40. #546 quotes
+  it with that range.
