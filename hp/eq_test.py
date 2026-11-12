@@ -225,7 +225,8 @@ def predict(argv):
         eqk = [rule(t["d"][i] / S, t["dt"][i] / S, t["F"][i], dck) for i in range(len(base))]
         out[k] = dict(raw=raw, eq=eqk)
         print(f"  S {k}: raw {raw}{'' if raw == base else '  <- the raw test changes'}; eq {eqk}"
-              f"{'' if eqk == eq0 else '  <- the eq test changes'}")
+              f"{'' if eqk == eq0 else '  <- the eq test changes'}; spread of log10(D_c(J S) S / D_c(J)) "
+              f"{np.ptp(np.log10(dck * S / dc0)):.1e}")
     for i in range(len(base)):
         d, dt = np.abs(t["d"][i]), np.abs(t["dt"][i])
         print(f"  trial {i} (step {t['it'][i]}, lam {t['lam'][i]:g}, max|F| {t['F'][i]:.2e}): ratio of the test's two sides raw "
