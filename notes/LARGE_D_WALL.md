@@ -118,11 +118,16 @@ the pinned system: share 1.0 for accepted and refused attempts alike, at D 242.5
 #499 and #513; `I499-mac/` at ea4cd55e and fe30a3c6). Its rebuild check passes on every attempt, and its control,
 the kernel rebuilt at D + 10⁻⁶, fails on every attempt.
 
-**The weak rows are not the obstacle.** On those four directions the reduced system is B(c − a) + T(c, c, c)/6 = 0,
-with a the first move's coefficients.
-- Its quadratic term Q = UᵀF″(vⱼ, vₖ) is truncation of the differences only: it falls like h² (6.3×10²⁰, 10¹⁶ and
-  10¹² at h = 10⁻²⁰, 10⁻²² and 10⁻²⁴). That bound is about 6×10⁹ times looser than the scale where Q would matter
-  (inferred, #527), and #529 takes it to smaller h.
+**The weak rows are not the obstacle.** On those four directions the reduced system is
+B(c − a) + ½Q(c, c) + T(c, c, c)/6 = 0, with a the first move's coefficients.
+- Down to h = 10⁻²⁴ the quadratic term Q = UᵀF″(vⱼ, vₖ) is lost in the differences' truncation, which falls like h²
+  (6.3×10²⁰, 10¹⁶ and 10¹² at h = 10⁻²⁰, 10⁻²² and 10⁻²⁴). At h = 10⁻³¹ and 10⁻³² it is resolved, agreeing to
+  1.3×10⁻⁶ and 2.3×10⁻⁶. Its largest entry is 5.4×10⁴ at the accepted attempt and 2.75×10⁴ at the refused one,
+  27 to 54 times the scale at which #527 estimated it would matter (#529; `I529-win2/` at dcde13a4). So Q is not
+  zero. The roots below were found with Q set to 0, but each was checked against the actual weak residual, which
+  includes every order.
+- The weak subspace is four-dimensional with a clean gap: σ₅ lies at least 1.2×10⁶ above σ₄ at both attempts, though
+  its own value does not converge (1.2–7.1×10⁻¹⁹ over 16 to 256 iterations; #529).
 - The cubic term is resolved: max|UᵀF‴| is 1.63×10³³ at D 242.55 and 4.46×10³¹ at D 232.13, the same at h = 10⁻²³ and
   10⁻²⁴ to 3×10⁻¹⁸.
 - At D 242.55 the root nearest the move is real, at about half of |a|, where the actual weak residual is 0.4% of
@@ -157,10 +162,26 @@ rows carry its own gain. With rows and columns equilibrated (`hp/near_null_eq.py
 | first node 0.3 → 0.35 | 0.00 | 0.00 | +41 | 0 |
 | last node 0.7 → 0.72 | −8.96 | −2.20 | −13.7 | positive |
 
-All four σ shift together, so the last segment sets a common scale of the weak directions, and neither model holds.
-The −13.7 is n[Φ(0.72) − Φ(0.7)], the node law that matched max|∂Δ/∂F| over 13 orders at D 40–61 (above). At
-D 242.36 the raw shift is 65% of it. #543 measures σ against the last node's position, and #544 moves each interior
-node.
+All four σ shift together, and neither model holds. The −13.7 is n[Φ(0.72) − Φ(0.7)], the node law that matched
+max|∂Δ/∂F| over 13 orders at D 40–61 (above). At D 242.36 the raw shift is 65% of it.
+
+Only the last node is felt (`I543-win2/` and `I544-win2/` at adbf158f, `I553-win2/` and `I554-win2/` at 145084e7):
+- Moving any interior node by 0.02, or the first node to 0.25, changes no σ (below 0.001 in ln, equilibrated). The
+  five-node layout ending at 0.80 gives #502's six-node 0.3–0.8 values to within 0.037 (#544, #543).
+- No law a + b x or a + b ln x in the last node's position x holds (#543), and the fit's prediction for 0.8, written
+  before the comparison, missed.
+- The weakest direction changes at x = 0.7428 (#553): below it is the harmonic-3 pair, and above it the pure Delta
+  direction. The Delta direction's raw σ there is near 10⁻³⁷ and is not the norm of J's Delta column (#553).
+- The weakest equilibrated σ is smallest at 0.74 (4.0×10⁻⁶³) and still rising at 0.92 (2.04×10⁻⁴², 19 orders above
+  0.70). The rise is J's scale, whose largest entry falls like x^−(D−3), from 2.4×10³⁷ at 0.70 to 9.3×10⁸ at 0.92
+  (#554). #559 extends the ladder to 0.98.
+- At x = 0.80 the Delta direction's raw σ falls with D: 1.59×10⁻³⁷, 1.24×10⁻³⁷ and 8.74×10⁻³⁸ at D 232.63, 237.13 and
+  242.36, about 6% per unit of D, while the other weak σ stay within 0.3% (#560; `I560-win2/` at 12e71363).
+
+**Why the 0.8 layout's polish failed.** At the re-noded 0.3–0.8 start of D 242.36, the polish's first step is of order
+1 (|dz| 1.73), almost all on v₄. It is the start's horizon residual, 1.62×10⁻³⁴, divided by σ₄ = 1.77×10⁻³⁴ (#501;
+`I501-mac/` at 650c9bf8). The outer layout is better conditioned, but its start is not accurate enough for its weakest
+direction. #562 refines the start's horizon rows before the polish.
 
 **The weak σ oscillate in D.** The equilibrated σ₁ and σ₂ oscillate with a period that shortens as D falls: 2.715 at
 D 232.6, 2.525 at 221.6 and 2.440 at 212.8 (#525; `I525-win2/` at 5037ec07). σ₃ and σ₄ have periods of 2.13–2.14
