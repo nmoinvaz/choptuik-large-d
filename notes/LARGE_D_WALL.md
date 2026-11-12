@@ -185,6 +185,30 @@ Only the last node is felt (`I543-win2/` and `I544-win2/` at adbf158f, `I553-win
 `I501-mac/` at 650c9bf8). The outer layout is better conditioned, but its start is not accurate enough for its weakest
 direction. #562 refines the start's horizon rows before the polish.
 
+**The freeze projector's rounding.** The frozen rows apply the kfreeze projector to p1, and main forms it in
+double-double. With the projector in octo-double (#523's cadcaf1, error 1.15×10⁻¹³²), the chain's states are
+1.6–1.7×10⁻³⁴ off their rows in the horizon p rows k ≤ 3, at every D from 215 to 242.36. On main's rounded rows they are
+at 5×10⁻³⁶ to 8×10⁻³⁸.
+- At the 0.975 start, three of the four weak σ come from that rounding: 7.4×10⁻³⁵, 7.4×10⁻³⁵ and 1.84×10⁻³⁴ on main,
+  against 2.8×10⁻³⁹ to 1.9×10⁻³⁷ on cadcaf1 (#562; `I562-mac/` at 690c41a9). The raw σ near 10⁻³⁴ of the outer-layout
+  ladders above carry it.
+- The pinned step to the exact rows lies on the four weak directions (share 1.0000), and its Δ part grows by about 0.8
+  in ln per unit of D (#589; `I589-mac/` at 420f201a):
+
+| D | Δ part of the step to the exact rows | chain_fit row's quoted err |
+|---|---|---|
+| 215.00 | −4.5×10⁻¹⁹ | 3.4×10⁻¹¹ |
+| 225.13 | −7.8×10⁻¹⁶ | 3.8×10⁻¹¹ |
+| 235.13 | −3.6×10⁻¹² | 2.6×10⁻¹⁴ |
+| 240.03 | −2.0×10⁻¹⁰ | none |
+| 242.36 | +2.1×10⁻⁹ | none |
+
+These are first-order figures. No state lies inside its chord window, so none is a measured shift. On the rounded rows,
+though, #562's homotopy traces stayed straight in Δ well past their chord windows. **Discrepancy, open:** if the
+first-order figure holds, the chain_fit rows of `hp/data/delta_all.csv` are off the exact problem's Δ from about D 233.6
+on. At D 235.13 that is the 12th decimal, 140 times the row's quoted err. #595 measures the shift at D 235 and 240 by
+tracing to the exact rows, and the rows stay as quoted until then.
+
 **The weak σ oscillate in D.** The equilibrated σ₁ and σ₂ oscillate with a period that shortens as D falls: 2.715 at
 D 232.6, 2.525 at 221.6 and 2.440 at 212.8 (#525; `I525-win2/` at 5037ec07). σ₃ and σ₄ have periods of 2.13–2.14
 over D 210–215.6.
@@ -202,7 +226,16 @@ D 229.13 → 230.13 moves Δ by ±1.175×10⁻¹³, equal and opposite. That is 
   D 242.36.
 - B stays at 0.90–0.98 near the radius, so no trapped sphere forms there. That contradicts 13.1's reading of the pole
   as g_rr → ∞ at an apparent horizon. The law itself holds.
-- The zero of x − c, where the p-equation is singular, extrapolates to 1–12% beyond the radius (numerical evidence,
-  under a mass-mode form). #545 tests it.
+- The zero of x − c, where the p-equation is singular, is the nearest singularity at moderate D and small δ, and not
+  at D 242.36:
+  - A real-axis march of the perturbed solution (`hp/pole_march.py`, #545; `I545-mac/` at 6e935ad8) finds no breakdown
+    at the radius. For δ > 0 at D 40 and 73, x − c rises to between −0.01 and −0.03 and turns back 1–6% beyond R,
+    with a field peak there. For δ < 0 nothing happens on the axis.
+  - The nearest zero of x − c from Padé approximants of the series (`hp/pole_sonic.py`, #592; `I592-mac/` at 5e4ec5b6)
+    lies within 3% of R at D 40 and 73 for |δ| = 10⁻⁸, and 4–13% beyond R at larger δ. At D 242.36 it lies 15–157%
+    beyond R.
+  - Numerical evidence. Past R the series' own accuracy limits the reading. At D 73 and 242.36 the double-double series
+    and the kernel's Taylor steps disagree far above the march's conditioning (#545), and #591 compares the series with
+    an octo-double one.
 - 13.6's C depends on the series' order count: 0.918, 0.935 and 0.942 at 100, 130 and 160 orders at D 40. #546 quotes
   it with that range.
