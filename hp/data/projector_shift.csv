@@ -1,0 +1,6 @@
+D,shift,kind,source
+215.0,-4.54717e-19,measured,"I595-mac 2b818f6f: exact - rounded, both polishes converged (delta_diff_s215.log)"
+225.13125,-7.75683e-16,measured,"I595-mac 2b818f6f: exact - rounded, both polishes converged (delta_diff_s225.log)"
+235.13125,-3.5313e-12,measured,"I595-mac 2b818f6f: exact - rounded; the rounded control's Delta from its logged steps, to 5e-17"
+240.02578125,-2.04e-10,first_order,"I589-mac 420f201a: the Delta part of near_null's pinned step on the exact rows"
+242.36419067382812,2.15e-9,first_order,"I589-mac 420f201a and I562-mac 690c41a9: the Delta part of the pinned step; the polish does not converge there"

@@ -2,7 +2,7 @@
 """Every computed value of Delta in one table, hp/data/delta_all.csv, one row per D from the low-D runs to the large-D
 chain's frontier, with the kind of computation, an error estimate and what that estimate is.
 
-    cd hp && python3 export_delta_all.py RAWDIR [--verify] [--mutate=dd|qd|pinned|chain_fit|chain|held|frontier|t85
+    cd hp && python3 export_delta_all.py RAWDIR [--verify] [--mutate=dd|qd|pinned|chain_fit|chain|held|frontier|projector|t85
                                                                    |fits|fits_table]
     cd hp && python3 export_delta_all.py RAWDIR --interp_check [--mutate=interp]
 
@@ -11,7 +11,8 @@ re-reads every row of the written CSV from the source and state its row names, r
 data/delta_fits.csv, and exits 1 on any difference; --mutate changes one row of that kind by one unit in its second
 part before the verification (the control, which must fail; it exits 2 when the table has no row of that kind);
 --mutate=held labels the last chain_fit row chain, and --mutate=frontier moves the first chain row below the chain_fit
-frontier (or, when chain_fit replaces every chain row, puts the chain's last row back), and --mutate=t85 gives the first
+frontier (or, when chain_fit replaces every chain row, puts the chain's last row back), --mutate=projector drops the
+first projector err (data/projector_shift.csv's), and --mutate=t85 gives the first
 chain_fit row a T85-mac source (the controls of the chains' checks); --mutate=fits gives the first chain_fit row whose
 err is interpolated the other fit's direct difference instead, the value an export that compares only at equal D
 writes, and --mutate=fits_table drops that row's interpolated entry from data/delta_fits.csv.
@@ -44,7 +45,10 @@ precedence where two share a D:
           the degree-10 chain at half-integer D), interpolated from the six states of that fit's chain nearest D by
           the polynomial of degree 5 in 1/(D - 2) (Lagrange, mpmath), when they bracket D. err_kind names the fit
           and how: "fits d6", "fits d10", "fits d6 interp", "fits d10 interp", with " one-sided" appended where
-          only some of the comparison fits reach that D (the frontier of a comparison chain). Each fit's difference is also written
+          only some of the comparison fits reach that D (the frontier of a comparison chain). From D 215 on, the
+          freeze projector's rounding enters too: Delta's shift from the double-double projector's rows to the exact
+          ones (data/projector_shift.csv, log-linear between its points; #589, #595), err_kind "projector", or
+          "projector first order" where it rests on a first-order figure. Each fit's difference is also written
           to data/delta_fits.csv (D, then per fit the signed Delta of that fit minus chain_fit's, how and the states).
   chain   the chain with the harmonics held on T75's trend (notes/QUAD_DOUBLE.md 13.17-13.24), its backbone traced
           the same way back to T75's pin 7 state at 73.27; double-double states to 79.27, quad-double after. Its rows at
@@ -81,6 +85,8 @@ FITS_OUT = os.path.join(HERE, "data", "delta_fits.csv")
 FITS_COLS = ["D"] + [f"{c}_{lab}" for lab in FITS.values() for c in ("diff", "how", "states")]
 # from this D on, a fit with no state at a chain_fit row's D is interpolated there (#478)
 INTERP_FROM = 191.5
+# the freeze projector's rounding: Delta's shift from the double-double projector's rows to the exact ones (#589, #595)
+PROJ = os.path.join(HERE, "data", "projector_shift.csv")
 INTERP_N = 6
 # the interpolation's control: leave-one-out at these D, where every chain has a state
 CONTROL_D = (186.0, 187.0, 188.0, 189.0, 190.0)
@@ -90,6 +96,25 @@ CONTROL_TOL = 1e-14
 def total(parts):
     """the exact sum of the parts (f64 values or their repr strings; empty parts are 0), in mpmath"""
     return sum((mp.mpf(float(p)) for p in parts if p != ""), mp.mpf(0))
+
+
+def projector_err(D):
+    """(|shift|, label) of the freeze projector's rounding at D: log-linear in |shift| between the points of
+    data/projector_shift.csv, the last interval's slope past its end; None below its first point (the shift there is
+    below 5e-19 and falls about 0.8 in ln per unit of D). The label is "projector", or "projector first order" where a
+    bracketing point is a first-order figure, not a measured shift."""
+    if not os.path.exists(PROJ):
+        return None
+    pts = sorted((float(r["D"]), abs(float(r["shift"])), r["kind"]) for r in csv.DictReader(open(PROJ)))
+    if D < pts[0][0] - TOL_D:
+        return None
+    for (d0, s0, k0), (d1, s1, k1) in zip(pts[:-1], pts[1:]):
+        if D <= d1 + TOL_D:
+            break
+    t = (D - d0) / (d1 - d0)
+    val = float(np.exp((1 - t) * np.log(s0) + t * np.log(s1)))
+    first = (k0 != "measured" and t < 1 - 1e-12) or (k1 != "measured" and t > 1e-12)
+    return val, "projector first order" if first else "projector"
 
 
 def fmt(x):
@@ -276,6 +301,9 @@ def chain_rows(keep=False, quiet=False):
             big, frow = {}, {}
             if spread["runs"]:
                 big["runs"] = max(abs(d) for d, _ in spread["runs"])
+            pe = projector_err(m["D"])
+            if pe:
+                big[pe[1]] = pe[0]
             for f, lab in (FITS.items() if kind == "chain_fit" else ()):
                 if spread[f]:
                     d, o = max(spread[f], key=lambda t: abs(t[0]))
@@ -429,6 +457,14 @@ def verify(rows, mutate=""):
         else:
             t.update({f"{c}_{lab}": "" for c in ("diff", "how", "states")})
             print(f"mutated: the {lab} entry of delta_fits.csv at D {r['D']} dropped")
+    elif mutate == "projector":
+        # the first row whose err is the projector's: given its old err (the runs' or none), as without the shift
+        r = next((r for r in rows if r["err_kind"].startswith("projector")), None)
+        if r is None:
+            print("no projector rows, so nothing to mutate")
+            sys.exit(2)
+        r["err"], r["err_kind"] = "", ""
+        print(f"mutated: the chain_fit row at D {r['D']} without its projector err")
     elif mutate == "held":
         r = [r for r in rows if r["kind"] == "chain_fit"][-1]
         r["kind"] = "chain"

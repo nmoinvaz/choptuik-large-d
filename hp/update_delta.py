@@ -73,7 +73,7 @@ def main():
         built = f.read()
     print("checks of the master table:", flush=True)
     ok &= run(["export_delta_all.py", raw, "--verify"])
-    for m in ("dd", "qd", "pinned", "chain_fit", "chain", "held", "frontier", "t85", "fits", "fits_table"):
+    for m in ("dd", "qd", "pinned", "chain_fit", "chain", "held", "frontier", "projector", "t85", "fits", "fits_table"):
         ok &= run(["export_delta_all.py", raw, "--verify", f"--mutate={m}"], expect=1)
     with open(master, "wb") as f:
         f.write(built)
