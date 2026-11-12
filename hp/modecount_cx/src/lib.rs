@@ -16,7 +16,8 @@
 //! * `mode_matrix_c`: the (L-1) x (L-1) mode matrix (Delta fixed, no phase row), as hpkernel's `jacobian` with
 //!   `Ctx::lam` set, but complex;
 //! * multidouble's `linalg::clu_logdet` (written here first): complex double-double LU with partial pivoting (getf2
-//!   order, 8-row lane vectors): ln|det| and arg det.
+//!   order, 8-row lane vectors): ln|det| and arg det;
+//! * `pivots::clu_pivots`: the same LU with every pivot recorded (`mode_pivots`, #552).
 //!
 //! With li = 0 the matrix equals hpkernel's mode matrix bit for bit (checked by hp/modecount_check.py and
 //! hp/modecount_test_check.py).
@@ -41,6 +42,8 @@ use pyo3::exceptions::PyValueError;
 use pyo3::prelude::*;
 use rayon::prelude::*;
 use std::sync::Arc;
+
+mod pivots;
 
 /// `Cx::test`: the full linearisation
 pub const TEST_OFF: u8 = 0;
@@ -819,6 +822,35 @@ impl CSolver {
             })
         })
         .map_err(PyValueError::new_err)
+    }
+
+    /// det M(lam) with every pivot of its LU: (ln|det|, arg det, min |u_kk|, max |u_kk|) as `mode_det` returns them,
+    /// bit for bit, then ln|u_kk|, arg u_kk and the pivot row chosen at each column k, as arrays in elimination order.
+    #[pyo3(signature = (zh, zl, lr_hi, li_hi, lr_lo=0.0, li_lo=0.0))]
+    #[allow(clippy::too_many_arguments, clippy::type_complexity)]
+    fn mode_pivots<'py>(
+        &self,
+        py: Python<'py>,
+        zh: PyReadonlyArray1<'py, f64>,
+        zl: PyReadonlyArray1<'py, f64>,
+        lr_hi: f64,
+        li_hi: f64,
+        lr_lo: f64,
+        li_lo: f64,
+    ) -> PyResult<(f64, f64, f64, f64, Bound<'py, PyArray1<f64>>, Bound<'py, PyArray1<f64>>, Bound<'py, PyArray1<usize>>)> {
+        let (h, l) = (slice(&zh, "zh")?, slice(&zl, "zl")?);
+        let (api, pool) = (&self.api, &self.pool);
+        let n = api.len() - 1;
+        let (lr, li) = (DD::new(lr_hi, lr_lo), DD::new(li_hi, li_lo));
+        let (la, arg, pmin, pmax, lnu, argu, rows) = py
+            .detach(|| {
+                pool.install(|| -> Result<_, String> {
+                    let (rh, rl, ih, il, ld) = api.mode_matrix_c(h, l, lr, li, true)?;
+                    pivots::clu_pivots(n, ld, rh, rl, ih, il, true)
+                })
+            })
+            .map_err(PyValueError::new_err)?;
+        Ok((la, arg, pmin, pmax, lnu.into_pyarray(py), argu.into_pyarray(py), rows.into_pyarray(py)))
     }
 
     /// The complex mode matrix as four (L-1, L-1) arrays (re_hi, re_lo, im_hi, im_lo).
