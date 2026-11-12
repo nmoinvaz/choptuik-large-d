@@ -8,7 +8,8 @@ the position of a single zero inside.
 
 --ball=PREC: det M is the exact determinant of the double-double mode matrix, from python-flint's ball LU at PREC bits
 (hp/modecount_qdet.py), not the double-double LU's. At #584's stuck points the LU's phase is off by up to 2.7 rad while
-the exact determinant moves 3e-5 per ulp of lambda. The tag gets "_ball<PREC>", so its cache is separate, and the
+the exact determinant moves 3e-5 per ulp of lambda. The tag (also a given --tag) gets "_ball<PREC>", so its cache is
+separate, and the
 record's pmin holds the ball radius of arg instead of the smallest pivot.
 
 --centre_tol=T: with --M, the centre series' tolerance in modecount_common.fit_nodes (default 1e-15). A smaller T adds
@@ -173,8 +174,9 @@ def main():
                fmax=float(opts.get("fmax", 1e-20)),
                centre_tol=float(opts["centre_tol"]) if "centre_tol" in opts else None)
     ball = int(opts["ball"]) if "ball" in opts else 0
-    tag = opts.get("tag", f"D{st.D:.4f}_M{st.M}" + ("" if "kf" not in opts else f"_kf{opts['kf']}")
-                   + (f"_ball{ball}" if ball else ""))
+    # the ball suffix applies to a given --tag too, so a ball run never reads a double-double cache
+    tag = opts.get("tag", f"D{st.D:.4f}_M{st.M}" + ("" if "kf" not in opts else f"_kf{opts['kf']}")) + (
+        f"_ball{ball}" if ball else "")
     if ball:
         import numpy as np
         from flint import ctx
