@@ -9,6 +9,7 @@ scaling of near_null_eq.py's result (Curtis-Reid then Ruiz on |J|, #502), on a p
     python3 eq_test.py verdict A B C D
     python3 eq_test.py same X Y [--mutate_bit 1]
     python3 eq_test.py sensitivity J0.npz
+    python3 eq_test.py step PREFIX_trace1.npz [--it 0] [--M 32] [--K 6]
     python3 eq_test.py polish [--Dc_ref L08.json] [--Dc_out FILE.npy] [--hist_out PREFIX] ANM_RUN_ARGS...
 
 planted: octo_corrector.planted's start (the converged state with its centre data and its nodes but the last moved by
@@ -267,6 +268,30 @@ def sensitivity(argv):
     return 0
 
 
+def step(argv):
+    """where a traced step's correction lives: its largest entries in z and in the equilibrated unknowns D_c^-1 z, by
+    block (near_null.layout), and each block's largest |dz| and |dz / D_c|. TRACE: polish's PREFIX_trace<call>.npz"""
+    from near_null import layout
+    opt = _opts(argv[1:], dict(M=32, K=6, it=0, top=8))
+    t = np.load(argv[0])
+    i = int(np.flatnonzero(t["it"] == opt["it"])[0])
+    d, dc = np.asarray(t["d"][i]), np.asarray(t["D_c"])
+    blocks = layout(opt["M"], opt["K"]) + [("Delta", len(d) - 1, 0)]
+
+    def where(j):
+        name, o = max(((n, o) for n, o, _ in blocks if o <= j), key=lambda x: x[1])
+        return f"{name}[{j - o}]"
+    print(f"{argv[0]}: step {opt['it']}, max|dz| {np.abs(d).max():.3e}, max|dz / D_c| {np.abs(d / dc).max():.3e}")
+    for tag, v in (("z", np.abs(d)), ("D_c^-1 z", np.abs(d / dc))):
+        top = np.argsort(-v)[:opt["top"]]
+        print(f"  largest in {tag}: " + ", ".join(f"{where(j)} {v[j]:.2e}" for j in top))
+    for n, o, _ in blocks:
+        sl = slice(o, o + (1 if n == "Delta" else opt["M"]))
+        print(f"  {n:10s} max|dz| {np.abs(d[sl]).max():.2e}, max|dz / D_c| {np.abs(d[sl] / dc[sl]).max():.2e}, "
+              f"D_c {dc[sl].min():.1e}..{dc[sl].max():.1e}")
+    return 0
+
+
 def verdict(argv):
     recs = []
     for p in argv[:4]:
@@ -378,7 +403,7 @@ def polish(argv):
 
 
 if __name__ == "__main__":
-    cmds = dict(planted=planted, predict=predict, verdict=verdict, same=same, polish=polish, sensitivity=sensitivity)
+    cmds = dict(planted=planted, predict=predict, verdict=verdict, same=same, polish=polish, sensitivity=sensitivity, step=step)
     if len(sys.argv) < 3 or sys.argv[1] not in cmds:
         sys.exit(__doc__)
     sys.exit(cmds[sys.argv[1]](sys.argv[2:]))
