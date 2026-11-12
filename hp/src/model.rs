@@ -1109,8 +1109,8 @@ fn jacobian_f64_lanes<T: Lane, const B: usize>(ctx: &Ctx<B>, zh: &[f64], zl: &[f
 /// The f64 Jacobian with some blocks' column tasks on other lanes (Ctx::f64_dd): `Du` (double-double, rounded to f64
 /// when stored) for the horizon block (HDD_BLOCK) or the last segment (HDD_LASTSEG), `Dtn<4>` for the horizon block
 /// (HDD_DTN), the other tasks with T in groups of T::NT; every column from multishoot's column evaluations, assembled
-/// as `jacobian_f64` does, with its projected rows (multishoot's crate-private `project_f64_block`, here through
-/// `ProjectedRows`) formed on the double-double columns of `Du` lanes before their rounding.
+/// as `jacobian_f64` does, with its projected rows (multishoot's `project_f64_block`) formed on the double-double
+/// columns of `Du` lanes before their rounding.
 fn jacobian_f64_hdd<T: Lane, const B: usize>(ctx: &Ctx<B>, zh: &[f64], zl: &[f64], par: bool) -> Result<(Vec<f64>, usize), String> {
     let l = ctx.len();
     let m = Ctx::<B>::M;
@@ -1143,15 +1143,15 @@ fn jacobian_f64_hdd<T: Lane, const B: usize>(ctx: &Ctx<B>, zh: &[f64], zl: &[f64
     let gc: Vec<Vec<Vec<DD>>> = if par { units.par_iter().map(unit).collect() } else { units.iter().map(unit).collect() };
     let cols: Vec<Vec<DD>> = gc.into_iter().flatten().collect();
     let mut jh = vec![0.0; ld * l];
-    // the double-double columns of the projected blocks' tasks, by unknown
-    let mut dd_col: std::collections::HashMap<usize, &Vec<DD>> = std::collections::HashMap::new();
+    // the double-double columns of the Du tasks, by block and unknown
+    let mut dd_col: std::collections::HashMap<(usize, usize), &[DD]> = std::collections::HashMap::new();
     for (&(b, seed), col) in tasks.iter().zip(&cols) {
         let c = sh.seed_columns(b, seed)[0];
         for (r, v) in col.iter().enumerate() {
             jh[c * ld + b * 4 * m + r] = v.hi;
         }
-        if sh.projected.iter().any(|p| p.block == b) {
-            dd_col.insert(c, col);
+        if du(b) {
+            dd_col.insert((b, c), col);
         }
     }
     for b in 0..=k {
@@ -1161,28 +1161,10 @@ fn jacobian_f64_hdd<T: Lane, const B: usize>(ctx: &Ctx<B>, zh: &[f64], zl: &[f64
             jh[idx] = (DD { hi: jh[idx], lo: 0.0 } - DD::ONE).hi;
         }
     }
-    // projected rows as multishoot's jacobian_f64 forms them: each column's rows times Pi in double-double, rounded
-    // (a Du task's from its double-double column), and Pi' added on the pinned unknowns
-    for p in &sh.projected {
-        let r0 = sh.row_block(p.block) + p.field * m;
-        for j in 0..l {
-            if (0..m).all(|i| jh[j * ld + r0 + i] == 0.0) {
-                continue;
-            }
-            let x: Vec<DD> = match dd_col.get(&j) {
-                Some(col) => col[p.field * m..(p.field + 1) * m].to_vec(),
-                None => (0..m).map(|i| DD::from_f64(jh[j * ld + r0 + i])).collect(),
-            };
-            for (i, v) in p.apply::<Double>(&x, None, false).into_iter().enumerate() {
-                jh[j * ld + r0 + i] = v.hi;
-            }
-        }
-        for jj in 0..m {
-            for i in 0..m {
-                let a = (p.pin + jj) * ld + r0 + i;
-                jh[a] = (DD::from_f64(jh[a]) + p.entry::<Double>(false, i, jj, false)).hi;
-            }
-        }
+    // the projected rows by multishoot's `project_f64_block`, as its jacobian_f64 forms them, a Du task's from its
+    // double-double column
+    for b in 0..=k {
+        sh.project_f64_block(b, &mut jh, ld, sh.row_block(b), l, Some, |j| dd_col.get(&(b, j)).copied())?;
     }
     for i in 0..m {
         jh[i * ld + l - 1] = ctx.phase.get(i).hi;
