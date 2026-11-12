@@ -2,18 +2,22 @@
 """Newton's correction test in the equilibrated unknowns (#504): octo_corrector.newton_od with scale_c = D_c, the column
 scaling of near_null_eq.py's result (Curtis-Reid then Ruiz on |J|, #502), on a planted state and on #489's polish.
 
-    cd hp && python3 eq_test.py planted RAW STATE --out PREFIX [--test raw|eq] [--S_seed -1] [--threads 2]
+    cd hp && python3 eq_test.py planted RAW STATE --out PREFIX [--test raw|eq] [--S none|random|unmoved] [--S_seed 7]
+        [--threads 2]
         [--rel 1e-12] [--seed 1] [--it_max 12] [--tol 1e-40] [--J0 FILE.npz] [--newton_from FILE.py]
-    python3 eq_test.py predict PREFIX --J0 FILE.npz [--seeds 7,8,9] [--tol 1e-40]
+    python3 eq_test.py predict PREFIX --J0 FILE.npz [--seeds 7,8,unmoved] [--n N] [--tol 1e-40] [--U 20,40] [--draws 500]
     python3 eq_test.py verdict A B C D
     python3 eq_test.py same X Y [--mutate_bit 1]
     python3 eq_test.py polish [--Dc_ref L08.json] [--Dc_out FILE.npy] [--hist_out PREFIX] ANM_RUN_ARGS...
 
 planted: octo_corrector.planted's start (the converged state with its centre data and its nodes but the last moved by
 --rel relative, --seed) corrected by newton_od inside ElimO, as planted's octo-double run does, every trial printed.
---S_seed k >= 0 gives the unknowns a planted column scaling: the corrector runs on w = S^-1 z, the system J S (ScaledO),
-with S_j the power of two nearest 10^u_j, u_j uniform in [-20, 20] (numpy default_rng(k), #502's plant), so that z = S w
-is exact in every part and the kernel sees the same points as without S. --test raw is newton_od's own test, the
+--S random or unmoved gives the unknowns a planted column scaling: the corrector runs on w = S^-1 z, the system J S
+(ScaledO), with S_j powers of two, so that z = S w is exact in every part and the kernel sees the same points as without
+S. random: S_j the power of two nearest 10^u_j, u_j uniform in [-20, 20] (numpy default_rng(--S_seed), #502's plant).
+unmoved: S_j = 2^-66 (1.4e-20) on the unknowns the plant leaves at the truth (the last node, m_h, a_h, Delta) and 2^66
+on those it moves. The raw test's max norms then fall on the unmoved unknowns, whose first correction (the first step's
+O(p^2) error there) the next correction undoes. --test raw is newton_od's own test, the
 leading parts' max norms of the corrections in w. --test eq is the test in the equilibrated unknowns, with D_c from
 near_null_eq.scalings on |J S| = |J| S, J the f64 leading part of the octo-double Jacobian at the start (Solver.jacobian_o,
 cached in --J0). --newton_from runs the newton_od of another copy of octo_corrector.py (the bit-identity check of
@@ -23,7 +27,8 @@ dz and of its correction, in z).
 
 predict: the decisions the raw test under S, and the equilibrated test with and without S, make at the trials of the
 plain run PREFIX (--test raw, no S), from its trace. Along that run's path only: a test that decides differently there
-leaves it.
+leaves it. Then each trial's two sides of both tests and, with --U, the largest raw ratio under --draws random S with u
+uniform in [-U, U].
 
 verdict (exit 0 pass, 1 fail, 2 the plant does not show), fixed before the runs: A plain (raw, no S), B (eq, no S),
 C (eq, S), D (raw, S), from one start and one S. The plant shows when D's lam sequence differs from A's (the control:
@@ -114,10 +119,11 @@ def planted(argv):
     from hpkernel.driver import load_q
     from reseed import Reseeder
     raw, path = argv[0], argv[1]
-    opt = _opts(argv[2:], dict(threads=2, rel=1e-12, seed=1, S_seed=-1, test="raw", it_max=12, tol=1e-40, J0="",
+    opt = _opts(argv[2:], dict(threads=2, rel=1e-12, seed=1, S="none", S_seed=7, test="raw", it_max=12, tol=1e-40, J0="",
                                newton_from="", out=""))
-    if not opt["out"] or opt["test"] not in ("raw", "eq"):
-        raise SystemExit("planted: --out PREFIX, and --test raw or eq")
+    if not opt["out"] or opt["test"] not in ("raw", "eq") or opt["S"] not in ("none", "random", "unmoved"):
+        raise SystemExit("planted: --out PREFIX, --test raw or eq, --S none, random or unmoved")
+    Sname = dict(none="none", random=f"random:{opt['S_seed']}", unmoved="unmoved")[opt["S"]]
     require_raw(opt["out"] + ".json")
     nod = newton_od
     if opt["newton_from"]:
@@ -133,13 +139,17 @@ def planted(argv):
     zs, n = plant_start(z4, rs, opt["rel"], opt["seed"], 0)
     z0 = o8_of_q(zs)
     L = len(z0[0])
-    S = plant_S(opt["S_seed"], L) if opt["S_seed"] >= 0 else None
+    S = None
+    if opt["S"] == "random":
+        S = plant_S(opt["S_seed"], L)
+    elif opt["S"] == "unmoved":
+        S = np.where(np.arange(L) >= n, 2.0 ** -66, 2.0 ** 66)
     print(f"planted {path}: D {mp.nstr(D, 12)}, L {L}, start = truth moved by {opt['rel']:.0e} relative in [0, {n}), seed "
           f"{opt['seed']}; pinned max|F| (octo) truth {omax(so.residual_o(o8_of_q(z4))):.2e}, start {omax(so.residual_o(z0)):.2e}; "
-          f"test {opt['test']}, S " + (f"seed {opt['S_seed']}: 2^k in {S.min():.1e}..{S.max():.1e}" if S is not None else "none")
+          f"test {opt['test']}, S " + (f"{Sname}: 2^k in {S.min():.1e}..{S.max():.1e}" if S is not None else "none")
           + (f", newton_od from {opt['newton_from']}" if opt["newton_from"] else ""), flush=True)
     dc = None
-    rec = dict(test=opt["test"], state=path, D_str=meta["D_str"], rel=opt["rel"], seed=opt["seed"], S_seed=opt["S_seed"],
+    rec = dict(test=opt["test"], state=path, D_str=meta["D_str"], rel=opt["rel"], seed=opt["seed"], S=Sname,
                tol=opt["tol"], it_max=opt["it_max"], newton_from=opt["newton_from"])
     A = None
     if opt["J0"] and os.path.exists(opt["J0"]):
@@ -179,7 +189,7 @@ def planted(argv):
     rec["lams"] = _lams(rec)[0]
     print(f"  {len(hist)} records, {'converged' if conv else 'NOT converged'}, lam sequence {rec['lams']}; pinned max|F| (octo) "
           f"{F:.2e}, Delta {mp.nstr(Dl, 40)}, projections {el.counts}, {rec['seconds']:.0f} s", flush=True)
-    save_o(opt["out"] + ".npz", z, dict(meta, planted=True, test=opt["test"], S_seed=opt["S_seed"]))
+    save_o(opt["out"] + ".npz", z, dict(meta, planted=True, test=opt["test"], S=Sname))
     d = np.array([t["d"] for t in trace]) if trace else np.zeros((0, L))
     dt = np.array([t["dt"] if t["dt"] is not None else np.full(L, np.nan) for t in trace]) if trace else np.zeros((0, L))
     if S is not None:                    # the trace in z
@@ -194,7 +204,7 @@ def planted(argv):
 def predict(argv):
     """the decisions of the raw test under S and of the equilibrated test (with and without S) at the plain run's trials"""
     prefix = argv[0]
-    opt = _opts(argv[1:], dict(J0="", seeds="7", tol=1e-40))
+    opt = _opts(argv[1:], dict(J0="", seeds="7", tol=1e-40, n=0, U="", draws=500))
     t = np.load(prefix + "_trace.npz")
     A = np.abs(np.load(opt["J0"])["J0"])
     L = A.shape[0]
@@ -207,14 +217,30 @@ def predict(argv):
     eq0 = [rule(t["d"][i], t["dt"][i], t["F"][i], dc0) for i in range(len(t["lam"]))]
     print(f"{prefix}: {len(base)} trials, plain decisions {base} (recorded {list(map(bool, t['accepted']))})")
     print(f"  eq, no S: {eq0}{'' if eq0 == base else '  <- differs from the plain test'}")
-    for k in [int(x) for x in opt["seeds"].split(",")]:
-        S = plant_S(k, L)
+    for k in opt["seeds"].split(","):
+        # a seed of the random S, or 'unmoved' (--n: the plant's moved unknowns)
+        S = np.where(np.arange(L) >= opt["n"], 2.0 ** -66, 2.0 ** 66) if k == "unmoved" else plant_S(int(k), L)
         dck = eq_scaling(A * S[None, :])[1]
         raw = [rule(t["d"][i] / S, t["dt"][i] / S, t["F"][i], np.ones(L)) for i in range(len(base))]
         eqk = [rule(t["d"][i] / S, t["dt"][i] / S, t["F"][i], dck) for i in range(len(base))]
         out[k] = dict(raw=raw, eq=eqk)
-        print(f"  S seed {k}: raw {raw}{'' if raw == base else '  <- the raw test changes'}; eq {eqk}"
+        print(f"  S {k}: raw {raw}{'' if raw == base else '  <- the raw test changes'}; eq {eqk}"
               f"{'' if eqk == eq0 else '  <- the eq test changes'}")
+    for i in range(len(base)):
+        d, dt = np.abs(t["d"][i]), np.abs(t["dt"][i])
+        print(f"  trial {i} (step {t['it'][i]}, lam {t['lam'][i]:g}, max|F| {t['F'][i]:.2e}): ratio of the test's two sides raw "
+              f"{dt.max() / d.max():.10f}, eq {(dt / dc0).max() / (d / dc0).max():.10f}; largest |dz_t,j| / |dz_j| "
+              f"{np.max(dt / d):.4e} at j {int(np.argmax(dt / d))}", flush=True)
+        for U in [float(x) for x in opt["U"].split(",") if x]:
+            # the raw ratio under draws of S = 10^u, u uniform in [-U, U] (seeds 5000 on), its largest value
+            r = []
+            for k in range(opt["draws"]):
+                u = np.random.default_rng(5000 + k).uniform(-U, U, L)
+                S = np.exp2(np.round(u * np.log2(10.0)))
+                r.append((dt / S).max() / (d / S).max())
+            r = np.array(r)
+            print(f"    {opt['draws']} draws of S, u in [-{U:g}, {U:g}]: raw ratio at most {r.max():.3e}, at or above 1 in "
+                  f"{int((r >= 1).sum())}", flush=True)
     return 0
 
 
@@ -224,12 +250,14 @@ def verdict(argv):
         with open(p if p.endswith(".json") else p + ".json") as f:
             recs.append(json.loads(f.readline()))
     a, b, c, d = recs
-    for name, r, want in (("A", a, ("raw", -1)), ("B", b, ("eq", -1)), ("C", c, ("eq", "S")), ("D", d, ("raw", "S"))):
-        print(f"{name}: test {r['test']}, S_seed {r['S_seed']}, lams {_lams(r)[0]}, converged {r['converged']}, max|F| {r['F']:.2e}, "
+    for r in recs:      # a record written before --S has S_seed, -1 for none
+        r.setdefault("S", "none" if r.get("S_seed", -1) < 0 else f"random:{r['S_seed']}")
+    for name, r, want in (("A", a, ("raw", "none")), ("B", b, ("eq", "none")), ("C", c, ("eq", "S")), ("D", d, ("raw", "S"))):
+        print(f"{name}: test {r['test']}, S {r['S']}, lams {_lams(r)[0]}, converged {r['converged']}, max|F| {r['F']:.2e}, "
               f"Delta {r['Delta']}")
-        if r["test"] != want[0] or (want[1] == -1) != (r["S_seed"] < 0):
+        if r["test"] != want[0] or (want[1] == "none") != (r["S"] == "none"):
             raise SystemExit(f"{name} is not the run verdict expects ({want})")
-    if not (c["S_seed"] == d["S_seed"] and a["state"] == b["state"] == c["state"] == d["state"]
+    if not (c["S"] == d["S"] and a["state"] == b["state"] == c["state"] == d["state"]
             and len({(r["rel"], r["seed"]) for r in recs}) == 1):
         raise SystemExit("the four runs do not share the start and S")
     shows = _lams(d) != _lams(a)
