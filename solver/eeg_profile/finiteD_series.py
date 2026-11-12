@@ -24,7 +24,8 @@ The reference choice REF (eps, K_REF, dlo 15, chain yes) gives the form.
 
 The form. With A(eps) the reference fit of A_n = 2|F_1| over every state (free intercept) and r_nu(eps) the reference
 fits, F_1 = -i A/2 and F_{nu+2} = r_nu F_nu for nu = 1..7: the harmonics through nu = 9 (EEG_PROFILE.md 8.1's
-G(u) = sum_k c_k u^k, c_k = r_1 ... r_{2k-1}, truncated at k = 4 and closed with the geometric tail of r_9).
+G(u) = sum_k c_k u^k, c_k = r_1 ... r_{2k-1}, truncated at k = 4). Each of A and r_nu carries the step at D 35, as the
+data do.
 
 Planted families (the truth is the tuned D = infinity ratio r_inf at A = 2.71918; the shapes are sized by the real
 ratios at D 20.04, 34.05 and 60.00, the realism printed as the plant's largest distance from every real ratio):
@@ -68,6 +69,9 @@ Revision 1 (posted on the issue after the first planted runs, before any fit of 
     python3 finiteD_series.py planted STATEDIR [--family=rat,q3] [--noise=0|measured] [--seeds=20] [--mutate=offset]
     python3 finiteD_series.py states STATEDIR [--mutate=target|scale1|reverse] [--json=F]
     python3 finiteD_series.py controls STATEDIR                  Pm, Am, Fm and reverse together
+    python3 finiteD_series.py info STATEDIR                      post hoc: the K sequence past the grid, rational fits
+
+states --json writes the medians, the verdicts and the form's Chebyshev coefficients.
 
 planted exits 1 when P1 (or P3, with noise) fails, and with --mutate=offset exits 0 only when Pm fires. states exits 1
 when A1 or F1 fails; with a mutation it exits 0 only when that mutation's criterion fires. controls exits 0 only when
@@ -214,6 +218,7 @@ def fit_poly(x, y, K, at=0.0, h=None):
     def ev(xx, hh=1.0):
         tt = (2 * np.asarray(xx, dtype=float) - (lo + hi)) / (hi - lo)
         return np.polynomial.chebyshev.chebval(tt, c[:K + 1]) + (c[K + 1] * hh if h is not None else 0.0)
+    ev.coef, ev.domain = c, (lo, hi)        # Chebyshev coefficients (then the step's) on the x range
     return complex(ev(at)), y - V @ c, ev
 
 
@@ -547,7 +552,8 @@ def form(recs, dmax=None):
         for nu in (1, 3, 5, 7):
             F[nu + 2] = F[nu] * complex(evr[nu](eps, hh))
         return F
-    coef = dict(A0=float(np.real(evA(0.0))), r0={nu: complex(evr[nu](0.0)) for nu in NUS})
+    coef = dict(A0=float(np.real(evA(0.0))), r0={nu: complex(evr[nu](0.0)) for nu in NUS},
+                cheb={"A": (evA.coef, evA.domain), **{nu: (evr[nu].coef, evr[nu].domain) for nu in NUS}})
     return F_of, evr, coef
 
 
@@ -718,7 +724,11 @@ def cmd_states(argv):
         cv = lambda z: [z.real, z.imag] if isinstance(z, complex) else z  # noqa: E731
         dump = dict(nu={str(nu): {k: cv(v) for k, v in x.items() if k not in ("best", "other")} for nu, x in out["nu"].items()},
                     form=dict(worst=fout["worst"], worst_held=fout["worst_held"], A0=fout["coef"]["A0"],
-                              r0={str(k): cv(v) for k, v in fout["coef"]["r0"].items()}),
+                              r0={str(k): cv(v) for k, v in fout["coef"]["r0"].items()},
+                              model="F_1 = -i A(eps)/2, F_{nu+2} = r_nu(eps) F_nu; each of A, r_nu = sum_k c_k T_k(t) "
+                                    "+ c_{K+1} H(D - 35), t = (2 eps - lo - hi)/(hi - lo), with [c, (lo, hi)] below",
+                              cheb={str(k): dict(c=[[complex(z).real, complex(z).imag] for z in c], domain=list(d))
+                                    for k, (c, d) in fout["coef"]["cheb"].items()}),
                     F2=dict(worst=f2out["worst"]), E1=dict(covered=eout["covered"], n=eout["n"], worst=eout["worst"]),
                     verdicts=dict(A1=ok_a, F1=ok_f, F2=ok_f2, E1=ok_e))
         json.dump(dump, open(js, "w"), indent=1, default=str)
@@ -781,12 +791,15 @@ def k_sequence(recs, nu, var="eps", dlo=15.0, ks=range(5, 13)):
 
 
 def shape_rms(rs, nu, c, L, M, step):
-    """the rms residual of the shape (r - c)/eps = P_L/Q_M fitted with the intercept held at c, and its nearest pole"""
+    """the rms residual of the shape (r - c)/eps = P_L/Q_M fitted with the intercept held at c, and its nearest pole
+    that is not a spurious pole-zero doublet (no zero of P within 1e-4 of it)"""
     use = use_for(rs, nu, REF[2], REF[3])
     P, Q = pade_params(rs, nu, c, L, M, step)
     res = np.array([c + r["eps"] * np.polyval(P[::-1], r["eps"]) / np.polyval(Q[::-1], r["eps"])
                     + (step if r["D"] >= STEP_D else 0) - r["r"][nu] for r in use])
-    return float(np.sqrt(np.mean(np.abs(res) ** 2))), complex(min(np.roots(Q[::-1]), key=abs))
+    zeros = np.roots(P[::-1])
+    poles = [p for p in np.roots(Q[::-1]) if not len(zeros) or min(abs(zeros - p)) > 1e-4]
+    return float(np.sqrt(np.mean(np.abs(res) ** 2))), complex(min(poles, key=abs)) if poles else complex("nan")
 
 
 def best_intercept(rs, nu, L, M, starts):
@@ -826,7 +839,7 @@ def cmd_info(argv):
                 rm, _ = shape_rms(rs, nu, med, L, M, step)
                 print(f"  r_{nu} {lab:14s} [{L}/{M}]: best c - tuned {fc(c - tuned[nu], 6)} (|.| {abs(c - tuned[nu]):.1e},"
                       f" grid median {abs(med - tuned[nu]):.1e}); rms at best {rb:.2e}, at tuned {rt:.2e}, at the grid "
-                      f"median {rm:.2e}; nearest pole at best eps {fc(pb, 4)} (|.| {abs(pb):.4f})", flush=True)
+                      f"median {rm:.2e}; nearest unpaired pole at best eps {fc(pb, 4)} (|.| {abs(pb):.4f})", flush=True)
     for nu in NU_ACC:
         print(f"\n== r_{nu}: tuned {fc(tuned[nu], 8)}")
         for lab, rs in sets:

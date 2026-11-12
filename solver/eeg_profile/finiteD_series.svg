@@ -1,0 +1,170 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1040" height="532" viewBox="0 0 1040 532" font-family="system-ui, sans-serif">
+<style>@media (prefers-color-scheme: dark){[fill="#fcfcfb"]{fill:#201f1d}[stroke="#fcfcfb"]{stroke:#201f1d}[fill="#0b0b0b"]{fill:#e8e6e3}[stroke="#0b0b0b"]{stroke:#e8e6e3}[fill="#52514e"]{fill:#a8a49d}[stroke="#52514e"]{stroke:#a8a49d}[fill="#e7e6e2"]{fill:#343230}[stroke="#e7e6e2"]{stroke:#343230}[fill="#c98500"]{fill:#d69a2d}[stroke="#c98500"]{stroke:#d69a2d}[fill="#eb6834"]{fill:#dd5c26}[stroke="#eb6834"]{stroke:#dd5c26}[fill="#eda100"]{fill:#c08800}[stroke="#eda100"]{stroke:#c08800}[fill="#e87ba4"]{fill:#d1678f}[stroke="#e87ba4"]{stroke:#d1678f}[fill="#4a3aa7"]{fill:#7263cf}[stroke="#4a3aa7"]{stroke:#7263cf}[fill="#a6339a"]{fill:#c257b5}[stroke="#a6339a"]{stroke:#c257b5}[fill="#7a7668"]{fill:#948e82}[stroke="#7a7668"]{stroke:#948e82}}</style>
+<rect width="1040" height="532" fill="#fcfcfb"/>
+<text x="16.0" y="26.0" font-size="15" fill="#0b0b0b" text-anchor="start" font-weight="bold">The finite-D harmonic ratios' D = ∞ limits against the tuned profile</text>
+<text x="16.0" y="46.0" font-size="11" fill="#52514e" text-anchor="start" font-weight="normal">r_ν = F_(ν+2)/F_ν of the centre profile, fitted in ε = 1/(D − 1) over the full-system states D 15–73 (r₁ also the chain to D 215), extrapolated to ε = 0.</text>
+<text x="16.0" y="61.0" font-size="11" fill="#52514e" text-anchor="start" font-weight="normal">r₁ and r₃ settle on the tuned values. r₅ and r₇ are still moving toward them as the degree grows, the sign of a singularity nearer to ε = 0 than the data reach.</text>
+<text x="96.0" y="106.0" font-size="12" fill="#0b0b0b" text-anchor="start" font-weight="normal">Polynomial fit: distance of its limit from the tuned ratio</text>
+<line x1="167.2" y1="120.0" x2="167.2" y2="420.0" stroke="#e7e6e2" stroke-width="1"/>
+<text x="167.2" y="435.0" font-size="11" fill="#52514e" text-anchor="middle" font-weight="normal" font-variant-numeric="tabular-nums">6</text>
+<line x1="262.2" y1="120.0" x2="262.2" y2="420.0" stroke="#e7e6e2" stroke-width="1"/>
+<text x="262.2" y="435.0" font-size="11" fill="#52514e" text-anchor="middle" font-weight="normal" font-variant-numeric="tabular-nums">8</text>
+<line x1="357.2" y1="120.0" x2="357.2" y2="420.0" stroke="#e7e6e2" stroke-width="1"/>
+<text x="357.2" y="435.0" font-size="11" fill="#52514e" text-anchor="middle" font-weight="normal" font-variant-numeric="tabular-nums">10</text>
+<line x1="452.2" y1="120.0" x2="452.2" y2="420.0" stroke="#e7e6e2" stroke-width="1"/>
+<text x="452.2" y="435.0" font-size="11" fill="#52514e" text-anchor="middle" font-weight="normal" font-variant-numeric="tabular-nums">12</text>
+<line x1="96.0" y1="420.0" x2="476.0" y2="420.0" stroke="#e7e6e2" stroke-width="1"/>
+<text x="90.0" y="424.0" font-size="11" fill="#52514e" text-anchor="end" font-weight="normal" font-variant-numeric="tabular-nums">1e-07</text>
+<line x1="96.0" y1="401.9" x2="476.0" y2="401.9" stroke="#e7e6e2" stroke-width="1"/>
+<text x="90.0" y="405.9" font-size="11" fill="#52514e" text-anchor="end" font-weight="normal" font-variant-numeric="tabular-nums">2e-07</text>
+<line x1="96.0" y1="378.1" x2="476.0" y2="378.1" stroke="#e7e6e2" stroke-width="1"/>
+<text x="90.0" y="382.1" font-size="11" fill="#52514e" text-anchor="end" font-weight="normal" font-variant-numeric="tabular-nums">5e-07</text>
+<line x1="96.0" y1="360.0" x2="476.0" y2="360.0" stroke="#e7e6e2" stroke-width="1"/>
+<text x="90.0" y="364.0" font-size="11" fill="#52514e" text-anchor="end" font-weight="normal" font-variant-numeric="tabular-nums">1e-06</text>
+<line x1="96.0" y1="341.9" x2="476.0" y2="341.9" stroke="#e7e6e2" stroke-width="1"/>
+<text x="90.0" y="345.9" font-size="11" fill="#52514e" text-anchor="end" font-weight="normal" font-variant-numeric="tabular-nums">2e-06</text>
+<line x1="96.0" y1="318.1" x2="476.0" y2="318.1" stroke="#e7e6e2" stroke-width="1"/>
+<text x="90.0" y="322.1" font-size="11" fill="#52514e" text-anchor="end" font-weight="normal" font-variant-numeric="tabular-nums">5e-06</text>
+<line x1="96.0" y1="300.0" x2="476.0" y2="300.0" stroke="#e7e6e2" stroke-width="1"/>
+<text x="90.0" y="304.0" font-size="11" fill="#52514e" text-anchor="end" font-weight="normal" font-variant-numeric="tabular-nums">1e-05</text>
+<line x1="96.0" y1="281.9" x2="476.0" y2="281.9" stroke="#e7e6e2" stroke-width="1"/>
+<text x="90.0" y="285.9" font-size="11" fill="#52514e" text-anchor="end" font-weight="normal" font-variant-numeric="tabular-nums">2e-05</text>
+<line x1="96.0" y1="258.1" x2="476.0" y2="258.1" stroke="#e7e6e2" stroke-width="1"/>
+<text x="90.0" y="262.1" font-size="11" fill="#52514e" text-anchor="end" font-weight="normal" font-variant-numeric="tabular-nums">5e-05</text>
+<line x1="96.0" y1="240.0" x2="476.0" y2="240.0" stroke="#e7e6e2" stroke-width="1"/>
+<text x="90.0" y="244.0" font-size="11" fill="#52514e" text-anchor="end" font-weight="normal" font-variant-numeric="tabular-nums">1e-04</text>
+<line x1="96.0" y1="221.9" x2="476.0" y2="221.9" stroke="#e7e6e2" stroke-width="1"/>
+<text x="90.0" y="225.9" font-size="11" fill="#52514e" text-anchor="end" font-weight="normal" font-variant-numeric="tabular-nums">2e-04</text>
+<line x1="96.0" y1="198.1" x2="476.0" y2="198.1" stroke="#e7e6e2" stroke-width="1"/>
+<text x="90.0" y="202.1" font-size="11" fill="#52514e" text-anchor="end" font-weight="normal" font-variant-numeric="tabular-nums">5e-04</text>
+<line x1="96.0" y1="180.0" x2="476.0" y2="180.0" stroke="#e7e6e2" stroke-width="1"/>
+<text x="90.0" y="184.0" font-size="11" fill="#52514e" text-anchor="end" font-weight="normal" font-variant-numeric="tabular-nums">1e-03</text>
+<line x1="96.0" y1="161.9" x2="476.0" y2="161.9" stroke="#e7e6e2" stroke-width="1"/>
+<text x="90.0" y="165.9" font-size="11" fill="#52514e" text-anchor="end" font-weight="normal" font-variant-numeric="tabular-nums">2e-03</text>
+<line x1="96.0" y1="138.1" x2="476.0" y2="138.1" stroke="#e7e6e2" stroke-width="1"/>
+<text x="90.0" y="142.1" font-size="11" fill="#52514e" text-anchor="end" font-weight="normal" font-variant-numeric="tabular-nums">5e-03</text>
+<line x1="96.0" y1="120.0" x2="476.0" y2="120.0" stroke="#e7e6e2" stroke-width="1"/>
+<text x="90.0" y="124.0" font-size="11" fill="#52514e" text-anchor="end" font-weight="normal" font-variant-numeric="tabular-nums">1e-02</text>
+<line x1="96.0" y1="420.0" x2="476.0" y2="420.0" stroke="#52514e" stroke-width="1"/>
+<line x1="96.0" y1="120.0" x2="96.0" y2="420.0" stroke="#52514e" stroke-width="1"/>
+<text x="286.0" y="454.0" font-size="12" fill="#0b0b0b" text-anchor="middle" font-weight="normal">polynomial degree K in ε</text>
+<text x="46.1" y="270.0" font-size="12" fill="#0b0b0b" text-anchor="middle" transform="rotate(-90 46.1 270.0)">|r_ν(0) − r_ν(tuned)|</text>
+<rect x="191.0" y="120" width="142.5" height="300" fill="#52514e" opacity="0.10"/>
+<text x="262.2" y="134.0" font-size="10" fill="#52514e" text-anchor="middle" font-weight="normal">grid G1</text>
+<polyline points="119.8,307.5 167.2,352.5 214.8,373.7 262.2,365.9 309.8,363.9 357.2,363.4 404.8,363.2 452.2,363.2" fill="none" stroke="#2a78d6" stroke-width="2"/>
+<g><circle cx="119.8" cy="307.5" r="5.5" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>r_1, K 5: 7.51e-06</title></g>
+<g><circle cx="167.2" cy="352.5" r="5.5" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>r_1, K 6: 1.33e-06</title></g>
+<g><circle cx="214.8" cy="373.7" r="5.5" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>r_1, K 7: 5.92e-07</title></g>
+<g><circle cx="262.2" cy="365.9" r="5.5" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>r_1, K 8: 7.96e-07</title></g>
+<g><circle cx="309.8" cy="363.9" r="5.5" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>r_1, K 9: 8.60e-07</title></g>
+<g><circle cx="357.2" cy="363.4" r="5.5" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>r_1, K 10: 8.78e-07</title></g>
+<g><circle cx="404.8" cy="363.2" r="5.5" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>r_1, K 11: 8.83e-07</title></g>
+<g><circle cx="452.2" cy="363.2" r="5.5" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>r_1, K 12: 8.85e-07</title></g>
+<polyline points="119.8,190.9 167.2,206.4 214.8,224.4 262.2,241.8 309.8,258.7 357.2,277.8 404.8,295.2 452.2,314.5" fill="none" stroke="#eb6834" stroke-width="2"/>
+<g><rect x="114.2" y="185.4" width="11.0" height="11.0" fill="#eb6834" stroke="#fcfcfb" stroke-width="2"/><title>r_3, K 5: 6.58e-04</title></g>
+<g><rect x="161.8" y="200.9" width="11.0" height="11.0" fill="#eb6834" stroke="#fcfcfb" stroke-width="2"/><title>r_3, K 6: 3.63e-04</title></g>
+<g><rect x="209.2" y="218.9" width="11.0" height="11.0" fill="#eb6834" stroke="#fcfcfb" stroke-width="2"/><title>r_3, K 7: 1.82e-04</title></g>
+<g><rect x="256.8" y="236.3" width="11.0" height="11.0" fill="#eb6834" stroke="#fcfcfb" stroke-width="2"/><title>r_3, K 8: 9.32e-05</title></g>
+<g><rect x="304.2" y="253.2" width="11.0" height="11.0" fill="#eb6834" stroke="#fcfcfb" stroke-width="2"/><title>r_3, K 9: 4.89e-05</title></g>
+<g><rect x="351.8" y="272.3" width="11.0" height="11.0" fill="#eb6834" stroke="#fcfcfb" stroke-width="2"/><title>r_3, K 10: 2.34e-05</title></g>
+<g><rect x="399.2" y="289.7" width="11.0" height="11.0" fill="#eb6834" stroke="#fcfcfb" stroke-width="2"/><title>r_3, K 11: 1.20e-05</title></g>
+<g><rect x="446.8" y="309.0" width="11.0" height="11.0" fill="#eb6834" stroke="#fcfcfb" stroke-width="2"/><title>r_3, K 12: 5.73e-06</title></g>
+<polyline points="119.8,146.7 167.2,154.7 214.8,164.3 262.2,173.5 309.8,182.4 357.2,192.5 404.8,201.2 452.2,210.4" fill="none" stroke="#1baf7a" stroke-width="2"/>
+<g><polygon points="119.8,140.2 126.2,146.7 119.8,153.2 113.2,146.7" fill="#1baf7a" stroke="#fcfcfb" stroke-width="2"/><title>r_5, K 5: 3.59e-03</title></g>
+<g><polygon points="167.2,148.2 173.8,154.7 167.2,161.2 160.8,154.7" fill="#1baf7a" stroke="#fcfcfb" stroke-width="2"/><title>r_5, K 6: 2.64e-03</title></g>
+<g><polygon points="214.8,157.8 221.2,164.3 214.8,170.8 208.2,164.3" fill="#1baf7a" stroke="#fcfcfb" stroke-width="2"/><title>r_5, K 7: 1.83e-03</title></g>
+<g><polygon points="262.2,167.0 268.8,173.5 262.2,180.0 255.8,173.5" fill="#1baf7a" stroke="#fcfcfb" stroke-width="2"/><title>r_5, K 8: 1.28e-03</title></g>
+<g><polygon points="309.8,175.9 316.2,182.4 309.8,188.9 303.2,182.4" fill="#1baf7a" stroke="#fcfcfb" stroke-width="2"/><title>r_5, K 9: 9.14e-04</title></g>
+<g><polygon points="357.2,186.0 363.8,192.5 357.2,199.0 350.8,192.5" fill="#1baf7a" stroke="#fcfcfb" stroke-width="2"/><title>r_5, K 10: 6.18e-04</title></g>
+<g><polygon points="404.8,194.7 411.2,201.2 404.8,207.7 398.2,201.2" fill="#1baf7a" stroke="#fcfcfb" stroke-width="2"/><title>r_5, K 11: 4.43e-04</title></g>
+<g><polygon points="452.2,203.9 458.8,210.4 452.2,216.9 445.8,210.4" fill="#1baf7a" stroke="#fcfcfb" stroke-width="2"/><title>r_5, K 12: 3.12e-04</title></g>
+<polyline points="119.8,128.9 167.2,133.9 214.8,140.0 262.2,145.8 309.8,150.9 357.2,154.1 404.8,156.2 452.2,166.2" fill="none" stroke="#eda100" stroke-width="2"/>
+<g><polygon points="119.8,122.4 126.2,134.4 113.2,134.4" fill="#eda100" stroke="#fcfcfb" stroke-width="2"/><title>r_7, K 5: 7.11e-03</title></g>
+<g><polygon points="167.2,127.4 173.8,139.4 160.8,139.4" fill="#eda100" stroke="#fcfcfb" stroke-width="2"/><title>r_7, K 6: 5.87e-03</title></g>
+<g><polygon points="214.8,133.5 221.2,145.5 208.2,145.5" fill="#eda100" stroke="#fcfcfb" stroke-width="2"/><title>r_7, K 7: 4.65e-03</title></g>
+<g><polygon points="262.2,139.3 268.8,151.3 255.8,151.3" fill="#eda100" stroke="#fcfcfb" stroke-width="2"/><title>r_7, K 8: 3.71e-03</title></g>
+<g><polygon points="309.8,144.4 316.2,156.4 303.2,156.4" fill="#eda100" stroke="#fcfcfb" stroke-width="2"/><title>r_7, K 9: 3.05e-03</title></g>
+<g><polygon points="357.2,147.6 363.8,159.6 350.8,159.6" fill="#eda100" stroke="#fcfcfb" stroke-width="2"/><title>r_7, K 10: 2.70e-03</title></g>
+<g><polygon points="404.8,149.7 411.2,161.7 398.2,161.7" fill="#eda100" stroke="#fcfcfb" stroke-width="2"/><title>r_7, K 11: 2.49e-03</title></g>
+<g><polygon points="452.2,159.7 458.8,171.7 445.8,171.7" fill="#eda100" stroke="#fcfcfb" stroke-width="2"/><title>r_7, K 12: 1.70e-03</title></g>
+<text x="472.0" y="410.0" font-size="11" fill="#0b0b0b" text-anchor="end" font-weight="normal">r₇</text>
+<circle cx="452.0" cy="406" r="4.5" fill="#eda100"/>
+<text x="438.0" y="410.0" font-size="11" fill="#0b0b0b" text-anchor="end" font-weight="normal">r₅</text>
+<circle cx="418.0" cy="406" r="4.5" fill="#1baf7a"/>
+<text x="404.0" y="410.0" font-size="11" fill="#0b0b0b" text-anchor="end" font-weight="normal">r₃</text>
+<circle cx="384.0" cy="406" r="4.5" fill="#eb6834"/>
+<text x="370.0" y="410.0" font-size="11" fill="#0b0b0b" text-anchor="end" font-weight="normal">r₁</text>
+<circle cx="350.0" cy="406" r="4.5" fill="#2a78d6"/>
+<circle cx="452.2" cy="166.2" r="10" fill="none" stroke="#0b0b0b" stroke-width="1.5"/>
+<line x1="445.6" y1="158.7" x2="422.2" y2="132.2" stroke="#0b0b0b" stroke-width="1"/>
+<text x="418.2" y="136.2" font-size="11" fill="#0b0b0b" text-anchor="end" font-weight="bold">r₇: 1.7e-3 at K 12</text>
+<g opacity="0.35"><line x1="494.0" y1="150.0" x2="494.0" y2="206.0" stroke="#52514e" stroke-width="2"/><polygon points="494.0,212.0 490.0,203.0 498.0,203.0" fill="#52514e"/><text x="494.0" y="174.0" font-size="11" fill="#52514e" text-anchor="middle" transform="rotate(90.0 494.0 181.0)">closer</text></g>
+<text x="620.0" y="106.0" font-size="12" fill="#0b0b0b" text-anchor="start" font-weight="normal">D = ∞ limit: polynomial grid against rational shapes</text>
+<line x1="680.0" y1="120.0" x2="680.0" y2="420.0" stroke="#e7e6e2" stroke-width="1"/>
+<text x="680.0" y="435.0" font-size="11" fill="#52514e" text-anchor="middle" font-weight="normal" font-variant-numeric="tabular-nums">r₃</text>
+<line x1="800.0" y1="120.0" x2="800.0" y2="420.0" stroke="#e7e6e2" stroke-width="1"/>
+<text x="800.0" y="435.0" font-size="11" fill="#52514e" text-anchor="middle" font-weight="normal" font-variant-numeric="tabular-nums">r₅</text>
+<line x1="920.0" y1="120.0" x2="920.0" y2="420.0" stroke="#e7e6e2" stroke-width="1"/>
+<text x="920.0" y="435.0" font-size="11" fill="#52514e" text-anchor="middle" font-weight="normal" font-variant-numeric="tabular-nums">r₇</text>
+<line x1="620.0" y1="420.0" x2="980.0" y2="420.0" stroke="#e7e6e2" stroke-width="1"/>
+<text x="614.0" y="424.0" font-size="11" fill="#52514e" text-anchor="end" font-weight="normal" font-variant-numeric="tabular-nums">1e-06</text>
+<line x1="620.0" y1="397.4" x2="980.0" y2="397.4" stroke="#e7e6e2" stroke-width="1"/>
+<text x="614.0" y="401.4" font-size="11" fill="#52514e" text-anchor="end" font-weight="normal" font-variant-numeric="tabular-nums">2e-06</text>
+<line x1="620.0" y1="367.6" x2="980.0" y2="367.6" stroke="#e7e6e2" stroke-width="1"/>
+<text x="614.0" y="371.6" font-size="11" fill="#52514e" text-anchor="end" font-weight="normal" font-variant-numeric="tabular-nums">5e-06</text>
+<line x1="620.0" y1="345.0" x2="980.0" y2="345.0" stroke="#e7e6e2" stroke-width="1"/>
+<text x="614.0" y="349.0" font-size="11" fill="#52514e" text-anchor="end" font-weight="normal" font-variant-numeric="tabular-nums">1e-05</text>
+<line x1="620.0" y1="322.4" x2="980.0" y2="322.4" stroke="#e7e6e2" stroke-width="1"/>
+<text x="614.0" y="326.4" font-size="11" fill="#52514e" text-anchor="end" font-weight="normal" font-variant-numeric="tabular-nums">2e-05</text>
+<line x1="620.0" y1="292.6" x2="980.0" y2="292.6" stroke="#e7e6e2" stroke-width="1"/>
+<text x="614.0" y="296.6" font-size="11" fill="#52514e" text-anchor="end" font-weight="normal" font-variant-numeric="tabular-nums">5e-05</text>
+<line x1="620.0" y1="270.0" x2="980.0" y2="270.0" stroke="#e7e6e2" stroke-width="1"/>
+<text x="614.0" y="274.0" font-size="11" fill="#52514e" text-anchor="end" font-weight="normal" font-variant-numeric="tabular-nums">1e-04</text>
+<line x1="620.0" y1="247.4" x2="980.0" y2="247.4" stroke="#e7e6e2" stroke-width="1"/>
+<text x="614.0" y="251.4" font-size="11" fill="#52514e" text-anchor="end" font-weight="normal" font-variant-numeric="tabular-nums">2e-04</text>
+<line x1="620.0" y1="217.6" x2="980.0" y2="217.6" stroke="#e7e6e2" stroke-width="1"/>
+<text x="614.0" y="221.6" font-size="11" fill="#52514e" text-anchor="end" font-weight="normal" font-variant-numeric="tabular-nums">5e-04</text>
+<line x1="620.0" y1="195.0" x2="980.0" y2="195.0" stroke="#e7e6e2" stroke-width="1"/>
+<text x="614.0" y="199.0" font-size="11" fill="#52514e" text-anchor="end" font-weight="normal" font-variant-numeric="tabular-nums">1e-03</text>
+<line x1="620.0" y1="172.4" x2="980.0" y2="172.4" stroke="#e7e6e2" stroke-width="1"/>
+<text x="614.0" y="176.4" font-size="11" fill="#52514e" text-anchor="end" font-weight="normal" font-variant-numeric="tabular-nums">2e-03</text>
+<line x1="620.0" y1="142.6" x2="980.0" y2="142.6" stroke="#e7e6e2" stroke-width="1"/>
+<text x="614.0" y="146.6" font-size="11" fill="#52514e" text-anchor="end" font-weight="normal" font-variant-numeric="tabular-nums">5e-03</text>
+<line x1="620.0" y1="120.0" x2="980.0" y2="120.0" stroke="#e7e6e2" stroke-width="1"/>
+<text x="614.0" y="124.0" font-size="11" fill="#52514e" text-anchor="end" font-weight="normal" font-variant-numeric="tabular-nums">1e-02</text>
+<line x1="620.0" y1="420.0" x2="980.0" y2="420.0" stroke="#52514e" stroke-width="1"/>
+<line x1="620.0" y1="120.0" x2="620.0" y2="420.0" stroke="#52514e" stroke-width="1"/>
+<text x="800.0" y="454.0" font-size="12" fill="#0b0b0b" text-anchor="middle" font-weight="normal">ratio</text>
+<text x="570.1" y="270.0" font-size="12" fill="#0b0b0b" text-anchor="middle" transform="rotate(-90 570.1 270.0)">|limit − r_ν(tuned)|</text>
+<line x1="658.0" y1="255.6" x2="674.0" y2="255.6" stroke="#eb6834" stroke-width="2"/>
+<g><circle cx="666.0" cy="277.3" r="5.5" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>r_3: grid median - tuned 7.99e-05</title></g>
+<g><polygon points="686.0,370.8 692.5,377.3 686.0,383.8 679.5,377.3" fill="#1baf7a" stroke="#fcfcfb" stroke-width="2"/><title>r_3 [3/3]: best intercept - tuned 3.71e-06</title></g>
+<g><polygon points="692.0,338.3 698.5,344.8 692.0,351.3 685.5,344.8" fill="#1baf7a" stroke="#fcfcfb" stroke-width="2"/><title>r_3 [4/3]: best intercept - tuned 1.01e-05</title></g>
+<g><polygon points="698.0,364.7 704.5,371.2 698.0,377.7 691.5,371.2" fill="#1baf7a" stroke="#fcfcfb" stroke-width="2"/><title>r_3 [5/3]: best intercept - tuned 4.47e-06</title></g>
+<g><polygon points="704.0,348.1 710.5,354.6 704.0,361.1 697.5,354.6" fill="#1baf7a" stroke="#fcfcfb" stroke-width="2"/><title>r_3 [4/4]: best intercept - tuned 7.45e-06</title></g>
+<line x1="778.0" y1="198.5" x2="794.0" y2="198.5" stroke="#eb6834" stroke-width="2"/>
+<g><circle cx="786.0" cy="189.9" r="5.5" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>r_5: grid median - tuned 1.17e-03</title></g>
+<g><polygon points="806.0,281.5 812.5,288.0 806.0,294.5 799.5,288.0" fill="#1baf7a" stroke="#fcfcfb" stroke-width="2"/><title>r_5 [3/3]: best intercept - tuned 5.75e-05</title></g>
+<g><polygon points="812.0,237.8 818.5,244.3 812.0,250.8 805.5,244.3" fill="#1baf7a" stroke="#fcfcfb" stroke-width="2"/><title>r_5 [4/3]: best intercept - tuned 2.20e-04</title></g>
+<g><polygon points="818.0,238.0 824.5,244.5 818.0,251.0 811.5,244.5" fill="#1baf7a" stroke="#fcfcfb" stroke-width="2"/><title>r_5 [5/3]: best intercept - tuned 2.19e-04</title></g>
+<g><polygon points="824.0,234.7 830.5,241.2 824.0,247.7 817.5,241.2" fill="#1baf7a" stroke="#fcfcfb" stroke-width="2"/><title>r_5 [4/4]: best intercept - tuned 2.42e-04</title></g>
+<line x1="898.0" y1="181.7" x2="914.0" y2="181.7" stroke="#eb6834" stroke-width="2"/>
+<g><circle cx="906.0" cy="154.2" r="5.5" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>r_7: grid median - tuned 3.50e-03</title></g>
+<g><polygon points="926.0,189.9 932.5,196.4 926.0,202.9 919.5,196.4" fill="#1baf7a" stroke="#fcfcfb" stroke-width="2"/><title>r_7 [3/3]: best intercept - tuned 9.59e-04</title></g>
+<g><polygon points="932.0,201.6 938.5,208.1 932.0,214.6 925.5,208.1" fill="#1baf7a" stroke="#fcfcfb" stroke-width="2"/><title>r_7 [4/3]: best intercept - tuned 6.68e-04</title></g>
+<g><polygon points="938.0,151.0 944.5,157.5 938.0,164.0 931.5,157.5" fill="#1baf7a" stroke="#fcfcfb" stroke-width="2"/><title>r_7 [5/3]: best intercept - tuned 3.16e-03</title></g>
+<g><polygon points="944.0,151.3 950.5,157.8 944.0,164.3 937.5,157.8" fill="#1baf7a" stroke="#fcfcfb" stroke-width="2"/><title>r_7 [4/4]: best intercept - tuned 3.14e-03</title></g>
+<text x="980.0" y="472.0" font-size="11" fill="#0b0b0b" text-anchor="end" font-weight="normal">rational shapes, post hoc</text>
+<circle cx="810.5" cy="468" r="4.5" fill="#1baf7a"/>
+<text x="794.5" y="472.0" font-size="11" fill="#0b0b0b" text-anchor="end" font-weight="normal">spread s</text>
+<circle cx="733.5" cy="468" r="4.5" fill="#eb6834"/>
+<text x="717.5" y="472.0" font-size="11" fill="#0b0b0b" text-anchor="end" font-weight="normal">grid median</text>
+<circle cx="637.3" cy="468" r="4.5" fill="#2a78d6"/>
+<text x="980.0" y="488.0" font-size="10" fill="#52514e" text-anchor="end" font-weight="normal">rational: (r − c)/ε = P_L/Q_M, [L/M] = [3/3], [4/3], [5/3], [4/4], left to right</text>
+<circle cx="786.0" cy="189.9" r="10" fill="none" stroke="#0b0b0b" stroke-width="1.5"/>
+<line x1="777.4" y1="184.7" x2="736.0" y2="159.9" stroke="#0b0b0b" stroke-width="1"/>
+<text x="732.0" y="163.9" font-size="11" fill="#0b0b0b" text-anchor="end" font-weight="bold">r₅ outside s</text>
+<g opacity="0.35"><line x1="998.0" y1="150.0" x2="998.0" y2="206.0" stroke="#52514e" stroke-width="2"/><polygon points="998.0,212.0 994.0,203.0 1002.0,203.0" fill="#52514e"/><text x="998.0" y="174.0" font-size="11" fill="#52514e" text-anchor="middle" transform="rotate(90.0 998.0 181.0)">closer</text></g>
+<text x="16.0" y="520.0" font-size="10" fill="#52514e" text-anchor="start" font-weight="normal">states: hp/data/states, raw T84-mac, T81, T138-win2 (b904462b)  ·  fits: solver/eeg_profile/finiteD_series.py  ·  tuned: scan45J1500 at A 2.71918</text>
+<a href="https://github.com/nmoinvaz/choptuik-large-d"><text x="1024" y="520" font-size="10" fill="#52514e" text-anchor="end" text-decoration="underline">github.com/nmoinvaz/choptuik-large-d</text></a>
+</svg>
