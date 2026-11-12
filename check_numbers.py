@@ -764,6 +764,31 @@ def large_d_walls():
 
 
 @check
+def pole_c_orders():
+    """notes/QUAD_DOUBLE.md 13.6's addendum: the pole constant C(R136) at 100 and 250 series orders over D 40-60, and
+    its rise from 200 to 250 orders (hp/data/pole_c_orders.csv, written by hp/pole_c_orders.py from the raw-data
+    repository's I538-mac and I546-win summaries; #546)."""
+    import csv
+    rows = [r for r in csv.DictReader(l for l in open(os.path.join(ROOT, "hp/data/pole_c_orders.csv"))
+                                      if not l.startswith("#"))]
+    C = {(float(r["D"]), int(r["orders"])): float(r["C_R136"]) for r in rows}
+    Ds = sorted({d for d, _ in C})
+    c100 = [C[(d, 100)] for d in Ds]
+    c250 = [C[(d, 250)] for d in Ds]
+    rise = [C[(d, 250)] - C[(d, 200)] for d in Ds]
+    Q, W = "notes/QUAD_DOUBLE.md", "notes/LARGE_D_WALL.md"
+    t100 = [(Q, "C(R136) is 0.869–0.918\nat 100 orders")]
+    t250 = [(Q, "0.947–0.958 at 250"), (W, "to 0.947–0.958 at 250")]
+    trise = [(Q, "to 250 orders it is still 0.004–0.009")]
+    return [("C(R136) at 100 orders, least (D 40-60)", min(c100), 0.869, 0.001, t100),
+            ("C(R136) at 100 orders, most", max(c100), 0.918, 0.001, t100),
+            ("C(R136) at 250 orders, least", min(c250), 0.947, 0.001, t250),
+            ("C(R136) at 250 orders, most", max(c250), 0.958, 0.001, t250),
+            ("C(R136) rise from 200 to 250 orders, least", min(rise), 0.004, 0.001, trise),
+            ("C(R136) rise from 200 to 250 orders, most", max(rise), 0.009, 0.001, trise)]
+
+
+@check
 def dropoffs():
     """notes/LARGE_D_WALL.md (from the README), "Where the drop-offs are": u*kappa's slope and crossings (hp/data/dropoffs.json, written by hp/plot_dropoffs.py
     from the raw-data repository's T76 records): the full system's fit n^38.9 crossing 1 at D 59.9, u*kappa at 67.74, the

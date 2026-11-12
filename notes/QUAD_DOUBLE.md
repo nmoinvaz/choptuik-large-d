@@ -1199,6 +1199,18 @@ basin test and the prototype's a-field profile near u_pole will show.
 
 `hp/plot_pole_basin.py RAWDIR` draws the lines and the thresholds above (hp/pole_basin.svg).
 
+**Addendum: C depends on the series' order count (#538, #546).** The radius estimator reads the series' last orders,
+and C grows with their number. The table above is at the states' own 100 orders. At D 40–60, C(R136) is 0.869–0.918
+at 100 orders and 0.947–0.958 at 250. The rise shrinks with each added block of orders but has not stopped: from 200
+to 250 orders it is still 0.004–0.009 (`hp/pole_c_orders.py` writes `hp/data/pole_c_orders.csv` from the raw-data
+repository's `I538-mac/` at 651f29e6 and `I546-win/` at b904462b).
+- So C ≈ 0.88 is a 100-order value, not a limit. The thresholds δ_max above use it, and R₀ also moves with the order
+  count, so they are not recomputed here.
+- The law's form, a line in ln(1/δ), holds at every order count (#538).
+- The mechanism read in 13.1 (H1, g_rr → ∞ at an apparent horizon) is contradicted. In the variables B = 1/a² and
+  C = c a² every field keeps the radius of a, and B stays at 0.90–0.98 near the radius (#538). #545 tests the sonic
+  point x = c instead.
+
 ### 13.7 T1–T4 in the prototype: the collocation block fails T3 (2026-11-03 19:00 UTC)
 
 `solver/dss_colloc.py` is the block of 13.2 inside the reference solver (`dss.py`, DSSMulti): the kernel's stored
