@@ -4,11 +4,19 @@ assembled at Re lambda, one f64 ulp up and two ulps up (CSolver.mode_matrix). Fo
 two-ulp change d2 is twice its one-ulp change d1; the entries where |d2 - 2 d1| > |d1| / 2 are counted, located by
 block of 4M rows and columns, and the largest is printed.
 
-    cd hp && python3 modecount_smooth.py STATE.npz M KF RE IM
+    cd hp && python3 modecount_smooth.py STATE.npz M KF|none RE IM
 """
-sys.path.insert(0, "/Users/nathan/Source/choptuik-large-d/hp")
+import os
+import sys
+
+import numpy as np
+
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from modecount_common import setup
-path, M, kf, re0, im0 = sys.argv[1], int(sys.argv[2]), int(sys.argv[3]), float(sys.argv[4]), float(sys.argv[5])
+if len(sys.argv) != 6:
+    sys.exit(__doc__)
+path, M, re0, im0 = sys.argv[1], int(sys.argv[2]), float(sys.argv[4]), float(sys.argv[5])
+kf = None if sys.argv[3] == "none" else int(sys.argv[3])
 st = setup(path, M=M, threads=4, kf=kf, fmax=1e-15, log=lambda *a: None)
 def mat(re_):
     rh, rl, ih, il = st.c.mode_matrix(st.zh, st.zl, re_, im0)
