@@ -1483,3 +1483,229 @@ with nothing on branch points.**
      cavity pole, a closed form for a frequency-dependent reflectivity, or a growth or build-up law at a laser
      threshold that the verdicts above miss.
    - *Depends on.* #221.
+
+## Addendum (2026-11-12, issue #527): Newton's method at singular and nearly singular roots, against #499's wall
+
+**Question.** What does the prior work on Newton's method at singular and nearly singular roots, and on the
+Lyapunov–Schmidt reduction of a system to its weak subspace, say about #499's findings at the D 242.5 wall, and which
+corrector does it support? Notation as in #499: J = F′(z0) at the corrector's start z0, V and U its four weak right and
+left singular vectors, X the strong complement of span(V), B = UᵀJV (singular values σ₁…σ₄), Q = UᵀF″(V·, V·) and
+T = UᵀF‴(V·, V·, V·) the second and third derivatives projected on the weak left directions, and a the weak
+coefficients of Newton's first move. The findings are numerical evidence (#499, comments of 2026-11-11 17:53 UTC to
+2026-11-12 00:34 UTC):
+- **F1.** Newton's first move lies on span(V), share 1.0 with 8.5e-4 of it elsewhere; σ₁…σ₄ = 2.5e-27…7.9e-26 at
+  D 242.36 and ‖J‖ ≈ 3e34.
+- **F2.** Q is below the differences' resolution (pure truncation, Q(h) = 6.3e60 h², bounded by 6e12 at h = 1e-24),
+  while T ≈ 1.6e33 agrees across h to 3e-18.
+- **F3.** The cubic reduced system B(c − a) + T(c, c, c)/6 = 0 has one real root near the start, at |c| = 0.45–0.54 |a|.
+  It solves the actual weak residual on z0 + Vc to under 1%; the other three roots are artefacts of the truncation.
+- **F4.** With the weak part placed on that root, newton_od is still refused. The strong-row residual that the weak move
+  leaves, ½F″(Vc*, Vc*) ≈ 2e-26, is the suspected coupling.
+
+**How.**
+- **Searches.** 24 web searches on 2026-11-12, and record queries of the Crossref, zbMATH Open and Semantic Scholar APIs
+  (the last gave no abstracts).
+- **Read in full.** Griewank's thesis (1980), Decker, Keller and Kelley (1983, the published PDF in CaltechAUTHORS),
+  Deuflhard (1974, the GDZ scan), Keller's TIFR lectures (the Internet Archive's copy of 2025-06-24; the TIFR link
+  returns 404), Kuznetsov (1999, §1–5, CWI repository), Dallas and Pollock (2023, arXiv v4), and Fischer, Izmailov and
+  Solodov (2019, the preprint of 2017-09-04), and §4.3 of the p-regularity survey arXiv:2501.07671.
+- **Records or reviews only.** The SIAM, AMS, Springer, Elsevier and DTIC pages refused the fetch (403 or a login
+  redirect). The other works below are recorded from Crossref's deposited metadata, zbMATH reviews and what the full
+  texts above say about them, marked as such.
+- **Text channel.** The PDFs were downloaded with curl and their text extracted with macOS PDFKit, or with the Vision
+  framework's OCR for scans (Deuflhard 1974; DKK 1983's theorem statements, read in both extractions). Quotes are from
+  that text and were not compared with the page images. Obvious OCR errors were corrected by hand ("newe" to "new"),
+  and others may remain.
+- **Inferences** are marked *inferred*. Every theorem read is proved for an exactly singular F′(x*); none treats a root
+  with a nonzero smallest singular value, except Decker and Kelley (1985, review only) and remarks in Griewank's thesis.
+
+### Closest works
+
+| Work | Bears on | What it contains | What it does not contain |
+|---|---|---|---|
+| **A. O. Griewank**, *Analysis and modification of Newton's method at singularities*, PhD thesis, Australian National University (June 1980), read in full | F1–F4, design 1 | **Order and regularity.** A singularity has order k when the derivatives projected on the singular equations, P∇^q f(x*), vanish for q ≤ k and P∇^{k+1}f(x*) does not (Thm 1.6 (ii)); it is regular when B(t) = (1/k!)P∇^{k+1}f(x*)t^k restricted to the null space N is nonsingular for some t ∈ N (§2.1). **Rates.** From a star-like domain, ρ_{j+1}/ρ_j → k/(k+1) (Lemma 2.2), and the residual falls by k/(k+1) (Lemma 3.2). **Line searches.** "the usual line search conditions of stabilised Newton methods (e.g. Goldstein test [23]) will always be met by the full Newton step during the final approach to a regular singularity. However it was found in [24] that such modifications can slow down the iteration considerably before the final pattern has been established" (p. 94). **Corrected steps.** Reddien's corrected step leads "to a point x′ much closer to the solution x* than x_{j+1} = g(x_j) but ... the subsequent Newton step from x′ tended to be disadvantageous. In our framework this means that x′ can lie outside W and may even belong to the singular set" (p. 96). **Acceleration.** The two-point iteration y_{i+1} = λg(g(y_i)) − (λ−1)g(y_i), λ ∈ (1, k+1), is Q-linear, and Q-superlinear as λ_j → k+1 (Thm 3.5, Cor. 3.6); at k = 2 "with fixed λ=2.8 converges quite nicely with Q-factor ≈ 0.044" on his test problem (p. 112). **Nearly singular.** "Once the residual ‖f‖ is of the same magnitude as the smallest singular value of the Jacobian at the solution, Newton's method is naturally superior" (p. 103). **Bordering.** "At higher order singularities the condition (4.60) cannot be satisfied so that the Jacobian of the overdetermined system f = 0, Z = 0 has at x* linearly dependent columns" (p. 150). | Irregular singularities ("not considered in this thesis", Preface); a theory for nonzero σ at the root; the strong rows' curvature acting back on the weak rows; an acceptance test like newton_od's. |
+| **D. W. Decker, H. B. Keller, C. T. Kelley** (DKK), *Convergence rates for Newton's method at singular points*, SIAM J. Numer. Anal. 20 (1983) 296–314, read in full | F1, F2, F4, design 1 | "the convergence of the Newton iterates to the root is linear rather than quadratic" (abstract). **Blocks.** With E = N ⊕ X, F′(x) = A + B + C + D (2.3)–(2.4); F′(x) is invertible iff the Schur complement D̂ = D − CA⁻¹B is invertible on N (Thm 2.6). The orders a, b, c, d of the blocks' first Taylor terms, barred when every argument lies in N (3.3)–(3.5), fix the leading weak operator: H = D̄_d̄ if d̄ < b̄ + c̄, D̄_d̄ − C̄Â⁻¹B̄ if d̄ = b̄ + c̄, −C̄Â⁻¹B̄ if d̄ > b̄ + c̄ (3.10). Regions W(ρ, θ, m) = {‖P_X x̃‖ ≤ θ‖P_N x̃‖^m} (3.1). **Rates.** Thm 5.1 (d = 1): the N-error ratio tends to 1/2. Thm 5.9: if d = d̄ ≤ c and D_d is nonsingular for all P_N x̃ ≠ 0, Newton converges from W(ρ, θ, 1) with N-error ratio d/(d+1) (5.11); Example 2 (d = 2) tabulates R_i → 0.6667. **Acceleration.** Thm 7.4 (two Newton steps, then a step of d+1 times the Newton correction; assumes d = d̄ ≤ c, b ≥ min(2, d), (7.5)) and Thm 7.27 (y = x − F′(x)⁻¹F(x), x⁺ = y − (d+1)F′(y)⁻¹F(y); assumes b ≥ 2, c ≥ d = d̄ ≥ 2, (7.5)): quadratic convergence of the N-error. | Nearly singular roots; a rate theorem for d̄ = b̄ + c̄; line searches. |
+| **G. W. Reddien**, *On Newton's method for singular problems*, SIAM J. Numer. Anal. 15 (1978) 993–996 | F2 | Not read. Griewank (p. iii): convergence "from within the intersection of some cone with some ball, provided x* is a regular first order singularity". DKK: "convergence, with overall linear rate 1/2, for the first problem was known previously [14]". | (unread) |
+| **G. W. Reddien**, *Newton's method and high order singularities*, Comput. Math. Appl. 5 (1979) 79–86 | F2 | Not read. DKK (p. 305): a result like Thm 5.9 "was derived in Reddien [15] but under the additional restrictions that dim (N) = 1", with a lower bound on F^{(p+1)} and the X-order "(p+1) reduced to 2". | (unread) |
+| **D. W. Decker, C. T. Kelley**, *Newton's method at singular points. I*, SIAM J. Numer. Anal. 17 (1980) 66–70; *II*, 17 (1980) 465–471; *Convergence acceleration for Newton's method at singular points*, 19 (1982) 219–229 | F2, design 1 | Not read. DKK: its Thm 5.1 (rate 1/2) is "a result from [2]" (I); II treats d = b = c = 1 with d̄ = 2 in W(ρ, θ, 2) (p. 302); Thm 7.4 generalizes "a modified scheme of [6]" (Griewank's thesis). | (unread) |
+| **D. W. Decker, C. T. Kelley**, *Expanded convergence domains for Newton's method at nearly singular roots*, SIAM J. Sci. Stat. Comput. 6 (1985) 951–966 | F1, F3 | zbMATH review (B. Döring) only: Newton "when the derivative of F is nearly singular at a zero"; "there is a larger than expected domain of attraction for the Newton iterates", "but that convergence appears to be only linear in most of this domain"; "A modification of Newton's method is given that improves this slow convergence." | Whether its class allows a vanishing quadratic term, and the modification itself (unread). |
+| **A. Griewank**, *On solving nonlinear equations with simple singularities or nearly singular solutions*, SIAM Rev. 27 (1985) 537–563 | design 1 | zbMATH review (E. L. Allgower) only: Newton near a regular singular zero of order k, extrapolation, overrelaxation, bordering ("The bordering method has principally been used for simple singularities") and quadratic models after Frank and Schnabel, tested on a tubular reactor problem. | (unread) |
+| **A. Griewank, M. R. Osborne**, *Analysis of Newton's method at irregular singularities*, SIAM J. Numer. Anal. 20 (1983) 747–773 | F2 | Record only (zbMATH keywords "irregular singularities", "divergence", "chaotical convergence behaviour"). Griewank's thesis: such cases "lead to very irregular behaviour of the Newton iteration even if the singularity is balanced" (p. 151). | (unread) |
+| **M. Dallas, S. Pollock**, *Newton–Anderson at singular points*, Int. J. Numer. Anal. Model. 20 (2023) 667–692, arXiv:2207.12334v4, read in full | F2 | Restates DKK's setting with D̂_N(x) = P_N f″(x*)(P_N(x − x*), P_N ·) and the error expansion e_k + w_{k+1} = ½P_N e_k + T_k P_R e_k + O(‖e_k‖²) (3); D̂_N "fails to be invertible for all P_N(x−x*) ≠ 0 if dim N > 1 and odd". §7: the order d is the least d with P_N f^{(d+1)}(x*)(x − x*)^d ≠ 0, and P_N(e_k + w_{k+1}) = d/(d+1) P_N e_k + … (Lemma 7.1); depth-one Anderson acceleration with γ-safeguarding converges with a factor below d/(d+1) when dim N = 1 (Thm 7.1). | High order with dim N > 1; nearly singular roots. |
+| **R. B. Schnabel, P. D. Frank**, *Tensor methods for nonlinear equations*, SIAM J. Numer. Anal. 21 (1984) 815–843; **D. Feng, P. D. Frank, R. B. Schnabel**, *Local convergence analysis of tensor methods for nonlinear equations*, Math. Program. 62 (1993) 427–459 | designs | Schnabel–Frank not read (SIAM and DTIC refused). Feng–Frank–Schnabel, zbMATH review (Z. Wang) only: on "problems where the Jacobian at the root has a null space of rank one", the iterates converge "two or three-step Q-superlinearly to the solution with Q-order 3/2", "while standard methods converge linearly with constant converging to 1/2". | A null space of dimension above one; a vanishing second-order term on it. |
+| **P. Deuflhard**, *A modified Newton method for the solution of ill-conditioned systems of nonlinear equations with application to multiple shooting*, Numer. Math. 22 (1974) 289–315, GDZ scan read in full | F4, design 2 | The damped Newton method "is extended in such a way as to apply to the solution of ill-conditioned systems of nonlinear equations, i.e. systems having a "nearly singular" Jacobian at some iterate" (abstract). The natural level function, scaled by J(x_k)⁻¹ (2.8), gives the monotonicity test on the simplified Newton correction with the old Jacobian (4.1)–(4.2). Rank strategy (4.7): when the test fails for every λ_k in [λ_min, 1], "reduce the pseudo-rank of the Jacobian by one, compute the new correction Δx_k from (2.16), and try once more"; the reduced method is Newton for "the reduced mapping PF(Px)", the dropped components frozen (4.8). (4.10): "Start with initial pseudo-rank of the Jacobian less than maximum rank. In the course of the iteration increase the rank gradually." | Convergence to a root whose dropped equations must also be solved; rates at singular roots; a test with the new Jacobian. |
+| **P. Deuflhard**, *Newton Methods for Nonlinear Problems: Affine Invariance and Adaptive Algorithms*, Springer Series in Computational Mathematics 35 (2004; 2011 printing) | F4 | Not read. Crossref lists the chapters "Systems of Equations: Local Newton Methods" (pp. 45–107), "Systems of Equations: Global Newton Methods" (109–172) and "Least Squares Problems: Gauss-Newton Methods" (173–231). ZIB's page of the book's codes: NLEQ_ERR implements §3.3.3, a global Newton method with an error-oriented criterion and an adaptive trust region; NLEQ2 has a rank strategy "slightly different from Section 3.3.3", and its header reads "Damped affine invariant Newton method with rank-strategy", with a QR decomposition "with subcondition estimation, rank decision and computation of the rank-deficient pseudoinverse". | (the text, including its restricted monotonicity test and its treatment of rank deficiency, is unread) |
+| **H. B. Keller**, *Lectures on Numerical Methods in Bifurcation Problems*, TIFR Lectures on Mathematics and Physics 79 (Springer, 1987), read in full | F2, F3, design 2 | Ch. 1, Example 2: −u³ + λ₁u + λ₂ = 0 has three real roots on one side of the fold λ₁³/27 = λ₂²/4 (1.17), a pitchfork at λ₂ = 0, and "The fold has a cusp at the origin". §5.12: the algebraic bifurcation equations a₁₁α² + 2a₁₂αβ + a₂₂β² = 0, a₁₁ = ψᵀG_uu φφ. §5.13: near a simple bifurcation point "there is a full conical neighbourhood ... in which F_X(Y,s) is nonsingular", and Newton converges from it. Method III (Lyapunov–Schmidt): u = u₁(σ) + ε(φ + v), ψᵀv = 0, with a scalar equation h(s, ε, v) = 0 for the left-null component (5.30). §4.11: the bordering algorithm, valid when A and the bordered matrix are nonsingular, and a variant for singular A. Method V (perturbed bifurcation) and §5.27 (fold following for −ξ³ + λξ + τ = 0). | Newton's rates at singular points; reduced equations with a vanishing quadratic term beyond the scalar examples. |
+| **Yu. A. Kuznetsov**, *Numerical normalization techniques for all codim 2 bifurcations of equilibria in ODE's*, SIAM J. Numer. Anal. 36 (1999) 1104–1124, §1–5 read | F2, F4, design 2 | §5, the cusp: a simple zero eigenvalue with Aq = 0, Aᵀp = 0, ⟨p, q⟩ = 1, and the reduced equation ẇ = bw² + cw³ with b = ½⟨p, B(q, q)⟩, B and C the second and third derivatives. When b = 0, "c = (1/6)⟨p, C(q,q,q) − 3B(q, A^INV B(q,q))⟩", where A^INV B(q, q) is found "by solving the nonsingular (n+1)-dimensional bordered system" (the idea credited to Keller, 1977). | A null space of dimension above one; a nearly singular A; an iteration (the coefficients are computed at a known point). |
+| **A. Fischer, A. F. Izmailov, M. V. Solodov**, *Local attractors of Newton-type methods for constrained equations and complementarity problems with nonisolated solutions*, J. Optim. Theory Appl. 180 (2019) 140–169, preprint read | F2 | 2-regularity in a direction v: "the p×p-matrix Φ′(ū)+ΠΦ′′(ū)[v] is nonsingular", equivalently "there exists no nonzero u∈ker Φ′(ū) such that Φ′′(ū)[v, u] ∈im Φ′(ū)"; under it Newton-type methods have a star-like domain of attraction. Same line, records only: Izmailov, Kurennoy, Solodov, Math. Program. 167 (2018) 355–379; Fischer, Izmailov, Solodov, *Unit stepsize for the Newton method close to critical solutions*, Math. Program. 187 (2021) 697–721, whose search listing says it couples Newton "with a linesearch technique for globalization that locally accepts unit stepsize". | Any result without 2-regularity, which Q = 0 excludes in every direction (*inferred*). |
+| **E. Bednarczuk, O. Brezhneva, K. Leśniewski, A. Prusińska, A. Tret'yakov**, *Towards nonlinearity. The p-regularity theory. Applications and developments*, arXiv:2501.07671v1 (2025), §4.3 read | designs | §4.3.2: the p-factor Newton method x_{k+1} = x_k − (F′ + P₁F″h + … + P_{p−1}F^{(p)}[h]^{p−1})⁻¹(F + P₁F′h + … + P_{p−1}F^{(p−1)}[h]^{p−1}), with projectors built from Im F′(x̄) and a direction h for which the p-factor matrix is nonsingular; quadratic convergence from a ball (Thm 4.16, quoted from Szczepanik, Prusińska and Tret'yakov 2012, not read). | Nearly singular roots: the projectors are those of an exactly singular F′(x̄). |
+
+### #499's findings against the literature
+
+| Finding | Prior work that predicts or explains it | Not predicted by any source read |
+|---|---|---|
+| **F1**, the first move on span(V) | **Explained.** At a singular root the error along N falls linearly while the X-error falls at higher order (DKK §1, (5.18)–(5.19)); after the first steps "the iterates are essentially confined to the one-dimensional nullspace" (Griewank, p. 149, of his case dim N = 1). At a nearly singular start the weak part of a Newton correction is the weak residual over σ (*inferred*, SVD algebra), and Deuflhard (1974, §1) names rounding at a nearly singular Jacobian as what forces tiny damping factors. | The move's size, a rounding-level weak residual \|Ba\| ≈ 1e-55 over σ (*inferred* arithmetic), and win2's floor of 1.3e-30 to 2e-30 for the first move at any a. |
+| **F2**, Q unresolved, T ≈ 1.6e33 | **Classified, not predicted.** A vanishing projected second derivative with a nonvanishing third is a singularity of order 2 (Griewank, Thm 1.6), d̄ = 2 (DKK (3.5)), a high-order singularity (Reddien 1979) and a root of order d = 2 (Dallas–Pollock §7). In the reduced equation it is the cusp, b = ½⟨p, B(q, q)⟩ = 0 (Kuznetsov §5; Keller, Ch. 1). It rules out 2-regularity in every direction (Fischer–Izmailov–Solodov's definition), so the theory of critical solutions does not apply. At an exactly singular root of this order the N-error falls by d/(d+1) = 2/3 per step (DKK Thm 5.9 and Example 2; Griewank, Lemma 3.2), not by the 1/2 of a first-order root. | Why Q vanishes here. Also, the reduced cubic coefficient is not T alone (next section). |
+| **F3**, one real root at about half the move | **Partly.** In one dimension B(c − a) + Tc³/6 = 0 is Keller's −ξ³ + λξ + τ = 0 with λ = −6B/T and τ = 6Ba/T (*inferred*). It has three real roots only when 4λ³ > 27τ² (Keller (1.17)), which needs λ > 0, that is B and T of opposite sign. So one real root is the same-sign side of the cusp, and the pitchfork that #499 considered and dropped is the other side (*inferred*, scalar model). Newton's step from c = 0, the reduced cubic's inflection point where the weak Jacobian is smallest (B), overshoots the root (*inferred*). With κ = \|T\|\|a\|²/(6\|B\|) = 1.6–3.5 from #499's numbers, κx³ + x − 1 = 0 gives c*/a = 0.52–0.62, against the measured 0.45–0.54 (*inferred*). | The four-dimensional tensor case; a start at the reduced cubic's inflection point (every convergence region read is a cone or star about the root). |
+| **F4**, refused after the weak-first step | **Explained in kind.** (i) Griewank's account of Reddien's corrected steps (p. 96) is the same observation: a step that lands much closer to the root along N is followed by a poor Newton step, because the point "can lie outside W". The weak-first point has its N-error removed and its X-error (the strong residual of 2e-26 over the strong singular values) left, so it lies outside every region W(ρ, θ, m) of DKK (3.1), and no theorem read covers the next step (*inferred*). (ii) The coupling has a name: the term C̄Â⁻¹B̄ of DKK's leading weak operator (3.10), and −3⟨p, B(q, A^INV B(q, q))⟩ in Kuznetsov's cusp coefficient. F″(v, v) ≈ 1e33 in the strong rows makes b̄ = 1, so this term is absent only if the mixed weak-left curvature UᵀF″(v, x), with v ∈ span(V) and x ∈ X, vanishes (*inferred* from (3.10) and Kuznetsov §5). #499's T and its root check use the affine subspace z0 + Vc, which does not see it. (iii) Griewank (Lemma 3.2): line searches accept the full step in the final approach to a regular singularity, and slow the iteration before that pattern sets in. | The size of the coupling term. newton_od's acceptance test (the correction at the trial with its own Jacobian) is analysed in no source read; Deuflhard (1974) analyses the old-Jacobian test. |
+
+### What the theorems assume, against #499's B, Q and T
+
+- **Exact singularity.** Every rate theorem read assumes F′(x*) singular. Here σ₁ = 2.5e-27 at z0, and the weak block's
+  Jacobian at the root is about ½T(c*, c*, ·) ≈ 1.6e-26 (#499, 00:34 UTC). The singular theory can describe the
+  iteration only where the cubic term dominates the linear one, |c| ≫ √(2σ/|T|) ≈ 1.8e-30 for σ₁ and 1.0e-29 for σ₄
+  (*inferred*). Below that the reduced root is regular and Newton is quadratic, as Griewank says for nearly singular
+  roots (p. 103). #499's first moves, |a| = 0.8–1.3e-29, lie at this crossover, where neither regime's theory holds
+  (*inferred*; σ is from D 242.36 and T from D 242.5146, which changes these scales by about 10%). The accepted
+  attempt's four linear steps before quadratic convergence fit that picture, but #499 showed the factor per step to be
+  the line search's λ.
+- **Q.** Order 2 needs the whole weak-left second derivative to vanish: Griewank's order k = 2 needs P∇²f(x*) = 0, and
+  DKK's d = 2 needs P_N F″(x*)(x̃, P_N ·) = 0 for every x̃, so the mixed block UᵀF″(x, v), x ∈ X, as well. #499 resolved
+  only the weak–weak block Q. Its bound, 6e12 at h = 1e-24, is far above the size at which Q would change the reduced
+  equation at the root's scale: ½Q(c, c) is below Bc and below T(c, c, c)/6 at |c| ≈ 5e-30 only if |Q| ≪ 1e3
+  (*inferred*). The root check of F3 bounds Q along one direction only.
+- **T.** Regularity needs ½T(t, t, ·) nonsingular on span(V) for some direction t (Griewank) or every direction (DKK
+  Thm 5.9). This is unmeasured; the single real root is consistent with it and does not show it.
+- **B, and the strong rows.** F″(v, v) ≈ 1.9e33 lies in the strong rows (#499, 17:53 UTC, which stands), so DKK's b and
+  b̄ are 1. The acceleration theorems need b ≥ 2.
+
+### Corrector designs from the literature
+
+**Design 1: overrelaxed Newton at an order-2 singular root** (DKK Thms 7.4 and 7.27; Griewank Thm 3.5, Cor. 3.6).
+- *Iteration.* y = x − F′(x)⁻¹F(x), x⁺ = y − 3F′(y)⁻¹F(y) (DKK with d = 2), or y⁺ = λg(g(y)) − (λ − 1)g(y) with
+  λ → 3, g the Newton map (Griewank with k = 2).
+- *Claim, proved there.* Quadratic convergence of the N-error (DKK (7.29)); Q-linear convergence whose factor falls as
+  λ → k+1, superlinear for λ_j → k+1 (Griewank), with a Q-factor of 0.044 at λ = 2.8 on his k = 2 test problem.
+- *Assumptions against #499.* **Exact singularity: fails** (B is not zero), and an overrelaxation by 3 overshoots once
+  |c| reaches the crossover above (*inferred*). Griewank advises reverting to Newton "when the rounding errors become
+  significant or the solution turns out to be only nearly singular" (p. 102). **b ≥ 2: fails**, since F″(v, v) lies in
+  the strong rows. Q = 0 with the mixed block: unmeasured. T(t, t, ·) nonsingular for every t: unmeasured. A start in a
+  cone W(ρ, θ, 1) about the root: #499's starts lie at the reduced cubic's inflection point instead (*inferred*).
+- *Verdict.* Not applicable as stated: two assumptions fail on #499's data.
+
+**Design 2: a Lyapunov–Schmidt corrector** (Keller's Method III and bordering algorithm; DKK Thm 2.6; Kuznetsov §5;
+Deuflhard's (4.8) and (4.10)).
+- *Iteration.* For given weak coordinates c, solve the strong rows for w ∈ X with c held, which is Newton on
+  Deuflhard's reduced mapping with the weak components frozen. Then take a Newton step on the four-dimensional reduced
+  map g(c) = UᵀF(z0 + Vc + w(c)). Its Jacobian is the Schur complement D − CA⁻¹B on span(V) (DKK Thm 2.6), formed by a
+  bordered solve (Keller §4.11; Kuznetsov (4.6)). g is evaluated with the full F, so no Taylor model of it is needed.
+  With Q = 0 its cubic coefficient is T − 3S, S(c, c, c) = UᵀF″(Vc, A^INV P_X F″(Vc, Vc)) (Kuznetsov §5, extended from
+  one null vector to four, *inferred*). Deuflhard's rule (4.10), to start at a reduced pseudo-rank and raise it, orders
+  the work the same way: strong rows first, weak rows after.
+- *Claim.* Each part is quadratic where Newton–Kantorovich applies (Keller §2.23–2.24): the strong solve when the
+  theorem's bound holds for A = P_X J P_X on X, whose smallest singular value is σ₅, and the reduced step near a root
+  where g′(c*) is nonsingular. No source read proves convergence of the nested iteration as a whole (*inferred*).
+- *Assumptions against #499.* **A gap after σ₄ = 7.9e-26:** σ₅ is not in #499, unmeasured. **g′(c*) nonsingular:** its
+  T part is about 1.6e-26, six times σ₁, so the reduced root is regular unless the term 3S cancels it (*inferred*;
+  S unmeasured). **Q:** g needs no Q, since it is evaluated directly. **Accuracy:** g must resolve |Ba| ≈ 1e-55 while
+  the strong rows carry 1e-26 during the inner solve, well within octo-double's 1e-125 relative (*inferred*).
+  **Start:** from c = 0 the reduced step meets the inflection again (g′ = B); from c = a, Newton's own first move,
+  g′ is 20–50 times σ₁ (*inferred*).
+- *Verdict.* No measured quantity contradicts it, and two assumptions are unmeasured. It differs from #499's weak-first
+  step in one point: the weak equation is solved on z0 + Vc + w(c), with the strong rows solved, not on z0 + Vc. That
+  is where the term S acts.
+
+**Not candidates.** Tensor methods: Feng, Frank and Schnabel analyse a rank-one null space at a first-order root (their
+baseline rate is 1/2), while #499's weak subspace is four-dimensional with a vanishing quadratic term, which a
+second-order tensor model cannot represent (*inferred*). Bordering with a singularity condition fails at higher-order
+singularities by Griewank's own statement (p. 150) and imposes an exact singularity that the root does not have. The
+p-factor Newton method with p = 3 assumes an exactly singular F′(x̄) and its image; it was not checked further.
+
+### References checked
+
+| Entry | Checked against | Verdict |
+|---|---|---|
+| Griewank, PhD thesis, ANU (1980) | the PDF's title page (on R. P. Brent's ANU page, not the university repository) | OK |
+| Decker, Keller, Kelley, SIAM J. Numer. Anal. 20(2), 296–314 (1983), doi:10.1137/0720020 | Crossref; the published first page (CaltechAUTHORS record zs4er-99k51) | OK |
+| Reddien, SIAM J. Numer. Anal. 15(5), 993–996 (1978), doi:10.1137/0715064 | Crossref; zbMATH 0397.65042 | OK (bibliographic) |
+| Reddien, Comput. Math. Appl. 5(2), 79–86 (1979), doi:10.1016/0898-1221(79)90061-0 | Crossref; zbMATH 0436.65032 | OK (bibliographic); DKK's list dates it 1980 |
+| Decker, Kelley: 17(1), 66–70 (1980), doi:10.1137/0717009; 17(3), 465–471 (1980), doi:10.1137/0717039; 19(1), 219–229 (1982), doi:10.1137/0719012 | Crossref; zbMATH 0428.65037 for part I | OK (bibliographic) |
+| Decker, Kelley, SIAM J. Sci. Stat. Comput. 6(4), 951–966 (1985), doi:10.1137/0906064 | Crossref; zbMATH 0597.65057 | OK (bibliographic) |
+| Griewank, SIAM Rev. 27(4), 537–563 (1985), doi:10.1137/1027141 | Crossref; zbMATH 0598.65026 | OK (bibliographic) |
+| Griewank, Osborne, SIAM J. Numer. Anal. 20(4), 747–773 (1983), doi:10.1137/0720050 | Crossref; zbMATH 0525.65025 | OK (bibliographic) |
+| Dallas, Pollock, Int. J. Numer. Anal. Model. 20(5), 667–692 (2023), doi:10.4208/ijnam2023-1029 | Crossref; the arXiv page (journal reference) | OK |
+| Schnabel, Frank, SIAM J. Numer. Anal. 21(5), 815–843 (1984), doi:10.1137/0721054 | Crossref; zbMATH 0562.65029 | OK (bibliographic) |
+| Feng, Frank, Schnabel, Math. Program. 62, 427–459 (1993), doi:10.1007/BF01585177 | Crossref; zbMATH 0796.65069 (review through the MaRDI portal) | OK; MaRDI's date of 13 October 1994 disagrees, the deposited metadata is used |
+| Deuflhard, Numer. Math. 22, 289–315 (1974), doi:10.1007/BF01406969 | the scan's first page, "Numer. Math. 22, 289-315 (1974)"; EuDML 132271 gives 289–316 | OK |
+| Deuflhard, *Newton Methods for Nonlinear Problems*, Springer Ser. Comput. Math. 35 (2004); 2011 printing doi:10.1007/978-3-642-23899-4 | Crossref (the 2011 printing and its chapters); ZIB's NLEQ2 header for the 2004 edition | PARTIAL: the 2004 edition's DOI *(unverified)* |
+| Keller, *Lectures on Numerical Methods in Bifurcation Problems*, TIFR Lectures on Math. and Phys. 79, Springer (1987) | zbMATH 0656.65063 (1987, IV+160 pp., ISBN 3-540-18367-1); the PDF's front matter (©TIFR 1986, ISBN 3-540-20228-5, 140 pages) | OK; MINOR: the two ISBNs and page counts differ |
+| Kuznetsov, SIAM J. Numer. Anal. 36(4), 1104–1124 (1999), doi:10.1137/S0036142998335005 | Crossref; the CWI copy's first page | OK |
+| Fischer, Izmailov, Solodov, J. Optim. Theory Appl. 180(1), 140–169 (2019), doi:10.1007/s10957-018-1297-2; Izmailov, Kurennoy, Solodov, Math. Program. 167(2), 355–379 (2018), doi:10.1007/s10107-017-1128-5; Fischer, Izmailov, Solodov, Math. Program. 187, 697–721 (2021), doi:10.1007/s10107-020-01496-z | Crossref; zbMATH 1470.65102 for 2021 | OK (bibliographic); the 2019 paper's content is from its 2017 preprint |
+| Bednarczuk et al., arXiv:2501.07671v1 (2025) | the arXiv PDF's header | OK (preprint); the source of its Thm 4.16, Szczepanik, Prusińska, Tret'yakov (Schedae Informaticae, 2012), *(unverified)* |
+
+### Gap statement
+
+- **Not read.** Reddien 1978 and 1979; Decker and Kelley 1980 (I, II), 1982 and 1985; Griewank 1985; Griewank and
+  Osborne 1981 and 1983; Kelley and Suresh 1983 and Kelley 1986 (records found, not entered above); Schnabel and Frank
+  1984; Feng, Frank and Schnabel 1993; Fischer, Izmailov and Solodov 2021; Deuflhard's book; Allgower and Georg's
+  *Introduction to Numerical Continuation Methods* (SIAM Classics 45, 2003, record only). Reviews and the full texts'
+  accounts of them stand in, which is the residual risk.
+- **The closest unread work** is Decker and Kelley (1985), on nearly singular roots with a modified Newton method. Its
+  class and its modification could change design 2's standing.
+- **Rounds.** Round 1 covered the issue's list. Round 2 went forward from DKK and Dallas–Pollock (Reddien 1979, Kelley
+  1986, critical solutions, p-regularity) and to numerical normal forms (Kuznetsov 1999) for the reduced cubic
+  coefficient. The search is not dry: no source read treats a nearly singular root whose reduced quadratic term
+  vanishes.
+
+### Discrepancies and proposed text (for the coordinator)
+
+- **#499's T is not the reduced cubic coefficient.** With Q = 0 the reduced equation's cubic coefficient is T − 3S
+  (Kuznetsov §5; DKK (3.10)). #499's T, its h-independence and the root check hold for the map c ↦ UᵀF(z0 + Vc) on the
+  affine subspace. They do not yet show the root of the reduced equation, where the strong rows are solved. Reported,
+  not changed.
+- **Rate 1/2 or 2/3.** Issue #527's "linear convergence at rate 1/2 near a double root" is the first-order case, Q ≠ 0.
+  With Q = 0 the classical rate is 2/3 (DKK, Example 2). #499 found the factor 1/2 to be the line search's λ, so neither
+  classical rate has been observed.
+- **Q's bound.** #499's reading that the weak nonlinearity is cubic rests, away from the root's direction, on the
+  h-scan, whose bound on Q (6e12) is about 6 × 10⁹ times the 1e3 at which Q would change the reduced equation at
+  |c| ≈ 5e-30 (*inferred*).
+- **Citation details.** DKK's list dates Reddien's high-order paper 1980 (Crossref and zbMATH: 1979). MaRDI dates
+  Feng–Frank–Schnabel 1994 (Crossref and zbMATH: 1993). Keller's lectures carry two ISBNs.
+- **REF_CHECK.md, Deuflhard 1974.** Its content is now read from the scan: the natural monotonicity test with the old
+  Jacobian, (4.1)–(4.2), and the rank strategy, (4.7) and (4.10). Proposed: replace "the content ... from the abstract
+  only" in that row with a pointer to this addendum.
+- **Proposed text** for the wall's write-up: "A vanishing Q = UᵀF″ with T = UᵀF‴ ≠ 0 makes the weak singularity one of
+  order 2 [Griewank 1980; Decker, Keller and Kelley 1983], whose reduced equation is the cusp normal form [Keller 1987,
+  Ch. 1; Kuznetsov 1999, §5]. At an exactly singular root of this order Newton's error along the null space falls by
+  2/3 per step. The accelerations proved for it assume that the strong rows of F″ vanish along the null space [Decker,
+  Keller and Kelley 1983, Thms 7.4 and 7.27], which F″(v, v) ≈ 1e33 rules out here."
+- **No novelty sentence** was added by this task.
+
+### Recommended tasks (for the coordinator to file)
+
+1. **Measure the composite term of the reduced cubic.**
+   - *What.* At the two D 242.5146 starts of #499 (accepted a 0.0078125, refused a 0.03125), form
+     w_jk = A^INV P_X F″(v_j, v_k) by a bordered solve, then S = UᵀF″(v_i, w_jk) by central differences checked
+     between h and h/10, symmetrized, and compare 3‖S‖ with ‖T‖. Evaluate the reduced map
+     g(c) = UᵀF(z0 + Vc + w(c)), w(c) from a strong Newton solve at fixed c, at c = a and at #499's root c*.
+   - *Why.* The literature's reduced cubic coefficient is T − 3S, and #499's measurements see only T. This decides
+     whether the weak-first refusal is the coupling (F4).
+   - *Acceptance.* S agrees between h and h/10 to 1e-2, or is bounded below its truncation. Control: w replaced by 2w
+     must change g(c*) by the amount S predicts, to 1e-2. If 3‖S‖ < 1e-2‖T‖ and |g(c*)| < 1e-2|Ba|, the coupling is
+     not this term and the refusal needs another cause; otherwise the cubic with T − 3S has a root c** with
+     |g(c**)| < 1e-2|Ba|, or the task reports that it has none.
+   - *Depends on.* #499 (`hp/dz0_weak.py`, `hp/weak_corrector.py`).
+2. **A/B the Lyapunov–Schmidt corrector (design 2).**
+   - *What.* Strong solve with span(V) frozen, then Newton on the four-dimensional g(c) from c = a, on win2's refused
+     start D 242.5146 → 242.5459 (a 0.03125), with newton_od on the same system as the control.
+   - *Why.* It is the design whose assumptions the data do not contradict.
+   - *Acceptance.* First a planted system with a known cubic reduced root (planted σ, T and S, the same code path)
+     converges to that root to 1e-3 relative, and its mutation, w set to 0, must fail to reach it. Then the real start
+     converges below 1e-60 where newton_od is refused, or the task reports where it stops.
+   - *Depends on.* Task 1, and σ₅ from task 3.
+3. **Check the order-2 assumptions on the measured tensors.**
+   - *What.* (a) σ₅ against σ₄ at z0. (b) The minimum over 1000 random unit t ∈ span(V) of σ_min/σ_max of the 4×4
+     matrix ½T(t, t, ·). (c) Q at h down to 1e-29, where the truncation 6.3e60 h² falls below 1e3, and the mixed block
+     UᵀF″(x, v) for a few strong directions x (task 1 gives the one that matters).
+   - *Why.* They decide whether the weak singularity is regular of order 2 in Griewank's and DKK's sense, so that
+     their rates apply away from the crossover, or irregular (Griewank and Osborne 1983).
+   - *Acceptance.* A planted tensor with a known singular direction must show the zero in (b). (c) passes when Q(h) and
+     Q(h/10) agree to 1e-2 or the truncation constant c h² stays below 1e3.
+   - *Depends on.* #499.
+4. **Read what did not open.**
+   - *What.* Decker and Kelley (1985), Griewank (1985), Reddien (1979), Schnabel and Frank (1984), Deuflhard's book
+     §3.3, Fischer, Izmailov and Solodov (2021), Allgower and Georg ch. 8.
+   - *Why.* Design 2's standing and the F4 verdict rest partly on reviews.
+   - *Acceptance.* Each is read and recorded. The task fails, and says so, if one of them analyses a corrector for a
+     nearly singular root whose reduced quadratic term vanishes that the designs above miss.
+   - *Depends on.* #527.
