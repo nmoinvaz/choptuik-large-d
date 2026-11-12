@@ -4,7 +4,9 @@ assembled at Re lambda, one f64 ulp up and two ulps up (CSolver.mode_matrix). Fo
 two-ulp change d2 is twice its one-ulp change d1; the entries where |d2 - 2 d1| > |d1| / 2 are counted, located by
 block of 4M rows and columns, and the largest is printed.
 
-    cd hp && python3 modecount_smooth.py STATE.npz M KF|none RE IM
+    cd hp && python3 modecount_smooth.py STATE.npz M KF|none RE IM [--joint]
+
+--joint prints the counted entries' (row block, column block) table, and within a block their field and tau lane.
 """
 import os
 import sys
@@ -13,10 +15,11 @@ import numpy as np
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from modecount_common import setup
-if len(sys.argv) != 6:
+args = [a for a in sys.argv[1:] if not a.startswith("--")]
+if len(args) != 5:
     sys.exit(__doc__)
-path, M, re0, im0 = sys.argv[1], int(sys.argv[2]), float(sys.argv[4]), float(sys.argv[5])
-kf = None if sys.argv[3] == "none" else int(sys.argv[3])
+path, M, re0, im0 = args[0], int(args[1]), float(args[3]), float(args[4])
+kf = None if args[2] == "none" else int(args[2])
 st = setup(path, M=M, threads=4, kf=kf, fmax=1e-15, log=lambda *a: None)
 def mat(re_):
     rh, rl, ih, il = st.c.mode_matrix(st.zh, st.zl, re_, im0)
@@ -43,3 +46,16 @@ if bad.sum():
     i = np.argmax(np.where(bad, np.abs(d1) / np.maximum(scale, 1e-300), 0))
     r, c = divmod(i, n)
     print(f"  largest: row {r}, col {c}: |A| {scale[r,c]:.2e}, |d1| {abs(d1[r,c]):.2e}, |d2| {abs(d2[r,c]):.2e}")
+    if "--joint" in sys.argv:
+        # the (row block, column block) pairs, and within a block of 4M the field (p, m, a, c = i // M) and the tau
+        # lane (i % M) of the rows and the columns (#612)
+        nb = (n + blk - 1) // blk
+        joint = np.zeros((nb, nb), dtype=int)
+        np.add.at(joint, (rows // blk, cols // blk), 1)
+        print(f"  (row block, column block) counts, {joint.sum()} in all:")
+        for a in range(nb):
+            print("    " + " ".join(f"{x:7d}" for x in joint[a]))
+        for lab, idx in (("rows", rows), ("cols", cols)):
+            w = idx % blk
+            print(f"  {lab} by field (p, m, a, c): {np.bincount(w // M, minlength=4)}; by tau lane: "
+                  f"{np.bincount(w % M, minlength=M)}")
