@@ -260,8 +260,12 @@ def main():
         print(f"  octo-double LU at z0 {time.time() - t1:.0f} s", flush=True)
         tau_r = add(o8(s.olu_solve(list(r0))), zero8(L), -1.0)      # -J^-1 r0, the real mode's first tangent
         if a.mode == "planted":
-            w = a.eps * f64(tau_r) / float(np.linalg.norm(f64(tau_r)))
-            zP = add(o8([w] + [np.zeros(L)] * 7), z0)
+            # w in eight parts, along tau0 itself: tau0 rounded to f64 is off by 1e-16 of it in strong directions,
+            # whose mixed curvature with tau0 reaches the weak rows (a first test with an f64 w: max|b| 2.7e-32 and a
+            # planted tangent of 1.4e-15 in Delta, against |w| 2.5e-17)
+            w8 = add(tau_r, zero8(L), a.eps / float(np.linalg.norm(f64(tau_r))))
+            w = f64(w8)
+            zP = add(w8, z0)
             FP = o8(s.residual_o(list(zP)))
             Fz = o8(s.residual_o(list(z0)))
             a8 = add(c8, FP, -1.0)                                    # F(zP) - c
