@@ -224,13 +224,15 @@ def main():
             r["draws"] = ds
             sd = float(np.std([x["darg"] for x in ds])) if draws > 1 else abs(ds[0]["darg"])
             dargs = ", ".join(f"{x['darg']:+.2e}" for x in ds)
-            print(f"  {draws} draws of one double-double rounding per entry: d arg {dargs} (spread {sd:.2e} rad)",
-                  flush=True)
+            r["floor"] = max(abs(x["darg"]) for x in ds)
+            print(f"  {draws} draws of one double-double rounding per entry: d arg {dargs} (spread {sd:.2e} rad, "
+                  f"largest {r['floor']:.2e})", flush=True)
         recs.append(r)
-    rec = dict(state=path, D=st.D, M=st.M, kf=st.kf, n=n, prec=prec, points=recs, planted=ok)
-    if opts.get("json"):
-        with open(opts["json"], "w") as fh:
-            json.dump(rec, fh, indent=1, default=float)
+        # the record after every point, so a stopped run keeps what it did
+        rec = dict(state=path, D=st.D, M=st.M, kf=st.kf, n=n, prec=prec, points=recs, planted=ok)
+        if opts.get("json"):
+            with open(opts["json"], "w") as fh:
+                json.dump(rec, fh, indent=1, default=float)
     print("check:", "pass" if ok else "FAIL", f"({time.time() - t0:.0f} s)")
     return 0 if ok else 1
 
