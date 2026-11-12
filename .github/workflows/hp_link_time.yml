@@ -1,0 +1,65 @@
+name: hp link time
+
+on:
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - ".github/workflows/hp_link_time.yml"
+
+jobs:
+  build:
+    name: windows ${{ matrix.linker }} ${{ matrix.profile }} run ${{ matrix.run }}
+    runs-on: windows-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        # link.exe is MSVC's linker; rust-lld.exe is LLVM's lld-link, shipped with the Rust toolchain
+        linker: [link.exe, rust-lld.exe]
+        # fat: hp's release profile (fat LTO, one codegen unit); thin: thin LTO, 16 codegen units
+        profile: [fat, thin]
+        # two runs of each to show the runners' spread
+        run: [1, 2]
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v7
+
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Install Python
+        uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"
+
+      # downloads are not part of the build time
+      - name: Fetch dependencies
+        working-directory: hp
+        run: cargo fetch
+
+      - name: Build hp
+        working-directory: hp
+        env:
+          LINKER: ${{ matrix.linker }}
+          PROFILE: ${{ matrix.profile }}
+        run: |
+          if [ "$LINKER" = "rust-lld.exe" ]; then
+            export CARGO_TARGET_X86_64_PC_WINDOWS_MSVC_LINKER=rust-lld.exe
+          fi
+          if [ "$PROFILE" = "thin" ]; then
+            export CARGO_PROFILE_RELEASE_LTO=thin CARGO_PROFILE_RELEASE_CODEGEN_UNITS=16
+          fi
+          start=$(date +%s)
+          cargo build --release --features python --timings
+          seconds=$(( $(date +%s) - start ))
+          ls -l target/release/_hpkernel.dll
+          echo "| $LINKER | $PROFILE | ${{ matrix.run }} | $seconds |" >> "$GITHUB_STEP_SUMMARY"
+          echo "build: $LINKER, $PROFILE, run ${{ matrix.run }}: $seconds s"
+
+      - name: Upload the timing report
+        uses: actions/upload-artifact@v7
+        with:
+          name: cargo-timing-${{ matrix.linker }}-${{ matrix.profile }}-${{ matrix.run }}
+          path: hp/target/cargo-timings/cargo-timing.html
