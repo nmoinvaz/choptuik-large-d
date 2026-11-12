@@ -2,18 +2,18 @@
 """Issue #396: hp's computed node and segment plan at a given M, printed to the bit, so that two machines' plans can be
 diffed entry by entry, and each planned Taylor step tested against its truncation target.
 
-    cd hp && python3 plan_print.py STATE.npz --M=48 [--kf=none|13] [--threads=N] [--json=OUT]
+    cd hp && python3 plan_print.py STATE.npz --M=48 [--kf=none|13] [--fmax=1e-15] [--threads=N] [--json=OUT]
 
 The state is resampled to M tau points and its nodes fitted as hp/modecount_common.prepare does (fit_nodes), in a
 fresh cache directory, so nothing an earlier run saved on this machine is read. It is then re-converged by Newton (as
 setup does, without the complex solver), and planned by Solver.plan(z, 1e-32, 0.05), the plan every computed layout
-uses. Printed and stored: the nodes, ks, and every segment's x points as hex floats, the plan's sha256 over those
+uses. A state that does not converge below --fmax is refused (exit 1). Printed and stored: the nodes, ks, and every segment's x points as hex floats, the plan's sha256 over those
 bytes, and the solution's |F|.
 
 Soundness: each planned step is taken once and as two half steps from the node state at the segment's start
 (Solver.integrate, double-double), and their relative difference is the step's truncation, to be compared with the
 target 1e-32 (it meets it when every step is within 100 times it). The end of each segment is compared with the next
-node's state (the layout check: it must agree to about |F|).
+node's state (the layout check: within 100 |F| + 1e-20).
 
 Control, every run: the plan is made again with the tolerance 64 ulps above 1e-32 (a step goes like tol^(1/k), so
 that moves a step by about two ulps, the size of a libm pow difference), and its hash must differ from the plain
@@ -34,6 +34,7 @@ sys.path.insert(0, HERE)
 
 TOL = 1e-32
 HMAX = 0.05
+FMAX = 1e-15         # the solution's residual (--fmax), as the mode-count runs on resampled D 30 states (#518)
 
 
 def plan_hash(segs):
@@ -46,10 +47,11 @@ def main():
     if not args or "M" not in opts:
         sys.exit(__doc__)
     import modecount_common as mc
-    from hpkernel.driver import make_solver, newton_solve
+    from hpkernel.driver import lm_solve, make_solver, newton_solve
     path, M = args[0], int(opts["M"])
     kf = "default" if "kf" not in opts else (None if opts["kf"] == "none" else int(opts["kf"]))
     threads = int(opts.get("threads", 1))
+    fmax = float(opts.get("fmax", FMAX))
     t0 = time.time()
     mc.DATA = tempfile.mkdtemp(prefix="plan_print_")          # a fresh cache: no earlier state of this machine is read
     zh, zl, meta, kf, _ = mc.prepare(path, M, threads, kf, print, True, None)
@@ -57,9 +59,19 @@ def main():
                     ks=meta.get("ks", 100), threads=threads, kfreeze=kf)
     s.set_segs(s.plan(zh, zl, TOL, HMAX))
     F = mc.resid(s, zh, zl)
-    if F > 1e-24:
-        zh, zl, _ = newton_solve(s, zh, zl, tol=1e-26, it_max=12, verbose=False)
-        F = mc.resid(s, zh, zl)
+    if F > fmax:
+        # as modecount_common.setup: Newton, then Levenberg-Marquardt where Newton stops above FMAX
+        zn, ln_, _ = newton_solve(s, zh, zl, tol=1e-24, it_max=12, verbose=False)
+        Fn = mc.resid(s, zn, ln_)
+        if Fn <= fmax:
+            zh, zl, F = zn, ln_, Fn
+        else:
+            print(f"  |F| {Fn:.1e} after Newton: Levenberg-Marquardt")
+            zh, zl, _ = lm_solve(s, zh, zl, tol=1e-27, it_max=20, verbose=False, newton_after=1e-22)
+            F = mc.resid(s, zh, zl)
+    if not F <= fmax:
+        print(f"the state does not converge in this layout: |F| {F:.1e} > {fmax:g}; no plan is printed")
+        return 1
     tol = TOL
     segs = s.plan(zh, zl, tol, HMAX)
     # a step goes like tol^(1/k), k about kt = 36, so 64 ulps of tol move a step by about two ulps, the size of a libm
@@ -98,7 +110,7 @@ def main():
             nh, nl = blk(i + 1)
             gap = float(np.max(np.abs((yh - nh) + (yl - nl)))) / float(np.max(np.abs(nh)))
             line["gap_to_next_node"] = gap
-            layout_ok = layout_ok and gap <= max(1e3 * F, 1e-20)
+            layout_ok = layout_ok and gap <= 100 * F + 1e-20
         rows.append(line)
         print(f"  segment {i}: largest step truncation {seg_worst:.1e}"
               + (f", end against node {i + 1} {line['gap_to_next_node']:.1e}" if "gap_to_next_node" in line else ""))
