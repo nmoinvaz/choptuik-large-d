@@ -15,7 +15,7 @@ rebuilt layout (up to N Newton steps, default 4; the up6 states at D = 27-35 com
 not change). States whose residual still exceeds --fmax (default 1e-20) are skipped and recorded as such.
 
     python3 gamma_dd.py out.jsonl STATE.npz [STATE.npz ...] [--threads=N] [--M48 | --Mhi=64] [--kf=none|13|auto] [--fmax=1e-20] [--polish[=N]]
-        [--series_override] [--mutate=old_rule|no_tail_gate]
+        [--newton_it=12] [--lm_it=20] [--series_override] [--mutate=old_rule|no_tail_gate]
 
 --M48 (or --Mhi=N) also resamples the state to M = 48 (N) tau points, re-converges it and repeats the root search,
 bracketed afresh from the formula (self-convergence; the record's M48 field). The M = 48 solve uses the kfreeze-13 cut
@@ -131,18 +131,19 @@ def resample_hi(zh, zl, M0, M, K, kf, mutate=""):
     return np.ascontiguousarray(hh), np.ascontiguousarray(hl)
 
 
-def solve_hi(s, zh, zl, F_ref, fmax, verbose=True, mutate=""):
+def solve_hi(s, zh, zl, F_ref, fmax, verbose=True, mutate="", newton_it=12, lm_it=20):
     """Re-converge a resampled state on the solver s. Newton to tol 1e-40, so it stops at the floor, where the line
     search finds no step that lowers |F| (as #266's R2 path), then Levenberg-Marquardt if that is above fmax.
     mutate=old_rule: tol max(10 F_ref, 1e-27), the rule before #271. Returns zh, zl and a record: |F|, the steps, the
-    stop, and the Newton step at the solution (its Delta component est, the linearised Delta correction)."""
+    stop, and the Newton step at the solution (its Delta component est, the linearised Delta correction). newton_it and
+    lm_it are the Newton and Levenberg-Marquardt iteration limits (--newton_it, --lm_it)."""
     tol = max(10 * F_ref, 1e-27) if mutate == "old_rule" else 1e-40
-    zh, zl, hist = newton_solve(s, zh, zl, tol=tol, it_max=12, verbose=verbose)
+    zh, zl, hist = newton_solve(s, zh, zl, tol=tol, it_max=newton_it, verbose=verbose)
     rec = dict(tol=tol, newton=sum("lam" in h for h in hist))
     if hist[-1]["F"] > fmax:
         if verbose:
             print("  Newton stalled; Levenberg-Marquardt", flush=True)
-        zh, zl, hist = lm_solve(s, zh, zl, tol=tol, it_max=20, verbose=verbose, newton_after=1e-22)
+        zh, zl, hist = lm_solve(s, zh, zl, tol=tol, it_max=lm_it, verbose=verbose, newton_after=1e-22)
         rec["lm"] = sum(1 for h in hist if h.get("lm"))
         rec["newton_after_lm"] = sum("lam" in h for h in hist)
     last = hist[-1]
@@ -231,7 +232,8 @@ def main():
             else:
                 if why:
                     hi["override"] = [why]
-                z48h, z48l, sol = solve_hi(s48, z48h, z48l, F, fmax, verbose=True, mutate=mutate)
+                z48h, z48l, sol = solve_hi(s48, z48h, z48l, F, fmax, verbose=True, mutate=mutate,
+                                           newton_it=int(opts.get("newton_it", 12)), lm_it=int(opts.get("lm_it", 20)))
                 F48, est, floor = sol.pop("F"), sol.pop("est"), sol.pop("floor")
                 log(f"  M = {Mhi}: |F| {F48:.1e} ({sol['stop']}); Newton step at the solution: Delta {est:+.2e}, "
                     f"max {sol['step']:.1e}; floor check {floor} (|est| <= {EST_MAX:.0e})")
