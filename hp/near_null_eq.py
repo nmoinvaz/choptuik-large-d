@@ -87,15 +87,8 @@ def ruiz(A, tol, dr=None, dc=None, cols=True, itmax=1000):
     return dr, dc, it, float(err)
 
 
-def curtis_reid(A, cols=True, floor=0.0):
-    """Curtis and Reid's scaling of the nonnegative f64 matrix A: (D_r, D_c) = (e^-rho, e^-gamma) with rho, gamma
-    minimizing the sum over the nonzeros of (log a_ij - rho_i - gamma_j)^2. cols=False fits rho alone (gamma = 0).
-    floor > 0 leaves out of the fit every entry below floor times the smaller of its row's and its column's max-norm,
-    so that entries negligible in both do not steer the scales (#580); each row's and column's largest entry is kept."""
-    P = A > 0
-    if floor > 0:
-        r, c = A.max(axis=1), A.max(axis=0)
-        P &= A >= floor * np.minimum(r[:, None], c[None, :])
+def _cr_fit(A, P, cols):
+    """Curtis and Reid's least-squares fit of log a_ij = rho_i + gamma_j over the entries in P: (e^-rho, e^-gamma)"""
     lA = np.where(P, np.log(np.where(P, A, 1.0)), 0.0)
     nr, nc = P.sum(axis=1), P.sum(axis=0)
     if not cols:
@@ -105,6 +98,60 @@ def curtis_reid(A, cols=True, floor=0.0):
     x = np.linalg.lstsq(N, np.concatenate([lA.sum(axis=1), lA.sum(axis=0)]), rcond=None)[0]
     n = A.shape[0]
     return np.exp(-x[:n]), np.exp(-x[n:])
+
+
+FLOOR_IT = 20
+
+
+def median_polish(A, P, cols=True, it=30):
+    """Tukey's median polish of log a_ij over the entries in P: (e^-rho, e^-gamma) with rho_i, gamma_j the row and
+    column effects; covariant under row and column scaling, and robust to a minority of outlying entries"""
+    L = np.where(P, np.log(np.where(P, A, 1.0)), np.nan)
+    rho, gam = np.zeros(A.shape[0]), np.zeros(A.shape[1])
+    for _ in range(it):
+        R = L - rho[:, None] - gam[None, :]
+        dr = np.nanmedian(R, axis=1)
+        rho += np.where(np.isfinite(dr), dr, 0.0)
+        if cols:
+            R = L - rho[:, None] - gam[None, :]
+            dc = np.nanmedian(R, axis=0)
+            gam += np.where(np.isfinite(dc), dc, 0.0)
+    return np.exp(-rho), np.exp(-gam)
+
+
+def curtis_reid(A, cols=True, floor=0.0, legacy_floor=False):
+    """Curtis and Reid's scaling of the nonnegative f64 matrix A: (D_r, D_c) = (e^-rho, e^-gamma) with rho, gamma
+    minimizing the sum over the nonzeros of (log a_ij - rho_i - gamma_j)^2. cols=False fits rho alone (gamma = 0).
+    floor > 0 leaves out of the fit the entries negligible in the equilibrated matrix B = D_r A D_c: those below floor
+    times the smaller of their row's and column's max-norm in B. The first set comes from Tukey's median polish
+    (covariant under scaling, and robust to a minority of negligible entries), then Curtis-Reid is refitted until the
+    set no longer changes. B, and so
+    the set, is the same for A and for any row and column scaling of A, so the result scales with it (#580, #613);
+    each row's and column's largest entry is kept. legacy_floor=True applies the floor to A's own max-norms, the rule
+    before #613, which a column scaling of A changes (the control of cr_floor_check.py's invariance test)."""
+    P0 = A > 0
+    if floor > 0 and legacy_floor:
+        r, c = A.max(axis=1), A.max(axis=0)
+        return _cr_fit(A, P0 & (A >= floor * np.minimum(r[:, None], c[None, :])), cols)
+    if floor <= 0:
+        return _cr_fit(A, P0, cols)
+    # the first set from Tukey's median polish of log a_ij over the nonzeros: its row and column effects absorb any
+    # row and column scaling exactly, and a minority of negligible entries cannot move a median; then Curtis-Reid
+    # is refitted on the entries not negligible in its own B
+    mdr, mdc = median_polish(A, P0, cols)
+    B = A * mdr[:, None] * mdc[None, :]
+    r, c = B.max(axis=1), B.max(axis=0)
+    P = P0 & (B >= floor * np.minimum(r[:, None], c[None, :]))
+    dr, dc = _cr_fit(A, P, cols)
+    for _ in range(FLOOR_IT):
+        B = A * dr[:, None] * dc[None, :]
+        r, c = B.max(axis=1), B.max(axis=0)
+        Pn = P0 & (B >= floor * np.minimum(r[:, None], c[None, :]))
+        if np.array_equal(Pn, P):
+            break
+        P = Pn
+        dr, dc = _cr_fit(A, P, cols)
+    return dr, dc
 
 
 def scalings(A, tol, cols=True, floor=0.0):
