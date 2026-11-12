@@ -185,29 +185,35 @@ Only the last node is felt (`I543-win2/` and `I544-win2/` at adbf158f, `I553-win
 `I501-mac/` at 650c9bf8). The outer layout is better conditioned, but its start is not accurate enough for its weakest
 direction. #562 refines the start's horizon rows before the polish.
 
-**The freeze projector's rounding.** The frozen rows apply the kfreeze projector to p1, and main forms it in
-double-double. With the projector in octo-double (#523's cadcaf1, error 1.15×10⁻¹³²), the chain's states are
-1.6–1.7×10⁻³⁴ off their rows in the horizon p rows k ≤ 3, at every D from 215 to 242.36. On main's rounded rows they are
-at 5×10⁻³⁶ to 8×10⁻³⁸.
+**The freeze projector's rounding.** The frozen rows apply the kfreeze projector to p1. Until #523 hp formed it in
+double-double, and every chain state was solved on those rounded rows. With the exact projector (main since #523,
+c2be1be, error 1.15×10⁻¹³²) the chain's states are 1.6–1.7×10⁻³⁴ off their rows in the horizon p rows k ≤ 3, at every D
+from 215 to 242.36. On the rounded rows they are at 5×10⁻³⁶ to 8×10⁻³⁸.
 - At the 0.975 start, three of the four weak σ come from that rounding: 7.4×10⁻³⁵, 7.4×10⁻³⁵ and 1.84×10⁻³⁴ on main,
-  against 2.8×10⁻³⁹ to 1.9×10⁻³⁷ on cadcaf1 (#562; `I562-mac/` at 690c41a9). The raw σ near 10⁻³⁴ of the outer-layout
-  ladders above carry it.
+  against 2.8×10⁻³⁹ to 1.9×10⁻³⁷ with the exact projector (#562; `I562-mac/` at 690c41a9). The raw σ near 10⁻³⁴ of the
+  outer-layout ladders above carry it.
 - The pinned step to the exact rows lies on the four weak directions (share 1.0000), and its Δ part grows by about 0.8
   in ln per unit of D (#589; `I589-mac/` at 420f201a):
 
-| D | Δ part of the step to the exact rows | chain_fit row's quoted err |
-|---|---|---|
-| 215.00 | −4.5×10⁻¹⁹ | 3.4×10⁻¹¹ |
-| 225.13 | −7.8×10⁻¹⁶ | 3.8×10⁻¹¹ |
-| 235.13 | −3.6×10⁻¹² | 2.6×10⁻¹⁴ |
-| 240.03 | −2.0×10⁻¹⁰ | none |
-| 242.36 | +2.1×10⁻⁹ | none |
+| D | first order (the step's Δ part) | measured (exact − rounded, both polishes converged) | ratio |
+|---|---|---|---|
+| 215.00 | −4.537×10⁻¹⁹ | −4.547×10⁻¹⁹ | 1.002 |
+| 225.13 | −7.818×10⁻¹⁶ | −7.757×10⁻¹⁶ | 0.992 |
+| 235.13 | −3.557×10⁻¹² | −3.531×10⁻¹² | 0.993 |
+| 240.03 | −2.04×10⁻¹⁰ | (#595, running) | |
+| 242.36 | +2.15×10⁻⁹ | not reached: the polish on the exact rows does not converge (#562) | |
 
-These are first-order figures. No state lies inside its chord window, so none is a measured shift. On the rounded rows,
-though, #562's homotopy traces stayed straight in Δ well past their chord windows. **Discrepancy, open:** if the
-first-order figure holds, the chain_fit rows of `hp/data/delta_all.csv` are off the exact problem's Δ from about D 233.6
-on. At D 235.13 that is the 12th decimal, 140 times the row's quoted err. #595 measures the shift at D 235 and 240 by
-tracing to the exact rows, and the rows stay as quoted until then.
+The measured shifts are #595's (`I595-mac/` at 2b818f6f, `hp/delta_diff.py`). Each is a direct polish of the chain's
+state on both projectors, and their difference cancels the reload's own offset. So the first-order figure holds to
+1% wherever it was tested, though no state lay inside its chord window: the window measures the start, not Newton's
+basin. On the rounded rows, too, #562's homotopy traces stayed straight in Δ far past their chord windows.
+
+**The table's error bars include it.** The chain_fit rows of `hp/data/delta_all.csv` solve the rounded rows, so from
+D 215 on each row's err is at least this shift, log-linear in |shift| between the points of
+`hp/data/projector_shift.csv` (0b67ed9). It is the largest err from D 232.63 on: 4.3×10⁻¹³ there, 3.5×10⁻¹² at
+D 235.13 (where the runs' spread was 2.6×10⁻¹⁴), and 2.6×10⁻⁹ at D 242.57. Past D 235.13 the err rests on first-order
+figures (err_kind "projector first order"). The values are unchanged until a chain on main's exact projector, from
+D 225 on, replaces them (Nathan's decision, 2026-11-12).
 
 **The weak σ oscillate in D.** The equilibrated σ₁ and σ₂ oscillate with a period that shortens as D falls: 2.715 at
 D 232.6, 2.525 at 221.6 and 2.440 at 212.8 (#525; `I525-win2/` at 5037ec07). σ₃ and σ₄ have periods of 2.13–2.14
