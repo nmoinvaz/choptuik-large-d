@@ -55,6 +55,8 @@ mod qd_residual;
 mod jvp_tests;
 #[cfg(test)]
 mod mode_tests;
+#[cfg(test)]
+mod freeze_tests;
 
 #[cfg(feature = "python")]
 mod python;

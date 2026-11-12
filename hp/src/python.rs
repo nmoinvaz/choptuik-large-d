@@ -446,8 +446,10 @@ impl Solver {
     }
 }
 
-fn freeze_pair<const B: usize>(p: &Option<(Vec<f64>, Vec<f64>)>) -> Option<(DMat<B>, DMat<B>)> {
-    p.as_ref().map(|(h, l)| {
+/// (Pi_low, Pi_high) from plow, which must be the projector onto the odd harmonics k <= kfreeze (model::check_freeze):
+/// the frozen rows are multishoot's projected rows at that cutoff
+fn freeze_pair<const B: usize>(p: &Option<(Vec<f64>, Vec<f64>)>) -> PyResult<Option<(DMat<B>, DMat<B>)>> {
+    let pair = p.as_ref().map(|(h, l)| {
         let m = 8 * B;
         let lo = DMat::<B>::from_rows(h, l);
         // Pi_high = I - Pi_low
@@ -461,7 +463,11 @@ fn freeze_pair<const B: usize>(p: &Option<(Vec<f64>, Vec<f64>)>) -> Option<(DMat
             }
         }
         (lo, DMat::<B>::from_rows(&hh, &hl))
-    })
+    });
+    if let Some((lo, _)) = &pair {
+        model::check_freeze(lo).map_err(PyValueError::new_err)?;
+    }
+    Ok(pair)
 }
 
 macro_rules! make_ctx {
@@ -476,7 +482,7 @@ macro_rules! make_ctx {
                 kt: $kt,
                 kc: $kc,
                 ks: $ks,
-                freeze: freeze_pair::<$bb>(&$plow),
+                freeze: freeze_pair::<$bb>(&$plow)?,
                 match_node: $mn,
                 lam: DD::ZERO,
                 mutate: 0,

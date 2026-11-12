@@ -30,7 +30,8 @@ use multidouble::native::{Dtn, OV};
 use multidouble::precision::{Double, Precision};
 use multidouble::simd::Native;
 use multishoot::jacobian::Seed;
-use multishoot::{Equations, ExtraRow, Rate, Shooting, Work};
+use multishoot::periodic::Parity;
+use multishoot::{Equations, ExtraRow, ProjectedRows, Rate, Shooting, Work};
 use crate::field::FieldSolve;
 use rayon::prelude::*;
 use std::any::Any;
@@ -54,7 +55,9 @@ pub struct Ctx<const B: usize> {
     /// With it, the horizon block's p rows become Pi_low (p mismatch) + Pi_high p1: the high harmonics of the p
     /// matching are dropped and the high harmonics of p1 pinned to zero instead. Those p1 harmonics reach the matching
     /// point only through exponentially small couplings (the near-null directions), and their effect on Delta is
-    /// below 1e-12 per unit change.
+    /// below 1e-12 per unit change. The rows are multishoot's projected rows (`Shooting::project_rows`, the cutoff
+    /// read from Pi_low by `kfreeze_of`), whose projector is formed in octo-double and read in each solve's
+    /// precision; these double-double matrices give the cutoff and serve hp/modecount_cx.
     pub freeze: Option<(DMat<B>, DMat<B>)>,
     /// Index of the node where the outward integration from the centre meets the inward integration from the
     /// horizon side. Segments b <= match_node run outward (node b-1 -> node b); segments b > match_node run inward
@@ -188,8 +191,37 @@ impl<const B: usize> Ctx<B> {
         s.segs = self.segs.clone();
         s.match_node = self.match_node;
         s.extra = vec![ExtraRow { terms: (0..Self::M).map(|i| (i, self.phase.get(i))).collect(), rhs: DD::ZERO }];
+        if let Some((lo, _)) = &self.freeze {
+            // the horizon block's p rows, p1 pinned to the high harmonics
+            s.project_rows(self.k(), 0, 0, Parity::Odd, kfreeze_of(lo)).expect("the horizon block's p rows");
+        }
         s
     }
+}
+
+/// The cutoff k_max of Pi_low, the projector onto the odd harmonics k <= k_max of a field on the M points of the half
+/// grid: each harmonic adds 2 / M to every diagonal entry, so the trace is twice their number and
+/// k_max = 2 round(tr / 2) - 1.
+pub fn kfreeze_of<const B: usize>(lo: &DMat<B>) -> usize {
+    let tr: f64 = (0..Ctx::<B>::M).map(|i| lo.cols[i].get(i).hi).sum();
+    (2 * (tr / 2.0).round() as usize).max(1) - 1
+}
+
+/// The cutoff of Pi_low after checking that it is multishoot's projector onto the odd harmonics k <= k_max
+/// (`ProjectedRows`, formed in octo-double) to double-double rounding, 1e-30 per entry: the frozen rows use that
+/// projector, not this matrix.
+pub fn check_freeze<const B: usize>(lo: &DMat<B>) -> Result<usize, String> {
+    let m = Ctx::<B>::M;
+    let kf = kfreeze_of(lo);
+    let p = ProjectedRows::new(m, 0, 0, 0, Parity::Odd, kf);
+    let worst = (0..m)
+        .flat_map(|i| (0..m).map(move |j| (i, j)))
+        .map(|(i, j)| (lo.cols[j].get(i) - p.entry::<Double>(true, i, j, false)).hi.abs())
+        .fold(0.0, f64::max);
+    if worst > 1e-30 || worst.is_nan() {
+        return Err(format!("plow is not the projector onto the odd harmonics k <= {kf} (largest difference {worst:.1e})"));
+    }
+    Ok(kf)
 }
 
 #[inline(always)]
@@ -954,77 +986,7 @@ impl<const B: usize> Equations<B> for Dss<'_, B> {
 }
 
 // ---------------------------------------------------------------------------------------------------------------
-// hp's freeze projection (Ctx::freeze) on the engine's results
-// ---------------------------------------------------------------------------------------------------------------
-
-/// a field from M scalars of a precision (their parts as they are)
-fn field_of<P: Precision<Native>, const B: usize>(v: &[P::Scalar]) -> Fl<P::V, B> {
-    let parts: Vec<Vec<f64>> = (0..P::PARTS).map(|q| v.iter().map(|&x| P::part(x, q)).collect()).collect();
-    P::load_field(&parts.iter().map(|p| p.as_slice()).collect::<Vec<_>>())
-}
-
-/// the M rows of the horizon block's p, Pi_low d + Pi_high y, with d the rows' mismatch and y the p1 field: rows
-/// r0..r0 + M of f
-fn freeze_rows<P: Precision<Native>, const B: usize>(ctx: &Ctx<B>, f: &mut [P::Scalar], y: &Fl<P::V, B>) {
-    if let Some((lo, hi)) = &ctx.freeze {
-        let m = Ctx::<B>::M;
-        let r0 = ctx.k() * 4 * m;
-        let d = lo.apply(&field_of::<P, B>(&f[r0..r0 + m])) + hi.apply(y);
-        for i in 0..m {
-            f[r0 + i] = P::field_get(&d, i);
-        }
-    }
-}
-
-/// The freeze projection on a Jacobian or mode matrix in the parts of P (column-major, ld): the horizon block's p
-/// rows of its input columns (`cols`) times Pi_low, -Pi_low on the target node's p and +Pi_high on p1, where those
-/// rows had the target's -1 and nothing (as model::jacobian formed them before the engine)
-fn freeze_matrix<P: Precision<Native>, const B: usize>(ctx: &Ctx<B>, c: &mut [Vec<f64>], ld: usize, cols: &[usize]) {
-    let Some((lo, hi)) = &ctx.freeze else { return };
-    let m = Ctx::<B>::M;
-    let r0 = ctx.k() * 4 * m;
-    for &cj in cols {
-        let o = cj * ld + r0;
-        let t = P::load_field::<B>(&c.iter().map(|p| &p[o..o + m]).collect::<Vec<_>>());
-        let e = lo.apply(&t);
-        for i in 0..m {
-            let v = P::field_get(&e, i);
-            for (q, cq) in c.iter_mut().enumerate() {
-                cq[o + i] = P::part(v, q);
-            }
-        }
-    }
-    let zero = P::from_raw(&vec![0.0; P::PARTS]);
-    let tg = ctx.block_target(ctx.k());
-    for r in 0..m {
-        for j in 0..m {
-            for (idx, v) in [((tg + j) * ld + r0 + r, zero + (-P::from_dd(lo.cols[j].get(r)))), (j * ld + r0 + r, zero + P::from_dd(hi.cols[j].get(r)))] {
-                for (q, cq) in c.iter_mut().enumerate() {
-                    cq[idx] = P::part(v, q);
-                }
-            }
-        }
-    }
-}
-
-/// the horizon block's input columns: m_h, a_h, and Delta when the matrix has it
-fn horizon_cols<const B: usize>(ctx: &Ctx<B>, delta: bool) -> Vec<usize> {
-    let l = ctx.len();
-    (ctx.off_mh()..ctx.off_mh() + 2 * Ctx::<B>::M).chain(if delta { Some(l - 1) } else { None }).collect()
-}
-
-/// freeze_matrix on an f64 matrix: each entry as a double-double with lo zero, rounded back to f64
-fn freeze_f64<const B: usize>(ctx: &Ctx<B>, c: &mut Vec<f64>, ld: usize) {
-    if ctx.freeze.is_none() {
-        return;
-    }
-    let mut parts = vec![std::mem::take(c), vec![0.0; ld * ctx.len()]];
-    freeze_matrix::<Double, B>(ctx, &mut parts, ld, &horizon_cols(ctx, true));
-    *c = parts.swap_remove(0);
-}
-
-// ---------------------------------------------------------------------------------------------------------------
-// residual, Jacobian (multishoot's, with hp's freeze projection)
+// residual, Jacobian (multishoot's)
 // ---------------------------------------------------------------------------------------------------------------
 
 pub(crate) fn delta_of(zh: &[f64], zl: &[f64]) -> DD {
@@ -1048,8 +1010,7 @@ fn split(f: &[DD]) -> (Vec<f64>, Vec<f64>) {
 pub fn residual<const B: usize>(ctx: &Ctx<B>, zh: &[f64], zl: &[f64], par: bool) -> Result<(Vec<f64>, Vec<f64>), String> {
     let sh = ctx.shooting();
     let z = [zh, zl];
-    let mut f = guard(|| sh.residual::<Double>(&z, par))?;
-    freeze_rows::<Double, B>(ctx, &mut f, &ctx.fld(zh, zl, 0));
+    let f = guard(|| sh.residual::<Double>(&z, par))?;
     Ok(split(&f))
 }
 
@@ -1064,21 +1025,15 @@ pub fn residual_jet<const N: usize, const B: usize>(ctx: &Ctx<B>, zs: &[(&[f64],
     Ok(f.iter().map(|v| split(v)).collect())
 }
 
-/// residual_jet in the precision P on the engine's problem sh (its control set by the caller): the engine's jet
-/// residual with hp's freeze projection, each coefficient's p1 read as the engine reads z_k
+/// residual_jet in the precision P on the engine's problem sh (its control set by the caller)
 pub(crate) fn residual_jet_p<P: Precision<Native>, const N: usize, const B: usize>(
-    ctx: &Ctx<B>,
+    _ctx: &Ctx<B>,
     sh: &Shooting<Dss<'_, B>, B>,
     zs: &[Vec<&[f64]>],
     par: bool,
     nout: usize,
 ) -> Result<Vec<Vec<P::Scalar>>, String> {
-    let mut f = guard(|| sh.residual_jet::<P, N>(zs, par, nout))?;
-    for (k, fk) in f.iter_mut().enumerate() {
-        let y = if k < zs.len() { sh.load::<P>(&zs[k], 0) } else { Fl::zero() };
-        freeze_rows::<P, B>(ctx, fk, &y);
-    }
-    Ok(f)
+    guard(|| sh.residual_jet::<P, N>(zs, par, nout))
 }
 
 /// Exact Jacobian dF/dz by forward-mode duals, column-major with leading dimension ld_for(L): (hi, lo, ld).
@@ -1089,21 +1044,14 @@ pub fn jacobian<const B: usize>(ctx: &Ctx<B>, zh: &[f64], zl: &[f64], par: bool)
     Ok((jh, jl, ld))
 }
 
-/// The exact Jacobian in the precision P on the engine's problem sh, with hp's freeze projection: (PARTS part
-/// arrays, ld)
-pub(crate) fn jacobian_p<P: Precision<Native>, const B: usize>(ctx: &Ctx<B>, sh: &Shooting<Dss<'_, B>, B>, z: &[&[f64]], par: bool) -> Result<(Vec<Vec<f64>>, usize), String> {
-    let (mut c, ld) = guard(|| sh.jacobian::<P>(z, par))?;
-    freeze_matrix::<P, B>(ctx, &mut c, ld, &horizon_cols(ctx, true));
-    Ok((c, ld))
+/// The exact Jacobian in the precision P on the engine's problem sh: (PARTS part arrays, ld)
+pub(crate) fn jacobian_p<P: Precision<Native>, const B: usize>(_ctx: &Ctx<B>, sh: &Shooting<Dss<'_, B>, B>, z: &[&[f64]], par: bool) -> Result<(Vec<Vec<f64>>, usize), String> {
+    guard(|| sh.jacobian::<P>(z, par))
 }
 
-/// The residual in the precision P on the engine's problem sh, with hp's freeze projection
-pub(crate) fn residual_p<P: Precision<Native>, const B: usize>(ctx: &Ctx<B>, sh: &Shooting<Dss<'_, B>, B>, z: &[&[f64]], par: bool) -> Result<Vec<P::Scalar>, String> {
-    let mut f = guard(|| sh.residual::<P>(z, par))?;
-    if z.len() == P::PARTS {
-        freeze_rows::<P, B>(ctx, &mut f, &sh.load::<P>(z, 0));
-    }
-    Ok(f)
+/// The residual in the precision P on the engine's problem sh
+pub(crate) fn residual_p<P: Precision<Native>, const B: usize>(_ctx: &Ctx<B>, sh: &Shooting<Dss<'_, B>, B>, z: &[&[f64]], par: bool) -> Result<Vec<P::Scalar>, String> {
+    guard(|| sh.residual::<P>(z, par))
 }
 
 /// The Jacobian in plain f64 (the same columns with `Fu` lanes: constants and the base state rounded to f64, the
@@ -1124,23 +1072,22 @@ pub fn jacobian_fun<const N: usize, const B: usize>(ctx: &Ctx<B>, zh: &[f64], zl
     jacobian_f64_lanes::<Fun<N>, B>(ctx, zh, zl, par)
 }
 
-/// The f64 Jacobian with T::NT tangents per evaluation (TAN_F64 lanes): multishoot's `jacobian_f64`, with hp's
-/// freeze projection; with Ctx::f64_dd's HDD_BLOCK, HDD_LASTSEG or HDD_DTN some blocks' columns on other lanes
+/// The f64 Jacobian with T::NT tangents per evaluation (TAN_F64 lanes): multishoot's `jacobian_f64`; with
+/// Ctx::f64_dd's HDD_BLOCK, HDD_LASTSEG or HDD_DTN some blocks' columns on other lanes
 /// (`jacobian_f64_hdd`).
 fn jacobian_f64_lanes<T: Lane, const B: usize>(ctx: &Ctx<B>, zh: &[f64], zl: &[f64], par: bool) -> Result<(Vec<f64>, usize), String> {
     if ctx.f64_dd & (HDD_BLOCK | HDD_LASTSEG | HDD_DTN) != 0 {
         return jacobian_f64_hdd::<T, B>(ctx, zh, zl, par);
     }
     let sh = ctx.shooting();
-    let (mut c, ld) = guard(|| sh.jacobian_f64::<T>(&[zh, zl], par))?;
-    freeze_f64(ctx, &mut c, ld);
-    Ok((c, ld))
+    guard(|| sh.jacobian_f64::<T>(&[zh, zl], par))
 }
 
 /// The f64 Jacobian with some blocks' column tasks on other lanes (Ctx::f64_dd): `Du` (double-double, rounded to f64
 /// when stored) for the horizon block (HDD_BLOCK) or the last segment (HDD_LASTSEG), `Dtn<4>` for the horizon block
 /// (HDD_DTN), the other tasks with T in groups of T::NT; every column from multishoot's column evaluations, assembled
-/// as `jacobian_f64` does, the freeze projection on the double-double columns before their rounding.
+/// as `jacobian_f64` does, with its projected rows (multishoot's crate-private `project_f64_block`, here through
+/// `ProjectedRows`) formed on the double-double columns of `Du` lanes before their rounding.
 fn jacobian_f64_hdd<T: Lane, const B: usize>(ctx: &Ctx<B>, zh: &[f64], zl: &[f64], par: bool) -> Result<(Vec<f64>, usize), String> {
     let l = ctx.len();
     let m = Ctx::<B>::M;
@@ -1164,50 +1111,53 @@ fn jacobian_f64_hdd<T: Lane, const B: usize>(ctx: &Ctx<B>, zh: &[f64], zl: &[f64
     }
     let f64_cols = |c: Vec<Vec<f64>>| -> Vec<Vec<DD>> { c.into_iter().map(|v| v.into_iter().map(DD::from_f64).collect()).collect() };
     let unit = |u: &(u8, Vec<(usize, Seed)>)| -> Vec<Vec<DD>> {
-        let mut cols = match u.0 {
+        match u.0 {
             1 => vec![sh.jac_column::<Double>(&z, &g, &prep, u.1[0])],
             2 => f64_cols(sh.jac_columns_f64::<Dtn<4>>(&z, &g, &prep, &u.1)),
             _ => f64_cols(sh.jac_columns_f64::<T>(&z, &g, &prep, &u.1)),
-        };
-        if let (true, Some((lo, _))) = (u.1[0].0 == k, &ctx.freeze) {
-            for col in cols.iter_mut() {
-                let (h, lw): (Vec<f64>, Vec<f64>) = col[..m].iter().map(|v| (v.hi, v.lo)).unzip();
-                let t = lo.apply(&Fl::<DV, B>::load(&h, &lw));
-                for (i, v) in col[..m].iter_mut().enumerate() {
-                    *v = t.get(i);
-                }
-            }
         }
-        cols
     };
     let gc: Vec<Vec<Vec<DD>>> = guard(|| Ok(if par { units.par_iter().map(unit).collect() } else { units.iter().map(unit).collect() }))?;
     let cols: Vec<Vec<DD>> = gc.into_iter().flatten().collect();
     let mut jh = vec![0.0; ld * l];
+    // the double-double columns of the projected blocks' tasks, by unknown
+    let mut dd_col: std::collections::HashMap<usize, &Vec<DD>> = std::collections::HashMap::new();
     for (&(b, seed), col) in tasks.iter().zip(&cols) {
         let c = sh.seed_columns(b, seed)[0];
         for (r, v) in col.iter().enumerate() {
             jh[c * ld + b * 4 * m + r] = v.hi;
         }
+        if sh.projected.iter().any(|p| p.block == b) {
+            dd_col.insert(c, col);
+        }
     }
     for b in 0..=k {
         let t = ctx.block_target(b);
         for r in 0..4 * m {
-            if b == k && r < m && ctx.freeze.is_some() {
-                continue;
-            }
             let idx = (t + r) * ld + b * 4 * m + r;
             jh[idx] = (DD { hi: jh[idx], lo: 0.0 } - DD::ONE).hi;
         }
     }
-    if let Some((lo, hi)) = &ctx.freeze {
-        // p rows of the horizon block: -Pi_low on the target node's p, +Pi_high on p1
-        let (t, r0) = (ctx.block_target(k), k * 4 * m);
-        for r in 0..m {
-            for j in 0..m {
-                let a = (t + j) * ld + r0 + r;
-                jh[a] = (DD { hi: jh[a], lo: 0.0 } - lo.cols[j].get(r)).hi;
-                let b = j * ld + r0 + r;
-                jh[b] = (DD { hi: jh[b], lo: 0.0 } + hi.cols[j].get(r)).hi;
+    // projected rows as multishoot's jacobian_f64 forms them: each column's rows times Pi in double-double, rounded
+    // (a Du task's from its double-double column), and Pi' added on the pinned unknowns
+    for p in &sh.projected {
+        let r0 = sh.row_block(p.block) + p.field * m;
+        for j in 0..l {
+            if (0..m).all(|i| jh[j * ld + r0 + i] == 0.0) {
+                continue;
+            }
+            let x: Vec<DD> = match dd_col.get(&j) {
+                Some(col) => col[p.field * m..(p.field + 1) * m].to_vec(),
+                None => (0..m).map(|i| DD::from_f64(jh[j * ld + r0 + i])).collect(),
+            };
+            for (i, v) in p.apply::<Double>(&x, None, false).into_iter().enumerate() {
+                jh[j * ld + r0 + i] = v.hi;
+            }
+        }
+        for jj in 0..m {
+            for i in 0..m {
+                let a = (p.pin + jj) * ld + r0 + i;
+                jh[a] = (DD::from_f64(jh[a]) + p.entry::<Double>(false, i, jj, false)).hi;
             }
         }
     }
@@ -1267,7 +1217,7 @@ pub fn jvp<const B: usize>(ctx: &Ctx<B>, zh: &[f64], zl: &[f64], vh: &[f64], vl:
         (vd.0[l - 1], vd.1[l - 1]) = (dv.hi, dv.lo);
     }
     let sh = ctx.shooting();
-    let (mut jv, mut f) = guard(|| sh.jvp::<Double>(&[zh, zl], &[vd.0.as_slice(), vd.1.as_slice()], par))?;
+    let (mut jv, f) = guard(|| sh.jvp::<Double>(&[zh, zl], &[vd.0.as_slice(), vd.1.as_slice()], par))?;
     let kb = ctx.k();
     if mutate == JVP_MUT_HORIZON {
         let (t, r0) = (ctx.block_target(kb), kb * 4 * m);
@@ -1277,9 +1227,14 @@ pub fn jvp<const B: usize>(ctx: &Ctx<B>, zh: &[f64], zl: &[f64], vh: &[f64], vl:
                 jv[r0 + q * m + i] = d.get(i);
             }
         }
+        // its projected rows: Pi on the rows, Pi' on v's pinned unknowns, as the engine forms them
+        for p in &sh.projected {
+            let r0 = sh.row_block(p.block) + p.field * m;
+            let y: Vec<DD> = (0..m).map(|j| DD::new(vh[p.pin + j], vl[p.pin + j])).collect();
+            let rows = p.apply::<Double>(&jv[r0..r0 + m], Some(&y), false);
+            jv[r0..r0 + m].copy_from_slice(&rows);
+        }
     }
-    freeze_rows::<Double, B>(ctx, &mut jv, &ctx.fld(vh, vl, 0));
-    freeze_rows::<Double, B>(ctx, &mut f, &ctx.fld(zh, zl, 0));
     if mutate == JVP_MUT_PHASE {
         jv[l - 1] = DD::ZERO;
     }
@@ -1307,13 +1262,12 @@ pub fn jacobian_block<T: Lane, const B: usize>(ctx: &Ctx<B>, zh: &[f64], zl: &[f
 
 /// The mode matrix M(lam) at a real growth rate lam: the linearization of the residual for perturbations
 /// ~ exp(lam tau), Delta held fixed, over the block rows and the unknowns before Delta (multishoot's `mode_matrix`,
-/// its real part), with hp's freeze projection. Column-major with leading dimension ld_for(L-1): (hi, lo, ld).
+/// its real part). Column-major with leading dimension ld_for(L-1): (hi, lo, ld).
 pub fn mode_matrix<const B: usize>(ctx: &Ctx<B>, zh: &[f64], zl: &[f64], lam: DD, par: bool) -> Result<(Vec<f64>, Vec<f64>, usize), String> {
     let sh = ctx.shooting();
     let mm = guard(|| sh.mode_matrix(&[zh, zl], Rate::new(lam, DD::ZERO), par))?;
     let ld = mm.ld;
     let mut re = mm.re;
-    freeze_matrix::<Double, B>(ctx, &mut re, ld, &horizon_cols(ctx, false));
     let l = re.pop().expect("two parts");
     let h = re.pop().expect("two parts");
     Ok((h, l, ld))
