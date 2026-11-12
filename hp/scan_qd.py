@@ -2,7 +2,7 @@
 """Continuation in D with the quad-double solver (notes/QUAD_DOUBLE.md, section 12).
 
     python3 scan_qd.py OUT.jsonl START.npz D_END [--history A.npz,B.npz] [--dD 0.02] [--dD_min 1e-4] [--dD_max 0.5]
-        [--grow 1.5] [--kfreeze 13] [--tol 1e-50] [--tol_accept 1e-44] [--it_max 10] [--threads N] [--tag qd]
+        [--grow 1.5] [--kfreeze 13 (-1: no cut)] [--tol 1e-50] [--tol_accept 1e-44] [--it_max 10] [--threads N] [--tag qd]
 
 START.npz and the --history states: solutions in driver.save (two parts) or driver.save_q (four parts) format, in
 increasing distance from D_END last. Each is first converged in quad-double at its own D with the full system
@@ -32,7 +32,7 @@ PLAN = {}        # the Taylor steps in use: D where they were planned, and the s
 
 def solver_at(D, a, meta):
     return make_solver(D, meta["M"], nodes=list(meta["nodes"]), kt=a.kt or meta.get("kt", 36), kc=a.kc or meta.get("kc", 146),
-                       ks=a.ks or meta.get("ks", 130), threads=a.threads, kfreeze=a.kfreeze)
+                       ks=a.ks or meta.get("ks", 130), threads=a.threads, kfreeze=a.kfreeze if a.kfreeze >= 0 else None)
 
 
 def solve_at(D, z, a, meta):
@@ -62,7 +62,7 @@ def main():
     ap.add_argument("--dD_min", type=float, default=1e-4)
     ap.add_argument("--dD_max", type=float, default=0.5)
     ap.add_argument("--grow", type=float, default=1.5)
-    ap.add_argument("--kfreeze", type=int, default=13)
+    ap.add_argument("--kfreeze", type=int, default=13)  # a negative value: no cut
     ap.add_argument("--kt", type=int, default=0, help="0: the start file's")
     ap.add_argument("--kc", type=int, default=0, help="0: the start file's")
     ap.add_argument("--ks", type=int, default=0, help="0: the start file's")
