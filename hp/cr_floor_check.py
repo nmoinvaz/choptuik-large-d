@@ -12,6 +12,10 @@ is printed as information.) Pass: with --cr_floor's 1e-12 the column scales move
 less than 0.5 in log10. Control: without the floor they move by more than 2, so the check can tell the two apart.
 Then the invariance (#613): a planted row and column scaling of the same matrix must leave the floored fit's
 equilibrated matrix the same to 1e-8 in log10; the floor on the raw max-norms (the rule before #613) must not.
+Then the spread (#613): six matrices whose equilibrated entries spread over 10^N(0, 8), with a planted column scaling
+10^±20 as near_null_eq.py's --plant makes it; the floored fit's equilibrated matrix must stay the same to 1e-8 in
+log10 for all six. Control: the median-polish start (start="median", the start that gave J and J S different weights
+at #613's 0.80 layout) must move it by more than 1e-3 for at least one.
 Exit 1 on failure.
 """
 import os
@@ -69,7 +73,27 @@ def main():
     print(f"a planted row and column scaling (10^±10): the equilibrated matrix moves {d_new:.1e} in log10 with the floor "
           f"on the equilibrated matrix (must stay below 1e-8), {d_old:.1e} with the floor on the raw max-norms "
           f"(control, must exceed 1e-3): {'pass' if ok2 else 'FAIL'}")
-    return 0 if ok1 and ok2 else 1
+    # spread (#613): entries spread over many orders in the equilibrated matrix, so that the floor's fixed point is
+    # not unique and only a covariant start reaches the same one for X and X S
+    mv_ls, mv_md = [], []
+    for seed in range(6):
+        g = np.random.default_rng(100 + seed)
+        m = 120
+        E = 10.0 ** g.normal(0, 8.0, (m, m)) * (g.uniform(size=(m, m)) < 0.15)
+        np.fill_diagonal(E, 1.0)
+        X = E * (10.0 ** g.uniform(-20, 20, m))[:, None] * (10.0 ** g.uniform(-20, 20, m))[None, :]
+        XS = X * (10.0 ** g.uniform(-20, 20, m))[None, :]
+
+        def eqs(Y, start):
+            dr, dc = curtis_reid(Y, floor=1e-12, start=start)
+            return Y * dr[:, None] * dc[None, :]
+        mv_ls.append(rel(eqs(XS, "ls"), eqs(X, "ls")))
+        mv_md.append(rel(eqs(XS, "median"), eqs(X, "median")))
+    ok3 = max(mv_ls) < 1e-8 and max(mv_md) > 1e-3
+    print(f"entries spread over 10^N(0, 8), a planted column scaling (10^±20), six matrices: the equilibrated matrix moves "
+          f"at most {max(mv_ls):.1e} in log10 (must stay below 1e-8), {max(mv_md):.1e} with the median-polish start "
+          f"(control, must exceed 1e-3): {'pass' if ok3 else 'FAIL'}")
+    return 0 if ok1 and ok2 and ok3 else 1
 
 
 if __name__ == "__main__":

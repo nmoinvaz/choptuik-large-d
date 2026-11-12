@@ -2,7 +2,7 @@
 """The weakest directions of the chain's Newton system with its rows and columns equilibrated, at a stored state (#502).
 
     cd hp && python3 near_null_eq.py RAWDIR STATE [--k=4] [--its=16] [--threads=2] [--tol=1e-12] [--plant=SEED]
-        [--cr_sets]   (with --plant and --cr_floor: compare the floored fit's kept sets for J and J S, #613)
+        [--cr_sets]   (with --plant and --cr_floor: compare the floored fit's weights for J and J S, #613)
         [--refine=3] [--jv=1] [--cr_floor=0] [--json=OUT] [--mutate=rows_only|sigma]
 
 The pinned system is factored once in octo-double exactly as near_null.py does it (the same make_solver call and plan,
@@ -26,11 +26,12 @@ point, and every row and column of J_eq has max-norm 1 to --tol. The 2-norm (dou
 too, but on these Jacobians, whose entries span 1e-43 to 1e37, Ruiz's 2-norm iteration converges only like 1/k and
 Newton's method for it has a Hessian singular in f64 (#502), so it is not used.
 
---cr_floor=F (default 0, the scaling as before): Curtis-Reid's fit leaves out every entry of |J| below F times the
-smaller of its row's and its column's max-norm. At F = 0 the fit's equal weight on every nonzero log|J_ij| lets
-entries 40 orders below their row steer the scales: at #489's 0.8 start, dropping the 168 entries below 1e-40 of
-their row max moves D_c by 2 orders (#504, hp/eq_test.py sensitivity). A floor of 1e-12 leaves only entries that
-matter to the scale (#580).
+--cr_floor=F (default 0, the scaling as before): Curtis-Reid's fit weights each entry by its margin below F times the
+smaller of its row's and its column's max-norm in the equilibrated matrix, clipped to [1e-8, 1] (curtis_reid). At F = 0
+the fit's equal weight on every nonzero log|J_ij| lets entries 40 orders below their row steer the scales: at #489's
+0.8 start, dropping the 168 entries below 1e-40 of their row max moves D_c by 2 orders (#504, hp/eq_test.py
+sensitivity). A floor of 1e-12 leaves only entries that matter to the scale (#580), and the weights do not depend on
+the scales of J's rows and columns (#613).
 
 Check (exit 1 on failure), --plant=SEED: a planted column scaling. J S with S_j = 10^u_j, u_j uniform in [-20, 20]
 (numpy default_rng(SEED)), is scaled from |J_0| S by the same three methods, and its sigma come from the same
@@ -89,24 +90,29 @@ def ruiz(A, tol, dr=None, dc=None, cols=True, itmax=1000):
 
 
 def _cr_fit(A, P, cols):
-    """Curtis and Reid's least-squares fit of log a_ij = rho_i + gamma_j over the entries in P: (e^-rho, e^-gamma)"""
-    lA = np.where(P, np.log(np.where(P, A, 1.0)), 0.0)
-    nr, nc = P.sum(axis=1), P.sum(axis=0)
+    """Curtis and Reid's least-squares fit of log a_ij = rho_i + gamma_j over the entries in P, or weighted by P when P
+    is a float array of weights in [0, 1]: (e^-rho, e^-gamma)"""
+    W = P.astype(float)
+    lA = np.where(W > 0, np.log(np.where(W > 0, A, 1.0)), 0.0) * W
+    nr, nc = W.sum(axis=1), W.sum(axis=0)
     if not cols:
         return np.exp(-lA.sum(axis=1) / nr), np.ones(A.shape[1])
-    Pf = P.astype(float)
-    N = np.block([[np.diag(nr.astype(float)), Pf], [Pf.T, np.diag(nc.astype(float))]])
+    N = np.block([[np.diag(nr), W], [W.T, np.diag(nc)]])
     x = np.linalg.lstsq(N, np.concatenate([lA.sum(axis=1), lA.sum(axis=0)]), rcond=None)[0]
     n = A.shape[0]
     return np.exp(-x[:n]), np.exp(-x[n:])
 
 
-FLOOR_IT = 20
+FLOOR_IT = 500      # the weights' iterations at most
+FLOOR_TOL = 1e-10   # they stop when no weight moves by more than this; the iteration converges linearly
+FLOOR_WMIN = 1e-8   # the smallest weight, so every nonzero keeps the pattern connected and the fit unique
 
 
 def median_polish(A, P, cols=True, it=30):
     """Tukey's median polish of log a_ij over the entries in P: (e^-rho, e^-gamma) with rho_i, gamma_j the row and
-    column effects; covariant under row and column scaling, and robust to a minority of outlying entries"""
+    column effects. Robust to a minority of outlying entries, but not covariant under row and column scaling: a row's
+    median of log a_ij + s_j is not its median of log a_ij shifted, and the L1 fit it approaches is not unique. As the
+    floored fit's start it gave J and J S different weights (#613); it stays as that control (start="median")."""
     L = np.where(P, np.log(np.where(P, A, 1.0)), np.nan)
     rho, gam = np.zeros(A.shape[0]), np.zeros(A.shape[1])
     for _ in range(it):
@@ -120,43 +126,49 @@ def median_polish(A, P, cols=True, it=30):
     return np.exp(-rho), np.exp(-gam)
 
 
-def curtis_reid(A, cols=True, floor=0.0, legacy_floor=False, return_set=False):
+def floor_weights(A, P0, dr, dc, floor):
+    """each nonzero's weight, its margin m = b_ij / (floor min(row max, col max)) in B = D_r A D_c clipped to
+    [FLOOR_WMIN, 1]: 1 for an entry not negligible in B's row or column, falling with its margin below"""
+    B = A * dr[:, None] * dc[None, :]
+    r, c = B.max(axis=1), B.max(axis=0)
+    m = np.where(P0, B / (floor * np.minimum(r[:, None], c[None, :])), 0.0)
+    return np.where(P0, np.clip(m, FLOOR_WMIN, 1.0), 0.0)
+
+
+def curtis_reid(A, cols=True, floor=0.0, legacy_floor=False, return_set=False, start="ls"):
     """Curtis and Reid's scaling of the nonnegative f64 matrix A: (D_r, D_c) = (e^-rho, e^-gamma) with rho, gamma
     minimizing the sum over the nonzeros of (log a_ij - rho_i - gamma_j)^2. cols=False fits rho alone (gamma = 0).
-    floor > 0 leaves out of the fit the entries negligible in the equilibrated matrix B = D_r A D_c: those below floor
-    times the smaller of their row's and column's max-norm in B. The first set comes from Tukey's median polish
-    (covariant under scaling, and robust to a minority of negligible entries), then Curtis-Reid is refitted, the set
-    only shrinking, until it no longer changes. B, and so
-    the set, is the same for A and for any row and column scaling of A, so the result scales with it (#580, #613);
-    each row's and column's largest entry is kept. legacy_floor=True applies the floor to A's own max-norms, the rule
-    before #613, which a column scaling of A changes (the control of cr_floor_check.py's invariance test)."""
+    floor > 0 weights each entry by its margin in the equilibrated matrix B = D_r A D_c, its value over floor times
+    the smaller of its row's and column's max-norm in B, clipped to [FLOOR_WMIN, 1], so that entries negligible in B
+    do not steer the fit (#580). The weighted fit is refitted on its own weights until they hold, from the unweighted
+    fit. Each step is covariant under row and column scaling (a least-squares fit in the logs, and margins of B), so
+    the weights and B are the same for A and any scaling of A up to rounding (#613). The floor's fixed point is not
+    unique, so the start must be covariant too: start="median" (Tukey's median polish, which is not) is the control
+    of cr_floor_check.py's spread test. legacy_floor=True drops the entries below floor times A's own row and column
+    max-norms, the rule before #613, which a column scaling of A changes (the control of its invariance test).
+    return_set=True also returns the weights (the kept set as 0 and 1 for legacy_floor or floor 0)."""
     P0 = A > 0
     if floor > 0 and legacy_floor:
         r, c = A.max(axis=1), A.max(axis=0)
         P = P0 & (A >= floor * np.minimum(r[:, None], c[None, :]))
-        return _cr_fit(A, P, cols) + ((P,) if return_set else ())
+        return _cr_fit(A, P, cols) + ((P.astype(float),) if return_set else ())
     if floor <= 0:
-        return _cr_fit(A, P0, cols) + ((P0,) if return_set else ())
-    # the first set from Tukey's median polish of log a_ij over the nonzeros: its row and column effects absorb any
-    # row and column scaling exactly, and a minority of negligible entries cannot move a median; then Curtis-Reid
-    # is refitted on the entries not negligible in its own B
-    mdr, mdc = median_polish(A, P0, cols)
-    B = A * mdr[:, None] * mdc[None, :]
-    r, c = B.max(axis=1), B.max(axis=0)
-    P = P0 & (B >= floor * np.minimum(r[:, None], c[None, :]))
-    dr, dc = _cr_fit(A, P, cols)
+        return _cr_fit(A, P0, cols) + ((P0.astype(float),) if return_set else ())
+    if start not in ("ls", "median"):
+        raise ValueError(f"start={start}: ls or median")
+    dr, dc = _cr_fit(A, P0, cols) if start == "ls" else median_polish(A, P0, cols)
+    W = floor_weights(A, P0, dr, dc, floor)
+    d = np.inf
     for _ in range(FLOOR_IT):
-        # the set only shrinks, so the loop cannot cycle between two sets (#613's one window); the maxima are over
-        # the entries still in it, so each row's and column's largest one stays
-        B = A * dr[:, None] * dc[None, :]
-        Bk = np.where(P, B, 0.0)
-        r, c = Bk.max(axis=1), Bk.max(axis=0)
-        Pn = P & (B >= floor * np.minimum(r[:, None], c[None, :]))
-        if np.array_equal(Pn, P):
+        dr, dc = _cr_fit(A, W, cols)
+        Wn = floor_weights(A, P0, dr, dc, floor)
+        d = float(np.abs(Wn - W).max())
+        W = Wn
+        if d <= FLOOR_TOL:
             break
-        P = Pn
-        dr, dc = _cr_fit(A, P, cols)
-    return (dr, dc, P) if return_set else (dr, dc)
+    else:
+        print(f"  curtis_reid: the floor's weights still move {d:.1e} after {FLOOR_IT} refits", file=sys.stderr, flush=True)
+    return (dr, dc, W) if return_set else (dr, dc)
 
 
 def scalings(A, tol, cols=True, floor=0.0):
@@ -233,7 +245,8 @@ def spread(eq, eqS, S):
 
 def main():
     args = [a for a in sys.argv[1:] if not a.startswith("--")]
-    opts = dict(a[2:].split("=", 1) for a in sys.argv[1:] if a.startswith("--") and "=" in a)
+    # a bare --flag is --flag=1 (#613: a bare --cr_sets was ignored)
+    opts = dict(a[2:].split("=", 1) if "=" in a else (a[2:], "1") for a in sys.argv[1:] if a.startswith("--"))
     if len(args) != 2:
         sys.exit(__doc__)
     raw, st = args
@@ -312,21 +325,18 @@ def main():
                   f"{sp:.1e}", flush=True)
             plant[name] = dict(rel=rel, spread=sp, iterations=n_it, err=err, vectors=vecs)
         if floor > 0 and "cr_sets" in opts:
-            # the floored fit's kept sets for J and for J S, which a covariant floor makes equal; the entries where
-            # they differ, with their margin B / (floor min(row max, col max)) in J's equilibrated frame (#613)
-            drA, dcA, PA = curtis_reid(A, cols, floor, return_set=True)
-            _, _, PS = curtis_reid(AS, cols, floor, return_set=True)
+            # the floored fit's weights for J and for J S, which a covariant floor makes equal up to rounding; the
+            # entries of full weight in one and not the other, and the largest weight difference (#613)
+            _, _, WA = curtis_reid(A, cols, floor, return_set=True)
+            _, _, WS = curtis_reid(AS, cols, floor, return_set=True)
             nz = A > 0
+            PA, PS = WA >= 1.0, WS >= 1.0
             dif = PA ^ PS
-            print(f"  floored sets: J drops {int((nz & ~PA).sum())}, J S drops {int((nz & ~PS).sum())}, they differ at "
-                  f"{int(dif.sum())} entries", flush=True)
-            if dif.any():
-                B = A * drA[:, None] * dcA[None, :]
-                Bk = np.where(PA, B, 0.0)
-                thr = floor * np.minimum(Bk.max(axis=1)[:, None], Bk.max(axis=0)[None, :])
-                mg = (B / thr)[dif]
-                print(f"  their margins in J's frame: {np.sort(mg)[:10]} (1 is the threshold)", flush=True)
-            rec["cr_sets"] = dict(drop_J=int((nz & ~PA).sum()), drop_JS=int((nz & ~PS).sum()), differ=int(dif.sum()))
+            dW = float(np.abs(WA - WS).max())
+            print(f"  floored weights: below 1 at {int((nz & ~PA).sum())} entries of J and {int((nz & ~PS).sum())} of "
+                  f"J S, full in one only at {int(dif.sum())}, largest weight difference {dW:.1e}", flush=True)
+            rec["cr_sets"] = dict(below_J=int((nz & ~PA).sum()), below_JS=int((nz & ~PS).sum()), differ=int(dif.sum()),
+                                  max_dW=dW)
         ok_p = bool(plant[RESULT]["rel"] < 1e-3)
         print(f"  check (planted column scaling, {RESULT}, bound 1e-3): {'pass' if ok_p else 'FAIL'}"
               + (" [control rows_only]" if not cols else ""), flush=True)
