@@ -155,6 +155,13 @@ quad-double step goes wrong in the mass mode's weakest direction, and near D 194
 The animations show the elimination pilot's measured values (`hp/plot_algorithm.py`). The design, its checks and the
 runs are in [notes/QUAD_DOUBLE.md](notes/QUAD_DOUBLE.md), sections 13.15–13.28.
 
+**Restart.** A chain that stops continues from the last state it saved with `--state <that state> --base_polish 0`
+and its own flags, on the build that made it. That reproduces the uninterrupted chain to the last bit of every array.
+This was checked on the d6 chain over two steps from D 230.13 and on the d10 chain over one (#587, #593; `I587-win/`
+at 23b674e9, `I593-win/` at b52dcbee). The saved files' hashes still differ from the uninterrupted chain's, through
+the meta field `source` alone, which names the state each run started from. Without `--base_polish 0` the loaded base
+is polished first, and that alone changes every entry (#586).
+
 ## 4. The number types
 
 ### One number as several doubles
