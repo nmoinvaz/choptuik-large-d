@@ -979,9 +979,36 @@ fn cdet<'py>(rh: PyReadonlyArray2<'py, f64>, rl: PyReadonlyArray2<'py, f64>, ih:
     clu_logdet(n, ld, a0, a1, a2, a3, false).map_err(PyValueError::new_err)
 }
 
+/// `cdet` with every pivot: (ln|det|, arg det, min |u_kk|, max |u_kk|, ln|u_kk|, arg u_kk, pivot rows), by the LU of
+/// `mode_pivots`, for planted matrices (#552).
+#[pyfunction]
+#[allow(clippy::type_complexity)]
+fn cpivots<'py>(
+    py: Python<'py>,
+    rh: PyReadonlyArray2<'py, f64>,
+    rl: PyReadonlyArray2<'py, f64>,
+    ih: PyReadonlyArray2<'py, f64>,
+    il: PyReadonlyArray2<'py, f64>,
+) -> PyResult<(f64, f64, f64, f64, Bound<'py, PyArray1<f64>>, Bound<'py, PyArray1<f64>>, Bound<'py, PyArray1<usize>>)> {
+    let n = rh.as_array().shape()[0];
+    let ld = ld_for(n);
+    let mut v = [vec![0.0; ld * n], vec![0.0; ld * n], vec![0.0; ld * n], vec![0.0; ld * n]];
+    for (q, src) in [rh.as_array(), rl.as_array(), ih.as_array(), il.as_array()].iter().enumerate() {
+        for c in 0..n {
+            for r in 0..n {
+                v[q][c * ld + r] = src[[r, c]];
+            }
+        }
+    }
+    let [a0, a1, a2, a3] = v;
+    let (la, arg, pmin, pmax, lnu, argu, rows) = pivots::clu_pivots(n, ld, a0, a1, a2, a3, false).map_err(PyValueError::new_err)?;
+    Ok((la, arg, pmin, pmax, lnu.into_pyarray(py), argu.into_pyarray(py), rows.into_pyarray(py)))
+}
+
 #[pymodule]
 fn modecount_cx(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_class::<CSolver>()?;
     m.add_function(wrap_pyfunction!(cdet, m)?)?;
+    m.add_function(wrap_pyfunction!(cpivots, m)?)?;
     Ok(())
 }
