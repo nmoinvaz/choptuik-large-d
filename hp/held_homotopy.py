@@ -129,7 +129,8 @@ def correct(so, zp, tol, first_max, it_max=8):
     for j in range(it_max + 1):
         nd = mx(d)
         nF = float(np.abs(np.asarray(Fh) + np.asarray(Fl)).max())
-        corr.append(dict(F=nF, dz=nd))
+        corr.append(dict(F=nF, dz=nd, dDelta=float(d[0][-1] + d[1][-1])))
+        print(f"    correction {j}: max|H| {nF:.3e}, max|dz| {nd:.3e}, its Delta {corr[-1]['dDelta']:+.3e}", flush=True)
         if not (np.isfinite(nd) and np.isfinite(nF)):
             return z, corr, False, "not finite"
         if nd <= tol:
