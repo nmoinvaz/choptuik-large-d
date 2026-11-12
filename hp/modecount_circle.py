@@ -4,7 +4,12 @@ the position of a single zero inside.
 
     python3 modecount_circle.py STATE.npz RE,IM,R [RE,IM,R ...] [--M=N] [--kf=none|13] [--tol=0.785] [--n0=16]
                                 [--data=hp/data] [--res=<data>/modecount_circles.jsonl] [--allow_unraw]
-                                [--fmax=1e-20] [--centre_tol=T]
+                                [--fmax=1e-20] [--centre_tol=T] [--ball=PREC]
+
+--ball=PREC: det M is the exact determinant of the double-double mode matrix, from python-flint's ball LU at PREC bits
+(hp/modecount_qdet.py), not the double-double LU's. At #584's stuck points the LU's phase is off by up to 2.7 rad while
+the exact determinant moves 3e-5 per ulp of lambda. The tag gets "_ball<PREC>", so its cache is separate, and the
+record's pmin holds the ball radius of arg instead of the smallest pivot.
 
 --centre_tol=T: with --M, the centre series' tolerance in modecount_common.fit_nodes (default 1e-15). A smaller T adds
 inner nodes to a layout that passes the series gate (#270), and the state is kept under its own name (_ct<T>).
@@ -167,7 +172,14 @@ def main():
     st = setup(path, M=int(opts["M"]) if "M" in opts else None, threads=int(opts.get("threads", 1)), kf=kf,
                fmax=float(opts.get("fmax", 1e-20)),
                centre_tol=float(opts["centre_tol"]) if "centre_tol" in opts else None)
-    tag = opts.get("tag", f"D{st.D:.4f}_M{st.M}" + ("" if "kf" not in opts else f"_kf{opts['kf']}"))
+    ball = int(opts["ball"]) if "ball" in opts else 0
+    tag = opts.get("tag", f"D{st.D:.4f}_M{st.M}" + ("" if "kf" not in opts else f"_kf{opts['kf']}")
+                   + (f"_ball{ball}" if ball else ""))
+    if ball:
+        import numpy as np
+        from flint import ctx
+        from modecount_qdet import ball_det
+        ctx.threads = int(opts.get("threads", 1))
     tol = float(opts.get("tol", math.pi / 4))
     n0 = int(opts.get("n0", 16))
     cache_path = os.path.join(data, f"modecount_{tag}_evals.jsonl")
@@ -190,7 +202,13 @@ def main():
         key = (float(lam.real), float(lam.imag))
         if key not in cache:
             t = time.time()
-            la, arg, pmin, pmax = st.det(key[0], key[1])
+            if ball:
+                # the exact determinant of the double-double matrix (modecount_qdet.ball_det), not its LU's (#584)
+                A = [np.ascontiguousarray(x) for x in st.c.mode_matrix(st.zh, st.zl, key[0], key[1])]
+                b = ball_det(*A, ball)
+                la, arg, pmin, pmax = b[0], b[1], b[3], float("nan")
+            else:
+                la, arg, pmin, pmax = st.det(key[0], key[1])
             r = dict(re=key[0], im=key[1], lnabs=la, arg=arg, pmin=pmin, pmax=pmax, sec=round(time.time() - t, 2))
             cache[key] = r
             cf.write(json.dumps(r) + "\n")
