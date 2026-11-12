@@ -1,5 +1,8 @@
 # Faster low-D points: two analyses and their synthesis (2026-11-04)
 
+File and line references here are to hp at 9e63140, before #523 moved `qsolve.rs`, `osolve.rs`, `xsolve.rs` and
+`block.rs` into multishoot's engine.
+
 The user asked whether the points below D = 3.1 can be computed faster, by side-steps or by parallelization. Two
 subagents answered independently: one read the code, the logs and the timing data (appendix A), one surveyed the
 literature without reading the code (appendix B). Both reports are read-only analyses; nothing was built or run beyond

@@ -35,12 +35,12 @@ relative to this folder.
   ([notes/LARGE_D_MIXED.md](LARGE_D_MIXED.md)): the horizon block's columns in double-double (`horizon_dd=4`), and a
   correction loop (GMRES preconditioned by the f64 LU, with exact double-double Jacobian-vector products, `Solver.jvp`).
   With both, Newton converges at every D tried, to the same Δ.
-- **Larger τ grids:** M = 160, 192, 256, 320 and 384 collocation points besides 8–128. Above M = 128 the
-  mixed-precision step builds and factors its f64 Jacobian in block storage (a staircase LU over the
-  multiple-shooting blocks, `hp/src/block.rs`): 8–12 times less memory than the dense matrix (173 MB at M = 192), and
-  the same steps as the dense path to that path's rounding at M ≤ 128, where every other result is unchanged bit for
-  bit. The exact double-double Jacobian, the Levenberg–Marquardt fallback and γ stay at M ≤ 128. At D = 3.7, Δ
-  changes by −3.4×10⁻¹¹, −3.2×10⁻¹⁵, −1.6×10⁻¹⁸ and −3.2×10⁻²¹ in the steps from M = 96 to 128, 160, 192 and 256
+- **Larger τ grids:** M = 160, 192, 256, 320 and 384 collocation points besides 8–128. Above M = 128 the mixed-precision
+  step builds and factors its f64 Jacobian in block storage (a staircase LU over the multiple-shooting blocks,
+  multishoot's `jacobian_staircase`): 8–12 times less memory than the dense matrix (173 MB at M = 192), and the same
+  steps as the dense path to that path's rounding at M ≤ 128, where every other result is unchanged bit for bit. The
+  exact double-double Jacobian, the Levenberg–Marquardt fallback and γ stay at M ≤ 128. At D = 3.7, Δ changes by
+  −3.4×10⁻¹¹, −3.2×10⁻¹⁵, −1.6×10⁻¹⁸ and −3.2×10⁻²¹ in the steps from M = 96 to 128, 160, 192 and 256
   ([notes/HIGH_M.md](HIGH_M.md)).
 - **Quad-double arithmetic:** the `qd` and `qv` modules add quad-double numbers
   (four f64, about 64 digits), scalar and 8-lane SIMD, with bitwise the same results on AVX-512, AVX2 and portable
@@ -49,7 +49,7 @@ relative to this folder.
   2.1×2⁻²⁰⁹ (63 digits). They cost 8–29 times double-double per operation and 14–17 times in sums of products. A
   quad-double residual would cost about 7 times the double-double one at the same orders
   ([notes/QUAD_DOUBLE.md](QUAD_DOUBLE.md); `hp/qd_check.py`, which runs the tests in a multidouble checkout).
-  A fully quad-double Newton (`hp/src/qsolve.rs`, on multidouble's quad-double dual numbers and LU) converges the
+  A fully quad-double Newton (`model::newton_in`, with multidouble's quad-double duals and LU) converges the
   full system from the double-double states up to D ≈ 71.5 and the pinned system to 73.3: Δ(68.5) =
   1.7899636306159916 − 1.016822×10⁻¹⁶, Δ(69.5) = 1.7879302979617628 + 7.083175×10⁻¹⁷ and Δ(70.5) = 1.7859529321182939 +
   1.087438×10⁻¹⁶, each reproduced by a second start with its own Taylor plan to 3×10⁻²⁸

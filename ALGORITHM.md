@@ -128,9 +128,9 @@ correction halves the step, three times at most, keeping the series.
 one LU of the Jacobian. The right-hand side of order k is the jet of the lower orders, with the dimension entered into
 the kernel as the jet's variable. The step a is where the series' last term falls to ε of its first, capped at h_max,
 and the prediction Σ z_k aᵏ is summed by Horner's rule. The chain built its series in quad-double until D ≈ 175.
-`--jet_o 1` builds the same series in octo-double (multidouble's `OJet`, `Ou` and `ODLu`; `hp/src/osolve.rs`). At D
-148.74 the quad-double series keeps only 5–6 digits at orders 4–9, and near D 171–176 it collapsed
-([notes/OCTO_DOUBLE.md](notes/OCTO_DOUBLE.md)).
+`--jet_o 1` builds the same series in octo-double (multidouble's `OJet`, `Ou` and `ODLu`; `model::residual_jet_in` in
+`hp/src/model.rs`). At D 148.74 the quad-double series keeps only 5–6 digits at orders 4–9, and near D 171–176 it
+collapsed ([notes/OCTO_DOUBLE.md](notes/OCTO_DOUBLE.md)).
 
 ![The predictor: a toy branch's partial sums converging order by order, beside the chain's series terms at D 128.56 and 131.06](hp/algo_predictor.svg)
 
@@ -253,9 +253,7 @@ The chain's walls and what moved it past each:
 
 | file | what it does |
 |---|---|
-| `hp/src/model.rs` | the residual's blocks: centre and horizon series, Taylor steps, the segment plan |
-| `hp/src/qsolve.rs` | the quad-double residual, jet, Jacobian and Newton step |
-| `hp/src/osolve.rs` | the octo-double residual, jet, Jacobian and Newton step |
+| `hp/src/model.rs` | the equations on multishoot's engine (`Dss`): centre and horizon series, Taylor steps, the segment plan; the quad- and octo-double residual, jet, Jacobian and Newton step (`residual_in`, `residual_jet_in`, `jacobian_in`, `newton_in`) |
 | `hp/python/hpkernel/driver.py` | set-up, the layout of z, `newton_qd`, state files |
 | `hp/anm_run.py` | the large-D chain: series, prediction, re-seed, corrector, save |
 | `hp/reseed.py` | the re-seed and the projection (`Reseeder`, `ElimQ`) |

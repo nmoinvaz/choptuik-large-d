@@ -1,5 +1,8 @@
 # What of hp could move into multidouble (audit of 2026-11-04)
 
+File and line references here are to hp at 9e63140, before #523 moved `qsolve.rs`, `osolve.rs`, `xsolve.rs` and
+`block.rs` into multishoot's engine.
+
 ## Recommendation
 
 Move one piece of Rust, the order-by-order solve of a jet lane in `model.rs` `psolve` (its two jet branches), into

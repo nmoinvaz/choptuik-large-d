@@ -585,10 +585,10 @@ double-double LU) and `hp/full_step_check.py`. At D = 72.80 one such step with 6
 ### 12.1 Built (2026-10-27, feat/qd-solver; raw/T81)
 
 The arithmetic is multidouble 1.7.0 (PRs #23 and #24): `Qu`, a quad-double value and tangent, and `QDLu`, a dense
-quad-double LU with partial pivoting. In hp, `qsolve.rs` holds the residual with every block in quad-double (the
-horizon solves refined to quad-double, value and tangent together), its exact Jacobian by `Qu` lanes and the Newton
-step, for M = 32 and 48. `driver.newton_qd` is Newton on it, `scan_qd.py` the continuation in D, and `qd_planted.py`
-the planted-root check.
+quad-double LU with partial pivoting. In hp, `model::residual_in` (on multishoot's engine) gives the residual with every
+block in quad-double (the horizon solves refined to quad-double, value and tangent together), its exact Jacobian by `Qu`
+lanes and the Newton step, for M = 32 and 48. `driver.newton_qd` is Newton on it, `scan_qd.py` the continuation in D,
+and `qd_planted.py` the planted-root check.
 
 **Precision tests.** The kernel tests (`cargo test --release --lib qsolve_`) run on the synthetic context.
 

@@ -6,9 +6,10 @@ Status: done (branch `wip/high-m`); stage 1 verified, the pilot stopped by its 1
 
 - **Larger M.** The kernel runs at M = 160, 192, 256, 320 and 384 besides 8–128. Above M = 128 the mixed-precision
   Newton step builds and factors its f64 Jacobian in block storage (a staircase LU over the multiple-shooting blocks,
-  `hp/src/block.rs`), never as the dense n × n matrix: 8–12 times less memory. The dense paths (exact double-double
-  Jacobian, Levenberg–Marquardt, γ's mode matrix) refuse above M = 128. No FFT derivative: the τ-derivative is 24–46%
-  of the Jacobian's time at M = 160–192, not enough to pay for a rebuild (section 4).
+  `model::jacobian_block` on multishoot's `jacobian_staircase`), never as the dense n × n matrix: 8–12 times less
+  memory. The dense paths (exact double-double Jacobian, Levenberg–Marquardt, γ's mode matrix) refuse above M = 128. No
+  FFT derivative: the τ-derivative is 24–46% of the Jacobian's time at M = 160–192, not enough to pay for a rebuild
+  (section 4).
 - **Verification (section 2).** Everything at M ≤ 128 is bit-identical to main (17 + 168 outputs compared); `cargo
   test` passes; the block step equals the dense step to the dense f64 LU's own rounding at M = 16–128, and its two
   controls fire; Newton converges to the same solution (Δ to 1.3×10⁻³⁰).
@@ -58,7 +59,7 @@ Two things grow with M and were changed so they fit:
   so the rayon pool is built with 256 MB stacks (`python.rs`; only the pages touched are used). This changes no
   number.
 
-### 1.2 Block storage of the Newton system (`hp/src/block.rs`, `model::jacobian_block`)
+### 1.2 Block storage of the Newton system (`model::jacobian_block`, multishoot's `jacobian_staircase`)
 
 The Jacobian of the multiple-shooting system (n = 4M(K + 1) + 1, K nodes) was built and factored as a dense n × n
 array; `DDLu` skips its zero blocks in time, not in memory. At M = 256 and K = 13 (n = 14 337) a dense f64 Jacobian
@@ -590,6 +591,8 @@ never saw, to 4×10⁻⁶ and 10⁻⁷" by:
 (the largest |formula − Δ| of the pilot is 7.6×10⁻⁶, at D = 3.25; section 5.5).
 
 ## 8. Files
+
+The files as this work added them, at hp before #523 (9e63140). `block.rs` is now multishoot's `jacobian_staircase`.
 
 - Kernel: `hp/src/block.rs` (new: block storage and staircase LU, tests), `hp/src/model.rs` (`jacobian_block`;
   `jacobian_lanes` without the clone), `hp/src/python.rs` (sizes, `Lu`, `newton_mixed(block=...)`, `lu_info`, the

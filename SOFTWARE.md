@@ -200,7 +200,8 @@ hp/                 double-double solver (crate hpkernel)
 │                   LU (and the complex determinant), the staircase LU and the tau-field kernels (with the early end
 │                   of a series for the tangents); hp re-exports its modules (hpkernel::dd, ::dv, ...)
 ├── src/lane.rs     hp's Lane trait: every multidouble lane type on the compile-time backend
-├── src/model.rs    centre series, Taylor stepping, horizon series, residual, Jacobian (double-double and f64)
+├── src/model.rs    the equations on multishoot's engine: centre series, Taylor steps, horizon series; residual,
+│                   Jacobians (double-double, quad-, octo-double, f64, staircase storage), jets, mode matrix
 ├── python/hpkernel/driver.py   grid, seeds, Newton, deflated Newton, Levenberg-Marquardt, re-noding (its numpy
 │                   double-double helpers come from multidouble's Python package, which build.sh installs)
 ├── src/field.rs    tau fields on the half grid (multidouble's field module: folded spectral derivative, Cauchy
@@ -222,12 +223,10 @@ hp/                 double-double solver (crate hpkernel)
 ├── plot_light_cone.py     light_cone.svg, the past light cone and the fast mode's size inside it
 ├── stall_margin.py   the stall detector: weakest directions, sigma_max and u*kappa at a state or a rebuilt seed
 ├── stall_summary.py  its results from the raw-data folder T76 (the power laws, the floor, the pinned systems)
-├── src/block.rs    block storage for the f64 Jacobian above M = 128 (multidouble's staircase LU)
 ├── highm_check.py, lowD_highM.py  checks of the larger tau grids, and the continuation toward D = 3 on them
 ├── lowD_highM_leg.py  a new leg of a finished lowD_highM.py run (its progress file, new targets)
 ├── step_test.py    the largest step in D that Newton tolerates at D = 45-60, for several solver variants (local task T43)
 ├── qd_check.py     checks of the quad-double arithmetic against mpmath, and across the SIMD backends
-├── src/qsolve.rs   the residual, its exact Jacobian and the Newton step in quad-double (M = 32, 48)
 ├── scan_qd.py, qd_planted.py  continuation in D with the quad-double Newton, and its planted-root check
 ├── export_dd.py    collects the runs' points into data/delta_dd.csv
 ├── t79_rows.py     T79's points (D 4-8.25, folder T79-win of the raw-data repository) into the low-D exporter's inputs

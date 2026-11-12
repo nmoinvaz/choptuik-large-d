@@ -8,7 +8,8 @@ and LU (`ODLu`). It is not used by the chain until the quad-double series gives 
 
 ## 1. What was added
 
-- `hp/src/osolve.rs`, `qsolve.rs` one level up. `residual_parts_o` and `residual_o` are the residual with `OV` lanes,
+- The octo-double entry points, the quad-double ones one level up (`model::residual_in`, `jacobian_in`, `newton_in`,
+  `residual_jet_in` on multishoot's engine, #523). `residual_parts_o` and `residual_o` are the residual with `OV` lanes,
   `residual_jet_o` the jet in the dimension with `OJet<N>` lanes (its D-dependent constants in `OSeries<N>`),
   `jacobian_o` the exact Jacobian with `Ou` lanes, and `newton_o` the step through `ODLu`. States come in eight parts.
 - `hp/src/model.rs` `psolve`: two branches for the octo-double lanes, ahead of the existing ones, which no existing lane
