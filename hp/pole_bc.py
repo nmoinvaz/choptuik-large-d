@@ -30,6 +30,7 @@ R(C) within 10% of 0.45 wherever read, read at u_p >= 0.14; B's first real zero 
 0.95 R(B). With --mutate=b the same checks must fail (B's radius falls to u_p). Exit 1 on a failed check.
 
     cd hp && python3 pole_bc.py planted [--mutate=b]
+    cd hp && python3 pole_bc.py summary OUT.jsonl      (the per-state fits and the where-test's ranges per delta)
     cd hp && python3 pole_bc.py OUT.jsonl STATE.npz [STATE.npz ...] [--mutate=b] [--threads N] [--ref pole_test.jsonl] [--ks N]
 """
 import json
@@ -425,6 +426,36 @@ def run_states(out, paths, mutate, threads, ref, ks_set=None):
         sys.exit(1)
 
 
+def summary(path):
+    """the numbers the issue's closing summary quotes, from a run's records"""
+    recs = [json.loads(line) for line in open(path) if line.strip()]
+    pts = [r for r in recs if r.get("delta") is not None]
+    print("per state: C = b (n - 1) on 13.6's grid; s = d ln R / d ln(1/delta) on the full grid, ± its standard error")
+    print(f"{'D':>8} " + " ".join(f"{'C_' + k:>7}" for k in ("R136", "a", "b", "B", "C", "p", "m", "new"))
+          + f" {'s_R136':>15} {'s_new':>15} {'s_new/s_R136':>12} {'s_B/s_R136':>10}")
+    for r in recs:
+        if not r.get("fits"):
+            continue
+        F = r["fits"]
+        cs = " ".join(f"{F[k]['C']:7.3f}" if "C" in F[k] else "      -" for k in ("R136", "a", "b", "B", "C", "p", "m", "new"))
+        s0, sn, sb = F["R136"].get("s"), F["new"].get("s"), F["B"].get("s")
+        print(f"{r['D']:8.4f} {cs} {s0:8.4f}±{F['R136']['s_se']:.4f} {sn:8.4f}±{F['new']['s_se']:.4f} {sn / s0:12.3f} {sb / s0:10.3f}")
+    print("where-test at D < 100 (B and x - c summed to u1 ~ 0.95 R; zeros extrapolated with the mass mode), per delta:")
+    for d in DELTAS[1:]:
+        sel = [r for r in pts if r["delta"] == d and r["D"] < 100 and r["new"]["R"]]
+        z = lambda r, k: r["where"].get(f"u_{k}_zero") or r["where"].get(f"u_{k}_extrap")  # noqa: E731
+        son = [z(r, "sonic") / r["new"]["R"] for r in sel if z(r, "sonic")]
+        ah = [z(r, "AH") / r["new"]["R"] for r in sel if z(r, "AH")]
+        bu = [r["where"]["B_at_u1"] for r in sel if r["where"].get("B_at_u1") is not None]
+        xc = [r["where"]["xc_at_u1"] for r in sel if r["where"].get("xc_at_u1") is not None]
+        sp = [max(abs(r[v]["R"] / r["R136"] - 1) for v in NEW) for r in sel if all(r[v]["R"] for v in NEW)]
+        cv = [max(r["where"].get("conv_B", 0.0), r["where"].get("conv_xc", 0.0)) for r in sel]
+        rng = lambda v: f"{min(v):.3f}-{max(v):.3f}" if v else "-"  # noqa: E731
+        print(f"  delta {d:.0e}: states {len(sel)}, B(u1) {rng(bu)}, max x-c(u1) {rng(xc)}, sonic/R_new {rng(son)}, "
+              f"AH/R_new {rng(ah)}, max |R_v/R136 - 1| over p, m, B, C {max(sp) if sp else float('nan'):.3f}, "
+              f"summation change {max(cv) if cv else float('nan'):.1e}")
+
+
 def main():
     args = list(sys.argv[1:])
     mutate = ""
@@ -442,6 +473,9 @@ def main():
     if "--ks" in args:
         # a diagnostic: the horizon series to N orders instead of the state's ks (R136 then differs from 13.6's)
         i = args.index("--ks"); ks_set = int(args[i + 1]); del args[i:i + 2]
+    if args and args[0] == "summary":
+        summary(args[1])
+        return
     if args and args[0] == "planted":
         planted(mutate)
         return
