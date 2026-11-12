@@ -98,7 +98,9 @@ a polish took the D 215.03125 state from 4.4e-36 to 1.5e-18 and the series of th
 2e-30). --base_adopt 1 adopts every polish, which is the control of that rule. --base_polish 0 skips the polish, so
 the stored state is the base as it stands: a state reloaded near D 215 starts about 4e-36 off in the held rows
 (their values are taken again from its first two parts), and its polish costs 12 octo-double steps before it is
-dropped. The step: the first is --a0 (h_max when 0), a refused attempt halves it, and after an accepted step the next is
+dropped. Under --corrector od a base whose double-double |F| is at most --tol is still polished when the stored
+state's pinned octo-double max |F| exceeds --tol_od, and the line "base: ..." gives both tests (#576). The step: the
+first is --a0 (h_max when 0), a refused attempt halves it, and after an accepted step the next is
 --a_grow times longer, up to h_max; with --a_hold 1 it grows only after a step accepted at its first attempt, so a
 step found by halving is kept (past D 232 steps of 1.0 are refused at every base and 0.5 accepted, #461).
 --lam_stall L ends an attempt, as refused, when two Newton steps in a row had lam at or below L. A state is saved
@@ -123,7 +125,7 @@ from hpkernel.driver import make_solver, newton_solve, deflated_newton, delta_co
 from multidouble import dd_add, dd_horner, dd_scale, dd_norm, qd_add_dd  # noqa: E402
 from pinning import HeldFit, PinnedQ, PinnedSolver, band_coeffs, band_field, qd_axpy  # noqa: E402
 from raw_out import require_raw  # noqa: E402
-from octo_corrector import ElimO, PinnedO, has_o, load_o, newton_od, o8, o8_of_q, q4_of_o, save_o, with_horizon  # noqa: E402,F401
+from octo_corrector import ElimO, PinnedO, has_o, load_o, newton_od, o8, o8_of_q, omax, q4_of_o, save_o, with_horizon  # noqa: E402,F401
 from reseed import ElimQ, Reseeder, StartNotProjected  # noqa: E402
 from taylor_predict import formula_delta  # noqa: E402
 
@@ -483,9 +485,17 @@ def main():
     # the held harmonics as directions to freeze in the quad-double Newton: unit band fields in the p1 block
     Fh, Fl = sp.residual(zh, zl)
     F0 = float(rnorm(Fh, Fl))
-    if F0 > opt["tol"] and not opt["base_polish"]:
+    need = F0 > opt["tol"]
+    if opt["corrector"] == "od" and opt["base_polish"] and not need:
+        # a start converged in double-double can be far off in octo-double: the gate is then the stored state's pinned
+        # octo-double max |F| against --tol_od (#576)
+        Fo = omax(PinnedO(sp.s, sp.ch, sp.cl, c8=sp.c8).residual_o(load_o(os.path.join(raw, opt["state"]))[0]))
+        need = Fo > opt["tol_od"]
+        print(f"base: double-double |F| {F0:.1e} <= --tol {opt['tol']:.0e}, octo-double max|F| {Fo:.1e} "
+              f"{'>' if need else '<='} --tol_od {opt['tol_od']:.0e}: base polish {'runs' if need else 'skipped'}", flush=True)
+    if need and not opt["base_polish"]:
         print("base polish skipped (--base_polish 0): the stored state is the base", flush=True)
-    elif F0 > opt["tol"]:
+    elif need:
         # the quad-double polish starts from all four stored parts: from the first two alone it starts eps_dd G off the
         # root, outside the basin past D ~ 131 (the restart of T113 at 135.06, notes/QUAD_DOUBLE.md 13.22)
         z4_base = tuple(np.ascontiguousarray(np.asarray(p)) for p in load_q(os.path.join(raw, opt["state"]))[0])
