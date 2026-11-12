@@ -376,12 +376,13 @@ def family_params(recs, tuned):
     return out
 
 
-def pade_params(recs, nu, rinf, L=PADE_LM[0], M=PADE_LM[1]):
+def pade_params(recs, nu, rinf, L=PADE_LM[0], M=PADE_LM[1], step=None):
     """the information family pade: (r - r_inf)/eps = P_L(eps)/Q_M(eps), Q_M(0) = 1, by linearized least squares
     (rows weighted by eps, so residuals are in r) on every state the reference fit takes, after the measured step at 35
-    is taken off; r_inf is held at the tuned value, so the family has the real data's shape and a known intercept"""
+    (step, or step_fits') is taken off; r_inf is held at the tuned value, so the family has the real data's shape and a
+    known intercept"""
     use = use_for(recs, nu, REF[2], REF[3])
-    st = step_fits(recs, verbose=False)[nu]["step35"]
+    st = step_fits(recs, verbose=False)[nu]["step35"] if step is None else step
     e = np.array([r["eps"] for r in use])
     y = np.array([(r["r"][nu] - (st if r["D"] >= STEP_D else 0) - rinf) / r["eps"] for r in use])
     X = np.array([[ei ** l for l in range(L + 1)] + [-(ei ** m) * yi for m in range(1, M + 1)] for ei, yi in zip(e, y)])
@@ -756,8 +757,102 @@ def cmd_controls(argv):
     return 0 if not bad else 1
 
 
+# ------------------------------------------------------------------ information, after the real run (post hoc)
+def rational_fit(recs, nu, L, M, dlo=15.0):
+    """r(eps) = P_L(eps)/Q_M(eps), Q_M(0) = 1, by linearized least squares (r Q = P) on the reference fit's states with
+    D >= dlo, after the measured step at 35 is taken off: the intercept P(0), the poles and the zeros in eps"""
+    use = use_for(recs, nu, dlo, REF[3])
+    st = step_fits(recs, verbose=False)[nu]["step35"]
+    e = np.array([r["eps"] for r in use])
+    y = np.array([r["r"][nu] - (st if r["D"] >= STEP_D else 0) for r in use])
+    X = np.array([[ei ** l for l in range(L + 1)] + [-(ei ** m) * yi for m in range(1, M + 1)] for ei, yi in zip(e, y)])
+    sc = np.abs(X).max(axis=0)
+    sol, *_ = np.linalg.lstsq(X / sc, y, rcond=None)
+    sol = sol / sc
+    P, Q = sol[:L + 1], np.r_[1.0, sol[L + 1:]]
+    res = y - np.polyval(P[::-1], e) / np.polyval(Q[::-1], e)
+    return dict(r0=complex(P[0]), poles=np.roots(Q[::-1]), zeros=np.roots(P[::-1]),
+                maxres=float(np.abs(res).max()))
+
+
+def k_sequence(recs, nu, var="eps", dlo=15.0, ks=range(5, 13)):
+    """the polynomial fit's D = infinity value against K beyond the grid"""
+    return [(k, one_fit(recs, nu, var, k, dlo, REF[3])["r0"]) for k in ks]
+
+
+def shape_rms(rs, nu, c, L, M, step):
+    """the rms residual of the shape (r - c)/eps = P_L/Q_M fitted with the intercept held at c, and its nearest pole"""
+    use = use_for(rs, nu, REF[2], REF[3])
+    P, Q = pade_params(rs, nu, c, L, M, step)
+    res = np.array([c + r["eps"] * np.polyval(P[::-1], r["eps"]) / np.polyval(Q[::-1], r["eps"])
+                    + (step if r["D"] >= STEP_D else 0) - r["r"][nu] for r in use])
+    return float(np.sqrt(np.mean(np.abs(res) ** 2))), complex(min(np.roots(Q[::-1]), key=abs))
+
+
+def best_intercept(rs, nu, L, M, starts):
+    """c minimizing shape_rms over the complex plane (Nelder-Mead in units of 1e-3 from each start)"""
+    from scipy.optimize import minimize
+    step = step_fits(rs, verbose=False)[nu]["step35"]
+    c0 = starts[0]
+    f = lambda p: math.log(shape_rms(rs, nu, c0 + complex(p[0], p[1]) * 1e-3, L, M, step)[0])  # noqa: E731
+    best = None
+    for s in starts:
+        x0 = ((s - c0).real * 1e3, (s - c0).imag * 1e3)
+        o = minimize(f, x0, method="Nelder-Mead", options=dict(xatol=1e-6, fatol=1e-12, maxiter=3000))
+        if best is None or o.fun < best.fun:
+            best = o
+    c = c0 + complex(*best.x) * 1e-3
+    return c, step
+
+
+def cmd_info(argv):
+    """post hoc, information only: the K sequence of the polynomial fits past the grid, free-intercept rational fits
+    with their nearest pole, and the intercept that the shape (r - c)/eps = P_L/Q_M fits best, on the real states and
+    on the noise-free planted families (known truth)"""
+    statedir = [a for a in argv if not a.startswith("--")][0]
+    recs = add_ratios(load_states(statedir))
+    tuned = tuned_ratios(A_TARGET)
+    par = family_params(recs, tuned)
+    sets = [("real", recs)] + [(f"planted {f}", planted_records(recs, par, f)) for f in FAMILIES + INFO_FAMILIES]
+    LM = [(L, M) for M in (1, 2, 3, 4) for L in range(2, 7) if 5 <= L + M <= 8]
+    print("== the intercept the shape (r - c)/eps = P_L/Q_M fits best (rms over the reference fit's states)")
+    for nu in (3, 5, 7):
+        for lab, rs in sets[:3]:
+            med = grid_fit(rs, nu)["median"]
+            for L, M in ((3, 3), (4, 3), (5, 3), (4, 4)):
+                c, step = best_intercept(rs, nu, L, M, [tuned[nu], med])
+                rb, pb = shape_rms(rs, nu, c, L, M, step)
+                rt, _ = shape_rms(rs, nu, tuned[nu], L, M, step)
+                rm, _ = shape_rms(rs, nu, med, L, M, step)
+                print(f"  r_{nu} {lab:14s} [{L}/{M}]: best c - tuned {fc(c - tuned[nu], 6)} (|.| {abs(c - tuned[nu]):.1e},"
+                      f" grid median {abs(med - tuned[nu]):.1e}); rms at best {rb:.2e}, at tuned {rt:.2e}, at the grid "
+                      f"median {rm:.2e}; nearest pole at best eps {fc(pb, 4)} (|.| {abs(pb):.4f})", flush=True)
+    for nu in NU_ACC:
+        print(f"\n== r_{nu}: tuned {fc(tuned[nu], 8)}")
+        for lab, rs in sets:
+            ks = k_sequence(rs, nu)
+            print(f"  {lab:14s} K sequence (eps, D >= 15), |r(0) - tuned|: "
+                  + "  ".join(f"K{k} {abs(v - tuned[nu]):.1e}" for k, v in ks))
+        for lab, rs in sets:
+            rows = []
+            for L, M in LM:
+                f = rational_fit(rs, nu, L, M)
+                near = min(f["poles"], key=abs) if len(f["poles"]) else complex("nan")
+                dz = min(abs(f["zeros"] - near)) if len(f["zeros"]) else float("nan")
+                rows.append((L, M, f["r0"], near, dz, f["maxres"]))
+            v = np.array([x[2] for x in rows])
+            med = cmedian(v)
+            print(f"  {lab:14s} rational [L/M], L + M = 5-8 ({len(rows)} fits): median |r(0) - tuned| "
+                  f"{abs(med - tuned[nu]):.1e}, spread {max(abs(v - med)):.1e}")
+            for L, M, r0, near, dz, mr in rows:
+                print(f"      [{L}/{M}] |r(0) - tuned| {abs(r0 - tuned[nu]):.1e}  nearest pole eps {fc(near, 4)} "
+                      f"(|.| {abs(near):.4f}, nearest zero {dz:.1e} from it)  max residual {mr:.1e}")
+    return 0
+
+
 if __name__ == "__main__":
-    cmds = dict(noise=cmd_noise, planted=lambda a: cmd_planted(a)[0], states=cmd_states, controls=cmd_controls)
+    cmds = dict(noise=cmd_noise, planted=lambda a: cmd_planted(a)[0], states=cmd_states, controls=cmd_controls,
+                info=cmd_info)
     if len(sys.argv) < 3 or sys.argv[1] not in cmds:
         sys.exit(__doc__)
     sys.exit(cmds[sys.argv[1]](sys.argv[2:]))
