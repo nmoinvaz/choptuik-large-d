@@ -7,7 +7,7 @@ scaling of near_null_eq.py's result (Curtis-Reid then Ruiz on |J|, #502), on a p
     python3 eq_test.py predict PREFIX --J0 FILE.npz [--seeds 7,8,9] [--tol 1e-40]
     python3 eq_test.py verdict A B C D
     python3 eq_test.py same X Y [--mutate_bit 1]
-    python3 eq_test.py polish [--Dc_ref L08.json] [--Dc_out FILE.npy] ANM_RUN_ARGS...
+    python3 eq_test.py polish [--Dc_ref L08.json] [--Dc_out FILE.npy] [--hist_out PREFIX] ANM_RUN_ARGS...
 
 planted: octo_corrector.planted's start (the converged state with its centre data and its nodes but the last moved by
 --rel relative, --seed) corrected by newton_od inside ElimO, as planted's octo-double run does, every trial printed.
@@ -36,6 +36,7 @@ Exit 1 when they differ. Control: --mutate_bit 1 flips the last bit of Y's eight
 polish: anm_run.main with the given arguments (#489's run_polish.sh), its newton_od given scale_c = D_c from |J| at the
 first corrector call's start and verbose 2. --Dc_ref: near_null_eq's json at the same state (#502's L08_plant7.json),
 whose D_c is compared with this one up to a constant factor (the scaling is unique up to D_r t, D_c / t).
+--hist_out PREFIX appends each corrector call's history to PREFIX.jsonl and its trace to PREFIX_trace<call>.npz.
 """
 import importlib.util
 import json
@@ -273,7 +274,7 @@ def same(argv):
 
 
 def polish(argv):
-    opt = dict(Dc_ref="", Dc_out="")
+    opt = dict(Dc_ref="", Dc_out="", hist_out="")
     rest = list(argv)
     for k in list(opt):
         if "--" + k in rest:
@@ -301,7 +302,20 @@ def polish(argv):
                 print(f"#504: log10(D_c / D_c of {os.path.basename(opt['Dc_ref'])}) {r.min():+.3e}..{r.max():+.3e} (spread "
                       f"{np.ptp(r):.1e})", flush=True)
         kw["verbose"] = 2
-        return newton_od(s, z, scale_c=state["dc"], **kw)
+        trace = []
+        out = newton_od(s, z, scale_c=state["dc"], trace=trace, **kw)
+        if opt["hist_out"]:
+            # every call's history (one json line) and the trace of its trials (each call's npz)
+            state["calls"] = state.get("calls", 0) + 1
+            with open(opt["hist_out"] + ".jsonl", "a") as f:
+                f.write(json.dumps(dict(call=state["calls"], converged=bool(out[2]), hist=out[1]), default=float) + "\n")
+            L = len(state["dc"])
+            np.savez_compressed(f"{opt['hist_out']}_trace{state['calls']}.npz", it=np.array([t["it"] for t in trace]),
+                                lam=np.array([t["lam"] for t in trace]), accepted=np.array([t["accepted"] for t in trace]),
+                                F=np.array([t["F"] for t in trace]), d=np.array([t["d"] for t in trace]).reshape(-1, L),
+                                dt=np.array([t["dt"] if t["dt"] is not None else np.full(L, np.nan) for t in trace]).reshape(-1, L),
+                                D_c=state["dc"])
+        return out
     anm_run.newton_od = nod
     sys.argv = ["anm_run.py"] + rest
     anm_run.main()
