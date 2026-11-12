@@ -31,7 +31,11 @@ says where the linear model of the path ends.
 Trace (the rules, fixed before the first real run and written on #562):
 - A rung goes from t to t' = min(t + h, 1). Predictor z0' = z + (t' - t) tau, tau = -J(z)^-1 b by the LU at z.
 - Corrector: full Newton steps on H(., t') from the predictor (PinnedO with the offset c + a + (1 - t') b). It
-  converges when a correction's max falls to tol = max(1e-12 (t' - t) max|tau|, 1e-70). The rung is refused when the
+  converges when a correction's max falls to tol = max(1e-12 (t' - t) max|tau|, 1e-70) and, with --rule 2 (the
+  default), its max|H| to tolF = max(1e-6 (t' - t) max|b|, 1e-90) as well. --rule 1 is the
+  first rule, the correction alone: it accepted predictors whose strong rows still held their quadratic error (2.1e-35
+  at 0.975 against 8e-54 a rung before, 2.5e-33 at 0.7), whose weak-direction Newton then diverged from the next
+  rung on (win2's first traces, #562). The rung is refused when the
   first correction exceeds half the predicted move (t' - t) max|tau|, when a correction exceeds half the one before,
   when a Jacobian or correction is not finite, or after 8 corrections.
 - Refused: h <- (t' - t) / 4 from the same z and tau.
@@ -118,8 +122,9 @@ class System:
         return add(x, zero8(len(x[0])), -self.sign * self.tdir)
 
 
-def correct(so, zp, tol, first_max, it_max=8):
-    """full Newton steps on so from zp: (z, corrections, ok, why); z's LU is the solver's on success"""
+def correct(so, zp, tol, first_max, it_max=8, tolF=float("inf")):
+    """full Newton steps on so from zp: (z, corrections, ok, why); z's LU is the solver's on success. Converged when a
+    correction is at most tol and max|H| at most tolF (rule 2; rule 1 passes tolF = inf)"""
     corr = []
     try:
         d, Fh, Fl, _, _ = so.newton_o(zp)
@@ -133,7 +138,7 @@ def correct(so, zp, tol, first_max, it_max=8):
         print(f"    correction {j}: max|H| {nF:.3e}, max|dz| {nd:.3e}, its Delta {corr[-1]['dDelta']:+.3e}", flush=True)
         if not (np.isfinite(nd) and np.isfinite(nF)):
             return z, corr, False, "not finite"
-        if nd <= tol:
+        if nd <= tol and nF <= tolF:
             return z, corr, True, "converged"
         if j == 0 and nd > first_max:
             return z, corr, False, "first correction above half the predicted move"
@@ -185,6 +190,7 @@ def main():
     ap.add_argument("--threads", type=int, default=4)
     ap.add_argument("--rho", default="")
     ap.add_argument("--rho_scale", type=float, default=1.0)
+    ap.add_argument("--rule", type=int, default=2, choices=(1, 2))
     ap.add_argument("--eps", type=float, default=0.0)
     ap.add_argument("--mutate", default="", choices=("", "sign", "tsign"))
     ap.add_argument("--probe_only", type=int, default=0)
@@ -383,11 +389,12 @@ def main():
         mt = mx(tau)
         zp = add(tau, z, dt)
         tol = max(1e-12 * dt * mt, 1e-70)
+        tolF = max(1e-6 * dt * mx(sysH.b8), 1e-90) if a.rule == 2 else float("inf")
         t1 = time.time()
         so = sysH.at(t2)
-        zn, corr, ok, why = correct(so, zp, tol, 0.5 * dt * mt)
-        rec = dict(kind="rung", k=k, t=t, t_new=t2, h=dt, tau_max=mt, tol=tol, corr=corr, ok=ok, why=why,
-                   seconds=round(time.time() - t1, 1))
+        zn, corr, ok, why = correct(so, zp, tol, 0.5 * dt * mt, tolF=tolF)
+        rec = dict(kind="rung", k=k, t=t, t_new=t2, h=dt, tau_max=mt, tol=tol, tolF=tolF, rule=a.rule, corr=corr, ok=ok,
+                   why=why, seconds=round(time.time() - t1, 1))
         if not ok:
             refusals += 1
             h = dt / 4
