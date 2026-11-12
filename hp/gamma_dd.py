@@ -15,11 +15,14 @@ rebuilt layout (up to N Newton steps, default 4; the up6 states at D = 27-35 com
 not change). States whose residual still exceeds --fmax (default 1e-20) are skipped and recorded as such.
 
     python3 gamma_dd.py out.jsonl STATE.npz [STATE.npz ...] [--threads=N] [--M48 | --Mhi=64] [--kf=none|13|auto] [--fmax=1e-20] [--polish[=N]]
-        [--newton_it=12] [--lm_it=20] [--bracket=A,B] [--xtol=1e-14] [--series_override] [--mutate=old_rule|no_tail_gate]
+        [--newton_it=12] [--lm_it=20] [--bracket=A,B] [--xtol=1e-14] [--ball=PREC] [--series_override]
+        [--mutate=old_rule|no_tail_gate]
 
 --bracket=A,B searches the root of det M in [A, B] only, at every M, instead of the grids about the formula's value,
 and a bracket without a sign change gives lam None and exit status 1 (#458: the root's resolution is the spread of lam
-over brackets). --xtol is brentq's absolute tolerance (its relative tolerance is 1e-15).
+over brackets). --xtol is brentq's absolute tolerance (its relative tolerance is 1e-15). --ball=PREC takes det M as
+the exact determinant of the double-double mode matrix (python-flint's ball LU at PREC bits, hp/modecount_qdet.py)
+instead of its double-double LU's, at every M; the log's pivot range then holds the ball radius of ln|det| (#590).
 
 --M48 (or --Mhi=N) also resamples the state to M = 48 (N) tau points, re-converges it and repeats the root search,
 bracketed afresh from the formula (self-convergence; the record's M48 field). The M = 48 solve uses the kfreeze-13 cut
@@ -80,7 +83,7 @@ def best_solver(meta, zh, zl, threads, M=None, force=None):
     return s, F, kf
 
 
-def find_lam(s, zh, zl, lam0, log=None, bracket=None, xtol=1e-14):
+def find_lam(s, zh, zl, lam0, log=None, bracket=None, xtol=1e-14, ball=0):
     """the root of det M near lam0, from the widening grids about lam0, or in bracket (a, b) when given (#458: the
     root's resolution as its spread over brackets); None when the bracket has no sign change"""
     cache = {}
@@ -88,7 +91,16 @@ def find_lam(s, zh, zl, lam0, log=None, bracket=None, xtol=1e-14):
     def sd(lam):
         if lam not in cache:
             t = time.time()
-            sg, la, pmin, pmax = s.mode_det(zh, zl, float(lam), 0.0)
+            if ball:
+                # the exact determinant of the double-double matrix (modecount_qdet.ball_det_real), not its LU's
+                from modecount_qdet import ball_det_real
+                mh, ml = s.mode_matrix(zh, zl, float(lam), 0.0)
+                sg, la, rad = ball_det_real(np.asarray(mh), np.asarray(ml), ball)
+                if sg == 0:
+                    raise ValueError(f"the ball of det M at lam {lam!r} contains 0 at {ball} bits")
+                pmin, pmax = rad, float("nan")
+            else:
+                sg, la, pmin, pmax = s.mode_det(zh, zl, float(lam), 0.0)
             cache[lam] = (sg, la)
             if log:
                 log(f"    lam {lam:.12f}: sign {sg:+.0f} ln|det| {la:.6f} pivots {pmin:.2e}..{pmax:.2e} ({time.time() - t:.1f} s)")
@@ -194,7 +206,11 @@ def main():
     mutate = opts.get("mutate", "")
     bracket = tuple(float(x) for x in opts["bracket"].split(",")) if "bracket" in opts else None
     xtol = float(opts.get("xtol", 1e-14))
-    root = dict(bracket=list(bracket) if bracket else None, xtol=xtol)
+    ball = int(opts.get("ball", 0))
+    if ball:
+        from flint import ctx
+        ctx.threads = threads
+    root = dict(bracket=list(bracket) if bracket else None, xtol=xtol, **({"ball": ball} if ball else {}))
     out = args[0]
     log = lambda m: print(m, flush=True)
     status = 0
@@ -222,10 +238,10 @@ def main():
             with open(out, "a") as fh_:
                 fh_.write(json.dumps(rec) + "\n")
             continue
-        lam, nch, nev = find_lam(s, zh, zl, lam0, log, bracket, xtol)
+        lam, nch, nev = find_lam(s, zh, zl, lam0, log, bracket, xtol, ball)
         rec = dict(D=D, M=meta["M"], kfreeze=kf, F=F, **({"F_in": F_in} if "polish" in opts else {}), lam=lam, gamma=(1 / lam if lam else None), lam_formula=lam0,
                    n_signchanges=nch, n_det=nev, state=os.path.basename(f), seconds=round(time.time() - t0, 1),
-                   **(root if bracket or "xtol" in opts else {}))
+                   **(root if bracket or "xtol" in opts or ball else {}))
         if bracket and lam is None:
             log(f"  no sign change of det M in the bracket {bracket}")
             status = 1
@@ -269,7 +285,7 @@ def main():
                         hi["override"] = hi.get("override", []) + [why]
                     lam48 = None
                     if F48 <= fmax:
-                        lam48, nch48, _ = find_lam(s48, z48h, z48l, lam0, log, bracket, xtol)  # independently of lam
+                        lam48, nch48, _ = find_lam(s48, z48h, z48l, lam0, log, bracket, xtol, ball)  # independently of lam
                         if bracket and lam48 is None:
                             log(f"  M = {Mhi}: no sign change of det M in the bracket {bracket}")
                             status = 1

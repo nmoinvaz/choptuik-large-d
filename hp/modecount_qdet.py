@@ -80,6 +80,21 @@ def ball_det(rh, rl, ih, il, prec, mutate=""):
             round(time.time() - t, 2), lg)
 
 
+def ball_det_real(mh, ml, prec):
+    """(sign, ln|det|, radius of ln|det|) of a real double-double matrix (mh, ml) in balls, the exact determinant of
+    the double-double matrix; sign 0 when the ball contains 0 (gamma_dd.py --ball, #590)"""
+    from flint import arb, arb_mat, ctx
+    ctx.prec = prec
+    n = mh.shape[0]
+    A = arb_mat([[arb(float(mh[i, j])) + arb(float(ml[i, j])) for j in range(n)] for i in range(n)])
+    d = A.det()
+    if d.contains(0):
+        return 0.0, float("nan"), float("inf")
+    sg = 1.0 if d > 0 else -1.0
+    lg = abs(d).log()
+    return sg, float(lg.mid()), float(lg.rad())
+
+
 def ball_diff(b2, b1):
     """(d ln|det|, d arg) between two ball_det results, taken in balls (an f64 difference of the two would floor at
     an ulp of arg); the arg difference wrapped to (-pi, pi]"""
