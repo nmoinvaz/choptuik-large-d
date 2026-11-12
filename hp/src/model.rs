@@ -629,25 +629,6 @@ impl HPrep {
     }
 }
 
-/// a preparation that failed (a horizon LU with a zero or non-finite pivot) panics with this prefix; `guard` returns
-/// it as the entry point's error, as before the engine
-const PREP_PANIC: &str = "hp horizon LUs: ";
-
-/// The result of f, with a failed preparation's panic (PREP_PANIC) as its error; any other panic goes on unwinding
-fn guard<R>(f: impl FnOnce() -> Result<R, String>) -> Result<R, String> {
-    match std::panic::catch_unwind(std::panic::AssertUnwindSafe(f)) {
-        Ok(r) => r,
-        Err(e) => match e.downcast_ref::<String>().and_then(|s| s.strip_prefix(PREP_PANIC)) {
-            Some(msg) => Err(msg.to_string()),
-            None => std::panic::resume_unwind(e),
-        },
-    }
-}
-
-fn prep_ok(r: Result<Vec<DDLu>, String>) -> Vec<DDLu> {
-    r.unwrap_or_else(|e| std::panic::panic_any(format!("{PREP_PANIC}{e}")))
-}
-
 /// (omega D + diag kappa) f = r with the LU at the values; for tangents the derivative of the system:
 /// A_t f_d = r_d - omega_d D f_v - kappa_d f_v, with A_t = A + lambda (`HPrep::lus_t`; the same LU at rate zero).
 fn psolve<T: Lane, const B: usize>(ctx: &Ctx<B>, prep: &HPrep, kk: usize, kappa: &Fl<T, B>, rhs: &Fl<T, B>, omega: T) -> Fl<T, B> {
@@ -952,25 +933,26 @@ impl<const B: usize> Equations<B> for Dss<'_, B> {
     const NAUX: usize = N_AUX;
     type Prep = HPrep;
 
-    fn prepare(&self, zh: &[f64], zl: &[f64]) -> HPrep {
-        self.prepare_rate(zh, zl, Rate::ZERO)
+    fn try_prepare(&self, zh: &[f64], zl: &[f64]) -> Result<HPrep, String> {
+        self.try_prepare_rate(zh, zl, Rate::ZERO)
     }
 
     /// the horizon LUs at the state's double-double a_h and Delta (the preconditioners of the refined solves in quad-
-    /// and octo-double), and at a nonzero rate the factors of the shifted solves (hp/modecount_cx's HLus)
-    fn prepare_rate(&self, zh: &[f64], zl: &[f64], rate: Rate) -> HPrep {
+    /// and octo-double), and at a nonzero rate the factors of the shifted solves (hp/modecount_cx's HLus); the error of
+    /// an LU with a zero or non-finite pivot is the entry point's
+    fn try_prepare_rate(&self, zh: &[f64], zl: &[f64], rate: Rate) -> Result<HPrep, String> {
         let ctx = self.0;
         let ah = ctx.fld(zh, zl, ctx.off_ah());
         let delta = delta_of(zh, zl);
-        let lus = prep_ok(horizon_lus(ctx, &ah, delta, true, DD::ZERO));
+        let lus = horizon_lus(ctx, &ah, delta, true, DD::ZERO)?;
         let (lus_t, lus2) = if rate.im.hi != 0.0 {
-            (Vec::new(), prep_ok(horizon_lus_c(ctx, &ah, delta, rate.re, rate.im, true)))
+            (Vec::new(), horizon_lus_c(ctx, &ah, delta, rate.re, rate.im, true)?)
         } else if rate.re.hi != 0.0 {
-            (prep_ok(horizon_lus(ctx, &ah, delta, true, rate.re)), Vec::new())
+            (horizon_lus(ctx, &ah, delta, true, rate.re)?, Vec::new())
         } else {
             (Vec::new(), Vec::new())
         };
-        HPrep { lus, lus_t, lus2, rate }
+        Ok(HPrep { lus, lus_t, lus2, rate })
     }
 
     fn taylor_coeffs<T: Lane>(&self, x0: f64, g: &[T], w: &mut Work<T, B>) {
@@ -1011,7 +993,7 @@ fn split(f: &[DD]) -> (Vec<f64>, Vec<f64>) {
 pub fn residual<const B: usize>(ctx: &Ctx<B>, zh: &[f64], zl: &[f64], par: bool) -> Result<(Vec<f64>, Vec<f64>), String> {
     let sh = ctx.shooting();
     let z = [zh, zl];
-    let f = guard(|| sh.residual::<Double>(&z, par))?;
+    let f = sh.residual::<Double>(&z, par)?;
     Ok(split(&f))
 }
 
@@ -1067,7 +1049,7 @@ impl<const B: usize> Ctx<B> {
 /// The residual with every block in the precision P, one scalar per row: each block reads its inputs, Delta and its
 /// target in all parts, and the projected rows and the phase row are in P too
 pub fn residual_in<P: Precision<Native>, const B: usize>(ctx: &Ctx<B>, z: &[&[f64]], par: bool) -> Result<Vec<P::Scalar>, String> {
-    guard(|| ctx.shooting_in::<P>().residual::<P>(z, par))
+    ctx.shooting_in::<P>().residual::<P>(z, par)
 }
 
 /// The residual on a jet state z(h) = sum_k z_k h^k in P (`P::J<N>` lanes), with the dimension n + h as the jet
@@ -1080,19 +1062,19 @@ pub fn residual_jet_in<P: Precision<Native>, const N: usize, const B: usize>(
     par: bool,
     nout: usize,
 ) -> Result<Vec<Vec<P::Scalar>>, String> {
-    guard(|| ctx.shooting_in::<P>().residual_jet::<P, N>(zs, par, nout))
+    ctx.shooting_in::<P>().residual_jet::<P, N>(zs, par, nout)
 }
 
 /// The exact Jacobian in P by forward-mode duals (`P::U` lanes, one evaluation per column): (PARTS column-major part
 /// arrays with leading dimension ld_for(L), ld), part q of entry (i, j) at c[q][j ld + i]
 pub fn jacobian_in<P: Precision<Native>, const B: usize>(ctx: &Ctx<B>, z: &[&[f64]], par: bool) -> Result<(Vec<Vec<f64>>, usize), String> {
-    guard(|| ctx.shooting_in::<P>().jacobian::<P>(z, par))
+    ctx.shooting_in::<P>().jacobian::<P>(z, par)
 }
 
 /// The Newton step in P at z: dz = -J^-1 F in PARTS parts, F, the dense LU in P and the seconds of the residual, the
 /// Jacobian, the factorization and the solve (multishoot's `newton_step`)
 pub fn newton_in<P: Precision<Native>, const B: usize>(ctx: &Ctx<B>, z: &[&[f64]], par: bool) -> Result<multishoot::newton::Step<P>, String> {
-    guard(|| ctx.shooting_in::<P>().newton_step::<P>(z, par))
+    ctx.shooting_in::<P>().newton_step::<P>(z, par)
 }
 
 /// The Jacobian in plain f64 (the same columns with `Fu` lanes: constants and the base state rounded to f64, the
@@ -1121,7 +1103,7 @@ fn jacobian_f64_lanes<T: Lane, const B: usize>(ctx: &Ctx<B>, zh: &[f64], zl: &[f
         return jacobian_f64_hdd::<T, B>(ctx, zh, zl, par);
     }
     let sh = ctx.shooting();
-    guard(|| sh.jacobian_f64::<T>(&[zh, zl], par))
+    sh.jacobian_f64::<T>(&[zh, zl], par)
 }
 
 /// The f64 Jacobian with some blocks' column tasks on other lanes (Ctx::f64_dd): `Du` (double-double, rounded to f64
@@ -1136,7 +1118,7 @@ fn jacobian_f64_hdd<T: Lane, const B: usize>(ctx: &Ctx<B>, zh: &[f64], zl: &[f64
     let sh = ctx.shooting();
     let z = [zh, zl];
     let g = sh.globals::<Double>(&z);
-    let prep = guard(|| Ok(sh.eq.prepare(zh, zl)))?;
+    let prep = sh.eq.try_prepare(zh, zl)?;
     let tasks = sh.jac_tasks();
     let k = ctx.k();
     let du = |b: usize| (ctx.f64_dd & HDD_BLOCK != 0 && b == k) || (ctx.f64_dd & HDD_LASTSEG != 0 && k >= 2 && b == k - 1);
@@ -1158,7 +1140,7 @@ fn jacobian_f64_hdd<T: Lane, const B: usize>(ctx: &Ctx<B>, zh: &[f64], zl: &[f64
             _ => f64_cols(sh.jac_columns_f64::<T>(&z, &g, &prep, &u.1)),
         }
     };
-    let gc: Vec<Vec<Vec<DD>>> = guard(|| Ok(if par { units.par_iter().map(unit).collect() } else { units.iter().map(unit).collect() }))?;
+    let gc: Vec<Vec<Vec<DD>>> = if par { units.par_iter().map(unit).collect() } else { units.iter().map(unit).collect() };
     let cols: Vec<Vec<DD>> = gc.into_iter().flatten().collect();
     let mut jh = vec![0.0; ld * l];
     // the double-double columns of the projected blocks' tasks, by unknown
@@ -1258,7 +1240,7 @@ pub fn jvp<const B: usize>(ctx: &Ctx<B>, zh: &[f64], zl: &[f64], vh: &[f64], vl:
         (vd.0[l - 1], vd.1[l - 1]) = (dv.hi, dv.lo);
     }
     let sh = ctx.shooting();
-    let (mut jv, f) = guard(|| sh.jvp::<Double>(&[zh, zl], &[vd.0.as_slice(), vd.1.as_slice()], par))?;
+    let (mut jv, f) = sh.jvp::<Double>(&[zh, zl], &[vd.0.as_slice(), vd.1.as_slice()], par)?;
     let kb = ctx.k();
     if mutate == JVP_MUT_HORIZON {
         let (t, r0) = (ctx.block_target(kb), kb * 4 * m);
@@ -1302,7 +1284,7 @@ pub fn jacobian_block<T: Lane, const B: usize>(ctx: &Ctx<B>, zh: &[f64], zl: &[f
         MUT_LINK => Control::StaircaseLink,
         _ => Control::None,
     });
-    guard(|| sh.jacobian_staircase::<T>(&[zh, zl], par))
+    sh.jacobian_staircase::<T>(&[zh, zl], par)
 }
 
 /// `jacobian_block`'s deliberate breakage for the controls (hp/highm_check.py): one pivot of the staircase LU's middle
@@ -1316,7 +1298,7 @@ pub const MUT_LINK: u8 = 2;
 /// its real part). Column-major with leading dimension ld_for(L-1): (hi, lo, ld).
 pub fn mode_matrix<const B: usize>(ctx: &Ctx<B>, zh: &[f64], zl: &[f64], lam: DD, par: bool) -> Result<(Vec<f64>, Vec<f64>, usize), String> {
     let sh = ctx.shooting();
-    let mm = guard(|| sh.mode_matrix(&[zh, zl], Rate::new(lam, DD::ZERO), par))?;
+    let mm = sh.mode_matrix(&[zh, zl], Rate::new(lam, DD::ZERO), par)?;
     let ld = mm.ld;
     let mut re = mm.re;
     let l = re.pop().expect("two parts");
