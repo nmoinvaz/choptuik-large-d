@@ -30,7 +30,7 @@ R(C) within 10% of 0.45 wherever read, read at u_p >= 0.14; B's first real zero 
 0.95 R(B). With --mutate=b the same checks must fail (B's radius falls to u_p). Exit 1 on a failed check.
 
     cd hp && python3 pole_bc.py planted [--mutate=b]
-    cd hp && python3 pole_bc.py OUT.jsonl STATE.npz [STATE.npz ...] [--mutate=b] [--threads N] [--ref pole_test.jsonl]
+    cd hp && python3 pole_bc.py OUT.jsonl STATE.npz [STATE.npz ...] [--mutate=b] [--threads N] [--ref pole_test.jsonl] [--ks N]
 """
 import json
 import math
@@ -327,7 +327,7 @@ def planted(mutate):
 
 
 # ------------------------------------------------------------------ the stored states
-def run_states(out, paths, mutate, threads, ref):
+def run_states(out, paths, mutate, threads, ref, ks_set=None):
     from hpkernel.driver import load, make_solver
     from pole_test import ratio_radius
     refR = {}
@@ -348,7 +348,7 @@ def run_states(out, paths, mutate, threads, ref):
         for path in paths:
             zh, zl, meta = load(path)
             D, M, nodes = meta["D"], meta["M"], list(meta["nodes"])
-            kc, ks, kt = meta.get("kc", 146), meta.get("ks", 130), meta.get("kt", 36)
+            kc, ks, kt = meta.get("kc", 146), ks_set or meta.get("ks", 130), meta.get("kt", 36)
             K = len(nodes)
             u0 = 1.0 - nodes[-1]
             n = D - 2
@@ -434,11 +434,14 @@ def main():
             args.remove(a)
     if mutate not in ("", "b"):
         raise SystemExit(f"--mutate={mutate}: only --mutate=b exists")
-    threads, ref = 2, None
+    threads, ref, ks_set = 2, None, None
     if "--threads" in args:
         i = args.index("--threads"); threads = int(args[i + 1]); del args[i:i + 2]
     if "--ref" in args:
         i = args.index("--ref"); ref = args[i + 1]; del args[i:i + 2]
+    if "--ks" in args:
+        # a diagnostic: the horizon series to N orders instead of the state's ks (R136 then differs from 13.6's)
+        i = args.index("--ks"); ks_set = int(args[i + 1]); del args[i:i + 2]
     if args and args[0] == "planted":
         planted(mutate)
         return
@@ -447,7 +450,7 @@ def main():
     allow = pop_allow(args)
     out, paths = args[0], args[1:]
     require_raw(out, allow=allow)
-    run_states(out, paths, mutate, threads, ref)
+    run_states(out, paths, mutate, threads, ref, ks_set)
 
 
 if __name__ == "__main__":
