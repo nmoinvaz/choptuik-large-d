@@ -200,7 +200,7 @@ from 215 to 242.36. On the rounded rows they are at 5×10⁻³⁶ to 8×10⁻³�
 | 215.00 | −4.537×10⁻¹⁹ | −4.547×10⁻¹⁹ | 1.002 |
 | 225.13 | −7.818×10⁻¹⁶ | −7.757×10⁻¹⁶ | 0.992 |
 | 235.13 | −3.557×10⁻¹² | −3.531×10⁻¹² | 0.993 |
-| 240.03 | −2.04×10⁻¹⁰ | (#595, running) | |
+| 240.03 | −2.04×10⁻¹⁰ | not reached: the polish on the exact rows stalls after its first step (#595) | |
 | 242.36 | +2.15×10⁻⁹ | not reached: the polish on the exact rows does not converge (#562) | |
 
 The measured shifts are #595's (`I595-mac/` at 2b818f6f, `hp/delta_diff.py`). Each is a direct polish of the chain's
