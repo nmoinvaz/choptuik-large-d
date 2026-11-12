@@ -8,6 +8,7 @@ scaling of near_null_eq.py's result (Curtis-Reid then Ruiz on |J|, #502), on a p
     python3 eq_test.py predict PREFIX --J0 FILE.npz [--seeds 7,8,unmoved] [--n N] [--tol 1e-40] [--U 20,40] [--draws 500]
     python3 eq_test.py verdict A B C D
     python3 eq_test.py same X Y [--mutate_bit 1]
+    python3 eq_test.py sensitivity J0.npz
     python3 eq_test.py polish [--Dc_ref L08.json] [--Dc_out FILE.npy] [--hist_out PREFIX] ANM_RUN_ARGS...
 
 planted: octo_corrector.planted's start (the converged state with its centre data and its nodes but the last moved by
@@ -37,6 +38,9 @@ with the same outcome (converged or not). The final iterates' bit equality and D
 
 same: the bit-identity check of two planted runs, the iterates' eight parts and the histories without their times.
 Exit 1 when they differ. Control: --mutate_bit 1 flips the last bit of Y's eighth part at one entry, and it must fail.
+
+sensitivity: how far near_null_eq's result scaling moves when the smallest entries of a stored f64 Jacobian are dropped,
+and under a relative perturbation of all its entries.
 
 polish: anm_run.main with the given arguments (#489's run_polish.sh), its newton_od given scale_c = D_c from |J| at the
 first corrector call's start and verbose 2. --Dc_ref: near_null_eq's json at the same state (#502's L08_plant7.json),
@@ -245,6 +249,24 @@ def predict(argv):
     return 0
 
 
+def sensitivity(argv):
+    """how far near_null_eq's result scaling D_c moves when J's smallest entries are dropped (each entry below thr times
+    its row's max set to 0, thr 1e-40 to 1e-20), and when every entry is multiplied by 1 + 1e-10 N(0, 1) (seed 1)"""
+    d = np.load(argv[0])
+    A = np.abs(d[list(d.keys())[0]])
+    dc = eq_scaling(A)[1]
+    rmax = A.max(axis=1, keepdims=True)
+    print(f"{argv[0]}: L {A.shape[0]}, |J| entries {A[A > 0].min():.1e}..{A.max():.1e}, D_c {dc.min():.2e}..{dc.max():.2e}")
+    for thr in (1e-40, 1e-35, 1e-30, 1e-25, 1e-20):
+        B = np.where(A > thr * rmax, A, 0.0)
+        r = np.log10(eq_scaling(B)[1] / dc)
+        print(f"  entries below {thr:.0e} of their row's max dropped ({int((A > 0).sum() - (B > 0).sum())}): spread of "
+              f"log10(D_c' / D_c) {np.ptp(r):.2e}", flush=True)
+    B = A * (1 + 1e-10 * np.random.default_rng(1).standard_normal(A.shape))
+    print(f"  every entry times 1 + 1e-10 N(0, 1): spread {np.ptp(np.log10(eq_scaling(B)[1] / dc)):.2e}")
+    return 0
+
+
 def verdict(argv):
     recs = []
     for p in argv[:4]:
@@ -356,7 +378,7 @@ def polish(argv):
 
 
 if __name__ == "__main__":
-    cmds = dict(planted=planted, predict=predict, verdict=verdict, same=same, polish=polish)
+    cmds = dict(planted=planted, predict=predict, verdict=verdict, same=same, polish=polish, sensitivity=sensitivity)
     if len(sys.argv) < 3 or sys.argv[1] not in cmds:
         sys.exit(__doc__)
     sys.exit(cmds[sys.argv[1]](sys.argv[2:]))
