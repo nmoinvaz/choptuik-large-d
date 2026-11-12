@@ -95,9 +95,12 @@ class System:
 
     def __init__(self, s, c8, a8, b8, sign=1.0):
         self.s, self.ca8, self.b8, self.sign = s, add(a8, c8), o8(b8), sign
+        self.cab8 = add(self.b8, self.ca8, sign)                     # c + a + sign b, the offset at t = 0
 
     def at(self, t):
-        off = add(self.b8, self.ca8, self.sign * (1.0 - t))
+        """PinnedO with the offset at t: c + a + sign b - sign t b below t = 1/2, where the float 1 - t would drop t
+        below 1e-16, and c + a + sign (1 - t) b above it (1 - t exact there)"""
+        off = add(self.b8, self.cab8, -self.sign * t) if t < 0.5 else add(self.b8, self.ca8, self.sign * (1.0 - t))
         return PinnedO(self.s, off[0], off[1], c8=off)
 
     def tangent(self):
