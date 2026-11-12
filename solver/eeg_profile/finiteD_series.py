@@ -53,6 +53,17 @@ Criteria (agent-comms#38, posted on the issue before the first fit of real data)
       move of each nu's median is reported.
   reverse  control, --mutate=reverse (theta -> -theta): every median's argument turns negative and A1 fails.
 
+Revision 1 (posted on the issue after the first planted runs, before any fit of real data):
+  - The noise estimator's window is 9 states at degree 5 (was 7 at degree 3, whose own truncation, about 2e-7 at
+    D < 35, set the first table). Its floor on the noise-free plants is printed by `noise`.
+  - Every fit carries a step column at D 35, where the scan starts pinning p1's harmonics above 13 (measured steps
+    2.5e-7 in r_5, 6.5e-7 in r_7, 1.2e-4 in r_9). The D = infinity value is taken on the pinned side. In the realistic
+    plant the step decays from D 35 like |F_15| ~ |F_13|^2/|F_11| of the real states (pin_weight).
+  - The grid is K 7, 8, 9 x D >= 15, 20 x {eps, 1/n} (x chain for r_1). With the step column, K <= 6 is
+    truncation-limited on q3 and K >= 10 noise-limited, and D >= 25, 30 leave too few states below 35.
+  - A third family, pade, is information only. It is the real data's shape, a linearized least-squares
+    (r - r_inf)/eps = P_4/Q_3 on the reference fit's states with r_inf held at the tuned value.
+
     python3 finiteD_series.py noise STATEDIR [--json=F]          the data's precision (local fits, no extrapolation)
     python3 finiteD_series.py planted STATEDIR [--family=rat,q3] [--noise=0|measured] [--seeds=20] [--mutate=offset]
     python3 finiteD_series.py states STATEDIR [--mutate=target|scale1|reverse] [--json=F]
@@ -82,16 +93,21 @@ NU_ACC = (1, 3, 5, 7)                    # the acceptance's ratios: harmonics th
 NU_MAX = 13                              # harmonics solved in every full state (kfreeze 13 from D 35)
 CHAIN_D = tuple(range(80, 180, 10)) + (180, 190, 200, 205, 209, 215)
 DMIN = 15.0
-KS = (4, 5, 6, 7, 8)
-DLOS = (15.0, 20.0, 30.0)
+KS = (7, 8, 9)                           # revision 1 (was 4-8): see the docstring
+DLOS = (15.0, 20.0)                      # revision 1 (was 15, 20, 30)
 VARS = ("eps", "inv_n")
 K_REF = 8
 REF = ("eps", K_REF, 15.0, True)
 OFFSET = 5e-4
 TOL_FORM = 1e-4
 F2_DMAX = 61.5                           # F2's fits stop at the double-double states
+STEP_D = 35.0                            # the scan pins p1's harmonics above 13 from here (kfreeze 13)
+STEP_FIT = True                          # every fit carries a step column at STEP_D (revision 1, see the docstring)
+NOISE_WINDOW = (9, 5)                    # revision 1: (7, 3) was set by the local fit's truncation at D < 35
 SCALE_D, SCALE_NU, SCALE = 40.0201, 5, 1.01
 FAMILIES = ("rat", "q3")
+INFO_FAMILIES = ("pade",)                # revision 1: the real data's shape, information only
+PADE_LM = (4, 3)
 ANCHOR_D = (20.0437, 34.0521, 60.0020)   # the real ratios there size the planted families
 
 
@@ -184,17 +200,20 @@ def tuned_ratios(A, path=TUNED_JSON[1], numax=15):
 
 
 # ------------------------------------------------------------------ the fits
-def fit_poly(x, y, K, at=0.0):
-    """complex least squares y = sum_{k <= K} c_k T_k(t), t the affine map of x's range onto [-1, 1]; returns the fit's
-    value at x = at, the residuals and a callable"""
+def fit_poly(x, y, K, at=0.0, h=None):
+    """complex least squares y = sum_{k <= K} c_k T_k(t) (+ s h), t the affine map of x's range onto [-1, 1], h an
+    optional indicator column (the step at STEP_D); returns the fit's value at x = at (with h = 1), the residuals and a
+    callable ev(x, h=1)"""
     lo, hi = float(x.min()), float(x.max())
     t = (2 * x - (lo + hi)) / (hi - lo)
     V = np.polynomial.chebyshev.chebvander(t, K)
+    if h is not None:
+        V = np.hstack([V, np.asarray(h, dtype=float)[:, None]])
     c, *_ = np.linalg.lstsq(V, y, rcond=None)
 
-    def ev(xx):
+    def ev(xx, hh=1.0):
         tt = (2 * np.asarray(xx, dtype=float) - (lo + hi)) / (hi - lo)
-        return np.polynomial.chebyshev.chebval(tt, c)
+        return np.polynomial.chebyshev.chebval(tt, c[:K + 1]) + (c[K + 1] * hh if h is not None else 0.0)
     return complex(ev(at)), y - V @ c, ev
 
 
@@ -205,11 +224,17 @@ def use_for(recs, nu, dlo, chain, dmax=None):
     return out
 
 
+def step_col(use):
+    """the indicator of the pinned states (D >= STEP_D), when STEP_FIT and at least 3 states lie on each side"""
+    h = np.array([1.0 if r["D"] >= STEP_D else 0.0 for r in use])
+    return h if (STEP_FIT and h.sum() >= 3 and (1 - h).sum() >= 3) else None
+
+
 def one_fit(recs, nu, var, K, dlo, chain, key="r", dmax=None):
     use = use_for(recs, nu, dlo, chain, dmax)
     x = np.array([r[var] for r in use])
     y = np.array([r[key][nu] for r in use])
-    v0, res, ev = fit_poly(x, y, K)
+    v0, res, ev = fit_poly(x, y, K, h=step_col(use))
     return dict(r0=v0, rms=float(np.sqrt(np.mean(np.abs(res) ** 2))), maxres=float(np.abs(res).max()), n=len(use),
                 ev=ev, D=[r["D"] for r in use], res=res)
 
@@ -273,9 +298,10 @@ def print_grid(nu, g, truth=None, label=""):
 
 
 # ------------------------------------------------------------------ the data's precision
-def noise(recs, verbose=True, window=7, deg=3):
+def noise(recs, verbose=True, window=NOISE_WINDOW[0], deg=NOISE_WINDOW[1]):
     """per nu: rms of the residuals of local fits (window consecutive full states, degree deg in eps), by group; an
-    estimator of the data's noise (it includes the local fit's own truncation), not a bound"""
+    estimator of the data's noise (it includes the local fit's own truncation, whose floor on the planted families is
+    printed by `noise`), not a bound"""
     full = [r for r in recs if r["kind"] == "full"]
     groups = (("D 15-35", 15.0, 35.0), ("D 35-61", 35.0, 61.5), ("D 68-73", 61.5, 74.0))
     out = {}
@@ -292,7 +318,8 @@ def noise(recs, verbose=True, window=7, deg=3):
         out[nu]["all"] = float(np.sqrt(np.nanmean(res ** 2)))
         out[nu]["max"] = float(np.nanmax(res))
     if verbose:
-        print("\n== the data's precision: rms of local residuals (7 consecutive full states, cubic in eps), absolute in r")
+        print(f"\n== the data's precision: rms of local residuals ({window} consecutive full states, degree {deg} in eps),"
+              " absolute in r")
         print("  nu " + "".join(f"{g:>11s}" for g, _, _ in groups) + "        all        max     |r| at D 60")
         r60 = next(r for r in full if abs(r["D"] - 60.002) < 0.01)
         for nu in NUS:
@@ -311,19 +338,22 @@ def step_fits(recs, verbose=True):
         y = np.array([r["r"][nu] for r in use])
         lo, hi = x.min(), x.max()
         t = (2 * x - (lo + hi)) / (hi - lo)
-        cols = [np.polynomial.chebyshev.chebvander(t, K_REF), np.array([[1.0 if r["D"] >= 35.0 else 0.0] for r in use])]
+        cols = [np.polynomial.chebyshev.chebvander(t, K_REF), np.array([[1.0 if r["D"] >= 35.0 else 0.0] for r in use]),
+                np.array([[1.0 if r["D"] >= 61.5 and r["kind"] == "full" else 0.0] for r in use])]
         if nu == 1:
             cols.append(np.array([[1.0 if r["kind"] == "chain" else 0.0] for r in use]))
         V = np.hstack(cols)
         c, *_ = np.linalg.lstsq(V, y, rcond=None)
-        out[nu] = dict(step35=complex(c[K_REF + 1]), step_chain=complex(c[K_REF + 2]) if nu == 1 else None)
+        out[nu] = dict(step35=complex(c[K_REF + 1]), step_qd=complex(c[K_REF + 2]),
+                       step_chain=complex(c[K_REF + 3]) if nu == 1 else None)
     if verbose:
-        print("\n== steps fitted beside the reference fit (eps, K 8, D >= 15): at D 35 (kfreeze 13 from there), and for"
-              " r_1 at the chain (D >= 80)")
+        print("\n== steps fitted beside the reference polynomial (eps, K 8, D >= 15): at D 35 (kfreeze 13 from there), at"
+              " the quad-double states (68.5-73), and for r_1 at the chain (D >= 80)")
         for nu in NUS:
             s = out[nu]
-            print(f"  r_{nu}: step at 35 {s['step35'].real:+.2e}{s['step35'].imag:+.2e}i"
-                  + (f", step at the chain {s['step_chain'].real:+.2e}{s['step_chain'].imag:+.2e}i" if s["step_chain"] is not None else ""))
+            print(f"  r_{nu}: step at 35 {s['step35'].real:+.2e}{s['step35'].imag:+.2e}i, at the quad-double states "
+                  f"{s['step_qd'].real:+.2e}{s['step_qd'].imag:+.2e}i"
+                  + (f", at the chain {s['step_chain'].real:+.2e}{s['step_chain'].imag:+.2e}i" if s["step_chain"] is not None else ""))
     return out
 
 
@@ -342,8 +372,21 @@ def family_params(recs, tuned):
         a = y[0] * (1 + b * e[0])
         Mq = np.array([[1.0, -e[i] * y[i], -e[i] ** 2 * y[i]] for i in range(3)])
         aq, b1, b2 = np.linalg.solve(Mq, y)
-        out[nu] = dict(rinf=rinf, rat=(a, b), q3=(aq, b1, b2))
+        out[nu] = dict(rinf=rinf, rat=(a, b), q3=(aq, b1, b2), pade=pade_params(recs, nu, rinf))
     return out
+
+
+def pade_params(recs, nu, rinf, L=PADE_LM[0], M=PADE_LM[1]):
+    """the information family pade: (r - r_inf)/eps = P_L(eps)/Q_M(eps), Q_M(0) = 1, by linearized least squares
+    (rows weighted by eps, so residuals are in r) on every state the reference fit takes, after the measured step at 35
+    is taken off; r_inf is held at the tuned value, so the family has the real data's shape and a known intercept"""
+    use = use_for(recs, nu, REF[2], REF[3])
+    st = step_fits(recs, verbose=False)[nu]["step35"]
+    e = np.array([r["eps"] for r in use])
+    y = np.array([(r["r"][nu] - (st if r["D"] >= STEP_D else 0) - rinf) / r["eps"] for r in use])
+    X = np.array([[ei ** l for l in range(L + 1)] + [-(ei ** m) * yi for m in range(1, M + 1)] for ei, yi in zip(e, y)])
+    sol, *_ = np.linalg.lstsq(X * e[:, None], y * e, rcond=None)
+    return (sol[:L + 1], np.r_[1.0, sol[L + 1:]])
 
 
 def planted_r(par, nu, fam, eps):
@@ -351,12 +394,26 @@ def planted_r(par, nu, fam, eps):
     if fam == "rat":
         a, b = p["rat"]
         return p["rinf"] + a * eps / (1 + b * eps)
+    if fam == "pade":
+        P, Q = p["pade"]
+        return p["rinf"] + eps * np.polyval(P[::-1], eps) / np.polyval(Q[::-1], eps)
     a, b1, b2 = p["q3"]
     return p["rinf"] + a * eps / (1 + b1 * eps + b2 * eps * eps)
 
 
 def group_of(r):
     return "D 15-35" if r["D"] < 35.0 else "D 35-61" if r["D"] < 61.5 else "D 68-73"
+
+
+def pin_weight(recs, r):
+    """the pinning's bias shape: 0 below STEP_D, from there the size of the first pinned harmonic, |F_15| ~
+    |F_13|^2/|F_11| of the real states, relative to its value at the first pinned state (the chain takes the last
+    full state's)"""
+    if r["D"] < STEP_D:
+        return 0.0
+    full = [q for q in recs if q["kind"] == "full" and q["D"] >= STEP_D]
+    prox = lambda q: abs(q["F"][13]) ** 2 / abs(q["F"][11])  # noqa: E731
+    return prox(r if r["kind"] == "full" else full[-1]) / prox(full[0])
 
 
 def planted_records(recs, par, fam, sig=None, rng=None, steps=None):
@@ -373,7 +430,7 @@ def planted_records(recs, par, fam, sig=None, rng=None, steps=None):
         rr = {nu: planted_r(par, nu, fam, eps) for nu in NUS}
         if steps is not None:
             for nu in NUS:
-                rr[nu] += (steps[nu][0] if r["D"] >= 35.0 else 0) + (steps[nu][1] if r["kind"] == "chain" else 0)
+                rr[nu] += steps[nu][0] * pin_weight(recs, r) + (steps[nu][1] if r["kind"] == "chain" else 0)
         truth_r = dict(rr)
         if sig is not None:
             for nu in NUS:
@@ -394,7 +451,7 @@ def planted_records(recs, par, fam, sig=None, rng=None, steps=None):
 
 def cmd_planted(argv):
     statedir = [a for a in argv if not a.startswith("--")][0]
-    fams = arg(argv, "family", ",".join(FAMILIES)).split(",")
+    fams = arg(argv, "family", ",".join(FAMILIES + INFO_FAMILIES)).split(",")
     nz = arg(argv, "noise", "0")
     seeds = int(arg(argv, "seeds", 20))
     mut = arg(argv, "mutate")
@@ -402,15 +459,19 @@ def cmd_planted(argv):
     tuned = tuned_ratios(A_TARGET)
     par = family_params(recs, tuned)
     print("== planted families: parameters and the distance from the real ratios at every full state (realism)")
+    st0 = step_fits(recs, verbose=False)
     for nu in NUS:
         a, b = par[nu]["rat"]
         aq, b1, b2 = par[nu]["q3"]
         poles = np.roots([b2, b1, 1.0])
         full = [r for r in recs if r["kind"] == "full"]
-        dr = max(abs(planted_r(par, nu, "rat", r["eps"]) - r["r"][nu]) for r in full)
-        dq = max(abs(planted_r(par, nu, "q3", r["eps"]) - r["r"][nu]) for r in full)
+        dist = {f: max(abs(planted_r(par, nu, f, r["eps"]) + (st0[nu]["step35"] if (f == "pade" and r["D"] >= STEP_D)
+                                                                else 0) - r["r"][nu]) for r in full)
+                for f in FAMILIES + INFO_FAMILIES}
+        pp = np.roots(par[nu]["pade"][1][::-1])
         print(f"  r_{nu}: rat a {fc(a, 4)} pole eps {fc(-1 / b, 4)};  q3 a {fc(aq, 4)} poles eps "
-              f"{', '.join(fc(p, 4) for p in poles)};  max |plant - real| rat {dr:.1e}, q3 {dq:.1e}")
+              f"{', '.join(fc(p, 4) for p in poles)};  pade poles eps {', '.join(fc(p, 4) for p in pp)};  "
+              "max |plant - real| " + ", ".join(f"{f} {v:.1e}" for f, v in dist.items()))
     sig, steps = None, None
     if nz == "measured":
         nzv = noise(recs, verbose=False)
@@ -422,7 +483,7 @@ def cmd_planted(argv):
         print("  steps added from D 35 (and at the chain): " + "; ".join(
             f"r_{nu} {abs(steps[nu][0]):.1e}" + (f" ({abs(steps[nu][1]):.1e})" if nu == 1 else "") for nu in NUS))
     off = OFFSET if mut == "offset" else 0.0
-    summ, ok_all = {}, True
+    summ, ok_all, oks = {}, True, {}
     nrun = seeds if sig is not None else 1
     for fam in fams:
         cover = {nu: 0 for nu in NUS}
@@ -451,16 +512,21 @@ def cmd_planted(argv):
             e = np.array(errs[nu])
             need = nrun if sig is None else 18
             ok = cover[nu] >= need
-            if nu in NU_ACC:
+            counted = nu in NU_ACC and fam in FAMILIES
+            oks[(fam, nu)] = ok
+            if counted:
                 ok_all &= ok
             print(f"  {nu:2d}  {cover[nu]:2d}/{nrun:<2d}   {e[:, 0].max():.2e}            {e[:, 1].min():.2e}..{e[:, 1].max():.2e}"
-                  f"      {e[:, 2].max():.2e}   {'pass' if ok else 'FAIL'}{'' if nu in NU_ACC else ' (information)'}")
+                  f"      {e[:, 2].max():.2e}   {'pass' if ok else 'FAIL'}{'' if counted else ' (information)'}")
             summ[f"{fam}_{nu}"] = dict(covered=cover[nu], runs=nrun, err_max=float(e[:, 0].max()),
                                        s_min=float(e[:, 1].min()), s_max=float(e[:, 1].max()), ref_err=float(e[:, 2].max()))
     crit = "P3" if sig is not None else "P1"
     if mut == "offset":
-        print(f"\n{crit} under --mutate=offset: {'fails, so Pm fires (control behaves)' if not ok_all else 'PASSES: Pm does not fire'}")
-        return 0 if not ok_all else 1, summ
+        held = [(f, nu) for f in FAMILIES for nu in NU_ACC if (f, nu) in oks and oks[(f, nu)]]
+        fired = not held
+        print(f"\nPm ({crit} with the truth moved by {OFFSET:g}, must fail for every nu and family): "
+              + ("fires (control behaves)" if fired else f"does NOT fire: still covered for {held}"))
+        return 0 if fired else 1, summ
     print(f"\n{crit}: {'pass' if ok_all else 'FAIL'}")
     return 0 if ok_all else 1, summ
 
@@ -471,13 +537,14 @@ def form(recs, dmax=None):
     dmax: the fits take only the full states with D <= dmax (F2)"""
     use = [r for r in recs if r["D"] >= REF[2] and (dmax is None or (r["D"] <= dmax and r["kind"] == "full"))]
     xa = np.array([r["eps"] for r in use])
-    _, _, evA = fit_poly(xa, np.array([r["A"] for r in use], dtype=complex), K_REF)
+    _, _, evA = fit_poly(xa, np.array([r["A"] for r in use], dtype=complex), K_REF, h=step_col(use))
     evr = {nu: one_fit(recs, nu, REF[0], REF[1], REF[2], REF[3] and dmax is None, dmax=dmax)["ev"] for nu in NUS}
 
     def F_of(eps):
-        F = {1: -0.5j * float(np.real(evA(eps)))}
+        hh = 1.0 if 1.0 + 1.0 / eps >= STEP_D else 0.0          # the step column, as the data carry it
+        F = {1: -0.5j * float(np.real(evA(eps, hh)))}
         for nu in (1, 3, 5, 7):
-            F[nu + 2] = F[nu] * complex(evr[nu](eps))
+            F[nu + 2] = F[nu] * complex(evr[nu](eps, hh))
         return F
     coef = dict(A0=float(np.real(evA(0.0))), r0={nu: complex(evr[nu](0.0)) for nu in NUS})
     return F_of, evr, coef
@@ -612,6 +679,11 @@ def cmd_noise(argv):
     print(f"{len(recs)} states: {sum(r['kind'] == 'full' for r in recs)} full (D {recs[0]['D']:.2f}-"
           f"{max(r['D'] for r in recs if r['kind'] == 'full'):.2f}), {sum(r['kind'] == 'chain' for r in recs)} chain")
     nz = noise(recs)
+    par = family_params(recs, tuned_ratios(A_TARGET))
+    for fam in FAMILIES:
+        fl = noise(planted_records(recs, par, fam), verbose=False)
+        print(f"  the estimator's floor on the noise-free {fam} plant: " + "; ".join(
+            f"r_{nu} " + ", ".join(f"{fl[nu][g]:.1e}" for g in ("D 15-35", "D 35-61", "D 68-73")) for nu in NUS))
     st = step_fits(recs)
     js = arg(argv, "json")
     if js:
