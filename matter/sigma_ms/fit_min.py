@@ -80,6 +80,20 @@ def fit_all(eps, delta):
     return out
 
 
+def local_parabolas(etas, delta):
+    """#633's local fit as a cross-check: the parabola through the three smallest of eta = 5, 6, 7, 8.5, 10 in eta,
+    ln eta and 1/eta (its vertex; the spread over the variables is its own model range)"""
+    pts = [(mp.mpf(e), d) for e, d in zip(etas, delta) if e in ("5", "6", "7", "8.5", "10")]
+    pts = sorted(sorted(pts, key=lambda p: p[1])[:3])
+    out = {}
+    for name, f, finv in (("eta", lambda x: x, lambda u: u), ("ln eta", mp.log, mp.exp), ("1/eta", lambda x: 1 / x, lambda u: 1 / u)):
+        u = [f(p[0]) for p in pts]
+        c = polyfit_mp(u, [p[1] for p in pts], 2)
+        uv = -c[1] / (2 * c[2])
+        out[name] = dict(eta_min=float(finv(uv)), Delta_min=mp.nstr(pval(c, uv), 20), points=[float(p[0]) for p in pts])
+    return out
+
+
 def summarize(fits):
     ok = [d for d in DEGREES if fits[d]["eta_min"] is not None]
     if QUOTED not in ok:
@@ -158,7 +172,7 @@ def main():
             print(f"M = {M}: missing {sorted(set(ETAS) - set(best))}")
             continue
         eps = [eps_of(e) for e in ETAS]
-        delta = [mp.mpf(best[e]["Delta"]) for e in ETAS]
+        delta = [mp.mpf(best[e]["Delta_hi"]) + mp.mpf(best[e]["Delta_lo"]) for e in ETAS]
         fits = fit_all(eps, delta)
         s = summarize(fits)
         out[M] = dict(fits={d: dict((k, v) for k, v in f.items() if k != "Delta_min_f") for d, f in fits.items()},
@@ -168,6 +182,10 @@ def main():
         for d in DEGREES:
             f = fits[d]
             print(f"M = {M}, degree {d}: eta_min {f['eta_min']}, Delta_min {f['Delta_min']}, residual {f['residual']:.1e}")
+        loc = local_parabolas(ETAS, delta)
+        out[M]["local_parabolas"] = loc
+        for k, v in loc.items():
+            print(f"M = {M}, local parabola in {k} through {v['points']}: eta_min {v['eta_min']:.4f}, Delta_min {v['Delta_min']}")
     if 32 in out and 48 in out and out[32]["summary"] and out[48]["summary"]:
         s32, s48 = out[32]["summary"], out[48]["summary"]
         res = dict(eta_min=s48["eta_min"], Delta_min=s48["Delta_min"],
