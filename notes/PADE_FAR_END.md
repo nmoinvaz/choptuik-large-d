@@ -30,6 +30,10 @@ section 11 is #684, section 12 is #667, and section 13 is #689.
 - **#667.** No plant with a weak second singular set past the arc reproduces the real series. Of 1584, none has #541's
   far poles at k = 8–10, and none matches two of the three features. A set near P0 + κ⋆ gives the DA2 scatter but a
   twin misfit at least 290 times too small. Only a set at 1.69 − 0.74i gives the real misfit (§12).
+- **#689.** Its planted control failed: a near-end exponent of 0.5 costs a plant only 11 terms, not 13. So the real
+  twins were not refitted. On plants, no near-end change gives the real misfit. A plant whose zero factor sits at the
+  real series' own Padé zero, 5–7×10⁻³ from the plants' x_ref, reproduces the real twin misfit within 0.2% at every
+  node (§13).
 
 ## 1. Question
 
@@ -1544,3 +1548,110 @@ Written into the script's `FROZEN` and here before the `control` and `real` stag
 Reference: J. A. Nelder and R. Mead, Comput. J. 7, 308 (1965), doi:10.1093/comjnl/7.4.308 (the simplex search). The
 entry was checked against the MaRDI portal's record and a university bibliography through a web search, not against
 the publisher's page or the full text.
+
+Seen before the freeze, and disclosed. One timing check fitted #672's kstar chord twin to the real series at ω∞ at
+M = 20. It reproduced #684's l2 there (2.0×10⁷, §11.5). No variant of this task was fitted to a plant or to the real
+series before the freeze.
+
+### 13.3 Results: a control fails, so the real stage did not run
+
+All runs used one process under `nice -n 10`, single-threaded, 2026-11-13 16:35–17:09 UTC, with `pade_twin_near.py`
+at 15b263b2. The records are in the raw-data repository's `I689-mac/` (fade0a9).
+
+| check | result | verdict |
+|---|---|---|
+| selftest | exact columns within 2.3×10⁻⁵⁷ to 5.3×10⁻⁵⁴ of the plants' quadrature; the α = 0 basis equals #672's bit for bit; exit 0 | OK |
+| selftest `--mutate=alphamom`, `p0mom` | exit 1, 1 | both fire |
+| K0, the end points | #541's near end reproduced exactly at every node; the ratio law within 3.2–5.7×10⁻⁵ and the poles past κ⋆ exactly | OK |
+| K2(a), the α = 0.5 plant in its own basis | χ = 1.1×10⁻³⁷ to 5.5×10⁻³⁷ at M = 6 | OK |
+| **K2(b), the same plant in the α = 0 basis** | **M_min = 17 and M_lo = 16 at every node (pass ≥ 19)** | **BAD** |
+| C0, 37 variant bases × 3 nodes | χ ≤ 8.8×10⁻³⁶ in all 111; every plant has M = 6 and fits σ₀–σ₁₂ within 7.6×10⁻⁴ | OK |
+| Z1(a), the moved-zero plant in its own basis | χ = 5.9×10⁻³⁷ to 1.4×10⁻³⁶ | OK |
+| Z1(b), the zero locator on that plant | both starts reach the plant's zero to better than 10⁻¹⁶ at every node, l2 at 20 terms e^(−39) | OK |
+| `control --mutate=alpha` | K2(a), Z1(a) and all 111 C0 fail (χ ≥ 2.8×10¹⁴); exit 1 | fires as frozen |
+| `control --mutate=zero` | K2(a), Z1(a) and the 87 C0 with a zero factor fail (χ ≥ 1.6×10¹⁶), and the 24 without one pass; exit 1 | fires as frozen |
+| `control --mutate=locate` | Z1(b) is off by 3.6×10⁻³ at every node; exit 1 | fires as frozen |
+| gate | K2 failed | no real stage |
+
+**By the frozen gate, no twin of the real series was fitted, and no variant is judged.** The threshold was not
+changed. The real series entered only through the end points of K0 and its Padé zero (13.4).
+
+### 13.4 Context on plants: which ingredient can make the real misfit
+
+Each plant has 6 terms, and its c_m are fitted to the node's real σ₀–σ₁₂. Each is refitted in the kstar basis, the
+real series' #672 twin class. The real series' row is #672's (§9.2). Judged by nothing.
+
+| plant | M_min in the kstar basis at ω/ω∞ 0.99, 1.00, 1.01 | χ at 22 terms |
+|---|---|---|
+| α = −0.5 | 18, 18, 18 | 4.5×10⁻⁹ to 1.1×10⁻⁸ |
+| α = −0.25, +0.25, +0.5 | 17 at every node | ≤ 1.4×10⁻⁹ |
+| α = +1 | 7, 7, 7 | 10⁻⁴⁷ to 10⁻⁴⁶ |
+| near541 | 19, 21, 21 | 4.2×10⁻⁷, 1.9×10⁻³, 1.2×10⁻² |
+| nozero | 23, 23, 23 | 2.5×10⁵, 2.9×10⁵, 3.4×10⁵ |
+| Z1's plant, zero 3.6×10⁻³ off x_ref | 23, 23, 23 | 5.2×10⁴, 5.5×10⁴, 6.1×10⁴ |
+| zpade's plant, zero at the real series' Padé zero | 23, 23, 23 | 9.72×10⁴, 9.13×10⁴, 8.61×10⁴ |
+| the real series (#672) | 23, 23, 23 | 9.70×10⁴, 9.12×10⁴, 8.60×10⁴ |
+
+- **The near end is seen, but weakly.** Every α in ±0.25, ±0.5 costs a plant 11–12 terms, and moving P0 to #541's near
+  end costs 13–15. That is why K2(b) fails. α = 1 is no new class, since s T_m(2s − 1) is a polynomial of degree
+  m + 1, so a 6-term α = 1 density is a 7-term α = 0 one. The other way round, the kstar plant needs 17 terms in the
+  α = 0.5 basis and 18 in the nozero basis.
+- **The real series' own zero is not the plants'.** The [11/11] Padé zero of the real Σσ_k x^k lies at
+  7.3527 + 0.0765i, 7.3941 − 0.0000i and 7.4344 − 0.0773i. That is 6.7×10⁻³, 5.9×10⁻³ and 5.1×10⁻³ from x_ref. Its
+  spread over [10/12], [12/10], [10/10], [11/10] and [10/11] is 8.4–8.8×10⁻⁵. On the K2 and Z1 plants, whose zeros
+  are known, the Padé zero is off by 1.2–1.7×10⁻⁵. This is a calibration on 6-term plants, not a bound.
+- **A zero 6×10⁻³ off reproduces the real misfit.** The plant whose zero sits at the real Padé zero misfits the kstar
+  twin by χ at 22 terms within 0.03–0.19% of the real series' value at every node. Its l2 at 20 terms at ω∞,
+  2.01×10⁷, is within 0.7% of the real series' 2.00×10⁷ (#684, `I684-mac/diag2.json`). Z1's plant, whose zero is
+  3.6×10⁻³ off, misfits by 5–6×10⁴. That is in proportion to the offset within 1% at every node: the zpade plant's
+  offset is 1.87, 1.64 and 1.40 times Z1's, and its χ at 22 terms 1.89, 1.65 and 1.41 times. The zero locator, run on
+  Z1's plant, finds the zero exactly (Z1).
+- **A reading, not tested.** S(x) = (1 − x/x_ref) Q(x) + S(x_ref), with Q entire. A twin with its factor at x_ref must
+  carry S(x_ref)/(1 − x/x_ref) in L, a pole at x = x_ref whose Taylor coefficients S(x_ref) x_ref^(−k) no Laplace
+  integral of a short density matches. The plants' twins of §6–§12 had their zero exactly at x_ref, so they never
+  met this term.
+
+### 13.5 What this means
+
+- **No verdict on the real twins.** The issue's own same-class control failed: the twin test sees α = 0.5 against
+  α = 0 at 17 terms, not 19. By the frozen gate the real stage did not run, and the threshold was not loosened.
+- **On plants, the near end cannot produce the real misfit.** Each tested near-end change, put into a 6-term plant,
+  leaves a kstar twin of 17–21 terms with χ ≤ 0.012 at 22 terms. The real series needs 23 terms, with χ ≈ 9×10⁴. This
+  is the argument #684 made for the far end.
+- **The zero factor can.** A plant that differs from the kstar class only by having its zero at the real series' own
+  Padé zero, 5–7×10⁻³ from x_ref, reproduces the real kstar misfit within 0.2% at every node. So the size of the misfit
+  that #672 and #684 found is the size this offset alone produces. Whether the real series has a short twin once its
+  zero is in place is what the zpade and zfit variants would decide. Their controls (C0, Z1) pass.
+- **An extrapolation.** If the misfit stays proportional to the offset, as it is between Z1's plant and zpade's, a
+  zero placed by Padé to 10⁻⁵ would still leave χ ≈ 10² at 22 terms. So zfit, which locates a planted zero to
+  better than 10⁻¹⁶, is the variant that can decide.
+- **What this does to earlier comparisons.** Every plant of §2–§12 has its zero at x_ref. So each comparison of a
+  plant's twin misfit with the real series' carries this offset. Examples are #684's "a plant with its far end 0.18
+  off misfits by less than 10⁻³" against the real 3×10⁴, and #667's low set reaching the real misfit. This is reported
+  here, not corrected.
+- **Status.** Numerical evidence on plants. Nothing about the real series' twins is judged here.
+
+### 13.6 A proposed amendment, for the coordinator
+
+The issue treats the zero factor separately from the near end, but the frozen gate tied both to K2. One amendment, not
+applied here:
+
+| check | proposed |
+|---|---|
+| gate, zero factor | nozero, zpade and zfit, and the context variants z…, rationozero, ratiozpade and zfitratio, run if K0, every C0 and Z1 pass |
+| gate, near end | K2 gates the near-end variants only (a…, near541, their combinations, p0fit, afit). It failed, so they stay unrun |
+| the rest | unchanged: C1, C2, `--mutate=c1dup`, the fits rule (M_min ≤ 20 at all three nodes) and zfit's location by l2 at M = 20 |
+
+### 13.7 Proposed text for proof/D_entire.md
+
+In 7.4, after the bullet "Nor does a weak second singular set past the arc (#667)":
+
+```diff
++- **The near end does not account for it, and the zero factor may (#689).** On plants matched to σ₀–σ₁₂, a near-end
++  exponent of ±0.25 or ±0.5, or #541's extrapolated near end, costs the κ⋆ twin 11–15 terms, with χ ≤ 0.012 at 22
++  terms. That is far below the real series' 9×10⁴, and the planted control on the exponent failed (17 terms where 19
++  were required), so the real twins were not refitted. The plants' zero factor sits at x_ref = 7.400 at ω∞. The real
++  series' own Padé zero lies 5–7×10⁻³ from it at every node. A plant whose zero is at that point misfits the κ⋆ twin
++  within 0.2% of the real series at every node. So the real misfit is the size a misplaced zero factor gives, and the
++  twin test with the zero in place is still to be run (notes/PADE_FAR_END.md §13).
+```
