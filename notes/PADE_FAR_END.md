@@ -27,6 +27,9 @@ section 11 is #684, and section 12 is #667.
   or at the k = 8–10 poles past κ⋆, or the exponent shifted by ±0.1 or ±0.3, every class still needs all 23 terms,
   though the test sees both on plants. Moving the far end out lowers the misfit 2–4 times, the exponent hardly moves
   it. After the freeze, no far end with Re t 1.2–4.0 and Im t −0.4–2.2 gave a 20-term chord twin either (§11).
+- **#667.** No plant with a weak second singular set past the arc reproduces the real series. Of 1584, none has #541's
+  far poles at k = 8–10, and none matches two of the three features. A set near P0 + κ⋆ gives the DA2 scatter but a
+  twin misfit at least 290 times too small. Only a set at 1.69 − 0.74i gives the real misfit (§12).
 
 ## 1. Question
 
@@ -1353,3 +1356,114 @@ The selftest (`python3 pade_second_set.py --selftest`) checks three things, and 
    ordered Re c₀…Re c₂₂, Im c₀…, which are not nested) gives 1.7×10⁵.
 3. The agreement count on planted zeros, 6 and 5 members within 0.016 of 2.0 + 1.2i: m_DA = 6 and 5, the same verdict
    as `pade_farend_diag.clusters`. `--mutate=agree` (radius 0.005) gives 1.
+
+### 12.3 Results: the controls
+
+All runs used one process under `nice -n 10`, single-threaded, 2026-11-13 14:04–14:36 UTC, with `pade_second_set.py`
+at e08c42d9. The `report` stage of 12.5 was written after the freeze and extended after the grid run, and it judges
+nothing. The records are in the raw-data repository's `I667-mac/` (the runs at 0b93b50, the final report at
+3ad5105).
+
+| check | result | verdict |
+|---|---|---|
+| selftest, and its mutations `secmom`, `nest`, `agree` | exit 0, and 1, 1, 1 | OK, all fire |
+| R1, the real series' m_DA | 2, 1 and 1 at ω/ω∞ = 0.99, 1.00 and 1.01 | OK |
+| R2, #541's far ends | the poles past κ⋆ bit-identical, the ratio law within 3.2–5.7×10⁻⁵ | OK |
+| R3, #684's χ₂₂ by projection, 45 real scans | within 4.3×10⁻¹⁰ relative; M_min = M_lo = 23; C1 passes | OK |
+| R4, η = 0 against FarPlant | σ₀–σ₃₁ identical for chord2 and arc at every node | OK |
+| J+, the real series judged as a plant | d_P = 0 and d_T = 0; passes (a), (b) and (c) at every node | OK |
+| J−, the η = 0 plants at ω∞ | m_DA = 11, d_P = 0.220 (chord2) and 0.225 (arc), M_min = 6 in the own class, d_T = 51.6; all three fail | OK |
+| `control --mutate=col` | R3 off by 3.0–4.8 relative at every node; exit 1 | fires |
+| `control --mutate=judge` | m_DA = 11, d_P = 0.05 and d_T = 2.0, so each of J+'s parts fails at every node; exit 1 | fires |
+
+`col` also makes J− fail, as it should: the mutated column belongs to the η = 0 plant's own basis too.
+
+### 12.4 Results: the grid
+
+**No plant reproduces the real series.** At ω∞ none of the 1584 plants passes all three criteria, and no plant passes
+any two. The far Padé poles (b) are never reproduced. C1 passed on every plant scan, and the run exited 0.
+
+| criterion at ω∞ | plants that pass | best plant | its m_DA, d_P, d_T |
+|---|---|---|---|
+| (a) DA2 | 132 | chord2, seg(+1, +1), α = 0, η = 10⁻³, φ = 180° | 2, 0.246, 4.88 |
+| (b) Padé | 0 | chord2, seg(−1, 0), α = β − 1, η = 10⁻¹, φ = 270° | 6, 0.146, 6.54 |
+| (c) twins | 24 | arc, low, α = β − 1, η = 10⁻², φ = 270° | 9, 0.257, 0.35 |
+| all three | 0 | | |
+
+The closest plant by the frozen D, among the 20 run at every node, is chord2 with the low segment, α = β − 1,
+η = 10⁻⁷ and φ = 180°, with D_all = 6.46.
+
+| ω/ω∞ | m_DA | d_P | d_T |
+|---|---|---|---|
+| 0.99 | 10 | 0.194 | 5.16 |
+| 1.00 | 9 | 0.189 | 5.10 |
+| 1.01 | 10 | 0.182 | 5.04 |
+
+D weights d_T in decades, so this ranking is set by the twin misfit. The per-criterion bests above say more.
+
+### 12.5 Post-freeze summary, labeled so
+
+`python3 pade_second_set.py report OUTDIR` (raw `report.log`). Per strength, at ω∞, over 176 plants each:
+
+| η | pass (a) | pass (b) | pass (c) | smallest m_DA | smallest d_P | smallest d_T | median log₁₀(χ₂₂ / χ₂₂(real)) |
+|---|---|---|---|---|---|---|---|
+| 10⁻⁹ | 0 | 0 | 0 | 10 | 0.219 | 6.95 | −11.51 |
+| 10⁻⁸ | 0 | 0 | 0 | 9 | 0.210 | 5.95 | −10.76 |
+| 10⁻⁷ | 0 | 0 | 0 | 8 | 0.176 | 4.95 | −10.03 |
+| 10⁻⁶ | 0 | 0 | 0 | 6 | 0.173 | 3.95 | −9.07 |
+| 10⁻⁵ | 1 | 0 | 0 | 5 | 0.178 | 2.95 | −8.07 |
+| 10⁻⁴ | 1 | 0 | 0 | 5 | 0.193 | 1.95 | −7.07 |
+| 10⁻³ | 41 | 0 | 8 | 2 | 0.191 | 0.95 | −6.07 |
+| 10⁻² | 36 | 0 | 16 | 3 | 0.186 | 0.35 | −5.07 |
+| 10⁻¹ | 53 | 0 | 0 | 3 | 0.146 | 1.35 | −4.07 |
+
+- **The far poles are out of reach.** No plant has a pole within 0.03 of #541's at all three orders. One order at a
+  time it happens: 0.027 at k = 8, 0.009 at k = 9 and 0.013 at k = 10, each for a different plant, whose distance at
+  the other orders brings its d_P to 0.205–0.249. The η = 0 plants have d_P = 0.220 and 0.225.
+- **The DA2 scatter needs a set near P0 + κ⋆.** (a) passes only for the segments near P0 + κ⋆ and the sum set, almost
+  all at η = 10⁻³ to 10⁻¹ (41, 36 and 53 plants). Their DA2 medians lie in 1.63–2.27 + 0.87–1.50i, and the real
+  series' in 2.20–2.30 + 1.33–1.44i. With η ≤ 10⁻⁶ at least 6 members still agree, as on the single-curve plants.
+- **But those sets are nearly invisible to the twins.** The median misfit at 22 terms rises by one decade per decade
+  of η from η = 10⁻⁷ on. With the second set near P0 + κ⋆, χ₂₂ stays at most 3.4×10⁻³ of the real series' in every
+  basis, and on the sum set at most 1.9×10⁻⁴, even with 10% of σ₂₂.
+- **Only the low set reaches the real misfit.** (c) passes for 24 plants, all with the segment ending at 1.69 − 0.74i,
+  at η = 10⁻³ and 10⁻². Their χ₂₂ is 0.11–3.0 times the real series' in every basis, with the second set holding
+  0.10–1.1% of σ₂₂ and 4.6×10⁻⁵ to 6.7×10⁻⁴ of σ₁₂. There the DA2 members agree, m_DA = 8–11: on the low set itself in
+  13 of the 24, and on κ⋆ in 8. Their d_P is 0.204–0.260.
+
+### 12.6 What this means
+
+- **No weak second set of these shapes reproduces the real series, by the frozen rule.** Two of the three features are
+  reproduced by some plants, the DA2 scatter and the twin misfit, but by different second sets. No plant matches two,
+  and none matches #541's far poles at k = 8, 9 and 10 together.
+- **The far Padé poles are the feature no plant has, single curve or two sets.** Their outward drift, about 0.05 per
+  order, is not produced by a weak set near P0 + κ⋆, at 1.69 − 0.74i or on P0 + the main curve.
+- **A second set near P0 + κ⋆ cannot explain the twin misfit.** It scatters the differential approximants as the real
+  series does, but even at 10% of σ₂₂ its single-curve twins misfit at least 290 times less than the real series in
+  every basis. So #547's candidate for the second set does not account for #672's and #684's result.
+- **A weak set at 1.69 − 0.74i does give the real misfit's size, at about 0.1–1% of σ₂₂.** That is the direction in
+  which five of the real DA2 members have a zero (§4.3). The grid does not separate the direction from the modulus:
+  at |Q| = 1.84 the low set is also the nearest to the origin of all the second curves here, the others lying at
+  |Q| ≥ 2.03. So this is a hint, not a location.
+- **Status.** Numerical evidence on plants. The grid holds one density shape, s⁴(1 − s)^α on a segment of length 0.3
+  or on the sum set, and one low position.
+
+A discrepancy, reported and not changed. D_entire 7.4 says that no real DA2 member has a zero within 0.17 of #541's
+far poles. §4.3 says so at ω∞, and it holds at ω/ω∞ = 1.00 and 1.01. At 0.99 one member has such a zero (R1's context
+in `control.log`). It is the [5, 5, 5] member with deg P = 1, whose zero at 1.402 + 0.957i
+(`I547-mac/diag_post_freeze.log`) lies within 0.17 of the k = 8 pole.
+
+### 12.7 Proposed text for proof/D_entire.md
+
+In 7.4, after the bullet "Neither the far end nor the exponent alone gives it one (#684)":
+
+```diff
++- **Nor does a weak second singular set past the arc (#667).** 1584 plants, chord2 or the arc plant plus a density
++  on a second curve (a short segment ending near P0 + κ⋆ = 2.03 + 1.24i or at 1.69 − 0.74i, or P0 + the main curve)
++  holding 10⁻⁹ to 10⁻¹ of σ₂₂, were judged on three features of the real series: no 6 differential approximants
++  agree past |t| = 1.65, the [k/k] poles past κ⋆ at k = 8–10, and no single-curve twin of fewer than 23 terms. None
++  reproduces it, and none matches two features at once. No plant has the far poles within 0.03 at all three orders
++  (the closest is 0.146 away). A set near P0 + κ⋆ scatters the approximants as the real series does, but its twins
++  misfit at least 290 times less in every basis. Only the set at 1.69 − 0.74i reaches the real misfit, at 0.1–1% of
++  σ₂₂ (notes/PADE_FAR_END.md §12).
+```

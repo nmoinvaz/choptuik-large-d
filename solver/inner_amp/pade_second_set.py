@@ -669,6 +669,46 @@ def run_report(outdir):
             f"{j['ratio_min']:.1e}..{j['ratio_max']:.1e}, share22 {r['plant']['share']['22']:.1e}, dev "
             f"{r['plant']['dev_13_22']:.1e}")
     out["a_and_b"] = [r["id"] for r in both]
+    # (b) one order at a time: the plant nearest #541's pole at each k
+    out["best_per_k"] = {}
+    for k in ("8", "9", "10"):
+        r = min(at0, key=lambda r: r["pade"][k]["dist"])
+        out["best_per_k"][k] = {"id": r["id"], "dist": r["pade"][k]["dist"], "pole": r["pade"][k]["nearest"],
+                                "d_P": r["judge"]["d_P"]}
+        log(f"(b) at k = {k} alone: smallest distance {r['pade'][k]['dist']:.3f} ({r['id']}, pole "
+            f"{complex(*r['pade'][k]['nearest']):.4f}); that plant's d_P over k = 8..10 {r['judge']['d_P']:.3f}")
+    # the plants that pass (c), and those that pass (a)
+    cs = [r for r in at0 if r["judge"]["c"]]
+    out["c_pass"] = [{"id": r["id"], "m_DA": r["judge"]["m_DA"], "da2_at": r["da2"]["at"], "d_P": r["judge"]["d_P"],
+                      "ratio": [r["judge"]["ratio_min"], r["judge"]["ratio_max"]], "share": r["plant"]["share"]}
+                     for r in cs]
+    if cs:
+        log(f"(c) passes for {len(cs)} plants, curves {sorted({r['cfg'] for r in cs})}, eta "
+            f"{sorted({r['eta'] for r in cs})}: m_DA {min(r['judge']['m_DA'] for r in cs)}.."
+            f"{max(r['judge']['m_DA'] for r in cs)}, the agreeing zero within 0.1 of Q_low in "
+            f"{sum(abs(complex(*r['da2']['at']) - Q_LOW) < 0.1 for r in cs)} of them and within 0.1 of kappa_* in "
+            f"{sum(abs(complex(*r['da2']['at']) - complex(te.kstar(WF0))) < 0.1 for r in cs)}; d_P "
+            f"{min(r['judge']['d_P'] for r in cs):.3f}..{max(r['judge']['d_P'] for r in cs):.3f}; chi_22 / real "
+            f"{min(r['judge']['ratio_min'] for r in cs):.2f}..{max(r['judge']['ratio_max'] for r in cs):.2f}; share of "
+            f"sigma_12, sigma_17, sigma_22 " + ", ".join(
+                f"{min(r['plant']['share'][k] for r in cs):.1e}..{max(r['plant']['share'][k] for r in cs):.1e}"
+                for k in ("12", "17", "22")))
+    out["ratio_max_by_curve"] = {}
+    for lab, sel in (("seg", lambda c: c.startswith("seg")), ("sum", lambda c: c == "sum"), ("low", lambda c: c == "low")):
+        rs = [r for r in at0 if sel(r["cfg"])]
+        hi = max(rs, key=lambda r: r["judge"]["ratio_max"])
+        out["ratio_max_by_curve"][lab] = {"ratio_max": hi["judge"]["ratio_max"], "id": hi["id"]}
+        log(f"largest chi_22 / chi_22(real) over the 15 bases and every plant with the {lab} curve: "
+            f"{hi['judge']['ratio_max']:.2e} ({hi['id']})")
+    a_s = [r for r in at0 if r["judge"]["a"]]
+    if a_s:
+        med = [complex(*r["da2"]["median"]) for r in a_s if r["da2"]["median"]]
+        log(f"(a) passes for {len(a_s)} plants, curves {sorted({r['cfg'] for r in a_s})}; per eta "
+            + ", ".join(f"{e:.0e}: {sum(r['eta'] == e for r in a_s)}" for e in ETAS)
+            + f"; their d_T {min(r['judge']['d_T'] for r in a_s):.2f}..{max(r['judge']['d_T'] for r in a_s):.2f}, d_P "
+            f"{min(r['judge']['d_P'] for r in a_s):.3f}..{max(r['judge']['d_P'] for r in a_s):.3f}; DA2 median Re "
+            f"{min(z.real for z in med):.2f}..{max(z.real for z in med):.2f}, Im {min(z.imag for z in med):.2f}.."
+            f"{max(z.imag for z in med):.2f}")
     log.dump(out)
     return True
 
