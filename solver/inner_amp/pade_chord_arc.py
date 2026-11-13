@@ -212,6 +212,50 @@ def run_bound(outdir):
     return any(v is not None for v in best.values())
 
 
+def run_twin(outdir, mut=None):
+    """chord twins of arcjump: a density (1-s)^ex sum_{m<M} c_m T_m(2s-1) on the chord P0 -> kappa_* (two branch points,
+    the planted zero factor as in the plants), fitted to arcjump's sigma_0..sigma_22 by least squares with weights
+    1/err_k, err_k the measured absolute error (relative floor 1e-30). chi = max_k |sigma_k(twin) - sigma_k| / err_k:
+    chi <= 1 means no statistic of the 23 coefficients, at the measured errors, tells the twin from arcjump.
+    --mutate=twin_noshift fits the twin to chord2's coefficients instead, which it must reproduce at M = 6."""
+    mp.mp.dps = F.DPS_DA
+    real = pg.load_scan(pg.REAL["J1250"])
+    rec = {"twins": {}}
+    for wf in pg.NODES:
+        target = F.FarPlant(wf, "chord2" if mut == "twin_noshift" else "arcjump", real[wf])
+        sig_t = target.sigma()[:F.N_COEF]
+        pg.NOISE_MODE = "measured"
+        rel = pg.noise_eps(wf)
+        err = [max(rel[k], 1e-30) * abs(sig_t[k]) for k in range(F.N_COEF)]
+        base = F.FarPlant(wf, "chord2", real[wf])
+        rows = []
+        for M in (6, 8, 10, 12, 14, 16, 18, 20, 22, 23):
+            mp.mp.dps = F.DPS_DA
+            mom = base.moments(M)
+            cols = [pg.pp.polymul(base.pref, mom[m], F.N_COEF) for m in range(M)]
+            A = mp.matrix([[cols[m][k] / err[k] for m in range(M)] for k in range(F.N_COEF)])
+            b = mp.matrix([sig_t[k] / err[k] for k in range(F.N_COEF)])
+            x = mp.lu_solve(A, b) if M == F.N_COEF else mp.lu_solve(A.H * A, A.H * b)
+            fit = [sum(x[m] * cols[m][k] for m in range(M)) for k in range(F.N_COEF)]
+            chi = max(float(abs(fit[k] - sig_t[k]) / err[k]) for k in range(F.N_COEF))
+            cmax = max(float(abs(x[m])) for m in range(M))
+            ss = [mp.mpf(j) / 200 for j in range(200)]
+            dens = max(float(abs((1 - s) ** base.ex * sum(x[m] * mp.chebyt(m, 2 * s - 1) for m in range(M))))
+                       for s in ss)
+            rows.append({"M": M, "chi": chi, "c_max": cmax, "density_max": dens})
+            print(f"wf {wf} M {M:2d}: chi {chi:.2e}  max |c_m| {cmax:.2e}  max |density| on the chord {dens:.2e}")
+            sys.stdout.flush()
+        c_ref = max(float(abs(c)) for c in base.c)
+        d_ref = max(float(abs((1 - s) ** base.ex * sum(base.c[m] * mp.chebyt(m, 2 * s - 1) for m in range(base.M))))
+                    for s in [mp.mpf(j) / 200 for j in range(200)])
+        print(f"wf {wf}: chord2 itself has max |c_m| {c_ref:.2e}, max |density| {d_ref:.2e}")
+        rec["twins"][wf] = {"rows": rows, "chord2_c_max": c_ref, "chord2_density_max": d_ref,
+                            "M_min_chi_le_1": min((r["M"] for r in rows if r["chi"] <= 1), default=None)}
+    name = "twin" + (f"_mutate_{mut}" if mut else "") + ".json"
+    json.dump(pg.jsonable(rec), open(os.path.join(outdir, name), "w"), indent=1)
+    return rec
+
+
 def selftest(mut=None):
     """(1) the Hermite-Pade discriminant of f = ((1 - k1 u)(1 - k2 u))^(1/2) exp(u/5) has zeros at both branch points
     1/k1, 1/k2; (2) H_DA and H_HP count a planted singularity on the middle of the arc: a chord density plus a
@@ -271,6 +315,15 @@ def main():
         sys.exit(0 if ok else 1)
     if stage == "bound":
         sys.exit(0 if run_bound(outdir) else 1)
+    if stage == "twin":
+        rec = run_twin(outdir, mut)
+        ms = {wf: r["M_min_chi_le_1"] for wf, r in rec["twins"].items()}
+        print("smallest M with chi <= 1 per node:", ms)
+        if mut == "twin_noshift":
+            ok = all(r["rows"][0]["chi"] <= 1 for r in rec["twins"].values())
+            print("control: the chord2 target is reproduced at M = 6:", ok)
+            sys.exit(0 if ok else 1)
+        sys.exit(0)
     if stage == "real":
         v = json.load(open(os.path.join(outdir, "plants.json")))["verdict"]
         passing = [n for n in NAMES if v[n]["separates"]]
