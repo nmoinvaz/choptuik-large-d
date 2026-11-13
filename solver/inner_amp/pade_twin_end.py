@@ -25,6 +25,7 @@ M_lo the smallest with l2 <= sqrt(n), n = 23, fits at 150 digits checked at 250,
     python3 pade_twin_end.py control OUTDIR [--mutate=farend|exshift] [--allow_unraw]
     python3 pade_twin_end.py real OUTDIR [--mutate=c1dup] [--allow_unraw]      (reads OUTDIR/control.json)
     python3 pade_twin_end.py diag OUTDIR [--allow_unraw]       (post-freeze diagnostic, wf 1.00, chord, not judged)
+    python3 pade_twin_end.py diag2 OUTDIR [--allow_unraw]      (post-freeze, after diag: chi at 20 terms; not judged)
 
 The selftest checks the moved-end, shifted-exponent moments against the plants' tanh-sinh quadrature. `control` runs
 the far ends' reproduction of #541 (K0), the same-class control on #547's far-end-1.85 plant (K1) and a same-class check
@@ -557,6 +558,88 @@ def run_diag(outdir):
     return True
 
 
+def run_diag2(outdir):
+    """post-freeze (#684), after `diag`. At M = n - 1 = 22 the least-squares residual has one complex dimension, so a
+    complex far end can be tuned to zero it, and the minimum of chi at 22 terms over P1 locates nothing. Here, at
+    wf 1.00, chord class: (1) a local minimisation of chi at 22 terms from diag's best point, which must reach chi < 1
+    if that reading holds; (2) the far-end grid by l2 at M = 20 (three residual dimensions), against the frozen rule's
+    sqrt(n): a basis whose least-squares l2 exceeds sqrt(n) has no twin of 20 terms with chi <= 1; (3) the exponent
+    shifts at the grid's best point, by l2 at 20 terms"""
+    log = tz.Log(outdir, "diag2", None)
+    wf = 1.0
+    sig = tc.real_sig()[wf][:N23]
+    rel, _ = tc.err_model(wf)
+    e0 = ex0(wf)
+    d1 = json.load(open(os.path.join(outdir, "diag.json")))
+    start = complex(*d1["best"]["P1"])
+    rec = {"note": "post-freeze diagnostic (#684), not judged; wf 1.00, chord class", "nm": [], "grid20": [],
+           "ex20": []}
+    import numpy as np
+
+    def f22(x):
+        chi = chi22(wf, sig, rel, complex(x[0], x[1]), e0)[0]
+        rec["nm"].append({"P1": complex(x[0], x[1]), "chi22": chi})
+        return np.log(chi)
+    simplex = np.array([[start.real, start.imag], [start.real + 0.02, start.imag], [start.real, start.imag + 0.02]])
+    vals = np.array([f22(p) for p in simplex])
+    for _ in range(60):                 # Nelder-Mead (reflection, expansion, contraction, shrink)
+        o = np.argsort(vals)
+        simplex, vals = simplex[o], vals[o]
+        if np.exp(vals[0]) < 1e-3 or np.max(np.abs(simplex[1:] - simplex[0])) < 1e-9:
+            break
+        c = simplex[:2].mean(axis=0)
+        xr = c + (c - simplex[2])
+        fr = f22(xr)
+        if fr < vals[0]:
+            xe = c + 2 * (c - simplex[2])
+            fe = f22(xe)
+            simplex[2], vals[2] = (xe, fe) if fe < fr else (xr, fr)
+        elif fr < vals[1]:
+            simplex[2], vals[2] = xr, fr
+        else:
+            xc = c + 0.5 * (simplex[2] - c)
+            fc = f22(xc)
+            if fc < vals[2]:
+                simplex[2], vals[2] = xc, fc
+            else:
+                simplex[1:] = simplex[0] + 0.5 * (simplex[1:] - simplex[0])
+                vals[1:] = [f22(p) for p in simplex[1:]]
+    o = np.argsort(vals)
+    pz = complex(*simplex[o[0]])
+    s = tz.scan(end_basis(wf, "chord", pz, e0, DPS_FIT), end_basis(wf, "chord", pz, e0, DPS_CHECK), sig, rel, N23, log,
+                f"far end tuned to chi at 22 terms, P1 {pz:.6f}")
+    rec["tuned"] = {"P1": pz, "chi22": float(np.exp(vals[o[0]])), "evals": len(rec["nm"]), "M_min": s["M_min"],
+                    "M_lo": s["M_lo"], "C1_pass": s["C1_pass"], "chi": {r["M"]: r["chi"] for r in s["rows"]},
+                    "l2": {r["M"]: r["l2"] for r in s["rows"]}}
+    log(f"(1) chi at 22 terms minimised over P1 from diag's best {start}: P1 {pz:.6f} |P1| {abs(pz):.4f}, chi22 "
+        f"{rec['tuned']['chi22']:.3e} after {len(rec['nm'])} evaluations; M_min {s['M_min']}, chi at 20, 21 terms "
+        f"{rec['tuned']['chi'][20]:.3e}, {rec['tuned']['chi'][21]:.3e}")
+    for a in range(12, 41):
+        for b in range(-4, 23):
+            P1 = complex(a / 10, b / 10)
+            chi, l2, _, _ = chi22(wf, sig, rel, P1, e0, M=20)
+            rec["grid20"].append({"P1": P1, "chi20": chi, "l2_20": l2})
+    g = sorted(rec["grid20"], key=lambda r: r["l2_20"])
+    ks = chi22(wf, sig, rel, kstar(wf), e0, M=20)
+    rec["kstar20"] = {"chi20": ks[0], "l2_20": ks[1]}
+    rec["grid20_best"] = g[0]
+    log(f"(2) l2 at 20 terms over the grid Re 1.2..4.0, Im -0.4..2.2 step 0.1 ({len(g)} far ends): smallest "
+        f"{g[0]['l2_20']:.3e} at {g[0]['P1']} (|P1| {abs(g[0]['P1']):.3f}), chi20 {g[0]['chi20']:.3e}; kstar l2 "
+        f"{ks[1]:.3e}, chi20 {ks[0]:.3e}; sqrt(n) = {N23 ** 0.5:.3f}. The 8 smallest: " + "; ".join(
+            f"{r['P1']} {r['l2_20']:.2e}" for r in g[:8]))
+    for d in ("-1.0", "-0.6", "-0.3", "+0.3", "+0.6", "+1.0", "-1.0i", "-0.6i", "-0.3i", "+0.3i", "+0.6i", "+1.0i"):
+        with mp.workdps(pg.DPS_PLANT):
+            ex = e0 + shift(d)
+        chi, l2, _, _ = chi22(wf, sig, rel, g[0]["P1"], ex, M=20)
+        rec["ex20"].append({"delta": d, "chi20": chi, "l2_20": l2})
+    b = min(rec["ex20"], key=lambda r: r["l2_20"])
+    log(f"(3) exponent shifts at that far end, l2 at 20 terms: " + ", ".join(f"{r['delta']} {r['l2_20']:.2e}"
+                                                                         for r in rec["ex20"])
+        + f"; smallest {b['l2_20']:.3e} at delta {b['delta']}")
+    log.dump(rec)
+    return True
+
+
 def main():
     argv = sys.argv[1:]
     from raw_out import pop_allow, require_raw
@@ -567,15 +650,15 @@ def main():
             raise SystemExit(f"unknown selftest mutation {mut}")
         sys.exit(0 if selftest(mut) else 1)
     argv = [a for a in argv if not a.startswith("--")]
-    if len(argv) != 2 or argv[0] not in ("control", "real", "diag"):
+    if len(argv) != 2 or argv[0] not in ("control", "real", "diag", "diag2"):
         raise SystemExit(__doc__)
     stage, outdir = argv
-    if mut not in ({"control": (None, "farend", "exshift"), "real": (None, "c1dup"), "diag": (None,)}[stage]):
+    if mut not in {"control": (None, "farend", "exshift"), "real": (None, "c1dup")}.get(stage, (None,)):
         raise SystemExit(f"unknown {stage} mutation {mut}")
     require_raw(os.path.join(outdir, "x.json"), allow=allow)
     os.makedirs(outdir, exist_ok=True)
     fn = {"control": lambda: run_control(outdir, mut), "real": lambda: run_real(outdir, mut),
-          "diag": lambda: run_diag(outdir)}[stage]
+          "diag": lambda: run_diag(outdir), "diag2": lambda: run_diag2(outdir)}[stage]
     sys.exit(0 if fn() else 1)
 
 
