@@ -111,8 +111,9 @@ removed from each correction (octo_corrector.chord_strong; #528, #674). 0, the d
 --reseed_start pred (with --reseed_q 1) runs the re-seed's quad-double polish from the prediction's own four-part
 horizon data first, and the double-double ladder only when that does not converge; ladder, the default, polishes the
 ladder's data as before (#693: past D ~ 249 the ladder's double-double data put the pole inside u0).
---elim_switch S (with --corrector od and --reseed) projects every point of the octo-double corrector whose pinned
-quad-double max|F| exceeds S (octo_corrector.ElimO; 1e-15 by default). With 0 every point is projected. Below the
+--elim_switch S (with --reseed 2) projects every point of the corrector whose pinned quad-double max|F| exceeds S
+(octo_corrector.ElimO for --corrector od, reseed.ElimQ for qd; 1e-15 by default). With 0 every point is projected,
+which for qd needs --reseed_q 1 (a double-double projection holds every point at its floor). Below the
 switch a projected iterate's full step goes unprojected, keeps the horizon rows' second-order term and is refused, which
 made the chain crawl at λ = 1/2 past D 251 (#700, notes/CRAWL.md).
 --ks K sums the horizon series to order K instead of the state's own ks (130 on the chain), and saves it with the
@@ -379,7 +380,7 @@ def main():
             sq = PinnedQ(spx.s, spx.ch, spx.cl)
             if elim.get("rs") is not None:
                 # --reseed 2: the corrector on the system with the horizon data eliminated (hp/reseed.py ElimQ)
-                sq = ElimQ(sq, elim["rs"])
+                sq = ElimQ(sq, elim["rs"], switch=opt["elim_switch"])
             z0 = z4_start if z4_start is not None else qparts(ph, pl)
             try:
                 z4, hist, conv = newton_qd(sq, z0, tol=opt["tol_qd"], it_max=opt["qd_it"], w=opt["qd_w"], verbose=True)
