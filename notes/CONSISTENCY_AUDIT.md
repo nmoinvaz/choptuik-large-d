@@ -968,7 +968,7 @@ before). `notes/HELD_HARMONICS.md` is added to DOCS.
   root-relative paths that are right once pasted into the README. Six are table-of-contents anchors with subscript
   digits (6b₀, 6b₁, n₀), which check_links.py keeps (Python's `\w`) and GitHub very likely drops, so they are likely the
   checker's error, not verified on GitHub. One is a code fragment in A_M2_review.md:81 that the link regex reads as a
-  link.
+  link. #661 checked these on GitHub's rendered pages (the last section).
 
 ## Coverage: files read
 
@@ -994,3 +994,28 @@ before). `notes/HELD_HARMONICS.md` is added to DOCS.
 
 Not covered: most of the math paper's proofs, the proof notes' certificate details, and the long logs of
 QUAD_DOUBLE.md §1–13.24, PLANTED_SELECTION.md, LIT_REVIEW.md and the matter notes. Recommended task 1 continues there.
+
+## check_links.py after #661
+
+`check_links.py` now builds heading anchors with github-slugger 2.0.0's rule, which its docstring states with the
+source. The rule reproduces the anchors GitHub rendered at 52433d0d for all 1724 headings of the 102 tracked .md files,
+in order, and for a planted file of 28 edge cases that `--selftest` keeps. The old rule missed 66 of the 1724.
+
+Over every tracked .md file it reads 998 links and flags 5. The old checker flagged 21 there, the 20 above and
+notes/CORRECTOR_BASIN.md:207, which came later. The table-of-contents anchors with 6b₀, 6b₁ and n₀ now resolve. There
+are five of them, not six. The links in quoted proposal text resolve from the repository root, which the docstring's
+rule allows for such text. There are fourteen of them, not thirteen. A_M2_review.md:81 is no longer read as a link,
+since GitHub does not render it as one.
+
+The five that remain are broken on GitHub, as its rendered pages show. They are not fixed here.
+
+| location | link | on GitHub |
+|---|---|---|
+| proof/A_certify.md:69 | `#103-results-at-ξ₁--03` | the heading's anchor is `#103-results-at-ξ--03` |
+| proof/A_certify.md:76 | `#12-lemma-6b₁` | `#12-lemma-6b` |
+| notes/SECOND_ORDER.md:18 | `#4-the-selection-at-second-order-δ₂-and-λ₂` | `#4-the-selection-at-second-order-δ-and-λ` |
+| notes/SECOND_ORDER.md:19 | `#5-against-the-fits-and-δ-with-δ₁-and-δ₂-held-fixed` | `#5-against-the-fits-and-δ-with-δ-and-δ-held-fixed` |
+| notes/CORRECTOR_BASIN.md:207 | `[ω](D)`, math in the formula for θ₀ | a link to a file D |
+
+The first four keep the subscript digits, as the old rule did, so the old checker passed them. The count above of 19
+artifacts in 20 flags holds, but the old checker also passed these four broken links.
