@@ -359,6 +359,24 @@ to D 253.53). The root test over orders 12 to 24 stays 7.2 to 8.5 to D 251.89. T
 4.9×10⁻⁶. So from D 252 on the singularity does come nearer, while the accepted steps fall to 0.11 to 0.18. Where
 it lies, and whether it reaches the real axis, needs 24-order series at those bases.
 
+#685 (dh370; raw `I685-dh370/` abed955c, `table685.txt` from `table685.py`) built them with `anm_run.py --save_jet 2`
+at five of #603's bases from D 252.25 to 253.71. Each equals #603's record in all 25 norms and both pivots, a Linux
+build against win2's Windows run, while a neighbouring base's record matches none. The planted estimator passes and
+its `drop_pole` control fails. Three tracks of singularities lie within a factor 1.2 of each other in distance.
+
+| track | D* | seen at | drift per unit D₀ (Re, Im) |
+|---|---|---|---|
+| A | 255.71 + 4.99i | all five bases, in Δ's own Padé poles | −0.04, −0.04 |
+| B | 252.31 + 5.80i | 252.25 to 253.07, in 23 to 25 of the 24 largest rows | +0.10, −0.43 (3 points) |
+| C | 259.20 + 2.88i | 253.07 to 253.71 | −0.41, −0.28 (3 points) |
+
+**Δ's own Padé poles hold one singularity fixed at D* = 255.71 + 4.99i at all five bases.** The root test agrees with
+A's distance to 3–7% at each base, read after the fact. Δ's two-term recurrence fit reads otherwise. Its D* moves from
+255.29 + 4.63i to 256.99 + 2.70i and would reach the axis at D₀ ≈ 255.8. But its window spread, 0.6 to 3.2, is as
+large as that drift, and its planted controls hold one pair near the front, not three. So whether the branch ends near
+D 256 is not decided. Track A predicts that the root test bottoms near 5.0 at D₀ ≈ 255.7 and rises after. A planted
+three-track series (#711) and series past D 255 (#712) test the two readings.
+
 ### The refusals are the corrector's
 
 The corrector's first Newton move is the prediction's error to first order. At the accepted steps it equals the
