@@ -9,6 +9,22 @@
     cd hp && python3 reduced_cubic.py rows RAWDIR DZ0 BASE [--threads=2] [--json=OUT]
     cd hp && python3 reduced_cubic.py rows planted [--seed=5] [--json=OUT] [--mutate=quadA|parity]
     cd hp && python3 reduced_cubic.py rowsum OUT.json [OUT.json ...]     (the rows runs' summary)
+    cd hp && python3 reduced_cubic.py curve RAWDIR DZ0 BASE [--ref677=RAY.json] [--ref694=ROWS.json] [--threads=2]
+        [--json=OUT] [--mutate=w0|chord]
+    cd hp && python3 reduced_cubic.py curve planted [--seed=5] [--json=OUT] [--mutate=w0|chord]
+
+`curve` (#698) evaluates g along c = +-t e, e = a / |a|, at t = 1e-6, 1e-5, 1e-4, 1e-3, 3.16e-3 and 1e-2 (and 1e-24
+on the + ray of a real start, #677's range), with the strong rows solved by Newton with the octo-double LU refactored
+at the iterate (newton_strong: a bordered solve per step, chord steps on each LU while they contract by 1e-3), and
+judges the departure dep(c) = g(c) - g(0) - B c, in units of |B c|, against #694's prediction kappa t with kappa = K /
+|a| from #677's even part (curve_verdict: within a factor 2 at 1e-3 and 1e-2 with order 2 +- 0.25 supports, off by
+more than 10 or an odd part as large as the even part below 1e-2 refutes). It also evaluates the flat chart z0 + V c
+(no strong solve) at the same t, a control on real data: its strong residual must grow as 1/2 max|F''(e, e)| t^2
+(#694's rows) and its departure must exceed the prediction by more than 10. Its plant (CurvePlanted) is RayPlanted
+carried to that range, with strong rows that the chord through z0's LU cannot follow above |c| 1e-5; it must recover
+each point to 1e-3 and the orders 4 and 5 to 0.05, every solve must converge, and the verdict's self-test must give
+its five planted verdicts. Its controls --mutate=w0 (no strong solve) and --mutate=chord (section 9's chord through
+z0's LU instead of Newton) must fail.
 
 `rows` (#694) splits the weak left vectors U over the residual's rows, expanded on harmonics within each field of each
 block (row_harm: block.field.harmonic, e.g. horizon.p.k5c, and the phase row), and measures each row's second
@@ -101,6 +117,7 @@ mp.mp.dps = 140
 # between h and h/10) and 1.4e-2 of it at 1e-32
 H = dict(Q=1e-32, T=1e-23, F=1e-32, S=1e-32, LS=1e-33)
 H_MUT_F = 1e-24                                             # --mutate=hF: w_jl from that step, whose h check must fail
+JET_MUT_FREEZE_N = 21           # Solver.residual_jet_o with the dimension frozen: its first coefficient is J(z) v (#698)
 
 
 def mgs(W):
@@ -152,7 +169,7 @@ class Real:
     """an attempt's pinned system, rebuilt as weak_corrector.py does; F(p) is the pinned residual at z0 + p (p an mpf
     list or None), solve(r) is J^-1 r through z0's octo-double LU"""
 
-    def __init__(self, raw, dzf, base, threads, log):
+    def __init__(self, raw, dzf, base, threads, log, fast=False):
         from hpkernel.driver import make_solver
         from multidouble import od_axpy
         from octo_corrector import PinnedO, load_o, o8, omax
@@ -173,16 +190,22 @@ class Real:
         s = make_solver(str(D), M, nodes=nodes, kt=mb.get("kt", 36), kc=mb.get("kc", 146), ks=mb.get("ks", 130),
                         threads=threads, kfreeze=kf)
         s.set_segs(mb["segs"])
-        # the held offset c = F_bare(z0) + J dz0 on the horizon block's p rows; J dz0 by columns in eight parts
-        J = [np.asarray(p) for p in s.jacobian_o(list(z0))]
-        JT = [np.ascontiguousarray(p.T) for p in J]
-        zero = np.zeros(L)
-        acc = [zero] * 8
-        for col in range(L):
-            for q in range(8):
-                x = float(d0[q][col])
-                if x != 0.0:
-                    acc = o8(od_axpy(x, *[JT[p][col] for p in range(8)], *acc))
+        # the held offset c = F_bare(z0) + J dz0 on the horizon block's p rows; J dz0 by columns in eight parts, or
+        # with fast (#698) as the octo-double jet's first coefficient with the dimension frozen (JET_MUT_FREEZE_N),
+        # J dz0 by forward mode, which saves the explicit Jacobian (about 200 s at 2 threads)
+        if fast:
+            J = None
+            acc = o8(s.residual_jet_o([list(z0), list(d0)], 2, JET_MUT_FREEZE_N)[1])
+        else:
+            J = [np.asarray(p) for p in s.jacobian_o(list(z0))]
+            JT = [np.ascontiguousarray(p.T) for p in J]
+            zero = np.zeros(L)
+            acc = [zero] * 8
+            for col in range(L):
+                for q in range(8):
+                    x = float(d0[q][col])
+                    if x != 0.0:
+                        acc = o8(od_axpy(x, *[JT[p][col] for p in range(8)], *acc))
         coff = mpv(o8(od_axpy(1.0, *acc, *o8(s.residual_o(list(z0))))), range(L))
         hp = set(range(4 * M * K, 4 * M * K + M))
         on, off = max(abs(coff[r]) for r in hp), max(abs(coff[r]) for r in range(L) if r not in hp)
@@ -190,7 +213,8 @@ class Real:
         c8 = parts8([coff[r] if r in hp else mp.mpf(0) for r in range(L)])
         self.so = PinnedO(s, c8[0], c8[1], c8=c8)
         self.s, self.z0, self.L, self.M, self.kf = s, z0, L, M, kf
-        self.J0 = J[0]                                  # the Jacobian's leading part, for the rows' scales (#694)
+        self.J0 = None if J is None else J[0]           # the Jacobian's leading part, for the rows' scales (#694)
+        self.lu_at = None                               # where the octo-double LU was last factored (None: z0)
         # the rows linear in z by construction: the horizon block's p rows above kfreeze (Pi' p1 minus the held
         # offset, multishoot's projected rows) and the phase row (sum_j w_j p1_j)
         self.frozen = [f"horizon.p.k{h}{cs}" for h in range(kf + 2, M, 2) for cs in "cs"] + ["phase"]
@@ -215,6 +239,14 @@ class Real:
     def solve64(self, b, transpose=False):
         x = self.s.olu_solve([np.ascontiguousarray(b)] + [np.zeros(self.L)] * 7, transpose)
         return np.asarray(x[0]) + np.asarray(x[1])
+
+    def refactor(self, p=None):
+        """the octo-double Jacobian and its LU at z0 + p (p None: z0) by Solver.newton_o; every solve after it uses
+        that LU. Returns its pivots (min, max |u_kk|)"""
+        z = self.z0 if p is None else self.o8(self.od_axpy(1.0, *self.parts8(p), *self.z0))
+        st = self.s.newton_o(list(z))
+        self.lu_at = None if p is None else list(p)
+        return st[3], st[4]
 
     def row_norms(self, RH):
         """|J_r|, the 2-norm of each row of J in RH's rows (f64, from the Jacobian's leading part)"""
@@ -488,6 +520,112 @@ class RayPlanted(Planted):
             d = self.dep_canon(y)
             return [mp.fsum(Op[i][j] * d[i] for i in range(k)) for j in range(k)]
         return f
+
+
+class CurvePlanted(RayPlanted):
+    """the curve mode's plant (#698): RayPlanted carried to |c| = 1e-6 .. 1e-2. Its reduced map is still exactly
+    beta + Sigma y + P4/24 + P5/120 (Q = L = 0, T = 3 S), with P4 / 24 about 1e-2 |B c| near |c| = 1e-3 and P5 equal to
+    P4 near |c| = 3e-3. Changed from RayPlanted: no quartic in the strong rows (c4 = 0); Lambda^-1 C about 0.1 in every
+    strong row, so that |w(c)| ~ 0.05 |c|^2 as at REF (|w_jl| 0.06 .. 0.14), and T = 3 S formed again with that C; and
+    in x's rows 0-3, which K does not reach, M(y) x = Lambda m (b . y) R x with R skew (Lambda + M(y) is never singular)
+    and 1/2 Lambda n (d . x)^2, m = 1e5 and n = 1e7. Those rows leave g unchanged, but the chord through z0's LU cannot
+    follow them once m |b . y| > 1 (|c| above about 1e-5), and Newton can. refactor(p) forms J(p) by central differences
+    at 400 digits (h 1e-160) and solve uses it (mp.lu_solve); refactor(None) returns to the analytic solves at z0."""
+
+    M_SKEW, N_QUAD = mp.mpf("1e5"), mp.mpf("1e7")
+
+    def __init__(self, seed, log, k=4, m=8):
+        self.Jz, self.lu_at = None, None
+        self.dN, self.nN = None, mp.mpf(0)              # RayPlanted's construction calls Gs
+        super().__init__(seed, lambda s: None, k, m)
+        rng = np.random.default_rng(seed + 698)
+        zero = mp.mpf(0)
+        self.c4 = (zero, self.c4[1])
+        self.C = []
+        for s in range(m):
+            cr = rng.standard_normal((k, k))
+            self.C.append([[self.lam[s] * mp.mpf("0.1") * mp.mpf((cr[i, j] + cr[j, i]) / 2) for j in range(k)]
+                           for i in range(k)])
+        lw = [[[self.C[s][j][l] / self.lam[s] for s in range(m)] for l in range(k)] for j in range(k)]
+        Sc = symmetrize([[[[mp.fsum(self.K[mm][i][s] * lw[j][l][s] for s in range(m)) for l in range(k)]
+                           for j in range(k)] for i in range(k)] for mm in range(k)])
+        self.T = [[[[3 * Sc[mm][i][j][l] for l in range(k)] for j in range(k)] for i in range(k)] for mm in range(k)]
+        R = rng.standard_normal((4, 4))
+        R = R - R.T
+        R /= np.linalg.norm(R, 2)
+        bv = rng.standard_normal(k)
+        bv /= np.linalg.norm(bv)
+        self.Mt = [[[zero] * m for _ in range(k)] for _ in range(m)]
+        for s in range(4):
+            for j in range(k):
+                for t in range(4):
+                    self.Mt[s][j][t] = self.lam[s] * self.M_SKEW * mp.mpf(float(bv[j])) * mp.mpf(float(R[s, t]))
+        dv = rng.standard_normal(4)
+        self.dN, self.nN = [mp.mpf(float(x)) for x in dv / np.linalg.norm(dv)], self.N_QUAD
+        nBe = nrm([self.sig[mm] * self.ya[mm] for mm in range(k)]) / nrm(self.ya)
+        self.P4 = [(mp.mpf(float(rng.standard_normal())), [mp.mpf(float(x)) for x in rng.standard_normal(k)])
+                   for _ in range(k)]
+        self.P5 = [(mp.mpf(float(rng.standard_normal())), [mp.mpf(float(x)) for x in rng.standard_normal(k)])
+                   for _ in range(k)]
+        # scaled along e = y_a / |y_a| (a / |a| in the code's coordinates): P4 / 24 is 1e-2 |B c| at |c| = 1e-3, and
+        # P5 / 120 equals P4 / 24 at |c| = 3e-3
+        ea = [x / nrm(self.ya) for x in self.ya]
+        p4 = mp.mpf("1e-2") * mp.mpf("1e-3") * nBe / (nrm([p * dot(av, ea) ** 4 / 24 for p, av in self.P4])
+                                                      * mp.mpf("1e-3") ** 4)
+        self.P4 = [(p4 * p, av) for p, av in self.P4]
+        p4e = nrm([p * dot(av, ea) ** 4 / 24 for p, av in self.P4])
+        q5 = p4e / (nrm([q * dot(b, ea) ** 5 / 120 for q, b in self.P5]) * mp.mpf("3e-3"))
+        self.P5 = [(q5 * q, b) for q, b in self.P5]
+        self.F0max = float(amax(self.F()))
+        self.dz0 = [-x for x in self.solve(self.F())]
+        # the plant's own check, as RayPlanted's, at |y| 1e-5 and 1e-3 (x's rows 4-7 are linear at fixed y, and G_w
+        # does not see rows 0-3, so xsolve's linear solve gives G_w's x exactly)
+        self.selfcheck = mp.mpf(0)
+        for scale in ("1e-5", "1e-3"):
+            y = [mp.mpf(float(x)) * mp.mpf(scale) for x in rng.standard_normal(k)]
+            g0 = self.Gw([zero] * k, self.xsolve([zero] * k))
+            gy = self.Gw(y, self.xsolve(y))
+            dep = [a_ - b_ - s_ * yy for a_, b_, s_, yy in zip(gy, g0, self.sig, y)]
+            want = self.dep_canon(y)
+            self.selfcheck = max(self.selfcheck, nrm([x - w for x, w in zip(dep, want)]) / nrm(want))
+        self.label = f"curve plant (seed {seed}): n {self.L}, k {k}"
+        self.meta = dict(seed=seed, n=self.L, k=k, F0max=self.F0max, ya=[float(x) for x in self.ya],
+                         selfcheck=float(self.selfcheck))
+        log(f"{self.label}; start max|F| {self.F0max:.3e}, |w0| {mp.nstr(nrm(self.w0c), 3)}, |y_a| "
+            f"{mp.nstr(nrm(self.ya), 3)}, |B e| {mp.nstr(nBe, 4)}; its reduced map minus beta + Sigma y against "
+            f"P4/24 + P5/120 {mp.nstr(self.selfcheck, 3)} (bound 1e-20): {'pass' if self.selfcheck < 1e-20 else 'FAIL'}")
+
+    def Gs(self, y, x):
+        out = super().Gs(y, x)
+        if self.dN is not None:
+            q = dot(self.dN, x[:4])
+            for s in range(4):
+                out[s] += self.lam[s] * self.nN * q * q / 2
+        return out
+
+    def refactor(self, p=None):
+        self.lu_at = None if p is None else list(p)
+        if p is None:
+            self.Jz = None
+            return None, None
+        n = self.L
+        with mp.workdps(400):
+            h = mp.mpf(10) ** -160
+            J = mp.matrix(n, n)
+            for i in range(n):
+                pp, pm = list(p), list(p)
+                pp[i] += h
+                pm[i] -= h
+                for r, (a_, b_) in enumerate(zip(self.F(pp), self.F(pm))):
+                    J[r, i] = (a_ - b_) / (2 * h)
+        self.Jz = J
+        return None, None
+
+    def solve(self, r, transpose=False):
+        if self.Jz is None:
+            return super().solve(r, transpose)
+        x = mp.lu_solve(self.Jz.T if transpose else self.Jz, mp.matrix(r))
+        return [x[i] for i in range(self.L)]
 
 
 # ------------------------------------------------------------------ tensors at z0
@@ -1361,6 +1499,344 @@ def raysum(paths):
             print(line)
 
 
+# ------------------------------------------------------------------ the curvature scale (#698)
+CURVE_T = [mp.mpf(10) ** (mp.mpf(e) / 2) for e in (-12, -10, -8, -6, -5, -4)]     # 1e-6, 1e-5, 1e-4, 1e-3, 3.16e-3, 1e-2
+CURVE_LEAD = mp.mpf("1e-24")         # the lead-in point on the + ray of a real start, #677's largest |c|
+CURVE_JUDGED = (mp.mpf("1e-3"), mp.mpf("1e-2"))
+SUPPORT_F, REFUTE_F = 2, 10          # within a factor 2 of the prediction supports, off by more than 10 refutes
+ORDER_TOL = mp.mpf("0.25")           # "local order 2": the even part's order over 1e-3 .. 1e-2 within 2 +- 0.25
+CONV_G = mp.mpf("1e-20")             # a solve converged when its error estimate is below 1e-20 |B c|
+
+
+def newton_strong(sysm, X, Um, c, w_init, wref, nBc, lu_max=6, chord_max=12):
+    """w(c) by Newton on the strong rows with the octo-double LU refactored at the iterate (#698). Each correction is
+    the bordered solve with the current LU, J dw = -(I - U U^T) F + U lam with V^T dw = 0: dw = -J^-1 r + Y lam,
+    Y = J^-1 U, lam from V^T dw = 0 (a 4 x 4 solve), r the strong residual. At z0 this is section 1's chord. The first
+    correction after a refactorization is a Newton step; further ones reuse that LU (chord steps, one residual and one
+    solve each) while each cuts |dw| by 1e-3 or more, and otherwise the LU is refactored at the new iterate (a growing
+    |dw| is not applied). The fixed point solves the strong rows whatever LU is used. Stops when |dw| < 1e-60
+    max(|w|, |w0|), when a refactorization does not cut the smallest |dw| so far (the floor), or after lu_max LUs. The
+    iterate with the smallest |dw| is kept; its error estimate is err = |U^T [F(w + dw) - F(w)]|, the change of g
+    by the correction not applied, and it counts as converged when err < CONV_G |B c| (nBc). Failure: a non-finite
+    |dw|, or one above max(|c|, |w0|) (a strong correction larger than the weak move). Returns (g, w, F, steps, ok,
+    err, LUs), steps one (LU, max|strong residual|, |dw|) each."""
+    k = len(X)
+    pv = lin([(mp.mpf(cj), X[j]) for j, cj in enumerate(c)])
+    w = list(w_init)
+    big = max(nrm(c), wref)
+    hist, best, nlu = [], None, 0
+    while nlu < lu_max:
+        sysm.refactor([x + y for x, y in zip(pv, w)])
+        nlu += 1
+        Y = [sysm.solve(u) for u in Um]
+        A = mp.matrix([[dot(X[i], Y[j]) for j in range(k)] for i in range(k)])
+        prev, improved, stop = None, False, False
+        for _ in range(chord_max):
+            Fv = sysm.F([x + y for x, y in zip(pv, w)])
+            r = strong_part(Um, Fv)
+            x = sysm.solve(r)
+            lam = mp.lu_solve(A, mp.matrix([dot(X[i], x) for i in range(k)]))
+            dw = [-x[q] + mp.fsum(lam[j] * Y[j][q] for j in range(k)) for q in range(len(x))]
+            cv = proj_U(X, dw)                          # V^T dw, zero but for rounding
+            dw = [d - mp.fsum(cv[j] * X[j][q] for j in range(k)) for q, d in enumerate(dw)]
+            nd = nrm(dw)
+            hist.append((nlu, float(amax(r)), float(nd)))
+            if not mp.isfinite(nd) or nd > big:
+                return proj_U(Um, Fv), w, Fv, hist, False, None, nlu
+            if best is None or nd < best[0]:
+                best = (nd, w, Fv, dw)
+                improved = True
+            if nd < mp.mpf("1e-60") * max(nrm(w), wref):
+                stop = True
+                break
+            if prev is not None and nd > prev:          # this LU's chord grows |dw|: refactor where it is
+                break
+            w = [a_ + b_ for a_, b_ in zip(w, dw)]
+            if prev is not None and nd > mp.mpf("1e-3") * prev:
+                break
+            prev = nd
+        if stop or not improved:
+            break
+    nd, w, Fv, dw = best
+    F2 = sysm.F([x + y + d for x, y, d in zip(pv, w, dw)])
+    gv = proj_U(Um, Fv)
+    err = nrm([a_ - b_ for a_, b_ in zip(proj_U(Um, F2), gv)])
+    return gv, w, Fv, hist, bool(err < CONV_G * nBc), err, nlu
+
+
+def w_predict(w0, conv, tau):
+    """w at the signed tau from the converged points [(tau_i, w_i)]: the two with the largest |tau_i| <= |tau| (the
+    same sign first), fitted by w0 + alpha tau^2 + beta tau^3 exactly; one point, w0 + (tau / tau_1)^2 (w_1 - w0); none,
+    w0"""
+    cand = sorted((p for p in conv if abs(p[0]) <= abs(tau)), key=lambda p: (abs(p[0]), (p[0] > 0) == (tau > 0)))
+    if not cand:
+        return list(w0)
+    if len(cand) == 1 or abs(cand[-1][0]) == abs(cand[-2][0]) and cand[-1][0] == cand[-2][0]:
+        t1, w1 = cand[-1]
+        return [x0 + (tau / t1) ** 2 * (x1 - x0) for x0, x1 in zip(w0, w1)]
+    (t1, w1), (t2, w2) = cand[-2], cand[-1]
+    Mx = mp.matrix([[t1 ** 2, t1 ** 3], [t2 ** 2, t2 ** 3]]) ** -1
+    out = []
+    for x0, x1, x2 in zip(w0, w1, w2):
+        al = Mx[0, 0] * (x1 - x0) + Mx[0, 1] * (x2 - x0)
+        be = Mx[1, 0] * (x1 - x0) + Mx[1, 1] * (x2 - x0)
+        out.append(x0 + al * tau ** 2 + be * tau ** 3)
+    return out
+
+
+def ls_order(ts, vals):
+    """the least-squares slope of ln vals against ln t (None if fewer than two positive values)"""
+    pts = [(mp.log(t), mp.log(v)) for t, v in zip(ts, vals) if v > 0]
+    if len(pts) < 2:
+        return None
+    xm, ym = mp.fsum(p[0] for p in pts) / len(pts), mp.fsum(p[1] for p in pts) / len(pts)
+    return float(mp.fsum((p[0] - xm) * (p[1] - ym) for p in pts) / mp.fsum((p[0] - xm) ** 2 for p in pts))
+
+
+def curve_verdict(rows, kappa):
+    """the frozen verdict of #698 (notes/REDUCED_CUBIC.md 11.3) from the rows {t, E, O, dp, dm, fl} (in units of
+    |B c|) against the prediction kappa t: at t = 1e-3 and 1e-2 the ratios E / (kappa t), |dep(+t e)| / (kappa t) and
+    |dep(-t e)| / (kappa t); the even part's least-squares order over 1e-3 .. 1e-2; and whether the odd part reaches the
+    even part at a resolved t below 1e-2 (a cubic as large as the quadratic below 1e-2). Supports: every ratio within a
+    factor 2, the order within 2 +- 0.25 and no such cubic. Refutes: a ratio off by more than 10, or such a cubic.
+    Between otherwise; not decided when a judged t is missing and nothing refutes."""
+    by = {mp.nstr(r["t"], 6): r for r in rows}
+    ratios, missing = {}, []
+    for t in CURVE_JUDGED:
+        r = by.get(mp.nstr(t, 6))
+        if r is None:
+            missing.append(float(t))
+            continue
+        ratios[float(t)] = {q: float(r[q] / (kappa * t)) for q in ("E", "dp", "dm")}
+    sel = [r for r in rows if CURVE_JUDGED[0] * mp.mpf("0.999") <= r["t"] <= CURVE_JUDGED[1] * mp.mpf("1.001")]
+    # the order of the departure itself, E |B c| = E t |B e|
+    order = ls_order([r["t"] for r in sel], [r["E"] * r["t"] for r in sel]) if len(sel) >= 2 else None
+    cubic = [float(r["t"]) for r in rows if r["t"] < CURVE_JUDGED[1] * mp.mpf("0.999") and r["O"] >= r["E"]
+             and r["O"] > RESOLVED * r["fl"] and r["E"] > RESOLVED * r["fl"]]
+    vals = [v for d in ratios.values() for v in d.values()]
+    refute = bool(cubic) or any(v > REFUTE_F or v < 1 / REFUTE_F for v in vals)
+    support = (not missing and not cubic and order is not None and abs(order - 2) <= ORDER_TOL
+               and all(1 / SUPPORT_F <= v <= SUPPORT_F for v in vals))
+    verdict = "refutes" if refute else ("supports" if support else ("not decided" if missing else "between"))
+    return dict(ratios=ratios, order=order, cubic_below=cubic, missing=missing, verdict=verdict)
+
+
+def verdict_selftest():
+    """curve_verdict on planted rows (E = kappa t^2 / t exactly, O = E / 10): with the planted kappa it must support,
+    with 20 kappa refute, with 4 kappa be between, with O = 2 E below 1e-2 refute, and with the 1e-2 row dropped be not
+    decided. Returns (all as required, the five verdicts)"""
+    kap = mp.mpf("4.5")
+    mk = lambda kk, of=mp.mpf("0.1"), drop=False: [   # noqa: E731
+        dict(t=t, E=kk * t, O=of * kk * t, dp=(1 + of) * kk * t, dm=(1 - of) * kk * t, fl=mp.mpf("1e-40"))
+        for t in CURVE_T if not (drop and t == CURVE_JUDGED[1])]
+    got = [curve_verdict(mk(kap), kap)["verdict"], curve_verdict(mk(kap), 20 * kap)["verdict"],
+           curve_verdict(mk(kap), 4 * kap)["verdict"], curve_verdict(mk(kap, mp.mpf(2)), kap)["verdict"],
+           curve_verdict(mk(kap, drop=True), kap)["verdict"]]
+    return got == ["supports", "refutes", "between", "refutes", "not decided"], got
+
+
+def curve_scan(sysm, bas, opts, mutate, log, rec, dump, truth=None, kappa=None, ref677=None, fee694=None):
+    """g on the strong-solved manifold along c = +-t e, e = a / |a|, at t in CURVE_T (and CURVE_LEAD on the + ray of
+    a real start), by newton_strong; the departure dep(c) = g(c) - g(0) - B c in units of |B c| = t |B e|, its even
+    and odd parts, their floors and orders, the flat chart (w = 0) at the same t, and the verdict of curve_verdict
+    against kappa t. truth (the plant): c -> the planted departure. ref677: #677's ray JSON (the lead-in point is
+    compared with its stored departure at 1e-24). fee694: max_r |F''_r(e, e)| from #694's rows JSON, against which the
+    flat chart's strong residual is compared. --mutate=w0: g on the flat chart instead of the strong solve;
+    --mutate=chord: the strong solve by ray_solve's chord through z0's LU instead of newton_strong."""
+    k, X, Um, B, a, Ba, nBa, na, w0 = (bas[n] for n in ("k", "X", "Um", "B", "a", "Ba", "nBa", "na", "w0"))
+    wref = max(nrm(w0), mp.mpf("1e-300"))
+    e = [x / na for x in a]
+    nBe = nrm([mp.fsum(B[m][j] * e[j] for j in range(k)) for m in range(k)])
+    t0 = time.time()
+    zero = [mp.mpf(0)] * k
+    if sysm.lu_at is not None:
+        sysm.refactor(None)
+    g00, w00, _, h00, ok00, e00 = ray_solve(sysm, X, Um, zero, w0, wref)
+    g0b, _, _, h0b, ok0b, e0b = ray_solve(sysm, X, Um, zero, [x * (1 + mp.mpf("1e-5")) for x in w0], wref)
+    floor0 = max(nrm([x - y for x, y in zip(g00, g0b)]), e00 or 0, e0b or 0)
+    log(f"  curve: |e| along a / |a|, |B e| {mp.nstr(nBe, 5)}; g(0) by the chord through z0's LU, from w0 and from w0 "
+        f"(1 + 1e-5): {'converged' if ok00 and ok0b else 'NOT converged'}, floor0 {mp.nstr(floor0, 3)} "
+        f"({mp.nstr(floor0 / nBa, 3)} of |B a|); prediction kappa t |B c| with kappa "
+        + ("none" if kappa is None else mp.nstr(kappa, 5)) + f" ({time.time() - t0:.0f} s)")
+    out = dict(nBe=float(nBe), floor0=float(floor0), floor0_Ba=float(floor0 / nBa), g0_ok=bool(ok00 and ok0b),
+               kappa=None if kappa is None else float(kappa), points=[], flat=[])
+    rec["curve"] = out
+    dump()
+    if not (ok00 and ok0b):
+        return False, rec
+    F0 = sysm.F()
+    gF0 = proj_U(Um, F0)
+    sF0 = strong_part(Um, F0)
+
+    def dep_of(gv, c):
+        return [gv[m] - g00[m] - mp.fsum(B[m][j] * c[j] for j in range(k)) for m in range(k)]
+
+    def dep_flat(gv, c):
+        return [gv[m] - gF0[m] - mp.fsum(B[m][j] * c[j] for j in range(k)) for m in range(k)]
+
+    # the flat chart z0 + V c (no strong solve): residuals only
+    tflat = ([CURVE_LEAD] if truth is None else []) + CURVE_T
+    for t in tflat:
+        row = dict(t=float(t))
+        for sgn in (1, -1):
+            c = [sgn * t * x for x in e]
+            Fv = sysm.F(lin([(cj, X[j]) for j, cj in enumerate(c)]))
+            d = dep_flat(proj_U(Um, Fv), c)
+            row["dep" + ("p" if sgn > 0 else "m")] = float(nrm(d) / (t * nBe))
+            sr = strong_part(Um, Fv)
+            row["sr" + ("p" if sgn > 0 else "m")] = float(amax([x - y for x, y in zip(sr, sF0)]) / t ** 2)
+            row["_d" + ("p" if sgn > 0 else "m")] = d
+        E = [(x + y) / 2 for x, y in zip(row["_dp"], row["_dm"])]
+        O = [(x - y) / 2 for x, y in zip(row["_dp"], row["_dm"])]
+        row["E"], row["O"] = float(nrm(E) / (t * nBe)), float(nrm(O) / (t * nBe))
+        row["O_t3"] = float(nrm(O) / t ** 3)
+        del row["_dp"], row["_dm"]
+        out["flat"].append(row)
+    log("  flat chart z0 + V c (w = 0), per t: |dep(+t e)|, |dep(-t e)|, even, odd part (of |B c|); odd / t^3; max of "
+        "the strong residual's change / t^2 (+, -)" + ("" if fee694 is None else
+                                                       f"; against 1/2 max|F''(e, e)| = {mp.nstr(fee694 / 2, 4)} (#694)"))
+    for r in out["flat"]:
+        log(f"    {r['t']:9.3g} {r['depp']:11.3e} {r['depm']:11.3e} {r['E']:11.3e} {r['O']:11.3e}  {r['O_t3']:10.3e}  "
+            f"{r['srp']:10.3e} {r['srm']:10.3e}")
+    dump()
+
+    # the strong-solved manifold
+    conv, pts = [], {1: [], -1: []}
+    for sgn in (1, -1):
+        ts = ([CURVE_LEAD] if truth is None and sgn == 1 else []) + CURVE_T
+        for t in ts:
+            t1 = time.time()
+            c = [sgn * t * x for x in e]
+            tau = sgn * t
+            w_init = w_predict(w0, conv, tau)
+            nBc = t * nBe
+            if mutate == "w0":
+                Fv = sysm.F(lin([(cj, X[j]) for j, cj in enumerate(c)]))
+                gv, wv, hv, okv, ev, nlu = proj_U(Um, Fv), [mp.mpf(0)] * len(w0), [], True, mp.mpf(0), 0
+            elif mutate == "chord":
+                gv, wv, Fv, hv0, okv, ev = ray_solve(sysm, X, Um, c, w_init, wref)
+                hv, nlu = [(0, x, y) for x, y in hv0], 0
+            else:
+                gv, wv, Fv, hv, okv, ev, nlu = newton_strong(sysm, X, Um, c, w_init, wref, nBc)
+            wdiff = nrm([x - y for x, y in zip(wv, w_init)])
+            p = dict(t=t, sgn=sgn, ok=bool(okv), hist=hv, lus=nlu, err=ev, Fmax=float(amax(Fv)),
+                     w=float(nrm([x - y for x, y in zip(wv, w0)])), w_init_err=float(wdiff), s=round(time.time() - t1, 1))
+            if okv:
+                p["dep"] = dep_of(gv, c)
+                conv.append((tau, wv))
+            pts[sgn].append(p)
+            log(f"    {'+' if sgn > 0 else '-'}t {mp.nstr(t, 3):>8}: " + (
+                f"|dep| / |B c| {mp.nstr(nrm(p['dep']) / nBc, 6)}, " if okv else "NOT converged, ")
+                + f"error estimate {mp.nstr((ev if ev is not None else mp.nan) / nBc, 3)} of |B c|, |w - w0| "
+                f"{p['w']:.3e}, its prediction off by {p['w_init_err']:.2e}, max|F| {p['Fmax']:.2e}, {nlu} LUs, "
+                f"(LU, |dw|) " + ", ".join(f"({h[0]}, {h[2]:.1e})" for h in hv) + f" ({p['s']:.0f} s)")
+            if not okv:
+                log(f"  curve: the {'+' if sgn > 0 else '-'} ray stops at |c| {mp.nstr(t, 3)}")
+                break
+            rec["curve"]["points"] = [dict({kk: (float(v) if isinstance(v, mp.mpf) else v) for kk, v in q.items()
+                                            if kk != "dep"}, dep=[float(x) for x in q.get("dep", [])])
+                                      for s in (1, -1) for q in pts[s]]
+            dump()
+
+    # the parts, per t where both signs converged
+    rows = []
+    byt = {mp.nstr(q["t"], 6): q for q in pts[-1] if q["ok"]}
+    for p in pts[1]:
+        m = byt.get(mp.nstr(p["t"], 6))
+        if not (p["ok"] and m is not None):
+            continue
+        t, nBc = p["t"], p["t"] * nBe
+        E = [(x + y) / 2 for x, y in zip(p["dep"], m["dep"])]
+        O = [(x - y) / 2 for x, y in zip(p["dep"], m["dep"])]
+        row = dict(t=t, E=nrm(E) / nBc, O=nrm(O) / nBc, dp=nrm(p["dep"]) / nBc, dm=nrm(m["dep"]) / nBc,
+                   fl=max(p["err"], m["err"], floor0) / nBc, lus=(p["lus"], m["lus"]))
+        if truth is not None:
+            dpt, dmt = truth([t * x for x in e]), truth([-t * x for x in e])
+            Et = [(x + y) / 2 for x, y in zip(dpt, dmt)]
+            Ot = [(x - y) / 2 for x, y in zip(dpt, dmt)]
+            for part, meas, tru in (("E", E, Et), ("O", O, Ot)):
+                ntr = nrm(tru) / nBc
+                row[part + "_true"] = ntr
+                row[part + "_err"] = nrm([x - y for x, y in zip(meas, tru)]) / nBc / max(ntr, RESOLVED * row["fl"])
+        rows.append(row)
+    main = [r for r in rows if r["t"] >= CURVE_T[0] * mp.mpf("0.999")]
+    log("  curve along a / |a|: t, |dep(+t e)|, |dep(-t e)|, even part E, odd part O, floor (of |B c| = t |B e|), "
+        "E / t, O / t (local orders between neighbours below)" + (", even and odd against the planted" if truth else ""))
+    for r in rows:
+        log(f"    {mp.nstr(r['t'], 3):>8} {float(r['dp']):12.5e} {float(r['dm']):12.5e} {float(r['E']):12.5e} "
+            f"{float(r['O']):12.5e} {float(r['fl']):9.2e} {float(r['E'] / r['t']):11.4e} {float(r['O'] / r['t']):11.4e}"
+            + (f" {float(r['E_err']):8.1e} {float(r['O_err']):8.1e}" if truth else ""))
+    # local orders of the departure itself (in t: the parts / |B c| times t)
+    loc = {q: [ls_order([r0["t"], r1["t"]], [r0[q] * r0["t"], r1[q] * r1["t"]]) for r0, r1 in zip(main, main[1:])]
+           for q in ("E", "O", "dp", "dm")}
+    for q, v in loc.items():
+        log(f"    local orders of {q} * |B c|: " + ", ".join("none" if x is None else f"{x:.3f}" for x in v))
+    fits = {}
+    for q in ("E", "O"):
+        res = [r for r in main if r[q] > RESOLVED * r["fl"]]
+        fits[q] = dict(n=len(res), p=ls_order([r["t"] for r in res[:4]], [r[q] * r["t"] for r in res[:4]])
+                       if len(res) >= 3 else None)
+    log("    leading orders of the departure (first four resolved points): even "
+        + ("none" if fits["E"]["p"] is None else f"{fits['E']['p']:.3f}") + ", odd "
+        + ("none" if fits["O"]["p"] is None else f"{fits['O']['p']:.3f}"))
+    out["rows"] = [{kk: (float(v) if isinstance(v, mp.mpf) else v) for kk, v in r.items()} for r in rows]
+    out["local"] = loc
+    out["fits"] = fits
+    out["lus"] = sum(q["lus"] for s in (1, -1) for q in pts[s])
+    stop = {str(s): next((float(q["t"]) for q in pts[s] if not q["ok"]), None) for s in (1, -1)}
+    out["stop"] = stop
+    ok = True
+    if truth is not None:
+        pe = bool(rows) and all(r["E_err"] < 1e-3 and r["O_err"] < 1e-3 for r in rows)
+        po = bool(fits["E"]["p"] is not None and abs(fits["E"]["p"] - 4) < 0.05 and fits["O"]["p"] is not None
+                  and abs(fits["O"]["p"] - 5) < 0.05)
+        pc = all(q["ok"] for s in (1, -1) for q in pts[s]) and len(rows) == len(CURVE_T)
+        vs, vgot = verdict_selftest()
+        out["planted"] = dict(points=pe, orders=po, converged=pc, verdict_selftest=vs, verdicts=vgot,
+                              worst=float(max(max(r["E_err"], r["O_err"]) for r in rows)) if rows else None)
+        log(f"  planted: (PC1) worst point error {out['planted']['worst'] if rows else float('nan'):.1e} (bound 1e-3): "
+            f"{'pass' if pe else 'FAIL'}; (PC2) orders 4 and 5 to 0.05: {'pass' if po else 'FAIL'}; (PC3) every solve "
+            f"converged: {'pass' if pc else 'FAIL'}; (PC4) the verdict's self-test {vgot}: {'pass' if vs else 'FAIL'}")
+        ok = pe and po and pc and vs
+    else:
+        # (Z1) the lead-in against #677's chord; (Z2) the flat chart; the verdict
+        z1 = None
+        lead = next((q for q in pts[1] if abs(q["t"] - CURVE_LEAD) < CURVE_LEAD * mp.mpf("1e-6")), None)
+        if ref677 is not None and lead is not None and lead["ok"]:
+            with open(ref677) as fh:
+                r6 = json.load(fh)
+            ref = next(q for q in r6["ray"]["rays"]["a"]["points"] if q["sgn"] == 1 and abs(q["t"] / 1e-24 - 1) < 1e-9)
+            d6 = nrm([mp.mpf(x) for x in ref["dep"]]) / mp.mpf(r6["Ba"])
+            dn = nrm(lead["dep"]) / nBa
+            z1 = float(abs(dn / d6 - 1))
+            log(f"  (Z1) the lead-in at |c| 1e-24: |dep| / |B a| {mp.nstr(dn, 8)} against #677's chord {mp.nstr(d6, 8)}: "
+                f"{z1:.1e} (bound 1e-6): {'pass' if z1 < 1e-6 else 'FAIL'}")
+        z2a = None
+        if fee694 is not None:
+            f6 = next(r for r in out["flat"] if abs(r["t"] / 1e-6 - 1) < 1e-9)
+            z2a = [float(f6[q] / (fee694 / 2)) for q in ("srp", "srm")]
+        flat_main = [r for r in out["flat"] if r["t"] >= float(CURVE_T[0]) * 0.999]
+        z2b = None if kappa is None else min(min(r["depp"], r["depm"]) / (float(kappa) * r["t"]) for r in flat_main)
+        z2_ok = bool(z2a is not None and all(0.5 <= x <= 2 for x in z2a) and z2b is not None and z2b > REFUTE_F)
+        log("  (Z2) the flat chart: its strong residual's change at 1e-6 against 1/2 max|F''(e, e)| (+, -) "
+            + ("none" if z2a is None else ", ".join(f"{x:.3f}" for x in z2a)) + " (within a factor 2); its smallest "
+            f"departure against the prediction {'none' if z2b is None else f'{z2b:.2e}'} (above 10): "
+            f"{'pass' if z2_ok else 'FAIL'}")
+        verd = curve_verdict(main, kappa) if kappa is not None else None
+        out["checks"] = dict(Z1=z1, Z1_ok=None if z1 is None else bool(z1 < 1e-6), Z2a=z2a, Z2b=z2b, Z2_ok=z2_ok)
+        out["verdict"] = verd
+        if verd is not None:
+            vo = "none" if verd["order"] is None else f"{verd['order']:.3f}"
+            log("  verdict (11.3): ratios to kappa t at " + "; ".join(
+                f"{t:g}: E {d['E']:.3f}, dep+ {d['dp']:.3f}, dep- {d['dm']:.3f}" for t, d in verd["ratios"].items())
+                + f"; the even part's order over 1e-3..1e-2 {vo}; odd >= even below 1e-2 at "
+                f"{verd['cubic_below'] or 'no t'}; missing {verd['missing'] or 'none'}: {verd['verdict']}")
+        ok = bool((z1 is None or z1 < 1e-6) and z2_ok and not any(stop.values()))
+    log(f"  curve: {out['lus']} LUs; stops {stop} ({time.time() - t0:.0f} s)")
+    dump()
+    return ok, rec
+
+
 # ------------------------------------------------------------------ the weak rows (#694)
 ROW_FIELDS = (("p", 1), ("m", 1), ("a", 0), ("c", 0))     # the fields of each residual block, with parity (1: odd)
 H_ROWS = (1e-32, 1e-33)          # F''(v_j, v_l) per row at these steps (#528's Q steps); the second is judged
@@ -1918,6 +2394,36 @@ def strip(rec):
     return {k: v for k, v in rec.items() if not k.startswith("_")}
 
 
+# #677's even part along a / |a| (raysum.txt), K |B a| (t / |a|)^2, as the prediction kappa = K / |a| of #694 (#698)
+KAPPA_677 = {"dz0_pin3_D242.5459_a0.031250.npz": (mp.mpf("3.750e-29"), mp.mpf("8.3246e-30")),
+             "dz0_pin3_D249.3927_a0.762939.npz": (mp.mpf("1.892e-28"), mp.mpf("8.0246e-30"))}
+
+
+def main_curve(args, opts, mutate, log, rec, dump):
+    """curve RAWDIR DZ0 BASE [--ref677=JSON] [--ref694=JSON] or curve planted: the basis, then curve_scan"""
+    if args[1:] == ["planted"]:
+        sysm = CurvePlanted(int(opts.get("seed", 5)), log)
+        rec.update(sysm.meta)
+        bas = basis(sysm, opts, log, rec, dump)
+        ok, rec = curve_scan(sysm, bas, opts, mutate, log, rec, dump, truth=sysm.dep_true(bas["X"], bas["Um"]))
+        return ok and bool(sysm.selfcheck < 1e-20)
+    sysm = Real(*args[1:4], int(opts.get("threads", 2)), log, fast=True)
+    rec.update(sysm.meta)
+    if not sysm.offset_ok:
+        log("check: FAIL (the held offset is not on its rows only)")
+        return False
+    bas = basis(sysm, opts, log, rec, dump)
+    K, an = KAPPA_677.get(os.path.basename(args[2]), (None, None))
+    kappa = None if K is None else K / an
+    fee = None
+    if opts.get("ref694"):
+        with open(opts["ref694"]) as fh:
+            r9 = json.load(fh)
+        fee = mp.mpf(max(abs(x) for x in r9["rows"]["along"]["rows"]["Fee"]))
+    ok, rec = curve_scan(sysm, bas, opts, mutate, log, rec, dump, kappa=kappa, ref677=opts.get("ref677"), fee694=fee)
+    return ok
+
+
 def main_ray(args, opts, mutate, log, rec, dump):
     """ray RAWDIR DZ0 BASE [--tensors=1] or ray planted: the scan of ray_scan, after the basis (and, with --tensors=1,
     the whole of #528's measurement, whose h checks are then judged too)"""
@@ -1960,9 +2466,9 @@ def main():
         rowsum(args[1:])
         return 0
     modes = dict(run=("", "w0", "Ssign", "Sh", "hF"), planted=("", "w0", "Ssign", "Sh", "hF"), ray=("", "w0", "B"),
-                 rows=("", "quadA", "parity"))
+                 rows=("", "quadA", "parity"), curve=("", "w0", "chord"))
     if not args or args[0] not in modes or (args[0] == "run" and len(args) != 4) or \
-            (args[0] in ("ray", "rows") and len(args) != 4 and args[1:] != ["planted"]):
+            (args[0] in ("ray", "rows", "curve") and len(args) != 4 and args[1:] != ["planted"]):
         sys.exit(__doc__)
     if mutate not in modes[args[0]]:
         sys.exit(f"--mutate={mutate}: in mode {args[0]}, one of {', '.join(modes[args[0]][1:])}")
@@ -1976,10 +2482,13 @@ def main():
         if out:
             with open(out, "w") as fh:
                 json.dump(strip(rec), fh, indent=1, default=float)
-    if args[0] in ("ray", "rows"):
+    if args[0] in ("ray", "rows", "curve"):
         if args[0] == "ray":
             rec["ray_t"] = [float(t) for t in RAY_T]
             ok = main_ray(args, opts, mutate, log, rec, dump)
+        elif args[0] == "curve":
+            rec["curve_t"] = [float(t) for t in CURVE_T]
+            ok = main_curve(args, opts, mutate, log, rec, dump)
         else:
             ok = main_rows(args, opts, mutate, log, rec, dump)
         rec["passed"] = bool(ok)
