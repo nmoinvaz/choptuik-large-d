@@ -76,8 +76,8 @@ FROZEN = {                          # written before the twins, size, twins_real
     "C0_same_class": "chord2 in the chord basis, arcjump in the arc basis, the plant arc in the smooth basis, each at "
                      "M = 6, n = 23: chi <= 1e-30 at every node",
     "C1_precision": "at M_min - 1 and M_min of every scan, chi at 250 digits agrees with 150 digits within 1e-3 relative",
-    "C1_amended_672": "#672, the coordinator's amendment, frozen before the rerun of twins and twins_real: at M = n, C1 "
-                      "passes when chi <= 1e-30 at both 150 and 250 digits; below n it is unchanged. Why: at M = n the "
+    "C1_amended_672": "#672, the coordinator's amendment, frozen before the rerun of twins and twins_real: at M = n, "
+                      "C1 passes when chi <= 1e-30 at both 150 and 250 digits; below n it is unchanged. Why: at M = n the "
                       "twin is the interpolant and chi is rounding noise at both precisions, so their relative "
                       "difference is undefined. A check fit that mpmath finds singular counts as chi = inf",
     "mutation_C1_672": "--mutate=c1dup (twins_real only): column n - 1 of the 250-digit bases is replaced by column "
@@ -657,7 +657,8 @@ def run_twins_jdiag(outdir):
                 + ", ".join(f"{r['chi']:.3e}" for r in rows if 18 <= r["M"] <= 22))
         c, chi, _ = tc.lsq(b, sig, err, N23, N23 - 1)
         with mp.workdps(DPS_FIT):
-            per = [float(abs(mp.fsum(c[m] * b.cols[m][k] for m in range(N23 - 1)) - sig[k]) / err[k]) for k in range(N23)]
+            per = [float(abs(mp.fsum(c[m] * b.cols[m][k] for m in range(N23 - 1)) - sig[k]) / err[k])
+                   for k in range(N23)]
         out["per_k_at_n_minus_1"] = per
         rec["classes"][cls] = out
         log(f"  {cls}: misfit at M = {N23 - 1} per k, in units of err_k: " + " ".join(f"{v:.1e}" for v in per))
