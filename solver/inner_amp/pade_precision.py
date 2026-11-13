@@ -9,7 +9,8 @@ what that did, and what the strings' own rounding leaves.
            at 53 bits, 60 and 100 digits (the precisions the callers used) against 300 digits. The c_m come from a
            double-precision least-squares fit, so a load that leaves them bit-identical leaves every plant unchanged.
   compare  every number of two JSON records of one stage (a run and its rerun): the largest absolute and relative
-           differences, with their paths, and any difference of structure.
+           differences, with their paths, and any difference of structure. --skip leaves out the paths that match a
+           regular expression (rounding noise, such as chi of an interpolant).
   floor    the strings' rounding as an input box: each component of sigma_k, k >= 1, within half a unit of its 20th
            digit (sigma_load.rounding; sigma_0 = 1 by normalisation). The first-order worst case of a statistic over
            the box is sum_i |d stat/d x_i| h_i, from one finite difference per component, h_i its half unit, at the
@@ -24,7 +25,7 @@ what that did, and what the strings' own rounding leaves.
            Then the twin scans with err_k widened to max(err_k, rounding_k).
 
     python3 pade_precision.py plants OUTDIR [--allow_unraw]
-    python3 pade_precision.py compare OLD.json NEW.json [--top=N] [--out=FILE.json]
+    python3 pade_precision.py compare OLD.json NEW.json [--top=N] [--out=FILE.json] [--skip=REGEX]
     python3 pade_precision.py floor OUTDIR [--mutate=corner] [--allow_unraw]
     python3 pade_precision.py floor_twins OUTDIR [--mutate=proj] [--allow_unraw]
 
@@ -34,6 +35,7 @@ import bisect
 import json
 import math
 import os
+import re
 import sys
 import time
 
@@ -128,21 +130,24 @@ def walk(a, b, path, out):
         out["structure"].append(f"{path}: type {type(a).__name__} -> {type(b).__name__}")
 
 
-def run_compare(old, new, top=12, out_json=None):
+def run_compare(old, new, top=12, out_json=None, skip=None):
     A, B = json.load(open(old)), json.load(open(new))
     for k in ("frozen", "mutate"):
         A.pop(k, None), B.pop(k, None)
     out = {"structure": [], "numbers": []}
     walk(A, B, "", out)
-    nums = sorted(out["numbers"], reverse=True)
-    print(f"{old} -> {new}: {len(nums)} numbers, {len(out['structure'])} structural differences")
+    rx = re.compile(skip) if skip else None
+    nums = sorted(n for n in out["numbers"] if not (rx and rx.search(n[2])))
+    nums.reverse()
+    print(f"{old} -> {new}: {len(nums)} numbers" + (f" (skipping /{skip}/, {len(out['numbers']) - len(nums)} left out)"
+                                                    if skip else "") + f", {len(out['structure'])} structural differences")
     for s in out["structure"][:top]:
         print("   structure:", s)
     moved = [n for n in nums if n[0] > 0]
     print(f"   numbers that differ: {len(moved)}; largest relative differences:")
     for rel, d, p, a, b in nums[:top]:
         print(f"   {rel:.2e} (abs {d:.2e})  {p}: {a!r} -> {b!r}")
-    res = {"old": old, "new": new, "n_numbers": len(nums), "n_differ": len(moved),
+    res = {"old": old, "new": new, "skip": skip, "n_numbers": len(nums), "n_differ": len(moved),
            "max_rel": nums[0][0] if nums else 0.0, "structure": out["structure"],
            "largest": [{"rel": r, "abs": d, "path": p, "old": a, "new": b} for r, d, p, a, b in nums[:200]]}
     if out_json:
@@ -413,9 +418,10 @@ def main():
     mut = next((a.split("=", 1)[1] for a in argv if a.startswith("--mutate=")), None)
     top = int(next((a.split("=", 1)[1] for a in argv if a.startswith("--top=")), 12))
     out_json = next((a.split("=", 1)[1] for a in argv if a.startswith("--out=")), None)
+    skip = next((a.split("=", 1)[1] for a in argv if a.startswith("--skip=")), None)
     argv = [a for a in argv if not a.startswith("--")]
     if len(argv) == 3 and argv[0] == "compare":
-        run_compare(argv[1], argv[2], top, out_json)
+        run_compare(argv[1], argv[2], top, out_json, skip)
         sys.exit(0)
     if len(argv) != 2 or argv[0] not in ("plants", "floor", "floor_twins"):
         raise SystemExit(__doc__)
