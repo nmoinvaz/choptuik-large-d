@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Resolve every markdown link in the given files, by default README.md and every notes/*.md. A relative file must
+"""Resolve every markdown link in the given files, by default every .md file git tracks. A relative file must
 exist, and a #anchor must match a heading of the target file or an <a id> or <a name> in it. Exits 1 on a broken
 link.
 
@@ -498,7 +498,14 @@ def main():
             sys.exit(f"unknown mutation {MUTATE!r}")
     if "--selftest" in args:
         sys.exit(selftest())
-    files = args or ["README.md"] + sorted(glob.glob(os.path.join(ROOT, "notes", "*.md")))
+    if not args:
+        import subprocess
+        try:                                            # every tracked .md, so proof/ and the rest are read too
+            args = subprocess.run(["git", "ls-files", "*.md"], cwd=ROOT, capture_output=True, text=True,
+                                  check=True).stdout.split()
+        except (OSError, subprocess.CalledProcessError):
+            args = ["README.md"] + sorted(glob.glob(os.path.join(ROOT, "notes", "*.md")))
+    files = args
     n, nprop, bad = check(files, ROOT)
     for f, ln, t, why in bad:
         print(f"{f}:{ln}: {t}: {why}")
