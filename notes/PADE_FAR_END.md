@@ -1,7 +1,13 @@
-# The far end of S₁'s Borel singular support (#547)
+# The Borel geometry of S₁ from 23 coefficients: the far end (#547), and chord against arc (#548)
 
 Status of everything here: numerical evidence. Nothing is rigorous. It bears on the type bounds of routes A3 and P5,
-which follow from the farthest singularity of the Borel transform (proof/D_entire.md sections 1 and 7).
+which follow from the farthest singularity of the Borel transform (proof/D_entire.md sections 1 and 7). Sections 1–4
+are #547, sections 5–6 are #548.
+
+- **#547.** A calibrated estimator recovers the far end of smooth-density plants within 0.009, but it fails #547's
+  acceptance. On the real series two controls fire, so no far end is quoted (§4).
+- **#548.** No statistic of σ₀–σ₂₂ can tell a chord from an arc at the measured errors. A function with only two branch
+  points reproduces the arc plant's 23 coefficients within those errors (§6).
 
 ## 1. Question
 
@@ -192,9 +198,7 @@ As a bullet at the end of 7.4, after "Together, these are numerical evidence ...
 +  stays uncalibrated.
 ```
 
-# Chord against arc at k ≤ 11 (#548)
-
-## 5. Method and frozen criteria
+## 5. Chord against arc at k ≤ 11 (#548): method and frozen criteria
 
 `solver/inner_amp/pade_chord_arc.py`. #541's arc fraction R_k separated its plants chord2 (two branch points) and
 arcjump (log branch points along the arc) by only 0.11–0.15. The three candidates below use the same 23 coefficients
@@ -248,10 +252,10 @@ Each entry is the clean value, with the noise spread in parentheses.
 | clean separation, S ≥ 0.3 at every node | 0.55–0.73, OK | 0.25–1.00, BAD at 1.01 | ≤ 0.05, BAD |
 | S ≥ 3ν at the measured errors | ν = 0.36–0.64, BAD | ν = 0.50–1.00, BAD | ν = 0.09–0.10, BAD |
 | mirror mutation, S < 0.3 at every node | 0 at every node, fires | S = 0.50 at 1.01, does not fire | S ≤ 0.05 |
-| σ₇ × 1.01, reported | both plants fall to 0.09–0.18 | 0–0.5 | about 2 |
+| σ₇ × 1.01, reported | both plants at 0.09–0.18 | 0–0.5 | 1.8–2.2 |
 
 **Without noise, the singular points of the differential approximants tell the plants apart.** H_DA puts arcjump at
-0.55–0.73 and chord2 at 0. #541's pole statistic, pooled and weighted by residue, does not: R_w is about 0.7 on both.
+0.55–0.73 and chord2 at 0. #541's pole statistic, pooled and weighted by residue, does not: R_w is 0.66–0.82 on both.
 At the measured errors no statistic passes, so by the frozen rule there is no real run.
 
 ### 6.2 The noise-scale bound
@@ -266,9 +270,10 @@ The measured errors were multiplied by a factor F before the noise was drawn.
 | 10⁻³ | 0.55/0.18, 0.73/0.36, 0.64/0.09 | no (fails at 1.00) |
 | 10⁻⁴ | 0.55/0.18, 0.73/0.27, 0.64/0.09 | no (fails at 1.00) |
 
-H_HP and R_w separate at no F either (`bound.json`). The spread of H_DA falls far more slowly than the noise. A few
-members have zeros right at the 0.04 tolerance, so even a perturbation of 10⁻¹⁶ relative moves them across it. So no
-statistic tried here would separate the plants even with σ₁₃–σ₂₂ 10⁴ times more accurate.
+H_HP and R_w separate at no F either (`bound.json`). The spread of H_DA falls far more slowly than the noise. That
+points to members whose zeros lie near the 0.04 tolerance, where a perturbation of 10⁻¹⁶ relative moves them across
+it; this reading was not checked. Either way, no statistic tried here would separate the plants even with σ₁₃–σ₂₂ 10⁴
+times more accurate.
 
 ### 6.3 Why no statistic can: a two-branch-point twin of arcjump
 
@@ -288,10 +293,10 @@ fits it to chord2 instead, and must reproduce it at M = 6; it does, with χ ≤ 
 largest |c_m| = 28 and density at most 2.9.
 
 **At the measured errors, a function with only two branch points reproduces all 23 coefficients of the arc plant.**
-Its density has 20 terms and a peak about three times chord2's. Any statistic of σ₀–σ₂₂ therefore gives the twin the
-value it gives arcjump, to within the noise. So no discriminator at this order exists, unless a prior limits the
-density to fewer than about 18 Chebyshev terms. The separation that H_DA shows on clean plants comes from such a
-prior: the plants have 6 terms.
+Its density has 20 terms, and its peak is 2.5–3.5 times chord2's. Any statistic of σ₀–σ₂₂ therefore gives the twin
+the value it gives arcjump, to within the noise. So no discriminator at this order exists, unless a prior limits the
+density to fewer than 20 Chebyshev terms; at 18 terms χ is already only 2.6–3.1. The separation that H_DA shows on clean
+plants rests on such a prior, since the plants have 6 terms.
 
 ### 6.4 Proposed text for proof/D_entire.md
 
@@ -304,7 +309,7 @@ In 7.4, replacing the bullet "Twenty-three coefficients do not separate the plan
 +  chord, at nearly the same rate, and #541's frozen verdict is indecisive. Singular points of differential approximants
 +  do separate the clean plants (0.55–0.73), but at the measured errors their noise spread is as large as that, and
 +  stays so with the errors 10⁴ times smaller. A function with exactly two branch points, a 20-term density on the
-+  chord P0 → κ⋆ peaking at three times chord2's, reproduces the arc plant's σ₀–σ₂₂ within the measured errors at every
-+  order (notes/PADE_FAR_END.md §6), so no statistic of these coefficients can tell them apart without a prior on the
-+  density.
++  chord P0 → κ⋆ peaking at 2.5–3.5 times chord2's, reproduces the arc plant's σ₀–σ₂₂ within the measured errors at
++  every order (notes/PADE_FAR_END.md §6). So no statistic of these coefficients can tell them apart without a prior on
++  the density.
 ```
