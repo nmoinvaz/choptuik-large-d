@@ -397,8 +397,12 @@ from D 78 to 100.19, each to a quad-double max|F| of at most 4.4e-45. The predic
 **The held fit's whole error is 0.19–0.31 of the quoted spread from D 78 to 100, and smaller than the part from
 harmonics 5 and 7 alone.** So harmonics 9–13 contribute with the opposite sign, −2.4e-14 at D 80 and −7.5e-13 at
 D 100. The comparison shares its D 77 origin and its kernel with the held chain, so it is not an independent check
-of that chain. Past D 99 the corrector stalls at a ≥ 0.1, where five attempts end at |F| 5e-25 to 6e-24, and the step
-falls to about 0.05. The cause is not known (#710). The double-double |F| of the converged states rises from 2.9e-20
+of that chain. Past D 99 the corrector stalled at a ≥ 0.1, where five attempts ended at |F| 5e-25 to 6e-24, and the
+step fell to about 0.05. The cause is the quad-double corrector's projection switch, as in the octo-double crawl of
+notes/CRAWL.md. Every point lay below it, so the horizon rows' second-order term was never eliminated. With
+`--elim_switch 0` both refused attempts converge in 3 steps to 6e-49, and the continuation's steps grow back to a = 1
+up to D 104.5 (#710, raw `I710-win/` 978179f6). Their Δ differs from the default switch's states at the same D by
+3e-26 and 1e-25, which #725 compares with what two converged roots resolve. The double-double |F| of the converged states rises from 2.9e-20
 at D 78 to 9.0e-17 at D 100. That has not been investigated.
 
 ### 4.5 Not run
