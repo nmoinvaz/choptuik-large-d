@@ -2,8 +2,8 @@
 
 Status of everything here: numerical evidence. Nothing is rigorous. It bears on the type bounds of routes A3 and P5,
 which follow from the farthest singularity of the Borel transform (proof/D_entire.md sections 1 and 7). Sections 1–4
-are #547, sections 5–6 are #548, section 7 is #670, section 8 is #669, section 9 is #672, section 10 is #683, and
-section 11 is #684.
+are #547, sections 5–6 are #548, section 7 is #670, section 8 is #669, section 9 is #672, section 10 is #683,
+section 11 is #684, and section 12 is #667.
 
 - **#547.** A calibrated estimator recovers the far end of smooth-density plants within 0.009, but it fails #547's
   acceptance. On the real series two controls fire, so no far end is quoted (§4).
@@ -1280,3 +1280,76 @@ and adding a bullet after it:
 +  far end and exponent tuned together. The ingredients left untested are the near end, the zero factor, and a
 +  singular support that is not one curve (notes/PADE_FAR_END.md §11).
 ```
+
+## 12. Plants with a weak second singular set past the arc (#667)
+
+The real σ₀–σ₂₂ differ from every single-curve plant in three ways. No 6 of the 11 DA2 members agree on a zero past
+|t| = 1.65 (§4.3). From k = 8 on, the [k/k] approximants have a pole past κ⋆ (D_entire 7.4). And no single-curve twin
+has fewer than 23 terms, with χ = 3.4×10⁴ to 1.3×10⁵ at 22 terms (§9.2, §11.4). Here the plants are a single curve
+plus a weak second singular set past it, and each is judged on all three.
+
+### 12.1 Method
+
+`solver/inner_amp/pade_second_set.py`.
+
+- **Plants.** S(x) = pref(x) (L_main(x) + λ L₂(x)) / S(0), with pref the planted zero factor.
+  - L_main is `pade_farend.FarPlant`'s density on the chord (chord2) or the arc (arc) from P0 to κ⋆.
+  - L₂ is the density s⁴ (1 − s)^α on a second curve g₂. So g₂(1) is a branch point of exponent α, and g₂(0) a weak
+    one of exponent 4. Its moments are exact: in u = 1 − s the integrand is u^α times a polynomial.
+  - The strength is the second set's share of σ₂₂: λ (pref L₂)₂₂ = η e^{iφ} σ₂₂(real).
+  - The main density's c_m are then fitted to the real σ₀–σ₁₂ minus the second set's part, as FarPlant does (M = 6,
+    or 8 if a relative residual exceeds 10⁻²). So every plant matches σ₀–σ₁₂, and η = 0 is FarPlant's plant.
+- **Second curves**, per node, from the node's P0 and κ⋆:
+  - *seg(a, b)*: a segment of length 0.3 pointing radially inward and ending at Q = P0 + κ⋆ + 0.25 (a + ib), with
+    a, b ∈ {−1, 0, 1}. At ω∞, P0 + κ⋆ = 2.028 + 1.236i.
+  - *low*: the same segment ending at Q = 1.69 − 0.74i. That is the mean of the five real DA2 zeros at 1.53–1.95 −
+    0.65–0.85i (§4.3), at |t| = 1.84.
+  - *sum*: P0 + the main curve, from 2P0 to P0 + κ⋆, the sum set that #547 named.
+- **The judge**, per node:
+  - (a) m_DA, the largest number of DA2 members with a zero in 1.65 < |t| < 6 within 0.05 of one member's zero. This
+    is `pade_farend_diag.clusters`' rule.
+  - (b) d_P, the largest over k = 8, 9, 10 of the distance from #541's pole past κ⋆ to the plant's nearest [k/k] pole
+    (`pade_geometry.pade`, 120 digits).
+  - (c) the twin test of §11 on 15 bases: the far end at κ⋆, the ratio-law κ, or the k = 8, 9, 10 poles, each in the
+    chord, stepped-arc and smooth-arc classes. The far ends are the real series' own, so these are #684's bases.
+    d_T is the largest |log₁₀(χ₂₂ / χ₂₂(real))| over the 15 scans.
+- **The errors** are the real series' absolute errors, err_k = rel_k |σ_k(real)|, for every plant. #684 used the
+  target's own |σ_k|. A candidate for the real series is measured in the real series' error units, and the fixed
+  weights let one Householder QR per basis give the least-squares residual at every M for every plant. The columns are
+  ordered Re c₀, Im c₀, Re c₁, ..., so the first 2M columns of Q span the M-term twin.
+
+### 12.2 Frozen criteria
+
+Written into the script's `FROZEN` and here before the `control` and `grid` stages were first run. Only the selftest
+ran before, and it fits no twin to a judged plant.
+
+| check | criterion |
+|---|---|
+| grid | kind chord2 or arc; curve seg(a, b) (9), low or sum; α = 0 or β − 1; η = 10⁻⁹, 10⁻⁸, …, 10⁻¹; φ = 0°, 90°, 180°, 270°. That makes 1584 plants |
+| nodes | every plant at ω∞ = 1.00. ω/ω∞ = 0.99 and 1.01 for every plant that passes (a), (b) and (c) at ω∞, and for the 20 plants with the smallest D there |
+| (a) DA2 | m_DA ≤ 5 |
+| (b) Padé | d_P ≤ 0.03 |
+| (c) twins | every one of the 15 scans has M_min = 23, and 0.1 ≤ χ₂₂ / χ₂₂(real) ≤ 10 |
+| reproduces | (a), (b) and (c) pass at all three nodes |
+| closest | D = max(m_DA / 5, d_P / 0.03, d_T) per node, and D_all its largest over the nodes. The closest plant has the smallest D_all among those run at all three nodes |
+| C1 | #672's amended C1 on every plant scan. A failure is listed, and the grid run exits 1 |
+| R1 | the real series has m_DA ≤ 5 at every node |
+| R2 | the real [k/k] poles past κ⋆ within 10⁻⁹ of #541's, and the ratio law within 10⁻⁴ (`pade_twin_end.check_ends`) |
+| R3 | the projections give M_min = M_lo = 23 and χ₂₂ within 10⁻⁶ relative of #684's in all 45 real scans |
+| R4 | at η = 0, σ₀–σ₃₁ equal FarPlant's exactly, for chord2 and arc at every node |
+| J+ | the real series, judged as a plant, passes (a), (b) and (c) at every node |
+| J− | the η = 0 chord2 and arc plants fail the judge at ω∞, each with M_min = 6 in its own class's κ⋆ basis |
+| gate | the grid runs only if R1–R4, J+ and J− pass |
+| mutations | `control --mutate=col` (every basis' column 0 at order 20 times 1 + 10⁻⁸) must make R3 fail. `--mutate=judge` (#541's poles + 0.05, the reference χ₂₂ × 100, the DA2 radius 0.5) must make each of J+'s three parts fail. Each run exits 1 |
+| context | per plant: the frozen DA2 median, the DA2 zeros within 0.17 of #541's far poles, the ratio law over k = 12–21, the second set's share of σ₁₂, σ₁₇ and σ₂₂, the largest \|σ_k / σ_k(real) − 1\| for k = 13–22, χ at 20 and 21 terms, and the main fit's M. Reported, not judged |
+
+The selftest (`python3 pade_second_set.py --selftest`) checks three things, and each fails under its mutation:
+
+1. The second set's exact moments against `mpmath.quad` of the integral written in s, for seg(0, 0) with α = β − 1,
+   sum with α = 0, and low with α = β − 1, at k = 0, 7, 15, 22 and 31: 3.5×10⁻⁵⁷ to 4.6×10⁻⁵⁶ (pass < 10⁻⁴⁰).
+   `--mutate=secmom` (α + 10⁻¹⁰ in the exact moments) gives 1.1–3.5×10⁻¹⁰.
+2. The projected χ and l2 against `pade_twin_count.lsq`, the scans' own fit, on the real series at ω∞ in the κ⋆ chord
+   and k = 10 arc bases, at M = 6, 14, 20, 22: equal in double precision (pass < 10⁻¹⁰). `--mutate=nest` (columns
+   ordered Re c₀…Re c₂₂, Im c₀…, which are not nested) gives 1.7×10⁵.
+3. The agreement count on planted zeros, 6 and 5 members within 0.016 of 2.0 + 1.2i: m_DA = 6 and 5, the same verdict
+   as `pade_farend_diag.clusters`. `--mutate=agree` (radius 0.005) gives 1.
