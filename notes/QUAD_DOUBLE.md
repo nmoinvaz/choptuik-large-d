@@ -1211,6 +1211,12 @@ repository's `I538-mac/` at 651f29e6 and `I546-win/` at b904462b).
   C = c a² every field keeps the radius of a, and B stays at 0.90–0.98 near the radius (#538). #545 tests the sonic
   point x = c instead.
 
+**At the chain's front (#693).** At D 225–254, with ks = 130, the law still holds where the pole is visible: for a_h
+off by δ ≥ 1e-28 the radius is 13.6's line within 2–13%. By that line, data off by 1e-32 have their pole at 0.28–0.25,
+inside u₀ = 0.3 at every D of #603's chain. The re-seed's quad-double polish starts from such data, and its failures
+from D 249.39 on are that start's (notes/HORIZON_RADIUS.md). The chain's own data, about 1e-39 off, have a radius of
+0.71–0.77 there.
+
 ### 13.7 T1–T4 in the prototype: the collocation block fails T3 (2026-11-03 19:00 UTC)
 
 `solver/dss_colloc.py` is the block of 13.2 inside the reference solver (`dss.py`, DSSMulti): the kernel's stored

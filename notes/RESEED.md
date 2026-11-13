@@ -539,3 +539,6 @@ re-seed before the corrector fixes the start but not the iterates. The eliminati
    (one series and corrector per step), though how far that holds is a *conjecture*.
 3. Family P at more bases and seeds (other directions: the predictions at h = 2 and 10), and family B at 94.1 and 87.0
    with seeds 2 and 3 (amendment 3).
+4. The double-double u₀ rung was at its floor ε_dd·G in every one of #603's 70 re-seeds. The polish fails past D 249
+   when it starts from the ladder's double-double data (off by about 1.3e-32). From the prediction's own four parts
+   (about 1e-39) it converges at the three failing steps tried (notes/HORIZON_RADIUS.md, section 4).
