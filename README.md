@@ -2024,7 +2024,11 @@ What is known about the selection, and what is open:
   theirs, in −0.08 < Re λ < 6.18 and a full period in Im λ, which
   holds the growth rates of both symmetry sectors ([notes/MODE_COUNT.md](notes/MODE_COUNT.md); at D = 61 also to Im λ =
   3.5ω and to Re λ = 12, figure below). Besides λ_phys there are only the τ translation (λ = 0) and a gauge mode of the
-  formulation at λ = 1 + ⟨c₁⟩ (a change of time coordinate that keeps the light cone at x = 1). A planted-zero test runs
+  formulation at λ = 1 + ⟨c₁⟩ (a change of time coordinate that keeps the light cone at x = 1). That gauge rate equals
+  4πμ/Δ, with μ Reiterer and Trubowitz's parameter[^10], so at D = 4 it is the surface gravity of the self-similarity
+  horizon that Gundlach, Hilditch and Martín-García give[^9], 0.6138552748. It rises to 0.97115850 at D = 244.64 and
+  tends to 1 as 1 − 7.4165644/n + 107.5086/n² − 1530/n³ (numerical evidence, a fit over D = 20 to 245;
+  [notes/MODE_COUNT.md](notes/MODE_COUNT.md) §10). A planted-zero test runs
   a synthetic determinant through the same code and counts what was planted in all 8 cases. A second resolution (M = 48)
   without the high-harmonic cut found one extra pair at D = 30, but on a layout whose centre series barely converged. On
   a fitted layout the full count is 0 in every box (#250, #260). Open:

@@ -2032,13 +2032,13 @@ def lam_gauge_table():
     late = [e for D, e in sup if D > 238.76]
     t_res = [(N, "have an rms of 1.7×10⁻¹⁴ to"), (N, "6.8×10⁻¹⁴ in every band of D below 226, and 2.1×10⁻¹³ above it")]
     t_sup = [(N, "are off by −5.1×10⁻¹² to 2.5×10⁻¹⁰"), (N, "those up to D = 238.76 are within 1.2×10⁻¹²")]
-    return [("lam_g at D 4", float(l4), 0.6138552748, 1e-10, [(N, "rises from 0.6138552748 at")]),
+    return [("lam_g at D 4", float(l4), 0.6138552748, 1e-10, [(N, "rises from 0.6138552748 at"), ("README.md", "Martín-García give[^9], 0.6138552748")]),
             ("lam_g(4) - 4 pi mu_RT/(2 K_RT)", d4, 2.7e-27, 1e-28,
              [(N, "against 4πμ_RT/(2K_RT) | 2.7×10⁻²⁷ |"), (N, "constants to 2.7×10⁻²⁷")]),
             ("identity D 15", ident[0], 2.5e-23, 1e-24, [(N, "| 2.5×10⁻²³ relative |")]),
             ("identity D 20.04", ident[1], 1.7e-21, 1e-22, [(N, "| 1.7×10⁻²¹ relative |")]),
             ("identity D 40.02", ident[2], 3.8e-16, 1e-17, [(N, "| 3.8×10⁻¹⁶ relative |")]),
-            ("lam_g at the frontier", float(ltop), 0.97115850, 1e-8, [(N, "D = 4 to 0.97115850 at D = 244.64")]),
+            ("lam_g at the frontier", float(ltop), 0.97115850, 1e-8, [(N, "D = 4 to 0.97115850 at D = 244.64"), ("README.md", "It rises to 0.97115850 at D = 244.64")]),
             ("the frontier's D", float(top["D"]), 244.64, 0.01, [(N, "D = 4 to 0.97115850 at D = 244.64")]),
             ("n(1 - lam_g) at the frontier", float(ntop * (1 - ltop)), 6.998004, 1e-6, [(N, "| 6.998004 |")]),
             ("states in the table", len(rows), 1510, 1, [(N, "holds 1510 stored states")]),
@@ -2084,7 +2084,8 @@ def full_lam_gauge():
     t_c0 = [(N, "| c₀ | 0.99999999941 ± 9.2×10⁻⁸ | 1 |")]
     t_rng = [(N, "give c₀ from 0.99999981663 to 0.999999999914"), (N, "so 1 lies 8.6×10⁻¹¹ above the range")]
     t_con = [(N, "| c₁ | −7.41656 ± 1.6×10⁻⁴ | −7.4165644 ± 4.4×10⁻⁶ |"), (N, "| c₂ | 107.51 ± 0.12 | 107.5086 ± 0.0069 |"),
-             (N, "| c₃ | | −1530 ± 5 |"), (N, "\\lambda_g = 1 - \\frac{7.4165644}{n} + \\frac{107.5086}{n^2} - \\frac{1530}{n^3}")]
+             (N, "| c₃ | | −1530 ± 5 |"), (N, "\\lambda_g = 1 - \\frac{7.4165644}{n} + \\frac{107.5086}{n^2} - \\frac{1530}{n^3}"),
+             ("README.md", "tends to 1 as 1 − 7.4165644/n + 107.5086/n² − 1530/n³")]
     return [("free c0, median", fs[0][0], 0.99999999941, 1e-11, t_c0),
             ("free c0, half-width", (fs[0][2] - fs[0][1]) / 2, 9.2e-8, 1e-9, t_c0 + [(N, "c₀ = 1 to 9.2×10⁻⁸")]),
             ("free c0, lowest", fs[0][1], 0.99999981663, 1e-11, t_rng),
