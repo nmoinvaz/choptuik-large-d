@@ -2,7 +2,7 @@
 
 Status of everything here: numerical evidence. Nothing is rigorous. It bears on the type bounds of routes A3 and P5,
 which follow from the farthest singularity of the Borel transform (proof/D_entire.md sections 1 and 7). Sections 1–4
-are #547, sections 5–6 are #548, and section 7 is #670.
+are #547, sections 5–6 are #548, section 7 is #670, and section 8 is #669.
 
 - **#547.** A calibrated estimator recovers the far end of smooth-density plants within 0.009, but it fails #547's
   acceptance. On the real series two controls fire, so no far end is quoted (§4).
@@ -11,6 +11,10 @@ are #547, sections 5–6 are #548, and section 7 is #670.
 - **#670.** More coefficients would not separate them either. The smallest such twin of the arc plant has 19 terms at
   23 coefficients and 19–20 at 31, with the errors of the extra orders extrapolated, so its size does not grow with
   the coefficient count (§7).
+- **#669.** The bound holds both ways: a function with log branch points along the arc reproduces the chord plant with
+  18 terms. No prior on the coefficient norm separates them either, since the arc plant's smallest chord twin is no
+  larger than the chord plant's own coefficients. A control fired on the first real scan, so the real series is not
+  done (§8).
 
 ## 1. Question
 
@@ -561,3 +565,117 @@ the plants judged here, at ω/ω∞ = 1.00.
 - With the radius 1.05 instead of 1 (the selftest's mutation), the 8-term density's smallest twin shrinks by only
   3×10⁻⁵. So the size reflects what the data determine, not the error level.
 - The ridge route came within 3×10⁻⁴ of the exact minimum.
+
+### 8.3 Results
+
+All runs used one process under `nice -n 10`, single-threaded, 2026-11-13 10:10–10:33 UTC, with `pade_twin_size.py`
+at f2926c0c. The records are in the raw-data repository's `I669-mac/` (31f549f6).
+
+| check | result | verdict |
+|---|---|---|
+| selftest, and its mutations `upoly`, `radius` | exit 0, and 1, 1 | OK, both fire |
+| C0, own class at M = 6 | χ = 2.5×10⁻³⁷ to 1.5×10⁻³⁶ for all three classes at every node | OK |
+| `--mutate=arccol`, `chordcol` | χ = 1.6–2.9×10³ (arc) and 0.9–1.1×10⁴ (chord) for the mutated basis at every node, the others unchanged; exit 1 | both fire |
+| C1 on the plants | 150 and 250 digits give the same χ on every scan | OK |
+| C2, the chord twin of arcjump | M_min = 19 at every node, as #670 | OK |
+| both ways, M_min ≤ 22 | 18 at every node | holds |
+| C1 on the real series | fired at the first real scan (8.4) | BAD, the real stage stopped |
+| S_gap, S_valid | gaps at most 2.5×10⁻¹¹; χ at 250 digits below 1 by 1.8×10⁻¹¹ or more, and N_lo unchanged | OK |
+| S0, chord2's smallest twin within 10% of its own size | N/N_own = 0.56–0.60 at every n and node | BAD |
+| `--mutate=scale` | N/N_own = 0.70–0.75, S0 fails; it fails without the mutation too, so this shows nothing | uninformative |
+| separation at n = 31 | ρ = 0.99–1.59 | no size prior separates |
+
+#### The twin both ways (n = 23)
+
+M_min and M_lo agree in every scan, so each number is the exact smallest size. The largest |c_m| and the peak density
+are those of the least-squares twin at M_min.
+
+| twin | M_min at ω/ω∞ 0.99, 1.00, 1.01 | largest \|c_m\| | peak density |
+|---|---|---|---|
+| stepped-arc twin of chord2 | 18, 18, 18 | 49–64 | 2.66–2.71 |
+| smooth-arc twin of chord2 (context) | 14, 14, 14 | 19–22 | 2.36–2.38 |
+| chord twin of arcjump | 19, 19, 19 | 1160–1520 | 7.0–9.5 |
+| chord2 itself | 6 | 27–30 | 2.87–3.00 |
+
+#### The smallest chord twin by coefficient norm (M = 40, F = 1)
+
+N is given to four digits. N_lo and N_hi agree to 2.5×10⁻¹¹ in every case, so N is the exact minimum.
+
+| ω/ω∞ | n | chord2's own N_own | chord2 | arcjump | arc | ρ = arcjump / chord2 |
+|---|---|---|---|---|---|---|
+| 0.99 | 23 | 43.83 | 25.04 | 36.04 | 27.41 | 1.44 |
+| 0.99 | 31 | 43.83 | 26.27 | 41.77 | 28.59 | 1.59 |
+| 1.00 | 23 | 45.94 | 26.00 | 31.11 | 27.69 | 1.20 |
+| 1.00 | 31 | 45.94 | 27.24 | 35.22 | 28.85 | 1.29 |
+| 1.01 | 23 | 48.93 | 27.31 | 25.46 | 27.95 | 0.93 |
+| 1.01 | 31 | 48.93 | 28.60 | 28.30 | 29.13 | 0.99 |
+
+The same twins, context:
+
+| ω/ω∞ | n | peak density: chord2 own / chord2 / arcjump / arc | largest \|c_m\|: chord2 own / chord2 / arcjump |
+|---|---|---|---|
+| 0.99 | 23 | 2.87 / 3.75 / 10.91 / 3.18 | 26.6 / 11.5 / 14.9 |
+| 0.99 | 31 | 2.87 / 3.30 / 12.34 / 3.80 | 26.6 / 12.3 / 17.3 |
+| 1.00 | 23 | 2.92 / 3.63 / 9.22 / 3.09 | 27.8 / 11.9 / 12.2 |
+| 1.00 | 31 | 2.92 / 3.33 / 10.52 / 3.92 | 27.8 / 12.6 / 14.1 |
+| 1.01 | 23 | 3.00 / 3.60 / 7.89 / 3.17 | 29.5 / 12.4 / 9.2 |
+| 1.01 | 31 | 3.00 / 3.33 / 8.67 / 3.83 | 29.5 / 13.1 / 10.4 |
+
+- 12–15 of the n residual constraints are active at each minimum.
+- M = 50 changes N by at most 5×10⁻⁵ at ω/ω∞ = 1.00.
+- The ridge route's best twin is 0.4–0.6% above the minimum for chord2 and arc, and 1.2–2.0% above it for arcjump.
+
+### 8.4 The real series: C1 fired, so the real stages stopped
+
+The first real scan was the chord twin of the real σ₀–σ₂₂ at ω/ω∞ = 0.99. It has M_min = 23 = n. At M = 22, χ is
+9.7×10⁴, the same at both precisions. At M = 23 the least-squares twin is the interpolant, so χ is rounding noise, at
+2.2×10⁻¹⁰⁷ with 150 digits and 2.6×10⁻²⁰⁷ with 250. C1 compares those two relatively, so it fired, and by the frozen
+rule the real stage stopped there. No other real scan was run, and the real size stage was not run either.
+
+The cause was read from `twins_real.json`, without a new run. C1's relative test means nothing when χ is zero to
+working precision, and that happens only when M_min = n. That is a defect of the criterion, not a loss of precision.
+The criterion was not changed and the stage was not rerun. One possible amendment, for the coordinator to decide: at
+M = n, require χ ≤ 10⁻³⁰ at both precisions instead.
+
+The scan's other rows are unaffected, since C1 holds at M = 22. **No chord twin with fewer than 23 terms reproduces the
+real σ₀–σ₂₂ at ω/ω∞ = 0.99**, while the arc plant needs 19. At 20, 21 and 22 terms χ is 1.4×10⁷, 1.3×10⁶ and 9.7×10⁴.
+The 23-term interpolant has largest |c_m| = 1.4×10¹⁵. That is one node and one class only, and it is not yet a result.
+
+### 8.5 What this means
+
+- **The term-count bound holds both ways.** A function with log branch points along the arc reproduces chord2, which
+  has two branch points, with 18 terms. A chord function reproduces arcjump with 19. So each class mimics the other
+  with 18–19 terms at the measured errors.
+- **The least-squares twins differ in size, but the smallest twins do not.** The least-squares chord twin of arcjump
+  has coefficients 39–57 times chord2's and a peak density 2.3–3.3 times chord2's. The stepped-arc twin of chord2 has
+  coefficients about twice chord2's and a peak density below chord2's. Minimised exactly, though, the smallest chord
+  twin of arcjump has a coefficient norm 0.93–1.59 times chord2's smallest, and its largest |c_m| is 9–17. So the large
+  coefficients of the least-squares twins of §6.3 and §7.3 lie in directions the data do not see.
+- **The coefficient norm fails the calibration.** chord2's own six coefficients have a norm 1.7–1.8 times its smallest
+  twin's, so S0 fails at every n and node, and the coefficient norm does not measure the density's own size. The
+  smallest twins lower the coefficients by raising the density: their peak is 3.3–3.8, against chord2's 2.9–3.0. The
+  norm weights the polynomial factor, which can be large near the far end, where (1 − s)^ex hides it.
+- **No coefficient-norm prior separates a chord from an arc, by the frozen rule.** ρ is at most 1.59 at n = 31. This
+  verdict does not depend on S0. arcjump's smallest chord twin, at 25–42, is smaller than chord2's own coefficient
+  vector, at 44–49, at every n and node. So a prior on ‖c‖ loose enough to admit chord2 admits a chord twin of the arc
+  plant. The smooth plant arc's smallest twin is 1.02–1.10 times chord2's.
+- **The peak density is still open.** The coefficient-norm minimisers of arcjump peak at 7.9–12.3. The least-squares
+  twins of #670 at n = 31 peak at 7.5–11.0, which is 2.5–3.8 times chord2's own peak. So at n = 31 a twin whose peak is
+  at most 3 times chord2's is known only at ω/ω∞ = 1.01. The smallest peak is also a convex problem, and it was not
+  computed. A peak-density prior could therefore separate them by a factor of at most 2.5–3.8 at n = 31.
+- **Status.** Everything here is numerical evidence on plants. The real series' only scan so far says that no chord
+  twin of fewer than 23 terms fits it at ω/ω∞ = 0.99 (8.4).
+
+### 8.6 Proposed text for proof/D_entire.md
+
+In 7.4, after the bullet "More coefficients would not separate them either (#670)":
+
+```diff
++- **Nor would a prior on the coefficients' size (#669).** Minimised exactly over the twins with χ ≤ 1, the smallest
++  chord twin of the arc plant has a coefficient norm 0.93–1.59 times chord2's smallest, at 23 and 31 coefficients.
++  It is smaller than chord2's own coefficient vector at every node (notes/PADE_FAR_END.md §8). That measure fails its
++  calibration, since chord2's own coefficients have 1.7–1.8 times its smallest twin's norm, but the comparison with
++  chord2's own coefficients does not need it. The other way round, a density on the arc with log branch points along
++  it reproduces chord2 with 18 terms. Whether a prior on the peak density separates them is open, since the known
++  chord twins of the arc plant peak at 2.3–3.8 times chord2's density.
+```
