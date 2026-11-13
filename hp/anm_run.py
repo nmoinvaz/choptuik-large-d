@@ -103,6 +103,9 @@ state's pinned octo-double max |F| exceeds --tol_od, and the line "base: ..." gi
 first is --a0 (h_max when 0), a refused attempt halves it, and after an accepted step the next is
 --a_grow times longer, up to h_max; with --a_hold 1 it grows only after a step accepted at its first attempt, so a
 step found by halving is kept (past D 232 steps of 1.0 are refused at every base and 0.5 accepted, #461).
+--od_accept natural judges the octo-double corrector's trials by Deuflhard's natural monotonicity test (the simplified
+Newton correction through the LU at the iterate, octo_corrector.newton_od) instead of each trial's own Newton
+correction (own, the default; #644).
 --lam_stall L ends an attempt, as refused, when two Newton steps in a row had lam at or below L. A state is saved
 with the plan of the run that converged it, and a run started from it keeps that plan
 (--keep_plan 0 plans again at the state, the control). Its states are saved in eight parts
@@ -260,6 +263,7 @@ def main():
     opt.update(base_polish=1)           # --base_polish 0: no polish, the stored state is the base
     opt.update(keep_plan=1)             # --keep_plan 0: plan the base again even when its state stores a plan
     opt.update(a0=0.0, a_grow=2.0, a_hold=0, lam_stall=0.0)    # the step's start, growth and hold; the corrector's stall rule
+    opt.update(od_accept="own")                                 # the octo-double corrector's trial test (#644)
     opt.update(held_fit="")             # --held_fit FILE (pinning.HeldFit; notes/HELD_HARMONICS.md)
     # --held_o 1: the held values and their Taylor coefficients as mpf instead of floats, and the held field in eight
     # parts instead of two (with --held_fit and --corrector od); --reseed_o K: K octo-double corrections of the
@@ -319,7 +323,8 @@ def main():
             z0 = z8_start if z8_start is not None else o8_of_q(z4_start if z4_start is not None else qparts(ph, pl))
             try:
                 z8, hist, conv = newton_od(so, z0, tol=opt["tol_od"], it_max=opt["qd_it"], verbose=True, junk_w=opt["od_junk"],
-                                           lam_stall=opt["lam_stall"], on_first=save_dz0 if opt["save_dz0"] else None)
+                                           lam_stall=opt["lam_stall"], on_first=save_dz0 if opt["save_dz0"] else None,
+                                           accept=opt["od_accept"])
             except StartNotProjected as e:
                 print(f"      elim projections {e.args[0]}: the start's projection failed, attempt stopped", flush=True)
                 Fh, Fl = spx.residual(z0[0], z0[1])

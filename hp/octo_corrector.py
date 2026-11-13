@@ -183,7 +183,7 @@ def junk_subspace_o(s, w, delta_max=1e-2, iters=6, seed=0):
 
 
 def newton_od(s, z, tol=1e-40, it_max=12, max_halvings=8, verbose=True, mutate=0, junk_w=0, delta_max=1e-2, tol_dz=1e-45,
-              lam_stall=0.0, on_first=None, scale_c=None, trace=None):
+              lam_stall=0.0, on_first=None, scale_c=None, trace=None, accept="own"):
     """Newton in octo-double from the eight-part state z on s (PinnedO, or ElimO around it): newton_qd's mode 'full'
     one level up (hpkernel.driver.newton_qd, its acceptance rule). A trial z + lam dz (lam = 1, 1/2, ...,
     2^-max_halvings) is accepted when the Newton correction there, with its own Jacobian, is smaller than dz (max norms
@@ -201,7 +201,16 @@ def newton_od(s, z, tol=1e-40, it_max=12, max_halvings=8, verbose=True, mutate=0
     system D_r J D_c (near_null_eq.py, #504), max |D_c^-1 dz_trial| < max |D_c^-1 dz| instead of the leading parts' max
     norms. A row scaling does not change the Newton correction, a column scaling does. Each record then also carries
     dz_eq, dz_eq_new and every trial (lam, max |F|, both sides of both tests). verbose >= 2 prints every trial. trace: a
-    list that gets each trial's leading parts of dz and of its correction (#504's planted check)."""
+    list that gets each trial's leading parts of dz and of its correction (#504's planted check).
+
+    accept="natural": Deuflhard's natural monotonicity test (Newton Methods for Nonlinear Problems, Springer 2004, sec.
+    3.3; NLEQ's restricted form). A trial z + lam dz is judged by the simplified Newton correction there, J(z)^-1
+    F(z + lam dz) through the LU already factored at z (s.olu_solve: one residual and one solve per trial, no new
+    Jacobian; on ElimO the trial is projected first and the projection's displacement is part of the correction, as
+    in ElimO.newton_o), and accepted when it is at most (1 - lam/4) times dz in the same norm, or when its max |F| <= tol; the
+    Jacobian and LU at the accepted point are formed once, for the next step. The default ("own") judges each trial by
+    its own Newton correction, a new Jacobian and LU per trial: near a nearly singular root the weak directions of
+    J(z + lam dz) turn against z's, and that correction can be large for a step that brought z closer (#634, #644)."""
     import time
     from multidouble import od_axpy
     z = o8(z)
@@ -258,6 +267,41 @@ def newton_od(s, z, tol=1e-40, it_max=12, max_halvings=8, verbose=True, mutate=0
         for _ in range(max_halvings + 1):
             zt = o8(od_axpy(lam, *d, *z))
             t1 = time.time()
+            if accept == "natural":
+                # The simplified Newton correction at the trial, through the LU factored at z (no newton_o yet).
+                # ElimO projects the trial first, so the correction is (zt' - zt) - J^-1 F(zt'), as its newton_o's.
+                elim = isinstance(s, ElimO)
+                base = s.so if elim else s
+                try:
+                    ztp = s.project(zt) if elim else zt
+                    disp = o8(od_axpy(-1.0, *zt, *ztp))
+                    Ft = o8(base.residual_o(ztp, mutate=mutate))
+                    xb = o8(s.olu_solve([np.ascontiguousarray(q) for q in Ft]))
+                    db = o8(od_axpy(-1.0, *xb, *disp))
+                    good = bool(np.isfinite(np.asarray(db[0])).all() and np.isfinite(np.asarray(Ft[0])).all())
+                except ValueError:
+                    good = False
+                theta = size(proj(db)) / nd if good and nd > 0 else float("inf")
+                ft = omax(Ft) if good else float("nan")
+                ok = good and (theta <= 1 - lam / 4 or ft <= tol)
+                if verbose >= 2:
+                    print(f"    on {it} trial lam {lam:g}: max|F| {ft:.2e}; simplified correction / |dz| = {theta:.3e} "
+                          f"(bound {1 - lam / 4:.3f}); {'accepted' if ok else 'refused'}, {round(time.time() - t1, 2)} s",
+                          flush=True)
+                if ok:
+                    # the Jacobian at the accepted point, once, for the next step (ElimO.newton_o without a second
+                    # projection)
+                    try:
+                        s0 = base.newton_o(ztp, mutate=mutate)
+                        stt = (o8(od_axpy(1.0, *disp, *s0[0])), *s0[1:])
+                        ok = bool(np.isfinite(stt[0][0]).all() and np.isfinite(stt[1]).all())
+                    except ValueError:
+                        ok = False
+                rec.setdefault("thetas", []).append([lam, theta])
+                if ok:
+                    break
+                lam *= 0.5
+                continue
             try:
                 stt = s.newton_o(zt, mutate=mutate)
                 good = np.isfinite(stt[0][0]).all() and np.isfinite(stt[1]).all()
@@ -410,7 +454,8 @@ def _run_od(so, rs, z8, opt):
     """ElimO around so (PinnedO), newton_od to opt's tol and it_max; the final point (its projection, the point whose
     residual converged), the history, converged, the octo-double pinned max |F| there and the projections"""
     el = ElimO(so, rs)
-    z, hist, conv = newton_od(el, z8, tol=opt["tol"], it_max=opt["it_max"], mutate=opt["mutate"], junk_w=opt.get("junk", 0))
+    z, hist, conv = newton_od(el, z8, tol=opt["tol"], it_max=opt["it_max"], mutate=opt["mutate"], junk_w=opt.get("junk", 0),
+                              accept=opt.get("accept", "own"))
     z = el.project(z)
     return z, hist, conv, omax(so.residual_o(z)), dict(el.counts)
 
@@ -459,7 +504,7 @@ def planted(argv):
     from reseed import Reseeder
     raw, path = argv[0], argv[1]
     opt = _parse(argv[2:], dict(threads=3, rel=1e-12, seed=1, mutate_offset="", mutate=0, it_max=12, qd=1, tol=1e-40, out="",
-                                Delta_ref="", last=0, od=1))
+                                Delta_ref="", last=0, od=1, accept="own"))
     z4, meta = load_q(os.path.join(raw, path))
     z4 = o8(z4)
     D = mp.mpf(meta["D_str"])
