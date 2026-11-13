@@ -27,7 +27,9 @@ Kuznetsov's bordered solve A^INV P_X is J⁻¹(I − UUᵀ) here, one solve with
   - Q_mjl = u_m·F″(v_j, v_l), central differences at h = 10⁻³², 10⁻³³;
   - T_mijl = u_m·F‴(v_i, v_j, v_l), antisymmetric four-point differences and polarization (as `dz0_weak.cubic`), at
     h = 10⁻²³, 10⁻²⁴;
-  - w_jl = J⁻¹(I − UUᵀ)F″(v_j, v_l), central differences at h = 10⁻²⁴, 10⁻²⁵;
+  - w_jl = J⁻¹(I − UUᵀ)F″(v_j, v_l), central differences at h = 10⁻³², 10⁻³³. The step is small because J⁻¹(I − UUᵀ)
+    multiplies the difference's h² truncation along the weakest strong directions (σ₅ ≈ 10⁻¹⁹) by up to 10¹⁹. At
+    h = 10⁻²⁴ the truncation was all of w_jl at REF (section 3);
   - S_m,i,jl = u_m·F″(v_i, w_jl), mixed central differences with the step h along v_i and along w_jl/|w_jl|, at
     h = 10⁻³², 10⁻³³, symmetrized as S_mijl = (S_m,i,jl + S_m,j,il + S_m,l,ij)/3;
   - L_mj = u_m·F″(v_j, w0) and q00 = UᵀF″(w0, w0), the coupling through w0, at the same steps as S.
@@ -65,31 +67,35 @@ J differ. It has canonical unknowns (y ∈ R⁴, x ∈ R⁸), rotated on both si
 digits, and z0 = 0:
 
 ```math
-G_w = \beta + \Sigma y + \tfrac12 Q(y,y) + \tfrac16 T(y,y,y) + \tfrac1{24} P_4(y,y,y,y) + K(y, x), \qquad G_s = \gamma + (\Lambda + M(y))\,x + \tfrac12 C(y,y).
+G_w = \beta + \Sigma y + \tfrac12 Q(y,y) + \tfrac16 T(y,y,y) + \tfrac1{24} P_4(y,y,y,y) + K(y, x), \qquad G_s = \gamma + (\Lambda + M(y))\,x + \tfrac12 C(y,y) + \tfrac1{24} c_4 (b_4 \cdot y)^4 e_0.
 ```
 
-The strong rows are linear in x at fixed y, so the reduced map is G_w(y, x(y)) with x(y) = −(Λ + M(y))⁻¹(γ + ½C(y, y)),
-and its truth is B = Σ, w0 = −Λ⁻¹γ, L = K(·, w0), S_m,i,jl = K_m(e_i, Λ⁻¹C(e_j, e_l)) and q00 = 0. The scales are the
-D 242.5 starts': σ = 2.1×10⁻²⁷ … 7.1×10⁻²⁶, strong singular values Λ = 10⁻¹⁹ … 3×10³⁴, max|T| 6.3×10³³, 3max|S|/max|T|
-0.40, |L| comparable with |B|, |Q| ≈ 2×10³, |w0| 5.9×10⁻³³, |w_jl| 6×10² … 6×10³. The quartic P₄ and the strong-row
-coupling M make the cubic model inexact, by about 10⁻⁴|Ba| at the root. β is set so that g(y*) = 0 at a planted root
-y* of size 4.5×10⁻³⁰. Of 20 random directions for y*, the one whose root is best conditioned is taken, with κ =
-σ_min(g′(y*))|y*|/|Ba| largest (0.51 at seed 5): a first plant at an arbitrary direction put y* in a cluster of three
-roots within 10⁻³⁰ of each other, which tests the cluster's conditioning rather than the recovery.
+The strong rows are linear in x at fixed y, so the reduced map is G_w(y, x(y)) with x(y) = −(Λ + M(y))⁻¹(γ + ½C(y, y)
++ …), and its truth is B = Σ, w0 = −Λ⁻¹γ, L = K(·, w0), S_m,i,jl = K_m(e_i, Λ⁻¹C(e_j, e_l)) and q00 = 0. The scales are
+the D 242.5 starts': σ = 2.1×10⁻²⁷ … 7.1×10⁻²⁶, strong singular values Λ = 10⁻¹⁹ … 3×10³⁴, max|T| 6.3×10³³,
+3max|S|/max|T| 0.53, |L| comparable with |B|, |Q| ≈ 2×10³, |w0| 5.9×10⁻³³, |w_jl| 6×10² … 6×10³.
+- The quartic P₄ and the strong-row coupling M make the cubic model inexact, by about 10⁻⁴|Ba| at the root.
+- The quartic c₄ = 10⁴³ in the weakest strong row (λ = 10⁻¹⁹) reproduces the w_jl truncation found at REF: from
+  h = 10⁻²⁴ it gives |w_jl| up to 10¹², all truncation.
+- β is set so that g(y*) = 0 at a planted root y* of size 4.5×10⁻³⁰. Of 20 random directions for y*, the one whose
+  root is best conditioned is taken, with κ = σ_min(g′(y*))|y*|/|Ba| largest (0.53 at seed 5). A first plant at an
+  arbitrary direction put y* in a cluster of three roots within 10⁻³⁰ of each other, which tests the cluster's
+  conditioning rather than the recovery.
 
 Pass criteria, fixed before the plant's first run except where noted:
 - **(P1)** B, L, Q, T and S, rotated into the plant's basis, equal the planted ones to 10⁻⁶ of their largest entry.
-- **(P2)** S at h against h/10 to 10⁻² of max|S|.
+- **(P2)** S at h against h/10 to 10⁻² of max|S|, and w_jl at h against h/10 to 10⁻² (2-norm, the worst pair).
 - **(P3)** Model T-3S,L has a root within 10⁻³ relative of the planted root, with |g| < 10⁻²|Ba| there. The plant must
   show: |g(c*)| ≥ 0.1|Ba| at model T's root, so that #499's root is not a root of the reduced map.
 - **(P4)** The S control to 10⁻².
 - **Mutations.** `--mutate=w0` skips the strong solve (w(c) = 0, so g is the affine map on z0 + Vc): (P3) and (P4)
   must fail. `--mutate=Ssign` flips S's sign in the models and in the control's prediction: (P3) and (P4) must fail.
   `--mutate=Sh` steps 10h along w_jl/|w_jl| at h/10 but divides by h², so S(h/10) is ten times too large: (P2) must
-  fail. A failed check exits 1.
+  fail. `--mutate=hF` forms w_jl at h = 10⁻²⁴: its h check in (P2) must fail. A failed check exits 1.
 
-The conditioning rule for y* and the strong solve's |dw| test were added after the first plant runs (above). The
-criteria themselves were not changed.
+Added after the first plant runs: the conditioning rule for y* and the strong solve's |dw| test. Added after the
+stopped REF run (section 3): the w_jl check, h_F = 10⁻³², the plant's quartic c₄ and `--mutate=hF`. No criterion was
+loosened.
 
 ## 3. Protocol for the real starts (fixed before the first real run)
 
@@ -107,6 +113,7 @@ criteria themselves were not changed.
   max|F| against #499's 9.041×10⁻³⁶ (REF).
 - **(R1)** S at h = 10⁻³² against 10⁻³³ to 10⁻² of max|S|. If they differ by the factor of an h² truncation
   (max|S(h)|/max|S(h/10)| between 50 and 200), S is reported as bounded by max|S(h/10)|, an estimate, and (R1) passes.
+  w_jl at h = 10⁻³² against 10⁻³³ to 10⁻² (added after the stopped run below).
 - **(R2)** The S control to 10⁻² of the larger of the two changes, judged when that is above 10⁻⁸⁵. Below that it is
   reported as not resolved.
 - **(R3)** The issue's verdict. If 3max|S| < 10⁻²max|T| and |g(c*)| < 10⁻²|Ba|, the coupling is not this term.
@@ -116,6 +123,10 @@ criteria themselves were not changed.
   control, max|F| at each root, and the chord's steps.
 - **Stop conditions.** A strong solve that does not converge at c = 0 or at c*, or a failed (R2), stops the work for
   that start, which is then reported. REF runs first, as the pilot.
+- **The stopped first run.** The first REF run formed w_jl at h = 10⁻²⁴ and 10⁻²⁵. It found |w_jl| = 4.5×10¹¹ to
+  1.2×10¹³, with h against h/10 at 0.99, the factor 100 of an h² truncation (raw `I528-mac/ref_hF1e-24_stopped.log`).
+  That w_jl would have made S wrong in a way S's own h check cannot see, since both of S's steps use the same w_jl. It
+  was stopped there by hand, before any S was formed. Its setup and basis lines are results (section 5).
 
 ## 4. The plant's results
 
@@ -123,15 +134,21 @@ criteria themselves were not changed.
 
 | check | result | control | control's result |
 |---|---|---|---|
-| (P1) recovery, relative to the largest entry | B 6e-107, L 2e-57, Q 3.8e-11, T 1.4e-118, S 2.4e-55: PASS | `--mutate=Sh` | S 9.0: FAIL |
-| (P2) S at h against h/10 | 5.7e-109: PASS | `--mutate=Sh` | 0.9: FAIL |
-| (P3) model T-3S,L's root against the planted one | 3.9e-5, \|g\|/\|Ba\| 5.9e-5: PASS | `--mutate=w0`, `Ssign` | \|g\|/\|Ba\| 1.87, 0.207: FAIL |
-| (P3) the plant shows | \|g(c\*)\|/\|Ba\| 5.74 | | |
-| (P4) S control | 1.2e-4: PASS | `--mutate=w0`, `Ssign` | 1.0, 2.0: FAIL |
+| (P1) recovery, relative to the largest entry | B 6e-107, L 2e-57, Q 3.8e-11, T 2e-118, S 2.9e-31: PASS | `--mutate=Sh` | S 9.0: FAIL |
+| (P2) S at h against h/10 | 2.6e-96: PASS | `--mutate=Sh` | 0.9: FAIL |
+| (P2) w_jl at h against h/10 | 7.9e-6: PASS | `--mutate=hF` | 99: FAIL |
+| (P3) model T-3S,L's root against the planted one | 2.6e-5, \|g\|/\|Ba\| 2.2e-5: PASS | `--mutate=w0`, `Ssign` | \|g\|/\|Ba\| 1.24, 1.03: FAIL |
+| (P3) the plant shows | \|g(c\*)\|/\|Ba\| 9.94 | | |
+| (P4) S control | 1.4e-4: PASS | `--mutate=w0`, `Ssign` | 1.0, 2.0: FAIL |
 
-On the plant, model T-3S (B, Q and T − 3S, without L) leaves |g(c**)|/|Ba| = 1.92, since the plant's L is as large as
-B by design. The map's own coefficients agree with the tensors: B_LS against B + L to 2.4×10⁻⁸, and Q_LS against Q to
-1.2×10⁻⁴, which is the plant's M(y)w0 term.
+Every run's exit is as required: 0 for the plant, 1 for each of the four mutations (`exits.txt`). The errors of (P1)
+are those of the steps: Q's 3.8×10⁻¹¹ is P₄'s h² truncation, and S's 2.9×10⁻³¹ is c₄'s truncation in w_jl.
+
+On the plant, model T-3S (B, Q and T − 3S, without L) leaves |g(c**)|/|Ba| = 3.18, since the plant's L is as large as B
+by design. The map's own coefficients agree with the tensors: B_LS against B + L to 2.7×10⁻⁸, and Q_LS against Q to
+1.1×10⁻⁴, which is the plant's M(y)w0 term. Under `--mutate=hF` the truncated w_jl (up to 1.5×10¹²) leaves S
+unchanged to 3×10⁻¹⁵, because the plant's K is small in the weakest strong row. So S's correctness cannot be inferred
+from a downstream check, and the w_jl check is what guards it.
 
 ## 5. Results at the D 242.5146 starts
 
