@@ -264,7 +264,8 @@ naming them there would make the sentence's scope plain (notes/LIT_REVIEW.md, ad
   - *Acceptance.* At D = 4 it reproduces 4πμ/(2K) from Reiterer and Trubowitz's constants to 10⁻²⁰ (`mu_check.py`'s
     state). The identity λ_g = 4πμ/Δ holds to the states' precision at three D. A mutation (n in place of n − 1) fails.
   - *Depends on.* #380. About 2 hours.
-- **R5. Is Δ(η) of the σ-model monotonic at large η?** Done by #623, #630 and #631: it is not (D9); the minimum lies between η = 5 and 10.
+- **R5. Is Δ(η) of the σ-model monotonic at large η?** Done by #623, #630 and #631: it is not (D9); the minimum lies
+  between η = 5 and 10.
   - *What.* Recompute Δ at D = 4 for η = 2, 5, 10, 20 and ∞ at k_c = 23 and 39.
   - *Why.* Row 31: the k_c = 15 table is non-monotonic by 6.5×10⁻⁵, below its own truncation error.
   - *Acceptance.* The sign of Δ(5) − Δ(∞) is the same at k_c = 23 and 39, and both differences exceed their change
