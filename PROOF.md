@@ -185,7 +185,7 @@ and two ω, from arb's Kummer U on either side of its cut; `lin_check.py`), the 
 with (A, ω) boxes (`series_arb.py`), and the forcing bound of the start-value fixed point (the optimally truncated
 series has residual 1.0×10⁻³³ on |ξ| ≤ 0.1; `residual_poly.py`). In double precision, Poincaré–Miranda holds on all four
 faces of the box (`pm_dryrun.py`): half-width 10⁻³ needs the multiplier enclosed to 0.076, 10⁻⁵ to 7.8×10⁻⁴, i.e. 10⁻²
-to 10⁻³ relative, the accuracy the Baldomá et al. template achieved. Since proved: the start-value fixed point
+to 10⁻³ relative, the accuracy the Baldomá et al. template achieved. Since certified: the start-value fixed point
 (`fixed_point.py`: on the rays arg ξ = ±3π/8,
 |ξ| ≤ 0.1, exactly one solution in an explicit weighted ball around the N = 53 series, contraction constant ≤ 0.2918, start
 values enclosed to 6×10⁻³⁴, with ∂/∂(A, ω) over a parameter box), and the Krawczyk test is built and validated on mock
@@ -196,7 +196,7 @@ arithmetic (QR wrapping with Lohner's pivoting, the variational columns as their
 along the ray to ξ₁ = 0.3 and the arc to the real axis (743 steps, state enclosed to 3×10⁻¹⁹, matching double precision
 to 9×10⁻¹⁶). With it the Krawczyk test passes on the box (A, ω/ω∞) = (2.5421480475, 0.7769940136) ± 10⁻⁹. An independent
 review ([proof/A_review.md](proof/A_review.md)) reproduced every input and found no error, and stated precisely what is
-proved: **one component of the jump, J_D at ξ₁ = 0.3 with y⁺ continued along the ray-then-arc path, has exactly one zero
+certified: **one component of the jump, J_D at ξ₁ = 0.3 with y⁺ continued along the ray-then-arc path, has exactly one zero
 in the box, and it is simple**, at A ∈ [2.54214804760, 2.54214804763], ω/ω∞ ∈ [0.7769940136011, 0.7769940136183]. Two
 lemmas turn this into "the one-harmonic selection condition has exactly one simple zero there": (6a) that J_D(ξ₁) = 0
 forces the whole jump to vanish (the template's step 4, a contraction for y⁺ − y⁻), and (6b) that the continuation along
@@ -204,8 +204,8 @@ the path is the Borel sum (y⁺ has a singularity between radii 0.30 and 0.35, j
 in double precision and both are judged fixable. An independent re-implementation in C++ with CAPD
 ([proof/A_certify.md](proof/A_certify.md) §10), sharing no integration or test code with the Python proof, confirms the
 result and certifies the box ±10⁻⁸ as well, ten times larger, with the zero enclosed eight to ten times more tightly.
-Since then (§11) lemma 6a is proved, 6b is proved near ξ = 0, and the certificate is redone on a lower path that needs
-analyticity only for |ξ| ≤ 0.2. Lemma 6b₁, the analyticity of y⁺ on the annular sector 0.0624 ≤ |ξ| ≤ 0.2, is proved by
+Since then (§11) lemma 6a is certified, 6b is certified near ξ = 0, and the certificate is redone on a lower path that needs
+analyticity only for |ξ| ≤ 0.2. Lemma 6b₁, the analyticity of y⁺ on the annular sector 0.0624 ≤ |ξ| ≤ 0.2, is certified by
 a covering with 178 validated Taylor discs (§12). **Theorem A(M = 1) is certified**, assuming Braaksma's summability
 theorem: the one-harmonic selection condition has exactly one zero in the box, it is simple, and it lies at A ∈
 [2.54214804761338, 2.54214804761975], ω/ω∞ ∈ [0.776994013607438, 0.776994013612010]. Not yet done: an independent
@@ -284,8 +284,8 @@ a finite radius of convergence and faster, cleaner convergence of all the estima
 centre-regular solution with profile F_n and frequency ω is analytic at the light cone exactly when C_{n,μ} =
 κ_{n,μ}[S_μ + O(1/n)] = 0 for every odd μ ≤ M, with κ explicit and non-zero; a zero of S that is simple once the phase
 is fixed gives a unique branch with ω_n − ω* = O(1/n), and any convergent sequence of solutions converges to a zero of
-S. Given the lemmas it is the finite-dimensional implicit function theorem, as in Xie–Tanveer. Lemma B2 is proved
-(`solver/proof/fast_eigenvalues.py`, sympy): the outer system's fast eigenvalues are n·c²/(x(x² − c²)) for p + m (equal
+S. Given the lemmas it is the finite-dimensional implicit function theorem, as in Xie–Tanveer. Lemma B2 is checked
+symbolically (`solver/proof/fast_eigenvalues.py`, sympy): the outer system's fast eigenvalues are n·c²/(x(x² − c²)) for p + m (equal
 to −nΦ′ at c = 1) and −n/x for b − 1, with no turning points on the real axis, regular-singular points at the centre and
 the light cone, and the turning point at infinity (x ~ √n) being exactly the inner problem. Gap (c) reduces to Olver's
 error control (the WKB phase and the Frobenius exponent are the same object, since x − c has a simple zero at the light
