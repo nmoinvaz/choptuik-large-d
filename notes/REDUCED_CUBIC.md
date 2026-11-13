@@ -377,7 +377,7 @@ ray run.
   O(t) = (dep(te) − dep(−te))/2 the orders 1, 3, …. An error in B shows as order 1 in the odd part.
 - **The floor of each t.** The largest of three things. Each sign's strong-solve error estimate,
   |Uᵀ[F(w − dw) − F(w)]|, is what the last correction, not applied, would change in g. floor0 is the difference of
-  g(0) between solves from w0 and from w0(1 + 10⁻³), together with both their estimates. The floor is
+  g(0) between solves from w0 and from w0(1 + 10⁻⁵), together with both their estimates. The floor is
   an estimate, not a bound, since the next correction can be larger by the error map's norm. A part counts as
   resolved at t where it exceeds 100 floors.
 - **The order.** The leading order p and constant K of each part, |part| ≈ K|Ba|(t/|a|)^p, come from a least-squares
@@ -462,6 +462,7 @@ absorbs the projector's difference in the frozen rows (section 3).
   orthogonal to V, |ξ| = 10⁻⁴|w0|. Its square reaches the strong rows through F″, and J⁻¹ multiplies that along the
   softest strong direction (σ₅ ≈ 10⁻¹⁹) by 10¹⁹: about 10³³ × (7×10⁻³⁷)² / 10⁻¹⁹ ≈ 5×10⁻²¹, far above the failure
   bound of 7×10⁻³⁶ (*inferred*: the run did not log the steps). And the stall test needed two consecutive steps
-  without a cut, which a fluctuating floor need not give. The second start is now w0(1 + 10⁻³), and the stop rule
-  keeps the best iterate (9.1). Failed solves at c = 0 now print their steps. The plant and its controls were rerun
-  with the new rule. No pass criterion changed.
+  without a cut, which a fluctuating floor need not give. The stop rule now keeps the best iterate (9.1), and failed
+  solves at c = 0 print their steps. The second start was first w0(1 + 10⁻³), and the plant's rerun (c4496cb1) failed
+  on it: its first correction, 10⁻³|w0|, sat on the failure bound 10⁻³|w0|. It is now w0(1 + 10⁻⁵). The plant and its
+  controls were rerun with the final rule. No pass criterion changed.

@@ -1126,12 +1126,13 @@ def ray_scan(sysm, bas, opts, mutate, log, rec, dump, truth=None, tensors=None):
     zero = [mp.mpf(0)] * k
     g00, w00, _, h00, ok00, e00 = solve(zero, w0)
     rng = np.random.default_rng(int(opts.get("seed_rays", 7)))
-    # the second start is w0 (1 + 1e-3): a random xi orthogonal to V failed at REF (the pilot), since its square
-    # reaches the strong rows through F'' and J^-1 multiplies that along the softest strong direction by 1e19
-    g0b, _, _, h0b, ok0b, e0b = solve(zero, [x * (1 + mp.mpf("1e-3")) for x in w0])
+    # the second start is w0 (1 + 1e-5), below the failure bound 1e-3 wref. A random xi orthogonal to V failed at REF
+    # (the pilot), since its square reaches the strong rows through F'' and J^-1 multiplies that along the softest
+    # strong direction by 1e19
+    g0b, _, _, h0b, ok0b, e0b = solve(zero, [x * (1 + mp.mpf("1e-5")) for x in w0])
     if not (ok00 and ok0b):
         log("  ray: the strong solve at c = 0 did not converge; the scan cannot run. (max|strong residual|, |dw|) per "
-            "step, from w0: " + ", ".join(f"({x:.1e}, {y:.1e})" for x, y in h00) + "; from w0 (1 + 1e-3): "
+            "step, from w0: " + ", ".join(f"({x:.1e}, {y:.1e})" for x, y in h00) + "; from w0 (1 + 1e-5): "
             + ", ".join(f"({x:.1e}, {y:.1e})" for x, y in h0b))
         rec["ray"] = dict(ok=False, h00=h00, h0b=h0b)
         return False, rec
@@ -1139,7 +1140,7 @@ def ray_scan(sysm, bas, opts, mutate, log, rec, dump, truth=None, tensors=None):
     eps0 = nrm([x + y for x, y in zip(g00, Ba)]) / nBa
     ga, _, Fa, ha, oka, ea = solve(a, w00)
     dep_a = dep_of(ga, g00, a)
-    log(f"  ray: g(0) from w0 and from w0 (1 + 1e-3): |difference| / |B a| "
+    log(f"  ray: g(0) from w0 and from w0 (1 + 1e-5): |difference| / |B a| "
         f"{mp.nstr(nrm([x - y for x, y in zip(g00, g0b)]) / nBa, 3)}, their error estimates {mp.nstr(e00 / nBa, 3)}, "
         f"{mp.nstr(e0b / nBa, 3)}: floor0 {mp.nstr(floor0 / nBa, 3)} of |B a|; chord steps {len(h00)}, {len(h0b)}; "
         f"|g(0) + B a| / |B a| {mp.nstr(eps0, 3)}")
