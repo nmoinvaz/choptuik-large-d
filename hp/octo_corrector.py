@@ -156,6 +156,61 @@ class PinnedO:
         return d, F[0], F[1], pmin, pmax
 
 
+def chord_strong(s, z, d, k, it_max=10, tol=1e-40, tol_dz=1e-45, mutate=0, verbose=True):
+    """#528/#674: the full first step z + d, then the strong rows solved by the chord through the LU factored at z
+    (s's last newton_o), keeping the step's weak coordinates. V: the k weakest right singular directions of J0
+    (junk_subspace_o with every direction kept). Per step x = J0^-1 F(z_c) and dw = (I - V V^T) x, applied twice:
+    J0^-1 (I - U U^T) F for exact singular vectors, but with the f64 projection's error relative to |x| instead of to
+    the strong rows' residual, which J0^-1 would amplify by 1/sigma into the weak coordinates. One residual and one
+    solve per step. Stops when |dw| (max of its leading part) < tol_dz or max |F| <= tol, when two steps in a row cut
+    |dw| by less than 0.3 (one non-contracting step is allowed, as #528's strong_solve), or when |dw| grows by more
+    than 2 (a failure). mutate_chord="noproj" (the control) keeps V's components. Returns (z_c, ok, dict)."""
+    import time
+    from multidouble import od_axpy
+    t0 = time.time()
+    V, sig, _ = junk_subspace_o(s, k, delta_max=2.0)       # |component| <= 1 always, so every direction is kept
+    zero8 = np.zeros(len(z[0]))
+
+    def drop_V(x):
+        for _ in range(2):
+            c = V @ (V.T @ (np.asarray(x[0]) + np.asarray(x[1])))
+            x = o8(od_axpy(-1.0, np.ascontiguousarray(c), *([zero8] * 7), *x))
+        return x
+    zc = o8(od_axpy(1.0, *o8(d), *o8(z)))
+    steps, ok = [], True
+    for j in range(it_max):
+        try:
+            Fc = o8(s.residual_o(zc, mutate=mutate))
+            fmax = omax(Fc)
+            if not np.isfinite(fmax):
+                ok = False
+                break
+            if fmax <= tol:
+                steps.append((fmax, 0.0))
+                break
+            x = o8(s.olu_solve([np.ascontiguousarray(q) for q in Fc]))
+        except ValueError:
+            ok = False
+            break
+        dw = x if CHORD_MUT.get("noproj") else drop_V(x)
+        ndw = float(np.abs(np.asarray(dw[0])).max())
+        steps.append((fmax, ndw))
+        if verbose:
+            print(f"    on 0 chord {j}: max|F| {fmax:.2e}, |dw| {ndw:.3e}", flush=True)
+        if not np.isfinite(ndw) or (len(steps) >= 2 and ndw > 2 * steps[-2][1]):
+            ok = False
+            break
+        zc = o8(od_axpy(-1.0, *dw, *zc))
+        if ndw < tol_dz:
+            break
+        if len(steps) >= 3 and ndw > 0.3 * steps[-2][1] and steps[-2][1] > 0.3 * steps[-3][1]:
+            break
+    return zc, ok, dict(sigma=[float(x) for x in sig], steps=steps, seconds=round(time.time() - t0, 2))
+
+
+CHORD_MUT = {}          # chord_strong's control: {"noproj": True} keeps the weak components of each correction
+
+
 def junk_subspace_o(s, w, delta_max=1e-2, iters=6, seed=0):
     """the w weakest right singular directions of the Jacobian of s's last octo-double LU (subspace iteration on
     (J^T J)^-1 by olu_solve, transposed then plain, in the leading part), Rayleigh-Ritz, keeping those whose Delta
@@ -183,7 +238,7 @@ def junk_subspace_o(s, w, delta_max=1e-2, iters=6, seed=0):
 
 
 def newton_od(s, z, tol=1e-40, it_max=12, max_halvings=8, verbose=True, mutate=0, junk_w=0, delta_max=1e-2, tol_dz=1e-45,
-              lam_stall=0.0, on_first=None, scale_c=None, trace=None, accept="own"):
+              lam_stall=0.0, on_first=None, scale_c=None, trace=None, accept="own", strong_chord=0, chord_it=10):
     """Newton in octo-double from the eight-part state z on s (PinnedO, or ElimO around it): newton_qd's mode 'full'
     one level up (hpkernel.driver.newton_qd, its acceptance rule). A trial z + lam dz (lam = 1, 1/2, ...,
     2^-max_halvings) is accepted when the Newton correction there, with its own Jacobian, is smaller than dz (max norms
@@ -211,7 +266,14 @@ def newton_od(s, z, tol=1e-40, it_max=12, max_halvings=8, verbose=True, mutate=0
     in ElimO.newton_o), and accepted when it is at most (1 - lam/4) times dz in the same norm, or when its max |F| <= tol; the
     Jacobian and LU at the accepted point are formed once, for the next step. The default ("own") judges each trial by
     its own Newton correction, a new Jacobian and LU per trial: near a nearly singular root the weak directions of
-    J(z + lam dz) turn against z's, and that correction can be large for a step that brought z closer (#634, #644)."""
+    J(z + lam dz) turn against z's, and that correction can be large for a step that brought z closer (#634, #644).
+
+    strong_chord=k > 0 (#674): the first step is taken whole, and then only the strong rows are solved, by the chord
+    dw = (I - V V^T) J0^-1 F through the start's LU (chord_strong, V the k weakest right singular directions of J0), at
+    most chord_it steps. At #499's starts the weak equations are affine once the strong rows are solved, with the
+    first move as their root (#528), so the chord's point is the solution to the chord's precision. It is accepted by
+    the natural test against the first step (theta at most 0.75, or max |F| <= tol), and the iteration continues from
+    it with the chosen test; refused, the first step's trials run as without the chord."""
     import time
     from multidouble import od_axpy
     z = o8(z)
@@ -264,6 +326,47 @@ def newton_od(s, z, tol=1e-40, it_max=12, max_halvings=8, verbose=True, mutate=0
                    mode="sel" if V is not None else "full")
         if eq:
             rec.update(dz_eq=nd, trials=[])
+        if strong_chord and it == 0:
+            # #528/#674: keep the first step's weak coordinates and solve the strong rows by the chord through the
+            # start's LU (chord_strong). With the strong rows solved the weak equations are affine there (3S = T), and
+            # their root is the first move.
+            zc, ok_c, chord = chord_strong(s, z, d, strong_chord, chord_it, tol, tol_dz, mutate, verbose)
+            theta = float("inf")
+            if ok_c:
+                # the natural test at the chord's point, through J0's LU (still factored: no newton_o since z)
+                try:
+                    Fz = o8(s.residual_o(zc, mutate=mutate))
+                    xb = o8(s.olu_solve([np.ascontiguousarray(q) for q in Fz]))
+                    theta = size(proj(xb)) / nd if nd > 0 else float("inf")
+                    ok_c = bool(np.isfinite(theta)) and (theta <= 0.75 or omax(Fz) <= tol)
+                except ValueError:
+                    ok_c = False
+            rec["chord"] = dict(chord, theta=theta, accepted=bool(ok_c))
+            if verbose:
+                print(f"  on 0: strong chord ({strong_chord} weak directions), {len(chord['steps'])} steps after the full "
+                      f"first step; theta at its point {theta:.3e} (bound 0.750): {'accepted' if ok_c else 'refused'}, "
+                      f"{round(time.time() - t0, 2)} s", flush=True)
+            refactored = False
+            if ok_c:
+                refactored = True
+                try:
+                    stt = s.newton_o(zc, mutate=mutate)
+                    ok_c = bool(np.isfinite(stt[0][0]).all() and np.isfinite(stt[1]).all())
+                except ValueError:
+                    ok_c = False
+            if ok_c:
+                z, st = zc, stt
+                rec.update(lam=1.0, F_new=omax(st[1:3]), dz_new=float(np.abs(proj(st[0])[0]).max()),
+                           seconds=round(time.time() - t0, 2))
+                hist.append(rec)
+                if verbose:
+                    print(f"  on {it}: |F| {nf:.2e} -> {rec['F_new']:.2e}, |dz| {rec['dz']:.2e} -> {rec['dz_new']:.2e}, "
+                          f"lam 1, dDelta {rec['dDelta']:+.2e}, piv {st[3]:.1e}..{st[4]:.1e}, {rec['seconds']} s", flush=True)
+                continue
+            # refused: unless newton_o ran at zc (and failed), J0's LU is still the one factored at z, and the trial
+            # loop below runs as without the chord; otherwise it is factored at z again
+            if refactored:
+                st = s.newton_o(z, mutate=mutate)
         lam = 1.0
         for _ in range(max_halvings + 1):
             zt = o8(od_axpy(lam, *d, *z))
@@ -456,7 +559,7 @@ def _run_od(so, rs, z8, opt):
     residual converged), the history, converged, the octo-double pinned max |F| there and the projections"""
     el = ElimO(so, rs)
     z, hist, conv = newton_od(el, z8, tol=opt["tol"], it_max=opt["it_max"], mutate=opt["mutate"], junk_w=opt.get("junk", 0),
-                              accept=opt.get("accept", "own"))
+                              accept=opt.get("accept", "own"), strong_chord=int(opt.get("strong", 0)))
     z = el.project(z)
     return z, hist, conv, omax(so.residual_o(z)), dict(el.counts)
 
@@ -505,7 +608,7 @@ def planted(argv):
     from reseed import Reseeder
     raw, path = argv[0], argv[1]
     opt = _parse(argv[2:], dict(threads=3, rel=1e-12, seed=1, mutate_offset="", mutate=0, it_max=12, qd=1, tol=1e-40, out="",
-                                Delta_ref="", last=0, od=1, accept="own"))
+                                Delta_ref="", last=0, od=1, accept="own", strong=0))
     z4, meta = load_q(os.path.join(raw, path))
     z4 = o8(z4)
     D = mp.mpf(meta["D_str"])
