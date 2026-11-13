@@ -16,6 +16,8 @@ The steps, in order:
 7. export_delta_all.py --interp_check checks the interpolation of the comparison fits at D 186 to 190, and its control
    --mutate=interp must fail.
 8. compare_published.py writes data/delta_published_compare.csv, every published value against ours.
+9. compare_gamma_published.py writes data/gamma_published_compare.csv, the published gamma and Delta below D = 14
+   against ours (#620), whose check in check_numbers.py fails once our values move by more than 1e-10.
 
 It prints each table's row count before and after, and the master table's new and changed rows. It exits 1 if a step
 fails, a control passes or a row is gone (other than rows that chain_fit replaces). A low-D task with new points must first be added to export_lowD.py's RAW_TASKS, and the
@@ -81,6 +83,7 @@ def main():
     ok &= run(["export_delta_all.py", raw, "--interp_check"])
     ok &= run(["export_delta_all.py", raw, "--interp_check", "--mutate=interp"], expect=1)
     ok &= run(["compare_published.py"])
+    ok &= run(["compare_gamma_published.py"])
     print("tables:", flush=True)
     for t in TABLES:
         b, a = before[t], rows(t)
