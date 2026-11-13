@@ -241,3 +241,23 @@ Checked by the coordinating session.
 | Entry | Checked against | Verdict |
 |---|---|---|
 | Deuflhard, *A modified Newton method for the solution of ill-conditioned systems of nonlinear equations with application to multiple shooting*, Numer. Math. 22, 289–315 (1974), doi:10.1007/BF01406969 | search records of the ZIB repository (opus4.kobv.de, docId 2037: volume 22, pages 289–315, 1974) and Springer (link.springer.com/doi/10.1007/BF01406969); some citing lists print the pages as "398–315", a typo; the GDZ scan's first page, "Numer. Math. 22, 289-315 (1974)" | OK: bibliographic details from the records and the scan; the content is read from the GDZ scan and recorded in [LIT_REVIEW.md](LIT_REVIEW.md), addendum of issue #527 (the natural monotonicity test with the old Jacobian, (4.1)–(4.2), and the rank strategy, (4.7) and (4.10)); cited for the natural monotonicity test, which newton_qd does not use |
+
+## Addendum (2026-11-13, issue #619): Gundlach 1998 and the determinant counts of 1995 and 1997
+
+Checked by the subagent of issue #619 on 2026-11-13. For each entry the INSPIRE record (its API), the arXiv record
+(its API and, for the 1998 paper, the abstract page) and the title block of the arXiv source were compared, and the DOI
+was resolved at doi.org. The content is recorded in [LIT_REVIEW.md](LIT_REVIEW.md), addendum of issue #619.
+
+| Entry | Checked against | Verdict |
+|---|---|---|
+| C. Gundlach, *Nonspherical perturbations of critical collapse and cosmic censorship*, Phys. Rev. D 57, R7075–R7079 (1998), arXiv:gr-qc/9710066, doi:10.1103/PhysRevD.57.R7075 | INSPIRE (title, author, PRD 57, 7075–7079, 1998, the DOI with the R); arXiv (v1 12 Oct 1997, v2 4 Jun 1998, comment "accepted for publication in PRD Rapid Comm", journal-ref "Phys.Rev.D57:7075-7079,1998"); the v1 and v2 sources (title, author); doi.org (the R form redirects to link.aps.org) | OK. MINOR: arXiv's DOI field and the 2025 review's `.bbl` give 10.1103/PhysRevD.57.7075, which doi.org answers with 404 |
+| E. W. Hirschmann, D. M. Eardley, *Critical exponents and stability at the black hole threshold for a complex scalar field*, Phys. Rev. D 52, 5850–5856 (1995), arXiv:gr-qc/9506078, doi:10.1103/PhysRevD.52.5850 | INSPIRE (title, authors, pages, DOI); arXiv (v3, 21 Aug 1995; journal-ref "Phys.Rev. D52 (1995) 5850-5856"); the source; doi.org (redirects to link.aps.org) | OK |
+| C. Gundlach, *Understanding critical collapse of a scalar field*, Phys. Rev. D 55, 695–713 (1997), arXiv:gr-qc/9604019, doi:10.1103/PhysRevD.55.695 | INSPIRE; arXiv (journal-ref "Phys.Rev. D55 (1997) 695-713"); the source; doi.org (redirects) | OK, as `Gundlach1997` in §1 |
+| C. Gundlach, *Critical gravitational collapse of a perfect fluid: nonspherical perturbations*, Phys. Rev. D 65, 084021 (2002), arXiv:gr-qc/9906124, doi:10.1103/PhysRevD.65.084021 | INSPIRE; arXiv (v1 30 Jun 1999, v2 9 Oct 2001; journal-ref "Phys.Rev. D65 (2002) 084021"); the v2 source; doi.org (redirects) | OK |
+
+Claim check of the review's two sentences that cite the 1998 paper (arXiv:2507.07636v1, its LaTeX source):
+
+| Sentence (location) | Source and locator | Verdict |
+|---|---|---|
+| "a similar count was carried out for the spectrum of (spherical and non-spherical) linear perturbations of the fluid collapse critical solutions, using numerical contour integration in the complex plane of potential mode frequencies" (Sec. VI E) | Gundlach 1998, v2, paragraph "Perturbation method": generic data evolved in τ and the dominant mode read off. Neither version has a contour integral | **NOT SUPPORTED** by the cited work. The contour counts are Hirschmann–Eardley 1995 (Secs. VI–VII) and Gundlach 1997 (App. E), for scalar fields |
+| "The nonspherical perturbations of the spherically symmetric critical solution for P = kρ were investigated numerically in a mode ansatz by [Gundlach 1998]. For 0.49 ≲ k < 1, there are multiple unstable modes." (Sec. V B) | Gundlach 1998 has c_s² = 1/3 only and no mode ansatz. The k ranges are in the abstract of Gundlach 2002 | **MISATTRIBUTED** (*inferred*: Gundlach 2002 is meant) |

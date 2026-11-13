@@ -27,7 +27,8 @@ naked-singularity sections as a map for other fields) is not covered here.
   horizon, ν_SH ≃ 0.6138, which at D = 4 is exactly our residual gauge rate λ_g. The single unstable mode at D = 4. The
   κ = 0 complex scalar, whose critical solution is the real DSS while the phase-rotating CSS has three unstable modes.
 - **Seven citations to add** (§5). One corrects our own notes: notes/LIT_REVIEW.md says the argument-principle mode
-  count has no counterpart in the sources it read, and the review names one (Gundlach 1998, by contour integration).
+  count has no counterpart in the sources it read. The review names Gundlach 1998, which has no such count (#619), but
+  Hirschmann–Eardley 1995 and Gundlach 1997 do (D6).
 
 ## 1. What the review contains on our topics, and what it does not
 
@@ -38,7 +39,8 @@ Contains:
 - other matter (IV A 3–5, V A 2 and Table I): σ-models, the complex scalar, the ℓ-multiplet, Yang–Mills, Bianchi IX;
 - charge, quantum effects and ghosts (III E, IV D) and toy models (IV E);
 - non-spherical perturbations and axisymmetric evolutions (V A 1);
-- a precedent for counting modes by contour integration (VI E);
+- a sentence crediting Gundlach 1998 with a mode count by contour integration (VI E), which that paper does not
+  contain (D6);
 - Reiterer and Trubowitz's existence proof, the regularity of CSS against DSS solutions, and the surface gravity ν of
   the self-similarity and Cauchy horizons (VII C, VII D 3, VII D 7, VII G, VII H).
 
@@ -65,7 +67,7 @@ same quantity, precision or reading), **differs** (a discrepancy, §3). Our stat
 | 3 | ν_SH,Choptuik ≃ 0.6138..., from Reiterer–Trubowitz's μ and Δ with ν = 4πμ/Δ, Eq. (125); in spherical symmetry ν − 2 = −⟨a₀²⟩ on the horizon, Eq. (119), read as the horizon's surface gravity | VII G | Reiterer & Trubowitz 2019; the review's derivation | our residual gauge rate is λ_g = 1 − (n − 1)⟨a_h² − 1⟩, at n = 2 the form 2 − ⟨a_h²⟩ of the review's Eq. (119). Our map gives λ_g = 4πμ/Δ, and our μ is 7.7×10⁻²⁸ from theirs (row 2), so at D = 4 λ_g is the review's ν_SH to that precision. From the constants in `mu_check.py`, 4πμ/(2K) = 0.6138552748 (*inferred*, arithmetic); an f64 state gives λ_g = 0.6138550 | notes/MODE_COUNT.md §1 and §5; notes/RT_FORMULATION.md §2 | agree |
 | 4 | "Any self-similar solution admits an unstable perturbation with λ = 1 that corresponds to an infinitesimal time shift of the background solution, and so is unphysical." | II C | — | λ = 1 is not a zero of our det M: the light cone is pinned to x = 1, and the residual gauge zero sits at λ_g instead. λ = 1 is a zero of the CSS counts and an exact mode of the inner problem | notes/MODE_COUNT.md §1; matter/COMPLEX_CRITICAL.md §2; PROOF.md §2 | consistent |
 | 5 | A critical solution has "exactly one λᵢ with positive real part (in fact it is purely real)"; a mode ansatz finds "a single unstable mode"; all non-spherical modes decay | II A, II C, V A 1 | Martín-García & Gundlach 1999 (non-spherical) | one physical unstable spherical mode, real, at D = 4 (complex λ, M = 48), 8.25, 16.76, 30.07, 45.05, 61.03 (numerical evidence; M = 48 extras at D ≥ 54 open). Non-spherical perturbations: not computed, listed as open | notes/MODE_COUNT.md; README, Limits and open problems | agree at D = 4 (spherical); citation to add for the non-spherical case |
-| 6 | "a similar count was carried out for the spectrum of (spherical and non-spherical) linear perturbations of the fluid collapse critical solutions, using numerical contour integration in the complex plane of potential mode frequencies" | VI E | Gundlach 1998 | notes/LIT_REVIEW.md (addendum #200, Q3) says the argument-principle count of det M(λ) "has no counterpart in the sources read" | notes/LIT_REVIEW.md | differs (D6) |
+| 6 | "a similar count was carried out for the spectrum of (spherical and non-spherical) linear perturbations of the fluid collapse critical solutions, using numerical contour integration in the complex plane of potential mode frequencies" | VI E | Gundlach 1998 | notes/LIT_REVIEW.md (addendum #200, Q3) says the argument-principle count of det M(λ) "has no counterpart in the sources read". Gundlach 1998, read by #619, evolves generic data in τ and reads off the dominant mode, with no contour integral. The determinant counts are Hirschmann–Eardley 1995 and Gundlach 1997, for scalar fields, and they contradict our sentence | notes/LIT_REVIEW.md, addenda #200 and #619 | differs (D6: the review against its source; our sentence against two earlier papers) |
 | 7 | "γ = 0.4131 ± 0.0001" at D = 5 | IV A 2 | Bland & Kunstatter 2007 | γ(5) = 0.413126936 (double-double, M = 48) | README, Values | agree |
 | 8 | the holographic prediction "γ = 0.409552" at D = 5, which motivated #7 | IV A 2 | Álvarez-Gaumé et al. 2007 | 0.413126936, 3.6×10⁻³ above the prediction, which #7 already excludes | README, Values | agree (with #7) |
 | 9 | D = 6: "mass scaling with γ ≃ 0.424" | IV A 2 | Garfinkle, Cutler & Duncan 1999 | γ(6) = 0.430079481, 0.0061 above; no uncertainty is quoted | README, Values | differs (D1) |
@@ -116,10 +118,18 @@ same quantity, precision or reading), **differs** (a discrepancy, §3). Our stat
 - **D5. η₀.** The review quotes η₀ ≃ 0.0688 (Bizoń & Wasserman 2000). matter/SIGMA.md gives 0.0686–0.0687, a range
   over fits of ln x_B = K/(η − α) + c, so 1–2 units of the last digit lower. The coupling where x_B first stays below
   10⁸, 0.06923, lies above both, so the difference may be the extrapolation's.
-- **D6. Our notes against the review: a precedent for the mode count.** notes/LIT_REVIEW.md (addendum #200, Q3) says
-  that "MODE_COUNT.md's argument-principle count of det M(λ) has no counterpart in the sources read". The review
-  (VI E) says Gundlach 1998 counted the fluid critical solution's modes, spherical and non-spherical, "using numerical
-  contour integration in the complex plane". The 1998 paper's method section was not read here (its abstract was).
+- **D6. The review against its source, and our notes against two earlier papers.** The review (VI E) says Gundlach
+  1998 counted the fluid critical solution's modes, spherical and non-spherical, "using numerical contour integration
+  in the complex plane". #619 read that paper's source, both versions. It evolves generic perturbation data, for
+  p = ρ/3 only, and reads off the dominant mode: "To answer this yes/no question, we write the perturbation equations as
+  evolution equations in the time variable τ" (paragraph "Perturbation method"). It has no contour integral and counts
+  nothing. Its successor, Gundlach 2002 (Sec. IV B), names contour integrals of det A(λ) as one method, citing Gundlach
+  1997, and uses the Lyapunov method and the eigenvalues of the discretized operator. The review's V B also credits
+  Gundlach 1998 with 2002's ranges of k. Separately, notes/LIT_REVIEW.md (addendum #200, Q3) says that
+  "MODE_COUNT.md's argument-principle count of det M(λ) has no counterpart in the sources read", and two papers
+  contradict it. Hirschmann–Eardley 1995 (Secs. VI–VII) and Gundlach 1997 (App. E) count the zeros of a shooting
+  determinant by the argument principle, for scalar-field critical solutions. The sentence is noted, not rewritten;
+  the reading and the proposed text are in notes/LIT_REVIEW.md, addendum #619.
 - **D7. The review against its source.** For Bianchi IX in 4+1 the review quotes Δ ≃ 0.49, where matter/LITERATURE.md
   §6.1 reads 0.47 in Bizoń, Chmaj & Schmidt 2005 and in Porto Veronese–Gundlach 2022 (whose 4+1 value Δ_B ≃ 0.47 was
   read here in their source). This is not our computation.
@@ -152,9 +162,12 @@ Each entry was checked on INSPIRE or arXiv on 2026-11-12. Where only the review'
 
 1. **MODE_COUNT.md §1, at λ_g.** The review, Sec. VII G, Eqs. (119) and (125): at D = 4 our λ_g is the review's ν_SH,
    the surface gravity of the self-similarity horizon, and its Sec. II C for the λ = 1 time-shift mode.
-2. **MODE_COUNT.md §2 and LIT_REVIEW.md (Q3).** C. Gundlach, *Nonspherical perturbations of critical collapse and cosmic
-   censorship*, Phys. Rev. D 57, R7075 (1998), arXiv:gr-qc/9710066: a mode count by contour integration (the review's
-   statement; the paper's method section not yet read, recommended task R1).
+2. **MODE_COUNT.md §2 and LIT_REVIEW.md (Q3).** E. W. Hirschmann and D. M. Eardley, *Critical exponents and stability
+   at the black hole threshold for a complex scalar field*, Phys. Rev. D 52, 5850 (1995), arXiv:gr-qc/9506078, Secs.
+   VI–VII; and C. Gundlach, *Understanding critical collapse of a scalar field*, Phys. Rev. D 55, 695 (1997),
+   arXiv:gr-qc/9604019, App. E. Both count the zeros of a shooting determinant by the argument principle (read by #619;
+   checked on INSPIRE, arXiv and doi.org on 2026-11-13). Not Gundlach 1998, PRD 57, R7075, which the review names: it
+   counts by time evolution (D6).
 3. **README, the open item "Non-spherical perturbations".** J. M. Martín-García and C. Gundlach, *All nonspherical
    perturbations of the Choptuik spacetime decay*, Phys. Rev. D 59, 064031 (1999), arXiv:gr-qc/9809059 (abstract read):
    at D = 4 the question is answered; it stays open at D ≠ 4.
@@ -188,6 +201,7 @@ naming them there would make the sentence's scope plain (notes/LIT_REVIEW.md, ad
   - *Acceptance.* The method passage is quoted with its locator. The task fails, and says so, if the paper counts modes
     some other way, which would make the review's statement a discrepancy to report.
   - *Depends on.* #380. About 1 hour.
+  - *Done* by #619. The paper counts modes by time evolution, so the review's statement is the discrepancy (D6).
 - **R2. A table of the published γ(D) and Δ(D) below D = 14.**
   - *What.* Add the values the review cites (Garfinkle–Cutler–Duncan, Birukou et al., Bland–Kunstatter, Sorkin–Oren,
     Bland et al.'s Table I, Taves–Kunstatter, Porto Veronese–Gundlach), each with its convention (mass or length

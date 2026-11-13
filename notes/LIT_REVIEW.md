@@ -1077,6 +1077,12 @@ shared structure with Kol's merger.**
   further mode in 0 ≤ Re κ ≤ 15, |Im κ| ≤ 14 without stating the method, and Maison assumes uniqueness. Holographic
   QNM studies use "the determinant method" (Amado et al.) without a winding count. MODE_COUNT.md's argument-principle
   count of det M(λ) has no counterpart in the sources read.
+  *Note (#619).* This sentence is contradicted by two papers. Hirschmann and Eardley 1995 (Secs. VI–VII) count the
+  zeros of a shooting determinant det A(σ) of the complex-scalar CSS solution by its phase wrap around a rectangle.
+  Gundlach 1997 (App. E) counts the zeros minus the poles of such a determinant for the D = 4 Choptuik solution by a
+  contour integral; #172 had read it only to character 100000, short of App. E. The 2025 review credits such a count to
+  Gundlach 1998, which counts by time evolution instead. Not rewritten here. The reading and a proposed correction are
+  in the addendum of issue #619.
 - **The rate near threshold** vanishes at a bifurcation (critical slowing down) and stays finite at a saddle, λ = 2 +
   O(1/n) here. #198's cavity saddle (Gomila et al.) remains the closer analogue.
 
@@ -1893,7 +1899,8 @@ values is
 
 - **This file's Q3 (addendum #200).** "MODE_COUNT.md's argument-principle count of det M(λ) has no counterpart in the
   sources read" is contradicted by the review's Sec. VI E (Gundlach 1998, contour integration). Reported, not changed;
-  REVIEW_GHMG25.md D6 and its task R1.
+  REVIEW_GHMG25.md D6 and its task R1. #619 read the 1998 paper, which has no such count, and found one in
+  Hirschmann–Eardley 1995 and in Gundlach 1997 (addendum of issue #619).
 - **§1's row for the review** is superseded by this addendum. Its content agrees with what was read here.
 - The comparison's seven discrepancies, the citations to add and the proposed README text are in
   [REVIEW_GHMG25.md](REVIEW_GHMG25.md) §3, §5 and §7.
@@ -1902,3 +1909,107 @@ values is
 ### Recommended tasks (for the coordinator to file)
 
 REVIEW_GHMG25.md §6 (R1–R5).
+
+## Addendum (2026-11-13, issue #619): Gundlach 1998's mode count, and the determinant counts before it
+
+**Question.** The 2025 review (Sec. VI E) says Gundlach 1998 counted the fluid critical solutions' modes "using
+numerical contour integration in the complex plane of potential mode frequencies". Does it? If so, the Q3 sentence of
+addendum #200, that MODE_COUNT.md's argument-principle count "has no counterpart in the sources read", is wrong
+(REVIEW_GHMG25.md, D6).
+
+**How.**
+- **Sources.** The arXiv e-print sources, fetched with curl on 2026-11-13. Quotes are verbatim from the LaTeX with math
+  in Unicode, and section numbers are RevTeX's.
+  - Read in full: gr-qc/9710066 v1 (`codim.tex`, dated 12 October 1997) and v2 (`codim_prd.tex`, "revised 14 March
+    1998"), diffed line by line.
+  - Read in part: Gundlach 1997, gr-qc/9604019 (Sec. IV A and Apps. B and E). Gundlach 2002, gr-qc/9906124 v2 (the
+    abstract and Secs. I, IV A, IV B and V). Hirschmann–Eardley 1995, gr-qc/9506078 v3 (Secs. VI and VII), whose ideas
+    Gundlach 1997's App. E says it generalizes. The rest of each was searched for "contour", "winding", "residue",
+    "pole" and "det".
+  - The review's Secs. VI E and V B, and its `.bbl` entries `Gundlach_nonspherical` (PRD 57, 7075, gr-qc/9710066) and
+    `Gundlach_critfluid2` (PRD 65, 084021, gr-qc/9906124), in its source.
+- **Text addressed to an AI agent.** None in the four papers.
+- **Sign conventions.** Gundlach 1997 puts the singularity at τ = −∞, so his growing modes have Re λ < 0.
+  Hirschmann–Eardley write e^{−iστ}, so theirs lie in the lower half σ plane. Each value is quoted in its paper's
+  convention.
+
+### Closest works
+
+| Work | Bears on | What it contains | What it does not contain |
+|---|---|---|---|
+| **C. Gundlach**, *Nonspherical perturbations of critical collapse and cosmic censorship*, PRD 57, R7075 (1998), gr-qc/9710066, v1 and v2 read in full | the review's VI E; MODE_COUNT.md | **Matter.** The perfect fluid p = ρ/3 only ("we have carried out the numerical calculations only for c_s² = 1/3"). **Method** (v2, the paragraph "Perturbation method"): "To answer this yes/no question, we write the perturbation equations as evolution equations in the time variable τ. [...] We evolve generic initial data for these equations for a sufficiently large interval of τ." Then "the mode with the largest Reλ takes over after a transition period, and both that λ and the corresponding f(x) can be simply read off from the late-time data", Koike, Hara and Adachi's method. v1 says "In this Letter, we do not determine all perturbation eigenvalues individually". **What was evolved.** l = 0 as a check ("γ ≃ 0.36"), and the odd and even l ≥ 1 perturbations in Gerlach and Sengupta's gauge-invariant variables, one (l, m) at a time, by a first-order upwind scheme along the characteristics (paragraph "Numerical method"). The even l = 1 perturbations are set aside as "pure gauge". A geometric-optics argument covers the radial frequencies the grid does not resolve, and large l. **Result.** "We find that the only growing mode is the previously known spherical one." | A contour integral, a determinant, or a count of modes in a region of the λ plane. The method finds only the dominant mode of each sector. Any growth rate for l ≥ 1, any table or figure of rates (its one figure is the numerical domain), the list of the l evolved, and any c_s² ≠ 1/3. Gundlach 2002 (Sec. I) corrects two of its assumptions, "that the l = 1 axial perturbations obey the same type of equation as the l ≥ 2 ones, and that the l = 1 polar perturbations are pure gauge", without changing its conclusion. |
+| **E. W. Hirschmann, D. M. Eardley**, *Critical exponents and stability at the black hole threshold for a complex scalar field*, PRD 52, 5850 (1995), gr-qc/9506078 v3, Secs. VI–VII | MODE_COUNT.md's method; matter/COMPLEX_CRITICAL.md | **The determinant** (Sec. VI). Two-point shooting to a midpoint gives "A(σ) X = 0 where A(σ) is a 6×6 complex matrix", and the modes are the zeros of det A(σ). A is analytic in σ, with "no singularities in the closed lower half σ plane". **The count.** "there is a theorem for counting the number N_C of zeros of det A within any closed contour C [...]: Δ_C Arg det A = 2π N_C", "a result similar to Levinson's theorem". Cauchy–Riemann spot checks agree to about 10⁻⁶. **Coverage** (Sec. VII). "a large rectangular contour C bounded by 0 ≤ Re σ ≤ 25, 0 ≥ Im σ ≥ −10 (detouring around the three zeros on the imaginary axis)", where "det A(σ) ∼ exp(τ∞σ), τ∞ ≈ 6i". **Result.** Five zeros in the lower half plane for the D = 4 complex-scalar CSS solution: the two gauge modes at σ = 0 and −i, "at the expected places", the black-hole mode σ = −2.58324i, and the pair σ = ±3.50224 − 0.25867i. | Poles (A has none there). A planted zero or a box that must count a known number, beyond the two gauge modes. D ≠ 4, non-spherical perturbations, DSS solutions. |
+| **C. Gundlach**, *Understanding critical collapse of a scalar field*, PRD 55, 695 (1997), gr-qc/9604019, Sec. IV A and Apps. B and E | MODE_COUNT.md's method and its poles | **The determinant** (App. E). Shooting from both ends to a midpoint gives "a complex square matrix d(mismatch at the midpoint) / d(free parameters at the endpoints)", A(λ): "We therefore have to search for zeros of det A(λ_i) in the complex plane". Holomorphy and det A(λ*) = det A(λ)* are checked numerically, to relative errors 10⁻⁹ and 10⁻¹⁰. **The count.** "Because det A(λ_i) is holomorphic, we can use the well-known contour integral ∫A′/A dλ_i = 2πi (N_z − N_p) to count the number of zeroes minus the number of poles within the contour." Both codes "generalize ideas already used in similar calculations", Hirschmann and Eardley's. **Poles** (App. B). The light-cone conditions have no periodic solution where an average coefficient vanishes. That gives λ = −1 for perturbations of the background's symmetry and λ ≃ −0.385, "the average of (1+ξ₀′)(1−a₀²)", for the opposite one. **What was counted.** The spherical perturbations of the D = 4 Choptuik solution, both symmetry sectors, in 0 ≤ Im λ < π/Δ (Sec. IV A). **Result** (Sec. IV A). One growing mode, real, "λ₁ = −2.674 ± 0.009", so γ = 0.374 ± 0.001; none of the opposite symmetry; the τ translation at λ = 0. | The extent of its contours. No box or region is stated beyond "the left half plane" of the result. Any deliberate check of the count. Non-spherical perturbations, other matter and D ≠ 4. App. E prints the strip as "0 ≤ Im λ_i < Δ/π", where Sec. IV A has π/Δ. |
+| **C. Gundlach**, *Critical gravitational collapse of a perfect fluid: nonspherical perturbations*, PRD 65, 084021 (2002), gr-qc/9906124 v2, read in part | the review's VI E and V B | The fluid for 0 < κ < 1 and l ≤ 5. **Methods** (Sec. IV B). Of the three it names, 1b) is the determinant: "One therefore looks for zeros of the complex-analytic function det A(λ). This can be done by contour integrals [Gundlach 1997]." It uses the other two. "We first implemented the Lyapunov method, method 2)", which "worked well for the κ = 1/3 fluid [Gundlach 1998]", and then "both method 3a) and 3b)", the eigenvalues of the evolution operator discretized in x, with four difference schemes, convergence tests and independent residual evaluation. **Results** (abstract). One growing spherical mode for every κ. No growing non-spherical mode for 1/9 < κ ≲ 0.49, a growing l = 1 axial mode for κ < 1/9, and several growing non-spherical modes for κ ≳ 0.49. | A contour integration. Method 1b) is described, with Gundlach 1997 as its reference, and not used. "contour" occurs once in the source. |
+
+### Verdicts
+
+- **Gundlach 1998 counts no modes by contour integration.** It decides whether each (l, parity) sector has a growing
+  mode by evolving generic data and reading off the dominant one. So the review's VI E sentence is not supported by the
+  paper it cites, and the task's stop condition holds: the paper counts modes some other way (REVIEW_GHMG25.md, D6).
+  Its successor, Gundlach 2002, names contour integration and uses other methods.
+- **The determinant counts are for scalar fields.** Hirschmann–Eardley 1995 count the zeros of their shooting
+  determinant by its phase wrap around a stated rectangle, for the complex-scalar CSS solution. Gundlach 1997 counts
+  the zeros minus the poles of his, for the Choptuik solution. That the review's sentence conflates them with the fluid
+  papers is *inferred*.
+- **The Q3 sentence of addendum #200 is contradicted.** Both scalar-field counts are MODE_COUNT.md's method in outline:
+  a shooting mismatch matrix whose determinant is holomorphic and conjugate-symmetric in λ, vanishes at the growth
+  rates, and is counted by the argument principle. Gundlach 1997 also accounts for poles traced to the light-cone
+  conditions, and Hirschmann–Eardley record the exponential growth of det A that MODE_COUNT.md divides out.
+  MODE_COUNT.md adds stated boxes, planted and deliberate checks, multiple shooting with an exact Jacobian, and D from 4
+  to 61 (*inferred* comparison; the codes share no machinery).
+- **One pole is the same** (*inferred*, arithmetic only, not recomputed). Gundlach 1997's opposite-symmetry pole,
+  λ ≃ −0.385 in his convention, sits where MODE_COUNT.md §1's kk = 0 horizon resonance does at D = 4,
+  n/2 − λ_g = 1 − 0.6139 = 0.386, on the other sector's real axis (Im λ = ω in the folded layout). The f64 code's
+  resonance at λ = 0.386 (MODE_COUNT.md §2) is the same. Both come from a solvability condition at the light cone, and
+  in our sign of λ both are minus the average of 1 − a² there (his weighted by 1 + ξ₀′). His other pole, λ = −1,
+  would sit at λ = 1 here, where the D = 4 real scan finds no sign change of det M (only λ_g and λ_phys change its
+  sign on 0.02 < λ < 6.47, MODE_COUNT.md).
+
+### References checked
+
+In [REF_CHECK.md](REF_CHECK.md), addendum of issue #619. All four are OK. The 1998 paper's DOI is
+10.1103/PhysRevD.57.R7075, and the form without the R, which arXiv's DOI field and the review's entry give, does not
+resolve.
+
+### Gap statement
+
+- **Not read.** The published APS texts (v2 of the 1998 paper is the version "accepted for publication"). The parts of
+  Gundlach 1997, Gundlach 2002 and Hirschmann–Eardley 1995 not named above, which were searched by keyword only.
+  Koike–Hara–Adachi's PRD 59, 104008 (1999), the "Lyapunov method" of Gundlach 2002.
+- **Not searched.** Determinant winding counts outside critical collapse (self-similar blowup, quasinormal modes)
+  before 1995; Hirschmann–Eardley cite Levinson's theorem only as a similar result.
+
+### Discrepancies and proposed text (for the coordinator)
+
+- **The review against its source** (REVIEW_GHMG25.md, D6). VI E credits Gundlach 1998 with a contour-integration
+  count of the fluid solutions' spherical and non-spherical modes. That paper evolves generic data, and its successor
+  uses the Lyapunov method and the eigenvalues of the discretized operator. V B also cites Gundlach 1998 for "a mode
+  ansatz" and for the ranges 0.49 ≲ k < 1, 1/9 < k ≲ 0.49 and 0 < k < 1/9, which are Gundlach 2002's results, while
+  1998 has κ = 1/3 only. The review appears to cite 1998 where 2002 is meant (*inferred*).
+- **This file's Q3 sentence** (addendum #200) is noted where it stands, not rewritten. Proposed replacement:
+  > MODE_COUNT.md's argument-principle count of det M(λ) has two precedents in critical collapse. Hirschmann and
+  > Eardley count the zeros of their shooting determinant around a rectangle for the complex-scalar CSS solution (PRD
+  > 52, 5850 (1995), Secs. VI–VII), and Gundlach counts the zeros minus the poles of his for the D = 4 Choptuik
+  > solution (PRD 55, 695 (1997), App. E).
+- **MODE_COUNT.md §2**, at "The function whose phase is followed", a credit for the method (AGENTS.md, standard
+  methods). Proposed:
+  > Counting the zeros of a shooting determinant by its winding goes back to Hirschmann and Eardley (PRD 52, 5850
+  > (1995), Sec. VI) and Gundlach (PRD 55, 695 (1997), App. E), whose poles also come from the light-cone conditions
+  > (his App. B).
+- **The README and the physics paper** name the argument-principle count (README, "Checked at D = 30 and 45";
+  `paper/physics/main.tex`, "One unstable mode") without a reference for the method. Gundlach 1997 is already README
+  [^3] and `\bibitem{Gundlach1997}`, and Hirschmann–Eardley 1995 is cited only in matter/. Proposed: cite both where the
+  count is named.
+- **No novelty sentence** was added by this task.
+
+### Recommended tasks (for the coordinator to file)
+
+1. **Credit the determinant count where it is used.**
+   - *What.* Apply the proposed text above to this file's Q3 sentence and to MODE_COUNT.md §2, and add the two
+     references where the README and `paper/physics/main.tex` name the count.
+   - *Why.* The Q3 sentence is contradicted (D6), and AGENTS.md asks for the original work where a method is named.
+   - *Acceptance.* `awk '/^\*\*Q3/,/^\*\*Q4/' notes/LIT_REVIEW.md | grep -c 'has no counterpart'` prints 0 (1 today),
+     and `grep -c Hirschmann notes/MODE_COUNT.md` and `grep -c Gundlach notes/MODE_COUNT.md` each print at least 1 (0
+     today). `python3 check_numbers.py --selftest` passes on both of its lines.
+   - *Depends on.* #619. Minutes.
