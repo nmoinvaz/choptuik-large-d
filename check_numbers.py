@@ -1981,7 +1981,6 @@ def short_forms():
 
 
 @check
-@check
 def chain_reach():
     """the README's reach of the large-D chain: a chain_fit row of hp/data/delta_all.csv at that D (#603)"""
     import csv
@@ -1992,6 +1991,7 @@ def chain_reach():
     return [("the chain's reach in the README", D, 245.6, 0.1, txt)]
 
 
+@check
 def lam_gauge_table():
     """notes/MODE_COUNT.md section 10: lam_g(D) from hp/data/lam_gauge.csv (hp/lam_gauge.py table), the D = 4 check
     against Reiterer and Trubowitz's constants (as solver/rt/mu_check.py holds them), the identity's three D (the CSV's
