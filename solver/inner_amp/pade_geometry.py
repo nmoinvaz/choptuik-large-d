@@ -45,6 +45,7 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, HERE)
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(HERE)), "hp"))
 import planted_plants as pp                                            # noqa: E402
+import sigma_load as sl                                                # noqa: E402
 
 NODES = (0.99, 1.0, 1.01)
 KS = range(6, 12)                   # [k/k], k = 6..11, from sigma_0..sigma_2k
@@ -72,14 +73,8 @@ FROZEN = {                          # written before any plant or real Pade pole
 
 # ---------------------------------------------------------------- input
 def load_scan(d):
-    out = {}
-    for wf in NODES:
-        fn = [f for f in os.listdir(d) if f.startswith(f"sigF_w{wf:.4f}") and f.endswith(".json")]
-        if not fn:
-            continue
-        r = json.load(open(os.path.join(d, fn[0])))
-        out[wf] = [mp.mpc(mp.mpf(a), mp.mpf(b)) for a, b in r["sigma_str"]]
-    return out
+    """{wf: [sigma_k]} of directory d, parsed from the strings at sigma_load.DPS_LOAD digits (#683)"""
+    return sl.load_scan(d, NODES)
 
 
 def mutate(sig, spec):

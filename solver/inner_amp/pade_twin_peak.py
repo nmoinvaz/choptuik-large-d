@@ -568,8 +568,7 @@ def run_peak_real(outdir):
         return False
     log = ts.Log(outdir, "peak_real", None)
     rec = {"frozen": FROZEN, "nodes": {}}
-    with mp.workdps(DPS_FIT):                   # the files' strings at full precision (tc.real_sig() may hold 53 bits)
-        real = pg.load_scan(pg.REAL["J1250"])
+    real = pg.load_scan(pg.REAL["J1250"])       # the files' strings at full precision (sigma_load)
     for wf in pg.NODES:
         base = tc.plant(wf, "chord2")[0]
         rel, _ = tc.err_model(wf)
