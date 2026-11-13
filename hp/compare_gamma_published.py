@@ -55,7 +55,7 @@ CONV = {
     ("GCD1999", "Delta"): "full: period of h, linear in phi, in T = -ln(u* - u); e^Delta ~ 21 per period (Sec. V)",
     ("Birukou2002", "gamma"): "length: R_ah ~ (a - a*)^gamma, apparent-horizon radius, supercritical (Sec. III)",
     ("Husain2003", "gamma"): "length: R_ah ~ (a - a*)^gamma, apparent-horizon radius, supercritical (text before Table 1)",
-    ("Husain2003", "Delta"): "full: set beside Delta = 3.44 at Lambda = 0 (text after Fig. 1)",
+    ("Husain2003", "Delta"): "full: set beside Delta = 3.44 at Lambda = 0 in the same paragraph",
     ("SO2005", "gamma"): "length: |p - p*|^gamma has dimensions of length; subcritical R_max ~ (p* - p)^(-2 gamma) (Secs. I, II)",
     ("SO2005", "Delta"): "full: period of the scalar field on the axis in log(T* - T) (Fig. 3)",
     ("SO2005", "Delta_half"): "half: period of a metric function or the curvature, stated as half the scalar field's (Figs. 4, 5)",
