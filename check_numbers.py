@@ -2082,6 +2082,104 @@ def lam_gauge_table():
             ("superseded, largest offset", max(late), 2.5e-10, 1e-11, t_sup)]
 
 
+@check
+def chain_dM_table():
+    """notes/QUAD_DOUBLE.md 13.31: Delta and lam_g of the chain's pinned system at M = 48 against M = 32
+    (hp/data/chain_dM.csv, hp/chain_dM.py table; #636), and its plants (hp/chain_dM.py PLANTED)"""
+    import csv
+    import mpmath as mp
+    sys.path.insert(0, os.path.join(ROOT, "hp"))
+    N = "notes/QUAD_DOUBLE.md"
+    rows = list(csv.DictReader(x for x in open(os.path.join(ROOT, "hp/data/chain_dM.csv")) if not x.startswith("#")))
+
+    def at(role, rule, D, mutate=""):
+        return [r for r in rows if r["role"] == role and r["rule"] == rule and r["mutate"] == mutate
+                and abs(float(r["D"]) - D) < 1e-3][0]
+    with mp.workdps(50):
+        p20 = at("planted", "polish", 20.043653)
+        # gamma_dd.py --M48's record at D 20.043653 (raw I271-macm3/gamma_dd.jsonl): Delta, Delta_lo, M48 Delta_diff
+        known20 = sum(mp.mpf(x) for x in (2.1111402926144796, -2.625407535122099e-17, 1.6728161489881694e-20))  # floats
+        off20 = float(mp.mpf(p20["Delta48"]) - known20)
+    t80, p80 = at("planted", "tol", 80.0), at("planted", "polish", 80.0)
+    src = open(os.path.join(ROOT, "hp/chain_dM.py")).read()
+    known80 = float(re.search(r'name="chain80".*?dM=([-0-9.e]+)', src, re.S).group(1))
+    t_pl = [(N, "| dd20: `up2_D20.0437`, no cut")]
+    items = [("dd20: Delta(M 48) - Delta(M 32)", float(p20["dDelta_stored"]), 1.673e-20, 1e-23, t_pl + [(N, "| Δ(M 48) − Δ(M 32) = +1.673×10⁻²⁰ |")]),
+             ("dd20: our Delta(M 48) below the record's", -off20, 4.4e-27, 1e-28, [(N, "| 4.4×10⁻²⁷ below the record's |")]),
+             ("chain80, stop at tol: dDelta", float(t80["dDelta_stored"]), -5.647e-25, 1e-28, [(N, "| −2.376×10⁻²⁵ | −5.647×10⁻²⁵ | 10⁻²⁷ | fail |")]),
+             ("chain80, stop at tol: max|F| at M 48", float(t80["F48"]), 6.0e-31, 1e-32, [(N, "The corrector stopped at max |F| 6.0×10⁻³¹")]),
+             ("chain80, stop at tol: est", float(t80["est48"]), 3.3e-25, 1e-26, [(N, "One more Newton step moved Δ by\n  +3.3×10⁻²⁵ there")]),
+             ("chain80, polish: dDelta", float(p80["dDelta_stored"]), -2.308e-25, 1e-28, [(N, "| −2.376×10⁻²⁵ | −2.308×10⁻²⁵ | 10⁻²⁷ | fail |"), (N, "| −2.309×10⁻²⁵ | −2.308×10⁻²⁵ | 10⁻²⁷ | pass |")]),
+             ("chain80, polish: est", float(p80["est48"]), -2.6e-58, 1e-59, [(N, "it is −2.6×10⁻⁵⁸ at D 80")]),
+             ("chain80: the plant's value on this build", known80, -2.309e-25, 1e-28, [(N, "Its M 48 difference is −2.309×10⁻²⁵ here")])]
+    # the chain table: (role, D, the row's first cell, max|F| at M 32 and M 48, est, dDelta, dlam, their units)
+    table = [("planted", 80.0, "| 80 (the plant) | `T138-win2/chain` |", 4.6e-52, 8.1e-52, -2.6e-58, -2.340e-25, 3.925e-26, 1e-29),
+             ("chain", 100.0, "| 100 | `T138-win2/chain` |", 3.2e-49, 3.1e-49, 6.8e-58, 2.874e-25, 2.337e-26, 1e-29),
+             ("chain", 150.0, "| 150 | `T138-win2/chain` |", 2.8e-41, 2.1e-41, 5.2e-51, 3.106e-25, 3.426e-27, 1e-30),
+             ("chain", 200.0, "| 200, at the floor | `T138-win2/chain_o` |", 9.8e-29, 9.8e-29, -5.4e-21, -2.235e-19, 2.748e-22, 1e-25)]
+    sup = str.maketrans("0123456789-", "⁰¹²³⁴⁵⁶⁷⁸⁹⁻")
+
+    def u(x, d):
+        m, e = f"{x:.{d}e}".split("e")
+        return f"{m.replace('-', '−')}×10{str(int(e)).translate(sup)}"
+    for role, D, head, f32, f48, est, dd, dl, ul in table:
+        r = at(role, "polish", D)
+        cells = (f"{head} {u(f32, 1)} / {u(f48, 1)} | {'+' if est > 0 else ''}{u(est, 1)} | {'+' if dd > 0 else ''}{u(dd, 3)} | "
+                 f"{'+' if dl > 0 else ''}{u(dl, 3)} |")
+        txt = [(N, cells)]
+        items += [(f"D {D}: max|F| at M 32", float(r["F32"]), f32, abs(f32) / 10, txt),
+                  (f"D {D}: max|F| at M 48", float(r["F48"]), f48, abs(f48) / 10, txt),
+                  (f"D {D}: est at M 48", float(r["est48"]), est, abs(est) / 10, txt),
+                  (f"D {D}: Delta(M 48) - Delta(M 32)", float(r["dDelta"]), dd, abs(dd) / 1e3, txt),
+                  (f"D {D}: lam_g(M 48) - lam_g(M 32)", float(r["dlam"]), dl, ul, txt)]
+    da = [r for r in csv.DictReader(open(os.path.join(ROOT, "hp/data/delta_all.csv"))) if r["kind"] == "chain_fit"]
+    de = [float(r["err"]) for r in da if r["err"]]
+    t_err = [(N, "the 188 chain_fit rows that have one (1.4×10⁻¹⁵ to 4.4×10⁻¹¹)"), (N, "(D 173.5 and 190.5)")]
+    items += [("chain_fit rows with an err", len(de), 188, 1, t_err), ("smallest chain_fit err", min(de), 1.4e-15, 1e-16, t_err),
+              ("largest chain_fit err", max(de), 4.4e-11, 1e-12, t_err),
+              ("chain_fit rows without an err", len(da) - len(de), 2, 1, t_err)]
+    with mp.workdps(50):
+        offD = float(mp.mpf(at("controls", "polish", 20.043653, "D")["Delta48"]) - known20)
+    items.append(("dd20 under --mutate=D: Delta(M 48) - the record's", offD, -4.307e-15, 1e-18,
+                  [(N, "lies −4.307×10⁻¹⁵ from the record's, the plant fails")]))
+    ramp = {r["eps"]: r for r in csv.DictReader(x for x in open(os.path.join(ROOT, "hp/data/chain_dM_ramp.csv"))
+                                                if not x.startswith("#"))}
+    move = float(mp.mpf(ramp["1e-12"]["c0_highest"]) - mp.mpf(ramp["0"]["c0_highest"]))
+    t_ramp = [(N, "moves the top of their c₀ range by\n3.0×10⁻¹²")]
+    items += [("ramp of 1e-12: the free c0's top moves", move, 3.0e-12, 1e-13, t_ramp),
+              ("ramp 0: 1 - the free c0's top", 1 - float(ramp["0"]["c0_highest"]), 8.6e-11, 1e-12,
+               [(N, "put c₀ below 1 by 8.6×10⁻¹¹ (notes/MODE_COUNT.md 10.5)")])]
+    r240 = at("chain", "floor", 240.1244140625)
+    t240 = [(N, "| 240.12, at the floor, against the stored state | `I603-win2/chain` | octo-double / 8.9×10⁻²⁸ | +7.1×10⁻²¹ | "
+                "−1.602×10⁻²¹ | −4.697×10⁻²⁵ |")]
+    items += [("D 240: max|F| at M 48", float(r240["F48"]), 8.9e-28, 1e-29, t240 + [(N, "max |F| 8.9×10⁻²⁸, with the LU's")]),
+              ("D 240: est at M 48", float(r240["est48"]), 7.1e-21, 1e-22, t240),
+              ("D 240: Delta(M 48) - Delta(stored)", float(r240["dDelta_stored"]), -1.602e-21, 1e-24, t240),
+              ("D 240: lam_g(M 48) - lam_g(stored)", float(r240["dlam_stored"]), -4.697e-25, 1e-28, t240),
+              ("D 240: M 48 start", float(r240["F48_start"]), 1.4e24, 1e23, [(N, "start from 1.4×10²⁴ to 5.0×10⁻¹⁹")]),
+              ("D 240: M 48 start re-seeded", float(r240["F48_reseeded"]), 5.0e-19, 1e-20, [(N, "start from 1.4×10²⁴ to 5.0×10⁻¹⁹")])]
+    r200 = at("chain", "polish", 200.0)
+    items += [("D 200: the quad-double path's move at M 32", float(r200["M32_moved"]), 2.61e-19, 1e-21,
+               [(N, "+2.61×10⁻¹⁹ from the stored state")]),
+              ("D 200: M 48 against the stored state", float(r200["dDelta_stored"]), 3.74e-20, 1e-22,
+               [(N, "solution lies +3.74×10⁻²⁰ from the stored state")]),
+              ("D 200: M 48 start", float(r200["F48_start"]), 2.3e15, 1e14, [(N, "start from 2.3×10¹⁵ to 1.0×10⁻¹⁸")]),
+              ("D 200: M 48 start re-seeded", float(r200["F48_reseeded"]), 1.0e-18, 1e-19, [(N, "start from 2.3×10¹⁵ to 1.0×10⁻¹⁸")])]
+    t_tail = [(N, "the M = 32 states is 4.4×10⁻¹⁴ at D 80, 1.4×10⁻¹⁴ at D 100 and 2.1×10⁻¹⁵ at D 150")]
+    items += [("tau tail k >= 28, D 80", float(p80["tail32_k28"]), 4.4e-14, 1e-15, t_tail),
+              ("tau tail k >= 28, D 100", float(at("chain", "polish", 100.0)["tail32_k28"]), 1.4e-14, 1e-15, t_tail),
+              ("tau tail k >= 28, D 150", float(at("chain", "polish", 150.0)["tail32_k28"]), 2.1e-15, 1e-16, t_tail),
+              ("tau tail k >= 28, D 20", float(p20["tail32_k28"]), 7.1e-10, 1e-11, [(N, "dd20 plant) the tail is 7.1×10⁻¹⁰, and Δ moves only 1.7×10⁻²⁰")])]
+    # D 61.026449: lam_g of the kfreeze-23 states at M 48 and M 64 (I252-mac), hp/data/lam_gauge.csv
+    lg = list(csv.DictReader(x for x in open(os.path.join(ROOT, "hp/data/lam_gauge.csv")) if not x.startswith("#")))
+    with mp.workdps(50):
+        k23 = {r["M"]: mp.mpf(r["lam_g"]) for r in lg if "I252-mac/states/modecount_state_D61.0264_M" in r["state"]
+               and r["state"].endswith(("M48_kf23_from_I212.npz", "M64_kf23.npz"))}
+        d23 = float(abs(k23["48"] - k23["64"]))
+    items.append(("D 61.03: kfreeze-23 lam_g, M 48 against M 64", d23, 6.5e-18, 1e-19, [(N, "λ_g moves 6.5×10⁻¹⁸")]))
+    return items
+
+
 def full_lam_gauge():
     """notes/MODE_COUNT.md section 10.4: the fit selection on the real backbone and the planted test's T1, T6 and its
     control (hp/lam_gauge_fit.py; about a minute)."""
