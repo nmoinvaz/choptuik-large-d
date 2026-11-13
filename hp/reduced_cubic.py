@@ -101,6 +101,7 @@ h_F = 1e-24, where its truncation dominates, and the h check of w_jl must fail. 
 protocol and the results.
 """
 import json
+import math
 import os
 import sys
 import time
@@ -1979,6 +1980,28 @@ def curvesum(paths):
         if cu.get("planted"):
             print("  planted: " + ", ".join(f"{n} {'pass' if cu['planted'][n] else 'FAIL'}"
                                             for n in ("points", "orders", "converged", "verdict_selftest")))
+        br = [x for x in cu.get("bridge", []) if "E" in x]
+        if br:
+            # the even part's coefficient E / t against the first point's, the odd part's change O - O(first) over t^2
+            # (the cubic's component along the order-1 term, in |B e| per unit t^2) with its local order in t, w / t^2
+            # against the first point's, and the flat chart's 2-norm against its first
+            b0 = br[0]
+            print(f"  bridge (11.4): {len(br)} converged t from {b0['t']:.3g} to {br[-1]['t']:.3g}"
+                  + ("; the chord failed at %.3g" % cu["bridge"][-1]["t"] if "fail" in cu["bridge"][-1] else "")
+                  + f"; E / (kappa t) at the first {b0['E'] / (kap * b0['t']) if kap else float('nan'):.8f}")
+            print("    t, E/t rel. first - 1, O, (O - O0) / t^2, local order of (O - O0) t, floor, |w - w0| / t^2 rel. "
+                  "first - 1 (+, -), flat 2-norm rel. first - 1, rho from w0 (+), linear rho (+), chord steps")
+            pv = None
+            for x in br:
+                d = x["O"] - b0["O"]
+                lo = ""
+                if pv is not None and pv[1] != 0 and d != 0:
+                    lo = f"{math.log(abs(d * x['t']) / abs(pv[1] * pv[0])) / math.log(x['t'] / pv[0]):.3f}"
+                print(f"    {x['t']:9.3g} {x['E'] / x['t'] / (b0['E'] / b0['t']) - 1:+.2e} {x['O']:.12e} "
+                      f"{d / x['t'] ** 2:+.4e} {lo:>6} {x['fl']:8.1e} {x['wp'] / b0['wp'] - 1:+.2e} "
+                      f"{x['wm'] / b0['wm'] - 1:+.2e} {x['fl2p'] / b0['fl2p'] - 1:+.2e} {x.get('rhop', float('nan')):+.3e} "
+                      f"{x.get('lrhop', float('nan')):+.3e} {x['stepsp']},{x['stepsm']}")
+                pv = (x["t"], d)
 
 
 # ------------------------------------------------------------------ the weak rows (#694)
