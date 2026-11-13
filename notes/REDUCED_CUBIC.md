@@ -659,13 +659,13 @@ G(\zeta) = \beta + D\zeta + \sum_{r \notin A} e_r \left[\tfrac12 q_r (b_r\cdot\z
   which does not. They have no nonlinear term, so they are affine in z exactly.
 - The planted weak left vectors are u_m = √(1 − ε_m²) a_m + ε_m n_m, with a_m an orthonormal basis of A's four rows
   that carry U (randomly rotated), n_m orthonormal on the nonlinear rows, and ε = 0.1, 0.15, 0.2, 0.25. Their share on
-  A is 1 − mean(ε²) = 0.964375.
+  A is 1 − mean(ε²) = 0.96625.
 - Σ is the D 242.5 starts' weak σ, Λ 29 strong singular values log-spaced from 10⁻¹⁹ to 3×10³⁴, and |q_r| (10²⁸ to
   10³³) and |t_r| (10³⁰ to 10³⁴) log-uniform.
 
 Pass criteria, fixed before the plant's first run:
 - **(PR1)** The rows found affine are exactly A, by label.
-- **(PR2)** The share on them equals 0.964375 to 10⁻⁶ (relative), and every row's share equals the planted one to
+- **(PR2)** The share on them equals 0.96625 to 10⁻⁶ (relative), and every row's share equals the planted one to
   10⁻⁶ of the largest.
 - **(PR3)** q_r on the nonlinear rows equals the planted one, along the code's V, to 10⁻⁶ (relative).
 - **(PR4)** F″(e, e), T(e) and S(e) per row equal the planted ones to 10⁻⁶ of each one's largest entry, and the affine
