@@ -6,7 +6,7 @@
 recomputes the series in such ways, compares them, and locates the nearest singularity of a scalar component's series
 (Delta's coefficients, the last entry of each z_k, or one row) by Pade poles and by a two-term recurrence fit.
 
-    python3 jet_singularity.py planted [--mutate drop_pole]
+    python3 jet_singularity.py planted [--case T3] [--mutate drop_pole]
     python3 jet_singularity.py jet RAW STATE OUTPREFIX --variants od,qd,q4,pert:L:S,inject:L:S [--N 24] [--threads 4]
         [--held_fit data/held_fit.json]
     python3 jet_singularity.py compare REF.npz VAR.npz ... [--ks 1-12] [--mutate scale]
@@ -27,6 +27,18 @@ D 245.14 with random signs (5 seeds). N3 (added after the records' norms were re
 background plus an entire oscillating component 2 Re C exp((0.1 + 2.3 i) a), which has no singularity. Pass: P1 and P2 recovered by Pade to 3% in |s| and 3 degrees in arg, and by
 the recurrence fit to 5% and 5 degrees; P3 to 10% and 10 degrees by both; N1, N2 and N3 give no stable Pade pole
 with |s| <= 4 at any seed. Each case also prints growth_law (singularity against entire fall, reported, not judged). --mutate drop_pole builds P1 without its pole, which must fail. Exit 1 on failure.
+
+planted --case T3 [--mutate drop_pole] (#711, criteria fixed 2026-11-13 before its first run): #685's three tracks as
+fixed conjugate pole pairs at D* = 255.71 + 4.99i (A), 252.31 + 5.80i (B) and 259.20 + 2.88i (C), seen from #685's
+five bases D0 = 252.2497 ... 253.7139, so s = D* - D0 moves with the base while the singularities do not. The pair
+amplitudes are real and set at the middle base D0 = 253.0682, equal there at order 12 (mix o12) or at order 24 (o24),
+with A's order-5 term 1e-12; the background is P1's ln term, the relative noise 1e-6 (judged) and 1e-12 (reported).
+Pass: at every base and in both mixes, each of the three pairs has a stable Pade pole within 3% in |s| and 3 degrees.
+Reported, with a verdict that is not part of the exit: the recurrence fit's D* = D0 + s at each base. It DRIFTS when
+its Im D* falls by at least 1.0 from the first base to the last in either mix (#685's data: 4.63 to 2.70); it HOLDS
+when Im D* stays within 0.3 of its mean at every base in both mixes; else PARTIAL. DRIFTS means three fixed
+singularities produce #685's drift, so the recurrence reading of #685 is dropped; HOLDS means they do not. --mutate
+drop_pole leaves out pair A, which must fail.
 
 jet: the series at STATE as anm_run.py --jet_o 1 forms it (its coefficients_o and coefficients_q, the held fit's
 Taylor coefficients in eight parts as --held_o 1 gives them), in each variant of --variants:
@@ -248,6 +260,77 @@ ENV_245 = [None, 3.6e-4, 1.1e-6, 4.0e-9, 1.5e-11, 1.88e-12, 8.79e-13, 1.69e-13, 
            2.3e-28]
 
 
+# #685's three tracks (D*) and its five bases, for planted --case T3 (#711)
+TRACKS_685 = dict(A=("255.71", "4.99"), B=("252.31", "5.80"), C=("259.20", "2.88"))
+BASES_685 = ("252.2497", "252.6135", "253.0682", "253.3524", "253.7139")
+MID_685 = "253.0682"
+
+
+def planted_tracks(D0, mix, seed=1, noise=1e-6, N=24, drop=()):
+    """c_1..c_N (mpf) at base D0 of P1's background plus #685's three pairs fixed at D*, and {name: s = D* - D0}"""
+    rng = np.random.default_rng(seed)
+    with mp.workdps(DPS):
+        S = mp.mpf(243)
+        c = [-mp.mpf("1.7e-4") * S * (-1) ** (k + 1) / (k * S ** k) for k in range(1, N + 1)]
+        mid, D0 = mp.mpf(MID_685), mp.mpf(D0)
+        kref = 12 if mix == "o12" else 24
+        sA = mp.mpc(*TRACKS_685["A"]) - mid
+        CA = mp.mpf("1e-12") * abs(sA) ** 6                     # A's order-5 term 1e-12 at the middle base
+        plants = {}
+        for name, (re_, im_) in TRACKS_685.items():
+            Ds = mp.mpc(re_, im_)
+            Cj = CA * (abs(Ds - mid) / abs(sA)) ** (kref + 1)  # equal order-kref terms at the middle base
+            s = Ds - D0
+            plants[name] = complex(s)
+            if name in drop:
+                continue
+            for k in range(1, N + 1):
+                c[k - 1] += Cj * 2 * mp.re(s ** (-k - 1))
+        if noise:
+            c = [v * (1 + noise * float(rng.standard_normal())) for v in c]
+        return c, plants
+
+
+def planted_t3(mutate):
+    """#711: planted --case T3 (the module docstring has the criteria)"""
+    drop = ("A",) if mutate == "drop_pole" else ()
+    ok_all = True
+    print("planted T3: #685's tracks A, B, C fixed at D*, seen from its five bases (criteria fixed before the run)", flush=True)
+    rec_im = {}
+    for mix in ("o12", "o24"):
+        rec_im[mix] = []
+        for D0 in BASES_685:
+            for nz in (1e-6, 1e-12):
+                c, plants = planted_tracks(D0, mix, noise=nz, drop=drop)
+                sp = stable_poles(c, r_max=12.0)
+                parts, ok = [], True
+                for name, s in plants.items():
+                    hit = [d for d in sp if abs(d["abs"] / abs(s) - 1) <= 0.03
+                           and abs(d["arg_deg"] - np.degrees(np.angle(s))) <= 3]
+                    ok &= bool(hit)
+                    parts.append(f"{name} planted |s| {abs(s):.3f} arg {np.degrees(np.angle(s)):.1f}: "
+                                 + (f"Pade |s| {hit[0]['abs']:.3f} arg {hit[0]['arg_deg']:.1f} (n {hit[0]['n']})" if hit else "not found"))
+                _, rec, rspread = recurrence_fit(c)
+                Dr = complex(float(D0) + rec.real, rec.imag) if rec is not None else None
+                if nz == 1e-6:
+                    ok_all &= ok
+                    rec_im[mix].append(Dr.imag if Dr is not None else float("nan"))
+                tag = "judged" if nz == 1e-6 else "reported"
+                print(f"  {mix} D0 {D0} noise {nz:.0e} ({tag}): {'PASS' if ok else 'FAIL'}: " + "; ".join(parts)
+                      + "; other stable poles: " + (", ".join(f"|s| {d['abs']:.3f} arg {d['arg_deg']:.1f}" for d in sp
+                                                              if not any(abs(d['abs'] / abs(s) - 1) <= 0.03 and abs(d['arg_deg'] - np.degrees(np.angle(s))) <= 3
+                                                                         for s in plants.values())) or "none")
+                      + (f"; recurrence D* {Dr.real:.2f}{Dr.imag:+.2f}i (spread {rspread:.2f})" if Dr is not None else "; recurrence none"),
+                      flush=True)
+    falls = {m: v[0] - v[-1] for m, v in rec_im.items()}
+    holds = all(np.nanmax(np.abs(np.array(v) - np.nanmean(v))) <= 0.3 for v in rec_im.values())
+    verdict = "DRIFTS" if any(f >= 1.0 for f in falls.values()) else ("HOLDS" if holds else "PARTIAL")
+    print("  recurrence fit's Im D* over the bases: " + "; ".join(f"{m} " + ", ".join(f"{x:.2f}" for x in v) + f" (fall {falls[m]:+.2f})"
+                                                       for m, v in rec_im.items()) + f": {verdict} (reported, not part of the exit)", flush=True)
+    print(f"{'PASS' if ok_all else 'FAIL'}: planted T3" + (f" (--mutate {mutate})" if mutate else ""), flush=True)
+    return 0 if ok_all else 1
+
+
 def judge_pole(c, plant, tol_r, tol_deg, tol_r_rec, tol_deg_rec):
     """(ok, line): the nearest stable Pade pole and the recurrence fit against the planted s"""
     sp = stable_poles(c)
@@ -295,6 +378,11 @@ def law_line(c):
 def planted(argv):
     mutate = argv[argv.index("--mutate") + 1] if "--mutate" in argv else ""
     mp.mp.dps = DPS
+    if "--case" in argv:
+        case = argv[argv.index("--case") + 1]
+        if case != "T3":
+            raise SystemExit(f"planted --case: T3 only, not {case}")
+        return planted_t3(mutate)
     ok_all = True
     print("planted controls of the estimator (criteria fixed before any real series was read)", flush=True)
     for kind, tol in (("P1", (0.03, 3, 0.05, 5)), ("P2", (0.03, 3, 0.05, 5)), ("P3", (0.10, 10, 0.10, 10))):
