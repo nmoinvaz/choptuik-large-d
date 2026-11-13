@@ -37,6 +37,7 @@ duality, ibid. ch. 5). Context: the ridge route (Hoerl and Kennard 1970, Technom
     python3 pade_twin_size.py --selftest [--mutate=upoly|radius]
     python3 pade_twin_size.py twins OUTDIR [--mutate=arccol|chordcol] [--allow_unraw]
     python3 pade_twin_size.py twins_real OUTDIR [--mutate=c1dup] [--allow_unraw]   (reads OUTDIR/twins_plants.json)
+    python3 pade_twin_size.py twins_jdiag OUTDIR [--allow_unraw]      (post-freeze diagnostic, #672, not judged)
     python3 pade_twin_size.py size OUTDIR [--mutate=scale] [--allow_unraw]
     python3 pade_twin_size.py size_real OUTDIR [--allow_unraw]        (reads OUTDIR/size_plants.json)
 
@@ -613,6 +614,57 @@ def run_twins_real(outdir, mut=None):
     return ok
 
 
+def run_twins_jdiag(outdir):
+    """post-freeze diagnostic (#672), not judged, at wf 1.00. (a) tc.real_sig() loads the files at the precision in
+    force when it is first called, 53 bits in twins_real; here both J files are also read from their strings at
+    DPS_FIT, and the scans are repeated on those. (b) Where the misfit at M = n - 1 sits, per order. (c) The scans with
+    err_k widened to max(err_k, |sigma_k(J1500) - sigma_k(J1250)|), both read at DPS_FIT"""
+    log = Log(outdir, "twins_jdiag", None)
+    rec = {"classes": {}}
+    wf = 1.0
+    s53 = tc.real_sig()[wf][:N23]
+    with mp.workdps(DPS_FIT):
+        sig = pg.load_scan(pg.REAL["J1250"])[wf][:N23]
+        j15 = pg.load_scan(pg.REAL["J1500"])[wf][:N23]
+    fn = [f for f in os.listdir(pg.REAL["J1250"]) if f.startswith(f"sigF_w{wf:.4f}")][0]
+    strs = json.load(open(os.path.join(pg.REAL["J1250"], fn)))["sigma_str"][:N23]
+    digits = [len(a.replace("-", "").replace(".", "").lstrip("0")) for a, _ in strs]
+    rel, _ = tc.err_model(wf)
+    fit = bases_part1(wf, DPS_FIT)
+    with mp.workdps(DPS_FIT):
+        err = tc.weights(sig, rel, N23, 1.0, DPS_FIT)
+        r53 = [float(abs(mp.mpc(s53[k]) - sig[k]) / abs(sig[k])) for k in range(N23)]
+        dj = [abs(j15[k] - sig[k]) for k in range(N23)]
+        err_j = [max(err[k], dj[k]) for k in range(N23)]
+    rec.update({"rel_53bit": r53, "string_digits_re": digits, "rel_k": rel[:N23],
+                "J_diff_over_err": [float(dj[k] / err[k]) for k in range(N23)]})
+    log(f"wf {wf}: J1250 as tc.real_sig() holds it against its strings, relative, per k: "
+        + " ".join(f"{v:.1e}" for v in r53))
+    log(f"  significant digits of Re sigma_k in the J1250 file: {digits}")
+    log(f"  measured rel_k: " + " ".join(f"{v:.1e}" for v in rel[:N23]))
+    log(f"  |J1500 - J1250| / err_k per k, both read at {DPS_FIT} digits: "
+        + " ".join(f"{float(dj[k] / err[k]):.1e}" for k in range(N23)))
+    for cls, b in fit.items():
+        out = {}
+        for lab, target, e in (("53bit", s53, err), ("strings", sig, err), ("widened", sig, err_j)):
+            rows = []
+            for M in range(M_CONTROL, N23 + 1):
+                c, chi, l2 = tc.lsq(b, target, e, N23, M)
+                rows.append({"M": M, "chi": chi, "l2": l2})
+            m_min, m_lo = tc.sizes(rows, N23)
+            out[lab] = {"rows": rows, "M_min": m_min, "M_lo": m_lo}
+            log(f"  {cls}, {lab}: M_min {m_min}, M_lo {m_lo}; chi at M = 18..22: "
+                + ", ".join(f"{r['chi']:.3e}" for r in rows if 18 <= r["M"] <= 22))
+        c, chi, _ = tc.lsq(b, sig, err, N23, N23 - 1)
+        with mp.workdps(DPS_FIT):
+            per = [float(abs(mp.fsum(c[m] * b.cols[m][k] for m in range(N23 - 1)) - sig[k]) / err[k]) for k in range(N23)]
+        out["per_k_at_n_minus_1"] = per
+        rec["classes"][cls] = out
+        log(f"  {cls}: misfit at M = {N23 - 1} per k, in units of err_k: " + " ".join(f"{v:.1e}" for v in per))
+    log.dump(rec)
+    return True
+
+
 def size_targets(wf):
     return {k: tc.plant(wf, k) for k in ("chord2", "arcjump", "arc")}
 
@@ -729,12 +781,13 @@ def main():
     if "--selftest" in argv:
         sys.exit(0 if selftest(mut) else 1)
     argv = [a for a in argv if not a.startswith("--")]
-    if len(argv) != 2 or argv[0] not in ("twins", "twins_real", "size", "size_real"):
+    if len(argv) != 2 or argv[0] not in ("twins", "twins_real", "twins_jdiag", "size", "size_real"):
         raise SystemExit(__doc__)
     stage, outdir = argv
     require_raw(os.path.join(outdir, "x.json"), allow=allow)
     os.makedirs(outdir, exist_ok=True)
     fn = {"twins": lambda: run_twins(outdir, mut), "twins_real": lambda: run_twins_real(outdir, mut),
+          "twins_jdiag": lambda: run_twins_jdiag(outdir),
           "size": lambda: run_size(outdir, mut), "size_real": lambda: run_size_real(outdir)}[stage]
     sys.exit(0 if fn() else 1)
 
