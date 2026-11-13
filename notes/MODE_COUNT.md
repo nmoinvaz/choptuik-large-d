@@ -100,11 +100,18 @@ there are 7 of them in 0.3 < Re λ < 6.6 on each of the lines Im = ±ω.
 **det M at complex λ.** `Solver.mode_det(zh, zl, lam_hi, lam_lo)` of `hp/` takes λ as a real double-double: its
 fourth argument is the low part of λ, not Im λ, and complex λ is not supported. `hp/modecount_cx/` is a separate crate
 (built by `hp/modecount_build.sh` into its own build directory; hpkernel is not modified or reinstalled) that links the
-hp kernel as a library and repeats the λ-dependent parts of `hp/src/model.rs` with a complex tangent: a lane type with
-a real value and a complex tangent (the background is real, so every dual-number rule acts on the real and imaginary
-parts separately), d/dτ → ωD + λ on the tangent, the horizon solves (A + λ) as the real 2M × 2M system
-[[A + Re λ, −Im λ], [Im λ, A + Re λ]], and the same kfreeze-13 rows. ln|det M| and arg det M come from a complex
-double-double LU with partial pivoting. Checks (`hp/modecount_check.py`, `hp/data/modecount_check.jsonl`):
+hp kernel as a library and takes the mode matrix from hp's engine at a complex rate (multishoot's
+`Shooting::mode_matrix` on hp's equations, #597). Its lanes have a real value and a complex tangent (the background
+is real, so every dual-number rule acts on the real and imaginary parts separately), d/dτ → ωD + λ on the tangent,
+the horizon solves (A + λ) are the real 2M × 2M system [[A + Re λ, −Im λ], [Im λ, A + Re λ]], and the frozen rows
+are the engine's exact projector. The test field's matrix holds the a and c tangents inside the recursions and keeps
+its own copy of them in the crate (`src/test_field.rs`). ln|det M| and arg det M come from a complex double-double LU
+with partial pivoting. With Im λ = 0 the matrix is hpkernel's bit for bit, at no cut and at kfreeze 13 alike.
+Determinants cached by the crate before #597 differ at kfreeze states in their last digits (up to 1.2×10⁻⁶ rad in
+arg at D 61 M 64), so caches of the two builds are not mixed. The matrix's entries carry a fixed error from the
+double-double evaluation of the centre and horizon series: steps of k ulps in Re λ show a median non-linearity
+falling as 1/k, 17% of the entries at D 61 M 64 kf 23 (#597, raw `I597-mac/` 86a9894e). Checks
+(`hp/modecount_check.py`, `hp/data/modecount_check.jsonl`):
 
 | check | D = 30.07 (M 32, no freeze) | D = 61.03 (M 32, kfreeze 13) |
 |---|---|---|
