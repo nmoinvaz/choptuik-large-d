@@ -387,6 +387,13 @@ recovers all three pairs when their terms are balanced at order 12, but it misse
 dominates the low orders, so the plant fails its own criterion and the Padé reading is not certified by it either.
 Track A predicts that the root test bottoms near 5.0 at D₀ ≈ 255.7 and rises after, which series past D 255 test (#712).
 
+With the plan made again at the state (#686, dh370; raw `I686-dh370/` bc9add86), the series at D 252.25 and 252.61
+put the nearest singularity at the same D* to 10⁻⁴, inside its spread over the approximants (0.010 and 0.094). Their
+coefficients move by up to 6% between the two plans, at orders 7 and 13. So, by #686's rule, the singularity is the
+solution's and not the plan's. Its control, D* moved by 0.5, reads as the plan's at both bases. This tests the plan
+only: the new plan's base polish did not converge, and the series were formed at the stored state (pinned max|F|
+3×10⁻³⁶). Another M or layout was not run, since the octo-double solver is built for M = 32 only (#735).
+
 ### The refusals are the corrector's
 
 The corrector's first Newton move is the prediction's error to first order. At the accepted steps it equals the
