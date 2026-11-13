@@ -12,7 +12,7 @@ from |dz_{k+1}| <= (omega/2) |dz_k|^2 (Newton-Mysovskikh). With lam < 1 the logg
 and the record says so (lam_k). They are lower bounds of the true h_k and omega, not enclosures.
 
     python3 kantorovich_log.py selftest [--mutate F] [--log OUT]
-    python3 kantorovich_log.py parse LOG --sample NAME [--jsonl RECORDS] [--csv OUT] [--append 1]
+    python3 kantorovich_log.py parse LOG --sample NAME [--jsonl RECORDS] [--csv OUT] [--append 1] [--from_step N]
     python3 kantorovich_log.py analyse CSV --train NAMES [--held NAMES] [--h_star X] [--h_prior 1.0] [--mutate F]
 
 selftest is the planted check: Newton histories of test functions with a known affine covariant Lipschitz constant
@@ -538,8 +538,10 @@ def a_star(h_star, rows_fit_dz, beta_fit, D, zN, N=24, h_max=1.0):
     """the largest a <= h_max whose predicted [h_0] = 2 K(D) |dz_0|(a)^beta is below h_star (bisection in log a)"""
     def h_pred(a):
         dz = dz0_model(rows_fit_dz, a, zN)
-        th = math.exp(beta_fit["logK"] + beta_fit["beta"] * math.log(dz) + beta_fit["gamma"] * (D - beta_fit["Dmean"]))
-        return 2 * th
+        try:
+            return 2 * math.exp(beta_fit["logK"] + beta_fit["beta"] * math.log(dz) + beta_fit["gamma"] * (D - beta_fit["Dmean"]))
+        except (OverflowError, ValueError):
+            return float("inf")
     if h_pred(h_max) < h_star:
         return h_max, h_pred
     lo, hi = 1e-3, h_max
@@ -579,6 +581,36 @@ def analyse(rows, train, held, h_star=None, h_prior=1.0, mutate=""):
     if he:
         print(f"held out {sorted(set(held))}: {len(he)} attempts, {sum(1 for r in he if not r['accepted'])} refused")
         report("held out", he)
+    # descriptive numbers of both samples (not part of the held-out test)
+    al = tr + he
+    for smp in sorted(set(r["sample"] for r in al)):
+        rs = [r for r in al if r["sample"] == smp]
+        tref = sum(r["t_corr"] for r in rs if not r["accepted"])
+        print(f"corrector seconds, {smp}: refused {tref:.0f} of {sum(r['t_corr'] for r in rs):.0f}; per refusal "
+              + ", ".join(f"{r['t_corr']:.0f}" for r in rs if not r["accepted"]))
+    thA, thA1 = [], []
+    for r in al:
+        if not r["accepted"] and r["h0"] >= hs:
+            for k, (t, lm) in enumerate(zip(r["thetas"].split(";"), r["lams"].split(";"))):
+                if lm == "1" and t:
+                    thA.append(float(t))
+                    if k > 0:
+                        thA1.append(float(t))
+    if thA:
+        print(f"class A (refused, [h_0] >= {hs:.3g}): theta at lam 1, all steps: n {len(thA)}, {min(thA):.3f}-{max(thA):.3f}, "
+              f"mean {np.mean(thA):.3f}; after the first step: n {len(thA1)}, mean "
+              f"{np.mean(thA1) if thA1 else float('nan'):.3f} (1/2: first-order singular root, 2/3: order 2)")
+    rise = [r for r in al if r["F1"] > r["F0"]]
+    print(f"|F| rose in the first step of {len(rise)} of {len(al)} attempts (max ratio "
+          f"{max(r['F1'] / r['F0'] for r in al):.2g}) while |dz| fell in {sum(1 for r in al if r['dz1'] < r['dz0'])}")
+    damped = [r for r in al if r["lam1"] < 1]
+    print(f"post hoc, a damped second step (lam_1 < 1): refused {sum(1 - r['accepted'] for r in damped)} of "
+          f"{sum(1 - r['accepted'] for r in al)}, accepted {sum(r['accepted'] for r in damped)} of {sum(r['accepted'] for r in al)}")
+    for lo in (225.0, 240.0):
+        b = [r for r in tr if r["attempt"] == 0 and r["D_base"] >= lo]
+        if len(b) > 2:
+            sz = np.polyfit([r["D_base"] for r in b], np.log([r["zN"] for r in b]), 1)[0]
+            print(f"ln |z_N| per unit D over the training bases from D {lo:g}: {sz:+.3f}")
     # fits on the training sample
     clean = [r for r in tr if r["lam0"] == 1.0 and 0 < r["theta0"] < 0.3]
     fb = fit_beta([r["dz0"] for r in clean], [r["theta0"] for r in clean], [r["D_base"] for r in clean])
@@ -587,6 +619,20 @@ def analyse(rows, train, held, h_star=None, h_prior=1.0, mutate=""):
           f"theta_0 < 0.3): beta {fb['beta']:.3f} +- {fb['beta_se']:.3f}, gamma {fb['gamma']:+.3f} +- "
           f"{fb['gamma_se']:.3f} per unit D, rms {fb['rms10']:.2f} dex (+-: standard errors of the regression)")
     print(f"  without the D term: beta {fb1['beta']:.3f} +- {fb1['beta_se']:.3f}, rms {fb1['rms10']:.2f} dex")
+    # the base's smallest LU pivot in place of D: theta_0 ~ |dz_0|^beta piv_lo^delta (delta -1 if theta_0 ~ 1/sigma)
+    y = np.log([r["theta0"] for r in clean])
+    A = np.stack([np.ones(len(clean)), np.log([r["dz0"] for r in clean]), np.log([r["piv_lo"] for r in clean])], 1)
+    cp, *_ = np.linalg.lstsq(A, y, rcond=None)
+    rp = y - A @ cp
+    covp = float(rp @ rp) / max(len(y) - 3, 1) * np.linalg.inv(A.T @ A)
+    print(f"  with the base's smallest LU pivot instead of D: beta {cp[1]:.3f} +- {math.sqrt(covp[1, 1]):.3f}, "
+          f"delta {cp[2]:+.3f} +- {math.sqrt(covp[2, 2]):.3f} (theta_0 ~ piv_lo^delta), rms "
+          f"{math.sqrt(float(rp @ rp) / len(y)) / math.log(10):.2f} dex")
+    Dh = np.array([r["D_base"] for r in tr if r["attempt"] == 0])
+    ph = np.log([r["piv_lo"] for r in tr if r["attempt"] == 0])
+    sl = np.polyfit(Dh, ph, 1)[0]
+    print(f"  the base's smallest pivot falls as exp({sl:+.3f} D) over the training bases; gamma above is "
+          f"{fb['gamma']:+.3f}")
     om = np.array([r["omega0"] for r in clean])
     Dv = np.array([r["D_base"] for r in clean])
     co = np.polyfit(Dv, np.log10(om), 1)
@@ -600,6 +646,37 @@ def analyse(rows, train, held, h_star=None, h_prior=1.0, mutate=""):
     print(f"fit |dz_0|^2 = (k |z_N| a^p)^2 + f^2 over {m['n']} training attempts: p {m['p']:.2f}, k {m['k']:.3g}, "
           f"floor {m['f']:.2e}, rms {m['rms10']:.2f} dex; with p = N + 1 = 25: k {mfix['k']:.3g}, floor "
           f"{mfix['f']:.2e}, rms {mfix['rms10']:.2f} dex")
+    # the basin: the |dz_0| at which the predicted [h_0] reaches h_star, and where the floor alone reaches it
+    def radius(f, D):
+        try:
+            return math.exp((math.log(hs / 2) - f["logK"] - f["gamma"] * (D - f["Dmean"])) / f["beta"])
+        except (OverflowError, ZeroDivisionError):
+            return float("nan")
+
+    def d_floor(f):
+        if not m["f"] > 0 or f["gamma"] == 0:
+            return float("nan")
+        return f["Dmean"] + (math.log(hs / 2) - f["logK"] - f["beta"] * math.log(m["f"])) / f["gamma"]
+
+    def shrink(f):
+        try:
+            return math.exp(-f["gamma"] / f["beta"])
+        except (OverflowError, ZeroDivisionError):
+            return float("nan")
+    print("basin radius, the |dz_0| whose predicted [h_0] is h_star: " + ", ".join(
+        f"D {D}: {radius(fb, D):.2e}" for D in (230, 235, 240, 245, 250)))
+    rng = np.random.default_rng(1)
+    bs = []
+    for _ in range(2000):
+        c = [clean[i] for i in rng.integers(0, len(clean), len(clean))]
+        f = fit_beta([r["dz0"] for r in c], [r["theta0"] for r in c], [r["D_base"] for r in c])
+        bs.append((f["beta"], shrink(f), d_floor(f)))
+    q = np.nanpercentile(np.array(bs), [2.5, 16, 50, 84, 97.5], axis=0)
+    print(f"  per unit D the radius changes by {shrink(fb):.3f}; the floor {m['f']:.2e} reaches "
+          f"h_star at D {d_floor(fb):.1f} (an extrapolation past the training D)")
+    for j, name in enumerate(("beta", "radius change per unit D", "D where the floor reaches h_star")):
+        print(f"  bootstrap over the {len(clean)} attempts (2000 resamples, seed 1), {name}: median {q[2, j]:.3f}, "
+              f"16-84% {q[1, j]:.3f}-{q[3, j]:.3f}, 2.5-97.5% {q[0, j]:.3f}-{q[4, j]:.3f} (a spread, not a bound)")
     by_base = {}
     for r in tr + he:
         by_base.setdefault((r["sample"], r["step"]), []).append(r)
@@ -617,13 +694,26 @@ def analyse(rows, train, held, h_star=None, h_prior=1.0, mutate=""):
     print(f"a-rule: the largest a <= 1 with predicted [h_0] < h_star {hs:.3g} (|dz_0| from the a-fit, theta_0 from "
           f"the beta fit with the D term)")
     out = []
+    fo = dict(logK=co[1] * math.log(10) - math.log(2), beta=1.0, gamma=co[0] * math.log(10), Dmean=0.0)  # [omega](D)|dz|/2
     for r in tr + he:
         a_s, hp = a_star(hs, m, fb, r["D_base"], r["zN"])
-        out.append((r, a_s, hp(r["a"])))
-    for r, a_s, hpr in out:
+        a_o, _ = a_star(hs, m, fo, r["D_base"], r["zN"])
+        out.append((r, a_s, hp(r["a"]), a_o))
+    print(f"  (a*_omega: the issue's form, one [omega](D) from the fit above, theta_0 = [omega](D) |dz_0| / 2)")
+    for r, a_s, hpr, a_o in out:
         if not r["accepted"]:
             print(f"    refused {r['sample']} D {r['D_base']:.3f} -> {r['D']:.3f}: a taken {r['a']:.4f}, a* {a_s:.4f}, "
-                  f"predicted [h_0] {hpr:.3g}, measured {r['h0']:.3g}: rule {'refuses it' if r['a'] > a_s else 'allows it'}")
+                  f"predicted [h_0] {hpr:.3g}, measured {r['h0']:.3g}: rule {'refuses it' if r['a'] > a_s else 'allows it'}"
+                  f"; a*_omega {a_o:.4f} ({'refuses' if r['a'] > a_o else 'allows'})")
+    for smp in sorted(set(r["sample"] for r, _, _, _ in out)):
+        fa_o = [r for r, _, _, a_o in out if r["accepted"] and r["sample"] == smp and r["a"] > a_o]
+        print(f"    accepted {smp}: a*_omega would have refused {len(fa_o)}")
+    print("  a* per base (first attempt), D_base: a taken, a*, a*_omega, |z_N|, verdict")
+    for r, a_s, _, a_o in out:
+        if r["attempt"] == 0:
+            print(f"    {r['sample']} {r['D_base']:.3f}: {r['a']:.4f} {a_s:.4f} {a_o:.4f} {r['zN']:.2e} "
+                  f"{'accepted' if r['accepted'] else 'refused'}")
+    out = [(r, a_s, hpr) for r, a_s, hpr, _ in out]
     for smp in sorted(set(r["sample"] for r, _, _ in out)):
         acc = [(r, a_s) for r, a_s, _ in out if r["accepted"] and r["sample"] == smp]
         fa = [(r, a_s) for r, a_s in acc if r["a"] > a_s]
@@ -644,6 +734,7 @@ def main(argv=None):
     p.add_argument("--jsonl", default=None)
     p.add_argument("--csv", default=None)
     p.add_argument("--append", type=int, default=0)
+    p.add_argument("--from_step", type=int, default=0)
     q = sub.add_parser("analyse")
     q.add_argument("csv")
     q.add_argument("--train", required=True)
@@ -678,7 +769,9 @@ def main(argv=None):
                 print(f"  step {at['step']} attempt {at['attempt']}: {n_rec} records parsed, the log says {at['od_steps']}")
                 bad.append("steps")
         if o.csv:
-            write_csv(rows_of(atts, o.sample), o.csv, append=bool(o.append))
+            keep = [at for at in atts if at["step"] >= o.from_step]
+            print(f"  {len(keep)} attempts from step {o.from_step} on written to {o.csv}")
+            write_csv(rows_of(keep, o.sample), o.csv, append=bool(o.append))
         return 1 if bad else 0
     if o.cmd == "analyse":
         rows = read_csv(o.csv)
