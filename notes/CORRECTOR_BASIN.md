@@ -23,6 +23,10 @@ Results are in section 4 onward, after the protocol (section 3), which was commi
   (7 of 12) the first step has [h₀] = 4e-13 to 0.05, so the start is deep inside the basin by Kantorovich's measure,
   and the attempt fails one or two steps later, after a damped step, when no trial passes newton_od's own-Jacobian
   test. No quantity of the first step separates class B from the accepted attempts.
+- **Class A is not a nonlinearity of the weak equations.** At the class A start 248.63 → 249.39, with the strong rows
+  solved, the weak residual at Newton's first move is 7.9×10⁻⁷ of |B a| and departs from affine only at second order
+  (#677, [REDUCED_CUBIC.md](REDUCED_CUBIC.md) 9). The basin that refuses newton_od is that of the full system, and a
+  corrector that keeps the first weak move and solves the strong rows (#674) is not bound by it.
 - **The first step contracts at third order, at a rate set by the smallest pivot.** θ₀ = K|dz₀|^β with
   β = 2.38 ± 0.12, and K grows as e^{1.07 D}, while the base's smallest LU pivot falls as e^{−1.01 D}. With the pivot as
   the regressor in place of D, θ₀ ∝ |dz₀|^2.33 piv^−1.03±0.08. This is the scaling of a weak direction with a vanishing
