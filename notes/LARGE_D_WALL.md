@@ -153,13 +153,19 @@ leaves 0.18 |B a| there. In the start's frame the first move's rest moves the we
 of |B a|: #499's 0.52 used U and B from the LU of newton_od's last trial point. Along rays out to 10⁵|a| (#677,
 [REDUCED_CUBIC.md](REDUCED_CUBIC.md) 9), at these two starts, at D 232.13 and at #603's class A start 248.63 → 249.39,
 the strong-solved weak residual is affine with slope B + L, plus a quadratic of 10⁻²⁹ to 10⁻²⁸ |B a| (|c|/|a|)², and
-no cubic or quartic is resolved. 3max|S| = max|T| at all four. At c = a it leaves 7.9×10⁻⁷ |B a| at the class A
+at #677's float precision no cubic or quartic is resolved (with the parts kept to 30 digits, #698 resolves the
+cubic). 3max|S| = max|T| at all four. At c = a it leaves 7.9×10⁻⁷ |B a| at the class A
 start, set by L, the coupling through the start's own strong correction, and max|F| there is 5.4×10⁻⁶⁶. Numerical
 evidence at four starts. #674 tests the corrector.
 The weak left vectors live on the last matching, half on the Taylor arrival at the last node and half on the horizon
 series there, with that node's state cancelled; within it, on the harmonics the freeze keeps matched (#694,
 [REDUCED_CUBIC.md](REDUCED_CUBIC.md) 10). None of their rows is affine, and Q and T − 3S are cancellations between the
 horizon series' rows. The Δ axis lies in span(V) to 0.9995. This fits "only the last node is felt" (below).
+Followed further along a/|a| by #677's chord (#698, [REDUCED_CUBIC.md](REDUCED_CUBIC.md) 11), the map at REF stays
+quadratic to 3×10⁻¹⁸ and has a resolved cubic, 19.2 |B a|/|a| per unit |c|², of the size its quadratic implies.
+Neither the chord (beyond about 10⁻¹⁸) nor Newton with a refactored LU (at 10⁻⁶) reaches |c| of 10⁻³, and the chord's
+pair test in its linear regime puts a fold of the strong block near |c| ≈ 5×10⁻¹⁷ (REF) and 10⁻¹⁷ (class A),
+inferred from a two-direction model.
 
 **Where the weakness lives in the layout.** Raw singular values are not comparable across layouts, since a node's
 rows carry its own gain. With rows and columns equilibrated (`hp/near_null_eq.py`, #502; `I502-mac/` at 811bbed3), the
