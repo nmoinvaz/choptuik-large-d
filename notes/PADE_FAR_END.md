@@ -1135,3 +1135,36 @@ Written into the script's `FROZEN` and here before the `control` and `real` stag
 | fits | a variant and class fit if M_min ≤ 20 at all three nodes; a variant fits if some class does |
 | verdict | the far end is named as the blocking ingredient if some far-end variant fits and no exponent variant does; the exponent if the reverse; both if both. If none fits, none of the tested moves gives a short twin |
 | context | χ at M = 20–22 of every scan; the sensitivity, each judged variant's chord2 plant in the κ⋆, β − 1 chord basis; the resolution, K1's plant in chord bases at \|P1\| = 1.80, 1.84, 1.86 and 1.90; K1's plant in the κ⋆ arc bases; the widened errors, where a changed judged verdict is reported as a discrepancy; J 1500 at ω∞, chord and arc. Reported, not judged |
+
+### 11.3 Results: the controls
+
+All runs used one process under `nice -n 10`, single-threaded, 2026-11-13 12:55–13:08 UTC, with `pade_twin_end.py` at
+37d9cbc4. The records are in the raw-data repository's `I684-mac/`. The first control run, at 40c370ab, stopped with a
+KeyError after K0 and K1 at ω/ω∞ = 0.99, because the C0 loop was handed the far ends of every node instead of its own.
+37d9cbc4 fixes that lookup and changes no criterion, and its log follows the first run's in `control.log`.
+
+| check | result | verdict |
+|---|---|---|
+| K0, the far ends | the ratio law within 3.2–5.7×10⁻⁵ of #541's four decimals; one pole past κ⋆ for each k and node, bit-identical to #541's | OK |
+| K1(a), #547's 1.85 plant in its own-end chord basis | χ = 4.3×10⁻³⁷ to 1.2×10⁻³⁶ at M = 6 | OK |
+| K1(b), the same plant in the κ⋆ chord basis | M_min = 21 and M_lo = 20 at every node | OK |
+| C0, 35 variants × 3 classes × 3 nodes | χ ≤ 1.3×10⁻³⁵ in all 315; every plant has M = 6, and fits σ₀–σ₁₂ to 3.1×10⁻⁴ or better | OK |
+| `control --mutate=farend` | K1(a) fails at every node (χ 2–5×10¹⁶); the 234 C0 with a moved far end fail (χ 7×10¹⁵ to 8×10¹⁶), and the 81 others pass (χ ≤ 3.5×10⁻³⁶); exit 1 | fires as frozen |
+| `control --mutate=exshift` | K1(a) (χ 2–5×10¹⁵) and all 315 C0 fail (χ ≥ 4×10¹⁴); exit 1 | fires as frozen |
+
+Context, not judged. Each number is M_min, the same at all three nodes unless a range is given.
+
+| plant | basis | M_min |
+|---|---|---|
+| #547's chord2 at 1.85 | its own far end | 6 |
+| | far end at \|P1\| = 1.84, 1.86, 1.90 | 18, 17, 17–18 |
+| | far end at \|P1\| = 1.80 | 19 |
+| | κ⋆ (\|P1\| = 1.675): chord, stepped arc, smooth arc | 21, 21, 21 |
+| each far-end variant's chord2 (ratio, pole8, pole9, pole10) | κ⋆, β − 1 chord | 21, 19, 20, 20 |
+| each exponent variant's chord2 (δ = ±0.1, ±0.3) | κ⋆, β − 1 chord | 16–17 |
+
+- **A far end within 0.05 of the truth still leaves a twin of 17–19 terms.** Only the exact far end gives the plant's
+  own 6. So a short twin by the frozen rule, M_min ≤ 20, places the far end only to about 0.1.
+- **A far end at 1.85 instead of κ⋆ costs the plant 15 terms, but not 23.** In the κ⋆ chord basis its χ at 22 terms is
+  7–9×10⁻⁴, where the real series has 9×10⁴.
+- **Any exponent shift of 0.1 or more costs 10–11 terms**, so the twins see the exponent too.
