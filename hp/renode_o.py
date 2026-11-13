@@ -24,7 +24,7 @@ horizon, the higher ones are not); and the start's pinned residual by block.
 
 Check (exit 1): after its refinement each refined node's block rows are below 1e-60 (max |F|), which holds only if
 the rows are the arriving state minus the node with unit weight. Control --mutate sign subtracts the rows instead,
-and the check must fail.
+and the check must fail. With --last f64 no new last node is refined, so --mutate is refused there (exit 1).
 """
 import argparse
 import os
@@ -81,6 +81,9 @@ def main():
     ap.add_argument("--threads", type=int, default=2)
     ap.add_argument("--mutate", default="", choices=("", "sign"))
     a = ap.parse_args()
+    if a.mutate and a.last == "f64":
+        # --last f64 refines no new last node, so the sign control has nothing to act on and could not fail (#673)
+        sys.exit("--mutate sign tests the refinement of a new node's rows; --last f64 refines none, so it is refused")
     out_path = os.path.join(a.raw, a.out)
     require_raw(out_path)
     sign = -1.0 if a.mutate == "sign" else 1.0
