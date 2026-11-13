@@ -466,21 +466,30 @@ chord.
   on a second curve (a short segment ending near P0 + κ⋆ = 2.03 + 1.24i or at 1.69 − 0.74i, or P0 + the main curve)
   holding 10⁻⁹ to 10⁻¹ of σ₂₂, were judged on three features of the real series: no 6 differential approximants
   agree past |t| = 1.65, the [k/k] poles past κ⋆ at k = 8–10, and no single-curve twin of fewer than 23 terms. None
-  reproduces it, and none matches two features at once. No plant has the far poles within 0.03 at all three orders
-  (the closest is 0.146 away). A set near P0 + κ⋆ scatters the approximants as the real series does, but its twins
-  misfit at least 290 times less in every basis. Only the set at 1.69 − 0.74i reaches the real misfit, at 0.1–1% of
-  σ₂₂ (notes/PADE_FAR_END.md §12).
+  reproduces it. No plant has the far poles within 0.03 at all three orders (the closest is 0.146 away). With the
+  zero factor at x_ref, a set near P0 + κ⋆ scattered the approximants but misfit at least 290 times less than the real
+  series, and only the set at 1.69 − 0.74i reached its misfit. Both comparisons carried the zero's offset, and #703
+  below redoes them (notes/PADE_FAR_END.md §12).
 - **The near end does not account for it (#689), and the zero factor accounts for its size only (#702).** On plants
   matched to σ₀–σ₁₂, a near-end exponent of ±0.25 or ±0.5, or #541's extrapolated near end, costs the κ⋆ twin 11–15
   terms, with χ ≤ 0.012 at 22 terms. The planted control on the exponent failed (17 terms where 19 were required), so
   the real twins were not refitted with a changed near end. The plants' zero factor sits at x_ref = 7.400 at ω∞, and
   the real series' own zero lies 5–7×10⁻³ from it at every node. With the zero there, located by fit or removed, the
   real chord twin still needs all 23 terms at every node. But its misfit at 22 terms falls from 9×10⁴ to 256–430, and
-  with the zero located no 20-term twin exists near it (l2 at least 1490 times √23). The far end at the ratio-law κ no
-  longer lowers the misfit. So most of the misfit quoted above is the zero's offset, and what is left, a few hundred
+  with the zero located no 20-term twin exists near it (l2 at least 1490 times √23). With the zero located again
+  together with it, the far end at the ratio-law κ no longer lowers the misfit. So most of the misfit quoted above is the zero's offset, and what is left, a few hundred
   error units, needs an ingredient the chord class with P0 and κ⋆ lacks (notes/PADE_FAR_END.md §13–14). The bullets
   above compare twins whose zero factor sits at x_ref. #672's and #684's conclusions survive in the chord class, but
   #667's margin for a set near P0 + κ⋆ does not.
+- **With the zero in place, a set near P0 + κ⋆ gives two of the three features (#703).** #667's plants were rebuilt
+  with their zero factor at the real series' located zero and judged against the real κ⋆ chord misfit there (402 at
+  ω∞). 35 plants match both the approximants' scatter and that misfit, within a factor 10, at all three nodes. Each
+  has a segment ending 0.25 past P0 + κ⋆ (|t| = 2.5–2.7), holding 2–12% of σ₂₂. With each plant's own zero located as
+  the real one was, its misfit at 20, 21 and 22 terms matches the real one within a factor 5. None has the far Padé
+  poles (d_P ≥ 0.136), so none reproduces the real series. The set at 1.69 − 0.74i reaches the real misfit only at
+  10⁻⁵–10⁻⁴ of σ₂₂, and never scatters the approximants. #547's plant with its far end 0.18 off still misfits
+  5×10⁵ times less than the real series. With the zero held, the ratio-law far end lowers the real misfit 1.7 times,
+  not 2.3–2.7 (notes/PADE_FAR_END.md §15).
 - **The real poles reach the chord sooner than either plant.** At k = 10 the poles with s ≤ 0.71 lie within 0.015 of
   the chord, and the last one, at s = 0.88, lies 0.074 from it, on the side away from the arc. J 1250 and J 1500 agree to
   0.03 in R. k = 11 is not determined by the data.
