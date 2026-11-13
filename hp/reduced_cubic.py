@@ -8,6 +8,7 @@
     cd hp && python3 reduced_cubic.py raysum OUT.json [OUT.json ...]     (the ray runs' summary, raysum's docstring)
     cd hp && python3 reduced_cubic.py rows RAWDIR DZ0 BASE [--threads=2] [--json=OUT]
     cd hp && python3 reduced_cubic.py rows planted [--seed=5] [--json=OUT] [--mutate=quadA|parity]
+    cd hp && python3 reduced_cubic.py rowsum OUT.json [OUT.json ...]     (the rows runs' summary)
 
 `rows` (#694) splits the weak left vectors U over the residual's rows, expanded on harmonics within each field of each
 block (row_harm: block.field.harmonic, e.g. horizon.p.k5c, and the phase row), and measures each row's second
@@ -1836,6 +1837,55 @@ def rows_scan(sysm, bas, opts, mutate, log, rec, dump, truth=None):
     return frozen_ok and tr_ok and h_ok and c3_ok, rec
 
 
+def rowsum(paths):
+    """the summary of rows runs (their --json files): per start the verdict, U's shares by block, the largest rows,
+    the pairing and the cancellations, each as the run stored it"""
+    for path in paths:
+        with open(path) as fh:
+            r = json.load(fh)
+        w = r["rows"]
+        lab, sh, q, Jr = w["labels"], w["share"], w["q"][-1], w["Jr"]
+        blk = {}
+        for x, s in zip(lab, sh):
+            b = x.split(".")[0]
+            blk[b] = blk.get(b, 0.0) + s
+        print(f"{os.path.basename(path)}: {r.get('label', r.get('dz0', 'planted'))}")
+        print(f"  share of |U| on affine rows {w['share_aff']:.4g} ({w['verdict']}; at h 1e-32 {w['share_aff_h32']:.4g}, "
+              f"{w['verdict_h32']}); against the largest q alone {w['share_glob']:.4g}, against |J_r| alone "
+              f"{w['share_own']:.4g}; worst weak vector {w['lam_min']:.3g}; rows linear by construction: share "
+              f"{w['share_frozen']:.3g}, all affine {w['frozen_ok']}")
+        print("  U by block: " + ", ".join(f"{b} {s:.4g}" for b, s in sorted(blk.items(), key=lambda t: -t[1])[:4]))
+        top = sorted(range(len(lab)), key=lambda i: -sh[i])[:8]
+        print("  largest rows: " + ", ".join(f"{lab[i]} {sh[i]:.3f} (q/|J_r| {q[i] / Jr[i]:.1e})" for i in top))
+        uw = [i for i in range(len(lab)) if sh[i] > 1e-6]
+        qj = [q[i] / Jr[i] for i in uw]
+        print(f"  rows with share > 1e-6: {len(uw)}, q/|J_r| {min(qj):.1e}..{max(qj):.1e}, q {min(q[i] for i in uw):.2e}.."
+              f"{max(q[i] for i in uw):.2e}")
+        if "pair" in w:
+            print(f"  pairing of the last two blocks {w['pair']:.2e}; |P_V e_Delta|^2 {w['PV_Delta']:.6f}; w_ee: "
+                  + ", ".join(f"{a} {b:.3f}" for a, b in w["wee_top"][:5]))
+        al = w.get("along")
+        if al:
+            for nm, d in al["contrib"].items():
+                line = (f"  {nm:<9} |U^T x| {d['UTx']:.3e}, no-cancellation {d['abs_all']:.3e}, ratio "
+                        f"{d['UTx'] / d['abs_all']:.2e}")
+                if "blocks" in w and nm in w["blocks"]:
+                    hb = w["blocks"][nm].get("horizon")
+                    if hb:
+                        line += f"; horizon block {hb[0]:.3e} of {hb[1]:.3e} ({hb[0] / hb[1]:.2e})"
+                    lb = [b for b in w["blocks"][nm] if b.startswith("node")]
+                    if lb:
+                        nb = w["blocks"][nm][lb[-1]]
+                        line += f"; {lb[-1]} {nb[0]:.3e} of {nb[1]:.3e}"
+                print(line)
+            print(f"  |U^T (T - 3S)(e)| / |U^T T(e)| {al['c3rel']:.2e}; w_ee h check {al['dwee']:.1e}, T {al['dT']:.1e}, "
+                  f"S {al['dS']:.1e}")
+        if "checks" in w:
+            print("  checks: " + ", ".join(f"{n} {'pass' if v else 'FAIL'}" for n, v in w["checks"].items()))
+        if "planted" in w:
+            print("  planted: " + ", ".join(f"{n} {'pass' if w['planted'][n] else 'FAIL'}" for n in ("pr1", "pr2", "pr3", "pr4")))
+
+
 def main_rows(args, opts, mutate, log, rec, dump):
     """rows RAWDIR DZ0 BASE or rows planted: the basis, then rows_scan"""
     if args[1:] == ["planted"]:
@@ -1895,6 +1945,9 @@ def main():
     mutate = opts.get("mutate", "")
     if args and args[0] == "raysum":
         raysum(args[1:])
+        return 0
+    if args and args[0] == "rowsum":
+        rowsum(args[1:])
         return 0
     modes = dict(run=("", "w0", "Ssign", "Sh", "hF"), planted=("", "w0", "Ssign", "Sh", "hF"), ray=("", "w0", "B"),
                  rows=("", "quadA", "parity"))
