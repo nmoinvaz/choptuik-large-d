@@ -1981,6 +1981,17 @@ def short_forms():
 
 
 @check
+@check
+def chain_reach():
+    """the README's reach of the large-D chain: a chain_fit row of hp/data/delta_all.csv at that D (#603)"""
+    import csv
+    rows = [r for r in csv.DictReader(open(os.path.join(ROOT, "hp/data/delta_all.csv"))) if r["kind"] == "chain_fit"]
+    D = min((float(r["D"]) for r in rows), key=lambda d: abs(d - 245.6366))
+    txt = [("README.md", "harmonics 5–13 of the centre field on a fit, to D = 245.6."),
+           ("README.md", "held on a fit of the full solutions, to D = 245.6.")]
+    return [("the chain's reach in the README", D, 245.6, 0.1, txt)]
+
+
 def lam_gauge_table():
     """notes/MODE_COUNT.md section 10: lam_g(D) from hp/data/lam_gauge.csv (hp/lam_gauge.py table), the D = 4 check
     against Reiterer and Trubowitz's constants (as solver/rt/mu_check.py holds them), the identity's three D (the CSV's

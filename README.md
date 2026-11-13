@@ -14,7 +14,7 @@ Papers (drafts, not yet reviewed):
 Choptuik's critical solution is the universal threshold between dispersal and black-hole formation for a massless
 scalar field. It is computed here as a periodic boundary-value problem in self-similar variables, in double-double
 precision across spacetime dimensions D from 3.044 to 73, and past 73 by a chain in quad- and octo-double that holds
-harmonics 5–13 of the centre field on a fit, to D = 222.
+harmonics 5–13 of the centre field on a fit, to D = 245.6.
 
 - One rational formula in 1/(D − 2) fits its echo period Δ(D) and critical exponent γ(D) for every D ≥ 4.
 - If Δ is analytic in 1/D, its limit is Δ∞ = 1.643893746 ± 1.5×10⁻⁸. That is finite, against the published
@@ -73,7 +73,7 @@ How it is done:
   solver in [`solver/`](solver/), with a Rust kernel for its residual (this crate), covers D = 3.6–40. A separate
   double-double (about 32-digit) solver in [`hp/`](hp/) reaches D = 67.77. It reaches 73.27 with the pinned runs, and
   78.12 in a layout where Δ is known to about 10⁻⁶. Past 73 the same residual is continued in D in quad- and
-  octo-double, with harmonics 5–13 of the centre field held on a fit of the full solutions, to D = 222.
+  octo-double, with harmonics 5–13 of the centre field held on a fit of the full solutions, to D = 245.6.
 - **Theory.** The large-D expansion, its Stokes multipliers and the inner problem at D = ∞ are in the Large-D section,
   with the scripts that check each step.
 - **Layout.** The physics is in this file, and the software is described at the end.
