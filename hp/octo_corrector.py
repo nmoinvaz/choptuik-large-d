@@ -200,7 +200,8 @@ def newton_od(s, z, tol=1e-40, it_max=12, max_halvings=8, verbose=True, mutate=0
     scale_c (f64, one per unknown): the test compares the corrections in the unknowns y = D_c^-1 z of the equilibrated
     system D_r J D_c (near_null_eq.py, #504), max |D_c^-1 dz_trial| < max |D_c^-1 dz| instead of the leading parts' max
     norms. A row scaling does not change the Newton correction, a column scaling does. Each record then also carries
-    dz_eq, dz_eq_new and every trial (lam, max |F|, both sides of both tests). verbose >= 2 prints every trial. trace: a
+    dz_eq, dz_eq_new and every trial (lam, max |F|, both sides of both tests). verbose >= 2 prints every trial, verbose 1
+    the refused ones (#666). trace: a
     list that gets each trial's leading parts of dz and of its correction (#504's planted check).
 
     accept="natural": Deuflhard's natural monotonicity test (Newton Methods for Nonlinear Problems, Springer 2004, sec.
@@ -308,14 +309,14 @@ def newton_od(s, z, tol=1e-40, it_max=12, max_halvings=8, verbose=True, mutate=0
             except ValueError:          # a non-finite or singular Jacobian at the trial point
                 good = False
             ok = good and (size(proj(stt[0])) < nd or omax(stt[1:3]) <= tol)
-            if eq or verbose >= 2 or trace is not None:
+            if eq or verbose >= 2 or trace is not None or (verbose and not ok):
                 dt = proj(stt[0]) if good else None
                 tr = dict(lam=lam, good=bool(good), accepted=bool(ok), F=omax(stt[1:3]) if good else float("nan"),
                           dz=rec["dz"], dz_t=size(dt, False) if good else float("nan"), seconds=round(time.time() - t1, 2))
                 if eq:
                     tr.update(dz_eq=nd, dz_eq_t=size(dt, True) if good else float("nan"))
                     rec["trials"].append(tr)
-                if verbose >= 2:
+                if verbose >= 2 or (verbose and not ok):     # every trial at verbose 2, the refused ones at 1 (#666)
                     line = (f"    on {it} trial lam {lam:g}: max|F| {tr['F']:.2e}; raw |dz_t| {tr['dz_t']:.3e} vs |dz| {tr['dz']:.3e}"
                             f" ({'<' if tr['dz_t'] < tr['dz'] else 'not <'})")
                     if eq:
@@ -332,7 +333,7 @@ def newton_od(s, z, tol=1e-40, it_max=12, max_halvings=8, verbose=True, mutate=0
             rec.update(lam=0.0, seconds=round(time.time() - t0, 2))
             hist.append(rec)
             if verbose:
-                print(f"  on {it}: |F| {nf:.2e}, |dz| {rec['dz']:.1e}: no trial step accepted, stopping", flush=True)
+                print(f"  on {it}: |F| {nf:.2e}, |dz| {rec['dz']:.2e}: no trial step accepted, stopping", flush=True)
             return z, hist, False
         z, st = zt, stt
         rec.update(lam=lam, F_new=omax(st[1:3]), dz_new=float(np.abs(proj(st[0])[0]).max()), seconds=round(time.time() - t0, 2))
@@ -340,7 +341,7 @@ def newton_od(s, z, tol=1e-40, it_max=12, max_halvings=8, verbose=True, mutate=0
             rec["dz_eq_new"] = size(proj(st[0]))
         hist.append(rec)
         if verbose:
-            print(f"  on {it}: |F| {nf:.2e} -> {rec['F_new']:.2e}, |dz| {rec['dz']:.1e} -> {rec['dz_new']:.1e}, lam {lam:g}, "
+            print(f"  on {it}: |F| {nf:.2e} -> {rec['F_new']:.2e}, |dz| {rec['dz']:.2e} -> {rec['dz_new']:.2e}, lam {lam:g}, "
                   f"dDelta {rec['dDelta']:+.2e}, piv {st[3]:.1e}..{st[4]:.1e}, {rec['seconds']} s"
                   + (f"; |dz/D_c| {nd:.1e} -> {rec['dz_eq_new']:.1e}" if eq else ""), flush=True)
         small = small + 1 if (lam_stall and lam <= lam_stall) else 0

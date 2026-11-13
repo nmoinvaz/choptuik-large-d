@@ -52,6 +52,9 @@ RE_STALL = re.compile(r"^\s+on (\d+): lam at or below .* \(stalled\)")
 RE_JUNK = re.compile(rf"^\s+on (\d+): projected correction below .* converged at \|F\| ({_NUM})")
 RE_TRIAL = re.compile(rf"^\s+on (\d+) trial lam ({_NUM}): max\|F\| ({_NUM}); simplified correction / \|dz\| = "
                       rf"({_NUM}) \(bound ({_NUM})\); (accepted|refused)")
+# the default test's refused trial, printed at verbose 1 from #666 on (every trial at verbose 2)
+RE_TRIAL_OWN = re.compile(rf"^\s+on (\d+) trial lam ({_NUM}): max\|F\| ({_NUM}); raw \|dz_t\| ({_NUM}) vs \|dz\| "
+                          rf"({_NUM}) \((?:<|not <)\).*?; (accepted|refused), ({_NUM}) s")
 RE_ODLINE = re.compile(r"^\s+octo-double Newton: (\d+) steps, .*?, (converged|not converged);")
 RE_ATT = re.compile(rf"^\s+a ({_NUM}) -> D ({_NUM}): predicted \|F\| ({_NUM}), (\w+) (\d+) steps -> ({_NUM}) "
                     rf"\(tol ({_NUM})(, stall accepted)?.*?moved ({_NUM}), ({_NUM}) s")
@@ -112,7 +115,13 @@ def parse_log(text):
         m = RE_TRIAL.match(line)
         if m and cur is not None:
             cur["trials"].append(dict(it=int(m[1]), lam=float(m[2]), F=float(m[3]), theta=float(m[4]),
-                                      bound=float(m[5]), accepted=m[6] == "accepted"))
+                                      bound=float(m[5]), accepted=m[6] == "accepted", test="natural"))
+            continue
+        m = RE_TRIAL_OWN.match(line)
+        if m and cur is not None:
+            # theta here is the trial's own correction over dz, which the default test bounds by 1
+            cur["trials"].append(dict(it=int(m[1]), lam=float(m[2]), F=float(m[3]), theta=float(m[4]) / float(m[5]),
+                                      bound=1.0, accepted=m[6] == "accepted", test="own"))
             continue
         m = RE_ODLINE.match(line)
         if m and cur is not None:
@@ -358,11 +367,18 @@ class Planted:
         return [si + yi for si, yi in zip(self.xs, y)]
 
 
+# the log format planted_newton prints: "old", newton_od before #666 (|dz| to 2 digits, no trial lines at verbose 1),
+# or "new" (|dz| to 3 digits, and a line per refused trial)
+LOGFMT = dict(fmt="new")
+
+
 def planted_newton(P, x, tol=1e-60, it_max=12, max_halvings=8, lam_stall=0.04, out=print):
-    """newton_od's iteration with its default ('own') test, printing its lines; returns (x, records, converged)"""
+    """newton_od's iteration with its default ('own') test, printing its lines in LOGFMT's format; returns (x,
+    records, converged)"""
     mp = P.mp
     st = P.newton(x)
     hist, small = [], 0
+    dzf = ".1e" if LOGFMT["fmt"] == "old" else ".2e"
 
     def nmax(v):
         return float(max(abs(t) for t in v))
@@ -383,15 +399,18 @@ def planted_newton(P, x, tol=1e-60, it_max=12, max_halvings=8, lam_stall=0.04, o
             stt = P.newton(xt)
             if nmax(stt[0]) < nd or nmax(stt[1]) <= tol:
                 break
+            if LOGFMT["fmt"] == "new":
+                out(f"    on {it} trial lam {float(lam):g}: max|F| {nmax(stt[1]):.2e}; raw |dz_t| {nmax(stt[0]):.3e} vs "
+                    f"|dz| {nd:.3e} (not <); refused, 0.01 s")
             lam /= 2
         else:
             hist.append(dict(rec, lam=0.0))
-            out(f"  on {it}: |F| {nf:.2e}, |dz| {nd:.1e}: no trial step accepted, stopping")
+            out(f"  on {it}: |F| {nf:.2e}, |dz| {nd:{dzf}}: no trial step accepted, stopping")
             return x, hist, False
         x, st = xt, stt
         rec.update(lam=float(lam), F_new=nmax(st[1]), dz_new=nmax(st[0]), seconds=0.01)
         hist.append(rec)
-        out(f"  on {it}: |F| {nf:.2e} -> {rec['F_new']:.2e}, |dz| {rec['dz']:.1e} -> {rec['dz_new']:.1e}, "
+        out(f"  on {it}: |F| {nf:.2e} -> {rec['F_new']:.2e}, |dz| {rec['dz']:{dzf}} -> {rec['dz_new']:{dzf}}, "
             f"lam {float(lam):g}, dDelta {rec['dDelta']:+.2e}, piv {float(st[2]):.1e}..{float(st[3]):.1e}, "
             f"{rec['seconds']} s")
         small = small + 1 if (lam_stall and lam <= lam_stall) else 0
@@ -423,6 +442,21 @@ def planted_log(P, starts, out):
 
 
 def selftest(mutate="", log=None):
+    """the planted checks on both log formats (LOGFMT): each must pass, and a mutation must fail on both"""
+    oks, lines, last = [], [], ""
+    for fmt in ("old", "new"):
+        LOGFMT["fmt"] = fmt
+        print(f"== log format: {fmt}", flush=True)
+        ok, ln, last = _selftest(mutate, log if fmt == "new" else None)
+        oks.append(ok)
+        lines += [f"== log format: {fmt}"] + ln
+    ok = all(oks)
+    print(f"selftest on both formats: {'PASS' if ok else 'FAIL'} (old {'PASS' if oks[0] else 'FAIL'}, new "
+          f"{'PASS' if oks[1] else 'FAIL'})", flush=True)
+    return ok, lines, last
+
+
+def _selftest(mutate="", log=None):
     import io
     import mpmath as mp
     mp.mp.dps = 110
@@ -464,6 +498,32 @@ def selftest(mutate="", log=None):
             f"{'' if good or not judged else '  <- outside the factor 2'}")
     say(f"  (P1) {'PASS' if p1 else 'FAIL'}: [omega]_0 within a factor 2 of the planted omega for every h_0 <= 0.5")
     ok_all &= p1
+    # (P4) the trial lines of newton_od's default test (octo_corrector.py's format, #666): one attempt with a plain,
+    # an equilibrated and a non-finite trial, each parsed with its ratio |dz_t| / |dz|
+    planted_trials = [(1.0, 4.1e-25, 2.345e-30, 1.5e-30, False, "refused"), (0.5, 3.0e-27, 1.234e-30, 1.5e-30, True,
+                      "accepted"), (0.25, float("nan"), float("nan"), 1.5e-30, False, "refused")]
+    tl = ["step 0: D 250.0, pivots 1.0e-28..1.0e+34, |z_1| 3.50e-04, |z_N| 1.00e-25, ratios 2-5 1 1 1 1, a_max 2.000, 1 s",
+          "    a 0.5000: re-seeded (ok), 0.1 s"]
+    for lam, F, dzt, dz, eq, verdict in planted_trials:
+        line = (f"    on 0 trial lam {lam:g}: max|F| {F:.2e}; raw |dz_t| {dzt:.3e} vs |dz| {dz:.3e} "
+                f"({'<' if dzt < dz else 'not <'})")
+        if eq:
+            line += f"; eq |dz_t/D_c| {dzt * 7:.3e} vs |dz/D_c| {dz * 7:.3e} ({'<' if dzt < dz else 'not <'})"
+        line += f"; {verdict}, 50.1 s"
+        tl.append(line.replace("raw |dz_t|", "raw dz_t") if mutate == "trials" else line)
+    tl += ["  on 0: |F| 1.00e-34 -> 3.00e-27, |dz| 1.50e-30 -> 1.23e-30, lam 0.5, dDelta +1.0e-31, piv 1.0e-28..1.0e+34, "
+           "50.0 s", "  on 1: |F| 3.00e-27, |dz| 1.23e-30: no trial step accepted, stopping",
+           "    a 0.500 -> D 250.5: predicted |F| 1.00e+00, od 2 steps -> 3.00e-27 (tol 1.0e-17), Delta 1.000000000000 "
+           "(formula diff +0.0e+00), moved 1.0e-30, 101 s"]
+    a4 = parse_log("\n".join(tl))
+    got = a4[0]["trials"] if len(a4) == 1 else []
+    p4 = len(got) == len(planted_trials) and all(
+        t["test"] == "own" and t["lam"] == lam and t["accepted"] == (v == "accepted")
+        and ((math.isnan(t["theta"]) and math.isnan(dzt)) or abs(t["theta"] - dzt / dz) <= 1e-3 * dzt / dz)
+        for t, (lam, F, dzt, dz, eq, v) in zip(got, planted_trials))
+    say(f"  (P4) {'PASS' if p4 else 'FAIL'}: {len(got)} of {len(planted_trials)} planted trial lines parsed, with "
+        f"their lam, verdict and |dz_t| / |dz|")
+    ok_all &= p4
     # (P2) the order of the first step's contraction: theta_0 ~ |dz_0|^beta, beta 1 (quadratic fold), 2 (cubic)
     p2 = True
     for kind, ys, beta_true in (("quad", [1e-34, 1e-33, 1e-32, 1e-31, 1e-30], 1.0),
