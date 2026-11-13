@@ -1641,6 +1641,9 @@ def bridge_scan(sysm, bas, log, out, dump, g00, floor0, fee2=None, wee=None, t_t
             E = [(x + y) / 2 for x, y in zip(deps[1], deps[-1])]
             O = [(x - y) / 2 for x, y in zip(deps[1], deps[-1])]
             row["E"], row["O"] = float(nrm(E) / (t * nBe)), float(nrm(O) / (t * nBe))
+            # the parts as vectors in units of |B c|, at 30 digits (where an order-1 term hides the cubic in |O|)
+            row["Ev"] = [mp.nstr(x / (t * nBe), 30) for x in E]
+            row["Ov"] = [mp.nstr(x / (t * nBe), 30) for x in O]
             row["fl"] = float(max(floor0, mp.mpf(row["errp"]) * t * nBe, mp.mpf(row["errm"]) * t * nBe) / (t * nBe))
         rows.append(row)
         nan = float("nan")
