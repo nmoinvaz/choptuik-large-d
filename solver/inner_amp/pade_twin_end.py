@@ -319,7 +319,7 @@ def run_control(outdir, mut=None):
         k1 &= out["a_pass"] and out["b_pass"]
         # C0 of every variant basis
         for v in JUDGED + CONTEXT:
-            P1, ex, moves = spec(v, wf, ends)
+            P1, ex, moves = spec(v, wf, ends[wf])
             Pb, exb = mutate_spec(P1, ex, moves, mut)
             for cls, kind in CLASSES:
                 plv = EndPlant(wf, kind, real[wf], P1, ex)
@@ -392,7 +392,7 @@ def run_real(outdir, mut=None):
         sig = real[wf][:N23]
         log.dump(rec)
         for v in group:
-            P1, ex, _ = spec(v, wf, ends)
+            P1, ex, _ = spec(v, wf, ends[wf])
             for cls, _ in CLASSES:
                 fit = end_basis(wf, cls, P1, ex, DPS_FIT)
                 chk = end_basis(wf, cls, P1, ex, DPS_CHECK)
