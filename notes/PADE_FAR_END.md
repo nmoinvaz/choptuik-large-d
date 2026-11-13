@@ -1896,3 +1896,74 @@ Seen before the freeze, and disclosed.
   and from x_ref. Both reached the same zero, 2.4×10⁻⁶ from ZLOC, where χ₂₂ = 31.7 and l2 at 20 terms is 497. Its
   (c′) value was not computed. Because relocation can move a plant's misfit, it is judged here as (c″), apart from
   (c′), and not left as context as first drafted.
+
+### 15.3 Results: the controls
+
+All runs used one process under `nice -n 10`, single-threaded, 2026-11-13 from 17:55 UTC, with `pade_second_zero.py`
+at 47a37bfa. The records are in the raw-data repository's `I703-mac/` (controls, mutations and the far stage at
+3a52690).
+
+| check | result | verdict |
+|---|---|---|
+| selftest 1, the new bases at x_ref against `end_basis` | equal bit for bit in the chord, stepped-arc and smooth-arc classes | OK |
+| selftest 2, the η = 0 chord2 plant at ZLOC against `NearPlant` | σ₀–σ₃₁ identical | OK |
+| selftest 3, the locator on a planted zero 3.6×10⁻³ from its start | found to 9.5×10⁻⁵⁵ in 5 steps | OK |
+| selftest `--mutate=gn` | off by 3.6×10⁻³; exit 1 | fires |
+| R1, the real m_DA | 2, 1 and 1 | OK |
+| R2, #541's far ends | the ratio law within 3.2–5.7×10⁻⁵, the poles past κ⋆ bit-identical | OK |
+| R3z, the real χ₂₂ by projection | equal to §14's zfit and nozero values within 1.1×10⁻¹⁶ relative; M_min = M_lo = 23 and C1 in both | OK |
+| R4z, the η = 0 plants at ZLOC | σ₀–σ₃₁ identical to the reference plants, chord2 and arc, at every node | OK |
+| R5, the locator on the real series from x_ref | §14's zfit zero to 5.9–8.8×10⁻¹² in 6 steps, with the same l2 at 20 terms | OK |
+| J+, the real series judged as a plant | passes (a), (b) and (c′) at every node | OK |
+| J−, the η = 0 plants at ω∞ | M_min = 6 in their own κ⋆ basis at ZLOC (χ₂₂ ≈ 3×10⁻⁴⁷); m_DA 11 and 10, d_P 0.219 and 0.225; both fail the judge | OK |
+| `control --mutate=zero` | J− and R4z fail; exit 1 | fires |
+| `control --mutate=bzero` | R3z and J− fail; exit 1 | fires |
+| `control --mutate=judge` | each of J+'s three parts fails; exit 1 | fires |
+
+R5 is an independent check of §14's located zero. Gauss–Newton with the coefficients projected out shares only the
+objective, l2 at 20 terms, with §14's Nelder–Mead search, and the two agree to 10⁻¹¹ at every node. Context: the
+η = 0 plants' [11/11] Padé zero lies 0.9–1.4×10⁻⁵ from ZLOC, as §13.4 calibrated it on other plants.
+
+The real series' χ₂₂ at ZLOC in each basis, the references of (c′) and of the context ratios:
+
+| ω/ω∞ | κ⋆ chord, arc, smooth | ratio-law κ | k = 8 pole | k = 9 pole | k = 10 pole | chord, no zero factor |
+|---|---|---|---|---|---|---|
+| 0.99 | 411, 529, 529 | 237, 464, 440 | 276, 452, 444 | 234, 439, 421 | 196, 440, 403 | 269 |
+| 1.00 | 402, 513, 513 | 235, 435, 421 | 277, 437, 433 | 229, 414, 403 | 191, 406, 383 | 256 |
+| 1.01 | 427, 537, 539 | 254, 440, 433 | 306, 459, 458 | 248, 423, 418 | 206, 404, 393 | 260 |
+
+Each far-end cell is chord, stepped arc, smooth arc. The zero was located in the κ⋆ chord class only (§14), so the
+arc and far-end columns are at that zero, not at each basis' own.
+
+### 15.4 Results: #684's comparison with the zero in place
+
+`pade_second_zero.py far`, 18:02–18:07 UTC.
+
+| check | ω/ω∞ = 0.99, 1.00, 1.01 | verdict |
+|---|---|---|
+| K1z(a), #547's 1.85 plant at ZLOC in its own-end chord basis at ZLOC | χ = 4.8×10⁻³⁷, 1.0×10⁻³⁶, 2.9×10⁻³⁷ | OK |
+| K1z(b), the same plant in zk/chord | M_min = 21 at every node, as in §11.3 | OK |
+| C1 on every scan of the stage | passes | OK |
+| `far --mutate=farend` | K1z(a) fails at every node; exit 1 | fires |
+
+| plant at ZLOC, in zk/chord | M_min | χ₂₂ | χ₂₂ / χ₂₂(real) |
+|---|---|---|---|
+| #547's chord2, far end at 1.85 (K1z) | 21 | 8.5, 7.8, 7.1 ×10⁻⁴ | 2.1, 2.0, 1.7 ×10⁻⁶ |
+| far end at the ratio-law κ | 21 | 7.3, 5.6, 4.2 ×10⁻⁴ | 1.8, 1.4, 1.0 ×10⁻⁶ |
+| far end at the k = 8 pole | 19 | 3–8×10⁻⁷ | 0.7–2.0×10⁻⁹ |
+| far end at the k = 9 pole | 20 | 1.2–2.1×10⁻⁵ | 2.8–5.0×10⁻⁸ |
+| far end at the k = 10 pole | 20 | 1.9–3.6×10⁻⁴ | 4.4–8.7×10⁻⁷ |
+
+The real series at ZLOC, relative to its κ⋆ chord χ₂₂: the ratio-law κ gives 0.58–0.59, the k = 8, 9, 10 poles
+0.67–0.72, 0.57–0.58 and 0.48, and β − 1 ∓ 0.3 changes χ₂₂ by at most 0.1%.
+
+| statement | result | verdict |
+|---|---|---|
+| S1 (#684): the far end alone does not account for the real misfit | every far-end plant misfits 10⁻⁹ to 2×10⁻⁶ times the real | survives |
+| S2 (#684): the ratio-law κ or the k = 10 pole lowers the real χ₂₂ 2.3–2.7 times | 1.7 and 2.1 times at a fixed zero | fails, a discrepancy |
+| S2b (#684): the far end matters far more than the exponent | the far end moves χ₂₂ by about 40%, ±0.3 in the exponent by at most 0.1% | survives |
+| S3 (#684): the real misfit stays above 3×10⁴ error units | 191–427 in every far-end chord basis at ZLOC | fails, a discrepancy (§14 found it first) |
+
+S2 depends on the zero. Held at ZLOC, the far end still lowers the real misfit, by 1.7–2.1 times. §14's zfitratio
+located the zero again together with the ratio-law far end and found χ₂₂ 5–10% higher. So whether moving the far end
+out helps depends on whether the zero is located again with it.
