@@ -156,6 +156,10 @@ the strong-solved weak residual is affine with slope B + L, plus a quadratic of 
 no cubic or quartic is resolved. 3max|S| = max|T| at all four. At c = a it leaves 7.9×10⁻⁷ |B a| at the class A
 start, set by L, the coupling through the start's own strong correction, and max|F| there is 5.4×10⁻⁶⁶. Numerical
 evidence at four starts. #674 tests the corrector.
+The weak left vectors live on the last matching, half on the Taylor arrival at the last node and half on the horizon
+series there, with that node's state cancelled; within it, on the harmonics the freeze keeps matched (#694,
+[REDUCED_CUBIC.md](REDUCED_CUBIC.md) 10). None of their rows is affine, and Q and T − 3S are cancellations between the
+horizon series' rows. The Δ axis lies in span(V) to 0.9995. This fits "only the last node is felt" (below).
 
 **Where the weakness lives in the layout.** Raw singular values are not comparable across layouts, since a node's
 rows carry its own gain. With rows and columns equilibrated (`hp/near_null_eq.py`, #502; `I502-mac/` at 811bbed3), the
