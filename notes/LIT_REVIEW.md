@@ -1651,6 +1651,9 @@ p-factor Newton method with p = 3 assumes an exactly singular F′(x̄) and its 
   vanishes.
 - **Update (#531).** Schnabel and Frank (as their 1983 report) and Fischer, Izmailov and Solodov (2021) are now read,
   and the other works of this list are recorded as not obtained, in the addendum of issue #531 below.
+- **Update (#528).** At #499's two D 242.5146 starts, 3max|S| = max|T| to four digits and max|T − 3S|/max|T| =
+  1.6×10⁻¹⁹. With the strong rows solved, the reduced map is affine and its root is Newton's first move
+  (notes/REDUCED_CUBIC.md). Design 2's "g′(c*) nonsingular" holds, with g′ = B.
 
 ### Discrepancies and proposed text (for the coordinator)
 

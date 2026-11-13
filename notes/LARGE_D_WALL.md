@@ -120,20 +120,17 @@ the pinned system: share 1.0 for accepted and refused attempts alike, at D 242.5
 #499 and #513; `I499-mac/` at ea4cd55e and fe30a3c6). Its rebuild check passes on every attempt, and its control,
 the kernel rebuilt at D + 10⁻⁶, fails on every attempt.
 
-**The weak rows are not the obstacle.** On those four directions the reduced system is
-B(c − a) + ½Q(c, c) + T(c, c, c)/6 = 0, with a the first move's coefficients.
-- Down to h = 10⁻²⁴ the quadratic term Q = UᵀF″(vⱼ, vₖ) is lost in the differences' truncation, which falls like h²
-  (6.3×10²⁰, 10¹⁶ and 10¹² at h = 10⁻²⁰, 10⁻²² and 10⁻²⁴). At h = 10⁻³¹ and 10⁻³² it is resolved, agreeing to
-  1.3×10⁻⁶ and 2.3×10⁻⁶. Its largest entry is 5.4×10⁴ at the accepted attempt and 2.75×10⁴ at the refused one,
-  27 to 54 times the scale at which #527 estimated it would matter (#529; `I529-win2/` at dcde13a4). So Q is not
-  zero. The roots below were found with Q set to 0, but each was checked against the actual weak residual, which
-  includes every order.
+**The weak rows are not the obstacle.** On the affine subspace z0 + Vc of those four directions the weak residual is
+B(c − a) + ½Q(c, c) + T(c, c, c)/6, with a the first move's coefficients.
+- Q = UᵀF″(vⱼ, vₖ) at k = 4 stays below the differences' h² truncation down to h = 10⁻³³ (≲ 6.4×10⁻⁶; #528,
+  `I528-mac/` at 625997f9). #529's entries of 2.75×10⁴ and 5.4×10⁴ were formed at k = 5, with the unconverged fifth
+  direction (`I529-win2/` at dcde13a4).
 - The weak subspace is four-dimensional with a clean gap: σ₅ lies at least 1.2×10⁶ above σ₄ at both attempts, though
   its own value does not converge (1.2–7.1×10⁻¹⁹ over 16 to 256 iterations; #529).
 - The cubic term is resolved: max|UᵀF‴| is 1.63×10³³ at D 242.55 and 4.46×10³¹ at D 232.13, the same at h = 10⁻²³ and
   10⁻²⁴ to 3×10⁻¹⁸.
-- At D 242.55 the root nearest the move is real, at about half of |a|, where the actual weak residual is 0.4% of
-  |B a|. At D 232.13 the root is the linear guess (4×10⁻⁹ and 3×10⁻¹¹ of |B a|), and win_d10 refused there anyway.
+- At D 242.55 the affine map's root nearest the move is real, at about half of |a|, where its residual is 0.4% of
+  |B a|. It is not a root of the system (below). At D 232.13 the root is the linear guess (4×10⁻⁹ and 3×10⁻¹¹ of |B a|), and win_d10 refused there anyway.
 - A corrector that first puts the weak part on that root (`hp/weak_corrector.py`, #499; `I499-mac/` at 19958783)
   is refused like newton_od. The control reproduces the attempt's sequence, 9.04×10⁻³⁶ → 7.27×10⁻²⁶ → 3.63×10⁻²⁶ →
   3.18×10⁻²⁶ with no trial accepted. The weak-first start stands at 2.02×10⁻²⁶ and stops at 1.35×10⁻²⁶.
@@ -145,14 +142,16 @@ moves' ratio, 3.50, so max|F| ≈ 1.0×10³³ |c|². At both points the weak row
 
 A third point comes from newton_od's first step from the weak-first start (`I499-mac/` at af80d7a1). That step again
 lies entirely on the weak directions (2-norm 3.69×10⁻³⁰, 3.0×10⁻⁵⁶ off them). The law predicts 1.43×10⁻²⁶ after it,
-and the run reached 1.35×10⁻²⁶. The coupling back runs through the mixed curvature UᵀF″(Vc, x) with x strong. The
-first move's 0.4% off the weak directions raises the weak residual from 0.004 to 0.52 of |B a|, which UᵀJx = 0 cannot
-do. So each weak correction raises the strong rows quadratically, and each strong correction feeds back into the weak
-rows. Three points, so numerical evidence.
+and the run reached 1.35×10⁻²⁶.
 
-That feedback is the term S of the reduced coefficient T − 3S (Kuznetsov's form, [LIT_REVIEW.md](LIT_REVIEW.md),
-#527). #499 measured T alone. #528 measures S, #529 the mixed block, and #530 tests a corrector that solves the strong
-rows before the weak ones.
+With the strong rows solved the feedback cancels the cubic (#528, [REDUCED_CUBIC.md](REDUCED_CUBIC.md)). The
+strong-row term of the reduced coefficient T − 3S (Kuznetsov's form, [LIT_REVIEW.md](LIT_REVIEW.md), #527) has
+3max|S| = max|T| to four digits, and max|T − 3S| = 1.6×10⁻¹⁹max|T|, below the differences' resolution. On the
+strong-solved manifold the weak residual is affine to 2.7×10⁻²⁵ of |B a|, and its root is the first move itself, c = a.
+Three chord steps through the start's LU then leave max|F| = 2.0×10⁻⁵¹ at the refused attempt. The root at half of |a|
+leaves 0.18 |B a| there. In the start's frame the first move's rest moves the weak residual only from 0.0044 to 0.0041
+of |B a|: #499's 0.52 used U and B from the LU of newton_od's last trial point. Numerical evidence at two starts. #530
+tests the corrector.
 
 **Where the weakness lives in the layout.** Raw singular values are not comparable across layouts, since a node's
 rows carry its own gain. With rows and columns equilibrated (`hp/near_null_eq.py`, #502; `I502-mac/` at 811bbed3), the
