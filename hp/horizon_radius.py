@@ -56,7 +56,9 @@ replace it (notes/HORIZON_RADIUS.md).
     cd hp && python3 horizon_radius.py run OUT.jsonl STATE.npz [...] [--kmax 160] [--precs dd,qd,od] [--deltas 0]
         [--threads 2] [--coef DIR]     (OUT in a task folder of the raw-data repository; --allow_unraw for scratch)
     cd hp && python3 horizon_radius.py ladder PRED.npz STATE.npz [--threads 2]   (the re-seed's start for the polish)
-    cd hp && python3 horizon_radius.py csv OUT.csv IN.jsonl [...]
+    cd hp && python3 horizon_radius.py pdelta PRED.npz STATE.npz [PRED STATE ...] [--reseed anm_run.jsonl ...]
+    cd hp && python3 horizon_radius.py polish4 PRED.npz STATE.npz [--threads 2]  (the polish from the prediction's data)
+    cd hp && python3 horizon_radius.py csv OUT.csv IN.jsonl [...] [--coef DIR] [--long LONG.jsonl --coef_long DIR]
     cd hp && python3 horizon_radius.py summary IN.jsonl [...] [--reseed anm_run.jsonl ...] [--coef DIR]
 """
 import json
@@ -76,6 +78,7 @@ PARITY = ("odd", "odd", "even", "even")
 W = 40
 WINDOWS = (60, 100, 130, 160)
 NHARM = 4                    # harmonics reported per field: the first NHARM its parity allows
+HARM_CSV = ("60", "130")     # the windows whose per-harmonic rows the csv keeps
 ETA = 2.0 ** -106
 U0 = 0.3
 TOL = 0.05
@@ -338,6 +341,55 @@ class Series:
 
 
 # ------------------------------------------------------------------ controls on real data
+def exact_rel(parts_a, parts_b):
+    """(a - b) / |b| per entry, a and b given as lists of parts (any number), summed exactly in mpmath"""
+    out = []
+    for i in range(len(parts_a[0])):
+        a = mp.fsum([mp.mpf(float(p[i])) for p in parts_a])
+        b = mp.fsum([mp.mpf(float(p[i])) for p in parts_b])
+        out.append(float((a - b) / abs(b)))
+    return np.array(out)
+
+
+def pdelta(pairs, reseed_jsonl):
+    """the horizon data of stored predictions (anm_run.py --save_pred 1) against the converged states at the same
+    D_str, exactly: the relative error of a_h and m_h (max over lanes; a_h's lane mean, the mass direction of 13.6),
+    for the prediction's two leading parts (what the double-double re-seed ladder starts from) and for all its parts;
+    beside each, the re-seed's outcome at that D from the chain's records (the attempt with the same D_str)"""
+    from hpkernel.driver import load_q
+    outcome = {}
+    for p in reseed_jsonl:
+        for line in open(p):
+            r = json.loads(line)
+            for at in r.get("attempts", []):
+                if at.get("reseed"):
+                    outcome.setdefault(at["D_str"], []).append(bool(at["reseed"]["ok"]))
+    rows = []
+    for pred, state in pairs:
+        z4, meta = load_q(pred)
+        zs, ms = load_state(state)
+        if meta["D_str"] != ms["D_str"]:
+            print(f"{os.path.basename(pred)}: D_str differs from {os.path.basename(state)}, skipped", flush=True)
+            continue
+        M, K = int(meta["M"]), len(meta["nodes"])
+        mh = 2 * M + 4 * M * K
+        sl = slice(mh, mh + 2 * M)
+        truth = [np.asarray(p)[sl] for p in zs]
+        r2 = exact_rel([np.asarray(z4[0])[sl], np.asarray(z4[1])[sl]], truth)
+        r4 = exact_rel([np.asarray(p)[sl] for p in z4], truth)
+        n = float(meta["D"]) - 2.0
+        G = meta["nodes"][-1] ** -(n - 1.0)
+        rec = dict(pred=os.path.basename(pred), D=float(meta["D"]), a=meta.get("a"), G=G,
+                   dd_ah_max=float(np.abs(r2[M:]).max()), dd_ah_mean=float(r2[M:].mean()), dd_mh_max=float(np.abs(r2[:M]).max()),
+                   all_ah_max=float(np.abs(r4[M:]).max()), all_ah_mean=float(r4[M:].mean()),
+                   reseed_ok=outcome.get(meta["D_str"]))
+        rows.append(rec)
+        print(f"{rec['D']:9.4f} a {rec['a']:.4f}: a_h error of the prediction, its two leading parts: max {rec['dd_ah_max']:.1e}, "
+              f"lane mean {rec['dd_ah_mean']:+.1e} (times G {rec['dd_ah_max'] * G:.1e}); all its parts: max {rec['all_ah_max']:.1e}; "
+              f"m_h {rec['dd_mh_max']:.1e}; re-seed at this D {rec['reseed_ok']}", flush=True)
+    return rows
+
+
 def ladder(pred_path, state_path, threads):
     """the re-seed (reseed.Reseeder, qd=True, as anm_run.py --reseed_q 1 builds it) on a stored prediction whose
     corrector converged to state_path at the same D: the double-double ladder's horizon data, the start of the
@@ -362,18 +414,44 @@ def ladder(pred_path, state_path, threads):
     rs.invert_q = spy
     t0 = time.time()
     zr, diag = rs.reseed(z4, verbose=True)
-    true = np.asarray(zs[0][o["mh"]:o["mh"] + 2 * M]) + np.asarray(zs[1][o["mh"]:o["mh"] + 2 * M])
+    sl = slice(o["mh"], o["mh"] + 2 * M)
+    truth = [np.asarray(p)[sl] for p in zs]
     rec = dict(pred=os.path.basename(pred_path), state=os.path.basename(state_path), D=float(D), ok=bool(diag["ok"]),
                seconds=round(time.time() - t0, 1))
     if "start" in seen:
-        d = seen["start"][0] + seen["start"][1]
-        rel = (d - true) / np.abs(true)
+        rel = exact_rel(seen["start"], truth)
         rec.update(delta_mh_max=float(np.abs(rel[:M]).max()), delta_ah_max=float(np.abs(rel[M:]).max()),
                    delta_ah_mean=float(rel[M:].mean()), polish_R=[h.get("R") for h in seen["hist"]])
-    dpred = (np.asarray(z4[0][o["mh"]:o["mh"] + 2 * M]) + np.asarray(z4[1][o["mh"]:o["mh"] + 2 * M]) - true) / np.abs(true)
+    dpred = exact_rel([np.asarray(p)[sl] for p in z4], truth)
     rec.update(pred_delta_ah_max=float(np.abs(dpred[M:]).max()), pred_delta_mh_max=float(np.abs(dpred[:M]).max()))
     print(json.dumps(rec), flush=True)
     return 0
+
+
+def polish4(pred_path, state_path, threads):
+    """the re-seed's quad-double polish (Reseeder.invert_q, as the re-seed calls it) started from the prediction's own
+    four-part horizon data instead of the double-double ladder's: its outcome and the result's a_h against the
+    converged state's (exact relative error)"""
+    from hpkernel.driver import load_q
+    from reseed import Reseeder
+    z4, meta = load_q(pred_path)
+    zs, ms = load_state(state_path)
+    if meta["D_str"] != ms["D_str"]:
+        raise SystemExit(f"the prediction's D {meta['D_str']} is not the state's {ms['D_str']}")
+    rs = Reseeder(meta, mp.mpf(meta["D_str"]), threads=threads, qd=True)
+    M, o = rs.M, rs.off
+    sl = slice(o["mh"], o["mh"] + 2 * M)
+    d4 = tuple(np.ascontiguousarray(np.asarray(p)[sl]) for p in z4)
+    t0 = time.time()
+    d, hist, conv = rs.invert_q(z4, d4)
+    truth = [np.asarray(p)[sl] for p in zs]
+    rel = exact_rel([np.asarray(p) for p in d], truth)
+    start = exact_rel(list(d4), truth)
+    rec = dict(pred=os.path.basename(pred_path), D=float(meta["D"]), converged=bool(conv), seconds=round(time.time() - t0, 1),
+               start_ah_max=float(np.abs(start[M:]).max()), result_ah_max=float(np.abs(rel[M:]).max()),
+               result_mh_max=float(np.abs(rel[:M]).max()), R=[h.get("R") for h in hist])
+    print(json.dumps(rec), flush=True)
+    return 0 if conv else 1
 
 
 def control(path, mutate, threads):
@@ -448,9 +526,35 @@ def run(out, paths, kmax, precs, deltas, threads, coef_dir):
 
 
 # ------------------------------------------------------------------ the derived table
-def csv_out(out, ins):
+def csv_out(out, ins, coef="", long_ins=(), coef_long=""):
+    """the estimator rows of every record (harmonic 'max' or j); with coef, one row per octo-double state on the
+    solution (harmonic 'structure': t_min, k_min, k_g); with long records and coef_long, one row per field and state
+    (harmonic 'transient': the largest term and its order, and the terms past the chain's ks summed at u0)"""
     import csv
     rows = []
+    recs = [json.loads(line) for p in ins for line in open(p) if line.strip()]
+    if coef:
+        import contextlib
+        import io
+        with contextlib.redirect_stdout(io.StringIO()):
+            st = structure(recs, coef)
+        for r, s in zip(sorted((r for r in recs if r["delta"] == 0 and r["prec"] == "od"), key=lambda r: r["D"]), st):
+            rows.append(dict(state=r["state"], folder=r["folder"], D=r["D"], prec="od", delta=0.0, u0=r["u0"], field="all",
+                             harmonic="structure", K=None, W=None, E1=None, E2=s["growth_E2"], E3=None, E3_n=None,
+                             E3_alpha=None, lo=None, hi=None, tK=None, H_u0=None, G=r["G"], Re_s=r["Re_s"],
+                             t_min=s["t_min"], k_min=s["k_min"], k_g=s["k_g"]))
+    if long_ins:
+        import contextlib
+        import io
+        lrecs = [json.loads(line) for p in long_ins for line in open(p) if line.strip()]
+        with contextlib.redirect_stdout(io.StringIO()):
+            lg = long_growth(lrecs, coef_long)
+        for r, s in zip(sorted((r for r in lrecs if r["delta"] == 0 and r["kmax"] > 160), key=lambda r: (r["D"], r["prec"])), lg):
+            for f in FIELDS:
+                rows.append(dict(state=r["state"], folder=r["folder"], D=r["D"], prec=r["prec"], delta=0.0, u0=r["u0"], field=f,
+                                 harmonic="transient", K=r["kmax"], W=None, E1=None, E2=s["E2"][-1], E3=None, E3_n=None,
+                                 E3_alpha=None, lo=None, hi=None, tK=s["t_last"], H_u0=r["H"][f], G=r["G"], Re_s=r["Re_s"],
+                                 k_peak=s["k_peak"], t_peak=s["t_peak"], tail_ks=s["tail"][f]))
     for path in ins:
         for line in open(path):
             if not line.strip():
@@ -462,17 +566,20 @@ def csv_out(out, ins):
                                 field=f, K=int(K), W=W, G=r["G"], Re_s=r["Re_s"], H_u0=r["H"][f])
                     rows.append(dict(base, harmonic="max", E1=e["E1"], E2=e["E2"], E3=e["E3"], E3_n=e["E3_n"],
                                      E3_alpha=e["E3_alpha"], lo=e["lo"], hi=e["hi"], tK=e["tK"]))
+                    if K not in HARM_CSV:
+                        continue                 # the harmonics' rows in two windows only (the jsonl has all four)
                     for j, h in e["harm"].items():
                         rows.append(dict(base, harmonic=j, E1=h["E1"], E2=h["E2"], E3=None, E3_n=None, E3_alpha=None,
                                          lo=None, hi=None, tK=h["tK"]))
     keys = ["state", "folder", "D", "prec", "delta", "u0", "field", "harmonic", "K", "W", "E1", "E2", "E3", "E3_n",
-            "E3_alpha", "lo", "hi", "tK", "H_u0", "G", "Re_s"]
+            "E3_alpha", "lo", "hi", "tK", "H_u0", "G", "Re_s", "t_min", "k_min", "k_g", "k_peak", "t_peak", "tail_ks"]
     fmt = lambda v: "" if v is None else (f"{v:.6g}" if isinstance(v, float) else v)  # noqa: E731
     with open(out, "w", newline="") as f:
         w = csv.DictWriter(f, fieldnames=keys)
         w.writeheader()
-        for r in sorted(rows, key=lambda r: (r["D"], r["prec"], r["delta"], r["field"], r["harmonic"] != "max", str(r["harmonic"]), r["K"])):
-            w.writerow({k: fmt(r[k]) for k in keys})
+        for r in sorted(rows, key=lambda r: (r["D"], r["prec"], r["delta"], r["field"], r["harmonic"] != "max", str(r["harmonic"]),
+                                             r["K"] if r["K"] is not None else -1)):
+            w.writerow({k: fmt(r.get(k)) for k in keys})
     print(f"{out}: {len(rows)} rows")
 
 
@@ -507,6 +614,17 @@ def main():
         return selftest(mutate)
     if cmd == "ladder":
         return ladder(args[0], args[1], threads)
+    if cmd == "polish4":
+        return polish4(args[0], args[1], threads)
+    if cmd == "pdelta":
+        reseed = []
+        while "--reseed" in args:
+            i = args.index("--reseed")
+            reseed.append(args[i + 1])
+            del args[i:i + 2]
+        pairs = [(args[i], args[i + 1]) for i in range(0, len(args) - 1, 2)]
+        pdelta(pairs, reseed)
+        return 0
     if cmd == "control":
         if mutate not in ("", "shift"):
             raise SystemExit("control: only --mutate shift")
@@ -523,7 +641,14 @@ def main():
         run(out, paths, kmax, precs, deltas, threads, coef)
         return 0
     if cmd == "csv":
-        csv_out(args[0], args[1:])
+        coef = opt("--coef", "")
+        coef_long = opt("--coef_long", "")
+        long_ins = []
+        while "--long" in args:
+            i = args.index("--long")
+            long_ins.append(args[i + 1])
+            del args[i:i + 2]
+        csv_out(args[0], args[1:], coef, long_ins, coef_long)
         return 0
     if cmd == "summary":
         reseed = []
@@ -589,7 +714,31 @@ def long_growth(recs, coef):
               + " ".join(f"{f} {v:.1e}" for f, v in rec["tail"].items()) + "; "
               + "; ".join(f"K {K}: E2 {e:.3f}, p harmonic 1 {e1:.3f}, t_K/t_K-1 {q:.2f}" for K, e, e1, q in
                           zip(Ks, rec["E2"], rec["E2_p1"], rec["ratio"])))
+    for lo in (225.0, 249.0):
+        sel = [x for x in out if x["D"] >= lo and x["tail"]["p"] > 0]
+        if len(sel) >= 3:
+            s = np.polyfit([x["D"] for x in sel], [math.log(x["tail"]["p"]) for x in sel], 1)[0]
+            print(f"the p rows' terms past ks, D >= {lo:.0f}: a factor {math.exp(s):.2f} per unit of D (log-linear fit over "
+                  f"{len(sel)} states)")
     return out
+
+
+def floors(recs, bound=1e-24):
+    """per precision, H / G (the rounding the floor is made of) over the states on the solution, and for quad-double
+    the D where H = max over m, a rows reaches the polish's acceptance bound, from the last state's H / G and G's exact
+    dependence on D (an extrapolation)"""
+    for prec in ("dd", "qd", "od"):
+        rs = sorted((r for r in recs if r["delta"] == 0 and r["prec"] == prec and r["kmax"] <= 160), key=lambda r: r["D"])
+        if not rs:
+            continue
+        hg = [max(r["H"]["m"], r["H"]["a"]) / r["G"] for r in rs]
+        line = f"{prec}: H / G over {len(rs)} states {min(hg):.1e} to {max(hg):.1e}"
+        if prec == "qd":
+            last = rs[-1]
+            x = 1.0 - last["u0"]
+            n1 = math.log(bound / hg[-1]) / math.log(1.0 / x)
+            line += f"; H reaches {bound:.0e} at G {bound / hg[-1]:.1e}, D {n1 + 3.0:.1f} (from D {last['D']:.2f}; an extrapolation)"
+        print(line)
 
 
 def law(recs, coef, rmax=0.34):
@@ -638,7 +787,9 @@ def law(recs, coef, rmax=0.34):
             line += (f"  fit on {len(rd)}: R0 {a0:+.4f} C {fit['C']:.3f} (worst residual {fit['resid']:.3f}), "
                      f"delta_max(0.3) {fit['delta_max']:.1e}")
         d136 = math.exp(-(U0 + 2.6 / (n - 1)) * (n - 1) / 0.88)
-        line += f"; 13.6's line: delta_max(0.3) {d136:.1e}"
+        r136 = {p["delta"]: (0.88 * math.log(1 / p["delta"]) - 2.6) / (n - 1) for p in pts}
+        line += ("; 13.6's line: R " + " ".join(f"{d:.0e}:{v:.3f}" for d, v in r136.items())
+                 + f", delta_max(0.3) {d136:.1e}")
         print(line)
         out.append(dict(state=st, D=rs[0]["D"], n=n, pts=pts, fit=fit, delta_max_136=d136))
     return out
@@ -661,6 +812,7 @@ def summary(ins, reseed, coef=""):
         p = e["p"].get("160")
         line += f"p160 E2 {g(p['E2']) if p else '-'}  H {max(r['H']['m'], r['H']['a']):.1e}"
         print(line)
+    floors(recs)
     if coef:
         structure(recs, coef)
         long_growth(recs, coef)
