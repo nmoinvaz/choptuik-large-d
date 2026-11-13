@@ -2158,9 +2158,12 @@ Files that were moved out of this repository are listed with their new paths in 
 
 [^3]: C. Gundlach, PRD 55, 695 (1997), [gr-qc/9604019](https://arxiv.org/abs/gr-qc/9604019); J. M. Martín-García and
     C. Gundlach, PRD 68, 024011 (2003), [gr-qc/0304070](https://arxiv.org/abs/gr-qc/0304070).
-[^4]: D. Garfinkle, C. Cutler and G. C. Duncan, PRD 60, 104007 (1999); E. Sorkin and Y. Oren, PRD 71, 124005 (2005);
-    J. Bland et al., CQG 22, 5355 (2005); J. Bland and G. Kunstatter, PRD 75, 101501 (2007); J. Bland, PhD thesis,
-    University of Manitoba (2007); T. Taves and G. Kunstatter, [arXiv:1105.0878](https://arxiv.org/abs/1105.0878).
+[^4]: D. Garfinkle, C. Cutler and G. C. Duncan, PRD 60, 104007 (1999); M. Birukou, V. Husain, G. Kunstatter, E. Vaz
+    and M. Olivier, PRD 65, 104036 (2002); E. Sorkin and Y. Oren, PRD 71, 124005 (2005); J. Bland et al., CQG 22, 5355
+    (2005); J. Bland and G. Kunstatter, PRD 75, 101501 (2007); J. Bland, PhD thesis, University of Manitoba (2007);
+    T. Taves and G. Kunstatter, PRD 84, 044034 (2011), [arXiv:1105.0878](https://arxiv.org/abs/1105.0878); B. Porto
+    Veronese and C. Gundlach, PRD 106, 104044 (2022). Their values are set against ours in
+    [hp/data/gamma_published_compare.csv](hp/data/gamma_published_compare.csv) (notes/REVIEW_GHMG25.md §8).
 [^5]: C. Ecker, F. Ecker, D. Grumiller and T. Jechtl, SciPost Phys. 20, 176 (2026),
     [arXiv:2602.10185](https://arxiv.org/abs/2602.10185).
 [^6]: M. Rozali and B. Way, JHEP 11 (2018) 106, [arXiv:1807.10283](https://arxiv.org/abs/1807.10283).
