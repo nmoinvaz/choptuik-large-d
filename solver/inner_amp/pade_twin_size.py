@@ -615,14 +615,14 @@ def run_twins_real(outdir, mut=None):
 
 
 def run_twins_jdiag(outdir):
-    """post-freeze diagnostic (#672), not judged, at wf 1.00. (a) tc.real_sig() loads the files at the precision in
-    force when it is first called, 53 bits in twins_real; here both J files are also read from their strings at
-    DPS_FIT, and the scans are repeated on those. (b) Where the misfit at M = n - 1 sits, per order. (c) The scans with
-    err_k widened to max(err_k, |sigma_k(J1500) - sigma_k(J1250)|), both read at DPS_FIT"""
+    """post-freeze diagnostic (#672), not judged, at wf 1.00. (a) #672's twins_real held the J1250 series at 53 bits;
+    here it is read at 53 bits and from its strings at full precision, and the scans are repeated on both. (b) Where
+    the misfit at M = n - 1 sits, per order. (c) The scans with err_k widened to max(err_k, |sigma_k(J1500) -
+    sigma_k(J1250)|), both read at full precision"""
     log = Log(outdir, "twins_jdiag", None)
     rec = {"classes": {}}
     wf = 1.0
-    s53 = tc.real_sig()[wf][:N23]
+    s53 = pg.sl.load_scan(pg.REAL["J1250"], prec=53)[wf][:N23]
     with mp.workdps(DPS_FIT):
         sig = pg.load_scan(pg.REAL["J1250"])[wf][:N23]
         j15 = pg.load_scan(pg.REAL["J1500"])[wf][:N23]

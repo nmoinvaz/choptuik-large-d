@@ -18,12 +18,12 @@ precision independently of the estimators.
 
 The planted zero: x0(wf) = XT + V (wf - wt) + W (wf - wt)^2, Im x0(wt) = 0 exactly.
 """
-import glob
-import json
 import os
 
 import mpmath as mp
 import numpy as np
+
+import sigma_load
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 REAL = os.path.join(HERE, "scan25phys")
@@ -53,11 +53,8 @@ def x0_planted(wf, wt):
 
 
 def load_real(scandir=REAL):
-    out = {}
-    for fn in sorted(glob.glob(os.path.join(scandir, "*.json"))):
-        r = json.load(open(fn))
-        out[float(r["wf"])] = ([mp.mpc(mp.mpf(a), mp.mpf(b)) for a, b in r["sigma_str"]], list(r.get("sigma_err", [])))
-    return out
+    """{wf: ([sigma_k], sigma_err)}, parsed from the strings at sigma_load.DPS_LOAD digits (#683)"""
+    return sigma_load.load_dir(scandir)
 
 
 def polymul(a, b, n):

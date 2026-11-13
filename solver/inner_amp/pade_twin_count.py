@@ -81,6 +81,7 @@ _REAL = {}
 
 
 def real_sig():
+    """the J1250 sigma_k per node, parsed from the strings at sigma_load.DPS_LOAD digits whatever the precision"""
     if not _REAL:
         _REAL.update(pg.load_scan(pg.REAL["J1250"]))
     return _REAL
