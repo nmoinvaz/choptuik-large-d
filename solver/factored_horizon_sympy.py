@@ -26,6 +26,9 @@ The checks (each prints PASS or FAIL):
       change of the unknowns that keeps Delta; a nonlinear change agrees in the first step to first order only.
   S7  the truncated matching of the linear model: y_reg = A y_h + C y_f, y_h^(K) = (y_reg - f C y_f)/A, so the
       matching determinant is -(f C/A) det(y_reg, y_f) and its grip on omega is f times the continuum's.
+  S8  the shadow u^k (2-u)^k (1-u)^(-2k-2) of the transient past order k = Re s: its terms' mean order and variance
+      at u0 in closed form.
+  E0  (printed only) the two exponents of Lemma B2 per unit of n at the layout's points, and G at D 237.13 and 242.36.
 The model (numerical evidence; its tolerances were set after a prototype run, so they describe, not test):
   M1  the linear model's horizon-regular series (Proposition 2's equation in u) against 2F1 at 1 - x^2.
   M2  the peak order of its transient against hp/data/horizon_radius.csv (k_peak, #693), at n_lin = 2 (Re s + 1).
@@ -328,6 +331,34 @@ def s7():
 
 
 # ------------------------------------------------------------------------------------------------------------------
+def exponents():
+    """E0 (printed, no check): the two exponents of Lemma B2 at the layout's points, per unit of n, and G"""
+    Phi = lambda x: mp.log(x) - mp.log(1 - x**2) / 2
+    x3, x4, x7 = mp.mpf("0.3"), mp.mpf("0.4"), mp.mpf("0.7")
+    print(f"E0 fast mode e^(-n Phi): Phi(0.7) = {mp.nstr(Phi(x7), 4)}; per unit of n between nodes 0.3 and 0.7 "
+          f"{mp.nstr(Phi(x7) - Phi(x3), 4)}, 0.4 and 0.7 {mp.nstr(Phi(x7) - Phi(x4), 4)}; at the last node 0.7 "
+          f"{mp.nstr(-Phi(x7), 3)} (|e^(-n Phi(0.7))| = 1 at n = 0 and grows this slowly)")
+    print(f"E0 mass mode x^-(n-1): per unit of n at 0.7 {mp.nstr(-mp.log(x7), 4)} (G^3: {mp.nstr(-3 * mp.log(x7), 4)});"
+          f" G = 0.7^-(D-3) is {mp.nstr(x7 ** -(mp.mpf('237.13125') - 3), 3)} at D 237.13 and "
+          f"{mp.nstr(x7 ** -(mp.mpf('242.36419') - 3), 3)} at D 242.36")
+
+
+def s8():
+    """the shadow S(u) = u^k (2-u)^k (1-u)^(-2k-2) of the transient past order k = Re s (the sum of C(j, k) w^j,
+    w = 1 - x^2 = u (2 - u), the large-j form of the linear model's 2F1 terms past its near-resonance): the mean order
+    m(u0) = u0 S'/S and the variance v(u0) = u0 m'(u0) of its terms at u0"""
+    u, k = sp.symbols("u k", positive=True)
+    lnS = k * sp.log(u) + k * sp.log(2 - u) - (2 * k + 2) * sp.log(1 - u)
+    m = sp.simplify(u * sp.diff(lnS, u))
+    v = sp.simplify(u * sp.diff(m, u))
+    m_t = k - k * u / (2 - u) + (2 * k + 2) * u / (1 - u)
+    v_t = -2 * k * u / (2 - u) ** 2 + (2 * k + 2) * u / (1 - u) ** 2
+    report("S8 the shadow's mean order m = k [1 - u0/(2-u0)] + (2k+2) u0/(1-u0)", is_zero(m - m_t))
+    report("S8 its variance v = (2k+2) u0/(1-u0)^2 - 2k u0/(2-u0)^2", is_zero(v - v_t))
+    return sp.lambdify((k, u), m_t), sp.lambdify((k, u), v_t)
+
+
+# ------------------------------------------------------------------------------------------------------------------
 # M: the linear model (Proposition 2's equation) in u = 1 - x
 def lin_series(n, s, J):
     """y = p - m: x^2 (1-x^2) y'' + x (n-2-2(s+1) x^2) y' - (n-2+s(s+1) x^2) y = 0 (README, Proposition 2), the
@@ -412,7 +443,7 @@ def interp(tab, D):
     raise ValueError(D)
 
 
-def model():
+def model(mfun, vfun):
     mp.mp.dps = 300
     states = load_states()
     deltas = load_delta()
@@ -424,10 +455,11 @@ def model():
         return 2 * (mp.mpf(rs) + 1), 1j * mu * om
     # M1, M2
     worst_y, worst_pk = mp.mpf(0), 0.0
-    print("M2 D, Re s, measured k_peak (horizon_radius.csv), model peak order (mu 1, 3), ln f at K 130, 160, 200, 250")
+    print("M2 D, Re s, measured k_peak (horizon_radius.csv), the shadow's mean order m (S8), the model's peak order "
+          "(mu 1, 3), ln f at K 130, 160, 200, 250")
     lnf = {}
     for D, rs, kpk in states:
-        row = []
+        row = [f"m {mfun(rs, 0.3):.1f}"]
         for mu in (1, 3):
             n, s = ns(D, mu)
             r = lin_model(n, s, 0.3, [130, 160, 200, 250])
@@ -470,8 +502,9 @@ def model():
                     d -= j * tau[j] * u ** (j - 1)
                 if abs(mp.log(abs((yr * d - yr1 * v) / r["Winf"]))) < 0.01 and Kmin is None:
                     Kmin = j
-            out.append(f"mu {mu}: K {Kmin} ({Kmin / rs:.2f} Re s)")
-        print(f"  D {D:.1f} (Re s {rs:.1f}): " + "; ".join(out))
+            sd = vfun(rs, 0.3) ** 0.5
+            out.append(f"mu {mu}: K {Kmin} ({Kmin / rs:.2f} Re s; m + {(Kmin - mfun(rs, 0.3)) / sd:.1f} sd)")
+        print(f"  D {D:.1f} (Re s {rs:.1f}, m {mfun(rs, 0.3):.1f}, sd {vfun(rs, 0.3) ** 0.5:.1f}): " + "; ".join(out))
         sys.stdout.flush()
     # M4: rates against I488-mac's sigma (raw 994f6f21) and the last-node shift against #537
     sig = {237.13125: (3.0107328097098527e-25, 1.4996164881594329e-23),
@@ -510,10 +543,12 @@ def model():
 
 def main():
     if MODE in ("all", "check"):
+        exponents()
         for f in (s1, s2, s3_symbolic, s3_exact, s3_rounding, s4, s5, s6, s7):
             f()
+    mfun, vfun = s8()
     if MODE in ("all", "model"):
-        model()
+        model(mfun, vfun)
     bad = [n for n, ok in results if not ok]
     print(f"{len(results) - len(bad)} of {len(results)} checks pass" + (f"; failed: {', '.join(bad)}" if bad else ""))
     sys.exit(1 if bad else 0)
