@@ -68,8 +68,10 @@ Conventions for the Claude sessions (cloud and local) that run computations here
   powers are of exact positive balls. Found by the BootLoops review, notes/BOOTLOOPS.md.)
 - **OpenBLAS pitfall (Windows):** `scipy.linalg.lu_factor` and `lu_solve` crash with an access violation on a matrix
   of 3.44 GiB or more (21500 unknowns in f64; 20000, 2.98 GiB, passes) when OpenBLAS uses more than one thread, with
-  scipy 1.15.3 (OpenBLAS 0.3.28) and with scipy 1.18.1 (0.3.31.dev) alike; with `OPENBLAS_NUM_THREADS=1` they complete
-  (#423, `I423-win/lu_size_test.py`, raw 5eaddb4b). Run such solves on Windows with one BLAS thread.
+  scipy 1.15.3 (OpenBLAS 0.3.28) and with scipy 1.18.1 (0.3.31.dev) alike; numpy's 0.3.34 solves correctly and then
+  crashes at exit. The multithreaded AVX-512 (SkylakeX) kernels corrupt the heap, and the AVX2 kernels
+  (`OPENBLAS_CORETYPE=Haswell`) pass at 21500 and 23857 (#423, `I423-win/`, raw 5eaddb4b and 572e606d; reported as
+  OpenMathLib/OpenBLAS#6252). Run such solves on Windows with one BLAS thread.
 - **Dependencies:** [requirements.txt](requirements.txt) pins the Python packages, and [SETUP.md](SETUP.md) gives the
   system and software requirements and the setup steps (uv, Python 3.14). A new venv is made with uv beside the
   existing interpreters, changing no system Python or package manager. The Rust kernels (`pip install .`,
