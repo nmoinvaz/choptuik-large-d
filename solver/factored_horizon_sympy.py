@@ -539,6 +539,27 @@ def model(mfun, vfun):
     print(f"  M4 last node 0.70 -> 0.72 at D {Dh:.2f}: model {shifts[0]:.2f} (mu 1), {shifts[1]:.2f} (mu 3); continuum "
           f"{cont:.2f}; the fast-mode law -n[Phi(0.72) - Phi(0.70)] = {law:.2f}; #537's raw shift of ln sigma_3: -8.96")
     report("M4 the last-node shift against #537's -8.96 within 5%", all(abs(v + 8.96) / 8.96 < 0.05 for v in shifts))
+    # M5 (printed only; a conjecture's estimate, written before #696's results): if the omitted transient is the
+    # discrete selection residual amplified by 1/f, raising ks moves Delta by about T_omit / sigma_inf, with T_omit the
+    # transient past ks = 130 at u0 (horizon_radius.csv's tail_ks, the larger of p and m) and sigma_inf = sigma_3 / f
+    # the grip without truncation (sigma_3 of I488 at D 242.36, f of mu 1, the continuum's drift in D added)
+    tails = {}
+    with open(os.path.join(ROOT, "hp", "data", "horizon_radius.csv")) as fh:
+        for r in csv.DictReader(fh):
+            if r["harmonic"] == "transient" and r["field"] in ("p", "m") and r["tail_ks"]:
+                D = float(r["D"])
+                tails[D] = max(tails.get(D, 0.0), float(r["tail_ks"]))
+    ttab = sorted((D, mp.log(v)) for D, v in tails.items())
+    n, s = ns(Dh, 1)
+    r0 = lin_model(n, s, 0.3, [130])
+    lnsig_inf = mp.log(s3h) - mp.log(abs(r0["W"][130] / r0["Winf"]))
+    for D in (245.1366, 253.8043):
+        n, s = ns(D, 1)
+        r = lin_model(n, s, 0.3, [130])
+        lsi = lnsig_inf + mp.log(abs(r["Winf"])) - mp.log(abs(r0["Winf"]))
+        T = mp.exp(interp(ttab, D))
+        print(f"  M5 D {D:.2f}: T_omit {mp.nstr(T, 2)}, sigma_inf {mp.nstr(mp.exp(lsi), 2)}, the amplification reading's "
+              f"|Delta(300) - Delta(130)| ~ {mp.nstr(T / mp.exp(lsi), 2)}; f(130) = e^{float(mp.log(abs(r['W'][130] / r['Winf']))):.1f}")
 
 
 def main():
