@@ -201,15 +201,19 @@ def coefficients(s, zh, zl, N, held=None, refine_it=1, z1=None):
 def coefficients_q(s, zq, N, held=None):
     """z_1..z_N by the quad-double jet (Solver.residual_jet_q) and the quad-double LU of the last Solver.newton_q, which
     must have been taken at zq (the base's four parts): the list of four-part z_k (z_0 first) and their norms. held as
-    in coefficients, added in quad-double. No refinement: the LU is the exact Jacobian's in quad-double."""
+    in coefficients, added in quad-double; a held field in more than two parts (--held_o 1's eight) is added from its
+    first four. No refinement: the LU is the exact Jacobian's in quad-double."""
     Zq, norms = [tuple(np.ascontiguousarray(np.asarray(p)) for p in zq)], [float(dd_norm(zq[0], zq[1]))]
     for k in range(1, N + 1):
         F = s.residual_jet_q(Zq, k + 1)
         b = [-np.asarray(p) for p in F[k]]
         if held is not None:
             fn, rows = held
-            th, tl = fn(k)
-            r = qd_add_dd(*(np.ascontiguousarray(p[rows]) for p in b), np.asarray(th), np.asarray(tl))
+            t = fn(k)
+            if len(t) == 2:
+                r = qd_add_dd(*(np.ascontiguousarray(p[rows]) for p in b), np.asarray(t[0]), np.asarray(t[1]))
+            else:
+                r = qd_axpy(1.0, *(np.ascontiguousarray(np.asarray(v)) for v in t[:4]), *(np.ascontiguousarray(p[rows]) for p in b))
             for p, v in zip(b, r):
                 p[rows] = v
         x = s.qlu_solve(*(np.ascontiguousarray(p) for p in b))
@@ -218,10 +222,12 @@ def coefficients_q(s, zq, N, held=None):
     return Zq, norms
 
 
-def coefficients_o(s, zo, N, held=None):
+def coefficients_o(s, zo, N, held=None, perturb=None):
     """z_1..z_N by the octo-double jet (Solver.residual_jet_o) and the octo-double LU of the last Solver.newton_o, which
     must have been taken at zo (eight parts): the list of eight-part z_k (z_0 first) and their norms. held as in
-    coefficients, added in octo-double (od_add_dd). No refinement: the LU is the exact Jacobian's in octo-double."""
+    coefficients, added in octo-double (od_add_dd). No refinement: the LU is the exact Jacobian's in octo-double.
+    perturb(k, b): the order-k right-hand side b (eight parts) changed before its solve, for jet_singularity.py's
+    noise injection (#634)."""
     # the octo-double helpers are in multidouble's Python package from f092018 on; imported here so that the other
     # paths run on the older packages the runners have
     from multidouble import od_add_dd, od_axpy
@@ -239,6 +245,8 @@ def coefficients_o(s, zo, N, held=None):
                 r = od_axpy(1.0, *(np.ascontiguousarray(np.asarray(v)) for v in t), *(np.ascontiguousarray(p[rows]) for p in b))
             for p, v in zip(b, r):
                 p[rows] = v
+        if perturb is not None:
+            b = list(perturb(k, b))
         Zo.append(o8(s.olu_solve([np.ascontiguousarray(p) for p in b])))
         norms.append(float(dd_norm(Zo[-1][0], Zo[-1][1])))
     return Zo, norms
