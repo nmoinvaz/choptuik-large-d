@@ -241,6 +241,7 @@ Checked by the coordinating session.
 | Entry | Checked against | Verdict |
 |---|---|---|
 | Deuflhard, *A modified Newton method for the solution of ill-conditioned systems of nonlinear equations with application to multiple shooting*, Numer. Math. 22, 289–315 (1974), doi:10.1007/BF01406969 | search records of the ZIB repository (opus4.kobv.de, docId 2037: volume 22, pages 289–315, 1974) and Springer (link.springer.com/doi/10.1007/BF01406969); some citing lists print the pages as "398–315", a typo; the GDZ scan's first page, "Numer. Math. 22, 289-315 (1974)" | OK: bibliographic details from the records and the scan; the content is read from the GDZ scan and recorded in [LIT_REVIEW.md](LIT_REVIEW.md), addendum of issue #527 (the natural monotonicity test with the old Jacobian, (4.1)–(4.2), and the rank strategy, (4.7) and (4.10)); cited for the natural monotonicity test, which newton_qd does not use |
+| Deuflhard, *A stepsize control for continuation methods and its special application to multiple shooting techniques*, Numer. Math. 33, 115–146 (1979) | EuDML 132632 (author, title, journal, volume, pages, year) | OK (bibliographic); not read; cited in notes/CORRECTOR_BASIN.md 6 for the a-rule's idea |
 
 ## Addendum (2026-11-13, issue #619): Gundlach 1998 and the determinant counts of 1995 and 1997
 
