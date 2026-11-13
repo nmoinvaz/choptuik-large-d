@@ -5,6 +5,10 @@ polynomials in t = 1/n (n = D - 2) or t = 1/D, lam_g = c0 + c1 t + c2 t^2 + ... 
     python3 hp/lam_gauge_fit.py planted [--mutate=limit]     the planted-truth test (run first; exits 1 on a fail)
     python3 hp/lam_gauge_fit.py fit                          the fit of the real backbone
 
+Post-hoc options of planted (after the real fit, reported as such): --sigma=S (the noise), --junk=D:offset,... (offsets
+at grid points, as the I461 states' near the frontier), --step=D0:offset (an offset below D0, as between layouts).
+--csv=PATH reads another table. --dlos=a,b,... (fit) changes the lower ends, a diagnostic outside the selection.
+
 c0 and c1 are the same in both variables (1/n = 1/D + 2/D^2 + ...). c2 is quoted in 1/n, the 1/D fits' c2 converted
 by c2(1/n) = c2(1/D) - 2 c1.
 
@@ -47,6 +51,7 @@ DEGS = range(3, 15)
 PLATEAU = 3
 SPACING = 1.0
 SIGMA = 1e-12
+REF_DEG = 14         # the reference fit for the residuals: the selected c0 = 1 fit in 1/n from D = 20
 BANDS = [(20, 40), (40, 67), (67, 74), (74, 120), (120, 180), (180, 226), (226, 246)]
 C0, C1, C2, C3 = mp.mpf(1), mp.mpf("-7.4"), mp.mpf(95), mp.mpf(-1200)
 TS = mp.mpf("0.08") * mp.expj(2 * mp.pi / 3)
@@ -73,7 +78,8 @@ def planted_coeffs(name, c0):
     return c0, C1, C2
 
 
-def backbone(path=CSV):
+def backbone(path=None):
+    path = path or CSV
     rows = [r for r in csv.DictReader(x for x in open(path) if not x.startswith("#")) if r["role"] == "backbone"]
     pts = sorted((mp.mpf(r["D_str"]) if r["D_str"] else mp.mpf(float(r["D"])), mp.mpf(r["lam_g"])) for r in rows)
     out, last = [], None
@@ -84,6 +90,17 @@ def backbone(path=CSV):
             out.append((D, lam))
             last = D
     return out
+
+
+def superseded(c, path=None):
+    """(D, lam_g - fit, state) of the table's superseded rows (delta_all.csv's I461 states past D 225.13), against the
+    polynomial c in 1/n"""
+    rows = [r for r in csv.DictReader(x for x in open(path or CSV) if not x.startswith("#")) if r["role"] == "superseded"]
+    out = []
+    for r in rows:
+        D = mp.mpf(r["D_str"]) if r["D_str"] else mp.mpf(float(r["D"]))
+        out.append((D, mp.mpf(r["lam_g"]) - mp.polyval(c[::-1], 1 / (D - 2)), r["state"]))
+    return sorted(out)
 
 
 def lsq(ts, ys, d, fixed0=None):
@@ -202,9 +219,9 @@ def cmd_fit(argv):
                   f"c1 {mp.nstr(f['c'][1], 10)} c2 {mp.nstr(f['c'][2], 8)} c3 {mp.nstr(f['c'][3], 6)}")
     report(con, "c0=1", ks=(1, 2, 3))
     ts = [1 / (D - 2) for D, _ in pts]
-    c, _ = lsq(ts, [y for _, y in pts], 13, fixed0=mp.mpf(1))
+    c, _ = lsq(ts, [y for _, y in pts], REF_DEG, fixed0=mp.mpf(1))
     res = [(D, y - mp.polyval(c[::-1], t)) for (D, y), t in zip(pts, ts)]
-    print("residuals of the c0 = 1, 1/n, D >= 20, degree-13 fit:")
+    print(f"residuals of the reference fit (c0 = 1, 1/n, D >= {DLOS[0]}, degree {REF_DEG}):")
     for lo, hi in BANDS:
         r = [float(e) for D, e in res if lo <= D < hi]
         if r:
@@ -212,13 +229,19 @@ def cmd_fit(argv):
                   f"max {max(abs(x) for x in r):.1e}")
     for D, e in sorted(res, key=lambda x: -abs(x[1]))[:3]:
         print(f"  largest: D {mp.nstr(D, 10)} residual {mp.nstr(e, 3)}")
+    for D, lam, st in superseded(c):
+        print(f"  superseded {st}: D {mp.nstr(D, 10)}, off this fit by {mp.nstr(lam, 3)}")
     inside = fr[0][1] <= 1 <= fr[0][2]
     print(f"c0 = 1 {'inside' if inside else 'OUTSIDE'} the free fits' range")
     return 0
 
 
 def main():
+    global CSV
     cmd = sys.argv[1] if len(sys.argv) > 1 else ""
+    for a in sys.argv[2:]:
+        if a.startswith("--csv="):            # another table, e.g. an earlier commit's
+            CSV = a.split("=", 1)[1]
     if cmd == "planted":
         return cmd_planted(sys.argv[2:])
     if cmd == "fit":
