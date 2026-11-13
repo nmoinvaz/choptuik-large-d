@@ -363,19 +363,21 @@ ray run.
 - **The rays.** g on the strong-solved manifold at c = ±t e, with e = a/|a| (judged) and two random unit vectors r1, r2
   (seed 7, diagnostic). t runs over 10^(n/4) from 10⁻³⁰ to 10⁻²⁴, 25 points. The issue's range, 10⁻²⁹ to 10⁻²⁶, is
   judged and the rest is diagnostic.
-- **The strong solve.** Section 1's chord through z0's LU, now run to |dw| < 10⁻⁶⁰|w0|, or until |dw| stops falling
-  (two steps in a row that cut it by less than 0.3). One step may grow |dw|. At |c| ≫ |a| the chord's error map
-  J⁻¹(I − UUᵀ)F″(Vc, ·) can have a norm above 1 and a square far below it, as at #528's c* (|dw| 5.44×10⁻⁵⁶,
-  5.44×10⁻⁵⁶, then 5×10⁻⁸²). A solve fails on a non-finite |dw|, on |dw| above 10⁻³ max(|c|, |w0|), or after 40
-  steps. Each t starts from w0 + (t/t′)²(w(t′) − w0), with t′ the ray's previous point. A ray stops at its first failed
-  solve, and that |c| is reported.
+- **The strong solve.** Section 1's chord through z0's LU, now run to |dw| < 10⁻⁶⁰|w0|, or until the smallest |dw| so
+  far has not fallen by 0.3 in three steps (the chord's floor). The iterate with the smallest |dw| is kept, and it
+  counts as converged when that |dw| is below section 1's 10⁻⁴⁰|w0|. A step may grow |dw|. At |c| ≫ |a| the chord's
+  error map J⁻¹(I − UUᵀ)F″(Vc, ·) can have a norm above 1 and a square far below it, as at #528's c* (|dw|
+  5.44×10⁻⁵⁶, 5.44×10⁻⁵⁶, then 5×10⁻⁸²). A solve fails on a non-finite |dw|, on |dw| above 10⁻³ max(|c|, |w0|), or
+  when no iterate in 40 steps gets below 10⁻⁴⁰|w0|. Each t starts from w0 + (t/t′)²(w(t′) − w0), with t′ the ray's
+  previous point. A ray stops at its first failed solve, and that |c| is reported. (This rule and the second start of
+  floor0 below replaced the first ones after the REF pilot, section 9.4.)
 - **The departure.** dep(c) = g(c) − g(0) − Bc, with the basis's B. The departure from B(c − a), the issue's affine
   part, is dep(c) + g(0) + Ba, and the constant ε0 = |g(0) + Ba|/|Ba| is reported (2.7×10⁻²⁵ at REF).
 - **Its parts.** The even part E(t) = (dep(te) + dep(−te))/2 holds the orders 2, 4, …, and the odd part
   O(t) = (dep(te) − dep(−te))/2 the orders 1, 3, …. An error in B shows as order 1 in the odd part.
 - **The floor of each t.** The largest of three things. Each sign's strong-solve error estimate,
   |Uᵀ[F(w − dw) − F(w)]|, is what the last correction, not applied, would change in g. floor0 is the difference of
-  g(0) between solves from w0 and from w0 + ξ (ξ ⊥ V, |ξ| = 10⁻⁴|w0|), together with both their estimates. The floor is
+  g(0) between solves from w0 and from w0(1 + 10⁻³), together with both their estimates. The floor is
   an estimate, not a bound, since the next correction can be larger by the error map's norm. A part counts as
   resolved at t where it exceeds 100 floors.
 - **The order.** The leading order p and constant K of each part, |part| ≈ K|Ba|(t/|a|)^p, come from a least-squares
@@ -451,3 +453,15 @@ absorbs the projector's difference in the frozen rows (section 3).
   its cause is known.
 - **Diagnostics, not judged.** The rays r1 and r2, max|F| and the chord's steps at each point, ε0, and the tensors'
   cubic against the odd part's K.
+
+### 9.4 Changes after real data
+
+- **The REF pilot, first run** (code 99ca8e3b, raw `I677-mac/ray_ref_pilot1_99ca8e3b.log`). The basis line equals
+  #528's to every printed digit, so (Y0) passes. Then a strong solve at c = 0 failed, and the scan stopped before any
+  ray. The first rule had two parts that could fail there. The second start of floor0 was w0 + ξ, with ξ random and
+  orthogonal to V, |ξ| = 10⁻⁴|w0|. Its square reaches the strong rows through F″, and J⁻¹ multiplies that along the
+  softest strong direction (σ₅ ≈ 10⁻¹⁹) by 10¹⁹: about 10³³ × (7×10⁻³⁷)² / 10⁻¹⁹ ≈ 5×10⁻²¹, far above the failure
+  bound of 7×10⁻³⁶ (*inferred*: the run did not log the steps). And the stall test needed two consecutive steps
+  without a cut, which a fluctuating floor need not give. The second start is now w0(1 + 10⁻³), and the stop rule
+  keeps the best iterate (9.1). Failed solves at c = 0 now print their steps. The plant and its controls were rerun
+  with the new rule. No pass criterion changed.
