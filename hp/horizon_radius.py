@@ -704,14 +704,16 @@ def long_growth(recs, coef):
         ks = int(r["ks"])
         kp = 100 + int(np.argmax(t[100:]))
         tail = np.abs(b[ks + 1:].sum(axis=0)).max(axis=1)            # the terms past the chain's ks, summed at u0
+        tail200 = float(np.abs(b[201:].sum(axis=0)).max()) if len(t) > 201 else None
         rec = dict(D=r["D"], prec=r["prec"], Re_s=r["Re_s"],
                    E2=[e2_root(t, K, r["u0"]) for K in Ks], E2_p1=[e2_root(h1, K, r["u0"]) for K in Ks],
                    ratio=[float(t[K] / t[K - 1]) for K in Ks], K=Ks, k_peak=kp, t_peak=float(t[kp]), t_last=float(t[-1]),
-                   tail=dict(zip(FIELDS, [float(x) for x in tail])))
+                   tail=dict(zip(FIELDS, [float(x) for x in tail])), tail200=tail200)
         out.append(rec)
         print(f"{r['D']:9.4f} {r['prec']} to order {len(t) - 1} (Re s {r['Re_s']:.1f}): peak t {rec['t_peak']:.1e} at order {kp}, "
               f"t_{len(t) - 1} {rec['t_last']:.1e}; terms past ks {ks} summed at u0, max over lanes: "
-              + " ".join(f"{f} {v:.1e}" for f, v in rec["tail"].items()) + "; "
+              + " ".join(f"{f} {v:.1e}" for f, v in rec["tail"].items())
+              + (f"; past order 200 {tail200:.1e}" if tail200 is not None else "") + "; "
               + "; ".join(f"K {K}: E2 {e:.3f}, p harmonic 1 {e1:.3f}, t_K/t_K-1 {q:.2f}" for K, e, e1, q in
                           zip(Ks, rec["E2"], rec["E2_p1"], rec["ratio"])))
     for lo in (225.0, 249.0):

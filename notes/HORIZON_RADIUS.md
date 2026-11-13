@@ -105,7 +105,8 @@ with them to 8×10⁻⁴.
   in the low harmonics (j ≤ 5 for p and m, j ≤ 4 for a and c), while the decaying part is carried by harmonics 13–17.
   Its onset tracks Re s = n / (2(1 + c₁)) − 1, the order where the p recurrence's κ_k changes sign.
 - **The transient's tail is the chain's truncation error at the node.** The chain sums to ks = 130 and leaves out the
-  terms past it: 2.2×10⁻¹² in the p rows at D 253.8, from 3.2×10⁻¹⁶ at D 247.
+  terms past it: 2.2×10⁻¹² in the p rows at D 253.8, from 3.2×10⁻¹⁶ at D 247. Since the peak lies past order 200, the
+  terms past order 200 are nearly as large (1.8×10⁻¹² at D 253.8), and only a ks near 300 or more would drop the tail.
 
 ## 2. The arithmetic's floors at u₀, against #603's re-seed records
 
