@@ -909,7 +909,7 @@ significant digits. #672 found that `pade_twin_count.real_sig()` held them at mp
 `solver/inner_amp/sigma_load.py` now parses them at 300 digits for every caller, inside `mp.workdps` and never through a
 float. `solver/inner_amp/pade_precision.py` measures what the earlier loading did, and what the strings' own rounding
 leaves. All runs used one process under `nice -n 10`, single-threaded, 2026-11-13 12:13–12:28 UTC. The records are in
-the raw-data repository's `I683-mac/` (59d7166).
+the raw-data repository's `I683-mac/` (839141d).
 
 ### 10.1 The callers
 
@@ -1008,8 +1008,9 @@ quoted three- and four-digit numbers are not expected to move. That is an infere
 
 `amp_flint_par.py` writes σ_k with `mp.nstr(z, 20)`, and its log prints 15 digits. The raw-data repository holds those
 two for every J 1250 and J 1500 run at these nodes (`T99-win2/`, `T102-mac/`, `T103-mac/`; the repository's wf 1.00
-J 1250 file is T99-win2's, whose strings equal T102-mac's). The certified σ₁ of D_entire 6.5 is an enclosure of
-half-width 3.5×10⁻⁵.
+J 1250 file is T99-win2's, whose strings equal T102-mac's). T102-mac's file differs in some `f` and `fit_info`
+entries, but `sigma_err_fit.py` gives identical errors from both (`I683-mac/errors/`). The certified σ₁ of D_entire
+6.5 is an enclosure of half-width 3.5×10⁻⁵.
 
 Files with more digits exist, from `scan_omega.py`, which writes 25 (`pade_precision.py strings`). Of the 78 files of
 `solver/inner_amp/` with σ_k at these nodes, 27 have 25 digits, all at lower J. The J 1000 `--fit phys` scan
