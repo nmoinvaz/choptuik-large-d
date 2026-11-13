@@ -3,7 +3,7 @@
 The large-D chain builds its Taylor series in D with the quad-double jet (`anm_run.py --jet_q 1`,
 notes/QUAD_DOUBLE.md 13.20). That series errs by about the quad-double unit times G², where G ≈ 0.7^−(D−3) is the
 mass mode's gain, and near D 170–185 this reaches the chain's tolerance. This note adds the same series one level up,
-in octo-double (eight `f64` parts, about 126 digits), on multidouble 4.0.0's octo-double jet (`OJet<N>`), dual (`Ou`)
+in octo-double (eight `f64` parts, about 127 digits), on multidouble 4.0.0's octo-double jet (`OJet<N>`), dual (`Ou`)
 and LU (`ODLu`). It is not used by the chain until the quad-double series gives out.
 
 ## 1. What was added

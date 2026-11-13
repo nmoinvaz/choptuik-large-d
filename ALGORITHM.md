@@ -17,7 +17,7 @@ periodic with period Δ, and the solver finds the fields and Δ together. Three 
    in D. Each number is therefore stored as a sum of 2, 4 or 8 ordinary doubles, and the larger D gets, the more parts
    each stage needs.
 
-![The large-D computation in six panels: Δ for every D; a solution as a wave of odd harmonics; the full equations' grip on harmonics 5 to 13 from D 79.8 to 232.6, up to thousands of times weaker per harmonic and weaker still as D grows; the smooth family that a fit of the full solutions carries past D 73; the size of each Taylor term of one chain step; and Δ's error bar, from about 10⁻¹⁵ for the full system to 3×10⁻¹¹ on the chain](hp/big_picture.svg)
+![The large-D computation in six panels: Δ for every D; a solution as a wave of odd harmonics; the full equations' grip on harmonics 5 to 13 from D 79.8 to 232.6, up to thousands of times weaker per harmonic and weaker still as D grows; the smooth family that a fit of the full solutions carries past D 73; the size of each Taylor term of one chain step; and Δ's error bar, from about 10⁻¹⁵ for the full system to 4×10⁻¹¹ on the chain](hp/big_picture.svg)
 
 **The large-D computation in one picture** (`hp/plot_big_picture.py`). The top row is the problem, and the bottom row
 is how a fit gets around it. Each panel is explained in detail here:

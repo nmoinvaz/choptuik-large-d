@@ -40,8 +40,9 @@ Contents
   $`e^{\pi\lvert\nu\rvert\omega/2}`$ that grow faster than the profile's harmonics decay (gap (b)). Neither template has
   that. Costin–Tanveer's Borel summability for PDEs with data analytic in a strip is the closest tool.
 - **Realistic targets, in order:** (A) a computer-assisted proof that the truncated (M = 5) inner multiplier has a
-  simple zero in an explicit small box around (A, ω/ω∞) = (2.7186, 0.9992), then a proof with a rigorous harmonic-tail
-  bound for the untruncated multiplier; (B) the selection theorem for large n, first for a model with finitely many
+  simple zero in an explicit small box around (A, ω/ω∞) = (2.7186, 0.9992), now certified (§4), then a proof with a
+  rigorous harmonic-tail bound for the untruncated multiplier; (B) the selection theorem for large n, first for a
+  model with finitely many
   harmonics, then in a weighted space of functions analytic in a θ-strip; (C) then follows as a corollary of (B), with
   no further numerics. (A) is a substantial but standard computer-assisted proof; (B) is a research-level paper in
   exponential asymptotics; together they would derive a critical-collapse echo period, the large-D limit Δ∞, rigorously
@@ -205,14 +206,14 @@ in double precision and both are judged fixable. An independent re-implementatio
 result and certifies the box ±10⁻⁸ as well, ten times larger, with the zero enclosed eight to ten times more tightly.
 Since then (§11) lemma 6a is proved, 6b is proved near ξ = 0, and the certificate is redone on a lower path that needs
 analyticity only for |ξ| ≤ 0.2. Lemma 6b₁, the analyticity of y⁺ on the annular sector 0.0624 ≤ |ξ| ≤ 0.2, is proved by
-a covering with 178 validated Taylor discs (§12). **Theorem A(M = 1) is proved**, assuming Braaksma's summability
+a covering with 178 validated Taylor discs (§12). **Theorem A(M = 1) is certified**, assuming Braaksma's summability
 theorem: the one-harmonic selection condition has exactly one zero in the box, it is simple, and it lies at A ∈
 [2.54214804761338, 2.54214804761975], ω/ω∞ ∈ [0.776994013607438, 0.776994013612010]. Not yet done: an independent
 re-implementation of the disc covering. Larger boxes fail because the interval Jacobian's excess grows like 7×10⁵·h (the
 solution is large where the ray meets the arc), so 10⁻³ boxes need a C² Lohner step; a lower path (ray to 0.2, then the
 real axis) should allow 10⁻⁸. The integration is stiff (fast modes shrink by e⁻³¹, so naive interval Taylor would
 overestimate by about e⁵⁰), which is why the Lohner wrapping is essential. At M = 5 the system is 38-dimensional, and
-the certificate must use the Schur-corrected conditions (leakage up to 10¹⁷), i.e. multiprecision Lohner.
+the certificate that works there is the second-order chart below.
 
 *Toward M = 3 and 5* ([proof/A_M.md](proof/A_M.md), [proof/A_lemmas_M.md](proof/A_lemmas_M.md)). The point certificate
 is **certified** at M = 3: the four real D-jump conditions at ξ₁ = 0.3 have exactly one zero, with a non-singular
@@ -227,14 +228,13 @@ the Jacobian over the box is enclosed in mean value form (proof/A_M2.md), certif
 lemma and Braaksma's theorem, exactly one simple zero of the D-jump function in a curved parallelepiped of outer
 half-width 10⁻¹⁰, with A ∈ [2.7185791892117, 2.7185791892118] and ω/ω∞ ∈ [0.99922840320656, 0.99922840320657]. The
 same code reproduces Theorem A(M = 1) and the M = 3 certificate on boxes 10² to 2×10⁴ times larger. An independent
-review with its own integrator (proof/A_M2_review.md) finds the claim holds; its issues are in the controls. Theorem
+review with its own integrator (proof/A_M2_review.md) finds the claim holds; its issues are in the controls.
 Lemmas 6a(5) (at the certificate's p̂, #184, after the review #39 found the first run centred on x̂) and 6b₁(5) (independently reviewed, #39) are certified, so A(M = 5) holds under the same assumptions; a second validated integrator (CAPD, #189, #208) reproduces the flows of both lemmas, every row of 6b₁(5) included. An independent review (proof/A_M_review.md) confirms the
 M = 3 point certificate, H1–H3 and lemma 6a; the majorant code of lemmas S and 6b₀ and the 6b₁ disc certificates are
 not yet reviewed.
 
-Staged targets: **A(M=5)**, a certified simple zero of the five-harmonic multiplier (lemmas A.1, A.2, A.4 only; a
-standard computer-assisted proof); then **A(∞)**, the untruncated zero, adding A.3, or by the entire-function route
-below.
+Staged targets: **A(M=5)** is done (above); next is **A(∞)**, the untruncated zero, adding A.3, or by the
+entire-function route below.
 
 **Route A3: the entire-function certificate** ([proof/D_entire.md](proof/D_entire.md), `solver/proof/entire_cert.py`).
 The coefficients follow σ_k/σ_{k+1} ≈ (k + β)/κ⋆ with κ⋆ ≈ 1.28 + 1.08i and β ≈ 4.2 − 1.6i, the same at ω/ω∞ = 0.99,

@@ -40,7 +40,7 @@ Every number, date and quotation in the paper, with the file or command it comes
 | item | source |
 |---|---|
 | lowest converged point D = 3.04375 | README.md line 361; `hp/data/delta_all.csv` first row |
-| G ≈ 0.7^−(D−3); about 32, 64 and 126 digits | `notes/OCTO_DOUBLE.md` introduction; `paper/physics/main.tex` line 145 |
+| G ≈ 0.7^−(D−3); about 32, 64 and 127 digits | `notes/OCTO_DOUBLE.md` introduction; `paper/physics/main.tex` line 145 |
 | 4 to 10 hours per low-D point | `notes/LOW_D.md` 15, "Cost" |
 | five machines; three weeks | comms headers; first commit 2026-10-19 03:53, last 2026-11-06 18:26 |
 | 31 stuck points | Appendix A, sourced below |

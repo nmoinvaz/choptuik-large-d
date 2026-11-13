@@ -208,12 +208,11 @@ state on both projectors, and their difference cancels the reload's own offset. 
 1% wherever it was tested, though no state lay inside its chord window: the window measures the start, not Newton's
 basin. On the rounded rows, too, #562's homotopy traces stayed straight in Δ far past their chord windows.
 
-**The table's error bars include it.** The chain_fit rows of `hp/data/delta_all.csv` solve the rounded rows, so from
-D 215 on each row's err is at least this shift, log-linear in |shift| between the points of
-`hp/data/projector_shift.csv` (0b67ed9). It is the largest err from D 232.63 on: 4.3×10⁻¹³ there, 3.5×10⁻¹² at
-D 235.13 (where the runs' spread was 2.6×10⁻¹⁴), and 2.6×10⁻⁹ at D 242.57. Past D 235.13 the err rests on first-order
-figures (err_kind "projector first order"). The values are unchanged until a chain on main's exact projector, from
-D 225 on, replaces them (Nathan's decision, 2026-11-12).
+**The table's error bars.** From D 225.13 on, the chain_fit rows of `hp/data/delta_all.csv` come from the rerun on
+main's exact projector (#603; commit 9c34843c), so they carry no projector term. Below D 225.13 the rows solve the
+rounded rows, and the shift there, at most 7.8×10⁻¹⁶ (`hp/data/projector_shift.csv`), is below the fits term, which
+sets their err (`hp/export_delta_all.py`). Until 9c34843c the rounded rows ran to D 242.57, and the shift was their
+largest err from D 232.63 on (4.3×10⁻¹³ there, 2.6×10⁻⁹ at D 242.57, err_kind "projector first order").
 
 **The weak σ oscillate in D.** The equilibrated σ₁ and σ₂ oscillate with a period that shortens as D falls: 2.715 at
 D 232.6, 2.525 at 221.6 and 2.440 at 212.8 (#525; `I525-win2/` at 5037ec07). σ₃ and σ₄ have periods of 2.13–2.14

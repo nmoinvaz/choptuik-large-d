@@ -21,8 +21,8 @@ det M are all found.
 One item is open. At a second resolution, M = 48 at D = 30, the count is the same except for an **extra conjugate
 pair at 4.267 ± 1.324i**. The pair is absent at M = 32, and absent at M = 48 when the centre data's τ-harmonics above
 13 are pinned (the cut the production runs use from D = 35 on). Without the cut, the M = 48 background converges only
-to |F| = 9×10⁻¹⁸. Everything points to an artifact of the solver's weakly coupled high-harmonic directions, but a third
-resolution is needed to close it (section 5). At D = 4 (f64 solver, real λ only) det M changes sign only at
+to |F| = 9×10⁻¹⁸. It was closed in section 5 (#250, #260): on a fitted layout the pair is absent and the count at
+M = 48 without the cut is 0 in every box, as at M = 32. At D = 4 (f64 solver, real λ only) det M changes sign only at
 λ_g = 0.6139 and λ_phys = 2.6741 on 0.02 < λ < 6.47.
 
 What is not covered: Re λ > 6.6, perturbations whose τ-harmonics lie above what the layout holds (above 31, and for the

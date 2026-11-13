@@ -163,7 +163,7 @@ same quantity, precision or reading), **differs** (a discrepancy, §3). Our stat
   two k_c. #631 narrows it to between η = 5 and 10: at k_c = 23 and 39, Δ(7) is the smallest of η = 5, 7, 10, 14, 20
   and ∞, every neighbouring difference resolved (raw I631-win 2d659f74); #633 narrows it to (6, 8.5), with Δ(7) still
   the smallest; a parabola through η = 6, 7 and 8.5 puts the minimum at η = 6.94 to 7.20 over the variable (η, ln η,
-  1/η) and k_c, Δ_min = 0.4598093 at k_c = 39 (raw I633-win 3046bc7d). Neither cited source says monotonic (both read
+  1/η) and k_c, Δ_min = 0.4598094 at k_c = 39 (raw I633-win 3046bc7d). Neither cited source says monotonic (both read
   in their arXiv sources on 2026-11-13). Husa et al. 2000 (gr-qc/0002067, Sec. IV): Δ/2 "varies strongly with the
   coupling constant", "At large η, Δ/2 asymptotes to 0.2300 ± 0.0003", and as η decreases towards 0.18 "Δ/2 rises
   sharply"; its Table I gives Δ/2 = 0.2295, 0.2304, 0.2293 and 0.2302 at η = 2, 5, 10 and 100, rounded to four figures

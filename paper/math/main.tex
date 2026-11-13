@@ -133,7 +133,7 @@ unstable mode and continuity in $1/n$, the critical exponent tends to $1/2$ (Cor
 The two contraction arguments among them, the global continuation and the inner--outer matching, are proved for each
 fixed $M$ and carried out with computer-assisted constants for $M = 1$ and $n \ge e^{73.89}$. For $M = 1$ the theorem is
 certified, assuming Braaksma's theorem, for $n \ge e^{89.75}$, with the light cone handled in the exact light-cone gauge
-(Section~\ref{sec:B1status}); a first independent review confirms it with corrections that change no constant.
+(Section~\ref{sec:B1status}); two independent reviews confirm it, with corrections that change no constant.
 \item For the one-harmonic truncation, the selection condition has exactly one zero in an explicit box of half-width
 $10^{-9}$, and it is simple (Theorem~\ref{thm:A}). The proof is computer-assisted, assumes only Braaksma's summability
 theorem, and follows Baldom\'a, Capi\'nski, Guardia and Seara~\cite{BaldomaCapinskiGuardiaSeara2023}.
@@ -164,7 +164,7 @@ Corollary~\ref{cor:gamma} & $\gamma_\infty = 1/2$ & conditional on Conjecture~\r
 Theorem~\ref{thm:B} & selection for the $M$-harmonic model & conditional on the lemmas of Table~\ref{tab:Bstatus}; for $M = 1$ certified, assuming Braaksma's theorem, $n \ge e^{89.75}$ (Section~\ref{sec:B1status}); reviewed in part \\
 Lemmas B1, B5.1, B6$'$, B8.1, B8.2; B2, B5.0 & ingredients of Theorem~\ref{thm:B} & proved; B2 and B5.0 checked symbolically \\
 Theorem~\ref{thm:A} & one simple zero of the $M = 1$ selection condition & certified (computer-assisted), assuming Braaksma's theorem \\
-Section~\ref{sec:A3} & one simple zero of the $M = 3$ selection condition & certified (computer-assisted), assuming Braaksma's theorem; not independently reviewed \\
+Section~\ref{sec:A3} & one simple zero of the $M = 3$ selection condition & certified (computer-assisted), assuming Braaksma's theorem; reviewed in part \\
 Lemma~\ref{lem:sigma1} & enclosure of the first amplitude coefficient $\sigma_1$ & certified (computer-assisted,\newline
 \repo{exact\_sigma.py}); not independently reviewed \\
 Section~\ref{sec:evidence} & $\omega^*/\winf = 0.999975$--$1.00005$ at fourteen to twenty-two orders (no zeros of $S_1$ nearer the origin than $x_0$ assumed) & numerical evidence \\
@@ -1318,8 +1318,9 @@ half the fast exponent.
 Lemma~B6 and the factor $\kappa_{n,\mu}$ are not needed in this form. Every certificate is in ball arithmetic and has a mutation control that makes it
 fail. A first independent review (\repo{proof/P2\_review.md}) finds that the theorem stands as stated, with seven
 corrections that change no constant or threshold (three of them to what the class of Lemma~B8's continuation up to the
-light cone must contain); its second implementations of that continuation's closure and of the jump lemma's secant bounds
-are not complete. The threshold $n_0$ is far beyond any dimension a numerical solver reaches, so the theorem does not by
+light cone must contain). A second review (\repo{proof/P2b\_review.md}) completes the second implementations of that
+continuation's closure and of the jump lemma's secant bounds and confirms both. The threshold $n_0$ is far beyond any
+dimension a numerical solver reaches, so the theorem does not by
 itself identify the computed branch.
 
 \subsection{Gap (b): the harmonic tail}
@@ -1881,8 +1882,8 @@ disc certificates of 6b$_1$ are not yet reviewed.
 \subsection{What is not claimed}
 Theorem~\ref{thm:A} is a statement about the one-harmonic truncation ($M = 1$), not about the physical problem: its zero is
 $22\%$ below $\winf$ in frequency, and it does not survive the addition of harmonic $3$. Nothing is said about parameters outside
-$X$. The disc covering has no second implementation. At $M = 5$ the higher harmonics leak into the lower conditions with weights up
-to $10^{17}$, so a certificate there must be posed on the Schur-corrected conditions, with multiprecision Lohner integration.
+$X$. The disc covering has no second implementation. At $M = 5$ the first-order certificate fails, and a second-order chart
+with $C^2$ enclosures certifies the zero instead (\repo{proof/A\_M2.md}, reviewed in \repo{proof/A\_M2\_review.md}).
 
 % =====================================================================================================
 \section{The untruncated multiplier as an entire function}
@@ -2201,12 +2202,11 @@ The large-$D$ limit of Choptuik's critical solution is a selection problem of th
 harmonics in place of a scalar parameter. The linear version of the whole chain (outer late orders, inner Stokes constant,
 light-cone coefficient) is proved. What would turn the selection rule into a theorem, in order of difficulty:
 \begin{enumerate}[leftmargin=2em]
-\item \emph{Theorem~\ref{thm:B} for $M = 1$}: the missing items of Section~\ref{sec:B1status}, chiefly a certified error bound
-in Lemma~B5(2) (or a matching domain of $n$-independent size, \repo{proof/B5\_inner.md}, \S5.4) and independent reviews of
-the certificate code; then the same for each fixed $M$. A proof of (H-$\sigma$) would identify the centre-regular solution
-with the Borel sum of the outer series, but the theorem does not need it.
-\item \emph{Theorem A($M = 5$)}, on the Schur-corrected conditions; an independent review of the $M = 3$ certificate
-(Section~\ref{sec:A3}); and a second implementation of the disc covering.
+\item \emph{Theorem~\ref{thm:B} for each fixed $M > 1$}, as for $M = 1$ (Section~\ref{sec:B1status}), and reviews of the
+certificate code not yet reviewed there (B5(1), B8 beyond the normalization run, (H8)). A proof of (H-$\sigma$) would
+identify the centre-regular solution with the Borel sum of the outer series, but the theorem does not need it.
+\item \emph{Theorem A($M = 5$)} in the paper (certified in \repo{proof/A\_M2.md}); a review of the $M = 3$ majorant code
+and disc certificates (Section~\ref{sec:A3}); and a second implementation of the disc covering.
 \item \emph{The untruncated zero}: the harmonic-tail lemma of Section~\ref{sec:tail} with $M = 7$ explicit, or rigorous
 $\sigma_k$, $k \le 14$, with a proof of the exponential type of $S_1$ (Section~\ref{sec:entire}).
 \item \emph{Uniformity in the harmonic index} (gap (b)) for the selection theorem itself, in a space of functions analytic in

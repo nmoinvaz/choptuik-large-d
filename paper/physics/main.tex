@@ -142,7 +142,7 @@ Fourier modes in $\tau$ (23--47 modes), with the integration-step error extrapol
 extrapolated in the mode count. Above $D \approx 26$ rounding at $10^{-16}$ in the residual moves $\Delta$ by
 $10^{-7}$--$10^{-6}$ at $D = 30$--$40$.
 
-\emph{Double-double solver} ($8.25 \le D \le 61.03$): double-double arithmetic~\cite{Dekker1971} (about 32 digits) on SIMD vectors;
+\emph{Double-double solver} ($8.25 \le D \le 61.03$ for the fits, and the values at $D = 4$--$8$ of Table~\ref{tab:values}): double-double arithmetic~\cite{Dekker1971} (about 32 digits) on SIMD vectors;
 Taylor series in $x$ of order 36 with truncation $10^{-32}$; centre and horizon series to $10^{-33}$; collocation in
 $\tau$ on the half period (32 points); an exact Jacobian by forward-mode duals~\cite{Wengert1964} with a double-double LU; continuation in
 $D$ with deflated Newton steps. The Jacobian has a ladder of near-null directions (high $\tau$-harmonics of the centre
@@ -151,9 +151,10 @@ data, singular values falling roughly like $e^{-0.7k}$ with the harmonic $k$); f
 $5.5\times10^{-10}$. The checks are
 listed in Table~\ref{tab:checks}. The 857 points fit smooth curves to about $4\times10^{-15}$; the estimated error per
 point is about $10^{-16}$ below $D = 27$ and up to a few $10^{-15}$ above (from the weak directions on $27$--$35$, the
-pinning above $D = 35$, and the relaxed tolerance above $D = 60.1$). Above $D = 40$ these
-checks are internal to the double-double solver (resolution, pinning, a second build on a second machine); the
-independent double-precision solver stops at $D = 40$.
+pinning above $D = 35$, and the relaxed tolerance above $D = 60.1$). The independent double-precision solver stops at
+$D = 40$. Above it, besides the double-double solver's own checks (resolution, pinning, a second build on a second
+machine), a collocation code in Reiterer and Trubowitz's formulation reproduces $\Delta$ to $3\times10^{-15}$ at
+$D = 40$ and $50$ and to $10^{-12}$ at $D = 60$ (in the repository, \texttt{notes/RT\_FORMULATION.md}).
 
 Why the extra precision is needed is itself a physical result. The sensitivity of $\Delta$ to the residual,
 $\max|\partial\Delta/\partial F|$, grows about 1.8-fold per unit of $D$ below $D = 27$ and 1.5-fold at $D = 56$--$61$, to
@@ -293,8 +294,9 @@ computation in the published data; ours, $0.41312694$ (stable to $10^{-7}$ acros
 Kunstatter's $0.4131 \pm 0.0001$~\cite{BlandKunstatter2007}. Below $D = 4$ the double-double solver, with its matching nodes moved to $x = 0.005$
 and $0.8$, gives $\Delta(3.7) = 3.46520048 \pm 3\times10^{-8}$ and $\gamma(3.7) = 0.34865019 \pm 8\times10^{-8}$, converged in
 the $\tau$ resolution (48, 64 and 80 points); our 47-mode f64 points there are $2$--$5\times10^{-6}$ high in $\Delta$.
-Extrapolated from $3.64 \le D \le 4$, $\gamma(3.5) = 0.3235 \pm 0.0030$, in agreement with~\cite{EckerEtAl2026}
-($0.32239$) and not with $0.349 \pm 0.003$ in~\cite{BlandEtAl2005}. The modes needed grow from about 73 at $D = 4$ to
+At $D = 3.5$ the double-double solver gives $\gamma = 0.3223856$, which moves by $3.8\times10^{-9}$ from 96 to 128
+points in $\tau$, in agreement with~\cite{EckerEtAl2026} ($0.32239$) and not with $0.349 \pm 0.003$
+in~\cite{BlandEtAl2005}. The modes needed grow from about 73 at $D = 4$ to
 about 110 at $D = 3.5$ and several hundred near $D = 3.05$; at $D = 3$ the scalar field decouples from gravity in these
 equations, so the family cannot reach a regular $D = 3$ limit.
 
@@ -592,8 +594,9 @@ $D = \infty$ critical solution is selected by the rule of Sec.~\ref{sec:selectio
 $\lambda = 2$ and the gauge mode $\lambda = 1$, and $\lambda(D)$ is continuous at $1/n = 0$, then $\gamma_\infty = 1/2$.}
 The uniqueness of the unstable mode at $D = \infty$ is not shown. At finite $D$ the outer region and the $1/n$
 corrections to Eqs.~\eqref{eq:heat} depend on $r$ explicitly, so the symmetry is broken and the mode survives as an
-ordinary unstable mode with $\lambda = 2 + O(1/n)$; the data give $2 + 3.0324/n$ [Eq.~\eqref{eq:lambda}], a coefficient
-that would need the $O(1/n)$ inner equations.
+ordinary unstable mode with $\lambda = 2 + O(1/n)$; the data give $2 + 3.0324/n$ [Eq.~\eqref{eq:lambda}]. The $O(1/n)$
+inner equations truncated to $M = 1$, 3 and 5 harmonics give $7.76$, $3.080$ and $3.023$, approaching it (numerical
+evidence, conditional on the selection rule at that order); without truncation it is not computed.
 
 \subsection{The selection rule at $D = \infty$}
 \label{sec:selection}
@@ -792,16 +795,17 @@ count~\cite{HirschmannEardley1995b,Gundlach1997} of the zeros of the growth-mode
 determinant in $-0.08 < \mathrm{Re}\,\lambda < 6.18$, over a full period in $\mathrm{Im}\,\lambda$ (both symmetry sectors), finds
 besides $\lambda_{\rm phys}$ only the $\tau$ translation ($\lambda = 0$) and a gauge mode of the formulation at
 $\lambda = 1 + \langle c_1\rangle$; a planted-zero test of the same code counts correctly in all 8 cases. A second resolution
-shows one extra pair at $D = 30$, absent at the production resolution and with the high-harmonic cut, which we take as a
-truncation artifact pending a third resolution. Lower $D$ with complex $\lambda$, larger $\mathrm{Re}\,\lambda$ and
+shows one extra pair at $D = 30$, absent at the production resolution and with the high-harmonic cut; on a layout whose
+centre series converges it is absent at that resolution too. Extra zeros at $D = 54$, 55 and 61 at the second resolution
+are absent at a third, as truncation artifacts are. Lower $D$ with complex $\lambda$, larger $\mathrm{Re}\,\lambda$ and
 non-spherical perturbations are not covered, and no collapse has been evolved above $D = 14$, so a continuously
 self-similar solution~\cite{ClarkPimentel2025} taking over the threshold is not excluded; in that case $1/\lambda$ would
 not be the critical exponent. For the axion--dilaton the corresponding check was made at $D \le 40$
 (Sec.~\ref{sec:matter}).
 
 \emph{Open.} Higher orders of the selection rule, which would give $\Dinf$ (and possibly a closed form) to more digits;
-a proof of the rule (Conjecture~1 of~\cite{math}); the uniqueness of the $\lambda = 2$ mode at $D = \infty$ and its $1/n$ coefficient; an
-independent check of the double-double points above $D = 40$; $\gamma$ just below $D = 4$; and the $\ell = 1$ multiplet
+a proof of the rule (Conjecture~1 of~\cite{math}); the uniqueness of the $\lambda = 2$ mode at $D = \infty$ and its $1/n$
+coefficient without truncation; and the $\ell = 1$ multiplet
 beyond $D = 9$ and the $\sigma$-model's DSS branch beyond $D = 11$, which would show whether a centrifugal term moves $\gamma_\infty$ away
 from $1/2$.
 
@@ -809,7 +813,7 @@ from $1/2$.
 \section{How this work was done}
 \label{sec:how}
 
-N.~M. chose the problem, set the direction at each step and ran the long computations on his own machine. The code, the
+N.~M. chose the problem, set the direction at each step and ran the long computations on his own machines. The code, the
 computations, the derivations, the proofs and the text, including this paper, were produced by Claude, Anthropic's AI
 model, working as a set of coordinated agents. N.~M. has not checked the mathematics himself, and no human expert has
 reviewed the work.

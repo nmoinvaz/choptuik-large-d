@@ -88,7 +88,7 @@ Each ± says what kind of bar it is.
 
 | Result | Value | Status | The bar | Where |
 |---|---|---|---|---|
-| Δ(D), γ(D) computed | 1199 double-double points, D = 8.25–67.77; 67 values of γ; points below D = 4 to 3.044 | numerical evidence | change from the next resolution, per point | [Values](#values), [Below D = 4](#below-d--4-and-the-limit-d--3) |
+| Δ(D), γ(D) computed | 1199 double-double points, D = 8.25–67.77; 67 values of γ; points below D = 4 to 3.044 | numerical evidence | below D = 8.25 the change from the next resolution, per point; above, the size of the resolution and freezing checks near each D | [Values](#values), [Below D = 4](#below-d--4-and-the-limit-d--3) |
 | One formula for all D ≥ 4 | a rational function of 1/(D − 2), 11 constants for Δ and 9 for γ | numerical evidence (an empirical fit) | its misfit on points it never saw | [The formula](#the-formula) |
 | The limit of Δ | Δ∞ = 1.643893746 ± 1.5×10⁻⁸ | conditional on Δ analytic in 1/D | the spread of 48 fit choices, corrected by a planted-truth test | [Is the period analytic in 1/D?](#is-the-period-analytic-in-1d) |
 | The limit of γ | γ∞ = 1/2 to about 5×10⁻⁷ | numerical evidence; explained given Conjecture 1 and one unstable mode | fit spread | [Proposition 5](#proposition-5-the-unstable-mode-at-infinite-d-is-exact), [GAMMA.md](GAMMA.md) |
@@ -99,7 +99,7 @@ Each ± says what kind of bar it is.
 | The five-harmonic point certificate | one simple zero, ω/ω∞ ∈ [0.99922840320656, 0.99922840320657] | certified, assuming Braaksma's theorem and the start-value lemma; reviewed (proof/A_M2_review.md); lemmas 6a(5) and 6b₁(5) are certified at it (#184, #39), so Theorem A(M = 5) holds under the same assumptions; a second validated integrator (CAPD) reproduces its flows (#189, #208) | rigorous enclosures | [PROOF.md](PROOF.md) |
 | D = 4 and the maximum of Δ | agreement with the published values; the maximum at D = 3.755725 | numerical evidence | published uncertainty; fit spread | [Relation to published work](#relation-to-published-work) |
 | The limit D → 3 | a finite Δ(3) (1.72–1.80) or Δ → 0: open | open (two readings) | fit-degree spread | [Below D = 4 and the limit D → 3](#below-d--4-and-the-limit-d--3) |
-| The echo's shape | a single harmonic from D ≈ 45 up (99.4% of the power), a pulse near D = 3 | numerical evidence | — | [Results](#results) |
+| The echo's shape | a single harmonic from D ≈ 45 up (99.2–99.4% of the power), a pulse near D = 3 | numerical evidence | — | [Results](#results) |
 
 In detail:
 
@@ -459,7 +459,8 @@ As D → ∞ (ε → 0):
   10⁻⁸–10⁻¹². From M = 32 to 48, λ moves by less than the root's resolution, 10⁻¹⁴ at D = 50 and 5×10⁻¹³ at D = 58
   (`hp/gamma_m48_gap.py`, raw I266-mac).
 - In free fits in powers of 1/n, λ∞ − 2 (λ = 1/γ) falls by a factor of about 3.5 with each added power. On D ≥ 30 it is
-  2.4×10⁻⁴, 6.7×10⁻⁵, 1.9×10⁻⁵, 5.5×10⁻⁶ and (1.6 ± 2.2)×10⁻⁶ for four to eight powers, with no sign of levelling off
+  2.4×10⁻⁴, 6.7×10⁻⁵, 1.9×10⁻⁵, 5.5×10⁻⁶ and (1.6 ± 2.2)×10⁻⁶ (the fit's standard error) for four to eight powers, with
+  no sign of levelling off
   (`cd hp && python3 gamma_compare.py data/gamma_dd.jsonl data/local/gamma_dd.jsonl`). Fixing λ∞ = 2 fits better with
   the same number of parameters.
 
@@ -519,7 +520,8 @@ are in [Is the period analytic in 1/D?](#is-the-period-analytic-in-1d).
 
 **Every value of Δ** we computed, from D = 3.04375 to the large-D chain's frontier, is in
 [`hp/data/delta_all.csv`](hp/data/delta_all.csv), one row per D. Each row has Δ in up to four parts (their sum is the
-value), the kind of computation, an error estimate and what that estimate is, a published value at that D where one
+value), the kind of computation, an error estimate and what that estimate is where one exists, a published value at
+that D where one
 exists (with our Δ minus it), and the source run and state in the [raw data](#raw-data). Every published value,
 including Ecker, Ecker and Grumiller's table to D = 200[^23], is compared with ours in
 [`hp/data/delta_published_compare.csv`](hp/data/delta_published_compare.csv).
@@ -529,9 +531,11 @@ The kinds of computation are:
 - the full system in double-double (D ≤ 67.77) or quad-double (68.5–73);
 - the pinned double-double runs after one full-system step (67.77–73.27);
 - the large-D chain from 74. The chain holds harmonics 5–13 of p1 on a fit of the full-system states (kind chain_fit).
-  It agrees with the 1/D series of the double-double points to within the series' own spread, to D = 215. Its error
-  column is the spread over the fit's degree where a rerun on the fits of degree 6 and 10 reached a D
-  ([notes/QUAD_DOUBLE.md](notes/QUAD_DOUBLE.md), 13.25).
+  It agrees with the 1/D series of the double-double points to within the series' own spread, to D = 215, where that
+  comparison ends. Its error column is the spread over the fit's degree where a rerun on the fits of degree 6 and 10
+  reached a D, directly or interpolated in 1/(D − 2), to D = 231.13. Above that, to 245.64, it is an estimate
+  extrapolated log-linearly in D from the last six measured rows (err_kind "fits extrapolated";
+  `hp/export_delta_all.py`, [notes/QUAD_DOUBLE.md](notes/QUAD_DOUBLE.md), 13.25).
 
 How the held harmonics' bias was found, removed and measured is in [notes/BIAS.md](notes/BIAS.md).
 `cd hp && python3 export_delta_all.py ../../choptuik-large-d-raw` rebuilds the file, and `--verify` checks every row
@@ -942,7 +946,8 @@ The last two columns approach the same limit, as Proposition 1 predicts (c = 1 -
 
 ![The solutions of all D as one family, animated: p1 over one echo period swept from D 38 to 232.6, the waves times √(D−2) nearly coinciding, each odd harmonic a nearly fixed factor smaller than the one before, and p over the radius and the echo phase with p1 its slope at the centre](hp/wave_family.svg)
 
-**The family to D 232.6** (`hp/plot_wave_family.py`). Times √(D−2), the first harmonic of p1 falls by 10% from D 38
+**The family to D 232.6**, where the chain stood when the figure was drawn (`hp/plot_wave_family.py`; the chain now
+reaches 245.6). Times √(D−2), the first harmonic of p1 falls by 10% from D 38
 to 232.6 (3.106 to 2.782), against 65% without the factor, on its way to the extrapolated 2.72. Within one wave each odd
 harmonic is a nearly fixed factor smaller than the one before: from harmonic 1 to 3 by 10.5 at D 38 and 16.3 at D
 232.6. Above D 73 harmonics 5–13 are held on a fit ([ALGORITHM.md](ALGORITHM.md), section 3), so there only harmonics
@@ -1436,8 +1441,8 @@ A ∈ [2.72647588563032, 2.72647588563144], ω/ω∞ ∈ [1.01560309485743, 1.01
   intervals from the saved box, checked single Lohner steps and the start values against 60–75-digit references,
   confirmed hypotheses H1–H3 and reran lemma 6a. It found no error that changes a number or a verdict.
 - Not yet reviewed, here or at M = 1, are the majorant code of lemmas S and 6b₀ and the 6b₁ disc certificates.
-- At M = 5 the same certificate fails, because the interval enclosures grow too fast along the arc. It needs a
-  second-order design ([proof/A_M.md](proof/A_M.md)).
+- At M = 5 the same certificate fails, because the interval enclosures grow too fast along the arc. A second-order
+  design certifies it instead ([proof/A_M2.md](proof/A_M2.md)).
 - The first coefficient σ₁ of the untruncated condition is also enclosed rigorously (±3.5×10⁻⁵).
 
 Evidence beyond the linear case comes from the amplitude expansion ([next subsection](#the-inner-problem-at-large-x)).
@@ -1604,7 +1609,8 @@ This is Weber's classical Stokes constant $`\sqrt{2\pi}/\Gamma(-\nu_W)`$ with $`
   third estimator the same: S₁ is numerically an entire function of A² of exponential type, and the series of
   G = e^{−κ̄A²}S₁ (same zeros, no cancellation) puts the real zero at 0.99988, A₀ = 2.7194
   ([proof/D_entire.md](proof/D_entire.md)). The truncation sequence alternates and converges (0.777, 1.0156, 0.999228,
-  1.000022; limit 0.999985 ± 2×10⁻⁵, [proof/B_tail_M7.md](proof/B_tail_M7.md)).
+  1.000022; limit 0.999985 ± 2×10⁻⁵, the scatter of M = 7's repeated solves, given that the per-pair ratio stays near
+  M = 7's, [proof/B_tail_M7.md](proof/B_tail_M7.md)).
 - *How far to trust those estimates.* A planted-truth test ([notes/PLANTED_SELECTION.md](notes/PLANTED_SELECTION.md))
   ran the same estimators, through the same code, on synthetic functions of the same class: Laplace integrals over a
   Borel arc whose coefficients match the real σ₀…σ₁₂ to 10⁻⁵, with the zero planted at ω/ω∞ = 0.996–1.004. The pair
@@ -1931,7 +1937,8 @@ never reaches large D and cannot test γ∞. Its γ ends near 1/2 for a differen
 the σ-model's DSS branch.
 
 A by-product supports the selection rule in a second model. At η = 0.14 the zero of the D = ∞ Stokes multiplier for the
-CSS ground state, A₀ = 1.9225686, matches the finite-D ground state extrapolated to D = ∞, 1.9226 ± 0.0003.
+CSS ground state, A₀ = 1.9225686, matches the finite-D ground state extrapolated to D = ∞, 1.9226 ± 0.0003 (a spread
+over the fit's degree).
 
 **σ-model, echoing (DSS) branch** ([matter/SIGMA_DSS.md](matter/SIGMA_DSS.md)). Continued in 1/η from the ℓ = 1
 solution (the σ-model's limit as η → ∞), the branch reproduces Husa et al.'s D = 4 values: Δ to 0.6% or better for
@@ -1958,8 +1965,10 @@ near-null band in the Jacobian and an unexplained drift of the gauge mode's root
   points supplies it ([notes/LARGE_D_WALL.md](notes/LARGE_D_WALL.md); [notes/QUAD_DOUBLE.md](notes/QUAD_DOUBLE.md),
   sections 12–13).
   - An exact Taylor continuation in D (the asymptotic numerical method, with the dimension entered as a jet through the
-    kernel) with a quad-double corrector carries the chain to D = 85.7. It does so only with harmonics 5–13 of the
-    centre profile held on a trend, and those values lie 5×10⁻⁸ to 1.4×10⁻⁷ below the 1/D series (section 13.19 there).
+    kernel) carries the chain past the wall, to D = 245.6 ([ALGORITHM.md](ALGORITHM.md), section 3). It does so only with
+    harmonics 5–13 of the centre profile held on a fit of the full solutions. Held on a trend instead, they put Δ
+    5×10⁻⁸ to 1.4×10⁻⁷ below the 1/D series by D = 85.7 (section 13.19 there), the bias that the fit removes
+    ([notes/BIAS.md](notes/BIAS.md)).
   - The wall is the digits the horizon block needs, which grow linearly with D, not the horizon series itself. In a toy
     of the horizon's two branches (`hp/horizon_toy.py`), the series keeps the full precision up to D ≈ 200. An integral
     equation from the horizon converges only after its first (D − 4)/2 Taylor terms are subtracted, and shooting outward
@@ -1972,7 +1981,7 @@ near-null band in the Jacobian and an unexplained drift of the gauge mode's root
   ([Is the period analytic in 1/D?](#is-the-period-analytic-in-1d), [notes/DINF_FITS.md](notes/DINF_FITS.md)).
 - **The limit D → 3.** Our polynomial in √(D − 3) keeps Δ(3) finite, between 1.72 and 1.80 over the fit degrees. Ecker
   et al. read a power law Δ → 0. The readings separate below D ≈ 3.04, where the lowest converged point so far is
-  3.04375 ([The formula](#the-formula), the limit graph).
+  3.04375 ([Below D = 4 and the limit D → 3](#below-d--4-and-the-limit-d--3), the limit graph).
 - **The proof status.** The selection rule is a conjecture with hypotheses H1–H2 and gaps (a)–(c). The one-harmonic
   theorem B(1) is certified assuming Braaksma's theorem, with a threshold n ≥ e^{89.75} far beyond any computed D, so it
   does not yet identify the computed branch ([PROOF.md](PROOF.md), [notes/PROOF_QUEUE.md](notes/PROOF_QUEUE.md)).
@@ -2078,10 +2087,11 @@ The other references are the footnotes below.
 ## How this work was done
 
 Nathan Moinvaziri chose the problem, set the direction at each step and ran the long computations on his own machines
-(two Windows computers and two Macs). The code, the computations, the derivations, the proofs and the text in this
-repository were produced by Claude, Anthropic's AI model, working as a set of coordinated agents. These were cloud
-sessions at first, then a coordinating session on one Mac, runner sessions on the other machines, and subagents for
-separate tasks. The commits up to 5 November 2026 are marked as co-authored. He has not checked the mathematics himself.
+(two Windows computers, two Macs and two Linux computers). The code, the computations, the derivations, the proofs and
+the text in this repository were produced by Claude, Anthropic's AI model, working as a set of coordinated agents.
+These were cloud sessions at first, then a coordinating session on one Mac, runner sessions on the other machines, and
+subagents for separate tasks. The commits up to 5 November 2026 are marked as co-authored. He has not checked the
+mathematics himself.
 
 What has been checked, and how:
 

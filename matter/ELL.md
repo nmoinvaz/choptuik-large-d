@@ -198,7 +198,9 @@ horizon series from u = 0.04 (30 terms), every point converged to the residual s
 
 Additional Δ points from the k_c = 23 continuation: Δ(8.15) = 0.9851763, Δ(8.375) = 0.9867067, Δ(8.7125) = 0.9879556,
 Δ(9.05) = 0.9881824. (D − 3)γ is the mass exponent. Data: `data/l1_kc23r.jsonl`, `data/l1_D4_kc*.jsonl`,
-`data/l1_kc23_gamma.jsonl`; table from [`ell_table.py`](../solver/matter/ell_table.py).
+`data/l1_kc23_gamma.jsonl`; table from [`ell_table.py`](../solver/matter/ell_table.py). A k_c = 23 continuation past
+D = 9 (`data/march_l1kc23hi.jsonl`, D 9.05 to 10.5) and its solution at D = 10 in `data/ell_gamma.jsonl` (κ = 0.7,
+Δ = 0.9849793, λ = 2.914966, abs(F) 1.4×10⁻¹³) are neither used nor checked here.
 
 **Accuracy.** τ truncation: k_c 23 → 31 at D = 6 changes Δ by 7×10⁻⁸ and λ by 2.6×10⁻⁷. RK steps: at D = 8, κ = 1 → 0.5
 moves Δ by 3.4×10⁻⁶ (∝ κ⁴), so κ = 0.7 carries ~1×10⁻⁶; horizon start u = 0.01 → 0.04 moves it by 4×10⁻⁷

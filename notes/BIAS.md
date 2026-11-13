@@ -8,8 +8,9 @@ measured, removed, and measured again, with pointers to where each result is rec
 Where it stands, as numerical evidence:
 
 - The chain (kind chain_fit, `hp/data/delta_all.csv`) holds the harmonics on a 1/n fit of the full-system states and
-  reaches D = 215.
-- Its bias, measured by a full-system step, is +1.2e-14 at D 80, at most +5.7e-13 up to 160 and −3.1e-12 at 215.
+  reaches D = 245.6 (#603).
+- Its bias, measured by a full-system step, is +1.2e-14 at D 80, at most +5.7e-13 up to 160 and −3.1e-12 at 215. The
+  step has not been taken above 215 (`hp/data/release_steps.csv`).
   The trend-held chain before it was biased by −5e-8 at 80 and −3.2e-6 at 200.
 - The step returns planted biases of harmonic 5 to 1e-5 of themselves, but between two held fits it removes only
   93–99% of the difference. So it is a measurement of the bias, not yet a correction.
@@ -36,7 +37,8 @@ bias, the step's |dΔ|. They lie below the series' spread (gray), so only the st
 | starts | two starts with their own Taylor plans, a spread | quad-double full system, 68.5–73 |
 | pins | pin 7 against pin 5, two systems, a spread | pinned runs, 67.77–73.27 |
 | runs | two step paths (T139), a spread | chain_fit, where no fit spread exists |
-| fits | held fits of degree 6 and 10 against 8 (T140), a spread | chain_fit, 74–150 |
+| fits | held fits of degree 6 and 10 against 8 (T140, #608), a spread, direct or interpolated in 1/(D − 2) | chain_fit, 74–231.13 |
+| fits extrapolated | the fits term extrapolated log-linearly in D from the last six rows that have one, an estimate | chain_fit, 232.13–245.64 |
 | step | the junk-frozen full-system step's dΔ, a linear estimate of the bias | chain_fit, every 5 in D (not in err) |
 
 None is a bound. The largest available is the row's err (`hp/export_delta_all.py`).
@@ -72,8 +74,8 @@ Each refinement answered the one before it:
 
 ## Open
 
-- **The remainder in 13.** Moves of single held coefficients (T148, T149) will show whether the step misses a
-  harmonic other than 5 or loses part of the response to the frozen junk.
+- **The remainder in 13.** Moves of single held coefficients (T148, T149; QUAD_DOUBLE 13.29) return harmonics 5 and 7
+  to 1e-4 and miss most of the response of harmonics 9–13, a likely source of the remainder.
 - **Above D 130.** No planted test reaches there. On the trend-held chain the step agreed with the exact shift to
   0.5–2% (13.29), at biases a million times larger than chain_fit's.
 - **Resolution.** The chain runs at M = 32 only. At D 80 its state, resampled to M = 48 in τ and solved again in
@@ -81,8 +83,8 @@ Each refinement answered the one before it:
   `resolution-mac/scan_chainfit_D80.log`), so resolution is far below the bias there. Above D 80 the check needs the
   horizon block re-seeded at the new M: without it the start residual grows from 1.7e-9 at 80 to 2e15 at 200.
 
-- **Range.** The chain stops at 215, where the octo-double corrector's weakest pivot reaches 7e-16
-  (`T138-win2/chain_od.log`). T150 reruns it with the junk frozen in the corrector, toward D 400.
+- **Range.** The first chain stopped at 215, where the octo-double corrector's weakest pivot reaches 7e-16
+  (`T138-win2/chain_od.log`). The chain now reaches 245.6, on the exact projector from 225.13 (#603).
   The crawl past the wall (I19-win2, D = 214.6 to 215.03, 7 rows of delta_all.csv) accepted its steps with 4 junk
   directions frozen. Reloaded with the crawl's options and no step, 1 of its 7 saved states and 1 of 3 saved
   predictions converge again, and those two give the crawl's Δ and correction to the printed digits. The other 8 stop

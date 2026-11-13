@@ -6,6 +6,9 @@ for the local machine to go further. Status words as in AGENTS.md; every number 
 
 ## Summary
 
+- **Since this status:** the double-double points reach D = 3.04375 (M = 384, 8.8e-11 from M = 320;
+  `hp/data/delta_all.csv`, sections 11–15), and D = 4 is converged at M = 192 (1.1e-22 from M = 160). The items below are
+  the status of 2026-10-22.
 - **Lowest D with a demonstrated-converged Delta: D = 3.7** (double-double solver): Delta(3.7) = 3.46520048 +- 3e-8
   (M = 80: 3.4652004835; the bar is the last M difference, the M = 48 / 64 / 80 steps contracting 33-fold), unchanged to
   < 1e-16 by two node layouts with longer series and tighter Taylor steps (Sec. 3). gamma(3.7) = 0.34865019 +- 8e-8
@@ -162,6 +165,8 @@ to follow M.
   estimator range). The rule was first applied to Ecker et al.'s gamma curve at the same D and contained their
   gamma(3.5) = 0.32239 (error 1.1e-3); `--mutate` (a curve turning by 0.01) fails it. Our points sit within 8e-7 of
   their curve.
+- **gamma(3.5) directly** (`hp/data/delta_dd_lowD.csv`, #628): 0.3223855828 at M = 128, 3.8e-9 from M = 96. It
+  supersedes the extrapolation above, inside whose range it lies.
 - Against Bland et al. 2005 (Table I): 0.349 +- 0.003 at 3.5 is 0.0255 above, more than four times the two ranges added;
   Ecker et al.'s direct 0.32239 and Bland's 2007 thesis value 0.3235 +- 0.0018 *(unverified, from Ecker et al.'s data
   file)* agree with ours. So the 2005 value at 3.5 looks wrong; the README's "gamma(3.5) <~ 0.33, an open check" can be
