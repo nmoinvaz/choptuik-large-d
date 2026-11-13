@@ -22,7 +22,8 @@ DOCS = {name: open(os.path.join(ROOT, name), encoding="utf-8").read()
                      "notes/PLANTED_SELECTION.md", "notes/PROOF_QUEUE.md", "proof/P5_scope.md",
                      "notes/QUAD_DOUBLE.md",
                      "notes/SOLVER_HP.md", "notes/LOW_D.md", "notes/INNER_STOKES.md", "notes/FORMULA_FORMS.md", "notes/LARGE_D_WALL.md",
-                     "notes/ECHO_ANALOGUES.md", "notes/REVIEW_GHMG25.md", "notes/MODE_COUNT.md", "matter/SIGMA_DSS.md")}
+                     "notes/ECHO_ANALOGUES.md", "notes/REVIEW_GHMG25.md", "notes/MODE_COUNT.md", "matter/SIGMA_DSS.md",
+                     "notes/HELD_HARMONICS.md")}
 
 
 def quoted_in(doc, text):
@@ -2203,6 +2204,139 @@ def sigma_ms():
             ("fit residual, M 48", f48["residual"], 1.9e-16, 0.1e-16, [(S, "largest residual is 1.9×10⁻¹⁶")]),
             ("eta_min, M 48 - 32", res["resolution_eta"], 1.7e-3, 0.1e-3, [(S, "1.7×10⁻³ in η_min and −2.2×10⁻⁸ in Δ_min")]),
             ("Delta_min, M 48 - 32", res["resolution_Delta"], -2.2e-8, 0.1e-8, [(S, "1.7×10⁻³ in η_min and −2.2×10⁻⁸ in Δ_min")])]
+    return out
+
+
+@check
+def chain_frontier():
+    """the README's reach of the large-D chain is the highest chain_fit D of hp/data/delta_all.csv (#653: chain_reach
+    takes the row nearest 245.6, so it would still pass after the chain moved on)"""
+    import csv
+    top = max(float(r["D"]) for r in csv.DictReader(open(os.path.join(ROOT, "hp/data/delta_all.csv")))
+              if r["kind"] == "chain_fit")
+    txt = [("README.md", "harmonics 5–13 of the centre field on a fit, to D = 245.6.")]
+    return [("the chain's highest D", top, 245.6, 0.1, txt)]
+
+
+@check
+def profile_table():
+    """README "How the solution scales with D" and the physics paper's Table tab:scaling: the profile F and the centre
+    lapse on the double-double states nearest D = 20, 30, 40, 50, 60 (hp/data/largeD_F_all.csv, hp/largeD_F_all.py)"""
+    import csv
+    rows = list(csv.DictReader(open(os.path.join(ROOT, "hp/data/largeD_F_all.csv"))))
+    out = []
+    quoted = {20: ("3.480", "0.130", "0.024", "3.021", "6.162"), 30: ("3.212", "0.105", "0.016", "3.201", "5.218"),
+              40: ("3.086", "0.093", "0.012", "3.304", "4.804"), 50: ("3.011", "0.085", "0.0097", "3.372", "4.568"),
+              60: ("2.962", "0.080", "0.0085", "3.421", "4.416")}
+    cols = ("F1", "F3_over_F1", "F5_over_F1", "n_one_minus_c0", "F2_mean")
+    for D, q in quoted.items():
+        r = min(rows, key=lambda r: abs(float(r["D"]) - D))
+        txt = [("README.md", f"| {D} | " + " | ".join(q) + " |"),
+               ("paper/physics/main.tex", f"{D} & " + " & ".join(q) + " \\\\")]
+        for c, s in zip(cols, q):
+            unit = 10.0 ** -len(s.split(".")[1])
+            out.append((f"{c} at D {float(r['D']):.2f}", float(r[c]), float(s), unit, txt))
+    return out
+
+
+@check
+def ell_table():
+    """README "Scalar multiplet with ℓ = 1" and the physics paper's table: Δ and γ of the ℓ = 1 multiplet at D = 4-9
+    (solver/matter/data/l1_kc23r.jsonl for D = 5-9 and l1_kc23_gamma.jsonl for γ(4), k_c = 23; l1_D4_kc39.jsonl for
+    Δ(4), k_c = 39; matter/ELL.md's table, solver/matter/ell_table.py)"""
+    d = os.path.join(ROOT, "solver/matter/data")
+    rows = {}
+    for line in open(os.path.join(d, "l1_kc23r.jsonl")):
+        r = json.loads(line)
+        rows[r["D"]] = r
+    g4 = json.loads(open(os.path.join(d, "l1_kc23_gamma.jsonl")).readline())
+    d4 = json.loads(open(os.path.join(d, "l1_D4_kc39.jsonl")).readline())
+    dq = ("0.4598611", "0.7833439", "0.9115281", "0.9639878", "0.9837905", "0.988205")
+    gq = ("0.118900", "0.215509", "0.265565", "0.295733", "0.316203", "0.331286")
+    txt = [("README.md", "| Δ | " + " | ".join(dq) + " |"), ("README.md", "| γ | " + " | ".join(gq) + " |"),
+           ("paper/physics/main.tex", "$\\Delta$ & " + " & ".join(dq) + " \\\\"),
+           ("paper/physics/main.tex", "$\\gamma$ & " + " & ".join(gq) + " \\\\")]
+    delta = [d4["Delta"]] + [rows[D]["Delta"] for D in (5.0, 6.0, 7.0, 8.0, 9.0)]
+    gamma = [g4["gamma"]] + [rows[D]["gamma"] for D in (5.0, 6.0, 7.0, 8.0, 9.0)]
+    out = []
+    for D, v, s in zip(range(4, 10), delta, dq):
+        out.append((f"l = 1 Delta({D})", v, float(s), 10.0 ** -len(s.split(".")[1]), txt))
+    for D, v, s in zip(range(4, 10), gamma, gq):
+        out.append((f"l = 1 gamma({D})", v, float(s), 10.0 ** -len(s.split(".")[1]), txt))
+    return out
+
+
+@check
+def d4_ladder():
+    """README "Relation to published work", D = 4: the double-double value at M = 192 to the 22 decimals quoted (exact
+    sum of its two parts) and the changes from M = 80 to 96, 128, 160 and 192 (hp/data/delta_dd_lowD.csv, whose
+    records are hp/data/lowD_highM/lift_D4_points.jsonl); the Values table's Δ(4) and γ(4) (γ at M = 80, the largest M
+    with a growth rate)"""
+    import csv
+    from decimal import Decimal, getcontext
+    from fractions import Fraction
+    getcontext().prec = 40
+    rows = {int(r["M"]): r for r in csv.DictReader(l for l in open(os.path.join(ROOT, "hp/data/delta_dd_lowD.csv"))
+                                                   if not l.startswith("#")) if abs(float(r["D"]) - 4.0) < 1e-9}
+    dec = lambda x: Decimal(Fraction(float(x)).numerator) / Decimal(Fraction(float(x)).denominator)  # noqa: E731
+    v192 = dec(rows[192]["Delta_hi"]) + dec(rows[192]["Delta_lo"])
+    q = "3.4454524022278213499715"
+    txt = [("README.md", f"Δ =\n  {q} at M = 192 τ points"),
+           ("README.md", "are\n  −1.3×10⁻¹¹, −9.0×10⁻¹⁴, −2.8×10⁻¹⁸ and +1.1×10⁻²²")]
+    tv = [("README.md", "| 4 | 3.445452402 | 0.37396072 |"), ("paper/physics/main.tex", "4 & 3.445452402 & 0.37396072")]
+    ch = {M: float(rows[M]["change_from_lower_M"]) for M in (96, 128, 160, 192)}
+    return [("Delta(4) at M 192 minus the quoted 22 decimals", float(v192 - Decimal(q)), 0.0, 1e-22, txt),
+            ("change M 80 -> 96", ch[96], -1.3e-11, 0.1e-11, txt),
+            ("change M 96 -> 128", ch[128], -9.0e-14, 0.1e-14, txt),
+            ("change M 128 -> 160", ch[160], -2.8e-18, 0.1e-18, txt),
+            ("change M 160 -> 192", ch[192], 1.1e-22, 0.1e-22, txt),
+            ("Values table Delta(4)", float(v192), 3.445452402, 1e-9, tv),
+            ("Values table gamma(4), M 80", float(rows[80]["gamma"]), 0.37396072, 1e-8, tv)]
+
+
+@check
+def gamma_61():
+    """GAMMA.md and the physics paper: γ at the highest double-double D of hp/data/gamma_dd.jsonl and
+    hp/data/local/gamma_dd.jsonl (61.03)"""
+    pts = {}
+    for fn in ("hp/data/gamma_dd.jsonl", "hp/data/local/gamma_dd.jsonl"):
+        for line in open(os.path.join(ROOT, fn)):
+            r = json.loads(line)
+            if r.get("gamma"):
+                pts[r["D"]] = r["gamma"]
+    top = max(pts)
+    txt = [("GAMMA.md", "γ(61) = 0.48935 and the points keep rising"),
+           ("paper/physics/main.tex", "At $D = 61$, $\\gamma = 0.48935$")]
+    return [("gamma at the highest D", pts[top], 0.48935, 1e-5, txt), ("that D", top, 61, 1, txt)]
+
+
+@check
+def saved_states():
+    """README "Reproduce": the number of saved solutions in hp/data/states and their D range"""
+    names = sorted(glob.glob(os.path.join(ROOT, "hp/data/states", "*.npz")))
+    D = [float(re.search(r"_D([0-9.]+)\.npz$", n).group(1)) for n in names]
+    txt = [("README.md", "(53 states, about one per unit of D from 8.25 to 60, about 1 MB)")]
+    return [("saved states", len(names), 53, 1, txt), ("lowest D", min(D), 8.25, 0.01, txt),
+            ("highest D", max(D), 60, 1, txt)]
+
+
+@check
+def held_release():
+    """notes/HELD_HARMONICS.md 4.4: the `fits` spread column against the err of hp/data/delta_all.csv at D 74-79, and
+    the range quoted for D 80, 100, 150 and 200"""
+    import csv
+    err = {float(r["D"]): float(r["err"]) for r in csv.DictReader(open(os.path.join(ROOT, "hp/data/delta_all.csv")))
+           if r["kind"] == "chain_fit" and r["err"]}
+    H = "notes/HELD_HARMONICS.md"
+    out = []
+    for D, q, s in ((74.0, 1.4e-15, "| 1.4e-15 |"), (75.0, 3.9e-15, "| 3.9e-15 |"), (76.0, 7.6e-15, "| 7.6e-15 |"),
+                    (77.0, 1.3e-14, "| 1.3e-14 |")):
+        out.append((f"fits spread at D {D:g}", err[D], q, 10.0 ** (math.floor(math.log10(q)) - 1), [(H, s)]))
+    t78 = [(H, "| 2.0e-14, 3.0e-14 |")]
+    out += [("fits spread at D 78", err[78.0], 2.0e-14, 0.1e-14, t78), ("fits spread at D 79", err[79.0], 3.0e-14, 0.1e-14, t78)]
+    t80 = [(H, "| 4.2e-14 to 2.8e-11 |")]
+    out += [("fits spread, lowest of D 80-200", min(err[D] for D in (80.0, 100.0, 150.0, 200.0)), 4.2e-14, 0.1e-14, t80),
+            ("fits spread, highest of D 80-200", max(err[D] for D in (80.0, 100.0, 150.0, 200.0)), 2.8e-11, 0.1e-11, t80)]
     return out
 
 
