@@ -158,4 +158,155 @@ from a downstream check, and the w_jl check is what guards it.
 
 ## 5. Results at the D 242.5146 starts
 
-Pending.
+### 5.1 The rebuilt system, and the projector
+
+The recovered systems on main's exact-projector kernel reproduce #499's numbers on the rounded kernel at every digit
+#499 printed. So at these starts the projector's rounding is absorbed by the recovered offset, as section 3 expected.
+
+| quantity | REF here | REF, #499 | ACC here | ACC, #499 |
+|---|---|---|---|---|
+| held offset off its rows (bound 10⁻⁶ of 8.16×10⁻⁴) | 1.62e-99: pass | 1.62e-99 | ACC_OFF | 2.03e-99 (#529) |
+| recovered start max\|F\| | 9.0408e-36 | 9.041e-36 | ACC_F0 | |
+| σ₁…σ₄, subspace iteration | 2.1390e-27, 2.1387e-27, 3.1943e-26, 7.0800e-26 | the same | ACC_SIG | 2.1882e-27, 2.1857e-27, 3.3268e-26, 7.1880e-26 |
+| a = Vᵀdz0 | −5.149e-30, −5.814e-30, −2.989e-30, 2.297e-31 | the same | ACC_A | −8.165e-30, −8.547e-30, −4.486e-30, 2.894e-31 |
+| \|Ba\| | 9.828e-56 | 9.83e-56 | ACC_BA | 1.53e-55 |
+| max\|T\|, h against h/10 | 1.631e33, 3.11e-18 | 1.631e33, 3.1e-18 | ACC_T | 1.618e33, 3.1e-18 |
+| c\*, the root of model T | 7.24e-31, −3.05e-30, −3.16e-30, 1.07e-31 | the same | ACC_CS | 1.0e-30, −2.97e-30, −4.8e-30, 2.91e-32 |
+| affine weak residual at c\*, of \|Ba\| | 0.00444 | 0.00444 | ACC_GAFF | 0.0068 |
+
+### 5.2 The tensors
+
+| quantity | REF | ACC |
+|---|---|---|
+| max\|Q\| at k = 4, h 10⁻³³ (Q(10⁻³²)/Q(10⁻³³)) | ≲ 6.4e-6 (99: pure h² truncation, constant 6.4e60) | ACC_Q |
+| \|w_jl\| | 0.058–0.144 | ACC_W |
+| w_jl, 10⁻³² against 10⁻³³; 10⁻³³ against 10⁻³⁴ (bound 10⁻²) | 1.41e-2; 1.41e-4: pass | ACC_WH |
+| max\|S\|, h against h/10 (bound 10⁻²) | 5.438e32, 1.7e-17: pass | ACC_S |
+| S's unsymmetric part, of max\|S\| | 0.053 | ACC_SA |
+| **3max\|S\|/max\|T\|** | **1.000** | ACC_3ST |
+| max\|T − 3S\|/max\|T\| | REF_C3 | ACC_C3 |
+| max\|L\|, L = UᵀF″(v_j, w0) | ≲ 4.3e-38 (h against h/10: 99, truncation) | ACC_L |
+| \|q00\| = \|UᵀF″(w0, w0)\| | 1.9e-68 | ACC_Q00 |
+| \|w0\| | 7.03e-33 | ACC_W0 |
+
+Every ≲ is an estimate: the difference at the smaller step, when the two steps differ by the factor 100 of an h²
+truncation. The other ± here are the differences between two steps, not bounds.
+
+### 5.3 The reduced map on the strong-solved manifold
+
+| quantity | REF | ACC |
+|---|---|---|
+| \|g(0) + Ba\|/\|Ba\| | 2.7e-25 | ACC_G0 |
+| B_LS against B + L, of max\|B + L\| | 6.0e-13 | ACC_BLS |
+| max\|Q_LS\| | 2.6e-24 | ACC_QLS |
+| **\|g(a)\|/\|Ba\|** | **2.7e-25** | ACC_GA |
+| max\|F\| at z0 + Va + w(a) | 2.0e-51 | ACC_FA |
+| \|g(c\*)\|/\|Ba\| (affine) | 0.176 (0.0044) | ACC_GCS |
+| model T: real roots; \|g\|/\|Ba\| at the nearest | 4; 0.176 | ACC_MT |
+| model T-3S: real roots; c**; \|g(c**)\|/\|Ba\| | 1; c** = a to 3 digits; 7.9e-10 | ACC_M3 |
+| model T-3S,LS: \|g(c**)\|/\|Ba\| | 1.6e-19 | ACC_MLS |
+
+With the strong rows solved, the weak equations are affine to the measured precision: g(c) = g(0) + Bc, with g(0) =
+−Ba, so the root is c = a, Newton's own first move. The cubic that #499 found on z0 + Vc is cancelled by the term 3S,
+which comes from a strong correction of only |dw| = 1.3×10⁻⁶⁰ at c* through the mixed curvature UᵀF″(v, w): S/|w_jl|
+is about 5×10³³ per unit of w, against UᵀF″(v, w0)/|w0| ≲ 6×10⁻⁶ along w0. (Numerical evidence.)
+
+### 5.4 The S control, and what it measures
+
+At REF's c*, replacing dw = w(c*) − w(0) by 2dw changes g by 1.684×10⁻⁵⁶, against −½S(c*, c*, c*) = 1.729×10⁻⁵⁶: a
+difference of 2.72×10⁻² of it, so **(R2) fails** against 10⁻². The w control (w → 2w) gives 2.66×10⁻², since Lc* and
+(3/2)q00 (10⁻⁶⁷ and 3×10⁻⁶⁸) are negligible. The work on REF was stopped there until the cause was known. The
+diagnostic added for it repeats the control at f c*, f = 1, ½, ¼, and forms UᵀF″(V f c*, dw) by a mixed difference
+with the actual dw (relative differences; ACC's rows in ACC_SCAN):
+
+| f | 2dw change against −½S | 2dw change against UᵀF″(Vfc*, dw) | UᵀF″(Vfc*, dw) against −½S | UᵀF″(Vfc*, dw_quad) against −½S | dw against dw_quad |
+|---|---|---|---|---|---|
+| 1 | 0.0272 | 0.0259 | 0.00176 | 1.9e-19 | 0.0104 |
+| ½ | 0.0169 | 0.0140 | 0.00353 | 1.9e-19 | 0.0209 |
+| ¼ | 0.0158 | 0.0092 | 0.00705 | 1.9e-19 | 0.0417 |
+
+- **S's assembly.** UᵀF″(Vc, dw_quad), with dw_quad = −½Σw_jl c_j c_l, equals −½S(c, c, c) to 1.9×10⁻¹⁹. This shares
+  the mixed-difference code with S, so it checks the tensor's symmetrization and contraction, not its differences.
+- **dw's linear part.** dw against dw_quad doubles as f halves, so dw has a part linear in c, 1.0% of |dw| at c*. Its
+  weak coupling (column 4) doubles too. It is a quadratic term, 0.18% of −½S at c*, which the control counts and S, the
+  quadratic part of w, does not contain. In g itself, Q_LS ≲ 2.6×10⁻²⁴, so that term is cancelled by others there
+  (*inferred*).
+- **The replacement's own orders.** Column 3 fits 0.025f + 0.0007/f (two parameters, three points) to 2%: the next orders of the
+  2dw replacement, ½UᵀF‴(Vc, Vc, dw) and (3/2)UᵀF″(dw, dw), grow as f, and the coupling through w(0) falls as 1/f.
+- **Together.** The control's error fits 0.025f + 0.0022/f to 5%. Its smallest value along c* is about 1.5%, near
+  f = 0.3. So with the bound 10⁻² the control fails at every point of this ray. The cause is the control's own
+  truncation at |c| ≈ 10⁻²⁹⁻³⁰, not S.
+- **The test of S that does not share the control's truncation** is the reduced map itself. If S were off by 1%, model
+  T-3S's cubic would leave about 10⁻² of T(a, a, a)/6 ≈ |Ba| at a, and its root would not be a root of g. g at that root
+  is 7.9×10⁻¹⁰|Ba| with the model's Q (its truncation), and 1.6×10⁻¹⁹ with Q_LS, and g(a) itself is 2.7×10⁻²⁵|Ba|. That
+  test shares with S only the residual F and the basis, and uses the strong solve where S uses w_jl and mixed
+  differences.
+
+### 5.5 Verdicts against the protocol
+
+| criterion | REF | ACC |
+|---|---|---|
+| (R0) offset on its rows; start as #499 | pass; 9.0408e-36 against 9.041e-36 | ACC_R0 |
+| (R1) S at h against h/10 (bound 10⁻²) | 1.7e-17: pass | ACC_R1S |
+| (R1) w_jl at 10⁻³³ against 10⁻³⁴ (bound 10⁻²) | 1.4e-4: pass | ACC_R1W |
+| (R2) S control at c\* (bound 10⁻²) | 2.72e-2: FAIL (section 5.4) | ACC_R2 |
+| (R3) 3max\|S\| < 10⁻²max\|T\| and \|g(c\*)\| < 10⁻²\|Ba\| | no: 3max\|S\| = max\|T\|, and \|g(c\*)\| = 0.176\|Ba\| | ACC_R3a |
+| (R3) model T-3S's root c\*\* with \|g(c\*\*)\| < 10⁻²\|Ba\| | yes: c\*\* = a, 7.9e-10 | ACC_R3b |
+| strong solves | 49, all converged | ACC_SOLVES |
+
+So by the issue's rule the coupling is this term, and the cubic with T − 3S has a root, c** = a.
+
+## 6. Reading (inferred, not shown)
+
+- **What the refused start needs.** Newton's first move already has the reduced root's weak coordinates, a. What it
+  lacks is the strong rows' own correction at c = a, of size |dw| ≈ 10⁻⁶⁰, which the chord iteration with z0's LU
+  finds in three steps. After it, max|F| is 2.0×10⁻⁵¹ at REF, below the chain's tolerance of 10⁻⁴⁰. So at these starts
+  the Lyapunov–Schmidt corrector of #530 needs one reduced step: the weak equation is affine on the strong-solved
+  manifold, and its root is the linear one.
+- **Why newton_od walks away.** From z0 + dz0 the remaining residual, 7.3×10⁻²⁶, is in the strong rows. A Newton step
+  there treats the weak and strong rows together with J(z0 + dz0), whose weak block is about T(a, a, ·)/2 ≈ 10⁻²⁵,
+  fifty times B. The cancellation T = 3S makes the step's weak part vanish only to the order the linearization
+  keeps. #499's step from its weak-first start was 3.7×10⁻³⁰ on span(V) and nothing off it. That is the size that the
+  next order, about 10% of the cubic at |a| (#499's u·F″″ ≈ 7.5×10⁶¹), would give after division by B. So each step
+  moves the weak coordinates by a fraction of |a| that the strong-solved map does not ask for.
+- **F4.** #499's weak-first step put the weak part at c* ≈ 0.53a, the root of the affine map. On the strong-solved
+  map that point leaves 0.18|Ba|, so the step moved the weak part away from the root. The refusal that followed is
+  what the reduced map predicts.
+- **Why T = 3S.** No source read explains it. The reduced map being affine to 2.7×10⁻²⁵ means that, on the manifold
+  where the strong rows hold, the weak rows' residual is linear in the weak coordinates to every order measured. A
+  near-symmetry of the equations, broken only at the linear order B, would do that. This is a conjecture.
+
+## 7. Discrepancies (reported, not fixed)
+
+- **Q at k = 4 against #529's Q at k = 5.** #529's largest entries, 2.75×10⁴ (REF) and 5.4×10⁴ (ACC), were formed with
+  the fifth direction, whose σ₅ does not converge. At k = 4, Q is below its h² truncation even at h = 10⁻³³ (≲ 6.4×10⁻⁶
+  at REF). #529's |Ba| at k = 5, 1.36×10⁻³⁶ (REF) and 7.95×10⁻³⁷ (ACC), is 10¹⁹ times the k = 4 value, so its reduced
+  system at k = 5 is not that of a converged four-dimensional subspace either (*inferred*). #529's raw JSON keeps only
+  max|Q|, so which entries are large cannot be checked. notes/LARGE_D_WALL.md's "So Q is not zero" and the remark on
+  #499 that "the reduced model for #528 and #530 must carry ½Q(c, c)" rest on the k = 5 tensor.
+- **#499's root c\*.** LARGE_D_WALL.md's "At D 242.55 the root nearest the move is real, at about half of |a|" holds
+  for the affine map on z0 + Vc. On the strong-solved manifold that point leaves 0.18|Ba| at REF, and the only real
+  root is a.
+- **The coupling through the first move's rest.** LARGE_D_WALL.md reads #499's split as the mixed curvature UᵀF″(Vc, x)
+  raising the weak residual from 0.004 to 0.52 of |Ba|. Along w0, the strong part of the first move, that curvature
+  is L ≲ 4.3×10⁻³⁸ (an estimate), so it gives at most 2×10⁻⁶⁷ at c*, not 5×10⁻⁵⁶. SPLIT_TEXT
+- **The S control fails** at REF (2.72×10⁻² against 10⁻²) and ACC_CTL. Section 5.4 gives its diagnosis.
+- **This task's own protocol** changed three times after real data, each recorded with its cause (section 3): the
+  step of w_jl twice (h² truncation amplified by J⁻¹), and the chord's stall rule twice (a stall test that cut a
+  converging iteration, then one that stopped between two corrections that cancel). No bound was loosened.
+
+## 8. Commands and raw data
+
+From `hp/`, with a clone of the raw-data repository (`git clone https://github.com/nmoinvaz/choptuik-large-d-raw RAW`)
+and main's hpkernel build on the path:
+
+```
+python3 reduced_cubic.py planted                     # check: pass, exit 0
+python3 reduced_cubic.py planted --mutate=w0         # check: FAIL, exit 1 (also --mutate=Ssign, Sh, hF)
+python3 reduced_cubic.py run RAW I461-win2/probeG03125b/dz0_pin3_D242.5459_a0.031250.npz \
+    I461-win2/probeG03125a/anm_pin3_D242.5146.npz --threads=2 --json=ref.json
+```
+
+The real runs exit 1, because the S control fails (R2). `I528-mac/run_i528.sh` runs all of them. Raw: `I528-mac/` of
+the raw-data repository at RAW_COMMIT, with every run's log and JSON, the stopped runs included (its README lists
+them).
