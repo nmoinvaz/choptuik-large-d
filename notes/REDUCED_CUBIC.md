@@ -27,9 +27,10 @@ Kuznetsov's bordered solve A^INV P_X is J⁻¹(I − UUᵀ) here, one solve with
   - Q_mjl = u_m·F″(v_j, v_l), central differences at h = 10⁻³², 10⁻³³;
   - T_mijl = u_m·F‴(v_i, v_j, v_l), antisymmetric four-point differences and polarization (as `dz0_weak.cubic`), at
     h = 10⁻²³, 10⁻²⁴;
-  - w_jl = J⁻¹(I − UUᵀ)F″(v_j, v_l), central differences at h = 10⁻³², 10⁻³³. The step is small because J⁻¹(I − UUᵀ)
-    multiplies the difference's h² truncation along the weakest strong directions (σ₅ ≈ 10⁻¹⁹) by up to 10¹⁹. At
-    h = 10⁻²⁴ the truncation was all of w_jl at REF (section 3);
+  - w_jl = J⁻¹(I − UUᵀ)F″(v_j, v_l), central differences at h = 10⁻³², 10⁻³³ and 10⁻³⁴, taken from 10⁻³⁴ and judged
+    on the last two. The steps are small because J⁻¹(I − UUᵀ) multiplies the difference's h² truncation along the
+    weakest strong directions (σ₅ ≈ 10⁻¹⁹) by up to 10¹⁹. At REF the truncation was all of w_jl at h = 10⁻²⁴, and
+    1.4×10⁻² of it at 10⁻³² (section 3);
   - S_m,i,jl = u_m·F″(v_i, w_jl), mixed central differences with the step h along v_i and along w_jl/|w_jl|, at
     h = 10⁻³², 10⁻³³, symmetrized as S_mijl = (S_m,i,jl + S_m,j,il + S_m,l,ij)/3;
   - L_mj = u_m·F″(v_j, w0) and q00 = UᵀF″(w0, w0), the coupling through w0, at the same steps as S.
@@ -84,7 +85,7 @@ the D 242.5 starts': σ = 2.1×10⁻²⁷ … 7.1×10⁻²⁶, strong singular v
 
 Pass criteria, fixed before the plant's first run except where noted:
 - **(P1)** B, L, Q, T and S, rotated into the plant's basis, equal the planted ones to 10⁻⁶ of their largest entry.
-- **(P2)** S at h against h/10 to 10⁻² of max|S|, and w_jl at h against h/10 to 10⁻² (2-norm, the worst pair).
+- **(P2)** S at h against h/10 to 10⁻² of max|S|, and w_jl at h/10 against h/100 to 10⁻² (2-norm, the worst pair).
 - **(P3)** Model T-3S,L has a root within 10⁻³ relative of the planted root, with |g| < 10⁻²|Ba| there. The plant must
   show: |g(c*)| ≥ 0.1|Ba| at model T's root, so that #499's root is not a root of the reduced map.
 - **(P4)** The S control to 10⁻².
@@ -113,7 +114,7 @@ loosened.
   max|F| against #499's 9.041×10⁻³⁶ (REF).
 - **(R1)** S at h = 10⁻³² against 10⁻³³ to 10⁻² of max|S|. If they differ by the factor of an h² truncation
   (max|S(h)|/max|S(h/10)| between 50 and 200), S is reported as bounded by max|S(h/10)|, an estimate, and (R1) passes.
-  w_jl at h = 10⁻³² against 10⁻³³ to 10⁻² (added after the stopped run below).
+  w_jl at h = 10⁻³³ against 10⁻³⁴ to 10⁻² (added after the stopped runs below).
 - **(R2)** The S control to 10⁻² of the larger of the two changes, judged when that is above 10⁻⁸⁵. Below that it is
   reported as not resolved.
 - **(R3)** The issue's verdict. If 3max|S| < 10⁻²max|T| and |g(c*)| < 10⁻²|Ba|, the coupling is not this term.
@@ -123,10 +124,15 @@ loosened.
   control, max|F| at each root, and the chord's steps.
 - **Stop conditions.** A strong solve that does not converge at c = 0 or at c*, or a failed (R2), stops the work for
   that start, which is then reported. REF runs first, as the pilot.
-- **The stopped first run.** The first REF run formed w_jl at h = 10⁻²⁴ and 10⁻²⁵. It found |w_jl| = 4.5×10¹¹ to
+- **The two stopped runs.** The first REF run formed w_jl at h = 10⁻²⁴ and 10⁻²⁵. It found |w_jl| = 4.5×10¹¹ to
   1.2×10¹³, with h against h/10 at 0.99, the factor 100 of an h² truncation (raw `I528-mac/ref_hF1e-24_stopped.log`).
   That w_jl would have made S wrong in a way S's own h check cannot see, since both of S's steps use the same w_jl. It
-  was stopped there by hand, before any S was formed. Its setup and basis lines are results (section 5).
+  was stopped there by hand, before any S was formed. The second run, with the new w_jl check at h = 10⁻³² against
+  10⁻³³, found |w_jl| = 0.058 to 0.144 and the check at 1.41×10⁻², which fails the bound 10⁻²
+  (`ref_hF1e-32_stopped.log`). It was stopped too. The cause is the same truncation: 1.4×10⁻² of |w_jl| ≈ 0.1 at
+  10⁻³², scaled by (10⁻²⁴/10⁻³²)² = 10¹⁶, predicts about 10¹³ at 10⁻²⁴, which the first run measured. So w_jl is now
+  taken one decade lower, and the bound is unchanged. The setup, basis and Q lines of both runs are results
+  (section 5).
 
 ## 4. The plant's results
 
@@ -134,20 +140,20 @@ loosened.
 
 | check | result | control | control's result |
 |---|---|---|---|
-| (P1) recovery, relative to the largest entry | B 6e-107, L 2e-57, Q 3.8e-11, T 2e-118, S 2.9e-31: PASS | `--mutate=Sh` | S 9.0: FAIL |
-| (P2) S at h against h/10 | 2.6e-96: PASS | `--mutate=Sh` | 0.9: FAIL |
-| (P2) w_jl at h against h/10 | 7.9e-6: PASS | `--mutate=hF` | 99: FAIL |
+| (P1) recovery, relative to the largest entry | B 6e-107, L 2e-57, Q 3.8e-11, T 2e-118, S 2.9e-33: PASS | `--mutate=Sh` | S 9.0: FAIL |
+| (P2) S at h against h/10 | 2.6e-98: PASS | `--mutate=Sh` | 0.9: FAIL |
+| (P2) w_jl at 10⁻³³ against 10⁻³⁴ (10⁻³² against 10⁻³³) | 7.9e-8 (7.9e-6): PASS | `--mutate=hF` | 99 (99): FAIL |
 | (P3) model T-3S,L's root against the planted one | 2.6e-5, \|g\|/\|Ba\| 2.2e-5: PASS | `--mutate=w0`, `Ssign` | \|g\|/\|Ba\| 1.24, 1.03: FAIL |
 | (P3) the plant shows | \|g(c\*)\|/\|Ba\| 9.94 | | |
 | (P4) S control | 1.4e-4: PASS | `--mutate=w0`, `Ssign` | 1.0, 2.0: FAIL |
 
 Every run's exit is as required: 0 for the plant, 1 for each of the four mutations (`exits.txt`). The errors of (P1)
-are those of the steps: Q's 3.8×10⁻¹¹ is P₄'s h² truncation, and S's 2.9×10⁻³¹ is c₄'s truncation in w_jl.
+are those of the steps: Q's 3.8×10⁻¹¹ is P₄'s h² truncation, and S's 2.9×10⁻³³ is c₄'s truncation in w_jl.
 
 On the plant, model T-3S (B, Q and T − 3S, without L) leaves |g(c**)|/|Ba| = 3.18, since the plant's L is as large as B
 by design. The map's own coefficients agree with the tensors: B_LS against B + L to 2.7×10⁻⁸, and Q_LS against Q to
-1.1×10⁻⁴, which is the plant's M(y)w0 term. Under `--mutate=hF` the truncated w_jl (up to 1.5×10¹²) leaves S
-unchanged to 3×10⁻¹⁵, because the plant's K is small in the weakest strong row. So S's correctness cannot be inferred
+1.1×10⁻⁴, which is the plant's M(y)w0 term. Under `--mutate=hF` the truncated w_jl (up to 1.5×10¹⁰) leaves S
+unchanged to 3×10⁻¹⁷, because the plant's K is small in the weakest strong row. So S's correctness cannot be inferred
 from a downstream check, and the w_jl check is what guards it.
 
 ## 5. Results at the D 242.5146 starts
