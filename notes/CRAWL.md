@@ -5,7 +5,8 @@ quad-double max |F| is at most 1e-15 is not projected. At chain_ns's crawl itera
 step is affine to 1.6e-54 lam² up to lam* = 1 - 7.77e-15. There it jumps by 5e38, to 8.9e-16, in the horizon
 block's c, a and m rows, where the switch stops projecting. The iterate itself is never projected and carries a
 residual of 0.129 in its horizon data, which only the full step removes. With every point projected the same
-iterate converges in two full Newton steps, to 9.8e-80 (section 8).
+iterate converges in two full Newton steps, to 9.8e-80 (section 8). The strong-row chord's first step makes that
+offset. Its correction is the f64 leak of a weak component, and the leak's m_h and a_h parts carry it (section 11).
 
 ## 1. The question
 
@@ -211,7 +212,7 @@ and was not projected. From the second point on, the points were projected, so t
 chord's second and third points, its last point twice, and the lam = 1/2 trial).
 The chord's last point, the crawl iterate, carries 0.129. How a chord step of |dw| 3.7e-37 raises the unprojected
 residual from 1.4e-17 past 1e-15 is not measured here. The mass mode's gain, about 1e39 on a_h at this D, makes a
-change of 1e-40 in a_h worth 0.1 in the horizon rows. That is a candidate, not a finding.
+change of 1e-40 in a_h worth 0.1 in the horizon rows. That was a candidate here, and section 11 measures it.
 
 ## 7. Candidates ruled out
 
@@ -280,7 +281,7 @@ Inferred, not measured:
   chain_ns's: each lam = 1 trial takes 0.35 to 0.43 s with max |F| 4.4e-23 to 4.2e-29, under 1e-15 and so not
   projected, and each lam = 1/2 trial takes 39 to 49 s, projected, at a ratio of 0.5000. It was not probed, and
   #603's older crawls (chain at a = 0.111, chain_nat at a = 0.0556) were not read for this signature.
-- How the chord gives its point its horizon offset (section 6).
+- How the chord gives its point its horizon offset (section 6; measured since, section 11).
 - That the default test (`accept="own"`) and the quad-double corrector (`ElimQ`, the same switch) can crawl the same
   way. Both evaluate trials through the same switch.
 - The difference between the rebuild's chord |dw| and win2's (section 4).
@@ -311,3 +312,158 @@ Inferred, not measured:
    - Acceptance (can fail): the trace names the chord step and the unknowns that carry the offset. Otherwise it shows
      every chord point below 1e-15, which refutes section 6's account.
    - Depends on #700.
+
+## 11. How the chord builds the offset (#715)
+
+**Result.** The chord's first step makes the offset, and its m_h and a_h components carry it. That step takes the
+switch's test value from 1.42e-17 to 0.1288, and the later steps leave it there. At the chord's first point
+x = J0^-1 F lies in the weak subspace V to 1.8e-16 of |x|. So the step dw = (I - V V^T) x, |dw| 3.7e-37, is the part of
+x's weak component that the f64 V does not remove. That leak reaches the horizon data, where the mass mode's gains turn
+6.5e-38 in m_h and 5.9e-41 in a_h into 0.105 and 0.085 in the horizon rows. The projection removes it from every
+residual the chord sees, but the chord never puts P(zc)'s horizon data into zc. So the offset is carried unchanged to
+the crawl iterate. Section 6's account is confirmed, with m_h as large a carrier as a_h.
+
+### 11.1 Method
+
+`hp/crawl_probe.py chord` rebuilds the attempt of section 4 to the chord's point. It runs `chord_strong` itself, as
+`newton_od` calls it under `--od_strong 4`, through an ElimO that records each point it is asked to project
+(`trace_elim`; the corrector's arithmetic is unchanged). It keeps each chord point, its projection (formed again with
+the switch off where the switch skipped it), each chord solve x = J0^-1 F and V. `chordstat` then prints the trace:
+
+- at each point, the switch's test value, the point's own residual and its projection's by block, and P(z) - z by
+  unknown group, with m_h and a_h by harmonic;
+- at each step, x, V^T x and dw by group;
+- each step also checks that dw = drop_V(x) reproduces the next point bit for bit;
+- the switch's test value at z - dw with one group of dw applied at a time;
+- dw against `drop_V` evaluated in mpmath at 160 digits with the same V (the f64 arithmetic's share), and with V
+  rounded differently (V plus 1e-16 noise, orthonormalized again).
+
+The exact `drop_V` was checked first on a planted x = V c + r, with c of size 2e-20 and r of size 1e-37. It returns
+r less its V component to 3.6e-52, the size that V's departure from orthonormality, 2e-16, leaves after two passes.
+The f64 version leaves 4e-37. Scaling one column of V by 1 + 1e-12 moves the exact result by 7e-38, so the comparison
+can fail.
+
+```
+python3 crawl_probe.py chord RAW I603-win2/chain_ns/anm_pin3_D253.8825.npz --a 0.05429687500004832 \
+    --jet I603-win2/chain_ns/jet_pin3_D253.8825.npz --check_pred I603-win2/chain_ns/pred_pin3_D253.9368.npz \
+    --check_iter I700-mac/crawl_iter_D253.9368.npz --out RAW/I715-mac --threads 2 --strong 4
+```
+
+The output is in folder `I715-mac/` of the raw-data repository, at commit 0f59849a: `chord_ns_D253.9368.log`, and
+`chord_trace_D253.9368.npz` with its `.jsonl` (2 threads on the Mac, 2487 s, exit 0).
+
+### 11.2 The rebuild
+
+| | #700 (Mac) | this run |
+|---|---|---|
+| prediction | equal to `pred_pin3_D253.9368.npz` | equal bit for bit |
+| start max\|F\| | 4.01e-20 | 4.01e-20 |
+| chord \|dw\| | 3.687e-37, 3.659e-37, 1.659e-53 | the same |
+| theta at the chord's point | 7.993e-12 | 7.993e-12 |
+| the chord's point | `crawl_iter_D253.9368.npz` | equal bit for bit |
+
+### 11.3 The points
+
+The switch's test value is the pinned quad-double max |F| of the point itself. P(z) - z is zero outside m_h and a_h at
+every point.
+
+| point | switch's test value | projected | P(z) - z in m_h | P(z) - z in a_h | F(P(z)) |
+|---|---|---|---|---|---|
+| start z0 | 4.01e-20 | skipped | 1.65e-57 | 2.74e-59 | 1.34e-35 |
+| chord point 0, z0 + dz | 1.42e-17 | skipped | 6.07e-47 | 7.63e-50 | 9.31e-47 |
+| chord point 1 | **0.1288** | yes (u0q) | 7.72e-38 | 5.60e-41 | 3.55e-37 |
+| chord point 2 | 0.1288 | yes | 7.72e-38 | 5.60e-41 | 4.25e-53 |
+| chord point 3, the crawl iterate | 0.1288 | yes | 7.72e-38 | 5.60e-41 | 4.25e-53 |
+
+The skipped points were projected again for the trace only. P(z) - z at point 3 equals that at point 1 to 9e-17
+relative. At point 1 the own residual is 0.129 in the horizon c rows, 0.065 in the a rows, 0.025 in the m rows and
+0.0024 in the p rows. Its largest harmonics are k 7, 19, 29 and 27 in the c and a rows, the harmonics of section 5's
+jump. The displacement is spread over every odd harmonic, from 1.6e-42 to 1.9e-41 in a_h and 9e-40 to 1.5e-38 in m_h.
+
+Chord point 0 is the full first Newton step. Projected, its residual is already 9.31e-47. Its own residual of
+1.42e-17 is the horizon rows' remainder, which the switch let through because it is below 1e-15.
+
+### 11.4 The steps
+
+| step | \|x\| (2-norm) | share of x outside V | \|dw\| (max) | dw in m_h | dw in a_h | dw in the nodes | switch's test value |
+|---|---|---|---|---|---|---|---|
+| 0 (point 0 → 1) | 2.79e-21 | 1.8e-16 | 3.687e-37 | 6.46e-38 | 5.94e-41 | 5.24e-38 | 1.42e-17 → **0.1288** |
+| 1 (point 1 → 2) | 6.44e-37 | 0.76 | 3.659e-37 | 1.23e-38 | 1.36e-41 | 5.43e-38 | 0.1288 → 0.1288 |
+| 2 (point 2 → 3) | 2.77e-37 | 8.2e-17 | 1.659e-53 | 1.09e-54 | 1.05e-57 | 2.08e-54 | 0.1288 → 0.1288 |
+
+Each step reproduces the next point bit for bit. V's singular values are 1.5e-20, 1.1e-20, 8.3e-21 and 1.6e-22. Three
+of its four directions have m_h content 0.38 to 0.41, a_h content 3e-4 to 5e-4 and node content 0.77.
+
+Step 0 split by unknown group, the switch's test value at chord point 0 less one part of its dw:
+
+| dw applied | switch's test value |
+|---|---|
+| none (chord point 0) | 1.42e-17 |
+| the centre data, the nodes, or the last node alone | 1.42e-17 |
+| Delta alone (1.7e-40) | 2.25e-7 |
+| everything but m_h and a_h | 2.25e-7 |
+| m_h alone (6.5e-38) | 0.105 |
+| a_h alone (5.9e-41) | 0.085 |
+| m_h and a_h | 0.129 |
+| the whole step | 0.1288 |
+| `drop_V` in mpmath with the same V (\|dw\| 3.76e-37) | 0.085 |
+| the f64 rounding of `drop_V` alone (dw less the mpmath dw) | 0.112 |
+| V rounded differently (\|dw\| 8.52e-37) | 1.15e3 |
+
+At steps 1 and 2 no group moves the switch's test value by more than 2%, and the whole step leaves it at 0.1288.
+
+### 11.5 Reading
+
+- **The step is step 0.** The chord's first residual is the unprojected 1.42e-17, whose image under J0^-1 is 2.8e-21
+  and lies in V to 1.8e-16. `drop_V` removes V's span only to f64 accuracy. So dw_0, 1.5e-16 |x|, is the leak of the
+  weak component, not a strong-row correction. It is that leak whether the projection is formed in f64 (3.69e-37) or
+  exactly with the same V (3.76e-37). A change of 1e-16 in V's entries changes it to 8.5e-37.
+- **The carriers are m_h and a_h.** The leak lands in every unknown. In the centre and the nodes it costs 3.55e-37 in
+  the projected residual, which step 1 removes (that step is 76% outside V, a real correction). In the horizon data
+  it costs 0.1 in the own residual. Projection removes it from what the chord sees, and the chord never takes P(zc)'s
+  horizon data into zc. P(z) - z after step 0 correlates with dw_0's m_h and a_h parts at 0.97, and it reaches the
+  crawl iterate unchanged.
+- **What the chord did to the eliminated residual.** It went from 9.31e-47 at the first step's point (unseen, since the
+  switch skipped it) to 3.55e-37 after the leak, and then to 4.25e-53. Theta, 7.993e-12, is formed at the crawl
+  iterate's projection, because the offset puts that point above the switch.
+- **The chord's |dw| on two machines.** #700 found the chord's |dw| differ by up to 1.8× between the Mac and win2 and
+  took the cause to be numpy's LAPACK in `junk_subspace_o`. Here |dw_0| is set by V's last bits and by the f64 rounding
+  of V V^T x, and a 1e-16 change in V changes it 2.3×. So any difference in rounding between the Mac's numpy
+  (Accelerate) and win2's changes dw_0 by a factor of order one, and step 1's |dw| follows dw_0. That fits #700's
+  attribution in kind. It does not show which call differs (the QR and eigh in `junk_subspace_o`, or the matrix
+  products in `drop_V`), and win2's switch's test value after step 0 was not measured.
+
+### 11.6 Measured and inferred
+
+Measured at chain_ns's attempt, on the Mac:
+
+- the switch's test value and P(z) - z at every chord point;
+- the step that makes the offset, and its carriers by group and harmonic;
+- dw_0 as the f64 leak of x's weak component;
+- that the offset reaches the crawl iterate unchanged.
+
+Inferred, not measured:
+
+- that win2's chord made an offset the same way (its points were projected, so their own residual exceeded 1e-15,
+  section 6);
+- that other attempts whose chord starts below the switch build offsets this way.
+
+### 11.7 Recommended tasks
+
+1. **The chord under switch 0.**
+   - What: in #714's switch-0 run of this attempt, log each chord step's |x|, the share of x outside V and |dw|
+     (chordstat's columns).
+   - Why: here the chord's first residual was the unprojected 1.42e-17 because the switch skipped the point. With
+     switch 0 it is F(P(z0 + dz)), 9.31e-47 here, and whether the chord still takes a leak step there is unknown.
+   - Acceptance (can fail): the chord's first max|F| is 9.31e-47 (as section 11.3 measured), and no chord step has
+     |dw| below 1e-15 |x| (a leak step). Either one failing is reported.
+   - Depends on #714 and #715.
+2. **A leak guard in `chord_strong`.**
+   - What: stop the chord before a step whose |dw| is below c ε |x| (c about 4), since that correction is f64 leak of
+     the weak component. Planted check: a map whose J0^-1 F lies in a known V. The guard must fire there, and must not
+     fire on the strong-row plant of #528.
+   - Why: step 0 here moved the eliminated residual from 9.3e-47 to 3.6e-37 and the horizon data by 1e-37 to 1e-41,
+     and its size depends on the machine.
+   - Acceptance (can fail): the guard fires at step 0 of this attempt with switch 1e-15, and the four class A points
+     of #674 still converge as before.
+   - Depends on #715 (and on task 1's answer, which may show the guard is not needed under switch 0).
