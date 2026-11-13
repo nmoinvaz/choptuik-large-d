@@ -14,8 +14,10 @@ and driver.newton_qd. It is converged when max|F| <= --tol, or when Newton stall
 record holds D, the start's Delta (all its parts), the full system's |F| at the start, the converged Delta and |F|,
 their difference, the Newton steps, whether it converged, and p1's coefficients of --held_ks at the start and at the
 end (pinning.band_coeffs). The Taylor steps are planned afresh, so the discrete system differs from the one the state
-was converged in: at T81's full state at D 73.0 the release without perturbation moves Delta by -2.8e-23, the floor of
-any comparison with the state's own Delta.
+was converged in. At T81's full state at D 73.0 the release without perturbation moves Delta by -8.4e-28 with a kernel
+from before #523 (the rounded freeze projector T81 was converged with, on macOS and Windows alike) and by -2.8e-23 with
+one from #523 on (the exact projector, where the state starts at |F| 2.6e-34). That move is the floor of any comparison
+with the state's own Delta.
 
 --perturb=EPS is the planted control: before the release, the cos and sin coefficients of p1's harmonics --held_ks
 are moved by EPS each (pinning.band_field), as a wrong fit would put them. From a full-system state, the release from

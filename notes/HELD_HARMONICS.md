@@ -339,7 +339,32 @@ Each value is one of its cosine-sine pair, which agree to 1e-3 or better (raw `I
 to 200 and by 3×10⁷ from 200 to 232.6. The fall from one harmonic to the next flattens there, to 15–30 times at
 232.6.
 
-### 4.4 Not run
+### 4.4 Releasing the held harmonics: the fit's own error at D 74–77 (#640, #642)
+
+`hp/release_held.py` re-converges a chain state at its own D with harmonics 5–13 free (`--kfreeze 13`, the full
+system), in quad-double, so Δ_released − Δ_held is the held fit's error at that D. Its planted control moves T81's
+full-system state at 73.0 by 1e-10 in the held coefficients and must return to the unperturbed release (Δ within
+1e-25, coefficients within 1e-20), while the run with no Newton step must fail. It passed on win and macm3. The
+unperturbed release moves Δ by −8.4e-28 on kernels from before #523 (win and macm3 agree to every digit) and by
+−2.76e-23 on kernels from #523 on (the exact freeze projector, two builds on the Mac agree), so the floor is the
+projector change, not the platform.
+
+| D | released | Δ_released − Δ_held | largest move of a held coefficient | `fits` spread in delta_all.csv |
+|---|---|---|---|---|
+| 74 | yes, 6 steps | +4.62e-16 | 1.8e-10 (harmonic 13) | 1.4e-15 |
+| 75 | yes, 7 steps | +1.25e-15 | 3.8e-10 | 3.9e-15 |
+| 76 | yes, 7 steps | +2.43e-15 | 5.9e-10 | 7.6e-15 |
+| 77 | yes, 8 steps | +4.06e-15 | 8.2e-10 | 1.3e-14 |
+| 78, 79 | stalled at \|F\| 1e-20 and 2e-19 | not a value | | 2.0e-14, 3.0e-14 |
+| 80, 100, 150, 200 | stalled or every trial refused | not a value | | 4.2e-14 to 2.8e-11 |
+
+Where it converges, the measured error is about a third of the `fits` spread quoted for the same D, so the spread
+is a conservative bound there. Above 77 no release converges from the chain's states, although they satisfy the full
+system to 5e-26 to 4e-23 at 80–200. The first Newton step raises |F| from about 1e-24 to 1e-14, along the near-null
+directions of section 4.3, so the stop is the Newton step's and not the held values'. Raw `I642-win/` and
+`I640-macm3/` (725ecb92).
+
+### 4.5 Not run
 
 - **A junk-only deflated Newton on the full system** (`newton_qd`'s `junk` mode, from a chain state). Section 4.3
   shows the junk at 79.77 is harmonics 11 and 13. Freezing them would solve 5–9, as 4.3's truncated step does. Any
@@ -389,7 +414,7 @@ read, so nothing here rests on their content beyond the method each names):
   The truncated step of 4.3.
 - P. E. Farrell, Á. Birkisson, S. W. Funke, *Deflation techniques for finding distinct solutions of nonlinear partial
   differential equations*, SIAM J. Sci. Comput. 37 (2015) A2026–A2045, doi:10.1137/140984798, arXiv:1410.5620.
-  Deflation of known solutions, which 4.4 sets aside.
+  Deflation of known solutions, which 4.5 sets aside.
 - A. N. Tikhonov, *Solution of incorrectly formulated problems and the regularization method*, Soviet Math. Dokl. 4
   (1963) 1035–1038, the translation of Dokl. Akad. Nauk SSSR 151 (1963) 501–504. One library record gives the
-  translation's volume as 5 *(volume unverified)*. The smoothest-solution penalty of 4.4.
+  translation's volume as 5 *(volume unverified)*. The smoothest-solution penalty of 4.5.
