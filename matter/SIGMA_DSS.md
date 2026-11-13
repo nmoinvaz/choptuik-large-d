@@ -454,8 +454,9 @@ the root-finder fix (`sigdss_lam_d4.jsonl`, `sigdss_m1up_part1.jsonl`) contain t
   γ_DSS ≈ 0.11, and the direct construction of the DSS solution "following Gundlach"; the values of Δ in their Fig. 1
   are not given in the text.
 - [L01] C. Lechner, PhD thesis, University of Vienna (2001), [gr-qc/0507009](https://arxiv.org/abs/gr-qc/0507009). Only
-  the abstract and chapters 1–3 could be read here ("For large couplings we construct a DSS solution. Both solutions
-  have one unstable mode."); chapter 4, with the DSS construction and its numbers, could not be retrieved.
+  the abstract and chapters 1–3 could be read at first ("For large couplings we construct a DSS solution. Both
+  solutions have one unstable mode."); chapter 4, the DSS construction, was read in its arXiv source on 2026-11-13
+  (notes/REVIEW_GHMG25.md D9).
 - [OVCU07] I. Olabarrieta, J. F. Ventrella, M. W. Choptuik, W. G. Unruh, PRD 76, 124014 (2007),
   [arXiv:0708.0513](https://arxiv.org/abs/0708.0513), as summarised in [LITERATURE.md](LITERATURE.md).
 - The ℓ-multiplet agent's solver and results (worktree `agent-a5bec5ffdf3db4330`, work in progress), as described in §3

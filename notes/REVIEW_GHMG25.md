@@ -163,8 +163,13 @@ same quantity, precision or reading), **differs** (a discrepancy, §3). Our stat
   two k_c. #631 narrows it to between η = 5 and 10: at k_c = 23 and 39, Δ(7) is the smallest of η = 5, 7, 10, 14, 20
   and ∞, every neighbouring difference resolved (raw I631-win 2d659f74); #633 narrows it to (6, 8.5), with Δ(7) still
   the smallest; a parabola through η = 6, 7 and 8.5 puts the minimum at η = 6.94 to 7.20 over the variable (η, ln η,
-  1/η) and k_c, Δ_min = 0.4598093 at k_c = 39 (raw I633-win 3046bc7d). The sources were not read here, so whether they
-  say monotonic or the review does is not known.
+  1/η) and k_c, Δ_min = 0.4598093 at k_c = 39 (raw I633-win 3046bc7d). Neither cited source says monotonic (both read
+  in their arXiv sources on 2026-11-13). Husa et al. 2000 (gr-qc/0002067, Sec. IV): Δ/2 "varies strongly with the
+  coupling constant", "At large η, Δ/2 asymptotes to 0.2300 ± 0.0003", and as η decreases towards 0.18 "Δ/2 rises
+  sharply"; its Table I gives Δ/2 = 0.2295, 0.2304, 0.2293 and 0.2302 at η = 2, 5, 10 and 100, rounded to four figures
+  from the spread over resolutions, which scatter by about 1×10⁻³, 40 times the dip (2.6×10⁻⁵ in Δ/2), so their data
+  cannot show it. Lechner 2001 (gr-qc/0507009, ch. 4): "below η ∼ 0.3 the period Δ(η) rises sharply with decreasing
+  η". So "monotonically decreasing" is the review's wording, not its sources'.
 - **D10. The test-field rate at D = 5 (#621).** Mittal, Gundlach and Martel's μ(5) = −0.448 and δ_Q = 1.425
   (arXiv:2609.17207, as quoted in matter/LITERATURE.md §8) against our μ(5) = −0.4430361582 (M = 48, the 11-node
   layout whose μ(4) is −0.3651202705 at M = 48 and −0.3651202372 at M = 64) and δ(5) = 1.422411: ours is 4.96×10⁻³
