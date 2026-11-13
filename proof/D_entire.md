@@ -423,8 +423,13 @@ chord.
 
 - **The [6/6] bow is not evidence of an arc.** chord2 matches σ₀–σ₁₂ to 3.6×10⁻⁵, and its [6/6] poles bow 0.114 off
   the chord. The real ones bow 0.116.
-- **Twenty-three coefficients do not separate the plants.** Both fall from about 1 toward the chord, at nearly the
-  same rate. The frozen separation test failed at every node, so #541's frozen verdict is indecisive.
+- **Twenty-three coefficients cannot separate a chord from an arc (#548).** Both plants fall from about 1 toward the
+  chord, at nearly the same rate, and #541's frozen verdict is indecisive. Singular points of differential approximants
+  do separate the clean plants (0.55–0.73), but at the measured errors their noise spread is as large as that, and
+  stays so with the errors 10⁴ times smaller. A function with exactly two branch points, a 20-term density on the
+  chord P0 → κ⋆ peaking at 2.5–3.5 times chord2's, reproduces the arc plant's σ₀–σ₂₂ within the measured errors at
+  every order (notes/PADE_FAR_END.md §6). So no statistic of these coefficients can tell them apart without a prior on
+  the density.
 - **The real poles reach the chord sooner than either plant.** At k = 10 the poles with s ≤ 0.71 lie within 0.015 of
   the chord, and the last one, at s = 0.88, lies 0.074 from it, on the side away from the arc. J 1250 and J 1500 agree to
   0.03 in R. k = 11 is not determined by the data.
@@ -436,3 +441,10 @@ chord.
   that window overshoots the planted κ⋆ by 0.10–0.14, so the shift alone does not decide.
 - **Together, these are numerical evidence** that the far end of the singular support, and with it the type, lies
   past |κ⋆| = 1.675.
+- **A calibrated estimator does not locate it (#547).** Second-order differential approximants
+  (`solver/inner_amp/pade_farend.py`, notes/PADE_FAR_END.md) recover the far end of every smooth-density plant within
+  0.009, for far ends from 1.62 to 1.90. They miss plants with steps on the arc by up to 0.042 and one exponent
+  variant by 0.063, and their noise spread reaches 0.36, so #547's acceptance fails. On three plants (chord2 at κ⋆ and
+  at 1.85, arcjump), at least 6 of the 11 approximants agree on the far end within 0.05. On the real series no 6 agree
+  anywhere past |t| = 1.65, and none has a zero within 0.17 of the far poles above. The far end is therefore not
+  located by σ₀–σ₂₂, and the type stays uncalibrated.
