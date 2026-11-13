@@ -313,3 +313,73 @@ In 7.4, replacing the bullet "Twenty-three coefficients do not separate the plan
 +  every order (notes/PADE_FAR_END.md §6). So no statistic of these coefficients can tell them apart without a prior on
 +  the density.
 ```
+
+## 7. Twin size against the number of coefficients (#670)
+
+`solver/inner_amp/pade_twin_count.py`. The question is whether more coefficients of S₁, such as #549's σ₂₃–σ₂₄,
+could separate a chord from an arc. #548's chord twin is refitted to n = 23, 25, 27 and 31 coefficients of the arc
+plant, and the smallest twin size is found at each n.
+
+### 7.1 Method
+
+- **Coefficients.** The plants are known functions, so their σ₀–σ₃₀ are computed from them, by the tanh-sinh moments of
+  §2.2 kept to order 31. Halving the step changes none of them by more than 8.7×10⁻⁶⁰ relative.
+- **Errors.** err_k = F rel_k |σ_k|. For k ≤ 22, rel_k is the measured error of §2.3, with a floor of 10⁻³⁰. For
+  k ≥ 23 it is an estimate: log₁₀ rel_k = a + bk, fitted on k = 18–22 at each node. The slope is 0.157–0.158 dex per
+  order at the three nodes, with residuals at most 0.008 dex, and it gives rel₃₀ = 2.6×10⁻¹¹ at ω/ω∞ = 1.00. The
+  measured errors do not depend on K at a given order (the J 1250 files with K = 41, 43 and 45 agree), so the model
+  assumes that #549's runs would keep J 1250's errors. F = 1 is the model, and F = 0.1 is every error 10 times smaller,
+  which is what more precise runs would buy. F = 0.01 is context: J 1500's errors at k = 16–20 are 10^2.3–10^2.7 times
+  smaller than J 1250's.
+- **Twin.** As in §6.3: the density (1 − s)^ex Σ_{m<M} c_m T_m(2s − 1) on the chord P0 → κ⋆, times the planted zero
+  factor, fitted by least squares with weights 1/err_k. Its moments are exact, from Beta functions, rather than
+  quadrature, so the same-class control also tests the plants' extra orders. The fit is a Householder QR at 150 digits.
+- **Sizes.** χ = max_k |σ_k(twin) − σ_k|/err_k as in §6.3, and l2 is the root sum of squares of the same ratios.
+  - M_min is the smallest M at which the least-squares twin has χ ≤ 1. It is an upper bound on the size of the smallest
+    twin.
+  - M_lo is the smallest M with l2 ≤ √n. It is a lower bound, since a twin with χ ≤ 1 has l2 ≤ √n and the least-squares
+    twin minimizes l2 among twins of its size.
+- **Visibility, context.** d_m is the weighted distance of the column of T_m from the span of the lower columns. A term
+  of size |c_m| moves σ₀…σ_{n−1} by |c_m| d_m error units once the lower terms are refitted. It depends on the basis and
+  the errors only.
+
+### 7.2 Frozen criteria
+
+Written into the script's `FROZEN` dict before its first selftest, and here before the run stage was first executed.
+
+| check | criterion |
+|---|---|
+| C0 same-class control | chord2's own twin at M = 6 has χ ≤ 10⁻³ at every n, node and F |
+| C1 precision | at M_min − 1 and M_min, χ at 250 digits agrees with 150 digits within 10⁻³ relative |
+| C2 reproduction | at n = 23 and F = 1, χ at M = 18, 20 and 22 is within a factor 2 of #548's values; a failure is reported as a discrepancy |
+| near n − 3 | at F = 1 and every node, M_min ≥ n − 4 at n = 27 and 31 |
+| saturates | at F = 1 and every node, M_min(31) ≤ M_min(23) + 2 |
+| verdict on #549 | if M stays near n − 3 or saturates, at F = 1 and at F = 0.1, more orders cannot separate a chord from an arc without a prior on the density's size, and the prior they need moves by at most M_min(25) − M_min(23) terms. Otherwise the gap n − M_min is reported and the verdict is open |
+| context | the arc plant (smooth density on the arc, ω/ω∞ = 1.00), F = 0.01 and d_m are reported, not judged |
+
+`run` exits 1 when C0 or C1 fails at F = 1 or 0.1. `run --mutate=moment` multiplies one exact moment, of T₀ at order
+26, by 1 + 10⁻⁸, and must make C0 fail at n = 27 and 31 but not at 23 and 25.
+
+The selftest (`python3 pade_twin_count.py --selftest`) checks six things, and each fires under a mutation:
+
+1. The exact chord moments agree with the plant's quadrature to 2.3×10⁻⁴³ for m, k < 31 (`--mutate=moment` gives
+   10⁻⁸).
+2. The plants' σ₀–σ₃₀ change by at most 8.7×10⁻⁶⁰ when the quadrature step is halved (`--mutate=quad` compares
+   against step 1/8 and gives 2.4×10⁻⁷).
+3. The tail fit of the error model has residuals at most 0.05 dex (`--mutate=errtail`, rel₂₀ × 3, gives 0.39).
+4. C0 at n = 31 gives χ = 5×10⁻³⁷ (`--mutate=moment` gives 930).
+5. The arc plant's twin at n = 31, M = 27 has the same χ at 150 and 250 digits (`--mutate=moment`, applied at 150
+   digits only, gives a relative difference of 18).
+6. Planted chord densities with c_m = 0.8^m e^{im} and M_true = 8, 12 and 16 terms are found at their size, at n = 23
+   and 31 and F = 1 and 0.1: l2 > √n at M_true − 1 and χ ≤ 1 at M_true (`--mutate=planted` drops the top term).
+
+Seen before the freeze, and disclosed:
+
+- The selftest's precision check fits the arc plant at n = 31, M = 27, and printed χ = 1.0×10⁻¹⁰, so M_min(31) ≤ 27
+  was known.
+- The planted sizes were first 8, 16 and 24. M_true = 24 failed: its top term, 0.8²³ T₂₃, moves σ₀–σ₃₀ by only
+  3.7×10⁻⁷ error units once the other 23 terms are refitted, so a 23-term density reproduces it. That is a property of
+  the data, not a fault of the finder, and the sizes became 8, 12 and 16, whose top terms are visible by factors of
+  500 or more.
+- d_m was computed with chord2's weights at ω/ω∞ = 1.00 and F = 1. A unit term is visible (d_m ≥ 1) up to m = 17 at
+  n = 23, and up to m = 18 at n = 27 and n = 31.

@@ -120,8 +120,10 @@ def err_model(wf, mut=None):
     b, a = np.polyfit(ks, y, 1)
     resid = float(np.max(np.abs(y - (a + b * ks))))
     out = [max(r, FLOOR) for r in rel] + [float(10 ** (a + b * k)) for k in range(N_MEAS, NMAX)]
+    q = np.polyfit(ks, y, 2)        # context: the tail's slope falls with k; a quadratic continues that
     return out, {"slope_dex": float(b), "intercept": float(a), "tail_resid_dex": resid,
-                 "rel_22": rel[22], "rel_30": out[NMAX - 1]}
+                 "rel_22": rel[22], "rel_30": out[NMAX - 1],
+                 "linear_over_quadratic_30": float(10 ** (a + b * (NMAX - 1) - np.polyval(q, NMAX - 1)))}
 
 
 # ---------------------------------------------------------------- exact chord moments
@@ -340,7 +342,8 @@ def run(outdir, mut=None):
         rel, info = err_model(wf)
         rec["errors"][wf] = {"rel": rel, **info}
         log(f"wf {wf}: error tail slope {info['slope_dex']:.4f} dex/order, residual {info['tail_resid_dex']:.3f}; "
-            f"rel_22 {info['rel_22']:.2e}, rel_30 {info['rel_30']:.2e} (extrapolated)")
+            f"rel_22 {info['rel_22']:.2e}, rel_30 {info['rel_30']:.2e} (extrapolated; a quadratic tail gives "
+            f"{info['linear_over_quadratic_30']:.2f} times less)")
         kinds = ("arcjump", "arc") if wf == 1.0 else ("arcjump",)
         targets = {k: plant(wf, k)[1] for k in kinds}
         for scale in SCALES:
