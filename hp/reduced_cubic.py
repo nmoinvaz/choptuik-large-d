@@ -1012,13 +1012,14 @@ LEVEL = mp.mpf("1e-2")               # the departure the verdict locates, in uni
 
 
 def ray_solve(sysm, X, Um, c, w_init, wref, mutate="", it_max=40):
-    """w(c) for the ray mode: the chord of strong_solve, run until |dw| < 1e-60 wref or until |dw| stops falling (two
-    steps in a row that cut it by less than 0.3). One step may grow |dw|: at |c| >> |a| the chord's error map
-    N = J^-1 (I - U U^T) F''(V c, .) can have a norm above 1 and a square far below it (#528 at c*: |dw| 5.44e-56,
-    5.44e-56, then 5e-82). Failure: a non-finite |dw|, |dw| above 1e-3 max(|c|, wref), or it_max steps. Returns
-    (g, w, F, the steps' (max|strong residual|, |dw|), ok, err), err = |U^T [F(w - dw) - F(w)]|, the change of g that
-    the last correction, not applied, would make: the point's error estimate (an estimate, since the next correction
-    can be larger by the norm of N)."""
+    """w(c) for the ray mode: the chord of strong_solve, run until |dw| < 1e-60 wref, or until the smallest |dw| so far
+    has not fallen by 0.3 in three steps (the chord's floor), and the iterate with the smallest |dw| is kept. A step may
+    grow |dw|: at |c| >> |a| the chord's error map N = J^-1 (I - U U^T) F''(V c, .) can have a norm above 1 and a
+    square far below it (#528 at c*: |dw| 5.44e-56, 5.44e-56, then 5e-82). The kept iterate counts as converged when
+    its |dw| is below strong_solve's 1e-40 wref. Failure: a non-finite |dw| or one above 1e-3 max(|c|, wref), or no
+    iterate below 1e-40 wref. Returns (g, w, F, the steps' (max|strong residual|, |dw|), ok, err), with
+    err = |U^T [F(w - dw) - F(w)]| the change of g that the kept iterate's correction, not applied, would make: the
+    point's error estimate (an estimate, since the next correction can be larger by the norm of N)."""
     pv = lin([(mp.mpf(cj), X[j]) for j, cj in enumerate(c)])
     if mutate == "w0":                                  # the control: no strong solve, the map on z0 + V c
         Fv = sysm.F(pv)
@@ -1027,6 +1028,7 @@ def ray_solve(sysm, X, Um, c, w_init, wref, mutate="", it_max=40):
     hist = []
     tol = mp.mpf("1e-60") * wref
     big = mp.mpf("1e-3") * max(nrm(c), wref)
+    best, since = None, 0
     for _ in range(it_max):
         Fv = sysm.F([x + y for x, y in zip(pv, w)])
         r = strong_part(Um, Fv)
@@ -1035,13 +1037,19 @@ def ray_solve(sysm, X, Um, c, w_init, wref, mutate="", it_max=40):
         hist.append((float(amax(r)), float(nd)))
         if not mp.isfinite(nd) or nd > big:
             return proj_U(Um, Fv), w, Fv, hist, False, None
-        stalled = len(hist) >= 3 and nd > 0.3 * hist[-2][1] and hist[-2][1] > 0.3 * hist[-3][1]
-        if nd < tol or stalled:
-            F2 = sysm.F([x + y - d for x, y, d in zip(pv, w, dw)])
-            gv = proj_U(Um, Fv)
-            return gv, w, Fv, hist, True, nrm([x - y for x, y in zip(proj_U(Um, F2), gv)])
+        if best is None or nd < 0.3 * best[0]:
+            since = 0
+        else:
+            since += 1
+        if best is None or nd < best[0]:
+            best = (nd, w, Fv, dw)
+        if nd < tol or since >= 3:
+            break
         w = [x - y for x, y in zip(w, dw)]
-    return proj_U(Um, Fv), w, Fv, hist, False, None
+    nd, w, Fv, dw = best
+    F2 = sysm.F([x + y - d for x, y, d in zip(pv, w, dw)])
+    gv = proj_U(Um, Fv)
+    return gv, w, Fv, hist, bool(nd < mp.mpf("1e-40") * wref), nrm([x - y for x, y in zip(proj_U(Um, F2), gv)])
 
 
 def fit_part(ts, vals, floors, na, n_lead=4):
@@ -1103,7 +1111,6 @@ def ray_scan(sysm, bas, opts, mutate, log, rec, dump, truth=None, tensors=None):
     the tensors predict along e. --mutate=B scales B by 1 + 1e-12 in dep (an order-1 term, which the plant's checks
     must catch); --mutate=w0 drops the strong solve (ray_solve)."""
     k, X, Um, B, a, Ba, nBa, na, w0 = (bas[n] for n in ("k", "X", "Um", "B", "a", "Ba", "nBa", "na", "w0"))
-    L = sysm.L
     wref = max(nrm(w0), mp.mpf("1e-300"))
     Bm = [[x * (1 + mp.mpf("1e-12")) for x in row] for row in B] if mutate == "B" else B
     nsolve = [0]
@@ -1119,19 +1126,20 @@ def ray_scan(sysm, bas, opts, mutate, log, rec, dump, truth=None, tensors=None):
     zero = [mp.mpf(0)] * k
     g00, w00, _, h00, ok00, e00 = solve(zero, w0)
     rng = np.random.default_rng(int(opts.get("seed_rays", 7)))
-    xi = [mp.mpf(float(x)) for x in rng.standard_normal(L)]
-    xi = [x - mp.fsum(dot(v, xi) * v[r] for v in X) for r, x in enumerate(xi)]
-    xi = [x * mp.mpf("1e-4") * wref / nrm(xi) for x in xi]           # below ray_solve's failure bound 1e-3
-    g0b, _, _, h0b, ok0b, e0b = solve(zero, [x + y for x, y in zip(w0, xi)])
+    # the second start is w0 (1 + 1e-3): a random xi orthogonal to V failed at REF (the pilot), since its square
+    # reaches the strong rows through F'' and J^-1 multiplies that along the softest strong direction by 1e19
+    g0b, _, _, h0b, ok0b, e0b = solve(zero, [x * (1 + mp.mpf("1e-3")) for x in w0])
     if not (ok00 and ok0b):
-        log("  ray: the strong solve at c = 0 did not converge; the scan cannot run")
-        rec["ray"] = dict(ok=False)
+        log("  ray: the strong solve at c = 0 did not converge; the scan cannot run. (max|strong residual|, |dw|) per "
+            "step, from w0: " + ", ".join(f"({x:.1e}, {y:.1e})" for x, y in h00) + "; from w0 (1 + 1e-3): "
+            + ", ".join(f"({x:.1e}, {y:.1e})" for x, y in h0b))
+        rec["ray"] = dict(ok=False, h00=h00, h0b=h0b)
         return False, rec
     floor0 = max(nrm([x - y for x, y in zip(g00, g0b)]), e00, e0b)
     eps0 = nrm([x + y for x, y in zip(g00, Ba)]) / nBa
     ga, _, Fa, ha, oka, ea = solve(a, w00)
     dep_a = dep_of(ga, g00, a)
-    log(f"  ray: g(0) from w0 and from w0 + xi (|xi| 1e-4 |w0|): |difference| / |B a| "
+    log(f"  ray: g(0) from w0 and from w0 (1 + 1e-3): |difference| / |B a| "
         f"{mp.nstr(nrm([x - y for x, y in zip(g00, g0b)]) / nBa, 3)}, their error estimates {mp.nstr(e00 / nBa, 3)}, "
         f"{mp.nstr(e0b / nBa, 3)}: floor0 {mp.nstr(floor0 / nBa, 3)} of |B a|; chord steps {len(h00)}, {len(h0b)}; "
         f"|g(0) + B a| / |B a| {mp.nstr(eps0, 3)}")
