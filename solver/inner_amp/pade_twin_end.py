@@ -498,19 +498,21 @@ def run_diag(outdir):
 
     def best_of(rows):
         return min(rows, key=lambda r: r["chi22"])
-    for a in range(12, 21):
-        for b in range(8, 17):
+    for a in range(12, 31):
+        for b in range(6, 23):
             P1 = complex(a / 10, b / 10)
             chi, l2, _, _ = chi22(wf, sig, rel, P1, e0)
             rec["far"].append({"P1": P1, "chi22": chi, "l2": l2})
     bf = best_of(rec["far"])
+    log("far end, the 8 best grid points: " + "; ".join(f"{r['P1']} |P1| {abs(r['P1']):.3f} chi22 {r['chi22']:.2e}"
+                                                        for r in sorted(rec["far"], key=lambda r: r["chi22"])[:8]))
     for a in range(-4, 5):
         for b in range(-4, 5):
             P1 = complex(round(bf["P1"].real + a / 40, 4), round(bf["P1"].imag + b / 40, 4))
             chi, l2, _, _ = chi22(wf, sig, rel, P1, e0)
             rec["far_fine"].append({"P1": P1, "chi22": chi, "l2": l2})
     bff = best_of(rec["far_fine"])
-    log(f"far end, grid Re 1.2..2.0, Im 0.8..1.6 step 0.1: best {bf['P1']} chi22 {bf['chi22']:.3e}; finer grid step "
+    log(f"far end, grid Re 1.2..3.0, Im 0.6..2.2 step 0.1: best {bf['P1']} chi22 {bf['chi22']:.3e}; finer grid step "
         f"0.025: best {bff['P1']} |P1| {abs(bff['P1']):.4f} chi22 {bff['chi22']:.3e}")
     for lab, P1 in (("kstar", ks), ("best_far", bff["P1"])):
         for d in ("-1.0", "-0.6", "-0.3", "+0.3", "+0.6", "+1.0", "-1.0i", "-0.6i", "-0.3i", "+0.3i", "+0.6i",
