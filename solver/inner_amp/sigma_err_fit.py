@@ -27,7 +27,7 @@ import sys
 import mpmath as mp
 
 HERE = os.path.dirname(os.path.abspath(__file__))
-mp.mp.dps = 40
+DPS = 40        # the precision of recompute's parse; set locally, so importing the module leaves mpmath's alone (#683)
 INF = float("inf")
 
 
@@ -61,8 +61,9 @@ def recompute(r, a1, e1=None):
     else:
         e1_bound = 0.0
     out = []
-    for k, (re_, im) in enumerate(r["sigma_str"]):
-        s = mp.mpc(re_, im)
+    with mp.workdps(DPS):
+        sig = [mp.mpc(re_, im) for re_, im in r["sigma_str"]]
+    for k, s in enumerate(sig):
         key = f"{2 * k + 1}_1"
         step = e1 if k == 0 else r["fit_info"][key][1]
         if not (step < INF):
@@ -101,7 +102,7 @@ def report(fn, fn_a1=None):
 
 def selftest():
     fns = sorted(glob.glob(os.path.join(HERE, "scan*/sigF_*.json")))
-    n = 0
+    n, last = 0, None
     for fn in fns:
         r = json.load(open(fn))
         if "fit_info" not in r or not (r["sigma_err"][-1] < INF):
@@ -110,8 +111,10 @@ def selftest():
         for k, s, e, _ in recompute(r, a1):
             if abs(e - r["sigma_err"][k]) > 1e-12 * r["sigma_err"][k]:
                 raise SystemExit(f"selftest: {fn} k {k}: recomputed {e:.6e} against stored {r['sigma_err'][k]:.6e}")
-        n += 1
-    r = json.load(open(fns[-1]))
+        n, last = n + 1, fn
+    if last is None:
+        raise SystemExit("selftest: no file with finite sigma_err")
+    r = json.load(open(last))       # the mutation on a file the check covers (the last file has inf errors, T104)
     fired = any(abs(e - r["sigma_err"][k]) > 1e-12 * r["sigma_err"][k] for k, s, e, _ in recompute(r, a1_of(r) * (1 + 1e-6)))
     if not fired:
         raise SystemExit("selftest: the mutation (a1 scaled by 1 + 1e-6) did not fire")
@@ -119,6 +122,7 @@ def selftest():
 
 
 if __name__ == "__main__":
+    mp.mp.dps = DPS
     p = argparse.ArgumentParser()
     p.add_argument("file", nargs="?")
     p.add_argument("--a1-from", dest="a1_from")
