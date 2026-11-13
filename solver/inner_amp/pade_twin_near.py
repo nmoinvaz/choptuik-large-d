@@ -35,6 +35,9 @@ alpha < 0, so the rule's end truncation stays below 1e-100).
     python3 pade_twin_near.py control OUTDIR [--mutate=alpha|zero|locate] [--allow_unraw]
     python3 pade_twin_near.py real OUTDIR [--mutate=c1dup] [--allow_unraw]     (reads OUTDIR/control.json)
 
+Gate as amended by #702 (AMENDED; notes/PADE_FAR_END.md 13.8): the variants that change no near end run in the real
+stage when K0, every C0 and Z1 pass; the near-end variants need K2 as well. #689's control.json is read unchanged.
+
 Exit 1 when a frozen control fails or a frozen rule forbids the real stage. Numerical evidence, not a bound.
 """
 import json
@@ -128,6 +131,29 @@ FROZEN = {                          # written before the control and real stages
                "[10/12], [12/10], [10/10], [11/10], [10/11] on the real series; widened errors (a changed judged "
                "verdict is a discrepancy, reported); J1500 at wf 1.00 for the judged variants",
 }
+# #702 amends FROZEN["gate"] (notes/PADE_FAR_END.md 13.6, 13.8), written before any real run. No threshold changes.
+AMENDED = {
+    "gate_zero": "the variants that change no near end (kstar, nozero, zpade, zfit; context z*, nozeroex-1, ratio, "
+                 "rationozero, ratiozpade, zfitratio) run if K0, every C0 and Z1 pass",
+    "gate_near": "the near-end variants (a*, near541, their combinations near541a*, nozeroa*, ratioa*, rationear541, "
+                 "and p0fit, afit) run only if K2 passes as well",
+    "verdict": "names the fitting judged variants of the groups that ran; if none fits, none of the tested zero factors "
+               "gives a short twin, and the near ends are reported as untested when K2 failed",
+    "unchanged": "C1, C2, --mutate=c1dup (on the non-located variants that run), the fits rule (M_min <= 20 at all "
+                 "three nodes), zfit's location by l2 at M = 20 and its C0 at the located zero (chi <= 1e-30)",
+}
+
+
+def near_end_variant(v):
+    """a variant that changes the near end: its exponent alpha, its position P0, or locates one of them"""
+    m = JUDGED.get(v, CONTEXT.get(v))
+    return "alpha" in m or "P0" in m or m.get("locate") in ("P0", "alpha")
+
+
+def gates(verdict):
+    """the amended gate (AMENDED): (zero-factor group runs, near-end group runs) from control.json's verdict"""
+    base = verdict["K0"] and verdict["C0"]
+    return base and verdict["Z1_a"] and verdict["Z1_b"], base and verdict["K2"]
 
 
 # ---------------------------------------------------------------- variants
@@ -569,8 +595,10 @@ def run_control(outdir, mut=None):
             f"of {sum(len(d) for d in rec['C0'].values())}; Z1(b) {z1b}; as frozen: {fired}")
     rec["gate_pass"] = k0 and k2 and c0_ok
     rec["controls_pass"] = rec["gate_pass"] and z1a and z1b
+    rec["gate_amended"] = dict(zip(("zero", "near"), gates(rec["verdict"])))
     log(f"K0 {k0}, K2 {k2}, C0 {c0_ok} ({len(c0_fail)} failures), Z1 {z1a and z1b}; the real stage may run: "
-        f"{rec['gate_pass']}")
+        f"{rec['gate_pass']} as first frozen; as amended (#702), zero-factor group {rec['gate_amended']['zero']}, "
+        f"near-end group {rec['gate_amended']['near']}")
     log.dump(rec)
     return rec["controls_pass"]
 
@@ -578,13 +606,21 @@ def run_control(outdir, mut=None):
 # ---------------------------------------------------------------- real stage
 def run_real(outdir, mut=None):
     ctl = json.load(open(os.path.join(outdir, "control.json")))
-    if not ctl["gate_pass"]:
-        print("the controls failed: no real run (frozen rule)")
+    g_zero, g_near = gates(ctl["verdict"])
+    if not (g_zero or g_near):
+        print("the controls failed: no real run (frozen rule, as amended by #702)")
         return False
     z1 = ctl["verdict"]["Z1_a"] and ctl["verdict"]["Z1_b"]
+
+    def runs(v):
+        return g_near if near_end_variant(v) else g_zero
+    unrun = [v for v in list(JUDGED) + list(CONTEXT) if not runs(v)]
     log = tz.Log(outdir, "real", mut)
-    rec = {"frozen": FROZEN, "mutate": mut, "scans": {}, "widened": {}, "J1500": {}, "located": {}, "C0_located": {},
-           "Z1_pass": z1}
+    log(f"amended gate (#702): K0 {ctl['verdict']['K0']}, C0 {ctl['verdict']['C0']}, Z1 {z1}, K2 "
+        f"{ctl['verdict']['K2']}; zero-factor group runs {g_zero}, near-end group runs {g_near}; not run: "
+        + (", ".join(unrun) or "none"))
+    rec = {"frozen": FROZEN, "amended": AMENDED, "mutate": mut, "scans": {}, "widened": {}, "J1500": {},
+           "located": {}, "C0_located": {}, "Z1_pass": z1, "gate_zero": g_zero, "gate_near": g_near, "unrun": unrun}
     real = tc.real_sig()
     j15 = pg.load_scan(pg.REAL["J1500"])
 
@@ -601,6 +637,8 @@ def run_real(outdir, mut=None):
             relw = te.widened(wf, rel)
             log.dump(rec)
             for v in group:
+                if not runs(v):
+                    continue
                 sp = spec(v, wf, ctx)
                 if sp["locate"]:
                     if mut:
@@ -655,23 +693,29 @@ def run_real(outdir, mut=None):
                       "l2_20": [src[wf][v]["l2"][20] for wf in pg.NODES],
                       "fits": all(m is not None and m <= M_FIT for m in mm)}
         return out
-    judged, context = table(scans, JUDGED), table(scans, CONTEXT)
+    judged = table(scans, [v for v in JUDGED if runs(v)])
+    context = table(scans, [v for v in CONTEXT if runs(v)])
     wide = table(rec["widened"], [v for v in JUDGED if v in rec["widened"][1.0]])
     c0loc = {v: all(r["pass"] for r in d.values()) for v, d in rec["C0_located"].items()}
-    for v in ("zfit", "zfitratio"):
-        if v in judged | context:
-            (judged | context)[v]["calibrated"] = z1 and c0loc.get(v, False)
-    groups = {"near-end exponent": [v for v in JUDGED if v.startswith("a") and judged[v]["fits"]],
-              "near-end position": [v for v in ("near541",) if judged[v]["fits"]],
-              "zero factor": [v for v in ("nozero", "zpade", "zfit") if judged[v]["fits"]
-                              and (v != "zfit" or (z1 and c0loc.get("zfit", False)))]}
-    if not judged["zfit"]["fits"] or (z1 and c0loc.get("zfit", False)):
+    for t in (judged, context):
+        for v in ("zfit", "zfitratio"):
+            if v in t:
+                t[v]["calibrated"] = z1 and c0loc.get(v, False)
+    zfit_ok = "zfit" in judged and z1 and c0loc.get("zfit", False)
+    groups = {"near-end exponent": [v for v in judged if v.startswith("a") and judged[v]["fits"]],
+              "near-end position": [v for v in ("near541",) if v in judged and judged[v]["fits"]],
+              "zero factor": [v for v in ("nozero", "zpade", "zfit") if v in judged and judged[v]["fits"]
+                              and (v != "zfit" or zfit_ok)]}
+    if "zfit" not in judged or not judged["zfit"]["fits"] or zfit_ok:
         zfit_note = None
     else:
         zfit_note = "zfit fits, but its locator is uncalibrated (Z1 or its C0 failed): not judged"
     named = [g for g, vs in groups.items() if vs]
+    tested = " or ".join(x for x, g in (("near ends", g_near), ("zero factors", g_zero)) if g)
     verdict = ("the fitting variants change: " + "; ".join(f"{g} ({', '.join(groups[g])})" for g in named) if named
-               else "none of the tested near ends or zero factors gives a short twin")
+               else f"none of the tested {tested} gives a short twin")
+    if not g_near:
+        verdict += "; the near ends are untested (K2 failed, so the near-end variants did not run)"
     c2 = {wf: {"M_min": scans[wf]["kstar"]["M_min"], "chi22": scans[wf]["kstar"]["chi"][22], "ref": REF672_CHORD[wf]}
           for wf in pg.NODES}
     c2_pass = all(x["M_min"] == N23 and abs(x["chi22"] / x["ref"] - 1) <= 1e-3 for x in c2.values())
@@ -679,7 +723,7 @@ def run_real(outdir, mut=None):
     rec.update({"judged": judged, "context": context, "widened_table": wide, "groups": groups, "verdict": verdict,
                 "zfit_note": zfit_note, "C2_baseline": {"rows": c2, "pass": c2_pass}, "widened_changes_verdict": changed,
                 "C0_located_pass": c0loc, "C1_pass": ok})
-    for v in list(JUDGED) + list(CONTEXT):
+    for v in list(judged) + list(context):
         t = judged.get(v) or context[v]
         log(f"{'judged ' if v in JUDGED else 'context'} {v:13s}: M_min {t['M_min']} M_lo {t['M_lo']}; chi at 22 terms "
             + ", ".join(f"{x:.2e}" for x in t["chi22"]) + "; l2 at 20 terms " + ", ".join(f"{x:.2e}" for x in t["l2_20"])

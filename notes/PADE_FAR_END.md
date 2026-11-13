@@ -1655,3 +1655,24 @@ In 7.4, after the bullet "Nor does a weak second singular set past the arc (#667
 +  within 0.2% of the real series at every node. So the real misfit is the size a misplaced zero factor gives, and the
 +  twin test with the zero in place is still to be run (notes/PADE_FAR_END.md §13).
 ```
+
+### 13.8 The gate amended (#702), before any real run
+
+13.6's amendment, applied in `pade_twin_near.py`'s `AMENDED` and here before the `real` stage was first run. No
+threshold changed, and no control was rerun: the real stage reads #689's `control.json` (`I689-mac/`, raw fade0a9),
+whose verdicts are K0, C0 and Z1 pass, K2 fails.
+
+| check | as amended |
+|---|---|
+| gate, zero factor | the variants that change no near end run if K0, every C0 and Z1 pass: kstar, nozero, zpade, zfit, and the context variants z…, nozeroex-1, ratio, rationozero, ratiozpade and zfitratio |
+| gate, near end | the variants that change the near end's exponent or position run only if K2 passes as well: a…, near541, near541a…, nozeroa…, ratioa…, rationear541, p0fit and afit. K2 failed, so they do not run |
+| verdict | names the fitting judged variants of the groups that ran. If none fits, none of the tested zero factors gives a short twin, and the near ends are reported as untested |
+| unchanged | C1 and C2, `--mutate=c1dup` (on the non-located variants that run), the fits rule (M_min ≤ 20 at all three nodes), zfit's location by l2 at M = 20, and its C0 at the located zero (χ ≤ 10⁻³⁰) |
+
+The reason. K2 tests whether the twin test resolves a near-end exponent of 0.5 against 0, so it bears on the near-end
+variants only. The zero-factor variants have their own planted controls, C0 for each basis and Z1 for the locator,
+and both pass. 13.4 found, on plants, that the zero's offset alone reproduces the real misfit, so the zero factor is
+the ingredient left to test on the real series.
+
+Three variants are in neither of 13.6's lists, kstar, ratio and nozeroex-1. None changes the near end, so they run
+with the zero-factor group. kstar is the baseline that C2 needs. ratio and nozeroex-1 are context only.
