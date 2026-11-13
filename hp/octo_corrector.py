@@ -16,7 +16,9 @@ used, so that a module importing this one runs on the older packages the runners
         [--Delta_ref D] [--last 0] [--mutate_offset qd] [--mutate 10] [--out PREFIX]
     python3 octo_corrector.py wall RAW PRED.npz [--threads 3] [--qd 0] [--F_max 1e-36] [--mutate_offset qd]
         [--mutate 10] [--out PREFIX] [--reseed_o 0] [--held_o 0]
-    (planted and wall take --switch S, ElimO's projection switch, 1e-15 by default; anm_run.py --elim_switch, #700)
+    (planted and wall take --switch S, ElimO's projection switch, 1e-15 by default; anm_run.py --elim_switch, #700;
+    and --reseed_o K and --reseed_start pred, anm_run.py's options of the same names, the re-seeder's octo-double
+    corrections and its polish from the point's own data, #713)
     python3 octo_corrector.py horizon RAW STATE.npz [--threads 3] [--steps 3] [--mutate_h sign]
     python3 octo_corrector.py digits [--mutate 2]
 
@@ -609,19 +611,23 @@ def planted(argv):
     from reseed import Reseeder
     raw, path = argv[0], argv[1]
     opt = _parse(argv[2:], dict(threads=3, rel=1e-12, seed=1, mutate_offset="", mutate=0, it_max=12, qd=1, tol=1e-40, out="",
-                                Delta_ref="", last=0, od=1, accept="own", strong=0, switch=1e-15))
+                                Delta_ref="", last=0, od=1, accept="own", strong=0, switch=1e-15, reseed_o=0,
+                                reseed_start="ladder"))
     z4, meta = load_q(os.path.join(raw, path))
     z4 = o8(z4)
     D = mp.mpf(meta["D_str"])
     s, sp, sq, so = pinned_o(meta, z4, threads=opt["threads"], mutate_offset=opt["mutate_offset"])
-    rs = Reseeder(meta, D, threads=opt["threads"], qd=True)
+    rs = Reseeder(meta, D, threads=opt["threads"], qd=True, od=opt["reseed_o"], qd_start=opt["reseed_start"])
     zs, n = plant_start(z4, rs, opt["rel"], opt["seed"], opt["last"])
     print(f"planted {path}: D {mp.nstr(D, 12)}, start = truth moved by {opt['rel']:.0e} relative in [0, {n}); pinned max|F| (octo) "
           f"truth {omax(so.residual_o(o8_of_q(z4))):.2e}, start {omax(so.residual_o(o8_of_q(zs))):.2e}; mutate_offset "
           f"'{opt['mutate_offset']}', mutate {opt['mutate']}", flush=True)
     import json
     rec = dict(test="planted", state=path, D_str=meta["D_str"], rel=opt["rel"], seed=opt["seed"], mutate_offset=opt["mutate_offset"],
-               mutate=opt["mutate"], last=opt["last"])
+               mutate=opt["mutate"], last=opt["last"], switch=opt["switch"], reseed_o=opt["reseed_o"],
+               reseed_start=opt["reseed_start"], accept=opt["accept"], strong=opt["strong"])
+    print(f"  ElimO switch {opt['switch']:g}, reseed_o {opt['reseed_o']}, reseed_start {opt['reseed_start']}, accept "
+          f"{opt['accept']}, strong {opt['strong']}", flush=True)
 
     def dump():
         if opt["out"]:
@@ -684,10 +690,10 @@ def wall(argv):
     from reseed import Reseeder
     raw, path = argv[0], argv[1]
     opt = _parse(argv[2:], dict(threads=3, mutate_offset="", mutate=0, it_max=12, qd=0, tol=1e-40, out="", F_max=1e-36, junk=0,
-                                reseed_o=0, held_o=0, switch=1e-15))
+                                reseed_o=0, held_o=0, switch=1e-15, reseed_start="ladder"))
     z4, meta = load_q(os.path.join(raw, path))
     D = mp.mpf(meta["D_str"])
-    rs = Reseeder(meta, D, threads=opt["threads"], qd=True, od=opt["reseed_o"])
+    rs = Reseeder(meta, D, threads=opt["threads"], qd=True, od=opt["reseed_o"], qd_start=opt["reseed_start"])
     t0 = time.time()
     zr, diag = rs.reseed(o8(z4))
     zr = o8(zr)
@@ -695,6 +701,8 @@ def wall(argv):
                              held_exact=bool(opt["held_o"]))
     print(f"wall {path}: D {mp.nstr(D, 12)}, re-seed {'ok' if diag['ok'] else 'FAILED'} ({diag['seconds']} s), pinned max|F| (octo) "
           f"{omax(so.residual_o(o8_of_q(zr))):.2e}; mutate_offset '{opt['mutate_offset']}', mutate {opt['mutate']}", flush=True)
+    print(f"  ElimO switch {opt['switch']:g}, reseed_o {opt['reseed_o']}, held_o {opt['held_o']}, reseed_start "
+          f"{opt['reseed_start']}", flush=True)
     start = o8_of_q(zr)
     if rs.od:
         # as anm_run.py does at the prediction: the re-seeded horizon data refined before the corrector starts
@@ -707,6 +715,7 @@ def wall(argv):
     import json
     ok = Fo < opt["F_max"]
     rec = dict(test="wall", pred=path, D_str=meta["D_str"], mutate_offset=opt["mutate_offset"], mutate=opt["mutate"],
+               switch=opt["switch"], reseed_o=opt["reseed_o"], held_o=opt["held_o"], reseed_start=opt["reseed_start"],
                od=dict(steps=len(ho), converged=bool(co), F=Fo, Delta=mp.nstr(Do, 40), hist=ho, counts=counts), passed=bool(ok))
 
     def dump():
