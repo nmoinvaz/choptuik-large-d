@@ -909,7 +909,7 @@ significant digits. #672 found that `pade_twin_count.real_sig()` held them at mp
 `solver/inner_amp/sigma_load.py` now parses them at 300 digits for every caller, inside `mp.workdps` and never through a
 float. `solver/inner_amp/pade_precision.py` measures what the earlier loading did, and what the strings' own rounding
 leaves. All runs used one process under `nice -n 10`, single-threaded, 2026-11-13 12:13–12:28 UTC. The records are in
-the raw-data repository's `I683-mac/` (4782261).
+the raw-data repository's `I683-mac/` (59d7166).
 
 ### 10.1 The callers
 
