@@ -1729,7 +1729,7 @@ def rows_scan(sysm, bas, opts, mutate, log, rec, dump, truth=None):
     # relative to the size U^T T(e) would have without cancellation between rows
     tr_err = nrm([x - y for x, y in zip(UT_rows, UT)]) / nrm([mp.fsum(abs(Uh[m][r] * Th[r]) for r in range(n))
                                                              for m in range(k)])
-    UC3 =[mp.fsum(Uh[m][r] * C3h[r] for r in range(n)) for m in range(k)]
+    UC3 = [mp.fsum(Uh[m][r] * C3h[r] for r in range(n)) for m in range(k)]
     c3rel = nrm(UC3) / nrm(UT)
     h_ok = bool(dwee < 1e-2 and dT < 1e-2 and dS < 1e-2)
     log(f"  along e = a / |a|: w_ee = J^-1 (I - U U^T) F''(e, e), |w_ee| {mp.nstr(nrm(wee[1]), 3)}, h {H['F'] / 10:.0e} "
@@ -1760,6 +1760,35 @@ def rows_scan(sysm, bas, opts, mutate, log, rec, dump, truth=None):
             f"{mp.nstr(d['abs_all'], 3):>10} {mp.nstr(d['absA'], 3):>10} {mp.nstr(d['absN'], 3):>10}; "
             f"{mp.nstr(d['xmax'], 3):>10} {mp.nstr(d['xA'], 3):>10}; largest |U_r| |x_r|: "
             + ", ".join(f"{lab} {v:.2e}" for lab, v in d["top"][:3]))
+    # diagnostics added after the REF pilot (not judged): each block's part of U^T x against its no-cancellation size;
+    # the pairing of U's rows in the last two blocks, which both hold minus node K-1's state; w_ee by unknowns; and
+    # how much of the axis Delta lies in span(V)
+    bl = [lab.split(".")[0] for lab in RH.labels]
+    byblock = {}
+    log("  each block's part of U^T x, |sum| (sum of |U_r x_r|), the three largest by the latter:")
+    for name, x in (("F''(e,e)", Qh), ("T(e)", Th), ("3S(e)", [3 * s for s in Sh]), ("T-3S", C3h)):
+        d = {}
+        for b in dict.fromkeys(bl):
+            idx = [r for r in range(n) if bl[r] == b]
+            d[b] = (float(nrm([mp.fsum(Uh[m][r] * x[r] for r in idx) for m in range(k)])),
+                    float(nrm([mp.fsum(abs(Uh[m][r] * x[r]) for r in idx) for m in range(k)])))
+        byblock[name] = d
+        log(f"    {name:<9} " + "; ".join(f"{b} {v[0]:.2e} ({v[1]:.2e})"
+                                          for b, v in sorted(d.items(), key=lambda t: -t[1][1])[:3]))
+    K1 = (L - 1) // (4 * M)
+    o1, o2 = 4 * M * (K1 - 2), 4 * M * (K1 - 1)
+    pair = max(nrm([u[o1 + i] + u[o2 + i] for i in range(4 * M)]) / nrm(u) for u in Um)
+    wsh = [x ** 2 for x in CH(wee[1])]
+    ws = mp.fsum(wsh)
+    worder = sorted(range(n), key=lambda r: -wsh[r])
+    pdel = mp.fsum(x[L - 1] ** 2 for x in X)
+    log(f"  U on the last two blocks' rows: max over the weak vectors of |u(block {K1 - 2}) + u(block {K1 - 1})| / |u| "
+        f"{mp.nstr(pair, 3)}; |P_V e_Delta|^2 {mp.nstr(pdel, 8)}; w_ee by unknowns: "
+        + ", ".join(f"{CH.labels[r]} {float(wsh[r] / ws):.3f}" for r in worder[:8]))
+    out["blocks"] = byblock
+    out["pair"] = float(pair)
+    out["PV_Delta"] = float(pdel)
+    out["wee_top"] = [(CH.labels[r], float(wsh[r] / ws)) for r in worder[:12]]
     out["along"] = dict(wee=float(nrm(wee[1])), dwee=float(dwee), dT=float(dT), dS=float(dS), h_ok=h_ok,
                         tr_err=float(tr_err), c3rel=float(c3rel),
                         contrib={nm: {kk: (v if kk == "top" else float(v)) for kk, v in d.items()} for nm, d in rel_tab.items()},
