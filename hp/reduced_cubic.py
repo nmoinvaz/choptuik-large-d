@@ -535,7 +535,7 @@ class CurvePlanted(RayPlanted):
 
     M_SKEW, N_QUAD = mp.mpf("1e5"), mp.mpf("1e7")
 
-    def __init__(self, seed, log, k=4, m=8):
+    def __init__(self, seed, log, k=4, m=8, mutate=""):
         self.Jz, self.lu_at = None, None
         self.dN, self.nN = None, mp.mpf(0)              # RayPlanted's construction calls Gs
         super().__init__(seed, lambda s: None, k, m)
@@ -552,7 +552,9 @@ class CurvePlanted(RayPlanted):
                            for j in range(k)] for i in range(k)] for mm in range(k)])
         self.T = [[[[3 * Sc[mm][i][j][l] for l in range(k)] for j in range(k)] for i in range(k)] for mm in range(k)]
         R = rng.standard_normal((4, 4))
-        R = R - R.T
+        # --mutate=fold (the bridge's control, 11.4): R symmetric, with real eigenvalues, so that Lambda + M(y) is
+        # singular where m (b . y) is minus an eigenvalue's inverse (a fold of the strong rows near |c| 1e-4)
+        R = R + R.T if mutate == "fold" else R - R.T
         R /= np.linalg.norm(R, 2)
         bv = rng.standard_normal(k)
         bv /= np.linalg.norm(bv)
@@ -1565,6 +1567,83 @@ def newton_strong(sysm, X, Um, c, w_init, wref, nBc, lu_max=6, chord_max=12):
     return gv, w, Fv, hist, bool(err < CONV_G * nBc), err, nlu
 
 
+BRIDGE_T = [mp.mpf(10) ** (mp.mpf(e) / 4) for e in range(-96, -55)]      # 1e-24 .. 1e-14, four per decade
+
+
+def bridge_scan(sysm, bas, log, out, dump, g00, floor0, fee2=None, wee=None):
+    """a diagnostic added after the REF pilot (#698, notes/REDUCED_CUBIC.md 11.4): the chord through z0's LU
+    (ray_solve, #677's strong solve) along +-t e from 1e-24 upward, four per decade, until it fails on either ray.
+    Per t: the departure's parts E and O in units of |B c|; |w - w0| / t^2 against 1/2 |w_ee| (#694); the chord's first
+    three corrections from w0, |dw_1| / |dw_0| and the signed pair ratio rho = <dw_2, dw_0> / |dw_0|^2 (if the chord's
+    error map acts on two directions, N^2 = rho there, and the strong block's determinant is that at z0 times 1 - rho,
+    so rho -> +1 marks a fold of the strong-solved manifold and rho -> -1 an oscillation without one: *inferred* from
+    that model); and the flat chart's strong residual change in 2-norm over t^2 against 1/2 |F''(e, e)|_2 (#694's rows,
+    a 2-norm, which the change of rows keeps)."""
+    k, X, Um, B, a, na, w0 = (bas[n] for n in ("k", "X", "Um", "B", "a", "na", "w0"))
+    wref = max(nrm(w0), mp.mpf("1e-300"))
+    e = [x / na for x in a]
+    nBe = nrm([mp.fsum(B[m][j] * e[j] for j in range(k)) for m in range(k)])
+    F0 = sysm.F()
+    sF0 = strong_part(Um, F0)
+    rows, prev = [], {1: [], -1: []}
+    t0 = time.time()
+    log("  bridge (diagnostic): t; E, O (of |B c|); |w - w0| / t^2 (+, -); |dw_1| / |dw_0|, rho (+, -); chord steps; "
+        "flat chart's strong residual change, 2-norm / t^2" + ("" if fee2 is None else f", against 1/2 |F''(e, e)|_2 = "
+                                                             f"{mp.nstr(fee2 / 2, 4)}")
+        + ("" if wee is None else f"; 1/2 |w_ee| = {mp.nstr(wee / 2, 4)}"))
+    for t in BRIDGE_T:
+        row = dict(t=float(t))
+        ok_all = True
+        deps = {}
+        for sgn in (1, -1):
+            c = [sgn * t * x for x in e]
+            pv = lin([(cj, X[j]) for j, cj in enumerate(c)])
+            # the pair test: three chord corrections from w0
+            w, dws = list(w0), []
+            for _ in range(3):
+                dw = sysm.solve(strong_part(Um, sysm.F([x + y for x, y in zip(pv, w)])))
+                dws.append(dw)
+                w = [x - y for x, y in zip(w, dw)]
+            n0 = nrm(dws[0])
+            row["r1" + ("p" if sgn > 0 else "m")] = float(nrm(dws[1]) / n0)
+            row["rho" + ("p" if sgn > 0 else "m")] = float(dot(dws[2], dws[0]) / n0 ** 2)
+            # the converged point, from the prediction as in ray_scan
+            p = prev[sgn]
+            w_init = w0 if not p else [x0 + (t / p[0]) ** 2 * (x1 - x0) for x0, x1 in zip(w0, p[1])]
+            gv, wv, Fv, hv, okv, ev = ray_solve(sysm, X, Um, c, w_init, wref)
+            row["steps" + ("p" if sgn > 0 else "m")] = len(hv)
+            if not okv:
+                ok_all = False
+                row["fail"] = sgn
+                break
+            prev[sgn] = (t, wv)
+            deps[sgn] = [gv[m] - g00[m] - mp.fsum(B[m][j] * c[j] for j in range(k)) for m in range(k)]
+            row["w" + ("p" if sgn > 0 else "m")] = float(nrm([x - y for x, y in zip(wv, w0)]) / t ** 2)
+            row["err" + ("p" if sgn > 0 else "m")] = float(ev / (t * nBe))
+            sr = strong_part(Um, sysm.F(pv))
+            row["fl2" + ("p" if sgn > 0 else "m")] = float(nrm([x - y for x, y in zip(sr, sF0)]) / t ** 2)
+        if ok_all:
+            E = [(x + y) / 2 for x, y in zip(deps[1], deps[-1])]
+            O = [(x - y) / 2 for x, y in zip(deps[1], deps[-1])]
+            row["E"], row["O"] = float(nrm(E) / (t * nBe)), float(nrm(O) / (t * nBe))
+            row["fl"] = float(max(floor0, mp.mpf(row["errp"]) * t * nBe, mp.mpf(row["errm"]) * t * nBe) / (t * nBe))
+        rows.append(row)
+        log(f"    {float(t):9.3g}; " + (f"{row['E']:11.4e} {row['O']:11.4e}; {row['wp']:.5e} {row['wm']:.5e}; "
+                                      if ok_all else "chord FAILED; ")
+            + f"{row.get('r1p', float('nan')):.3g} {row.get('rhop', float('nan')):+.4e}, {row.get('r1m', float('nan')):.3g} "
+            f"{row.get('rhom', float('nan')):+.4e}; {row.get('stepsp')},{row.get('stepsm')}; "
+            f"{row.get('fl2p', float('nan')):.4e} {row.get('fl2m', float('nan')):.4e}")
+        out["bridge"] = rows
+        dump()
+        if not ok_all:
+            break
+    rhos = [r[q] for r in rows for q in ("rhop", "rhom") if q in r]
+    log(f"  bridge: {len(rows)} t, the chord {'failed at ' + str(rows[-1]['t']) if 'fail' in rows[-1] else 'held'}; "
+        f"rho positive at {sum(x > 0 for x in rhos)} and negative at {sum(x < 0 for x in rhos)} of {len(rhos)} "
+        f"({time.time() - t0:.0f} s)")
+    return rows
+
+
 def w_predict(w0, conv, tau):
     """w at the signed tau from the converged points [(tau_i, w_i)]: the two with the largest |tau_i| <= |tau| (the
     same sign first), fitted by w0 + alpha tau^2 + beta tau^3 exactly; one point, w0 + (tau / tau_1)^2 (w_1 - w0); none,
@@ -1636,7 +1715,8 @@ def verdict_selftest():
     return got == ["supports", "refutes", "between", "refutes", "not decided"], got
 
 
-def curve_scan(sysm, bas, opts, mutate, log, rec, dump, truth=None, kappa=None, ref677=None, fee694=None):
+def curve_scan(sysm, bas, opts, mutate, log, rec, dump, truth=None, kappa=None, ref677=None, fee694=None, fee2=None,
+               wee=None):
     """g on the strong-solved manifold along c = +-t e, e = a / |a|, at t in CURVE_T (and CURVE_LEAD on the + ray of
     a real start), by newton_strong; the departure dep(c) = g(c) - g(0) - B c in units of |B c| = t |B e|, its even
     and odd parts, their floors and orders, the flat chart (w = 0) at the same t, and the verdict of curve_verdict
@@ -1700,6 +1780,21 @@ def curve_scan(sysm, bas, opts, mutate, log, rec, dump, truth=None, kappa=None, 
         log(f"    {r['t']:9.3g} {r['depp']:11.3e} {r['depm']:11.3e} {r['E']:11.3e} {r['O']:11.3e}  {r['O_t3']:10.3e}  "
             f"{r['srp']:10.3e} {r['srm']:10.3e}")
     dump()
+    pb = True
+    if opts.get("bridge", "0") == "1":                  # the diagnostic of 11.4, through z0's LU, before any refactoring
+        brows = bridge_scan(sysm, bas, log, out, dump, g00, floor0, fee2=fee2, wee=wee)
+        if truth is not None:
+            # (PB) on the plant: its skew coupling oscillates without a fold, so rho < 0 at every t; --mutate=fold
+            # (a symmetric coupling) makes rho > 0, and (PB) must fail
+            rh = [r[q] for r in brows for q in ("rhop", "rhom") if q in r]
+            pb = bool(rh) and all(x < 0 for x in rh)
+            out["planted_bridge"] = pb
+            log(f"  planted: (PB) rho negative at every t of the bridge: {'pass' if pb else 'FAIL'}")
+    if opts.get("newton", "1") == "0":
+        log("  curve: the Newton points skipped (--newton=0); nothing judged")
+        out["newton"] = False
+        dump()
+        return pb, rec
 
     # the strong-solved manifold
     conv, pts = [], {1: [], -1: []}
@@ -1798,7 +1893,7 @@ def curve_scan(sysm, bas, opts, mutate, log, rec, dump, truth=None, kappa=None, 
         log(f"  planted: (PC1) worst point error {out['planted']['worst'] if rows else float('nan'):.1e} (bound 1e-3): "
             f"{'pass' if pe else 'FAIL'}; (PC2) orders 4 and 5 to 0.05: {'pass' if po else 'FAIL'}; (PC3) every solve "
             f"converged: {'pass' if pc else 'FAIL'}; (PC4) the verdict's self-test {vgot}: {'pass' if vs else 'FAIL'}")
-        ok = pe and po and pc and vs
+        ok = pe and po and pc and vs and pb
     else:
         # (Z1) the lead-in against #677's chord; (Z2) the flat chart; the verdict
         z1 = None
@@ -2435,7 +2530,7 @@ KAPPA_677 = {"dz0_pin3_D242.5459_a0.031250.npz": (mp.mpf("3.750e-29"), mp.mpf("8
 def main_curve(args, opts, mutate, log, rec, dump):
     """curve RAWDIR DZ0 BASE [--ref677=JSON] [--ref694=JSON] or curve planted: the basis, then curve_scan"""
     if args[1:] == ["planted"]:
-        sysm = CurvePlanted(int(opts.get("seed", 5)), log)
+        sysm = CurvePlanted(int(opts.get("seed", 5)), log, mutate=mutate)
         rec.update(sysm.meta)
         bas = basis(sysm, opts, log, rec, dump)
         ok, rec = curve_scan(sysm, bas, opts, mutate, log, rec, dump, truth=sysm.dep_true(bas["X"], bas["Um"]))
@@ -2448,12 +2543,15 @@ def main_curve(args, opts, mutate, log, rec, dump):
     bas = basis(sysm, opts, log, rec, dump)
     K, an = KAPPA_677.get(os.path.basename(args[2]), (None, None))
     kappa = None if K is None else K / an
-    fee = None
+    fee = fee2 = wee = None
     if opts.get("ref694"):
         with open(opts["ref694"]) as fh:
             r9 = json.load(fh)
         fee = mp.mpf(max(abs(x) for x in r9["rows"]["along"]["rows"]["Fee"]))
-    ok, rec = curve_scan(sysm, bas, opts, mutate, log, rec, dump, kappa=kappa, ref677=opts.get("ref677"), fee694=fee)
+        fee2 = mp.sqrt(mp.fsum(mp.mpf(x) ** 2 for x in r9["rows"]["along"]["rows"]["Fee"]))
+        wee = mp.mpf(r9["rows"]["along"]["wee"])
+    ok, rec = curve_scan(sysm, bas, opts, mutate, log, rec, dump, kappa=kappa, ref677=opts.get("ref677"), fee694=fee,
+                         fee2=fee2, wee=wee)
     return ok
 
 
@@ -2502,7 +2600,7 @@ def main():
         curvesum(args[1:])
         return 0
     modes = dict(run=("", "w0", "Ssign", "Sh", "hF"), planted=("", "w0", "Ssign", "Sh", "hF"), ray=("", "w0", "B"),
-                 rows=("", "quadA", "parity"), curve=("", "w0", "chord"))
+                 rows=("", "quadA", "parity"), curve=("", "w0", "chord", "fold"))
     if not args or args[0] not in modes or (args[0] == "run" and len(args) != 4) or \
             (args[0] in ("ray", "rows", "curve") and len(args) != 4 and args[1:] != ["planted"]):
         sys.exit(__doc__)
