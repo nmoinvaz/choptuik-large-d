@@ -25,7 +25,8 @@ M_lo the smallest with l2 <= sqrt(n), n = 23, fits at 150 digits checked at 250,
     python3 pade_twin_end.py control OUTDIR [--mutate=farend|exshift] [--allow_unraw]
     python3 pade_twin_end.py real OUTDIR [--mutate=c1dup] [--allow_unraw]      (reads OUTDIR/control.json)
     python3 pade_twin_end.py diag OUTDIR [--allow_unraw]       (post-freeze diagnostic, wf 1.00, chord, not judged)
-    python3 pade_twin_end.py diag2 OUTDIR [--allow_unraw]      (post-freeze, after diag: chi at 20 terms; not judged)
+    python3 pade_twin_end.py diag2 OUTDIR [--allow_unraw]      (post-freeze, after diag: l2 at 20 terms; not judged)
+    python3 pade_twin_end.py diag3 OUTDIR [--allow_unraw]      (post-freeze, after diag2: l2 at 20 minimised)
 
 The selftest checks the moved-end, shifted-exponent moments against the plants' tanh-sinh quadrature. `control` runs
 the far ends' reproduction of #541 (K0), the same-class control on #547's far-end-1.85 plant (K1) and a same-class check
@@ -640,6 +641,76 @@ def run_diag2(outdir):
     return True
 
 
+def nelder_mead(f, x0, step, iters):
+    """minimise f from x0 (Nelder and Mead 1965, Comput. J. 7, 308): reflection, expansion, contraction, shrink"""
+    import numpy as np
+    n = len(x0)
+    S = np.array([x0] + [np.array(x0) + step * np.eye(n)[i] for i in range(n)], dtype=float)
+    v = np.array([f(p) for p in S])
+    for _ in range(iters):
+        o = np.argsort(v)
+        S, v = S[o], v[o]
+        c = S[:-1].mean(axis=0)
+        xr = c + (c - S[-1])
+        fr = f(xr)
+        if fr < v[0]:
+            xe = c + 2 * (c - S[-1])
+            fe = f(xe)
+            S[-1], v[-1] = (xe, fe) if fe < fr else (xr, fr)
+        elif fr < v[-2]:
+            S[-1], v[-1] = xr, fr
+        else:
+            xc = c + 0.5 * (S[-1] - c)
+            fc = f(xc)
+            if fc < v[-1]:
+                S[-1], v[-1] = xc, fc
+            else:
+                S[1:] = S[0] + 0.5 * (S[1:] - S[0])
+                v[1:] = [f(p) for p in S[1:]]
+    o = np.argsort(v)
+    return S[o[0]], v[o[0]]
+
+
+def run_diag3(outdir):
+    """post-freeze (#684), after diag2, wf 1.00, chord class: l2 at 20 terms minimised continuously, (1) over the far end
+    from diag2's three best grid points, (2) over the far end and a complex exponent shift together, against sqrt(n)"""
+    import numpy as np
+    log = tz.Log(outdir, "diag3", None)
+    wf = 1.0
+    sig = tc.real_sig()[wf][:N23]
+    rel, _ = tc.err_model(wf)
+    e0 = ex0(wf)
+    g = sorted(json.load(open(os.path.join(outdir, "diag2.json")))["grid20"], key=lambda r: r["l2_20"])[:3]
+    rec = {"note": "post-freeze diagnostic (#684), not judged; wf 1.00, chord class, l2 at 20 terms", "far": [],
+           "evals": 0}
+
+    def l2_20(P1, d=0j):
+        rec["evals"] += 1
+        with mp.workdps(pg.DPS_PLANT):
+            ex = e0 + mp.mpc(d)
+        return chi22(wf, sig, rel, P1, ex, M=20)[1]
+    for r in g:
+        x, fv = nelder_mead(lambda p: np.log(l2_20(complex(p[0], p[1]))), [r["P1"][0], r["P1"][1]], 0.03, 80)
+        rec["far"].append({"start": complex(*r["P1"]), "P1": complex(*x), "l2_20": float(np.exp(fv))})
+        log(f"(1) from {complex(*r['P1'])} (l2 {r['l2_20']:.3e}): P1 {complex(*x):.5f} |P1| {abs(complex(*x)):.4f}, "
+            f"l2 at 20 terms {np.exp(fv):.3e} (sqrt(n) {N23 ** 0.5:.3f})")
+    b = min(rec["far"], key=lambda r: r["l2_20"])
+    x, fv = nelder_mead(lambda p: np.log(l2_20(complex(p[0], p[1]), complex(p[2], p[3]))),
+                        [b["P1"].real, b["P1"].imag, 0.0, 0.0], 0.03, 200)
+    P1, d = complex(x[0], x[1]), complex(x[2], x[3])
+    with mp.workdps(pg.DPS_PLANT):
+        ex = e0 + mp.mpc(d)
+    s = tz.scan(end_basis(wf, "chord", P1, ex, DPS_FIT), end_basis(wf, "chord", P1, ex, DPS_CHECK), sig, rel, N23, log,
+                f"far end and exponent tuned to l2 at 20 terms, P1 {P1:.5f}, delta {d:.4f}")
+    rec["joint"] = {"P1": P1, "delta": d, "l2_20": float(np.exp(fv)), "M_min": s["M_min"], "M_lo": s["M_lo"],
+                    "C1_pass": s["C1_pass"], "chi": {r["M"]: r["chi"] for r in s["rows"]},
+                    "l2": {r["M"]: r["l2"] for r in s["rows"]}}
+    log(f"(2) far end and exponent together: P1 {P1:.5f} |P1| {abs(P1):.4f}, delta {d:.4f}, l2 at 20 terms "
+        f"{np.exp(fv):.3e} (sqrt(n) {N23 ** 0.5:.3f}); M_min {s['M_min']}, M_lo {s['M_lo']}; {rec['evals']} evaluations")
+    log.dump(rec)
+    return True
+
+
 def main():
     argv = sys.argv[1:]
     from raw_out import pop_allow, require_raw
@@ -650,7 +721,7 @@ def main():
             raise SystemExit(f"unknown selftest mutation {mut}")
         sys.exit(0 if selftest(mut) else 1)
     argv = [a for a in argv if not a.startswith("--")]
-    if len(argv) != 2 or argv[0] not in ("control", "real", "diag", "diag2"):
+    if len(argv) != 2 or argv[0] not in ("control", "real", "diag", "diag2", "diag3"):
         raise SystemExit(__doc__)
     stage, outdir = argv
     if mut not in {"control": (None, "farend", "exshift"), "real": (None, "c1dup")}.get(stage, (None,)):
@@ -658,7 +729,8 @@ def main():
     require_raw(os.path.join(outdir, "x.json"), allow=allow)
     os.makedirs(outdir, exist_ok=True)
     fn = {"control": lambda: run_control(outdir, mut), "real": lambda: run_real(outdir, mut),
-          "diag": lambda: run_diag(outdir), "diag2": lambda: run_diag2(outdir)}[stage]
+          "diag": lambda: run_diag(outdir), "diag2": lambda: run_diag2(outdir),
+          "diag3": lambda: run_diag3(outdir)}[stage]
     sys.exit(0 if fn() else 1)
 
 
