@@ -339,6 +339,10 @@ SOURCES = [
 ]
 # not solutions: pass-1 states, failed or stopped runs, checkpoints, predictions
 SKIP = re.compile(r"_p1_|fail|ckpt|astray|polluted|stalled|pred_|_f64check|aside")
+# A state whose stored residual (meta F) is above this does not solve its layout to double-double precision, and is
+# left out: T79-win/m64_D4.0000 (0.23), the M 48 state at D 30.07 without the cut (9e-18, MODE_COUNT.md section 5) and
+# the M 48 resampling at D 60.00 (1.9e-15).
+F_MAX = 1e-18
 # The backbone (one state per D, the one the fit uses): delta_all.csv's state where it names one; else the first of
 # these present at that D; else the first state at that D.
 PRIORITY = ["T45-win/hp/data/lowD_states/d4hm15_D4.0000_M192.npz", "repo:hp/data/states/", "raw:T79-win/down_",
@@ -351,15 +355,15 @@ def raw_commit(raw):
 
 
 def inventory(raw):
-    """[(label, path, kind, named)]: named = delta_all.csv names this state for its D"""
-    out, named = [], set()
+    """[(label, path, kind, named)], and {label: (err, err_kind)} of delta_all.csv's Delta for the states it names"""
+    out, named = [], {}
     for where, pat, kind in SOURCES:
         if where == "csv":
             for r in csv.DictReader(open(os.path.join(REPO, pat))):
                 if r["state"].strip():
                     k = {"chain_fit": "chain"}.get(r["kind"], r["kind"])
                     out.append(("raw:" + r["state"], os.path.join(raw, r["state"]), k, True))
-                    named.add("raw:" + r["state"])
+                    named["raw:" + r["state"]] = (r["err"], r["err_kind"])
             continue
         base = REPO if where == "repo" else raw
         for p in sorted(glob.glob(os.path.join(base, pat))):
@@ -373,7 +377,7 @@ def inventory(raw):
             continue
         seen.add(lab)
         uniq.append((lab, p, k, lab in named))
-    return uniq
+    return uniq, named
 
 
 def cmd_table(argv):
@@ -384,7 +388,8 @@ def cmd_table(argv):
     out = opt(argv, "out", os.path.join(REPO, "hp", "data", "lam_gauge.csv"))
     commit = raw_commit(raw)
     rows, digests = [], {}
-    for lab, p, kind, named in inventory(raw):
+    inv, errs = inventory(raw)
+    for lab, p, kind, named in inv:
         parts, meta = load(p)
         if meta.get("prediction") or meta["D"] < 4:
             continue
@@ -392,6 +397,9 @@ def cmd_table(argv):
             M, K, off = layout(parts, meta)
         except ValueError as e:
             print(f"  skip {lab}: {e}")
+            continue
+        if meta.get("F") is not None and float(meta["F"]) > F_MAX:
+            print(f"  skip {lab}: stored |F| {float(meta['F']):.1e} > {F_MAX:.0e}")
             continue
         key = np.concatenate([q[off:off + M] for q in parts] + [q[-1:] for q in parts]).tobytes()
         if key in digests:                 # the same state stored twice (a copy in another folder)
@@ -404,6 +412,7 @@ def cmd_table(argv):
         row = dict(D=repr(float(meta["D"])), D_str=meta.get("D_str", ""), lam_g=s(lg), Delta=s(De), mu=s(mu),
                    lam_g_f64=repr(lf), M=M, K=K, parts=len(parts), kfreeze=meta.get("kfreeze", "") or "",
                    pin_held=";".join(str(x) for x in meta.get("pin_held", []) or []), F=meta.get("F", ""),
+                   Delta_err=errs.get(lab, ("", ""))[0], Delta_err_kind=errs.get(lab, ("", ""))[1],
                    kind=kind, role="", named=int(named), state=lab, copies=0,
                    _lam=lg, _Dkey=round(float(meta["D"]), 6))
         digests[key] = row
@@ -429,8 +438,8 @@ def cmd_table(argv):
         for r in g:
             r.setdefault("n_same_D", "")
             r.setdefault("spread_same_D", "")
-    cols = ["D", "D_str", "lam_g", "Delta", "mu", "lam_g_f64", "M", "K", "parts", "kfreeze", "pin_held", "F", "kind",
-            "role", "n_same_D", "spread_same_D", "named", "copies", "state"]
+    cols = ["D", "D_str", "lam_g", "Delta", "mu", "lam_g_f64", "M", "K", "parts", "kfreeze", "pin_held", "F",
+            "Delta_err", "Delta_err_kind", "kind", "role", "n_same_D", "spread_same_D", "named", "copies", "state"]
     with open(out, "w", newline="") as f:
         f.write(f"# lam_g = 1 - (n - 1)<a_h^2 - 1> (hp/lam_gauge.py table), mu = lam_g Delta / (4 pi); raw-data "
                 f"repository at {commit}; state 'raw:' paths are in it, 'repo:' in this repository\n")
@@ -440,12 +449,21 @@ def cmd_table(argv):
             w.writerow(r)
     bb = [r for r in rows if r["role"] == "backbone"]
     print(f"{len(rows)} states ({len(bb)} backbone D) from D {bb[0]['D']} to {bb[-1]['D']}; raw {commit}; -> {out}")
+    worst = {}
     for Dk, g in groups.items():
         if len(g) > 1:
             b = [r for r in g if r["role"] == "backbone"][0]
             desc = ", ".join(f"{r['kind']} M{r['M']} p{r['parts']}" + (f" pin{r['pin_held'].count(';') + 1}"
                                                                          if r["pin_held"] else "") for r in g)
             print(f"  D {Dk}: {len(g)} states, spread {b['spread_same_D']} ({desc})")
+            cls = "+".join(sorted({r["kind"] for r in g})) + (" (M differs)" if len({r["M"] for r in g}) > 1 else "")
+            sp = float(b["spread_same_D"])
+            if sp >= worst.get(cls, (0, 0, 0))[0]:
+                worst[cls] = (sp, Dk, sum(1 for h in groups.values() if len(h) > 1 and
+                                          "+".join(sorted({r["kind"] for r in h})) +
+                                          (" (M differs)" if len({r["M"] for r in h}) > 1 else "") == cls))
+    for cls, (sp, Dk, cnt) in sorted(worst.items()):
+        print(f"largest spread, {cls}: {sp:.2e} at D {Dk} ({cnt} D)")
     return 0
 
 
