@@ -9,6 +9,7 @@ point where it stops being affine. The rows that jump there are named by block, 
         [--strong 4] [--steps 2] [--check_pred PRED.npz]
     python3 crawl_probe.py probe RAW ITER.npz --out DIR [--threads 2] [--lo 0.5] [--hi 1.0] [--rungs 6]
         [--tol_lam 1e-6] [--arms U,E] [--theta 1] [--theta_half 0] [--hint 1]
+    python3 crawl_probe.py fixrun RAW ITER.npz --out DIR [--threads 2] [--switch 0] [--steps 6] [--tol 1e-60]
 
 `selftest` is the planted check (fixed before the first real run): a smooth map with a quadratic remainder along the
 exact Newton step, plus a jump of known rows switched on at a known lam_true along that step. Pass: lam* within 1e-6 of
@@ -37,6 +38,12 @@ the trial projected (what a corrector that projects every trial of a projected i
 at lam = 1/2 as the corrector forms it. --hint 1 (the default) brackets arm E's jump first by bisecting the switch's
 test value along the line (no projection), then evaluates F at the bracket's ends (locate_jump's hint); a projection
 costs about 5.5 min on the Mac.
+
+`fixrun` continues the corrector from the saved iterate (newton_od, the natural test, no chord, at most --steps steps
+to --tol) with ElimO's switch set to --switch: 0 projects every point the corrector evaluates (the proposed fix),
+1e-15 is the corrector as it runs (the control, which must crawl: lam 1/2 at ratio 0.5000). It prints each trial and
+the final pinned octo-double max |F| of the converged point's projection and of the point itself, and Delta to 40
+digits.
 """
 import json
 import os
@@ -83,7 +90,7 @@ def locate_jump(ev, F0, lams, tol_lam=1e-6, K=1e3, floor_rel=1e-12, max_bisect=6
         if verbose:
             extra = " ".join(f"{k} {v:.3e}" if isinstance(v, float) else f"{k} {v}" for k, v in info.items()
                              if not isinstance(v, (list, dict)))
-            print(f"    lam {lam:.9f}: max|F| {recs[-1]['maxF']:.3e}, e {e:.3e}  {extra}", flush=True)
+            print(f"    lam {lam:.9f} (1 - lam {1 - lam:.4e}): max|F| {recs[-1]['maxF']:.3e}, e {e:.3e}  {extra}", flush=True)
         return F, e
     rung = [e_of(lam) for lam in lams]
     g = [growth(rung[i][1], rung[i + 1][1], lams[i], lams[i + 1], floor) for i in range(len(lams) - 1)]
@@ -434,20 +441,25 @@ def probe(argv):
         return sws[lam]
 
     def sw_hint(la, lb):
-        """the bracket of width 6e-7 around the lam where the switch's test value crosses el.switch between la and
-        lb (bisected on that value, which needs no projection); None when it does not cross there"""
-        a_, b_ = la, lb
-        if not (sw_at(a_) > el.switch >= sw_at(b_)):
+        """the bracket lb - (1 +- 0.1) mu* around the lam = lb - mu* where the switch's test value crosses el.switch
+        between la and lb, bisected on that value (which needs no projection) in log mu, mu = lb - lam, so that a
+        crossing a few ulps below lb is resolved; None when it does not cross there"""
+        mu_hi, mu_lo = lb - la, 8 * np.spacing(lb)
+        if not (sw_at(la) > el.switch >= sw_at(lb)) or sw_at(lb - mu_lo) > el.switch:
             return None
-        while b_ - a_ > 2e-7:
-            m_ = 0.5 * (a_ + b_)
-            if sw_at(m_) > el.switch:
-                a_ = m_
+        for _ in range(48):
+            mu_m = float(np.sqrt(mu_hi * mu_lo))
+            if sw_at(lb - mu_m) > el.switch:
+                mu_hi = mu_m
             else:
-                b_ = m_
-        c_ = 0.5 * (a_ + b_)
-        print(f"    hint: the switch's test value crosses {el.switch:.0e} at lam {c_:.9f} ({len(sws)} evaluations of it)", flush=True)
-        return (max(c_ - 3e-7, 0.5 * (la + c_)), min(c_ + 3e-7, 0.5 * (c_ + lb)))
+                mu_lo = mu_m
+            if mu_hi / mu_lo < 1.02:
+                break
+        mu = float(np.sqrt(mu_hi * mu_lo))
+        res["sw_crossing"] = dict(mu=mu, lam=lb - mu, n_sw=len(sws), sw=sorted([[k, v] for k, v in sws.items()]))
+        print(f"    hint: the switch's test value crosses {el.switch:.0e} at lam = {lb:g} - {mu:.4e} ({len(sws)} evaluations of it)",
+              flush=True)
+        return (lb - 1.1 * mu, lb - 0.9 * mu)
     for arm in arms:
         ev = ev_arm(arm)
         F0, info0 = ev(0.0)
@@ -468,7 +480,8 @@ def probe(argv):
             ar.update(lam_a=r["lam_a"], lam_b=r["lam_b"], width=r["width"], e_a=r["e_a"], e_b=r["e_b"],
                       blocks_a=per_block(dev_a, M, K), blocks_b=per_block(dev_b, M, K), n_rows99=len(rows),
                       rows99=[(r_, *row_name(r_, M, K), float(jump[r_])) for r_ in rows[:40]])
-            print(f"  arm {arm}: lam* {r['lam_star']:.9f} (bracket {r['lam_a']:.9f}..{r['lam_b']:.9f}), e {r['e_a']:.3e} -> {r['e_b']:.3e}", flush=True)
+            print(f"  arm {arm}: lam* {r['lam_star']:.9f}, 1 - lam* {1 - r['lam_star']:.4e} (bracket 1 - lam {1 - r['lam_a']:.4e} .. "
+                  f"{1 - r['lam_b']:.4e}, width {r['width']:.2e}), e {r['e_a']:.3e} -> {r['e_b']:.3e}", flush=True)
             top_a = sorted(ar["blocks_a"].items(), key=lambda kv: -kv[1])[:6]
             top_b = sorted(ar["blocks_b"].items(), key=lambda kv: -kv[1])[:6]
             print("    |F - (1 - lam) F0| per block, below lam*: " + ", ".join(f"{k} {v:.2e}" for k, v in top_a), flush=True)
@@ -495,7 +508,7 @@ def probe(argv):
             dev_p = Fp - (1 - r["lam_b"]) * F0
             ar.update(forced_b=dict(lam=r["lam_b"], e=float(np.abs(dev_p).max()), blocks=per_block(dev_p, M, K), **infop))
             top_p = sorted(ar["forced_b"]["blocks"].items(), key=lambda kv: -kv[1])[:6]
-            print(f"    at lam_b {r['lam_b']:.9f} projected ({infop['how']}): e {ar['forced_b']['e']:.3e}; per block "
+            print(f"    at lam_b (1 - lam {1 - r['lam_b']:.4e}) projected ({infop['how']}): e {ar['forced_b']['e']:.3e}; per block "
                   + ", ".join(f"{k} {v:.2e}" for k, v in top_p), flush=True)
         res["arms"][arm] = ar
         with open(rec_path, "a") as fh:
@@ -529,9 +542,42 @@ def probe(argv):
     return 0
 
 
+def fixrun(argv):
+    from octo_corrector import delta_digits, newton_od, o8, omax
+    from raw_out import require_raw
+    raw, it_path = argv[0], argv[1]
+    out = _opt(argv, "out", "")
+    threads, steps, tol, switch = _opt(argv, "threads", 2), _opt(argv, "steps", 6), _opt(argv, "tol", 1e-60), _opt(argv, "switch", 0.0)
+    os.makedirs(out, exist_ok=True)
+    dd = np.load(it_path)
+    meta = json.loads(str(dd["meta"]))
+    z = o8(tuple(dd[f"z{q}"] for q in range(8)))
+    tag = os.path.basename(it_path).replace("crawl_iter_", "").replace(".npz", "")
+    name = os.path.join(out, f"fixrun_{tag}_switch{switch:g}.npz")
+    require_raw(name)
+    t0 = time.time()
+    att = build_attempt(raw, meta["raw_base"], meta["a"], threads=threads, jet=meta.get("jet"), pred=meta.get("pred"))
+    el = make_elim(att, record=True)
+    el.cache = None
+    el.switch = switch
+    print(f"fixrun: {it_path}, D + a {att['Dn']}, ElimO switch {switch:g}, natural test, at most {steps} steps to {tol:.0e}",
+          flush=True)
+    zf, hist, conv = newton_od(el, z, tol=tol, it_max=steps, verbose=True, junk_w=0, lam_stall=0.04, accept="natural")
+    zp = el.project(zf)
+    Fp, Fz = omax(att["so"].residual_o(zp)), omax(att["so"].residual_o(zf))
+    print(f"  {len(hist)} steps, converged {conv}, projections {el.counts}; pinned octo-double max|F| of the final point's "
+          f"projection {Fp:.2e}, of the point itself {Fz:.2e}; Delta {delta_digits(zp)}; {time.time() - t0:.0f} s", flush=True)
+    np.savez(name, **{f"z{q}": np.asarray(zp[q]) for q in range(8)},
+             meta=json.dumps(dict(iter=it_path, switch=switch, steps=steps, tol=tol, converged=bool(conv), hist=hist,
+                                  F_proj=Fp, F_point=Fz, Delta=delta_digits(zp), counts=dict(el.counts),
+                                  seconds=round(time.time() - t0, 1)), default=float))
+    return 0 if conv else 1
+
+
 if __name__ == "__main__":
     args = sys.argv[1:]
-    if not args or args[0] not in ("selftest", "iterate", "probe"):
+    cmds = {"selftest": selftest, "iterate": iterate, "probe": probe, "fixrun": fixrun}
+    if not args or args[0] not in cmds:
         print(__doc__)
         sys.exit(2)
-    sys.exit({"selftest": selftest, "iterate": iterate, "probe": probe}[args[0]](args[1:]))
+    sys.exit(cmds[args[0]](args[1:]))
