@@ -195,6 +195,13 @@ symmetry (§6).
   7% of 2/λ_CSS = 0.389 (λ_CSS = 5.1428 at η = 0.17, SIGMA.md §4). Here a rises toward 0.389 as the fit window narrows
   (8% short at η ≤ 0.195), consistent with the heteroclinic picture: near η_c the DSS orbit spends a time
   (1/λ_CSS) ln 1/(η − η_c) near each of ±u_CSS per period.
+- **Not monotonic at large η.** At k_c = 23 and 39, Δ(η) falls below its η = ∞ value, has its minimum between
+  η = 6 and 8.5 (near η ≈ 7.2 at k_c = 39), and rises back to Δ(∞) from below; the neighbouring differences are
+  resolved against their change between the two k_c (#623, #630, #631, #633; notes/REVIEW_GHMG25.md D9). The left
+  panel is the k_c = 15 branch from η_c to ∞, the right one Δ(η) − Δ(∞) at k_c = 15, 23 and 39
+  ([`plot_sigma_delta.py`](../solver/matter/plot_sigma_delta.py), from the raw folders I623-win to I633-win).
+
+![Δ(η) at D = 4: the DSS branch from η_c to ∞, and the minimum near η = 7](sigma_delta_eta.svg)
 
 ## 5. Continuation in D
 
