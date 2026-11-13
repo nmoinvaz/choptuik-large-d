@@ -118,7 +118,8 @@ switch a projected iterate's full step goes unprojected, keeps the horizon rows'
 made the chain crawl at λ = 1/2 past D 251 (#700, notes/CRAWL.md).
 --ks K sums the horizon series to order K instead of the state's own ks (130 on the chain), and saves it with the
 states (#696). The unknowns are the same, so a state converged at one ks starts at another with |F| of about the
-series' terms between the two orders.
+series' terms between the two orders. A changed ks plans the base again (a stored plan stalled the polish), so its
+control is the state's own ks with --keep_plan 0, since planning again moves Delta by itself past D 230 (#461).
 --lam_stall L ends an attempt, as refused, when two Newton steps in a row had lam at or below L. A state is saved
 with the plan of the run that converged it, and a run started from it keeps that plan
 (--keep_plan 0 plans again at the state, the control). Its states are saved in eight parts
@@ -511,7 +512,12 @@ def main():
     # when its double-double |F| is below 1e-6, which it is not past D ~ 130), so a restart that plans again changes
     # the steps: that leaves the state 5e-36 off its own equations at D 226, and past D 230 the weak direction turns
     # it into a first correction of 1e-15 (#461)
-    segs = m.get("segs") if opt["keep_plan"] else None
+    # a stored plan did not carry a changed --ks: at ks 131 its polish stalled at 1e-25 where a new plan converged (#696)
+    ks_changed = bool(opt["ks"]) and opt["ks"] != m.get("ks", 130)
+    segs = m.get("segs") if opt["keep_plan"] and not ks_changed else None
+    if ks_changed and opt["keep_plan"] and m.get("segs"):
+        print("--ks changes the horizon order, so the base is planned again (compare with --ks of the state's own order "
+              "and --keep_plan 0, which moves Delta by itself past D 230)", flush=True)
     if segs:
         print(f"the base keeps its stored plan ({sum(len(sg) - 1 for sg in segs)} steps)", flush=True)
     else:
