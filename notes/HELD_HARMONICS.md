@@ -359,7 +359,23 @@ projector change, not the platform.
 | 80, 100, 150, 200 | stalled or every trial refused | not a value | | 4.2e-14 to 2.8e-11 |
 
 Where it converges, the measured error is about a third of the `fits` spread quoted for the same D, so the spread
-is a conservative bound there. Above 77 no release converges from the chain's states, although they satisfy the full
+is a conservative bound there.
+
+**A partial release reaches D 200** (#641, macm3; raw `I641-macm3/` 5c3443e3). With `anm_run.py --kfreeze 7
+--held_fit`, harmonics 5 and 7 are solved and 9–13 stay held on the fit. Its base polish converges at every D tried:
+
+| D | Δ_kf7 − Δ_held | `fits` spread | ratio |
+|---|---|---|---|
+| 80 | +3.67e-14 | 4.2e-14 | 0.87 |
+| 100 | +9.69e-13 | 1.2e-12 | 0.81 |
+| 150 | +9.52e-12 | 1.1e-11 | 0.87 |
+| 200 | +2.00e-11 | 2.8e-11 | 0.71 |
+
+This is the part of the held fit's error that comes from harmonics 5 and 7. It is not a bound on the whole error,
+since 9–13 stay held and their part may have either sign. It is 0.71–0.87 of the quoted spread at every D, so the
+spread is the right size from D 80 to 200. Releasing harmonic 9 too (`--kfreeze 9`) converges at D 80 only
+(+1.21e-14), and its polish stalls at D 100, 150 and 200. The control, the unreleased system, returns the stored Δ to
+−7.07e-29. Above 77 no release converges from the chain's states, although they satisfy the full
 system to 5e-26 to 4e-23 at 80–200. The first Newton step raises |F| from about 1e-24 to 1e-14, along the near-null
 directions of section 4.3, so the stop is the Newton step's and not the held values'. Raw `I642-win/` and
 `I640-macm3/` (725ecb92).
