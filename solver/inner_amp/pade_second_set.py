@@ -33,6 +33,7 @@ M come from one Householder QR per basis (Proj), at 150 digits and, for C1, at 2
     python3 pade_second_set.py --selftest [--mutate=secmom|nest|agree]
     python3 pade_second_set.py control OUTDIR [--mutate=col|judge] [--allow_unraw]
     python3 pade_second_set.py grid OUTDIR [--allow_unraw]              (reads OUTDIR/control.json)
+    python3 pade_second_set.py report OUTDIR [--allow_unraw]   (post-freeze summary of OUTDIR/grid.jsonl, not judged)
 
 Exit 1 when a frozen control fails or the gate forbids the grid. Numerical evidence on plants, not a bound.
 """
@@ -621,6 +622,57 @@ def run_grid(outdir):
     return not c1_fail
 
 
+def run_report(outdir):
+    """post-freeze summary of grid.jsonl at wf 1.00, judged by nothing: per eta and per (kind, curve, alpha), the pass
+    counts and the smallest m_DA, d_P and d_T, and the median of log10(chi_22 / chi_22(real)) over the 15 scans"""
+    rows = [json.loads(x) for x in open(os.path.join(outdir, "grid.jsonl"))]
+    ctl = json.load(open(os.path.join(outdir, "control.json")))
+    ref = {float(w): n["R3"]["chi22"] for w, n in ctl["nodes"].items()}
+    at0 = [r for r in rows if r["wf"] == WF0]
+    log = tz.Log(outdir, "report", None)
+    out = {"note": "post-freeze summary of grid.jsonl, judged by nothing", "by_eta": {}, "by_group": {}}
+
+    def lr(r):
+        return float(np.median([math.log10(r["twin"][s]["chi"]["22"] / ref[r["wf"]][s]) for s in SCANS]))
+
+    def stats(rs):
+        j = [r["judge"] for r in rs]
+        return {"n": len(rs), "a": sum(x["a"] for x in j), "b": sum(x["b"] for x in j), "c": sum(x["c"] for x in j),
+                "ab": sum(x["a"] and x["b"] for x in j), "m_DA_min": min(x["m_DA"] for x in j),
+                "d_P_min": min(x["d_P"] for x in j), "d_T_min": min(x["d_T"] for x in j),
+                "log_ratio_median": float(np.median([lr(r) for r in rs])),
+                "log_ratio_range": [min(lr(r) for r in rs), max(lr(r) for r in rs)],
+                "M_min_23": sum(x["M_min_23"] for x in j), "D_min": min(x["D"] for x in j)}
+    log("eta     n   (a) (b) (c) (a+b) M_min=23  min m_DA  min d_P  min d_T  median log10(chi22/real) [range]")
+    for eta in ETAS:
+        s = stats([r for r in at0 if abs(r["eta"] / eta - 1) < 1e-9])
+        out["by_eta"][eta] = s
+        log(f"{eta:.0e} {s['n']:4d} {s['a']:4d} {s['b']:3d} {s['c']:3d} {s['ab']:4d} {s['M_min_23']:6d} {s['m_DA_min']:9d} "
+            f"{s['d_P_min']:8.3f} {s['d_T_min']:8.2f}  {s['log_ratio_median']:+.2f} [{s['log_ratio_range'][0]:+.2f}, "
+            f"{s['log_ratio_range'][1]:+.2f}]")
+    log("group (kind|curve|alpha): (a) (b) (c) (a+b); min m_DA, d_P, d_T, D; eta of the smallest d_P")
+    for kind in KINDS:
+        for cfg in CONFIGS:
+            for a in ALPHAS:
+                rs = [r for r in at0 if (r["kind"], r["cfg"], r["alpha"]) == (kind, cfg, a)]
+                s = stats(rs)
+                bp = min(rs, key=lambda r: r["judge"]["d_P"])
+                s["eta_best_d_P"] = bp["eta"]
+                out["by_group"][f"{kind}|{cfg}|{a}"] = s
+                log(f"{kind:6s} {cfg:8s} {a:3s}: {s['a']:3d} {s['b']:3d} {s['c']:3d} {s['ab']:3d}; {s['m_DA_min']:2d} "
+                    f"{s['d_P_min']:.3f} {s['d_T_min']:.2f} {s['D_min']:.2f}; d_P best at eta {bp['eta']:.0e} "
+                    f"phase {bp['phase']}")
+    both = [r for r in at0 if r["judge"]["a"] and r["judge"]["b"]]
+    for r in sorted(both, key=lambda r: r["judge"]["D"])[:20]:
+        j = r["judge"]
+        log(f"(a)+(b): {r['id']}: m_DA {j['m_DA']}, d_P {j['d_P']:.3f}, d_T {j['d_T']:.2f}, ratio "
+            f"{j['ratio_min']:.1e}..{j['ratio_max']:.1e}, share22 {r['plant']['share']['22']:.1e}, dev "
+            f"{r['plant']['dev_13_22']:.1e}")
+    out["a_and_b"] = [r["id"] for r in both]
+    log.dump(out)
+    return True
+
+
 def main():
     argv = sys.argv[1:]
     from raw_out import pop_allow, require_raw
@@ -631,10 +683,10 @@ def main():
             raise SystemExit(f"unknown selftest mutation {mut}")
         sys.exit(0 if selftest(mut) else 1)
     argv = [a for a in argv if not a.startswith("--")]
-    if len(argv) != 2 or argv[0] not in ("control", "grid"):
+    if len(argv) != 2 or argv[0] not in ("control", "grid", "report"):
         raise SystemExit(__doc__)
     stage, outdir = argv
-    if mut not in {"control": (None, "col", "judge"), "grid": (None,)}[stage]:
+    if mut not in {"control": (None, "col", "judge"), "grid": (None,), "report": (None,)}[stage]:
         raise SystemExit(f"unknown {stage} mutation {mut}")
     require_raw(os.path.join(outdir, "x.json"), allow=allow)
     os.makedirs(outdir, exist_ok=True)
@@ -644,8 +696,10 @@ def main():
             rec = json.load(open(os.path.join(outdir, f"control_mutate_{mut}.json")))
             print(f"mutation {mut} fired as frozen: {rec['mutation_fired']}; exit 1")
             ok = False
-    else:
+    elif stage == "grid":
         ok = run_grid(outdir)
+    else:
+        ok = run_report(outdir)
     sys.exit(0 if ok else 1)
 
 
