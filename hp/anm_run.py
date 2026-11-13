@@ -16,7 +16,7 @@ formulation of hp/pinning.py; their coefficients are zero).
         [--qd_it 12] [--qd_w 0] [--refine 1] [--probe 0 --probe_c C] [--plan_tol 1e-32] [--fix1 0] [--F_pred_max 0]
         [--horizon_alpha 0] [--fix1_qlu 0] [--jet_q 0] [--reseed 0] [--pred_q 0] [--reseed_q 0] [--save_pred 0]
         [--jet_o 0] [--corrector od --tol_od 1e-40] [--base_adopt 0] [--base_polish 1] [--keep_plan 1] [--held_fit FILE]
-        [--held_o 0] [--reseed_o 0] [--a0 0] [--a_grow 2] [--a_hold 0] [--lam_stall 0] [--save_base 0]
+        [--held_o 0] [--reseed_o 0] [--a0 0] [--a_grow 2] [--a_hold 0] [--lam_stall 0] [--save_base 0] [--save_jet 0]
 
 --corrector qd runs the quad-double Newton of the kernel (hpkernel.driver.newton_qd, Solver.newton_q) on the pinned
 system (pinning.PinnedQ: the held harmonics' offset subtracted from the quad-double residual and added to the step, as
@@ -112,6 +112,10 @@ corrector, the junk among the w weakest directions of its first Jacobian (octo_c
 content; p1's highest harmonics past D ~ 210, notes/QUAD_DOUBLE.md 13.30), as newton_qd's junk mode does.
 --save_base 1 saves the base after its octo-double polish as OUTDIR/base_pin<k>_D<D>.npz (eight parts, its meta
 recording the polish), when the polish was adopted; with --steps 0 the polish alone is the run (#489).
+--save_jet 1 saves each base's series z_0..z_N as OUTDIR/jet_pin<k>_D<D>.npz, in all the parts its jet carries (eight
+with --jet_o, four with --jet_q, two otherwise; keys z0..z<P-1>, each an (N + 1, L) array, order k in row k), its meta
+recording the norms and pivots. --save_jet 2 saves it and stops before the first attempt, so the series alone is the
+run (#634).
 """
 import json
 import os
@@ -266,6 +270,7 @@ def main():
     # re-seeded horizon data (reseed.Reseeder.refine_o)
     opt.update(held_o=0, reseed_o=0)
     opt.update(save_base=0)             # --save_base 1: the polished base saved (with --corrector od)
+    opt.update(save_jet=0)              # --save_jet 1: each base's series saved; 2: saved, then stop (#634)
     for k in list(opt):
         f = "--" + k
         if f in args:
@@ -739,6 +744,19 @@ def main():
             z1h, z1l, fix1 = fix_z1(D, zq, np.array(Zh[1]), np.array(Zl[1]))
             Zh, Zl, norms, refine = coefficients(s, zh, zl, N, held=held_arg, refine_it=opt["refine"], z1=(z1h, z1l))
         t_coef = time.time() - t0
+        if opt["save_jet"]:
+            # --save_jet: the series in every part its jet carries, order k in row k (#634)
+            jet = Zo if Zo is not None else (Zq if opt["jet_q"] else list(zip(Zh, Zl)))
+            jp = os.path.join(out, f"jet_pin{kf}_D{float(D):.4f}.npz")
+            np.savez(jp, **{f"z{q}": np.array([np.asarray(z[q]) for z in jet]) for q in range(len(jet[0]))},
+                     meta=json.dumps(dict(D=float(D), D_str=str(D), M=M, N=N, kfreeze=kf, parts=len(jet[0]),
+                                          jet="o" if opt["jet_o"] else ("q" if opt["jet_q"] else "dd"), norms=norms,
+                                          pivots=(float(pmin), float(pmax)), state=opt["state"], held_fit=opt["held_fit"],
+                                          held_o=opt["held_o"], t_coef=t_coef)))
+            print(f"step {step}: the series saved as {jp} ({len(jet[0])} parts, {t_coef:.0f} s)", flush=True)
+            if opt["save_jet"] == 2:
+                print("done (--save_jet 2: the series alone)", flush=True)
+                return
         a_max = (opt["eps"] * norms[1] / norms[N]) ** (1.0 / (N - 1)) if norms[N] else opt["h_max"]
         room = float(opt["D_max"] - D)
         a = min(a_max, opt["h_max"], room) if a is None else min(a, a_max, opt["h_max"], room)
