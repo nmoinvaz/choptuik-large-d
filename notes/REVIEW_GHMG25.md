@@ -169,7 +169,9 @@ same quantity, precision or reading), **differs** (a discrepancy, §3). Our stat
   sharply"; its Table I gives Δ/2 = 0.2295, 0.2304, 0.2293 and 0.2302 at η = 2, 5, 10 and 100, rounded to four figures
   from the spread over resolutions, which scatter by about 1×10⁻³, 40 times the dip (2.6×10⁻⁵ in Δ/2), so their data
   cannot show it. Lechner 2001 (gr-qc/0507009, ch. 4): "below η ∼ 0.3 the period Δ(η) rises sharply with decreasing
-  η". So "monotonically decreasing" is the review's wording, not its sources'.
+  η". So "monotonically decreasing" is the review's wording, not its sources'. #639's second solver (double-double,
+  M = 48, the multishoot engine) puts the minimum at η = 6.98019, Δ_min = 0.45980936174, from polynomial fits in 1/η
+  through η = 5 … ∞ (spread over degrees 3.5×10⁻⁶ in η; matter/SIGMA_DSS.md §11).
 - **D10. The test-field rate at D = 5 (#621).** Mittal, Gundlach and Martel's μ(5) = −0.448 and δ_Q = 1.425
   (arXiv:2609.17207, as quoted in matter/LITERATURE.md §8) against our μ(5) = −0.4430361582 (M = 48, the 11-node
   layout whose μ(4) is −0.3651202705 at M = 48 and −0.3651202372 at M = 64) and δ(5) = 1.422411: ours is 4.96×10⁻³

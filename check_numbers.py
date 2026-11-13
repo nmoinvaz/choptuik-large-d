@@ -2191,7 +2191,9 @@ def sigma_ms():
             ("planted M 16 Delta - Delta*", float(p16["dd_dDelta"]), -1.1e-29, 0.1e-29, t16)]
     f32, f48, res = fit["32"]["summary"], fit["48"]["summary"], fit["result"]
     tf = [(S, "| η_min | 6.97851 | 6.98019 | 6.9801938 to 6.9801973 |"),
-          (S, "| Δ_min | 0.45980938351 | 0.45980936174 | within 8×10⁻¹² |")]
+          (S, "| Δ_min | 0.45980938351 | 0.45980936174 | within 8×10⁻¹² |"),
+          ("README.md", "minimum at η = 6.98019, with Δ = 0.45980936174"),
+          ("notes/REVIEW_GHMG25.md", "minimum at η = 6.98019, Δ_min = 0.45980936174")]
     out += [("eta_min, M 32", f32["eta_min"], 6.97851, 1e-5, tf), ("eta_min, M 48", f48["eta_min"], 6.98019, 1e-5, tf),
             ("eta_min spread low", f48["spread_eta"][0], 6.9801938, 1e-7, tf),
             ("eta_min spread high", f48["spread_eta"][1], 6.9801973, 1e-7, tf),

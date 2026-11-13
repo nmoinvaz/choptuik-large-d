@@ -1939,6 +1939,10 @@ solution (the σ-model's limit as η → ∞), the branch reproduces Husa et al.
 physical unstable mode at D = 6. Continued in D at η = 1 and η = 0.3 (15 Fourier modes; 23 change λ by at most 10⁻⁴),
 it shows no fold to D = 10.5 and 11. From D = 4 to 9 its γ lies below the ℓ = 1 value by a nearly D-independent offset,
 about −0.003 at η = 1 and −0.015 to −0.017 at η = 0.3, growing as η falls, the direction the prediction expects.
+At D = 4 the echoing period Δ(η) is not monotonic: it has a minimum at η = 6.98019, with Δ = 0.45980936174, from a
+second solver on the multishoot engine ([matter/SIGMA_DSS.md](matter/SIGMA_DSS.md) §11). It agrees with the Fourier
+solver to that solver's truncation (1.2–2.1×10⁻⁹ at k_c = 39), and its own resolution error at M = 48 is about
+10⁻¹¹ (the change to M = 64).
 
 γ∞ is not established. Fits of λ(D) on 5 ≤ D ≤ 9 give γ∞ from 0.36 to 0.57 (a spread over fit choices), fit about as
 well with λ∞ = 2 imposed, and get worse when D = 10 is added. The points above D ≈ 10 are preliminary, because of a
