@@ -66,6 +66,10 @@ Conventions for the Claude sessions (cloud and local) that run computations here
 - **python-flint pitfall (0.9.0):** `arb(0, r)**k` returns NaN for a ball that contains 0 with r > 0 and k = 2 or 3,
   while `x*x` is correct. Write powers of balls that may contain 0 as products. (`solver/proof/` is unaffected: its
   powers are of exact positive balls. Found by the BootLoops review, notes/BOOTLOOPS.md.)
+- **OpenBLAS pitfall (scipy 1.15.3, Windows):** `scipy.linalg.lu_factor` and `lu_solve` crash with an access violation
+  on a matrix over 4 GiB (about 24000 unknowns in f64) when OpenBLAS uses more than one thread; with
+  `OPENBLAS_NUM_THREADS=1` they complete (#423: a 4.24 GiB matrix crashed, 2.98 GiB did not, `I423-win/lu_size_test.py`).
+  Run such solves on Windows with one BLAS thread.
 - **Dependencies:** [requirements.txt](requirements.txt) pins the Python packages, and [SETUP.md](SETUP.md) gives the
   system and software requirements and the setup steps (uv, Python 3.14). A new venv is made with uv beside the
   existing interpreters, changing no system Python or package manager. The Rust kernels (`pip install .`,
