@@ -205,6 +205,10 @@ from 215 to 242.36. On the rounded rows they are at 5×10⁻³⁶ to 8×10⁻³�
 - At the 0.975 start, three of the four weak σ come from that rounding: 7.4×10⁻³⁵, 7.4×10⁻³⁵ and 1.84×10⁻³⁴ on main,
   against 2.8×10⁻³⁹ to 1.9×10⁻³⁷ with the exact projector (#562; `I562-mac/` at 690c41a9). The raw σ near 10⁻³⁴ of the
   outer-layout ladders above carry it.
+- At D 252.25 the 0.975 layout's first Newton step, 2.1×10⁻², lies 94% on one weak direction (σ₁ = 4.7×10⁻⁴⁰), and
+  it is the same at three starts whose max|F| differs by 3×10²⁰. The residual's component on that direction is
+  u₁ᵀF = 8.68725×10⁻⁴¹ at all three, carried by the two blocks that meet at the last node (n3>n4 and horizon>n4),
+  so it is the mismatch of the two arrivals there and not any start's gap (#688; `I688-dh370/` at 0ad4eb2e).
 - The pinned step to the exact rows lies on the four weak directions (share 1.0000), and its Δ part grows by about 0.8
   in ln per unit of D (#589; `I589-mac/` at 420f201a):
 
