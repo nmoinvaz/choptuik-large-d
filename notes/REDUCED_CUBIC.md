@@ -349,3 +349,105 @@ python3 reduced_cubic.py run RAW I461-win2/probeG03125b/dz0_pin3_D242.5459_a0.03
 The real runs exit 1, because the S control fails (R2). `I528-mac/run_i528.sh` runs all of them. Raw: `I528-mac/` of
 the raw-data repository at 625997f9, with every run's log and JSON, the stopped runs included (its README lists
 them).
+
+## 9. Where the reduced map stops being affine: rays in |c| (#677)
+
+The strong-row chord of #674 keeps Newton's first move a in the weak coordinates and solves only the strong rows. It
+relies on g being affine from 0 to a. This section measures how far that holds, along rays out to 10³|a| and beyond,
+at four starts. Sections 9.1 to 9.3 are the protocol, committed before the ray plant's first run and before any real
+ray run.
+
+### 9.1 Method (`reduced_cubic.py ray`)
+
+- **The basis.** V, U, B = UᵀJV, a and w0 as in section 1, from the same code.
+- **The rays.** g on the strong-solved manifold at c = ±t e, with e = a/|a| (judged) and two random unit vectors r1, r2
+  (seed 7, diagnostic). t runs over 10^(n/4) from 10⁻³⁰ to 10⁻²⁴, 25 points. The issue's range, 10⁻²⁹ to 10⁻²⁶, is
+  judged and the rest is diagnostic.
+- **The strong solve.** Section 1's chord through z0's LU, now run to |dw| < 10⁻⁶⁰|w0|, or until |dw| stops falling
+  (two steps in a row that cut it by less than 0.3). One step may grow |dw|. At |c| ≫ |a| the chord's error map
+  J⁻¹(I − UUᵀ)F″(Vc, ·) can have a norm above 1 and a square far below it, as at #528's c* (|dw| 5.44×10⁻⁵⁶,
+  5.44×10⁻⁵⁶, then 5×10⁻⁸²). A solve fails on a non-finite |dw|, on |dw| above 10⁻³ max(|c|, |w0|), or after 40
+  steps. Each t starts from w0 + (t/t′)²(w(t′) − w0), with t′ the ray's previous point. A ray stops at its first failed
+  solve, and that |c| is reported.
+- **The departure.** dep(c) = g(c) − g(0) − Bc, with the basis's B. The departure from B(c − a), the issue's affine
+  part, is dep(c) + g(0) + Ba, and the constant ε0 = |g(0) + Ba|/|Ba| is reported (2.7×10⁻²⁵ at REF).
+- **Its parts.** The even part E(t) = (dep(te) + dep(−te))/2 holds the orders 2, 4, …, and the odd part
+  O(t) = (dep(te) − dep(−te))/2 the orders 1, 3, …. An error in B shows as order 1 in the odd part.
+- **The floor of each t.** The largest of three things. Each sign's strong-solve error estimate,
+  |Uᵀ[F(w − dw) − F(w)]|, is what the last correction, not applied, would change in g. floor0 is the difference of
+  g(0) between solves from w0 and from w0 + ξ (ξ ⊥ V, |ξ| = 10⁻⁴|w0|), together with both their estimates. The floor is
+  an estimate, not a bound, since the next correction can be larger by the error map's norm. A part counts as
+  resolved at t where it exceeds 100 floors.
+- **The order.** The leading order p and constant K of each part, |part| ≈ K|Ba|(t/|a|)^p, come from a least-squares
+  line through ln|part| against ln t at its first four resolved points (the smallest t). The local order between every
+  two neighbouring resolved points is printed too, so a change of regime shows. The fit's rms in ln is printed. It is a
+  measure of the fit, not an error bar on p.
+- **The crossing.** The first t at which |dep(±te)| reaches 10⁻²|Ba|, by log-log interpolation between neighbouring
+  points. If it is not reached, a power-law extrapolation from the last two points is given, labelled as such. The same
+  is printed for |g(c) − B(c − a)|.
+- **c = a.** |g(a)|/|Ba|, |dep(a)|/|Ba| and max|F| at z0 + Va + w(a), the point #674's chord aims for.
+- **With `--tensors=1`.** The whole of `run` runs first (section 1's tensors, models and controls). The tensors'
+  cubic along e, |(T − 3S)(e, e, e)|/6 · |a|³/|Ba|, at both step pairs (their difference shows its resolution), is the
+  constant that the odd part's K would have if its order were 3.
+
+### 9.2 The plant (`reduced_cubic.py ray planted`)
+
+RayPlanted is section 2's plant with Q = 0, L = 0 (K zero on x's rows 0–3, where w0 lives), M = 0 and T = 3S, and with
+a planted departure. Its reduced map is then exactly
+
+```math
+g(y) = \beta + \Sigma y + \tfrac1{24} P_4(y,y,y,y) + \tfrac1{120} P_5(y,y,y,y,y), \qquad P_{4,m} = p_m (a_m \cdot y)^4, \quad P_{5,m} = q_m (b_m \cdot y)^5.
+```
+
+- β = −Σy_a with |y_a| = 8.3×10⁻³⁰, REF's |a|. P₄ is about 10⁻²|Ba| near |c| = 20|a|, and P₅ equals P₄ near
+  |c| = 10⁻²⁶. So the even part has order 4 and the odd part order 5, and the crossing lies inside the judged range.
+- Section 2's quartic c₄ stays in strong row 0, where K is now zero, so it reaches w_jl but not g.
+- **(PY0)** The plant checks its own construction: G_w(y, x(y)) − β − Σy against P₄/24 + P₅/120 at |y| = 10⁻²⁹ and
+  10⁻²⁷, to 10⁻²⁰. This is where T = 3S is tested.
+
+Pass criteria, fixed before the first run:
+- **(PY1)** At every point and in both parts, |measured − planted| < 10⁻³ max(|planted|, 100 floors).
+- **(PY2)** Along every ray, the leading orders are 4 (even) and 5 (odd), to 0.05.
+- **(PY3)** Along every ray and sign, the crossing of 10⁻²|Ba| is within 10⁻² (relative) of the planted one, found
+  by bisection on the planted departure.
+- **Controls.** `--mutate=w0` drops the strong solve, so g is the map on z0 + Vc, whose odd part carries T(c, c, c)/6
+  (order 3): (PY1), (PY2) and (PY3) must fail. `--mutate=B` scales B by 1 + 10⁻¹² in dep, an order-1 odd term: (PY1)
+  and (PY2) must fail. A failed check exits 1.
+
+### 9.3 The real starts
+
+Every start is analysed on main's 3c35f0c kernel with the exact projector (`i599/site2`). The recovered offset
+absorbs the projector's difference in the frozen rows (section 3).
+
+| start | DZ0 (raw-data repository) | BASE | made on |
+|---|---|---|---|
+| REF, D 242.5459 (refused) | `I461-win2/probeG03125b/dz0_pin3_D242.5459_a0.031250.npz` | `I461-win2/probeG03125a/anm_pin3_D242.5146.npz` | win2, before #523: rounded projector |
+| ACC, D 242.5225 (accepted) | `I461-win2/probeG0078/dz0_pin3_D242.5225_a0.007812.npz` | the same | win2, rounded projector |
+| D 232.13, win_d10 (refused) | `I513-win/run_d10/dz0_pin3_D232.1312_a1.000000.npz` | `I462-win/chain_d10/anm_pin3_D231.1312.npz` | win, venv-t151 (#462's build, before #523): rounded projector |
+| class A, D 249.39 (refused) | `I677-mac/classA/dz0_pin3_D249.3927_a0.762939.npz` | `I603-win2/chain/anm_pin3_D248.6298.npz` | made again here on `i599/site2` (exact projector); #603 itself ran on venv-i600, also exact |
+
+- **The class A start.** #644's `I644-win2/own/` holds that attempt's prediction before its re-seed, not the
+  corrector's start and first step, which `run` and `ray` need. So the start is made again on the Mac with
+  `anm_run.py --steps 1 --save_dz0 1`, #603's flags and 2 threads (`I677-mac/run_classA.sh`), and stopped after its
+  first Newton step.
+- **(Y0)** As (R0), the held offset is on its rows. For REF and ACC, the basis line (σ, a, |Ba|) must equal #528's to
+  its printed digits (the same code and inputs). For the class A start, anm_run's series, rung and first Newton lines
+  must equal #603's (`I644-win2/own.log` lines 3 to 10, the base polish to the first Newton step, which #644 found
+  identical to #603's chain.log), or the difference is reported.
+- **(Y1)** At D 232.13 and the class A start, `--tensors=1`, with #528's (R1) h checks judged: w_jl at 10⁻³³ against
+  10⁻³⁴, and S at h against h/10, both to 10⁻². For REF and ACC, #528's (R1) passed with the same code and inputs
+  (`I528-mac/`) and is not rerun. #528's S control (R2) is reported, not judged, since its failure at REF and ACC is the
+  control's own truncation (section 5.4). If an h check fails with the factor 100 of an h² truncation, the tensors are
+  rerun once with their steps one decade lower. Any other failure is reported, and the ray result, which does not use
+  the tensors, stands.
+- **(Y2)** Along e = a/|a|, every strong solve on the judged range converges, at both signs. Otherwise the |c| where the
+  ray stops is reported, and the order is fitted below it.
+- **(Y3)** Along e, at least one part has a fitted leading order (three or more resolved points). Otherwise it is
+  reported as not resolved, with the largest |dep| against its floor.
+- **The verdict per start.** The leading order and K of each part, the local orders, the |c|/|a| at which |dep| reaches
+  10⁻²|Ba| (measured, extrapolated, or not reached), and |dep(a)|/|Ba|.
+- **Order and stops.** The plant and its controls first, then REF as the pilot, ACC, D 232.13 and the class A start. A
+  failed plant or control stops the real runs. A control that fires on real data stops the work for that start until
+  its cause is known.
+- **Diagnostics, not judged.** The rays r1 and r2, max|F| and the chord's steps at each point, ε0, and the tensors'
+  cubic against the odd part's K.

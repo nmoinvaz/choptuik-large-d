@@ -3,6 +3,16 @@
 
     cd hp && python3 reduced_cubic.py run RAWDIR DZ0 BASE [--k=4] [--its=16] [--threads=2] [--json=OUT] [--mutate=M]
     cd hp && python3 reduced_cubic.py planted [--seed=5] [--json=OUT] [--mutate=M]
+    cd hp && python3 reduced_cubic.py ray RAWDIR DZ0 BASE [--tensors=1] [--threads=2] [--json=OUT] [--mutate=w0|B]
+    cd hp && python3 reduced_cubic.py ray planted [--seed=5] [--json=OUT] [--mutate=w0|B]
+
+`ray` (#677) scans the reduced map g on the strong-solved manifold along rays c = +-t e, e = a / |a| and two random
+unit vectors, at t = 1e-30 .. 1e-24 (four per decade; 1e-29 .. 1e-26 judged), and fits the order at which it departs
+from its affine part, dep(c) = g(c) - g(0) - B c, in its even and odd parts (ray_scan). With --tensors=1 it first
+runs the whole of `run`'s measurement, whose h checks are then judged. Its plant (RayPlanted) has T = 3S, Q = L = 0
+and a planted departure P4/24 + P5/120; it must recover each point to 1e-3, the orders 4 and 5 to 0.05 and the
+crossing of 1e-2 |B a| to 1e-2. Its controls --mutate=w0 (no strong solve) and --mutate=B (B scaled by 1 + 1e-12)
+must fail.
 
 `run` rebuilds a corrector attempt's pinned system as hp/weak_corrector.py does (DZ0 is anm_run.py --save_dz0's file,
 BASE the state it stepped from, both relative to RAWDIR; the held offset c = F_bare(z0) + J dz0 on the horizon block's
@@ -382,6 +392,77 @@ class Planted:
         return dict(B=r2(Bc), L=r2(Lc), Q=r3(self.Q), T=r4(self.T), S=r4(Sc), root=croot)
 
 
+class RayPlanted(Planted):
+    """the ray mode's plant (#677): Planted with Q = 0, L = 0 (K zero on x's rows 0-3, where w0 lives), M = 0 and
+    T = 3 S, so that the reduced map is exactly g(y) = beta + Sigma y + 1/24 P4(y^4) + 1/120 P5(y^5), with
+    P4_m(y^4) = p_m (a_m . y)^4 and P5_m(y^5) = q_m (b_m . y)^5. Its departure from the affine part is even of order 4
+    and odd of order 5, with constants set so that it reaches 1e-2 |B a| near |c| = 20 |a| and P5 equals P4 near
+    |c| = 1e-26. beta = -Sigma y_a with |y_a| 8.3e-30 (REF's |a|), so a = V^T dz0 is y_a rotated. The strong rows keep
+    Planted's quartic c4 in row 0, where K is now zero, so it reaches w_jl but not g."""
+
+    def __init__(self, seed, log, k=4, m=8):
+        self.P5 = [(mp.mpf(0), [mp.mpf(0)] * k)] * k        # Planted's construction calls Gw
+        super().__init__(seed, lambda s: None, k, m)
+        rng = np.random.default_rng(seed + 677)
+        zero = mp.mpf(0)
+        self.Q = [[[zero] * k for _ in range(k)] for _ in range(k)]
+        for mm in range(k):
+            for j in range(k):
+                for s in range(4):
+                    self.K[mm][j][s] = zero
+        self.Mt = [[[zero] * m for _ in range(k)] for _ in range(m)]
+        lw = [[[self.C[s][j][l] / self.lam[s] for s in range(m)] for l in range(k)] for j in range(k)]
+        Sc = symmetrize([[[[mp.fsum(self.K[mm][i][s] * lw[j][l][s] for s in range(m)) for l in range(k)]
+                           for j in range(k)] for i in range(k)] for mm in range(k)])
+        self.T = [[[[3 * Sc[mm][i][j][l] for l in range(k)] for j in range(k)] for i in range(k)] for mm in range(k)]
+        yr = rng.standard_normal(k)
+        self.ya = [mp.mpf(float(x)) * mp.mpf("8.3e-30") / mp.mpf(float(np.linalg.norm(yr))) for x in yr]
+        self.beta = [-self.sig[mm] * self.ya[mm] for mm in range(k)]
+        nBa = nrm([self.sig[mm] * self.ya[mm] for mm in range(k)])
+        p4 = 24 * mp.mpf("1e-2") * nBa / (20 * nrm(self.ya)) ** 4
+        q5 = 5 * p4 / mp.mpf("1e-26")
+        self.P4 = [(p4 * mp.mpf(float(rng.standard_normal())), [mp.mpf(float(x)) for x in rng.standard_normal(k)])
+                   for _ in range(k)]
+        self.P5 = [(q5 * mp.mpf(float(rng.standard_normal())), [mp.mpf(float(x)) for x in rng.standard_normal(k)])
+                   for _ in range(k)]
+        self.F0max = float(amax(self.F()))
+        self.dz0 = [-x for x in self.solve(self.F())]
+        # the plant's own check: its reduced map minus beta + Sigma y is P4/24 + P5/120 (T - 3S cancels exactly)
+        self.selfcheck = mp.mpf(0)
+        for scale in ("1e-29", "1e-27"):
+            y = [mp.mpf(float(x)) * mp.mpf(scale) for x in rng.standard_normal(k)]
+            g0 = self.Gw([zero] * k, self.xsolve([zero] * k))
+            gy = self.Gw(y, self.xsolve(y))
+            dep = [a_ - b_ - s_ * yy for a_, b_, s_, yy in zip(gy, g0, self.sig, y)]
+            want = self.dep_canon(y)
+            self.selfcheck = max(self.selfcheck, nrm([x - w for x, w in zip(dep, want)]) / nrm(want))
+        self.label = f"ray plant (seed {seed}): n {self.L}, k {k}"
+        self.meta = dict(seed=seed, n=self.L, k=k, F0max=self.F0max, ya=[float(x) for x in self.ya],
+                         selfcheck=float(self.selfcheck))
+        log(f"{self.label}; start max|F| {self.F0max:.3e}, |w0| {mp.nstr(nrm(self.w0c), 3)}, |y_a| "
+            f"{mp.nstr(nrm(self.ya), 3)}, |B a| {mp.nstr(nBa, 4)}; its reduced map minus beta + Sigma y against "
+            f"P4/24 + P5/120 {mp.nstr(self.selfcheck, 3)} (bound 1e-20): {'pass' if self.selfcheck < 1e-20 else 'FAIL'}")
+
+    def Gw(self, y, x):
+        return [v + q * dot(b, y) ** 5 / 120 for v, (q, b) in zip(super().Gw(y, x), self.P5)]
+
+    def dep_canon(self, y):
+        """the planted departure P4(y^4)/24 + P5(y^5)/120 in the plant's own weak rows"""
+        return [p * dot(av, y) ** 4 / 24 + q * dot(b, y) ** 5 / 120 for (p, av), (q, b) in zip(self.P4, self.P5)]
+
+    def dep_true(self, X, Um):
+        """the planted departure in the code's coordinates: c -> U^T-rotated P4/24 + P5/120 at y = O c"""
+        k = self.k
+        O = [[dot(self.PR[i], X[j]) for j in range(k)] for i in range(k)]
+        Op = [[dot(self.PL[i], Um[j]) for j in range(k)] for i in range(k)]
+
+        def f(c):
+            y = [mp.fsum(O[i][j] * c[j] for j in range(k)) for i in range(k)]
+            d = self.dep_canon(y)
+            return [mp.fsum(Op[i][j] * d[i] for i in range(k)) for j in range(k)]
+        return f
+
+
 # ------------------------------------------------------------------ tensors at z0
 def symmetrize(S):
     """the symmetric part of S[m][i][j][l], symmetric in (j, l) already: (S_i,jl + S_j,il + S_l,ij) / 3"""
@@ -603,7 +684,8 @@ def model_roots(g, jac, starts, scale, nBa):
 
 
 # ------------------------------------------------------------------ the measurement
-def measure(sysm, opts, mutate, log, rec, dump):
+def basis(sysm, opts, log, rec, dump):
+    """V (X), U, B, a, w0 at z0, as the docstring says; the line it prints is the run's 'basis:' line"""
     k, its = int(opts.get("k", 4)), int(opts.get("its", 16))
     L = sysm.L
     t0 = time.time()
@@ -634,6 +716,13 @@ def measure(sysm, opts, mutate, log, rec, dump):
     rec.update(sigma_B=sv, sigma_iter=[float(x) for x in hist[-1]], a=[float(x) for x in a], a_norm=float(na),
                Ba=float(nBa), rest=float(nrm(rest)), dz0_re=float(redz), w0=float(nrm(w0)))
     dump()
+    return dict(k=k, X=X, Um=Um, B=B, a=a, Ba=Ba, nBa=nBa, na=na, rest=rest, F0=F0, gF0=gF0, w0=w0)
+
+
+def measure(sysm, opts, mutate, log, rec, dump, bas=None):
+    bas = bas or basis(sysm, opts, log, rec, dump)
+    k, X, Um, B, a, Ba, nBa = (bas[n] for n in ("k", "X", "Um", "B", "a", "Ba", "nBa"))
+    rest, gF0, w0 = bas["rest"], bas["gF0"], bas["w0"]
 
     # Q, T, w_jl, S, L, q00 at z0
     t0 = time.time()
@@ -696,7 +785,9 @@ def measure(sysm, opts, mutate, log, rec, dump):
         + f"; its unsymmetric part {mp.nstr(asym, 3)} of it; 3 max|S| / max|T| {mp.nstr(3 * tmax(S) / tmax(T), 4)} "
         f"({time.time() - t0:.0f} s)")
     C3 = tmap(lambda t, s: t - 3 * s, T, S)
-    dC3 = tdiff(tmap(lambda t, s: t - 3 * s, Ts[0][0], Ss[0]), C3) / tmax(T)
+    C3_0 = tmap(lambda t, s: t - 3 * s, Ts[0][0], Ss[0])
+    dC3 = tdiff(C3_0, C3) / tmax(T)
+    rec["_internal"] = dict(T=T, S=S, C3=C3, C3_0=C3_0)
     log(f"  T - 3S: max|T - 3S| / max|T| {mp.nstr(tmax(C3) / tmax(T), 4)}; T - 3S at the larger steps against the "
         f"smaller, relative to max|T|, {mp.nstr(dC3, 3)}")
     rec.update(S=dict(max=float(tmax(S)), h_h10=float(dS), ok=S_ok, trunc_bound=S_trunc, ratio=float(ratio),
@@ -909,22 +1000,319 @@ def measure(sysm, opts, mutate, log, rec, dump):
                 f"root |c**| {mp.nstr(nrm(b['c']), 4)} with |g(c**)| / |B a| {mp.nstr(b['g'], 3)} "
                 f"({'below' if b['g'] < 1e-2 else 'NOT below'} 1e-2), max|F| there {b['Fmax']:.2e}"))
     dump()
-    rec["_internal"] = dict(X=X, Um=Um, B=B, BL=BL, Q=Q, T=T, S=S, Lm=Lm, out=out, BLS=BLS, QLS=QLS, cstar=cs)
+    rec["_internal"].update(X=X, Um=Um, B=B, BL=BL, Q=Q, T=T, S=S, Lm=Lm, out=out, BLS=BLS, QLS=QLS, cstar=cs)
     return ok and ok_S, rec
+
+
+# ------------------------------------------------------------------ the ray mode (#677)
+RAY_T = [mp.mpf(10) ** (mp.mpf(e) / 4) for e in range(-120, -95)]    # |c| from 1e-30 to 1e-24, four per decade
+RAY_JUDGED = (mp.mpf("0.999e-29"), mp.mpf("1.001e-26"))             # the issue's range; the rest is diagnostic
+RESOLVED = 100                       # a part is resolved where it exceeds 100 times its floor
+LEVEL = mp.mpf("1e-2")               # the departure the verdict locates, in units of |B a|
+
+
+def ray_solve(sysm, X, Um, c, w_init, wref, mutate="", it_max=40):
+    """w(c) for the ray mode: the chord of strong_solve, run until |dw| < 1e-60 wref or until |dw| stops falling (two
+    steps in a row that cut it by less than 0.3). One step may grow |dw|: at |c| >> |a| the chord's error map
+    N = J^-1 (I - U U^T) F''(V c, .) can have a norm above 1 and a square far below it (#528 at c*: |dw| 5.44e-56,
+    5.44e-56, then 5e-82). Failure: a non-finite |dw|, |dw| above 1e-3 max(|c|, wref), or it_max steps. Returns
+    (g, w, F, the steps' (max|strong residual|, |dw|), ok, err), err = |U^T [F(w - dw) - F(w)]|, the change of g that
+    the last correction, not applied, would make: the point's error estimate (an estimate, since the next correction
+    can be larger by the norm of N)."""
+    pv = lin([(mp.mpf(cj), X[j]) for j, cj in enumerate(c)])
+    if mutate == "w0":                                  # the control: no strong solve, the map on z0 + V c
+        Fv = sysm.F(pv)
+        return proj_U(Um, Fv), [mp.mpf(0)] * len(pv), Fv, [(float(amax(strong_part(Um, Fv))), 0.0)], True, mp.mpf(0)
+    w = list(w_init)
+    hist = []
+    tol = mp.mpf("1e-60") * wref
+    big = mp.mpf("1e-3") * max(nrm(c), wref)
+    for _ in range(it_max):
+        Fv = sysm.F([x + y for x, y in zip(pv, w)])
+        r = strong_part(Um, Fv)
+        dw = sysm.solve(r)
+        nd = nrm(dw)
+        hist.append((float(amax(r)), float(nd)))
+        if not mp.isfinite(nd) or nd > big:
+            return proj_U(Um, Fv), w, Fv, hist, False, None
+        stalled = len(hist) >= 3 and nd > 0.3 * hist[-2][1] and hist[-2][1] > 0.3 * hist[-3][1]
+        if nd < tol or stalled:
+            F2 = sysm.F([x + y - d for x, y, d in zip(pv, w, dw)])
+            gv = proj_U(Um, Fv)
+            return gv, w, Fv, hist, True, nrm([x - y for x, y in zip(proj_U(Um, F2), gv)])
+        w = [x - y for x, y in zip(w, dw)]
+    return proj_U(Um, Fv), w, Fv, hist, False, None
+
+
+def fit_part(ts, vals, floors, na, n_lead=4):
+    """the leading order p and constant K of one part of the departure, vals ~ K (t / |a|)^p in units of |B a|: a least
+    squares line through log vals against log t at the first n_lead resolved points (vals > RESOLVED floors, from the
+    smallest t), and the local slope between every two neighbouring resolved points"""
+    ok = [bool(v > RESOLVED * f) for v, f in zip(vals, floors)]
+    res = [i for i, o in enumerate(ok) if o]
+    local = [dict(t0=float(ts[i]), t1=float(ts[i + 1]),
+                  p=float(mp.log(vals[i + 1] / vals[i]) / mp.log(ts[i + 1] / ts[i])))
+             for i in range(len(ts) - 1) if ok[i] and ok[i + 1]]
+    if len(res) < 3:
+        return dict(n=len(res), p=None, K=None, local=local)
+    lead = res[:n_lead]
+    x = [mp.log(ts[i] / na) for i in lead]
+    y = [mp.log(vals[i]) for i in lead]
+    xm, ym = mp.fsum(x) / len(x), mp.fsum(y) / len(y)
+    p = mp.fsum((u - xm) * (v - ym) for u, v in zip(x, y)) / mp.fsum((u - xm) ** 2 for u in x)
+    rms = mp.sqrt(mp.fsum((v - ym - p * (u - xm)) ** 2 for u, v in zip(x, y)) / len(x))
+    return dict(n=len(res), p=float(p), K=float(mp.exp(ym - p * xm)), rms=float(rms), t_from=float(ts[lead[0]]),
+                t_to=float(ts[lead[-1]]), local=local)
+
+
+def crossing(ts, vals, level=LEVEL):
+    """the first t at which vals reaches level, by log-log interpolation between neighbouring points; else, from the
+    last two points if both are positive and rising, a power-law extrapolation; else None"""
+    for i, (t, v) in enumerate(zip(ts, vals)):
+        if v >= level:
+            if i == 0 or vals[i - 1] <= 0:
+                return dict(t=float(t), how="at or below the first point")
+            t1, v1 = ts[i - 1], vals[i - 1]
+            lt = mp.log(t1) + (mp.log(level) - mp.log(v1)) * (mp.log(t) - mp.log(t1)) / (mp.log(v) - mp.log(v1))
+            return dict(t=float(mp.exp(lt)), how="interpolated")
+    if len(ts) >= 2 and 0 < vals[-2] < vals[-1]:
+        p = mp.log(vals[-1] / vals[-2]) / mp.log(ts[-1] / ts[-2])
+        return dict(t=float(ts[-1] * (level / vals[-1]) ** (1 / p)), how=f"extrapolated (local order {float(p):.2f})")
+    return dict(t=None, how="not reached")
+
+
+def true_crossing(dep, e, sgn, nBa, level=LEVEL):
+    """the plant's crossing along sgn t e, from its planted departure: a scan at 40 points per decade, then bisection"""
+    f = lambda t: nrm(dep([sgn * t * x for x in e])) / nBa      # noqa: E731
+    grid = [mp.mpf(10) ** (mp.mpf(j) / 40) for j in range(-31 * 40, -23 * 40)]
+    for t0, t1 in zip(grid, grid[1:]):
+        if f(t0) < level <= f(t1):
+            for _ in range(80):
+                tm = mp.sqrt(t0 * t1)
+                t0, t1 = (tm, t1) if f(tm) < level else (t0, tm)
+            return t1
+    return None
+
+
+def ray_scan(sysm, bas, opts, mutate, log, rec, dump, truth=None, tensors=None):
+    """g on the strong-solved manifold along the rays c = +-t e, e = a / |a| (judged) and two random unit vectors
+    (diagnostic), at t in RAY_T. The departure from the affine part is dep(c) = g(c) - g(0) - B c; its even part
+    (dep(t e) + dep(-t e)) / 2 holds the orders 2, 4, ..., its odd part the orders 1, 3, .... The floor of each point
+    is the larger of its strong solve's error estimate (ray_solve) and the difference of g(0) between two solves from
+    different starts. truth (the plant): c -> the planted departure. tensors: T - 3S at two step pairs, for the cubic
+    the tensors predict along e. --mutate=B scales B by 1 + 1e-12 in dep (an order-1 term, which the plant's checks
+    must catch); --mutate=w0 drops the strong solve (ray_solve)."""
+    k, X, Um, B, a, Ba, nBa, na, w0 = (bas[n] for n in ("k", "X", "Um", "B", "a", "Ba", "nBa", "na", "w0"))
+    L = sysm.L
+    wref = max(nrm(w0), mp.mpf("1e-300"))
+    Bm = [[x * (1 + mp.mpf("1e-12")) for x in row] for row in B] if mutate == "B" else B
+    nsolve = [0]
+
+    def solve(c, w_init):
+        nsolve[0] += 1
+        return ray_solve(sysm, X, Um, c, w_init, wref, mutate)
+
+    def dep_of(gv, g0, c):
+        return [gv[m] - g0[m] - mp.fsum(Bm[m][j] * c[j] for j in range(k)) for m in range(k)]
+
+    t0 = time.time()
+    zero = [mp.mpf(0)] * k
+    g00, w00, _, h00, ok00, e00 = solve(zero, w0)
+    rng = np.random.default_rng(int(opts.get("seed_rays", 7)))
+    xi = [mp.mpf(float(x)) for x in rng.standard_normal(L)]
+    xi = [x - mp.fsum(dot(v, xi) * v[r] for v in X) for r, x in enumerate(xi)]
+    xi = [x * mp.mpf("1e-4") * wref / nrm(xi) for x in xi]           # below ray_solve's failure bound 1e-3
+    g0b, _, _, h0b, ok0b, e0b = solve(zero, [x + y for x, y in zip(w0, xi)])
+    if not (ok00 and ok0b):
+        log("  ray: the strong solve at c = 0 did not converge; the scan cannot run")
+        rec["ray"] = dict(ok=False)
+        return False, rec
+    floor0 = max(nrm([x - y for x, y in zip(g00, g0b)]), e00, e0b)
+    eps0 = nrm([x + y for x, y in zip(g00, Ba)]) / nBa
+    ga, _, Fa, ha, oka, ea = solve(a, w00)
+    dep_a = dep_of(ga, g00, a)
+    log(f"  ray: g(0) from w0 and from w0 + xi (|xi| 1e-4 |w0|): |difference| / |B a| "
+        f"{mp.nstr(nrm([x - y for x, y in zip(g00, g0b)]) / nBa, 3)}, their error estimates {mp.nstr(e00 / nBa, 3)}, "
+        f"{mp.nstr(e0b / nBa, 3)}: floor0 {mp.nstr(floor0 / nBa, 3)} of |B a|; chord steps {len(h00)}, {len(h0b)}; "
+        f"|g(0) + B a| / |B a| {mp.nstr(eps0, 3)}")
+    log(f"  ray: at c = a: |g(a)| / |B a| {mp.nstr(nrm(ga) / nBa, 3)}, |dep(a)| / |B a| {mp.nstr(nrm(dep_a) / nBa, 3)}, "
+        f"its error estimate {mp.nstr((ea or 0) / nBa, 3)}, max|F| {float(amax(Fa)):.2e}, chord steps {len(ha)} "
+        f"({'converged' if oka else 'NOT converged'}) ({time.time() - t0:.0f} s)")
+    out = dict(floor0=float(floor0 / nBa), eps0=float(eps0), g_a=float(nrm(ga) / nBa), dep_a=float(nrm(dep_a) / nBa),
+               err_a=None if ea is None else float(ea / nBa), Fmax_a=float(amax(Fa)), ok_a=oka, rays={})
+    rec["ray"] = out
+    dump()
+    ehat = [x / na for x in a]
+    rays = [("a", ehat)]
+    for name in ("r1", "r2"):
+        v = rng.standard_normal(k)
+        rays.append((name, [mp.mpf(float(x)) / mp.mpf(float(np.linalg.norm(v))) for x in v]))
+    checks = dict(points=True, orders=True, crossings=True)
+    for name, e in rays:
+        t0 = time.time()
+        pts = {}
+        for sgn in (1, -1):
+            pts[sgn] = []
+            w_prev, t_prev = w00, None
+            for t in RAY_T:
+                c = [sgn * t * x for x in e]
+                w_init = w00 if t_prev is None else [x0 + (t / t_prev) ** 2 * (wp - x0) for x0, wp in zip(w00, w_prev)]
+                gv, wv, Fv, hv, okv, ev = solve(c, w_init)
+                if not okv:
+                    log(f"  ray {name}, sign {sgn:+d}: the strong solve at |c| {mp.nstr(t, 3)} did not converge, "
+                        "(max|strong residual|, |dw|) per step " + ", ".join(f"({x:.1e}, {y:.1e})" for x, y in hv)
+                        + "; the ray stops there")
+                    pts[sgn].append(dict(t=t, ok=False, hist=hv))
+                    break
+                pts[sgn].append(dict(t=t, ok=True, dep=dep_of(gv, g00, c), err=ev, Fmax=float(amax(Fv)), hist=hv))
+                w_prev, t_prev = wv, t
+        rows = []
+        for p, m in zip(pts[1], pts[-1]):
+            if not (p["ok"] and m["ok"]):
+                break
+            E = [(x + y) / 2 for x, y in zip(p["dep"], m["dep"])]
+            O = [(x - y) / 2 for x, y in zip(p["dep"], m["dep"])]
+            row = dict(t=p["t"], dp=nrm(p["dep"]) / nBa, dm=nrm(m["dep"]) / nBa, E=nrm(E) / nBa, O=nrm(O) / nBa,
+                       fl=max(p["err"], m["err"], floor0) / nBa, steps=(len(p["hist"]), len(m["hist"])),
+                       Fmax=max(p["Fmax"], m["Fmax"]))
+            if truth is not None:
+                dpt, dmt = truth([p["t"] * x for x in e]), truth([-m["t"] * x for x in e])
+                Et = [(x + y) / 2 for x, y in zip(dpt, dmt)]
+                Ot = [(x - y) / 2 for x, y in zip(dpt, dmt)]
+                for part, meas, tru in (("E", E, Et), ("O", O, Ot)):
+                    nt = nrm(tru) / nBa
+                    err = nrm([x - y for x, y in zip(meas, tru)]) / nBa
+                    row[part + "_true"] = nt
+                    row[part + "_err"] = err / max(nt, RESOLVED * row["fl"])
+            rows.append(row)
+        ts = [r["t"] for r in rows]
+        fits = {part: fit_part(ts, [r[part] for r in rows], [r["fl"] for r in rows], na) for part in ("E", "O")}
+        cross = {sgn: crossing([q["t"] for q in pts[sgn] if q["ok"]], [nrm(q["dep"]) / nBa for q in pts[sgn] if q["ok"]])
+                 for sgn in (1, -1)}
+        # the same for g(c) - B (c - a) = dep(c) + g(0) + B a, which differs from dep by the start's constant eps0
+        e0v = [x + y for x, y in zip(g00, Ba)]
+        cross_full = {sgn: crossing([q["t"] for q in pts[sgn] if q["ok"]],
+                                    [nrm([x + y for x, y in zip(q["dep"], e0v)]) / nBa for q in pts[sgn] if q["ok"]])
+                      for sgn in (1, -1)}
+        judged = [r for r in rows if RAY_JUDGED[0] <= r["t"] <= RAY_JUDGED[1]]
+        stop = {sgn: next((float(q["t"]) for q in pts[sgn] if not q["ok"]), None) for sgn in (1, -1)}
+        log(f"  ray {name} (e . a / |a| {mp.nstr(dot(e, ehat), 3)}): t, t/|a|, |dep(+t e)|, |dep(-t e)|, even part, odd "
+            "part, floor (of |B a|), chord steps (+, -), max|F|" + (", even and odd against the planted" if truth else ""))
+        for r in rows:
+            log(f"    {mp.nstr(r['t'], 3):>8} {float(r['t'] / na):9.3g} {float(r['dp']):10.3e} {float(r['dm']):10.3e} "
+                f"{float(r['E']):10.3e} {float(r['O']):10.3e} {float(r['fl']):9.2e} {r['steps'][0]:>2},{r['steps'][1]:<2} "
+                f"{r['Fmax']:9.2e}" + (f" {float(r['E_err']):8.1e} {float(r['O_err']):8.1e}" if truth else ""))
+        for part, f in fits.items():
+            log(f"    {'even' if part == 'E' else 'odd'} part: " + (
+                f"leading order {f['p']:.3f} (rms {f['rms']:.1e} in ln), K {f['K']:.3e} |B a| (t/|a|)^p, from the first "
+                f"{min(4, f['n'])} of {f['n']} resolved points, t {f['t_from']:.2e}..{f['t_to']:.2e}" if f["p"] is not None
+                else f"not resolved ({f['n']} points above {RESOLVED} times the floor)")
+                + ("; local orders " + ", ".join(f"{d['p']:.2f}" for d in f["local"]) if f["local"] else ""))
+        for sgn in (1, -1):
+            cr, cf = cross[sgn], cross_full[sgn]
+            log(f"    sign {sgn:+d}: |dep| reaches {mp.nstr(LEVEL, 1)} |B a| at " + (
+                f"|c| {cr['t']:.3e}, |c|/|a| {cr['t'] / float(na):.4g} ({cr['how']})" if cr["t"] is not None
+                else cr["how"]) + "; |g(c) - B (c - a)| at " + (
+                f"|c|/|a| {cf['t'] / float(na):.4g} ({cf['how']})" if cf["t"] is not None else cf["how"])
+                + ("" if stop[sgn] is None else f"; the ray stopped at |c| {stop[sgn]:.2e}"))
+        rr = dict(e=[float(x) for x in e], e_dot_ahat=float(dot(e, ehat)), stop=stop,
+                  rows=[{kk: (float(v) if isinstance(v, mp.mpf) else v) for kk, v in r.items()} for r in rows],
+                  fits=fits, cross={str(s): c for s, c in cross.items()},
+                  cross_full={str(s): c for s, c in cross_full.items()},
+                  judged_ok=bool(len(judged) == len([t for t in RAY_T if RAY_JUDGED[0] <= t <= RAY_JUDGED[1]])),
+                  points=[dict(sgn=sgn, t=float(q["t"]), ok=q["ok"], dep=[float(x) for x in q.get("dep", [])],
+                               err=None if q.get("err") is None else float(q["err"] / nBa), hist=q["hist"])
+                          for sgn in (1, -1) for q in pts[sgn]])
+        if tensors is not None:
+            # the cubic the tensors predict along e: (T - 3S)(e, e, e) / 6 |a|^3 / |B a|, at both step pairs
+            pr = [nrm([mp.fsum(C[m][i][j][l] * e[i] * e[j] * e[l] for i in range(k) for j in range(k)
+                               for l in range(k)) for m in range(k)]) / 6 * na ** 3 / nBa for C in tensors]
+            rr["K3_tensors"] = [float(x) for x in pr]
+            log(f"    the tensors' cubic along e, |(T - 3S)(e, e, e)| / 6 |a|^3 / |B a|: {mp.nstr(pr[0], 3)} (smaller "
+                f"steps), {mp.nstr(pr[1], 3)} (larger)")
+        if truth is not None:
+            pe = all(r["E_err"] < 1e-3 and r["O_err"] < 1e-3 for r in rows)
+            po = bool(fits["E"]["p"] is not None and abs(fits["E"]["p"] - 4) < 0.05 and fits["O"]["p"] is not None
+                      and abs(fits["O"]["p"] - 5) < 0.05)
+            tc = {sgn: true_crossing(truth, e, sgn, nBa) for sgn in (1, -1)}
+            pc = all(tc[s] is not None and cross[s]["t"] is not None and abs(cross[s]["t"] / float(tc[s]) - 1) < 1e-2
+                     for s in (1, -1))
+            checks["points"] &= pe
+            checks["orders"] &= po
+            checks["crossings"] &= pc
+            rr["planted"] = dict(points=pe, orders=po, crossings=pc, tc={str(s): None if v is None else float(v)
+                                                                       for s, v in tc.items()},
+                                 worst=float(max(max(r["E_err"], r["O_err"]) for r in rows)) if rows else None)
+            log(f"    planted: worst point error {rr['planted']['worst']:.1e} (bound 1e-3): {'pass' if pe else 'FAIL'}; "
+                f"orders 4 and 5 to 0.05: {'pass' if po else 'FAIL'}; crossings against the planted "
+                + ", ".join(f"{float(tc[s] / na) if tc[s] else float('nan'):.4g}" for s in (1, -1))
+                + f" |a| (bound 1e-2): {'pass' if pc else 'FAIL'}")
+        log(f"    ({time.time() - t0:.0f} s)")
+        out["rays"][name] = rr
+        dump()
+    out["solves"] = nsolve[0]
+    a_ray = out["rays"]["a"]
+    out["verdict"] = dict(judged_converged=a_ray["judged_ok"],
+                          order_fitted=bool(any(a_ray["fits"][p]["p"] is not None for p in ("E", "O"))))
+    if truth is not None:
+        out["planted_checks"] = checks
+        ok = all(checks.values())
+    else:
+        ok = out["verdict"]["judged_converged"] and out["verdict"]["order_fitted"]
+    log(f"  ray: {nsolve[0]} strong solves; along a / |a|, every judged point converged: "
+        f"{'yes' if out['verdict']['judged_converged'] else 'NO'}; an order fitted: "
+        f"{'yes' if out['verdict']['order_fitted'] else 'NO'}"
+        + ("" if truth is None else "; planted checks " + ", ".join(f"{n} {'pass' if v else 'FAIL'}"
+                                                                    for n, v in checks.items())))
+    dump()
+    return ok, rec
 
 
 def strip(rec):
     return {k: v for k, v in rec.items() if not k.startswith("_")}
 
 
+def main_ray(args, opts, mutate, log, rec, dump):
+    """ray RAWDIR DZ0 BASE [--tensors=1] or ray planted: the scan of ray_scan, after the basis (and, with --tensors=1,
+    the whole of #528's measurement, whose h checks are then judged too)"""
+    if args[1:] == ["planted"]:
+        sysm = RayPlanted(int(opts.get("seed", 5)), log)
+        rec.update(sysm.meta)
+        bas = basis(sysm, opts, log, rec, dump)
+        ok, rec = ray_scan(sysm, bas, opts, mutate, log, rec, dump, truth=sysm.dep_true(bas["X"], bas["Um"]))
+        ok = ok and bool(sysm.selfcheck < 1e-20)
+    else:
+        sysm = Real(*args[1:4], int(opts.get("threads", 2)), log)
+        rec.update(sysm.meta)
+        if not sysm.offset_ok:
+            log("check: FAIL (the held offset is not on its rows only)")
+            return False
+        bas = basis(sysm, opts, log, rec, dump)
+        tens, hok = None, True
+        if opts.get("tensors", "0") == "1":
+            measure(sysm, opts, "", log, rec, dump, bas)
+            I = rec["_internal"]
+            tens = [I["C3"], I["C3_0"]]
+            hok = bool((rec["S"]["ok"] or rec["S"]["trunc_bound"]) and rec["w"]["ok"])
+            log(f"  #528's h checks (judged here): w_jl {'pass' if rec['w']['ok'] else 'FAIL'}, S "
+                f"{'pass' if rec['S']['ok'] else ('bounded by its truncation' if rec['S']['trunc_bound'] else 'FAIL')}"
+                "; its S control is reported, not judged (notes/REDUCED_CUBIC.md 5.4, 9)")
+        ok, rec = ray_scan(sysm, bas, opts, mutate, log, rec, dump, tensors=tens)
+        rec["h_checks_ok"] = hok
+        ok = ok and hok
+    return ok
+
+
 def main():
     args = [a for a in sys.argv[1:] if not a.startswith("--")]
     opts = dict(a[2:].split("=", 1) for a in sys.argv[1:] if a.startswith("--") and "=" in a)
     mutate = opts.get("mutate", "")
-    if mutate not in ("", "w0", "Ssign", "Sh", "hF"):
-        sys.exit(f"--mutate={mutate}: w0, Ssign, Sh or hF")
-    if not args or args[0] not in ("run", "planted") or (args[0] == "run" and len(args) != 4):
+    modes = dict(run=("", "w0", "Ssign", "Sh", "hF"), planted=("", "w0", "Ssign", "Sh", "hF"), ray=("", "w0", "B"))
+    if not args or args[0] not in modes or (args[0] == "run" and len(args) != 4) or \
+            (args[0] == "ray" and len(args) != 4 and args[1:] != ["planted"]):
         sys.exit(__doc__)
+    if mutate not in modes[args[0]]:
+        sys.exit(f"--mutate={mutate}: in mode {args[0]}, one of {', '.join(modes[args[0]][1:])}")
     out = opts.get("json", "")
     rec = dict(mode=args[0], mutate=mutate, h=H, started=time.strftime("%Y-%m-%d %H:%M:%S", time.gmtime()))
 
@@ -935,6 +1323,14 @@ def main():
         if out:
             with open(out, "w") as fh:
                 json.dump(strip(rec), fh, indent=1, default=float)
+    if args[0] == "ray":
+        rec["ray_t"] = [float(t) for t in RAY_T]
+        ok = main_ray(args, opts, mutate, log, rec, dump)
+        rec["passed"] = bool(ok)
+        rec["finished"] = time.strftime("%Y-%m-%d %H:%M:%S", time.gmtime())
+        dump()
+        print("check:", "pass" if ok else "FAIL")
+        return 0 if ok else 1
     if args[0] == "run":
         sysm = Real(*args[1:4], int(opts.get("threads", 2)), log)
         rec.update(sysm.meta)
