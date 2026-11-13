@@ -3,7 +3,7 @@
 Status of everything here: numerical evidence. Nothing is rigorous. It bears on the type bounds of routes A3 and P5,
 which follow from the farthest singularity of the Borel transform (proof/D_entire.md sections 1 and 7). Sections 1–4
 are #547, sections 5–6 are #548, section 7 is #670, section 8 is #669, section 9 is #672, section 10 is #683,
-section 11 is #684, section 12 is #667, and section 13 is #689.
+section 11 is #684, section 12 is #667, section 13 is #689, and section 14 is #702.
 
 - **#547.** A calibrated estimator recovers the far end of smooth-density plants within 0.009, but it fails #547's
   acceptance. On the real series two controls fire, so no far end is quoted (§4).
@@ -34,6 +34,10 @@ section 11 is #684, section 12 is #667, and section 13 is #689.
   twins were not refitted. On plants, no near-end change gives the real misfit. A plant whose zero factor sits at the
   real series' own Padé zero, 5–7×10⁻³ from the plants' x_ref, reproduces the real twin misfit within 0.2% at every
   node (§13).
+- **#702.** With the zero factor at the real zero, located by fit or removed, the real chord twin still needs all 23
+  terms at every node. Its misfit at 22 terms falls 200–360 times, to 256–430 error units, and the located zero lies
+  2×10⁻⁵ from the Padé zero. With the zero located the far end no longer helps, and #667's margin for a set near
+  P0 + κ⋆ is gone (§14).
 
 ## 1. Question
 
@@ -1676,3 +1680,130 @@ the ingredient left to test on the real series.
 
 Three variants are in neither of 13.6's lists, kstar, ratio and nozeroex-1. None changes the near end, so they run
 with the zero-factor group. kstar is the baseline that C2 needs. ratio and nozeroex-1 are context only.
+
+## 14. The real twins with the zero factor in place (#702)
+
+§13's real stage, with the gate amended as in §13.8. The zero-factor variants are fitted to the real σ₀–σ₂₂ in the
+chord class. The near-end variants did not run, since K2 failed.
+
+### 14.1 What ran
+
+One process under `nice -n 10`, single-threaded, with `pade_twin_near.py` at e31b537f. The real stage reads #689's
+`control.json` (`I689-mac/`, raw fade0a9), copied unchanged. The records are in the raw-data repository's `I702-mac/`
+(ff0920c).
+
+| run | UTC | exit |
+|---|---|---|
+| `real` | 2026-11-13 17:19–17:30 | 0 |
+| `real --mutate=c1dup` | 17:30–17:32 | 1 (fires) |
+
+### 14.2 The checks
+
+| check | result | verdict |
+|---|---|---|
+| amended gate | K0, every C0 and Z1 passed, K2 failed. The 17 variants that change no near end ran, and the 24 near-end variants did not | as frozen |
+| C1, 67 scans (51 judged and context, 12 widened, 4 J 1500) | below n, χ at 250 digits equals χ at 150 in double precision; at M = n, χ ≤ 5.3×10⁻¹⁰⁶ at 150 digits and 4.2×10⁻²⁰⁶ at 250 | OK |
+| C2, kstar against #672 | M_min = 23, and χ at 22 terms 96978.58, 91162.72 and 86025.38, equal to #672's to the 7 digits stored | OK |
+| C0 at the located zero, zfit | the plant with its zero there, refitted in its own basis, has χ = 6.5×10⁻³⁷ to 1.5×10⁻³⁶ | OK |
+| C0 at the located zero, zfitratio | χ = 3.5×10⁻³⁷ to 1.2×10⁻³⁶ | OK |
+| `real --mutate=c1dup` | the amended C1 fires on all 45 scans with M_min = n, and every M = 22 row still agrees. No scan has M_min < n | fires |
+| widened errors | every χ at 22 terms within 1.4×10⁻¹³ relative, and M_min = 23 everywhere, so no judged verdict changes | OK |
+
+### 14.3 Results: no variant fits
+
+**No variant fits. Every scan has M_min = M_lo = 23, at every node.** By the frozen verdict, as amended, none of the
+tested zero factors gives a short twin. The near ends are untested.
+
+The least-squares twin at ω/ω∞ = 0.99, 1.00 and 1.01. M_min = 23 in every cell, and √23 = 4.8.
+
+| variant | zero factor | χ at 22 terms | l2 at 20 terms |
+|---|---|---|---|
+| kstar | at x_ref | 9.70×10⁴, 9.12×10⁴, 8.60×10⁴ | 2.39×10⁷, 2.00×10⁷, 2.44×10⁷ |
+| nozero | none | 269, 256, 260 | 1.07×10⁵, 9.60×10⁴, 1.41×10⁵ |
+| zpade | at the [11/11] Padé zero | 636, 698, 720 | 8.15×10⁴, 6.70×10⁴, 9.31×10⁴ |
+| zfit | located by l2 at 20 terms | 411, 402, 427 | 7.15×10³, 7.17×10³, 9.14×10³ |
+| context: nozeroex-1 | none, far exponent β − 2 | 299, 286, 293 | 1.21×10⁵, 1.08×10⁵, 1.59×10⁵ |
+| context: z ± 0.01, ± 0.01i | x_ref moved | 5.4×10⁴ to 2.5×10⁵ | 1.3×10⁷ to 7.0×10⁷ |
+| context: z ± 0.1, ± 0.1i | x_ref moved | 1.1×10⁶ to 2.3×10⁶ | 2.6×10⁸ to 6.3×10⁸ |
+| context: ratio | at x_ref | 3.46×10⁴, 3.43×10⁴, 3.48×10⁴ | 1.00×10⁷, 8.77×10⁶, 1.14×10⁷ |
+| context: rationozero | none | 290, 280, 311 | 1.35×10⁵, 1.21×10⁵, 1.73×10⁵ |
+| context: ratiozpade | at the Padé zero | 348, 345, 329 | 2.77×10⁴, 3.94×10⁴, 8.80×10⁴ |
+| context: zfitratio | located | 432, 426, 468 | 8.36×10³, 8.44×10³, 1.13×10⁴ |
+
+The ratio rows have the far end at #541's ratio-law κ. J 1500 at ω∞ gives M_min = 23 for each judged variant, with
+χ at 22 terms within 1.5×10⁻³ relative of J 1250's (zfit at the zero located on J 1250).
+
+### 14.4 The located zero
+
+zfit's zero, located by l2 at 20 terms. Both starts, x_ref and the Padé zero, end within 2.4–5.1×10⁻¹¹ of each other,
+so it is a local minimum, not a global one.
+
+| ω/ω∞ | zfit's zero | the [11/11] Padé zero | difference | Padé spread over orders | l2 at 20 terms / √23 |
+|---|---|---|---|---|---|
+| 0.99 | 7.3527443 + 0.0765244i | 7.3527416 + 0.0765021i | 2.2×10⁻⁵ | 8.8×10⁻⁵ | 1490 |
+| 1.00 | 7.3940843 − 0.0000139i | 7.3940871 − 0.0000330i | 1.9×10⁻⁵ | 8.5×10⁻⁵ | 1500 |
+| 1.01 | 7.4343739 − 0.0772437i | 7.4343831 − 0.0772603i | 1.9×10⁻⁵ | 8.4×10⁻⁵ | 1910 |
+
+The zero located with the ratio-law far end, zfitratio's, lies 1.7–3.9×10⁻⁵ from the Padé zero and 3.2–4.0×10⁻⁵ from
+zfit's. Every located zero lies 5.1–6.7×10⁻³ from x_ref.
+
+Z1 calibrated the locator on a plant inside its class, where it finds the zero exactly. Here the class misfits by
+1500–1900 √23 at the located zero, so the located zero is the best zero of a model that does not fit. Its agreement
+with the Padé zero is a consistency check, not a calibrated estimate. The ± here are distances, not error bars.
+
+### 14.5 What this means
+
+- **The zero factor in place gives no short twin either, by the frozen rule.** With the zero removed, at the real
+  series' Padé zero or located by fit, every chord twin with P0, κ⋆ and the plants' exponent needs all 23 terms at every
+  node. With the zero located, l2 at 20 terms stays 1490–1910 times √23, so no 20-term twin exists for any zero near
+  the located one.
+- **The zero's offset was most of the misfit's size.** At x_ref the real kstar twin misfits by χ = 8.6–9.7×10⁴ at 22
+  terms. With the zero located it misfits by 400–430, 200–240 times less, and with no zero factor by 256–269, 330–360
+  times less. l2 at 20 terms falls 2700–3300 times with the zero located. So §13.4's reading holds for the size: a
+  plant whose zero is 6×10⁻³ off reproduces the real misfit, and the real series with its zero in place keeps 0.3–0.5%
+  of it.
+- **What remains is not the zero.** §13.5 extrapolated χ ≈ 10² at 22 terms for a zero placed to 10⁻⁵. The located
+  zero gives 400–430, and it minimises l2 at 20 terms over the zero, where a misfit made by the zero alone would fall
+  to the noise as on Z1's plant. So a misfit of a few hundred error units at σ₁₁–σ₂₂ needs an ingredient the chord
+  class with P0 and κ⋆ does not have.
+- **The far end no longer helps.** With the zero at x_ref the ratio-law far end lowers χ at 22 terms 2.5–2.8 times
+  (#684). With the zero located it raises it by 5–10% (zfitratio against zfit), and with no zero factor by 8–20%.
+- **For the earlier sections.** These are comparisons of quoted numbers, not reruns. #703 reruns them.
+  - §9 (#672): "no short twin in these classes" holds in the chord class with the zero moved, located or removed. Its
+    misfit size, 0.9–1.3×10⁵, was the zero's offset. The arc classes were not refitted here.
+  - §11 (#684): "the far end alone does not account for it" holds. A plant whose far end is 0.18 off misfits by
+    7–9×10⁻⁴ at 22 terms, and the real series by 400 with its zero located. "Of the two, the far end matters far more"
+    does not hold with the zero located.
+  - §12 (#667): "a set near P0 + κ⋆ cannot explain the twin misfit" no longer holds by its margin. Its plants' χ at 22
+    terms reach 3.4×10⁻³ of the real series' with the zero at x_ref, about 310 at ω∞ in the chord basis. With the zero
+    located the real misfit is 402 there, and with no zero factor 256. The plants had their zeros at x_ref in their
+    own bases, so their numbers carry no offset. The low set's plants misfit about 25–1000 times more than the real
+    series now.
+- **Status.** Numerical evidence. The verdict is the frozen one, under §13.8's amended gate. The statements about the
+  located zero rest on a local search from two starts.
+
+### 14.6 Proposed text for proof/D_entire.md
+
+In 7.4, replacing the bullet "The near end does not account for it, and the zero factor may (#689)":
+
+```diff
+-- **The near end does not account for it, and the zero factor may (#689).** On plants matched to σ₀–σ₁₂, a near-end
+-  exponent of ±0.25 or ±0.5, or #541's extrapolated near end, costs the κ⋆ twin 11–15 terms, with χ ≤ 0.012 at 22
+-  terms. That is far below the real series' 9×10⁴, and the planted control on the exponent failed (17 terms where 19
+-  were required), so the real twins were not refitted. The plants' zero factor sits at x_ref = 7.400 at ω∞. The real
+-  series' own Padé zero lies 5–7×10⁻³ from it at every node. A plant whose zero is at that point misfits the κ⋆ twin
+-  within 0.2% of the real series at every node. So the real misfit is the size a misplaced zero factor gives, and the
+-  twin test with the zero in place is still to be run (notes/PADE_FAR_END.md §13). The bullets above compare twins
+-  whose zero factor sits at x_ref, so their statements about the real series carry that offset.
++- **The near end does not account for it (#689), and the zero factor accounts for its size only (#702).** On plants
++  matched to σ₀–σ₁₂, a near-end exponent of ±0.25 or ±0.5, or #541's extrapolated near end, costs the κ⋆ twin 11–15
++  terms, with χ ≤ 0.012 at 22 terms. The planted control on the exponent failed (17 terms where 19 were required), so
++  the real twins were not refitted with a changed near end. The plants' zero factor sits at x_ref = 7.400 at ω∞, and
++  the real series' own zero lies 5–7×10⁻³ from it at every node. With the zero there, located by fit or removed, the
++  real chord twin still needs all 23 terms at every node. But its misfit at 22 terms falls from 9×10⁴ to 256–430, and
++  with the zero located no 20-term twin exists near it (l2 at least 1490 times √23). The far end at the ratio-law κ no
++  longer lowers the misfit. So most of the misfit quoted above is the zero's offset, and what is left, a few hundred
++  error units, needs an ingredient the chord class with P0 and κ⋆ lacks (notes/PADE_FAR_END.md §13–14). The bullets
++  above compare twins whose zero factor sits at x_ref. #672's and #684's conclusions survive in the chord class, but
++  #667's margin for a set near P0 + κ⋆ does not.
+```
