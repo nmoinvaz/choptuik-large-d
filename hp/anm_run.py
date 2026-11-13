@@ -351,7 +351,9 @@ def main():
             last_q["z8"], last_q["z4"] = z8, q4_of_o(z8)
             Fh, Fl = spx.residual(z8[0], z8[1])
             Fc = float(rnorm(Fh, Fl))
-            fo = float(hist[-1]["F"]) if hist else float("nan")
+            # max |F| at the final iterate: after the last accepted step (its F_new; at the it_max cap the step's own F is
+            # the iterate before it), or the record's F when it is the converged or no-trial record (#664)
+            fo = float(hist[-1].get("F_new", hist[-1]["F"])) if hist else float("nan")
             # max |F| at the start and after the last step, for the base's adoption rule
             last_q["od_F"] = (float(hist[0]["F"]), float(hist[-1].get("F_new", hist[-1]["F"]))) if hist else None
             print(f"      octo-double Newton: {len(hist)} steps, max|F| {fo:.1e}, {'converged' if conv else 'not converged'}; double-double |F| "
