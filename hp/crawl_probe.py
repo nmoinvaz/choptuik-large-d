@@ -7,15 +7,17 @@ point where it stops being affine. The rows that jump there are named by block, 
     python3 crawl_probe.py selftest [--mutate shift|comp|smooth|control|coarse]
     python3 crawl_probe.py iterate RAW BASE.npz --a A (--jet JET.npz | --pred PRED.npz) --out DIR [--threads 2]
         [--strong 4] [--steps 2] [--check_pred PRED.npz]
-    python3 crawl_probe.py probe RAW ITER.npz --out DIR [--threads 2] [--lo 0.5] [--hi 1.0] [--rungs 11]
-        [--tol_lam 1e-6] [--arms E,U,P] [--theta 1]
+    python3 crawl_probe.py probe RAW ITER.npz --out DIR [--threads 2] [--lo 0.5] [--hi 1.0] [--rungs 6]
+        [--tol_lam 1e-6] [--arms U,E] [--theta 1] [--theta_half 0] [--hint 1]
 
 `selftest` is the planted check (fixed before the first real run): a smooth map with a quadratic remainder along the
 exact Newton step, plus a jump of known rows switched on at a known lam_true along that step. Pass: lam* within 1e-6 of
 lam_true, the rows carrying 99% of the jump (in the squared 2-norm) equal to the planted rows, and the control (the
-same map without the jump) reported affine to the ladder's end. The mutations must make it fail: shift (the jump
-planted 5e-6 past the lam_true the check expects), comp (planted on the neighbouring rows), smooth (no jump planted,
-one expected), control (a jump planted in the control), coarse (the bisection stopped at 1e-2). Exit 1 on failure.
+same map without the jump) reported affine to the ladder's end. The detector runs three times: without a hint, with
+a bracket hint around lam_true, and with a hint 0.01 away, which it must refuse and still find lam*. The mutations must
+make it fail: shift (the jump planted 5e-6 past the lam_true the check expects), comp (planted on the neighbouring
+rows), smooth (no jump planted, one expected), control (a jump planted in the control), coarse (the bisection stopped
+at 1e-2), hint_trust (a hinted bracket taken without evaluating its ends). Exit 1 on failure.
 
 `iterate` rebuilds one attempt of anm_run.py with #603's flags (--corrector od --tol_od 1e-60 --reseed 2 --reseed_q 1
 --reseed_o 3 --held_o 1 --held_fit data/held_fit.json --jet_o 1 --od_accept natural --od_strong 4 --lam_stall 0.04,
@@ -28,9 +30,13 @@ the rebuilt one must equal bit for bit (exit 1 otherwise).
 `probe` evaluates, at the saved iterate, lam -> F(z + lam dz) on the ladder lo..hi and bisects the first jump to
 tol_lam (locate_jump). Arm E is the corrector's own residual (ElimO: the trial projected when its pinned quad-double
 max |F| exceeds the switch, as newton_od's natural test evaluates it), arm U the residual never projected (PinnedO),
-arm P the residual always projected. Each evaluation records the switch's test value, whether the point was projected,
-and max |F - (1 - lam) F0| per block. --theta 1 also forms the natural test's simplified correction at lam = 1 with
-the trial projected (what a corrector that projects every trial of a projected iterate would see).
+arm P (on request) the residual always projected; after arm E the point just above lam* is also evaluated projected.
+Each evaluation records the switch's test value, whether the point was projected, and max |F - (1 - lam) F0| per
+block. --theta 1 also forms the natural test's simplified correction at lam = 1 with
+the trial projected (what a corrector that projects every trial of a projected iterate would see), and --theta_half 1
+at lam = 1/2 as the corrector forms it. --hint 1 (the default) brackets arm E's jump first by bisecting the switch's
+test value along the line (no projection), then evaluates F at the bracket's ends (locate_jump's hint); a projection
+costs about 5.5 min on the Mac.
 """
 import json
 import os
@@ -50,7 +56,10 @@ def growth(e_a, e_b, lam_a, lam_b, floor):
     return e_b / max(e_a * (lam_b / lam_a) ** 2, floor)
 
 
-def locate_jump(ev, F0, lams, tol_lam=1e-6, K=1e3, floor_rel=1e-12, max_bisect=60, verbose=True):
+HINT_MUT = {}         # the control of the hint: {"trust": True} takes a hinted bracket without evaluating its ends
+
+
+def locate_jump(ev, F0, lams, tol_lam=1e-6, K=1e3, floor_rel=1e-12, max_bisect=60, verbose=True, hint=None):
     """The first lam on the ladder lams (increasing) past which lam -> ev(lam) stops being affine. ev(lam) returns
     (F, info): F the residual's leading values (float64), info a dict kept with the record. The deviation from the
     affine model is e(lam) = max |F(lam) - (1 - lam) F0|. A smooth map along a Newton step deviates by its quadratic
@@ -58,7 +67,10 @@ def locate_jump(ev, F0, lams, tol_lam=1e-6, K=1e3, floor_rel=1e-12, max_bisect=6
     (lam_b / lam_a)^2 (and the floor floor_rel max |F0|). The bracket is then bisected with the threshold
     tau = sqrt(e_a (lam_b / lam_a)^2 e_b) until it is narrower than tol_lam. Returns a dict: lam_star (None when
     every rung is affine), the bracket's ends with their F and e, every evaluation in order, and the largest growth
-    on the ladder."""
+    on the ladder. hint(lam_a, lam_b), when given, proposes a narrower bracket (h_a, h_b) inside the rungs' bracket
+    (from a cheaper quantity than ev): ev is evaluated at both ends, and the bracket is taken only when h_a reads
+    affine (e <= tau) and h_b jumped (e > tau); otherwise the two evaluations narrow the rungs' bracket as bisection
+    steps would, and the bisection goes on from there."""
     F0 = np.asarray(F0, dtype=float)
     floor = floor_rel * float(np.abs(F0).max())
     recs = []
@@ -83,6 +95,25 @@ def locate_jump(ev, F0, lams, tol_lam=1e-6, K=1e3, floor_rel=1e-12, max_bisect=6
     la, lb = lams[i], lams[i + 1]
     (Fa, ea), (Fb, eb) = rung[i], rung[i + 1]
     tau = float(np.sqrt(max(ea * (lb / la) ** 2, floor) * eb))
+    out["hint"] = None
+    h = hint(la, lb) if hint is not None else None
+    if h is not None and la < h[0] < h[1] < lb:
+        if HINT_MUT.get("trust"):
+            (Fa, ea), (Fb, eb) = e_of(h[0]), e_of(h[1])
+            la, lb = h
+            out["hint"] = dict(bracket=list(h), taken=True, trusted=True)
+        else:
+            (Fha, eha), (Fhb, ehb) = e_of(h[0]), e_of(h[1])
+            taken = eha <= tau < ehb
+            if eha > tau:                    # the jump lies below h_a
+                lb, Fb, eb = h[0], Fha, eha
+            else:
+                la, Fa, ea = h[0], Fha, eha
+                if ehb > tau:
+                    lb, Fb, eb = h[1], Fhb, ehb
+                else:                        # the jump lies above h_b
+                    la, Fa, ea = h[1], Fhb, ehb
+            out["hint"] = dict(bracket=list(h), taken=bool(taken))
     for _ in range(max_bisect):
         if lb - la <= tol_lam:
             break
@@ -143,18 +174,27 @@ def selftest(argv):
     rows_plant = tuple(r + 1 for r in rows) if mutate == "comp" else rows
     F, z, d, _ = plant(lam_true=lam_plant, rows=rows_plant, J=0.0 if mutate == "smooth" else 1.0)
     tol = 1e-2 if mutate == "coarse" else 1e-7
+    if mutate == "hint_trust":
+        HINT_MUT["trust"] = True
     print(f"planted: n {len(z)}, jump at lam {lam_plant:.9f} on rows {list(rows_plant)}"
           f"{'  (--mutate ' + mutate + ')' if mutate else ''}", flush=True)
-    r = locate_jump(lambda lam: (F(z + lam * d), {}), F(z), ladder, tol_lam=tol, verbose=False)
-    ok_lam = r["lam_star"] is not None and abs(r["lam_star"] - lam_true) <= 1e-6
-    # the jump net of the affine change across the bracket, (F_b - (1 - lam_b) F0) - (F_a - (1 - lam_a) F0)
     F0 = F(z)
-    rows_found = (sorted(carriers((r["F_b"] - (1 - r["lam_b"]) * F0) - (r["F_a"] - (1 - r["lam_a"]) * F0)))
-                  if r["lam_star"] is not None else [])
-    ok_rows = rows_found == sorted(rows)
-    print(f"  jump: lam* {r['lam_star'] if r['lam_star'] is None else format(r['lam_star'], '.9f')} "
-          f"(expected {lam_true:.9f}, bound 1e-6), largest ladder growth {r['g_max']:.2e} (K {r['K']:.0e}); "
-          f"rows carrying 99% {rows_found} (expected {sorted(rows)})", flush=True)
+    ok_lam = ok_rows = True
+    # three runs of the detector: no hint, a hint around lam_true, and a hint 0.01 away (which must be refused)
+    for name, hint in (("no hint", None), ("hint at lam_true", lambda a, b: (lam_true - 3e-8, lam_true + 3e-8)),
+                       ("hint 0.01 off", lambda a, b: (lam_true + 0.01 - 3e-8, lam_true + 0.01 + 3e-8))):
+        r = locate_jump(lambda lam: (F(z + lam * d), {}), F0, ladder, tol_lam=tol, verbose=False, hint=hint)
+        ok_l = r["lam_star"] is not None and abs(r["lam_star"] - lam_true) <= 1e-6
+        # the jump net of the affine change across the bracket, (F_b - (1 - lam_b) F0) - (F_a - (1 - lam_a) F0)
+        rows_found = (sorted(carriers((r["F_b"] - (1 - r["lam_b"]) * F0) - (r["F_a"] - (1 - r["lam_a"]) * F0)))
+                      if r["lam_star"] is not None else [])
+        ok_r = rows_found == sorted(rows)
+        ok_lam, ok_rows = ok_lam and ok_l, ok_rows and ok_r
+        hn = r.get("hint")
+        print(f"  jump ({name}): lam* {r['lam_star'] if r['lam_star'] is None else format(r['lam_star'], '.9f')} "
+              f"(expected {lam_true:.9f}, bound 1e-6), largest ladder growth {r['g_max']:.2e} (K {r['K']:.0e}); "
+              f"rows carrying 99% {rows_found} (expected {sorted(rows)}); {len(r['evals'])} evaluations"
+              + (f"; hint {'taken' if hn['taken'] else 'refused'}" if hn else ""), flush=True)
     Fc, zc, dc, _ = plant(lam_true=lam_true, rows=rows, J=1.0 if mutate == "control" else 0.0)
     rc = locate_jump(lambda lam: (Fc(zc + lam * dc), {}), Fc(zc), ladder, tol_lam=tol, verbose=False)
     ok_ctl = rc["lam_star"] is None
@@ -233,8 +273,18 @@ def make_elim(att, record=False):
             if record:
                 self.calls.append((z, st))
             return st
+
+        def project(self, z):
+            # with cache (the probe): a point's projection is formed once (deterministic; counts only the misses)
+            if self.cache is None:
+                return super().project(z)
+            key = b"".join(np.ascontiguousarray(np.asarray(p, dtype=float)).tobytes() for p in z)
+            if key not in self.cache:
+                self.cache[key] = super().project(z)
+            return self.cache[key]
     el = RecElimO(att["so"], att["rs"])
     el.calls = []
+    el.cache = None if record else {}
     el.first = False
     return el
 
@@ -329,9 +379,9 @@ def probe(argv):
     raw, it_path = argv[0], argv[1]
     out = _opt(argv, "out", "")
     threads = _opt(argv, "threads", 2)
-    lo, hi, rungs = _opt(argv, "lo", 0.5), _opt(argv, "hi", 1.0), _opt(argv, "rungs", 11)
+    lo, hi, rungs = _opt(argv, "lo", 0.5), _opt(argv, "hi", 1.0), _opt(argv, "rungs", 6)
     tol_lam = _opt(argv, "tol_lam", 1e-6)
-    arms = _opt(argv, "arms", "E,U,P").split(",")
+    arms = _opt(argv, "arms", "U,E").split(",")
     os.makedirs(out, exist_ok=True)
     dd = np.load(it_path)
     meta = json.loads(str(dd["meta"]))
@@ -376,13 +426,37 @@ def probe(argv):
         return ev
     ladder = [lo + (hi - lo) * i / (rungs - 1) for i in range(rungs)]
     res = dict(iter=it_path, meta=meta, ladder=ladder, arms={})
+    sws = {}
+
+    def sw_at(lam):
+        if lam not in sws:
+            sws[lam] = sw_of(o8(od_axpy(lam, *d, *z)))
+        return sws[lam]
+
+    def sw_hint(la, lb):
+        """the bracket of width 6e-7 around the lam where the switch's test value crosses el.switch between la and
+        lb (bisected on that value, which needs no projection); None when it does not cross there"""
+        a_, b_ = la, lb
+        if not (sw_at(a_) > el.switch >= sw_at(b_)):
+            return None
+        while b_ - a_ > 2e-7:
+            m_ = 0.5 * (a_ + b_)
+            if sw_at(m_) > el.switch:
+                a_ = m_
+            else:
+                b_ = m_
+        c_ = 0.5 * (a_ + b_)
+        print(f"    hint: the switch's test value crosses {el.switch:.0e} at lam {c_:.9f} ({len(sws)} evaluations of it)", flush=True)
+        return (max(c_ - 3e-7, 0.5 * (la + c_)), min(c_ + 3e-7, 0.5 * (c_ + lb)))
     for arm in arms:
         ev = ev_arm(arm)
         F0, info0 = ev(0.0)
         print(f"  arm {arm}: at lam 0 max|F| {float(np.abs(F0).max()):.3e} (switch test {info0['sw']:.3e}, {info0['how']})", flush=True)
-        r = locate_jump(ev, F0, ladder, tol_lam=tol_lam)
+        r = locate_jump(ev, F0, ladder, tol_lam=tol_lam, hint=sw_hint if (arm == "E" and _opt(argv, "hint", 1)) else None)
+        if r.get("hint"):
+            print(f"    hint {'taken' if r['hint']['taken'] else 'refused'}: {r['hint']['bracket']}", flush=True)
         ar = dict(F0_max=float(np.abs(F0).max()), lam0=info0, lam_star=r["lam_star"], g_max=r["g_max"], growth=r["growth"],
-                  evals=r["evals"])
+                  evals=r["evals"], hint=r.get("hint"))
         if r["lam_star"] is None:
             print(f"  arm {arm}: affine to lam = {hi:g} (largest ladder growth {r['g_max']:.2e}, K {r['K']:.0e}); "
                   f"e at the end {r['e_end']:.3e}", flush=True)
@@ -414,6 +488,15 @@ def probe(argv):
                 ar["harmonics"][f"{b}{f}"] = {int(k): float(x) for k, x in zip(ks_, amp)}
                 top = sorted(zip(ks_, amp), key=lambda kv: -kv[1])[:4]
                 print(f"    block {b} field {f}: largest harmonics " + ", ".join(f"k {int(k)} {x:.2e}" for k, x in top), flush=True)
+        if arm == "E" and r["lam_star"] is not None:
+            # the same point just above lam* with its horizon data projected (arm P there): whether the projection
+            # alone takes the residual back to the affine model
+            Fp, infop = ev_arm("P")(r["lam_b"])
+            dev_p = Fp - (1 - r["lam_b"]) * F0
+            ar.update(forced_b=dict(lam=r["lam_b"], e=float(np.abs(dev_p).max()), blocks=per_block(dev_p, M, K), **infop))
+            top_p = sorted(ar["forced_b"]["blocks"].items(), key=lambda kv: -kv[1])[:6]
+            print(f"    at lam_b {r['lam_b']:.9f} projected ({infop['how']}): e {ar['forced_b']['e']:.3e}; per block "
+                  + ", ".join(f"{k} {v:.2e}" for k, v in top_p), flush=True)
         res["arms"][arm] = ar
         with open(rec_path, "a") as fh:
             fh.write(json.dumps(dict(arm=arm, **ar), default=float) + "\n")
@@ -425,9 +508,9 @@ def probe(argv):
         same = all(np.array_equal(np.asarray(dz_new[q]), np.asarray(d[q])) for q in range(8))
         nd = float(np.abs(np.asarray(d[0])).max())
         th = {}
-        for lam in (1.0, 0.5):
+        for lam, modes in ((1.0, ("switch", "forced")),) + (((0.5, ("switch",)),) if _opt(argv, "theta_half", 0) else ()):
             zt = o8(od_axpy(lam, *d, *z))
-            for mode in ("switch", "forced"):
+            for mode in modes:
                 ztp = el.project(zt) if mode == "switch" else forced(zt)[0]
                 disp = o8(od_axpy(-1.0, *zt, *ztp))
                 Ft = o8(so.residual_o(ztp))
