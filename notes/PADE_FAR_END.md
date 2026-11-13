@@ -3,7 +3,7 @@
 Status of everything here: numerical evidence. Nothing is rigorous. It bears on the type bounds of routes A3 and P5,
 which follow from the farthest singularity of the Borel transform (proof/D_entire.md sections 1 and 7). Sections 1–4
 are #547, sections 5–6 are #548, section 7 is #670, section 8 is #669, section 9 is #672, section 10 is #683,
-section 11 is #684, and section 12 is #667.
+section 11 is #684, section 12 is #667, and section 13 is #689.
 
 - **#547.** A calibrated estimator recovers the far end of smooth-density plants within 0.009, but it fails #547's
   acceptance. On the real series two controls fire, so no far end is quoted (§4).
@@ -1467,3 +1467,80 @@ In 7.4, after the bullet "Neither the far end nor the exponent alone gives it on
 +  misfit at least 290 times less in every basis. Only the set at 1.69 − 0.74i reaches the real misfit, at 0.1–1% of
 +  σ₂₂ (notes/PADE_FAR_END.md §12).
 ```
+
+## 13. The near end and the zero factor of the real twins (#689)
+
+Every twin class of §9 and §11 has a density that is regular at the near end P0, and the plants' zero factor
+1 − x/x_ref. Here the real σ₀–σ₂₂'s chord twins are refitted with the near end changed, and separately with the zero
+factor moved or removed.
+
+Two reasons to look at them. The near end's share of σ_k scales as (|P0|/|κ⋆|)^k, which is 10⁻⁴ to 10⁻⁸ of σ_k for
+k = 11–22, so 10⁴ error units or more, an order-of-magnitude estimate (#684). The zero factor matters through the
+Borel transform: (1 − x/x_ref) L(x) has the Borel transform B_L(t) + B_L′(t)/x_ref, so a density that is nonzero at P0
+gives the twin a pole at P0 besides the log branch point there, and the far end's exponent drops by one.
+
+### 13.1 Method
+
+`solver/inner_amp/pade_twin_near.py`. The fits, errors, sizes and C1 are §9's and §11's (`pade_twin_size.scan`):
+weights 1/err_k with the measured errors (floor 10⁻³⁰), M_min and M_lo at n = 23, fits at 150 digits checked at 250,
+C1 as amended in §9.1. Only the chord class is used.
+
+- **The twin.** pref(x) L(x), with L the Laplace integral of the density s^α (1 − s)^ex Σ_{m<M} c_m T_m(2s − 1) on the
+  chord from P0 to P1, ex = β − 1, and pref = 1 − x/x₀ or 1. The moments are exact, from
+  ∫₀¹ s^(α+p) (1 − s)^ex ds = B(α + p + 1, ex + 1). At α = 0 they are §7.1's, so the baseline basis equals #672's bit
+  for bit (selftest).
+- **Judged variants**, per node, each with P1 = κ⋆ and otherwise the baseline's ingredients:
+  - *kstar*: α = 0, P0 and the zero at x_ref, #672's chord twin;
+  - *a−0.5*, *a−0.25*, *a+0.25*, *a+0.5*, *a+1*: the near-end exponent α;
+  - *near541*: P0 moved to #541's extrapolated near end, 0.732 + 0.056i at ω∞ (0.773 + 0.146i and 0.728 + 0.035i at
+    ω/ω∞ = 0.99 and 1.01);
+  - *nozero*: the zero factor removed;
+  - *zpade*: the zero moved to the real series' own zero nearest x_ref, from its [11/11] Padé approximant in x;
+  - *zfit*: the zero located by fit quality, the l2 of the least-squares twin at M = 20 = n − 3 minimised over x₀.
+- **The locator.** By §11.5, χ at M = n − 1 cannot locate an end point, since a tuned complex parameter zeroes the one
+  residual dimension left. So the locator minimises log l2 at M = 20, where three residual dimensions remain. It runs
+  Nelder–Mead (Nelder and Mead 1965) in offsets x₀ = centre + scale (p + iq), from scale 0.01, re-centred at the best
+  point with the scale divided by 100 each round. It stops when a round gains less than 10⁻³ in log l2 or the scale
+  falls below 10⁻²⁰. It starts from x_ref and from the Padé zero, and the lower l2 is kept.
+- **Context, not judged.**
+  - near541 with each α;
+  - nozero with each α, and nozero with ex = β − 2, which keeps the far end's exponent of the product;
+  - the zero moved from x_ref by ±0.01, ±0.01i, ±0.1 and ±0.1i;
+  - the far end at #541's ratio-law κ, #684's best far end, alone and with each α, with near541, nozero and zpade;
+  - *zfitratio*, the zero located with that far end;
+  - *p0fit*, P0 located by the same locator, started from P0 and from #541's near end;
+  - *afit*, α located by l2 at M = 20, on −0.9 to 2.0 in steps of 0.1 and then by golden section.
+  - Also the errors widened to the strings' rounding (§10.5), and J 1500 at ω∞, for the judged variants.
+- **Plants.** Each check plant is §2.2's, on the chord with the variant's P0, P1, α and zero factor: c_m fitted to the
+  node's real σ₀–σ₁₂ (M = 6, or 8), moments by tanh-sinh quadrature at 60 digits. For α < 0 the rule runs to
+  t = 6 instead of 4.5, so its end truncation stays below 10⁻¹⁰⁰.
+
+The selftest compares the exact columns with the plants' quadrature columns, for m, k < 23, on nine bases: each α,
+near541 with α = 0.5, nozero, a moved zero, and nozero with ex = β − 2. They agree to 2.3×10⁻⁵⁷ to 5.3×10⁻⁵⁴, against
+a pass of 10⁻⁴⁰, and the baseline's columns equal `pade_twin_end.end_basis`'s bit for bit. `--mutate=alphamom` (α +
+10⁻¹⁰ in the exact moments) gives 1.1×10⁻⁹ to 8.4×10⁻⁴, and `p0mom` (P0 (1 + 10⁻¹⁰)) gives 2.5×10⁻¹⁰ to 5.4×10⁻⁹, so
+both fail it. These selftest runs came before the freeze below. They use the plants' construction only, and no twin
+was fitted to a plant or to the real series before it.
+
+### 13.2 Frozen criteria
+
+Written into the script's `FROZEN` and here before the `control` and `real` stages were first run.
+
+| check | criterion |
+|---|---|
+| K0 ends | #541's near end reproduced within 10⁻⁹ at every node (`I541-mac/real.json`), and the far ends as #684's K0 |
+| K2 control | the issue's same-class control, at every node: the chord2 plant with α = 0.5, at P0, κ⋆ and x_ref, (a) refitted in its own basis at its own M has χ ≤ 10⁻³⁰; (b) in the kstar basis (α = 0) has M_min ≥ 19 |
+| C0 same class | every non-located variant basis, judged and context, at every node: the chord2 plant of the same spec, refitted in the variant's basis at its own M, has χ ≤ 10⁻³⁰. A located variant gets the same check at its located value in the real stage; if it fails there, that variant is reported and not judged |
+| Z1 locator | a chord2 plant with its zero at x_ref + 0.003 + 0.002i, at every node: (a) χ ≤ 10⁻³⁰ in its own basis; (b) the zero locator, started as for zfit, returns the plant's zero within 10⁻⁴. Z1 does not gate the real stage. If it fails, zfit and zfitratio are reported as uncalibrated and not judged |
+| gate | the real stage runs only if K0, K2 and every C0 pass |
+| C1 | as amended in §9.1, on every scan; if it fires on real data the work stops |
+| C2 baseline | kstar reproduces #672: M_min = 23 and χ at 22 terms within 10⁻³ relative, at every node. A failure is a discrepancy, reported |
+| control mutations | `--mutate=alpha` adds 0.01 to every basis' α: K2(a), Z1(a) and every C0 must fail. `--mutate=zero` moves the zero of every basis that has one by +0.01: K2(a), Z1(a) and every C0 with a zero factor must fail, and every C0 without one must pass. `--mutate=locate` makes the locator return its first start, x_ref, unsearched: Z1(b) must fail at every node. Each run exits 1 |
+| real mutation | `real --mutate=c1dup` (§9.1), on the non-located variants: the amended C1 must fire on every scan with M_min = n and pass on every scan with M_min < n; exit 1 |
+| fits | a variant fits if M_min ≤ 20 at all three nodes |
+| verdict | the fitting judged variants are named by ingredient: the near-end exponent (a…), the near-end position (near541), the zero factor (nozero, zpade, and zfit if Z1 passed). If none fits, none of the tested near ends or zero factors gives a short twin |
+| context | χ at M = 20–22 and l2 at M = 20 of every scan. The sensitivity: each judged variant's chord2 plant in the kstar basis, the kstar plant in the nozero and a+0.5 bases, K2's plant in the a+0.25 and a+1 bases, and Z1's plant in the kstar basis. The Padé zero's error on the K2 and Z1 plants, and its spread over [10/12], [12/10], [10/10], [11/10] and [10/11] on the real series. The widened errors, where a changed judged verdict is reported as a discrepancy. J 1500 at ω∞. Reported, not judged |
+
+Reference: J. A. Nelder and R. Mead, Comput. J. 7, 308 (1965), doi:10.1093/comjnl/7.4.308 (the simplex search). The
+entry was checked against the MaRDI portal's record and a university bibliography through a web search, not against
+the publisher's page or the full text.
