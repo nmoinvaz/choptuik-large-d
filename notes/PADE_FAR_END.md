@@ -2,7 +2,8 @@
 
 Status of everything here: numerical evidence. Nothing is rigorous. It bears on the type bounds of routes A3 and P5,
 which follow from the farthest singularity of the Borel transform (proof/D_entire.md sections 1 and 7). Sections 1–4
-are #547, sections 5–6 are #548, section 7 is #670, section 8 is #669, section 9 is #672, and section 10 is #683.
+are #547, sections 5–6 are #548, section 7 is #670, section 8 is #669, section 9 is #672, section 10 is #683, and
+section 11 is #684.
 
 - **#547.** A calibrated estimator recovers the far end of smooth-density plants within 0.009, but it fails #547's
   acceptance. On the real series two controls fire, so no far end is quoted (§4).
@@ -1084,3 +1085,53 @@ No number of 7.4 changes. One sentence would record the inputs' precision, at th
 +the differential approximants' zeros by less than 10⁻⁵, and the twins' χ by less than 10⁻⁵ error units
 +(notes/PADE_FAR_END.md §10).
 ```
+
+## 11. Which ingredient blocks a short real twin: the far end or the exponent (#684)
+
+§9.2 found that no twin with the plants' end points P0 and κ⋆, their exponent ex = β − 1 and their zero factor
+reproduces the real σ₀–σ₂₂ with fewer than 23 terms. Here the same twins are refitted with the far end moved past κ⋆,
+or with the exponent shifted, one ingredient at a time.
+
+### 11.1 Method
+
+`solver/inner_amp/pade_twin_end.py`. The twin classes, fits, errors, sizes and C1 are §9's (`pade_twin_size.scan`):
+chord, stepped arc and smooth arc; weights 1/err_k with the measured errors (floor 10⁻³⁰); M_min and M_lo at n = 23;
+fits at 150 digits, checked at 250, with C1 as amended in §9.1. Only the far end P1 or the exponent changes.
+
+- **The far ends**, per node, from that node's J 1250 series:
+  - *ratio*: the ratio law over k = 12–21, 1.4574 + 1.1119i at ω∞ (#541);
+  - *pole8*, *pole9*, *pole10*: the real [k/k] pole past κ⋆, at |t| = 1.715, 1.762 and 1.806 at ω∞ (#541).
+- **The exponent**: ex = β − 1 + δ with δ = −0.3, −0.1, +0.1 and +0.3, and P1 = κ⋆.
+- **The bases.** The chord runs from P0 to P1, with exact Beta moments (§7.1). The arcs are the cubic through D_entire
+  7.1's poles and P1 (`pade_farend.FarArc`, §2.2), with exact moments (§8.1). *kstar*, the plants' P1 and ex, is §9's
+  baseline.
+- **Context, not judged.** Far ends on κ⋆'s ray at |P1| = 1.75, 1.80, 1.85, 1.90 and 2.00; each moved far end with each
+  δ; *ratiopair*, the κ and β − 1 of the same 12–21 ratio fit (β = 5.66 − 2.65i at ω∞); and imaginary shifts
+  δ = ±0.1i, ±0.3i. Also the errors widened to the strings' rounding (§10.5), and J 1500 at ω∞.
+- **Plants.** Each check plant is §2.2's: a density with the given P1 and ex, its c_m fitted to the node's real σ₀–σ₁₂,
+  with moments by tanh-sinh quadrature at 60 digits (`EndPlant`, as `pade_farend.FarPlant`).
+
+The selftest compares the exact columns with a moved far end and a shifted exponent against the plants' quadrature
+columns, for m, k < 23: the chord to the k = 10 pole with δ = +0.3, the stepped arc to the ratio-law κ with δ = −0.3,
+and the smooth arc to the k = 8 pole with δ = +0.1i. They agree to 1.4×10⁻⁵⁵, 6.0×10⁻⁵⁹ and 1.7×10⁻⁴⁷, against a
+pass of 10⁻⁴⁰. `--mutate=endmom` (the chord's P1 times 1 + 10⁻¹⁰ in the exact moments) gives 4.1×10⁻⁹, and `upoly`
+(§8.2) gives 2.4×10⁻¹⁰ and 2.4×10⁻⁹, so both fail it. These selftest runs came before the freeze below. They use the
+plants' construction only, and no twin was fitted to a plant or to the real series before it.
+
+### 11.2 Frozen criteria
+
+Written into the script's `FROZEN` and here before the `control` and `real` stages were first run.
+
+| check | criterion |
+|---|---|
+| K0 far ends | the ratio law within 10⁻⁴ of #541's at every node; exactly one real [k/k] pole with \|κ⋆\| + 0.01 < \|t\| < 2.2 and Im t > 0 for k = 8, 9 and 10 at every node, within 10⁻⁹ of #541's (`I541-mac/real.json`) |
+| K1 control (#547's plant) | #547's chord2 plant with its far end at 1.85: (a) in the chord basis with its own far end, at its own M, χ ≤ 10⁻³⁰; (b) in the κ⋆ chord basis, M_min ≥ 19. At every node |
+| C0 same class | for every variant, judged or context, every class and node: the plant of the same class (chord2, arcjump or arc) with that far end and exponent, refitted in the variant's basis at its own M, has χ ≤ 10⁻³⁰ |
+| gate | the real stage runs only if K0, K1 and every C0 pass |
+| C1 | as amended in §9.1, on every scan; if it fires on real data the work stops |
+| C2 baseline | kstar reproduces §9.2: M_min = 23, and χ at 22 terms within 10⁻³ relative of #672's, at every node and class. A failure is a discrepancy, reported |
+| control mutations | `control --mutate=farend` moves the far end of every moved-end basis radially by +0.01, and K1's own-end basis to 1.86: K1(a) and every C0 with a moved far end must fail, and the C0 of kstar and of the exponent shifts must pass. `--mutate=exshift` adds 0.01 to every basis' exponent: K1(a) and every C0 must fail. Each run exits 1 |
+| real mutation | `real --mutate=c1dup` (§9.1): the amended C1 must fire on every scan with M_min = n, and pass on every scan with M_min < n; exit 1 |
+| fits | a variant and class fit if M_min ≤ 20 at all three nodes; a variant fits if some class does |
+| verdict | the far end is named as the blocking ingredient if some far-end variant fits and no exponent variant does; the exponent if the reverse; both if both. If none fits, none of the tested moves gives a short twin |
+| context | χ at M = 20–22 of every scan; the sensitivity, each judged variant's chord2 plant in the κ⋆, β − 1 chord basis; the resolution, K1's plant in chord bases at \|P1\| = 1.80, 1.84, 1.86 and 1.90; K1's plant in the κ⋆ arc bases; the widened errors, where a changed judged verdict is reported as a discrepancy; J 1500 at ω∞, chord and arc. Reported, not judged |
