@@ -1296,7 +1296,9 @@ def raysum(paths):
         print(f"{os.path.basename(path)}: {r.get('label', r.get('dz0', 'planted'))}; |a| {na:.4e}, |B a| {nBa:.4e}, "
               f"eps0 {ray.get('eps0', float('nan')):.3e}, |g(a)| {ray.get('g_a', float('nan')):.3e}, |dep(a)| "
               f"{ray.get('dep_a', float('nan')):.3e}, max|F| at a {ray.get('Fmax_a', float('nan')):.2e}, floor0 "
-              f"{ray.get('floor0', float('nan')):.2e} (of |B a|)")
+              f"{ray.get('floor0', float('nan')):.2e} (of |B a|)"
+              + (f"; max|L| |a| / |B a| {r['L']['max'] * na / nBa:.2g} (L's h against h/10 {r['L']['h_h10']:.2g})"
+                 if isinstance(r.get("L"), dict) else ""))       # an int L is the system's size
         for name, rr in (ray.get("rays") or {}).items():
             rows = rr["rows"]
             nb = {}
