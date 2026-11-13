@@ -24,6 +24,7 @@ M_lo the smallest with l2 <= sqrt(n), n = 23, fits at 150 digits checked at 250,
     python3 pade_twin_end.py --selftest [--mutate=endmom|upoly]
     python3 pade_twin_end.py control OUTDIR [--mutate=farend|exshift] [--allow_unraw]
     python3 pade_twin_end.py real OUTDIR [--mutate=c1dup] [--allow_unraw]      (reads OUTDIR/control.json)
+    python3 pade_twin_end.py diag OUTDIR [--allow_unraw]       (post-freeze diagnostic, wf 1.00, chord, not judged)
 
 The selftest checks the moved-end, shifted-exponent moments against the plants' tanh-sinh quadrature. `control` runs
 the far ends' reproduction of #541 (K0), the same-class control on #547's far-end-1.85 plant (K1) and a same-class check
@@ -167,11 +168,14 @@ def mutate_spec(P1, ex, moves, mut):
 
 
 # ---------------------------------------------------------------- bases and plants
-def end_basis(wf, cls, P1, ex, dps, M=N23, K=N23, mut=None):
-    """twin columns of class cls with far end P1 and exponent ex, at dps digits (the geometry at the plants' 60)"""
+def end_basis(wf, cls, P1, ex, dps, M=N23, K=N23, mut=None, P0=None):
+    """twin columns of class cls with far end P1 and exponent ex, at dps digits (the geometry at the plants' 60). P0,
+    chord only (the post-freeze diagnostic): the near end, instead of D_entire 7.1's first pole"""
     with mp.workdps(pg.DPS_PLANT):
         pref = pp.factor([pp.x0_planted(wf, "1.0000")])
         arc = F.FarArc(wf, "chord" if cls == "chord" else "arc", mp.mpc(P1))
+        if P0 is not None and cls == "chord":
+            arc.P0 = mp.mpc(P0)
         ex = mp.mpc(ex)
     pieces = F.PIECES[{"chord": "chord2", "arc": "arcjump", "smooth": "arc"}[cls]]
     with mp.workdps(dps):
@@ -188,10 +192,12 @@ class EndPlant(pg.Plant):
     chord or FarArc from P0 to P1, times the planted zero factor, c_m fitted to the real sigma_0..sigma_12 (M = 6, or 8
     if the largest relative residual exceeds 1e-2), moments by tanh-sinh at the plants' 60 digits"""
 
-    def __init__(self, wf, kind, real_sig, P1, ex):
+    def __init__(self, wf, kind, real_sig, P1, ex, P0=None):
         mp.mp.dps = pg.DPS_PLANT
         self.wf, self.kind = wf, kind
         self.arc = F.FarArc(wf, "chord" if kind == "chord2" else "arc", mp.mpc(P1))
+        if P0 is not None and kind == "chord2":
+            self.arc.P0 = mp.mpc(P0)
         self.P0, self.P1 = self.arc.P0, self.arc.P1
         self.ex = mp.mpc(ex)
         self.pieces = F.PIECES[kind]
@@ -457,6 +463,98 @@ def run_real(outdir, mut=None):
     return ok
 
 
+# ---------------------------------------------------------------- post-freeze diagnostic, not judged
+NEAR541 = {0.99: 0.773 + 0.146j, 1.0: 0.732 + 0.056j, 1.01: 0.728 + 0.035j}   # I541-mac/real.log near_inf, 3 decimals
+
+
+def chi22(wf, sig, rel, P1, ex, P0=None, M=N23 - 1):
+    """chi and l2 of the least-squares chord twin with M terms"""
+    b = end_basis(wf, "chord", P1, ex, DPS_FIT, M=M, P0=P0)
+    c, chi, l2 = tc.twin_fit(b, sig, rel, N23, M, 1.0)
+    return chi, l2, c, b
+
+
+def per_k(b, c, sig, rel):
+    with mp.workdps(DPS_FIT):
+        err = tc.weights(sig, rel, N23, 1.0, DPS_FIT)
+        return [float(abs(mp.fsum(c[m] * b.cols[m][k] for m in range(len(c))) - sig[k]) / err[k]) for k in range(N23)]
+
+
+def run_diag(outdir):
+    """post-freeze (#684), wf 1.00, chord class only, chi at 22 terms: (1) the far end on a grid of the t plane, then a
+    finer grid around its best point; (2) real and imaginary exponent shifts up to 1 at kappa_* and at that point;
+    (3) the near end P0 moved, to #541's extrapolated near end and on a grid, with P1 at kappa_* and at that point;
+    (4) for the best combination, the full scan with C1, a same-class plant check, and the misfit per order"""
+    log = tz.Log(outdir, "diag", None)
+    wf = 1.0
+    sig = tc.real_sig()[wf][:N23]
+    rel, _ = tc.err_model(wf)
+    e0, ks = ex0(wf), kstar(wf)
+    rec = {"note": "post-freeze diagnostic (#684), not judged; wf 1.00, chord class, chi at 22 terms", "far": [],
+           "far_fine": [], "ex": [], "near": []}
+    base = chi22(wf, sig, rel, ks, e0)
+    rec["kstar_chi22"] = base[0]
+    log(f"kstar: chi at 22 terms {base[0]:.3e}")
+
+    def best_of(rows):
+        return min(rows, key=lambda r: r["chi22"])
+    for a in range(12, 21):
+        for b in range(8, 17):
+            P1 = complex(a / 10, b / 10)
+            chi, l2, _, _ = chi22(wf, sig, rel, P1, e0)
+            rec["far"].append({"P1": P1, "chi22": chi, "l2": l2})
+    bf = best_of(rec["far"])
+    for a in range(-4, 5):
+        for b in range(-4, 5):
+            P1 = complex(round(bf["P1"].real + a / 40, 4), round(bf["P1"].imag + b / 40, 4))
+            chi, l2, _, _ = chi22(wf, sig, rel, P1, e0)
+            rec["far_fine"].append({"P1": P1, "chi22": chi, "l2": l2})
+    bff = best_of(rec["far_fine"])
+    log(f"far end, grid Re 1.2..2.0, Im 0.8..1.6 step 0.1: best {bf['P1']} chi22 {bf['chi22']:.3e}; finer grid step "
+        f"0.025: best {bff['P1']} |P1| {abs(bff['P1']):.4f} chi22 {bff['chi22']:.3e}")
+    for lab, P1 in (("kstar", ks), ("best_far", bff["P1"])):
+        for d in ("-1.0", "-0.6", "-0.3", "+0.3", "+0.6", "+1.0", "-1.0i", "-0.6i", "-0.3i", "+0.3i", "+0.6i",
+                  "+1.0i"):
+            with mp.workdps(pg.DPS_PLANT):
+                ex = e0 + shift(d)
+            chi, l2, _, _ = chi22(wf, sig, rel, P1, ex)
+            rec["ex"].append({"P1_at": lab, "delta": d, "chi22": chi, "l2": l2})
+        log(f"exponent at {lab}: chi22 " + ", ".join(f"{r['delta']} {r['chi22']:.2e}" for r in rec["ex"]
+                                                    if r["P1_at"] == lab))
+    P0s = [("near541", NEAR541[wf])] + [(f"grid", complex(a / 100, b / 100)) for a in range(65, 90, 5)
+                                         for b in range(0, 25, 5)]
+    for lab1, P1 in (("kstar", ks), ("best_far", bff["P1"])):
+        for lab0, P0 in P0s:
+            chi, l2, _, _ = chi22(wf, sig, rel, P1, e0, P0=P0)
+            rec["near"].append({"P1_at": lab1, "P0_kind": lab0, "P0": P0, "chi22": chi, "l2": l2})
+        rows = [r for r in rec["near"] if r["P1_at"] == lab1]
+        bn = best_of(rows)
+        log(f"near end with P1 at {lab1}: #541's near end {NEAR541[wf]} chi22 {rows[0]['chi22']:.3e}; grid "
+            f"Re 0.65..0.85, Im 0..0.20 step 0.05: best {bn['P0']} chi22 {bn['chi22']:.3e}")
+    cands = ([{"P0": None, "P1": bff["P1"], "ex": e0, "chi22": bff["chi22"], "what": "best far end"}]
+             + [{"P0": r["P0"], "P1": ks if r["P1_at"] == "kstar" else bff["P1"], "ex": e0, "chi22": r["chi22"],
+                 "what": f"near end, P1 at {r['P1_at']}"} for r in rec["near"]])
+    bc = min(cands, key=lambda r: r["chi22"])
+    fit = end_basis(wf, "chord", bc["P1"], bc["ex"], DPS_FIT, P0=bc["P0"])
+    chk = end_basis(wf, "chord", bc["P1"], bc["ex"], DPS_CHECK, P0=bc["P0"])
+    s = tz.scan(fit, chk, sig, rel, N23, log, f"best combination ({bc['what']}, P0 {bc['P0']}, P1 {complex(bc['P1'])})")
+    pl = EndPlant(wf, "chord2", tc.real_sig()[wf], bc["P1"], bc["ex"], P0=bc["P0"])
+    c0 = tz.row(end_basis(wf, "chord", bc["P1"], bc["ex"], DPS_FIT, M=pl.M, P0=bc["P0"]), pl.sigma()[:N23], rel,
+                N23, pl.M)["chi"]
+    _, _, c_k, b_k = base
+    _, _, c_b, b_b = chi22(wf, sig, rel, bc["P1"], bc["ex"], P0=bc["P0"])
+    rec["best"] = {"what": bc["what"], "P0": bc["P0"], "P1": complex(bc["P1"]), "chi22": bc["chi22"],
+                   "M_min": s["M_min"], "M_lo": s["M_lo"], "C1_pass": s["C1_pass"], "C0_chi": c0,
+                   "chi": {r["M"]: r["chi"] for r in s["rows"]}, "per_k_kstar": per_k(b_k, c_k, sig, rel),
+                   "per_k_best": per_k(b_b, c_b, sig, rel)}
+    log(f"best combination: {bc['what']}, P0 {bc['P0']}, P1 {complex(bc['P1']):.4f}: M_min {s['M_min']}, M_lo "
+        f"{s['M_lo']}, C1 {s['C1_pass']}; its own-class plant at M {pl.M}: chi {c0:.1e}")
+    log("misfit at 22 terms per k, kstar: " + " ".join(f"{v:.1e}" for v in rec["best"]["per_k_kstar"]))
+    log("misfit at 22 terms per k, best:  " + " ".join(f"{v:.1e}" for v in rec["best"]["per_k_best"]))
+    log.dump(rec)
+    return True
+
+
 def main():
     argv = sys.argv[1:]
     from raw_out import pop_allow, require_raw
@@ -467,14 +565,16 @@ def main():
             raise SystemExit(f"unknown selftest mutation {mut}")
         sys.exit(0 if selftest(mut) else 1)
     argv = [a for a in argv if not a.startswith("--")]
-    if len(argv) != 2 or argv[0] not in ("control", "real"):
+    if len(argv) != 2 or argv[0] not in ("control", "real", "diag"):
         raise SystemExit(__doc__)
     stage, outdir = argv
-    if mut not in ({"control": (None, "farend", "exshift"), "real": (None, "c1dup")}[stage]):
+    if mut not in ({"control": (None, "farend", "exshift"), "real": (None, "c1dup"), "diag": (None,)}[stage]):
         raise SystemExit(f"unknown {stage} mutation {mut}")
     require_raw(os.path.join(outdir, "x.json"), allow=allow)
     os.makedirs(outdir, exist_ok=True)
-    sys.exit(0 if (run_control if stage == "control" else run_real)(outdir, mut) else 1)
+    fn = {"control": lambda: run_control(outdir, mut), "real": lambda: run_real(outdir, mut),
+          "diag": lambda: run_diag(outdir)}[stage]
+    sys.exit(0 if fn() else 1)
 
 
 if __name__ == "__main__":
