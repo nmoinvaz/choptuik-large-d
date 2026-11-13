@@ -26,7 +26,7 @@ map out to |c| = 10⁻², with the strong rows solved by Newton, at REF and the 
 | The refused start, strong rows solved at c = a | converged, below the chain's 1e-40 | max\|F\| 2.0e-51; 1.1e-50 |
 | The projector (exact here, rounded in #499) | no effect at #499's printed digits | section 5.1 |
 | **Where g stops being affine** (#677: rays to 10⁵\|a\|, four starts) | **affine with slope B + L, plus a quadratic; no cubic or quartic resolved** | the quadratic reaches 10⁻²\|Ba\| near 10¹³\|a\| (extrapolated); section 9 |
-| **Does the map curve on \|c\| of order 0.02 to 0.1?** (#698: \|c\| = 10⁻⁶ to 10⁻², REF and class A) | **not decided**: Newton with a refactored LU stops at 10⁻⁶ and the chord near 10⁻¹⁸; the flat-chart control fires | to 3×10⁻¹⁸ at REF the map is quadratic, with a resolved cubic of ordinary size (7.8\|Be\| per t²); the linear pair test puts a fold of the strong block near 10⁻¹⁷ at class A (*inferred*); section 11 |
+| **Does the map curve on \|c\| of order 0.02 to 0.1?** (#698: \|c\| = 10⁻⁶ to 10⁻², REF and class A) | **not decided**: Newton with a refactored LU stops at 10⁻⁶ and the chord near 10⁻¹⁸; the flat-chart control fires | to 3×10⁻¹⁸ at REF the map is quadratic, with a resolved cubic of ordinary size (19.2\|Be\| per t², 0.95 of κ²); the linear pair test puts a fold of the strong block near 5×10⁻¹⁷ (REF) and 10⁻¹⁷ (class A) (*inferred*); section 11 |
 | **Do the weak rows live on rows affine in z?** (#694, four starts) | **no: U lives on the last matching (node 4's Taylor arrival against the horizon series), on no affine row** | share of \|U\| on rows affine to 10⁻¹⁰: 1.9×10⁻¹⁸ to 4.2×10⁻¹⁸; Q and T − 3S are cancellations between rows that are not affine; section 10 |
 
 - **At these starts T = 3S.** With the strong rows solved, the weak equations are affine to 2.7×10⁻²⁵, so #499's cubic
@@ -1018,10 +1018,10 @@ summarized by `curvesum`. All judge nothing.
 | E/t against its value at 10⁻²⁴ | constant to 2.2×10⁻¹⁵ | constant to 2.2×10⁻¹⁶ to 5.6×10⁻¹⁹; 1.7×10⁻¹¹ at 10⁻¹⁸, at its floor |
 | E/(κt), κ from #677's 4-digit K | 1.00001 | 1.00013 |
 | \|w − w0\|/t² against ½\|w_ee\| (#694) | 0.0718098 against 0.07181, constant to 10⁻¹¹ | 0.0539856 against 0.05399, constant to 10⁻¹¹ from 10⁻²² (a term linear in t shows as ∓5.6×10⁻⁹ at 10⁻²⁴) |
-| the odd part | its order-1 term (5.3×10⁻³⁰ \|Bc\|) plus a cubic: O − O(10⁻²⁴) of local order 3.000 at every pair of neighbours from 5.6×10⁻²³ to 3.16×10⁻¹⁸, (O − O₀)/t² = −7.8157 \|Be\| per unit t² | its order-1 term Lc (7.9×10⁻⁷ \|Bc\|) hides any cubic below 10⁻²⁹ of it in \|O\|, which is constant to 13 digits |
+| the odd part | its order-1 term (5.3×10⁻³⁰ \|Bc\|) plus a cubic: O − O(10⁻²⁴) of local order 3.000 at every pair of neighbours from 5.6×10⁻²³ to 3.16×10⁻¹⁸, (O − O₀)/t² = −7.8157 \|Be\| per unit t² (the cubic's component along the order-1 term). From the vectors (`curve_ref_bridge2`), the whole cubic: \|O(t) − O(t₀)\|/(t² − t₀²) = 19.2053 \|Be\| per unit t², the same to 6 digits from 3.2×10⁻²⁴ to 10⁻²¹, local order 3.000 | its order-1 term Lc (7.9×10⁻⁷ \|Bc\|) hides any cubic below 10⁻²⁹ of it in \|O\|, which is constant to 13 digits |
 | the flat chart's strong residual change, 2-norm/t², against ½\|F″(e, e)\|₂ | 3.3310×10³³ against 3.331×10³³; changed by 5.2×10⁻¹⁰ at 3.16×10⁻¹⁸, as (t/1.4×10⁻¹³)² | 3.5401×10³⁴ against 3.54×10³⁴; changed by 2.6×10⁻¹¹ at 10⁻¹⁸, as (t/2.0×10⁻¹³)² |
 | ρ from w0 | −1.631×10³² t² to 5.6×10⁻²², then off its law | −9.94×10³³ t² to 1.8×10⁻²², then off its law |
-| ρ in the linear regime | REF_LRHO | **+8.6447×10³³ t²**, both rays, at every t to 10⁻¹⁸ (8.665×10⁻³ there; its excess over the t² law, 2.3×10⁻³ at 10⁻¹⁸, grows as (t/2.1×10⁻¹⁷)²) |
+| ρ in the linear regime | **+4.6054×10³² t²**, both rays, at every t to 10⁻²¹ (`curve_ref_bridge2`) | **+8.6447×10³³ t²**, both rays, at every t to 10⁻¹⁸ (8.665×10⁻³ there; its excess over the t² law, 2.3×10⁻³ at 10⁻¹⁸, grows as (t/2.1×10⁻¹⁷)²) |
 
 - **The two pair tests disagree at the class A start.** From w0 the start error is 0.054t², and from the converged point
   it is 10⁻⁶⁰. Both ratios follow t², but with opposite signs. The w0 test leaves its law first, near 3×10⁻²², while
@@ -1029,12 +1029,13 @@ summarized by `curvesum`. All judge nothing.
   sign at REF is not evidence. That is why REF's bridge was run again with the linear test.
 - **What the linear ratio says** (*inferred*, in the two-direction model of 11.4). At the class A start ρ = 1 at
   t = 1.0755×10⁻¹⁷ on both rays, where the strong block (I − UUᵀ)J restricted to V's complement would be singular, a
-  fold of the strong-solved manifold. REF: REF_FOLD. The chord's own step limit (40) stops the bridge long before:
-  at the class A start ρ is 8.7×10⁻³ at its last converged point, so the bridge cannot see the fold itself.
+  fold of the strong-solved manifold. At REF the linear ratio is +4.6054×10³² t², so ρ = 1 at t = 4.66×10⁻¹⁷; the w0
+  test's −1.63×10³² t² there was not in the linear regime either. The chord's own step limit (40) stops the bridge
+  long before: at the class A start ρ is 8.7×10⁻³ at its last converged point, so the bridge cannot see the fold.
 - **The map within the bridge.** At REF the even part is exactly quadratic over 6.5 more decades than #677's, and the
-  odd part has a resolved cubic of local order 3.00 whose coefficient, 7.8|Be| per unit t² along the order-1 term, is
-  of the size the reading assumes (κ² = 20.3). The quadratic and the cubic would be equal near |c| = 4.5/7.8 = 0.58.
-  The strong correction w is exactly quadratic too.
+  odd part has a resolved cubic of local order 3.00. Its coefficient is 19.2|Be| per unit t² (7.8 of it along the
+  order-1 term), 0.95 of κ² = 20.3, the size the reading assumes. The quadratic and the cubic would be equal near
+  |c| = 4.5/19.2 = 0.23. The strong correction w is exactly quadratic too. No quartic is resolved.
 
 ### 11.8 Results at the class A start (the protocol)
 
@@ -1076,13 +1077,14 @@ in the issue's range.
 
 - **Within its reach the map is ordinary.** At REF the even part is exactly quadratic from 10⁻³⁰ (#677) to 3×10⁻¹⁸, a
   constant coefficient over 12.5 decades. The odd part carries a resolved cubic of local order 3.00 whose coefficient,
-  7.8|Be| per unit t², is of the size κ² = 20 that the reading assumes. The quadratic and the cubic would be equal near
-  |c| = 0.6. So the map's own Taylor coefficients are those of a function that curves on |c| of order 0.1 to 1, which
-  is the reading's claim about the coefficients. It is numerical evidence on 3×10⁻¹⁸ and below, not at 10⁻³.
+  19.2|Be| per unit t², is 0.95 of κ² = 20.3, the size the reading assumes. The quadratic and the cubic would be equal
+  near |c| = 0.23. So the map's own Taylor coefficients are those of a function that curves on |c| of order 0.1, which
+  is the reading's claim about the coefficients. It is numerical evidence at 3×10⁻¹⁸ and below, not at 10⁻³.
 - **The strong-solved chart may not reach 10⁻³.** The chord's error map has a pair of directions with N² = ρ, which
   grows as t². In the linear regime ρ is positive at the class A start, +8.6×10³³ t², so in the two-direction model the
   strong block (with U and V fixed at z0) turns singular at |c| ≈ 10⁻¹⁷ on both rays: a fold, beyond which w(c), and so
-  g(c), would not continue as one smooth branch. REF_READING If the fold is real, g's Taylor series at 0 has a radius
+  g(c), would not continue as one smooth branch. At REF the linear ratio is positive too, +4.6×10³² t², which puts
+  the fold at |c| ≈ 4.7×10⁻¹⁷. If the fold is real, g's Taylor series at 0 has a radius
   of about 10⁻¹⁷, and the reading's prediction at 10⁻³ has no meaning on this chart, whatever the coefficients. Its
   test is a recommended task (the strong block's smallest singular value along the ray, from the refactored LU).
 - **Why Newton fails at 10⁻⁶.** The strong rows are extremely nonlinear in their softest direction. The chord's pair
@@ -1091,9 +1093,9 @@ in the issue's range.
   the quadratic prediction at 10⁻⁶, which leaves a residual of 10²² there, is outside that basin, and so would be any
   prediction made by extrapolation from |c| ≤ 3×10⁻¹⁸.
 - **What 3S = T then is.** Section 10.8 read the reduced map's cubic as the ordinary one of a function of Δ. The bridge
-  adds that the cubic is resolved and ordinary in size at REF, 7.8|Be| per unit t², so 3S = T leaves a cubic of that
-  size rather than none. The map's cubic along e is about 10⁻⁵⁸ of the flat chart's, far below the tensors' resolution:
-  |UᵀT(e)|/6 = 2.5×10³² per t³ against 7.8|Be| = 9×10⁻²⁶ per t³ (its component along the order-1 term).
+  adds that the cubic is resolved and ordinary in size at REF, 19.2|Be| per unit t², so 3S = T leaves a cubic of that
+  size rather than none. The map's cubic along e is about 10⁻⁵⁷ of the flat chart's, far below the tensors' resolution:
+  |UᵀT(e)|/6 = 2.5×10³² per t³ against 19.2|Be| = 2.3×10⁻²⁵ per t³.
 
 ### 11.11 Discrepancies (reported, not fixed)
 
@@ -1104,12 +1106,13 @@ in the issue's range.
   10⁻⁶ to 10⁻²: the flat chart is 10²⁰ to 10³³ times its quadratic there and overflows at REF from 10⁻³.
 - **"A resolved cubic below 10⁻² refutes."** Read literally, the bridge resolves a cubic at REF below 10⁻² (from
   5.6×10⁻²³ to 3.2×10⁻¹⁸). The protocol (11.3) froze the criterion as an odd part at least as large as the even part
-  below 10⁻², a cubic that bends the map on a scale below 10⁻². By that it does not refute: the cubic is 7.8/4.5 t of
-  the quadratic. Both readings are stated; the bridge is a diagnostic and judges nothing.
+  below 10⁻², a cubic that bends the map on a scale below 10⁻². By that it does not refute: the cubic is 19.2/4.5 t =
+  4.3t of the quadratic. Both readings are stated; the bridge is a diagnostic and judges nothing.
 - **The task's premise on the chord.** The chord through z0's LU fails already at 5.6×10⁻¹⁸ (REF) and 1.8×10⁻¹⁸ (class
   A), and Newton with the LU refactored at every iterate fails at 10⁻⁶ as well.
 - **The two pair tests disagree in sign** at the class A start (11.7); the one from w0 is not in the chord's linear
-  regime. REF_PAIR_DISC
+  regime. REF's rerun with the linear test gives +4.6054×10³² t², positive like the class A start's. My progress post
+  of 17:48 on #698 had read REF's negative ratio from w0 as "no fold"; the post of 19:22 corrected it.
 - **Conduct.** Twice, a plant run of a few seconds on one thread ran while a real run was computing (the bridge's
   plant checks), against "one compute process at a time".
 
@@ -1128,5 +1131,6 @@ python3 reduced_cubic.py curvesum curve_ref.json             # the parts, the ch
 ```
 
 `I698-mac/run_i698.sh` runs all of them (`--bridge=1` adds the bridge, `--newton=0` skips the Newton points,
-`--bridge_to` caps the bridge). A real start takes 6 to 8 minutes to set up at 2 threads, each octo-double LU 4 to 5
-minutes, and the bridge 20 to 45 minutes. Raw: `I698-mac/` of the raw-data repository at RAW_COMMIT.
+`--bridge_to` caps the bridge). A real start takes 6 to 8 minutes to set up at 2 threads, each octo-double LU 3.5 to
+9 minutes under the Mac's load, and the bridge 6 to 45 minutes. Raw: `I698-mac/` of the raw-data repository at
+af339c17, with every run's log and JSON and `curvesum.txt` (its README lists them).
