@@ -21,7 +21,7 @@ g(c) = U^T F(z0 + V c + w(c)) (Keller 1987, Method III; Decker, Keller and Kelle
 The tensors at z0, by differences of F at two steps each (the second a tenth of the first):
   Q_mjl = u_m . F''(v_j, v_l), central differences at h_Q;
   T_mijl = u_m . F'''(v_i, v_j, v_l), antisymmetric four-point differences and polarization at h_T (dz0_weak.cubic);
-  w_jl = J^-1 (I - U U^T) F''(v_j, v_l), central differences at h_F;
+  w_jl = J^-1 (I - U U^T) F''(v_j, v_l), central differences at h_F, h_F / 10 and h_F / 100;
   S_m,i,jl = u_m . F''(v_i, w_jl), mixed central differences with the step h_S along v_i and along w_jl / |w_jl|,
       symmetrized, S_mijl = (S_m,i,jl + S_m,j,il + S_m,l,ij) / 3;
   L_mj = u_m . F''(v_j, w0) and q00 = U^T F''(w0, w0), the coupling through the start's own strong correction w0.
@@ -41,7 +41,8 @@ Controls at c*:
   - S control (judged): dw = w(c*) - w0 replaced by 2 dw changes g by -1/2 S(c*, c*, c*), to 1e-2 of it;
   - w control (diagnostic): w(c*) replaced by 2 w(c*) changes g by L c* - 1/2 S(c*, c*, c*) + 3/2 q00.
 
-Checks of both modes (exit 1 on failure): w_jl at h_F against h_F / 10 to 1e-2 (2-norm, the worst pair); S at h_S
+Checks of both modes (exit 1 on failure): w_jl at h_F / 10 against h_F / 100 to 1e-2 (2-norm, the worst pair; w_jl is
+taken from h_F / 100, and h_F against h_F / 10 is printed for the h^2 pattern); S at h_S
 against h_S / 10 to 1e-2 of max|S| (or, on real data, reported as bounded below its truncation when the two differ by
 the factor 100 of an h^2 term); the S control. `planted` also
 judges the recovery of every tensor (rotated into the plant's basis) to 1e-6 of its largest entry, and that the model
@@ -65,9 +66,10 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 mp.mp.dps = 140
 
-# the first step of each difference; the second is /10. h_F is small because J^-1 (I - U U^T) multiplies the second
-# difference's h^2 truncation along the weakest strong directions (sigma_5 ~ 1e-19) by up to 1e19: at h_F = 1e-24 the
-# truncation was all of w_jl at the D 242.5 starts (0.99 between h and h/10)
+# the first step of each difference; the second is /10 (w_jl: /10 and /100, judged on the last two). h_F is small
+# because J^-1 (I - U U^T) multiplies the second difference's h^2 truncation along the weakest strong directions
+# (sigma_5 ~ 1e-19) by up to 1e19: at the refused D 242.5 start the truncation was all of w_jl at h_F = 1e-24 (0.99
+# between h and h/10) and 1.4e-2 of it at 1e-32
 H = dict(Q=1e-32, T=1e-23, F=1e-32, S=1e-32, LS=1e-33)
 H_MUT_F = 1e-24                                             # --mutate=hF: w_jl from that step, whose h check must fail
 
@@ -638,21 +640,27 @@ def measure(sysm, opts, mutate, log, rec, dump):
     t0 = time.time()
     hF = H_MUT_F if mutate == "hF" else H["F"]
     Ws = []
-    for hh in (hF, hF / 10):
+    for hh in (hF, hF / 10, hF / 100):
         F2 = second_diffs(sysm, X, hh)
         Ws.append({key: sysm.solve(strong_part(Um, v)) for key, v in F2.items() if key[0] <= key[1]})
-    wjl = Ws[1]
-    dW = max(nrm([x - y for x, y in zip(Ws[0][key], Ws[1][key])]) / nrm(Ws[1][key]) for key in wjl)
+    # w_jl from the smallest step; the judged pair is the last two (h_F / 10 against h_F / 100), the first pair is
+    # printed for the h^2 pattern (a truncation falls by 100 per decade of h, a rounding grows)
+    dWs = [max(nrm([x - y for x, y in zip(Wa[key], Wb[key])]) / nrm(Wb[key]) for key in Wb)
+           for Wa, Wb in ((Ws[0], Ws[1]), (Ws[1], Ws[2]))]
+    wjl = Ws[2]
+    dW = dWs[1]
     W_ok = bool(dW < 1e-2)
     for key in list(wjl):
         wjl[(key[1], key[0])] = wjl[key]
     F2max = max(amax(v) for v in F2.values())
     log(f"  w_jl = J^-1 (I - U U^T) F''(v_j, v_l): max|F''| {mp.nstr(F2max, 3)}, |w_jl| "
         f"{mp.nstr(min(nrm(v) for v in wjl.values()), 3)}..{mp.nstr(max(nrm(v) for v in wjl.values()), 3)} at h "
-        f"{hF / 10:.0e}, |V^T w_jl| / |w_jl| up to {mp.nstr(max(nrm(proj_U(X, v)) / nrm(v) for v in wjl.values()), 3)}; "
-        f"against h {hF:.0e} {mp.nstr(dW, 3)} (bound 1e-2): {'pass' if W_ok else 'FAIL'} ({time.time() - t0:.0f} s)")
+        f"{hF / 100:.0e}, |V^T w_jl| / |w_jl| up to {mp.nstr(max(nrm(proj_U(X, v)) / nrm(v) for v in wjl.values()), 3)}; "
+        f"h {hF:.0e} against {hF / 10:.0e} {mp.nstr(dWs[0], 3)}, {hF / 10:.0e} against {hF / 100:.0e} {mp.nstr(dW, 3)} "
+        f"(bound 1e-2): {'pass' if W_ok else 'FAIL'} ({time.time() - t0:.0f} s)")
     rec.update(w=dict(F2max=float(F2max), wmax=float(max(nrm(v) for v in wjl.values())),
-                      wmin=float(min(nrm(v) for v in wjl.values())), h=hF / 10, h_h10=float(dW), ok=W_ok))
+                      wmin=float(min(nrm(v) for v in wjl.values())), h=hF / 100, diffs=[float(x) for x in dWs],
+                      ok=W_ok))
     dump()
     t0 = time.time()
     Ts = [third_tensor(sysm, X, Um, hh) for hh in (H["T"], H["T"] / 10)]
