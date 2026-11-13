@@ -55,6 +55,7 @@ replace it (notes/HORIZON_RADIUS.md).
     cd hp && python3 horizon_radius.py control STATE.npz [--mutate shift] [--threads 2]
     cd hp && python3 horizon_radius.py run OUT.jsonl STATE.npz [...] [--kmax 160] [--precs dd,qd,od] [--deltas 0]
         [--threads 2] [--coef DIR]     (OUT in a task folder of the raw-data repository; --allow_unraw for scratch)
+    cd hp && python3 horizon_radius.py ladder PRED.npz STATE.npz [--threads 2]   (the re-seed's start for the polish)
     cd hp && python3 horizon_radius.py csv OUT.csv IN.jsonl [...]
     cd hp && python3 horizon_radius.py summary IN.jsonl [...] [--reseed anm_run.jsonl ...] [--coef DIR]
 """
@@ -337,6 +338,44 @@ class Series:
 
 
 # ------------------------------------------------------------------ controls on real data
+def ladder(pred_path, state_path, threads):
+    """the re-seed (reseed.Reseeder, qd=True, as anm_run.py --reseed_q 1 builds it) on a stored prediction whose
+    corrector converged to state_path at the same D: the double-double ladder's horizon data, the start of the
+    quad-double polish, against the converged state's (relative, per lane), and the polish's outcome"""
+    from hpkernel.driver import load_q
+    from reseed import Reseeder
+    z4, meta = load_q(pred_path)
+    zs, ms = load_state(state_path)
+    if meta["D_str"] != ms["D_str"]:
+        raise SystemExit(f"the prediction's D {meta['D_str']} is not the state's {ms['D_str']}")
+    D = mp.mpf(meta["D_str"])
+    rs = Reseeder(meta, D, threads=threads, qd=True)
+    M, o = rs.M, rs.off
+    seen = {}
+    inv = rs.invert_q
+
+    def spy(z, d4, **kw):
+        seen["start"] = [np.array(p) for p in d4]
+        out = inv(z, d4, **kw)
+        seen["hist"] = out[1]
+        return out
+    rs.invert_q = spy
+    t0 = time.time()
+    zr, diag = rs.reseed(z4, verbose=True)
+    true = np.asarray(zs[0][o["mh"]:o["mh"] + 2 * M]) + np.asarray(zs[1][o["mh"]:o["mh"] + 2 * M])
+    rec = dict(pred=os.path.basename(pred_path), state=os.path.basename(state_path), D=float(D), ok=bool(diag["ok"]),
+               seconds=round(time.time() - t0, 1))
+    if "start" in seen:
+        d = seen["start"][0] + seen["start"][1]
+        rel = (d - true) / np.abs(true)
+        rec.update(delta_mh_max=float(np.abs(rel[:M]).max()), delta_ah_max=float(np.abs(rel[M:]).max()),
+                   delta_ah_mean=float(rel[M:].mean()), polish_R=[h.get("R") for h in seen["hist"]])
+    dpred = (np.asarray(z4[0][o["mh"]:o["mh"] + 2 * M]) + np.asarray(z4[1][o["mh"]:o["mh"] + 2 * M]) - true) / np.abs(true)
+    rec.update(pred_delta_ah_max=float(np.abs(dpred[M:]).max()), pred_delta_mh_max=float(np.abs(dpred[:M]).max()))
+    print(json.dumps(rec), flush=True)
+    return 0
+
+
 def control(path, mutate, threads):
     z, meta = load_state(path)
     sr = Series(z, meta, threads=threads)
@@ -466,6 +505,8 @@ def main():
         if mutate not in ("", "drop_term"):
             raise SystemExit("selftest: only --mutate drop_term")
         return selftest(mutate)
+    if cmd == "ladder":
+        return ladder(args[0], args[1], threads)
     if cmd == "control":
         if mutate not in ("", "shift"):
             raise SystemExit("control: only --mutate shift")
@@ -535,11 +576,17 @@ def long_growth(recs, coef):
         t = np.abs(b).max(axis=(1, 2))
         h1 = np.abs(harmonics(b, 0)[:, 1])
         Ks = [K for K in (160, 200, 240, 280, 300) if K < len(t)]
+        ks = int(r["ks"])
+        kp = 100 + int(np.argmax(t[100:]))
+        tail = np.abs(b[ks + 1:].sum(axis=0)).max(axis=1)            # the terms past the chain's ks, summed at u0
         rec = dict(D=r["D"], prec=r["prec"], Re_s=r["Re_s"],
                    E2=[e2_root(t, K, r["u0"]) for K in Ks], E2_p1=[e2_root(h1, K, r["u0"]) for K in Ks],
-                   ratio=[float(t[K] / t[K - 1]) for K in Ks], K=Ks)
+                   ratio=[float(t[K] / t[K - 1]) for K in Ks], K=Ks, k_peak=kp, t_peak=float(t[kp]), t_last=float(t[-1]),
+                   tail=dict(zip(FIELDS, [float(x) for x in tail])))
         out.append(rec)
-        print(f"{r['D']:9.4f} {r['prec']} to order {len(t) - 1} (Re s {r['Re_s']:.1f}): "
+        print(f"{r['D']:9.4f} {r['prec']} to order {len(t) - 1} (Re s {r['Re_s']:.1f}): peak t {rec['t_peak']:.1e} at order {kp}, "
+              f"t_{len(t) - 1} {rec['t_last']:.1e}; terms past ks {ks} summed at u0, max over lanes: "
+              + " ".join(f"{f} {v:.1e}" for f, v in rec["tail"].items()) + "; "
               + "; ".join(f"K {K}: E2 {e:.3f}, p harmonic 1 {e1:.3f}, t_K/t_K-1 {q:.2f}" for K, e, e1, q in
                           zip(Ks, rec["E2"], rec["E2_p1"], rec["ratio"])))
     return out
