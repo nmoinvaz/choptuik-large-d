@@ -22,7 +22,7 @@ DOCS = {name: open(os.path.join(ROOT, name), encoding="utf-8").read()
                      "notes/PLANTED_SELECTION.md", "notes/PROOF_QUEUE.md", "proof/P5_scope.md",
                      "notes/QUAD_DOUBLE.md",
                      "notes/SOLVER_HP.md", "notes/LOW_D.md", "notes/INNER_STOKES.md", "notes/FORMULA_FORMS.md", "notes/LARGE_D_WALL.md",
-                     "notes/ECHO_ANALOGUES.md", "notes/REVIEW_GHMG25.md")}
+                     "notes/ECHO_ANALOGUES.md", "notes/REVIEW_GHMG25.md", "notes/MODE_COUNT.md")}
 
 
 def quoted_in(doc, text):
@@ -1980,6 +1980,135 @@ def short_forms():
             ("40-61 c2", c[2], -18.04099, 1e-5, txt), ("40-61 margin", err, 5.7e-6, 1e-7, txt)]
 
 
+@check
+def lam_gauge_table():
+    """notes/MODE_COUNT.md section 10: lam_g(D) from hp/data/lam_gauge.csv (hp/lam_gauge.py table), the D = 4 check
+    against Reiterer and Trubowitz's constants (as solver/rt/mu_check.py holds them), the identity's three D (the CSV's
+    lam_RT), the same-D spreads, the mu minimum, and the reference fit's residuals and the superseded I461 states'
+    offsets (hp/lam_gauge_fit.py; the slow fit selection is full_lam_gauge)."""
+    import csv
+    import mpmath as mp
+    sys.path.insert(0, os.path.join(ROOT, "hp"))
+    dps = mp.mp.dps
+    import lam_gauge_fit as LF
+    mp.mp.dps = dps
+    N = "notes/MODE_COUNT.md"
+    with mp.workdps(60):
+        rows = list(csv.DictReader(x for x in open(os.path.join(ROOT, "hp/data/lam_gauge.csv")) if not x.startswith("#")))
+        bb = [r for r in rows if r["role"] == "backbone"]
+        at = lambda D: [r for r in bb if abs(float(r["D"]) - D) < 1e-6][0]
+        src = open(os.path.join(ROOT, "solver/rt/mu_check.py")).read()
+        mu_rt = mp.mpf(re.search(r'MU_RT = mp.mpf\("([0-9.]+)"\)', src).group(1))
+        k_rt = mp.mpf(re.search(r'K_RT = mp.mpf\("([0-9.]+)"\)', src).group(1))
+        l4 = mp.mpf(at(4.0)["lam_g"])
+        d4 = float(l4 - 4 * mp.pi * mu_rt / (2 * k_rt))
+        ident = []
+        for D in (15.0, 20.043653, 40.020065):
+            r = [x for x in rows if x["lam_RT"] and abs(float(x["D"]) - D) < 1e-6][0]
+            ident.append(float(abs(mp.mpf(r["lam_g"]) - mp.mpf(r["lam_RT"])) / mp.mpf(r["lam_g"])))
+        top = bb[-1]
+        ltop = mp.mpf(top["lam_g"])
+        ntop = mp.mpf(top["D_str"]) - 2
+        mumin = min(bb, key=lambda r: mp.mpf(r["mu"]))
+        groups = {}
+        for r in rows:
+            groups.setdefault(round(float(r["D"]), 6), []).append(r)
+        spread = lambda g: float(max(mp.mpf(r["lam_g"]) for r in g) - min(mp.mpf(r["lam_g"]) for r in g))
+        multi = [g for g in groups.values() if len(g) > 1]
+        chain = max(spread(g) for g in multi if {r["kind"] for r in g} == {"chain"})
+        pinned = max(spread(g) for g in multi if {r["kind"] for r in g} == {"pinned"})
+        m4 = {r["M"]: mp.mpf(r["lam_g"]) for r in rows if "d4hm15_D4.0000" in r["state"]}
+    with mp.workdps(40):
+        pts = LF.backbone()
+        ts = [1 / (D - 2) for D, _ in pts]
+        c, _ = LF.lsq(ts, [y for _, y in pts], LF.REF_DEG, fixed0=mp.mpf(1))
+        res = [(float(D), float(y - mp.polyval(c[::-1], t))) for (D, y), t in zip(pts, ts)]
+        sup = [(float(D), float(e)) for D, e, _ in LF.superseded(c)]
+    rms = lambda v: (sum(x * x for x in v) / len(v)) ** 0.5
+    low = [rms([e for D, e in res if lo <= D < hi]) for lo, hi in LF.BANDS if hi <= 226]
+    high = rms([e for D, e in res if D >= 226])
+    worst = max(res, key=lambda x: abs(x[1]))
+    early = max(abs(e) for D, e in sup if D <= 238.76)
+    late = [e for D, e in sup if D > 238.76]
+    t_res = [(N, "have an rms of 1.7×10⁻¹⁴ to"), (N, "6.8×10⁻¹⁴ in every band of D below 226, and 2.1×10⁻¹³ above it")]
+    t_sup = [(N, "are off by −5.1×10⁻¹² to 2.5×10⁻¹⁰"), (N, "those up to D = 238.76 are within 1.2×10⁻¹²")]
+    return [("lam_g at D 4", float(l4), 0.6138552748, 1e-10, [(N, "rises from 0.6138552748 at")]),
+            ("lam_g(4) - 4 pi mu_RT/(2 K_RT)", d4, 2.7e-27, 1e-28,
+             [(N, "against 4πμ_RT/(2K_RT) | 2.7×10⁻²⁷ |"), (N, "constants to 2.7×10⁻²⁷")]),
+            ("identity D 15", ident[0], 2.5e-23, 1e-24, [(N, "| 2.5×10⁻²³ relative |")]),
+            ("identity D 20.04", ident[1], 1.7e-21, 1e-22, [(N, "| 1.7×10⁻²¹ relative |")]),
+            ("identity D 40.02", ident[2], 3.8e-16, 1e-17, [(N, "| 3.8×10⁻¹⁶ relative |")]),
+            ("lam_g at the frontier", float(ltop), 0.97115850, 1e-8, [(N, "D = 4 to 0.97115850 at D = 244.64")]),
+            ("the frontier's D", float(top["D"]), 244.64, 0.01, [(N, "D = 4 to 0.97115850 at D = 244.64")]),
+            ("n(1 - lam_g) at the frontier", float(ntop * (1 - ltop)), 6.998004, 1e-6, [(N, "| 6.998004 |")]),
+            ("states in the table", len(rows), 1510, 1, [(N, "holds 1510 stored states")]),
+            ("backbone D", len(bb), 1274, 1, [(N, "at each of 1274 D")]),
+            ("D of the mu minimum", float(mumin["D"]), 38.02, 0.01, [(N, "minimum near D = 38.02 (0.12910162")]),
+            ("mu at its minimum", float(mp.mpf(mumin["mu"])), 0.12910162, 1e-8, [(N, "minimum near D = 38.02 (0.12910162")]),
+            ("chain spread, #603 against I461", chain, 3.8e-13, 1e-14, [(N, "| 14 | 3.8×10⁻¹³ at D = 237.13 |")]),
+            ("pinned spread, 5 against 7", pinned, 1.6e-14, 1e-15, [(N, "| 160 | 1.6×10⁻¹⁴ |")]),
+            ("D 4, M 160 against 192", float(m4["160"] - m4["192"]), 1.6e-23, 1e-24,
+             [(N, "M = 160 against 192 there: 1.6×10⁻²³")]),
+            ("reference fit, smallest band rms below 226", min(low), 1.7e-14, 1e-15, t_res),
+            ("reference fit, largest band rms below 226", max(low), 6.8e-14, 1e-15, t_res),
+            ("reference fit, rms above 226", high, 2.1e-13, 1e-14, t_res),
+            ("reference fit, largest residual", abs(worst[1]), 7.5e-13, 1e-14, [(N, "the largest, 7.5×10⁻¹³, at the last state")]),
+            ("superseded, up to 238.76", early, 1.2e-12, 1e-13, t_sup),
+            ("superseded, first offset past 238.76", late[0], -5.1e-12, 1e-13, t_sup),
+            ("superseded, largest offset", max(late), 2.5e-10, 1e-11, t_sup)]
+
+
+def full_lam_gauge():
+    """notes/MODE_COUNT.md section 10.4: the fit selection on the real backbone and the planted test's T1, T6 and its
+    control (hp/lam_gauge_fit.py; about a minute)."""
+    import mpmath as mp
+    sys.path.insert(0, os.path.join(ROOT, "hp"))
+    dps = mp.mp.dps
+    import lam_gauge_fit as LF
+    mp.mp.dps = dps
+    N = "notes/MODE_COUNT.md"
+    with mp.workdps(40):
+        pts = LF.backbone()
+        grid = [D for D, _ in pts]
+        free, con = LF.fits(pts), LF.fits(pts, fixed0=mp.mpf(1))
+        fs = {k: [float(x) for x in LF.summary(free, k)] for k in (0, 1, 2)}
+        cs = {k: [float(x) for x in LF.summary(con, k)] for k in (1, 2, 3)}
+        nf, nc = sum(f["sel"] for f in free), sum(f["sel"] for f in con)
+        t1 = LF.planted_points("T1", grid)
+        p_free, p_con = LF.fits(t1), LF.fits(t1, fixed0=mp.mpf(1))
+        p0, p1 = LF.summary(p_free, 0), LF.summary(p_con, 1)
+        q1 = LF.summary(LF.fits(LF.planted_points("T1", grid, sigma=5e-14), fixed0=mp.mpf(1)), 1)
+        t6 = LF.summary(LF.fits(LF.planted_points("T6", grid)), 0)
+        mu = LF.summary(LF.fits(LF.planted_points("T1", grid, c0=1 + mp.mpf("1e-5"))), 0)
+    half = lambda v: float((v[2] - v[1]) / 2)
+    t_c0 = [(N, "| c₀ | 0.99999999941 ± 9.2×10⁻⁸ | 1 |")]
+    t_rng = [(N, "give c₀ from 0.99999981663 to 0.999999999914"), (N, "so 1 lies 8.6×10⁻¹¹ above the range")]
+    t_con = [(N, "| c₁ | −7.41656 ± 1.6×10⁻⁴ | −7.4165644 ± 4.4×10⁻⁶ |"), (N, "| c₂ | 107.51 ± 0.12 | 107.5086 ± 0.0069 |"),
+             (N, "| c₃ | | −1530 ± 5 |"), (N, "\\lambda_g = 1 - \\frac{7.4165644}{n} + \\frac{107.5086}{n^2} - \\frac{1530}{n^3}")]
+    return [("free c0, median", fs[0][0], 0.99999999941, 1e-11, t_c0),
+            ("free c0, half-width", (fs[0][2] - fs[0][1]) / 2, 9.2e-8, 1e-9, t_c0 + [(N, "c₀ = 1 to 9.2×10⁻⁸")]),
+            ("free c0, lowest", fs[0][1], 0.99999981663, 1e-11, t_rng),
+            ("free c0, highest", fs[0][2], 0.999999999914, 1e-12, t_rng),
+            ("1 - highest free c0", 1 - fs[0][2], 8.6e-11, 1e-12, t_rng),
+            ("free fits kept", nf, 36, 1, [(N, "| c₀ free (36 fits) | c₀ = 1 (31 fits) |")]),
+            ("c0 = 1 fits kept", nc, 31, 1, [(N, "| c₀ free (36 fits) | c₀ = 1 (31 fits) |")]),
+            ("free c1", fs[1][0], -7.41656, 1e-5, t_con), ("free c1 half-width", (fs[1][2] - fs[1][1]) / 2, 1.6e-4, 1e-5, t_con),
+            ("free c2", fs[2][0], 107.51, 0.01, t_con), ("free c2 half-width", (fs[2][2] - fs[2][1]) / 2, 0.12, 0.01, t_con),
+            ("c1 at c0 = 1", cs[1][0], -7.4165644, 1e-7, t_con),
+            ("c1 half-width", (cs[1][2] - cs[1][1]) / 2, 4.4e-6, 1e-7, t_con + [(N, "fit choices of 4.4×10⁻⁶, 0.0069 and 5")]),
+            ("c2 at c0 = 1", cs[2][0], 107.5086, 1e-4, t_con),
+            ("c2 half-width", (cs[2][2] - cs[2][1]) / 2, 0.0069, 1e-4, t_con),
+            ("c3 at c0 = 1", cs[3][0], -1530, 10, t_con),
+            ("c3 half-width", (cs[3][2] - cs[3][1]) / 2, 5, 1, t_con),
+            ("T1 free c0 half-width", half(p0), 2.0e-7, 1e-8, [(N, "| 1 ± 2.0×10⁻⁷, holds 1 |")]),
+            ("T1 c1 half-width", half(p1), 6.8e-6, 1e-7, [(N, "| −7.4 ± 6.8×10⁻⁶, holds −7.4 |")]),
+            ("T1 c1 half-width, sigma 5e-14", half(q1), 3.4e-7, 1e-8, [(N, "| −7.4 ± 3.4×10⁻⁷, holds −7.4 |")]),
+            ("T6 free c0", float(t6[0]), 1.000021, 1e-6, [(N, "| 1.000021 ± 1.6×10⁻⁵, 1 outside |")]),
+            ("T6 free c0 half-width", half(t6), 1.6e-5, 1e-6, [(N, "| 1.000021 ± 1.6×10⁻⁵, 1 outside |")]),
+            ("control: lowest c0", float(mu[1]), 1.0000100, 1e-7, [(N, "| 1.0000100 to 1.0000104, 1 outside")]),
+            ("control: highest c0", float(mu[2]), 1.0000104, 1e-7, [(N, "| 1.0000100 to 1.0000104, 1 outside")])]
+
+
 def full_dinf():
     sys.path.insert(0, os.path.join(ROOT, "hp"))
     import dd_fits_mp as F
@@ -2008,6 +2137,7 @@ def main():
     groups = [(fn.__name__, fn()) for fn in CHECKS]
     if full:
         groups.append(("full_dinf", full_dinf()))
+        groups.append(("full_lam_gauge", full_lam_gauge()))
     n_items = sum(len(items) for _, items in groups)
     n_bad = 0
     for name, items in groups:
