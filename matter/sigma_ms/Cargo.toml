@@ -1,0 +1,29 @@
+[package]
+name = "sigmams"
+version = "0.1.0"
+edition = "2021"
+description = "The self-gravitating hedgehog sigma-model's DSS solution on multishoot: Taylor stepping in x, collocation in tau, exact Jacobians, double- and quad-double Newton"
+
+[lib]
+name = "_sigmams"
+crate-type = ["cdylib", "rlib"]
+
+[features]
+python = ["dep:pyo3", "dep:numpy"]
+
+[dependencies]
+pyo3 = { version = "0.30", features = ["extension-module"], optional = true }
+numpy = { version = "0.30", optional = true }
+rayon = "1.10"
+# the multiple-shooting engine and the arithmetic, at hp's versions (hp/Cargo.toml); `mutate` gives the engine's
+# controls (Control::DropColumn for the planted check's dropped-column control)
+multishoot = { version = "=1.2.2", features = ["mutate"] }
+multidouble = "=4.2.1"
+
+[profile.release]
+opt-level = 3
+codegen-units = 1
+lto = "fat"
+debug = false
+# unstripped, as hp/Cargo.toml: macOS 27's dyld refuses an extension stripped by rustc's llvm-objcopy
+strip = false
