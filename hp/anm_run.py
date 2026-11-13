@@ -111,6 +111,9 @@ removed from each correction (octo_corrector.chord_strong; #528, #674). 0, the d
 --reseed_start pred (with --reseed_q 1) runs the re-seed's quad-double polish from the prediction's own four-part
 horizon data first, and the double-double ladder only when that does not converge; ladder, the default, polishes the
 ladder's data as before (#693: past D ~ 249 the ladder's double-double data put the pole inside u0).
+--ks K sums the horizon series to order K instead of the state's own ks (130 on the chain), and saves it with the
+states (#696). The unknowns are the same, so a state converged at one ks starts at another with |F| of about the
+series' terms between the two orders.
 --lam_stall L ends an attempt, as refused, when two Newton steps in a row had lam at or below L. A state is saved
 with the plan of the run that converged it, and a run started from it keeps that plan
 (--keep_plan 0 plans again at the state, the control). Its states are saved in eight parts
@@ -290,6 +293,7 @@ def main():
     opt.update(held_o=0, reseed_o=0)
     opt.update(save_base=0)             # --save_base 1: the polished base saved (with --corrector od)
     opt.update(save_jet=0)              # --save_jet 1: each base's series saved; 2: saved, then stop (#634)
+    opt.update(ks=0)                    # --ks K: the horizon series' order instead of the state's (#696)
     for k in list(opt):
         f = "--" + k
         if f in args:
@@ -308,6 +312,9 @@ def main():
     zh, zl, m = load_state(os.path.join(raw, opt["state"]))
     D, M, nodes = (mp.mpf(m["D_str"]) if "D_str" in m else mp.mpf(float(m["D"]))), int(m["M"]), list(m["nodes"])
     kt, kc, ks = m.get("kt", 36), m.get("kc", 146), m.get("ks", 130)
+    if opt["ks"]:
+        print(f"horizon series to order {opt['ks']} instead of the state's {ks}", flush=True)
+        ks = opt["ks"]
     kf, N = opt["kfreeze"], opt["N"]
     if opt["jet_o"] and (M != 32 or not 1 <= N <= 31):
         raise SystemExit(f"--jet_o 1: the octo-double solver is built for M = 32 and N <= 31, not M {M}, N {N}")
