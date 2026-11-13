@@ -76,6 +76,7 @@ version = "0.1.0"
 dependencies = [
  "hpkernel",
  "multidouble",
+ "multishoot",
  "numpy",
  "pyo3",
  "rayon",
