@@ -12,6 +12,7 @@
     cd hp && python3 reduced_cubic.py curve RAWDIR DZ0 BASE [--ref677=RAY.json] [--ref694=ROWS.json] [--threads=2]
         [--json=OUT] [--mutate=w0|chord]
     cd hp && python3 reduced_cubic.py curve planted [--seed=5] [--json=OUT] [--mutate=w0|chord]
+    cd hp && python3 reduced_cubic.py curvesum OUT.json [OUT.json ...]   (the curve runs' summary)
 
 `curve` (#698) evaluates g along c = +-t e, e = a / |a|, at t = 1e-6, 1e-5, 1e-4, 1e-3, 3.16e-3 and 1e-2 (and 1e-24
 on the + ray of a real start, #677's range), with the strong rows solved by Newton with the octo-double LU refactored
@@ -1837,6 +1838,38 @@ def curve_scan(sysm, bas, opts, mutate, log, rec, dump, truth=None, kappa=None, 
     return ok, rec
 
 
+def curvesum(paths):
+    """the summary of curve runs (their --json files): per start the parts per t in units of |B c|, their ratio to
+    the prediction kappa t, O / E, the solves' LUs, the flat chart's checks and the verdict, as the run stored them"""
+    for path in paths:
+        with open(path) as fh:
+            r = json.load(fh)
+        cu = r.get("curve") or {}
+        kap = cu.get("kappa")
+        print(f"{os.path.basename(path)}: {r.get('label', r.get('dz0', 'planted'))}; |a| {r['a_norm']:.4e}, |B a| "
+              f"{r['Ba']:.4e}, |B e| {cu.get('nBe', float('nan')):.4e}, floor0 {cu.get('floor0_Ba', float('nan')):.2e} of "
+              f"|B a|, kappa {kap}; {cu.get('lus')} LUs; stops {cu.get('stop')}")
+        print("  t, E, O, |dep(+)|, |dep(-)| (of |B c|), floor, E / (kappa t), O / E, LUs (+, -)")
+        for row in cu.get("rows", []):
+            ratio = row["E"] / (kap * row["t"]) if kap else float("nan")
+            print(f"    {row['t']:9.3g} {row['E']:12.5e} {row['O']:12.5e} {row['dp']:12.5e} {row['dm']:12.5e} "
+                  f"{row['fl']:9.2e} {ratio:9.4f} {row['O'] / row['E'] if row['E'] else float('nan'):10.3e} "
+                  f"{row['lus']}")
+        for q, v in (cu.get("local") or {}).items():
+            print(f"  local orders of {q}: " + ", ".join("none" if x is None else f"{x:.3f}" for x in v))
+        ch = cu.get("checks")
+        if ch:
+            print(f"  checks: (Z1) {ch['Z1']}, {'pass' if ch['Z1_ok'] else 'FAIL'}; (Z2a) {ch['Z2a']}, (Z2b) "
+                  f"{ch['Z2b']}: {'pass' if ch['Z2_ok'] else 'FAIL'}")
+        v = cu.get("verdict")
+        if v:
+            print(f"  verdict: {v['verdict']}; ratios {v['ratios']}; order {v['order']}; odd >= even below 1e-2 at "
+                  f"{v['cubic_below']}; missing {v['missing']}")
+        if cu.get("planted"):
+            print("  planted: " + ", ".join(f"{n} {'pass' if cu['planted'][n] else 'FAIL'}"
+                                            for n in ("points", "orders", "converged", "verdict_selftest")))
+
+
 # ------------------------------------------------------------------ the weak rows (#694)
 ROW_FIELDS = (("p", 1), ("m", 1), ("a", 0), ("c", 0))     # the fields of each residual block, with parity (1: odd)
 H_ROWS = (1e-32, 1e-33)          # F''(v_j, v_l) per row at these steps (#528's Q steps); the second is judged
@@ -2464,6 +2497,9 @@ def main():
         return 0
     if args and args[0] == "rowsum":
         rowsum(args[1:])
+        return 0
+    if args and args[0] == "curvesum":
+        curvesum(args[1:])
         return 0
     modes = dict(run=("", "w0", "Ssign", "Sh", "hF"), planted=("", "w0", "Ssign", "Sh", "hF"), ray=("", "w0", "B"),
                  rows=("", "quadA", "parity"), curve=("", "w0", "chord"))
