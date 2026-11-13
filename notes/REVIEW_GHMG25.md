@@ -161,8 +161,10 @@ same quantity, precision or reading), **differs** (a discrepancy, §3). Our stat
   value (Husa et al. 2000; Lechner 2001). At k_c = 23 and 39, Δ(10) < Δ(5) < Δ(20) < Δ(∞), so Δ has a minimum between
   η = 5 and 20 and approaches Δ(∞) from below; both differences are resolved, 43–112 times their change between the
   two k_c. #631 narrows it to between η = 5 and 10: at k_c = 23 and 39, Δ(7) is the smallest of η = 5, 7, 10, 14, 20
-  and ∞, every neighbouring difference resolved (raw I631-win 2d659f74); #633 narrows it further. The sources were not
-  read here, so whether they say monotonic or the review does is not known.
+  and ∞, every neighbouring difference resolved (raw I631-win 2d659f74); #633 narrows it to (6, 8.5), with Δ(7) still
+  the smallest; a parabola through η = 6, 7 and 8.5 puts the minimum at η = 6.94 to 7.20 over the variable (η, ln η,
+  1/η) and k_c, Δ_min = 0.4598093 at k_c = 39 (raw I633-win 3046bc7d). The sources were not read here, so whether they
+  say monotonic or the review does is not known.
 - **D10. The test-field rate at D = 5 (#621).** Mittal, Gundlach and Martel's μ(5) = −0.448 and δ_Q = 1.425
   (arXiv:2609.17207, as quoted in matter/LITERATURE.md §8) against our μ(5) = −0.4430361582 (M = 48, the 11-node
   layout whose μ(4) is −0.3651202705 at M = 48 and −0.3651202372 at M = 64) and δ(5) = 1.422411: ours is 4.96×10⁻³
@@ -264,8 +266,8 @@ naming them there would make the sentence's scope plain (notes/LIT_REVIEW.md, ad
   - *Acceptance.* At D = 4 it reproduces 4πμ/(2K) from Reiterer and Trubowitz's constants to 10⁻²⁰ (`mu_check.py`'s
     state). The identity λ_g = 4πμ/Δ holds to the states' precision at three D. A mutation (n in place of n − 1) fails.
   - *Depends on.* #380. About 2 hours.
-- **R5. Is Δ(η) of the σ-model monotonic at large η?** Done by #623, #630 and #631: it is not (D9); the minimum lies
-  between η = 5 and 10.
+- **R5. Is Δ(η) of the σ-model monotonic at large η?** Done by #623, #630, #631 and #633: it is not (D9); the minimum
+  lies between η = 6 and 8.5.
   - *What.* Recompute Δ at D = 4 for η = 2, 5, 10, 20 and ∞ at k_c = 23 and 39.
   - *Why.* Row 31: the k_c = 15 table is non-monotonic by 6.5×10⁻⁵, below its own truncation error.
   - *Acceptance.* The sign of Δ(5) − Δ(∞) is the same at k_c = 23 and 39, and both differences exceed their change
