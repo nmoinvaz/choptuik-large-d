@@ -158,6 +158,14 @@ def report(allf, label, ks=(0, 1, 2)):
     return out
 
 
+def planted_points(name, grid, sigma=SIGMA, c0=1, junk=None, step=(0, 0)):
+    """the plant on the grid, with its noise (seed 622), junk offsets at grid D (rounded to 3 places) and a step"""
+    rng = random.Random(622)
+    junk = junk or {}
+    return [(D, planted(name, 1 / (D - 2), mp.mpf(c0)) + mp.mpf(rng.gauss(0, sigma))
+             + junk.get(round(float(D), 3), 0) + (step[1] if D < step[0] else 0)) for D in grid]
+
+
 def cmd_planted(argv):
     mut = "--mutate=limit" in argv
     sigma = SIGMA
@@ -174,9 +182,7 @@ def cmd_planted(argv):
     c0p = mp.mpf(1) + (mp.mpf("1e-5") if mut else 0)
     ok_all = True
     for name in ("T1", "T2", "T3", "T4", "T5", "T6"):
-        rng = random.Random(622)
-        pts = [(D, planted(name, 1 / (D - 2), c0p) + mp.mpf(rng.gauss(0, sigma))
-                + junk.get(round(float(D), 3), 0) + (step[1] if D < step[0] else 0)) for D in grid]
+        pts = planted_points(name, grid, sigma, c0p, junk, step)
         want = planted_coeffs(name, mp.mpf(1))          # graded against c0 = 1 (the mutation plants 1 + 1e-5)
         print(f"{name}{' (mutation limit: planted c0 = 1 + 1e-5)' if mut else ''} (sigma {sigma:g}"
               f"{', junk at ' + str(sorted(junk)) if junk else ''}"
