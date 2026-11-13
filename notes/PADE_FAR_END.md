@@ -298,8 +298,9 @@ largest |c_m| = 28 and density at most 2.9.
 **At the measured errors, a function with only two branch points reproduces all 23 coefficients of the arc plant.**
 Its density has 20 terms, and its peak is 2.5–3.5 times chord2's. Any statistic of σ₀–σ₂₂ therefore gives the twin
 the value it gives arcjump, to within the noise. So no discriminator at this order exists, unless a prior limits the
-density to fewer than 20 Chebyshev terms; at 18 terms χ is already only 2.6–3.1. The separation that H_DA shows on clean
-plants rests on such a prior, since the plants have 6 terms.
+density to fewer than 19 Chebyshev terms (a 19-term twin fits, χ = 0.08–0.11, §7; #548 scanned only even M); at 18
+terms χ is already only 2.6–3.1. The separation that H_DA shows on clean plants rests on such a prior, since the
+plants have 6 terms.
 
 ### 6.4 Proposed text for proof/D_entire.md
 

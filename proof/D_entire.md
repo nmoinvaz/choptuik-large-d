@@ -430,6 +430,11 @@ chord.
   chord P0 → κ⋆ peaking at 2.5–3.5 times chord2's, reproduces the arc plant's σ₀–σ₂₂ within the measured errors at
   every order (notes/PADE_FAR_END.md §6). So no statistic of these coefficients can tell them apart without a prior on
   the density.
+- **More coefficients would not separate them either (#670).** Refitted to arcjump's σ₀–σ₃₀, with the errors
+  of σ₂₃–σ₃₀ extrapolated from the measured ones (an estimate), the smallest two-branch-point twin grows only from 19
+  terms at 23 coefficients to 19–20 at 31, and to 20–21 with every error 10 times smaller (notes/PADE_FAR_END.md §7).
+  A twin of fixed size reproduces the extra orders, so σ₂₃–σ₂₄ (#549) cannot separate a chord from an arc without a
+  prior on the density.
 - **The real poles reach the chord sooner than either plant.** At k = 10 the poles with s ≤ 0.71 lie within 0.015 of
   the chord, and the last one, at s = 0.88, lies 0.074 from it, on the side away from the arc. J 1250 and J 1500 agree to
   0.03 in R. k = 11 is not determined by the data.
