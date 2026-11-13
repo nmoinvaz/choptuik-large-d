@@ -38,6 +38,10 @@ section 11 is #684, section 12 is #667, section 13 is #689, section 14 is #702, 
   terms at every node. Its misfit at 22 terms falls 200–360 times, to 256–430 error units, and the located zero lies
   2×10⁻⁵ from the Padé zero. With the zero located the far end no longer helps, and #667's margin for a set near
   P0 + κ⋆ is gone (§14).
+- **#703.** With the plants' zero also at the real zero, a weak set ending 0.25 past P0 + κ⋆, holding 2–12% of σ₂₂,
+  gives both the real DA2 scatter and the real twin misfit within a factor 10 at all three nodes (35 plants). None has
+  #541's far poles, so none reproduces the real series. The low set now matches the misfit only at 10⁻⁵–10⁻⁴ of σ₂₂,
+  and the far end alone still accounts for none of it (§15).
 
 ## 1. Question
 
@@ -1967,3 +1971,138 @@ The real series at ZLOC, relative to its κ⋆ chord χ₂₂: the ratio-law κ 
 S2 depends on the zero. Held at ZLOC, the far end still lowers the real misfit, by 1.7–2.1 times. §14's zfitratio
 located the zero again together with the ratio-law far end and found χ₂₂ 5–10% higher. So whether moving the far end
 out helps depends on whether the zero is located again with it.
+
+### 15.5 Results: the grid
+
+`pade_second_zero.py grid`, 18:07–19:40 UTC, one process. The record is `I703-mac/grid.jsonl` (raw-data bfd2a89).
+C1 passed on every plant scan. Every one of the 1100 relocations converged, in at most 10 steps. The other 804 plants
+had l2₂₀(ZLOC) < 0.1 χ₂₂(real), so by §15.1's bound they fail (c″) unrelocated.
+
+**No plant reproduces the real series, with (c′) or with (c″).** The far Padé poles (b) are matched by no plant at any
+node. The smallest d_P is 0.145 at ω∞, and 0.136 over the 94 plants run at three nodes. **But with the zero in place,
+the DA2 scatter (a) and the twin misfit (c′) now occur together.**
+
+| criterion | at ω∞, of 1904 | at all three nodes, of the 94 run there |
+|---|---|---|
+| (a) | 386 | |
+| (b) | 0 | 0 |
+| (c′) | 136 (104 near P0 + κ⋆, 32 low) | 43 |
+| (c″) | 248 | 65 |
+| (a) + (c′) | **48** | **35** |
+| (a) + (c″) | **91** | **50** |
+| (b) + (c′), (b) + (c″) | 0 | 0 |
+| all three, with (c′) or with (c″) | 0 | 0 |
+| context: #667's (c), all 15 bases at ZLOC | 40 | |
+
+Per strength, for the curves near P0 + κ⋆ and the sum set (160 plants each), at ω∞:
+
+| η | (a) | (c′) | (a) + (c′) | (c″) | (a) + (c″) | χ₂₂ / χ₂₂(real), largest |
+|---|---|---|---|---|---|---|
+| 10⁻¹ | 48 | 56 | 25 | 88 | 36 | 0.78 |
+| 5×10⁻² | 45 | 40 | 19 | 64 | 28 | 0.39 |
+| 2×10⁻² | 53 | 8 | 4 | 40 | 16 | 0.16 |
+| 10⁻² | 64 | 0 | 0 | 24 | 11 | 0.078 |
+| 10⁻³ | 72 | 0 | 0 | 0 | 0 | 7.8×10⁻³ |
+| 10⁻⁴ to 10⁻⁹ | 54 to 0 | 0 | 0 | 0 | 0 | 7.8×10⁻⁴ and less |
+
+The misfit rises by one decade per decade of η, as in §12.5.
+
+**The 35 plants that pass (a) and (c′) at all three nodes.**
+- Their curves are seg(+1, +1) (19), seg(+1, 0) (8), seg(+1, −1) (6) and seg(0, +1) (2). These are the segments
+  ending 0.25 past P0 + κ⋆ in Re t or Im t, at |Q| = 2.48–2.72 at ω∞, against |P0 + κ⋆| = 2.37.
+- Their main density is chord2 in 30, arc in 5. Their η is 10⁻¹ (19), 5×10⁻² (12) and 2×10⁻² (4).
+- In the 48 that pass at ω∞, the second set holds 2.0–12% of σ₂₂ and 3.6–58×10⁻⁵ of σ₁₂.
+
+| ω/ω∞ | m_DA | d_P | χ₂₂ / χ₂₂(real) | l2₂₀ / l2₂₀(real) at ZLOC | l2₂₀ / l2₂₀(real), relocated |
+|---|---|---|---|---|---|
+| 0.99 | 3–5 | 0.254–0.270 | 0.11–0.61 | 4.8–24 | 0.22–1.11 |
+| 1.00 | 3–5 | 0.245–0.259 | 0.14–0.78 | 5.3–27 | 0.27–1.37 |
+| 1.01 | 3–5 | 0.235–0.247 | 0.18–0.96 | 7.2–36 | 0.33–1.67 |
+
+Of the 48 that pass at ω∞, 13 fail at another node: (a) fails at 1.01 for 8 and at 0.99 for 3, and (c′) fails at
+0.99 for 5.
+
+**The misfit's profile over M, context, not judged.** The real series at ZLOC at ω∞ has χ = 4745, 4359 and 402 at
+20, 21 and 22 terms, and l2 at 20 terms 7172. For the 48 plants passing (a) and (c′) at ω∞:
+- *With the zero held at ZLOC*: χ at 20 terms is 3.5–21 times the real's, χ at 21 terms 0.25–1.65 times, and χ at 22
+  terms 0.11–0.78 times.
+- *With each plant's own zero located*, as the real one was: these become 0.23–1.32, 0.23–1.30 and 0.28–1.67 times,
+  and l2 at 20 terms 0.23–1.37 times. The located zero lies 0.9–5.6×10⁻⁵ from ZLOC.
+
+So once located, these plants' misfit matches the real one at 20, 21 and 22 terms within a factor 5.
+
+Two more features of these plants, also context:
+- **Their DA2 zeros sit near #541's poles.** Each has 4–10 DA2 zeros within 0.17 of #541's far poles, where the real
+  series has none at ω∞.
+- **Their DA2 medians fall partly in the real one's place.** The medians lie at 1.97–2.28 + 0.98–1.49i, against the
+  real series' 2.20–2.30 + 1.33–1.44i (§12.5).
+
+**The low set** (Q = 1.69 − 0.74i) now passes (c′) at η = 10⁻⁵ and 10⁻⁴ (32 plants, χ₂₂ 0.19–2.7 times the real's).
+At η = 10⁻³ to 10⁻¹ it misfits 19–2700 times more than the real series. It fails (a) at every η, with m_DA = 6–11.
+
+### 15.6 The statements
+
+| statement | result | verdict |
+|---|---|---|
+| S1–S3 (#684) | §15.4 | S1 and S2b survive; S2 and S3 fail |
+| S4 (#667): a set near P0 + κ⋆ misfits at least 290 times less than the real series, even at 10% of σ₂₂ | largest χ₂₂ / χ₂₂(real) 0.78 (arc, seg(+1, +1), α = 0, η = 10⁻¹, φ = 0°); 1.67 with (c″) | fails, a discrepancy |
+| S5 (#667): only the low set reaches the real misfit | (c′) passes for the low set and for seg(+1, ±1), seg(+1, 0) and seg(0, +1); (c″) for 8 curves | fails, a discrepancy |
+| #667 §12.6, not frozen as a statement here: no plant matches two of the three features | 35 plants pass (a) and (c′) at all three nodes | fails, a discrepancy |
+| #667 §12.6: the low set gives the real misfit at 0.1–1% of σ₂₂ | it does so only at 10⁻⁵–10⁻⁴ of σ₂₂ now | fails, a discrepancy |
+| #667 §12.6: the far Padé poles are the feature no plant has | no plant here has d_P ≤ 0.03; the smallest is 0.136 | survives |
+
+These discrepancies are reported, not fixed. Each of #667's numbers compared plants with their zero at x_ref against
+the real series in bases with the zero at x_ref, where the real misfit was 200–360 times larger (§14.5).
+
+### 15.7 What this means
+
+- **No plant reproduces the real series, by the frozen rule.** With (c′) and with (c″), no plant of the 1904 matches
+  the far Padé poles at any node. That is the one feature still out of reach of every single-curve and two-set plant.
+- **The ingredient left after the zero is consistent with a weak second set near P0 + κ⋆.** With the zero in place, a
+  segment ending 0.25 past P0 + κ⋆ (|Q| = 2.5–2.7), holding 2–12% of σ₂₂, gives both the real DA2 scatter and the real
+  twin misfit at 22 terms, within a factor 10, at all three nodes (35 plants). With its own zero located, as the
+  real one was, its misfit matches the real one at 20, 21 and 22 terms within a factor 5. This is consistency, not
+  location. The grid holds one density shape on one segment length, and a set nearer the origin (|Q| ≤ 2.37) gives
+  too small a misfit for (c′) at the same η.
+- **What such a set does not give.** It does not give #541's far poles, which these plants miss by d_P = 0.24–0.27.
+  And its DA2 zeros cluster near those poles, where the real series has none.
+- **The low set is no longer the candidate.** At 1.69 − 0.74i a set must be 10³ times weaker than #667 found to match
+  the real misfit, and it never scatters the approximants as the real series does.
+- **#684's far-end comparison survives.** A plant whose far end is 0.18 off misfits 5×10⁵ times less than the real
+  series with the zero in place, so the far end alone does not account for the real misfit. With the zero held at ZLOC,
+  the ratio-law far end lowers the real misfit 1.7 times, not 2.3–2.7. With the zero located again (§14) it does not
+  lower it at all. Whether moving the far end helps depends on the zero.
+- **Error bars.** Every factor here is a ratio of two least-squares misfits in the same basis, with the real series'
+  measured errors as the unit. The ranges are spreads over plants and nodes, not error bars. The located zeros' offsets
+  are distances, not uncertainties.
+- **Status.** Numerical evidence on plants. The verdict is the frozen one.
+
+### 15.8 Proposed text for proof/D_entire.md
+
+In 7.4, two edits to the bullet "Nor does a weak second singular set past the arc (#667)", and a bullet after "The near
+end does not account for it (#689), and the zero factor accounts for its size only (#702)":
+
+```diff
+   holding 10⁻⁹ to 10⁻¹ of σ₂₂, were judged on three features of the real series: no 6 differential approximants
+   agree past |t| = 1.65, the [k/k] poles past κ⋆ at k = 8–10, and no single-curve twin of fewer than 23 terms. None
+-  reproduces it, and none matches two features at once. No plant has the far poles within 0.03 at all three orders
+-  (the closest is 0.146 away). A set near P0 + κ⋆ scatters the approximants as the real series does, but its twins
+-  misfit at least 290 times less in every basis. Only the set at 1.69 − 0.74i reaches the real misfit, at 0.1–1% of
+-  σ₂₂ (notes/PADE_FAR_END.md §12).
++  reproduces it. No plant has the far poles within 0.03 at all three orders (the closest is 0.146 away). With the
++  zero factor at x_ref, a set near P0 + κ⋆ scattered the approximants but misfit at least 290 times less than the real
++  series, and only the set at 1.69 − 0.74i reached its misfit. Both comparisons carried the zero's offset, and #703
++  below redoes them (notes/PADE_FAR_END.md §12).
+```
+
+```diff
++- **With the zero in place, a set near P0 + κ⋆ gives two of the three features (#703).** #667's plants were rebuilt
++  with their zero factor at the real series' located zero and judged against the real κ⋆ chord misfit there (402 at
++  ω∞). 35 plants match both the approximants' scatter and that misfit, within a factor 10, at all three nodes. Each
++  has a segment ending 0.25 past P0 + κ⋆ (|t| = 2.5–2.7), holding 2–12% of σ₂₂. With each plant's own zero located as
++  the real one was, its misfit at 20, 21 and 22 terms matches the real one within a factor 5. None has the far Padé
++  poles (d_P ≥ 0.136), so none reproduces the real series. The set at 1.69 − 0.74i reaches the real misfit only at
++  10⁻⁵–10⁻⁴ of σ₂₂, and never scatters the approximants. #547's plant with its far end 0.18 off still misfits
++  5×10⁵ times less than the real series. With the zero held, the ratio-law far end lowers the real misfit 1.7 times,
++  not 2.3–2.7 (notes/PADE_FAR_END.md §15).
+```
