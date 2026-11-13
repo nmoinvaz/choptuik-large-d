@@ -11,6 +11,9 @@ point where it stops being affine. The rows that jump there are named by block, 
         [--tol_lam 1e-6] [--arms U,E] [--theta 1] [--theta_half 0] [--hint 1]
     python3 crawl_probe.py fixrun RAW ITER.npz --out DIR [--threads 2] [--switch 0] [--steps 6] [--tol 1e-60]
     python3 crawl_probe.py offset RAW ITER.npz [--threads 2]
+    python3 crawl_probe.py chord RAW BASE.npz --a A (--jet JET.npz | --pred PRED.npz) --out DIR [--threads 2]
+        [--strong 4] [--chord_it 10] [--check_pred PRED.npz] [--check_iter ITER.npz]
+    python3 crawl_probe.py chordstat RAW DIR/chord_trace_D<D>.npz [--threads 2]
 
 `selftest` is the planted check (fixed before the first real run): a smooth map with a quadratic remainder along the
 exact Newton step, plus a jump of known rows switched on at a known lam_true along that step. Pass: lam* within 1e-6 of
@@ -49,6 +52,18 @@ digits.
 `offset` splits the saved step dz into the projection's displacement P(z) - z (the iterate's horizon data against those
 its last node asks for) and the step from the projected point, and prints each by block and field, with the
 displacement's m_h and a_h by harmonic and the unprojected residual's largest rows (one projection).
+
+`chord` (#715) rebuilds the attempt's start and its first Newton step as `iterate` does, and runs chord_strong as
+newton_od calls it under --strong, through an ElimO that keeps each point it is asked to project (trace_elim). It keeps
+each chord point, its projection (formed again with the switch off where the switch skipped it), each chord solve
+x = J0^-1 F and the weak subspace V, in DIR/chord_trace_D<D>.npz, and then runs `chordstat` on them. --check_iter: the
+iterate `iterate` saved, which the chord's last point must equal bit for bit (exit 1 otherwise). `chordstat` prints,
+at each point, the switch's test value, the point's own residual and its projection's by block (the horizon rows by
+harmonic), and P(z) - z by unknown group with m_h and a_h by harmonic. At each chord step it prints x, V^T x and
+dw = drop_V(x) by group, checks that the step reproduces the next point bit for bit (exit 1 otherwise), and splits the
+step: dw against drop_V in mpmath with the same V (drop_V's f64 rounding), and the switch's test value at z - dw with
+one group of dw applied, with the exact dw, with the rounding alone, and with V rounded differently (V plus 1e-16
+noise, orthonormalized again).
 """
 import json
 import os
@@ -628,9 +643,298 @@ def offset(argv):
     return 0
 
 
+# ------------------------------------------------------------------ the strong-row chord, point by point (#715)
+def groups(M, K):
+    """index arrays of the unknown groups: centre data, node i, the last node, m_h, a_h, Delta"""
+    o = 2 * M + 4 * M * K
+    g = {"centre": np.arange(0, 2 * M), "nodes": np.arange(2 * M, o), "last node": np.arange(o - 4 * M, o),
+         "m_h": np.arange(o, o + M), "a_h": np.arange(o + M, o + 2 * M), "Delta": np.array([o + 2 * M])}
+    g["horizon data"] = np.r_[g["m_h"], g["a_h"]]
+    return g
+
+
+def trace_elim(att):
+    """ElimO around the attempt's PinnedO (switch 1e-15) that keeps each point it is asked to project, in order, with
+    its switch's test value, how it was projected and the projection (formed once per point), and each one-argument
+    olu_solve (the chord's J0^-1 F and the natural test's) with its result. The corrector's arithmetic is unchanged."""
+    from hpkernel.driver import qmax
+    from octo_corrector import ElimO, o8, q4_of_o
+
+    class TraceElimO(ElimO):
+        def project(self, z):
+            z = o8(z)
+            key = b"".join(np.ascontiguousarray(np.asarray(p, dtype=float)).tobytes() for p in z)
+            if key not in self.cache:
+                n0 = dict(self.counts)
+                t1 = time.time()
+                zp = super().project(z)
+                how = next((k for k in self.counts if self.counts[k] != n0[k]), "?")
+                self.cache[key] = (zp, how, qmax(self.sq.residual_q(*q4_of_o(z))), round(time.time() - t1, 1))
+            zp, how, sw, sec = self.cache[key]
+            self.points.append(dict(z=z, zp=zp, how=how, sw=sw, s=sec))
+            return zp
+
+        def olu_solve(self, *args):
+            r = self.so.olu_solve(*args)
+            if len(args) == 1:
+                self.solves.append((o8(args[0]), o8(r)))
+            return r
+    el = TraceElimO(att["so"], att["rs"])
+    el.points, el.solves, el.cache = [], [], {}
+    return el
+
+
+def drop_V(V, x):
+    """chord_strong's drop_V, the same two lines: x less V V^T x (leading parts, f64), twice"""
+    from multidouble import od_axpy
+    from octo_corrector import o8
+    zero8 = np.zeros(len(x[0]))
+    for _ in range(2):
+        c = V @ (V.T @ (np.asarray(x[0]) + np.asarray(x[1])))
+        x = o8(od_axpy(-1.0, np.ascontiguousarray(c), *([zero8] * 7), *x))
+    return x
+
+
+def drop_V_exact(V, x, dps=160):
+    """x less V V^T x twice in mpmath at dps digits, with V's f64 entries and all eight parts of x: drop_V without
+    its f64 rounding (the same V). Returned in eight parts."""
+    import mpmath as mp
+    from octo_corrector import o8
+    with mp.workdps(dps):
+        L, w = V.shape
+        xs = [mp.fsum(mp.mpf(float(x[q][i])) for q in range(8)) for i in range(L)]
+        Vm = [[mp.mpf(float(V[i, j])) for j in range(w)] for i in range(L)]
+        for _ in range(2):
+            c = [mp.fsum(Vm[i][j] * xs[i] for i in range(L)) for j in range(w)]
+            xs = [xs[i] - mp.fsum(Vm[i][j] * c[j] for j in range(w)) for i in range(L)]
+        out = [np.zeros(L) for _ in range(8)]
+        for i in range(L):
+            v = xs[i]
+            for q in range(8):
+                f = float(v)
+                out[q][i] = f
+                v = v - mp.mpf(f)
+    return o8(out)
+
+
+def chord(argv):
+    """the attempt's start, its first Newton step and the strong-row chord (chord_strong, as newton_od calls it under
+    --od_strong), with every chord point, its projection (forced where the switch skipped it), each chord solve
+    J0^-1 F and the weak subspace V kept; then chordstat on them"""
+    import octo_corrector as oc
+    from octo_corrector import o8
+    from raw_out import require_raw
+    raw, base = argv[0], argv[1]
+    a = float(argv[argv.index("--a") + 1])
+    jet, pred, out = _opt(argv, "jet", "") or None, _opt(argv, "pred", "") or None, _opt(argv, "out", "")
+    threads, strong, chord_it = _opt(argv, "threads", 2), _opt(argv, "strong", 4), _opt(argv, "chord_it", 10)
+    os.makedirs(out, exist_ok=True)
+    t0 = time.time()
+    att = build_attempt(raw, base, a, threads=threads, jet=jet, pred=pred)
+    name = os.path.join(out, f"chord_trace_D{float(att['Dn']):.4f}.npz")
+    require_raw(name)
+    print(f"chord: base {base}, D + a {att['Dn']}, prediction from {'jet ' + jet if jet else 'pred ' + pred}", flush=True)
+    code = 0
+    chk = _opt(argv, "check_pred", "")
+    if chk:
+        d = np.load(os.path.join(raw, chk))
+        same = all(np.array_equal(np.asarray(att["pred4"][q]), d[k]) for q, k in enumerate(("zh", "zl", "z2", "z3")))
+        print(f"  the rebuilt prediction against {chk}: {'bit for bit equal' if same else 'DIFFERS'}", flush=True)
+        code |= 0 if same else 1
+    z0, rsd = reseeded_start(att)
+    el = trace_elim(att)
+    st = el.newton_o(z0)                      # newton_od's first call, the start's LU (J0)
+    dz = o8(st[0])
+    nd = float(np.abs(np.asarray(dz[0])).max())
+    print(f"  re-seed {'ok' if rsd['ok'] else 'FAILED, prediction kept'}; start max|F| (PinnedO) "
+          f"{float(np.abs(np.asarray(st[1]) + np.asarray(st[2])).max()):.2e}, |dz| {nd:.3e}, {time.time() - t0:.0f} s",
+          flush=True)
+    junk = {}
+    orig = oc.junk_subspace_o
+
+    def junk_rec(s, w, *args, **kw):
+        r = orig(s, w, *args, **kw)
+        junk.update(V=r[0], sig=r[1], sig_other=r[2])
+        return r
+    oc.junk_subspace_o = junk_rec
+    try:
+        zc, ok_c, info = oc.chord_strong(el, z0, dz, strong, chord_it, 1e-60, 1e-45, 0, True)
+    finally:
+        oc.junk_subspace_o = orig
+    n_chord = len(el.solves)
+    Fz = o8(el.residual_o(zc))                # newton_od's natural test at the chord's point, through J0's LU
+    xb = o8(el.olu_solve([np.ascontiguousarray(q) for q in Fz]))
+    theta = float(np.abs(np.asarray(xb[0])).max()) / nd
+    print(f"  chord: {len(info['steps'])} steps, ok {ok_c}; theta at its point {theta:.3e} (#700: 7.993e-12), "
+          f"{time.time() - t0:.0f} s", flush=True)
+    chk = _opt(argv, "check_iter", "")
+    if chk:
+        di = np.load(os.path.join(raw, chk))
+        same = all(np.array_equal(np.asarray(zc[q]), di[f"z{q}"]) for q in range(8))
+        print(f"  the chord's point against {chk}: {'bit for bit equal' if same else 'DIFFERS'}", flush=True)
+        code |= 0 if same else 1
+    # the points: the start, then each point the chord evaluated, then its last point (the natural test's)
+    pts = el.points
+    print("  points projected (in order): " + ", ".join(f"{p['how']} (switch test {p['sw']:.2e})" for p in pts), flush=True)
+    forced = []
+    for k, p in enumerate(pts):
+        if p["how"] == "skipped" and not any(p["z"] is q["z"] for q in pts[:k]):
+            t1 = time.time()
+            zp4, how = att["rs"].project(oc.q4_of_o(p["z"]))
+            zp = p["z"] if how == "failed" else att["with_horizon"](p["z"], zp4, att["rs"])
+            forced.append(k)
+            p.update(zp_forced=zp, how_forced=how, s_forced=round(time.time() - t1, 1))
+            print(f"  point {k} forced: projection {how}, {p['s_forced']} s", flush=True)
+    sav = {"meta": json.dumps(dict(raw_base=base, a=a, jet=jet, pred=pred, threads=threads, strong=strong,
+                                   chord_it=chord_it, n_chord_solves=n_chord, chord=info, theta=theta, ok=bool(ok_c),
+                                   points=[dict(how=p["how"], sw=p["sw"], s=p["s"], how_forced=p.get("how_forced"))
+                                           for p in pts], counts=dict(el.counts), seconds=round(time.time() - t0, 1)),
+                              default=float),
+           "V": junk["V"], "sig": junk["sig"], "sig_other": junk["sig_other"]}
+    for k, p in enumerate(pts):
+        zp = p.get("zp_forced", p["zp"])
+        for q in range(8):
+            sav[f"p{k}_z{q}"] = np.asarray(p["z"][q])
+            sav[f"p{k}_P{q}"] = np.asarray(zp[q])
+    for j, (F, x) in enumerate(el.solves[:n_chord]):
+        for q in range(8):
+            sav[f"x{j}_{q}"] = np.asarray(x[q])
+    for q in range(8):
+        sav[f"zc_{q}"] = np.asarray(zc[q])
+        sav[f"dz_{q}"] = np.asarray(dz[q])
+    np.savez(name, **sav)
+    print(f"  saved {name}, {time.time() - t0:.0f} s", flush=True)
+    code |= chordstat([raw, name] + (["--threads", str(threads)]))
+    return code
+
+
+def chordstat(argv):
+    """the trace of chord(): at each point the switch's test value, its own residual and its projection's by block,
+    and P(z) - z by unknown group with m_h and a_h by harmonic; at each chord step x = J0^-1 F, V^T x, dw by group,
+    drop_V's f64 rounding (dw against drop_V in mpmath with the same V), and the switch's test value at z - dw with
+    only one group of dw applied, with the exact dw, and with V rounded differently (V + 1e-16 noise, QR again)"""
+    from hpkernel.driver import qmax
+    from multidouble import od_axpy
+    from octo_corrector import PinnedO, o8, q4_of_o  # noqa: F401
+    from pinning import PinnedQ
+    from raw_out import require_raw
+    raw, path = argv[0], argv[1]
+    threads = _opt(argv, "threads", 2)
+    dd = np.load(path)
+    meta = json.loads(str(dd["meta"]))
+    att = build_attempt(raw, meta["raw_base"], meta["a"], threads=threads, jet=meta.get("jet"), pred=meta.get("pred"))
+    M, K, so = att["M"], att["K"], att["so"]
+    sq = PinnedQ(so.s, so.ch, so.cl)
+    rec_path = path.replace(".npz", ".jsonl")
+    require_raw(rec_path)
+    V = dd["V"]
+    G = groups(M, K)
+    n = len(meta["points"])
+    Z = [o8(tuple(dd[f"p{k}_z{q}"] for q in range(8))) for k in range(n)]
+    P = [o8(tuple(dd[f"p{k}_P{q}"] for q in range(8))) for k in range(n)]
+    X = [o8(tuple(dd[f"x{j}_{q}"] for q in range(8))) for j in range(meta["n_chord_solves"])]
+    lead = lambda v: np.asarray(v[0]) + np.asarray(v[1])  # noqa: E731
+
+    def sw(z):
+        return qmax(sq.residual_q(*q4_of_o(z)))
+
+    def sub(z, v):
+        return o8(od_axpy(-1.0, *v, *z))
+
+    def mask(v, idx):
+        m = np.zeros(len(v[0]), dtype=bool)
+        m[idx] = True
+        return o8(tuple(np.where(m, np.asarray(p), 0.0) for p in v))
+
+    def gmax(v):
+        lv = lead(v)
+        return {g: float(np.abs(lv[ix]).max()) for g, ix in G.items()}
+
+    def harm(v, g):
+        ks_, amp = harmonics(lead(v)[G[g]], M)
+        return {int(k): float(x) for k, x in zip(ks_, amp)}
+
+    def hrows(F):
+        """the horizon block's rows of a residual by field, max and by harmonic"""
+        o = 4 * M * K
+        Fl = lead(F)
+        out = {}
+        for f in range(4):
+            seg = Fl[o + M * f:o + M * (f + 1)]
+            ks_, amp = harmonics(seg, M)
+            out[FIELDS[f]] = dict(max=float(np.abs(seg).max()), harm={int(k): float(x) for k, x in zip(ks_, amp)})
+        return out
+    names = ["start z0"] + [f"chord point {k - 1}" for k in range(1, n)]
+    recs = []
+    print(f"chordstat: {path}; M {M}, K {K}; V {V.shape}, sigma {', '.join(f'{s:.2e}' for s in dd['sig'])}", flush=True)
+    print("  the points (the switch's test value is the pinned quad-double max |F| of the point itself):", flush=True)
+    for k in range(n):
+        disp = o8(od_axpy(-1.0, *Z[k], *P[k]))
+        Fo, Fp = so.residual_o(Z[k]), so.residual_o(P[k])
+        r = dict(kind="point", k=k, name=names[k], how=meta["points"][k]["how"], how_forced=meta["points"][k]["how_forced"],
+                 sw=sw(Z[k]), F_own=per_block(lead(Fo), M, K), F_proj_max=float(np.abs(lead(Fp)).max()),
+                 F_proj=per_block(lead(Fp), M, K), hrows_own=hrows(Fo), disp=gmax(disp), disp_mh=harm(disp, "m_h"),
+                 disp_ah=harm(disp, "a_h"))
+        recs.append(r)
+        top = sorted(r["F_own"].items(), key=lambda kv: -kv[1])[:4]
+        print(f"  [{k}] {names[k]}: switch test {r['sw']:.3e} ({r['how']}{', forced ' + r['how_forced'] if r['how_forced'] else ''}); "
+              f"own F by block " + ", ".join(f"{b} {v:.2e}" for b, v in top) + f"; F(P(z)) {r['F_proj_max']:.2e}", flush=True)
+        print("      own F in the horizon rows by harmonic: " + "; ".join(
+            f"{f} " + ", ".join(f"k{kk} {v:.1e}" for kk, v in sorted(r["hrows_own"][f]["harm"].items(), key=lambda kv: -kv[1])[:4])
+            for f in ("m", "a", "c")), flush=True)
+        print(f"      P(z) - z: m_h {r['disp']['m_h']:.3e}, a_h {r['disp']['a_h']:.3e}, other {max(r['disp'][g] for g in ('centre', 'nodes', 'Delta')):.1e}; "
+              f"a_h by harmonic " + ", ".join(f"k{kk} {v:.1e}" for kk, v in r["disp_ah"].items()), flush=True)
+        print("      m_h by harmonic " + ", ".join(f"k{kk} {v:.1e}" for kk, v in r["disp_mh"].items()), flush=True)
+    # the chord steps: point j + 1 (pts index) is chord point j; chord point j + 1 = chord point j - dw_j
+    print("  the chord steps:", flush=True)
+    rng = np.random.default_rng(1)
+    Vp = np.linalg.qr(V + 1e-16 * rng.standard_normal(V.shape))[0]
+    for j, x in enumerate(X):
+        zj, zn = Z[j + 1], Z[j + 2]
+        dw = drop_V(V, x)
+        same = all(np.array_equal(np.asarray(p), np.asarray(q)) for p, q in zip(sub(zj, dw), zn))
+        dwx = drop_V_exact(V, x)
+        res_ = o8(od_axpy(-1.0, *dwx, *dw))         # drop_V's rounding, dw - dw_exact
+        dwp = drop_V(Vp, x)
+        vtx = V.T @ lead(x)
+        r = dict(kind="step", j=j, reproduced=bool(same), x=gmax(x), x_max=float(np.abs(lead(x)).max()),
+                 VTx=[float(v) for v in vtx], dw=gmax(dw), dw_max=float(np.abs(lead(dw)).max()),
+                 dw_ah=harm(dw, "a_h"), dw_mh=harm(dw, "m_h"), rounding=gmax(res_), rounding_ah=harm(res_, "a_h"),
+                 dw_exact_max=float(np.abs(lead(dwx)).max()), dw_Vp_max=float(np.abs(lead(dwp)).max()),
+                 sw_before=sw(zj), sw_after=sw(zn))
+        part = {}
+        for g in ("centre", "nodes", "last node", "m_h", "a_h", "horizon data", "Delta"):
+            part[g] = sw(sub(zj, mask(dw, G[g])))
+        notg = np.setdiff1d(np.arange(len(dw[0])), G["horizon data"])
+        part["all but horizon data"] = sw(sub(zj, mask(dw, notg)))
+        part["exact dw"] = sw(sub(zj, dwx))
+        part["exact dw, own F max"] = float(np.abs(lead(so.residual_o(sub(zj, dwx)))).max())
+        part["dw with V rounded differently"] = sw(sub(zj, dwp))
+        part["rounding only (dw - exact dw)"] = sw(sub(zj, res_))
+        r["sw_partial"] = part
+        recs.append(r)
+        print(f"  step {j} (chord point {j} -> {j + 1}): reproduced {'bit for bit' if same else 'NOT'}; |x| {r['x_max']:.3e} "
+              f"(a_h {r['x']['a_h']:.2e}, m_h {r['x']['m_h']:.2e}, nodes {r['x']['nodes']:.2e}); V^T x "
+              + ", ".join(f"{v:+.2e}" for v in vtx), flush=True)
+        print(f"      |dw| {r['dw_max']:.3e} (a_h {r['dw']['a_h']:.2e}, m_h {r['dw']['m_h']:.2e}, nodes {r['dw']['nodes']:.2e}, "
+              f"Delta {r['dw']['Delta']:.2e}); exact drop_V |dw| {r['dw_exact_max']:.3e}; with V rounded differently "
+              f"{r['dw_Vp_max']:.3e}", flush=True)
+        print(f"      drop_V's rounding (dw - exact): a_h {r['rounding']['a_h']:.2e}, m_h {r['rounding']['m_h']:.2e}, "
+              f"nodes {r['rounding']['nodes']:.2e}, centre {r['rounding']['centre']:.2e}", flush=True)
+        print(f"      switch test {r['sw_before']:.3e} -> {r['sw_after']:.3e}; with one group of dw only: "
+              + ", ".join(f"{g} {v:.2e}" for g, v in part.items()), flush=True)
+        print("      dw in a_h by harmonic " + ", ".join(f"k{kk} {v:.1e}" for kk, v in r["dw_ah"].items()), flush=True)
+    with open(rec_path, "w") as fh:
+        for r in recs:
+            fh.write(json.dumps(r, default=float) + "\n")
+    print(f"  records {rec_path}", flush=True)
+    return 0 if all(r["reproduced"] for r in recs if r["kind"] == "step") else 1
+
+
 if __name__ == "__main__":
     args = sys.argv[1:]
-    cmds = {"selftest": selftest, "iterate": iterate, "probe": probe, "fixrun": fixrun, "offset": offset}
+    cmds = {"selftest": selftest, "iterate": iterate, "probe": probe, "fixrun": fixrun, "offset": offset, "chord": chord,
+            "chordstat": chordstat}
     if not args or args[0] not in cmds:
         print(__doc__)
         sys.exit(2)
