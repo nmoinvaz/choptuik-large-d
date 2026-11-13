@@ -4,9 +4,11 @@ assembled at Re lambda, one f64 ulp up and two ulps up (CSolver.mode_matrix). Fo
 two-ulp change d2 is twice its one-ulp change d1; the entries where |d2 - 2 d1| > |d1| / 2 are counted, located by
 block of 4M rows and columns, and the largest is printed.
 
-    cd hp && python3 modecount_smooth.py STATE.npz M KF|none RE IM [--joint]
+    cd hp && python3 modecount_smooth.py STATE.npz M KF|none RE IM [--joint] [--mutate=lo]
 
 --joint prints the counted entries' (row block, column block) table, and within a block their field and tau lane.
+--mutate=lo, the control: the matrices' low parts are dropped, as an assembly in f64 would leave them, so the one-ulp
+changes are whole ulps of the high parts and most changed entries must count as non-linear.
 """
 import os
 import sys
@@ -20,9 +22,14 @@ if len(args) != 5:
     sys.exit(__doc__)
 path, M, re0, im0 = args[0], int(args[1]), float(args[3]), float(args[4])
 kf = None if args[2] == "none" else int(args[2])
+mutate = next((a.split("=", 1)[1] for a in sys.argv[1:] if a.startswith("--mutate=")), None)
+if mutate not in (None, "lo"):
+    sys.exit(f"--mutate takes lo, not {mutate}")
 st = setup(path, M=M, threads=4, kf=kf, fmax=1e-15, log=lambda *a: None)
 def mat(re_):
     rh, rl, ih, il = st.c.mode_matrix(st.zh, st.zl, re_, im0)
+    if mutate == "lo":
+        rl, il = np.zeros_like(rl), np.zeros_like(il)
     return (np.asarray(rh), np.asarray(rl), np.asarray(ih), np.asarray(il))
 def diff(A, B):
     # exact-enough difference of two double-double complex matrices, in f64 (each part difference is exact for nearby values)
