@@ -24,7 +24,8 @@
 //! Copied and adapted from hp's model.rs (the Choptuik scalar: four fields, centre datum p1 with m ~ -p1 x): its
 //! Taylor recursion, centre and horizon series, horizon LUs and refined periodic solves, with the sigma-model terms,
 //! the fifth field psi and the l = 1 centre structure (p ~ m ~ q x, the 2 x 2 order-k system of sigdss_solver.py's
-//! centre_series). hp's f64, octo-double, jet and mode-matrix lanes are not carried over.
+//! centre_series). The f64 lanes serve the mixed-precision Newton's Jacobian; hp's octo-double, jet and mode-matrix
+//! lanes are not carried over.
 use crate::planted::Planted;
 use multidouble::dd::DD;
 use multidouble::field::{cs, cs_w, horner, FieldSolve, Fl};
@@ -44,8 +45,8 @@ use rayon::prelude::*;
 pub const NF: usize = 5;
 /// the scratch series of the Taylor recursion (`Work::aux`): a2, q2, g, h, pth, mth, ww, vv, sn, co, ss, g2, sg, hs
 const N_AUX: usize = 14;
-/// terms of the series of sin(s)/s and cos(s) in w = s^2: k = 0..N_SIN-1, the first dropped term w^26/53! ~ 2e-70
-/// for |w| <= 1 (|kappa psi| <= 1 rad; |u| <= 0.3 at eta >= 5, D = 4)
+/// terms of the series of sin(s)/s and cos(s) in w = s^2: k = 0..N_SIN-1, the first dropped terms w^26/53! and
+/// w^26/52! below 1.3e-68 for |w| <= 1 (|kappa psi| <= 1 rad; |u| <= 0.3 at eta >= 5, D = 4)
 const N_SIN: usize = 26;
 
 /// `Ctx::mutate`, the controls of the planted check (planted.py --mutate): gamma's recursion in the Taylor steps with

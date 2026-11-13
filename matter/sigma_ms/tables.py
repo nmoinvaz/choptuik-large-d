@@ -41,7 +41,7 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("raw")
     ap.add_argument("--csv", default="")
-    ap.add_argument("--Ms", default="32,48")
+    ap.add_argument("--Ms", default="32,48,64")
     a = ap.parse_args()
     Ms = [int(m) for m in a.Ms.split(",")]
     ours = {}
@@ -62,17 +62,22 @@ def main():
         row = dict(eta=e)
         for M in Ms:
             r = ours.get((e, M))
-            row[f"Delta_M{M}"] = r["Delta"] if r else ""
+            # the double-double value hi + lo (the records' "Delta" string of runs before the fix of run_eta.py
+            # holds the hi part only: mpmath was at its default 53 bits there)
+            row[f"Delta_M{M}"] = mp.nstr(mp.mpf(r["Delta_hi"]) + mp.mpf(r["Delta_lo"]), 32) if r else ""
             row[f"F_M{M}"] = f"{r['F']:.1e}" if r else ""
             row[f"constraint_M{M}"] = f"{r['constraint']:.1e}" if r else ""
         if row["Delta_M32"] and row.get("Delta_M48"):
-            row["M48_minus_M32"] = mp.nstr(mp.mpf(row["Delta_M48"]) - mp.mpf(row["Delta_M32"]), 4)
+            row["M48_minus_M32"] = mp.nstr(mp.mpf(row["Delta_M48"]) - mp.mpf(row["Delta_M32"]), 10)
+        if row.get("Delta_M48") and row.get("Delta_M64"):
+            row["M64_minus_M48"] = mp.nstr(mp.mpf(row["Delta_M64"]) - mp.mpf(row["Delta_M48"]), 10)
         row["Delta_kc23"] = sig.get((e, 23), "")
         row["Delta_kc39"] = sig.get((e, 39), "")
+        # the acceptance compares M = 48 (the issue's highest M; M = 64 is the check of its error)
         best = row.get("Delta_M48") or row.get("Delta_M32")
         if best and row["Delta_kc39"] != "":
             diff = mp.mpf(best) - mp.mpf(row["Delta_kc39"])
-            row["best_minus_kc39"] = mp.nstr(diff, 4)
+            row["best_minus_kc39"] = mp.nstr(diff, 10)
             row["kc39_minus_kc23"] = f"{row['Delta_kc39'] - row['Delta_kc23']:.4e}" if row["Delta_kc23"] != "" else ""
             if e == "inf":
                 bound = abs(l1[39] - l1[31])
@@ -86,7 +91,8 @@ def main():
                 ok &= v
         rows.append(row)
     cols = ["eta"] + [f"{p}_M{M}" for M in Ms for p in ("Delta", "F", "constraint")] + \
-        ["M48_minus_M32", "Delta_kc23", "Delta_kc39", "best_minus_kc39", "kc39_minus_kc23", "verdict"]
+        ["M48_minus_M32"] + (["M64_minus_M48"] if 64 in Ms else []) + \
+        ["Delta_kc23", "Delta_kc39", "best_minus_kc39", "kc39_minus_kc23", "verdict"]
     print("| " + " | ".join(cols) + " |")
     print("|" + "---|" * len(cols))
     for r in rows:
@@ -98,6 +104,40 @@ def main():
             w.writeheader()
             for r in rows:
                 w.writerow({c: r.get(c, "") for c in cols})
+        # the checks (I639-mac/checks/): a second start and the quad-double Newton, against the chain's run at the same
+        # eta and M; Delta of a quad-double state from its four parts in the saved state
+        import numpy as np
+        cpath = os.path.join(a.raw, "I639-mac", "checks", "sm_records.jsonl")
+        if os.path.exists(cpath):
+            with open(os.path.join(os.path.dirname(a.csv), "checks.csv"), "w", newline="") as f:
+                w = csv.writer(f)
+                w.writerow(["tag", "eta", "M", "seed", "F", "Delta", "minus_chain", "qd_F", "Delta_qd", "qd_minus_dd"])
+                for line in open(cpath):
+                    r = json.loads(line)
+                    D = mp.mpf(r["Delta_hi"]) + mp.mpf(r["Delta_lo"])
+                    c = ours[(r["eta"], r["M"])]
+                    Dc = mp.mpf(c["Delta_hi"]) + mp.mpf(c["Delta_lo"])
+                    qF, Dq, dq = "", "", ""
+                    if "qd" in r:
+                        z = np.load(os.path.join(a.raw, "I639-mac", "checks", f"sm_{r['tag']}.npz"))
+                        with mp.workdps(80):
+                            Q = sum(mp.mpf(float(z[k][-1])) for k in ("zh", "zl", "z2", "z3"))
+                            Dq, dq = mp.nstr(Q, 64), mp.nstr(Q - D, 6)
+                        qF = f"{r['qd']['F'][-1]:.2e}"
+                    seed = r["seed"].get("sigdss") or r["seed"].get("src")
+                    w.writerow([r["tag"], r["eta"], r["M"], seed, f"{r['F']:.2e}", mp.nstr(D, 32), mp.nstr(D - Dc, 6), qF, Dq, dq])
+        # the planted check's runs (planted.py), one row per run, beside the table
+        pc = ["M", "mutate", "steps", "F_star", "dd_converged", "dd_newton_steps", "dd_err", "dd_dDelta", "dd_F_last",
+              "dd_pass", "qd_converged", "qd_F_last", "qd_dDelta_dd", "qd_dDelta", "qd_pass"]
+        with open(os.path.join(os.path.dirname(a.csv), "planted.csv"), "w", newline="") as f:
+            w = csv.writer(f)
+            w.writerow(pc)
+            for line in open(os.path.join(a.raw, "I639-mac", "planted", "planted_records.jsonl")):
+                r = json.loads(line)
+                dd, qd = r["dd"], r["qd"]
+                w.writerow([r["M"], r["mutate"] or "none", r["steps"], f"{r['F_star']:.3e}", dd["converged"], dd["steps"],
+                            f"{dd['err']:.3e}", f"{dd['dDelta']:.3e}", f"{dd['F'][-1]:.3e}", dd["pass_"], qd["converged"],
+                            f"{qd['F'][-1]:.3e}", f"{qd.get('dDelta_dd', float('nan')):.3e}", f"{qd['dDelta']:.3e}", qd["pass_"]])
     print("ACCEPTANCE", "PASS" if ok else "FAIL")
     sys.exit(0 if ok else 1)
 

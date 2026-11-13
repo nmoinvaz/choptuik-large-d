@@ -29,6 +29,10 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, HERE)
 import smdriver as sd  # noqa: E402
 
+# enough digits for the sums of a state's parts (quad-double: about 64 digits); at mpmath's default of 53 bits the
+# records' Delta string held the hi part only (the runs of #639 before this line; Delta_hi and Delta_lo are exact)
+mp.mp.dps = 80
+
 
 def eps_of(eta):
     return 0.0 if eta in (None, "inf") or eta == float("inf") else 1.0 / float(eta)
