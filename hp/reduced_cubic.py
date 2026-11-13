@@ -1280,11 +1280,14 @@ def ray_scan(sysm, bas, opts, mutate, log, rec, dump, truth=None, tensors=None):
 
 def raysum(paths):
     """the summary of ray runs (their --json files): per start and ray, the fitted orders and constants, the crossing,
-    and estimates of the next orders. If the odd part is l t + s t^3 + ..., the change of O/t from the smallest to the
-    largest resolved t bounds |s| t_max^2; likewise E/t^2 for the even part's quartic. These are estimates from the
-    stored points (16 digits each), not bounds proved, and they assume the leading orders are 1 and 2. In units of
-    |B a| (t/|a|)^p: K3 for the cubic, K4 for the quartic; K3 also as |(T - 3S)(e, e, e)| / max|T| where the run
-    measured T (with 6 K3 |B a| / |a|^3)."""
+    and estimates of the next orders. If the odd part is l t + s t^3 + ..., the relative change rho of |O|/t from the
+    smallest to the largest resolved t estimates |s| t_max^2 / |l| as rho for s along l, and as sqrt(2 rho) for s
+    orthogonal to l (the norm then changes at second order); the larger is taken. Likewise |E|/t^2 for the even
+    part's quartic. The norms |E| and |O| are the run's, formed at 140 digits and stored with 16 (the stored dep
+    vectors are not used: where one part exceeds the other by 16 digits their half sums cancel to rounding). So rho
+    has a floor near 1e-16, and sqrt(2 rho) near 1e-8. These are estimates, not bounds, and they assume the leading
+    orders are 1 and 2. In units of |B a| (t/|a|)^p: K3 for the cubic, K4 for the quartic; K3 also as
+    |(T - 3S)(e, e, e)| / max|T| where the run measured T (with 6 K3 |B a| / |a|^3)."""
     for path in paths:
         with open(path) as fh:
             r = json.load(fh)
@@ -1295,19 +1298,16 @@ def raysum(paths):
               f"{ray.get('dep_a', float('nan')):.3e}, max|F| at a {ray.get('Fmax_a', float('nan')):.2e}, floor0 "
               f"{ray.get('floor0', float('nan')):.2e} (of |B a|)")
         for name, rr in (ray.get("rays") or {}).items():
-            pts = {(p["sgn"], p["t"]): p for p in rr["points"] if p["ok"]}
-            ts = sorted({t for s, t in pts if (1, t) in pts and (-1, t) in pts})
-            rows = {row["t"]: row for row in rr["rows"]}
-            E = {t: [(x + y) / 2 for x, y in zip(pts[(1, t)]["dep"], pts[(-1, t)]["dep"])] for t in ts}
-            O = {t: [(x - y) / 2 for x, y in zip(pts[(1, t)]["dep"], pts[(-1, t)]["dep"])] for t in ts}
-            res = lambda part: [t for t in ts if rows[t][part] > RESOLVED * rows[t]["fl"]]   # noqa: E731
+            rows = rr["rows"]
             nb = {}
-            for part, P, p0 in (("O", O, 1), ("E", E, 2)):
-                rt = res(part)
+            for part, p0 in (("O", 1), ("E", 2)):
+                rt = [row for row in rows if row[part] > RESOLVED * row["fl"]]
                 if len(rt) >= 2:
-                    t0, t1 = rt[0], rt[-1]
-                    d = np.linalg.norm(np.array(P[t1]) / t1 ** p0 - np.array(P[t0]) / t0 ** p0)
-                    nb[part] = d / t1 ** 2 * na ** (p0 + 2) / nBa    # |next coefficient| in |B a| (t/|a|)^(p0+2)
+                    r0, r1 = rt[0], rt[-1]
+                    k0, k1 = r0[part] / r0["t"] ** p0, r1[part] / r1["t"] ** p0
+                    rho = max(abs(k1 / k0 - 1), 2.2e-16)            # not below the stored digits' rounding
+                    # |next coefficient| in |B a| (t/|a|)^(p0+2): max(rho, sqrt(2 rho)) |lead| / t_max^2
+                    nb[part] = max(rho, (2 * rho) ** 0.5) * k1 / r1["t"] ** 2 * na ** (p0 + 2)
             fits = rr["fits"]
             line = f"  ray {name}:"
             for part in ("E", "O"):
