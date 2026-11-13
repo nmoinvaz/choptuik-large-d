@@ -379,9 +379,13 @@ its `drop_pole` control fails. Three tracks of singularities lie within a factor
 **Δ's own Padé poles hold one singularity fixed at D* = 255.71 + 4.99i at all five bases.** The root test agrees with
 A's distance to 3–7% at each base, read after the fact. Δ's two-term recurrence fit reads otherwise. Its D* moves from
 255.29 + 4.63i to 256.99 + 2.70i and would reach the axis at D₀ ≈ 255.8. But its window spread, 0.6 to 3.2, is as
-large as that drift, and its planted controls hold one pair near the front, not three. So whether the branch ends near
-D 256 is not decided. Track A predicts that the root test bottoms near 5.0 at D₀ ≈ 255.7 and rises after. A planted
-three-track series (#711) and series past D 255 (#712) test the two readings.
+large as that drift, and its planted controls held one pair near the front, not three. A planted series with A, B and
+C fixed in D, seen from the same five bases (#711, `jet_singularity.py planted --case T3`; raw `I711-mac/` d396e4e5),
+makes the recurrence fit's Im D* fall by 2.96 and touch the axis, while nothing moves. **So the recurrence fit's drift
+toward the axis is what three fixed singularities produce, and by the rule fixed before the run it is dropped.** Padé
+recovers all three pairs when their terms are balanced at order 12, but it misses the nearest one when the farthest
+dominates the low orders, so the plant fails its own criterion and the Padé reading is not certified by it either.
+Track A predicts that the root test bottoms near 5.0 at D₀ ≈ 255.7 and rises after, which series past D 255 test (#712).
 
 ### The refusals are the corrector's
 
