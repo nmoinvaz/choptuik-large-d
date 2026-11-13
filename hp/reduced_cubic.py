@@ -5,6 +5,7 @@
     cd hp && python3 reduced_cubic.py planted [--seed=5] [--json=OUT] [--mutate=M]
     cd hp && python3 reduced_cubic.py ray RAWDIR DZ0 BASE [--tensors=1] [--threads=2] [--json=OUT] [--mutate=w0|B]
     cd hp && python3 reduced_cubic.py ray planted [--seed=5] [--json=OUT] [--mutate=w0|B]
+    cd hp && python3 reduced_cubic.py raysum OUT.json [OUT.json ...]     (the ray runs' summary, raysum's docstring)
 
 `ray` (#677) scans the reduced map g on the strong-solved manifold along rays c = +-t e, e = a / |a| and two random
 unit vectors, at t = 1e-30 .. 1e-24 (four per decade; 1e-29 .. 1e-26 judged), and fits the order at which it departs
@@ -1277,6 +1278,58 @@ def ray_scan(sysm, bas, opts, mutate, log, rec, dump, truth=None, tensors=None):
     return ok, rec
 
 
+def raysum(paths):
+    """the summary of ray runs (their --json files): per start and ray, the fitted orders and constants, the crossing,
+    and estimates of the next orders. If the odd part is l t + s t^3 + ..., the change of O/t from the smallest to the
+    largest resolved t bounds |s| t_max^2; likewise E/t^2 for the even part's quartic. These are estimates from the
+    stored points (16 digits each), not bounds proved, and they assume the leading orders are 1 and 2. In units of
+    |B a| (t/|a|)^p: K3 for the cubic, K4 for the quartic; K3 also as |(T - 3S)(e, e, e)| / max|T| where the run
+    measured T (with 6 K3 |B a| / |a|^3)."""
+    for path in paths:
+        with open(path) as fh:
+            r = json.load(fh)
+        ray = r.get("ray") or {}
+        na, nBa = r["a_norm"], r["Ba"]
+        print(f"{os.path.basename(path)}: {r.get('label', r.get('dz0', 'planted'))}; |a| {na:.4e}, |B a| {nBa:.4e}, "
+              f"eps0 {ray.get('eps0', float('nan')):.3e}, |g(a)| {ray.get('g_a', float('nan')):.3e}, |dep(a)| "
+              f"{ray.get('dep_a', float('nan')):.3e}, max|F| at a {ray.get('Fmax_a', float('nan')):.2e}, floor0 "
+              f"{ray.get('floor0', float('nan')):.2e} (of |B a|)")
+        for name, rr in (ray.get("rays") or {}).items():
+            pts = {(p["sgn"], p["t"]): p for p in rr["points"] if p["ok"]}
+            ts = sorted({t for s, t in pts if (1, t) in pts and (-1, t) in pts})
+            rows = {row["t"]: row for row in rr["rows"]}
+            E = {t: [(x + y) / 2 for x, y in zip(pts[(1, t)]["dep"], pts[(-1, t)]["dep"])] for t in ts}
+            O = {t: [(x - y) / 2 for x, y in zip(pts[(1, t)]["dep"], pts[(-1, t)]["dep"])] for t in ts}
+            res = lambda part: [t for t in ts if rows[t][part] > RESOLVED * rows[t]["fl"]]   # noqa: E731
+            nb = {}
+            for part, P, p0 in (("O", O, 1), ("E", E, 2)):
+                rt = res(part)
+                if len(rt) >= 2:
+                    t0, t1 = rt[0], rt[-1]
+                    d = np.linalg.norm(np.array(P[t1]) / t1 ** p0 - np.array(P[t0]) / t0 ** p0)
+                    nb[part] = d / t1 ** 2 * na ** (p0 + 2) / nBa    # |next coefficient| in |B a| (t/|a|)^(p0+2)
+            fits = rr["fits"]
+            line = f"  ray {name}:"
+            for part in ("E", "O"):
+                f = fits[part]
+                line += (f" {'even' if part == 'E' else 'odd'} order {f['p']:.3f}, K {f['K']:.3e}" if f["p"] is not None
+                         else f" {'even' if part == 'E' else 'odd'} not resolved") + ";"
+            if "O" in nb:
+                line += f" cubic K3 <~ {nb['O']:.1e}"
+                if r.get("T"):
+                    line += f" (|(T - 3S)(e,e,e)| / max|T| <~ {6 * nb['O'] * nBa / na ** 3 / r['T']['max']:.1e})"
+            if "E" in nb:
+                line += f", quartic K4 <~ {nb['E']:.1e}"
+            cr = rr["cross"]["1"]
+            line += (f"; 1e-2 |B a| at |c|/|a| {cr['t'] / na:.3g} ({cr['how']})" if cr["t"] is not None
+                     else f"; 1e-2 |B a| {cr['how']}")
+            if rr.get("K3_tensors"):
+                line += f"; tensors' K3 {rr['K3_tensors'][0]:.2e} ({rr['K3_tensors'][1]:.2e} at the larger steps)"
+            if any(rr["stop"].values()):
+                line += f"; stopped at {rr['stop']}"
+            print(line)
+
+
 def strip(rec):
     return {k: v for k, v in rec.items() if not k.startswith("_")}
 
@@ -1316,6 +1369,9 @@ def main():
     args = [a for a in sys.argv[1:] if not a.startswith("--")]
     opts = dict(a[2:].split("=", 1) for a in sys.argv[1:] if a.startswith("--") and "=" in a)
     mutate = opts.get("mutate", "")
+    if args and args[0] == "raysum":
+        raysum(args[1:])
+        return 0
     modes = dict(run=("", "w0", "Ssign", "Sh", "hF"), planted=("", "w0", "Ssign", "Sh", "hF"), ray=("", "w0", "B"))
     if not args or args[0] not in modes or (args[0] == "run" and len(args) != 4) or \
             (args[0] == "ray" and len(args) != 4 and args[1:] != ["planted"]):
