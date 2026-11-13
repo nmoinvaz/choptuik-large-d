@@ -284,7 +284,7 @@ def newton_od(s, z, tol=1e-40, it_max=12, max_halvings=8, verbose=True, mutate=0
                 theta = size(proj(db)) / nd if good and nd > 0 else float("inf")
                 ft = omax(Ft) if good else float("nan")
                 ok = good and (theta <= 1 - lam / 4 or ft <= tol)
-                if verbose >= 2:
+                if verbose:     # each trial, since anm_run's records keep no corrector history
                     print(f"    on {it} trial lam {lam:g}: max|F| {ft:.2e}; simplified correction / |dz| = {theta:.3e} "
                           f"(bound {1 - lam / 4:.3f}); {'accepted' if ok else 'refused'}, {round(time.time() - t1, 2)} s",
                           flush=True)
