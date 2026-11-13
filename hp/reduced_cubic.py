@@ -2008,6 +2008,24 @@ def curvesum(paths):
                       f"{x['wm'] / b0['wm'] - 1:+.2e} {x['fl2p'] / b0['fl2p'] - 1:+.2e} {x.get('rhop', float('nan')):+.3e} "
                       f"{x.get('lrhop', float('nan')):+.3e} {x['stepsp']},{x['stepsm']}")
                 pv = (x["t"], d)
+            if all("Ov" in x for x in br):
+                # the cubic from the odd part as a vector, |Ov(t) - Ov(t0)| / (t^2 - t0^2) in |B e| per unit t^2, and
+                # the quartic from the even part, |Ev(t) / t - Ev(t0) / t0| / (t^2 - t0^2)
+                o0 = [mp.mpf(v) for v in b0["Ov"]]
+                e0 = [mp.mpf(v) / mp.mpf(b0["t"]) for v in b0["Ev"]]
+                print("    from the vectors: t, |O(t) - O(t0)| / (t^2 - t0^2), |E(t)/t - E(t0)/t0| / (t^2 - t0^2), the "
+                      "first's local order in t (of |O - O0| t)")
+                pv = None
+                for x in br[1:]:
+                    tt = mp.mpf(x["t"])
+                    dO = nrm([mp.mpf(v) - w for v, w in zip(x["Ov"], o0)])
+                    dE = nrm([mp.mpf(v) / tt - w for v, w in zip(x["Ev"], e0)])
+                    den = tt ** 2 - mp.mpf(b0["t"]) ** 2
+                    lo = ""
+                    if pv is not None and pv[1] > 0 and dO > 0:
+                        lo = f"{float(mp.log(dO * tt / (pv[1] * pv[0])) / mp.log(tt / pv[0])):.3f}"
+                    print(f"    {x['t']:9.3g} {mp.nstr(dO / den, 6):>12} {mp.nstr(dE / den, 6):>12} {lo:>6}")
+                    pv = (tt, dO)
 
 
 # ------------------------------------------------------------------ the weak rows (#694)
