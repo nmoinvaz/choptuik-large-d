@@ -531,7 +531,9 @@ The ψ-constraint is not imposed. It is 1.2×10⁻¹⁴ to 3.5×10⁻¹⁴ of ma
   M = 32 and M = 48 fits, 1.7×10⁻³ in η_min and −2.2×10⁻⁸ in Δ_min, is the resolution error of the M = 32 fit; for
   M = 48 it is an upper estimate. The M = 48 → 64 change is −4.3×10⁻⁴ times the M = 32 → 48 one at both η = 7 and
   ∞. If it keeps that shape at the other couplings, which were not run at M = 64, the M = 48 fit would move by about
-  −7×10⁻⁷ in η_min and +9×10⁻¹² in Δ_min. The parabolas of #633 through η = 6, 7 and 8.5 give 7.198, 7.089 and 6.983
+  −7×10⁻⁷ in η_min and +9×10⁻¹² in Δ_min. #650 ran the other six couplings at M = 64 (macm3, raw `I650-macm3/`
+  7f5b5cb1): |Δ(M = 64) − Δ(M = 48)| is 4.6×10⁻¹² to 1.93×10⁻¹¹, and the degree-6 fit's η_min moves to 6.9801930, by
+  −8.8×10⁻⁷, with Δ_min moving by +9.4×10⁻¹², as projected. The parabolas of #633 through η = 6, 7 and 8.5 give 7.198, 7.089 and 6.983
   in η, ln η and 1/η at M = 48. The one in 1/η, the variable Δ is analytic in, is the closest, and the spread of
   6.94–7.20 quoted in notes/REVIEW_GHMG25.md D9 is mostly the three-point model's.
 
