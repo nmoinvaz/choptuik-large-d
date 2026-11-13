@@ -92,9 +92,9 @@ dependencies = [
 
 [[package]]
 name = "multishoot"
-version = "1.2.1"
+version = "1.2.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c3aab6b9de78fdf16e13a00c5f43407924ea224bf23ca951db267723bb63207b"
+checksum = "2c99e76fa2349d959efe88d82c0a2dc9bf8c72958dfd351cff7d45d548fd87c5"
 dependencies = [
  "multidouble",
  "rayon",
