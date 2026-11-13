@@ -179,41 +179,79 @@ def fnorm(F):
     return float(np.max(np.abs(sum(np.asarray(f) for f in F))))
 
 
-def newton_solve(s, zh, zl, tol=1e-28, it_max=16, max_halvings=10, verbose=True, log=print):
-    """Newton with the exact double-double Jacobian (Solver.newton) and backtracking on max |F| (halving); stops when
-    max |F| < tol or a step finds no decrease. Returns zh, zl, history."""
+def newton_solve(s, zh, zl, tol=1e-28, it_max=16, max_halvings=10, verbose=True, log=print, jac="dd", chord=0,
+                 chord_rate=0.1):
+    """Newton in double-double with backtracking on max |F| (halving); stops when max |F| < tol or a step finds no
+    decrease. jac: "dd", the exact double-double Jacobian (Solver.newton); "mixed", the f64 Jacobian of Fun<4> lanes in
+    staircase storage (Solver.newton_mixed: the same root, linear convergence), with an exact step instead when a
+    mixed step finds no decrease. chord: after each Jacobian, up to this many chord steps with its factors
+    (Solver.chord) while each lowers max |F| by at least chord_rate. With jac "mixed", once max |F| < tol the step
+    computed there is still taken if max |F| stays below tol (the linear convergence leaves an error of about that
+    step along the weak directions, which |F| does not show; hp's newton_solve). Returns zh, zl, history."""
     hist = []
     t0 = time.time()
-    for it in range(it_max):
-        dz, F, pmin, pmax = s.newton([zh, zl])
-        nF = fnorm(F)
-        rec = dict(it=it, F=nF, Delta=float(zh[-1]), piv=(pmin, pmax), t=round(time.time() - t0, 1))
-        if nF < tol:
-            rec["converged"] = True
-            hist.append(rec)
-            if verbose:
-                log(f"  newton {it}: |F| {nF:.2e} converged, Delta {zh[-1]:.15f} (step |dz| {dd_norm(*dz):.1e})")
-            return zh, zl, hist
+
+    def search(dz, nF):
         lam = 1.0
-        ok = False
         for h in range(max_halvings + 1):
             th, tl = dd_add(zh, zl, dz[0] * lam, dz[1] * lam)
             n1 = fnorm(s.residual([th, tl]))
             if np.isfinite(n1) and n1 < nF:
-                ok = True
-                break
+                return True, lam, th, tl, n1
             lam *= 0.5
-        rec.update(lam=lam, dz=dd_norm(*dz), dDelta=float(dz[0][-1] + dz[1][-1]) * lam)
+        return False, lam, th, tl, n1
+
+    for it in range(it_max):
+        kind = jac
+        dz, F, pmin, pmax = s.newton([zh, zl]) if kind == "dd" else s.newton_mixed([zh, zl])
+        nF = fnorm(F)
+        rec = dict(it=it, jac=kind, F=nF, Delta=float(zh[-1]), piv=(pmin, pmax), t_step=getattr(s, "step_timing", lambda: None)(),
+                   t=round(time.time() - t0, 1))
+        if nF < tol:
+            rec["converged"] = True
+            if kind != "dd":
+                th, tl = dd_add(zh, zl, dz[0], dz[1])
+                n1 = fnorm(s.residual([th, tl]))
+                if n1 < tol:
+                    zh, zl = th, tl
+                    rec.update(polished=True, F_polished=n1, dDelta=float(dz[0][-1] + dz[1][-1]))
+            hist.append(rec)
+            if verbose:
+                log(f"  newton {it} ({kind}): |F| {nF:.2e} converged, Delta {zh[-1]:.15f} (step |dz| {dd_norm(*dz):.1e}"
+                    f"{', taken' if rec.get('polished') else ''})")
+            return zh, zl, hist
+        ok, lam, th, tl, n1 = search(dz, nF)
+        if not ok and kind != "dd":
+            if verbose:
+                log(f"  newton {it}: |F| {nF:.2e}: no decrease along the mixed step; retrying with the exact Jacobian")
+            dz, F, pmin, pmax = s.newton([zh, zl])
+            rec.update(jac="dd", retry_dd=True)
+            ok, lam, th, tl, n1 = search(dz, nF)
+        rec.update(lam=lam, F_next=n1, dz=dd_norm(*dz), dDelta=float(dz[0][-1] + dz[1][-1]) * lam)
         hist.append(rec)
         if verbose:
-            log(f"  newton {it}: |F| {nF:.2e} -> {n1:.2e}, lam {lam:g}, |dz| {rec['dz']:.1e}, dDelta {rec['dDelta']:+.2e}, "
-                f"pivots {pmin:.1e}..{pmax:.1e} ({rec['t']} s)")
+            log(f"  newton {it} ({rec['jac']}): |F| {nF:.2e} -> {n1:.2e}, lam {lam:g}, |dz| {rec['dz']:.1e}, "
+                f"dDelta {rec['dDelta']:+.2e}, pivots {pmin:.1e}..{pmax:.1e} ({rec['t']} s)")
         if not ok:
             rec["failed"] = "line search"
             return zh, zl, hist
         zh, zl = th, tl
+        for c in range(chord):
+            if n1 < tol:
+                break
+            dzc, Fc = s.chord([zh, zl])
+            ch, cl = dd_add(zh, zl, dzc[0], dzc[1])
+            n2 = fnorm(s.residual([ch, cl]))
+            crec = dict(it=it, chord=c, F=n1, F_next=n2, dDelta=float(dzc[0][-1] + dzc[1][-1]), t=round(time.time() - t0, 1))
+            hist.append(crec)
+            if verbose:
+                log(f"    chord {c}: |F| {n1:.2e} -> {n2:.2e}, dDelta {crec['dDelta']:+.2e}")
+            if not (np.isfinite(n2) and n2 < chord_rate * n1):
+                break
+            zh, zl, n1 = ch, cl, n2
     F = s.residual([zh, zl])
-    hist.append(dict(it=it_max, F=fnorm(F), Delta=float(zh[-1]), t=round(time.time() - t0, 1)))
+    nF = fnorm(F)
+    hist.append(dict(it=it_max, F=nF, Delta=float(zh[-1]), t=round(time.time() - t0, 1), converged=nF < tol))
     return zh, zl, hist
 
 

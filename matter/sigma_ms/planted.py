@@ -18,7 +18,10 @@ rounding. Nothing here shares code with the kernel's recursions.
 Plan, written before the runs: from z* + delta (delta 1e-3 relative on every unknown, Delta 1e-3 off), the same Newton as
 the real runs (smdriver.newton_solve) must reach max |F| < 1e-28 within 10 steps, at max |z - z*| < 1e-26 and
 |Delta - Delta*| < 1e-28; then a quad-double Newton (smdriver.newton_qd) from that point must reach max |F| < 1e-50 with
-|Delta - Delta*| < 1e-30 (the sources are double-double, so z* solves the quad-double system only to about 1e-32).
+|Delta_qd - Delta_dd| < 1e-28. The planted truth is exact only to double-double: the sources and z* are double-double
+roundings, so the quad-double system's solution lies about cond(J) 1e-32 from z* (cond 8e3 here), and the quad-double
+check compares with the double-double solve instead. (The first version of this plan asked |Delta_qd - Delta*| < 1e-30
+of the quad-double solve; it gave -2.5e-30 on the first run, at M = 8, because of that rounding, #639.)
 Exit 0 when every check passes, 1 otherwise.
 
 Controls (each must make the check fail, exit 1):
@@ -172,7 +175,14 @@ def main():
     s = sd.Solver(M, 2.0, 0.0, 1.0, 0.0, *sd.dmat_odd(M), *sd.phase_weights(M), nodes, [], 30, 40, 40, a.threads)
     s.set_planted(pp["beta"][0], pp["beta"][1], *pp["coef"])
     zh, zl = planted_z(pp, nodes)
-    s.set_segs(s.plan(zh, zl, 1e-32, 0.05))
+    # the start: z* + 1e-3 relative on every unknown (every harmonic), Delta 1e-3 off
+    rng = np.random.default_rng(1)
+    pert = 1e-3 * rng.uniform(-1, 1, len(zh)) * np.maximum(np.abs(zh), 0.1)
+    pert[-1] = 1e-3 * zh[-1]
+    z0h = zh + pert
+    # the Taylor steps planned from the start, as the real runs plan from their seed: a plan from z* (smooth in x)
+    # takes steps too long for the start's high harmonics near the horizon, where x - c is small
+    s.set_segs(s.plan(z0h, np.zeros_like(zl), 1e-32, 0.05))
     steps = sum(len(g) - 1 for g in s.get_segs())
     F_star = sd.fnorm(s.residual([zh, zl]))
     print(f"planted M = {M}, L = {s.size}, {steps} Taylor steps; max |F(z*)| = {F_star:.2e}", flush=True)
@@ -182,10 +192,6 @@ def main():
         col = 2 * M + 5 * M * 3 + 2 * M + 3          # node 3's field a, point 3
         s.set_drop_col(col)
         print(f"control: Jacobian column {col} dropped", flush=True)
-    rng = np.random.default_rng(1)
-    pert = 1e-3 * rng.uniform(-1, 1, len(zh)) * np.maximum(np.abs(zh), 0.1)
-    pert[-1] = 1e-3 * zh[-1]
-    z0h = zh + pert
     rh, rl, hist = sd.newton_solve(s, z0h, np.zeros_like(zl), tol=1e-28, it_max=10)
     conv = bool(hist and hist[-1].get("converged"))
     err = float(np.max(np.abs((rh - zh) + (rl - zl))))
@@ -196,13 +202,15 @@ def main():
           f"{'PASS' if ok_dd else 'FAIL'}", flush=True)
     zq, hq = sd.newton_qd(s, sd.qparts(rh, rl), tol=1e-50, it_max=6)
     convq = bool(hq and hq[-1].get("converged"))
-    dDq = float(mp.mpf(zq[0][-1]) + zq[1][-1] + zq[2][-1] + zq[3][-1] - (mp.mpf(zh[-1]) + zl[-1]))
-    ok_qd = convq and abs(dDq) < 1e-30
-    print(f"quad-double: converged {convq} (|F| {hq[-1]['F']:.2e}), Delta - Delta* {dDq:+.2e} -> "
-          f"{'PASS' if ok_qd else 'FAIL'}", flush=True)
+    Dq = mp.mpf(zq[0][-1]) + zq[1][-1] + zq[2][-1] + zq[3][-1]
+    dDq = float(Dq - (mp.mpf(zh[-1]) + zl[-1]))
+    dqd = float(Dq - (mp.mpf(rh[-1]) + rl[-1]))
+    ok_qd = convq and abs(dqd) < 1e-28
+    print(f"quad-double: converged {convq} (|F| {hq[-1]['F']:.2e}), Delta_qd - Delta_dd {dqd:+.2e}, "
+          f"Delta_qd - Delta* {dDq:+.2e} -> {'PASS' if ok_qd else 'FAIL'}", flush=True)
     rec = dict(M=M, mutate=a.mutate, steps=steps, F_star=F_star, dd=dict(converged=conv, steps=n_it, err=err, dDelta=dD,
                F=[h["F"] for h in hist], pass_=ok_dd), qd=dict(converged=convq, F=[h["F"] for h in hq], dDelta=dDq,
-               pass_=ok_qd))
+               dDelta_dd=dqd, pass_=ok_qd))
     if a.out:
         with open(a.out, "a") as f:
             f.write(json.dumps(rec) + "\n")

@@ -7,8 +7,10 @@ use crate::model::{self, Ctx};
 use crate::planted::Planted;
 use multidouble::dd::DD;
 use multidouble::field::Fl;
+use multidouble::linalg::{DDLu, QDLu};
 use multidouble::native::{DMat, DV};
 use multidouble::precision::{Double, Precision, Quad};
+use multidouble::qd::QD;
 use numpy::ndarray::Array2;
 use numpy::{IntoPyArray, PyArray1, PyArray2, PyReadonlyArray1, PyReadonlyArray2, PyReadonlyArray4};
 use pyo3::exceptions::PyValueError;
@@ -16,8 +18,26 @@ use pyo3::prelude::*;
 use std::sync::Arc;
 
 type V = (Vec<f64>, Vec<f64>);
-/// (dz parts, F parts, min |u_kk|, max |u_kk|)
-type Step = (Vec<Vec<f64>>, Vec<Vec<f64>>, f64, f64);
+
+/// The factors of the last Newton step, kept for chord steps
+enum Stored {
+    Dd(DDLu),
+    Qd(QDLu),
+    Mixed(multishoot::MixedLu),
+}
+
+impl Stored {
+    fn pivots(&self) -> (f64, f64) {
+        match self {
+            Stored::Dd(l) => l.pivot_range(),
+            Stored::Mixed(l) => l.pivot_range(),
+            Stored::Qd(_) => (f64::NAN, f64::NAN),
+        }
+    }
+}
+
+/// (dz parts, F parts, the factors, seconds of the residual, the Jacobian, the factorization and the solve)
+type Step = (Vec<Vec<f64>>, Vec<Vec<f64>>, Stored, [f64; 4]);
 
 trait Api: Send + Sync {
     fn len(&self) -> usize;
@@ -25,6 +45,7 @@ trait Api: Send + Sync {
     fn residual(&self, z: &[&[f64]]) -> Result<Vec<Vec<f64>>, String>;
     fn jacobian(&self, zh: &[f64], zl: &[f64]) -> Result<(Vec<f64>, Vec<f64>, usize), String>;
     fn newton(&self, z: &[&[f64]]) -> Result<Step, String>;
+    fn newton_mixed(&self, z: &[&[f64]], staircase: bool) -> Result<Step, String>;
     fn plan(&self, zh: &[f64], zl: &[f64], tol: f64, hmax: f64) -> Vec<Vec<f64>>;
     fn set_segs(&mut self, segs: Vec<Vec<f64>>) -> Result<(), String>;
     fn segs(&self) -> Vec<Vec<f64>>;
@@ -66,12 +87,25 @@ impl<const B: usize> Api for Ctx<B> {
         match z.len() {
             2 => {
                 let s = model::newton_in::<Double, B>(self, z, true)?;
-                let (pmin, pmax) = s.lu.pivot_range();
-                Ok((s.dz, parts_f::<Double>(&s.f), pmin, pmax))
+                Ok((s.dz, parts_f::<Double>(&s.f), Stored::Dd(s.lu), s.t))
             }
             4 => {
                 let s = model::newton_in::<Quad, B>(self, z, true)?;
-                Ok((s.dz, parts_f::<Quad>(&s.f), f64::NAN, f64::NAN))
+                Ok((s.dz, parts_f::<Quad>(&s.f), Stored::Qd(s.lu), s.t))
+            }
+            p => Err(format!("z must have 2 or 4 parts, not {p}")),
+        }
+    }
+    fn newton_mixed(&self, z: &[&[f64]], staircase: bool) -> Result<Step, String> {
+        let t0 = std::time::Instant::now();
+        match z.len() {
+            2 => {
+                let (dz, f, lu) = model::newton_mixed_in::<Double, B>(self, z, staircase, true)?;
+                Ok((dz, parts_f::<Double>(&f), Stored::Mixed(lu), [0.0, t0.elapsed().as_secs_f64(), 0.0, 0.0]))
+            }
+            4 => {
+                let (dz, f, lu) = model::newton_mixed_in::<Quad, B>(self, z, staircase, true)?;
+                Ok((dz, parts_f::<Quad>(&f), Stored::Mixed(lu), [0.0, t0.elapsed().as_secs_f64(), 0.0, 0.0]))
             }
             p => Err(format!("z must have 2 or 4 parts, not {p}")),
         }
@@ -183,6 +217,10 @@ type A1<'py> = Bound<'py, PyArray1<f64>>;
 struct Solver {
     api: Box<dyn Api>,
     pool: Arc<rayon::ThreadPool>,
+    /// the factors of the last newton or newton_mixed call (chord)
+    lu: Option<Stored>,
+    /// seconds of the last newton call: residual, Jacobian, factorization, solve
+    last_t: [f64; 4],
 }
 
 impl Solver {
@@ -250,7 +288,7 @@ impl Solver {
         api.set_segs(segs).map_err(PyValueError::new_err)?;
         let t = if threads == 0 { std::thread::available_parallelism().map(|v| v.get()).unwrap_or(1) } else { threads };
         let pool = Arc::new(rayon::ThreadPoolBuilder::new().num_threads(t).stack_size(256 << 20).build().unwrap());
-        Ok(Solver { api, pool })
+        Ok(Solver { api, pool, lu: None, last_t: [0.0; 4] })
     }
 
     #[getter]
@@ -350,11 +388,80 @@ impl Solver {
     /// The Newton step dz = -J^-1 F in the state's precision (two parts: double-double, four: quad-double), with the
     /// exact Jacobian and a dense LU. Returns (dz parts, F parts, min |u_kk|, max |u_kk|) (pivots NaN in quad-double).
     #[allow(clippy::type_complexity)]
-    fn newton<'py>(&self, py: Python<'py>, z: Vec<PyReadonlyArray1<'py, f64>>) -> PyResult<(Vec<A1<'py>>, Vec<A1<'py>>, f64, f64)> {
+    fn newton<'py>(&mut self, py: Python<'py>, z: Vec<PyReadonlyArray1<'py, f64>>) -> PyResult<(Vec<A1<'py>>, Vec<A1<'py>>, f64, f64)> {
         let zp = self.zparts(&z)?;
         let (api, pool) = (&self.api, &self.pool);
-        let (dz, f, pmin, pmax) = py.detach(|| pool.install(|| api.newton(&zp))).map_err(PyValueError::new_err)?;
+        let (dz, f, lu, t) = py.detach(|| pool.install(|| api.newton(&zp))).map_err(PyValueError::new_err)?;
+        let (pmin, pmax) = lu.pivots();
+        self.lu = Some(lu);
+        self.last_t = t;
         Ok((dz.into_iter().map(|v| arr(py, v)).collect(), f.into_iter().map(|v| arr(py, v)).collect(), pmin, pmax))
+    }
+
+    /// The mixed-precision Newton step: F in the state's precision (two or four parts), the f64 Jacobian of Fun<4>
+    /// lanes factored in staircase (default) or dense storage, dz solved in double-double with its factors (kept for
+    /// chord). Returns (dz parts, F parts, min |u_kk|, max |u_kk|).
+    #[pyo3(signature = (z, staircase=true))]
+    #[allow(clippy::type_complexity)]
+    fn newton_mixed<'py>(
+        &mut self,
+        py: Python<'py>,
+        z: Vec<PyReadonlyArray1<'py, f64>>,
+        staircase: bool,
+    ) -> PyResult<(Vec<A1<'py>>, Vec<A1<'py>>, f64, f64)> {
+        let zp = self.zparts(&z)?;
+        let (api, pool) = (&self.api, &self.pool);
+        let (dz, f, lu, t) = py.detach(|| pool.install(|| api.newton_mixed(&zp, staircase))).map_err(PyValueError::new_err)?;
+        let (pmin, pmax) = lu.pivots();
+        self.lu = Some(lu);
+        self.last_t = t;
+        Ok((dz.into_iter().map(|v| arr(py, v)).collect(), f.into_iter().map(|v| arr(py, v)).collect(), pmin, pmax))
+    }
+
+    /// A chord step with the factors of the last newton or newton_mixed call: F at z (two or four parts) and
+    /// dz = -J^-1 F (in quad-double with quad-double factors, else in double-double, taken into z's precision).
+    /// Returns (dz parts, F parts).
+    #[allow(clippy::type_complexity)]
+    fn chord<'py>(&self, py: Python<'py>, z: Vec<PyReadonlyArray1<'py, f64>>) -> PyResult<(Vec<A1<'py>>, Vec<A1<'py>>)> {
+        let zp = self.zparts(&z)?;
+        let lu = self.lu.as_ref().ok_or_else(|| PyValueError::new_err("chord: no stored factors (call newton first)"))?;
+        let (api, pool) = (&self.api, &self.pool);
+        let f = py.detach(|| pool.install(|| api.residual(&zp))).map_err(PyValueError::new_err)?;
+        let n = f[0].len();
+        let dz: Vec<Vec<f64>> = match (lu, f.len()) {
+            (Stored::Qd(l), 4) => {
+                let mut b: Vec<QD> = (0..n).map(|i| -QD::new(f[0][i], f[1][i], f[2][i], f[3][i])).collect();
+                <Quad as Precision<multidouble::simd::Native>>::lu_solve(l, &mut b);
+                (0..4).map(|q| b.iter().map(|v| v.x[q]).collect()).collect()
+            }
+            (Stored::Qd(_), _) => return Err(PyValueError::new_err("chord: quad-double factors need a four-part state")),
+            (st, parts) => {
+                let mut b: Vec<DD> = (0..n)
+                    .map(|i| {
+                        let v = if parts == 4 { QD::new(f[0][i], f[1][i], f[2][i], f[3][i]).to_dd() } else { DD::new(f[0][i], f[1][i]) };
+                        -v
+                    })
+                    .collect();
+                match st {
+                    Stored::Dd(l) => l.solve(&mut b),
+                    Stored::Mixed(l) => l.solve(&mut b),
+                    Stored::Qd(_) => unreachable!(),
+                }
+                let mut out = vec![b.iter().map(|v| v.hi).collect::<Vec<f64>>(), b.iter().map(|v| v.lo).collect()];
+                if parts == 4 {
+                    out.push(vec![0.0; n]);
+                    out.push(vec![0.0; n]);
+                }
+                out
+            }
+        };
+        Ok((dz.into_iter().map(|v| arr(py, v)).collect(), f.into_iter().map(|v| arr(py, v)).collect()))
+    }
+
+    /// seconds of the last newton call: (residual, Jacobian, factorization, solve); newton_mixed puts its total second
+    fn step_timing(&self) -> (f64, f64, f64, f64) {
+        let t = self.last_t;
+        (t[0], t[1], t[2], t[3])
     }
 
     /// Step points for every segment from the node states of z (multishoot's planner); does not change the solver
