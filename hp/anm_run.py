@@ -111,6 +111,10 @@ removed from each correction (octo_corrector.chord_strong; #528, #674). 0, the d
 --reseed_start pred (with --reseed_q 1) runs the re-seed's quad-double polish from the prediction's own four-part
 horizon data first, and the double-double ladder only when that does not converge; ladder, the default, polishes the
 ladder's data as before (#693: past D ~ 249 the ladder's double-double data put the pole inside u0).
+--elim_switch S (with --corrector od and --reseed) projects every point of the octo-double corrector whose pinned
+quad-double max|F| exceeds S (octo_corrector.ElimO; 1e-15 by default). With 0 every point is projected. Below the
+switch a projected iterate's full step goes unprojected, keeps the horizon rows' second-order term and is refused, which
+made the chain crawl at λ = 1/2 past D 251 (#700, notes/CRAWL.md).
 --ks K sums the horizon series to order K instead of the state's own ks (130 on the chain), and saves it with the
 states (#696). The unknowns are the same, so a state converged at one ks starts at another with |F| of about the
 series' terms between the two orders.
@@ -294,6 +298,7 @@ def main():
     opt.update(save_base=0)             # --save_base 1: the polished base saved (with --corrector od)
     opt.update(save_jet=0)              # --save_jet 1: each base's series saved; 2: saved, then stop (#634)
     opt.update(ks=0)                    # --ks K: the horizon series' order instead of the state's (#696)
+    opt.update(elim_switch=1e-15)       # --elim_switch S: ElimO projects a point whose pinned qd |F| exceeds S (#700)
     for k in list(opt):
         f = "--" + k
         if f in args:
@@ -346,7 +351,7 @@ def main():
             # --corrector od: the octo-double Newton (hp/octo_corrector.py), with --reseed 2 inside ElimO
             so = PinnedO(spx.s, spx.ch, spx.cl, c8=spx.c8)
             if elim.get("rs") is not None:
-                so = ElimO(so, elim["rs"])
+                so = ElimO(so, elim["rs"], switch=opt["elim_switch"])
             z0 = z8_start if z8_start is not None else o8_of_q(z4_start if z4_start is not None else qparts(ph, pl))
             try:
                 z8, hist, conv = newton_od(so, z0, tol=opt["tol_od"], it_max=opt["qd_it"], verbose=True, junk_w=opt["od_junk"],
