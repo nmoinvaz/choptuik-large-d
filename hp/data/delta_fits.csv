@@ -160,10 +160,9 @@ D,diff_d6,how_d6,states_d6,diff_d10,how_d10,states_d10
 223.13125,+3.6961e-11,direct,I462-win/chain_d6/anm_pin3_D223.1312.npz,+1.7498e-11,direct,I462-win/chain_d10/anm_pin3_D223.1312.npz
 224.13125,+3.7370e-11,direct,I462-win/chain_d6/anm_pin3_D224.1312.npz,+1.8107e-11,direct,I462-win/chain_d10/anm_pin3_D224.1312.npz
 225.13125,+3.7767e-11,direct,I462-win/chain_d6/anm_pin3_D225.1312.npz,+1.8537e-11,direct,I462-win/chain_d10/anm_pin3_D225.1312.npz
-226.13125,+3.8151e-11,direct,I462-win/chain_d6/anm_pin3_D226.1312.npz,+1.8768e-11,direct,I462-win/chain_d10/anm_pin3_D226.1312.npz
-227.13125,+3.8516e-11,direct,I462-win/chain_d6/anm_pin3_D227.1312.npz,+1.8749e-11,direct,I462-win/chain_d10/anm_pin3_D227.1312.npz
-228.13125,+3.8846e-11,direct,I462-win/chain_d6/anm_pin3_D228.1312.npz,+1.8319e-11,direct,I462-win/chain_d10/anm_pin3_D228.1312.npz
-229.13125,+3.9148e-11,direct,I462-win/chain_d6/anm_pin3_D229.1312.npz,+1.7539e-11,direct,I462-win/chain_d10/anm_pin3_D229.1312.npz
-230.13125,+3.9390e-11,direct,I514-win/run_s6f6_a/anm_pin3_D230.1312.npz,+3.9272e-11,direct,I514-win/run_s6f10/anm_pin3_D230.1312.npz
-231.13125,+3.9565e-11,direct,I462-win/chain_d6/anm_pin3_D231.1312.npz,+1.4101e-11,direct,I462-win/chain_d10/anm_pin3_D231.1312.npz
-232.13125,+3.9672e-11,direct,I462-win/chain_d6/anm_pin3_D232.1312.npz,,,
+226.13125,+3.8151e-11,direct,I608-dh610/chain_d6/anm_pin3_D226.1312.npz,+1.8768e-11,direct,I608-dh610/chain_d10/anm_pin3_D226.1312.npz
+227.13125,+3.8516e-11,direct,I608-dh610/chain_d6/anm_pin3_D227.1312.npz,+1.8749e-11,direct,I608-dh610/chain_d10/anm_pin3_D227.1312.npz
+228.13125,+3.8846e-11,direct,I608-dh610/chain_d6/anm_pin3_D228.1312.npz,+1.8319e-11,direct,I608-dh610/chain_d10/anm_pin3_D228.1312.npz
+229.13125,+3.9148e-11,direct,I608-dh610/chain_d6/anm_pin3_D229.1312.npz,+1.7539e-11,direct,I608-dh610/chain_d10/anm_pin3_D229.1312.npz
+230.13125,+3.9390e-11,direct,I608-dh610/chain_d6/anm_pin3_D230.1312.npz,+1.6172e-11,direct,I608-dh610/chain_d10/anm_pin3_D230.1312.npz
+231.13125,+3.9586e-11,interp,I462-win/chain_d6/anm_pin3_D226.1312.npz .. I462-win/chain_d6/anm_pin3_D232.1312.npz,+1.4120e-11,interp,I462-win/chain_d10/anm_pin3_D226.1312.npz .. I462-win/chain_d10/anm_pin3_D231.6312.npz
