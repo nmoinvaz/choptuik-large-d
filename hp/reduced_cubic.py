@@ -507,12 +507,13 @@ def tmap(f, A, B):
 def strong_solve(sysm, X, Um, c, w_init, wref, gref, mutate="", it_max=30):
     """w(c) by the chord iteration (docstring), judged by its corrections |dw| (2-norm), not by the strong rows'
     residual, whose rows differ in scale by 1e53 and whose max norm can grow while w converges. Converged when
-    |dw| < 1e-40 wref (wref = |w0|). The chord uses z0's J, and at c != 0 it can stall in the softest strong directions
-    (sigma_5 ~ 1e-19), where J(z) and J differ: |dw| then stays put (at REF about 6e-65 at |c| = 1e-33). A stalled
-    solve (|dw| above 0.3 of the previous one, or not converged after it_max steps) counts as converged when its last
-    correction cannot change g: |U^T [F(w - dw) - F(w)]| < 1e-6 gref (gref = |B a|), one more residual. A |dw| that
-    grows by more than 2 is a failure. Returns (w, F at z0 + V c + w, the steps' (max|strong residual|, |dw|), ok, the
-    last correction's change of g or None)"""
+    |dw| < 1e-40 wref (wref = |w0|). The chord uses z0's J, and at c != 0 it differs from J(z) in the softest strong
+    directions (sigma_5 ~ 1e-19). There its second correction can undo its first (at REF's c*: |dw| 5.44e-56, 5.44e-56,
+    then 5e-82, with w(c*) - w(0) = 1.3e-60), so one step whose |dw| does not fall is allowed. A solve stalls when two
+    steps in a row fail to cut |dw| by 0.3, or after it_max steps; it counts as converged when its last correction
+    cannot change g: |U^T [F(w - dw) - F(w)]| < 1e-6 gref (gref = |B a|), one more residual. A |dw| that grows by more
+    than 2 is a failure. Returns (w, F at z0 + V c + w, the steps' (max|strong residual|, |dw|), ok, the last
+    correction's change of g or None)"""
     pv = lin([(mp.mpf(cj), X[j]) for j, cj in enumerate(c)])
     if mutate == "w0":                                  # the control: no strong solve, the map on z0 + V c
         Fv = sysm.F(pv)
@@ -535,7 +536,7 @@ def strong_solve(sysm, X, Um, c, w_init, wref, gref, mutate="", it_max=30):
             return w, Fv, hist, True, None
         if len(hist) >= 2 and nd > 2 * hist[-2][1]:     # diverging
             return w, Fv, hist, False, None
-        if len(hist) >= 2 and nd > 0.3 * hist[-2][1]:   # stalled
+        if len(hist) >= 3 and nd > 0.3 * hist[-2][1] and hist[-2][1] > 0.3 * hist[-3][1]:     # stalled
             return judge(w, Fv, dw)
         w = [a - b for a, b in zip(w, dw)]
     return judge(w, Fv, dw)
@@ -843,6 +844,14 @@ def measure(sysm, opts, mutate, log, rec, dump):
         f"strong-solved manifold, affine {mp.nstr(cstar['gaff'], 3)}; |S(c*,c*,c*)| {mp.nstr(nrm(Sc), 3)}, "
         f"|T(c*,c*,c*)| {mp.nstr(nrm(Tc), 3)}; dw = w(c*) - w(0): |dw| {mp.nstr(nrm(dw), 3)}, against its quadratic "
         f"model {mp.nstr(edw, 3)}")
+    # #499's step split at c* (its z1 = z0 + V c* + (dz0 - V a)): U^T F with w the first step's rest, w0, w(0), w(c*)
+    split = {}
+    for name, wv in (("rest", rest), ("w0", w0), ("w(0)", w00), ("w(c*)", wcs)):
+        split[name] = float(nrm(proj_U(Um, sysm.F([p + x for p, x in zip(pv, wv)]))) / nBa)
+    log("  #499's split at c*, |U^T F(z0 + V c* + w)| / |B a| for w = " + ", ".join(f"{n} {v:.4g}"
+                                                                                 for n, v in split.items())
+        + f"; |w(0) - w0| {mp.nstr(nrm([x - y for x, y in zip(w00, w0)]), 3)}, |rest - w0| "
+        f"{mp.nstr(nrm([x - y for x, y in zip(rest, w0)]), 3)}")
     log(f"  S control: dw -> 2 dw changes g by {mp.nstr(nrm(dmeas), 4)}, predicted -1/2 S(c*,c*,c*) "
         f"{mp.nstr(pred_n, 4)}, difference {mp.nstr(errS, 3)} of it (bound 1e-2"
         + ("" if resolvable else ", but both below 1e-85: not resolved") + f"): {'pass' if ok_S else 'FAIL'}")
@@ -853,7 +862,7 @@ def measure(sysm, opts, mutate, log, rec, dump):
                            Sc=float(nrm(Sc)), Tc=float(nrm(Tc)), dw=float(nrm(dw)), dw_vs_quad=float(edw),
                            S_meas=float(nrm(dmeas)), S_pred=float(pred_n), S_err=float(errS), S_ok=ok_S,
                            S_resolvable=resolvable, w_meas=float(nrm(wm)), w_pred=float(nrm(wp)), w_err=float(errW),
-                           Lc=float(nrm(Lc)), q00=float(nrm(q00)))
+                           Lc=float(nrm(Lc)), q00=float(nrm(q00)), split=split)
     dump()
     # diagnostic of the S control (not judged): the control along c* at f c*, f = 1, 1/2, 1/4, where a next-order term
     # of the control falls as f relative to -1/2 S; and u.F''(V c, dw) by a mixed difference with the actual dw, which
