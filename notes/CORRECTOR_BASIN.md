@@ -204,7 +204,7 @@ continuation, where the predictor's error and the corrector's first contraction 
 It refuses the three class A refusals of I603 (in sample, with margins of 2–18% in a) and one of crawlJ's two, and
 none of the 49 accepted attempts. crawlJ's other class A refusal, at a = 0.477, starts with the rounded projector's
 error of 1.2e-29, which the training fit, made on the exact projector, puts near its floor. The issue's form,
-θ₀ = [ω](D)|dz₀|/2 with the fit of [ω]₀ above, gives a\* = 1 at every base and refuses nothing.
+θ₀ = \[ω\](D)|dz₀|/2 with the fit of [ω]₀ above, gives a\* = 1 at every base and refuses nothing.
 
 On #603's bases a\* is 1 up to D 243.64, then 0.98 (244.64), 0.86 (246.26), 0.80 (247.04), 0.75 (248.02), 0.72 (248.63),
 0.66–0.71 (249.01–249.39), 0.68 (249.87) and 0.61–0.63 (250.17–250.84). Near D 250, ln a\* falls by about 0.07 per
