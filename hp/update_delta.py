@@ -15,6 +15,8 @@ The steps, in order:
    and its control is reported as skipped. The master table is then restored and verified again.
 7. export_delta_all.py --interp_check checks the interpolation of the comparison fits at D 186 to 190, and its control
    --mutate=interp must fail.
+7b. export_delta_all.py --lam_screen screens the chain_fit backbone's gauge rate (#637), and its control
+   --mutate=lam must fail.
 8. compare_published.py writes data/delta_published_compare.csv, every published value against ours.
 9. compare_gamma_published.py writes data/gamma_published_compare.csv, the published gamma and Delta below D = 14
    against ours (#620), whose check in check_numbers.py fails once our values move by more than 1e-10.
@@ -82,6 +84,8 @@ def main():
     ok &= run(["export_delta_all.py", raw, "--verify"])
     ok &= run(["export_delta_all.py", raw, "--interp_check"])
     ok &= run(["export_delta_all.py", raw, "--interp_check", "--mutate=interp"], expect=1)
+    ok &= run(["export_delta_all.py", raw, "--lam_screen"])
+    ok &= run(["export_delta_all.py", raw, "--lam_screen", "--mutate=lam"], expect=1)
     ok &= run(["compare_published.py"])
     ok &= run(["compare_gamma_published.py"])
     print("tables:", flush=True)

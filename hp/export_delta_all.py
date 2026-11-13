@@ -5,6 +5,7 @@ chain's frontier, with the kind of computation, an error estimate and what that 
     cd hp && python3 export_delta_all.py RAWDIR [--verify] [--mutate=dd|qd|pinned|chain_fit|chain|held|frontier|projector|t85
                                                                    |fits|fits_table]
     cd hp && python3 export_delta_all.py RAWDIR --interp_check [--mutate=interp]
+    cd hp && python3 export_delta_all.py RAWDIR --lam_screen [--mutate=lam]
 
 RAWDIR is a clone of the raw-data repository (git clone https://github.com/nmoinvaz/choptuik-large-d-raw). --verify
 re-reads every row of the written CSV from the source and state its row names, rebuilds the chains' err, err_kind and
@@ -19,6 +20,12 @@ writes, and --mutate=fits_table drops that row's interpolated entry from data/de
 --interp_check is the interpolation's control: at D 186 to 190, where every chain has a state, each comparison fit's
 Delta interpolated from its other states (as below) must equal its state's to 1e-14. It exits 1 otherwise;
 --mutate=interp interpolates in D instead of 1/(D - 2), whose truncation error the check must catch.
+--lam_screen is the gauge rate's smoothness screen (#622, #637): lam_g of each chain_fit backbone state (hp/lam_gauge.py,
+from its parts) against the polynomial of degree SCREEN_DEG in 1/(D - 2) through the SCREEN_N nearest other backbone states (a cubic
+through six leaves its own truncation, up to 1.4e-10 near D 77, above SCREEN_TOL); it exits 1 when one
+departs by more than SCREEN_TOL. Every other chain_fit-held state is set against the backbone's polynomial at its D too, and
+those above SCREEN_TOL are listed (information: they are not rows of the table). --mutate=lam adds 1e-10 to the lam_g of
+the backbone state nearest D 240, and the screen must fail.
 
 Columns: D; Delta in up to four parts, Delta = q0 + q1 + q2 + q3 (each an f64; q2 and q3 are empty where the value is
 double-double); kind; err and err_kind; the source record; published_ref, published_Delta and published_diff, the most
@@ -97,6 +104,10 @@ EXACT = ("I595-mac/", "I603-win2/", "I608-dh610/")
 HOPS = 10
 # above the comparison chains' frontier, the fits term is extrapolated from the last EXTRAP_N rows that have one
 EXTRAP_N = 6
+# the gauge rate's smoothness screen (--lam_screen): neighbours in the local cubic and the largest departure accepted
+SCREEN_N = 8
+SCREEN_DEG = 5
+SCREEN_TOL = 1e-11
 INTERP_N = 6
 # the interpolation's control: leave-one-out at these D, where every chain has a state
 CONTROL_D = (186.0, 187.0, 188.0, 189.0, 190.0)
@@ -588,12 +599,61 @@ def verify(rows, mutate=""):
     return bad == 0
 
 
+def lam_screen(mutate=""):
+    """lam_g of each chain_fit backbone state against the polynomial of degree SCREEN_DEG in 1/(D - 2) through its
+    SCREEN_N nearest other backbone states; True when none departs by more than SCREEN_TOL. Other chain_fit-held states are listed against the
+    backbone's polynomial at their D (information)."""
+    import lam_gauge as LG
+    states, by_dir = chain_states()
+    held = {d: held_of(d) for d in by_dir}
+    bb = backbone(states, by_dir, held, "chain_fit")
+
+    def lam(rel):
+        parts, meta = LG.load(os.path.join(RAW, rel))
+        return mp.mpf(LG.lam_g(parts, meta)), mp.mpf(meta.get("D_str", repr(float(meta["D"]))))
+    pts = [(rel,) + lam(rel) for rel in bb]
+    if mutate == "lam":
+        k = min(range(len(pts)), key=lambda i: abs(pts[i][2] - 240))
+        pts[k] = (pts[k][0], pts[k][1] + mp.mpf("1e-10"), pts[k][2])
+        print(f"mutated: lam_g of {pts[k][0]} + 1e-10")
+
+    def cubic(others, D):
+        near = sorted(others, key=lambda p: abs(p[2] - D))[:SCREEN_N]
+        t = [1 / (p[2] - 2) for p in near]
+        c = np.polyfit([float(x - 1 / (D - 2)) for x in t], [float(p[1] - near[0][1]) for p in near], SCREEN_DEG)
+        return near[0][1] + mp.mpf(float(c[-1]))
+    bad = 0
+    for i, (rel, lg, D) in enumerate(pts):
+        d = float(lg - cubic(pts[:i] + pts[i + 1:], D))
+        if abs(d) > SCREEN_TOL:
+            bad += 1
+            print(f"  DEPARTS: backbone {rel} D {float(D):.4f}: lam_g - local polynomial = {d:+.2e}")
+    on = set(bb)
+    flagged = []
+    for rel in sorted(states, key=lambda r: states[r][0]["D"]):
+        if rel in on or held[os.path.dirname(rel)] != held[os.path.dirname(bb[0])]:
+            continue
+        lg, D = lam(rel)
+        if not pts[0][2] < D < pts[-1][2]:
+            continue
+        d = float(lg - cubic(pts, D))
+        if abs(d) > SCREEN_TOL:
+            flagged.append((float(D), d, rel))
+    for D, d, rel in flagged:
+        print(f"  off the backbone (not in the table): {rel} D {D:.4f}: {d:+.2e}")
+    print(f"verify: lam screen, {len(pts) - bad} of {len(pts)} backbone states within {SCREEN_TOL:.0e} of their neighbours' polynomial;"
+          f" {len(flagged)} other chain_fit-held states off it")
+    return bad == 0
+
+
 if __name__ == "__main__":
     args = [a for a in sys.argv[1:] if not a.startswith("--")]
     opts = dict((a[2:] + "=").split("=")[:2] for a in sys.argv[1:] if a.startswith("--"))
     if not args:
         sys.exit(__doc__)
     RAW = os.path.abspath(args[0])
+    if "lam_screen" in opts:
+        sys.exit(0 if lam_screen(opts.get("mutate", "")) else 1)
     if "interp_check" in opts:
         sys.exit(0 if interp_check("D" if opts.get("mutate") == "interp" else "1/n") else 1)
     if "verify" in opts or "mutate" in opts:
