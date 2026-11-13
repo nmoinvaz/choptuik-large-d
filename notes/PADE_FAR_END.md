@@ -707,3 +707,107 @@ can make the amended C1 fire. A duplicated last column is such a basis, and it l
 Before the freeze, this mechanism was tried on the plant arcjump at ω/ω∞ = 0.99 in the chord basis: χ at M = 22 stayed
 2.7×10⁻⁷, and at M = 23 mpmath's QR reported the matrix numerically singular. Perturbing the last column toward its
 neighbour by 10⁻¹⁵⁰ to 10⁻²⁴⁵ did the same.
+
+### 9.2 Results, part 1: no class reproduces the real series with fewer than 23 terms
+
+All runs used one process under `nice -n 10`, single-threaded, 2026-11-13 10:51–10:57 UTC, with `pade_twin_size.py` at
+2f6e3d6d (the diagnostic at bc8bf51d). The records are in the raw-data repository's `I672-mac/`.
+
+| check | result | verdict |
+|---|---|---|
+| `twins`, the plants rerun | the same M_min, M_lo and χ as §8.3 in every scan; C0, C1 and C2 pass; exit 0 | OK |
+| `twins_real`, amended C1 | every scan has M_min = n = 23. Below n the two precisions give the same χ; at M = n, χ is 3×10⁻¹⁰⁸ to 2×10⁻¹⁰⁷ at 150 digits and 1×10⁻²⁰⁸ to 3×10⁻²⁰⁷ at 250; exit 0 | OK |
+| `twins_real --mutate=c1dup` | the amended C1 fires at M = n in all 9 scans (the 250-digit fit is singular), and the M = 22 rows still agree; exit 1 | fires |
+
+χ of the least-squares twin of the real σ₀–σ₂₂ (J 1250) at 22 terms. M_min = M_lo = 23 in every case, so no twin with
+fewer than 23 terms exists in any class, by the bound of §7.1.
+
+| ω/ω∞ | chord | stepped arc | smooth arc |
+|---|---|---|---|
+| 0.99 | 9.7×10⁴ | 1.24×10⁵ | 1.27×10⁵ |
+| 1.00 | 9.1×10⁴ | 1.15×10⁵ | 1.18×10⁵ |
+| 1.01 | 8.6×10⁴ | 1.06×10⁵ | 1.08×10⁵ |
+| 1.00, J 1500 (context) | 9.1×10⁴ | 1.15×10⁵ | not run |
+
+- **No class reproduces the real series with fewer terms than coefficients.** The chord, the stepped arc and the
+  smooth arc each need all 23 terms, at every node, where the plants' twins need 14–19 (§8.3). By the frozen rule
+  neither the chord nor the arc is preferred by term count. The chord fits best at 22 terms, by a factor 1.2–1.3, at
+  every node.
+- **Where the misfit sits (post-freeze diagnostic, `twins_jdiag`, ω/ω∞ = 1.00).** At 22 terms the residual is below
+  one error unit for k ≤ 10 and 38–46 units at k = 11. It peaks at k = 17 (0.9–1.2×10⁵ units) and falls to 130–180
+  units at k = 22. The three classes have the same profile.
+- **What the twins share.** Every class here has the plants' end points P0 and κ⋆, their exponent β − 1 and their
+  zero factor, which were matched to σ₀–σ₁₂ (§2.2). So the result says that no density of up to 22 terms with those
+  end points and that exponent fits σ₁₁–σ₂₂ within the measured errors. It does not say which ingredient fails. One
+  candidate is the far end, which §4 and D_entire 7.4 suggest may lie past κ⋆.
+
+#### Discrepancies found on the way (reported, not fixed)
+
+- **The real series is held at 53 bits.** `pade_twin_count.real_sig()` reads the J 1250 files at the precision in
+  force when it is first called, which is mpmath's default 53 bits in `twins_real` (and in #669's run). The values are
+  then off their strings by up to 7.5×10⁻¹⁷ relative, which is 10⁹ times the measured error at k = 1. Read at 150
+  digits instead, the chord, arc and smooth scans give the same M_min, and χ at M = 18–22 agrees to four digits
+  (`twins_jdiag`). So the result above does not depend on it.
+- **The files' strings are coarser than their errors at low order.** Re σ_k has 20 significant digits for k = 1–8,
+  a rounding of up to 5×10⁻²⁰ relative, while the measured errors are 3.3×10⁻²⁶ to 2.6×10⁻²¹ there. The fits treat the
+  strings as exact. Since the misfit sits at k ≥ 11, this does not move the twin scans either.
+- **The J 1500 line of `twins_real` is an artifact.** It compares J 1500 read at 60 digits with J 1250 held at 53 bits,
+  and so it reports χ = 1.7×10⁹, at k = 1. Read at 150 digits, the two files agree exactly at k ≤ 9, and they differ by
+  at most 1.0 error unit, at k = 16 (`twins_jdiag`). With err_k widened to the J difference, every class still needs
+  23 terms.
+
+### 9.3 Part 2: method
+
+`solver/inner_amp/pade_twin_peak.py`. The twin is §8.1's chord twin with M = 40 terms and #670's errors (F = 1). Its
+size is now the peak density on #548's grid, P(c) = max_j |φ(s_j)| with φ(s) = (1 − s)^ex Σ_m c_m T_m(2s − 1) and
+s_j = j/200, j < 200.
+
+- **The problem.** With A and b as in §8.1 and Φ the matrix of φ on the grid, P⋆ = min over c of max_j |(Φc)_j|
+  subject to |(Ac − b)_k| ≤ 1 for every k. Each modulus of a complex number is a second-order cone, so this is a
+  convex cone program.
+- **Coordinates.** A = U S V by mpmath's SVD at 150 digits. Along a singular direction with s_i ≥ 1 the unknown is the
+  residual it causes, along one with s_i < 1 and along the null directions it is the coefficient itself. In these
+  unknowns every entry of the problem is at most of order one, so it is solved in double precision. The start is the
+  ridge twin with ‖residual‖₂ = 1/2.
+- **Solver.** A log-barrier method (Boyd and Vandenberghe 2004, ch. 11) with damped Newton steps, after the unknowns
+  are whitened by numpy's SVD. Directions below 10⁻¹³ of the largest singular value, which move neither the density
+  nor a residual, are dropped. The polydisc radius is 1 − 10⁻⁹, so the explicit twin has χ < 1.
+- **The bracket.** P_hi is the peak of an explicit twin, rebuilt at 150 digits, whose χ is recomputed from its
+  coefficients at 150 digits and, with the 250-digit basis, at 250. P_lo is a dual bound (ibid. ch. 5). For any λ with
+  ‖λ‖₁ = 1 and Φ^H λ = A^H μ, every twin has max_j |(Φc)_j| ≥ Re μ^H (b + r) ≥ Re μ^H b − ‖μ‖₁. λ comes from the
+  barrier's last three centred stages. It is projected at 150 digits so that μ exists exactly, removing its part along
+  the null directions and along those with s_i below a threshold (10⁻² to 10⁻¹², or none). Every such bound is valid,
+  and P_lo is the largest.
+- **Context.** A grid of 200 points leaves room between its points. The minimiser can bulge between s = 0 and 0.005,
+  and its polynomial factor can grow near s = 1, where (1 − s)^ex hides it. So the same minimisation is repeated on
+  s = j/1000, and each twin's peak is also given on s = j/2000. Neither is judged.
+
+### 9.4 Part 2: frozen criteria
+
+Written into `pade_twin_peak.py`'s `FROZEN` and here before the `peak` and `peak_real` stages were first run.
+
+| check | criterion |
+|---|---|
+| planted (selftest) | (1) a separable problem hidden by a random unitary rotation, with weights 10⁻³⁰–10³⁰, P⋆ = max_k (\|b_k\| − 1)/s_k = 3.1; (2) the Chebyshev problem on a grid holding the 11 extrema of T₁₀, one constraint \|S 2⁹ c₁₀ − S\| ≤ 1 with S = 100, P⋆ = (1 − 1/S) 2⁻⁹. Each needs P_hi and P_lo within 10⁻⁶ of P⋆, each on its side, and χ ≤ 1. (3) #670's planted 8-term chord density at ω/ω∞ = 1.00, n = 23: P_lo ≤ P_hi ≤ its own peak, P_hi/P_lo − 1 ≤ 0.01, χ ≤ 1 + 10⁻⁶ at 250 digits |
+| selftest mutations | `radius` (polydisc radius 1.05), `noproj` (λ not projected) and `dual` (the bound's −‖μ‖₁ dropped) each make the selftest fail |
+| P_gap | P_hi/P_lo − 1 ≤ 0.01 for every target, n and node |
+| P_valid | P_lo ≤ P_hi (1 + 10⁻¹²); the explicit twin's χ at 250 digits ≤ 1 + 10⁻⁶; P_lo recomputed at 250 digits from the same λ within 10⁻⁶ relative |
+| P0 calibration | chord2's smallest peak lies within 10% of its own peak P_own (its 6-term density on the same grid): P_lo ≥ 0.9 P_own and P_hi ≤ 1.1 P_own, at n = 23 and 31 and every node |
+| P0 mutation | `peak --mutate=scale` (chord2's σ_k × 0.75, its errors kept) must make P0 fail at every n and node; the run exits 1 |
+| separation | §8.2's factor-3 rule on the peak. At n = 31, ρ_hi = P_hi(arcjump)/P_lo(chord2) and ρ_lo = P_lo(arcjump)/P_hi(chord2). If ρ_hi ≤ 3 at every node, no peak prior separates them, and that is the answer. If ρ_lo > 3 at every node, a peak prior of factor 3 separates them. Otherwise the verdict is mixed. n = 23 is reported the same way |
+| peak_real | only if P_gap, P_valid and P0 pass and ρ_lo > 3 at every node at n = 23: the real series' smallest peak chord twin at n = 23, with ρ_real = P(real)/P(chord2) read against 3. Otherwise there is no real run |
+| context | the grid s = j/1000 with the same rule and chord2's ratio to its own peak there; each twin's peak on s = j/2000, its coefficient norm and largest \|c_m\|; the active constraints; the plant arc; arcjump against chord2's own peak; M = 50 at ω/ω∞ = 1.00. Reported, not judged |
+
+`scale` fires by construction, since chord2's own density is a twin of itself: the scaled target's smallest peak is
+at most 0.75 P_own. It shows that the comparison can fail, not that P0 is sensitive.
+
+Seen before the freeze, and disclosed. These are development runs on the planted problems and on #670's 8-term chord
+density only, not on chord2, arcjump or arc.
+
+- On the 8-term density at n = 23 the smallest peak is 3.349 against its own 3.721, a ratio of 0.90. Its twin has
+  ‖c‖ = 2.3×10⁷, and its peak on s = j/2000 is 5.53, at s = 0.0015, between the first two grid points. That is why the
+  finer grid is reported as context.
+- The first version of the solver used the least-norm interpolant as its start and stopped on its Newton step limit,
+  which gave a bracket of 41% on that density. The ridge start, the whitening and the damped steps fixed both.
+- `noproj` passes the two closed-form problems, whose duals are accurate without the projection. It fails only on the
+  8-term density, where its "bound" exceeds the explicit twin's peak.
