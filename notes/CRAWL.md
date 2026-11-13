@@ -1,18 +1,26 @@
 # The crawl at the chain's front: where the residual jumps along the Newton step (#700)
 
+**Result.** The jump is ElimO's projection switch (`hp/octo_corrector.py`, `ElimO.project`): a trial whose pinned
+quad-double max |F| is at most 1e-15 is not projected. At chain_ns's crawl iterate the corrector's residual along its
+step is affine to 1.6e-54 lam² up to lam* = 1 - 7.77e-15. There it jumps by 5e38, to 8.9e-16, in the horizon
+block's c, a and m rows, where the switch stops projecting. The iterate itself is never projected and carries a
+residual of 0.129 in its horizon data, which only the full step removes. With every point projected the same
+iterate converges in two full Newton steps, to 9.8e-80 (section 8).
 
 ## 1. The question
 
-Past D 251.9 the octo-double corrector of #603 crawls. At each Newton step the natural test refuses lam = 1 at a
-simplified-correction ratio of 1e2 to 1e17 and accepts lam = 1/2 at a ratio of exactly 0.5000, so max |F| and |dz|
+Past D 251.9 the octo-double corrector of #603 crawls. At each Newton step the natural test refuses lam = 1, at a
+simplified-correction ratio of 34 to 9.4e16, and accepts lam = 1/2 at a ratio of exactly 0.5000. So max |F| and |dz|
 halve per step until the step cap (#674 at D 251.886, a = 0.7276; #603's chain_ns at D 253.88, a = 0.0543). A smooth
-residual along z + lam dz cannot be affine at lam = 1/2 to four digits and 1e30 off at lam = 1. This note locates the
-point lam* where it stops being affine, names the rows that jump there, and names the branch in the code that makes
-them jump.
+residual along z + lam dz cannot be affine at lam = 1/2 to four digits and 1e22 to 1e36 times larger at lam = 1.
+This note locates the point lam* where it stops being affine, names the rows that jump there, and names the branch in
+the code that makes them jump.
 
 ## 2. Method
 
-`hp/crawl_probe.py` (raw folder `I700-mac/` of the raw-data repository).
+`hp/crawl_probe.py`. Its output is in folder `I700-mac/` of the raw-data repository, at commit f2c81ea (clone
+github.com/nmoinvaz/choptuik-large-d-raw first; the commands below take its root as RAW). The Mac ran it on 2
+threads with main 3c35f0c's kernel build.
 
 - `locate_jump` evaluates F(lam) = F(z + lam dz) on a ladder of lam and measures its deviation from the affine model,
   e(lam) = max |F(lam) - (1 - lam) F(0)|. Along an exact Newton step a smooth map deviates by its quadratic
@@ -26,6 +34,18 @@ them jump.
   projected when its pinned quad-double max |F| exceeds the switch, 1e-15, as the natural test evaluates it). Arm U is
   never projected (PinnedO). Arm P is always projected. It also forms the natural test's ratio at lam = 1 and 1/2,
   with the trial as the corrector projects it and with the trial projected.
+- `fixrun` continues the corrector from the saved iterate with ElimO's switch set as asked (section 8).
+
+The runs, from `hp/` with `OPENBLAS_NUM_THREADS=1` and the kernel on `PYTHONPATH`, RAW the raw-data clone's root:
+
+```
+python3 crawl_probe.py selftest        # PASS; --mutate shift, comp, smooth, control, coarse and hint_trust FAIL
+python3 crawl_probe.py iterate RAW I603-win2/chain_ns/anm_pin3_D253.8825.npz --a 0.05429687500004832 \
+    --jet I603-win2/chain_ns/jet_pin3_D253.8825.npz --check_pred I603-win2/chain_ns/pred_pin3_D253.9368.npz \
+    --out RAW/I700-mac --threads 2 --strong 4 --steps 2
+python3 crawl_probe.py probe RAW RAW/I700-mac/crawl_iter_D253.9368.npz --out RAW/I700-mac --threads 2 --rungs 6 --arms U,E
+python3 crawl_probe.py fixrun RAW RAW/I700-mac/crawl_iter_D253.9368.npz --out RAW/I700-mac --threads 2 --switch 0 --steps 4
+```
 
 ## 3. The planted check (fixed before the first real run)
 
@@ -208,3 +228,86 @@ change of 1e-40 in a_h worth 0.1 in the horizon rows. That is a candidate, not a
 - **The projection's own branches** (`Reseeder.project`: u0, u0q, ladder, failed; `refine_o`'s refactoring rule). Every
   projected evaluation on the step was u0q, and the projected side is affine to 1.6e-54 lam² through lam*.
 - **The first step and the chord** are not on this line. The probe's step is the corrector's step at the chord's point.
+
+## 8. The fix, and its A/B on the crawl iterate
+
+The switch dates from the double-double projection, which held every point at the double-double floor
+(notes/RESEED.md 3.3, amendment 4). Under #603's flags the projection is the quad-double polish followed by three
+octo-double corrections (`--reseed_q 1 --reseed_o 3`). Its rung residual reaches about 1e-80, below the corrector's
+1e-60. So nothing is lost by projecting every point. The proposed change, as a diff (not applied; `hp/anm_run.py`,
+`correct`):
+
+```diff
+             if elim.get("rs") is not None:
+-                so = ElimO(so, elim["rs"])
++                # with --reseed_o the projection is octo-double, so every point is projected: below the switch a
++                # projected iterate's full step went unprojected and was refused for its horizon rows (#700)
++                so = ElimO(so, elim["rs"], switch=0.0 if opt["reseed_o"] else 1e-15)
+```
+
+**A/B on the crawl iterate** (`crawl_probe.py fixrun`, `fixrun_ns_D253.9368_switch0.log`). The corrector continues
+from the saved iterate with its own code (`newton_od`, the natural test, ElimO around the attempt's PinnedO and
+re-seeder). Only the switch is set to 0.
+
+| | switch 1e-15 (as it runs) | switch 0 |
+|---|---|---|
+| step 1 | lam 1 refused (ratio 9.4e16), lam 1/2 accepted, 2.58e-53 → 1.29e-53 | lam 1 accepted (ratio 2.4e-24), 2.58e-53 → 1.61e-54 |
+| step 2 | the same crawl (win2: 18 more steps, ending at 4.3e-59 at the cap) | lam 1 accepted (ratio 3.7e-24), 1.61e-54 → 9.82e-80 |
+| result | refused | converged; projection max\|F\| 9.82e-80, the point itself 2.03e-65 |
+| Delta | 1.684328705808 (win2's refused iterate, 12 digits) | 1.684328705807959325195082725310726557634 |
+
+The switch-1e-15 column is the rebuild's step 1 and win2's log. The switch-0 run used 4 projections (u0q) and no
+skips, in 2995 s on the Mac. No converged state of this D exists to compare Delta with to 40 digits, so this A/B
+shows convergence, not the state's agreement with another route.
+
+The cost is one projection, 34 s on win2, at each point the switch now skips. chain_ns's accepted attempts skipped 7
+to 11 evaluations, so they would take about 4 to 6 min more each. Its crawling refusal cost 31 min. A cheaper rule,
+not tested here, would project the trials of an iterate that was itself projected and keep the switch otherwise.
+
+## 9. What is measured and what is inferred
+
+Measured at chain_ns's attempt (D 253.8825 + 0.0543):
+
+- the corrector's residual along its step at the crawl iterate, lam* = 1 - 7.77e-15, and the jump per block;
+- that the kernel's own residual is smooth along the step;
+- that the point above lam* is affine when projected;
+- the natural test at lam = 1 both ways;
+- the A/B.
+
+Inferred, not measured:
+
+- That #674's 251.886 crawl has the same cause. Its log (`I674-win2/251.886_armA.log`) shows the same signature as
+  chain_ns's: each lam = 1 trial takes 0.35 to 0.43 s with max |F| 4.4e-23 to 4.2e-29, under 1e-15 and so not
+  projected, and each lam = 1/2 trial takes 39 to 49 s, projected, at a ratio of 0.5000. It was not probed, and
+  #603's older crawls (chain at a = 0.111, chain_nat at a = 0.0556) were not read for this signature.
+- How the chord gives its point its horizon offset (section 6).
+- That the default test (`accept="own"`) and the quad-double corrector (`ElimQ`, the same switch) can crawl the same
+  way. Both evaluate trials through the same switch.
+- The difference between the rebuild's chord |dw| and win2's (section 4).
+
+## 10. Recommended tasks
+
+1. **The switch-0 A/B on win2, at #603's crawling attempts.**
+   - What: anm_run.py with the diff of section 8 (or an `--elim_switch` option), at chain_ns's a = 0.0543 from D
+     253.8825, at #674's 251.886 arm A (a = 0.7275957614183426), and at the old chain's a = 0.111 from D 253.6411.
+     Each also runs with switch 1e-15 as the control.
+   - Why: one attempt converged here, on the Mac, from the crawl iterate; the chain needs the whole attempt on its
+     own machine.
+   - Acceptance (can fail): each switch-0 attempt converges to at most 1e-60 within 8 Newton steps, and each control
+     crawls (lam 1/2 at ratio 0.5000). At 251.886, the state's Delta agrees with #603's state at D 252.6135 to 1e-40.
+   - Depends on #700.
+2. **The octo-double corrector's planted checks with switch 0.**
+   - What: `octo_corrector.py planted` (D 200 and a state past D 250) and `wall` with ElimO's switch 0, and their
+     controls `--mutate_offset qd` and `--mutate 10`.
+   - Why: the switch was part of the corrector those checks passed.
+   - Acceptance (can fail): planted converges below 1e-40 with Delta within 1e-30 of the quad-double corrector's, and
+     both controls fail.
+   - Depends on #700.
+3. **How the strong-row chord moves its point's horizon data.**
+   - What: at chain_ns's attempt, the switch's test value and P(zc) - zc (in m_h and a_h, by harmonic;
+     `crawl_probe.py offset` is written for this) at every chord point.
+   - Why: the chord took the iterate's own residual from 1.4e-17 to 0.129. With switch 0 that no longer stops the
+     corrector, but a chord that drifts in a_h at the 1e-40 level is worth knowing about before it is trusted further.
+   - Acceptance (can fail): the trace names the chord step and the unknowns that carry the offset. Otherwise it shows
+     every chord point below 1e-15, which refutes section 6's account.
+   - Depends on #700.
