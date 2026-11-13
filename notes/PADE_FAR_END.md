@@ -191,3 +191,37 @@ As a bullet at the end of 7.4, after "Together, these are numerical evidence ...
 +  none has a zero within 0.17 of the far poles above. The far end is therefore not located by σ₀–σ₂₂, and the type
 +  stays uncalibrated.
 ```
+
+# Chord against arc at k ≤ 11 (#548)
+
+## 5. Method and frozen criteria
+
+`solver/inner_amp/pade_chord_arc.py`. #541's arc fraction R_k separated its plants chord2 (two branch points) and
+arcjump (log branch points along the arc) by only 0.11–0.15. The three candidates below use the same 23 coefficients
+and #541's chord frame: s along P0 → κ⋆, d off the chord, and the arc's offset profile d_arc(s).
+
+- **H_DA** is the fraction of the 11 DA2 members of §2.1 that have a zero of Q₂ on the middle of the arc, meaning
+  0.3 ≤ s ≤ 0.7 and |d − d_arc(s)| ≤ 0.04. There the arc lies 0.09–0.11 off the chord, so such a zero is nearer the arc
+  than the chord.
+- **H_HP** is the same fraction for the discriminant zeros of quadratic Hermite–Padé approximants
+  p₀ + p₁f + p₂f² = O(uⁿ) (Shafer 1974). The degrees are (m, m, m) and (m − 1, m, m) for m = 6, 7, with n ≤ 23.
+- **R_w** is #541's arc fraction pooled over k = 6–11, with each pole weighted by the modulus of its residue.
+
+Each is near 0 for a chord and near 1 for singularities on the arc. The noise is that of §2.3, the measured per-order
+errors, over 10 seeds.
+
+H_DA was looked at on chord2 and arcjump at the three nodes, with this noise, while it was being designed. H_HP and R_w
+were not.
+
+| check | criterion |
+|---|---|
+| separation | per node and per statistic: S = X(arcjump) − X(chord2) ≥ 0.3 and S ≥ 3ν, with ν the larger noise spread of X on the two plants |
+| pass | the separation holds at all three nodes, and the mirror mutation fires |
+| mutation | `--mutate=mirror` reflects the arc's profile across the chord, and must give S < 0.3 at every node. `--mutate=sigma7` (σ₇ × 1.01) is reported, not judged |
+| real run | only for a statistic that passes. Otherwise the task reports the bound |
+| bound | the noise-scale study: the largest factor F among 1, 0.1, …, 10⁻⁴ by which the measured errors must be multiplied for the separation to hold at all three nodes |
+
+The selftest (`python3 pade_chord_arc.py selftest`, mutations `selftest_hp` and `selftest_step`) checks two things:
+
+1. The Hermite–Padé discriminant of ((1 − k₁u)(1 − k₂u))^{1/2} e^{u/5} has zeros at both branch points, to 1.8×10⁻¹².
+2. A planted density step on the arc at s = 0.5–0.6, added to chord2, raises H_DA from 0.00 to 0.55.
