@@ -2514,3 +2514,128 @@ w = 2 and 3 fail the degree-10 pairs badly (ratios 2.0–4.4) and the degree-6 p
 2–3% of both (0.979–1.032). There the octo-double step is no longer accepted (λ → 0), a milder form of the wall at 215,
 so each value is the predicted first step only. So w = 4, the setting of T141–T145, is the right one above D 100, and
 the step's systematic uncertainty is a few percent of the fits' differences, about 1e-13 at 100–130.
+
+### 13.31 The chain's truncation in τ: M = 48 at D 80–240 (#636, 2026-11-13)
+
+`hp/chain_dM.py` resamples a chain state from M = 32 to M = 48 and solves its pinned system again at its own D. The
+system is the chain's except for M. It keeps the nodes, the Taylor orders and kfreeze 3, holds p1's harmonics 5–13 at
+the state's own values (zero above 13), and makes the Taylor plan at the start at 10⁻³² with steps of at most 0.05.
+The corrector is the chain's quad-double one, with the horizon data re-seeded from the last node and eliminated
+(`anm_run.py --corrector qd --reseed 2 --reseed_q 1`), followed by plain Newton down to the floor. M = 32 is solved by
+the same path from the stored state, so each difference is taken between two solutions of one corrector. A solution
+above max |F| 10⁻²⁰ is refused. Raw output is in `I636-mac/` of the raw-data repository.
+
+The kernel limits what can be measured. Quad-double is built for M = 32 and 48 only, and octo-double for M = 32 only.
+So M = 48 is solved in quad-double at every D, also where the chain used octo-double, and M = 64 needs a build.
+
+**The re-seed makes M = 48 solvable above D 80.** Resampling carries the truncation into the horizon data, where the
+mass mode amplifies it (2×10¹⁵ in |F| at D 200 without the re-seed, notes/BIAS.md). Re-seeded, the M = 48 start at
+D 80 falls from 1.7×10⁻⁹ to 1.4×10⁻¹⁶.
+
+**Planted checks** (criteria fixed before the runs, in the script's docstring).
+
+| plant | known | ours | bound | verdict |
+|---|---|---|---|---|
+| dd20: `up2_D20.0437`, no cut, Δ(M 48) against gamma_dd's record (raw `I271-macm3/gamma_dd.jsonl`) | Δ(M 48) − Δ(M 32) = +1.673×10⁻²⁰ | 4.4×10⁻²⁷ below the record's | 3 \|est\| + 10⁻²⁵ = 1.1×10⁻²⁵ | pass |
+| chain80, first run: stop at max \|F\| ≤ 10⁻³⁰ | −2.376×10⁻²⁵ | −5.647×10⁻²⁵ | 10⁻²⁷ | fail |
+| chain80, with the polish to the floor | −2.376×10⁻²⁵ | −2.308×10⁻²⁵ | 10⁻²⁷ | fail |
+| chain80 against `resolution_check.py` rerun on this build | −2.309×10⁻²⁵ | −2.308×10⁻²⁵ | 10⁻²⁷ | pass |
+
+The two failures each found a cause.
+
+- **The stop at the tolerance.** The corrector stopped at max |F| 6.0×10⁻³¹. One more Newton step moved Δ by
+  +3.3×10⁻²⁵ there, about 5×10⁵ times the residual. The driver now runs plain Newton on the pinned system to the floor
+  before it takes Δ. The record carries est, the Δ part of one more step at the solution, and it is −2.6×10⁻⁵⁸ at D 80.
+- **The kernel's system moved between builds.** The known value is from the kernel of 2026-11-07
+  (`resolution-mac/scan_chainfit_D80.log`). On that build `resolution_check.py` finds the stored M 32 state at |F|
+  1.0×10⁻³⁵. On this build (main 3c35f0c, the exact freeze projector, #523) the same script finds 2.9×10⁻³⁴, and its
+  first step moves Δ by 3.3×10⁻²⁷. Its M 48 difference is −2.309×10⁻²⁵ here, against −2.376×10⁻²⁵ there. The two
+  correctors share the kernel and the held values. They differ in the re-seed, the elimination, the resampler and the
+  Newton mode (junk-frozen there). The plant now uses this build's value.
+
+The plants dd40 and dd58 (kfreeze 13) were stopped for time. Their centre series of order 420 makes each M = 48
+quad-double step take about 8 min under the Mac's load. The dd plants ran without the re-seed, since one M = 32
+re-seed at D 40 took 431 s (`I636-mac/debug/dd40.log`).
+
+**The refusal control.** `--mutate=unconverged` gives the M = 48 corrector no step at D 100. The re-seeded resample
+stays at max |F| 3.4×10⁻¹⁷, and the driver refuses it, reports no difference and exits 1
+(`I636-mac/controls/unconverged_d100.log`).
+
+**The plants' control.** `planted --only=dd20 --mutate=D` solves the M = 48 system at D (1 + 10⁻¹⁴). Its Δ(M 48)
+lies −4.307×10⁻¹⁵ from the record's, the plant fails, and the command exits 1 (`I636-mac/controls/planted_dd20_D.log`).
+The D 80 plant also failed twice for real causes (above).
+
+**The chain states.** Each D is delta_all.csv's backbone state nearest the D asked for. The differences are between
+the M = 48 and M = 32 solutions of one path. est is the Δ part of one more Newton step at the M = 48 solution, an
+estimate of that solution's error in Δ, not a bound.
+
+| D | state | max \|F\| at M 32 / M 48 | est at M 48 | Δ(M 48) − Δ(M 32) | λ_g(M 48) − λ_g(M 32) |
+|---|---|---|---|---|---|
+| 80 (the plant) | `T138-win2/chain` | 4.6×10⁻⁵² / 8.1×10⁻⁵² | −2.6×10⁻⁵⁸ | −2.340×10⁻²⁵ | +3.925×10⁻²⁶ |
+| 100 | `T138-win2/chain` | 3.2×10⁻⁴⁹ / 3.1×10⁻⁴⁹ | +6.8×10⁻⁵⁸ | +2.874×10⁻²⁵ | +2.337×10⁻²⁶ |
+| 150 | `T138-win2/chain` | 2.8×10⁻⁴¹ / 2.1×10⁻⁴¹ | +5.2×10⁻⁵¹ | +3.106×10⁻²⁵ | +3.426×10⁻²⁷ |
+| 200, at the floor | `T138-win2/chain_o` | 9.8×10⁻²⁹ / 9.8×10⁻²⁹ | −5.4×10⁻²¹ | −2.235×10⁻¹⁹ | +2.748×10⁻²² |
+| 240.12, at the floor, against the stored state | `I603-win2/chain` | octo-double / 8.9×10⁻²⁸ | +7.1×10⁻²¹ | −1.602×10⁻²¹ | −4.697×10⁻²⁵ |
+
+**D 200 is at the quad-double floor.** Both solutions stop at max |F| 9.8×10⁻²⁹. That is accepted under the refusal
+rule (10⁻²⁰) but misses the bound of 10⁻³⁰ (13.28's floor near D 194). At M = 32 the quad-double path moves Δ by
++2.61×10⁻¹⁹ from the stored state, which the chain's quad-double corrector converged with its own plan. The M = 48
+solution lies +3.74×10⁻²⁰ from the stored state and −2.235×10⁻¹⁹ from the M = 32 re-solve. So the difference in M is
+not resolved there, and the floor bounds it at about 3×10⁻¹⁹ in Δ and 3×10⁻²² in λ_g. The re-seed took the M = 48
+start from 2.3×10¹⁵ to 1.0×10⁻¹⁸. These runs used 4 corrector steps, 1 polish step and at most 2 halvings, since each
+trial at the floor is a full residual and LU of about 4 min at M = 32 and 7 min at M = 48 on 2 threads.
+
+**D 240.12 is at the floor too, and its M = 32 is the stored octo-double state.** The chain converged that state in
+octo-double to 10⁻⁶⁰, which the quad-double path could only move by its own floor, so M = 32 is not solved again
+and the difference is taken against the stored state. The re-seed took the M = 48 start from 1.4×10²⁴ to 5.0×10⁻¹⁹,
+and one Newton step reached the floor, max |F| 8.9×10⁻²⁸, with the LU's pivots from 1.4×10⁻¹⁵ to 1.6×10³⁴. Later
+steps at that floor cost about 10 min a trial and move Δ by less than the floor's bound, as at D 200, so the run took
+one step (`I636-mac/chain/d240_it4_stopped.log` is the first run, stopped after that step). The difference is below
+est there and is not resolved. At D 200 the floor moved Δ by 2.6×10⁻¹⁹.
+
+**Δ and λ_g converge in M far faster than the fields.** The largest τ coefficient |c_k| with k ≥ 28 over every field of
+the M = 32 states is 4.4×10⁻¹⁴ at D 80, 1.4×10⁻¹⁴ at D 100 and 2.1×10⁻¹⁵ at D 150, and the fields fall about 10 times
+per two harmonics at every D. Yet at D 80–150 Δ moves by 3×10⁻²⁵ or less and λ_g by 4×10⁻²⁶ or less. At D 20 (the
+dd20 plant) the tail is 7.1×10⁻¹⁰, and Δ moves only 1.7×10⁻²⁰ between M 32 and M 48. The pinned system's own
+truncation, p1's harmonics above 13 held at zero, is a different term. M = 48 keeps it as it is, and the release step
+measures it (13.29).
+
+**Against #622's discrepancy.** The free fits of λ_g put c₀ below 1 by 8.6×10⁻¹¹ (notes/MODE_COUNT.md 10.5). A smooth
+error of 10⁻¹² in λ_g along the chain, rising from 0 at D 73 to 10⁻¹² at D 245, moves the top of their c₀ range by
+3.0×10⁻¹² (`hp/chain_dM.py ramp`, hp/data/chain_dM_ramp.csv). Closing the gap that way would take about 3×10⁻¹¹ at
+D 245. λ_g's τ truncation is at most 4×10⁻²⁶ at D 80–150, and at D 200–240 it is below the quad-double floor's
+3×10⁻²² in λ_g, 11 orders of magnitude short of that, so it is not the cause.
+
+**The refit** (`chain_dM.py refit`, `I636-mac/refit/`). λ_g's table was refitted twice by `lam_gauge_fit.py`. The
+first puts the M = 48 values in place of the six measured backbone rows (D 20.04, 80, 100, 150, 200 and 240.12). The
+second adds the measured difference to all 188 chain rows from D 73 on, linear in D between the measured D. Both give
+the free fits' c₀ range of 10.4 to its printed digits, 0.99999981663 to 0.999999999914, so 1 stays outside it. In
+both, `planted --mutate=limit` still exits 1. The departure of c₀ from 1 is not the τ truncation.
+
+**The D 61.03 comparison that pointed here measures the p1 cut.** MODE_COUNT.md 10.5 quotes λ_g at M = 32 against the
+two M = 64 layouts at D 61.03 (1.6×10⁻¹⁴ and 2.0×10⁻¹⁴). The M = 32 backbone state there has kfreeze 13, and the M = 64
+states have kfreeze 23 (`I252-mac/states/`). Between the kfreeze-23 states at M = 48 and M = 64, λ_g moves 6.5×10⁻¹⁸
+(hp/data/lam_gauge.csv). So that figure is the effect of p1's harmonics 15–23, not of M.
+
+**Proposed for delta_all.csv's err** (the coordinator's file, export_delta_all.py). A term `dM`, the τ truncation of
+the pinned system, from the chain rows of hp/data/chain_dM.csv: |Δ(M 48) − Δ(M 32)| + |est| + |the M 32 re-solve's
+move| at each measured D, log-linear in D between them and constant past the ends. It joins the chain_fit row's terms
+as the projector term does, and err stays the largest term. That is a bound of about 3×10⁻²⁵ to D 150 and of the
+quad-double floor above. It stays below the err of the 188 chain_fit rows that have one (1.4×10⁻¹⁵ to 4.4×10⁻¹¹),
+so those rows keep their err. The two rows without one (D 173.5 and 190.5) would get the dM term as err.
+
+**Reproduction** (from `hp/`, with a clone of the raw-data repository as RAW and its folder `I636-mac/` for output):
+
+    python3 chain_dM.py planted RAW RAW/I636-mac/planted --only=chain80          # the D 80 plant, 48 min on 5 threads
+    python3 chain_dM.py planted RAW RAW/I636-mac/planted --only=dd20 --reseed=0  # the D 20 plant
+    python3 chain_dM.py planted RAW RAW/I636-mac/controls --only=dd20 --reseed=0 --m32=0 --mutate=D   # must exit 1
+    python3 chain_dM.py run RAW RAW/I636-mac/chain T138-win2/chain/anm_pin3_D100.0000.npz
+    python3 chain_dM.py run RAW RAW/I636-mac/controls T138-win2/chain/anm_pin3_D100.0000.npz --m32=0 --save=0 \
+        --mutate=unconverged                                                      # must exit 1
+    python3 chain_dM.py table RAW/I636-mac/planted/chain_dM.jsonl RAW/I636-mac/chain/chain_dM.jsonl \
+        RAW/I636-mac/controls/chain_dM.jsonl
+    python3 chain_dM.py refit RAW/I636-mac/refit RAW/I636-mac/planted/chain_dM.jsonl RAW/I636-mac/chain/chain_dM.jsonl
+    python3 chain_dM.py ramp
+
+The runs at D 200 and 240.12 add `--it`, `--polish_it` and `--halvings` as `I636-mac/run_i636_large.sh` and
+`run_i636_d240.sh` give them.
