@@ -24,7 +24,8 @@ Contents
 - [8. Verdict](#8-verdict)
 - [9. Open issues and a proposed local-machine task](#9-open-issues-and-a-proposed-local-machine-task)
 - [10. Scripts and data](#10-scripts-and-data)
-- [11. References](#11-references)
+- [11. Δ(η) at D = 4 on the multishoot kernel](#11-δη-at-d--4-on-the-multishoot-kernel)
+- [12. References](#12-references)
 
 ## 1. Summary
 
@@ -437,7 +438,114 @@ solutions used as seeds, copied), solutions `sigdss_sol_*.npy`, logs `sigdss_log
 the root-finder fix (`sigdss_lam_d4.jsonl`, `sigdss_m1up_part1.jsonl`) contain two unconverged growth rates, marked by
 `last_step` above 10⁻³.
 
-## 11. References
+## 11. Δ(η) at D = 4 on the multishoot kernel
+
+#639 recomputed Δ(η) at D = 4 with a second solver that shares no code with `sigdss_solver.py`. It solves the
+equations of §2 on the multishoot engine in double-double, as hp does for the scalar. Raw output is in the raw-data
+repository's `I639-mac/` (commit 09204498). Statements here are **computed**.
+
+**The kernel.** [`sigma_ms/`](sigma_ms/) is a crate of its own (`sigmams`), copied from hp's `model.rs` and adapted;
+hp is not touched. It carries five fields (p, m, a, c, ψ) on the half τ-grid of M collocation points, which holds the
+odd harmonics up to M − 1. Products are not truncated.
+
+- Between 21 nodes, from x = 0.001 to 0.98, the solution is carried by Taylor steps in x of order 36. The steps are
+  planned so that each step's last terms stay below 10⁻³².
+- The centre series (ψ ≈ qx, p ≈ m ≈ qx, the ℓ = 1 order-k system of §2) is summed at x = 0.001, and the horizon series
+  at u = 0.02. Both run to order 80, and their tails are below 10⁻⁵⁵.
+- σ and γ enter the Taylor recursion through dσ = γ dψ and dγ = −κ²σ dψ. Their order-0 values come from the series of
+  sin s/s and cos s in s² = κ²ψ², so η = ∞ is the same code with σ = ψ.
+- The Jacobian is exact, by forward-mode duals. Newton runs in double-double, with the exact Jacobian at M = 32 and with
+  the f64 Jacobian in staircase storage at M = 48 and 64. The f64 Jacobian has the same root, at a contraction of 10⁻⁶ or
+  better per step near it.
+- The Taylor steps are planned again after each Newton step. A seed that is not a solution has singular components near
+  the horizon, where x − c is small. So its plan has about 550 steps, against 233 at the solution (M = 32).
+- Each coupling is seeded by the secant in ε = 1/η through the two couplings before it (`chain.py`). A run takes 3–6
+  Newton steps and 3–22 minutes on 2–4 threads.
+
+**Planted truth** (`sigma_ms/planted.py`, M = 8). The manufactured fields are polynomials in x with τ-dependent
+coefficients, with ψ = qx. Their sources are formed in mpmath from the closed forms σ² = (1 − cos 2βx)/(2κ²) and
+σγ = sin(2βx)/(2κ), β = κq, so they share no code with the recursions. The planted state solves the discrete system
+to max |F| = 6.8×10⁻³², which checks the centre series, the Taylor recursion and the horizon series term by term. From
+a 10⁻³ perturbation, Newton reaches |F| = 6.5×10⁻³² in 7 steps, with max |z − z*| = 3.2×10⁻³⁰ and
+Δ − Δ* = 1.6×10⁻³⁰. Each of four controls makes the check fail:
+
+| control | what fails |
+|---|---|
+| κ² of γ's recursion in the Taylor steps scaled by 1 + 2⁻³⁰ | Δ − Δ* = −6.2×10⁻¹² |
+| 2n of a³σ² in 2x a_x scaled by 1 + 2⁻³⁰ | Δ − Δ* = 1.3×10⁻¹⁰ |
+| one Jacobian column without its block derivative | linear convergence: |F| = 1.65×10⁻²⁸ after 10 steps |
+| the quad-double residual reading the state in double-double | the quad-double |F| stops at 5.8×10⁻³³ |
+
+The quad-double Newton on the planted problem reaches |F| = 1.2×10⁻⁵⁹, and its Δ is within 4.1×10⁻³⁰ of the
+double-double one. The planted truth itself is exact only to double-double rounding (cond J ≈ 8×10³ here). At M = 16
+the unmutated check passes as well: 7 Newton steps, max |z − z*| = 2.3×10⁻²⁹, Δ − Δ* = −1.1×10⁻²⁹.
+
+**Results** (`sigma_ms/data/delta_eta.csv`, from `sigma_ms/tables.py`). Every run converged to max |F| ≤ 2.7×10⁻²⁹.
+The ψ-constraint is not imposed. It is 1.2×10⁻¹⁴ to 3.5×10⁻¹⁴ of max |p| at every point, against 1.5×10⁻⁴ to
+2.0×10⁻⁴ for sigdss at k_c = 39.
+
+| η | Δ, M = 32 | Δ, M = 48 | M = 48 − 32 | sigdss, k_c = 39 | M = 48 − k_c 39 | k_c 39 − 23 |
+|---|---|---|---|---|---|---|
+| 5 | 0.45981785434 | 0.45981784128 | −1.31×10⁻⁸ | 0.4598178425 | −1.2×10⁻⁹ | −3.35×10⁻⁶ |
+| 6 | 0.45981081171 | 0.45981079389 | −1.78×10⁻⁸ | 0.4598107952 | −1.3×10⁻⁹ | −3.50×10⁻⁶ |
+| 7 | 0.45980938401 | 0.45980936217 | −2.18×10⁻⁸ | 0.4598093636 | −1.4×10⁻⁹ | −3.62×10⁻⁶ |
+| 8.5 | 0.45981108547 | 0.45981105877 | −2.67×10⁻⁸ | 0.4598110603 | −1.5×10⁻⁹ | −3.74×10⁻⁶ |
+| 10 | 0.45981421418 | 0.45981418368 | −3.05×10⁻⁸ | 0.4598141853 | −1.6×10⁻⁹ | −3.83×10⁻⁶ |
+| 14 | 0.45982261021 | 0.45982257284 | −3.74×10⁻⁸ | 0.4598225746 | −1.7×10⁻⁹ | −3.98×10⁻⁶ |
+| 20 | 0.45983156970 | 0.45983152655 | −4.32×10⁻⁸ | 0.4598315284 | −1.9×10⁻⁹ | −4.09×10⁻⁶ |
+| ∞ | 0.45986115865 | 0.45986109977 | −5.89×10⁻⁸ | 0.4598611019 | −2.1×10⁻⁹ | −4.35×10⁻⁶ |
+
+- **The resolution error.** M = 32 → 48 changes Δ by −1.3×10⁻⁸ to −5.9×10⁻⁸, the error of the M = 32 values.
+  M = 48 → 64 changes it by 2.5×10⁻¹¹ at η = ∞ and 9.5×10⁻¹² at η = 7, the error estimate of the M = 48 values. That
+  estimate is the next M's change, not a bound.
+- **η = ∞.** M = 48 lies 2.1×10⁻⁹ below sigdss's k_c = 39 value 0.4598611019 and the ℓ = 1 multiplet's 0.4598611019.
+  That solver's own k_c = 31 → 39 change is −9.83×10⁻⁸ (`data/l1_D4_kc31.jsonl`, `kc39`). If its k_c sequence is
+  geometric, its limit lies 2.3×10⁻⁹ below k_c = 39, where M = 48 lies.
+- **Against sigdss.** At every η, M = 48 lies 1.2×10⁻⁹ to 2.1×10⁻⁹ below sigdss's k_c = 39, 2,000 to 2,800 times
+  less than sigdss's k_c = 23 → 39 change. The two solvers converge to the same Δ(η).
+- **Two starts.** η = 7 at M = 32 started from sigdss's k_c = 39 state (raw `I639-mac/checks/`) and from the ε chain
+  gives the same Δ to 6.2×10⁻³² (`sigma_ms/data/checks.csv`).
+- **Quad double.** At η = 7 and M = 32, quad-double Newton (the quad-double residual, the f64 Jacobian) reaches
+  |F| = 1.1×10⁻⁵⁸ in three steps and moves Δ by 1.2×10⁻³¹. Double-double rounding does not limit Δ at these M.
+- **The minimum.** Δ is analytic in ε = 1/η at ε = 0, so `sigma_ms/fit_min.py` fits polynomials in ε of degree 4–7
+  through the eight couplings (the degree-6 one is quoted) and takes their minimum on 5 ≤ η ≤ 10. The fit was first
+  run on planted data with a known minimum and noise of 10⁻⁹ (`fit_min.py --selftest`), where it returned the minimum
+  within the spread over degrees. Two controls fire: a minimum outside the window gives no minimum, and one point
+  shifted by 10⁻⁷ gives a residual twenty times the noise.
+
+| | M = 32 | M = 48 | spread over degrees 4–7 (M = 48) |
+|---|---|---|---|
+| η_min | 6.97851 | 6.98019 | 6.9801938 to 6.9801973 |
+| Δ_min | 0.45980938351 | 0.45980936174 | within 8×10⁻¹² |
+
+  On the M = 48 data the degree-6 fit's largest residual is 1.9×10⁻¹⁶. The two error bars are of different kinds, and
+  neither is an enclosure. The spread over degrees is an estimator range, 3.5×10⁻⁶ in η_min. The change between the
+  M = 32 and M = 48 fits, 1.7×10⁻³ in η_min and −2.2×10⁻⁸ in Δ_min, is the resolution error of the M = 32 fit; for
+  M = 48 it is an upper estimate. The M = 48 → 64 change is −4.3×10⁻⁴ times the M = 32 → 48 one at both η = 7 and
+  ∞. If it keeps that shape at the other couplings, which were not run at M = 64, the M = 48 fit would move by about
+  −7×10⁻⁷ in η_min and +9×10⁻¹² in Δ_min. The parabolas of #633 through η = 6, 7 and 8.5 give 7.198, 7.089 and 6.983
+  in η, ln η and 1/η at M = 48. The one in 1/η, the variable Δ is analytic in, is the closest, and the spread of
+  6.94–7.20 quoted in notes/REVIEW_GHMG25.md D9 is mostly the three-point model's.
+
+**Commands** (from the repository root). Build first with `PY=<python3> SITE=<dir> matter/sigma_ms/build.sh` and run
+with `PYTHONPATH=<dir>`; the runs need the raw-data repository cloned beside the checkout
+(`git clone https://github.com/nmoinvaz/choptuik-large-d-raw ../choptuik-large-d-raw`) and write into `OUT`:
+
+```
+python3 matter/sigma_ms/planted.py --M 8 [--mutate gamma|sigma_h|dropcol|qd_state]
+python3 matter/sigma_ms/fit_min.py --selftest
+python3 matter/sigma_ms/run_eta.py --eta inf --M 32 --sigdss ../choptuik-large-d-raw/I623-win/data/sigdss_sol_ref_i623_kc39_etainf_D4.0000_etainf.npy --kc_seed 39 --out OUT --tag etainf_M32
+python3 matter/sigma_ms/chain.py --M 32 --start OUT/sm_etainf_M32.npz --etas 20,14,10,8.5,7,6,5 --out OUT
+python3 matter/sigma_ms/chain.py --M 48 --resample_from 32 --etas inf,20,14,10,8.5,7,6,5 --out OUT --extra "--jac mixed --jac_final mixed"
+python3 matter/sigma_ms/tables.py ../choptuik-large-d-raw --csv matter/sigma_ms/data/delta_eta.csv
+python3 matter/sigma_ms/fit_min.py --records ../choptuik-large-d-raw/I639-mac/data/sm_records.jsonl --out matter/sigma_ms/data/fit_min.json
+```
+
+The runs of #639 took the same steps by other routes (the η = ∞ state at M = 48 from M = 32, then the ε chain at
+M = 48 from it; η = 5 and 6 at M = 48 resampled from M = 32); the solutions do not depend on the route (two starts at
+η = 7 agree to 6.2×10⁻³²).
+
+## 12. References
 
 - [HLPTA00] S. Husa, C. Lechner, M. Pürrer, J. Thornburg, P. C. Aichelburg, PRD 62, 104007 (2000),
   [gr-qc/0002067](https://arxiv.org/abs/gr-qc/0002067). Table I and the quoted sentences were read from the arXiv HTML
