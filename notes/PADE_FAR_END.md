@@ -2,7 +2,7 @@
 
 Status of everything here: numerical evidence. Nothing is rigorous. It bears on the type bounds of routes A3 and P5,
 which follow from the farthest singularity of the Borel transform (proof/D_entire.md sections 1 and 7). Sections 1–4
-are #547, sections 5–6 are #548, section 7 is #670, section 8 is #669, and section 9 is #672.
+are #547, sections 5–6 are #548, section 7 is #670, section 8 is #669, section 9 is #672, and section 10 is #683.
 
 - **#547.** A calibrated estimator recovers the far end of smooth-density plants within 0.009, but it fails #547's
   acceptance. On the real series two controls fire, so no far end is quoted (§4).
@@ -19,6 +19,9 @@ are #547, sections 5–6 are #548, section 7 is #670, section 8 is #669, and sec
   plant has a twin of 14–19 terms in another class. No prior on the peak density separates a chord from an arc either:
   the arc plant's smallest chord twin peaks at only 1.4–1.8 times the chord plant's, and this measure passes the
   calibration that the coefficient norm failed (§9).
+- **#683.** Every script now reads the real σ_k from their strings at full precision. No quoted real-series number
+  moves. The strings' 20 digits are coarser than the measured errors at k = 1–8, but that rounding moves the Padé
+  poles, R_k and DA2 zeros by at most 4.4×10⁻⁶, and the real twins' χ by at most 2.3×10⁻⁶ error units (§10).
 
 ## 1. Question
 
@@ -897,4 +900,177 @@ adding two bullets after it:
 +  with the plants' end points P0 and κ⋆ and their exponent reproduces the real σ₀–σ₂₂ with fewer than 23 terms, at any
 +  node (χ 0.9–1.3×10⁵ at 22 terms), while each plant has a twin of 14–19 terms in another class. The misfit sits at
 +  σ₁₁–σ₂₂. Which ingredient fails, the far end or the exponent, is not determined (notes/PADE_FAR_END.md §9.2).
+```
+
+## 10. Precision of the real inputs (#683)
+
+The scripts of sections 1–9 read the real σ₀–σ₂₂ from the strings (`sigma_str`) of the scan files, which carry 20
+significant digits. #672 found that `pade_twin_count.real_sig()` held them at mpmath's default 53 bits (§9.2).
+`solver/inner_amp/sigma_load.py` now parses them at 300 digits for every caller, inside `mp.workdps` and never through a
+float. `solver/inner_amp/pade_precision.py` measures what the earlier loading did, and what the strings' own rounding
+leaves. All runs used one process under `nice -n 10`, single-threaded, 2026-11-13 12:13–12:28 UTC. The records are in
+the raw-data repository's `I683-mac/` (4782261).
+
+### 10.1 The callers
+
+Each row is a stage that loaded the real series, with the precision its strings were parsed at before #683. Every row
+now parses at 300 digits.
+
+| entry point | stages (task) | parsed at | what the values feed |
+|---|---|---|---|
+| `pade_geometry.load_scan` | `pade_geometry.py plants` (#541) | 53 bits | the plants' template σ₀–σ₁₂ |
+| | `pade_geometry.py real` and `selftest` (#541) | 60 digits | the real [k/k] poles at 120 digits; the selftest's template |
+| | `pade_farend.py`, every stage (#547), and `pade_farend_diag.py` | 100 digits | the plants' template; the real DA2 at 100 digits |
+| | `pade_chord_arc.py`, every stage (#548) | 100 digits | the plants' template |
+| | `pade_twin_size.py twins_real`, its J 1500 context line (#669, #672) | 60 digits | J 1500 against J 1250 |
+| | `twins_jdiag` and `peak_real` (#672) | 150 digits, explicitly | a diagnostic; a gated stage, not run |
+| `pade_twin_count.real_sig` | `pade_twin_count.py` (#670), `pade_twin_size.py twins` and `size` (#669, #672), `pade_twin_peak.py` (#672) | 53 bits | the plants' template |
+| | `pade_twin_size.py twins_real` (#669, #672) | 53 bits | the targets of the real twin fits at 150 and 250 digits |
+| `planted_plants.load_real` | the P-ARC families (#541's `repo-arc` and `repo-chord`; notes/PLANTED_SELECTION.md) | 50 digits | their template |
+| `sigma_err_fit.recompute`, through `pade_geometry.noise_eps` | every stage with the measured errors | 40 digits | \|σ_k\| as a double, in err_k only; not switched |
+
+`twins_jdiag` keeps its 53-bit reading, now explicit (`sigma_load.load_scan(..., prec=53)`), since it documents #672's
+values. The other loaders of the scan files lie outside these scripts and were not switched. They parse at their
+module's 30–80 digits, above the strings' 20 (`solver/proof/exact_sigma.py --borel`, `entire_cert.py`,
+`homega_interp.py`, `feasibility.py`, `zero_selection.py`, `planted_estimators.py`, `solver/plot_selection.py`,
+`solver/harmony/stokes/`, `solver/independent_second_zero/`), or they use doubles by design (`trunc_seq_M7.py`,
+`fit_arc.py`, `check_numbers.py`).
+
+### 10.2 The load check
+
+`python3 sigma_load.py --check` calls each entry point at mpmath's default 53 bits, as a script's first load does. Every
+nonzero component of every loaded σ_k must equal its string, parsed again at 600 digits, within 10⁻¹⁰⁰ relative. It
+covers the J 1250 files at the three nodes, the J 1500 file and the `scan25phys` files of the P-ARC families.
+
+| run | largest relative error | verdict |
+|---|---|---|
+| `--check` | 6.0×10⁻³⁰² to 8.6×10⁻³⁰² on every path; exit 0 | OK |
+| `--check --mutate=53bit`, the loader parsing at 53 bits | 6.9×10⁻¹⁷ to 1.1×10⁻¹⁶ on every path; exit 1 | fires |
+
+### 10.3 What a 53-bit template did to the plants
+
+The plants' c_m are a least-squares fit in double precision to the real σ₀–σ₁₂ (§2.2), so the template's precision
+enters through the rounding of the fit's inputs. `pade_precision.py plants` refits chord2, arcjump and arc
+(`pade_farend.FarPlant`) and chord2 and arcjump (`pade_geometry.Plant`) at each node, with the template parsed at 53
+bits, 60 digits and 100 digits, against 300 digits.
+
+| template | c_m that differ | largest change of c_m | of σ₀–σ₃₀ | of σ₁–σ₂₂, in error units |
+|---|---|---|---|---|
+| 60 or 100 digits | 0 of 6, every plant and node | 0 | 0 | 0 |
+| 53 bits | 6 of 6, every plant and node | 1.0×10⁻¹³ to 3.4×10⁻¹² relative | 2.5×10⁻¹⁴ to 3.8×10⁻¹³ relative | 1.3–5.1×10¹⁰ |
+
+So the plants of #547 and #548 are unchanged, and those of #541, #669, #670 and #672 change at about 10⁻¹³ relative.
+Before #683, `pade_twin_count.py`'s chord2 was therefore a different function from `pade_farend.py`'s, by 10¹⁰ error
+units at low order. Now they are the same. Both are plants of the same family, so this is a change of plant, not an
+error. What it does downstream is in 10.4.
+
+### 10.4 Reruns at full precision
+
+Each stage below was rerun with its own script and compared, number by number, with its stored record
+(`pade_precision.py compare`, `I683-mac/compare/`). At M = n the twin is the interpolant and its χ is rounding noise,
+so those rows and C1's ratios there are left out (`--skip`).
+
+| stage | record | numbers that differ | largest relative change |
+|---|---|---|---|
+| `pade_farend.py real` | `I547-mac/real.json` | 0 of 305 | 0 |
+| `pade_farend_diag.py` | `I547-mac/diag_post_freeze.json` | 0 of 675 | 0 |
+| `pade_geometry.py real`, frozen and `--noise=measured` | `I541-mac/real*.json` | 39 of 1736, all of them distances to the plants in the verdict | 6.8×10⁻¹¹ |
+| `pade_geometry.py plants`, frozen and `--noise=measured` | `I541-mac/plants*.json` | 3294 of 4367, and 3682 of 4808 | 6.6×10⁻⁹ (a pole offset of 5.6×10⁻⁵); 1.5×10⁻⁶ for a noise spread |
+| `pade_twin_size.py twins`, the plants | `I672-mac/twins_plants.json` | 800 | 3.6×10⁻¹² |
+| `pade_twin_size.py twins_real` | `I672-mac/twins_real.json` | 783 | 5.1×10⁻⁸ |
+| its J 1500 context line | the same | | χ 1.7×10⁹ → 1.01, at k = 16 |
+
+The exits match the records. `pade_geometry.py plants` and `real` exit 1 on their frozen verdicts, as in #541, and the
+other stages exit 0. The real Padé poles, R_k, bows, ratio-law κ and noise spreads of #541, and every number of #547's
+real and diagnostic runs, are bit-identical in double precision, since those stages parsed at 60 and 100 digits. The
+J 1500 line now gives what §9.2's diagnostic found, at most 1.0 error unit, at k = 16.
+
+**No quoted real-series number moves by its last digit.**
+
+| quoted number | where | quoted | rerun |
+|---|---|---|---|
+| R_k of the real series at ω∞, k = 6–11 | D_entire 7.4 | 1.000, 0.826, 0.701, 0.405, −0.057, 0.33 | bit-identical |
+| the real [6/6] bow | D_entire 7.4 | 0.116 | bit-identical |
+| the poles past κ⋆ at ω∞, k = 8, 9, 10 | D_entire 7.4, §1 | 1.355 + 1.051i, 1.407 + 1.061i, 1.457 + 1.069i (\|t\| 1.715, 1.762, 1.806) | bit-identical |
+| the ratio law over k = 12–21 | D_entire 7.4, §1 | 1.457 + 1.112i, \|κ\| = 1.833 | bit-identical |
+| the DA2 median, modulus, spread and noise, per node and J 1500 | §4.2 | at ω∞ 2.228 + 1.435i, 2.650, 0.24, 0.19 | bit-identical |
+| the DA2 zeros past \|t\| = 1.65 | §4.3, D_entire 7.4 | no 6 members agree; none within 0.17 of the far poles | bit-identical |
+| M_min = M_lo of the real chord, arc and smooth twins | §9.2, D_entire 7.4 | 23 at every node | 23 at every node |
+| their χ at 22 terms | §9.2, D_entire 7.4 | 9.7×10⁴ to 1.27×10⁵ (0.9–1.3×10⁵) | the same to 7 digits |
+| the J 1500 twins' χ at 22 terms | §9.2 | 9.1×10⁴ and 1.15×10⁵ | the same |
+
+The plant stages of #548 are unchanged exactly, since their plants are (10.3). Those of #669, #670 and #672 part 2
+(`size`, `run`, `peak`) were not rerun. On the same plants, `twins` moved by at most 3.6×10⁻¹² relative, so their
+quoted three- and four-digit numbers are not expected to move. That is an inference, not a rerun.
+
+### 10.5 The floor that the 20-digit strings put on each statistic
+
+`amp_flint_par.py` writes σ_k with `mp.nstr(z, 20)`, and its log prints 15 digits. The raw-data repository holds those
+two for every J 1250 and J 1500 run at these nodes (`T99-win2/`, `T102-mac/`, `T103-mac/`; the repository's wf 1.00
+J 1250 file is T99-win2's, whose strings equal T102-mac's), and no other output carries σ_k there. The certified σ₁ of
+D_entire 6.5 has 9 digits. So no more digits exist, and the strings are the floor. Their rounding is half a unit in the
+20th digit (`sigma_load.py --rounding`). Against the measured errors, all relative:
+
+| ω/ω∞ | measured error, k = 1–8 | string rounding, k = 1–8 | rounding over error, k = 1, …, 8 | k = 9 |
+|---|---|---|---|---|
+| 0.99 | 3.0×10⁻²⁶ to 5.5×10⁻²¹ | 7.8×10⁻²¹ to 4.5×10⁻²⁰ | 2.6×10⁵, 2.8×10⁵, 4.0×10⁵, 1.1×10⁵, 870, 940, 24, 3.4 | 0.089 |
+| 1.00 | 3.3×10⁻²⁶ to 2.6×10⁻²¹ | 7.8×10⁻²¹ to 4.5×10⁻²⁰ | 2.3×10⁵, 2.5×10⁵, 3.6×10⁵, 1.4×10⁵, 780, 2100, 22, 7.1 | 0.079 |
+| 1.01 | 3.7×10⁻²⁶ to 2.6×10⁻²¹ | 7.7×10⁻²¹ to 4.6×10⁻²⁰ | 2.1×10⁵, 2.3×10⁵, 3.2×10⁵, 1.2×10⁵, 1700, 2200, 14, 7.4 | 0.070 |
+
+The rounding exceeds the measured error at k = 1–8 at every node, and from k = 9 on it is below it. The J 1500 file
+rounds the same way. It equals J 1250 exactly at k ≤ 9, because both round to the same 20 digits there, so the J
+difference says nothing about those orders.
+
+The floor of a statistic is its first-order worst case over the box the rounding leaves: each component of σ₁–σ₂₂
+anywhere within half a unit of its 20th digit (σ₀ = 1 by normalisation). `pade_precision.py floor` takes one finite
+difference per component at the working precision and sums the moduli. It is a first-order bound, not an enclosure.
+Its control evaluates the corner of the box that maximises Re t of the pole past κ⋆ at k = 10, and the one for R₁₀, at
+ω∞. The actual shifts, 1.3624×10⁻⁸ and 2.7579×10⁻⁷, equal the bounds to five digits, and `--mutate=corner`, which
+doubles the corner, gives the ratio 2.00000 and fails.
+
+| statistic | floor over the three nodes and J 1500 | quoted to | noise spread at the measured errors |
+|---|---|---|---|
+| [k/k] geometry poles, k = 6–9 | ≤ 2.1×10⁻⁹ | 3 decimals | |
+| the same, k = 10 and 11 | ≤ 9.5×10⁻⁸ and ≤ 9.5×10⁻⁷ | 3 decimals | |
+| the poles past κ⋆, k = 8, 9, 10 | ≤ 1.2×10⁻¹⁰, 1.1×10⁻⁹ and 2.2×10⁻⁸ | 3 decimals | |
+| their pole–zero gaps | ≤ 9.4×10⁻¹² | 1 digit | |
+| R_k, k = 6–9 | ≤ 1.2×10⁻⁸ | 3 decimals | |
+| R₁₀ and R₁₁ | ≤ 3.3×10⁻⁷ and ≤ 3.5×10⁻⁶ | 3 and 2 decimals | 0.05 and 0.47 at ω∞ |
+| the bow at k = 6 | ≤ 1.9×10⁻¹² | 3 decimals | |
+| each DA2 member's farthest zero, and so the median | ≤ 4.4×10⁻⁶ | 3 decimals | 0.13–0.19 |
+| χ of the real chord, arc and smooth twins at 22 terms | ≤ 2.3×10⁻⁶ error units, largest at k = 16–18 | 2–3 digits, of about 10⁵ | |
+
+`pade_precision.py floor_twins` gives the twins' row. The residual of a least-squares twin is linear in its target,
+r = (I − QQᵀ)Wσ with Q from mp.qr, so its shift over the box is exact to first order. Two controls pass at every node
+and class. χ from Q equals `tc.lsq`'s, with a relative difference of 0 in double precision. A refit by `tc.lsq` with Re
+σ₃ moved by 10⁶ half units matches Q's prediction to 10⁻¹⁰⁴. `--mutate=proj`, which drops Q's last column, makes both
+fail, by factors of 2.4–9.3 and 10⁹–10¹⁰, and exits 1. With err_k widened to max(err_k, rounding_k), every class still
+has M_min = M_lo = 23 at every node, and χ at 22 terms is unchanged at three digits.
+
+### 10.6 What this means
+
+- **The 53-bit loading moved no quoted number.** It reached the real series only through `twins_real`, whose χ it
+  moved by 5×10⁻⁸ relative, and through the J 1500 context line, which §9.2 had already flagged as an artifact. Its
+  larger effect was on the plants. It changed them by 10⁻¹³ relative, at 10¹⁰ error units, and their statistics by at
+  most 7×10⁻⁹ relative (1.5×10⁻⁶ for a noise spread).
+- **The strings are coarser than the errors at k = 1–8, and no statistic here notices.** The measured errors at
+  k = 1–4 lie 10⁵ times below the rounding, so the true input error at k = 1–8 is the rounding, and a fit that weights
+  those orders by the measured errors treats up to 4×10⁵ error units of rounding as signal. But every statistic here is
+  set by the higher orders. Over the whole box the Padé poles and DA2 zeros move by at most 4.4×10⁻⁶ in t, R_k by at
+  most 3.5×10⁻⁶, and the real twins' χ by at most 2.3×10⁻⁶ error units, and the twin verdict survives errors widened to
+  the rounding. A statistic that leaned on σ₁–σ₈ at their measured errors would need more digits. None of those quoted
+  here does.
+- **More digits would need a rerun.** `amp_flint_par.py` computes σ_k at 1280 bits and keeps 20 digits. A rerun that
+  writes them in full would lift the floor, and nothing quoted here needs it.
+
+### 10.7 Proposed text for proof/D_entire.md
+
+No number of 7.4 changes. One sentence would record the inputs' precision, at the end of 7.4's first paragraph:
+
+```diff
+ `solver/inner_amp/pade_geometry.py` computes the [k/k] poles for k = 6–11 from σ₀–σ₂₂ (`scan45J1250`, 120 digits). It
+ does the same for continuous plants matched to σ₀–σ₁₂ to the conventions of notes/PLANTED_SELECTION.md 2.2.
++The files give σ_k to 20 digits, coarser than their measured errors at k ≤ 8. That rounding moves the poles, R_k and
++the differential approximants' zeros by less than 10⁻⁵, and the twins' χ by less than 10⁻⁵ error units
++(notes/PADE_FAR_END.md §10).
 ```
