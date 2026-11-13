@@ -2,8 +2,8 @@
 
 Does the radius of the horizon series reach the matching distance u₀ = 1 − x_last = 0.3 near D 253, where #603's chain
 slows to steps of 0.02–0.03 and the horizon re-seed's last rung fails? The code is `hp/horizon_radius.py`, the derived
-table `hp/data/horizon_radius.csv`, and the raw output folder `I693-mac/` of the raw-data repository (commit 2227dbf;
-its `run_693.sh` holds every command). Everything here is numerical evidence.
+table `hp/data/horizon_radius.csv`, and the raw output folder `I693-mac/` of the raw-data repository (commits 2227dbf
+and f08461f; its `run_693.sh` holds every command). Everything here is numerical evidence.
 
 ## Answer
 
