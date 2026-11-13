@@ -1616,6 +1616,18 @@ def bridge_scan(sysm, bas, log, out, dump, g00, floor0, fee2=None, wee=None):
                 ok_all = False
                 row["fail"] = sgn
                 break
+            # the same test in the chord's linear regime (added after REF's bridge, where the start w0 left it near
+            # 1e-21): from the converged w plus 1e-60 along w - w0
+            dl = [x - y for x, y in zip(wv, w0)]
+            nl = nrm(dl)
+            w, dws = [x + mp.mpf("1e-60") * d / nl for x, d in zip(wv, dl)], []
+            for _ in range(3):
+                dw = sysm.solve(strong_part(Um, sysm.F([x + y for x, y in zip(pv, w)])))
+                dws.append(dw)
+                w = [x - y for x, y in zip(w, dw)]
+            n0 = nrm(dws[0])
+            row["lr1" + ("p" if sgn > 0 else "m")] = float(nrm(dws[1]) / n0)
+            row["lrho" + ("p" if sgn > 0 else "m")] = float(dot(dws[2], dws[0]) / n0 ** 2)
             prev[sgn] = (t, wv)
             deps[sgn] = [gv[m] - g00[m] - mp.fsum(B[m][j] * c[j] for j in range(k)) for m in range(k)]
             row["w" + ("p" if sgn > 0 else "m")] = float(nrm([x - y for x, y in zip(wv, w0)]) / t ** 2)
@@ -1628,19 +1640,23 @@ def bridge_scan(sysm, bas, log, out, dump, g00, floor0, fee2=None, wee=None):
             row["E"], row["O"] = float(nrm(E) / (t * nBe)), float(nrm(O) / (t * nBe))
             row["fl"] = float(max(floor0, mp.mpf(row["errp"]) * t * nBe, mp.mpf(row["errm"]) * t * nBe) / (t * nBe))
         rows.append(row)
+        nan = float("nan")
         log(f"    {float(t):9.3g}; " + (f"{row['E']:11.4e} {row['O']:11.4e}; {row['wp']:.5e} {row['wm']:.5e}; "
                                       if ok_all else "chord FAILED; ")
-            + f"{row.get('r1p', float('nan')):.3g} {row.get('rhop', float('nan')):+.4e}, {row.get('r1m', float('nan')):.3g} "
-            f"{row.get('rhom', float('nan')):+.4e}; {row.get('stepsp')},{row.get('stepsm')}; "
-            f"{row.get('fl2p', float('nan')):.4e} {row.get('fl2m', float('nan')):.4e}")
+            + f"{row.get('r1p', nan):.3g} {row.get('rhop', nan):+.4e}, {row.get('r1m', nan):.3g} "
+            f"{row.get('rhom', nan):+.4e}; linear {row.get('lr1p', nan):.3g} {row.get('lrhop', nan):+.4e}, "
+            f"{row.get('lr1m', nan):.3g} {row.get('lrhom', nan):+.4e}; {row.get('stepsp')},{row.get('stepsm')}; "
+            f"{row.get('fl2p', nan):.4e} {row.get('fl2m', nan):.4e}")
         out["bridge"] = rows
         dump()
         if not ok_all:
             break
     rhos = [r[q] for r in rows for q in ("rhop", "rhom") if q in r]
+    lrhos = [r[q] for r in rows for q in ("lrhop", "lrhom") if q in r]
     log(f"  bridge: {len(rows)} t, the chord {'failed at ' + str(rows[-1]['t']) if 'fail' in rows[-1] else 'held'}; "
-        f"rho positive at {sum(x > 0 for x in rhos)} and negative at {sum(x < 0 for x in rhos)} of {len(rhos)} "
-        f"({time.time() - t0:.0f} s)")
+        f"rho from w0 positive at {sum(x > 0 for x in rhos)} and negative at {sum(x < 0 for x in rhos)} of "
+        f"{len(rhos)}; in the linear regime positive at {sum(x > 0 for x in lrhos)} and negative at "
+        f"{sum(x < 0 for x in lrhos)} of {len(lrhos)} ({time.time() - t0:.0f} s)")
     return rows
 
 
@@ -1786,7 +1802,7 @@ def curve_scan(sysm, bas, opts, mutate, log, rec, dump, truth=None, kappa=None, 
         if truth is not None:
             # (PB) on the plant: its skew coupling oscillates without a fold, so rho < 0 at every t; --mutate=fold
             # (a symmetric coupling) makes rho > 0, and (PB) must fail
-            rh = [r[q] for r in brows for q in ("rhop", "rhom") if q in r]
+            rh = [r[q] for r in brows for q in ("rhop", "rhom", "lrhop", "lrhom") if q in r]
             pb = bool(rh) and all(x < 0 for x in rh)
             out["planted_bridge"] = pb
             log(f"  planted: (PB) rho negative at every t of the bridge: {'pass' if pb else 'FAIL'}")

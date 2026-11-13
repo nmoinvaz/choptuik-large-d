@@ -929,3 +929,24 @@ verdict took the order of E in units of |Bc| (order 1) instead of the departure'
   plant or control stops the real runs. (Z1) or (Z2) failing at a start stops that start until the cause is known. The
   solver's rules in 11.1 may change after the pilot, with the change and its cause recorded in 11.4; no criterion of
   11.2 or 11.3 changes.
+
+### 11.4 Changes after real data
+
+- **The REF pilot** (code 085fbdff, raw `I698-mac/curve_ref.log`). (Z0) and (Z1) pass. The flat-chart control (Z2a)
+  fires: at |c| = 10⁻⁶ the flat chart's strong residual is 1.2×10²⁰ times ½F″(e, e)t². Newton stops at 10⁻⁶ on both
+  rays (11.5). By 11.3 that stops REF's judged measurement until the cause is known, and `curve_verdict` gives *not
+  decided* (both judged t missing).
+- **A defect of (Z2a) as written.** #694 stored F″(e, e) in its harmonic rows, and (Z2a) compares its max norm with one
+  over grid rows. A max norm changes under that orthogonal change of rows, which is why the ratio is 0.45 even at
+  10⁻²⁴, where the flat chart is exactly quadratic. A 2-norm does not change. The failure at 10⁻⁶ (10²⁰ times) does
+  not depend on it. The criterion is left as frozen, and the bridge below prints the 2-norm.
+- **A diagnostic added for the cause, the chord bridge** (`--bridge=1`, code 46f250b3; nothing in 11.2 or 11.3
+  changed). Through z0's LU, before any refactorization, section 9's chord follows both rays from 10⁻²⁴ upward, four
+  per decade to 10⁻¹⁴, until it fails. Per t it prints the departure's parts (of |Bc|), |w − w0|/t² against ½|w_ee|
+  (#694), and the flat chart's strong residual change in 2-norm over t² against ½|F″(e, e)|₂. It also prints the
+  chord's first three corrections from w0, |dw₁|/|dw₀| and the signed pair ratio ρ = ⟨dw₂, dw₀⟩/|dw₀|². If the chord's
+  error map N acts on two directions, as #677's paired steps suggest, then N² = ρ there. The strong block's
+  determinant is then z0's times 1 − ρ, so ρ → +1 marks a fold of the strong-solved manifold, and ρ < 0 an
+  oscillation without one (*inferred* from that model). Its plant check (PB): the curve plant's skew coupling must
+  give ρ < 0 at every t. Its control `--mutate=fold` (a symmetric coupling) must give ρ > 0, failing (PB).
+- **The class A start** runs with `--bridge=1`: the bridge first, then the protocol's Newton points.
