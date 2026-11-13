@@ -23,6 +23,10 @@ section 11 is #684.
 - **#683.** Every script now reads the real σ_k from their strings at full precision. No quoted real-series number
   moves. The strings' 20 digits are coarser than the measured errors at k = 1–8, but that rounding moves the Padé
   poles, R_k and DA2 zeros by at most 4.4×10⁻⁶, and the real twins' χ by at most 2.3×10⁻⁶ error units (§10).
+- **#684.** Neither the far end nor the exponent alone blocks a short real twin. With the far end at the ratio-law κ
+  or at the k = 8–10 poles past κ⋆, or the exponent shifted by ±0.1 or ±0.3, every class still needs all 23 terms,
+  though the test sees both on plants. Moving the far end out lowers the misfit 2–4 times, the exponent hardly moves
+  it. After the freeze, no far end with Re t 1.2–4.0 and Im t −0.4–2.2 gave a 20-term chord twin either (§11).
 
 ## 1. Question
 
@@ -1139,9 +1143,10 @@ Written into the script's `FROZEN` and here before the `control` and `real` stag
 ### 11.3 Results: the controls
 
 All runs used one process under `nice -n 10`, single-threaded, 2026-11-13 12:55–13:08 UTC, with `pade_twin_end.py` at
-37d9cbc4. The records are in the raw-data repository's `I684-mac/`. The first control run, at 40c370ab, stopped with a
-KeyError after K0 and K1 at ω/ω∞ = 0.99, because the C0 loop was handed the far ends of every node instead of its own.
-37d9cbc4 fixes that lookup and changes no criterion, and its log follows the first run's in `control.log`.
+37d9cbc4. The records are in the raw-data repository's `I684-mac/` (d444df1). The first control run, at 40c370ab,
+stopped with a KeyError after K0 and K1 at ω/ω∞ = 0.99, because the C0 loop was handed the far ends of every node
+instead of its own. 37d9cbc4 fixes that lookup and changes no criterion, and its log follows the first run's in
+`control.log`.
 
 | check | result | verdict |
 |---|---|---|
@@ -1168,3 +1173,110 @@ Context, not judged. Each number is M_min, the same at all three nodes unless a 
 - **A far end at 1.85 instead of κ⋆ costs the plant 15 terms, but not 23.** In the κ⋆ chord basis its χ at 22 terms is
   7–9×10⁻⁴, where the real series has 9×10⁴.
 - **Any exponent shift of 0.1 or more costs 10–11 terms**, so the twins see the exponent too.
+
+### 11.4 Results: the real series
+
+The real stage ran 2026-11-13 13:08–13:23 UTC at 37d9cbc4, one process under `nice -n 10`, single-threaded.
+
+| check | result | verdict |
+|---|---|---|
+| gate | K0, K1 and every C0 passed | OK |
+| C1, 315 scans | below n, χ at 250 digits equals χ at 150 in double precision; at M = n, χ ≤ 1.1×10⁻¹⁰⁶ at both | OK |
+| C2, kstar against #672 | M_min = 23, and χ at 22 terms within 7.7×10⁻⁸ relative, at every node and class | OK |
+| `real --mutate=c1dup` (13:23–13:29) | the amended C1 fires at M = n in all 315 scans (the 250-digit fit is singular), and every M = 22 row still agrees; no scan has M_min < n; exit 1 | fires |
+
+**No variant fits. Every scan, judged or context, has M_min = M_lo = 23, at every node and in every class.** By the
+frozen verdict, none of the tested moves gives a short twin: neither the far end moved to the ratio-law κ or to any of
+the k = 8–10 poles, nor the exponent shifted by ±0.1 or ±0.3.
+
+χ of the least-squares twin at 22 terms, at ω/ω∞ = 0.99, 1.00 and 1.01, in units of 10⁴. M_min = 23 in every cell.
+
+| variant | \|P1\| at ω∞ | chord | stepped arc | smooth arc |
+|---|---|---|---|---|
+| kstar (§9.2) | 1.675 | 9.7, 9.1, 8.6 | 12.4, 11.5, 10.6 | 12.7, 11.8, 10.8 |
+| pole8 | 1.715 | 6.3, 6.2, 6.2 | 8.4, 8.2, 8.1 | 8.7, 8.5, 8.3 |
+| pole9 | 1.762 | 4.8, 4.6, 4.6 | 6.5, 6.3, 6.2 | 6.8, 6.6, 6.4 |
+| pole10 | 1.806 | 3.6, 3.5, 3.5 | 4.9, 4.8, 4.8 | 5.2, 5.1, 5.0 |
+| ratio | 1.833 | 3.5, 3.4, 3.5 | 4.8, 4.7, 4.7 | 5.0, 4.9, 4.9 |
+| ex − 0.3 | 1.675 | 9.5, 8.9, 8.4 | 12.1, 11.3, 10.4 | 12.4, 11.5, 10.6 |
+| ex + 0.3 | 1.675 | 9.9, 9.3, 8.8 | 12.7, 11.8, 10.9 | 13.0, 12.1, 11.1 |
+| context: R1.75 | 1.75 | 6.7, 6.5, 6.3 | 8.8, 8.4, 8.0 | 9.0, 8.5, 8.1 |
+| context: R1.85 | 1.85 | 4.3, 4.2, 4.1 | 5.7, 5.4, 5.2 | 5.9, 5.6, 5.4 |
+| context: R2.00 | 2.00 | 2.3, 2.1, 2.2 | 3.0, 2.9, 2.9 | 3.2, 3.0, 2.9 |
+| context: ratiopair | 1.833 | 4.4, 4.3, 4.3 | 6.4, 6.2, 6.0 | 6.5, 6.3, 6.1 |
+| context: ex + 0.3i | 1.675 | 9.4, 8.9, 8.4 | 12.1, 11.2, 10.3 | 12.3, 11.4, 10.6 |
+
+δ = ±0.1 lies between kstar and ±0.3, and −0.3i, ±0.1i likewise. Every far end combined with every δ, also context,
+has M_min = 23 everywhere.
+
+- **The far end moves χ, the exponent hardly does.** Moving the far end out lowers χ at 22 terms steadily, by a factor
+  2.3–2.7 at the k = 10 pole and the ratio-law κ, and by about 4 at |P1| = 2.00 on κ⋆'s ray, with no minimum up to
+  there. An
+  exponent shift of ±0.3, real or imaginary, moves χ by 2–3%. The classes keep their order, and the chord fits best.
+- **The real misfit is of another size than the plants'.** A plant whose far end is 0.18 past κ⋆ has χ = 7–9×10⁻⁴ at
+  22 terms in the κ⋆ basis (§11.3). The real series, in the basis with its own ratio-law κ, has χ = 3.4×10⁴. So the
+  far end alone, at any of the tested places, does not account for it.
+- **Context.** With the errors widened to the strings' rounding, every χ at 22 terms changes by at most 1.3×10⁻¹³
+  relative, and every M_min stays 23. J 1500 at ω∞ gives the same χ as J 1250 to five digits, and M_min = 23.
+
+### 11.5 Post-freeze diagnostics, labeled so
+
+Written after the frozen verdict, judged by nothing, at ω∞ in the chord class only. `pade_twin_end.py diag`, `diag2`
+and `diag3`, 13:29–13:41 UTC, at 266d0532, e9eee419 and a0b050d5.
+
+- **χ at 22 terms locates nothing.** At M = n − 1 the least-squares residual has one complex dimension, so a complex
+  far end can be tuned to zero it. `diag` found its smallest χ at 22 terms on a grid of far ends at 2.5 + 0.85i
+  (|P1| = 2.64), 9.2 against κ⋆'s 9.1×10⁴. `diag2` minimised it from there and reached χ = 3.5×10⁻⁴ at
+  2.494 + 0.846i, which makes M_min = 22, while χ at 20 and 21 terms stayed 7.1×10⁴ and 6.4×10³. So that point is a
+  tuned zero, not a far end, and the near-end scan of `diag` (χ at 22 terms with P0 moved, smallest at the grid's
+  corner 0.85 + 0.20i) means nothing either.
+- **No far end gives a twin of 20 terms.** By the frozen rule's own measure, a basis whose least-squares l2 at 20
+  terms exceeds √23 = 4.8 has no 20-term twin with χ ≤ 1. Over 783 far ends with Re 1.2–4.0 and Im −0.4–2.2 (step 0.1),
+  the smallest l2 at 20 terms is 1.5×10⁴, at 2.7 + 0.9i. κ⋆ gives 2.0×10⁷. Minimised continuously from the three best
+  grid points, it reaches 1.4×10⁴, 1.7×10⁴ and 6.0×10³, the last at 2.437 + 0.462i. Each is a local minimum of a
+  Nelder–Mead search, not a global bound.
+- **Nor does any exponent there, or both tuned together.** At 2.7 + 0.9i every real or imaginary shift up to 1 raises
+  l2 at 20 terms. With the far end and a complex exponent shift tuned together, the search wandered to
+  P1 = 3.28 − 0.11i with the exponent shifted by 13.0 − 18.5i, and l2 at 20 terms stopped at 173, 36 times √23
+  (M_min = 23).
+- **The basis checks out there.** The plant of `diag`'s best combination, refitted in its own basis, has χ = 7.8×10⁻³⁷.
+  That plant needed M = 8 to fit σ₀–σ₁₂.
+
+### 11.6 What this means
+
+- **Neither the far end nor the exponent alone blocks a short twin, by the frozen rule.** With the far end at the
+  ratio-law κ or at any of the k = 8–10 poles, or the exponent shifted by ±0.1 or ±0.3, every class needs all 23
+  terms at every node. The controls show that the test sees both ingredients: a plant with the right far end has a
+  twin of 6 terms, one with a far end 0.18 off needs 21, and an exponent 0.1 off costs 10–11 terms.
+- **Of the two, the far end matters far more.** Moving it out lowers the real misfit steadily, by a factor 2.3–2.7 at
+  the k = 10 pole and the ratio-law κ and about 4 at |P1| = 2.00, while ±0.3 in the exponent moves it by 2–3%. But
+  the misfit stays above 3×10⁴ error units, and a plant with its far end 0.18 off misfits by less than 10⁻³.
+- **The real σ₁₁–σ₂₂ need something no tested twin has (post-freeze).** No far end with Re 1.2–4.0 and Im −0.4–2.2
+  gives a chord twin of 20 terms (l2 at least 1250 times √23), nor do the far end and exponent tuned together (36
+  times). The ingredients
+  left are those the twins share with the plants: the near end and its exponent (the density is regular at P0 in every
+  class), the zero factor, and a single curve as the singular support (#547, #667).
+- **χ at M = n − 1 cannot locate an end point.** A tuned complex end point zeroes the one residual dimension left. A
+  locator needs at least two residual dimensions per complex parameter tuned, such as l2 at M ≤ n − 3.
+- **Status.** Numerical evidence. The verdict is the frozen one. The post-freeze statements rest on local searches at
+  ω∞ in the chord class.
+
+### 11.7 Proposed text for proof/D_entire.md
+
+In 7.4, replacing the last sentence of the bullet "The real series has no short twin in any of these classes (#672)"
+and adding a bullet after it:
+
+```diff
+   node (χ 0.9–1.3×10⁵ at 22 terms), while each plant has a twin of 14–19 terms in another class. The misfit sits at
+-  σ₁₁–σ₂₂. Which ingredient fails, the far end or the exponent, is not determined (notes/PADE_FAR_END.md §9.2).
++  σ₁₁–σ₂₂ (notes/PADE_FAR_END.md §9.2).
++- **Neither the far end nor the exponent alone gives it one (#684).** With the far end moved to the ratio-law κ
++  (|κ| = 1.833) or to any of the k = 8–10 poles past κ⋆, or with the end exponent shifted by ±0.1 or ±0.3, every
++  chord, stepped-arc and smooth-arc twin still needs all 23 terms at every node. The test sees both: a plant with its
++  far end at 1.85 has a twin of 6 terms in a basis with that far end and needs 21 with κ⋆, and an exponent 0.1 off
++  costs a plant 10–11 terms. Moving the far end out lowers the real misfit at 22 terms by a factor 2.3–2.7 at the
++  ratio-law κ, while ±0.3 in the exponent moves it by 2–3%, but it stays above 3×10⁴ error units. After the freeze,
++  a local search at ω∞ found no chord twin of 20 terms with any far end in Re t 1.2–4.0, Im t −0.4–2.2, nor with the
++  far end and exponent tuned together. The ingredients left untested are the near end, the zero factor, and a
++  singular support that is not one curve (notes/PADE_FAR_END.md §11).
+```
