@@ -1571,7 +1571,7 @@ def newton_strong(sysm, X, Um, c, w_init, wref, nBc, lu_max=6, chord_max=12):
 BRIDGE_T = [mp.mpf(10) ** (mp.mpf(e) / 4) for e in range(-96, -55)]      # 1e-24 .. 1e-14, four per decade
 
 
-def bridge_scan(sysm, bas, log, out, dump, g00, floor0, fee2=None, wee=None):
+def bridge_scan(sysm, bas, log, out, dump, g00, floor0, fee2=None, wee=None, t_to=None):
     """a diagnostic added after the REF pilot (#698, notes/REDUCED_CUBIC.md 11.4): the chord through z0's LU
     (ray_solve, #677's strong solve) along +-t e from 1e-24 upward, four per decade, until it fails on either ray.
     Per t: the departure's parts E and O in units of |B c|; |w - w0| / t^2 against 1/2 |w_ee| (#694); the chord's first
@@ -1593,6 +1593,8 @@ def bridge_scan(sysm, bas, log, out, dump, g00, floor0, fee2=None, wee=None):
                                                              f"{mp.nstr(fee2 / 2, 4)}")
         + ("" if wee is None else f"; 1/2 |w_ee| = {mp.nstr(wee / 2, 4)}"))
     for t in BRIDGE_T:
+        if t_to is not None and t > t_to * mp.mpf("1.001"):
+            break
         row = dict(t=float(t))
         ok_all = True
         deps = {}
@@ -1799,7 +1801,8 @@ def curve_scan(sysm, bas, opts, mutate, log, rec, dump, truth=None, kappa=None, 
     dump()
     pb = True
     if opts.get("bridge", "0") == "1":                  # the diagnostic of 11.4, through z0's LU, before any refactoring
-        brows = bridge_scan(sysm, bas, log, out, dump, g00, floor0, fee2=fee2, wee=wee)
+        brows = bridge_scan(sysm, bas, log, out, dump, g00, floor0, fee2=fee2, wee=wee,
+                            t_to=mp.mpf(opts["bridge_to"]) if opts.get("bridge_to") else None)
         if truth is not None:
             # (PB) on the plant: its skew coupling oscillates without a fold, so rho < 0 at every t; --mutate=fold
             # (a symmetric coupling) makes rho > 0, and (PB) must fail
