@@ -22,7 +22,7 @@ DOCS = {name: open(os.path.join(ROOT, name), encoding="utf-8").read()
                      "notes/PLANTED_SELECTION.md", "notes/PROOF_QUEUE.md", "proof/P5_scope.md",
                      "notes/QUAD_DOUBLE.md",
                      "notes/SOLVER_HP.md", "notes/LOW_D.md", "notes/INNER_STOKES.md", "notes/FORMULA_FORMS.md", "notes/LARGE_D_WALL.md",
-                     "notes/ECHO_ANALOGUES.md", "notes/REVIEW_GHMG25.md", "notes/MODE_COUNT.md")}
+                     "notes/ECHO_ANALOGUES.md", "notes/REVIEW_GHMG25.md", "notes/MODE_COUNT.md", "matter/SIGMA_DSS.md")}
 
 
 def quoted_in(doc, text):
@@ -2131,6 +2131,77 @@ def full_lam_gauge():
             ("T6 free c0 half-width", half(t6), 1.6e-5, 1e-6, [(N, "| 1.000021 ± 1.6×10⁻⁵, 1 outside |")]),
             ("control: lowest c0", float(mu[1]), 1.0000100, 1e-7, [(N, "| 1.0000100 to 1.0000104, 1 outside")]),
             ("control: highest c0", float(mu[2]), 1.0000104, 1e-7, [(N, "| 1.0000100 to 1.0000104, 1 outside")])]
+
+
+@check
+def sigma_ms():
+    """matter/SIGMA_DSS.md section 11: the sigma-model's Delta(eta) at D = 4 on the multishoot kernel (#639), from
+    matter/sigma_ms/data/delta_eta.csv (tables.py), fit_min.json (fit_min.py) and planted.csv (the planted check)"""
+    S = "matter/SIGMA_DSS.md"
+    d = os.path.join(ROOT, "matter/sigma_ms/data")
+    import csv as _csv
+    rows = {r["eta"]: r for r in _csv.DictReader(open(os.path.join(d, "delta_eta.csv")))}
+    pl = {r["mutate"]: r for r in _csv.DictReader(open(os.path.join(d, "planted.csv"))) if r["M"] == "8"}
+    fit = json.load(open(os.path.join(d, "fit_min.json")))
+    sup = lambda x: x.replace("-", "−").translate(str.maketrans("0123456789−", "⁰¹²³⁴⁵⁶⁷⁸⁹⁻"))  # noqa: E731
+    sci = lambda v, p: (lambda m, e: f"{'−' if v < 0 else ''}{abs(float(m)):.{p}f}×10{sup(str(int(e)))}")(*f"{v:.{p}e}".split("e"))  # noqa: E731
+    out = []
+    table = {"5": "5", "6": "6", "7": "7", "8.5": "8.5", "10": "10", "14": "14", "20": "20", "inf": "∞"}
+    for e, lab in table.items():
+        r = rows[e]
+        d32, d48, k39 = float(r["Delta_M32"]), float(r["Delta_M48"]), float(r["Delta_kc39"])
+        dm, dk, kk = float(r["M48_minus_M32"]), float(r["best_minus_kc39"]), float(r["kc39_minus_kc23"])
+        line = (f"| {lab} | {d32:.11f} | {d48:.11f} | {sci(dm, 2)} | {k39:.10f} | {sci(dk, 1)} | {sci(kk, 2)} |")
+        t = [(S, line)]
+        out += [(f"Delta({lab}), M 32", d32, float(f"{d32:.11f}"), 1e-11, t),
+                (f"Delta({lab}), M 48", d48, float(f"{d48:.11f}"), 1e-11, t),
+                (f"Delta({lab}), M 48 - 32", dm, float(f"{dm:.2e}"), 10 ** (math.floor(math.log10(abs(dm))) - 2), t),
+                (f"Delta({lab}), sigdss k_c 39", k39, float(f"{k39:.10f}"), 1e-10, t),
+                (f"Delta({lab}), M 48 - k_c 39", dk, float(f"{dk:.1e}"), 10 ** (math.floor(math.log10(abs(dk))) - 1), t),
+                (f"Delta({lab}), k_c 39 - 23", kk, float(f"{kk:.2e}"), 10 ** (math.floor(math.log10(abs(kk))) - 2), t)]
+    m64 = {e: float(rows[e]["M64_minus_M48"]) for e in rows if rows[e].get("M64_minus_M48")}
+    t64 = [(S, f"M = 48 → 64 changes it by {sci(m64['inf'], 1)} at η = ∞ and {sci(m64['7'], 1)} at η = 7")]
+    out += [("M 48 -> 64 at inf", m64["inf"], 2.5e-11, 0.1e-11, t64), ("M 48 -> 64 at 7", m64["7"], 9.5e-12, 0.1e-12, t64)]
+    # the ratio of the M changes at eta = 7 and inf, and the fit's shift scaled by it (an estimate, as the notes say)
+    rat = {e: m64[e] / float(rows[e]["M48_minus_M32"]) for e in ("7", "inf")}
+    tr = [(S, "is −4.3×10⁻⁴ times the M = 32 → 48 one at both η = 7 and"),
+          (S, "−7×10⁻⁷ in η_min and +9×10⁻¹² in Δ_min")]
+    out += [("M change ratio at 7", rat["7"], -4.3e-4, 0.1e-4, tr), ("M change ratio at inf", rat["inf"], -4.3e-4, 0.1e-4, tr),
+            ("projected eta_min shift", rat["7"] * fit["result"]["resolution_eta"], -7e-7, 1e-7, tr),
+            ("projected Delta_min shift", rat["7"] * fit["result"]["resolution_Delta"], 9e-12, 1e-12, tr)]
+    n, g, sh, dc, qs = pl["none"], pl["gamma"], pl["sigma_h"], pl["dropcol"], pl["qd_state"]
+    tp = [(S, "to max |F| = 6.8×10⁻³²"), (S, "Newton reaches |F| = 6.5×10⁻³² in 7 steps, with max |z − z*| = 3.2×10⁻³⁰"),
+          (S, "Δ − Δ* = 1.6×10⁻³⁰. Each of four controls")]
+    out += [("planted max |F(z*)|", float(n["F_star"]), 6.8e-32, 0.1e-32, tp),
+            ("planted Newton |F|", float(n["dd_F_last"]), 6.5e-32, 0.1e-32, tp),
+            ("planted Newton steps", int(n["dd_newton_steps"]), 7, 1, tp),
+            ("planted max |z - z*|", float(n["dd_err"]), 3.2e-30, 0.1e-30, tp),
+            ("planted Delta - Delta*", float(n["dd_dDelta"]), 1.6e-30, 0.1e-30, tp),
+            ("control gamma", float(g["dd_dDelta"]), -6.2e-12, 0.1e-12, [(S, "| Δ − Δ* = −6.2×10⁻¹² |")]),
+            ("control sigma_h", float(sh["dd_dDelta"]), 1.3e-10, 0.1e-10, [(S, "| Δ − Δ* = 1.3×10⁻¹⁰ |")]),
+            ("control dropcol", float(dc["dd_F_last"]), 1.65e-28, 0.01e-28, [(S, "|F| = 1.65×10⁻²⁸ after 10 steps")]),
+            ("control qd_state", float(qs["qd_F_last"]), 5.8e-33, 0.1e-33, [(S, "|F| stops at 5.8×10⁻³³")]),
+            ("planted quad-double |F|", float(n["qd_F_last"]), 1.2e-59, 0.1e-59, [(S, "reaches |F| = 1.2×10⁻⁵⁹")]),
+            ("planted quad-double minus double-double", abs(float(n["qd_dDelta_dd"])), 4.1e-30, 0.1e-30,
+             [(S, "within 4.1×10⁻³⁰ of the")])]
+    p16 = [r for r in _csv.DictReader(open(os.path.join(d, "planted.csv"))) if r["M"] == "16" and r["mutate"] == "none"][0]
+    t16 = [(S, "7 Newton steps, max |z − z*| = 2.3×10⁻²⁹, Δ − Δ* = −1.1×10⁻²⁹")]
+    out += [("planted M 16 steps", int(p16["dd_newton_steps"]), 7, 1, t16),
+            ("planted M 16 max |z - z*|", float(p16["dd_err"]), 2.3e-29, 0.1e-29, t16),
+            ("planted M 16 Delta - Delta*", float(p16["dd_dDelta"]), -1.1e-29, 0.1e-29, t16)]
+    f32, f48, res = fit["32"]["summary"], fit["48"]["summary"], fit["result"]
+    tf = [(S, "| η_min | 6.97851 | 6.98019 | 6.9801938 to 6.9801973 |"),
+          (S, "| Δ_min | 0.45980938351 | 0.45980936174 | within 8×10⁻¹² |")]
+    out += [("eta_min, M 32", f32["eta_min"], 6.97851, 1e-5, tf), ("eta_min, M 48", f48["eta_min"], 6.98019, 1e-5, tf),
+            ("eta_min spread low", f48["spread_eta"][0], 6.9801938, 1e-7, tf),
+            ("eta_min spread high", f48["spread_eta"][1], 6.9801973, 1e-7, tf),
+            ("Delta_min, M 32", float(f32["Delta_min"]), 0.45980938351, 1e-11, tf),
+            ("Delta_min, M 48", float(f48["Delta_min"]), 0.45980936174, 1e-11, tf),
+            ("Delta_min spread", max(abs(x) for x in f48["spread_Delta"]), 8e-12, 1e-12, tf),
+            ("fit residual, M 48", f48["residual"], 1.9e-16, 0.1e-16, [(S, "largest residual is 1.9×10⁻¹⁶")]),
+            ("eta_min, M 48 - 32", res["resolution_eta"], 1.7e-3, 0.1e-3, [(S, "1.7×10⁻³ in η_min and −2.2×10⁻⁸ in Δ_min")]),
+            ("Delta_min, M 48 - 32", res["resolution_Delta"], -2.2e-8, 0.1e-8, [(S, "1.7×10⁻³ in η_min and −2.2×10⁻⁸ in Δ_min")])]
+    return out
 
 
 def full_dinf():

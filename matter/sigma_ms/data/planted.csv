@@ -1,0 +1,7 @@
+M,mutate,steps,F_star,dd_converged,dd_newton_steps,dd_err,dd_dDelta,dd_F_last,dd_pass,qd_converged,qd_F_last,qd_dDelta_dd,qd_dDelta,qd_pass
+8,none,172,6.779e-32,True,7,3.170e-30,1.579e-30,6.471e-32,True,True,1.202e-59,-4.094e-30,-2.515e-30,True
+8,gamma,172,6.779e-32,True,7,6.226e-12,-6.226e-12,1.071e-31,False,True,4.382e-59,-9.795e-30,-6.226e-12,True
+8,sigma_h,172,6.779e-32,True,7,2.794e-10,1.262e-10,7.396e-32,False,True,5.061e-60,1.333e-30,1.262e-10,True
+8,dropcol,172,6.779e-32,False,10,1.651e-28,-6.761e-29,1.649e-28,False,False,2.238e-46,6.509e-29,-2.515e-30,False
+8,qd_state,172,6.779e-32,True,7,3.170e-30,1.579e-30,6.471e-32,True,False,5.763e-33,-4.094e-30,-2.515e-30,False
+16,none,351,9.861e-32,True,7,2.263e-29,-1.138e-29,1.233e-31,True,True,1.377e-57,1.242e-29,1.031e-30,True
