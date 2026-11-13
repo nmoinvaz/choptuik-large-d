@@ -8,6 +8,8 @@ vector), where S is the strong rows' curvature fed back into the weak rows. This
 D 242.5146 starts, and the reduced map itself on the strong-solved manifold.
 
 Results are in section 4 onward, after the protocol (section 3), which was committed before the first real run.
+Section 9 (#677) follows the reduced map along rays out to 10⁵|a|, at those two starts, at D 232.13 and at a class A
+start of #603.
 
 ## Verdicts
 
@@ -22,6 +24,7 @@ Results are in section 4 onward, after the protocol (section 3), which was commi
 | #499's root c\* on that manifold | not a root | \|g(c\*)\|/\|Ba\| 0.176; 0.208 |
 | The refused start, strong rows solved at c = a | converged, below the chain's 1e-40 | max\|F\| 2.0e-51; 1.1e-50 |
 | The projector (exact here, rounded in #499) | no effect at #499's printed digits | section 5.1 |
+| **Where g stops being affine** (#677: rays to 10⁵\|a\|, four starts) | **affine with slope B + L, plus a quadratic; no cubic or quartic resolved** | the quadratic reaches 10⁻²\|Ba\| near 10¹³\|a\| (extrapolated); section 9 |
 
 - **At these starts T = 3S.** With the strong rows solved, the weak equations are affine to 2.7×10⁻²⁵, so #499's cubic
   is the curvature of the affine subspace z0 + Vc, and its root c* is not a root of the system.
@@ -466,3 +469,139 @@ absorbs the projector's difference in the frozen rows (section 3).
   solves at c = 0 print their steps. The second start was first w0(1 + 10⁻³), and the plant's rerun (c4496cb1) failed
   on it: its first correction, 10⁻³|w0|, sat on the failure bound 10⁻³|w0|. It is now w0(1 + 10⁻⁵). The plant and its
   controls were rerun with the final rule. No pass criterion changed.
+- **`raysum`, added after the runs.** It reads the runs' JSON files and prints the orders, constants and crossings with
+  estimates of the next orders, K3 for a cubic in the odd part and K4 for a quartic in the even part. These come from
+  the relative change ρ of |O|/t and |E|/t² across the resolved range: ρ for a next order along the leading one, and
+  √(2ρ) for one orthogonal to it, whichever is larger. ρ is floored at the 16 stored digits, 2.2×10⁻¹⁶. Its first
+  version took E and O from the stored dep vectors, which are floats. Where one part exceeds the other by more than 16
+  digits, as at D 232.13 and the class A start, those half sums are rounding. The estimates are diagnostics and
+  judge nothing.
+
+### 9.5 The plant's results
+
+`python3 reduced_cubic.py ray planted` from `hp/` (code 321954dc; raw `I677-mac/ray_planted*.log`):
+
+| check | plant | `--mutate=w0` | `--mutate=B` |
+|---|---|---|---|
+| (PY0) its own construction against P₄/24 + P₅/120 (bound 10⁻²⁰) | 5.3×10⁻¹³⁶: pass | | |
+| (PY1) worst point, both parts (bound 10⁻³) | 3.6×10⁻⁵¹: pass | 2.5×10¹¹: FAIL | 24: FAIL |
+| (PY2) leading orders, even and odd, along a | 4.000, 5.000: pass | 4.000, 3.000: FAIL | 4.000, 3.17: FAIL |
+| (PY3) crossing of 10⁻²\|Ba\| along a, measured against planted, in \|a\| | 9.7138 against 9.7138: pass | 0.241: FAIL | 9.7138: pass (not required to fail) |
+| exit | 0 | 1 | 1 |
+
+All three rays pass (PY1) and (PY2). The worst crossing error over the rays and signs is 0.87%, on r2 (17.44 against
+17.29), within the bound 10⁻². Under `--mutate=B` the odd part's local orders run 1.16 → 3.35 → 4.93 → 5.00 along a,
+so the fit sees the planted order-1 term and then P₅.
+
+### 9.6 Results at the four starts
+
+Raw `I677-mac/ray_{ref,acc,d232,classA}.log` and `.json`, and `raysum.txt` (`reduced_cubic.py raysum`, 5f755c56). REF
+ran with code 321954dc and the others with 11c31fbd, whose ray mode is the same. dep(c) = g(c) − g(0) − Bc. Along
+e = a/|a|, in units of |Ba| with K as in |part| ≈ K(|c|/|a|)^p:
+
+| start | weak σ | \|a\|, \|Ba\| | even part: order, K | odd part: order, K | K3, K4 (estimates) | 10⁻²\|Ba\| at \|c\|/\|a\|: dep; even part alone |
+|---|---|---|---|---|---|---|
+| REF, D 242.5459 | 2.1×10⁻²⁷ … 7.1×10⁻²⁶ | 8.32×10⁻³⁰, 9.83×10⁻⁵⁶ | 2.000, 3.750×10⁻²⁹ | 1.000, 5.303×10⁻³⁰ | ≲ 7.7×10⁻⁴⁸, ≲ 7.7×10⁻⁴⁷ | 1.6×10¹³; 1.6×10¹³ (both extrapolated) |
+| ACC, D 242.5225 | 2.2×10⁻²⁷ … 7.2×10⁻²⁶ | 1.26×10⁻²⁹, 1.53×10⁻⁵⁵ | 2.000, 5.584×10⁻²⁹ | 1.000, 8.001×10⁻³⁰ | ≲ 2.7×10⁻⁴⁷, ≲ 1.9×10⁻⁴⁶ | 1.3×10¹³; 1.3×10¹³ (extrapolated) |
+| D 232.13, win_d10 | 2.1×10⁻²³ … 5.0×10⁻²¹ | 1.43×10⁻²⁹, 1.79×10⁻⁵⁰ | 2.000, 1.758×10⁻²⁸ | 1.000, 7.420×10⁻¹⁴ | ≲ 3.2×10⁻³¹, ≲ 7.6×10⁻⁴⁶ | 1.35×10¹¹ (extrapolated, order 1); 7.5×10¹² |
+| class A, D 249.3927 | 2.4×10⁻³⁰ … 8.2×10⁻³⁰ | 8.02×10⁻³⁰, 5.70×10⁻⁵⁹ | 2.000, 1.892×10⁻²⁸ | 1.000, 7.882×10⁻⁷ | ≲ 1.1×10⁻²⁴, ≲ 4.4×10⁻⁴⁴ | **1.27×10⁴ (measured)**; 7.3×10¹² |
+
+| start | ε0 = \|g(0) + Ba\| | \|g(a)\| | \|dep(a)\| | max\|F\| at z0 + Va + w(a) | floor0 | chord steps | judged points converged |
+|---|---|---|---|---|---|---|---|
+| REF | 2.72×10⁻²⁵ | 2.72×10⁻²⁵ | 4.27×10⁻²⁹ | 7.3×10⁻⁷⁷ | 3.0×10⁻⁴⁶ | 5–8 | all, and every point to 10⁻²⁴ |
+| ACC | 4.39×10⁻²⁵ | 4.39×10⁻²⁵ | 6.38×10⁻²⁹ | 9.0×10⁻⁷⁶ | 2.1×10⁻⁴⁵ | 5–8 | all |
+| D 232.13 | 8.49×10⁻¹⁶ | 7.42×10⁻¹⁴ | 7.42×10⁻¹⁴ | 1.7×10⁻⁶⁴ | 6.7×10⁻⁵¹ | 5–7 | all |
+| class A | 1.42×10⁻¹⁰ | 7.88×10⁻⁷ | 7.88×10⁻⁷ | 5.4×10⁻⁶⁶ | 5.3×10⁻³⁹ | 5–9 | all |
+
+- **The orders.** At every start and on every ray, the even part has local order 2.00 and the odd part 1.00 between
+  every two neighbouring points, from 10⁻³⁰ to 10⁻²⁴ (six decades, up to 1.2×10⁵|a| at REF). No cubic or quartic is
+  resolved. The random rays r1 and r2 give the same orders, with even K 1.3 to 29 times that along a.
+- **The odd order-1 term** is the difference between the map's slope and B. At D 232.13 it is L c: L = UᵀF″(v, w0)
+  is resolved there (h against h/10 0.25%), max|L||a|/|Ba| is 8.7×10⁻¹⁴ against the measured 7.4×10⁻¹⁴, and #528's
+  model with L leaves 4.3×10⁻¹⁷ at its root against 7.4×10⁻¹⁴ without it. At the class A start the map's own slope
+  B_LS accounts for it: model T-3S,LS leaves 1.2×10⁻¹⁴. L is not resolved there (h against h/10 3.3), but its size,
+  max|L||a|/|Ba| = 9.6×10⁻⁷, is that of the measured 7.9×10⁻⁷ (*inferred*). At REF and ACC it is B's numerical error
+  or L, whose bound there (L ≲ 4.3×10⁻³⁸, section 5.2) is far above it, so the two cannot be separated.
+- **So, with the strong rows solved, the weak equations are affine with slope B + L** to the order-2 term. That term
+  reaches 10⁻²|Ba| only near 10¹³|a| (an extrapolation of a pure t² law measured to 10⁵|a|).
+- **The issue's affine part B(c − a)** differs from that by ε0 and L. At the class A start the departure from B(c − a)
+  reaches 10⁻²|Ba| at |c| = 1.27×10⁴|a|, measured, and it is linear in |c|. At c = a it is 7.9×10⁻⁷|Ba|.
+- **The cubic.** K3 converts to |(T − 3S)(e, e, e)|/max|T| ≲ 2.6×10⁻²⁵ at D 232.13 and ≲ 3.6×10⁻²⁹ at the class A
+  start (raysum, with each run's max|T|). The tensors' own cubic along e, |(T − 3S)(e, e, e)|/6 · |a|³/|Ba|, is
+  1.05×10⁻²⁶ (D 232.13) and 1.2×10⁻¹⁴ (class A) at the smaller steps and 100 times that at the larger ones, so it is the
+  differences' h² truncation, not a value. Against K3 ≲ 3.2×10⁻³¹ and ≲ 1.1×10⁻²⁴, the rays bound the reduced cubic
+  4 to 10 orders below what the tensors resolve. At REF, K3 ≲ 7.7×10⁻⁴⁸ against max|T − 3S| = 1.6×10⁻¹⁹max|T|
+  (section 5.2) says the same far more strongly.
+
+The tensors at the two new starts (`--tensors=1`, section 1's measurement):
+
+| quantity | D 232.13 | class A |
+|---|---|---|
+| (R1) w_jl at 10⁻³² against 10⁻³³; 10⁻³³ against 10⁻³⁴ (bound 10⁻²) | 1.0×10⁻⁴; 1.0×10⁻⁶: pass | 0.334; 3.3×10⁻³: pass |
+| (R1) S at h against h/10 (bound 10⁻²) | 6.1×10⁻¹⁸: pass | 5.0×10⁻¹⁷: pass |
+| max\|T\|, h against h/10 | 4.457×10³¹, 1.2×10⁻¹⁸ (#499's value) | 1.994×10³⁴, 6.1×10⁻¹⁸ |
+| **3max\|S\|/max\|T\|** | **1.000** | **1.000** |
+| max\|T − 3S\|/max\|T\| (the two step pairs differ by) | 5.7×10⁻²⁰ (5.7×10⁻¹⁸) | 4.7×10⁻¹⁹ (4.7×10⁻¹⁷) |
+| max\|Q\| at h 10⁻³³ (Q(10⁻³²)/Q(10⁻³³)) | ≲ 6.6×10⁻⁸ (99) | ≲ 1.4×10⁻⁴ (99) |
+| max\|L\| (h against h/10) | 1.10×10⁻³⁴ (0.0025) | 6.8×10⁻³⁶ (3.3, not resolved) |
+| \|B_LS − (B + L)\|/max\|B + L\| | 5.6×10⁻¹⁹ | 2.8×10⁻⁸ |
+| (R2) S control at c\*, reported (section 5.4) | 0.81% | 1.31% |
+| \|g(c\*)\|/\|Ba\|, #499's root (affine) | 4.2×10⁻⁷ (4.3×10⁻⁹) | 0.939 (0.0048) |
+| model T-3S, T-3S,L, T-3S,LS: \|g(c\*\*)\|/\|Ba\| | 7.4×10⁻¹⁴, 4.3×10⁻¹⁷, 1.1×10⁻²⁶ | 4.1×10⁻⁵, 4.2×10⁻⁵, 1.2×10⁻¹⁴ |
+
+At the class A start the models with Q leave 4×10⁻⁵, against 7.9×10⁻⁷ at c = a itself. Their Q is the differences'
+truncation (the h² ratio 99), and ½max|Q||a|² is of that size (*inferred*). Its S control scan along c* repeats REF's
+pattern: dw departs from its quadratic model by 0.43%, 0.86% and 1.7% at f = 1, ½ and ¼.
+
+### 9.7 Verdicts against the protocol
+
+| criterion | REF | ACC | D 232.13 | class A |
+|---|---|---|---|---|
+| (Y0) offset on its rows; the start as recorded | pass; basis = #528's | pass; basis = #528's | pass; basis = #499's (σ, a, \|Ba\| 1.79×10⁻⁵⁰) | pass; anm_run's lines = #603's |
+| (Y1) #528's h checks | #528 (not rerun) | #528 (not rerun) | pass | pass |
+| (Y2) every judged solve along e converged | yes (to 10⁻²⁴) | yes | yes | yes |
+| (Y3) a fitted leading order along e | even 2, odd 1 | even 2, odd 1 | even 2, odd 1 | even 2, odd 1 |
+| exit | 0 | 0 | 0 | 0 |
+
+### 9.8 Reading (inferred, not shown)
+
+- **The premise of #674 holds at all four starts.** At c = a, Newton's first move, the strong-solved weak residual is
+  2.7×10⁻²⁵, 4.4×10⁻²⁵, 7.4×10⁻¹⁴ and 7.9×10⁻⁷ of |Ba|. With the chord run to its floor, max|F| there is 7×10⁻⁷⁷,
+  9×10⁻⁷⁶, 2×10⁻⁶⁴ and 5×10⁻⁶⁶, below the chain's 10⁻⁶⁰ at every start. At the class A start, where the full step of
+  newton_od lands far outside its basin (#644, #655), the reduced map is affine to 7.9×10⁻⁷ at c = a. The weak residual
+  left after the chord is that fraction of |Ba|, and a Newton step after it moves the weak coordinates by a fraction
+  of |a| of that order (*inferred* from the slope).
+- **What separates the starts** is the linear term L, the coupling through the start's own strong correction w0, not
+  a nonlinearity. At c = a it is 5×10⁻³⁰ (REF, or B's error), 7×10⁻¹⁴ (D 232.13) and 8×10⁻⁷ (class A) of |Ba|. The
+  class A start's weak σ are about 10³ times smaller than at D 242.5, with |w0| of the same size.
+- **T = 3S to all measured orders.** At four starts the map has no cubic and no quartic above the estimates of 9.6,
+  far below the tensors' resolution. So the cancellation that #528 found at two starts is exact to the ray's precision,
+  along a and along random directions. A near-symmetry that leaves the weak rows affine on the strong-solved manifold,
+  broken at the linear order B and the quadratic order Q, would do this. This is a conjecture.
+
+### 9.9 Discrepancies (reported, not fixed)
+
+- **#528's S control fails again at the class A start** (1.31% against 10⁻²) and passes at D 232.13 (0.81%). As at REF
+  and ACC, the scan along c* shows the control's own truncation (dw's linear part doubles as f halves). Here it is
+  reported, not judged, by 9.3's protocol.
+- **The class A start's tensors on #528's steps.** Its w_jl at 10⁻³² against 10⁻³³ differ by 0.334, against 0.014 at
+  REF. The judged pair (10⁻³³ against 10⁻³⁴, 3.3×10⁻³) passes with the h² ratio 100. So the steps chosen at D 242.5
+  are near their limit at the class A start's weaker σ.
+- **#499's root c\* at the class A start** leaves 0.94|Ba| on the strong-solved manifold, against 0.0048 on the affine
+  subspace: the same misreading as at REF (section 7), larger here.
+
+### 9.10 Commands
+
+From `hp/`, with a clone of the raw-data repository at `RAW` and main's hpkernel build on the path:
+
+```
+python3 reduced_cubic.py ray planted                     # check: pass, exit 0
+python3 reduced_cubic.py ray planted --mutate=w0         # check: FAIL, exit 1 (also --mutate=B)
+python3 reduced_cubic.py ray RAW I461-win2/probeG03125b/dz0_pin3_D242.5459_a0.031250.npz \
+    I461-win2/probeG03125a/anm_pin3_D242.5146.npz --threads=2 --json=ray_ref.json
+python3 reduced_cubic.py raysum ray_ref.json             # the orders, constants, crossings and estimates
+```
+
+`I677-mac/run_i677.sh` runs all of them (D 232.13 and the class A start with `--tensors=1`), and `run_classA.sh` makes
+the class A start. REF takes about 16 minutes at 2 threads, and a start with the tensors 25 to 47 minutes. Raw:
+`I677-mac/` of the raw-data repository at a8de27c, with every run's log and JSON (its README lists them).
