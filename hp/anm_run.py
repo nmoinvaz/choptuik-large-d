@@ -108,6 +108,9 @@ Newton correction through the LU at the iterate, octo_corrector.newton_od) inste
 correction (own, the default; #644). --od_strong k takes the corrector's first step whole and then solves only the
 strong rows, by the chord through the start's LU with the k weakest right directions of the start's Jacobian
 removed from each correction (octo_corrector.chord_strong; #528, #674). 0, the default, is off.
+--reseed_start pred (with --reseed_q 1) runs the re-seed's quad-double polish from the prediction's own four-part
+horizon data first, and the double-double ladder only when that does not converge; ladder, the default, polishes the
+ladder's data as before (#693: past D ~ 249 the ladder's double-double data put the pole inside u0).
 --lam_stall L ends an attempt, as refused, when two Newton steps in a row had lam at or below L. A state is saved
 with the plan of the run that converged it, and a run started from it keeps that plan
 (--keep_plan 0 plans again at the state, the control). Its states are saved in eight parts
@@ -279,6 +282,7 @@ def main():
     opt.update(a0=0.0, a_grow=2.0, a_hold=0, lam_stall=0.0)    # the step's start, growth and hold; the corrector's stall rule
     opt.update(od_accept="own")                                 # the octo-double corrector's trial test (#644)
     opt.update(od_strong=0)             # --od_strong k: the strong-row chord after the first step (#674)
+    opt.update(reseed_start="ladder")   # --reseed_start pred: the re-seed's quad-double polish from the point's own data (#693)
     opt.update(held_fit="")             # --held_fit FILE (pinning.HeldFit; notes/HELD_HARMONICS.md)
     # --held_o 1: the held values and their Taylor coefficients as mpf instead of floats, and the held field in eight
     # parts instead of two (with --held_fit and --corrector od); --reseed_o K: K octo-double corrections of the
@@ -528,7 +532,8 @@ def main():
             # alone (its quadratic term there; 1e-41 in the others), which the projection removes
             if opt["reseed"] == 2:
                 elim["rs"] = Reseeder(dict(M=M, nodes=nodes, kt=kt, kc=kc, ks=ks), D, threads=opt["threads"],
-                                      horizon_alpha=opt["horizon_alpha"], qd=bool(opt["reseed_q"]), od=opt["reseed_o"])
+                                      horizon_alpha=opt["horizon_alpha"], qd=bool(opt["reseed_q"]), od=opt["reseed_o"],
+                                      qd_start=opt["reseed_start"])
             zh_p, zl_p, F0_p, _, conv_p, _ = correct(sp, zh, zl, opt["tol"],
                                                      z8_start=load_o(os.path.join(raw, opt["state"]))[0])
             elim["rs"] = None
@@ -814,7 +819,8 @@ def main():
                     # --reseed 1: the prediction's horizon data from its last node (hp/reseed.py); 2: also eliminated
                     # inside the corrector
                     rs_n = Reseeder(dict(M=M, nodes=nodes, kt=kt, kc=kc, ks=ks), Dn, threads=opt["threads"],
-                                    horizon_alpha=opt["horizon_alpha"], qd=bool(opt["reseed_q"]), od=opt["reseed_o"])
+                                    horizon_alpha=opt["horizon_alpha"], qd=bool(opt["reseed_q"]), od=opt["reseed_o"],
+                                      qd_start=opt["reseed_start"])
                     dz0_at.update(D=float(Dn), D_str=str(Dn), a=float(a))
                     if opt["save_pred"] and pred4 is not None:
                         # the prediction before its re-seed, for testing the re-seed on it (13.26)

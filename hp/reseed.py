@@ -83,7 +83,8 @@ class Reseeder:
     is the stepper's error estimate (a plan at check_tol with steps at most hmax / 2, at Taylor order check_kt)."""
 
     def __init__(self, meta, D, threads=2, levels=5, rows="ma", plan_tol=1e-32, hmax=0.05, check_tol=1e-36,
-                 check_kt=None, it_max=30, horizon_alpha=0, mutate="none", floor_rule="stall", qd=False, od=0):
+                 check_kt=None, it_max=30, horizon_alpha=0, mutate="none", floor_rule="stall", qd=False, od=0,
+                 qd_start="ladder"):
         self.M, self.nodes = int(meta["M"]), list(meta["nodes"])
         self.K = len(self.nodes)
         self.kt, self.kc, self.ks = meta.get("kt", 36), meta.get("kc", 146), meta.get("ks", 130)
@@ -102,6 +103,11 @@ class Reseeder:
         # node to the quad-double floor eps_qd G rather than eps_dd G (the double-double rung's floor exceeds what the
         # corrector tolerates past D ~ 128, notes/QUAD_DOUBLE.md 13.22)
         self.qd = qd
+        # qd_start (#693): "ladder" polishes the double-double ladder's u0 data in quad-double, as before; "pred" first
+        # polishes the point's own four-part horizon data (a prediction carries a_h to about 1e-39, the ladder's data
+        # are rounded to double-double, about 1e-32 off, whose pole lies inside u0 past D ~ 249), and runs the ladder
+        # only when that does not converge
+        self.qd_start = qd_start
         # od: the number of octo-double corrections of the horizon data after the quad-double polish (refine_o), taken
         # where the data are put on an eight-part point (octo_corrector.with_horizon); 0: none
         self.od = int(od)
@@ -493,10 +499,30 @@ class Reseeder:
         t0 = time.time()
         zh, zl = np.asarray(z[0], dtype=float), np.asarray(z[1], dtype=float)
         M, o = self.M, self.off
+        pre = []
+        if self.qd and len(z) == 4 and self.qd_start == "pred":
+            # the quad-double polish from the point's own four-part horizon data (#693); the ladder below only if it fails
+            sl_ = slice(o["mh"], o["mh"] + 2 * M)
+            tq = time.time()
+            d4, hq, cq = self.invert_q(z, tuple(np.ascontiguousarray(np.asarray(p, dtype=float)[sl_]) for p in z))
+            pre = [dict(u=self.us[-1], qd=True, start="pred", conv=cq, its=len(hq) - 1, R0=hq[0]["R"], R=hq[-1]["R"],
+                        seconds=round(time.time() - tq, 2))]
+            if verbose:
+                print(f"    rung u0 in quad-double from the point's own data: {len(hq) - 1} its, |R| {hq[0]['R']:.2e} -> "
+                      f"{hq[-1]['R']:.2e}, {'converged' if cq else 'NOT converged, the ladder follows'}, "
+                      f"{time.time() - tq:.1f} s", flush=True)
+            if cq:
+                out = [np.array(p, dtype=float) for p in z]
+                for q in range(4):
+                    out[q][sl_] = d4[q]
+                return tuple(np.ascontiguousarray(p) for p in out), dict(us=[self.us[-1]], dropped=[], plan=None, rungs=pre,
+                                                                        ok=True, rows=self.rows, levels=self.levels,
+                                                                        mutate=self.mutate, start="pred",
+                                                                        seconds=round(time.time() - t0, 2))
         tg, info = self.targets(zh, zl)
         self.last_targets = tg
         us = [u for u in self.us if u in tg]
-        diag = dict(us=us, dropped=[u for u in self.us if u not in tg], plan=info, rungs=[], ok=True, rows=self.rows,
+        diag = dict(us=us, dropped=[u for u in self.us if u not in tg], plan=info, rungs=list(pre), ok=True, rows=self.rows,
                     levels=self.levels, mutate=self.mutate)
         dh = np.array(zh[o["mh"]:o["mh"] + 2 * M]); dl = np.array(zl[o["mh"]:o["mh"] + 2 * M])
         d0 = dh + dl
