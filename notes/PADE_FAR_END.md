@@ -2,12 +2,15 @@
 
 Status of everything here: numerical evidence. Nothing is rigorous. It bears on the type bounds of routes A3 and P5,
 which follow from the farthest singularity of the Borel transform (proof/D_entire.md sections 1 and 7). Sections 1–4
-are #547, sections 5–6 are #548.
+are #547, sections 5–6 are #548, and section 7 is #670.
 
 - **#547.** A calibrated estimator recovers the far end of smooth-density plants within 0.009, but it fails #547's
   acceptance. On the real series two controls fire, so no far end is quoted (§4).
 - **#548.** No statistic of σ₀–σ₂₂ can tell a chord from an arc at the measured errors. A function with only two branch
   points reproduces the arc plant's 23 coefficients within those errors (§6).
+- **#670.** More coefficients would not separate them either. The smallest such twin of the arc plant has 19 terms at
+  23 coefficients and 19–20 at 31, with the errors of the extra orders extrapolated, so its size does not grow with
+  the coefficient count (§7).
 
 ## 1. Question
 
@@ -317,8 +320,8 @@ In 7.4, replacing the bullet "Twenty-three coefficients do not separate the plan
 ## 7. Twin size against the number of coefficients (#670)
 
 `solver/inner_amp/pade_twin_count.py`. The question is whether more coefficients of S₁, such as #549's σ₂₃–σ₂₄,
-could separate a chord from an arc. #548's chord twin is refitted to n = 23, 25, 27 and 31 coefficients of the arc
-plant, and the smallest twin size is found at each n.
+could separate a chord from an arc. #548's chord twin is refitted to n = 23, 25, 27 and 31 coefficients of arcjump,
+the arc plant of §6, and the smallest twin size is found at each n.
 
 ### 7.1 Method
 
@@ -355,7 +358,7 @@ Written into the script's `FROZEN` dict before its first selftest, and here befo
 | near n − 3 | at F = 1 and every node, M_min ≥ n − 4 at n = 27 and 31 |
 | saturates | at F = 1 and every node, M_min(31) ≤ M_min(23) + 2 |
 | verdict on #549 | if M stays near n − 3 or saturates, at F = 1 and at F = 0.1, more orders cannot separate a chord from an arc without a prior on the density's size, and the prior they need moves by at most M_min(25) − M_min(23) terms. Otherwise the gap n − M_min is reported and the verdict is open |
-| context | the arc plant (smooth density on the arc, ω/ω∞ = 1.00), F = 0.01 and d_m are reported, not judged |
+| context | the plant arc (smooth density on the arc, ω/ω∞ = 1.00), F = 0.01 and d_m are reported, not judged |
 
 `run` exits 1 when C0 or C1 fails at F = 1 or 0.1. `run --mutate=moment` multiplies one exact moment, of T₀ at order
 26, by 1 + 10⁻⁸, and must make C0 fail at n = 27 and 31 but not at 23 and 25.
@@ -368,18 +371,106 @@ The selftest (`python3 pade_twin_count.py --selftest`) checks six things, and ea
    against step 1/8 and gives 2.4×10⁻⁷).
 3. The tail fit of the error model has residuals at most 0.05 dex (`--mutate=errtail`, rel₂₀ × 3, gives 0.39).
 4. C0 at n = 31 gives χ = 5×10⁻³⁷ (`--mutate=moment` gives 930).
-5. The arc plant's twin at n = 31, M = 27 has the same χ at 150 and 250 digits (`--mutate=moment`, applied at 150
+5. arcjump's twin at n = 31, M = 27 has the same χ at 150 and 250 digits (`--mutate=moment`, applied at 150
    digits only, gives a relative difference of 18).
 6. Planted chord densities with c_m = 0.8^m e^{im} and M_true = 8, 12 and 16 terms are found at their size, at n = 23
    and 31 and F = 1 and 0.1: l2 > √n at M_true − 1 and χ ≤ 1 at M_true (`--mutate=planted` drops the top term).
 
 Seen before the freeze, and disclosed:
 
-- The selftest's precision check fits the arc plant at n = 31, M = 27, and printed χ = 1.0×10⁻¹⁰, so M_min(31) ≤ 27
-  was known.
+- The selftest's precision check fits arcjump at n = 31, M = 27, and printed χ = 1.0×10⁻¹⁰, so M_min(31) ≤ 27 was
+  known.
 - The planted sizes were first 8, 16 and 24. M_true = 24 failed: its top term, 0.8²³ T₂₃, moves σ₀–σ₃₀ by only
   3.7×10⁻⁷ error units once the other 23 terms are refitted, so a 23-term density reproduces it. That is a property of
   the data, not a fault of the finder, and the sizes became 8, 12 and 16, whose top terms are visible by factors of
   500 or more.
 - d_m was computed with chord2's weights at ω/ω∞ = 1.00 and F = 1. A unit term is visible (d_m ≥ 1) up to m = 17 at
   n = 23, and up to m = 18 at n = 27 and n = 31.
+
+### 7.3 Results
+
+All runs used one core under `nice -n 10`, 2026-11-13 09:20–09:33 UTC, with `pade_twin_count.py` at e6845dfb. The
+records are in the raw-data repository's `I670-mac/` (95ad391).
+
+| check | result | verdict |
+|---|---|---|
+| selftest, and its mutations `moment`, `planted`, `errtail`, `quad` | exit 0, and 1, 1, 1, 1 | OK, all fire |
+| C0, chord2's own twin at M = 6, every n, node and F | χ ≤ 1.5×10⁻³⁴ | OK |
+| C1, 150 against 250 digits at M_min − 1 and M_min | the same χ in double precision, every row | OK |
+| C2, #548's χ at M = 18, 20, 22, n = 23 | equal to 4 digits at all three nodes | OK |
+| `run --mutate=moment` | C0 gives χ = 540–1000 at n = 27 and 31 with F = 1 (×10, ×100 at F = 0.1, 0.01), and at most 1.5×10⁻³⁴ at n = 23 and 25; exit 1 | fires |
+| near n − 3, M_min ≥ n − 4 at n = 27, 31 | M_min = 19–20, so n − M_min = 7–11 | fails |
+| saturates, M_min(31) ≤ M_min(23) + 2 | +1 at every node at F = 1; +1, +2, +2 at F = 0.1 | holds |
+
+The twin's size is given as M_lo–M_min, the bracket of 7.1 that holds the smallest twin, or as one number when they are
+equal.
+
+| F | ω/ω∞ | n = 23 | 25 | 27 | 31 |
+|---|---|---|---|---|---|
+| 1 | 0.99 | 19 | 19 | 19–20 | 20 |
+| 1 | 1.00 | 19 | 19 | 19 | 20 |
+| 1 | 1.01 | 19 | 19 | 19–20 | 19–20 |
+| 0.1 | 0.99 | 19–20 | 20 | 20 | 20–21 |
+| 0.1 | 1.00 | 19 | 20 | 20 | 20–21 |
+| 0.1 | 1.01 | 19 | 20 | 20 | 20–21 |
+| 0.01, context | each node | 20 | 20–21 | 21 | 21 |
+| | n − 3 | 20 | 22 | 24 | 28 |
+
+χ of the least-squares twin at ω/ω∞ = 1.00 and F = 1, by size M:
+
+| M | 18 | 19 | 20 | 21 | 22 |
+|---|---|---|---|---|---|
+| n = 23 | 3.1 | 0.095 | 1.5×10⁻³ | 2.3×10⁻⁵ | 2.4×10⁻⁷ |
+| n = 25 | 9.3 | 0.39 | 0.011 | 2.2×10⁻⁴ | 5.5×10⁻⁶ |
+| n = 27 | 20 | 0.99 | 0.040 | 1.4×10⁻³ | 3.7×10⁻⁵ |
+| n = 31 | 54 | 2.7 | 0.16 | 5.9×10⁻³ | 6.0×10⁻⁴ |
+
+- **The twins are large.** At M_min the twin's density peaks at 7.0–11.1 and its largest |c_m| is 946–1718, over every
+  n, node and F. chord2 peaks at 2.9 with |c_m| ≤ 28. These are the least-squares twins, which do not minimize size.
+- **The plant arc, context.** Its density is smooth on the arc, so it has two branch points only. Its twin needs 16
+  terms at F = 1 (M_lo = 15 at n = 23), 16–17 at F = 0.1 and 17 at F = 0.01, at every n. That twin peaks at 2.7 with
+  |c_m| ≤ 28, the size of chord2.
+- **Visibility.** With arcjump's weights at F = 1, a unit term is visible for m ≤ 17 at n = 23 and m ≤ 18 at n = 25–31,
+  at every node. A term of size 10³ is visible for m ≤ 19, 20, 20 and 21 at n = 23, 25, 27 and 31. Each factor 10 in F
+  adds about one term.
+- **Error model.** rel₃₀ is 2.4×10⁻¹¹, 2.6×10⁻¹¹ and 2.9×10⁻¹¹ at the three nodes. The tail's slope falls slowly with
+  k, and a quadratic fit on k = 18–22 would put rel₃₀ 2.5 times lower. That lies inside the F = 0.1 variant.
+
+### 7.4 What this means
+
+- **The twin's size does not grow as n − 3, it saturates.** From 23 to 31 coefficients the smallest chord twin of
+  arcjump grows from 19 terms to 19–20, at every node. So a chord density with a fixed number of terms reproduces
+  σ₂₃–σ₃₀ as well, within the extrapolated errors, and the extra orders add no constraint it cannot meet. With every
+  error 10 and 100 times smaller, the twin at n = 31 has 20–21 and 21 terms.
+- **Why, in terms of the basis.** Beyond about 18 Chebyshev terms, a unit term moves σ₀…σ_{n−1} by less than their
+  errors once the lower terms are refitted, and 8 more orders raise that count by only one. Each new order is less
+  precise than the last, by 0.157 dex, and what it says about the density overlaps what the lower orders say. A
+  likely reading, not tested here, is that the k-th coefficient weights the density near the far end, where the
+  factor (1 − s)^ex, with Re ex ≈ 3.2, suppresses it.
+- **Verdict on #549, by the frozen rule.** M saturates at F = 1 and at F = 0.1. So more coefficients cannot separate a
+  chord from an arc without a prior on the density. For σ₂₃–σ₂₄ (n = 25), the prior they would need moves by
+  M_min(25) − M_min(23) = 0 terms at F = 1, and by 0–1 at F = 0.1. #549 is not worth running for this purpose. Its own
+  aim, fixing the k = 11 Padé poles, is not judged here.
+- **What a prior would need.** A prior on the number of terms has to exclude 19–21 terms, whatever n. A prior on the
+  density's size might do better: arcjump's least-squares twins have coefficients 34–61 times chord2's, while the
+  twin of the smooth plant arc is the size of chord2. Whether a smaller twin of arcjump exists is open, since the least
+  squares do not minimize size.
+
+### 7.5 A discrepancy with 6.3
+
+#548 scanned even M only. With every M, a 19-term twin already reproduces σ₀–σ₂₂ at n = 23, with χ = 0.08–0.11 at the
+three nodes, and M_lo = 19, so the smallest twin has exactly 19 terms. §6.3's "unless a prior limits the density to
+fewer than 20 Chebyshev terms" should read 19. Its quoted values at M = 18, 20 and 22 are reproduced (C2). This is
+reported, not changed.
+
+### 7.6 Proposed text for proof/D_entire.md
+
+In 7.4, after the bullet "Twenty-three coefficients cannot separate a chord from an arc (#548)":
+
+```diff
++- **More coefficients would not separate them either (#670).** Refitted to arcjump's σ₀–σ₃₀, with the errors
++  of σ₂₃–σ₃₀ extrapolated from the measured ones (an estimate), the smallest two-branch-point twin grows only from 19
++  terms at 23 coefficients to 19–20 at 31, and to 20–21 with every error 10 times smaller (notes/PADE_FAR_END.md §7).
++  A twin of fixed size reproduces the extra orders, so σ₂₃–σ₂₄ (#549) cannot separate a chord from an arc without a
++  prior on the density.
+```
