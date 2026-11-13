@@ -11,6 +11,8 @@ what that did, and what the strings' own rounding leaves.
   compare  every number of two JSON records of one stage (a run and its rerun): the largest absolute and relative
            differences, with their paths, and any difference of structure. --skip leaves out the paths that match a
            regular expression (rounding noise, such as chi of an interpolant).
+  strings  every file of solver/inner_amp with sigma_str at the three nodes, by digit count; a file with more than
+           20 digits is compared with the J 1250 strings per order, against their rounding.
   floor    the strings' rounding as an input box: each component of sigma_k, k >= 1, within half a unit of its 20th
            digit (sigma_load.rounding; sigma_0 = 1 by normalisation). The first-order worst case of a statistic over
            the box is sum_i |d stat/d x_i| h_i, from one finite difference per component, h_i its half unit, at the
@@ -26,12 +28,14 @@ what that did, and what the strings' own rounding leaves.
 
     python3 pade_precision.py plants OUTDIR [--allow_unraw]
     python3 pade_precision.py compare OLD.json NEW.json [--top=N] [--out=FILE.json] [--skip=REGEX]
+    python3 pade_precision.py strings OUTDIR [--allow_unraw]
     python3 pade_precision.py floor OUTDIR [--mutate=corner] [--allow_unraw]
     python3 pade_precision.py floor_twins OUTDIR [--mutate=proj] [--allow_unraw]
 
 Exit 1 when a control fails. Numerical evidence: the first-order bound is not a rigorous enclosure.
 """
 import bisect
+import glob
 import json
 import math
 import os
@@ -153,6 +157,44 @@ def run_compare(old, new, top=12, out_json=None, skip=None):
     if out_json:
         json.dump(res, open(out_json, "w"), indent=1)
     return res
+
+
+# ---------------------------------------------------------------- strings: where more than 20 digits exist
+def run_strings(outdir):
+    """every file under solver/inner_amp with sigma_str at the three nodes, by its strings' digit count. A file with
+    more than 20 digits could lift the floor only if it agrees with the J 1250 strings within their rounding at the
+    orders where the rounding exceeds the measured error (k = 1..8): per order, |sigma_k(file) - sigma_k(J1250)| over
+    the J 1250 rounding"""
+    log = Log(outdir, "strings")
+    rec = {"files": {}, "longer": {}}
+    j1250 = {wf: sl.node_file(pg.REAL["J1250"], wf) for wf in pg.NODES}
+    for fn in sorted(glob.glob(os.path.join(HERE, "**", "*.json"), recursive=True)):
+        try:
+            r = json.load(open(fn))
+        except (ValueError, UnicodeDecodeError):
+            continue
+        if not isinstance(r, dict) or "sigma_str" not in r or r.get("wf") not in pg.NODES:
+            continue
+        nd = max(sl.digits(s) for p in r["sigma_str"] for s in p)
+        name = os.path.relpath(fn, HERE)
+        rec["files"][name] = {"wf": r["wf"], "J": r.get("J"), "K": r.get("K"), "orders": len(r["sigma_str"]),
+                              "digits": nd}
+        if nd <= 20:
+            continue
+        ref = json.load(open(j1250[r["wf"]]))
+        s, s0 = sl.load_file(fn)[0], sl.load_file(j1250[r["wf"]])[0]
+        rows = sl.rounding(ref)[1]
+        with mp.workdps(60):
+            q = [float(abs(s[k] - s0[k]) / (rows[k][2] * abs(s0[k]))) for k in range(1, min(len(s), N23))]
+        rec["longer"][name] = {"over_J1250_rounding": q, "k1_8_max": max(q[:8]), "k1_8_min": min(q[:8])}
+        log(f"{name} (wf {r['wf']}, J {r.get('J')}, {nd} digits, {len(s)} orders): |sigma_k - sigma_k(J1250)| over the "
+            f"J1250 rounding, k = 1..{len(q)}: " + " ".join(f"{x:.1e}" for x in q))
+    n = {}
+    for v in rec["files"].values():
+        n[v["digits"]] = n.get(v["digits"], 0) + 1
+    log(f"files with sigma_str at the nodes, by digit count: {n}")
+    dump(outdir, "strings", rec)
+    return True
 
 
 # ---------------------------------------------------------------- floor: the input box
@@ -423,12 +465,13 @@ def main():
     if len(argv) == 3 and argv[0] == "compare":
         run_compare(argv[1], argv[2], top, out_json, skip)
         sys.exit(0)
-    if len(argv) != 2 or argv[0] not in ("plants", "floor", "floor_twins"):
+    if len(argv) != 2 or argv[0] not in ("plants", "strings", "floor", "floor_twins"):
         raise SystemExit(__doc__)
     stage, outdir = argv
     require_raw(os.path.join(outdir, "x.json"), allow=allow)
     os.makedirs(outdir, exist_ok=True)
-    fn = {"plants": lambda: run_plants(outdir), "floor": lambda: run_floor(outdir, mut),
+    fn = {"plants": lambda: run_plants(outdir), "strings": lambda: run_strings(outdir),
+          "floor": lambda: run_floor(outdir, mut),
           "floor_twins": lambda: run_floor_twins(outdir, mut)}[stage]
     sys.exit(0 if fn() else 1)
 

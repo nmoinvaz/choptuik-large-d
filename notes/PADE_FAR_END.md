@@ -980,10 +980,11 @@ so those rows and C1's ratios there are left out (`--skip`).
 | `pade_twin_size.py twins_real` | `I672-mac/twins_real.json` | 783 | 5.1×10⁻⁸ |
 | its J 1500 context line | the same | | χ 1.7×10⁹ → 1.01, at k = 16 |
 
-The exits match the records. `pade_geometry.py plants` and `real` exit 1 on their frozen verdicts, as in #541, and the
-other stages exit 0. The real Padé poles, R_k, bows, ratio-law κ and noise spreads of #541, and every number of #547's
-real and diagnostic runs, are bit-identical in double precision, since those stages parsed at 60 and 100 digits. The
-J 1500 line now gives what §9.2's diagnostic found, at most 1.0 error unit, at k = 16.
+Every verdict matches its record. `pade_geometry.py plants` and `real` exit 1 on their frozen verdicts, which are
+#541's (T1–T4 fail on the plants, and the real series converges at no node), and the other stages exit 0. The real
+Padé poles, R_k, bows, ratio-law κ and noise spreads of #541, and every number of #547's real and diagnostic runs, are
+bit-identical in double precision, since those stages parsed at 60 and 100 digits. The J 1500 line now gives what
+§9.2's diagnostic found, at most 1.0 error unit, at k = 16.
 
 **No quoted real-series number moves by its last digit.**
 
@@ -1007,9 +1008,17 @@ quoted three- and four-digit numbers are not expected to move. That is an infere
 
 `amp_flint_par.py` writes σ_k with `mp.nstr(z, 20)`, and its log prints 15 digits. The raw-data repository holds those
 two for every J 1250 and J 1500 run at these nodes (`T99-win2/`, `T102-mac/`, `T103-mac/`; the repository's wf 1.00
-J 1250 file is T99-win2's, whose strings equal T102-mac's), and no other output carries σ_k there. The certified σ₁ of
-D_entire 6.5 has 9 digits. So no more digits exist, and the strings are the floor. Their rounding is half a unit in the
-20th digit (`sigma_load.py --rounding`). Against the measured errors, all relative:
+J 1250 file is T99-win2's, whose strings equal T102-mac's). The certified σ₁ of D_entire 6.5 is an enclosure of
+half-width 3.5×10⁻⁵.
+
+Files with more digits exist, from `scan_omega.py`, which writes 25 (`pade_precision.py strings`). Of the 78 files of
+`solver/inner_amp/` with σ_k at these nodes, 27 have 25 digits, all at lower J. The J 1000 `--fit phys` scan
+(`scan27J1000`, 640 bits, σ₀–σ₁₃) is the closest. It agrees with the J 1250 strings within their rounding at
+k = 1–7 (0.02–0.72 rounding units) and departs from them by 69–1900 units at k = 8. The J 750 scans agree at k ≤ 3,
+not at every node at k = 4, and depart by 15–260 units at k = 5–6. Nothing measures the J 1000 to J 1250 difference
+below the rounding, and at k = 8 it is already 69–1900 times the rounding, so those extra digits are not the J 1250
+values' and were not used. The strings are therefore the floor. Their rounding is half a unit
+in the 20th digit (`sigma_load.py --rounding`). Against the measured errors, all relative:
 
 | ω/ω∞ | measured error, k = 1–8 | string rounding, k = 1–8 | rounding over error, k = 1, …, 8 | k = 9 |
 |---|---|---|---|---|
