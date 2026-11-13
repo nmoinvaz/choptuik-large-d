@@ -8,6 +8,8 @@
   explain_parts.svg    1/3 as one, two, four and eight doubles: each part's value and the error of their sum
   explain_soa.svg      a quad-double vector in memory: four contiguous float64 arrays, element i across them
   explain_gain.svg     the mass-mode gain G = 0.7^-(D-3) against D, with the chain's walls marked
+  explain_newton.svg   what a Newton step is: the tangent's zero for x^2 - 2, and a step too long for arctan x,
+                       refused because |f| grows, then halved
 
     cd hp && python3 plot_explainer.py [-o .]
 
@@ -254,6 +256,66 @@ def gain_svg():
                                y + h + 40, REPO)), [(D, G(D)) for D, _ in WALLS]
 
 
+def newton_svg():
+    """two panels: one Newton step on f(x) = x^2 - 2 from 3, and a step too long on arctan x from 1.5, refused and halved"""
+    def curve(svg, xm, ym, f, lo, hi, n=200):
+        pts = [lo + (hi - lo) * i / n for i in range(n + 1)]
+        svg.add('<polyline points="' + " ".join(f"{xm(x):.1f},{ym(f(x)):.1f}" for x in pts)
+                + f'" fill="none" stroke="{SERIES[0]}" stroke-width="2.5"/>')
+
+    def seg(svg, xm, ym, x0, y0, x1, y1, color, dash=False, width=1.5):
+        svg.add(f'<line x1="{xm(x0):.1f}" y1="{ym(y0):.1f}" x2="{xm(x1):.1f}" y2="{ym(y1):.1f}" stroke="{color}" '
+                f'stroke-width="{width}"' + (' stroke-dasharray="6 4"' if dash else "") + "/>")
+    from data_graphs import caption, marker
+    svg = Svg(980)
+    svg.text(16, 24, "What a Newton step is", size=14, fill=INK, weight="bold")
+    svg.text(16, 42, "To solve f(x) = 0, replace f by its tangent at the current point and jump to where the tangent is "
+             "zero: x_new = x − f(x) / f′(x).", size=11)
+    f, df = (lambda x: x * x - 2), (lambda x: 2 * x)
+    xs = [3.0]
+    for _ in range(4):
+        xs.append(xs[-1] - f(xs[-1]) / df(xs[-1]))
+    x, y, w, h = 70, 110, 380, 330
+    caption(svg, x, 80, "One step: follow the tangent to zero", "f(x) = x² − 2, from x₀ = 3; the root is √2")
+    xm, ym = axes(svg, x, y, w, h, (0.5, 3.4), (-3, 8), "x", "f(x)", xfmt=lambda v: f"{v:g}", yfmt=lambda v: f"{v:g}")
+    seg(svg, xm, ym, 0.5, 0, 3.4, 0, INK_SOFT, width=1)
+    curve(svg, xm, ym, f, 0.5, 3.4)
+    for k in range(2):
+        x0, x1 = xs[k], xs[k + 1]
+        seg(svg, xm, ym, x1 - 0.15, df(x0) * (x1 - 0.15 - x0) + f(x0), x0 + 0.15, df(x0) * 0.15 + f(x0), SERIES[1])
+        seg(svg, xm, ym, x1, 0, x1, f(x1), INK_SOFT, dash=True)
+        marker(svg, "circle", xm(x0), ym(f(x0)), SERIES[1], f"x_{k} = {x0:.6f}, f = {f(x0):.4f}")
+        marker(svg, "diamond", xm(x1), ym(0), SERIES[1], f"tangent zero: x_{k + 1} = {x1:.6f}")
+    callout(svg, xm(xs[0]), ym(f(xs[0])), "x₀ = 3, f = 7", dx=12, dy=60)
+    callout(svg, xm(xs[1]), ym(0), "x₁ = 1.833: where the tangent is zero", dx=60, dy=40)
+    svg.text(x + 8, y + 18, f"Then x₂ = {xs[2]:.4f}, x₃ = {xs[3]:.6f}, x₄ = {xs[4]:.10f}:", size=11, fill=INK)
+    svg.text(x + 8, y + 34, "the error squares each step (quadratic convergence).", size=11, fill=INK)
+    g, dg = math.atan, (lambda x: 1 / (1 + x * x))
+    x0 = 1.5
+    full = x0 - g(x0) / dg(x0)
+    half = x0 + 0.5 * (full - x0)
+    x2, w2 = 560, 380
+    caption(svg, x2, 80, "A step that is too long: refused, then halved",
+            "f(x) = arctan x, from x₀ = 1.5: the slope is small, so the step is long")
+    xm2, ym2 = axes(svg, x2, y, w2, h, (-2.5, 2.5), (-1.5, 1.5), "x", "f(x)", xfmt=lambda v: f"{v:g}",
+                    yfmt=lambda v: f"{v:g}")
+    seg(svg, xm2, ym2, -2.5, 0, 2.5, 0, INK_SOFT, width=1)
+    curve(svg, xm2, ym2, g, -2.5, 2.5)
+    seg(svg, xm2, ym2, full - 0.2, dg(x0) * (full - 0.2 - x0) + g(x0), x0 + 0.3, dg(x0) * 0.3 + g(x0), SERIES[1])
+    seg(svg, xm2, ym2, full, 0, full, g(full), INK_SOFT, dash=True)
+    seg(svg, xm2, ym2, half, 0, half, g(half), INK_SOFT, dash=True)
+    marker(svg, "circle", xm2(x0), ym2(g(x0)), SERIES[1], f"x₀ = 1.5, |f| = {abs(g(x0)):.3f}")
+    marker(svg, "cross", xm2(full), ym2(g(full)), SERIES[7], f"full step: x = {full:.3f}, |f| = {abs(g(full)):.3f}")
+    marker(svg, "diamond", xm2(half), ym2(g(half)), SERIES[2], f"half step: x = {half:.3f}, |f| = {abs(g(half)):.3f}")
+    callout(svg, xm2(full), ym2(g(full)), f"full step: |f| grows {abs(g(x0)):.2f} → {abs(g(full)):.2f}, refused",
+            dx=20, dy=50)
+    callout(svg, xm2(half), ym2(g(half)), f"half step (λ = 1/2): |f| {abs(g(half)):.2f}, accepted", dx=20, dy=-70)
+    svg.text(x2 + 8, y + 18, "The chain's corrector near D 245 does this in 769 unknowns:", size=11, fill=INK)
+    svg.text(x2 + 8, y + 34, "its weakest directions have tiny slopes, so full steps overshoot.", size=11, fill=INK)
+    out = svg.finish(footnote(svg, SRC + ["illustration: f(x) = x² − 2 and arctan x"], "", [], y + h + 44, REPO))
+    return out, xs, (x0, full, half, abs(g(x0)), abs(g(full)), abs(g(half)))
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("-o", default=HERE)
@@ -265,6 +327,7 @@ def main():
     out["explain_parts.svg"], parts, errs = parts_svg()
     out["explain_soa.svg"] = soa_svg(L)
     out["explain_gain.svg"], gw = gain_svg()
+    out["explain_newton.svg"], nx, at = newton_svg()
     for name, s in out.items():
         with open(os.path.join(a.o, name), "w") as f:
             f.write(s)
@@ -272,6 +335,9 @@ def main():
     print("parts of 1/3:", " ".join(f"{p:.3e}" for p in parts))
     print("relative error by parts:", ", ".join(f"{n}: {e:.2e}" for n, e in errs.items()))
     print("gain at the walls:", ", ".join(f"{D:g}: {g:.2e}" for D, g in gw))
+    print("Newton on x^2 - 2 from 3:", ", ".join(f"{v:.12f}" for v in nx))
+    print("arctan from 1.5: full step to {:.4f} (|f| {:.4f} -> {:.4f}, refused), half step to {:.4f} (|f| {:.4f})".format(
+        at[1], at[3], at[4], at[2], at[5]))
     print("wrote", ", ".join(out))
 
 

@@ -72,6 +72,8 @@ row of F in every unknown), solves J dz = −F by an LU factorization and adds d
 when max |F| is below the tolerance. The Jacobian, the LU and the residual all run in the same multi-part arithmetic as
 z.
 
+![What a Newton step is: for x² − 2 from x = 3, the tangent's zero gives the next point and the error squares each step; for arctan x from 1.5, where the slope is small, the full step overshoots and makes |f| larger, so it is refused and the halved step is accepted](hp/explain_newton.svg)
+
 ## 2. Solving one point
 
 [`hp/`](hp/) (crate `hpkernel`) works in double-double and, where the large-D chain needs it, in quad-double and octo-double, with its arithmetic from the crate [multidouble](https://github.com/nmoinvaz/multidouble).
