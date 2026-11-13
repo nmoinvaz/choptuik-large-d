@@ -25,9 +25,10 @@ The spread over E1-E3 in one window is an estimator range, not an error bar; the
 the late orders are from asymptotic.
 
 13.6's pole law (QUAD_DOUBLE 13.6, #546): a_h scaled by 1 + delta (od_axpy, so delta below 1e-16 is kept), the
-series recomputed in octo-double, R(delta) by E1-E3 in the last window, R = R0 + b ln(1/delta), C = b (n - 1), and
-delta_max(u0) = exp(-(u0 - R0) / b), the largest data error for which the series still converges at u0. Also recorded:
-H(delta) = max over the m and a rows of |S_ks(u0) - node| at the chain's ks, the re-seed rung's residual for those data.
+series recomputed in quad-double (`run --precs qd --deltas ...`), R(delta) from the response b(delta) - b(0) (`summary
+--coef`, its docstring in law()), R = R0 + b ln(1/delta), C = b (n - 1), and delta_max(u0) = exp(-(u0 - R0) / b), the
+largest error of a_h for which the series still converges at u0. Also recorded: H(delta) = max over the m and a rows
+of |S_ks(u0) - node| at the chain's ks, the re-seed rung's residual for those data.
 
 Planted truth (`selftest`, criteria written before any real series was read by these estimators; u0 = 0.3, M = 32,
 orders to 160, relative noise 2^-106 on every term):
@@ -55,7 +56,7 @@ replace it (notes/HORIZON_RADIUS.md).
     cd hp && python3 horizon_radius.py run OUT.jsonl STATE.npz [...] [--kmax 160] [--precs dd,qd,od] [--deltas 0]
         [--threads 2] [--coef DIR]     (OUT in a task folder of the raw-data repository; --allow_unraw for scratch)
     cd hp && python3 horizon_radius.py csv OUT.csv IN.jsonl [...]
-    cd hp && python3 horizon_radius.py summary IN.jsonl [...] [--reseed anm_run.jsonl ...]
+    cd hp && python3 horizon_radius.py summary IN.jsonl [...] [--reseed anm_run.jsonl ...] [--coef DIR]
 """
 import json
 import math
@@ -489,13 +490,116 @@ def main():
             i = args.index("--reseed")
             reseed.append(args[i + 1])
             del args[i:i + 2]
-        return summary(args, reseed)
+        coef = opt("--coef", "")
+        return summary(args, reseed, coef)
     print(__doc__)
     return 2
 
 
-def summary(ins, reseed):
-    """the per-state table, 13.6's law per state and its delta_max(u0), and the re-seed records beside them"""
+def coef_path(coef, r, prec=None, delta=None):
+    d = r["delta"] if delta is None else delta
+    return os.path.join(coef, f"{r['state'][:-4]}_{prec or r['prec']}_d{d:.0e}.npy")
+
+
+def structure(recs, coef):
+    """per state, the octo-double series' parts (summary): the decaying part's radius (E2 and E3 of the max over
+    fields in the window ending at 60), the smallest term over orders 40-160 and its order, the first order past it
+    with a term 100 times larger (the growth's onset), Re s (13.1: the exponent of the singular solutions), and the
+    growth's E2 in the window ending at 160"""
+    print("octo-double, on the solution: R_dec (orders 20-60: E2, E3 of the a field), t_min and its order, the onset k_g "
+          "(first order past it with t_k > 100 t_min), Re s, the growth's E2 (orders 120-160, max over fields)")
+    out = []
+    for r in sorted((r for r in recs if r["delta"] == 0 and r["prec"] == "od"), key=lambda r: r["D"]):
+        b = np.load(coef_path(coef, r))
+        t = np.abs(b).max(axis=(1, 2))
+        k0 = 40 + int(np.argmin(t[40:]))
+        kg = next((k for k in range(k0, len(t)) if t[k] > 100 * t[k0]), None)
+        e60 = r["est"]["a"]["60"]
+        e2g = e2_root(t, 160, r["u0"]) if len(t) > 160 else None
+        rec = dict(D=r["D"], R_dec_E2=e60["E2"], R_dec_E3=e60["E3"], t_min=float(t[k0]), k_min=k0, k_g=kg, Re_s=r["Re_s"],
+                   growth_E2=e2g)
+        out.append(rec)
+        g = lambda x: f"{x:.3f}" if x is not None else "-"  # noqa: E731
+        print(f"{r['D']:9.4f}  R_dec {g(e60['E2'])} / {g(e60['E3'])}  t_min {t[k0]:.1e} at {k0}  k_g {kg}  Re s {r['Re_s']:.1f}  "
+              f"growth E2 {g(e2g)}")
+    return out
+
+
+def long_growth(recs, coef):
+    """records with more than 160 orders (`run --kmax 300`): the growth past the onset, E2 of the max over fields and of
+    the p field's harmonic 1 in the windows of 40 orders ending at 160, 200, 240, 280 and 300, and the local ratio
+    t_k / t_(k-1) of the max over fields at those orders (a radius settles; a ratio growing with k is factorial)"""
+    out = []
+    for r in sorted((r for r in recs if r["delta"] == 0 and r["kmax"] > 160), key=lambda r: (r["D"], r["prec"])):
+        b = np.load(coef_path(coef, r))
+        t = np.abs(b).max(axis=(1, 2))
+        h1 = np.abs(harmonics(b, 0)[:, 1])
+        Ks = [K for K in (160, 200, 240, 280, 300) if K < len(t)]
+        rec = dict(D=r["D"], prec=r["prec"], Re_s=r["Re_s"],
+                   E2=[e2_root(t, K, r["u0"]) for K in Ks], E2_p1=[e2_root(h1, K, r["u0"]) for K in Ks],
+                   ratio=[float(t[K] / t[K - 1]) for K in Ks], K=Ks)
+        out.append(rec)
+        print(f"{r['D']:9.4f} {r['prec']} to order {len(t) - 1} (Re s {r['Re_s']:.1f}): "
+              + "; ".join(f"K {K}: E2 {e:.3f}, p harmonic 1 {e1:.3f}, t_K/t_K-1 {q:.2f}" for K, e, e1, q in
+                          zip(Ks, rec["E2"], rec["E2_p1"], rec["ratio"])))
+    return out
+
+
+def law(recs, coef, rmax=0.34):
+    """13.6's perturbation in quad-double: on the response db = b(delta) - b(0) (the series common to both removed), E2
+    of the a field and of the max over fields in the windows ending at 130 and 160, and E3 of the a field's lanes at
+    160; H(delta) / (delta G). A point is read when E2 (a field, window ending at 160) is below rmax: above it the
+    window sees the mass mode's hump (its terms fall as (k + n - 1) u0 / (k + 1), 0.83 per order at k 140, n 251,
+    read as 0.36). R = R0 + b ln(1/delta) on the read points (3 or more), C = b (n - 1), delta_max(0.3) =
+    exp(-(0.3 - R0) / b); 13.6's line (C = 0.88, R0 = -2.6 / (n - 1)) beside it."""
+    by = {}
+    for r in recs:
+        if r["delta"] > 0 and r["prec"] == "qd":
+            by.setdefault(r["state"], []).append(r)
+    if not by:
+        return []
+    print("13.6's law in quad-double, on db = b(delta) - b(0): per delta R (E2 of a at 160 / of the max over fields at 160 / "
+          "E3 of a at 160 with its lanes) and H(delta) / (delta G)")
+    out = []
+    for st, rs in sorted(by.items(), key=lambda kv: kv[1][0]["D"]):
+        r0 = [x for x in recs if x["state"] == st and x["delta"] == 0 and x["prec"] == "qd"]
+        if not r0:
+            continue
+        b0 = np.load(coef_path(coef, r0[0]))
+        pts = []
+        line = f"{rs[0]['D']:9.4f}:"
+        for r in sorted(rs, key=lambda r: -r["delta"]):
+            db = np.load(coef_path(coef, r)) - b0
+            e = estimate(db, r["u0"], windows=(130, 160))
+            Ra = e["a"]["160"]["E2"]
+            Rmax = e2_root(np.abs(db).max(axis=(1, 2)), 160, r["u0"])
+            ds = e["a"]["160"]
+            Hr = max(r["H"]["m"], r["H"]["a"]) / (r["delta"] * r["G"])
+            pts.append(dict(delta=r["delta"], R_a=Ra, R_max=Rmax, R_ds=ds["E3"], n_ds=ds["E3_n"], alpha_ds=ds["E3_alpha"],
+                            H_rel=Hr, read=bool(Ra is not None and Ra < rmax)))
+            g = lambda x: f"{x:.3f}" if x is not None else "-"  # noqa: E731
+            line += f" {r['delta']:.0e}: {g(Ra)}/{g(Rmax)}/{g(ds['E3'])}({ds['E3_n']}) H {Hr:.1e}{'' if pts[-1]['read'] else ' (not read)'};"
+        n = rs[0]["n"]
+        rd = [p for p in pts if p["read"]]
+        fit = {}
+        if len(rd) >= 3:
+            x = np.array([math.log(1 / p["delta"]) for p in rd])
+            y = np.array([p["R_a"] for p in rd])
+            bb, a0 = np.polyfit(x, y, 1)
+            fit = dict(R0=float(a0), b=float(bb), C=float(bb * (n - 1)), resid=float(np.max(np.abs(np.polyval([bb, a0], x) - y))),
+                       delta_max=float(math.exp(-(U0 - a0) / bb)), npts=len(rd))
+            line += (f"  fit on {len(rd)}: R0 {a0:+.4f} C {fit['C']:.3f} (worst residual {fit['resid']:.3f}), "
+                     f"delta_max(0.3) {fit['delta_max']:.1e}")
+        d136 = math.exp(-(U0 + 2.6 / (n - 1)) * (n - 1) / 0.88)
+        line += f"; 13.6's line: delta_max(0.3) {d136:.1e}"
+        print(line)
+        out.append(dict(state=st, D=rs[0]["D"], n=n, pts=pts, fit=fit, delta_max_136=d136))
+    return out
+
+
+def summary(ins, reseed, coef=""):
+    """the per-state table, the octo-double series' parts, 13.6's law per state and its delta_max(u0), and the re-seed
+    records beside them"""
     recs = [json.loads(line) for p in ins for line in open(p) if line.strip()]
     g = lambda x: f"{x:.3f}" if x is not None else "    -"  # noqa: E731
     print("on the solution (delta 0): per precision, the a field's E1/E2/E3 at K 100, 130, 160 and the p field's E2 at 160;"
@@ -510,24 +614,10 @@ def summary(ins, reseed):
         p = e["p"].get("160")
         line += f"p160 E2 {g(p['E2']) if p else '-'}  H {max(r['H']['m'], r['H']['a']):.1e}"
         print(line)
-    law = {}
-    for r in recs:
-        if r["delta"] > 0 and r["prec"] == "od":
-            law.setdefault(r["state"], []).append(r)
-    if law:
-        print("13.6's law in octo-double: R(delta) by E2 of the max over fields at K 160, R = R0 + b ln(1/delta), C = b (n - 1)")
-        for st, rs in sorted(law.items(), key=lambda kv: kv[1][0]["D"]):
-            pts = []
-            for r in sorted(rs, key=lambda r: -r["delta"]):
-                R = min(r["est"][f]["160"]["E2"] for f in FIELDS if r["est"][f].get("160") and r["est"][f]["160"]["E2"])
-                pts.append((r["delta"], R, max(r["H"]["m"], r["H"]["a"])))
-            x = np.array([math.log(1 / d) for d, _, _ in pts])
-            y = np.array([R for _, R, _ in pts])
-            bb, a0 = np.polyfit(x, y, 1)
-            n = rs[0]["n"]
-            dmax = math.exp(-(U0 - a0) / bb)
-            print(f"{rs[0]['D']:9.4f}: " + " ".join(f"{d:.0e}:{R:.3f}(H {h:.0e})" for d, R, h in pts)
-                  + f"  R0 {a0:+.4f} b {bb:.5f} C {bb * (n - 1):.3f}, delta_max(0.3) {dmax:.1e}")
+    if coef:
+        structure(recs, coef)
+        long_growth(recs, coef)
+        law(recs, coef)
     if reseed:
         print("re-seed records (#603): D, a, ok, the double-double u0 rung's |R|, the quad-double rung's its and |R|")
         for p in reseed:
