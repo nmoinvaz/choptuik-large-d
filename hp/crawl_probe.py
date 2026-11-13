@@ -10,6 +10,7 @@ point where it stops being affine. The rows that jump there are named by block, 
     python3 crawl_probe.py probe RAW ITER.npz --out DIR [--threads 2] [--lo 0.5] [--hi 1.0] [--rungs 6]
         [--tol_lam 1e-6] [--arms U,E] [--theta 1] [--theta_half 0] [--hint 1]
     python3 crawl_probe.py fixrun RAW ITER.npz --out DIR [--threads 2] [--switch 0] [--steps 6] [--tol 1e-60]
+    python3 crawl_probe.py offset RAW ITER.npz [--threads 2]
 
 `selftest` is the planted check (fixed before the first real run): a smooth map with a quadratic remainder along the
 exact Newton step, plus a jump of known rows switched on at a known lam_true along that step. Pass: lam* within 1e-6 of
@@ -44,6 +45,10 @@ to --tol) with ElimO's switch set to --switch: 0 projects every point the correc
 1e-15 is the corrector as it runs (the control, which must crawl: lam 1/2 at ratio 0.5000). It prints each trial and
 the final pinned octo-double max |F| of the converged point's projection and of the point itself, and Delta to 40
 digits.
+
+`offset` splits the saved step dz into the projection's displacement P(z) - z (the iterate's horizon data against those
+its last node asks for) and the step from the projected point, and prints each by block and field, with the
+displacement's m_h and a_h by harmonic and the unprojected residual's largest rows (one projection).
 """
 import json
 import os
@@ -574,9 +579,58 @@ def fixrun(argv):
     return 0 if conv else 1
 
 
+def unknown_blocks(v, M, K):
+    """max |v| per unknown group of the layout: centre data (p1, c0), node i's fields, m_h, a_h, Delta"""
+    v = np.asarray(v, dtype=float)
+    out = {"p1": float(np.abs(v[:M]).max()), "c0": float(np.abs(v[M:2 * M]).max())}
+    for i in range(K):
+        for f in range(4):
+            o = 2 * M + 4 * M * i + M * f
+            out[f"n{i}{FIELDS[f]}"] = float(np.abs(v[o:o + M]).max())
+    o = 2 * M + 4 * M * K
+    out["m_h"] = float(np.abs(v[o:o + M]).max())
+    out["a_h"] = float(np.abs(v[o + M:o + 2 * M]).max())
+    out["Delta"] = float(abs(v[-1]))
+    return out
+
+
+def offset(argv):
+    from multidouble import od_axpy
+    from octo_corrector import o8, omax
+    raw, it_path = argv[0], argv[1]
+    threads = _opt(argv, "threads", 2)
+    dd = np.load(it_path)
+    meta = json.loads(str(dd["meta"]))
+    z = o8(tuple(dd[f"z{q}"] for q in range(8)))
+    d = o8(tuple(dd[f"d{q}"] for q in range(8)))
+    t0 = time.time()
+    att = build_attempt(raw, meta["raw_base"], meta["a"], threads=threads, jet=meta.get("jet"), pred=meta.get("pred"))
+    M, K, so = att["M"], att["K"], att["so"]
+    el = make_elim(att)
+    el.switch = 0.0
+    zp = el.project(z)
+    disp = o8(od_axpy(-1.0, *z, *zp))
+    step = o8(od_axpy(-1.0, *disp, *d))
+    lead = lambda v: np.asarray(v[0]) + np.asarray(v[1])  # noqa: E731
+    print(f"offset: {it_path}, projection {el.counts}, {time.time() - t0:.0f} s", flush=True)
+    for name, v in (("dz", d), ("P(z) - z", disp), ("dz - (P(z) - z), the step from P(z)", step)):
+        ub = unknown_blocks(lead(v), M, K)
+        print(f"  {name}: max {max(ub.values()):.3e}; " + ", ".join(f"{k} {x:.2e}" for k, x in ub.items() if x > 0), flush=True)
+    o = 2 * M + 4 * M * K
+    for nm, sl in (("m_h", slice(o, o + M)), ("a_h", slice(o + M, o + 2 * M))):
+        ks_, amp = harmonics(lead(disp)[sl], M)
+        print(f"  P(z) - z in {nm} by harmonic: " + ", ".join(f"k {int(k)} {x:.2e}" for k, x in zip(ks_, amp)), flush=True)
+    Fz, Fpz = lead(so.residual_o(z)), lead(so.residual_o(zp))
+    for nm, F in (("F(z)", Fz), ("F(P(z))", Fpz)):
+        pb = per_block(F, M, K)
+        top = sorted(pb.items(), key=lambda kv: -kv[1])[:8]
+        print(f"  {nm}: max {omax((F, np.zeros_like(F))):.3e}; per block " + ", ".join(f"{k} {x:.2e}" for k, x in top), flush=True)
+    return 0
+
+
 if __name__ == "__main__":
     args = sys.argv[1:]
-    cmds = {"selftest": selftest, "iterate": iterate, "probe": probe, "fixrun": fixrun}
+    cmds = {"selftest": selftest, "iterate": iterate, "probe": probe, "fixrun": fixrun, "offset": offset}
     if not args or args[0] not in cmds:
         print(__doc__)
         sys.exit(2)
