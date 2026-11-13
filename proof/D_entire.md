@@ -404,6 +404,9 @@ order-1 and order-2 Borel transforms.
 
 `solver/inner_amp/pade_geometry.py` computes the [k/k] poles for k = 6–11 from σ₀–σ₂₂ (`scan45J1250`, 120 digits). It
 does the same for continuous plants matched to σ₀–σ₁₂ to the conventions of notes/PLANTED_SELECTION.md 2.2.
+The files give σ_k to 20 digits, coarser than their measured errors at k ≤ 8. That rounding moves the poles, R_k and
+the differential approximants' zeros by less than 10⁻⁵, and the twins' χ by less than 10⁻⁵ error units
+(notes/PADE_FAR_END.md §10).
 
 - **chord2** has its density on the chord P0 → κ⋆, so exactly two branch points.
 - **arcjump** has its density on the arc of 7.1 with steps, so branch points along the arc.
