@@ -3,7 +3,8 @@
 Status of everything here: numerical evidence. Nothing is rigorous. It bears on the type bounds of routes A3 and P5,
 which follow from the farthest singularity of the Borel transform (proof/D_entire.md sections 1 and 7). Sections 1–4
 are #547, sections 5–6 are #548, section 7 is #670, section 8 is #669, section 9 is #672, section 10 is #683,
-section 11 is #684, section 12 is #667, section 13 is #689, section 14 is #702, and section 15 is #703.
+section 11 is #684, section 12 is #667, section 13 is #689, section 14 is #702, section 15 is #703, and section 16
+is #718.
 
 - **#547.** A calibrated estimator recovers the far end of smooth-density plants within 0.009, but it fails #547's
   acceptance. On the real series two controls fire, so no far end is quoted (§4).
@@ -2106,3 +2107,70 @@ end does not account for it (#689), and the zero factor accounts for its size on
 +  5×10⁵ times less than the real series. With the zero held, the ratio-law far end lowers the real misfit 1.7 times,
 +  not 2.3–2.7 (notes/PADE_FAR_END.md §15).
 ```
+
+## 16. Where the second set near P0 + κ⋆ has to be (#718)
+
+§15's 35 plants that pass (a) and (c′) at all three nodes all have one segment shape, length 0.3 with near-end exponent
+4, and their end points Q are four of the nine points of #667's lattice, those 0.25 past P0 + κ⋆ in Re t or Im t. Here
+Q moves over a wider lattice around P0 + κ⋆, the segment's length and near-end exponent vary, and each plant is judged
+by §15's judge, unchanged. The question is whether the passing positions are pinned to one place.
+
+### 16.1 Method
+
+`solver/inner_amp/pade_second_ring.py`, on top of `pade_second_zero.py` (its `ZMain`, `zbasis`, `evaluate`, `judge`,
+`relocated` and `judge_reloc`, called unchanged).
+
+- **Plants.** §15's: pref (L_main + λ L₂) / S(0) with the zero factor at ZLOC, L_main the chord2 or arc density at κ⋆
+  with its c_m refitted to the real σ₀–σ₁₂ minus the second set's part. L₂ is the density s^P (1 − s)^α on the segment
+  of length L from Q − L Q/|Q| to Q, so Q is a branch point of exponent α and the near end a weak one of exponent P.
+- **Positions.** Q = P0 + κ⋆ + 0.25 (a + ib) at each node, with a = −1, …, 4 and b = −2, …, 4, which makes 42 lattice
+  positions. At ω∞ they span |Q| = 1.92–3.76 and arg Q = 14–52°, around P0 + κ⋆ = 2.028 + 1.236i (|Q| = 2.37,
+  arg 31°). #667's nine seg(a, b) are the points with |a|, |b| ≤ 1.
+- **Shapes.** Six groups (main density, L, P): (chord2, 0.3, 4) and (arc, 0.3, 4), §15's shape, and the chord2 main
+  with (0.15, 4), (0.6, 4), (0.3, 2) and (0.3, 6), each varied one at a time. In each, α = 0 or β − 1, and φ = 0°, 90°,
+  180° and 270°.
+- **Strengths, from the (c′) window.** On §15's grid, χ₂₂ / χ₂₂(real) in zk/chord is η times a constant g per curve
+  and α, the same to three digits over the four phases and both main densities (`I703-mac/grid.jsonl`). That is
+  because the main density lies in zk/chord's span, so only the second set misfits. Here g is measured per position,
+  shape and α on one chord2 plant at η = 10⁻², φ = 0°, at ω∞. The window of η where (c′) can pass is
+  [0.1/g, 10/g], cut to [10⁻⁶, 0.2]. Inside it η takes the log-midpoints of three equal bins, which put η g at about
+  0.22, 1 and 4.6 for an uncut window. If the window is empty, the set is too weak for (c′) at every η ≤ 0.2, or too
+  strong at every η ≥ 10⁻⁶, and η = 0.2 or 10⁻⁶ is run to show it. The same η is used at every node.
+- **Nodes.** Every plant runs at ω∞. Per position and group, the plants that pass (a) and (c′) there, smallest D first,
+  run at ω/ω∞ = 0.99 and then 1.01 until one passes at all three nodes. So each position's verdict is exact for the
+  plants of the grid, without running every plant at every node.
+- **(c″)**, judged apart, is evaluated at a node only for a plant that passes (a) there, since (a) + (c″) is the only
+  use of it here.
+
+### 16.2 Frozen criteria
+
+Written into the script's `FROZEN` and here before the `pilot` and `ring` stages were first run. Only the selftest ran
+before, and it judges no plant.
+
+| check | criterion |
+|---|---|
+| plant passes | (a) and (c′) at ω/ω∞ = 0.99, 1.00 and 1.01 |
+| position passes | for a group, if one of its plants passes; a position passes if it passes for some group |
+| **located** | a lattice position that passes, whose four lattice neighbours (a ± 1, b) and (a, b ± 1) lie in the lattice and pass for no group, and whose four diagonal points Q + 0.25 e^{i(2k+1)π/4}, k = 0–3, pass for no group. Each neighbour is 0.25 away |
+| stage 2 | the diagonal points run only around candidates, the passing lattice positions whose four lattice neighbours lie in the lattice and fail, with every group and the η and node rules above |
+| not bounded | if no position is located, the region is not bounded by this rule. The report gives the passing positions with \|Q\| and arg Q, and the lattice edges they touch, where the region stays open |
+| apart | the same verdict with (c″) in place of (c′), on the same plants. Their η is chosen for (c′), so this is context for (c″)'s region, not a scan of its window |
+| judge | §15's, unchanged: (a) m_DA ≤ 5, (b) d_P ≤ 0.03, (c′) M_min = 23 and 0.1 ≤ χ₂₂ / χ₂₂(real) ≤ 10 in zk/chord, (c″) by `relocated` and `judge_reloc`, evaluated only if control's R5 passes |
+| control | §15's control stage and its mutations are rerun first (`pade_second_zero.py control`, `--mutate=zero`, `bzero`, `judge`; the selftest and `--mutate=gn`; `far` and `far --mutate=farend`). J+ and J− must hold and each mutation must fire |
+| R6 | the pilot evaluates 12 of §15's plants through this path at ω∞: seg(+1, +1), seg(0, 0) and seg(−1, −1), chord2 and arc, α = 0 and β − 1, η = 10⁻¹, φ = 90°. Against `I703-mac/grid.jsonl`: m_DA, M_min and the judge's (a), (b), (c′) equal, d_P and χ₂₂ / χ₂₂(real) within 10⁻¹² relative, and (c″)'s ratio within 10⁻⁹ where both have it |
+| R7 | the selftest: the second set's exact moments against `mpmath.quad` for the four new shapes, α = 0 and β − 1, at a lattice point and a diagonal point, k = 0, 7, 15, 22, 31, within 10⁻⁴⁰ relative; the lattice curves with L = 0.3 equal `pade_second_set.second_curve`'s bit for bit for #667's nine seg; the diagonal points 0.25 from their centre to 10⁻⁵⁰; and the η rule on planted g = 7.79, 0.49 and 10⁸ gives a window with η g in [0.1, 10], the cap and the floor |
+| R8 | the premise of the η rule: every plant at ω∞ has \|χ₂₂ / χ₂₂(real) / (η g) − 1\| ≤ 10⁻², and every plant inside a window passes (c′) at ω∞. The pilot checks it on Q = P0 + κ⋆ + 0.25 (1 + i), (chord2, 0.3, 4), α = 0, φ = 0°, and the ring on all its plants |
+| J (pilot) | through this path: J+, the real series passes (a), (b) and (c′) at every node; J−, the η = 0 chord2 and arc plants at ω∞ fail the judge, with M_min = 6 in their own κ⋆ basis |
+| gate | the pilot runs only if control passes, and the ring only if the pilot passes |
+| mutations | `--selftest --mutate=secmom` (α + 10⁻¹⁰ in the exact moments) must fail R7's moments, `--mutate=len` (L × (1 + 10⁻⁶)) its curves, and `--mutate=window` (g × 100 in the η rule) its η rule. `pilot --mutate=len` must fail R6 and `pilot --mutate=window` must fail R8. Each exits 1 |
+| C1 | #672's amended C1 on every plant scan. A failure is listed, and the ring exits 1 |
+| context | per plant, `evaluate`'s record with the other 15 scans' χ₂₂ and M_min, and the relocation; per position, \|Q\|, arg Q, g and the windows; the verdict per group; (b) and d_P. Reported, not judged |
+
+Seen before the freeze, and disclosed.
+
+- A timing check evaluated one of §15's grid plants (chord2, seg(+1, +1), α = 0, η = 5×10⁻², φ = 90°) piece by piece,
+  without printing any statistic: DA2 takes 0.6 s, the Padé poles 0.4 s, a projection 0.01 s, a relocation 2 s.
+- The η rule rests on §15's published grid, where g is constant to three digits per curve and α. For example g = 7.79
+  at seg(+1, +1) with α = 0, 0.49 at seg(0, 0) and 0.0096 at seg(−1, −1), so seg(0, 0) reaches (c′) only at η ≥ 0.2.
+- #703's recommended task asked for (a) + (c″) and neighbours 0.25 away at the same modulus. #718 asks for (a) + (c′)
+  and neighbours 0.25 away in every direction, which is the rule here. (c″)'s verdict is reported apart.
