@@ -22,7 +22,7 @@ DOCS = {name: open(os.path.join(ROOT, name), encoding="utf-8").read()
                      "notes/PLANTED_SELECTION.md", "notes/PROOF_QUEUE.md", "proof/P5_scope.md",
                      "notes/QUAD_DOUBLE.md",
                      "notes/SOLVER_HP.md", "notes/LOW_D.md", "notes/INNER_STOKES.md", "notes/FORMULA_FORMS.md", "notes/LARGE_D_WALL.md",
-                     "notes/ECHO_ANALOGUES.md")}
+                     "notes/ECHO_ANALOGUES.md", "notes/REVIEW_GHMG25.md")}
 
 
 def quoted_in(doc, text):
@@ -171,6 +171,139 @@ def lowD_limits():
     if t105:
         out.append(("T105 Delta at 3.04375 (M %s)" % t105[-1][1], float(t105[-1][2]) + float(t105[-1][3]), 2.436459, 1e-6,
                     [("README.md", "the T105 leg, M = 384, Δ = 2.436459")]))
+    return out
+
+
+# The published gamma, Delta and wiggle periods below D = 14 (#620), as copied from the papers' arXiv sources: ref, D,
+# quantity, lower and upper end (equal unless a range), uncertainty. A frozen copy of hp/compare_gamma_published.py's
+# rows, which guards the CSV against later edits; that copy's fidelity to the papers is the producer's --verify.
+PUBLISHED_GAMMA = """
+GCD1999 6 gamma 0.424 0.424 none_stated; GCD1999 6 gamma_mass 1.27 1.27 none_stated
+GCD1999 6 Delta 3.03 3.03 none_stated; Birukou2002 4 gamma 0.36 0.36 none_stated
+Birukou2002 4 gamma 0.35 0.35 none_stated; Birukou2002 5 gamma 0.41 0.41 none_stated
+Birukou2002 5 gamma 0.52 0.52 none_stated; Birukou2002 5 gamma 0.49 0.49 none_stated
+Birukou2002 6 gamma 0.44 0.44 none_stated; Birukou2002 6 gamma 0.41 0.41 none_stated
+Husain2003 4 gamma 0.370 0.375 range; Husain2003 4 gamma 0.37 0.38 range; Husain2003 4 gamma 0.37 0.39 range
+Husain2003 4 gamma 0.36 0.38 range; Husain2003 4 gamma 0.37 0.38 range; Husain2003 4 gamma 0.36 0.38 range
+Husain2003 4 gamma 0.37 0.40 range; Husain2003 4 gamma 0.3738 0.3738 none_stated
+Husain2003 4 Delta 3.5 3.5 none_stated; SO2005 4 Delta 3.37 3.37 2%; SO2005 4 gamma 0.372 0.372 1%
+SO2005 5 Delta 3.19 3.19 2%; SO2005 5 gamma 0.408 0.408 2%; SO2005 5 Delta_half 1.6 1.6 none_stated
+SO2005 6 Delta 3.01 3.01 2%; SO2005 6 gamma 0.422 0.422 2%; SO2005 7 Delta 2.83 2.83 2%
+SO2005 7 gamma 0.429 0.429 2%; SO2005 7 Delta_half 1.41 1.41 none_stated; SO2005 8 Delta 2.70 2.70 3%
+SO2005 8 gamma 0.436 0.436 2%; SO2005 9 Delta 2.61 2.61 3%; SO2005 9 gamma 0.442 0.442 2%
+SO2005 10 Delta 2.55 2.55 3%; SO2005 10 gamma 0.447 0.447 3%; SO2005 11 Delta 2.51 2.51 3%
+SO2005 11 gamma 0.44 0.44 3%; Bland2005 3.5 gamma 0.349 0.349 +-0.003; Bland2005 4 gamma 0.374 0.374 +-0.002
+Bland2005 4 Delta 3.40 3.40 +-0.1; Bland2005 5 gamma 0.412 0.412 +-0.004; Bland2005 5 Delta 3.10 3.10 +-0.1
+Bland2005 6 gamma 0.430 0.430 +-0.003; Bland2005 6 Delta 2.98 2.98 +-0.1; Bland2005 7 gamma 0.441 0.441 +-0.004
+Bland2005 7 Delta 2.96 2.96 +-0.1; Bland2005 8 gamma 0.446 0.446 +-0.004; Bland2005 8 Delta 2.77 2.77 +-0.1
+Bland2005 9 gamma 0.453 0.453 +-0.003; Bland2005 9 Delta 2.63 2.63 +-0.1; Bland2005 10 gamma 0.456 0.456 +-0.004
+Bland2005 10 Delta 2.50 2.50 +-0.1; Bland2005 11 gamma 0.459 0.459 +-0.004; Bland2005 11 Delta 2.46 2.46 +-0.1
+Bland2005 12 gamma 0.462 0.462 +-0.005; Bland2005 12 Delta 2.44 2.44 +-0.1; Bland2005 13 gamma 0.463 0.463 +-0.004
+Bland2005 13 Delta 2.40 2.40 +-0.1; Bland2005 14 gamma 0.465 0.465 +-0.004; BK2007 5 gamma 0.4131 0.4131 +-0.0001
+BK2007 5 Delta 3.225 3.225 +-0.003; BK2007 5 gamma 0.4130 0.4130 +-0.0001; BK2007 5 Delta 3.2264 3.2264 +-0.0005
+BK2007 5 gamma 0.4130 0.4130 +-0.0001; BK2007 5 Delta 3.2230 3.2230 +-0.0006; BK2007 5 gamma 0.4131 0.4131 +-0.0001
+BK2007 5 Delta 3.2223 3.2223 +-0.0006; BK2007 5 gamma 0.4131 0.4131 +-0.0001; BK2007 5 Delta 3.2264 3.2264 +-0.0004
+BK2007 5 gamma 0.4131 0.4131 +-0.0001; BK2007 5 Delta 3.2246 3.2246 +-0.0005; BK2007 5 gamma 0.4131 0.4131 +-0.0003
+BK2007 5 gamma 0.4133 0.4133 +-0.0004; TK2011 4 gamma 0.378 0.378 +-0.002; TK2011 4 T 4.4 4.4 +-0.3
+TK2011 4 gamma 0.379 0.379 +-0.002; TK2011 4 T 4.4 4.4 +-0.2; TK2011 5 gamma 0.413 0.413 +-0.002
+TK2011 5 T 3.9 3.9 +-0.8; TK2011 5 gamma 0.416 0.416 +-0.002; TK2011 5 T 3.7 3.7 +-0.4
+TK2011 6 gamma 0.429 0.429 +-0.003; TK2011 6 T 3.4 3.4 +-0.3; TK2011 6 gamma 0.428 0.428 +-0.002
+TK2011 6 T 3.3 3.3 +-0.2; TK2011 7 gamma 0.440 0.440 +-0.005; TK2011 7 T 3.1 3.1 +-0.1
+TK2011 7 gamma 0.440 0.440 +-0.006; TK2011 7 T 3.1 3.1 +-0.4; TK2011 8 gamma 0.44 0.44 +-0.02
+TK2011 8 T 3.0 3.0 +-0.1; PVG2022 5 gamma 0.415 0.415 none_stated; PVG2022 5 Delta_half 1.6 1.6 none_stated
+PVG2022 5 gamma 0.413 0.413 none_stated; PVG2022 5 gamma 0.4131 0.4131 none_stated
+PVG2022 5 T_log10 1.7 1.7 none_stated; PVG2022 5 gamma 0.41 0.41 none_stated
+"""
+
+PUBLISHED_GAMMA_NOTE = {   # notes/REVIEW_GHMG25.md section 8: values, within their uncertainty, largest |diff| and its unit
+    "GCD1999": ("| Garfinkle, Cutler & Duncan 1999 | 3 | 0 | 2.05×10⁻² (Δ(6)) |", 3, 0, 2.05e-2, 1e-4),
+    "Birukou2002": ("| Birukou et al. 2002 | 7 | 1 | 1.07×10⁻¹ (γ(5), Gaussian data) |", 7, 1, 1.07e-1, 1e-3),
+    "Husain2003": ("| Husain et al. 2003 | 9 | 7 | 5.45×10⁻² (Δ(4), Λ = −5, \"a rough estimate\") |", 9, 7, 5.45e-2, 1e-4),
+    "SO2005": ("| Sorkin & Oren 2005 | 18 | 12 | 7.55×10⁻² (Δ(4)) |", 18, 12, 7.55e-2, 1e-4),
+    "Bland2005": ("| Bland et al. 2005 | 22 | 19 | 1.22×10⁻¹ (Δ(5)) |", 22, 19, 1.22e-1, 1e-3),
+    "BK2007": ("| Bland & Kunstatter 2007 | 14 | 7 | 4.70×10⁻³ (Δ(5), N = 512 and 1536) |", 14, 7, 4.70e-3, 1e-5),
+    "TK2011": ("| Taves & Kunstatter 2011 | 18 | 12 | 2.07×10⁻¹ (T(4)) |", 18, 12, 2.07e-1, 1e-3),
+    "PVG2022": ("| Porto Veronese & Gundlach 2022 | 6 | 5 | 1.09×10⁻² (Δ_Ψ(5)) |", 6, 5, 1.09e-2, 1e-4),
+}
+
+
+@check
+def published_gamma():
+    """notes/REVIEW_GHMG25.md, section 8 and D1, D8 and row 13: hp/data/gamma_published_compare.csv
+    (hp/compare_gamma_published.py). Every published value and stated uncertainty against PUBLISHED_GAMMA, to one unit of
+    its last printed digit; our value against the data files; diff and within recomputed; the counts the note quotes."""
+    import csv
+    num = lambda s: float(s.strip("+-%")) if re.fullmatch(r"[+-]*[0-9.]+%?", s.strip()) else float("nan")  # noqa: E731
+    unit = lambda s: 10.0 ** -len(s.strip("+-%").partition(".")[2])  # noqa: E731
+    want, seen = {}, {}
+    for e in (e.split() for e in PUBLISHED_GAMMA.replace("\n", ";").split(";") if e.strip()):
+        k = (e[0], float(e[1]), e[2])
+        want[k + (seen.get(k, 0),)] = e[3:]
+        seen[k] = seen.get(k, 0) + 1
+    # ours, read here from the data files and not through the producer
+    gam = {}
+    for r in csv.DictReader(l for l in open(os.path.join(ROOT, "hp/data/delta_dd_lowD.csv")) if not l.startswith("#")):
+        if r["gamma"]:
+            gam.setdefault(float(r["D"]), {})[int(r["M"])] = float(r["gamma"])
+    gam = {D: byM[max(byM)] for D, byM in gam.items()}
+    for fn in ("hp/data/gamma_dd.jsonl", "hp/data/local/gamma_dd.jsonl"):
+        for l in open(os.path.join(ROOT, fn)):
+            j = json.loads(l)
+            if "gamma" in j:
+                gam.setdefault(j["D"], j["gamma"])
+    dl = {float(r["D"]): sum(float(r[f"Delta_q{i}"] or 0) for i in range(4))
+          for r in csv.DictReader(open(os.path.join(ROOT, "hp/data/delta_all.csv")))}
+    f = {"gamma": lambda D: gam[D], "gamma_mass": lambda D: (D - 3) * gam[D], "Delta": lambda D: dl[D],
+         "Delta_half": lambda D: dl[D] / 2, "T": lambda D: dl[D] / (2 * gam[D]),
+         "T_log10": lambda D: dl[D] / (2 * math.log(10) * gam[D])}
+    rows = list(csv.DictReader(open(os.path.join(ROOT, "hp/data/gamma_published_compare.csv"))))
+    out, seen, bad_ours, bad_diff, bad_within, by_ref, diffs = [], {}, 0, 0, 0, {}, {}
+    for r in rows:
+        k = (r["published_ref"], float(r["D"]), r["quantity"])
+        n = seen.get(k, 0)
+        seen[k] = n + 1
+        lo, hi, unc = want.get(k + (n,), ("nan", "nan", "none_stated"))
+        lab = f"{k[0]} {k[2]}({r['D']}) #{n + 1}"
+        out.append((lab, num(r["published_lo"]), num(lo), unit(lo), []))
+        if hi != lo:
+            out.append((lab + " upper end", num(r["published_hi"]), num(hi), unit(hi), []))
+        if unc not in ("none_stated", "range"):
+            out.append((lab + " uncertainty", num(r["published_unc"]), num(unc), unit(unc), []))
+        v = (num(lo) + num(hi)) / 2
+        ua = ((num(hi) - num(lo)) / 2 if unc == "range" else 0.5 * unit(lo) if unc == "none_stated" else
+              num(unc) / 100 * v if unc.endswith("%") else num(unc))
+        ours = float(r["ours"])
+        bad_ours += not abs(ours - f[k[2]](k[1])) <= 1e-10
+        d = ours - v
+        bad_diff += not abs(float(r["diff"]) - d) <= 0.5 * 10 ** (math.floor(math.log10(abs(d))) - 2) * (1 + 1e-6)
+        bad_within += (r["within"] == "yes") != (abs(d) <= ua * (1 + 1e-9))
+        c = by_ref.setdefault(k[0], [0, 0, 0.0])
+        c[0] += 1
+        c[1] += abs(d) <= ua * (1 + 1e-9)
+        c[2] = max(c[2], abs(d))
+        diffs.setdefault(k, []).append(d)
+    out += [("rows of the CSV", len(rows), 97, 1, [("notes/REVIEW_GHMG25.md", "(97 values)")]),
+            ("entries of PUBLISHED_GAMMA", len(want), 97, 1, []),
+            ("rows whose ours differs from the data files by more than 1e-10", bad_ours, 0, 1, []),
+            ("rows whose diff is not ours minus the published value", bad_diff, 0, 1, []),
+            ("rows whose within is not |diff| <= the uncertainty", bad_within, 0, 1, [])]
+    note = "notes/REVIEW_GHMG25.md"
+    for ref, (text, n, k, m, u) in PUBLISHED_GAMMA_NOTE.items():
+        c = by_ref.get(ref, [0, 0, float("nan")])
+        out += [(f"{ref} values", c[0], n, 1, [(note, text)]), (f"{ref} within", c[1], k, 1, [(note, text)]),
+                (f"{ref} largest |diff|", c[2], m, u, [(note, text)])]
+    g6 = diffs[("GCD1999", 6.0, "gamma")][0]
+    bland = max(abs(d) for (ref, D, q), ds in diffs.items() if ref == "Bland2005" and q == "gamma" and D >= 4 for d in ds)
+    out += [("D1: gamma(6) above 0.424", g6, 0.0061, 1e-4, [(note, "0.0061 (1.4%) higher")]),
+            ("D1: the same, percent", 100 * g6 / 0.424, 1.4, 0.1, [(note, "0.0061 (1.4%) higher")]),
+            ("D8: Bland-Kunstatter Delta(5) above ours", -diffs[("BK2007", 5.0, "Delta")][0], 3.3e-3, 1e-4,
+             [(note, "(hep-th/0702226v1, Eq. (3)) is 3.3×10⁻³ above")]),
+            ("row 13: our Delta(5)/2", f["Delta_half"](5.0), 1.611, 1e-3, [(note, "our Δ(5)/2 = 1.611")]),
+            ("row 13: our residual period Delta/(2 ln(10) gamma) at D 5", f["T_log10"](5.0), 1.6934, 1e-4,
+             [(note, "gives Δ_res = Δ/(2 ln(10) γ) = 1.6934")]),
+            ("Bland et al. gamma at D 4-14, largest |diff|", bland, 1.31e-3, 1e-5, [(note, "by at most 1.31×10⁻³ (D = 9)")]),
+            ("Bland et al. gamma(3.5) above ours", -diffs[("Bland2005", 3.5, "gamma")][0], 0.0266, 1e-4,
+             [(note, "is 0.0266 above our 0.3223856 (M = 96)")])]
     return out
 
 
