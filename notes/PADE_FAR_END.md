@@ -475,3 +475,89 @@ In 7.4, after the bullet "Twenty-three coefficients cannot separate a chord from
 +  A twin of fixed size reproduces the extra orders, so σ₂₃–σ₂₄ (#549) cannot separate a chord from an arc without a
 +  prior on the density.
 ```
+
+## 8. Twins both ways, twins of the real series, and the smallest twin by size (#669)
+
+`solver/inner_amp/pade_twin_size.py`. #548 and #670 showed that a chord twin reproduces the arc plant. Here the twin
+runs the other way and on the real σ₀–σ₂₂ (part 1). Then the twin is minimised by its size rather than by its number
+of terms (part 2), to test whether a prior on the density's size could separate a chord from an arc.
+
+### 8.1 Method
+
+- **Twin classes.** Each twin is the planted zero factor times a Laplace integral with density
+  w(s) (1 − s)^ex Σ_{m<M} c_m T_m(2s − 1) along a path, with ex = β − 1 as in the plants.
+  - *chord*: the chord P0 → κ⋆, w = 1. Exactly two branch points, the class of chord2.
+  - *arc*: the cubic arc of §2.2, with arcjump's step weights w = 1, 2, 1, 2 on the quarters of s. Each step is a log
+    branch point on the arc, so this is the class of arcjump.
+  - *smooth*, context: the same arc with w = 1, the class of the plant arc. Its density continues off the arc, so it
+    has two branch points only.
+- **Exact moments.** On the arc, γ^k γ′ T_m(2s − 1) is a polynomial in u = 1 − s, and ∫ u^(ex+j) du is elementary on
+  each piece, so the arc moments are exact at the working precision. The chord moments are the Beta-function moments of
+  §7.1. Neither basis shares the plants' tanh-sinh quadrature.
+- **Part 1, the twin scan.** As §7.1: the least-squares twin with weights 1/err_k, χ = max_k |Δσ_k|/err_k, M_min the
+  smallest M with χ ≤ 1 (an upper bound on the smallest twin), M_lo the smallest M with l2 ≤ √n (a lower bound). The
+  errors are the measured ones, err_k = rel_k |σ_k| (§2.3, floor 10⁻³⁰), at n = 23. The fit is at 150 digits and
+  checked at 250.
+- **Part 2, the size.** The size of a chord twin is N = ‖c‖₂ = (Σ_m |c_m|²)^{1/2}, the norm of its Chebyshev
+  coefficients, with M = 40 terms. This measure was chosen before the runs; the peak density is reported as context.
+  - With A the twin's columns and b the target, rows weighted by 1/err_k, the residual is ρ = Ac − b. For M ≥ n the
+    least-norm c with residual ρ is A^H (AA^H)^{−1} (b + ρ). So the smallest twin with χ ≤ 1 solves
+    N² = min (b + ρ)^H (AA^H)^{−1} (b + ρ) over the polydisc |ρ_k| ≤ 1. That is a convex quadratic problem in n complex
+    unknowns.
+  - It is solved by a log-barrier Newton method (Boyd and Vandenberghe 2004, ch. 11), at 150 digits. N_hi is the norm
+    of an explicit twin, whose χ is recomputed from its coefficients at 250 digits. N_lo is the square root of the
+    Lagrange dual at the barrier's multipliers, which bounds the minimum from below for any multipliers. So the
+    smallest twin by size lies in [N_lo, N_hi].
+  - The errors are #670's model: measured for k ≤ 22, extrapolated beyond (§7.1), F = 1. The targets are chord2,
+    arcjump and arc, at n = 23 and 31, at every node.
+  - Context: the ridge route the issue suggested (Hoerl and Kennard 1970), c(λ) minimising ‖Ac − b‖² + λ‖c‖², whose
+    smallest ‖c‖ with χ ≤ 1 on the path is an upper bound; N at M = 50 at ω/ω∞ = 1.00; the peak density and the
+    largest |c_m| of each smallest twin.
+
+References: S. Boyd and L. Vandenberghe, *Convex Optimization* (Cambridge University Press, 2004), ch. 11 (barrier
+method) and ch. 5 (duality); A. E. Hoerl and R. W. Kennard, Technometrics 12, 55 (1970),
+doi:10.1080/00401706.1970.10488634 (ridge regression). Both were checked against a publisher record or the book's
+contents through a web search, not against the full text.
+
+### 8.2 Frozen criteria
+
+Written into the script's `FROZEN` dict, and here, before the `twins`, `size`, `twins_real` and `size_real` stages were
+first run.
+
+| check | criterion |
+|---|---|
+| C0 same class | at n = 23, M = 6 and every node: chord2 in the chord basis, arcjump in the arc basis and the plant arc in the smooth basis each have χ ≤ 10⁻³⁰ |
+| C1 precision | at M_min − 1 and M_min of every scan, χ at 250 digits agrees with 150 digits within 10⁻³ relative |
+| C2 reproduction | the chord twin of arcjump has M_min = 19 at every node (#670); a failure is reported as a discrepancy |
+| both ways | the arc twin of chord2 counts as a twin, not an interpolant, if M_min ≤ n − 1 = 22; M_min and the gap n − M_min are reported per node |
+| twin mutations | `--mutate=arccol` (the arc basis' column m = 0 at order 20 times 1 + 10⁻⁸) must make C0 fail for the arc basis at every node, and `--mutate=chordcol` for the chord basis; each run exits 1 |
+| twins_real | only if C0 and C1 pass on the plants. Per node, M_min and M_lo of the chord, arc and smooth twins of the real σ₀–σ₂₂ (J 1250). If C1 fires on real data, the work stops. A class counts as preferred by term count only if its M_min is smaller by at least 3 at every node; J 1500 at ω/ω∞ = 1.00 is context |
+| S_gap | N_hi/N_lo − 1 ≤ 10⁻⁴ for every target, n and node |
+| S_valid | the explicit twin's χ recomputed at 250 digits with the 250-digit basis is at most 1 + 10⁻⁶, and N_lo recomputed at 250 digits with the same multipliers agrees within 10⁻⁶ relative |
+| S0 calibration | chord2's smallest twin lies within 10% of chord2's own size N_own (its own 6 coefficients): N_lo ≥ 0.9 N_own and N_hi ≤ 1.1 N_own, at n = 23 and 31 and every node |
+| size mutation | `--mutate=scale` (chord2's σ_k × 1.25 with its errors kept) must make S0 fail at every n and node; the run exits 1 |
+| separation | at n = 31: ρ_hi = N_hi(arcjump)/N_lo(chord2) and ρ_lo = N_lo(arcjump)/N_hi(chord2). If ρ_hi ≤ 3 at every node, no size prior separates them, and that is the answer. If ρ_lo > 3 at every node, a size prior of factor 3 separates them. Otherwise the verdict is mixed. n = 23 is reported the same way |
+| size_real | only if S_gap, S_valid and S0 pass and ρ_lo > 3 at every node at n = 23: the real series' smallest chord twin at n = 23, with ρ_real = N(real)/N(chord2) per node read against 3. Otherwise there is no real size run |
+| context | the ridge route, N at M = 50, the peak density and largest \|c_m\| of each smallest twin, and the plant arc's N, reported and not judged |
+
+The selftest (`python3 pade_twin_size.py --selftest`) checks four things. Its mutations `upoly` (dγ/ds × (1 + 10⁻¹⁰)
+in the u-polynomial) and `radius` (the solver's polydisc radius 1.05) each make it fail.
+
+1. The u-polynomial moments on the chord agree with the Beta moments of §7.1 to 5×10⁻¹⁰⁰ for m < 50, k < 31
+   (`upoly` gives 10⁻¹⁰).
+2. The exact stepped-arc moments agree with the plant's tanh-sinh moments to 1.5×10⁻⁵⁸ for m, k < 23 (`upoly` gives
+   3×10⁻¹⁰).
+3. On a planted polydisc problem with a closed-form answer, Q⋆ = 5.5625, and AA^H's eigenvalues spread over
+   10⁻⁴⁰–10⁴⁰, the barrier and the dual both return Q⋆ to 1.4×10⁻¹¹, and the twin has χ ≤ 1 (`radius` gives 4.84).
+4. A planted 8-term chord density (c_m = 0.8^m e^{im}, #670's) has a smallest twin no larger than itself, with the
+   bracket closed to 5×10⁻¹² and χ ≤ 1 at 250 digits.
+
+Seen before the freeze, and disclosed. These are development runs on the planted chord densities of #670 only, not on
+the plants judged here, at ω/ω∞ = 1.00.
+
+- The 8- and 12-term densities' smallest twins are 0.962–0.966 times their own norms, at n = 23 and 31 and M = n, 40,
+  50 and 60, with 11–12 of the n constraints active.
+- M = 40 and M = 60 agree to 1×10⁻⁵, which fixed M = 40.
+- With the radius 1.05 instead of 1 (the selftest's mutation), the 8-term density's smallest twin shrinks by only
+  3×10⁻⁵. So the size reflects what the data determine, not the error level.
+- The ridge route came within 3×10⁻⁴ of the exact minimum.

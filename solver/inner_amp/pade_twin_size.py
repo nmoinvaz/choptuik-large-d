@@ -26,8 +26,8 @@ the norm of its Chebyshev coefficients, at M_SIZE terms. With A the n x M matrix
 rows weighted by 1/err_k, and rho = A c - b, the least-norm c with residual rho is A^H (A A^H)^(-1) (b + rho) when
 M >= n. So the smallest twin solves
     N^2 = min over the polydisc |rho_k| <= 1 of (b + rho)^H (A A^H)^(-1) (b + rho),
-a convex quadratic problem in n complex unknowns, solved by a log-barrier Newton method (Fiacco and McCormick 1968;
-Boyd and Vandenberghe 2004, Convex Optimization, ch. 11). N_hi is the norm of an explicit twin whose chi is recomputed
+a convex quadratic problem in n complex unknowns, solved by a log-barrier Newton method (Boyd and Vandenberghe 2004,
+Convex Optimization, Cambridge University Press, ch. 11). N_hi is the norm of an explicit twin whose chi is recomputed
 from c. N_lo = g(mu)^(1/2), the Lagrange dual at the barrier's multipliers, a lower bound for every mu >= 0 (weak
 duality, ibid. ch. 5). Context: the ridge route (Hoerl and Kennard 1970, Technometrics 12, 55), c(lambda) minimising
 ||A c - b||^2 + lambda ||c||^2, whose smallest ||c|| with chi <= 1 is an upper bound; and the peak density and largest
@@ -507,10 +507,17 @@ def run_twins(outdir, mut=None):
             ok &= good
             rec["controls"].setdefault(wf, {})[cls] = {**r, "pass": good}
             log(f"wf {wf}: C0 {cls} basis, {kind} at M 6: chi {r['chi']:.1e} {'OK' if good else 'BAD'}")
+        if mut:                     # a mutation run judges C0 only
+            continue
         for cls, kind in (("arc", "chord2"), ("smooth", "chord2"), ("chord", "arcjump")):
             s = scan(fit[cls], chk[cls], sig[kind], rel, N23, log, f"wf {wf} {cls} twin of {kind}")
             ok &= s["C1_pass"]
             rec["scans"].setdefault(wf, {})[f"{cls}_of_{kind}"] = s
+    if mut:
+        rec["controls_pass"] = ok
+        log(f"controls C0 pass: {ok}")
+        log.dump(rec)
+        return ok
     c2r = {wf: rec["scans"][wf]["chord_of_arcjump"]["M_min"] for wf in pg.NODES}
     both = {wf: rec["scans"][wf]["arc_of_chord2"]["M_min"] for wf in pg.NODES}
     rec["C2_reproduce"] = {"M_min": c2r, "pass": all(v == 19 for v in c2r.values())}
@@ -588,7 +595,7 @@ def run_size(outdir, mut=None):
                                              "density_max": density_peak(own_c, fit.ex, fit.pieces)}
             log(f"wf {wf} n {n}: chord2's own twin (M 6): N_own {n_own:.6e}, chi {own_chi:.1e}, max|c| "
                 f"{node['own'][n]['c_max']:.2f}, peak density {node['own'][n]['density_max']:.3f}")
-            for kind in ("chord2", "arcjump", "arc"):
+            for kind in ("chord2",) if mut else ("chord2", "arcjump", "arc"):     # a mutation run judges S0 only
                 sig = pl[kind][1][:n]
                 err = tc.weights(sig, rel, n, 1.0, DPS_FIT)
                 errc = tc.weights(sig, rel, n, 1.0, DPS_CHECK)
@@ -596,6 +603,9 @@ def run_size(outdir, mut=None):
                     sig = [z * mp.mpf("1.25") for z in sig]
                 log(f"  wf {wf} n {n} {kind}:")
                 out, _ = smallest_twin(fit, chk, sig, err, errc, n, M_SIZE, log=log)
+                node.setdefault("twins", {}).setdefault(kind, {})[n] = out
+                if mut:
+                    continue
                 out["ridge"] = ridge_route(fit, sig, err, n, M_SIZE)
                 rg = out["ridge"]
                 log(f"    ridge route (context): smallest ||c|| with chi <= 1 on the path "
@@ -608,7 +618,6 @@ def run_size(outdir, mut=None):
                     out["M50"]["rel_change"] = cv["N_hi"] / out["N_hi"] - 1
                     log(f"    M {M_CONV} (context): N_hi {cv['N_hi']:.6e}, {out['M50']['rel_change']:+.2e} relative "
                         f"to M {M_SIZE}")
-                node.setdefault("twins", {}).setdefault(kind, {})[n] = out
     # verdicts
     v = {"S_gap": True, "S_valid": True, "S0": {}, "separation": {}}
     for wf, node in rec["nodes"].items():
@@ -619,18 +628,23 @@ def run_size(outdir, mut=None):
     for n in NS_SIZE:
         s0, sep = {}, {}
         for wf, node in rec["nodes"].items():
-            c2, aj, own = node["twins"]["chord2"][n], node["twins"]["arcjump"][n], node["own"][n]["N_own"]
+            c2, own = node["twins"]["chord2"][n], node["own"][n]["N_own"]
             s0[wf] = {"lo_ratio": c2["N_lo"] / own, "hi_ratio": c2["N_hi"] / own,
                       "pass": c2["N_lo"] >= 0.9 * own and c2["N_hi"] <= 1.1 * own}
+            if mut:
+                continue
+            aj = node["twins"]["arcjump"][n]
             sep[wf] = {"rho_hi": aj["N_hi"] / c2["N_lo"], "rho_lo": aj["N_lo"] / c2["N_hi"],
                        "arc_over_chord2": node["twins"]["arc"][n]["N_hi"] / c2["N_hi"]}
-        hi_ok = all(x["rho_hi"] <= 3 for x in sep.values())
-        lo_ok = all(x["rho_lo"] > 3 for x in sep.values())
         v["S0"][n] = {"nodes": s0, "pass": all(x["pass"] for x in s0.values())}
-        v["separation"][n] = {"nodes": sep, "verdict": "no size prior separates" if hi_ok else
-                              ("a size prior of factor 3 separates" if lo_ok else "mixed")}
         log(f"n {n}: S0 " + "; ".join(f"wf {wf} N/N_own {x['lo_ratio']:.4f}..{x['hi_ratio']:.4f} "
                                       f"{'OK' if x['pass'] else 'BAD'}" for wf, x in s0.items()))
+        if mut:
+            continue
+        hi_ok = all(x["rho_hi"] <= 3 for x in sep.values())
+        lo_ok = all(x["rho_lo"] > 3 for x in sep.values())
+        v["separation"][n] = {"nodes": sep, "verdict": "no size prior separates" if hi_ok else
+                              ("a size prior of factor 3 separates" if lo_ok else "mixed")}
         log(f"n {n}: separation " + "; ".join(f"wf {wf} rho {x['rho_lo']:.3f}..{x['rho_hi']:.3f}, arc/chord2 "
                                               f"{x['arc_over_chord2']:.3f}" for wf, x in sep.items())
             + f" -> {v['separation'][n]['verdict']}")
