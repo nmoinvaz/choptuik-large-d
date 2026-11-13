@@ -14,7 +14,8 @@ naked-singularity sections as a map for other fields) is not covered here.
   rendering, matched to their tags.
 - **Text addressed to an AI agent.** None was found in the source.
 - **Primary sources.** A statement credited to a cited paper was read only as the review states it, unless the row says
-  otherwise. The abstracts of eight cited papers were read, to verify the entries of §5.
+  otherwise. The abstracts of eight cited papers were read, to verify the entries of §5. Rows 7–13 were then read in
+  the cited papers themselves (#620, §8).
 
 ## Verdict
 
@@ -68,13 +69,13 @@ same quantity, precision or reading), **differs** (a discrepancy, §3). Our stat
 | 4 | "Any self-similar solution admits an unstable perturbation with λ = 1 that corresponds to an infinitesimal time shift of the background solution, and so is unphysical." | II C | — | λ = 1 is not a zero of our det M: the light cone is pinned to x = 1, and the residual gauge zero sits at λ_g instead. λ = 1 is a zero of the CSS counts and an exact mode of the inner problem | notes/MODE_COUNT.md §1; matter/COMPLEX_CRITICAL.md §2; PROOF.md §2 | consistent |
 | 5 | A critical solution has "exactly one λᵢ with positive real part (in fact it is purely real)"; a mode ansatz finds "a single unstable mode"; all non-spherical modes decay | II A, II C, V A 1 | Martín-García & Gundlach 1999 (non-spherical) | one physical unstable spherical mode, real, at D = 4 (complex λ, M = 48), 8.25, 16.76, 30.07, 45.05, 61.03 (numerical evidence; M = 48 extras at D ≥ 54 open). Non-spherical perturbations: not computed, listed as open | notes/MODE_COUNT.md; README, Limits and open problems | agree at D = 4 (spherical); citation to add for the non-spherical case |
 | 6 | "a similar count was carried out for the spectrum of (spherical and non-spherical) linear perturbations of the fluid collapse critical solutions, using numerical contour integration in the complex plane of potential mode frequencies" | VI E | Gundlach 1998 | notes/LIT_REVIEW.md (addendum #200, Q3) says the argument-principle count of det M(λ) "has no counterpart in the sources read". Gundlach 1998, read by #619, evolves generic data in τ and reads off the dominant mode, with no contour integral. The determinant counts are Hirschmann–Eardley 1995 and Gundlach 1997, for scalar fields, and they contradict our sentence | notes/LIT_REVIEW.md, addenda #200 and #619 | differs (D6: the review against its source; our sentence against two earlier papers) |
-| 7 | "γ = 0.4131 ± 0.0001" at D = 5 | IV A 2 | Bland & Kunstatter 2007 | γ(5) = 0.413126936 (double-double, M = 48) | README, Values | agree |
+| 7 | "γ = 0.4131 ± 0.0001" at D = 5 | IV A 2 | Bland & Kunstatter 2007 | γ(5) = 0.413126936 (double-double, M = 48), 2.7×10⁻⁵ above theirs. Their Δ = 3.225 ± 0.003, which the review does not quote, is 3.3×10⁻³ above our 3.2217019446 (D8) | README, Values; §8 | agree (read in the paper, #620) |
 | 8 | the holographic prediction "γ = 0.409552" at D = 5, which motivated #7 | IV A 2 | Álvarez-Gaumé et al. 2007 | 0.413126936, 3.6×10⁻³ above the prediction, which #7 already excludes | README, Values | agree (with #7) |
-| 9 | D = 6: "mass scaling with γ ≃ 0.424" | IV A 2 | Garfinkle, Cutler & Duncan 1999 | γ(6) = 0.430079481, 0.0061 above; no uncertainty is quoted | README, Values | differs (D1) |
-| 10 | Birukou et al. "confirm known results in 3+1 (γ ≃ 0.36) and 5+1 (γ ≃ 0.44)" and find in 4+1 "γ ≃ 0.41 for one family" | IV A 2 | Birukou et al. 2002; Husain et al. 2003 | γ = 0.37396072, 0.430079481, 0.413126936: differences −0.014, +0.010, −0.003, at the 1–4% level of those evolutions | README, Values | consistent |
-| 11 | in 4+1, "γ ≃ 0.52 for another" family | IV A 2 | Birukou et al. 2002 | 0.413126936 for the universal exponent; 0.52 is 0.107 above | README, Values | differs (D2) |
-| 12 | "mass scaling with γ" in 4+1 and 5+1 | IV A 2 | as #9–11 | the mass scales with (D − 3)γ; the quoted numbers match our γ, the exponent of the length scale, so they are read as the scaling of $`M^{1/(D-3)}`$ (*inferred*) | README, The problem | consistent (a wording point) |
-| 13 | "a numerical determination of γ and Δ for the spherical massless scalar field in noninteger dimension up to 14", and "[Porto Veronese–Gundlach] for results in 8+1" | IV A 2 | Sorkin–Oren 2005; Bland et al. 2005; Taves–Kunstatter 2011; Porto Veronese & Gundlach 2022 | README [^4] cites the first three for 3.5 ≤ D ≤ 14, not Porto Veronese–Gundlach. Their 8+1 results are figures only (read in their arXiv source, the scalar-field appendix); their D = 5 values, γ_Ψ ≃ 0.413–0.415 and Δ_Ψ ≃ 1.6, are our γ(5) and, it seems, our Δ(5)/2 = 1.611 (*inferred*: a half-period reading, not checked) | README [^4] | agree; citation to add |
+| 9 | D = 6: "mass scaling with γ ≃ 0.424" | IV A 2 | Garfinkle, Cutler & Duncan 1999 | γ(6) = 0.430079481, 0.0061 above. The paper's 0.424 is the slope of the subcritical maximum curvature, a length exponent, from 300-point evolutions with no error estimate; its mass exponent is 1.27, three times it (Sec. V) | README, Values; §8 | differs (D1, confirmed in the paper, #620) |
+| 10 | Birukou et al. "confirm known results in 3+1 (γ ≃ 0.36) and 5+1 (γ ≃ 0.44)" and find in 4+1 "γ ≃ 0.41 for one family" | IV A 2 | Birukou et al. 2002; Husain et al. 2003 | γ = 0.37396072, 0.430079481, 0.413126936: differences −0.014, +0.010, −0.003, at the 1–4% level of those evolutions. In the paper, 0.36 and 0.44 are its Gaussian family; its tanh family gives 0.35 and 0.41 at D = 4 and 6 (Sec. IV), which the review does not quote. Husain et al. 2003 is at D = 4 with Λ < 0 only | README, Values; §8 | consistent (read in the papers, #620) |
+| 11 | in 4+1, "γ ≃ 0.52 for another" family | IV A 2 | Birukou et al. 2002 | 0.413126936 for the universal exponent; 0.52 is 0.107 above | README, Values; §8 | differs (D2, corrected: not a second exponent, #620) |
+| 12 | "mass scaling with γ" in 4+1 and 5+1 | IV A 2 | as #9–11 | the mass scales with (D − 3)γ. Every γ in the papers read is the exponent of a length: Garfinkle et al. state $`M_{BH} \propto (p-p_*)^{(n-3)\gamma}`$ and give 1.27 for the mass, and Birukou et al. fit the apparent horizon's radius | README, The problem; §8 | consistent (a wording point, confirmed in the papers, #620) |
+| 13 | "a numerical determination of γ and Δ for the spherical massless scalar field in noninteger dimension up to 14", and "[Porto Veronese–Gundlach] for results in 8+1" | IV A 2 | Sorkin–Oren 2005; Bland et al. 2005; Taves–Kunstatter 2011; Porto Veronese & Gundlach 2022 | README [^4] cites the first three for 3.5 ≤ D ≤ 14, not Porto Veronese–Gundlach. Their 8+1 results are figures only (read in their arXiv source, the scalar-field appendix). Their D = 5 values, γ_Ψ ≃ 0.413–0.415 and Δ_Ψ ≃ 1.6, are our γ(5) and our Δ(5)/2 = 1.611. Δ_Ψ is the half period, confirmed in §8 | README [^4]; §8 | agree (half period confirmed, #620); citation to add |
 | 14 | Kol "claims to obtain analytic estimates for γ and Δ in arbitrary dimension", which "motivated" #13 | IV A 2 | Kol 2006 | README: Kol's formula "is for the black-string merger, not for scalar collapse" (Kol's text read, notes/LIT_REVIEW.md §1) | README, Relation to published work | consistent (the README is sharper than the review) |
 | 15 | the echo count "N ≃ Δ⁻¹ γ ln\|p − p∗\| + constant", Eq. (19); γ = 1/λ₀, Eq. (15) | II C | — | "about γ ln(1/\|p − p*\|)/Δ echoes"; γ = 1/λ | README, What the numbers mean physically | agree |
 | 16 | 2+1 with Λ < 0: "a universal CSS critical solution, and γ = 1.20 ± 0.05"; a curvature exponent 7/8 and mass exponent 8/23 from the glued Garfinkle solution | IV A 1 | Pretorius & Choptuik 2000; Jałmużna, Gundlach & Chmaj 2015 | the D → 3⁺ limit of the asymptotically flat DSS family is open (finite Δ(3) or Δ → 0); notes/LOW_D.md §6 records that nothing ties the 2+1 CSS solution to that limit | README, Below D = 4; notes/LOW_D.md §6 | consistent (no common claim) |
@@ -100,12 +101,30 @@ same quantity, precision or reading), **differs** (a discrepancy, §3). Our stat
 
 ## 3. Discrepancies (reported, not resolved)
 
-- **D1. γ(6).** The review quotes γ ≃ 0.424 (Garfinkle, Cutler & Duncan 1999), with no uncertainty. Ours is
-  0.430079481, quoted to 10⁻⁹ (double-double, M = 48), 0.0061 (1.4%) higher. The 1999 value is an evolution fit, and
-  the paper itself was not read here.
-- **D2. A second exponent in 4+1.** The review quotes Birukou et al.'s γ ≃ 0.52 for a second family at D = 5, without
-  comment. Ours, and Bland and Kunstatter's 0.4131 ± 0.0001, are 0.4131; a family-dependent exponent conflicts with
-  universality. The 2002 paper was not read.
+- **D1. γ(6). Confirmed in the paper (#620).** The review quotes γ ≃ 0.424 (Garfinkle, Cutler & Duncan 1999), with no
+  uncertainty. Ours is 0.430079481, quoted to 10⁻⁹ (double-double, M = 48), 0.0061 (1.4%) higher.
+  - The paper (gr-qc/9908044v1, Sec. V) has "The result is γ = 0.424, so M_BH ∝ (p−p*)^1.27". It comes from the slope,
+    −2γ, of the subcritical maximum curvature against ln(p* − p), from 50 evolutions on 300 grid points. No error
+    estimate is given. Its supercritical mass slope, "≈ 1.27", is 3γ, the mass exponent.
+  - Its period, Δ = 3.03, is 0.0205 above our Δ(6) = 3.0094832205, and the review does not quote it.
+  - The later evolutions at D = 6 bracket ours: Bland et al. 2005 give 0.430 ± 0.003, Taves and Kunstatter 2011 give
+    0.429 ± 0.003 and 0.428 ± 0.002, Sorkin and Oren give 0.422 ± 2%, and Birukou et al. give 0.44 and 0.41 (§8). So
+    the 1999 value is low by 1.4% for an evolution without an error bar, and the discrepancy stands as reported.
+- **D2. A second exponent in 4+1. Corrected: not a second exponent (#620).** The review quotes Birukou et al.'s γ ≃ 0.52
+  for a second family at D = 5, without comment. Ours, and Bland and Kunstatter's 0.4131 ± 0.0001, are 0.4131.
+  - What Birukou et al. computed (gr-qc/0201026v2, Secs. III–IV). The apparent-horizon radius of supercritical
+    evolutions, R_ah ∝ (a − a*)^γ, fitted for two families with the amplitude varied, at 6000 grid points: Gaussian data
+    χ = aφ exp[−((φ − φ₀)/σ)²] give 0.52 (Fig. 5) and tanh data give 0.41 (Fig. 3). No error estimates are given.
+  - The authors do not claim a second universality class. They write that "in five dimensions the critical exponent
+    appears not to be universal, at least in the supercritical approach to computing it", that "the reason for this is
+    not clear to us", and that a subcritical computation of the exponent would be worthwhile.
+  - The same group's next papers found one exponent. Bland et al. 2005 (Sec. II) replaced a step of the 2002 equations
+    whose integrand "is singular in the critical region near φ = 0", which "leads to instabilities that severely limit
+    the accuracy of the calculation". They then found 0.412 ± 0.004 at D = 5 for Gaussian data (a φ^(2/n) Gaussian, not
+    the 2002 family). Bland and Kunstatter 2007 found 0.4131 ± 0.0001 for the amplitude, 0.4131 ± 0.0003 for the width
+    and 0.4133 ± 0.0004 for the centre of their Gaussian. Neither paper discusses the 0.52 itself.
+  - So the 0.52 is a numerical result of the 2002 code that its authors flagged as unexplained, superseded by their
+    later work. It does not conflict with universality. The review omits the authors' caveat.
 - **D3. κ_c.** The review states the CSS is critical for κ > 0.0754 (Hirschmann & Eardley 1997, no uncertainty).
   notes/HARMONY.md finds the Hopf point at κ_c = 0.075733 at D = 4 (numerical evidence: two settings agree, the
   κ = 0 mode reproduced to 10⁻¹¹), 3.3×10⁻⁴ higher. HARMONY.md already lists it against Hirschmann and Eardley; the
@@ -133,6 +152,11 @@ same quantity, precision or reading), **differs** (a discrepancy, §3). Our stat
 - **D7. The review against its source.** For Bianchi IX in 4+1 the review quotes Δ ≃ 0.49, where matter/LITERATURE.md
   §6.1 reads 0.47 in Bizoń, Chmaj & Schmidt 2005 and in Porto Veronese–Gundlach 2022 (whose 4+1 value Δ_B ≃ 0.47 was
   read here in their source). This is not our computation.
+- **D8. Bland and Kunstatter's Δ(5) (#620).** Their Δ_5d = 3.225 ± 0.003 (hep-th/0702226v1, Eq. (3)) is 3.3×10⁻³ above
+  our 3.2217019446, outside its error bar. Ours comes from two independent codes that agree to 10⁻¹¹ (README, D = 5).
+  Their error bar is set by the spread of their Table I over five grid sizes, 3.2223–3.2264, each value with
+  ±0.0004–0.0006. Ours lies below all five, and only the N = 1024 value is within its own error of ours. Their γ agrees
+  (row 7).
 
 ## 4. Existence proofs, and what a selection rule would add
 
@@ -174,7 +198,9 @@ Each entry was checked on INSPIRE or arXiv on 2026-11-12. Where only the review'
 4. **README [^4].** M. Birukou, V. Husain, G. Kunstatter, E. Vaz and M. Olivier, *Scalar field collapse in any
    dimension*, Phys. Rev. D 65, 104036 (2002), arXiv:gr-qc/0201026 (the first D = 5 evolutions); and B. Porto Veronese
    and C. Gundlach, Phys. Rev. D 106, 104044 (2022), arXiv:2209.08404 (the scalar in 8+1, and a critique of Bland et
-   al.'s formulation).
+   al.'s formulation). Both were read in their arXiv sources for #620 (§8), Birukou et al. in full. That task also
+   verified Taves and Kunstatter's journal, Phys. Rev. D 84, 044034 (2011), which [^4] does not give yet
+   (notes/REF_CHECK.md, addendum of #620).
 5. **matter/COMPLEX_CRITICAL.md §4.** K. Marouda, D. Cors, H. R. Rüter, F. Atteneder and D. Hilditch, *Twist-free
    axisymmetric critical collapse of a complex scalar field*, Phys. Rev. D 109, 124042 (2024), arXiv:2402.06724; and
    D. Cors, S. Renkhoff, H. R. Rüter, D. Hilditch and B. Brügmann, *Formulation improvements for critical collapse
@@ -202,7 +228,7 @@ naming them there would make the sentence's scope plain (notes/LIT_REVIEW.md, ad
     some other way, which would make the review's statement a discrepancy to report.
   - *Depends on.* #380. About 1 hour.
   - *Done* by #619. The paper counts modes by time evolution, so the review's statement is the discrepancy (D6).
-- **R2. A table of the published γ(D) and Δ(D) below D = 14.**
+- **R2. A table of the published γ(D) and Δ(D) below D = 14.** Done as #620 (§8).
   - *What.* Add the values the review cites (Garfinkle–Cutler–Duncan, Birukou et al., Bland–Kunstatter, Sorkin–Oren,
     Bland et al.'s Table I, Taves–Kunstatter, Porto Veronese–Gundlach), each with its convention (mass or length
     exponent, full or half period), to a `gamma_published_compare.csv` beside `hp/data/delta_published_compare.csv`,
@@ -256,3 +282,128 @@ For the coordinator, who edits the README. Each footnote entry is verified in §
   > the computations in non-integer D[^4].
 - **PROOF.md's table of precedents** (not the README): "near the past light cone" → "from the centre to slightly
   beyond the past light cone".
+- **[^4], Taves and Kunstatter** (#620; journal verified on INSPIRE): "T. Taves and G. Kunstatter, PRD 84, 044034
+  (2011), [arXiv:1105.0878](https://arxiv.org/abs/1105.0878)".
+- **Relation to published work, the "Below D = 4" bullet** (#620, §8): the sentence "Extrapolated from 3.64 ≤ D ≤ 4,
+  γ(3.5) = 0.3235 ± 0.0030, in agreement with Ecker et al.'s 0.32239 and not with Bland et al.'s 0.349 ± 0.003" could
+  quote the double-double value that `hp/data/delta_dd_lowD.csv` now holds:
+  > The double-double solver gives γ(3.5) = 0.3223856 (M = 96, one resolution), in agreement with Ecker et al.'s
+  > 0.32239 and not with Bland et al.'s 0.349 ± 0.003 (their Table I).
+
+## 8. The published γ and Δ below D = 14, read in the papers (#620)
+
+Every γ, Δ and wiggle period that the works of rows 7–13 give for the massless scalar below D = 14 was copied from the
+paper's arXiv source, not from the review, into
+[`hp/data/gamma_published_compare.csv`](../hp/data/gamma_published_compare.csv) (97 values). The producer,
+`hp/compare_gamma_published.py`, holds each value with its locator and a verbatim quote of the source line. It sets
+our value of the same quantity beside it, from `hp/data/delta_dd_lowD.csv`, `hp/data/gamma_dd.jsonl` and
+`hp/data/delta_all.csv`, and writes the difference. Our errors are below 10⁻⁸, except for γ(3.5), which has one
+resolution. Either way they are negligible against every published uncertainty.
+
+### What was read
+
+| Work | arXiv source read | Parts read | INSPIRE record |
+|---|---|---|---|
+| Garfinkle, Cutler & Duncan, PRD 60, 104007 (1999) | gr-qc/9908044v1 | all | 505541 |
+| Birukou, Husain, Kunstatter, Vaz & Olivier, PRD 65, 104036 (2002) | gr-qc/0201026v2 | all | 581516 |
+| Husain, Kunstatter, Preston & Birukou, CQG 20, L23 (2003) | gr-qc/0210011v2 | all | 598687 |
+| Sorkin & Oren, PRD 71, 124005 (2005) | hep-th/0502034v2 | Secs. I, II, IV and V, with Table I and the figure captions | 676110 |
+| Bland, Preston, Becker, Kunstatter & Husain, CQG 22, 5355 (2005) | gr-qc/0507088v2 | all | 687871 |
+| Bland & Kunstatter, PRD 75, 101501 (2007) | hep-th/0702226v1 | Eqs. (1)–(3), the method, Tables I–II and the summary | 745509 |
+| Taves & Kunstatter, PRD 84, 044034 (2011) | 1105.0878v2 | Secs. 1, 3.2 and 4, with Table 1 | 898119 |
+| Porto Veronese & Gundlach, PRD 106, 104044 (2022) | 2209.08404v1 | Secs. I, IV and V, and Appendix A | 2153661 |
+
+The sources were fetched from arxiv.org/src on 2026-11-13; each is the latest arXiv version, and a journal text may
+differ. No text addressed to an AI agent was found in them. Values that a paper quotes from another one (Bland et al.'s
+columns for Sorkin and Oren, Taves and Kunstatter's rows "from" other works) are not entered, since they are not
+determinations of that paper.
+
+### Conventions
+
+- **γ.** Every γ read is the exponent of a length.
+  - Garfinkle et al. and Sorkin and Oren take it from the subcritical maximum curvature, which scales as
+    (p* − p)^(−2γ). Sorkin and Oren define γ so that |p − p*|^γ "has dimensions of length".
+  - Birukou et al., Husain et al., Bland et al., Bland and Kunstatter and Porto Veronese and Gundlach fit the radius of
+    the apparent horizon, R_ah ∝ (a − a*)^γ. Taves and Kunstatter fit its areal radius on formation.
+  - The one mass exponent is Garfinkle et al.'s 1.27 at D = 6, which is 3γ, as their Sec. II derives.
+- **Δ.** Every Δ read is the full period, the period of the scalar field, with three exceptions.
+  - Sorkin and Oren's Figs. 4 and 5 give the period of a metric function and of the curvature, "half the period of the
+    scalar field".
+  - Porto Veronese and Gundlach's Δ_Ψ is a half period (row 13, below).
+  - Taves and Kunstatter give T = Δ/(2γ), the wiggle period in ln|A − A*|. This reading is *inferred* from their
+    Table 1, which lists Bland et al.'s and Sorkin and Oren's Δ in that form, for example Sorkin and Oren's 3.37 and
+    0.372 at D = 4 as 4.53.
+
+### The comparison
+
+"Within" means within the stated uncertainty, or within half a unit of the last printed digit where none is stated (a
+rounding bound only, so a "no" there says only that the printed digits differ).
+
+| Work | Values | Within their uncertainty | Largest \|ours − published\| |
+|---|---|---|---|
+| Garfinkle, Cutler & Duncan 1999 | 3 | 0 | 2.05×10⁻² (Δ(6)) |
+| Birukou et al. 2002 | 7 | 1 | 1.07×10⁻¹ (γ(5), Gaussian data) |
+| Husain et al. 2003 | 9 | 7 | 5.45×10⁻² (Δ(4), Λ = −5, "a rough estimate") |
+| Sorkin & Oren 2005 | 18 | 12 | 7.55×10⁻² (Δ(4)) |
+| Bland et al. 2005 | 22 | 19 | 1.22×10⁻¹ (Δ(5)) |
+| Bland & Kunstatter 2007 | 14 | 7 | 4.70×10⁻³ (Δ(5), N = 512 and 1536) |
+| Taves & Kunstatter 2011 | 18 | 12 | 2.07×10⁻¹ (T(4)) |
+| Porto Veronese & Gundlach 2022 | 6 | 5 | 1.09×10⁻² (Δ_Ψ(5)) |
+
+- **γ, where the published values are precise.** Bland et al.'s eleven values at D = 4–14 are all within their
+  errors, by at most 1.31×10⁻³ (D = 9). Bland and Kunstatter's 0.4131 ± 0.0001 is 2.7×10⁻⁵ from ours. Husain et al.'s
+  seven D = 4 ranges, at Λ < 0, all contain ours.
+- **γ, outside the stated errors.**
+  - Bland et al.'s γ(3.5) = 0.349 ± 0.003 (Table I) is 0.0266 above our 0.3223856 (M = 96). The README already
+    reports this; the value is now located in the paper (notes/REF_CHECK.md).
+  - Sorkin and Oren's γ at D = 7, 8, 9 and 11 is 2.1–4.1% below ours, beyond their 2–3%. Their Sec. V names the
+    likely cause: lowering the accuracy of p* "from 1 part in 10¹⁴ to 1 part in 10¹⁰" lowers γ by a few percent.
+  - Taves and Kunstatter's γ(4) is 0.378 ± 0.002 and 0.379 ± 0.002, against our 0.37396. Their width-varied values at
+    D = 5 and 6 are also outside their errors.
+  - Birukou et al.'s values have no error estimates and scatter by ±0.02 between their two families at D = 4 and 6.
+    D1 and D2 are in §3.
+- **Δ.** Sorkin and Oren's periods agree within 2–3% except at D = 4, where 3.37 is 2.2% below 3.4455. Bland et al.'s
+  are within ±0.1 except at D = 5, where 3.10 is 0.122 low, and at D = 7, where 2.96 is 0.117 high. Bland and
+  Kunstatter's Δ(5) is D8. Garfinkle et al.'s Δ(6) = 3.03 is 0.0205 high, with no error stated.
+- **Half and wiggle periods.** Sorkin and Oren's half periods, 1.6 at D = 5 and 1.41 at D = 7, are within 1% of ours,
+  1.6109 and 1.4214. Taves and Kunstatter's T is within its error at 7 of 9 entries. Porto Veronese and Gundlach's
+  residual period, 1.7, is our Δ/(2 ln(10) γ) = 1.6934 to the digit given.
+
+### Row 13: Porto Veronese and Gundlach's Δ_Ψ is the half period
+
+- Their Figs. 10 and 11 relate the period of the residuals of the scaling law in log₁₀|p − p*| to the echoing period
+  by Δ_res = Δ_Ψ/(ln(10)γ). With Δ_res = 1.7 and γ = 0.4131 this gives Δ_Ψ = 1.62.
+- Their relation is Hod and Piran's ϖ = Δ/β for the period of the mass's fine structure in ln(p − p*), written in
+  log₁₀ (Hod and Piran, PRD 55, R440 (1997), gr-qc/9606087v2; abstract and figure captions read). Hod and Piran's
+  figure captions give ϖ ≈ 4.6 at D = 4 with β = γ ≈ 0.374, so their Δ there is 1.72, the period of the metric, half
+  the scalar field's 3.445. In the full period the relation reads Δ/(2γ), as Bland et al. (Δ = 2Tγ) and Bland and
+  Kunstatter (Δ_5d = 2γδ_5d) write it.
+- So Δ_Ψ is Δ/2. Our Δ(5) = 3.2217019446 gives Δ_res = Δ/(2 ln(10) γ) = 1.6934 and Δ/2 = 1.6109.
+- Sorkin and Oren's Fig. 4 confirms it at the same D. At D = 5 the metric function α oscillates with period "≃ 1.6",
+  "half the period of the scalar field (≃ 3.19)".
+- So Δ_Ψ ≃ 1.6 agrees with Δ(5)/2 = 1.611 to its one decimal, and row 13's reading is confirmed. Their γ_Ψ values, 0.413
+  and 0.4131 (q = 10⁻⁶) and 0.41 (q = 0), agree with ours to their digits, and 0.415 (q = 0) is 1.9×10⁻³ high.
+
+### Inconsistencies inside the papers (not ours, reported)
+
+- Taves and Kunstatter's Table 1 lists Garfinkle et al.'s Δ = 3.03 unconverted in its T column. In their convention it
+  would be 3.03/(2 × 0.424) = 3.57.
+- Taves and Kunstatter quote Bland et al. at D = 8 as γ = 0.4459 ± 0.0054 and T = 3.11 ± 0.1 (Sec. 3.2), where Bland et
+  al.'s Table I has 0.446 ± 0.004 and Δ = 2.77. Their abstract credits Bland et al. with an asymptote of 1/2, where
+  Bland et al. 2005 give 0.466. Both may come from Bland's thesis, which was not read for this: *(unverified)*.
+- Porto Veronese and Gundlach's introduction says their scalar-field tests are in "9+1 (physical) dimensions", and
+  their Appendix A says 8+1. Their Sec. V B calls Δ_Ψ ≃ 1.6 "in agreement with" Bland et al., whose D = 5 period is the
+  full one, 3.10. The two agree only with the factor 2.
+
+### The check
+
+- **`check_numbers.py`, check `published_gamma`.** It compares every published value and stated uncertainty in the CSV
+  with a frozen copy of the transcription, at one unit of its last printed digit. It recomputes our value from the data
+  files and the difference and the verdict from the transcription, and ties the counts in the table above to the CSV.
+  `--selftest` shifts each item by one unit and must see it rejected.
+- **`hp/compare_gamma_published.py --verify DIR`.** It checks each quote against the arXiv sources and each value and
+  stated uncertainty against its quote. On the sources above, 97 of 97 rows pass. Its controls each fail with exit 1:
+  0.424 changed to 0.425 in the row (the value is no longer in its quote), in the row and the quote (the quote is no
+  longer in the source), 3.2223 changed to 3.2224, and 0.41 changed to 0.4 (a prefix of the true value).
+- **What the two share.** The frozen copy and the producer's rows were transcribed in the same reading. The frozen
+  copy guards the CSV against later edits. Only `--verify` ties the transcription to the papers.
