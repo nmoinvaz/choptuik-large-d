@@ -235,6 +235,7 @@ def make_elim(att, record=False):
             return st
     el = RecElimO(att["so"], att["rs"])
     el.calls = []
+    el.first = False
     return el
 
 
