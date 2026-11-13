@@ -162,9 +162,9 @@ hp sums the horizon segment as series in u at x = 1, built by forward recurrence
 ```
 
 and hp's a and c series give B's and C's to every order checked (S3, to order 4). The homogeneous solution, the mass
-mode, has the coefficients of (1 − u)^(−(n−1)) exp(∫₀ᵘ q/(1 − s) ds) (S3), whose sum at u₀ is G. A forward recurrence
-from b₀ therefore carries any error of b₀, and its own rounding, to the node multiplied by G. In 30 digits, at n = 240
-and K = 130, its sum at u₀ misses by 3.0×10⁵ (S3).
+mode, has the coefficients of (1 − u)^(−(n−1)) exp(∫₀ᵘ q/(1 − s) ds) (S3), whose sum at u₀ is 3.2's G. A forward
+recurrence from b₀ therefore carries any error of b₀, and its own rounding, to the node multiplied by G. In 30 digits,
+at n = 240 and K = 130, its sum at u₀ misses by 3.0×10⁵ (S3).
 
 The factored series splits b_k = B_sl,k + γ χ̂_k.
 - **B_sl, the minimal solution.** It solves rows k = 0, …, K of the recurrence with b_(K+1) = 0, one (K + 1) × (K + 1)
@@ -361,10 +361,12 @@ hp/src is not changed by this task.
 From the repository root (sympy 1.14, mpmath 1.3):
 
 ```
-python3 solver/factored_horizon_sympy.py                      # 30 checks pass, exit 0 (about 70 s)
-python3 solver/factored_horizon_sympy.py check --mutate=sign   # 8 checks FAIL, exit 1
+python3 solver/factored_horizon_sympy.py                      # 30 checks pass, exit 0
+python3 solver/factored_horizon_sympy.py check --mutate=sign   # 9 of 26 checks FAIL, exit 1
 python3 solver/factored_horizon_sympy.py model --mutate=ks     # M4's two checks FAIL, exit 1
 ```
+
+One process, about a minute on an idle Mac and nine minutes on the shared one.
 
 `check` runs E0 and S1–S8 alone, `model` S8 and M1–M5. M2–M4's tolerances were set after a prototype run, so they
 describe the agreement rather than test it; the tests are 4.5 and #696. M5 prints the estimate of 4.3 and checks
