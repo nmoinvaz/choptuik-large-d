@@ -2020,7 +2020,8 @@ What is known about the selection, and what is open:
 
   That would be an equation for ω∞ and F∞ alone, from which Δ∞ would follow to any precision.
 - **Checked at D = 30 and 45, and at D = 61 at one resolution: one physical unstable mode.** The zeros of the
-  growth-mode determinant were counted by the argument principle in −0.08 < Re λ < 6.18 and a full period in Im λ, which
+  growth-mode determinant were counted by the argument principle, as Hirschmann and Eardley[^24] and Gundlach[^3] counted
+  theirs, in −0.08 < Re λ < 6.18 and a full period in Im λ, which
   holds the growth rates of both symmetry sectors ([notes/MODE_COUNT.md](notes/MODE_COUNT.md); at D = 61 also to Im λ =
   3.5ω and to Re λ = 12, figure below). Besides λ_phys there are only the τ translation (λ = 0) and a gauge mode of the
   formulation at λ = 1 + ⟨c₁⟩ (a change of time coordinate that keeps the light cone at x = 1). A planted-zero test runs
@@ -2185,3 +2186,4 @@ Files that were moved out of this repository are listed with their new paths in 
 [^21]: N. J. Higham, *Accuracy and Stability of Numerical Algorithms*, 2nd ed., SIAM (2002).
 [^22]: R. S. Dembo, S. C. Eisenstat and T. Steihaug, *Inexact Newton methods*, SIAM J. Numer. Anal. 19, 400–408 (1982), doi:10.1137/0719025 *(partly verified: notes/REF_CHECK.md)*.
 [^23]: C. Ecker, F. Ecker and D. Grumiller, "Critical collapse remains discretely self-similar at large D", arXiv:2611.07007 (2026).
+[^24]: E. W. Hirschmann and D. M. Eardley, PRD 52, 5850 (1995), [gr-qc/9506078](https://arxiv.org/abs/gr-qc/9506078).

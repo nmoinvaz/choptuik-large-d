@@ -126,7 +126,9 @@ periodic problems on the full τ grid, so besides the resonances above it has fu
 multiple of ω, which odd right-hand sides do not excite; one of them, at λ = 0.386, lies on the scanned interval.
 
 **The function whose phase is followed.** On a closed contour C the winding number of det M is (zeros − poles)
-inside C. Rather than det M, the phase of
+inside C. Counting the zeros of a shooting determinant by its winding goes back to Hirschmann and Eardley (PRD 52, 5850
+(1995), Sec. VI) and Gundlach (PRD 55, 695 (1997), App. E), whose poles also come from the light-cone conditions (his
+App. B). Rather than det M, the phase of
 
 ```math
 g(\lambda) = \det M(\lambda)\;\frac{\prod_j (\lambda - p_j)}{\prod_k (\lambda - z_k)}\;e^{-P_2(\lambda)}

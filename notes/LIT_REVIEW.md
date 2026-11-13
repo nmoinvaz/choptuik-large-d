@@ -1076,13 +1076,10 @@ shared structure with Kol's merger.**
   1 − |U|χ₀(0, 0) (Marsiglio et al., Eq. 1). It does not count. In critical collapse, Koike–Hara–Adachi report no
   further mode in 0 ≤ Re κ ≤ 15, |Im κ| ≤ 14 without stating the method, and Maison assumes uniqueness. Holographic
   QNM studies use "the determinant method" (Amado et al.) without a winding count. MODE_COUNT.md's argument-principle
-  count of det M(λ) has no counterpart in the sources read.
-  *Note (#619).* This sentence is contradicted by two papers. Hirschmann and Eardley 1995 (Secs. VI–VII) count the
-  zeros of a shooting determinant det A(σ) of the complex-scalar CSS solution by its phase wrap around a rectangle.
-  Gundlach 1997 (App. E) counts the zeros minus the poles of such a determinant for the D = 4 Choptuik solution by a
-  contour integral; #172 had read it only to character 100000, short of App. E. The 2025 review credits such a count to
-  Gundlach 1998, which counts by time evolution instead. Not rewritten here. The reading and a proposed correction are
-  in the addendum of issue #619.
+  count of det M(λ) has two precedents in critical collapse. Hirschmann and Eardley count the zeros of their shooting
+  determinant around a rectangle for the complex-scalar CSS solution (PRD 52, 5850 (1995), Secs. VI–VII), and Gundlach
+  counts the zeros minus the poles of his for the D = 4 Choptuik solution (PRD 55, 695 (1997), App. E); the reading is
+  the addendum of issue #619.
 - **The rate near threshold** vanishes at a bifurcation (critical slowing down) and stays finite at a saddle, λ = 2 +
   O(1/n) here. #198's cavity saddle (Gomila et al.) remains the closer analogue.
 
