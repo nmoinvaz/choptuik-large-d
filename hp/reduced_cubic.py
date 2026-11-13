@@ -19,7 +19,7 @@ rows' parts of U^T F''(e, e), U^T T(e) = U^T F'''(e, e, e) and U^T 3S(e) = 3 U^T
 it would have without cancellation between rows. Checks on real data (exit 1): the rows linear by construction (the
 horizon block's p rows above kfreeze and the phase row) are classified affine; the change of rows is orthonormal; w_ee,
 T(e) and S(e) at two steps agree to 1e-2; and |U^T (T - 3S)(e)| < 1e-12 |U^T T(e)|. Its plant (RowPlanted) has five
-planted affine rows, four of which carry U with the planted share 0.964375; it must recover the affine set, the share
+planted affine rows, four of which carry U with the planted share 0.96625; it must recover the affine set, the share
 and every row's share to 1e-6, q_r, F''(e, e), T(e) and S(e) per row to 1e-6. Its controls --mutate=quadA (a
 quadratic term in the planted affine rows that carry U) and --mutate=parity (each field expanded on the other parity's
 harmonics) must fail.
@@ -1448,7 +1448,7 @@ class RowPlanted:
     zeta = P_R^T z, with D = U_c Sigma E_w^T + U_c' Lambda E_s^T and [U_c U_c'] orthogonal. The planted weak left
     vectors are u_m = sqrt(1 - eps_m^2) a_m + eps_m n_m, a_m an orthonormal basis of the four affine rows centre.m.k1c,
     horizon.p.k3c, horizon.p.k3s and phase (randomly rotated), n_m orthonormal on the nonlinear rows, eps 0.1, 0.15,
-    0.2, 0.25: their share on the affine rows is 1 - mean(eps^2) = 0.964375. A fifth affine row, horizon.a.k0c, carries
+    0.2, 0.25: their share on the affine rows is 1 - mean(eps^2) = 0.96625. A fifth affine row, horizon.a.k0c, carries
     no U. Sigma is the D 242.5 starts' weak sigma, Lambda 29 strong singular values log-spaced from 1e-19 to 3e34;
     |q_r| from 1e28 to 1e33 and |t_r| from 1e30 to 1e34, log-uniform. The affine rows have no nonlinear term, so they
     are affine in z exactly; --mutate=quadA adds 1/2 q_A (b . zeta)^2, q_A = 1e-6 max|q|, to the four that carry U."""
