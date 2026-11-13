@@ -173,8 +173,9 @@ same quantity, precision or reading), **differs** (a discrepancy, §3). Our stat
 - **D10. The test-field rate at D = 5 (#621).** Mittal, Gundlach and Martel's μ(5) = −0.448 and δ_Q = 1.425
   (arXiv:2609.17207, as quoted in matter/LITERATURE.md §8) against our μ(5) = −0.4430361582 (M = 48, the 11-node
   layout whose μ(4) is −0.3651202705 at M = 48 and −0.3651202372 at M = 64) and δ(5) = 1.422411: ours is 4.96×10⁻³
-  (1.1%) above in μ and 2.59×10⁻³ below in δ. At D = 4 the two resolutions differ by 3.3×10⁻⁸, so a resolution error
-  of 5×10⁻³ at D = 5 is not expected; #632 repeats μ(5) at M = 64. Their paper was not read here, only the quotation.
+  (1.1%) above in μ and 2.59×10⁻³ below in δ. At M = 64 (#632, raw I632-macm3 7d76c271) μ(5) = −0.4430361582136 and
+  μ(6) = −0.5052240827037, 1.6×10⁻¹² and 7.0×10⁻¹⁵ from M = 48, so the gap is not our resolution: it is the same at
+  both. Their paper was not read here, only the quotation.
 
 ## 4. Existence proofs, and what a selection rule would add
 
