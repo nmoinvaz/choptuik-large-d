@@ -504,19 +504,27 @@ def tmap(f, A, B):
 
 
 # ------------------------------------------------------------------ the strong solve and the reduced map
-def strong_solve(sysm, X, Um, c, w_init, wref, mutate="", it_max=30):
+def strong_solve(sysm, X, Um, c, w_init, wref, gref, mutate="", it_max=30):
     """w(c) by the chord iteration (docstring), judged by its corrections |dw| (2-norm), not by the strong rows'
     residual, whose rows differ in scale by 1e53 and whose max norm can grow while w converges. Converged when
-    |dw| < 1e-40 wref (wref = |w0|); stalled (|dw| above 0.3 of its value two steps back) counts as converged only
-    below 1e-30 wref; a growing |dw| is a failure. Returns (w, F at z0 + V c + w, the steps' (max|strong residual|,
-    |dw|), ok)"""
+    |dw| < 1e-40 wref (wref = |w0|). The chord uses z0's J, and at c != 0 it can stall in the softest strong directions
+    (sigma_5 ~ 1e-19), where J(z) and J differ: |dw| then stays put (at REF about 6e-65 at |c| = 1e-33). A stalled
+    solve (|dw| above 0.3 of the previous one, or not converged after it_max steps) counts as converged when its last
+    correction cannot change g: |U^T [F(w - dw) - F(w)]| < 1e-6 gref (gref = |B a|), one more residual. A |dw| that
+    grows by more than 2 is a failure. Returns (w, F at z0 + V c + w, the steps' (max|strong residual|, |dw|), ok, the
+    last correction's change of g or None)"""
     pv = lin([(mp.mpf(cj), X[j]) for j, cj in enumerate(c)])
     if mutate == "w0":                                  # the control: no strong solve, the map on z0 + V c
         Fv = sysm.F(pv)
-        return [mp.mpf(0)] * len(pv), Fv, [(float(amax(strong_part(Um, Fv))), 0.0)], True
+        return [mp.mpf(0)] * len(pv), Fv, [(float(amax(strong_part(Um, Fv))), 0.0)], True, None
     w = list(w_init)
     hist = []
-    tol, stall = mp.mpf("1e-40") * wref, mp.mpf("1e-30") * wref
+    tol = mp.mpf("1e-40") * wref
+
+    def judge(w, Fv, dw):
+        F2 = sysm.F([a + b - d for a, b, d in zip(pv, w, dw)])
+        dg = nrm([x - y for x, y in zip(proj_U(Um, F2), proj_U(Um, Fv))])
+        return w, Fv, hist, bool(dg < mp.mpf("1e-6") * gref), float(dg / gref)
     for _ in range(it_max):
         Fv = sysm.F([a + b for a, b in zip(pv, w)])
         r = strong_part(Um, Fv)
@@ -524,32 +532,34 @@ def strong_solve(sysm, X, Um, c, w_init, wref, mutate="", it_max=30):
         nd = nrm(dw)
         hist.append((float(amax(r)), float(nd)))
         if nd < tol:                                    # converged; F is that of the current w
-            return w, Fv, hist, True
-        if len(hist) >= 3 and nd > 0.3 * hist[-3][1]:   # stalled
-            return w, Fv, hist, bool(nd < stall)
-        if len(hist) >= 2 and nd > hist[-2][1]:         # diverging
-            return w, Fv, hist, False
+            return w, Fv, hist, True, None
+        if len(hist) >= 2 and nd > 2 * hist[-2][1]:     # diverging
+            return w, Fv, hist, False, None
+        if len(hist) >= 2 and nd > 0.3 * hist[-2][1]:   # stalled
+            return judge(w, Fv, dw)
         w = [a - b for a, b in zip(w, dw)]
-    return w, Fv, hist, False
+    return judge(w, Fv, dw)
 
 
 class Map:
     """g(c) on the strong-solved manifold, with every evaluation logged"""
 
-    def __init__(self, sysm, X, Um, w0, mutate, log):
-        self.sysm, self.X, self.Um, self.w0, self.mutate, self.log = sysm, X, Um, w0, mutate, log
+    def __init__(self, sysm, X, Um, w0, gref, mutate, log):
+        self.sysm, self.X, self.Um, self.w0, self.gref, self.mutate, self.log = sysm, X, Um, w0, gref, mutate, log
         self.wref = max(nrm(w0), mp.mpf("1e-300"))
         self.calls = 0
-        self.steps = []
+        self.stalls = []                                # the stalled solves' change of g, relative to |B a|
 
     def __call__(self, c, w_init=None):
-        w, Fv, hist, ok = strong_solve(self.sysm, self.X, self.Um, c, self.w0 if w_init is None else w_init,
-                                       self.wref, self.mutate)
+        w, Fv, hist, ok, dg = strong_solve(self.sysm, self.X, self.Um, c, self.w0 if w_init is None else w_init,
+                                           self.wref, self.gref, self.mutate)
         self.calls += 1
-        self.steps.append(len(hist))
+        if dg is not None:
+            self.stalls.append(dg)
         if not ok:
             self.log(f"  strong solve at |c| {mp.nstr(nrm(c), 3)} did not converge: (max|strong residual|, |dw|) per "
-                     "step " + ", ".join(f"({x:.1e}, {y:.1e})" for x, y in hist))
+                     "step " + ", ".join(f"({x:.1e}, {y:.1e})" for x, y in hist)
+                     + ("" if dg is None else f"; its last correction changes g by {dg:.1e} of |B a|"))
         return proj_U(self.Um, Fv), w, Fv, hist, ok
 
 
@@ -684,8 +694,16 @@ def measure(sysm, opts, mutate, log, rec, dump):
         + (f"; the ratio {mp.nstr(ratio, 3)} is an h^2 truncation's, so |S| < {mp.nstr(tmax(S), 3)}" if S_trunc else "")
         + f"; its unsymmetric part {mp.nstr(asym, 3)} of it; 3 max|S| / max|T| {mp.nstr(3 * tmax(S) / tmax(T), 4)} "
         f"({time.time() - t0:.0f} s)")
+    C3 = tmap(lambda t, s: t - 3 * s, T, S)
+    dC3 = tdiff(tmap(lambda t, s: t - 3 * s, Ts[0][0], Ss[0]), C3) / tmax(T)
+    log(f"  T - 3S: max|T - 3S| / max|T| {mp.nstr(tmax(C3) / tmax(T), 4)}; T - 3S at the larger steps against the "
+        f"smaller, relative to max|T|, {mp.nstr(dC3, 3)}")
     rec.update(S=dict(max=float(tmax(S)), h_h10=float(dS), ok=S_ok, trunc_bound=S_trunc, ratio=float(ratio),
-                      asym=float(asym), threeS_T=float(3 * tmax(S) / tmax(T))))
+                      asym=float(asym), threeS_T=float(3 * tmax(S) / tmax(T)), C3_T=float(tmax(C3) / tmax(T)),
+                      C3_h=float(dC3)))
+    rec["tensors"] = {n: tmap(lambda x, _: mp.nstr(x, 30), A, A) for n, A in
+                      (("B", B), ("Q", Q), ("T", T), ("S", S), ("T_minus_3S", C3))}
+    rec["tensors"]["a"] = [mp.nstr(x, 30) for x in a]
     dump()
     t0 = time.time()
     if nrm(w0) > 0:
@@ -709,7 +727,7 @@ def measure(sysm, opts, mutate, log, rec, dump):
     dump()
 
     # the reduced map
-    g = Map(sysm, X, Um, w0, mutate, log)
+    g = Map(sysm, X, Um, w0, nBa, mutate, log)
     t0 = time.time()
     g00, w00, F00, h00, ok00 = g([mp.mpf(0)] * k)
     w00 = list(w00)
@@ -836,6 +854,37 @@ def measure(sysm, opts, mutate, log, rec, dump):
                            S_meas=float(nrm(dmeas)), S_pred=float(pred_n), S_err=float(errS), S_ok=ok_S,
                            S_resolvable=resolvable, w_meas=float(nrm(wm)), w_pred=float(nrm(wp)), w_err=float(errW),
                            Lc=float(nrm(Lc)), q00=float(nrm(q00)))
+    dump()
+    # diagnostic of the S control (not judged): the control along c* at f c*, f = 1, 1/2, 1/4, where a next-order term
+    # of the control falls as f relative to -1/2 S; and u.F''(V c, dw) by a mixed difference with the actual dw, which
+    # separates dw's departure from its quadratic model (dw_quad) from the higher orders of the 2 dw replacement
+    t0 = time.time()
+    scan = []
+    for f in ((mp.mpf(1), mp.mpf(1) / 2, mp.mpf(1) / 4) if mutate != "w0" else ()):     # w0: dw = 0, nothing to scan
+        cf = [f * x for x in cs]
+        wf = g(cf, w00)[1]
+        dwf = [x - y for x, y in zip(wf, w00)]
+        pvf = lin([(cj, X[j]) for j, cj in enumerate(cf)])
+        G1 = proj_U(Um, sysm.F([p + x + y for p, x, y in zip(pvf, w00, dwf)]))
+        G2 = proj_U(Um, sysm.F([p + x + 2 * y for p, x, y in zip(pvf, w00, dwf)]))
+        dm = [y - x for x, y in zip(G1, G2)]
+        dp = [-sgnS * f ** 3 * x / 2 for x in Sc]
+        nc = nrm(cf)
+        ec = [x / nc for x in pvf]
+        mx = [t * nc for t in mixed(sysm, Um, ec, dwf, H["S"] / 10)]          # u.F''(V cf, dwf)
+        dwqf = lin([(-cf[j] * cf[l] / 2, wjl[(j, l)]) for j in range(k) for l in range(k)])
+        mq = [t * nc for t in mixed(sysm, Um, ec, dwqf, H["S"] / 10)]         # u.F''(V cf, dw_quad), = -1/2 S(cf^3)
+        rel = lambda u, v: float(nrm([x - y for x, y in zip(u, v)]) / nrm(v))   # noqa: E731
+        scan.append(dict(f=float(f), meas_pred=rel(dm, dp), meas_mixed=rel(dm, mx), mixed_pred=rel(mx, dp),
+                         quad_pred=rel(mq, dp), dw_quad=rel(dwf, dwqf)))
+    log("  S control along c* (diagnostic), f: (2dw change against -1/2 S(f c*), against u.F''(V f c*, dw); "
+        "u.F''(V f c*, dw) against -1/2 S; u.F''(V f c*, dw_quad) against -1/2 S; dw against dw_quad): "
+        + "; ".join(f"{d['f']:g}: ({d['meas_pred']:.3g}, {d['meas_mixed']:.3g}; {d['mixed_pred']:.3g}; "
+                    f"{d['quad_pred']:.3g}; {d['dw_quad']:.3g})" for d in scan) + f" ({time.time() - t0:.0f} s)")
+    rec["controls"]["scan"] = scan
+    rec["stalls"] = dict(n=len(g.stalls), max_dg=max(g.stalls) if g.stalls else None)
+    log(f"  strong solves: {g.calls}, of which {len(g.stalls)} stalled; their last correction changes g by at most "
+        f"{(max(g.stalls) if g.stalls else 0):.1e} of |B a|")
     # the verdict of the issue
     small_S = bool(3 * tmax(S) < mp.mpf("1e-2") * tmax(T))
     small_g = bool(nrm(gcs) < mp.mpf("1e-2") * nBa)
