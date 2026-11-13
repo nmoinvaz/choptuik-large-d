@@ -1,0 +1,121 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="980" height="582" viewBox="0 0 980 582" font-family="system-ui, sans-serif">
+<style>@media (prefers-color-scheme: dark){[fill="#fcfcfb"]{fill:#201f1d}[stroke="#fcfcfb"]{stroke:#201f1d}[fill="#0b0b0b"]{fill:#e8e6e3}[stroke="#0b0b0b"]{stroke:#e8e6e3}[fill="#52514e"]{fill:#a8a49d}[stroke="#52514e"]{stroke:#a8a49d}[fill="#e7e6e2"]{fill:#343230}[stroke="#e7e6e2"]{stroke:#343230}[fill="#c98500"]{fill:#d69a2d}[stroke="#c98500"]{stroke:#d69a2d}[fill="#eb6834"]{fill:#dd5c26}[stroke="#eb6834"]{stroke:#dd5c26}[fill="#eda100"]{fill:#c08800}[stroke="#eda100"]{stroke:#c08800}[fill="#e87ba4"]{fill:#d1678f}[stroke="#e87ba4"]{stroke:#d1678f}[fill="#4a3aa7"]{fill:#7263cf}[stroke="#4a3aa7"]{stroke:#7263cf}[fill="#a6339a"]{fill:#c257b5}[stroke="#a6339a"]{stroke:#c257b5}[fill="#7a7668"]{fill:#948e82}[stroke="#7a7668"]{stroke:#948e82}}</style>
+<rect width="980" height="582" fill="#fcfcfb"/>
+<text x="16.0" y="24.0" font-size="14" fill="#0b0b0b" text-anchor="start" font-weight="bold">The RT prototype's Δ against ours, by Chebyshev grid</text>
+<text x="16.0" y="42.0" font-size="11" fill="#52514e" text-anchor="start" font-weight="normal">|Δ_RT − Δ_hp| at each D; two markers at one D are two converged roots from different starts. Above D ≈ 40 a finer grid is worse.</text>
+<line x1="247.1" y1="76.0" x2="247.1" y2="496.0" stroke="#e7e6e2" stroke-width="1"/>
+<text x="247.1" y="511.0" font-size="11" fill="#52514e" text-anchor="middle" font-weight="normal" font-variant-numeric="tabular-nums">20</text>
+<line x1="499.0" y1="76.0" x2="499.0" y2="496.0" stroke="#e7e6e2" stroke-width="1"/>
+<text x="499.0" y="511.0" font-size="11" fill="#52514e" text-anchor="middle" font-weight="normal" font-variant-numeric="tabular-nums">40</text>
+<line x1="750.8" y1="76.0" x2="750.8" y2="496.0" stroke="#e7e6e2" stroke-width="1"/>
+<text x="750.8" y="511.0" font-size="11" fill="#52514e" text-anchor="middle" font-weight="normal" font-variant-numeric="tabular-nums">60</text>
+<line x1="96.0" y1="472.7" x2="776.0" y2="472.7" stroke="#e7e6e2" stroke-width="1"/>
+<text x="90.0" y="476.7" font-size="11" fill="#52514e" text-anchor="end" font-weight="normal" font-variant-numeric="tabular-nums">1e-22</text>
+<line x1="96.0" y1="426.0" x2="776.0" y2="426.0" stroke="#e7e6e2" stroke-width="1"/>
+<text x="90.0" y="430.0" font-size="11" fill="#52514e" text-anchor="end" font-weight="normal" font-variant-numeric="tabular-nums">1e-20</text>
+<line x1="96.0" y1="379.3" x2="776.0" y2="379.3" stroke="#e7e6e2" stroke-width="1"/>
+<text x="90.0" y="383.3" font-size="11" fill="#52514e" text-anchor="end" font-weight="normal" font-variant-numeric="tabular-nums">1e-18</text>
+<line x1="96.0" y1="332.7" x2="776.0" y2="332.7" stroke="#e7e6e2" stroke-width="1"/>
+<text x="90.0" y="336.7" font-size="11" fill="#52514e" text-anchor="end" font-weight="normal" font-variant-numeric="tabular-nums">1e-16</text>
+<line x1="96.0" y1="286.0" x2="776.0" y2="286.0" stroke="#e7e6e2" stroke-width="1"/>
+<text x="90.0" y="290.0" font-size="11" fill="#52514e" text-anchor="end" font-weight="normal" font-variant-numeric="tabular-nums">1e-14</text>
+<line x1="96.0" y1="239.3" x2="776.0" y2="239.3" stroke="#e7e6e2" stroke-width="1"/>
+<text x="90.0" y="243.3" font-size="11" fill="#52514e" text-anchor="end" font-weight="normal" font-variant-numeric="tabular-nums">1e-12</text>
+<line x1="96.0" y1="192.7" x2="776.0" y2="192.7" stroke="#e7e6e2" stroke-width="1"/>
+<text x="90.0" y="196.7" font-size="11" fill="#52514e" text-anchor="end" font-weight="normal" font-variant-numeric="tabular-nums">1e-10</text>
+<line x1="96.0" y1="146.0" x2="776.0" y2="146.0" stroke="#e7e6e2" stroke-width="1"/>
+<text x="90.0" y="150.0" font-size="11" fill="#52514e" text-anchor="end" font-weight="normal" font-variant-numeric="tabular-nums">1e-8</text>
+<line x1="96.0" y1="99.3" x2="776.0" y2="99.3" stroke="#e7e6e2" stroke-width="1"/>
+<text x="90.0" y="103.3" font-size="11" fill="#52514e" text-anchor="end" font-weight="normal" font-variant-numeric="tabular-nums">1e-6</text>
+<line x1="96.0" y1="496.0" x2="776.0" y2="496.0" stroke="#52514e" stroke-width="1"/>
+<line x1="96.0" y1="76.0" x2="96.0" y2="496.0" stroke="#52514e" stroke-width="1"/>
+<text x="436.0" y="530.0" font-size="12" fill="#0b0b0b" text-anchor="middle" font-weight="normal">spacetime dimension D</text>
+<text x="46.1" y="286.0" font-size="12" fill="#0b0b0b" text-anchor="middle" transform="rotate(-90 46.1 286.0)">|Δ_RT − Δ_hp| (lower is better)</text>
+<line x1="96" y1="239.3" x2="776" y2="239.3" stroke="#52514e" stroke-width="1.5" stroke-dasharray="6 4"/>
+<text x="385.6" y="233.3" font-size="11" fill="#52514e" text-anchor="start" font-weight="normal">acceptance, 1e-12</text>
+<polyline points="121.2,344.9 127.5,343.0 133.8,341.3 140.1,339.7 146.4,338.2 152.7,336.8 159.0,335.5 165.3,334.3 171.6,333.2 177.9,332.3 184.1,331.4 190.4,330.6 196.7,329.9 203.0,329.3 247.7,327.4 372.8,320.9 435.9,309.4 499.2,296.5 561.5,298.7 625.0,297.3 687.8,278.5 750.8,230.8" fill="none" stroke="#2a78d6" stroke-width="2"/>
+<g><circle cx="121.2" cy="344.9" r="5.5" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>32 × 101, D 10: -3.00e-17</title></g>
+<g><circle cx="127.5" cy="343.0" r="5.5" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>32 × 101, D 10.5: -3.60e-17</title></g>
+<g><circle cx="133.8" cy="341.3" r="5.5" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>32 × 101, D 11: -4.27e-17</title></g>
+<g><circle cx="140.1" cy="339.7" r="5.5" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>32 × 101, D 11.5: -5.01e-17</title></g>
+<g><circle cx="146.4" cy="338.2" r="5.5" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>32 × 101, D 12: -5.81e-17</title></g>
+<g><circle cx="152.7" cy="336.8" r="5.5" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>32 × 101, D 12.5: -6.67e-17</title></g>
+<g><circle cx="159.0" cy="335.5" r="5.5" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>32 × 101, D 13: -7.57e-17</title></g>
+<g><circle cx="165.3" cy="334.3" r="5.5" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>32 × 101, D 13.5: -8.50e-17</title></g>
+<g><circle cx="171.6" cy="333.2" r="5.5" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>32 × 101, D 14: -9.45e-17</title></g>
+<g><circle cx="177.9" cy="332.3" r="5.5" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>32 × 101, D 14.5: -1.04e-16</title></g>
+<g><circle cx="184.1" cy="331.4" r="5.5" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>32 × 101, D 15: -1.13e-16</title></g>
+<g><circle cx="190.4" cy="330.6" r="5.5" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>32 × 101, D 15.5: -1.23e-16</title></g>
+<g><circle cx="196.7" cy="329.9" r="5.5" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>32 × 101, D 16: -1.31e-16</title></g>
+<g><circle cx="203.0" cy="329.3" r="5.5" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>32 × 101, D 16.5: -1.39e-16</title></g>
+<g><circle cx="247.7" cy="327.4" r="5.5" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>32 × 101, D 20.0437: -1.68e-16</title></g>
+<g><circle cx="372.8" cy="320.9" r="5.5" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>32 × 101, D 29.9847: +3.20e-16</title></g>
+<g><circle cx="435.9" cy="309.4" r="5.5" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>32 × 101, D 34.9933: +9.90e-16</title></g>
+<g><circle cx="499.2" cy="296.5" r="5.5" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>32 × 101, D 40.0201: +3.54e-15</title></g>
+<g><circle cx="561.5" cy="298.7" r="5.5" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>32 × 101, D 44.9634: +2.85e-15</title></g>
+<g><circle cx="625.0" cy="297.3" r="5.5" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>32 × 101, D 50.0075: +3.29e-15</title></g>
+<g><circle cx="625.0" cy="288.9" r="5.5" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>32 × 101, D 50.0075: +7.49e-15</title></g>
+<g><circle cx="687.8" cy="278.5" r="5.5" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>32 × 101, D 54.9961: -2.11e-14</title></g>
+<g><circle cx="687.8" cy="281.9" r="5.5" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>32 × 101, D 54.9961: +1.49e-14</title></g>
+<g><circle cx="750.8" cy="230.8" r="5.5" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>32 × 101, D 60.002: -2.33e-12</title></g>
+<g><circle cx="750.8" cy="236.9" r="5.5" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>32 × 101, D 60.002: -1.27e-12</title></g>
+<polyline points="184.1,464.3 247.7,420.8 372.8,362.4 435.9,365.6 499.2,304.9 561.5,287.6 625.0,228.6 687.8,239.7 750.8,203.4" fill="none" stroke="#eb6834" stroke-width="2"/>
+<g><circle cx="184.1" cy="464.3" r="5.5" fill="#eb6834" stroke="#fcfcfb" stroke-width="2"/><title>32 × 121, D 15: -2.28e-22</title></g>
+<g><circle cx="247.7" cy="420.8" r="5.5" fill="#eb6834" stroke="#fcfcfb" stroke-width="2"/><title>32 × 121, D 20.0437: +1.67e-20</title></g>
+<g><circle cx="372.8" cy="362.4" r="5.5" fill="#eb6834" stroke="#fcfcfb" stroke-width="2"/><title>32 × 121, D 29.9847: +5.33e-18</title></g>
+<g><circle cx="435.9" cy="365.6" r="5.5" fill="#eb6834" stroke="#fcfcfb" stroke-width="2"/><title>32 × 121, D 34.9933: -3.86e-18</title></g>
+<g><circle cx="499.2" cy="304.9" r="5.5" fill="#eb6834" stroke="#fcfcfb" stroke-width="2"/><title>32 × 121, D 40.0201: +1.55e-15</title></g>
+<g><circle cx="561.5" cy="287.6" r="5.5" fill="#eb6834" stroke="#fcfcfb" stroke-width="2"/><title>32 × 121, D 44.9634: -8.53e-15</title></g>
+<g><circle cx="561.5" cy="297.6" r="5.5" fill="#eb6834" stroke="#fcfcfb" stroke-width="2"/><title>32 × 121, D 44.9634: +3.18e-15</title></g>
+<g><circle cx="625.0" cy="228.6" r="5.5" fill="#eb6834" stroke="#fcfcfb" stroke-width="2"/><title>32 × 121, D 50.0075: -2.89e-12</title></g>
+<g><circle cx="625.0" cy="228.6" r="5.5" fill="#eb6834" stroke="#fcfcfb" stroke-width="2"/><title>32 × 121, D 50.0075: -2.89e-12</title></g>
+<g><circle cx="625.0" cy="224.0" r="5.5" fill="#eb6834" stroke="#fcfcfb" stroke-width="2"/><title>32 × 121, D 50.0075: +4.52e-12</title></g>
+<g><circle cx="687.8" cy="239.7" r="5.5" fill="#eb6834" stroke="#fcfcfb" stroke-width="2"/><title>32 × 121, D 54.9961: +9.65e-13</title></g>
+<g><circle cx="687.8" cy="217.6" r="5.5" fill="#eb6834" stroke="#fcfcfb" stroke-width="2"/><title>32 × 121, D 54.9961: +8.54e-12</title></g>
+<g><circle cx="750.8" cy="203.4" r="5.5" fill="#eb6834" stroke="#fcfcfb" stroke-width="2"/><title>32 × 121, D 60.002: +3.46e-11</title></g>
+<polyline points="435.9,367.8 499.2,285.9 561.5,225.8 625.0,201.7 687.8,111.6" fill="none" stroke="#1baf7a" stroke-width="2"/>
+<g><circle cx="435.9" cy="367.8" r="5.5" fill="#1baf7a" stroke="#fcfcfb" stroke-width="2"/><title>32 × 141, D 34.9933: +3.12e-18</title></g>
+<g><circle cx="499.2" cy="285.9" r="5.5" fill="#1baf7a" stroke="#fcfcfb" stroke-width="2"/><title>32 × 141, D 40.0201: +1.01e-14</title></g>
+<g><circle cx="499.2" cy="280.9" r="5.5" fill="#1baf7a" stroke="#fcfcfb" stroke-width="2"/><title>32 × 141, D 40.0201: +1.65e-14</title></g>
+<g><circle cx="561.5" cy="225.8" r="5.5" fill="#1baf7a" stroke="#fcfcfb" stroke-width="2"/><title>32 × 141, D 44.9634: +3.80e-12</title></g>
+<g><circle cx="625.0" cy="201.7" r="5.5" fill="#1baf7a" stroke="#fcfcfb" stroke-width="2"/><title>32 × 141, D 50.0075: -4.11e-11</title></g>
+<g><circle cx="687.8" cy="111.6" r="5.5" fill="#1baf7a" stroke="#fcfcfb" stroke-width="2"/><title>32 × 141, D 54.9961: -2.97e-07</title></g>
+<polyline points="121.2,238.5 127.5,237.5 133.8,237.3 140.1,238.3 146.4,241.9 152.7,258.4 159.0,240.8 165.3,230.5 171.6,224.0 177.9,219.0 184.1,214.8 190.4,211.1 196.7,207.8 203.0,204.9 247.7,189.2 372.8,167.2" fill="none" stroke="#7a7668" stroke-width="2"/>
+<g><circle cx="121.2" cy="238.5" r="5.5" fill="#7a7668" stroke="#fcfcfb" stroke-width="2"/><title>32 × 81, D 10: -1.08e-12</title></g>
+<g><circle cx="127.5" cy="237.5" r="5.5" fill="#7a7668" stroke="#fcfcfb" stroke-width="2"/><title>32 × 81, D 10.5: -1.19e-12</title></g>
+<g><circle cx="133.8" cy="237.3" r="5.5" fill="#7a7668" stroke="#fcfcfb" stroke-width="2"/><title>32 × 81, D 11: -1.22e-12</title></g>
+<g><circle cx="140.1" cy="238.3" r="5.5" fill="#7a7668" stroke="#fcfcfb" stroke-width="2"/><title>32 × 81, D 11.5: -1.10e-12</title></g>
+<g><circle cx="146.4" cy="241.9" r="5.5" fill="#7a7668" stroke="#fcfcfb" stroke-width="2"/><title>32 × 81, D 12: -7.74e-13</title></g>
+<g><circle cx="152.7" cy="258.4" r="5.5" fill="#7a7668" stroke="#fcfcfb" stroke-width="2"/><title>32 × 81, D 12.5: -1.52e-13</title></g>
+<g><circle cx="159.0" cy="240.8" r="5.5" fill="#7a7668" stroke="#fcfcfb" stroke-width="2"/><title>32 × 81, D 13: +8.63e-13</title></g>
+<g><circle cx="165.3" cy="230.5" r="5.5" fill="#7a7668" stroke="#fcfcfb" stroke-width="2"/><title>32 × 81, D 13.5: +2.38e-12</title></g>
+<g><circle cx="171.6" cy="224.0" r="5.5" fill="#7a7668" stroke="#fcfcfb" stroke-width="2"/><title>32 × 81, D 14: +4.54e-12</title></g>
+<g><circle cx="177.9" cy="219.0" r="5.5" fill="#7a7668" stroke="#fcfcfb" stroke-width="2"/><title>32 × 81, D 14.5: +7.46e-12</title></g>
+<g><circle cx="184.1" cy="214.8" r="5.5" fill="#7a7668" stroke="#fcfcfb" stroke-width="2"/><title>32 × 81, D 15: +1.13e-11</title></g>
+<g><circle cx="190.4" cy="211.1" r="5.5" fill="#7a7668" stroke="#fcfcfb" stroke-width="2"/><title>32 × 81, D 15.5: +1.62e-11</title></g>
+<g><circle cx="196.7" cy="207.8" r="5.5" fill="#7a7668" stroke="#fcfcfb" stroke-width="2"/><title>32 × 81, D 16: +2.24e-11</title></g>
+<g><circle cx="203.0" cy="204.9" r="5.5" fill="#7a7668" stroke="#fcfcfb" stroke-width="2"/><title>32 × 81, D 16.5: +3.00e-11</title></g>
+<g><circle cx="247.7" cy="189.2" r="5.5" fill="#7a7668" stroke="#fcfcfb" stroke-width="2"/><title>32 × 81, D 20.0437: +1.40e-10</title></g>
+<g><circle cx="372.8" cy="167.2" r="5.5" fill="#7a7668" stroke="#fcfcfb" stroke-width="2"/><title>32 × 81, D 29.9847: +1.24e-09</title></g>
+<circle cx="687.8" cy="111.6" r="10" fill="none" stroke="#0b0b0b" stroke-width="1.5"/>
+<line x1="677.9" y1="110.2" x2="647.8" y2="105.6" stroke="#0b0b0b" stroke-width="1"/>
+<text x="643.8" y="109.6" font-size="11" fill="#0b0b0b" text-anchor="end" font-weight="bold">32 × 141 at D 55: 3e-7</text>
+<circle cx="750.8" cy="230.8" r="10" fill="none" stroke="#0b0b0b" stroke-width="1.5"/>
+<line x1="742.1" y1="225.9" x2="660.8" y2="180.8" stroke="#0b0b0b" stroke-width="1"/>
+<text x="656.8" y="184.8" font-size="11" fill="#0b0b0b" text-anchor="end" font-weight="bold">32 × 101 misses at D 60</text>
+<circle cx="184.1" cy="464.3" r="10" fill="none" stroke="#0b0b0b" stroke-width="1.5"/>
+<line x1="193.0" y1="459.6" x2="210.1" y2="450.3" stroke="#0b0b0b" stroke-width="1"/>
+<text x="214.1" y="454.3" font-size="11" fill="#0b0b0b" text-anchor="start" font-weight="bold">32 × 121 to 2e-22</text>
+<g opacity="0.35"><line x1="794.0" y1="106.0" x2="794.0" y2="162.0" stroke="#52514e" stroke-width="2"/><polygon points="794.0,168.0 790.0,159.0 798.0,159.0" fill="#52514e"/><text x="794.0" y="130.0" font-size="11" fill="#52514e" text-anchor="middle" transform="rotate(90.0 794.0 137.0)">smaller</text></g>
+<g><circle cx="827.0" cy="212.0" r="5.5" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>32 × 101</title></g>
+<text x="840.0" y="216.0" font-size="11" fill="#0b0b0b" text-anchor="start" font-weight="normal">32 × 101</text>
+<g><circle cx="827.0" cy="232.0" r="5.5" fill="#eb6834" stroke="#fcfcfb" stroke-width="2"/><title>32 × 121</title></g>
+<text x="840.0" y="236.0" font-size="11" fill="#0b0b0b" text-anchor="start" font-weight="normal">32 × 121</text>
+<g><circle cx="827.0" cy="252.0" r="5.5" fill="#1baf7a" stroke="#fcfcfb" stroke-width="2"/><title>32 × 141</title></g>
+<text x="840.0" y="256.0" font-size="11" fill="#0b0b0b" text-anchor="start" font-weight="normal">32 × 141</text>
+<g><circle cx="827.0" cy="272.0" r="5.5" fill="#7a7668" stroke="#fcfcfb" stroke-width="2"/><title>32 × 81</title></g>
+<text x="840.0" y="276.0" font-size="11" fill="#0b0b0b" text-anchor="start" font-weight="normal">32 × 81</text>
+<text x="16.0" y="570.0" font-size="10" fill="#52514e" text-anchor="start" font-weight="normal">Apple M5, 32 GB, macOS 27.0.1</text>
+<text x="16.0" y="556.0" font-size="10" fill="#52514e" text-anchor="start" font-weight="normal">solver/rt/rt_run.py --solver mp (main b4d401f)  ·  raw I105-mac 6c9d697, I145-mac 62b275a  ·  hp double-double rows of hp/data/delta_all.csv</text>
+<a href="https://github.com/nmoinvaz/choptuik-large-d"><text x="964" y="570" font-size="10" fill="#52514e" text-anchor="end" text-decoration="underline">github.com/nmoinvaz/choptuik-large-d</text></a>
+</svg>
