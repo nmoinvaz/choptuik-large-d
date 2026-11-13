@@ -32,6 +32,7 @@ lattice cannot be located: the region is open there. Apart, the same with (c'') 
     python3 pade_second_ring.py --selftest [--mutate=secmom|len|window]
     python3 pade_second_ring.py pilot OUTDIR --ref703=I703-mac/grid.jsonl [--mutate=len|window] [--allow_unraw]
     python3 pade_second_ring.py ring OUTDIR [--allow_unraw]     (reads OUTDIR/control.json, OUTDIR/pilot.json; resumes)
+    python3 pade_second_ring.py report OUTDIR [--allow_unraw]   (post-freeze summary of the ring's files, not judged)
 
 OUTDIR/control.json is pade_second_zero.py control's. Exit 1 when a frozen control fails or the gate forbids a stage.
 Numerical evidence on plants, not a bound.
@@ -507,6 +508,101 @@ def run_ring(outdir):
     return r8 and not c1_fail
 
 
+# ---------------------------------------------------------------- report (written after the freeze; judges nothing)
+def run_report(outdir):
+    """post-freeze summary of OUTDIR/ring.jsonl and ring.json: the position maps, per-position g and windows, counts at
+    wf 1.00, and the ranges of the passing plants. Every verdict is the ring stage's; nothing here is judged"""
+    log = Z.tz.Log(outdir, "report", None)
+    recs, gs = {}, {}
+    for line in open(os.path.join(outdir, "ring.jsonl")):
+        try:
+            r = json.loads(line)
+        except json.JSONDecodeError:            # a line still being written
+            continue
+        if r.get("type") == "g":
+            gs[(r["pos"], r["L"], r["P"], r["alpha"])] = r
+        else:
+            recs[(r["id"], r["wf"])] = r
+    ring = json.load(open(os.path.join(outdir, "ring.json")))
+    posv = ring["positions"]
+    at0 = [r for (_, wf), r in recs.items() if wf == WF0]
+    groups = ["/".join(map(str, g)) for g in GROUPS]
+
+    def code(p, crit, grp=None):
+        v = posv.get(p)
+        if v is None:
+            return "  "
+        gl = [grp] if grp else groups
+        if any(v["groups"][g][crit]["pass"] for g in gl if crit in v["groups"][g]):
+            return "P"
+        if any(v["groups"][g][crit]["n_wf1"] for g in gl if crit in v["groups"][g]):
+            return "1"
+        ws = [w[0] for k, w in v["windows"].items()
+              if grp is None or k.startswith(f"{grp.split('/')[1]}/{grp.split('/')[2]}/")]
+        return "cap" if all(w == "cap" for w in ws) else "·"
+
+    log("Codes: P passes (a)+(crit) at all three nodes; 1 only at wf 1.00; · some (c') window, no (a)+(crit) at wf 1.00; "
+        "cap every window empty (too weak at eta 0.2). Rows b, columns a; Q = P0 + kappa_* + 0.25 (a + ib)")
+    for crit, lab in (("c", "(a)+(c')"), ("c2", "(a)+(c'')")):
+        for grp in [None] + groups:
+            log(f"map {lab}, {'union' if grp is None else grp}:")
+            log("| b \\ a | " + " | ".join(f"{a:+d}" for a in LAT_A) + " |")
+            log("|---|" + "---|" * len(LAT_A))
+            for b in sorted(LAT_B, reverse=True):
+                log(f"| {b:+d} | " + " | ".join(code(pos_id((a, b, None)), crit, grp) for a in LAT_A) + " |")
+    diag = sorted(p for p in posv if "d" in p)
+    if diag:
+        log("stage 2 points: " + ", ".join(f"{p} {code(p, 'c')}/{code(p, 'c2')}" for p in diag))
+    log("per position at wf 1.00: |Q|, arg Q, g at (0.3, 4) for alpha 0 and beta - 1, windows (cap/window/floor over the "
+        "10 shape-alpha pairs), plants, (a), (a)+(c'), (a)+(c''), m_DA range over the windowed plants")
+    for p in sorted(posv, key=lambda q: (posv[q]["pos"][0], posv[q]["pos"][1], str(posv[q]["pos"][2]))):
+        v = posv[p]
+        rs = [r for r in at0 if r["pos"] == p]
+        wk = [w[0] for w in v["windows"].values()]
+        ws = [r for r in rs if gs[(p, r["L"], r["P"], r["alpha"])]["window"] == "window"]
+        mda = [r["judge"]["m_DA"] for r in ws]
+        log(f"{p:10s} Q {v['Q'][0]:.3f}{v['Q'][1]:+.3f}i |Q| {v['absQ']:.3f} arg {v['argQ_deg']:5.1f} | g "
+            f"{v['windows']['0.3/4/log'][1]:.3g}, {v['windows']['0.3/4/ex'][1]:.3g} | cap {wk.count('cap')} window "
+            f"{wk.count('window')} floor {wk.count('floor')} | plants {len(rs)}, (a) {sum(r['judge']['a'] for r in rs)}, "
+            f"(a)+(c') {sum(r['judge']['a'] and r['judge']['c'] for r in rs)}, (a)+(c'') "
+            f"{sum(r['judge']['a'] and bool(r['judge']['c2']) for r in rs)} | m_DA "
+            + (f"{min(mda)}-{max(mda)}" if mda else "-") + f" | pass {v['pass']}")
+    j0 = [r["judge"] for r in at0]
+    log(f"wf 1.00, {len(at0)} plants: (a) {sum(j['a'] for j in j0)}, (b) {sum(j['b'] for j in j0)}, (c') "
+        f"{sum(j['c'] for j in j0)}, (a)+(c') {sum(j['a'] and j['c'] for j in j0)}, (c'') evaluated "
+        f"{sum(j['c2'] is not None and 'ratio2' in j and j['ratio2'] is not None for j in j0)}, (a)+(c'') "
+        f"{sum(j['a'] and bool(j['c2']) for j in j0)}; smallest d_P {min(float(j['d_P']) for j in j0):.3f}")
+    for grp in groups:
+        kind, L, P = grp.split("/")
+        rs = [r for r in at0 if r["kind"] == kind and str(r["L"]) == L and str(r["P"]) == P]
+        log(f"group {grp:14s}: plants {len(rs)}, (a) {sum(r['judge']['a'] for r in rs)}, (a)+(c') "
+            f"{sum(r['judge']['a'] and r['judge']['c'] for r in rs)}, positions passing (c') "
+            f"{sum(v['groups'][grp]['c']['pass'] for v in posv.values())}, (c'') "
+            f"{sum(v['groups'][grp].get('c2', {}).get('pass', False) for v in posv.values())}")
+    # the plants that pass at all three nodes
+    full = {}
+    for (pid, wf), r in recs.items():
+        full.setdefault(pid, {})[wf] = r
+    win = [d for d in full.values() if len(d) == 3 and all(d[w]["judge"]["a"] and d[w]["judge"]["c"] for w in NODES)]
+    if win:
+        e = [d[WF0]["eta"] for d in win]
+        s12 = [d[WF0]["plant"]["share"]["12"] for d in win]
+        log(f"plants passing (a)+(c') at all three nodes: {len(win)}; eta {min(e):.2e}-{max(e):.2e}; share of sigma_12 "
+            f"{min(s12):.1e}-{max(s12):.1e}; d_P {min(float(d[w]['judge']['d_P']) for d in win for w in NODES):.3f}-"
+            f"{max(float(d[w]['judge']['d_P']) for d in win for w in NODES):.3f}; ratio at wf 1.00 "
+            f"{min(d[WF0]['judge']['ratio'] for d in win):.2f}-{max(d[WF0]['judge']['ratio'] for d in win):.2f}")
+    # (a) against eta g, the misfit ratio, on the windowed plants
+    bins = ((0.1, 0.3), (0.3, 1), (1, 3), (3, 10))
+    ws = [r for r in at0 if gs[(r["pos"], r["L"], r["P"], r["alpha"])]["window"] == "window"]
+    log("(a) on windowed plants by chi_22 / chi_22(real): " + "; ".join(
+        f"{lo}-{hi}: {sum(r['judge']['a'] for r in ws if lo <= r['judge']['ratio'] < hi)} of "
+        f"{sum(1 for r in ws if lo <= r['judge']['ratio'] < hi)}" for lo, hi in bins))
+    log(f"ring.json: verdict {ring.get('verdict')}; R8 {ring.get('R8', {}).get('pass')}; C1 failures "
+        f"{ring.get('C1_fail')}")
+    log.dump({"note": "post-freeze summary, judges nothing", "n_wf1": len(at0), "n_records": len(recs)})
+    return True
+
+
 def main():
     argv = sys.argv[1:]
     from raw_out import pop_allow, require_raw
@@ -518,10 +614,10 @@ def main():
             raise SystemExit(f"unknown selftest mutation {mut}")
         sys.exit(0 if selftest(mut) else 1)
     argv = [a for a in argv if not a.startswith("--")]
-    if len(argv) != 2 or argv[0] not in ("pilot", "ring"):
+    if len(argv) != 2 or argv[0] not in ("pilot", "ring", "report"):
         raise SystemExit(__doc__)
     stage, outdir = argv
-    if mut not in {"pilot": (None, "len", "window"), "ring": (None,)}[stage]:
+    if mut not in {"pilot": (None, "len", "window"), "ring": (None,), "report": (None,)}[stage]:
         raise SystemExit(f"unknown {stage} mutation {mut}")
     require_raw(os.path.join(outdir, "x.json"), allow=allow)
     if stage == "pilot":
@@ -530,8 +626,10 @@ def main():
         ok = run_pilot(outdir, ref703, mut)
         if mut:
             ok = False
-    else:
+    elif stage == "ring":
         ok = run_ring(outdir)
+    else:
+        ok = run_report(outdir)
     sys.exit(0 if ok else 1)
 
 
