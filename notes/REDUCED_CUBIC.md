@@ -954,7 +954,7 @@ verdict took the order of E in units of |Bc| (order 1) instead of the departure'
 - **The pair test in the linear regime** (203e56a0). REF's bridge showed the test from w0 leaving its t² law near
   10⁻²¹, where its start error 0.072t² reaches about 10⁻⁴³. So each converged point also gets the test from the
   converged w moved by 10⁻⁶⁰ along w − w0, far inside the linear regime. The class A run has both.
-- **REF's bridge again** (`--bridge_to=1e-19`, code 2169dc00, `curve_ref_bridge2`), since at the class A start the two
+- **REF's bridge again** (`--bridge_to=1e-21`, code 2169dc00, `curve_ref_bridge2`), since at the class A start the two
   tests disagree in sign, so REF's sign from w0 is not evidence. This run also stores the parts as vectors at 30
   digits (4bb29b7f), for a cubic that an order-1 term hides in |O|.
 
@@ -1009,7 +1009,7 @@ Raw `I698-mac/curve_ref.log` and `.json` (code 085fbdff, exit 1), summarized by 
 ### 11.7 The chord bridge from 10⁻²⁴ (diagnostic, 11.4)
 
 Raw `I698-mac/curve_ref_bridge.log` (code 46f250b3), `curve_ref_bridge2.log` (REF again, with the linear-regime pair
-test and the parts as vectors, to 10⁻¹⁹; code 2169dc00) and the bridge in `curve_classA.log` (code 203e56a0), each
+test and the parts as vectors, to 10⁻²¹; code 2169dc00) and the bridge in `curve_classA.log` (code 203e56a0), each
 summarized by `curvesum`. All judge nothing.
 
 | quantity | REF | class A |
@@ -1038,16 +1038,16 @@ summarized by `curvesum`. All judge nothing.
 
 ### 11.8 Results at the class A start (the protocol)
 
-Raw `I698-mac/curve_classA.log` and `.json` (code 203e56a0, exit CLA_EXIT), with the bridge of 11.7 run first.
+Raw `I698-mac/curve_classA.log` and `.json` (code 203e56a0, exit 1), with the bridge of 11.7 run first.
 
 | criterion | result |
 |---|---|
 | (Z0) offset on its rows; basis line against #677's | pass; σ, a and \|Ba\| equal to every printed digit (\|Vᵀw0\| 2.6×10⁻¹²⁸ against 8.4×10⁻¹²⁹); the jet's J dz0 leaves 9.1×10⁻⁶⁶ off the held rows |
-| (Z1) the lead-in at 10⁻²⁴ against #677's chord | CLA_Z1 |
-| (Z2a) the flat chart's strong residual at 10⁻⁶ against ½max\|F″(e, e)\| (2.70×10³⁴) | CLA_Z2A |
-| (Z2b) the flat chart's departure against κt | CLA_Z2B |
-| (Z3) every strong solve converged | CLA_Z3 |
-| the verdict (`curve_verdict`) | CLA_VERDICT |
+| (Z1) the lead-in at 10⁻²⁴ against #677's chord | 0.098216381 \|Ba\| both: 4.6×10⁻¹⁷ (bound 10⁻⁶): pass. Newton took 3 LUs: the corrections came in a pair on the first, 3.3×10⁻³⁵ twice, against \|w − w0\| = 5.4×10⁻⁵⁰, and grew once on the second |
+| (Z2a) the flat chart's strong residual at 10⁻⁶ against ½max\|F″(e, e)\| (2.70×10³⁴) | 1.7×10²⁰ times (within a factor 2): FAIL |
+| (Z2b) the flat chart's departure against κt | 5.4×10⁸² times or more (above 10): pass |
+| (Z3) every strong solve converged | no: both rays stop at 10⁻⁶. From the quadratic prediction max\|F\| is 1.4×10²³, and Newton's first step 2.6×10¹⁹ (+) and 2.2×10¹⁹ (−) |
+| the verdict (`curve_verdict`) | **not decided**: both judged t missing |
 
 The flat chart at the class A start, as at REF but without overflow: its strong residual over t² is 7.6×10³³ at
 10⁻²⁴ and 4.5×10⁵⁴, 2.5×10⁶⁰, 2.6×10⁶⁷, 3.2×10⁷⁶ and 7.0×10⁸⁸ at 10⁻⁶, 10⁻⁵, 10⁻⁴, 10⁻³ and 10⁻², and its odd part over
@@ -1057,14 +1057,14 @@ t³ is 2.255×10³³ at 10⁻²⁴, which is \|UᵀT(e)\|/6 = 1.3531×10³⁴/6 
 
 | criterion | REF | class A |
 |---|---|---|
-| (PC0)–(PC4) the plant; its controls w0 and chord fail | pass; both fail | |
+| (PC0)–(PC4) and (PB), the plant; its controls w0, chord and fold fail | pass; all three fail | (the same plant) |
 | (Z0) | pass | pass |
-| (Z1) the lead-in against #677 | pass (2.3×10⁻¹⁷) | CLA_Z1S |
-| (Z2) the flat chart, a control | **fires**: (a) 1.2×10²⁰ at 10⁻⁶ | CLA_Z2S |
-| (Z3) every strong solve converged | no: both rays stop at 10⁻⁶ | CLA_Z3S |
+| (Z1) the lead-in against #677 | pass (2.3×10⁻¹⁷) | pass (4.6×10⁻¹⁷) |
+| (Z2) the flat chart, a control | **fires**: (a) 1.2×10²⁰ at 10⁻⁶ | **fires**: (a) 1.7×10²⁰ at 10⁻⁶ |
+| (Z3) every strong solve converged | no: both rays stop at 10⁻⁶ | no: both rays stop at 10⁻⁶ |
 | departure at 10⁻³ and 10⁻² against κt (factor 2 supports, 10 refutes) | not measured | not measured |
-| the verdict | **not decided** | CLA_VS |
-| exit | 1 | CLA_EXIT |
+| the verdict | **not decided** | **not decided** |
+| exit | 1 | 1 |
 
 **The reading's verdict, by 11.3: not decided at either start.** The frozen test needs g at |c| = 10⁻³ and 10⁻², and
 neither solve reaches them: Newton with the refactored LU fails at 10⁻⁶ on its first step at both starts, and the chord
@@ -1087,11 +1087,12 @@ in the issue's range.
   test is a recommended task (the strong block's smallest singular value along the ray, from the refactored LU).
 - **Why Newton fails at 10⁻⁶.** The strong rows are extremely nonlinear in their softest direction. The chord's pair
   test from w0 leaves its t² law once its start error passes about 10⁻⁴³ (REF, 0.072t² at t ≈ 10⁻²¹), and at the class
-  A start its sign already disagrees with the linear test at 10⁻²⁴, where that error is 5×10⁻⁵⁰. Newton's step from the quadratic prediction at 10⁻⁶, which leaves a residual of
-  10²² there, is outside that basin, and so would be any prediction made by extrapolation from |c| ≤ 3×10⁻¹⁸.
+  A start its sign already disagrees with the linear test at 10⁻²⁴, where that error is 5×10⁻⁵⁰. Newton's step from
+  the quadratic prediction at 10⁻⁶, which leaves a residual of 10²² there, is outside that basin, and so would be any
+  prediction made by extrapolation from |c| ≤ 3×10⁻¹⁸.
 - **What 3S = T then is.** Section 10.8 read the reduced map's cubic as the ordinary one of a function of Δ. The bridge
-  adds that the cubic is resolved and ordinary in size at REF, 7.8|Be| per unit t², so 3S = T leaves a cubic of that size
-  rather than none. The map's cubic along e is about 10⁻⁵⁸ of the flat chart's, far below the tensors' resolution:
+  adds that the cubic is resolved and ordinary in size at REF, 7.8|Be| per unit t², so 3S = T leaves a cubic of that
+  size rather than none. The map's cubic along e is about 10⁻⁵⁸ of the flat chart's, far below the tensors' resolution:
   |UᵀT(e)|/6 = 2.5×10³² per t³ against 7.8|Be| = 9×10⁻²⁶ per t³ (its component along the order-1 term).
 
 ### 11.11 Discrepancies (reported, not fixed)
