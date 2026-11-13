@@ -3,7 +3,7 @@
 Status of everything here: numerical evidence. Nothing is rigorous. It bears on the type bounds of routes A3 and P5,
 which follow from the farthest singularity of the Borel transform (proof/D_entire.md sections 1 and 7). Sections 1–4
 are #547, sections 5–6 are #548, section 7 is #670, section 8 is #669, section 9 is #672, section 10 is #683,
-section 11 is #684, section 12 is #667, section 13 is #689, and section 14 is #702.
+section 11 is #684, section 12 is #667, section 13 is #689, section 14 is #702, and section 15 is #703.
 
 - **#547.** A calibrated estimator recovers the far end of smooth-density plants within 0.009, but it fails #547's
   acceptance. On the real series two controls fire, so no far end is quoted (§4).
@@ -1807,3 +1807,92 @@ In 7.4, replacing the bullet "The near end does not account for it, and the zero
 +  above compare twins whose zero factor sits at x_ref. #672's and #684's conclusions survive in the chord class, but
 +  #667's margin for a set near P0 + κ⋆ does not.
 ```
+
+## 15. #667's and #684's plants with the zero factor at the real zero (#703)
+
+Every plant of §2–§12 has its zero factor at x_ref, 5–7×10⁻³ from the real series' own zero, so each comparison of a
+plant's twin misfit with the real series' carried that offset (§13.5). §14 located the real zero by fit and found the
+real κ⋆ chord twin's misfit at 22 terms to be 402–427 there. Here #667's two-set plants and #684's far-end plants are
+rebuilt with their zero at that located zero, and compared with the real series in bases with the same zero.
+
+### 15.1 Method
+
+`solver/inner_amp/pade_second_zero.py`.
+
+- **The zero.** ZLOC is §14's located zero (zfit) per node, from `I702-mac/real.json` to 40 digits, for example
+  7.3940842931 − 0.0000139i at ω∞. It is used, not the [11/11] Padé zero, because the real misfit of 402 is quoted in
+  its basis. Every plant's zero factor and every basis' zero factor is `planted_plants.factor([ZLOC])` at the plants'
+  60 digits, so a plant and a basis share the zero exactly.
+- **Plants.** #667's (§12.1), with only the zero factor moved to ZLOC and the main density's c_m refitted to the real
+  σ₀–σ₁₂. #684's (§11.3): #547's chord2 plant with its far end at |P1| = 1.85 on κ⋆'s ray (K1), and the chord2
+  plants of the ratio-law κ and the k = 8–10 poles, with the same change.
+- **Bases.** The judged basis, zk/chord, is the κ⋆ chord twin with the zero at ZLOC, §14's zfit basis. As context,
+  #667's other 14 bases with the zero at ZLOC, and the chord basis without a zero factor. The residuals at every M
+  come from one Householder QR per basis (§12.1), with the real series' errors for every plant.
+- **The judge.** #667's (a) and (b), unchanged. (c′) replaces #667's (c): in zk/chord, M_min = 23 and χ₂₂ within a
+  factor 10 of the real series' in the same basis (411, 402, 427).
+- **The relocation, judged apart as (c″).** The real misfit of 402 is the misfit after its zero was located by l2 at
+  20 terms. The same locator, run on a plant, may move the plant's zero and lower its misfit. So (c″) is (c′) in the
+  κ⋆ chord basis with the zero at the plant's own located zero. The locator is Gauss–Newton in w = 1/x₀ with the
+  coefficients projected out (variable projection, Golub and Pereyra 1973). Each step solves the least-squares fit at
+  M = 20 against the columns plus the model's derivative in w, Σ c_m ∂col_m/∂w, whose coefficient is the step, and is
+  halved until l2 falls. Started from ZLOC, every accepted step lowers l2 at 20 terms. So at the located zero
+  χ₂₂ ≤ l2₂₂ ≤ l2₂₀ ≤ l2₂₀(ZLOC), and a plant with l2₂₀(ZLOC) < 0.1 χ₂₂(real) fails (c″) without being relocated.
+
+Reference: G. H. Golub and V. Pereyra, "The differentiation of pseudo-inverses and nonlinear least squares problems
+whose variables separate", SIAM J. Numer. Anal. 10, 413–432 (1973), doi:10.1137/0710036 (variable projection). The
+entry was checked against the Scilit and BibSonomy records through a web search, not against the publisher's page.
+
+The selftest (`python3 pade_second_zero.py --selftest`) checks three things:
+
+1. The new bases with the zero at x_ref equal `pade_twin_end.end_basis`'s bit for bit, in the chord, stepped-arc and
+   smooth-arc classes.
+2. The η = 0 chord2 plant at ZLOC equals `pade_twin_near.NearPlant` with that zero, σ₀–σ₃₁ exactly.
+3. The locator, on the chord2 plant with its zero at ZLOC + 0.003 + 0.002i and started from ZLOC, returns the plant's
+   zero within 10⁻¹². `--mutate=gn`, which returns the start unsearched, must fail it.
+
+### 15.2 Frozen criteria
+
+Written into the script's `FROZEN` and here before the `control`, `far` and `grid` stages were first run.
+
+| check | criterion |
+|---|---|
+| grid, part near | chord2 or arc; the curves seg(a, b) (9) and sum; α = 0 or β − 1; η = 10⁻², 2×10⁻², 5×10⁻², 10⁻¹; φ = 0°, 90°, 180°, 270°. That makes 640 plants, run first |
+| grid, part rest | #667's 1584 plants not in part near (1264), with η = 10⁻⁹ to 10⁻¹ in decades and the low curve |
+| nodes | every plant at ω∞. ω/ω∞ = 0.99 and 1.01 for each plant that passes (a), (b) and (c′) or (c″) at ω∞, the plants that pass (a) and (c′) there (at most 60, smallest D first) and (a) and (c″) (at most 60, smallest D″), and the 20 with the smallest D |
+| (a), (b) | #667's: m_DA ≤ 5, d_P ≤ 0.03 |
+| (c′) | in zk/chord, M_min = 23 and 0.1 ≤ χ₂₂ / χ₂₂(real) ≤ 10, with χ₂₂(real) the real series' in the same basis |
+| (c″) | (c′) in the κ⋆ chord basis with the zero at the plant's own located zero, against the same χ₂₂(real). Evaluated only if R5 passes. A plant with l2₂₀(ZLOC) < 0.1 χ₂₂(real) fails it unrelocated |
+| reproduces | (a), (b) and (c′) at all three nodes. Apart, the same with (c″) |
+| the question | counts of (c′), (a)+(c′), (b)+(c′) and all three at ω∞, and at all three nodes for the plants run there; the same with (c″) |
+| closest | D = max(m_DA / 5, d_P / 0.03, d_T) with d_T = \|log₁₀(χ₂₂ / χ₂₂(real))\| in zk/chord, D_all its largest over the nodes, smallest D_all among the plants run at every node. D″ takes d_T from (c″) |
+| R1, R2 | #667's: the real m_DA ≤ 5 at every node; #541's far ends reproduced |
+| R3z | the real χ₂₂ by projection in zk/chord and in the chord basis without a zero factor within 10⁻⁶ relative of §14's zfit and nozero values; M_min = M_lo = 23 and C1 in both |
+| R4z | the η = 0 plants: chord2 equals `NearPlant` with its zero at ZLOC, and arc equals its own FarPlant refitted at ZLOC, σ₀–σ₃₁ exactly, at every node |
+| R5 | the locator on the real series, started from x_ref, returns §14's zfit zero within 10⁻⁸ at every node |
+| J+ | the real series, judged as a plant, passes (a), (b) and (c′) at every node |
+| J− | the η = 0 chord2 and arc plants at ω∞ fail the judge, each with M_min = 6 in its own class's κ⋆ basis at ZLOC (zk/chord, and the smooth arc) |
+| gate | `far` and `grid` run only if R1–R4z, J+ and J− pass. (c″) is evaluated only if R5 passes too |
+| C1 | #672's amended C1 on every plant scan. A failure is listed, and the stage exits 1 |
+| far, K1z | #547's 1.85 chord2 plant at ZLOC: (a) χ ≤ 10⁻³⁰ in its own-end chord basis at ZLOC, at its own M; (b) M_min ≥ 19 in zk/chord, with χ₂₂ / χ₂₂(real). The far-end plants (ratio, pole8–10) at ZLOC in zk/chord as its sensitivity. The real series in the ratio, pole8–10 and ex ± 0.3 chord bases at ZLOC, as context |
+| mutations | `control --mutate=zero` (the plants keep their zero at x_ref): J− and R4z must fail. `--mutate=bzero` (every basis' zero at ZLOC + 10⁻⁶): R3z and J− must fail. `--mutate=judge` (#667's): each of J+'s parts must fail. `far --mutate=farend` (K1's own-end basis at 1.86): K1z(a) must fail. `--selftest --mutate=gn`: selftest 3 must fail. Each exits 1 |
+| context | per plant: the other 15 scans' χ₂₂ ratios and #667's (c) on the 15 bases at ZLOC; χ at 20 and 21 terms; l2 at 20 terms against the real's; the second set's share; the DA2 median; the [11/11] Padé zero of the η = 0 plants. Reported, not judged |
+
+The earlier statements about the real misfit's size, each tested by a frozen rule. A failure is a discrepancy, reported.
+
+| statement | survives if |
+|---|---|
+| S1 (#684): the far end alone does not account for the real misfit | the K1z plant's and every far-end plant's χ₂₂ / χ₂₂(real) < 0.1 in zk/chord, at every node |
+| S2 (#684): the ratio-law κ or the k = 10 pole lowers the real χ₂₂ 2.3–2.7 times | the real χ₂₂ in both chord bases at ZLOC is at most χ₂₂(zk/chord) / 2.3, at every node |
+| S2b (#684): the far end matters far more than the exponent | \|log χ(ratio)/χ(kstar)\| exceeds \|log χ(ex ± 0.3)/χ(kstar)\| at ZLOC, at every node |
+| S3 (#684): the real misfit stays above 3×10⁴ error units | the real χ₂₂ ≥ 3×10⁴ in all five far-end chord bases at ZLOC |
+| S4 (#667): a set near P0 + κ⋆ misfits at least 290 times less than the real series, even at 10% of σ₂₂ | every plant with a near curve has χ₂₂ / χ₂₂(real) ≤ 1/290 in zk/chord at ω∞. Apart with (c″)'s χ₂₂, or its bound when not relocated |
+| S5 (#667): only the low set reaches the real misfit | some plant passes (c′) at ω∞, and every one that does has the low curve. Apart with (c″) |
+
+Seen before the freeze, and disclosed.
+
+- A timing check projected the real series at ω∞ onto zk/chord. It gave χ₂₂ = 401.7976584156973, §14's value.
+- A timing check of the locator ran on one grid plant (chord2, seg(0, 0), α = β − 1, η = 10⁻¹, φ = 0°), from ZLOC
+  and from x_ref. Both reached the same zero, 2.4×10⁻⁶ from ZLOC, where χ₂₂ = 31.7 and l2 at 20 terms is 497. Its
+  (c′) value was not computed. Because relocation can move a plant's misfit, it is judged here as (c″), apart from
+  (c′), and not left as context as first drafted.
