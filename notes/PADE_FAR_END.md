@@ -2,7 +2,7 @@
 
 Status of everything here: numerical evidence. Nothing is rigorous. It bears on the type bounds of routes A3 and P5,
 which follow from the farthest singularity of the Borel transform (proof/D_entire.md sections 1 and 7). Sections 1–4
-are #547, sections 5–6 are #548, section 7 is #670, and section 8 is #669.
+are #547, sections 5–6 are #548, section 7 is #670, section 8 is #669, and section 9 is #672.
 
 - **#547.** A calibrated estimator recovers the far end of smooth-density plants within 0.009, but it fails #547's
   acceptance. On the real series two controls fire, so no far end is quoted (§4).
@@ -15,6 +15,10 @@ are #547, sections 5–6 are #548, section 7 is #670, and section 8 is #669.
   18 terms. No prior on the coefficient norm separates them either, since the arc plant's smallest chord twin is no
   larger than the chord plant's own coefficients. A control fired on the first real scan, so the real series is not
   done (§8).
+- **#672.** No twin class, chord or arc, reproduces the real series with fewer than 23 terms, at any node, while each
+  plant has a twin of 14–19 terms in another class. No prior on the peak density separates a chord from an arc either:
+  the arc plant's smallest chord twin peaks at only 1.4–1.8 times the chord plant's, and this measure passes the
+  calibration that the coefficient norm failed (§9).
 
 ## 1. Question
 
@@ -811,3 +815,86 @@ density only, not on chord2, arcjump or arc.
   which gave a bracket of 41% on that density. The ridge start, the whitening and the damped steps fixed both.
 - `noproj` passes the two closed-form problems, whose duals are accurate without the projection. It fails only on the
   8-term density, where its "bound" exceeds the explicit twin's peak.
+
+### 9.5 Results, part 2
+
+All runs used one process under `nice -n 10`, single-threaded, 2026-11-13 11:18–11:47 UTC, with `pade_twin_peak.py`
+at 15a53292. The records are in the raw-data repository's `I672-mac/` (13ae7a4).
+
+| check | result | verdict |
+|---|---|---|
+| selftest | separable problem within 6.8×10⁻¹⁰, Chebyshev problem within 2.0×10⁻⁸, the 8-term density bracketed to 1.9×10⁻⁴; exit 0 | OK |
+| selftest `--mutate=radius`, `noproj`, `dual` | exit 1, 1, 1 | all fire |
+| P_gap | P_hi/P_lo − 1 is 3.4×10⁻⁵ to 6.8×10⁻³, largest for arcjump at n = 31 | OK |
+| P_valid | P_lo < P_hi everywhere; χ at 250 digits at most 0.999999999; P_lo at 250 digits equal to 150 in double precision | OK |
+| P0, chord2's smallest peak against its own | 0.922–0.929 at every n and node | OK |
+| `peak --mutate=scale` | P/P_own = 0.691–0.697, P0 fails at every n and node; exit 1 | fires |
+| separation at n = 31 | ρ = 1.45–1.82 | no peak prior separates |
+| `peak_real` | refused by its frozen rule, since ρ_lo ≤ 3 at n = 23; exit 1 | not run |
+
+The smallest peak density of the chord twin on s = j/200, as the bracket [P_lo, P_hi] rounded to three decimals. ρ is
+arcjump's smallest against chord2's smallest, from ρ_lo to ρ_hi.
+
+| ω/ω∞ | n | chord2's own peak | chord2 | arcjump | arc | chord2 / own | ρ | arcjump / chord2's own |
+|---|---|---|---|---|---|---|---|---|
+| 0.99 | 23 | 2.870 | 2.654 | 4.411–4.413 | 2.460–2.461 | 0.925 | 1.662–1.663 | 1.54 |
+| 0.99 | 31 | 2.870 | 2.667 | 4.810–4.843 | 2.467 | 0.929 | 1.804–1.816 | 1.69 |
+| 1.00 | 23 | 2.922 | 2.698–2.699 | 4.088–4.089 | 2.529 | 0.923 | 1.515 | 1.40 |
+| 1.00 | 31 | 2.922 | 2.711 | 4.392–4.404 | 2.537–2.538 | 0.928 | 1.620–1.625 | 1.51 |
+| 1.01 | 23 | 2.998 | 2.763 | 3.830–3.831 | 2.647 | 0.922 | 1.386–1.387 | 1.28 |
+| 1.01 | 31 | 2.998 | 2.776 | 4.023–4.045 | 2.658 | 0.926 | 1.449–1.457 | 1.35 |
+
+Context, not judged:
+
+- **The finer grid.** On s = j/1000 every minimum is within 0.2% of the one above, chord2's ratio to its own peak is
+  again 0.92–0.93, and ρ at n = 31 is 1.45–1.82. The twins found on s = j/200 do bulge between its points, mostly at
+  s = 0.0125: on s = j/2000 they peak 7–25% above their grid peak, and 56% above it for arc at ω/ω∞ = 1.01, n = 31.
+  The twins found on s = j/1000 stay within 2.7% of theirs.
+- **Their coefficients are huge.** ‖c‖ is 5×10⁶ to 2×10⁷ for every smallest-peak twin. These coefficients make a
+  polynomial that is large only near s = 1, where (1 − s)^ex hides it from both the grid and the moments. So the peak
+  and the coefficient norm of §8 measure different things.
+- **M = 50 at ω/ω∞ = 1.00** lowers chord2's and arc's smallest peaks by 0.16–0.28%, and arcjump's by 1.7%.
+- **Active constraints.** 31–38 grid points and 10–14 of the n residuals are active at each minimum.
+
+### 9.6 What this means
+
+- **No twin class reproduces the real series with fewer terms than coefficients.** The chord, the stepped arc and the
+  smooth arc each need all 23 terms at every node, while each plant has a twin of 14–19 terms in another class. The
+  classes share the plants' end points, exponent and zero factor, so the real σ₁₁–σ₂₂ are not of that form at the
+  measured errors. Which ingredient fails is not determined here. By term count, neither the chord nor the arc is
+  preferred.
+- **The peak density passes the calibration that the coefficient norm failed.** chord2's smallest twin peaks at
+  0.92–0.93 of chord2's own density, so at 23 or 31 coefficients no chord twin of chord2 peaks more than 8% below
+  chord2 itself. By coefficient norm the smallest twin was 40–44% below chord2's own (§8.5).
+- **No prior on the peak separates a chord from an arc, by the frozen rule.** The arc plant's smallest chord twin
+  peaks at 1.45–1.82 times chord2's smallest at n = 31, and 1.39–1.66 at n = 23. Against chord2's own density it is
+  1.28–1.69. So a prior would have to cap the peak within a factor 1.3–1.7 of the true density's, which supposes the
+  density's size known to that accuracy. With 8 more coefficients the margin grows by 5–9%, with their errors
+  extrapolated (§7.1).
+- **A smooth density on the arc has a chord twin smaller than chord2.** The plant arc's smallest chord twin peaks at
+  0.92–0.96 times chord2's smallest, and 0.86–0.89 times chord2's own density.
+- **Status.** Numerical evidence on plants, with exact brackets for each minimum (within 0.7%) at the measured errors
+  and #670's extrapolated ones. The real series was not run in part 2, by the frozen rule.
+
+### 9.7 Proposed text for proof/D_entire.md
+
+In 7.4, replacing the last three sentences of the bullet "Nor would a prior on the coefficients' size (#669)" and
+adding two bullets after it:
+
+```diff
+   chord2's own coefficients does not need it. The other way round, a density on the arc with log branch points along
+-  it reproduces chord2 with 18 terms. Whether a prior on the peak density separates them is open, since the known
+-  chord twins of the arc plant peak at 2.3–3.8 times chord2's density. On the real series at ω/ω∞ = 0.99, no chord
+-  twin with fewer than 23 terms reproduces σ₀–σ₂₂ (χ 9.7×10⁴ at 22 terms), where the arc plant needs 19; one node,
+-  and the real stage stopped there on a control (§8).
++  it reproduces chord2 with 18 terms.
++- **Nor would a prior on the peak density (#672).** Minimised exactly on #548's grid, chord2's smallest chord twin
++  peaks at 0.92–0.93 times chord2's own density, so this measure passes the calibration that the norm failed. The arc
++  plant's smallest chord twin peaks at only 1.45–1.82 times chord2's at 31 coefficients and 1.39–1.66 at 23, so by
++  the factor-3 rule no peak prior separates them (notes/PADE_FAR_END.md §9). A grid five times finer moves these
++  minima by at most 0.2%.
++- **The real series has no short twin in any of these classes (#672).** No chord, stepped-arc or smooth-arc density
++  with the plants' end points P0 and κ⋆ and their exponent reproduces the real σ₀–σ₂₂ with fewer than 23 terms, at any
++  node (χ 0.9–1.3×10⁵ at 22 terms), while each plant has a twin of 14–19 terms in another class. The misfit sits at
++  σ₁₁–σ₂₂. Which ingredient fails, the far end or the exponent, is not determined (notes/PADE_FAR_END.md §9.2).
+```
