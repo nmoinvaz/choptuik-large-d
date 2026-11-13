@@ -593,3 +593,184 @@ open":
 > truncation artifact pending M = 64; lower D with complex λ; Re λ > 6.6; non-spherical perturbations; competition with
 > CSS solutions (Clark and Pimentel).
 
+## 10. λ_g(D) from D = 4 to the frontier, and the review's ν_SH
+
+Issue #622. Subagent of the coordinator on the Mac, 2026-11-13. Code `hp/lam_gauge.py` (λ_g of a state, the checks,
+the table) and `hp/lam_gauge_fit.py` (the fit in 1/n and its planted test). Table `hp/data/lam_gauge.csv`. Logs are in
+folder `I622-mac/` of the raw-data repository (0c554329), and the states were read at its 6913f312.
+
+**Result.** The residual gauge rate λ_g = 1 + ⟨c₁⟩ = 1 − (n − 1)⟨a_h² − 1⟩ of section 1 rises from 0.6138552748 at
+D = 4 to 0.97115850 at D = 244.64. By the map between the gauges λ_g = 4πμ/Δ, with μ Reiterer and Trubowitz's echoing
+parameter (notes/RT_FORMULATION.md section 2). At D = 4 λ_g is therefore the 2025 review's surface gravity ν_SH of the
+self-similarity horizon (notes/REVIEW_GHMG25.md row 3), and here it reproduces 4πμ/(2K) from Reiterer and Trubowitz's
+constants to 2.7×10⁻²⁷. Past D = 4 the table is 4πμ/Δ, the review's expression evaluated in D dimensions. As D → ∞,
+λ_g → 1. The fits in 1/n with c₀ free give c₀ = 1 to 9.2×10⁻⁸, and with c₀ = 1 they give
+
+```math
+\lambda_g = 1 - \frac{7.4165644}{n} + \frac{107.5086}{n^2} - \frac{1530}{n^3} + \dots
+```
+
+with spreads over fit choices of 4.4×10⁻⁶, 0.0069 and 5 (numerical evidence). The coefficients grow by about 14 per
+order, so the series converges only for n above about 14. μ = λ_g Δ/(4π) has a minimum near D = 38.02 (0.12910162
+there) and tends to Δ_∞/(4π) if λ_g → 1. Two discrepancies are open (10.5).
+
+### 10.1 What is computed
+
+a_h = a(τ, 1) is the block at offset 3M + 4MK of the state vector (`Ctx::off_ah` in `hp/src/model.rs`). Every part
+the state stores (two, four or eight) is summed exactly at 1400 bits, and n = D − 2 comes from the meta's `D_str` where
+the state has one (the chain's D in mpmath precision). ⟨·⟩ is the mean over the M points of the half τ grid. It is the
+exact τ average of a_h² up to aliasing at the state's truncation level. `hp/modecount_common.py` forms the same number
+in f64 (`st.lam_g`).
+
+### 10.2 Checks
+
+Each check exits 1 when it fails, and each was run with its control, `--mutate=n` (n in place of n − 1), which must
+exit 1. The bounds were fixed before the runs.
+
+| check | result | bound | verdict | control |
+|---|---|---|---|---|
+| D = 4, M = 192 state of `T45-win`, against 4πμ_RT/(2K_RT) | 2.7×10⁻²⁷ | 10⁻²⁰ | OK | −0.386, exit 1 |
+| identity at D = 15, against the RT prototype's 4πμ/Δ (32 × 121) | 2.5×10⁻²³ relative | 1.0×10⁻²¹ | OK | 0.031, exit 1 |
+| identity at D = 20.043653 | 1.7×10⁻²¹ relative | 7.9×10⁻²⁰ | OK | 0.017, exit 1 |
+| identity at D = 40.020065 | 3.8×10⁻¹⁶ relative | 8.2×10⁻¹⁵ | OK | 0.0045, exit 1 |
+| `modecount_common`'s f64 λ_g, 5 records and 3 live setups | at most 2.2×10⁻¹⁵ | f64 bound, 1.6×10⁻¹⁴ to 1.1×10⁻¹³ | OK | exit 1 |
+
+The D = 4 check restates `solver/rt/mu_check.py`'s on the same state (μ 7.7×10⁻²⁸ and Δ 3.1×10⁻²⁶ from Reiterer and
+Trubowitz's) as the one number the review quotes.
+
+The identity's bound is 10 times the two states' measured agreement in Δ, |Δ_RT − Δ_hp|/Δ = 1.0×10⁻²², 7.9×10⁻²¹
+and 8.2×10⁻¹⁶, which is the precision this pair of states has. On the RT side μ comes from the RT state's last
+unknown and Δ from its run record, so neither touches a_h. The two codes share no equations, unknowns or
+discretization (RT_FORMULATION.md 9.4 lists what they share: a D = 10 start state mapped from ours, multidouble's
+`dd_dot` inside a preconditioner, and Python). The agreement is numerical evidence for the identity, a measured
+difference of two discretizations, not a bound. The RT side's own coarser grids (48 × 101 at D = 15 and 20.04,
+32 × 141 at 40.02) differ from 32 × 121 by 1.2×10⁻¹⁷, 3.2×10⁻¹⁷ and 9.2×10⁻¹⁶ in 4πμ/Δ.
+
+The f64 bound is u(8(n − 1) + M max|c₁| + 4), u = 2⁻⁵², the rounding of a_h to f64 amplified by n − 1.
+
+### 10.3 The table
+
+`hp/data/lam_gauge.csv` holds 1510 stored states from D = 4 to 244.64, with one backbone state at each of 1274 D. Each
+row gives λ_g to 40 digits, Δ, μ, the f64 value, M, K, the number of parts, the cut and the held harmonics, the stored
+|F| where the state has one, delta_all.csv's error of Δ where it names the state, and the state's path. The sources
+are the double-double scans and resolution studies (`hp/data/states`, `hp/data/lowD_states`, folders `T45-win`,
+`T79-win`, `T12-win`, `T13-win`, `I254-mac`, `I609-macm3`, `I624-macm3`, `I252-mac` and two smaller ones), the pinned
+runs of `T73` and `T75`, every state delta_all.csv names, and #603's chain. The backbone is delta_all.csv's state where
+it names one. From D = 225.13 on it is #603's rerun on the exact projector, which is to replace the chain_fit rows
+there, and delta_all.csv's I461 states are kept as superseded rows. Left out are pass-1, failed and checkpoint states,
+predictions, and five states whose stored |F| exceeds 10⁻¹⁸ (among them the M = 48 state at D = 30.07 of section 5).
+`python3 hp/lam_gauge.py summary` prints this table from the CSV. The chain has gone on since (#603's states at
+D = 245.14 and 245.64, raw-data commit bdb59d11), and a rerun of `table` adds them.
+
+| D | λ_g | n(1 − λ_g) | μ = λ_g Δ/(4π) | M | parts | kind | spread at this D |
+|---|---|---|---|---|---|---|---|
+| 4 | 0.6138552748275863 | 0.77228945 | 0.168307078963 | 192 | 2 | dd | 3.2e-08 (12 states) |
+| 5 | 0.6159001942416268 | 1.1522994 | 0.157901347523 | 48 | 2 | dd | 7.5e-13 (3 states) |
+| 6 | 0.6268262820946539 | 1.4926949 | 0.150116786781 | 48 | 2 | dd | 3.5e-15 (3 states) |
+| 8 | 0.6538632595891257 | 2.0768204 | 0.141101988691 | 48 | 2 | dd | 4.7e-21 (2 states) |
+| 10 | 0.6802262243476667 | 2.5581902 | 0.136467723845 | 48 | 2 | dd |  |
+| 15 | 0.7343107544932498 | 3.4539602 | 0.1316588888 | 48 | 2 | dd |  |
+| 20.0437 | 0.7741046242265046 | 4.0759778 | 0.130048962668 | 32 | 2 | dd | 1.2e-21 (2 states) |
+| 30.0688 | 0.8264840435223195 | 4.8703888 | 0.129188936627 | 32 | 2 | dd | 4.6e-15 (5 states) |
+| 40.0201 | 0.859114044119647 | 5.3564932 | 0.129106119531 | 32 | 2 | dd | 3.6e-23 (2 states) |
+| 50.0075 | 0.8815254515810067 | 5.6876658 | 0.129189625721 | 32 | 2 | dd | 3.6e-13 (2 states) |
+| 61.0264 | 0.8992305398413639 | 5.9480634 | 0.129320395656 | 32 | 2 | dd | 2.2e-14 (6 states) |
+| 70 | 0.9101693456550344 | 6.1084845 | 0.129425853784 | 32 | 4 | pinned | 1.6e-17 (2 states) |
+| 80 | 0.9198662582035799 | 6.2504319 | 0.129533487902 | 32 | 4 | chain |  |
+| 100 | 0.9340982831555508 | 6.4583683 | 0.129713366985 | 32 | 4 | chain |  |
+| 125 | 0.9460731705500394 | 6.633 | 0.129883062024 | 32 | 4 | chain |  |
+| 150 | 0.9543663237784518 | 6.7537841 | 0.13000955416 | 32 | 4 | chain |  |
+| 175 | 0.9604491250544841 | 6.8423014 | 0.130106690454 | 32 | 4 | chain |  |
+| 200 | 0.9651012172824055 | 6.909959 | 0.130183349561 | 32 | 4 | chain |  |
+| 225.131 | 0.9687914431998714 | 6.9636043 | 0.130245566676 | 32 | 8 | chain | 2.8e-17 (2 states) |
+| 244.637 | 0.9711585000283656 | 6.998004 | 0.130286113376 | 32 | 8 | chain |  |
+
+The parts are the arithmetic the state was solved in (2 double-double, 4 quad-double, 8 octo-double). What the table
+can say about each state's error is the spread between stored states at the same D. These spreads are over states, not
+error bounds:
+
+| states at the same D | D | largest spread of λ_g |
+|---|---|---|
+| double-double, M or layout differs | 11 | 3.2×10⁻⁸ at D = 4, from its M = 48 states (M = 160 against 192 there: 1.6×10⁻²³); 3.6×10⁻¹³ at D = 50.01, 2.2×10⁻¹⁴ at D = 61.03 |
+| pinned, 5 against 7 held harmonics (`T73`, `T75`) | 160 | 1.6×10⁻¹⁴ |
+| pinned against quad-double (`T81`, `T84`) | 7 | 1.0×10⁻¹⁵ |
+| chain, #603 against I461 | 14 | 3.8×10⁻¹³ at D = 237.13 |
+
+### 10.4 D → ∞
+
+The fit (`hp/lam_gauge_fit.py`) takes the backbone from D = 20 on, thinned to D at least 1 apart, which gives 200 points
+from D = 20.04 to 244.64. It fits polynomials in t = 1/n and in t = 1/D from D_lo = 20, 30, 40 and 60, of degree 3 to
+14, with c₀ free or fixed at 1, and converts the 1/D coefficients to 1/n. At each variable and D_lo it keeps the
+degrees whose rms residual is within a factor 3 of the smallest there. The quoted value is the median of the kept fits,
+and its ± is the half-width of their range: a spread over fit choices, not a bound.
+
+**Planted truth first** (the plants and the pass criteria are in the script's docstring, fixed before the real data
+were fitted). Synthetic λ(t) = 1 − 7.4t + 95t² + t³h(t) on the real D grid, with Gaussian noise of σ = 10⁻¹² and tails
+h that the polynomial does not contain: a pole (T1), a square-root branch point (T2), a complex pole pair (T3), a log
+branch point (T4), all of size 1200, and one pole at every order (T5). T6 adds 30t² log t, outside the model class.
+
+| run | free c₀: range | c₁ at c₀ = 1: range | verdict |
+|---|---|---|---|
+| T1–T5, σ = 10⁻¹² | 1 ± 2.0×10⁻⁷, holds 1 | −7.4 ± 6.8×10⁻⁶, holds −7.4 | pass, exit 0 |
+| T6 (reported, not graded) | 1.000021 ± 1.6×10⁻⁵, 1 outside | | informative |
+| control `--mutate=limit` (c₀ = 1 + 10⁻⁵ planted) | 1.0000100 to 1.0000104, 1 outside at every plant | | fails, exit 1 |
+| post hoc, σ = 5×10⁻¹⁴ (the real data's level) | holds 1 | −7.4 ± 3.4×10⁻⁷, holds −7.4 | pass, exit 0 |
+| post hoc, σ = 5×10⁻¹⁴ and an offset of ±3×10⁻¹³ below D = 74 | holds 1 | holds −7.4 | pass, exit 0 |
+
+**The real data.** The residuals of the reference fit (c₀ = 1, 1/n, D ≥ 20, degree 14) have an rms of 1.7×10⁻¹⁴ to
+6.8×10⁻¹⁴ in every band of D below 226, and 2.1×10⁻¹³ above it, with the largest, 7.5×10⁻¹³, at the last state
+(D = 244.64).
+
+| coefficient of 1/nᵏ | c₀ free (36 fits) | c₀ = 1 (31 fits) |
+|---|---|---|
+| c₀ | 0.99999999941 ± 9.2×10⁻⁸ | 1 |
+| c₁ | −7.41656 ± 1.6×10⁻⁴ | −7.4165644 ± 4.4×10⁻⁶ |
+| c₂ | 107.51 ± 0.12 | 107.5086 ± 0.0069 |
+| c₃ | | −1530 ± 5 |
+
+The value with c₀ = 1 is conditional on λ_g → 1, which the free fits support to 9.2×10⁻⁸ but not to the 10⁻¹⁰ the
+fits resolve (10.5).
+
+### 10.5 Discrepancies (reported, not fixed)
+
+- **The free fits' c₀ is below 1 at every fit choice.** The 36 kept fits give c₀ from 0.99999981663 to 0.999999999914,
+  so 1 lies 8.6×10⁻¹¹ above the range. The planted tests hold their c₀ = 1 at the frozen noise and, post hoc, at the
+  real data's noise and with a step between layouts, so the one-sidedness comes from something in the real data that
+  the plants lack. A diagnostic fit of the chain alone (`fit --dlos=74,90,110`) is one-sided as well. Untested
+  candidates are the M = 32 truncation of λ_g along the chain, which no stored state measures past D = 61.03 (M = 32
+  differs from the two M = 64 layouts there by 1.6×10⁻¹⁴ and 2.0×10⁻¹⁴), and structure outside the model class, as T6
+  shows for a t² log t term.
+- **I461's last chain_fit states are off the λ_g curve.** Against the reference fit through #603's states, the states
+  delta_all.csv names from D = 239.54 to 242.57 (I461 crawlJ and probe083) are off by −5.1×10⁻¹² to 2.5×10⁻¹⁰,
+  growing with D, while those up to D = 238.76 are within 1.2×10⁻¹². With them as the backbone (the table before #603's
+  states were preferred, `I622-mac/lam_gauge_before603.csv`), the post-hoc planted test with their offsets at their D
+  fails for T1, T2, T4 and T5 (exit 1). This agrees with #603's purpose, but delta_all.csv still names those states.
+
+### 10.6 Reproduction
+
+From the repository root, with the raw-data repository checked out at RAW (`git clone
+https://github.com/nmoinvaz/choptuik-large-d-raw`). The f64 check's `--live` needs hpkernel (`hp/build.sh`). Each
+command exits 1 when its check fails.
+
+```
+python3 hp/lam_gauge.py rt RAW/T45-win/hp/data/lowD_states/d4hm15_D4.0000_M192.npz   # 2.7e-27; --mutate=n exits 1
+python3 hp/lam_gauge.py identity RAW                                                  # 10.2; --mutate=n exits 1
+python3 hp/lam_gauge.py f64 --raw=RAW --live                                          # 10.2; --mutate=n exits 1
+python3 hp/lam_gauge.py table RAW                                                     # writes hp/data/lam_gauge.csv
+python3 hp/lam_gauge.py summary                                                       # the table of 10.3
+python3 hp/lam_gauge_fit.py planted                                                   # 10.4; --mutate=limit exits 1
+python3 hp/lam_gauge_fit.py planted --sigma=5e-14                                     # post hoc
+python3 hp/lam_gauge_fit.py fit                                                       # 10.4 and 10.5
+python3 hp/lam_gauge_fit.py planted --csv=RAW/I622-mac/lam_gauge_before603.csv --sigma=2.5e-13 \
+    --junk=241.887:4.8e-11,240.514:-2.5e-11                                           # 10.5, exits 1
+```
+
+### 10.7 Proposed README text
+
+For the coordinator, after the gauge mode in the bullet of section 9:
+
+> The gauge mode's rate λ_g = 1 + ⟨c₁⟩ equals 4πμ/Δ, with μ Reiterer and Trubowitz's echoing parameter, so at D = 4
+> it is the surface gravity of the self-similarity horizon in the 2025 review of critical collapse, 0.6138552748. It
+> rises to 0.9712 at D = 244.6 and tends to 1 as 1 − 7.4165644/n + 107.5086/n² (numerical evidence;
+> notes/MODE_COUNT.md section 10).
+
