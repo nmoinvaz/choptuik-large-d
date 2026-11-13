@@ -452,7 +452,16 @@ chord.
 - **The real series has no short twin in any of these classes (#672).** No chord, stepped-arc or smooth-arc density
   with the plants' end points P0 and κ⋆ and their exponent reproduces the real σ₀–σ₂₂ with fewer than 23 terms, at any
   node (χ 0.9–1.3×10⁵ at 22 terms), while each plant has a twin of 14–19 terms in another class. The misfit sits at
-  σ₁₁–σ₂₂. Which ingredient fails, the far end or the exponent, is not determined (notes/PADE_FAR_END.md §9.2).
+  σ₁₁–σ₂₂ (notes/PADE_FAR_END.md §9.2).
+- **Neither the far end nor the exponent alone gives it one (#684).** With the far end moved to the ratio-law κ
+  (|κ| = 1.833) or to any of the k = 8–10 poles past κ⋆, or with the end exponent shifted by ±0.1 or ±0.3, every
+  chord, stepped-arc and smooth-arc twin still needs all 23 terms at every node. The test sees both: a plant with its
+  far end at 1.85 has a twin of 6 terms in a basis with that far end and needs 21 with κ⋆, and an exponent 0.1 off
+  costs a plant 10–11 terms. Moving the far end out lowers the real misfit at 22 terms by a factor 2.3–2.7 at the
+  ratio-law κ, while ±0.3 in the exponent moves it by 2–3%, but it stays above 3×10⁴ error units. After the freeze,
+  a local search at ω∞ found no chord twin of 20 terms with any far end in Re t 1.2–4.0, Im t −0.4–2.2, nor with the
+  far end and exponent tuned together. The ingredients left untested are the near end, the zero factor, and a
+  singular support that is not one curve (notes/PADE_FAR_END.md §11).
 - **The real poles reach the chord sooner than either plant.** At k = 10 the poles with s ≤ 0.71 lie within 0.015 of
   the chord, and the last one, at s = 0.88, lies 0.074 from it, on the side away from the arc. J 1250 and J 1500 agree to
   0.03 in R. k = 11 is not determined by the data.
