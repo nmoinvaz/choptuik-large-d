@@ -2005,6 +2005,147 @@ def chain_reach():
 
 
 @check
+def jet_634():
+    """notes/LARGE_D_WALL.md, "The chain's series past D 236" (#634): the stored predictions against the converged
+    states, the series' changes under injected noise, a moved base and quad-double, the attempts' first moves, and the
+    singularity's place (hp/data/jet_634.json, written by hp/jet_singularity.py summary from the raw-data repository's
+    I634-mac and I603-win2 folders). Each value is compared as a mantissa at its quoted power of ten."""
+    J = json.load(open(os.path.join(ROOT, "hp/data/jet_634.json")))
+    W = "notes/LARGE_D_WALL.md"
+    p, v = J["preds"], J["variants"]["245.1366"]
+    m = lambda x, e: x / 10.0 ** e  # noqa: E731
+
+    def rel(tag, k):
+        return v[tag]["rel"][str(k)]
+    acc = [a for a in J["attempts"] if a["accepted"] and a["a"] > 0.9]
+    ref = {round(a["D0"], 2): a for a in J["attempts"] if not a["accepted"]}
+    r13 = [r["radius_12"] for r in J["records"] if r["D0"] < 236.7]
+    r14 = [r["radius_12"] for r in J["records"] if r["D0"] > 236.7]
+    L = J["locate"]["236.6312"]
+    B = J["records_beyond"]
+    Bd = {round(r["D0"], 2): r for r in B}
+    t_pred = [(W, "All 27 predictions err by 1.1×10⁻³¹ to 1.7×10⁻²⁹ at a ≥ 0.93")]
+    t_tab = [(W, "| 5 | 1.876×10⁻¹² | 3.3×10⁻¹¹ | 5.3×10⁻²⁶ | 1.7×10⁻²⁶ | 5.3×10² | 3.9×10¹³⁹ |")]
+    items = [
+        ("predictions", p["n"], 27, 1, t_pred),
+        ("prediction error at a >= 0.93, least", m(p["err_a1_min"], -31), 1.1, 0.1, t_pred),
+        ("prediction error at a >= 0.93, most", m(p["err_a1_max"], -29), 1.7, 0.1, t_pred),
+        ("prediction error at a <= 0.61, least", m(p["err_small_min"], -36), 2.5, 0.1, [(W, "by 2.5×10⁻³⁶ to 2.0×10⁻³⁵ at a ≤ 0.61")]),
+        ("prediction error at a <= 0.61, most", m(p["err_small_max"], -35), 2.0, 0.1, [(W, "by 2.5×10⁻³⁶ to 2.0×10⁻³⁵ at a ≤ 0.61")]),
+        ("middle orders' terms at a >= 0.93, least", m(p["mid_a1_min"], -14), 5.9, 0.1, [(W, "are 5.9×10⁻¹⁴ to\n4.35×10⁻¹³ at a ≥ 0.93")]),
+        ("middle orders' terms at a >= 0.93, most", m(p["mid_a1_max"], -13), 4.35, 0.01, [(W, "are 5.9×10⁻¹⁴ to\n4.35×10⁻¹³ at a ≥ 0.93")]),
+        ("least factor below the middle orders", m(p["factor_min"], 16), 2.6, 0.1, [(W, "within 1/(2.6×10¹⁶) of them")]),
+        ("reproduced norms at D 236.63", J["repro"]["236.6312_N24"]["equal"], 25, 1, [(W, "equals the record at all 25 orders")]),
+        ("injected noise, order 1", m(rel("inject_1e-80_1", 1), -19), 4.4, 0.1, [(W, "| 1 | −1.69×10⁻⁴ | 4.4×10⁻¹⁹ | 9.9×10⁻³⁴ |")]),
+        ("injected noise, order 5", m(rel("inject_1e-80_1", 5), -11), 3.3, 0.1, t_tab),
+        ("injected noise, order 8", m(rel("inject_1e-80_1", 8), -11), 3.6, 0.1, [(W, "| 8 | 6.73×10⁻¹⁵ | 3.6×10⁻¹¹ |")]),
+        ("base at 1.6e-60, order 5", m(rel("pert_1e-74_1", 5), -26), 5.3, 0.1, t_tab),
+        ("base at 1.6e-60, order 8", m(rel("pert_1e-74_1", 8), -25), 5.7, 0.1, [(W, "| 8 | 6.73×10⁻¹⁵ | 3.6×10⁻¹¹ | 5.7×10⁻²⁵ |")]),
+        ("base at 5.0e-61, order 5", m(rel("pert_1e-74_2", 5), -26), 1.7, 0.1, t_tab),
+        ("base at 1.6e-32, order 5", m(rel("pert_1e-60_1", 5), 2), 5.3, 0.1, t_tab),
+        ("quad-double, order 1", m(rel("qd", 1), 17), 6.5, 0.1, [(W, "It is wrong by 6.5×10¹⁷ at order 1")]),
+        ("quad-double, order 5", m(rel("qd", 5), 139), 3.9, 0.1, t_tab),
+        ("residual of the base moved at 1e-74, seed 1", m(v["pert_1e-74_1"]["info"]["dF_max"], -60), 1.6, 0.1, [(W, "base at max\\|F\\| 1.6×10⁻⁶⁰")]),
+        ("move at 1e-74, seed 1", m(v["pert_1e-74_1"]["info"]["dz_max"], -48), 5.6, 0.1, [(W, "the move is 5.6×10⁻⁴⁸ (seed 1)")]),
+        ("move at 1e-74, seed 2", m(v["pert_1e-74_2"]["info"]["dz_max"], -48), 1.8, 0.1, [(W, "or 1.8×10⁻⁴⁸\n  (seed 2)")]),
+        ("move at 1e-60", m(v["pert_1e-60_1"]["info"]["dz_max"], -34), 5.6, 0.1, [(W, "10⁻⁶⁰ the move is 5.6×10⁻³⁴ and the residual 1.6×10⁻³²")]),
+        ("residual at 1e-60", m(v["pert_1e-60_1"]["info"]["dF_max"], -32), 1.6, 0.1, [(W, "10⁻⁶⁰ the move is 5.6×10⁻³⁴ and the residual 1.6×10⁻³²")]),
+        ("accepted first moves, least", m(min(a["dz"] for a in acc), -31), 1.1, 0.1, [(W, "| accepted at a > 0.9 (13) | 1.1×10⁻³¹ to 1.7×10⁻²⁹ |")]),
+        ("accepted first moves, most", m(max(a["dz"] for a in acc), -29), 1.7, 0.1, [(W, "| accepted at a > 0.9 (13) | 1.1×10⁻³¹ to 1.7×10⁻²⁹ |")]),
+        ("accepted attempts at a > 0.9", len(acc), 13, 1, [(W, "| accepted at a > 0.9 (13) |")]),
+        ("refused at D 236.13, first move", m(ref[236.13]["dz"], -31), 7.7, 0.1, [(W, "| refused, base D 236.13, a = 1 | 7.7×10⁻³¹ |")]),
+        ("refused at D 240.12, first move", m(ref[240.12]["dz"], -33), 4.9, 0.1, [(W, "| refused, base D 240.12, a = 0.763 | 4.9×10⁻³³ |")]),
+        ("refused at D 244.64, after the first move", m(ref[244.64]["F1"], -24), 1.4, 0.1, [(W, "| refused, base D 244.64, a = 1 | 6.2×10⁻³⁰ | 2.6×10⁻³³ | 1.4×10⁻²⁴ |")]),
+        ("root test to D 236.63, least", min(r13), 7.1, 0.1, [(W, "7.1 to 7.9 at the 13 bases from D 225.13 to 236.63")]),
+        ("root test to D 236.63, most", max(r13), 7.9, 0.1, [(W, "7.1 to 7.9 at the 13 bases from D 225.13 to 236.63")]),
+        ("root test from D 237.13, least", min(r14), 7.3, 0.1, [(W, "7.3 to 9.7 at the 14 bases from D 237.13 to\n245.14")]),
+        ("root test from D 237.13, most", max(r14), 9.7, 0.1, [(W, "7.3 to 9.7 at the 14 bases from D 237.13 to\n245.14")]),
+        ("rows with a stable pole at D 236.63", L["rows_found"], 17, 1, [(W, "Of the 24 rows with the largest |z_8|, 17 have a stable Padé pole")]),
+        ("their |s|, least", L["rows_abs"][0], 8.3, 0.1, [(W, "at |s| = 8.3 to 9.7 (median 8.75)")]),
+        ("their |s|, median", L["rows_abs"][1], 8.75, 0.01, [(W, "at |s| = 8.3 to 9.7 (median 8.75)")]),
+        ("their |s|, most", L["rows_abs"][2], 9.7, 0.1, [(W, "at |s| = 8.3 to 9.7 (median 8.75)")]),
+        ("their argument, median", L["rows_arg"][1], 86.6, 0.1, [(W, "59° to 113° (median 86.6°)")]),
+        ("their argument, least", L["rows_arg"][0], 59, 1, [(W, "59° to 113° (median 86.6°)")]),
+        ("their argument, most", L["rows_arg"][2], 113, 1, [(W, "59° to 113° (median 86.6°)")]),
+        ("accepted steps' convergence, least", m(min(a["F_conv"] for a in J["attempts"] if a["accepted"]), -96), 2.85, 0.01,
+         [(W, "#603's accepted steps converged to\n  2.85×10⁻⁹⁶ to 2.6×10⁻⁶²")]),
+        ("accepted steps' convergence, most", m(max(a["F_conv"] for a in J["attempts"] if a["accepted"]), -62), 2.6, 0.1,
+         [(W, "#603's accepted steps converged to\n  2.85×10⁻⁹⁶ to 2.6×10⁻⁶²")]),
+        ("quad-double's rounding as an injection", m(1e-80 * rel("qd", 1) / rel("inject_1e-80_1", 1), -44), 1.5, 0.1,
+         [(W, "Quad-double rounds like an injection of\n  1.5×10⁻⁴⁴")]),
+        ("octo-double's rounding as an injection", m(2.0 ** -212 * 1e-80 * rel("qd", 1) / rel("inject_1e-80_1", 1), -108), 2, 1,
+         [(W, "rounds like one of about 2×10⁻¹⁰⁸")]),
+        ("octo-double's rounding in z_5..z_8", m(max(rel("inject_1e-80_1", k) for k in (5, 6, 7, 8)) * 2.0 ** -212 * rel("qd", 1)
+                                                 / rel("inject_1e-80_1", 1), -39), 8, 1, [(W, "That would move z_5 to z_8 by\n  8×10⁻³⁹ at most")]),
+        ("od series at D 245.14, norms equal to the record", J["od_vs_record"]["245.1366"]["equal"]
+         + J["od_vs_record"]["245.1366"]["pivots_equal"], 10, 1, [(W, "Its od series at D 245.14 equals #603's record at orders 0 to 8 bit for bit")]),
+        ("od series at D 243.64, norms equal to the record", J["od_vs_record"]["243.6366"]["equal"]
+         + J["od_vs_record"]["243.6366"]["pivots_equal"], 10, 1, [(W, "At D 243.64 the od series equals\n#603's record at orders 0 to 8 bit for bit")]),
+        ("driver against anm_run.py at D 236.63", int(J["driver"]["236.6312"]), 1, 1,
+         [(W, "At D 236.63 the driver's od series equals `anm_run.py`'s 24-order series in every part of every entry")]),
+        ("move at D 236.63", m(J["variants"]["236.6312"]["pert_1e-74_1"]["info"]["dz_max"], -51), 1.2, 0.1,
+         [(W, "moves that base by 1.2×10⁻⁵¹ and leaves max|F| at 9.4×10⁻⁶⁹")]),
+        ("residual at D 236.63", m(J["variants"]["236.6312"]["pert_1e-74_1"]["info"]["dF_max"], -69), 9.4, 0.1,
+         [(W, "moves that base by 1.2×10⁻⁵¹ and leaves max|F| at 9.4×10⁻⁶⁹")]),
+        ("change at D 236.63", m(J["variants"]["236.6312"]["pert_1e-74_1"]["rel_max_5_8"], -35), 1.1, 0.1,
+         [(W, "z_8 by 1.1×10⁻³⁵ at most")]),
+        ("quad-double at D 236.63, order 1", m(J["variants"]["236.6312"]["qd"]["rel"]["1"], 15), 1.6, 0.1,
+         [(W, "the quad-double series is wrong by 1.6×10¹⁵ at order 1")]),
+        ("quad-double at D 243.64, order 1", m(J["variants"]["243.6366"]["qd"]["rel"]["1"], 16), 1.4, 0.1,
+         [(W, "is wrong by 1.4×10¹⁶ at order 1")]),
+        ("change per unit residual at D 236.63", m(J["variants"]["236.6312"]["pert_1e-74_1"]["rel_max_5_8"]
+                                                  / J["variants"]["236.6312"]["pert_1e-74_1"]["info"]["dF_max"], 33), 1.2, 0.1,
+         [(W, "1.2×10³³ at D 236.63 to 3.7×10³⁵ at D 245.14")]),
+        ("change per unit residual at D 245.14", m(v["pert_1e-74_1"]["rel_max_5_8"] / v["pert_1e-74_1"]["info"]["dF_max"], 35), 3.7, 0.1,
+         [(W, "1.2×10³³ at D 236.63 to 3.7×10³⁵ at D 245.14")]),
+        ("D 245.14, rows with a stable pole (16 orders)", J["locate"]["245.1366"]["rows_found"], 24, 1,
+         [(W, "For the same 24 rows, they give stable Padé poles")]),
+        ("D 245.14, |s| least (16 orders)", J["locate"]["245.1366"]["rows_abs"][0], 5.6, 0.1, [(W, "at |s| = 5.6 to 7.0 (median 6.7)")]),
+        ("D 245.14, |s| median (16 orders)", J["locate"]["245.1366"]["rows_abs"][1], 6.7, 0.1, [(W, "at |s| = 5.6 to 7.0 (median 6.7)")]),
+        ("D 245.14, |s| most (16 orders)", J["locate"]["245.1366"]["rows_abs"][2], 7.0, 0.1, [(W, "at |s| = 5.6 to 7.0 (median 6.7)")]),
+        ("D 245.14, argument least", J["locate"]["245.1366"]["rows_arg"][0], 9, 1, [(W, "arguments 9° to 107°\n(median 42°)")]),
+        ("D 245.14, argument median", J["locate"]["245.1366"]["rows_arg"][1], 42, 1, [(W, "arguments 9° to 107°\n(median 42°)")]),
+        ("D 245.14, argument most", J["locate"]["245.1366"]["rows_arg"][2], 107, 1, [(W, "arguments 9° to 107°\n(median 42°)")]),
+        ("D 245.14, root tests least", min(J["locate"]["245.1366"]["root_rows"]), 6.1, 0.1, [(W, "root tests of 6.1 to 8.0")]),
+        ("D 245.14, root tests most", max(J["locate"]["245.1366"]["root_rows"]), 8.0, 0.1, [(W, "root tests of 6.1 to 8.0")]),
+        ("D 245.14, 16 orders equal to the record", J["repro"]["245.1366_N16"]["equal"], 17, 1, [(W, "they equal the record's 17\nnorms")]),
+        ("D 236.63 at 16 orders, |s| least", J["locate"]["236.6312"]["rows_abs_16"][0], 5.3, 0.1, [(W, "D 236.63's series gives 5.3 to 6.3 (median\n5.7)")]),
+        ("D 236.63 at 16 orders, |s| median", J["locate"]["236.6312"]["rows_abs_16"][1], 5.7, 0.1, [(W, "D 236.63's series gives 5.3 to 6.3 (median\n5.7)")]),
+        ("D 236.63 at 16 orders, |s| most", J["locate"]["236.6312"]["rows_abs_16"][2], 6.3, 0.1, [(W, "D 236.63's series gives 5.3 to 6.3 (median\n5.7)")]),
+        ("D 236.63 at 16 orders, argument median", J["locate"]["236.6312"]["rows_arg_16"][1], 88, 1, [(W, "at a median of 88°")]),
+        ("records past D 245.64, root test to D 251.89, least", min(r["radius_12"] for r in B if r["D0"] < 251.9), 7.2, 0.1,
+         [(W, "The root test over orders 12 to 24 stays 7.2 to 8.5 to D 251.89")]),
+        ("records past D 245.64, root test to D 251.89, most", max(r["radius_12"] for r in B if r["D0"] < 251.9), 8.5, 0.1,
+         [(W, "The root test over orders 12 to 24 stays 7.2 to 8.5 to D 251.89")]),
+        ("root test at D 252.25", Bd[252.25]["radius_12"], 6.5, 0.1, [(W, "to 6.5 at D 252.25")]),
+        ("root test at D 252.61", Bd[252.61]["radius_12"], 6.0, 0.1, [(W, "6.0 at D 252.61 and 5.3 to 5.6 from D 253.07 to 253.53")]),
+        ("root test from D 253.07, least", min(r["radius_12"] for r in B if r["D0"] > 253), 5.3, 0.1,
+         [(W, "6.0 at D 252.61 and 5.3 to 5.6 from D 253.07 to 253.53")]),
+        ("root test from D 253.07, most", max(r["radius_12"] for r in B if r["D0"] > 253), 5.6, 0.1,
+         [(W, "6.0 at D 252.61 and 5.3 to 5.6 from D 253.07 to 253.53")]),
+        ("|z_4| at D 245.64", m(Bd[245.64]["z"][3], -11), 1.9, 0.1, [(W, "|z_4| grows from 1.9×10⁻¹¹ to 4.8×10⁻⁷")]),
+        ("|z_4| at D 253.53", m(Bd[253.53]["z"][3], -7), 4.8, 0.1, [(W, "|z_4| grows from 1.9×10⁻¹¹ to 4.8×10⁻⁷")]),
+        ("|z_3| at D 245.64", m(Bd[245.64]["z"][2], -9), 4.0, 0.1, [(W, "|z_3| from 4.0×10⁻⁹ to 2.1×10⁻⁶")]),
+        ("|z_3| at D 253.53", m(Bd[253.53]["z"][2], -6), 2.1, 0.1, [(W, "|z_3| from 4.0×10⁻⁹ to 2.1×10⁻⁶")]),
+        ("|z_2| at D 253.53", m(Bd[253.53]["z"][1], -6), 4.9, 0.1, [(W, "|z_2| from 1.1×10⁻⁶ to\n4.9×10⁻⁶")]),
+        ("accepted steps from D 253.07, least", min(x for r in B if r["D0"] > 253 for x in r["a_accepted"]), 0.11, 0.01,
+         [(W, "the accepted steps fall to 0.11 to 0.18")]),
+        ("accepted steps from D 253.07, most", max(x for r in B if r["D0"] > 253 for x in r["a_accepted"]), 0.18, 0.01,
+         [(W, "the accepted steps fall to 0.11 to 0.18")]),
+        ("polish at D 245.14, start", m(J["polish"]["245.1366"]["F_start"], -67), 2.0, 0.1,
+         [(W, "from max|F| 2.0×10⁻⁶⁷ to\n  7.9×10⁻⁹³ in two Newton steps, a move of 9.3×10⁻⁵³")]),
+        ("polish at D 245.14, end", m(J["polish"]["245.1366"]["F_final"], -93), 7.9, 0.1,
+         [(W, "from max|F| 2.0×10⁻⁶⁷ to\n  7.9×10⁻⁹³ in two Newton steps, a move of 9.3×10⁻⁵³")]),
+        ("polish at D 245.14, Newton steps", J["polish"]["245.1366"]["n_steps"], 2, 1, [(W, "7.9×10⁻⁹³ in two Newton steps")]),
+        ("polish at D 245.14, first move", m(J["polish"]["245.1366"]["moves"][0], -53), 9.3, 0.1, [(W, "a move of 9.3×10⁻⁵³")]),
+        ("polish at D 245.14, change of z_5..z_8", m(v["polish"]["rel_max_5_8"], -31), 1.0, 0.1,
+         [(W, "Its z_5 to z_8 differ from the stored base's by 1.0×10⁻³¹ at\n  most")]),
+        ("Delta's root test at D 236.63", L["delta"]["root_radius"], 7.4, 0.1, [(W, "Δ's own series has no stable pole within 50, and its root test gives 7.4")]),
+    ]
+    return items
+
+
+@check
 def lam_gauge_table():
     """notes/MODE_COUNT.md section 10: lam_g(D) from hp/data/lam_gauge.csv (hp/lam_gauge.py table), the D = 4 check
     against Reiterer and Trubowitz's constants (as solver/rt/mu_check.py holds them), the identity's three D (the CSV's

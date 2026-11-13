@@ -243,3 +243,131 @@ D 229.13 → 230.13 moves Δ by ±1.175×10⁻¹³, equal and opposite. That is 
     an octo-double one.
 - 13.6's C depends on the series' order count: 0.918, 0.935 and 0.942 at 100, 130 and 160 orders at D 40. #546 quotes
   it with that range.
+
+## The chain's series past D 236: true coefficients, and a singularity that comes near only past D 252 (#634)
+
+#603's chain on the exact projector builds, at each base D₀, the octo-double series z(D₀ + a) = Σ z_k a^k to N = 24
+(`anm_run.py --jet_o 1`). From D 236 on, |z_5| to |z_8| grow 20 to 1000 times, while |z_1| to |z_4| stay smooth. Two
+readings fit the norms. One is noise in those orders. The other is a singularity of z(D) in the complex D plane coming
+near the real axis, which would bound the chain and explain its refusals at a ≈ 1. From D 225 to 245 neither holds.
+The middle orders are the series' true coefficients to 16 digits or more of their size. The nearest singularity stays
+more than 5.5 from every base by every estimator used, and the refusals are the corrector's. The chain's later records
+show that singularity coming nearer from D 252 on. `hp/jet_singularity.py` (its docstring gives every command and
+criterion) wrote `hp/data/jet_634.json` from the raw-data repository at 29946938, folders `I634-mac/` and
+`I603-win2/`. All of it is numerical evidence.
+
+### The corrector confirms the middle orders
+
+The chain stores each prediction before its re-seed (`pred_pin3_D*.npz`), and `jet_singularity.py preds` compares it,
+row by row, with the converged state at the same D. All 27 predictions err by 1.1×10⁻³¹ to 1.7×10⁻²⁹ at a ≥ 0.93, and
+by 2.5×10⁻³⁶ to 2.0×10⁻³⁵ at a ≤ 0.61. The middle orders' terms max |z_k| a^k (k = 5 to 8) are 5.9×10⁻¹⁴ to
+4.35×10⁻¹³ at a ≥ 0.93, so each prediction lies within 1/(2.6×10¹⁶) of them. Its control, `--mutate scale5`, adds
+|z_5| a^5 to each prediction's Δ and fails. Noise as large as the growth would put about 10⁻¹³ into every prediction.
+The largest error is Δ's own entry at most a = 1 steps, and it is the truncation at N = 24.
+
+### The series under moved precision and a moved base
+
+`jet_singularity.py jet` forms a base's series as the chain does, through `anm_run.py`'s `coefficients_o` and
+`coefficients_q`. Its od series at D 245.14 equals #603's record at orders 0 to 8 bit for bit. The 24-order series that
+`anm_run.py --save_jet 2` builds at D 236.63 equals the record at all 25 orders and both pivots. So this Mac's build of
+main 3c35f0c reproduces win2's series exactly.
+
+At D 245.14 the largest entry of each of z_5 to z_8 is Δ's own. The table gives each variant's change,
+max|z_k′ − z_k| / max|z_k|, at orders 1 and 5 to 8 (N = 8, `I634-mac/jets/`).
+
+| k | Δ_k | noise injected, 10⁻⁸⁰ of max\|b_k\| | base at max\|F\| 1.6×10⁻⁶⁰ | base at 5.0×10⁻⁶¹ | base at 1.6×10⁻³² | quad-double series |
+|---|---|---|---|---|---|---|
+| 1 | −1.69×10⁻⁴ | 4.4×10⁻¹⁹ | 9.9×10⁻³⁴ | 2.6×10⁻³⁴ | 9.9×10⁻⁶ | 6.5×10¹⁷ |
+| 5 | 1.876×10⁻¹² | 3.3×10⁻¹¹ | 5.3×10⁻²⁶ | 1.7×10⁻²⁶ | 5.3×10² | 3.9×10¹³⁹ |
+| 6 | 8.79×10⁻¹³ | 3.2×10⁻¹¹ | 1.0×10⁻²⁵ | 3.6×10⁻²⁶ | 1.0×10³ | 3.2×10¹⁶⁸ |
+| 7 | 1.69×10⁻¹³ | 3.4×10⁻¹¹ | 1.7×10⁻²⁵ | 6.0×10⁻²⁶ | 1.7×10³ | 6.7×10¹⁹⁷ |
+| 8 | 6.73×10⁻¹⁵ | 3.6×10⁻¹¹ | 5.7×10⁻²⁵ | 2.2×10⁻²⁵ | 5.7×10³ | 7.0×10²²⁷ |
+
+- **The quad-double series cannot represent this one.** It is wrong by 6.5×10¹⁷ at order 1 and about 10³⁰ more at each
+  order, the quad-double unit times G² of [OCTO_DOUBLE.md](OCTO_DOUBLE.md) far past 1. So the precision comparison
+  rests on the injection, not on a second precision.
+- **Rounding.** Noise injected into every order's right-hand side at 10⁻⁸⁰ of its size moves z_5 to z_8 by about
+  3×10⁻¹¹. The quad-double column calibrates the rounding at order 1. Quad-double rounds like an injection of
+  1.5×10⁻⁴⁴, so octo-double, 2⁻²¹² finer, rounds like one of about 2×10⁻¹⁰⁸. That would move z_5 to z_8 by
+  8×10⁻³⁹ at most. It is an estimate, not a bound, since it assumes a linear response and takes the rounding's size
+  from order 1.
+- **The base.** The base is moved by J⁻¹r, r random. With max|r| = 10⁻⁷⁴ the move is 5.6×10⁻⁴⁸ (seed 1) or 1.8×10⁻⁴⁸
+  (seed 2), almost all along Δ. Its residual, quadratic in the move, is the chain's acceptance level. At max|r| =
+  10⁻⁶⁰ the move is 5.6×10⁻³⁴ and the residual 1.6×10⁻³². The change follows the residual, not the move. From that
+  base to seed 1 the residual falls by 10²⁸, and so does the change, while the move falls by 10¹⁴. So a base
+  converged to max|F| ≤ 10⁻⁶⁰ has z_5 to z_8 right to 6×10⁻²⁵ of their size. #603's accepted steps converged to
+  2.85×10⁻⁹⁶ to 2.6×10⁻⁶².
+- **The base polished.** `anm_run.py --tol_od 1e-80` takes the stored base at D 245.14 from max|F| 2.0×10⁻⁶⁷ to
+  7.9×10⁻⁹³ in two Newton steps, a move of 9.3×10⁻⁵³. Its z_5 to z_8 differ from the stored base's by 1.0×10⁻³¹ at
+  most, as the residual's share predicts.
+
+At D 236.63 the driver's od series equals `anm_run.py`'s 24-order series in every part of every entry at orders 0
+to 8. J⁻¹r with max|r| = 10⁻⁷⁴ moves that base by 1.2×10⁻⁵¹ and leaves max|F| at 9.4×10⁻⁶⁹. It changes z_5 to
+z_8 by 1.1×10⁻³⁵ at most, and the quad-double series is wrong by 1.6×10¹⁵ at order 1. At D 243.64 the od series equals
+#603's record at orders 0 to 8 bit for bit, the largest entry of z_5 to z_8 is again Δ's, and the quad-double series
+is wrong by 1.4×10¹⁶ at order 1. The largest change of z_5 to z_8 per unit of the base's residual grows from
+1.2×10³³ at D 236.63 to 3.7×10³⁵ at D 245.14.
+
+### Where the series is singular
+
+The estimator passed its planted controls before it read any real series (`jet_singularity.py planted`; its criteria
+are fixed in the docstring). It recovers conjugate pole pairs at |s| = 1 and 2.5 to within 3% in |s| and 3° in
+argument, and a square-root pair at 1.5 to within 10%. It reports no stable pole within 4 for background and noise
+alone, for noise shaped like the records' |z_k| at D 245.14, and for an entire oscillating component, 5 seeds each.
+Its control, `--mutate drop_pole`, fails. Two changes were made while the plants failed, before any real series. A
+Froissart-doublet filter at 1% dropped the genuine pole, whose residue is small. Poles inside the disc of convergence
+are now cut, at 0.85 of the root-test radius (Cauchy–Hadamard).
+
+The records give no argument, but to D 245.14 their root test does not shrink. Over orders 12 to 24 of the records'
+|z_k| it is 7.1 to 7.9 at the 13 bases from D 225.13 to 236.63, and 7.3 to 9.7 at the 14 bases from D 237.13 to
+245.14. At a singularity within 1 of the base, |z_24| would be at least |z_5|. At D 245.14 it is 2.3×10⁻²⁸ against
+1.9×10⁻¹².
+
+At D 236.63 the 24-order series locates it.
+- Of the 24 rows with the largest |z_8|, 17 have a stable Padé pole, at |s| = 8.3 to 9.7 (median 8.75) and arguments
+  59° to 113° (median 86.6°).
+- Those rows' root tests give 7.4 to 10.2.
+- Δ's own series has no stable pole within 50, and its root test gives 7.4.
+- From order 7 on, Δ's coefficients follow the signs −, −, +, + of an argument near ±90°.
+
+So the nearest singularity lies near D 237.1 ± 8.7i, about 9 off the real axis. That is 9 steps of a = 1 and three
+times the step bound a_max. The ranges are spreads over rows and approximants, not error bars.
+
+At D 245.14 only 16 orders were affordable here. `anm_run.py --save_jet 2` built them, and they equal the record's 17
+norms. For the same 24 rows, they give stable Padé poles at |s| = 5.6 to 7.0 (median 6.7), arguments 9° to 107°
+(median 42°), and root tests of 6.1 to 8.0. Read at its first 16 orders, D 236.63's series gives 5.3 to 6.3 (median
+5.7) at a median of 88°, where its 24 orders give a median of 8.75. So 16 orders put |s| about a third low. At equal
+order count the distance does not shrink, from a median of 5.7 to 6.7. The argument turns, from about 88° to about
+42°, so the singularity seen from D 245.14 lies ahead of the base and nearer the axis. Its place needs the 24 orders.
+
+From D 225.13 to 245.14 the middle orders grow because that singularity's share grows, not because it comes nearer.
+|z_24| grows 46 times over that range at a root-test radius that does not shrink, and the bound
+a_max = (ε|z_1|/|z_24|)^(1/23) sees that share through |z_24|.
+
+#603's chain went on past D 245.64, and its records show more (records only, raw `I603-win2/` at d2948f5b, the bases
+to D 253.53). The root test over orders 12 to 24 stays 7.2 to 8.5 to D 251.89. Then it falls, to 6.5 at D 252.25,
+6.0 at D 252.61 and 5.3 to 5.6 from D 253.07 to 253.53. The component reaches the low orders there. From D 245.64 to
+253.53, |z_4| grows from 1.9×10⁻¹¹ to 4.8×10⁻⁷, |z_3| from 4.0×10⁻⁹ to 2.1×10⁻⁶ and |z_2| from 1.1×10⁻⁶ to
+4.9×10⁻⁶. So from D 252 on the singularity does come nearer, while the accepted steps fall to 0.11 to 0.18. Where
+it lies, and whether it reaches the real axis, needs 24-order series at those bases.
+
+### The refusals are the corrector's
+
+The corrector's first Newton move is the prediction's error to first order. At the accepted steps it equals the
+prediction's distance from the converged state, for example 1.60×10⁻³¹ against 1.65×10⁻³¹ at D 226.13.
+`jet_singularity.py refusals` reads every attempt in #603's log.
+
+| attempts | first move | start max\|F\| | max\|F\| after the first move |
+|---|---|---|---|
+| accepted at a > 0.9 (13) | 1.1×10⁻³¹ to 1.7×10⁻²⁹ | 2.6×10⁻³⁴ to 1.4×10⁻³³ | 5.0×10⁻³⁰ to 2.8×10⁻²⁵ |
+| refused, base D 236.13, a = 1 | 7.7×10⁻³¹ | 2.7×10⁻³⁴ | 4.0×10⁻²⁸ |
+| refused, base D 238.54, a = 0.977 | 1.2×10⁻³⁰ | 2.1×10⁻³⁴ | 1.1×10⁻²⁸ |
+| refused, base D 240.12, a = 0.763 | 4.9×10⁻³³ | 4.0×10⁻³⁶ | 1.1×10⁻³² |
+| refused, base D 244.64, a = 1 | 6.2×10⁻³⁰ | 2.6×10⁻³³ | 1.4×10⁻²⁴ |
+
+The refused predictions were as accurate as the accepted ones, and each error is Δ's entry, since the move's Δ part
+equals the move. At a > 0.9 the move is 0.01 to 0.6 of |z_24| a^24, the truncation at N = 24. The middle orders'
+terms there, 7×10⁻¹⁴ to 4×10⁻¹³, are summed to that accuracy. So the refusals are not the predictor's, neither its
+truncation nor its middle orders. They are the corrector's, in the step after its first move, where the residual
+rises quadratically in the strong rows ("The jump after the first move" above). The residuals after the first move
+overlap. 6.8×10⁻²⁷ was accepted from D 242.71, and 4.0×10⁻²⁸ was refused from D 236.13.
