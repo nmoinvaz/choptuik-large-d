@@ -180,14 +180,15 @@ def fnorm(F):
 
 
 def newton_solve(s, zh, zl, tol=1e-28, it_max=16, max_halvings=10, verbose=True, log=print, jac="dd", chord=0,
-                 chord_rate=0.1):
+                 chord_rate=0.1, after_step=None):
     """Newton in double-double with backtracking on max |F| (halving); stops when max |F| < tol or a step finds no
     decrease. jac: "dd", the exact double-double Jacobian (Solver.newton); "mixed", the f64 Jacobian of Fun<4> lanes in
     staircase storage (Solver.newton_mixed: the same root, linear convergence), with an exact step instead when a
     mixed step finds no decrease. chord: after each Jacobian, up to this many chord steps with its factors
     (Solver.chord) while each lowers max |F| by at least chord_rate. With jac "mixed", once max |F| < tol the step
     computed there is still taken if max |F| stays below tol (the linear convergence leaves an error of about that
-    step along the weak directions, which |F| does not show; hp's newton_solve). Returns zh, zl, history."""
+    step along the weak directions, which |F| does not show; hp's newton_solve). after_step(zh, zl), if given, is
+    called after every accepted step (run_eta.py re-plans the Taylor steps there). Returns zh, zl, history."""
     hist = []
     t0 = time.time()
 
@@ -203,6 +204,14 @@ def newton_solve(s, zh, zl, tol=1e-28, it_max=16, max_halvings=10, verbose=True,
 
     for it in range(it_max):
         kind = jac
+        if kind == "dd":
+            # the residual first: a converged state needs no Jacobian
+            nF0 = fnorm(s.residual([zh, zl]))
+            if nF0 < tol:
+                hist.append(dict(it=it, jac=kind, F=nF0, Delta=float(zh[-1]), converged=True, t=round(time.time() - t0, 1)))
+                if verbose:
+                    log(f"  newton {it}: |F| {nF0:.2e} converged, Delta {zh[-1]:.15f}")
+                return zh, zl, hist
         dz, F, pmin, pmax = s.newton([zh, zl]) if kind == "dd" else s.newton_mixed([zh, zl])
         nF = fnorm(F)
         rec = dict(it=it, jac=kind, F=nF, Delta=float(zh[-1]), piv=(pmin, pmax), t_step=getattr(s, "step_timing", lambda: None)(),
@@ -249,19 +258,29 @@ def newton_solve(s, zh, zl, tol=1e-28, it_max=16, max_halvings=10, verbose=True,
             if not (np.isfinite(n2) and n2 < chord_rate * n1):
                 break
             zh, zl, n1 = ch, cl, n2
+        if after_step is not None:
+            after_step(zh, zl)
     F = s.residual([zh, zl])
     nF = fnorm(F)
     hist.append(dict(it=it_max, F=nF, Delta=float(zh[-1]), t=round(time.time() - t0, 1), converged=nF < tol))
     return zh, zl, hist
 
 
-def newton_qd(s, z, tol=1e-55, it_max=8, verbose=True, log=print):
-    """Newton in quad-double (Solver.newton with four parts): full steps while max |F| falls. Returns z, history."""
+def newton_qd(s, z, tol=1e-55, it_max=8, verbose=True, log=print, jac="dd"):
+    """Newton in quad-double: full steps while max |F| falls. jac "dd": the exact quad-double Jacobian (Solver.newton
+    with four parts); "mixed": the f64 Jacobian in staircase storage with the quad-double residual (Solver.newton_mixed,
+    linear convergence to the same root); "chord": the first step's factors (exact) kept for the later steps.
+    Returns z, history."""
     z = [np.asarray(p, dtype=float) for p in z]
     hist = []
     t0 = time.time()
     for it in range(it_max):
-        dz, F, _, _ = s.newton(z)
+        if jac == "mixed":
+            dz, F, _, _ = s.newton_mixed(z)
+        elif jac == "chord" and it > 0:
+            dz, F = s.chord(z)
+        else:
+            dz, F, _, _ = s.newton(z)
         nF = fnorm(F)
         rec = dict(it=it, F=nF, Delta=float(z[0][-1]), t=round(time.time() - t0, 1))
         hist.append(rec)

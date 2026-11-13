@@ -51,9 +51,15 @@ def main():
     ap.add_argument("--nodes", default="")
     ap.add_argument("--plan_tol", type=float, default=sd.PLAN_TOL)
     ap.add_argument("--hmax", type=float, default=sd.PLAN_HMAX)
-    ap.add_argument("--tol", type=float, default=1e-27)
+    ap.add_argument("--tol", type=float, default=1e-28)
     ap.add_argument("--it", type=int, default=16)
+    ap.add_argument("--jac", default="dd", help="dd (exact double-double Jacobian) or mixed (f64, staircase)")
+    ap.add_argument("--jac_final", default="dd", help="the Jacobian of the Newton on the final plan")
+    ap.add_argument("--chord", type=int, default=0)
+    ap.add_argument("--replan", type=int, default=1, help="re-plan the Taylor steps after every Newton step")
     ap.add_argument("--qd", action="store_true")
+    ap.add_argument("--qd_jac", default="mixed", help="dd (exact quad-double Jacobian), mixed or chord")
+    ap.add_argument("--qd_it", type=int, default=8)
     ap.add_argument("--threads", type=int, default=4)
     a = ap.parse_args()
     os.makedirs(a.out, exist_ok=True)
@@ -100,19 +106,29 @@ def main():
     steps0 = [len(g) - 1 for g in s.get_segs()]
     F1 = sd.fnorm(s.residual([zh, zl]))
     log(f"plan from the seed: {sum(steps0)} steps {steps0} ({time.time() - tp:.1f} s); |F| {F1:.2e}")
-    zh, zl, h1 = sd.newton_solve(s, zh, zl, tol=a.tol, it_max=a.it, log=log)
+    replans = []
+
+    def replan(zh_, zl_):
+        # a seed that is not a solution has singular components near the horizon (x - c small), which need short
+        # steps; each Newton iterate is smoother, so the steps are planned again from it
+        s.set_segs(s.plan(zh_, zl_, a.plan_tol, a.hmax))
+        replans.append(sum(len(g) - 1 for g in s.get_segs()))
+        log(f"    re-planned: {replans[-1]} steps")
+    after = replan if a.replan else None
+    zh, zl, h1 = sd.newton_solve(s, zh, zl, tol=a.tol, it_max=a.it, log=log, jac=a.jac, chord=a.chord, after_step=after)
     # re-plan from the solution and converge on that plan (the plan depends on the state; hp plans once per point)
     tp = time.time()
     s.set_segs(s.plan(zh, zl, a.plan_tol, a.hmax))
     steps1 = [len(g) - 1 for g in s.get_segs()]
     F2 = sd.fnorm(s.residual([zh, zl]))
     log(f"plan from the solution: {sum(steps1)} steps ({time.time() - tp:.1f} s); |F| {F2:.2e}")
-    zh, zl, h2 = sd.newton_solve(s, zh, zl, tol=a.tol, it_max=a.it, log=log)
+    zh, zl, h2 = sd.newton_solve(s, zh, zl, tol=a.tol, it_max=a.it, log=log, jac=a.jac_final, chord=a.chord)
     conv = bool(h2 and h2[-1].get("converged"))
     Fend = h2[-1]["F"] if h2 else float("nan")
     Delta = mp.mpf(zh[-1]) + mp.mpf(zl[-1])
     rec = dict(tag=a.tag, eta=a.eta, D=a.D, M=a.M, K=K, nodes=nodes, kt=a.kt, kc=a.kc, ks=a.ks, plan_tol=a.plan_tol,
-               hmax=a.hmax, seed=seed, F_seed=F0, steps=sum(steps1), steps_seg=steps1, converged=conv, F=Fend,
+               hmax=a.hmax, seed=seed, F_seed=F0, steps_seed=sum(steps0), replans=replans, jac=a.jac,
+               jac_final=a.jac_final, chord=a.chord, steps=sum(steps1), steps_seg=steps1, converged=conv, F=Fend,
                Delta=mp.nstr(Delta, 34), Delta_hi=float(zh[-1]), Delta_lo=float(zl[-1]),
                newton=[dict((k, v) for k, v in h.items() if k != "piv") for h in h1 + h2],
                constraint=sd.constraint(s, zh + zl, nodes), tail_centre=sd.series_tail(s, zh, zl, 0, nodes),
@@ -123,7 +139,7 @@ def main():
         f"tails {rec['tail_centre']:.1e} {rec['tail_horizon']:.1e}")
     z4 = None
     if a.qd and conv:
-        z4, hq = sd.newton_qd(s, sd.qparts(zh, zl), tol=1e-55, it_max=6, log=log)
+        z4, hq = sd.newton_qd(s, sd.qparts(zh, zl), tol=1e-55, it_max=a.qd_it, log=log, jac=a.qd_jac)
         Dq = sum(mp.mpf(p[-1]) for p in z4)
         rec.update(qd=dict(F=[h["F"] for h in hq], converged=bool(hq[-1].get("converged")), Delta=mp.nstr(Dq, 60),
                            Delta_qd_minus_dd=mp.nstr(Dq - Delta, 6)))
