@@ -440,10 +440,16 @@ chord.
   It is smaller than chord2's own coefficient vector at every node (notes/PADE_FAR_END.md §8). That measure fails its
   calibration, since chord2's own coefficients have 1.7–1.8 times its smallest twin's norm, but the comparison with
   chord2's own coefficients does not need it. The other way round, a density on the arc with log branch points along
-  it reproduces chord2 with 18 terms. Whether a prior on the peak density separates them is open, since the known
-  chord twins of the arc plant peak at 2.3–3.8 times chord2's density. On the real series at ω/ω∞ = 0.99, no chord
-  twin with fewer than 23 terms reproduces σ₀–σ₂₂ (χ 9.7×10⁴ at 22 terms), where the arc plant needs 19; one node,
-  and the real stage stopped there on a control (§8).
+  it reproduces chord2 with 18 terms.
+- **Nor would a prior on the peak density (#672).** Minimised exactly on #548's grid, chord2's smallest chord twin
+  peaks at 0.92–0.93 times chord2's own density, so this measure passes the calibration that the norm failed. The arc
+  plant's smallest chord twin peaks at only 1.45–1.82 times chord2's at 31 coefficients and 1.39–1.66 at 23, so by
+  the factor-3 rule no peak prior separates them (notes/PADE_FAR_END.md §9). A grid five times finer moves these
+  minima by at most 0.2%.
+- **The real series has no short twin in any of these classes (#672).** No chord, stepped-arc or smooth-arc density
+  with the plants' end points P0 and κ⋆ and their exponent reproduces the real σ₀–σ₂₂ with fewer than 23 terms, at any
+  node (χ 0.9–1.3×10⁵ at 22 terms), while each plant has a twin of 14–19 terms in another class. The misfit sits at
+  σ₁₁–σ₂₂. Which ingredient fails, the far end or the exponent, is not determined (notes/PADE_FAR_END.md §9.2).
 - **The real poles reach the chord sooner than either plant.** At k = 10 the poles with s ≤ 0.71 lie within 0.015 of
   the chord, and the last one, at s = 0.88, lies 0.074 from it, on the side away from the arc. J 1250 and J 1500 agree to
   0.03 in R. k = 11 is not determined by the data.
