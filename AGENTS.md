@@ -252,14 +252,15 @@ tasks' fields until 2026-11-10 was removed, and its fields are on the issues as 
 
 - **Thread budget on the local 8-thread machine:** 4–6 threads at below-normal priority; one process per thread. It has
   4 physical cores, so with 6 busy threads a job runs about 4× slower than on 2 cloud cores; scale cloud estimates.
-- **Coordination:** the coordinator (`coordinator`) and the runners talk through the channel `choptuik-large-d/` of the
-  private repository nmoinvaz/agent-comms, where each message is one file. Its README is the protocol, so read it
-  before sending or waiting: `gh api repos/nmoinvaz/agent-comms/readme -H "Accept: application/vnd.github.raw"`.
+- **Coordination:** the coordinator (`coordinator`) and the runners talk through the channel `choptuik-large-d` of the
+  private repository nmoinvaz/agent-comms, with `gh agent-msg -R nmoinvaz/agent-comms`. Its README is the protocol, so
+  read it before sending or waiting: `gh api repos/nmoinvaz/agent-comms/readme -H "Accept: application/vnd.github.raw"`.
   Commands, task assignments, questions and answers go as messages there, and every result, decision and follow-up task
   about a task is also written on its issue ("Tasks: GitHub issues" above). A message that asks for something is
-  answered with `re` set, which is the only receipt its sender gets. `comms.txt`, the archive of the messages up to
-  2026-11-08, is kept in that repository under `archive/choptuik-large-d/`, whole and as one file per entry (entries
-  before 2026-10-24 22:25 UTC are in PDT, and the laptop's say `local`). A citation of comms.txt means that file.
+  answered with `--re` set, which is the only receipt its sender gets. The messages sent as files, up to 2026-11-13, are
+  kept in that repository at the tag `git-era-messages`. `comms.txt`, the archive of the messages up to 2026-11-08, is
+  under `archive/choptuik-large-d/` there, whole and as one file per entry (entries before 2026-10-24 22:25 UTC are in
+  PDT, and the laptop's say `local`). A citation of comms.txt means that file.
   The machines are the Windows laptop (`win`), a Windows desktop (`win2`), an M3 Mac (`macm3`) and the Apple M5 Mac
   (`mac`), where the coordinator runs. Times come from a clock (`date -u '+%Y-%m-%d %H:%M'`), not guessed. A queued
   task states its commands, its thread count, its stop conditions and what to push.
