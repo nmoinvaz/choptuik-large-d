@@ -16,13 +16,17 @@ not change). States whose residual still exceeds --fmax (default 1e-20) are skip
 
     python3 gamma_dd.py out.jsonl STATE.npz [STATE.npz ...] [--threads=N] [--M48 | --Mhi=64] [--kf=none|13|auto] [--fmax=1e-20] [--polish[=N]]
         [--newton_it=12] [--lm_it=20] [--bracket=A,B] [--xtol=1e-14] [--ball=PREC] [--series_override]
-        [--mutate=old_rule|no_tail_gate]
+        [--scan=CENTRE,STEP,K0,K1 [--scan_at=base|hi] [--scan_only]] [--mutate=old_rule|no_tail_gate]
 
 --bracket=A,B searches the root of det M in [A, B] only, at every M, instead of the grids about the formula's value,
 and a bracket without a sign change gives lam None and exit status 1 (#458: the root's resolution is the spread of lam
 over brackets). --xtol is brentq's absolute tolerance (its relative tolerance is 1e-15). --ball=PREC takes det M as
 the exact determinant of the double-double mode matrix (python-flint's ball LU at PREC bits, hp/modecount_qdet.py)
 instead of its double-double LU's, at every M; the log's pivot range then holds the ball radius of ln|det| (#590).
+--scan=CENTRE,STEP,K0,K1 takes the same det M at lam = CENTRE + k STEP for k = K0..K1, at the state's own M
+(--scan_at=base) or at the resampled one (hi, the default with --M48 or --Mhi), into the record's scan list of (k, lam,
+sign, ln|det|) (#625: whether det M crosses zero once near the root or many times in a band). --scan_only skips the
+root searches, so that several processes can each take a range of k on the same background.
 
 --M48 (or --Mhi=N) also resamples the state to M = 48 (N) tau points, re-converges it and repeats the root search,
 bracketed afresh from the formula (self-convergence; the record's M48 field). The M = 48 solve uses the kfreeze-13 cut
@@ -83,10 +87,10 @@ def best_solver(meta, zh, zl, threads, M=None, force=None):
     return s, F, kf
 
 
-def find_lam(s, zh, zl, lam0, log=None, bracket=None, xtol=1e-14, ball=0):
-    """the root of det M near lam0, from the widening grids about lam0, or in bracket (a, b) when given (#458: the
-    root's resolution as its spread over brackets); None when the bracket has no sign change"""
-    cache = {}
+def det_fn(s, zh, zl, ball=0, log=None, cache=None):
+    """lam -> (sign, ln|det M|) at the state, by the double-double LU (mode_det) or, with ball > 0, the exact
+    determinant of the double-double matrix at ball bits; memoized in cache"""
+    cache = {} if cache is None else cache
 
     def sd(lam):
         if lam not in cache:
@@ -103,8 +107,31 @@ def find_lam(s, zh, zl, lam0, log=None, bracket=None, xtol=1e-14, ball=0):
                 sg, la, pmin, pmax = s.mode_det(zh, zl, float(lam), 0.0)
             cache[lam] = (sg, la)
             if log:
-                log(f"    lam {lam:.12f}: sign {sg:+.0f} ln|det| {la:.6f} pivots {pmin:.2e}..{pmax:.2e} ({time.time() - t:.1f} s)")
+                log(f"    lam {lam:.15f}: sign {sg:+.0f} ln|det| {la:.6f} pivots {pmin:.2e}..{pmax:.2e} ({time.time() - t:.1f} s)")
         return cache[lam]
+    return sd
+
+
+def scan_det(s, zh, zl, scan, ball=0, log=None):
+    """[(k, lam, sign, ln|det|)] at lam = c + k step for k = k0..k1 (--scan)"""
+    c, step, k0, k1 = scan
+    sd = det_fn(s, zh, zl, ball, log)
+    out = []
+    for k in range(k0, k1 + 1):
+        lam = c + k * step
+        sg, la = sd(lam)
+        out.append([k, lam, float(sg), float(la)])
+    if log:
+        ch = sum(1 for a, b in zip(out, out[1:]) if a[2] != b[2])
+        log(f"  scan: {len(out)} points, {ch} sign changes between neighbours")
+    return out
+
+
+def find_lam(s, zh, zl, lam0, log=None, bracket=None, xtol=1e-14, ball=0):
+    """the root of det M near lam0, from the widening grids about lam0, or in bracket (a, b) when given (#458: the
+    root's resolution as its spread over brackets); None when the bracket has no sign change"""
+    cache = {}
+    sd = det_fn(s, zh, zl, ball, log, cache)
 
     if bracket:
         a, b = bracket
@@ -211,6 +238,14 @@ def main():
         from flint import ctx
         ctx.threads = threads
     root = dict(bracket=list(bracket) if bracket else None, xtol=xtol, **({"ball": ball} if ball else {}))
+    scan = None
+    if "scan" in opts:
+        c, step, k0, k1 = opts["scan"].split(",")
+        scan = (float(c), float(step), int(k0), int(k1))
+    scan_at = opts.get("scan_at", "hi" if ("M48" in opts or "Mhi" in opts) else "base")
+    scan_only = "scan_only" in opts
+    if scan_only and not scan:
+        sys.exit("--scan_only needs --scan")
     out = args[0]
     log = lambda m: print(m, flush=True)
     status = 0
@@ -238,14 +273,16 @@ def main():
             with open(out, "a") as fh_:
                 fh_.write(json.dumps(rec) + "\n")
             continue
-        lam, nch, nev = find_lam(s, zh, zl, lam0, log, bracket, xtol, ball)
+        lam, nch, nev = (None, 0, 0) if scan_only else find_lam(s, zh, zl, lam0, log, bracket, xtol, ball)
         rec = dict(D=D, M=meta["M"], kfreeze=kf, F=F, **({"F_in": F_in} if "polish" in opts else {}), lam=lam, gamma=(1 / lam if lam else None), lam_formula=lam0,
                    n_signchanges=nch, n_det=nev, state=os.path.basename(f), seconds=round(time.time() - t0, 1),
                    **(root if bracket or "xtol" in opts or ball else {}))
-        if bracket and lam is None:
+        if scan and scan_at == "base":
+            rec["scan"] = scan_det(s, zh, zl, scan, ball, log)
+        if bracket and lam is None and not scan_only:
             log(f"  no sign change of det M in the bracket {bracket}")
             status = 1
-        if ("M48" in opts or "Mhi" in opts) and lam:
+        if ("M48" in opts or "Mhi" in opts) and (lam or scan_only):
             # self-convergence: resample to Mhi (default 48) collocation points in tau, re-converge, find lam
             t1 = time.time()
             rec.update(Delta=float(zh[-1]), Delta_lo=float(zl[-1]))
@@ -284,12 +321,14 @@ def main():
                     if why:
                         hi["override"] = hi.get("override", []) + [why]
                     lam48 = None
-                    if F48 <= fmax:
+                    if F48 <= fmax and scan and scan_at == "hi":
+                        hi["scan"] = scan_det(s48, z48h, z48l, scan, ball, log)
+                    if F48 <= fmax and not scan_only:
                         lam48, nch48, _ = find_lam(s48, z48h, z48l, lam0, log, bracket, xtol, ball)  # independently of lam
                         if bracket and lam48 is None:
                             log(f"  M = {Mhi}: no sign change of det M in the bracket {bracket}")
                             status = 1
-                    hi.update(lam=lam48, lam_diff=(lam48 - lam) if lam48 else None)
+                    hi.update(lam=lam48, lam_diff=(lam48 - lam) if lam48 and lam else None)
             if "refused" in hi:
                 log(f"  M = {Mhi}: refused, {hi['refused']}; --series_override accepts it")
             hi["seconds"] = round(time.time() - t1, 1)
