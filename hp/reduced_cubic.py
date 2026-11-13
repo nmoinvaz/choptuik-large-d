@@ -1855,6 +1855,16 @@ def rowsum(paths):
               f"{w['share_own']:.4g}; worst weak vector {w['lam_min']:.3g}; rows linear by construction: share "
               f"{w['share_frozen']:.3g}, all affine {w['frozen_ok']}")
         print("  U by block: " + ", ".join(f"{b} {s:.4g}" for b, s in sorted(blk.items(), key=lambda t: -t[1])[:4]))
+        fh_ = {}
+        for x, s in zip(lab, sh):
+            p = x.split(".")
+            key = p[1] + "." + p[2][:-1] if len(p) == 3 else x      # field and harmonic, cos and sin together
+            fh_[key] = fh_.get(key, 0.0) + s
+        print("  U by field and harmonic (all blocks): " + ", ".join(
+            f"{b} {s:.4f}" for b, s in sorted(fh_.items(), key=lambda t: -t[1])[:9]))
+        vl, vs = w["vlabels"], w["vshare"]
+        print("  V by unknowns (|P_V e_x|^2): " + ", ".join(
+            f"{vl[i]} {len(r['a']) * vs[i]:.3f}" for i in sorted(range(len(vl)), key=lambda i: -vs[i])[:8]))
         top = sorted(range(len(lab)), key=lambda i: -sh[i])[:8]
         print("  largest rows: " + ", ".join(f"{lab[i]} {sh[i]:.3f} (q/|J_r| {q[i] / Jr[i]:.1e})" for i in top))
         uw = [i for i in range(len(lab)) if sh[i] > 1e-6]
