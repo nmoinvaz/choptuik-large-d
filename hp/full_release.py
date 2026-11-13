@@ -11,7 +11,7 @@ M = 32 only), whose LU resolves the mass mode's weak direction past D ~ 185 wher
 released Delta must land on the series, about 5.0e-8 above the chain, where the quad-double release stalled.
 --junk w (with --octo 1) freezes the junk among the w weakest directions of the first Jacobian (no Delta content;
 octo_corrector.junk_subspace_o), as newton_qd's junk mode does: whether the release then converges is the test of
-notes/QUAD_DOUBLE.md 13.30.
+notes/QUAD_DOUBLE.md 13.29.
     cd hp && python3 full_release.py RAWDIR STATE [STATE ...] [--kfreeze 13] [--threads 2] [--it 10] [--octo 0] [--junk 0]
 solver() and release() are the step for one state, which release_planted.py runs on planted states.
 """

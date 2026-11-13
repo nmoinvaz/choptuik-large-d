@@ -112,7 +112,7 @@ with the plan of the run that converged it, and a run started from it keeps that
 (octo_corrector.save_o: save_q's four, which load_q reads, and four more), and the series of the next base (--jet_o)
 is taken at all eight. M = 32 only; --accept_stall_qd does not apply. --od_junk w freezes, in every step of that
 corrector, the junk among the w weakest directions of its first Jacobian (octo_corrector.junk_subspace_o: no Delta
-content; p1's highest harmonics past D ~ 210, notes/QUAD_DOUBLE.md 13.30), as newton_qd's junk mode does.
+content; p1's highest harmonics past D ~ 210, notes/QUAD_DOUBLE.md 13.29), as newton_qd's junk mode does.
 --save_base 1 saves the base after its octo-double polish as OUTDIR/base_pin<k>_D<D>.npz (eight parts, its meta
 recording the polish), when the polish was adopted; with --steps 0 the polish alone is the run (#489).
 """
@@ -258,7 +258,7 @@ def main():
                tol=1e-20, tol_growth=1.45, accept_stall=1e-17, junk_only=0, threads=4, w=24, trend="", tol_qd=1e-28, accept_stall_qd=0.0, qd_it=12, qd_w=0,
                refine=1, probe=0, probe_c=0.0, plan_tol=1e-32, fix1=0, F_pred_max=0.0, horizon_alpha=0, fix1_qlu=0, jet_q=0, reseed=0, pred_q=0, reseed_q=0,
                save_pred=0, jet_o=0, save_dz0=0)
-    opt.update(tol_od=1e-40, od_junk=0)  # --corrector od (hp/octo_corrector.py); --od_junk w freezes junk (13.30)
+    opt.update(tol_od=1e-40, od_junk=0)  # --corrector od (hp/octo_corrector.py); --od_junk w freezes junk (QUAD_DOUBLE 13.29)
     opt.update(base_adopt=0)            # --base_adopt 1: the base's od polish is adopted whatever it did
     opt.update(base_polish=1)           # --base_polish 0: no polish, the stored state is the base
     opt.update(keep_plan=1)             # --keep_plan 0: plan the base again even when its state stores a plan

@@ -160,7 +160,7 @@ def junk_subspace_o(s, w, delta_max=1e-2, iters=6, seed=0):
     """the w weakest right singular directions of the Jacobian of s's last octo-double LU (subspace iteration on
     (J^T J)^-1 by olu_solve, transposed then plain, in the leading part), Rayleigh-Ritz, keeping those whose Delta
     component is below delta_max ("junk": at large D p1's highest harmonics, which carry no Delta;
-    notes/QUAD_DOUBLE.md 13.30), orthonormal; with the kept and the other singular values (junk_subspace_q's octo twin)"""
+    notes/QUAD_DOUBLE.md 13.29), orthonormal; with the kept and the other singular values (junk_subspace_q's octo twin)"""
     L = s.size
     zero = np.zeros(L)
     rng = np.random.default_rng(seed)
