@@ -14,6 +14,8 @@ crate-type = ["cdylib"]
 hpk = { package = "hpkernel", path = "..", default-features = false }
 # the generic SIMD types for pivots.rs's copy of clu_logdet; the version hp pins, so cargo uses the one crate
 multidouble = "=4.2.1"
+# the engine's mode matrix at a complex rate (Shooting::mode_matrix, Rate); the version hp pins, one crate
+multishoot = "=1.2.2"
 pyo3 = { version = "0.30", features = ["extension-module"] }
 numpy = "0.30"
 rayon = "1.10"
