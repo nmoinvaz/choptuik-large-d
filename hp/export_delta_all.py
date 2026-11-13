@@ -48,7 +48,11 @@ precedence where two share a D:
           only some of the comparison fits reach that D (the frontier of a comparison chain). From D 215 on, the
           freeze projector's rounding enters too: Delta's shift from the double-double projector's rows to the exact
           ones (data/projector_shift.csv, log-linear between its points; #589, #595), err_kind "projector", or
-          "projector first order" where it rests on a first-order figure. Each fit's difference is also written
+          "projector first order" where it rests on a first-order figure. The runs on the exact projector (EXACT:
+          #603's rerun from D 225.13 and #608's comparison chains) carry no projector term and are compared with each
+          other only; a run started from a base or a copy is traced through that file's own source. Above the
+          comparison chains' frontier, where no fit's difference is measured, the fits term is extrapolated
+          log-linearly in D from the last six rows that have one (err_kind "fits extrapolated", an estimate). Each fit's difference is also written
           to data/delta_fits.csv (D, then per fit the signed Delta of that fit minus chain_fit's, how and the states).
   chain   the chain with the harmonics held on T75's trend (notes/QUAD_DOUBLE.md 13.17-13.24), its backbone traced
           the same way back to T75's pin 7 state at 73.27; double-double states to 79.27, quad-double after. Its rows at
@@ -87,6 +91,12 @@ FITS_COLS = ["D"] + [f"{c}_{lab}" for lab in FITS.values() for c in ("diff", "ho
 INTERP_FROM = 191.5
 # the freeze projector's rounding: Delta's shift from the double-double projector's rows to the exact ones (#589, #595)
 PROJ = os.path.join(HERE, "data", "projector_shift.csv")
+# the runs on the exact freeze projector (main's kernel from #523 on): their rows carry no projector term, and they are
+# compared only with each other (#603, #608; #595's polished bases)
+EXACT = ("I595-mac/", "I603-win2/", "I608-dh610/")
+HOPS = 10
+# above the comparison chains' frontier, the fits term is extrapolated from the last EXTRAP_N rows that have one
+EXTRAP_N = 6
 INTERP_N = 6
 # the interpolation's control: leave-one-out at these D, where every chain has a state
 CONTROL_D = (186.0, 187.0, 188.0, 189.0, 190.0)
@@ -115,6 +125,11 @@ def projector_err(D):
     val = float(np.exp((1 - t) * np.log(s0) + t * np.log(s1)))
     first = (k0 != "measured" and t < 1 - 1e-12) or (k1 != "measured" and t > 1e-12)
     return val, "projector first order" if first else "projector"
+
+
+def exact(rel):
+    """a state of a run on the exact freeze projector (EXACT)"""
+    return rel.replace(os.sep, "/").startswith(EXACT)
 
 
 def fmt(x):
@@ -262,6 +277,14 @@ def trace(states, by_dir, held, top, kind):
         src = states[seg[0]][0]["source"]
         lineage_check(cur, seg, src, states)
         bb = seg + bb
+        # a run started from a base or a copy (#603's polished base_pin3, I589-mac's s225) continues from that file's
+        # own source, up to HOPS files deep
+        hop, root = 0, None
+        while src not in states and hop < HOPS and os.path.exists(os.path.join(RAW, src)):
+            nxt = json.loads(str(np.load(os.path.join(RAW, src))["meta"])).get("source")
+            if not nxt:
+                break
+            src, hop = nxt, hop + 1
         if src not in states:
             root = src
             break
@@ -287,21 +310,21 @@ def chain_rows(keep=False, quiet=False):
         for rel in bb:
             m, parts = states[rel]
             v, err, ek = total(parts), "", ""
-            sysk = (held[os.path.dirname(rel)], parts[3] != "")
+            sysk = (held[os.path.dirname(rel)], parts[3] != "", exact(rel))
             # runs: the same held harmonics and precision; a comparison fit's (T140) states at this D
             spread = {"runs": [], **{f: [] for f in FITS}}
             for o, (mo, po) in states.items():
                 if o in on or abs(mo["D"] - m["D"]) >= TOL_D:
                     continue
-                osys = (held[os.path.dirname(o)], po[3] != "")
+                osys = (held[os.path.dirname(o)], po[3] != "", exact(o))
                 if osys == sysk:
                     spread["runs"].append((total(po) - v, o))
-                elif kind == "chain_fit" and osys[0][0] == "fit" and osys[0][1] in FITS and osys[1] == sysk[1]:
+                elif kind == "chain_fit" and osys[0][0] == "fit" and osys[0][1] in FITS and osys[1:] == sysk[1:]:
                     spread[osys[0][1]].append((total(po) - v, o))
             big, frow = {}, {}
             if spread["runs"]:
                 big["runs"] = max(abs(d) for d, _ in spread["runs"])
-            pe = projector_err(m["D"])
+            pe = None if exact(rel) else projector_err(m["D"])
             if pe:
                 big[pe[1]] = pe[0]
             for f, lab in (FITS.items() if kind == "chain_fit" else ()):
@@ -332,7 +355,26 @@ def chain_rows(keep=False, quiet=False):
             rows.append(dict(D=fmt(m["D"]), Delta_q0=parts[0], Delta_q1=parts[1], Delta_q2=parts[2], Delta_q3=parts[3],
                              kind=kind, err=err, err_kind=ek,
                              source=os.path.join(os.path.dirname(rel), "anm_run.jsonl"), state=rel))
+    extrapolate_fits(rows)
     return rows, fits
+
+
+def extrapolate_fits(rows):
+    """above the last chain_fit row with a fits term (the comparison chains' frontier) no fit's difference is measured,
+    and the largest term elsewhere is that one: there the fits term of the last EXTRAP_N rows that have one is
+    extrapolated log-linearly in D, its slope at least 0, and taken where it exceeds the row's own err (err_kind "fits
+    extrapolated", an estimate, not a measured spread)"""
+    fr = [(float(r["D"]), float(r["err"])) for r in rows if r["kind"] == "chain_fit" and r["err_kind"].startswith("fits")]
+    if len(fr) < EXTRAP_N:
+        return
+    xs, ys = np.array([d for d, _ in fr[-EXTRAP_N:]]), np.log([e for _, e in fr[-EXTRAP_N:]])
+    slope, icpt = np.polyfit(xs, ys, 1)
+    slope = max(slope, 0.0)
+    for r in rows:
+        if r["kind"] == "chain_fit" and float(r["D"]) > fr[-1][0] + TOL_D:
+            est = float(np.exp(icpt + slope * float(r["D"])))
+            if est > (float(r["err"]) if r["err"] else 0.0):
+                r["err"], r["err_kind"] = f"{est:.1e}", "fits extrapolated"
 
 
 def interp_check(var="1/n"):
