@@ -462,6 +462,14 @@ chord.
   a local search at ω∞ found no chord twin of 20 terms with any far end in Re t 1.2–4.0, Im t −0.4–2.2, nor with the
   far end and exponent tuned together. The ingredients left untested are the near end, the zero factor, and a
   singular support that is not one curve (notes/PADE_FAR_END.md §11).
+- **Nor does a weak second singular set past the arc (#667).** 1584 plants, chord2 or the arc plant plus a density
+  on a second curve (a short segment ending near P0 + κ⋆ = 2.03 + 1.24i or at 1.69 − 0.74i, or P0 + the main curve)
+  holding 10⁻⁹ to 10⁻¹ of σ₂₂, were judged on three features of the real series: no 6 differential approximants
+  agree past |t| = 1.65, the [k/k] poles past κ⋆ at k = 8–10, and no single-curve twin of fewer than 23 terms. None
+  reproduces it, and none matches two features at once. No plant has the far poles within 0.03 at all three orders
+  (the closest is 0.146 away). A set near P0 + κ⋆ scatters the approximants as the real series does, but its twins
+  misfit at least 290 times less in every basis. Only the set at 1.69 − 0.74i reaches the real misfit, at 0.1–1% of
+  σ₂₂ (notes/PADE_FAR_END.md §12).
 - **The real poles reach the chord sooner than either plant.** At k = 10 the poles with s ≤ 0.71 lie within 0.015 of
   the chord, and the last one, at s = 0.88, lies 0.074 from it, on the side away from the arc. J 1250 and J 1500 agree to
   0.03 in R. k = 11 is not determined by the data.
@@ -478,5 +486,6 @@ chord.
   0.009, for far ends from 1.62 to 1.90. They miss plants with steps on the arc by up to 0.042 and one exponent
   variant by 0.063, and their noise spread reaches 0.36, so #547's acceptance fails. On three plants (chord2 at κ⋆ and
   at 1.85, arcjump), at least 6 of the 11 approximants agree on the far end within 0.05. On the real series no 6 agree
-  anywhere past |t| = 1.65, and none has a zero within 0.17 of the far poles above. The far end is therefore not
+  anywhere past |t| = 1.65, and at ω/ω∞ = 1.00 and 1.01 none has a zero within 0.17 of the far poles above (at 0.99
+  one does: [5,5,5] with deg P = 1, at 1.402 + 0.957i, near the k = 8 pole; #667). The far end is therefore not
   located by σ₀–σ₂₂, and the type stays uncalibrated.
