@@ -15,6 +15,7 @@ that grid, so it differs from the continuum average by aliasing at the state's t
     python3 hp/lam_gauge.py identity RAW                 acceptance 2: lam_g against 4 pi mu / Delta of RT states
     python3 hp/lam_gauge.py f64 [--live]                 modecount_common's f64 lam_g against this one
     python3 hp/lam_gauge.py table RAW [--out CSV]        lam_g(D) on the stored states (hp/data/lam_gauge.csv)
+    python3 hp/lam_gauge.py summary                      the table of notes/MODE_COUNT.md section 10, from the CSV
 
 RAW is a checkout of the raw-data repository (git clone https://github.com/nmoinvaz/choptuik-large-d-raw).
 --mutate=n uses n in place of n - 1 in lam_g. rt, identity and f64 must then exit 1. Each check exits 1 when it fails.
@@ -335,6 +336,7 @@ SOURCES = [
     ("raw", "T73/t73/pin*_D*.npz", "pinned"),
     ("raw", "T75/pin*_D*.npz", "pinned"),
     ("csv", "hp/data/delta_all.csv", None),
+    ("raw", "I603-win2/base/base_pin3_D*.npz", "chain"),
     ("raw", "I603-win2/chain/anm_pin3_D*.npz", "chain"),
 ]
 # not solutions: pass-1 states, failed or stopped runs, checkpoints, predictions
@@ -347,6 +349,10 @@ F_MAX = 1e-18
 # these present at that D; else the first state at that D.
 PRIORITY = ["T45-win/hp/data/lowD_states/d4hm15_D4.0000_M192.npz", "repo:hp/data/states/", "raw:T79-win/down_",
             "raw:T12-win/", "raw:T13-win/", "raw:I603-win2/"]
+# From D 225.13125 on, #603's rerun on the exact freeze projector replaces the chain_fit rows (the purpose of #603): its
+# states are the backbone there, and delta_all.csv's I461 states are kept as role "superseded" (in the table and in the
+# same-D spreads, not in the fit).
+SUPERSEDE = ("raw:I603-win2/", 225.13125)
 
 
 def raw_commit(raw):
@@ -418,11 +424,18 @@ def cmd_table(argv):
         digests[key] = row
         rows.append(row)
     rows.sort(key=lambda r: (r["_Dkey"], r["state"]))
+    for D, ours, npz, rec, _, _ in IDENTITY:      # the identity's RT side, on the rows of our states there
+        lr = rt_lam(raw, npz, rec)[0]
+        for r in rows:
+            if r["state"] == "repo:" + ours:
+                r["lam_RT"], r["lam_RT_state"] = s(lr, 30), "raw:" + npz
     groups = {}
     for r in rows:
         groups.setdefault(r["_Dkey"], []).append(r)
     for Dk, g in groups.items():
         best = [r for r in g if r["named"]]
+        if Dk >= SUPERSEDE[1]:
+            best = [r for r in g if r["state"].startswith(SUPERSEDE[0])] or [None]
         if not best:
             for pre in PRIORITY:
                 best = [r for r in g if r["state"].startswith(pre) or r["state"] == "raw:" + pre]
@@ -430,19 +443,22 @@ def cmd_table(argv):
                     break
         best = (best or g)[0]
         for r in g:
-            r["role"] = "backbone" if r is best else "alt"
+            r["role"] = "backbone" if r is best else ("superseded" if Dk >= SUPERSEDE[1] else "alt")
         lams = [r["_lam"] for r in g]
         sp = max(lams) - min(lams) if len(g) > 1 else mp.mpf(0)
-        best["n_same_D"] = len(g)
-        best["spread_same_D"] = mp.nstr(sp, 3) if len(g) > 1 else ""
+        head = best if best is not None else g[0]
+        head["n_same_D"] = len(g)
+        head["spread_same_D"] = mp.nstr(sp, 3) if len(g) > 1 else ""
         for r in g:
             r.setdefault("n_same_D", "")
             r.setdefault("spread_same_D", "")
     cols = ["D", "D_str", "lam_g", "Delta", "mu", "lam_g_f64", "M", "K", "parts", "kfreeze", "pin_held", "F",
-            "Delta_err", "Delta_err_kind", "kind", "role", "n_same_D", "spread_same_D", "named", "copies", "state"]
+            "Delta_err", "Delta_err_kind", "kind", "role", "n_same_D", "spread_same_D", "named", "copies", "state",
+            "lam_RT", "lam_RT_state"]
     with open(out, "w", newline="") as f:
         f.write(f"# lam_g = 1 - (n - 1)<a_h^2 - 1> (hp/lam_gauge.py table), mu = lam_g Delta / (4 pi); raw-data "
-                f"repository at {commit}; state 'raw:' paths are in it, 'repo:' in this repository\n")
+                f"repository at {commit}; state 'raw:' paths are in it, 'repo:' in this repository; lam_RT = 4 pi mu / "
+                f"Delta of the RT prototype's state lam_RT_state\n")
         w = csv.DictWriter(f, fieldnames=cols, extrasaction="ignore")
         w.writeheader()
         for r in rows:
@@ -452,7 +468,7 @@ def cmd_table(argv):
     worst = {}
     for Dk, g in groups.items():
         if len(g) > 1:
-            b = [r for r in g if r["role"] == "backbone"][0]
+            b = [r for r in g if r["spread_same_D"]][0]
             desc = ", ".join(f"{r['kind']} M{r['M']} p{r['parts']}" + (f" pin{r['pin_held'].count(';') + 1}"
                                                                          if r["pin_held"] else "") for r in g)
             print(f"  D {Dk}: {len(g)} states, spread {b['spread_same_D']} ({desc})")
@@ -467,12 +483,33 @@ def cmd_table(argv):
     return 0
 
 
+SUMMARY_D = [4, 5, 6, 8, 10, 15, 20.043653, 30.068824, 40.020065, 50.007491, 61.026449, 70, 80, 100, 125, 150, 175,
+             200, 225.13125, 244.6366]
+
+
+def cmd_summary(argv):
+    """the table of notes/MODE_COUNT.md section 10: the backbone row nearest each D of SUMMARY_D"""
+    path = opt(argv, "csv", os.path.join(REPO, "hp", "data", "lam_gauge.csv"))
+    rows = [r for r in csv.DictReader(x for x in open(path) if not x.startswith("#")) if r["role"] == "backbone"]
+    print("| D | λ_g | n(1 − λ_g) | μ = λ_g Δ/(4π) | M | parts | kind | spread at this D |")
+    print("|---|---|---|---|---|---|---|---|")
+    for t in SUMMARY_D:
+        r = min(rows, key=lambda r: abs(float(r["D"]) - t))
+        lg = mp.mpf(r["lam_g"])
+        n = (mp.mpf(r["D_str"]) if r["D_str"] else mp.mpf(float(r["D"]))) - 2
+        sp = f"{float(r['spread_same_D']):.1e} ({r['n_same_D']} states)" if r["spread_same_D"] else ""
+        print(f"| {float(r['D']):.6g} | {mp.nstr(lg, 16)} | {mp.nstr(n * (1 - lg), 8)} | {mp.nstr(mp.mpf(r['mu']), 12)} "
+              f"| {r['M']} | {r['parts']} | {r['kind']} | {sp} |")
+    return 0
+
+
 def main():
     if len(sys.argv) < 2:
         print(__doc__)
         return 2
     cmd, argv = sys.argv[1], sys.argv[2:]
-    fn = dict(show=cmd_show, rt=cmd_rt, identity=cmd_identity, f64=cmd_f64, table=cmd_table).get(cmd)
+    fn = dict(show=cmd_show, rt=cmd_rt, identity=cmd_identity, f64=cmd_f64, table=cmd_table,
+              summary=cmd_summary).get(cmd)
     if fn is None:
         print(__doc__)
         return 2

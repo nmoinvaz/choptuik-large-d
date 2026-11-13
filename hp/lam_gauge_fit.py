@@ -47,6 +47,7 @@ DEGS = range(3, 15)
 PLATEAU = 3
 SPACING = 1.0
 SIGMA = 1e-12
+BANDS = [(20, 40), (40, 67), (67, 74), (74, 120), (120, 180), (180, 226), (226, 246)]
 C0, C1, C2, C3 = mp.mpf(1), mp.mpf("-7.4"), mp.mpf(95), mp.mpf(-1200)
 TS = mp.mpf("0.08") * mp.expj(2 * mp.pi / 3)
 TAILS = {
@@ -113,8 +114,8 @@ def fits(pts, fixed0=None):
                 if d + 1 > len(ts) // 4:
                     continue
                 c, rms = lsq(ts, ys, d, fixed0)
-                if var == "D":          # c2 in 1/n
-                    c = c[:2] + [c[2] - 2 * c[1]] + c[3:]
+                if var == "D":          # c2 and c3 in 1/n: 1/D = t - 2t^2 + 4t^3 - ..., t = 1/n
+                    c = c[:2] + [c[2] - 2 * c[1], c[3] - 4 * c[2] + 4 * c[1]] + c[4:]
                 row.append(dict(var=var, Dlo=Dlo, d=d, c=c, rms=rms, npts=len(ts)))
             best = min(f["rms"] for f in row)
             for f in row:
@@ -142,14 +143,27 @@ def report(allf, label, ks=(0, 1, 2)):
 
 def cmd_planted(argv):
     mut = "--mutate=limit" in argv
+    sigma = SIGMA
+    junk = {}
+    step = (0, 0)
+    for a in argv:
+        if a.startswith("--sigma="):
+            sigma = float(a.split("=", 1)[1])
+        if a.startswith("--step="):           # an offset below D0, as between the backbone's layouts
+            step = (float(a.split("=", 1)[1].split(":")[0]), mp.mpf(a.split("=", 1)[1].split(":")[1]))
+        if a.startswith("--junk="):
+            junk = {float(x.split(":")[0]): mp.mpf(x.split(":")[1]) for x in a.split("=", 1)[1].split(",")}
     grid = [D for D, _ in backbone()]
     c0p = mp.mpf(1) + (mp.mpf("1e-5") if mut else 0)
     ok_all = True
     for name in ("T1", "T2", "T3", "T4", "T5", "T6"):
         rng = random.Random(622)
-        pts = [(D, planted(name, 1 / (D - 2), c0p) + mp.mpf(rng.gauss(0, SIGMA))) for D in grid]
+        pts = [(D, planted(name, 1 / (D - 2), c0p) + mp.mpf(rng.gauss(0, sigma))
+                + junk.get(round(float(D), 3), 0) + (step[1] if D < step[0] else 0)) for D in grid]
         want = planted_coeffs(name, mp.mpf(1))          # graded against c0 = 1 (the mutation plants 1 + 1e-5)
-        print(f"{name}{' (mutation limit: planted c0 = 1 + 1e-5)' if mut else ''}: planted c0 1, c1 "
+        print(f"{name}{' (mutation limit: planted c0 = 1 + 1e-5)' if mut else ''} (sigma {sigma:g}"
+              f"{', junk at ' + str(sorted(junk)) if junk else ''}"
+              f"{', step ' + mp.nstr(step[1], 2) + ' below D ' + str(step[0]) if step[0] else ''}): planted c0 1, c1 "
               f"{mp.nstr(want[1], 6)}, c2 {mp.nstr(want[2], 6)}")
         free = report(fits(pts), "free")
         okf = all(free[k][1] <= want[k] <= free[k][2] for k in (0, 1, 2))
@@ -169,6 +183,10 @@ def cmd_planted(argv):
 
 
 def cmd_fit(argv):
+    global DLOS
+    for a in argv:
+        if a.startswith("--dlos="):           # a diagnostic, not the quoted selection
+            DLOS = tuple(float(x) for x in a.split("=", 1)[1].split(","))
     pts = backbone()
     print(f"{len(pts)} points, D {mp.nstr(pts[0][0], 8)} to {mp.nstr(pts[-1][0], 8)}")
     free = fits(pts)
@@ -183,6 +201,17 @@ def cmd_fit(argv):
             print(f"  c0=1 {f['var']} D>={f['Dlo']} d {f['d']}: rms {mp.nstr(f['rms'], 2)}  "
                   f"c1 {mp.nstr(f['c'][1], 10)} c2 {mp.nstr(f['c'][2], 8)} c3 {mp.nstr(f['c'][3], 6)}")
     report(con, "c0=1", ks=(1, 2, 3))
+    ts = [1 / (D - 2) for D, _ in pts]
+    c, _ = lsq(ts, [y for _, y in pts], 13, fixed0=mp.mpf(1))
+    res = [(D, y - mp.polyval(c[::-1], t)) for (D, y), t in zip(pts, ts)]
+    print("residuals of the c0 = 1, 1/n, D >= 20, degree-13 fit:")
+    for lo, hi in BANDS:
+        r = [float(e) for D, e in res if lo <= D < hi]
+        if r:
+            print(f"  D {lo}-{hi}: {len(r)} pts, rms {(sum(x * x for x in r) / len(r)) ** 0.5:.1e}, "
+                  f"max {max(abs(x) for x in r):.1e}")
+    for D, e in sorted(res, key=lambda x: -abs(x[1]))[:3]:
+        print(f"  largest: D {mp.nstr(D, 10)} residual {mp.nstr(e, 3)}")
     inside = fr[0][1] <= 1 <= fr[0][2]
     print(f"c0 = 1 {'inside' if inside else 'OUTSIDE'} the free fits' range")
     return 0
