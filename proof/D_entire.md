@@ -435,6 +435,15 @@ chord.
   terms at 23 coefficients to 19–20 at 31, and to 20–21 with every error 10 times smaller (notes/PADE_FAR_END.md §7).
   A twin of fixed size reproduces the extra orders, so σ₂₃–σ₂₄ (#549) cannot separate a chord from an arc without a
   prior on the density.
+- **Nor would a prior on the coefficients' size (#669).** Minimised exactly over the twins with χ ≤ 1, the smallest
+  chord twin of the arc plant has a coefficient norm 0.93–1.59 times chord2's smallest, at 23 and 31 coefficients.
+  It is smaller than chord2's own coefficient vector at every node (notes/PADE_FAR_END.md §8). That measure fails its
+  calibration, since chord2's own coefficients have 1.7–1.8 times its smallest twin's norm, but the comparison with
+  chord2's own coefficients does not need it. The other way round, a density on the arc with log branch points along
+  it reproduces chord2 with 18 terms. Whether a prior on the peak density separates them is open, since the known
+  chord twins of the arc plant peak at 2.3–3.8 times chord2's density. On the real series at ω/ω∞ = 0.99, no chord
+  twin with fewer than 23 terms reproduces σ₀–σ₂₂ (χ 9.7×10⁴ at 22 terms), where the arc plant needs 19; one node,
+  and the real stage stopped there on a control (§8).
 - **The real poles reach the chord sooner than either plant.** At k = 10 the poles with s ≤ 0.71 lie within 0.015 of
   the chord, and the last one, at s = 0.88, lies 0.074 from it, on the side away from the arc. J 1250 and J 1500 agree to
   0.03 in R. k = 11 is not determined by the data.
