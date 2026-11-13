@@ -1323,6 +1323,9 @@ def raysum(paths):
             cr = rr["cross"]["1"]
             line += (f"; 1e-2 |B a| at |c|/|a| {cr['t'] / na:.3g} ({cr['how']})" if cr["t"] is not None
                      else f"; 1e-2 |B a| {cr['how']}")
+            if fits["E"]["p"] is not None:
+                # where the even part alone, K (t/|a|)^p, would reach 1e-2 (an extrapolation of its fit)
+                line += f", the even part alone at {(1e-2 / fits['E']['K']) ** (1 / fits['E']['p']):.2g}"
             if rr.get("K3_tensors"):
                 line += f"; tensors' K3 {rr['K3_tensors'][0]:.2e} ({rr['K3_tensors'][1]:.2e} at the larger steps)"
             if any(rr["stop"].values()):
