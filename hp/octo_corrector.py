@@ -16,6 +16,7 @@ used, so that a module importing this one runs on the older packages the runners
         [--Delta_ref D] [--last 0] [--mutate_offset qd] [--mutate 10] [--out PREFIX]
     python3 octo_corrector.py wall RAW PRED.npz [--threads 3] [--qd 0] [--F_max 1e-36] [--mutate_offset qd]
         [--mutate 10] [--out PREFIX] [--reseed_o 0] [--held_o 0]
+    (planted and wall take --switch S, ElimO's projection switch, 1e-15 by default; anm_run.py --elim_switch, #700)
     python3 octo_corrector.py horizon RAW STATE.npz [--threads 3] [--steps 3] [--mutate_h sign]
     python3 octo_corrector.py digits [--mutate 2]
 
@@ -557,7 +558,7 @@ def _parse(argv, opt):
 def _run_od(so, rs, z8, opt):
     """ElimO around so (PinnedO), newton_od to opt's tol and it_max; the final point (its projection, the point whose
     residual converged), the history, converged, the octo-double pinned max |F| there and the projections"""
-    el = ElimO(so, rs)
+    el = ElimO(so, rs, switch=float(opt.get("switch", 1e-15)))
     z, hist, conv = newton_od(el, z8, tol=opt["tol"], it_max=opt["it_max"], mutate=opt["mutate"], junk_w=opt.get("junk", 0),
                               accept=opt.get("accept", "own"), strong_chord=int(opt.get("strong", 0)))
     z = el.project(z)
@@ -608,7 +609,7 @@ def planted(argv):
     from reseed import Reseeder
     raw, path = argv[0], argv[1]
     opt = _parse(argv[2:], dict(threads=3, rel=1e-12, seed=1, mutate_offset="", mutate=0, it_max=12, qd=1, tol=1e-40, out="",
-                                Delta_ref="", last=0, od=1, accept="own", strong=0))
+                                Delta_ref="", last=0, od=1, accept="own", strong=0, switch=1e-15))
     z4, meta = load_q(os.path.join(raw, path))
     z4 = o8(z4)
     D = mp.mpf(meta["D_str"])
@@ -683,7 +684,7 @@ def wall(argv):
     from reseed import Reseeder
     raw, path = argv[0], argv[1]
     opt = _parse(argv[2:], dict(threads=3, mutate_offset="", mutate=0, it_max=12, qd=0, tol=1e-40, out="", F_max=1e-36, junk=0,
-                                reseed_o=0, held_o=0))
+                                reseed_o=0, held_o=0, switch=1e-15))
     z4, meta = load_q(os.path.join(raw, path))
     D = mp.mpf(meta["D_str"])
     rs = Reseeder(meta, D, threads=opt["threads"], qd=True, od=opt["reseed_o"])
