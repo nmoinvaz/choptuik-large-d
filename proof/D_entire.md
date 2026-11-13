@@ -470,6 +470,14 @@ chord.
   (the closest is 0.146 away). A set near P0 + κ⋆ scatters the approximants as the real series does, but its twins
   misfit at least 290 times less in every basis. Only the set at 1.69 − 0.74i reaches the real misfit, at 0.1–1% of
   σ₂₂ (notes/PADE_FAR_END.md §12).
+- **The near end does not account for it, and the zero factor may (#689).** On plants matched to σ₀–σ₁₂, a near-end
+  exponent of ±0.25 or ±0.5, or #541's extrapolated near end, costs the κ⋆ twin 11–15 terms, with χ ≤ 0.012 at 22
+  terms. That is far below the real series' 9×10⁴, and the planted control on the exponent failed (17 terms where 19
+  were required), so the real twins were not refitted. The plants' zero factor sits at x_ref = 7.400 at ω∞. The real
+  series' own Padé zero lies 5–7×10⁻³ from it at every node. A plant whose zero is at that point misfits the κ⋆ twin
+  within 0.2% of the real series at every node. So the real misfit is the size a misplaced zero factor gives, and the
+  twin test with the zero in place is still to be run (notes/PADE_FAR_END.md §13). The bullets above compare twins
+  whose zero factor sits at x_ref, so their statements about the real series carry that offset.
 - **The real poles reach the chord sooner than either plant.** At k = 10 the poles with s ≤ 0.71 lie within 0.015 of
   the chord, and the last one, at s = 0.88, lies 0.074 from it, on the side away from the arc. J 1250 and J 1500 agree to
   0.03 in R. k = 11 is not determined by the data.
