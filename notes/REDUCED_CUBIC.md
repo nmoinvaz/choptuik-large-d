@@ -9,7 +9,7 @@ D 242.5146 starts, and the reduced map itself on the strong-solved manifold.
 
 Results are in section 4 onward, after the protocol (section 3), which was committed before the first real run.
 Section 9 (#677) follows the reduced map along rays out to 10⁵|a|, at those two starts, at D 232.13 and at a class A
-start of #603.
+start of #603. Section 10 (#694) finds where the weak rows live at the same four starts.
 
 ## Verdicts
 
@@ -25,6 +25,7 @@ start of #603.
 | The refused start, strong rows solved at c = a | converged, below the chain's 1e-40 | max\|F\| 2.0e-51; 1.1e-50 |
 | The projector (exact here, rounded in #499) | no effect at #499's printed digits | section 5.1 |
 | **Where g stops being affine** (#677: rays to 10⁵\|a\|, four starts) | **affine with slope B + L, plus a quadratic; no cubic or quartic resolved** | the quadratic reaches 10⁻²\|Ba\| near 10¹³\|a\| (extrapolated); section 9 |
+| **Do the weak rows live on rows affine in z?** (#694, four starts) | **no: U lives on the last matching (node 4's Taylor arrival against the horizon series), on no affine row** | share of \|U\| on rows affine to 10⁻¹⁰: 1.9×10⁻¹⁸ to 4.2×10⁻¹⁸; Q and T − 3S are cancellations between rows that are not affine; section 10 |
 
 - **At these starts T = 3S.** With the strong rows solved, the weak equations are affine to 2.7×10⁻²⁵, so #499's cubic
   is the curvature of the affine subspace z0 + Vc, and its root c* is not a root of the system.
@@ -695,3 +696,137 @@ basis.
   Q(e, e), T(e, e, e) and 3S(e, e, e) on the affine rows and on the rest, and their no-cancellation sizes.
 - **Order and stops.** The plant and its two controls first, then REF as the pilot, ACC, D 232.13 and the class A
   start. A failed plant or control stops the real runs, and so does (W1) failing at REF.
+
+### 10.4 Changes after the first runs
+
+- **The planted share.** 10.2 and the docstring gave 1 − mean(ε²) as 0.964375. The plant's first run (b6abb010)
+  computed 0.96625, which is 1 − 0.135/4, and the text now says so. No criterion changed.
+- **Diagnostics after the REF pilot** (8cbd3f31, raw `rows_ref_pilot_8cbd3f31.log`). The pilot found U on the last two
+  blocks. Code 848f7c06 adds four diagnostics, none judged: each block's part of Uᵀx against its no-cancellation size;
+  the pairing |u(node K − 1 rows) + u(horizon rows)|/|u|; w_ee by unknowns; and |P_V e_Δ|², how much of the Δ axis
+  lies in span(V). The plant, its controls and all four starts were rerun on 848f7c06. REF's judged lines equal the
+  pilot's. `rowsum` (9a7455f4) prints the summary below from the runs' JSON files.
+
+### 10.5 The plant's results
+
+`python3 reduced_cubic.py rows planted` from `hp/` (code 848f7c06; raw `I694-mac/rows_planted*.log`):
+
+| check | plant | `--mutate=quadA` | `--mutate=parity` |
+|---|---|---|---|
+| (PR1) the affine rows found against the planted five, by label | equal: pass | only horizon.a.k0c: FAIL | only phase, labels wrong: FAIL |
+| (PR2) share 0.96625, every row's share (bound 10⁻⁶) | 1.4×10⁻⁶³, 6.2×10⁻⁶³: pass | share 2.4×10⁻¹²⁴: FAIL | share 0.240, rows 0.88: FAIL |
+| (PR3) q_r against the planted (bound 10⁻⁶) | 1.8×10⁻¹⁰⁴: pass | pass (not required to fail) | 1.9×10⁴: FAIL |
+| (PR4) F″(e, e), T(e), S(e) per row; the affine rows' part | 6×10⁻¹⁰⁶, 4×10⁻¹⁰³, 5×10⁻⁵⁵; 7×10⁻¹⁰³: pass | pass | 1.5, 0.71, 1.7: FAIL |
+| the harmonic basis orthonormal (bound 10⁻¹²⁰) | 3.9×10⁻¹⁴¹ | | |
+| exit | 0 | 1 | 1 |
+
+The first runs (b6abb010) gave the same lines.
+
+### 10.6 Results at the four starts
+
+Raw `I694-mac/rows_{ref,acc,d232,classA}.log` and `.json` (code 848f7c06) and `rowsum.txt` (`reduced_cubic.py rowsum`,
+9a7455f4). Every start has K = 5 nodes and M = 32, so L = 769. Block 4 ("node4") is the Taylor step from node 3 to node
+4 minus node 4, and block 5 ("horizon") is the horizon series at node 4 minus node 4.
+
+| start | share of \|U\| on affine rows, h 10⁻³³; 10⁻³² | verdict | against the largest q alone | the 29 rows linear by construction: their share of \|U\|; all affine | U by block | \|u(node4) + u(horizon)\|/\|u\| |
+|---|---|---|---|---|---|---|
+| REF, D 242.5459 | 2.07×10⁻¹⁸; 2.07×10⁻¹⁸ | **refutes** | 0.5 | 6.4×10⁻⁵⁶; yes | node4 0.5, horizon 0.5, node3 3.3×10⁻¹¹ | 2.7×10⁻²⁶ |
+| ACC, D 242.5225 | 2.07×10⁻¹⁸; 2.07×10⁻¹⁸ | **refutes** | 0.5 | 6.8×10⁻⁵⁶; yes | node4 0.5, horizon 0.5, node3 3.3×10⁻¹¹ | 2.7×10⁻²⁶ |
+| D 232.13 | 4.24×10⁻¹⁸; 4.24×10⁻¹⁸ | **refutes** | 0.5 | 3.6×10⁻⁴⁶; yes | node4 0.5, horizon 0.5, node3 1.1×10⁻¹⁷ | 2.2×10⁻²¹ |
+| class A, D 249.3927 | 1.88×10⁻¹⁸; 1.88×10⁻¹⁸ | **refutes** | 0.5 | 1.1×10⁻⁶¹; yes | node4 0.5, horizon 0.5, node3 2.8×10⁻⁴³ | 3.6×10⁻³⁰ |
+
+- **Where U lives.** On the matching at the last node, half on each of its two blocks, row for row: each (field,
+  harmonic) row of node4 has the share of the same row of horizon. Both blocks hold minus node 4's state, and U pairs
+  them so that it cancels (to 2.7×10⁻²⁶ at REF). So the weak equations are the mismatch between the Taylor arrival at
+  node 4 and the horizon series there, with node 4's own unknowns eliminated.
+- **Its harmonics.** The same at all four starts to two digits: p and m at k = 1 and 3 (0.22 each of m.k1, m.k3, p.k1,
+  p.k3), and a at k = 0, 2, 4 (0.026, 0.051, 0.027). Every other harmonic is below 10⁻⁴. These are the low harmonics,
+  the ones the freeze keeps matched (k ≤ kfreeze = 3 for p).
+- **How far from affine those rows are.** The 30 rows with a share above 10⁻⁶ have q_r/|J_r| from 7×10⁻⁵ to 1.2×10⁻²,
+  six to eight orders above the cut, so the verdict does not depend on the threshold. At REF the node4 rows have q_r =
+  0.03 to 0.1 against |J_r| ≈ 22, and the horizon rows q_r = 3×10³² to 6×10³² against |J_r| ≈ 3×10³⁶.
+- **The rows linear by construction** (the horizon p rows above kfreeze, and the phase row) are all classified
+  affine, with q_r ≤ 1.5×10⁻⁶⁵, and U has no weight on them (10⁻⁴⁶ to 10⁻⁶¹).
+- **Where V lives** (diagnostic). The Δ axis lies in span(V): |P_V e_Δ|² = 0.99949 (REF and ACC), 0.99942 (D 232.13)
+  and 0.99953 (class A). The rest is p1, m_h and node 4's p and m at k = 1 (cos) and k = 3: |P_V e|² = 0.26 for p1.k3c
+  and p1.k3s, 0.22 for p1.k1c, 0.18 for m_h.k1c and 0.14 for m_h.k3c and m_h.k3s.
+
+Along e = a/|a|, the parts of Uᵀx (each against the size it would have without cancellation between rows):
+
+| start | \|Uᵀ F″(e, e)\|; no-cancellation size | its horizon part; its node4 part | \|Uᵀ T(e)\| (of its size) | \|Uᵀ 3S(e)\| (of its size) | \|Uᵀ(T − 3S)(e)\| of its size | (W3) \|Uᵀ(T − 3S)\|/\|Uᵀ T\| |
+|---|---|---|---|---|---|---|
+| REF | 2.1×10⁻⁸; 1.4×10³³ | 3.21×10⁻³ (of 1.4×10³³); 3.21×10⁻³ (of 0.092) | 1.51×10³³ (0.77) | 1.51×10³³ (0.55) | 3.1×10⁻¹⁹ of 9.4×10³² | 1.9×10⁻¹⁹ |
+| ACC | 2.1×10⁻⁸; 1.4×10³³ | 3.14×10⁻³; 3.14×10⁻³ (of 0.089) | 1.51×10³³ (0.76) | 1.51×10³³ (0.54) | 3.1×10⁻¹⁹ of 9.3×10³² | 1.9×10⁻¹⁹ |
+| D 232.13 | 3.6×10⁻¹¹; 2.0×10³¹ | 6.56×10⁻³; 6.56×10⁻³ (of 0.021) | 1.53×10³¹ (0.63) | 1.53×10³¹ (0.34) | 1.6×10⁻²⁰ of 2.5×10³¹ | 2.6×10⁻²⁰ |
+| class A | 4.9×10⁻⁷; 1.9×10³⁴ | 2.60×10⁻³; 2.60×10⁻³ (of 0.0074) | 1.35×10³⁴ (0.85) | 1.35×10³⁴ (0.63) | 9.0×10⁻¹⁹ of 6.4×10³³ | 4.3×10⁻¹⁹ |
+
+- **Q along e** is a cancellation between rows that are not affine. Within the horizon block, U's part of F″(e, e) is
+  10⁻³⁴ to 10⁻³⁷ of its rows' size, and the 3×10⁻³ left over equals the node4 block's part, which cancels it in turn
+  to the differences' truncation (#528's Q ≲ 6×10⁻⁶ per entry at REF).
+- **T and 3S** each come from the horizon block, at 0.63 to 0.85 (T) and 0.34 to 0.63 (3S) of their rows' sizes, so each
+  is a sum of rows that do not cancel much. Summed without cancellation, T − 3S is half of T's size (9.4×10³² against
+  1.95×10³³ at REF), so T = 3S does not hold row by row. It holds in U's sum over the horizon rows, to 3×10⁻¹⁹ of that
+  size, the differences' resolution (#528's T − 3S between step pairs, 1.6×10⁻¹⁷).
+- The rows classified affine contribute at most 4×10⁻²¹ of each no-cancellation size (4×10⁻²⁴ at the class A start).
+- (W3)'s consistency with #528 and #677 holds: |Uᵀ(T − 3S)(e)| = 1.9×10⁻¹⁹ |UᵀT(e)| at REF, against #528's max|T − 3S| =
+  1.6×10⁻¹⁹ max|T|.
+
+The REF pilot (8cbd3f31) printed the same judged lines to every digit.
+
+### 10.7 Verdicts against the protocol
+
+| criterion | REF | ACC | D 232.13 | class A |
+|---|---|---|---|---|
+| (W0) offset on its rows; the basis line equals #677's | pass; equal | pass; equal | pass; equal | pass; equal |
+| (W1) the 29 rows linear by construction classified affine | pass | pass | pass | pass |
+| (W2) the change of rows (orthonormal to 2.6×10⁻¹⁴⁰; rows against grid ≤ 2×10⁻¹⁴¹) | pass | pass | pass | pass |
+| (W3) w_ee, T(e), S(e) at two steps; 3S = T along e | 4.4×10⁻⁵, 1.2×10⁻¹⁸, 2.0×10⁻¹⁷; pass | 4.4×10⁻⁵, 1.3×10⁻¹⁸, 2.0×10⁻¹⁷; pass | 9.7×10⁻⁸, 2.2×10⁻¹⁹, 2.8×10⁻¹⁸; pass | 6.0×10⁻⁴, 2.1×10⁻¹⁸, 4.4×10⁻¹⁷; pass |
+| (W4) the share on affine rows; the verdict, at both steps | 2.1×10⁻¹⁸: refutes | 2.1×10⁻¹⁸: refutes | 4.2×10⁻¹⁸: refutes | 1.9×10⁻¹⁸: refutes |
+| exit | 0 | 0 | 0 | 0 |
+
+### 10.8 What 3S = T expresses there (reading; inferred, not shown)
+
+- **The conjecture of affine weak rows is refuted at all four starts.** The weak left vectors do not avoid curvature:
+  they sit on the last matching, whose horizon block holds the largest curvature along V in the system (up to 3.6×10³⁴
+  at the class A start). That U lives on the last matching fits #543's and #544's finding that only the last node's
+  position moves the weak σ.
+- **What the cancellations are.** By section 1's expansion, the reduced map's own coefficients along e are Q(e, e) and
+  (T − 3S)(e, e, e), and both are cancellations between rows that are not affine, to 10⁻⁴¹ and 3×10⁻¹⁹ of their rows'
+  sizes. So 3S = T says that
+  the reduced map has no cubic at the scale of its rows' cubic. T is the horizon series' third derivative along V, seen
+  through U. 3S is the same rows' mixed curvature between V and w_ee, the strong correction's shift of the horizon data,
+  p1 and the centre and nodes' c (w_ee by unknowns, `rowsum.txt`). On z0 + Vc the horizon series bends at 10³³; along
+  the strong-solved manifold the strong rows remove that bend in every direction U sees.
+- **The reduced map's own scale.** #677's even parts give the reduced map's curvature against its slope along e,
+  |g″(e, e)|/|Be| = 2K/|a|: 9.0 (REF), 8.8 (ACC), 24.6 (D 232.13) and 47.2 (class A) per unit of |c|. The weak equation
+  therefore curves on |c| of order 0.02 to 0.1 in the unknowns, an ordinary scale for a function of the period Δ, whose
+  axis is in span(V). At |c| from 10⁻³⁰ to 10⁻²⁴, its quadratic term is 5×10⁻³⁰ to 2×10⁻²³ of its linear one. That is
+  all #677 found, with no special structure needed. In this reading the weak equations look affine because the weak
+  coordinates are 27 to 28 orders below their own curvature scale. The 10³³ cubic on z0 + Vc is the curvature of that
+  flat chart, carried by the horizon series, which the strong correction removes. This is a conjecture, and its test is
+  in the closing summary's recommended tasks: at REF it predicts a departure of 4.5|c| of |Bc| along e, 0.45% at |c| =
+  10⁻³ and 4.5% at 10⁻².
+
+### 10.9 Discrepancies (reported, not fixed)
+
+- **The issue's literal reading.** With "affine to 10⁻¹⁰ of the largest q" alone, the share is 0.5 at all four
+  starts, "between". The node4 rows' q (0.03 to 0.1) is 10⁻³⁴ of the horizon rows', while their own q/|J_r| is about
+  10⁻³. The protocol's verdict, which also asks q_r ≤ 10⁻¹⁰ |J_r|, refutes. Both are reported.
+- **Section 9.8's wording.** "A near-symmetry that leaves the weak rows affine on the strong-solved manifold" read as
+  rows affine in z is refuted here. Read as the reduced map being affine on that manifold, it is #677's measurement, and
+  10.8 offers a reading that needs no symmetry, itself a conjecture until its test runs.
+
+### 10.10 Commands
+
+From `hp/`, with a clone of the raw-data repository at `RAW` and main's hpkernel build on the path:
+
+```
+python3 reduced_cubic.py rows planted                     # check: pass, exit 0
+python3 reduced_cubic.py rows planted --mutate=quadA      # check: FAIL, exit 1 (also --mutate=parity)
+python3 reduced_cubic.py rows RAW I461-win2/probeG03125b/dz0_pin3_D242.5459_a0.031250.npz \
+    I461-win2/probeG03125a/anm_pin3_D242.5146.npz --threads=2 --json=rows_ref.json
+python3 reduced_cubic.py rowsum rows_ref.json             # the shares, rows, pairing and cancellations
+```
+
+`I694-mac/run_i694.sh` runs all of them. A start takes 6 to 13 minutes at 2 threads, most of it the octo-double LU.
+Raw: `I694-mac/` of the raw-data repository at af311e7, with every run's log and JSON (its README lists them).
