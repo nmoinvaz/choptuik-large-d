@@ -9,7 +9,8 @@ D 242.5146 starts, and the reduced map itself on the strong-solved manifold.
 
 Results are in section 4 onward, after the protocol (section 3), which was committed before the first real run.
 Section 9 (#677) follows the reduced map along rays out to 10⁵|a|, at those two starts, at D 232.13 and at a class A
-start of #603. Section 10 (#694) finds where the weak rows live at the same four starts.
+start of #603. Section 10 (#694) finds where the weak rows live at the same four starts. Section 11 (#698) follows the
+map out to |c| = 10⁻², with the strong rows solved by Newton, at REF and the class A start.
 
 ## Verdicts
 
@@ -830,3 +831,101 @@ python3 reduced_cubic.py rowsum rows_ref.json             # the shares, rows, pa
 
 `I694-mac/run_i694.sh` runs all of them. A start takes 6 to 13 minutes at 2 threads, most of it the octo-double LU.
 Raw: `I694-mac/` of the raw-data repository at af311e7, with every run's log and JSON (its README lists them).
+
+## 11. The reduced map's own scale: |c| = 10⁻⁶ to 10⁻² (#698)
+
+Section 10.8 read #677's even part as the reduced map's ordinary curvature: |g″(e, e)|/|Be| = 2K/|a| is 9.0 per unit
+of |c| at REF and 47.2 at the class A start, so the weak equation would curve on |c| of order 0.02 to 0.1 and look
+affine only because the chain's |c| is 27 orders smaller. That reading predicts the departure from affine along e at
+|c| far beyond #677's range: 4.5|c| of |Bc| at REF and 23.6|c| at the class A start. This section measures it at
+|c| = 10⁻⁶ to 10⁻². Sections 11.1 to 11.3 are the protocol, committed before any real run of this mode.
+
+### 11.1 Method (`reduced_cubic.py curve`)
+
+- **The basis.** V, U, B = UᵀJV, a and w0 at z0 as in section 1, from the same code. The held offset's J dz0 is formed
+  by the octo-double jet with the dimension frozen (`Solver.residual_jet_o`, its first coefficient J dz0 by forward
+  mode) instead of the explicit Jacobian, which saves about 200 s per start. (Z0) checks that the basis is unchanged.
+- **The points.** c = ±t e, e = a/|a|, at t = 10⁻⁶, 10⁻⁵, 10⁻⁴, 10⁻³, 10^−2.5 and 10⁻², and on the + ray of a real start
+  first at t = 10⁻²⁴, #677's largest |c| (the lead-in). t = 10⁻³ and 10⁻² are judged.
+- **The strong solve by Newton** (`newton_strong`). At |c| above about 10⁻¹⁷ the chord through z0's LU no longer
+  contracts: at REF its corrections fall in pairs by about 5×10³² t² (`I677-mac/ray_ref.json`, *inferred* from the
+  steps). Here the octo-double Jacobian and its LU are refactored at the iterate z = z0 + Vc + w (`Solver.newton_o`,
+  about 220 s at 2 threads). Each correction is the bordered solve with the current LU, J dw = −r + Uλ with Vᵀdw = 0,
+  r = (I − UUᵀ)F the strong residual: dw = −J⁻¹r + J⁻¹Uλ, with λ from the 4 × 4 system Vᵀdw = 0. At z0 this is section
+  1's chord, since there VᵀJ⁻¹U = Rᵀ and VᵀJ⁻¹r = 0. The first correction after a refactorization is a Newton step.
+  Further corrections reuse that LU while each cuts |dw| by 10⁻³ or more; otherwise the LU is refactored at the new
+  iterate, and a correction that grows |dw| is not applied. The fixed point solves the strong rows whatever LU is used.
+  The iteration stops when |dw| < 10⁻⁶⁰ max(|w|, |w0|), when a refactorization does not cut the smallest |dw| so far
+  (the floor), or after six LUs, and keeps the iterate with the smallest |dw|.
+- **Convergence.** The kept iterate's error estimate is err = |Uᵀ[F(w + dw) − F(w)]|, the change of g by the correction
+  not applied, as in section 9. A solve converged when err < 10⁻²⁰|Bc|. It failed on a non-finite |dw| or on one above
+  max(|c|, |w0|), a strong correction larger than the weak move. A ray stops at its first failed solve.
+- **The start of each solve.** w at the new t from the converged points: the two with the largest |t| at most the new
+  one, fitted by w0 + αt² + βt³ (signed t, the same sign first); one point, its quadratic scaling; none, w0.
+- **The departure.** dep(c) = g(c) − g(0) − Bc, with g(0) and its floor floor0 from section 9's chord at c = 0 through
+  z0's LU, from w0 and from w0(1 + 10⁻⁵). At these |c| the natural unit is |Bc| = t|Be|, not |Ba|, and every part is
+  given in it. E(t) and O(t) are the even and odd parts, as in section 9. The floor of each t is the larger of the two
+  signs' error estimates and floor0, and a part is resolved where it exceeds 100 floors.
+- **Orders.** The local order of each part between neighbouring points, of the departure itself (E|Bc| and O|Bc| in
+  t). The plant's leading orders come from a least-squares line at its first four resolved points, as in section 9.
+- **The flat chart** (w = 0, z0 + Vc, residuals only) at the same t: its departure, its parts, O/t³, and the change of
+  the strong residual, max over rows of |[(I − UUᵀ)(F(z0 + Vc) − F(z0))]_r|, over t².
+- **The prediction.** κ = K/|a| from #677's even part along e (`I677-mac/raysum.txt`): REF K = 3.750×10⁻²⁹,
+  |a| = 8.3246×10⁻³⁰, κ = 4.505; the class A start K = 1.892×10⁻²⁸, |a| = 8.0246×10⁻³⁰, κ = 23.58. The reading predicts
+  E(t) = κt|Bc|, local order 2.
+
+### 11.2 The plant (`reduced_cubic.py curve planted`)
+
+CurvePlanted is section 9.2's plant (Q = L = 0, T = 3S) carried to this range. Its reduced map is still exactly
+β + Σy + P₄/24 + P₅/120, now with P₄/24 = 10⁻²|Bc| at |c| = 10⁻³ along e and P₅/120 equal to it at |c| = 3×10⁻³, so the
+even part has order 4 and the odd part order 5 across the range. Changed from 9.2:
+- no quartic c₄ in the strong rows, and Λ⁻¹C ≈ 0.1 in every strong row, so that |w(c)| ≈ 0.05|c|² as at REF
+  (|w_jl| 0.06 to 0.14). T = 3S is formed again with that C;
+- x's rows 0 to 3, which K does not reach, get M(y)x = Λ m (b·y) R x with R skew-symmetric (so Λ + M(y) is never
+  singular) and ½Λ n (d·x)², with m = 10⁵ and n = 10⁷. They leave g unchanged, but the chord through z0's LU cannot
+  follow them once m|b·y| > 1 (|c| above about 10⁻⁵), and Newton can;
+- J at an iterate is formed by central differences at 400 digits (h = 10⁻¹⁶⁰) and solved by mp.lu_solve.
+
+Pass criteria, fixed before the plant's first run:
+- **(PC0)** As (PY0): the plant's reduced map minus β + Σy against P₄/24 + P₅/120 at |y| = 10⁻⁵ and 10⁻³, to 10⁻²⁰.
+- **(PC1)** At every t and in both parts, |measured − planted| < 10⁻³ max(|planted|, 100 floors).
+- **(PC2)** The leading orders are 4 (even) and 5 (odd), to 0.05.
+- **(PC3)** Every strong solve converged, at all six t on both rays.
+- **(PC4)** The verdict's self-test: `curve_verdict` on planted rows with E = κt and O = E/10 must give *supports* with
+  κ, *refutes* with 20κ, *between* with 4κ, *refutes* with O = 2E, and *not decided* with the 10⁻² row dropped.
+- **Controls.** `--mutate=w0` drops the strong solve (g on the flat chart, whose odd part carries T(c, c, c)/6, of
+  order 3): (PC1) and (PC2) must fail. `--mutate=chord` solves the strong rows by section 9's chord through z0's LU:
+  (PC3) must fail. A failed check exits 1.
+
+The plant's first runs, during the code's development and before this protocol, found one bug that (PC4) caught: the
+verdict took the order of E in units of |Bc| (order 1) instead of the departure's (order 2).
+
+### 11.3 The real starts (fixed before the first real run)
+
+- **Inputs.** REF and the class A start, as in section 9.3, with #677's ray runs (`I677-mac/ray_ref.json`,
+  `ray_classA.json`) for (Z1) and #694's rows runs (`I694-mac/rows_ref.json`, `rows_classA.json`) for (Z2).
+- **(Z0)** As (Y0): the held offset is on its rows, and the basis line (σ, a, |Ba|) equals #677's to its printed digits.
+- **(Z1)** The lead-in at t = 10⁻²⁴ on the + ray: |dep|/|Ba| from `newton_strong` equals #677's chord value to 10⁻⁶
+  (relative). The two share F, the basis and g(0), not the strong solve.
+- **(Z2) The flat chart, a control on real data.** (a) At t = 10⁻⁶, the strong residual's change over t² equals
+  ½ max_r |F″_r(e, e)| of #694 (2.34×10³³ at REF, 2.70×10³⁴ at the class A start) within a factor 2, at both signs:
+  the flat chart's 10³³|c|² bend. (b) Its departure exceeds κt|Bc| by more than 10 at every t from 10⁻⁶ to 10⁻², so
+  that without the strong solve the test refutes. Its odd part O/t³ is reported against |UᵀT(e)|/6 (#694: 1.51×10³³/6
+  at REF, 1.35×10³⁴/6 at the class A start).
+- **(Z3)** Every strong solve converged. Otherwise the |c| where the ray stops is reported, with the solve's steps.
+- **The verdict per start** (`curve_verdict`). At t = 10⁻³ and 10⁻² the ratios E/(κt), |dep(+te)|/(κt|Bc|) and
+  |dep(−te)|/(κt|Bc|), and the least-squares order of the departure's even part over 10⁻³, 10^−2.5 and 10⁻².
+  - *Supports*: all six ratios within a factor 2 (0.5 to 2), the order within 2 ± 0.25, and no t below 10⁻² where the
+    odd part, resolved, is at least the even part.
+  - *Refutes*: a ratio off by more than 10 (above 10 or below 0.1), or an odd part at least as large as the even part
+    at a resolved t below 10⁻² (a cubic as large as the quadratic there, so the map bends on a scale below 10⁻²).
+  - *Between* otherwise, reported as it is; *not decided* when a judged t is missing (the ray stopped) and nothing
+    refutes.
+- **The reading's verdict.** Supported if both starts support, refuted if either refutes, and otherwise reported as it
+  is.
+- **Reported, not judged.** Every point's departure and parts, their local orders, O/E per t, each solve's LUs, steps,
+  error estimate and max|F|, the error of each solve's start, and the flat chart's parts at every t.
+- **Order and stops.** The plant and its two controls first, then REF as the pilot, then the class A start. A failed
+  plant or control stops the real runs. (Z1) or (Z2) failing at a start stops that start until the cause is known. The
+  solver's rules in 11.1 may change after the pilot, with the change and its cause recorded in 11.4; no criterion of
+  11.2 or 11.3 changes.
