@@ -380,6 +380,27 @@ system to 5e-26 to 4e-23 at 80–200. The first Newton step raises |F| from abou
 directions of section 4.3, so the stop is the Newton step's and not the held values'. Raw `I642-win/` and
 `I640-macm3/` (725ecb92).
 
+**Continued in D, the full system reaches D 100** (#682, win; raw `I682-win/` 0e9206ac, `cont_table_682.txt`).
+Instead of releasing each chain state at its own D, `anm_run.py --kfreeze 13` without `--held_fit` continues the D 77
+release in D, with the quad-double jet predictor, re-seed and corrector (`--tol_qd 1e-44`). It converges at 33 points
+from D 78 to 100.19, each to a quad-double max|F| of at most 4.4e-45. The prediction's |F| is flat in the step a
+(slope −0.11, 5.8e-36 to 5.2e-35 over 44 attempts), so the predictor's error is not first order there.
+
+| D | Δ_full − Δ_held | `fits` spread | ratio | Δ_kf7 − Δ_held (#641) |
+|---|---|---|---|---|
+| 78 | +6.20e-15 | 2.0e-14 | 0.31 | |
+| 80 | +1.22e-14 | 4.2e-14 | 0.29 | +3.67e-14 |
+| 90 | +8.41e-14 | 3.8e-13 | 0.22 | |
+| 99 | +2.06e-13 | 1.1e-12 | 0.19 | |
+| 100 | +2.22e-13 | 1.2e-12 | 0.19 | +9.69e-13 |
+
+**The held fit's whole error is 0.19–0.31 of the quoted spread from D 78 to 100, and smaller than the part from
+harmonics 5 and 7 alone.** So harmonics 9–13 contribute with the opposite sign, −2.4e-14 at D 80 and −7.5e-13 at
+D 100. The comparison shares its D 77 origin and its kernel with the held chain, so it is not an independent check
+of that chain. Past D 99 the corrector stalls at a ≥ 0.1, where five attempts end at |F| 5e-25 to 6e-24, and the step
+falls to about 0.05. The cause is not known (#710). The double-double |F| of the converged states rises from 2.9e-20
+at D 78 to 9.0e-17 at D 100. That has not been investigated.
+
 ### 4.5 Not run
 
 - **A junk-only deflated Newton on the full system** (`newton_qd`'s `junk` mode, from a chain state). Section 4.3
