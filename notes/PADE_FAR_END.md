@@ -93,3 +93,101 @@ The selftest (`python3 pade_farend.py selftest`) checks three things, each with 
 1. One member reproduces the end of a semi-classical chord density exactly, with error 0 against a bound of 10⁻¹⁰.
 2. The ensemble recovers the end of a density outside that class, (1 + sin 4s/2 + 0.3i cos 3s)(1 − s)^ex, to 3.7×10⁻⁵.
 3. The moved-end plants' moments agree with `mpmath.quad` to 6×10⁻⁶¹.
+
+References: A. J. Guttmann and G. S. Joyce, J. Phys. A 5, L81 (1972), doi:10.1088/0305-4470/5/9/001 (differential
+approximants); D. L. Hunter and G. A. Baker, Phys. Rev. B 19, 3808 (1979), doi:10.1103/PhysRevB.19.3808 (the
+inhomogeneous form). Both entries were checked against the publisher's record through Scilit and the University of
+Melbourne's listing, not against the full text.
+
+## 4. Results
+
+All runs used one core under `nice -n 10`, 2026-11-13 07:59–08:12 UTC, with `pade_farend.py` at e3822c28. The records
+are in the raw-data repository's `I547-mac/` (cce7a42).
+
+### 4.1 Plants: C1, C2 and C3 fail
+
+The estimator recovers smooth densities, and misses densities with branch points along the arc. Errors are |estimate −
+P1| in t units. "noise" and "spread" are as in 2.3.
+
+| family | plants | largest error | noise |
+|---|---|---|---|
+| family | plants | largest error | noise |
+|---|---|---|---|
+| chord2 and arc, far end 1.62–1.90, three nodes; chord2 also with exponent β − 2 at κ⋆ and β | 21 | 0.009 | 0.003–0.024 |
+| chord2 and arc stretched to 1.85 (low orders not refitted) | 2 | 0.001 | 0.004–0.010 |
+| arcmid and arcsteps at κ⋆ | 2 | 0.012 | 0.013–0.027 |
+| arcjump, far end 1.62–1.90, three nodes | 9 | 0.042 | 0.02–0.36 |
+| chord2 at 1.85 with the end exponent β − 2 | 1 | 0.063 | 0.066 |
+
+On arcjump the estimate's modulus falls short of the far end by 0.02–0.04 once the end is past κ⋆. A likely cause, not
+tested here, is the log branch point of the step at s = 0.75, which competes with the far end at these orders.
+
+| check | result | verdict |
+|---|---|---|
+| C1, every plant within 0.02 | 7 of 35 fail: six arcjump plants and chord2 at 1.85 with exponent β − 2 | BAD |
+| C2, an end moved 0.05 moves the estimate > 0.03 | 0.047–0.051 for chord2 and arc, but 0.015 for arcjump κ⋆ → κ⋆ + 0.05 | BAD |
+| C3, noise ≤ 0.01 | above 0.01 on 24 of 35 plants, up to 0.36 (arcjump) | BAD |
+| B1, the ratio law 12–21 misses the κ⋆ plants by > 0.05 | 0.10–0.14, as in #541 | OK |
+
+The ratio law over k = 12–21 misses the plants with far ends at 1.75–1.90 by 0.02–0.36, so its value of 1.833 on the
+real series does not locate the far end either.
+
+### 4.2 Real series, frozen run: two controls fire
+
+| | ω/ω∞ 0.99 | 1.00 | 1.01 | 1.00, J 1500 |
+|---|---|---|---|---|
+| DA2 median | 2.201+1.328i | 2.228+1.435i | 2.303+1.349i | 2.222+1.371i |
+| modulus | 2.570 | 2.650 | 2.669 | 2.610 |
+| spread | 0.27 | 0.24 | 0.18 | 0.28 |
+| noise | 0.15 | 0.19 | 0.13 | |
+
+| control | bound | result | verdict |
+|---|---|---|---|
+| real range | modulus in 1.62–1.90 | 2.65 | BAD, fires |
+| `--mutate=scale1.03` | equal to 1.03 × the estimate within 10⁻⁶ | off by 0.11 | BAD, fires |
+| `--mutate=sigma7`, reported only | | the estimate moves 0.25 | WATCH |
+
+Every member's farthest zero lies at |t| = 2.4–3.0, against the window edge at 3. Scaling by 1.03 pushes some members'
+zeros past the edge, and those members then report another zero, which is why the scale control fails. By the frozen
+rules no far end is quoted, and the work on the real quote stopped here.
+
+### 4.3 Post-freeze diagnostics, labeled so
+
+`pade_farend_diag.py` prints every zero of Q₂ with 1.65 < |t| < 6, for each member. Zeros inside |t| = 1.65, the
+arc's interior, are not printed, because #548 had not yet been frozen.
+
+- **On the plants, the members agree.** chord2 at κ⋆ puts 11 of 11 members within 0.05 of the far end (median absolute
+  deviation 0.0004). chord2 at 1.85 puts 10 of 11 there (0.0016), and arcjump 6 of 11 (0.015).
+- **On the real series, no six members agree within 0.05 anywhere past |t| = 1.65.** At ω/ω∞ = 1.00 every member has
+  a zero in 1.98–2.55 + 1.0–1.64i, scattered by 0.1–0.3. Five of 11 have one at 1.53–1.95 − 0.65–0.85i, in the lower
+  half plane. None has a zero within 0.17 of #541's far Padé poles (1.355–1.457 + 1.05–1.07i). J 1500 reproduces 7 of
+  the 11 members' farthest zeros within 0.03 and moves the other four by 0.1 or more. With a₂₂ dropped, the farthest
+  zeros stay in 2.06–2.56 + 1.18–1.59i.
+
+### 4.4 What this means
+
+- The 23 coefficients do not locate the far end by this method. The estimator meets #547's acceptance only on plants
+  with a smooth density, and the real series behaves like none of the plants.
+- **On the three plants tested (D1, D2, D4), at least 6 of the 11 DA2 members agree on the far end within 0.05. On the
+  real series no 6 agree anywhere past |t| = 1.65.**
+  This is a second structural difference between the real series and the plants, after #541's (the real Padé poles
+  reach the chord sooner than any plant).
+- So the evidence that the far end lies past |κ⋆| = 1.675 is still that of #541: the far Padé poles and the drift of
+  the ratio law. #547 neither confirms nor refutes it, and the type in routes A3 and P5 stays uncalibrated.
+
+### 4.5 Proposed text for proof/D_entire.md
+
+As a bullet at the end of 7.4, after "Together, these are numerical evidence ...":
+
+```diff
+ - **Together, these are numerical evidence** that the far end of the singular support, and with it the type, lies
+   past |κ⋆| = 1.675.
++- **A calibrated estimator does not locate it (#547).** Second-order differential approximants
++  (`solver/inner_amp/pade_farend.py`, notes/PADE_FAR_END.md) recover the far end of every smooth-density plant within
++  0.009, for far ends from 1.62 to 1.90. They miss plants with steps on the arc by up to 0.042 and one exponent
++  variant by 0.063, and their noise spread reaches 0.36, so #547's acceptance fails. On three plants (chord2 at κ⋆ and
++  at 1.85, arcjump), at least 6 of the 11 approximants agree on the far end within 0.05. On the real series no 6 agree
++  anywhere past |t| = 1.65, and
++  none has a zero within 0.17 of the far poles above. The far end is therefore not located by σ₀–σ₂₂, and the type
++  stays uncalibrated.
+```
