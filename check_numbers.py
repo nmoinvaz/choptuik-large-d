@@ -303,7 +303,7 @@ def published_gamma():
              [(note, "gives Δ_res = Δ/(2 ln(10) γ) = 1.6934")]),
             ("Bland et al. gamma at D 4-14, largest |diff|", bland, 1.31e-3, 1e-5, [(note, "by at most 1.31×10⁻³ (D = 9)")]),
             ("Bland et al. gamma(3.5) above ours", -diffs[("Bland2005", 3.5, "gamma")][0], 0.0266, 1e-4,
-             [(note, "is 0.0266 above our 0.3223856 (M = 96)")])]
+             [(note, "is 0.0266 above our 0.3223856 (M = 128)")])]
     return out
 
 
@@ -1978,6 +1978,18 @@ def short_forms():
     txt = [("notes/FORMULA_FORMS.md", "| 40–61 | 10⁻⁴ | 3 | 1.6450284 + 10.19239/D − 18.04099/D² | 5.7×10⁻⁶ |")]
     return [("40-61 c0", c[0], 1.6450284, 1e-7, txt), ("40-61 c1", c[1], 10.19239, 1e-5, txt),
             ("40-61 c2", c[2], -18.04099, 1e-5, txt), ("40-61 margin", err, 5.7e-6, 1e-7, txt)]
+
+
+@check
+def gamma_35():
+    """README "Below D = 4": gamma(3.5) at M = 128 and its change from M = 96, from hp/data/delta_dd_lowD.csv (#628)"""
+    import csv
+    g = {int(r["M"]): float(r["gamma"]) for r in csv.DictReader(l for l in open(os.path.join(ROOT, "hp/data/delta_dd_lowD.csv"))
+                                                                  if not l.startswith("#"))
+         if abs(float(r["D"]) - 3.5) < 1e-9 and r["gamma"]}
+    txt = [("README.md", "At D = 3.5 the double-double solver gives γ = 0.3223856, which moves by 3.8×10⁻⁹ from M = 96 to 128")]
+    return [("gamma(3.5) at M 128", g[128], 0.3223856, 1e-7, txt),
+            ("gamma(3.5), M 96 to 128", g[128] - g[96], 3.8e-9, 1e-10, txt)]
 
 
 @check

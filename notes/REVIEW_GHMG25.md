@@ -374,7 +374,7 @@ rounding bound only, so a "no" there says only that the printed digits differ).
   errors, by at most 1.31×10⁻³ (D = 9). Bland and Kunstatter's 0.4131 ± 0.0001 is 2.7×10⁻⁵ from ours. Husain et al.'s
   seven D = 4 ranges, at Λ < 0, all contain ours.
 - **γ, outside the stated errors.**
-  - Bland et al.'s γ(3.5) = 0.349 ± 0.003 (Table I) is 0.0266 above our 0.3223856 (M = 96). The README already
+  - Bland et al.'s γ(3.5) = 0.349 ± 0.003 (Table I) is 0.0266 above our 0.3223856 (M = 128). The README already
     reports this; the value is now located in the paper (notes/REF_CHECK.md).
   - Sorkin and Oren's γ at D = 7, 8, 9 and 11 is 2.1–4.1% below ours, beyond their 2–3%. Their Sec. V names the
     likely cause: lowering the accuracy of p* "from 1 part in 10¹⁴ to 1 part in 10¹⁰" lowers γ by a few percent.

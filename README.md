@@ -649,8 +649,8 @@ the footnotes.
   converged in the τ resolution (48, 64 and 80 points) and in the node layout ([notes/LOW_D.md](notes/LOW_D.md)). Its
   first node is moved to x = 0.005 and its last to 0.8, because the series there converge ever more slowly as D falls.
   Ecker et al. (2026) give 3.4652005 and 0.3486503 there. The f64 points below D = 4 (47 Fourier modes) are 2–5×10⁻⁶
-  high in Δ. Extrapolated from 3.64 ≤ D ≤ 4, γ(3.5) = 0.3235 ± 0.0030, in agreement with Ecker et al.'s 0.32239 and not
-  with Bland et al.'s 0.349 ± 0.003. The modes needed grow from about 73 at D = 4 to about 110 at 3.5 and several
+  high in Δ. At D = 3.5 the double-double solver gives γ = 0.3223856, which moves by 3.8×10⁻⁹ from M = 96 to 128 in τ,
+  in agreement with Ecker et al.'s 0.32239 and not with Bland et al.'s 0.349 ± 0.003. The modes needed grow from about 73 at D = 4 to about 110 at 3.5 and several
   hundred near 3.05. At D = 3 the scalar decouples from gravity in these equations, so the family cannot reach a regular
   D = 3 limit.
 - **Large D.** Ecker, Ecker & Grumiller (2026) and Ecker et al. (2026) conjecture Δ → 0 as D → ∞. Bland's 2007 PhD
