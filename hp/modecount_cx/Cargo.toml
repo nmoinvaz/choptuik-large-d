@@ -13,7 +13,7 @@ crate-type = ["cdylib"]
 [dependencies]
 hpk = { package = "hpkernel", path = "..", default-features = false }
 # the generic SIMD types for pivots.rs's copy of clu_logdet; the version hp pins, so cargo uses the one crate
-multidouble = "=4.1.0"
+multidouble = "=4.2.1"
 pyo3 = { version = "0.30", features = ["extension-module"] }
 numpy = "0.30"
 rayon = "1.10"
