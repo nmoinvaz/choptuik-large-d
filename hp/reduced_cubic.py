@@ -41,15 +41,17 @@ Controls at c*:
   - S control (judged): dw = w(c*) - w0 replaced by 2 dw changes g by -1/2 S(c*, c*, c*), to 1e-2 of it;
   - w control (diagnostic): w(c*) replaced by 2 w(c*) changes g by L c* - 1/2 S(c*, c*, c*) + 3/2 q00.
 
-Checks of both modes (exit 1 on failure): S at h_S against h_S / 10 to 1e-2 of max|S| (or, on real data, reported as
-bounded below its truncation when the two differ by the factor 100 of an h^2 term); the S control. `planted` also
+Checks of both modes (exit 1 on failure): w_jl at h_F against h_F / 10 to 1e-2 (2-norm, the worst pair); S at h_S
+against h_S / 10 to 1e-2 of max|S| (or, on real data, reported as bounded below its truncation when the two differ by
+the factor 100 of an h^2 term); the S control. `planted` also
 judges the recovery of every tensor (rotated into the plant's basis) to 1e-6 of its largest entry, and that the model
 "T-3S,L" has a root within 1e-3 relative of the planted root with |g| < 1e-2 |B a| there, and that the plant shows
 (|g(c*)| >= 0.1 |B a| on the strong-solved manifold). Mutations: --mutate=w0 skips the strong solve (w(c) = 0, the
 map on z0 + V c), and the root check and the S control must fail; --mutate=Ssign flips S's sign in the models and in
 the control's prediction, and both must fail; --mutate=Sh steps 10 h along w_jl / |w_jl| at h_S / 10 but divides by
-that h squared, so that S(h_S / 10) is ten times too large, and the h check of S must fail. notes/REDUCED_CUBIC.md has
-the protocol and the results.
+that h squared, so that S(h_S / 10) is ten times too large, and the h check of S must fail; --mutate=hF forms w_jl at
+h_F = 1e-24, where its truncation dominates, and the h check of w_jl must fail. notes/REDUCED_CUBIC.md has the
+protocol and the results.
 """
 import json
 import os
@@ -63,7 +65,11 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 mp.mp.dps = 140
 
-H = dict(Q=1e-32, T=1e-23, F=1e-24, S=1e-32, LS=1e-33)       # the first step of each difference; the second is /10
+# the first step of each difference; the second is /10. h_F is small because J^-1 (I - U U^T) multiplies the second
+# difference's h^2 truncation along the weakest strong directions (sigma_5 ~ 1e-19) by up to 1e19: at h_F = 1e-24 the
+# truncation was all of w_jl at the D 242.5 starts (0.99 between h and h/10)
+H = dict(Q=1e-32, T=1e-23, F=1e-32, S=1e-32, LS=1e-33)
+H_MUT_F = 1e-24                                             # --mutate=hF: w_jl from that step, whose h check must fail
 
 
 def mgs(W):
@@ -189,7 +195,7 @@ class Planted:
     """a synthetic system with a known reduced map. Canonical unknowns (y in R^k, x in R^m), rotated on both sides by
     random orthogonal P_L, P_R at 140 digits: F(z) = P_L G(P_R^T z), z0 = 0, with
         G_w = beta + Sigma y + 1/2 Q(y, y) + 1/6 T(y, y, y) + 1/24 P4(y, y, y, y) + K(y, x)
-        G_s = gamma + (Lambda + M(y)) x + 1/2 C(y, y).
+        G_s = gamma + (Lambda + M(y)) x + 1/2 C(y, y) + 1/24 c4 (b4 . y)^4 e_0.
     J = P_L diag(Sigma, Lambda) P_R^T at z0. The strong rows are linear in x at fixed y, so
     x(y) = -(Lambda + M(y))^-1 (gamma + 1/2 C(y, y)) and the reduced map is G_w(y, x(y)) exactly. Its truth: B = Sigma,
     w0 = -Lambda^-1 gamma, L = K(., w0), Q, T, S_m,i,jl = K_m(e_i, Lambda^-1 C(e_j, e_l)), q00 = 0. beta is set so that
@@ -225,6 +231,10 @@ class Planted:
             cr = rng.standard_normal((k, k))
             scale = 0 if s < 4 else (min(self.lam[s] * 3e3, mp.mpf(1e33)))
             self.C.append([[mp.mpf(scale) * mp.mpf((cr[i, j] + cr[j, i]) / 2) for j in range(k)] for i in range(k)])
+        # a quartic in the weakest strong row, 1/24 c4 (b4 . y)^4 with c4 1e43: J^-1 multiplies its share of the
+        # second differences' truncation by 1e19, so w_jl from h_F = 1e-24 is that truncation (as at the D 242.5 starts)
+        # while h_F = 1e-32 resolves w_jl (--mutate=hF)
+        self.c4 = (mp.mpf(1e43), [mp.mpf(float(x)) for x in rng.standard_normal(k)])
         # K(y, x): 1.5e6 on rows 0-3 of x (L ~ |B|), 1e29 on rows 4-6 (S ~ |T| / 3), 1e30 on row 7
         kr = rng.standard_normal((k, k, m))
         ks = [1.5e6] * 4 + [1e29] * 3 + [1e30]
@@ -272,10 +282,14 @@ class Planted:
         for s in range(m):
             for t in range(m):
                 A[s, t] = (self.lam[s] if s == t else 0) + mp.fsum(self.Mt[s][j][t] * y[j] for j in range(k))
-        rhs = mp.matrix([-(self.gam[s] + mp.fsum(self.C[s][i][j] * y[i] * y[j] for i in range(k) for j in range(k)) / 2)
-                         for s in range(m)])
+        rhs = mp.matrix([-(self.gam[s] + mp.fsum(self.C[s][i][j] * y[i] * y[j] for i in range(k) for j in range(k)) / 2
+                           + self.quart(s, y)) for s in range(m)])
         x = mp.lu_solve(A, rhs)
         return [x[s] for s in range(m)]
+
+    def quart(self, s, y):
+        """the strong row's quartic term, in row 0 only"""
+        return self.c4[0] * dot(self.c4[1], y) ** 4 / 24 if s == 0 else mp.mpf(0)
 
     def Gw(self, y, x):
         k, m = self.k, self.m
@@ -295,7 +309,8 @@ class Planted:
         k, m = self.k, self.m
         return [self.gam[s] + self.lam[s] * x[s] + mp.fsum(self.Mt[s][j][t] * y[j] * x[t] for j in range(k)
                                                              for t in range(m))
-                + mp.fsum(self.C[s][i][j] * y[i] * y[j] for i in range(k) for j in range(k)) / 2 for s in range(m)]
+                + mp.fsum(self.C[s][i][j] * y[i] * y[j] for i in range(k) for j in range(k)) / 2 + self.quart(s, y)
+                for s in range(m)]
 
     def F(self, p=None):
         n, k = self.L, self.k
@@ -621,20 +636,23 @@ def measure(sysm, opts, mutate, log, rec, dump):
     rec.update(Q=dict(max=float(tmax(Q)), h_h10=float(dQ)))
     dump()
     t0 = time.time()
+    hF = H_MUT_F if mutate == "hF" else H["F"]
     Ws = []
-    for hh in (H["F"], H["F"] / 10):
+    for hh in (hF, hF / 10):
         F2 = second_diffs(sysm, X, hh)
         Ws.append({key: sysm.solve(strong_part(Um, v)) for key, v in F2.items() if key[0] <= key[1]})
-    wjl = Ws[0]
-    dW = max(nrm([x - y for x, y in zip(Ws[0][key], Ws[1][key])]) / nrm(Ws[0][key]) for key in wjl)
+    wjl = Ws[1]
+    dW = max(nrm([x - y for x, y in zip(Ws[0][key], Ws[1][key])]) / nrm(Ws[1][key]) for key in wjl)
+    W_ok = bool(dW < 1e-2)
     for key in list(wjl):
         wjl[(key[1], key[0])] = wjl[key]
     F2max = max(amax(v) for v in F2.values())
     log(f"  w_jl = J^-1 (I - U U^T) F''(v_j, v_l): max|F''| {mp.nstr(F2max, 3)}, |w_jl| "
-        f"{mp.nstr(min(nrm(v) for v in wjl.values()), 3)}..{mp.nstr(max(nrm(v) for v in wjl.values()), 3)}, "
-        f"|V^T w_jl| / |w_jl| up to {mp.nstr(max(nrm(proj_U(X, v)) / nrm(v) for v in wjl.values()), 3)}; h {H['F']:.0e} "
-        f"against h/10 {mp.nstr(dW, 3)} ({time.time() - t0:.0f} s)")
-    rec.update(w=dict(F2max=float(F2max), wmax=float(max(nrm(v) for v in wjl.values())), h_h10=float(dW)))
+        f"{mp.nstr(min(nrm(v) for v in wjl.values()), 3)}..{mp.nstr(max(nrm(v) for v in wjl.values()), 3)} at h "
+        f"{hF / 10:.0e}, |V^T w_jl| / |w_jl| up to {mp.nstr(max(nrm(proj_U(X, v)) / nrm(v) for v in wjl.values()), 3)}; "
+        f"against h {hF:.0e} {mp.nstr(dW, 3)} (bound 1e-2): {'pass' if W_ok else 'FAIL'} ({time.time() - t0:.0f} s)")
+    rec.update(w=dict(F2max=float(F2max), wmax=float(max(nrm(v) for v in wjl.values())),
+                      wmin=float(min(nrm(v) for v in wjl.values())), h=hF / 10, h_h10=float(dW), ok=W_ok))
     dump()
     t0 = time.time()
     Ts = [third_tensor(sysm, X, Um, hh) for hh in (H["T"], H["T"] / 10)]
@@ -765,7 +783,7 @@ def measure(sysm, opts, mutate, log, rec, dump):
     dump()
 
     # the controls at c*
-    ok = S_ok or S_trunc
+    ok = (S_ok or S_trunc) and W_ok
     if cstar is None:
         log("  no root of model T: no c*, the controls cannot run")
         rec["controls"] = None
@@ -837,8 +855,8 @@ def main():
     args = [a for a in sys.argv[1:] if not a.startswith("--")]
     opts = dict(a[2:].split("=", 1) for a in sys.argv[1:] if a.startswith("--") and "=" in a)
     mutate = opts.get("mutate", "")
-    if mutate not in ("", "w0", "Ssign", "Sh"):
-        sys.exit(f"--mutate={mutate}: w0, Ssign or Sh")
+    if mutate not in ("", "w0", "Ssign", "Sh", "hF"):
+        sys.exit(f"--mutate={mutate}: w0, Ssign, Sh or hF")
     if not args or args[0] not in ("run", "planted") or (args[0] == "run" and len(args) != 4):
         sys.exit(__doc__)
     out = opts.get("json", "")
