@@ -679,3 +679,31 @@ In 7.4, after the bullet "More coefficients would not separate them either (#670
 +  it reproduces chord2 with 18 terms. Whether a prior on the peak density separates them is open, since the known
 +  chord twins of the arc plant peak at 2.3–3.8 times chord2's density.
 ```
+
+## 9. The real twins with C1 amended at M = n, and the smallest chord twin by peak density (#672)
+
+Part 1 reruns §8's twin scans on the real σ₀–σ₂₂, which stopped on C1 (§8.4). Part 2 minimises the chord twin's peak
+density instead of its coefficient norm.
+
+### 9.1 The amendment of C1 (frozen)
+
+Written into `pade_twin_size.py`'s `FROZEN` (`C1_amended_672`, `mutation_C1_672`) and here before `twins` and
+`twins_real` were rerun. It is the coordinator's amendment, and no other criterion of §8.2 changes.
+
+| check | criterion |
+|---|---|
+| C1 below n | unchanged: at M_min − 1 and M_min, χ at 250 digits agrees with 150 digits within 10⁻³ relative |
+| C1 at M = n | χ ≤ 10⁻³⁰ at both 150 and 250 digits |
+| a singular check | a 250-digit fit that mpmath finds numerically singular counts as χ = ∞, so C1 fails |
+| mutation | `twins_real --mutate=c1dup` replaces column n − 1 of the 250-digit bases by column n − 2. It must make the amended C1 fire on every scan with M_min = n and leave the scans with M_min < n passing. The run judges C1 only, does not stop when it fires, and exits 1 |
+
+Why the amendment. At M = n the least-squares twin is the interpolant, so χ is rounding noise at each precision
+(2.2×10⁻¹⁰⁷ and 2.6×10⁻²⁰⁷ in §8.4), and their relative difference measures nothing. What can still go wrong at M = n
+is a fit that does not interpolate, and the absolute bound catches that.
+
+Why this mutation. A column multiplied by 1 + 10⁻⁸, as `arccol` does, leaves the 250-digit system square and
+nonsingular, so the fit still interpolates at M = n and χ stays at rounding noise. Only a basis that cannot interpolate
+can make the amended C1 fire. A duplicated last column is such a basis, and it leaves every row below M = n unchanged.
+Before the freeze, this mechanism was tried on the plant arcjump at ω/ω∞ = 0.99 in the chord basis: χ at M = 22 stayed
+2.7×10⁻⁷, and at M = 23 mpmath's QR reported the matrix numerically singular. Perturbing the last column toward its
+neighbour by 10⁻¹⁵⁰ to 10⁻²⁴⁵ did the same.

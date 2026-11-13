@@ -19,7 +19,8 @@ piece (arc_moments). The chord moments of pade_twin_count are exact too, so neit
 Part 1, twins (stage `twins`, plants, then `twins_real`). Weighted least squares (weights 1/err_k) of each twin class
 against sigma_0..sigma_22. chi = max_k |sigma_k(twin) - sigma_k| / err_k, err_k = rel_k |sigma_k|, rel_k the measured
 error (sigma_err_fit.py, as pade_geometry.noise_eps; floor 1e-30). M_min = smallest M with chi <= 1, M_lo = smallest M
-with l2 <= sqrt(n) (no twin of fewer terms has chi <= 1), as #670.
+with l2 <= sqrt(n) (no twin of fewer terms has chi <= 1), as #670. C1 compares chi at 150 and 250 digits at M_min - 1
+and M_min. At M = n the twin interpolates and chi is rounding noise, so there C1 requires chi <= 1e-30 at both (#672).
 
 Part 2, size (stage `size`, plants, then `size_real`). The size of a chord twin is N = ||c||_2 = (sum_m |c_m|^2)^(1/2),
 the norm of its Chebyshev coefficients, at M_SIZE terms. With A the n x M matrix of the twin's columns and b the target,
@@ -35,7 +36,7 @@ duality, ibid. ch. 5). Context: the ridge route (Hoerl and Kennard 1970, Technom
 
     python3 pade_twin_size.py --selftest [--mutate=upoly|radius]
     python3 pade_twin_size.py twins OUTDIR [--mutate=arccol|chordcol] [--allow_unraw]
-    python3 pade_twin_size.py twins_real OUTDIR [--allow_unraw]       (reads OUTDIR/twins_plants.json)
+    python3 pade_twin_size.py twins_real OUTDIR [--mutate=c1dup] [--allow_unraw]   (reads OUTDIR/twins_plants.json)
     python3 pade_twin_size.py size OUTDIR [--mutate=scale] [--allow_unraw]
     python3 pade_twin_size.py size_real OUTDIR [--allow_unraw]        (reads OUTDIR/size_plants.json)
 
@@ -62,6 +63,7 @@ M_CONV = 50                         # convergence context at wf 1.00
 DPS_FIT, DPS_CHECK = 150, 250
 M_CONTROL = 6                       # every plant has M = 6
 CHI_CONTROL = 1e-30
+C1_INTERP = 1e-30                   # C1 at M = n, where the twin interpolates (#672)
 TOL_QP = 1e-10                      # barrier stops when n/t <= TOL_QP Q
 PIECES = F.PIECES
 FROZEN = {                          # written before the twins, size, twins_real and size_real stages were first run
@@ -73,6 +75,14 @@ FROZEN = {                          # written before the twins, size, twins_real
     "C0_same_class": "chord2 in the chord basis, arcjump in the arc basis, the plant arc in the smooth basis, each at "
                      "M = 6, n = 23: chi <= 1e-30 at every node",
     "C1_precision": "at M_min - 1 and M_min of every scan, chi at 250 digits agrees with 150 digits within 1e-3 relative",
+    "C1_amended_672": "#672, the coordinator's amendment, frozen before the rerun of twins and twins_real: at M = n, C1 "
+                      "passes when chi <= 1e-30 at both 150 and 250 digits; below n it is unchanged. Why: at M = n the "
+                      "twin is the interpolant and chi is rounding noise at both precisions, so their relative "
+                      "difference is undefined. A check fit that mpmath finds singular counts as chi = inf",
+    "mutation_C1_672": "--mutate=c1dup (twins_real only): column n - 1 of the 250-digit bases is replaced by column "
+                       "n - 2, so the 250-digit fit cannot interpolate at M = n. It must make the amended C1 fire on "
+                       "every scan with M_min = n and leave the scans with M_min < n passing; the run does not stop on "
+                       "a firing, judges C1 only, and exits 1",
     "C2_reproduce": "the chord twin of arcjump at n = 23 has M_min = 19 at every node (#670); a failure is a "
                     "discrepancy, reported",
     "both_ways": "the arc twin of chord2 counts as a twin (not an interpolant) if M_min <= n - 1 = 22; its M_min and "
@@ -196,6 +206,15 @@ def row(basis, sig, rel, n, M):
             "density_max": density_peak(c, basis.ex, basis.pieces)}
 
 
+def c1_row(M, n, chi, chi_check):
+    """C1 on one precision row. Below n: 150 and 250 digits agree within 1e-3 relative. At M = n (amended, #672): the
+    twin is the interpolant, chi is rounding noise, and both must be <= C1_INTERP"""
+    rd = abs(chi_check - chi) / chi_check if math.isfinite(chi_check) and chi_check > 0 else math.inf
+    if M == n:
+        return {"rule": "interpolant", "rel_diff": rd, "pass": chi <= C1_INTERP and chi_check <= C1_INTERP}
+    return {"rule": "relative", "rel_diff": rd, "pass": rd <= 1e-3}
+
+
 def scan(basis, check, sig, rel, n, log, label):
     t0 = time.time()
     rows = [row(basis, sig, rel, n, M) for M in range(M_CONTROL, n + 1)]
@@ -205,13 +224,17 @@ def scan(basis, check, sig, rel, n, log, label):
         r = next((x for x in rows if x["M"] == M), None)
         if r is None:
             continue
-        rc = row(check, sig, rel, n, M)
-        prec.append({"M": M, "chi": r["chi"], "chi_check": rc["chi"], "rel_diff": abs(rc["chi"] - r["chi"]) / rc["chi"]})
-    c1 = bool(prec) and all(p["rel_diff"] <= 1e-3 for p in prec)
+        try:
+            chi_c = row(check, sig, rel, n, M)["chi"]
+        except ValueError:          # mpmath's "matrix is numerically singular": the check cannot fit
+            chi_c = math.inf
+        prec.append({"M": M, "chi": r["chi"], "chi_check": chi_c, **c1_row(M, n, r["chi"], chi_c)})
+    c1 = bool(prec) and all(p["pass"] for p in prec)
     at = next((x for x in rows if x["M"] == m_min), None)
     log(f"  {label}: M_min {m_min} M_lo {m_lo}; chi at M_min - 1, M_min: "
         + ", ".join(f"{x['chi']:.2e}" for x in rows if m_min and x["M"] in (m_min - 1, m_min))
         + (f"; at M_min max|c| {at['c_max']:.2e}, peak density {at['density_max']:.2f}" if at else "")
+        + "; at 250 digits " + ", ".join(f"{p['chi_check']:.2e} ({p['rule']})" for p in prec)
         + f"; C1 {'OK' if c1 else 'BAD'} ({time.time() - t0:.0f}s)")
     return {"rows": rows, "M_min": m_min, "M_lo": m_lo, "precision": prec, "C1_pass": c1}
 
@@ -489,8 +512,12 @@ def bases_part1(wf, dps, mut=None):
     c2, _ = tc.plant(wf, "chord2")
     aj, _ = tc.plant(wf, "arcjump")
     ar, _ = tc.plant(wf, "arc")
-    return {"chord": chord_cols(c2, dps, N23, N23, mut), "arc": arc_cols(aj, PIECES["arcjump"], dps, N23, N23, mut),
-            "smooth": arc_cols(ar, PIECES["arc"], dps, N23, N23, mut)}
+    out = {"chord": chord_cols(c2, dps, N23, N23, mut), "arc": arc_cols(aj, PIECES["arcjump"], dps, N23, N23, mut),
+           "smooth": arc_cols(ar, PIECES["arc"], dps, N23, N23, mut)}
+    if mut == "c1dup" and dps == DPS_CHECK:     # the 250-digit bases only; columns m < n - 1 are untouched
+        for b in out.values():
+            b.cols[N23 - 1] = list(b.cols[N23 - 2])
+    return out
 
 
 def run_twins(outdir, mut=None):
@@ -531,27 +558,29 @@ def run_twins(outdir, mut=None):
     return ok
 
 
-def run_twins_real(outdir):
+def run_twins_real(outdir, mut=None):
     plants = json.load(open(os.path.join(outdir, "twins_plants.json")))
     if not plants["controls_pass"]:
         print("the plant controls failed: no real run (frozen rule)")
         return False
-    log = Log(outdir, "twins_real", None)
-    rec = {"frozen": FROZEN, "scans": {}}
+    log = Log(outdir, "twins_real", mut)
+    rec = {"frozen": FROZEN, "mutate": mut, "scans": {}}
     ok = True
     real = tc.real_sig()
     for wf in pg.NODES:
-        fit, chk = bases_part1(wf, DPS_FIT), bases_part1(wf, DPS_CHECK)
+        fit, chk = bases_part1(wf, DPS_FIT), bases_part1(wf, DPS_CHECK, mut)
         rel, _ = tc.err_model(wf)
         sig = real[wf][:N23]
         for cls in ("chord", "arc", "smooth"):
             s = scan(fit[cls], chk[cls], sig, rel, N23, log, f"wf {wf} {cls} twin of the real series (J1250)")
             ok &= s["C1_pass"]
             rec["scans"].setdefault(wf, {})[cls] = s
-            if not s["C1_pass"]:
+            if not s["C1_pass"] and not mut:
                 log("C1 fired on real data: stop (frozen rule)")
                 log.dump(rec)
                 return False
+        if mut:                     # a mutation run judges C1 only
+            continue
         if wf == 1.0:
             j15 = pg.load_scan(pg.REAL["J1500"])[1.0][:N23]
             with mp.workdps(DPS_FIT):
@@ -565,6 +594,17 @@ def run_twins_real(outdir):
                 rec["scans"].setdefault("J1500", {})[cls] = scan(fit[cls], chk[cls], j15, rel, N23, log,
                                                                  f"wf 1.0 {cls} twin of J1500 (context)")
     mm = {wf: {cls: rec["scans"][wf][cls]["M_min"] for cls in ("chord", "arc", "smooth")} for wf in pg.NODES}
+    if mut:
+        at_n = [(wf, c) for wf in pg.NODES for c, s in rec["scans"][wf].items() if s["M_min"] == N23]
+        below = [(wf, c) for wf in pg.NODES for c, s in rec["scans"][wf].items() if s["M_min"] != N23]
+        fired = bool(at_n) and all(not rec["scans"][wf][c]["C1_pass"] for wf, c in at_n)
+        isolated = all(rec["scans"][wf][c]["C1_pass"] for wf, c in below)
+        rec.update({"M_min": mm, "C1_pass": ok, "mutation": {"scans_at_n": at_n, "fired_at_n": fired,
+                                                            "below_n_pass": isolated}})
+        log(f"mutation {mut}: scans with M_min = n {at_n}; amended C1 fired on each: {fired}; scans with M_min < n "
+            f"still pass: {isolated}; C1 pass overall: {ok}")
+        log.dump(rec)
+        return ok
     pref = {cls: all(mm[wf][cls] is not None and mm[wf][o] is not None and mm[wf][o] - mm[wf][cls] >= 3
                      for wf in pg.NODES) for cls, o in (("chord", "arc"), ("arc", "chord"))}
     rec.update({"M_min": mm, "preferred_by_count": pref, "C1_pass": ok})
@@ -694,7 +734,7 @@ def main():
     stage, outdir = argv
     require_raw(os.path.join(outdir, "x.json"), allow=allow)
     os.makedirs(outdir, exist_ok=True)
-    fn = {"twins": lambda: run_twins(outdir, mut), "twins_real": lambda: run_twins_real(outdir),
+    fn = {"twins": lambda: run_twins(outdir, mut), "twins_real": lambda: run_twins_real(outdir, mut),
           "size": lambda: run_size(outdir, mut), "size_real": lambda: run_size_real(outdir)}[stage]
     sys.exit(0 if fn() else 1)
 
