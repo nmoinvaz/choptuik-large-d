@@ -93,7 +93,7 @@ same quantity, precision or reading), **differs** (a discrepancy, §3). Our stat
 | 28 | S³ σ-model: the n-th CSS solution is regular to the future light cone only for η < η_n, "η₁ ≃ 0.1518" | IV A 3 | Bizoń & Wasserman 2000 | α₁ = 0.1518–0.1519 (a range over fits of the horizon's divergence) | matter/SIGMA.md §4 | agree |
 | 29 | the same, "η₀ ≃ 0.0688" | IV A 3 | Bizoń & Wasserman 2000 | α₀ = 0.0686–0.0687 (the same kind of range) | matter/SIGMA.md §4 | differs (D5, minor) |
 | 30 | the CSS–DSS transition at "η_c ≃ 0.170", with "Δ ≃ −(2/λ) log(η − η_c) + b", λ the CSS Lyapunov exponent | IV A 3 | Aichelburg, Bizoń & Tabor 2006; Lechner et al. 2002 | η_c = 0.1702; the fitted slope 0.359 rises toward 2/λ_CSS = 0.389 as the window narrows | matter/SIGMA_DSS.md §4 | agree |
-| 31 | for η ≳ 0.2, "The period Δ depends on η, monotonically decreasing towards an asymptotic value for η → ∞" | IV A 3 | Husa et al. 2000; Lechner 2001 | Δ falls from 1.276 (η = 0.18) to 0.459956 (η = 5), then 0.459963 (10) and 0.460021 (∞): non-monotonic by 6.5×10⁻⁵, below the k_c = 15 truncation (1.6×10⁻⁴ at η = ∞). The η → ∞ limit is the ℓ = 1 multiplet (our identification; the review does not name it) | matter/SIGMA_DSS.md §1, §4 | consistent (WATCH; a recommended task) |
+| 31 | for η ≳ 0.2, "The period Δ depends on η, monotonically decreasing towards an asymptotic value for η → ∞" | IV A 3 | Husa et al. 2000; Lechner 2001 | Δ falls from 1.276 (η = 0.18) to a minimum between η = 5 and 20, then rises to Δ(∞) from below: at k_c = 39 Δ = 0.4601686 (η = 2), 0.4598178 (5), 0.4598142 (10), 0.4598315 (20), 0.4598611 (∞) (#623, #630; raw I623-win 9985be57, I630-win 9c2cac04). Δ(5) − Δ(∞) = −4.33×10⁻⁵ and Δ(20) − Δ(10) = +1.73×10⁻⁵ are 43 and 68 times their change from k_c = 23 to 39 (an estimate of the truncation, not a bound). The η → ∞ limit is the ℓ = 1 multiplet (our identification; the review does not name it) | matter/SIGMA_DSS.md §1, §4; #623, #630 | differs (D9) |
 | 32 | the ℓ-multiplet: DSS, "Δ and mass scaling exponent γ both decrease approximately exponentially with l" | V A 2 | Olabarrieta et al. 2007 | at D = 4, ℓ = 0, 1, 2: Δ = 3.4455, 0.4598611, 0.1193 (the last from an evolution); γ = 0.374, 0.118900 | matter/ELL.md; README, Other matter | consistent |
 | 33 | EYM (magnetic): the DSS solution of the ansatz w = 1 − rS "has no non-gravitating counterpart"; in the general SU(2) system, "evidence against the existence of a universal critical solution" | IV A 4 | Gundlach 1997; Maliborski & Rinne 2018 | the same reading of the magnetic case (matter/LITERATURE.md §4.1 cites the review); the README's Yang–Mills row is for the magnetic ansatz | matter/LITERATURE.md §4.1; README, Other matter | agree (with a caveat for the general case) |
 | 34 | Bianchi IX in 4+1: "Δ ≃ 0.49 and γ ≃ 0.3289" | IV A 5 | Bizoń, Chmaj & Schmidt 2005 | matter/LITERATURE.md §6.1 reads Δ ≈ 0.47 in that paper and in Porto Veronese–Gundlach ("the 2025 review quotes 0.49"); not computed here | matter/LITERATURE.md §6.1 | differs (D7, the review against its source) |
@@ -157,6 +157,11 @@ same quantity, precision or reading), **differs** (a discrepancy, §3). Our stat
   Their error bar is set by the spread of their Table I over five grid sizes, 3.2223–3.2264, each value with
   ±0.0004–0.0006. Ours lies below all five, and only the N = 1024 value is within its own error of ours. Their γ agrees
   (row 7).
+- **D9. The σ-model's Δ(η) is not monotonic (#623, #630).** The review says Δ decreases monotonically toward its η → ∞
+  value (Husa et al. 2000; Lechner 2001). At k_c = 23 and 39, Δ(10) < Δ(5) < Δ(20) < Δ(∞), so Δ has a minimum between
+  η = 5 and 20 and approaches Δ(∞) from below; both differences are resolved, 43–112 times their change between the
+  two k_c. #631 locates the minimum. The sources were not read here, so whether they say monotonic or the review does
+  is not known.
 
 ## 4. Existence proofs, and what a selection rule would add
 
@@ -253,7 +258,7 @@ naming them there would make the sentence's scope plain (notes/LIT_REVIEW.md, ad
   - *Acceptance.* At D = 4 it reproduces 4πμ/(2K) from Reiterer and Trubowitz's constants to 10⁻²⁰ (`mu_check.py`'s
     state). The identity λ_g = 4πμ/Δ holds to the states' precision at three D. A mutation (n in place of n − 1) fails.
   - *Depends on.* #380. About 2 hours.
-- **R5. Is Δ(η) of the σ-model monotonic at large η?**
+- **R5. Is Δ(η) of the σ-model monotonic at large η?** Done by #623 and #630: it is not (D9); #631 locates the minimum.
   - *What.* Recompute Δ at D = 4 for η = 2, 5, 10, 20 and ∞ at k_c = 23 and 39.
   - *Why.* Row 31: the k_c = 15 table is non-monotonic by 6.5×10⁻⁵, below its own truncation error.
   - *Acceptance.* The sign of Δ(5) − Δ(∞) is the same at k_c = 23 and 39, and both differences exceed their change
