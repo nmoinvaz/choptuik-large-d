@@ -402,8 +402,33 @@ step fell to about 0.05. The cause is the quad-double corrector's projection swi
 notes/CRAWL.md. Every point lay below it, so the horizon rows' second-order term was never eliminated. With
 `--elim_switch 0` both refused attempts converge in 3 steps to 6e-49, and the continuation's steps grow back to a = 1
 up to D 104.5 (#710, raw `I710-win/` 978179f6). Their Δ differs from the default switch's states at the same D by
-3e-26 and 1e-25, which #725 compares with what two converged roots resolve. The double-double |F| of the converged states rises from 2.9e-20
-at D 78 to 9.0e-17 at D 100. That has not been investigated.
+3e-26 and 1e-25. The double-double |F| of the converged states rises from 2.9e-20 at D 78 to 9.0e-17 at D 100. That
+has not been investigated.
+
+How far two converged roots agree depends on D (#725, raw `I725-win/` 9672e70d). Two a = 1/16 steps from cont3's
+D 99.75 state, each converged to a quad-double max|F| of 2e-49 to 4e-49, reproduce cont3's Δ to 5.7e-34 at D 99.8125
+and only to 1.7e-25 at D 99.875. The three converged states at D 99.875 (cont3's, #710's A1 and #725's X2) span
+2.0e-25 in Δ. A weak direction of fixed gain near 5e-31 would allow a larger difference at D 99.8125 than the one
+seen, so it does not explain both D by itself. #727 polishes the three states to 1e-60, and #728 measures the weak
+direction's σ_min there.
+
+With `--elim_switch 0` the continuation reaches D 112.75 (#726, raw `I726-win/` 647cd9f5). Every accepted step
+converges to at most 7.0e-45. The difference to the held chain keeps growing, by a factor of 1.055 per unit of D
+falling to 1.039, while the quoted spread grows faster:
+
+| D | Δ_full − Δ_held | `fits` spread | ratio |
+|---|---|---|---|
+| 105 | +3.05e-13 | 1.8e-12 | 0.170 |
+| 108 | +3.56e-13 | 2.3e-12 | 0.155 |
+| 112 | +4.21e-13 | 2.9e-12 | 0.145 |
+
+**So the held fit's error stays at 0.15–0.17 of the quoted spread up to D 112, below the 0.19 of D 99–100.** The
+expectation written before the run, that the ratio stays near 0.19, failed in that direction. From D 112.75 the four
+attempts, at a = 1/4 down to 1/32, all stall between 1.1e-44 and 7.8e-44 against the bar of 1e-44, and the run stops
+there. The stall does not fall with a, while the first full step's |F| falls from 1.05e-21 to 1.7e-23, so it is a floor
+of the corrector, not the step's quadratic error. The 17 Newton steps taken at the floor move Δ by at most 4.4e-45, and
+the elimination's pivots span 8e-20 to 9e14. #739 tests whether quad-double precision sets the floor, using the
+octo-double corrector. #740, D 113 to 120 at a bar of 1e-42, waits on that.
 
 ### 4.5 Not run
 
