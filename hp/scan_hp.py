@@ -140,7 +140,7 @@ def solve_at(D, zh, zl, a, nodes, M, it_max, pin=None):
     ok = bool(hist) and (hist[-1]["F"] < a.tol or bool(hist[-1].get("accepted")))
     if not ok and a.lm and pin is None:      # (lm_steps knows nothing of the pin offset)
         print(f"   D={D}: Newton stopped at |F| {hist[-1]['F']:.1e}; Levenberg-Marquardt from the predictor", flush=True)
-        zh2, zl2, h2 = lm_solve(s, zh, zl, tol=a.tol, it_max=a.lm, verbose=a.verbose, newton_after=1e-22)
+        zh2, zl2, h2 = lm_solve(s, zh, zl, tol=a.tol, it_max=a.lm, verbose=a.verbose, newton_after=a.lm_newton_after)
         hist = hist + h2
         ok = hist[-1]["F"] < a.tol
     return s, zh2, zl2, hist, ok, time.time() - t0
@@ -201,6 +201,8 @@ def main():
     ap.add_argument("--pin_deg", type=int, default=1, help="--pin: degree of the trend")
     ap.add_argument("--pin_n", type=int, default=6, help="--pin: number of measured points in the trend fit")
     ap.add_argument("--lm", type=int, default=15, help="Levenberg-Marquardt iterations after a failed Newton (0: off)")
+    ap.add_argument("--lm_newton_after", type=float, default=1e-22, help="Levenberg-Marquardt hands over to Newton once "
+                    "|F| is below this (#611: it stalls near 1e-12 at D 55, inside Newton's reach)")
     ap.add_argument("--Dlist", default="", help="explicit D values to visit in order (comma list or @file); "
                     "D_end is then ignored")
     ap.add_argument("--jac", default="dd", choices=["dd", "f64", "f64h", "f64g", "f64hg"],
