@@ -605,3 +605,93 @@ python3 reduced_cubic.py raysum ray_ref.json             # the orders, constants
 `I677-mac/run_i677.sh` runs all of them (D 232.13 and the class A start with `--tensors=1`), and `run_classA.sh` makes
 the class A start. REF takes about 16 minutes at 2 threads, and a start with the tensors 25 to 47 minutes. Raw:
 `I677-mac/` of the raw-data repository at a8de27c, with every run's log and JSON (its README lists them).
+
+## 10. Where the weak rows live (#694)
+
+With the strong rows solved, the weak equations are affine at four starts (section 9). #694 tests one explanation:
+that the weak left vectors U live on rows of F that are affine in z, so that U^T F has no curvature to begin with.
+Sections 10.1 to 10.3 are the protocol, committed before the plant's first run and before any real run.
+
+### 10.1 Method (`reduced_cubic.py rows`)
+
+- **The rows.** The residual has K + 1 blocks of 4M rows (`hp/src/model.rs`): block 0 is the centre series at node 0
+  minus node 0 ("centre"), block b the Taylor step from node b − 1 to node b minus node b ("node b"), block K the
+  horizon series minus node K − 1 ("horizon"). Each block holds the fields p, m (odd) and a, c (even) on the M points
+  of the half grid, and the last row is the phase row. Each field's M rows are expanded on its harmonics, an
+  orthonormal change of rows (cos and sin of k = 1, 3, …, M − 1 for an odd field; cos of k = 0 and M, cos and sin of
+  k = 2, …, M − 2 for an even one). A row is then labelled block.field.harmonic, such as horizon.p.k5c.
+- **The rows linear by construction.** The horizon block's p rows above kfreeze are multishoot's projected rows,
+  Π′p1 minus the held offset, and the phase row is Σ w_j p1_j. With kfreeze = 3 these are horizon.p.k5 to k31 (cos
+  and sin) and phase, 29 rows.
+- **U's share.** With U from section 1's basis, a row's share is Σ_m U_mr²/k, which does not depend on the basis of
+  span(U), and the shares sum to 1. The share of a set of rows is the sum of their shares. The smallest eigenvalue of
+  U_Aᵀ U_A, the share of the worst unit vector of span(U), is printed beside it.
+- **Each row's curvature along V.** q_r = max over j ≤ l of |F″_r(v_j, v_l)|, from central second differences at
+  h = 10⁻³² and 10⁻³³ (#528's Q steps), judged at 10⁻³³. Their ratio is printed for each row: about 1 where F″ is
+  resolved, 100 for an h² truncation and 0.01 for rounding.
+- **Affine to 10⁻¹⁰.** A row is affine when q_r is at most 10⁻¹⁰ of the largest q_r over all rows and at most 10⁻¹⁰ of
+  its own |J_r| (the 2-norm of its row of J, in f64). The first is the issue's reading. The second stops a row from
+  counting as affine only because its scale is small, since the rows' scales differ by 10⁵³. The shares under each
+  alone are printed too.
+- **The rows carrying the rest.** The rows not affine, by share, and their shares summed by block and field.
+- **Where V lives** (diagnostic). The same split of the weak right vectors over the unknowns (p1, c0 | node i: p, m, a,
+  c | m_h, a_h | Δ), by field and harmonic.
+- **The relation to 3S = T, along e = a/|a|.** Three vectors per row: F″(e, e) (central differences at 10⁻³³, the step
+  of Q), T(e) = F‴(e, e, e) (four-point differences at 10⁻²³ and 10⁻²⁴, T's steps) and S(e) = F″(e, w_ee), with
+  w_ee = J⁻¹(I − UUᵀ)F″(e, e) from the differences at 10⁻³³ and 10⁻³⁴ (w_jl's steps) and mixed differences at 10⁻³² and
+  10⁻³³ (S's steps). Then Uᵀx = Σ_r U_r x_r = (Q(e, e), T(e, e, e) and 3S(e, e, e) of section 1), its part on the
+  affine rows and on the rest, and the size it would have without cancellation between rows, √(Σ_m (Σ_r |U_mr x_r|)²).
+  If the conjecture holds, the affine rows contribute nothing to any of them, and T and 3S come only from the rest.
+  If it fails, the ratio of |Uᵀx| to its no-cancellation size shows whether Q = 0 and T = 3S come from cancellation
+  between rows that are not affine.
+
+### 10.2 The plant (`reduced_cubic.py rows planted`)
+
+RowPlanted is a system on the residual's row layout with M = 4 and K = 1: the centre and horizon blocks of four fields
+each and the phase row, n = 33. Its rows are given in its own harmonic basis, written independently of the code's, and
+its unknowns are rotated by a random orthogonal matrix. In the harmonic rows,
+
+```math
+G(\zeta) = \beta + D\zeta + \sum_{r \notin A} e_r \left[\tfrac12 q_r (b_r\cdot\zeta)^2 + \tfrac16 t_r (b'_r\cdot\zeta)^3\right], \qquad D = U_c \Sigma E_w^{T} + U_c' \Lambda E_s^{T}.
+```
+
+- The planted affine rows A are centre.m.k1c, horizon.p.k3c, horizon.p.k3s and phase, which carry U, and horizon.a.k0c,
+  which does not. They have no nonlinear term, so they are affine in z exactly.
+- The planted weak left vectors are u_m = √(1 − ε_m²) a_m + ε_m n_m, with a_m an orthonormal basis of A's four rows
+  that carry U (randomly rotated), n_m orthonormal on the nonlinear rows, and ε = 0.1, 0.15, 0.2, 0.25. Their share on
+  A is 1 − mean(ε²) = 0.964375.
+- Σ is the D 242.5 starts' weak σ, Λ 29 strong singular values log-spaced from 10⁻¹⁹ to 3×10³⁴, and |q_r| (10²⁸ to
+  10³³) and |t_r| (10³⁰ to 10³⁴) log-uniform.
+
+Pass criteria, fixed before the plant's first run:
+- **(PR1)** The rows found affine are exactly A, by label.
+- **(PR2)** The share on them equals 0.964375 to 10⁻⁶ (relative), and every row's share equals the planted one to
+  10⁻⁶ of the largest.
+- **(PR3)** q_r on the nonlinear rows equals the planted one, along the code's V, to 10⁻⁶ (relative).
+- **(PR4)** F″(e, e), T(e) and S(e) per row equal the planted ones to 10⁻⁶ of each one's largest entry, and the affine
+  rows' part of Uᵀx is below 10⁻¹⁰ of its no-cancellation size for all three.
+- **The harmonic basis** is orthonormal to 10⁻¹²⁰.
+- **Controls.** `--mutate=quadA` adds ½q_A(b·ζ)², q_A = 10⁻⁶ max|q_r|, to A's four rows that carry U: (PR1) and (PR2)
+  must fail. `--mutate=parity` expands every field on the harmonics of the other parity, which keeps the change of rows
+  orthogonal but labels each row wrongly: (PR1) and (PR2) must fail. A failed check exits 1.
+
+### 10.3 The real starts (fixed before the first real run)
+
+The four starts of section 9.3, on main's 3c35f0c kernel (exact projector, `i599/site2`), each with section 1's
+basis.
+- **(W0)** As (Y0): the held offset is on its rows, and the basis line (σ, a, |Ba|) equals #677's to its printed
+  digits.
+- **(W1)** The 29 rows linear by construction are all classified affine. This is a control on real data: if it fails,
+  the classification or the labels are wrong, and the start's result is not used until the cause is known.
+- **(W2)** The change of rows is orthonormal to 10⁻¹²⁰, and Uᵀ T(e) summed over the harmonic rows equals the sum over
+  the grid rows to 10⁻¹⁰⁰ of its no-cancellation size.
+- **(W3)** w_ee at 10⁻³³ against 10⁻³⁴, Uᵀ T(e) at 10⁻²³ against 10⁻²⁴ and Uᵀ S(e) at 10⁻³² against 10⁻³³ agree to
+  10⁻², and |Uᵀ(T − 3S)(e)| < 10⁻¹² |Uᵀ T(e)|, the consistency with #528 and #677. A failure is reported as a
+  discrepancy, and the share (which does not use these) stands.
+- **(W4) The verdict per start.** The share of |U| on the affine rows at h = 10⁻³³: above 0.99 supports the conjecture
+  of affine weak rows, below 0.5 refutes it, and between is reported as it is. The same at 10⁻³²; a different verdict
+  there is reported as step-dependent.
+- **Reported, not judged.** The rows carrying the rest by block, field and harmonic; V by unknowns; the parts of
+  Q(e, e), T(e, e, e) and 3S(e, e, e) on the affine rows and on the rest, and their no-cancellation sizes.
+- **Order and stops.** The plant and its two controls first, then REF as the pilot, ACC, D 232.13 and the class A
+  start. A failed plant or control stops the real runs, and so does (W1) failing at REF.

@@ -6,6 +6,23 @@
     cd hp && python3 reduced_cubic.py ray RAWDIR DZ0 BASE [--tensors=1] [--threads=2] [--json=OUT] [--mutate=w0|B]
     cd hp && python3 reduced_cubic.py ray planted [--seed=5] [--json=OUT] [--mutate=w0|B]
     cd hp && python3 reduced_cubic.py raysum OUT.json [OUT.json ...]     (the ray runs' summary, raysum's docstring)
+    cd hp && python3 reduced_cubic.py rows RAWDIR DZ0 BASE [--threads=2] [--json=OUT]
+    cd hp && python3 reduced_cubic.py rows planted [--seed=5] [--json=OUT] [--mutate=quadA|parity]
+
+`rows` (#694) splits the weak left vectors U over the residual's rows, expanded on harmonics within each field of each
+block (row_harm: block.field.harmonic, e.g. horizon.p.k5c, and the phase row), and measures each row's second
+derivative along the weak right directions, q_r = max over j <= l of |F''_r(v_j, v_l)| (central differences at
+H_ROWS, the second judged). A row is affine to 1e-10 when q_r is below 1e-10 of the largest q and below 1e-10 of its
+own |J_r|. Printed: the share of |U| on the affine rows (the verdict: above 0.99 supports the conjecture of affine weak
+rows, below 0.5 refutes it), by block and field, the rows that carry the rest, V by unknowns, and along e = a / |a| the
+rows' parts of U^T F''(e, e), U^T T(e) = U^T F'''(e, e, e) and U^T 3S(e) = 3 U^T F''(e, w_ee), each against the size
+it would have without cancellation between rows. Checks on real data (exit 1): the rows linear by construction (the
+horizon block's p rows above kfreeze and the phase row) are classified affine; the change of rows is orthonormal; w_ee,
+T(e) and S(e) at two steps agree to 1e-2; and |U^T (T - 3S)(e)| < 1e-12 |U^T T(e)|. Its plant (RowPlanted) has five
+planted affine rows, four of which carry U with the planted share 0.964375; it must recover the affine set, the share
+and every row's share to 1e-6, q_r, F''(e, e), T(e) and S(e) per row to 1e-6. Its controls --mutate=quadA (a
+quadratic term in the planted affine rows that carry U) and --mutate=parity (each field expanded on the other parity's
+harmonics) must fail.
 
 `ray` (#677) scans the reduced map g on the strong-solved manifold along rays c = +-t e, e = a / |a| and two random
 unit vectors, at t = 1e-30 .. 1e-24 (four per decade; 1e-29 .. 1e-26 judged), and fits the order at which it departs
@@ -171,7 +188,11 @@ class Real:
         self.offset_ok = bool(on > 0 and off < mp.mpf("1e-6") * on)
         c8 = parts8([coff[r] if r in hp else mp.mpf(0) for r in range(L)])
         self.so = PinnedO(s, c8[0], c8[1], c8=c8)
-        self.s, self.z0, self.L = s, z0, L
+        self.s, self.z0, self.L, self.M, self.kf = s, z0, L, M, kf
+        self.J0 = J[0]                                  # the Jacobian's leading part, for the rows' scales (#694)
+        # the rows linear in z by construction: the horizon block's p rows above kfreeze (Pi' p1 minus the held
+        # offset, multishoot's projected rows) and the phase row (sum_j w_j p1_j)
+        self.frozen = [f"horizon.p.k{h}{cs}" for h in range(kf + 2, M, 2) for cs in "cs"] + ["phase"]
         st = s.newton_o(list(z0))                     # z0's LU, kept for every solve below
         self.F0max = omax(self.so.residual_o(z0))
         self.dz0 = mpv(d0, range(L))
@@ -193,6 +214,10 @@ class Real:
     def solve64(self, b, transpose=False):
         x = self.s.olu_solve([np.ascontiguousarray(b)] + [np.zeros(self.L)] * 7, transpose)
         return np.asarray(x[0]) + np.asarray(x[1])
+
+    def row_norms(self, RH):
+        """|J_r|, the 2-norm of each row of J in RH's rows (f64, from the Jacobian's leading part)"""
+        return [float(x) for x in np.linalg.norm(RH.matrix64() @ self.J0, axis=1)]
 
 
 def sym_cubic(rng, k, scale, rank=6):
@@ -1335,6 +1360,471 @@ def raysum(paths):
             print(line)
 
 
+# ------------------------------------------------------------------ the weak rows (#694)
+ROW_FIELDS = (("p", 1), ("m", 1), ("a", 0), ("c", 0))     # the fields of each residual block, with parity (1: odd)
+H_ROWS = (1e-32, 1e-33)          # F''(v_j, v_l) per row at these steps (#528's Q steps); the second is judged
+AFFINE = mp.mpf("1e-10")         # affine to 1e-10: q_r below 1e-10 of the largest q and of the row's own |J_r|
+SUPPORT, REFUTE = 0.99, 0.5      # the issue's verdict on the share of |U| on the affine rows
+
+
+def harm_basis(M, odd):
+    """the orthonormal harmonic basis of a field's M values on the half grid theta_j = pi j / M (multishoot's
+    Parity::Odd and Parity::Even grids): an odd field has cos and sin of k = 1, 3, ..., M - 1, each times sqrt(2 / M);
+    an even one cos of k = 0 and of the Nyquist harmonic k = M, each times 1 / sqrt(M), and cos and sin of
+    k = 2, 4, ..., M - 2, times sqrt(2 / M). [(label, M mpf values)]"""
+    th = [mp.pi * j / M for j in range(M)]
+    s2, s1 = mp.sqrt(mp.mpf(2) / M), 1 / mp.sqrt(M)
+    pair = lambda k: [(f"k{k}c", [s2 * mp.cos(k * t) for t in th]), (f"k{k}s", [s2 * mp.sin(k * t) for t in th])]  # noqa: E731
+    if odd:
+        return [b for k in range(1, M, 2) for b in pair(k)]
+    return [("k0c", [s1] * M)] + [b for k in range(2, M, 2) for b in pair(k)] + [(f"k{M}c", [s1 * (-1) ** j
+                                                                                             for j in range(M)])]
+
+
+def harm_ortho(M):
+    """max |H H^T - I| of harm_basis at 140 digits, over both parities"""
+    worst = mp.mpf(0)
+    for odd in (0, 1):
+        b = [v for _, v in harm_basis(M, odd)]
+        for i in range(M):
+            for j in range(i, M):
+                worst = max(worst, abs(dot(b[i], b[j]) - (1 if i == j else 0)))
+    return worst
+
+
+class Harm:
+    """an orthogonal change of rows (or of columns) to (field, harmonic): the fields of M values each, in order, every
+    one expanded on harm_basis of its parity, then one single entry (the phase row, or the column Delta). A row here is
+    labelled block.field.harmonic, e.g. horizon.p.k5c. --mutate=parity (a control of the plant) expands each field on
+    the basis of the other parity, which keeps the change orthogonal but labels every row wrongly."""
+
+    def __init__(self, fields, single, M, mutate=""):
+        bases = {odd: harm_basis(M, odd != (mutate == "parity")) for odd in (0, 1)}
+        self.labels, self.rows, self.M = [], [], M
+        for f, (name, odd) in enumerate(fields):
+            for lab, vec in bases[odd]:
+                self.labels.append(f"{name}.{lab}")
+                self.rows.append((M * f, vec))
+        self.labels.append(single)
+        self.rows.append((M * len(fields), None))
+        self.n = len(self.rows)
+
+    def __call__(self, v):
+        return [v[s] if vec is None else mp.fsum(x * v[s + j] for j, x in enumerate(vec)) for s, vec in self.rows]
+
+    def matrix64(self):
+        H = np.zeros((self.n, self.n))
+        for i, (s, vec) in enumerate(self.rows):
+            if vec is None:
+                H[i, s] = 1.0
+            else:
+                H[i, s:s + self.M] = [float(x) for x in vec]
+        return H
+
+
+def row_harm(L, M, mutate=""):
+    """the residual's rows (hp/src/model.rs): blocks b = 0..K of 4M rows, each the fields p, m, a, c on the half grid
+    (block 0 the centre series at node 0 minus node 0, block b the Taylor step node b-1 -> node b minus node b, block K
+    the horizon series minus node K-1), then the phase row"""
+    K1 = (L - 1) // (4 * M)
+    assert 4 * M * K1 + 1 == L, f"L {L} is not 4 M (K + 1) + 1 with M {M}"
+    names = ["centre"] + [f"node{b}" for b in range(1, K1 - 1)] + ["horizon"]
+    return Harm([(f"{bn}.{fn}", odd) for bn in names for fn, odd in ROW_FIELDS], "phase", M, mutate)
+
+
+def col_harm(L, M):
+    """the unknowns (near_null.layout): p1, c0 | node_i: p, m, a, c | m_h, a_h | Delta"""
+    K = (L - 1) // (4 * M) - 1
+    return Harm([("p1", 1), ("c0", 0)] + [(f"node{i}.{fn}", odd) for i in range(K) for fn, odd in ROW_FIELDS]
+                + [("m_h", 1), ("a_h", 0)], "Delta", M)
+
+
+class RowPlanted:
+    """the rows mode's plant (#694): a system on the residual's row layout with M = 4 and K = 1 (the centre and horizon
+    blocks of four fields each, and the phase row; n = 33), whose rows are given in its own harmonic basis (written
+    here independently of harm_basis) and whose unknowns are rotated by a random orthogonal P_R at 140 digits; z0 = 0.
+    In the harmonic rows,
+        G(zeta) = beta + D zeta + sum over the nonlinear rows r of e_r [1/2 q_r (b_r . zeta)^2 + 1/6 t_r (b'_r . zeta)^3],
+    zeta = P_R^T z, with D = U_c Sigma E_w^T + U_c' Lambda E_s^T and [U_c U_c'] orthogonal. The planted weak left
+    vectors are u_m = sqrt(1 - eps_m^2) a_m + eps_m n_m, a_m an orthonormal basis of the four affine rows centre.m.k1c,
+    horizon.p.k3c, horizon.p.k3s and phase (randomly rotated), n_m orthonormal on the nonlinear rows, eps 0.1, 0.15,
+    0.2, 0.25: their share on the affine rows is 1 - mean(eps^2) = 0.964375. A fifth affine row, horizon.a.k0c, carries
+    no U. Sigma is the D 242.5 starts' weak sigma, Lambda 29 strong singular values log-spaced from 1e-19 to 3e34;
+    |q_r| from 1e28 to 1e33 and |t_r| from 1e30 to 1e34, log-uniform. The affine rows have no nonlinear term, so they
+    are affine in z exactly; --mutate=quadA adds 1/2 q_A (b . zeta)^2, q_A = 1e-6 max|q|, to the four that carry U."""
+
+    A_U = ("centre.m.k1c", "horizon.p.k3c", "horizon.p.k3s", "phase")
+    A_0 = ("horizon.a.k0c",)
+    EPS = (0.1, 0.15, 0.2, 0.25)
+
+    def __init__(self, seed, log, mutate=""):
+        M, K1, k = 4, 2, 4
+        n = 4 * M * K1 + 1
+        self.M, self.L, self.k = M, n, k
+        rng = np.random.default_rng(seed + 694)
+        rnd = lambda: [mp.mpf(float(x)) for x in rng.standard_normal(n)]   # noqa: E731
+        # the plant's own grid functions: Hg[i] is harmonic row i on the grid
+        self.labels, self.Hg = [], []
+        for b, bn in enumerate(("centre", "horizon")):
+            for f, (fn, odd) in enumerate(ROW_FIELDS):
+                ks = ([(h, cs) for h in range(1, M, 2) for cs in "cs"] if odd else
+                      [(0, "c")] + [(h, cs) for h in range(2, M, 2) for cs in "cs"] + [(M, "c")])
+                for h, cs in ks:
+                    wt = mp.sqrt((1 if h in (0, M) else 2) / mp.mpf(M))
+                    v = [mp.mpf(0)] * n
+                    for j in range(M):
+                        v[4 * M * b + M * f + j] = wt * (mp.cos(h * mp.pi * j / M) if cs == "c" else mp.sin(h * mp.pi * j / M))
+                    self.labels.append(f"{bn}.{fn}.k{h}{cs}")
+                    self.Hg.append(v)
+        self.labels.append("phase")
+        self.Hg.append([mp.mpf(0)] * (n - 1) + [mp.mpf(1)])
+        iA = [self.labels.index(x) for x in self.A_U]
+        self.affine = set(self.A_U + self.A_0)
+        iN = [i for i, x in enumerate(self.labels) if x not in self.affine]
+        unit = lambda i: [mp.mpf(1 if r == i else 0) for r in range(n)]   # noqa: E731
+        Q4 = mgs([[mp.mpf(float(x)) for x in rng.standard_normal(k)] for _ in range(k)])[0]
+        aa = [lin([(Q4[m][i], unit(iA[i])) for i in range(k)]) for m in range(k)]
+        nn = mgs([[x if r in iN else mp.mpf(0) for r, x in enumerate(rnd())] for _ in range(k)])[0]
+        self.Uc = [[mp.sqrt(1 - mp.mpf(e) ** 2) * x + mp.mpf(e) * y for x, y in zip(aa[m], nn[m])]
+                   for m, e in enumerate(self.EPS)]
+        self.Ucp = mgs(self.Uc + [rnd() for _ in range(n - k)])[0][k:]
+        self.sig = [mp.mpf(x) for x in ("2.1e-27", "2.2e-27", "3.2e-26", "7.1e-26")]
+        self.lam = [mp.mpf(10) ** (mp.mpf(-19) + (mp.log10(mp.mpf("3e34")) + 19) * s / (n - k - 1))
+                    for s in range(n - k)]
+        self.PR = mgs([rnd() for _ in range(n)])[0]          # z = sum_i zeta_i PR[i]
+        self.nl = {}
+        for i in iN:
+            self.nl[i] = (mp.mpf(float(rng.choice([-1, 1]) * 10 ** rng.uniform(28, 33))), rnd(),
+                          mp.mpf(float(rng.choice([-1, 1]) * 10 ** rng.uniform(30, 34))), rnd())
+        qmax = max(abs(v[0]) for v in self.nl.values())
+        if mutate == "quadA":
+            for i in iA:
+                self.nl[i] = (qmax * mp.mpf("1e-6"), rnd(), mp.mpf(0), [mp.mpf(0)] * n)
+        # the start: beta = -D zeta_a, so that the first Newton step is P_R zeta_a, |a| 8.3e-30, |w0| ~ 1e-33
+        ya = [mp.mpf(float(x)) for x in rng.standard_normal(k)]
+        ya = [x * mp.mpf("8.3e-30") / nrm(ya) for x in ya]
+        za = ya + [mp.mpf(float(x)) * mp.mpf("1e-33") for x in rng.standard_normal(n - k)]
+        self.beta = [mp.mpf(0)] * n
+        self.beta = [-x for x in self.Dz(za)]
+        self.F0max = float(amax(self.F()))
+        self.dz0 = [-x for x in self.solve(self.F())]
+        self.share_aff_true = 1 - mp.fsum(mp.mpf(e) ** 2 for e in self.EPS) / k
+        self.label = f"rows plant (seed {seed}): n {n}, k {k}" + (f", --mutate={mutate}" if mutate else "")
+        self.meta = dict(seed=seed, n=n, k=k, F0max=self.F0max, share_aff_true=float(self.share_aff_true))
+        log(f"{self.label}; start max|F| {self.F0max:.3e}; planted affine rows {', '.join(sorted(self.affine))}; the "
+            f"planted share of |U| on them {mp.nstr(self.share_aff_true, 8)}")
+
+    def Dz(self, zeta):
+        k = self.k
+        return [mp.fsum([self.sig[m] * zeta[m] * self.Uc[m][r] for m in range(k)]
+                        + [self.lam[s] * zeta[k + s] * self.Ucp[s][r] for s in range(self.L - k)])
+                for r in range(self.L)]
+
+    def G(self, zeta):
+        g = [b + d for b, d in zip(self.beta, self.Dz(zeta))]
+        for i, (q, b, t, b2) in self.nl.items():
+            g[i] += q * dot(b, zeta) ** 2 / 2 + t * dot(b2, zeta) ** 3 / 6
+        return g
+
+    def zeta(self, p):
+        return [dot(c, p) for c in self.PR]
+
+    def F(self, p=None):
+        g = self.G([mp.mpf(0)] * self.L if p is None else self.zeta(p))
+        return [mp.fsum(g[i] * self.Hg[i][r] for i in range(self.L)) for r in range(self.L)]
+
+    def solve(self, r, transpose=False):
+        """J^-1 r = P_R D^-1 Hg^T r and J^-T r = Hg D^-T P_R^T r, with D^-1 y = [Sigma^-1 U_c^T y; Lambda^-1 U_c'^T y]
+        and D^-T x = U_c Sigma^-1 x_w + U_c' Lambda^-1 x_s"""
+        k, n = self.k, self.L
+        d = self.sig + self.lam
+        W = self.Uc + self.Ucp
+        if transpose:
+            x = self.zeta(r)
+            y = lin([(x[i] / d[i], W[i]) for i in range(n)])
+            return lin([(y[i], self.Hg[i]) for i in range(n)])
+        y = [dot(h, r) for h in self.Hg]
+        x = [dot(W[i], y) / d[i] for i in range(n)]
+        return lin([(x[i], self.PR[i]) for i in range(n)])
+
+    def solve64(self, b, transpose=False):
+        return np.array([float(x) for x in self.solve([mp.mpf(float(v)) for v in b], transpose)])
+
+    def row_norms(self, RH):
+        n, k = self.L, self.k
+        Hg = np.array([[float(x) for x in v] for v in self.Hg]).T            # grid <- harmonic rows
+        D = np.array([[float(s * u[r]) for s, u in zip(self.sig + self.lam, self.Uc + self.Ucp)] for r in range(n)])
+        PR = np.array([[float(x) for x in v] for v in self.PR]).T
+        return [float(x) for x in np.linalg.norm(RH.matrix64() @ (Hg @ D @ PR.T), axis=1)]
+
+    # the truth, in the plant's harmonic rows (the code's must equal them, row for row)
+    def share_true(self):
+        return [mp.fsum(u[r] ** 2 for u in self.Uc) / self.k for r in range(self.L)]
+
+    def q_true(self, X):
+        z = [self.zeta(x) for x in X]
+        out = [mp.mpf(0)] * self.L
+        for i, (q, b, _, _) in self.nl.items():
+            bv = [dot(b, zz) for zz in z]
+            out[i] = abs(q) * max(abs(bv[j] * bv[l]) for j in range(self.k) for l in range(j, self.k))
+        return out
+
+    def along_true(self, ez):
+        """per row: F''(e, e), F'''(e, e, e) and F''(e, w_ee), w_ee = J^-1 (I - U U^T) F''(e, e) (U the planted)"""
+        ze = self.zeta(ez)
+        n, k = self.L, self.k
+        Fee, T = [mp.mpf(0)] * n, [mp.mpf(0)] * n
+        for i, (q, b, t, b2) in self.nl.items():
+            Fee[i] = q * dot(b, ze) ** 2
+            T[i] = t * dot(b2, ze) ** 3
+        zw = [mp.mpf(0)] * k + [dot(self.Ucp[s], Fee) / self.lam[s] for s in range(n - k)]
+        S = [mp.mpf(0)] * n
+        for i, (q, b, _, _) in self.nl.items():
+            S[i] = q * dot(b, ze) * dot(b, zw)
+        return Fee, T, S
+
+
+def d3_full(sysm, ev, h):
+    """F'''(e, e, e) as a full vector, the antisymmetric four-point difference at step h (third_tensor's D3)"""
+    acc = None
+    for wgt, t in ((1, 2), (-2, 1), (2, -1), (-1, -2)):
+        Fv = sysm.F([mp.mpf(t) * h * x for x in ev])
+        acc = [wgt * x for x in Fv] if acc is None else [a + wgt * x for a, x in zip(acc, Fv)]
+    return [x / (2 * mp.mpf(h) ** 3) for x in acc]
+
+
+def mixed_full(sysm, ev, w, h):
+    """F''(e, w) as a full vector: mixed central differences with the step h along e (a unit vector) and along
+    w / |w| (mixed's, without the projection on U)"""
+    nw = nrm(w)
+    ew = [t / nw for t in w]
+    acc = None
+    for sx, sw, wgt in ((1, 1, 1), (1, -1, -1), (-1, 1, -1), (-1, -1, 1)):
+        Fv = sysm.F(lin([(mp.mpf(sx) * h, ev), (mp.mpf(sw) * h, ew)]))
+        acc = [wgt * t for t in Fv] if acc is None else [a + wgt * t for a, t in zip(acc, Fv)]
+    return [t * nw / (4 * mp.mpf(h) ** 2) for t in acc]
+
+
+def rows_scan(sysm, bas, opts, mutate, log, rec, dump, truth=None):
+    """where the weak left vectors U live, and whether those rows are affine (docstring, `rows`). truth: the plant"""
+    k, X, Um, a, na, nBa = (bas[n] for n in ("k", "X", "Um", "a", "na", "nBa"))
+    t0 = time.time()
+    M, L = sysm.M, sysm.L
+    RH, CH = row_harm(L, M, mutate), col_harm(L, M)
+    n = RH.n
+    orth = harm_ortho(M)
+    Uh = [RH(u) for u in Um]
+    share = [mp.fsum(Uh[m][r] ** 2 for m in range(k)) / k for r in range(n)]
+    Vh = [CH(x) for x in X]
+    vshare = [mp.fsum(Vh[m][r] ** 2 for m in range(k)) / k for r in range(n)]
+    jn = sysm.row_norms(RH)
+    log(f"  rows: {n} rows in (block, field, harmonic), the change of rows orthonormal to {mp.nstr(orth, 3)}; shares "
+        f"of |U| sum to {mp.nstr(mp.fsum(share), 20)}, of |V| to {mp.nstr(mp.fsum(vshare), 20)} ({time.time() - t0:.0f} s)")
+    # F''(v_j, v_l) per row at the two steps; q_r the largest over j <= l
+    qs = []
+    for hh in H_ROWS:
+        t1 = time.time()
+        F2 = second_diffs(sysm, X, hh)
+        rr = [RH(v) for key, v in F2.items() if key[0] <= key[1]]
+        qs.append([max(abs(x[r]) for x in rr) for r in range(n)])
+        log(f"  F''(v_j, v_l) per row at h {hh:.0e}: max q {mp.nstr(max(qs[-1]), 4)} ({time.time() - t1:.0f} s)")
+    q = qs[-1]
+
+    def classify(qv):
+        qm = max(qv)
+        glob = [bool(qv[r] <= AFFINE * qm) for r in range(n)]
+        own = [bool(qv[r] <= AFFINE * jn[r]) for r in range(n)]
+        return [g and o for g, o in zip(glob, own)], glob, own
+    aff, glob, own = classify(q)
+    aff_h = classify(qs[0])[0]
+    sh = lambda sel: mp.fsum(share[r] for r in range(n) if sel[r])    # noqa: E731
+    share_aff, share_glob, share_own, share_aff_h = sh(aff), sh(glob), sh(own), sh(aff_h)
+    G = mp.matrix(k, k)
+    for m in range(k):
+        for m2 in range(k):
+            G[m, m2] = mp.fsum(Uh[m][r] * Uh[m2][r] for r in range(n) if aff[r])
+    lam_min = min(mp.eigsy(G)[0])
+    verdict = lambda s: "supports" if s > SUPPORT else ("refutes" if s < REFUTE else "between")     # noqa: E731
+    frozen = list(getattr(sysm, "frozen", [])) if truth is None else sorted(truth.affine)
+    fidx = [RH.labels.index(x) if x in RH.labels else None for x in frozen]
+    frozen_ok = bool(frozen and all(i is not None and aff[i] for i in fidx))
+    share_frozen = mp.fsum(share[i] for i in fidx if i is not None)
+    log(f"  share of |U| on the rows affine to 1e-10 (q_r <= 1e-10 max q and <= 1e-10 |J_r|, at h {H_ROWS[-1]:.0e}): "
+        f"{mp.nstr(share_aff, 10)} ({sum(aff)} of {n} rows): {verdict(share_aff)}; at h {H_ROWS[0]:.0e} "
+        f"{mp.nstr(share_aff_h, 10)} ({verdict(share_aff_h)}); against the largest q alone {mp.nstr(share_glob, 10)}, "
+        f"against |J_r| alone {mp.nstr(share_own, 10)}; the worst weak left vector's share (smallest eigenvalue of "
+        f"U_A^T U_A) {mp.nstr(lam_min, 6)}")
+    log(f"  the rows linear by construction ({len(frozen)}: {frozen[0]} .. {frozen[-1]}): share of |U| "
+        f"{mp.nstr(share_frozen, 10)}; all classified affine: {'yes' if frozen_ok else 'NO'}; their largest q "
+        f"{mp.nstr(max((q[i] for i in fidx if i is not None), default=mp.mpf(0)), 3)}")
+    # by block and field
+    groups = {}
+    for r, lab in enumerate(RH.labels):
+        g = ".".join(lab.split(".")[:2])
+        d = groups.setdefault(g, dict(share=mp.mpf(0), share_aff=mp.mpf(0), qmax=mp.mpf(0), qJ=mp.mpf(0), naff=0, n=0))
+        d["share"] += share[r]
+        d["share_aff"] += share[r] if aff[r] else 0
+        d["qmax"] = max(d["qmax"], q[r])
+        d["qJ"] = max(d["qJ"], q[r] / jn[r])
+        d["naff"] += aff[r]
+        d["n"] += 1
+    log("  by block and field: share of |U|, of it on affine rows, max q, max q/|J_r|, affine rows / rows")
+    for g, d in groups.items():
+        log(f"    {g:<12} {float(d['share']):10.3e} {float(d['share_aff']):10.3e} {float(d['qmax']):10.3e} "
+            f"{float(d['qJ']):10.3e} {d['naff']:>3}/{d['n']}")
+
+    def row_line(r):
+        rat = qs[0][r] / q[r] if q[r] > 0 else mp.inf
+        return (f"    {RH.labels[r]:<18} share {float(share[r]):.3e}, q {float(q[r]):.3e}, q/|J_r| "
+                f"{float(q[r] / jn[r]):.2e}, |J_r| {jn[r]:.2e}, q(1e-32)/q(1e-33) {float(rat):.3g}"
+                f"{'' if aff[r] else ', NOT affine'}")
+    order = sorted(range(n), key=lambda r: -share[r])
+    log("  the rows of U, largest share first:")
+    for r in order[:12]:
+        log(row_line(r))
+    rest = [r for r in order if not aff[r]]
+    log(f"  the rest, on rows not affine ({len(rest)} rows, share {mp.nstr(1 - share_aff, 4)}), largest share first:")
+    for r in rest[:12]:
+        log(row_line(r))
+    rest_groups = {}
+    for r in rest:
+        g = ".".join(RH.labels[r].split(".")[:2])
+        rest_groups[g] = rest_groups.get(g, mp.mpf(0)) + share[r]
+    log("  the rest by block and field: " + ", ".join(f"{g} {float(v):.2e}" for g, v in
+                                                       sorted(rest_groups.items(), key=lambda x: -x[1])[:10]))
+    vorder = sorted(range(n), key=lambda r: -vshare[r])
+    log("  V by unknowns (diagnostic), largest share first: " + ", ".join(f"{CH.labels[r]} {float(vshare[r]):.3f}"
+                                                                         for r in vorder[:10]))
+    out = dict(n=n, orth=float(orth), labels=RH.labels, share=[float(x) for x in share],
+               q=[[float(x) for x in qq] for qq in qs], Jr=jn, affine=aff, affine_h32=aff_h,
+               share_aff=float(share_aff), share_aff_h32=float(share_aff_h), share_glob=float(share_glob),
+               share_own=float(share_own), lam_min=float(lam_min), verdict=verdict(share_aff),
+               verdict_h32=verdict(share_aff_h), frozen=frozen, frozen_ok=frozen_ok, share_frozen=float(share_frozen),
+               groups={g: {kk: (float(v) if isinstance(v, mp.mpf) else v) for kk, v in d.items()} for g, d in groups.items()},
+               rest_groups={g: float(v) for g, v in rest_groups.items()},
+               vlabels=CH.labels, vshare=[float(x) for x in vshare])
+    rec["rows"] = out
+    dump()
+
+    # 3S = T along e = a / |a|: per row F''(e, e), T(e) = F'''(e, e, e) and S(e) = F''(e, w_ee)
+    t1 = time.time()
+    e = [x / na for x in a]
+    ev = lin([(e[j], X[j]) for j in range(k)])
+    F0 = sysm.F()
+    Tf = [d3_full(sysm, ev, hh) for hh in (H["T"], H["T"] / 10)]
+    Fee = []
+    for hh in (H["F"] / 10, H["F"] / 100):
+        Fp, Fm = sysm.F([hh * x for x in ev]), sysm.F([-hh * x for x in ev])
+        Fee.append([(p_ - 2 * z_ + m_) / mp.mpf(hh) ** 2 for p_, z_, m_ in zip(Fp, F0, Fm)])
+    wee = [sysm.solve(strong_part(Um, f)) for f in Fee]
+    dwee = nrm([x - y for x, y in zip(wee[0], wee[1])]) / nrm(wee[1])
+    Sf = [mixed_full(sysm, ev, wee[1], hh) for hh in (H["S"], H["S"] / 10)]
+    rel = lambda u, v: nrm([x - y for x, y in zip(u, v)]) / nrm(v)    # noqa: E731
+    dT = rel(proj_U(Um, Tf[0]), proj_U(Um, Tf[1]))
+    dS = rel(proj_U(Um, Sf[0]), proj_U(Um, Sf[1]))
+    Th, Sh, Qh = RH(Tf[1]), RH(Sf[1]), RH(Fee[1])
+    C3h = [t - 3 * s for t, s in zip(Th, Sh)]
+    UT = proj_U(Um, Tf[1])
+    UT_rows = [mp.fsum(Uh[m][r] * Th[r] for r in range(n)) for m in range(k)]
+    # relative to the size U^T T(e) would have without cancellation between rows
+    tr_err = nrm([x - y for x, y in zip(UT_rows, UT)]) / nrm([mp.fsum(abs(Uh[m][r] * Th[r]) for r in range(n))
+                                                             for m in range(k)])
+    UC3 =[mp.fsum(Uh[m][r] * C3h[r] for r in range(n)) for m in range(k)]
+    c3rel = nrm(UC3) / nrm(UT)
+    h_ok = bool(dwee < 1e-2 and dT < 1e-2 and dS < 1e-2)
+    log(f"  along e = a / |a|: w_ee = J^-1 (I - U U^T) F''(e, e), |w_ee| {mp.nstr(nrm(wee[1]), 3)}, h {H['F'] / 10:.0e} "
+        f"against {H['F'] / 100:.0e} {mp.nstr(dwee, 3)}; U^T T(e) at h {H['T']:.0e} against {H['T'] / 10:.0e} "
+        f"{mp.nstr(dT, 3)}; U^T S(e) at h {H['S']:.0e} against {H['S'] / 10:.0e} {mp.nstr(dS, 3)} (bound 1e-2 each): "
+        f"{'pass' if h_ok else 'FAIL'}; U^T x by rows against by grid points {mp.nstr(tr_err, 3)}; "
+        f"|U^T (T - 3S)(e)| / |U^T T(e)| {mp.nstr(c3rel, 3)} (bound 1e-12) ({time.time() - t1:.0f} s)")
+
+    def contrib(x):
+        """U^T x, its parts on the affine rows and on the rest, and the sizes they would have without cancellation
+        between rows, sqrt(sum_m (sum_r |U_mr x_r|)^2)"""
+        part = lambda sel, ab: nrm([mp.fsum((abs(Uh[m][r] * x[r]) if ab else Uh[m][r] * x[r])   # noqa: E731
+                                            for r in range(n) if sel(r)) for m in range(k)])
+        allr, A_, N_ = (lambda r: True), (lambda r: aff[r]), (lambda r: not aff[r])
+        d = dict(UTx=part(allr, False), abs_all=part(allr, True), A=part(A_, False), absA=part(A_, True),
+                 N=part(N_, False), absN=part(N_, True), xmax=amax(x), xA=max((abs(x[r]) for r in range(n) if aff[r]),
+                                                                              default=mp.mpf(0)))
+        top = sorted(range(n), key=lambda r: -mp.sqrt(share[r]) * abs(x[r]))[:5]
+        d["top"] = [(RH.labels[r], float(mp.sqrt(share[r] * k) * abs(x[r]))) for r in top]
+        return d
+    rel_tab = {}
+    log("  per row, along e: |U^T x|; its part on the affine rows and on the rest; the sum of |U_r x_r| over all rows "
+        "(no cancellation), on the affine rows and on the rest; max |x_r| over all rows and over the affine rows")
+    for name, x in (("F''(e,e)", Qh), ("T(e)", Th), ("3S(e)", [3 * s for s in Sh]), ("T-3S", C3h)):
+        d = contrib(x)
+        rel_tab[name] = d
+        log(f"    {name:<9} {mp.nstr(d['UTx'], 3):>10}; {mp.nstr(d['A'], 3):>10} {mp.nstr(d['N'], 3):>10}; "
+            f"{mp.nstr(d['abs_all'], 3):>10} {mp.nstr(d['absA'], 3):>10} {mp.nstr(d['absN'], 3):>10}; "
+            f"{mp.nstr(d['xmax'], 3):>10} {mp.nstr(d['xA'], 3):>10}; largest |U_r| |x_r|: "
+            + ", ".join(f"{lab} {v:.2e}" for lab, v in d["top"][:3]))
+    out["along"] = dict(wee=float(nrm(wee[1])), dwee=float(dwee), dT=float(dT), dS=float(dS), h_ok=h_ok,
+                        tr_err=float(tr_err), c3rel=float(c3rel),
+                        contrib={nm: {kk: (v if kk == "top" else float(v)) for kk, v in d.items()} for nm, d in rel_tab.items()},
+                        rows=dict(Fee=[float(x) for x in Qh], T=[float(x) for x in Th], S=[float(x) for x in Sh]))
+    dump()
+
+    if truth is not None:
+        lab_ok = RH.labels == truth.labels
+        got = set(RH.labels[r] for r in range(n) if aff[r])
+        pr1 = bool(lab_ok and got == truth.affine)
+        st = truth.share_true()
+        e_share = abs(share_aff - truth.share_aff_true) / truth.share_aff_true
+        e_rows = max(abs(share[r] - st[r]) for r in range(n)) / max(st)
+        pr2 = bool(e_share < 1e-6 and e_rows < 1e-6)
+        qt = truth.q_true(X)
+        nl = [r for r in range(n) if qt[r] > 0]
+        e_q = max(abs(q[r] - qt[r]) / qt[r] for r in nl)
+        pr3 = bool(e_q < 1e-6)
+        Ft, Tt, St = truth.along_true(ev)
+        e_al = [max(abs(x - y) for x, y in zip(xm, xt)) / amax(xt) for xm, xt in ((Qh, Ft), (Th, Tt), (Sh, St))]
+        partA = max(rel_tab[nm]["A"] / rel_tab[nm]["abs_all"] for nm in ("F''(e,e)", "T(e)", "3S(e)"))
+        pr4 = bool(max(e_al) < 1e-6 and partA < 1e-10)
+        log(f"  planted (PR1) the affine rows found, {sorted(got) if len(got) < 9 else str(len(got)) + ' rows'}, against "
+            f"the planted {sorted(truth.affine)}, labels {'equal' if lab_ok else 'NOT equal'}: {'pass' if pr1 else 'FAIL'}")
+        log(f"  planted (PR2) share on them {mp.nstr(share_aff, 10)} against {mp.nstr(truth.share_aff_true, 10)}: "
+            f"{mp.nstr(e_share, 3)}; every row's share {mp.nstr(e_rows, 3)} of the largest (bound 1e-6): "
+            f"{'pass' if pr2 else 'FAIL'}")
+        log(f"  planted (PR3) q_r on the nonlinear rows against the planted {mp.nstr(e_q, 3)} (bound 1e-6): "
+            f"{'pass' if pr3 else 'FAIL'}")
+        log(f"  planted (PR4) F''(e,e), T(e), S(e) per row against the planted, of each one's largest: "
+            + ", ".join(mp.nstr(x, 3) for x in e_al) + f"; the affine rows' part of U^T x, of the no-cancellation size, "
+            f"{mp.nstr(partA, 3)} (bounds 1e-6, 1e-10): {'pass' if pr4 else 'FAIL'}")
+        out["planted"] = dict(pr1=pr1, pr2=pr2, pr3=pr3, pr4=pr4, e_share=float(e_share), e_rows=float(e_rows),
+                              e_q=float(e_q), e_along=[float(x) for x in e_al], partA=float(partA), found=sorted(got))
+        dump()
+        return pr1 and pr2 and pr3 and pr4 and bool(orth < 1e-120), rec
+    tr_ok = bool(orth < 1e-120 and tr_err < 1e-100)
+    c3_ok = bool(c3rel < 1e-12)
+    out["checks"] = dict(W1_frozen=frozen_ok, W2_transform=tr_ok, W3_h=h_ok, W3_c3=c3_ok)
+    log(f"  checks: (W1) the rows linear by construction classified affine {'pass' if frozen_ok else 'FAIL'}; (W2) the "
+        f"change of rows {'pass' if tr_ok else 'FAIL'}; (W3) h checks {'pass' if h_ok else 'FAIL'}, 3S = T along e "
+        f"{'pass' if c3_ok else 'FAIL'}; verdict (W4): the share {mp.nstr(share_aff, 6)} {verdict(share_aff)} the "
+        f"conjecture (at h {H_ROWS[0]:.0e}: {verdict(share_aff_h)})")
+    dump()
+    return frozen_ok and tr_ok and h_ok and c3_ok, rec
+
+
+def main_rows(args, opts, mutate, log, rec, dump):
+    """rows RAWDIR DZ0 BASE or rows planted: the basis, then rows_scan"""
+    if args[1:] == ["planted"]:
+        sysm = RowPlanted(int(opts.get("seed", 5)), log, mutate)
+        rec.update(sysm.meta)
+        bas = basis(sysm, opts, log, rec, dump)
+        ok, rec = rows_scan(sysm, bas, opts, mutate, log, rec, dump, truth=sysm)
+        return ok
+    sysm = Real(*args[1:4], int(opts.get("threads", 2)), log)
+    rec.update(sysm.meta)
+    if not sysm.offset_ok:
+        log("check: FAIL (the held offset is not on its rows only)")
+        return False
+    bas = basis(sysm, opts, log, rec, dump)
+    ok, rec = rows_scan(sysm, bas, opts, mutate, log, rec, dump)
+    return ok
+
+
 def strip(rec):
     return {k: v for k, v in rec.items() if not k.startswith("_")}
 
@@ -1377,9 +1867,10 @@ def main():
     if args and args[0] == "raysum":
         raysum(args[1:])
         return 0
-    modes = dict(run=("", "w0", "Ssign", "Sh", "hF"), planted=("", "w0", "Ssign", "Sh", "hF"), ray=("", "w0", "B"))
+    modes = dict(run=("", "w0", "Ssign", "Sh", "hF"), planted=("", "w0", "Ssign", "Sh", "hF"), ray=("", "w0", "B"),
+                 rows=("", "quadA", "parity"))
     if not args or args[0] not in modes or (args[0] == "run" and len(args) != 4) or \
-            (args[0] == "ray" and len(args) != 4 and args[1:] != ["planted"]):
+            (args[0] in ("ray", "rows") and len(args) != 4 and args[1:] != ["planted"]):
         sys.exit(__doc__)
     if mutate not in modes[args[0]]:
         sys.exit(f"--mutate={mutate}: in mode {args[0]}, one of {', '.join(modes[args[0]][1:])}")
@@ -1393,9 +1884,12 @@ def main():
         if out:
             with open(out, "w") as fh:
                 json.dump(strip(rec), fh, indent=1, default=float)
-    if args[0] == "ray":
-        rec["ray_t"] = [float(t) for t in RAY_T]
-        ok = main_ray(args, opts, mutate, log, rec, dump)
+    if args[0] in ("ray", "rows"):
+        if args[0] == "ray":
+            rec["ray_t"] = [float(t) for t in RAY_T]
+            ok = main_ray(args, opts, mutate, log, rec, dump)
+        else:
+            ok = main_rows(args, opts, mutate, log, rec, dump)
         rec["passed"] = bool(ok)
         rec["finished"] = time.strftime("%Y-%m-%d %H:%M:%S", time.gmtime())
         dump()
