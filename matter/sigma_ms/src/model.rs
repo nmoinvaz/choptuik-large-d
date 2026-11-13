@@ -29,6 +29,8 @@ use crate::planted::Planted;
 use multidouble::dd::DD;
 use multidouble::field::{cs, cs_w, horner, FieldSolve, Fl};
 use multidouble::linalg::{ld_for, DDLu};
+use multidouble::dual::F8;
+use multidouble::native::F8 as F8n;
 use multidouble::native::{DMat, DV};
 use multidouble::precision::Precision;
 use multidouble::simd::Native;
@@ -455,14 +457,33 @@ pub struct HPrep {
 }
 
 /// (omega D + diag kappa) f = r with the LU at the values; for tangents the derivative of the system,
-/// A f_d = r_d - omega_d D f_v - kappa_d f_v; quad-double lanes refined to their precision (hp's psolve, its DV, Du,
-/// QV and Qu branches)
+/// A f_d = r_d - omega_d D f_v - kappa_d f_v; quad-double lanes refined to their precision; f64 lanes (the
+/// mixed-precision Newton's Jacobian) with the hi parts of the factors (hp's psolve, its DV, Du, QV, Qu and f64
+/// branches)
 fn psolve<T: Lane, const B: usize>(ctx: &Ctx<B>, prep: &HPrep, kk: usize, kappa: &Fl<T, B>, rhs: &Fl<T, B>, omega: T) -> Fl<T, B> {
     let lu = &prep.lus[kk];
-    assert!(
-        T::NJ == 0 && !T::VAL_OD && !T::VAL_F64 && !T::TAN_F64,
-        "sigmams: the horizon solve supports double-double and quad-double lanes only"
-    );
+    assert!(T::NJ == 0 && !T::VAL_OD, "sigmams: the horizon solve has no jet or octo-double branch");
+    if T::VAL_F64 || T::TAN_F64 {
+        // f64 values: the value solve in f64 with the hi parts of the double-double factors; f64 tangents: each
+        // tangent's solve likewise
+        let fv = if T::VAL_F64 { lu.solve_lanes_hi(&rhs.val()) } else { lu.solve_lanes(&rhs.val()) };
+        let z = Fl::<DV, B>::zero();
+        let mut out = Fl::<T, B>::from_vt(&fv, &z);
+        if !T::TANGENT {
+            return out;
+        }
+        let fv8 = Fl::<F8n, B>::from_vt(&fv, &z);
+        let dfv = ctx.d.apply(&fv8);
+        for k in 0..T::NT {
+            let od = F8(omega.tan64(k));
+            let r = (rhs.tan64(k) - dfv.mul_t(od)) - kappa.tan64(k) * fv8;
+            let fd = lu.solve_lanes_hi(&r.val());
+            for b in 0..B {
+                out.0[b].set_tan64(k, fd.0[b].hi);
+            }
+        }
+        return out;
+    }
     if T::VAL_QD {
         // Moler's refinement with the residual in the lane's precision (multidouble's solve_lanes_refine_t)
         let steps = if ctx.mutate == MUT_QD_NOREFINE { 0 } else { QD_REFINE + T::TANGENT as usize };
@@ -674,6 +695,20 @@ pub fn jacobian_in<P: Precision<Native>, const B: usize>(ctx: &Ctx<B>, z: &[&[f6
 /// The Newton step in P at z (multishoot's newton_step)
 pub fn newton_in<P: Precision<Native>, const B: usize>(ctx: &Ctx<B>, z: &[&[f64]], par: bool) -> Result<multishoot::newton::Step<P>, String> {
     ctx.shooting_in::<P>().newton_step::<P>(z, par)
+}
+
+/// The mixed-precision Newton step in P at z: F in P, the f64 Jacobian of `Fun<4>` lanes (four columns per
+/// evaluation) factored in staircase or dense storage, dz = -J~^-1 F solved in double-double with its factors
+/// (multishoot's newton_step_mixed)
+#[allow(clippy::type_complexity)]
+pub fn newton_mixed_in<P: Precision<Native>, const B: usize>(
+    ctx: &Ctx<B>,
+    z: &[&[f64]],
+    staircase: bool,
+    par: bool,
+) -> Result<(Vec<Vec<f64>>, Vec<P::Scalar>, multishoot::MixedLu), String> {
+    let storage = if staircase { multishoot::Storage::Staircase } else { multishoot::Storage::Dense };
+    ctx.shooting_in::<P>().newton_step_mixed::<P, multidouble::native::Fun<4>>(z, storage, par)
 }
 
 /// Step points of every segment planned from the node states of z (multishoot's plan_segments: each step's last
