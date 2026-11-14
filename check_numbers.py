@@ -23,7 +23,7 @@ DOCS = {name: open(os.path.join(ROOT, name), encoding="utf-8").read()
                      "notes/QUAD_DOUBLE.md",
                      "notes/SOLVER_HP.md", "notes/LOW_D.md", "notes/INNER_STOKES.md", "notes/FORMULA_FORMS.md", "notes/LARGE_D_WALL.md",
                      "notes/ECHO_ANALOGUES.md", "notes/REVIEW_GHMG25.md", "notes/MODE_COUNT.md", "matter/SIGMA_DSS.md",
-                     "notes/HELD_HARMONICS.md")}
+                     "notes/HELD_HARMONICS.md", "notes/CONSISTENCY_AUDIT.md")}
 
 
 def quoted_in(doc, text):
@@ -106,6 +106,36 @@ def t79_values():
             ("M 48 -> 64 at D 5", abs(float(best[5.0][7])), 8.7e-12, 1e-13, txt),
             ("M 48 -> 64 at D 6", abs(float(best[6.0][7])), 3e-14, 1e-14, txt),
             ("M 48 -> 64 at D 8", math.log10(abs(float(best[8.0][7]))), -20, 1, txt)]
+
+
+@check
+def d5_two_codes():
+    """README, D = 5 in the comparison with Ecker et al.: the f64 value and its estimate (solver/data_all.py low_d(),
+    kc 31, 39, 47 extrapolated geometrically), the double-double values at M = 48 and 64 (hp/compare/dd_D5.log), and
+    the gaps between them that the text quotes"""
+    sys.path.insert(0, os.path.join(ROOT, "solver"))
+    cwd = os.getcwd()
+    os.chdir(os.path.join(ROOT, "solver", "data"))         # low_d reads the scan files from here
+    try:
+        import data_all
+        f64, est, _ = data_all.low_d()[5.0]
+    finally:
+        os.chdir(cwd)
+    log = open(os.path.join(ROOT, "hp/compare/dd_D5.log")).read()
+    dd = {int(m.group(1)): float(m.group(2)) + float(m.group(3))
+          for m in re.finditer(r"^D 5\.0 M (\d+): Delta ([0-9.]+) \(\+([-0-9.e]+)\)", log, re.M)}
+    t1 = [("README.md", "mode count (3.221701945 ± 7×10⁻¹¹, the size of that extrapolation step")]
+    t2 = [("README.md", "collocation points (3.22170194461806,\n    3.22170194462672), which agree with each other to 10⁻¹¹")]
+    t3 = [("README.md", "comes from two independent codes, which agree to 2×10⁻¹⁰")]
+    t4 = [("README.md", "The f64 value lies 1.5×10⁻¹⁰ above them, about twice its\n    estimate")]
+    return [("f64 Delta(5)", f64, 3.221701945, 1e-9, t1),
+            ("f64 Delta(5) estimate, the extrapolation step", est, 7e-11, 1e-11, t1),
+            ("double-double Delta(5) at M 48", dd[48], 3.22170194461806, 1e-14, t2),
+            ("double-double Delta(5) at M 64", dd[64], 3.22170194462672, 1e-14, t2),
+            ("double-double M 48 - 64 (log10)", math.log10(abs(dd[48] - dd[64])), -11, 1, t2),
+            ("largest gap of the two codes, M 48 and 64", max(abs(f64 - dd[48]), abs(f64 - dd[64])), 2e-10, 1e-10, t3),
+            ("f64 above double-double M 64", f64 - dd[64], 1.5e-10, 1e-11, t4),
+            ("that gap over the f64 estimate", (f64 - dd[64]) / est, 2, 1, t4)]
 
 
 @check
@@ -433,6 +463,35 @@ def formula_cut():
             ("formula_cut coefficients", len(J["c"]), 29, 0.5, txt),
             ("formula_cut largest |r|/sigma", J["max_abs_residual_over_sigma"], 3.47, 0.01, txt),
             ("formula_cut Delta_inf", float(J["Delta_inf"]), 1.643893745, 1e-9, txt)]
+
+
+@check
+def f64_dinf_range():
+    """README "Main results": the f64 limit 1.64395 ± 0.00008, the centre of the range of the free limit c0 over the
+    fits with chi2/dof <= 1 on D <= 30.2 and its half-width rounded up at the quoted digit (solver/final_fit.py
+    --range, limit_range); the range's ends and the number of fits are those notes/CONSISTENCY_AUDIT.md quotes"""
+    sys.path.insert(0, os.path.join(ROOT, "solver"))
+    cwd = os.getcwd()
+    os.chdir(os.path.join(ROOT, "solver", "data"))         # step_converged reads the scan files from here
+    try:
+        import final_fit
+        D, y, s, _ = final_fit.step_converged()
+        rows, ok = final_fit.limit_range(D, y, s)
+    finally:
+        os.chdir(cwd)
+    lo, hi = min(ok), max(ok)
+    up = math.ceil(round((hi - lo) / 2 / 1e-5, 6)) * 1e-5
+    txt = [("README.md", "The f64 points gave 1.64395 ± 0.00008, the centre and\nhalf-width of the range"),
+           ("README.md", "(variable 1/D, 1/(D − 1) or 1/(D − 2), degree 8–11, from D ≥ 10\nor 12 to 30.2, χ²/dof ≤ 1)")]
+    audit = [("notes/CONSISTENCY_AUDIT.md", "the range 1.643882–1.644027 of the free limit c₀ over the 19 of 24 fits")]
+    return [("fit choices", len(rows), 24, 1, audit),
+            ("fits with chi2/dof <= 1", len(ok), 19, 1, audit),
+            ("f64 range, low end", lo, 1.643882, 1e-6, audit),
+            ("f64 range, high end", hi, 1.644027, 1e-6, audit),
+            ("f64 range, centre", (lo + hi) / 2, 1.64395, 1e-5, txt),
+            ("f64 range, half-width rounded up", up, 0.00008, 1e-5, txt),
+            ("1.64395 ± 0.00008 contains the range (1 = yes)", float(1.64395 - 0.00008 <= lo and hi <= 1.64395 + 0.00008),
+             1, 0.1, txt)]
 
 
 @check
