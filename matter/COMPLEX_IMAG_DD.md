@@ -139,3 +139,7 @@ and the LU differ. Every phase agrees within 3.4×10⁻⁴ rad, and the windings
   `--dd=0` at the sampled points.
 - **The control fires.** `complex_imag.py --mutate=lightcone` scales one coefficient of the light-cone series (P₁)
   by 1.1, and B0 at D = 20.04 then counts 0 instead of 1.
+
+At D = 4 (#803, the win laptop; raw `I803-win/` 5c6c95e2) the light-cone block in double-double changes the phase by at most
+1.3×10⁻¹⁰ rad over 162 points of I95's double count (lowDn_D4.0000_M48), and B0, U0 and FULL wind 1, 0 and 0 as the
+double counts do. The change thus falls from 3.4×10⁻⁴ rad at D 20.04 and 3.9×10⁻⁶ at D 10 to 1.3×10⁻¹⁰ at D 4.
