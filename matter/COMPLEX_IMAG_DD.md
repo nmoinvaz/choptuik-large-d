@@ -67,7 +67,43 @@ At D = 60, λ = 1.3 + 0.4i, the phase of det M moves by 7×10⁻¹¹ rad between
 
 ## 4. Counts
 
-(to be filled from the runner's raw folder)
+dh370 ran `run_i375.sh` at 38c2fbee (raw `I375-dh370/`, 31438056; 12 processes, 2 h 43 min, exit 0). The tables are
+printed by `python3 solver/matter/i375_summary.py <raw>/I375-dh370`, which exits 1 when an acceptance fails (its
+control, D = 45.05's B0 replaced by the mutated count, exits 1; `I375-mac/summary_control.log`).
+
+**The imaginary sector of the real DSS has no zero of det M with Re λ > −0.05 other than λ = 0, in |Im λ| < 3ω/2 and
+Re λ < 6, at D = 30.07, 45.05 and 60.00, as the crate found.** Box counts at tol 10⁻¹⁴ (windings of g, integers to
+10⁻¹³; every phase step ≤ π/4 after bisection, no bisection limit reached):
+
+| D | state | B0 | U0 | FULL (candidate poles inside) | largest step | determinants | crate (hp/modecount_cx) |
+|---|---|---|---|---|---|---|---|
+| 30.07 | up6_D30.0688 | 1 | 0 | 0 (14) | 0.60 rad | 226 | λ = 0 only (GHOST_ADMIXTURE.md §3) |
+| 45.05 | up7_D45.0507 | 1 | 0 | 0 (14) | 0.62 rad | 234 | λ = 0 only (GHOST_ADMIXTURE.md §3) |
+| 60.00 | up13_D60.0020 | 1 | 0 | 0 (12) | 0.62 rad | 234 | λ = 0 only (COMPLEX_CRITICAL.md §3) |
+
+The crate's regions contain B0 ∪ U0 ∪ FULL at each D. At D = 30.07 and 60.00 one candidate pole lies inside U0 (its
+upper half), as in the crate's count at D = 30.07.
+
+**Tolerance.** The phase of det M at tol 10⁻¹² against 10⁻¹⁴, at six λ per D (0.1 + 0.3i, 1.3 + 0.4i, 3 + i,
+5 + 0.5ωi, 0.15 + 0.9ωi, 5.9 + 1.4ωi), differs by at most 0 (D = 30.07), 5.9×10⁻¹² (45.05) and 2.8×10⁻¹⁰ rad
+(60.00); the acceptance was 10⁻³ rad. This measures the Taylor truncation only. Between two machines (below) the same
+determinant differs by up to 4×10⁻⁷ rad.
+
+**Controls**, each seen to fire:
+
+| control | D | box | count |
+|---|---|---|---|
+| pair planted at 3.1 ± 1.0i (the evaluations shared with FULL) | 30.07, 45.05, 60.00 | FULL | 0 → 2, 2, 2 |
+| `--mutate=coupling` | 30.07, 45.05, 60.00 | B0 | 1 → 2, 2, 4 |
+
+**Two machines.** The Mac's pilot count of B0 at D = 30.07 (`I375-mac/evals_D30.0688_tol1e-14.jsonl`, code 8d3621b4,
+whose determinant is that of 38c2fbee) and dh370's evaluate det M at the same 39 points. ln|det M| differs by up to
+6.8×10⁻⁷ and its phase by up to 3.8×10⁻⁷ rad (`i375_summary.py ... --other=<mac evals>,<dh370 evals>`); the winding is
+the same to every digit (1.0000000000000464). The Mac at 38c2fbee reproduces its own pilot at λ = −0.05 bit for bit
+(`I375-mac/xmachine_det_D30.jsonl`), so the difference is the machine's (an Apple M5 with Apple Accelerate and macOS's
+libm, against an i7-8700 under Fedora; Python 3.14.7 against 3.14.10, numpy 2.5.4 and scipy 1.18.1 on both). It is the
+size that §2's centre-block sensitivity gives for a rounding-level change of the double centre block (10⁻¹⁵ relative
+moves the phase by 10⁻⁶ rad at D = 60); the source was not traced.
 
 ## 5. Discrepancies
 
@@ -76,6 +112,8 @@ At D = 60, λ = 1.3 + 0.4i, the phase of det M moves by 7×10⁻¹¹ rad between
   tolerances and two orders, while the crate's record of the state gives |F| = 6×10⁻²⁵. up13_D60.0020 agrees to
   3×10⁻²⁵. Its effect on det M was not measured. For scale, entries of the propagator 0.3 → 0.4 changed by
   1.4×10⁻¹⁴ move the phase by 4×10⁻¹⁰ rad at D = 30 (`diag/blocks_D30.log`).
-- **complex_imag.py at D = 30.07** is 0.05 rad off in the phase of det M, from its light-cone block. Its counts at D = 4,
-  10, 20 (COMPLEX_CRITICAL.md §3) are not affected by this page's numbers; whether its light-cone block is accurate
+- **The double-double det M is reproducible between machines only to about 10⁻⁶** in ln det (§4), not to the 10⁻¹⁰
+  of its tolerance and matching-point checks, which ran on one machine. The counts do not depend on it.
+- **complex_imag.py at D = 30.07** is 0.05 rad off in the phase of det M, from its light-cone block. Its counts at D =
+  4, 10, 20 (COMPLEX_CRITICAL.md §3) are not affected by this page's numbers; whether its light-cone block is accurate
   there was not checked here.
