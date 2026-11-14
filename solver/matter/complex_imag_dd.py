@@ -27,6 +27,11 @@ ddnp.py's (Dekker, Knuth, Hida-Li-Bailey), not multidouble's.
     python3 complex_imag_dd.py tolscan STATE.npz [--tols=1e-12,1e-14,1e-16,1e-18,1e-20] [--lams=...] [--out=F]
     python3 complex_imag_dd.py count STATE.npz B0 U0 FULL [--plant=Z] [--mutate=coupling|noG] [--evlog=F] [--out=F]
     python3 complex_imag_dd.py selftest            the banded LU against numpy and mpmath, with a mutated control
+
+Options: --dd=N (double-double node segments, counted from the light cone; default all), --nsub=1 (pieces per such
+segment), --nsub_double=1, --tol=1e-20 and --K=32 (Taylor), --grid=fixed (steps chosen once, at lam_ref = 6 + 1.5 omega i,
+the far corner of the standard boxes; or adaptive, per lambda), --rtol=1e-13 (DOP853 in double), --ks=100 (light-cone
+series order).
 """
 import json
 import math
@@ -157,6 +162,12 @@ def matvec(A, v):
 def taylor_series(st, x0, ybg, Y, lam, K, kcoup=1.0, gG=1.0):
     """Taylor coefficients in xi = x - x0 (x0 a double) of the background (p, m, a, c: R stacks (K+1, M)) and of the
     test field Y = (P; Q) (C stacks (K+1, M, nc)) at x0"""
+    bgs = bg_series(st, x0, ybg, K)
+    return bgs, (None if Y is None else test_series(st, x0, bgs, Y, lam, K, kcoup, gG))
+
+
+def bg_series(st, x0, ybg, K):
+    """the background's Taylor coefficients at x0, with G = (n - 1) c (a^2 - 1) and x (x -+ c)"""
     M = st.M
     nm1, hn = st.nm1, st.hn
     X0 = rvec(x0, M)
@@ -196,9 +207,14 @@ def taylor_series(st, x0, ybg, Y, lam, K, kcoup=1.0, gG=1.0):
             Rm = dd.sub(Rm, dd.dsum(dd.mul(dd.mul_d(sp[1:k + 1], w[:, None]), m[k:0:-1]), 0))
         p[k + 1] = dd.div(Rp, dd.mul_d(sm[0], float(k + 1)))
         m[k + 1] = dd.div(Rm, dd.mul_d(sp[0], float(k + 1)))
-    bgs = dict(p=p, m=m, a=a, c=c)
-    if Y is None:
-        return bgs, None
+    return dict(p=p, m=m, a=a, c=c, G=G, sm=sm, sp=sp)
+
+
+def test_series(st, x0, bgs, Y, lam, K, kcoup=1.0, gG=1.0):
+    """the test field's Taylor coefficients at x0 on the background series bgs: (P, Q), C stacks (K+1, M, nc)"""
+    M = st.M
+    hn = st.hn
+    c, G, sm, sp = bgs["c"], bgs["G"], bgs["sm"], bgs["sp"]
     nc = Y.shape[1]
     hnv = rvec(hn, M)
     wP = dd.add(dd.sub(dd.mul_d(G, gG), c), dd.mul_d(dd.mul(R(hnv.h[None], hnv.l[None]), c), kcoup))
@@ -228,7 +244,7 @@ def taylor_series(st, x0, ybg, Y, lam, K, kcoup=1.0, gG=1.0):
         dQ = dd.mul_d(sp0, float(k + 1))
         P[k + 1] = dd.rdiv_c(RP, R(dP.h[:, None], dP.l[:, None]))
         Q[k + 1] = dd.rdiv_c(RQ, R(dQ.h[:, None], dQ.l[:, None]))
-    return bgs, (P, Q)
+    return P, Q
 
 
 def horner_r(F, h):
@@ -285,6 +301,42 @@ def dd_segment(st, x0, x1, ybg, Y, lam, tol, K=32, kcoup=1.0, gG=1.0, stats=None
     if stats is not None:
         stats.append(nstep)
     return ybg, Y
+
+
+def build_grid(st, x0, x1, ybg, lam_ref, tol, K, kcoup=1.0, gG=1.0):
+    """the steps of dd_segment from x0 to x1 for the propagator at lam_ref, with the background's series at each step:
+    a fixed grid, so that det M is analytic in lambda and the background series are computed once"""
+    M = st.M
+    x = x0
+    I2 = C(R(np.eye(2 * M)), R(np.zeros((2 * M, 2 * M))))
+    Y = I2
+    steps = []
+    while x < x1:
+        bgs = bg_series(st, x, ybg, K)
+        ts = test_series(st, x, bgs, Y, lam_ref, K, kcoup, gG)
+        h = step_size(bgs, ts, K, tol)
+        if not h > 1e-12 * max(1.0, abs(x)):
+            raise RuntimeError("step size %g at x = %r" % (h, x))
+        xn = x1 if x + h >= x1 else x + h
+        h = xn - x
+        steps.append((x, h, bgs))
+        ybg = [horner_r(bgs[f], h) for f in ("p", "m", "a", "c")]
+        Pn, Qn = horner_c(ts[0], h), horner_c(ts[1], h)
+        Y = C(R(np.concatenate([Pn.re.h, Qn.re.h]), np.concatenate([Pn.re.l, Qn.re.l])),
+              R(np.concatenate([Pn.im.h, Qn.im.h]), np.concatenate([Pn.im.l, Qn.im.l])))
+        x = xn
+    return steps, ybg
+
+
+def grid_segment(st, steps, Y, lam, K, kcoup=1.0, gG=1.0):
+    """the test field propagated over a fixed grid of build_grid"""
+    M = st.M
+    for x, h, bgs in steps:
+        P, Q = test_series(st, x, bgs, Y, lam, K, kcoup, gG)
+        Pn, Qn = horner_c(P, h), horner_c(Q, h)
+        Y = C(R(np.concatenate([Pn.re.h, Qn.re.h]), np.concatenate([Pn.re.l, Qn.re.l])),
+              R(np.concatenate([Pn.im.h, Qn.im.h]), np.concatenate([Pn.im.l, Qn.im.l])))
+    return Y
 
 
 # ------------------------------------------------------------------ the light-cone block in double-double
@@ -366,7 +418,7 @@ class DDTestField:
     segment (and inside the double ones with nsub_double). det M does not change in exact arithmetic when a matching
     point is added (eliminate the new unknowns: det(-I) = 1), but each piece's propagator is then well conditioned."""
 
-    def __init__(self, bg, mutate=None, ndd=None, tol=1e-20, K=32, rtol=1e-13, kf=None, nsub=5, nsub_double=1):
+    def __init__(self, bg, mutate=None, ndd=None, tol=1e-20, K=32, rtol=1e-13, kf=None, nsub=1, nsub_double=1):
         if kf is not None:
             raise SystemExit("kf is not implemented in double-double")
         self.bg = bg
@@ -383,6 +435,9 @@ class DDTestField:
         self.last_tail = None
         self.last_times = {}
         self.hstats = {}
+        self.fixed_grid = True
+        self.lam_ref = complex(6.0, 1.5 * bg.omega)          # the far corner of the standard boxes
+        self.grids = {}
 
     def poles(self):
         return self.tf.poles()
@@ -416,14 +471,31 @@ class DDTestField:
         A.re.h[0:2 * M, M:3 * M] = -I2
         self.last_steps = []
         ybg = None
+        gkey = (self.tol, self.K, self.nsub, self.ndd)
+        if self.fixed_grid and gkey not in self.grids:
+            grid = []
+            for (x0, x1, isdd, seg, b, first) in pcs:
+                if isdd:
+                    if first:
+                        ybg = st.node[b - 1]
+                    steps, ybg = build_grid(st, x0, x1, ybg, self.lam_ref, self.tol, self.K, self.kcoup, self.gG)
+                    grid.append(steps)
+                else:
+                    grid.append(None)
+            self.grids[gkey] = grid
         for i, (x0, x1, isdd, seg, b, first) in enumerate(pcs, start=1):
             r0 = 2 * M * i
             if isdd:
-                if first:
-                    ybg = st.node[b - 1]                    # the stored double-double node starts each segment
                 Y0 = C(R(I2.copy()), R(np.zeros((2 * M, 2 * M))))
-                ybg, Phi = dd_segment(st, x0, x1, ybg, Y0, lam, self.tol, self.K, self.kcoup, self.gG,
-                                      self.last_steps)
+                if self.fixed_grid:
+                    steps = self.grids[gkey][i - 1]
+                    Phi = grid_segment(st, steps, Y0, lam, self.K, self.kcoup, self.gG)
+                    self.last_steps.append(len(steps))
+                else:
+                    if first:
+                        ybg = st.node[b - 1]                # the stored double-double node starts each segment
+                    ybg, Phi = dd_segment(st, x0, x1, ybg, Y0, lam, self.tol, self.K, self.kcoup, self.gG,
+                                          self.last_steps)
             else:
                 Phi = dd.from_complex(self.tf.propagate(seg, x0, x1, I2.astype(complex), lam))
             A[r0:r0 + 2 * M, M + 2 * M * (i - 1):M + 2 * M * i] = Phi
@@ -461,6 +533,28 @@ def check(bg, ddtf, out_emit):
         d = max(float(np.max(np.abs(dd.sub(y1[f], st.node[b][f]).h))) for f in range(4))
         mism.append(dict(x0=bg.X[b - 1], x1=bg.X[b], maxdiff=d, steps=steps[0]))
     rec["bg_node_mismatch_dd"] = mism
+    # 1b. the same at a tolerance 1e4 times smaller and K + 8: does the mismatch fall (truncation) or stay (the state)?
+    mism2 = []
+    for b in range(max(1, L - ddtf.ndd), L):
+        steps = []
+        y1, _ = dd_segment(st, bg.X[b - 1], bg.X[b], st.node[b - 1], None, 0.0, ddtf.tol * 1e-4, ddtf.K + 8,
+                           stats=steps)
+        d = max(float(np.max(np.abs(dd.sub(y1[f], st.node[b][f]).h))) for f in range(4))
+        mism2.append(dict(x0=bg.X[b - 1], x1=bg.X[b], maxdiff=d, steps=steps[0]))
+    rec["bg_node_mismatch_dd_tight"] = mism2
+    # 1c. the light-cone series against the integrator: H(x_m) carried from x_m to the last node by the double-double
+    # Taylor propagator must equal H at the last node (both from the series, at u = 1 - x_m and at u = 1 - x_last)
+    xl = bg.X[-1]
+    xm = 0.5 * (bg.X[-2] + xl)
+    ybm, _ = dd_segment(st, bg.X[-2], xm, st.node[-2], None, 0.0, ddtf.tol * 1e-4, ddtf.K + 8)
+    lam_c = 1.3 + 0.4j
+    Hm, tail_m = horizon_dd(st, bg, lam_c, xm, ddtf.kcoup, ddtf.gG)
+    Hl, tail_l = horizon_dd(st, bg, lam_c, xl, ddtf.kcoup, ddtf.gG)
+    _, Hml = dd_segment(st, xm, xl, ybm, Hm, lam_c, ddtf.tol, ddtf.K, ddtf.kcoup, ddtf.gG)
+    rec["horizon_vs_integrator"] = dict(x_m=xm, lam=[lam_c.real, lam_c.imag], tail_m=tail_m, tail_last=tail_l,
+                                        maxdiff=dd.maxabs(dd.csub(Hml, Hl)), maxval=dd.maxabs(Hl))
+    Hd = ddtf.tf.horizon(lam_c, xl)
+    rec["horizon_double_vs_dd"] = dict(maxdiff=float(np.max(np.abs(Hd - Hl.to_complex()))))
     # 2. lambda = 0: the background's (p, m) is a test-field solution; propagated by the double-double propagator
     nul = []
     for b in range(max(1, L - ddtf.ndd), L):
@@ -476,10 +570,12 @@ def check(bg, ddtf, out_emit):
     Hh, tail = horizon_dd(st, bg, 0j, bg.X[-1], ddtf.kcoup, ddtf.gG)
     zf = np.load(bg.path, allow_pickle=True)
     o = 2 * M + 4 * M * bg.K
-    mh = zf["zh"][o:o + M] + zf["zl"][o:o + M]
-    got = Hh.to_complex() @ mh
-    ref = np.concatenate([st.node[-1][0].h + st.node[-1][0].l, st.node[-1][1].h + st.node[-1][1].l])
-    rec["null_lambda0_horizon"] = dict(maxdiff=float(np.max(np.abs(got - ref))), tail=tail)
+    mh = R(zf["zh"][o:o + M][:, None], zf["zl"][o:o + M][:, None])
+    got = C(dd.matmul(Hh.re, mh), dd.matmul(Hh.im, mh))
+    ref = R(np.concatenate([st.node[-1][0].h, st.node[-1][1].h])[:, None],
+            np.concatenate([st.node[-1][0].l, st.node[-1][1].l])[:, None])
+    dz = dd.csub(got, C(ref, dd.zeros(ref.shape)))
+    rec["null_lambda0_horizon"] = dict(maxdiff=dd.maxabs(dz), tail=tail)
     # 4. double-double against double ln det
     lam = 1.3 + 0.4j
     t = time.time()
@@ -556,11 +652,13 @@ def main():
     bg = ci.Background(pos[1], ks_series=int(o.get("ks", "100")))
     ndd = int(o["dd"]) if "dd" in o else None
     ddtf = DDTestField(bg, mutate, ndd=ndd, tol=float(o.get("tol", "1e-20")), K=int(o.get("K", "32")),
-                       rtol=float(o.get("rtol", "1e-13")), nsub=int(o.get("nsub", "5")),
+                       rtol=float(o.get("rtol", "1e-13")), nsub=int(o.get("nsub", "1")),
                        nsub_double=int(o.get("nsub_double", "1")))
+    ddtf.fixed_grid = o.get("grid", "fixed") == "fixed"
     info = dict(state=os.path.basename(bg.path), D=bg.D, M=bg.M, nodes=bg.nodes, omega=bg.omega, mutate=mutate,
                 tol=ddtf.tol, K=ddtf.K, ndd=ddtf.ndd, rtol=ddtf.tf.rtol, ks=bg.ks, nsub=ddtf.nsub,
-                nsub_double=ddtf.nsub_double)
+                nsub_double=ddtf.nsub_double, grid="fixed" if ddtf.fixed_grid else "adaptive",
+                lam_ref=[ddtf.lam_ref.real, ddtf.lam_ref.imag])
     if pos[0] == "check":
         check(bg, ddtf, emit)
         return
