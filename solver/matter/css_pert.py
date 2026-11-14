@@ -3,6 +3,7 @@
 
     python3 css_pert.py D KAPPA OMEGA F0 LAM_RE [LAM_IM] [RFRAC]     root of det M(lambda) from the given start
     python3 css_pert.py count D KAPPA OMEGA F0 RE0 RE1 IM1 [K]       zeros of det M in the box RE0 < Re lam < RE1, |Im lam| < IM1
+                                                                     (one starting sample per 0.25 of edge; K > 0: K per edge)
 
 Perturbations ~ e^{lambda tau} (tau = -ln(-t)): psi = f + eps e^{lambda tau} A(x), psibar = fbar + eps e^{lambda tau} B(x),
 b = b0 + eps e^{lambda tau} db, u = u0 + eps e^{lambda tau} du (A and B independent: the real system complexified).
@@ -199,37 +200,48 @@ def find_root(n, kap, om, f0, lam0, xh, R, tol=1e-11, maxit=30, verbose=False):
     return l2
 
 
-def winding(n, kap, om, f0, xh, R, re0, re1, im1, K=24):
-    """Number of zeros of det M inside the box (argument principle), with the phase tracked along K points per side
-    (refined adaptively where the phase jumps by more than 1 rad)."""
-    corners = [complex(re0, -im1), complex(re1, -im1), complex(re1, im1), complex(re0, im1), complex(re0, -im1)]
+def winding_path(F, corners, K=None, h=0.25, tol=0.5, maxdepth=30):
+    """(1/2 pi) x the change of arg F around the closed polygon `corners`, from one starting sample per h of edge (K per
+    edge if K is given), every interval bisected until its phase step is below tol rad and its halves agree with the
+    whole.  The test passes an interval whose halves each turn by a whole multiple of 2 pi, so the starting samples are
+    spaced by length: a fixed K per edge misses whole turns on long edges (#770, #793, #809)."""
     total = 0.0
-    nev = 0
-    for a, c in zip(corners[:-1], corners[1:]):
-        vals = {}
-        def val(t):
-            nonlocal nev
-            if t not in vals:
-                vals[t] = detM(n, kap, om, f0, a + (c - a) * t, xh, R); nev += 1
-            return vals[t]
+    pts = list(corners) + [corners[0]]
+    for a, c in zip(pts[:-1], pts[1:]):
+        m = K if K else max(1, int(np.ceil(abs(c - a) / h - 1e-9)))
+
         def incr(t0, t1, depth=0):
-            # phase increment, bisected until the two halves agree with the whole and each step is < 0.5 rad
-            d = np.angle(val(t1) / val(t0))
-            tm = 0.5 * (t0 + t1)
-            d1 = np.angle(val(tm) / val(t0)); d2 = np.angle(val(t1) / val(tm))
-            if (abs(d1 + d2 - d) > 1e-6 or abs(d) > 0.5) and depth < 30:
+            # phase increment, bisected until the two halves agree with the whole and each step is < tol
+            za, zb, zm = a + (c - a) * t0, a + (c - a) * t1, a + (c - a) * 0.5 * (t0 + t1)
+            d = np.angle(F(zb) / F(za))
+            d1 = np.angle(F(zm) / F(za)); d2 = np.angle(F(zb) / F(zm))
+            if (abs(d1 + d2 - d) > 1e-6 or abs(d) > tol) and depth < maxdepth:
+                tm = 0.5 * (t0 + t1)
                 return incr(t0, tm, depth + 1) + incr(tm, t1, depth + 1)
             return d1 + d2
-        ts = np.linspace(0, 1, K + 1)
+        ts = np.linspace(0, 1, m + 1)
         for t0, t1 in zip(ts[:-1], ts[1:]):
             total += incr(t0, t1)
-    return total / (2 * np.pi), nev
+    return total / (2 * np.pi)
+
+
+def winding(n, kap, om, f0, xh, R, re0, re1, im1, K=None, h=0.25):
+    """Number of zeros of det M inside the box re0 < Re < re1, |Im| < im1 (argument principle, winding_path)."""
+    vals = {}
+
+    def F(z):
+        key = (round(z.real, 14), round(z.imag, 14))
+        if key not in vals:
+            vals[key] = detM(n, kap, om, f0, z, xh, R)
+        return vals[key]
+    corners = [complex(re0, -im1), complex(re1, -im1), complex(re1, im1), complex(re0, im1)]
+    return winding_path(F, corners, K, h), len(vals)
 
 
 if __name__ == "__main__":
     if sys.argv[1] == "count":
         D, kap, om, f0, re0, re1, im1 = [float(s) for s in sys.argv[2:9]]
-        K = int(sys.argv[9]) if len(sys.argv) > 9 else 24
+        K = int(sys.argv[9]) if len(sys.argv) > 9 and int(sys.argv[9]) > 0 else None   # 0 or absent: spaced by length
         Rf = float(sys.argv[10]) if len(sys.argv) > 10 else 0.85
         n = D - 2
         xh = cl.horizon_estimate(n, kap, om, f0)

@@ -3,7 +3,10 @@
 by secant iteration, and recompute it with a second circle radius: a growth rate does not move with R, an artefact of
 the jump method does (matter/CSS.md section 6).
 
-    python3 css_locate.py BG.jsonl OUT.jsonl D RE0 RE1 IM0 IM1
+    python3 css_locate.py BG.jsonl OUT.jsonl D RE0 RE1 IM0 IM1 [--K=N]
+
+The phase is tracked from one starting sample per 0.25 of edge (--K=N: N per edge, 12 before #809), with bisection until
+each step is below 0.3 rad and the halves agree with the whole.
 """
 import sys, os, json
 import numpy as np
@@ -15,6 +18,7 @@ import css_pert as cp
 bg = {r["D"]: r for r in (json.loads(l) for l in open(sys.argv[1]))}
 out = sys.argv[2]
 D, re0, re1, im0, im1 = [float(v) for v in sys.argv[3:8]]
+K = next((int(a.split("=", 1)[1]) for a in sys.argv if a.startswith("--K=")), None)
 r = bg[D]; n = D - 2; xh = r["X"]; kap = r["kappa"]; om = r["omega"]; f0 = r["f0"]
 R = 0.85 * xh
 corners = [complex(re0, im0), complex(re1, im0), complex(re1, im1), complex(re0, im1), complex(re0, im0)]
@@ -36,13 +40,14 @@ for a, c in zip(corners[:-1], corners[1:]):
         # d log det = i dphase + d log|det|; lambda d log det on this step (midpoint rule)
         dl = np.log(abs(val(zb)) / abs(val(za))) + 1j * (d1 + d2)
         return d1 + d2, zm * dl
-    for t0, t1 in zip(np.linspace(0, 1, 13)[:-1], np.linspace(0, 1, 13)[1:]):
+    m = K if K else max(1, int(np.ceil(abs(c - a) / 0.25 - 1e-9)))
+    for t0, t1 in zip(np.linspace(0, 1, m + 1)[:-1], np.linspace(0, 1, m + 1)[1:]):
         w, sm = seg(t0, t1)
         W += w; S += sm
 wn = W / (2 * np.pi); ssum = S / (2j * np.pi)
 print("D=%g box Re %.2f..%.2f Im %.2f..%.2f: winding %.3f, sum of zeros %.6f%+.6fi (%d evaluations)"
       % (D, re0, re1, im0, im1, wn, ssum.real, ssum.imag, len(vals)), flush=True)
-rec = dict(D=D, box=[re0, re1, im0, im1], winding=wn, sum=[ssum.real, ssum.imag])
+rec = dict(D=D, box=[re0, re1, im0, im1], winding=wn, sum=[ssum.real, ssum.imag], K=K, evaluations=len(vals))
 k = int(round(wn))
 if k == 1:
     z1 = cp.find_root(n, kap, om, f0, ssum, xh, R, tol=1e-10, maxit=40)
