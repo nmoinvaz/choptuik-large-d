@@ -415,8 +415,13 @@ seen, so it does not explain both D by itself.
 converged on different plans, with interior nodes up to 9.5e-4 apart, while the two D 99.8125 states shared one plan.
 Copied onto cont3's plan and polished in octo-double to 2.4e-62 or below, all three give Δ =
 1.745150028164499252944352893640343550633, the same to 1.1e-46. The first Newton step on the common plan moves A1 and
-X2 by exactly their offsets on their own plans. So at D 99.875 the plan sets Δ to about 25 digits, and #741 measures
-how that depends on the node shift.
+X2 by exactly their offsets on their own plans. So at D 99.875 the plan sets Δ to about 25 digits.
+
+One node does not carry that dependence (#741, raw `I741-win/` 86eeacdc). Shifting the plan's node `segs[3][1]` by
+1e-4 to 1e-2 moves Δ by −1.0e-27, +7.9e-28, +2.6e-27, +8.5e-28 and +8.2e-29. The effect is not a power law, and it
+does not grow with the shift. Each value is reproduced from two other starts to 1.9e-54 or better, so it belongs to
+the plan. It is at most a few 1e-27, against #727's offsets of 3.0e-26 and 1.7e-25 between plans that moved several
+nodes by 5e-4 to 9.5e-4. #751 shifts each of the other six nodes.
 
 With `--elim_switch 0` the continuation reaches D 112.75 (#726, raw `I726-win/` 647cd9f5). Every accepted step
 converges to at most 7.0e-45. The difference to the held chain keeps growing, by a factor of 1.055 per unit of D
