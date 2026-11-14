@@ -242,7 +242,8 @@ hp/                 double-double solver (crate hpkernel)
 ├── data_graphs.py  SVG graph primitives, vendored unchanged from github.com/nmoinvaz/speedy-gonzales (skills/graph-data)
 ├── data/delta_dd.csv   every double-double point: D, Delta (hi + lo; Delta_lo is the low word, not an error), |F|,
 │                       max dDelta/dF, run, an error estimate and its kind (Delta_err, err_kind: the change from the next
-│                       lower tau resolution at low D, the size of the nearby checks elsewhere), and whether a published
+│                       lower tau resolution at low D, or at a D solved at one M that M's departure from the best value
+│                       at the neighbouring D, the size of the nearby checks elsewhere), and whether a published
 │                       value at that D agrees within its stated uncertainty (published_ref, published_diff,
 │                       published_match; data/published_delta.csv); the continuation points (857 for D = 8.25-61.03, 342 from
 │                       the continuation toward 70 for 61.04-67.77, runs T48-pilotB and T48-up70) and the

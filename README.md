@@ -521,7 +521,7 @@ are in [Is the period analytic in 1/D?](#is-the-period-analytic-in-1d).
 
 **Every value of Δ** we computed, from D = 3.04375 to the large-D chain's frontier, is in
 [`hp/data/delta_all.csv`](hp/data/delta_all.csv), one row per D. Each row has Δ in up to four parts (their sum is the
-value), the kind of computation, an error estimate and what that estimate is where one exists, a published value at
+value), the kind of computation, an error estimate and what that estimate is, a published value at
 that D where one
 exists (with our Δ minus it), and the source run and state in the [raw data](#raw-data). Every published value,
 including Ecker, Ecker and Grumiller's table to D = 200[^23], is compared with ours in
