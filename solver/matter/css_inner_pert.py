@@ -393,6 +393,9 @@ def main():
     pos, o = opts_of(sys.argv[1:])
     out = o.get("out")
     mutate = o.get("mutate") or None
+    rtol = float(o.get("rtol", "1e-12"))
+    if "dps" in o:
+        mp.mp.dps = int(o["dps"])
 
     def emit(rec):
         print(json.dumps(rec), flush=True)
@@ -407,7 +410,7 @@ def main():
         kap = float(pos[1]); lam = complex(pos[2].replace(" ", ""))
         f0, om = background(kap)
         r0, r1 = float(o.get("r0", 0.1)), float(o.get("r1", 0.3))
-        I = Inner(kap, f0, om, r0, r1, mutate=mutate)
+        I = Inner(kap, f0, om, r0, r1, rtol=rtol, mutate=mutate)
         t = time.time()
         M, up, lo = I.M(lam)
         sv = np.linalg.svd(M, compute_uv=False)
@@ -421,14 +424,14 @@ def main():
         f0, om = background(kap)
         for s in sets:
             r0, r1 = SETTINGS[s]
-            I = Inner(kap, f0, om, r0, r1, mutate=mutate)
+            I = Inner(kap, f0, om, r0, r1, rtol=rtol, mutate=mutate)
             t = time.time()
             lam, ok = secant(I.det, lam0)
             M = I.M(lam)[0]
             sv = np.linalg.svd(M, compute_uv=False)
             emit(dict(kind="root", kappa=kap, f0=f0, omega=om, setting=s, r0=r0, r1=r1, start=[lam0.real, lam0.imag],
                       lam=[lam.real, lam.imag], converged=ok, im_over_omega=lam.imag / om, sv=sv.tolist(),
-                      evaluations=I.nev, seconds=round(time.time() - t, 1), mutate=mutate))
+                      evaluations=I.nev, seconds=round(time.time() - t, 1), mutate=mutate, rtol=rtol, dps=mp.mp.dps))
         return
     if cmd == "count":
         sys.path.insert(0, HERE)
@@ -437,7 +440,7 @@ def main():
         f0, om = background(kap)
         for s in sets:
             r0, r1 = SETTINGS[s]
-            I = Inner(kap, f0, om, r0, r1, mutate=mutate)
+            I = Inner(kap, f0, om, r0, r1, rtol=rtol, mutate=mutate)
             cache = {}
 
             def F(lam):
@@ -472,7 +475,7 @@ def main():
             res = []
             for s in sets:
                 r0, r1 = SETTINGS[s]
-                I = Inner(kap, f0, om, r0, r1, mutate=mutate)
+                I = Inner(kap, f0, om, r0, r1, rtol=rtol, mutate=mutate)
                 l, ok = secant(I.det, g)
                 res.append((s, l, ok))
             l = res[0][1]
