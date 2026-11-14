@@ -122,7 +122,28 @@ def selftest():
 
 # ---- functions and zeros ----------------------------------------------------------------------------------
 def to_acb(v):
-    return acb(arb(mp.nstr(mp.re(v), 170)), arb(mp.nstr(mp.im(v), 170)))
+    return acb(arb(mp.nstr(mp.re(v), 200)), arb(mp.nstr(mp.im(v), 200)))
+
+
+XDPS = 320                                          # x0 and C's coefficients
+
+
+def refine_root(s, x):
+    """Newton on the series polynomial at XDPS digits: C's division by (x - x0) leaves a term eps sum x^n / x0^(n+1),
+    eps = S(x0), which at |x| = 46 is e^355 eps, so x0 must be a zero of the polynomial to far beyond 160 digits"""
+    with mp.workdps(XDPS):
+        a = [s.c[n] / mp.factorial(n) for n in range(len(s.c))]
+        x = mp.mpc(x)
+        for _ in range(60):
+            f, fp = mp.mpc(0), mp.mpc(0)
+            for an in reversed(a):
+                fp = fp * x + f
+                f = f * x + an
+            dx = f / fp
+            x -= dx
+            if abs(dx) < mp.mpf(10) ** (10 - XDPS) * abs(x):
+                break
+        return +x
 
 
 def to_mp(a):
@@ -227,12 +248,17 @@ def cmd_zeros():
     P1 = poly_of(s1)
     z1, w1, h1 = zeros_omega(P1, s1.name)
     arm1 = SL.arm([to_mp(z) for z in z1])
-    x0 = arm1[0]
-    print(f"  P1 x0 = {mp.nstr(x0, 20)}", flush=True)
+    x0 = refine_root(s1, arm1[0])
+    with mp.workdps(XDPS):
+        print(f"  P1 x0 = {mp.nstr(x0, 20)} (refined at {XDPS} digits, moved {mp.nstr(abs(x0 - arm1[0]), 3)})",
+              flush=True)
     todo = [("P1", s1, P1, (z1, w1, h1)), ("P2", s2, poly_of(s2), None)]
+    sdps = SL.SDPS
+    SL.SDPS = XDPS                                  # displaced() and poly_of() work at XDPS for C
     for nm, d in (("C", D_CTRL), ("C0", mp.mpf(0))):
         sc = SL.displaced(s1, x0, d)
         todo.append((nm, sc, poly_of(sc), None))
+    SL.SDPS = sdps
     for nm, s, P, pre in todo:
         zs, w, hits = pre if pre else zeros_omega(P, s.name)
         ok &= (w == len(zs)) and hits == 0
@@ -382,6 +408,53 @@ def cmd_checks():
     return ok
 
 
+def cmd_posthoc_w():
+    """post hoc (not part of the test): P1's e at x0 by order for the arc family at other w"""
+    out = {}
+    for w in args.get("w", "1.09,1.10,1.11").split(","):
+        with mp.workdps(SL.SDPS):
+            s = SL.Series(f"P1 arc (w {w})", SL.arc_family.ArcBase().coeffs(mp.mpf(w), 200))
+        zs, wnd, hits = zeros_omega(poly_of(s), s.name)
+        a = arm_of([to_mp(z) for z in zs])
+        es = []
+        for N in range(0, len(a) - 3):
+            xh, _ = predict(a, N)
+            es.append(float(abs(xh - a[0])))
+        NX = {X: n_within(a, X) - 3 for X in XS}
+        print(f"  w {w}: winding {wnd}, zeros {len(zs)}; x0 {SL.Z.cnum(a[0], 4)}; |x_j| "
+              + ", ".join(f"{float(abs(x)):.1f}" for x in a[1:]) + "\n    e by order N = 0..: "
+              + ", ".join(f"{e:.4f}" for e in es) + "; pre-registered N(X): "
+              + ", ".join(f"X {X}: N {N} e {es[N]:.4f}" for X, N in NX.items() if 0 <= N < len(es)), flush=True)
+        out[w] = {"x0": str(a[0]), "abs_arm": [float(abs(x)) for x in a], "e_by_order": es,
+                  "N_of_X": NX, "winding": wnd, "zeros": len(zs)}
+    if "out" in args:
+        json.dump(out, open(args["out"], "w"), indent=1)
+    return True
+
+
+def cmd_sensitivity():
+    """post hoc: |d x0_hat / d x_j| of the order-N law (x0_hat is analytic in each x_j), P1 and P2"""
+    _, Zs = load_zeros(args["zeros"])
+    out = {}
+    for k in ("P1", "P2"):
+        a = arm_of(Zs[k])
+        out[k] = {}
+        for N in range(0, 5):
+            base, _ = predict(a, N)
+            h = mp.mpf(10) ** -25
+            g = []
+            for j in range(1, N + 4):
+                b = list(a)
+                b[j] = b[j] + h
+                g.append(float(abs((predict(b, N)[0] - base) / h)))
+            out[k][N] = g
+            print(f"  {k}, N = {N} (x1..x{N + 3}): |d x0_hat/d x_j| = " + ", ".join(f"{v:.3g}" for v in g)
+                  + f"; sum {sum(g):.3g}, rms-sum {math.sqrt(sum(v * v for v in g)):.3g}", flush=True)
+    if "out" in args:
+        json.dump(out, open(args["out"], "w"), indent=1)
+    return True
+
+
 def quad_arc(x):
     """P1's S(x) by tanh-sinh quadrature of the arc integral, on 16 subintervals"""
     b = SL.arc_family.ArcBase()
@@ -415,4 +488,8 @@ if __name__ == "__main__":
         sys.exit(0 if cmd_checks() else 1)
     if cmd == "fit":
         sys.exit(cmd_fit())
+    if cmd == "posthoc_w":
+        sys.exit(0 if cmd_posthoc_w() else 1)
+    if cmd == "sensitivity":
+        sys.exit(0 if cmd_sensitivity() else 1)
     raise SystemExit(__doc__)
