@@ -2518,6 +2518,26 @@ def chain_frontier():
 
 
 @check
+def pinned_frontier():
+    """the pinned rows of hp/data/delta_all.csv from D 73.1 to the frontier 73.265722 (#756, notes/CONSISTENCY_AUDIT.md
+    P2-2): each has an err; the quad-double Delta_full1 is the row at 73.1 and at the frontier (rule (a) of
+    hp/export_delta_all.py), whose pins differ by 5.0e-16 there; the double-double rows between carry the dd-qd gap
+    (rule (b)), which notes/QUAD_DOUBLE.md 12.4 quotes at the frontier"""
+    import csv
+    rows = [r for r in csv.DictReader(open(os.path.join(ROOT, "hp/data/delta_all.csv")))
+            if r["kind"] == "pinned" and float(r["D"]) >= 73.1 - 1e-9]
+    qd = [r for r in rows if r["Delta_q2"]]
+    gap = max((float(r["err"]) for r in rows if r["err_kind"] == "dd-qd gap"), default=0.0)
+    front = max(rows, key=lambda r: float(r["D"]))
+    return [("pinned rows at D >= 73.1 without an err", sum(not r["err"] for r in rows), 0, 1, []),
+            ("quad-double pinned rows at D >= 73.1", len(qd), 2, 1, []),
+            ("the frontier row's quad-double pins' spread", float(front["err"] or 0) if front["Delta_q2"] else 0.0,
+             5.0e-16, 0.1e-16, []),
+            ("the dd-qd gap of the rows below the frontier", gap, 1.1e-14, 0.1e-14,
+             [("notes/QUAD_DOUBLE.md", "lies 1.1e-14 above them")])]
+
+
+@check
 def profile_table():
     """README "How the solution scales with D" and the physics paper's Table tab:scaling: the profile F and the centre
     lapse on the double-double states nearest D = 20, 30, 40, 50, 60 (hp/data/largeD_F_all.csv, hp/largeD_F_all.py)"""
