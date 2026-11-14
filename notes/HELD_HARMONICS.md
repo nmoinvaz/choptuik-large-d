@@ -469,6 +469,19 @@ nodes do not interact, and halving `segs[3][2]`'s shift makes its effect 3.6 tim
 of #751, at shifts of 1e-3, did not add up to the plans' offsets because each node's effect depends on its shift far
 from linearly, not because the nodes interact.
 
+Neither node's effect is a smooth function of its shift (#769, raw `I769-win/` 3c99ea8b). Each was moved alone by
+0.25 to 2.0 times A1's shift, every polish converging to 1.6e-61 or below, and a repeat of #763's `segs[3][2]` at 0.5
+reproduced it exactly:
+
+| shift / A1's | 0.25 | 0.5 | 0.75 | 1.0 | 1.5 | 2.0 |
+|---|---|---|---|---|---|---|
+| `segs[3][1]` | −8.3e-28 | +8.2e-28 | −1.1e-28 | +1.8e-27 | +1.4e-27 | +2.6e-27 |
+| `segs[3][2]` | +6.2e-26 | +9.9e-26 | +1.0e-25 | +2.8e-26 | +1.9e-25 | −1.2e-25 |
+
+**So at D 99.875 Δ's dependence on the plan's nodes behaves as a floor of about 1e-25, which changes sign and follows
+no power of the shift, and not as a smooth function of the nodes' positions.** It lies 13 orders below the quoted
+spread there (about 1e-12), so no quoted number moves.
+
 With `--elim_switch 0` the continuation reaches D 112.75 (#726, raw `I726-win/` 647cd9f5). Every accepted step
 converges to at most 7.0e-45. The difference to the held chain keeps growing, by a factor of 1.055 per unit of D
 falling to 1.039, while the quoted spread grows faster:
