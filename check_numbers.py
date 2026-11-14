@@ -2538,6 +2538,119 @@ def pinned_frontier():
 
 
 @check
+def pinned_qd_table():
+    """notes/QUAD_DOUBLE.md 12.4: the quad-double Delta_full1 of the pinned solutions against
+    hp/data/delta_pinned_qd.csv (hp/export_pinned_qd.py, the exact sums of T84-mac's *_fullcorr.jsonl records; #758).
+    The section's two tables are read from the note: each Delta_full1 and T75's double-double value to its printed
+    digits, each difference, |F|, correction and |dz| to its printed precision. Then the figures of the text"""
+    import csv
+    import mpmath as mp
+    N, A = "notes/QUAD_DOUBLE.md", "notes/CONSISTENCY_AUDIT.md"
+    nan = float("nan")
+    rows = {(round(float(r["D"]), 4), int(r["pin"])): r
+            for r in csv.DictReader(open(os.path.join(ROOT, "hp/data/delta_pinned_qd.csv")))}
+    sec = DOCS[N].split("\n### 12.4 ", 1)[1].split("\n### 12.5 ", 1)[0].splitlines()
+
+    def table(head):
+        """the cells of each body row of the table whose header starts with head"""
+        i = next((k for k, x in enumerate(sec) if x.startswith(head)), len(sec))
+        out = []
+        for x in sec[i + 2:]:
+            if not x.startswith("|"):
+                break
+            out.append([c.strip() for c in x.strip().strip("|").split("|")])
+        return out
+
+    def sci(label, have, cell):
+        """a printed number (1.2e-32, -5.3e-29, 2e-10) against the file's, to its last printed digit"""
+        m = re.fullmatch(r"[+-]?\d+(?:\.(\d+))?e([+-]?\d+)", cell)
+        if not m:
+            return (label, float(have or nan), nan, 1.0, [])
+        return (label, float(have or nan), float(cell), 10.0 ** (int(m.group(2)) - len(m.group(1) or "")), [])
+
+    def decimal(label, have, cell):
+        """a printed decimal of up to 22 digits against the file's, as its offset from its first 12 decimals"""
+        if not re.fullmatch(r"\d\.\d{12,}", cell) or not have:
+            return (label, nan, nan, 1.0, [])
+        with mp.workdps(60):
+            base = mp.mpf(cell[:14])
+            return (label, float(mp.mpf(have) - base), float(mp.mpf(cell) - base), 10.0 ** (2 - len(cell)), [])
+    items, full1, seen = [], 0, set()
+    for c in table("| D | pin | full-system |F|"):
+        D, pin = float(c[0]), int(c[1].split()[0])
+        r = rows.get((D, pin), {})
+        seen.add((D, pin))
+        tag = f"D {c[0]} pin {pin}"
+        items += [sci(f"{tag}: |F| at the pinned solution", r.get("F_full"), c[2]),
+                  sci(f"{tag}: correction", r.get("correction"), c[3]),
+                  decimal(f"{tag}: Delta_full1", r.get("Delta"), c[4])]
+        full1 += 1
+        m = re.fullmatch(r"(\d\.\d+) \(pin 7\)(?:, \.\.\.(\d+) \(pin 5\))?", c[5])
+        if c[5] and not m:
+            items.append((f"{tag}: T75's double-double Delta_full1", nan, nan, 1.0, []))
+        elif m:
+            items.append(decimal(f"{tag}: T75's pin 7 Delta_full1", r.get("dd_pin7"), m.group(1)))
+            if m.group(2):
+                p5 = m.group(1)[:-len(m.group(2))] + m.group(2)
+                items.append(decimal(f"{tag}: T75's pin 5 Delta_full1", r.get("dd_pin5"), p5))
+    for c in table("| D | Delta_full1 (pin 7 and pin 5)"):
+        D = float(c[0])
+        r7, r5 = rows.get((D, 7), {}), rows.get((D, 5), {})
+        seen |= {(D, 7), (D, 5)}
+        items += [decimal(f"D {c[0]} pin 7: Delta_full1", r7.get("Delta"), c[1]),
+                  decimal(f"D {c[0]} pin 5: Delta_full1", r5.get("Delta"), c[1]),
+                  sci(f"D {c[0]}: pin 7 - pin 5", r7.get("minus_other_pin"), c[2])]
+        full1 += 2
+        q, dz = [x.strip() for x in c[3].split(",")] if c[3] else ["", ""], [x.strip() for x in c[4].split(",")]
+        for pin, r, x, z in ((7, r7, q[0], dz[0]), (5, r5, q[-1], dz[-1])):
+            items += [sci(f"D {c[0]} pin {pin}: the full step's |dz|", r.get("dz"), z),
+                      sci(f"D {c[0]} pin {pin}: minus the full system's", r.get("minus_qd"), x) if x else
+                      (f"D {c[0]} pin {pin}: a full-system value the table leaves out", float(bool(r.get("minus_qd"))),
+                       0.0, 1.0, [])]
+    items += [("Delta_full1 values in the two tables", full1, 18, 1, []),
+              ("records of delta_pinned_qd.csv in the tables", len(seen & set(rows)), 16, 1, [])]
+    with mp.workdps(60):
+        def at(D, pin, col):
+            return mp.mpf(rows[(D, pin)][col])
+        F = 73.2657
+        leg = [r for (D, p), r in rows.items() if 71.0 <= D <= 73.1]
+        qd = [r for r in leg if r["minus_qd"]]
+        items += [("the frontier's pinned Delta, pin 3 - pin 1", float(at(F, 3, "Delta_pinned") - at(F, 1, "Delta_pinned")),
+                   2.2e-15, 0.1e-15, [(N, "The two converged Delta differ by 2.2e-15")]),
+                  ("T75's double-double pins at 73.1, 7 - 5", float(abs(at(73.1, 7, "dd_pin7") - at(73.1, 7, "dd_pin5"))),
+                   8.6e-15, 0.1e-15, [(N, "2e-16 typically and 8.6e-15 at 73.1")]),
+                  ("the leg's smallest pins' spread", min(abs(float(r["minus_other_pin"])) for r in leg), 7.1e-33, 0.1e-33,
+                   [(N, "to between 7.1e-33 (71.5)")]),
+                  ("the leg's largest pins' spread", max(abs(float(r["minus_other_pin"])) for r in leg), 9.0e-25, 0.1e-25,
+                   [(N, "9.0e-25 (73.1) here"), (N, "spread, 9.0e-25 or better")]),
+                  ("both pins against the full system", max(abs(float(r["minus_qd"])) for r in qd), 1.8e-26, 0.1e-26,
+                   [(N, "both pins lie within 1.8e-26 of"), (N, "to within 1.8e-26 where the full system converged")]),
+                  ("pin 7 against the full system", max(abs(float(r["minus_qd"])) for r in qd if r["pin"] == "7"), 8.1e-28,
+                   0.1e-28, [(N, "lies within 8.1e-28 of it")]),
+                  ("D with a full-system value where pin 7's full step is the smaller",
+                   sum(float(r["dz"]) < float(rows[(round(float(r["D"]), 4), 5)]["dz"]) for r in qd if r["pin"] == "7"), 4,
+                   1, [(N, "Pin 7, whose full step is the smaller there")])]
+        sp = {round(float(r["D"]), 4): r["spread"] for r in csv.DictReader(open(os.path.join(ROOT, "hp/data/delta_qd.csv")))}
+        items += [(f"delta_qd.csv's two-start spread at {D}", float(sp[D] or nan), q, 0.1e-28,
+                   [(N, "(3.8e-28 at 71.5 and 8.4e-28 at 73.0, a spread between Taylor plans")])
+                  for D, q in ((71.5, 3.8e-28), (73.0, 8.4e-28))]
+        items += [("71.0: the pins against the full system", max(abs(float(rows[(71.0, p)]["minus_qd"])) for p in (7, 5)),
+                   2.0e-28, 0.1e-28, [(N, "lie within 2.0e-28 (71.0) and 3.8e-28 (71.5) of it")]),
+                  ("71.5: the pins against the full system", max(abs(float(rows[(71.5, p)]["minus_qd"])) for p in (7, 5)),
+                   3.8e-28, 0.1e-28, [(N, "lie within 2.0e-28 (71.0) and 3.8e-28 (71.5) of it")]),
+                  ("the frontier's pins' spread", abs(float(rows[(F, 3)]["minus_other_pin"])), 5.0e-16, 0.1e-16,
+                   [(N, "5.0e-16 (a spread between two systems, not a bound)")]),
+                  ("the frontier's full step |dz|", float(rows[(F, 3)]["dz"]), 7.9e-6, 0.1e-6,
+                   [(N, "|dz| is 7.9e-6 against 1.6e-9 at 72.4")]),
+                  ("72.4's full step |dz|, pin 7", float(rows[(72.4, 7)]["dz"]), 1.6e-9, 0.1e-9,
+                   [(N, "|dz| is 7.9e-6 against 1.6e-9 at 72.4")])]
+        t = [(N, "1.06e-14 and 1.11e-14 above them"), (A, "1.06×10⁻¹⁴ and 1.11×10⁻¹⁴ above the two quad-double ones")]
+        items += [(f"the frontier's double-double Delta_full1 above pin {p}'s",
+                   float(at(F, p, "dd_pin7") - at(F, p, "Delta")), q, 0.01e-14, t) for p, q in ((1, 1.06e-14), (3, 1.11e-14))]
+    return items
+
+
+@check
 def profile_table():
     """README "How the solution scales with D" and the physics paper's Table tab:scaling: the profile F and the centre
     lapse on the double-double states nearest D = 20, 30, 40, 50, 60 (hp/data/largeD_F_all.csv, hp/largeD_F_all.py)"""
