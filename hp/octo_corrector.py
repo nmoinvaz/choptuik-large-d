@@ -587,6 +587,9 @@ def _delta(z):
 
 
 def _parse(argv, opt):
+    unknown = [a for a in argv if a.startswith("--") and a[2:] not in opt]
+    if unknown:     # an unknown option is refused, not ignored (#777 lost a run to one)
+        raise SystemExit(f"octo_corrector.py: unknown options {unknown}; known: {sorted(opt)}")
     for k in list(opt):
         if "--" + k in argv:
             i = argv.index("--" + k)
@@ -649,12 +652,13 @@ def planted(argv):
     from reseed import Reseeder
     raw, path = argv[0], argv[1]
     opt = _parse(argv[2:], dict(threads=3, rel=1e-12, seed=1, mutate_offset="", mutate=0, it_max=12, qd=1, tol=1e-40, out="",
-                                Delta_ref="", last=0, od=1, accept="own", strong=0, switch=1e-15, full_drop=0.0))
+                                Delta_ref="", last=0, od=1, accept="own", strong=0, switch=1e-15, full_drop=0.0, reseed_o=0,
+                                reseed_start="ladder"))
     z4, meta = load_q(os.path.join(raw, path))
     z4 = o8(z4)
     D = mp.mpf(meta["D_str"])
     s, sp, sq, so = pinned_o(meta, z4, threads=opt["threads"], mutate_offset=opt["mutate_offset"])
-    rs = Reseeder(meta, D, threads=opt["threads"], qd=True)
+    rs = Reseeder(meta, D, threads=opt["threads"], qd=True, od=opt["reseed_o"], qd_start=opt["reseed_start"])
     zs, n = plant_start(z4, rs, opt["rel"], opt["seed"], opt["last"])
     print(f"planted {path}: D {mp.nstr(D, 12)}, start = truth moved by {opt['rel']:.0e} relative in [0, {n}); pinned max|F| (octo) "
           f"truth {omax(so.residual_o(o8_of_q(z4))):.2e}, start {omax(so.residual_o(o8_of_q(zs))):.2e}; mutate_offset "
@@ -724,10 +728,10 @@ def wall(argv):
     from reseed import Reseeder
     raw, path = argv[0], argv[1]
     opt = _parse(argv[2:], dict(threads=3, mutate_offset="", mutate=0, it_max=12, qd=0, tol=1e-40, out="", F_max=1e-36, junk=0,
-                                reseed_o=0, held_o=0, switch=1e-15, accept="own", full_drop=0.0))
+                                reseed_o=0, held_o=0, switch=1e-15, accept="own", full_drop=0.0, reseed_start="ladder"))
     z4, meta = load_q(os.path.join(raw, path))
     D = mp.mpf(meta["D_str"])
-    rs = Reseeder(meta, D, threads=opt["threads"], qd=True, od=opt["reseed_o"])
+    rs = Reseeder(meta, D, threads=opt["threads"], qd=True, od=opt["reseed_o"], qd_start=opt["reseed_start"])
     t0 = time.time()
     zr, diag = rs.reseed(o8(z4))
     zr = o8(zr)
