@@ -433,8 +433,9 @@ weakest one alone carries less as the last node moves in: v₁'s share of the st
 horizon block, as #772 predicted, but u₁ᵀr comes wholly from n3>n4, so the prediction that both blocks share it failed.
 Within that block u₁ᵀr is the small remainder of a cancellation between the p and m rows (shares −50.3 and +48.9 at
 0.80, −1877 and +1878 at 0.92), and r itself is almost purely r_p − r_m, its k = 1 amplitude 69 to 77 times that of
-r_p + r_m. So the re-noded starts' residual is a mismatch of p − m at node 4, the renode's interpolation error in that
-combination, and the first step answers it along the weak directions (numerical evidence, one build).
+r_p + r_m. So the re-noded starts' residual is a mismatch of p − m at node 4, and the first step answers it along the weak
+directions (numerical evidence, one build). That the mismatch is the renode's interpolation error is a reading, not
+tested.
 
 #760 (dh370; raw `I760-dh370/` f8f6d7fc) built the series at three of #603's bases from D 256.57 to 258.78. Each equals
 #603's record in all 25 norms and both pivots, and a neighbouring base's record matches none. The near track holds as a
