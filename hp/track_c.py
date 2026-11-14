@@ -311,8 +311,50 @@ def cmd_real():
     return out
 
 
+def cmd_fold():
+    """post hoc (D 259.9): (1) chain - series on its steep range fitted to s sqrt(D* - D) + a + b (D - 259); (2) the same
+    square-root term planted under P0 on the real grid, through the pre-registered fits: can the data below 245 hold it?"""
+    rows = json.load(open(args["real"]))["beyond"]
+    lo = float(args.get("from", "253.5"))
+    pts = [(mp.mpf(D), mp.mpf(d_)) for D, d_, _ in rows if D >= lo]
+
+    import numpy as np
+    Dv = np.array([float(D) for D, _ in pts])
+    yv = np.array([float(d_) for _, d_ in pts])
+    best = None
+    for Ds_ in np.arange(Dv.max() + 0.001, 261.0, 0.0005):      # D* above the last state; linear in (s, a, b)
+        A = np.stack([np.sqrt(Ds_ - Dv), np.ones_like(Dv), Dv - 259], 1)
+        c_, *_ = np.linalg.lstsq(A, yv, rcond=None)
+        rms_ = float(np.sqrt(np.mean((A @ c_ - yv) ** 2)))
+        if best is None or rms_ < best[1]:
+            best = ([c_[0], Ds_, c_[1], c_[2]], rms_)
+    sol, rms = best
+    sol = [mp.mpf(float(v)) for v in sol]
+    print("(1) chain - series on D >= %.1f (%d states) = s sqrt(D* - D) + a + b (D - 259): s = %s, D* = %s, a = %s, "
+          "b = %s; rms residual %.2e (the largest |difference| %.2e)" % (
+              lo, len(pts), mp.nstr(sol[0], 6), mp.nstr(sol[1], 8), mp.nstr(sol[2], 5), mp.nstr(sol[3], 5),
+              float(rms), float(max(abs(d_) for _, d_ in pts))))
+    sq, Ds = sol[0], sol[1]
+    real = load_real()
+    rng = random.Random(6)
+    data = {d: (readme_formula(mp.mpf(d)) + sq * mp.sqrt(Ds - mp.mpf(d)) + mp.mpf(rng.gauss(0, s_)), s_, k)
+            for d, (v, s_, k) in real.items()}
+    fits = all_fits(data)
+    print("(2) P0 + s sqrt(D* - D) with that s and D*: %d of %d fits accepted (per D_min %s); smallest chi2/dof %.3g" % (
+        sum(f["ok"] for f in fits), len(fits),
+        ", ".join("%d: %d" % (dm, sum(1 for f in fits if f["ok"] and f["dmin"] == dm)) for dm in DMINS),
+        min(f["chi2dof"] for f in fits)))
+    out = dict(s=str(sq), Dstar=str(Ds), a=str(sol[2]), b=str(sol[3]), rms=rms,
+               planted_accepted=sum(f["ok"] for f in fits), planted_min_chi2=min(f["chi2dof"] for f in fits))
+    if "out" in args:
+        json.dump(out, open(args["out"], "w"), indent=1)
+
+
 if __name__ == "__main__":
     cmd = sys.argv[1] if len(sys.argv) > 1 else ""
+    if cmd == "fold":
+        cmd_fold()
+        sys.exit(0)
     if cmd == "real":
         cmd_real()
         sys.exit(0)
