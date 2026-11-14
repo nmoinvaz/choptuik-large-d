@@ -452,8 +452,22 @@ at a plan's values, Δ reproduces that plan's offset, and with every other inter
 | X2 | −1.6580e-25 | −1.6580e-25 | 1.0000 | −2.5e-36 |
 
 **So Δ's plan dependence at D 99.875 is set by the last segment's two interior nodes, and the rest of the plan acts
-10 orders of magnitude below it.** A repeat of the X2 case from A1's arrays reproduces it to 4.6e-94. Why the two nodes'
-single effects do not add up to the pair's (#751) is #763.
+10 orders of magnitude below it.** A repeat of the X2 case from A1's arrays reproduces it to 4.6e-94.
+
+The two nodes act additively, and each acts far from linearly in its shift (#763, raw `I763-win/` 92a55d95). Each node
+was moved alone and both together, by 0.5 and 1.0 times A1's shift, and polished as above. The pair at 1.0 reproduces
+#754's effect exactly (+2.9709e-26, the control).
+
+| moved | effect at 0.5 | effect at 1.0 | 0.5 / 1.0 |
+|---|---|---|---|
+| `segs[3][1]` | +8.19e-28 | +1.83e-27 | 0.447 |
+| `segs[3][2]` | +9.90e-26 | +2.79e-26 | 3.55 |
+| both | +9.98e-26 | +2.97e-26 | 3.36 |
+
+The pair's effect minus the sum of the two single effects is −8.4e-31 and −3.8e-30, below 1.3e-4 of the pair. **So the
+nodes do not interact, and halving `segs[3][2]`'s shift makes its effect 3.6 times larger.** The single-node effects
+of #751, at shifts of 1e-3, did not add up to the plans' offsets because each node's effect depends on its shift far
+from linearly, not because the nodes interact.
 
 With `--elim_switch 0` the continuation reaches D 112.75 (#726, raw `I726-win/` 647cd9f5). Every accepted step
 converges to at most 7.0e-45. The difference to the held chain keeps growing, by a factor of 1.055 per unit of D
