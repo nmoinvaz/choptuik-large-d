@@ -421,7 +421,27 @@ One node does not carry that dependence (#741, raw `I741-win/` 86eeacdc). Shifti
 1e-4 to 1e-2 moves Δ by −1.0e-27, +7.9e-28, +2.6e-27, +8.5e-28 and +8.2e-29. The effect is not a power law, and it
 does not grow with the shift. Each value is reproduced from two other starts to 1.9e-54 or better, so it belongs to
 the plan. It is at most a few 1e-27, against #727's offsets of 3.0e-26 and 1.7e-25 between plans that moved several
-nodes by 5e-4 to 9.5e-4. #751 shifts each of the other six nodes.
+nodes by 5e-4 to 9.5e-4.
+
+The dependence sits in the last segment (#751, raw `I751-win/` 9183fd12). Each of the other six interior nodes was
+shifted by 1e-3 and polished in octo-double, every polish converging to at most 7e-62:
+
+| node | position | effect on Δ |
+|---|---|---|
+| `segs[0][1]` | 0.334 | +3.1e-48 |
+| `segs[0][2]` | 0.373 | −4.5e-44 |
+| `segs[1][1]` | 0.444 | +1.4e-39 |
+| `segs[1][2]` | 0.472 | −5.4e-36 |
+| `segs[2][1]` | 0.55 | −1.5e-32 |
+| `segs[3][1]` (#741) | 0.649 | +2.6e-27 |
+| `segs[3][2]` | 0.674 | −3.5e-26 |
+
+**The effect grows by about 22 orders of magnitude from the first segment to the last**, so only the last segment's two
+nodes act above 1e-27. A repeat of `segs[3][2]` from another start reproduces it to 1.6e-56. The single-node effects do
+not add up to the plans' offsets, though. The six sum to −3.46e-26, against A1's +2.97e-26 and X2's −1.66e-25, and
+scaled by each plan's actual shifts they give −1.4e-27 and −1.4e-26. So the effects are not linear in the shift, or not
+additive. The expectation written before the run, that segment 0 or 1 carries the offsets, failed. #754 takes the last
+segment whole at each plan's nodes.
 
 With `--elim_switch 0` the continuation reaches D 112.75 (#726, raw `I726-win/` 647cd9f5). Every accepted step
 converges to at most 7.0e-45. The difference to the held chain keeps growing, by a factor of 1.055 per unit of D
