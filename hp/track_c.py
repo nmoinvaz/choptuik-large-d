@@ -2,7 +2,8 @@
 """Track C (#801): Delta(D) at D 250-400 from a 1/n series matched to the data below D 245 (pre-registered on #801).
 
 Data: data/delta_all.csv rows of kind dd (err_kind "check", cleaned as dd_fits_mp.clean), qd ("starts") and chain_fit,
-D_min <= D <= 245.64; Delta = the sum of the four parts, sigma = err floored at 1e-16. Fit: Delta = sum_{j<=K} a_j eps^j,
+D_min <= D <= 245.64; Delta = the sum of the four parts, sigma = err floored at 1e-16.
+Fit: Delta = sum_{j<=K} a_j eps^j,
 eps in {1/(D-2), 1/(D-1), 1/D}, K in {12, 14, 16, 18, 20}, D_min in {10, 20, 30}: weighted least squares in arb at
 256 bits (Chebyshev basis over the fitted eps range; normal equations), accepted when chi^2/dof <= 4. At each target:
 the median of the accepted fits, E = F max(h, s), h half their range, s the central fit's propagated data error (from
@@ -232,7 +233,8 @@ def cmd_planted():
     diffs0 = [float(arb(mp.nstr(ref[D215][0], 70)) - s_["ev"](D215)) for s_ in sers]
     spread = max(diffs) - min(diffs)
     print("P4 (#313): at D %.2f the planted chain minus the low-D series: %s; without the bias %s; planted bias %.2e; "
-          "the series' spread %.2e" % (D215, ", ".join("%.2e" % v for v in diffs), ", ".join("%.2e" % v for v in diffs0),
+          "the series' spread %.2e" % (D215, ", ".join("%.2e" % v for v in diffs),
+                                       ", ".join("%.2e" % v for v in diffs0),
                                        -3.1e-12 * ((D215 - 74) / 141) ** 2, spread))
     out["P4"] = dict(D=D215, diffs=diffs, diffs_nobias=diffs0, spread=spread)
     if "out" in args:
@@ -291,7 +293,8 @@ def cmd_real():
     diffs = [float(arb(mp.nstr(real[D215][0], 70)) - s_["ev"](D215)) for s_ in sers]
     print("  #313: chain_fit at D %.2f minus the low-D series (1/D, 1/n; 16, 18, 20): %s; spread %.2e; the track C "
           "series minus chain_fit there: %+.2e" % (D215, ", ".join("%+.2e" % v for v in diffs), max(diffs) - min(diffs),
-                                                    float(estimate(fits, D215, Fc)["value"] - arb(mp.nstr(real[D215][0], 70)))))
+                                                    float(estimate(fits, D215, Fc)["value"]
+                                                          - arb(mp.nstr(real[D215][0], 70)))))
     out["313"] = dict(D=D215, diffs=diffs)
     # the chain past 245.64 against the series
     raw = args.get("raw")
@@ -312,8 +315,9 @@ def cmd_real():
 
 
 def cmd_fold():
-    """post hoc (D 259.9): (1) chain - series on its steep range fitted to s sqrt(D* - D) + a + b (D - 259); (2) the same
-    square-root term planted under P0 on the real grid, through the pre-registered fits: can the data below 245 hold it?"""
+    """post hoc (D 259.9): (1) chain - series on its steep range fitted to s sqrt(D* - D) + a + b (D - 259);
+    (2) the same square-root term planted under P0 on the real grid, through the pre-registered fits: can the data
+    below 245 hold it?"""
     rows = json.load(open(args["real"]))["beyond"]
     lo = float(args.get("from", "253.5"))
     pts = [(mp.mpf(D), mp.mpf(d_)) for D, d_, _ in rows if D >= lo]
@@ -340,7 +344,8 @@ def cmd_fold():
     data = {d: (readme_formula(mp.mpf(d)) + sq * mp.sqrt(Ds - mp.mpf(d)) + mp.mpf(rng.gauss(0, s_)), s_, k)
             for d, (v, s_, k) in real.items()}
     fits = all_fits(data)
-    print("(2) P0 + s sqrt(D* - D) with that s and D*: %d of %d fits accepted (per D_min %s); smallest chi2/dof %.3g" % (
+    print("(2) P0 + s sqrt(D* - D) with that s and D*: %d of %d fits accepted (per D_min %s); "
+          "smallest chi2/dof %.3g" % (
         sum(f["ok"] for f in fits), len(fits),
         ", ".join("%d: %d" % (dm, sum(1 for f in fits if f["ok"] and f["dmin"] == dm)) for dm in DMINS),
         min(f["chi2dof"] for f in fits)))
