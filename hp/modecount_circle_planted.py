@@ -15,12 +15,15 @@ pi/4, as on the real data (--n0=16 tests 16 points):
   two      centre 2.0+0.75i, R 0.35: 1.80+0.60i and 2.20+0.90i                       winding +2, positions
   pair     centre 3.0, R 0.2: the conjugate pair 3.02 +- 0.05i                       winding +2, positions
   pole     centre 2.536+3.477i, R 0.2: the candidate pole n/2 - 30 lam_g + i omega   winding -1
-Pass criteria: every winding as listed, to 1e-6; every position within 1e-4 of its planted zero in one, phys, two and
-pair, with error estimate below 1e-3; in every case with positions each error is at most its estimate (the estimate
+  four     centre 3.12, R 0.36, with the extra pair 3.25 +- 0.12i planted for this case alone: 3.02 +- 0.05i and
+           3.25 +- 0.12i, at 0.31 R and 0.49 R                                       winding +4, positions
+Pass criteria: every winding as listed, to 1e-6; every position within 1e-4 of its planted zero in one, phys, two,
+pair and four, with error estimate below 1e-3; in every case with positions each error is at most its estimate (the estimate
 covers the error). History: the first version (af2f8db, positions for winding 1 only, without pair, n0 16 and 20)
 passed, and its controls failed. The second (4a004e6) added positions in two and the case pair, and failed in two at
 n0 = 16 only: errors 6.3e-5, estimates 1.3e-3 (the zeros lie at 0.71 R, where the 8-point sums of the estimate
 converge slowly). At n0 = 20 every case passed, so the real circles use n0 = 20 and the test runs it by default.
+The case four was added with positions for windings up to 4 (#708's circles at kf 35 wind +4).
 Controls, each must make the test fail: --mutate=nodiv leaves out the division by (lam - c)^W in the position sums;
 --mutate=offset plants the zero of case one 0.01 from where the criteria expect it.
 
@@ -48,6 +51,9 @@ CASES = [("one", 1.84 + 0.57j, 0.2, 1, [ZEROS[0]]), ("phys", P.LP + 0.03j, 0.2, 
          ("edge", 1.92 + 0.60j, 0.2, 1, [ZEROS[0]]), ("empty", 3.5 + 0.8j, 0.2, 0, None),
          ("two", 2.0 + 0.75j, 0.35, 2, ZEROS[:2]), ("pair", 3.0 + 0j, 0.2, 2, [ZEROS[2], ZEROS[2].conjugate()]),
          ("pole", POLE, 0.2, -1, None)]
+# case four's own extra pair, planted only for it, so the other cases' zeros are unchanged
+FOUR = 3.25 + 0.12j
+CASES_FOUR = [("four", 3.12 + 0j, 0.36, 4, [ZEROS[2], ZEROS[2].conjugate(), FOUR, FOUR.conjugate()])]
 ALIAS_C, ALIAS_R, ALIAS_ARC, ALIAS_D, ALIAS_SEP = 3.5 + 0.8j, 0.2, 3, 0.002, 0.008
 
 
@@ -88,14 +94,17 @@ def test(mutate=None):
     zeros = list(ZEROS)
     if mutate == "offset":
         zeros[0] += 0.01
-    f = P.det_for(zeros)
+    f, f4 = P.det_for(zeros), P.det_for(zeros + [FOUR])
 
-    def det(lam):
-        la, arg, _, _ = f(lam.real, lam.imag)
-        return la, arg
+    def det_of(g):
+        def det(lam):
+            la, arg, _, _ = g(lam.real, lam.imag)
+            return la, arg
+        return det
     ok = True
     for n0 in (N0,):
-        for name, c, R, want, z in CASES:
+        for name, c, R, want, z in CASES + CASES_FOUR:
+            det = det_of(f4 if name == "four" else f)
             rec = C.circle(det, c, R, math.pi / 4, n0, mutate if mutate in ("nodiv", "flat") else None)
             bad = []
             if abs(rec["winding"] - want) > 1e-6:
@@ -109,7 +118,7 @@ def test(mutate=None):
                     line += f", position error {err:.1e}, estimate {e:.1e}"
                     if err > max(e, 1e-12):
                         bad.append("the estimate does not cover the error")
-                    if name in ("one", "phys", "two", "pair") and (err > 1e-4 or e > 1e-3):
+                    if name in ("one", "phys", "two", "pair", "four") and (err > 1e-4 or e > 1e-3):
                         bad.append("position not within 1e-4 or estimate not below 1e-3")
             elif z is not None:
                 bad.append("no positions")
