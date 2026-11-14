@@ -2335,10 +2335,10 @@ def chain_dM_table():
                   (f"D {D}: lam_g(M 48) - lam_g(M 32)", float(r["dlam"]), dl, ul, txt)]
     da = [r for r in csv.DictReader(open(os.path.join(ROOT, "hp/data/delta_all.csv"))) if r["kind"] == "chain_fit"]
     de = [float(r["err"]) for r in da if r["err"]]
-    t_err = [(N, "the 188 chain_fit rows that have one (1.4×10⁻¹⁵ to 4.4×10⁻¹¹)"), (N, "(D 173.5 and 190.5)")]
-    items += [("chain_fit rows with an err", len(de), 188, 1, t_err), ("smallest chain_fit err", min(de), 1.4e-15, 1e-16, t_err),
+    t_err = [(N, "all 190 chain_fit rows (1.4×10⁻¹⁵ to 4.4×10⁻¹¹), so every row\nkeeps its err")]
+    items += [("chain_fit rows with an err", len(de), 190, 1, t_err), ("smallest chain_fit err", min(de), 1.4e-15, 1e-16, t_err),
               ("largest chain_fit err", max(de), 4.4e-11, 1e-12, t_err),
-              ("chain_fit rows without an err", len(da) - len(de), 2, 1, t_err)]
+              ("chain_fit rows without an err", len(da) - len(de), 0, 1, t_err)]
     with mp.workdps(50):
         offD = float(mp.mpf(at("controls", "polish", 20.043653, "D")["Delta48"]) - known20)
     items.append(("dd20 under --mutate=D: Delta(M 48) - the record's", offD, -4.307e-15, 1e-18,
@@ -2535,6 +2535,26 @@ def pinned_frontier():
              5.0e-16, 0.1e-16, []),
             ("the dd-qd gap of the rows below the frontier", gap, 1.1e-14, 0.1e-14,
              [("notes/QUAD_DOUBLE.md", "1.06e-14 and 1.11e-14 above them")])]
+
+
+@check
+def table_errs():
+    """every pinned and chain_fit row of hp/data/delta_all.csv has an err or a reason named in its err_kind (#759).
+    The pinned rows that one pin reached take the larger of the dd-qd gap and the neighbouring waypoints' pins spread
+    (rules (b) and (c) of hp/export_delta_all.py). Where T75's pin 7 meets T73's pin 5 (70.65 to 70.95), the row is
+    pin 7's with the pins' spread. The backbone's half steps 173.5 and 190.5 take the comparison fits interpolated
+    there"""
+    import csv
+    rows = list(csv.DictReader(open(os.path.join(ROOT, "hp/data/delta_all.csv"))))
+    bare = lambda kind: sum(r["kind"] == kind and not r["err"] and not r["err_kind"] for r in rows)
+    cross = [r for r in rows if r["source"].startswith("T75/pin7.jsonl:") and r["err_kind"] == "pins"
+             and float(r["D"]) < 71.0]
+    half = [r for r in rows if r["kind"] == "chain_fit" and float(r["D"]) in (173.5, 190.5)
+            and r["err_kind"].endswith(" interp")]
+    return [("pinned rows without an err or a named reason", bare("pinned"), 0, 1, []),
+            ("chain_fit rows without an err or a named reason", bare("chain_fit"), 0, 1, []),
+            ("pin 7 rows with the pins' spread where T75's pin 7 meets T73's pin 5", len(cross), 7, 1, []),
+            ("half-step chain_fit rows with the fits interpolated", len(half), 2, 1, [])]
 
 
 @check
