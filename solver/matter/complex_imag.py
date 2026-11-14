@@ -218,6 +218,7 @@ class Background:
             m[k + 1] = rm / (v[0] * (k + 1))
         fl = lambda X: np.array(X.tolist(), dtype=float)
         self.hs = dict(p=fl(p), m=fl(m[:K + 1]), a=fl(a[:K + 1]), c=fl(c[:K + 2]), G=fl(G), e=fl(e), v=fl(v))
+        self.hs_mp = dict(p=p, m=m[:K + 1], a=a[:K + 1], c=c[:K + 2], G=G, e=e, v=v)    # for complex_imag_dd.py
         self.c1 = self.hs["c"][1]
 
     def horizon_eval(self, x):
