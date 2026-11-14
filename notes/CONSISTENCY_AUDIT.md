@@ -1719,3 +1719,121 @@ Canonical: the data file. The new check `sigma_fold` ties SIGMA.md's and the phy
  never reaches large D and cannot test γ∞. Its γ ends near 1/2 for a different reason. The test of the prediction needs
  the σ-model's DSS branch.
 ```
+
+### P2-14. B5_inner.md's status table still has (H8) open and B5(2) estimated (superseded)
+
+| location | says |
+|---|---|
+| proof/B5_inner.md:586–587 (§8) | "(H8) itself: **open**"; "B5(2) error at n₀(1): … estimated in section 7 (ln n ≳ 105)" |
+| proof/B5_inner.md:56 (summary) | "A discrepancy, to resolve before B(1) and A(1) can be combined": C_selection.md §1 and the paper truncate b, c to \|ν\| ≤ M − 1 |
+| proof/B3_borel.md:796 (§8) | "B3 actual solution, fixed order: = B8 on the real segment (to be written with constants)" |
+| proof/B8_constants.md §0, §8 | (H8) **certified** for n ≥ e^{73.89}, δ = (8.3×10⁻⁵, 79.04, 3.232, 6.464); B8(1) certified for n ≥ e^{62} |
+| proof/B_chain.md §0, §3 | B5(2) certified, error ≤ e^{76.94}/n for n ≥ e^{73.89} |
+| proof/C_selection.md:103–104; paper/math/main.tex:880–888 | b and c on \|ν\| ≤ M + 1 |
+
+B5_inner.md's summary already marks its B5(2) estimate superseded, but its status table and the discrepancy bullet were
+not updated. Canonical: B8_constants.md, B_chain.md and C_selection.md §1.
+
+```diff
+--- a/proof/B5_inner.md
++++ b/proof/B5_inner.md
+@@ -53,7 +53,7 @@
+   (with the best κ₁ ≈ 0.85; `b5_threshold.py`). That is an estimate, not part of this lemma (section 7).
+   *Superseded:* the estimate uses the exponent ⟨F²⟩ where the fast mode of the Φ-component has
+   Re 𝒢 = ⟨F²⟩ − 3/2, and omits the weight m_Φ = |z|; B5(2) is now certified ([B_chain.md](B_chain.md) §3).
+-- **A discrepancy, to resolve before B(1) and A(1) can be combined.**
++- **A discrepancy, since resolved: C_selection.md §1 and the paper now use b and c on |ν| ≤ M + 1.**
+   - C_selection.md §1 and the paper truncate b and c to even |ν| ≤ M − 1.
+   - The certified inner problem (and every inner solver, `lateral_np.py`, `hier.py`, `first_order_jet.py`) keeps c on
+     |ν| ≤ M + 1. For M = 1 that is c on {0} against {0, ±2}.
+@@ -583,8 +583,8 @@
+ | existence of a super-solution, hence some n₀(M), for each fixed M | **proved, conditional on (H8)**, with Braaksma's Gevrey bounds; no numerical n₀(M) |
+ | M = 1: all constants, the super-solution, n₀(1) = max(e^{73.89}, n₈) (max(e^{69.78}, n₈) at Z = 0.009) | **certified** (`b5_bounds.py`, python-flint; with lemma S of A_certify.md rerun over the complex box); **conditional on (H8)** and on Braaksma's theorem as in Theorem A(M = 1) |
+ | leading data δ⁰ of (H8) | **numerical evidence** (`b5_data.py`; cross-checked) |
+-| (H8) itself | **open**: B8's remainder in these variables, plus the series comparison of section 7 |
+-| B5(2) error at n₀(1) | not part of this lemma; estimated in section 7 (ln n ≳ 105, `b5_threshold.py`) |
++| (H8) itself | **certified** for M = 1, n ≥ e^{73.89}, δ = (8.3×10⁻⁵, 79.04, 3.232, 6.464) ≤ δ_ref ([B8_constants.md](B8_constants.md) §8) |
++| B5(2) error at n₀(1) | not part of this lemma; **certified** in label form, error ≤ e^{76.94}/n for n ≥ e^{73.89} ([B_chain.md](B_chain.md) §3); section 7's estimate (ln n ≳ 105) is superseded |
+ 
+ The trusted code: `b5_bounds.py` (new, not reviewed independently), `b5_formulas.py` (new), `fixed_point.py` and
+ `lemma6_sector.py` (A_certify.md; reviewed in A_review.md, rerun over a different box), python-flint 0.9.
+--- a/proof/B3_borel.md
++++ b/proof/B3_borel.md
+@@ -793,7 +793,7 @@
+ | (H-σ), M = 1 | Borel transform analytic near [0, ∞) | **conjecture**; **numerical evidence** σ ≈ π/2; proof plan §4 with one open technical point (derivative loss) |
+ | (H-σ), M ≥ 3 | | **conjecture**; numerical evidence that σ is set by an x-independent singularity near −1.2 (M = 3) |
+ | B3 formal half | | **proved** (B3.7) |
+-| B3 actual solution, fixed order | | = B8 on the real segment (to be written with constants) |
++| B3 actual solution, fixed order | | = B8 on the real segment, written with constants in [B8_constants.md](B8_constants.md) (**certified** for M = 1, n ≥ e^{62}) |
+ | B3 strong form (1-sum) | | ⇔ (H-σ) (Nevanlinna–Sokal), **open** |
+ | B4 summability | | **cited**, Braaksma 1992, hypotheses checked against the paper |
+ | B4 parameter-analyticity | | **proved** given Braaksma (Lemma B4.P); not in Braaksma 1992 or the Ramis–Sibuya 1994 abstract |
+```
+
+### P2-15. B_tail.md still waits for M = 7 (superseded)
+
+| location | says |
+|---|---|
+| proof/B_tail.md:52, 307–309 (§7) | "M = 7 should land at 0.99997–1.00017, a sharp test when it runs"; "M = 7 … is the next data point" |
+| proof/B_tail_M7.md §2–3; README.md:1617 | M = 7 gives ω/ω∞ = 1.000022 (±2×10⁻⁵, the scatter of repeated solves), inside the prediction; last ratio −0.049 |
+
+Canonical: proof/B_tail_M7.md.
+
+```diff
+--- a/proof/B_tail.md
++++ b/proof/B_tail.md
+@@ -49,7 +49,8 @@
+   A 10⁻⁴ box needs M = 9 explicit.
+ - **The two routes are consistent.** The truncated sequence and the alternation sign put the limit at 0.99923–1.00011. The
+   untruncated bracket at order 12 is 0.99915–1.00011, with the central Padé value 0.99989. They overlap, and both
+-  contain 1. M = 7 should land at 0.99997–1.00017, a sharp test when it runs.
++  contain 1. M = 7 should land at 0.99997–1.00017, a sharp test when it runs. (It landed at 1.000022, inside the
++  prediction; [B_tail_M7.md](B_tail_M7.md) §2.)
+ - **Secondary Stokes lines from F's complex singularities: no sign of them.** They are absent at every finite order in
+   A, where each order is a trigonometric polynomial and the late orders contain only fast-mode families. S₁ is numerically
+   entire in A², and the two routes agree. What is not excluded is a non-uniformity in the order of limits (sum in A,
+@@ -305,8 +306,8 @@
+ ## 7. What remains open
+ 
+ 1. **The jump-conditioned tail bound itself.** The per-pair ratio −0.045 to −0.057 is measured on three points (M = 1, 3,
+-   5), with M = 1 pre-asymptotic. M = 7 (`hier.py 7 … --predict --floor --schur`) is the next data point. The prediction is
+-   c₇ = 0.99997–1.00017.
++   5), with M = 1 pre-asymptotic. M = 7 (`hier.py 7 … --predict --floor --schur`) was the next data point, with the
++   prediction c₇ = 0.99997–1.00017. It gives 1.000022 and a last ratio of −0.049 ([B_tail_M7.md](B_tail_M7.md) §2–3).
+ 2. **Why the Galerkin projection explodes at σ_{M+1}.** Either its multiplier is genuinely large or its late orders have
+    a family structure outside the fit basis (the fit residual rises). Deciding this is a few hours' work: compute the
+    projected system's fast-mode exponents, refit, and compare with a lateral (`inner_np.py`) evaluation of the same
+```
+
+### P2-16. A_certify.md calls the certified lemma 6b₁ "proved" (inconsistent status word)
+
+| location | says |
+|---|---|
+| proof/A_certify.md:41, 1386 | "lemma 6b₁ is proved"; "Lemma 6b₁ is proved in §12" |
+| proof/A_certify.md:37 (the paragraph before); PROOF.md:208; README.md:209 | lemma 6b₁ "is certified" by the covering with validated Taylor discs |
+
+AGENTS.md: *proved* is by hand, *certified* computer-assisted. #653's finding 8 noted the same word in PROOF.md, which
+main has since changed (71015044).
+
+```diff
+--- a/proof/A_certify.md
++++ b/proof/A_certify.md
+@@ -38,7 +38,7 @@
+ the box, and it is simple**, at A ∈ [2.54214804761338, 2.54214804761975], ω/ω∞ ∈ [0.776994013607438,
+ 0.776994013612010] (§11.7).
+ 
+-**Since then (§12):** lemma 6b₁ is proved. The annulus is covered by 178 validated Taylor discs (radius 10–24 in
++**Since then (§12):** lemma 6b₁ is certified. The annulus is covered by 178 validated Taylor discs (radius 10–24 in
+ u = 1/ξ², orders 40–70). Their centre values come from single-trajectory Lohner runs along the start ray and 12 arcs,
+ and the disc functions glue to one analytic continuation of y⁺. With §11 this gives **Theorem A(M = 1)** without
+ conditions, given Braaksma's theorem for the existence of y⁺ (§12.6): the M = 1 selection condition has exactly one
+@@ -1383,7 +1383,7 @@
+ has exactly one simple zero x* in X. By 11.5 (whose hypothesis now holds), J_D(0.3; x) = 0 ⇔ y⁺ ≡ y⁻. ∎
+ 
+ **What remains:** lemma 6b₁ only (11.4 lists three routes and their cost). Without it, the honest statement is item 1
+-above together with 6a as stated. (Lemma 6b₁ is proved in §12, and the theorem is restated there without the
++above together with 6a as stated. (Lemma 6b₁ is certified in §12, and the theorem is restated there without the
+ condition, §12.6.)
+ 
+ **Independence.**
+```
