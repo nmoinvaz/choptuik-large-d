@@ -415,7 +415,14 @@ put the nearest singularity at the same D* to 10⁻⁴, inside its spread over t
 coefficients move by up to 6% between the two plans, at orders 7 and 13. So, by #686's rule, the singularity is the
 solution's and not the plan's. Its control, D* moved by 0.5, reads as the plan's at both bases. This tests the plan
 only: the new plan's base polish did not converge, and the series were formed at the stored state (pinned max|F|
-3×10⁻³⁶). Another M or layout was not run, since the octo-double solver is built for M = 32 only (#735).
+3×10⁻³⁶). Another M was not run, since the octo-double solver is built for M = 32 only.
+
+Other layouts give no converged state at D 252.25 (#735, dh370; raw `I735-dh370/` bfd910f3). #603's state re-noded to
+the last nodes 0.80 and 0.92 (nodes 0.3, 0.4, 0.5, 0.6 and the last) starts at max|F| 1.2×10⁻³⁶ and 6.8×10⁻³⁷, and its
+renode controls fail as they must. But the base polish takes a first step of |dz| 0.25 and 0.10, every trial from λ 1 to
+1/64 gives NaN, and no trial is accepted in 47 and 45 min. So the series' singularity cannot yet be compared across
+layouts. The start and the first step have the pattern #688 read at 0.975, a small gap at the last node and a large
+step along one weak direction, which is not yet measured at these starts.
 
 ### The refusals are the corrector's
 
