@@ -218,7 +218,8 @@ def cmd_run():
                 with open(out, "a") as fo:
                     fo.write(json.dumps(rec) + "\n")
                 ze = rec.get("zero_err")
-                print("%-2s K %3d [%2d/%2d]: zeros %3d winding %3d entered %-5s max zero error x1..x6 %s  e %s  (%.0f s)" % (
+                print("%-2s K %3d [%2d/%2d]: zeros %3d winding %3d entered %-5s max zero error x1..x6 %s  e %s  "
+                      "(%.0f s)" % (
                     fn, K, m, K - m, rec["zeros"], rec["winding"], rec["entered"],
                     "%.1e" % max(ze[1:7]) if ze and len(ze) >= 7 else "-",
                     "%.4f" % rec["e"] if "e" in rec else "-", rec["seconds"]), flush=True)
