@@ -340,6 +340,44 @@ def published_gamma():
 
 
 @check
+def published_matter():
+    """matter/published_compare.csv (solver/matter/compare_published_matter.py): the matter models' published values
+    against ours. Each published value against matter/published_values.csv; ours against the repository's data files
+    where it is read from them (the raw rows are checked by the script's --check); diff and within recomputed; the
+    counts per reference."""
+    import csv
+    src = [r for r in csv.DictReader(l for l in open(os.path.join(ROOT, "matter/published_values.csv"))
+                                     if not l.startswith("#"))]
+    rows = list(csv.DictReader(open(os.path.join(ROOT, "matter/published_compare.csv"))))
+    bad_pub = bad_ours = bad_diff = bad_within = 0
+    by_ref = {}
+    for s, r in zip(src, rows):
+        bad_pub += s["published"] != r["published"] or s["unc_abs"] != r["unc_abs"]
+        ours, pub, ua = float(r["ours"]), float(r["published"]), float(r["unc_abs"])
+        if not r["ours_source"].startswith("raw:"):
+            rec = [json.loads(l) for l in open(os.path.join(ROOT, r["ours_source"])) if l.strip()]
+            v = [float(j[s["ours_key"]]) for j in rec if abs(float(j["D"]) - float(r["D"])) < 1e-9
+                 and abs(float(j.get("kappa", r["kappa"])) - float(r["kappa"])) < 1e-9]
+            bad_ours += not v or abs(v[0] - ours) > 1e-11 * abs(ours)
+        d = ours - pub
+        bad_diff += abs(float(r["diff"]) - d) > 5e-4 * abs(d) + 1e-15
+        bad_within += (r["within"] == "yes") != (abs(d) <= ua)
+        c = by_ref.setdefault(r["published_ref"], [0, 0])
+        c[0] += 1
+        c[1] += r["within"] == "yes"
+    out = [("rows of matter/published_compare.csv", len(rows), 27, 1, []),
+           ("rows of matter/published_values.csv", len(src), 27, 1, []),
+           ("rows whose published side differs from published_values.csv", bad_pub, 0, 1, []),
+           ("rows whose ours differs from the data files", bad_ours, 0, 1, []),
+           ("rows whose diff is not ours minus the published value", bad_diff, 0, 1, []),
+           ("rows whose within is not |diff| <= unc_abs", bad_within, 0, 1, [])]
+    for ref, (n, k) in {"HE97": (3, 3), "HE95a": (3, 2), "HE95b": (2, 0), "HHS96": (5, 3), "AGH12": (14, 1)}.items():
+        c = by_ref.get(ref, [0, 0])
+        out += [(f"{ref} values", c[0], n, 1, []), (f"{ref} within", c[1], k, 1, [])]
+    return out
+
+
+@check
 def echo_shapes():
     """README "What repeats with that period": the first-harmonic power fractions, the deviations from the sinusoid and
     the centre amplitudes of hp/data/echo_shapes.csv (hp/plot_echo.py on stored states of the raw-data repository)"""

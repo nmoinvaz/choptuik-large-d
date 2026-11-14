@@ -235,6 +235,10 @@ one used below.
 | κ = 0: λ (real) | 2.5832752 | | γ = 0.387106 [HE95b] (λ = 2.58327) |
 | κ = 0: oscillatory mode | 0.2586698 ± 3.5022488i | | "unstable via a growing oscillatory mode" [HE95b] |
 
+[published_compare.csv](published_compare.csv) lists these published values, HE97's γ(κ) and §3's AGH12 values
+against ours, with each publication's stated uncertainty and whether ours lies within it
+(`solver/matter/compare_published_matter.py`, checked by `check_numbers.py`).
+
 The symmetry modes come out exact. At D = 4, κ = 1 the collocation gives λ = 0.9999999999 (time translation),
 3×10⁻⁸ (phase) and 2×10⁻⁹ ± 1.1769527294i (target isometries), and the complex-path method gives the time-translation
 root at 0.999999998755.

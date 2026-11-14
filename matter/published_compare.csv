@@ -1,0 +1,28 @@
+model,D,kappa,quantity,published_ref,published,published_unc,unc_abs,unc_kind,convention,locator,ours,ours_source,diff,within
+kappa-model,4,0,gamma,HE97,0.3871,none stated,0.00005,rounding bound (none stated),gamma = 1/lambda_phys,Table 1,0.3871054891228591,raw:I377-mac/path_D4.jsonl,+5.489e-06,yes
+kappa-model,4,1,gamma,HE97,0.2641,none stated,0.00005,rounding bound (none stated),gamma = 1/lambda_phys,Table 1,0.2641065999701451,solver/matter/data/css_gamma_k1.jsonl,+6.600e-06,yes
+kappa-model,4,10,gamma,HE97,0.1469,none stated,0.00005,rounding bound (none stated),gamma = 1/lambda_phys,Table 1,0.14689922223011495,raw:I377-mac/scan_D4.jsonl,-7.778e-07,yes
+free complex scalar,4,0,omega,HE95a,1.9154446,1e-7,1e-7,stated,the phase-rotation frequency,eqs. (13)-(17) and text,1.9154446898931115,solver/matter/data/css_bg_k0.jsonl,+8.989e-08,yes
+free complex scalar,4,0,x_h,HE95a,5.0035380,2e-7,2e-7,stated,x_h = z_2 (the past light cone),eqs. (13)-(17) and text,5.003538252196598,solver/matter/data/css_bg_k0.jsonl,+2.522e-07,no
+free complex scalar,4,0,u(x_h),HE95a,0.39707205,3e-8,3e-8,stated,u at z_2,eqs. (13)-(17) and text,0.3970720443022438,solver/matter/data/css_bg_k0.jsonl,-5.698e-09,yes
+free complex scalar,4,0,gamma,HE95b,0.387111,3e-6,3e-6,stated,gamma = 1/lambda_phys (sigma = -2.58324i +- 0.00002i),v3 text (matter/COMPLEX_CRITICAL.md 5),0.3871054891228591,raw:I377-mac/path_D4.jsonl,-5.511e-06,no
+free complex scalar,4,0,gamma,HE95b,0.387106,none stated,0.0000005,rounding bound (none stated),gamma = 1/lambda_phys,arXiv listing's abstract,0.3871054891228591,raw:I377-mac/path_D4.jsonl,-5.109e-07,no
+axion-dilaton,4,1,omega,HHS96,1.17695272200,2.7e-9,2.7e-9,stated,the phase-rotation frequency,eqs. (4.6a-d) and (6.3),1.1769527241765292,solver/matter/data/css_bg_k1.jsonl,+2.177e-09,yes
+axion-dilaton,4,1,x_h,HHS96,2.60909347510,2.16e-9,2.16e-9,stated,x_h = z_+,eqs. (4.6a-d) and (6.3),2.6090934730269257,solver/matter/data/css_bg_k1.jsonl,-2.073e-09,yes
+axion-dilaton,4,1,|f(0)|,HHS96,0.892555411872,none stated,5e-13,rounding bound (none stated),|f| at the centre,eqs. (4.6a-d) and (6.3),0.8925554115736785,solver/matter/data/css_bg_k1.jsonl,-2.983e-10,no
+axion-dilaton,4,1,|f(x_h)|,HHS96,0.364210875022,none stated,5e-13,rounding bound (none stated),|f| at z_+,eqs. (4.6a-d) and (6.3),0.36421087446303846,solver/matter/data/css_bg_k1.jsonl,-5.590e-10,no
+axion-dilaton,4,1,gamma,HHS96,0.2641066,none stated,0.00000005,rounding bound (none stated),gamma = 1/lambda_phys,text,0.2641065999701451,solver/matter/data/css_gamma_k1.jsonl,-2.985e-11,yes
+axion-dilaton,4,1,omega,AGH12,1.176,third digit of gamma unreliable,0.0005,rounding bound (none stated),the phase-rotation frequency,Tables 1-2,1.1769527241765292,solver/matter/data/css_bg_k1.jsonl,+9.527e-04,no
+axion-dilaton,5,1,omega,AGH12,1.297,third digit of gamma unreliable,0.0005,rounding bound (none stated),the phase-rotation frequency,Tables 1-2,1.3563472388178728,solver/matter/data/css_bg_k1.jsonl,+5.935e-02,no
+axion-dilaton,6,1,omega,AGH12,1.469,third digit of gamma unreliable,0.0005,rounding bound (none stated),the phase-rotation frequency,Tables 1-2,1.512548734570419,solver/matter/data/css_bg_k1.jsonl,+4.355e-02,no
+axion-dilaton,7,1,omega,AGH12,1.610,third digit of gamma unreliable,0.0005,rounding bound (none stated),the phase-rotation frequency,Tables 1-2,1.6429317974544226,solver/matter/data/css_bg_k1.jsonl,+3.293e-02,no
+axion-dilaton,8,1,omega,AGH12,1.721,third digit of gamma unreliable,0.0005,rounding bound (none stated),the phase-rotation frequency,Tables 1-2,1.753067206078116,solver/matter/data/css_bg_k1.jsonl,+3.207e-02,no
+axion-dilaton,9,1,omega,AGH12,1.791,third digit of gamma unreliable,0.0005,rounding bound (none stated),the phase-rotation frequency,Tables 1-2,1.8474971035406313,solver/matter/data/css_bg_k1.jsonl,+5.650e-02,no
+axion-dilaton,10,1,omega,AGH12,1.852,third digit of gamma unreliable,0.0005,rounding bound (none stated),the phase-rotation frequency,Tables 1-2,1.9295309155411846,solver/matter/data/css_bg_k1.jsonl,+7.753e-02,no
+axion-dilaton,4,1,gamma,AGH12,0.261,third digit of gamma unreliable,0.005,third digit unreliable (stated),gamma = 1/Re kappa (radius convention),Tables 1-2,0.2641065999701451,solver/matter/data/css_gamma_k1.jsonl,+3.107e-03,yes
+axion-dilaton,5,1,gamma,AGH12,0.278,third digit of gamma unreliable,0.005,third digit unreliable (stated),gamma = 1/Re kappa (radius convention),Tables 1-2,0.3394388122067218,solver/matter/data/css_gamma_k1.jsonl,+6.144e-02,no
+axion-dilaton,6,1,gamma,AGH12,0.287,third digit of gamma unreliable,0.005,third digit unreliable (stated),gamma = 1/Re kappa (radius convention),Tables 1-2,0.3758114051884244,solver/matter/data/css_gamma_k1.jsonl,+8.881e-02,no
+axion-dilaton,7,1,gamma,AGH12,0.311,third digit of gamma unreliable,0.005,third digit unreliable (stated),gamma = 1/Re kappa (radius convention),Tables 1-2,0.3974654798911639,solver/matter/data/css_gamma_k1.jsonl,+8.647e-02,no
+axion-dilaton,8,1,gamma,AGH12,0.352,third digit of gamma unreliable,0.005,third digit unreliable (stated),gamma = 1/Re kappa (radius convention),Tables 1-2,0.41196440050649974,solver/matter/data/css_gamma_k1.jsonl,+5.996e-02,no
+axion-dilaton,9,1,gamma,AGH12,0.373,third digit of gamma unreliable,0.005,third digit unreliable (stated),gamma = 1/Re kappa (radius convention),Tables 1-2,0.4224313338698901,solver/matter/data/css_gamma_k1.jsonl,+4.943e-02,no
+axion-dilaton,10,1,gamma,AGH12,0.347,third digit of gamma unreliable,0.005,third digit unreliable (stated),gamma = 1/Re kappa (radius convention),Tables 1-2,0.43039252983723636,solver/matter/data/css_gamma_k1.jsonl,+8.339e-02,no
