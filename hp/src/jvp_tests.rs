@@ -144,3 +144,44 @@ fn halpha_control_bitwise_on_rounding_only() {
     assert!(df <= 1e-28 * sf.max(1.0) && dj <= 1e-28 * sj.max(1.0), "HALPHA_ON differs by more than rounding");
     assert!(d64 <= 1e-12 * s64, "HALPHA_ON: the f64 Jacobian differs by more than rounding ({d64:e})");
 }
+
+/// the residual and the double-double Jacobian of the synthetic context at horizon order ks, its last term weighted w
+fn with_ks(ks: usize, w: f64) -> (Vec<f64>, Vec<f64>, Vec<f64>, Vec<f64>) {
+    let (mut ctx, zh, zl) = synth();
+    ctx.ks = ks;
+    ctx.ks_w = w;
+    let (fh, fl) = residual(&ctx, &zh, &zl, false).unwrap();
+    let (jh, jl, _) = jacobian(&ctx, &zh, &zl, false).unwrap();
+    (fh, fl, jh, jl)
+}
+
+/// Ctx::ks_w (#744): w = 0 at order K is order K - 1 bit for bit, w = 1 is order K bit for bit, and w = 1/2 lies halfway
+/// between them to rounding, in the residual and the double-double Jacobian. The order-K term must change the results,
+/// or the test shows nothing (K = 12 on the synthetic context; at its ks = 30 the term is below double-double).
+#[test]
+fn ksw_homotopy_ends_and_middle() {
+    const K: usize = 12;
+    let lower = with_ks(K - 1, 1.0);
+    let upper = with_ks(K, 1.0);
+    let w0 = with_ks(K, 0.0);
+    assert!(w0.0 == lower.0 && w0.1 == lower.1, "w = 0: the residual is not order K - 1's");
+    assert!(w0.2 == lower.2 && w0.3 == lower.3, "w = 0: the Jacobian is not order K - 1's");
+    let (du, su) = dd_diff(&upper.0, &upper.1, &lower.0, &lower.1);
+    let (dj, sj) = dd_diff(&upper.2, &upper.3, &lower.2, &lower.3);
+    println!("order {K} against {}: residual {du:.2e} (largest entry {su:.2e}), Jacobian {dj:.2e} ({sj:.2e})", K - 1);
+    assert!(du > 0.0 && dj > 0.0, "the order-K term changes nothing, so the homotopy is not tested");
+    let half = with_ks(K, 0.5);
+    let mid = |a: &[f64], al: &[f64], b: &[f64], bl: &[f64]| -> (Vec<f64>, Vec<f64>) {
+        a.iter().zip(al).zip(b.iter().zip(bl)).map(|((&ah, &alo), (&bh, &blo))| {
+            let m = (DD { hi: ah, lo: alo } + DD { hi: bh, lo: blo }).mul_pwr2(0.5);
+            (m.hi, m.lo)
+        }).unzip()
+    };
+    let (mh, ml) = mid(&upper.0, &upper.1, &lower.0, &lower.1);
+    let (jmh, jml) = mid(&upper.2, &upper.3, &lower.2, &lower.3);
+    let (dm, _) = dd_diff(&half.0, &half.1, &mh, &ml);
+    let (dmj, _) = dd_diff(&half.2, &half.3, &jmh, &jml);
+    println!("w = 1/2 against the midpoint: residual {dm:.2e}, Jacobian {dmj:.2e}");
+    assert!(dm <= 1e-6 * du && dmj <= 1e-6 * dj, "w = 1/2 is not halfway between the two orders");
+    assert!(dm < du && dmj < dj, "w = 1/2 equals an end");
+}

@@ -57,6 +57,8 @@ trait Api: Send + Sync {
     fn jvp(&mut self, zh: &[f64], zl: &[f64], vh: &[f64], vl: &[f64], mutate: u8, cut: bool) -> Result<(Vec<f64>, Vec<f64>, Vec<f64>, Vec<f64>), String>;
     /// Ctx::horizon_alpha (model::HALPHA_*)
     fn set_horizon_alpha(&mut self, mode: u8);
+    /// Ctx::ks_w, the weight of the horizon series' order-ks term
+    fn set_ks_w(&mut self, w: f64);
     /// model::residual_in at `Quad` at the four-part state z, F in four parts; mutate: Ctx::mutate for this call
     fn residual_q(&mut self, z: [&[f64]; 4], mutate: u8) -> Result<Q4, String>;
     /// model::jacobian_in at `Quad`: (four parts, ld)
@@ -277,6 +279,9 @@ impl<const B: usize> Api for Ctx<B> {
     fn set_horizon_alpha(&mut self, mode: u8) {
         self.horizon_alpha = mode;
     }
+    fn set_ks_w(&mut self, w: f64) {
+        self.ks_w = w;
+    }
     fn residual_q(&mut self, z: [&[f64]; 4], mutate: u8) -> Result<Q4, String> {
         qd_sizes!(self, mutate, |c| model::residual_in::<Quad, _>(c, &z, true).map(|f| std::array::from_fn(|q| f.iter().map(|v| v.x[q]).collect())))
     }
@@ -494,6 +499,7 @@ macro_rules! make_ctx {
                 mutate: 0,
                 f64_dd: 0,
                 horizon_alpha: 0,
+                ks_w: 1.0,
             }) as Box<dyn Api>, )*
             _ => return Err(PyValueError::new_err("M must be one of 8, 16, 32, 40, 48, 64, 80, 96, 128, 160, 192, 256, 320, 384, 512")),
         }
@@ -592,6 +598,20 @@ impl Solver {
         self.qlu = None;
         self.olu = None;
         self.api.set_horizon_alpha(mode);
+        Ok(())
+    }
+
+    /// The weight w of the horizon series' highest term, order ks, in its sum (Ctx::ks_w): 1 (the default) as before,
+    /// bit for bit; 0 the sum to order ks - 1; between, the homotopy from one order to the next (#744). Drops the
+    /// stored LU.
+    fn set_ks_w(&mut self, w: f64) -> PyResult<()> {
+        if !(0.0..=1.0).contains(&w) {
+            return Err(PyValueError::new_err(format!("ks_w must lie in [0, 1], not {w}")));
+        }
+        self.lu = None;
+        self.qlu = None;
+        self.olu = None;
+        self.api.set_ks_w(w);
         Ok(())
     }
 

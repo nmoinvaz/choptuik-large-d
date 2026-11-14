@@ -83,6 +83,11 @@ pub struct Ctx<const B: usize> {
     /// HALPHA_MUT, the control, carries alpha but forms them from 1 + alpha as before (the cancellation put back).
     /// All lanes read it.
     pub horizon_alpha: u8,
+    /// Weight of the horizon series' highest term (order ks) in its sum (`horizon_state`): 1, the default, sums it whole
+    /// and skips the multiplication, so every result is as before bit for bit; w in [0, 1) is the homotopy from order
+    /// ks - 1 (w = 0, that sum bit for bit) to order ks (#744). It applies only when the series reaches ks. All lanes
+    /// read it, tangents included.
+    pub ks_w: f64,
 }
 
 /// `Ctx::f64_dd`: the horizon series' periodic solves (`psolve`) in double-double for the f64 lanes, value and
@@ -912,7 +917,13 @@ pub fn horizon_series<T: Lane, const B: usize>(ctx: &Ctx<B>, m0: &Fl<T, B>, a0: 
 }
 
 pub fn horizon_state<T: Lane, const B: usize>(ctx: &Ctx<B>, m0: &Fl<T, B>, a0: &Fl<T, B>, omega: T, prep: &HPrep) -> State<T, B> {
-    let s = horizon_series(ctx, m0, a0, omega, prep);
+    let mut s = horizon_series(ctx, m0, a0, omega, prep);
+    // Ctx::ks_w: the order-ks term weighted, the homotopy in the horizon order (#744), where the series reached ks
+    if ctx.ks_w != 1.0 && s[0].len() == ctx.ks + 1 {
+        for q in s.iter_mut() {
+            q[ctx.ks] = q[ctx.ks].mulf(ctx.ks_w);
+        }
+    }
     let u = ctx.u0().mul_pwr2(1.0 / series_scale(ctx.u0().hi));
     [horner(&s[0], u), horner(&s[1], u), horner(&s[2], u), horner(&s[3], u)]
 }
@@ -1324,7 +1335,7 @@ pub(crate) mod ctxfile {
         let l = v[i] as usize;
         let zh = v[i + 1..i + 1 + l].to_vec();
         let zl = v[i + 1 + l..i + 1 + 2 * l].to_vec();
-        let ctx = Ctx::<B> { n, d, phase, nodes, segs, kt, kc, ks, freeze: None, match_node: k - 1, lam: DD::ZERO, mutate: 0, f64_dd: 0, horizon_alpha: 0 };
+        let ctx = Ctx::<B> { n, d, phase, nodes, segs, kt, kc, ks, freeze: None, match_node: k - 1, lam: DD::ZERO, mutate: 0, f64_dd: 0, horizon_alpha: 0, ks_w: 1.0 };
         assert_eq!(ctx.len(), l);
         (ctx, zh, zl)
     }

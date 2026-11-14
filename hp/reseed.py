@@ -90,6 +90,7 @@ class Reseeder:
         self.M, self.nodes = int(meta["M"]), list(meta["nodes"])
         self.K = len(self.nodes)
         self.kt, self.kc, self.ks = meta.get("kt", 36), meta.get("kc", 146), meta.get("ks", 130)
+        self.ks_w = float(meta.get("ks_w", 1.0))   # the weight of the horizon series' order-ks term (#744)
         self.D, self.threads, self.levels, self.rows = mp.mpf(D), threads, levels, rows
         self.plan_tol, self.hmax, self.check_tol = plan_tol, hmax, check_tol
         self.check_kt = check_kt or self.kt + 12
@@ -132,7 +133,7 @@ class Reseeder:
         key = (tuple(nodes), kt or self.kt)
         if key not in self._aux:
             s = make_solver(self.D, self.M, nodes=list(nodes), kt=kt or self.kt, kc=self.kc, ks=self.ks, threads=self.threads,
-                            kfreeze=None, horizon_alpha=self.horizon_alpha)
+                            kfreeze=None, horizon_alpha=self.horizon_alpha, ks_w=self.ks_w)
             s.set_segs([[nodes[i], nodes[i + 1]] for i in range(len(nodes) - 1)])
             self._aux[key] = s
         return self._aux[key]
