@@ -14,7 +14,7 @@ status words are AGENTS.md's.
 
 | question | answer | status |
 |---|---|---|
-| which factor is tied to the weak directions | the fast mode, through the horizon series' truncation at ks = 130 | numerical evidence from a linear model (section 4); a conjecture for the chain until #696 and the test of 4.5 |
+| which factor is tied to the weak directions | the fast mode, through the horizon series' truncation at ks = 130 | numerical evidence from a linear model (section 4); for the chain, order 131 moves Δ by 3.8×10⁻¹³ at D 245.14 and order 132 does not converge (4.6) |
 | can the mass mode's G set the weak σ | no: they follow e_Δᵀ J⁻¹, which no change of the horizon data moves | proved (section 2) given the rows unchanged; the identity checked symbolically (S6) |
 | can G be factored out | yes, exactly: B = 1/a² obeys a linear equation, and its datum moves to the last node | checked symbolically (S1–S5) |
 | the mass mode's gain before and after | x_K^−(n−1) e^(F²(1−x_K²)/n + O(n⁻²)) before; 1 after, for every n and x_K | checked symbolically (S2, S5) |
@@ -29,8 +29,8 @@ The linear model reproduces three measurements with no fitted parameter (M4):
 | change of ln σ₃ for the last node 0.70 → 0.72 at D 242.36 (#537) | −8.96 | −8.92 (μ = 1), −8.93 (μ = 3) | −13.95 |
 
 The order of work this suggests:
-1. #696 (running) and the σ test of 4.5, which need no change to hp's code. If they support the truncation, the chain
-   runs at ks ≈ 1.9 Re s.
+1. The σ test of 4.5, and a corrector that converges past ks 131 (4.6: #696 stopped at 132). If they support the
+   truncation, the chain runs at ks ≈ 1.9 Re s.
 2. The mass mode factored at the last node (section 3), for the strong side: the ε·G floors, the re-seed's polish and
    the corrector's quadratic jump. It needs an inner solve on the horizon segment, whose cost stage 1 of section 5
    measures.
@@ -305,7 +305,31 @@ mean keeping its shadow in the discrete problem, in one of two ways.
 - **Refutes** it: ln σ₃ changes by less than 1 between ks = 130 and 250.
 - **Control.** The same at a state whose Re s lies far below 130 (D 60): ln σ changes by less than 0.05.
 
-## 5. Plan for hp's model and the planted tests
+### 4.6 Raising ks at D 245.14 (#696, #743, #744)
+
+`anm_run.py --ks K` re-converged #603's state at D 245.1366 with the horizon series summed to order K (win2; raw
+`I696-win2/` f39f3177, `I743-win2/` e50463e4, `I744-win2/` 2d44081d). Δ is quoted only from converged states.
+
+| run | ks, plan | Newton steps, final max\|F\| | Δ − Δ(chain state) |
+|---|---|---|---|
+| r130 | 130, stored | 1, 2.0×10⁻⁶⁷ | 0 |
+| r130k | 130, planned again | 5, 3.6×10⁻⁸⁶ | +2.374×10⁻¹⁴ |
+| r131k | 131, planned again | 9, 1.2×10⁻⁸⁵ | +4.062×10⁻¹³ |
+| s132, s132e | 132, from r131k's base, without and with `--elim_switch 0` | 20, 4.1×10⁻²⁴ and 4.5×10⁻²⁴ | not converged |
+| r300 | 300, stored | stopped at its start, 1.4×10⁻¹⁷ | not converged |
+
+**The order-131 term moves Δ by 3.8×10⁻¹³ at D 245.14**, sixteen times the plan's own effect (2.4×10⁻¹⁴). Order 132
+does not converge: its first full step reaches max|F| 1.18×10²⁰ (|dw| 5×10³⁰), and the corrector never recovers from
+it. The failed projections counted at that step all sit at trials that had already blown up, so they are a symptom
+(#743). At D 253.80 even the re-planned ks 130 does not converge, so no ladder ran there.
+
+The order-132 term weighted by w (`--ks 132 --ks_w W`, branch `wip/i744`, each rung from the last's base) converges in
+5 steps at w = 1/16, 1/8 and 1/4, where Δ − Δ(w = 0) is +3.302×10⁻¹³, +6.452×10⁻¹³ and +9.7×10⁻¹³. At w = 1/2 it
+stops at the 20-step cap at max|F| 2.6×10⁻²⁴. Its control holds (w = 0 equals ks 131 to the bit), and the jump from
+w = 0 to 1 reproduces s132's first step. So the climb gets further than the jump, and by w = 1/4 order 132 has already
+moved Δ by 2.5 times order 131's whole term. So the horizon series' truncation moves Δ at D 245 by 10⁻¹² within a
+quarter of one order (numerical evidence, one plan and one layout), and where the corrector's failure begins between w = 1/4 and 1/2
+is the next measurement.
 
 hp/src is not changed by this task.
 

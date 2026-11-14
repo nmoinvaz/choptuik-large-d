@@ -333,8 +333,11 @@ So by the issue's rule the coupling is this term, and the cubic with T − 3S ha
   B from z0's LU), adding the first move's rest changes the weak residual at c* from 0.00444 to 0.00409 of |Ba| at REF,
   and from 0.00682 to 0.00620 at ACC; w0 and w(0) give the same. Only w(c*) moves it, to 0.176 and 0.208, by the S
   term. `hp/weak_corrector.py` forms the U and B of its split after newton_od has run (lines 128–129), from the LU of
-  newton_od's last trial point, not z0's. That is the likely source of #499's 0.517 and 0.384 (*inferred* from the
-  code, not rerun).
+  newton_od's last trial point, not z0's. #675 reran #499's split both ways (dh610; raw `I675-dh610/` 67580cb6). Formed
+  after newton_od (`--split_at=after`, the control), it reproduces #499's 0.517 at z1 and 0.384 at z1 + dz, and every
+  other log line to Δ's 25 digits. Formed from z0's LU (`--split_at=start`, now the default), it gives 0.00409 at z1,
+  this section's figure, and 0.147 at z1 + dz. So the frame was the source of 0.517, and in z0's frame the weak
+  residual still rises at z1 + dz, to 0.147 of |Ba| (against 0.176 for w(c*) above).
 - **The S control fails** at REF (2.72×10⁻² against 10⁻²) and ACC (3.55×10⁻²). Section 5.4 gives its diagnosis.
 - **This task's own protocol** changed four times after real data, each recorded with its cause (section 3): the
   step of w_jl twice (h² truncation amplified by J⁻¹), and the chord's stall rule twice (a stall test that cut a

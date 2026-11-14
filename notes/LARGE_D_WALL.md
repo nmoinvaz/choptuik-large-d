@@ -424,6 +424,24 @@ renode controls fail as they must. But the base polish takes a first step of |dz
 layouts. The start and the first step have the pattern #688 read at 0.975, a small gap at the last node and a large
 step along one weak direction, which is not yet measured at these starts.
 
+#760 (dh370; raw `I760-dh370/` f8f6d7fc) built the series at three of #603's bases from D 256.57 to 258.78. Each equals
+#603's record in all 25 norms and both pivots, and a neighbouring base's record matches none. The near track holds as a
+Padé pole of Δ at D₀ 256.57 and 257.69, with Im D* within 0.07 of 2.79, and is gone at 258.78. Track A is not among
+Δ's stable poles at any of the three bases.
+
+| base D₀ | root test | Δ's nearest Padé pole | the near track's pole | rows' nearest pole (median) |
+|---|---|---|---|---|
+| 256.5686 | 3.604 | 258.57 + 2.82i | the same | 258.53 + 2.84i |
+| 257.6853 | 2.431 | 259.61 + 1.18i | 258.57 + 2.86i | 259.27 + 1.98i |
+| 258.7829 | 1.220 | 259.96 + 0.00i | none within 0.4 | 259.95 + 0.00i, all 24 rows |
+
+**From D 258.78 the series' nearest singularity lies on the real axis, at D* ≈ 259.95**, 1.17 from the base and 0.4
+ahead of the chain's front at 259.52. The root test, 1.220, is 4.5% above that distance (read after the fact; the bars
+fixed before the run were on the near track and fail at 257.69 and 258.78). A second real pole, at 260.17, and complex
+ones near 259.5–259.8 + 1.2–1.6i are seen from the same base. A real singularity of Δ(D) would end the real branch or
+turn it in a fold. The series at bases past D 259 test its place (#776), and its exponent decides which (#782). This is
+numerical evidence from one layout and one plan per base.
+
 ### The refusals are the corrector's
 
 The corrector's first Newton move is the prediction's error to first order. At the accepted steps it equals the
