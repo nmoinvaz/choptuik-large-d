@@ -325,6 +325,16 @@ continuous along the whole branch. Not covered: growth rates above the boxes (|I
 4.5–6), and dimensions other than D = 4–8, 10, 20, 40. The collocation finds none at D ≤ 8. The D = ∞ question
 (is λ = 2 the only unstable mode of the inner problem?) is open here, as it is for the real scalar (GAMMA.md §6).
 
+**Recounted with starting samples spaced by edge length (#809).** The counts above started each edge from 12 samples,
+which can miss whole turns of the phase on long edges (#770). Recounted from one sample per 0.25 of edge (raw
+`I809-mac/`), every count above recounts to its number but one, and the four boxes said to hold exactly λ = 1 and
+λ_phys, counted directly, hold 2 each. The exception is the D = 4 box 0.2 < Re λ < 5, 1.5 < Im λ < 2.5, which counts 4,
+not 3, with 12 starting samples per edge as well. Its fourth zero, 4.0372394 + 1.5145361i, lies 0.0145 inside the
+bottom edge and moves by 2.0×10⁻² at R = 0.6 x_h, so it is an artefact on the resonance line like the others, and with
+the bottom edge at Im λ = 1.52 the box counts 3. The quoted 3 has no record, and its source is not reproduced.
+`css_count.py selftest` plants a box with a 12-long edge that 12 starting samples per edge undercount (−5 for 3) and the
+new spacing counts right.
+
 ## 7. Extrapolation to D = ∞
 
 **γ.** Fits of λ in powers of 1/n (`css_fit.py`, points D = 4–80). Free fits of λ∞, D ≥ Dmin, K powers of 1/n:
@@ -536,8 +546,8 @@ All in `solver/matter/`; run single-process under `nice -n 10`. Times are for on
 | `css_lateral.py cont KAPPA D0 OMEGA F0 DLIST [RFRAC] [OUT] [STEP]` | the background by complex-path shooting, continued in D; horizon data from Cauchy integrals → `data/css_bg_k*.jsonl` | 5–20 s per D |
 | `css_pert.py D KAPPA OMEGA F0 LAM` / `count …` | the growth rate as a zero of det M(λ); winding number of det M in a box | 10 s per root; minutes per box |
 | `css_gamma.py BG OUT` | λ(D) and γ(D) for every background point → `data/css_gamma_k1.jsonl` | 1 min per D |
-| `css_count.py BG OUT D:RE0:RE1:IM[:RFRAC] …` | winding number of det M in a box, for a given circle radius (§6) → `data/css_count_k1.jsonl` | 20–60 min per box |
-| `css_locate.py BG OUT D RE0 RE1 IM0 IM1` | the zeros of det M in a box (winding number and their sum), refined, and recomputed with a second radius: growth rate or artefact (§6) → `data/css_locate_k1.jsonl` | 20–40 min |
+| `css_count.py BG OUT D:RE0:RE1:IM[:RFRAC] … [--K=N]` / `selftest` | winding number of det M in a box, for a given circle radius, from one starting sample per 0.25 of edge (`--K=N`: N per edge); the planted long-edge box (§6) → `data/css_count_k1.jsonl` | 20–60 min per box (0.2–4.1 min on the Mac's M5, #809's `queue1.log`) |
+| `css_locate.py BG OUT D RE0 RE1 IM0 IM1 [--K=N]` | the zeros of det M in a box (winding number and their sum), refined, and recomputed with a second radius: growth rate or artefact (§6) → `data/css_locate_k1.jsonl` | 20–40 min |
 | `css_inner_pde.py` | sympy: the autonomous D = ∞ inner PDE reduces under the CSS ansatz to the inner ODE (§8) | 1 min |
 | `css_momcheck.py [KAPPA] [DLIST]` | the linearized momentum constraint on the collocation eigenvectors (§1) | 1 min |
 | `css_mucheck.py BG DLIST` | the horizon exponent μ against the scaling of the jump with R (§3) | 1 min |
