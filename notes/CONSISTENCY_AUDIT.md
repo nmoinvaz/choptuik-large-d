@@ -1138,3 +1138,57 @@ The other three bars of finding 15 are its diff, in main since before eaa4f460. 
 3. **The lint in the routine.** What: name `python3 readme_bars.py` beside `check_numbers.py --selftest` in AGENTS.md's
    "Quoted numbers" rule, once the text above is applied. Why: a new ± without a kind would otherwise pass unseen.
    Acceptance: `readme_bars.py` exits 0 on main after the edit, and its `--selftest` exits 1. Depends on: #662.
+
+## Follow-up #755
+
+Two checks of `check_numbers.py` tie the bars of follow-up #662 to scripts. Both pass on main 22254bb7, and `--selftest`
+rejects a one-unit shift of each of their 15 items (1573 of 1573 in all).
+
+| check | README | items | source |
+|---|---|---|---|
+| `f64_dinf_range` | 475 | 24 fit choices, 19 kept, ends 1.643882 and 1.644027, centre 1.64395, half-width rounded up 0.00008, and 1.64395 ± 0.00008 contains the range | `solver/final_fit.py --range` (`limit_range`) |
+| `d5_two_codes` | 643–648 | f64 3.221701945 and its estimate 7×10⁻¹¹, double-double M = 48 and 64 and their 10⁻¹¹, the codes' gap 2×10⁻¹⁰, the f64 value 1.5×10⁻¹⁰ above M = 64, twice its estimate | `solver/data_all.py` `low_d()[5.0]`, `hp/compare/dd_D5.log` |
+
+The D = 5 check fails on the old text "which agree to 10⁻¹¹". From `solver/data`:
+
+```sh
+python3 ../final_fit.py --range               # 19 of 24 fits ... c0 1.643882 .. 1.644027, centre 1.643955, half-width 0.000073
+python3 ../final_fit.py --plant               # every plant passes, exit 0
+python3 ../final_fit.py --plant --mutate      # every plant fails, exit 1
+python3 ../final_fit.py --plant --seeds 40    # each plant: 14 of 40 seeds pass, c0 inside 32
+```
+
+### The plant
+
+`final_fit.py --plant` runs synthetic Δ(D) with a known limit through `limit_range`, on the real D grid with the real
+weights. The base is the stored formula (P8/Q2 in 1/(D − 2), limit a₀ = 1.6438975180). P2 adds a pole at D = −8.3 and
+P3 a log branch point at D = −20, as T2 and T5 of `hp/planted_dinf.py`. The noise is Gaussian at 0.8 times the weights'
+σ, where the real fits' χ²/dof is 0.63. The script's docstring fixed the plants and the pass criteria before the first
+run.
+
+| plant | fits kept | range | centre − a₀ | verdict |
+|---|---|---|---|---|
+| P1, the formula | 19 | 1.643896–1.644031 | +6.6×10⁻⁵ | pass |
+| P2, pole | 18 | 1.643821–1.643944 | −1.5×10⁻⁵ | pass |
+| P3, log branch | 19 | 1.643714–1.643960 | −6.1×10⁻⁵ | pass |
+| control `--mutate`, +0.00024 on every point | 18–19 | | +1.8 to +3.1×10⁻⁴ | all fail |
+
+**The plants pass at their fixed seeds by luck of the noise.** Over seeds 1–40 each plant passes 14 times, a₀ lies
+inside the range 32 times, and one seed keeps no fit. The centre moves by −2.85×10⁻⁴ to +3.43×10⁻⁴ about a₀ (rms
+1.5×10⁻⁴), and the median half-width is 1.4×10⁻⁴. P2 and P3 give P1's numbers to three digits, since the fits absorb
+their structure and the noise sets the spread. So ± 0.00008 is a spread over fit choices for one draw of the data, not a
+bound. White noise at the weights' level would move the centre by about twice it. The real range is half as wide as the
+plants' median, so the real errors are smaller or more correlated than this noise model. The double-double Δ∞ =
+1.643893746 lies 6.1×10⁻⁵ below the f64 centre, inside the range.
+
+### Discrepancies
+
+- **README:475 calls 0.00008 the half-width of the range.** The half-width is 7.28×10⁻⁵, which rounds to 0.00007.
+  0.00008 is that half-width rounded up, and only the rounded-up bar about 1.64395 contains the range, since 1.64395 +
+  0.00007 = 1.64402 lies below 1.644027. The check tests the rounded-up half-width and the containment. One resolution
+  is "the centre and half-width, rounded up, of the range".
+- **README:647 says the f64 value lies 1.5×10⁻¹⁰ above the M = 48 and 64 values.** It is 1.55×10⁻¹⁰ above M = 64 and
+  1.63×10⁻¹⁰ above M = 48. The check uses M = 64. One resolution is "lies 1.5×10⁻¹⁰ above the M = 64 value".
+
+Either change moves a text that `check_numbers.py` quotes (`f64_dinf_range`, `d5_two_codes`), so the check's text
+follows the README.
