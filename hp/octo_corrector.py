@@ -479,12 +479,13 @@ class ElimO:
     (None: never), as ElimQ. The switch test is the pinned quad-double residual of the rounding (PinnedQ), far above
     its floor there."""
 
-    def __init__(self, so, rs, switch=1e-15, start_F=1e-6):
+    def __init__(self, so, rs, switch=1e-15, start_F=1e-6, log=False):
         from pinning import PinnedQ
         self.so, self.rs, self.switch, self.start_F = so, rs, switch, start_F
         self.sq = PinnedQ(so.s, so.ch, so.cl)
         self.counts = dict(u0=0, u0q=0, ladder=0, failed=0, skipped=0)
         self.first = True
+        self.log = log                  # log=True prints one line per failed projection (reseed.why_failed, #743)
 
     def __getattr__(self, name):
         return getattr(self.so, name)
@@ -492,7 +493,7 @@ class ElimO:
     def project(self, z):
         """z (eight parts) projected when its pinned max |F| exceeds switch (the point ElimO's residual is that of),
         else z; counted"""
-        from reseed import StartNotProjected
+        from reseed import StartNotProjected, why_failed
         first, self.first = self.first, False
         z = o8(z)
         z4 = q4_of_o(z)
@@ -502,6 +503,9 @@ class ElimO:
             return z
         zp, how = self.rs.project(z4)
         self.counts[how] += 1
+        if how == "failed" and self.log:
+            print(f"      projection failed ({self.counts['failed']}): "
+                  + why_failed(nf, getattr(self.rs, "last_project", None)), flush=True)
         if how == "failed" and first and self.start_F is not None and nf > self.start_F:
             raise StartNotProjected(dict(self.counts))
         return z if how == "failed" else with_horizon(z, zp, self.rs)

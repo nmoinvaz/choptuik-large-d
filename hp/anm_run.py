@@ -116,6 +116,9 @@ ladder's data as before (#693: past D ~ 249 the ladder's double-double data put 
 which for qd needs --reseed_q 1 (a double-double projection holds every point at its floor). Below the
 switch a projected iterate's full step goes unprojected, keeps the horizon rows' second-order term and is refused, which
 made the chain crawl at λ = 1/2 past D 251 (#700, notes/CRAWL.md).
+--log_proj 1 prints one line per failed projection of the corrector: the point's pinned max|F| and each stage of
+Reseeder.project, the u0 rung, its quad-double polish and the ladder's last rung (reseed.why_failed, #743). It only
+prints. The lines are numbered, and the last one's number equals the run's printed count of failed projections.
 --ks K sums the horizon series to order K instead of the state's own ks (130 on the chain), and saves it with the
 states (#696). The unknowns are the same, so a state converged at one ks starts at another with |F| of about the
 series' terms between the two orders. A changed ks plans the base again (a stored plan stalled the polish), so its
@@ -301,6 +304,7 @@ def main():
     opt.update(save_jet=0)              # --save_jet 1: each base's series saved; 2: saved, then stop (#634)
     opt.update(ks=0)                    # --ks K: the horizon series' order instead of the state's (#696)
     opt.update(elim_switch=1e-15)       # --elim_switch S: ElimO projects a point whose pinned qd |F| exceeds S (#700)
+    opt.update(log_proj=0)              # --log_proj 1: a line per failed projection, with each stage's residuals (#743)
     for k in list(opt):
         f = "--" + k
         if f in args:
@@ -353,7 +357,7 @@ def main():
             # --corrector od: the octo-double Newton (hp/octo_corrector.py), with --reseed 2 inside ElimO
             so = PinnedO(spx.s, spx.ch, spx.cl, c8=spx.c8)
             if elim.get("rs") is not None:
-                so = ElimO(so, elim["rs"], switch=opt["elim_switch"])
+                so = ElimO(so, elim["rs"], switch=opt["elim_switch"], log=bool(opt["log_proj"]))
             z0 = z8_start if z8_start is not None else o8_of_q(z4_start if z4_start is not None else qparts(ph, pl))
             try:
                 z8, hist, conv = newton_od(so, z0, tol=opt["tol_od"], it_max=opt["qd_it"], verbose=True, junk_w=opt["od_junk"],
@@ -381,7 +385,7 @@ def main():
             sq = PinnedQ(spx.s, spx.ch, spx.cl)
             if elim.get("rs") is not None:
                 # --reseed 2: the corrector on the system with the horizon data eliminated (hp/reseed.py ElimQ)
-                sq = ElimQ(sq, elim["rs"], switch=opt["elim_switch"])
+                sq = ElimQ(sq, elim["rs"], switch=opt["elim_switch"], log=bool(opt["log_proj"]))
             z0 = z4_start if z4_start is not None else qparts(ph, pl)
             try:
                 z4, hist, conv = newton_qd(sq, z0, tol=opt["tol_qd"], it_max=opt["qd_it"], w=opt["qd_w"], verbose=True)

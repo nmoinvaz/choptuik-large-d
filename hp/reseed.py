@@ -15,6 +15,7 @@ state there (the node itself at u0), and its equations are the m and a rows of t
     python3 reseed.py checkq PRED.npz [--threads 4] [--legacy 1] [--rule136 1] [--sweeps 1]
     python3 reseed.py truthq STATE.npz [--threads 4] [--sweeps 1] [--delta 1e-32] [--seed 1]
     python3 reseed.py checkstart PRED.npz [--threads 4] [--start_F 1e-6] [--budget 900]
+    python3 reseed.py projlog [--mutate=silent|stage]
 
 `check` is the unit check and the stepper check (notes/RESEED.md 3.1, 3.2): the converged state's own node re-seeded
 from horizon data off by delta_h (relative, random signs) must return the state's horizon data to the floor of 3.1,
@@ -26,7 +27,8 @@ the quad-double polish and must converge; --legacy 1, the earlier polish rule, m
 short (its docstring), and --sweeps 1 past D 210. `truthq` plants an error in a converged state's horizon data and
 the re-seed must remove it (its docstring). `checkstart` runs the corrector on a stored prediction after its re-seed
 and must end within a budget; --start_F 0 must make it fail on a prediction whose start projection fails (its
-docstring).
+docstring). `projlog` checks the log line of a failed projection (`anm_run.py --log_proj 1`, #743) on stubs, and its
+mutations silent and stage must make it fail.
 """
 import json
 import os
@@ -587,10 +589,14 @@ class Reseeder:
         nh = zh[o["node"](self.K - 1):o["node"](self.K - 1) + 4 * M]
         nl = zl[o["node"](self.K - 1):o["node"](self.K - 1) + 4 * M]
         dh, dl, hist, conv = self.invert(u0, zh, zl, np.array(nh), np.array(nl), np.array(zh[sl_]), np.array(zl[sl_]))
+        # last_project: what each stage of this call did, for the log of a failed projection (#743); no effect on z'
+        self.last_project = lp = dict(u0=dict(conv=bool(conv), its=len(hist) - 1, R0=hist[0]["R"], R=hist[-1]["R"],
+                                              finite=bool(np.all(np.isfinite(dh)))))
         how = "u0"
         if self.qd and len(z) == 4 and np.all(np.isfinite(dh)):
             # the double-double u0 rung as the start (converged or at its floor), then the quad-double polish
             d4, hq, cq = self.invert_q(z, (dh, dl, np.zeros(2 * M), np.zeros(2 * M)))
+            lp["u0q"] = dict(conv=bool(cq), its=len(hq) - 1, R0=hq[0]["R"], R=hq[-1]["R"])
             if cq:
                 out = [np.array(p, dtype=float) for p in z]
                 for q in range(4):
@@ -599,6 +605,9 @@ class Reseeder:
             conv = False
         if not conv:
             zr, diag = self.reseed(z)
+            last = {k: v for k, v in (diag["rungs"][-1] if diag["rungs"] else {}).items() if k != "hist"}
+            lp["ladder"] = dict(ok=bool(diag["ok"]), rungs=len(diag["rungs"]), dropped=list(diag.get("dropped", [])),
+                                last=last)
             if not diag["ok"]:
                 return tuple(np.ascontiguousarray(np.asarray(p, dtype=float)) for p in z), "failed"
             return tuple(np.ascontiguousarray(np.asarray(p, dtype=float)) for p in zr), "ladder"
@@ -607,6 +616,30 @@ class Reseeder:
         for p in out[2:]:
             p[sl_] = 0.0
         return tuple(np.ascontiguousarray(p) for p in out), how
+
+
+def why_failed(nf, lp):
+    """one line on a failed projection: the point's pinned max |F| nf and each stage of Reseeder.project (lp, its
+    last_project), so that the stage that failed and its residuals can be read (#743)"""
+    if not lp:
+        return f"point max|F| {nf:.2e}; no stage record"
+
+    def stage(d):
+        return f"{d['its']} its, |R| {d['R0']:.2e} -> {d['R']:.2e}, {'converged' if d['conv'] else 'NOT converged'}"
+    out = [f"point max|F| {nf:.2e}", "u0 rung " + stage(lp["u0"]) + ("" if lp["u0"]["finite"] else ", data not finite")]
+    if "u0q" in lp:
+        out.append("u0 quad-double " + stage(lp["u0q"]))
+    if "ladder" in lp:
+        lad, r = lp["ladder"], lp["ladder"]["last"]
+        if r.get("finite") is False:
+            at = f"rung u {r['u']:.6f}: target not finite"
+        elif r:
+            at = f"rung u {r['u']:.6f}{' quad-double' if r.get('qd') else ''} " + stage(r)
+        else:
+            at = "no rung"
+        out.append(f"ladder {'ok' if lad['ok'] else 'FAILED'} after {lad['rungs']} rungs, last {at}"
+                   + (f", dropped {lad['dropped']}" if lad["dropped"] else ""))
+    return "; ".join(out)
 
 
 class StartNotProjected(Exception):
@@ -625,10 +658,11 @@ class ElimQ:
     StartNotProjected (None: never); no such attempt of the chain logs to D 188 converged (notes/QUAD_DOUBLE.md 13.28).
     """
 
-    def __init__(self, sq, rs, switch=1e-15, start_F=1e-6):
+    def __init__(self, sq, rs, switch=1e-15, start_F=1e-6, log=False):
         self.sq, self.rs, self.switch, self.start_F = sq, rs, switch, start_F
         self.counts = dict(u0=0, u0q=0, ladder=0, failed=0, skipped=0)
         self.first = True
+        self.log = log                  # log=True prints one line per failed projection (why_failed, #743)
 
     def __getattr__(self, name):
         return getattr(self.sq, name)
@@ -641,6 +675,9 @@ class ElimQ:
             return z
         zp, how = self.rs.project(z)
         self.counts[how] += 1
+        if how == "failed" and self.log:
+            print(f"      projection failed ({self.counts['failed']}): "
+                  + why_failed(nf, getattr(self.rs, "last_project", None)), flush=True)
         if how == "failed" and first and self.start_F is not None and nf > self.start_F:
             # an unprojected start keeps its horizon data off by up to the mass-mode gain, so every trial's
             # projection fails too, at minutes apiece past D 185 (notes/QUAD_DOUBLE.md 13.28)
@@ -920,7 +957,50 @@ def checkstart(argv):
     return 0 if ok else 1
 
 
+def projlog(argv):
+    """the log line of a failed projection (#743) on stubs, no kernel run: a re-seeder whose u0 rung, quad-double
+    polish and ladder all fail, twice. Pass: two lines, numbered 1 and 2, each naming the point's max|F|, the three
+    stages' residuals and the ladder's last rung. --mutate=silent (log off) and --mutate=stage (the ladder's record
+    dropped) must fail. Exit 0 on pass."""
+    import contextlib
+    import io
+    mutate = next((a.split("=", 1)[1] for a in argv if a.startswith("--mutate=")), "none")
+
+    class RS:
+        def project(self, z):
+            self.last_project = dict(u0=dict(conv=False, its=30, R0=1.0e-20, R=3.0e-22, finite=True),
+                                     u0q=dict(conv=False, its=16, R0=3.0e-22, R=2.0e-40),
+                                     ladder=dict(ok=False, rungs=4, dropped=[],
+                                                 last=dict(u=0.0123, conv=False, its=30, R0=1.0e-18, R=5.0e-21)))
+            if mutate == "stage":
+                del self.last_project["ladder"]
+            return z, "failed"
+
+    class SQ:
+        def residual_q(self, *z):
+            return np.array([1.5e-20]), np.zeros(1), np.zeros(1), np.zeros(1)
+
+    el = ElimQ(SQ(), RS(), switch=0.0, start_F=None, log=mutate != "silent")
+    buf = io.StringIO()
+    with contextlib.redirect_stdout(buf):
+        for _ in range(2):
+            el._proj(tuple(np.zeros(1) for _ in range(4)))
+    lines = buf.getvalue().splitlines()
+    want = ["point max|F| 1.50e-20", "u0 rung 30 its, |R| 1.00e-20 -> 3.00e-22, NOT converged",
+            "u0 quad-double 16 its, |R| 3.00e-22 -> 2.00e-40, NOT converged",
+            "ladder FAILED after 4 rungs, last rung u 0.012300 30 its, |R| 1.00e-18 -> 5.00e-21, NOT converged"]
+    ok = (len(lines) == 2 and el.counts["failed"] == 2
+          and all(f"projection failed ({k + 1})" in ln and all(w in ln for w in want) for k, ln in enumerate(lines)))
+    for ln in lines:
+        print(ln)
+    print(f"projlog: {'PASS' if ok else 'FAIL'} ({len(lines)} lines, failed count {el.counts['failed']}"
+          + (f", mutate={mutate}" if mutate != "none" else "") + ")", flush=True)
+    return 0 if ok else 1
+
+
 if __name__ == "__main__":
+    if len(sys.argv) > 1 and sys.argv[1] == "projlog":
+        sys.exit(projlog(sys.argv[2:]))
     if len(sys.argv) > 2 and sys.argv[1] == "check":
         sys.exit(check(sys.argv[2:]))
     if len(sys.argv) > 2 and sys.argv[1] == "checkq":
