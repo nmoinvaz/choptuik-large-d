@@ -417,6 +417,44 @@ def main():
         emit(dict(kind="det", kappa=kap, lam=[lam.real, lam.imag], r0=r0, r1=r1, det=[complex(np.linalg.det(M)).real,
                   complex(np.linalg.det(M)).imag], sv=sv.tolist(), seconds=round(time.time() - t, 2), mutate=mutate))
         return
+    if cmd == "check":
+        # 1. background part of prhs against css_inner.rhs; 2. the series recursion against the exact modes' series
+        # (and the control: the same data at a wrong lambda must fail); 3. the exact modes as null vectors of M
+        kap = float(pos[1]) if len(pos) > 1 else 0.0
+        f0, om = background(kap)
+        ok = True
+        Z = np.array([0.4 + 0.1j, 0.3 - 0.2j, -0.2 + 0.3j, 0.1 + 0.05j, 1.3 + 0.1j]); xi = 0.37 + 0.05j
+        d = np.abs(prhs(xi, np.concatenate([Z, np.zeros(10, complex)]), kap, om, 1.7)[:5] - ci.rhs(xi, Z, kap, om)).max()
+        ok &= d < 1e-12
+        emit(dict(kind="check", what="background rhs vs css_inner.rhs", kappa=kap, maxdiff=d))
+        bg = Background(kap, f0, om, 100)
+        N = 60
+
+        def relerr(x, y):
+            sc = max(abs(v) for v in y[:N]) if any(abs(v) > 0 for v in y[:N]) else 1
+            return max(float(abs(x[k] - y[k]) / max(abs(y[k]), 1e-30 * sc)) if abs(y[k]) > 0 else float(abs(x[k]) / sc)
+                       for k in range(N))
+        for lam, cA, cB, cbe in exact_modes(bg):
+            A_, B_, be_ = pert_series(bg, lam, cA[0], cB[0], N)
+            e = max(relerr(A_, cA), relerr(B_, cB))
+            eb = max(float(abs(be_[k] - cbe[k]) / max(abs(v) for v in bg.coef[2][:k + 2])) for k in range(N))
+            A2, B2, _ = pert_series(bg, lam + mp.mpf("0.01"), cA[0], cB[0], N)   # control: wrong lambda
+            ectl = max(relerr(A2, cA), relerr(B2, cB))
+            good = e < 1e-20 and eb < 1e-20 and ectl > 1e-6
+            ok &= good
+            emit(dict(kind="check", what="series of the exact mode", lam=[float(mp.re(lam)), float(mp.im(lam))],
+                      relerr_AB=e, err_beta_scaled=eb, control_lam_plus_0p01_relerr=ectl, ok=bool(good)))
+        I = Inner(kap, f0, om, 0.1, 0.3)
+        for lam in (0, 1, 2, 1.5):
+            M = I.M(lam)[0]
+            sv = np.linalg.svd(M, compute_uv=False)
+            r = sv[-1] / sv[0]
+            good = (r < 1e-10) if lam != 1.5 else (r > 1e-3)
+            ok &= good
+            emit(dict(kind="check", what="smallest/largest singular value of M (1.5: control, must be large)",
+                      lam=lam, ratio=r, ok=bool(good)))
+        print("check", "PASS" if ok else "FAIL", flush=True)
+        sys.exit(0 if ok else 1)
     sets = o.get("set", "A,B,C").split(",")
     plant = complex(o["plant"].replace(" ", "")) if "plant" in o else None
     if cmd == "root":
