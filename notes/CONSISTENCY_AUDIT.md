@@ -1192,3 +1192,377 @@ plants' median, so the real errors are smaller or more correlated than this nois
 
 Either change moves a text that `check_numbers.py` quotes (`f64_dinf_range`, `d5_two_codes`), so the check's text
 follows the README.
+
+## Part 2 (#658)
+
+Audited commit: **90a81f69** (main, 2026-11-14). Agent mac658, on the Mac, under #653's rules (the top of this note).
+Scope: the math paper's proofs, the proof notes' certificate details (`proof/`, PROOF.md beyond its Summary, §4 and §5),
+`notes/QUAD_DOUBLE.md` §1–13.24, `notes/PLANTED_SELECTION.md` and the matter notes (`matter/`). Reading and comparison,
+with small scripts that read the data files. Work in progress: the findings below are those found so far.
+
+### P2-1. PROOF.md §1 still has the selection range at fifteen orders, with one surviving ring (superseded)
+
+| location | says |
+|---|---|
+| PROOF.md:82–88 | the twelve-order expansion "brackets" ω*/ω∞ in 0.99915–1.00011; 0.999975–1.00005 "over fourteen and fifteen orders"; "the fourteenth and fifteenth coefficients rejected every ring …, and the one surviving ring … puts the zero inside the range" |
+| README.md:132–138, 1620–1621, 1670–1678 | the pair is "not a bracket"; the range is over nine orders, the fourteenth to twenty-second; the rings just beyond x₀ survived one coefficient each and were rejected through σ₂₂; M = 7 gives 1.000022 |
+
+Canonical: the README and notes/PLANTED_SELECTION.md §7–14. PROOF.md:399 quotes the same range without the order count
+and stays as it is.
+
+```diff
+--- a/PROOF.md
++++ b/PROOF.md
+@@ -79,13 +79,13 @@
+ **Corollary C (identification).** If the critical solutions computed for D = 8–61 form the branch of Theorem B, then
+ ω∞ = ω*, and Δ∞ = 2π/ω* is determined by the inner problem alone.
+ 
+-The numerics so far are consistent with all three: the twelve-order amplitude expansion brackets ω*/ω∞ in
+-0.99915–1.00011 with Padé estimates 0.9999, and the five-harmonic truncation gives 0.999228 (README, "Where that leaves
+-it"). A planted-truth test of those estimators (notes/PLANTED_SELECTION.md) puts the zero at 0.999975–1.00005 over
+-fourteen and fifteen orders (an estimator range, which contains the finite-D value) if S₁ has no zeros closer to the
+-origin than x₀; the fourteenth and fifteenth coefficients rejected every ring of such zeros constructed so far, and the
+-one surviving ring, with zeros just beyond x₀, puts the zero inside the range. They are evidence, not part of the
+-proof.
++The numerics so far are consistent with all three: at twelve orders the amplitude expansion gives ω*/ω∞ =
++0.99915–1.00011 (two estimators, not a bracket) with Padé estimates 0.9999, and the five- and seven-harmonic
++truncations give 0.999228 and 1.000022 (README, "Where that leaves it"). A planted-truth test of those estimators
++(notes/PLANTED_SELECTION.md) puts the zero at 0.999975–1.00005 over the fourteenth to twenty-second orders (an estimator
++range, which contains the finite-D value) if S₁ has no zeros closer to the origin than x₀. Those coefficients rejected
++every ring of such zeros constructed so far, and the rings with zeros just beyond x₀ each survived one coefficient and
++put the zero inside the range. They are evidence, not part of the proof.
+ 
+ ## 2. What is already proved here
+ 
+```
+
+### P2-2. The math paper calls λ₁ open, which the truncations have computed (superseded)
+
+| location | says |
+|---|---|
+| paper/math/main.tex:860–864 | "Two questions are open: whether λ = 2 is the only physical unstable mode at D = ∞, and that coefficient", −S_{1/n}/∂_λS |
+| paper/math/main.tex:2219 (Outlook) | open: "the coefficient of 1/n in λ" |
+| notes/FIRST_ORDER.md:30–34, README.md:1833–1848 | λ₁ = 7.76, 3.080, 3.023 at M = 1, 3, 5 from the O(1/n) inner problem, against the fitted 3.0324; "M = 7 and an untruncated computation are not done" |
+
+This is #653's finding 11 for the math paper. Canonical: notes/FIRST_ORDER.md. The diff also carries finding P2-5's
+change on line 864, since the two touch the same line.
+
+```diff
+--- a/paper/math/main.tex
++++ b/paper/math/main.tex
+@@ -857,11 +857,13 @@
+ 
+ At finite $D$ the outer region and the $1/n$ corrections to the inner equations depend on $r$ explicitly
+ (Lemma~\ref{lem:B50}), so the symmetry is broken and the mode survives as an ordinary unstable mode with
+-$\lambda = 2 + O(1/n)$, whose $1/n$ coefficient is measured in~\cite{companion}. Two questions are open: whether
+-$\lambda = 2$ is the only physical unstable mode at $D = \infty$, and that coefficient, which by first-order perturbation
+-theory is
++$\lambda = 2 + O(1/n)$, whose $1/n$ coefficient is measured in~\cite{companion}. Whether $\lambda = 2$ is the only
++physical unstable mode at $D = \infty$ is open. The coefficient is, by first-order perturbation theory,
+ $-S_{1/n}/\partial_\lambda S$ at $\lambda = 2$, with $S$ the perturbation's fast-mode multiplier and $S_{1/n}$ the part induced
+-by the $O(1/n)$ inner equations. The one-harmonic model of Section~\ref{sec:thmA} has a root $\lambda = 1.765$; this is not a
++by the $O(1/n)$ inner equations. In the $M$-harmonic truncations it is $7.76$, $3.080$ and $3.023$ for $M = 1$, $3$ and $5$,
++against $3.0324$ from the solutions (numerical evidence, conditional on Conjecture~\ref{conj} at that order;
++\repo{notes/FIRST\_ORDER.md}); without truncation it is not computed. The one-harmonic model of Section~\ref{sec:thmA}
++has a root $\lambda = 1.769$; this is not a
+ counterexample, because its background is not the $D = \infty$ solution and because Galerkin truncation does not commute
+ with the gauge step, which multiplies by $P(\theta)$.
+ 
+@@ -2216,7 +2218,8 @@
+ \end{enumerate}
+ Together these would derive $\Dinf = 2\pi/\omega^*$ from the $D = \infty$ equations. Numerically the rule already gives $\Dinf$ to
+ about $10^{-4}$; more orders, or $M = 9$, would sharpen that, and whether $\Dinf$ has a closed form is open. For the critical
+-exponent, open are the uniqueness of the unstable mode at $D = \infty$ and the coefficient of $1/n$ in $\lambda$. A
++exponent, open are the uniqueness of the unstable mode at $D = \infty$ and the coefficient of $1/n$ in $\lambda$ without
++harmonic truncation. A
+ centrifugal term of order $n/r^2$ (scalar multiplets with angular momentum, wave maps, Yang--Mills) becomes an explicit
+ $1/s$ in the inner equations and removes the symmetry of Proposition~\ref{prop:5}. Other matter models test this, and the
+ companion paper reports the tests~\cite{companion}: for the axion--dilaton, whose inner problem keeps the symmetry,
+```
+
+### P2-3. C_selection.md's summary says the B(1) certificate code is unreviewed (superseded, inconsistent within the file)
+
+| location | says |
+|---|---|
+| proof/C_selection.md:76–77 | "The certificate code has not been reviewed independently." |
+| proof/C_selection.md:959–962 (§13.1) | B7, Lemma LC and Lemma J have second implementations (P2_review.md, P2b_review.md); lemma L, B5(2), Lemma P audited; B5(1), B8 beyond `--d0` and (H8) not reviewed |
+
+Canonical: §13.1 of the same file, and proof/P2b_review.md.
+
+```diff
+--- a/proof/C_selection.md
++++ b/proof/C_selection.md
+@@ -73,8 +73,9 @@
+   ([B_chain.md](B_chain.md) §15; Section 13.1 lists every link with its status and threshold). The theorem is proved
+   with the selection function "label of the outer jump at a fixed point of the Stokes line" rather than the
+   light-cone coefficient C_{n,μ}; B6 and the factor κ_{n,μ} are not needed. The light cone is handled by Lemma LC (B8
+-  continued into the light-cone disc in the exact gauge) and Lemma J (the jump vanishes with its label). The
+-  certificate code has not been reviewed independently.
++  continued into the light-cone disc in the exact gauge) and Lemma J (the jump vanishes with its label). Two
++  independent reviews ([P2_review.md](P2_review.md), [P2b_review.md](P2b_review.md)) re-implement B7, Lemma LC and
++  Lemma J; the code of B5(1), of B8 beyond `--d0` and of (H8) is not yet reviewed (Section 13.1).
+ 
+ | Step | Content | Status (details in Section 13) |
+ |---|---|---|
+```
+
+### P2-4. A_M.md and A_lemmas_M.md say their code is unreviewed, and A_lemmas_M.md has M = 5 waiting (superseded)
+
+| location | says |
+|---|---|
+| proof/A_M.md:8, 17–18, 91, 333 | "not reviewed"; M = 5 "the new code not reviewed"; "the new files above (not reviewed)"; "the new files are not reviewed" |
+| proof/A_M_review.md (Verdict) | the M = 3 point certificate is certified; the exact-rational re-assembly reproduces its margins |
+| proof/A_M2.md:7, 191–192 | "reviewed independently in A_M2_review.md"; certify_M2*.py reviewed |
+| proof/A_M2_review.md:181 | item 9: "A_M2.md and A_M.md say 'the new code not reviewed'; the coordinator decides how to change that" |
+| proof/A_lemmas_M.md:12 | "Nothing here has been reviewed independently yet." |
+| proof/A_lemmas_M.md:766 | "At M = 5 everything waits for its certificate except lemma S, 6b₀, the flat estimate and step (i)" |
+| proof/A_lemmas_M.md:37–38 (its own summary), README.md:208–209 | 6a(3) reviewed (A_M_review.md); 6a(5) and 6b₁(5) certified at A_M2.md's p̂, the code reviewed by #39 |
+
+A_M2.md was updated after its review, and A_M.md was not. #40 (open) is to write Theorem A(M = 5) into A_lemmas_M.md,
+so the second diff may be overtaken by it. The lines the first diff lengthens past 120 characters are for
+`wrap_prose.py --write`.
+
+```diff
+--- a/proof/A_M.md
++++ b/proof/A_M.md
+@@ -5,7 +5,8 @@
+ box". The analytic lemmas that turn the point certificate into the statement about the selection condition (the
+ analogues of lemmas S, 6a and 6b of A_certify.md §11–12) are not part of this note; the M-harmonic start-value fixed
+ point is being written separately (`solver/proof/fixed_point_M.py`, notes in `proof/A_lemmas_M.md`). Written by Claude
+-(Anthropic) under Nathan Moinvaziri's direction; not reviewed.
++(Anthropic) under Nathan Moinvaziri's direction; its M = 3 certificate is reviewed independently in
++[A_M_review.md](A_M_review.md).
+ 
+ **Status.** M = 1: this code path reproduces Theorem A(M = 1)'s box (§6.1). M = 3: **certified**, given the M-harmonic
+ start-value lemma `fixed_point_M.start_data_M` and Braaksma's theorem, on a parallelepiped of outer half-width 10⁻¹⁰
+@@ -13,8 +14,8 @@
+ four box runs of §7 on the local machine all failed: at h = 3×10⁻¹¹ and 10⁻¹² (twice) the derivative radius grew past
+ order one on the arc, and the one run that finished (h = 10⁻¹³) fails the Krawczyk test (margins −13.7, −11.8, +0.29,
+ +0.33, −542, −511; `logs/A_M_krawczyk_M5_1e-13.log`). The design change of §7, a second-order chart with C² enclosures,
+-is [A_M2.md](A_M2.md): with it M = 5 is **certified** (given the same lemma and Braaksma's theorem; the new code not
+-reviewed) on a curved parallelepiped of outer half-width 10⁻¹⁰ (A_M2.md §6.4). An independent review
++is [A_M2.md](A_M2.md): with it M = 5 is **certified** (given the same lemma and Braaksma's theorem; the new code reviewed in
++[A_M2_review.md](A_M2_review.md)) on a curved parallelepiped of outer half-width 10⁻¹⁰ (A_M2.md §6.4). An independent review
+ ([A_M_review.md](A_M_review.md)) confirms the M = 3 certificate. With lemma 6a run on this certificate's state box
+ (ρ₆ₐ = 0.041) and the other lemmas of [A_lemmas_M.md](A_lemmas_M.md), **Theorem A(3) is certified** (A_lemmas_M.md §7).
+ 
+@@ -88,7 +89,7 @@
+   by the certificate's code path, not a certificate. `python3 certify_M.py startcheck M` checks that the lemma's
+   enclosure contains this file's own series (independent code; at M = 3 they agree to 4×10⁻⁷⁶).
+ - The correctness of the code: python-flint 0.9 (arb/acb), validated_int.py's Lohner step (reviewed,
+-  [A_review.md](A_review.md)), and the new files above (not reviewed).
++  [A_review.md](A_review.md)), and the new files above (reviewed with the M = 3 certificate, [A_M_review.md](A_M_review.md)).
+ 
+ ## 2. Design: the Schur-corrected Krawczyk test in a tilted box
+ 
+@@ -330,7 +331,7 @@
+ radius in Y Dg̃(X) 0.23.
+ 
+ > **Certified** (given the start-value lemma `fixed_point_M.start_data_M` and Braaksma's theorem; trusted code
+-> certify_M*.py, validated_int.py and python-flint 0.9; the new files are not reviewed): the D-jump function g of §1 at
++> certify_M*.py, validated_int.py and python-flint 0.9; the new files reviewed in [A_M_review.md](A_M_review.md)): the D-jump function g of §1 at
+ > M = 3 has exactly one zero in the parallelepiped
+ > P = p̂ + T·([−10⁻¹⁰, 10⁻¹⁰]² × [−4×10⁻¹⁶, 4×10⁻¹⁶]²), and its Jacobian is non-singular there. The zero lies in
+ > (endpoints rounded outward):
+```
+
+```diff
+--- a/proof/A_lemmas_M.md
++++ b/proof/A_lemmas_M.md
+@@ -9,7 +9,9 @@
+ Status words as in AGENTS.md: *proved* (by hand), *certified* (computer-assisted, the trusted code named),
+ *conditional* (with the hypothesis named), *numerical evidence*. The one fact assumed throughout, as at M = 1, is
+ Braaksma's summability theorem for the existence of the lateral solutions y± and their asymptotics
+-([C_selection.md](C_selection.md) Lemma B4(M)). Nothing here has been reviewed independently yet.
++([C_selection.md](C_selection.md) Lemma B4(M)). Lemma 6a(3) and the M = 3 assembly are reviewed independently in
++[A_M_review.md](A_M_review.md), and the lemma 6a and 6b₁ code at M = 5 by #39 (the summary below); the majorant code
++of lemmas S and 6b₀ is not yet reviewed.
+ 
+ Contents
+ 
+@@ -763,8 +765,7 @@
+ - a certificate of S₁ = 0 alone, at fixed higher harmonics: that would not satisfy 6a, which needs all (M + 1)/2
+   complex J_{D,μ}(ξ₁), or an invertible linear image of them such as `hier.py`'s de-mixed residuals.
+ 
+-At M = 5 everything waits for its certificate except lemma S, 6b₀, the flat estimate and step (i), which are certified
+-here. 6b₁(5) is a local-machine task (§9).
++At M = 5 the point certificate is [A_M2.md](A_M2.md)'s, and the summary above gives the status of each lemma at it.
+ 
+ ## 8. Mutation table
+ 
+```
+
+### P2-5. The one-harmonic model's root: 1.765 or 1.769 (superseded, a bar dropped)
+
+| location | says |
+|---|---|
+| README.md:1861, GAMMA.md:171, paper/math/main.tex:864 | the one-harmonic model has a root λ = 1.765 |
+| README at 3498262d (where 1.765 entered) | "λ = 1.765 ± 0.005 (γ = 0.567; `pert_ratio.py`)", in the one-harmonic model at its zero |
+| notes/FIRST_ORDER.md:33, 314 | λ* = 1.769122008 for M = 1, the model's growth rate near 2 at its zero (A = 2.5421480, ω*/ω∞ = 0.776994014) |
+
+The two are the same quantity: the later one lies inside the first one's ±0.005, which the quotes dropped. Canonical:
+notes/FIRST_ORDER.md (`data/first_order_hier_M1_xi0.2.json`). The math paper's line is in finding P2-2's diff.
+
+```diff
+--- a/README.md
++++ b/README.md
+@@ -1858,7 +1858,7 @@
+ - that λ = 2 is the only physical unstable mode at D = ∞;
+ - the 1/n coefficients without truncation, and a proof of the O(1/n) matching.
+ 
+-The one-harmonic model's root, λ = 1.765, is not a counterexample, for two reasons. Its background is not the D = ∞
++The one-harmonic model's root, λ = 1.769, is not a counterexample, for two reasons. Its background is not the D = ∞
+ solution, and Galerkin truncation does not commute with the gauge step, which multiplies by P(θ). More in
+ [GAMMA.md](GAMMA.md).
+ 
+--- a/GAMMA.md
++++ b/GAMMA.md
+@@ -168,7 +168,7 @@
+ $`r_{\rm div} = \sqrt{2(\varepsilon-1)}`$, from an exact symmetry; γ∞ = 1/2 follows given Conjecture 1, the uniqueness
+ of the unstable mode and continuity of λ(D).
+ 
+-**The one-harmonic model's 1.765.** There λ = 2 is not a root, for two reasons:
++**The one-harmonic model's 1.769.** There λ = 2 is not a root, for two reasons:
+ - the model's background is not the D = ∞ solution (its ω is 22% low);
+ - Galerkin truncation does not commute with the gauge fix, which multiplies by P(θ), so the truncated model has no exact
+   λ = 2 mode with h₀ = 0. (The s-translation alone does commute with the truncation.)
+```
+
+### P2-6. PROOF.md's staged plan still lists the M = 5 certificate and Theorem B(1) as future work (superseded)
+
+| location | says |
+|---|---|
+| PROOF.md:407 (§7, stage 2) | difficulty "a computer-assisted-proof project of a few months", who "computer-assisted-proof community" |
+| PROOF.md:410 (§7, stage 5) | Theorem B for a finite-harmonic model, "hard, a full paper" |
+| PROOF.md:414–416 | "Stages 1 and 2 are achievable … would already be a publishable result: a computer-assisted certificate that the five-harmonic inner problem selects ω/ω∞ = 0.9992 ± 10⁻⁶" |
+| PROOF.md:225–232 (§4), 321 (§5) | A(M = 5) certified on a box of half-width 10⁻¹⁰, ω/ω∞ ∈ [0.99922840320656, 0.99922840320657]; B(1) certified for n ≥ e^{89.75} |
+
+#653's finding 8 fixed the Summary and §4 but not §7. Canonical: PROOF.md §4 and §5.
+
+```diff
+--- a/PROOF.md
++++ b/PROOF.md
+@@ -404,16 +404,16 @@
+ | Stage | Goal | Ingredients | Difficulty | Who |
+ |---|---|---|---|---|
+ | 1 | Write the inner problem as a first-order system at the irregular singular point ξ = ∞ (t = 1/ξ²), list the transseries, and identify S_ν with Costin's Stokes constants | Costin (1998); the existing formal series (`solver/inner_borel/`, `inner_np.py`) | low–moderate, weeks | here |
+-| 2 | Certified M = 5 zero (Theorem A(M=5)) | A.1 by fixed point with explicit constants; A.2 validated Taylor integration; A.4 Krawczyk; tolerances from `feasibility.py` | moderate, a computer-assisted-proof project of a few months | computer-assisted-proof community |
++| 2 | Certified M = 5 zero (Theorem A(M=5)) | A.1 by fixed point with explicit constants; A.2 validated Taylor integration; A.4 Krawczyk; tolerances from `feasibility.py` | done (§4, [proof/A_M2.md](proof/A_M2.md)) | here |
+ | 3 | Growth bound for σ_k and the entire-function structure; factor out the Γ dependence | the exact amplitude recursion; rigorous Darboux bounds for its late orders | moderate–hard | exponential asymptotics |
+ | 4 | Harmonic tail bound A.3, then Theorem A(∞) | weighted dual norms on the tuned family; Schur complement estimates | hard, genuinely new | both communities |
+-| 5 | Theorem B for a finite-harmonic model (θ-dependence truncated in the full equations, not only the inner problem) | Xie–Tanveer architecture; Costin; B.3–B.7 | hard, a full paper | exponential asymptotics |
++| 5 | Theorem B for a finite-harmonic model (θ-dependence truncated in the full equations, not only the inner problem) | Xie–Tanveer architecture; Costin; B.3–B.7 | hard, a full paper; done for M = 1, assuming Braaksma's theorem (§5, [proof/B_chain.md](proof/B_chain.md)) | exponential asymptotics; here for M = 1 |
+ | 6 | Theorem B in the strip-analytic setting | Costin–Tanveer PDE Borel summability; gap (b) | research-level | exponential asymptotics |
+ | 7 | Corollary C, with a certified large-D solution | Reiterer–Trubowitz method at one D | moderate given 2–6 | GR / computer-assisted proofs |
+ 
+-Stages 1 and 2 are achievable with current tools and would already be a publishable result: a computer-assisted
+-certificate that the five-harmonic inner problem selects ω/ω∞ = 0.9992 ± 10⁻⁶, together with the measured convergence
+-in M and the untruncated bracket. Stage 4 is where a new idea is needed.
++Stage 2 is done (§4): the five-harmonic inner problem selects ω/ω∞ ∈ [0.99922840320656, 0.99922840320657], assuming
++Braaksma's theorem and the start-value lemma. With the measured convergence in M and the untruncated bracket, stages 1
++and 2 would already be a publishable result. Stage 4 is where a new idea is needed.
+ 
+ What is being worked on now, and in what order: [notes/PROOF_QUEUE.md](notes/PROOF_QUEUE.md).
+ 
+```
+
+### P2-7. PROOF.md gives the computed range as D = 8–61 (superseded)
+
+| location | says |
+|---|---|
+| PROOF.md:79 (Corollary C), 394 (§6) | "the critical solutions computed for D = 8–61"; "The double-double solutions at D = 8–61" |
+| README.md:91, 109 | 1199 double-double points, D = 8.25–67.77 |
+
+Canonical: the README's main-results table and `hp/data/delta_all.csv`.
+
+```diff
+--- a/PROOF.md
++++ b/PROOF.md
+@@ -76,8 +76,8 @@
+ profile and frequency satisfy F_n → F(A*, ω*) and ω_n = ω* + O(1/n). Conversely, any family of such solutions with
+ F_n → F_∞, ω_n → ω_∞ in the sense of hypothesis (H1) has S(F_∞, ω_∞) ≡ 0.
+ 
+-**Corollary C (identification).** If the critical solutions computed for D = 8–61 form the branch of Theorem B, then
+-ω∞ = ω*, and Δ∞ = 2π/ω* is determined by the inner problem alone.
++**Corollary C (identification).** If the critical solutions computed for D = 8.25–67.77 form the branch of Theorem B,
++then ω∞ = ω*, and Δ∞ = 2π/ω* is determined by the inner problem alone.
+ 
+ The numerics so far are consistent with all three: the twelve-order amplitude expansion brackets ω*/ω∞ in
+ 0.99915–1.00011 with Padé estimates 0.9999, and the five-harmonic truncation gives 0.999228 (README, "Where that leaves
+@@ -391,8 +391,8 @@
+ - **Uniqueness in the box.** Theorem A must certify that there is exactly one zero of S₁ in a box that also contains
+   the numerically extrapolated ω∞ = 3.82213590 (±4×10⁻⁸) and A∞ ≈ 2.70–2.72. A box of radius 10⁻³ suffices for the
+   identification; it does not need the numerics' digits.
+-- **That the computed branch is the branch of Theorem B.** The double-double solutions at D = 8–61 are numerical. A
+-  Reiterer–Trubowitz-style computer-assisted existence proof at one large D (say D = 40–60), with the certified solution
++- **That the computed branch is the branch of Theorem B.** The double-double solutions at D = 8.25–67.77 are numerical.
++  A Reiterer–Trubowitz-style computer-assisted existence proof at one large D (say D = 40–60), with the certified solution
+   inside the basin of Theorem B's construction, would close this; alternatively, Theorem B's construction at n ≥ n₀ with
+   explicit n₀ and a certified solution at some D ≥ n₀ + 2.
+ 
+```
+
+### P2-8. The math paper's coefficient record stops at σ₁₂ and σ₁₇ (superseded, inconsistent within the paper)
+
+| location | says |
+|---|---|
+| paper/math/main.tex:1916 | "σ₁–σ₁₂ are available at ω/ω∞ = 0.99, 1.00, 1.01" |
+| paper/math/main.tex:2185 | "σ₁₄–σ₁₇ were fitted with one window, to plateau steps of 3×10⁻¹³ to 1.5×10⁻¹² relative" |
+| paper/math/main.tex:2129–2180 | the evidence uses σ₁₃ … σ₂₂ |
+| README.md:1641–1648 | σ₁₅ … σ₂₂ converged to 4.5×10⁻¹³ … 2.3×10⁻¹² relative (σ₁₈ the largest) |
+| solver/inner_amp/scan45J1250/ | `sigF_w{0.9900,1.0000,1.0100}_K45_J1250_p1280.json` (σ to 22 at the three ω) |
+
+Canonical: the README's table and the data files.
+
+```diff
+--- a/paper/math/main.tex
++++ b/paper/math/main.tex
+@@ -1913,7 +1913,7 @@
+ \sigma_5 = -0.00555413676 - 0.00280595708\iu,\\
+ \sigma_6 = (-2.7853745790 - 10.776628405\iu)\times10^{-4},\quad \sigma_7 = (1.0223846436 - 1.4905053530\iu)\times10^{-4};
+ \end{gather*}
+-$\sigma_1$--$\sigma_{12}$ are available at $\omega/\winf = 0.99$, $1.00$, $1.01$ (\repo{solver/inner\_amp/}). A fit is accurate but not an enclosure; Lemma~\ref{lem:sigma1} below encloses $\sigma_1$
++$\sigma_1$--$\sigma_{22}$ are available at $\omega/\winf = 0.99$, $1.00$, $1.01$ (\repo{solver/inner\_amp/}). A fit is accurate but not an enclosure; Lemma~\ref{lem:sigma1} below encloses $\sigma_1$
+ rigorously. Summing \eqref{eq:sigmak} directly at the zero is hopeless: the terms $|\sigma_k|A_0^{2k}$ grow to about $240$ at
+ $k = 9$ and are still $160$ at $k = 12$, and would fall below $10^{-6}$ only near $k \approx 37$.
+ 
+```
+
+```diff
+--- a/paper/math/main.tex
++++ b/paper/math/main.tex
+@@ -2182,7 +2182,7 @@
+ \subsection{What the evidence does not show}
+ The $\pm0.00006$ above is the range of calibrated estimators, not an error bound, and it rests on the assumption about the
+ other zeros of $S_1$.
+-The coefficients $\sigma_k$ come from late-order fits; two fit windows agree to about $10^{-19}$ for $\sigma_1$--$\sigma_{12}$ ($\sigma_{13}$ to $2\times10^{-13}$ relative; $\sigma_{14}$--$\sigma_{17}$ were fitted with one window, to plateau steps of $3\times10^{-13}$ to $1.5\times10^{-12}$ relative), and the
++The coefficients $\sigma_k$ come from late-order fits; two fit windows agree to about $10^{-19}$ for $\sigma_1$--$\sigma_{12}$ ($\sigma_{13}$ to $2\times10^{-13}$ relative; $\sigma_{14}$--$\sigma_{22}$ to plateau steps of $3\times10^{-13}$ to $2.3\times10^{-12}$ relative), and the
+ estimates need them to about $10^{-10}$, but only $\sigma_1$ is enclosed rigorously (Lemma~\ref{lem:sigma1}). At the zero the series \eqref{eq:sigmak} is far from summed, and every
+ estimator (crossings, ratios, Pad\'e approximants, the factored series) is a resummation whose convergence is observed, not
+ proved; the arc-shaped Borel singularity of Section~\ref{sec:entire} is a known source of slow convergence. Settling the other zeros needs more orders, starting with $\sigma_{23}$. Finally, agreement of the numbers is evidence that the selection rule is the right one, not a proof
+```
+
+### P2-9. B_tail_M7.md quotes one part of complex σ₄ and σ₆ as "true" (inconsistent, minor)
+
+| location | says |
+|---|---|
+| proof/B_tail_M7.md:288–289 | σ₄ = −399 "(true −0.029)", σ₆ = −1371 "(true −0.0011)" |
+| proof/B_tail.md:214–215, README.md:1411 | σ₄ = −0.0289 + 0.0108i, σ₆ = −0.00028 − 0.00108i ("−0.0003 − 0.0011i") |
+
+−0.029 is Re σ₄, but −0.0011 is Im σ₆. Canonical: proof/B_tail.md §4.
+
+```diff
+--- a/proof/B_tail_M7.md
++++ b/proof/B_tail_M7.md
+@@ -285,8 +285,8 @@
+ | hier's model, M = 1 | odd ≤ 1, even ≤ 2 | σ₁ unchanged (4.5×10⁻¹⁰, fit level) | σ₂ changed by 0.0590 (14% of \|σ₂\|) | `trunc_hier_M1_K5_J500_w1.0000.json` |
+ | hier's model, M = 3 | odd ≤ 3, even ≤ 4 | σ₁–σ₃ unchanged (≤ 2.7×10⁻¹⁰) | σ₄ changed by 3.74×10⁻⁵ (0.12% of \|σ₄\|) | `trunc_hier_M3_K9_J500_w1.0000.json` |
+ | hier's model, M = 5 | odd ≤ 5, even ≤ 6 | σ₁–σ₅ unchanged (≤ 4.2×10⁻¹⁰) | σ₆ changed by 7.9×10⁻⁹ (7×10⁻⁶ of \|σ₆\|) | `trunc_hier_M5_K13_J500_w1.0000.json` (a first run, cut by a container restart, `trunc_hier_M5_cut.log`) |
+-| `amp_trunc.py`, M = 3 | all ≤ 3 | σ₃ changed by 5.3×10⁻⁴ | σ₄ = −399 (true −0.029) | B_tail.md §4 |
+-| `amp_trunc.py`, M = 5 | all ≤ 5 | σ₅ changed by 4.4×10⁻⁴ | σ₆ = −1371 (true −0.0011) | B_tail.md §4 |
++| `amp_trunc.py`, M = 3 | all ≤ 3 | σ₃ changed by 5.3×10⁻⁴ | σ₄ = −399 (true −0.0289 + 0.0108i) | B_tail.md §4 |
++| `amp_trunc.py`, M = 5 | all ≤ 5 | σ₅ changed by 4.4×10⁻⁴ | σ₆ = −1371 (true −0.00028 − 0.00108i) | B_tail.md §4 |
+ 
+ (`python3 trunc_seq_M7.py --amp`.) Lemma O's prediction holds exactly in both truncations: hier's model first changes at
+ σ_{M+1}, `amp_trunc.py`'s at σ_M. And the explosion is a property of dropping the even harmonic M + 1, not of Galerkin
+```
