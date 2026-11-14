@@ -334,6 +334,28 @@ def cmd_profile():
               mp.nstr(kap_nu, 6), float(abs(kap_nu)), mp.nstr(lam_nu / kap_nu, 5), mp.nstr(3j / OMEGA, 5)))
     print("  B/R = kappa (log strength relative to the pole) and C_inf = 1.5 e^{2 Im theta0} |kappa| = %.5f" % (
         float(1.5 * mp.exp(2 * mp.im(th0)) * abs(kap_nu))))
+    # post hoc (not part of the test): kappa3 fixed at the b-free prediction 3i kappa/omega, a free nu^-4 term
+    def resid4(prm):
+        w0_, kp_, mu_ = prm
+        rt = mp.sqrt(w0_) * (1 if mp.re(mp.sqrt(w0_) / root) > 0 else -1)
+        rho_ = -2j * sgn * Rpred / rt
+        out = []
+        for k in ks:
+            nu = 2 * k + 1
+            out.append(c[k] * w0_ ** k - rho_ * (1 + kp_ / nu ** 2 + 3j * kp_ / OMEGA / nu ** 3 + mu_ / nu ** 4))
+        return out
+    (w04, kp4, mu4), res4 = lsq(resid4, [w03, kap_nu, mp.mpc(0)])
+    rt4 = mp.sqrt(w04) * (1 if mp.re(mp.sqrt(w04) / root) > 0 else -1)
+    rho4 = -2j * sgn * Rpred / rt4
+    cm4 = [rho4 * w04 ** (-k) * (1 + kp4 / (2 * k + 1) ** 2 + 3j * kp4 / OMEGA / (2 * k + 1) ** 3
+                                 + mu4 / (2 * k + 1) ** 4) for k in range(11)]
+    _, _, Cm4, _ = stats(cm4)
+    th04 = mp.log(w04) / 2j
+    print("post hoc: kappa3 fixed at 3i kappa/omega, free mu/nu^4 (max residual %.1e): kappa = %s, |kappa| = %.5f, "
+          "mu = %s; model C_k at k = 5..8 %s; C_inf = 1.5 e^{2 Im theta0} |kappa| = %.5f" % (
+              float(res4), mp.nstr(kp4, 6), float(abs(kp4)), mp.nstr(mu4, 4),
+              ", ".join("%.5f" % float(Cm4[k]) for k in (5, 6, 7, 8)),
+              float(1.5 * mp.exp(-2 * abs(mp.im(th04))) * abs(kp4))))
     print("profile: %s" % ("PASS" if ok else "FAIL"))
     if "out" in args:
         json.dump({"A": str(A), "C": [float(v) for v in C], "p": [float(v) for v in p], "theta0": str(th0),
