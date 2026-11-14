@@ -186,3 +186,30 @@ With d = 0, the control never fires.
   60-digit x₀ left a term ε Σ xⁿ/x₀ⁿ⁺¹ with ε = S(x₀), which gave C 46 zeros in the region instead of 37. The
   winding check caught it, and stokes_series.py refines x₀ to 320 digits. §5's runs used C only through σ₀…σ₄₀,
   and whether the 60-digit x₀ mattered there was not checked.
+
+## 7. The Borel–Padé order the corrected law needs (#788)
+
+**At the data's coefficient noise of 10⁻¹⁴, no K ≤ 100 suffices.** At K = 100 every Borel–Padé sum of P1 gives
+e₁ = 2.13 against the bound of 0.15, and the control C does not fire at any K. Script:
+`solver/harmony/stokes/stokes_bp.py`. Raw: `I788-mac/` (d2ff76f8). The test was pre-registered on #788 before any
+sum was computed.
+
+**Method.** P1's σ₀…σ_K, and C's, carry 10⁻¹⁴ relative noise (§3). They are summed by Borel–Padé
+[m/(K − m)] over §2's range of m. Each sum's zeros in |x| ≤ 42, Re x ≥ 2 are found in arb and checked by the argument
+principle. The arm must reach x₆, and §6's order-3 law on x₁…x₆ gives x̂₀. K is decisive when every P1 sum that
+enters has e₁ ≤ 0.15 and every C sum that enters has |x̂₀ − (x₀ + 1)| > 3 max e₁.
+
+| K | P1 sums entered | e₁ | median error of x₅, x₆ | decisive |
+|---|---|---|---|---|
+| 40 | 5 of 8 | 5.1–6.1 | 5.1, 12 | no (the control, as required) |
+| 60 | 10 of 11 | 4.2–5.2 | 8×10⁻³, 0.42 | no |
+| 80 | 12 of 14 | 1.2–2.9 | 1.2×10⁻⁴, 1.5×10⁻² | no |
+| 100 | 16 of 17 | 2.13 | 2.0×10⁻⁴, 2.4×10⁻² | no |
+
+- **Post hoc: the noise sets the floor, not K.** From K = 80 to 100 the outer zeros stop improving. At K = 100 their
+  errors scale with the noise: x₆ is off by 2.5×10⁻⁸ at 10⁻²⁰, by 2.5×10⁻⁵ at 10⁻¹⁷ and by 2.4×10⁻² at 10⁻¹⁴, the same
+  in every sum. With exact coefficients, the sums reproduce the exact zeros to 10⁻²⁴ and e₁ = 0.0117, §6's value.
+- **Post hoc: what a data test would need.** At noise 10⁻¹⁷ every K = 100 sum gives e₁ ≈ 0.011. K = 80 does not:
+  its e₁ runs from 0.06 to 5.3 across the sums. So σ₀…σ₁₀₀ would be needed to about 10⁻¹⁷, a thousand times below the
+  J truncation of the data in hand (#213), from an amplitude run of order about 200. By §5.3's cost, that is far beyond
+  the runs made so far.

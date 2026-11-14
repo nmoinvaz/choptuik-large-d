@@ -16,6 +16,8 @@ e1 = |x0_hat - x0| <= 0.15, and every C sum that enters has |x0_hat - (x0 + 1)| 
     python3 stokes_bp.py exact                          the law on P1's exact arm (#773: e = 0.0117)
     python3 stokes_bp.py run --K=40,60,80,100 --out=FILE   the sums (resumable), then the verdict
     python3 stokes_bp.py verdict --out=FILE             the verdict from FILE alone
+    python3 stokes_bp.py posthoc --K=100 --noise=0,1e-20 --out=FILE   post hoc (not part of the test): P1's sums at
+                                                        other noise levels, to tell the noise floor from K
 Exit codes: selftest 0/1; run and verdict 0 if some K is decisive, 3 if none; 1 if K = 40 is decisive (the control).
 """
 import json
@@ -174,7 +176,11 @@ def cmd_exact():
 # ---- the run ---------------------------------------------------------------------------------------------------
 def one_sum(sig, K, m, exact_arm, target):
     t0 = time.time()
-    ts, rs, c0 = Z.borel_pade(sig, m, K - m)
+    try:
+        ts, rs, c0 = Z.borel_pade(sig, m, K - m)
+    except ZeroDivisionError:                       # the Pade system is singular (exact data of lower degree)
+        return dict(K=K, m=m, zeros=0, winding=None, hits=0, complete=False, arm=None, entered=False,
+                    pade="singular", seconds=round(time.time() - t0, 1))
     F = ExpSum(ts, rs, c0)
     zs, (wnd, hits) = zeros_region(F)
     zm = [T.to_mp(z) for z in zs]
@@ -219,6 +225,32 @@ def cmd_run():
     return verdict(out)
 
 
+def cmd_posthoc():
+    out = args["out"]
+    done = set()
+    if os.path.exists(out):
+        for line in open(out):
+            r = json.loads(line)
+            done.add((r["noise"], r["K"], r["m"]))
+    s1, sc, arm, x0 = planted()
+    for K in [int(k) for k in args.get("K", "100").split(",")]:
+        for nz in [float(v) for v in args.get("noise", "0,1e-20").split(",")]:
+            SL.NOISE = nz
+            sig = SL.noisy(s1.sigma(K), 1 + 10 * K)
+            for m in range(math.ceil(0.35 * K), K // 2 + 2):
+                if (nz, K, m) in done:
+                    continue
+                rec = dict(fn="P1", noise=nz, **one_sum(sig, K, m, arm, x0))
+                with open(out, "a") as fo:
+                    fo.write(json.dumps(rec) + "\n")
+                ze = rec.get("zero_err")
+                print("P1 noise %.0e K %3d [%2d/%2d]: entered %-5s zero errors x1..x6 %s  e %s  (%.0f s)" % (
+                    nz, K, m, K - m, rec["entered"], " ".join("%.1e" % v for v in ze[1:7]) if ze and len(ze) >= 7
+                    else "-", "%.4f" % rec["e"] if "e" in rec else "-", rec["seconds"]), flush=True)
+    SL.NOISE = 1e-14
+    return 0
+
+
 def verdict(out):
     recs = [json.loads(line) for line in open(out)]
     Ks = sorted({r["K"] for r in recs})
@@ -258,6 +290,8 @@ if __name__ == "__main__":
         sys.exit(0 if cmd_exact() else 1)
     if cmd == "run":
         sys.exit(cmd_run())
+    if cmd == "posthoc":
+        sys.exit(cmd_posthoc())
     if cmd == "verdict":
         sys.exit(verdict(args["out"]))
     raise SystemExit(__doc__)
