@@ -2,16 +2,18 @@
 """Every computed value of Delta in one table, hp/data/delta_all.csv, one row per D from the low-D runs to the large-D
 chain's frontier, with the kind of computation, an error estimate and what that estimate is.
 
-    cd hp && python3 export_delta_all.py RAWDIR [--verify] [--mutate=dd|qd|pinned|chain_fit|chain|held|frontier|projector|t85
-                                                                   |fits|fits_table]
+    cd hp && python3 export_delta_all.py RAWDIR [--verify] [--mutate=dd|qd|pinned|pinned_qd|gap|chain_fit|chain|held
+                                                                   |frontier|projector|t85|fits|fits_table]
     cd hp && python3 export_delta_all.py RAWDIR --interp_check [--mutate=interp]
     cd hp && python3 export_delta_all.py RAWDIR --lam_screen [--mutate=lam]
 
 RAWDIR is a clone of the raw-data repository (git clone https://github.com/nmoinvaz/choptuik-large-d-raw). --verify
-re-reads every row of the written CSV from the source and state its row names, rebuilds the chains' err, err_kind and
-data/delta_fits.csv, and exits 1 on any difference; --mutate changes one row of that kind by one unit in its second
-part before the verification (the control, which must fail; it exits 2 when the table has no row of that kind);
---mutate=held labels the last chain_fit row chain, and --mutate=frontier moves the first chain row below the chain_fit
+re-reads every row of the written CSV from the source and state its row names, rebuilds the pinned and chain rows' err,
+err_kind and data/delta_fits.csv, and exits 1 on any difference; --mutate changes one row of that kind by one unit in
+its second part before the verification (the control, which must fail; it exits 2 when the table has no row of that
+kind); --mutate=pinned_qd drops the last two parts of the first quad-double pinned row, and --mutate=gap the err of the
+first "dd-qd gap" row (the pinned rules' controls); --mutate=held labels the last chain_fit row chain, and
+--mutate=frontier moves the first chain row below the chain_fit
 frontier (or, when chain_fit replaces every chain row, puts the chain's last row back), --mutate=projector drops the
 first projector err (data/projector_shift.csv's), and --mutate=t85 gives the first
 chain_fit row a T85-mac source (the controls of the chains' checks); --mutate=fits gives the first chain_fit row whose
@@ -42,7 +44,16 @@ precedence where two share a D:
           graph draws them (solver/plot_delta.py). Where both pins (layouts) reached a D, the row is pin 7's (0.8's) and
           err is the difference (err_kind "pins", "layouts"), a spread between two systems, not a bound. T85-mac's rows
           inside chain_fit's span are left out, since its layouts differ by 2.3e-7 to 8.3e-7 and chain_fit replaces
-          them (notes/QUAD_DOUBLE.md 13.25).
+          them (notes/QUAD_DOUBLE.md 13.25). Two rules set the rows nearest the frontier (#756):
+          (a) where T84-mac's quad-double Delta_full1 exists (PINNED_QD, notes/QUAD_DOUBLE.md 12.4: the pinned
+          solution converged in quad-double plus the full-system Newton step's Delta component, four parts each), it
+          replaces the double-double rows at that D. The row is the pin with the most free harmonics (pin 7, or 3 at
+          the frontier D 73.265722), its eight parts summed exactly and written as four, and err the difference of
+          the two pins' exact sums (err_kind "pins qd"), a spread between two systems, not a bound.
+          (b) the double-double rows between the two highest D of (a) (T75's last shared waypoint 73.1 and the
+          frontier), which no pins err brackets, take as err the larger of the two D's gaps, each the largest
+          difference between a double-double Delta_full1 of either pin there and a quad-double one (err_kind
+          "dd-qd gap"), an estimate, not a bound. The single-pin rows below 73.1 have no err.
   chain_fit  the asymptotic numerical method's chain (anm_run.py) with harmonics 5-13 of p1 held on a 1/n fit of the
           full-system states (--held_fit, notes/HELD_HARMONICS.md), its backbone traced from its highest-D state back
           through each run's start state to T81's quad-double state at 73.0. err as for chain, or, where a run with
@@ -89,6 +100,9 @@ HELD = {"chain_fit": "fit", "chain": "trend"}
 FIT_REPLACES = ("T85-mac/",)
 PINNED = (("T73/t73/pin7.jsonl", "T73/t73/pin5.jsonl", "pins"), ("T75/pin7.jsonl", "T75/pin5.jsonl", "pins"),
           ("T85-mac/x80.jsonl", "T85-mac/x85.jsonl", "layouts"))
+# the quad-double Delta_full1 of the pinned solutions (qd_fullcorr.py, notes/QUAD_DOUBLE.md 12.4), four parts each of
+# Delta_pinned and of the full-system Newton step's Delta component (#756)
+PINNED_QD = "T84-mac/*_fullcorr.jsonl"
 TOL_D = 1e-9
 # the fits that chain_fit's (degree 8) is compared with, T140's, and their labels in err_kind
 FITS = {"data/held_fit_d6.json": "d6", "data/held_fit_d10.json": "d10"}
@@ -188,8 +202,36 @@ def pinned_state(f, r):
     return st if os.path.exists(os.path.join(RAW, st)) else ""
 
 
+def full1_qd(r):
+    """the exact sum of a PINNED_QD record's eight parts, Delta_pinned_q and correction_q"""
+    with mp.workprec(1200):
+        return sum((mp.mpf(p) for p in r["Delta_pinned_q"] + r["correction_q"]), mp.mpf(0))
+
+
+def parts4(x):
+    """x as four f64 parts, each the nearest f64 to what the ones before leave of it"""
+    out = []
+    with mp.workprec(1200):
+        for _ in range(4):
+            out.append(float(x))
+            x -= mp.mpf(out[-1])
+    return [fmt(p) for p in out]
+
+
+def pinned_qd():
+    """the quad-double Delta_full1 by D (6 decimals): [(pin, exact sum, file, record)], the highest pin first"""
+    out = defaultdict(list)
+    for p in sorted(glob.glob(os.path.join(RAW, PINNED_QD))):
+        f = os.path.relpath(p, RAW).replace(os.sep, "/")
+        for r in records(f):
+            out[round(r["D"], 6)].append((r["pin"], full1_qd(r), f, r))
+    for k in out:
+        out[k].sort(key=lambda t: -t[0])
+    return out
+
+
 def pinned_rows(Dmin):
-    rows = []
+    rows, dd = [], defaultdict(list)
     for main, other, ek in PINNED:
         sec = {round(r["D"], 6): r for r in records(other) if "Delta_full1" in r}
         used = set()
@@ -198,6 +240,7 @@ def pinned_rows(Dmin):
                 if "Delta_full1" not in r or r["D"] <= Dmin:
                     continue
                 k = round(r["D"], 6)
+                dd[k].append(total([r["Delta_full1"], r["Delta_full1_lo"]]))
                 if f == other and k in used:
                     continue
                 err = ""
@@ -208,6 +251,27 @@ def pinned_rows(Dmin):
                 rows.append(dict(D=fmt(r["D"]), Delta_q0=fmt(r["Delta_full1"]), Delta_q1=fmt(r["Delta_full1_lo"]), Delta_q2="",
                                  Delta_q3="", kind="pinned", err=err, err_kind=ek if err else "", source=f"{f}:D{r['D']}",
                                  state=pinned_state(f, r)))
+    # (a) the quad-double Delta_full1 replaces the double-double rows at its D, with the pins' spread as err
+    qd = {k: v for k, v in pinned_qd().items() if k > Dmin}
+    rows = [r for r in rows if round(float(r["D"]), 6) not in qd]
+    gap = {}
+    for k, sols in qd.items():
+        pin, v, f, r = sols[0]
+        err = max((abs(v - w) for _, w, _, _ in sols[1:]), default=None)
+        st = f"{os.path.dirname(f)}/{r['state']}"
+        rows.append(dict(D=fmt(r["D"]), **dict(zip(("Delta_q0", "Delta_q1", "Delta_q2", "Delta_q3"), parts4(v))),
+                         kind="pinned", err="" if err is None else f"{float(err):.1e}",
+                         err_kind="" if err is None else "pins qd", source=f"{f}:D{r['D']}",
+                         state=st if os.path.exists(os.path.join(RAW, st)) else ""))
+        # the largest difference between a double-double and a quad-double Delta_full1 at this D
+        gap[k] = max((abs(a - w) for a in dd[k] for _, w, _, _ in sols), default=None)
+    # (b) the double-double rows between the two highest quad-double D: the larger gap of the two as err
+    top = sorted(k for k in gap if gap[k] is not None)[-2:]
+    if len(top) == 2:
+        e = f"{float(max(gap[top[0]], gap[top[1]])):.1e}"
+        for r in rows:
+            if not r["err"] and not r["Delta_q2"] and top[0] < round(float(r["D"]), 6) < top[1]:
+                r["err"], r["err_kind"] = e, "dd-qd gap"
     return rows
 
 
@@ -518,6 +582,19 @@ def verify(rows, mutate=""):
             sys.exit(2)
         r["err"], r["err_kind"] = "", ""
         print(f"mutated: the chain_fit row at D {r['D']} without its projector err")
+    elif mutate in ("pinned_qd", "gap"):
+        # a quad-double pinned row as its first two parts only; a dd-qd gap row without its err (as before #756)
+        test = (lambda r: r["kind"] == "pinned" and r["Delta_q2"]) if mutate == "pinned_qd" else \
+            (lambda r: r["err_kind"] == "dd-qd gap")
+        r = next((r for r in rows if test(r)), None)
+        if r is None:
+            print(f"no {mutate} rows, so nothing to mutate")
+            sys.exit(2)
+        if mutate == "pinned_qd":
+            r["Delta_q2"] = r["Delta_q3"] = ""
+        else:
+            r["err"] = r["err_kind"] = ""
+        print(f"mutated: the {mutate} row at D {r['D']}")
     elif mutate == "held":
         r = [r for r in rows if r["kind"] == "chain_fit"][-1]
         r["kind"] = "chain"
@@ -546,6 +623,10 @@ def verify(rows, mutate=""):
     pub = published()
     dd = {r["D"]: r for r in csv.DictReader(open(os.path.join(HERE, "data", "delta_dd.csv")))}
     qd = {r["D"]: r for r in csv.DictReader(open(os.path.join(HERE, "data", "delta_qd.csv")))}
+    # the pinned rows rebuilt, for their err (rules (a) and (b)); where two runs share a D, the first, as build() keeps
+    pin = {}
+    for r in pinned_rows(max(float(x) for x in dd)):
+        pin.setdefault(r["D"], r)
     recs = {}
     for r in rows:
         parts = [r[f"Delta_q{i}"] for i in range(4)]
@@ -558,9 +639,15 @@ def verify(rows, mutate=""):
         elif r["kind"] == "pinned":
             f, _, d = r["source"].partition(":D")
             if f not in recs:
-                recs[f] = {repr(x["D"]): x for x in records(f) if "Delta_full1" in x}
+                recs[f] = {repr(x["D"]): x for x in records(f) if "Delta_full1" in x or "correction_q" in x}
             s = recs[f][repr(float(d))]
-            want = [fmt(s["Delta_full1"]), fmt(s["Delta_full1_lo"]), "", ""]
+            want = parts4(full1_qd(s)) if "correction_q" in s else \
+                [fmt(s["Delta_full1"]), fmt(s["Delta_full1_lo"]), "", ""]
+            w = pin.get(r["D"])
+            if w is None or (r["err"], r["err_kind"], r["source"]) != (w["err"], w["err_kind"], w["source"]):
+                bad += 1
+                print(f"DIFFERS: pinned D {r['D']}: err {r['err']} ({r['err_kind']}) from {r['source']} against"
+                      f" {w and (w['err'], w['err_kind'], w['source'])}")
         else:
             want = load_state(r["state"])[1]
             h = held_of(os.path.dirname(r["state"]))[0]

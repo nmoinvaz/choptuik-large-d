@@ -11,8 +11,9 @@ The steps, in order:
 4. export_delta_all.py RAWDIR writes data/delta_all.csv and data/delta_fits.csv.
 5. export_delta_all.py --verify checks the master table.
 6. Each --mutate control runs and must fail by its check (one per kind, and held, frontier and t85 for the chains'
-   checks, fits and fits_table for the error bar over the held fit's degree). A kind with no rows has nothing to mutate,
-   and its control is reported as skipped. The master table is then restored and verified again.
+   checks, fits and fits_table for the error bar over the held fit's degree, pinned_qd and gap for the pinned rows'
+   rules). A kind with no rows has nothing to mutate, and its control is reported as skipped. The master table is then
+   restored and verified again.
 7. export_delta_all.py --interp_check checks the interpolation of the comparison fits at D 186 to 190, and its control
    --mutate=interp must fail.
 7b. export_delta_all.py --lam_screen screens the chain_fit backbone's gauge rate (#637), and its control
@@ -77,7 +78,8 @@ def main():
         built = f.read()
     print("checks of the master table:", flush=True)
     ok &= run(["export_delta_all.py", raw, "--verify"])
-    for m in ("dd", "qd", "pinned", "chain_fit", "chain", "held", "frontier", "projector", "t85", "fits", "fits_table"):
+    for m in ("dd", "qd", "pinned", "pinned_qd", "gap", "chain_fit", "chain", "held", "frontier", "projector", "t85",
+              "fits", "fits_table"):
         ok &= run(["export_delta_all.py", raw, "--verify", f"--mutate={m}"], expect=1)
     with open(master, "wb") as f:
         f.write(built)
