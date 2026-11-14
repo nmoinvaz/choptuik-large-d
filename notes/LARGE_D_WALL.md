@@ -645,5 +645,56 @@ per-state table had been seen.
 - Whether the continuum shares the term is #801's continuum test, at M = 48 or with the harmonics released.
 - The pre-registered rank correlation with per-state quantities failed its own plants. On this grid every plant names
   the step size, because a smooth term's local residual grows as the span⁴. So it identifies nothing.
-- #787's λ_g screen fails on the same states from 250.47. A local cubic cannot follow this term once it passes the
-  screen's tolerance. Whether λ_g carries the same 1/p_min law is untested.
+- #787's λ_g screen fails on the same states from 250.47. λ_g carries a term of the same kind (next subsection).
+
+### The gauge rate carries the same term (#807)
+
+**λ_g follows the same law. Its departure from a smooth fit is one analytic function, of size about 3×10⁻³⁹/p_min from
+250.47 to 258.8, about 70 times smaller than Δ's in these units.** Toward the fold it falls 10–15 times below that.
+#787's screen departures are this term's curvature, not errors of the states. Script: `hp/lam_frontier.py`. Raw:
+`I807-mac/` of the raw-data repository. The tests were pre-registered on #807, and the control was amended once after it
+fired, with its cause found.
+
+**Analyticity.**
+- chain_nsr's 63 jets carry the horizon block a_h, so λ_g = 1 − (n − 1)⟨a_h² − 1⟩ can be continued.
+- Continued at 200 digits, they return all 83 states within reach, 251.30–259.74, in 1236 comparisons. The worst is
+  at 0.31 of the bound 10T, with |d| ≤ 2.2×10⁻¹².
+- The plants: a 1/p_min term and a square-root pair pass. The same term with per-state errors fails by 4×10²¹, and with
+  one state moved by 10⁻¹⁰ it fails by 10²⁰.
+- **The control**, each jet against its next prediction, agrees to 1.2×10⁻⁶³. Its n-mutation misses by 1.1×10⁻⁴.
+- **The amendment.** As first run, the control took a from the stored D strings. From D 257.5 on, the run's D carries a
+  50-digit rounding, 2.5–6×10⁻⁴⁸ off base + a. That made the control miss by up to 3×10⁻⁵¹, in every entry of the
+  state.
+- Below the jets, each state's λ_g is within 5.1×10⁻³¹ of its stored prediction, over all 121 steps from 226.13.
+
+**The law.** δλ_g = λ_g − R, with R a polynomial of degree 8 in 1/(D − 2) fitted on chain_fit's backbone from 150
+to 245.64.
+- R's residual there is at most 4.7×10⁻¹³. Its spread over degree and range is 1.4×10⁻¹¹ at 250.47 and 3.6×10⁻¹⁰ at
+  259.7, and all 82 states clear three times it.
+- **As registered** (windows of 3 in D that end by 259.7), the windowed maximum of |δλ_g|·p_min ranges over a factor
+  1.77, from 2.9×10⁻³⁹ to 5.1×10⁻³⁹. The planted 1/p_min term gives 2.24.
+- **The plants that must fail.** A square-root pair and fixed per-state errors of 10⁻¹⁰ failed as registered, but only
+  because no state cleared the spread. Applied past the frontier only (post hoc), they fail on the statistic itself,
+  by factors 3.6×10⁴ and 1.4×10⁴.
+- **Post hoc, with the windows cut short by the last state:** 17.7, against 3.4 for the planted term.
+  |δλ_g|·p_min falls to 2–3×10⁻⁴⁰ at 259.3–259.7. So near the fold the law is an upper envelope only.
+- δλ_g changes sign near 252.0, 255.1 and 259.27. Δ's term does so near 250.3, 253.1 and 256.4, so the zeros
+  interleave. This is an observation, not tested.
+
+**The screen.**
+- Applied to λ_g, #787's polynomial (degree 5 through 8 neighbours) gives its departures exactly: −1.45×10⁻¹¹ at
+  250.47, −2.84×10⁻⁹ at 256.57 and +5.43×10⁻¹⁰ at 258.60.
+- Applied to δλ_g it gives the same to 1.3×10⁻¹⁹, so they come from the term.
+- The screen's own departure × p_min ranges over a factor 69, because it depends on the step spacing.
+
+**The proposed screen past the frontier: a prediction check.**
+
+```math
+\left|\lambda_g(\text{state}) - \lambda_g(\text{prediction})\right| \le 10^{-20}
+```
+
+- It applies at every state whose run stored its prediction (`--save_pred 1`, #603 from 226.13).
+- The prediction is the previous state's series at this D, so the check ties each state to its predecessor's analytic
+  continuation without assuming smoothness over neighbours.
+- It passes all 121 states at 5.1×10⁻³¹. Its control, one state's λ_g moved by 10⁻¹⁰ (`--mutate=lam`), fails.
+- The polynomial screen stays where it passes, below 250.46, and wherever no prediction is stored.
