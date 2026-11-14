@@ -336,7 +336,12 @@ its step, not from a missing root. Δ − Δ(w = 1/4) is +8.76×10⁻¹⁴, +9.3
 term's effect thus levels off near 1.06×10⁻¹² from w = 0, most of it gained by w = 1/4. Two rungs between (#797; raw
 `I797-win2/` 4ecf7009) converge in 5 steps each and put Δ − Δ(w = 1/4) at 8.761, 9.256, 9.368, 9.192 and 8.799×10⁻¹⁴
 for w = 3/8, 13/32, 7/16, 15/32 and 1/2: a smooth turn with its peak near w = 7/16, 6×10⁻¹⁵ high, against a last step's
-dΔ of at most 4×10⁻⁵¹ at each rung. The climb on to w = 1, a converged order-132 base, is #796.
+dΔ of at most 4×10⁻⁵¹ at each rung. #796 (raw `I796-win2/` 378653ca and 20070baf) climbed on: w = 5/8 converges in 5 steps; w = 3/4 stalls at the 20-step cap with
+θ falling about 8 times per step, and resumed from its own base it converges in 4 more; 7/8 converges in 5 and w = 1 in
+19 (λ down to 1/32 in its first 8 steps, 18 failed projections all at blown-up trials). A cold polish of the w = 1 base
+at w = 1 converges in 1 step to 6.9×10⁻⁷⁵. **So the climb gives a converged order-132 state at D 245.14, the first past
+ks 131, and Δ(132) − Δ(131) = 9.262×10⁻¹³ there**, after Δ(w) peaked near w = 1/2 at 1.058×10⁻¹² (not monotone in w).
+Track A climbs the whole tail the same way (4.7).
 
 ### 4.7 Track A: the tail homotopy (#800; design, criteria fixed before any code)
 
