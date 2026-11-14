@@ -10,9 +10,13 @@ assumed. It is checked on the evaluated points instead: D(conj lam) = conj D(lam
     python3 css_inf_count.py selftest [--mutate=coarse]     a synthetic D with known zeros, three of them 0.02-0.05
                                                             from the edges; coarse (one sample per edge) must fail
     python3 css_inf_count.py count [--r0=0.1 --r1=0.3 --alpha=0.375 --rtol=1e-13 --N=160] [--plant=3.1+5j]
-                                   [--evlog=F] [--out=F]    --plant multiplies D by (lam - p)(lam - conj p)
+                                   [--box=RE0,RE1,IM0,IM1] [--evlog=F] [--out=F]
+                                   --plant multiplies D by (lam - p)(lam - conj p); --box defaults to 0.05,5,-9,9
+    python3 css_inf_count.py locate LAM0 [LAM0 ...] [--target=T,...] [--atol=A] [setting options] [--out=F]
+                                   zeros of D by css_inf_jump's secant from each LAM0 (and LAM0 + 1e-3); --atol sets
+                                   DOP853's absolute tolerance (css_inf_jump.ATOL), needed next to lambda = +-i omega
 --evlog keeps every D(lam) (jsonl) and is read back first, so a plant reuses the plain count's evaluations.
-Exit codes: selftest 0 pass, 1 fail; count 0 when the winding is an integer and no bisection limit is hit.
+Exit codes: selftest 0 pass, 1 fail; count 0 when the winding is an integer and no bisection limit is hit; locate 0.
 """
 import json
 import math
@@ -114,7 +118,15 @@ def selftest(coarse=False):
           "3 + 9.5i): winding %.12f, planted %.12f, largest step %.3f rad, %d intervals: %s" % (
               " (coarse)" if coarse else "", len(inside), r["winding"], rp["winding"], r["largest_step"],
               r["intervals"], "PASS" if ok else "FAIL"))
-    return ok
+    strip = (-0.05, 0.05, -9.0, 9.0)                # #791: 0 and +-i omega inside, 0.03 + 9.02i just outside
+    s = count_box(Arg(D), box=strip, coarse=coarse)
+    sp = count_box(Arg(D, plant=0.02 + 6j), box=strip, coarse=coarse)
+    ok2 = round(s["winding"]) == 3 and abs(s["winding"] - 3) < 1e-9 and round(sp["winding"]) == 5 \
+        and s["largest_step"] <= STEP and s["bisection_limit_hits"] == 0
+    print("selftest%s, strip -0.05 < Re < 0.05: winding %.12f (3: 0, +-i omega), planted 0.02 +- 6i %.12f, largest "
+          "step %.3f rad, %d intervals: %s" % (" (coarse)" if coarse else "", s["winding"], sp["winding"],
+                                                s["largest_step"], s["intervals"], "PASS" if ok2 else "FAIL"))
+    return ok and ok2
 
 
 def main():
@@ -123,7 +135,7 @@ def main():
     pos = [a for a in args if not a.startswith("--")]
     if pos and pos[0] == "selftest":
         sys.exit(0 if selftest(coarse=opts.get("mutate") == "coarse") else 1)
-    if not pos or pos[0] != "count":
+    if not pos or pos[0] not in ("count", "locate"):
         raise SystemExit(__doc__)
     import css_inf_jump as cj
     st = dict(r0=float(opts.get("r0", 0.1)), r1=float(opts.get("r1", 0.3)), alpha=float(opts.get("alpha", 0.375)),
@@ -131,6 +143,25 @@ def main():
     t0 = time.time()
     P = cj.Problem(r0=st["r0"], r1=st["r1"], alpha=st["alpha"] * math.pi, rtol=st["rtol"], N=st["N"])
     x, j = P.select(log=lambda s: None)
+    if pos[0] == "locate":
+        cj.ATOL = float(opts["atol"]) if "atol" in opts else None
+        om = x[1]
+        names = {"0": 0j, "iw": 1j * om, "-iw": -1j * om}
+        targets = [names[t] for t in opts.get("target", "").split(",")] if "target" in opts else [None] * len(pos[1:])
+        for s0, tg in zip(pos[1:], targets):
+            t = time.time()
+            lam, it = P.root(complex(s0), log=lambda s: None)
+            d = P.det(lam)
+            rec = dict(kind="locate", **st, atol=cj.ATOL, f0=x[0], omega=om, bg_jump=j, start=[complex(s0).real,
+                       complex(s0).imag], lam=[lam.real, lam.imag], iterations=it, D_at_root=abs(d),
+                       target=None if tg is None else [tg.real, tg.imag],
+                       dist_to_target=None if tg is None else abs(lam - tg), seconds=round(time.time() - t, 1))
+            print(json.dumps(rec), flush=True)
+            if "out" in opts:
+                with open(opts["out"], "a") as fo:
+                    fo.write(json.dumps(rec) + "\n")
+        return
+    box = tuple(float(v) for v in opts["box"].split(",")) if "box" in opts else BOX
     evlog = opts.get("evlog")
     cache = {}
     if evlog and os.path.exists(evlog):
@@ -144,10 +175,10 @@ def main():
                 fo.write(json.dumps(r) + "\n")
     plant = complex(opts["plant"]) if "plant" in opts else None
     arg = Arg(P.det, plant=plant, cache=cache, log=log)
-    res = count_box(arg)
+    res = count_box(arg, box=box)
     sym = [abs(arg.cache[k].conjugate() - arg.cache[(k[0], -k[1])]) / abs(arg.cache[k])
            for k in arg.cache if k[1] > 0 and (k[0], -k[1]) in arg.cache]
-    rec = dict(kind="count", **st, box=list(BOX), plant=[plant.real, plant.imag] if plant else None, f0=x[0],
+    rec = dict(kind="count", **st, box=list(box), plant=[plant.real, plant.imag] if plant else None, f0=x[0],
                omega=x[1], bg_jump=j, **res, new_evaluations=arg.nev, cached=len(arg.cache) - arg.nev,
                conj_pairs=len(sym), conj_symmetry_max=max(sym) if sym else None, seconds=round(time.time() - t0, 1))
     print(json.dumps(rec), flush=True)
