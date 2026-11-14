@@ -2198,3 +2198,47 @@ time, μ = 2ns₀ with s = ρ²/(2n), and on the cone it is Kol's s₊ mode at D
 ### Recommended tasks (for the coordinator to file)
 
 KOL_MERGER.md §7.
+
+## Addendum (2026-11-14, issue #380, part 2): the review's PDE-blowup and naked-singularity sections
+
+**Question.** Which self-similar blowup and naked-singularity problems do Secs. VI and VII of Gundlach, Hilditch and
+Martín-García's review list, which open items does it state, and where do our methods apply? The map is
+[REVIEW_GHMG25.md](REVIEW_GHMG25.md) §9, the canonical place for it. This entry records what was read.
+
+**How.** Secs. VI and VII of arXiv:2507.07636v1 (lines 3412–5077 of `critphen_lrr_maintext.tex`), every line, from the
+arXiv source downloaded with curl on 2026-11-14. The cited works were not read; their records were checked against
+the arXiv API (export.arxiv.org, 2026-11-14). Log and hashes: `I380-mac/read_log.md` of the raw-data repository.
+
+### References checked
+
+The arXiv records of the 25 works §9 names, against the review's `.bbl` (author, year, journal where given): 2 PARTIAL,
+1 MINOR, the rest OK.
+
+| Entry | arXiv record | Verdict |
+|---|---|---|
+| Glogić, Schörkhuber, Adv. Math. 390 (2021) 107930, arXiv:1810.07681 | DOI 10.1016/j.aim.2021.107930 | OK; the review's key says 18, the journal year is 2021 |
+| Glogić, Maliborski, Schörkhuber, Nonlinearity 33 (2020), arXiv:1905.13739 | DOI 10.1088/1361-6544/ab6f4d | OK |
+| Biernat, Bizoń, CMP 338 (2015) 1443, arXiv:1409.8214 | journal ref and DOI | OK |
+| Biernat, Bizoń, Maliborski, Nonlinearity 30 (2017), arXiv:1608.07707 | DOI 10.1088/1361-6544/aa61ab | OK |
+| Bizoń, Maison, Wasserman, Nonlinearity 20 (2007) 2061, math/0702156; Bizoń, Breitenlohner, Maison, Wasserman, Nonlinearity 23 (2010) 225, arXiv:0905.3834 | journal refs | OK; the review's key BizBreMaiWas09 is the preprint year |
+| Bizoń, Chmaj, Tabor, Nonlinearity 17 (2004) 2187, math-ph/0311019 | journal ref | OK |
+| Merle, Raphaël, Rodnianski, Szeftel, arXiv:1912.10998, 1912.11009, 1912.11005 | titles; no journal ref on arXiv | PARTIAL: the review's journals (Ann. Math. 196 (2022); Invent. Math. 227 (2022)) not checked against the publishers |
+| Biasi, CNSNS 103 (2021) 106014, arXiv:2104.05728 | journal ref and DOI | OK |
+| Buckmaster, Cao-Labora, Gómez-Serrano, Forum Math. Pi 13 (2025) e6, arXiv:2208.09445 | journal ref and DOI | MINOR: the review cites the 2022 preprint |
+| Jenssen, arXiv:2501.09037; Donninger, Schörkhuber, arXiv:2406.16597; Shao, Wei, Zhang, arXiv:2403.11471; Sandine, arXiv:2310.18870; Singh, arXiv:2402.00062; Cicortas, Kehle, arXiv:2412.09540 | titles and authors | OK as preprints |
+| Tao, Anal. PDE 9 (2016) 1999, arXiv:1602.08059 | journal ref and DOI | OK |
+| Guo, Hadžić, Jang, Schrecker, ARMA 246 (2022), arXiv:2107.12056; Guo, Hadžić, Jang, CMP 386 (2021), arXiv:2011.01013; Guo, Hadžić, Jang, arXiv:2112.10826 | DOIs where given | OK |
+| Glogić, arXiv:2104.01839 (Adv. Math. 408 (2022) per the review) | title | PARTIAL: journal not on the arXiv record |
+| Bizoń, CMP 215 (2000), math-ph/9910026 | DOI 10.1007/s002200000291 | OK |
+| Martín-García, Gundlach, PRD 68, 024011 (2003), gr-qc/0304070 | journal ref and DOI | OK |
+
+### Gap statement
+
+- **Not read.** Every primary source of Secs. VI and VII. §9 states each result as the review gives it, so a row's
+  "known" and "open" columns are the review's account, as of v1.
+- **Not searched.** Work after the review on the open items of §9.1 (for example, a numerical count of the Euler
+  implosion modes). Each recommended task of §9.3 starts with that search.
+
+### Recommended tasks (for the coordinator to file)
+
+REVIEW_GHMG25.md §9.3.

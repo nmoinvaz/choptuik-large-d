@@ -2,8 +2,8 @@
 
 The review is C. Gundlach, D. Hilditch and J. M. Martín-García, *Critical Phenomena in Gravitational Collapse*,
 arXiv:2507.07636v1 (10 July 2025; 51 pages; gr-qc, math.AP), the update of the 2007 Living Review (lrr-2007-5). This
-note sets every statement of it that overlaps our work against our value or result. Part 2 of #380 (its PDE-blowup and
-naked-singularity sections as a map for other fields) is not covered here.
+note sets every statement of it that overlaps our work against our value or result. Part 2 of #380, its PDE-blowup and
+naked-singularity sections as a map for other fields, is §9.
 
 - **Version.** v1 is the only arXiv version (abstract page fetched 2026-11-12). Its arXiv comment says that feedback
   "received by October 2025 will be considered in the version to be published". INSPIRE lists no journal publication
@@ -429,3 +429,126 @@ rounding bound only, so a "no" there says only that the printed digits differ).
   longer in the source), 3.2223 changed to 3.2224, and 0.41 changed to 0.4 (a prefix of the true value).
 - **What the two share.** The frozen copy and the producer's rows were transcribed in the same reading. The frozen
   copy guards the CSV against later edits. Only `--verify` ties the transcription to the papers.
+
+## 9. The PDE-blowup and naked-singularity sections, as a map for other fields (#380, part 2)
+
+**Verdict.** The review's Secs. VI and VII list 18 self-similar blowup or naked-singularity problems. For six of them it
+states an open item that one of our methods addresses, and HARMONY.md and matter/ address none of the six items yet.
+The clearest match is in VI E. There the authors of the compressible-Euler blowup proofs "comment that counting the
+number of unstable modes should be addressed numerically", and the review points to Gundlach 1998's contour count as
+the precedent. That is the winding count of notes/MODE_COUNT.md. The analytic problems (Christodoulou's regularity
+thresholds, the vacuum and extremal constructions) have no counterpart among our methods.
+
+**How it was read.** Secs. VI (lines 3412–3986 of `critphen_lrr_maintext.tex`) and VII (3988–5077), every line, from
+the arXiv source of v1, downloaded again on 2026-11-14 (SHA-256 in `I380-mac/read_log.md` of the raw-data repository).
+The cited papers were not read. Their arXiv records were checked (LIT_REVIEW.md, addendum of #380 part 2), so each
+statement below is the review's account of them.
+
+**Our methods**, as the issue names them:
+- M1, high-precision self-similar solves (`hp/`, the mpmath shooting of `solver/harmony/`);
+- M2, unstable-mode counts by a winding number (notes/MODE_COUNT.md);
+- M3, large-dimension expansions, including the symmetry weights of Proposition 5 and notes/KOL_MERGER.md;
+- M4, selection by a Stokes multiplier (exponential asymptotics, Borel–Padé sums);
+- M5, validated numerics (python-flint, Lohner integration, Taylor discs, `solver/proof/`).
+
+### 9.1 What Secs. VI and VII list
+
+| Sec. | Problem | What the review says is known | Open item it states | Ours | Covered here |
+|---|---|---|---|---|---|
+| VI B | focusing u_tt = Δu + \|u\|^{p−1}u, d = 3, p = 3, 5, 7 (Bizoń–Chmaj–Tabor 2004) | p = 5: static critical solution; p = 7: CSS critical solution. A countable family for every odd p (Bizoń–Maison–Wasserman 2007); for p = 3 "the n-th solution has n unstable modes" (Bizoń et al. 2009) | "For p = 3 a critical solution could not be identified" | M1, M2 for the family's counts; the p = 3 threshold is dynamical: none | no |
+| VI B | cubic focusing NLW, d ≥ 5, explicit self-similar solution (Glogić–Schörkhuber 2018) | d = 7: codimension-one attractor, proved, because "the particular choice of d = 7 allows a rigorous solution of the spectral problem"; the spectrum "computed numerically for general d ≥ 5" (Glogić–Maliborski–Schörkhuber 2020) | the spectral problem at d ≠ 7 (*inferred* from the quoted sentence) | M2 + M5: certified counts at d = 5, 6, 8, 9, …; M3: the spectrum as d → ∞ | no |
+| VI C | SO(d) Yang–Mills, d = 5 family W_n; explicit CSS for d ≥ 5 (Biernat–Bizoń 2015) | spectrum = zeros of a special function, all eigenvalues negative except the gauge one; stable blowup proved for all odd d ≥ 5 (Glogić 2022) | none stated | M3 | yes: matter/YM_FAMILY.md, notes/YANG_MILLS_AI.md, HARMONY row 5 |
+| VI D | corotational wave maps into S^d, d = 3 family (Bizoń 2000); explicit CSS for d ≥ 3 | n = 1 is the critical solution in d = 3; mode stability of the explicit solutions proved (Biernat–Bizoń 2015); the threshold is a self-similar solution's attracting manifold "for 3 ≤ d ≤ 6" (Biernat–Bizoń–Maliborski 2017) | d ≥ 7 is outside the stated range | M1, M2, M3 at d ≥ 7 | d = 3 only: HARMONY "What we can give them", row 1 |
+| VI E | Newtonian compressible Euler and Navier–Stokes, P ∝ ρ^Γ (Merle–Raphaël–Rodnianski–Szeftel 2019–2022; Buckmaster–Cao-Labora–Gómez-Serrano 2022) | smooth self-similar solutions for a countable sequence of speeds β_k accumulating from below at β*(d, Γ); finite-codimension stability; Navier–Stokes for Γ < 1 + 2/√3 | "counting the number of unstable modes should be addressed numerically"; "it remains open how many unstable modes there are and if any smooth self-similar solution is stable" (after Biasi 2021) | M2 on M1's profiles; M4 for the accumulation of β_k | profiles only: HARMONY row 3 and its implosion pilot (r⁽³⁾(7/5), r⁽⁵⁾(7/5) to 22–25 digits) |
+| VI E | CSS Euler solutions with finite mass and energy (Jenssen 2025) | existence for β > 1 near 1 | uniqueness for t > 0, "a preliminary statement" | none | no |
+| VI F | defocusing NLS, (d, p) = (5, 9), (6, 5), (8, 3), (9, 3) (Merle et al.) | blowup from the Euler profiles when (p − 1)(d − 2√d) > 4 | other (d, p) "may carry over" | M1 | no |
+| VI F | focusing cubic NLS, d = 3 (Donninger–Schörkhuber 2024) | a self-similar profile Q with α ≃ 0.917, proved by a computer-assisted Chebyshev expansion | none stated | M1 (α to many digits) | no |
+| VI G | relativistic Euler, P = kρ (Shao–Wei–Zhang 2024) | one smooth self-similar implosion for each d and k: d = 2, 3 for 0 < k < 1, d > 3 for k*(d) < k < 1 | "existence for smaller k is not excluded" | M1, M3 | no |
+| VI H | defocusing NLW systems, m = 40 (Tao 2016) | a smooth DSS blowup that is not CSS | "no proof yet of the non-existence of smooth CSS solutions" | none | no |
+| VII A | Euler–Poisson (Guo–Hadžić–Jang–Schrecker 2021; Larson–Penston; Hunter family, Sandine 2023) | existence by interval arithmetic on Taylor series at the sonic point | none stated | M1, M2, M5 | yes: HARMONY row 4 and "What we can give them", row 2 |
+| VII B | relativistic Larson–Penston, P = kρ, k ≪ 1 (Guo–Hadžić–Jang 2021) | existence as analytic solutions; numerically attractors | "Stability has not yet been proved rigorously, and neither has existence or stability of the relativistic Hunter A, B, ... solutions which are believed to be codimension-1, 2, ... stable" | M1, M2 for the counts; M5 for existence | Newtonian only: HARMONY |
+| VII C | the CSS critical solution of the S³ σ-model in GR (Bizoń–Wasserman) | existence proved, "the only CSS one so far" | none stated | M1, M2 | yes: matter/SIGMA.md |
+| VII D | Christodoulou's CSS naked singularities; the instability theorems (Christodoulou 1999; Singh 2022, 2024; An 2024) | C^{1,ε} at the past light cone, ε = k²/(1 − k²); unstable under C^{1,δ} perturbations with δ = k²/(4(1 + 5k²)); "We believe that this generalises to any CSS or DSS spherical Einstein-scalar solution, such as the Choptuik solution, if one replaces k² by 1 − ν" | whether δ is sharp ("Sin24 conjectures" it is not); "if unstable nonlinear perturbations with support in the interior can remove the naked singularity" | none for the proofs; ν_SH(D) from M1 gives the conjectured thresholds | ν_SH(D): #622 |
+| VII D 7 | the Choptuik solution (Reiterer–Trubowitz) | analytic from the centre to beyond the past light cone | a proof that it is a naked singularity, analytic up to its Cauchy horizon, "might be possible ... using the method of [RT]" | M5, weeks; our solvers stop at x = 1 (§4) | no |
+| VII E | vacuum CSS (Rodnianski–Shlapentokh-Rothman 2017, 2019; Shlapentokh-Rothman 2022) | κ > 0 naked singularities, C^{1,cε²} across v = 0 | none stated beyond the constructions | none | no |
+| VII F, G, H | DSS exterior naked singularities (Cicortas–Kehle 2024); surface gravity ν; comparison | ν_CH,Choptuik ≃ 1 − 1.4710461(4)×10⁻⁶ (Martín-García–Gundlach 2003); ν_SH,Choptuik ≃ 0.6138 | the conjecture that a naked singularity "regular everywhere to the past of the CH cannot also be regular through the CH"; twist-free axisymmetric vacuum DSS "(potentially)" possible | M1 for ν_SH(D); none for the rest | ν_SH: §2 row 3, #622 |
+| VII I | extremal critical collapse (Kehle–Unger 2022, 2024) | thresholds that settle to extremal Reissner–Nordström, spherical charged Vlasov | Conjectures 1–5 (stability, charged scalar field, vacuum) | none | no |
+
+### 9.2 Where our methods apply
+
+- **Mode counts (M2).** The review states two counts as open (VI E, VII B) and describes a third as computed only
+  numerically (VI B, d ≠ 7). In each, the background is a smooth self-similar profile and the count is a winding number
+  of a determinant in the complex rate plane, which MODE_COUNT.md does for the Choptuik solution. The review's own
+  precedent is Gundlach 1998's contour count for fluids (VI E, quoted in §3 D6).
+- **Large dimension (M3).** Three families are posed for every d: cubic NLW (d ≥ 5), Yang–Mills (d ≥ 5) and wave maps
+  (d ≥ 3), as is relativistic Euler (d ≥ 2). The review discusses none of them as d → ∞. For Yang–Mills this is
+  YM_FAMILY.md's test. For the others the question #429 asked here applies: whether an unstable rate tends to the weight
+  of a symmetry of the d = ∞ equations.
+- **Selected parameters (M1, M4).** The blowup speeds β_k accumulate at β*(d, Γ) (VI E), and the NLS profile has one
+  selected α (VI F). HARMONY row 1 found that zeros of a Stokes multiplier come in families with a predicted spacing,
+  which is the kind of law an accumulation at β* could follow (*inferred*, untested).
+- **Validated numerics (M5).** The existence proofs the review lists for blowup profiles are computer-assisted
+  (Guo–Hadžić–Jang–Schrecker; Donninger–Schörkhuber; Reiterer–Trubowitz), so a certified count at a given d or Γ would
+  sit beside them. HARMONY's costs for certifying a profile and its count are 3–5 days (wave maps) and 1–2 weeks (Hunter
+  A).
+- **None.** VI H, VII D's proofs, VII E, VII F's constructions, the conjecture of VII H and VII I are analytic problems
+  without a computed parameter. None of the five methods applies to them.
+
+### 9.3 Recommended tasks (for the coordinator to file)
+
+Each is outside the README's scope (another physical system) unless it says otherwise, so by AGENTS.md it is a private
+task of nmoinvaz/agent-comms with the label `choptuik-large-d`.
+
+1. **Unstable modes of the compressible-Euler implosion profiles.**
+   - *What.* M2 on HARMONY's implosion profiles (γ = 7/5, the speeds r⁽³⁾ and r⁽⁵⁾), radial perturbations first, in
+     the similarity variables of `solver/harmony/implosion/`.
+   - *Why.* VI E states the count as open and asks for it numerically.
+   - *Acceptance.* Before the real run, the winding code counts a case with a proved answer: cubic NLW's explicit
+     solution at d = 7, a codimension-one attractor by Glogić–Schörkhuber, so one growing mode besides the symmetry
+     modes. On the Euler profiles it must find the time-translation mode at its exact rate to 10⁻¹⁰. A mutation (one
+     coupling's sign flipped) must change the planted count. The real count must agree at two contour radii and two
+     resolutions; otherwise the verdict is "not resolved".
+   - *Depends on.* #380, `solver/harmony/implosion/`. 2–4 days.
+2. **Cubic NLW self-similar blowup, d = 5–12 and d → ∞.**
+   - *What.* The spectrum of Glogić–Schörkhuber's explicit solution by M2 at d = 5, 6, 8, 9, 10, 11 and 12, then its
+     unstable rate as d → ∞ (M3).
+   - *Why.* The review records a rigorous spectral solution at d = 7 only. The large-d rate tests whether #429's
+     mechanism (a rate equal to a symmetry's weight) holds outside gravity.
+   - *Acceptance.* d = 7 reproduces the proved count. The count is stable under contour and resolution, as in task 1.
+     For the limit, a fit of the rate in 1/d on planted data with a known limit must recover it to 10⁻⁶ before the
+     real fit is reported, with the spread over fit choices named as such.
+   - *Depends on.* #380. A day for numerical evidence; certified counts (M5), 2–3 more days per d.
+3. **The wave-map threshold for d ≥ 7.**
+   - *What.* The self-similar solution that Biernat–Bizoń–Maliborski identify as the threshold for 3 ≤ d ≤ 6, followed
+     to d = 7–16 by M1, with its count by M2 and its large-d limit by M3.
+   - *Why.* The review states the threshold result for 3 ≤ d ≤ 6 only.
+   - *Acceptance.* At d = 3 it reproduces HARMONY's λ₁ to 40 digits. The count at d = 3–6 is one besides the
+     time-translation mode, as their codimension-one threshold implies. If
+     the solution ceases to exist or gains a mode at some d, that d is bracketed by two runs at different resolutions.
+   - *Depends on.* #380, `solver/harmony/magnetism/wavemap_ss.py`. A day.
+4. **Relativistic Hunter A and B: existence and counts by numerics.** *Public or private: the coordinator's call* (GR
+   matter, not among matter/'s models).
+   - *What.* M1 for the relativistic Hunter A and B profiles, P = kρ, at k = 0.01, 0.05 and 0.1, and their unstable
+     counts by M2.
+   - *Why.* VII B states their existence and stability as open, with the belief that they are codimension 1 and 2.
+   - *Acceptance.* As k → 0 the profiles and rates tend to HARMONY's Newtonian Hunter A (mode σ = 9.4636946238…) within
+     a fit whose planted control recovers a known limit. The counts are 1 and 2, or the belief is reported as not
+     supported, with the count at two contours and two resolutions.
+   - *Depends on.* #380, `solver/harmony/larson_penston/`. 1–2 days.
+5. **The review's conjectured Hölder thresholds for the Choptuik solution in D.** *Public*; fold into #622.
+   - *What.* With #622's ν_SH(D), tabulate δ = (1 − ν)/(4(1 + 5(1 − ν))) and ε = (1 − ν)/ν, the review's VII D
+     thresholds with k² replaced by 1 − ν, labelled as the review's conjecture.
+   - *Why.* They would set the regularity below which perturbations of the Choptuik solution in D dimensions destroy
+     its naked singularity, if the review's belief holds.
+   - *Acceptance.* At D = 4, ν = 0.6138552748 gives δ and ε that the script prints and `check_numbers.py` checks, and
+     a mutated ν (k² in place of 1 − ν) must fail that check.
+   - *Depends on.* #622. Minutes.
+
+### 9.4 Discrepancies and items to note (reported, not resolved)
+
+- **Item 3 of #380** (open problems bearing on the selection rule or our numbers) was covered by §4 from Secs. II, III
+  and VII D 7. Secs. VI and VII add none that bears on Δ, γ or Conjecture 1. The surface gravity is §2 row 3.
+- **Not proposed.** VI F's other (d, p) and VI G's small k. M1 would give numerical profiles there, but the open item
+  is an existence proof, which a numerical profile does not settle.
+- **ν_CH.** The review quotes ν_CH,Choptuik ≃ 1 − 1.4710461(4)×10⁻⁶ from Martín-García–Gundlach 2003. Our solvers do not
+  reach the Cauchy horizon, so we have no value to set against it.
