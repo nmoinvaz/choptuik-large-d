@@ -445,7 +445,22 @@ corrector with `--reseed_o 3` converges the same two attempts, to D 112.875 and 
 steps each. An octo-double attempt takes 1.2 to 1.4 times as long as a stalled quad-double one. Its control, the
 D 112.75 state polished alone in octo-double, keeps the quad-double Δ to 7.0e-46. At D 113, Δ_full − Δ_held is
 +4.37e-13, 0.146 of the spread. Octo-double changes the corrector and the projection together, so which of the two
-sets the quad-double floor is not separated. #742 continues to D 120 in octo-double.
+sets the quad-double floor is not separated.
+
+The octo-double corrector carries the full system on to D 120 (#742, raw `I742-win/` c5ec16fb). Every accepted step
+converges to at most 1e-60. The steps are at a = 1 to D 117, and at a = 1/2 from there, since the a = 1 step from D 117
+crawled under both trial tests (#752 asks why).
+
+| D | Δ_full − Δ_held | `fits` spread | ratio |
+|---|---|---|---|
+| 113 | +4.37e-13 | 3.0e-12 | 0.146 |
+| 116 | +4.81e-13 | 3.5e-12 | 0.137 |
+| 120 | +5.32e-13 | 4.2e-12 | 0.127 |
+
+The shift grows smoothly from D 105 to D 120. Its ratio per unit of D falls by about 0.002 a step, from 1.055 to 1.023,
+and is continuous across the change of step size. **So the held fit's error falls to 0.127 of the quoted spread at
+D 120**, since the spread grows by a factor 1.4 from D 113 and the shift by 1.22. The expectation written before the
+run, a ratio near 0.146, failed in that direction.
 
 ### 4.5 Not run
 
