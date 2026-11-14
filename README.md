@@ -525,7 +525,9 @@ value), the kind of computation, an error estimate and what that estimate is, a 
 that D where one
 exists (with our Δ minus it), and the source run and state in the [raw data](#raw-data). Every published value,
 including Ecker, Ecker and Grumiller's table to D = 200[^23], is compared with ours in
-[`hp/data/delta_published_compare.csv`](hp/data/delta_published_compare.csv).
+[`hp/data/delta_published_compare.csv`](hp/data/delta_published_compare.csv). The published values for the other matter models
+([below](#other-matter-at-large-d)) are in [`matter/published_values.csv`](matter/published_values.csv), each with a
+link to its paper, and are compared with ours in [`matter/published_compare.csv`](matter/published_compare.csv).
 
 The kinds of computation are:
 

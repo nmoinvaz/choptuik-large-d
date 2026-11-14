@@ -19,7 +19,7 @@ import sys
 ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 SRC = os.path.join(ROOT, "matter", "published_values.csv")
 OUT = os.path.join(ROOT, "matter", "published_compare.csv")
-COLS = ["model", "D", "kappa", "quantity", "published_ref", "published", "published_unc", "unc_abs", "unc_kind",
+COLS = ["model", "D", "kappa", "quantity", "published_ref", "ref_url", "published", "published_unc", "unc_abs", "unc_kind",
         "convention", "locator", "ours", "ours_source", "diff", "within"]
 
 
