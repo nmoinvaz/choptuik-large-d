@@ -467,3 +467,90 @@ Inferred, not measured:
    - Acceptance (can fail): the guard fires at step 0 of this attempt with switch 1e-15, and the four class A points
      of #674 still converge as before.
    - Depends on #715 (and on task 1's answer, which may show the guard is not needed under switch 0).
+
+## 12. The full system's crawl at D 118: the own test and p1's harmonic 13 (#752)
+
+**Result.** #742's a = 1 step from D 117 to 118 (`--elim_switch 0`, the default own test) does not crawl for a reason
+in the residual. Along the crawling Newton step the corrector's residual is affine with a quadratic remainder,
+1.393e-28 lam², to four digits on every rung up to lam = 1, so no lam* exists. The own test judges the lam = 1 trial
+by that trial's own Newton correction, 2.977e-15. All of it lies in a cos/sin pair of p1's harmonic 13, whose
+singular value at the root is 4.9e-28 (notes/QUAD_DOUBLE.md 12.3's junk directions). It is the harmonic-13 error the
+first step left, 2.92e-15. The iterate's Jacobian cannot see it, so it never shrinks, while |dz| halves at each
+accepted lam = 1/2. Taken, the refused step converges in three lam = 1 steps. It is not #700's mechanism: every point
+is projected and the residual has no jump.
+
+### 12.1 Method
+
+`hp/crawl_probe.py anm` runs `anm_run.main` on #742's arguments (`I742-win/run_742.py`) with a recording ElimO and
+`newton_od` capped at `--stop + 1` steps. It saves each attempt's iterate at Newton step `--stop` with its step and
+the attempt's pieces. The attempt is then reported refused, so the same run goes on to the a = 1/2 attempt, M's
+first, the control. `probe --own 1 --weak 4` adds the own test's corrections at lam = 1 and 1/2, split into the
+projection's displacement and the Newton step from the projected trial, and their share in the four weakest
+directions there. `weak` names those directions. `fixrun --accept own --start_lam 1` takes the refused step.
+Output: folder `I752-mac/` of the raw-data repository at 77a5564b, whose README holds every table.
+
+```
+python3 crawl_probe.py anm RAW RAW/I752-mac/R --stop 1 --attempts 2 --state I742-win/L/anm_pin13_D117.0000.npz \
+    --kfreeze 13 --N 24 --eps 1e-14 --D_max 400 --corrector od --tol_od 1e-60 --qd_it 12 --jet_q 1 --pred_q 1 \
+    --reseed 2 --reseed_q 1 --reseed_o 3 --save_pred 1 --a_grow 1.25 --a_hold 1 --lam_stall 0.04 --elim_switch 0 \
+    --steps 1 --h_max 1.0 --a0 1.0 --threads 4
+python3 crawl_probe.py probe RAW RAW/I752-mac/R/crawl_iter_D118.0000_s1.npz --out RAW/I752-mac/probe --threads 4 \
+    --arms U,E,P --theta 1 --theta_half 1 --own 1 --weak 4
+python3 crawl_probe.py fixrun RAW RAW/I752-mac/R/crawl_iter_D118.0000_s1.npz --out RAW/I752-mac/fix --threads 4 \
+    --switch 0 --accept own --start_lam 1
+```
+
+**The build.** #742 ran on a kernel from before #523, with the freeze projector rounded. Under main's build (exact
+projector) the D 117 state is 2.0e-34 off in the horizon block's p rows and every other block agrees. So the
+rebuild runs on a pre-#523 build (venv-314's of 2026-11-09). There the base polish, the series, both predictions (bit
+for bit) and every compared log line of the crawl and of the control equal #742's, and each comparison's mutation
+fails. #774 owns the Delta question.
+
+### 12.2 Along the step and at the trial
+
+| | crawl (a = 1, D 118) | control (a = 1/2, D 117.5) |
+|---|---|---|
+| the iterate's \|dz\|, and max\|F\| of its projection | 1.683e-15, 1.388e-15 | 3.846e-16, 3.171e-16 |
+| arm E (switch 0) along lam 0.5 to 1: e / lam² | 1.393e-28 on every rung | 6.123e-28 on every rung |
+| arm U (never projected) at lam 0 | 1.425e-05 | 2.551e-06 |
+| natural test at lam = 1 (bound 0.75) | 5.85e-05 | 9.37e-04 |
+| own test at lam = 1: the trial's own correction | 2.977e-15, refused | 2.623e-17, accepted |
+| its share in the four weakest directions at the trial | 1.000 | 1.000 |
+| those singular values at the trial | 8.27e-25 (twice), 4.91e-28 (twice) | 8.64e-25 (twice), 5.21e-28 (twice) |
+| the same at the iterate | 2.64e-21 to 5.05e-22 | 5.63e-22 to 1.09e-22 |
+| p1's harmonic-13 error: prediction, iterate, trial | 1.91e-7, 2.92e-15, 2.92e-15 | 9.07e-8, 3.59e-17, 2.59e-17 |
+
+The four directions are p1's harmonics 11 and 13, as cos/sin pairs with Delta components of 7e-9 to 1.2e-6. Their
+singular values are the same at L's D 117 state (9.04e-25 and 5.53e-28) and at M's D 117.5 and 118 states, so
+every root here has them. Along the step they halve with the distance to the full step, so at the iterate the
+harmonic-13 error is invisible to Newton (share 0.002 of the iterate's step). At the full-step trial the other errors
+are gone, and the trial's own correction is that error. At step 1 of #742's eleven other own-test attempts, the
+trial's correction W was 0.037 to 0.455 of the iterate's |dz| (`margin.py`). In the crawl it was 1.77.
+
+### 12.3 Against #700, and on main's build
+
+| | #700 (D 253.9, switch 1e-15) | #752 (D 118, switch 0) |
+|---|---|---|
+| the corrector's residual along the step | jumps by 5e38 at lam* = 1 - 7.77e-15 | affine to lam = 1, 1.393e-28 lam² |
+| what refuses lam = 1 | the unprojected trial's horizon rows | the own test's correction in p1's harmonic 13 |
+| the iterate's own (unprojected) residual | 0.129 | 1.4e-5 (the control: 2.6e-6) |
+| lam = 1/2 | accepted at ratio 0.5000 | accepted, its own correction 8.4e-16 < 1.68e-15 |
+
+The same attempt on main's build polishes the base first (|dz| 4.07e-13), then starts from |dz| 4.93e-8 and takes
+lam = 1 at every step (W / Y 0.395 at step 1), reaching 2.57e-53 after step 3. That is one attempt and not a rule.
+
+### 12.4 Measured and inferred
+
+Measured: the rebuild against #742, the residual along both steps, both tests and the own corrections split, the weak
+directions at three roots and the trial, the harmonic errors against a root of the same plan, the refused step taken
+(converged, Delta 1.729915772540067188606175429102600883886), and the same attempt on main's build.
+
+Inferred, not measured: that W is the harmonic-13 error in the other attempts; why the first step leaves 81 times
+more of it at a = 1 than at a = 1/2; and whether N's natural-test crawl is the same pair. The refused step's
+converged state and M's D 118 state differ in Delta by 1.05e-20. They solve different plans, because each attempt
+plans its own prediction.
+
+### 12.5 Recommended tasks
+
+The full text is in `I752-mac/README.md`. They are the own test's full-step drop (#709's rule for the own test, an A/B
+at this iterate), N's crawl probed the same way, and the first step's harmonic-13 remainder against a on main's build.
