@@ -7,10 +7,12 @@
                                                                      each root followed through the backgrounds DLIST
     python3 complex_css.py track D0 D1 LAM1[,LAM2..] [--h=0.1] [--hmax=1] [--spread=1e-8] [--out=F]
                                                                      background and roots continued in D (adaptive)
-    python3 complex_css.py count D RE0 RE1 IM0 IM1 [--R=0.85] [--plant=Z] [--mutate=M] [--K=12] [--out=F]
+    python3 complex_css.py count D RE0 RE1 IM0 IM1 [--R=0.85] [--plant=Z] [--mutate=M] [--K=N] [--out=F]
                                                                      zeros of det M in RE0 < Re < RE1, IM0 < Im < IM1
     python3 complex_css.py boxes D LAMOSC [--R=0.85,0.6] [--names=A,B,C,S] [--plant=Z] [--mutate=M] [--out=F]
                                                                      the standard boxes A, B, C, S at each radius
+Counts start from one sample per 0.25 of each edge; --K=N starts every edge at N samples instead (count, boxes,
+locate), which on long edges can miss whole turns of the phase (#770, #793).
     python3 complex_css.py selftest                                  the winding code on a synthetic function
 
 Backgrounds: data/css_bg_k0.jsonl (css_lateral.py cont 0 ...), --bg for another file.  Growth rates are zeros of
@@ -115,13 +117,16 @@ class Det:
         return self.cache[key]
 
 
-def winding(F, corners, K=12, tol=0.5, maxdepth=30):
-    """(1/2 pi) x the change of arg F around the closed polygon `corners` (counterclockwise), tracked on K points per
-    edge, every interval bisected until its phase step is below tol rad and its two halves agree with the whole.
+def winding(F, corners, K=None, tol=0.5, maxdepth=30, h=0.25):
+    """(1/2 pi) x the change of arg F around the closed polygon `corners` (counterclockwise), tracked from one starting
+    sample per h of edge (K per edge if K is given), every interval bisected until its phase step is below tol rad and
+    its two halves agree with the whole.  The test passes an interval whose halves each turn by a whole multiple of
+    2 pi, so the starting samples are spaced by length: K = 6 on an edge 19 long missed whole turns (#770).
     Returns (winding, largest step, number of intervals)."""
     total, big, nint = 0.0, 0.0, 0
     pts = list(corners) + [corners[0]]
     for a, c in zip(pts[:-1], pts[1:]):
+        n = K if K else max(1, int(np.ceil(abs(c - a) / h - 1e-9)))
         def val(t):
             return F(a + (c - a) * t)
 
@@ -136,7 +141,7 @@ def winding(F, corners, K=12, tol=0.5, maxdepth=30):
             big = max(big, abs(d1 + d2))
             nint += 1
             return d1 + d2
-        ts = np.linspace(0, 1, K + 1)
+        ts = np.linspace(0, 1, n + 1)
         for t0, t1 in zip(ts[:-1], ts[1:]):
             total += incr(t0, t1)
     return total / (2 * np.pi), big, nint
@@ -210,7 +215,7 @@ def main():
         def F(l):
             return np.exp(30 * l + 2j * l * l) * np.prod([l - z for z in zs])
         Fd = detrended(F, (0, 1, -0.6, 0.6))           # the path the counts take
-        w, big, ni = winding(Fd, box(0, 1, -0.6, 0.6), K=6)
+        w, big, ni = winding(Fd, box(0, 1, -0.6, 0.6))
         wc, bigc, nic = winding(F, box(0, 1, -0.6, 0.6), K=1, tol=10.0, maxdepth=0)
         ok = abs(w - 3) < 1e-6 and big < 0.5
         ctl = abs(wc - 3) > 1e-6
@@ -336,13 +341,13 @@ def main():
         re0, re1, im0, im1 = [float(s) for s in pos[2:6]]
         Rf = float(o.get("R", "0.85"))
         plant = complex(o["plant"].replace(" ", "")) if "plant" in o else None
-        K = int(o.get("K", "6"))
+        K = int(o["K"]) if "K" in o else None
         r = bg[D]
         det = Det(r, Rf, plant)
         t = time.time()
         w, big, ni = winding(detrended(det, (re0, re1, im0, im1)), box(re0, re1, im0, im1), K=K)
         emit(dict(kind="count", D=D, box=[re0, re1, im0, im1], R_over_xh=Rf, winding=w, largest_step=big,
-                  intervals=ni, evaluations=det.nev, seconds=round(time.time() - t, 1), plant=None if plant is None
+                  intervals=ni, K=K, evaluations=det.nev, seconds=round(time.time() - t, 1), plant=None if plant is None
                   else [plant.real, plant.imag], mutate=mutate, omega=r["omega"],
                   resonance_Im=r["kappa_s"] * r["mu"][1]))
         return
@@ -363,7 +368,7 @@ def main():
         while a < re1 - 1e-12:
             b = min(a + w, re1)
             bx = (a, b, im0, im1)
-            wnd, big, ni = winding(detrended(det1, bx), box(*bx), K=4)
+            wnd, big, ni = winding(detrended(det1, bx), box(*bx), K=int(o["K"]) if "K" in o else None)
             k = int(round(wnd))
             roots = []
             if k >= 1:
@@ -379,7 +384,7 @@ def main():
                     l2, ok2 = secant(Det(r, Rf), lam)
                     moved.append([Rf, l2.real, l2.imag, bool(ok2), abs(l2 - lam)])
                 other.append(moved)
-            emit(dict(kind="locate", D=D, subbox=list(bx), R_over_xh=Rfs[0], winding=wnd, largest_step=big,
+            emit(dict(kind="locate", D=D, subbox=list(bx), R_over_xh=Rfs[0], winding=wnd, largest_step=big, K=o.get("K"),
                       roots=[[q.real, q.imag] for q in roots], at_other_radii=other, omega=r["omega"],
                       mutate=mutate))
             a = b
@@ -410,8 +415,8 @@ def main():
                 det = Det(r, Rf, plant)
                 t = time.time()
                 F = detrended(det, bx)
-                w, big, ni = winding(F, box(*bx), K=int(o.get("K", "6")))
-                emit(dict(kind="box", D=D, box_name=nm, box=list(bx), R_over_xh=Rf, winding=w, largest_step=big,
+                w, big, ni = winding(F, box(*bx), K=int(o["K"]) if "K" in o else None)
+                emit(dict(kind="box", D=D, box_name=nm, box=list(bx), R_over_xh=Rf, winding=w, largest_step=big, K=o.get("K"),
                           intervals=ni, evaluations=det.nev, seconds=round(time.time() - t, 1),
                           lam_osc=[lo.real, lo.imag], lam_osc_converged=ok, omega=om,
                           plant=None if plant is None else [plant.real, plant.imag], mutate=mutate))
