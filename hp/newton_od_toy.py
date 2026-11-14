@@ -19,7 +19,9 @@ vector as large as the step (the amplified noise of a nearly singular root), the
 natural test refuses them all. With full_drop = 1e-20 the full step, which lands on the root, is accepted by its drop and
 the full step is accepted at the first step; with full_drop = 0 it is refused; and a full step whose |F| falls only to
 2e-10 of the start's is still refused at full_drop = 1e-20. Control: --mutate=drop accepts a full step on any decrease of |F| (the floor at 1),
-so the third case must fail.
+so the third case must fail. The same three cases with the own test (#777): a toy whose Newton step at every point but
+the start carries the weak vector, the own correction #752 found in junk directions, so the own test refuses the full
+step that lands on the root.
 """
 import contextlib
 import io
@@ -133,6 +135,16 @@ class Noisy:
         return [np.asarray(rhs[0], dtype=float) + self.w] + [ZERO] * 7
 
 
+class NoisyOwn(Noisy):
+    """Noisy for the own test (#777): newton_o's step at every point but the start carries w, as the trial's own
+    correction carried p1's harmonic-13 pair at #752's crawl, so the own test refuses the full step that lands on r"""
+
+    def newton_o(self, z, mutate=0):
+        y = np.asarray(z[0], dtype=float)
+        st = -(y - self.r) + (self.w if np.any(y != 0) else 0.0)
+        return [st] + [ZERO] * 7, y - self.r + self.c, ZERO, 1.0, 1.0
+
+
 def drop_check(mutate=False):
     """the first step from y = 0: at full_drop 1e-20 the full step is accepted by its drop, where the natural test
     refuses it (theta 1.5); at 0 it is refused; and a full step whose |F| falls only to 2e-10 of the start's 2 is
@@ -141,19 +153,22 @@ def drop_check(mutate=False):
         octo_corrector.DROP_MUT["floor1"] = True
     z = [np.array([0.0, 0.0])] + [ZERO] * 7
 
-    def first(c, fd):
+    def first(c, fd, cls, accept):
         with contextlib.redirect_stdout(io.StringIO()):
-            _, h, _ = newton_od(Noisy(c), z, tol=1e-30, it_max=1, accept="natural", full_drop=fd)
+            _, h, _ = newton_od(cls(c), z, tol=1e-30, it_max=1, accept=accept, full_drop=fd)
         r = h[0] if h else {}
         return bool(r.get("by_drop")), r.get("lam")
 
-    on, lam_on = first(1e-25, 1e-20)
-    off, lam_off = first(1e-25, 0.0)
-    miss, _ = first(4e-10, 1e-20)
-    on_ok, off_ok, miss_ok = on and lam_on == 1.0, not off and lam_off != 1.0, not miss
-    good = on_ok and off_ok and miss_ok
-    print(f"full step's drop: accepted by the drop at 1e-20 {on_ok}; refused at 0 {off_ok}; a full step to 2e-10 of "
-          f"the start's refused at 1e-20 {miss_ok}: {'pass' if good else 'FAIL'}")
+    good = True
+    for cls, accept in ((Noisy, "natural"), (NoisyOwn, "own")):
+        on, lam_on = first(1e-25, 1e-20, cls, accept)
+        off, lam_off = first(1e-25, 0.0, cls, accept)
+        miss, _ = first(4e-10, 1e-20, cls, accept)
+        on_ok, off_ok, miss_ok = on and lam_on == 1.0, not off and lam_off != 1.0, not miss
+        g = on_ok and off_ok and miss_ok
+        good &= g
+        print(f"full step's drop, {accept} test: accepted by the drop at 1e-20 {on_ok}; refused at 0 {off_ok}; a full step "
+              f"to 2e-10 of the start's refused at 1e-20 {miss_ok}: {'pass' if g else 'FAIL'}")
     return good
 
 

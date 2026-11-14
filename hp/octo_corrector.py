@@ -17,7 +17,7 @@ used, so that a module importing this one runs on the older packages the runners
     python3 octo_corrector.py wall RAW PRED.npz [--threads 3] [--qd 0] [--F_max 1e-36] [--mutate_offset qd]
         [--mutate 10] [--out PREFIX] [--reseed_o 0] [--held_o 0]
     (planted and wall take --switch S, ElimO's projection switch, 1e-15 by default; anm_run.py --elim_switch, #700;
-    and --full_drop F, newton_od's full_drop with --accept natural, 0 by default; anm_run.py --od_full_drop, #709)
+    and --full_drop F, newton_od's full_drop with either test, 0 by default; anm_run.py --od_full_drop, #709, #777)
     python3 octo_corrector.py horizon RAW STATE.npz [--threads 3] [--steps 3] [--mutate_h sign]
     python3 octo_corrector.py digits [--mutate 2]
 
@@ -272,10 +272,12 @@ def newton_od(s, z, tol=1e-40, it_max=12, max_halvings=8, verbose=True, mutate=0
     Jacobian and LU at the accepted point are formed once, for the next step. The default ("own") judges each trial by
     its own Newton correction, a new Jacobian and LU per trial: near a nearly singular root the weak directions of
     J(z + lam dz) turn against z's, and that correction can be large for a step that brought z closer (#634, #644).
-    full_drop=f > 0 (with accept="natural" only, #709): a full-step trial (lam = 1) is also accepted when its max |F| is
-    at most f times the iterate's, whatever its theta. Near a nearly singular root the simplified correction is the
-    weak directions' amplification of a tiny residual, so theta near 1 there need not mean the step failed. It is not
-    affine-invariant, and 0 (the default) leaves the test as it was.
+    full_drop=f > 0 (the natural test, #709; the own test, #777): a full-step trial (lam = 1) is also accepted when its
+    max |F| is at most f times the iterate's, whatever its theta or its own correction. Near a nearly singular root the
+    simplified correction is the weak directions' amplification of a tiny residual, and the trial's own correction can
+    lie wholly in junk directions its Jacobian cannot see (#752: p1's harmonic-13 pair at D 118), so neither test's
+    refusal there need mean the step failed. It is not affine-invariant, and 0 (the default) leaves both tests as they
+    were.
 
     strong_chord=k > 0 (#674): the first step is taken whole, and then only the strong rows are solved, by the chord
     dw = (I - V V^T) J0^-1 F through the start's LU (chord_strong, V the k weakest right singular directions of J0), at
@@ -427,7 +429,12 @@ def newton_od(s, z, tol=1e-40, it_max=12, max_halvings=8, verbose=True, mutate=0
             except ValueError:          # a non-finite or singular Jacobian at the trial point
                 good = False
             ok = good and (size(proj(stt[0])) < nd or omax(stt[1:3]) <= tol)
-            if eq or verbose >= 2 or trace is not None or (verbose and not ok):
+            fd = 1.0 if DROP_MUT["floor1"] and full_drop > 0 else full_drop
+            by_drop = bool(not ok and good and fd > 0 and lam == 1.0 and omax(stt[1:3]) <= fd * nf)     # #777
+            ok = ok or by_drop
+            if by_drop:
+                rec["by_drop"] = True
+            if eq or verbose >= 2 or trace is not None or (verbose and (not ok or by_drop)):
                 dt = proj(stt[0]) if good else None
                 tr = dict(lam=lam, good=bool(good), accepted=bool(ok), F=omax(stt[1:3]) if good else float("nan"),
                           dz=rec["dz"], dz_t=size(dt, False) if good else float("nan"), seconds=round(time.time() - t1, 2))
@@ -440,7 +447,9 @@ def newton_od(s, z, tol=1e-40, it_max=12, max_halvings=8, verbose=True, mutate=0
                     if eq:
                         line += (f"; eq |dz_t/D_c| {tr['dz_eq_t']:.3e} vs |dz/D_c| {nd:.3e} "
                                  f"({'<' if tr['dz_eq_t'] < nd else 'not <'})")
-                    print(line + f"; {'accepted' if ok else 'refused'}, {tr['seconds']} s", flush=True)
+                    print(line + f"; {'accepted' if ok else 'refused'}"
+                          + (f" by the full step's drop (max|F| at most {full_drop:g} of {nf:.2e})" if by_drop else "")
+                          + f", {tr['seconds']} s", flush=True)
                 if trace is not None:
                     trace.append(dict(it=it, lam=lam, accepted=bool(ok), F=tr["F"], d=np.array(d[0]),
                                       dt=np.array(dt[0]) if good else None))

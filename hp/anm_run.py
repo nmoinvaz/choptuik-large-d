@@ -108,8 +108,9 @@ Newton correction through the LU at the iterate, octo_corrector.newton_od) inste
 correction (own, the default; #644). --od_strong k takes the corrector's first step whole and then solves only the
 strong rows, by the chord through the start's LU with the k weakest right directions of the start's Jacobian
 removed from each correction (octo_corrector.chord_strong; #528, #674). 0, the default, is off.
---od_full_drop F (with --od_accept natural) also accepts a full-step trial whose max|F| is at most F times the
-iterate's, whatever its simplified-correction ratio (newton_od's full_drop, #709). 0, the default, is off.
+--od_full_drop F also accepts a full-step trial whose max|F| is at most F times the iterate's, whatever its
+simplified-correction ratio (--od_accept natural, #709) or its own correction (the default own test, #777)
+(newton_od's full_drop). 0, the default, is off.
 --reseed_start pred (with --reseed_q 1) runs the re-seed's quad-double polish from the prediction's own four-part
 horizon data first, and the double-double ladder only when that does not converge; ladder, the default, polishes the
 ladder's data as before (#693: past D ~ 249 the ladder's double-double data put the pole inside u0).
@@ -296,7 +297,7 @@ def main():
     opt.update(a0=0.0, a_grow=2.0, a_hold=0, lam_stall=0.0)    # the step's start, growth and hold; the corrector's stall rule
     opt.update(od_accept="own")                                 # the octo-double corrector's trial test (#644)
     opt.update(od_strong=0)             # --od_strong k: the strong-row chord after the first step (#674)
-    opt.update(od_full_drop=0.0)        # --od_full_drop f: the natural test also accepts a full step whose |F| falls to f (#709)
+    opt.update(od_full_drop=0.0)        # --od_full_drop f: either test also accepts a full step whose |F| falls to f (#709, #777)
     opt.update(reseed_start="ladder")   # --reseed_start pred: the re-seed's quad-double polish from the point's own data (#693)
     opt.update(held_fit="")             # --held_fit FILE (pinning.HeldFit; notes/HELD_HARMONICS.md)
     # --held_o 1: the held values and their Taylor coefficients as mpf instead of floats, and the held field in eight

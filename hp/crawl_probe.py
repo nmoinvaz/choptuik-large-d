@@ -911,8 +911,10 @@ def fixrun(argv):
     out = _opt(argv, "out", "")
     threads, steps, tol, switch = _opt(argv, "threads", 2), _opt(argv, "steps", 6), _opt(argv, "tol", 1e-60), _opt(argv, "switch", 0.0)
     # --accept own|natural: newton_od's trial test; --start_lam L: start from the iterate's trial z + L dz instead of
-    # the iterate (1: the full step the crawl refused); --junk w: newton_od's junk_w (0: off)
+    # the iterate (1: the full step the crawl refused); --junk w: newton_od's junk_w (0: off); --full_drop f:
+    # newton_od's full_drop, a full step accepted when its max|F| falls to f times the iterate's (#709, #777; 0: off)
     accept, start_lam, junk = _opt(argv, "accept", "natural"), _opt(argv, "start_lam", 0.0), _opt(argv, "junk", 0)
+    full_drop = _opt(argv, "full_drop", 0.0)
     os.makedirs(out, exist_ok=True)
     dd = np.load(it_path)
     meta = json.loads(str(dd["meta"]))
@@ -921,7 +923,8 @@ def fixrun(argv):
         from multidouble import od_axpy
         z = o8(od_axpy(start_lam, *o8(tuple(dd[f"d{q}"] for q in range(8))), *z))
     tag = os.path.basename(it_path).replace("crawl_iter_", "").replace(".npz", "")
-    extra = (f"_{accept}" if accept != "natural" else "") + (f"_from{start_lam:g}" if start_lam else "") + (f"_junk{junk}" if junk else "")
+    extra = (f"_{accept}" if accept != "natural" else "") + (f"_from{start_lam:g}" if start_lam else "") + (f"_junk{junk}" if junk else "") \
+        + (f"_drop{full_drop:g}" if full_drop else "")
     name = os.path.join(out, f"fixrun_{tag}_switch{switch:g}{extra}.npz")
     require_raw(name)
     t0 = time.time()
@@ -930,8 +933,9 @@ def fixrun(argv):
     el.cache = None
     el.switch = switch
     print(f"fixrun: {it_path}, D + a {att['Dn']}, ElimO switch {switch:g}, {accept} test, from lam {start_lam:g}, junk_w {junk}, "
-          f"at most {steps} steps to {tol:.0e}", flush=True)
-    zf, hist, conv = newton_od(el, z, tol=tol, it_max=steps, verbose=True, junk_w=junk, lam_stall=0.04, accept=accept)
+          f"full_drop {full_drop:g}, at most {steps} steps to {tol:.0e}", flush=True)
+    zf, hist, conv = newton_od(el, z, tol=tol, it_max=steps, verbose=True, junk_w=junk, lam_stall=0.04, accept=accept,
+                               full_drop=full_drop)
     zp = el.project(zf)
     Fp, Fz = omax(att["so"].residual_o(zp)), omax(att["so"].residual_o(zf))
     print(f"  {len(hist)} steps, converged {conv}, projections {el.counts}; pinned octo-double max|F| of the final point's "
