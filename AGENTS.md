@@ -217,11 +217,11 @@ tasks' fields until 2026-11-10 was removed, and its fields are on the issues as 
   `subagent`. `running` marks a task that a runner has started, and `blocked` one that waits for another task or a
   decision. An `area: ...` label names the part of the work, and a sprint is a milestone ("Sprint 1", weekly from
   2026-11-08). An open issue without `running` or `blocked` is to do, and a closed issue is done.
-- **Assignment.** The coordinator tells each runner which task to take next with a message ("The local machine" below).
-  The message names the issue and repeats its commands; the issue's body stays the record of the task. At the same time
-  the coordinator adds the machine's label, which marks the owner. A runner takes up a task only when the coordinator's
-  message names it, not from a label alone, since a label may only say which machine a task is planned for. A blocked
-  issue gets `blocked` until it is ready again.
+- **Assignment.** The coordinator tells each runner which task to take next with a message. The message names the issue
+  and repeats its commands; the issue's body stays the record of the task. At the same time the coordinator adds the
+  machine's label, which marks the owner. A runner takes up a task only when the coordinator's message names it, not
+  from a label alone, since a label may only say which machine a task is planned for. A blocked issue gets `blocked`
+  until it is ready again.
 - **Picking it up.** The runner adds the label `running`, comments "started" on the issue with the machine, the checkout
   and the threads, and answers the coordinator's message that it started.
 - **Raw output** goes to the raw-data repository as before, in a folder `I<issue>-<machine>/` (for example `I37-win2/`),
@@ -263,15 +263,12 @@ tasks' fields until 2026-11-10 was removed, and its fields are on the issues as 
 
 - **Thread budget on the local 8-thread machine:** 4–6 threads at below-normal priority; one process per thread. It has
   4 physical cores, so with 6 busy threads a job runs about 4× slower than on 2 cloud cores; scale cloud estimates.
-- **Coordination:** the coordinator starts each runner over hc from the `runner` or `runner-me` template, which carries
-  the rules for messages and notes: messages go by `hc send`, and agents keep their notes in nmoinvaz/agent-comms under
-  the name `choptuik-large-d`. Every result, decision and follow-up task about a task is also written on its issue
-  ("Tasks: GitHub issues" above). The messages sent as files, up to 2026-11-13, are kept in that repository at the tag
-  `git-era-messages`. `comms.txt`, the archive of the messages up to 2026-11-08, is under `archive/choptuik-large-d/`
-  there, whole and as one file per entry (entries before 2026-10-24 22:25 UTC are in PDT, and the laptop's say `local`).
-  A citation of comms.txt means that file. The machines are the Windows laptop (`win`), a Windows desktop (`win2`), an
-  M3 Mac (`macm3`) and the Apple M5 Mac (`mac`), where the coordinator runs. Times come from a clock
-  (`date -u '+%Y-%m-%d %H:%M'`), not guessed. A queued task states its commands, its thread count, its stop conditions
-  and what to push.
+- **Archives and machines:** the messages sent as files, up to 2026-11-13, are kept in the private repository
+  nmoinvaz/agent-comms at the tag `git-era-messages`. `comms.txt`, the archive of the messages up to 2026-11-08, is
+  under `archive/choptuik-large-d/` there, whole and as one file per entry (entries before 2026-10-24 22:25 UTC are in
+  PDT, and the laptop's say `local`). A citation of comms.txt means that file. The machines are the Windows laptop
+  (`win`), a Windows desktop (`win2`), an M3 Mac (`macm3`) and the Apple M5 Mac (`mac`), where the coordinator runs.
+  Times come from a clock (`date -u '+%Y-%m-%d %H:%M'`), not guessed. A queued task states its commands, its thread
+  count, its stop conditions and what to push.
 - **Long jobs start with a pilot:** a short run of the hardest case, with a stop condition, before an overnight run
   (the T30 pilot stopped a sweep that would have failed after hours).
