@@ -80,9 +80,12 @@ and 1.12, at that resolution only.
 
 The comparison reads only `sigma_str` and shares no code with `amp_flint_par.py` or the comparison scripts of #202,
 #256 and #295. The files share `amp_flint_par.py`. For 1.09 and 1.11 every file at the 10⁻¹⁵ level is from win2:
-T155-win2 (2026-11-07, its run overlapping the first fault at 18:37 UTC), I213-win2 and I256-win2 (new firmware). Only
-1.10 is compared with another machine at that level (T153-macm3). The K 33 values at 1.09 and 1.11 are reproduced to
-20 digits by #256's K 39 J 1000 runs for σ₁…σ₁₅.
+T155-win2 (2026-11-07, its run overlapping the first fault at 18:37 UTC), I213-win2 and I256-win2 (new firmware). 1.10 is
+compared with another machine at that level (T153-macm3), and since #767 (the win laptop, raw `I767-win/` d1f6f2a5)
+1.09 and 1.11 are too: `amp_flint_par.py` at K 15, J 1500, 1280 bits and `--procs` 3, from 188853c5 (#82's summation
+order) with python-flint 0.9.0 and FLINT 3.6.0, gives σ₀…σ₇ equal to win2's K 45 files in all 20 printed digits at both
+nodes, while the 1.09 file against the 1.10 one differs at σ₀ (the control). The K 33 values at 1.09 and 1.11 are
+reproduced to 20 digits by #256's K 39 J 1000 runs for σ₁…σ₁₅.
 
 ## An observation
 
