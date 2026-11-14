@@ -15,6 +15,11 @@ point where it stops being affine. The rows that jump there are named by block, 
     python3 crawl_probe.py chord RAW BASE.npz --a A (--jet JET.npz | --pred PRED.npz) --out DIR [--threads 2]
         [--strong 4] [--chord_it 10] [--check_pred PRED.npz] [--check_iter ITER.npz]
     python3 crawl_probe.py chordstat RAW DIR/chord_trace_D<D>.npz [--threads 2]
+    python3 crawl_probe.py anm RAW DIR --stop 1 [--attempts 1] --state STATE.npz <anm_run.py's flags>
+    python3 crawl_probe.py logcmp OURS.log REF.log --anchor TEXT [--anchor_ref TEXT] [--nth 1] [--nth_ref 1] [--n 4]
+        [--mutate digit]
+    python3 crawl_probe.py weak RAW [STATE.npz ...] [--iter ITER.npz --lams 0,1] [--w 4] [--threads 2] [--out FILE]
+    (probe also takes --own 1 [--own_lams 1,0.5] [--weak 4]: the default trial test's corrections, own_test)
 
 `selftest` is the planted check (fixed before the first real run): a smooth map with a quadratic remainder along the
 exact Newton step, plus a jump of known rows switched on at a known lam_true along that step. Pass: lam* within 1e-6 of
@@ -65,6 +70,16 @@ dw = drop_V(x) by group, checks that the step reproduces the next point bit for 
 step: dw against drop_V in mpmath with the same V (drop_V's f64 rounding), and the switch's test value at z - dw with
 one group of dw applied, with the exact dw, with the rounding alone, and with V rounded differently (V plus 1e-16
 noise, orthonormalized again).
+
+`anm` (#752) runs anm_run.main itself on the given arguments, so an attempt of any flags is rebuilt through its own
+code path: the base polish, the series, the prediction, its re-seed and plan, ElimO with the run's switch. Each
+attempt's newton_od is capped at --stop + 1 steps, and its iterate at Newton step --stop is saved with its step and
+the attempt's pieces (crawl_iter_D<D>_s<stop>.npz; probe, fixrun and weak rebuild the attempt from them). The attempt
+is then reported not converged, so anm_run halves a and runs the next. The own test only. `logcmp` compares n lines
+of a rebuilt log with the reference's from the nth line holding an anchor, timings and step numbers dropped; exit 1
+when one differs (--mutate digit is its control). `weak` prints the weakest right singular directions of the pinned
+octo-double Jacobian at stored full-system states or at an iterate's projected trials (sigma, Delta component, unknown
+groups, p1 harmonics, and a trial's own step along them).
 """
 import json
 import os
