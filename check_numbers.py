@@ -23,7 +23,8 @@ DOCS = {name: open(os.path.join(ROOT, name), encoding="utf-8").read()
                      "notes/QUAD_DOUBLE.md",
                      "notes/SOLVER_HP.md", "notes/LOW_D.md", "notes/INNER_STOKES.md", "notes/FORMULA_FORMS.md", "notes/LARGE_D_WALL.md",
                      "notes/ECHO_ANALOGUES.md", "notes/REVIEW_GHMG25.md", "notes/MODE_COUNT.md", "matter/SIGMA_DSS.md",
-                     "notes/HELD_HARMONICS.md", "notes/CONSISTENCY_AUDIT.md")}
+                     "notes/HELD_HARMONICS.md", "notes/CONSISTENCY_AUDIT.md", "PROOF.md", "notes/FIRST_ORDER.md",
+                     "matter/CSS.md", "matter/SIGMA.md")}
 
 
 def quoted_in(doc, text):
@@ -2635,6 +2636,143 @@ def held_release():
     t80 = [(H, "| 4.2e-14 to 2.8e-11 |")]
     out += [("fits spread, lowest of D 80-200", min(err[D] for D in (80.0, 100.0, 150.0, 200.0)), 4.2e-14, 0.1e-14, t80),
             ("fits spread, highest of D 80-200", max(err[D] for D in (80.0, 100.0, 150.0, 200.0)), 2.8e-11, 0.1e-11, t80)]
+    return out
+
+
+def _box_lines(path, after=None):
+    """The `name in [lo, hi]` lines of a Krawczyk log, as decimal strings, from the first line containing `after` on."""
+    lines = open(os.path.join(ROOT, path)).read().splitlines()
+    if after is not None:
+        lines = lines[next(i for i, l in enumerate(lines) if after in l):]
+    out = {}
+    for l in lines:
+        m = re.match(r"\s+(\S+)\s+in \[([0-9.]+), ([0-9.]+)\]", l)
+        if m and m.group(1) not in out:
+            out[m.group(1)] = (m.group(2), m.group(3))
+    return out
+
+
+def _outward(lo, hi, places):
+    """[lo, hi] rounded outward to `places` decimals, exactly (decimal strings in, floats out)."""
+    from decimal import Decimal, ROUND_FLOOR, ROUND_CEILING
+    q = Decimal(1).scaleb(-places)
+    return (float(Decimal(lo).quantize(q, rounding=ROUND_FLOOR)), float(Decimal(hi).quantize(q, rounding=ROUND_CEILING)))
+
+
+@check
+def m5_enclosure():
+    """Theorem A(M = 5)'s zero (#658): the certificate's enclosure, rounded outward, in solver/proof/logs/
+    A_M2_krawczyk_M5_1e-10.log (proof/A_M2.md section 6.4), against the shorter outward roundings quoted in the README
+    and PROOF.md"""
+    b = _box_lines("solver/proof/logs/A_M2_krawczyk_M5_1e-10.log", "the zero (endpoints rounded outward)")
+    wl, wh = _outward(*b["w/w_inf"], 14)
+    al, ah = _outward(*b["A"], 13)
+    tw = [("README.md", "ω/ω∞ ∈ [0.99922840320656, 0.99922840320657]"),
+          ("PROOF.md", "ω/ω∞ ∈ [0.99922840320656, 0.99922840320657]")]
+    ta = [("PROOF.md", "A ∈ [2.7185791892117, 2.7185791892118]")]
+    return [("A(5) omega/omega_inf, lower end", wl, 0.99922840320656, 1e-14, tw),
+            ("A(5) omega/omega_inf, upper end", wh, 0.99922840320657, 1e-14, tw),
+            ("A(5) amplitude, lower end", al, 2.7185791892117, 1e-13, ta),
+            ("A(5) amplitude, upper end", ah, 2.7185791892118, 1e-13, ta)]
+
+
+@check
+def m3_enclosure():
+    """Theorem A(M = 3)'s zero (#658): the point certificate's enclosure in solver/proof/logs/A_M_krawczyk_M3_1e-10.log,
+    and the same box from the independent mpmath-interval recheck (A_M_recheck_M3_1e-10.log) rounded outward, against
+    the README, the math paper and proof/A_M.md"""
+    k = _box_lines("solver/proof/logs/A_M_krawczyk_M3_1e-10.log")
+    r = _box_lines("solver/proof/logs/A_M_recheck_M3_1e-10.log")
+    q = {"A": (2.72647588563032, 2.72647588563144), "w/w_inf": (1.01560309485743, 1.01560309485804)}
+    t = [("README.md", "A ∈ [2.72647588563032, 2.72647588563144], ω/ω∞ ∈ [1.01560309485743, 1.01560309485804]."),
+         ("paper/math/main.tex",
+          "$A \\in [2.72647588563032, 2.72647588563144]$, $\\omega/\\winf \\in [1.01560309485743, 1.01560309485804]$")]
+    out = []
+    for nm in ("A", "w/w_inf"):
+        rl, rh = _outward(*r[nm], 14)
+        out += [(f"A(3) {nm}, lower end (Krawczyk log)", float(k[nm][0]), q[nm][0], 1e-14, t),
+                (f"A(3) {nm}, upper end (Krawczyk log)", float(k[nm][1]), q[nm][1], 1e-14, t),
+                (f"A(3) {nm}, lower end (recheck, outward)", rl, q[nm][0], 1e-14, t),
+                (f"A(3) {nm}, upper end (recheck, outward)", rh, q[nm][1], 1e-14, t)]
+    return out
+
+
+@check
+def first_order_lam():
+    """notes/FIRST_ORDER.md: the truncated models' own growth rate lambda* near 2 at their zeros (M = 5: the mean of the
+    three runs), from solver/inner_pert/data/first_order_hier_M*.json (#658: the one-harmonic model's root, quoted
+    elsewhere as 1.765)"""
+    d = os.path.join(ROOT, "solver/inner_pert/data")
+    lam = lambda n: json.load(open(os.path.join(d, n + ".json")))["lam"]  # noqa: E731
+    m5 = [lam(n) for n in ("first_order_hier_M5_xi0.2", "first_order_hier_M5_xi0.19", "first_order_hier_M5_xi0.2_rtol1e-13")]
+    F = "notes/FIRST_ORDER.md"
+    return [("lambda*, M = 1", lam("first_order_hier_M1_xi0.2"), 1.769122008, 1e-9, [(F, "| 14.9977 | 1.769122008 |")]),
+            ("lambda*, M = 3", lam("first_order_hier_M3_xi0.2"), 2.006804459, 1e-9, [(F, "| 9.88625 | 2.006804459 |")]),
+            ("lambda*, M = 5", sum(m5) / 3, 1.9996689, 1e-7, [(F, "| 10.4023 | 1.9996689 |")]),
+            ("lambda*, M = 1, short", lam("first_order_hier_M1_xi0.2"), 1.76912, 1e-5,
+             [(F, "| λ* (n = ∞) | 1.76912 | 2.00680 | 1.99967 | 2 |")])]
+
+
+@check
+def sigma_fold():
+    """matter/SIGMA.md section 5 and the physics paper: the fold of the sigma model's CSS branch at eta = 0.14, the
+    maximum of D along solver/matter/data/sigma_fold_eta0.14.jsonl (a parabola in the path parameter q through the
+    point of largest D and its two neighbours), and lambda, gamma at that point"""
+    rows = [json.loads(l) for l in open(os.path.join(ROOT, "solver/matter/data/sigma_fold_eta0.14.jsonl"))]
+    i = max(range(len(rows)), key=lambda j: rows[j]["D"])
+    f = rows[i]
+    (q0, d0), (q1, d1), (q2, d2) = ((rows[j]["q"], rows[j]["D"]) for j in (i - 1, i, i + 1))
+    a = ((d2 - d1) / (q2 - q1) - (d1 - d0) / (q1 - q0)) / (q2 - q0)
+    b = (d1 - d0) / (q1 - q0) - a * (q1 + q0)
+    qm = -b / (2 * a)
+    dmax = d1 + a * (qm * qm - q1 * q1) + b * (qm - q1)
+    t = [("matter/SIGMA.md", "D_f = 8.5444**, where γ = 0.5135"), ("paper/physics/main.tex", "$0.5135$ at a fold at"),
+         ("paper/physics/main.tex", "$D = 8.5444$")]
+    tab = [("matter/SIGMA.md", "| **8.5444 (fold)** | 6.2607 | 1.51227 | **1.94724** | **0.51355** |")]
+    return [("fold D", dmax, 8.5444, 1e-4, t), ("gamma at the fold", f["gamma"], 0.5135, 1e-4, t),
+            ("fold D, README", dmax, 8.544, 1e-3, [("README.md", "at a fold at D = 8.544,")]),
+            ("lambda at the fold (table)", f["lam"], 1.94724, 1e-5, tab),
+            ("gamma at the fold (table)", f["gamma"], 0.51355, 1e-5, tab)]
+
+
+@check
+def css_omega():
+    """matter/CSS.md section 7, the README and the papers: omega_inf of the axion-dilaton (kappa = 1) and the free
+    complex scalar (kappa = 0) from the D = inf inner Stokes zero (solver/matter/data/css_inner_kpath.jsonl) against
+    the median of css_fit.py's converged fits (data/css_fit_k*.json), and their relative difference"""
+    d = os.path.join(ROOT, "solver/matter/data")
+    inner = {r["kappa"]: r["omega"] for r in (json.loads(l) for l in open(os.path.join(d, "css_inner_kpath.jsonl")))}
+    C = "matter/CSS.md"
+    tag = [("README.md", "(agreement 1.6×10⁻⁴ and 1.3×10⁻⁴, relative)"),
+           (C, "agree to 1.6×10⁻⁴ (κ = 1) and 1.3×10⁻⁴ (κ = 0) in ω"),
+           ("paper/math/main.tex", "$1.6\\times10^{-4}$ and $1.3\\times10^{-4}$ (relative)")]
+    out = []
+    for k, w_in, w_x, rng, ag in ((1.0, 3.1998939020, 3.1994, (3.1985, 3.1999), 1.6e-4),
+                                  (0.0, 3.9789695074, 3.9784, (3.9776, 3.9787), 1.3e-4)):
+        med, lo, hi = json.load(open(os.path.join(d, f"css_fit_k{k:g}.json")))["omega"]
+        t_in = [(C, f"**{w_in:.10f}**"), ("README.md", f"{w_in:.7f}")]
+        t_x = [(C, f"{w_x:.4f} (" + ("fits: " if k else "") + f"{rng[0]:.4f}–{rng[1]:.4f})"), ("README.md", f"{w_x:.4f}")]
+        out += [(f"kappa {k:g}: inner omega_inf", inner[k], w_in, 1e-10, t_in),
+                (f"kappa {k:g}: extrapolated omega_inf (median)", med, w_x, 1e-4, t_x),
+                (f"kappa {k:g}: lowest fit", lo, rng[0], 1e-4, t_x), (f"kappa {k:g}: highest fit", hi, rng[1], 1e-4, t_x),
+                (f"kappa {k:g}: relative agreement", (inner[k] - med) / med, ag, 1e-5, tag)]
+    return out
+
+
+@check
+def css_lambda_table():
+    """matter/CSS.md section 7: lambda_inf - 2 of the free fits of lambda(D) in powers of 1/n, per D_min and number of
+    powers K (solver/matter/data/css_fit_k1.json, css_fit.py)"""
+    tab = json.load(open(os.path.join(ROOT, "solver/matter/data/css_fit_k1.json")))["lam_minus_2_table"]
+    sup = lambda e: str(e).replace("-", "⁻").translate(str.maketrans("0123456789", "⁰¹²³⁴⁵⁶⁷⁸⁹"))  # noqa: E731
+    fmt = lambda v: (lambda m, e: f"{m}×10{sup(int(e))}")(*f"{v:.2e}".split("e"))  # noqa: E731
+    out = []
+    for dmin, row in tab.items():
+        cells = [fmt(v) if (dmin, K) not in (("24", 7), ("30", 7)) else f"({fmt(v)})" for v, K in zip(row, range(3, 8))]
+        txt = [("matter/CSS.md", f"| {dmin} | " + " | ".join(cells) + " |")]
+        for v, K in zip(row, range(3, 8)):
+            out.append((f"lambda_inf - 2, D >= {dmin}, K = {K}", v, float(f"{v:.2e}"),
+                        10.0 ** (math.floor(math.log10(abs(v))) - 2), txt))
     return out
 
 
