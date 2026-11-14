@@ -455,6 +455,18 @@ ones near 259.5–259.8 + 1.2–1.6i are seen from the same base. A real singula
 turn it in a fold. The series at bases past D 259 test its place (#776), and its exponent decides which (#782). This is
 numerical evidence from one layout and one plan per base.
 
+#776 (dh370; raw `I776-dh370/` e37e4df8) built the series at three of #603's bases past D 259. Each equals #603's record
+in all 25 norms and both pivots, with a neighbouring record as the control. Δ's nearest stable Padé pole lies on the
+real axis at 259.94, 259.92 and 259.91 from D₀ 259.0505, 259.2582 and 259.4928, and the root test is within 2.9%, 2.3%
+and 0.0% of |259.95 − D₀|, so every bar fixed before the run is met. At the last base Padé puts four real poles between
+259.91 and 260.01, as it does along a branch cut. `hp/singularity_type.py` (#782), whose Dlog estimator recovers a
+square-root point and a pole to 10% in a plant matched to that base, reads Δ's exponent there as +0.54 (ratio fit) and
++0.47 (Dlog Padé), with D* at 259.903 and 259.904, and all 24 rows' ratio fits give D* 259.903.
+
+**So the chain's branch has a square-root branch point at D* ≈ 259.903, where it folds back rather than ends** (numerical
+evidence: one layout and one plan per base; the exponents' spreads, 0.14 and 0.15, are over one method's windows and
+approximants). #795 tests whether D* stays put on a new plan, and #792 and #794 add bases from 259.52 to 259.59.
+
 ### The refusals are the corrector's
 
 The corrector's first Newton move is the prediction's error to first order. At the accepted steps it equals the
