@@ -243,12 +243,13 @@ singular (smallest/largest singular value 1.4×10⁻⁶).
 no other growth rate: its unstable mode is unique there.** Not covered: growth rates with Re λ > 8, |Im λ| > 9.60, or
 0 < Re λ < 0.05, and the selection rule itself (Conjecture 1), which this computation assumes.
 
-**The count can miss whole turns.** With `count`'s default of 6 starting samples per edge, W counted 0 at both settings
-(344 and 304 determinants), against 4 and 2 with 24. The winding routine bisects an interval until its phase step is
-below 0.5 rad and its halves agree, and an interval over whose halves the phase turns by whole multiples of 2π passes
-that test. The tiles A, B, S, C, with edges up to 6.15 long, agree with W at 24 samples, and #781's count at κ = 0 (from
-steps of 0.25) agrees with §1.4's tiles, so the counts quoted on this page stand. #781's counter shows the same
-blindness in its control: with one sample per edge it counts 0.
+**The count can miss whole turns.** With 6 starting samples per edge, `count`'s default before #793, W counted 0 at
+both settings (344 and 304 determinants), against 4 and 2 with 24. The winding routine bisects an interval until its
+phase step is below 0.5 rad and its halves agree, and an interval over whose halves the phase turns by whole multiples
+of 2π passes that test. #781's counter shows the same blindness in its control: with one sample per edge it counts 0.
+Since #793 every count starts from one sample per 0.25 of edge (`--K=N` keeps N per edge). With that default W counts 4
+(A) and 2 (B), the K = 6 count still gives 0 at both settings, and every count of §1.4 and of this section recounts to
+its quoted number (raw `I793-mac/`, `inner_counts.jsonl`).
 
 ## 2. The change of stability κ_c(D) (#377)
 
@@ -413,7 +414,7 @@ python3 solver/matter/css_inner_pert.py root 0 2.1 --set=A                   # l
 python3 solver/matter/css_inner_pert.py root 0 0.536+7.93j --set=A           # 0.5365223424 + 7.9320241697i
 python3 solver/matter/css_inner_pert.py count 0 0.05 5 4.2289695 9.432 --set=A   # winding 1
 python3 solver/matter/css_inner_pert.py count 1 0.9 5 -2.9498939 2.9498939 --set=A   # winding 2
-python3 solver/matter/css_inner_pert.py count 1 0.05 8 -9.5996817 9.5996817 --set=B --K=24   # winding 2
+python3 solver/matter/css_inner_pert.py count 1 0.05 8 -9.5996817 9.5996817 --set=B   # winding 2 (with --K=6: 0)
 python3 solver/matter/css_inner_pert.py locate 1 5 8 2.9498939 6.2747878 --set=A,B,C --w=1.7
                                                       # 7.7410972542 + 3.7686870595i at A and C, not converged at B
 python3 solver/matter/css_kappa_crit.py selftest

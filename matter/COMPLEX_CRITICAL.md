@@ -130,6 +130,9 @@ after bisection; the table is printed by `complex_table.py`):
 | 80 | 0 | 2 | 1 | 0 | 0 | 0.48 rad | 852 |
 
 (A, B and C counted the same at both radii; the determinants are the total over the eight counts of each D.)
+Recounted with starting samples spaced by edge length, one per 0.25 of edge (the default since #793, raw `I793-mac/`),
+every count of this table, the D = 4 controls below and the strip's sub-box windings and located zeros below are
+unchanged, from 1202 to 1378 determinants per D.
 
 A, B and C give the same count at both radii and the expected one at every D: B holds λ = 1 and λ_phys, C holds
 λ_osc, A holds nothing. The strip S holds 6, 5, 4, 3, 2 zeros at both radii at D = 4–10, 1 and 0 at D = 20, and none at
