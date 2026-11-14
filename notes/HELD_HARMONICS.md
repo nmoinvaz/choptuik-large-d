@@ -405,6 +405,12 @@ up to D 104.5 (#710, raw `I710-win/` 978179f6). Their Δ differs from the defaul
 3e-26 and 1e-25. The double-double |F| of the converged states rises from 2.9e-20 at D 78 to 9.0e-17 at D 100. That
 has not been investigated.
 
+**Discrepancy (#774).** The runs from here to the end of 4.4 (#725 to #769, all on the win laptop) used an hpkernel
+built before #523, with the rounded freeze projector, so their states solve that system. On main's build, with the exact
+projector, #742's D 117 state has pinned max|F| 2.0e-34 against 1.75e-64, all in the horizon block's p rows (found by
+#752). The Δ shifts that the exact projector gives at D 99.875 and D 113–120 are not measured yet, so the values below
+hold for the rounded-projector system until #774 re-polishes their states.
+
 How far two converged roots agree depends on D (#725, raw `I725-win/` 9672e70d). Two a = 1/16 steps from cont3's
 D 99.75 state, each converged to a quad-double max|F| of 2e-49 to 4e-49, reproduce cont3's Δ to 5.7e-34 at D 99.8125
 and only to 1.7e-25 at D 99.875. The three converged states at D 99.875 (cont3's, #710's A1 and #725's X2) span
