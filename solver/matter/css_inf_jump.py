@@ -33,6 +33,7 @@ x = 2 r1^2, and its zeros in a must be a = 0, -1, -2, ...
     python3 css_inf_jump.py det LAM [LAM ...]          D(lam)
     python3 css_inf_jump.py root LAM0 [--r1=...]       a zero of D by the secant method from LAM0
 Options: --r0=0.1 --r1=0.3 --alpha=0.375 (in units of pi) --rtol=1e-13 --N=140 (series orders) --out=FILE
+--atol=A (DOP853's absolute tolerance; default 1e-30 + rtol 1e-6)
 """
 import functools
 import json
@@ -46,6 +47,9 @@ import sympy as sp
 from scipy.integrate import solve_ivp
 
 F0_CSS, OM_CSS = 0.5019081944, 3.9789695074            # CSS.md section 8, kappa = 0, ten digits
+ATOL = None         # DOP853's absolute tolerance; None is 1e-30 + rtol 1e-6. At an exact mode whose data leave some
+                    # components zero (u = 1 at lambda = i omega), that tolerance resolves their rounding noise and the
+                    # integration stalls; --atol=1e-16 avoids it (#781)
 
 
 # ------------------------------------------------------------------ equations
@@ -252,10 +256,11 @@ def opt_sum(c, z, nder=1):
 def path_integrate(rhs, y0, r0, r1, alpha, rtol):
     """integrate dy/dxi = rhs(xi, y) from xi0 = r0 e^{i alpha} along the ray to r1 e^{i alpha} and the arc to r1"""
     e = np.exp(1j * alpha)
-    s1 = solve_ivp(lambda r, y: e * rhs(r * e, y), (r0, r1), y0, method="DOP853", rtol=rtol, atol=1e-30 + rtol * 1e-6)
+    atol = ATOL if ATOL is not None else 1e-30 + rtol * 1e-6
+    s1 = solve_ivp(lambda r, y: e * rhs(r * e, y), (r0, r1), y0, method="DOP853", rtol=rtol, atol=atol)
     y1 = s1.y[:, -1]
     s2 = solve_ivp(lambda p, y: 1j * r1 * np.exp(1j * p) * rhs(r1 * np.exp(1j * p), y), (alpha, 0.0), y1,
-                   method="DOP853", rtol=rtol, atol=1e-30 + rtol * 1e-6)
+                   method="DOP853", rtol=rtol, atol=atol)
     return s2.y[:, -1], s1.nfev + s2.nfev
 
 
@@ -490,6 +495,9 @@ def main():
         if out:
             with open(out, "a") as fo:
                 fo.write(json.dumps(rec) + "\n")
+    global ATOL
+    if "atol" in opts:
+        ATOL = float(opts["atol"])
     kw = dict(r0=float(opts.get("r0", 0.1)), r1=float(opts.get("r1", 0.3)),
               alpha=float(opts.get("alpha", 0.375)) * math.pi, rtol=float(opts.get("rtol", 1e-13)),
               N=int(opts.get("N", 140)))
