@@ -472,7 +472,10 @@ and +0.472 (spread 0.06) and Padé puts D* at 259.913 and 259.912. With the plan
 +0.011, the bar of 0.01 just failing. Cut at 12 to 24 orders, each plan's D* is fixed to 10⁻³ and Δ's coefficients
 change between the plans by about 0.018 per order, so the two plans place one square-root point about 0.010 apart. The
 new plan's base did not converge, so whether that offset is the plan's or the unconverged base's is not separated. D*
-is thus 259.90 to 259.92.
+is thus 259.90 to 259.92. Nearer still, at D₀ 259.6306 and 259.6657, 0.27 and 0.24 from it (#799, dh370; raw `I799-dh370/` d3658d62), the
+kept plan's series put D* at 259.9032 to 259.9036 by both estimators, with exponents +0.52 (ratio) and +0.47 to +0.48
+(Dlog). So on #603's plan D* = 259.903 from six bases between 259.49 and 259.67. The root-test bar, fixed at
+|259.95 − D₀| before D* was known, fails at 259.6657 by 0.1% (−5.1% against 5%).
 
 ### The refusals are the corrector's
 
