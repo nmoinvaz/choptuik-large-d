@@ -10,6 +10,7 @@ point where it stops being affine. The rows that jump there are named by block, 
     python3 crawl_probe.py probe RAW ITER.npz --out DIR [--threads 2] [--lo 0.5] [--hi 1.0] [--rungs 6]
         [--tol_lam 1e-6] [--arms U,E] [--theta 1] [--theta_half 0] [--hint 1]
     python3 crawl_probe.py fixrun RAW ITER.npz --out DIR [--threads 2] [--switch 0] [--steps 6] [--tol 1e-60]
+        [--accept natural|own] [--start_lam 0] [--junk 0]
     python3 crawl_probe.py offset RAW ITER.npz [--threads 2]
     python3 crawl_probe.py chord RAW BASE.npz --a A (--jet JET.npz | --pred PRED.npz) --out DIR [--threads 2]
         [--strong 4] [--chord_it 10] [--check_pred PRED.npz] [--check_iter ITER.npz]
@@ -894,21 +895,28 @@ def fixrun(argv):
     raw, it_path = argv[0], argv[1]
     out = _opt(argv, "out", "")
     threads, steps, tol, switch = _opt(argv, "threads", 2), _opt(argv, "steps", 6), _opt(argv, "tol", 1e-60), _opt(argv, "switch", 0.0)
+    # --accept own|natural: newton_od's trial test; --start_lam L: start from the iterate's trial z + L dz instead of
+    # the iterate (1: the full step the crawl refused); --junk w: newton_od's junk_w (0: off)
+    accept, start_lam, junk = _opt(argv, "accept", "natural"), _opt(argv, "start_lam", 0.0), _opt(argv, "junk", 0)
     os.makedirs(out, exist_ok=True)
     dd = np.load(it_path)
     meta = json.loads(str(dd["meta"]))
     z = o8(tuple(dd[f"z{q}"] for q in range(8)))
+    if start_lam:
+        from multidouble import od_axpy
+        z = o8(od_axpy(start_lam, *o8(tuple(dd[f"d{q}"] for q in range(8))), *z))
     tag = os.path.basename(it_path).replace("crawl_iter_", "").replace(".npz", "")
-    name = os.path.join(out, f"fixrun_{tag}_switch{switch:g}.npz")
+    extra = (f"_{accept}" if accept != "natural" else "") + (f"_from{start_lam:g}" if start_lam else "") + (f"_junk{junk}" if junk else "")
+    name = os.path.join(out, f"fixrun_{tag}_switch{switch:g}{extra}.npz")
     require_raw(name)
     t0 = time.time()
     att = attempt_of(raw, dd, meta, threads)
     el = make_elim(att, record=True)
     el.cache = None
     el.switch = switch
-    print(f"fixrun: {it_path}, D + a {att['Dn']}, ElimO switch {switch:g}, natural test, at most {steps} steps to {tol:.0e}",
-          flush=True)
-    zf, hist, conv = newton_od(el, z, tol=tol, it_max=steps, verbose=True, junk_w=0, lam_stall=0.04, accept="natural")
+    print(f"fixrun: {it_path}, D + a {att['Dn']}, ElimO switch {switch:g}, {accept} test, from lam {start_lam:g}, junk_w {junk}, "
+          f"at most {steps} steps to {tol:.0e}", flush=True)
+    zf, hist, conv = newton_od(el, z, tol=tol, it_max=steps, verbose=True, junk_w=junk, lam_stall=0.04, accept=accept)
     zp = el.project(zf)
     Fp, Fz = omax(att["so"].residual_o(zp)), omax(att["so"].residual_o(zf))
     print(f"  {len(hist)} steps, converged {conv}, projections {el.counts}; pinned octo-double max|F| of the final point's "
