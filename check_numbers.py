@@ -2534,7 +2534,7 @@ def pinned_frontier():
             ("the frontier row's quad-double pins' spread", float(front["err"] or 0) if front["Delta_q2"] else 0.0,
              5.0e-16, 0.1e-16, []),
             ("the dd-qd gap of the rows below the frontier", gap, 1.1e-14, 0.1e-14,
-             [("notes/QUAD_DOUBLE.md", "lies 1.1e-14 above them")])]
+             [("notes/QUAD_DOUBLE.md", "1.06e-14 and 1.11e-14 above them")])]
 
 
 @check

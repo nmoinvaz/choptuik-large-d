@@ -1259,7 +1259,7 @@ and stays as it is. The diff also carries finding P2-13's change to Corollary C 
 | notes/QUAD_DOUBLE.md:11 (opening) | "Nothing in the solver uses them yet." |
 | notes/QUAD_DOUBLE.md §12.1; README.md:91, 529 | the quad-double solver, built 2026-10-27; the quad-double points 68.5–73 |
 
-The double-double value lies 1.06×10⁻¹⁴ and 1.12×10⁻¹⁴ above the two quad-double ones (exact sums of the parts, mpmath),
+The double-double value lies 1.06×10⁻¹⁴ and 1.11×10⁻¹⁴ above the two quad-double ones (exact sums of the parts, mpmath),
 ten times the text. The row of `delta_all.csv` at that D is the double-double value, so its Δ carries this 10⁻¹⁴, which
 no err column shows (only one pin reached that D, so the rule of `hp/export_delta_all.py` gives none). Canonical: the
 note's own table.

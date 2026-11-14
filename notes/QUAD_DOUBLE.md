@@ -827,38 +827,45 @@ the double-double solution's values, the band subtracted as PinnedSolver does, t
 | 7 (9-13) | stalls at 7.4e-18 after one step | |
 
 At D 73.27 the quad-double Newton converges once harmonics 5 and up are held, and not with 5 or 7 free: those two
-are junk there as well (their directions' sigma against c). The two converged Delta differ by 3e-17, the cost of
+are junk there as well (their directions' sigma against c). The two converged Delta differ by 2.2e-15, the cost of
 holding harmonic 3 at its double-double value.
 
 **The full-system Delta from the pinned quad-double solutions** (qd_fullcorr.py: the full system's residual at the
 pinned solution and one full-system Newton step from it in quad-double, not taken; its Delta component is T75's
-linearised correction dDelta_pin, there in double-double):
+linearised correction dDelta_pin, there in double-double). Delta_full1 is the exact sum of the pinned Delta's four
+parts and the correction's four, and T75's value the exact sum of its two (hp/data/delta_pinned_qd.csv, from
+hp/export_pinned_qd.py):
 
 | D | pin | full-system |F| at the pinned solution | correction | Delta_full1 (quad-double) | T75's double-double Delta_full1 |
 |---|---|---|---|---|---|
-| 72.4 | 7 | 1.2e-32 | -3.740277e-16 | 1.78234204349234182 + 4.615e-17 | 1.7823420434923420 (pin 7), ...3418 (pin 5) |
-| 72.4 | 5 (T75's pin 5 state) | 1.1e-31 | +2.976526e-16 | 1.78234204349234182 + 4.061e-17 | |
-| 73.2657 | 1 | 1.9e-22 | +1.157711e-12 | 1.78075708073624606 - 1.5e-17 | 1.7807570807362567 (pin 7) |
-| 73.2657 | 3 | 3.5e-25 | +1.154965e-12 | 1.78075708073624539 + 1.3e-17 | |
+| 72.4 | 7 | 1.2e-32 | -3.740277e-16 | 1.782342043492341937179 | 1.7823420434923420 (pin 7), ...3418 (pin 5) |
+| 72.4 | 5 (T75's pin 5 state) | 1.1e-31 | +2.976526e-16 | 1.782342043492341937179 | |
+| 73.2657 | 1 | 1.9e-22 | +1.157711e-12 | 1.780757080736246011439 | 1.7807570807362566 (pin 7) |
+| 73.2657 | 3 | 3.5e-25 | +1.154965e-12 | 1.780757080736245514196 | |
 
 **The quad-double leg** (qd_leg.sh: T75's pin 7 and pin 5 states at the shared waypoints, each converged with its own
-pin to 1e-53 in 3-5 steps, then corrected to the full system; the two pins' full-system Delta, both parts summed
-exactly, and their difference, a spread between two systems, not a bound; T75's double-double pairs differ by
-2e-16 typically and 8e-15 at 73.1):
+pin to 1e-53 in 3-5 steps, then corrected to the full system as above; hp/data/delta_pinned_qd.csv). The two pins'
+Delta_full1 agree to the digits shown. Their difference is a spread between two systems, not a bound. Each pin's
+Delta_full1 minus the full system's converged quad-double Delta (hp/data/delta_qd.csv: 12.1 at 72.8 and 73.0, the table
+below at 71.0 and 71.5) is a difference between two computations, not a bound. T75's double-double pairs differ by
+2e-16 typically and 8.6e-15 at 73.1.
 
-| D | Delta_full (pin 7) | Delta_full (pin 5) | pin 7 - pin 5 | the full step's |dz| (7, 5) |
+| D | Delta_full1 (pin 7 and pin 5) | pin 7 - pin 5 | minus the full system's (7, 5) | the full step's |dz| (7, 5) |
 |---|---|---|---|---|
-| 71.0 | 1.7849845180052927569 | 1.7849845180052927026 | +5.4e-17 | 2e-10, 9e-9 |
-| 71.5 | 1.7840292487782318328 | 1.7840292487782318328 | -1e-32 | 3e-10, 7e-10 |
-| 72.0 | 1.7830868580304841321 | 1.7830868580304841542 | -2.2e-17 | 4e-9, 4e-9 |
-| 72.4 | 1.7823420434923419721 | 1.7823420434923419383 | +3.4e-17 | 2e-9, 2e-9 |
-| 72.8 | 1.7816051756032901967 | 1.7816051756032901536 | +4.3e-17 | 5e-9, 8e-8 |
-| 73.0 | 1.7812396819309261819 | 1.7812396819309262050 | -2.3e-17 | 7e-9, 1e-7 |
-| 73.1 | 1.7810576633135505371 | 1.7810576633135505477 | -1.1e-17 | 6e-8, 9e-7 |
+| 71.0 | 1.784984518005292743111 | -5.3e-29 | -2.0e-28, -1.4e-28 | 2e-10, 9e-9 |
+| 71.5 | 1.784029248778231812597 | -7.1e-33 | +3.8e-28, +3.8e-28 | 3e-10, 7e-10 |
+| 72.0 | 1.783086858030484121665 | +1.9e-29 | | 4e-9, 4e-9 |
+| 72.4 | 1.782342043492341937179 | +1.0e-29 | | 2e-9, 2e-9 |
+| 72.8 | 1.781605175603290189107 | -1.1e-26 | -1.5e-29, +1.1e-26 | 5e-9, 8e-8 |
+| 73.0 | 1.781239681930926192607 | -1.9e-26 | -8.1e-28, +1.8e-26 | 7e-9, 1e-7 |
+| 73.1 | 1.781057663313550556488 | +9.0e-25 | | 6e-8, 9e-7 |
 
-The pins' disagreement, which is the pin's cost, falls from 2e-16 in double-double to 1e-17..5e-17 here, and to
-1e-32 at 71.5 where both full steps are small. The full quad-double solutions of 12.1 at 72.8 and 73.0,
-1.7816051756032901527 and 1.7812396819309262040, lie between or within 2e-17 of the pairs.
+The pins' disagreement, which is the pin's cost, falls from 2e-16 in double-double to between 7.1e-33 (71.5) and
+9.0e-25 (73.1) here. At 71.0, 71.5, 72.8 and 73.0 both pins lie within 1.8e-26 of the full system's converged Delta.
+Pin 7, whose full step is the smaller there, lies within 8.1e-28 of it, the size of the full system's own spread
+between two starts (3.8e-28 at 71.5 and 8.4e-28 at 73.0, a spread between Taylor plans, not a bound). So at 71-73.1
+one linearised full-system step from a quad-double pinned solution gives the full system's Delta to about the pins'
+spread, 9.0e-25 or better (an estimate, not a bound), and to within 1.8e-26 where the full system converged.
 
 **The full system from the polished states** (qd_fullleg.py: the full system, kfreeze 13, converged in quad-double
 from T73's and T75's pin 7 and pin 5 states as two independent starts, each with its own Taylor plan; the basin
@@ -875,12 +882,12 @@ table above said inside to about 71):
 
 So the full system's Delta is known to about 3e-28 at D 68.5, 69.5 and 70.5 (two starts, two plans), thirteen digits
 past the double-double data's 2e-15 check error, and to the single converged solution at 71.0 and 71.5, where the
-corrected pinned pairs above lie within 1e-17 (71.0) and 2e-17 (71.5) of it: that is the linearised correction's own
-error, and the pins' agreement to 1e-32 at 71.5 was a coincidence of the two pins. From 72 on no start of double-double
+corrected pinned pairs above lie within 2.0e-28 (71.0) and 3.8e-28 (71.5) of it. From 72 on no start of double-double
 quality reaches the full basin, as the table of basins said. At the frontier the two pins' quad-double values differ by
-7e-16 and the double-double one lies 1.1e-14 above them: the digits there are set by the pin's cost (the full step's
-|dz| is 7.9e-6 against 1.6e-9 at 72.4), not by the arithmetic. So the quad-double solver adds digits where the pin is
-cheap, up to about 72.5 in this layout, and past that the full system's junk, not precision, bounds Delta.
+5.0e-16 (a spread between two systems, not a bound), and the double-double one lies 1.06e-14 and 1.11e-14 above them
+(pins 1 and 3): the digits there are set by the pin's cost (the full step's |dz| is 7.9e-6 against 1.6e-9 at 72.4),
+not by the arithmetic. So the quad-double solver adds digits where the pin is cheap, through 73.1 in this layout, and
+at the frontier the full system's junk, not precision, bounds Delta.
 
 **Second starts at 71-73, and the spread corrected (2026-11-06 04:00 UTC).** The other pin's states polished in
 quad-double in their own pinned system (T84-mac's `*_pinned5_dz.npz` at 71.0, 71.5 and 72.8, `*_pinned7_dz.npz` at 73.0,
