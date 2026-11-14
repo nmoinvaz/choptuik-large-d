@@ -328,8 +328,13 @@ The order-132 term weighted by w (`--ks 132 --ks_w W`, branch `wip/i744`, each r
 stops at the 20-step cap at max|F| 2.6×10⁻²⁴. Its control holds (w = 0 equals ks 131 to the bit), and the jump from
 w = 0 to 1 reproduces s132's first step. So the climb gets further than the jump, and by w = 1/4 order 132 has already
 moved Δ by 2.5 times order 131's whole term. So the horizon series' truncation moves Δ at D 245 by 10⁻¹² within a
-quarter of one order (numerical evidence, one plan and one layout), and where the corrector's failure begins between w = 1/4 and 1/2
-is the next measurement.
+quarter of one order (numerical evidence, one plan and one layout).
+
+#783 (win2; raw `I783-win2/` 36ed0c10) climbed on from w = 1/4 in smaller steps. w = 3/8, 7/16 and 1/2 each converge in
+5 steps (max|F| 3.2×10⁻⁸², 1.6×10⁻⁹⁰, 5.3×10⁻⁹¹, no failed projection), so #744's stall at w = 1/2 came from the size of
+its step, not from a missing root. Δ − Δ(w = 1/4) is +8.76×10⁻¹⁴, +9.37×10⁻¹⁴ and +8.80×10⁻¹⁴ there. The order-132
+term's effect thus levels off near 1.06×10⁻¹² from w = 0, most of it gained by w = 1/4. The climb on to w = 1, a converged
+order-132 base, is #796.
 
 hp/src is not changed by this task.
 
