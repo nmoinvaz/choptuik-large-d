@@ -117,10 +117,10 @@ finite n. For the merger, λ(n) is a root of a quadratic at every n. For the cri
 orders like ω (Proposition 5, first paragraph), so the 1/n coefficients cannot be compared through perturbation theory.
 Their difference, 4 against 3.0324, is not explained by this task.
 
-*Inferred, not checked:* Kol's correspondence (a double analytic continuation, the reduction over the Euclidean time t
-and a Weyl rescaling whose factor tends to 1 at D = ∞) may carry the Ricci flow of a U(1)-symmetric plane onto the
-Ricci–scalar flow of form L. The reason is that a Ricci flow of a warped product g₁ + e^{2φ}dt² reduces, after a
-diffeomorphism, to ∂g₁ = 2 dφ⊗dφ, ∂φ = Δφ on the base, the shape of form L. Recommended task 1 below tests it.
+*Inferred here, checked in §8 (#768):* Kol's correspondence (a double analytic continuation, the reduction over the
+Euclidean time t and a Weyl rescaling whose factor tends to 1 at D = ∞) may carry the Ricci flow of a U(1)-symmetric
+plane onto the Ricci–scalar flow of form L. The reason is that a Ricci flow of a warped product g₁ + e^{2φ}dt²
+reduces, after a diffeomorphism, to ∂g₁ = 2 dφ⊗dφ, ∂φ = Δφ on the base, the shape of form L.
 
 ## 5. Discrepancies (reported, not fixed)
 
@@ -154,6 +154,78 @@ with `[^ES]: R. Emparan and R. Suzuki, JHEP 07 (2019) 094, arXiv:1905.01062.`
      gives a nonzero residual. Otherwise the verdict is "no exact map", with the obstruction named.
    - *Depends on.* #429. Under an hour on one core.
 
+## 8. Kol's correspondence at D = ∞ (#768)
+
+**The map is exact. Kol's double analytic continuation and his reduction over the circle carry Emparan and Suzuki's
+D = ∞ flow onto Proposition 5(i) in form L (DINF_ANALYTIC.md §1.1), with α = 1. This is checked symbolically on every
+solution, not only on examples.** With the scalar term doubled (α = 2), the residual is −2φ_t² ≠ 0. Script:
+`solver/inner_pert/kol_map.py` (13 checks, exit 0); its three mutations each exit 1. Raw: `I768-mac/`.
+
+**The map, step by step** (s = σ = ρ²/2 up to form L's scaling (t, s) → (at, a²s)):
+1. ES's flow (1/ρ)∂_ρ g = 2 Ric [ES19, Eq. (3.20)] on the static 2-metric V(ρ, ξ)(−dt² + dξ²) [Eq. (4.1)] is their
+   Eq. (4.2), −(1/ρ)V_ρ = (ln V)_ξξ (check 1).
+2. Kol's continuation ξ = ix, t = iz [K06, Eq. (3.7)] turns the 2-metric into V̂(−dx² + dz²), with V̂(σ, x) = V(ρ, ix).
+   The same flow then reads V̂_σ = (ln V̂)_xx, the forward logarithmic diffusion (check 2).
+3. The reduction over the new circle z [K06, Eqs. (3.1)–(3.4)] gives the scalar A = ½ ln(V̂/n) and the base metric
+   V̂ dx². The Weyl factor (V̂/n)^{1/(d−2)} tends to 1 (check 3). Form L's φ is A, up to a constant, and Kol's canonical
+   Φ = √(2(d−1)/(d−2)) A tends to √2 φ.
+4. In the gauge x = X(s, t) that follows −∇φ, ∂_sX = −V̂⁻¹∂_xφ, set c² = V̂(s, X) X_t². Form L's two equations then
+   hold identically in jet space (check 4). Through Y = 2φ_t/c, so do the three equations of Prop. 5(i) (check 5).
+
+The mutations:
+- **The scalar term doubled** gives the residual −P₁²V₁²/(2V₀²) in (c²)_s − 2αφ_t².
+- **No continuation**, using (4.2) itself, gives residuals proportional to V₁² − V₀V₂.
+- **The gauge velocity doubled** gives nonzero residuals too.
+
+**The flow's sign.** ES's flow is the forward Ricci flow in λ = λ₀ − ρ²/2 [Eqs. (3.2)–(3.3)], which runs toward
+smaller ρ, so in σ it is a backward diffusion. The continuation reverses the sign of the second derivative. On the
+Choptuik side the flow is therefore the forward diffusion in s, outward from the centre, as in Prop. 5. The direction
+in which the merger's flow is well posed (inward) maps to the ill-posed direction of form L.
+
+**Boundary conditions on each side:**
+
+| | merger (ES's variables) | Choptuik side (form L) |
+|---|---|---|
+| tangential symmetry | ξ → −ξ (Kol's z-reflection, [K06] §3.2) | t → −t, time reflection: Kol's "TS-Choptuik" |
+| tangential ends | the horizon V → 0; for the cone at \|ξ\| → ∞, V ≈ 4(ρ² − μ)e^{−2\|ξ\|} | x → ±π/2, where the circle's size e^{φ} diverges; for the cone, t → ±∞ in its gauge below |
+| scaling direction | the ancient flow from ρ → ∞ (λ → −∞), on the cone | s → ∞ |
+| tip and centre | ρ → 0, where S^n shrinks | s = 0, the centre, where Prop. 5 sets c = 1 |
+| critical solution | the continuously self-similar cone, μ = 0 | discretely self-similar, selected by Conjecture 1 |
+
+**Counterparts of ES's exact solutions:**
+- **The cone [ES19, Eq. (4.7)]** becomes V̂ = (2σ − μ) sec²x. Its gauge equation integrates to tan X = t/√(2s − μ),
+  and gives the exact solution
+  φ = ½ ln(2s − μ + t²), c² = (2s − μ)/(2s − μ + t²), Y = 2t/√((2s − μ)(2s − μ + t²)).
+  It solves form L and Prop. 5(i) (check 6). At μ = 0 it is invariant under (t, s) → (at, a²s), and μ is the shift of
+  s, the λ = 2 generator of §2. Its c vanishes at s = μ/2, so it does not meet Prop. 5's centre condition c = 1. It is
+  a solution with the time-symmetric conditions, not the critical solution of Prop. 5.
+- **King–Rosenau [ES19, Eq. (4.22)]** stays real, V̂ = sinh(4σ − 2μ)/(cosh(4σ − 2μ) + cos 2x), and solves the
+  continued diffusion (check 6). Its gauge equation was not integrated.
+- **The single black hole [ES19, Eq. (4.9)]** is not even in ξ, so its continuation is complex. It has no real
+  counterpart, as Kol's reality condition requires ([K06] §3.2).
+
+**What was read, 2026-11-14.** The arXiv TeX sources, at their latest versions (1905.01062v3, hep-th/0502033v3). The
+equation numbers were counted from that TeX (`I768-mac/eqnumbers.txt`), and the counter reproduces the numbers cited
+in §1–§3.
+- [ES19] Secs. 3 and 4.1–4.3 and 7: the flow, Eqs. (3.1)–(3.3) and (3.20); the static 2-metric and the logarithmic
+  diffusion, Eqs. (4.1)–(4.5); the cone (4.7); the single black hole (4.9); King–Rosenau (4.22).
+  - Its 2-metric has Lorentzian signature in t. §3 above used t Euclidean, which gives the same Eq. (4.2).
+  - Its Outlook (Sec. 7) recalls that Kol related Choptuik's collapse to the merger by a double Wick rotation. It
+    suggests applying the large-D methods to that problem, and notes that Rozali and Way's large-D study [RW18] scales
+    temporal gradients as theirs scales the direction along the horizon. The map is not carried out there.
+- [K06] Secs. 2.1–2.2 and 3.1–3.3:
+  - the merger ansatz (2.1) and Choptuik's action (2.6);
+  - the reduction over t, the Weyl rescaling, the reduced action and Φ's normalization, Eqs. (3.1)–(3.4);
+  - the boundary conditions, and the continuation (3.7);
+  - the cone example, Eqs. (3.8)–(3.10).
+  - The correspondence is stated at finite D. The large-D limit is not taken there.
+
+**Proposed text** (for the coordinator, for GAMMA.md or after Prop. 5 in the README):
+
+> At infinite D, Kol's double analytic continuation carries Emparan and Suzuki's U(1)-symmetric Ricci flow onto
+> Proposition 5(i) in its form L exactly, with the time-reflection boundary condition in place of the centre's
+> (`solver/inner_pert/kol_map.py`).
+
 ## References
 
 - [K06] B. Kol, *Choptuik scaling and the merger transition*, JHEP 10 (2006) 017, hep-th/0502033.
@@ -161,9 +233,12 @@ with `[^ES]: R. Emparan and R. Suzuki, JHEP 07 (2019) 094, arXiv:1905.01062.`
   solution*, Class. Quant. Grav. 23 (2006) 6805, hep-th/0607129.
 - [ES19] R. Emparan, R. Suzuki, *Topology-changing horizons at large D as Ricci flows*, JHEP 07 (2019) 094,
   arXiv:1905.01062.
+- [RW18] M. Rozali, B. Way, *Gravitating scalar stars in the large D limit*, JHEP 11 (2018) 106, arXiv:1807.10283
+  (verified in notes/DINF_ANALYTIC.md §5).
 
 Each was checked against its INSPIRE record (notes/LIT_REVIEW.md, addendum of issue #429). Logs:
 `I429-mac/` of the raw-data repository.
 
 Command, from `solver/inner_pert/`: `python3 kol_merger.py` (exit 0), and `--mutate=bigsphere`, `prefactor`,
-`twosphere` or `kr` (each exits 1).
+`twosphere` or `kr` (each exits 1). For §8: `python3 kol_map.py` (exit 0), and `--mutate=alpha2`, `nocont` or
+`gauge2` (each exits 1).
