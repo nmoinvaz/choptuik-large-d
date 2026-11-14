@@ -2373,9 +2373,9 @@ def chain_dM_table():
                   (f"D {D}: lam_g(M 48) - lam_g(M 32)", float(r["dlam"]), dl, ul, txt)]
     da = [r for r in csv.DictReader(open(os.path.join(ROOT, "hp/data/delta_all.csv"))) if r["kind"] == "chain_fit"]
     de = [float(r["err"]) for r in da if r["err"]]
-    t_err = [(N, "all 190 chain_fit rows (1.4×10⁻¹⁵ to 4.4×10⁻¹¹), so every row\nkeeps its err")]
-    items += [("chain_fit rows with an err", len(de), 190, 1, t_err), ("smallest chain_fit err", min(de), 1.4e-15, 1e-16, t_err),
-              ("largest chain_fit err", max(de), 4.4e-11, 1e-12, t_err),
+    t_err = [(N, "all 285 chain_fit rows (1.4×10⁻¹⁵ to 1.9×10⁻¹), so every row\nkeeps its err")]
+    items += [("chain_fit rows with an err", len(de), 285, 1, t_err), ("smallest chain_fit err", min(de), 1.4e-15, 1e-16, t_err),
+              ("largest chain_fit err", max(de), 0.19, 0.01, t_err),
               ("chain_fit rows without an err", len(da) - len(de), 0, 1, t_err)]
     with mp.workdps(50):
         offD = float(mp.mpf(at("controls", "polish", 20.043653, "D")["Delta48"]) - known20)
@@ -2546,13 +2546,41 @@ def sigma_ms():
 
 @check
 def chain_frontier():
-    """the README's reach of the large-D chain is the highest chain_fit D of hp/data/delta_all.csv (#653: chain_reach
-    takes the row nearest 245.6, so it would still pass after the chain moved on)"""
+    """the README's reach of the large-D chain is the highest chain_fit D of hp/data/delta_all.csv whose err is not the
+    weak pivot's (#653: chain_reach takes the row nearest 245.6, so it would still pass after the chain moved on). Past
+    track C's comparison frontier the rows carry err_kind "weak pivot" (#806, hp/export_delta_all.py), and the README's
+    reach is moved separately; every chain_fit row past the reach must carry that err"""
     import csv
-    top = max(float(r["D"]) for r in csv.DictReader(open(os.path.join(ROOT, "hp/data/delta_all.csv")))
-              if r["kind"] == "chain_fit")
+    rows = [r for r in csv.DictReader(open(os.path.join(ROOT, "hp/data/delta_all.csv"))) if r["kind"] == "chain_fit"]
+    top = max(float(r["D"]) for r in rows if r["err_kind"] != "weak pivot")
+    past = [r for r in rows if float(r["D"]) > top + 1e-9]
     txt = [("README.md", "harmonics 5–13 of the centre field on a fit, to D = 245.6.")]
-    return [("the chain's highest D", top, 245.6, 0.1, txt)]
+    return [("the chain's highest D without the weak pivot's err", top, 245.6, 0.1, txt),
+            ("chain_fit rows past it without the weak pivot's err", sum(r["err_kind"] != "weak pivot" for r in past), 0, 1,
+             [])]
+
+
+@check
+def series_rows():
+    """notes/LARGE_D_WALL.md "Track C": its Delta and E at D 250, 300 and 400 are the series rows of
+    hp/data/delta_all.csv (#804; hp/data/delta_series.csv, written by hp/track_c.py csv)"""
+    import csv
+    import mpmath as mp
+    rows = {float(r["D"]): r for r in csv.DictReader(open(os.path.join(ROOT, "hp/data/delta_all.csv")))
+            if r["kind"] == "series"}
+    W = "notes/LARGE_D_WALL.md"
+    items = []
+    for D, v, e, ue in ((250.0, "1.684955205950", "8.0×10⁻¹¹", 1e-12), (300.0, "1.678171015415", "1.24×10⁻¹⁰", 1e-12),
+                        (400.0, "1.669658064111", "2.33×10⁻¹⁰", 1e-12)):
+        r = rows[D]
+        txt = [(W, f"| {D:.0f} | {v} | {e} |")]
+        mant, ex = e.split("×10")
+        E = float(mant) * 10.0 ** -int(ex.translate(str.maketrans("⁰¹²³⁴⁵⁶⁷⁸⁹⁻", "0123456789-")).lstrip("-"))
+        with mp.workdps(40):
+            val = float(mp.mpf(r["Delta_q0"]) + mp.mpf(r["Delta_q1"]))
+        items += [(f"the series' Delta at D {D:.0f}", val, float(v), 1e-12, txt),
+                  (f"the series' E at D {D:.0f}", float(r["err"]), E, ue, txt)]
+    return items
 
 
 @check

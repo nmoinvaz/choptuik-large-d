@@ -533,7 +533,7 @@ three of the same authors.
 
 ## Track C: Δ(D) at D 250–400 from the 1/n series matched below 245 (#801)
 
-**The 1/n series fitted below D 245 gives Δ at D 250, 300 and 400 to 8×10⁻¹¹, 1.3×10⁻¹⁰ and 2.4×10⁻¹⁰.** It sees
+**The 1/n series fitted below D 245 gives Δ at D 250, 300 and 400 to 8×10⁻¹¹, 1.2×10⁻¹⁰ and 2.3×10⁻¹⁰.** It sees
 nothing at D 259.9. #603's chain leaves it past 246: by 10⁻¹⁰–10⁻⁷ with changing sign up to 253.5, then steeply, by
 3.7×10⁻² at 259.74, as a square root at D* ≈ 259.88. A square root of that size cannot be present below 245, so the
 fold belongs to the chain's discrete system (numerical evidence, post hoc). Script: `hp/track_c.py`. Raw: `I801-mac/`
@@ -546,20 +546,26 @@ amendments made on planted functions before any fit to the real data.
 - The fit starts at D₀, the smallest D_min with at least 5 accepted fits, and also uses the next D_min.
 - The error is E = max(h, s): h is half the range of those fits, and s the central fit's propagated data error.
 - On the real data D₀ = 10, with 19 fits used (χ²/dof 0.24–2.7). The central fit's residuals on D 150–245 are at most
-  2.2σ (rms 0.37σ, at most 9.4×10⁻¹¹).
+  2.8σ (rms 0.44σ, at most 9.7×10⁻¹¹).
 - **Error kind:** a spread over fit choices, calibrated on planted functions. It is not a bound, and it is conditional
   on Δ being analytic in 1/n below 245 up to exponentially small terms, and on chain_fit lying within its stated errors.
   Those errors are themselves spreads over the held fit's degree.
 
 | D | Δ | E |
 |---|---|---|
-| 250 | 1.684955205949 | 8.1×10⁻¹¹ |
-| 300 | 1.678171015413 | 1.27×10⁻¹⁰ |
-| 400 | 1.669658064110 | 2.40×10⁻¹⁰ |
-| ∞ | 1.6438937453 | 2.0×10⁻⁹ |
+| 250 | 1.684955205950 | 8.0×10⁻¹¹ |
+| 300 | 1.678171015415 | 1.24×10⁻¹⁰ |
+| 400 | 1.669658064111 | 2.33×10⁻¹⁰ |
+| ∞ | 1.6438937453 | 1.9×10⁻⁹ |
+
+- **In the table.** These are the series rows of `hp/data/delta_all.csv`, kind series, every 10 from D 250 to 400
+  (#804). `hp/track_c.py csv` refits them whenever the table is rebuilt (`hp/update_delta.py`).
+  - **Why they moved.** #608's newer comparison chains changed the err of the chain_fit rows below 245.64, which weight
+    the fit. That moved the values from #801's by at most 2×10⁻¹², well inside E, and the central fit's residuals with
+    them.
 
 - **Against D = ∞.** The limit lies inside the fitted Δ∞ = 1.643893746 ± 1.5×10⁻⁸, and inside the inner problem's
-  1.64387 ± 6×10⁻⁵. The slope is Δ₁ = 10.375285 (fits 10.37109–10.37531). The fitted value is 10.3753, and the inner
+  1.64387 ± 6×10⁻⁵. The slope is Δ₁ = 10.375285 (fits 10.37109–10.37529). The fitted value is 10.3753, and the inner
   problem at M = 5 gives 10.402 (FIRST_ORDER.md).
 
 **The planted functions**, on the real D grid with the real σ:
@@ -625,13 +631,16 @@ per-state table had been seen.
 - The sign changes' spacing is near the weak σ's period above (2.7 at D 232.6, lengthening with D). This is an
   observation, not tested.
 
-**The proposed err for rows past the frontier.**
+**The err for rows past the frontier.** `hp/export_delta_all.py` gives it to the chain_fit rows past 245.64 (#806).
 
 ```math
 \mathrm{err} = \max\left(\text{fits extrapolated},\ 4.4\times10^{-37}/p_\mathrm{min}\right)
 ```
 
-- p_min is the state's smallest LU pivot, which the record of the step from that state carries (`pivots[0]`).
+- p_min is the state's smallest LU pivot, which the record of the step from that state carries (`pivots[0]`). A
+  running chain's newest state has none yet, so its row waits for the next step.
+- The export's check: every row past 245.64 lies within its err of the series, and every row from 253.64 to 259.72
+  has a series value. Its control halves K and fails at 13 rows, 255.05 among them.
 - The term is 1.0×10⁻¹⁰ at 245.64, 4×10⁻⁸ at 250.2 and 5.8×10⁻⁶ at 253.5. It passes the fits term between D 245.14
   and 245.64.
 - **Error kind:** an envelope of the chain's difference from track C's series. It is calibrated with a factor 2 on
@@ -687,7 +696,8 @@ to 245.64.
 - Applied to δλ_g it gives the same to 1.3×10⁻¹⁹, so they come from the term.
 - The screen's own departure × p_min ranges over a factor 69, because it depends on the step spacing.
 
-**The proposed screen past the frontier: a prediction check.**
+**The screen past the frontier: a prediction check.** `export_delta_all.py --lam_screen` uses it from D 250.46 on
+(#787).
 
 ```math
 \left|\lambda_g(\text{state}) - \lambda_g(\text{prediction})\right| \le 10^{-20}
@@ -696,5 +706,6 @@ to 245.64.
 - It applies at every state whose run stored its prediction (`--save_pred 1`, #603 from 226.13).
 - The prediction is the previous state's series at this D, so the check ties each state to its predecessor's analytic
   continuation without assuming smoothness over neighbours.
-- It passes all 121 states at 5.1×10⁻³¹. Its control, one state's λ_g moved by 10⁻¹⁰ (`--mutate=lam`), fails.
+- It passes all 121 states at 5.1×10⁻³¹. Its control, one state's λ_g moved by 10⁻¹⁰, fails. In the exporter that
+  control is `--mutate=lam_pred`, at the state nearest D 255.
 - The polynomial screen stays where it passes, below 250.46, and wherever no prediction is stored.
