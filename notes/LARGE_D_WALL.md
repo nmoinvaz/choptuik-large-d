@@ -422,7 +422,19 @@ the last nodes 0.80 and 0.92 (nodes 0.3, 0.4, 0.5, 0.6 and the last) starts at m
 renode controls fail as they must. But the base polish takes a first step of |dz| 0.25 and 0.10, every trial from λ 1 to
 1/64 gives NaN, and no trial is accepted in 47 and 45 min. So the series' singularity cannot yet be compared across
 layouts. The start and the first step have the pattern #688 read at 0.975, a small gap at the last node and a large
-step along one weak direction, which is not yet measured at these starts.
+step along the weak directions.
+
+dh610 measured that step at both starts with #688's `uf688.py` (#772, #785, #786, #790; raw `I772-dh610/` 150c60ee,
+`I785-dh610/` b8cbfd37, `I786-dh610/` 8c9f7389, `I790-dh610/` f6e36595). The pinned first step reproduces the base
+polish's (2.517×10⁻¹ and 1.030×10⁻¹). The four weakest directions carry all of it at 0.975, 0.80 and 0.92, but the
+weakest one alone carries less as the last node moves in: v₁'s share of the step's squared norm is 0.934, 0.427 and
+0.612, and v₃ carries 41% and 38% at 0.80 and 0.92. The residual sits wholly in the n3>n4 matching block, in all its
+128 rows at about 5×10⁻³⁷, against at most 5×10⁻⁹⁹ in every other block. u₁ has half its weight there and half in the
+horizon block, as #772 predicted, but u₁ᵀr comes wholly from n3>n4, so the prediction that both blocks share it failed.
+Within that block u₁ᵀr is the small remainder of a cancellation between the p and m rows (shares −50.3 and +48.9 at
+0.80, −1877 and +1878 at 0.92), and r itself is almost purely r_p − r_m, its k = 1 amplitude 69 to 77 times that of
+r_p + r_m. So the re-noded starts' residual is a mismatch of p − m at node 4, the renode's interpolation error in that
+combination, and the first step answers it along the weak directions (numerical evidence, one build).
 
 #760 (dh370; raw `I760-dh370/` f8f6d7fc) built the series at three of #603's bases from D 256.57 to 258.78. Each equals
 #603's record in all 25 norms and both pivots, and a neighbouring base's record matches none. The near track holds as a
