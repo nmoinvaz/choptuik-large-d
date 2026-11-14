@@ -2,7 +2,7 @@
 """A corrector whose first step puts the weak subspace on its root (#499, step 4), A/B against newton_od.
 
     cd hp && python3 weak_corrector.py RAWDIR DZ0 BASE [--mode=weak|newton] [--k=4] [--hs=1e-23,1e-24] [--tol=1e-60]
-        [--it=12] [--lam_stall=0.04] [--threads=2] [--json=OUT]
+        [--it=12] [--lam_stall=0.04] [--threads=2] [--split_at=start|after] [--json=OUT]
 
 DZ0 is anm_run.py --save_dz0's file of an attempt (its corrector start z0 and first Newton step dz0), BASE the state
 it stepped from (plan and sizes), both relative to RAWDIR. The kernel at the attempt's D is rebuilt as dz0_weak.py
@@ -16,6 +16,9 @@ which must repeat the attempt's logged Newton sequence and its refusal. --mode=w
 the four weakest directions: z1 = z0 + V c* + (dz0 - V a), with a = V^T dz0 and c* the root of the cubic reduced
 system B (c - a) + T(c, c, c) / 6 = 0 (dz0_weak.cubic) whose actual weak residual is smallest, at most 5e-2 of
 |B a|. Then newton_od runs from z1. Printed: max|F| at z0 and z1, newton_od's sequence and outcome, Delta.
+The weak residual of newton_od's first step is read in the reduced model's frame U, B, formed from the LU at z0
+(--split_at=start, #675). --split_at=after forms it from the LU newton_od leaves at its last trial point, which is the
+frame #499's figures (0.517, 0.384) were read in, kept as the control.
 """
 import json
 import os
@@ -47,6 +50,9 @@ def main():
     tol, it, lam_stall = float(opts.get("tol", 1e-60)), int(opts.get("it", 12)), float(opts.get("lam_stall", 0.04))
     if mode not in ("weak", "newton"):
         sys.exit(f"--mode={mode}: weak or newton")
+    split_at = opts.get("split_at", "start")
+    if split_at not in ("start", "after"):
+        sys.exit(f"--split_at={split_at}: start or after")
     f = np.load(os.path.join(raw, dzf))
     z0 = o8([f[f"z{q}"] for q in range(8)])
     d0 = o8([f[f"d{q}"] for q in range(8)])
@@ -58,7 +64,7 @@ def main():
     s = make_solver(str(D), M, nodes=nodes, kt=mb.get("kt", 36), kc=mb.get("kc", 146), ks=mb.get("ks", 130),
                     threads=int(opts.get("threads", 2)), kfreeze=kf)
     s.set_segs(mb["segs"])
-    rec = dict(dz0=dzf, base=base, D=float(D), a=md.get("a"), mode=mode, k=k, tol=tol)
+    rec = dict(dz0=dzf, base=base, D=float(D), a=md.get("a"), mode=mode, k=k, tol=tol, split_at=split_at)
     t0 = time.time()
 
     # the held offset c = F_bare(z0) + J dz0, on the horizon block's p rows
@@ -84,6 +90,11 @@ def main():
         print("check: FAIL")
         return 1
 
+    def frame(X):
+        """U (orthonormal) and B = R^-T from J^-T X = U R, with the LU the solver holds now"""
+        Um, Rm = mgs([mpv(o8(s.olu_solve(list(parts8(x)), True)), range(L)) for x in X])
+        return Um, (mp.matrix(Rm) ** -1).T
+
     start = z0
     if mode == "weak":
         t0 = time.time()
@@ -96,6 +107,9 @@ def main():
         X = mgs([[mp.mpf(float(x)) for x in V[:, j]] for j in range(k)])[0]
         for _ in range(3):
             X = mgs([mpv(o8(s.olu_solve(list(o8(s.olu_solve(list(parts8(x)), True))))), range(L)) for x in X])[0]
+        if split_at == "start":
+            # the reduced model's frame from the LU at z0, before cubic and newton_od refactor it (#675)
+            Um, B = frame(X)
         a = [mp.fsum(x * y for x, y in zip(X[j], dv)) for j in range(k)]
         hs = [float(x) for x in opts.get("hs", "1e-23,1e-24").split(",")]
         cr = {}
@@ -125,8 +139,9 @@ def main():
     if mode == "weak" and first:
         # the first step newton_od takes from z1: its span(V) part and the rest, and the weak residual of the reduced
         # model's coordinates (U^T [F - F(z0)] - B a) at z1 and at z1 + dz
-        Um, Rm = mgs([mpv(o8(s.olu_solve(list(parts8(x)), True)), range(L)) for x in X])
-        B = (mp.matrix(Rm) ** -1).T
+        if split_at == "after":
+            # the control: the frame from the LU newton_od left behind, at its last trial point
+            Um, B = frame(X)
         Ba = B * mp.matrix(a)
         nBa = mp.sqrt(mp.fsum(x * x for x in Ba))
         F0b = o8(s.residual_o(list(z0)))
