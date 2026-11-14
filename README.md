@@ -14,7 +14,8 @@ Papers (drafts, not yet reviewed):
 Choptuik's critical solution is the universal threshold between dispersal and black-hole formation for a massless
 scalar field. It is computed here as a periodic boundary-value problem in self-similar variables, in double-double
 precision across spacetime dimensions D from 3.044 to 73, and past 73 by a chain in quad- and octo-double that holds
-harmonics 5–13 of the centre field on a fit, to D = 245.6.
+harmonics 5–13 of the centre field on a fit, to D = 259.74, below a fold of its discrete system near D = 259.90
+(numerical evidence).
 
 - One rational formula in 1/(D − 2) fits its echo period Δ(D) and critical exponent γ(D) for every D ≥ 4.
 - If Δ is analytic in 1/D, its limit is Δ∞ = 1.643893746 ± 1.5×10⁻⁸. That is finite, against the published
@@ -73,7 +74,7 @@ How it is done:
   solver in [`solver/`](solver/), with a Rust kernel for its residual (this crate), covers D = 3.6–40. A separate
   double-double (about 32-digit) solver in [`hp/`](hp/) reaches D = 67.77. It reaches 73.27 with the pinned runs, and
   78.12 in a layout where Δ is known to about 10⁻⁶. Past 73 the same residual is continued in D in quad- and
-  octo-double, with harmonics 5–13 of the centre field held on a fit of the full solutions, to D = 245.6.
+  octo-double, with harmonics 5–13 of the centre field held on a fit of the full solutions, to D = 259.74.
 - **Theory.** The large-D expansion, its Stokes multipliers and the inner problem at D = ∞ are in the Large-D section,
   with the scripts that check each step.
 - **Layout.** The physics is in this file, and the software is described at the end.
@@ -535,10 +536,13 @@ The kinds of computation are:
 - the pinned double-double runs after one full-system step (67.77–73.27);
 - the large-D chain from 74. The chain holds harmonics 5–13 of p1 on a fit of the full-system states (kind chain_fit).
   It agrees with the 1/D series of the double-double points to within the series' own spread, to D = 215, where that
-  comparison ends. Its error column is the spread over the fit's degree where a rerun on the fits of degree 6 and 10
-  reached a D, directly or interpolated in 1/(D − 2), to D = 231.13. Above that, to 245.64, it is an estimate
-  extrapolated log-linearly in D from the last six measured rows (err_kind "fits extrapolated";
-  `hp/export_delta_all.py`, [notes/QUAD_DOUBLE.md](notes/QUAD_DOUBLE.md), 13.25).
+  comparison ends. To D = 245.64 its error column is the spread over the fit's degree, where a rerun on the fits of
+  degree 6 and 10 reached a D, directly or interpolated in 1/(D − 2) (`hp/export_delta_all.py`,
+  [notes/QUAD_DOUBLE.md](notes/QUAD_DOUBLE.md), 13.25). Past 245.64 the chain leaves the 1/n series of the next bullet,
+  by one smooth term of its discrete system that grows as the system's smallest LU pivot p_min falls. There the error
+  column is 4.4×10⁻³⁷/p_min (err_kind "weak pivot"), an envelope of that departure, an estimate, not a bound
+  ([notes/LARGE_D_WALL.md](notes/LARGE_D_WALL.md), "The chain past the comparison frontier").
+- the 1/n series fitted to these rows up to D = 245.64 (track C), every 10 from D = 250 to 400 (kind series).
 
 How the held harmonics' bias was found, removed and measured is in [notes/BIAS.md](notes/BIAS.md).
 `cd hp && python3 export_delta_all.py ../../choptuik-large-d-raw` rebuilds the file, and `--verify` checks every row
@@ -560,6 +564,11 @@ Where the values in the table come from:
 - **Δ(70) and Δ(100)** are extrapolations that every model fitting the double-double points agrees on, to 10⁻¹¹ and
   2×10⁻⁸, the half-integer series included.
 - **D = 1000 and ∞** assume analyticity in 1/D. The half-integer series differ there by 3×10⁻⁶ and more.
+- **Δ for D = 250–400** is the 1/n series fitted to the rows up to D = 245.64 (track C, `hp/track_c.py`): 1.684955205950
+  ± 8.0×10⁻¹¹ at D = 250, 1.678171015415 ± 1.24×10⁻¹⁰ at 300 and 1.669658064111 ± 2.33×10⁻¹⁰ at 400. Its limit,
+  1.6438937453 ± 1.9×10⁻⁹, lies inside the Δ∞ above. Each ± is a spread over fit choices, calibrated on planted
+  functions. It is not a bound, and it is conditional on Δ being analytic in 1/n below D = 245, up to exponentially
+  small terms ([notes/LARGE_D_WALL.md](notes/LARGE_D_WALL.md), "Track C").
 
 The physics figure below and the candidate test use these values. The double-double points behind them are described in
 [How the points are computed](#how-the-points-are-computed).
@@ -953,7 +962,7 @@ The last two columns approach the same limit, as Proposition 1 predicts (c = 1 -
 ![The solutions of all D as one family, animated: p1 over one echo period swept from D 38 to 232.6, the waves times √(D−2) nearly coinciding, each odd harmonic a nearly fixed factor smaller than the one before, and p over the radius and the echo phase with p1 its slope at the centre](hp/wave_family.svg)
 
 **The family to D 232.6**, where the chain stood when the figure was drawn (`hp/plot_wave_family.py`; the chain now
-reaches 245.6). Times √(D−2), the first harmonic of p1 falls by 10% from D 38
+reaches 259.74). Times √(D−2), the first harmonic of p1 falls by 10% from D 38
 to 232.6 (3.106 to 2.782), against 65% without the factor, on its way to the extrapolated 2.72. Within one wave each odd
 harmonic is a nearly fixed factor smaller than the one before: from harmonic 1 to 3 by 10.5 at D 38 and 16.3 at D
 232.6. Above D 73 harmonics 5–13 are held on a fit ([ALGORITHM.md](ALGORITHM.md), section 3), so there only harmonics
@@ -1971,10 +1980,23 @@ near-null band in the Jacobian and an unexplained drift of the gauge mode's root
   points supplies it ([notes/LARGE_D_WALL.md](notes/LARGE_D_WALL.md); [notes/QUAD_DOUBLE.md](notes/QUAD_DOUBLE.md),
   sections 12–13).
   - An exact Taylor continuation in D (the asymptotic numerical method, with the dimension entered as a jet through the
-    kernel) carries the chain past the wall, to D = 245.6 ([ALGORITHM.md](ALGORITHM.md), section 3). It does so only with
+    kernel) carries the chain past the wall, to D = 259.74 ([ALGORITHM.md](ALGORITHM.md), section 3). It does so only with
     harmonics 5–13 of the centre profile held on a fit of the full solutions. Held on a trend instead, they put Δ
     5×10⁻⁸ to 1.4×10⁻⁷ below the 1/D series by D = 85.7 (section 13.19 there), the bias that the fit removes
     ([notes/BIAS.md](notes/BIAS.md)).
+  - **A fold near D = 259.9.** The chain's Taylor series at eight bases from D = 259.26 to 259.67 place a square-root
+    branch point of Δ on the real axis, where the branch folds back. D* = 259.903 is the median of the sixteen
+    estimates, from 259.900 to 259.905.
+    - Δ's exponent there is 0.45 to 0.48 by Dlog Padé, which returns an isolated planted square root
+      (`hp/singularity_type.py planted`), and 0.52 to 0.72 by a ratio fit.
+    - A plan made at the state, on a base that did not converge, moves D* by +0.010 to +0.011 at the two bases where it
+      was run.
+    - The 1/n series fitted below D = 245 shows nothing there, and a square root of that size planted in the data
+      below 245 makes every fit of it fail.
+    - So the fold belongs to the chain's discrete system, its resolution and truncations with harmonics 5–13 held,
+      not to the continuum as far as the data below 245 show. This is numerical evidence
+      ([notes/LARGE_D_WALL.md](notes/LARGE_D_WALL.md), "Where the series is singular" and "Track C";
+      [`hp/data/fold_259.csv`](hp/data/fold_259.csv)).
   - The wall is the digits the horizon block needs, which grow linearly with D, not the horizon series itself. In a toy
     of the horizon's two branches (`hp/horizon_toy.py`), the series keeps the full precision up to D ≈ 200. An integral
     equation from the horizon converges only after its first (D − 4)/2 Taylor terms are subtracted, and shooting outward

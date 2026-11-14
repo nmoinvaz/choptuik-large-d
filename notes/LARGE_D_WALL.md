@@ -712,7 +712,8 @@ to 245.64.
 
 ## Proposed README text
 
-Drafted for the coordinator, who edits the README. Each block below replaces the README passage named above it, and
+Applied to the README by the coordinator on 2026-11-14 (its checks moved to the README with it). Drafted for the
+coordinator, who edits the README. Each block below replaces the README passage named above it, and
 the README's table of values is left to the coordinator.
 
 **Where each number comes from.**

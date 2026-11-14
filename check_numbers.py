@@ -2096,10 +2096,10 @@ def chain_reach():
     """the README's reach of the large-D chain: a chain_fit row of hp/data/delta_all.csv at that D (#603)"""
     import csv
     rows = [r for r in csv.DictReader(open(os.path.join(ROOT, "hp/data/delta_all.csv"))) if r["kind"] == "chain_fit"]
-    D = min((float(r["D"]) for r in rows), key=lambda d: abs(d - 245.6366))
-    txt = [("README.md", "harmonics 5–13 of the centre field on a fit, to D = 245.6."),
-           ("README.md", "held on a fit of the full solutions, to D = 245.6.")]
-    return [("the chain's reach in the README", D, 245.6, 0.1, txt)]
+    D = max(float(r["D"]) for r in rows)
+    txt = [("README.md", "harmonics 5–13 of the centre field on a fit, to D = 259.74,"),
+           ("README.md", "held on a fit of the full solutions, to D = 259.74.")]
+    return [("the chain's reach in the README, its highest chain_fit row", D, 259.74, 0.01, txt)]
 
 
 @check
@@ -2554,15 +2554,15 @@ def chain_frontier():
     rows = [r for r in csv.DictReader(open(os.path.join(ROOT, "hp/data/delta_all.csv"))) if r["kind"] == "chain_fit"]
     top = max(float(r["D"]) for r in rows if r["err_kind"] != "weak pivot")
     past = [r for r in rows if float(r["D"]) > top + 1e-9]
-    txt = [("README.md", "harmonics 5–13 of the centre field on a fit, to D = 245.6.")]
-    return [("the chain's highest D without the weak pivot's err", top, 245.6, 0.1, txt),
+    txt = [("README.md", "To D = 245.64 its error column is the spread over the fit's degree")]
+    return [("the chain's highest D without the weak pivot's err", top, 245.64, 0.01, txt),
             ("chain_fit rows past it without the weak pivot's err", sum(r["err_kind"] != "weak pivot" for r in past), 0, 1,
              [])]
 
 
 @check
 def proposed_readme():
-    """notes/LARGE_D_WALL.md "Proposed README text" (the coordinator moves it into the README, and these texts with it):
+    """README: the large-D results applied from notes/LARGE_D_WALL.md "Proposed README text" (#800):
     the chain's reach and the fits err's frontier (hp/data/delta_all.csv), the weak pivot's K (hp/export_delta_all.py),
     track C's values and limit (hp/data/delta_series.csv, hp/track_c.py csv) and the fold near D 259.9
     (hp/data/fold_259.csv, hp/fold_table.py)"""
@@ -2570,7 +2570,7 @@ def proposed_readme():
     import statistics
     import sys as _sys
     import mpmath as mp
-    W = "notes/LARGE_D_WALL.md"
+    W = "README.md"
     rows = list(csv.DictReader(open(os.path.join(ROOT, "hp/data/delta_all.csv"))))
     fit = [r for r in rows if r["kind"] == "chain_fit"]
     reach = max(float(r["D"]) for r in fit)
@@ -2590,8 +2590,8 @@ def proposed_readme():
     off = [float(new[k][f"{e}_Dstar"]) - float(r[f"{e}_Dstar"]) for k in new for r in kept if r["D0"] == k
            for e in ("ratio", "dlog")]
     t_reach = [(W, "harmonics 5–13 of the centre field on a fit, to D = 259.74, below a fold of its discrete system near D = 259.90"),
-               (W, "held on a fit of the full solutions, to D = 259.74."), (W, "becomes \"the chain now reaches 259.74\"."),
-               (W, "\"carries the chain past the wall, to D = 259.74\"")]
+               (W, "held on a fit of the full solutions, to D = 259.74."), (W, "the chain now\nreaches 259.74)."),
+               (W, "carries the chain past the wall, to D = 259.74")]
     t_fits = [(W, "comparison ends. To D = 245.64 its error column is the spread over the fit's degree"),
               (W, "Past 245.64 the chain leaves the 1/n series of the next bullet")]
     t_wp = [(W, "column is 4.4×10⁻³⁷/p_min (err_kind \"weak pivot\")")]
