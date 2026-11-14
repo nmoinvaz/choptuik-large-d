@@ -333,8 +333,10 @@ quarter of one order (numerical evidence, one plan and one layout).
 #783 (win2; raw `I783-win2/` 36ed0c10) climbed on from w = 1/4 in smaller steps. w = 3/8, 7/16 and 1/2 each converge in
 5 steps (max|F| 3.2×10⁻⁸², 1.6×10⁻⁹⁰, 5.3×10⁻⁹¹, no failed projection), so #744's stall at w = 1/2 came from the size of
 its step, not from a missing root. Δ − Δ(w = 1/4) is +8.76×10⁻¹⁴, +9.37×10⁻¹⁴ and +8.80×10⁻¹⁴ there. The order-132
-term's effect thus levels off near 1.06×10⁻¹² from w = 0, most of it gained by w = 1/4. The climb on to w = 1, a converged
-order-132 base, is #796.
+term's effect thus levels off near 1.06×10⁻¹² from w = 0, most of it gained by w = 1/4. Two rungs between (#797; raw
+`I797-win2/` 4ecf7009) converge in 5 steps each and put Δ − Δ(w = 1/4) at 8.761, 9.256, 9.368, 9.192 and 8.799×10⁻¹⁴
+for w = 3/8, 13/32, 7/16, 15/32 and 1/2: a smooth turn with its peak near w = 7/16, 6×10⁻¹⁵ high, against a last step's
+dΔ of at most 4×10⁻⁵¹ at each rung. The climb on to w = 1, a converged order-132 base, is #796.
 
 hp/src is not changed by this task.
 
