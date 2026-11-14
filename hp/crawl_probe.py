@@ -289,9 +289,38 @@ def reseeded_start(att):
     return z0, rsd
 
 
+def attempt_of(raw, dd, meta, threads):
+    """the attempt of a saved iterate: rebuilt from its pieces when anm saved it (build_saved), else by build_attempt"""
+    if meta.get("mode") == "anm":
+        return build_saved(dd, meta, threads)
+    return build_attempt(raw, meta["raw_base"], meta["a"], threads=threads, jet=meta.get("jet"), pred=meta.get("pred"))
+
+
+def build_saved(dd, meta, threads=2):
+    """the attempt of an iterate saved by anm, from the pieces anm_run had built: the solver at D + a on the
+    attempt's plan, PinnedO with the attempt's held offset (ch, cl and c8 as stored), the re-seeder of D + a with
+    the run's options, and ElimO's switch"""
+    import mpmath as mp
+    from hpkernel.driver import make_solver
+    from octo_corrector import PinnedO, with_horizon
+    from reseed import Reseeder
+    mp.mp.dps = 50
+    M, nodes, kf = int(meta["M"]), list(meta["nodes"]), int(meta["kfreeze"])
+    kt, kc, ks, ha = meta["kt"], meta["kc"], meta["ks"], meta["horizon_alpha"]
+    Dn = mp.mpf(meta["Dn_str"])
+    sn = make_solver(Dn, M, nodes=nodes, kt=kt, kc=kc, ks=ks, threads=threads, kfreeze=kf, horizon_alpha=ha)
+    sn.set_segs(meta["segs"])
+    c8 = [np.ascontiguousarray(dd[f"c8_{q}"]) for q in range(8)] if "c8_0" in dd else None
+    so = PinnedO(sn, dd["ch"], dd["cl"], c8=c8)
+    rs = Reseeder(dict(M=M, nodes=nodes, kt=kt, kc=kc, ks=ks), Dn, threads=threads, horizon_alpha=ha,
+                  qd=bool(meta["reseed_qd"]), od=meta["reseed_od"], qd_start=meta["reseed_start"])
+    return dict(M=M, K=len(nodes), nodes=nodes, D=mp.mpf(meta["D_str"]), Dn=Dn, m=meta, sn=sn, so=so, rs=rs,
+                with_horizon=with_horizon, switch=float(meta["switch"]))
+
+
 def make_elim(att, record=False):
-    """ElimO around the attempt's PinnedO (switch 1e-15), past its start (no StartNotProjected); with record every
-    newton_o call keeps (z, st) in .calls"""
+    """ElimO around the attempt's PinnedO (switch 1e-15, or the attempt's own when anm saved it), past its start (no
+    StartNotProjected); with record every newton_o call keeps (z, st) in .calls"""
     from octo_corrector import ElimO
 
     class RecElimO(ElimO):
@@ -309,7 +338,7 @@ def make_elim(att, record=False):
             if key not in self.cache:
                 self.cache[key] = super().project(z)
             return self.cache[key]
-    el = RecElimO(att["so"], att["rs"])
+    el = RecElimO(att["so"], att["rs"], switch=att.get("switch", 1e-15))
     el.calls = []
     el.cache = None if record else {}
     el.first = False
@@ -418,7 +447,7 @@ def probe(argv):
     rec_path = os.path.join(out, f"crawl_probe_{tag}.jsonl")
     require_raw(rec_path)
     t0 = time.time()
-    att = build_attempt(raw, meta["raw_base"], meta["a"], threads=threads, jet=meta.get("jet"), pred=meta.get("pred"))
+    att = attempt_of(raw, dd, meta, threads)
     M, K, so, rs = att["M"], att["K"], att["so"], att["rs"]
     el = make_elim(att)
     print(f"probe: {it_path}, D + a {att['Dn']}, |dz| {float(np.abs(d[0]).max()):.3e}, arms {arms}, {time.time() - t0:.1f} s", flush=True)
@@ -558,8 +587,222 @@ def probe(argv):
         print(f"  the step at the iterate formed again: {'bit for bit the stored one' if same else 'DIFFERS from the stored one'}", flush=True)
         with open(rec_path, "a") as fh:
             fh.write(json.dumps(dict(theta=res["theta"]), default=float) + "\n")
+    if _opt(argv, "own", 0):
+        res["own"] = own_test(el, so, z, d, M, K, [float(x) for x in _opt(argv, "own_lams", "1,0.5").split(",")],
+                              weak=_opt(argv, "weak", 0))
+        with open(rec_path, "a") as fh:
+            fh.write(json.dumps(dict(own=res["own"]), default=float) + "\n")
     print(f"done, {time.time() - t0:.0f} s; records {rec_path}", flush=True)
     return 0
+
+
+def own_test(el, so, z, d, M, K, lams, weak=0):
+    """newton_od's default trial test (accept="own", #742) at the saved iterate z with its step d: each trial
+    z + lam d is judged by its own Newton correction, ElimO.newton_o there, which is the trial's projection's
+    displacement P(zt) - zt plus the Newton step from P(zt); accepted when its max (leading part) is below |d|. Both
+    pieces are printed by unknown group, at the iterate (d = P(z) - z plus the step from P(z)) and at each trial.
+    weak = w > 0: also the share (2-norm, leading parts) of each piece in the w weakest right singular directions of
+    the Jacobian at the projected point (junk_subspace_o with every direction kept), with their singular values"""
+    from multidouble import od_axpy
+    from octo_corrector import junk_subspace_o, o8, omax
+
+    def lead(v):
+        return np.asarray(v[0]) + np.asarray(v[1])
+
+    def share(V, v):
+        x = lead(v)
+        n = float(np.linalg.norm(x))
+        return float(np.linalg.norm(V.T @ x)) / n if n > 0 else 0.0
+
+    def split(name, zt, st):
+        zp = el.project(zt)                      # the projection newton_o used (make_elim caches it)
+        disp = o8(od_axpy(-1.0, *zt, *zp))
+        newt = o8(od_axpy(-1.0, *disp, *st[0]))
+        r = dict(dz=float(np.abs(lead(st[0])).max()), F=omax(st[1:3]), disp_max=float(np.abs(lead(disp)).max()),
+                 newton_max=float(np.abs(lead(newt)).max()), disp=unknown_blocks(lead(disp), M, K),
+                 newton=unknown_blocks(lead(newt), M, K), piv=[float(st[3]), float(st[4])])
+        if weak:
+            V, sig, _ = junk_subspace_o(so, weak, delta_max=2.0)
+            r.update(sigma=[float(x) for x in sig], share_V=dict(dz=share(V, st[0]), disp=share(V, disp), newton=share(V, newt)))
+        print(f"  own test, {name}: |correction| {r['dz']:.4e} = displacement P(z) - z {r['disp_max']:.4e} + step from "
+              f"P(z) {r['newton_max']:.4e}; max|F(P(z))| {r['F']:.3e}, piv {r['piv'][0]:.1e}..{r['piv'][1]:.1e}", flush=True)
+        for nm in ("disp", "newton"):
+            top = sorted(r[nm].items(), key=lambda kv: -kv[1])[:6]
+            print(f"      {'displacement' if nm == 'disp' else 'step from P(z)'} by group: "
+                  + ", ".join(f"{g} {v:.2e}" for g, v in top), flush=True)
+        if weak:
+            print(f"      weak directions at P(z): sigma " + ", ".join(f"{s:.2e}" for s in r["sigma"]) + "; share of the "
+                  + ", ".join(f"{k} {v:.3f}" for k, v in r["share_V"].items()), flush=True)
+        return r, newt
+    out = {}
+    st0 = el.newton_o(z)
+    out["iterate"], new0 = split("at the iterate", z, st0)
+    nd = float(np.abs(lead(d)).max())
+    same = all(np.array_equal(np.asarray(st0[0][q]), np.asarray(d[q])) for q in range(8))
+    out["iterate"]["step_reproduced"] = same
+    print(f"      the step formed again at the iterate: {'bit for bit the stored one' if same else 'DIFFERS'}", flush=True)
+    newts = {}
+    for lam in lams:
+        zt = o8(od_axpy(lam, *d, *z))
+        st = el.newton_o(zt)
+        r, newts[lam] = split(f"trial lam {lam:g}", zt, st)
+        r["accepted"] = bool(r["dz"] < nd)
+        print(f"      own test at lam {lam:g}: {r['dz']:.4e} vs |dz| {nd:.4e}: {'accepted' if r['accepted'] else 'refused'}",
+              flush=True)
+        out[f"{lam:g}"] = r
+    # the directions of the steps from the projected points: the iterate's against each trial's
+    cos = {}
+    keys = [("iterate", new0)] + [(f"{lam:g}", newts[lam]) for lam in lams]
+    for i in range(len(keys)):
+        for j in range(i + 1, len(keys)):
+            a, b = lead(keys[i][1]), lead(keys[j][1])
+            na, nb = float(np.linalg.norm(a)), float(np.linalg.norm(b))
+            cos[f"{keys[i][0]}~{keys[j][0]}"] = float(a @ b) / (na * nb) if na > 0 and nb > 0 else 0.0
+    out["cos_newton"] = cos
+    print("  cosines of the steps from P(z): " + ", ".join(f"{k} {v:+.6f}" for k, v in cos.items()), flush=True)
+    return out
+
+
+# ------------------------------------------------------------------ an attempt of anm_run.py itself, recorded (#752)
+class StopRun(Exception):
+    """anm's newton_od wrapper ends anm_run.main with it after the last attempt it records"""
+
+
+def anm(argv):
+    """anm_run.main on the given arguments, with every ElimO.newton_o call of an attempt recorded and newton_od
+    capped at --stop + 1 steps: the base polish runs as it does, and each attempt's iterate at Newton step --stop
+    (own test: the trial accepted at step stop - 1) is saved with its step, as ElimO.newton_o returned them, with the
+    attempt's pieces (plan, held offset, re-seeder options, switch) for build_saved. The attempt is then reported
+    not converged, so anm_run halves a and runs the next one; after --attempts attempts the run ends."""
+    import anm_run
+    import mpmath as mp
+    import octo_corrector as oc
+    from raw_out import require_raw
+    argv = list(argv)
+
+    def pop(key, default):
+        f = "--" + key
+        if f in argv:
+            i = argv.index(f)
+            v = type(default)(argv[i + 1])
+            del argv[i:i + 2]
+            return v
+        return default
+    stop, n_att = pop("stop", 1), pop("attempts", 1)
+    raw, out = argv[0], argv[1]
+    state = argv[argv.index("--state") + 1]
+    os.makedirs(out, exist_ok=True)
+    _, _, m0 = anm_run.load_state(os.path.join(raw, state))
+    calls = []
+
+    class RecElimO(oc.ElimO):
+        def newton_o(self, z, mutate=0):
+            st = super().newton_o(z, mutate=mutate)
+            calls.append((oc.o8(z), st))
+            return st
+    anm_run.ElimO = RecElimO
+    phase = dict(series=False, n=0)
+    for nm in ("coefficients", "coefficients_q", "coefficients_o"):
+        def wrapped(*a, _f=getattr(anm_run, nm), **k):
+            phase["series"] = True              # the base polish is over: the next newton_od is an attempt
+            return _f(*a, **k)
+        setattr(anm_run, nm, wrapped)
+    nod = anm_run.newton_od
+
+    def newton_rec(s, z0, **kw):
+        if not phase["series"]:
+            return nod(s, z0, **kw)
+        if kw.get("accept", "own") != "own" or kw.get("strong_chord") or kw.get("junk_w"):
+            raise SystemExit("anm: the own test only, without --od_strong or --od_junk")
+        if not isinstance(s, oc.ElimO):
+            raise SystemExit("anm: needs --reseed 2 (ElimO)")
+        calls.clear()
+        kw["it_max"] = stop + 1
+        z, hist, conv = nod(s, z0, **kw)
+        if len(hist) <= stop or "F_new" not in hist[stop - 1]:
+            raise SystemExit(f"anm: the attempt ended after {len(hist)} steps, before step {stop}")
+        # own test: one newton_o per trial, lam = 1, 1/2, ... until one is accepted; call 0 is the start
+        idx = sum(int(round(-np.log2(h["lam"]))) + 1 for h in hist[:stop])
+        zi, st = calls[idx]
+        Fi, di = oc.omax(st[1:3]), float(np.abs(np.asarray(st[0][0])).max())
+        ok = Fi == hist[stop]["F"] == hist[stop - 1]["F_new"] and di == hist[stop]["dz"]
+        Dn = s.rs.D
+        a = float(Dn - mp.mpf(m0["D_str"]))
+        name = os.path.join(out, f"crawl_iter_D{float(Dn):.4f}_s{stop}.npz")
+        require_raw(name)
+        so = s.so
+        meta = dict(mode="anm", raw_base=state, a=a, D_str=m0["D_str"], Dn_str=str(Dn), M=int(m0["M"]), nodes=list(m0["nodes"]),
+                    kt=m0.get("kt", 36), kc=m0.get("kc", 146), ks=s.rs.ks, kfreeze=int(sys.argv[sys.argv.index("--kfreeze") + 1])
+                    if "--kfreeze" in sys.argv else 3, horizon_alpha=s.rs.horizon_alpha, segs=[[float(x) for x in sg] for sg in so.s.get_segs()],
+                    reseed_qd=bool(s.rs.qd), reseed_od=int(s.rs.od), reseed_start=s.rs.qd_start, switch=float(s.switch),
+                    stop=stop, call=idx, n_calls=len(calls), hist=hist, F_iter=Fi, dz=di, check_hist=bool(ok),
+                    anm_args=list(sys.argv[1:]))
+        extra = {f"c8_{q}": np.asarray(so.c8[q]) for q in range(8)} if so.c8 is not None else {}
+        np.savez(name, **{f"z{q}": np.asarray(zi[q]) for q in range(8)}, **{f"d{q}": np.asarray(st[0][q]) for q in range(8)},
+                 ch=np.asarray(so.ch), cl=np.asarray(so.cl), **extra, meta=json.dumps(meta, default=float))
+        print(f"  anm: saved {name}, the iterate at Newton step {stop} (newton_o call {idx} of {len(calls)}; max|F| {Fi:.3e}, "
+              f"|dz| {di:.4e}; {'equal to' if ok else 'DIFFERENT FROM'} newton_od's records)", flush=True)
+        phase["n"] += 1
+        phase["ok"] = phase.get("ok", True) and ok
+        if phase["n"] >= n_att:
+            raise StopRun()
+        return z, hist, False
+    anm_run.newton_od = newton_rec
+    sys.argv = ["anm_run.py", raw, out] + argv[2:]
+    try:
+        anm_run.main()
+    except StopRun:
+        print(f"anm: stopped after {phase['n']} recorded attempts", flush=True)
+        return 0 if phase.get("ok") else 1
+    print("anm: anm_run ended before the attempts were recorded", flush=True)
+    return 1
+
+
+STRIP = (r",\s*[0-9.]+ s$", r"^step \d+: ")
+
+
+def norm_line(ln):
+    """a log line without its timing and step number, the fields that differ between runs of one computation"""
+    import re
+    ln = ln.rstrip()
+    for p in STRIP:
+        ln = re.sub(p, "", ln)
+    return ln.strip()
+
+
+def log_block(path, anchor, nth, n):
+    """the n lines from the nth line (1-based) containing anchor, normalized"""
+    lines = open(path, encoding="utf-8", errors="replace").read().splitlines()
+    hits = [i for i, ln in enumerate(lines) if anchor in ln]
+    if len(hits) < nth:
+        return None
+    i = hits[nth - 1]
+    return [norm_line(ln) for ln in lines[i:i + n]]
+
+
+def logcmp(argv):
+    """the lines of a rebuilt run's log against the reference's: n lines from the nth line holding each anchor,
+    their timings and step numbers dropped. --mutate digit changes one digit of the rebuilt block's last line (the
+    control, which must fail). Exit 1 when a line differs."""
+    ours, ref = argv[0], argv[1]
+    n = _opt(argv, "n", 4)
+    a_ours, a_ref = _opt(argv, "anchor", ""), _opt(argv, "anchor_ref", "") or _opt(argv, "anchor", "")
+    b_ours = log_block(ours, a_ours, _opt(argv, "nth", 1), n)
+    b_ref = log_block(ref, a_ref, _opt(argv, "nth_ref", 1), n)
+    if b_ours is None or b_ref is None:
+        print(f"logcmp: anchor not found ({'rebuilt' if b_ours is None else 'reference'} log)", flush=True)
+        return 1
+    if _opt(argv, "mutate", "") == "digit":
+        import re
+        b_ours[-1] = re.sub(r"\d", lambda mo: str((int(mo.group()) + 1) % 10), b_ours[-1], count=1)
+    bad = 0
+    for k, (x, y) in enumerate(zip(b_ours, b_ref)):
+        same = x == y
+        bad += not same
+        print(f"  [{k}] {'same' if same else 'DIFFERS'}: {x}" + ("" if same else f"\n       reference: {y}"), flush=True)
+    print(f"logcmp: {n - bad} of {n} lines equal{' (--mutate digit)' if '--mutate' in argv else ''}; "
+          f"{'PASS' if not bad and len(b_ours) == len(b_ref) == n else 'FAIL'}", flush=True)
+    return 0 if not bad and len(b_ours) == len(b_ref) == n else 1
 
 
 def fixrun(argv):
@@ -576,7 +819,7 @@ def fixrun(argv):
     name = os.path.join(out, f"fixrun_{tag}_switch{switch:g}.npz")
     require_raw(name)
     t0 = time.time()
-    att = build_attempt(raw, meta["raw_base"], meta["a"], threads=threads, jet=meta.get("jet"), pred=meta.get("pred"))
+    att = attempt_of(raw, dd, meta, threads)
     el = make_elim(att, record=True)
     el.cache = None
     el.switch = switch
@@ -619,7 +862,7 @@ def offset(argv):
     z = o8(tuple(dd[f"z{q}"] for q in range(8)))
     d = o8(tuple(dd[f"d{q}"] for q in range(8)))
     t0 = time.time()
-    att = build_attempt(raw, meta["raw_base"], meta["a"], threads=threads, jet=meta.get("jet"), pred=meta.get("pred"))
+    att = attempt_of(raw, dd, meta, threads)
     M, K, so = att["M"], att["K"], att["so"]
     el = make_elim(att)
     el.switch = 0.0
@@ -822,7 +1065,7 @@ def chordstat(argv):
     threads = _opt(argv, "threads", 2)
     dd = np.load(path)
     meta = json.loads(str(dd["meta"]))
-    att = build_attempt(raw, meta["raw_base"], meta["a"], threads=threads, jet=meta.get("jet"), pred=meta.get("pred"))
+    att = attempt_of(raw, dd, meta, threads)
     M, K, so = att["M"], att["K"], att["so"]
     sq = PinnedQ(so.s, so.ch, so.cl)
     rec_path = path.replace(".npz", ".jsonl")
@@ -934,7 +1177,7 @@ def chordstat(argv):
 if __name__ == "__main__":
     args = sys.argv[1:]
     cmds = {"selftest": selftest, "iterate": iterate, "probe": probe, "fixrun": fixrun, "offset": offset, "chord": chord,
-            "chordstat": chordstat}
+            "chordstat": chordstat, "anm": anm, "logcmp": logcmp}
     if not args or args[0] not in cmds:
         print(__doc__)
         sys.exit(2)
