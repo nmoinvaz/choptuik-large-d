@@ -391,6 +391,25 @@ recovers all three pairs when their terms are balanced at order 12, but it misse
 dominates the low orders, so the plant fails its own criterion and the Padé reading is not certified by it either.
 Track A predicts that the root test bottoms near 5.0 at D₀ ≈ 255.7 and rises after, which series past D 255 test (#712).
 
+#712 (dh370; raw `I712-dh370/` f210e31d) built the series at three of #603's bases past D 255. Each equals #603's record
+in all 25 norms and both pivots, and a neighbouring base's record matches none. Track A stays a stable Padé pole of Δ at
+every base, at 255.64–255.65 + 5.01–5.04i, so its imaginary part does not move toward the axis (the bar, Im D* within
+0.1 of 4.99, is met at all three). The root test does not bottom near 5.0, though. It falls on, to 4.80, 4.24 and 3.68
+at D₀ 255.06, 255.37 and 255.77, because a nearer track sets it.
+
+| base D₀ | root test | track A's Padé pole | the nearest Padé pole | rows' nearest pole (median) |
+|---|---|---|---|---|
+| 255.0550 | 4.803 | 255.65 + 5.03i | 258.53 + 2.76i | 258.59 + 2.81i |
+| 255.3711 | 4.237 | 255.64 + 5.04i | 258.65 + 2.61i | 258.61 + 2.79i |
+| 255.7661 | 3.682 | 255.64 + 5.01i | 258.61 + 2.81i | 258.59 + 2.78i |
+
+**From D 255.06 on, the nearest singularity of the series is a track at D* ≈ 258.60 + 2.79i, nearer than A**, and
+every one of the 24 largest rows has its nearest pole on it. It lies 0.6 from track C of #685's table (259.20 + 2.88i,
+seen from D 253.07 to 253.71 with a drift that three points do not establish), so it may be C seen from nearer (a
+reading, not tested). Its own drift over D₀ 255.06–255.77 is −0.008 and −0.042 per unit D₀, three points over 0.7, not
+established. The root test equals neither track's distance exactly. No planted case yet holds a pole at |s| 4 beside
+one at 5, so the Padé reading of two near tracks is not tested.
+
 With the plan made again at the state (#686, dh370; raw `I686-dh370/` bc9add86), the series at D 252.25 and 252.61
 put the nearest singularity at the same D* to 10⁻⁴, inside its spread over the approximants (0.010 and 0.094). Their
 coefficients move by up to 6% between the two plans, at orders 7 and 13. So, by #686's rule, the singularity is the
