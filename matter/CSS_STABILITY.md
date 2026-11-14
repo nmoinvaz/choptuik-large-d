@@ -190,8 +190,19 @@ counts 6, and 8 with the plant. With one sample per edge (the control) it counts
 The exact mode λ = iω lies 0.05 outside the left edge. It is a simple zero of D, since |D(iω + ε)|/|ε| tends to
 3.39×10⁴ from three directions. #771's evaluation of D(iω) had not finished. At iω the data (1, 0) is the exact shift
 mode, so v and w are rounding noise, and DOP853's absolute tolerance of 10⁻¹⁹ makes it resolve that noise. With the
-absolute tolerance at 10⁻¹⁶ for that point, |D(iω)| = 7.8×10⁻⁸. The strip 0 ≤ Re λ ≤ 0.05 is covered by neither
-method's count. Raw `I781-mac/`.
+absolute tolerance at 10⁻¹⁶ for that point, |D(iω)| = 7.8×10⁻⁸. Raw `I781-mac/`.
+
+**The strip −0.05 < Re λ < 0.05, |Im λ| < 9 (#791)** holds exactly λ = 0 and ±iω, by the same count. It winds
+2.9999999999999987 at setting A and 2.999999999999998 at B. A pair planted at 0.02 ± 6i makes it 5 at both, the largest
+step is 0.4978 and 0.4961 rad, and D(λ̄) = conj D(λ) holds to 1.6×10⁻⁹ and 1.0×10⁻⁸ on the contour.
+
+The three zeros are located by the secant:
+- the one near 0 to 2×10⁻¹³ from λ = 0, with the default tolerance;
+- the ones near ±iω to 2×10⁻¹¹ (A) and 3×10⁻¹⁰ (B) from ±iω, which is D's noise floor there. These use the absolute
+  tolerance of 10⁻¹⁶ (`--atol`), and only these do.
+
+So no growth rate with 0 ≤ Re λ < 0.05 hides in |Im λ| < 9, and §1.4's "not covered" no longer includes that strip.
+Raw `I791-mac/`.
 
 ## 2. The change of stability κ_c(D) (#377)
 
