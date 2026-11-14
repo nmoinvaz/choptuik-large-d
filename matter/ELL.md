@@ -200,9 +200,24 @@ Additional Δ points from the k_c = 23 continuation: Δ(8.15) = 0.9851763, Δ(8.
 Δ(9.05) = 0.9881824. (D − 3)γ is the mass exponent. Data: `data/l1_kc23r.jsonl`, `data/l1_D4_kc*.jsonl`,
 `data/l1_kc23_gamma.jsonl`; table from [`ell_table.py`](../solver/matter/ell_table.py). A k_c = 23 continuation past
 D = 9 (`data/march_l1kc23hi.jsonl`, D 9.05 to 10.5) and its solution at D = 10 in `data/ell_gamma.jsonl` (κ = 0.7,
-Δ = 0.9849793, λ = 2.914966, abs(F) 1.4×10⁻¹³) are neither used nor checked here.
+Δ = 0.9849793, λ = 2.914966, abs(F) 1.4×10⁻¹³) are **not converged in k_c at this table's accuracy**, and are left out
+(#660, raw `I660-mac/`). At D = 10, re-solved from the same state (κ = 0.7, horizon series from u = 0.04, 30 terms):
 
-**Accuracy.** τ truncation: k_c 23 → 31 at D = 6 changes Δ by 7×10⁻⁸ and λ by 2.6×10⁻⁷. RK steps: at D = 8, κ = 1 → 0.5
+| k_c | Δ | λ | abs(F) | ψ-constraint |
+|---|---|---|---|---|
+| 23 | 0.9849793 | 2.914966 | 6×10⁻¹⁴ | 8×10⁻⁵ |
+| 31 | 0.9849767 | 2.914953 | 2×10⁻¹² | 2×10⁻⁶ |
+| 39 | 0.9849760 | 2.914949 | 2×10⁻¹² | 2×10⁻⁷ |
+
+From k_c 23 to 31, Δ moves by 2.7×10⁻⁶ and λ by 1.3×10⁻⁵, against the 1×10⁻⁶ and 3×10⁻⁶ this table claims (the bar of
+#660, set before the run). From 31 to 39 the changes are about a quarter of that, 7×10⁻⁷ and 3.5×10⁻⁶, so the
+truncation converges, but k_c 23 is too low at D = 10. abs(dΔ/dF) is 1.4×10⁶ at every k_c. A rerun of the march
+reproduces its Δ to 3×10⁻⁹ but not its ψ-constraint (8×10⁻⁵ against the stored 1.4×10⁻⁵ at D = 10), so at k_c 23 near
+D = 10 the constraint is not a stable diagnostic. The march's points beyond D = 10, where the constraint reaches
+1.9×10⁻⁴ and the march stopped, are not checked.
+
+**Accuracy.** τ truncation: k_c 23 → 31 at D = 6 changes Δ by 7×10⁻⁸ and λ by 2.6×10⁻⁷, and at D = 10 by 2.7×10⁻⁶
+and 1.3×10⁻⁵ (above), so it grows with D and was measured only at these two D. RK steps: at D = 8, κ = 1 → 0.5
 moves Δ by 3.4×10⁻⁶ (∝ κ⁴), so κ = 0.7 carries ~1×10⁻⁶; horizon start u = 0.01 → 0.04 moves it by 4×10⁻⁷
 (`data/ell_tests.jsonl`). Selection: see below; at D = 9 it adds ~4×10⁻⁶ to Δ. So Δ is good to ~1×10⁻⁶ for
 D = 5–8 and ~5×10⁻⁶ at D = 9; λ to ~10⁻⁶ relative (the RK error of λ was not measured separately).
