@@ -1198,9 +1198,16 @@ follows the README.
 Audited commit: **90a81f69** (main, 2026-11-14). Agent mac658, on the Mac, under #653's rules (the top of this note).
 Scope: the math paper's proofs, the proof notes' certificate details (`proof/`, PROOF.md beyond its Summary, §4 and §5),
 `notes/QUAD_DOUBLE.md` §1–13.24, `notes/PLANTED_SELECTION.md` and the matter notes (`matter/`). Reading and comparison,
-with small scripts that read the data files. Work in progress: the findings below are those found so far, in no final order.
+with small scripts that read the data files. Each finding gives its locations, the canonical source, a verdict and a
+diff. Every diff applies to 90a81f69 on its own (`git apply --check`), and all of them together in the order below,
+which is also the order of severity. With all of them applied, every text `check_numbers.py` quotes is still present,
+and `check_numbers.py --selftest` passes on both of its lines (1629 of 1629 pass, and 1629 of 1629 reject a one-unit
+shift), on a scratch copy of 90a81f69 with this branch's `check_numbers.py`. Nothing here was applied to the files
+audited. Lines a diff lengthens past 120 characters are for `wrap_prose.py --write`.
 
-### P2-1. PROOF.md §1 still has the selection range at fifteen orders, with one surviving ring (superseded)
+### Findings, most severe first
+
+#### P2-1. PROOF.md §1 still has the selection range at fifteen orders, with one surviving ring (superseded)
 
 | location | says |
 |---|---|
@@ -1208,7 +1215,7 @@ with small scripts that read the data files. Work in progress: the findings belo
 | README.md:132–138, 1620–1621, 1670–1678 | the pair is "not a bracket"; the range is over nine orders, the fourteenth to twenty-second; the rings just beyond x₀ survived one coefficient each and were rejected through σ₂₂; M = 7 gives 1.000022 |
 
 Canonical: the README and notes/PLANTED_SELECTION.md §7–14. PROOF.md:399 quotes the same range without the order count
-and stays as it is. The diff also carries finding P2-7's change to Corollary C (PROOF.md:79), whose context overlaps.
+and stays as it is. The diff also carries finding P2-13's change to Corollary C (PROOF.md:79), whose context overlaps.
 
 ```diff
 --- a/PROOF.md
@@ -1242,7 +1249,51 @@ and stays as it is. The diff also carries finding P2-7's change to Corollary C (
  
 ```
 
-### P2-2. The math paper calls λ₁ open, which the truncations have computed (superseded)
+#### P2-2. QUAD_DOUBLE.md puts the frontier gap at a tenth of its own table's (inconsistent; an opening line superseded)
+
+| location | says |
+|---|---|
+| notes/QUAD_DOUBLE.md:880 (§12.4) | at D 73.27 "the double-double one lies 1e-15 from them" |
+| notes/QUAD_DOUBLE.md:840–841 (its table) | T75's double-double Δ_full1 1.7807570807362567, the quad-double ones 1.78075708073624606 − 1.5×10⁻¹⁷ and 1.78075708073624539 + 1.3×10⁻¹⁷ |
+| hp/data/delta_all.csv, D 73.265722 | 1.7807570807362567 − 9.18×10⁻¹⁷ (kind pinned, no err) |
+| notes/QUAD_DOUBLE.md:11 (opening) | "Nothing in the solver uses them yet." |
+| notes/QUAD_DOUBLE.md §12.1; README.md:91, 529 | the quad-double solver, built 2026-10-27; the quad-double points 68.5–73 |
+
+The double-double value lies 1.06×10⁻¹⁴ and 1.12×10⁻¹⁴ above the two quad-double ones (exact sums of the parts, mpmath),
+ten times the text. The row of `delta_all.csv` at that D is the double-double value, so its Δ carries this 10⁻¹⁴, which
+no err column shows (only one pin reached that D, so the rule of `hp/export_delta_all.py` gives none). Canonical: the
+note's own table.
+
+```diff
+--- a/notes/QUAD_DOUBLE.md
++++ b/notes/QUAD_DOUBLE.md
+@@ -877,7 +877,7 @@
+ corrected pinned pairs above lie within 1e-17 (71.0) and 2e-17 (71.5) of it: that is the linearised correction's own
+ error, and the pins' agreement to 1e-32 at 71.5 was a coincidence of the two pins. From 72 on no start of double-double
+ quality reaches the full basin, as the table of basins said. At the frontier the two pins' quad-double values differ by
+-7e-16 and the double-double one lies 1e-15 from them: the digits there are set by the pin's cost (the full step's |dz|
++7e-16 and the double-double one lies 1.1e-14 above them: the digits there are set by the pin's cost (the full step's |dz|
+ is 7.9e-6 against 1.6e-9 at 72.4), not by the arithmetic. So the quad-double solver adds digits where the pin is cheap,
+ up to about 72.5 in this layout, and past that the full system's junk, not precision, bounds Delta.
+ 
+```
+
+```diff
+--- a/notes/QUAD_DOUBLE.md
++++ b/notes/QUAD_DOUBLE.md
+@@ -8,7 +8,8 @@
+ 
+ Quad-double numbers (an unevaluated sum of four f64, about 64 significant digits) are now in the `hpkernel` crate:
+ a scalar type `QD` and an 8-lane SIMD type `QV` with bitwise the same results, on the AVX-512, AVX2 and portable
+-backends of `v8.rs`. Nothing in the solver uses them yet. Every existing output is bit-identical (section 9). The
++backends of `v8.rs`. Sections 1–10 describe them as first built, when nothing in the solver used them yet; the
++quad-double solver built on them is in section 12.1 onward. Every existing output is bit-identical (section 9). The
+ logs behind every number here are in `hp/data/quad_double/`, and the commands run in `hp/`.
+ 
+ **Summary.**
+```
+
+#### P2-3. The math paper calls λ₁ open, which the truncations have computed (superseded)
 
 | location | says |
 |---|---|
@@ -1250,7 +1301,7 @@ and stays as it is. The diff also carries finding P2-7's change to Corollary C (
 | paper/math/main.tex:2219 (Outlook) | open: "the coefficient of 1/n in λ" |
 | notes/FIRST_ORDER.md:30–34, README.md:1833–1848 | λ₁ = 7.76, 3.080, 3.023 at M = 1, 3, 5 from the O(1/n) inner problem, against the fitted 3.0324; "M = 7 and an untruncated computation are not done" |
 
-This is #653's finding 11 for the math paper. Canonical: notes/FIRST_ORDER.md. The diff also carries finding P2-5's
+This is #653's finding 11 for the math paper. Canonical: notes/FIRST_ORDER.md. The diff also carries finding P2-9's
 change on line 864, since the two touch the same line.
 
 ```diff
@@ -1286,7 +1337,39 @@ change on line 864, since the two touch the same line.
  companion paper reports the tests~\cite{companion}: for the axion--dilaton, whose inner problem keeps the symmetry,
 ```
 
-### P2-3. C_selection.md's summary says the B(1) certificate code is unreviewed (superseded, inconsistent within the file)
+#### P2-4. CSS.md does not say which fits its λ∞ and γ∞ figures come from (unsupported bar)
+
+| location | says |
+|---|---|
+| matter/CSS.md:349 (§7), 31 (summary); README.md:1877 | "λ∞ = 2 to about 10⁻⁵, γ∞ = 1/2 to about 3×10⁻⁶" |
+| solver/matter/css_fit.py (docstring) | "The quoted limit is the median of the kept fits whose truncation is 'converged' …, with the full spread over (K, Dmin) as the error bar" |
+| solver/matter/data/css_fit_k1.json | `lambda` = [2.0000955, 2.0000086, 2.000258], `gamma` = [0.4999677, 0.4999152, 0.4999969] (median, low, high) |
+| matter/CSS.md:328–334 (table) | free fits: λ∞ − 2 = 8.64×10⁻⁶ (K = 7, D ≥ 20), 1.68–1.70×10⁻⁵ (K = 6–7, D ≥ 24), 8.18–8.27×10⁻⁶ (D ≥ 30) |
+
+The quoted figures are the highest-order free fits of the note's table, which the note's argument (each added power
+divides λ∞ − 2 by about 3) supports. The script that writes the data quotes the median instead, which is ten times
+larger. Neither is named. The ω agreements of the same section (1.6×10⁻⁴, 1.3×10⁻⁴) hold with the unrounded medians
+(1.579×10⁻⁴, 1.317×10⁻⁴; the new check `css_omega`), though the table's rounded 3.1994 and 3.9784 would give 1.5×10⁻⁴
+and 1.4×10⁻⁴, as the physics paper's "before rounding" says.
+
+```diff
+--- a/matter/CSS.md
++++ b/matter/CSS.md
+@@ -347,7 +347,10 @@
+ The 1/n coefficient is 3.598–3.601 over the fits with 5–6 powers and D ≥ 20–24, rising slowly with the order, so
+ c₁ = 3.60 ± 0.01. For the real scalar's DSS solution GAMMA.md has λ = 2 + 3.0324/n − 34.3/n², a similar series.
+ **Conclusion: λ∞ = 2 to about 10⁻⁵, γ∞ = 1/2 to about 3×10⁻⁶** (an extrapolation from D ≤ 80; at D = 80,
+-γ = 0.4896024).
++γ = 0.4896024). Both are read off the highest-order free fits of the table, K = 7 on D ≥ 20 and K = 6–7 on D ≥ 24
++and 30 (λ∞ − 2 = 0.8–1.7×10⁻⁵): an estimate, not a bound. `css_fit.py`'s own summary in `data/css_fit_k1.json`, the
++median of the best third of its converged fits over (K, D ≥), includes lower orders and gives λ∞ − 2 = 9.6×10⁻⁵
++(0.9×10⁻⁵ to 2.6×10⁻⁴) and γ∞ − 1/2 = −3.2×10⁻⁵ (−8.5×10⁻⁵ to −3.1×10⁻⁶).
+ 
+ **ω.** The phase-rotation frequency extrapolates to
+ 
+```
+
+#### P2-5. C_selection.md's summary says the B(1) certificate code is unreviewed (superseded, inconsistent within the file)
 
 | location | says |
 |---|---|
@@ -1312,7 +1395,7 @@ Canonical: §13.1 of the same file, and proof/P2b_review.md.
  |---|---|---|
 ```
 
-### P2-4. A_M.md and A_lemmas_M.md say their code is unreviewed, and A_lemmas_M.md has M = 5 waiting (superseded)
+#### P2-6. A_M.md and A_lemmas_M.md say their code is unreviewed, and A_lemmas_M.md has M = 5 waiting (superseded)
 
 | location | says |
 |---|---|
@@ -1324,9 +1407,9 @@ Canonical: §13.1 of the same file, and proof/P2b_review.md.
 | proof/A_lemmas_M.md:766 | "At M = 5 everything waits for its certificate except lemma S, 6b₀, the flat estimate and step (i)" |
 | proof/A_lemmas_M.md:37–38 (its own summary), README.md:208–209 | 6a(3) reviewed (A_M_review.md); 6a(5) and 6b₁(5) certified at A_M2.md's p̂, the code reviewed by #39 |
 
-A_M2.md was updated after its review, and A_M.md was not. #40 (open) is to write Theorem A(M = 5) into A_lemmas_M.md,
-so the second diff may be overtaken by it. The lines the first diff lengthens past 120 characters are for
-`wrap_prose.py --write`.
+A_M2.md was updated after its review, and A_M.md was not. #40 (open) is to write Theorem A(M = 5) into A_lemmas_M.md, so
+the second diff may be overtaken by it. The lines the first diff lengthens past 120 characters are for `wrap_prose.py
+--write`.
 
 ```diff
 --- a/proof/A_M.md
@@ -1398,43 +1481,57 @@ so the second diff may be overtaken by it. The lines the first diff lengthens pa
  
 ```
 
-### P2-5. The one-harmonic model's root: 1.765 or 1.769 (superseded, a bar dropped)
+#### P2-7. B5_inner.md's status table still has (H8) open and B5(2) estimated (superseded)
 
 | location | says |
 |---|---|
-| README.md:1861, GAMMA.md:171, paper/math/main.tex:864 | the one-harmonic model has a root λ = 1.765 |
-| README at 3498262d (where 1.765 entered) | "λ = 1.765 ± 0.005 (γ = 0.567; `pert_ratio.py`)", in the one-harmonic model at its zero |
-| notes/FIRST_ORDER.md:33, 314 | λ* = 1.769122008 for M = 1, the model's growth rate near 2 at its zero (A = 2.5421480, ω*/ω∞ = 0.776994014) |
+| proof/B5_inner.md:586–587 (§8) | "(H8) itself: **open**"; "B5(2) error at n₀(1): … estimated in section 7 (ln n ≳ 105)" |
+| proof/B5_inner.md:56 (summary) | "A discrepancy, to resolve before B(1) and A(1) can be combined": C_selection.md §1 and the paper truncate b, c to \|ν\| ≤ M − 1 |
+| proof/B3_borel.md:796 (§8) | "B3 actual solution, fixed order: = B8 on the real segment (to be written with constants)" |
+| proof/B8_constants.md §0, §8 | (H8) **certified** for n ≥ e^{73.89}, δ = (8.3×10⁻⁵, 79.04, 3.232, 6.464); B8(1) certified for n ≥ e^{62} |
+| proof/B_chain.md §0, §3 | B5(2) certified, error ≤ e^{76.94}/n for n ≥ e^{73.89} |
+| proof/C_selection.md:103–104; paper/math/main.tex:880–888 | b and c on \|ν\| ≤ M + 1 |
 
-The two are the same quantity: the later one lies inside the first one's ±0.005, which the quotes dropped. Canonical:
-notes/FIRST_ORDER.md (`data/first_order_hier_M1_xi0.2.json`). The math paper's line is in finding P2-2's diff.
+B5_inner.md's summary already marks its B5(2) estimate superseded, but its status table and the discrepancy bullet were
+not updated. Canonical: B8_constants.md, B_chain.md and C_selection.md §1.
 
 ```diff
---- a/README.md
-+++ b/README.md
-@@ -1858,7 +1858,7 @@
- - that λ = 2 is the only physical unstable mode at D = ∞;
- - the 1/n coefficients without truncation, and a proof of the O(1/n) matching.
+--- a/proof/B5_inner.md
++++ b/proof/B5_inner.md
+@@ -53,7 +53,7 @@
+   (with the best κ₁ ≈ 0.85; `b5_threshold.py`). That is an estimate, not part of this lemma (section 7).
+   *Superseded:* the estimate uses the exponent ⟨F²⟩ where the fast mode of the Φ-component has
+   Re 𝒢 = ⟨F²⟩ − 3/2, and omits the weight m_Φ = |z|; B5(2) is now certified ([B_chain.md](B_chain.md) §3).
+-- **A discrepancy, to resolve before B(1) and A(1) can be combined.**
++- **A discrepancy, since resolved: C_selection.md §1 and the paper now use b and c on |ν| ≤ M + 1.**
+   - C_selection.md §1 and the paper truncate b and c to even |ν| ≤ M − 1.
+   - The certified inner problem (and every inner solver, `lateral_np.py`, `hier.py`, `first_order_jet.py`) keeps c on
+     |ν| ≤ M + 1. For M = 1 that is c on {0} against {0, ±2}.
+@@ -583,8 +583,8 @@
+ | existence of a super-solution, hence some n₀(M), for each fixed M | **proved, conditional on (H8)**, with Braaksma's Gevrey bounds; no numerical n₀(M) |
+ | M = 1: all constants, the super-solution, n₀(1) = max(e^{73.89}, n₈) (max(e^{69.78}, n₈) at Z = 0.009) | **certified** (`b5_bounds.py`, python-flint; with lemma S of A_certify.md rerun over the complex box); **conditional on (H8)** and on Braaksma's theorem as in Theorem A(M = 1) |
+ | leading data δ⁰ of (H8) | **numerical evidence** (`b5_data.py`; cross-checked) |
+-| (H8) itself | **open**: B8's remainder in these variables, plus the series comparison of section 7 |
+-| B5(2) error at n₀(1) | not part of this lemma; estimated in section 7 (ln n ≳ 105, `b5_threshold.py`) |
++| (H8) itself | **certified** for M = 1, n ≥ e^{73.89}, δ = (8.3×10⁻⁵, 79.04, 3.232, 6.464) ≤ δ_ref ([B8_constants.md](B8_constants.md) §8) |
++| B5(2) error at n₀(1) | not part of this lemma; **certified** in label form, error ≤ e^{76.94}/n for n ≥ e^{73.89} ([B_chain.md](B_chain.md) §3); section 7's estimate (ln n ≳ 105) is superseded |
  
--The one-harmonic model's root, λ = 1.765, is not a counterexample, for two reasons. Its background is not the D = ∞
-+The one-harmonic model's root, λ = 1.769, is not a counterexample, for two reasons. Its background is not the D = ∞
- solution, and Galerkin truncation does not commute with the gauge step, which multiplies by P(θ). More in
- [GAMMA.md](GAMMA.md).
- 
---- a/GAMMA.md
-+++ b/GAMMA.md
-@@ -168,7 +168,7 @@
- $`r_{\rm div} = \sqrt{2(\varepsilon-1)}`$, from an exact symmetry; γ∞ = 1/2 follows given Conjecture 1, the uniqueness
- of the unstable mode and continuity of λ(D).
- 
--**The one-harmonic model's 1.765.** There λ = 2 is not a root, for two reasons:
-+**The one-harmonic model's 1.769.** There λ = 2 is not a root, for two reasons:
- - the model's background is not the D = ∞ solution (its ω is 22% low);
- - Galerkin truncation does not commute with the gauge fix, which multiplies by P(θ), so the truncated model has no exact
-   λ = 2 mode with h₀ = 0. (The s-translation alone does commute with the truncation.)
+ The trusted code: `b5_bounds.py` (new, not reviewed independently), `b5_formulas.py` (new), `fixed_point.py` and
+ `lemma6_sector.py` (A_certify.md; reviewed in A_review.md, rerun over a different box), python-flint 0.9.
+--- a/proof/B3_borel.md
++++ b/proof/B3_borel.md
+@@ -793,7 +793,7 @@
+ | (H-σ), M = 1 | Borel transform analytic near [0, ∞) | **conjecture**; **numerical evidence** σ ≈ π/2; proof plan §4 with one open technical point (derivative loss) |
+ | (H-σ), M ≥ 3 | | **conjecture**; numerical evidence that σ is set by an x-independent singularity near −1.2 (M = 3) |
+ | B3 formal half | | **proved** (B3.7) |
+-| B3 actual solution, fixed order | | = B8 on the real segment (to be written with constants) |
++| B3 actual solution, fixed order | | = B8 on the real segment, written with constants in [B8_constants.md](B8_constants.md) (**certified** for M = 1, n ≥ e^{62}) |
+ | B3 strong form (1-sum) | | ⇔ (H-σ) (Nevanlinna–Sokal), **open** |
+ | B4 summability | | **cited**, Braaksma 1992, hypotheses checked against the paper |
+ | B4 parameter-analyticity | | **proved** given Braaksma (Lemma B4.P); not in Braaksma 1992 or the Ramis–Sibuya 1994 abstract |
 ```
 
-### P2-6. PROOF.md's staged plan still lists the M = 5 certificate and Theorem B(1) as future work (superseded)
+#### P2-8. PROOF.md's staged plan still lists the M = 5 certificate and Theorem B(1) as future work (superseded)
 
 | location | says |
 |---|---|
@@ -1472,131 +1569,78 @@ notes/FIRST_ORDER.md (`data/first_order_hier_M1_xi0.2.json`). The math paper's l
  
 ```
 
-### P2-7. PROOF.md gives the computed range as D = 8–61 (superseded)
+#### P2-9. The one-harmonic model's root: 1.765 or 1.769 (superseded, a bar dropped)
 
 | location | says |
 |---|---|
-| PROOF.md:79 (Corollary C), 394 (§6) | "the critical solutions computed for D = 8–61"; "The double-double solutions at D = 8–61" |
-| README.md:91, 109 | 1199 double-double points, D = 8.25–67.77 |
+| README.md:1861, GAMMA.md:171, paper/math/main.tex:864 | the one-harmonic model has a root λ = 1.765 |
+| README at 3498262d (where 1.765 entered) | "λ = 1.765 ± 0.005 (γ = 0.567; `pert_ratio.py`)", in the one-harmonic model at its zero, the bar's kind not stated |
+| notes/FIRST_ORDER.md:33, 314 | λ* = 1.769122008 for M = 1, the model's growth rate near 2 at its zero (A = 2.5421480, ω*/ω∞ = 0.776994014) |
 
-Canonical: the README's main-results table and `hp/data/delta_all.csv`. The diff below is §6's line; Corollary C's is in
-finding P2-1's diff. The math paper's "computed to D = 61" (abstract) and "857 values 8.25 ≤ D ≤ 61.03" (§2.2) are the
-same scope, left to #653's recommended task 6 (the papers at the repository's present state).
+The two are the same quantity: the later one lies inside the first one's ±0.005, which the quotes dropped. Canonical:
+notes/FIRST_ORDER.md (`data/first_order_hier_M1_xi0.2.json`). The math paper's line is in finding P2-3's diff.
 
 ```diff
---- a/PROOF.md
-+++ b/PROOF.md
-@@ -391,8 +391,8 @@
- - **Uniqueness in the box.** Theorem A must certify that there is exactly one zero of S₁ in a box that also contains
-   the numerically extrapolated ω∞ = 3.82213590 (±4×10⁻⁸) and A∞ ≈ 2.70–2.72. A box of radius 10⁻³ suffices for the
-   identification; it does not need the numerics' digits.
--- **That the computed branch is the branch of Theorem B.** The double-double solutions at D = 8–61 are numerical. A
--  Reiterer–Trubowitz-style computer-assisted existence proof at one large D (say D = 40–60), with the certified solution
-+- **That the computed branch is the branch of Theorem B.** The double-double solutions at D = 8.25–67.77 are numerical.
-+  A Reiterer–Trubowitz-style computer-assisted existence proof at one large D (say D = 40–60), with the certified solution
-   inside the basin of Theorem B's construction, would close this; alternatively, Theorem B's construction at n ≥ n₀ with
-   explicit n₀ and a certified solution at some D ≥ n₀ + 2.
+--- a/README.md
++++ b/README.md
+@@ -1858,7 +1858,7 @@
+ - that λ = 2 is the only physical unstable mode at D = ∞;
+ - the 1/n coefficients without truncation, and a proof of the O(1/n) matching.
  
+-The one-harmonic model's root, λ = 1.765, is not a counterexample, for two reasons. Its background is not the D = ∞
++The one-harmonic model's root, λ = 1.769, is not a counterexample, for two reasons. Its background is not the D = ∞
+ solution, and Galerkin truncation does not commute with the gauge step, which multiplies by P(θ). More in
+ [GAMMA.md](GAMMA.md).
+ 
+--- a/GAMMA.md
++++ b/GAMMA.md
+@@ -168,7 +168,7 @@
+ $`r_{\rm div} = \sqrt{2(\varepsilon-1)}`$, from an exact symmetry; γ∞ = 1/2 follows given Conjecture 1, the uniqueness
+ of the unstable mode and continuity of λ(D).
+ 
+-**The one-harmonic model's 1.765.** There λ = 2 is not a root, for two reasons:
++**The one-harmonic model's 1.769.** There λ = 2 is not a root, for two reasons:
+ - the model's background is not the D = ∞ solution (its ω is 22% low);
+ - Galerkin truncation does not commute with the gauge fix, which multiplies by P(θ), so the truncated model has no exact
+   λ = 2 mode with h₀ = 0. (The s-translation alone does commute with the truncation.)
 ```
 
-### P2-8. The math paper's coefficient record stops at σ₁₂ and σ₁₇ (superseded, inconsistent within the paper)
+#### P2-10. B_tail.md still waits for M = 7 (superseded)
 
 | location | says |
 |---|---|
-| paper/math/main.tex:1916 | "σ₁–σ₁₂ are available at ω/ω∞ = 0.99, 1.00, 1.01" |
-| paper/math/main.tex:2185 | "σ₁₄–σ₁₇ were fitted with one window, to plateau steps of 3×10⁻¹³ to 1.5×10⁻¹² relative" |
-| paper/math/main.tex:2129–2180 | the evidence uses σ₁₃ … σ₂₂ |
-| README.md:1641–1648 | σ₁₅ … σ₂₂ converged to 4.5×10⁻¹³ … 2.3×10⁻¹² relative (σ₁₈ the largest) |
-| solver/inner_amp/scan45J1250/ | `sigF_w{0.9900,1.0000,1.0100}_K45_J1250_p1280.json` (σ to 22 at the three ω) |
+| proof/B_tail.md:52, 307–309 (§7) | "M = 7 should land at 0.99997–1.00017, a sharp test when it runs"; "M = 7 … is the next data point" |
+| proof/B_tail_M7.md §2–3; README.md:1617 | M = 7 gives ω/ω∞ = 1.000022 (±2×10⁻⁵, the scatter of repeated solves), inside the prediction; last ratio −0.049 |
 
-Canonical: the README's table and the data files.
+Canonical: proof/B_tail_M7.md.
 
 ```diff
---- a/paper/math/main.tex
-+++ b/paper/math/main.tex
-@@ -1913,7 +1913,7 @@
- \sigma_5 = -0.00555413676 - 0.00280595708\iu,\\
- \sigma_6 = (-2.7853745790 - 10.776628405\iu)\times10^{-4},\quad \sigma_7 = (1.0223846436 - 1.4905053530\iu)\times10^{-4};
- \end{gather*}
--$\sigma_1$--$\sigma_{12}$ are available at $\omega/\winf = 0.99$, $1.00$, $1.01$ (\repo{solver/inner\_amp/}). A fit is accurate but not an enclosure; Lemma~\ref{lem:sigma1} below encloses $\sigma_1$
-+$\sigma_1$--$\sigma_{22}$ are available at $\omega/\winf = 0.99$, $1.00$, $1.01$ (\repo{solver/inner\_amp/}). A fit is accurate but not an enclosure; Lemma~\ref{lem:sigma1} below encloses $\sigma_1$
- rigorously. Summing \eqref{eq:sigmak} directly at the zero is hopeless: the terms $|\sigma_k|A_0^{2k}$ grow to about $240$ at
- $k = 9$ and are still $160$ at $k = 12$, and would fall below $10^{-6}$ only near $k \approx 37$.
+--- a/proof/B_tail.md
++++ b/proof/B_tail.md
+@@ -49,7 +49,8 @@
+   A 10⁻⁴ box needs M = 9 explicit.
+ - **The two routes are consistent.** The truncated sequence and the alternation sign put the limit at 0.99923–1.00011. The
+   untruncated bracket at order 12 is 0.99915–1.00011, with the central Padé value 0.99989. They overlap, and both
+-  contain 1. M = 7 should land at 0.99997–1.00017, a sharp test when it runs.
++  contain 1. M = 7 should land at 0.99997–1.00017, a sharp test when it runs. (It landed at 1.000022, inside the
++  prediction; [B_tail_M7.md](B_tail_M7.md) §2.)
+ - **Secondary Stokes lines from F's complex singularities: no sign of them.** They are absent at every finite order in
+   A, where each order is a trigonometric polynomial and the late orders contain only fast-mode families. S₁ is numerically
+   entire in A², and the two routes agree. What is not excluded is a non-uniformity in the order of limits (sum in A,
+@@ -305,8 +306,8 @@
+ ## 7. What remains open
  
+ 1. **The jump-conditioned tail bound itself.** The per-pair ratio −0.045 to −0.057 is measured on three points (M = 1, 3,
+-   5), with M = 1 pre-asymptotic. M = 7 (`hier.py 7 … --predict --floor --schur`) is the next data point. The prediction is
+-   c₇ = 0.99997–1.00017.
++   5), with M = 1 pre-asymptotic. M = 7 (`hier.py 7 … --predict --floor --schur`) was the next data point, with the
++   prediction c₇ = 0.99997–1.00017. It gives 1.000022 and a last ratio of −0.049 ([B_tail_M7.md](B_tail_M7.md) §2–3).
+ 2. **Why the Galerkin projection explodes at σ_{M+1}.** Either its multiplier is genuinely large or its late orders have
+    a family structure outside the fit basis (the fit residual rises). Deciding this is a few hours' work: compute the
+    projected system's fast-mode exponents, refit, and compare with a lateral (`inner_np.py`) evaluation of the same
 ```
 
-```diff
---- a/paper/math/main.tex
-+++ b/paper/math/main.tex
-@@ -2182,7 +2182,7 @@
- \subsection{What the evidence does not show}
- The $\pm0.00006$ above is the range of calibrated estimators, not an error bound, and it rests on the assumption about the
- other zeros of $S_1$.
--The coefficients $\sigma_k$ come from late-order fits; two fit windows agree to about $10^{-19}$ for $\sigma_1$--$\sigma_{12}$ ($\sigma_{13}$ to $2\times10^{-13}$ relative; $\sigma_{14}$--$\sigma_{17}$ were fitted with one window, to plateau steps of $3\times10^{-13}$ to $1.5\times10^{-12}$ relative), and the
-+The coefficients $\sigma_k$ come from late-order fits; two fit windows agree to about $10^{-19}$ for $\sigma_1$--$\sigma_{12}$ ($\sigma_{13}$ to $2\times10^{-13}$ relative; $\sigma_{14}$--$\sigma_{22}$ to plateau steps of $3\times10^{-13}$ to $2.3\times10^{-12}$ relative), and the
- estimates need them to about $10^{-10}$, but only $\sigma_1$ is enclosed rigorously (Lemma~\ref{lem:sigma1}). At the zero the series \eqref{eq:sigmak} is far from summed, and every
- estimator (crossings, ratios, Pad\'e approximants, the factored series) is a resummation whose convergence is observed, not
- proved; the arc-shaped Borel singularity of Section~\ref{sec:entire} is a known source of slow convergence. Settling the other zeros needs more orders, starting with $\sigma_{23}$. Finally, agreement of the numbers is evidence that the selection rule is the right one, not a proof
-```
-
-### P2-9. B_tail_M7.md quotes one part of complex σ₄ and σ₆ as "true" (inconsistent, minor)
-
-| location | says |
-|---|---|
-| proof/B_tail_M7.md:288–289 | σ₄ = −399 "(true −0.029)", σ₆ = −1371 "(true −0.0011)" |
-| proof/B_tail.md:214–215, README.md:1411 | σ₄ = −0.0289 + 0.0108i, σ₆ = −0.00028 − 0.00108i ("−0.0003 − 0.0011i") |
-
-−0.029 is Re σ₄, but −0.0011 is Im σ₆. Canonical: proof/B_tail.md §4.
-
-```diff
---- a/proof/B_tail_M7.md
-+++ b/proof/B_tail_M7.md
-@@ -285,8 +285,8 @@
- | hier's model, M = 1 | odd ≤ 1, even ≤ 2 | σ₁ unchanged (4.5×10⁻¹⁰, fit level) | σ₂ changed by 0.0590 (14% of \|σ₂\|) | `trunc_hier_M1_K5_J500_w1.0000.json` |
- | hier's model, M = 3 | odd ≤ 3, even ≤ 4 | σ₁–σ₃ unchanged (≤ 2.7×10⁻¹⁰) | σ₄ changed by 3.74×10⁻⁵ (0.12% of \|σ₄\|) | `trunc_hier_M3_K9_J500_w1.0000.json` |
- | hier's model, M = 5 | odd ≤ 5, even ≤ 6 | σ₁–σ₅ unchanged (≤ 4.2×10⁻¹⁰) | σ₆ changed by 7.9×10⁻⁹ (7×10⁻⁶ of \|σ₆\|) | `trunc_hier_M5_K13_J500_w1.0000.json` (a first run, cut by a container restart, `trunc_hier_M5_cut.log`) |
--| `amp_trunc.py`, M = 3 | all ≤ 3 | σ₃ changed by 5.3×10⁻⁴ | σ₄ = −399 (true −0.029) | B_tail.md §4 |
--| `amp_trunc.py`, M = 5 | all ≤ 5 | σ₅ changed by 4.4×10⁻⁴ | σ₆ = −1371 (true −0.0011) | B_tail.md §4 |
-+| `amp_trunc.py`, M = 3 | all ≤ 3 | σ₃ changed by 5.3×10⁻⁴ | σ₄ = −399 (true −0.0289 + 0.0108i) | B_tail.md §4 |
-+| `amp_trunc.py`, M = 5 | all ≤ 5 | σ₅ changed by 4.4×10⁻⁴ | σ₆ = −1371 (true −0.00028 − 0.00108i) | B_tail.md §4 |
- 
- (`python3 trunc_seq_M7.py --amp`.) Lemma O's prediction holds exactly in both truncations: hier's model first changes at
- σ_{M+1}, `amp_trunc.py`'s at σ_M. And the explosion is a property of dropping the even harmonic M + 1, not of Galerkin
-```
-
-### P2-10. CSS.md does not say which fits its λ∞ and γ∞ figures come from (unsupported bar)
-
-| location | says |
-|---|---|
-| matter/CSS.md:349 (§7), 31 (summary); README.md:1877 | "λ∞ = 2 to about 10⁻⁵, γ∞ = 1/2 to about 3×10⁻⁶" |
-| solver/matter/css_fit.py (docstring) | "The quoted limit is the median of the kept fits whose truncation is 'converged' …, with the full spread over (K, Dmin) as the error bar" |
-| solver/matter/data/css_fit_k1.json | `lambda` = [2.0000955, 2.0000086, 2.000258], `gamma` = [0.4999677, 0.4999152, 0.4999969] (median, low, high) |
-| matter/CSS.md:328–334 (table) | free fits: λ∞ − 2 = 8.64×10⁻⁶ (K = 7, D ≥ 20), 1.68–1.70×10⁻⁵ (K = 6–7, D ≥ 24), 8.18–8.27×10⁻⁶ (D ≥ 30) |
-
-The quoted figures are the highest-order free fits of the note's table, which the note's argument (each added power
-divides λ∞ − 2 by about 3) supports. The script that writes the data quotes the median instead, which is ten times
-larger. Neither is named. The ω agreements of the same section (1.6×10⁻⁴, 1.3×10⁻⁴) hold with the unrounded medians
-(1.579×10⁻⁴, 1.317×10⁻⁴; the new check `css_omega`), though the table's rounded 3.1994 and 3.9784 would give 1.5×10⁻⁴
-and 1.4×10⁻⁴, as the physics paper's "before rounding" says.
-
-```diff
---- a/matter/CSS.md
-+++ b/matter/CSS.md
-@@ -347,7 +347,10 @@
- The 1/n coefficient is 3.598–3.601 over the fits with 5–6 powers and D ≥ 20–24, rising slowly with the order, so
- c₁ = 3.60 ± 0.01. For the real scalar's DSS solution GAMMA.md has λ = 2 + 3.0324/n − 34.3/n², a similar series.
- **Conclusion: λ∞ = 2 to about 10⁻⁵, γ∞ = 1/2 to about 3×10⁻⁶** (an extrapolation from D ≤ 80; at D = 80,
--γ = 0.4896024).
-+γ = 0.4896024). Both are read off the highest-order free fits of the table, K = 7 on D ≥ 20 and K = 6–7 on D ≥ 24
-+and 30 (λ∞ − 2 = 0.8–1.7×10⁻⁵): an estimate, not a bound. `css_fit.py`'s own summary in `data/css_fit_k1.json`, the
-+median of the best third of its converged fits over (K, D ≥), includes lower orders and gives λ∞ − 2 = 9.6×10⁻⁵
-+(0.9×10⁻⁵ to 2.6×10⁻⁴) and γ∞ − 1/2 = −3.2×10⁻⁵ (−8.5×10⁻⁵ to −3.1×10⁻⁶).
- 
- **ω.** The phase-rotation frequency extrapolates to
- 
-```
-
-### P2-11. Matter notes list as open what other matter notes have done (superseded)
+#### P2-11. Matter notes list as open what other matter notes have done (superseded)
 
 | location | says |
 |---|---|
@@ -1652,160 +1696,74 @@ adds the pointers and changes no claim.
  
 ```
 
-### P2-12. QUAD_DOUBLE.md: the frontier gap is 10⁻¹⁴, not 10⁻¹⁵, and the opening says the solver does not use quad-double (inconsistent, superseded)
+#### P2-12. The math paper's coefficient record stops at σ₁₂ and σ₁₇ (superseded, inconsistent within the paper)
 
 | location | says |
 |---|---|
-| notes/QUAD_DOUBLE.md:880 (§12.4) | at D 73.27 "the double-double one lies 1e-15 from them" |
-| notes/QUAD_DOUBLE.md:840–841 (its table) | T75's double-double Δ_full1 1.7807570807362567, the quad-double ones 1.78075708073624606 − 1.5×10⁻¹⁷ and 1.78075708073624539 + 1.3×10⁻¹⁷ |
-| hp/data/delta_all.csv, D 73.265722 | 1.7807570807362567 − 9.18×10⁻¹⁷ (kind pinned, no err) |
-| notes/QUAD_DOUBLE.md:11 (opening) | "Nothing in the solver uses them yet." |
-| notes/QUAD_DOUBLE.md §12.1; README.md:91, 529 | the quad-double solver, built 2026-10-27; the quad-double points 68.5–73 |
+| paper/math/main.tex:1916 | "σ₁–σ₁₂ are available at ω/ω∞ = 0.99, 1.00, 1.01" |
+| paper/math/main.tex:2185 | "σ₁₄–σ₁₇ were fitted with one window, to plateau steps of 3×10⁻¹³ to 1.5×10⁻¹² relative" |
+| paper/math/main.tex:2129–2180 | the evidence uses σ₁₃ … σ₂₂ |
+| README.md:1641–1648 | σ₁₅ … σ₂₂ converged to 4.5×10⁻¹³ … 2.3×10⁻¹² relative (σ₁₈ the largest) |
+| solver/inner_amp/scan45J1250/ | `sigF_w{0.9900,1.0000,1.0100}_K45_J1250_p1280.json` (σ to 22 at the three ω) |
 
-The double-double value lies 1.06×10⁻¹⁴ and 1.12×10⁻¹⁴ above the two quad-double ones (exact sums of the parts, mpmath),
-ten times the text. The row of `delta_all.csv` at that D is the double-double value, so its Δ carries this 10⁻¹⁴, which
-no err column shows (only one pin reached that D, so the rule of `hp/export_delta_all.py` gives none). Canonical: the
-note's own table.
+Canonical: the README's table and the data files.
 
 ```diff
---- a/notes/QUAD_DOUBLE.md
-+++ b/notes/QUAD_DOUBLE.md
-@@ -877,7 +877,7 @@
- corrected pinned pairs above lie within 1e-17 (71.0) and 2e-17 (71.5) of it: that is the linearised correction's own
- error, and the pins' agreement to 1e-32 at 71.5 was a coincidence of the two pins. From 72 on no start of double-double
- quality reaches the full basin, as the table of basins said. At the frontier the two pins' quad-double values differ by
--7e-16 and the double-double one lies 1e-15 from them: the digits there are set by the pin's cost (the full step's |dz|
-+7e-16 and the double-double one lies 1.1e-14 above them: the digits there are set by the pin's cost (the full step's |dz|
- is 7.9e-6 against 1.6e-9 at 72.4), not by the arithmetic. So the quad-double solver adds digits where the pin is cheap,
- up to about 72.5 in this layout, and past that the full system's junk, not precision, bounds Delta.
+--- a/paper/math/main.tex
++++ b/paper/math/main.tex
+@@ -1913,7 +1913,7 @@
+ \sigma_5 = -0.00555413676 - 0.00280595708\iu,\\
+ \sigma_6 = (-2.7853745790 - 10.776628405\iu)\times10^{-4},\quad \sigma_7 = (1.0223846436 - 1.4905053530\iu)\times10^{-4};
+ \end{gather*}
+-$\sigma_1$--$\sigma_{12}$ are available at $\omega/\winf = 0.99$, $1.00$, $1.01$ (\repo{solver/inner\_amp/}). A fit is accurate but not an enclosure; Lemma~\ref{lem:sigma1} below encloses $\sigma_1$
++$\sigma_1$--$\sigma_{22}$ are available at $\omega/\winf = 0.99$, $1.00$, $1.01$ (\repo{solver/inner\_amp/}). A fit is accurate but not an enclosure; Lemma~\ref{lem:sigma1} below encloses $\sigma_1$
+ rigorously. Summing \eqref{eq:sigmak} directly at the zero is hopeless: the terms $|\sigma_k|A_0^{2k}$ grow to about $240$ at
+ $k = 9$ and are still $160$ at $k = 12$, and would fall below $10^{-6}$ only near $k \approx 37$.
  
 ```
 
 ```diff
---- a/notes/QUAD_DOUBLE.md
-+++ b/notes/QUAD_DOUBLE.md
-@@ -8,7 +8,8 @@
- 
- Quad-double numbers (an unevaluated sum of four f64, about 64 significant digits) are now in the `hpkernel` crate:
- a scalar type `QD` and an 8-lane SIMD type `QV` with bitwise the same results, on the AVX-512, AVX2 and portable
--backends of `v8.rs`. Nothing in the solver uses them yet. Every existing output is bit-identical (section 9). The
-+backends of `v8.rs`. Sections 1–10 describe them as first built, when nothing in the solver used them yet; the
-+quad-double solver built on them is in section 12.1 onward. Every existing output is bit-identical (section 9). The
- logs behind every number here are in `hp/data/quad_double/`, and the commands run in `hp/`.
- 
- **Summary.**
+--- a/paper/math/main.tex
++++ b/paper/math/main.tex
+@@ -2182,7 +2182,7 @@
+ \subsection{What the evidence does not show}
+ The $\pm0.00006$ above is the range of calibrated estimators, not an error bound, and it rests on the assumption about the
+ other zeros of $S_1$.
+-The coefficients $\sigma_k$ come from late-order fits; two fit windows agree to about $10^{-19}$ for $\sigma_1$--$\sigma_{12}$ ($\sigma_{13}$ to $2\times10^{-13}$ relative; $\sigma_{14}$--$\sigma_{17}$ were fitted with one window, to plateau steps of $3\times10^{-13}$ to $1.5\times10^{-12}$ relative), and the
++The coefficients $\sigma_k$ come from late-order fits; two fit windows agree to about $10^{-19}$ for $\sigma_1$--$\sigma_{12}$ ($\sigma_{13}$ to $2\times10^{-13}$ relative; $\sigma_{14}$--$\sigma_{22}$ to plateau steps of $3\times10^{-13}$ to $2.3\times10^{-12}$ relative), and the
+ estimates need them to about $10^{-10}$, but only $\sigma_1$ is enclosed rigorously (Lemma~\ref{lem:sigma1}). At the zero the series \eqref{eq:sigmak} is far from summed, and every
+ estimator (crossings, ratios, Pad\'e approximants, the factored series) is a resummation whose convergence is observed, not
+ proved; the arc-shaped Borel singularity of Section~\ref{sec:entire} is a known source of slow convergence. Settling the other zeros needs more orders, starting with $\sigma_{23}$. Finally, agreement of the numbers is evidence that the selection rule is the right one, not a proof
 ```
 
-### P2-13. The σ-model's γ at its fold rounds to 0.514, not 0.513 (inconsistent, minor)
+#### P2-13. PROOF.md gives the computed range as D = 8–61 (superseded)
 
 | location | says |
 |---|---|
-| README.md:1938 | γ rises "to 0.513 at a fold at D = 8.544" |
-| matter/SIGMA.md:42, 252, 261; paper/physics/main.tex:752 | γ = 0.5135 (0.51355, λ = 1.94724) at the fold |
-| solver/matter/data/sigma_fold_eta0.14.jsonl | γ = 0.513548 at the point of largest D, 8.544346; a parabola through it and its neighbours puts the fold at D = 8.54438 |
+| PROOF.md:79 (Corollary C), 394 (§6) | "the critical solutions computed for D = 8–61"; "The double-double solutions at D = 8–61" |
+| README.md:91, 109 | 1199 double-double points, D = 8.25–67.77 |
 
-Canonical: the data file. The new check `sigma_fold` ties SIGMA.md's and the physics paper's figures to it.
-
-```diff
---- a/README.md
-+++ b/README.md
-@@ -1935,7 +1935,7 @@
- 
- **σ-model, self-similar (CSS) branch** ([matter/SIGMA.md](matter/SIGMA.md)). The D-dimensional equations are checked
- against Bizoń and Wasserman's at D = 4, and the D = 4 values are reproduced: λ ≈ 5.14, γ ≈ 0.18, and the horizon
--thresholds. Continued in D at fixed coupling η = 0.14, γ rises from 0.188 at D = 4 to 0.513 at a fold at D = 8.544,
-+thresholds. Continued in D at fixed coupling η = 0.14, γ rises from 0.188 at D = 4 to 0.5135 at a fold at D = 8.544,
- where the branch ends. In flat space it collapses onto a singular cone (u ≡ π/2) as D → 8, with λ → 2. So this branch
- never reaches large D and cannot test γ∞. Its γ ends near 1/2 for a different reason. The test of the prediction needs
- the σ-model's DSS branch.
-```
-
-### P2-14. B5_inner.md's status table still has (H8) open and B5(2) estimated (superseded)
-
-| location | says |
-|---|---|
-| proof/B5_inner.md:586–587 (§8) | "(H8) itself: **open**"; "B5(2) error at n₀(1): … estimated in section 7 (ln n ≳ 105)" |
-| proof/B5_inner.md:56 (summary) | "A discrepancy, to resolve before B(1) and A(1) can be combined": C_selection.md §1 and the paper truncate b, c to \|ν\| ≤ M − 1 |
-| proof/B3_borel.md:796 (§8) | "B3 actual solution, fixed order: = B8 on the real segment (to be written with constants)" |
-| proof/B8_constants.md §0, §8 | (H8) **certified** for n ≥ e^{73.89}, δ = (8.3×10⁻⁵, 79.04, 3.232, 6.464); B8(1) certified for n ≥ e^{62} |
-| proof/B_chain.md §0, §3 | B5(2) certified, error ≤ e^{76.94}/n for n ≥ e^{73.89} |
-| proof/C_selection.md:103–104; paper/math/main.tex:880–888 | b and c on \|ν\| ≤ M + 1 |
-
-B5_inner.md's summary already marks its B5(2) estimate superseded, but its status table and the discrepancy bullet were
-not updated. Canonical: B8_constants.md, B_chain.md and C_selection.md §1.
+Canonical: the README's main-results table and `hp/data/delta_all.csv`. The diff below is §6's line; Corollary C's is in
+finding P2-1's diff. The math paper's "computed to D = 61" (abstract) and "857 values 8.25 ≤ D ≤ 61.03" (§2.2) are the
+same scope, left to #653's recommended task 6 (the papers at the repository's present state).
 
 ```diff
---- a/proof/B5_inner.md
-+++ b/proof/B5_inner.md
-@@ -53,7 +53,7 @@
-   (with the best κ₁ ≈ 0.85; `b5_threshold.py`). That is an estimate, not part of this lemma (section 7).
-   *Superseded:* the estimate uses the exponent ⟨F²⟩ where the fast mode of the Φ-component has
-   Re 𝒢 = ⟨F²⟩ − 3/2, and omits the weight m_Φ = |z|; B5(2) is now certified ([B_chain.md](B_chain.md) §3).
--- **A discrepancy, to resolve before B(1) and A(1) can be combined.**
-+- **A discrepancy, since resolved: C_selection.md §1 and the paper now use b and c on |ν| ≤ M + 1.**
-   - C_selection.md §1 and the paper truncate b and c to even |ν| ≤ M − 1.
-   - The certified inner problem (and every inner solver, `lateral_np.py`, `hier.py`, `first_order_jet.py`) keeps c on
-     |ν| ≤ M + 1. For M = 1 that is c on {0} against {0, ±2}.
-@@ -583,8 +583,8 @@
- | existence of a super-solution, hence some n₀(M), for each fixed M | **proved, conditional on (H8)**, with Braaksma's Gevrey bounds; no numerical n₀(M) |
- | M = 1: all constants, the super-solution, n₀(1) = max(e^{73.89}, n₈) (max(e^{69.78}, n₈) at Z = 0.009) | **certified** (`b5_bounds.py`, python-flint; with lemma S of A_certify.md rerun over the complex box); **conditional on (H8)** and on Braaksma's theorem as in Theorem A(M = 1) |
- | leading data δ⁰ of (H8) | **numerical evidence** (`b5_data.py`; cross-checked) |
--| (H8) itself | **open**: B8's remainder in these variables, plus the series comparison of section 7 |
--| B5(2) error at n₀(1) | not part of this lemma; estimated in section 7 (ln n ≳ 105, `b5_threshold.py`) |
-+| (H8) itself | **certified** for M = 1, n ≥ e^{73.89}, δ = (8.3×10⁻⁵, 79.04, 3.232, 6.464) ≤ δ_ref ([B8_constants.md](B8_constants.md) §8) |
-+| B5(2) error at n₀(1) | not part of this lemma; **certified** in label form, error ≤ e^{76.94}/n for n ≥ e^{73.89} ([B_chain.md](B_chain.md) §3); section 7's estimate (ln n ≳ 105) is superseded |
+--- a/PROOF.md
++++ b/PROOF.md
+@@ -391,8 +391,8 @@
+ - **Uniqueness in the box.** Theorem A must certify that there is exactly one zero of S₁ in a box that also contains
+   the numerically extrapolated ω∞ = 3.82213590 (±4×10⁻⁸) and A∞ ≈ 2.70–2.72. A box of radius 10⁻³ suffices for the
+   identification; it does not need the numerics' digits.
+-- **That the computed branch is the branch of Theorem B.** The double-double solutions at D = 8–61 are numerical. A
+-  Reiterer–Trubowitz-style computer-assisted existence proof at one large D (say D = 40–60), with the certified solution
++- **That the computed branch is the branch of Theorem B.** The double-double solutions at D = 8.25–67.77 are numerical.
++  A Reiterer–Trubowitz-style computer-assisted existence proof at one large D (say D = 40–60), with the certified solution
+   inside the basin of Theorem B's construction, would close this; alternatively, Theorem B's construction at n ≥ n₀ with
+   explicit n₀ and a certified solution at some D ≥ n₀ + 2.
  
- The trusted code: `b5_bounds.py` (new, not reviewed independently), `b5_formulas.py` (new), `fixed_point.py` and
- `lemma6_sector.py` (A_certify.md; reviewed in A_review.md, rerun over a different box), python-flint 0.9.
---- a/proof/B3_borel.md
-+++ b/proof/B3_borel.md
-@@ -793,7 +793,7 @@
- | (H-σ), M = 1 | Borel transform analytic near [0, ∞) | **conjecture**; **numerical evidence** σ ≈ π/2; proof plan §4 with one open technical point (derivative loss) |
- | (H-σ), M ≥ 3 | | **conjecture**; numerical evidence that σ is set by an x-independent singularity near −1.2 (M = 3) |
- | B3 formal half | | **proved** (B3.7) |
--| B3 actual solution, fixed order | | = B8 on the real segment (to be written with constants) |
-+| B3 actual solution, fixed order | | = B8 on the real segment, written with constants in [B8_constants.md](B8_constants.md) (**certified** for M = 1, n ≥ e^{62}) |
- | B3 strong form (1-sum) | | ⇔ (H-σ) (Nevanlinna–Sokal), **open** |
- | B4 summability | | **cited**, Braaksma 1992, hypotheses checked against the paper |
- | B4 parameter-analyticity | | **proved** given Braaksma (Lemma B4.P); not in Braaksma 1992 or the Ramis–Sibuya 1994 abstract |
 ```
 
-### P2-15. B_tail.md still waits for M = 7 (superseded)
-
-| location | says |
-|---|---|
-| proof/B_tail.md:52, 307–309 (§7) | "M = 7 should land at 0.99997–1.00017, a sharp test when it runs"; "M = 7 … is the next data point" |
-| proof/B_tail_M7.md §2–3; README.md:1617 | M = 7 gives ω/ω∞ = 1.000022 (±2×10⁻⁵, the scatter of repeated solves), inside the prediction; last ratio −0.049 |
-
-Canonical: proof/B_tail_M7.md.
-
-```diff
---- a/proof/B_tail.md
-+++ b/proof/B_tail.md
-@@ -49,7 +49,8 @@
-   A 10⁻⁴ box needs M = 9 explicit.
- - **The two routes are consistent.** The truncated sequence and the alternation sign put the limit at 0.99923–1.00011. The
-   untruncated bracket at order 12 is 0.99915–1.00011, with the central Padé value 0.99989. They overlap, and both
--  contain 1. M = 7 should land at 0.99997–1.00017, a sharp test when it runs.
-+  contain 1. M = 7 should land at 0.99997–1.00017, a sharp test when it runs. (It landed at 1.000022, inside the
-+  prediction; [B_tail_M7.md](B_tail_M7.md) §2.)
- - **Secondary Stokes lines from F's complex singularities: no sign of them.** They are absent at every finite order in
-   A, where each order is a trigonometric polynomial and the late orders contain only fast-mode families. S₁ is numerically
-   entire in A², and the two routes agree. What is not excluded is a non-uniformity in the order of limits (sum in A,
-@@ -305,8 +306,8 @@
- ## 7. What remains open
- 
- 1. **The jump-conditioned tail bound itself.** The per-pair ratio −0.045 to −0.057 is measured on three points (M = 1, 3,
--   5), with M = 1 pre-asymptotic. M = 7 (`hier.py 7 … --predict --floor --schur`) is the next data point. The prediction is
--   c₇ = 0.99997–1.00017.
-+   5), with M = 1 pre-asymptotic. M = 7 (`hier.py 7 … --predict --floor --schur`) was the next data point, with the
-+   prediction c₇ = 0.99997–1.00017. It gives 1.000022 and a last ratio of −0.049 ([B_tail_M7.md](B_tail_M7.md) §2–3).
- 2. **Why the Galerkin projection explodes at σ_{M+1}.** Either its multiplier is genuinely large or its late orders have
-    a family structure outside the fit basis (the fit residual rises). Deciding this is a few hours' work: compute the
-    projected system's fast-mode exponents, refit, and compare with a lateral (`inner_np.py`) evaluation of the same
-```
-
-### P2-16. A_certify.md calls the certified lemma 6b₁ "proved" (inconsistent status word)
+#### P2-14. A_certify.md calls the certified lemma 6b₁ "proved" (inconsistent status word)
 
 | location | says |
 |---|---|
@@ -1837,3 +1795,151 @@ main has since changed (71015044).
  
  **Independence.**
 ```
+#### P2-15. The σ-model's γ at its fold rounds to 0.514, not 0.513 (inconsistent, minor)
+
+| location | says |
+|---|---|
+| README.md:1938 | γ rises "to 0.513 at a fold at D = 8.544" |
+| matter/SIGMA.md:42, 252, 261; paper/physics/main.tex:752 | γ = 0.5135 (0.51355, λ = 1.94724) at the fold |
+| solver/matter/data/sigma_fold_eta0.14.jsonl | γ = 0.513548 at the point of largest D, 8.544346; a parabola through it and its neighbours puts the fold at D = 8.54438 |
+
+Canonical: the data file. The new check `sigma_fold` ties SIGMA.md's and the physics paper's figures to it.
+
+```diff
+--- a/README.md
++++ b/README.md
+@@ -1935,7 +1935,7 @@
+ 
+ **σ-model, self-similar (CSS) branch** ([matter/SIGMA.md](matter/SIGMA.md)). The D-dimensional equations are checked
+ against Bizoń and Wasserman's at D = 4, and the D = 4 values are reproduced: λ ≈ 5.14, γ ≈ 0.18, and the horizon
+-thresholds. Continued in D at fixed coupling η = 0.14, γ rises from 0.188 at D = 4 to 0.513 at a fold at D = 8.544,
++thresholds. Continued in D at fixed coupling η = 0.14, γ rises from 0.188 at D = 4 to 0.5135 at a fold at D = 8.544,
+ where the branch ends. In flat space it collapses onto a singular cone (u ≡ π/2) as D → 8, with λ → 2. So this branch
+ never reaches large D and cannot test γ∞. Its γ ends near 1/2 for a different reason. The test of the prediction needs
+ the σ-model's DSS branch.
+```
+
+#### P2-16. B_tail_M7.md quotes one part of complex σ₄ and σ₆ as "true" (inconsistent, minor)
+
+| location | says |
+|---|---|
+| proof/B_tail_M7.md:288–289 | σ₄ = −399 "(true −0.029)", σ₆ = −1371 "(true −0.0011)" |
+| proof/B_tail.md:214–215, README.md:1411 | σ₄ = −0.0289 + 0.0108i, σ₆ = −0.00028 − 0.00108i ("−0.0003 − 0.0011i") |
+
+−0.029 is Re σ₄, but −0.0011 is Im σ₆. Canonical: proof/B_tail.md §4.
+
+```diff
+--- a/proof/B_tail_M7.md
++++ b/proof/B_tail_M7.md
+@@ -285,8 +285,8 @@
+ | hier's model, M = 1 | odd ≤ 1, even ≤ 2 | σ₁ unchanged (4.5×10⁻¹⁰, fit level) | σ₂ changed by 0.0590 (14% of \|σ₂\|) | `trunc_hier_M1_K5_J500_w1.0000.json` |
+ | hier's model, M = 3 | odd ≤ 3, even ≤ 4 | σ₁–σ₃ unchanged (≤ 2.7×10⁻¹⁰) | σ₄ changed by 3.74×10⁻⁵ (0.12% of \|σ₄\|) | `trunc_hier_M3_K9_J500_w1.0000.json` |
+ | hier's model, M = 5 | odd ≤ 5, even ≤ 6 | σ₁–σ₅ unchanged (≤ 4.2×10⁻¹⁰) | σ₆ changed by 7.9×10⁻⁹ (7×10⁻⁶ of \|σ₆\|) | `trunc_hier_M5_K13_J500_w1.0000.json` (a first run, cut by a container restart, `trunc_hier_M5_cut.log`) |
+-| `amp_trunc.py`, M = 3 | all ≤ 3 | σ₃ changed by 5.3×10⁻⁴ | σ₄ = −399 (true −0.029) | B_tail.md §4 |
+-| `amp_trunc.py`, M = 5 | all ≤ 5 | σ₅ changed by 4.4×10⁻⁴ | σ₆ = −1371 (true −0.0011) | B_tail.md §4 |
++| `amp_trunc.py`, M = 3 | all ≤ 3 | σ₃ changed by 5.3×10⁻⁴ | σ₄ = −399 (true −0.0289 + 0.0108i) | B_tail.md §4 |
++| `amp_trunc.py`, M = 5 | all ≤ 5 | σ₅ changed by 4.4×10⁻⁴ | σ₆ = −1371 (true −0.00028 − 0.00108i) | B_tail.md §4 |
+ 
+ (`python3 trunc_seq_M7.py --amp`.) Lemma O's prediction holds exactly in both truncations: hier's model first changes at
+ σ_{M+1}, `amp_trunc.py`'s at σ_M. And the explosion is a property of dropping the even harmonic M + 1, not of Galerkin
+```
+
+
+### Counts by kind
+
+| kind | findings |
+|---|---|
+| superseded | P2-1, 3, 5, 6, 7, 8, 9, 10, 11, 12, 13 |
+| inconsistent | P2-2, 15, 16 |
+| inconsistent status word | P2-14 |
+| unsupported (a bar whose kind or source is not named) | P2-4 |
+| broken reference | none (below) |
+| **total** | **16** |
+
+### Recommended tasks
+
+1. **The frontier rows of `delta_all.csv`.** What: give the pinned rows that only one pin reached (D 73.1–73.27) an err,
+   or replace the 73.2657 row by the quad-double Δ_full1 of QUAD_DOUBLE.md §12.4 (T84-mac). Why: finding P2-2; the row
+   at 73.265722 lies 1.06×10⁻¹⁴ above both quad-double values and carries no err. Acceptance: `export_delta_all.py
+   --verify` passes, and a check that compares the row with the quad-double value fails on the CSV at 90a81f69 and
+   passes after. Depends on: #658.
+2. **A lint for stale status claims in the proof notes.** What: a script that lists, per named result (the names of
+   `check_proof_table.py`), the status and review phrases of proof/*.md ("not reviewed", "open", "waits", "next data
+   point", "proved" for a computer-assisted step) and compares them with the README's table "What is proved, and how".
+   Why: findings P2-5, 6, 7, 10 and 14 are each a note that kept an old status after the work moved on, and #653 found
+   the same in PROOF.md and PROOF_QUEUE.md. Acceptance: at 90a81f69 it lists C_selection.md:77, A_M.md:8,
+   A_lemmas_M.md:12, B5_inner.md:586 and A_certify.md:41; with the diffs above applied it lists none of them; a planted
+   line "Theorem B(1) … not reviewed" is listed. Depends on: #658.
+3. **Theorem A(M = 5) in A_lemmas_M.md.** #40, open, covers it. Finding P2-6's second diff is the minimum until then.
+
+### New checks (the commit "check_numbers: check the A(3) and A(5) enclosures, …")
+
+`check_numbers.py --selftest` on the branch: 1629 of 1629 pass, and 1629 of 1629 reject a value shifted by one unit
+(1573 before). PROOF.md, notes/FIRST_ORDER.md, matter/CSS.md and matter/SIGMA.md are added to DOCS. Every check passes
+on 90a81f69 and with every diff above applied, since none of them quotes a changed line.
+
+| check | quoted numbers | source |
+|---|---|---|
+| `m5_enclosure` | A(M = 5)'s zero, ω/ω∞ ∈ [0.99922840320656, 0.99922840320657] (README, PROOF.md) and A ∈ [2.7185791892117, 2.7185791892118] (PROOF.md), as outward roundings | solver/proof/logs/A_M2_krawczyk_M5_1e-10.log |
+| `m3_enclosure` | A(M = 3)'s zero, A and ω/ω∞ (README, math paper), from the Krawczyk log and, rounded outward, from the independent mpmath-interval recheck | solver/proof/logs/A_M_krawczyk_M3_1e-10.log, A_M_recheck_M3_1e-10.log |
+| `first_order_lam` | λ* = 1.769122008, 2.006804459, 1.9996689 (M = 1, 3, 5) and the short row 1.76912 (FIRST_ORDER.md) | solver/inner_pert/data/first_order_hier_M*.json |
+| `sigma_fold` | the fold D = 8.5444 (8.544 in the README) and γ = 0.5135 there (SIGMA.md, physics paper), the table's 1.94724 and 0.51355 | solver/matter/data/sigma_fold_eta0.14.jsonl |
+| `css_omega` | ω∞ 3.1998939020 and 3.9789695074 (inner), 3.1994 and 3.9784 with their fit ranges (extrapolated), the agreements 1.6×10⁻⁴ and 1.3×10⁻⁴ (CSS.md, README, math paper) | solver/matter/data/css_inner_kpath.jsonl, css_fit_k0.json, css_fit_k1.json |
+| `css_lambda_table` | the 25 entries of CSS.md §7's table of λ∞ − 2 | solver/matter/data/css_fit_k1.json |
+
+The 1.769 of finding P2-9 is checked in FIRST_ORDER.md, its source note. A check of the README's and GAMMA.md's text
+belongs with that diff, once it is applied.
+
+### Checked and found consistent
+
+- **Theorem B in the math paper**: n₀ = e^{89.75}, e^{67.84}/n, B5(2)'s e^{76.94}/n for n ≥ e^{73.89}, B8 for n ≥
+  e^{62}, δ = (8.3×10⁻⁵, 79.04, 3.232, 6.464), x = (392, 9.2×10⁴, 21, 30), θ_LC = 0.7355, d₀ = 3.59×10⁶, θ_J = 0.176,
+  against C_selection.md §13.1, B_chain.md, B8_constants.md, B5_inner.md and P2b_review.md. The light-cone exponents'
+  gaps (|Im| ≥ 6.89, 7.26 for M ≥ 3; |Re| < 0.02) and the M = 5 singular values 6.8×10³, 3.9×10³ against C_selection.md
+  and A_certify.md.
+- **Theorem A(M = 1) in the math paper** against A_certify.md: the contraction table, the enclosure radii, the 743 steps
+  and J(x̂), the Krawczyk margins and the mutation table's C0 and C7, the zero box, the 178 discs and 6073 Lohner steps,
+  and CAPD's margins at 10⁻⁸ and its zero box on the ray–arc path. **A(M = 3) and A(M = 5)**: the enclosures in the
+  README, PROOF.md, the math paper, A_M.md, A_M2.md and A_M_review.md against the Krawczyk logs (now checked).
+- **The entire-function section** against D_entire.md: the ratio-law table, the G table, the Jacobian's singular values
+  0.53 and 0.26, the margins 2.6×10⁻³ and 5.7×10⁻⁴, C₃ = 110.3 and the σ₁ enclosures. **Gap (b)** against B_tail.md: q∞,
+  |q|A² = 0.0633, σ_F = 1.428, 0.0574, −399 and −1371, 1.380, 0.374.
+- **The evidence for K = 13–22** in the math paper and the README against PLANTED_SELECTION.md §5.4, §6.9 and
+  §7.8–14.10: every arg crossing, ring-free zero, estimator range, ring count and σ error. The README's planted-truth
+  biases (1.3–5.4×10⁻³, −0.8 to +1.9×10⁻⁴, up to 8×10⁻⁴, 0.99992–1.00019) against §3.3–4.
+- **QUAD_DOUBLE.md's Δ values**: all 37 occurrences of Δ to 12–19 digits in §1–13.24 against `delta_qd.csv` and
+  `delta_all.csv`. Each equals a CSV value to the digits shown, apart from the frontier (finding P2-2), the pin ladder's
+  uncorrected Δ at 73.27, which differ from the CSV by the tabulated correction 1.16×10⁻¹², and the three chain values
+  of 13.19 at 79.77–80.27, which the later chain replaced.
+- **Matter**: CSS.md's |f(0)| and A² agreements (3.1×10⁻⁵, 5.2×10⁻⁵; 1.8×10⁻⁵, 2.5×10⁻⁵) against `css_fit_k*.json` and
+  `css_inner_kpath.jsonl`; SIGMA_DSS.md's offsets (−0.0028 to −0.0033 at η = 1, −0.0146 to −0.0165 at η = 0.3) against
+  its own table and the README; SIGMA.md's A∞ = 1.9226 ± 0.0003 (a spread over the fit's degree, which covers the three
+  fits 1.92247–1.92282) against A₀ = 1.9225686; ELL.md's D = 4 values against Olabarrieta et al.'s; CSS.md's κ = 1
+  uniqueness against COMPLEX_CRITICAL.md's κ = 0 pair, which are different models.
+- **Paths**: every repository path that the scope files cite exists on main, apart from two that the notes date
+  themselves: `hp/full_step_check.py` (on wip/qd-horizon, QUAD_DOUBLE.md §12) and `hp/src/qd.rs` (moved to multidouble,
+  the note's opening).
+
+### Coverage: files read
+
+- **In full**: paper/math/main.tex §1 Results and status table, §2, §3, §4, §6, §7 (Lemma S's proof read for its
+  numbers), §8 and §9; PROOF.md §1–3 and §6–8 with its references; proof/D_entire.md Summary to §3 and §5; matter/ELL.md
+  §5–9; matter/CSS.md summary, §6 and §7; matter/YM_FAMILY.md; matter/SIGMA_DSS.md §1; notes/PLANTED_SELECTION.md §1,
+  §3.3, §5.4, §6.9 and §7.8–14.10 (each order's combination and verdict); notes/QUAD_DOUBLE.md's opening, §1, §9–12.7,
+  §13.17–13.20 and §13.23–13.24.
+- **In part**: paper/math/main.tex §5 (Proposition 5, read for its numbers); proof/A_certify.md (status, §4.4–4.5, §9.3,
+  §10.3, §11.7, §12.6), A_lemmas_M.md (summary, §7), A_M.md (status, §1, §6.2), A_M2.md (status, §6.4), A_M_review.md
+  and A_M2_review.md (verdicts, A_M2's item 9), A_review.md (the linear check), B_chain.md (§0), B8_constants.md (§0,
+  §8, §9), B5_inner.md (summary, §7, §8), B3_borel.md (§8), B_tail.md (verdict, §4, §7), B_tail_M7.md (summary, §4),
+  C_selection.md (§0, §1, §13.1), FORMAL.md, P3_scope.md and P5_scope.md (openings); matter/SIGMA.md (summary, §5, §7),
+  STRUCTURE.md (§10), COMPLEX_CRITICAL.md (summary); notes/QUAD_DOUBLE.md §12.4's tables; notes/PLANTED_SELECTION.md
+  §2.1.
+- **Searched, not read**: the rest of proof/ (P2_review.md and P2b_review.md beyond their constants, the bodies of
+  B_chain.md, B8_constants.md, B5_inner.md, B3_borel.md and C_selection.md §2–12), matter/LITERATURE.md, the bodies of
+  SIGMA.md and STRUCTURE.md, QUAD_DOUBLE.md §2–8, §13.1–13.16 and §13.21–13.22, and PLANTED_SELECTION.md §2.2–3.2,
+  §3.4–6.8 and each order's procedure (§7.0–14.7). They were searched for status phrases ("not reviewed", "open",
+  "waits", "next data point", "proved"), for the numbers above, and for the paths they cite.
+- **Data files read**: hp/data/delta_all.csv, delta_qd.csv, delta_dd.csv, delta_dd_lowD.csv;
+  solver/proof/logs/A_M2_krawczyk_M5_1e-10.log, A_M_krawczyk_M3_1e-10.log, A_M_recheck_M3_1e-10.log;
+  solver/inner_pert/data/first_order_hier_M{1,3,5}*.json; solver/matter/data/css_fit_k0.json, css_fit_k1.json,
+  css_inner_kpath.jsonl, sigma_fold_eta0.14.jsonl; the file list of solver/inner_amp/.
