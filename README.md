@@ -473,9 +473,9 @@ any finite order of the 1/n expansion ([Proposition 5](#proposition-5-the-unstab
 
 Δ∞ comes from fits of all the double-double points. The fits, their residuals and the error bar are in
 [Is the period analytic in 1/D?](#is-the-period-analytic-in-1d). The f64 points gave 1.64395 ± 0.00008, the centre and
-half-width of the range of the limit over fit choices (variable 1/D, 1/(D − 1) or 1/(D − 2), degree 8–11, from D ≥ 10
-or 12 to 30.2, χ²/dof ≤ 1). This formula's own limit is a₀ = 1.643898, 4×10⁻⁶ high, which its fitting range could not
-see. The coefficients of one fit are correlated, so they are not physical constants. Only the function is.
+half-width, rounded up, of the range of the limit over fit choices (variable 1/D, 1/(D − 1) or 1/(D − 2), degree 8–11,
+from D ≥ 10 or 12 to 30.2, χ²/dof ≤ 1). This formula's own limit is a₀ = 1.643898, 4×10⁻⁶ high, which its fitting range
+could not see. The coefficients of one fit are correlated, so they are not physical constants. Only the function is.
 
 **The limit rests on an assumption, which the double-double points now support.** Δ∞ = 1.643893746 holds if Δ(D) is
 analytic in 1/D at D = ∞. That means no half-integer powers $`n^{-1/2}`$, no $`\log n`$, and no new scale far beyond the
@@ -644,8 +644,8 @@ the footnotes.
     `hp/compare/dd_D5.log`). They are the f64 solver at 31, 39 and 47 Fourier modes, extrapolated geometrically in the
     mode count (3.221701945 ± 7×10⁻¹¹, the size of that extrapolation step, an estimate and not a bound,
     `solver/data_all.py`), and the double-double solver at M = 48 and 64 collocation points (3.22170194461806,
-    3.22170194462672), which agree with each other to 10⁻¹¹. The f64 value lies 1.5×10⁻¹⁰ above them, about twice its
-    estimate.
+    3.22170194462672), which agree with each other to 10⁻¹¹. The f64 value lies 1.5×10⁻¹⁰ above the M = 64 value,
+    about twice its estimate.
   - Their published data ([github.com/EckerChristian/CriticalSpacetimeCrystal](https://github.com/EckerChristian/CriticalSpacetimeCrystal), compared by `hp/compare/cmp_ecker.py`) show their D = 5 value still moving by −1.66×10⁻⁴ between 256 and 512 modes, toward ours. That is in the range above D ≈ 4.8 where their paper notes that the light-cone expansion order has to be increased.
   - Their offset from our values grows smoothly with D, from 2.7×10⁻⁷ at D = 4 to 5×10⁻⁴ at D = 5.5. The first is within
     their stated ±10⁻⁶, and ours matches Martín-García & Gundlach to 7×10⁻⁹ there.

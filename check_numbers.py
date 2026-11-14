@@ -127,7 +127,7 @@ def d5_two_codes():
     t1 = [("README.md", "mode count (3.221701945 ± 7×10⁻¹¹, the size of that extrapolation step")]
     t2 = [("README.md", "collocation points (3.22170194461806,\n    3.22170194462672), which agree with each other to 10⁻¹¹")]
     t3 = [("README.md", "comes from two independent codes, which agree to 2×10⁻¹⁰")]
-    t4 = [("README.md", "The f64 value lies 1.5×10⁻¹⁰ above them, about twice its\n    estimate")]
+    t4 = [("README.md", "The f64 value lies 1.5×10⁻¹⁰ above the M = 64 value,\n    about twice its estimate")]
     return [("f64 Delta(5)", f64, 3.221701945, 1e-9, t1),
             ("f64 Delta(5) estimate, the extrapolation step", est, 7e-11, 1e-11, t1),
             ("double-double Delta(5) at M 48", dd[48], 3.22170194461806, 1e-14, t2),
@@ -481,8 +481,8 @@ def f64_dinf_range():
         os.chdir(cwd)
     lo, hi = min(ok), max(ok)
     up = math.ceil(round((hi - lo) / 2 / 1e-5, 6)) * 1e-5
-    txt = [("README.md", "The f64 points gave 1.64395 ± 0.00008, the centre and\nhalf-width of the range"),
-           ("README.md", "(variable 1/D, 1/(D − 1) or 1/(D − 2), degree 8–11, from D ≥ 10\nor 12 to 30.2, χ²/dof ≤ 1)")]
+    txt = [("README.md", "The f64 points gave 1.64395 ± 0.00008, the centre and\nhalf-width, rounded up, of the range"),
+           ("README.md", "(variable 1/D, 1/(D − 1) or 1/(D − 2), degree 8–11,\nfrom D ≥ 10 or 12 to 30.2, χ²/dof ≤ 1)")]
     audit = [("notes/CONSISTENCY_AUDIT.md", "the range 1.643882–1.644027 of the free limit c₀ over the 19 of 24 fits")]
     return [("fit choices", len(rows), 24, 1, audit),
             ("fits with chi2/dof <= 1", len(ok), 19, 1, audit),
