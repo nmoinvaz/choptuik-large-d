@@ -2558,6 +2558,34 @@ def table_errs():
 
 
 @check
+def table_errs_all():
+    """every row of hp/data/delta_all.csv has an err or a reason named in its err_kind (#764). The full-system
+    quad-double rows with one start (71.0, 72.8) take the larger two-start spread of the nearest qd rows below and
+    above. The low-D rows solved at one M (3.72-3.8 at M 80, 4.25-8.2 at M 48) take that M's departure from the best
+    value at the nearest D below and above with a larger M, below only from 8.059375 on (hp/export_lowD.py).
+    Delta(7)'s err stays below half the last digit the README quotes"""
+    import csv
+    rows = list(csv.DictReader(open(os.path.join(ROOT, "hp/data/delta_all.csv"))))
+    at = {(r["kind"], float(r["D"])): r for r in rows}
+    err = lambda kind, D: float(at[(kind, D)]["err"] or "nan")  # noqa: E731
+    kinds = lambda ek: [r for r in rows if r["err_kind"] == ek]  # noqa: E731
+    txt7 = [("README.md", "| 7 | 2.84275320647 | 0.439991242 |"),
+            ("notes/LOW_D.md", "unchecked, to 10⁻¹¹ by its neighbours")]
+    return [("rows of any kind without an err or a named reason", sum(not r["err"] and not r["err_kind"] for r in rows),
+             0, 1, []),
+            ("qd rows with the neighbouring starts' spread", len(kinds("starts neighbours")), 2, 1, []),
+            ("low-D rows with the neighbouring dM", len(kinds("dM neighbours")), 21, 1, []),
+            ("low-D rows with the dM below only", len(kinds("dM neighbours one-sided")), 3, 1, []),
+            ("qd err at 71.0 (starts neighbours)", err("qd", 71.0), 3.8e-28, 0.1e-28, []),
+            ("qd err at 72.8 (starts neighbours)", err("qd", 72.8), 8.4e-28, 0.1e-28, []),
+            ("M 80 err at 3.72 (dM neighbours)", err("dd", 3.72), 1.3e-9, 0.1e-9, []),
+            ("M 48 err at 4.25 (dM neighbours)", err("dd", 4.25), 2.6e-7, 0.1e-7, []),
+            ("M 48 err at 7 (dM neighbours)", err("dd", 7.0), 3.0e-14, 0.1e-14, txt7),
+            ("M 48 err at 8.2 (dM neighbours one-sided)", err("dd", 8.2), 9.5e-21, 0.1e-21, []),
+            ("Delta(7)'s err below half the README's last digit", int(err("dd", 7.0) < 0.5e-11), 1, 1, txt7)]
+
+
+@check
 def pinned_qd_table():
     """notes/QUAD_DOUBLE.md 12.4: the quad-double Delta_full1 of the pinned solutions against
     hp/data/delta_pinned_qd.csv (hp/export_pinned_qd.py, the exact sums of T84-mac's *_fullcorr.jsonl records; #758).
