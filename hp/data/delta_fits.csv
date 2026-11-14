@@ -99,6 +99,7 @@ D,diff_d6,how_d6,states_d6,diff_d10,how_d10,states_d10
 171.0,+1.7738e-11,direct,I13-win/chain_d6/anm_pin3_D171.0000.npz,-5.5862e-12,direct,I13-win/chain_d10/anm_pin3_D171.0000.npz
 172.0,+1.8078e-11,direct,I13-win/chain_d6/anm_pin3_D172.0000.npz,-5.4163e-12,direct,I13-win/chain_d10/anm_pin3_D172.0000.npz
 173.0,+1.8419e-11,direct,I13-win/chain_d6/anm_pin3_D173.0000.npz,-5.2403e-12,direct,I13-win/chain_d10/anm_pin3_D173.0000.npz
+173.5,+1.8590e-11,interp,I13-win/chain_d6/anm_pin3_D171.0000.npz .. I13-win/chain_d6/anm_pin3_D176.0000.npz,-5.1496e-12,interp,I13-win/chain_d10/anm_pin3_D171.0000.npz .. I13-win/chain_d10/anm_pin3_D176.0000.npz
 174.0,+1.8762e-11,direct,I13-win/chain_d6/anm_pin3_D174.0000.npz,-5.0574e-12,direct,I13-win/chain_d10/anm_pin3_D174.0000.npz
 175.0,+1.9106e-11,direct,I13-win/chain_d6/anm_pin3_D175.0000.npz,-4.8693e-12,direct,I13-win/chain_d10/anm_pin3_D175.0000.npz
 176.0,+1.9451e-11,direct,I13-win/chain_d6/anm_pin3_D176.0000.npz,-4.6749e-12,direct,I13-win/chain_d10/anm_pin3_D176.0000.npz
@@ -116,6 +117,7 @@ D,diff_d6,how_d6,states_d6,diff_d10,how_d10,states_d10
 188.0,+2.3652e-11,direct,I13-win/chain_d6/anm_pin3_D188.0000.npz,-1.9936e-12,direct,I13-win/chain_d10/anm_pin3_D188.0000.npz
 189.0,+2.4005e-11,direct,I13-win/chain_d6/anm_pin3_D189.0000.npz,-1.7430e-12,direct,I13-win/chain_d10/anm_pin3_D189.0000.npz
 190.0,+2.4358e-11,direct,I13-win/chain_d6/anm_pin3_D190.0000.npz,-1.4872e-12,direct,I13-win/chain_d10/anm_pin3_D190.0000.npz
+190.5,+2.4535e-11,interp,I13-win/chain_d6/anm_pin3_D188.0000.npz .. I215-win/chain_d6/anm_pin3_D193.0000.npz,-1.3565e-12,interp,I13-win/chain_d10/anm_pin3_D188.0000.npz .. I215-win/chain_d10/anm_pin3_D192.5000.npz
 191.5,+2.4889e-11,interp,I13-win/chain_d6/anm_pin3_D189.0000.npz .. I215-win/chain_d6/anm_pin3_D194.0000.npz,-1.0920e-12,direct,I13-win/chain_d10/anm_pin3_D191.5000.npz
 192.5,+2.5242e-11,interp,I13-win/chain_d6/anm_pin3_D190.0000.npz .. I215-win/chain_d6/anm_pin3_D195.0000.npz,-8.2009e-13,direct,I215-win/chain_d10/anm_pin3_D192.5000.npz
 193.5,+2.5597e-11,interp,I13-win/chain_d6/anm_pin3_D191.0000.npz .. I215-win/chain_d6/anm_pin3_D196.0000.npz,-5.3963e-13,direct,I215-win/chain_d10/anm_pin3_D193.5000.npz
