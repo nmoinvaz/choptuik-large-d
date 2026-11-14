@@ -13,6 +13,13 @@ trial and prints it at verbose 1; and kantorovich_log.parse_log reads every prin
 The strong-row chord (#674): chord_strong from the start keeps the first step's weak coordinate y0 to 1e-12
 relative and solves the strong row to 1e-12 of its value after the step, and newton_od with strong_chord=1 converges.
 Control: --mutate=noproj keeps the weak part of each chord correction, which moves y0, and the check must fail.
+
+The full step's drop (#709, newton_od's full_drop with the natural test): on a linear toy whose LU solves carry a weak
+vector as large as the step (the amplified noise of a nearly singular root), theta is about 1 at every trial, so the
+natural test refuses them all. With full_drop = 1e-20 the full step, which lands on the root, is accepted by its drop and
+the full step is accepted at the first step; with full_drop = 0 it is refused; and a full step whose |F| falls only to
+2e-10 of the start's is still refused at full_drop = 1e-20. Control: --mutate=drop accepts a full step on any decrease of |F| (the floor at 1),
+so the third case must fail.
 """
 import contextlib
 import io
@@ -104,6 +111,52 @@ def chord_check():
     return good
 
 
+class Noisy:
+    """a linear toy, F(y) = y - r + c, whose LU solves add a fixed weak vector w as large as the start's Newton step (the
+    simplified correction near a nearly singular root, #709); newton_o's own step, -(y - r), ignores the constant c, so
+    the full step's |F| is |c|: 1e-25 by default (above the run's tol 1e-30, below 1e-20 of the start's |F| of 2), or
+    larger for the case whose full step falls only to |c|."""
+
+    size = 2
+
+    def __init__(self, c=1e-25):
+        self.r, self.w, self.c = np.array([1.0, 2.0]), np.array([0.0, 3.0]), np.array([c, 0.0])
+
+    def residual_o(self, z, mutate=0):
+        return [np.asarray(z[0], dtype=float) - self.r + self.c] + [ZERO] * 7
+
+    def newton_o(self, z, mutate=0):
+        y = np.asarray(z[0], dtype=float)
+        return [-(y - self.r)] + [ZERO] * 7, y - self.r + self.c, ZERO, 1.0, 1.0
+
+    def olu_solve(self, rhs, trans=False):
+        return [np.asarray(rhs[0], dtype=float) + self.w] + [ZERO] * 7
+
+
+def drop_check(mutate=False):
+    """the first step from y = 0: at full_drop 1e-20 the full step is accepted by its drop, where the natural test
+    refuses it (theta 1.5); at 0 it is refused; and a full step whose |F| falls only to 2e-10 of the start's 2 is
+    still refused at 1e-20"""
+    if mutate:
+        octo_corrector.DROP_MUT["floor1"] = True
+    z = [np.array([0.0, 0.0])] + [ZERO] * 7
+
+    def first(c, fd):
+        with contextlib.redirect_stdout(io.StringIO()):
+            _, h, _ = newton_od(Noisy(c), z, tol=1e-30, it_max=1, accept="natural", full_drop=fd)
+        r = h[0] if h else {}
+        return bool(r.get("by_drop")), r.get("lam")
+
+    on, lam_on = first(1e-25, 1e-20)
+    off, lam_off = first(1e-25, 0.0)
+    miss, _ = first(4e-10, 1e-20)
+    on_ok, off_ok, miss_ok = on and lam_on == 1.0, not off and lam_off != 1.0, not miss
+    good = on_ok and off_ok and miss_ok
+    print(f"full step's drop: accepted by the drop at 1e-20 {on_ok}; refused at 0 {off_ok}; a full step to 2e-10 of "
+          f"the start's refused at 1e-20 {miss_ok}: {'pass' if good else 'FAIL'}")
+    return good
+
+
 def main():
     quiet = "--mutate=quiet" in sys.argv[1:]
     if "--mutate=noproj" in sys.argv[1:]:
@@ -121,6 +174,7 @@ def main():
         print(f"{accept}: converged {conv} in {steps} lines; trial lines printed {printed} (refused {refused}), parsed "
               f"{parsed}: {'pass' if good else 'FAIL'}")
     ok &= chord_check()
+    ok &= drop_check("--mutate=drop" in sys.argv[1:])
     mut = " ".join(a for a in sys.argv[1:] if a.startswith("--mutate="))
     print(f"newton_od_toy{' ' + mut if mut else ''}: {'PASS' if ok else 'FAIL'}")
     return 0 if ok else 1

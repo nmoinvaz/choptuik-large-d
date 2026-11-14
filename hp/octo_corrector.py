@@ -16,7 +16,8 @@ used, so that a module importing this one runs on the older packages the runners
         [--Delta_ref D] [--last 0] [--mutate_offset qd] [--mutate 10] [--out PREFIX]
     python3 octo_corrector.py wall RAW PRED.npz [--threads 3] [--qd 0] [--F_max 1e-36] [--mutate_offset qd]
         [--mutate 10] [--out PREFIX] [--reseed_o 0] [--held_o 0]
-    (planted and wall take --switch S, ElimO's projection switch, 1e-15 by default; anm_run.py --elim_switch, #700)
+    (planted and wall take --switch S, ElimO's projection switch, 1e-15 by default; anm_run.py --elim_switch, #700;
+    and --full_drop F, newton_od's full_drop with --accept natural, 0 by default; anm_run.py --od_full_drop, #709)
     python3 octo_corrector.py horizon RAW STATE.npz [--threads 3] [--steps 3] [--mutate_h sign]
     python3 octo_corrector.py digits [--mutate 2]
 
@@ -210,6 +211,8 @@ def chord_strong(s, z, d, k, it_max=10, tol=1e-40, tol_dz=1e-45, mutate=0, verbo
 
 
 CHORD_MUT = {}          # chord_strong's control: {"noproj": True} keeps the weak components of each correction
+# newton_od_toy.py's control of full_drop (#709): 'floor1' accepts a full step on any decrease of |F|
+DROP_MUT = {"floor1": False}
 
 
 def junk_subspace_o(s, w, delta_max=1e-2, iters=6, seed=0):
@@ -239,7 +242,8 @@ def junk_subspace_o(s, w, delta_max=1e-2, iters=6, seed=0):
 
 
 def newton_od(s, z, tol=1e-40, it_max=12, max_halvings=8, verbose=True, mutate=0, junk_w=0, delta_max=1e-2, tol_dz=1e-45,
-              lam_stall=0.0, on_first=None, scale_c=None, trace=None, accept="own", strong_chord=0, chord_it=10):
+              lam_stall=0.0, on_first=None, scale_c=None, trace=None, accept="own", strong_chord=0, chord_it=10,
+              full_drop=0.0):
     """Newton in octo-double from the eight-part state z on s (PinnedO, or ElimO around it): newton_qd's mode 'full'
     one level up (hpkernel.driver.newton_qd, its acceptance rule). A trial z + lam dz (lam = 1, 1/2, ...,
     2^-max_halvings) is accepted when the Newton correction there, with its own Jacobian, is smaller than dz (max norms
@@ -268,6 +272,10 @@ def newton_od(s, z, tol=1e-40, it_max=12, max_halvings=8, verbose=True, mutate=0
     Jacobian and LU at the accepted point are formed once, for the next step. The default ("own") judges each trial by
     its own Newton correction, a new Jacobian and LU per trial: near a nearly singular root the weak directions of
     J(z + lam dz) turn against z's, and that correction can be large for a step that brought z closer (#634, #644).
+    full_drop=f > 0 (with accept="natural" only, #709): a full-step trial (lam = 1) is also accepted when its max |F| is
+    at most f times the iterate's, whatever its theta. Near a nearly singular root the simplified correction is the
+    weak directions' amplification of a tiny residual, so theta near 1 there need not mean the step failed. It is not
+    affine-invariant, and 0 (the default) leaves the test as it was.
 
     strong_chord=k > 0 (#674): the first step is taken whole, and then only the strong rows are solved, by the chord
     dw = (I - V V^T) J0^-1 F through the start's LU (chord_strong, V the k weakest right singular directions of J0), at
@@ -389,10 +397,16 @@ def newton_od(s, z, tol=1e-40, it_max=12, max_halvings=8, verbose=True, mutate=0
                 theta = size(proj(db)) / nd if good and nd > 0 else float("inf")
                 ft = omax(Ft) if good else float("nan")
                 ok = good and (theta <= 1 - lam / 4 or ft <= tol)
+                fd = 1.0 if DROP_MUT["floor1"] and full_drop > 0 else full_drop
+                by_drop = bool(not ok and good and fd > 0 and lam == 1.0 and ft <= fd * nf)
+                ok = ok or by_drop
                 if verbose:     # each trial, since anm_run's records keep no corrector history
                     print(f"    on {it} trial lam {lam:g}: max|F| {ft:.2e}; simplified correction / |dz| = {theta:.3e} "
-                          f"(bound {1 - lam / 4:.3f}); {'accepted' if ok else 'refused'}, {round(time.time() - t1, 2)} s",
-                          flush=True)
+                          f"(bound {1 - lam / 4:.3f}); {'accepted' if ok else 'refused'}"
+                          + (f" by the full step's drop (max|F| at most {full_drop:g} of {nf:.2e})" if by_drop else "")
+                          + f", {round(time.time() - t1, 2)} s", flush=True)
+                if by_drop:
+                    rec["by_drop"] = True
                 if ok:
                     # the Jacobian at the accepted point, once, for the next step (ElimO.newton_o without a second
                     # projection)
@@ -564,7 +578,8 @@ def _run_od(so, rs, z8, opt):
     residual converged), the history, converged, the octo-double pinned max |F| there and the projections"""
     el = ElimO(so, rs, switch=float(opt.get("switch", 1e-15)))
     z, hist, conv = newton_od(el, z8, tol=opt["tol"], it_max=opt["it_max"], mutate=opt["mutate"], junk_w=opt.get("junk", 0),
-                              accept=opt.get("accept", "own"), strong_chord=int(opt.get("strong", 0)))
+                              accept=opt.get("accept", "own"), strong_chord=int(opt.get("strong", 0)),
+                              full_drop=float(opt.get("full_drop", 0.0)))
     z = el.project(z)
     return z, hist, conv, omax(so.residual_o(z)), dict(el.counts)
 
@@ -613,7 +628,7 @@ def planted(argv):
     from reseed import Reseeder
     raw, path = argv[0], argv[1]
     opt = _parse(argv[2:], dict(threads=3, rel=1e-12, seed=1, mutate_offset="", mutate=0, it_max=12, qd=1, tol=1e-40, out="",
-                                Delta_ref="", last=0, od=1, accept="own", strong=0, switch=1e-15))
+                                Delta_ref="", last=0, od=1, accept="own", strong=0, switch=1e-15, full_drop=0.0))
     z4, meta = load_q(os.path.join(raw, path))
     z4 = o8(z4)
     D = mp.mpf(meta["D_str"])
@@ -688,7 +703,7 @@ def wall(argv):
     from reseed import Reseeder
     raw, path = argv[0], argv[1]
     opt = _parse(argv[2:], dict(threads=3, mutate_offset="", mutate=0, it_max=12, qd=0, tol=1e-40, out="", F_max=1e-36, junk=0,
-                                reseed_o=0, held_o=0, switch=1e-15))
+                                reseed_o=0, held_o=0, switch=1e-15, accept="own", full_drop=0.0))
     z4, meta = load_q(os.path.join(raw, path))
     D = mp.mpf(meta["D_str"])
     rs = Reseeder(meta, D, threads=opt["threads"], qd=True, od=opt["reseed_o"])
