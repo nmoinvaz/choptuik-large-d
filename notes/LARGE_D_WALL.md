@@ -534,11 +534,11 @@ three of the same authors.
 ## Track C: Δ(D) at D 250–400 from the 1/n series matched below 245 (#801)
 
 **The 1/n series fitted below D 245 gives Δ at D 250, 300 and 400 to 8×10⁻¹¹, 1.3×10⁻¹⁰ and 2.4×10⁻¹⁰.** It sees
-nothing at D 259.9. #603's chain leaves it past 246: erratically at 10⁻¹⁰–10⁻⁷ up to 253.5, then steeply, by 3.7×10⁻² at
-259.74, as a square root at D* ≈ 259.88. A square root of that size cannot be present below 245, so the fold belongs to
-the chain's discrete system (numerical evidence, post hoc). Script: `hp/track_c.py`. Raw: `I801-mac/` of the raw-data
-repository (1a3c1d04). The fit's form and the error rule were pre-registered on #801, with two amendments made on
-planted functions before any fit to the real data.
+nothing at D 259.9. #603's chain leaves it past 246: by 10⁻¹⁰–10⁻⁷ with changing sign up to 253.5, then steeply, by
+3.7×10⁻² at 259.74, as a square root at D* ≈ 259.88. A square root of that size cannot be present below 245, so the
+fold belongs to the chain's discrete system (numerical evidence, post hoc). Script: `hp/track_c.py`. Raw: `I801-mac/`
+of the raw-data repository (1a3c1d04). The fit's form and the error rule were pre-registered on #801, with two
+amendments made on planted functions before any fit to the real data.
 
 **The fit.**
 - Δ = Σ_{j≤K} a_j ε^j, with ε ∈ {1/(D−2), 1/(D−1), 1/D} and K = 12–20. It is weighted least squares in arb at 256
@@ -574,8 +574,9 @@ planted functions before any fit to the real data.
 - **P3, a planted fold of 10⁻⁹√(259.903 − D).** The series misses it by 0.8, 1.3 and 2.6 E at D 250, 255 and 259.5.
 
 **#603's chain past 245.64** (86 states, Δ read from the states):
-- **Up to 253.5** it stays near the series but scatters from 10⁻¹⁰ to 2×10⁻⁷, with changing sign. That is beyond its
-  "fits extrapolated" 4.4×10⁻¹¹, so the chain's own error grows there.
+- **Up to 253.5** it stays near the series but departs by 10⁻¹⁰ to 3×10⁻⁷, with changing sign. That is beyond its
+  "fits extrapolated" 4.4×10⁻¹¹, so the chain's own error grows there. #805 found it to be one smooth term that grows
+  as the weak pivot falls (next section).
 - **From 253.5 to 259.74**, chain − series falls smoothly to −3.7×10⁻². It fits s√(D* − D) + a + b(D − 259) with
   s = 0.060 and D* = 259.878, an rms of 10⁻³ (`fold.log`). D* is near #799's 259.903.
 - **Post hoc:** that square-root term, planted under the formula on the real grid, makes all 135 fits fail (χ²/dof
@@ -584,3 +585,65 @@ planted functions before any fit to the real data.
   chain's fold were the continuum's, its amplitude would have to grow by about 10⁹ between D 245 and 259.8. That fits
   the reading of this note's previous section, that the fold may belong to the discrete system: M = 32, the horizon
   series to order 130, harmonics 5–13 held.
+
+## The chain past the comparison frontier: a term that grows as the weak pivot falls (#805)
+
+**#603's departure from track C's series past D 246 is not scatter. It is one smooth term of the pinned M = 32 system,
+and its size follows that system's smallest LU pivot, |chain − series| ≤ 2.2×10⁻³⁷/p_min from 246 to 253.5.** p_min
+falls as about e^(−1.44D), from 4.4×10⁻²⁷ at 245.6 to 7.6×10⁻³² at 253.5. A rule with twice that constant, calibrated
+on 246–253.4, covers all 66 later states to 259.72, the fold included, at worst at 0.82 of its value. That holds over
+more than eight decades of the departure, from 10⁻¹⁰ at 246 to 3.6×10⁻² at 259.7. Script: `hp/frontier_audit.py`.
+Raw: `I805-mac/` of the raw-data repository. Tests J and 3 and their plants were pre-registered on #805, after the
+per-state table had been seen.
+
+**The candidates the stored states rule out.**
+- **Each state's convergence.** chain_nsr stored each base's series (25 orders, eight parts). The series from D 253.93
+  and 254.31, continued at 200 digits, returns every state within reach, 251.89–254.21, to within 0.26 of its own
+  truncation estimate (the pass bound was 10 times it), and to at most 1.5×10⁻¹³. A local cubic misses the same
+  states by 3–4×10⁻⁸ at 251.9–252.6.
+  - The plants: an entire term growing as 1/p_min, and a square-root pair at 258.6 ± 2.79i, both pass. The same term
+    with per-state errors c(refused + 0.2)/p_min fails by a factor of 10¹⁹. Each jet returns its next prediction to
+    2×10⁻⁶⁶.
+  - Below 251.9 no stored series reaches. There, each step's Δ correction, Δ_state − Δ(prediction) from the stored
+    files, is at most 1.7×10⁻²⁹ over 104 steps from 240 to 259.74 (median 2.6×10⁻³⁵). The octo-double max|F| is
+    5×10⁻⁹³ to 5×10⁻⁶¹.
+- **The plan.** One segment plan (hash 17758509) holds at every state from 240 to 255.8.
+- **The held fit's degree.** chain_fit's err is the spread over the held fit's degree (`data/delta_fits.csv`). From D
+  150 to 231, d6 − d8 grows linearly from 1.1×10⁻¹¹ to 4.0×10⁻¹¹, while p_min falls by 12 decades (5.9×10⁻⁸ to
+  1.3×10⁻²⁰). So the degree spread is not amplified by the weak direction. Continued linearly, it would be about
+  5×10⁻¹¹ at 253.5, against departures of up to 3×10⁻⁷.
+  - The fit itself is extrapolated throughout. `data/held_fit.json` was fitted on D 38–73.
+
+**What the term looks like.**
+- |chain − series|·p_min changes sign between 247.5 and 248.0, 250.2 and 250.5, 253.1 and 253.2, and 256.3 and 256.6.
+  The zeros are 2.5–3.3 apart. Between them its magnitude peaks at 2–3.6×10⁻³⁷.
+- Post hoc, log|chain − series| against log(1/p_min) has slope 1.04 over 246–259.72. The windowed maximum of
+  |chain − series|·p_min varies by a factor 1.8.
+- For the planted 1/p_min term the same statistics are 0.95 and 2.6, and for the square-root pair −0.21 and 1.4×10⁷.
+- The local cubic misses the planted term by a median 0.204 of its value on 248–253, and the real Δ by 0.200. So
+  the local residuals there are the term's own curvature: its scale in D, 1/1.44, is below the six neighbours' span.
+- The sign changes' spacing is near the weak σ's period above (2.7 at D 232.6, lengthening with D). This is an
+  observation, not tested.
+
+**The proposed err for rows past the frontier.**
+
+```math
+\mathrm{err} = \max\left(\text{fits extrapolated},\ 4.4\times10^{-37}/p_\mathrm{min}\right)
+```
+
+- p_min is the state's smallest LU pivot, which the record of the step from that state carries (`pivots[0]`).
+- The term is 1.0×10⁻¹⁰ at 245.64, 4×10⁻⁸ at 250.2 and 5.8×10⁻⁶ at 253.5. It passes the fits term between D 245.14
+  and 245.64.
+- **Error kind:** an envelope of the chain's difference from track C's series. It is calibrated with a factor 2 on
+  246–253.4 and tested out of sample to 259.72. It is an estimate, not a bound.
+- It assumes track C is right past 245 to within its E. E is at most 10⁻¹⁰ there, below the term from 246 on.
+
+**Not settled.**
+- What the weak direction amplifies, a fixed share of about 2×10⁻³⁷ in the LU's units, is not identified. The stored
+  states cannot separate the held values' extrapolation from the discretization. A solve at fixed D with the held fit
+  of another degree would.
+- Whether the continuum shares the term is #801's continuum test, at M = 48 or with the harmonics released.
+- The pre-registered rank correlation with per-state quantities failed its own plants. On this grid every plant names
+  the step size, because a smooth term's local residual grows as the span⁴. So it identifies nothing.
+- #787's λ_g screen fails on the same states from 250.47. A local cubic cannot follow this term once it passes the
+  screen's tolerance. Whether λ_g carries the same 1/p_min law is untested.
