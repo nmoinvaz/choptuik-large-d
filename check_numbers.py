@@ -2561,6 +2561,76 @@ def chain_frontier():
 
 
 @check
+def proposed_readme():
+    """notes/LARGE_D_WALL.md "Proposed README text" (the coordinator moves it into the README, and these texts with it):
+    the chain's reach and the fits err's frontier (hp/data/delta_all.csv), the weak pivot's K (hp/export_delta_all.py),
+    track C's values and limit (hp/data/delta_series.csv, hp/track_c.py csv) and the fold near D 259.9
+    (hp/data/fold_259.csv, hp/fold_table.py)"""
+    import csv
+    import statistics
+    import sys as _sys
+    import mpmath as mp
+    W = "notes/LARGE_D_WALL.md"
+    rows = list(csv.DictReader(open(os.path.join(ROOT, "hp/data/delta_all.csv"))))
+    fit = [r for r in rows if r["kind"] == "chain_fit"]
+    reach = max(float(r["D"]) for r in fit)
+    fits_top = max(float(r["D"]) for r in fit if r["err_kind"].startswith("fits"))
+    _sys.path.insert(0, os.path.join(ROOT, "hp"))
+    from export_delta_all import WP_K
+    ser = {r["D"]: r for r in csv.DictReader(open(os.path.join(ROOT, "hp/data/delta_series.csv")))}
+    with mp.workdps(40):
+        val = lambda r: float(mp.mpf(r["Delta_q0"]) + mp.mpf(r["Delta_q1"]))  # noqa: E731
+    lim = ser["inf"]
+    fold = list(csv.DictReader(open(os.path.join(ROOT, "hp/data/fold_259.csv"))))
+    kept = [r for r in fold if r["plan"] == "kept"]
+    new = {r["D0"]: r for r in fold if r["plan"] == "new"}
+    est = sorted(float(r[f"{e}_Dstar"]) for r in kept for e in ("ratio", "dlog"))
+    dl = [float(r["dlog_mu"]) for r in kept]
+    ra = [float(r["ratio_mu"]) for r in kept]
+    off = [float(new[k][f"{e}_Dstar"]) - float(r[f"{e}_Dstar"]) for k in new for r in kept if r["D0"] == k
+           for e in ("ratio", "dlog")]
+    t_reach = [(W, "harmonics 5–13 of the centre field on a fit, to D = 259.74, below a fold of its discrete system near D = 259.90"),
+               (W, "held on a fit of the full solutions, to D = 259.74."), (W, "becomes \"the chain now reaches 259.74\"."),
+               (W, "\"carries the chain past the wall, to D = 259.74\"")]
+    t_fits = [(W, "comparison ends. To D = 245.64 its error column is the spread over the fit's degree"),
+              (W, "Past 245.64 the chain leaves the 1/n series of the next bullet")]
+    t_wp = [(W, "column is 4.4×10⁻³⁷/p_min (err_kind \"weak pivot\")")]
+    t_ser = [(W, "1.684955205950\n  ± 8.0×10⁻¹¹ at D = 250, 1.678171015415 ± 1.24×10⁻¹⁰ at 300 and 1.669658064111 ± 2.33×10⁻¹⁰ at 400.")]
+    t_lim = [(W, "1.6438937453 ± 1.9×10⁻⁹, lies inside the Δ∞ above.")]
+    t_fold = [(W, "at eight bases from D = 259.26 to 259.67 place a square-root"),
+              (W, "D* = 259.903 is the median of the sixteen\n    estimates, from 259.900 to 259.905.")]
+    t_mu = [(W, "Δ's exponent there is 0.45 to 0.48 by Dlog Padé"), (W, "and 0.52 to 0.72 by a ratio fit.")]
+    t_new = [(W, "moves D* by +0.010 to +0.011 at the two bases where it")]
+    return [("the chain's reach", reach, 259.74, 0.01, t_reach),
+            ("the fold's D*, to 0.01", statistics.median(est), 259.90, 0.01, t_reach),
+            ("the highest chain_fit row with the fits err", fits_top, 245.64, 0.01, t_fits),
+            ("the weak pivot's K", WP_K, 4.4e-37, 0.1e-37, t_wp),
+            ("the series at D 250", val(ser["250.0"]), 1.684955205950, 1e-12, t_ser),
+            ("its E at D 250", float(ser["250.0"]["E"]), 8.0e-11, 0.1e-11, t_ser),
+            ("the series at D 300", val(ser["300.0"]), 1.678171015415, 1e-12, t_ser),
+            ("its E at D 300", float(ser["300.0"]["E"]), 1.24e-10, 0.01e-10, t_ser),
+            ("the series at D 400", val(ser["400.0"]), 1.669658064111, 1e-12, t_ser),
+            ("its E at D 400", float(ser["400.0"]["E"]), 2.33e-10, 0.01e-10, t_ser),
+            ("the series' limit", val(lim), 1.6438937453, 1e-10, t_lim),
+            ("the limit's E", float(lim["E"]), 1.9e-9, 0.1e-9, t_lim),
+            ("the limit inside Delta_inf's bar (1 = yes)", int(abs(val(lim) - 1.643893746) <= 1.5e-8), 1, 1, t_lim),
+            ("bases on the chain's plan", len(kept), 8, 1, t_fold),
+            ("their first D", min(float(r["D0"]) for r in kept), 259.26, 0.01, t_fold),
+            ("their last D", max(float(r["D0"]) for r in kept), 259.67, 0.01, t_fold),
+            ("estimates of D*", len(est), 16, 1, t_fold),
+            ("D*, their median", statistics.median(est), 259.903, 0.001, t_fold),
+            ("D*, the smallest", est[0], 259.900, 0.001, t_fold),
+            ("D*, the largest", est[-1], 259.905, 0.001, t_fold),
+            ("the Dlog exponent, the smallest", min(dl), 0.45, 0.01, t_mu),
+            ("the Dlog exponent, the largest", max(dl), 0.48, 0.01, t_mu),
+            ("the ratio exponent, the smallest", min(ra), 0.52, 0.01, t_mu),
+            ("the ratio exponent, the largest", max(ra), 0.72, 0.01, t_mu),
+            ("bases on the new plan", len(new), 2, 1, t_new),
+            ("the new plan's shift of D*, the smallest", min(off), 0.010, 0.001, t_new),
+            ("the new plan's shift of D*, the largest", max(off), 0.011, 0.001, t_new)]
+
+
+@check
 def series_rows():
     """notes/LARGE_D_WALL.md "Track C": its Delta and E at D 250, 300 and 400 are the series rows of
     hp/data/delta_all.csv (#804; hp/data/delta_series.csv, written by hp/track_c.py csv)"""

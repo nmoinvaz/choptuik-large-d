@@ -709,3 +709,76 @@ to 245.64.
 - It passes all 121 states at 5.1×10⁻³¹. Its control, one state's λ_g moved by 10⁻¹⁰, fails. In the exporter that
   control is `--mutate=lam_pred`, at the state nearest D 255.
 - The polynomial screen stays where it passes, below 250.46, and wherever no prediction is stored.
+
+## Proposed README text
+
+Drafted for the coordinator, who edits the README. Each block below replaces the README passage named above it, and
+the README's table of values is left to the coordinator.
+
+**Where each number comes from.**
+- The chain's reach and the weak pivot's err: `hp/data/delta_all.csv` and `hp/export_delta_all.py`.
+- The series: `hp/data/delta_series.csv`, from `hp/track_c.py csv`. Its limit is that file's "limit" row.
+- The fold: `hp/data/fold_259.csv`, from `hp/fold_table.py`. It collects the runs of #792, #794, #795 and #799 from the
+  raw-data repository.
+
+**The checks.** `check_numbers.py` checks each number here (proposed_readme). When the text moves into the README,
+those checks move with it. Then chain_reach and chain_frontier, which still check the README's 245.6, are dropped.
+
+**1. The introduction** (README lines 16–17, the end of the paragraph "Choptuik's critical solution is …"):
+
+```text
+precision across spacetime dimensions D from 3.044 to 73, and past 73 by a chain in quad- and octo-double that holds
+harmonics 5–13 of the centre field on a fit, to D = 259.74, below a fold of its discrete system near D = 259.90
+(numerical evidence).
+```
+
+**2. How it is done, Solvers** (line 76): "… held on a fit of the full solutions, to D = 245.6." becomes
+
+```text
+  octo-double, with harmonics 5–13 of the centre field held on a fit of the full solutions, to D = 259.74.
+```
+
+**3. Values, the kinds of computation** (lines 536–541, the chain's bullet), replaced by two bullets:
+
+```text
+- the large-D chain from 74. The chain holds harmonics 5–13 of p1 on a fit of the full-system states (kind chain_fit).
+  It agrees with the 1/D series of the double-double points to within the series' own spread, to D = 215, where that
+  comparison ends. To D = 245.64 its error column is the spread over the fit's degree, where a rerun on the fits of
+  degree 6 and 10 reached a D, directly or interpolated in 1/(D − 2) (`hp/export_delta_all.py`,
+  [notes/QUAD_DOUBLE.md](notes/QUAD_DOUBLE.md), 13.25). Past 245.64 the chain leaves the 1/n series of the next bullet,
+  by one smooth term of its discrete system that grows as the system's smallest LU pivot p_min falls. There the error
+  column is 4.4×10⁻³⁷/p_min (err_kind "weak pivot"), an envelope of that departure, an estimate, not a bound
+  ([notes/LARGE_D_WALL.md](notes/LARGE_D_WALL.md), "The chain past the comparison frontier").
+- the 1/n series fitted to these rows up to D = 245.64 (track C), every 10 from D = 250 to 400 (kind series).
+```
+
+**4. Values, a bullet after "D = 1000 and ∞ assume analyticity in 1/D"** (line 562):
+
+```text
+- **Δ for D = 250–400** is the 1/n series fitted to the rows up to D = 245.64 (track C, `hp/track_c.py`): 1.684955205950
+  ± 8.0×10⁻¹¹ at D = 250, 1.678171015415 ± 1.24×10⁻¹⁰ at 300 and 1.669658064111 ± 2.33×10⁻¹⁰ at 400. Its limit,
+  1.6438937453 ± 1.9×10⁻⁹, lies inside the Δ∞ above. Each ± is a spread over fit choices, calibrated on planted
+  functions. It is not a bound, and it is conditional on Δ being analytic in 1/n below D = 245, up to exponentially
+  small terms ([notes/LARGE_D_WALL.md](notes/LARGE_D_WALL.md), "Track C").
+```
+
+**5. The wave-family caption** (lines 955–956): "the chain now reaches 245.6" becomes "the chain now reaches 259.74".
+
+**6. Limits and open problems, the large-D wall** (line 1974): "carries the chain past the wall, to D = 245.6" becomes
+"carries the chain past the wall, to D = 259.74", and a sub-bullet follows that one:
+
+```text
+  - **A fold near D = 259.9.** The chain's Taylor series at eight bases from D = 259.26 to 259.67 place a square-root
+    branch point of Δ on the real axis, where the branch folds back. D* = 259.903 is the median of the sixteen
+    estimates, from 259.900 to 259.905.
+    - Δ's exponent there is 0.45 to 0.48 by Dlog Padé, which returns an isolated planted square root
+      (`hp/singularity_type.py planted`), and 0.52 to 0.72 by a ratio fit.
+    - A plan made at the state, on a base that did not converge, moves D* by +0.010 to +0.011 at the two bases where it
+      was run.
+    - The 1/n series fitted below D = 245 shows nothing there, and a square root of that size planted in the data
+      below 245 makes every fit of it fail.
+    - So the fold belongs to the chain's discrete system, its resolution and truncations with harmonics 5–13 held,
+      not to the continuum as far as the data below 245 show. This is numerical evidence
+      ([notes/LARGE_D_WALL.md](notes/LARGE_D_WALL.md), "Where the series is singular" and "Track C";
+      [`hp/data/fold_259.csv`](hp/data/fold_259.csv)).
+```
