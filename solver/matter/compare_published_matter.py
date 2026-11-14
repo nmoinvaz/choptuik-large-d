@@ -1,6 +1,14 @@
 #!/usr/bin/env python3
 """Every published value of matter/published_values.csv against ours, in matter/published_compare.csv.
 
+matter/published_values.csv holds the published values for the matter models of matter/: the kappa-model CSS
+(matter/CSS.md; kappa = 0 the free complex scalar, kappa = 1 the axion-dilaton), with the uncertainty each publication
+states and the file ours is read from. It is plain CSV with no comment lines, so that GitHub renders it. Its references
+are the keys of matter/CSS.md's reference list, where each was verified; ref_url is the paper's arXiv page (the IDs of
+matter/LITERATURE.md's reference list). unc_abs is the stated uncertainty, or half a unit of the last printed digit
+where none is stated (unc_kind "rounding bound (none stated)"). ours_source is a path in this repository or raw:<path>
+in the raw-data repository; ours_key names the field of the record with the row's D and kappa.
+
     python3 solver/matter/compare_published_matter.py RAW            write the table
     python3 solver/matter/compare_published_matter.py RAW --check [--mutate=ours]
 
