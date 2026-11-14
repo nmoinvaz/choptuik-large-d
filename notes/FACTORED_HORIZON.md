@@ -338,6 +338,37 @@ term's effect thus levels off near 1.06×10⁻¹² from w = 0, most of it gained
 for w = 3/8, 13/32, 7/16, 15/32 and 1/2: a smooth turn with its peak near w = 7/16, 6×10⁻¹⁵ high, against a last step's
 dΔ of at most 4×10⁻⁵¹ at each rung. The climb on to w = 1, a converged order-132 base, is #796.
 
+### 4.7 Track A: the tail homotopy (#800; design, criteria fixed before any code)
+
+**Why the tail and not the jump.** By 4.2–4.3 the weak σ fall in D at the rate the truncation at ks = 130 loses the
+selection's grip, so raising ks to about 1.9 Re s (4.4) should restore the grip and the conditioning together. The jump
+does not get there: from the ks-130 state the first Newton step at ks 132 reaches max|F| 1e20 and at ks 300 the run never
+leaves its start (#696). The weighted climb in one order converges rung by rung (#744, #783, #796). So the first stage
+generalizes it from one order to the whole tail.
+
+**The option.** `Ctx` gets `ks_w_from`: the horizon series' orders ks_w_from..ks are multiplied by ks_w (today's
+`--ks_w` is the case ks_w_from = ks). At ks_w = 0 the system is the order-(ks_w_from − 1) truncation bit for bit, and at 1
+the order-ks one. A rung from w to w' changes the residual by (w' − w) times the tail's terms, about 2×10⁻¹² in the p
+rows at D 253.8 (#693), so the rungs stay small where the weak σ is small and may grow as the grip returns.
+
+**Stage 1, at D 245.1366** (win2's build of wip/i744, extended): the tail 131..250 climbed in w from #696's r130k base
+(re-planned, converged there). Criteria: (1) w = 0 equals r130k to the bit; (2) each rung converges, or the first that
+does not is reported with its projection lines; (3) at w = 1, Δ against the single-order climb's (#796) and the model's
+estimate of T_omit/σ_∞ (4.3, M5: 2.7×10⁻¹² at D 245.14, a conjecture good to a factor 100); (4) σ₁–σ₄ (`near_null.py`)
+at w = 0, 1/2 and 1: the reading of 4.3 holds if σ₃ rises with w by the model's −ln f (μ = 1) within 30%, and fails if
+it changes by less than a factor 2.
+
+**Stage 2, at the fold** (only if stage 1 meets (2) and (4)): the same climb at #603's state D 259.4928 to ks ≈ 1.9 Re s,
+then the series there (#776's command) and #782's estimators. The fold is the truncation's if D* moves by more than
+0.05 or the exponent leaves the square-root band; it is the continuum's if D* stays within the two plans' 0.01.
+
+**Stage 3** (only if stage 2 removes the fold or moves it past the chain's reach): the chain run on with the climbed ks.
+
+Not chosen for now: the tail summed in closed form from Proposition 3's transport (4.4), which changes the problem by
+the WKB error, O(1/n), and would need its own planted tests. It stays the fallback if stage 1 fails (2).
+
+## 5. Plan for hp's model and the planted tests
+
 hp/src is not changed by this task.
 
 **The truncation (first).**
