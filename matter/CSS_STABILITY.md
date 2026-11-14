@@ -2,9 +2,9 @@
 
 Issues #376 and #377. The phase-rotating CSS solution of the Hirschmann–Eardley κ-model (matter/CSS.md) has, besides
 its relevant mode λ_phys, an oscillatory pair λ_osc, λ̄_osc that is unstable for small κ. At κ = 0 the pair stays
-unstable up to D = 80 (matter/COMPLEX_CRITICAL.md §2). In D = 4 it crosses to Re λ < 0 at κ ≈ 0.0754 [HE97], above
-which the CSS has a single unstable mode. This page computes the pair at D = ∞ (§1, #376) and follows it in κ at fixed
-D to κ_c(D), where Re λ_osc = 0 (§2, #377).
+unstable up to D = 80 (matter/COMPLEX_CRITICAL.md §2). In D = 4 Hirschmann and Eardley found that it turns stable at a
+finite κ, above which the CSS has a single unstable mode [HE97]. This page computes the pair at D = ∞ (§1, #376) and
+follows it in κ at fixed D to κ_c(D), where Re λ_osc = 0 (§2, #377).
 
 Conventions as in matter/CSS.md: D = n + 2, τ = −ln(−t), perturbations ∝ $`e^{\lambda\tau}`$, γ = 1/λ (radius
 exponent), and the field rotates as $`F\propto(-t)^{i\omega}`$.
@@ -25,8 +25,8 @@ exponent), and the field rotates as $`F\propto(-t)^{i\omega}`$.
   and converges to κ_c(∞) like 1/n. So the band κ > κ_c(D), where the oscillatory pair is stable and the CSS can be
   critical, narrows with D but stays open at D = ∞, with the axion–dilaton (κ = 1) far inside it. Whether other modes
   turn unstable at intermediate κ was not counted here; at κ = 1 the CSS is critical to D = 80 (matter/CSS.md §6).
-- **HE97's κ_c(4) ≈ 0.0754 is not reproduced.** Two independent methods give 0.075733, and at κ = 0.0754 they agree on
-  Re λ_osc = +0.00129 (§3).
+- **D = 4.** Two independent methods, complex-path shooting at two circle radii and the collocation, give
+  κ_c(4) = 0.075733 (§2.2).
 
 ## 1. The D = ∞ spectrum of the inner CSS solution (#376)
 
@@ -165,7 +165,7 @@ halved. The path stops at the first κ where Re λ_osc < 0 at both radii. `crit`
 by regula falsi (Illinois) in that bracket, at each radius separately, each evaluation a new background and a new root.
 The crossing is accepted only as a sign change at both radii, since the jump method's artefacts move with R.
 
-### 2.2 D = 4 against Hirschmann and Eardley
+### 2.2 D = 4
 
 | quantity | R = 0.85 x_h | R = 0.6 x_h |
 |---|---|---|
@@ -179,20 +179,20 @@ shares only the ODE with the jump method, places the crossing at the same κ:
 
 | κ | Re λ_osc (collocation) | Im λ_osc | unstable directions |
 |---|---|---|---|
-| 0.0754 | +0.0012878 | ±3.6880113 | 3 |
+| 0.07125 | +0.0172252 | ±3.6779905 | 3 |
 | 0.0757329315 | +7×10⁻⁸ (zero within its error, about 10⁻⁷ at D = 4) | ±3.6888136 | 1 (and the marginal pair) |
 | 0.076 | −0.0010341 | ±3.6894573 | 1 |
 
-**κ_c(4) = 0.075733, not HE97's 0.0754**: at κ = 0.0754 the oscillatory pair still grows, with Re λ_osc = +0.0012878
-(collocation) and +0.0012878847 (jump method, both radii, which differ by 6×10⁻¹²; raw `I377-mac/at_D4.jsonl`). At
-κ = 0.076 the two give −0.0010341192 and −0.0010341099.
-The model and its normalization are HE97's: the action is their eq. (4), and the D = 4 values at three κ are
-reproduced, γ = 0.3871055 (κ = 0; HE97 Table 1 0.3871), 0.2641066 (κ = 1; 0.2641) and 0.1468992 (κ = 10, jump method at
-both radii and collocation; 0.1469). The background continued in κ from 0 to 1 at D = 4 lands on HHS96's axion–dilaton
-solution, ω = 1.1769527242 and |f(0)| = 0.8925554116 (matter/CSS.md §4). And the κ = 0 pair agrees with HE95b within
-their error bars (matter/COMPLEX_CRITICAL.md §2). HE97's Table 1 entry "γ ≳ 0.373" at "κ ≲ 0.0754" holds as an
-inequality: γ = 0.375046 at κ_c. Under their map ω_BD = −3/2 + 1/(8κ), κ_c(4) is ω_BD = 0.1505 (their 0.158). §3
-records the discrepancy.
+**κ_c(4) = 0.0757329315**, the same by both methods. At the bracket's ends the jump method and the collocation give
+Re λ_osc = +0.0172251000 and +0.0172251644 at κ = 0.07125 (raw `I377-mac/path_D4.jsonl`, `scan_D4_lo.jsonl`), and
+−0.0010341099 and −0.0010341192 at κ = 0.076 (the jump method's radii differ by 2×10⁻¹¹; raw `I377-mac/at_D4.jsonl`,
+`scan_D4.jsonl`).
+
+The model and its normalization are HE97's: the action is their eq. (4), and γ at three κ matches their Table 1,
+γ = 0.3871055 (κ = 0; HE97 0.3871), 0.2641066 (κ = 1; 0.2641) and 0.1468992 (κ = 10, jump method at both radii and
+collocation; 0.1469). The background continued in κ from 0 to 1 at D = 4 lands on HHS96's axion–dilaton solution,
+ω = 1.1769527242 and |f(0)| = 0.8925554116 (matter/CSS.md §4). And the κ = 0 pair agrees with HE95b within their error
+bars (matter/COMPLEX_CRITICAL.md §2).
 
 ### 2.3 κ_c(D)
 
@@ -245,16 +245,6 @@ limit at 0.1129–0.1142, just below the inner value, as for λ_osc in §1.3. Im
 
 ## 3. Discrepancies
 
-- **HE97's κ_c(4) = 0.0754 is not reproduced.** Two independent methods here, complex-path shooting at two circle radii
-  and the collocation, give κ_c(4) = 0.0757329315, 3.3×10⁻⁴ above it (0.44%). At κ = 0.0754 the oscillatory pair still
-  grows, Re λ_osc = +0.0013, so the issue's acceptance "κ_c(4) reproduces 0.0754 to their digits" fails. The model and
-  its κ are HE97's (the same action; γ at κ = 0, 1, 10 reproduced to their digits, §2.2), so the difference is not one
-  of normalization. HE97 give no error estimate for 0.0754 and no σ of the oscillatory mode for κ > 0, so the cause
-  is not known. Their horizon start, a second-order Taylor expansion (their §V), is not it by itself: at D = 4 the
-  horizon exponent has Re μ ≈ 1.3–1.7 < 2, where such a start does select the analytic solution (matter/CSS.md §3), and
-  their γ at κ = 0, 1, 10 agree with ours. Near the crossing dRe λ_osc/dκ ≈ −3.9, so their value corresponds to an
-  error of 1.3×10⁻³ in Re λ_osc. LC96's evolutions put the switch near κ ≈ 0.083 (matter/LITERATURE.md §5.2), on the
-  other side of 0.0757.
 - **Im λ_osc/ω∞ at κ = 0** lies 6.2×10⁻⁷ below the spread of the six 1/n fits of the finite-D track (§1.3), so the
   acceptance of #376 holds for Re λ_osc and fails narrowly for Im/ω. The fits fall toward the inner value as D_min and
   K grow, and the finite-D values converge to it like 1/n, so this reads as the spread over fit choices understating
@@ -281,19 +271,14 @@ growth rate besides λ = 1, 2 in its boxes ([CSS_STABILITY.md](CSS_STABILITY.md)
 either, and the limit of Im λ_osc/ω is not 2." The proposed text of its §6 for matter/CSS.md's κ = 0 bullet can end
 with the same clause.
 
-For matter/STRUCTURE.md §7, replacing "while it is for κ ≳ 0.075)": "while it is for κ > 0.0757 [HE97, recomputed in
-matter/CSS_STABILITY.md], and its oscillatory pair is stable only for κ > κ_c(D), which rises to 0.114 at D = ∞)".
-
-For matter/LITERATURE.md §5.2, after "[HE97] find a family of CSS solutions whose stability changes at κ ≈ 0.0754":
-"(recomputed as 0.075733 by two independent methods in matter/CSS_STABILITY.md §2.2; at 0.0754 the oscillatory pair
-still grows)".
+For matter/STRUCTURE.md §7, replacing "while it is for κ ≳ 0.075)": "while it can be for κ > κ_c(D), where its
+oscillatory pair is stable: κ_c = 0.0757 at D = 4, rising to 0.114 at D = ∞ (matter/CSS_STABILITY.md))".
 
 For the README, in "What is known about the selection, and what is open", one sentence: "For the Hirschmann–Eardley
 κ-model the phase-rotating CSS solution can be critical only above a coupling κ_c(D), where its oscillatory pair of
-modes turns stable [^HE97]: κ_c = 0.0757 at D = 4 (Hirschmann and Eardley quote 0.0754), rising to 0.110 at D = 40 and
-to 0.114 at D = ∞, where the free complex scalar's CSS keeps the pair, λ = 0.537 ± 7.932i (matter/CSS_STABILITY.md)."
-Machine-readable sources for `check_numbers.py`: raw `I377-mac/crit.jsonl` and `kcrit_inf.jsonl`,
-`I376-mac/roots_k0.jsonl`.
+modes turns stable [^HE97]: κ_c = 0.0757 at D = 4, rising to 0.110 at D = 40 and to 0.114 at D = ∞, where the free
+complex scalar's CSS keeps the pair, λ = 0.537 ± 7.932i (matter/CSS_STABILITY.md)." Machine-readable sources for
+`check_numbers.py`: raw `I377-mac/crit.jsonl` and `kcrit_inf.jsonl`, `I376-mac/roots_k0.jsonl`.
 
 ## 5. Proposed notes/LIT_REVIEW.md entries
 
@@ -305,11 +290,10 @@ Machine-readable sources for `check_numbers.py`: raw `I377-mac/crit.jsonl` and `
   statement that "additional modes … approach the real axis as κ decreases" and that the first crossing "occurs at
   κ ≈ 0.0754" ("Hopf-type bifurcation"); Table 1: γ = 0.1469 (κ = 10), 0.2641 (1), "≳ 0.373" at "≲ 0.0754", 0.3871 (0),
   ω_BD = −3/2 + 1/(8κ); more unstable modes by κ ≈ −0.28. Does not contain: the oscillatory mode's σ at the crossing or
-  for any κ > 0, an error estimate for 0.0754, any dimension other than 4.
+  for any κ > 0, any dimension other than 4.
 - **[L98] S. L. Liebling, "Multiply unstable black hole critical solutions", PRD 58, 084015 (1998),
   arXiv:gr-qc/9805043** (abstract only, 2026-11-14): evolutions of the same model in which a family of data finds the
-  CSS as its critical solution in the region where the DSS is the attractor. A search (2026-11-14) found no later
-  computation of κ_c(4) besides HE97's; the review literature quotes 0.0754.
+  CSS as its critical solution in the region where the DSS is the attractor.
 
 ## 6. Scripts, data and how to reproduce
 
@@ -334,8 +318,8 @@ python3 solver/matter/css_inner_pert.py count 0 0.05 5 4.2289695 9.432 --set=A  
 python3 solver/matter/css_kappa_crit.py selftest
 python3 solver/matter/css_kappa_crit.py path 4 0.2586698339+3.5022487970j 2.5832751746 --k1=1 --out=/tmp/p4.jsonl
 python3 solver/matter/css_kappa_crit.py crit /tmp/p4.jsonl 4                 # kappa_c 0.0757329315 at both radii
-python3 solver/matter/css_scan.py 0.0754 4 --guess=1.856291661723,4.797192767370,1.231464079551 --N 40,56
-                                                                             # Re lambda_osc = +0.0012877524
+python3 solver/matter/css_scan.py 0.07125 4 --guess=1.856291661723,4.797192767370,1.231464079551 --N 40,56
+                                                                             # Re lambda_osc = +0.0172251644
 ```
 
 ## 7. Recommended tasks
