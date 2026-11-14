@@ -11,6 +11,12 @@ the inverse normal matrix), F from the planted test.
 
     cd hp && python3 track_c.py planted [--out=FILE]         P0-P4 on the real D grid with noise N(0, sigma)
     cd hp && python3 track_c.py real [--F=1] [--out=FILE]     the real data
+    cd hp && python3 track_c.py csv [--out=data/delta_series.csv]    the series for hp/export_delta_all.py (#804)
+
+csv: the estimate at D 250, 260, ..., 400 (use "row", the table's series rows) and at every chain_fit row of
+data/delta_all.csv past D 245.64 (use "chain", for the exporter's check of the weak pivot's err, #806): Delta in two
+parts, E, h, s and err_kind ("series fits" where h >= s, else "series data"), with the fingerprint of the rows fitted
+(export_delta_all.series_input) in every row.
 """
 import csv
 import json
@@ -34,6 +40,7 @@ DEGS = (12, 14, 16, 18, 20)
 DMINS = (10, 20, 30, 45, 60, 80, 100, 130, 160)   # second amendment (#801): the fit starts as low as the data allow
 CHI_MAX = 4
 TARGETS = [245.64, 250, 255, 259.5, 300, 400]
+GRID = [250 + 10 * i for i in range(16)]           # the table's series rows, D 250 to 400 (#804)
 # the README's rational formula for Delta (a known series in eps = 1/n)
 RA = ["1.6438975180", "4.0378045077e1", "2.5233285989e2", "2.0673502321e2", "-3.5709850575e2", "3.1347320996e2",
       "-4.1891374574e2", "3.2695252782e2", "-1.6050467699e2"]
@@ -146,7 +153,7 @@ def estimate(fits, D, Fc=1.0):
     D0, acc = levels(fits)
     if len(acc) < 5:                                # an estimate needs at least 5 accepted fits
         return None
-    vals = sorted((float(f["ev"](D) - arb("1.6")), f) for f in acc)  # offset for float resolution
+    vals = sorted(((float(f["ev"](D) - arb("1.6")), f) for f in acc), key=lambda t: t[0])  # offset for float resolution
     vs = [v for v, _ in vals]
     med_i = len(vs) // 2
     central = vals[med_i][1]
@@ -314,6 +321,38 @@ def cmd_real():
     return out
 
 
+def cmd_csv():
+    """data/delta_series.csv for export_delta_all.py: the series rows and its values at the chain past 245.64"""
+    dps = mp.mp.dps
+    import export_delta_all as X                    # its import sets mpmath's precision; restored below
+    mp.mp.dps = dps
+    table = list(csv.DictReader(open(os.path.join(HERE, "data", "delta_all.csv"))))
+    tag = X.series_input(table)
+    real = load_real()
+    fits = all_fits(real)
+    D0, used = levels(fits)
+    chain = [r["D"] for r in table if r["kind"] == "chain_fit" and float(r["D"]) > DMAX + 1e-9]
+    out = []
+    for use, Ds in (("row", [X.fmt(D) for D in GRID]), ("chain", chain)):
+        for Ds_ in Ds:
+            est = estimate(fits, mp.mpf(Ds_))
+            x = mp.mpf(est["value"].mid().str(50, radius=False))
+            q0 = float(x)
+            out.append(dict(D=Ds_, Delta_q0=repr(q0), Delta_q1=repr(float(x - q0)), E="%.2e" % est["E"],
+                            h="%.2e" % est["h"], s="%.2e" % est["s"],
+                            err_kind="series fits" if est["h"] >= est["s"] else "series data", use=use, input=tag))
+    path = args.get("out", os.path.join(HERE, "data", "delta_series.csv"))
+    with open(path, "w", newline="") as fh:
+        w = csv.DictWriter(fh, fieldnames=list(out[0]))
+        w.writeheader()
+        w.writerows(out)
+    print("series: %d points to D %.2f, D0 = %s, %d fits used; %d rows (D %s to %s) and %d chain values -> %s "
+          "(input %s)" % (len(real), max(real), D0, len(used), len(GRID), GRID[0], GRID[-1], len(chain), path, tag))
+    for r in out[:1] + [o for o in out if o["use"] == "row" and float(o["D"]) in (300.0, 400.0)]:
+        print("  D %s: Delta %.12f, E %s (%s)" % (r["D"], float(mp.mpf(r["Delta_q0"]) + mp.mpf(r["Delta_q1"])),
+                                                 r["E"], r["err_kind"]))
+
+
 def cmd_fold():
     """post hoc (D 259.9): (1) chain - series on its steep range fitted to s sqrt(D* - D) + a + b (D - 259);
     (2) the same square-root term planted under P0 on the real grid, through the pre-registered fits: can the data
@@ -362,6 +401,9 @@ if __name__ == "__main__":
         sys.exit(0)
     if cmd == "real":
         cmd_real()
+        sys.exit(0)
+    if cmd == "csv":
+        cmd_csv()
         sys.exit(0)
     if cmd == "planted":
         cmd_planted()
