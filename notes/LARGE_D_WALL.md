@@ -497,3 +497,36 @@ terms there, 7×10⁻¹⁴ to 4×10⁻¹³, are summed to that accuracy. So the 
 truncation nor its middle orders. They are the corrector's, in the step after its first move, where the residual
 rises quadratically in the strong rows ("The jump after the first move" above). The residuals after the first move
 overlap. 6.8×10⁻²⁷ was accepted from D 242.71, and 4.0×10⁻²⁸ was refused from D 236.13.
+
+## What the literature offers (#802)
+
+**No paper reports a turning point, a fold or an end of the self-similar critical branch at large D.** The furthest
+outside computation is Ecker, Ecker and Grumiller's to D = 200 (arXiv:2611.07007, here EEG26b), below the square-root
+point near D* ≈ 259.9 found above. What the literature adds for our discrete problem is a diagnosis that matches ours
+(the horizon's singular branch is hard to tell from the regular one at large D, with an exponent growing like D/2) and
+one cheap test. The sources, read from their arXiv TeX, are recorded in notes/LIT_REVIEW.md, addendum of 2026-11-14
+(#802).
+
+**The explicit answer on a turning point: no.** EEG26b: "we construct critical DSS solutions up to D=200" (section
+"Numerical results") and "Thus, critical collapse remains DSS at large D" (section "Summary and outlook"). Their Table 1
+lists Δ to six decimals up to D = 200, in steps that widen from 0.0005 near D = 3 to 1 above D = 28 (EEGJ's values below
+5.5). They state no reason for stopping there and report no difficulty at the top besides the rising precision. The
+nearest statements are extrema of the observables, not ends of the branch:
+- Sorkin and Oren (hep-th/0502034, Introduction) write "This extrapolation seems to indicate that Δ reaches a minimum
+  and γ has a maximum somewhere in between 11≤D≤13", from evolutions that stop at D = 11.
+- EEGJ (arXiv:2602.10185, Sec. 5.2) find one maximum of Δ, at D_crit = 3.755726 ± 10⁻⁶.
+- Clark and Pimentel's "two critical dimensions, D=6 and D=10" (arXiv:2504.10590, Sec. 5) concern the spectrum of
+  CSS-breaking perturbations.
+
+The issue names EEGJ (SciPost Phys. 20, 176) as the D = 200 work. EEGJ stop at D = 5.5. The D = 200 work is EEG26b, by
+three of the same authors.
+
+| formulation idea | paper and equation | applies to our discrete problem? |
+|---|---|---|
+| Fourier × Chebyshev spectral Newton in Reiterer–Trubowitz's quadratic variables, with exact dyadic (gmp) arithmetic, the Jacobian inverted at a precision that rises with D, and steps of ½ in D from a linear predictor | EEG26b, section "Numerical setup" and the SM's "Choice of numerical scheme"; 40 × 80 modes, 11,200 unknowns | Evaluated in notes/RT_FORMULATION.md: it does not avoid our horizon wall, since its Chebyshev system's smallest singular value falls with the resolution at a rate that grows with D. EEG26b give no precision, conditioning or resolution test at D = 200, so their run says nothing about D > 200. Their Δ table already serves as a check to D = 200 (`hp/data/delta_published_compare.csv`). |
+| More Taylor terms at the SSH, to separate the regular branch from the singular one, whose exponent is δ = (2⟨ψ₋₀²⟩ + D − 4)/(2 − 2⟨ψ₋₀²⟩) | EEGJ Sec. 8.1, Sec. 8.3 ("Large D") and App. B (`eq:appB7`); EEG26b's SM, "(1−x)^{(D−4+f(D))/(2−f(D))}" | Our solver imposes the convergent horizon series, not a condition of fixed order. In the linear toy of notes/LARGE_D_LITERATURE.md (e) that series builds the regular branch exactly, at every exponent. In our gauge the exponent is Re s = n/(2(1 + c₁)) − 1, ≈ (D − 4)/2 when c₁ is small (notes/QUAD_DOUBLE.md 13.1; c₁ = −0.141 at D 40 gives 21.1 against 18). The recurrence's operator at order k, ωD + κ_k with κ_k = (k + 1)(1 + c₁) − n/2, changes the sign of its real part at k ≈ Re s. If c₁ is small at D*, Re s ≈ 128 there, next to the chain's horizon order of 130. Whether the fold near D* is tied to that order is untested. The recommended task of #802 tests it. |
+| The large-D expansion in ε = 1/(D − 1), with the rescaled free function β̃ and a fitted model profile (q ≈ 0.0551, phase 0.0985) | EEG (arXiv:2601.14358); EEG26b, section "Refined large-D analytics" | Only as a seed or for the bulk. Its leading order admits any periodic β and any Δ (EEG). It "converges fast in the center and slowly at the SSH" (EEG, at D = 300), and EEG26b expect large-D numbers to need "instanton corrections of the form e^{−1/ε}". It cannot stand in for the horizon condition, which is what selects Δ. |
+| The large-D effective theory: a near-horizon layer of width r₀/D in the variable 𝖱 = rⁿ, integrated out into effective equations, with corrections from outside it exponentially small in 1/n | Emparan, Suzuki, Tanabe (arXiv:1302.6382, the equation labelled `sR`); Emparan et al. (arXiv:1504.06489, Sec. 1); Emparan, Rafecas-Ventosa, Way (arXiv:2512.14186); Emparan and Herzog Sec. X.C | Not as a cure. These treat black-hole horizons, not the SSH of a self-similar solution, and no version for self-similar collapse was found. A change of radial variable leaves the branch exponents as they are (notes/LARGE_D_LITERATURE.md (e)). A 1/n treatment of a layer at the SSH would make the regular–singular distinction exponentially small in 1/n, which no order of 1/n carries. |
+| Rozali and Way's scaling τ = √D t, with D-free leading-order equations of heat type | arXiv:1807.10283, Sec. 2.2 and Eqs. (9) | Not directly: their gauge "cannot have the continuous or discrete self-similarity exhibited by the finite D critical solution" (their Conclusions). The project's n-free inner problem is its self-similar counterpart (LIT_REVIEW C4). |
+| Matched asymptotics (method of regions) in self-similar time: a region near the saddle point on x ∼ √(2ε) and a strong-gravity region on x_C ∝ (x + c)/ε | Clark and Pimentel, Sec. 3 and App. A, for the CSS ODE | A template for track C at most. For DSS they write it "would require the development of additional techniques" (Sec. 5), and no DSS version exists in what was read. |
+| An affine-null characteristic formulation in n dimensions | Bridera, Gallo, Mädler (arXiv:2606.13636) | No: it is built for evolutions, not for the DSS eigenproblem. |
