@@ -1019,3 +1019,122 @@ The five that remain are broken on GitHub, as its rendered pages show. They are 
 
 The first four keep the subscript digits, as the old rule did, so the old checker passed them. The count above of 19
 artifacts in 20 flags holds, but the old checker also passed these four broken links.
+
+## Follow-up #662
+
+Finding 15's two unsourced bars are found, and the lint `readme_bars.py` lists each ± of the README whose sentence names
+no kind. On the audited commit it lists the five cases of finding 15 and a sixth that the audit missed. The README lines
+below are those of main at eaa4f460, where finding 15's diff is already applied (README:462, 1612, 1940).
+
+### The bars and their sources
+
+| README | bar | kind | source |
+|---|---|---|---|
+| 475 | 1.64395 ± 0.00008 | a spread over fit choices, the centre and half-width of the range 1.643882–1.644027 of the free limit c₀ over the 19 of 24 fits with χ²/dof ≤ 1 (1/D, 1/(D − 1), 1/(D − 2), degree 8–11, from D ≥ 10 or 12 to 30.2) | `solver/final_fit.py` (`step_converged`, `weighted_series`). README 15ceca38 stated the range and its fit choices. No committed script prints it |
+| 643 | 3.221701945 ± 7×10⁻¹¹ | an estimator, the size of a geometric extrapolation step in the mode count, \|ext − kc 47\| = 6.89×10⁻¹¹ | `solver/data_all.py` `low_d()` at D = 5 (3.221701944781), Richardson in the RK step at kc 31, 39 and 47, from `solver/data/scan_ne6_lowD_kc*.jsonl` |
+| 753 | ±3×10⁻¹¹ | a floor, `low_d()`'s σ = max(3×10⁻¹¹, \|kc 39 − kc 31\|/13), where the mode-count term is only 9×10⁻¹⁴ (D = 7) and 6×10⁻¹³ (D = 7.75) | `solver/data_all.py`. `hp/proto/val_lowD.py` prints it as the references' sigma |
+
+Both are reproduced on main from `solver/data`:
+
+```sh
+PYTHONPATH=.. python3 -c "from final_fit import step_converged as sc, weighted_series as ws; D, y, s, _ = sc(); a = [c[0] for lo in (10, 12) for m in [(D >= lo) & (D <= 30.2)] for f in (lambda d: 1/d, lambda d: 1/(d-1), lambda d: 1/(d-2)) for k in (8, 9, 10, 11) for c, chi in [ws(f(D[m]), y[m], 1/s[m], k)] if chi <= 1]; print(len(a), round(min(a), 6), round(max(a), 6))"
+PYTHONPATH=.. python3 -c "from data_all import low_d; lo = low_d(); print([(d, lo[d][0], lo[d][1]) for d in (5.0, 7.0, 7.75)])"
+```
+
+The first prints `19 1.643882 1.644027`, the same on solver/ as of 15ceca38. The second prints D = 5 as
+(3.221701944781393, 6.89×10⁻¹¹) and D = 7, 7.75 with σ = 3×10⁻¹¹.
+
+### The lint
+
+`readme_bars.py` states its rule in its docstring. A sentence names a kind when it holds one of the words spread,
+scatter, standard error, standard deviation, range, estimat, bound, enclos, interval, box, certif, rigorous,
+resolution, fit choices or bar. A bar also passes when a later sentence of its paragraph starts with "The bar" (or a
+like phrase), when its sentence cites a publication, or when the same value ± bar passes elsewhere in the file.
+Extrapolated, converges, limit and fit alone do not count. A ± before a letter, or a lone ± before an integer, is a
+sign.
+
+| check | command | result | exit |
+|---|---|---|---|
+| audited commit | `python3 readme_bars.py --rev b73b80e8` | lists 462, 474, 639, 749, 1607, 1934, of 35 bars | 1 |
+| planted bare ± | `python3 readme_bars.py --selftest` | the copy of the Main results row for Δ∞, its kind words dropped and its bar set to 7.654321 ± 0.000123, is listed | 1 |
+| proposed text | `python3 readme_bars.py FILE`, FILE a copy of main's README.md with the diff below applied | lists none, of 35 bars | 0 |
+| main, eaa4f460 | `python3 readme_bars.py` | lists 475, 643, 753 | 1 |
+
+All 48 ± and \pm of main are read. 35 are bars and 13 are signs (±1/2, ±1, ±2; ±iπ three times; \pm\beta; \pm\pi;
+±2, ±4, ±6; ±ω), and the "Each ±" of README:87.
+
+### Proposed README text
+
+It applies to main at eaa4f460 (`git apply --check`). With it applied, `check_numbers.py` quotes no changed line.
+
+```diff
+--- a/README.md
++++ b/README.md
+@@ -472,9 +472,10 @@
+ any finite order of the 1/n expansion ([Proposition 5](#proposition-5-the-unstable-mode-at-infinite-d-is-exact)).
+ 
+ Δ∞ comes from fits of all the double-double points. The fits, their residuals and the error bar are in
+-[Is the period analytic in 1/D?](#is-the-period-analytic-in-1d). The f64 points gave 1.64395 ± 0.00008. This formula's
+-own limit is a₀ = 1.643898, 4×10⁻⁶ high, which its fitting range could not see. The coefficients of one fit are
+-correlated, so they are not physical constants. Only the function is.
++[Is the period analytic in 1/D?](#is-the-period-analytic-in-1d). The f64 points gave 1.64395 ± 0.00008, the centre and
++half-width of the range of the limit over fit choices (variable 1/D, 1/(D − 1) or 1/(D − 2), degree 8–11, from D ≥ 10
++or 12 to 30.2, χ²/dof ≤ 1). This formula's own limit is a₀ = 1.643898, 4×10⁻⁶ high, which its fitting range could not
++see. The coefficients of one fit are correlated, so they are not physical constants. Only the function is.
+ 
+ **The limit rests on an assumption, which the double-double points now support.** Δ∞ = 1.643893746 holds if Δ(D) is
+ analytic in 1/D at D = ∞. That means no half-integer powers $`n^{-1/2}`$, no $`\log n`$, and no new scale far beyond the
+@@ -640,8 +641,10 @@
+ - **D = 5: a resolution effect in the published value.** Ecker et al. 2026 give Δ = 3.22176, γ = 0.41322, which are
+   5.8×10⁻⁵ and 9.3×10⁻⁵ above the values here.
+   - Our Δ(5) = 3.2217019446 comes from two independent codes, which agree to 10⁻¹¹ (`hp/compare/dd_D5.py`, log in
+-    `hp/compare/dd_D5.log`). They are the f64 solver at 31, 39 and 47 Fourier modes (3.221701945 ± 7×10⁻¹¹ extrapolated)
+-    and the double-double solver at M = 48 and 64 collocation points (3.22170194461806, 3.22170194462672).
++    `hp/compare/dd_D5.log`). They are the f64 solver at 31, 39 and 47 Fourier modes, extrapolated geometrically in the
++    mode count (3.221701945 ± 7×10⁻¹¹, the size of that extrapolation step, an estimate and not a bound,
++    `solver/data_all.py`), and the double-double solver at M = 48 and 64 collocation points (3.22170194461806,
++    3.22170194462672).
+   - Their published data ([github.com/EckerChristian/CriticalSpacetimeCrystal](https://github.com/EckerChristian/CriticalSpacetimeCrystal), compared by `hp/compare/cmp_ecker.py`) show their D = 5 value still moving by −1.66×10⁻⁴ between 256 and 512 modes, toward ours. That is in the range above D ≈ 4.8 where their paper notes that the light-cone expansion order has to be increased.
+   - Their offset from our values grows smoothly with D, from 2.7×10⁻⁷ at D = 4 to 5×10⁻⁴ at D = 5.5. The first is within
+     their stated ±10⁻⁶, and ours matches Martín-García & Gundlach to 7×10⁻⁹ there.
+@@ -750,7 +753,7 @@
+ | horizon series against 40-digit mpmath | 2×10⁻³² |
+ | Jacobian against double-double differences | agrees to the difference truncation |
+ | Newton at D = 8 | quadratic, $`\lvert F\rvert = 5\times10^{-31}`$ in 4 steps |
+-| Δ(7), Δ(7.75) against the 39-mode references (±3×10⁻¹¹) | +3.1×10⁻¹², −2.8×10⁻¹² |
++| Δ(7), Δ(7.75) against the 39-mode references (±3×10⁻¹¹, the floor of their error estimate in `solver/data_all.py`) | +3.1×10⁻¹², −2.8×10⁻¹² |
+ | 32 / 48 / 64 collocation points in τ, D = 7–17 | Δ agrees to 10⁻¹⁶ |
+ | first node at x = 0.02 / 0.05 / 0.1, D = 16.75 | Δ identical to 10⁻¹⁶ |
+ | 32 / 48 collocation points in τ, D = 40 | Δ agrees to 9×10⁻²² |
+```
+
+The other three bars of finding 15 are its diff, in main since before eaa4f460. The lint passes them by "standard error"
+(README:462), "scatter" (1612) and "spread" (1940).
+
+### Discrepancies
+
+- **D = 5, "two independent codes, which agree to 10⁻¹¹" (README:642).** The extrapolated f64 value, 3.221701944781,
+  is 1.55×10⁻¹⁰ above the double-double M = 64 value 3.22170194462672 (1.63×10⁻¹⁰ above M = 48), 2.2 times its own bar
+  of 6.9×10⁻¹¹. The f64 seed of `hp/compare/dd_D5.log` (kc 47, RK x2, 3.221701944776) is 1.49×10⁻¹⁰ above. Only the
+  double-double M = 48 and 64 agree to 10⁻¹¹ (8.7×10⁻¹²). Quoting the f64 value as 3.221701945 rounds the gap away. Not
+  changed in the text above. One resolution is "which agree to 2×10⁻¹⁰".
+- **No script prints the range behind 1.64395 ± 0.00008.** `final_fit.py`'s own output fits every point to D = 38.2,
+  including the six x_K 0.7 points above 30.2. Over its rows with χ²/dof ≤ 1 the range is 1.643896–1.644223 on main
+  (1.643896–1.644168 at 15ceca38), not the quoted one, which needs the cut D ≤ 30.2.
+- **Finding 15 counted five bars without a kind. There are six.** The sixth is the 39-mode references' ±3×10⁻¹¹
+  (README:749 at b73b80e8).
+- `solver/data_all.py`'s docstring says the kc 47 re-solves exist at D ≤ 4.25, but `low_d()` also extrapolates with them
+  at D = 5.
+
+### Recommended tasks
+
+1. **The f64 Δ∞ range in a script.** What: an option of `solver/final_fit.py` that prints the range of c₀ over the fits
+   with χ²/dof ≤ 1 on D ≤ 30.2, and a `check_numbers.py` check of the README's 1.64395 ± 0.00008 against it. Why: the
+   second discrepancy above. Acceptance: the check passes on main, and `--selftest` rejects a one-unit shift. Depends
+   on: #662.
+2. **The D = 5 agreement.** What: decide the text of README:642 against the 1.55×10⁻¹⁰ gap, and add a check of the f64
+   and double-double values of D = 5 (`low_d()[5.0]` against `hp/compare/dd_D5.log`). Why: the first discrepancy.
+   Acceptance: the check fails on the text "agree to 10⁻¹¹" and passes on the text chosen. Depends on: #662.
+3. **The lint in the routine.** What: name `python3 readme_bars.py` beside `check_numbers.py --selftest` in AGENTS.md's
+   "Quoted numbers" rule, once the text above is applied. Why: a new ± without a kind would otherwise pass unseen.
+   Acceptance: `readme_bars.py` exits 0 on main after the edit, and its `--selftest` exits 1. Depends on: #662.
