@@ -147,9 +147,14 @@ fn halpha_control_bitwise_on_rounding_only() {
 
 /// the residual and the double-double Jacobian of the synthetic context at horizon order ks, its last term weighted w
 fn with_ks(ks: usize, w: f64) -> (Vec<f64>, Vec<f64>, Vec<f64>, Vec<f64>) {
+    with_tail(ks, w, 0)
+}
+
+fn with_tail(ks: usize, w: f64, from: usize) -> (Vec<f64>, Vec<f64>, Vec<f64>, Vec<f64>) {
     let (mut ctx, zh, zl) = synth();
     ctx.ks = ks;
     ctx.ks_w = w;
+    ctx.ks_w_from = from;
     let (fh, fl) = residual(&ctx, &zh, &zl, false).unwrap();
     let (jh, jl, _) = jacobian(&ctx, &zh, &zl, false).unwrap();
     (fh, fl, jh, jl)
@@ -184,4 +189,34 @@ fn ksw_homotopy_ends_and_middle() {
     println!("w = 1/2 against the midpoint: residual {dm:.2e}, Jacobian {dmj:.2e}");
     assert!(dm <= 1e-6 * du && dmj <= 1e-6 * dj, "w = 1/2 is not halfway between the two orders");
     assert!(dm < du && dmj < dj, "w = 1/2 equals an end");
+}
+
+/// Ctx::ks_w_from (#800): the weight on orders F..=K alike. w = 0 is order F - 1 bit for bit, w = 1 order K bit for bit,
+/// and since the horizon state is affine in the weighted terms, w = 1/2 lies halfway between the two in the residual (to
+/// rounding; the Jacobian is not affine in them through the tangents' products, so only its ends are checked). The
+/// control: the weight placed from F - 1 instead must not give order F - 1 at w = 0.
+#[test]
+fn ksw_tail_ends_and_middle() {
+    const K: usize = 14;
+    const F: usize = 11;
+    let lower = with_ks(F - 1, 1.0);
+    let upper = with_ks(K, 1.0);
+    let w0 = with_tail(K, 0.0, F);
+    let w1 = with_tail(K, 1.0, F);
+    assert!(w0.0 == lower.0 && w0.1 == lower.1, "w = 0: the residual is not order F - 1's");
+    assert!(w0.2 == lower.2 && w0.3 == lower.3, "w = 0: the Jacobian is not order F - 1's");
+    assert!(w1.0 == upper.0 && w1.1 == upper.1 && w1.2 == upper.2 && w1.3 == upper.3, "w = 1 is not order K's");
+    let (du, su) = dd_diff(&upper.0, &upper.1, &lower.0, &lower.1);
+    println!("orders {F}..{K} against order {}: residual {du:.2e} (largest entry {su:.2e})", F - 1);
+    assert!(du > 0.0, "the tail changes nothing, so the homotopy is not tested");
+    let half = with_tail(K, 0.5, F);
+    let (mh, ml): (Vec<f64>, Vec<f64>) = upper.0.iter().zip(&upper.1).zip(lower.0.iter().zip(&lower.1)).map(|((&ah, &alo), (&bh, &blo))| {
+        let m = (DD { hi: ah, lo: alo } + DD { hi: bh, lo: blo }).mul_pwr2(0.5);
+        (m.hi, m.lo)
+    }).unzip();
+    let (dm, _) = dd_diff(&half.0, &half.1, &mh, &ml);
+    println!("w = 1/2 against the midpoint: residual {dm:.2e}");
+    assert!(dm <= 1e-6 * du && dm < du, "w = 1/2 is not halfway between the two truncations");
+    let wrong = with_tail(K, 0.0, F - 1);
+    assert!(!(wrong.0 == lower.0 && wrong.1 == lower.1), "the control: weighting from F - 1 still gives order F - 1 at w = 0");
 }

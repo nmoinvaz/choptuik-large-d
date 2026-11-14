@@ -59,6 +59,8 @@ trait Api: Send + Sync {
     fn set_horizon_alpha(&mut self, mode: u8);
     /// Ctx::ks_w, the weight of the horizon series' order-ks term
     fn set_ks_w(&mut self, w: f64);
+    /// Ctx::ks_w_from, the first order that ks_w weights (0: order ks alone)
+    fn set_ks_w_from(&mut self, k: usize);
     /// model::residual_in at `Quad` at the four-part state z, F in four parts; mutate: Ctx::mutate for this call
     fn residual_q(&mut self, z: [&[f64]; 4], mutate: u8) -> Result<Q4, String>;
     /// model::jacobian_in at `Quad`: (four parts, ld)
@@ -282,6 +284,9 @@ impl<const B: usize> Api for Ctx<B> {
     fn set_ks_w(&mut self, w: f64) {
         self.ks_w = w;
     }
+    fn set_ks_w_from(&mut self, k: usize) {
+        self.ks_w_from = k;
+    }
     fn residual_q(&mut self, z: [&[f64]; 4], mutate: u8) -> Result<Q4, String> {
         qd_sizes!(self, mutate, |c| model::residual_in::<Quad, _>(c, &z, true).map(|f| std::array::from_fn(|q| f.iter().map(|v| v.x[q]).collect())))
     }
@@ -500,6 +505,7 @@ macro_rules! make_ctx {
                 f64_dd: 0,
                 horizon_alpha: 0,
                 ks_w: 1.0,
+                ks_w_from: 0,
             }) as Box<dyn Api>, )*
             _ => return Err(PyValueError::new_err("M must be one of 8, 16, 32, 40, 48, 64, 80, 96, 128, 160, 192, 256, 320, 384, 512")),
         }
@@ -612,6 +618,17 @@ impl Solver {
         self.qlu = None;
         self.olu = None;
         self.api.set_ks_w(w);
+        Ok(())
+    }
+
+    /// The first order k that the weight ks_w applies to (Ctx::ks_w_from, #800): 0 (the default) order ks alone, as
+    /// before; k weights orders k..ks alike, so that ks_w = 0 is the sum to order k - 1 bit for bit and 1 the sum to
+    /// order ks. Drops the stored LU.
+    fn set_ks_w_from(&mut self, k: usize) -> PyResult<()> {
+        self.lu = None;
+        self.qlu = None;
+        self.olu = None;
+        self.api.set_ks_w_from(k);
         Ok(())
     }
 

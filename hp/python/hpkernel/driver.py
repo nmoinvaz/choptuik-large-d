@@ -79,11 +79,12 @@ def plow_odd(M, kf, dps=40):
 
 
 def make_solver(D, M, nodes=None, kt=36, kc=40, ks=120, segs=None, threads=0, kfreeze=None, match_node=None,
-                horizon_alpha=0, ks_w=1.0):
+                horizon_alpha=0, ks_w=1.0, ks_w_from=0):
     """kfreeze: pin the p1 harmonics k > kfreeze to zero and drop the matching of p's harmonics k > kfreeze at the
     horizon block (see model.rs Ctx::freeze). horizon_alpha: Solver.set_horizon_alpha (0, the default, as before; 1
     the horizon series in alpha = a - 1; 2 its control). ks_w: Solver.set_ks_w, the weight of the horizon series' order-ks
-    term (1, the default, as before; 0 the sum to order ks - 1; between, the homotopy of #744)."""
+    term (1, the default, as before; 0 the sum to order ks - 1; between, the homotopy of #744). ks_w_from:
+    Solver.set_ks_w_from, the first order ks_w weights (0, the default, order ks alone; k > 0, orders k..ks, #800)."""
     nodes = list(NODES_OLD if nodes is None else nodes)
     with mp.workdps(40):
         nh, nl = dd_from_mp([mp.mpf(D) - 2])
@@ -97,6 +98,8 @@ def make_solver(D, M, nodes=None, kt=36, kc=40, ks=120, segs=None, threads=0, kf
         s.set_horizon_alpha(horizon_alpha)
     if ks_w != 1.0:
         s.set_ks_w(ks_w)
+    if ks_w_from:
+        s.set_ks_w_from(int(ks_w_from))
     return s
 
 

@@ -88,6 +88,10 @@ pub struct Ctx<const B: usize> {
     /// ks - 1 (w = 0, that sum bit for bit) to order ks (#744). It applies only when the series reaches ks. All lanes
     /// read it, tangents included.
     pub ks_w: f64,
+    /// The first order ks_w weights (#800): 0, the default, weights order ks alone (#744's homotopy, as before bit for
+    /// bit); k in 1..=ks weights orders k..=ks, the homotopy from the sum to order k - 1 (w = 0, bit for bit) to the sum
+    /// to order ks (w = 1), in the whole tail at once.
+    pub ks_w_from: usize,
 }
 
 /// `Ctx::f64_dd`: the horizon series' periodic solves (`psolve`) in double-double for the f64 lanes, value and
@@ -918,10 +922,14 @@ pub fn horizon_series<T: Lane, const B: usize>(ctx: &Ctx<B>, m0: &Fl<T, B>, a0: 
 
 pub fn horizon_state<T: Lane, const B: usize>(ctx: &Ctx<B>, m0: &Fl<T, B>, a0: &Fl<T, B>, omega: T, prep: &HPrep) -> State<T, B> {
     let mut s = horizon_series(ctx, m0, a0, omega, prep);
-    // Ctx::ks_w: the order-ks term weighted, the homotopy in the horizon order (#744), where the series reached ks
+    // Ctx::ks_w: the order-ks term weighted, the homotopy in the horizon order (#744), where the series reached ks; with
+    // Ctx::ks_w_from = k, orders k..=ks weighted alike, the homotopy in the whole tail (#800)
     if ctx.ks_w != 1.0 && s[0].len() == ctx.ks + 1 {
+        let from = if ctx.ks_w_from == 0 { ctx.ks } else { ctx.ks_w_from.min(ctx.ks) };
         for q in s.iter_mut() {
-            q[ctx.ks] = q[ctx.ks].mulf(ctx.ks_w);
+            for k in from..=ctx.ks {
+                q[k] = q[k].mulf(ctx.ks_w);
+            }
         }
     }
     let u = ctx.u0().mul_pwr2(1.0 / series_scale(ctx.u0().hi));
@@ -1335,7 +1343,7 @@ pub(crate) mod ctxfile {
         let l = v[i] as usize;
         let zh = v[i + 1..i + 1 + l].to_vec();
         let zl = v[i + 1 + l..i + 1 + 2 * l].to_vec();
-        let ctx = Ctx::<B> { n, d, phase, nodes, segs, kt, kc, ks, freeze: None, match_node: k - 1, lam: DD::ZERO, mutate: 0, f64_dd: 0, horizon_alpha: 0, ks_w: 1.0 };
+        let ctx = Ctx::<B> { n, d, phase, nodes, segs, kt, kc, ks, freeze: None, match_node: k - 1, lam: DD::ZERO, mutate: 0, f64_dd: 0, horizon_alpha: 0, ks_w: 1.0, ks_w_from: 0 };
         assert_eq!(ctx.len(), l);
         (ctx, zh, zl)
     }

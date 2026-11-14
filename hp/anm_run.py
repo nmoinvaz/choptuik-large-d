@@ -126,7 +126,9 @@ control is the state's own ks with --keep_plan 0, since planning again moves Del
 --ks_w W weights the horizon series' order-ks term by W in [0, 1] for every solver of the run, the re-seeder's included
 (make_solver's ks_w, Solver.set_ks_w): 1, the default, as before bit for bit; 0 the sum to order ks - 1 bit for bit; a
 ladder W = 1/16, 1/8, ..., 1 at --ks K is the homotopy from order K - 1 to K, each rung from the last's base (#744).
-States and records carry ks_w.
+--ks_w_from F with --ks_w: the weight applies to orders F..ks alike (make_solver's ks_w_from, Solver.set_ks_w_from), the
+homotopy in the whole tail from order F - 1 (W = 0, bit for bit) to order ks (W = 1) (#800); 0, the default, weights order
+ks alone. States and records carry ks_w and ks_w_from.
 --lam_stall L ends an attempt, as refused, when two Newton steps in a row had lam at or below L. A state is saved
 with the plan of the run that converged it, and a run started from it keeps that plan
 (--keep_plan 0 plans again at the state, the control). Its states are saved in eight parts
@@ -289,7 +291,7 @@ def main():
     args = list(sys.argv[1:])
     opt = dict(state="T75/pin7_D73.2657.npz", kfreeze=3, N=24, eps=1e-16, h_max=2.0, steps=20, D_max=200.0, corrector="dnp",
                tol=1e-20, tol_growth=1.45, accept_stall=1e-17, junk_only=0, threads=4, w=24, trend="", tol_qd=1e-28, accept_stall_qd=0.0, qd_it=12, qd_w=0,
-               refine=1, probe=0, probe_c=0.0, plan_tol=1e-32, fix1=0, F_pred_max=0.0, horizon_alpha=0, ks_w=1.0, fix1_qlu=0, jet_q=0, reseed=0, pred_q=0, reseed_q=0,
+               refine=1, probe=0, probe_c=0.0, plan_tol=1e-32, fix1=0, F_pred_max=0.0, horizon_alpha=0, ks_w=1.0, ks_w_from=0, fix1_qlu=0, jet_q=0, reseed=0, pred_q=0, reseed_q=0,
                save_pred=0, jet_o=0, save_dz0=0)
     opt.update(tol_od=1e-40, od_junk=0)  # --corrector od (hp/octo_corrector.py); --od_junk w freezes junk (QUAD_DOUBLE 13.29)
     opt.update(base_adopt=0)            # --base_adopt 1: the base's od polish is adopted whatever it did
@@ -333,7 +335,10 @@ def main():
     if not 0.0 <= opt["ks_w"] <= 1.0:
         sys.exit(f"--ks_w {opt['ks_w']}: a weight in [0, 1]")
     if opt["ks_w"] != 1.0:
-        print(f"the horizon series' order-{ks} term weighted {opt['ks_w']!r} (#744)", flush=True)
+        print(f"the horizon series' order{'s ' + str(opt['ks_w_from']) + '..' if opt['ks_w_from'] else '-'}{ks} "
+              f"term{'s' if opt['ks_w_from'] else ''} weighted {opt['ks_w']!r} (#744, #800)", flush=True)
+    if opt["ks_w_from"] and not 1 <= opt["ks_w_from"] <= ks:
+        sys.exit(f"--ks_w_from {opt['ks_w_from']}: an order in 1..{ks}")
     kf, N = opt["kfreeze"], opt["N"]
     if opt["jet_o"] and (M != 32 or not 1 <= N <= 31):
         raise SystemExit(f"--jet_o 1: the octo-double solver is built for M = 32 and N <= 31, not M {M}, N {N}")
@@ -436,7 +441,7 @@ def main():
         dcorr = float(delta_correction(spx, Fh, Fl)) if Fc > tol and np.isfinite(Fc) else 0.0
         return ch, cl, Fc, len(hist), bool(Fc <= tol or Fc <= opt["accept_stall"]), dcorr
     mk = lambda Dx: make_solver(Dx, M, nodes=nodes, kt=kt, kc=kc, ks=ks, threads=opt["threads"], kfreeze=kf,  # noqa: E731
-                                horizon_alpha=opt["horizon_alpha"], ks_w=opt["ks_w"])
+                                horizon_alpha=opt["horizon_alpha"], ks_w=opt["ks_w"], ks_w_from=opt["ks_w_from"])
     ks_held = [k for k in range(kf + 1, 14) if k % 2 == 1]
     if opt["held_o"] and not (opt["held_fit"] and opt["corrector"] == "od" and opt["jet_o"]):
         raise SystemExit("--held_o 1 needs --held_fit, --corrector od and --jet_o 1")
@@ -562,7 +567,7 @@ def main():
             # --reseed 2 inside ElimO: from a quad-double state at D 188 a full step leaves 4e-14 in the horizon rows
             # alone (its quadratic term there; 1e-41 in the others), which the projection removes
             if opt["reseed"] == 2:
-                elim["rs"] = Reseeder(dict(M=M, nodes=nodes, kt=kt, kc=kc, ks=ks, ks_w=opt["ks_w"]), D, threads=opt["threads"],
+                elim["rs"] = Reseeder(dict(M=M, nodes=nodes, kt=kt, kc=kc, ks=ks, ks_w=opt["ks_w"], ks_w_from=opt["ks_w_from"]), D, threads=opt["threads"],
                                       horizon_alpha=opt["horizon_alpha"], qd=bool(opt["reseed_q"]), od=opt["reseed_o"],
                                       qd_start=opt["reseed_start"])
             zh_p, zl_p, F0_p, _, conv_p, _ = correct(sp, zh, zl, opt["tol"],
@@ -573,7 +578,7 @@ def main():
                 zh, zl, F0 = zh_p, zl_p, F0_p
                 if opt["save_base"] and "z8" in last_q:
                     p = os.path.join(out, f"base_pin{kf}_D{float(D):.4f}.npz")
-                    save_o(p, last_q["z8"], dict(D=float(D), D_str=str(D), M=M, nodes=nodes, kt=kt, kc=kc, ks=ks, ks_w=opt["ks_w"], kfreeze=kf,
+                    save_o(p, last_q["z8"], dict(D=float(D), D_str=str(D), M=M, nodes=nodes, kt=kt, kc=kc, ks=ks, ks_w=opt["ks_w"], ks_w_from=opt["ks_w_from"], kfreeze=kf,
                                                  pin_held=ks_held, N=N, source=opt["state"], parts=8,
                                                  segs=[[float(x) for x in sg] for sg in segs],
                                                  base_polish=dict(converged=bool(conv_p), max_F=Fs, tol_od=opt["tol_od"])))
@@ -817,7 +822,7 @@ def main():
         ratios = [norms[k - 1] / norms[k] if norms[k] else None for k in range(2, N + 1)]
         rec = dict(step=step, D0=float(D), D0_str=str(D), pin=kf, N=N, pivots=(float(pmin), float(pmax)), norms=norms, a_max=a_max,
                    t_coef=t_coef, refine_last=refine[-1], fix1=fix1, ratios_2_5=ratios[:4], trend=opt["trend"], slopes=slopes, held=ks_held,
-                   horizon_alpha=opt["horizon_alpha"], ks_w=opt["ks_w"], jet_q=opt["jet_q"], jet_o=opt["jet_o"], held_fit=opt["held_fit"])
+                   horizon_alpha=opt["horizon_alpha"], ks_w=opt["ks_w"], ks_w_from=opt["ks_w_from"], jet_q=opt["jet_q"], jet_o=opt["jet_o"], held_fit=opt["held_fit"])
         print(f"step {step}: D {mp.nstr(D, 12)}, pivots {pmin:.1e}..{pmax:.1e}, |z_1| {norms[1]:.2e}, |z_N| {norms[N]:.2e}, ratios 2-5 "
               + " ".join(f"{r:.1f}" for r in ratios[:4] if r) + f", a_max {a_max:.3f}, {t_coef:.0f} s", flush=True)
         if opt["probe"]:
@@ -849,14 +854,14 @@ def main():
                 if opt["reseed"]:
                     # --reseed 1: the prediction's horizon data from its last node (hp/reseed.py); 2: also eliminated
                     # inside the corrector
-                    rs_n = Reseeder(dict(M=M, nodes=nodes, kt=kt, kc=kc, ks=ks, ks_w=opt["ks_w"]), Dn, threads=opt["threads"],
+                    rs_n = Reseeder(dict(M=M, nodes=nodes, kt=kt, kc=kc, ks=ks, ks_w=opt["ks_w"], ks_w_from=opt["ks_w_from"]), Dn, threads=opt["threads"],
                                     horizon_alpha=opt["horizon_alpha"], qd=bool(opt["reseed_q"]), od=opt["reseed_o"],
                                       qd_start=opt["reseed_start"])
                     dz0_at.update(D=float(Dn), D_str=str(Dn), a=float(a))
                     if opt["save_pred"] and pred4 is not None:
                         # the prediction before its re-seed, for testing the re-seed on it (13.26)
                         save_q(os.path.join(out, f"pred_pin{kf}_D{float(Dn):.4f}.npz"), pred4,
-                               dict(D=float(Dn), D_str=str(Dn), M=M, nodes=nodes, kt=kt, kc=kc, ks=ks, ks_w=opt["ks_w"], kfreeze=kf, pin_held=ks_held,
+                               dict(D=float(Dn), D_str=str(Dn), M=M, nodes=nodes, kt=kt, kc=kc, ks=ks, ks_w=opt["ks_w"], ks_w_from=opt["ks_w_from"], kfreeze=kf, pin_held=ks_held,
                                     N=N, a=a, source=opt["state"], prediction=True))
                     zr, rsd = rs_n.reseed(pred4 if pred4 is not None else (ph, pl))
                     elim["rs"] = rs_n if opt["reseed"] == 2 else None
@@ -921,7 +926,7 @@ def main():
         # re-base the trend on the new state (its harmonics sit on the trend's values at D, to the corrector's floor)
         base_coeffs = coeffs_of(zh, zl)
         n0 = float(D) - 2.0
-        meta_out = dict(D=float(D), D_str=str(D), M=M, nodes=nodes, kt=kt, kc=kc, ks=ks, ks_w=opt["ks_w"], kfreeze=kf, pin_held=ks_held, N=N, a=a, source=opt["state"],
+        meta_out = dict(D=float(D), D_str=str(D), M=M, nodes=nodes, kt=kt, kc=kc, ks=ks, ks_w=opt["ks_w"], ks_w_from=opt["ks_w_from"], kfreeze=kf, pin_held=ks_held, N=N, a=a, source=opt["state"],
                         segs=[[float(x) for x in sg] for sg in segs])       # the run's plan, which the state solves
         if opt["corrector"] == "qd" and "z4" in last_q:
             save_q(os.path.join(out, f"anm_pin{kf}_D{float(D):.4f}.npz"), last_q["z4"], meta_out)

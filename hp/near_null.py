@@ -159,7 +159,10 @@ def main():
     D = m.get("D_str", repr(float(m["D"])))
     kf = int(opts.get("kfreeze", m.get("kfreeze", 3)))
     s = make_solver(D, M, nodes=nodes, kt=m.get("kt", 36), kc=m.get("kc", 146), ks=m.get("ks", 130),
-                    threads=int(opts.get("threads", 2)), kfreeze=kf)
+                    threads=int(opts.get("threads", 2)), kfreeze=kf, ks_w=float(m.get("ks_w", 1.0)),
+                    ks_w_from=int(m.get("ks_w_from", 0)))   # the state's horizon-tail weight (#744, #800)
+    if float(m.get("ks_w", 1.0)) != 1.0:
+        print(f"the state's horizon tail weighted {m['ks_w']!r} from order {m.get('ks_w_from', 0) or m.get('ks', 130)}", flush=True)
     # the stored plan by default, the one the polish keeps (#563); a state saved without one gets a new plan
     keep_plan = opts.get("keep_plan", "1") == "1" and "segs" in m
     if opts.get("keep_plan", "1") == "1" and not keep_plan:
