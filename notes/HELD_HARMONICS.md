@@ -433,8 +433,14 @@ expectation written before the run, that the ratio stays near 0.19, failed in th
 attempts, at a = 1/4 down to 1/32, all stall between 1.1e-44 and 7.8e-44 against the bar of 1e-44, and the run stops
 there. The stall does not fall with a, while the first full step's |F| falls from 1.05e-21 to 1.7e-23, so it is a floor
 of the corrector, not the step's quadratic error. The 17 Newton steps taken at the floor move Δ by at most 4.4e-45, and
-the elimination's pivots span 8e-20 to 9e14. #739 tests whether quad-double precision sets the floor, using the
-octo-double corrector. #740, D 113 to 120 at a bar of 1e-42, waits on that.
+the elimination's pivots span 8e-20 to 9e14.
+
+**The floor is the quad-double precision** (#739, raw `I739-win/` 51a8e41f). From the D 112.75 state, the octo-double
+corrector with `--reseed_o 3` converges the same two attempts, to D 112.875 and D 113, to 7.8e-89 and 7.3e-85 in five
+steps each. An octo-double attempt takes 1.2 to 1.4 times as long as a stalled quad-double one. Its control, the
+D 112.75 state polished alone in octo-double, keeps the quad-double Δ to 7.0e-46. At D 113, Δ_full − Δ_held is
++4.37e-13, 0.146 of the spread. Octo-double changes the corrector and the projection together, so which of the two
+sets the quad-double floor is not separated. #742 continues to D 120 in octo-double.
 
 ### 4.5 Not run
 
