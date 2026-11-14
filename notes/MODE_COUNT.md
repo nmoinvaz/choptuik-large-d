@@ -436,7 +436,8 @@ A mode whose eigenfunction has weight in the centre harmonics 22–23 would move
 decides. The U zeros are not located.
 
 **The box 2.6 < Re λ < 3.6, |Im λ| ≤ 0.5 at D = 61 on the exact determinant, kf 27 to 37 (#551, #656, #657, #708;
-raw `I551-win2/`, `I656-macm3/`, `I657-win2/` ddc106d0, `I657-macm3/` bcda518c, `I708-macm3/` 3edb2e48).** M = 48,
+raw `I551-win2/`, `I656-macm3/`, `I657-win2/` ddc106d0, `I657-macm3/` bcda518c, `I708-macm3/` 3edb2e48,
+`I722-macm3/` 06e7216f).** M = 48,
 seed `up23_D61.0264.npz`. det M is the exact determinant of the double-double mode matrix, from python-flint's ball LU
 at 320 bits (`--ball=320`). Four R 0.36 circles at 2.85 ± 0.25i and 3.35 ± 0.25i cover the box. A zero inside two
 circles is counted once, and small circles (R 0.05, or R 0.1 at kf 37) confirm the pair near the real axis and any
@@ -445,7 +446,7 @@ with 0 verification mismatches.
 
 | kf | count | windings UL, LL, UR, LR | the pair near the real axis |
 |---|---|---|---|
-| 27 | 6 | +1, +1, +3, +3 | about 3.159 (R 0.36 circles only; #722 runs its small circle) |
+| 27 | 6 | +1, +1, +3, +3 | 3.158561 ± 0.037423i |
 | 29 | 6 | +3, +3, +3, +3 | 3.103405 ± 0.004333i |
 | 31 | 8 | +3, +3, +2, +2 | 3.027496 ± 0.008339i |
 | 33 | 8 | +3, +3, +2, +2 | 2.961992 ± 0.018132i |
@@ -454,9 +455,11 @@ with 0 verification mismatches.
 
 **The count rises by 2 every second odd cut, 6, 6, 8, 8, 10, 10, so these zeros multiply with the cut.** If the step
 continues, kf 39 gives 12, which #749 tests at kf 39 and 41. The pair's real part falls with the cut and nearly stops
-between kf 35 and 37 (−0.0068), while |Im λ| roughly doubles at each cut but kf 35. Its zeros at one cut are matched
-to the next by position alone. The other zeros are not tracked across cuts. This is numerical evidence on the M = 48
-truncation, not certified. A count that grows with the cut points to the truncation, as the row above does.
+between kf 35 and 37 (−0.0068). |Im λ| is not monotone: from 0.037 at kf 27 it drops to 0.004 at kf 29, then roughly
+doubles at each cut but kf 35 (#722's small circle at kf 27 winds +2, its two zeros conjugate to 6e-8, and #657's R 0.36
+circle there agrees within its estimates). Its zeros at one cut are matched to the next by position alone. The other
+zeros are not tracked across cuts. This is numerical evidence on the M = 48 truncation, not certified. A count that
+grows with the cut points to the truncation, as the row above does.
 
 **The series' radii, and M = 64 (#141; raw `I141-mac/`, 5eff98e).** The centre series (x = 0 to the first node) takes
 one d/dτ per order, and its radius of convergence falls as M rises. At D = 30 without the cut it is 0.435, 0.324, 0.278
