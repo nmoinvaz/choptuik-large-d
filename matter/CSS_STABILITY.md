@@ -11,7 +11,22 @@ exponent), and the field rotates as $`F\propto(-t)^{i\omega}`$.
 
 **Result in brief.**
 
-- PENDING
+- **D = ∞, κ = 0.** The perturbation problem of the inner CSS solution is set up as the background's: the growth rates
+  are the λ at which a regular perturbation has a zero Stokes jump. Its exact λ = 2 mode is found, to 1.4×10⁻¹², and so
+  are λ = 0, 1 and ±iω. **The oscillatory pair survives at D = ∞: λ_osc(∞) = 0.5365223424 ± 7.9320241697i**, the same
+  to 2×10⁻¹⁰ over three matching settings, with **Im λ_osc/ω∞ = 1.99349, not 2**. Box counts find λ = 1, 2 and the
+  pair, and nothing else, in 0.05 < Re λ < 5, |Im λ| < 9.43. So the κ = 0 CSS has three unstable directions at D = ∞,
+  as at every D from 4 to 80.
+- **Against finite D.** The 1/n fits of the finite-D track give Re λ_osc → 0.53643–0.53653, which holds the inner
+  0.53652, and Im λ_osc/ω → 1.9934877–1.9934987, which the inner 1.9934870 misses by 6×10⁻⁷ (§3). The finite-D values
+  converge to the inner ones like 1/n.
+- **κ_c(D).** Re λ_osc changes sign, at both circle radii, at κ_c = 0.0757329, 0.0895074, 0.0993081, 0.1065516 and
+  0.1103184 for D = 4, 6, 10, 20 and 40, and the inner problem gives κ_c(∞) = 0.1143406. κ_c(D) rises monotonically
+  and converges to κ_c(∞) like 1/n. So the band κ > κ_c(D), where the oscillatory pair is stable and the CSS can be
+  critical, narrows with D but stays open at D = ∞, with the axion–dilaton (κ = 1) far inside it. Whether other modes
+  turn unstable at intermediate κ was not counted here; at κ = 1 the CSS is critical to D = 80 (matter/CSS.md §6).
+- **HE97's κ_c(4) ≈ 0.0754 is not reproduced.** Two independent methods give 0.075733, and at κ = 0.0754 they agree on
+  Re λ_osc = +0.00129 (§3).
 
 ## 1. The D = ∞ spectrum of the inner CSS solution (#376)
 
@@ -32,18 +47,18 @@ F = e^{-i\omega\tau}\big(f + \epsilon e^{\lambda\tau}A\big), \qquad
 \bar F = e^{i\omega\tau}\big(g + \epsilon e^{\lambda\tau}B\big), \qquad c = b + \epsilon e^{\lambda\tau}\beta ,
 ```
 
-with A and B independent (the real system, complexified), so X acts on A, B, β as θ + λ − iω, θ + λ + iω, θ + λ.
-The data at the irregular singular point ξ = 0 are A(0) and B(0). The lapse there is fixed by the matching (GAMMA.md §4),
-β(0) = 0. This gauge removes the time reparametrizations t → t + η(t): with η ∝ (−t)^{1−λ} they are perturbations
-with β(0) = λ − 1, so only the λ = 1 one survives, as the time translation. As for the background, the regular formal
-series in z diverges, with the fast mode $`e^{-b^2/(2\xi^2)}`$, and a growth rate is a λ at which a regular perturbation
-has zero Stokes jump (GAMMA.md §5).
+with A and B independent (the real system, complexified), so X acts on A, B, β as θ + λ − iω, θ + λ + iω, θ + λ. The
+data at the irregular singular point ξ = 0 are A(0) and B(0). The lapse there is fixed by the matching (GAMMA.md §4),
+β(0) = 0. This gauge removes the time reparametrizations t → t + η(t): with η ∝ (−t)^{1−λ} they are perturbations with
+β(0) = λ − 1, so only the λ = 1 one survives, as the time translation. As for the background, the regular formal series
+in z diverges, with the fast mode $`e^{-b^2/(2\xi^2)}`$, and a growth rate is a λ at which a regular perturbation has
+zero Stokes jump (GAMMA.md §5).
 
 **The determinant.** The upper and lower lateral solutions are computed as in `css_inner.py`: the optimally truncated
-series at $`\xi_0 = r_0e^{\pm3i\pi/8}`$, where the fast mode is exponentially large, integrated along the ray to |ξ| = r₁ and
-along the arc to the real axis. Both sides are integrated, background and perturbation together, so λ may be complex.
-The jumps of A and B at ξ = r₁ are linear in the data, J = M(λ)(A(0), B(0)), and the growth rates are the zeros of
-det M at every setting (r₀, r₁). A zero that moves with the setting is an artefact: det M is the product of the
+series at $`\xi_0 = r_0e^{\pm3i\pi/8}`$, where the fast mode is exponentially large, integrated along the ray to |ξ| =
+r₁ and along the arc to the real axis. Both sides are integrated, background and perturbation together, so λ may be
+complex. The jumps of A and B at ξ = r₁ are linear in the data, J = M(λ)(A(0), B(0)), and the growth rates are the zeros
+of det M at every setting (r₀, r₁). A zero that moves with the setting is an artefact: det M is the product of the
 determinant of the Stokes multipliers and that of the fast modes' (A, B) values at r₁, and the latter can vanish.
 Settings: A = (0.1, 0.3), B = (0.1, 0.25), C = (0.09, 0.3); r₁ stays below the background's movable singularity at
 |ξ| ≈ 0.335 (matter/STRUCTURE.md §7).
@@ -68,8 +83,9 @@ finite-D codes (`css_pert.py`, the collocation) but the derivation. Each check b
 |---|---|---|
 | the linearized rhs is the ε-derivative of the (s, t) inner PDE (`css_inner_pert_eqs.py`, sympy, 8 random complex points, κ = 0–0.96, complex λ) | largest residual 2×10⁻¹⁵, relative to the largest term | `--mutate=hamsign` (sign of the β equation's source) and `nometric` (β not fed back): residuals 2.9 and 1.1, rejected |
 | background part of the rhs against `css_inner.rhs` | 3.6×10⁻¹⁵ | — |
-| the series recursion reproduces the five exact modes' series (60 coefficients, κ = 0) | relative 1.4×10⁻²⁷ (λ = 0), 2.2×10⁻²⁷ (1), 4.4×10⁻²⁷ (2), 0 (±iω) | the same data at λ + 0.01: relative 6×10⁹ to 4×10⁹³, rejected (`css_inner_pert.py check`) |
+| the series recursion reproduces the five exact modes' series (60 coefficients, κ = 0) | relative 1.4×10⁻²⁷ (λ = 0), 2.2×10⁻²⁷ (1), 4.4×10⁻²⁷ (2), 0 (±iω) | the same data at λ + 0.01: relative 6×10⁹ to 1×10¹³, rejected (`css_inner_pert.py check`) |
 | M(λ) is singular at λ = 0, 1, 2 (smallest / largest singular value, setting A) | 1.3×10⁻¹³, 2.2×10⁻¹⁴, 5.2×10⁻¹³ | 0.072 at λ = 1.5 |
+| the same two checks at κ = 0.5 (`check 0.5`), where the ±iω modes have B = −κg² ≠ 0 | series ≤ 2.6×10⁻²⁷; M singular to ≤ 8.4×10⁻¹³ at λ = 0, 1, 2 | 0.11 at λ = 1.5; series at λ + 0.01 miss by 3×10⁹ or more |
 | the same with the mutations | — | nometric: 1.0, 1.0 at λ = 1, 2 (smallest = largest, 0.38 and 3.0); hamsign: 0.32, 0.55 |
 | the secant from λ = 2.1 | 2 − 1.4×10⁻¹² (A), 2 − 5.9×10⁻¹³ (B), 2 − 1.4×10⁻¹² (C) | nometric: runs to λ = 9×10⁻⁷ (not converged; the test field's phase modes); hamsign: runs to λ = 0 |
 
@@ -103,15 +119,14 @@ on D ≥ 15, 20, 30):
 | Re λ_osc | 0.53642930–0.53653455 | 0.53652234 | yes |
 | Im λ_osc / ω | 1.99348767–1.99349871 | 1.99348705 | no, 6.2×10⁻⁷ below the lowest fit |
 
-The Im/ω fits fall monotonically toward the inner value as D_min and K grow (1.99349871 at D ≥ 15, K = 3 to 1.99348767 at
-D ≥ 30, K = 4). The finite-D values converge to the inner one at the rate of an ordinary 1/n series:
-n(Re λ_osc(D) − Re λ_osc(∞)) = −0.98, −1.02, −1.09, −1.13 and n(Im/ω(D) − Im/ω(∞)) = −0.565, −0.582, −0.606, −0.617 at
-D = 15.3, 20.3, 39.2, 80. Fits with the limit fixed at the inner value, in powers 1/n … 1/n^{K+1}, have rms residuals 1
-to 3.5 times smaller than the free fits with the same number of parameters (Re: 1.1×10⁻⁶ against 3.1×10⁻⁶ at D ≥ 15,
-K = 3; Im/ω: 2.7×10⁻⁹ against 7.8×10⁻⁹ at D ≥ 20, K = 4), with the 1/n coefficients −1.178 (Re) and −0.6273 (Im/ω).
-So the issue's acceptance holds for Re λ_osc and fails narrowly for Im/ω: the inner value lies outside the fits' range
-by 6% of its width. As for ω∞ in matter/CSS.md §7, the narrow spread over fit choices understates the extrapolation
-error (§3).
+The Im/ω fits fall monotonically toward the inner value as D_min and K grow (1.99349871 at D ≥ 15, K = 3 to 1.99348767
+at D ≥ 30, K = 4). The finite-D values converge to the inner one at the rate of an ordinary 1/n series: n(Re λ_osc(D) −
+Re λ_osc(∞)) = −0.98, −1.02, −1.09, −1.13 and n(Im/ω(D) − Im/ω(∞)) = −0.565, −0.582, −0.606, −0.617 at D = 15.3, 20.3,
+39.2, 80. Fits with the limit fixed at the inner value, in powers 1/n … 1/n^{K+1}, have rms residuals 1 to 3.5 times
+smaller than the free fits with the same number of parameters (Re: 1.1×10⁻⁶ against 3.1×10⁻⁶ at D ≥ 15, K = 3; Im/ω:
+2.7×10⁻⁹ against 7.8×10⁻⁹ at D ≥ 20, K = 4), with the 1/n coefficients −1.178 (Re) and −0.6273 (Im/ω). So the issue's
+acceptance holds for Re λ_osc and fails narrowly for Im/ω: the inner value lies outside the fits' range by 6% of its
+width. As for ω∞ in matter/CSS.md §7, the narrow spread over fit choices understates the extrapolation error (§3).
 
 ### 1.4 Box counts
 
@@ -130,7 +145,8 @@ Controls, each seen to fire (setting A): a zero planted at 1 + 6i makes C count 
 At finite D the strip S holds the jump method's resonance artefacts (6 zeros at D = 4, none at D ≥ 40); at D = ∞ it
 holds none at either setting, as expected, since the inner problem has no regular singular point. Zeros come in pairs
 λ, λ̄ by the conjugation symmetry of the real perturbation system, so C covers the lower half plane as well (checked
-numerically in `I376-mac/conj_k0.jsonl`, PENDING).
+numerically: det M(λ̄) = conj det M(λ) to 1.3×10⁻¹⁰ relative at 1.3 ± 2.1i and 0.7 ± 6.5i, and the secant from
+0.536 − 7.93i converges to 0.5365223424 − 7.9320241698i at settings A and B; raw `I376-mac/conj_k0.jsonl`).
 
 **So in these boxes the D = ∞ κ = 0 CSS has λ = 1 (gauge), λ = 2 (the relevant mode, exact) and the pair λ_osc, λ̄_osc,
 and no other growth rate: three unstable directions, as at every finite D from 4 to 80.** Its instability is not a
@@ -168,7 +184,8 @@ shares only the ODE with the jump method, places the crossing at the same κ:
 | 0.076 | −0.0010341 | ±3.6894573 | 1 |
 
 **κ_c(4) = 0.075733, not HE97's 0.0754**: at κ = 0.0754 the oscillatory pair still grows, with Re λ_osc = +0.0012878
-(collocation) and PENDING (jump method, both radii).
+(collocation) and +0.0012878847 (jump method, both radii, which differ by 6×10⁻¹²; raw `I377-mac/at_D4.jsonl`). At
+κ = 0.076 the two give −0.0010341192 and −0.0010341099.
 The model and its normalization are HE97's: the action is their eq. (4), and the D = 4 values at three κ are
 reproduced, γ = 0.3871055 (κ = 0; HE97 Table 1 0.3871), 0.2641066 (κ = 1; 0.2641) and 0.1468992 (κ = 10, jump method at
 both radii and collocation; 0.1469). The background continued in κ from 0 to 1 at D = 4 lands on HHS96's axion–dilaton
@@ -193,11 +210,38 @@ spread is the difference between the κ_c found at the two radii, a spread betwe
 At every D the sign change of Re λ_osc shows at both radii, with the same values to 10⁻⁸. **κ_c(D) rises
 monotonically with D and levels off**: polynomial fits in 1/n (n = D − 2) of degree 2–3 on D ≥ 4, 6, 10 give
 κ_c(∞) = 0.1129–0.1142 (a spread over fit choices on three to five points, not an error bound). So the band of κ where
-the CSS has three unstable directions widens with D, from κ < 0.0757 at D = 4 to κ < 0.110 at D = 40, and the
-axion–dilaton (κ = 1) stays far on the stable side. A CSS solution with κ in between (0.076 < κ < 0.110) is critical
-in D = 4 and not in D = 40. γ at κ_c rises with D toward 1/2 as for every κ.
+the oscillatory pair is unstable widens with D, from κ < 0.0757 at D = 4 to κ < 0.110 at D = 40, and the
+axion–dilaton (κ = 1) stays far on the stable side. For κ between 0.0757 and 0.1103 the pair is stable at D = 4 and
+unstable at D = 40. γ at κ_c rises with D toward 1/2 as for every κ.
 
-PENDING: the D = ∞ path (§2.4).
+### 2.4 κ_c at D = ∞
+
+`css_inner_pert.py kpath 0 1 0.05` follows λ_osc of the inner solution in κ at settings A and B, each inner background
+re-solved by `css_inner.py`, and `kcrit` refines the crossing at each setting (raw `I377-mac/kpath_inf.jsonl`,
+`kcrit_inf.jsonl`):
+
+| κ | ω∞(κ) | λ_osc(∞) | Im λ_osc / ω∞ | setting spread |
+|---|---|---|---|---|
+| 0 | 3.9789695 | 0.5365223 + 7.9320242i | 1.99349 | 1×10⁻¹⁰ |
+| 0.05 | 3.9256528 | 0.2972904 + 7.8553060i | 2.00102 | 1×10⁻¹⁰ |
+| 0.1 | 3.8739534 | 0.0653125 + 7.7716617i | 2.00613 | 9×10⁻¹¹ |
+| **0.1143406** | 3.8594315 | ±7.7465455i | 2.00717 | κ_c: 9×10⁻¹² |
+| 0.15 | 3.8239189 | −0.1602438 + 7.6821182i | 2.00896 | 9×10⁻¹¹ |
+| 0.2 | 3.7755639 | −0.3802052 + 7.5874227i | 2.00961 | 6×10⁻¹¹ |
+| 0.4 | 3.5985546 | −1.2210364 + 7.1648785i | 1.99104 | 1×10⁻¹⁰ |
+| 0.6 | 3.4457917 | −2.0480255 + 6.6713159i | 1.93608 | 5×10⁻¹⁰ |
+| 0.9 | 3.2549120 | −3.6391186 + 5.6869460i | 1.74719 | 1×10⁻⁸ |
+
+**κ_c(∞) = 0.1143405667** (settings A and B agree to 9×10⁻¹²), with γ∞ = 1/2 there as at every κ. Beyond κ = 0.9 the
+path is not resolved: at κ = 0.95 setting A's secant did not converge, and at κ = 1 the two settings end 12 apart, so
+λ_osc(∞) of the axion–dilaton is not given here (only that it is damped, Re λ_osc < −3.6 at κ = 0.9).
+
+The finite-D values approach κ_c(∞) like an ordinary 1/n series: n(κ_c(∞) − κ_c(D)) = 0.077, 0.099, 0.120, 0.140,
+0.153 at D = 4, 6, 10, 20, 40. Fits of κ_c(D) − κ_c(∞) in powers 1/n … 1/n^K have rms residuals 2 to 4 times smaller
+than free fits with the same number of parameters (7.1×10⁻⁴ against 1.9×10⁻³ with two parameters on D ≥ 4, 2.5×10⁻⁵
+against 8.1×10⁻⁵ with three on D ≥ 6), with the 1/n coefficient −0.13 to −0.16. The free fits of degree 2–3 put the
+limit at 0.1129–0.1142, just below the inner value, as for λ_osc in §1.3. Im λ_osc/ω at the crossing runs 1.98720,
+1.99400, 1.99988, 2.00410, 2.00588 at D = 4–40 toward the inner 2.00717.
 
 ## 3. Discrepancies
 
@@ -216,9 +260,40 @@ PENDING: the D = ∞ path (§2.4).
   K grow, and the finite-D values converge to it like 1/n, so this reads as the spread over fit choices understating
   the extrapolation error, as for ω∞ in matter/CSS.md §7.
 
-## 4. Proposed text for matter/CSS.md, matter/COMPLEX_CRITICAL.md and the README
+## 4. Proposed text for matter/CSS.md, matter/COMPLEX_CRITICAL.md, matter/STRUCTURE.md and the README
 
-PENDING
+For matter/CSS.md §11, replacing the bullet "**The λ = 2 mode of the CSS inner solution was not constructed
+explicitly.**":
+
+> - **The λ = 2 mode of the CSS inner solution** is constructed (the s-translate plus the gauge term with constant P)
+>   and found as a zero of the inner perturbation determinant, to 1.4×10⁻¹² at κ = 0, with the other exact modes
+>   λ = 0, 1, ±iω ([CSS_STABILITY.md](CSS_STABILITY.md) §1). It inherits the status of the selection rule
+>   (Conjecture 1).
+
+For matter/CSS.md §11, the bullet "**Other κ.**", one sentence after its first: "The CSS's oscillatory pair crosses
+to Re λ < 0 at κ_c(D) = 0.0757, 0.0895, 0.0993, 0.1066, 0.1103 at D = 4, 6, 10, 20, 40 and 0.1143 at D = ∞
+([CSS_STABILITY.md](CSS_STABILITY.md) §2), so the CSS can be critical only for κ > κ_c(D)."
+
+For matter/COMPLEX_CRITICAL.md §4, "Status", replacing "Open: the 1/n fits give Im λ_osc / ω → 1.9935 with no visible
+spread, not 2; whether the limit is 2 with a slower correction (a log, or a non-analytic term) is not decided by
+D ≤ 80.": "The D = ∞ inner problem has the pair at λ_osc = 0.5365223 ± 7.9320242i, Im λ_osc/ω∞ = 1.99349, and no other
+growth rate besides λ = 1, 2 in its boxes ([CSS_STABILITY.md](CSS_STABILITY.md) §1): the CSS is not critical at D = ∞
+either, and the limit of Im λ_osc/ω is not 2." The proposed text of its §6 for matter/CSS.md's κ = 0 bullet can end
+with the same clause.
+
+For matter/STRUCTURE.md §7, replacing "while it is for κ ≳ 0.075)": "while it is for κ > 0.0757 [HE97, recomputed in
+matter/CSS_STABILITY.md], and its oscillatory pair is stable only for κ > κ_c(D), which rises to 0.114 at D = ∞)".
+
+For matter/LITERATURE.md §5.2, after "[HE97] find a family of CSS solutions whose stability changes at κ ≈ 0.0754":
+"(recomputed as 0.075733 by two independent methods in matter/CSS_STABILITY.md §2.2; at 0.0754 the oscillatory pair
+still grows)".
+
+For the README, in "What is known about the selection, and what is open", one sentence: "For the Hirschmann–Eardley
+κ-model the phase-rotating CSS solution can be critical only above a coupling κ_c(D), where its oscillatory pair of
+modes turns stable [^HE97]: κ_c = 0.0757 at D = 4 (Hirschmann and Eardley quote 0.0754), rising to 0.110 at D = 40 and
+to 0.114 at D = ∞, where the free complex scalar's CSS keeps the pair, λ = 0.537 ± 7.932i (matter/CSS_STABILITY.md)."
+Machine-readable sources for `check_numbers.py`: raw `I377-mac/crit.jsonl` and `kcrit_inf.jsonl`,
+`I376-mac/roots_k0.jsonl`.
 
 ## 5. Proposed notes/LIT_REVIEW.md entries
 
@@ -231,10 +306,10 @@ PENDING
   κ ≈ 0.0754" ("Hopf-type bifurcation"); Table 1: γ = 0.1469 (κ = 10), 0.2641 (1), "≳ 0.373" at "≲ 0.0754", 0.3871 (0),
   ω_BD = −3/2 + 1/(8κ); more unstable modes by κ ≈ −0.28. Does not contain: the oscillatory mode's σ at the crossing or
   for any κ > 0, an error estimate for 0.0754, any dimension other than 4.
-- **[L98] S. L. Liebling, "Multiply unstable black hole critical solutions", PRD 58, 084015 (1998), arXiv:gr-qc/9805043**
-  (abstract only, 2026-11-14): evolutions of the same model in which a family of data finds the CSS as its critical
-  solution in the region where the DSS is the attractor. A search (2026-11-14) found no later computation of κ_c(4)
-  besides HE97's; the review literature quotes 0.0754.
+- **[L98] S. L. Liebling, "Multiply unstable black hole critical solutions", PRD 58, 084015 (1998),
+  arXiv:gr-qc/9805043** (abstract only, 2026-11-14): evolutions of the same model in which a family of data finds the
+  CSS as its critical solution in the region where the DSS is the attractor. A search (2026-11-14) found no later
+  computation of κ_c(4) besides HE97's; the review literature quotes 0.0754.
 
 ## 6. Scripts, data and how to reproduce
 
@@ -248,7 +323,7 @@ the machine shared. Raw output: [choptuik-large-d-raw](https://github.com/nmoinv
 | `css_inner_pert_eqs.py [--mutate=…]` | sympy: the linearized rhs is the ε-derivative of the inner PDE in (s, t) | 20 s |
 | `css_kappa_crit.py path / crit / bgpath / selftest` | finite D: the background and λ_osc, λ_phys followed in κ at two radii; κ_c refined at each radius; the background alone along κ; the crossing finder on a planted function | 10–60 s per κ step; 1–4 min per κ_c |
 
-To reproduce from the repository root (the second and third lines need the venv of SETUP.md):
+To reproduce from the repository root, with the venv of SETUP.md:
 
 ```
 python3 solver/matter/css_inner_pert_eqs.py                                  # worst residual 2e-15, exit 0
@@ -265,7 +340,20 @@ python3 solver/matter/css_scan.py 0.0754 4 --guess=1.856291661723,4.797192767370
 
 ## 7. Recommended tasks
 
-PENDING
+1. **Uniqueness of the axion–dilaton CSS's unstable mode at D = ∞.** What: `css_inner_pert.py count 1 …` in the boxes
+   A, B, C, S with ω∞(κ = 1) = 3.19989, and a wider box (Re λ < 8, |Im λ| < 3ω∞), at settings A and B. Why:
+   matter/CSS.md §11 lists uniqueness at D = ∞ as open, and this code makes it a count of a few hours. Acceptance (can
+   fail): B counts exactly 2 (λ = 1, 2) at both settings; every other box counts 0, or its zeros are located and their
+   Re λ reported; a planted zero adds one and `--mutate=nometric` changes B. Depends on: #376.
+2. **A second implementation of the D = ∞ perturbation determinant.** What: the inner perturbation problem in
+   matter/STRUCTURE.md §7's variables (y, σ, c), as in `struct_css.py`, or a Chebyshev discretization of the inner ODE
+   on a ray, sharing no code with `css_inner_pert.py`. Why: AGENTS.md asks for independent checks; the present
+   cross-check against finite D is an extrapolation. Acceptance (can fail): λ = 2 found to 10⁻¹⁰, λ_osc(∞, κ = 0) and
+   κ_c(∞) reproduced to 10⁻⁸. Depends on: #376.
+3. **λ_osc at D = ∞ for κ ≥ 0.95.** What: `css_inner_pert.py kpath 0.9 1 0.01` at settings A, B and C, and a box
+   count around the result at κ = 1. Why: the path of §2.4 is unresolved there (the settings end 12 apart at κ = 1), so
+   the axion–dilaton's damped pair at D = ∞ is not known. Acceptance (can fail): the settings agree to 10⁻⁸ at every
+   κ, and the box count around λ_osc(κ = 1) is 1 at two settings. Depends on: #377.
 
 ## References
 

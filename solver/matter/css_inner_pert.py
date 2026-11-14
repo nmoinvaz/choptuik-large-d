@@ -431,9 +431,10 @@ def main():
         N = 60
 
         def relerr(x, y):
-            sc = max(abs(v) for v in y[:N]) if any(abs(v) > 0 for v in y[:N]) else 1
-            return max(float(abs(x[k] - y[k]) / max(abs(y[k]), 1e-30 * sc)) if abs(y[k]) > 0 else float(abs(x[k]) / sc)
-                       for k in range(N))
+            # relative to the exact coefficient, or to the background's |a_k| (the series' natural size) where larger:
+            # an exact coefficient 0 is then compared on the scale of the coefficients around it
+            a = bg.coef[0]
+            return max(float(abs(x[k] - y[k]) / max(abs(y[k]), abs(a[k]))) for k in range(N))
         for lam, cA, cB, cbe in exact_modes(bg):
             A_, B_, be_ = pert_series(bg, lam, cA[0], cB[0], N)
             e = max(relerr(A_, cA), relerr(B_, cB))
