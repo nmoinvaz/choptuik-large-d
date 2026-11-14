@@ -169,9 +169,10 @@ at n = 240 and K = 130, its sum at u₀ misses by 3.0×10⁵ (S3).
 The factored series splits b_k = B_sl,k + γ χ̂_k.
 - **B_sl, the minimal solution.** It solves rows k = 0, …, K of the recurrence with b_(K+1) = 0, one (K + 1) × (K + 1)
   system per τ point. The rows are diagonally dominant (n − 1 + k > k + 1 + Σ|q_j|), so the mass mode decays from high
-  orders to low ones. Solving a recurrence backward for its minimal solution is Miller's method. Its sources are in
-  [LIT_REVIEW.md](LIT_REVIEW.md), addendum of #733 (B1–B8), whose discrepancy 1 names the forms closest to this one,
-  Olver's boundary-value form (B4) and Gautschi's first-order backward recursion (B7).
+  orders to low ones. Solving the rows with b_(K+1) = 0 is the boundary-value form of backward recurrence. For a
+  first-order inhomogeneous equation it is Gautschi's backward recursion from y_ν = 0 (1997), and for second order it
+  is Olver's algorithm (1967), which he regards as a generalization of Miller's (1952) ([LIT_REVIEW.md](LIT_REVIEW.md),
+  addendum of #733, B4 and B7).
 - **χ̂**, the mass mode normalized so that Σ_(k≤K) χ̂_k u₀^k = 1, computed forward (the dominant solution is stable
   that way) or from its closed form.
 - **γ**, one number per τ point, fixed by the value at the node. With γ = B_K − Σ_k B_sl,k u₀^k, B's sum at u₀ is the
