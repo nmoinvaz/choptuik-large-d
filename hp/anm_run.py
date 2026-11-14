@@ -313,6 +313,9 @@ def main():
         f = "--" + k
         if f in args:
             i = args.index(f); opt[k] = type(opt[k])(args[i + 1]); del args[i:i + 2]
+    unknown = [x for x in args if x.startswith("--")]
+    if unknown or len(args) != 2:      # an unknown option is refused, not ignored (#792 lost a run to one)
+        raise SystemExit(f"anm_run.py: unknown options {unknown}" if unknown else f"anm_run.py: expected RAW OUT, got {args}")
     raw, out = args[0], args[1]
     if opt["pred_q"] and (not opt["jet_q"] or (opt["reseed"] and not opt["reseed_q"])):
         raise SystemExit("--pred_q needs --jet_q 1, and with --reseed also --reseed_q 1")
