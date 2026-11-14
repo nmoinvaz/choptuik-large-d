@@ -407,9 +407,24 @@ has not been investigated.
 
 **Discrepancy (#774).** The runs from here to the end of 4.4 (#725 to #769, all on the win laptop) used an hpkernel
 built before #523, with the rounded freeze projector, so their states solve that system. On main's build, with the exact
-projector, #742's D 117 state has pinned max|F| 2.0e-34 against 1.75e-64, all in the horizon block's p rows (found by
-#752). The Δ shifts that the exact projector gives at D 99.875 and D 113–120 are not measured yet, so the values below
-hold for the rounded-projector system until #774 re-polishes their states.
+projector, their states start at a pinned max|F| of 2.0e-34 to 2.4e-34. At D 117 all of it is in the horizon block's p
+rows (#752). Re-polished there in octo-double with each run's flags, every state converges in 3 or 4 steps to 4.5e-69
+or below, and Δ moves by about 1e-19 (#774, raw `I774-mac/` f8e0491e):
+
+| D | states | Δ on the exact projector − Δ on the rounded one |
+|---|---|---|
+| 99.875 | cont3 and X2c on cont3's plan, X2 on its own plan | +1.4994e-20 |
+| 113 | #742's | −9.60e-20 |
+| 117 | #742's | +1.57e-20 |
+| 120 | #742's | +7.64e-20 |
+
+So the absolute Δ quoted below at D 99.875, 1.745150028164499252944352893640343550633 (#727), is the rounded
+system's root. The exact system's is 1.745150028164499252959346891093763008937. The differences between plans are not
+affected. X2 − X2c is −1.658041e-25 on the rounded projector and −1.658042e-25 on the exact one, so the projector moves
+the two plans' roots alike, to 1.2e-31. That is one pair of plans, and the node-shifted plans of #741–#769 are inferred
+to behave the same way. The held chain's states move by only −2.5e-27 to −5.8e-27 at D 113–120, so #742's
+Δ_full − Δ_held changes by the full system's shift alone, at most 9.6e-20, and every quoted digit stands. A control
+re-polish on the old build reproduces #727's X2c root bit for bit.
 
 How far two converged roots agree depends on D (#725, raw `I725-win/` 9672e70d). Two a = 1/16 steps from cont3's
 D 99.75 state, each converged to a quad-double max|F| of 2e-49 to 4e-49, reproduce cont3's Δ to 5.7e-34 at D 99.8125
