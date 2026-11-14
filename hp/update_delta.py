@@ -9,17 +9,19 @@ The steps, in order:
 2. export_lowD.py --raw RAWDIR writes data/delta_dd_lowD.csv.
 3. export_dd.py --raw RAWDIR writes data/delta_dd.csv, which takes the low-D rows.
 4. export_delta_all.py RAWDIR writes data/delta_all.csv and data/delta_fits.csv.
-5. export_delta_all.py --verify checks the master table.
+4b. track_c.py csv writes data/delta_series.csv, track C's 1/n series fitted on the rows up to D 245.64 (#804), and
+   export_delta_all.py RAWDIR runs again, so the table takes its series rows.
+5. export_delta_all.py --verify checks the master table, the series rows and the weak pivot's coverage (#806).
 6. Each --mutate control runs and must fail by its check (one per kind, and held, frontier and t85 for the chains'
    checks, fits, fits_table and half for the error bar over the held fit's degree, pinned_qd, gap, neighbours and
    cross for the pinned rows' rules, qd_neighbours, dm_neighbours and one_sided for the rules of the qd rows with one
-   start and the low-D rows at one M). A kind with no rows has nothing to mutate, and its control is reported as
-   skipped.
+   start and the low-D rows at one M, series for the series rows and weak_pivot, K halved, for the weak pivot's err).
+   A kind with no rows has nothing to mutate, and its control is reported as skipped.
    The master table is then restored and verified again.
 7. export_delta_all.py --interp_check checks the interpolation of the comparison fits at D 173, 174 and 186 to 191, and
    its control --mutate=interp must fail.
-7b. export_delta_all.py --lam_screen screens the chain_fit backbone's gauge rate (#637), and its control
-   --mutate=lam must fail.
+7b. export_delta_all.py --lam_screen screens the chain_fit backbone's gauge rate (#637; past D 250.46 against each
+   state's stored prediction, #787), and its controls --mutate=lam and --mutate=lam_pred must fail.
 8. compare_published.py writes data/delta_published_compare.csv, every published value against ours.
 9. compare_gamma_published.py writes data/gamma_published_compare.csv, the published gamma and Delta below D = 14
    against ours (#620), whose check in check_numbers.py fails once our values move by more than 1e-10.
@@ -37,7 +39,7 @@ from export_delta_all import COLS, fit_span, replaced
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 DATA = os.path.join(HERE, "data")
-TABLES = ["delta_qd.csv", "delta_dd_lowD.csv", "delta_dd.csv", "delta_all.csv", "delta_fits.csv"]
+TABLES = ["delta_qd.csv", "delta_dd_lowD.csv", "delta_dd.csv", "delta_all.csv", "delta_fits.csv", "delta_series.csv"]
 
 
 def rows(name):
@@ -73,6 +75,8 @@ def main():
     ok &= run(["export_lowD.py", "--raw", raw])
     ok &= run(["export_dd.py", "--raw", raw])
     ok &= run(["export_delta_all.py", raw])
+    ok &= run(["track_c.py", "csv"])
+    ok &= run(["export_delta_all.py", raw])
     if not ok:
         return 1
     master = os.path.join(DATA, "delta_all.csv")
@@ -81,7 +85,8 @@ def main():
     print("checks of the master table:", flush=True)
     ok &= run(["export_delta_all.py", raw, "--verify"])
     for m in ("dd", "qd", "pinned", "pinned_qd", "gap", "neighbours", "cross", "chain_fit", "chain", "held", "frontier",
-              "projector", "t85", "fits", "fits_table", "half", "qd_neighbours", "dm_neighbours", "one_sided"):
+              "projector", "t85", "fits", "fits_table", "half", "qd_neighbours", "dm_neighbours", "one_sided",
+              "series", "weak_pivot"):
         ok &= run(["export_delta_all.py", raw, "--verify", f"--mutate={m}"], expect=1)
     with open(master, "wb") as f:
         f.write(built)
@@ -90,6 +95,7 @@ def main():
     ok &= run(["export_delta_all.py", raw, "--interp_check", "--mutate=interp"], expect=1)
     ok &= run(["export_delta_all.py", raw, "--lam_screen"])
     ok &= run(["export_delta_all.py", raw, "--lam_screen", "--mutate=lam"], expect=1)
+    ok &= run(["export_delta_all.py", raw, "--lam_screen", "--mutate=lam_pred"], expect=1)
     ok &= run(["compare_published.py"])
     ok &= run(["compare_gamma_published.py"])
     print("tables:", flush=True)

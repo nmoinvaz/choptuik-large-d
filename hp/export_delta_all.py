@@ -4,9 +4,9 @@ chain's frontier, with the kind of computation, an error estimate and what that 
 
     cd hp && python3 export_delta_all.py RAWDIR [--verify] [--mutate=dd|qd|pinned|pinned_qd|gap|neighbours|cross
                                                    |chain_fit|chain|held|frontier|projector|t85|fits|fits_table|half
-                                                   |qd_neighbours|dm_neighbours|one_sided]
+                                                   |qd_neighbours|dm_neighbours|one_sided|series|weak_pivot]
     cd hp && python3 export_delta_all.py RAWDIR --interp_check [--mutate=interp]
-    cd hp && python3 export_delta_all.py RAWDIR --lam_screen [--mutate=lam]
+    cd hp && python3 export_delta_all.py RAWDIR --lam_screen [--mutate=lam|lam_pred]
 
 RAWDIR is a clone of the raw-data repository (git clone https://github.com/nmoinvaz/choptuik-large-d-raw). --verify
 re-reads every row of the written CSV from the source and state its row names, rebuilds the err and err_kind of the qd
@@ -19,7 +19,9 @@ first "dd-qd gap" row, --mutate=neighbours the err of the first "pins neighbours
 --mutate=qd_neighbours, dm_neighbours and one_sided drop the err of the first "starts neighbours", "dM neighbours"
 and "dM neighbours one-sided" row (the controls of the qd and low-D rules, #764);
 --mutate=half drops the err of the first chain_fit row whose fits are all interpolated below D 191.5 (the half steps'
-control); --mutate=held labels the last chain_fit row chain, and
+control); --mutate=series moves the first series row by one unit (as for a kind); --mutate=weak_pivot halves the err of
+every "weak pivot" row (K halved, #806), which the coverage check must catch, first at D 255.05;
+--mutate=held labels the last chain_fit row chain, and
 --mutate=frontier moves the first chain row below the chain_fit
 frontier (or, when chain_fit replaces every chain row, puts the chain's last row back), --mutate=projector drops the
 first projector err (data/projector_shift.csv's), and --mutate=t85 gives the first
@@ -33,9 +35,18 @@ below) must equal its state's to 1e-14. It exits 1 otherwise;
 --lam_screen is the gauge rate's smoothness screen (#622, #637): lam_g of each chain_fit backbone state (hp/lam_gauge.py,
 from its parts) against the polynomial of degree SCREEN_DEG in 1/(D - 2) through the SCREEN_N nearest other backbone states (a cubic
 through six leaves its own truncation, up to 1.4e-10 near D 77, above SCREEN_TOL); it exits 1 when one
-departs by more than SCREEN_TOL. Every other chain_fit-held state is set against the backbone's polynomial at its D too, and
+departs by more than SCREEN_TOL. Past PRED_FROM (250.46) the polynomial cannot follow the weak pivot's term, which lam_g
+carries (#807, notes/LARGE_D_WALL.md "The gauge rate carries the same term"), so a state whose run stored its
+prediction (pred_pin3_D<D>.npz, the series of the state before it at this D) is screened against that instead:
+|lam_g(state) - lam_g(prediction)| <= PRED_TOL (1e-20; #603's states are within 5.1e-31). Every other chain_fit-held
+state below PRED_FROM is set against the backbone's polynomial at its D too, and
 those above SCREEN_TOL are listed (information: they are not rows of the table). --mutate=lam adds 1e-10 to the lam_g of
-the backbone state nearest D 240, and the screen must fail.
+the backbone state nearest D 240, and --mutate=lam_pred to that of the state nearest D 255 (the prediction check's
+control), and the screen must fail.
+
+--verify also checks the series rows against data/delta_series.csv and that file's fingerprint against the table's rows
+it was fitted on (series_input), and the weak pivot's coverage: past WP_FROM every chain_fit row with a series value
+there lies within its err of it, and every row in WP_CHECK (253.64-259.72, #805's out-of-sample range) has one.
 
 Columns: D; Delta in up to four parts, Delta = q0 + q1 + q2 + q3 (each an f64; q2 and q3 are empty where the value is
 double-double); kind; err and err_kind; the source record; published_ref, published_Delta and published_diff, the most
@@ -103,6 +114,19 @@ precedence where two share a D:
           same D with the same held harmonics and precision (another step history, corrector or machine), err is the
           largest difference (err_kind "runs"), a spread, not a bound. The held trend biases every chain value low, by
           5e-8 at D 80 growing to 3.2e-6 at D 200 (13.29); err does not include it.
+          chain_fit past WP_FROM (track C's comparison frontier, 245.64): err is the larger of the above and WP_K / p_min,
+          p_min the state's smallest LU pivot (pivots[0] of the record of the step from it, or of its stored series for
+          a run's last state; a state with neither, a running chain's newest, has no row until it has one), err_kind
+          "weak pivot" (#805, #806; notes/LARGE_D_WALL.md "The chain past the comparison
+          frontier"). The chain's departure from track C's series there is one smooth term of the pinned M = 32 system
+          that grows as p_min falls; WP_K is twice its largest |chain - series| p_min on 246-253.4, and it covers every
+          later state to 259.72 out of sample. It is an envelope, an estimate, not a bound.
+  series  track C's 1/n series (#801, #804; hp/track_c.py, notes/LARGE_D_WALL.md "Track C") at D 250 to 400, from
+          data/delta_series.csv (track_c.py csv): the median of the accepted fits to the dd, qd and chain_fit rows up
+          to D 245.64, in two parts. err is E = max(h, s): err_kind "series fits" where h, half the accepted fits'
+          range, is the larger, "series data" where s, the central fit's propagated data error, is. A spread over fit
+          choices calibrated on planted functions, not a bound, and conditional on Delta being analytic in 1/n below
+          245 up to exponentially small terms. It has the lowest precedence.
 """
 import bisect
 import csv
@@ -120,7 +144,7 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 OUT = os.path.join(HERE, "data", "delta_all.csv")
 COLS = ["D", "Delta_q0", "Delta_q1", "Delta_q2", "Delta_q3", "kind", "err", "err_kind", "source", "published_ref",
         "published_Delta", "published_diff", "state"]
-RANK = {"qd": 0, "dd": 1, "pinned": 2, "chain_fit": 3, "chain": 4}
+RANK = {"qd": 0, "dd": 1, "pinned": 2, "chain_fit": 3, "chain": 4, "series": 5}
 HELD = {"chain_fit": "fit", "chain": "trend"}
 # pinned runs whose rows chain_fit replaces inside its span (their layouts' spread, 13.25)
 FIT_REPLACES = ("T85-mac/",)
@@ -147,6 +171,20 @@ EXTRAP_N = 6
 SCREEN_N = 8
 SCREEN_DEG = 5
 SCREEN_TOL = 1e-11
+# past PRED_FROM the polynomial cannot follow the weak pivot's term (#807): a backbone state whose run stored its
+# prediction (anm_run.py --save_pred 1) is screened against it instead, |lam_g(state) - lam_g(prediction)| <= PRED_TOL
+PRED_FROM = 250.46
+PRED_TOL = 1e-20
+# past track C's comparison frontier WP_FROM the chain_fit rows take the weak pivot's term WP_K / p_min (#805, #806),
+# and every row there with a series value is checked to be covered by its err; WP_CHECK is #805's out-of-sample range,
+# where every row must have one
+WP_FROM = 245.64
+WP_K = 4.4e-37
+WP_CHECK = (253.64, 259.72)
+# track C's 1/n series (#801, #804), written by track_c.py csv: rows ("row") and its values at the chain_fit rows
+# past WP_FROM ("chain"), with the fingerprint of the rows it was fitted on
+SERIES = os.path.join(HERE, "data", "delta_series.csv")
+SERIES_DMAX = 245.64
 INTERP_N = 6
 # the interpolation's control: leave-one-out at these D, where every chain has a state (173, 174, 190 and 191 beside
 # the half steps 173.5 and 190.5)
@@ -500,6 +538,7 @@ def chain_rows(keep=False, quiet=False):
                              kind=kind, err=err, err_kind=ek,
                              source=os.path.join(os.path.dirname(rel), "anm_run.jsonl"), state=rel))
     extrapolate_fits(rows)
+    weak_pivot(rows, backbone_pivots(states, fit))
     return rows, fits
 
 
@@ -519,6 +558,67 @@ def extrapolate_fits(rows):
             est = float(np.exp(icpt + slope * float(r["D"])))
             if est > (float(r["err"]) if r["err"] else 0.0):
                 r["err"], r["err_kind"] = f"{est:.1e}", "fits extrapolated"
+
+
+def backbone_pivots(states, bb):
+    """{round(D, 6): p_min} of the backbone's states: pivots[0] of the record of the step from each state, in the
+    backbone's folders (#805), or, for a state no step left (a run's last), its stored series' (anm_run.py --save_jet)"""
+    out = {}
+    for d in dict.fromkeys(os.path.dirname(r) for r in bb):
+        f = os.path.join(d, "anm_run.jsonl")
+        for r in records(f) if os.path.exists(os.path.join(RAW, f)) else []:
+            if r.get("pivots"):
+                out.setdefault(round(r["D0"], 6), r["pivots"][0])
+    for rel in bb:
+        k = round(states[rel][0]["D"], 6)
+        jet = os.path.join(RAW, os.path.dirname(rel), f"jet_pin3_D{states[rel][0]['D']:.4f}.npz")
+        if k not in out and os.path.exists(jet):
+            out[k] = json.loads(str(np.load(jet)["meta"]))["pivots"][0]
+    return out
+
+
+def weak_pivot(rows, pmin):
+    """past WP_FROM a chain_fit row's err is the larger of its own and WP_K / p_min (err_kind "weak pivot", #806): the
+    envelope of #603's departure from track C's series, calibrated on 246-253.4 with a factor 2 and covering #805's
+    states to 259.72 out of sample, an estimate, not a bound"""
+    held_back = []
+    for r in rows:
+        if r["kind"] == "chain_fit" and float(r["D"]) > WP_FROM + TOL_D:
+            p = pmin.get(round(float(r["D"]), 6))
+            if p is None:
+                # a running chain's newest state: its pivot comes with the step from it (record or stored series)
+                held_back.append(r)
+                continue
+            t = WP_K / p
+            if t > (float(r["err"]) if r["err"] else 0.0):
+                r["err"], r["err_kind"] = f"{t:.1e}", "weak pivot"
+    for r in held_back:
+        rows.remove(r)
+        print(f"chain_fit D {r['D']} ({r['state']}): no LU pivot stored yet, so the row waits for it")
+
+
+def series_input(rows):
+    """the fingerprint of the rows track C is fitted on (track_c.load_real's: dd with err_kind check, qd with starts,
+    chain_fit, D <= SERIES_DMAX): sha256 of their D, parts and err"""
+    import hashlib
+    sel = [r for r in rows if float(r["D"]) <= SERIES_DMAX + TOL_D and (
+        (r["kind"] == "dd" and r["err_kind"] == "check") or (r["kind"] == "qd" and r["err_kind"] == "starts")
+        or r["kind"] == "chain_fit")]
+    txt = "\n".join(",".join([r["D"]] + [r[f"Delta_q{i}"] for i in range(4)] + [r["err"]])
+                    for r in sorted(sel, key=lambda r: float(r["D"])))
+    return hashlib.sha256(txt.encode()).hexdigest()[:16]
+
+
+def series_csv():
+    """data/delta_series.csv's rows, [] where it does not exist"""
+    return list(csv.DictReader(open(SERIES))) if os.path.exists(SERIES) else []
+
+
+def series_rows():
+    """the series rows of the table (use "row" of data/delta_series.csv): Delta in two parts, err its E"""
+    return [dict(D=r["D"], Delta_q0=r["Delta_q0"], Delta_q1=r["Delta_q1"], Delta_q2="", Delta_q3="", kind="series",
+                 err=r["E"], err_kind=r["err_kind"], source="data/delta_series.csv:track_c", state="")
+            for r in series_csv() if r["use"] == "row"]
 
 
 def interp_check(var="1/n"):
@@ -615,10 +715,14 @@ def build():
     chain, fits = chain_rows()
     span = fit_span(chain)
     rows = {}
-    for r in qd_rows() + dd + [r for r in pinned_rows(dmax) if not replaced(r, span)] + chain:
+    for r in qd_rows() + dd + [r for r in pinned_rows(dmax) if not replaced(r, span)] + chain + series_rows():
         k = round(float(r["D"]), 9)
         if k not in rows or RANK[r["kind"]] < RANK[rows[k]["kind"]]:
             rows[k] = r
+    sc = series_csv()
+    if sc and sc[0]["input"] != series_input(rows.values()):
+        print(f"series: data/delta_series.csv was fitted on other rows (input {sc[0]['input']}, the table's"
+              f" {series_input(rows.values())}); rerun track_c.py csv, then this export", flush=True)
     pub = published()
     return [{**rows[k], **published_cols(rows[k], pub)} for k in sorted(rows)], fits
 
@@ -691,6 +795,15 @@ def verify(rows, mutate=""):
             sys.exit(2)
         r["err"] = r["err_kind"] = ""
         print(f"mutated: the chain_fit row at D {r['D']} without its err")
+    elif mutate == "weak_pivot":
+        # K halved: every weak-pivot row's err halved (WP_K / p_min exceeds twice the fits term at every such row)
+        wp = [r for r in rows if r["err_kind"] == "weak pivot"]
+        if not wp:
+            print("no weak pivot rows, so nothing to mutate")
+            sys.exit(2)
+        for r in wp:
+            r["err"] = f"{float(r['err']) / 2:.1e}"
+        print(f"mutated: the {len(wp)} weak pivot rows' err halved (K {WP_K / 2:.1e})")
     elif mutate == "held":
         r = [r for r in rows if r["kind"] == "chain_fit"][-1]
         r["kind"] = "chain"
@@ -732,6 +845,8 @@ def verify(rows, mutate=""):
     for r in pinned_rows(max(float(x) for x in dd)):
         pin.setdefault(r["D"], r)
     recs = {}
+    sc = series_csv()
+    ser = {r["D"]: r for r in sc if r["use"] == "row"}
     for r in rows:
         parts = [r[f"Delta_q{i}"] for i in range(4)]
         if r["kind"] in ("dd", "qd"):
@@ -754,6 +869,12 @@ def verify(rows, mutate=""):
                 bad += 1
                 print(f"DIFFERS: pinned D {r['D']}: err {r['err']} ({r['err_kind']}) from {r['source']} against"
                       f" {w and (w['err'], w['err_kind'], w['source'])}")
+        elif r["kind"] == "series":
+            s = ser.get(r["D"])
+            want = [s["Delta_q0"], s["Delta_q1"], "", ""] if s else ["?"] * 4
+            if not s or (r["err"], r["err_kind"], r["source"]) != (s["E"], s["err_kind"], "data/delta_series.csv:track_c"):
+                bad += 1
+                print(f"DIFFERS: series D {r['D']}: err {r['err']} ({r['err_kind']}) against {s and (s['E'], s['err_kind'])}")
         else:
             want = load_state(r["state"])[1]
             h = held_of(os.path.dirname(r["state"]))[0]
@@ -787,6 +908,38 @@ def verify(rows, mutate=""):
     for d in have:
         bad += 1
         print(f"DIFFERS: delta_fits.csv D {d}: no chain_fit row has it")
+    # the series rows: each of data/delta_series.csv's in the table, fitted on the table's rows up to SERIES_DMAX
+    if sc:
+        miss = sorted(set(ser) - {r["D"] for r in rows if r["kind"] == "series"}, key=float)
+        if miss:
+            bad += len(miss)
+            print(f"DIFFERS: {len(miss)} series rows of data/delta_series.csv not in the table: {miss[:3]}")
+        if sc[0]["input"] != series_input(rows):
+            bad += 1
+            print(f"DIFFERS: data/delta_series.csv was fitted on other rows (input {sc[0]['input']}, the table's"
+                  f" {series_input(rows)}): rerun track_c.py csv")
+    # the weak pivot's coverage (#806): past WP_FROM each chain_fit row with a series value within its err of it, and
+    # every row in WP_CHECK with one
+    cov = {r["D"]: total([r["Delta_q0"], r["Delta_q1"]]) for r in sc if r["use"] == "chain"}
+    past = [r for r in rows if r["kind"] == "chain_fit" and float(r["D"]) > WP_FROM + TOL_D]
+    ncov, worst = 0, (0.0, None)
+    for r in past:
+        if r["D"] not in cov:
+            if WP_CHECK[0] - TOL_D <= float(r["D"]) <= WP_CHECK[1] + TOL_D:
+                bad += 1
+                print(f"DIFFERS: chain_fit D {r['D']}: no series value to check its err against")
+            continue
+        d = abs(float(total([r[f"Delta_q{i}"] for i in range(4)]) - cov[r["D"]]))
+        q = d / float(r["err"]) if r["err"] else float("inf")
+        worst = max(worst, (q, r["D"]))
+        if q > 1:
+            bad += 1
+            print(f"DIFFERS: chain_fit D {r['D']}: |chain - series| {d:.2e} above its err {r['err']} ({r['err_kind']})")
+        else:
+            ncov += 1
+    if past:
+        print(f"  weak pivot: {ncov} of {len(past)} chain_fit rows past {WP_FROM} within their err of the series;"
+              f" largest |chain - series|/err {worst[0]:.3f} at D {worst[1]}")
     print(f"verify: {len(rows) - bad} of {len(rows)} rows equal their sources, {len(cfits)} rows of delta_fits.csv"
           " rebuilt")
     return bad == 0
@@ -815,8 +968,21 @@ def lam_screen(mutate=""):
         t = [1 / (p[2] - 2) for p in near]
         c = np.polyfit([float(x - 1 / (D - 2)) for x in t], [float(p[1] - near[0][1]) for p in near], SCREEN_DEG)
         return near[0][1] + mp.mpf(float(c[-1]))
-    bad = 0
+    if mutate == "lam_pred":
+        k = min(range(len(pts)), key=lambda i: abs(pts[i][2] - 255))
+        pts[k] = (pts[k][0], pts[k][1] + mp.mpf("1e-10"), pts[k][2])
+        print(f"mutated: lam_g of {pts[k][0]} + 1e-10")
+    bad, npred = 0, 0
     for i, (rel, lg, D) in enumerate(pts):
+        pred = os.path.join(RAW, os.path.dirname(rel), f"pred_pin3_D{float(D):.4f}.npz")
+        if D > PRED_FROM and os.path.exists(pred):
+            # past PRED_FROM: the state against the prediction it was corrected from, the series of the state before
+            npred += 1
+            d = float(lg - lam(os.path.relpath(pred, RAW))[0])
+            if abs(d) > PRED_TOL:
+                bad += 1
+                print(f"  DEPARTS: backbone {rel} D {float(D):.4f}: lam_g - its prediction's = {d:+.2e}")
+            continue
         d = float(lg - cubic(pts[:i] + pts[i + 1:], D))
         if abs(d) > SCREEN_TOL:
             bad += 1
@@ -827,15 +993,16 @@ def lam_screen(mutate=""):
         if rel in on or held[os.path.dirname(rel)] != held[os.path.dirname(bb[0])]:
             continue
         lg, D = lam(rel)
-        if not pts[0][2] < D < pts[-1][2]:
+        if not pts[0][2] < D < min(pts[-1][2], PRED_FROM):
             continue
         d = float(lg - cubic(pts, D))
         if abs(d) > SCREEN_TOL:
             flagged.append((float(D), d, rel))
     for D, d, rel in flagged:
         print(f"  off the backbone (not in the table): {rel} D {D:.4f}: {d:+.2e}")
-    print(f"verify: lam screen, {len(pts) - bad} of {len(pts)} backbone states within {SCREEN_TOL:.0e} of their neighbours' polynomial;"
-          f" {len(flagged)} other chain_fit-held states off it")
+    print(f"verify: lam screen, {len(pts) - bad} of {len(pts)} backbone states within {SCREEN_TOL:.0e} of their neighbours' polynomial"
+          f" or, {npred} past D {PRED_FROM}, {PRED_TOL:.0e} of their prediction's; {len(flagged)} other chain_fit-held states off"
+          " the polynomial")
     return bad == 0
 
 
