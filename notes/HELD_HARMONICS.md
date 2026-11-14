@@ -440,8 +440,20 @@ shifted by 1e-3 and polished in octo-double, every polish converging to at most 
 nodes act above 1e-27. A repeat of `segs[3][2]` from another start reproduces it to 1.6e-56. The single-node effects do
 not add up to the plans' offsets, though. The six sum to −3.46e-26, against A1's +2.97e-26 and X2's −1.66e-25, and
 scaled by each plan's actual shifts they give −1.4e-27 and −1.4e-26. So the effects are not linear in the shift, or not
-additive. The expectation written before the run, that segment 0 or 1 carries the offsets, failed. #754 takes the last
-segment whole at each plan's nodes.
+additive. The expectation written before the run, that segment 0 or 1 carries the offsets, failed.
+
+The last segment taken whole carries each plan's offset (#754, raw `I754-win/` c40d1b53). cont3's state was polished in
+octo-double on mixed plans, every polish converging to 2.4e-62 or below. With only the last segment's two interior nodes
+at a plan's values, Δ reproduces that plan's offset, and with every other interior node at its values, Δ moves by 4e-36:
+
+| plan | offset | last segment at its nodes | ratio | the rest at its nodes |
+|---|---|---|---|---|
+| A1 | +2.9709e-26 | +2.9709e-26 | 1.0000 | −4.2e-36 |
+| X2 | −1.6580e-25 | −1.6580e-25 | 1.0000 | −2.5e-36 |
+
+**So Δ's plan dependence at D 99.875 is set by the last segment's two interior nodes, and the rest of the plan acts
+10 orders of magnitude below it.** A repeat of the X2 case from A1's arrays reproduces it to 4.6e-94. Why the two nodes'
+single effects do not add up to the pair's (#751) is #763.
 
 With `--elim_switch 0` the continuation reaches D 112.75 (#726, raw `I726-win/` 647cd9f5). Every accepted step
 converges to at most 7.0e-45. The difference to the held chain keeps growing, by a factor of 1.055 per unit of D
