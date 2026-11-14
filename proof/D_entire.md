@@ -489,7 +489,11 @@ chord.
   poles (d_P ≥ 0.136), so none reproduces the real series. The set at 1.69 − 0.74i reaches the real misfit only at
   10⁻⁵–10⁻⁴ of σ₂₂, and never scatters the approximants. #547's plant with its far end 0.18 off still misfits
   5×10⁵ times less than the real series. With the zero held, the ratio-law far end lowers the real misfit 1.7 times,
-  not 2.3–2.7 (notes/PADE_FAR_END.md §15).
+  not 2.3–2.7 (notes/PADE_FAR_END.md §15). These two features do not locate the set (#718). On a lattice of 42 end
+  points, |t| = 1.9–3.8, with segment lengths 0.15–0.6 and near-end exponents 2–6, every end point at |t| ≥ 2.48
+  gives both at all three nodes. Their strength falls about 500 times outward, and the passing region reaches the
+  lattice's outer edges. The end points nearer than |t| ≈ 2.4 fail because they would need more than 13–28% of σ₂₂
+  (notes/PADE_FAR_END.md §16).
 - **The real poles reach the chord sooner than either plant.** At k = 10 the poles with s ≤ 0.71 lie within 0.015 of
   the chord, and the last one, at s = 0.88, lies 0.074 from it, on the side away from the arc. J 1250 and J 1500 agree to
   0.03 in R. k = 11 is not determined by the data.
