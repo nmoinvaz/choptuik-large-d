@@ -554,3 +554,17 @@ plans its own prediction.
 
 The full text is in `I752-mac/README.md`. They are the own test's full-step drop (#709's rule for the own test, an A/B
 at this iterate), N's crawl probed the same way, and the first step's harmonic-13 remainder against a on main's build.
+
+## 13. The natural test's full-step drop (#709)
+
+`newton_od(..., full_drop=f)` (`anm_run.py --od_full_drop`) also accepts a full-step trial whose max|F| falls to f times
+the iterate's, whatever its simplified-correction ratio. In three of chain_nsr's 7-step attempts the natural test had
+refused a λ = 1 trial at θ = 1.000 whose max|F| was 2.1e-56, 20 orders below the λ = 1/2 step that replaced it.
+
+win2 ran the A/B with f = 1e-20 on chain_nsr's attempts 4 and 5, one step each from their stored bases on #603's own
+build (raw `I709-win2/` 2452dc6b). Each pair is accepted at the same D_str in all 51 digits, and the states agree to
+8.65e-87 and 7.86e-85 (bar 1e-55). With the option the corrector takes 5 octo-double steps instead of 7, and its time
+falls from 456 to 374 s and from 530 to 358 s. The planted check at D 200 with the option converges in 7 steps to
+2.9e-64 and lies 3.2e-49 from #713's switch-0 state (8.1e-54). Its written bar, 1e-40 against ref_D200, is not met
+(1.7e-39), because ref_D200 itself is converged only to 6.5e-49. The toy check passes and its control
+(`--mutate=drop`, the floor at 1) fails. The own test's counterpart is #777.
