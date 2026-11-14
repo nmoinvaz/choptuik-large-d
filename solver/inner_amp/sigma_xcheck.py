@@ -32,6 +32,7 @@ Controls (`selftest`; each must fire):
     python3 sigma_xcheck.py replica RAW [--mutate=K]
     python3 sigma_xcheck.py reproduce RAW
     python3 sigma_xcheck.py selftest RAW --tol TOL.json
+    python3 sigma_xcheck.py jseq RAW [--out FILE]      (J 1000, 1250, 1500 at each node: where a difference sits)
 RAW is a checkout of choptuik-large-d-raw. Exit 1 when a verdict is BAD or a control does not fire.
 """
 import hashlib
@@ -271,6 +272,35 @@ def cmd_reproduce(raw, quiet=False):
     return bad
 
 
+JSEQ = {wf: (TARGET[wf][1], f"I213-win2/sigF_w{wf}_K45_J1250_p1280.json", TARGET[wf][0]) for wf in TARGET}
+JSEQ["1.00"] = ("T83-mac/scan33J1000/sigF_w1.0000_K33_J1000_p960.json",
+                "T99-win2/scan45J1250/sigF_w1.0000_K45_J1250_p1280.json", REF["1.0000"][0])
+
+
+def cmd_jseq(raw, nlist=None, out=None):
+    """Where a K45 J1500 / K33 J1000 difference sits: J 1000 -> 1250 against J 1250 -> 1500 (K 45 J 1250 of #213)."""
+    nlist = nlist or list(range(NMAX + 1))
+    rec = {}
+    print("J sequence, r relative to |sigma(J1500)|: a = J1000 vs J1500, b = J1000 vs J1250, c = J1250 vs J1500")
+    print("| n | " + " | ".join(f"{wf} a | {wf} b | {wf} c" for wf in JSEQ) + " |")
+    print("|---|" + "---|" * (3 * len(JSEQ)))
+    files = {wf: [load(raw, p) for p in ps] for wf, ps in JSEQ.items()}
+    for n in nlist:
+        cells = []
+        for wf, (f1000, f1250, f1500) in files.items():
+            den = abs(val(f1500["s"][n]))
+            a = abs(val(f1000["s"][n]) - val(f1500["s"][n])) / den
+            b = abs(val(f1000["s"][n]) - val(f1250["s"][n])) / den
+            c = abs(val(f1250["s"][n]) - val(f1500["s"][n])) / den
+            cells += [fmt(a), fmt(b), fmt(c)]
+            rec.setdefault(wf, []).append([n, mp.nstr(a, 6), mp.nstr(b, 6), mp.nstr(c, 6)])
+        print(f"| {n} | " + " | ".join(cells) + " |")
+    if out:
+        with open(out, "w") as fh:
+            json.dump({"files": {wf: [f["path"] for f in fs] for wf, fs in files.items()}, "rows": rec}, fh, indent=1)
+    return 0
+
+
 def cmd_selftest(raw, tolpath):
     ok = True
     eq, diff = cmd_replica(raw)
@@ -338,6 +368,8 @@ def main(argv):
         return 1 if cmd_reproduce(raw) else 0
     if cmd == "selftest":
         return cmd_selftest(raw, tol)
+    if cmd == "jseq":
+        return cmd_jseq(raw, out=out)
     raise SystemExit(__doc__)
 
 
