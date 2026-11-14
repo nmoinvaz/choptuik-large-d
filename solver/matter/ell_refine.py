@@ -4,7 +4,7 @@ For each D: take data/sol_{src}_D{D}.npy (kc_src; waits for it), regrid to kc, r
 save data/sol_{tag}_D{D}.npy, and find the physical growth rate (root of det M(lambda), bracketed around the value
 extrapolated from the previous points, refined by brentq).
 usage: python ell_refine.py src kc_src tag kc l "D1,D2,..." lam0 [--kappa 0.5] [--rk 1] [--no-gamma] [--tol 1e-11]
-Records: data/{tag}.jsonl."""
+Records: data/{tag}.jsonl (with |dDelta/dF|, the norm of the Delta row of J^-1, as ell_march.py records it)."""
 import os, sys, json, time, argparse
 import numpy as np
 from scipy.optimize import brentq
@@ -73,8 +73,11 @@ for D in [float(v) for v in a.Ds.split(",")]:
                   reg=a.reg)
     S = mk(a.kc, z); steps = S.freeze_from(z, a.kappa)
     z, nF, _ = lm(S, z, tol=a.tol, maxjac=4, verbose=False, reg=a.reg)
+    _, J = S.jacobian(z)
+    eD = np.zeros(len(z)); eD[-1] = 1.0
+    sensD = float(np.linalg.norm(np.linalg.lstsq(J.T, eD, rcond=None)[0]))     # |dDelta/dF|, as in ell_march.py
     rec = dict(D=D, l=a.l, kc=a.kc, kappa=a.kappa, rk=a.rk, reg=a.reg, u0=a.u0, Ks=a.Ks, src=a.src, Delta=float(z[-1]), Delta_src=float(z0[-1]),
-               F=float(nF), F_start=F0, steps=int(sum(steps.values())), constraint=S.constraint(z),
+               F=float(nF), F_start=F0, steps=int(sum(steps.values())), constraint=S.constraint(z), dDelta_dF=sensD,
                lam_gauge=S.gauge_lambda(z))
     np.save(os.path.join(HERE, "data", f"sol_{a.tag}_D{D:.4f}.npy"), z)
     if not a.no_gamma and nF < 1e-8:
