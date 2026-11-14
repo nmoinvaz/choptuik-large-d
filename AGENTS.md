@@ -227,17 +227,20 @@ tasks' fields until 2026-11-10 was removed, and its fields are on the issues as 
 - **Raw output** goes to the raw-data repository as before, in a folder `I<issue>-<machine>/` (for example `I37-win2/`),
   whose README.md starts `# I<issue>-<machine>: <what it holds>`, then the machine and the issue's URL. The comms-era
   `T<n>-<machine>/` folders stay as they are.
-- **Posts.** The work is recorded on the issue, by the agent that did it: progress posts (hourly, with cpu and memory),
-  results, discrepancies and recommended tasks are comments there, posted by the runner or subagent itself. A message to
-  the coordinator never replaces the issue post: a result sent to the coordinator is also posted on its issue by its
-  sender (Nathan, 2026-11-08). Questions, commands and other coordination go by message between the runner and the
-  coordinator; whatever they decide about a task is written on its issue as well, so the issue stays complete.
-- **Finishing.** The last comment is a summary of the results: what ran and its exits, the numbers the task asked for,
-  each control's verdict, the raw folder and its commit, anything that failed or disagrees with the text
-  (discrepancies are reported, not fixed), and the recommended tasks (below). Then the runner removes `running` and
-  closes the issue (`gh issue close <n> --comment ...`). A run that stops early says why in a comment, removes
-  `running` and leaves the issue open, so the coordinator can reassign it. Either way the runner then tells the
-  coordinator, so it can name the next task at once.
+- **Posts.** The work is recorded on the issue, by the agent that did it, and kept short. A progress post (hourly) is at
+  most five lines: the state, the ETA, cpu and memory, and the newest raw commit. It is skipped when nothing changed
+  since the last one. Tables, logs and step histories go in the raw folder's README (or, for a task without a raw
+  folder, a file on its branch), and the post links to it. A message to the coordinator never replaces the issue post: a
+  result sent to the coordinator is also posted on its issue by its sender (Nathan, 2026-11-08). Questions, commands and
+  other coordination go by message between the runner and the coordinator; whatever they decide about a task is written
+  on its issue as well, so the issue stays complete.
+- **Finishing.** The last comment leads with the answer in at most three sentences. Then come one table of the
+  acceptance criteria, each with its verdict and number, the raw folder and its commit, anything that failed or
+  disagrees with the text (discrepancies are reported, not fixed), and the recommended tasks (below), one line each,
+  with their full text in the raw README. Everything else is in the raw README. Then the runner removes `running` and
+  closes the issue (`gh issue close <n> --comment ...`). A run that stops early says why in a comment, removes `running`
+  and leaves the issue open, so the coordinator can reassign it. Either way the runner then tells the coordinator, so it
+  can name the next task at once.
 - **Numbers.** The tasks that had no comment on 2026-11-10 were made again as issues that day and have new numbers.
   [notes/ISSUE_NUMBERS.md](notes/ISSUE_NUMBERS.md) lists each old number with its new one, for a "#<n>" written before.
 - **gh.** A runner needs the gh CLI logged in with access to this repository (`gh auth status`). The repository's
