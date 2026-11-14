@@ -308,8 +308,10 @@ def build_grid(st, x0, x1, ybg, lam_ref, tol, K, kcoup=1.0, gG=1.0):
     a fixed grid, so that det M is analytic in lambda and the background series are computed once"""
     M = st.M
     x = x0
-    I2 = C(R(np.eye(2 * M)), R(np.zeros((2 * M, 2 * M))))
-    Y = I2
+    # four random columns (fixed seed) stand for the propagator's 2M: each mixes every mode, so its tail bounds the
+    # step as the identity's columns would, at 1/16 of the cost
+    rng = np.random.default_rng(12345)
+    Y = dd.from_complex(rng.standard_normal((2 * M, 4)) + 1j * rng.standard_normal((2 * M, 4)))
     steps = []
     while x < x1:
         bgs = bg_series(st, x, ybg, K)
