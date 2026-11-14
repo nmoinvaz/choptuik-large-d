@@ -16,7 +16,8 @@ the inverse normal matrix), F from the planted test.
 csv: the estimate at D 250, 260, ..., 400 (use "row", the table's series rows) and at every chain_fit row of
 data/delta_all.csv past D 245.64 (use "chain", for the exporter's check of the weak pivot's err, #806): Delta in two
 parts, E, h, s and err_kind ("series fits" where h >= s, else "series data"), with the fingerprint of the rows fitted
-(export_delta_all.series_input) in every row.
+(export_delta_all.series_input) in every row. A last row, D inf with use "limit", is the series' limit, which the
+exporter does not read.
 """
 import csv
 import json
@@ -333,9 +334,9 @@ def cmd_csv():
     D0, used = levels(fits)
     chain = [r["D"] for r in table if r["kind"] == "chain_fit" and float(r["D"]) > DMAX + 1e-9]
     out = []
-    for use, Ds in (("row", [X.fmt(D) for D in GRID]), ("chain", chain)):
+    for use, Ds in (("row", [X.fmt(D) for D in GRID]), ("chain", chain), ("limit", ["inf"])):
         for Ds_ in Ds:
-            est = estimate(fits, mp.mpf(Ds_))
+            est = estimate(fits, "inf" if use == "limit" else mp.mpf(Ds_))
             x = mp.mpf(est["value"].mid().str(50, radius=False))
             q0 = float(x)
             out.append(dict(D=Ds_, Delta_q0=repr(q0), Delta_q1=repr(float(x - q0)), E="%.2e" % est["E"],
