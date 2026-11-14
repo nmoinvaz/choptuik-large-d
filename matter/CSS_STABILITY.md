@@ -153,6 +153,27 @@ and no other growth rate: three unstable directions, as at every finite D from 4
 finite-D effect. Not covered: growth rates with Re λ > 5, |Im λ| > 9.43, or 0 < Re λ < 0.05, and the status of the
 selection rule itself (Conjecture 1), which this computation assumes, as GAMMA.md §5 does for λ = 2.
 
+### 1.5 A second implementation (#771)
+
+`solver/matter/css_inf_jump.py` finds the same growth rates as zeros of a 2×2 Stokes-jump determinant, not of det M.
+sympy derives the perturbation ODEs from matter/CSS.md §8's PDE (F and F̄ independent, so λ may be complex; w(0) = 0
+as the gauge). The regular formal series are solved order by order, the lateral solutions run from ξ₀ = r₀e^{±iα}
+along a ray and an arc to r₁, and the secant finds the zeros of the jumps' determinant. It shares with
+`css_inner_pert.py` only the PDE, CSS.md's (|f(0)|, ω) as Newton's start, and the lateral-solution idea of
+`struct_css.py`.
+
+| check (r₀ 0.1, r₁ 0.3, α 3π/8, rtol 10⁻¹³) | result | bound |
+|---|---|---|
+| the exact λ = 2 | 2 − 5.3×10⁻¹⁴ | 10⁻¹⁰ |
+| λ_osc(∞) | 0.5365223423982 + 7.9320241696692i, 3.1×10⁻¹¹ from §1.3 | 10⁻⁸ |
+| spread over six settings (r₀ 0.09–0.11, r₁ 0.25–0.3, α 0.3π or 3π/8) | λ = 2 within 1.4×10⁻¹², λ_osc within 1.2×10⁻¹⁰ | 10⁻¹⁰, 10⁻⁸ |
+| a planted ₂F₀(a, 0.7;; 2ξ²) through the same series, paths and secant | zeros a = −1, −2 to 1×10⁻¹⁴ and 2×10⁻¹³ | 10⁻¹² |
+| its control, one coefficient × 1.001 | zeros off by 1.2×10⁻⁴ and 5.9×10⁻⁴, exit 1 | must fail |
+
+The quoted ± is the spread over one method's settings. At r₁ = 0.32, inside the movable singularity at |ξ| ≈ 0.335
+(matter/STRUCTURE.md §7), λ = 2 moves by 3.4×10⁻¹⁰, so r₁ stays at 0.3 or below. κ_c(∞) was not recomputed this way.
+Raw `I771-mac/` at 3a94ada8.
+
 ## 2. The change of stability κ_c(D) (#377)
 
 ### 2.1 Method
@@ -324,12 +345,12 @@ python3 solver/matter/css_scan.py 0.07125 4 --guess=1.856291661723,4.79719276737
 
 ## 7. Recommended tasks
 
-1. **Uniqueness of the axion–dilaton CSS's unstable mode at D = ∞.** What: `css_inner_pert.py count 1 …` in the boxes
+1. **Uniqueness of the axion–dilaton CSS's unstable mode at D = ∞** (filed as #770). What: `css_inner_pert.py count 1 …` in the boxes
    A, B, C, S with ω∞(κ = 1) = 3.19989, and a wider box (Re λ < 8, |Im λ| < 3ω∞), at settings A and B. Why:
    matter/CSS.md §11 lists uniqueness at D = ∞ as open, and this code makes it a count of a few hours. Acceptance (can
    fail): B counts exactly 2 (λ = 1, 2) at both settings; every other box counts 0, or its zeros are located and their
    Re λ reported; a planted zero adds one and `--mutate=nometric` changes B. Depends on: #376.
-2. **A second implementation of the D = ∞ perturbation determinant.** What: the inner perturbation problem in
+2. **A second implementation of the D = ∞ perturbation determinant** (done, #771, §1.5). What: the inner perturbation problem in
    matter/STRUCTURE.md §7's variables (y, σ, c), as in `struct_css.py`, or a Chebyshev discretization of the inner ODE
    on a ray, sharing no code with `css_inner_pert.py`. Why: AGENTS.md asks for independent checks; the present
    cross-check against finite D is an extrapolation. Acceptance (can fail): λ = 2 found to 10⁻¹⁰, λ_osc(∞, κ = 0) and
