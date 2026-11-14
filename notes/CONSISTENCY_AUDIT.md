@@ -1198,7 +1198,7 @@ follows the README.
 Audited commit: **90a81f69** (main, 2026-11-14). Agent mac658, on the Mac, under #653's rules (the top of this note).
 Scope: the math paper's proofs, the proof notes' certificate details (`proof/`, PROOF.md beyond its Summary, §4 and §5),
 `notes/QUAD_DOUBLE.md` §1–13.24, `notes/PLANTED_SELECTION.md` and the matter notes (`matter/`). Reading and comparison,
-with small scripts that read the data files. Work in progress: the findings below are those found so far.
+with small scripts that read the data files. Work in progress: the findings below are those found so far, in no final order.
 
 ### P2-1. PROOF.md §1 still has the selection range at fifteen orders, with one surviving ring (superseded)
 
@@ -1208,15 +1208,18 @@ with small scripts that read the data files. Work in progress: the findings belo
 | README.md:132–138, 1620–1621, 1670–1678 | the pair is "not a bracket"; the range is over nine orders, the fourteenth to twenty-second; the rings just beyond x₀ survived one coefficient each and were rejected through σ₂₂; M = 7 gives 1.000022 |
 
 Canonical: the README and notes/PLANTED_SELECTION.md §7–14. PROOF.md:399 quotes the same range without the order count
-and stays as it is.
+and stays as it is. The diff also carries finding P2-7's change to Corollary C (PROOF.md:79), whose context overlaps.
 
 ```diff
 --- a/PROOF.md
 +++ b/PROOF.md
-@@ -79,13 +79,13 @@
- **Corollary C (identification).** If the critical solutions computed for D = 8–61 form the branch of Theorem B, then
- ω∞ = ω*, and Δ∞ = 2π/ω* is determined by the inner problem alone.
+@@ -76,16 +76,16 @@
+ profile and frequency satisfy F_n → F(A*, ω*) and ω_n = ω* + O(1/n). Conversely, any family of such solutions with
+ F_n → F_∞, ω_n → ω_∞ in the sense of hypothesis (H1) has S(F_∞, ω_∞) ≡ 0.
  
+-**Corollary C (identification).** If the critical solutions computed for D = 8–61 form the branch of Theorem B, then
+-ω∞ = ω*, and Δ∞ = 2π/ω* is determined by the inner problem alone.
+-
 -The numerics so far are consistent with all three: the twelve-order amplitude expansion brackets ω*/ω∞ in
 -0.99915–1.00011 with Padé estimates 0.9999, and the five-harmonic truncation gives 0.999228 (README, "Where that leaves
 -it"). A planted-truth test of those estimators (notes/PLANTED_SELECTION.md) puts the zero at 0.999975–1.00005 over
@@ -1224,6 +1227,9 @@ and stays as it is.
 -origin than x₀; the fourteenth and fifteenth coefficients rejected every ring of such zeros constructed so far, and the
 -one surviving ring, with zeros just beyond x₀, puts the zero inside the range. They are evidence, not part of the
 -proof.
++**Corollary C (identification).** If the critical solutions computed for D = 8.25–67.77 form the branch of Theorem B,
++then ω∞ = ω*, and Δ∞ = 2π/ω* is determined by the inner problem alone.
++
 +The numerics so far are consistent with all three: at twelve orders the amplitude expansion gives ω*/ω∞ =
 +0.99915–1.00011 (two estimators, not a bracket) with Padé estimates 0.9999, and the five- and seven-harmonic
 +truncations give 0.999228 and 1.000022 (README, "Where that leaves it"). A planted-truth test of those estimators
@@ -1473,22 +1479,13 @@ notes/FIRST_ORDER.md (`data/first_order_hier_M1_xi0.2.json`). The math paper's l
 | PROOF.md:79 (Corollary C), 394 (§6) | "the critical solutions computed for D = 8–61"; "The double-double solutions at D = 8–61" |
 | README.md:91, 109 | 1199 double-double points, D = 8.25–67.77 |
 
-Canonical: the README's main-results table and `hp/data/delta_all.csv`.
+Canonical: the README's main-results table and `hp/data/delta_all.csv`. The diff below is §6's line; Corollary C's is in
+finding P2-1's diff. The math paper's "computed to D = 61" (abstract) and "857 values 8.25 ≤ D ≤ 61.03" (§2.2) are the
+same scope, left to #653's recommended task 6 (the papers at the repository's present state).
 
 ```diff
 --- a/PROOF.md
 +++ b/PROOF.md
-@@ -76,8 +76,8 @@
- profile and frequency satisfy F_n → F(A*, ω*) and ω_n = ω* + O(1/n). Conversely, any family of such solutions with
- F_n → F_∞, ω_n → ω_∞ in the sense of hypothesis (H1) has S(F_∞, ω_∞) ≡ 0.
- 
--**Corollary C (identification).** If the critical solutions computed for D = 8–61 form the branch of Theorem B, then
--ω∞ = ω*, and Δ∞ = 2π/ω* is determined by the inner problem alone.
-+**Corollary C (identification).** If the critical solutions computed for D = 8.25–67.77 form the branch of Theorem B,
-+then ω∞ = ω*, and Δ∞ = 2π/ω* is determined by the inner problem alone.
- 
- The numerics so far are consistent with all three: the twelve-order amplitude expansion brackets ω*/ω∞ in
- 0.99915–1.00011 with Padé estimates 0.9999, and the five-harmonic truncation gives 0.999228 (README, "Where that leaves
 @@ -391,8 +391,8 @@
  - **Uniqueness in the box.** Theorem A must certify that there is exactly one zero of S₁ in a box that also contains
    the numerically extrapolated ω∞ = 3.82213590 (±4×10⁻⁸) and A∞ ≈ 2.70–2.72. A box of radius 10⁻³ suffices for the
@@ -1565,4 +1562,160 @@ Canonical: the README's table and the data files.
  
  (`python3 trunc_seq_M7.py --amp`.) Lemma O's prediction holds exactly in both truncations: hier's model first changes at
  σ_{M+1}, `amp_trunc.py`'s at σ_M. And the explosion is a property of dropping the even harmonic M + 1, not of Galerkin
+```
+
+### P2-10. CSS.md does not say which fits its λ∞ and γ∞ figures come from (unsupported bar)
+
+| location | says |
+|---|---|
+| matter/CSS.md:349 (§7), 31 (summary); README.md:1877 | "λ∞ = 2 to about 10⁻⁵, γ∞ = 1/2 to about 3×10⁻⁶" |
+| solver/matter/css_fit.py (docstring) | "The quoted limit is the median of the kept fits whose truncation is 'converged' …, with the full spread over (K, Dmin) as the error bar" |
+| solver/matter/data/css_fit_k1.json | `lambda` = [2.0000955, 2.0000086, 2.000258], `gamma` = [0.4999677, 0.4999152, 0.4999969] (median, low, high) |
+| matter/CSS.md:328–334 (table) | free fits: λ∞ − 2 = 8.64×10⁻⁶ (K = 7, D ≥ 20), 1.68–1.70×10⁻⁵ (K = 6–7, D ≥ 24), 8.18–8.27×10⁻⁶ (D ≥ 30) |
+
+The quoted figures are the highest-order free fits of the note's table, which the note's argument (each added power
+divides λ∞ − 2 by about 3) supports. The script that writes the data quotes the median instead, which is ten times
+larger. Neither is named. The ω agreements of the same section (1.6×10⁻⁴, 1.3×10⁻⁴) hold with the unrounded medians
+(1.579×10⁻⁴, 1.317×10⁻⁴; the new check `css_omega`), though the table's rounded 3.1994 and 3.9784 would give 1.5×10⁻⁴
+and 1.4×10⁻⁴, as the physics paper's "before rounding" says.
+
+```diff
+--- a/matter/CSS.md
++++ b/matter/CSS.md
+@@ -347,7 +347,10 @@
+ The 1/n coefficient is 3.598–3.601 over the fits with 5–6 powers and D ≥ 20–24, rising slowly with the order, so
+ c₁ = 3.60 ± 0.01. For the real scalar's DSS solution GAMMA.md has λ = 2 + 3.0324/n − 34.3/n², a similar series.
+ **Conclusion: λ∞ = 2 to about 10⁻⁵, γ∞ = 1/2 to about 3×10⁻⁶** (an extrapolation from D ≤ 80; at D = 80,
+-γ = 0.4896024).
++γ = 0.4896024). Both are read off the highest-order free fits of the table, K = 7 on D ≥ 20 and K = 6–7 on D ≥ 24
++and 30 (λ∞ − 2 = 0.8–1.7×10⁻⁵): an estimate, not a bound. `css_fit.py`'s own summary in `data/css_fit_k1.json`, the
++median of the best third of its converged fits over (K, D ≥), includes lower orders and gives λ∞ − 2 = 9.6×10⁻⁵
++(0.9×10⁻⁵ to 2.6×10⁻⁴) and γ∞ − 1/2 = −3.2×10⁻⁵ (−8.5×10⁻⁵ to −3.1×10⁻⁶).
+ 
+ **ω.** The phase-rotation frequency extrapolates to
+ 
+```
+
+### P2-11. Matter notes list as open what other matter notes have done (superseded)
+
+| location | says |
+|---|---|
+| matter/SIGMA.md:9, §7 (408–415) | "The DSS branch was not computed (§7)"; "Not known. Whether the DSS branch exists at all D for fixed η, and where η_c(D) … goes" |
+| matter/SIGMA_DSS.md §1 | the DSS branch computed at D = 4 (η_c = 0.1702) and continued to D = 10.5–11 at η = 1 and 0.3 |
+| matter/STRUCTURE.md:456–458 (§10) | wave maps' D = ∞ inner problem "was not computed"; "the finite-D Hirschmann–Eardley solutions were not computed here; that … would test the D = ∞ selection rule cleanly" |
+| matter/SIGMA.md §6 (363–366); matter/CSS.md §7 | the D = ∞ CSS ground state at η = 0.14, A₀ = 1.9225686; the finite-D Hirschmann–Eardley solutions to D = 80 and the selection test, which passes |
+
+Neither SIGMA.md nor STRUCTURE.md points to the notes that did the work. Canonical: SIGMA_DSS.md and CSS.md. The diff
+adds the pointers and changes no claim.
+
+```diff
+--- a/matter/SIGMA.md
++++ b/matter/SIGMA.md
+@@ -6,7 +6,8 @@
+ inner variables, breaks this. This page tests the prediction on the self-gravitating hedgehog σ-model (wave map into
+ $`S^{D-1}`$, coupling η = 4πGf²). It covers: the D-dimensional equations (checked against Bizoń–Wasserman in D = 4); the
+ continuously self-similar (CSS) critical solution and its growing mode, validated against every published D = 4 and
+-flat-space number found; its continuation in D; and the D = ∞ inner problem. The DSS branch was not computed (§7).
++flat-space number found; its continuation in D; and the D = ∞ inner problem. The DSS branch was not computed here
++(§7); [SIGMA_DSS.md](SIGMA_DSS.md) computes it.
+ 
+ Notation as in the README: D = n + 2, d = n + 1 space dimensions, x = r/(−t), τ = −ln(−t), s = r²/(2n), and γ = 1/λ is
+ the radius exponent ($`r_{\rm BH} \propto (p-p_*)^\gamma`$; the mass exponent is (D − 3)γ). Statements are marked, as in
+@@ -406,7 +407,9 @@
+ 
+ ## 7. The DSS branch
+ 
+-Not computed: the time went to the CSS branch, and the ℓ = 1 multiplet (the η → ∞ limit) is another agent's task. What is known about it here:
++Not computed here: the time went to the CSS branch, and the ℓ = 1 multiplet (the η → ∞ limit) is another agent's task.
++[SIGMA_DSS.md](SIGMA_DSS.md) has since computed the branch at D = 4 and continued it to D ≈ 10.5–11 at η = 1 and
++0.3. What was known about it here:
+ - *Argued.* At fixed η its D = ∞ inner problem is the system of §6.1, n-free and without s-translation, so its λ∞ is not
+   protected at 2. It depends on η and tends, as η → ∞, to the ℓ = 1 multiplet's value (STRUCTURE.md). In D = 4 the
+   DSS exponent is about 0.11 for η ≳ 0.2 and tends to 0.1185 ± 0.0005 as η → ∞ [HLPTA00]. [LTHA02] give γ_DSS ≈ 0.11.
+--- a/matter/STRUCTURE.md
++++ b/matter/STRUCTURE.md
+@@ -453,9 +453,12 @@
+ - **ℓ ∝ n** needs the turning-point layer with gravity written out, including how the time dependence enters.
+ - **Yang–Mills:** that the type II threshold in D ≥ 6 is the U-system's critical solution is argued, not shown; no
+   Einstein–Yang–Mills collapse in D ≥ 5 has been computed.
+-- **Wave maps:** the D = ∞ inner problem as a function of η (its CSS solutions and the DSS branch) was not computed.
+-- **The CSS check:** the finite-D Hirschmann–Eardley solutions were not computed here; that, and the next order in 1/n
+-  of the CSS inner problem, would test the D = ∞ selection rule cleanly.
++- **Wave maps:** the D = ∞ inner problem as a function of η (its CSS solutions and the DSS branch) was not computed
++  here. [SIGMA.md](SIGMA.md) §6 solves its CSS ground state at η = 0.14, and [SIGMA_DSS.md](SIGMA_DSS.md) follows the
++  finite-D DSS branch to D ≈ 10.5–11.
++- **The CSS check:** the finite-D Hirschmann–Eardley solutions were not computed here. [CSS.md](CSS.md) §7 has since
++  computed them to D = 80 and made the test, which passes. The next order in 1/n of the CSS inner problem is not
++  computed.
+ 
+ ## 11. Scripts
+ 
+```
+
+### P2-12. QUAD_DOUBLE.md: the frontier gap is 10⁻¹⁴, not 10⁻¹⁵, and the opening says the solver does not use quad-double (inconsistent, superseded)
+
+| location | says |
+|---|---|
+| notes/QUAD_DOUBLE.md:880 (§12.4) | at D 73.27 "the double-double one lies 1e-15 from them" |
+| notes/QUAD_DOUBLE.md:840–841 (its table) | T75's double-double Δ_full1 1.7807570807362567, the quad-double ones 1.78075708073624606 − 1.5×10⁻¹⁷ and 1.78075708073624539 + 1.3×10⁻¹⁷ |
+| hp/data/delta_all.csv, D 73.265722 | 1.7807570807362567 − 9.18×10⁻¹⁷ (kind pinned, no err) |
+| notes/QUAD_DOUBLE.md:11 (opening) | "Nothing in the solver uses them yet." |
+| notes/QUAD_DOUBLE.md §12.1; README.md:91, 529 | the quad-double solver, built 2026-10-27; the quad-double points 68.5–73 |
+
+The double-double value lies 1.06×10⁻¹⁴ and 1.12×10⁻¹⁴ above the two quad-double ones (exact sums of the parts, mpmath),
+ten times the text. The row of `delta_all.csv` at that D is the double-double value, so its Δ carries this 10⁻¹⁴, which
+no err column shows (only one pin reached that D, so the rule of `hp/export_delta_all.py` gives none). Canonical: the
+note's own table.
+
+```diff
+--- a/notes/QUAD_DOUBLE.md
++++ b/notes/QUAD_DOUBLE.md
+@@ -877,7 +877,7 @@
+ corrected pinned pairs above lie within 1e-17 (71.0) and 2e-17 (71.5) of it: that is the linearised correction's own
+ error, and the pins' agreement to 1e-32 at 71.5 was a coincidence of the two pins. From 72 on no start of double-double
+ quality reaches the full basin, as the table of basins said. At the frontier the two pins' quad-double values differ by
+-7e-16 and the double-double one lies 1e-15 from them: the digits there are set by the pin's cost (the full step's |dz|
++7e-16 and the double-double one lies 1.1e-14 above them: the digits there are set by the pin's cost (the full step's |dz|
+ is 7.9e-6 against 1.6e-9 at 72.4), not by the arithmetic. So the quad-double solver adds digits where the pin is cheap,
+ up to about 72.5 in this layout, and past that the full system's junk, not precision, bounds Delta.
+ 
+```
+
+```diff
+--- a/notes/QUAD_DOUBLE.md
++++ b/notes/QUAD_DOUBLE.md
+@@ -8,7 +8,8 @@
+ 
+ Quad-double numbers (an unevaluated sum of four f64, about 64 significant digits) are now in the `hpkernel` crate:
+ a scalar type `QD` and an 8-lane SIMD type `QV` with bitwise the same results, on the AVX-512, AVX2 and portable
+-backends of `v8.rs`. Nothing in the solver uses them yet. Every existing output is bit-identical (section 9). The
++backends of `v8.rs`. Sections 1–10 describe them as first built, when nothing in the solver used them yet; the
++quad-double solver built on them is in section 12.1 onward. Every existing output is bit-identical (section 9). The
+ logs behind every number here are in `hp/data/quad_double/`, and the commands run in `hp/`.
+ 
+ **Summary.**
+```
+
+### P2-13. The σ-model's γ at its fold rounds to 0.514, not 0.513 (inconsistent, minor)
+
+| location | says |
+|---|---|
+| README.md:1938 | γ rises "to 0.513 at a fold at D = 8.544" |
+| matter/SIGMA.md:42, 252, 261; paper/physics/main.tex:752 | γ = 0.5135 (0.51355, λ = 1.94724) at the fold |
+| solver/matter/data/sigma_fold_eta0.14.jsonl | γ = 0.513548 at the point of largest D, 8.544346; a parabola through it and its neighbours puts the fold at D = 8.54438 |
+
+Canonical: the data file. The new check `sigma_fold` ties SIGMA.md's and the physics paper's figures to it.
+
+```diff
+--- a/README.md
++++ b/README.md
+@@ -1935,7 +1935,7 @@
+ 
+ **σ-model, self-similar (CSS) branch** ([matter/SIGMA.md](matter/SIGMA.md)). The D-dimensional equations are checked
+ against Bizoń and Wasserman's at D = 4, and the D = 4 values are reproduced: λ ≈ 5.14, γ ≈ 0.18, and the horizon
+-thresholds. Continued in D at fixed coupling η = 0.14, γ rises from 0.188 at D = 4 to 0.513 at a fold at D = 8.544,
++thresholds. Continued in D at fixed coupling η = 0.14, γ rises from 0.188 at D = 4 to 0.5135 at a fold at D = 8.544,
+ where the branch ends. In flat space it collapses onto a singular cone (u ≡ π/2) as D → 8, with λ → 2. So this branch
+ never reaches large D and cannot test γ∞. Its γ ends near 1/2 for a different reason. The test of the prediction needs
+ the σ-model's DSS branch.
 ```
