@@ -49,8 +49,9 @@ precedence where two share a D:
           estimate, not a bound. A row with one start and no such row on one side keeps no err.
   dd      the full system in double-double (data/delta_dd.csv, export_dd.py). err and err_kind are that file's: "dM",
           the change from the next lower tau resolution M; "dM neighbours" or "dM neighbours one-sided" at the low-D
-          rows solved at one M only (3.72-3.8 at M 80, 4.25-8.2 at M 48), that M's departure from the best value at
-          the nearest D below and above that have a larger M (export_lowD.py, #764); or "check", the size of the
+          rows solved at one M only (3.72-3.8 at M 80; 4.25-8.2 had M 48 alone until #766's and #775's M 64 relayouts),
+          that M's departure from the best value at the nearest D below and above that have a larger M (export_lowD.py,
+          #764); or "check", the size of the
           resolution and harmonic-freezing checks near this D. Each is an estimate, not a bound.
   pinned  a pinned double-double run (T73 then T75: pin 7 and pin 5; T85-mac: last node 0.8 and 0.85) above the dd
           points' last D: Delta_full1, the pinned Delta plus one linearised full-system correction, as the README

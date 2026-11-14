@@ -5,7 +5,9 @@ points (hp/export_dd.py, run name lowD-M<M>, or lowD-M<M>-unresolved).
 
 Input: data/lowD_dd.jsonl, data/lowD_dd_local*.jsonl, data/lowD_highM/*points*.jsonl if present (records of
 hp/lowD_dd.py and the larger-M runs), the *points*.jsonl of the task folders RAW_TASKS in the raw-data repository
-(the continuation below D = 3.05, which writes its records there; AGENTS.md), and data/lowD_gamma*.jsonl for gamma.
+(the continuation below D = 3.05, which writes its records there; AGENTS.md), the relayout.py states m64_D*.npz of the
+folders RELAYOUT_TASKS (an M 48 state re-solved at M 64: Delta from the last entries of zh and zl, D, M and |F| from its
+meta), and data/lowD_gamma*.jsonl for gamma.
 One row per (D, M); where several runs have the same (D, M), the one with the smaller |F| is kept. Columns:
   D, M, Delta_hi, Delta_lo   Delta as hi + lo (double-double), at tau resolution M
   F                          the final residual |F|
@@ -25,8 +27,9 @@ where that M and a larger one were both solved cleanly, the larger of the two (e
 side has such a D, that side's term is the estimate (err_kind "dM neighbours one-sided"). Either is an estimate, not a
 bound.
 The term falls with D in every bracket (M 48: 2.6e-7 at D 4, 8.7e-12 at 5, 3.0e-14 at 6, 9.5e-21 at 8; M 80: 1.3e-9 at
-3.7, 1.3e-11 at 4; notes/LOW_D.md 10), so the larger term is the one below, which is also the side the one-sided rows
-(8.059375 to 8.2, above the last M 64 check at 8) have.
+3.7, 1.3e-11 at 4; notes/LOW_D.md 10), so the larger term is the one below. Since #766's and #775's M 64 relayouts, every
+D from 4.25 to 8.2 has M 64, and its err is the measured change from M 48 (#775 found the one-sided term short of it
+at 8.059375, 8.1375 and 8.2 by 1.7 to 2.3 times).
 
     cd hp && python3 export_lowD.py [--raw ROOT]
 
@@ -48,6 +51,9 @@ RESOLVED = 1e-8
 # 83e99d6 (2026-10-31, D 3.045 at M 320/384)
 RAW_ROOT = os.path.join(HERE, "..", "..", "choptuik-large-d-raw")
 RAW_TASKS = ("T82-win", "T100-win2", "T105-win2")
+# relayout.py's M 64 states from T79-win's M 48 states (#766 at D 7.0 and 8.2, raw 7b58975a; #775 at the other 16 D of
+# 4.25 to 8.1375, raw ceefdbe8)
+RELAYOUT_TASKS = ("I766-win", "I775-win")
 # converged solutions that picked up content along the near-null directions (centre-series tail 1e-9 to 1e-10 where
 # clean neighbours have 1e-50; an M 96 solve from them does not converge); the local machine's report in comms.txt,
 # 2026-10-23 05:51 PDT. Keyed by (D, M, source file): another run's solve at the same D and M can be clean (the cloud
@@ -80,10 +86,28 @@ def raw_records(raw_root=RAW_ROOT):
     return out
 
 
+def relayout_records(raw_root=RAW_ROOT):
+    """records of the relayout states m64_D*.npz of every RELAYOUT_TASKS folder; a missing folder stops the export"""
+    import numpy as np
+    out = []
+    for task in RELAYOUT_TASKS:
+        folder = os.path.join(raw_root, task)
+        if not os.path.isdir(folder):
+            sys.exit(f"export_lowD: {folder} is missing; clone https://github.com/nmoinvaz/choptuik-large-d-raw "
+                     f"beside the checkout or pass --raw ROOT")
+        for f in sorted(glob.glob(os.path.join(folder, "m64_D*.npz"))):
+            d = np.load(f, allow_pickle=False)
+            m = json.loads(str(d["meta"]))
+            out.append(dict(D=m["D"], M=m["M"], Delta=[float(d["zh"][-1]), float(d["zl"][-1])], F=m["F"], converged=True,
+                            _src=f"{task}/{os.path.basename(f)}"))
+    return out
+
+
 def build(raw_root=RAW_ROOT):
     """the rows of delta_dd_lowD.csv (dicts), sorted by D and M"""
     best, polluted = {}, {}
-    for r in list(records("lowD_dd*.jsonl")) + list(records("lowD_highM/*points*.jsonl")) + raw_records(raw_root):
+    for r in list(records("lowD_dd*.jsonl")) + list(records("lowD_highM/*points*.jsonl")) + raw_records(raw_root) \
+            + relayout_records(raw_root):
         if r.get("converged") is False or r.get("Delta") is None or r.get("D", 99) >= 8.25:
             continue
         if r.get("F") is not None and r["F"] > 1e-25:

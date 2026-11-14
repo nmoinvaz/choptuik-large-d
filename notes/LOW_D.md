@@ -307,22 +307,30 @@ D = 8.25 state at M = 48 (kt 36, kc 60, ks 100, corrector dnp, tol 1e-27) to D =
 |F| 2–5×10⁻³¹, 65–170 s each), then `relayout.py` at M = 64 at D = 8, 6, 5 and 4, and `gamma_batch.py` at every
 point. `hp/t79_rows.py` puts the records into the low-D exporter's inputs (`data/lowD_dd_t79.jsonl`,
 `data/lowD_gamma_t79.jsonl`); `hp/data/delta_dd_lowD.csv` and `delta_dd.csv` hold the rows (run names lowD-M48,
-lowD-M64; the M 48 points without an M 64 check are "unresolved" there, converged but not checked in M).
+lowD-M64). Every D from 4.25 to 8.2 now has an M 64 relayout (#766, #775; below the table).
 
 | D | Δ (M 48) | Δ(M 64) − Δ(M 48) | γ (M 48) |
 |---|---|---|---|
 | 8 | 2.711790054444401 | 9.5×10⁻²¹ | 0.446716389 |
-| 7 | 2.842753206466524 | (not run) | 0.439991242 |
+| 7 | 2.842753206466524 | +1.8×10⁻¹⁷ (#766) | 0.439991242 |
 | 6 | 3.009483220493004 | −3.0×10⁻¹⁴ | 0.430079481 |
 | 5 | 3.221701944618060 | +8.7×10⁻¹² | 0.413126936 |
 | 4 | 3.445452661587394 | −2.6×10⁻⁷ (the earlier M 64 point; T79's M 64 re-solve at D = 4 did not converge, \|F\| 0.23 after 30 steps) | 0.373960289 |
 
 The M 48 value at D = 4 reproduces the earlier low-D run's M 48 value to every digit. The M 48 truncation falls from
-2.6×10⁻⁷ at D = 4 to 10⁻²⁰ at D = 8, so the points at D ≥ 5 are quoted to the M 64 check (10⁻¹¹ at D = 5, and Δ(7),
-unchecked, to 10⁻¹¹ by its neighbours); γ to 10⁻⁹ (its M 48 value; at D = 4 the M 48 → 64 change in γ is 4×10⁻⁷, at
+2.6×10⁻⁷ at D = 4 to 10⁻²⁰ at D = 8, so the points at D ≥ 5 are quoted to the M 64 check (10⁻¹¹ at D = 5, 1.8×10⁻¹⁷ at
+D = 7); γ to 10⁻⁹ (its M 48 value; at D = 4 the M 48 → 64 change in γ is 4×10⁻⁷, at
 D ≥ 5 it was not measured). The growth-rate roots agree with the f64 formula's λ to 10⁻⁸–10⁻⁶. Not a stop, for the
 record: the task's note expected the D = 4 value within 10⁻¹⁰ of the M 192 one; 2.6×10⁻⁷ is the known M 48 truncation
 there, so the expectation was wrong, not the run.
+
+`relayout.py` at M 64 from T79's M 48 states at the other 18 D of 4.25 to 8.2 (#766 at D 7 and 8.2, raw `I766-win/`
+7b58975a; #775 at the rest, raw `I775-win/` ceefdbe8; each converged at |F| 3×10⁻³¹ to 7×10⁻³⁰) measures each M 48
+point's truncation. Δ(M 64) − Δ(M 48) falls from −5.2×10⁻⁹ at D 4.25 to 1.8×10⁻¹⁷ at 7, and to 1–2×10⁻²⁰ from 7.75 to
+8.2. `hp/export_lowD.py` reads the M 64 states, so the tables carry the M 64 value with that change as its err (kind
+dM). The err the rows carried before, the M 48 departure at the nearest D with a larger M (#764), covered the measured
+change at 15 of the 18 D and understated it at the three where only the lower neighbour existed, 8.059375, 8.1375 and
+8.2, by 1.7, 2.2 and 2.3 times (`I775-win/compare_775.txt`).
 
 ## 11. The continuation below D = 3.4 (from the README)
 
