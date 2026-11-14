@@ -2139,3 +2139,62 @@ in DLMF and p. xvii in B2 and B4, *(unverified)* against the volume.
    - *Acceptance.* `grep -c "^| B6 .*Not read" notes/LIT_REVIEW.md` prints 0 (1 at #733's commit), and
      `grep -c "^| B9 " notes/LIT_REVIEW.md` prints 1.
    - *Depends on.* #733, and access to the two texts (a library copy of Wimp, Cambridge Core for Clenshaw). Hours.
+
+## Addendum (2026-11-14, issue #429): Kol's merger at infinite D, and the Ricci flow of Emparan and Suzuki
+
+**Question.** Is the λ → 2 of Kol's black-string merger at D = ∞ the weight of a symmetry, as Proposition 5's is? The
+derivation and the verdict (yes: the translation of s = ρ²/(2n), weight 2) are in [KOL_MERGER.md](KOL_MERGER.md), which
+is the canonical place for them. This entry records what was read.
+
+**How.** The arXiv sources of the four works below were downloaded with curl on 2026-11-14 and read as LaTeX, so quotes
+are verbatim with the math rewritten in Unicode. Bibliographic records from the INSPIRE API. Logs, hashes and short
+quotes: `I429-mac/read_log.md` of the raw-data repository. Inferences are marked *inferred*.
+
+### Closest works
+
+| Work | What it contains | What it does not contain |
+|---|---|---|
+| **B. Kol**, JHEP 10 (2006) 017, hep-th/0502033v3, Secs. 1–3 read in full (§1 has his row) | The ansatz, Eq. (2.4), with e^{2ε/2} on S² and e^{−2ε/(D−3)} on S^{D−3}: "A priori one could start with two separate scale functions, one for each sphere, but a constraint relates them as above." Eq. (2.5); Eqs. (3.16)–(3.21), with s₊ "leading for large ρ". | Any limit D → ∞, any symmetry behind the exponents. |
+| **R. Emparan, R. Suzuki**, *Topology-changing horizons at large D as Ricci flows*, JHEP 07 (2019) 094, arXiv:1905.01062; Secs. 1–3, 4.1, 4.3 (start), 4.6, App. A and C read | A large-D scaling with ∇⊥ = O(√D) near the double cone (Eq. (2.6)). Leading-order cones (p − 1)(ρ² − μ)/n dΩ_p², "where μ is an integration constant" (Eq. (2.10)): fused, critical, split. Merger geometries "must solve the p-dimensional Ricci flow equation" with λ = λ₀ − ρ²/2 (Eqs. (3.2)–(3.3)); for p = 2 the log diffusion ∂_λV = ∂²_ξ ln V (Eq. (4.3)), "invariant under scaling ... and also under translations λ → λ + C". King–Rosenau conifold (Eq. (4.22)). "the scale-breaking induced by the parameter μ can be regarded as a relevant perturbation of the exact cone at short distances" (Sec. 4.6). App. A: AKS's modes tend to (ℓ+2)(ℓ−1). Outlook: Kol's Choptuik link, "It seems natural to try to apply our methods to this problem", and Rozali–Way's temporal scaling "would map to the same scaling". | The identification of the translation (μ) with Kol's ℓ = 0 exponent, s₊ → −2, or with γ → 1/2. Any critical exponent. Any Choptuik computation. |
+| **V. Asnin, B. Kol, M. Smolkin**, *Analytic evidence for continuous self similarity of the critical merger solution*, CQG 23 (2006) 6805, hep-th/0607129; Sec. 1, the spectrum derivation and the phase-space eigenvalues read | Indicial equations s² + (D−2)s − (l+2)(l−1)(D−2) = 0 and two others; the spectrum s^t± (with 4l² + 12l + D + 6) and s^s± (with 4l² + 4l + D − 10), l ≥ 0. "For all but one l = 0 mode we find that s₊ > 0." The l = 0 phase-space eigenvalues ½(√(D−2) ± √(D−10)), with λ₋ ≃ 2/√D as D → ∞. | Any limit of the spectrum as D → ∞, or a symmetry behind it. |
+| **C. R. Clark, G. L. Pimentel**, JHEP 11 (2025) 017, arXiv:2504.10590 (§1 has its row); Sec. 1's merger paragraph, Sec. 4.1 and the end of 4.3 read | The merger parallel: "criticality is associated with a characteristic scale of O(1/√D)" (citing Emparan–Suzuki), their Region B equation mapped onto Emparan–Suzuki–Tanabe's non-uniform string equation, D = 10 in both. An RG translation O(s₀)F(x, s) = F(x, s + s₀) of their CSS scaling variable. | The merger's γ at D = ∞, or its symmetry origin. |
+
+*Inferred* (and *checked symbolically* in KOL_MERGER.md §2): Emparan and Suzuki's μ is the translation of the flow
+time, μ = 2ns₀ with s = ρ²/(2n), and on the cone it is Kol's s₊ mode at D = ∞.
+
+### Citation chains (INSPIRE, 2026-11-14)
+
+- Records citing Emparan–Suzuki: 18. Citing Kol 2006: 31. Titles screened for critical, Choptuik, collapse, Ricci,
+  self-similar, merger, cone and large D.
+- Opened: Asnin–Kol–Smolkin and Clark–Pimentel (above).
+- Not opened: arXiv:2310.05460 (Robinson–Trautman solutions with scalar hair and Ricci flow), 2103.06932, 1806.11129,
+  1706.02323, gr-qc/0604114, hep-th/0502034.
+
+### References checked
+
+| Entry | Checked against | Verdict |
+|---|---|---|
+| Kol, JHEP 10 (2006) 017, hep-th/0502033, doi:10.1088/1126-6708/2006/10/017 | INSPIRE recid 676109 | OK |
+| Emparan, Suzuki, JHEP 07 (2019) 094, arXiv:1905.01062, doi:10.1007/JHEP07(2019)094 | INSPIRE recid 1733128; the arXiv abstract page | OK |
+| Asnin, Kol, Smolkin, Class. Quant. Grav. 23 (2006) 6805–6827, hep-th/0607129, doi:10.1088/0264-9381/23/23/013 | INSPIRE recid 721976 | OK |
+
+### Gap statement
+
+- **Not read.** Kol's original double-cone paper (hep-th/0206220), where Eq. (2.5) first appeared, and the six records
+  above that were not opened. Kol 2006 and Asnin–Kol–Smolkin restate its result, and the derivation here reproduces it
+  from the ansatz.
+- **Emparan–Suzuki** was read in the sections listed. Secs. 4.2, 4.4, 4.5, 5 and 6 and Apps. B, D and E were skimmed
+  by keyword only.
+
+### Discrepancies and proposed text (for the coordinator)
+
+- **Emparan–Suzuki, App. A** prints AKS's tensor-family formula under the name of the scalar family, and its stated
+  D → ∞ limit is the scalar family's. KOL_MERGER.md §5, item 1.
+- **This file's addendum #200, Q2**, says no source tells whether Kol's −2 is the weight of a symmetry. Emparan–Suzuki,
+  not read then, have the translation, though not the identification. KOL_MERGER.md §5, item 2. Reported, not changed.
+- **Proposed README text:** KOL_MERGER.md §6.
+- **No novelty sentence** was added by this task.
+
+### Recommended tasks (for the coordinator to file)
+
+KOL_MERGER.md §7.

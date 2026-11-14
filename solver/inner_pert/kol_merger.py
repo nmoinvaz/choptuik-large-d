@@ -13,8 +13,8 @@ Here n = D - 2. The checks, in order (each prints PASS or FAIL; the exit code is
   3. D = infinity in the areal gauge, at fixed s = r^2/(2n) and A = a^2: N = 1 and A_s = 2, with no explicit s. The
      s-translation applied to the cone A = 2s gives dA/A = 1/s, i.e. eps ~ rho^-2, and P(s)/n -> s + 2;
   4. the root near -2 is -2 - 4/n - 16/n^2 - 80/n^3 + O(n^-4);
-  5. Emparan-Suzuki's large-D system [ES19, Eqs. (4.2), (4.4)]: with N^2 = 1 + rho V_rho/(n V) every leading component
-     vanishes on the cone V = (rho^2 - mu) sech^2 xi and on the King-Rosenau solution [ES19, Eq. (4.9)], and the
+  5. Emparan-Suzuki's large-D system [ES19, Eqs. (4.2), (4.5)]: with N^2 = 1 + rho V_rho/(n V) every leading component
+     vanishes on the cone V = (rho^2 - mu) sech^2 xi and on the King-Rosenau solution [ES19, Eq. (4.22)], and the
      xi-xi component is -(1/2)[(1/rho) V_rho + (ln V)_xixi]; a mutated profile sech^2(2 xi) fails;
   6. the linearization of (1/rho) V_rho + (ln V)_xixi = 0 about the cone, V = rho^2 sech^2 xi (1 + c rho^s P_l(tanh xi)),
      gives s = l(l+1) - 2 for l = 0..4. That is the D -> infinity limit of Asnin-Kol-Smolkin's scalar family [AKS06,
