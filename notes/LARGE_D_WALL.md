@@ -464,8 +464,9 @@ square-root point and a pole to 10% in a plant matched to that base, reads Δ's 
 +0.47 (Dlog Padé), with D* at 259.903 and 259.904, and all 24 rows' ratio fits give D* 259.903.
 
 **So the chain's branch has a square-root branch point at D* ≈ 259.903, where it folds back rather than ends** (numerical
-evidence: one layout and one plan per base; the exponents' spreads, 0.14 and 0.15, are over one method's windows and
-approximants). #795 tests whether D* stays put on a new plan, and #792 and #794 add bases from 259.52 to 259.59.
+evidence: one layout and one plan per base, and one discretization, M = 32 with the horizon series to order 130 and
+harmonics 5 to 13 held, so the fold may belong to that system rather than to the continuum; the exponents' spreads, 0.14
+and 0.15, are over one method's windows and approximants). #795 tests whether D* stays put on a new plan, and #792 and #794 add bases from 259.52 to 259.59.
 
 ### The refusals are the corrector's
 
