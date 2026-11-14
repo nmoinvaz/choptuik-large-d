@@ -3,7 +3,7 @@
 
     python3 singularity_type.py planted [--mutate=move]
     python3 singularity_type.py real JET.json [JET.json ...] [--D_min 256] [--json OUT]
-    python3 singularity_type.py rows JET.npz [JET.npz ...] [--rows 24]
+    python3 singularity_type.py rows JET.npz [JET.npz ...] [--rows 24] [--delta]
 
 At a singularity f ~ A (1 - h/s)^mu, h = D - D0, the series' coefficients obey c_k / c_(k-1) = (1/s)(1 - (1 + mu)/k)
 when it is alone. mu = 1/2 is a square-root point, where the real branch turns (a fold in D); mu = -1 is a simple pole,
@@ -35,7 +35,8 @@ no contaminated median past the bar), and a type band, reported beside the bar a
 real: Delta's coefficients (delta_coeffs, double precision) of each locate entry with N = 24 and D0 >= D_min in a
 jet_singularity.py summary file (I760-dh370/jet_760.json, I776-dh370/jet_776.json): both estimators, D* = D0 + s.
 rows: the same for the 24 entries with the largest |z_8| of each saved series (anm_run.py --save_jet 2), from the
-octo-double coefficients; the median and range over rows.
+octo-double coefficients; the median and range over rows. --delta adds Delta's own series (the last entry) from the same
+file, in octo-double.
 
 Methods: the ratio method of C. Domb and M. F. Sykes, Proc. R. Soc. Lond. A 240, 214 (1957),
 doi:10.1098/rspa.1957.0078; Dlog Pade approximants, G. A. Baker, Jr. and P. Graves-Morris, Pade Approximants, 2nd ed.,
@@ -218,6 +219,12 @@ def rows(argv):
     n = int(argv[argv.index("--rows") + 1]) if "--rows" in argv else 24
     for f in [a for a in argv if a.endswith(".npz")]:
         Z, m = load_jet(f)
+        if "--delta" in argv:
+            c, _ = row_series(Z, "delta")
+            r, d = ratio_fit(c), dlog_fit(c)
+            for name, e in (("ratio", r), ("dlog", d)):
+                print(f"D0 {m['D']:.4f} Delta {name}: " + (f"D* {m['D'] + e[0]:.4f} (s {e[0]:.4f}), mu {e[1]:+.4f} {kind(e[1])}, "
+                      f"spreads {e[2]:.1e} {e[3]:.1e}" if e else "no estimate"), flush=True)
         idx = [int(i) for i in np.argsort(np.abs(np.asarray(Z[8][0])))[::-1][:n]]
         rr, dd = [], []
         for i in idx:
