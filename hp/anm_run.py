@@ -111,6 +111,9 @@ removed from each correction (octo_corrector.chord_strong; #528, #674). 0, the d
 --od_full_drop F also accepts a full-step trial whose max|F| is at most F times the iterate's, whatever its
 simplified-correction ratio (--od_accept natural, #709) or its own correction (the default own test, #777)
 (newton_od's full_drop). 0, the default, is off.
+--od_abort_theta R (with --od_accept natural) refuses an attempt at Newton iteration 1 when the full-step trial's
+simplified-correction ratio there exceeds R (newton_od's abort_theta, #784; hp/abort_replay.py fixed R = 1e8 from #603's
+and #608's logs). 0, the default, is off.
 --reseed_start pred (with --reseed_q 1) runs the re-seed's quad-double polish from the prediction's own four-part
 horizon data first, and the double-double ladder only when that does not converge; ladder, the default, polishes the
 ladder's data as before (#693: past D ~ 249 the ladder's double-double data put the pole inside u0).
@@ -298,6 +301,7 @@ def main():
     opt.update(od_accept="own")                                 # the octo-double corrector's trial test (#644)
     opt.update(od_strong=0)             # --od_strong k: the strong-row chord after the first step (#674)
     opt.update(od_full_drop=0.0)        # --od_full_drop f: either test also accepts a full step whose |F| falls to f (#709, #777)
+    opt.update(od_abort_theta=0.0)      # --od_abort_theta R: the natural test refuses at iteration 1 when theta(lam 1) > R (#784)
     opt.update(reseed_start="ladder")   # --reseed_start pred: the re-seed's quad-double polish from the point's own data (#693)
     opt.update(held_fit="")             # --held_fit FILE (pinning.HeldFit; notes/HELD_HARMONICS.md)
     # --held_o 1: the held values and their Taylor coefficients as mpf instead of floats, and the held field in eight
@@ -370,7 +374,7 @@ def main():
                 z8, hist, conv = newton_od(so, z0, tol=opt["tol_od"], it_max=opt["qd_it"], verbose=True, junk_w=opt["od_junk"],
                                            lam_stall=opt["lam_stall"], on_first=save_dz0 if opt["save_dz0"] else None,
                                            accept=opt["od_accept"], strong_chord=int(opt["od_strong"]),
-                                           full_drop=opt["od_full_drop"])
+                                           full_drop=opt["od_full_drop"], abort_theta=opt["od_abort_theta"])
             except StartNotProjected as e:
                 print(f"      elim projections {e.args[0]}: the start's projection failed, attempt stopped", flush=True)
                 Fh, Fl = spx.residual(z0[0], z0[1])

@@ -22,6 +22,10 @@ the full step is accepted at the first step; with full_drop = 0 it is refused; a
 so the third case must fail. The same three cases with the own test (#777): a toy whose Newton step at every point but
 the start carries the weak vector, the own correction #752 found in junk directions, so the own test refuses the full
 step that lands on the root.
+
+The refusal at iteration 1 (#784, newton_od's abort_theta with the natural test): a toy whose LU solves add a weak vector
+1e9 times the step from the first accepted point on, so theta is small at step 0 and about 1e9 at iteration 1. With
+abort_theta 1e8 the attempt stops at iteration 1 marked aborted; with 1e10 it does not (the control).
 """
 import contextlib
 import io
@@ -145,6 +149,50 @@ class NoisyOwn(Noisy):
         return [st] + [ZERO] * 7, y - self.r + self.c, ZERO, 1.0, 1.0
 
 
+class Abort:
+    """F(y) = (y - r) + 0.1 (y - r)^2 elementwise; newton_o its Newton step; olu_solve adds w = (0, 1e9) once newton_o
+    has run twice (from the first accepted point on), so the natural test's theta is about 1e9 at iteration 1 (#784)"""
+
+    size = 2
+
+    def __init__(self):
+        self.r, self.calls = np.array([1.0, 2.0]), 0
+
+    def _F(self, y):
+        return (y - self.r) + 0.1 * (y - self.r) ** 2
+
+    def residual_o(self, z, mutate=0):
+        return [self._F(np.asarray(z[0], dtype=float))] + [ZERO] * 7
+
+    def newton_o(self, z, mutate=0):
+        self.calls += 1
+        y = np.asarray(z[0], dtype=float)
+        f = self._F(y)
+        return [-f / (1 + 0.2 * (y - self.r))] + [ZERO] * 7, f, ZERO, 1.0, 1.0
+
+    def olu_solve(self, rhs, trans=False):
+        w = np.array([0.0, 1e9]) if self.calls >= 2 else ZERO
+        return [np.asarray(rhs[0], dtype=float) + w] + [ZERO] * 7
+
+
+def abort_check():
+    """abort_theta 1e8 stops the toy's attempt at iteration 1, 1e10 does not"""
+    z = [np.array([0.0, 0.0])] + [ZERO] * 7
+
+    def run(R):
+        with contextlib.redirect_stdout(io.StringIO()):
+            _, h, _ = newton_od(Abort(), z, tol=1e-30, it_max=4, accept="natural", abort_theta=R)
+        return h
+
+    h8, h10 = run(1e8), run(1e10)
+    fired = len(h8) == 2 and "aborted" in h8[-1] and h8[0].get("lam") == 1.0
+    quiet = not any("aborted" in r for r in h10)
+    good = fired and quiet
+    print(f"refusal at iteration 1: stops at 1e8 {fired} (theta {h8[-1].get('aborted', float('nan')):.2e}); not at 1e10 "
+          f"{quiet}: {'pass' if good else 'FAIL'}")
+    return good
+
+
 def drop_check(mutate=False):
     """the first step from y = 0: at full_drop 1e-20 the full step is accepted by its drop, where the natural test
     refuses it (theta 1.5); at 0 it is refused; and a full step whose |F| falls only to 2e-10 of the start's 2 is
@@ -190,6 +238,7 @@ def main():
               f"{parsed}: {'pass' if good else 'FAIL'}")
     ok &= chord_check()
     ok &= drop_check("--mutate=drop" in sys.argv[1:])
+    ok &= abort_check()
     mut = " ".join(a for a in sys.argv[1:] if a.startswith("--mutate="))
     print(f"newton_od_toy{' ' + mut if mut else ''}: {'PASS' if ok else 'FAIL'}")
     return 0 if ok else 1
