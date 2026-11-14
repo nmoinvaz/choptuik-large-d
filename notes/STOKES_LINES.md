@@ -72,3 +72,67 @@ the physical zero x₀ = 7.39408 (A₀ = 2.7192).
    `harmony-mac/stokes/`). By the arm rule they give x₁ = 12.75 + 1.12i and x₂ = 16.81 + 1.78i in [10/12] and [11/11],
    but 17.07 + 1.34i in [8/14]. The candidates for x₃ differ by more than 1 between sums. The test has not been run on
    them.
+
+## 5. Results (2026-11-14)
+
+**Verdict: inconclusive. The test as fixed cannot decide, at any number of coefficients, so the data run was not
+made (§4, item 2).** Its limit is not the 23 coefficients at hand. With exact zeros, the two-endpoint law fitted on
+x₁–x₃ misses the realistic planted function's x₀ by 0.50, against the fixed bound of 0.15. The physical zero lies where
+the law's corrections are still large. Both planted functions do follow the law asymptotically: its fitted Λ tends to
+their true endpoint difference as the fit moves out. Their x₀ is the j = 0 member of the sequence, at 0.08–0.6 from
+the law's prediction against a spacing of about 5.5. But the law is not accurate enough there to tell a zero on the
+sequence from one displaced by 1.0, which is what the test asks of it. Script: `solver/harmony/stokes/stokes_lines.py`;
+logs in the raw-data repository's `I357-mac/`.
+
+### 5.1 The planted runs (fixed in §3–§4)
+
+The law's prediction x̂₀ is the median over the Borel–Padé sums; e = |x̂₀ − x₀|; the control is P1 with x₀ moved by
+d = 1.0, and it fires when |x̂₀ − (x₀ + d)| > 3e₁.
+
+| K | e₁ (P1, arc) | spread₁ | e₂ (P2, segment) | spread₂ | control | decisive |
+|---|---|---|---|---|---|---|
+| exact zeros | 0.504 | — | 0.077 | — | — | — |
+| 22 | 3.46 | 4.53 | 1.38 | 0.89 | 2.85, does not fire | no |
+| 30 | 0.481 | 0.98 | 0.017 | 0.088 | 0.881, does not fire | no |
+| 40 | 0.501 | 0.018 | 0.076 | 0.0012 | 0.580, does not fire | no |
+
+- **K = 22.** Every sum places x₀ and x₁ to three decimals. For P1, x₂ is off by 0.03–2.1 and x₃ by 1.7–5.3, and the
+  3×3 fit turns that into |q| of 21–98 against the exact 8.0. The data's sums show the same pattern (§4, item 4).
+- **K = 40.** The sums reproduce the exact arm and the exact-zero prediction (P1: x̂₀ = 8.209 − 1.000i with spread
+  0.018, against 8.210 − 1.004i from exact zeros). The remaining error is the law's own.
+- **The checks of P2's two routes.** Its fifth moment by quadrature, and S(9 + 2i) by Kummer functions, agree with the
+  series to 1.5×10⁻⁵¹ and 2.3×10⁻⁵¹.
+
+### 5.2 Post hoc: the law's error from exact zeros (not part of the fixed test)
+
+`stokes_lines.py explore`, on the exact arms. The arm in |x| < 30 has five zeros, x₀ to x₄.
+
+| fit | P1: e at x₀ | P1: Λ | P2: e at x₀ | P2: Λ |
+|---|---|---|---|---|
+| law on x₁–x₃ | 0.504 | 0.932 + 1.357i | 0.077 | 0.951 + 1.025i |
+| law on x₂–x₄ | 0.644 | 0.920 + 1.333i | 0.160 | 0.955 + 1.006i |
+| law + c/x on x₁–x₄ | 0.359 | 0.887 + 1.301i | 0.016 | 0.944 + 0.974i |
+| true endpoint difference | | 0.914 + 1.325i | | 0.954 + 0.972i |
+
+- **The law's form is right.** Λ from x₂–x₄ is 0.7% from P1's true zp − za, closer than from x₁–x₃. So the zeros are
+  those of two endpoint contributions, as the hypothesis assumes.
+- **Extrapolating down is not.** Fitting farther out makes the prediction at x₀ worse (0.64 for P1), since x₀ is then
+  farther from the fitted zeros. A 1/x term helps (0.36 for P1), but to reach 0.15 the law needs more correction terms,
+  and each term needs one more zero.
+- **The control machinery can fire.** With d = 3 at K = 40 (run post hoc; the fixed d is 1.0) the control gives
+  |x̂₀ − (x₀ + d)| = 2.55, against 3e₁ = 1.50, so it fires.
+
+### 5.3 What a decisive test would need
+
+1. **A law with corrections, tested on planted zeros first.** The two-endpoint asymptotic series to O(x⁻²) or more,
+   one unknown per order, fitted on P1's exact zeros out to |x| = X. The question is the X at which P1's x₀ comes out
+   within 0.15 and the d = 1 control fires. That needs exact zeros of the arc family beyond |x| = 30, by the same
+   200-term series at 160 digits (P1's coefficients grow like 2.2ⁿ, so |x| = 40 still converges, with more terms).
+   Hours on one core.
+2. **The coefficients the data would then need.** At K = 40 the sums reproduce the exact zeros to |x| ≈ 26 with
+   spread 0.02. If the resolved radius grows about linearly with K, |x| = X needs K ≈ 1.5X: K ≈ 60 for X = 40. That is
+   σ₀…σ₆₀, an amplitude run of order 121, against the K 45 run at ω∞ that took 59 893 s with 3 processes on win2
+   (T99-win2/scan45J1500/w1.0000.log). By that step, it exceeds the Mac's share many times over, and it is worth
+   making only if item 1 finds a finite X.
+
+The harmonic index as the large parameter was not tested (§1).
