@@ -530,3 +530,57 @@ three of the same authors.
 | Rozali and Way's scaling τ = √D t, with D-free leading-order equations of heat type | arXiv:1807.10283, Sec. 2.2 and Eqs. (9) | Not directly: their gauge "cannot have the continuous or discrete self-similarity exhibited by the finite D critical solution" (their Conclusions). The project's n-free inner problem is its self-similar counterpart (LIT_REVIEW C4). |
 | Matched asymptotics (method of regions) in self-similar time: a region near the saddle point on x ∼ √(2ε) and a strong-gravity region on x_C ∝ (x + c)/ε | Clark and Pimentel, Sec. 3 and App. A, for the CSS ODE | A template for track C at most. For DSS they write it "would require the development of additional techniques" (Sec. 5), and no DSS version exists in what was read. |
 | An affine-null characteristic formulation in n dimensions | Bridera, Gallo, Mädler (arXiv:2606.13636) | No: it is built for evolutions, not for the DSS eigenproblem. |
+
+## Track C: Δ(D) at D 250–400 from the 1/n series matched below 245 (#801)
+
+**The 1/n series fitted below D 245 gives Δ at D 250, 300 and 400 to 8×10⁻¹¹, 1.3×10⁻¹⁰ and 2.4×10⁻¹⁰.** It sees
+nothing at D 259.9. #603's chain leaves it past 246: erratically at 10⁻¹⁰–10⁻⁷ up to 253.5, then steeply, by 3.7×10⁻² at
+259.74, as a square root at D* ≈ 259.88. A square root of that size cannot be present below 245, so the fold belongs to
+the chain's discrete system (numerical evidence, post hoc). Script: `hp/track_c.py`. Raw: `I801-mac/` of the raw-data
+repository (1a3c1d04). The fit's form and the error rule were pre-registered on #801, with two amendments made on
+planted functions before any fit to the real data.
+
+**The fit.**
+- Δ = Σ_{j≤K} a_j ε^j, with ε ∈ {1/(D−2), 1/(D−1), 1/D} and K = 12–20. It is weighted least squares in arb at 256
+  bits on delta_all.csv's dd, qd and chain_fit rows up to D 245.64, accepted at χ²/dof ≤ 4.
+- The fit starts at D₀, the smallest D_min with at least 5 accepted fits, and also uses the next D_min.
+- The error is E = max(h, s): h is half the range of those fits, and s the central fit's propagated data error.
+- On the real data D₀ = 10, with 19 fits used (χ²/dof 0.24–2.7). The central fit's residuals on D 150–245 are at most
+  2.2σ (rms 0.37σ, at most 9.4×10⁻¹¹).
+- **Error kind:** a spread over fit choices, calibrated on planted functions. It is not a bound, and it is conditional
+  on Δ being analytic in 1/n below 245 up to exponentially small terms, and on chain_fit lying within its stated errors.
+  Those errors are themselves spreads over the held fit's degree.
+
+| D | Δ | E |
+|---|---|---|
+| 250 | 1.684955205949 | 8.1×10⁻¹¹ |
+| 300 | 1.678171015413 | 1.27×10⁻¹⁰ |
+| 400 | 1.669658064110 | 2.40×10⁻¹⁰ |
+| ∞ | 1.6438937453 | 2.0×10⁻⁹ |
+
+- **Against D = ∞.** The limit lies inside the fitted Δ∞ = 1.643893746 ± 1.5×10⁻⁸, and inside the inner problem's
+  1.64387 ± 6×10⁻⁵. The slope is Δ₁ = 10.375285 (fits 10.37109–10.37531). The fitted value is 10.3753, and the inner
+  problem at M = 5 gives 10.402 (FIRST_ORDER.md).
+
+**The planted functions**, on the real D grid with the real σ:
+- **P0, the README's rational formula.** It comes back within 1.4×10⁻¹¹ (D 300) and 2.7×10⁻¹¹ (D 400), against
+  E = 9.0×10⁻¹¹ and 1.5×10⁻¹⁰. So F = 1.
+- **P1 and P2, with exponentially small terms** (10⁻⁹ at D 100, decaying at 0.1 and 0.05 per unit of D). They push D₀ to
+  130 and 160. The truth is inside E there, but E is 7.5×10⁻³ and 40 (P1, D 300 and 400). If the data held such a term,
+  the method would give no usable value at 300–400.
+  - The real data start at D₀ = 10, so they hold no such term above σ.
+  - Under the rule as first registered, with D_min ≤ 30, P1 and P2 were accepted at no fit. Under the first amendment,
+    with D_min to 100, P0's E grew to 3×10⁻⁵ at 400.
+- **P3, a planted fold of 10⁻⁹√(259.903 − D).** The series misses it by 0.8, 1.3 and 2.6 E at D 250, 255 and 259.5.
+
+**#603's chain past 245.64** (86 states, Δ read from the states):
+- **Up to 253.5** it stays near the series but scatters from 10⁻¹⁰ to 2×10⁻⁷, with changing sign. That is beyond its
+  "fits extrapolated" 4.4×10⁻¹¹, so the chain's own error grows there.
+- **From 253.5 to 259.74**, chain − series falls smoothly to −3.7×10⁻². It fits s√(D* − D) + a + b(D − 259) with
+  s = 0.060 and D* = 259.878, an rms of 10⁻³ (`fold.log`). D* is near #799's 259.903.
+- **Post hoc:** that square-root term, planted under the formula on the real grid, makes all 135 fits fail (χ²/dof
+  ≥ 1.4×10⁴). The real data fit at χ²/dof ≤ 2.7.
+- **So the continuum's Δ, as far as the data below 245 show it, has no square-root point of that size at 259.9.** If the
+  chain's fold were the continuum's, its amplitude would have to grow by about 10⁹ between D 245 and 259.8. That fits
+  the reading of this note's previous section, that the fold may belong to the discrete system: M = 32, the horizon
+  series to order 130, harmonics 5–13 held.

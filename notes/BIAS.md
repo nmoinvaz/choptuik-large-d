@@ -72,6 +72,19 @@ Each refinement answered the one before it:
 - The spreads (9, 10) say how far chain_fit moves with its own choices. The planted tests (12, 13) say how far the step
   can be trusted. The second test is stricter, and the step does not pass it.
 
+## The 1.1e-10 at D 215 (#313, resolved in #801)
+
+chain_fit's distance of 1.1×10⁻¹⁰ at D 215 from the 1/D series fitted on the double-double points (D ≤ 67.77,
+`hp/data/chain_fit_vs_series.txt`) is that series' extrapolation, not chain_fit's bias (numerical evidence).
+- chain_fit minus the six low-D fits (1/D and 1/n at degrees 16, 18 and 20) is −1.06×10⁻¹⁰ for 1/D at degree 16, and
+  +4.0×10⁻¹² to −1.7×10⁻⁹ for the others. That is a spread of 1.8×10⁻⁹.
+- The 1/n series fitted through all the data to 245 (#801, LARGE_D_WALL.md "Track C") meets chain_fit at 215 to
+  2×10⁻¹³.
+- The full-system step puts chain_fit's own bias there at −3.1×10⁻¹².
+- **The planted check** (`hp/track_c.py planted`, P4) is the formula with that −3.1×10⁻¹² release bias added on the
+  chain points, put through the same comparison. Each fit's difference returns the planted bias exactly, but the low-D
+  series' spread at 215 is 8.8×10⁻¹⁰. So the comparison cannot resolve a bias of chain_fit's size.
+
 ## Open
 
 - **The remainder in 13.** Moves of single held coefficients (T148, T149; QUAD_DOUBLE 13.29) return harmonics 5 and 7
