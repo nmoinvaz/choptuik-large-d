@@ -663,6 +663,89 @@ def own_test(el, so, z, d, M, K, lams, weak=0):
     return out
 
 
+def weak(argv):
+    """the w weakest right singular directions of the pinned octo-double Jacobian (junk_subspace_o, every direction
+    kept) at each stored state RAW/STATE (a full-system state, no held harmonics, on its stored plan), or with --iter
+    ITER.npz (anm's) at the projection of the trial z + lam d (--lams, comma separated; 0 is the iterate): their
+    singular values, Delta component, largest unknown groups and p1's largest harmonics, and at a trial the components
+    of its own Newton step (from the projected point) along them, with that step's p1 harmonics. --out FILE appends
+    one JSON record per point."""
+    import mpmath as mp
+    from hpkernel.driver import make_solver
+    from multidouble import od_axpy
+    from octo_corrector import PinnedO, junk_subspace_o, load_o, o8, omax
+    from pinning import PinnedSolver, band_field
+    raw = argv[0]
+    w, threads = _opt(argv, "w", 4), _opt(argv, "threads", 2)
+    it_path = _opt(argv, "iter", "")
+    mp.mp.dps = 50
+
+    def lead(v):
+        return np.asarray(v[0]) + np.asarray(v[1])
+
+    def report(name, so, z, M, K, step=None):
+        t1 = time.time()
+        st = so.newton_o(z)
+        V, sig, _ = junk_subspace_o(so, w, delta_max=2.0)
+        r = dict(name=name, F=omax(st[1:3]), piv=[float(st[3]), float(st[4])], sigma=[float(x) for x in sig], dirs=[])
+        print(f"  {name}: max|F| {r['F']:.2e}, piv {r['piv'][0]:.1e}..{r['piv'][1]:.1e}; sigma "
+              + ", ".join(f"{s:.3e}" for s in sig), flush=True)
+        for j in range(V.shape[1]):
+            v = V[:, j]
+            ub = unknown_blocks(v, M, K)
+            ks_, amp = harmonics(v[:M], M)
+            top = sorted(ub.items(), key=lambda kv: -kv[1])[:4]
+            hk = sorted(zip(ks_, amp), key=lambda kv: -kv[1])[:3]
+            r["dirs"].append(dict(groups=ub, p1_harm={int(k): float(x) for k, x in zip(ks_, amp)}, delta=float(v[-1])))
+            print(f"      direction {j}: Delta {v[-1]:+.1e}; groups " + ", ".join(f"{g} {x:.2f}" for g, x in top)
+                  + "; p1 harmonics " + ", ".join(f"k {int(k)} {x:.2f}" for k, x in hk), flush=True)
+        if step is not None:
+            x = lead(step)
+            n = float(np.linalg.norm(x))
+            c = V.T @ x / n if n > 0 else np.zeros(V.shape[1])
+            ks_, amp = harmonics(x[:M], M)
+            r.update(step_max=float(np.abs(x).max()), step_share=[float(t) for t in c],
+                     step_p1_harm={int(k): float(a) for k, a in zip(ks_, amp)})
+            print(f"      its own step from there: max {r['step_max']:.3e}, components along the directions "
+                  + ", ".join(f"{t:+.3f}" for t in c) + "; p1 harmonics "
+                  + ", ".join(f"k {int(k)} {a:.1e}" for k, a in sorted(zip(ks_, amp), key=lambda kv: -kv[1])[:4]), flush=True)
+        r["seconds"] = round(time.time() - t1, 1)
+        return r
+    recs = []
+    if it_path:
+        dd = np.load(it_path)
+        meta = json.loads(str(dd["meta"]))
+        z = o8(tuple(dd[f"z{q}"] for q in range(8)))
+        d = o8(tuple(dd[f"d{q}"] for q in range(8)))
+        att = attempt_of(raw, dd, meta, threads)
+        el = make_elim(att)
+        for lam in [float(x) for x in _opt(argv, "lams", "0,1").split(",")]:
+            zt = o8(od_axpy(lam, *d, *z))
+            zp = el.project(zt)
+            st = att["so"].newton_o(zp)
+            recs.append(dict(lam=lam, **report(f"{os.path.basename(it_path)} lam {lam:g}, projected", att["so"], zp,
+                                                att["M"], att["K"], step=st[0])))
+    vals = {argv[i + 1] for i, a in enumerate(argv[:-1]) if a.startswith("--")}
+    for path in [a for a in argv[1:] if a.endswith(".npz") and a not in vals]:
+        z8, m = load_o(os.path.join(raw, path))
+        if m.get("pin_held"):
+            raise SystemExit(f"{path}: weak handles full-system states only (held {m['pin_held']})")
+        M, nodes = int(m["M"]), list(m["nodes"])
+        s = make_solver(mp.mpf(m["D_str"]), M, nodes=nodes, kt=m.get("kt", 36), kc=m.get("kc", 146), ks=m.get("ks", 130),
+                        threads=threads, kfreeze=int(m["kfreeze"]), horizon_alpha=0)
+        s.set_segs(m["segs"])
+        h = band_field([], [], M, parts=2)
+        sp = PinnedSolver(s, M, h[0], h[1], h_rest=h[2:])
+        recs.append(dict(state=path, D=m["D_str"], **report(f"{path} (D {m['D_str']})", PinnedO(s, sp.ch, sp.cl, c8=sp.c8),
+                                                            z8, M, len(nodes))))
+    out = _opt(argv, "out", "")
+    if out:
+        with open(out, "a") as fh:
+            for r in recs:
+                fh.write(json.dumps(r, default=float) + "\n")
+    return 0
+
+
 # ------------------------------------------------------------------ an attempt of anm_run.py itself, recorded (#752)
 class StopRun(Exception):
     """anm's newton_od wrapper ends anm_run.main with it after the last attempt it records"""
@@ -1177,7 +1260,7 @@ def chordstat(argv):
 if __name__ == "__main__":
     args = sys.argv[1:]
     cmds = {"selftest": selftest, "iterate": iterate, "probe": probe, "fixrun": fixrun, "offset": offset, "chord": chord,
-            "chordstat": chordstat, "anm": anm, "logcmp": logcmp}
+            "chordstat": chordstat, "anm": anm, "logcmp": logcmp, "weak": weak}
     if not args or args[0] not in cmds:
         print(__doc__)
         sys.exit(2)
