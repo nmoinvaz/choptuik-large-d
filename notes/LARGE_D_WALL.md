@@ -466,7 +466,13 @@ square-root point and a pole to 10% in a plant matched to that base, reads Δ's 
 **So the chain's branch has a square-root branch point at D* ≈ 259.903, where it folds back rather than ends** (numerical
 evidence: one layout and one plan per base, and one discretization, M = 32 with the horizon series to order 130 and
 harmonics 5 to 13 held, so the fold may belong to that system rather than to the continuum; the exponents' spreads, 0.14
-and 0.15, are over one method's windows and approximants). #795 tests whether D* stays put on a new plan, and #792 and #794 add bases from 259.52 to 259.59.
+and 0.15, are over one method's windows and approximants). #794 (win2, #603's own build; raw `I794-win2/` 7617827d) adds D₀ 259.5183 and 259.5702, where Δ's Dlog exponent is +0.466
+and +0.472 (spread 0.06) and Padé puts D* at 259.913 and 259.912. With the plan made at the state (#795, dh370; raw
+`I795-dh370/` 5ee0ec47) the exponent holds (0.54 and 0.47 at D₀ 259.4928 on both plans) while D* moves by +0.010 to
++0.011, the bar of 0.01 just failing. Cut at 12 to 24 orders, each plan's D* is fixed to 10⁻³ and Δ's coefficients
+change between the plans by about 0.018 per order, so the two plans place one square-root point about 0.010 apart. The
+new plan's base did not converge, so whether that offset is the plan's or the unconverged base's is not separated. D*
+is thus 259.90 to 259.92.
 
 ### The refusals are the corrector's
 
