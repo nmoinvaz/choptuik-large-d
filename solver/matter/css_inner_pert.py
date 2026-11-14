@@ -7,6 +7,8 @@
     python3 css_inner_pert.py count KAPPA RE0 RE1 IM0 IM1 [--set=..] [--plant=Z] [--mutate=M] [--K=6]
                                                               winding number of det M around the box
     python3 css_inner_pert.py kpath K0 K1 STEP LAM [--set=..]   the root followed in kappa (background re-solved)
+    python3 css_inner_pert.py locate KAPPA RE0 RE1 IM0 IM1 [--set=..] [--w=1] [--K=12]
+                                                              the zeros in a box, refined at every other setting
 
 All commands take --out=FILE (jsonl, appended).  Settings (r0, r1): A = (0.1, 0.3), B = (0.1, 0.25), C = (0.09, 0.3).
 
@@ -553,6 +555,70 @@ def main():
             emit(dict(kind="kpath", kappa=kap, f0=f0, omega=om, guess=[g.real, g.imag], lam=[l.real, l.imag],
                       settings=[[s_, x.real, x.imag, ok_] for s_, x, ok_ in res],
                       spread=max(abs(x - l) for _, x, _ in res), im_over_omega=l.imag / om, mutate=mutate))
+        return
+    if cmd == "locate":
+        # the zeros in a box, as complex_css.py locate at finite D: the box is halved along its longer side while it
+        # winds and is wider than w, each half counted at the first setting; in a smallest box that winds k >= 1 times
+        # the secant starts from a 4 x 3 grid until k distinct roots inside it converge; each root is then refined at
+        # every other setting. A growth rate is the same at every setting, an artefact of the jump moves.
+        sys.path.insert(0, HERE)
+        import complex_css as cc
+        kap = float(pos[1])
+        w, K = float(o.get("w", "1")), int(o.get("K", 12))
+        f0, om = background(kap)
+        Is = {s: Inner(kap, f0, om, *SETTINGS[s], mutate=mutate) for s in sets}
+
+        def detf(f):
+            cache = {}
+
+            def F(l):
+                key = (round(l.real, 13), round(l.imag, 13))
+                if key not in cache:
+                    cache[key] = f(l) * (l - plant) if plant is not None else f(l)
+                return cache[key]
+            return F
+        Ds = {s: detf(Is[s].det) for s in sets}
+        det0 = Ds[sets[0]]
+        stack = [tuple(float(v) for v in pos[2:6])]
+        while stack:
+            a, b, c, d = bx = stack.pop()
+            t = time.time()
+            wnd, big, ni = cc.winding(cc.detrended(det0, bx), cc.box(*bx), K=K)
+            k = int(round(wnd))
+            split = k >= 1 and max(b - a, d - c) > w
+            emit(dict(kind="locate_box", kappa=kap, setting=sets[0], box=list(bx), winding=wnd, largest_step=big,
+                      intervals=ni, split=split, seconds=round(time.time() - t, 1), mutate=mutate))
+            if split:
+                if b - a >= d - c:
+                    m = 0.5 * (a + b)
+                    stack += [(a, m, c, d), (m, b, c, d)]
+                else:
+                    m = 0.5 * (c + d)
+                    stack += [(a, b, c, m), (a, b, m, d)]
+                continue
+            if k < 1:
+                continue
+            roots = []
+            for sa in np.linspace(a, b, 6)[1:-1]:
+                for sb in np.linspace(c, d, 5)[1:-1]:
+                    if len(roots) >= k:
+                        break
+                    lam, ok = secant(det0, complex(sa, sb))
+                    if ok and a < lam.real < b and c < lam.imag < d and all(abs(lam - q) > 1e-6 for q in roots):
+                        roots.append(lam)
+            for lam in roots:
+                M = Is[sets[0]].M(lam)[0]
+                sv = np.linalg.svd(M, compute_uv=False)
+                other = []
+                for s in sets[1:]:
+                    l2, ok2 = secant(Ds[s], lam)
+                    other.append([s, l2.real, l2.imag, bool(ok2), abs(l2 - lam)])
+                emit(dict(kind="locate", kappa=kap, omega=om, setting=sets[0], box=list(bx), winding=wnd,
+                          lam=[lam.real, lam.imag], sv=sv.tolist(), at_other_settings=other, mutate=mutate,
+                          plant=None if plant is None else [plant.real, plant.imag]))
+            if len(roots) < k:
+                emit(dict(kind="locate", kappa=kap, omega=om, setting=sets[0], box=list(bx), winding=wnd, lam=None,
+                          found=len(roots), mutate=mutate, plant=None if plant is None else [plant.real, plant.imag]))
         return
     raise SystemExit(__doc__)
 
