@@ -705,3 +705,9 @@ truncation. And at 3.043 the base state itself plans while its better prediction
 not shown, that the continuation meets a singular point of the x integration between 3.0434 and 3.043, at x near
 0.0140, which moves to smaller x as D falls. The test that separates a prediction error from a branch that ends is the
 corrected leg in steps of at most 0.00035 from 3.04375, with Newton at each D.
+
+Between 3.0434 and 3.043 the freeze begins at h ≈ −0.0006 (#798, win, M 384, T135's stored series; raw `I798-win/`
+82e4904a). From the same base, orders 1 to 3 plan at 3.0433 and 3.0432 (h −0.00045, −0.00055) and are capped at 3.0431
+and 3.04305 (h −0.00065, −0.0007); the base state itself plans down to 3.04305 and is capped at 3.0425. T135's planted
+case repeats exactly (3.0425, order 3, capped at x 0.013725225625), and the `--cap 0.001` control caps every case. So
+the corrected leg's step must stay below about 0.0005 with predictions of order 1 to 3.
