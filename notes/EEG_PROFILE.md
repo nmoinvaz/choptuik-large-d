@@ -774,3 +774,90 @@ References for this section, each checked against the publisher's or a catalog r
   Mathematics Genealogy Project record.
 - H. Stahl, J. Approx. Theory 91 (1997) 139–204, doi:10.1006/jath.1997.3141.
 - R. de Montessus de Ballore, Bull. Soc. Math. France 30 (1902) 28–36, doi:10.24033/bsmf.653.
+
+## 9. Eq. (16)'s parameters as series in A² (issue #390)
+
+**At the selected amplitude A = 2.720, the amplitude expansion's series gives
+w = F₃/F₁ = 0.055084558 e^{0.0987856i}, with a truncation estimate of 1.6×10⁻¹² (2.9×10⁻¹¹ relative).** That is the
+first ratio of the tuned profile of §3.3 (0.055085, 0.09879), and EEG's fitted q e^{iδ}. It is now an explicit series
+in x = A² whose coefficients are fixed by the selection conditions S_ν = 0, not a fit. Script:
+`solver/eeg_profile/w_series.py`. Raw: `I390-mac/` of the raw-data repository. The tolerance was pre-registered on
+#390.
+
+**The series.** With F₁ = −iA/2,
+
+```math
+w(A) = \frac{F_3}{F_1} = \frac{2i f_3(A)}{A} = \sum_{m\ge1} q_m x^m, \qquad q_m = 2i f_{2m+1,3},
+```
+
+from the tuned harmonics of the K = 45, ω∞ amplitude expansion (`solver/inner_amp/scan45J1500`, `scan45J1250`).
+
+| m | q_m | \|q_m/q_{m−1}\| | term at A = 2.72 |
+|---|---|---|---|
+| 1 | 8.4992184×10⁻³ + 1.1424281×10⁻³ i | | 6.3×10⁻² |
+| 2 | −1.6334493×10⁻⁴ − 6.5997320×10⁻⁵ i | 0.0205 | 9.6×10⁻³ |
+| 3 | 2.4254231×10⁻⁶ + 1.5859758×10⁻⁶ i | 0.0164 | 1.2×10⁻³ |
+| 4 | −4.4692379×10⁻⁸ − 1.7131903×10⁻⁸ i | 0.0165 | 1.4×10⁻⁴ |
+| 5 | 1.5899960×10⁻⁹ + 1.7399835×10⁻¹⁰ i | 0.0334 | 3.6×10⁻⁵ |
+| 6 | −5.2766280×10⁻¹¹ − 1.4376067×10⁻¹¹ i | 0.0342 | 9.0×10⁻⁶ |
+| 10 | −4.2964995×10⁻¹⁷ − 2.9063283×10⁻¹⁷ i | 0.0333 | 2.6×10⁻⁸ |
+| 16 | −2.0244478×10⁻²⁶ − 5.8922481×10⁻²⁶ i | 0.0316 | 5.0×10⁻¹² |
+
+- **Where the trusted coefficients end.** All 22 coefficients are in the log. From m = 5 the ratios settle near
+  0.032, a radius of about 31 in x (A ≈ 5.6), so at A = 2.72 each term is about 0.24 of the one before.
+- The two J agree to 10⁻³ through m = 16. The truncation estimate T uses those 16 terms and a geometric tail.
+- m = 17–22 are not converged in J, from 2×10⁻³ to 100% between the two J, and leave the ratio pattern from m = 20.
+  They add 9.5×10⁻¹³ together, within T.
+- The two J's sums differ by 10⁻¹⁵.
+
+**The leading order and its corrections** (partial sums at A = 2.72):
+
+| through | \|w\| | arg w |
+|---|---|---|
+| x¹ (w ≈ q₁A²) | 0.0634461 | 0.133615 |
+| x² | 0.0541564 | 0.089484 |
+| x³ | 0.0551948 | 0.099484 |
+| x⁴ | 0.0550565 | 0.098798 |
+| x⁶ | 0.0550831 | 0.098777 |
+| x¹⁰ | 0.0550846 | 0.098786 |
+| x¹⁶ (S) | 0.055084558 | 0.0987856 |
+
+- The leading term alone is 15% high in modulus, and its phase 0.134 is 35% high.
+- 1/q₁ = 115.56981 − 15.53439i. The README's "roughly 1/q ≈ 8ω² − 4iω − 1.3" gives 115.56978 − 15.28854i at ω∞. Its
+  real part agrees to 3×10⁻⁵, and its imaginary part is 0.246 (1.6%) smaller in magnitude.
+
+**The higher ratios.** By series division, r_ν = F_{ν+2}/F_ν = Σ c_m x^m:
+- r₃: c₁ = 8.51225×10⁻³ + 8.4888×10⁻⁴ i and c₂ = −1.1955×10⁻⁴ − 3.861×10⁻⁵ i. At A = 2.72 it is
+  0.057203472 e^{0.0788059i}, with T = 1.1×10⁻¹².
+- r₅: c₁ = 8.52132×10⁻³ + 8.2034×10⁻⁴ i and c₂ = −1.1629×10⁻⁴ − 3.824×10⁻⁵ i. At A = 2.72 it is
+  0.057392004 e^{0.0748342i}, with T = 9.4×10⁻¹³.
+
+Both equal §3.3's directly summed values to the printed digits. These are the coefficients beyond Eq. (16) that the
+rational family of §8 fits: r₃ and r₅ differ from w by 3.8% and 4.2% in modulus.
+
+**The comparisons**, pre-registered with the tolerance T plus half a unit in the target's last digit:
+
+| comparison | value | difference | bound | verdict |
+|---|---|---|---|---|
+| #390's target 0.05509 e^{0.0988i} | 0.055084558 e^{0.0987856i} | −5.44×10⁻⁶, −1.4×10⁻⁵ | 5×10⁻⁶, 5×10⁻⁵ | fails in modulus (below) |
+| §3.3's 0.055085 e^{0.09879i} (`data/tuned_profile_A2.72.txt`) | same | −4.4×10⁻⁷, −4.4×10⁻⁶ | 5×10⁻⁷, 5×10⁻⁶ | passes |
+| M = 7 inner selection at A = 2.719213648 (`hier_nb_M7_fixA_xi015_newton3.log`), informational | 0.0547867 + 0.0054308i, ω shift included | −3×10⁻⁷, −1.2×10⁻⁶ | 5×10⁻⁷ per component | outside; M = 7's truncation is not estimated |
+
+**EEG's fitted q e^{iδ} = 0.0551 e^{0.0985i}** against w(2.72): the modulus agrees to the printed digits, and the
+phase differs by 2.9×10⁻⁴. Their own fitting procedure applied to the tuned profile returns (0.05510, 0.09866) (§3.3).
+
+**Planted truth and controls.**
+- A planted profile goes through the same code: w_p = q₁x(1 + xe^{0.4i}/31.25)^{−1/2}, and
+  r₃ = p₁x(1 + xe^{0.3i}/30)^{−1/3}. Its last three coefficients carry a 10⁻¹⁴ floor, and its two "J" differ by 10⁻¹²
+  in the other coefficients.
+- w_p(7.3984) is recovered to 8.7×10⁻¹⁵ (T = 1.4×10⁻¹⁴), and r₃ to 3.2×10⁻¹⁴ (T = 5.1×10⁻¹⁴). The trusted-range rule
+  drops the three corrupted coefficients.
+- Each control makes the script exit 1. With the coefficients read one order off (`--mutate=index`), the error is
+  5.8×10⁻². With F₁ = A/2 (`--mutate=phase`) it is 8.1×10⁻², and r₃ is unchanged, as it must be.
+
+**Discrepancy, reported.** #390 quotes F₃/F₁ = 0.05509. To five decimals the value is 0.05508: 0.0550846 was rounded
+to 0.055085 in §3.3's file and then rounded again. The phase 0.0988 is right.
+
+**Commands**, from `solver/eeg_profile/`:
+- `python3 w_series.py planted` exits 0, and `--mutate=index` or `--mutate=phase` exits 1.
+- `python3 w_series.py run --A=2.72` exits 0.
