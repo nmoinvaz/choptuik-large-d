@@ -28,7 +28,7 @@ hp/modecount_circle_planted.py). --kf=13 gives the tag a "_kf13" suffix.
 Each evaluation goes to <data>/modecount_<tag>_evals.jsonl (the same cache as modecount_wind.py for that state), and
 the log and the record go to <data> too, which must be a task folder of the raw-data repository (hp/raw_out.py).
 
-Positions. When the winding W is 1 to WMAX (4), h(lam) = det M exp(-beta (lam - c)) / (lam - c)^W has no winding, so
+Positions. When the winding W is 1 to WMAX (6), h(lam) = det M exp(-beta (lam - c)) / (lam - c)^W has no winding, so
 ln h is periodic on the circle, and the power sums of the zeros z_j inside are (integration by parts)
 
     s_k = sum_j (z_j - c)^k = -(k / 2 pi i) closed int (lam - c)^(k-1) ln h d lam
@@ -54,8 +54,8 @@ from modecount_wind import parse, wrap, DATA  # noqa: E402
 ALIAS = math.pi / 2
 NB = 3
 # the largest winding given positions. The sums need k = 1 .. W on n0 points, and the n0 / 2 estimate's sums alias
-# sooner as W grows (modecount_circle_planted.py, case four).
-WMAX = 4
+# sooner as W grows (modecount_circle_planted.py, cases four, five and six).
+WMAX = 6
 
 
 def circle(det, c, R, tol=math.pi / 4, n0=16, mutate=None, alias=ALIAS):
