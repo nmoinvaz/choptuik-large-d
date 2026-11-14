@@ -709,8 +709,8 @@ to the next.
   $`(\theta - \theta_0)^\alpha`$ with $`\alpha`$ near 1.
 
 *Status:* **numerical evidence**, conditional on the selection rule as in §3.3. The fits and their controls are
-reproducible. The branch point is read from ten harmonics, one Padé signature and one power law, and no analysis of
-the inner equations near the singularity has confirmed it.
+reproducible. The branch point was read here from ten harmonics, one Padé signature and one power law. §10 derives
+its type from the inner equations.
 
 ### 8.6 What it means for #137 and #138
 
@@ -861,3 +861,97 @@ to 0.055085 in §3.3's file and then rounded again. The phase 0.0988 is right.
 **Commands**, from `solver/eeg_profile/`:
 - `python3 w_series.py planted` exits 0, and `--mutate=index` or `--mutate=phase` exits 1.
 - `python3 w_series.py run --A=2.72` exits 0.
+
+## 10. The singularity's type from the inner equations (issue #397)
+
+**The singularity at θ₀ is a simple pole plus (θ − θ₀) ln(θ − θ₀).** The logarithm arises at the double resonance r = 2
+of the inner equations' movable singularity, and the singularity is not algebraic.
+- **The residue is fixed** by the equations: R = −ω/√2 in this repository's gauge. The profile's coefficients give it to
+  8×10⁻⁶.
+- **The exponent −4** of |r_{ν+2} − r_ν| follows, and the data give 4.0012, 4.0002 and 3.9955 at ν = 11–15.
+- **The constant 0.01124 needs one global number.** The local expansion leaves the log's strength free, and the profile
+  gives |B/R| = 0.1304.
+
+Script: `solver/eeg_profile/profile_singularity.py`. Raw: `I397-mac/` of the raw-data repository (20a5fb76). The
+criteria were pre-registered on #397, with one amendment before any computation.
+
+### 10.1 The local expansion
+
+The profile is the centre data of the D = ∞ inner flow. In Prop. 5's variables Y(0, t) = 2√2 F(θ)/(−t), with
+θ = −ω ln(−t). On the slice s = 0 the gauge-fixed form (A) of DINF_ANALYTIC.md §1.1, Y_s + (VY)_u = Y_uu and
+V_u = Y²/4, has u = t. A singular manifold ψ = u − f(s) = 0 through (0, t₀) therefore hands the profile the generic
+movable singularity of (A).
+
+Carried to order ψ⁴, with ln ψ and ln²ψ allowed at every order (`wtc`, sympy):
+
+```math
+Y = \pm\Big[\frac{2}{\psi} + (v_2 + d_2)\,\psi + d_2\,\psi\ln\psi\Big] + O(\psi^3\ln^2\psi), \qquad
+V = -\frac1\psi + f'(s) + O(\psi).
+```
+
+- The residue ±2 is fixed, and the constant term next to the pole vanishes.
+- The only resonance is the double one at r = 2. There v₂ and the log coefficient d₂ are free, and with f they are the
+  system's three free functions. This agrees with `painleve.py log_check`.
+- The ln²ψ term at ψ³ is forced by d₂, with coefficient ±7d₂²/20, and adds no freedom. Odd orders in ψ vanish.
+
+Mapped to θ, this gives F = R/(θ − θ₀) + A₀ + (A₁ + B ln(θ − θ₀))(θ − θ₀) + (A₂ + B₂ ln(θ − θ₀))(θ − θ₀)² + …, with:
+- R = ±ω/√2;
+- B/R = d₂t₀²/(2ω²), free;
+- B₂/B = −3/(2ω), fixed by the map θ(t).
+
+### 10.2 What it predicts for the harmonics
+
+The pole and its images give F_ν ≈ −2iR e^{−iνθ₀}(1 + κ/ν² + κ₃/ν³ + …), with κ = B/R and κ₃ = (3i/ω)κ. So:
+- **The ratio differences fall as (ν + 2)⁻⁴**, with constant 1.5 e^{2 Im θ₀}|κ|.
+- **Their modulus is centred at ν + 2**, i.e. at k + 1.5 in §8.5's notation, up to O(k⁻²), because κ₃/κ is imaginary.
+  Only the constant needs κ.
+- **The alternatives are excluded.** A ln(θ − θ₀) beside the pole would give a ν⁻³ law, and a non-integer power would
+  give a non-integer exponent.
+
+### 10.3 The tests
+
+Pre-registered, on the profile at A = 2.72 (K = 45, ω∞, each A series with its tail):
+
+| test | result | bound | verdict |
+|---|---|---|---|
+| 1. exponent: local exponents at k = 5, 6, 7 | 4.0012, 4.0002, 3.9955 | 4 ± 0.2 | passes |
+| 2. residue: free fit c_k = w₀^{−k}[ρ + κ′/(k + ½)² + λ′/(k + ½)³] on k = 4–9 | \|R\| = 2.7026367 against ω/√2 = 2.7026582 (−8×10⁻⁶); arg R real to 1.4×10⁻⁵ | 0.2%, 0.01 rad | passes |
+| 3. constant, consistency: R fixed, w₀, κ, λ fitted | model C_k = 0.01120–0.01122 against the data's 0.01124 | 3% | passes (0.4%) |
+
+- **The location.** The fit puts θ₀ at −0.03640 − 1.42838i, which is 3.10519 − 1.42838i modulo π. That is §8.5's
+  pole.
+- **Post hoc: the predicted 1/ν³ term.** With κ₃ fixed at the b-free 3iκ/ω and a free ν⁻⁴ term, the fit residual
+  falls from 3.2×10⁻⁷ to 2.5×10⁻⁷. It gives κ = 0.02999 − 0.12689i, |κ| = 0.13039, and a model C_k of 0.01124 at
+  every k = 5–8. Its asymptote 1.5 e^{2 Im θ₀}|κ| is also 0.01124.
+- **Without κ₃ imposed**, the free 1/ν³ term absorbs the higher terms: test 3's κ gives an asymptote 2.7% higher.
+- **The centring.** The data's C_k is 0.01125 at k = 4 and 0.01124 from k = 5 on, as §10.2 predicts.
+
+**The planted checks** (`planted`), run first:
+- **Q1.** A pole plus (w₀ − w) ln(1 − w/w₀) plus a far pole, with exact coefficients, matches its predicted finite-k
+  curve to 1.6×10⁻⁶.
+- **Q2.** The planted ODE Y′ = VY + k₁, V′ = Y²/4, the s-independent reduction of (A), whose compatibility fixes the
+  log coefficient at b₂ = k₁/3. With k₁ = 0.3 its nearest singularity has residue −1.9999982, against ±2. Its constant
+  is within 0.57% of the prediction from b₂ at k = 60–80, with local exponents 4.05.
+  - The next local terms leave the residue about 10⁻⁶ off at K = 87. The script's internal residue check was set to
+    10⁻⁴ after its first setting, 10⁻⁶, proved too tight for that.
+- **The control, k₁ = 0**, which removes the logarithm. Q2 settles only from k ≈ 50, because a second singularity of
+  the planted solution dominates below.
+  - The registered criterion holds: C falls by 130 from k = 10 to 30. It does not discriminate, though, since the
+    k₁ = 0.3 run also falls there.
+  - At k = 60–80, where Q2 is compared, the control's C falls from 2×10⁻⁵ to 9×10⁻⁹, with local exponents 28–37 instead
+    of 4.
+
+### 10.4 What it means for #137 and #138
+
+- **For #138's trial solution**, the form with the logarithm built in now has its pole fixed: R = −ω/√2 at θ₀, and the
+  log's strength |B/R| ≈ 0.130. The next term is the forced (θ − θ₀)² ln(θ − θ₀) with B₂/B = −3/(2ω).
+- **For #137's conformal map**, the location is confirmed, and it is a log branch point, not an isolated pole.
+
+*Status:* the local expansion is **checked symbolically**. That the profile's singularity is this movable singularity
+of (A) is **numerical evidence**: the residue to 8×10⁻⁶, the exponent and the centring. It is conditional on the
+selection rule, as in §3.3.
+
+**Commands**, from `solver/eeg_profile/`:
+- `python3 profile_singularity.py wtc --order=5` exits 0.
+- `python3 profile_singularity.py planted` exits 0.
+- `python3 profile_singularity.py profile --A=2.72` exits 0.
