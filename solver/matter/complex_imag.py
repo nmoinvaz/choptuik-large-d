@@ -38,6 +38,8 @@ Symmetric boxes use det M(conj lam) = conj det M(lam): winding = (phase change a
 Controls: --plant=Z multiplies g by (lam - Z)(lam - conj Z) (a box holding Z counts one or two more);
 --mutate=coupling scales the P equation's (n/2) c (P + Q) by 1.1, --mutate=noG drops G from both equations: either
 breaks the lam = 0 mode, so B0 must change its count; selftest's control (no refinement) must fail.
+--mutate=lightcone scales one coefficient of the light-cone series, P_1 (the u^1 term of the test field's P block), by
+LC_SCALE after the recursion (#780).
 """
 import json
 import math
@@ -51,6 +53,7 @@ from scipy.integrate import solve_ivp
 import scipy.linalg as sl
 
 HERE = os.path.dirname(os.path.abspath(__file__))
+LC_SCALE = float(os.environ.get("LC_SCALE", "1.1"))   # --mutate=lightcone: the factor on P_1
 sys.path.insert(0, HERE)
 
 
@@ -349,6 +352,8 @@ class TestField:
             Q[k + 1] = rq / (v[0][:, None] * (k + 1))
         u = 1 - x
         pw = u ** np.arange(K + 1)
+        if self.mutate == "lightcone":
+            P[1] = LC_SCALE * P[1]
         self.last_tail = float(max(np.max(np.abs(P[-1])) * u ** K, np.max(np.abs(Q[K])) * u ** K))
         return np.concatenate([np.tensordot(pw, P, 1), np.tensordot(pw, Q[:K + 1], 1)])
 
