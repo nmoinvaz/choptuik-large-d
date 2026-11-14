@@ -1858,7 +1858,7 @@ Still open:
 - that λ = 2 is the only physical unstable mode at D = ∞;
 - the 1/n coefficients without truncation, and a proof of the O(1/n) matching.
 
-The one-harmonic model's root, λ = 1.765, is not a counterexample, for two reasons. Its background is not the D = ∞
+The one-harmonic model's root, λ = 1.769, is not a counterexample, for two reasons. Its background is not the D = ∞
 solution, and Galerkin truncation does not commute with the gauge step, which multiplies by P(θ). More in
 [GAMMA.md](GAMMA.md).
 
@@ -1935,7 +1935,7 @@ needs ℓ = 1 out to D ≈ 15–20, which needs the double-double solver's tools
 
 **σ-model, self-similar (CSS) branch** ([matter/SIGMA.md](matter/SIGMA.md)). The D-dimensional equations are checked
 against Bizoń and Wasserman's at D = 4, and the D = 4 values are reproduced: λ ≈ 5.14, γ ≈ 0.18, and the horizon
-thresholds. Continued in D at fixed coupling η = 0.14, γ rises from 0.188 at D = 4 to 0.513 at a fold at D = 8.544,
+thresholds. Continued in D at fixed coupling η = 0.14, γ rises from 0.188 at D = 4 to 0.5135 at a fold at D = 8.544,
 where the branch ends. In flat space it collapses onto a singular cone (u ≡ π/2) as D → 8, with λ → 2. So this branch
 never reaches large D and cannot test γ∞. Its γ ends near 1/2 for a different reason. The test of the prediction needs
 the σ-model's DSS branch.

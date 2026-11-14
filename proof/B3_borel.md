@@ -793,7 +793,7 @@ of Z⁺ and its asymptotics on the sector), as in A_certify.md.
 | (H-σ), M = 1 | Borel transform analytic near [0, ∞) | **conjecture**; **numerical evidence** σ ≈ π/2; proof plan §4 with one open technical point (derivative loss) |
 | (H-σ), M ≥ 3 | | **conjecture**; numerical evidence that σ is set by an x-independent singularity near −1.2 (M = 3) |
 | B3 formal half | | **proved** (B3.7) |
-| B3 actual solution, fixed order | | = B8 on the real segment (to be written with constants) |
+| B3 actual solution, fixed order | | = B8 on the real segment, written with constants in [B8_constants.md](B8_constants.md) (**certified** for M = 1, n ≥ e^{62}) |
 | B3 strong form (1-sum) | | ⇔ (H-σ) (Nevanlinna–Sokal), **open** |
 | B4 summability | | **cited**, Braaksma 1992, hypotheses checked against the paper |
 | B4 parameter-analyticity | | **proved** given Braaksma (Lemma B4.P); not in Braaksma 1992 or the Ramis–Sibuya 1994 abstract |

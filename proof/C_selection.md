@@ -73,8 +73,9 @@ Contents
   ([B_chain.md](B_chain.md) §15; Section 13.1 lists every link with its status and threshold). The theorem is proved
   with the selection function "label of the outer jump at a fixed point of the Stokes line" rather than the
   light-cone coefficient C_{n,μ}; B6 and the factor κ_{n,μ} are not needed. The light cone is handled by Lemma LC (B8
-  continued into the light-cone disc in the exact gauge) and Lemma J (the jump vanishes with its label). The
-  certificate code has not been reviewed independently.
+  continued into the light-cone disc in the exact gauge) and Lemma J (the jump vanishes with its label). Two
+  independent reviews ([P2_review.md](P2_review.md), [P2b_review.md](P2b_review.md)) re-implement B7, Lemma LC and
+  Lemma J; the code of B5(1), of B8 beyond `--d0` and of (H8) is not yet reviewed (Section 13.1).
 
 | Step | Content | Status (details in Section 13) |
 |---|---|---|

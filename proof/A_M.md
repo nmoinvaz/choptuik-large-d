@@ -5,7 +5,8 @@ validated integration plus one Krawczyk test, giving "exactly one simple zero of
 box". The analytic lemmas that turn the point certificate into the statement about the selection condition (the
 analogues of lemmas S, 6a and 6b of A_certify.md §11–12) are not part of this note; the M-harmonic start-value fixed
 point is being written separately (`solver/proof/fixed_point_M.py`, notes in `proof/A_lemmas_M.md`). Written by Claude
-(Anthropic) under Nathan Moinvaziri's direction; not reviewed.
+(Anthropic) under Nathan Moinvaziri's direction; its M = 3 certificate is reviewed independently in
+[A_M_review.md](A_M_review.md).
 
 **Status.** M = 1: this code path reproduces Theorem A(M = 1)'s box (§6.1). M = 3: **certified**, given the M-harmonic
 start-value lemma `fixed_point_M.start_data_M` and Braaksma's theorem, on a parallelepiped of outer half-width 10⁻¹⁰
@@ -13,8 +14,8 @@ start-value lemma `fixed_point_M.start_data_M` and Braaksma's theorem, on a para
 four box runs of §7 on the local machine all failed: at h = 3×10⁻¹¹ and 10⁻¹² (twice) the derivative radius grew past
 order one on the arc, and the one run that finished (h = 10⁻¹³) fails the Krawczyk test (margins −13.7, −11.8, +0.29,
 +0.33, −542, −511; `logs/A_M_krawczyk_M5_1e-13.log`). The design change of §7, a second-order chart with C² enclosures,
-is [A_M2.md](A_M2.md): with it M = 5 is **certified** (given the same lemma and Braaksma's theorem; the new code not
-reviewed) on a curved parallelepiped of outer half-width 10⁻¹⁰ (A_M2.md §6.4). An independent review
+is [A_M2.md](A_M2.md): with it M = 5 is **certified** (given the same lemma and Braaksma's theorem; the new code reviewed in
+[A_M2_review.md](A_M2_review.md)) on a curved parallelepiped of outer half-width 10⁻¹⁰ (A_M2.md §6.4). An independent review
 ([A_M_review.md](A_M_review.md)) confirms the M = 3 certificate. With lemma 6a run on this certificate's state box
 (ρ₆ₐ = 0.041) and the other lemmas of [A_lemmas_M.md](A_lemmas_M.md), **Theorem A(3) is certified** (A_lemmas_M.md §7).
 
@@ -88,7 +89,7 @@ or anything about M > 5 or the untruncated problem.
   by the certificate's code path, not a certificate. `python3 certify_M.py startcheck M` checks that the lemma's
   enclosure contains this file's own series (independent code; at M = 3 they agree to 4×10⁻⁷⁶).
 - The correctness of the code: python-flint 0.9 (arb/acb), validated_int.py's Lohner step (reviewed,
-  [A_review.md](A_review.md)), and the new files above (not reviewed).
+  [A_review.md](A_review.md)), and the new files above (reviewed with the M = 3 certificate, [A_M_review.md](A_M_review.md)).
 
 ## 2. Design: the Schur-corrected Krawczyk test in a tilted box
 
@@ -330,7 +331,7 @@ K(X) ⊂ int X on the run's whole box, relative margins 0.994, 0.997, 0.778, 0.7
 radius in Y Dg̃(X) 0.23.
 
 > **Certified** (given the start-value lemma `fixed_point_M.start_data_M` and Braaksma's theorem; trusted code
-> certify_M*.py, validated_int.py and python-flint 0.9; the new files are not reviewed): the D-jump function g of §1 at
+> certify_M*.py, validated_int.py and python-flint 0.9; the new files reviewed in [A_M_review.md](A_M_review.md)): the D-jump function g of §1 at
 > M = 3 has exactly one zero in the parallelepiped
 > P = p̂ + T·([−10⁻¹⁰, 10⁻¹⁰]² × [−4×10⁻¹⁶, 4×10⁻¹⁶]²), and its Jacobian is non-singular there. The zero lies in
 > (endpoints rounded outward):

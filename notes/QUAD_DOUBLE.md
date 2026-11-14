@@ -8,7 +8,8 @@
 
 Quad-double numbers (an unevaluated sum of four f64, about 64 significant digits) are now in the `hpkernel` crate:
 a scalar type `QD` and an 8-lane SIMD type `QV` with bitwise the same results, on the AVX-512, AVX2 and portable
-backends of `v8.rs`. Nothing in the solver uses them yet. Every existing output is bit-identical (section 9). The
+backends of `v8.rs`. Sections 1–10 describe them as first built, when nothing in the solver used them yet; the
+quad-double solver built on them is in section 12.1 onward. Every existing output is bit-identical (section 9). The
 logs behind every number here are in `hp/data/quad_double/`, and the commands run in `hp/`.
 
 **Summary.**
@@ -877,9 +878,9 @@ past the double-double data's 2e-15 check error, and to the single converged sol
 corrected pinned pairs above lie within 1e-17 (71.0) and 2e-17 (71.5) of it: that is the linearised correction's own
 error, and the pins' agreement to 1e-32 at 71.5 was a coincidence of the two pins. From 72 on no start of double-double
 quality reaches the full basin, as the table of basins said. At the frontier the two pins' quad-double values differ by
-7e-16 and the double-double one lies 1e-15 from them: the digits there are set by the pin's cost (the full step's |dz|
-is 7.9e-6 against 1.6e-9 at 72.4), not by the arithmetic. So the quad-double solver adds digits where the pin is cheap,
-up to about 72.5 in this layout, and past that the full system's junk, not precision, bounds Delta.
+7e-16 and the double-double one lies 1.1e-14 above them: the digits there are set by the pin's cost (the full step's
+|dz| is 7.9e-6 against 1.6e-9 at 72.4), not by the arithmetic. So the quad-double solver adds digits where the pin is
+cheap, up to about 72.5 in this layout, and past that the full system's junk, not precision, bounds Delta.
 
 **Second starts at 71-73, and the spread corrected (2026-11-06 04:00 UTC).** The other pin's states polished in
 quad-double in their own pinned system (T84-mac's `*_pinned5_dz.npz` at 71.0, 71.5 and 72.8, `*_pinned7_dz.npz` at 73.0,

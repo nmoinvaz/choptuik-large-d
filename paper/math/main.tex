@@ -857,11 +857,13 @@ of the unstable mode tends to $2$, and $\gamma = 1/\lambda \to 1/2$.
 
 At finite $D$ the outer region and the $1/n$ corrections to the inner equations depend on $r$ explicitly
 (Lemma~\ref{lem:B50}), so the symmetry is broken and the mode survives as an ordinary unstable mode with
-$\lambda = 2 + O(1/n)$, whose $1/n$ coefficient is measured in~\cite{companion}. Two questions are open: whether
-$\lambda = 2$ is the only physical unstable mode at $D = \infty$, and that coefficient, which by first-order perturbation
-theory is
+$\lambda = 2 + O(1/n)$, whose $1/n$ coefficient is measured in~\cite{companion}. Whether $\lambda = 2$ is the only
+physical unstable mode at $D = \infty$ is open. The coefficient is, by first-order perturbation theory,
 $-S_{1/n}/\partial_\lambda S$ at $\lambda = 2$, with $S$ the perturbation's fast-mode multiplier and $S_{1/n}$ the part induced
-by the $O(1/n)$ inner equations. The one-harmonic model of Section~\ref{sec:thmA} has a root $\lambda = 1.765$; this is not a
+by the $O(1/n)$ inner equations. In the $M$-harmonic truncations it is $7.76$, $3.080$ and $3.023$ for $M = 1$, $3$ and $5$,
+against $3.0324$ from the solutions (numerical evidence, conditional on Conjecture~\ref{conj} at that order;
+\repo{notes/FIRST\_ORDER.md}); without truncation it is not computed. The one-harmonic model of Section~\ref{sec:thmA}
+has a root $\lambda = 1.769$; this is not a
 counterexample, because its background is not the $D = \infty$ solution and because Galerkin truncation does not commute
 with the gauge step, which multiplies by $P(\theta)$.
 
@@ -1913,7 +1915,7 @@ at $\omega = \winf$ two fit windows, $J = 750$ and $1000$ terms, agree to about 
 \sigma_5 = -0.00555413676 - 0.00280595708\iu,\\
 \sigma_6 = (-2.7853745790 - 10.776628405\iu)\times10^{-4},\quad \sigma_7 = (1.0223846436 - 1.4905053530\iu)\times10^{-4};
 \end{gather*}
-$\sigma_1$--$\sigma_{12}$ are available at $\omega/\winf = 0.99$, $1.00$, $1.01$ (\repo{solver/inner\_amp/}). A fit is accurate but not an enclosure; Lemma~\ref{lem:sigma1} below encloses $\sigma_1$
+$\sigma_1$--$\sigma_{22}$ are available at $\omega/\winf = 0.99$, $1.00$, $1.01$ (\repo{solver/inner\_amp/}). A fit is accurate but not an enclosure; Lemma~\ref{lem:sigma1} below encloses $\sigma_1$
 rigorously. Summing \eqref{eq:sigmak} directly at the zero is hopeless: the terms $|\sigma_k|A_0^{2k}$ grow to about $240$ at
 $k = 9$ and are still $160$ at $k = 12$, and would fall below $10^{-6}$ only near $k \approx 37$.
 
@@ -2182,7 +2184,7 @@ than $x_0$; every ring with such zeros constructed so far has been rejected.
 \subsection{What the evidence does not show}
 The $\pm0.00006$ above is the range of calibrated estimators, not an error bound, and it rests on the assumption about the
 other zeros of $S_1$.
-The coefficients $\sigma_k$ come from late-order fits; two fit windows agree to about $10^{-19}$ for $\sigma_1$--$\sigma_{12}$ ($\sigma_{13}$ to $2\times10^{-13}$ relative; $\sigma_{14}$--$\sigma_{17}$ were fitted with one window, to plateau steps of $3\times10^{-13}$ to $1.5\times10^{-12}$ relative), and the
+The coefficients $\sigma_k$ come from late-order fits; two fit windows agree to about $10^{-19}$ for $\sigma_1$--$\sigma_{12}$ ($\sigma_{13}$ to $2\times10^{-13}$ relative; $\sigma_{14}$--$\sigma_{22}$ to plateau steps of $3\times10^{-13}$ to $2.3\times10^{-12}$ relative), and the
 estimates need them to about $10^{-10}$, but only $\sigma_1$ is enclosed rigorously (Lemma~\ref{lem:sigma1}). At the zero the series \eqref{eq:sigmak} is far from summed, and every
 estimator (crossings, ratios, Pad\'e approximants, the factored series) is a resummation whose convergence is observed, not
 proved; the arc-shaped Borel singularity of Section~\ref{sec:entire} is a known source of slow convergence. Settling the other zeros needs more orders, starting with $\sigma_{23}$. Finally, agreement of the numbers is evidence that the selection rule is the right one, not a proof
@@ -2216,7 +2218,8 @@ by a computer-assisted existence proof in the manner of Reiterer and Trubowitz~\
 \end{enumerate}
 Together these would derive $\Dinf = 2\pi/\omega^*$ from the $D = \infty$ equations. Numerically the rule already gives $\Dinf$ to
 about $10^{-4}$; more orders, or $M = 9$, would sharpen that, and whether $\Dinf$ has a closed form is open. For the critical
-exponent, open are the uniqueness of the unstable mode at $D = \infty$ and the coefficient of $1/n$ in $\lambda$. A
+exponent, open are the uniqueness of the unstable mode at $D = \infty$ and the coefficient of $1/n$ in $\lambda$ without
+harmonic truncation. A
 centrifugal term of order $n/r^2$ (scalar multiplets with angular momentum, wave maps, Yang--Mills) becomes an explicit
 $1/s$ in the inner equations and removes the symmetry of Proposition~\ref{prop:5}. Other matter models test this, and the
 companion paper reports the tests~\cite{companion}: for the axion--dilaton, whose inner problem keeps the symmetry,

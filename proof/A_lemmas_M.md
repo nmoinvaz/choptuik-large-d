@@ -9,7 +9,9 @@ path once they exist; §7 lists exactly what waits for them.
 Status words as in AGENTS.md: *proved* (by hand), *certified* (computer-assisted, the trusted code named),
 *conditional* (with the hypothesis named), *numerical evidence*. The one fact assumed throughout, as at M = 1, is
 Braaksma's summability theorem for the existence of the lateral solutions y± and their asymptotics
-([C_selection.md](C_selection.md) Lemma B4(M)). Nothing here has been reviewed independently yet.
+([C_selection.md](C_selection.md) Lemma B4(M)). Lemma 6a(3) and the M = 3 assembly are reviewed independently in
+[A_M_review.md](A_M_review.md), and the lemma 6a and 6b₁ code at M = 5 by #39 (the summary below); the majorant code
+of lemmas S and 6b₀ is not yet reviewed.
 
 Contents
 
@@ -763,8 +765,7 @@ If the certificate's final box or path differs from the above, these must be rer
 - a certificate of S₁ = 0 alone, at fixed higher harmonics: that would not satisfy 6a, which needs all (M + 1)/2
   complex J_{D,μ}(ξ₁), or an invertible linear image of them such as `hier.py`'s de-mixed residuals.
 
-At M = 5 everything waits for its certificate except lemma S, 6b₀, the flat estimate and step (i), which are certified
-here. 6b₁(5) is a local-machine task (§9).
+At M = 5 the point certificate is [A_M2.md](A_M2.md)'s, and the summary above gives the status of each lemma at it.
 
 ## 8. Mutation table
 

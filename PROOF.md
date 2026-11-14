@@ -76,16 +76,16 @@ there is a discretely self-similar solution, regular at the centre and analytic 
 profile and frequency satisfy F_n → F(A*, ω*) and ω_n = ω* + O(1/n). Conversely, any family of such solutions with
 F_n → F_∞, ω_n → ω_∞ in the sense of hypothesis (H1) has S(F_∞, ω_∞) ≡ 0.
 
-**Corollary C (identification).** If the critical solutions computed for D = 8–61 form the branch of Theorem B, then
-ω∞ = ω*, and Δ∞ = 2π/ω* is determined by the inner problem alone.
+**Corollary C (identification).** If the critical solutions computed for D = 8.25–67.77 form the branch of Theorem B,
+then ω∞ = ω*, and Δ∞ = 2π/ω* is determined by the inner problem alone.
 
-The numerics so far are consistent with all three: the twelve-order amplitude expansion brackets ω*/ω∞ in
-0.99915–1.00011 with Padé estimates 0.9999, and the five-harmonic truncation gives 0.999228 (README, "Where that leaves
-it"). A planted-truth test of those estimators (notes/PLANTED_SELECTION.md) puts the zero at 0.999975–1.00005 over
-fourteen and fifteen orders (an estimator range, which contains the finite-D value) if S₁ has no zeros closer to the
-origin than x₀; the fourteenth and fifteenth coefficients rejected every ring of such zeros constructed so far, and the
-one surviving ring, with zeros just beyond x₀, puts the zero inside the range. They are evidence, not part of the
-proof.
+The numerics so far are consistent with all three: at twelve orders the amplitude expansion gives ω*/ω∞ =
+0.99915–1.00011 (two estimators, not a bracket) with Padé estimates 0.9999, and the five- and seven-harmonic
+truncations give 0.999228 and 1.000022 (README, "Where that leaves it"). A planted-truth test of those estimators
+(notes/PLANTED_SELECTION.md) puts the zero at 0.999975–1.00005 over the fourteenth to twenty-second orders (an estimator
+range, which contains the finite-D value) if S₁ has no zeros closer to the origin than x₀. Those coefficients rejected
+every ring of such zeros constructed so far, and the rings with zeros just beyond x₀ each survived one coefficient and
+put the zero inside the range. They are evidence, not part of the proof.
 
 ## 2. What is already proved here
 
@@ -391,8 +391,8 @@ and if that zero is the unique simple zero in a box containing the numerical lim
 - **Uniqueness in the box.** Theorem A must certify that there is exactly one zero of S₁ in a box that also contains
   the numerically extrapolated ω∞ = 3.82213590 (±4×10⁻⁸) and A∞ ≈ 2.70–2.72. A box of radius 10⁻³ suffices for the
   identification; it does not need the numerics' digits.
-- **That the computed branch is the branch of Theorem B.** The double-double solutions at D = 8–61 are numerical. A
-  Reiterer–Trubowitz-style computer-assisted existence proof at one large D (say D = 40–60), with the certified solution
+- **That the computed branch is the branch of Theorem B.** The double-double solutions at D = 8.25–67.77 are numerical.
+  A Reiterer–Trubowitz-style computer-assisted existence proof at one large D (say D = 40–60), with the certified solution
   inside the basin of Theorem B's construction, would close this; alternatively, Theorem B's construction at n ≥ n₀ with
   explicit n₀ and a certified solution at some D ≥ n₀ + 2.
 
@@ -404,16 +404,16 @@ theorem rather than its basis.
 | Stage | Goal | Ingredients | Difficulty | Who |
 |---|---|---|---|---|
 | 1 | Write the inner problem as a first-order system at the irregular singular point ξ = ∞ (t = 1/ξ²), list the transseries, and identify S_ν with Costin's Stokes constants | Costin (1998); the existing formal series (`solver/inner_borel/`, `inner_np.py`) | low–moderate, weeks | here |
-| 2 | Certified M = 5 zero (Theorem A(M=5)) | A.1 by fixed point with explicit constants; A.2 validated Taylor integration; A.4 Krawczyk; tolerances from `feasibility.py` | moderate, a computer-assisted-proof project of a few months | computer-assisted-proof community |
+| 2 | Certified M = 5 zero (Theorem A(M=5)) | A.1 by fixed point with explicit constants; A.2 validated Taylor integration; A.4 Krawczyk; tolerances from `feasibility.py` | done (§4, [proof/A_M2.md](proof/A_M2.md)) | here |
 | 3 | Growth bound for σ_k and the entire-function structure; factor out the Γ dependence | the exact amplitude recursion; rigorous Darboux bounds for its late orders | moderate–hard | exponential asymptotics |
 | 4 | Harmonic tail bound A.3, then Theorem A(∞) | weighted dual norms on the tuned family; Schur complement estimates | hard, genuinely new | both communities |
-| 5 | Theorem B for a finite-harmonic model (θ-dependence truncated in the full equations, not only the inner problem) | Xie–Tanveer architecture; Costin; B.3–B.7 | hard, a full paper | exponential asymptotics |
+| 5 | Theorem B for a finite-harmonic model (θ-dependence truncated in the full equations, not only the inner problem) | Xie–Tanveer architecture; Costin; B.3–B.7 | hard, a full paper; done for M = 1, assuming Braaksma's theorem (§5, [proof/B_chain.md](proof/B_chain.md)) | exponential asymptotics; here for M = 1 |
 | 6 | Theorem B in the strip-analytic setting | Costin–Tanveer PDE Borel summability; gap (b) | research-level | exponential asymptotics |
 | 7 | Corollary C, with a certified large-D solution | Reiterer–Trubowitz method at one D | moderate given 2–6 | GR / computer-assisted proofs |
 
-Stages 1 and 2 are achievable with current tools and would already be a publishable result: a computer-assisted
-certificate that the five-harmonic inner problem selects ω/ω∞ = 0.9992 ± 10⁻⁶, together with the measured convergence
-in M and the untruncated bracket. Stage 4 is where a new idea is needed.
+Stage 2 is done (§4): the five-harmonic inner problem selects ω/ω∞ ∈ [0.99922840320656, 0.99922840320657], assuming
+Braaksma's theorem and the start-value lemma. With the measured convergence in M and the untruncated bracket, stages 1
+and 2 would already be a publishable result. Stage 4 is where a new idea is needed.
 
 What is being worked on now, and in what order: [notes/PROOF_QUEUE.md](notes/PROOF_QUEUE.md).
 

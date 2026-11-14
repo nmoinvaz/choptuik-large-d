@@ -49,7 +49,8 @@ Gap (b) is real but not fatal, and it is narrower than the README's statement of
   A 10⁻⁴ box needs M = 9 explicit.
 - **The two routes are consistent.** The truncated sequence and the alternation sign put the limit at 0.99923–1.00011. The
   untruncated bracket at order 12 is 0.99915–1.00011, with the central Padé value 0.99989. They overlap, and both
-  contain 1. M = 7 should land at 0.99997–1.00017, a sharp test when it runs.
+  contain 1. M = 7 should land at 0.99997–1.00017, a sharp test when it runs. (It landed at 1.000022, inside the
+  prediction; [B_tail_M7.md](B_tail_M7.md) §2.)
 - **Secondary Stokes lines from F's complex singularities: no sign of them.** They are absent at every finite order in
   A, where each order is a trigonometric polynomial and the late orders contain only fast-mode families. S₁ is numerically
   entire in A², and the two routes agree. What is not excluded is a non-uniformity in the order of limits (sum in A,
@@ -305,8 +306,8 @@ finite algebraic recursion order by order (§4).
 ## 7. What remains open
 
 1. **The jump-conditioned tail bound itself.** The per-pair ratio −0.045 to −0.057 is measured on three points (M = 1, 3,
-   5), with M = 1 pre-asymptotic. M = 7 (`hier.py 7 … --predict --floor --schur`) is the next data point. The prediction is
-   c₇ = 0.99997–1.00017.
+   5), with M = 1 pre-asymptotic. M = 7 (`hier.py 7 … --predict --floor --schur`) was the next data point, with the
+   prediction c₇ = 0.99997–1.00017. It gives 1.000022 and a last ratio of −0.049 ([B_tail_M7.md](B_tail_M7.md) §2–3).
 2. **Why the Galerkin projection explodes at σ_{M+1}.** Either its multiplier is genuinely large or its late orders have
    a family structure outside the fit basis (the fit residual rises). Deciding this is a few hours' work: compute the
    projected system's fast-mode exponents, refit, and compare with a lateral (`inner_np.py`) evaluation of the same

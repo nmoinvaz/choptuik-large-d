@@ -38,7 +38,7 @@ So the theorem holds, assuming Braaksma's summability theorem: **the M = 1 selec
 the box, and it is simple**, at A ∈ [2.54214804761338, 2.54214804761975], ω/ω∞ ∈ [0.776994013607438,
 0.776994013612010] (§11.7).
 
-**Since then (§12):** lemma 6b₁ is proved. The annulus is covered by 178 validated Taylor discs (radius 10–24 in
+**Since then (§12):** lemma 6b₁ is certified. The annulus is covered by 178 validated Taylor discs (radius 10–24 in
 u = 1/ξ², orders 40–70). Their centre values come from single-trajectory Lohner runs along the start ray and 12 arcs,
 and the disc functions glue to one analytic continuation of y⁺. With §11 this gives **Theorem A(M = 1)** without
 conditions, given Braaksma's theorem for the existence of y⁺ (§12.6): the M = 1 selection condition has exactly one
@@ -1383,7 +1383,7 @@ same hulls. So the real-linear map 𝓛 : ∂Σ ↦ ∂J_D(0.3) is injective, DJ
 has exactly one simple zero x* in X. By 11.5 (whose hypothesis now holds), J_D(0.3; x) = 0 ⇔ y⁺ ≡ y⁻. ∎
 
 **What remains:** lemma 6b₁ only (11.4 lists three routes and their cost). Without it, the honest statement is item 1
-above together with 6a as stated. (Lemma 6b₁ is proved in §12, and the theorem is restated there without the
+above together with 6a as stated. (Lemma 6b₁ is certified in §12, and the theorem is restated there without the
 condition, §12.6.)
 
 **Independence.**

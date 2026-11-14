@@ -6,7 +6,8 @@ invariant under s-translation, which gives an exact λ = 2 mode ([GAMMA.md](../G
 inner variables, breaks this. This page tests the prediction on the self-gravitating hedgehog σ-model (wave map into
 $`S^{D-1}`$, coupling η = 4πGf²). It covers: the D-dimensional equations (checked against Bizoń–Wasserman in D = 4); the
 continuously self-similar (CSS) critical solution and its growing mode, validated against every published D = 4 and
-flat-space number found; its continuation in D; and the D = ∞ inner problem. The DSS branch was not computed (§7).
+flat-space number found; its continuation in D; and the D = ∞ inner problem. The DSS branch was not computed here
+(§7); [SIGMA_DSS.md](SIGMA_DSS.md) computes it.
 
 Notation as in the README: D = n + 2, d = n + 1 space dimensions, x = r/(−t), τ = −ln(−t), s = r²/(2n), and γ = 1/λ is
 the radius exponent ($`r_{\rm BH} \propto (p-p_*)^\gamma`$; the mass exponent is (D − 3)γ). Statements are marked, as in
@@ -406,7 +407,9 @@ light cone (D = 8 at η = 0, D = 8.351 at η = 0.14).
 
 ## 7. The DSS branch
 
-Not computed: the time went to the CSS branch, and the ℓ = 1 multiplet (the η → ∞ limit) is another agent's task. What is known about it here:
+Not computed here: the time went to the CSS branch, and the ℓ = 1 multiplet (the η → ∞ limit) is another agent's task.
+[SIGMA_DSS.md](SIGMA_DSS.md) has since computed the branch at D = 4 and continued it to D ≈ 10.5–11 at η = 1 and
+0.3. What was known about it here:
 - *Argued.* At fixed η its D = ∞ inner problem is the system of §6.1, n-free and without s-translation, so its λ∞ is not
   protected at 2. It depends on η and tends, as η → ∞, to the ℓ = 1 multiplet's value (STRUCTURE.md). In D = 4 the
   DSS exponent is about 0.11 for η ≳ 0.2 and tends to 0.1185 ± 0.0005 as η → ∞ [HLPTA00]. [LTHA02] give γ_DSS ≈ 0.11.

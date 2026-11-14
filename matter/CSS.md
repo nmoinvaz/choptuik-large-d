@@ -347,7 +347,10 @@ fit with the same number of parameters. This is the same pattern as the real sca
 The 1/n coefficient is 3.598–3.601 over the fits with 5–6 powers and D ≥ 20–24, rising slowly with the order, so
 c₁ = 3.60 ± 0.01. For the real scalar's DSS solution GAMMA.md has λ = 2 + 3.0324/n − 34.3/n², a similar series.
 **Conclusion: λ∞ = 2 to about 10⁻⁵, γ∞ = 1/2 to about 3×10⁻⁶** (an extrapolation from D ≤ 80; at D = 80,
-γ = 0.4896024).
+γ = 0.4896024). Both are read off the highest-order free fits of the table, K = 7 on D ≥ 20 and K = 6–7 on D ≥ 24
+and 30 (λ∞ − 2 = 0.8–1.7×10⁻⁵): an estimate, not a bound. `css_fit.py`'s own summary in `data/css_fit_k1.json`, the
+median of the best third of its converged fits over (K, D ≥), includes lower orders and gives λ∞ − 2 = 9.6×10⁻⁵
+(0.9×10⁻⁵ to 2.6×10⁻⁴) and γ∞ − 1/2 = −3.2×10⁻⁵ (−8.5×10⁻⁵ to −3.1×10⁻⁶).
 
 **ω.** The phase-rotation frequency extrapolates to
 

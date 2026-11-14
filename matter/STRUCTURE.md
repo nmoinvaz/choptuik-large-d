@@ -453,9 +453,12 @@ truncation; its first 1/n correction would need the O(1/n) inner equations.
 - **ℓ ∝ n** needs the turning-point layer with gravity written out, including how the time dependence enters.
 - **Yang–Mills:** that the type II threshold in D ≥ 6 is the U-system's critical solution is argued, not shown; no
   Einstein–Yang–Mills collapse in D ≥ 5 has been computed.
-- **Wave maps:** the D = ∞ inner problem as a function of η (its CSS solutions and the DSS branch) was not computed.
-- **The CSS check:** the finite-D Hirschmann–Eardley solutions were not computed here; that, and the next order in 1/n
-  of the CSS inner problem, would test the D = ∞ selection rule cleanly.
+- **Wave maps:** the D = ∞ inner problem as a function of η (its CSS solutions and the DSS branch) was not computed
+  here. [SIGMA.md](SIGMA.md) §6 solves its CSS ground state at η = 0.14, and [SIGMA_DSS.md](SIGMA_DSS.md) follows the
+  finite-D DSS branch to D ≈ 10.5–11.
+- **The CSS check:** the finite-D Hirschmann–Eardley solutions were not computed here. [CSS.md](CSS.md) §7 has since
+  computed them to D = 80 and made the test, which passes. The next order in 1/n of the CSS inner problem is not
+  computed.
 
 ## 11. Scripts
 

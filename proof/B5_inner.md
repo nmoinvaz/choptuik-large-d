@@ -53,7 +53,7 @@ Contents
   (with the best κ₁ ≈ 0.85; `b5_threshold.py`). That is an estimate, not part of this lemma (section 7).
   *Superseded:* the estimate uses the exponent ⟨F²⟩ where the fast mode of the Φ-component has
   Re 𝒢 = ⟨F²⟩ − 3/2, and omits the weight m_Φ = |z|; B5(2) is now certified ([B_chain.md](B_chain.md) §3).
-- **A discrepancy, to resolve before B(1) and A(1) can be combined.**
+- **A discrepancy, since resolved: C_selection.md §1 and the paper now use b and c on |ν| ≤ M + 1.**
   - C_selection.md §1 and the paper truncate b and c to even |ν| ≤ M − 1.
   - The certified inner problem (and every inner solver, `lateral_np.py`, `hier.py`, `first_order_jet.py`) keeps c on
     |ν| ≤ M + 1. For M = 1 that is c on {0} against {0, ±2}.
@@ -583,8 +583,8 @@ relative error of the jump is of order $`x\,n^{-1+1/(2\kappa_1)}(\ln n/\kappa_1)
 | existence of a super-solution, hence some n₀(M), for each fixed M | **proved, conditional on (H8)**, with Braaksma's Gevrey bounds; no numerical n₀(M) |
 | M = 1: all constants, the super-solution, n₀(1) = max(e^{73.89}, n₈) (max(e^{69.78}, n₈) at Z = 0.009) | **certified** (`b5_bounds.py`, python-flint; with lemma S of A_certify.md rerun over the complex box); **conditional on (H8)** and on Braaksma's theorem as in Theorem A(M = 1) |
 | leading data δ⁰ of (H8) | **numerical evidence** (`b5_data.py`; cross-checked) |
-| (H8) itself | **open**: B8's remainder in these variables, plus the series comparison of section 7 |
-| B5(2) error at n₀(1) | not part of this lemma; estimated in section 7 (ln n ≳ 105, `b5_threshold.py`) |
+| (H8) itself | **certified** for M = 1, n ≥ e^{73.89}, δ = (8.3×10⁻⁵, 79.04, 3.232, 6.464) ≤ δ_ref ([B8_constants.md](B8_constants.md) §8) |
+| B5(2) error at n₀(1) | not part of this lemma; **certified** in label form, error ≤ e^{76.94}/n for n ≥ e^{73.89} ([B_chain.md](B_chain.md) §3); section 7's estimate (ln n ≳ 105) is superseded |
 
 The trusted code: `b5_bounds.py` (new, not reviewed independently), `b5_formulas.py` (new), `fixed_point.py` and
 `lemma6_sector.py` (A_certify.md; reviewed in A_review.md, rerun over a different box), python-flint 0.9.

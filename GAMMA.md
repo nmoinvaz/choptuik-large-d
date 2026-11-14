@@ -168,7 +168,7 @@ $`r_{\rm BH} \propto (p - p_*)^{1/2}`$. This is the DSS counterpart of Rozali an
 $`r_{\rm div} = \sqrt{2(\varepsilon-1)}`$, from an exact symmetry; γ∞ = 1/2 follows given Conjecture 1, the uniqueness
 of the unstable mode and continuity of λ(D).
 
-**The one-harmonic model's 1.765.** There λ = 2 is not a root, for two reasons:
+**The one-harmonic model's 1.769.** There λ = 2 is not a root, for two reasons:
 - the model's background is not the D = ∞ solution (its ω is 22% low);
 - Galerkin truncation does not commute with the gauge fix, which multiplies by P(θ), so the truncated model has no exact
   λ = 2 mode with h₀ = 0. (The s-translation alone does commute with the truncation.)
