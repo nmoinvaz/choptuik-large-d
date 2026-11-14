@@ -3,17 +3,21 @@
 chain's frontier, with the kind of computation, an error estimate and what that estimate is.
 
     cd hp && python3 export_delta_all.py RAWDIR [--verify] [--mutate=dd|qd|pinned|pinned_qd|gap|neighbours|cross
-                                                   |chain_fit|chain|held|frontier|projector|t85|fits|fits_table|half]
+                                                   |chain_fit|chain|held|frontier|projector|t85|fits|fits_table|half
+                                                   |qd_neighbours|dm_neighbours|one_sided]
     cd hp && python3 export_delta_all.py RAWDIR --interp_check [--mutate=interp]
     cd hp && python3 export_delta_all.py RAWDIR --lam_screen [--mutate=lam]
 
 RAWDIR is a clone of the raw-data repository (git clone https://github.com/nmoinvaz/choptuik-large-d-raw). --verify
-re-reads every row of the written CSV from the source and state its row names, rebuilds the pinned and chain rows' err,
-err_kind and data/delta_fits.csv, and exits 1 on any difference; --mutate changes one row of that kind by one unit in
+re-reads every row of the written CSV from the source and state its row names, rebuilds the err and err_kind of the qd
+rows (from data/delta_qd.csv), the low-D dd rows (from data/delta_dd_lowD.csv), the pinned and the chain rows, and
+data/delta_fits.csv, and exits 1 on any difference; --mutate changes one row of that kind by one unit in
 its second part before the verification (the control, which must fail; it exits 2 when the table has no row of that
 kind); --mutate=pinned_qd drops the last two parts of the first quad-double pinned row, --mutate=gap the err of the
 first "dd-qd gap" row, --mutate=neighbours the err of the first "pins neighbours" row, and --mutate=cross puts T73's pin
 5 back at the first shared waypoint of T75's pin 7 and T73's pin 5, without an err (the pinned rules' controls);
+--mutate=qd_neighbours, dm_neighbours and one_sided drop the err of the first "starts neighbours", "dM neighbours"
+and "dM neighbours one-sided" row (the controls of the qd and low-D rules, #764);
 --mutate=half drops the err of the first chain_fit row whose fits are all interpolated below D 191.5 (the half steps'
 control); --mutate=held labels the last chain_fit row chain, and
 --mutate=frontier moves the first chain row below the chain_fit
@@ -39,10 +43,15 @@ precise value of data/published_delta.csv at this D (6 decimals), as printed, an
 where none is listed); the state file (relative to RAWDIR, empty where none was stored). The kinds, in order of
 precedence where two share a D:
   qd      the full system converged in quad-double (data/delta_qd.csv, export_qd.py). err: the spread between two
-          starts with their own Taylor plans (err_kind "starts"), not a bound.
+          starts with their own Taylor plans (err_kind "starts"), not a bound. At 71.0 and 72.8 the second start
+          stalled (raw qd2start-mac/second.jsonl, |F| 2e-19 and 8e-18), so the row has one start, and err is the larger
+          spread of the nearest rows below and above with two starts (err_kind "starts neighbours", #764), an
+          estimate, not a bound. A row with one start and no such row on one side keeps no err.
   dd      the full system in double-double (data/delta_dd.csv, export_dd.py). err and err_kind are that file's: "dM",
-          the change from the next lower tau resolution M, or "check", the size of the resolution and
-          harmonic-freezing checks near this D.
+          the change from the next lower tau resolution M; "dM neighbours" or "dM neighbours one-sided" at the low-D
+          rows solved at one M only (3.72-3.8 at M 80, 4.25-8.2 at M 48), that M's departure from the best value at
+          the nearest D below and above that have a larger M (export_lowD.py, #764); or "check", the size of the
+          resolution and harmonic-freezing checks near this D. Each is an estimate, not a bound.
   pinned  a pinned double-double run (T73 then T75: pin 7 and pin 5; T85-mac: last node 0.8 and 0.85) above the dd
           points' last D: Delta_full1, the pinned Delta plus one linearised full-system correction, as the README
           graph draws them (solver/plot_delta.py). T75 continues T73's pins (each T75 pin starts 0.005 past the same
@@ -195,14 +204,29 @@ def qd_state(src):
     return os.path.join(folder, r["state"])
 
 
+def qd_err(qd):
+    """{D: (err, err_kind)} of the rows of data/delta_qd.csv: the two starts' spread, or, for a row with one start, the
+    larger spread of the nearest rows below and above with two (#764)"""
+    two = sorted((float(r["D"]), float(r["spread"])) for r in qd if r["spread"])
+    out = {}
+    for r in qd:
+        D = float(r["D"])
+        lo, hi = [s for d, s in two if d < D][-1:], [s for d, s in two if d > D][:1]
+        out[r["D"]] = ((r["spread"], "starts") if r["spread"] else
+                       (f"{max(lo + hi):.1e}", "starts neighbours") if lo and hi else ("", ""))
+    return out
+
+
 def qd_rows():
     rows = []
-    for r in csv.DictReader(open(os.path.join(HERE, "data", "delta_qd.csv"))):
+    qd = list(csv.DictReader(open(os.path.join(HERE, "data", "delta_qd.csv"))))
+    errs = qd_err(qd)
+    for r in qd:
         st = qd_state(r["source"])
         if not os.path.exists(os.path.join(RAW, st)):
             sys.exit(f"qd row D {r['D']}: state {st} missing in {RAW}")
         rows.append(dict(D=r["D"], Delta_q0=r["Delta_q0"], Delta_q1=r["Delta_q1"], Delta_q2=r["Delta_q2"],
-                         Delta_q3=r["Delta_q3"], kind="qd", err=r["spread"], err_kind="starts" if r["spread"] else "",
+                         Delta_q3=r["Delta_q3"], kind="qd", err=errs[r["D"]][0], err_kind=errs[r["D"]][1],
                          source=f"data/delta_qd.csv:{r['source']}", state=st))
     return rows
 
@@ -626,12 +650,15 @@ def verify(rows, mutate=""):
             sys.exit(2)
         r["err"], r["err_kind"] = "", ""
         print(f"mutated: the chain_fit row at D {r['D']} without its projector err")
-    elif mutate in ("pinned_qd", "gap", "neighbours"):
+    elif mutate in ("pinned_qd", "gap", "neighbours", "qd_neighbours", "dm_neighbours", "one_sided"):
         # a quad-double pinned row as its first two parts only; a dd-qd gap or pins neighbours row without its err
-        # (as before #756 and #759)
+        # (as before #756 and #759); a qd row with one start, a dd row at one M without its err (as before #764)
         test = {"pinned_qd": lambda r: r["kind"] == "pinned" and r["Delta_q2"],
                 "gap": lambda r: r["err_kind"] == "dd-qd gap",
-                "neighbours": lambda r: r["err_kind"].endswith(" neighbours")}[mutate]
+                "neighbours": lambda r: r["kind"] == "pinned" and r["err_kind"].endswith(" neighbours"),
+                "qd_neighbours": lambda r: r["err_kind"] == "starts neighbours",
+                "dm_neighbours": lambda r: r["err_kind"] == "dM neighbours",
+                "one_sided": lambda r: r["err_kind"] == "dM neighbours one-sided"}[mutate]
         r = next((r for r in rows if test(r)), None)
         if r is None:
             print(f"no {mutate} rows, so nothing to mutate")
@@ -691,6 +718,14 @@ def verify(rows, mutate=""):
     pub = published()
     dd = {r["D"]: r for r in csv.DictReader(open(os.path.join(HERE, "data", "delta_dd.csv")))}
     qd = {r["D"]: r for r in csv.DictReader(open(os.path.join(HERE, "data", "delta_qd.csv")))}
+    # the err of the qd rows and of the low-D dd rows rebuilt from delta_qd.csv and the per-M rows of delta_dd_lowD.csv:
+    # the change from the next lower M, or the rule for a D solved at one M (#764)
+    qerr = qd_err(list(qd.values()))
+    import export_lowD
+    lowd = list(csv.DictReader(open(os.path.join(HERE, "data", "delta_dd_lowD.csv"))))
+    lerr = {k: (f"{v:.1e}", ek) for k, (v, ek) in export_lowD.neighbour_err(lowd).items()}
+    lerr.update({float(r["D"]): (format(abs(float(r["change_from_lower_M"])), ".1e"), "dM") for r in lowd
+                 if r["best"] == "1" and r["change_from_lower_M"]})
     # the pinned rows rebuilt, for their err (rules (a) and (b)); where two runs share a D, the first, as build() keeps
     pin = {}
     for r in pinned_rows(max(float(x) for x in dd)):
@@ -698,12 +733,14 @@ def verify(rows, mutate=""):
     recs = {}
     for r in rows:
         parts = [r[f"Delta_q{i}"] for i in range(4)]
-        if r["kind"] == "dd":
-            s = dd[r["D"]]
-            want = [s["Delta_hi"], s["Delta_lo"], "", ""]
-        elif r["kind"] == "qd":
-            s = qd[r["D"]]
-            want = [s[f"Delta_q{i}"] for i in range(4)]
+        if r["kind"] in ("dd", "qd"):
+            s = (dd if r["kind"] == "dd" else qd)[r["D"]]
+            want = [s["Delta_hi"], s["Delta_lo"], "", ""] if r["kind"] == "dd" else [s[f"Delta_q{i}"] for i in range(4)]
+            w = (qerr[r["D"]] if r["kind"] == "qd" else lerr.get(float(r["D"]), ("", ""))
+                 if s["run"].startswith("lowD-") else (s["Delta_err"], s["err_kind"]))
+            if (r["err"], r["err_kind"]) != w:
+                bad += 1
+                print(f"DIFFERS: {r['kind']} D {r['D']}: err {r['err']} ({r['err_kind']}) against {w}")
         elif r["kind"] == "pinned":
             f, _, d = r["source"].partition(":D")
             if f not in recs:

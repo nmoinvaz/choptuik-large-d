@@ -19,6 +19,15 @@ One row per (D, M); where several runs have the same (D, M), the one with the sm
                              directions (POLLUTED below); those are listed but never used as a value
   source                     the file the record came from (a raw-data task folder's files as <folder>/<file>)
 
+A best row with no lower M at its D has no change_from_lower_M. Its error estimate for delta_dd.csv (neighbour_err,
+#764) is the same M's departure from the best value, |Delta(M) - Delta(largest M)|, at the nearest D below and above
+where that M and a larger one were both solved cleanly, the larger of the two (err_kind "dM neighbours"). Where only one
+side has such a D, that side's term is the estimate (err_kind "dM neighbours one-sided"). Either is an estimate, not a
+bound.
+The term falls with D in every bracket (M 48: 2.6e-7 at D 4, 8.7e-12 at 5, 3.0e-14 at 6, 9.5e-21 at 8; M 80: 1.3e-9 at
+3.7, 1.3e-11 at 4; notes/LOW_D.md 10), so the larger term is the one below, which is also the side the one-sided rows
+(8.059375 to 8.2, above the last M 64 check at 8) have.
+
     cd hp && python3 export_lowD.py [--raw ROOT]
 
 ROOT is a clone of https://github.com/nmoinvaz/choptuik-large-d-raw, by default beside this checkout
@@ -30,6 +39,7 @@ import glob
 import json
 import os
 import sys
+from collections import defaultdict
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 RESOLVED = 1e-8
@@ -111,6 +121,29 @@ def build(raw_root=RAW_ROOT):
             rows.append(row)
     rows.sort(key=lambda r: (r["D"], r["M"]))
     return rows
+
+
+def neighbour_err(rows):
+    """{D: (|term|, err_kind)} for each D whose clean rows have one M (see the docstring), from the rows of build()
+    or of delta_dd_lowD.csv (strings); the term is in double-double as change_from_lower_M, the hi parts first"""
+    by = defaultdict(dict)
+    for r in rows:
+        if r["status"] == "clean":
+            by[float(r["D"])][int(r["M"])] = (float(r["Delta_hi"]), float(r["Delta_lo"] or 0))
+
+    def dev(D, M):
+        (h, lo), (bh, blo) = by[D][M], by[D][max(by[D])]
+        return abs((h - bh) + (lo - blo))
+    out = {}
+    for D in sorted(by):
+        if len(by[D]) != 1:
+            continue
+        M = next(iter(by[D]))
+        both = [d for d in sorted(by) if M in by[d] and max(by[d]) > M]
+        terms = [dev(d, M) for d in [d for d in both if d < D][-1:] + [d for d in both if d > D][:1]]
+        if terms:
+            out[D] = (max(terms), "dM neighbours" + (" one-sided" if len(terms) == 1 else ""))
+    return out
 
 
 def main():

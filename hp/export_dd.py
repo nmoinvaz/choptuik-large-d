@@ -20,9 +20,13 @@ Columns: D, Delta as hi + lo (double-double: Delta_lo is the low word, digits 17
 residual |F|, the largest |dDelta/dF| (how far a residual error moves Delta), the linearised Delta correction
 -dDelta/dF . F where the run recorded it, and the run name; then
   Delta_err, err_kind   an estimate of Delta's error, and what it is: "dM" (low-D rows: |Delta(M) - Delta(next lower M)|
-                        at this D, an estimator that overestimates where the change falls fast with M) or "check" (the
-                        continuation rows: the size of the resolution and harmonic-freezing checks near this D, README
-                        "Accuracy", 1e-16 below D = 35 and 2e-15 from D = 35 on, not computed at this D)
+                        at this D, an estimator that overestimates where the change falls fast with M), "dM neighbours"
+                        or "dM neighbours one-sided" (low-D rows solved at one M only, M 80 at 3.72-3.8 and M 48 at
+                        4.25-8.2: that M's departure from the best value at the nearest D below and above with a larger
+                        M, the larger of the two, or the one side's where only one has it; export_lowD.neighbour_err,
+                        #764), or "check" (the continuation rows: the size of the resolution and harmonic-freezing
+                        checks near this D, README "Accuracy", 1e-16 below D = 35 and 2e-15 from D = 35 on, not computed
+                        at this D). Each is an estimate, not a bound
   published_ref, published_diff, published_match
                         a published value at this D (data/published_delta.csv: reference key, Delta - published), and
                         "yes" when the difference is within the uncertainty the publication states, "no" otherwise;
@@ -73,10 +77,12 @@ for f, prefix in files:
 # data/delta_dd_lowD.csv. The fits use D >= 10 and do not see these rows.
 sys.path.insert(0, here)
 import export_lowD  # noqa: E402
-for r in export_lowD.build(raw or export_lowD.RAW_ROOT):
+LOWD = export_lowD.build(raw or export_lowD.RAW_ROOT)
+NEIGHBOURS = export_lowD.neighbour_err(LOWD)     # the rows solved at one M only (#764)
+for r in LOWD:
     if r["best"] and round(r["D"], 6) not in rows:
         rec = dict(D=r["D"], Delta=r["Delta_hi"], Delta_lo=r["Delta_lo"], F=r["F"], sens=[r["sens_max"] or float("nan")],
-                   dDelta_est=r["dDelta_est"], err=r["change_from_lower_M"])
+                   dDelta_est=r["dDelta_est"], err=r["change_from_lower_M"], neighbours=NEIGHBOURS.get(r["D"]))
         rows[round(r["D"], 6)] = (rec, f"lowD-M{r['M']}" + ("" if r["resolved"] else "-unresolved"))
 # T48 above the scans' last point (see the docstring for the rules)
 LAST_SCAN = max(rows)
@@ -128,8 +134,11 @@ with open(out, "w") as fh:
     for d in sorted(rows):
         r, run = rows[d]
         est = r.get("dDelta_est")
-        if run.startswith("lowD-"):
-            err, kind = ("", "") if r.get("err") is None else (format(abs(r["err"]), ".1e"), "dM")
+        if run.startswith("lowD-") and r.get("err") is None:
+            nb = r.get("neighbours")
+            err, kind = ("", "") if nb is None else (format(nb[0], ".1e"), nb[1])
+        elif run.startswith("lowD-"):
+            err, kind = format(abs(r["err"]), ".1e"), "dM"
         else:
             err, kind = format(CHECK_BELOW_35 if r["D"] < 35 else CHECK_FROM_35, ".0e"), "check"
         # the most precise published value at this D

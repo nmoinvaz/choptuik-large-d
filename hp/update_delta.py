@@ -12,7 +12,9 @@ The steps, in order:
 5. export_delta_all.py --verify checks the master table.
 6. Each --mutate control runs and must fail by its check (one per kind, and held, frontier and t85 for the chains'
    checks, fits, fits_table and half for the error bar over the held fit's degree, pinned_qd, gap, neighbours and
-   cross for the pinned rows' rules). A kind with no rows has nothing to mutate, and its control is reported as skipped.
+   cross for the pinned rows' rules, qd_neighbours, dm_neighbours and one_sided for the rules of the qd rows with one
+   start and the low-D rows at one M). A kind with no rows has nothing to mutate, and its control is reported as
+   skipped.
    The master table is then restored and verified again.
 7. export_delta_all.py --interp_check checks the interpolation of the comparison fits at D 173, 174 and 186 to 191, and
    its control --mutate=interp must fail.
@@ -79,7 +81,7 @@ def main():
     print("checks of the master table:", flush=True)
     ok &= run(["export_delta_all.py", raw, "--verify"])
     for m in ("dd", "qd", "pinned", "pinned_qd", "gap", "neighbours", "cross", "chain_fit", "chain", "held", "frontier",
-              "projector", "t85", "fits", "fits_table", "half"):
+              "projector", "t85", "fits", "fits_table", "half", "qd_neighbours", "dm_neighbours", "one_sided"):
         ok &= run(["export_delta_all.py", raw, "--verify", f"--mutate={m}"], expect=1)
     with open(master, "wb") as f:
         f.write(built)
