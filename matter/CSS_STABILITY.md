@@ -27,6 +27,8 @@ exponent), and the field rotates as $`F\propto(-t)^{i\omega}`$.
   turn unstable at intermediate κ was not counted here; at κ = 1 the CSS is critical to D = 80 (matter/CSS.md §6).
 - **D = 4.** Two independent methods, complex-path shooting at two circle radii and the collocation, give
   κ_c(4) = 0.075733 (§2.2).
+- **D = ∞, κ = 1.** For the axion–dilaton the counts find λ = 1 and λ = 2 and no other growth rate in
+  0.05 < Re λ < 8, |Im λ| < 3ω∞, so its relevant mode is unique there at D = ∞ (§1.6).
 
 ## 1. The D = ∞ spectrum of the inner CSS solution (#376)
 
@@ -193,6 +195,50 @@ mode, so v and w are rounding noise, and DOP853's absolute tolerance of 10⁻¹�
 absolute tolerance at 10⁻¹⁶ for that point, |D(iω)| = 7.8×10⁻⁸. The strip 0 ≤ Re λ ≤ 0.05 is covered by neither
 method's count. Raw `I781-mac/`.
 
+### 1.6 The axion–dilaton at D = ∞ (#770)
+
+The same counts at κ = 1, the axion–dilaton, whose inner solution has f(0) = 0.4048768438 and ω∞ = 3.1998939020
+(`data/css_inner_kpath.jsonl`). Raw `I770-mac/`.
+
+**The exact modes.** `check 1` passes: the recursion reproduces the five exact modes' series to 8×10⁻²⁴ (3.5×10⁹ or more
+at λ + 0.01), and M is singular at λ = 0, 1, 2 to 9.9×10⁻¹³ (0.149 at λ = 1.5). The secant finds λ = 2 to 1.2×10⁻¹² and
+λ = 1 to 6.7×10⁻¹³ at each of settings A, B and C, so r₁ = 0.3 still serves at κ = 1. det M(λ̄) = conj det M(λ) to
+2.0×10⁻¹² relative at 1.3 ± 2.1i and 0.7 ± 6.5i at settings A and B, so the upper-half boxes S and C cover the lower
+half as well.
+
+**The counts**, in §1.4's boxes with ω = ω∞(κ = 1) and ε = ¼. Box C reaches up to 3ω∞ = 9.600, since the pair λ_osc is
+damped by κ = 0.9 (§2.4). W is the wider box of #770:
+
+| box | region | expected | setting A | setting B | determinants (A, B) |
+|---|---|---|---|---|---|
+| A | 0.05 < Re λ < 0.9, \|Im λ\| < ω − ε | none | 0 | 0 | 124, 124 |
+| B | 0.9 < Re λ < 5, \|Im λ\| < ω − ε | λ = 1, λ = 2 | 2 | 2 | 132, 132 |
+| S | 0.05 < Re λ < 5, ω − ε < Im λ < ω + ε | none | 0 | 0 | 68, 68 |
+| C | 0.05 < Re λ < 5, ω + ε < Im λ < 3ω | none | 0 | 0 | 52, 52 |
+| W, 24 starting samples per edge | 0.05 < Re λ < 8, \|Im λ\| < 3ω | λ = 1, λ = 2 | 4 | 2 | 480, 408 |
+
+Controls, each seen to fire (setting A): a zero planted at 3 + 1i makes B count 3, and `--mutate=nometric` makes it
+count 1. Box C counts 0 again with 24 starting samples per edge (192 determinants).
+
+**W's two extra zeros at setting A are an artefact of the jump at r₁ = 0.3.** The strip 5 < Re λ < 8 of W counts 0 about
+the real axis and 1 in 2.95 < Im λ < 3ω at setting A. `css_inner_pert.py locate` halves that box while it winds and
+finds the zero at λ = 7.7410972542 + 3.7686870595i, at setting A and at C (r₀ 0.09, the same r₁), which agree to
+1×10⁻¹³. At setting B (r₁ = 0.25) the secant from it does not converge, and its box 6.5 < Re λ < 8,
+2.95 < Im λ < 4.61 counts 0. With its conjugate it accounts for W's 4 at A against 2 at B. `locate`'s control, a zero
+planted at 2.3 + 6.1i in a box free of zeros, is found there exactly at settings A and B, where M itself is not
+singular (smallest/largest singular value 1.4×10⁻⁶).
+
+**So in 0.05 < Re λ < 8, |Im λ| < 3ω∞ the D = ∞ axion–dilaton CSS has λ = 1 (gauge) and λ = 2 (the relevant mode) and
+no other growth rate: its unstable mode is unique there.** Not covered: growth rates with Re λ > 8, |Im λ| > 9.60, or
+0 < Re λ < 0.05, and the selection rule itself (Conjecture 1), which this computation assumes.
+
+**The count can miss whole turns.** With `count`'s default of 6 starting samples per edge, W counted 0 at both settings
+(344 and 304 determinants), against 4 and 2 with 24. The winding routine bisects an interval until its phase step is
+below 0.5 rad and its halves agree, and an interval over whose halves the phase turns by whole multiples of 2π passes
+that test. The tiles A, B, S, C, with edges up to 6.15 long, agree with W at 24 samples, and #781's count at κ = 0 (from
+steps of 0.25) agrees with §1.4's tiles, so the counts quoted on this page stand. #781's counter shows the same
+blindness in its control: with one sample per edge it counts 0.
+
 ## 2. The change of stability κ_c(D) (#377)
 
 ### 2.1 Method
@@ -339,11 +385,11 @@ complex scalar's CSS keeps the pair, λ = 0.537 ± 7.932i (matter/CSS_STABILITY.
 
 All in `solver/matter/`, run single-process under `nice -n 10` on the Mac (Apple M5); times for one process there, with
 the machine shared. Raw output: [choptuik-large-d-raw](https://github.com/nmoinvaz/choptuik-large-d-raw), folders
-`I376-mac/` and `I377-mac/` (the queue scripts that ran are in them, with their logs).
+`I376-mac/`, `I377-mac/` and `I770-mac/` (the queue scripts that ran are in them, with their logs).
 
 | script | what it does | cost |
 |---|---|---|
-| `css_inner_pert.py check / det / root / count / kpath / kcrit` | the D = ∞ inner CSS perturbations: series, lateral solutions, det M(λ), secant roots at settings A, B, C, winding counts (`--plant`, `--mutate=nometric\|hamsign`), the root followed in κ and κ_c(∞) | 1.5 s per determinant (κ = 0, 5.5 s to build a background); 1 min per root at three settings; 2.5–5 min per box |
+| `css_inner_pert.py check / det / root / count / kpath / kcrit / locate` | the D = ∞ inner CSS perturbations: series, lateral solutions, det M(λ), secant roots at settings A, B, C, winding counts (`--plant`, `--mutate=nometric\|hamsign`, `--K` starting samples per edge), the root followed in κ and κ_c(∞), the zeros in a box refined at every setting | 1.5 s per determinant (κ = 0, 5.5 s to build a background); 1 min per root at three settings; 2.5–5 min per box |
 | `css_inner_pert_eqs.py [--mutate=…]` | sympy: the linearized rhs is the ε-derivative of the inner PDE in (s, t) | 20 s |
 | `css_kappa_crit.py path / crit / bgpath / selftest` | finite D: the background and λ_osc, λ_phys followed in κ at two radii; κ_c refined at each radius; the background alone along κ; the crossing finder on a planted function | 10–60 s per κ step; 1–4 min per κ_c |
 
@@ -355,6 +401,10 @@ python3 solver/matter/css_inner_pert.py check 0                              # c
 python3 solver/matter/css_inner_pert.py root 0 2.1 --set=A                   # lambda = 2 - 1.4e-12
 python3 solver/matter/css_inner_pert.py root 0 0.536+7.93j --set=A           # 0.5365223424 + 7.9320241697i
 python3 solver/matter/css_inner_pert.py count 0 0.05 5 4.2289695 9.432 --set=A   # winding 1
+python3 solver/matter/css_inner_pert.py count 1 0.9 5 -2.9498939 2.9498939 --set=A   # winding 2
+python3 solver/matter/css_inner_pert.py count 1 0.05 8 -9.5996817 9.5996817 --set=B --K=24   # winding 2
+python3 solver/matter/css_inner_pert.py locate 1 5 8 2.9498939 6.2747878 --set=A,B,C --w=1.7
+                                                      # 7.7410972542 + 3.7686870595i at A and C, not converged at B
 python3 solver/matter/css_kappa_crit.py selftest
 python3 solver/matter/css_kappa_crit.py path 4 0.2586698339+3.5022487970j 2.5832751746 --k1=1 --out=/tmp/p4.jsonl
 python3 solver/matter/css_kappa_crit.py crit /tmp/p4.jsonl 4                 # kappa_c 0.0757329315 at both radii
@@ -364,14 +414,15 @@ python3 solver/matter/css_scan.py 0.07125 4 --guess=1.856291661723,4.79719276737
 
 ## 7. Recommended tasks
 
-1. **Uniqueness of the axion–dilaton CSS's unstable mode at D = ∞** (filed as #770). What: `css_inner_pert.py count 1 …` in the boxes
-   A, B, C, S with ω∞(κ = 1) = 3.19989, and a wider box (Re λ < 8, |Im λ| < 3ω∞), at settings A and B. Why:
-   matter/CSS.md §11 lists uniqueness at D = ∞ as open, and this code makes it a count of a few hours. Acceptance (can
-   fail): B counts exactly 2 (λ = 1, 2) at both settings; every other box counts 0, or its zeros are located and their
-   Re λ reported; a planted zero adds one and `--mutate=nometric` changes B. Depends on: #376.
-2. **A second implementation of the D = ∞ perturbation determinant** (done, #771, §1.5). What: the inner perturbation problem in
-   matter/STRUCTURE.md §7's variables (y, σ, c), as in `struct_css.py`, or a Chebyshev discretization of the inner ODE
-   on a ray, sharing no code with `css_inner_pert.py`. Why: AGENTS.md asks for independent checks; the present
+1. **Uniqueness of the axion–dilaton CSS's unstable mode at D = ∞** (done, #770, §1.6). What:
+   `css_inner_pert.py count 1 …` in the boxes A, B, C, S with ω∞(κ = 1) = 3.19989, and a wider box (Re λ < 8, |Im λ| <
+   3ω∞), at settings A and B. Why: matter/CSS.md §11 lists uniqueness at D = ∞ as open, and this code makes it a count
+   of a few hours. Acceptance (can fail): B counts exactly 2 (λ = 1, 2) at both settings; every other box counts 0, or
+   its zeros are located and their Re λ reported; a planted zero adds one and `--mutate=nometric` changes B. Depends on:
+   #376.
+2. **A second implementation of the D = ∞ perturbation determinant** (done, #771, §1.5). What: the inner perturbation
+   problem in matter/STRUCTURE.md §7's variables (y, σ, c), as in `struct_css.py`, or a Chebyshev discretization of the
+   inner ODE on a ray, sharing no code with `css_inner_pert.py`. Why: AGENTS.md asks for independent checks; the present
    cross-check against finite D is an extrapolation. Acceptance (can fail): λ = 2 found to 10⁻¹⁰, λ_osc(∞, κ = 0) and
    κ_c(∞) reproduced to 10⁻⁸. Depends on: #376.
 3. **λ_osc at D = ∞ for κ ≥ 0.95.** What: `css_inner_pert.py kpath 0.9 1 0.01` at settings A, B and C, and a box
