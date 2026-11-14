@@ -458,9 +458,13 @@ def hermite(D0, z0, t0, D1, z1, t1, D):
 def lm_solve(s, zh, zl, tol=1e-27, it_max=20, mus=(0.0, 1e-8, 1e-6, 1e-4, 1e-3, 1e-2, 1e-1, 1.0), verbose=True,
              newton_after=1e-12):
     """Levenberg-Marquardt (Marquardt scaling) in double-double: each iteration tries every mu and keeps the
-    step with the smallest |F|_2; once |F| < newton_after it hands over to newton_solve. Returns zh, zl, history."""
+    step with the smallest |F|_2; once |F| < newton_after it hands over to newton_solve. If Newton raises there (a
+    Jacobian it cannot factor, such as a singular one at the root, or a failed evaluation), LM goes on from its last
+    accepted state and does not hand over again; the iteration's history record gets handover_failed. Returns zh, zl,
+    history."""
     hist = []
     t0 = time.time()
+    handover = True
     for it in range(it_max):
         steps, Fh, Fl = s.lm_steps(zh, zl, list(mus))
         n0 = rnorm(Fh, Fl)
@@ -480,9 +484,16 @@ def lm_solve(s, zh, zl, tol=1e-27, it_max=20, mus=(0.0, 1e-8, 1e-6, 1e-4, 1e-3, 
         if verbose:
             print(f"  lm {it}: |F|_2 {n0:.2e} -> {n1:.2e} (mu {mu:g}, |dz| {dz:.1e}) Delta {zh[-1]:.15f} t {time.time() - t0:.0f}s",
                   flush=True)
-        if n1 < newton_after:
-            zh, zl, h2 = newton_solve(s, zh, zl, tol=tol, it_max=8, verbose=verbose)
-            return zh, zl, hist + h2
+        if handover and n1 < newton_after:
+            try:
+                zh2, zl2, h2 = newton_solve(s, zh, zl, tol=tol, it_max=8, verbose=verbose)
+            except ValueError as e:
+                handover = False
+                hist[-1]["handover_failed"] = str(e)
+                if verbose:
+                    print(f"  lm {it}: Newton failed ({e}); LM goes on without it", flush=True)
+                continue
+            return zh2, zl2, hist + h2
     return zh, zl, hist
 
 
