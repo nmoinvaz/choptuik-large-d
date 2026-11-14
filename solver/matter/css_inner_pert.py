@@ -4,10 +4,11 @@
     python3 css_inner_pert.py check [KAPPA]                    the checks below (exit 1 if one fails or a control does not fire)
     python3 css_inner_pert.py det KAPPA LAM [--r0= --r1=]      det M(lambda) and its smallest singular value
     python3 css_inner_pert.py root KAPPA LAM [--set=..]        secant root of det M at each (r0, r1) setting
-    python3 css_inner_pert.py count KAPPA RE0 RE1 IM0 IM1 [--set=..] [--plant=Z] [--mutate=M] [--K=6]
-                                                              winding number of det M around the box
+    python3 css_inner_pert.py count KAPPA RE0 RE1 IM0 IM1 [--set=..] [--plant=Z] [--mutate=M] [--K=N]
+                                                              winding number of det M around the box (from one
+                                                              sample per 0.25 of edge; --K=N: N per edge)
     python3 css_inner_pert.py kpath K0 K1 STEP LAM [--set=..]   the root followed in kappa (background re-solved)
-    python3 css_inner_pert.py locate KAPPA RE0 RE1 IM0 IM1 [--set=..] [--w=1] [--K=12]
+    python3 css_inner_pert.py locate KAPPA RE0 RE1 IM0 IM1 [--set=..] [--w=1] [--K=N]
                                                               the zeros in a box, refined at every other setting
 
 All commands take --out=FILE (jsonl, appended).  Settings (r0, r1): A = (0.1, 0.3), B = (0.1, 0.25), C = (0.09, 0.3).
@@ -491,9 +492,10 @@ def main():
                     cache[key] = d * (lam - plant) if plant is not None else d
                 return cache[key]
             t = time.time()
-            w, big, ni = cc.winding(cc.detrended(F, (re0, re1, im0, im1)), cc.box(re0, re1, im0, im1), K=int(o.get("K", 6)))
+            K = int(o["K"]) if "K" in o else None
+            w, big, ni = cc.winding(cc.detrended(F, (re0, re1, im0, im1)), cc.box(re0, re1, im0, im1), K=K)
             emit(dict(kind="count", kappa=kap, setting=s, r0=r0, r1=r1, box=[re0, re1, im0, im1], winding=w,
-                      largest_step=big, intervals=ni, evaluations=I.nev, seconds=round(time.time() - t, 1),
+                      largest_step=big, intervals=ni, K=K, evaluations=I.nev, seconds=round(time.time() - t, 1),
                       plant=None if plant is None else [plant.real, plant.imag], mutate=mutate, omega=om))
         return
     if cmd == "kcrit":
@@ -564,7 +566,7 @@ def main():
         sys.path.insert(0, HERE)
         import complex_css as cc
         kap = float(pos[1])
-        w, K = float(o.get("w", "1")), int(o.get("K", 12))
+        w, K = float(o.get("w", "1")), (int(o["K"]) if "K" in o else None)
         f0, om = background(kap)
         Is = {s: Inner(kap, f0, om, *SETTINGS[s], mutate=mutate) for s in sets}
 
@@ -587,7 +589,7 @@ def main():
             k = int(round(wnd))
             split = k >= 1 and max(b - a, d - c) > w
             emit(dict(kind="locate_box", kappa=kap, setting=sets[0], box=list(bx), winding=wnd, largest_step=big,
-                      intervals=ni, split=split, seconds=round(time.time() - t, 1), mutate=mutate))
+                      intervals=ni, K=K, split=split, seconds=round(time.time() - t, 1), mutate=mutate))
             if split:
                 if b - a >= d - c:
                     m = 0.5 * (a + b)
