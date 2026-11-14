@@ -114,6 +114,28 @@ moves the phase by 10⁻⁶ rad at D = 60); the source was not traced.
   1.4×10⁻¹⁴ move the phase by 4×10⁻¹⁰ rad at D = 30 (`diag/blocks_D30.log`).
 - **The double-double det M is reproducible between machines only to about 10⁻⁶** in ln det (§4), not to the 10⁻¹⁰
   of its tolerance and matching-point checks, which ran on one machine. The counts do not depend on it.
-- **complex_imag.py at D = 30.07** is 0.05 rad off in the phase of det M, from its light-cone block. Its counts at D =
-  4, 10, 20 (COMPLEX_CRITICAL.md §3) are not affected by this page's numbers; whether its light-cone block is accurate
-  there was not checked here.
+- **complex_imag.py at D = 30.07** is 0.05 rad off in the phase of det M, from its light-cone block. At D = 10 and
+  20.04 the same block is good enough for its counts (§6). D = 4 was not checked.
+
+## 6. The double counts at D = 10 and 20.04 (#780)
+
+**complex_imag.py's counts at D = 10 and 20.04 (COMPLEX_CRITICAL.md §3) stand.** complex_imag_dd.py evaluates det M
+at every point of those counts with complex_imag.py's own double propagators (`--dd=0`), so only the light-cone block
+and the LU differ. Every phase agrees within 3.4×10⁻⁴ rad, and the windings over the same points are equal. Script
+`solver/matter/i780_compare.py`; `i780_summary.py` prints the numbers and exits 1 on a failure. Raw `I780-mac/`
+(c84f5580).
+
+| | D = 20.04 | D = 10 | bound |
+|---|---|---|---|
+| points of the double counts | 168 | 150 | |
+| largest phase difference | 3.4×10⁻⁴ rad | 3.9×10⁻⁶ rad | 10⁻³ rad |
+| windings B0 / U0 / FULL: double, and over the double-double values | 1 / 0 / 0, 1 / 0 / 0 | 1 / 0 / 0, 1 / 0 / 0 | equal |
+| full double-double against `--dd=0` (6 and 5 sampled points) | ≤ 5.7×10⁻⁹ rad | ≤ 6.9×10⁻¹⁰ rad | |
+
+- **The difference is the light-cone block's.** At D = 20.04's largest differences, the block and the LU were
+  swapped one at a time. The block's entries differ by up to 1.3×10⁻⁷ relative, which accounts for the full 3.44×10⁻⁴
+  rad at −0.05 + 1.98i, 0.05 from the zero at λ = 0 where |det M| is small. The LU contributes 4×10⁻⁸ rad.
+- **The double propagators are adequate at D ≤ 20.** Full double-double moves the phase by at most 6×10⁻⁹ rad from
+  `--dd=0` at the sampled points.
+- **The control fires.** `complex_imag.py --mutate=lightcone` scales one coefficient of the light-cone series (P₁)
+  by 1.1, and B0 at D = 20.04 then counts 0 instead of 1.
