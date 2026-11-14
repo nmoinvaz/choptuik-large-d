@@ -711,3 +711,16 @@ Between 3.0434 and 3.043 the freeze begins at h ≈ −0.0006 (#798, win, M 384,
 and 3.04305 (h −0.00065, −0.0007); the base state itself plans down to 3.04305 and is capped at 3.0425. T135's planted
 case repeats exactly (3.0425, order 3, capped at x 0.013725225625), and the `--cap 0.001` control caps every case. So
 the corrected leg's step must stay below about 0.0005 with predictions of order 1 to 3.
+
+**#343, the corrected leg (procedure, fixed before the run).** `hp/lowD_highM.py` from T105's converged pair at D
+3.04375 (`lowDhm_x0.000157-0.975_p1_D3.0438_M320.npz` and `_M384.npz`), `--Ms 320,384 --dD 0.0004 --D_end 3.040
+--min_step 0.00005 --diff_max 1e-8`, so Newton runs at every D at both resolutions, on targets 3.04335, 3.04295, ...
+The step is below #798's onset (about 0.0006 for predictions of order 1 to 3), and T105's own try at h −0.000625
+(D 3.043125) failed at |F| 8×10⁻² with Newton steps of |dz| 10 to 100. The first two points are the pilot: the second,
+3.04295, crosses 3.043. Reading:
+1. If the leg passes 3.043 with Newton converged at both resolutions and their difference within 1e-8, the freeze at
+   3.043 was the prediction's, and the leg goes on toward 3.040.
+2. If Newton fails at every step between 3.04335 and 3.043 down to the 0.00005 floor, or a plan never returns (no log
+   line for 8 h, the longest point allowed), the branch meets a singular point near x 0.014 there. That is reported as
+   the result, with the last converged D and the frozen x.
+Anything else is reported as it is.
