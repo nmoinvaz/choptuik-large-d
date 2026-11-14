@@ -431,9 +431,10 @@ def main():
         N = 60
 
         def relerr(x, y):
-            sc = max(abs(v) for v in y[:N]) if any(abs(v) > 0 for v in y[:N]) else 1
-            return max(float(abs(x[k] - y[k]) / max(abs(y[k]), 1e-30 * sc)) if abs(y[k]) > 0 else float(abs(x[k]) / sc)
-                       for k in range(N))
+            # relative to the exact coefficient, or to the background's |a_k| (the series' natural size) where larger:
+            # an exact coefficient 0 is then compared on the scale of the coefficients around it
+            a = bg.coef[0]
+            return max(float(abs(x[k] - y[k]) / max(abs(y[k]), abs(a[k]))) for k in range(N))
         for lam, cA, cB, cbe in exact_modes(bg):
             A_, B_, be_ = pert_series(bg, lam, cA[0], cB[0], N)
             e = max(relerr(A_, cA), relerr(B_, cB))
@@ -492,6 +493,37 @@ def main():
             emit(dict(kind="count", kappa=kap, setting=s, r0=r0, r1=r1, box=[re0, re1, im0, im1], winding=w,
                       largest_step=big, intervals=ni, evaluations=I.nev, seconds=round(time.time() - t, 1),
                       plant=None if plant is None else [plant.real, plant.imag], mutate=mutate, omega=om))
+        return
+    if cmd == "kcrit":
+        # kappa_c at D = infinity: kcrit KPATHFILE ; from the first sign change of Re lambda in the kpath records, the
+        # zero of Re lambda(kappa) refined at each setting separately (css_kappa_crit.refine, regula falsi)
+        import css_kappa_crit as kc
+        P = [json.loads(l) for l in open(pos[1])]
+        P = [p for p in P if p.get("kind") == "kpath"]
+        ks = [p["kappa"] for p in P]
+        for s in sets:
+            res = [next(x[1] for x in p["settings"] if x[0] == s) for p in P]
+            i = kc.crossing(ks, res)
+            if i is None:
+                emit(dict(kind="kcrit", setting=s, crossing=False))
+                continue
+            pa, pb = P[i], P[i + 1]
+            la = next(complex(x[1], x[2]) for x in pa["settings"] if x[0] == s)
+            lb = next(complex(x[1], x[2]) for x in pb["settings"] if x[0] == s)
+            r0, r1 = SETTINGS[s]
+            cache = {}
+
+            def F(k):
+                f0, om = background(k)
+                I = Inner(k, f0, om, r0, r1, rtol=rtol, mutate=mutate)
+                l, ok = secant(I.det, la + (lb - la) * (k - pa["kappa"]) / (pb["kappa"] - pa["kappa"]))
+                cache[k] = (f0, om, l, ok)
+                return l.real
+            k, fk, it = kc.refine(F, pa["kappa"], pb["kappa"], la.real, lb.real)
+            f0, om, l, ok = cache[k]
+            emit(dict(kind="kcrit", setting=s, r0=r0, r1=r1, crossing=True, kappa_c=k, re_at_kappa_c=fk, iterations=it,
+                      lam=[l.real, l.imag], converged=ok, f0=f0, omega=om, im_over_omega=l.imag / om,
+                      bracket=[pa["kappa"], pb["kappa"]], re_bracket=[la.real, lb.real]))
         return
     if cmd == "kpath":
         # follow a root in kappa: kpath K0 K1 STEP LAM ; at each kappa the inner background is solved (css_inner.solve
