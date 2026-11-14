@@ -586,6 +586,8 @@ def check(bg, ddtf, out_emit):
     rec["seconds_dd"] = round(time.time() - t, 1)
     rec["steps"] = ddtf.last_steps
     rec["times"] = ddtf.last_times
+    v_c = ddtf.lndet(np.conj(lam))                       # real background: det M(conj lam) = conj det M(lam)
+    rec["conj_symmetry"] = [v_c.real - v_dd.real, math.remainder(v_c.imag + v_dd.imag, 2 * math.pi)]
     rec["horizon_tail"] = ddtf.last_tail
     rec["horizon_refine_last_rel"] = ddtf.hstats.get("refine_last_rel")
     # 5. matching points: det M is unchanged in exact arithmetic when nsub changes
@@ -677,7 +679,7 @@ def main():
         tols = [float(t) for t in o.get("tols", "1e-12,1e-14,1e-16,1e-18,1e-20").split(",")]
         om = bg.omega
         lams = [complex(s) for s in o["lams"].split(",")] if "lams" in o else \
-            [0.1 + 0.3j, 1.3 + 0.4j, 3.0 + 1.0j, 5.0 + 0.5 * om * 1j, 0.15 + 1.0 * om * 1j, 5.9 + 1.4 * om * 1j]
+            [0.1 + 0.3j, 1.3 + 0.4j, 3.0 + 1.0j, 5.0 + 0.5 * om * 1j, 0.15 + 0.9 * om * 1j, 5.9 + 1.4 * om * 1j]
         for lam in lams:
             for tl in tols:
                 ddtf.tol = tl
