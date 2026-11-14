@@ -187,7 +187,7 @@ def main():
         hmax = float(o.get("hmax", "0.05"))
         smax = float(o.get("spread", "1e-7"))
         r = load_k0(D)
-        hist = dict(om=[(0.0, r["omega"])], f0=[(0.0, r["f0"])], osc=[], phys=[])
+        hist = dict(om=[], f0=[], osc=[], phys=[])     # filled from kappa = 0 on (the start uses the stored r)
         kap, below = 0.0, 0
         # kappa = 0: the roots from the given starts
         first = True
