@@ -409,8 +409,14 @@ How far two converged roots agree depends on D (#725, raw `I725-win/` 9672e70d).
 D 99.75 state, each converged to a quad-double max|F| of 2e-49 to 4e-49, reproduce cont3's Δ to 5.7e-34 at D 99.8125
 and only to 1.7e-25 at D 99.875. The three converged states at D 99.875 (cont3's, #710's A1 and #725's X2) span
 2.0e-25 in Δ. A weak direction of fixed gain near 5e-31 would allow a larger difference at D 99.8125 than the one
-seen, so it does not explain both D by itself. #727 polishes the three states to 1e-60, and #728 measures the weak
-direction's σ_min there.
+seen, so it does not explain both D by itself.
+
+**The spread is the segment plan, not three roots** (#727, raw `I727-win/` 34651ada). The three D 99.875 states were
+converged on different plans, with interior nodes up to 9.5e-4 apart, while the two D 99.8125 states shared one plan.
+Copied onto cont3's plan and polished in octo-double to 2.4e-62 or below, all three give Δ =
+1.745150028164499252944352893640343550633, the same to 1.1e-46. The first Newton step on the common plan moves A1 and
+X2 by exactly their offsets on their own plans. So at D 99.875 the plan sets Δ to about 25 digits, and #741 measures
+how that depends on the node shift.
 
 With `--elim_switch 0` the continuation reaches D 112.75 (#726, raw `I726-win/` 647cd9f5). Every accepted step
 converges to at most 7.0e-45. The difference to the held chain keeps growing, by a factor of 1.055 per unit of D

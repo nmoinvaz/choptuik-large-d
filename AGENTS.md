@@ -55,7 +55,9 @@ Conventions for the Claude sessions (cloud and local) that run computations here
   - The corrector in octo-double is `anm_run.py --corrector od` with `--tol_od` (1e-40; `--qd_it` steps), from
     `hp/octo_corrector.py` (`PinnedO`, `newton_od`, `ElimO`; notes/OCTO_DOUBLE.md 5). Its states have eight parts
     (`save_o`, `load_o`), which `load_q` reads as four. Its checks are `octo_corrector.py planted` and `wall`, with
-    the controls `--mutate_offset qd` and `--mutate 10`.
+    the controls `--mutate_offset qd` and `--mutate 10`. Give it `--reseed_o 3` whenever the re-seeder projects
+    (`--reseed 2`). Without it the projection is only quad-double accurate, and the corrector stalls at that level,
+    2.7e-49 at D 99.875 (#727) and 1.2e-33 at D 200 with `--elim_switch 0` (#713).
 - **Other matter models:** the ℓ-multiplet solver is `solver/matter/dss_ell.py` (a copy-and-adapt of `solver/dss.py`;
   ℓ = 0 reproduces it to 9×10⁻¹⁴). Check new field equations symbolically against covariant ones first, as
   `solver/matter/struct_eqs.py` does, and validate at D = 4 against published values before continuing in D.
