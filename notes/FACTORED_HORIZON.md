@@ -169,8 +169,9 @@ at n = 240 and K = 130, its sum at u₀ misses by 3.0×10⁵ (S3).
 The factored series splits b_k = B_sl,k + γ χ̂_k.
 - **B_sl, the minimal solution.** It solves rows k = 0, …, K of the recurrence with b_(K+1) = 0, one (K + 1) × (K + 1)
   system per τ point. The rows are diagonally dominant (n − 1 + k > k + 1 + Σ|q_j|), so the mass mode decays from high
-  orders to low ones. Solving a recurrence backward for its minimal solution is Miller's method, not yet recorded in
-  [LIT_REVIEW.md](LIT_REVIEW.md) (a recommended task of #491's closing summary).
+  orders to low ones. Solving a recurrence backward for its minimal solution is Miller's method. Its sources are in
+  [LIT_REVIEW.md](LIT_REVIEW.md), addendum of #733 (B1–B8), whose discrepancy 1 names the forms closest to this one,
+  Olver's boundary-value form (B4) and Gautschi's first-order backward recursion (B7).
 - **χ̂**, the mass mode normalized so that Σ_(k≤K) χ̂_k u₀^k = 1, computed forward (the dominant solution is stable
   that way) or from its closed form.
 - **γ**, one number per τ point, fixed by the value at the node. With γ = B_K − Σ_k B_sl,k u₀^k, B's sum at u₀ is the
@@ -381,4 +382,5 @@ nothing.
 - [LIT_REVIEW.md](LIT_REVIEW.md) C3 and Q1, the WKB entries: nΦ as the fast mode's WKB exponent (Q1), and the
   Stokes reading of Propositions 3–4, in which the selection is the coefficient of that mode (C3).
 - Deuflhard (1974), LIT_REVIEW.md F4: the natural level function ‖J⁻¹F‖, invariant under the rows' scaling.
-- Miller's backward recurrence for the minimal solution: named, not yet recorded in LIT_REVIEW.md.
+- Miller (1952), Olver (1967) and Gautschi (1997), [LIT_REVIEW.md](LIT_REVIEW.md) B1–B8 (addendum of #733): backward
+  recurrence for the minimal solution, and its boundary-value form with b_(K+1) = 0 (B4, B7).

@@ -2013,3 +2013,129 @@ resolve.
      and `grep -c Hirschmann notes/MODE_COUNT.md` and `grep -c Gundlach notes/MODE_COUNT.md` each print at least 1 (0
      today). `python3 check_numbers.py --selftest` passes on both of its lines.
    - *Depends on.* #619. Minutes.
+
+## Addendum (2026-11-14, issue #733): Miller's backward recurrence and the minimal solutions of recurrences
+
+**Question.** What do the standard sources on Miller's backward recurrence and on minimal solutions contain, as they
+bear on [FACTORED_HORIZON.md](FACTORED_HORIZON.md) 3.3? There B's series recurrence, (k + 1) b_(k+1) = (n − 1 + k) b_k
++ (q b)_k − (n − 1) δ_(k0), is solved for B_sl from its rows k = 0, …, K with b_(K+1) = 0, one (K + 1) × (K + 1)
+system per τ point, because the mass mode, its homogeneous solution, grows with k. The note calls this Miller's method.
+Two features set the recurrence apart from the sources' cases.
+- **Full history.** Row k fixes b_(k+1) from b_0, …, b_k, so the homogeneous solutions form one line, the mass mode χ,
+  as for a first-order equation (S3). The product (q b)_k couples every lower order, though, so the row's order grows
+  with k.
+- **No normalization.** The end condition alone fixes B_sl. The mass mode is added afterwards as γ χ̂, with γ set at
+  the node.
+
+**How.**
+- **Searches.** 11 web searches on 2026-11-14, and record queries of DLMF's bibliography, the zbMATH Open API,
+  Crossref, Open Library and the Internet Archive.
+- **Read.** DLMF §3.6, all seven subsections (Release 1.2.8 of 2026-09-15). Gautschi (1967), the copy on his Purdue
+  page of selected works, §§0 and 3 in full and the rest by its statements and headings. Olver (1967a), NIST's PDF,
+  §§1–5, 7, 8 and 12 in full and §§6 and 9–11 by their statements. Gautschi (1997b), the copy on his Purdue page,
+  §§1–2.4 and 3.2 in full and the rest by its headings.
+- **Records or reviews only.** Bickley et al. (1952): the Internet Archive's scan is borrow-only, and its search-inside
+  endpoint refused the query (403). Olver (1964) and Olver–Sookne (1972): ams.org answered with a "Verifying your
+  connection" page. Wimp (1984): no copy was found, and zbMATH's review was read. The AMS reviews of the 1952 tables
+  (Bull. AMS 59 (1953) 189–191) and of Wimp (Bull. AMS 14 (1986)) were not opened for the same reason, and mirror
+  copies were not fetched.
+- **Text channel.** The PDFs were downloaded with curl. Their text came from PDFKit's text layer (Gautschi 1967) or the
+  Vision framework's OCR (Olver 1967a, Gautschi 1997b). Quotes are from that text and were not compared with the page
+  images. OCR errors in quotes were corrected by hand, and subscripts the OCR lost were restored from context. Each
+  source's equations are paraphrased in its own notation.
+- **Text addressed to an AI agent.** None in the sources read.
+- **Inferences** are marked *inferred*.
+
+### Closest works
+
+| Row | Work | Read | What it contains | What it does not contain |
+|---|---|---|---|---|
+| B1 | **W. G. Bickley, L. J. Comrie, J. C. P. Miller, D. H. Sadler, A. J. Thompson**, *Bessel Functions, Part II: Functions of Positive Integer Order*, British Association Mathematical Tables vol. X, Cambridge University Press (1952) | Not read. Records and the citing texts only | Miller's method is on pp. xvi–xvii (DLMF 3.6(iii)) or p. xvii (B2, B4). As DLMF describes it, arbitrary "trial values", for example 1 and 0, are assigned to w_N and w_(N+1), a trial solution is computed by backward recursion, "in the course of which the original components of the unwanted solution g_n die away", a normalizing factor Λ is applied, and the cycle is repeated with a higher N until the normalized solutions agree. Olver (B4 §1): "for evaluating the most rapidly decreasing solution of a second-order homogeneous linear difference equation", "in connection with the tabulation of modified Bessel functions". zbMATH's review of Wimp (B6): I_n(x), "though apparently mentioned by Lord Rayleigh as early as 1910". | (unread) The text itself. As B2, B4 and B8 describe it, an inhomogeneous equation and an end condition without normalization. |
+| B2 | **W. Gautschi**, *Computational aspects of three-term recurrence relations*, SIAM Rev. 9 (1967) 24–82 | §§0 and 3 in full, the rest by statements | **Scope.** "restricting attention to the special case of three-term recurrence relations" (§0). **Minimal solution.** f_n/g_n → 0 for every independent solution g, "minimal at infinity", unique up to a factor and fixed by one initial value; Pincherle's "distinguished" solution (§0, with its footnote). **Algorithm (3.9)** under a normalization Σ λ_m f_m = s (3.2) is "mathematically (though not computationally) equivalent" to Miller's, which recurs backward from the values 1 and 0 at ν and ν + 1 and normalizes (3.11)–(3.12). Theorem 3.1: it converges if and only if (f_(ν+1)/g_(ν+1)) Σ_(m≤ν) λ_m g_m → 0 (3.16). **Boundary values** (§0, (0.6)): the tridiagonal system with y₀ = f₀ and y_N = f_N is stable, but "the procedure requires two values, f₀ and f_N, of the desired solution to be known in advance". **Rounding** "will not be discussed in detail", and none of the algorithms "is sensitive to rounding, unless the series (0.5) is subject to cancellation of terms". **Other orders.** "The problem of computing minimal solutions is clearly not peculiar to three-term recurrence relations", and in that generality it "has not been thoroughly studied" (§0). §8 brings a first-order inhomogeneous recurrence (the incomplete gamma function) to three-term homogeneous form "by elimination of the inhomogeneous term". **Priority.** Lord Rayleigh "already recommended that spherical Bessel functions be calculated in the direction of decreasing order" (p. 46, after Logan). | First-order and full-history recurrences in their own right. An end condition of zero for an inhomogeneous equation. A rounding-error analysis. |
+| B3 | **F. W. J. Olver**, *Error analysis of Miller's recurrence algorithm*, Math. Comp. 18 (1964) 65–74 | Not read. Records and the citing texts only | Gautschi (B2 §0): "who recently analyzed the error accumulation in Miller's algorithm". Olver (B4 §1): "Error analyses of the algorithm have been supplied by the present writer [3]". DLMF 3.6(iii) cites it, with Wimp's Ch. 4 and Gautschi, for "convergence proofs, and error analyses". | (unread) |
+| B4 | **F. W. J. Olver**, *Numerical solution of second-order linear difference equations*, J. Res. Nat. Bur. Standards 71B (1967) 111–129 | §§1–5, 7, 8 and 12 in full, the rest by statements | **Problem** (2.01)–(2.05): a_r y_(r−1) − b_r y_r + c_r y_(r+1) = d_r with solutions A f_r + B g_r + h_r, f_r/g_r → 0 and h_r/g_r → 0, and the wanted solution has y_r/g_r → 0 and y₀ = k. **Approach** (§3): "treat it directly as a boundary-value problem rather than use initial-value techniques". "Following Miller's approach in the homogeneous case [1], we solve the algebraic equations with the value of y_N arbitrarily set equal to zero", and "only in the neighborhood of r = N can substantial errors occur". Theorem 1: y_r^(N) → y_r as N → ∞ with r fixed. **Algorithm** (§4): forward elimination computes p_r, the homogeneous solution with p₀ = 0 and p₁ = 1, and e_r by (4.05), and back substitution starts from y_N = 0. Since y_r^(N+1) − y_r^(N) = p_r e_N/(p_N p_(N+1)) (4.10), N is chosen before any back substitution. **Truncation error** (5.01)–(5.02): y_r − y_r^(N) = p_r Σ_(s≥N) e_s/(p_s p_(s+1)). **Rounding** (§7): an error made during back substitution "is multiplied by the factor p_r/p_s when it is transmitted to y_r (r < s)", which "decays with diminishing r", because "p_r contains a substantial multiple of g_r, and y_r contains no multiple of this function". Rounding is transmitted unstably "only when the original problem is ill-posed or when heavy cancellation takes place during the calculation of e_r". **Miller** (§8): "in the homogeneous case the Miller recurrence algorithm can be regarded as the solution of the set of equations (3.01) and (3.02), with d_r = 0, by backward elimination. In the inhomogeneous case the solution by backward elimination [...] can be regarded as a generalization of the Miller algorithm." A general normalization Σ m_r y_r = k is §9. | Equations of order other than two: "it may be possible to extend the present approach to difference equations of order higher than the second" (§12). Full-history recurrences. |
+| B5 | **F. W. J. Olver, D. J. Sookne**, *Note on backward recurrence algorithms*, Math. Comp. 26 (1972) 941–947 | Not read. Records only | DLMF 3.6(v) and Gautschi (B7 §3.2) cite it with B4 for Olver's algorithm. | (unread) |
+| B6 | **J. Wimp**, *Computation with Recurrence Relations*, Pitman, Boston (1984) | Not read. zbMATH review (signed J. Oliver) | Review: "Roughly three quarters of the book is devoted to linear algorithms, beginning with the classical algorithm for first and second order homogeneous equations applied by J. C. P. Miller in 1952". "The whole family of related methods for both the homogeneous and nonhomogeneous cases [...] are discussed in detail." It surveys applications to special functions "and series solutions of ordinary differential equations", and has appendices on the general and asymptotic theory of linear difference equations. DLMF cites its Ch. 4 for Miller's algorithm, Ch. 6 for Olver's and Chs. 7–8 for other orders *(unverified against the book)*. | (unread) Whether it treats full-history recurrences, such as those of series solutions. |
+| B7 | **W. Gautschi**, *The computation of special functions by linear difference equations*, in *Advances in Difference Equations* (Veszprém, 1995), Gordon and Breach (1997) 213–243 | §§1–2.4 and 3.2 in full, the rest by headings | **Scope.** "linear first-order and homogeneous second-order difference equations" (§1). **First order** (§2.3): for y_n = a_n y_(n−1) + b_n the solutions are f_n + c h_n, with h the homogeneous solution, and the amplification factor ρ_n = f₀ h_n/f_n (2.10) carries a relative error ε at n = s to (ρ_t/ρ_s) ε at n = t (2.9). The recursion is unstable if \|ρ_n\| → ∞ (Def. 2.1), and pseudostable if sup\|ρ_n\| is finite but large. "in the case of instability, we can compute f_N for any fixed N, in principle, as accurately as we wish by starting the recurrence at some sufficiently large n = ν > N, with y_ν = 0, and recurring from n = ν down to n = N" (2.14), with error ρ_N/ρ_ν (2.15). "However, this is foolproof only if \|ρ_n\| increases monotonically for n > N. Then all rounding errors introduced in the course of the recursion are consistently attenuated in downward direction." Otherwise the terminal phase amplifies rounding by up to R = sup\|ρ_t/ρ_s\| over N ≤ t < s ≤ ν, which is tolerable if R eps is within the accuracy wanted. Example (§2.2): the incomplete gamma function, recurred backward from 0 at ν, is obtained "accurately to full machine precision". **Second order** (§3.2): the minimal solution, Pincherle's theorem (Thm 3.1), B2's algorithm and Miller's (Thm 3.2, (3.19)–(3.20)), and Olver's algorithm as "the best known" boundary-value method. "All known recurrence algorithms can be interpreted and unified in terms of triangular matrix factorization and numerical linear algebra techniques" (Cash and Zahar 1994, with extensions to systems). | Full-history recurrences. |
+| B8 | **NIST Digital Library of Mathematical Functions**, §3.6 *Linear Difference Equations* (Release 1.2.8, 2026-09-15) | In full | **3.6(ii).** A recessive solution ("equivalently, minimal or distinguished") has w_n/g_n → 0, and backward recursion restores stability "provided that c_n ≠ 0", starting from w_N and w_(N+1). **3.6(iii).** Miller's algorithm (B1), with Λ fixed by w₀ or by Σ λ_n w_n = 1 (3.6.5), "usually superior when the true value of w₀ is zero or pathologically small". **3.6(iv).** For inhomogeneous equations, "If, as n → ∞, the wanted solution w_n grows (decays) in magnitude at least as fast as any solution of the corresponding homogeneous equation, then forward (backward) recursion is stable." When it is intermediate, boundary-value methods solve the tridiagonal system (3.6.7) with w₀ = λ and w_N = 0, and w_n^(N) → w_n. **3.6(v).** Olver's algorithm (3.6.8)–(3.6.10), back substitution "starting with w_N = 0". **3.6(vii).** For the first-order equation (3.6.17), "in the inhomogeneous case it may sometimes be necessary to recur backwards to achieve stability" (B7). For order k ≥ 3 or systems of k first-order equations, "boundary-value methods are the rule rather than the exception", with k − ℓ conditions at the beginning and ℓ at the end, and forward and backward recursion are the cases ℓ = 0 and ℓ = k. | Full-history recurrences. |
+
+### Against FACTORED_HORIZON.md 3.3
+
+- **The name.** Miller's algorithm proper is homogeneous and second order. It recurs backward from arbitrary trial
+  values and then normalizes (B1, B2 (3.11)–(3.12), B8 3.6(iii)). B_sl is a particular solution of an inhomogeneous
+  recurrence, fixed by the end condition b_(K+1) = 0 with no normalization. That is Olver's boundary-value form (B4
+  §3), and in first order Gautschi's backward recursion from y_ν = 0 (B7 (2.14)). Olver regards backward elimination in
+  the inhomogeneous case as "a generalization of the Miller algorithm" (B4 §8). So the note's sentence holds in his
+  sense, while the form it uses is stated in B4 and B7 (discrepancy 1).
+- **The end condition does not reach b.** B_sl satisfies the rows k < K, so on 0, …, K it is the forward series of its
+  own b₀, and any two end conditions give series that differ by a multiple of χ (*inferred*). γ χ̂ absorbs that
+  multiple, as S3's "for any γ" says. So the truncation error that B4 (5.01) and B7 (2.15) bound does not enter b, and
+  only the propagation of rounding bears on it (*inferred*).
+- **Rounding.** Olver's back-substitution errors decay toward low r by p_r/p_s, because p_r holds the dominant solution
+  and y_r does not (B4 §7). Gautschi's backward recursion attenuates every rounding error when |ρ_n| increases
+  monotonically past the wanted range, and otherwise amplifies them by up to R (B7 §2.3). Both are conditions on the
+  solutions. The note's reason, the rows' diagonal dominance, is a condition on the coefficients, and no source read
+  derives one from the other. S3 measures the outcome directly.
+- **The forward half.** χ̂ is the dominant solution, for which forward recursion is stable (B8 3.6(ii)), and Olver's
+  algorithm computes its p_r the same way (B4 §4).
+- **Full history.** No source read treats a recurrence whose rows involve every lower order. B7's first-order analysis
+  uses only that the solutions are f + c h with one homogeneous solution h (B7 (2.7)–(2.10)). That holds here with h =
+  χ (S3), so its amplification factors carry over (*inferred*). In DLMF's terms the note's system has one end
+  condition and a one-dimensional homogeneous space, the case ℓ = k = 1 of B8 3.6(vii) (*inferred*).
+- **"Minimal".** The term is defined for homogeneous equations (B2 §0, B8 3.6(ii)). For an inhomogeneous one the
+  sources' condition is Olver's y_r/g_r → 0 (B4 (2.04)), here B_sl,k/χ_k → 0. At the note's finite K, B_sl is the
+  particular solution that the end condition picks, and by the second bullet nothing in b depends on its limit as K →
+  ∞ (*inferred*).
+
+### References checked
+
+In [REF_CHECK.md](REF_CHECK.md), addendum of issue #733. All eight are OK as bibliographic records. Olver's error
+analysis of Miller's algorithm is Math. Comp. 18 (1964), not 1967. The locator of Miller's description is pp. xvi–xvii
+in DLMF and p. xvii in B2 and B4, *(unverified)* against the volume.
+
+### Gap statement
+
+- **Not read.** B1, B3, B5 and B6, recorded from DLMF, zbMATH and the citing texts. Also works the sources read name,
+  cited here from their reference lists *(unverified)*: Olver (1967b, bounds, J. Res. NBS 71B, 161–166), Olver (1988,
+  *Error bounds for linear recurrence relations*, Math. Comp. 50, 481–499), Cash and Zahar (1994, *A unified approach
+  to recurrence algorithms*), Lozier (1980, NBSIR 80-1976), Shintani (1965), J. Oliver (Numer. Math. 9, 323–340) and
+  Clenshaw (1957).
+- **The closest unread works** are Wimp's chapters on other orders and on series solutions of differential equations
+  (B6), and Clenshaw (1957), whose method for differential equations in Chebyshev series uses "similar computational
+  processes" (B4 §1). The note's recurrence is of that kind, the Taylor coefficients of B's equation in u, and either
+  may treat its full-history form.
+- **Rounds.** Round 1 covered the five works the task names. Round 2 went forward from DLMF's references to Gautschi
+  (1997b), its source for first-order equations, and to Olver–Sookne (1972). The search is not dry, since no source
+  read treats a recurrence whose rows involve every lower order.
+
+### Discrepancies and proposed text (for the coordinator)
+
+1. **FACTORED_HORIZON.md 3.3 credits Miller with a form that is Olver's and Gautschi's.** Its sentence "Solving a
+   recurrence backward for its minimal solution is Miller's method" is now followed by a pointer to this addendum,
+   with the claim unchanged. Proposed replacement:
+   > Solving the rows with b_(K+1) = 0 is the boundary-value form of backward recurrence. For a first-order
+   > inhomogeneous equation it is Gautschi's backward recursion from y_ν = 0 (1997), and for second order it is Olver's
+   > algorithm (1967), which he regards as a generalization of Miller's (1952) ([LIT_REVIEW.md](LIT_REVIEW.md), addendum
+   > of #733, B4 and B7).
+2. **The date of Olver's error analysis.** #733's assignment names "Olver's error analysis of Miller's algorithm
+   (1967)". That paper is Math. Comp. 18 (1964) 65–74 (B3), and Olver's 1967 paper is the boundary-value algorithm
+   (B4).
+3. **No novelty sentence** was added by this task.
+
+### Recommended tasks (for the coordinator to file)
+
+1. **Credit Olver and Gautschi where FACTORED_HORIZON.md names Miller's method.**
+   - *What.* Apply discrepancy 1's proposed text to FACTORED_HORIZON.md 3.3.
+   - *Why.* AGENTS.md asks for the original work where a method is named, and the form used is B4's and B7's.
+   - *Acceptance.* `grep -c "is Miller's method" notes/FACTORED_HORIZON.md` prints 0 (1 at #733's commit), and
+     `python3 check_numbers.py --selftest` passes on both of its lines.
+   - *Depends on.* #733. Minutes.
+2. **Read Wimp (1984) and Clenshaw (1957) for the full-history form.**
+   - *What.* Obtain Wimp's book and Clenshaw, *The numerical solution of linear differential equations in Chebyshev
+     series*, Proc. Cambridge Philos. Soc. 53 (1957) 134–149 (as B2 cites it, *(unverified)*). Read Wimp's Chs. 4
+     and 6–8 and his treatment of series solutions, and Clenshaw's recurrence for the coefficients, and record in rows
+     B6 and a new B9 whether either treats a recurrence whose rows involve every lower order.
+   - *Why.* They are the closest unread works (gap statement), and the note's recurrence has that form.
+   - *Acceptance.* `grep -c "^| B6 .*Not read" notes/LIT_REVIEW.md` prints 0 (1 at #733's commit), and
+     `grep -c "^| B9 " notes/LIT_REVIEW.md` prints 1.
+   - *Depends on.* #733, and access to the two texts (a library copy of Wimp, Cambridge Core for Clenshaw). Hours.
