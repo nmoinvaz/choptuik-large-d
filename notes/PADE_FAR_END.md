@@ -2174,3 +2174,112 @@ Seen before the freeze, and disclosed.
   at seg(+1, +1) with α = 0, 0.49 at seg(0, 0) and 0.0096 at seg(−1, −1), so seg(0, 0) reaches (c′) only at η ≥ 0.2.
 - #703's recommended task asked for (a) + (c″) and neighbours 0.25 away at the same modulus. #718 asks for (a) + (c′)
   and neighbours 0.25 away in every direction, which is the rule here. (c″)'s verdict is reported apart.
+
+### 16.3 Results: the controls
+
+All runs used one process under `nice -n 10` on the Mac, from 20:19 UTC on 2026-11-13, with `pade_second_ring.py` at
+a2a6deb6 and `pade_second_zero.py` unchanged. The records are in the raw-data repository's `I718-mac/` (controls,
+selftests and pilot at a03acdd8).
+
+| check | result | verdict |
+|---|---|---|
+| §15's control: R1, R2, R3z, R4z, R5, J+ and J− | all pass; the gate and (c″) are on | OK |
+| §15's selftest, and `--mutate=gn` | exit 0; the mutation is off by 3.6×10⁻³, exit 1 | OK, fires |
+| `control --mutate=zero`, `bzero`, `judge` | R4z and J− fail; R3z and J− fail; J+ fails; each exits 1 | all fire |
+| `far`, and `far --mutate=farend` | K1z(a), K1z(b) and C1 pass; K1z(a) fails at every node | OK, fires |
+| R7, the ring's selftest | moments within 2.5×10⁻⁵⁵; the L = 0.3 curves bit for bit; diagonal points to 1.9×10⁻⁶²; the η rule gives the window, the cap and the floor | OK |
+| R7's mutations `secmom`, `len`, `window` | each fails its part, exit 1 | all fire |
+| R6, 12 of §15's plants through the ring's path | m_DA, M_min, (a), (b) and (c′) equal; d_P and χ₂₂ / χ₂₂(real) within 2.2×10⁻¹⁶ | OK |
+| R8 in the pilot, (+1, +1), (chord2, 0.3, 4), α = 0 | ratio / (η g) − 1 = 2.3×10⁻⁷ to 2.6×10⁻⁶; all three plants in the window pass (c′) | OK |
+| J+ through the ring's path | the real series passes (a), (b) and (c′) at every node (m_DA 2, 1, 1) | OK |
+| J− through the ring's path | the η = 0 chord2 and arc plants: m_DA 11 and 10, d_P 0.219 and 0.225, M_min 6 in their own κ⋆ basis; both fail | OK |
+| `pilot --mutate=len`, `--mutate=window` | R6 fails; R8 fails; each exits 1 | both fire |
+| R8 in the ring, all 5392 plants at ω∞ | largest \|ratio / (η g) − 1\| = 5.3×10⁻⁵; no plant inside a window fails (c′) | OK |
+| C1 on every plant scan of the ring | no failure | OK |
+
+### 16.4 Results: the ring
+
+`pade_second_ring.py ring`, 20:37–22:40 UTC, and after the session stopped, resumed from its records 22:44–02:57 UTC
+(the 17 positions done were replayed from the stored records, with the same verdicts). It made 5967 plant records,
+5392 at ω∞, 303 at 0.99 and 272 at 1.01. The records are `I718-mac/ring.jsonl`, the verdict `ring.json`, and the
+maps of the report stage (written after the freeze, judging nothing) `report.log`, at raw-data 88feab35.
+
+**No position is located, with (c′) or with (c″), so the region is not bounded by the frozen rule.** 34 of the 42
+lattice positions pass (a) and (c′) at all three nodes. 16 of them lie on the lattice's edge: a = −1 at b = +2 to +4,
+the whole row b = +4, the whole column a = +4, and b = −2 at a = +2 to +4. No passing position has four failing
+lattice neighbours, so there was no candidate, and stage 2 ran no diagonal point.
+
+P*n* passes (a) and (c′) at all three nodes for *n* of the six shapes, – fails for all; |Q| at ω∞ in brackets.
+
+| b \ a | −1 | 0 | +1 | +2 | +3 | +4 |
+|---|---|---|---|---|---|---|
+| +4 | P5 (2.86) | P6 (3.02) | P6 (3.19) | P6 (3.37) | P6 (3.57) | P6 (3.76) |
+| +3 | P3 (2.67) | P6 (2.84) | P6 (3.02) | P6 (3.21) | P6 (3.41) | P6 (3.62) |
+| +2 | P2 (2.48) | P6 (2.67) | P6 (2.86) | P6 (3.07) | P6 (3.28) | P6 (3.49) |
+| +1 | – (2.32) | P6 (2.51) | P6 (2.72) | P6 (2.93) | P6 (3.15) | P6 (3.37) |
+| 0 | – (2.17) | – (2.37) | P6 (2.59) | P6 (2.81) | P6 (3.04) | P6 (3.27) |
+| −1 | – (2.03) | – (2.25) | P6 (2.48) | P5 (2.71) | P5 (2.95) | P5 (3.18) |
+| −2 | – (1.92) | – (2.16) | – (2.39) | P5 (2.63) | P6 (2.87) | P5 (3.12) |
+
+Every position at |Q| ≥ 2.48 passes, and every one at |Q| ≤ 2.39 fails. The passing ones span arg Q = 14–52°, the
+whole lattice. With (c″) in place of (c′), 37 positions pass, the same map plus (0, 0), (0, −1) and (0, −2), and none
+is located either.
+
+**The inner edge.** At the five positions (−1, −2) to (−1, +1) and (0, −1), every (c′) window is capped, since g ≤ 0.5
+for every shape and α, so the real misfit needs η > 0.2. At (0, 0) and (0, −2), 2 and 1 of the 10 windows are open,
+and the plants that pass there at ω∞ fail (c′) at 0.99, with χ₂₂ / χ₂₂(real) = 0.07–0.08 (at (0, −2) they fail (a)
+there too). At (+1, −2) every window is open, and each of its 8 plants that pass at ω∞ fails (a) at 0.99 or 1.01,
+with m_DA = 6. At η = 0.15–0.2 a set holds 13–28% of σ₂₂.
+
+**Outward, strength trades against position.** g grows outward, at (0.3, 4) and α = 0 from 0.49 at P0 + κ⋆ to 656 at
+(+4, +4), so the (c′) window moves to weaker sets as the set moves out. The plants passing at all three nodes hold
+0.5–20% of σ₂₂ at |Q| = 2.4–2.75, 0.11–14% at 2.75–3.1, and 0.034–9.7% at 3.1–3.8. On the windowed plants at ω∞, (a)
+holds for 61%, 68%, 66% and 79% in the bands χ₂₂ / χ₂₂(real) = 0.1–0.3, 0.3–1, 1–3 and 3–10, so (a) does not depend
+on the misfit. Within the window, (c′) fixes only η g(Q).
+
+**Shapes.** Per group, the positions passing (c′): chord2 with (0.15, 4) and (0.3, 6) at 34, (0.3, 4) at 33, (0.6, 4)
+and (0.3, 2) at 32, and the arc main density at 26. Besides the eight failing positions, the arc fails at (+2, −1),
+(+3, −1), (+4, −1), (+2, −2) and (+4, −2), and at (−1, +2) to (−1, +4).
+
+| criterion | at ω∞, of 5392 |
+|---|---|
+| (a) | 3477 |
+| (b) | 0 (smallest d_P 0.139) |
+| (c′) | 5064 |
+| (a) + (c′) | 3401 |
+| (a) + (c″) | 3433 |
+
+The node rule runs other nodes only until one plant per position and group passes, so the 197 plants that pass (a) and
+(c′) at all three nodes are a lower count. They have m_DA = 1–5, d_P = 0.232–0.270 and χ₂₂ / χ₂₂(real) = 0.10–5.8
+over the three nodes, with η = 3.3×10⁻⁴ to 0.175.
+
+### 16.5 What this means
+
+- **The two features do not locate the set.** A weak segment ending anywhere in the lattice's outer part, at
+  |t| = 2.48–3.76 and arg t = 14–52°, gives both the real DA2 scatter and the real twin misfit at 22 terms, at all three
+  nodes, for every segment length and near-end exponent tried. Its strength sets the misfit, and the strength of the
+  passing plants falls about 500 times over the lattice (η = 0.175 to 3.3×10⁻⁴). So §15's 35 plants, 0.25 past
+  P0 + κ⋆, are one corner of a region open outward, not a place the data pins down.
+- **The inner edge is mostly where the weak-set cap binds.** Nearer than |t| ≈ 2.4, a set would need η > 0.2, more
+  than 13–28% of σ₂₂, to reach the real misfit, which the frozen rule excludes. At three of the eight failing
+  positions, (0, 0), (0, −2) and (+1, −2), the plants passing at ω∞ fail at one other node, by m_DA = 6 against ≤ 5 or
+  by χ₂₂ / χ₂₂(real) = 0.07–0.08 against ≥ 0.1.
+- **What could still locate it.** The far Padé poles (b), which no plant has (d_P ≥ 0.139), and the misfit's profile
+  over M, which the records keep but nothing here judges. The outer edge, if there is one, lies past |t| = 3.76.
+- **Error bars.** Each factor is a ratio of two least-squares misfits in the same basis, with the real series'
+  measured errors as the unit. The ranges are spreads over plants and nodes, not error bars.
+- **Status.** Numerical evidence on plants. The verdict is the frozen one.
+
+### 16.6 Proposed text for proof/D_entire.md
+
+In 7.4, at the end of the bullet "With the zero in place, a set near P0 + κ⋆ gives two of the three features (#703)":
+
+```diff
+   5×10⁵ times less than the real series. With the zero held, the ratio-law far end lowers the real misfit 1.7 times,
+-  not 2.3–2.7 (notes/PADE_FAR_END.md §15).
++  not 2.3–2.7 (notes/PADE_FAR_END.md §15). These two features do not locate the set (#718). On a lattice of 42 end
++  points, |t| = 1.9–3.8, with segment lengths 0.15–0.6 and near-end exponents 2–6, every end point at |t| ≥ 2.48
++  gives both at all three nodes, with a strength that falls about 500 times outward, and the passing region reaches
++  the lattice's outer edges. The end points nearer than |t| ≈ 2.4 fail because they would need more than 13–28% of
++  σ₂₂ (notes/PADE_FAR_END.md §16).
+```
