@@ -174,6 +174,25 @@ The quoted ± is the spread over one method's settings. At r₁ = 0.32, inside t
 (matter/STRUCTURE.md §7), λ = 2 moves by 3.4×10⁻¹⁰, so r₁ stays at 0.3 or below. κ_c(∞) was not recomputed this way.
 Raw `I771-mac/` at 3a94ada8.
 
+**The count by the second method (#781).** `solver/matter/css_inf_count.py` winds D(λ) around the full boundary of
+0.05 < Re λ < 5, |Im λ| < 9, with steps from 0.25 bisected until each phase step is at most 0.5 rad. D is entire in
+λ, so its winding is its number of zeros. The conjugation symmetry is not assumed, only checked.
+
+| setting (r₀, r₁, α) | winding | with a pair planted at 3.1 ± 5i | largest step | determinants | D(λ̄) = conj D(λ) |
+|---|---|---|---|---|---|
+| A (0.1, 0.3, 3π/8) | 4.000000000000003 | 5.999999999999997 | 0.4985 rad | 464 | 1.1×10⁻⁹ (231 pairs) |
+| B (0.11, 0.25, 0.3π) | 3.9999999999999956 | 6.0000000000000036 | 0.4997 rad | 476 | 7.7×10⁻⁹ (237 pairs) |
+
+**So the second method also finds four zeros in the box: λ = 1, λ = 2 and the pair λ_osc, λ̄_osc.** The counter's
+selftest uses a synthetic D with e^{4λ} growth and six zeros inside, three of them 0.02 to 0.05 outside its edges. It
+counts 6, and 8 with the plant. With one sample per edge (the control) it counts 0.
+
+The exact mode λ = iω lies 0.05 outside the left edge. It is a simple zero of D, since |D(iω + ε)|/|ε| tends to
+3.39×10⁴ from three directions. #771's evaluation of D(iω) had not finished. At iω the data (1, 0) is the exact shift
+mode, so v and w are rounding noise, and DOP853's absolute tolerance of 10⁻¹⁹ makes it resolve that noise. With the
+absolute tolerance at 10⁻¹⁶ for that point, |D(iω)| = 7.8×10⁻⁸. The strip 0 ≤ Re λ ≤ 0.05 is covered by neither
+method's count. Raw `I781-mac/`.
+
 ## 2. The change of stability κ_c(D) (#377)
 
 ### 2.1 Method
