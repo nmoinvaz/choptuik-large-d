@@ -16,6 +16,7 @@ that grid, so it differs from the continuum average by aliasing at the state's t
     python3 hp/lam_gauge.py f64 [--live]                 modecount_common's f64 lam_g against this one
     python3 hp/lam_gauge.py table RAW [--out CSV]        lam_g(D) on the stored states (hp/data/lam_gauge.csv)
     python3 hp/lam_gauge.py summary                      the table of notes/MODE_COUNT.md section 10, from the CSV
+    python3 hp/lam_gauge.py errs [--csv=CSV]             Delta_err, Delta_err_kind from delta_all.csv (#765)
 
 RAW is a checkout of the raw-data repository (git clone https://github.com/nmoinvaz/choptuik-large-d-raw).
 --mutate=n uses n in place of n - 1 in lam_g. rt, identity and f64 must then exit 1. Each check exits 1 when it fails.
@@ -395,7 +396,11 @@ def cmd_table(argv):
     commit = raw_commit(raw)
     rows, digests = [], {}
     inv, errs = inventory(raw)
+    absent = []
     for lab, p, kind, named in inv:
+        if not os.path.exists(p):          # a state delta_all.csv names that is not at this raw commit
+            absent.append(lab)
+            continue
         parts, meta = load(p)
         if meta.get("prediction") or meta["D"] < 4:
             continue
@@ -465,6 +470,9 @@ def cmd_table(argv):
             w.writerow(r)
     bb = [r for r in rows if r["role"] == "backbone"]
     print(f"{len(rows)} states ({len(bb)} backbone D) from D {bb[0]['D']} to {bb[-1]['D']}; raw {commit}; -> {out}")
+    if absent:
+        print(f"  {len(absent)} states named by delta_all.csv are not at raw {commit} and are left out, from "
+              f"{absent[0]} to {absent[-1]}")
     worst = {}
     for Dk, g in groups.items():
         if len(g) > 1:
@@ -485,6 +493,34 @@ def cmd_table(argv):
 
 SUMMARY_D = [4, 5, 6, 8, 10, 15, 20.043653, 30.068824, 40.020065, 50.007491, 61.026449, 70, 80, 100, 125, 150, 175,
              200, 225.13125, 244.6366]
+
+
+def cmd_errs(argv):
+    """Refresh the err columns of hp/data/lam_gauge.csv from hp/data/delta_all.csv, every other column and row kept (#765).
+    A row whose state delta_all.csv names takes that row's err and err_kind; the others are left as they are. A full
+    `table` rebuild follows delta_all.csv's naming as well, which since raw 6913f312 has moved the chain from #461's
+    states to #603's from D 216.13 on and would drop the superseded rows notes/MODE_COUNT.md section 10 quotes."""
+    path = opt(argv, "csv", os.path.join(REPO, "hp", "data", "lam_gauge.csv"))
+    lines = open(path).read().splitlines(keepends=True)
+    head = [l for l in lines if l.startswith("#")]
+    rows = list(csv.DictReader(l for l in lines if not l.startswith("#")))
+    cols = list(rows[0].keys())
+    da = {"raw:" + r["state"]: r for r in csv.DictReader(open(os.path.join(REPO, "hp", "data", "delta_all.csv")))
+          if r["state"].strip()}
+    changed = 0
+    for r in rows:
+        d = da.get(r["state"])
+        if d is not None and (r["Delta_err"], r["Delta_err_kind"]) != (d["err"], d["err_kind"]):
+            r["Delta_err"], r["Delta_err_kind"] = d["err"], d["err_kind"]
+            changed += 1
+    with open(path, "w", newline="") as f:
+        f.writelines(head)
+        w = csv.DictWriter(f, fieldnames=cols)
+        w.writeheader()
+        for r in rows:
+            w.writerow(r)
+    named = sum(r["state"] in da for r in rows)
+    print(f"{changed} rows' err columns set from delta_all.csv; {named} of {len(rows)} rows are states it names; -> {path}")
 
 
 def cmd_summary(argv):
@@ -509,7 +545,7 @@ def main():
         return 2
     cmd, argv = sys.argv[1], sys.argv[2:]
     fn = dict(show=cmd_show, rt=cmd_rt, identity=cmd_identity, f64=cmd_f64, table=cmd_table,
-              summary=cmd_summary).get(cmd)
+              summary=cmd_summary, errs=cmd_errs).get(cmd)
     if fn is None:
         print(__doc__)
         return 2

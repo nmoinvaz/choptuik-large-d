@@ -691,7 +691,12 @@ The f64 bound is u(8(n − 1) + M max|c₁| + 4), u = 2⁻⁵², the rounding of
 
 `hp/data/lam_gauge.csv` holds 1510 stored states from D = 4 to 244.64, with one backbone state at each of 1274 D. Each
 row gives λ_g to 40 digits, Δ, μ, the f64 value, M, K, the number of parts, the cut and the held harmonics, the stored
-|F| where the state has one, delta_all.csv's error of Δ where it names the state, and the state's path. The sources
+|F| where the state has one, delta_all.csv's error of Δ where it names the state, and the state's path. The rows
+and every column but the two err columns are those of the build at raw 6913f312. The err columns are refreshed from
+the current delta_all.csv by `lam_gauge.py errs` (#765), and `check_numbers.py lam_gauge_errs` fails if a named row
+lacks its err. Since that build, delta_all.csv names #603's chain states in place of #461's from D 216.13 on, and pin
+7's states in place of pin 5's from D 70.65. So 49 rows marked named are no longer named by it. A `table` rebuild
+would follow the new naming and drop the superseded #461 rows that 10.4 quotes (#765). The sources
 are the double-double scans and resolution studies (`hp/data/states`, `hp/data/lowD_states`, folders `T45-win`,
 `T79-win`, `T12-win`, `T13-win`, `I254-mac`, `I609-macm3`, `I624-macm3`, `I252-mac` and two smaller ones), the pinned
 runs of `T73` and `T75`, every state delta_all.csv names, and #603's chain. The backbone is delta_all.csv's state where
@@ -796,6 +801,7 @@ python3 hp/lam_gauge.py rt RAW/T45-win/hp/data/lowD_states/d4hm15_D4.0000_M192.n
 python3 hp/lam_gauge.py identity RAW                                                  # 10.2; --mutate=n exits 1
 python3 hp/lam_gauge.py f64 --raw=RAW --live                                          # 10.2; --mutate=n exits 1
 python3 hp/lam_gauge.py table RAW                                                     # writes hp/data/lam_gauge.csv
+python3 hp/lam_gauge.py errs                                                          # its err columns from delta_all.csv
 python3 hp/lam_gauge.py summary                                                       # the table of 10.3
 python3 hp/lam_gauge_fit.py planted                                                   # 10.4; --mutate=limit exits 1
 python3 hp/lam_gauge_fit.py planted --sigma=5e-14                                     # post hoc
