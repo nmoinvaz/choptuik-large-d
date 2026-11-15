@@ -28,7 +28,8 @@ max|F|). The verdict (not a check): "determined" if every seed's Delta step is w
 unperturbed one, else "not determined".
 
 power (#850): per (D, blocks, seed) over the run JSONs, dev(rel) = dDelta(seed) - dDelta(unperturbed), exact from the
-eight parts, and between neighbouring rels the power p = ln(dev1 / dev2) / ln(rel1 / rel2) (none on a sign change). The
+eight parts, with |dev| / move (1 for a Newton step that returns a move of the Delta block alone), and between
+neighbouring rels the power p = ln(dev1 / dev2) / ln(rel1 / rel2) (none on a sign change). The
 reading: "quadratic" if every p is in --quad, "linear" if every p is in --lin, else "neither". Check (exit 1): the
 JSONs of one group have the same unperturbed step, eight parts, so they come from one state and system (control:
 --mutate start moves one JSON's unperturbed step by an ulp, and the check must fail).
@@ -221,8 +222,9 @@ def power(argv):
         print(f"  D {mp.nstr(mp.mpf(D_str), 10)}, {', '.join(bls)}, seed {seed}: the unperturbed step "
               f"{'the same' if same else 'NOT the same'} in the {len(pts)} runs ({'pass' if same else 'FAIL'})")
         for (rel, dv), p in zip(devs, sorted(pts, key=lambda t: -t[0])):
-            print(f"    rel {rel:g} ({p[3]}): dDelta {p[2]['dDelta']:+.6e}, dev {dv:+.6e}, max|dz| {p[2]['dz']:.4e}, "
-                  f"smallest pivot {p[2]['piv'][0]:.6e}, max|F| {p[2]['F']:.4e}")
+            print(f"    rel {rel:g} ({p[3]}): move {p[2]['move']:.4e}, dDelta {p[2]['dDelta']:+.6e}, dev {dv:+.6e}, "
+                  f"|dev| / move {abs(dv) / p[2]['move'] if p[2]['move'] else float('nan'):.4e}, max|dz| "
+                  f"{p[2]['dz']:.4e}, smallest pivot {p[2]['piv'][0]:.6e}, max|F| {p[2]['F']:.4e}")
         print(f"    p {', '.join('none (sign change)' if p is None else f'{p:.4f}' for p in ps) or '-'}: {reading}")
         out.append(dict(D_str=D_str, blocks=list(bls), seed=seed, devs=devs, p=ps, reading=reading, same_start=same))
     if opts["json"]:
