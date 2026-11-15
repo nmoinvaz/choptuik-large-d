@@ -185,7 +185,9 @@ pass at k_c = 15 (steps 0.02 → 0.3; `data/march_l1_kc15.jsonl`) reached D = 9.
 8×10⁻⁴ (D = 6) to 5×10⁻² (D = 9.3) as the centre data's high harmonics drifted (|q₁₁| = 0.15 > |q₃| at D = 9): the
 "junk" of [solver/notes.md](../solver/notes.md), here a k_c = 15 truncation artefact. All values below are k_c = 23,
 re-solved from those points (D ≤ 8) or continued at k_c = 23 (D ≥ 8; `data/march_l1_kc23m.jsonl`), with κ = 0.7,
-horizon series from u = 0.04 (30 terms), every point converged to the residual shown.
+horizon series from u = 0.04 (30 terms), every point converged to the residual shown. The D = 4 and 5 rows are the
+exception: their stored residuals are recovered only with κ = 0.5 and the horizon series from u = 0.01 (16 terms)
+(#810).
 
 | D | n | Δ | λ = 1/γ | γ | (D − 3)γ | abs(F) | ψ-constraint |
 |---|---|---|---|---|---|---|---|
@@ -216,8 +218,30 @@ reproduces its Δ to 3×10⁻⁹ but not its ψ-constraint (8×10⁻⁵ against 
 D = 10 the constraint is not a stable diagnostic. The march's points beyond D = 10, where the constraint reaches
 1.9×10⁻⁴ and the march stopped, are not checked.
 
-**Accuracy.** τ truncation: k_c 23 → 31 at D = 6 changes Δ by 7×10⁻⁸ and λ by 2.6×10⁻⁷, and at D = 10 by 2.7×10⁻⁶
-and 1.3×10⁻⁵ (above), so it grows with D and was measured only at these two D. RK steps: at D = 8, κ = 1 → 0.5
+**The table's convergence in k_c (#810, raw `I810-mac/`).** Each row was re-solved from its stored state at k_c 23, 31
+and 39 (its own settings, tol 10⁻¹³) and tested against #660's bars, 1×10⁻⁶ in Δ and 3×10⁻⁶ in λ. The bar applies to
+the change from the row's k_c to the next, and the change after must be smaller:
+
+| D | Δ: 23 → 31 | 31 → 39 | λ: 23 → 31 | 31 → 39 | ψ-constraint at 23 / 31 / 39 | the row's values |
+|---|---|---|---|---|---|---|
+| 4 | −4.3×10⁻⁶ | −9.8×10⁻⁸ | **−2.6×10⁻⁴** | −6.5×10⁻⁶ | 2×10⁻² / 2×10⁻³ / 2×10⁻⁴ | Δ (k_c 39) converged; **λ, γ, (D − 3)γ (k_c 23) not** |
+| 5 | −9×10⁻⁹ | +7×10⁻¹⁰ | −5.5×10⁻⁷ | −5.5×10⁻⁹ | 3×10⁻⁴ / 1.5×10⁻⁵ / 7×10⁻⁷ | converged |
+| 6 | +6.8×10⁻⁸ | — | −2.6×10⁻⁷ | — | 2×10⁻⁵ / 3×10⁻⁷ / — | within the bar (k_c 39 not run) |
+| 7 | +1.7×10⁻⁷ | +4.5×10⁻⁸ | −5.6×10⁻⁷ | −1.5×10⁻⁷ | 2×10⁻⁵ / 1.4×10⁻⁷ / 4×10⁻⁸ | converged |
+| 8 | +3.6×10⁻⁷ | +9.7×10⁻⁸ | −8.4×10⁻⁷ | −2.3×10⁻⁷ | 2×10⁻⁶ / 2×10⁻⁷ / 9×10⁻⁸ | converged |
+| 9 | −5.7×10⁻⁷ | −1.5×10⁻⁷ | +2.6×10⁻⁶ | +6.7×10⁻⁷ | 2×10⁻⁶ / 3×10⁻⁷ / 1.2×10⁻⁷ | converged (λ at 0.86 of its bar) |
+
+So every tabulated value is converged in k_c to the table's accuracy except λ at D = 4, with γ and (D − 3)γ there. Its
+k_c 23 value is 2.6×10⁻⁴ above the k_c 39 one, λ = 8.410158, and γ is 0.118904 at k_c 39 against the table's 0.118900.
+The ψ-constraint falls with k_c at every D, and the table's states give back their stored constraint on re-solve.
+
+#660's stored and rerun constraints differ because the converged states at k_c 23 near D = 10 are not isolated. The
+Jacobian there has four near-null directions, with singular values 2×10⁻¹² to 1×10⁻¹¹ against 5.5. Along each, Newton
+re-converges to abs(F) ≈ 6×10⁻¹⁴ at states whose constraint differs by 1–3×10⁻⁵ while Δ moves by less than 10⁻⁹. The
+strongest direction returns to the start (`ell_constraint_dirs.py --resolve`).
+
+**Accuracy.** τ truncation: k_c 23 → 31 changes Δ by 9×10⁻⁹ to 5.7×10⁻⁷ and λ by 2.6×10⁻⁷ to 2.6×10⁻⁶ at D = 5–9,
+by 2.7×10⁻⁶ and 1.3×10⁻⁵ at D = 10, and λ by 2.6×10⁻⁴ at D = 4 (the table above). RK steps: at D = 8, κ = 1 → 0.5
 moves Δ by 3.4×10⁻⁶ (∝ κ⁴), so κ = 0.7 carries ~1×10⁻⁶; horizon start u = 0.01 → 0.04 moves it by 4×10⁻⁷
 (`data/ell_tests.jsonl`). Selection: see below; at D = 9 it adds ~4×10⁻⁶ to Δ. So Δ is good to ~1×10⁻⁶ for
 D = 5–8 and ~5×10⁻⁶ at D = 9; λ to ~10⁻⁶ relative (the RK error of λ was not measured separately).
@@ -344,6 +368,7 @@ All in [`solver/matter/`](../solver/matter/); data in `solver/matter/data/`.
 | `ell_scan.py`, `ell_march.py` | D-continuation (fixed list / adaptive with tangent predictor) |
 | `ell_refine.py`, `ell_gamma.py`, `ell_gamma_series.py` | re-solve at higher k_c, growth rates |
 | `ell_regtest.py`, `ell_spectrum.py` | sensitivity to prior, κ and horizon start; harmonic content and constraint |
+| `ell_constraint_dirs.py` | the ψ-constraint along the Jacobian's weakest directions: straight moves, and Newton re-converged (`--resolve`); the strongest direction as the control (#810) |
 | `ell_fit.py`, `ell_table.py` | large-D fits (λ∞ free / = 2, λ₁ − λ₀) and the results table |
 
 Main data: `l1_D4_kc{11,23,31,39}.jsonl` (D = 4 k_c convergence), `l1_kc23r.jsonl` (Δ, λ at D = 5–9),
