@@ -763,6 +763,14 @@ python3 lam_singularity.py real RAW --planted=data/lam_singularity_planted.json 
 python3 lam_singularity.py posthoc RAW --json=data/lam_singularity_posthoc.json
 ```
 
+**Whether the two folds are one point is not settled (#819; raw `I819-mac/` 567f1b72).**
+- One shared branch point would cancel the square root in λ_g − rΔ, leaving μ = 3/2. With the two series' measured
+  sizes, #782's contamination and the real low orders, the Dlog estimator does not read μ = 3/2 at any base in the
+  plant, though clean plants read it exactly. So the real combination was not typed.
+- The coefficients' ratio r is 0.020646, constant over the 26 bases to 1.2×10⁻⁴ relative. In the plant with λ_g's fold
+  0.01 above Δ's, the fitted r swings by a relative 20. This is an observation, not a bound. #820 calibrates it with
+  smaller planted shifts. `hp/fold_cancel.py` (403d9dae) holds the plant and the coefficient fits.
+
 ## Proposed README text
 
 Applied to the README by the coordinator on 2026-11-14 (its checks moved to the README with it). Drafted for the
