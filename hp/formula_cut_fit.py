@@ -10,7 +10,11 @@ weighted design has condition 1e11-1e14, and float64 fits of it are wrong. The p
 unresolved runs) and the resolved best rows of hp/data/delta_dd_lowD.csv; sigma is Delta_err (low-D rows: the change
 from the lower M), floored at 1e-15; the continuation points that hp/dd_fits_mp.clean drops (60 digits, D >= 10) are
 left out and listed in the output. Writes hp/data/formula_cut.json.
-    cd hp && python3 formula_cut_fit.py [--K 28] [--ns -9]
+    cd hp && python3 formula_cut_fit.py [--K 28] [--ns -9] [--data-commit SHA] [--verify]
+--data-commit SHA reads both tables as they were at commit SHA (git show) and records the commit in the output, so the
+file reproduces from a stated commit; the stored file was fitted to 437b82a5's tables. --verify writes nothing and
+exits 0 if and only if the refit equals the stored hp/data/formula_cut.json byte for byte (its control: verifying
+against main's current tables, which moved after 437b82a5, must fail).
 """
 import csv
 import json
@@ -24,12 +28,27 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 ctx.prec = 256
 K = int(sys.argv[sys.argv.index("--K") + 1]) if "--K" in sys.argv else 28
 NS = float(sys.argv[sys.argv.index("--ns") + 1]) if "--ns" in sys.argv else -9.0
+COMMIT = sys.argv[sys.argv.index("--data-commit") + 1] if "--data-commit" in sys.argv else None
+VERIFY = "--verify" in sys.argv
+DATA = os.path.join(HERE, "data")          # the tables' directory; a copy of SHA's hp/data with --data-commit
+
+
+def tables_at(commit):
+    """hp/data/delta_dd.csv and delta_dd_lowD.csv as at `commit`, in a temporary hp/data; returns that hp directory"""
+    import subprocess
+    import tempfile
+    hp = os.path.join(tempfile.mkdtemp(prefix="formula_cut_"), "hp")
+    os.makedirs(os.path.join(hp, "data"))
+    for f in ("delta_dd.csv", "delta_dd_lowD.csv"):
+        blob = subprocess.run(["git", "-C", HERE, "show", f"{commit}:hp/data/{f}"], check=True, capture_output=True).stdout
+        open(os.path.join(hp, "data", f), "wb").write(blob)
+    return hp
 
 
 def points():
     """{D: (hi, lo, sigma, run)} for every resolved double-double point"""
     pts = {}
-    for r in csv.DictReader(open(os.path.join(HERE, "data", "delta_dd.csv"))):
+    for r in csv.DictReader(open(os.path.join(DATA, "delta_dd.csv"))):
         if "unresolved" in r["run"]:
             continue
         D = round(float(r["D"]), 6)
@@ -38,7 +57,7 @@ def points():
         else:
             err = float(r["Delta_err"])
         pts[D] = (float(r["Delta_hi"]), float(r["Delta_lo"]), max(err, 1e-15), r["run"])
-    for r in csv.DictReader(l for l in open(os.path.join(HERE, "data", "delta_dd_lowD.csv")) if not l.startswith("#")):
+    for r in csv.DictReader(l for l in open(os.path.join(DATA, "delta_dd_lowD.csv")) if not l.startswith("#")):
         if r["best"] == "1" and r["resolved"] == "1":
             D = round(float(r["D"]), 6)
             if D not in pts:
@@ -50,6 +69,7 @@ def points():
 def dropped():
     """the continuation points D >= 10 that the production cleaning drops (dd_fits_mp.clean)"""
     import dd_fits_mp as F
+    F.HERE = os.path.dirname(DATA)         # load_points reads HERE/data/delta_dd.csv
     pts, _ = F.load_points()
     Ds = sorted(d for d in pts if d >= 10)
     return sorted(set(round(d, 6) for d in Ds) - set(round(d, 6) for d in F.clean(pts, Ds, verbose=False)))
@@ -69,6 +89,9 @@ def cheb(x, k):
 
 
 def main():
+    global DATA
+    if COMMIT:
+        DATA = os.path.join(tables_at(COMMIT), "data")
     pts = points()
     drop = set(dropped())
     Ds = [d for d in sorted(pts) if d not in drop]
@@ -101,7 +124,15 @@ def main():
                points=len(Ds), dropped=sorted(drop), max_abs_residual_over_sigma=float(np.abs(res).max()),
                chi2_per_dof=float(np.sum(res ** 2) / (len(Ds) - K - 1)),
                produced_by="hp/formula_cut_fit.py (python-flint, 256 bits) from hp/data/delta_dd.csv and delta_dd_lowD.csv")
-    json.dump(out, open(os.path.join(HERE, "data", "formula_cut.json"), "w"), indent=1)
+    if COMMIT:
+        out["data_commit"] = COMMIT
+    path = os.path.join(HERE, "data", "formula_cut.json")
+    if VERIFY:
+        same = json.dumps(out, indent=1) == open(path).read()
+        print(f"verify against {path}{' (tables at ' + COMMIT + ')' if COMMIT else ''}: "
+              f"{'PASS, byte for byte' if same else 'FAIL, the refit differs'}")
+        sys.exit(0 if same else 1)
+    json.dump(out, open(path, "w"), indent=1)
     print(f"K {K}, n_s {NS:g}: {len(Ds)} points ({len(drop)} dropped by the cleaning), max |r|/sigma {np.abs(res).max():.2f}, "
           f"chi2/dof {out['chi2_per_dof']:.3f}; Delta_inf {out['Delta_inf']}, Delta(3) {out['Delta_3']}")
 
