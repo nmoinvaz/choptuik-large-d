@@ -2807,6 +2807,83 @@ def lam_fold():
 
 
 @check
+def lam_singularity():
+    """notes/LARGE_D_WALL.md "The gauge rate's own series fold at the same point" (#818): lam_g's and Delta's series at
+    chain_nsr's bases typed by singularity_type.py's estimators, from hp/data/lam_singularity.json (hp/lam_singularity.py
+    real), lam_singularity_planted.json (planted) and lam_singularity_posthoc.json (posthoc)"""
+    import json
+    import numpy as np
+    N = "notes/LARGE_D_WALL.md"
+    js = json.load(open(os.path.join(ROOT, "hp/data/lam_singularity.json")))
+    pl = json.load(open(os.path.join(ROOT, "hp/data/lam_singularity_planted.json")))
+    ph = json.load(open(os.path.join(ROOT, "hp/data/lam_singularity_posthoc.json")))
+    b, hits = js["bases"], js["hits"]
+    H = [(float(k), v) for k, v in b.items() if float(k) in hits]
+    ds = lambda ser, e: [D + v[ser][e][0] for D, v in H]                     # noqa: E731
+    mu = lambda ser, e: [v[ser][e][1] for D, v in H]                         # noqa: E731
+    t_l = [(N, "| λ_g | 259.9028–259.9033 | +0.508 to +0.551 | 259.9035–259.9057 | +0.252 to +0.405 |")]
+    t_d = [(N, "| Δ | 259.9029–259.9033 | +0.504 to +0.541 | 259.9033–259.9037 | +0.466 to +0.489 |")]
+    mid = [v for k, v in b.items() if 259.36 < float(k) < 259.49]
+    low = [(float(k), v) for k, v in b.items() if float(k) < 259.34]
+    dm = sorted(float(k) for k, v in b.items() if v["delta"]["meets"] and v["usable"])
+    a_l = [v["lam"][0] for v in ph.values()]
+    a_d = [v["delta"][0] for v in ph.values()]
+    rel = max(max(abs(v["plant_S"][0] / 5e-4 - 1), abs(v["plant_A10"][0] / 5e-5 - 1)) for v in ph.values())
+    t_a = [(N, "On λ_g it gives +6.9×10⁻⁴ to +7.2×10⁻⁴ at the 31 bases from 259.367")]
+    return [("bases from D 258.78", len(b), 42, 1, [(N, "42 bases from D 258.78")]),
+            ("bases that discriminate", len(pl["discriminating"]), 39, 1, [(N, "39 of the 42 bases do")]),
+            ("bases that meet the criterion", len(hits), 26, 1, [(N, "26 bases meet the criterion")]),
+            ("first meeting base", min(hits), 259.4928, 1e-4, [(N, "every base from 259.4928 to 259.8184")]),
+            ("last meeting base", max(hits), 259.8184, 1e-4, [(N, "every base from 259.4928 to 259.8184")]),
+            ("verdict, a square root", float(js["verdict"] == "a square root at D 259.903"), 1, 1,
+             [(N, "λ_g's series in D has the square-root point of Δ's, at D* = 259.903")]),
+            ("lam_g ratio D* low", min(ds("lam", "ratio")), 259.9028, 1e-4, t_l),
+            ("lam_g ratio D* high", max(ds("lam", "ratio")), 259.9033, 1e-4, t_l),
+            ("lam_g ratio mu low", min(mu("lam", "ratio")), 0.508, 1e-3, t_l),
+            ("lam_g ratio mu high", max(mu("lam", "ratio")), 0.551, 1e-3, t_l),
+            ("lam_g Dlog D* low", min(ds("lam", "dlog")), 259.9035, 1e-4, t_l),
+            ("lam_g Dlog D* high", max(ds("lam", "dlog")), 259.9057, 1e-4, t_l),
+            ("lam_g Dlog mu low", min(mu("lam", "dlog")), 0.252, 1e-3, t_l),
+            ("lam_g Dlog mu high", max(mu("lam", "dlog")), 0.405, 1e-3, t_l),
+            ("Delta ratio D* low", min(ds("delta", "ratio")), 259.9029, 1e-4, t_d),
+            ("Delta ratio D* high", max(ds("delta", "ratio")), 259.9033, 1e-4, t_d),
+            ("Delta ratio mu low", min(mu("delta", "ratio")), 0.504, 1e-3, t_d),
+            ("Delta ratio mu high", max(mu("delta", "ratio")), 0.541, 1e-3, t_d),
+            ("Delta Dlog D* low", min(ds("delta", "dlog")), 259.9033, 1e-4, t_d),
+            ("Delta Dlog D* high", max(ds("delta", "dlog")), 259.9037, 1e-4, t_d),
+            ("Delta Dlog mu low", min(mu("delta", "dlog")), 0.466, 1e-3, t_d),
+            ("Delta Dlog mu high", max(mu("delta", "dlog")), 0.489, 1e-3, t_d),
+            ("Delta meets at", len(dm), 36, 1, [(N, "Δ meets the criterion at 36 of the 39 bases, from 259.1618")]),
+            ("Delta's first", dm[0], 259.1618, 1e-4, [(N, "Δ meets the criterion at 36 of the 39 bases, from 259.1618")]),
+            ("bases from 259.367 to 259.472", len(mid), 5, 1, [(N, "At the five bases from 259.367 to 259.472")]),
+            ("their Dlog mu low", min(v["lam"]["dlog"][1] for v in mid), 0.196, 1e-3, [(N, "+0.196 to +0.234")]),
+            ("their Dlog mu high", max(v["lam"]["dlog"][1] for v in mid), 0.234, 1e-3, [(N, "+0.196 to +0.234")]),
+            ("below 259.33: Dlog D* low", min(D + v["lam"]["dlog"][0] for D, v in low), 259.77, 0.01,
+             [(N, "put their pole at 259.77–259.82 with exponent +1.3 to +1.8")]),
+            ("below 259.33: Dlog D* high", max(D + v["lam"]["dlog"][0] for D, v in low), 259.82, 0.01,
+             [(N, "put their pole at 259.77–259.82 with exponent +1.3 to +1.8")]),
+            ("below 259.33: Dlog mu low", min(v["lam"]["dlog"][1] for D, v in low), 1.3, 0.1,
+             [(N, "with exponent +1.3 to +1.8")]),
+            ("below 259.33: Dlog mu high", max(v["lam"]["dlog"][1] for D, v in low), 1.8, 0.1,
+             [(N, "with exponent +1.3 to +1.8")]),
+            ("the S plants' Dlog mu at the meeting bases", float(np.median([pl["bases"][k]["S"]["dlog"][1]
+                                                                            for k in pl["bases"] if float(k) >= 259.49])),
+             0.49, 0.01, [(N, "(the plants give +0.49 there)")]),
+            ("post hoc: the plants' relative error", rel, 9.4e-5, 1e-6, [(N, "to a relative 9.4×10⁻⁵")]),
+            ("post hoc: lam_g's bases", len(ph), 31, 1, t_a),
+            ("post hoc: lam_g a1 low", min(a_l), 6.9e-4, 1e-5, t_a),
+            ("post hoc: lam_g a1 high", max(a_l), 7.2e-4, 1e-5, t_a),
+            ("post hoc: lam_g's spread over k", max(v["lam"][1] for v in ph.values()), 0.023, 1e-3,
+             [(N, "with spreads over k of at most 2.3%")]),
+            ("post hoc: Delta a1 low", min(a_d), 3.41e-2, 1e-4, [(N, "+3.41×10⁻² to +3.52×10⁻²")]),
+            ("post hoc: Delta a1 high", max(a_d), 3.52e-2, 1e-4, [(N, "+3.41×10⁻² to +3.52×10⁻²")]),
+            ("post hoc: lam_g over Delta", float(np.median([v["lam"][0] / v["delta"][0] for v in ph.values()])), 0.020,
+             1e-3, [(N, "so λ_g's coefficient is 0.020 of Δ's")]),
+            ("post hoc: 10.4's pointer, low", min(a_l), 6.9e-4, 1e-5,
+             [("notes/MODE_COUNT.md", "with coefficient 6.9×10⁻⁴ to 7.2×10⁻⁴ (post hoc)")])]
+
+
+@check
 def table_errs_all():
     """every row of hp/data/delta_all.csv has an err or a reason named in its err_kind (#764). The full-system
     quad-double rows with one start (71.0, 72.8) take the larger two-start spread of the nearest qd rows below and

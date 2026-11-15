@@ -835,6 +835,9 @@ Even there, two things limit what the fit says:
 
 On G every form misses by 6×10⁴σ or more, like the plant whose period lengthens with D (2.1×10⁴σ).
 
+λ_g's own series settle the square root (#818, notes/LARGE_D_WALL.md, "The gauge rate's own series fold at the same
+point"). They put it at 259.903, Δ's fold, with coefficient 6.9×10⁻⁴ to 7.2×10⁻⁴ (post hoc).
+
 ### 10.5 Discrepancies (reported, not fixed)
 
 - **The free fits' c₀ is below 1 at every fit choice.** The 36 kept fits give c₀ from 0.99999981663 to 0.999999999914,

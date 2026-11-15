@@ -710,6 +710,59 @@ to 245.64.
   control is `--mutate=lam_pred`, at the state nearest D 255.
 - The polynomial screen stays where it passes, below 250.46, and wherever no prediction is stored.
 
+### The gauge rate's own series fold at the same point (#818)
+
+**λ_g's series in D has the square-root point of Δ's, at D* = 259.903.** By `singularity_type.py`'s two estimators
+(#782), 26 bases meet the criterion fixed before the run, every base from 259.4928 to 259.8184. Script:
+`hp/lam_singularity.py`. Raw: `I818-mac/` of the raw-data repository.
+
+**How it is computed.**
+- λ_g's series is formed from the horizon block of chain_nsr's jets, 42 bases from D 258.78, 25 orders, eight parts.
+- With a_h = Σ zₙhⁿ, the Cauchy product gives ⟨a_h² − 1⟩ exactly to order 24, and λ_g = 1 − (D₀ − 3 + h)⟨a_h² − 1⟩.
+- Its order 0 equals each base state's λ_g to 2×10⁻¹⁹⁹. The full product equals #807's `lam_jet` to 3×10⁻¹⁹⁹.
+- With n in place of n − 1 in the series, both checks miss by 1.1×10⁻⁴.
+
+**The plants**, fixed before λ_g's series were typed:
+- At each base, the fold at 259.9033 with the near contamination of #782.
+- The fold's size is that of #815's coefficient, 5×10⁻⁴ √(D* − D). The regular part is that of 10.4's reference fit and
+  #815's entire term.
+- The criterion: both estimators put D* within 0.01 of 259.9033, with the exponent in [0.25, 0.75].
+- A base counts when the square-root plant meets the criterion and a pole plant and a plant moved 0.5 further do not.
+  39 of the 42 bases do.
+- `singularity_type.py planted` itself exits 1, because its contaminated plants at s 1.17 fail its 10% bar. Its
+  docstring has recorded this since #782.
+
+**The result** at the 26 bases, with Δ's series from the same jets:
+
+| series | ratio D* | ratio exponent | Dlog D* | Dlog exponent |
+|---|---|---|---|---|
+| λ_g | 259.9028–259.9033 | +0.508 to +0.551 | 259.9035–259.9057 | +0.252 to +0.405 |
+| Δ | 259.9029–259.9033 | +0.504 to +0.541 | 259.9033–259.9037 | +0.466 to +0.489 |
+
+- Δ meets the criterion at 36 of the 39 bases, from 259.1618. That reproduces #782's result on this run's own jets.
+- At the five bases from 259.367 to 259.472, λ_g's ratio estimate meets it, but its Dlog exponent, +0.196 to +0.234,
+  falls just below the band.
+- Below 259.33, λ_g's Dlog approximants put their pole at 259.77–259.82 with exponent +1.3 to +1.8.
+- λ_g's Dlog exponent stays low throughout (the plants give +0.49 there). Its cause is not identified.
+
+**Post hoc: the coefficient** of √(D* − D), from the orders 16 to 24 of each series as c_k = a₁√s (½ choose k)(−s)⁻ᵏ,
+with s = 259.9033 − D₀:
+- It returns the plants' 5×10⁻⁴ and 5×10⁻⁵ to a relative 9.4×10⁻⁵.
+- On λ_g it gives +6.9×10⁻⁴ to +7.2×10⁻⁴ at the 31 bases from 259.367, with spreads over k of at most 2.3%.
+- On Δ it gives +3.41×10⁻² to +3.52×10⁻², so λ_g's coefficient is 0.020 of Δ's.
+- λ_g's value lies inside the range that MODE_COUNT.md 10.4's value fits could not narrow (4.7–8.7×10⁻⁴, #815), and
+  has its sign.
+
+This is numerical evidence, from one discretization and one plan, as for Δ above. From `hp/`, with the raw-data
+repository at RAW (f65c5e43 or later):
+
+```
+python3 lam_singularity.py control RAW                    # the series' construction; --mutate=n exits 1
+python3 lam_singularity.py planted RAW --json=data/lam_singularity_planted.json
+python3 lam_singularity.py real RAW --planted=data/lam_singularity_planted.json --json=data/lam_singularity.json
+python3 lam_singularity.py posthoc RAW --json=data/lam_singularity_posthoc.json
+```
+
 ## Proposed README text
 
 Applied to the README by the coordinator on 2026-11-14 (its checks moved to the README with it). Drafted for the
