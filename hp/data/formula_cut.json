@@ -71,5 +71,6 @@
  ],
  "max_abs_residual_over_sigma": 3.473749906511158,
  "chi2_per_dof": 0.15206169295567853,
- "produced_by": "hp/formula_cut_fit.py (python-flint, 256 bits) from hp/data/delta_dd.csv and delta_dd_lowD.csv"
+ "produced_by": "hp/formula_cut_fit.py (python-flint, 256 bits) from hp/data/delta_dd.csv and delta_dd_lowD.csv",
+ "data_commit": "437b82a5"
 }

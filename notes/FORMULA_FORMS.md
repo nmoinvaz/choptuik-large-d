@@ -108,6 +108,9 @@ different quantity, `plot_delta.full1_of`'s pinned Δ plus its linearised correc
 The 29 coefficients are fitted at 256 bits (python-flint) on all 1214 resolved double-double points from D = 3.04 to
 67.77, less the 27 that the production cleaning drops (`hp/formula_cut_fit.py`, which writes
 [`hp/data/formula_cut.json`](../hp/data/formula_cut.json)). `hp/formula_cut.py` evaluates both forms and checks them.
+The file was fitted to the tables of commit 437b82a5, which it records as `data_commit`. `cd hp && python3
+formula_cut_fit.py --data-commit 437b82a5 --verify` refits from those tables and exits 0 on a byte-for-byte match. On
+main's later tables the refit differs (#765), which is that check's control.
 Every fitted point lies within 3.47 times its error (χ²/dof 0.152). The largest misses by range are:
 
 | D | points | largest miss |
