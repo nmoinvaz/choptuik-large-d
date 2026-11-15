@@ -658,6 +658,16 @@ ended too (2.1×10⁻¹⁷ apart). The next correction, 1.1×10⁻⁵ in Δ at a
     linear return at rel 1.5×10⁻⁸¹ (240.1) and 6.3×10⁻⁹⁰ (252.6), an extrapolation. These are steps of the plain
     pinned Newton (`PinnedO.newton_o`, no projection), not of the chain's ElimO corrector. The checks reproduce #840's
     centre and Δ controls as doubles, and the no-op control fails on max|F| (its dΔ alone was equal as a double).
+  - **From the stored truth, Newton removes a horizon move in two steps, with no contraction at the first (#852; raw
+    `I852-mac/` df307f7c, `step_spread.py --steps`).** At D 240.1244, with m_h and a_h moved by rel 10⁻⁹⁰, 10⁻⁹³
+    and 10⁻⁹⁶, the first step multiplies the move by 9.31×10³ at every rel. At 10⁻⁹⁰ it adds #840's quadratic part,
+    7.5556×10⁹² per rel² against #840's 7.5565×10⁹². The second step brings the distance to the unperturbed path to
+    the octo-double floor, 1.3×10⁻⁹⁹ to 2.7×10⁻⁹⁹ of |z_h|, at every rel. The gain comes from the start. The stored
+    truth is 3.2085×10⁻⁵⁷ of |z_h| from its root. Off a root, Newton's map has the derivative −J⁻¹F''(·, d₀) (derived
+    by hand), so that offset turns the move into a first-order change. #852's prediction (contraction at 10⁻⁹⁶, none
+    at 10⁻⁹⁰) assumed a start at the root, and it fails. The unperturbed path's own steps fall to 2.37×10⁻⁹⁸ and
+    1.16×10⁻⁹⁹ of |z_h|. A re-converged truth is #874, and #852's test from it is #875. The same cross term may move
+    #857's linear return of a Δ move.
 - **The horizon rows' linear range in Δ shrinks slowly with D (#832; raw `I832-mac/` 9a901063).** It is 1.8×10⁻²⁴ at
   D 200 and 2.3×10⁻²⁷ at 253.7, falling 0.119 per unit D and easing to 0.083 at the top. That is far below the weak
   pivot's 1.44, so this range is not what grows with #805's departure. #832's part 1 (the reduced map with Δ weak and
