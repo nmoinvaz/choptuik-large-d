@@ -625,6 +625,13 @@ ended too (2.1×10⁻¹⁷ apart). The next correction, 1.1×10⁻⁵ in Δ at a
     #830. Not affected (four-part states): #468, #504, #523, #555, #644, #674, #709, od-corrector-mac, #713's D200.
   - #827's spread (Δ step under 10⁻⁶⁵ horizon perturbations) was measured around the four-part start, so it describes
     that point's sensitivity. #826's two arms are stopped as superseded.
+  - **The fix (#837; raw `I837-mac/` 0cb961f8, `octo_corrector.truth_system`).** planted, proj_shift and step_spread
+    now read eight parts, hold the held values in eight parts, and keep the stored plan. The truth's pinned residual
+    is then 5.5519×10⁻⁹² at D 252.6135 (#805's 5.6×10⁻⁹²) and 1.7135×10⁻⁶⁶ at 240.1244. The first Newton step's Δ
+    part from it is +5.26×10⁻⁸² and −4.38×10⁻⁵⁸. Each of six controls fails that bar. Holding the values as floats
+    gives the old 3.5827×10⁻²⁰ and 2.2158×10⁻²⁰ exactly, so the floats were the cause. The four-part read gives
+    1.5×10⁻²⁶ and 1.8×10⁻²⁸, and a plan made at the state 2.7×10⁻³⁶ and 6.1×10⁻³⁶. The four-part states of #468–#709
+    and #713's D200 give unchanged results. At the root, the switch-0 projection raises |F| to 2.3×10⁻⁸⁰.
 - Before the correction, the readings were these, kept for the record:
   - **The jump belongs to the start's projection at switch 0, not to the truth (#816, corrected by #823).** #816 ran
     Newton from the truth with `--switch 0`, which projects the start first. From that projected start the first step
