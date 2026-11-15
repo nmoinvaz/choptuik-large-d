@@ -647,8 +647,17 @@ ended too (2.1×10⁻¹⁷ apart). The next correction, 1.1×10⁻⁵ in Δ at a
     "not determined" at all four only because a root's own step is tiny (5×10⁻⁸² to 8×10⁻⁴⁹). So the horizon data's
     sensitivity is not the departure that grows with 1/p_min. The slope of log(spread) is 1.57 per unit D against 1.44,
     but from 245.6 on the move changes the smallest pivot by 0.66 to 226×, outside the Jacobian's linear range, so that
-    slope mixes regimes. Not explained: Newton's step after a pure 1.69×10⁻⁶⁵ move of Δ returns |dΔ| of 6.5×10¹⁵ (240.1)
-    to 6.7×10²³ (252.6) times the move, not once the move (#850).
+    slope mixes regimes. After a pure 1.69×10⁻⁶⁵ move of Δ, Newton's step returns |dΔ| of 6.5×10¹⁵ (240.1) to
+    6.7×10²³ (252.6) times the move, not once the move. #850 reads this as the step's second-order term (next bullet).
+  - **After a pure Δ move, Newton's Δ step is quadratic in the move (#850; raw `I850-mac/` 811e84e2,
+    `step_spread.py --blocks Delta` and `power`).** At D 240.1244 the departure from the root's own step is exactly
+    quadratic over rel 10⁻⁶⁵ to 10⁻⁶⁷ (p 2.0000, 2.0000), with dev / rel² = 1.1027×10⁸¹ and |dev| / move 6.5×10¹⁵ to
+    6.5×10¹³. At 252.6135 it settles toward a quadratic (p 1.6481, 1.9772), with dev / rel² −1.13×10⁸⁹ to −2.67×10⁸⁹, as
+    the move's change of the smallest pivot falls from 4.1×10⁻² to 4.2×10⁻⁴. So the ratio is the second-order term,
+    not a failure of the step's linear part, which these rels do not reach. That term would equal a once-the-move
+    linear return at rel 1.5×10⁻⁸¹ (240.1) and 6.3×10⁻⁹⁰ (252.6), an extrapolation. These are steps of the plain
+    pinned Newton (`PinnedO.newton_o`, no projection), not of the chain's ElimO corrector. The checks reproduce #840's
+    centre and Δ controls as doubles, and the no-op control fails on max|F| (its dΔ alone was equal as a double).
 - **The horizon rows' linear range in Δ shrinks slowly with D (#832; raw `I832-mac/` 9a901063).** It is 1.8×10⁻²⁴ at
   D 200 and 2.3×10⁻²⁷ at 253.7, falling 0.119 per unit D and easing to 0.083 at the top. That is far below the weak
   pivot's 1.44, so this range is not what grows with #805's departure. #832's part 1 (the reduced map with Δ weak and
