@@ -5,7 +5,10 @@ by hp/singularity_type.py's estimators (#782), beside Delta's series from the sa
     cd hp && python3 lam_singularity.py control RAWDIR [--mutate=n]   the series' construction (exits 1 on a fail)
     cd hp && python3 lam_singularity.py planted RAWDIR [--json=OUT]   plants of lam_g's size at each base (exits 1 on a
                                                                       fail)
-    cd hp && python3 lam_singularity.py real RAWDIR [--json=OUT]      lam_g's and Delta's series at each base
+    cd hp && python3 lam_singularity.py real RAWDIR --planted=PLANTED.json [--json=OUT]
+                                                                      lam_g's and Delta's series at each base
+    cd hp && python3 lam_singularity.py posthoc RAWDIR [--json=OUT]   post hoc: the fold's coefficient from the high
+                                                                      orders, plants first
 
 RAWDIR is a clone of the raw-data repository; the jets are I603-win2/chain_nsr/jet_pin3_D*.npz (25 orders, eight
 parts), read by lam_frontier.load_ah_jet for the horizon block a_h and by the same sums for Delta (the last entry).
@@ -232,9 +235,42 @@ def cmd_real(raw):
     return 0
 
 
+def amplitude(c, D0, ks=range(16, 25)):
+    """post hoc: the fold's coefficient a1 of sqrt(D* - D) from c_k = A binom(1/2, k) (-1)^k / s^k at the high orders,
+    A = a1 sqrt(s), s = DSTAR - D0; (median a1 over ks, its relative spread)"""
+    s = DSTAR - mp.mpf(D0)
+    v = [float(c[k - 1] * s ** k / (mp.binomial(mp.mpf(1) / 2, k) * (-1) ** k) / mp.sqrt(s)) for k in ks]
+    med = float(np.median(v))
+    return med, (max(v) - min(v)) / abs(med)
+
+
+def cmd_posthoc(raw):
+    """post hoc (after the registered real run): the fold's coefficient from the high orders, on the plants S (a1
+    5e-4) and S A/10 (5e-5) first, then on lam_g's and Delta's series, at the bases from D 259.36"""
+    mp.mp.dps = 200
+    out = {}
+    print("post hoc: a1, the coefficient of sqrt(D* - D), from c_16..c_24 (median, relative spread over k)")
+    for jp in jets(raw):
+        D0 = float(jp.rsplit("_D", 1)[1][:-4])
+        if D0 < 259.36:
+            continue
+        with mp.workdps(ST.DPS):
+            pS = amplitude(plant_at(D0, 0.5), D0)
+            pA = amplitude(plant_at(D0, 0.5, amp=FOLD_A / 10), D0)
+        Db, c, M = LFR.load_ah_jet(jp)
+        lam = amplitude(lam_series(Db, c, M)[1:], D0)
+        dl = amplitude(delta_series(jp)[1:], D0)
+        out[D0] = dict(plant_S=pS, plant_A10=pA, lam=lam, delta=dl)
+        print("  D0 %.4f  plant S %.3e (%.1e)  plant A/10 %.3e (%.1e) | lam_g %+.3e (%.1e) | Delta %+.3e (%.1e)" % (
+            D0, pS[0], pS[1], pA[0], pA[1], lam[0], lam[1], dl[0], dl[1]))
+    if "json" in args:
+        json.dump(out, open(args["json"], "w"), indent=1)
+    return 0
+
+
 if __name__ == "__main__":
     cmd = sys.argv[1] if len(sys.argv) > 1 else ""
-    fn = dict(control=cmd_control, planted=cmd_planted, real=cmd_real).get(cmd)
+    fn = dict(control=cmd_control, planted=cmd_planted, real=cmd_real, posthoc=cmd_posthoc).get(cmd)
     if fn is None or not pos:
         print(__doc__)
         sys.exit(2)
