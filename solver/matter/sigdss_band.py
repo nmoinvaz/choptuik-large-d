@@ -15,7 +15,8 @@ step -(J^-1 F)_Delta. Check (exit 1): the two g agree to 1e-6 relative. Control:
 by 1e-6, which raises g by 1e6 where the Delta column is not near-null; the coordinator's acceptance reads it.
 
 walk: Levenberg-Marquardt (sigdss_solver.lm, the steps frozen once from STATE, no stall stop), one Jacobian at a time,
-until Delta moves less than --dtol in one Jacobian or --maxjac Jacobians. Per Jacobian: |F|, Delta, its change.
+until Delta moves less than --dtol in one Jacobian (settled), a Jacobian does not lower |F| (stalled), or --maxjac
+Jacobians. Per Jacobian: |F|, Delta, its change.
 """
 import json
 import os
@@ -84,22 +85,26 @@ def main(argv):
               f"\n  W = g |F| = {r['W']:.4e}; Newton's Delta step {r['newton_dDelta']:+.4e} ({time.time() - t0:.0f} s)",
               flush=True)
     else:
-        hist = []
+        hist, stalled = [], False
+        nF0 = float(np.linalg.norm(S.residual(z[None, :])[0]))
         for it in range(int(opt["maxjac"])):
             zn, nF, _ = lm(S, z, tol=0.0, maxjac=1, verbose=False, stall=10 ** 9)
             dD = float(zn[-1] - z[-1])
             hist.append(dict(jac=it, F=float(nF), Delta=float(zn[-1]), dDelta=dD))
             print(f"  jac {it}: |F| {nF:.4e} Delta {zn[-1]:.12f} change {dD:+.3e} ({time.time() - t0:.0f} s)", flush=True)
-            if np.array_equal(zn, z):
-                print("  no decrease: stopped", flush=True)
+            # a Jacobian that does not lower |F| (a step of rounding size, or none) is a stall, not a settled Delta
+            stalled = np.array_equal(zn, z) or not nF < nF0
+            if stalled:
+                print("  no decrease of |F|: stalled", flush=True)
                 break
-            z = zn
+            z, nF0 = zn, float(nF)
             if abs(dD) < float(opt["dtol"]):
                 break
-        rec.update(hist=hist, Delta=float(z[-1]), F=hist[-1]["F"] if hist else None, settled=bool(hist) and
-                   abs(hist[-1]["dDelta"]) < float(opt["dtol"]))
+        rec.update(hist=hist, Delta=float(z[-1]), F=hist[-1]["F"] if hist else None, stalled=bool(stalled),
+                   settled=bool(hist) and not stalled and abs(hist[-1]["dDelta"]) < float(opt["dtol"]))
         print(f"sigdss_band walk {spec}: {len(hist)} Jacobians, Delta {z[-1]:.12f}, |F| {rec['F']:.4e}, "
-              f"{'settled' if rec['settled'] else 'NOT settled'} (dtol {opt['dtol']})", flush=True)
+              f"{'settled' if rec['settled'] else 'stalled' if stalled else 'NOT settled'} (dtol {opt['dtol']})",
+              flush=True)
         if opt["out"]:
             np.save(opt["out"], z)
     if opt["json"]:
