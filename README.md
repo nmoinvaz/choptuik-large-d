@@ -959,14 +959,15 @@ The profile $`F = \sqrt n\, \partial_x p\,(x = 0)`$ converges as D grows:
 
 The last two columns approach the same limit, as Proposition 1 predicts (c = 1 - ε F² (1-x²) + …).
 
-![The solutions of all D as one family, animated: p1 over one echo period swept from D 38 to 232.6, the waves times √(D−2) nearly coinciding, each odd harmonic a nearly fixed factor smaller than the one before, and p over the radius and the echo phase with p1 its slope at the centre](hp/wave_family.svg)
+![The solutions of all D as one family, animated: p1 over one echo period swept from D 38 to 245.64, the comparison frontier, the waves times √(D−2) nearly coinciding, each odd harmonic a nearly fixed factor smaller than the one before, and p over the radius and the echo phase with p1 its slope at the centre](hp/wave_family.svg)
 
-**The family to D 232.6**, where the chain stood when the figure was drawn (`hp/plot_wave_family.py`; the chain now
-reaches 259.74). Times √(D−2), the first harmonic of p1 falls by 10% from D 38
-to 232.6 (3.106 to 2.782), against 65% without the factor, on its way to the extrapolated 2.72. Within one wave each odd
-harmonic is a nearly fixed factor smaller than the one before: from harmonic 1 to 3 by 10.5 at D 38 and 16.3 at D
-232.6. Above D 73 harmonics 5–13 are held on a fit ([ALGORITHM.md](ALGORITHM.md), section 3), so there only harmonics
-1 and 3 are solved values.
+**The family to D 245.64**, the comparison frontier, the last D where the chain agrees with track C's series within
+its err. Past it the weak pivot's term grows, and near D 259.9 the discrete system's fold distorts Δ and the harmonics
+([notes/LARGE_D_WALL.md](notes/LARGE_D_WALL.md); `hp/plot_wave_family.py`; the chain now
+reaches 259.74). Times √(D−2), the first harmonic of p1 falls by 11% from D 38 to 245.64 (3.106 to 2.778), against 66%
+without the factor, on its way to the extrapolated 2.72. Within one wave each odd harmonic is a nearly fixed factor
+smaller than the one before: from harmonic 1 to 3 by 10.5 at D 38 and 16.3 at D 245.64. Above D 73 harmonics 5–13
+are held on a fit ([ALGORITHM.md](ALGORITHM.md), section 3), so there only harmonics 1 and 3 are solved values.
 
 ### Proposition 1: the 1/n expansion never fixes the period
 
