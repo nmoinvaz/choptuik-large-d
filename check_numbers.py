@@ -24,7 +24,7 @@ DOCS = {name: open(os.path.join(ROOT, name), encoding="utf-8").read()
                      "notes/SOLVER_HP.md", "notes/LOW_D.md", "notes/INNER_STOKES.md", "notes/FORMULA_FORMS.md", "notes/LARGE_D_WALL.md",
                      "notes/ECHO_ANALOGUES.md", "notes/REVIEW_GHMG25.md", "notes/MODE_COUNT.md", "matter/SIGMA_DSS.md",
                      "notes/HELD_HARMONICS.md", "notes/CONSISTENCY_AUDIT.md", "PROOF.md", "notes/FIRST_ORDER.md",
-                     "matter/CSS.md", "matter/SIGMA.md")}
+                     "matter/CSS.md", "matter/SIGMA.md", "ALGORITHM.md")}
 
 
 def quoted_in(doc, text):
@@ -2592,6 +2592,28 @@ def sigma_ms():
 
 
 @check
+def figure_front():
+    """the captions of the large-D chain's figures name the D they are drawn at, the chain's front of hp/chain_front.py
+    (its rule FIGURES; "top" is hp/data/delta_all.csv's highest chain_fit D), to the caption's two decimals (#659):
+    hp/echo_harmonics.svg, fit_steps.svg and harmonics_held.svg in ALGORITHM.md, hp/wave_family.svg in the README and
+    ALGORITHM.md's sentence on it. hp/big_picture.svg's caption names only the grip data's range (79.8 to 232.6,
+    hp/data/held_grip.csv), so it has no item here. When the chain moves on, the figures are drawn again
+    (plot_*.py RAWDIR) and these captions follow"""
+    import sys as _sys
+    _sys.path.insert(0, os.path.join(ROOT, "hp"))
+    from chain_front import FIGURES, front
+    D = front(FIGURES)[0]
+    A, R = "ALGORITHM.md", "README.md"
+    caps = [(A, "One echo period of the centre field p1 at D 259.74"),
+            (A, "its extension to D 259.74, and the chain's Taylor step"),
+            (A, "the size of each odd harmonic of p1 at D 259.74 with its role"),
+            (A, "hardly changes from D 38 to 259.74"),
+            (R, "p1 over one echo period swept from D 38 to 259.74"),
+            (R, "**The family to D 259.74**")]
+    return [(f"the figures' D: {doc}, '{txt[:34]}...'", D, 259.74, 0.01, [(doc, txt)]) for doc, txt in caps]
+
+
+@check
 def chain_frontier():
     """the README's reach of the large-D chain is the highest chain_fit D of hp/data/delta_all.csv whose err is not the
     weak pivot's (#653: chain_reach takes the row nearest 245.6, so it would still pass after the chain moved on). Past
@@ -2637,7 +2659,7 @@ def proposed_readme():
     off = [float(new[k][f"{e}_Dstar"]) - float(r[f"{e}_Dstar"]) for k in new for r in kept if r["D0"] == k
            for e in ("ratio", "dlog")]
     t_reach = [(W, "harmonics 5–13 of the centre field on a fit, to D = 259.74, below a fold of its discrete system near D = 259.90"),
-               (W, "held on a fit of the full solutions, to D = 259.74."), (W, "the chain now\nreaches 259.74)."),
+               (W, "held on a fit of the full solutions, to D = 259.74."), (W, "**The family to D 259.74**, the chain's reach"),
                (W, "carries the chain past the wall, to D = 259.74")]
     t_fits = [(W, "comparison ends. To D = 245.64 its error column is the spread over the fit's degree"),
               (W, "Past 245.64 the chain leaves the 1/n series of the next bullet")]
