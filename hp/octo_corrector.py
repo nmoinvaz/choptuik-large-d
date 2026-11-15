@@ -214,6 +214,8 @@ CHORD_MUT = {}          # chord_strong's control: {"noproj": True} keeps the wea
 # newton_od_toy.py's controls of full_drop (#709): 'floor1' accepts a full step on any decrease of |F|.
 # 'noline' omits the own test's line for a trial accepted by the drop (#816).
 DROP_MUT = {"floor1": False, "noline": False}
+# newton_od_toy.py's control of a failed projection's reason (#824): 'nowhy' omits newton_od's line.
+PROJ_MUT = {"nowhy": False}
 
 
 def junk_subspace_o(s, w, delta_max=1e-2, iters=6, seed=0):
@@ -390,6 +392,7 @@ def newton_od(s, z, tol=1e-40, it_max=12, max_halvings=8, verbose=True, mutate=0
         for _ in range(max_halvings + 1):
             zt = o8(od_axpy(lam, *d, *z))
             t1 = time.time()
+            nwhy = len(s.why) if isinstance(s, ElimO) else 0
             if accept == "natural":
                 # The simplified Newton correction at the trial, through the LU factored at z (no newton_o yet).
                 # ElimO projects the trial first, so the correction is (zt' - zt) - J^-1 F(zt'), as its newton_o's.
@@ -415,6 +418,7 @@ def newton_od(s, z, tol=1e-40, it_max=12, max_halvings=8, verbose=True, mutate=0
                           f"(bound {1 - lam / 4:.3f}); {'accepted' if ok else 'refused'}"
                           + (f" by the full step's drop (max|F| at most {full_drop:g} of {nf:.2e})" if by_drop else "")
                           + f", {round(time.time() - t1, 2)} s", flush=True)
+                _why(s, it, lam, nwhy, verbose)
                 if by_drop:
                     rec["by_drop"] = True
                 if abort_theta > 0 and 1 <= it <= abort_it and lam == 1.0 and not ok and theta > abort_theta:     # #784
@@ -469,6 +473,7 @@ def newton_od(s, z, tol=1e-40, it_max=12, max_halvings=8, verbose=True, mutate=0
                 if trace is not None:
                     trace.append(dict(it=it, lam=lam, accepted=bool(ok), F=tr["F"], d=np.array(d[0]),
                                       dt=np.array(dt[0]) if good else None))
+            _why(s, it, lam, nwhy, verbose)
             if ok:
                 break
             lam *= 0.5
@@ -493,6 +498,14 @@ def newton_od(s, z, tol=1e-40, it_max=12, max_halvings=8, verbose=True, mutate=0
                 print(f"  on {it}: lam at or below {lam_stall:g} twice in a row, stopping (stalled)", flush=True)
             return z, hist, False
     return z, hist, False
+
+
+def _why(s, it, lam, n0, verbose):
+    """newton_od at verbose 1: why each projection of this trial failed, from ElimO's record (reseed.why_failed: the
+    point's max|F| and each stage's residuals, #824); not printed when ElimO logs them itself (log=True)"""
+    if verbose and isinstance(s, ElimO) and not s.log and not PROJ_MUT["nowhy"]:
+        for c, w in s.why[n0:]:
+            print(f"      on {it}, lam {lam:g}: projection failed ({c}): {w}", flush=True)
 
 
 def with_horizon(z8, z4, rs):
@@ -525,6 +538,7 @@ class ElimO:
         self.counts = dict(u0=0, u0q=0, ladder=0, failed=0, skipped=0)
         self.first = True
         self.log = log                  # log=True prints one line per failed projection (reseed.why_failed, #743)
+        self.why = []                   # (count, reason) of each failed projection, for newton_od's lines (#824)
 
     def __getattr__(self, name):
         return getattr(self.so, name)
@@ -542,9 +556,10 @@ class ElimO:
             return z
         zp, how = self.rs.project(z4)
         self.counts[how] += 1
-        if how == "failed" and self.log:
-            print(f"      projection failed ({self.counts['failed']}): "
-                  + why_failed(nf, getattr(self.rs, "last_project", None)), flush=True)
+        if how == "failed":
+            self.why.append((self.counts["failed"], why_failed(nf, getattr(self.rs, "last_project", None))))
+            if self.log:
+                print(f"      projection failed ({self.counts['failed']}): {self.why[-1][1]}", flush=True)
         if how == "failed" and first and self.start_F is not None and nf > self.start_F:
             raise StartNotProjected(dict(self.counts))
         return z if how == "failed" else with_horizon(z, zp, self.rs)
