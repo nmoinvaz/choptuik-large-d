@@ -7,6 +7,7 @@ recomputes the series in such ways, compares them, and locates the nearest singu
 (Delta's coefficients, the last entry of each z_k, or one row) by Pade poles and by a two-term recurrence fit.
 
     python3 jet_singularity.py planted [--case T3|T4] [--mutate drop_pole|drop_near]
+    python3 jet_singularity.py planted --case T4fit --jet JET.npz [--mutate drop_pole|drop_near] [--json OUT]
     python3 jet_singularity.py jet RAW STATE OUTPREFIX --variants od,qd,q4,pert:L:S,inject:L:S [--N 24] [--threads 4]
         [--held_fit data/held_fit.json]
     python3 jet_singularity.py compare REF.npz VAR.npz ... [--ks 1-12] [--mutate scale]
@@ -51,6 +52,17 @@ fail as well (reported beside the issue's control). If either track is missed, #
 untested. First run (2026-11-15): FAIL. In o12 all four pairs are recovered to the planted |s| and arg; in o24 B
 dominates every order to 24, the root-test radius is 6.755, and A and the near track lie inside 0.85 of it, where
 stable_poles drops them. Each control fails where o12 passes.
+
+planted --case T4fit --jet JET.npz [--mutate drop_pole|drop_near] (#825, criteria fixed 2026-11-15 before its first
+run): T4's four pairs at the real series' amplitude mix. JET.npz is #712's series at D0 = 255.7661
+(I712-dh370/repro/jet_pin3_D255.7661.npz); Delta's coefficients c_1..c_24 are its last entry. The pairs are held at
+T4's D*, and their complex amplitudes C_j (the term 2 Re C_j s_j^-(k+1)) are fitted by least squares to c_5..c_24, each
+order weighted by 1/|c_k|: eight real parameters. Reported: the fit's largest and rms relative residual over orders
+5-24, and the real series' own stable Pade poles. The planted series is T4's background plus the fitted pairs, with
+relative noise 1e-6 (judged) and 1e-12 (reported). Pass, both needed: the planted series' root-test radius within 10% of
+the real series' (#712: 3.682), and A and the near track each with a stable Pade pole within 3% in |s| and 3 degrees.
+The controls leave out A (drop_pole) or the near track (drop_near) from the fitted mix and must fail. Reported, not
+judged: the same plant with orders 1-4 taken from the real series instead of T4's background.
 
 jet: the series at STATE as anm_run.py --jet_o 1 forms it (its coefficients_o and coefficients_q, the held fit's
 Taylor coefficients in eight parts as --held_o 1 gives them), in each variant of --variants:
@@ -356,6 +368,86 @@ def planted_t4(mutate):
     return 0 if ok_all else 1
 
 
+def planted_t4fit(mutate, jet, out=None):
+    """#825: planted --case T4fit (the module docstring has the criteria)"""
+    Z, m = load_jet(jet)
+    with mp.workdps(DPS):
+        creal, _ = row_series(Z, "delta")
+        D0 = mp.mpf(m["D_str"]) if "D_str" in m else mp.mpf(m["D"])
+        ss = {name: mp.mpc(re_, im_) - D0 for name, (re_, im_) in TRACKS_712.items()}
+        ks = range(5, 25)
+        cols = []
+        for name in TRACKS_712:
+            s = ss[name]
+            cols.append([float(2 * mp.re(s ** (-k - 1)) / abs(creal[k - 1])) for k in ks])
+            cols.append([float(-2 * mp.im(s ** (-k - 1)) / abs(creal[k - 1])) for k in ks])
+        A = np.array(cols).T
+        y = np.array([float(creal[k - 1] / abs(creal[k - 1])) for k in ks])
+        p, *_ = np.linalg.lstsq(A, y, rcond=None)
+        resid = A @ p - y
+        amps = {name: mp.mpc(p[2 * i], p[2 * i + 1]) for i, name in enumerate(TRACKS_712)}
+        pairs = lambda drop: [mp.fsum(2 * mp.re(amps[n] * ss[n] ** (-k - 1)) for n in TRACKS_712 if n not in drop)  # noqa: E731
+                              for k in range(1, 25)]
+        S = mp.mpf(243)
+        bg = [-mp.mpf("1.7e-4") * S * (-1) ** (k + 1) / (k * S ** k) for k in range(1, 25)]
+    rho_real = root_radius(creal)
+    print(f"planted T4fit: T4's pairs fitted to Delta's series at D0 {mp.nstr(D0, 8)} ({os.path.basename(jet)}), "
+          "criteria fixed before the run", flush=True)
+    print(f"  the fit over orders 5-24 (weights 1/|c_k|): largest relative residual {np.abs(resid).max():.2e}, rms "
+          f"{np.sqrt(np.mean(resid ** 2)):.2e}; amplitudes " + ", ".join(
+              f"{n} |C| {float(abs(amps[n])):.3e} arg {float(mp.degrees(mp.arg(amps[n]))):.0f}" for n in TRACKS_712), flush=True)
+    with mp.workdps(DPS):
+        terms = {n: [float(abs(2 * mp.re(amps[n] * ss[n] ** (-k - 1)))) for k in (5, 12, 24)] for n in TRACKS_712}
+    print("  each pair's |term| at orders 5, 12, 24: " + "; ".join(f"{n} " + ", ".join(f"{x:.1e}" for x in v)
+                                                         for n, v in terms.items()), flush=True)
+    sp_real = stable_poles(creal, r_max=12.0)
+    print(f"  the real series: root-test radius {rho_real:.3f}; stable Pade poles " + ", ".join(
+        f"|s| {d['abs']:.3f} arg {d['arg_deg']:.1f} (n {d['n']})" for d in sp_real), flush=True)
+    drop = ("A",) if mutate == "drop_pole" else ("near",) if mutate == "drop_near" else ()
+    ok_all, rec = True, dict(fit_max=float(np.abs(resid).max()), fit_rms=float(np.sqrt(np.mean(resid ** 2))),
+                             amps={n: [float(mp.re(a)), float(mp.im(a))] for n, a in amps.items()}, rho_real=rho_real,
+                             real_poles=[dict(abs=d["abs"], arg=d["arg_deg"], n=d["n"]) for d in sp_real], runs={})
+    for variant in ("T4 background", "real low orders"):
+        for nz in (1e-6, 1e-12):
+            rng = np.random.default_rng(1)
+            with mp.workdps(DPS):
+                pr = pairs(drop)
+                if variant == "T4 background":
+                    c = [bg[k] + pr[k] for k in range(24)]
+                else:
+                    full = pairs(())
+                    c = [(creal[k] - full[k] if k < 4 else 0) + pr[k] for k in range(24)]
+                c = [v * (1 + nz * float(rng.standard_normal())) for v in c]
+            rho = root_radius(c)
+            okr = abs(rho / rho_real - 1) <= 0.10
+            sp = stable_poles(c, r_max=12.0)
+            parts, okp = [], True
+            for name in TRACKS_712:
+                s = complex(ss[name])
+                hit = [d for d in sp if abs(d["abs"] / abs(s) - 1) <= 0.03 and abs(d["arg_deg"] - np.degrees(np.angle(s))) <= 3]
+                if name in ("A", "near"):
+                    okp &= bool(hit)
+                parts.append(f"{name}{'' if name in ('A', 'near') else ' (reported)'} planted |s| {abs(s):.3f} arg "
+                             f"{np.degrees(np.angle(s)):.1f}: " + (f"Pade |s| {hit[0]['abs']:.3f} arg {hit[0]['arg_deg']:.1f} "
+                                                                   f"(n {hit[0]['n']})" if hit else "not found"))
+            ok = okr and okp
+            judged = variant == "T4 background" and nz == 1e-6
+            if judged:
+                ok_all &= ok
+            other = [d for d in sp if not any(abs(d["abs"] / abs(complex(s)) - 1) <= 0.03
+                                              and abs(d["arg_deg"] - np.degrees(np.angle(complex(s)))) <= 3 for s in ss.values())]
+            print(f"  {variant}, noise {nz:.0e} ({'judged' if judged else 'reported'}): {'PASS' if ok else 'FAIL'}: root-test "
+                  f"radius {rho:.3f} against the real {rho_real:.3f} ({rho / rho_real - 1:+.1%}, {'within' if okr else 'outside'} "
+                  f"10%); " + "; ".join(parts) + "; other stable poles: "
+                  + (", ".join(f"|s| {d['abs']:.3f} arg {d['arg_deg']:.1f}" for d in other) or "none"), flush=True)
+            rec["runs"][f"{variant}:{nz:.0e}"] = dict(rho=rho, ok_rho=bool(okr), ok_poles=bool(okp),
+                                                      poles=[dict(abs=d["abs"], arg=d["arg_deg"], n=d["n"]) for d in sp])
+    print(f"{'PASS' if ok_all else 'FAIL'}: planted T4fit" + (f" (--mutate {mutate})" if mutate else ""), flush=True)
+    if out:
+        json.dump(dict(rec, ok=bool(ok_all), mutate=mutate), open(out, "w"), indent=1)
+    return 0 if ok_all else 1
+
+
 def planted_t3(mutate):
     """#711: planted --case T3 (the module docstring has the criteria)"""
     drop = ("A",) if mutate == "drop_pole" else ()
@@ -445,8 +537,11 @@ def planted(argv):
     mp.mp.dps = DPS
     if "--case" in argv:
         case = argv[argv.index("--case") + 1]
-        if case not in ("T3", "T4"):
-            raise SystemExit(f"planted --case: T3 or T4, not {case}")
+        if case not in ("T3", "T4", "T4fit"):
+            raise SystemExit(f"planted --case: T3, T4 or T4fit, not {case}")
+        if case == "T4fit":
+            return planted_t4fit(mutate, argv[argv.index("--jet") + 1],
+                                 argv[argv.index("--json") + 1] if "--json" in argv else None)
         return planted_t3(mutate) if case == "T3" else planted_t4(mutate)
     ok_all = True
     print("planted controls of the estimator (criteria fixed before any real series was read)", flush=True)
