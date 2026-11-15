@@ -12,6 +12,8 @@
     cd hp && python3 reduced_cubic.py curve RAWDIR DZ0 BASE [--ref677=RAY.json] [--ref694=ROWS.json] [--threads=2]
         [--json=OUT] [--curve_t=LIST] [--mutate=w0|chord|dz0]
     cd hp && python3 reduced_cubic.py curve planted [--seed=5] [--json=OUT] [--mutate=w0|chord]
+    (curve takes --elim=1, the horizon data eliminated (#828), with --reseed_o=3 and --elim_fast=1 on a real start,
+        and --mutate=noelim|hrows on the plant)
     cd hp && python3 reduced_cubic.py curvesum OUT.json [OUT.json ...]   (the curve runs' summary)
 
 `curve` (#698) evaluates g along c = +-t e, e = a / |a|, at t = 1e-6, 1e-5, 1e-4, 1e-3, 3.16e-3 and 1e-2 (and 1e-24
@@ -31,6 +33,16 @@ uses (#823); its step must be that system's Newton step at z0 (-J^-1 F(z0) withi
 --mutate=dz0 (the step scaled by 1 + 1e-6) must fail that. --curve_t=LIST adds t to the + ray of a real start, each
 a number or a multiple of |a| ("a", "2a"). Each converged point stores g, its signs against g(0) and dlast, the move's
 Delta against z0.
+With --elim=1 (#828) curve runs on the system with the horizon data eliminated (Elim): its unknowns are all but m_h
+and a_h, its rows all but the horizon block's m and a rows, and its residual is the base's on the other rows after the
+horizon data are solved from the m and a rows at fixed other unknowns (the projection). Its Jacobian is the Schur
+complement, so its solves are the full LU's with zeros on the eliminated rows (transposed: on the eliminated
+unknowns). The start is P(z0). On a real start z0 is projected by ElimO's projection with --reseed_o octo-double
+corrections, and the other points by a chord on the full system's own m and a rows with their block at P(z0)
+(real_horizon). Its plant (HorizonPlanted) is CurvePlanted with a planted horizon block whose elimination returns
+CurvePlanted exactly; it must pass as curve planted does, and --mutate=w0, --mutate=noelim (the plant without the
+elimination, whose strong solve cannot follow the horizon block) and --mutate=hrows (the rows one past the horizon
+rows eliminated) must fail.
 
 `rows` (#694) splits the weak left vectors U over the residual's rows, expanded on harmonics within each field of each
 block (row_harm: block.field.harmonic, e.g. horizon.p.k5c, and the phase row), and measures each row's second
@@ -241,6 +253,7 @@ class Real:
             dre = [-x for x in self.solve(self.F())]
             self.dz0_re = nrm([x - y for x, y in zip(dre, self.dz0)]) / nrm(self.dz0)
             self.dz0_ok = bool(self.dz0_re < DZ0_BAR)
+        self.mb, self.D, self.K, self.threads = mb, D, K, threads       # the layout, for Elim's projection (#828)
         self.label = f"{dzf}: D {mp.nstr(D, 12)} (a {md.get('a')}), from {base}"
         log(f"{self.label}; L {L}; held offset on its rows {mp.nstr(on, 3)}, elsewhere {mp.nstr(off, 3)} (bound 1e-6 "
             f"of the first): {'pass' if self.offset_ok else 'FAIL'}; the {'stored' if own else 'recovered'} system's "
@@ -274,6 +287,201 @@ class Real:
     def row_norms(self, RH):
         """|J_r|, the 2-norm of each row of J in RH's rows (f64, from the Jacobian's leading part)"""
         return [float(x) for x in np.linalg.norm(RH.matrix64() @ self.J0, axis=1)]
+
+
+class ElimFailed(Exception):
+    """a projection of Elim's that did not converge (#828)"""
+
+
+class Elim:
+    """a system with its horizon data eliminated (#828). The unknowns are the base system's but hcols (m_h, a_h), the
+    rows its rows but hrows (the horizon block's m and a rows), and F(p) is the base's residual on those rows at
+    z0 + p with the horizon data projected, solved from hrows at fixed other unknowns (project). Its Jacobian is the
+    Schur complement J_rr - J_rh J_hh^-1 J_hr of the base's at the projected point. A solve with it is the base's
+    solve with zeros on hrows, its unknowns but hcols kept (J^-1 [r; 0]); a transposed solve is the base's with zeros
+    on hcols, its rows but hrows kept. The start is P(z0), z0 projected, and the base's LU is refactored there;
+    refactor(None) returns to it. mutate 'hrows' (the control of the index sets) eliminates the rows one past hrows."""
+
+    def __init__(self, base, hcols, hrows, project, log, mutate=""):
+        t0 = time.time()
+        self.base, self.project, self.log = base, project, log
+        self.hc = sorted(hcols)
+        self.hr = sorted(r + 1 for r in hrows) if mutate == "hrows" else sorted(hrows)
+        hcs, hrs = set(self.hc), set(self.hr)
+        self.Lb = base.L
+        self.keep = [i for i in range(base.L) if i not in hcs]
+        self.krows = [r for r in range(base.L) if r not in hrs]
+        self.L = len(self.keep)
+        self.cache, self.Fcache, self.nproj, self.rung, self.hrow_max, self.tproj = {}, {}, 0, 0.0, mp.mpf(0), 0.0
+        Fz = base.F()
+        self.p0 = self.full(None)
+        shift = [self.p0[i] for i in self.hc]
+        Fp = self.Fcache.get(None) or base.F(self.p0)
+        pv = self.refactor(None)
+        self.lu_at = None
+        F0 = [Fp[r] for r in self.krows]
+        self.F0max = float(amax(F0))
+        self.dz0 = [-x for x in self.solve(F0)]
+        self.offset_ok, self.dz0_ok = getattr(base, "offset_ok", True), getattr(base, "dz0_ok", True)
+        self.selfcheck = getattr(base, "selfcheck", mp.mpf(0))
+        hm = lambda F, rows: float(amax([F[r] for r in rows]))           # noqa: E731
+        self.label = base.label + f", horizon data eliminated ({len(self.hc)} unknowns, {len(self.hr)} rows)"
+        self.meta = dict(base.meta, elim=dict(
+            hcols=[self.hc[0], self.hc[-1]], hrows=[self.hr[0], self.hr[-1]], mutate=mutate, L=self.L,
+            shift=float(amax(shift)), hrows_z0=hm(Fz, self.hr), hrows_P=hm(Fp, self.hr), rest_z0=hm(Fz, self.krows),
+            rest_P=hm(Fp, self.krows), pivots=list(pv) if pv[0] is not None else None, rung=self.rung,
+            dz0_last=float(self.dz0[-1])))
+        log(f"  elimination: {len(self.hc)} unknowns (hcols {self.hc[0]}..{self.hc[-1]}) and {len(self.hr)} rows "
+            f"(hrows {self.hr[0]}..{self.hr[-1]}), L {self.Lb} -> {self.L}; P(z0) moves the horizon data by "
+            f"{mp.nstr(amax(shift), 3)}; max|F| on hrows {mp.nstr(amax([Fz[r] for r in self.hr]), 3)} at z0, "
+            f"{mp.nstr(amax([Fp[r] for r in self.hr]), 3)} at P(z0) (the projection's last rung residual "
+            f"{self.rung:.2e}); on the other rows {mp.nstr(amax([Fz[r] for r in self.krows]), 4)} and "
+            f"{mp.nstr(amax(F0), 4)}" + ("" if pv[0] is None else f"; LU pivots at P(z0) {pv[0]:.2e}..{pv[1]:.2e}")
+            + f"; the reduced Newton step's last unknown {mp.nstr(self.dz0[-1], 7)} ({time.time() - t0:.0f} s)")
+
+    def full(self, p):
+        """the base's offset at the reduced offset p (None: 0) with the horizon data projected; the last four cached"""
+        key = None if p is None else tuple(p)
+        if key in self.cache:
+            return self.cache[key]
+        pf = [mp.mpf(0)] * self.Lb
+        if p is not None:
+            for j, i in enumerate(self.keep):
+                pf[i] = p[j]
+        t1 = time.time()
+        pr = self.project(pf)
+        pf, rung = pr[0], pr[1]
+        self.Fcache[key] = pr[2] if len(pr) > 2 else None        # the base's residual there, if the projection has it
+        self.tproj += time.time() - t1
+        self.nproj += 1
+        self.rung = max(self.rung, rung)
+        if len(self.cache) >= 4:
+            old = next(iter(self.cache))
+            self.cache.pop(old)
+            self.Fcache.pop(old, None)
+        self.cache[key] = pf
+        return pf
+
+    def F(self, p=None):
+        pf = self.full(p)
+        Fb = self.Fcache.get(None if p is None else tuple(p))
+        if Fb is None:
+            Fb = self.base.F(pf)
+        self.hrow_max = max(self.hrow_max, amax([Fb[r] for r in self.hr]))
+        return [Fb[r] for r in self.krows]
+
+    def solve(self, r, transpose=False):
+        rows, cols = (self.keep, self.krows) if transpose else (self.krows, self.keep)
+        b = [mp.mpf(0)] * self.Lb
+        for j, i in enumerate(rows):
+            b[i] = r[j]
+        x = self.base.solve(b, transpose)
+        return [x[i] for i in cols]
+
+    def solve64(self, b, transpose=False):
+        rows, cols = (self.keep, self.krows) if transpose else (self.krows, self.keep)
+        bb = np.zeros(self.Lb)
+        bb[rows] = b
+        return np.asarray(self.base.solve64(bb, transpose))[cols]
+
+    def refactor(self, p=None):
+        pf = self.full(p)
+        st = self.base.refactor(pf if any(x != 0 for x in pf) else None)
+        self.lu_at = None if p is None else list(p)
+        return st
+
+    def dep_true(self, X, Um):
+        return self.base.dep_true(X, Um)
+
+    def stats(self):
+        return dict(projections=self.nproj, seconds=round(self.tproj, 1), rung=self.rung, hrows=float(self.hrow_max))
+
+
+CHORD_MAX = 30          # the fast projection's chord steps at most (#828)
+
+
+def real_horizon(sysm, od=3, fast=True, log=print):
+    """Elim's index sets and projection on a real start (#828): hcols m_h and a_h; hrows the horizon block's m and a
+    rows, 4 M K + M .. 4 M K + 3 M (its p rows are 4 M K .. 4 M K + M, Real's held rows). z0 is projected by ElimO's
+    projection, reseed's Reseeder.project at the point's quad-double rounding (the u0 rung from the point's own data
+    and its quad-double polish, the ladder when that fails), then od octo-double corrections of the rung (refine_o,
+    anm_run.py --reseed_o). Without fast every point is projected so (minutes each). With fast, the other points are
+    projected by a chord on the full system's own hrows: the block J[hrows, hcols] at P(z0) from jacobian_o, factored
+    once in octo-double (ODLu), and h <- h - J_hh^-1 F[hrows] from the last projected point's h, until max|F[hrows]|
+    no longer halves (the floor) or after CHORD_MAX steps; the iterate with the smallest is kept, and its residual is
+    returned with it. Returns (hcols, hrows, project): project(p) gives (p with its hcols entries replaced, the last
+    max|R|, the residual there or None), and raises ElimFailed when the projection fails."""
+    from multidouble import ODLu, od_axpy
+    from octo_corrector import o8, q4_of_o, with_horizon
+    from reseed import Reseeder, offsets
+    M, K = sysm.M, sysm.K
+    o = offsets(M, K)
+    hc = list(range(o["mh"], o["mh"] + 2 * M))
+    hr = list(range(4 * M * K + M, 4 * M * K + 3 * M))
+    hca, hra = np.array(hc), np.array(hr)
+    rs = Reseeder(sysm.mb, sysm.D, threads=sysm.threads, qd=True, od=od)
+    h0 = sysm.mpv(sysm.z0, hc)
+    st = dict(lu=None, h=None, first=True)
+
+    def offsets_of(z, p):
+        hz = sysm.mpv(z, hc)
+        out = list(p)
+        for j, i in enumerate(hc):
+            out[i] = hz[j] - h0[j]
+        return out
+
+    def chord(z):
+        best, hist = None, []
+        for _ in range(CHORD_MAX):
+            F = o8(sysm.so.residual_o(z))
+            R = [np.ascontiguousarray(np.asarray(F[q])[hra]) for q in range(8)]
+            nR = float(np.max(np.abs(R[0])))
+            hist.append(nR)
+            if not np.isfinite(nR):
+                break
+            if best is None or nR < best[0]:
+                best = (nR, z, F)
+            if nR == 0.0 or (len(hist) >= 2 and nR > 0.5 * hist[-2]):
+                break
+            x = st["lu"].solve(*[-r for r in R])
+            hz = od_axpy(1.0, *x, *[np.ascontiguousarray(np.asarray(z[q])[hca]) for q in range(8)])
+            z = [np.array(z[q], dtype=float) for q in range(8)]
+            for q in range(8):
+                z[q][hca] = hz[q]
+            z = o8(z)
+        if best is None:
+            raise ElimFailed(f"the chord's residual is not finite ({hist})")
+        return best, hist
+
+    def project(p):
+        z = sysm.o8(sysm.od_axpy(1.0, *sysm.parts8(p), *sysm.z0))
+        if st["first"] or not fast:
+            t1 = time.time()
+            zp4, how = rs.project(q4_of_o(z))
+            if how == "failed":
+                raise ElimFailed(f"projection failed at |p| {mp.nstr(nrm(p), 3)}")
+            zp = with_horizon(z, zp4, rs)
+            rung = float(rs.last_o[-1]) if getattr(rs, "last_o", None) else float("nan")
+            if not fast:
+                return offsets_of(zp, p), rung, None
+            t2 = time.time()
+            J = sysm.s.jacobian_o(list(zp))
+            st["lu"] = ODLu(*[np.ascontiguousarray(np.asarray(J[q])[np.ix_(hra, hca)]) for q in range(8)])
+            st["first"] = False
+            (nR, zb, Fb), hist = chord(zp)
+            log(f"  P(z0): Reseeder.project '{how}' and {od} octo-double corrections, its rung residual {rung:.2e} "
+                f"({t2 - t1:.0f} s); J[hrows, hcols] there by jacobian_o and ODLu ({time.time() - t2:.0f} s); the "
+                f"chord on hrows from it: max|F[hrows]| " + ", ".join(f"{x:.2e}" for x in hist))
+        else:
+            if st["h"] is not None:
+                z = [np.array(z[q], dtype=float) for q in range(8)]
+                for q in range(8):
+                    z[q][hca] = st["h"][q]
+                z = o8(z)
+            (nR, zb, Fb), hist = chord(z)
+        st["h"] = [np.array(np.asarray(zb[q])[hca]) for q in range(8)]
+        return offsets_of(zb, p), nR, sysm.mpv(Fb, range(sysm.L))
+    return hc, hr, project
 
 
 def sym_cubic(rng, k, scale, rank=6):
@@ -651,6 +859,153 @@ class CurvePlanted(RayPlanted):
             return super().solve(r, transpose)
         x = mp.lu_solve(self.Jz.T if transpose else self.Jz, mp.matrix(r))
         return [x[i] for i in range(self.L)]
+
+
+class HorizonPlanted:
+    """Elim's plant (#828): CurvePlanted (the main system, n = k + m unknowns q and rows) with two horizon unknowns h
+    inserted before its last unknown and two horizon rows inserted at row n / 2. With d = h - h*(q) and
+    h*(q) = A q + 1/2 H(q, q) the horizon data of the regular family, the horizon rows are R = G (d + 1/2 nu d^2), and
+    the main rows are F_main(q) + E (phi(h) - phi(h*(q))) = F_main(q) + E G d (1 + 1/2 mu G (h + h*)), with
+    phi(h) = G h + 1/2 mu G^2 h^2 per datum and G = diag(1, 1e37) (an m_h-like datum and an a_h-like one with the mass
+    mode's gain). R = 0 has the root d = 0, where the main rows are CurvePlanted's, so the system with h eliminated is
+    CurvePlanted, its Jacobian (the Schur complement) is J_main, and its reduced map is CurvePlanted's. With h free, a
+    strong move w leaves d = -1/2 H(w, w) after the chord's linear step, and the main rows keep E mu G^2 d h, about
+    1e-23 at |w| 1e-32, above |B a| (1e-56), which the strong solve through the full J amplifies past |w|
+    (--mutate=noelim must fail). project(p) solves R = 0 for h by Newton from p's h at fixed q. refactor(p) forms the
+    full J by central differences at 400 digits, as CurvePlanted's, and refactor(None) returns to the analytic solves
+    at z0: J^-1 [r; r_h] = [x; A x + G^-1 r_h] with x = J_main^-1 (r - E r_h), and J^-T [s; s_h] = [y; G^-1 s_h - E^T y]
+    with y = J_main^-T (s + A^T s_h)."""
+
+    GH = (mp.mpf(1), mp.mpf("1e37"))
+    NU, MU = mp.mpf(10), mp.mpf(1)
+
+    def __init__(self, seed, log, k=4, m=8):
+        self.main = CurvePlanted(seed, log, k, m)
+        n = self.main.L
+        self.n, self.k, self.L = n, k, n + 2
+        self.hcols, self.hrows = [n - 1, n], [n // 2, n // 2 + 1]
+        self.qcols = [i for i in range(self.L) if i not in self.hcols]
+        self.qrows = [r for r in range(self.L) if r not in self.hrows]
+        rng = np.random.default_rng(seed + 828)
+        f = lambda x: mp.mpf(float(x))                                  # noqa: E731
+        self.A = [[f(x) for x in rng.standard_normal(n)] for _ in range(2)]
+        self.H = []
+        for _ in range(2):
+            hr = rng.standard_normal((n, n))
+            self.H.append([[f((hr[i, j] + hr[j, i]) / 2) for j in range(n)] for i in range(n)])
+        self.E = [[f(x) for x in rng.standard_normal(2)] for _ in range(n)]
+        self.Jz, self.lu_at = None, None
+        F0 = self.F()
+        self.F0max = float(amax(F0))
+        self.dz0 = [-x for x in self.solve(F0)]
+        # the plant's own check: on the projected manifold the main rows are CurvePlanted's and R vanishes
+        self.selfcheck = self.main.selfcheck
+        man = mp.mpf(0)
+        for scale in ("1e-5", "1e-3"):
+            q = [f(x) * mp.mpf(scale) for x in rng.standard_normal(n)]
+            pf, _ = self.project(self.embed(q, [mp.mpf(0)] * 2))
+            Fv, Fm = self.F(pf), self.main.F(q)
+            man = max(man, nrm([Fv[r] - x for r, x in zip(self.qrows, Fm)]) / nrm(Fm),
+                      amax([Fv[r] for r in self.hrows]) / nrm(Fm))
+        self.manifold = man
+        self.selfcheck = max(self.selfcheck, man)
+        self.label = f"horizon plant (seed {seed}): n {self.L} = {n} + 2, k {k}"
+        self.meta = dict(self.main.meta, n=self.L, manifold=float(man), selfcheck=float(self.selfcheck))
+        log(f"{self.label}; start max|F| {self.F0max:.3e}; on the projected manifold the main rows against "
+            f"CurvePlanted's and the horizon rows {mp.nstr(man, 3)} (bound 1e-20): {'pass' if man < 1e-20 else 'FAIL'}")
+
+    def embed(self, q, h):
+        p = [mp.mpf(0)] * self.L
+        for j, i in enumerate(self.qcols):
+            p[i] = q[j]
+        for j, i in enumerate(self.hcols):
+            p[i] = h[j]
+        return p
+
+    def hstar(self, q):
+        return [dot(a, q) + mp.fsum(Hm[i][j] * q[i] * q[j] for i in range(self.n) for j in range(self.n)) / 2
+                for a, Hm in zip(self.A, self.H)]
+
+    def F(self, p=None):
+        n = self.n
+        p = [mp.mpf(0)] * self.L if p is None else p
+        q, h = [p[i] for i in self.qcols], [p[i] for i in self.hcols]
+        hs = self.hstar(q)
+        d = [x - y for x, y in zip(h, hs)]
+        R = [g * (x + self.NU * x * x / 2) for g, x in zip(self.GH, d)]
+        ph = [g * x * (1 + self.MU * g * (y + z) / 2) for g, x, y, z in zip(self.GH, d, h, hs)]
+        Fm = self.main.F(q)
+        Fm = [Fm[r] + mp.fsum(self.E[r][c] * ph[c] for c in range(2)) for r in range(n)]
+        out = [mp.mpf(0)] * self.L
+        for j, r in enumerate(self.qrows):
+            out[r] = Fm[j]
+        for j, r in enumerate(self.hrows):
+            out[r] = R[j]
+        return out
+
+    def project(self, p):
+        """p with h solved from R = 0 at its q (Newton from its h, per datum), and the largest |R| left"""
+        q, h = [p[i] for i in self.qcols], [p[i] for i in self.hcols]
+        hs = self.hstar(q)
+        for c in range(2):
+            for _ in range(60):
+                d = h[c] - hs[c]
+                st = (d + self.NU * d * d / 2) / (1 + self.NU * d)
+                h[c] -= st
+                if abs(st) <= mp.mpf(10) ** (-mp.mp.dps + 5) * max(abs(h[c]), 1):
+                    break
+        R = [g * ((x - y) + self.NU * (x - y) ** 2 / 2) for g, x, y in zip(self.GH, h, hs)]
+        return self.embed(q, h), float(amax(R))
+
+    def refactor(self, p=None):
+        self.lu_at = None if p is None else list(p)
+        if p is None:
+            self.Jz = None
+            return None, None
+        n = self.L
+        with mp.workdps(400):
+            hh = mp.mpf(10) ** -160
+            J = mp.matrix(n, n)
+            for i in range(n):
+                pp, pm = list(p), list(p)
+                pp[i] += hh
+                pm[i] -= hh
+                for r, (a_, b_) in enumerate(zip(self.F(pp), self.F(pm))):
+                    J[r, i] = (a_ - b_) / (2 * hh)
+        self.Jz = J
+        return None, None
+
+    def solve(self, r, transpose=False):
+        if self.Jz is not None:     # at 400 digits: the full J's entries reach 1e70 (G^2 mu h), its condition 1e97
+            with mp.workdps(400):
+                x = mp.lu_solve(self.Jz.T if transpose else self.Jz, mp.matrix(r))
+            return [+x[i] for i in range(self.L)]
+        n = self.n
+        if not transpose:
+            rq, rh = [r[i] for i in self.qrows], [r[i] for i in self.hrows]
+            x = self.main.solve([rq[j] - mp.fsum(self.E[j][c] * rh[c] for c in range(2)) for j in range(n)])
+            xh = [dot(a, x) + y / g for a, y, g in zip(self.A, rh, self.GH)]
+            return self.embed(x, xh)
+        sq, sh = [r[i] for i in self.qcols], [r[i] for i in self.hcols]
+        y = self.main.solve([sq[j] + mp.fsum(self.A[c][j] * sh[c] for c in range(2)) for j in range(n)], True)
+        yh = [x / g - mp.fsum(self.E[j][c] * y[j] for j in range(n)) for c, (x, g) in enumerate(zip(sh, self.GH))]
+        out = [mp.mpf(0)] * self.L
+        for j, i in enumerate(self.qrows):
+            out[i] = y[j]
+        for j, i in enumerate(self.hrows):
+            out[i] = yh[j]
+        return out
+
+    def solve64(self, b, transpose=False):
+        return np.array([float(x) for x in self.solve([mp.mpf(float(v)) for v in b], transpose)])
+
+    def dep_true(self, X, Um):
+        """CurvePlanted's departure; X and Um in the main system's coordinates (Elim's), or full ones (noelim, the
+        control), which are cut to them"""
+        if len(X[0]) == self.L:
+            X = [[x[i] for i in self.qcols] for x in X]
+            Um = [[u[r] for r in self.qrows] for u in Um]
+        return self.main.dep_true(X, Um)
 
 
 # ------------------------------------------------------------------ tensors at z0
@@ -1781,20 +2136,24 @@ def curve_scan(sysm, bas, opts, mutate, log, rec, dump, truth=None, kappa=None, 
     g00, w00, _, h00, ok00, e00 = ray_solve(sysm, X, Um, zero, w0, wref)
     g0b, _, _, h0b, ok0b, e0b = ray_solve(sysm, X, Um, zero, [x * (1 + mp.mpf("1e-5")) for x in w0], wref)
     floor0 = max(nrm([x - y for x, y in zip(g00, g0b)]), e00 or 0, e0b or 0)
+    F0 = sysm.F()
+    gF0 = proj_U(Um, F0)
+    sF0 = strong_part(Um, F0)
+    g0F = nrm([x - y for x, y in zip(g00, gF0)]) / nBa       # g(0) against U^T F(z0), of |B a| (#828)
     log(f"  curve: |e| along a / |a|, |B e| {mp.nstr(nBe, 5)}; g(0) by the chord through z0's LU, from w0 and from w0 "
-        f"(1 + 1e-5): {'converged' if ok00 and ok0b else 'NOT converged'}, floor0 {mp.nstr(floor0, 3)} "
-        f"({mp.nstr(floor0 / nBa, 3)} of |B a|); prediction kappa t |B c| with kappa "
-        + ("none" if kappa is None else mp.nstr(kappa, 5)) + f" ({time.time() - t0:.0f} s)")
+        f"(1 + 1e-5): {'converged' if ok00 and ok0b else 'NOT converged'} (|dw| per step "
+        + ", ".join(f"{x[1]:.1e}" for x in h00) + f"; bound 1e-40 |w0| = {mp.nstr(mp.mpf('1e-40') * wref, 3)}), floor0 "
+        f"{mp.nstr(floor0, 3)} ({mp.nstr(floor0 / nBa, 3)} of |B a|); |g(0) - U^T F(z0)| {mp.nstr(g0F, 4)} of |B a|; "
+        "prediction kappa t |B c| with kappa " + ("none" if kappa is None else mp.nstr(kappa, 5))
+        + f" ({time.time() - t0:.0f} s)")
     out = dict(nBe=float(nBe), floor0=float(floor0), floor0_Ba=float(floor0 / nBa), g0_ok=bool(ok00 and ok0b),
                kappa=None if kappa is None else float(kappa), points=[], flat=[], g0=[float(x) for x in g00],
-               dlast0=float(w00[-1]), na=float(na), t_plus=[float(t) for t in t_plus])
+               dlast0=float(w00[-1]), na=float(na), t_plus=[float(t) for t in t_plus], g0_UF0=float(g0F),
+               g0_dw=[float(x[1]) for x in h00], Ba=float(nBa))
     rec["curve"] = out
     dump()
     if not (ok00 and ok0b):
         return False, rec
-    F0 = sysm.F()
-    gF0 = proj_U(Um, F0)
-    sF0 = strong_part(Um, F0)
 
     def dep_of(gv, c):
         return [gv[m] - g00[m] - mp.fsum(B[m][j] * c[j] for j in range(k)) for m in range(k)]
@@ -2623,14 +2982,25 @@ KAPPA_677 = {"dz0_pin3_D242.5459_a0.031250.npz": (mp.mpf("3.750e-29"), mp.mpf("8
 
 def main_curve(args, opts, mutate, log, rec, dump):
     """curve RAWDIR DZ0 BASE [--ref677=JSON] [--ref694=JSON] or curve planted: the basis, then curve_scan"""
+    elim = opts.get("elim", "0") == "1"
+    if mutate in ("noelim", "hrows") and not elim:
+        sys.exit(f"--mutate={mutate}: with --elim=1 only")
     if args[1:] == ["planted"]:
         if opts.get("curve_t") or mutate == "dz0":
             sys.exit("--curve_t and --mutate=dz0: real starts only")
-        sysm = CurvePlanted(int(opts.get("seed", 5)), log, mutate=mutate)
+        if elim:                # #828: the horizon plant, its horizon data eliminated (noelim: not, the control)
+            hpl = HorizonPlanted(int(opts.get("seed", 5)), log)
+            sysm = hpl if mutate == "noelim" else Elim(hpl, hpl.hcols, hpl.hrows, hpl.project, log, mutate)
+        else:
+            sysm = CurvePlanted(int(opts.get("seed", 5)), log, mutate=mutate)
         rec.update(sysm.meta)
         bas = basis(sysm, opts, log, rec, dump)
         ok, rec = curve_scan(sysm, bas, opts, mutate, log, rec, dump, truth=sysm.dep_true(bas["X"], bas["Um"]))
+        if isinstance(sysm, Elim):
+            rec["elim_stats"] = sysm.stats()
         return ok and bool(sysm.selfcheck < 1e-20)
+    if mutate == "noelim":
+        sys.exit("--mutate=noelim: the plant only (on a real start, the run without --elim is the control)")
     sysm = Real(*args[1:4], int(opts.get("threads", 2)), log, fast=True, mutate=mutate)
     rec.update(sysm.meta)
     if not sysm.offset_ok:
@@ -2639,6 +3009,10 @@ def main_curve(args, opts, mutate, log, rec, dump):
     if not sysm.dz0_ok:
         log("check: FAIL (the stored first step is not the stored system's Newton step)")
         return False
+    if elim:                    # #828: the horizon data eliminated, projected as ElimO with --reseed_o
+        hc, hr, pr = real_horizon(sysm, int(opts.get("reseed_o", 3)), fast=opts.get("elim_fast", "1") == "1", log=log)
+        sysm = Elim(sysm, hc, hr, pr, log, mutate)
+        rec.update(sysm.meta)
     bas = basis(sysm, opts, log, rec, dump)
     # --curve_t=LIST: more t on the + ray, each a number or a multiple of |a| ("a", "2a"), #823
     t_plus = [bas["na"] * (mp.mpf(x[:-1]) if x[:-1] else 1) if x.endswith("a") else mp.mpf(x)
@@ -2654,6 +3028,11 @@ def main_curve(args, opts, mutate, log, rec, dump):
         wee = mp.mpf(r9["rows"]["along"]["wee"])
     ok, rec = curve_scan(sysm, bas, opts, mutate, log, rec, dump, kappa=kappa, ref677=opts.get("ref677"), fee694=fee,
                          fee2=fee2, wee=wee, t_plus=t_plus)
+    if isinstance(sysm, Elim):
+        rec["elim_stats"] = sysm.stats()
+        log(f"  elimination: {rec['elim_stats']['projections']} projections ({rec['elim_stats']['seconds']} s), the "
+            f"largest last rung residual {rec['elim_stats']['rung']:.2e}, the largest max|F| on hrows "
+            f"{rec['elim_stats']['hrows']:.2e}")
     return ok
 
 
@@ -2702,7 +3081,7 @@ def main():
         curvesum(args[1:])
         return 0
     modes = dict(run=("", "w0", "Ssign", "Sh", "hF"), planted=("", "w0", "Ssign", "Sh", "hF"), ray=("", "w0", "B"),
-                 rows=("", "quadA", "parity"), curve=("", "w0", "chord", "fold", "dz0"))
+                 rows=("", "quadA", "parity"), curve=("", "w0", "chord", "fold", "dz0", "noelim", "hrows"))
     if not args or args[0] not in modes or (args[0] == "run" and len(args) != 4) or \
             (args[0] in ("ray", "rows", "curve") and len(args) != 4 and args[1:] != ["planted"]):
         sys.exit(__doc__)
