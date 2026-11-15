@@ -1,14 +1,14 @@
 #!/usr/bin/env python3
 """What the large-D chain does with each harmonic of the centre field p1, and how the held ones are chosen, as one SVG.
 
-    cd hp && python3 plot_harmonics.py RAWDIR [STATE] [-o .]
+    cd hp && python3 plot_harmonics.py RAWDIR [STATE] [-o .] [--front top|fits]
 
 harmonics_held.svg has three panels:
-  1. the size of each odd harmonic k of p1 (sqrt(a_k^2 + b_k^2)) in a chain state (default the clean chain's state at
-     D 232.63125): harmonics 1 and 3 are solved, 5 to 13 are held at the fit's values, 15 and up are set to zero;
+  1. the size of each odd harmonic k of p1 (sqrt(a_k^2 + b_k^2)) in a chain state (default the chain's front,
+     chain_front.py): harmonics 1 and 3 are solved, 5 to 13 are held at the fit's values, 15 and up are set to zero;
   2. harmonic 5's cosine coefficient a_5 against D: the full-system states the fit is made from (held_fit.py's
      full_states) and the fits of degree 6, 8 and 10 (data/held_fit_d6.json, held_fit.json, held_fit_d10.json)
-     extended to D 240;
+     extended past the state's D;
   3. how far the fits of degree 6 and 10 are from degree 8 in a_5, against D: inside the states' range they agree to
      the fit's residual, past it they part, and that parting is the error bar on Delta.
 Standard library and numpy; the primitives are data_graphs.py. Prints the plotted numbers.
@@ -29,7 +29,6 @@ from octo_corrector import load_o  # noqa: E402
 from pinning import HeldFit, band_coeffs  # noqa: E402
 
 REPO = "https://github.com/nmoinvaz/choptuik-large-d"
-STATE = "I461-win2/crawlG/anm_pin3_D232.6312.npz"
 class DecadeAxis(dg.Axis):
     """a log axis ticked every STEP-th decade, so labels over many decades do not meet"""
     STEP = 1
@@ -53,9 +52,16 @@ def fits_dmin():
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("raw")
-    ap.add_argument("state", nargs="?", default=STATE)
+    ap.add_argument("state", nargs="?", default=None)
     ap.add_argument("-o", default=HERE)
+    ap.add_argument("--front", default=None)
     a = ap.parse_args()
+    if a.front is None:
+        from chain_front import FIGURES
+        a.front = FIGURES
+    from chain_front import front, x_hi
+    if a.state is None:
+        a.state = front(a.front)[1]
 
     z, meta = load_o(os.path.join(a.raw, a.state))
     M, D_state = int(meta["M"]), float(meta["D"])
@@ -66,7 +72,8 @@ def main():
     role = {k: ("held" if k in held else ("solved" if k <= int(meta["kfreeze"]) else "zero")) for k in ks}
     pts = [p for p in full_states(a.raw) if float(p["D"]) >= fits_dmin()]
     fits = [(deg, HeldFit(os.path.join(HERE, p))) for deg, p in FITS]
-    Ds = np.linspace(38.0, 240.0, 203)
+    XHI = x_hi(D_state)
+    Ds = np.linspace(38.0, XHI, int(round(XHI - 38)) + 1)      # one point per unit of D
     curves = {deg: [f.values(float(D), [5])[0][0] for D in Ds] for deg, f in fits}
 
     print(f"| harmonic k | size at D {D_state:g} | role |\n|---|---|---|")
@@ -74,7 +81,7 @@ def main():
         print(f"| {k} | {v:.3e} | {role[k]} |")
     print(f"\nfull-system states: {len(pts)}, D {float(pts[0]['D']):g} to {float(pts[-1]['D']):g}")
     print("| D | a5 degree 6 | a5 degree 8 | a5 degree 10 |\n|---|---|---|---|")
-    for D in (73, 100, 150, 200, 232.63125):
+    for D in (73, 100, 150, 200, D_state):
         i = int(round(D - 38))
         print(f"| {D:g} | {curves[6][i]:.12e} | {curves[8][i]:.12e} | {curves[10][i]:.12e} |")
 
@@ -88,7 +95,7 @@ def main():
 
     # panel 1: the spectrum
     x, y, w, h = 86, 112, 600, 250
-    svg.text(16, y - 18, f"1. Size of each harmonic of p1 at D {D_state:g}, on the clean chain", size=12, fill=INK, weight="bold")
+    svg.text(16, y - 18, f"1. Size of each harmonic of p1 at D {D_state:g}, on the chain", size=12, fill=INK, weight="bold")
     dg.Axis, DecadeAxis.STEP = DecadeAxis, 6
     xm, ym = axes(svg, x, y, w, h, (0, M), (1e-36, 1, "log"), "harmonic number k", "size of the harmonic",
                   xfmt=lambda v: f"{v:g}", yfmt=lambda v: f"1e{round(math.log10(v))}")
@@ -118,7 +125,7 @@ def main():
     hi = max(max(data_v), max(max(c) for c in curves.values()))
     pad = 0.06 * (hi - lo)
     dg.Axis = DecadeAxis
-    xm2, ym2 = axes(svg, x, y2, w, h, (30, 240), (lo - pad, hi + pad), "spacetime dimension D", "a5",
+    xm2, ym2 = axes(svg, x, y2, w, h, (30, XHI), (lo - pad, hi + pad), "spacetime dimension D", "a5",
                     xfmt=lambda v: f"{v:g}", yfmt=lambda v: f"{v:.4f}")
     svg.add(f'<rect x="{xm2(38):.1f}" y="{y2}" width="{xm2(73) - xm2(38):.1f}" height="{h}" fill="{SERIES[2]}" fill-opacity="0.08"/>')
     svg.text((xm2(38) + xm2(73)) / 2, y2 + 14, "full solutions", size=10, fill=INK_SOFT, anchor="middle")
@@ -147,7 +154,7 @@ def main():
     d10 = [abs(u - v) for u, v in zip(curves[10], curves[8])]
     pos = [v for v in d6 + d10 if v > 0]
     DecadeAxis.STEP = 2
-    xm3, ym3 = axes(svg, x, y3, w, h, (30, 240), (min(pos) / 3, max(pos) * 3, "log"), "spacetime dimension D",
+    xm3, ym3 = axes(svg, x, y3, w, h, (30, XHI), (min(pos) / 3, max(pos) * 3, "log"), "spacetime dimension D",
                     "difference in a5 (lower is better)", xfmt=lambda v: f"{v:g}", yfmt=lambda v: f"1e{round(math.log10(v))}")
     svg.add(f'<rect x="{xm3(38):.1f}" y="{y3}" width="{xm3(73) - xm3(38):.1f}" height="{h}" fill="{SERIES[2]}" fill-opacity="0.08"/>')
     for vals, c, name in ((d6, SERIES[3], "degree 6 minus degree 8"), (d10, SERIES[4], "degree 10 minus degree 8")):

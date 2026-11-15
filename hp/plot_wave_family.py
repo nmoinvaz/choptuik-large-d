@@ -1,18 +1,20 @@
 #!/usr/bin/env python3
 """The critical solutions of all D form one smooth family of waves, animated in one SVG.
 
-    cd hp && python3 plot_wave_family.py RAWDIR [-o .] [--frame T]
+    cd hp && python3 plot_wave_family.py RAWDIR [-o .] [--frame T] [--front top|fits]
 
 wave_family.svg plays four steps on a loop (SMIL, as plot_algorithm.py's figures):
-  1. one wave per D: p1 at the centre over one echo period, swept from D 38 to 232.6 through the stored states (the
-     full-system states of held_fit.py to D 73, the chain_fit chain of T138-win2 to D 215, the clean chain
-     I461-win2/crawlG to D 232.6), beside the size of its harmonic 1 against D;
+  1. one wave per D: p1 at the centre over one echo period, swept from D 38 to the chain's front (chain_front.py: the
+     highest chain_fit D of data/delta_all.csv, or with --front fits the comparison frontier) through the stored states
+     (the full-system states of held_fit.py to D 73, the chain_fit chain of T138-win2 to D 215, the clean chain
+     I461-win2/crawlG to D 225, #603's chain on the exact projector from D 226.13), beside the size of its harmonic 1
+     against D;
   2. the same waves times sqrt(D-2): they nearly coincide, so across D the solution is close to one shape shrunk by
      1/sqrt(D-2);
   3. within one wave each odd harmonic is a nearly fixed factor smaller than the one before: the wave at D 38 built up
      harmonic by harmonic, and |harmonic k| against k at seven D on a log scale;
-  4. each wave is the slope at the centre of a surface: p over the radius x and the echo phase theta at D 38 and
-     232.6, drawn from the solver's five nodes x = 0.3 to 0.7, where p is close to p1 x.
+  4. each wave is the slope at the centre of a surface: p over the radius x and the echo phase theta at D 38 and at
+     the front, drawn from the solver's five nodes x = 0.3 to 0.7, where p is close to p1 x.
 Harmonics 15 and up are zero in all these runs (kfreeze 13 for the full states, 3 for the chains), and the chains hold
 harmonics 5 to 13 on the fit of data/held_fit.json. --frame T writes the still at time T. Standard library and numpy;
 the primitives are data_graphs.py and the clock of plot_algorithm.py. Prints the plotted numbers.
@@ -33,15 +35,17 @@ from held_fit import full_states, load  # noqa: E402
 from hpkernel.driver import load_q  # noqa: E402
 
 REPO = "https://github.com/nmoinvaz/choptuik-large-d"
-CHAINS = ["T138-win2/chain", "T138-win2/chain_o", "I461-win2/crawlG"]
+# in order of precedence where two have a state within 0.05 of a D: #603's states are the table's from D 226.13
+CHAINS = ["T138-win2/chain", "T138-win2/chain_o", "I603-win2/chain", "I603-win2/chain_nat", "I603-win2/chain_ns",
+          "I603-win2/chain_nsr", "I461-win2/crawlG"]
 M = 32
 KS = list(range(1, 15, 2))       # harmonics 1 to 13; 15 and up are zero in every run here
-REP_D = [38.02, 52.04, 73.0, 100.0, 150.0, 200.0, 232.63]
+REP_D = [38.02, 52.04, 73.0, 100.0, 150.0, 200.0]          # and the front
 T = 48.0
 STEPS = [(0.0, 13.0), (13.0, 23.0), (23.0, 36.0), (36.0, 48.0)]
 TITLES = [
     ("1. One wave for each D", "Each D has its own critical solution. Over one echo period its centre field p1 is a wave: here it is swept "
-     "from D 38 to 232.6 through the stored solutions."),
+     "from D 38 to {front} through the stored solutions."),
     ("2. Multiply each wave by √(D−2)", "Scaled by √(D−2) the waves nearly coincide. Across D the solution is close to one shape, "
      "shrunk by 1/√(D−2)."),
     ("3. Inside one wave, each harmonic is a fixed factor smaller", "Built harmonic by harmonic, the wave at D 38 converges by a "
@@ -80,15 +84,17 @@ def size(co, k):
     return math.hypot(*co[k])
 
 
-def catalogue(raw):
-    """every stored solution from D 38 on as (D, kind, path): the full states to D 73, then the chains"""
+def catalogue(raw, D_hi, front_state):
+    """every stored solution from D 38 to D_hi as (D, kind, path): the full states to D 73, the front's own state (so a
+    run of short steps below it, as near #603's fold, does not stand in for it), then the chains"""
     out = [(float(p["D"]), "full", p["path"]) for p in full_states(raw) if float(p["D"]) >= 38.0]
     top = max(d for d, _, _ in out)
+    out.append((D_hi, "chain", os.path.join(raw, front_state)))
     for sub in CHAINS:
         for f in sorted(os.listdir(os.path.join(raw, sub))):
             if f.startswith("anm_pin3_D") and f.endswith(".npz"):
                 D = float(f[len("anm_pin3_D"):-4])
-                if D > top + 0.5 and all(abs(D - d) > 0.05 for d, _, _ in out):
+                if top + 0.5 < D <= D_hi + 1e-6 and all(abs(D - d) > 0.05 for d, _, _ in out):
                     out.append((D, "chain", os.path.join(raw, sub, f)))
     return sorted(out)
 
@@ -111,12 +117,20 @@ def main():
     ap.add_argument("raw")
     ap.add_argument("-o", default=HERE)
     ap.add_argument("--frame", type=float, default=None)
+    ap.add_argument("--front", default=None)
     a = ap.parse_args()
+    if a.front is None:
+        from chain_front import FIGURES
+        a.front = FIGURES
+    from chain_front import front, x_hi
+    D_front, front_state = front(a.front)
+    XHI = x_hi(D_front)
+    titles = [(t, x.format(front=f"{D_front:.1f}")) for t, x in TITLES]
     pa.FRAME = a.frame
     clock = pa.Clock(T)
     S1, S2, S3, S4 = STEPS
 
-    cat = catalogue(a.raw)
+    cat = catalogue(a.raw, D_front, front_state)
     allst = [state(*c) for c in cat]
     Ds = np.array([s["D"] for s in allst])
     print(f"{len(allst)} solutions, D {Ds.min():g} to {Ds.max():g} ({sum(s['kind'] == 'full' for s in allst)} full)")
@@ -124,7 +138,7 @@ def main():
     def nearest(D0):
         return allst[int(np.argmin(np.abs(Ds - D0)))]
 
-    reps = [nearest(D) for D in REP_D]
+    reps = [nearest(D) for D in REP_D + [D_front]]
     c1_0 = size(allst[0]["co"], 1)
     sc1_0 = math.sqrt(allst[0]["D"] - 2) * c1_0
     print("| D | Delta | sqrt(D-2) |c1| | |c1|/|c3| | |c3|/|c5| | |c5|/|c7| | kind |\n|---|---|---|---|---|---|---|")
@@ -241,13 +255,13 @@ def main():
     spread = [math.sqrt(s["D"] - 2) * size(s["co"], 1) for s in allst]
     grp([f'<text x="{LX + LW / 2}" y="{LY + 18}" text-anchor="middle" font-size="11" fill="{INK}">times √(D−2), the seven waves nearly coincide:</text>',
          f'<text x="{LX + LW / 2}" y="{LY + 32}" text-anchor="middle" font-size="11" fill="{INK}">their harmonic 1 falls by {100 * (1 - spread[-1] / spread[0]):.0f}% '
-         f'from D 38 to 232.6,</text>',
+         f'from D 38 to {D_front:.1f},</text>',
          f'<text x="{LX + LW / 2}" y="{LY + 46}" text-anchor="middle" font-size="11" fill="{INK}">against {100 * (1 - size(allst[-1]["co"], 1) / c1_0):.0f}% '
          f'unscaled</text>'], on(t_m1, S2[1]))
 
     # the right panel for steps 1 and 2: the size of harmonic 1 against D, as it is and times sqrt(D-2)
     def right12():
-        holder["R"] = axes(svg, RX, RY, RW, RH, (30, 240), (0, 1.12), "spacetime dimension D", "size of harmonic 1, relative to D 38",
+        holder["R"] = axes(svg, RX, RY, RW, RH, (30, XHI), (0, 1.12), "spacetime dimension D", "size of harmonic 1, relative to D 38",
                            xfmt=lambda v: f"{v:g}", yfmt=lambda v: f"{v:.1f}")
     grp(pa.capture(svg, right12), on(S1[0] + 0.01, S2[1]))
     xR, yR = holder["R"]
@@ -257,13 +271,13 @@ def main():
     grp([f'<path d="{pa.path_d(raw_line)}" fill="none" stroke="{SERIES[0]}" stroke-width="2"/>'],
         [(0, 0), (0.01, 0.25), (t1, 0.25), (t1 + 0.3, 1), (S2[1] - 0.3, 1), (S2[1], 0), (T, 0)])
     grp([moving_dot([(t_of(s["D"]), xR(s["D"]), yR(size(s["co"], 1) / c1_0)) for s in sweep], SERIES[0])], on(S1[0] + 0.3, S1[1]))
-    grp([f'<text x="{xR(236):.1f}" y="{yR(rel[-1]) + 20:.1f}" text-anchor="end" font-size="11" fill="{SERIES[0]}">'
+    grp([f'<text x="{xR(XHI - 4):.1f}" y="{yR(rel[-1]) + 20:.1f}" text-anchor="end" font-size="11" fill="{SERIES[0]}">'
          f'|harmonic 1|: down to {rel[-1]:.2f}</text>'], on(t1, S2[1]))
     grp([f'<line x1="{RX}" y1="{yR(1):.1f}" x2="{RX + RW}" y2="{yR(1):.1f}" stroke="{INK_SOFT}" stroke-width="1" stroke-dasharray="4 3"/>'],
         on(S2[0] + 0.3, S2[1]))
     sc_line = [(xR(d), yR(v)) for d, v in zip(Ds, rel_sc)]
     grp([draw_in(clock, sc_line, SERIES[1], 2.4, S2[0] + 1.2, S2[0] + 4.2)], on(S2[0] + 1.0, S2[1]))
-    grp([f'<text x="{xR(236):.1f}" y="{yR(rel_sc[-1]) + 18:.1f}" text-anchor="end" font-size="11" fill="{SERIES[1]}">'
+    grp([f'<text x="{xR(XHI - 4):.1f}" y="{yR(rel_sc[-1]) + 18:.1f}" text-anchor="end" font-size="11" fill="{SERIES[1]}">'
          f'√(D−2) × |harmonic 1|: {rel_sc[-1]:.2f}</text>'], on(S2[0] + 4.2, S2[1]))
     grp([f'<text x="{RX + RW - 6}" y="{RY + RH - 40}" text-anchor="end" font-size="11" fill="{INK}">the wave shrinks by 1/√(D−2),</text>',
          f'<text x="{RX + RW - 6}" y="{RY + RH - 26}" text-anchor="end" font-size="11" fill="{INK}">and its shape changes only slowly</text>'],
@@ -315,11 +329,11 @@ def main():
     r_lo, r_hi = size(reps[0]["co"], 1) / size(reps[0]["co"], 3), size(reps[-1]["co"], 1) / size(reps[-1]["co"], 3)
     grp([f'<text x="{xK(0.6):.1f}" y="{RY + RH - 54}" font-size="11" fill="{INK}">a near-straight line: each odd harmonic is a</text>',
          f'<text x="{xK(0.6):.1f}" y="{RY + RH - 40}" font-size="11" fill="{INK}">nearly fixed factor smaller, from 1 to 3 about</text>',
-         f'<text x="{xK(0.6):.1f}" y="{RY + RH - 26}" font-size="11" fill="{INK}">{r_lo:.0f}× at D 38 and {r_hi:.0f}× at D 232.6</text>',
+         f'<text x="{xK(0.6):.1f}" y="{RY + RH - 26}" font-size="11" fill="{INK}">{r_lo:.0f}× at D 38 and {r_hi:.0f}× at D {D_front:.1f}</text>',
          f'<text x="{xK(0.6):.1f}" y="{RY + RH - 10}" font-size="11" fill="{INK_SOFT}">hollow: held on the fit (the chains, D above 73)</text>'],
         on(S3[0] + 6.4, S3[1]))
 
-    # step 4: p over x and theta at D 38 and D 232.6, from the five nodes; p1 is its slope at x = 0
+    # step 4: p over x and theta at D 38 and at the front, from the five nodes; p1 is its slope at x = 0
     def surface(s, ox, oy, scale, t_in):
         def P(t, x, p):
             return ox + 280 * t / (2 * np.pi) + 160 * x / 0.7, oy - 165 * x / 0.7 - scale * p
@@ -362,7 +376,7 @@ def main():
          f'x = 0.3 to 0.7, and p = 0 at the centre. Both surfaces on one vertical scale.</text>'], on(S4[0] + 3.6, S4[1]))
 
     # the step titles and the progress dots
-    for (u, v), (title, text) in zip(STEPS, TITLES):
+    for (u, v), (title, text) in zip(STEPS, titles):
         clock.group(svg, [f'<text x="16" y="{LY + LH + 66}" font-size="14" font-weight="bold" fill="{INK}">{title}</text>',
                           f'<text x="16" y="{LY + LH + 88}" font-size="12" fill="{INK}">{text}</text>'], u, v - 0.3)
     for i, (u, v) in enumerate(STEPS):
@@ -370,7 +384,7 @@ def main():
         svg.add(f'<circle cx="{cx + 6}" cy="{LY + LH + 112}" r="5" fill="none" stroke="{INK_SOFT}"/>')
         clock.group(svg, [f'<circle cx="{cx + 6}" cy="{LY + LH + 112}" r="5" fill="{SERIES[1]}"/>'], u, v - 0.3)
     hgt = footnote(svg, [f"{sum(s['kind'] == 'full' for s in allst)} full solutions to D 73 (held_fit.py)",
-                         "chains: raw T138-win2 chain and chain_o, I461-win2/crawlG"], "", [], LY + LH + 140, REPO)
+                         "chains: raw T138-win2 chain and chain_o, I461-win2/crawlG, I603-win2"], "", [], LY + LH + 140, REPO)
     out = os.path.join(a.o, "wave_family.svg")
     open(out, "w").write(svg.finish(hgt))
     print(f"wrote {out}")

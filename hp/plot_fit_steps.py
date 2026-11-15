@@ -1,14 +1,15 @@
 #!/usr/bin/env python3
 """How the held harmonics' fit is made, and how the chain then steps in D, animated in one SVG.
 
-    cd hp && python3 plot_fit_steps.py RAWDIR [-o .] [--frame T]
+    cd hp && python3 plot_fit_steps.py RAWDIR [-o .] [--frame T] [--front top|fits]
 
 fit_steps.svg plays five steps on a loop (SMIL, as plot_algorithm.py's figures):
   1. the full-system solutions below D 73: p1 over one echo period at six of them;
   2. harmonic 5 measured in each wave: the wave times cos 5 theta, averaged over the period, is a5 / 2, and a5 becomes a
      point against D;
   3. the least-squares fit of degree 8 drawn through all 138 points (held_fit.py, data/held_fit.json);
-  4. the fit extended to D 240, beside the fits of degree 6 and 10, and its value at the chain's front setting
+  4. the fit extended past the chain's front (chain_front.py: the highest chain_fit D of data/delta_all.csv, or with
+     --front fits the comparison frontier), beside the fits of degree 6 and 10, and its value at the front setting
      harmonic 5 of the wave there;
   5. the calculus of the chain's step: Delta of the clean chain's states against D with the tangent at a base, and the
      size of each Taylor term |z_k| a^k of that step (anm_run.jsonl), summed to the prediction that Newton corrects.
@@ -33,7 +34,6 @@ from octo_corrector import load_o  # noqa: E402
 from pinning import HeldFit  # noqa: E402
 
 REPO = "https://github.com/nmoinvaz/choptuik-large-d"
-FRONT = "I461-win2/crawlG/anm_pin3_D232.6312.npz"
 CHAIN_LOGS = ["I461-win2/crawlG.log", "I461-win2/crawlH.log", "I461-win2/crawlI.log"]
 JSONL = "I461-win2/crawlG/anm_run.jsonl"
 BASE_D = 228.13125
@@ -43,7 +43,7 @@ TITLES = [
     ("1. Take the full solutions", "Below D 73 every harmonic can still be solved. Here is p1 at the centre over one echo period, at six of the 138."),
     ("2. Measure harmonic 5 in each", "Multiply the wave by cos 5θ and average over the period. Twice the average is a5, the amount of cos 5θ in the wave: one point against D."),
     ("3. Fit a polynomial through the points", "A least-squares polynomial of degree 8 in 1/(D−2), times 1/√(D−2), passes within 10⁻¹² of all 138 points."),
-    ("4. Extend it to larger D", "Past D 73 the polynomial gives the held value. At D 232.6 it sets the wave's harmonic-5 part. Fits of degree 6 and 10 differ by 3×10⁻⁹ there."),
+    ("4. Extend it to larger D", "Past D 73 the polynomial gives the held value. At D {front} it sets the wave's harmonic-5 part. Fits of degree 6 and 10 differ by {spread} there."),
     ("5. Step in D with calculus", "Δ looks straight, but zoomed in it bends. At a solved D the chain computes 24 derivatives of the whole solution; their Taylor sum predicts the next D."),
 ]
 EXAMPLE_D = [38.02, 45.0, 52.0, 59.0, 66.0, 73.0]
@@ -82,7 +82,13 @@ def main():
     ap.add_argument("raw")
     ap.add_argument("-o", default=HERE)
     ap.add_argument("--frame", type=float, default=None)
+    ap.add_argument("--front", default=None)
     a = ap.parse_args()
+    if a.front is None:
+        from chain_front import FIGURES
+        a.front = FIGURES
+    from chain_front import front, x_hi
+    FRONT = front(a.front)[1]
     pa.FRAME = a.frame
     clock = pa.Clock(T)
 
@@ -101,8 +107,14 @@ def main():
     D_front = float(mf["D"])
     fits = {deg: HeldFit(os.path.join(HERE, f)) for deg, f in ((6, "data/held_fit_d6.json"), (8, "data/held_fit.json"),
                                                                (10, "data/held_fit_d10.json"))}
-    Dgrid = np.linspace(float(fitd["Dmin"]), 240.0, 220)
+    XHI = x_hi(D_front)
+    Dgrid = np.linspace(float(fitd["Dmin"]), XHI, 220)
     a5 = {deg: [f.values(float(D), [5])[0][0] for D in Dgrid] for deg, f in fits.items()}
+    spread = abs(fits[6].values(D_front, [5])[0][0] - fits[10].values(D_front, [5])[0][0])
+    mant, ex10 = f"{spread:.0e}".split("e")
+    sup = str.maketrans("-0123456789", "⁻⁰¹²³⁴⁵⁶⁷⁸⁹")
+    titles = [(t, x.format(front=f"{D_front:.1f}", spread=f"{mant}×10{str(int(ex10)).translate(sup)}")) for t, x in TITLES]
+    print(f"step 4: at D {D_front:.4f} the fits of degree 6 and 10 differ by {spread:.3e} in a5")
     # data: the clean chain's Delta and one step's Taylor terms
     att = []
     for lg in CHAIN_LOGS:
@@ -167,7 +179,7 @@ def main():
     clock.group(svg, strip_axes("A", AY, AH, ymax, "p1, the wave", lambda v: f"{v:.1f}"), 0.0, S4[1])
 
     def right_axes():
-        holder["R"] = axes(svg, RX, RY, RW, RH, (30, 240), (lo5, hi5), "spacetime dimension D", "a5: the amount of cos 5θ in p1",
+        holder["R"] = axes(svg, RX, RY, RW, RH, (30, XHI), (lo5, hi5), "spacetime dimension D", "a5: the amount of cos 5θ in p1",
                            xfmt=lambda v: f"{v:g}", yfmt=lambda v: f"{v:.4f}")
     clock.group(svg, pa.capture(svg, right_axes), 0.0, S4[1])
     xA, yA = holder["A"]
@@ -328,7 +340,7 @@ def main():
                 S5[1] - 2.8, T - 0.7)
 
     # the step titles under the panels
-    for (t0, t1), (title, text) in zip(STEPS, TITLES):
+    for (t0, t1), (title, text) in zip(STEPS, titles):
         clock.group(svg, [f'<text x="16" y="{LY + LH + 66}" font-size="14" font-weight="bold" fill="{INK}">{title}</text>',
                           f'<text x="16" y="{LY + LH + 88}" font-size="12" fill="{INK}">{text}</text>'], t0, t1 - 0.3)
     # progress dots for the five steps
@@ -337,7 +349,7 @@ def main():
         svg.add(f'<circle cx="{cx + 6}" cy="{LY + LH + 112}" r="5" fill="none" stroke="{INK_SOFT}"/>')
         clock.group(svg, [f'<circle cx="{cx + 6}" cy="{LY + LH + 112}" r="5" fill="{SERIES[1]}"/>'], t0, t1 - 0.3)
     hgt = footnote(svg, ["138 full solutions (held_fit.py)", "fits: data/held_fit*.json",
-                         f"chain: raw I461-win2 crawlG, base D {BASE_D:g}"], "", [], LY + LH + 140, REPO)
+                         f"front: raw {FRONT}", f"step: raw I461-win2 crawlG, base D {BASE_D:g}"], "", [], LY + LH + 140, REPO)
     out = os.path.join(a.o, "fit_steps.svg")
     open(out, "w").write(svg.finish(hgt))
     print(f"wrote {out}")

@@ -51,7 +51,7 @@ A field's Fourier coefficients are its harmonics over one echo period: harmonic 
 times through the period. p₁ changes sign after half a period, so only its odd harmonics occur, and they shrink quickly
 with k.
 
-![One echo period of the centre field p1 at D 232.63, the sum of its harmonics, and harmonics 1, 3, 5 and 13 drawn alone, each on its own scale](hp/echo_harmonics.svg)
+![One echo period of the centre field p1 at D 259.74, the sum of its harmonics, and harmonics 1, 3, 5 and 13 drawn alone, each on its own scale](hp/echo_harmonics.svg)
 
 ![The unknown vector z of the large-D chain, to scale: 64 centre numbers, five nodes of 128 numbers each (p, m, a, c with 32 Fourier coefficients each), 64 horizon numbers, and Δ](hp/explain_layout.svg)
 
@@ -112,17 +112,17 @@ The harmonics are held because the full equations barely fix them. At D 79.77 th
 (`hp/held_schur.py --jac=exact`, [hp/data/held_grip.csv](hp/data/held_grip.csv)) has singular values from 7.4×10⁻¹³
 for harmonic 5 down to 1.4×10⁻²⁴ for harmonic 13. A full Newton step would move harmonic 13 by 0.44, where its size is
 3.7×10⁻⁷. A fit can stand in for them because the solutions form a smooth family in D: times √(D−2) the centre field
-hardly changes from D 38 to 232.6 (the README's
+hardly changes from D 38 to 259.74 (the README's
 [How the solution scales with D](README.md#how-the-solution-scales-with-d)).
 
-![The fit and the step, animated: full solutions below D 73, harmonic 5 read from each wave, the polynomial through the points, its extension to D 232.6, and the chain's Taylor step in D with the size of each term](hp/fit_steps.svg)
+![The fit and the step, animated: full solutions below D 73, harmonic 5 read from each wave, the polynomial through the points, its extension to D 259.74, and the chain's Taylor step in D with the size of each term](hp/fit_steps.svg)
 
 Inside D 38–73 fits of degree 6, 8 and 10 agree to about 10⁻¹² in a₅. Past it they part, and chains run on the three
 fits give Δ's error bar, about 3×10⁻¹¹ near D 200–215 (err_kind "fits" in `hp/data/delta_all.csv`,
 [notes/BIAS.md](notes/BIAS.md)). Each step has a predictor, an optional re-seed and a corrector, and a failed
 correction halves the step, three times at most, keeping the series.
 
-![The held harmonics: the size of each odd harmonic of p1 at D 232.63 with its role (1 and 3 solved, 5 to 13 held, 15 and up set to zero), harmonic 5's cosine coefficient in the 138 full solutions and the fits of degree 6, 8 and 10 that extend them, and how far those fits part past D 73](hp/harmonics_held.svg)
+![The held harmonics: the size of each odd harmonic of p1 at D 259.74 with its role (1 and 3 solved, 5 to 13 held, 15 and up set to zero), harmonic 5's cosine coefficient in the 138 full solutions and the fits of degree 6, 8 and 10 that extend them, and how far those fits part past D 73](hp/harmonics_held.svg)
 
 ![One step of the continuation in D: base, quad-double jets, step, prediction, re-seed, corrector, then a new base or a halved step](hp/algo_step.svg)
 

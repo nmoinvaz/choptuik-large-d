@@ -1,12 +1,13 @@
 #!/usr/bin/env python3
 """The big picture of the large-D computation in six panels: the problem, and how the held-harmonics fit solves it.
 
-    cd hp && python3 plot_big_picture.py RAWDIR [-o .]
+    cd hp && python3 plot_big_picture.py RAWDIR [-o .] [--front top|fits]
 
 big_picture.svg, read left to right and top to bottom:
   1. every D has its own critical solution and echo period: Delta(D) from data/delta_all.csv;
-  2. a solution is a wave over one echo period, a sum of odd harmonics: p1 at the clean chain's state D 232.63
-     (raw I461-win2/crawlG) and the size of each harmonic, by role (solved, held, zero);
+  2. a solution is a wave over one echo period, a sum of odd harmonics: p1 at the chain's front (chain_front.py: the
+     highest chain_fit D of data/delta_all.csv, or with --front fits the comparison frontier) and the size of each
+     harmonic, by role (solved, held, zero);
   3. past D 73 the full equations barely fix the higher harmonics: the singular values of the Schur complement of the
      held rows, from the exact Jacobian (data/held_grip.csv, made by held_grip.py from held_schur.py --jac=exact, raw
      I479-mac at dd9ba550);
@@ -37,7 +38,6 @@ from hpkernel.driver import load_q  # noqa: E402
 from pinning import HeldFit  # noqa: E402
 
 REPO = "https://github.com/nmoinvaz/choptuik-large-d"
-FRONT = "I461-win2/crawlG/anm_pin3_D232.6312.npz"
 JSONL = "I461-win2/crawlG/anm_run.jsonl"
 BASE_D = 228.13125
 M = 32
@@ -80,13 +80,20 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("raw")
     ap.add_argument("-o", default=HERE)
+    ap.add_argument("--front", default=None)
     a = ap.parse_args()
+    if a.front is None:
+        from chain_front import FIGURES
+        a.front = FIGURES
+    from chain_front import front, x_hi
+    D_top, FRONT = front(a.front)
 
     # data
     rows = list(csv.DictReader(open(os.path.join(HERE, "data", "delta_all.csv"))))
     full_kinds = ("dd", "qd", "pinned")
     dfull = sorted((float(r["D"]), float(r["Delta_q0"])) for r in rows if r["kind"] in full_kinds)
-    dchain = sorted((float(r["D"]), float(r["Delta_q0"])) for r in rows if r["kind"] == "chain_fit")
+    dchain = sorted((float(r["D"]), float(r["Delta_q0"])) for r in rows if r["kind"] == "chain_fit"
+                    and float(r["D"]) <= D_top + 1e-9)                      # the chain to the front the figure is drawn at
     d4 = min(dfull, key=lambda p: abs(p[0] - 4.0))
     err_full = sorted((float(r["D"]), float(r["err"])) for r in rows if r["kind"] == "dd" and r["err_kind"] == "check")
     err_chain = sorted((float(r["D"]), float(r["err"])) for r in rows if r["kind"] == "chain_fit" and r["err_kind"].startswith("fits")
@@ -95,6 +102,7 @@ def main():
     f = np.asarray(zf[0], float) + np.asarray(zf[1], float)
     co = coeffs(f[:M])
     D_front = float(mf["D"])
+    XHI = x_hi(D_front)
     sizes = {k: math.hypot(*co[k]) for k in KS}
     ratios = [sizes[k] / sizes[k + 2] for k in KS[:-1]]
     grip = list(csv.DictReader(open(os.path.join(HERE, "data", "held_grip.csv"))))
@@ -149,7 +157,7 @@ def main():
     # 1. Delta against D
     _, y, x, w, h = cell(0, 0)
     claim(0, 0, "1.", "Each D has its own critical solution,", "with its own echo period Δ")
-    xm, ym = axes(svg, x, y, w, h, (0, 240), (1.5, 3.7), "spacetime dimension D", "echo period Δ", xfmt=lambda v: f"{v:g}",
+    xm, ym = axes(svg, x, y, w, h, (0, XHI), (1.5, 3.7), "spacetime dimension D", "echo period Δ", xfmt=lambda v: f"{v:g}",
                   yfmt=lambda v: f"{v:.1f}")
     svg.add(f'<path d="{pa.path_d([(xm(D), ym(v)) for D, v in dfull])}" fill="none" stroke="{SERIES[2]}" stroke-width="2.2"/>')
     svg.add(f'<path d="{pa.path_d([(xm(D), ym(v)) for D, v in dchain])}" fill="none" stroke="{SERIES[0]}" stroke-width="2.2"/>')
@@ -230,12 +238,12 @@ def main():
     _, y, x, w, h = cell(0, 1)
     claim(0, 1, "4.", "But the solutions form a smooth family,", "so a fit carries harmonic 5 past D 73")
     u = lambda D: 1 / (D - 2)  # noqa: E731
-    Dg = np.linspace(float(fitd["Dmin"]), 240, 300)
+    Dg = np.linspace(float(fitd["Dmin"]), XHI, 300)
     curve = [(D, sq_a5(D, fit.values(float(D), [5])[0][0])) for D in Dg]
     vals = [sq_a5(float(p["D"]), p["c"]["5a"]) for p in pts] + [v for _, v in curve]
     pad = (max(vals) - min(vals)) * 0.12
-    xl = (u(36.0), u(242.0))
-    TICKS[xl] = [u(D) for D in (40, 50, 73, 100, 240)]
+    xl = (u(36.0), u(XHI + 2.0))
+    TICKS[xl] = [u(D) for D in (40, 50, 73, 100, XHI)]
     xf, yf = axes(svg, x, y, w, h, xl, (min(vals) - pad, max(vals) + pad), "D, spaced as 1/(D − 2)", "√(D−2) · a5",
                   xfmt=lambda v: f"{1 / v + 2:.0f}", yfmt=lambda v: f"{v:.4f}")
     inside = [(xf(u(D)), yf(v)) for D, v in curve if D <= 73.0]
@@ -271,7 +279,7 @@ def main():
     emax = max(e for _, e in err_chain)
     claim(2, 1, "6.", "The price: Δ's error bar grows", f"from about 10⁻¹⁵ to {sci(emax)}")
     allerr = [e for _, e in err_full] + [e for _, e in err_chain]
-    xe, ye = axes(svg, x, y, w, h, (0, 240), (10 ** math.floor(math.log10(min(allerr))), 10 ** math.ceil(math.log10(emax)), "log"),
+    xe, ye = axes(svg, x, y, w, h, (0, XHI), (10 ** math.floor(math.log10(min(allerr))), 10 ** math.ceil(math.log10(emax)), "log"),
                   "spacetime dimension D", "error bar of Δ", xfmt=lambda v: f"{v:g}", yfmt=p10)
     for (series, col, what) in ((err_full, SERIES[2], "full system: change with resolution"),
                                 (err_chain, SERIES[0], "chain: spread over the fit's degree")):
@@ -282,7 +290,7 @@ def main():
         svg.text(x + 8, y + 14 + 13 * j + (6 if j > 1 else 0), line, size=10, fill=col)
 
     hgt = footnote(svg, ["Δ and error bars: data/delta_all.csv", "grip: data/held_grip.csv (held_schur.py, raw I479-mac)",
-                         f"wave, step: raw {FRONT.split('/anm')[0]}", "fit: data/held_fit.json"], "", [], rows_y[1][0] + 60 + PH + 46, REPO)
+                         f"wave: raw {FRONT}", f"step: raw {JSONL}", "fit: data/held_fit.json"], "", [], rows_y[1][0] + 60 + PH + 46, REPO)
     out = os.path.join(a.o, "big_picture.svg")
     open(out, "w").write(svg.finish(hgt))
     print(f"wrote {out}")

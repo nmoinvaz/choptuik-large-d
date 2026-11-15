@@ -1,12 +1,14 @@
 #!/usr/bin/env python3
 """One echo period of the centre field p1 and the harmonics it is made of, as one SVG.
 
-    cd hp && python3 plot_echo_harmonics.py RAWDIR [STATE] [-o .]
+    cd hp && python3 plot_echo_harmonics.py RAWDIR [STATE] [-o .] [--front top|fits]
 
 echo_harmonics.svg: on top p1 over one echo period (theta = 2 pi tau / Delta from 0 to 2 pi) at the state's D, from its
 odd harmonics (pinning.band_coeffs on the half grid); below it harmonics 1, 3, 5 and 13 drawn alone, each on its own
 scale, with its size. p1 changes sign after half a period, so only odd harmonics occur, and harmonic k runs k times
-through the period. Standard library and numpy; the primitives are data_graphs.py. Prints the plotted numbers.
+through the period. STATE defaults to the chain's front (chain_front.py: the highest chain_fit D of data/delta_all.csv,
+or with --front fits the comparison frontier). Standard library and numpy; the primitives are data_graphs.py. Prints the
+plotted numbers.
 """
 import argparse
 import math
@@ -23,7 +25,6 @@ from octo_corrector import load_o  # noqa: E402
 from pinning import band_coeffs  # noqa: E402
 
 REPO = "https://github.com/nmoinvaz/choptuik-large-d"
-STATE = "I461-win2/crawlG/anm_pin3_D232.6312.npz"
 SHOWN = [1, 3, 5, 13]
 PI_TICKS = {0.0: "0", math.pi / 2: "π/2", math.pi: "π", 3 * math.pi / 2: "3π/2", 2 * math.pi: "2π"}
 
@@ -40,9 +41,16 @@ class PiAxis(dg.Axis):
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("raw")
-    ap.add_argument("state", nargs="?", default=STATE)
+    ap.add_argument("state", nargs="?", default=None)
     ap.add_argument("-o", default=HERE)
+    ap.add_argument("--front", default=None)
     a = ap.parse_args()
+    if a.front is None:
+        from chain_front import FIGURES
+        a.front = FIGURES
+    if a.state is None:
+        from chain_front import front
+        a.state = front(a.front)[1]
     z, meta = load_o(os.path.join(a.raw, a.state))
     M, D = int(meta["M"]), float(meta["D"])
     Delta = float(np.asarray(z[0])[-1])
