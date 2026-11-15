@@ -154,7 +154,7 @@ import numpy as np  # noqa: E402
 from hpkernel.driver import make_solver, newton_solve, deflated_newton, delta_correction, newton_qd, qparts, rnorm, save, save_q, load_q  # noqa: E402
 from multidouble import dd_add, dd_horner, dd_scale, dd_norm, qd_add_dd  # noqa: E402
 from pinning import HeldFit, PinnedQ, PinnedSolver, band_coeffs, band_field, qd_axpy  # noqa: E402
-from raw_out import require_raw  # noqa: E402
+from raw_out import pop_allow, require_raw  # noqa: E402
 from octo_corrector import ElimO, PinnedO, delta_digits, has_o, load_o, newton_od, o8, o8_of_q, omax, q4_of_o, save_o, with_horizon  # noqa: E402,F401
 from reseed import ElimQ, Reseeder, StartNotProjected  # noqa: E402
 from taylor_predict import formula_delta  # noqa: E402
@@ -317,6 +317,7 @@ def main():
         f = "--" + k
         if f in args:
             i = args.index(f); opt[k] = type(opt[k])(args[i + 1]); del args[i:i + 2]
+    pop_allow(args)                     # --allow_unraw is require_raw's, read from sys.argv
     unknown = [x for x in args if x.startswith("--")]
     if unknown or len(args) != 2:      # an unknown option is refused, not ignored (#792 lost a run to one)
         raise SystemExit(f"anm_run.py: unknown options {unknown}" if unknown else f"anm_run.py: expected RAW OUT, got {args}")
