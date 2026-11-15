@@ -6,6 +6,8 @@ Taylor series in D (#829), by two approximant families that share only the input
                                                     [--cont=0.3] [--noise=1e-30]
     cd hp && python3 fold_mirror.py real RAWDIR --planted=PLANTED.json [--json=OUT] [--csv=OUT]
     cd hp && python3 fold_mirror.py literal RAWDIR      the issue's method 1 on the truncated series alone (no model)
+    cd hp && python3 fold_mirror.py noise RAWDIR [--json=OUT]   the jets' noise, from the forms' residuals
+    cd hp && python3 fold_mirror.py posthoc RAWDIR --planted=P.json --real=R.json [--json=OUT]
 
 RAWDIR is a clone of the raw-data repository: the jets are I603-win2/chain_nsr/jet_pin3_D*.npz (25 orders, eight
 parts; Delta is the last entry), at the 46 bases from D 258.7829 to 259.8352 that #818 used, and the measured Delta is
@@ -668,9 +670,75 @@ def cmd_literal(raw):
     return 0
 
 
+def cmd_noise(raw):
+    """the jets' coefficient noise: the residual of the two-base least-squares forms at degrees 10..15 on three base
+    pairs, on plants of relative noise 1e-30, 1e-33, 1e-36 and on the real series; no mirror is evaluated. The real
+    noise is the real M2 residual at degree 15 over the 1e-33 plant's residual per unit noise"""
+    mp.mp.dps = DPS
+    pairs = [("259.8352", "259.7864"), ("259.8068", "259.7603"), ("259.7510", "259.7053")]
+    ser = {"%.4f" % float(Db): (Db, c) for Db, c, _ in base_inputs(raw, None, 0)}
+    out = {}
+    for src in ("1e-30", "1e-33", "1e-36", "real"):
+        for a, b in pairs:
+            if src == "real":
+                inputs = [ser[a], ser[b]]
+            else:
+                pl = Plant(0.0, 0.3, float(src))
+                inputs = [(ser[a][0], pl.series(ser[a][0], 1)), (ser[b][0], pl.series(ser[b][0], 2))]
+            row = {}
+            for d in range(10, 16):
+                for kind in ("QP", "DA"):
+                    row["%s%d" % (kind, d)] = float(forms(inputs, (d, d, d), kind)[1])
+            out["%s %s,%s" % (src, a, b)] = row
+            print("%-5s %s,%s  " % (src, a, b) + " ".join("%s %.1e" % kv for kv in row.items()), flush=True)
+    est = [out["real %s,%s" % pr]["QP15"] / (out["1e-33 %s,%s" % pr]["QP15"] / 1e-33) for pr in pairs]
+    print("the jets' relative noise from M2's degree-15 residual: %.1e to %.1e; the plant carries the larger of it "
+          "and 1e-30" % (min(est), max(est)))
+    if "json" in args:
+        json.dump(dict(residuals=out, noise=est), open(args["json"], "w"), indent=1)
+    return 0
+
+
+def cmd_posthoc(raw):
+    """post hoc, from PLANTED.json and REAL.json: the plant's Puiseux data at D* against the methods' at the usable
+    bases; the real result restricted to #818's 42 bases (to 259.8184); the stated spread over the actual error"""
+    mp.mp.dps = DPS
+    pl, re_ = json.load(open(args["planted"])), json.load(open(args["real"]))
+    plant = Plant()
+    E = lambda t: (lambda q: q[0] + q[2])(plant.parts(DSTAR - t))      # noqa: E731  R + C, the even part
+    e = mp.taylor(E, 0, 2)
+    sd = mp.taylor(lambda t: peval(plant.S, t), 0, 1)
+    truth = [float(DSTAR), float(e[0]), float(sd[0]), float(e[1]), float(sd[1]), float(e[2])]
+    names = ["Dstar", "Delta*", "a1", "a2", "a3", "a4"]
+    use = [b for b in pl["bases"] if pl["bases"][b]["usable"]]
+    worst = {nm: {m: max(abs(pl["bases"][b][m]["coeffs"][i] - truth[i]) for b in use) for m in ("M1", "M2")}
+             for i, nm in enumerate(names)}
+    worst["mu"] = dict(M1=max(abs(pl["bases"][b]["M1"]["coeffs"][6] - 0.5) for b in use))
+    print("the plant's Puiseux data at D* against both methods at its %d usable bases (worst):" % len(use))
+    for i, nm in enumerate(names):
+        print("  %-6s truth %+.15f  M1 %.1e  M2 %.1e" % (nm, truth[i], worst[nm]["M1"], worst[nm]["M2"]))
+    print("  mu (M1): |mu - 1/2| %.1e" % worst["mu"]["M1"])
+    ratio = {m: pl[m]["largest_spread"] / pl[m]["err_mirror"] for m in ("M1", "M2")}
+    print("the plant's largest stated spread over its largest actual error: M1 %.0f, M2 %.0f" % (ratio["M1"], ratio["M2"]))
+    r8 = [b for b in re_["bases"] if float(b) <= 259.8185]
+    t = {"%.2f" % x["D"]: x for x in re_["table"]}
+    d7, d12 = 0.0, 0.0
+    for k in re_["bases"][r8[0]]["M1"]["mirror"]:
+        v1 = statistics.median([re_["bases"][b]["M1"]["mirror"][k] for b in r8])
+        v2 = statistics.median([re_["bases"][b]["M2"]["mirror"][k] for b in r8])
+        d7 = max(d7, abs((v1 + v2) / 2 - float(t["%.2f" % float(k)]["mirror"])))
+        d12 = max(d12, abs(v1 - v2))
+    print("#818's 42 bases only: %d usable (%s); their mirror against the table %.1e, M1 against M2 %.1e" % (
+        len(r8), ", ".join("%.4f" % float(b) for b in r8), d7, d12))
+    if "json" in args:
+        json.dump(dict(truth=dict(zip(names, truth)), worst=worst, spread_over_error=ratio,
+                       r818=dict(bases=[float(b) for b in r8], vs_table=d7, m1_m2=d12)), open(args["json"], "w"), indent=1)
+    return 0
+
+
 if __name__ == "__main__":
     cmd = sys.argv[1] if len(sys.argv) > 1 else ""
-    fn = dict(planted=cmd_planted, real=cmd_real, literal=cmd_literal).get(cmd)
+    fn = dict(planted=cmd_planted, real=cmd_real, literal=cmd_literal, noise=cmd_noise, posthoc=cmd_posthoc).get(cmd)
     if fn is None or not pos:
         print(__doc__)
         sys.exit(2)

@@ -3523,6 +3523,81 @@ def css_lambda_table():
     return out
 
 
+
+@check
+def fold_mirror():
+    """notes/LARGE_D_WALL.md "The fold's mirror branch" (#829): hp/fold_mirror.py's plant, control, real run, noise and
+    post hoc readings, hp/data/fold_mirror_{planted,control,real,noise,posthoc,planted_1pt}.json and fold_mirror.csv"""
+    N = "notes/LARGE_D_WALL.md"
+    ld = lambda tag: json.load(open(os.path.join(ROOT, "hp/data/fold_mirror_%s.json" % tag)))   # noqa: E731
+    pl, ct, re_, nz, ph, p1 = (ld(t) for t in ("planted", "control", "real", "noise", "posthoc", "planted_1pt"))
+    tab = {round(r["D"], 2): r for r in re_["table"]}
+    with open(os.path.join(ROOT, "hp/data/fold_mirror.csv")) as fh:
+        rows = [ln.rstrip("\n").split(",") for ln in fh][1:]
+    B = re_["bases"]
+    co = lambda m, i: [B[b][m]["coeffs"][i] for b in B]                     # noqa: E731
+    med = lambda v: sorted(v)[len(v) // 2]                                  # noqa: E731
+    val = lambda i: (med(co("M1", i)) + med(co("M2", i))) / 2               # noqa: E731
+    spr = lambda i: max(co("M1", i) + co("M2", i)) - min(co("M1", i) + co("M2", i))   # noqa: E731
+    wst = lambda nm: max(ph["worst"][nm].values())                          # noqa: E731
+    a818 = json.load(open(os.path.join(ROOT, "hp/data/lam_singularity_posthoc.json")))
+    d818 = [v["delta"][0] for v in a818.values()]
+    t_tab = lambda nm: [(N, "| %s |" % nm)]                                 # noqa: E731
+    out = [("M1 against M2 on the mirror", re_["diff"], 8.0e-9, 1e-10, [(N, "8.0×10⁻⁹ over D 259.64–259.90")]),
+           ("M1's largest |mu - 1/2|", max(abs(x - 0.5) for x in co("M1", 6)), 8.9e-15, 1e-16,
+            [(N, "1/2 to 8.9×10⁻¹⁵ at every base")]),
+           ("the plant's noise", pl["noise"], 1e-30, 1e-31, [(N, "relative 10⁻³⁰, above the jets' own")]),
+           ("the jets' noise, low", min(nz["noise"]), 5.7e-35, 1e-36, [(N, "5.7×10⁻³⁵ to 7.2×10⁻³⁴.")]),
+           ("the jets' noise, high", max(nz["noise"]), 7.2e-34, 1e-35, [(N, "5.7×10⁻³⁵ to 7.2×10⁻³⁴.")]),
+           ("usable bases", len(pl["usable"]), 7, 1, [(N, "7, from 259.8068 to 259.8352")]),
+           ("first usable base", min(pl["usable"]), 259.8068, 1e-4, [(N, "7, from 259.8068 to 259.8352")]),
+           ("last usable base", max(pl["usable"]), 259.8352, 1e-4, [(N, "7, from 259.8068 to 259.8352")]),
+           ("plant M1 over the usable bases", pl["M1"]["err_mirror"], 5.5e-8, 1e-9,
+            [(N, "the median is within 5.5×10⁻⁸ (M1) and 8.5×10⁻⁸ (M2)")]),
+           ("plant M2 over the usable bases", pl["M2"]["err_mirror"], 8.5e-8, 1e-9,
+            [(N, "the median is within 5.5×10⁻⁸ (M1) and 8.5×10⁻⁸ (M2)")]),
+           ("plant passes", float(pl["pass"]), 1, 1, []),
+           ("control M1 misses by", ct["M1"]["err_mirror"], 2.0e-3, 1e-4, [(N, "both methods miss by 2.0×10⁻³")]),
+           ("control M2 misses by", ct["M2"]["err_mirror"], 2.0e-3, 1e-4, [(N, "both methods miss by 2.0×10⁻³")]),
+           ("one base: M1's miss", p1["bases"]["259.83524580843965"]["M1"]["err_mirror"], 5.5e-6, 1e-7,
+            [(N, "M1 misses the plant's"), (N, "mirror by 5.5×10⁻⁶ and M2 by 7.6×10⁻⁷ (`planted --points=1`)")]),
+           ("one base: M2's miss", p1["bases"]["259.83524580843965"]["M2"]["err_mirror"], 7.6e-7, 1e-8,
+            [(N, "mirror by 5.5×10⁻⁶ and M2 by 7.6×10⁻⁷ (`planted --points=1`)")]),
+           ("+ sheet against the measured Delta", max(B[b][m]["err_plus"] for b in B for m in ("M1", "M2")), 5.4e-29,
+            1e-30, [(N, "to 5.4×10⁻²⁹.")]),
+           ("mirror at 259.64", float(tab[259.64]["mirror"]), 1.6104224, 1e-7,
+            [(N, "from 1.6104224 at 259.64 to 1.6302764 at 259.90")]),
+           ("mirror at 259.90", float(tab[259.9]["mirror"]), 1.6302764, 1e-7,
+            [(N, "from 1.6104224 at 259.64 to 1.6302764 at 259.90")]),
+           ("the csv's mirror at 259.64", float(rows[0][1]), 1.6104224, 1e-7, []),
+           ("error at 259.64", tab[259.64]["err"], 1.8e-7, 1e-8, [(N, "It is 1.8×10⁻⁷ at 259.64 and falls below")]),
+           ("error past 259.86 below 1e-12", float(max(r["err"] for D, r in tab.items() if D > 259.865) < 1e-12), 1, 1,
+            [(N, "10⁻¹² past 259.86")]),
+           ("spread over error, M1", ph["spread_over_error"]["M1"], 44, 1, [(N, "the largest spread was 44 (M1) and 116 (M2)")]),
+           ("spread over error, M2", ph["spread_over_error"]["M2"], 116, 1, [(N, "the largest spread was 44 (M1) and 116 (M2)")]),
+           ("D*", val(0), 259.90330382883, 1e-11, t_tab("D* | 259.90330382883 | below 10⁻¹³ | below 10⁻¹³")),
+           ("D*'s spread below 1e-13", float(spr(0) < 1e-13), 1, 1, t_tab("D* | 259.90330382883 | below 10⁻¹³")),
+           ("D*'s plant error below 1e-13", float(wst("Dstar") < 1e-13), 1, 1, t_tab("D* | 259.90330382883 | below 10⁻¹³ | below 10⁻¹³")),
+           ("Delta*", val(1), 1.6323214210731, 1e-13, t_tab("Δ* | 1.6323214210731 | below 10⁻¹⁵ | 2.2×10⁻¹⁶")),
+           ("Delta*'s spread below 1e-15", float(spr(1) < 1e-15), 1, 1, t_tab("Δ* | 1.6323214210731 | below 10⁻¹⁵")),
+           ("Delta*'s plant error", wst("Delta*"), 2.2e-16, 1e-17, t_tab("Δ* | 1.6323214210731 | below 10⁻¹⁵ | 2.2×10⁻¹⁶"))]
+    for i, nm, v, s_, w in ((2, "a₁", 0.035020554885, 2.3e-15, 3.9e-14), (3, "a₂", -0.008654817400, 2.1e-14, 3.4e-13),
+                            (4, "a₃", 0.018417121619, 2.4e-13, 4.4e-12), (5, "a₄", 0.004191095534, 2.9e-12, 5.9e-11)):
+        sup = lambda e: str(e).replace("-", "⁻").translate(str.maketrans("0123456789", "⁰¹²³⁴⁵⁶⁷⁸⁹"))   # noqa: E731
+        f = lambda x: (lambda m, e: "%s×10%s" % (m, sup(int(e))))(*("%.1e" % x).split("e"))         # noqa: E731
+        row = t_tab("%s | %s | %s | %s" % (nm, ("%.12f" % v).replace("-", "−"), f(s_), f(w)))
+        k = "a%d" % (i - 1)
+        out += [(k, val(i), v, 1e-12, row), (k + "'s spread", spr(i), s_, 10.0 ** (math.floor(math.log10(s_)) - 1), row),
+                (k + "'s plant error", wst(k), w, 10.0 ** (math.floor(math.log10(w)) - 1), row)]
+    out += [("a1 inside #818's range", float(min(d818) <= val(2) <= max(d818)), 1, 1,
+             [(N, "a₁ lies inside #818's 0.0341–0.0352")]),
+            ("D* inside #821's range", float(259.903301 <= val(0) <= 259.903306), 1, 1,
+             [(N, "D* lies inside #821's free-D* range, 259.903301–259.903306.")]),
+            ("#818's bases: usable", len(ph["r818"]["bases"]), 3, 1, [(N, "3 bases are usable, one fewer than the registered 4")]),
+            ("#818's bases: against the table", ph["r818"]["vs_table"], 9.4e-10, 1e-11,
+             [(N, "Their mirror agrees with the table to 9.4×10⁻¹⁰.")])]
+    return out
+
 def full_dinf():
     sys.path.insert(0, os.path.join(ROOT, "hp"))
     import dd_fits_mp as F

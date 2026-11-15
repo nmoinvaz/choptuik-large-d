@@ -845,6 +845,57 @@ python3 lam_singularity.py posthoc RAW --json=data/lam_singularity_posthoc.json
     the bound).
   - This is numerical evidence, from one discretization and one plan.
 
+### The fold's mirror branch (#829)
+
+**The second sheet of Δ(D) at the fold comes from the chain's own series. Two approximant families agree on it to
+8.0×10⁻⁹ over D 259.64–259.90.** The branch point is a square root: the differential approximant's local exponent is
+1/2 to 8.9×10⁻¹⁵ at every base. Script: `hp/fold_mirror.py`. Table: `hp/data/fold_mirror.csv`, with Δ on both sheets
+and its error. Raw: `I829-mac/` of the raw-data repository.
+
+**How it is computed.**
+- Each base is paired with the base nearest 0.05 below it. The two series, 25 orders each, enter one two-valued
+  approximant, by least squares, at seven degree sets with sums 31–33.
+- **M1** is a differential approximant, Q₁f′ + Q₀f + R = 0. Its solution is continued once around Q₁'s zero near D*,
+  on a circle of radius at most 0.12 that holds that zero alone, and comes back to the real axis on the other sheet.
+- **M2** is a quadratic Padé approximant, P f² + Q f + R = 0. Its second root is the mirror.
+- The two share only the input series.
+- **Why the series needs a model.** The truncated series cannot be continued around D* by itself. A polynomial
+  re-expanded at any centre is the same polynomial, so the loop returns its starting value.
+
+**The plant**, fixed before the real run.
+- **Its terms:** a fold R + S√(D* − D) at the chain's sizes, with #782's near singularities at 0.3 of its amplitude.
+- **Its noise:** relative 10⁻³⁰, above the jets' own. That own noise, from the forms' least-squares residual, is
+  5.7×10⁻³⁵ to 7.2×10⁻³⁴.
+- **The usable bases:** 7, from 259.8068 to 259.8352. At each, both methods return the plant's mirror within 10⁻⁶ at all
+  27 points of the table.
+- **The result over them:** the median is within 5.5×10⁻⁸ (M1) and 8.5×10⁻⁸ (M2).
+- **The control:** with D* moved by 0.01, both methods miss by 2.0×10⁻³.
+- **Single-base and exact two-base forms fall short.** Matched at the base nearest D* alone, M1 misses the plant's
+  mirror by 5.5×10⁻⁶ and M2 by 7.6×10⁻⁷ (`planted --points=1`). Matched exactly at two bases, the forms are accurate
+  without noise but not with it (raw `dev/t2.py`).
+
+**The real series at those 7 bases.**
+- **The chain's sheet:** it meets the measured Δ at the states in [259.64, D*) to 5.4×10⁻²⁹.
+- **The mirror:** it runs from 1.6104224 at 259.64 to 1.6302764 at 259.90.
+- **Its stated error:** a spread over bases and approximants, not a bound. It is 1.8×10⁻⁷ at 259.64 and falls below
+  10⁻¹² past 259.86. On the plant, the largest spread was 44 (M1) and 116 (M2) times the largest actual error.
+- **The Puiseux data**, with Δ = Δ* + Σ aₖsᵏ and s = ±√(D* − D), + on the chain's sheet:
+
+| | value | spread over bases and methods | the plant's worst error (post hoc) |
+|---|---|---|---|
+| D* | 259.90330382883 | below 10⁻¹³ | below 10⁻¹³ |
+| Δ* | 1.6323214210731 | below 10⁻¹⁵ | 2.2×10⁻¹⁶ |
+| a₁ | 0.035020554885 | 2.3×10⁻¹⁵ | 3.9×10⁻¹⁴ |
+| a₂ | −0.008654817400 | 2.1×10⁻¹⁴ | 3.4×10⁻¹³ |
+| a₃ | 0.018417121619 | 2.4×10⁻¹³ | 4.4×10⁻¹² |
+| a₄ | 0.004191095534 | 2.9×10⁻¹² | 5.9×10⁻¹¹ |
+
+- **Against earlier estimates.** a₁ lies inside #818's 0.0341–0.0352, which came from the high orders with D* fixed at
+  259.9033. D* lies inside #821's free-D* range, 259.903301–259.903306.
+- **Base set.** Restricted to #818's 42 bases (up to 259.8184), 3 bases are usable, one fewer than the registered 4.
+  Their mirror agrees with the table to 9.4×10⁻¹⁰.
+- This is numerical evidence, from one discretization and one plan.
+
 ## Proposed README text
 
 Applied to the README by the coordinator on 2026-11-14 (its checks moved to the README with it). Drafted for the
