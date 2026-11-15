@@ -522,7 +522,7 @@ out there. ∎
 
 ### 3.3 Results
 
-**Where lemma S closes** (`--scan`, at the point x̂; `lemmas_M_runs/lemmaS_scan_M3.json`, `lemmaS_scan_M5.log`). The
+**Where lemma S closes** (`--scan`, at the point x̂; `lemmas_M_runs/lemmaS_scan_M3.json`, `lemmaS_scan_M5.json`). The
 contraction constant, by r₊ (R₊ = r₊²) and weight exponent k:
 
 | r₊ | M = 1 (§11.3) | M = 3, k = 10 / 20 / 30 | M = 5, k = 10 / 20 / 30 |
@@ -532,7 +532,7 @@ contraction constant, by r₊ (R₊ = r₊²) and weight exponent k:
 | 0.08 | | 0.557 / 0.502 / 0.510 | 0.803 / 0.725 / 0.737 |
 | 0.07 | | 0.450 / 0.388 / 0.378 | 0.650 / 0.563 / 0.549 |
 | 0.06 | | 0.358 / 0.297 / 0.279 | 0.517 / 0.431 / 0.406 |
-| 0.05 | | 0.278 / 0.223 / 0.203 | 0.402 (k = 10) |
+| 0.05 | | 0.278 / 0.223 / 0.203 | 0.402 / 0.324 / 0.295 |
 
 The contraction at fixed R₊ grows with M through the label terms, as §3.2 predicts. At M = 3 the M = 1 domain
 (R₊ = 0.01) still closes, so G₀ and the 6b₁ annulus are those of M = 1. At M = 5 it does not, and R₊ = 0.0064
@@ -1143,6 +1143,18 @@ wrong-sign mutation certifies 0 of 38 discs. Per disc, Λ agrees with win2's to 
 (1.1×10⁻⁵). The box radii are 0.924 to 1.088 times win2's, as ball radii differ between builds (AGENTS.md). The Pi's
 enclosures pass the check on the Mac (python-flint 0.9.0, FLINT 3.6.0), with the same counts and the same failures
 when the tile is dropped, and win2's pass on the Pi.
+
+The rest of the M = 5 set was rerun there as well (#861, raw `I861-rpi5/` f3b02202): step (i)'s tables, lemma S with
+the old sector lemma and the flat estimate over x̂ ± 10⁻⁶, lemma S's scan, and lemma 6a(5) at p̂ with #184's controls.
+The tables and the sector run equal the stored ones in every printed digit. Lemma 6a(5) on the Pi's own B gives
+ρ₆ₐ = [0.2124578258 ± 4.08×10⁻¹¹] < 1, against macm3's [0.2120798569 ± 1.46×10⁻¹¹] (#184). The two balls are 0.18%
+apart and disjoint, since ρ₆ₐ is assembled from upper bounds and the two B differ in radius (3.248×10⁻⁵ against
+3.030×10⁻⁵), as AGENTS.md describes. macm3's B gives [0.2120798571 ± 1.53×10⁻¹¹] on the Pi, and the Pi's B gives
+[0.2124578262 ± 3.74×10⁻¹¹] on the Mac. The controls give #184's verdicts. Lemma S's series mutation is caught at a
+point, as `mutations_M.py` runs it, but not over a parameter box (#865). The stored M = 5 scan log had 22 rows, with
+|η| 491 to 530 times this code's at r₊ ≤ 0.09 and the same contraction constants. The Mac's and the Pi's runs agree in
+all 27 rows to 2.6×10⁻¹¹ relative, so the stored `lemmaS_scan_M5.log` and `.json` are now the Mac's run. The table of
+§3.3 keeps its values, and its r₊ = 0.05 row now gives all three k.
 
 ## 11. Proposed text for A_certify.md and PROOF.md
 
