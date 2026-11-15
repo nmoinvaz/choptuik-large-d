@@ -456,6 +456,7 @@ resolved, with 0 verification mismatches.
 | 41 | 10 | +4, +4, +3, +3 | 2.871492 ± 0.033464i |
 | 43 | 10 | +3, +3, +3, +3 | 2.916297 ± 0.040652i |
 | 45 | 10 | +4, +4, +3, +3 | 2.866137 ± 0.040400i |
+| 47 (uncut) | 11 | +5, +5, +3, +3 | three real zeros: 2.765738, 2.852038, 3.056075 |
 
 **The count rose by 2 every second odd cut, 6, 6, 8, 8, 10, 10, and then held at 10 at kf 39, 41, 43 and 45**, where
 that step predicted 12 at kf 39 and 14 at kf 43 (#749, #789). At kf 39 and 41 the shared zero lies in both upper circles
@@ -480,7 +481,13 @@ above does. It then held for five cuts while its zeros moved: the shared zero re
     #813's bar of 10⁻⁹, but the zero agrees to 3×10⁻¹².
   - The two machines' own kf 41 states, both at |F| 1.3×10⁻¹⁹, differ by 1.9×10⁻⁹ in p at the first node, mostly in
     harmonics 15–23, and by 4.8×10⁻¹⁶ in Δ. That moves ln|det| by up to 2.9×10⁻² and the zero by 5.9×10⁻⁷ (#749).
-- kf 47 freezes none of M = 48's odd harmonics, so it is the uncut system and the last cut there (#812).
+- **At kf 47, the uncut M = 48 system, the count is 11 (#812; raw `I812-macm3/` cc3e9b99).** kf 45's pair near
+  2.866 ± 0.040i is three real zeros there: a triple circle (R 0.24 on the axis at 2.905) winds +3 at 2.765738,
+  2.852038 and 3.056075. The zero both upper circles share winds +1 in a lens (3.165841 + 0.137242i), and its conjugate
+  in another. The basis: the four R 0.36 circles' 5 + 5 + 3 + 3 = 16, less 3 for the axis zeros in both left circles
+  and 2 for the shared zero and its conjugate. Every circle has 0 mismatches, and the control winds +1.
+  - So the count held at 10 for every cut from kf 37 to 45, and steps to 11 when nothing is frozen. Whether the added
+    zero belongs to the solution or to the M = 48 truncation is #838, the same box at M = 64.
 
 **The series' radii, and M = 64 (#141; raw `I141-mac/`, 5eff98e).** The centre series (x = 0 to the first node) takes
 one d/dτ per order, and its radius of convergence falls as M rises. At D = 30 without the cut it is 0.435, 0.324, 0.278
