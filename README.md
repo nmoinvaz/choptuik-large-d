@@ -1925,13 +1925,13 @@ continuously self-similar (CSS), so it solves ordinary differential equations.
 
 **Scalar multiplet with ℓ = 1** ([matter/ELL.md](matter/ELL.md)). The repository's DSS solver, adapted to the
 ℓ-multiplet and checked against the main solver at ℓ = 0 (Δ to 9×10⁻¹⁴), reproduces the published D = 4 values: Δ =
-0.4598611 and γ = 0.118900, against 0.460 ± 0.002 and 0.119 ± 0.001 (Olabarrieta, Ventrella, Choptuik and Unruh 2007).
+0.4598611 and γ = 0.118904, against 0.460 ± 0.002 and 0.119 ± 0.001 (Olabarrieta, Ventrella, Choptuik and Unruh 2007).
 Followed up in D:
 
 | D | 4 | 5 | 6 | 7 | 8 | 9 |
 |---|---|---|---|---|---|---|
 | Δ | 0.4598611 | 0.7833439 | 0.9115281 | 0.9639878 | 0.9837905 | 0.988205 |
-| γ | 0.118900 | 0.215509 | 0.265565 | 0.295733 | 0.316203 | 0.331286 |
+| γ | 0.118904 | 0.215509 | 0.265565 | 0.295733 | 0.316203 | 0.331286 |
 
 Beyond D = 9 the period is selected ever more weakly (|dΔ/dF| ≈ 4×10⁵, a level the ℓ = 0 solution reaches only near D =
 21), and continuation needs steps of 0.05 in D, so the run stops there.

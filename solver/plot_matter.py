@@ -6,7 +6,7 @@ Data (all from files in the repository):
   |F| <= 1e-20), the double-double D = 3.7 and 4 points (hp/data/lowD_gamma.jsonl, M = 80) and the f64 points below
   D = 8.25 (solver/rational_fit.gamma_data);
 - axion-dilaton, phase-rotating self-similar (CSS): solver/matter/data/css_gamma_k1.jsonl (matter/CSS.md);
-- l = 1 scalar multiplet, echoing: D = 4 from l1_kc23_gamma.jsonl, D >= 5 from l1_kc23r.jsonl (matter/ELL.md);
+- l = 1 scalar multiplet, echoing: D = 4 from l1_D4_kc47.jsonl (k_c 47, #811), D >= 5 from l1_kc23r.jsonl (matter/ELL.md);
 - sigma model, echoing, at couplings eta = 1 and 0.3: solver/matter/data/sigdss_*.jsonl as collected by
   sigdss_tables.py, the highest k_c with a converged growth rate at each D; D >= 10 is marked preliminary
   (matter/SIGMA_DSS.md section 6);
@@ -60,7 +60,7 @@ def axion_dilaton():
 
 
 def ell1():
-    g4 = [r for r in jl(os.path.join(MDATA, "l1_kc23_gamma.jsonl")) if r["D"] == 4.0][-1]
+    g4 = jl(os.path.join(MDATA, "l1_D4_kc47.jsonl"))[-1]
     pts = {4.0: 1 / g4["lam"]}
     for r in jl(os.path.join(MDATA, "l1_kc23r.jsonl")):
         if r.get("lam"):

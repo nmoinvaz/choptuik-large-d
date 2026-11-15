@@ -1,5 +1,5 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="900" height="554" viewBox="0 0 900 554" font-family="system-ui, sans-serif">
-<style>@media (prefers-color-scheme: dark){[fill="#fcfcfb"]{fill:#201f1d}[stroke="#fcfcfb"]{stroke:#201f1d}[fill="#0b0b0b"]{fill:#e8e6e3}[stroke="#0b0b0b"]{stroke:#e8e6e3}[fill="#52514e"]{fill:#a8a49d}[stroke="#52514e"]{stroke:#a8a49d}[fill="#e7e6e2"]{fill:#343230}[stroke="#e7e6e2"]{stroke:#343230}[fill="#efeeea"]{fill:#2a2927}[stroke="#efeeea"]{stroke:#2a2927}[fill="#eb6834"]{fill:#dd5c26}[stroke="#eb6834"]{stroke:#dd5c26}[fill="#7a7668"]{fill:#948e82}[stroke="#7a7668"]{stroke:#948e82}}</style>
+<style>@media (prefers-color-scheme: dark){[fill="#fcfcfb"]{fill:#201f1d}[stroke="#fcfcfb"]{stroke:#201f1d}[fill="#0b0b0b"]{fill:#e8e6e3}[stroke="#0b0b0b"]{stroke:#e8e6e3}[fill="#52514e"]{fill:#a8a49d}[stroke="#52514e"]{stroke:#a8a49d}[fill="#e7e6e2"]{fill:#343230}[stroke="#e7e6e2"]{stroke:#343230}[fill="#efeeea"]{fill:#2a2927}[stroke="#efeeea"]{stroke:#2a2927}[fill="#f5f4f0"]{fill:#232221}[stroke="#f5f4f0"]{stroke:#232221}[fill="#eb6834"]{fill:#dd5c26}[stroke="#eb6834"]{stroke:#dd5c26}[fill="#7a7668"]{fill:#948e82}[stroke="#7a7668"]{stroke:#948e82}}</style>
 <rect width="900" height="554" fill="#fcfcfb"/>
 <text x="78.0" y="26.0" font-size="15" fill="#0b0b0b" text-anchor="start" font-weight="bold">The critical exponent γ across matter models, against 1/D</text>
 <text x="78.0" y="46.0" font-size="11" fill="#52514e" text-anchor="start" font-weight="normal">Infinite dimension is the left edge; hover a mark for its value. Hollow: preliminary (σ-model, D ≥ 10).</text>
@@ -150,7 +150,7 @@
 <g><circle cx="111.2" cy="170.2" r="2.6" fill="#1baf7a" stroke="#fcfcfb" stroke-width="2"/><title>axion–dilaton (self-similar), D = 70: γ = 0.488229</title></g>
 <g><circle cx="107.0" cy="169.0" r="2.6" fill="#1baf7a" stroke="#fcfcfb" stroke-width="2"/><title>axion–dilaton (self-similar), D = 80: γ = 0.489602</title></g>
 <path d="M658.9,482.0 L542.7,400.5 L465.3,358.2 L409.9,332.7 L368.4,315.4 L336.2,302.7" fill="none" stroke="#eb6834" stroke-width="1.6" stroke-opacity="0.85" stroke-linejoin="round"/>
-<g><circle cx="658.9" cy="482.0" r="3.6" fill="#eb6834" stroke="#fcfcfb" stroke-width="2"/><title>ℓ = 1 multiplet (echoing), D = 4: γ = 0.118900</title></g>
+<g><circle cx="658.9" cy="482.0" r="3.6" fill="#eb6834" stroke="#fcfcfb" stroke-width="2"/><title>ℓ = 1 multiplet (echoing), D = 4: γ = 0.118904</title></g>
 <g><circle cx="542.7" cy="400.5" r="3.6" fill="#eb6834" stroke="#fcfcfb" stroke-width="2"/><title>ℓ = 1 multiplet (echoing), D = 5: γ = 0.215509</title></g>
 <g><circle cx="465.3" cy="358.2" r="3.6" fill="#eb6834" stroke="#fcfcfb" stroke-width="2"/><title>ℓ = 1 multiplet (echoing), D = 6: γ = 0.265565</title></g>
 <g><circle cx="409.9" cy="332.7" r="3.6" fill="#eb6834" stroke="#fcfcfb" stroke-width="2"/><title>ℓ = 1 multiplet (echoing), D = 7: γ = 0.295733</title></g>

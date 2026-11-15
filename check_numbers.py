@@ -2870,17 +2870,16 @@ def profile_table():
 @check
 def ell_table():
     """README "Scalar multiplet with ℓ = 1" and the physics paper's table: Δ and γ of the ℓ = 1 multiplet at D = 4-9
-    (solver/matter/data/l1_kc23r.jsonl for D = 5-9 and l1_kc23_gamma.jsonl for γ(4), k_c = 23; l1_D4_kc39.jsonl for
-    Δ(4), k_c = 39; matter/ELL.md's table, solver/matter/ell_table.py)"""
+    (solver/matter/data/l1_kc23r.jsonl for D = 5-9, k_c = 23; l1_D4_kc47.jsonl for D = 4, k_c = 47, converged in k_c
+    (#811); matter/ELL.md's table, solver/matter/ell_table.py)"""
     d = os.path.join(ROOT, "solver/matter/data")
     rows = {}
     for line in open(os.path.join(d, "l1_kc23r.jsonl")):
         r = json.loads(line)
         rows[r["D"]] = r
-    g4 = json.loads(open(os.path.join(d, "l1_kc23_gamma.jsonl")).readline())
-    d4 = json.loads(open(os.path.join(d, "l1_D4_kc39.jsonl")).readline())
+    g4 = d4 = json.loads(open(os.path.join(d, "l1_D4_kc47.jsonl")).readline())
     dq = ("0.4598611", "0.7833439", "0.9115281", "0.9639878", "0.9837905", "0.988205")
-    gq = ("0.118900", "0.215509", "0.265565", "0.295733", "0.316203", "0.331286")
+    gq = ("0.118904", "0.215509", "0.265565", "0.295733", "0.316203", "0.331286")
     txt = [("README.md", "| Δ | " + " | ".join(dq) + " |"), ("README.md", "| γ | " + " | ".join(gq) + " |"),
            ("paper/physics/main.tex", "$\\Delta$ & " + " & ".join(dq) + " \\\\"),
            ("paper/physics/main.tex", "$\\gamma$ & " + " & ".join(gq) + " \\\\")]
