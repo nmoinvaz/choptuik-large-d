@@ -586,7 +586,7 @@ def horner(cs, z, zero):
 def start_set(xs, M, h, cauchy, rho0, r0="0.07", arg="3pi/8", sector=None, N=None, k=None, mutate=None,
               kernel="sharp", prec=512, verbose=True):
     """values at the centre and derivative columns over X = xs +- h at u0 = rho0 e^{-2 i arg}, in the u-system's
-    variables [P_mu, V_mu, KAPPA (C_nu - delta)]. Returns (ok, vals, cols, info)."""
+    variables [P_mu, V_mu, KAPPA (C_nu - delta), w, A]. Returns (ok, vals, cols, info)."""
     ctx.prec = prec
     odd, even = harmonics(M)
     hh, cc = arb(h), arb(cauchy)
@@ -626,6 +626,11 @@ def start_set(xs, M, h, cauchy, rho0, r0="0.07", arg="3pi/8", sector=None, N=Non
         cols[i] += [Pj[mu].d[i] + disc(up(eta_radius(outC, ("p", mu), az) / cc)) for mu in odd]
         cols[i] += [Vj[mu].d[i] + disc(up(eta_radius(outC, ("v", mu), az) / cc)) for mu in odd]
         cols[i] += [KAPPA * (Cj[nu].d[i] + disc(up(eta_radius(outC, ("c", nu), az) / cc))) for nu in even]
+    # the u-system's last two states, w and A, and their derivatives (exact)
+    winf = acb(2 * arb.pi() / arb(PERIOD))
+    vals += [stP.w, xp[0]]
+    for i in range(m):
+        cols[i] += [winf if i == 1 else acb(0), acb(1 if i == 0 else 0)]
     info.update(z0=z0, t_jets=time.time() - t0)
     if verbose:
         print(f"jets over the real box: {info['t_jets']:.1f} s", flush=True)
@@ -661,8 +666,10 @@ def stored_set(path, key="0"):
 def compare(M, vals, cols, path, verbose=True):
     """overlap of every component (real and imaginary part) of the values and the columns with the stored set"""
     odd, even = harmonics(M)
-    names = [f"P{mu:+d}" for mu in odd] + [f"V{mu:+d}" for mu in odd] + [f"c{nu:+d}" for nu in even]
+    names = [f"P{mu:+d}" for mu in odd] + [f"V{mu:+d}" for mu in odd] + [f"c{nu:+d}" for nu in even] + ["w", "A"]
     d, svals, scols = stored_set(path)
+    if len(svals) != len(names) or len(scols) != len(cols):
+        raise ValueError("the stored set has another dimension")
     miss, worst, inside = [], 0.0, 0
     rows = []
     for i, nm in enumerate(names):
@@ -680,7 +687,8 @@ def compare(M, vals, cols, path, verbose=True):
             ov = a.real.overlaps(b.real) and a.imag.overlaps(b.imag)
             if not ov:
                 cmiss.append(f"d{nm}/dx{jj}")
-            cworst = max(cworst, float(abs(a.mid() - b.mid()).upper()) / (rad(a) + rad(b)))
+            if rad(a) + rad(b) > 0:
+                cworst = max(cworst, float(abs(a.mid() - b.mid()).upper()) / (rad(a) + rad(b)))
     if verbose:
         print(f"stored set {path}: centre {d['x'][0][:14]}.., h = {d['h']}")
         print("  component, overlap, |mid - stored mid|, radius, stored radius")
