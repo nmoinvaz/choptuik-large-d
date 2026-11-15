@@ -666,8 +666,11 @@ def start_data(x, M, r0, arg, cauchy, N=None, k=None, mutate=None, kernel="sharp
     zero, one = Jet(acb(0), [acb(0)] * m), Jet(acb(1), [acb(0)] * m)
     d, q, g = formal_series(Fj, sj, M, stX.N, zero, one, True, stX.gp)
     vals, ders = [], [[] for _ in range(m)]
+    e_real, e_cauchy = [], []           # per state component: the bounds of eta on x and on its Cauchy box
 
     def add(jet, e, eC):
+        e_real.append(e)
+        e_cauchy.append(eC)
         vals.append(jet.v + disc(e))
         for i in range(m):
             ders[i].append(jet.d[i] + disc(up(eC / cc)))
@@ -683,6 +686,7 @@ def start_data(x, M, r0, arg, cauchy, N=None, k=None, mutate=None, kernel="sharp
     for nu in even:
         Cj = horner([g[j][nu] for j in range(stX.N)], z0, zero)
         add(Cj, eta_radius(outX, ("c", nu), Ru), eta_radius(outC, ("c", nu), Ru))
+    info["e_real"], info["e_cauchy"] = e_real, e_cauchy
     info["eta"] = max(float(eta_radius(outX, cp, Ru)) for cp in stX.comps)
     info["eta_cauchy"] = max(float(eta_radius(outC, cp, Ru)) for cp in stC.comps)
     return True, xi0, vals, ders, info

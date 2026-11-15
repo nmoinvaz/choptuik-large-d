@@ -23,8 +23,18 @@ fixed_point_M_b.py, imports neither.
         entry over the hull overlaps the first's, per component (and the values over the hull, which the certificate
         does not use). --second (kind box2): also the second-order jets of Y_N over the hull along the chart's
         directions, by the second implementation's recursion on series of length 3, against certify_M2.series2.
+    python3 fixed_point_M_b_check.py cert2 --box=data/A_M2_box_M5_1e-10.json
+        the C^2 start data of a second-order box run (issue #869): certify_M2.start_data2's values at p^, its
+        first-derivative columns V0_k = Dy+(xi0; p^) T_k and its 21 second-derivative columns
+            W0_jk = D^2 Y_N(p(x))[d_j, d_k] + (Cauchy bound of D^2 eta) + Dy+ Gamma_jk     over the box,
+        against the same three assembled from the second implementation: D^2 Y_N from its recursion on series of
+        length 3 over the hull, the Cauchy bound e_q (2 nu / (c - hw))^2 with e_q its own bound of eta on the Cauchy
+        box at p^, and the Gamma term from its own derivatives over the hull. The chart geometry (T, Gamma, the
+        directions d_k, the pair list) is the certificate's. Criteria, written before the first run: the four
+        contractions hold and every entry overlaps (values, V0, and 21 pairs x nd components of W0).
     mutations (each must make its check fail, exit status 3):
         m1 --mutate=coef | sign | scale     as in fixed_point_M_b.py
+        cert2 --mutate=w0 | sign            the second implementation's D^2 Y_N dropped; the sign of [G P]
         lip --mutate=drop                   the second implementation without the [ct W] term of Phi_V: (b) must fail
         cert --mutate=sign | radius         the sign of [G P]: the start data must miss the certificate's;
                                             r0 = 0.3: no contraction
@@ -229,6 +239,128 @@ def cert(boxfile, mutate=None, second=False, N_in=None):
     return ok
 
 
+def cert2(boxfile, mutate=None):
+    import json
+    import time
+    import certify_M as CM
+    import certify_M2 as C2M
+    import certify_M2_lohner as C2
+    import start_cover_M2 as SC
+    from flint import acb_series
+    with open(boxfile) as fh:
+        bx = json.load(fh)
+    assert bx["kind"] == "box2", "cert2 is for the second-order (box2) runs"
+    ce = SC.cert_data(bx)
+    M, r0, arg, c = ce["M"], ce["r0"], ce["arg"], ce["c"]
+    m = M + 1
+    p, hull = ce["p"], ce["hull"]
+    nd = len(FPM.state_order(M))
+    msys = mutate if mutate == "sign" else None
+    # the chart, as certify_M2.load_chart and box2_run build it
+    ctx.prec = CM.KPREC
+    Cm = [[arb(x) for x in r] for r in bx["C"]]
+    G = [[arb(x) for x in r] for r in bx["Gamma"]]
+    ws = list(bx["w"])
+    widths = [arb(bx["h"]), arb(bx["h"])] + [arb(ws[(i // 2) % len(ws)]) for i in range(M - 1)]
+    # the first implementation: the certificate's own call
+    t0 = time.time()
+    v1, cols1, _, W1, info1 = C2M.start_data2(M, bx["p"], Cm, G, widths, verbose=False)
+    pairs = C2.pair_list(m)
+    print(f"{boxfile}: M = {M}, ray {arg}, r0 = {r0}, h = {bx['h']}, w = {ws}; start_data2: N = {info1['N']}, "
+          f"second-derivative bound of eta {info1['eta_d2_bound']:.3e}, {len(pairs)} pairs  [{time.time() - t0:.0f} s]",
+          flush=True)
+    # the second implementation
+    t0 = time.time()
+    okc, xi0, v2, d2c, ic = B.start_data(p, M, r0, arg, c, mutate=msys, verbose=False)
+    okb, _, _, d2b, ib = B.start_data(hull, M, r0, arg, c, N=ic["N"], k=ic["k"], mutate=msys, verbose=False)
+    print(f"second implementation: N = {ic['N']}, k = {ic['k']}; four contractions hold: {okc and okb} (constants "
+          + ", ".join(f"{float(o['lam']):.4f}" for o in (ic["real"], ic["cbox"], ib["real"], ib["cbox"]) if "lam" in o)
+          + f")  [{time.time() - t0:.0f} s]", flush=True)
+    if not (okc and okb):
+        print("C2 START DATA: FAIL (no contraction)")
+        return False
+    ctx.prec = SC.PREC
+    T = CM.T_matrix(Cm, M)
+    X = [arb(0, wd) for wd in widths]
+    dirs = C2M.dp_dirs(T, G, X, M)
+    sums = [[dirs[j][i] + dirs[k][i] for i in range(m)] for (j, k) in pairs if j != k]
+    cc = arb(c)
+    hw = max(float(abs(hull[i] - p[i]).upper()) for i in range(m))
+    nu = max(float(abs(dirs[k][i]).upper()) for k in range(m) for i in range(m))
+    ctx.prec = 512
+    fac = (2 * arb(nu) / (cc - arb(hw))) ** 2
+    # V0_k = sum_i T_ik d/dp_i, at p^
+    cols2 = [[sum((acb(T[i][k]) * d2c[i][q] for i in range(m)), acb(0)) for q in range(nd)] for k in range(m)]
+    # D^2 Y_N over the hull: second-order jets along d_k and along d_j + d_k (polarization)
+    ctx.cap = 3
+    odd, even = B.harmonics(M)
+    z0 = xi0 * xi0
+    zero, one = acb_series([0], prec=3), acb_series([1], prec=3)
+    N = ic["N"]
+
+    def jets(dv):
+        pj = [acb_series([acb(hull[i]), acb(dv[i])], prec=3) for i in range(m)]
+        F, _, sl = B.profile(pj, M)
+        d, q, g = B.formal_series(F, sl, M, N, zero, one, True, st_gp(msys))
+        st = [B.horner([d[j][mu] for j in range(N)], z0, zero) * xi0 for mu in odd]
+        st += [B.horner([q[j][mu] for j in range(N)], z0, zero) * z0 for mu in odd]
+        st += [B.horner([g[j][nu] for j in range(N)], z0, zero) for nu in even]
+        out = []
+        for v in st:
+            cs = v.coeffs()
+            out.append(cs[2] if len(cs) > 2 else acb(0))
+        return out
+    jd = [jets(dv) for dv in dirs]
+    js = iter([jets(dv) for dv in sums])
+    e_q = ic["e_cauchy"]
+    W2 = []
+    for (j, k) in pairs:
+        if j == k:
+            dd = [2 * jd[j][q] for q in range(nd)]
+        else:
+            jsk = next(js)
+            dd = [jsk[q] - jd[j][q] - jd[k][q] for q in range(nd)]
+        if mutate == "w0":
+            dd = [acb(0) for _ in range(nd)]
+        col = []
+        for q in range(nd):
+            v = dd[q] + B.disc(B.up(e_q[q] * fac))
+            if j < 2 and k < 2:
+                for i in range(2, m):
+                    v = v + d2b[i][q] * C2M.gam(G, i - 2, j, k)
+            col.append(v)
+        W2.append(col)
+    print(f"  second implementation's assembly: hull half-width {hw:.3e}, nu = {nu:.3f}, Cauchy factor "
+          f"{float(fac.mid()):.4e}, its largest bound of D^2 eta {max(float((e * fac).upper()) for e in e_q):.3e}  "
+          f"[{time.time() - t0:.0f} s]", flush=True)
+    ok = True
+
+    def block(title, A1, A2):
+        nonlocal ok
+        miss = [i for i in range(len(A1)) if not ov(A2[i], A1[i])]
+        inside = sum(bool(A1[i].contains(A2[i])) for i in range(len(A1)))
+        dist = max(float(abs(A2[i].mid() - A1[i].mid()).upper()) for i in range(len(A1)))
+        r1, r2 = max(B.rad(z) for z in A1), max(B.rad(z) for z in A2)
+        print(f"  {title}: {len(A1) - len(miss)} of {len(A1)} overlap ({inside} of the second's balls inside the "
+              f"first's); largest midpoint distance {dist:.2e}; largest radius first {r1:.2e}, second {r2:.2e}")
+        ok = ok and not miss
+        return miss
+    block("values at p^", v1, v2)
+    block("first-derivative columns V0", [z for col in cols1 for z in col], [z for col in cols2 for z in col])
+    miss = block("second-derivative columns W0", [z for col in W1 for z in col], [z for col in W2 for z in col])
+    bad = sorted({pairs[i // nd] for i in miss})
+    print(f"  W0 pair by pair: {len(pairs) - len(bad)} of {len(pairs)} pairs overlap in all {nd} components"
+          + (f"; pairs with a miss: {bad[:10]}" if bad else ""))
+    for pi, (j, k) in enumerate(pairs):
+        r1, r2 = max(B.rad(z) for z in W1[pi]), max(B.rad(z) for z in W2[pi])
+        mx = max(float(abs(z).upper()) for z in W1[pi])
+        dist = max(float(abs(W2[pi][q].mid() - W1[pi][q].mid()).upper()) for q in range(nd))
+        print(f"    pair ({j}, {k}): max |W0| {mx:.3e}, midpoints within {dist:.2e}, radius first {r1:.2e}, second "
+              f"{r2:.2e}")
+    print(f"C2 START DATA ({boxfile}): {'PASS' if ok else 'FAIL'}")
+    return ok
+
+
 def st_gp(mutate):
     return {"sign": acb(-1), "scale": 1 + acb("1e-9")}.get(mutate)
 
@@ -239,6 +371,8 @@ def main():
     cmd = args[0] if args else "m1"
     if cmd == "m1":
         ok = m1(opts.get("mutate"))
+    elif cmd == "cert2":
+        ok = cert2(opts["box"], opts.get("mutate"))
     elif cmd == "cert":
         ok = cert(opts["box"], opts.get("mutate"), "second" in opts, int(opts["N"]) if "N" in opts else None)
     else:
