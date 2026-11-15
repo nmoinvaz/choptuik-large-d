@@ -2892,7 +2892,8 @@ def fold_separation():
     ld = lambda tag: json.load(open(os.path.join(ROOT, "hp/data/fold_cancel_calibrate%s.json" % tag)))  # noqa: E731
     reg, c0, c1, c3 = ld(""), ld("_cont0"), ld("_cont0.01"), ld("_cont0.03")
     jr = lambda j, d: j["judged"][d]["range"]                                                         # noqa: E731
-    rob = min(j["robust"][d] / jr(j, d) for j in (c0, c1) for d in j["judged"] if jr(j, d) > 0)
+    rob = min(j["robust"][d] / jr(j, d) for j in (c0, c1) for d in j["judged"] if float(d) >= 1e-6)
+    holds = all(j["robust"]["1e-06"] > j["real_range"] for j in (c0, c1))
     t_b = [(N, "There δ = 10⁻⁶ already gives 4.0–4.9×10⁻⁴, and −δ gives 3.3–4.0×10⁻⁴")]
     return [("the real range", reg["real_range"], 1.2e-4, 1e-5, [(N, "23 times the real 1.2×10⁻⁴")]),
             ("the registered floor", jr(reg, "0.0"), 2.7e-3, 1e-4, [(N, "the plant's range\n  is already 2.7×10⁻³")]),
@@ -2909,7 +2910,9 @@ def fold_separation():
             ("post hoc 0: the bound", c0["bound"], 1e-6, 1e-7, [(N, "So |D*(λ_g) − D*(Δ)| < 10⁻⁶")]),
             ("post hoc 0.03: floor", jr(c3, "0.0"), 2.7e-4, 1e-5, [(N, "exceeds the real range (2.7×10⁻⁴)")]),
             ("post hoc 0.03: not bounded", float(c3["bound"] is None), 1, 1, [(N, "From 0.03 on, the floor alone")]),
-            ("the common shift's largest effect", 1 - rob, 0.16, 0.01, [(N, "lowers the ranges by at most 16%")])]
+            ("the common shift's largest effect at delta >= 1e-6", 1 - rob, 0.13, 0.01,
+             [(N, "lowers the ranges at δ ≥ 10⁻⁶ by at most 13%")]),
+            ("the bound holds over the common shift", float(holds), 1, 1, [(N, "so the bound holds over it")])]
 
 
 @check

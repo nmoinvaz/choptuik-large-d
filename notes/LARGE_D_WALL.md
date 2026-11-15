@@ -779,7 +779,8 @@ python3 lam_singularity.py posthoc RAW --json=data/lam_singularity_posthoc.json
   - There δ = 10⁻⁶ already gives 4.0–4.9×10⁻⁴, and −δ gives 3.3–4.0×10⁻⁴. So |D*(λ_g) − D*(Δ)| < 10⁻⁶.
   - From 0.03 on, the floor alone exceeds the real range (2.7×10⁻⁴), so the real constancy also bounds the
     contamination.
-  - A shift of both folds by up to ±4×10⁻⁴, the spread of Δ's own D*, lowers the ranges by at most 16%.
+  - A shift of both folds by up to ±4×10⁻⁴, the spread of Δ's own D*, lowers the ranges at δ ≥ 10⁻⁶ by at most 13%,
+    so the bound holds over it.
   - This is numerical evidence, conditional on the plant's model of the other singularities.
 
 ## Proposed README text
