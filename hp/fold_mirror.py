@@ -2,30 +2,37 @@
 """The fold's mirror branch: the second sheet of Delta(D) at the square-root point D* = 259.9033, from chain_nsr's own
 Taylor series in D (#829), by two approximant families that share only the input series.
 
-    cd hp && python3 fold_mirror.py planted RAWDIR [--json=OUT] [--shift=0.01] [--cont=0.3] [--noise=1e-30]
+    cd hp && python3 fold_mirror.py planted RAWDIR [--json=OUT] [--shift=0.01 --usable=..] [--bases=..] [--points=1]
+                                                    [--cont=0.3] [--noise=1e-30]
     cd hp && python3 fold_mirror.py real RAWDIR --planted=PLANTED.json [--json=OUT] [--csv=OUT]
     cd hp && python3 fold_mirror.py literal RAWDIR      the issue's method 1 on the truncated series alone (no model)
 
 RAWDIR is a clone of the raw-data repository: the jets are I603-win2/chain_nsr/jet_pin3_D*.npz (25 orders, eight
-parts; Delta is the last entry), at the bases from D 258.78 that #818 used, and the measured Delta is the last entry of
-each state anm_pin3_D*.npz.
+parts; Delta is the last entry), at the 46 bases from D 258.7829 to 259.8352 that #818 used, and the measured Delta is
+the last entry of each state anm_pin3_D*.npz (every state in [259.64, D*) present in RAWDIR).
 
 Near D*, Delta = Delta* + sum_k a_k s^k with s = +sqrt(D* - D) on the chain's sheet and s = -sqrt(D* - D) on the
-mirror. Both methods take a base's coefficients c_0..c_24 (h = D - D_b) and build a two-valued approximant.
-  M1  differential approximant continued around D*. A first-order inhomogeneous approximant
-      Q1 f' + Q0 f + R = O(h^(m1 + m0 + r + 2)), Q1(0) = 1 (Guttmann and Joyce), whose zero h* nearest D* is the
-      branch point, with local exponent mu = -Q0(h*)/Q1'(h*). Its solution is continued from the base along the real
-      axis to h* - rho, once counterclockwise around h* on the circle of radius rho, back to h* - rho on the other
-      sheet, then along the real axis to each D. Each step re-expands the solution at a new centre, the approximant
-      supplying every order (a Taylor step of order KT, of length at most STEP times the distance to the nearest zero
-      of Q1). rho = min(RHO, 0.45 d), d the distance from h* to the next zero of Q1, so the circle holds h* alone.
-      The mirror is the real part, and |Im| (zero when mu = 1/2) is reported.
-  M2  quadratic Pade (Shafer) approximants P f^2 + Q f + R = O(h^(l + m + n + 2)), P(0) = 1. Their roots
-      (-Q +- sqrt(Q^2 - 4 P R)) / (2 P): the root equal to c_0 at the base is the chain's, the other the mirror,
-      followed along the real axis, where neither the discriminant nor P may vanish between the base and D.
-The truncated series alone cannot do method 1 as the issue words it: a polynomial re-expanded at any centre is the same
-polynomial, single-valued, so a loop around D* returns its starting value (`literal` shows it). The orders past 24 must
-come from a model, and the differential approximant is that model in M1.
+mirror. Each method builds a two-valued approximant from the series of two bases (h = D - D_b at the anchor D_b): the
+base and its partner, the base nearest D_b - PAIR. Its polynomials, in x = (D - D*)/W, make the form vanish to all 25
+(M2) or 24 (M1) orders of both series, by least squares with each condition scaled to unit largest entry (`forms`;
+with --points=1, the anchor's series alone at the lower degrees DA_DEG1, QP_DEG1).
+  M1  differential approximant continued around D*. A first-order inhomogeneous approximant Q1 f' + Q0 f + R = 0
+      (Guttmann and Joyce), whose zero h* nearest D* is the branch point, with local exponent
+      mu = -Q0(h*)/Q1'(h*). Its solution is continued from the anchor along the real axis to h* - rho, once
+      counterclockwise around h* on the circle of radius rho, back to h* - rho on the other sheet, then along the real
+      axis to each D. Each step re-expands the solution at a new centre, the approximant supplying every order (a
+      Taylor step of order KT, of length at most STEP times the distance to the nearest zero of Q1).
+      rho = min(RHO, 0.45 d), d the distance from h* to the next zero of Q1, so the circle holds h* alone. The mirror
+      is the real part, and |Im| (zero when mu = 1/2) is reported.
+  M2  quadratic Pade (Shafer) approximants P f^2 + Q f + R = 0. Their roots (-Q +- sqrt(Q^2 - 4 P R)) / (2 P): the
+      root equal to c_0 at the anchor is the chain's, the other the mirror, followed along the real axis, where
+      neither the discriminant nor P may vanish between the anchor and D.
+The truncated series alone cannot do method 1 as the issue first worded it: a polynomial re-expanded at any centre is
+the same polynomial, single-valued, so a loop around D* returns its starting value (`literal` shows it). The orders
+past 24 must come from a model, and the differential approximant is that model in M1.
+The configuration was fixed on the plant before the real run (#829): matched exactly at one base, both methods reach
+about 5e-6 at 259.64 at the base nearest D*; at two bases, matched exactly (degree sum 46), 1e-9 without noise but
+1e-2 at noise 1e-30; by least squares at the degrees DEG2 (sums 31-33), about 1e-7 at noise 1e-30.
 
 Delta* and a1..a4. M2: with t = D*_Q - D at the discriminant's zero, E = -Q/(2P) = Delta* + a2 t + a4 t^2 + ... and
 sigma sqrt(disc/t)/(2P) = a1 + a3 t + ..., series arithmetic. M1: Frobenius at h*, the particular solution analytic
@@ -42,11 +49,13 @@ planted (criteria registered on #829 before the real series was read by this scr
 of F = R(D) + S(D) sqrt(D* - D) + C(D), with the chain's sizes (Delta* 1.6323, a1 0.035, a2 -0.010, a3 0.020, a4
 0.010, an entire term 1e-3 Re e^(kappa (D - 259.9033)), kappa 1.019 + 1.607i, and a5 -0.010; from a fit of the
 measured Delta, sizes only), the contamination C = CONT a1 [sqrt(260.17 - D) + 2 Re sqrt(259.47 + 1.17i - D)] (#782's
-near singularities, CONT 0.3), and relative noise NOISE 1e-30 on every coefficient (the jets' sums meet the next
-states to 1e-37..5e-33). Its mirror is R - S sqrt(D* - D) + C. A base is usable when both methods' base values are
+near singularities, CONT 0.3), and relative noise NOISE on every coefficient: the larger of 1e-30 and the jets'
+own, 1e-34..8e-34 from the plateau of the two-base least-squares residual of M2's forms on the real series at degrees
+12-15 (no mirror evaluated; the jets' sums also meet the next states to 1e-37..5e-33), so 1e-30. Its mirror is R - S sqrt(D* - D) + C. A base is usable when both methods' base values are
 within 1e-6 of the plant's mirror at all GRID points. Pass: at least 4 usable bases, each method's grid values within
 1e-6 at all GRID points, and its + sheet within 1e-8 of F at the states in [259.64, D*) other than the base.
---shift=0.01 (the control) builds the plant with D* moved by 0.01 and judges it against the unmoved plant: it must fail.
+--shift=0.01 --usable=B1,B2,.. (the control) builds the plant with D* moved by 0.01 and judges it at the unmoved
+plant's usable bases against the unmoved plant's mirror: it must fail.
 Exit 1 when the verdict is not the expected one.
 
 real: at the usable bases of PLANTED.json. (a) + sheet: both methods' chain sheet meets the measured Delta at the
@@ -54,9 +63,8 @@ states in [259.64, D*) other than the base to 1e-8; (b) the two methods' mirrors
 reported with the spread over bases; (c) the table (CSV); (d) Delta*, a1..a4 by both methods, a1 beside #818's
 0.0341..0.0352 (hp/data/lam_singularity_posthoc.json).
 
-Methods: differential approximants, A. J. Guttmann and G. S. Joyce, J. Phys. A 5, L81 (1972),
-doi:10.1088/0305-4470/5/9/001; quadratic Pade approximants, R. E. Shafer, SIAM J. Numer. Anal. 11, 447 (1974),
-doi:10.1137/0711037.
+Methods: differential approximants, Guttmann and Joyce 1972, J. Phys. A 5, L81; quadratic Pade approximants,
+Shafer 1974, SIAM J. Numer. Anal. 11, 447 (as cited in solver/inner_amp/pade_chord_arc.py).
 """
 import glob
 import json
@@ -70,7 +78,7 @@ import numpy as np
 
 DPS = 80
 DSTAR = mp.mpf("259.9033")        # hp/data/fold_259.csv (#603's kept plan)
-D_MIN = 258.78
+D_MIN, D_MAX = 258.78, 259.8353   # #818's 46 bases, 258.7829 .. 259.8352 (chain_nsr has since gone on)
 N = 24
 GRID = [mp.mpf(25964 + k) / 100 for k in range(27)]      # 259.64 .. 259.90
 S_LO = 259.64                     # + sheet check: the states in [S_LO, D*)
@@ -145,7 +153,7 @@ def polish(p, x0):
 # ---- data ----
 def jets(raw):
     fs = sorted(glob.glob(os.path.join(raw, "I603-win2", "chain_nsr", "jet_pin3_D*.npz")))
-    return [f for f in fs if float(f.rsplit("_D", 1)[1][:-4]) >= D_MIN - 1e-9]
+    return [f for f in fs if D_MIN - 1e-9 <= float(f.rsplit("_D", 1)[1][:-4]) <= D_MAX]
 
 
 def delta_series(path):
