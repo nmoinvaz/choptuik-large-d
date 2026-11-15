@@ -1,8 +1,10 @@
-//! The pivots of multidouble's `linalg::clu_logdet`: its LU copied from multidouble 4.1.0 (`clu_logdet_on`, the
-//! version hp pins) with each pivot recorded as it is formed and nothing else changed, so ln|det|, arg det, min |u_kk|
-//! and max |u_kk| are clu_logdet's bit for bit (`mode_pivots` returns them for that check, #552). Those are f64
-//! aggregates, so the comparison sees changes above their resolution; the double-double identity rests on the
-//! source, which differs from clu_logdet_on only by the three pushes and the returned lists.
+//! The pivots of multidouble's `linalg::clu_logdet`: its unblocked LU copied from multidouble 4.1.0 (`clu_logdet_on`,
+//! from 4.5.0 on `clu_logdet_control`'s `CluControl::Dense`) with each pivot recorded as it is formed and nothing else
+//! changed, so ln|det|, arg det, min |u_kk| and max |u_kk| are clu_logdet's bit for bit (`mode_pivots` returns them
+//! for that check, #552). Those are f64 aggregates, so the comparison sees changes above their resolution; the
+//! double-double identity rests on the source, which differs from the unblocked elimination only by the three pushes
+//! and the returned lists, and on clu_logdet's blocked elimination matching the unblocked one bit for bit
+//! (multidouble's tests; modecount_check.py's check 6 on the mode matrix).
 use multidouble::dd::{pow2_near, DD};
 use multidouble::dv::{DotAcc, DV};
 use multidouble::simd::{self, Kernel, Simd};

@@ -19,10 +19,13 @@
    cached ln|det|, arg det, min |u_kk| and max |u_kk|. The layout's segment plan uses libm, so a cache from another
    operating system can differ in the last bits (notes/HIGH_M.md 9.5). Control: the first of them with Re lambda one
    ulp up must differ in one of the four.
+6. CSolver.mode_det by multidouble's blocked complex LU (clu_logdet from 4.5.0) bit for bit against its unblocked
+   elimination (mode_det's dense=True, CluControl::Dense, clu_logdet before 4.5.0) on the same matrices, at four lambda
+   on and off the real axis. Control: the blocked one with Re lambda one ulp up must differ in one of the four floats.
 
 --mutate=dmat, the control of checks 2 and 5: the complex kernel is built with the differentiation matrix's largest
 entry of row 0 moved by one ulp of its high part (modecount_pivots.csolver), so both must fail.
-Exit 1 if check 2 or 5 fails or one of their controls passes.
+Exit 1 if check 2, 5 or 6 fails or one of their controls passes.
 """
 import json
 import math
@@ -165,6 +168,30 @@ def main():
             elif not ctl and not all(same):
                 bad.append(f"check 5 failed at {e['re']}{e['im']:+}i")
         rec["regression"] = dict(cache=os.path.basename(opts["regress"]), points=reg)
+
+    # 6. the blocked LU (clu_logdet from multidouble 4.5.0) against the unblocked one on the same matrices
+    lu = []
+    pts = ((1.7, 0.0), (0.9, 0.4), (2.5, -1.1), (st.lam_g, 0.05))
+    try:
+        st.c.mode_det(st.zh, st.zl, 1.7, 0.0, dense=True)
+    except TypeError:
+        pts = ()
+        log("  6. skipped: this modecount_cx build has no mode_det(dense=)")
+    for k, (lr, li) in enumerate(pts + pts[:1]):
+        ctl = k == len(pts)
+        blocked = st.c.mode_det(st.zh, st.zl, float(np.nextafter(lr, np.inf)) if ctl else float(lr), float(li))
+        dense = st.c.mode_det(st.zh, st.zl, float(lr), float(li), dense=True)
+        same = [bits(a) == bits(b) for a, b in zip(blocked, dense)]
+        lu.append(dict(re=float(lr), im=float(li), control=ctl, blocked=list(blocked), dense=list(dense),
+                       equal=[bool(s) for s in same]))
+        log(f"  6. {'control (blocked one ulp above), ' if ctl else ''}lambda {lr!r}{li:+}i: blocked ln|det| "
+            f"{blocked[0]!r}, unblocked {dense[0]!r}; four floats equal {sum(same)} of 4"
+            + ("" if ctl else (": pass" if all(same) else ": FAIL")))
+        if ctl and all(same):
+            bad.append("control 6: one ulp of Re lambda left the blocked determinant's four floats unchanged")
+        elif not ctl and not all(same):
+            bad.append(f"check 6 failed at {lr}{li:+}i")
+    rec["lu_blocked_vs_dense"] = lu
     rec["failed"] = bad
     with open(out, "a") as fo:
         fo.write(json.dumps(rec) + "\n")
