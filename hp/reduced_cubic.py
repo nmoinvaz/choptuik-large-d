@@ -10,7 +10,7 @@
     cd hp && python3 reduced_cubic.py rows planted [--seed=5] [--json=OUT] [--mutate=quadA|parity]
     cd hp && python3 reduced_cubic.py rowsum OUT.json [OUT.json ...]     (the rows runs' summary)
     cd hp && python3 reduced_cubic.py curve RAWDIR DZ0 BASE [--ref677=RAY.json] [--ref694=ROWS.json] [--threads=2]
-        [--json=OUT] [--mutate=w0|chord]
+        [--json=OUT] [--curve_t=LIST] [--mutate=w0|chord|dz0]
     cd hp && python3 reduced_cubic.py curve planted [--seed=5] [--json=OUT] [--mutate=w0|chord]
     cd hp && python3 reduced_cubic.py curvesum OUT.json [OUT.json ...]   (the curve runs' summary)
 
@@ -26,6 +26,11 @@ carried to that range, with strong rows that the chord through z0's LU cannot fo
 each point to 1e-3 and the orders 4 and 5 to 0.05, every solve must converge, and the verdict's self-test must give
 its five planted verdicts. Its controls --mutate=w0 (no strong solve) and --mutate=chord (section 9's chord through
 z0's LU instead of Newton) must fail.
+A DZ0 file of `octo_corrector.py planted --save_dz0` carries its system's plan and held offset, which `curve` then
+uses (#823); its step must be that system's Newton step at z0 (-J^-1 F(z0) within 1e-20 of it, relative), and
+--mutate=dz0 (the step scaled by 1 + 1e-6) must fail that. --curve_t=LIST adds t to the + ray of a real start, each
+a number or a multiple of |a| ("a", "2a"). Each converged point stores g, its signs against g(0) and dlast, the move's
+Delta against z0.
 
 `rows` (#694) splits the weak left vectors U over the residual's rows, expanded on harmonics within each field of each
 block (row_harm: block.field.harmonic, e.g. horizon.p.k5c, and the phase row), and measures each row's second
@@ -171,7 +176,7 @@ class Real:
     """an attempt's pinned system, rebuilt as weak_corrector.py does; F(p) is the pinned residual at z0 + p (p an mpf
     list or None), solve(r) is J^-1 r through z0's octo-double LU"""
 
-    def __init__(self, raw, dzf, base, threads, log, fast=False):
+    def __init__(self, raw, dzf, base, threads, log, fast=False, mutate=""):
         from hpkernel.driver import make_solver
         from multidouble import od_axpy
         from octo_corrector import PinnedO, load_o, o8, omax
@@ -180,7 +185,11 @@ class Real:
         f = np.load(os.path.join(raw, dzf))
         z0 = o8([f[f"z{q}"] for q in range(8)])
         d0 = o8([f[f"d{q}"] for q in range(8)])
+        if mutate == "dz0":         # the control of the stored system (#823): the first step scaled by 1 + 1e-6
+            d0 = o8([np.asarray(p) * (1 + 1e-6) for p in d0])
         md = json.loads(str(f["meta"]))
+        # a dz0 file of octo_corrector.py planted --save_dz0 carries its system's plan and held offset (#823)
+        own = "c0" in f.files and bool(md.get("segs"))
         _, mb = load_o(os.path.join(raw, base))
         M, nodes, kf = int(mb["M"]), list(mb["nodes"]), int(mb.get("kfreeze", 3))
         K, L = len(nodes), len(z0[0])
@@ -191,7 +200,7 @@ class Real:
         t0 = time.time()
         s = make_solver(str(D), M, nodes=nodes, kt=mb.get("kt", 36), kc=mb.get("kc", 146), ks=mb.get("ks", 130),
                         threads=threads, kfreeze=kf)
-        s.set_segs(mb["segs"])
+        s.set_segs(md["segs"] if own else mb["segs"])
         # the held offset c = F_bare(z0) + J dz0 on the horizon block's p rows; J dz0 by columns in eight parts, or
         # with fast (#698) as the octo-double jet's first coefficient with the dimension frozen (JET_MUT_FREEZE_N),
         # J dz0 by forward mode, which saves the explicit Jacobian (about 200 s at 2 threads)
@@ -212,7 +221,10 @@ class Real:
         hp = set(range(4 * M * K, 4 * M * K + M))
         on, off = max(abs(coff[r]) for r in hp), max(abs(coff[r]) for r in range(L) if r not in hp)
         self.offset_ok = bool(on > 0 and off < mp.mpf("1e-6") * on)
-        c8 = parts8([coff[r] if r in hp else mp.mpf(0) for r in range(L)])
+        if own:
+            c8 = o8([f[f"c{q}"] for q in range(8)])
+        else:
+            c8 = parts8([coff[r] if r in hp else mp.mpf(0) for r in range(L)])
         self.so = PinnedO(s, c8[0], c8[1], c8=c8)
         self.s, self.z0, self.L, self.M, self.kf = s, z0, L, M, kf
         self.J0 = None if J is None else J[0]           # the Jacobian's leading part, for the rows' scales (#694)
@@ -223,13 +235,22 @@ class Real:
         st = s.newton_o(list(z0))                     # z0's LU, kept for every solve below
         self.F0max = omax(self.so.residual_o(z0))
         self.dz0 = mpv(d0, range(L))
+        # with the stored system, the stored step must be its Newton step at z0: -J^-1 F(z0) against dz0 (#823)
+        self.dz0_re, self.dz0_ok = None, True
+        if own:
+            dre = [-x for x in self.solve(self.F())]
+            self.dz0_re = nrm([x - y for x, y in zip(dre, self.dz0)]) / nrm(self.dz0)
+            self.dz0_ok = bool(self.dz0_re < DZ0_BAR)
         self.label = f"{dzf}: D {mp.nstr(D, 12)} (a {md.get('a')}), from {base}"
         log(f"{self.label}; L {L}; held offset on its rows {mp.nstr(on, 3)}, elsewhere {mp.nstr(off, 3)} (bound 1e-6 "
-            f"of the first): {'pass' if self.offset_ok else 'FAIL'}; the recovered system's start max|F| "
-            f"{self.F0max:.4e}; octo-double LU pivots {st[3]:.1e}..{st[4]:.1e} ({time.time() - t0:.0f} s)")
+            f"of the first): {'pass' if self.offset_ok else 'FAIL'}; the {'stored' if own else 'recovered'} system's "
+            f"start max|F| {self.F0max:.4e}" + ("" if not own else f"; -J^-1 F(z0) against the stored dz0 "
+            f"{mp.nstr(self.dz0_re, 3)} (bound {DZ0_BAR:g}): {'pass' if self.dz0_ok else 'FAIL'}")
+            + f"; octo-double LU pivots {st[3]:.1e}..{st[4]:.1e} ({time.time() - t0:.0f} s)")
         self.meta = dict(dz0=dzf, base=base, D=float(D), D_str=mp.nstr(D, 30), a_step=md.get("a"), L=L,
                          offset=dict(on=float(on), off=float(off), ok=self.offset_ok), F0max=self.F0max,
-                         pivots=[st[3], st[4]])
+                         pivots=[st[3], st[4]], system="stored" if own else "recovered",
+                         dz0_re=None if self.dz0_re is None else float(self.dz0_re), dz0_ok=self.dz0_ok)
 
     def F(self, p=None):
         z = self.z0 if p is None else self.o8(self.od_axpy(1.0, *self.parts8(p), *self.z0))
@@ -1506,6 +1527,7 @@ def raysum(paths):
 # ------------------------------------------------------------------ the curvature scale (#698)
 CURVE_T = [mp.mpf(10) ** (mp.mpf(e) / 2) for e in (-12, -10, -8, -6, -5, -4)]     # 1e-6, 1e-5, 1e-4, 1e-3, 3.16e-3, 1e-2
 CURVE_LEAD = mp.mpf("1e-24")         # the lead-in point on the + ray of a real start, #677's largest |c|
+DZ0_BAR = 1e-20                      # a stored system's step against its re-solved Newton step, relative (#823)
 CURVE_JUDGED = (mp.mpf("1e-3"), mp.mpf("1e-2"))
 SUPPORT_F, REFUTE_F = 2, 10          # within a factor 2 of the prediction supports, off by more than 10 refutes
 ORDER_TOL = mp.mpf("0.25")           # "local order 2": the even part's order over 1e-3 .. 1e-2 within 2 +- 0.25
@@ -1738,14 +1760,16 @@ def verdict_selftest():
 
 
 def curve_scan(sysm, bas, opts, mutate, log, rec, dump, truth=None, kappa=None, ref677=None, fee694=None, fee2=None,
-               wee=None):
+               wee=None, t_plus=()):
     """g on the strong-solved manifold along c = +-t e, e = a / |a|, at t in CURVE_T (and CURVE_LEAD on the + ray of
     a real start), by newton_strong; the departure dep(c) = g(c) - g(0) - B c in units of |B c| = t |B e|, its even
     and odd parts, their floors and orders, the flat chart (w = 0) at the same t, and the verdict of curve_verdict
     against kappa t. truth (the plant): c -> the planted departure. ref677: #677's ray JSON (the lead-in point is
     compared with its stored departure at 1e-24). fee694: max_r |F''_r(e, e)| from #694's rows JSON, against which the
     flat chart's strong residual is compared. --mutate=w0: g on the flat chart instead of the strong solve;
-    --mutate=chord: the strong solve by ray_solve's chord through z0's LU instead of newton_strong."""
+    --mutate=chord: the strong solve by ray_solve's chord through z0's LU instead of newton_strong. t_plus: more t on
+    the + ray (--curve_t). Each converged point stores g, its signs against g(0), and dlast, the move's last unknown
+    (Delta on a real start) against z0 (#823)."""
     k, X, Um, B, a, Ba, nBa, na, w0 = (bas[n] for n in ("k", "X", "Um", "B", "a", "Ba", "nBa", "na", "w0"))
     wref = max(nrm(w0), mp.mpf("1e-300"))
     e = [x / na for x in a]
@@ -1762,7 +1786,8 @@ def curve_scan(sysm, bas, opts, mutate, log, rec, dump, truth=None, kappa=None, 
         f"({mp.nstr(floor0 / nBa, 3)} of |B a|); prediction kappa t |B c| with kappa "
         + ("none" if kappa is None else mp.nstr(kappa, 5)) + f" ({time.time() - t0:.0f} s)")
     out = dict(nBe=float(nBe), floor0=float(floor0), floor0_Ba=float(floor0 / nBa), g0_ok=bool(ok00 and ok0b),
-               kappa=None if kappa is None else float(kappa), points=[], flat=[])
+               kappa=None if kappa is None else float(kappa), points=[], flat=[], g0=[float(x) for x in g00],
+               dlast0=float(w00[-1]), na=float(na), t_plus=[float(t) for t in t_plus])
     rec["curve"] = out
     dump()
     if not (ok00 and ok0b):
@@ -1823,6 +1848,7 @@ def curve_scan(sysm, bas, opts, mutate, log, rec, dump, truth=None, kappa=None, 
     conv, pts = [], {1: [], -1: []}
     for sgn in (1, -1):
         ts = ([CURVE_LEAD] if truth is None and sgn == 1 else []) + CURVE_T
+        ts = sorted(ts + list(t_plus)) if sgn == 1 else ts
         for t in ts:
             t1 = time.time()
             c = [sgn * t * x for x in e]
@@ -1842,10 +1868,15 @@ def curve_scan(sysm, bas, opts, mutate, log, rec, dump, truth=None, kappa=None, 
                      w=float(nrm([x - y for x, y in zip(wv, w0)])), w_init_err=float(wdiff), s=round(time.time() - t1, 1))
             if okv:
                 p["dep"] = dep_of(gv, c)
+                p["g"] = [float(x) for x in gv]
+                p["signs"] = "".join("+" if x * y > 0 else "-" for x, y in zip(gv, g00))
+                p["dlast"] = float(mp.fsum(c[j] * X[j][-1] for j in range(k)) + wv[-1])
                 conv.append((tau, wv))
             pts[sgn].append(p)
             log(f"    {'+' if sgn > 0 else '-'}t {mp.nstr(t, 3):>8}: " + (
-                f"|dep| / |B c| {mp.nstr(nrm(p['dep']) / nBc, 6)}, " if okv else "NOT converged, ")
+                f"|dep| / |B c| {mp.nstr(nrm(p['dep']) / nBc, 6)}, g against g(0) {p['signs']}, "
+                f"g.g(0) / |g(0)|^2 {mp.nstr(dot(gv, g00) / dot(g00, g00), 6)}, dlast {p['dlast']:+.10e}, "
+                if okv else "NOT converged, ")
                 + f"error estimate {mp.nstr((ev if ev is not None else mp.nan) / nBc, 3)} of |B c|, |w - w0| "
                 f"{p['w']:.3e}, its prediction off by {p['w_init_err']:.2e}, max|F| {p['Fmax']:.2e}, {nlu} LUs, "
                 f"(LU, |dw|) " + ", ".join(f"({h[0]}, {h[2]:.1e})" for h in hv) + f" ({p['s']:.0f} s)")
@@ -2593,17 +2624,25 @@ KAPPA_677 = {"dz0_pin3_D242.5459_a0.031250.npz": (mp.mpf("3.750e-29"), mp.mpf("8
 def main_curve(args, opts, mutate, log, rec, dump):
     """curve RAWDIR DZ0 BASE [--ref677=JSON] [--ref694=JSON] or curve planted: the basis, then curve_scan"""
     if args[1:] == ["planted"]:
+        if opts.get("curve_t") or mutate == "dz0":
+            sys.exit("--curve_t and --mutate=dz0: real starts only")
         sysm = CurvePlanted(int(opts.get("seed", 5)), log, mutate=mutate)
         rec.update(sysm.meta)
         bas = basis(sysm, opts, log, rec, dump)
         ok, rec = curve_scan(sysm, bas, opts, mutate, log, rec, dump, truth=sysm.dep_true(bas["X"], bas["Um"]))
         return ok and bool(sysm.selfcheck < 1e-20)
-    sysm = Real(*args[1:4], int(opts.get("threads", 2)), log, fast=True)
+    sysm = Real(*args[1:4], int(opts.get("threads", 2)), log, fast=True, mutate=mutate)
     rec.update(sysm.meta)
     if not sysm.offset_ok:
         log("check: FAIL (the held offset is not on its rows only)")
         return False
+    if not sysm.dz0_ok:
+        log("check: FAIL (the stored first step is not the stored system's Newton step)")
+        return False
     bas = basis(sysm, opts, log, rec, dump)
+    # --curve_t=LIST: more t on the + ray, each a number or a multiple of |a| ("a", "2a"), #823
+    t_plus = [bas["na"] * (mp.mpf(x[:-1]) if x[:-1] else 1) if x.endswith("a") else mp.mpf(x)
+              for x in opts.get("curve_t", "").split(",") if x]
     K, an = KAPPA_677.get(os.path.basename(args[2]), (None, None))
     kappa = None if K is None else K / an
     fee = fee2 = wee = None
@@ -2614,7 +2653,7 @@ def main_curve(args, opts, mutate, log, rec, dump):
         fee2 = mp.sqrt(mp.fsum(mp.mpf(x) ** 2 for x in r9["rows"]["along"]["rows"]["Fee"]))
         wee = mp.mpf(r9["rows"]["along"]["wee"])
     ok, rec = curve_scan(sysm, bas, opts, mutate, log, rec, dump, kappa=kappa, ref677=opts.get("ref677"), fee694=fee,
-                         fee2=fee2, wee=wee)
+                         fee2=fee2, wee=wee, t_plus=t_plus)
     return ok
 
 
@@ -2663,7 +2702,7 @@ def main():
         curvesum(args[1:])
         return 0
     modes = dict(run=("", "w0", "Ssign", "Sh", "hF"), planted=("", "w0", "Ssign", "Sh", "hF"), ray=("", "w0", "B"),
-                 rows=("", "quadA", "parity"), curve=("", "w0", "chord", "fold"))
+                 rows=("", "quadA", "parity"), curve=("", "w0", "chord", "fold", "dz0"))
     if not args or args[0] not in modes or (args[0] == "run" and len(args) != 4) or \
             (args[0] in ("ray", "rows", "curve") and len(args) != 4 and args[1:] != ["planted"]):
         sys.exit(__doc__)
