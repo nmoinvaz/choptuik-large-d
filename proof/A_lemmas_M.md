@@ -864,12 +864,14 @@ x ↦ (J^path_{D,μ}(ξ₁; x))_{μ = 1, 3, …, M} has exactly one zero in X_c 
 
 - (H0) the certificate's start data are those of step (i) (§2), and step (i) is proved, at the certificate's
   truncation N, on a set that contains its start sets: its centre p̂, the hull of its run box, and the Cauchy box of
-  each;
-- (H1) X_c ⊂ X₆ = x̂ ± 10⁻⁶, the box over which lemma S(M), the old sector lemma and the flat estimate are proved here
-  (§3.3);
-- (H2) X_c ⊂ X_b, the box of a complete 6b₁ covering: at M = 3, X_b = p̂ ± 1.1×10⁻⁹ (§5.3), certified; at M = 5, X_b
-  is the ball of radius 10⁻¹⁸ + 2.19×10⁻²⁷ around p̂ cut at 39 decimals (§7);
-- (H3) lemma 6a(M) holds with B₁ the certificate's state box at ξ₁ over X_c.
+  each (`start_cover_M2.py`);
+- (H1) X_c ⊂ X₆ = x̂ ± 10⁻⁶, the box over which lemma S(M), and with it lemma 6b₀(M), is proved (§3.3,
+  `lemma6_sector_M.py --box=1e-6`);
+- (H2) X_c ⊂ X_b, the box of a complete 6b₁ covering (`lemma6b1_cover_M.py check`), whose own run proves its start set
+  by the old sector lemma: at M = 3, X_b = p̂ ± 1.1×10⁻⁹ (§5.3), certified; at M = 5, X_b is the ball of radius
+  10⁻¹⁸ + 2.19×10⁻²⁷ around p̂ cut at 39 decimals (§7, `theorem_A_sets_M.py`);
+- (H3) lemma 6a(M) holds with B₁ the certificate's state box at ξ₁ over X_c (`lemma6_jump_M.py --box=`). Its run proves
+  lemma S(M) and the flat estimate over its own box, x̂ ± 10⁻⁶ at M = 3 and p̂ ± 10⁻⁶ at M = 5, which contains X_c.
 
 Then the M-harmonic selection condition y⁺ ≡ y⁻ (all of S_1, …, S_M vanish) holds at exactly one point x* of X_c, and
 the real (M + 1) × (M + 1) Jacobian of (Re S_μ, Im S_μ)_μ is non-singular at x*.
@@ -880,7 +882,7 @@ the real (M + 1) × (M + 1) Jacobian of (Re S_μ, Im S_μ)_μ is non-singular at
    certificate's path lies in Ω up to the real leg, and its start value on the 5π/16 ray is y⁺ by the start-value fixed
    point (step (i), §2, from H0). So the path continuation is the continuation along the real axis, and J^path = J.
 2. The certificate gives one simple zero of J in X_c.
-3. Lemma 6a(M) (H3, with lemma S and the flat estimate from H1) gives J(ξ₁; x) = 0 ⇔ y⁺ ≡ y⁻.
+3. Lemma 6a(M) (H3, whose run supplies its own lemma S and flat estimate) gives J(ξ₁; x) = 0 ⇔ y⁺ ≡ y⁻.
 4. Simplicity transfers to S by §4.2. ∎
 
 At M = 1 the same assembly is Theorem A(M = 1) of §12.6.
@@ -906,14 +908,10 @@ derivative entries at M = 3, 19 of 19 and 114 of 114 at M = 5), the stored contr
 0.7246665601) and the stored Λ of the 6a runs (0.2922808049 and 0.4233267068). Mutations of the box (h = 2×10⁻⁶, or
 9×10⁻¹¹ past the edge), of the centre, of g₀ and of ρ₀ are each reported as not covered (`--selftest`).
 
-Three statements above are sharper than the runs:
-
-- (H1) lists the old sector lemma among what is proved over X₆. No step of the proof uses that run. The covering runs
-  its own old sector lemma at its centre (use 1, with r₀ = 0.07 at M = 5), and lemma 6a does not use it.
-- Step 3 of the proof takes lemma S and the flat estimate "from H1", over X₆ = x̂ ± 10⁻⁶. The M = 5 run of lemma 6a
-  proves them over p̂ ± 10⁻⁶, its own centre. Both boxes contain X_c.
-- At M = 5 the covering's centre is p̂ cut at 39 decimals, and X_c and X_b have the same nominal half-width. §7 states
-  both sets exactly and checks the inclusion (#871).
+So each hypothesis names a run that a step of the proof consumes: (H0) and (H2) feed step 1, with (H1) for
+lemma 6b₀, and (H3) feeds step 3. The stored run of the old sector lemma over X₆ (§3.3) is not among them: the covering
+runs its own, at its centre, with r₀ = 0.07 at M = 5 (#872). The inclusion in (H1) follows from two that the scripts
+check, X_c ⊂ X_b (`theorem_A_sets_M.py`, §7) and X_b ⊂ X₆ (use 2 above).
 
 ## 7. What waits for the point certificate
 
@@ -951,10 +949,10 @@ Against that, this note's status for M = 3:
 | hypothesis of §6 | status here | what it needs from the certificate |
 |---|---|---|
 | (H0) step (i) at the certificate's truncation, on a set that contains its start sets | **certified** by the certificate's own run on its four sets, and over x̂ ± 10⁻⁶ with its Cauchy box at N = 95 (#862). The stored rows of §2.4 are for N = 94 | its centre, box and start ray; then `start_cover_M2.py --box= --rerun` (seconds) |
-| (H1) X_c ⊂ x̂ ± 10⁻⁶ (lemma S, 6b₀, flat estimate) | **certified** over x̂ ± 10⁻⁶; p̂ is within 4×10⁻¹⁰ of x̂ | only the inclusion, which holds for any h ≤ 10⁻⁷ around p̂ |
+| (H1) X_c ⊂ x̂ ± 10⁻⁶ (lemma S, 6b₀) | **certified** over x̂ ± 10⁻⁶; p̂ is within 4×10⁻¹⁰ of x̂ | only the inclusion, which holds for any h ≤ 10⁻⁷ around p̂ |
 | (H2) X_c ⊂ p̂ ± 1.1×10⁻⁹ (lemma 6b₁) | **certified** on that box (§5.3) | the inclusion: its final centre within about 10⁻¹⁰ of p̂ and h ≤ 10⁻⁹ (true of both of its runs) |
 | the path lies in Ω | yes: arc 0.2, start ray 5π/16 within 0.2 of 3π/8, start point at 0.0741 < 0.1 | none |
-| (H3) lemma 6a from its B₁ at ξ₁ = 0.3 | **certified**: ρ₆ₐ = 0.041 (below) | its hull of y⁺(0.3; X_c), as JSON (keys M, h, x, xi1, yX_xi1); then `lemma6_jump_M.py --box=` (about 1 h) |
+| (H3) lemma 6a from its B₁ at ξ₁ = 0.3, with lemma S and the flat estimate proved in its run over x̂ ± 10⁻⁶ | **certified**: ρ₆ₐ = 0.041 (below) | its hull of y⁺(0.3; X_c), as JSON (keys M, h, x, xi1, yX_xi1); then `lemma6_jump_M.py --box=` (about 1 h) |
 | the zero and its simplicity | — | its Krawczyk test on the (M + 1) real D-jump conditions at ξ₁ |
 
 **The 6a pilots from ξ₁ = 0.3** (not rigorous). From x̂, the backward flow ran (450 steps), but G_slow was not
