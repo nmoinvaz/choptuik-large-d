@@ -17,6 +17,7 @@ used, so that a module importing this one runs on the older packages the runners
     python3 octo_corrector.py wall RAW PRED.npz [--threads 3] [--qd 0] [--F_max 1e-36] [--mutate_offset qd]
         [--mutate 10] [--out PREFIX] [--reseed_o 0] [--held_o 0] [--lu od|qd]
     (planted and wall take --switch S, ElimO's projection switch, 1e-15 by default; anm_run.py --elim_switch, #700;
+    --strong k, newton_od's strong_chord, 0 by default; anm_run.py --od_strong, #674;
     and --full_drop F, newton_od's full_drop with either test, 0 by default; anm_run.py --od_full_drop, #709, #777;
     and --lu qd, PinnedO's quad-double LU under the octo-double residual)
     python3 octo_corrector.py horizon RAW STATE.npz [--threads 3] [--steps 3] [--mutate_h sign]
@@ -847,6 +848,7 @@ def wall(argv):
     from reseed import Reseeder
     raw, path = argv[0], argv[1]
     opt = _parse(argv[2:], dict(threads=3, mutate_offset="", mutate=0, it_max=12, qd=0, tol=1e-40, out="", F_max=1e-36, junk=0, lu="od",
+                                strong=0,
                                 reseed_o=0, held_o=0, switch=1e-15, accept="own", full_drop=0.0, reseed_start="ladder"))
     z4, meta = load_q(os.path.join(raw, path))
     D = D_of(meta)
