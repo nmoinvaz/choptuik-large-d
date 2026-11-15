@@ -108,6 +108,9 @@ Newton correction through the LU at the iterate, octo_corrector.newton_od) inste
 correction (own, the default; #644). --od_strong k takes the corrector's first step whole and then solves only the
 strong rows, by the chord through the start's LU with the k weakest right directions of the start's Jacobian
 removed from each correction (octo_corrector.chord_strong; #528, #674). 0, the default, is off.
+--od_lu qd factors the corrector's Jacobian in quad-double (Solver.newton_q) and solves each step's octo-double
+residual F - c through that LU (octo_corrector.PinnedO's lu="qd"): the residual fixes the converged point, the LU's
+rounding only the rate. od, the default, is the octo-double LU.
 --od_full_drop F also accepts a full-step trial whose max|F| is at most F times the iterate's, whatever its
 simplified-correction ratio (--od_accept natural, #709) or its own correction (the default own test, #777)
 (newton_od's full_drop). 0, the default, is off.
@@ -303,6 +306,7 @@ def main():
     opt.update(od_full_drop=0.0)        # --od_full_drop f: either test also accepts a full step whose |F| falls to f (#709, #777)
     opt.update(od_abort_theta=0.0)      # --od_abort_theta R: the natural test refuses at iteration 1 when theta(lam 1) > R (#784)
     opt.update(od_abort_it=1)           # --od_abort_it K: that refusal at iterations 1 to K
+    opt.update(od_lu="od")              # --od_lu qd: the corrector's LU in quad-double under the octo-double residual
     opt.update(reseed_start="ladder")   # --reseed_start pred: the re-seed's quad-double polish from the point's own data (#693)
     opt.update(held_fit="")             # --held_fit FILE (pinning.HeldFit; notes/HELD_HARMONICS.md)
     opt.update(held_from="")            # --held_from STATE: the base's held values from STATE's, by the fit (#808)
@@ -369,7 +373,7 @@ def main():
         corrector's start in four parts (--pred_q), else (ph, pl). z8_start: the octo-double corrector's in eight"""
         if opt["corrector"] == "od":
             # --corrector od: the octo-double Newton (hp/octo_corrector.py), with --reseed 2 inside ElimO
-            so = PinnedO(spx.s, spx.ch, spx.cl, c8=spx.c8)
+            so = PinnedO(spx.s, spx.ch, spx.cl, c8=spx.c8, lu=opt["od_lu"])
             if elim.get("rs") is not None:
                 so = ElimO(so, elim["rs"], switch=opt["elim_switch"], log=bool(opt["log_proj"]))
             z0 = z8_start if z8_start is not None else o8_of_q(z4_start if z4_start is not None else qparts(ph, pl))

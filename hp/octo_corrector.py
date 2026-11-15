@@ -13,11 +13,12 @@ The octo-double helpers (od_add_dd, od_axpy) are multidouble's from f092018 on; 
 used, so that a module importing this one runs on the older packages the runners have.
 
     python3 octo_corrector.py planted RAW STATE.npz [--threads 3] [--rel 1e-12] [--seed 1] [--qd 1] [--od 1]
-        [--Delta_ref D] [--last 0] [--mutate_offset qd] [--mutate 10] [--out PREFIX]
+        [--Delta_ref D] [--last 0] [--mutate_offset qd] [--mutate 10] [--out PREFIX] [--lu od|qd]
     python3 octo_corrector.py wall RAW PRED.npz [--threads 3] [--qd 0] [--F_max 1e-36] [--mutate_offset qd]
-        [--mutate 10] [--out PREFIX] [--reseed_o 0] [--held_o 0]
+        [--mutate 10] [--out PREFIX] [--reseed_o 0] [--held_o 0] [--lu od|qd]
     (planted and wall take --switch S, ElimO's projection switch, 1e-15 by default; anm_run.py --elim_switch, #700;
-    and --full_drop F, newton_od's full_drop with either test, 0 by default; anm_run.py --od_full_drop, #709, #777)
+    and --full_drop F, newton_od's full_drop with either test, 0 by default; anm_run.py --od_full_drop, #709, #777;
+    and --lu qd, PinnedO's quad-double LU under the octo-double residual)
     python3 octo_corrector.py horizon RAW STATE.npz [--threads 3] [--steps 3] [--mutate_h sign]
     python3 octo_corrector.py digits [--mutate 2]
 
@@ -123,14 +124,24 @@ class PinnedO:
     F - c formed from an octo-double residual_o: the kernel's F there is rounded to double-double, 2^-106 |c| ~ 1e-35
     on the held rows (|c| ~ 8e-4), above the tolerance. mutate_offset (the control): 'qd' adds J^-1 c through the
     quad-double LU at the point's quad-double rounding instead of the octo-double one. c8: the offset in eight parts
-    (PinnedSolver's c8, anm_run.py --held_o 1), used instead of ch, cl in residual_o and in the step."""
+    (PinnedSolver's c8, anm_run.py --held_o 1), used instead of ch, cl in residual_o and in the step.
+    lu="qd": the step's LU is the quad-double one (Solver.newton_q at z's quad-double rounding, kept for qlu_solve) and
+    newton_o's step is -J^-1 (F - c) by it, with F - c in octo-double, so the residual alone fixes the point the
+    iteration converges to and the LU's rounding (about cond(J) 2^-212) only its rate; olu_solve is then qlu_solve
+    on the right-hand side's quad-double rounding. "od" (the default) is the octo-double LU throughout."""
 
-    def __init__(self, s, ch, cl, mutate_offset="", c8=None):
+    def __init__(self, s, ch, cl, mutate_offset="", c8=None, lu="od"):
+        if lu not in ("od", "qd"):
+            raise ValueError(f"PinnedO: lu is od or qd, not {lu!r}")
+        if lu == "qd" and mutate_offset:
+            # the control acts on the octo-double LU's J^-1 c, which the quad-double mode does not form
+            raise ValueError("PinnedO: mutate_offset is a control of lu='od'; with lu='qd' use the kernel's mutate")
         self.s = s
         self.ch, self.cl = np.ascontiguousarray(ch), np.ascontiguousarray(cl)
         self.zero = np.zeros(len(self.ch))
         self.mutate_offset = mutate_offset
         self.c8 = None if c8 is None else o8(c8)
+        self.lu = lu
 
     def __getattr__(self, name):
         return getattr(self.s, name)
@@ -142,9 +153,21 @@ class PinnedO:
             return o8(od_axpy(-1.0, *self.c8, *o8(F)))
         return o8(od_add_dd(*o8(F), -self.ch, -self.cl))
 
+    def olu_solve(self, b, transpose=False):
+        """x with J x = b (J^T x = b with transpose) by the LU of the last newton_o: the octo-double one, or with
+        lu="qd" the quad-double one on b's quad-double rounding (x in eight parts, the lower four zero)"""
+        if self.lu == "qd":
+            return o8_of_q(self.s.qlu_solve(*q4_of_o(b), transpose=transpose))
+        return self.s.olu_solve(list(o8(b)), transpose)
+
     def newton_o(self, z, mutate=0):
         from multidouble import od_axpy
         z = o8(z)
+        if self.lu == "qd":
+            pmin, pmax = self.s.newton_q(*q4_of_o(z), mutate=mutate)[6:8]
+            F = self.residual_o(z, mutate=mutate)
+            d = tuple(-p for p in self.olu_solve(F))
+            return o8(d), F[0], F[1], pmin, pmax
         d, _, _, pmin, pmax = self.s.newton_o(list(z), mutate=mutate)
         if self.mutate_offset == "qd":
             self.s.newton_q(*q4_of_o(z), mutate=mutate)
@@ -583,10 +606,10 @@ def D_of(meta):
         return mp.mpf(meta["D_str"])
 
 
-def pinned_o(meta, z, threads=2, plan_tol=1e-32, mutate_offset="", held_exact=False, segs=None):
+def pinned_o(meta, z, threads=2, plan_tol=1e-32, mutate_offset="", held_exact=False, segs=None, lu="od"):
     """reseed.pinned's solver at the state's D, with the segments planned at z at plan_tol (segs: a stored plan
     instead, #837), and its PinnedO wrapper: (s, PinnedSolver, PinnedQ, PinnedO). The held values are z's own, as
-    floats, or with held_exact taken from all of z's parts and carried in eight (anm_run.py --held_o 1)."""
+    floats, or with held_exact taken from all of z's parts and carried in eight (anm_run.py --held_o 1). lu: PinnedO's."""
     import mpmath as mp
     from hpkernel.driver import make_solver
     from pinning import PinnedQ, PinnedSolver, band_coeffs, band_field
@@ -600,7 +623,7 @@ def pinned_o(meta, z, threads=2, plan_tol=1e-32, mutate_offset="", held_exact=Fa
                      rest=[np.asarray(p)[:M] for p in z[2:]] if held_exact else ())
     h = band_field(co, ks_held, M, parts=8 if held_exact else 2)
     sp = PinnedSolver(s, M, h[0], h[1], h_rest=h[2:])
-    return s, sp, PinnedQ(s, sp.ch, sp.cl), PinnedO(s, sp.ch, sp.cl, mutate_offset=mutate_offset, c8=sp.c8)
+    return s, sp, PinnedQ(s, sp.ch, sp.cl), PinnedO(s, sp.ch, sp.cl, mutate_offset=mutate_offset, c8=sp.c8, lu=lu)
 
 
 
@@ -678,7 +701,7 @@ def o8_any(z):
     return o8(z) if len(z) == 8 else o8_of_q(z)
 
 
-def truth_system(raw, path, threads=3, read="auto", held="auto", plan="auto", mutate_offset=""):
+def truth_system(raw, path, threads=3, read="auto", held="auto", plan="auto", mutate_offset="", lu="od"):
     """a stored state and the pinned system of the checks (#837): (z, meta, (s, PinnedSolver, PinnedQ, PinnedO), info).
     auto: a state saved in eight parts (anm_run.py --corrector od) is read in eight and solved in its chain's own
     system, the held values carried in eight parts from all of its parts (as --held_o 1 holds them) and its stored plan
@@ -700,7 +723,7 @@ def truth_system(raw, path, threads=3, read="auto", held="auto", plan="auto", mu
     if stored and not meta.get("segs"):
         raise SystemExit(f"{path}: no stored plan (segs) in its meta")
     sysm = pinned_o(meta, z, threads=threads, mutate_offset=mutate_offset, held_exact=exact,
-                    segs=meta["segs"] if stored else None)
+                    segs=meta["segs"] if stored else None, lu=lu)
     info = dict(file_parts=8 if eight else 4, read=nread, held="eight parts" if exact else "floats",
                 plan="stored" if stored else "made at the state")
     return z, meta, sysm, info
@@ -726,11 +749,11 @@ def planted(argv):
     raw, path = argv[0], argv[1]
     opt = _parse(argv[2:], dict(threads=3, rel=1e-12, seed=1, mutate_offset="", mutate=0, it_max=12, qd=1, tol=1e-40, out="",
                                 Delta_ref="", last=0, od=1, accept="own", strong=0, switch=1e-15, full_drop=0.0, reseed_o=0,
-                                reseed_start="ladder", save_dz0="", read="auto", held="auto", plan="auto"))
+                                reseed_start="ladder", save_dz0="", read="auto", held="auto", plan="auto", lu="od"))
     # the truth and its system: an eight-part state's chain's own system, a four-part state's as before (#837)
     z4, meta, (s, sp, sq, so), info = truth_system(raw, path, threads=opt["threads"], read=opt["read"],
                                                    held=opt["held"], plan=opt["plan"],
-                                                   mutate_offset=opt["mutate_offset"])
+                                                   mutate_offset=opt["mutate_offset"], lu=opt["lu"])
     D = D_of(meta)
     rs = Reseeder(meta, D, threads=opt["threads"], qd=True, od=opt["reseed_o"], qd_start=opt["reseed_start"])
     zs, n = plant_start(z4, rs, opt["rel"], opt["seed"], opt["last"])
@@ -823,7 +846,7 @@ def wall(argv):
     from hpkernel.driver import load_q
     from reseed import Reseeder
     raw, path = argv[0], argv[1]
-    opt = _parse(argv[2:], dict(threads=3, mutate_offset="", mutate=0, it_max=12, qd=0, tol=1e-40, out="", F_max=1e-36, junk=0,
+    opt = _parse(argv[2:], dict(threads=3, mutate_offset="", mutate=0, it_max=12, qd=0, tol=1e-40, out="", F_max=1e-36, junk=0, lu="od",
                                 reseed_o=0, held_o=0, switch=1e-15, accept="own", full_drop=0.0, reseed_start="ladder"))
     z4, meta = load_q(os.path.join(raw, path))
     D = D_of(meta)
@@ -831,7 +854,7 @@ def wall(argv):
     t0 = time.time()
     zr, diag = rs.reseed(o8(z4))
     zr = o8(zr)
-    s, sp, sq, so = pinned_o(meta, zr, threads=opt["threads"], mutate_offset=opt["mutate_offset"],
+    s, sp, sq, so = pinned_o(meta, zr, threads=opt["threads"], mutate_offset=opt["mutate_offset"], lu=opt["lu"],
                              held_exact=bool(opt["held_o"]))
     print(f"wall {path}: D {mp.nstr(D, 12)}, re-seed {'ok' if diag['ok'] else 'FAILED'} ({diag['seconds']} s), pinned max|F| (octo) "
           f"{omax(so.residual_o(o8_of_q(zr))):.2e}; mutate_offset '{opt['mutate_offset']}', mutate {opt['mutate']}", flush=True)
