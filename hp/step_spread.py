@@ -2,8 +2,8 @@
 """Is Newton's Delta step at a converged state determined at octo-double precision? Its spread under perturbations of
 one block at a time by a relative size (#827), and that spread against D and #805's 2.2e-37/p_min (#830).
 
-    cd hp && python3 step_spread.py RAW STATE [--threads 3] [--rel 1e-65] [--seeds 1,2,3,4] [--blocks m_h,a_h]
-        [--ref D] [--repeat 1] [--controls 1] [--match OUT.json] [--json OUT] [--mutate repeat|noop]
+    cd hp && python3 step_spread.py RAW STATE [--threads 3] [--rel 1e-65[,REL...]] [--seeds 1,2,3,4] [--blocks m_h,a_h]
+        [--steps 1] [--ref D] [--repeat 1] [--controls 1] [--match OUT.json] [--json OUT] [--mutate repeat|noop|nostep]
     cd hp && python3 step_spread.py sum TABLE OUT.json [OUT.json ...] [--K 2.2e-37] [--slope 1.44] [--json SUM]
     cd hp && python3 step_spread.py power OUT.json [OUT.json ...] [--quad 1.8,2.2] [--lin 0.9,1.1] [--json POW]
         [--mutate start]
@@ -12,11 +12,19 @@ one block at a time by a relative size (#827), and that spread against D and #80
 The system is proj_shift.py's (octo_corrector.py planted's at --rel 0, truth_system: an eight-part state's own chain
 system, #837; no projection). The plain pinned Newton step (PinnedO.newton_o) is taken at the unperturbed state, at
 the seed blocks (--blocks, proj_shift.blocks' names; m_h and a_h by default) perturbed by rel with random signs,
-z_i -> z_i (1 + rel s_i), s_i = +-1, for each seed, and (--controls 1) at each block other than m_h and a_h
+z_i -> z_i (1 + rel s_i), s_i = +-1, for each rel of --rel and each seed, and (--controls 1, at the first rel) at each
+block other than m_h and a_h
 (reseed.offsets' centre, nodes, Delta) perturbed alone by the same size with the first seed, the centre being the
 control. Printed per run: the perturbation's largest move, the step's Delta part and the smallest pivot. The spread is
 the largest |dDelta(seed) - dDelta(unperturbed)| over the seeds, exact from the steps' eight parts; the seeds' standard
 deviation is printed beside it.
+
+--steps N (#852): each run takes N full Newton steps, z_k = z_(k-1) + dz_k, and prints after each max|dz_k|, the
+smallest pivot, max|F| at z_(k-1), max|z_k - z| / max|z_h| (z the stored truth, itself one Newton step of max|dz_1|
+from the root) and, for a perturbed run, max|z_k - u_k| / max|z_h| with u_k the unperturbed run's k-th iterate: the
+perturbation's own error, which does not see the truth's. The reading (not a check): "contracts" if that error, from
+max|move| / max|z_h| at k = 0, falls at each step (or is 0). Control: --mutate nostep keeps z_k at z_(k-1), and the
+reading must be "does NOT contract".
 
 Checks (exit 1 on failure): with --ref, the unperturbed step's Delta part equals it as a double; with --repeat 1, the
 unperturbed step taken a second time has the same eight parts of its Delta part and the same smallest pivot (control:
@@ -205,7 +213,7 @@ def power(argv):
         rec = json.load(open(path))
         for r in seed_runs(rec):
             key = (rec["D_str"], tuple(rec.get("blocks", ["m_h", "a_h"])), r["seed"])
-            groups.setdefault(key, []).append((rec["rel"], rec["runs"][0], r, os.path.basename(path)))
+            groups.setdefault(key, []).append((r.get("rel", rec["rel"]), rec["runs"][0], r, os.path.basename(path)))
     if opts["mutate"] == "start":
         # the same-start check's control: the last run of each group read with its unperturbed step one ulp off
         for pts in groups.values():
@@ -249,14 +257,15 @@ def main(argv):
     mp.mp.dps = 150
     raw, path = argv[0], argv[1]
     opt = dict(threads="3", rel="1e-65", seeds="1,2,3,4", ref="", json="", repeat="0", controls="1", mutate="",
-               read="auto", held="auto", plan="auto", blocks="m_h,a_h", match="")
+               read="auto", held="auto", plan="auto", blocks="m_h,a_h", match="", steps="1")
     for k in list(opt):
         if "--" + k in argv:
             opt[k] = argv[argv.index("--" + k) + 1]
     unknown = [a for a in argv[2:] if a.startswith("--") and a[2:] not in opt]
     if unknown:
         raise SystemExit(f"step_spread.py: unknown options {unknown}")
-    rel, seeds = float(opt["rel"]), [int(x) for x in opt["seeds"].split(",") if x]
+    rels, seeds = [float(x) for x in opt["rel"].split(",")], [int(x) for x in opt["seeds"].split(",") if x]
+    rel, nsteps = rels[0], int(opt["steps"])           # the controls take the first rel
     t0 = time.time()
     # the truth and its system as planted builds them (#837): an eight-part state's chain's own system
     z4, meta, (s, sp, sq, so), info = truth_system(raw, path, threads=int(opt["threads"]), read=opt["read"],
@@ -277,15 +286,26 @@ def main(argv):
     if not sel or any(b not in bl for b in sel):
         raise SystemExit(f"step_spread.py: --blocks {opt['blocks']!r}: the blocks are {', '.join(bl)}")
     lab = ", ".join(sel)
-    print(f"step_spread {path}: D {mp.nstr(mp.mpf(meta['D_str']), 15)}, M {M}, K {K}, L {L}; rel {rel:g}, seeds "
+    zh = float(np.abs(np.asarray(z[0][bl["m_h"][0]:bl["a_h"][1]])).max())      # max|z_h|, the errors' scale
+    print(f"step_spread {path}: D {mp.nstr(mp.mpf(meta['D_str']), 15)}, M {M}, K {K}, L {L}; rel "
+          f"{', '.join(f'{x:g}' for x in rels)}, steps {nsteps}, seeds "
           f"{seeds}; pinned max|F| (octo) {omax(so.residual_o(z)):.4e} ({time.time() - t0:.0f} s)", flush=True)
     print(f"  the system (#837): truth read in {info['read']} of {info['file_parts']} parts, held values "
           f"{info['held']}, plan {info['plan']}", flush=True)
     zero8 = [np.zeros(L)] * 7
 
-    def run(name, which, seed, control=False):
+    def odmax(a, b):
+        """max |a - b| / max|z_h| of two eight-part states, from the leading part of their octo-double difference"""
+        return float(np.abs(np.asarray(o8(od_axpy(-1.0, *b, *a))[0])).max()) / zh
+
+    upath = []          # the unperturbed run's iterates z_1 .. z_N
+
+    def run(name, which, seed, control=False, rel=rel):
         """the plain Newton step at z with the blocks in which perturbed by rel (seed's signs); None: unperturbed.
-        --mutate noop leaves the seed runs' state unperturbed (the --match check's control)"""
+        --mutate noop leaves the seed runs' state unperturbed (the --match check's control). With --steps N > 1, N
+        full Newton steps z_k = z_(k-1) + dz_k, with after each max|z_k - z| / max|z_h| (the truth, as stored) and
+        max|z_k - u_k| / max|z_h| (u_k: the unperturbed run's k-th iterate); --mutate nostep leaves z_k at z_(k-1)
+        (the contraction reading's control)"""
         dz = np.zeros(L)
         if which and not (opt["mutate"] == "noop" and not control):
             rng = np.random.default_rng(seed)
@@ -299,11 +319,40 @@ def main(argv):
         d = o8(st[0])
         dD = float(sum((mp.mpf(float(p[-1])) for p in d), mp.mpf(0)))
         r = dict(run=name, blocks=list(which or []), seed=seed if which else None, control=control,
-                 move=float(np.abs(dz).max()),
+                 rel=rel if which else 0.0, move=float(np.abs(dz).max()),
                  dDelta=dD, dDelta_parts=[float(p[-1]) for p in d], dz=float(np.abs(d[0]).max()),
                  piv=[st[3], st[4]], F=omax(st[1:3]), s=round(time.time() - t1, 1))
         print(f"  {name:22s} move {r['move']:.3e}: dDelta {dD:+.10e}, max|dz| {r['dz']:.4e}, smallest pivot "
               f"{st[3]:.4e}, max|F| {r['F']:.4e} ({r['s']:.0f} s)", flush=True)
+        if nsteps > 1:
+            hist, zk = [], zp
+            for k in range(1, nsteps + 1):
+                if k > 1:
+                    t1 = time.time()
+                    st = so.newton_o(zk)
+                    d = o8(st[0])
+                zk = zk if opt["mutate"] == "nostep" else o8(od_axpy(1.0, *d, *zk))
+                if which is None:
+                    upath.append(zk)
+                h = dict(k=k, dz=float(np.abs(d[0]).max()), dDelta=float(sum(d[i][-1] for i in range(8))),
+                         piv=st[3], F_before=omax(st[1:3]), e_truth=odmax(zk, z),
+                         e_pair=odmax(zk, upath[k - 1]) if which is not None and len(upath) >= k else None,
+                         s=round(time.time() - t1, 1))
+                hist.append(h)
+                print(f"    step {k}: max|dz| {h['dz']:.4e}, dDelta {h['dDelta']:+.4e}, smallest pivot {h['piv']:.4e}, "
+                      f"max|F| before {h['F_before']:.4e}; |z_k - truth| / |z_h| {h['e_truth']:.4e}"
+                      + (f", |z_k - u_k| / |z_h| {h['e_pair']:.4e}" if h["e_pair"] is not None else "")
+                      + f" ({h['s']:.0f} s)", flush=True)
+            r["F_end"] = omax(so.residual_o(zk))
+            r["hist"] = hist
+            if which is not None:
+                e = [r["move"] / zh] + [h["e_pair"] for h in hist]
+                r["contracts"] = all(b < a or b == 0 for a, b in zip(e, e[1:]))
+                print(f"    max|F| at z_{nsteps} {r['F_end']:.4e}; |z_k - u_k| / |z_h| from k = 0: "
+                      f"{', '.join(f'{x:.3e}' for x in e)}: {'contracts' if r['contracts'] else 'does NOT contract'}",
+                      flush=True)
+            else:
+                print(f"    max|F| at z_{nsteps} {r['F_end']:.4e}", flush=True)
         return r
 
     runs = [run("unperturbed", None, None)]
@@ -312,15 +361,16 @@ def main(argv):
         # the same step a second time; --mutate repeat perturbs its centre data instead (the check's control)
         rep = (run("centre, the repeat's control", ("centre",), seeds[0] if seeds else 1) if opt["mutate"] == "repeat"
                else run("unperturbed again", None, None))
-    for sd in seeds:
-        runs.append(run(f"{lab} seed {sd}", sel, sd))
+    for x in rels:
+        for sd in seeds:
+            runs.append(run(f"{lab} seed {sd}" + (f" rel {x:g}" if len(rels) > 1 else ""), sel, sd, rel=x))
     if opt["controls"] == "1":
         for b in [n for n in bl if n not in ("m_h", "a_h")]:
             runs.append(run(f"{b} seed {seeds[0]}" + (" (control)" if b == "centre" else ""), (b,), seeds[0], True))
     ref0 = runs[0]["dDelta"]
     ok = True
-    rec = dict(state=path, system=info, D_str=meta["D_str"], rel=rel, seeds=seeds, blocks=list(sel), runs=runs,
-               mutate=opt["mutate"])
+    rec = dict(state=path, system=info, D_str=meta["D_str"], rel=rel if len(rels) == 1 else rels, seeds=seeds,
+               blocks=list(sel), runs=runs, steps=nsteps, zh=zh, mutate=opt["mutate"])
     if opt["ref"]:
         good = ref0 == float(opt["ref"])
         ok &= good
@@ -347,11 +397,12 @@ def main(argv):
         res = []
         for r in seed_runs(rec):
             m = [x for x in mrec["runs"] if x["blocks"] == r["blocks"] and x.get("seed") == r["seed"]]
-            good = bool(m) and mrec["rel"] == rel and m[0]["dDelta"] == r["dDelta"] and m[0]["F"] == r["F"]
+            mrel = m[0].get("rel", mrec["rel"]) if m else None
+            good = bool(m) and mrel == r["rel"] and m[0]["dDelta"] == r["dDelta"] and m[0]["F"] == r["F"]
             res.append(good)
             print(f"  check: {r['run']} against {os.path.basename(opt['match'])}'s "
                   + (f"{m[0]['run']!r}: dDelta {r['dDelta']!r} vs {m[0]['dDelta']!r}, max|F| {r['F']!r} vs "
-                     f"{m[0]['F']!r}, rel {rel:g} vs {mrec['rel']:g}" if m else "run (none with these blocks and seed)")
+                     f"{m[0]['F']!r}, rel {r['rel']:g} vs {mrel:g}" if m else "run (none with these blocks and seed)")
                   + f": {'pass' if good else 'FAIL'}", flush=True)
         good = bool(res) and all(res)
         ok &= good
