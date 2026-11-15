@@ -576,6 +576,13 @@ class ElimO:
         return (o8(od_axpy(1.0, *disp, *st[0])), *st[1:])
 
 
+def D_of(meta):
+    """the state's D from its D_str (50 digits) at 60 digits or more, whatever the caller's precision (#831)"""
+    import mpmath as mp
+    with mp.workdps(max(mp.mp.dps, 60)):
+        return mp.mpf(meta["D_str"])
+
+
 def pinned_o(meta, z, threads=2, plan_tol=1e-32, mutate_offset="", held_exact=False):
     """reseed.pinned's solver at the state's D, with the segments planned at z at plan_tol, and its PinnedO wrapper:
     (s, PinnedSolver, PinnedQ, PinnedO). The held values are z's own, as floats, or with held_exact taken from all
@@ -584,7 +591,7 @@ def pinned_o(meta, z, threads=2, plan_tol=1e-32, mutate_offset="", held_exact=Fa
     from hpkernel.driver import make_solver
     from pinning import PinnedQ, PinnedSolver, band_coeffs, band_field
     M = int(meta["M"])
-    D = mp.mpf(meta["D_str"])
+    D = D_of(meta)
     s = make_solver(D, M, nodes=meta["nodes"], kt=meta.get("kt", 36), kc=meta.get("kc", 146), ks=meta.get("ks", 130),
                     threads=threads, kfreeze=meta["kfreeze"])
     s.set_segs(s.plan(np.asarray(z[0]), np.asarray(z[1]), plan_tol, 0.05))
@@ -687,7 +694,7 @@ def planted(argv):
                                 reseed_start="ladder", save_dz0=""))
     z4, meta = load_q(os.path.join(raw, path))
     z4 = o8(z4)
-    D = mp.mpf(meta["D_str"])
+    D = D_of(meta)
     s, sp, sq, so = pinned_o(meta, z4, threads=opt["threads"], mutate_offset=opt["mutate_offset"])
     rs = Reseeder(meta, D, threads=opt["threads"], qd=True, od=opt["reseed_o"], qd_start=opt["reseed_start"])
     zs, n = plant_start(z4, rs, opt["rel"], opt["seed"], opt["last"])
@@ -780,7 +787,7 @@ def wall(argv):
     opt = _parse(argv[2:], dict(threads=3, mutate_offset="", mutate=0, it_max=12, qd=0, tol=1e-40, out="", F_max=1e-36, junk=0,
                                 reseed_o=0, held_o=0, switch=1e-15, accept="own", full_drop=0.0, reseed_start="ladder"))
     z4, meta = load_q(os.path.join(raw, path))
-    D = mp.mpf(meta["D_str"])
+    D = D_of(meta)
     rs = Reseeder(meta, D, threads=opt["threads"], qd=True, od=opt["reseed_o"], qd_start=opt["reseed_start"])
     t0 = time.time()
     zr, diag = rs.reseed(o8(z4))
@@ -844,7 +851,7 @@ def horizon(argv):
         print(f"horizon {path}: not an eight-part state, nothing to test")
         return 2
     z8, meta = load_o(os.path.join(raw, path))
-    D = mp.mpf(meta["D_str"])
+    D = D_of(meta)
     rs = Reseeder(meta, D, threads=opt["threads"], qd=True, od=opt["steps"])
     sl = slice(rs.off["mh"], rs.off["mh"] + 2 * rs.M)
     t0 = time.time()
@@ -879,7 +886,9 @@ def horizon(argv):
 if __name__ == "__main__":
     import os
     import sys
+    import mpmath
     sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+    mpmath.mp.dps = 50          # the command line's precision, reseed's (#831: reseed no longer sets it on import)
     if len(sys.argv) > 1 and sys.argv[1] == "digits":
         sys.exit(digits_check(sys.argv[2:]))
     if len(sys.argv) > 3 and sys.argv[1] in ("planted", "wall", "horizon"):
