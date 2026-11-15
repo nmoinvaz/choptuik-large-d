@@ -315,6 +315,134 @@ centre plus the box times its derivative from jets) would remove most of the los
 - M = 5: the same ray at r₀ = 0.0622, or θ = 3π/8 at r₀ ≤ 0.07.
 - At M = 5, r₀ = 0.1 is too large for any box, and 0.085 gives Cauchy bounds too weak to use.
 
+### 2.5 A second implementation of the contraction (#427)
+
+Code: `solver/proof/fixed_point_M_b.py`. It imports python-flint and the standard library only, and shares no code with
+`fixed_point.py`, `fixed_point_M.py`, `series_arb.py` or `validated_int.py`. `fixed_point_M_b_check.py` is a harness
+that imports both implementations and compares them. Runs and logs: raw `I427-mac/`, b5d32f69.
+
+**What it proves.** Lemma FP(M) with the diag splitting on a ray (or on every ray of a sector), at a point, on a real
+box and on a complex box of parameters, with the conclusion in componentwise form: the fixed point η satisfies
+$`\lvert\eta_i(z)\rvert \le w_i\lvert z\rvert^{k_i}`$ on 0 < |z| ≤ R for an explicit vector w. It then evaluates the
+start set of lemma 6b₁ at s₀ in the variables of `SysUM`, with its derivative columns (jets of Y_N over the real box,
+Cauchy's estimate for η over the complex box), and compares it with the stored one.
+
+**What is done differently.**
+
+- The system in z is re-derived from the equations of `inner_np.py`, and the series comes from a recursion written for
+  it (the module's docstring has both).
+- The residual of Y_N is computed by ball-polynomial arithmetic on the three equations.
+- Majorants are polynomials in t = |z| with nonnegative coefficients, kept term by term together with their derivatives
+  in the components of η. Q_N is bounded from its own coefficients.
+- The fast kernel is bounded by one formula in place of the two of §4.4 (below).
+- The contraction test is componentwise (below), and the weight exponent is k = N − 2, the largest for which
+  y⁺ − Y_N = O(z^N) lies in the uniqueness class.
+
+*Kernel bound.* With 1/ϱ = 1/r + τ, for a > 0, e ≥ 0 and m ≥ −2,
+
+```math
+\int_0^r e^{-a\left(\frac1\varrho - \frac1r\right)}\Big(\frac\varrho r\Big)^{e}\varrho^m\,d\varrho = r^{m+2} I_n, \qquad
+I_n = \int_0^\infty \frac{e^{-a\tau}}{(1 + r\tau)^n}\,d\tau, \qquad n = m + 2 + e .
+```
+
+One integration by parts gives $`1 = a I_{n-1} + (n-1)\,r\,I_n`$, and $`I_{n-1} \ge I_n`$, so
+
+```math
+I_n \le \frac{1}{a + (m + 1 + e)\,r} .
+```
+
+It is below both bounds of §4.4, r^{m+2}/a and r^{m+1}/(m + 1). The exponent is e = 3/2 − μ Im ω, from the factor
+(t/z)^{(3 + 2s_μ)/2} of the kernel (§2.2). The code uses its smallest value over the labels and the parameter set: 1.5
+at real ω, and 1.4809 on the M = 5 Cauchy box.
+
+*Componentwise test.* Let F_i ≥ ‖T(0)_i‖, and let L_ij(w) bound the norm of ∂(Tη)_i/∂η_j over the set
+X_w = {‖η_i‖ ≤ w_i for every i}. If F + L(w)w < w in every component, then T maps X_w into itself, and it contracts in
+the norm max_i ‖η_i‖/w_i with constant max_i (L(w)w)_i/w_i < 1. So T has exactly one fixed point in X_w (Banach). A
+second vector w′ ≤ w with F + L(w)w′ ≤ w′ confines that fixed point to X_w′, because the Picard iterates from 0 stay
+in the closed set X_w′. The code takes w along an approximate Perron vector of L and w′ ≈ (1 − L)⁻¹F, and checks both
+inequalities in arb.
+
+**M = 5 at the certificate's centre** p̂ (the `x` of the stored start set), r₀ = 0.07, N = 105, k = 103:
+
+| parameters | rays | contraction constant | sup\|η\| at \|z\| = R (p, v, c) | holds |
+|---|---|---|---|---|
+| the point p̂ | arg ξ = 3π/8 | 0.1000 | 7.5×10⁻⁷⁵, 1.5×10⁻⁷², 1.5×10⁻⁷⁸ | yes |
+| complex box p̂ ± (10⁻¹⁸ + 10⁻³)(1 + i) | arg ξ = 3π/8 | 0.1002 | 6.9×10⁻¹⁷, 1.4×10⁻¹⁴, 1.3×10⁻²⁰ | yes |
+| the point p̂ | \|arg ξ − 3π/8\| ≤ 0.2 | 0.1135 | 9.3×10⁻⁷⁵, 1.8×10⁻⁷², 1.6×10⁻⁷⁸ | yes |
+| complex box | \|arg ξ − 3π/8\| ≤ 0.2 | 0.1137 | 8.5×10⁻¹⁷, 1.7×10⁻¹⁴, 1.4×10⁻²⁰ | yes |
+| the point p̂, k = 40 | \|arg ξ − 3π/8\| ≤ 0.2 | 0.2355 | 2.5×10⁻⁷⁴, 1.9×10⁻⁷², 6.4×10⁻⁷⁸ | yes |
+
+The last row is the configuration of the stored data (`start_data_u`: sector 0.2, k = 40), for which `fixed_point_M.py`
+gives 0.3671 with the kernel bounds of §4.4 and its own weights.
+
+**The start set at s₀ = 405e^{−3iπ/4} against the stored one** (`I38-macm3/lemma6b1_runs_M5_cert/ray.json`,
+`sets["0"]`, the C¹ start set that lemma 6b₁(5)'s ray and rows continue from):
+
+- all 21 values (19 state components, w and A) overlap, and each of the second implementation's balls lies inside the
+  stored one. The midpoints differ by 6×10⁻⁸⁰ to 5×10⁻⁷⁷; the stored radii are 2×10⁻⁷⁹ to 1.1×10⁻⁷⁶ (rounding at 256
+  bits), the second implementation's at most 3.2×10⁻¹⁰³;
+- all 126 derivative entries over X = p̂ ± 10⁻¹⁸ overlap, with radii 1 to 2 times the stored ones (at most 2.7×10⁻¹⁶
+  against 1.9×10⁻¹⁶).
+
+The same holds against win2's stored reproduction (`I121-win2/`, #121), and at M = 3 against the certificate's start
+set at 262e^{−3iπ/4} (`lemma6b1_runs_M3_cert/ray.json`, p̂ ± 1.1×10⁻⁹, r₀ = 0.1, N = 53, k = 51): contraction constants
+0.1674 at the point and 0.1681 on the complex box, 15 of 15 values and 60 of 60 derivative entries overlap.
+
+**Planted truth and comparisons** (run before the M = 5 start set):
+
+| check | what must hold | result |
+|---|---|---|
+| the linear problem (no gravity), M = 1, 3, 5 | the enclosure contains y⁺ = 2F_μ x^α U(α, ½, x), x = −1/(2z), α = (1 + s_μ)/2, with Kummer's U from arb | passes; the radius is 3.2 to 3.4 times the true distance at z₀ and 1.05 to 1.16 times near \|z\| = R |
+| M = 1 with gravity | the enclosures of (D, S, C)(ξ₀) overlap `fixed_point.py`'s 7 start values | passes; midpoints equal to 6×10⁻⁹⁷ |
+| the two Lipschitz matrices at the first implementation's N, k and ball, with the kernel bounds of §4.4 | every entry of the second is ≤ the first's and ≥ 0.8 of it; the same for the forcing | passes; ratios 0.88–1.00 (M = 1), 0.86–1.00 (M = 3), 0.81–1.00 (M = 5); forcing ratios 0.99995, 0.99985, 0.99998; contraction constants in the first's weights 0.2143 against 0.2145, 0.3354 against 0.3359, 0.25000 against 0.25004 |
+| two truncations of the full M = 5 problem at p̂, N = 60 and 95 against 105 | the two enclosures of the one solution overlap at z₀ and at \|z\| = R | passes; the difference uses 0.83 and 0.68 of the summed radii at \|z\| = R |
+
+The lowest ratios of the third row are the entries p ← c and v ← c, where the second implementation's bound of Q_N is
+the tighter one.
+
+**Mutations** (each must fail, and does; exit status 3):
+
+| mutation | what fires |
+|---|---|
+| `--mutate=radius` (r₀ = 0.3) | no contraction: weighted row sums 19.3 at the point |
+| `--mutate=coef` (one series coefficient off by a relative 10⁻⁶) | the residual no longer vanishes below its structural orders |
+| `--mutate=sign` (the sign of [G P], in the series, the residual and the jets) | a contraction for another system; none of the 19 state values and none of their 114 derivative entries overlaps the stored set |
+| `--mutate=scale` ([G P] times 1 + 10⁻⁹) | the same: 0 of 19 and 0 of 114 |
+| `--mutate=rho0` (the start point at \|u\| = 404) | 0 of 19 and 0 of 114 |
+| `--planted --mutate=truth` (Kummer's α times 1 + 10⁻¹²) | the enclosure misses the mutated truth by 2.3×10⁻¹³ |
+| `lip --mutate=drop` (the majorant without the [(C − 1)W] term) | the v rows fall to half of the first implementation's |
+| `--two=60,105 --mutate=forcing` (the N = 60 forcing divided by 1000) | the N = 60 enclosure misses the N = 105 one by a factor 820 |
+
+**What the two implementations share.**
+
+- The hand-proved formulation of §4.4 and §2.2: the variables, the diag splitting, the integral operator and the
+  component norms.
+- The hand-proved steps that no code checks: the vanishing of the residual below its structural orders (both codes test
+  only that those balls contain 0), the identification of the fixed point with y⁺ by Braaksma's theorem, and Cauchy's
+  estimate.
+- The centre p̂, the box and the Cauchy radius; the rule for N; python-flint 0.9.0 with FLINT 3.6.0.
+
+Of `start_data_u`'s pipeline the second implementation replaces `run_M` at the point and on the Cauchy box,
+`series_jet_M`, the evaluation at z₀ and the η discs. It does not replace `lohner_c1`, which turns the values and
+columns into the stored Lohner set; the comparison is made with that set. The point certificate's own start data
+(`certify_M2.py`, from `start_data_M` on its ray and radius) have not been recomputed.
+
+Reproduce, from `solver/proof/` (python-flint 0.9.0; each command exits 0 only if its check passes, and takes under
+15 s):
+
+```
+git clone https://github.com/nmoinvaz/choptuik-large-d-raw ../../../choptuik-large-d-raw    # once, beside the checkout
+RAY=../../../choptuik-large-d-raw/I38-macm3/lemma6b1_runs_M5_cert/ray.json
+python3 fixed_point_M_b.py --planted --M=5
+python3 fixed_point_M_b_check.py m1
+python3 fixed_point_M_b_check.py lip --M=5
+python3 fixed_point_M_b.py --M=5 --two=60,105 --compare=$RAY
+python3 fixed_point_M_b.py --M=5 --start --rho0=405 --h=1e-18 --cauchy=1e-3 --compare=$RAY
+python3 fixed_point_M_b.py --M=5 --start --rho0=405 --h=1e-18 --cauchy=1e-3 --compare=$RAY --mutate=sign    # exits 3
+```
+
+`I427-mac/run_i427.sh` has all 32 runs, and `exits.txt` there their exit statuses.
+
 ## 3. Lemma S and lemma 6b₀
 
 Code: `solver/proof/lemma6_sector_M.py`.
