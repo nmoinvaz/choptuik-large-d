@@ -415,3 +415,10 @@ python3 certify_M2.py d2check --box=data/A_M2_box_M5_1e-10.json --fd=data/A_M2_f
 python3 certify_M_recheck.py data/A_M2_box_M5_1e-10.json [--mutate]                                       # pass [fail]
 python3 certify_M2.py export6a --box=data/A_M2_box_M5_1e-10.json --out=data/A_M2_6a_M5_1e-10.json        # for lemma 6a(M)
 ```
+
+These commands, without the finite-difference runs and the pilot, were rerun on aarch64 Linux (Raspberry Pi 5,
+python-flint 0.9.0, FLINT 3.6.0; #847, raw `I847-rpi5/` 22a0690a and a2cee954). Every run exits 0, and every control
+fails by its verdict. M = 1 and M = 3 print REPRODUCED. The Pi's M = 5 box passes with relative margins +0.996, +0.998,
++0.889, +0.889, +0.912 and +0.911 and hier's checks (a) and (b), its zero enclosure equals §6.4's, and it passes on the
+Mac with the same margins, as the stored x86 box does on the Pi. d2check's worst ratio at M = 5 is 2.67×10⁻⁷ there
+against the stored box's 2.64×10⁻⁷, since the two box runs' radii differ in their last digits.
