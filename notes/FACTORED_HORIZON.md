@@ -372,6 +372,22 @@ then the series there (#776's command) and #782's estimators. The fold is the tr
 Not chosen for now: the tail summed in closed form from Proposition 3's transport (4.4), which changes the problem by
 the WKB error, O(1/n), and would need its own planted tests. It stays the fallback if stage 1 fails (2).
 
+**Stage 1's result: (1) and (2) failed, and the climb stopped at its first rung** (dh370, raw `I800-dh370/` f2bdf5c9).
+- **(1), the w = 0 control, failed for a reason of the design.** `--ks 250` plans the base again, because a stored plan
+  does not carry a changed `--ks`. So t0 solved order 130's equations on another plan. r130k and t0 both have 23 steps
+  but differ in their segments. t0 started at |F| 6.05×10⁻³⁶, and its first correction moved Δ by +4.70×10⁻¹³ through
+  pivots down to 1.1×10⁻²⁶. That is a plan's effect at D 245.14, twenty times r130k's own re-plan (2.4×10⁻¹⁴, 4.6),
+  as large as order 131's term, and 2% of #805's envelope there (2.0×10⁻¹¹).
+- **(2), the first rung, failed in its first step.** The tail of orders 131 to 250 adds 1.3×10⁻¹⁷ to the horizon rows
+  at t0's base, in octo-double on the chain's solver (`diag800b.py`), and `horizon_radius.py` reads the same.
+  F(w) − F(0) is linear in w. So w = 1/64 starts near 2×10⁻¹⁹. Its first full step reached max|F| 9.4×10⁴⁴ (|dw| 3.9×10⁴⁴), where
+  t0's reached 4.2×10⁻²⁶, and every trial from λ = 1 down to 1/128 was refused.
+- **The corrector's basin, not the tail's size, ends the climb.** A rung's start residual is Δw times the tail.
+  #744's order-132 climb gives the basin's scale. That order's term is about 4×10⁻²⁹ at u₀ (t₁₃₀ at this base), so its
+  rungs of 1/16 started near 2.5×10⁻³⁰ and converged, and the rung of 1/4 to w = 1/2 (about 10⁻²⁹) stalled. The
+  whole tail is 10¹² times that, so a homotopy in w would need about 10¹² rungs. Stage 1 is not continued. What
+  remains is a corrector with a larger basin, or the closed-form tail (4.4).
+
 ## 5. Plan for hp's model and the planted tests
 
 hp/src is not changed by this task.
