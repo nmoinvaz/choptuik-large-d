@@ -616,12 +616,13 @@ def probe(argv):
                     grp = unknown_blocks(x, M, K)
                     th[f"{lam:g}_{mode}"].update(share_weak=float(np.linalg.norm(Vw.T @ x)) / nx if nx > 0 else 0.0,
                                                  sigma_weak=[float(v) for v in sigw], groups=grp)
-                    top = sorted(grp.items(), key=lambda kv: -kv[1])[:6]
-                    print(f"    its share in the {wk} weakest directions {th[f'{lam:g}_{mode}']['share_weak']:.4f}; largest "
-                          "unknown groups " + ", ".join(f"{g} {v:.2e}" for g, v in top), flush=True)
                 print(f"  natural test at lam {lam:g}, trial {'as the corrector projects it' if mode == 'switch' else 'projected'}: "
                       f"max|F| {omax(Ft):.3e}, simplified correction / |dz| {th[f'{lam:g}_{mode}']['theta']:.3e} (bound {1 - lam / 4:.3f})",
                       flush=True)
+                if Vw is not None:
+                    top = sorted(grp.items(), key=lambda kv: -kv[1])[:6]
+                    print(f"    its share in the {wk} weakest directions {th[f'{lam:g}_{mode}']['share_weak']:.4f}; largest "
+                          "unknown groups " + ", ".join(f"{g} {v:.2e}" for g, v in top), flush=True)
         res["theta"] = dict(step_reproduced=same, cases=th)
         print(f"  the step at the iterate formed again: {'bit for bit the stored one' if same else 'DIFFERS from the stored one'}", flush=True)
         with open(rec_path, "a") as fh:
