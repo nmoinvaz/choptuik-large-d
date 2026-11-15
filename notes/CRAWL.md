@@ -621,6 +621,13 @@ ended too (2.1×10⁻¹⁷ apart). The next correction, 1.1×10⁻⁵ in Δ at a
   7.1×10⁻²⁹ to 7.3×10⁻³¹. Both steps reproduce the recorded ones exactly, and the per-block control fails as it must.
   So at D 252.6 the weak step hangs on horizon data far below octo-double's own rounding of other blocks. Whether the
   step is determined at all at this precision is #827.
+- **Newton's Δ step there is not determined at octo-double precision (#827; raw `I827-mac/` 504238d3,
+  `hp/step_spread.py`).** A random 10⁻⁶⁵ relative perturbation of m_h and a_h moves the Δ step from +3.311×10⁻⁸ to
+  between −8.68×10⁻⁹ and +2.58×10⁻⁸ over four seeds: a deviation of 1.26, against the 10⁻³ bar. The same perturbation
+  of the centre or of any node leaves the step equal as a double (relative 10⁻⁶⁵ to 4×10⁻³⁹). On Δ itself it moves the
+  step by 2.3×10⁻⁵ relative. The zero perturbation reproduces +3.3110848587422764×10⁻⁸ exactly. So at D 252.6 a Δ step
+  carries no information below about 3×10⁻⁸, and #826's Newton from the truth is judged on its residual, not on Δ.
+  #830 measures how this spread grows with D.
 - **The reduced map along Δ is not defined there with free horizon data (#823).** The first strong move, w0 of
   2.26×10⁻¹⁹, takes max|F| to 8.6×10⁻⁴. The chord then diverges, and newton_strong stops after one LU. So no root
   reading was possible at 10⁻⁴ or 10⁻⁵. Inferred, the coordinator's reading: the horizon block's gain, about 10³⁷ at
