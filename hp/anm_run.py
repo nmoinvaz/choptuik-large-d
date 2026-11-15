@@ -16,7 +16,7 @@ formulation of hp/pinning.py; their coefficients are zero).
         [--qd_it 12] [--qd_w 0] [--refine 1] [--probe 0 --probe_c C] [--plan_tol 1e-32] [--fix1 0] [--F_pred_max 0]
         [--horizon_alpha 0] [--fix1_qlu 0] [--jet_q 0] [--reseed 0] [--pred_q 0] [--reseed_q 0] [--save_pred 0]
         [--jet_o 0] [--corrector od --tol_od 1e-40] [--base_adopt 0] [--base_polish 1] [--keep_plan 1] [--held_fit FILE]
-        [--held_o 0] [--reseed_o 0] [--a0 0] [--a_grow 2] [--a_hold 0] [--lam_stall 0] [--save_base 0] [--save_jet 0]
+        [--held_o 0] [--reseed_o 0] [--a0 0] [--a_grow 2] [--a_hold 0] [--lam_stall 0] [--save_base 0] [--save_jet 0] [--held_from STATE]
 
 --corrector qd runs the quad-double Newton of the kernel (hpkernel.driver.newton_qd, Solver.newton_q) on the pinned
 system (pinning.PinnedQ: the held harmonics' offset subtracted from the quad-double residual and added to the step, as
@@ -304,6 +304,7 @@ def main():
     opt.update(od_abort_theta=0.0)      # --od_abort_theta R: the natural test refuses at iteration 1 when theta(lam 1) > R (#784)
     opt.update(reseed_start="ladder")   # --reseed_start pred: the re-seed's quad-double polish from the point's own data (#693)
     opt.update(held_fit="")             # --held_fit FILE (pinning.HeldFit; notes/HELD_HARMONICS.md)
+    opt.update(held_from="")            # --held_from STATE: the base's held values from STATE's, by the fit (#808)
     # --held_o 1: the held values and their Taylor coefficients as mpf instead of floats, and the held field in eight
     # parts instead of two (with --held_fit and --corrector od); --reseed_o K: K octo-double corrections of the
     # re-seeded horizon data (reseed.Reseeder.refine_o)
@@ -491,6 +492,26 @@ def main():
             raise SystemExit("--held_fit replaces --trend; give one of them")
         print(f"held values from the fit {opt['held_fit']} (degree {hfit.meta.get('deg')}, {hfit.meta.get('n_points')} full-system states, "
               f"D {hfit.meta.get('Dmin')}-{hfit.meta.get('Dmax')}), relative to the base", flush=True)
+    # --held_from STATE: the base's held values are STATE's, carried from its D to the base's by --held_fit's increment.
+    # These are the values of STATE's chain continued to the base's D. A polish at fixed D then solves that chain's
+    # system from this chain's state (#808).
+    if opt["held_from"]:
+        if hfit is None:
+            raise SystemExit("--held_from needs --held_fit")
+        fp = os.path.join(raw, opt["held_from"])
+        fzh, fzl, fm = load_state(fp)
+        if int(fm["M"]) != M or list(fm["nodes"]) != nodes or int(fm.get("kfreeze", kf)) != kf:
+            raise SystemExit(f"--held_from {opt['held_from']}: M {fm['M']}, kfreeze {fm.get('kfreeze')} or its nodes differ from the base's")
+        Df = mp.mpf(fm["D_str"]) if "D_str" in fm else mp.mpf(float(fm["D"]))
+        frest = [np.asarray(p)[:M] for p in load_o(fp)[0][2:]] if held_x and has_o(fp) else ()
+        fco = band_coeffs(np.asarray(fzh)[:M], np.asarray(fzl)[:M], M, ks_held, exact=held_x, rest=frest)
+        num = (lambda v: v) if held_x else float  # noqa: E731
+        moved = [(num(mp.mpf(a) + da), num(mp.mpf(b) + db)) for (a, b), (da, db) in zip(fco, hfit.increment(Df, D, ks_held))]
+        dmax = max(max(abs(mp.mpf(a1) - mp.mpf(a0)), abs(mp.mpf(b1) - mp.mpf(b0)))
+                   for (a1, b1), (a0, b0) in zip(moved, base_coeffs))
+        print(f"held values from {opt['held_from']} (D {mp.nstr(Df, 12)}) carried to D {mp.nstr(D, 12)} by the fit: they differ "
+              f"from the base's own by at most {mp.nstr(dmax, 3)}", flush=True)
+        base_coeffs = moved
 
     def held_at(Dx):
         """the held coefficients at D = Dx on the trend, relative to the base"""
@@ -579,7 +600,7 @@ def main():
                 if opt["save_base"] and "z8" in last_q:
                     p = os.path.join(out, f"base_pin{kf}_D{float(D):.4f}.npz")
                     save_o(p, last_q["z8"], dict(D=float(D), D_str=str(D), M=M, nodes=nodes, kt=kt, kc=kc, ks=ks, kfreeze=kf,
-                                                 pin_held=ks_held, N=N, source=opt["state"], parts=8,
+                                                 pin_held=ks_held, N=N, source=opt["state"], parts=8, held_from=opt["held_from"],
                                                  segs=[[float(x) for x in sg] for sg in segs],
                                                  base_polish=dict(converged=bool(conv_p), max_F=Fs, tol_od=opt["tol_od"])))
                     print(f"base polish saved as {p}", flush=True)
