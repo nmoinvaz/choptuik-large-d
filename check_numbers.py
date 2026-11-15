@@ -2959,6 +2959,36 @@ def near_amp():
 
 
 @check
+def fold_separation_free():
+    """notes/LARGE_D_WALL.md (#822): the two folds' separation from free-D* fits, planted, from
+    hp/data/fold_separation_planted.json and fold_separation.json (hp/fold_separation.py planted and real)"""
+    import json
+    N = "notes/LARGE_D_WALL.md"
+    pl = json.load(open(os.path.join(ROOT, "hp/data/fold_separation_planted.json")))
+    re_ = json.load(open(os.path.join(ROOT, "hp/data/fold_separation.json")))
+    U, b = [str(u) for u in pl["usable"]], pl["bases"]
+    E = ("1e-06", "1e-05")
+    sep = lambda d: [b[u][e][d]["sep"] for u in U for e in E]                          # noqa: E731
+    mis = max(abs(b[u][e][d]["Dl"] - (259.9033 + float(e) + float(d))) for u in b for e in E
+              for d in ("0.0", "1e-07", "1e-06", "1e-05"))
+    ru = [v for v in re_["bases"].values() if v["usable"]]
+    t_r = [(N, "δ = 10⁻⁶ is recovered as 0.81–1.23×10⁻⁶ and δ = 10⁻⁵ as 0.75–1.22×10⁻⁵")]
+    t_s = [(N, "The real largest separation at those bases is 8.3×10⁻⁷, at 259.4928")]
+    return [("usable bases", len(U), 23, 1, [(N, "At 23 of the 26 bases")]),
+            ("delta 1e-6 low", min(sep("1e-06")), 8.1e-7, 1e-8, t_r), ("delta 1e-6 high", max(sep("1e-06")), 1.23e-6, 1e-8, t_r),
+            ("delta 1e-5 low", min(sep("1e-05")), 7.5e-6, 1e-7, t_r), ("delta 1e-5 high", max(sep("1e-05")), 1.22e-5, 1e-7, t_r),
+            ("delta 0 largest", max(abs(x) for x in sep("0.0")), 6.9e-8, 1e-9, [(N, "δ = 0 reads at\n    most 6.9×10⁻⁸ there")]),
+            ("largest D* misplacement", mis, 3.5e-6, 1e-7, [(N, "misplaces each series' D* by up to 3.5×10⁻⁶")]),
+            ("the real S", re_["S"], 8.3e-7, 1e-8, t_s),
+            ("the smallest recovered 1e-6", min(sep("1e-06")), 8.1e-7, 1e-8, [(N, "10⁻⁶ separation, 8.1×10⁻⁷")]),
+            ("the bound", re_["bound"], 1e-5, 1e-6, [(N, "so the bound is the next planted δ, 10⁻⁵")]),
+            ("real bases at the floor", sum(abs(v["sep"]) <= 1.11e-7 for v in ru), 21, 1,
+             [(N, "At 21 of the 23 bases the real separation is at most 1.1×10⁻⁷")]),
+            ("the largest of them", sorted(abs(v["sep"]) for v in ru)[-3], 1.1e-7, 1e-8,
+             [(N, "the real separation is at most 1.1×10⁻⁷")])]
+
+
+@check
 def table_errs_all():
     """every row of hp/data/delta_all.csv has an err or a reason named in its err_kind (#764). The full-system
     quad-double rows with one start (71.0, 72.8) take the larger two-start spread of the nearest qd rows below and
