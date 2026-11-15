@@ -617,7 +617,11 @@ ended too (2.1×10⁻¹⁷ apart). The next correction, 1.1×10⁻⁵ in Δ at a
   start's own step, through a pivot of 2.35×10⁻¹⁴. Raw `I816-mac/` 3f23c2f2, `I823-mac/`.
 - So the switch-0 projection moves the state far enough that Newton's next step leaves the basin, which bears on
   #713's, #777's and #817's switch-0 runs. #823 asks the reduced map along Δ for a root near the unprojected truth,
-  where the linear model puts one at |c| ≈ 3.3×10⁻⁸. #817 (the strong-row chord) is judged on its residual alone.
+  where the linear model puts one at |c| ≈ 3.3×10⁻⁸.
+- **The strong-row chord at switch 0 gets no further (#817; dh610, raw `I817-dh610/` 6de35956).** With and without the
+  drop, both arms accepted step 0 only at λ = 1/64 (3.40×10⁻¹² to 3.34×10⁻¹²), as #713 did. The full steps gave
+  2.5×10²² to 2.4×10¹⁶. At 2.1 h a step, the 10⁻⁴⁰ bar could not be met in 12 steps, so the run was stopped there.
+  #826 runs Newton from the unprojected truth at the default switch.
 
 ## 14. Refusing an attempt at iteration 1 (#784)
 
