@@ -557,7 +557,10 @@ python3 certify_M.py refine 5 --iters=2 --modes=full,full --mixed --tag=c \
 These commands, without `refine` and `plan`, were rerun on aarch64 Linux (Raspberry Pi 5, python-flint 0.9.0, FLINT
 3.6.0; #844, raw `I844-rpi5/` eed07c7e), with `m1 --rerun` recomputing the M = 1 runs. Every run exits 0, and every
 control fails. The Pi's M = 3 box passes the Krawczyk test with relative margins +0.994, +0.997, +0.778 and +0.778, its
-enclosures equal §6.2's, and it passes on the Mac with the same margins, as the stored x86 box does on the Pi.
+enclosures equal §6.2's, and it passes on the Mac with the same margins, as the stored x86 box does on the Pi. On
+Windows x86-64 (a Surface laptop, Python 3.14, python-flint 0.9.0, FLINT 3.6.0; #860, raw `I860-winb/` e6b7c048), every
+run exits 0 and every control fails, with the same margins. The stored and the Pi's boxes pass there, and its own box
+passes on the Mac.
 
 ## 9. Proposed text for README.md, PROOF.md and A_certify.md
 

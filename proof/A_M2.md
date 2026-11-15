@@ -457,4 +457,9 @@ python-flint 0.9.0, FLINT 3.6.0; #847, raw `I847-rpi5/` 22a0690a and a2cee954). 
 fails by its verdict. M = 1 and M = 3 print REPRODUCED. The Pi's M = 5 box passes with relative margins +0.996, +0.998,
 +0.889, +0.889, +0.912 and +0.911 and hier's checks (a) and (b), its zero enclosure equals §6.4's, and it passes on the
 Mac with the same margins, as the stored x86 box does on the Pi. d2check's worst ratio at M = 5 is 2.67×10⁻⁷ there
-against the stored box's 2.64×10⁻⁷, since the two box runs' radii differ in their last digits.
+against the stored box's 2.64×10⁻⁷, since the two box runs' radii differ in their last digits. On Windows x86-64 (a
+Surface laptop, Python 3.14, python-flint 0.9.0, FLINT 3.6.0; #860, raw `I860-winb/` e6b7c048), every run exits 0, every
+control fails by its verdict, M = 1 and M = 3 print REPRODUCED, and the six M = 5 margins and hier's checks are the
+same. The stored and the Pi's boxes pass there, and its own boxes pass on the Mac with the same margins. d2check's worst
+ratio is 2.59×10⁻⁷ there. Its logs give `fixed_point_M.py`'s SHA-256 as a44e6c92 rather than 589e5a81, since that
+checkout converts line ends (`core.autocrlf`); the file's git blob is the same.

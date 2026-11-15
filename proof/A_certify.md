@@ -557,8 +557,11 @@ python3 krawczyk.py --xi1=0.3           # Krawczyk budget (dry run) and the mock
 
 These commands, with `validated_int.py krawczyk 1e-9` of §9, were rerun on aarch64 Linux (Raspberry Pi 5, python-flint
 0.9.0, FLINT 3.6.0; #843, raw `I843-rpi5/` 750c51ab). Every command exits 0, and the Krawczyk test passes with margins
-7.925×10⁻¹⁰ and 9.247×10⁻¹⁰. The Pi's point and box runs pass on the Mac, and the stored x86 runs pass on the Pi, with the
-same margins.
+7.925×10⁻¹⁰ and 9.247×10⁻¹⁰. The Pi's point and box runs pass on the Mac, and the stored x86 runs pass on the Pi, with
+the same margins. They were rerun on Windows x86-64 (a Surface laptop, Python 3.14, python-flint 0.9.0, FLINT 3.6.0;
+#860, raw `I860-winb/` e6b7c048) as well. The margins are the same there. The stored and the Pi's runs pass there, and
+its own runs pass on the Mac. Only the double-precision Poincaré–Miranda dry run (`--pm`) differs, from its fourth
+digit.
 
 ## 9. Step (ii): the validated integration (agent VI)
 
