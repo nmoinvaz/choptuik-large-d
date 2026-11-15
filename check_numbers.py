@@ -2256,8 +2256,9 @@ def jet_634():
 def lam_gauge_table():
     """notes/MODE_COUNT.md section 10: lam_g(D) from hp/data/lam_gauge.csv (hp/lam_gauge.py table), the D = 4 check
     against Reiterer and Trubowitz's constants (as solver/rt/mu_check.py holds them), the identity's three D (the CSV's
-    lam_RT), the same-D spreads, the mu minimum, and the reference fit's residuals and the superseded I461 states'
-    offsets (hp/lam_gauge_fit.py; the slow fit selection is full_lam_gauge)."""
+    lam_RT), the same-D spreads, the fit's top and the frontier, the extrema of mu and n(1 - lam_g), and the reference
+    fit's residuals and the superseded I461 states' offsets (hp/lam_gauge_fit.py; the slow fit selection is
+    full_lam_gauge)."""
     import csv
     import mpmath as mp
     sys.path.insert(0, os.path.join(ROOT, "hp"))
@@ -2281,14 +2282,28 @@ def lam_gauge_table():
         top = bb[-1]
         ltop = mp.mpf(top["lam_g"])
         ntop = mp.mpf(top["D_str"]) - 2
-        mumin = min(bb, key=lambda r: mp.mpf(r["mu"]))
+        # the top of section 10.4's fit (lam_gauge_fit.DMAX), which the README quotes
+        fit = at(float(LF.DMAX))
+        lfit = mp.mpf(fit["lam_g"])
+        nfit = mp.mpf(fit["D_str"]) - 2
+        past = len([r for r in bb if mp.mpf(r["D_str"] or r["D"]) > LF.DMAX])
+        nl = lambda r: (mp.mpf(r["D_str"] or r["D"]) - 2) * (1 - mp.mpf(r["lam_g"]))
+        mumin = min((r for r in bb if 30 < float(r["D"]) < 50), key=lambda r: mp.mpf(r["mu"]))
+        mumax = max((r for r in bb if float(r["D"]) > 50), key=lambda r: mp.mpf(r["mu"]))
+        nlmax = max(bb, key=nl)
+        # 0 where mu stays above its D 38 minimum past D 50, so that the item fails rather than raises
+        below = next((float(r["D"]) for r in bb if float(r["D"]) > 50 and mp.mpf(r["mu"]) < mp.mpf(mumin["mu"])), 0.0)
         groups = {}
         for r in rows:
             groups.setdefault(round(float(r["D"]), 6), []).append(r)
         spread = lambda g: float(max(mp.mpf(r["lam_g"]) for r in g) - min(mp.mpf(r["lam_g"]) for r in g))
         multi = [g for g in groups.values() if len(g) > 1]
-        chain = max(spread(g) for g in multi if {r["kind"] for r in g} == {"chain"})
-        pinned = max(spread(g) for g in multi if {r["kind"] for r in g} == {"pinned"})
+        ch603 = [g for g in multi if {r["kind"] for r in g} == {"chain"} and any("I603-" in r["state"] for r in g)]
+        ch461 = [g for g in multi if {r["kind"] for r in g} == {"chain"} and all("I461-" in r["state"] for r in g)]
+        chain = max(spread(g) for g in ch603)
+        chain461 = max((spread(g) for g in ch461), default=0.0)
+        pins = [g for g in multi if {r["kind"] for r in g} == {"pinned"}]
+        pinned = max(spread(g) for g in pins)
         m4 = {r["M"]: mp.mpf(r["lam_g"]) for r in rows if "d4hm15_D4.0000" in r["state"]}
     with mp.workdps(40):
         pts = LF.backbone()
@@ -2304,21 +2319,44 @@ def lam_gauge_table():
     late = [e for D, e in sup if D > 238.76]
     t_res = [(N, "have an rms of 1.7×10⁻¹⁴ to"), (N, "6.8×10⁻¹⁴ in every band of D below 226, and 2.1×10⁻¹³ above it")]
     t_sup = [(N, "are off by −5.1×10⁻¹² to 2.5×10⁻¹⁰"), (N, "those up to D = 238.76 are within 1.2×10⁻¹²")]
+    t_fit = [(N, "D = 4 to 0.97115850 at D = 244.64, the top of 10.4's fit")]
+    t_top = [(N, "and to 0.97285094 at D = 259.74, #603's last chain state")]
+    t_min = [(N, "local minimum near D = 38.02\n(0.12910162 there)")]
+    t_max = [(N, "maximum near D = 256.01 (0.13031003)")]
+    t_nl = [(N, "n(1 − λ_g) one near D = 258.60 (7.0321072)")]
+    t_ch = [(N, "| 14 | 3.8×10⁻¹³ at D = 237.13 |")]
+    t_461 = [(N, "| 9 | 6.0×10⁻²⁰ at D = 223.13 |")]
+    t_pin = [(N, "| 161 | 1.6×10⁻¹⁴ |")]
     return [("lam_g at D 4", float(l4), 0.6138552748, 1e-10, [(N, "rises from 0.6138552748 at"), ("README.md", "Martín-García give[^9], 0.6138552748")]),
             ("lam_g(4) - 4 pi mu_RT/(2 K_RT)", d4, 2.7e-27, 1e-28,
              [(N, "against 4πμ_RT/(2K_RT) | 2.7×10⁻²⁷ |"), (N, "constants to 2.7×10⁻²⁷")]),
             ("identity D 15", ident[0], 2.5e-23, 1e-24, [(N, "| 2.5×10⁻²³ relative |")]),
             ("identity D 20.04", ident[1], 1.7e-21, 1e-22, [(N, "| 1.7×10⁻²¹ relative |")]),
             ("identity D 40.02", ident[2], 3.8e-16, 1e-17, [(N, "| 3.8×10⁻¹⁶ relative |")]),
-            ("lam_g at the frontier", float(ltop), 0.97115850, 1e-8, [(N, "D = 4 to 0.97115850 at D = 244.64"), ("README.md", "It rises to 0.97115850 at D = 244.64")]),
-            ("the frontier's D", float(top["D"]), 244.64, 0.01, [(N, "D = 4 to 0.97115850 at D = 244.64")]),
-            ("n(1 - lam_g) at the frontier", float(ntop * (1 - ltop)), 6.998004, 1e-6, [(N, "| 6.998004 |")]),
-            ("states in the table", len(rows), 1510, 1, [(N, "holds 1510 stored states")]),
-            ("backbone D", len(bb), 1274, 1, [(N, "at each of 1274 D")]),
-            ("D of the mu minimum", float(mumin["D"]), 38.02, 0.01, [(N, "minimum near D = 38.02 (0.12910162")]),
-            ("mu at its minimum", float(mp.mpf(mumin["mu"])), 0.12910162, 1e-8, [(N, "minimum near D = 38.02 (0.12910162")]),
-            ("chain spread, #603 against I461", chain, 3.8e-13, 1e-14, [(N, "| 14 | 3.8×10⁻¹³ at D = 237.13 |")]),
-            ("pinned spread, 5 against 7", pinned, 1.6e-14, 1e-15, [(N, "| 160 | 1.6×10⁻¹⁴ |")]),
+            ("lam_g at the fit's top", float(lfit), 0.97115850, 1e-8, t_fit + [("README.md", "It rises to 0.97115850 at D = 244.64")]),
+            ("the fit's top D", float(fit["D"]), 244.64, 0.01, t_fit + [(N, "10.4's fit stops at D = 244.64")]),
+            ("n(1 - lam_g) at the fit's top", float(nfit * (1 - lfit)), 6.998004, 1e-6, [(N, "| 6.998004 |")]),
+            ("chain states past the fit's top", past, 97, 1, [(N, "so the 97 chain states past it")]),
+            ("lam_g at the frontier", float(ltop), 0.97285094, 1e-8, t_top),
+            ("the frontier's D", float(top["D"]), 259.74, 0.01, t_top + [(N, "from D = 4 to 259.74")]),
+            ("n(1 - lam_g) at the frontier", float(ntop * (1 - ltop)), 6.9974954, 1e-7, [(N, "| 6.9974954 |")]),
+            ("mu at the frontier", float(mp.mpf(top["mu"])), 0.12743554, 1e-8, [(N, "0.12743554 at D = 259.74")]),
+            ("states in the table", len(rows), 1621, 1, [(N, "holds 1621 stored states")]),
+            ("backbone D", len(bb), 1371, 1, [(N, "at each of 1371 D")]),
+            ("D of the mu minimum", float(mumin["D"]), 38.02, 0.01, t_min),
+            ("mu at its minimum", float(mp.mpf(mumin["mu"])), 0.12910162, 1e-8, t_min),
+            ("D of the mu maximum past 50", float(mumax["D"]), 256.01, 0.01, t_max),
+            ("mu at that maximum", float(mp.mpf(mumax["mu"])), 0.13031003, 1e-8, t_max),
+            ("D of the n(1 - lam_g) maximum", float(nlmax["D"]), 258.60, 0.01, t_nl),
+            ("n(1 - lam_g) at its maximum", float(nl(nlmax)), 7.0321072, 1e-7, t_nl),
+            ("first D past 50 with mu below its D 38 minimum", below, 259.05, 0.01,
+             [(N, "value from D = 259.05 on")]),
+            ("chain spread, #603 against I461", chain, 3.8e-13, 1e-14, t_ch),
+            ("chain D, #603 against I461", len(ch603), 14, 1, t_ch),
+            ("chain spread, I461 crawlB3 against crawlG", chain461, 6.0e-20, 1e-21, t_461),
+            ("chain D, I461 crawlB3 against crawlG", len(ch461), 9, 1, t_461),
+            ("pinned spread, 5 against 7", pinned, 1.6e-14, 1e-15, t_pin),
+            ("pinned D", len(pins), 161, 1, t_pin),
             ("D 4, M 160 against 192", float(m4["160"] - m4["192"]), 1.6e-23, 1e-24,
              [(N, "M = 160 against 192 there: 1.6×10⁻²³")]),
             ("reference fit, smallest band rms below 226", min(low), 1.7e-14, 1e-15, t_res),

@@ -50,6 +50,9 @@ DLOS = (20, 30, 40, 60)
 DEGS = range(3, 15)
 PLATEAU = 3
 SPACING = 1.0
+# the top of section 10.4's backbone, D = 244.64 (its 200 points from D = 20.04): the chain's later states, which the
+# table holds since #814, are not in the published fit, so a table rebuild leaves 10.4's numbers as they are
+DMAX = mp.mpf("244.63661775588989261316641421473150330712087452411")
 SIGMA = 1e-12
 REF_DEG = 14         # the reference fit for the residuals: the selected c0 = 1 fit in 1/n from D = 20
 BANDS = [(20, 40), (40, 67), (67, 74), (74, 120), (120, 180), (180, 226), (226, 246)]
@@ -84,7 +87,7 @@ def backbone(path=None):
     pts = sorted((mp.mpf(r["D_str"]) if r["D_str"] else mp.mpf(float(r["D"])), mp.mpf(r["lam_g"])) for r in rows)
     out, last = [], None
     for D, lam in pts:
-        if D < min(DLOS):
+        if D < min(DLOS) or D > DMAX:
             continue
         if last is None or D - last >= SPACING:
             out.append((D, lam))
