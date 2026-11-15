@@ -451,6 +451,7 @@ def real_horizon(sysm, od=3, fast=True, log=print):
             for q in range(8):
                 z[q][hca] = hz[q]
             z = o8(z)
+        project.hist = hist         # the last chord's max|F[hrows]| per step, for diagnostics
         if best is None:
             raise ElimFailed(f"the chord's residual is not finite ({hist})")
         return best, hist
@@ -483,6 +484,7 @@ def real_horizon(sysm, od=3, fast=True, log=print):
             (nR, zb, Fb), hist = chord(z)
         st["h"] = [np.array(np.asarray(zb[q])[hca]) for q in range(8)]
         return offsets_of(zb, p), nR, sysm.mpv(Fb, range(sysm.L))
+    project.rs, project.st, project.hist = rs, st, []
     return hc, hr, project
 
 
