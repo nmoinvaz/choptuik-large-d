@@ -583,10 +583,10 @@ def D_of(meta):
         return mp.mpf(meta["D_str"])
 
 
-def pinned_o(meta, z, threads=2, plan_tol=1e-32, mutate_offset="", held_exact=False):
-    """reseed.pinned's solver at the state's D, with the segments planned at z at plan_tol, and its PinnedO wrapper:
-    (s, PinnedSolver, PinnedQ, PinnedO). The held values are z's own, as floats, or with held_exact taken from all
-    of z's parts and carried in eight (anm_run.py --held_o 1)."""
+def pinned_o(meta, z, threads=2, plan_tol=1e-32, mutate_offset="", held_exact=False, segs=None):
+    """reseed.pinned's solver at the state's D, with the segments planned at z at plan_tol (segs: a stored plan
+    instead, #837), and its PinnedO wrapper: (s, PinnedSolver, PinnedQ, PinnedO). The held values are z's own, as
+    floats, or with held_exact taken from all of z's parts and carried in eight (anm_run.py --held_o 1)."""
     import mpmath as mp
     from hpkernel.driver import make_solver
     from pinning import PinnedQ, PinnedSolver, band_coeffs, band_field
@@ -594,7 +594,7 @@ def pinned_o(meta, z, threads=2, plan_tol=1e-32, mutate_offset="", held_exact=Fa
     D = D_of(meta)
     s = make_solver(D, M, nodes=meta["nodes"], kt=meta.get("kt", 36), kc=meta.get("kc", 146), ks=meta.get("ks", 130),
                     threads=threads, kfreeze=meta["kfreeze"])
-    s.set_segs(s.plan(np.asarray(z[0]), np.asarray(z[1]), plan_tol, 0.05))
+    s.set_segs(segs if segs else s.plan(np.asarray(z[0]), np.asarray(z[1]), plan_tol, 0.05))
     ks_held = [k for k in range(int(meta["kfreeze"]) + 1, 14) if k % 2 == 1]
     co = band_coeffs(np.asarray(z[0])[:M], np.asarray(z[1])[:M], M, ks_held, exact=held_exact,
                      rest=[np.asarray(p)[:M] for p in z[2:]] if held_exact else ())
@@ -656,18 +656,54 @@ def _run_qd(sq, so, rs, z4, tol, it_max):
 
 
 def plant_start(z4, rs, rel, seed, last):
-    """planted's start (four parts) from the converged four-part state z4 and the number n of moved unknowns: the
-    centre data and the nodes but the last (last: all nodes) moved by rel r relative, r uniform in +-[0.5, 1] (seed). A
-    last node moved by 1e-12 leaves the regular family by G 1e-12 at the horizon, and its projection fails (180.5246,
-    2026-11-06)"""
+    """planted's start from the converged state z4, in its own parts (four, or eight from an eight-part read, #837),
+    and the number n of moved unknowns: the centre data and the nodes but the last (last: all nodes) moved by rel r
+    relative, r uniform in +-[0.5, 1] (seed). A last node moved by 1e-12 leaves the regular family by G 1e-12 at the
+    horizon, and its projection fails (180.5246, 2026-11-06)"""
     from hpkernel.driver import qd_axpy
+    from multidouble import od_axpy
     n = rs.off["mh"] if last else rs.off["node"](rs.K - 1)
     rng = np.random.default_rng(seed)
     r = rng.uniform(0.5, 1.0, n) * rng.choice([-1.0, 1.0], n)
     dz = np.zeros(len(z4[0]))
     dz[:n] = rel * r * z4[0][:n]
     zero = np.zeros(len(dz))
+    if len(z4) == 8:
+        return o8(od_axpy(1.0, dz, *([zero] * 7), *o8(z4))), n
     return o8(qd_axpy(1.0, dz, zero, zero, zero, *z4)), n
+
+
+def o8_any(z):
+    """z in eight parts: a four-part vector promoted (o8_of_q), an eight-part one as it is"""
+    return o8(z) if len(z) == 8 else o8_of_q(z)
+
+
+def truth_system(raw, path, threads=3, read="auto", held="auto", plan="auto", mutate_offset=""):
+    """a stored state and the pinned system of the checks (#837): (z, meta, (s, PinnedSolver, PinnedQ, PinnedO), info).
+    auto: a state saved in eight parts (anm_run.py --corrector od) is read in eight and solved in its chain's own
+    system, the held values carried in eight parts from all of its parts (as --held_o 1 holds them) and its stored plan
+    (as --keep_plan 1 keeps it); a four-part state is read in four, with its held values as floats and a plan made at
+    it, as before. The controls each restore one old behaviour: read '4' (load_q), held 'float', plan 'state'. z is in
+    the parts read (four or eight)."""
+    import os
+    from hpkernel.driver import load_q
+    fp = os.path.join(raw, path)
+    eight = has_o(fp)
+    if read == "8" or (read == "auto" and eight):
+        z, meta = load_o(fp)
+        nread = 8
+    else:
+        z, meta = load_q(fp)
+        z, nread = o8(z), 4
+    exact = held == "exact" or (held == "auto" and eight)
+    stored = plan == "stored" or (plan == "auto" and eight)
+    if stored and not meta.get("segs"):
+        raise SystemExit(f"{path}: no stored plan (segs) in its meta")
+    sysm = pinned_o(meta, z, threads=threads, mutate_offset=mutate_offset, held_exact=exact,
+                    segs=meta["segs"] if stored else None)
+    info = dict(file_parts=8 if eight else 4, read=nread, held="eight parts" if exact else "floats",
+                plan="stored" if stored else "made at the state")
+    return z, meta, sysm, info
 
 
 def planted(argv):
@@ -686,24 +722,27 @@ def planted(argv):
     import os
     import time
     import mpmath as mp
-    from hpkernel.driver import load_q
     from reseed import Reseeder
     raw, path = argv[0], argv[1]
     opt = _parse(argv[2:], dict(threads=3, rel=1e-12, seed=1, mutate_offset="", mutate=0, it_max=12, qd=1, tol=1e-40, out="",
                                 Delta_ref="", last=0, od=1, accept="own", strong=0, switch=1e-15, full_drop=0.0, reseed_o=0,
-                                reseed_start="ladder", save_dz0=""))
-    z4, meta = load_q(os.path.join(raw, path))
-    z4 = o8(z4)
+                                reseed_start="ladder", save_dz0="", read="auto", held="auto", plan="auto"))
+    # the truth and its system: an eight-part state's chain's own system, a four-part state's as before (#837)
+    z4, meta, (s, sp, sq, so), info = truth_system(raw, path, threads=opt["threads"], read=opt["read"],
+                                                   held=opt["held"], plan=opt["plan"],
+                                                   mutate_offset=opt["mutate_offset"])
     D = D_of(meta)
-    s, sp, sq, so = pinned_o(meta, z4, threads=opt["threads"], mutate_offset=opt["mutate_offset"])
     rs = Reseeder(meta, D, threads=opt["threads"], qd=True, od=opt["reseed_o"], qd_start=opt["reseed_start"])
     zs, n = plant_start(z4, rs, opt["rel"], opt["seed"], opt["last"])
+    F_truth, F_start = omax(so.residual_o(o8_any(z4))), omax(so.residual_o(o8_any(zs)))
     print(f"planted {path}: D {mp.nstr(D, 12)}, start = truth moved by {opt['rel']:.0e} relative in [0, {n}); pinned max|F| (octo) "
-          f"truth {omax(so.residual_o(o8_of_q(z4))):.2e}, start {omax(so.residual_o(o8_of_q(zs))):.2e}; mutate_offset "
-          f"'{opt['mutate_offset']}', mutate {opt['mutate']}", flush=True)
+          f"truth {F_truth:.2e}, start {F_start:.2e}; mutate_offset '{opt['mutate_offset']}', mutate {opt['mutate']}",
+          flush=True)
+    print(f"  the system (#837): truth read in {info['read']} of {info['file_parts']} parts, held values "
+          f"{info['held']}, plan {info['plan']}; pinned max|F| (octo) at the truth {F_truth:.4e}", flush=True)
     import json
     rec = dict(test="planted", state=path, D_str=meta["D_str"], rel=opt["rel"], seed=opt["seed"], mutate_offset=opt["mutate_offset"],
-               mutate=opt["mutate"], last=opt["last"])
+               mutate=opt["mutate"], last=opt["last"], system=info, F_truth=F_truth, F_start=F_start)
 
     def dump():
         if opt["out"]:
@@ -727,7 +766,7 @@ def planted(argv):
     if opt["od"]:
         t0 = time.time()
         try:
-            zo, ho, co, Fo, counts = _run_od(so, rs, o8_of_q(zs), opt, on_first=on_first)
+            zo, ho, co, Fo, counts = _run_od(so, rs, o8_any(zs), opt, on_first=on_first)
         except _Dz0Saved as e:
             print(f"  --save_dz0: stopped before the first step's trials; projections {e.counts}, "
                   f"{time.time() - t0:.0f} s", flush=True)
@@ -751,7 +790,7 @@ def planted(argv):
             ref = mp.mpf(opt["Delta_ref"])
     if opt["qd"]:
         t0 = time.time()
-        zq, hq, cq, Fq, cntq = _run_qd(sq, so, rs, zs, 1e-45, 12)
+        zq, hq, cq, Fq, cntq = _run_qd(sq, so, rs, q4_of_o(zs) if len(zs) == 8 else zs, 1e-45, 12)
         Dq = _delta(zq)
         print(f"  qd: {len(hq)} steps, {'converged' if cq else 'stopped'}, its last max|F| {hq[-1]['F']:.2e} (octo at the projected point "
               f"{Fq:.2e}), Delta {mp.nstr(Dq, 40)}, projections {cntq}, {time.time() - t0:.0f} s", flush=True)
