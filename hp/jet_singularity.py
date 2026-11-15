@@ -6,7 +6,7 @@
 recomputes the series in such ways, compares them, and locates the nearest singularity of a scalar component's series
 (Delta's coefficients, the last entry of each z_k, or one row) by Pade poles and by a two-term recurrence fit.
 
-    python3 jet_singularity.py planted [--case T3] [--mutate drop_pole]
+    python3 jet_singularity.py planted [--case T3|T4] [--mutate drop_pole|drop_near]
     python3 jet_singularity.py jet RAW STATE OUTPREFIX --variants od,qd,q4,pert:L:S,inject:L:S [--N 24] [--threads 4]
         [--held_fit data/held_fit.json]
     python3 jet_singularity.py compare REF.npz VAR.npz ... [--ks 1-12] [--mutate scale]
@@ -39,6 +39,16 @@ its Im D* falls by at least 1.0 from the first base to the last in either mix (#
 when Im D* stays within 0.3 of its mean at every base in both mixes; else PARTIAL. DRIFTS means three fixed
 singularities produce #685's drift, so the recurrence reading of #685 is dropped; HOLDS means they do not. --mutate
 drop_pole leaves out pair A, which must fail.
+
+planted --case T4 [--mutate drop_pole|drop_near] (#761, criteria fixed 2026-11-15 before its first run): #712's two
+tracks as seen from its last base D0 = 255.7661, A at D* = 255.64 + 5.01i (|s| 5.01, arg 91 degrees) and the near track
+at D* = 258.61 + 2.81i (|s| 4.00, arg 45 degrees), with #685's B and C as in T3, four fixed conjugate pole pairs. The
+amplitudes are real and set at D0, equal there at order 12 (mix o12) or at order 24 (o24), with A's order-5 term 1e-12;
+the background is P1's ln term, the relative noise 1e-6 (judged) and 1e-12 (reported), 24 orders. Pass: in both mixes,
+A and the near track each have a stable Pade pole within 3% in |s| and 3 degrees in arg. B and C are reported, not
+judged. --mutate drop_pole leaves out pair A, which must fail; --mutate drop_near leaves out the near track, which must
+fail as well (reported beside the issue's control). If either track is missed, #712's Pade reading of the two is
+untested.
 
 jet: the series at STATE as anm_run.py --jet_o 1 forms it (its coefficients_o and coefficients_q, the held fit's
 Taylor coefficients in eight parts as --held_o 1 gives them), in each variant of --variants:
@@ -291,6 +301,59 @@ def planted_tracks(D0, mix, seed=1, noise=1e-6, N=24, drop=()):
         return c, plants
 
 
+# #712's two tracks from its last base, and #685's B and C, for planted --case T4 (#761)
+TRACKS_712 = dict(A=("255.64", "5.01"), near=("258.61", "2.81"), B=TRACKS_685["B"], C=TRACKS_685["C"])
+BASE_712 = "255.7661"
+
+
+def planted_t4(mutate):
+    """#761: planted --case T4 (the module docstring has the criteria)"""
+    drop = ("A",) if mutate == "drop_pole" else ("near",) if mutate == "drop_near" else ()
+    ok_all = True
+    print("planted T4: #712's tracks A and near with #685's B and C, fixed at D*, from D0 %s (criteria fixed before the run)"
+          % BASE_712, flush=True)
+    for mix in ("o12", "o24"):
+        for nz in (1e-6, 1e-12):
+            rng = np.random.default_rng(1)
+            with mp.workdps(DPS):
+                S = mp.mpf(243)
+                c = [-mp.mpf("1.7e-4") * S * (-1) ** (k + 1) / (k * S ** k) for k in range(1, 25)]
+                D0 = mp.mpf(BASE_712)
+                kref = 12 if mix == "o12" else 24
+                sA = mp.mpc(*TRACKS_712["A"]) - D0
+                CA = mp.mpf("1e-12") * abs(sA) ** 6
+                plants = {}
+                for name, (re_, im_) in TRACKS_712.items():
+                    s = mp.mpc(re_, im_) - D0
+                    plants[name] = complex(s)
+                    if name in drop:
+                        continue
+                    Cj = CA * (abs(s) / abs(sA)) ** (kref + 1)
+                    for k in range(1, 25):
+                        c[k - 1] += Cj * 2 * mp.re(s ** (-k - 1))
+                if nz:
+                    c = [v * (1 + nz * float(rng.standard_normal())) for v in c]
+            sp = stable_poles(c, r_max=12.0)
+            parts, ok = [], True
+            for name, s in plants.items():
+                hit = [d for d in sp if abs(d["abs"] / abs(s) - 1) <= 0.03 and abs(d["arg_deg"] - np.degrees(np.angle(s))) <= 3]
+                if name in ("A", "near"):
+                    ok &= bool(hit)
+                parts.append(f"{name}{'' if name in ('A', 'near') else ' (reported)'} planted |s| {abs(s):.3f} arg "
+                             f"{np.degrees(np.angle(s)):.1f}: " + (f"Pade |s| {hit[0]['abs']:.3f} arg {hit[0]['arg_deg']:.1f} "
+                                                                   f"(n {hit[0]['n']})" if hit else "not found"))
+            if nz == 1e-6:
+                ok_all &= ok
+            other = [d for d in sp if not any(abs(d["abs"] / abs(s) - 1) <= 0.03 and abs(d["arg_deg"] - np.degrees(np.angle(s))) <= 3
+                                              for s in plants.values())]
+            print(f"  {mix} noise {nz:.0e} ({'judged' if nz == 1e-6 else 'reported'}): {'PASS' if ok else 'FAIL'}: "
+                  + "; ".join(parts) + "; other stable poles: "
+                  + (", ".join(f"|s| {d['abs']:.3f} arg {d['arg_deg']:.1f}" for d in other) or "none")
+                  + f"; root-test radius {root_radius(c):.3f}", flush=True)
+    print(f"{'PASS' if ok_all else 'FAIL'}: planted T4" + (f" (--mutate {mutate})" if mutate else ""), flush=True)
+    return 0 if ok_all else 1
+
+
 def planted_t3(mutate):
     """#711: planted --case T3 (the module docstring has the criteria)"""
     drop = ("A",) if mutate == "drop_pole" else ()
@@ -380,9 +443,9 @@ def planted(argv):
     mp.mp.dps = DPS
     if "--case" in argv:
         case = argv[argv.index("--case") + 1]
-        if case != "T3":
-            raise SystemExit(f"planted --case: T3 only, not {case}")
-        return planted_t3(mutate)
+        if case not in ("T3", "T4"):
+            raise SystemExit(f"planted --case: T3 or T4, not {case}")
+        return planted_t3(mutate) if case == "T3" else planted_t4(mutate)
     ok_all = True
     print("planted controls of the estimator (criteria fixed before any real series was read)", flush=True)
     for kind, tol in (("P1", (0.03, 3, 0.05, 5)), ("P2", (0.03, 3, 0.05, 5)), ("P3", (0.10, 10, 0.10, 10))):
