@@ -896,6 +896,34 @@ and its error. Raw: `I829-mac/` of the raw-data repository.
   Their mirror agrees with the table to 9.4×10⁻¹⁰.
 - This is numerical evidence, from one discretization and one plan.
 
+### The fold on #795's new plan (#833)
+
+**#795's new-plan series do not meet their own states, so they cannot say whether the fold moves with the plan.** Both
+plans share the base states at D 259.2582 and 259.4928, which satisfy the new plan's equations to 4.7×10⁻³⁶ and
+5.5×10⁻³⁶. The kept plan's series at 259.2582, summed at 259.4928, meets that state's Δ to 1.0×10⁻¹⁵. The new plan's
+misses it by 3.2×10⁻⁵, with a last term of 1.3×10⁻¹⁵. Script: `hp/fold_plan.py`. Raw: `I833-mac/`.
+
+**How it is computed.**
+- #829's two families are applied to Δ's series on both plans, at the only two bases the new plan has.
+- **The configurations:** the pair (anchor 259.4928, partner 259.2582), and each base alone.
+- **The plant** (#829's, noise 10⁻³⁰) finds D* in the pair to 3.7×10⁻⁷.
+  - **Move control:** a planted move of 0.010 is recovered to 10⁻⁶ and reads "moves with the plan".
+  - **No-move control:** doubling the near contamination reads "does not move".
+
+**On the real series.**
+- **The kept plan, in the pair**, gives D* 259.90330382874 (M2) and 259.9033038229 (M1). That is within 8.8×10⁻¹¹ and
+  5.9×10⁻⁹ of #829's value from bases near D*.
+- **The new plan, in the pair**, gives no consistent D*: M1 and M2 differ by 9.5×10⁻³, and M1's exponent is 1.48. The
+  registered rule then reads "does not move" (+5.4×10⁻³ against a combined error of 9.5×10⁻³). That reading comes from
+  fitting one form to two series that are not one function.
+- **Each new-plan series alone** has a square-root point, M1's exponent 0.50005 and 0.504. They lie +0.0102 (259.4928)
+  and +0.0113 (259.2582) above the kept plan's, both "moves" by the rule, but they disagree with each other by
+  1.1×10⁻³.
+- **Each series' + sheet at the other base** misses that state by 1.7×10⁻⁵ and 3.2×10⁻⁵ on the new plan, and by at most
+  1.9×10⁻¹⁷ on the kept plan.
+- **What would decide it:** new-plan series that meet their own states, at bases within 0.1 of D*. That is #829's
+  configuration, about 8 series.
+
 ## Proposed README text
 
 Applied to the README by the coordinator on 2026-11-14 (its checks moved to the README with it). Drafted for the

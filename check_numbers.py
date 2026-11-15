@@ -3598,6 +3598,54 @@ def fold_mirror():
              [(N, "Their mirror agrees with the table to 9.4×10⁻¹⁰.")])]
     return out
 
+
+@check
+def fold_plan():
+    """notes/LARGE_D_WALL.md "The fold on #795's new plan" (#833): hp/fold_plan.py planted and real,
+    hp/data/fold_plan_planted.json and fold_plan_real.json"""
+    N = "notes/LARGE_D_WALL.md"
+    pl = json.load(open(os.path.join(ROOT, "hp/data/fold_plan_planted.json")))
+    re_ = json.load(open(os.path.join(ROOT, "hp/data/fold_plan_real.json")))
+    P, Sa, Sb = (re_["configs"][k] for k in ("P", "Sa", "Sb"))
+    pP = pl["configs"]["P"]
+    st = re_["states"]
+    out = [("main configuration P", float(pl["main"] == "P"), 1, 1, [(N, "(#829's, noise 10⁻³⁰) finds D* in the pair to 3.7×10⁻⁷")]),
+           ("plant D* error in P", pP["plant_err"], 3.7e-7, 1e-8, [(N, "finds D* in the pair to 3.7×10⁻⁷")]),
+           ("move control recovered to 1e-6", float(abs(pP["move"]["shift"] - 0.010) < 1e-6), 1, 1,
+            [(N, "a planted move of 0.010 is recovered to 10⁻⁶ and reads \"moves with the plan\"")]),
+           ("move control reads moves", float(pP["move"]["verdict"] == "moves with the plan"), 1, 1, []),
+           ("no-move control", float(pP["cont2"]["verdict"] == "does not move"), 1, 1,
+            [(N, "doubling the near contamination reads \"does not move\"")]),
+           ("kept direct sum", st["kept"]["direct"], 1.0e-15, 1e-16, [(N, "meets that state's Δ to 1.0×10⁻¹⁵")]),
+           ("new direct sum", st["new"]["direct"], 3.2e-5, 1e-6, [(N, "misses it by 3.2×10⁻⁵, with a last term of 1.3×10⁻¹⁵")]),
+           ("new last term", st["new"]["last"], 1.3e-15, 1e-16, [(N, "misses it by 3.2×10⁻⁵, with a last term of 1.3×10⁻¹⁵")]),
+           ("kept P M2 D*", P["summary"]["kept"]["M2"]["Dstar"], 259.90330382874, 1e-11,
+            [(N, "gives D* 259.90330382874 (M2) and 259.9033038229 (M1)")]),
+           ("kept P M1 D*", P["summary"]["kept"]["M1"]["Dstar"], 259.9033038229, 1e-10,
+            [(N, "gives D* 259.90330382874 (M2) and 259.9033038229 (M1)")]),
+           ("against #829, M2", abs(P["summary"]["kept"]["M2"]["Dstar"] - 259.90330382883), 8.8e-11, 1e-12,
+            [(N, "within 8.8×10⁻¹¹ and")]),
+           ("against #829, M1", abs(P["summary"]["kept"]["M1"]["Dstar"] - 259.90330382883), 5.9e-9, 1e-10,
+            [(N, "5.9×10⁻⁹ of #829's value")]),
+           ("new P: M1 - M2", abs(P["summary"]["new"]["M1"]["Dstar"] - P["summary"]["new"]["M2"]["Dstar"]), 9.5e-3, 1e-4,
+            [(N, "M1 and M2 differ by 9.5×10⁻³, and M1's exponent is 1.48")]),
+           ("new P: M1's exponent", P["summary"]["new"]["M1"]["mu"], 1.48, 0.01, [(N, "M1's exponent is 1.48")]),
+           ("P verdict", float(P["verdict"] == "does not move"), 1, 1, [(N, "registered rule then reads \"does not move\"")]),
+           ("P difference", P["diff"], 5.4e-3, 1e-4, [(N, "(+5.4×10⁻³ against a combined error of 9.5×10⁻³)")]),
+           ("P combined error", P["comb"], 9.5e-3, 1e-4, [(N, "(+5.4×10⁻³ against a combined error of 9.5×10⁻³)")]),
+           ("Sa new mu", Sa["summary"]["new"]["M1"]["mu"], 0.50005, 1e-5, [(N, "M1's exponent 0.50005 and 0.504")]),
+           ("Sb new mu", Sb["summary"]["new"]["M1"]["mu"], 0.504, 1e-3, [(N, "M1's exponent 0.50005 and 0.504")]),
+           ("Sa shift", Sa["diff"], 0.0102, 1e-4, [(N, "+0.0102 (259.4928)")]),
+           ("Sb shift", Sb["diff"], 0.0113, 1e-4, [(N, "and +0.0113 (259.2582)")]),
+           ("Sa verdict", float(Sa["verdict"] == "moves with the plan"), 1, 1, []),
+           ("Sb verdict", float(Sb["verdict"] == "moves with the plan"), 1, 1, []),
+           ("Sa against Sb, new", Sb["new"][0] - Sa["new"][0], 1.1e-3, 1e-4, [(N, "1.1×10⁻³.")]),
+           ("new + sheet, Sa", max(Sa["plus"]["new"].values()), 1.7e-5, 1e-6, [(N, "misses that state by 1.7×10⁻⁵ and 3.2×10⁻⁵ on the new plan")]),
+           ("new + sheet, Sb", max(Sb["plus"]["new"].values()), 3.2e-5, 1e-6, [(N, "misses that state by 1.7×10⁻⁵ and 3.2×10⁻⁵ on the new plan")]),
+           ("kept + sheets, largest", max(max(Sa["plus"]["kept"].values()), max(Sb["plus"]["kept"].values())), 1.9e-17, 1e-18,
+            [(N, "1.9×10⁻¹⁷ on the kept plan")])]
+    return out
+
 def full_dinf():
     sys.path.insert(0, os.path.join(ROOT, "hp"))
     import dd_fits_mp as F
