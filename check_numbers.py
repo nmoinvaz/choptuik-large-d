@@ -2756,6 +2756,57 @@ def lam_gauge_errs():
 
 
 @check
+def lam_fold():
+    """notes/MODE_COUNT.md 10.4: lam_g past D 248, the fold's square root against the 1/p_min term (#815), from
+    hp/data/lam_fold.json (hp/lam_fold_fit.py real) and hp/data/lam_fold_planted.json (its planted)"""
+    import json
+    N = "notes/MODE_COUNT.md"
+    js = json.load(open(os.path.join(ROOT, "hp/data/lam_fold.json")))
+    pl = json.load(open(os.path.join(ROOT, "hp/data/lam_fold_planted.json")))["plants"]
+    n, g = js["N"], js["G"]
+    k4, k5 = n["posthoc_K4"], n["posthoc_K5"]
+    rC = lambda o: o["C"]["r"]                                                   # noqa: E731
+    t_n = [(N, "| N | 2.6×10⁶ | 1.8×10⁶ | 1.2×10³ | 1.5×10⁵ | 259.882 | 1/p_min term, C incomplete |")]
+    t_g = [(N, "| G | 1.8×10⁷ | 3.9×10⁶ | 5.4×10⁵ | 3.7×10⁶ | 259.779 | neither, C incomplete |")]
+    t_p = [(N, "| N, post hoc, fold part of degree 5 | 3.3×10⁴ | | 46 | 1.7×10⁵ | 259.910 | both, C incomplete |")]
+    t_k = [(N, "Then C comes within 86σ and 46σ on N, with D* 259.9071 and 259.9099")]
+    gmin = min([rC(g)] + [g["C_K%d" % K]["r"] for K in (1, 2, 4, 5)] + [rC(g["posthoc_K%d" % K]) for K in (4, 5)])
+    verdict = lambda o, v, c: float(o["verdict"] == v and o["complete"] == c)  # noqa: E731
+    return [("window N states", n["n"], 40, 1, [(N, "N = 258–259.74 (40 states)")]),
+            ("window G states", g["n"], 92, 1, [(N, "G = 248–259.74 (92 states)")]),
+            ("smallest sigma on G", g["sigma_min"], 6e-13, 1e-13, [(N, "fits, 6×10⁻¹³ to 1.9×10⁻¹²")]),
+            ("largest sigma on G", g["sigma_max"], 1.9e-12, 1e-13, [(N, "fits, 6×10⁻¹³ to 1.9×10⁻¹²")]),
+            ("plants not as expected", sum(v["expected"] is False for v in pl.values()), 0, 1,
+             [(N, "The plants give the expected verdict on both windows")]),
+            ("N: r(S)", n["S"]["r"], 2.6e6, 1e5, t_n), ("N: r(W)", n["W"]["r"], 1.8e6, 1e5, t_n),
+            ("N: r(C)", rC(n), 1.2e3, 100, t_n), ("N: r(C_even)", n["C_even"]["r"], 1.5e5, 1e4, t_n),
+            ("N: C's D*", n["C"]["Dstar"], 259.882, 1e-3, t_n),
+            ("N: verdict pmin, C incomplete", verdict(n, "pmin", False), 1, 1, t_n),
+            ("N: r(C_even)/r(C)", n["C_even"]["r"] / rC(n), 130, 10, [(N, "(130), but C puts D* 0.021 below")]),
+            ("N: C's D* below the fold", 259.9033 - n["C"]["Dstar"], 0.021, 1e-3, [(N, "C puts D* 0.021 below")]),
+            ("G: r(S)", g["S"]["r"], 1.8e7, 1e6, t_g), ("G: r(W)", g["W"]["r"], 3.9e6, 1e5, t_g),
+            ("G: r(C)", rC(g), 5.4e5, 1e4, t_g), ("G: r(C_even)", g["C_even"]["r"], 3.7e6, 1e5, t_g),
+            ("G: C's D*", g["C"]["Dstar"], 259.779, 1e-3, t_g),
+            ("G: verdict neither, C incomplete", verdict(g, "neither", False), 1, 1, t_g),
+            ("N, K 5: r(S)", k5["S"]["r"], 3.3e4, 1e3, t_p), ("N, K 5: r(C)", rC(k5), 46, 1, t_p + t_k),
+            ("N, K 5: r(C_even)", k5["C_even"]["r"], 1.7e5, 1e4, t_p),
+            ("N, K 5: C's D*", k5["C"]["Dstar"], 259.910, 1e-3, t_p),
+            ("N, K 5: verdict both, C incomplete", verdict(k5, "both", False), 1, 1, t_p),
+            ("N, K 4: r(C)", rC(k4), 86, 1, t_k), ("N, K 4: C's D*", k4["C"]["Dstar"], 259.9071, 1e-4, t_k),
+            ("N, K 5: C's D* (4 places)", k5["C"]["Dstar"], 259.9099, 1e-4, t_k),
+            ("N, K 4: verdict both", float(k4["verdict"] == "both"), 1, 1, [(N, "and both terms\nare carried")]),
+            ("N, K 4: odd part over max|delta|", k4["C"]["odd_max"] / n["delta_max"], 44, 1,
+             [(N, "at 44 and 52 times the largest |δ|")]),
+            ("N, K 5: odd part over max|delta|", k5["C"]["odd_max"] / n["delta_max"], 52, 1,
+             [(N, "at 44 and 52 times the largest |δ|")]),
+            ("N, K 4: C's omega", k4["C"]["omega"], 2.5, 0.1, [(N, "C's W has ω 2.5 and 2.4")]),
+            ("N, K 5: C's omega", k5["C"]["omega"], 2.4, 0.1, [(N, "C's W has ω 2.5 and 2.4")]),
+            ("G: smallest r(C) over every degree", gmin, 6e4, 1e4, [(N, "On G every form misses by 6×10⁴σ or more")]),
+            ("G: the chirped plant's r(C)", pl["G:Wchirp"]["C"]["r"], 2.1e4, 1e3,
+             [(N, "whose period lengthens with D (2.1×10⁴σ)")])]
+
+
+@check
 def table_errs_all():
     """every row of hp/data/delta_all.csv has an err or a reason named in its err_kind (#764). The full-system
     quad-double rows with one start (71.0, 72.8) take the larger two-start spread of the nearest qd rows below and

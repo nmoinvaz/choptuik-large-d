@@ -2,9 +2,11 @@
 """lam_g past the top of notes/MODE_COUNT.md 10.4's fit (#815): the fold's square root, the 1/p_min term, or both.
 
     cd hp && python3 lam_fold_fit.py planted RAWDIR [--json=OUT]   the plants first (exits 1 when a verdict is not the
-                                                                   expected one); --mutate=dstar judges D*_C against
+                                                                   expected one; hp/data/lam_fold_planted.json is its
+                                                                   output); --mutate=dstar judges D*_C against
                                                                    259.9033 + 0.5, and must exit 1
     cd hp && python3 lam_fold_fit.py real [--json=OUT]             the chain's states, with the verdict rule below
+                                                                   (hp/data/lam_fold.json is its output)
 
 RAWDIR is a clone of the raw-data repository (I603-win2/ at 1a3c1d04 or later), read for p_min only (the smallest LU
 pivot of each state, frontier_audit.record_info), which sets the 1/p_min plant's rate and size.
@@ -42,6 +44,11 @@ Plants (on the real D grid and sigma, noise N(0, sigma) of seed 815, fixed befor
   Smoved  PS with its fold at 260.4033 (control): expected "neither", since D*_C is 0.5 from 259.9033
   Snoisy  PS with noise 1e4 sigma (control): expected C incomplete
   Wchirp  PW's rate with its period lengthening by 2% per unit D (reported, not judged)
+
+Post hoc (added after the registered real fit, which gave C incomplete on both windows): the fold part S of degree
+K = 4 and 5, with C_even's regular part of the same degree in D (K // 2 = 2), judged by the same rule. Its plants PS,
+PW and PM are judged as above in `planted` (marked post hoc), and `real` gives its verdicts beside the registered ones.
+`real` also prints C at K = 1, 2, 4 and 5 against the registered C_even, a diagnostic.
 """
 import csv
 import json
@@ -120,8 +127,8 @@ def lrms(res):
     return math.log(float(np.sqrt(np.mean(res ** 2))))
 
 
-def form(D, y, sig, name, K=3):
-    """the fit of one form: dict(r, and its parameters)"""
+def form(D, y, sig, name, K=3, m=1):
+    """the fit of one form: dict(r, and its parameters); K the fold part's degree in u, m C_even's degree in D"""
     top = float(D.max())
     if name == "S":
         f = lambda p: lrms(lin(scols(D, p[0], K), y, sig)[1])        # noqa: E731
@@ -130,7 +137,7 @@ def form(D, y, sig, name, K=3):
         c, res = lin(scols(D, m.x[0], K), y, sig)
         return dict(r=float(np.max(np.abs(res))), Dstar=float(m.x[0]), a=[float(x) for x in c])
     if name in ("W", "C_even"):
-        extra = [np.ones_like(D), D - 259.0] if name == "C_even" else []
+        extra = [(D - 259.0) ** j for j in range(m + 1)] if name == "C_even" else []
         f = lambda p: lrms(lin(wcols(D, *p) + extra, y, sig)[1])     # noqa: E731
         G = [(b, w) for b in np.linspace(0, 5, 26) for w in np.linspace(0.05, 5, 50)]
         m = nm(f, [list(G[i]) for i in np.argsort([f(p) for p in G])[:4]], lambda p: True)
@@ -152,9 +159,9 @@ def form(D, y, sig, name, K=3):
     raise ValueError(name)
 
 
-def judge(D, y, sig):
+def judge(D, y, sig, K=3, m=1):
     """every form on one window and the verdict of the rule"""
-    out = {k: form(D, y, sig, k) for k in ("S", "W", "C", "C_even")}
+    out = {k: form(D, y, sig, k, K, m) for k in ("S", "W", "C", "C_even")}
     sq = out["C_even"]["r"] / out["C"]["r"] >= NEED and abs(out["C"]["Dstar"] - DREF) <= DSTAR_TOL
     pm = out["S"]["r"] / out["C"]["r"] >= NEED
     out["verdict"] = {(True, True): "both", (True, False): "sqrt", (False, True): "pmin"}.get((sq, pm), "neither")
@@ -221,6 +228,9 @@ def window(pts, w):
     return tuple(np.array([p[i] for p in sel]) for i in range(3))
 
 
+POSTHOC = ((4, 2), (5, 2))      # (K, m) of the post hoc variant
+
+
 def cmd_planted(raw):
     pts = data()
     b, p250 = pivot_law(raw)
@@ -229,12 +239,20 @@ def cmd_planted(raw):
     for w in WINDOWS:
         D, _, sig = window(pts, w)
         print("window %s, D %.2f to %.2f, %d states, sigma %.1e to %.1e:" % (w, D[0], D[-1], len(D), sig.min(), sig.max()))
-        for name, y in plants(D, sig, b, p250).items():
+        P = plants(D, sig, b, p250)
+        for name, y in P.items():
             o = judge(D, y, sig)
             e = expected(name, o, b)
             ok &= e is not False
             print(line(name, o) + " | " + {True: "as expected", False: "NOT AS EXPECTED", None: "reported"}[e])
             out[w + ":" + name] = dict(o, expected=e)
+        for K, m in POSTHOC:
+            for name in ("PS", "PW", "PM"):
+                o = judge(D, P[name], sig, K, m)
+                e = expected(name, o, b)
+                ok &= e is not False
+                print(line("%s K%d" % (name, K), o) + " | post hoc, " + ("as expected" if e else "NOT AS EXPECTED"))
+                out["%s:%s:K%d" % (w, name, K)] = dict(o, expected=e)
     print("planted:", "PASS" if ok else "FAIL")
     if "json" in args:
         json.dump(dict(b=b, p250=p250, plants=out), open(args["json"], "w"), indent=1)
@@ -249,6 +267,8 @@ def cmd_real():
         print("window %s, D %.4f to %.4f, %d states, |delta| up to %.2e, sigma %.1e to %.1e:" % (
             w, D[0], D[-1], len(D), np.max(np.abs(y)), sig.min(), sig.max()))
         o = judge(D, y, sig)
+        o.update(n=len(D), D_lo=float(D[0]), D_hi=float(D[-1]), delta_max=float(np.max(np.abs(y))),
+                 sigma_min=float(sig.min()), sigma_max=float(sig.max()))
         print(line("real", o))
         c = o["C"]
         print("    C's parts: the odd powers of u up to %.2e (%.2e at the top), W up to %.2e (%.2e at the top)" % (
@@ -259,6 +279,11 @@ def cmd_real():
             print("    diagnostic C with K = %d: r %.1e, D* %.5f, beta %.4f, omega %.4f" % (
                 K, ck["r"], ck["Dstar"], ck["beta"], ck["omega"]))
             o["C_K%d" % K] = ck
+        for K, m in POSTHOC:
+            ph = judge(D, y, sig, K, m)
+            print(line("K%d m%d" % (K, m), ph) + " | post hoc")
+            print("    C's parts: the odd powers of u up to %.2e, W up to %.2e" % (ph["C"]["odd_max"], ph["C"]["W_max"]))
+            o["posthoc_K%d" % K] = ph
         out[w] = o
     if "json" in args:
         json.dump(out, open(args["json"], "w"), indent=1)
