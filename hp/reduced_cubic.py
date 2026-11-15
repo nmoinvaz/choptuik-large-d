@@ -1030,6 +1030,56 @@ def strong_part(Um, v):
     return [v[r] - mp.fsum(c[m] * Um[m][r] for m in range(len(Um))) for r in range(len(v))]
 
 
+def chart_truth(sysm, X, Um, B, dps=400):
+    """the chart's reduced map solved independently of curve's strong solves (#832): at c, the point p = X c + w with
+    X^T w = 0 and W^T F(p) = 0 (W an orthonormal complement of U), by Newton on that square system with its Jacobian
+    from central differences of F (step 1e-160), at dps digits, from p = X c. Returns c -> g(c) - g(0) - B c, g(c) =
+    U^T F(p), in U's coordinates: the truth of curve's departure for a chart whose planted map is not known (e_Delta
+    among the weak directions). It shares only F and the chart (X, U, B) with the code it checks."""
+    n, k = sysm.L, len(X)
+    W = []
+    for i in range(n):                                  # the complement of U by Gram-Schmidt of the unit vectors
+        v = [mp.mpf(1) if r == i else mp.mpf(0) for r in range(n)]
+        for q in list(Um) + W:
+            c = dot(q, v)
+            v = [a - c * b for a, b in zip(v, q)]
+        nv = nrm(v)
+        if nv > mp.mpf("1e-8"):
+            W.append([a / nv for a in v])
+        if len(W) == n - k:
+            break
+
+    def g(c):
+        with mp.workdps(dps):
+            h = mp.mpf(10) ** -160
+            p = [mp.fsum(cj * X[j][r] for j, cj in enumerate(c)) for r in range(n)]
+            for _ in range(40):
+                Fv = sysm.F(p)
+                G = [dot(x, p) - cj for x, cj in zip(X, c)] + [dot(wv, Fv) for wv in W]
+                Jm = mp.matrix(n, n)
+                for i in range(n):
+                    pp, pm = list(p), list(p)
+                    pp[i] += h
+                    pm[i] -= h
+                    dF = [(a - b) / (2 * h) for a, b in zip(sysm.F(pp), sysm.F(pm))]
+                    for r in range(k):
+                        Jm[r, i] = X[r][i]
+                    for r, wv in enumerate(W):
+                        Jm[k + r, i] = dot(wv, dF)
+                dp = mp.lu_solve(Jm, mp.matrix(G))
+                p = [a - dp[i] for i, a in enumerate(p)]
+                if nrm([dp[i] for i in range(n)]) < mp.mpf(10) ** -(dps - 60) * max(nrm(p), mp.mpf("1e-300")):
+                    break
+            gv = [dot(u, sysm.F(p)) for u in Um]
+        return [+x for x in gv]
+    g0 = g([mp.mpf(0)] * k)
+
+    def dep(c):
+        gv = g(c)
+        return [gv[m] - g0[m] - mp.fsum(B[m][j] * c[j] for j in range(k)) for m in range(k)]
+    return dep
+
+
 def second_diffs(sysm, X, h):
     """F''(v_j, v_l) as full vectors by central differences at step h: three points on the diagonal, four off it"""
     k = len(X)
@@ -1242,6 +1292,11 @@ def basis(sysm, opts, log, rec, dump):
     X = mgs([[mp.mpf(float(x)) for x in V[:, j]] for j in range(k)])[0]
     for _ in range(3):
         X = mgs([sysm.solve(sysm.solve(x, True)) for x in X])[0]
+    if opts.get("weak_delta", "0") == "1":
+        # #832: e_Delta, the last unknown, joins the weak directions after their refinement, so that w, orthogonal to
+        # V, never moves Delta; U = orth(J^-T V) as before, and g has k + 1 components
+        X = mgs(X + [[mp.mpf(0)] * (L - 1) + [mp.mpf(1)]])[0]
+        k = len(X)
     Um, Rm = mgs([sysm.solve(x, True) for x in X])
     Bm_ = (mp.matrix(Rm) ** -1).T
     B = [[Bm_[i, j] for j in range(k)] for i in range(k)]
@@ -2047,23 +2102,24 @@ def bridge_scan(sysm, bas, log, out, dump, g00, floor0, fee2=None, wee=None, t_t
     return rows
 
 
-def w_predict(w0, conv, tau):
+def w_predict(w0, conv, tau, p=2):
     """w at the signed tau from the converged points [(tau_i, w_i)]: the two with the largest |tau_i| <= |tau| (the
-    same sign first), fitted by w0 + alpha tau^2 + beta tau^3 exactly; one point, w0 + (tau / tau_1)^2 (w_1 - w0); none,
-    w0"""
+    same sign first), fitted by w0 + alpha tau^p + beta tau^(p+1) exactly; one point, w0 + (tau / tau_1)^p (w_1 - w0);
+    none, w0. p = 2 for the chart of singular directions (w - w0 = O(|c|^2)); p = 1 with e_Delta among the weak
+    directions (#832), which are not all singular, so that w - w0 has a linear part"""
     cand = sorted((p for p in conv if abs(p[0]) <= abs(tau)), key=lambda p: (abs(p[0]), (p[0] > 0) == (tau > 0)))
     if not cand:
         return list(w0)
     if len(cand) == 1 or abs(cand[-1][0]) == abs(cand[-2][0]) and cand[-1][0] == cand[-2][0]:
         t1, w1 = cand[-1]
-        return [x0 + (tau / t1) ** 2 * (x1 - x0) for x0, x1 in zip(w0, w1)]
+        return [x0 + (tau / t1) ** p * (x1 - x0) for x0, x1 in zip(w0, w1)]
     (t1, w1), (t2, w2) = cand[-2], cand[-1]
-    Mx = mp.matrix([[t1 ** 2, t1 ** 3], [t2 ** 2, t2 ** 3]]) ** -1
+    Mx = mp.matrix([[t1 ** p, t1 ** (p + 1)], [t2 ** p, t2 ** (p + 1)]]) ** -1
     out = []
     for x0, x1, x2 in zip(w0, w1, w2):
         al = Mx[0, 0] * (x1 - x0) + Mx[0, 1] * (x2 - x0)
         be = Mx[1, 0] * (x1 - x0) + Mx[1, 1] * (x2 - x0)
-        out.append(x0 + al * tau ** 2 + be * tau ** 3)
+        out.append(x0 + al * tau ** p + be * tau ** (p + 1))
     return out
 
 
@@ -2130,6 +2186,9 @@ def curve_scan(sysm, bas, opts, mutate, log, rec, dump, truth=None, kappa=None, 
     the + ray (--curve_t). Each converged point stores g, its signs against g(0), and dlast, the move's last unknown
     (Delta on a real start) against z0 (#823)."""
     k, X, Um, B, a, Ba, nBa, na, w0 = (bas[n] for n in ("k", "X", "Um", "B", "a", "Ba", "nBa", "na", "w0"))
+    # the ray's t: CURVE_T, or on a plant --plant_t (#832: the e_Delta chart's plant, whose strong rows 0-3 turn
+    # nonlinear above |x| 1e-7, CurvePlanted's scale for its own chart)
+    CT = [mp.mpf(x) for x in opts["plant_t"].split(",")] if truth is not None and opts.get("plant_t") else CURVE_T
     wref = max(nrm(w0), mp.mpf("1e-300"))
     e = [x / na for x in a]
     nBe = nrm([mp.fsum(B[m][j] * e[j] for j in range(k)) for m in range(k)])
@@ -2158,6 +2217,9 @@ def curve_scan(sysm, bas, opts, mutate, log, rec, dump, truth=None, kappa=None, 
     dump()
     if not (ok00 and ok0b):
         return False, rec
+    if opts.get("g0_only", "0") == "1":     # #832: g(0) alone, the ray's points left out
+        log("  curve: g(0) only (--g0_only=1); the ray's points are not evaluated")
+        return True, rec
 
     def dep_of(gv, c):
         return [gv[m] - g00[m] - mp.fsum(B[m][j] * c[j] for j in range(k)) for m in range(k)]
@@ -2166,7 +2228,7 @@ def curve_scan(sysm, bas, opts, mutate, log, rec, dump, truth=None, kappa=None, 
         return [gv[m] - gF0[m] - mp.fsum(B[m][j] * c[j] for j in range(k)) for m in range(k)]
 
     # the flat chart z0 + V c (no strong solve): residuals only
-    tflat = ([CURVE_LEAD] if truth is None else []) + CURVE_T
+    tflat = ([CURVE_LEAD] if truth is None else []) + CT
     for t in tflat:
         row = dict(t=float(t))
         for sgn in (1, -1):
@@ -2210,13 +2272,13 @@ def curve_scan(sysm, bas, opts, mutate, log, rec, dump, truth=None, kappa=None, 
     # the strong-solved manifold
     conv, pts = [], {1: [], -1: []}
     for sgn in (1, -1):
-        ts = ([CURVE_LEAD] if truth is None and sgn == 1 else []) + CURVE_T
+        ts = ([CURVE_LEAD] if truth is None and sgn == 1 else []) + CT
         ts = sorted(ts + list(t_plus)) if sgn == 1 else ts
         for t in ts:
             t1 = time.time()
             c = [sgn * t * x for x in e]
             tau = sgn * t
-            w_init = w_predict(w0, conv, tau)
+            w_init = w_predict(w0, conv, tau, 1 if opts.get("weak_delta", "0") == "1" else 2)
             nBc = t * nBe
             if mutate == "w0":
                 Fv = sysm.F(lin([(cj, X[j]) for j, cj in enumerate(c)]))
@@ -2272,7 +2334,7 @@ def curve_scan(sysm, bas, opts, mutate, log, rec, dump, truth=None, kappa=None, 
                 row[part + "_true"] = ntr
                 row[part + "_err"] = nrm([x - y for x, y in zip(meas, tru)]) / nBc / max(ntr, RESOLVED * row["fl"])
         rows.append(row)
-    main = [r for r in rows if r["t"] >= CURVE_T[0] * mp.mpf("0.999")]
+    main = [r for r in rows if r["t"] >= CT[0] * mp.mpf("0.999")]
     log("  curve along a / |a|: t, |dep(+t e)|, |dep(-t e)|, even part E, odd part O, floor (of |B c| = t |B e|), "
         "E / t, O / t (local orders between neighbours below)" + (", even and odd against the planted" if truth else ""))
     for r in rows:
@@ -2303,14 +2365,16 @@ def curve_scan(sysm, bas, opts, mutate, log, rec, dump, truth=None, kappa=None, 
         pe = bool(rows) and all(r["E_err"] < 1e-3 and r["O_err"] < 1e-3 for r in rows)
         po = bool(fits["E"]["p"] is not None and abs(fits["E"]["p"] - 4) < 0.05 and fits["O"]["p"] is not None
                   and abs(fits["O"]["p"] - 5) < 0.05)
-        pc = all(q["ok"] for s in (1, -1) for q in pts[s]) and len(rows) == len(CURVE_T)
+        pc = all(q["ok"] for s in (1, -1) for q in pts[s]) and len(rows) == len(CT)
         vs, vgot = verdict_selftest()
         out["planted"] = dict(points=pe, orders=po, converged=pc, verdict_selftest=vs, verdicts=vgot,
                               worst=float(max(max(r["E_err"], r["O_err"]) for r in rows)) if rows else None)
         log(f"  planted: (PC1) worst point error {out['planted']['worst'] if rows else float('nan'):.1e} (bound 1e-3): "
             f"{'pass' if pe else 'FAIL'}; (PC2) orders 4 and 5 to 0.05: {'pass' if po else 'FAIL'}; (PC3) every solve "
             f"converged: {'pass' if pc else 'FAIL'}; (PC4) the verdict's self-test {vgot}: {'pass' if vs else 'FAIL'}")
-        ok = pe and po and pc and vs and pb
+        # PC2's orders 4 and 5 are those of CurvePlanted's own chart; with e_Delta among the weak directions (#832)
+        # the departure is another function, read against chart_truth, and its orders are reported only
+        ok = pe and (po or opts.get("weak_delta", "0") == "1") and pc and vs and pb
     else:
         # (Z1) the lead-in against #677's chord; (Z2) the flat chart; the verdict
         z1 = None
@@ -2999,7 +3063,11 @@ def main_curve(args, opts, mutate, log, rec, dump):
             sysm = CurvePlanted(int(opts.get("seed", 5)), log, mutate=mutate)
         rec.update(sysm.meta)
         bas = basis(sysm, opts, log, rec, dump)
-        ok, rec = curve_scan(sysm, bas, opts, mutate, log, rec, dump, truth=sysm.dep_true(bas["X"], bas["Um"]))
+        if opts.get("weak_delta", "0") == "1":     # #832: e_Delta among the weak directions, read against chart_truth
+            truth = chart_truth(sysm, bas["X"], bas["Um"], bas["B"])
+        else:
+            truth = sysm.dep_true(bas["X"], bas["Um"])
+        ok, rec = curve_scan(sysm, bas, opts, mutate, log, rec, dump, truth=truth)
         if isinstance(sysm, Elim):
             rec["elim_stats"] = sysm.stats()
         return ok and bool(sysm.selfcheck < 1e-20)
