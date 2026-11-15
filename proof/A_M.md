@@ -8,9 +8,10 @@ point is being written separately (`solver/proof/fixed_point_M.py`, notes in `pr
 (Anthropic) under Nathan Moinvaziri's direction; its M = 3 certificate is reviewed independently in
 [A_M_review.md](A_M_review.md).
 
-**Status.** M = 1: this code path reproduces Theorem A(M = 1)'s box (§6.1). M = 3: **certified**, given the M-harmonic
-start-value lemma `fixed_point_M.start_data_M` and Braaksma's theorem, on a parallelepiped of outer half-width 10⁻¹⁰
-(§6.2). M = 5: **not certified by this note's first-order code**. The centre is refined (numerical evidence), but the
+**Status.** M = 1: this code path reproduces Theorem A(M = 1)'s box (§6.1). M = 3: **certified**, assuming Braaksma's
+theorem, on a parallelepiped of outer half-width 10⁻¹⁰ (§6.2). Its start data are proved in the run by the M-harmonic
+start-value lemma `fixed_point_M.start_data_M` (§6.2). M = 5: **not certified by this note's first-order code**. The
+centre is refined (numerical evidence), but the
 four box runs of §7 on the local machine all failed: at h = 3×10⁻¹¹ and 10⁻¹² (twice) the derivative radius grew past
 order one on the arc, and the one run that finished (h = 10⁻¹³) fails the Krawczyk test (margins −13.7, −11.8, +0.29,
 +0.33, −542, −511; `logs/A_M_krawczyk_M5_1e-13.log`). The design change of §7, a second-order chart with C² enclosures,
@@ -81,8 +82,8 @@ or anything about M > 5 or the untruncated problem.
 
 - Braaksma's 1-summability theorem, for the existence of y⁺ and its asymptotics on its sector (as in Theorem A(M = 1)).
 - The start-value lemma for the M-harmonic system: at M = 1 this is `fixed_point.start_data` (proved, A_certify.md §4.4–4.5).
-  At M ≥ 3 it is `fixed_point_M.start_data_M` (another agent's file, notes in `proof/A_lemmas_M.md`; not yet merged or
-  reviewed when these runs were made). certify_M.py imports it when it is importable (next to it after the merge, or
+  At M ≥ 3 it is `fixed_point_M.start_data_M` (notes in `proof/A_lemmas_M.md` §2; reviewed at M = 3 in
+  `proof/A_M_review.md` §4). certify_M.py imports it when it is importable (next to it after the merge, or
   from the directory in the environment variable `CERTIFY_M_FPM_DIR`) and records the file's path and SHA-256 in every
   run; otherwise it falls back to a **non-rigorous placeholder** (the series truncated at its smallest term plus an
   assumed error ball, `certify_M_sys.placeholder_start`), and a result obtained that way is numerical evidence produced

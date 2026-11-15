@@ -220,7 +220,8 @@ is **certified** at M = 3: the four real D-jump conditions at ξ₁ = 0.3 have e
 Jacobian, in a box of outer half-width 10⁻¹⁰ about A = 2.7264758856, ω/ω∞ = 1.0156030949. The parts of Theorem A that
 turn a point certificate into the theorem have been generalized to M harmonics: the start-value fixed point with
 parameter derivatives, lemma S, and lemmas 6a, 6b₀ and 6b₁. At M = 3 all of them are certified on boxes that contain the
-point certificate's box, lemma 6a with that certificate's state box at ξ₁ = 0.3 (ρ₆ₐ = 0.041). So **Theorem A(M = 3) is
+point certificate's box, the start-value fixed point at the certificate's truncation N = 95 by its own run and by a
+rerun over x̂ ± 10⁻⁶ (#862), and lemma 6a with that certificate's state box at ξ₁ = 0.3 (ρ₆ₐ = 0.041). So **Theorem A(M = 3) is
 certified**, assuming Braaksma's theorem: the three-harmonic selection condition has exactly one zero in the
 certificate's box, and it is simple. At M = 5 the first-order point certificate fails: its derivative enclosures
 overestimate the true variation over the box by 10² to 10⁵ (A_M.md). A second-order chart with C² enclosures, so that
