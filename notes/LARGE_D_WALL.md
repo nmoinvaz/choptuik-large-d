@@ -407,8 +407,18 @@ at D₀ 255.06, 255.37 and 255.77, because a nearer track sets it.
 every one of the 24 largest rows has its nearest pole on it. It lies 0.6 from track C of #685's table (259.20 + 2.88i,
 seen from D 253.07 to 253.71 with a drift that three points do not establish), so it may be C seen from nearer (a
 reading, not tested). Its own drift over D₀ 255.06–255.77 is −0.008 and −0.042 per unit D₀, three points over 0.7, not
-established. The root test equals neither track's distance exactly. No planted case yet holds a pole at |s| 4 beside
-one at 5, so the Padé reading of two near tracks is not tested.
+established. The root test equals neither track's distance exactly.
+
+**The Padé reading of the two tracks is untested: its planted case fails (#761, `jet_singularity.py planted --case
+T4`; raw `I761-mac/`).** The case plants A (|s| 5.01, 91°) and the near track (|s| 4.00, 45°) as seen from D₀
+255.7661, with #685's B and C, in T3's two amplitude mixes.
+- With the four pairs' terms balanced at order 12, Padé recovers all four to the planted |s| and argument.
+- When the farthest pair, B at |s| 6.75, dominates every order up to 24, the root-test radius is 6.755. Then A and the
+  near track lie inside 0.85 of it, where `stable_poles` drops poles as the approximant's, and neither is found.
+- Its controls fire where the balanced mix passes: leaving out A loses A, and leaving out the near track loses it.
+
+The real series' root test there, 3.68, is below both tracks' |s|, unlike the second mix's 6.755. That fits a mix like
+the first, but it is an inference, not a planted test.
 
 With the plan made again at the state (#686, dh370; raw `I686-dh370/` bc9add86), the series at D 252.25 and 252.61
 put the nearest singularity at the same D* to 10⁻⁴, inside its spread over the approximants (0.010 and 0.094). Their

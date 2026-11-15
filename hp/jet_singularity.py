@@ -48,7 +48,9 @@ the background is P1's ln term, the relative noise 1e-6 (judged) and 1e-12 (repo
 A and the near track each have a stable Pade pole within 3% in |s| and 3 degrees in arg. B and C are reported, not
 judged. --mutate drop_pole leaves out pair A, which must fail; --mutate drop_near leaves out the near track, which must
 fail as well (reported beside the issue's control). If either track is missed, #712's Pade reading of the two is
-untested.
+untested. First run (2026-11-15): FAIL. In o12 all four pairs are recovered to the planted |s| and arg; in o24 B
+dominates every order to 24, the root-test radius is 6.755, and A and the near track lie inside 0.85 of it, where
+stable_poles drops them. Each control fails where o12 passes.
 
 jet: the series at STATE as anm_run.py --jet_o 1 forms it (its coefficients_o and coefficients_q, the held fit's
 Taylor coefficients in eight parts as --held_o 1 gives them), in each variant of --variants:
