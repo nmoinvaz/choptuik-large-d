@@ -601,13 +601,23 @@ def _parse(argv, opt):
     return opt
 
 
-def _run_od(so, rs, z8, opt):
+class _Dz0Saved(Exception):
+    """planted --save_dz0: newton_od's on_first wrote the start and its first step, and the run stops there (#823)"""
+
+
+def _run_od(so, rs, z8, opt, on_first=None):
     """ElimO around so (PinnedO), newton_od to opt's tol and it_max; the final point (its projection, the point whose
-    residual converged), the history, converged, the octo-double pinned max |F| there and the projections"""
+    residual converged), the history, converged, the octo-double pinned max |F| there and the projections. on_first:
+    newton_od's; a _Dz0Saved it raises carries the projections so far (counts)"""
     el = ElimO(so, rs, switch=float(opt.get("switch", 1e-15)))
-    z, hist, conv = newton_od(el, z8, tol=opt["tol"], it_max=opt["it_max"], mutate=opt["mutate"], junk_w=opt.get("junk", 0),
-                              accept=opt.get("accept", "own"), strong_chord=int(opt.get("strong", 0)),
-                              full_drop=float(opt.get("full_drop", 0.0)))
+    try:
+        z, hist, conv = newton_od(el, z8, tol=opt["tol"], it_max=opt["it_max"], mutate=opt["mutate"],
+                                  junk_w=opt.get("junk", 0), accept=opt.get("accept", "own"),
+                                  strong_chord=int(opt.get("strong", 0)), full_drop=float(opt.get("full_drop", 0.0)),
+                                  on_first=on_first)
+    except _Dz0Saved as e:
+        e.counts = dict(el.counts)
+        raise
     z = el.project(z)
     return z, hist, conv, omax(so.residual_o(z)), dict(el.counts)
 
@@ -648,7 +658,9 @@ def planted(argv):
     Controls, which must fail: --mutate_offset qd (PinnedO's J^-1 c through the quad-double LU), --mutate 10 (the
     kernel's OD_MUT_STATE_QD, the state read in its quad-double part). --qd 0 skips the quad-double run and --od 0 the
     octo-double one; --Delta_ref then gives the other's Delta (a passing run's) to compare with, else only the
-    residual is judged. Exit 1 on failure."""
+    residual is judged. Exit 1 on failure. --save_dz0 PATH writes the start and its first Newton step to PATH in
+    anm_run.py's dz0 format (#499; a 0), with this system's plan (segs) and held offset (c0..c7) for reduced_cubic.py,
+    and stops before the step's trials, exit 0 (#823)."""
     import os
     import time
     import mpmath as mp
@@ -657,7 +669,7 @@ def planted(argv):
     raw, path = argv[0], argv[1]
     opt = _parse(argv[2:], dict(threads=3, rel=1e-12, seed=1, mutate_offset="", mutate=0, it_max=12, qd=1, tol=1e-40, out="",
                                 Delta_ref="", last=0, od=1, accept="own", strong=0, switch=1e-15, full_drop=0.0, reseed_o=0,
-                                reseed_start="ladder"))
+                                reseed_start="ladder", save_dz0=""))
     z4, meta = load_q(os.path.join(raw, path))
     z4 = o8(z4)
     D = mp.mpf(meta["D_str"])
@@ -676,9 +688,28 @@ def planted(argv):
             with open(opt["out"] + ".json", "w") as f:
                 f.write(json.dumps(rec, default=float) + "\n")
     ok, judged = True, []
+    on_first = None
+    if opt["save_dz0"]:
+        def on_first(z, d):
+            # the dz0 file of anm_run.py's save_dz0 (z0..z7, d0..d7, meta), plus this system's plan and offset (#823)
+            c8 = so.c8 if so.c8 is not None else o8([so.ch, so.cl] + [so.zero] * 6)
+            md = dict(D=float(D), D_str=meta["D_str"], a=0.0, M=int(meta["M"]), nodes=meta["nodes"],
+                      kfreeze=meta["kfreeze"], source=path, segs=[[float(x) for x in sg] for sg in s.get_segs()],
+                      rel=opt["rel"], seed=opt["seed"], last=opt["last"], switch=opt["switch"], planted=True)
+            np.savez(opt["save_dz0"], **{f"z{q}": np.asarray(z[q]) for q in range(8)},
+                     **{f"d{q}": np.asarray(d[q]) for q in range(8)}, **{f"c{q}": np.asarray(c8[q]) for q in range(8)},
+                     meta=json.dumps(md))
+            print(f"  --save_dz0: the start and its first step written to {opt['save_dz0']}: |dz| "
+                  f"{float(np.abs(d[0]).max()):.6e}, dDelta {float(d[0][-1] + d[1][-1]):+.6e}", flush=True)
+            raise _Dz0Saved()
     if opt["od"]:
         t0 = time.time()
-        zo, ho, co, Fo, counts = _run_od(so, rs, o8_of_q(zs), opt)
+        try:
+            zo, ho, co, Fo, counts = _run_od(so, rs, o8_of_q(zs), opt, on_first=on_first)
+        except _Dz0Saved as e:
+            print(f"  --save_dz0: stopped before the first step's trials; projections {e.counts}, "
+                  f"{time.time() - t0:.0f} s", flush=True)
+            return 0
         Do = _delta(zo)
         print(f"  od: {len(ho)} steps, {'converged' if co else 'NOT converged'}, pinned max|F| (octo) {Fo:.2e}, Delta {mp.nstr(Do, 40)}, "
               f"projections {counts}, {time.time() - t0:.0f} s", flush=True)
