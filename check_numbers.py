@@ -2749,6 +2749,28 @@ def table_errs_all():
 
 
 @check
+def pinned_qd_second():
+    """notes/QUAD_DOUBLE.md 12.4: each pin's quad-double Delta_full1 against the second full-system solutions at D 71.5
+    and 73.0, the column minus_qd2 of hp/data/delta_pinned_qd.csv (hp/export_pinned_qd.py; #762), and against the first
+    (minus_qd)"""
+    import csv
+    N = "notes/QUAD_DOUBLE.md"
+    rows = {(round(float(r["D"]), 4), int(r["pin"])): r
+            for r in csv.DictReader(open(os.path.join(ROOT, "hp/data/delta_pinned_qd.csv")))}
+    v = lambda D, p, c: float(rows[(D, p)][c] or "nan")  # noqa: E731
+    t7 = [(N, "pin 7's Δ_full1 lies -5.8e-32 from\nthe second solution at 71.5 and +2.9e-29 at 73.0")]
+    t1 = [(N, "against +3.8e-28 and -8.1e-28 from the first")]
+    t5 = [(N, "pin 5's lies -5.1e-32\nat 71.5 and +1.9e-26 at 73.0")]
+    return [("pin 7 minus the second solution at 71.5", v(71.5, 7, "minus_qd2"), -5.8e-32, 1e-33, t7),
+            ("pin 7 minus the second solution at 73.0", v(73.0, 7, "minus_qd2"), 2.9e-29, 1e-30, t7),
+            ("pin 7 minus the first solution at 71.5", v(71.5, 7, "minus_qd"), 3.8e-28, 1e-29, t1),
+            ("pin 7 minus the first solution at 73.0", v(73.0, 7, "minus_qd"), -8.1e-28, 1e-29, t1),
+            ("pin 5 minus the second solution at 71.5", v(71.5, 5, "minus_qd2"), -5.1e-32, 1e-33, t5),
+            ("pin 5 minus the second solution at 73.0", v(73.0, 5, "minus_qd2"), 1.9e-26, 1e-27, t5),
+            ("rows with a second-solution difference", sum(bool(r["minus_qd2"]) for r in rows.values()), 4, 1, [])]
+
+
+@check
 def pinned_qd_table():
     """notes/QUAD_DOUBLE.md 12.4: the quad-double Delta_full1 of the pinned solutions against
     hp/data/delta_pinned_qd.csv (hp/export_pinned_qd.py, the exact sums of T84-mac's *_fullcorr.jsonl records; #758).

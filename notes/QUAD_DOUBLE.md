@@ -900,6 +900,10 @@ four parts, the spreads at 68.5, 69.5 and 70.5 are 3.2e-28, 5.0e-29 and 9.1e-29,
 6e-34 to 6e-33. `export_qd.py` now sums the parts exactly, and this section, 12.5 and notes/SOLVER_HP.md quote the
 corrected spread. The two plans' agreement to about 3e-28 is the plan's truncation (each plan's step terms are about
 1e-32), not the arithmetic.
+Against the second solutions (`minus_qd2` of `hp/data/delta_pinned_qd.csv`, #762), pin 7's Δ_full1 lies -5.8e-32 from
+the second solution at 71.5 and +2.9e-29 at 73.0, against +3.8e-28 and -8.1e-28 from the first; pin 5's lies -5.1e-32
+at 71.5 and +1.9e-26 at 73.0. So pin 7's offsets from the first solutions are, to 3e-29, the difference between the
+first and the second solutions.
 
 Freezing p1's harmonics 3-13 or 9-13 as bare band fields (qd_freezeh.py) does not deflate: the first projected step
 of 5e-7 leaves a residual of 5e-7, identical for both sets, because a bare harmonic is not a weak direction of J
