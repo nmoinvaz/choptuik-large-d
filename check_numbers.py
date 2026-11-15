@@ -2623,15 +2623,17 @@ def figure_front():
 def chain_frontier():
     """the README's reach of the large-D chain is the highest chain_fit D of hp/data/delta_all.csv whose err is not the
     weak pivot's (#653: chain_reach takes the row nearest 245.6, so it would still pass after the chain moved on). Past
-    track C's comparison frontier the rows carry err_kind "weak pivot" (#806, hp/export_delta_all.py), and the README's
-    reach is moved separately; every chain_fit row past the reach must carry that err"""
+    track C's comparison frontier the rows carry an estimate, err_kind "weak pivot" (#806, hp/export_delta_all.py) or
+    "fits extrapolated" where that is larger, and the README's reach is moved separately; every chain_fit row past the
+    reach must carry one of the two"""
     import csv
     rows = [r for r in csv.DictReader(open(os.path.join(ROOT, "hp/data/delta_all.csv"))) if r["kind"] == "chain_fit"]
-    top = max(float(r["D"]) for r in rows if r["err_kind"] != "weak pivot")
+    measured = lambda r: r["err_kind"] not in ("weak pivot", "fits extrapolated")   # the other two are estimates
+    top = max(float(r["D"]) for r in rows if measured(r))
     past = [r for r in rows if float(r["D"]) > top + 1e-9]
     txt = [("README.md", "To D = 245.64 its error column is the spread over the fit's degree")]
     return [("the chain's highest D without the weak pivot's err", top, 245.64, 0.01, txt),
-            ("chain_fit rows past it without the weak pivot's err", sum(r["err_kind"] != "weak pivot" for r in past), 0, 1,
+            ("chain_fit rows past it with a measured err", sum(measured(r) for r in past), 0, 1,
              [])]
 
 
@@ -2649,7 +2651,7 @@ def proposed_readme():
     rows = list(csv.DictReader(open(os.path.join(ROOT, "hp/data/delta_all.csv"))))
     fit = [r for r in rows if r["kind"] == "chain_fit"]
     reach = max(float(r["D"]) for r in fit)
-    fits_top = max(float(r["D"]) for r in fit if r["err_kind"].startswith("fits"))
+    fits_top = max(float(r["D"]) for r in fit if r["err_kind"].startswith("fits") and r["err_kind"] != "fits extrapolated")
     _sys.path.insert(0, os.path.join(ROOT, "hp"))
     from export_delta_all import WP_K
     ser = {r["D"]: r for r in csv.DictReader(open(os.path.join(ROOT, "hp/data/delta_series.csv")))}

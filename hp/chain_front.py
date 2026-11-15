@@ -26,7 +26,9 @@ def front(rule="top"):
     rows = [r for r in csv.DictReader(open(os.path.join(HERE, "data", "delta_all.csv")))
             if r["kind"] == "chain_fit" and r["state"]]
     if rule == "fits":
-        rows = [r for r in rows if r["err_kind"].startswith("fits")]
+        # a measured spread; "fits extrapolated" (past the comparison chains' frontier) is an estimate, as the weak
+        # pivot's term is
+        rows = [r for r in rows if r["err_kind"].startswith("fits") and r["err_kind"] != "fits extrapolated"]
     elif rule != "top":
         raise SystemExit(f"chain_front: rule {rule!r} is top or fits")
     r = max(rows, key=lambda r: float(r["D"]))
