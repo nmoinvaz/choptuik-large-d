@@ -21,10 +21,11 @@ deviation is printed beside it.
 
 --steps N (#852): each run takes N full Newton steps, z_k = z_(k-1) + dz_k, and prints after each max|dz_k|, the
 smallest pivot, max|F| at z_(k-1), max|z_k - z| / max|z_h| (z the stored truth, itself one Newton step of max|dz_1|
-from the root) and, for a perturbed run, max|z_k - u_k| / max|z_h| with u_k the unperturbed run's k-th iterate: the
-perturbation's own error, which does not see the truth's. The reading (not a check): "contracts" if that error, from
-max|move| / max|z_h| at k = 0, falls at each step (or is 0). Control: --mutate nostep keeps z_k at z_(k-1), and the
-reading must be "does NOT contract".
+from the root), for the unperturbed run its step max|u_k - u_(k-1)| / max|z_h| (whether its path settles below the
+perturbations' scale) and, for a perturbed run, max|z_k - u_k| / max|z_h| with u_k the unperturbed run's k-th
+iterate: the perturbation's own error, which does not see the truth's. The reading (not a check): "contracts" if that
+error, from max|move| / max|z_h| at k = 0, falls at each step (or is 0). Control: --mutate nostep keeps z_k at
+z_(k-1), and the reading must be "does NOT contract".
 
 Checks (exit 1 on failure): with --ref, the unperturbed step's Delta part equals it as a double; with --repeat 1, the
 unperturbed step taken a second time has the same eight parts of its Delta part and the same smallest pivot (control:
@@ -334,12 +335,15 @@ def main(argv):
                 zk = zk if opt["mutate"] == "nostep" else o8(od_axpy(1.0, *d, *zk))
                 if which is None:
                     upath.append(zk)
-                h = dict(k=k, dz=float(np.abs(d[0]).max()), dDelta=float(sum(d[i][-1] for i in range(8))),
+                h = dict(k=k, dz=float(np.abs(d[0]).max()), dz_rel=float(np.abs(d[0]).max()) / zh,
+                         dDelta=float(sum(d[i][-1] for i in range(8))),
                          piv=st[3], F_before=omax(st[1:3]), e_truth=odmax(zk, z),
                          e_pair=odmax(zk, upath[k - 1]) if which is not None and len(upath) >= k else None,
                          s=round(time.time() - t1, 1))
                 hist.append(h)
-                print(f"    step {k}: max|dz| {h['dz']:.4e}, dDelta {h['dDelta']:+.4e}, smallest pivot {h['piv']:.4e}, "
+                print(f"    step {k}: max|dz| {h['dz']:.4e}"
+                      + (f" (max|u_k - u_(k-1)| / |z_h| {h['dz_rel']:.4e})" if which is None else "")
+                      + f", dDelta {h['dDelta']:+.4e}, smallest pivot {h['piv']:.4e}, "
                       f"max|F| before {h['F_before']:.4e}; |z_k - truth| / |z_h| {h['e_truth']:.4e}"
                       + (f", |z_k - u_k| / |z_h| {h['e_pair']:.4e}" if h["e_pair"] is not None else "")
                       + f" ({h['s']:.0f} s)", flush=True)
