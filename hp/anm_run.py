@@ -17,6 +17,7 @@ formulation of hp/pinning.py; their coefficients are zero).
         [--horizon_alpha 0] [--fix1_qlu 0] [--jet_q 0] [--reseed 0] [--pred_q 0] [--reseed_q 0] [--save_pred 0]
         [--jet_o 0] [--corrector od --tol_od 1e-40] [--base_adopt 0] [--base_polish 1] [--keep_plan 1] [--held_fit FILE]
         [--held_o 0] [--reseed_o 0] [--a0 0] [--a_grow 2] [--a_hold 0] [--lam_stall 0] [--save_base 0] [--save_jet 0] [--held_from STATE]
+        [--arclength 0 --guard 0.05 --D_min 0 --arc_sign 1 --border 1]
 
 --corrector qd runs the quad-double Newton of the kernel (hpkernel.driver.newton_qd, Solver.newton_q) on the pinned
 system (pinning.PinnedQ: the held harmonics' offset subtracted from the quad-double residual and added to the step, as
@@ -138,6 +139,11 @@ corrector, the junk among the w weakest directions of its first Jacobian (octo_c
 content; p1's highest harmonics past D ~ 210, notes/QUAD_DOUBLE.md 13.29), as newton_qd's junk mode does.
 --save_base 1 saves the base after its octo-double polish as OUTDIR/base_pin<k>_D<D>.npz (eight parts, its meta
 recording the polish), when the polish was adopted; with --steps 0 the polish alone is the run (#489).
+--arclength 1 runs the pseudo-arclength continuation of hp/arclength.py (its docstring, #842) from the base instead of the
+continuation in D: the base is polished at D rounded to double-double, each step's series is this run's D-series
+(coefficients_o) composed with D(s), and its corrector is newton_od with the chain's flags on the bordered system in
+(D, z). It needs --jet_o 1 and --corrector od, and takes --N, --eps, --h_max, --a_grow, --steps and the od flags as the
+chain does. Records OUT/arc.jsonl, states OUT/arc_<n>_D<D>.npz (with --save_jet 1 the series as arcjet_<n>_D<D>.npz).
 --save_jet 1 saves each base's series z_0..z_N as OUTDIR/jet_pin<k>_D<D>.npz, in all the parts its jet carries (eight
 with --jet_o, four with --jet_q, two otherwise; keys z0..z<P-1>, each an (N + 1, L) array, order k in row k), its meta
 recording the norms and pivots. --save_jet 2 saves it and stops before the first attempt, so the series alone is the
@@ -315,6 +321,10 @@ def main():
     opt.update(ks=0)                    # --ks K: the horizon series' order instead of the state's (#696)
     opt.update(elim_switch=1e-15)       # --elim_switch S: ElimO projects a point whose pinned qd |F| exceeds S (#700)
     opt.update(log_proj=0)              # --log_proj 1: a line per failed projection, with each stage's residuals (#743)
+    # --arclength 1: the pseudo-arclength continuation of hp/arclength.py from this base (#842), oriented by --arc_sign
+    # (the sign of D's change), no base where the unit tangent's |t_D| < --guard, stopping below --D_min (0: never);
+    # --border 0 is its control (the D-series and the corrector at fixed D)
+    opt.update(arclength=0, guard=0.05, D_min=0.0, arc_sign=1, border=1)
     for k in list(opt):
         f = "--" + k
         if f in args:
@@ -616,6 +626,15 @@ def main():
     print(f"base {opt['state']}: D {mp.nstr(D, 12)}, M {M}, pin {kf} (held {ks_held}), |F| {F0:.1e}; N {N}, eps {opt['eps']}, h_max {opt['h_max']}, "
           f"corrector {opt['corrector']} (junk_only {junk_only}), tol {opt['tol']:.1e} x {opt['tol_growth']}^(D - {mp.nstr(D_start, 8)}), "
           f"stalls accepted below {opt['accept_stall']:.0e}", flush=True)
+    if opt["arclength"]:
+        if not (opt["jet_o"] and opt["corrector"] == "od"):
+            raise SystemExit("--arclength 1 needs --jet_o 1 and --corrector od")
+        import arclength
+        sys.exit(arclength.run_chain(dict(opt=opt, raw=raw, out=out, D=D, M=M, nodes=nodes, kt=kt, kc=kc, ks=ks, kf=kf, N=N, segs=segs,
+                                          ks_held=ks_held, hfit=hfit, held_x=held_x, hparts=hparts, rows=rows, mk=mk, wrap_at=wrap_at,
+                                          last_q=last_q, state_path=os.path.join(raw, opt["state"]), coefficients_o=coefficients_o,
+                                          trend=opt["trend"])))
+
     def predicted(D0, zh0, zl0, Zh_, Zl_, a_, powers=False):
         """the series' prediction at D0 + a_ and its max |F| in double-double and quad-double, as an attempt forms it
         (powers: the sum with float64 powers a_**k instead of Horner's rule, the control)"""

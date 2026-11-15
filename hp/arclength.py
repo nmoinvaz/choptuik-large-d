@@ -31,10 +31,13 @@ a check fails.
 """
 import json
 import math
+import os
 import random
 import sys
+import time
 
 import mpmath as mp
+import numpy as np
 
 
 # ------------------------------------------------------------------ truncated power series and vectors (mpmath)
@@ -84,6 +87,16 @@ def ts_sin(u):
 
 def sin_(x):
     return ts_sin(x) if isinstance(x, TS) else mp.sin(x)
+
+
+def o8(z):
+    """a vector's parts as contiguous float64 arrays (octo_corrector.o8, here so that the plant needs no kernel)"""
+    return tuple(np.ascontiguousarray(np.asarray(p, dtype=float)) for p in z)
+
+
+def omax(F):
+    """max |F| of a residual in parts, to f64 accuracy (octo_corrector.omax)"""
+    return float(np.abs(np.asarray(F[0]) + np.asarray(F[1])).max())
 
 
 def vadd(u, v, a=1):
@@ -162,7 +175,6 @@ def unit_tangent(Z, H, s):
 
 def tD_poly(Z, H):
     """|t_D(s)| as a fast float64 function of s, from the Gram matrix of the z_k's leading digits"""
-    import numpy as np
     N = len(Z) - 1
     Zf = np.array([[float(x) for x in Z[k]] for k in range(1, N + 1)])
     G = Zf @ Zf.T
@@ -357,10 +369,11 @@ class Toy:
 
 
 # ------------------------------------------------------------------ the driver
-def continue_arc(sysm, x0, D0, sign0, opt, stop=None, log=print):
+def continue_arc(sysm, x0, D0, sign0, opt, stop=None, log=print, on_step=None):
     """the continuation from the base (x0, D0) in the direction of sign0 (the sign of D's change): one record per
     step. opt: N, eps, h_max, grow, steps, border, guard, edge (place one base at |t_D| = guard on the approach to
-    the first turn), mutate, direct (compare compose() with sysm.direct at each base)."""
+    the first turn), mutate, direct (compare compose() with sysm.direct at each base), keep_x (the points' vectors in
+    the records; the chain saves its states instead). on_step(rec) is called after each step."""
     N = opt["N"]
     x, D, sign = list(x0), D0, sign0
     t_prev = None
@@ -427,12 +440,17 @@ def continue_arc(sysm, x0, D0, sign0, opt, stop=None, log=print):
             a /= 2
         if conv and opt["border"]:
             for s_, dD_ in turn_in(H, am):
-                rec.setdefault("turn", []).append(dict(s=float(s_), D=mp.nstr(D + dD_, 40), x=[mp.nstr(v, 40) for v in horner(Z, s_)]))
+                xs_ = horner(Z, s_)
+                rec.setdefault("turn", []).append(dict(s=float(s_), D=mp.nstr(D + dD_, 40), Delta=mp.nstr(xs_[-1], 40),
+                                                       x=[mp.nstr(v, 40) for v in xs_] if opt.get("keep_x", True) else None))
                 turns += 1
         rec["converged"] = conv
         if conv:
-            rec.update(a=a, D=float(Dc), D_str=mp.nstr(Dc, 40), x=[mp.nstr(v, 40) for v in xc], tD_end=float(abs(tD)))
+            rec.update(a=a, D=float(Dc), D_str=mp.nstr(Dc, 40), Delta=mp.nstr(xc[-1], 40), tD_end=float(abs(tD)),
+                       x=[mp.nstr(v, 40) for v in xc] if opt.get("keep_x", True) else None)
         recs.append(rec)
+        if on_step is not None:
+            on_step(rec)
         log(f"step {step}: D0 {mp.nstr(D, 15)}, sign {sign:+d}, a_max {a_max:.3e}, a {a:.3e} ({how}), |t_D| base {rec['tD0']:.3f}"
             + (f", cond max {rec['cond_max']:.1e}" if "cond_max" in rec else "")
             + (f", direct max rel {max(rec['direct_rel']):.1e}" if "direct_rel" in rec else "")
@@ -446,6 +464,353 @@ def continue_arc(sysm, x0, D0, sign0, opt, stop=None, log=print):
         if stop is not None and stop(x, D):
             break
     return recs
+
+# ------------------------------------------------------------------ the chain (anm_run.py --arclength 1)
+DPS_SERIES = 140        # the series, its sums and the border's dot products: above octo-double's 128 digits
+DPS_KERNEL = 50         # the held values and every number the kernel's side forms, at anm_run.py's precision
+
+
+def to_mp_vec(z):
+    """a vector in parts (two to eight float64 arrays) as mpf, each entry its parts' exact sum"""
+    P = [np.asarray(p, dtype=float) for p in z]
+    return [mp.fsum(mp.mpf(float(P[q][i])) for q in range(len(P))) for i in range(len(P[0]))]
+
+
+def to_parts(v, n=8):
+    """an mpf vector as n float64 arrays, each entry split exactly (at DPS_SERIES)"""
+    out = [np.zeros(len(v)) for _ in range(n)]
+    for i, x in enumerate(v):
+        r = mp.mpf(x)
+        for q in range(n):
+            f = float(r)
+            out[q][i] = f
+            r -= f
+    return tuple(np.ascontiguousarray(p) for p in out)
+
+
+def dd_round(D):
+    """D rounded to double-double, as an exact mpf: the kernel forms n = D - 2 there"""
+    hi = float(D)
+    return mp.mpf(hi) + mp.mpf(float(D - hi))
+
+
+class BorderedCore:
+    """the pinned octo-double system in the unknowns y = (D, z) (D first, so Delta stays the last unknown), with the
+    pseudo-arclength row g = <t_z, z - z_p> + t_D (D - D_p) first, for newton_od. D is double-double: each step's dD
+    is rounded so that D + dD is, and dz is taken for the rounded dD. The row is reported as 0 once |g| is within
+    ulp(D) / |t_D| (the rounding of D moves the point along the branch by at most that). newton_o: Keller's block
+    elimination through the LU at the point (sysm.at(D)), a = -J^-1 (F - c), b = J^-1 F_D, each call's denominator
+    t_D - <t_z, b> and |b| logged; olu_solve: the same elimination (transposed: through J^-T)."""
+
+    def __init__(self, sysm, zp, Dp, tz, tD):
+        self.sysm, self.L = sysm, sysm.L
+        self.size = self.L + 1
+        self.zp, self.Dp, self.tz, self.tD = zp, mp.mpf(Dp), tz, mp.mpf(tD)
+        self.last = None
+        self.log = []
+
+    def split(self, y):
+        y = [np.asarray(p, dtype=float) for p in y]
+        with mp.workdps(DPS_SERIES):
+            D = dd_round(mp.fsum(mp.mpf(float(p[0])) for p in y))
+        return D, tuple(np.ascontiguousarray(p[1:]) for p in y)
+
+    def join(self, d0, z):
+        """(scalar, vector in parts) as one eight-part vector; the scalar an mpf or float"""
+        with mp.workdps(DPS_SERIES):
+            r, head = mp.mpf(d0), []
+            for _ in range(8):
+                f = float(r)
+                head.append(f)
+                r -= f
+        z = list(z) + [np.zeros(self.L)] * (8 - len(z))
+        return tuple(np.ascontiguousarray(np.concatenate(([head[q]], np.asarray(z[q], dtype=float)))) for q in range(8))
+
+    def g(self, D, z):
+        with mp.workdps(DPS_SERIES):
+            return vdot(self.tz, vadd(to_mp_vec(z), self.zp, -1)) + self.tD * (D - self.Dp)
+
+    def g_eff(self, D, z):
+        g = self.g(D, z)
+        return mp.mpf(0) if abs(g) <= abs(D) * mp.mpf(2) ** -105 / abs(self.tD) else g
+
+    def residual_o(self, y, mutate=0):
+        D, z = self.split(y)
+        e = self.sysm.at(D)
+        return self.join(self.g_eff(D, z), o8(e["po"].residual_o(z, mutate=mutate)))
+
+    def newton_o(self, y, mutate=0):
+        D, z = self.split(y)
+        e = self.sysm.at(D)
+        d, Fh, Fl, pmin, pmax = e["po"].newton_o(z, mutate=mutate)
+        FD = self.sysm.F_D(e, z)
+        b = o8(e["sn"].olu_solve([np.ascontiguousarray(p) for p in FD]))
+        with mp.workdps(DPS_SERIES):
+            am, bm = to_mp_vec(d), to_mp_vec(b)
+            g = self.g(D, z)
+            den = self.tD - vdot(self.tz, bm)
+            dD = -(g + vdot(self.tz, am)) / den
+            dDr = dd_round(D + dD) - D
+            step = self.join(dDr, to_parts(vadd(am, bm, -dDr)))
+            ge = self.g_eff(D, z)
+            self.last = dict(D=D, e=e, b=bm, FD=FD, den=den)
+            self.log.append(dict(D=mp.nstr(D, 34), den=float(den), b=float(vnorm(bm)), dD=float(dD), dD_rounded=float(dDr), g=float(g)))
+            gh = float(ge)
+            gl = float(ge - gh)
+        return step, np.concatenate(([gh], np.asarray(Fh))), np.concatenate(([gl], np.asarray(Fl))), pmin, pmax
+
+    def olu_solve(self, rhs, trans=False):
+        rhs = [np.asarray(p, dtype=float) for p in rhs] + [np.zeros(self.size)] * (8 - len(rhs))
+        e, last = self.last["e"], self.last
+        rz = [np.ascontiguousarray(p[1:]) for p in rhs]
+        with mp.workdps(DPS_SERIES):
+            rg = mp.fsum(mp.mpf(float(p[0])) for p in rhs)
+            if not trans:
+                a = to_mp_vec(e["sn"].olu_solve(rz))
+                yD = (rg - vdot(self.tz, a)) / last["den"]
+                return self.join(yD, to_parts(vadd(a, last["b"], -yD)))
+            c = to_mp_vec(e["sn"].olu_solve(rz, True))
+            if "eT" not in last:
+                last["eT"] = to_mp_vec(e["sn"].olu_solve(list(to_parts(self.tz)), True))
+                last["FDm"] = to_mp_vec(last["FD"])
+            yD = (rg - vdot(last["FDm"], c)) / (self.tD - vdot(last["FDm"], last["eT"]))
+            return self.join(yD, to_parts(vadd(c, last["eT"], -yD)))
+
+
+def _bordered_elim_class():
+    """BorderedElim, an ElimO (so that newton_od takes its projection paths) around a BorderedCore: the point's z is
+    projected by the ElimO at its own D (sysm.at(D)), and newton_o's step includes the projection's displacement, as
+    ElimO's. The start's failed projection at max|F| above 1e-6 raises reseed.StartNotProjected, as ElimO's."""
+    from octo_corrector import ElimO
+    from reseed import StartNotProjected
+
+    class BorderedElim(ElimO):
+        def __init__(self, core, log=False):        # noqa: super().__init__ builds a PinnedQ this class does not use
+            self.so, self.log, self.why, self.first = core, log, [], True
+            self.counts = dict(u0=0, u0q=0, ladder=0, failed=0, skipped=0)
+
+        def project(self, y):
+            from multidouble import od_axpy  # noqa: F401
+            core = self.so
+            D, z = core.split(y)
+            e = core.sysm.at(D)
+            first, self.first = self.first, False
+            if e["eo"] is None:
+                return o8(y)
+            c0, n0 = dict(e["eo"].counts), len(e["eo"].why)
+            zp = e["eo"].project(z)
+            for k in self.counts:
+                self.counts[k] += e["eo"].counts.get(k, 0) - c0.get(k, 0)
+            self.why.extend(e["eo"].why[n0:])
+            if first and e["eo"].counts["failed"] > c0["failed"] and omax(e["po"].residual_o(z)) > 1e-6:
+                raise StartNotProjected(dict(self.counts))
+            return core.join(D, zp)
+
+        def residual_o(self, y, mutate=0):
+            return self.so.residual_o(self.project(y), mutate=mutate)
+
+        def newton_o(self, y, mutate=0):
+            from multidouble import od_axpy
+            y = o8(y)
+            yp = self.project(y)
+            st = self.so.newton_o(yp, mutate=mutate)
+            disp = o8(od_axpy(-1.0, *y, *yp))
+            return (o8(od_axpy(1.0, *disp, *st[0])), *st[1:])
+    return BorderedElim
+
+
+class ChainSys:
+    """the chain's system for continue_arc, from anm_run.py's context c (its base setup, solvers and held fit): the
+    D-series at a base by anm_run's coefficients_o (the octo-double jet with the held fit's jets), and the bordered
+    corrector (newton_od on BorderedElim, with the chain's flags). Every D is double-double; at(D) builds and keeps
+    (the last three) the solver, its pinned wrappers, the re-seeder and the held slope there."""
+
+    def __init__(self, c, z8, D):
+        self.c, self.opt = c, c["opt"]
+        self.base8, self.D = o8(z8), D
+        self.L = len(self.base8[0])
+        self.cache = {}
+        self.n_pts = 0
+        if c["hfit"] is None and c["trend"]:
+            raise SystemExit("--arclength 1 takes the held values from --held_fit (or constant), not --trend")
+
+    def at(self, D):
+        from octo_corrector import ElimO, PinnedO
+        from pinning import band_field
+        from reseed import Reseeder
+        c, opt = self.c, self.opt
+        key = (float(D), float(D - float(D)))
+        if key in self.cache:
+            return self.cache[key]
+        with mp.workdps(DPS_KERNEL):
+            Dd = mp.mpf(key[0]) + mp.mpf(key[1])
+            sn = c["mk"](Dd)
+            sn.set_segs(c["segs"])
+            spn = c["wrap_at"](sn, Dd)
+            po = PinnedO(spn.s, spn.ch, spn.cl, c8=spn.c8)
+            rs = (Reseeder(dict(M=c["M"], nodes=c["nodes"], kt=c["kt"], kc=c["kc"], ks=c["ks"]), Dd, threads=opt["threads"],
+                           horizon_alpha=opt["horizon_alpha"], qd=bool(opt["reseed_q"]), od=opt["reseed_o"], qd_start=opt["reseed_start"])
+                  if opt["reseed"] else None)
+            eo = ElimO(po, rs, switch=opt["elim_switch"], start_F=None, log=bool(opt["log_proj"])) if opt["reseed"] == 2 else None
+            held1 = (band_field(c["hfit"].jets(Dd, 1, c["ks_held"], exact=c["held_x"])[1], c["ks_held"], c["M"], parts=c["hparts"])
+                     if c["hfit"] is not None else None)
+        e = dict(D=Dd, sn=sn, spn=spn, po=po, rs=rs, eo=eo, held1=held1)
+        while len(self.cache) >= 3:
+            self.cache.pop(next(iter(self.cache)))
+        self.cache[key] = e
+        return e
+
+    def F_D(self, e, z):
+        """the pinned residual's D-derivative at fixed z: the kernel's order-1 jet coefficient minus the held slope"""
+        from multidouble import od_add_dd, od_axpy
+        F = e["sn"].residual_jet_o([o8(z)], 2)
+        f1 = [np.array(np.asarray(p), dtype=float) for p in F[1]]
+        t = e["held1"]
+        if t is not None:
+            rows = self.c["rows"]
+            if len(t) == 2:
+                r = od_add_dd(*(np.ascontiguousarray(p[rows]) for p in f1), -np.asarray(t[0]), -np.asarray(t[1]))
+            else:
+                r = od_axpy(-1.0, *(np.ascontiguousarray(np.asarray(v)) for v in t), *(np.ascontiguousarray(p[rows]) for p in f1))
+            for p, v in zip(f1, r):
+                p[rows] = v
+        return o8(f1)
+
+    def newton_args(self):
+        opt = self.opt
+        return dict(tol=opt["tol_od"], it_max=opt["qd_it"], verbose=True, junk_w=opt["od_junk"], lam_stall=opt["lam_stall"],
+                    accept=opt["od_accept"], strong_chord=int(opt["od_strong"]), full_drop=opt["od_full_drop"],
+                    abort_theta=opt["od_abort_theta"], abort_it=opt["od_abort_it"])
+
+    def polish(self):
+        """the base solved at D rounded to double-double (its held values there): the chain's corrector at fixed D"""
+        from octo_corrector import newton_od
+        with mp.workdps(DPS_SERIES):
+            self.D = dd_round(self.D)
+        e = self.at(self.D)
+        so = e["eo"] if e["eo"] is not None else e["po"]
+        F0 = omax(e["po"].residual_o(self.base8))
+        z8, hist, conv = newton_od(so, self.base8, **self.newton_args())
+        if e["eo"] is not None:
+            z8 = e["eo"].project(z8)
+        F1 = omax(e["po"].residual_o(z8))
+        with mp.workdps(DPS_SERIES):
+            dDelta = float(mp.fsum(mp.mpf(float(p[-1])) for p in z8) - mp.fsum(mp.mpf(float(p[-1])) for p in self.base8))
+        self.base8 = o8(z8)
+        return dict(D=mp.nstr(self.D, 34), F_before=F0, F_after=F1, steps=len(hist), converged=bool(conv), dDelta=dDelta)
+
+    def dseries(self, x, D, N):
+        c = self.c
+        from pinning import band_field
+        e = self.at(D)
+        t0 = time.time()
+        with mp.workdps(DPS_KERNEL):
+            pmin, pmax = e["sn"].newton_o(list(self.base8))[3:5]
+            held = None
+            if c["hfit"] is not None:
+                jets = c["hfit"].jets(e["D"], N, c["ks_held"], exact=c["held_x"])
+                held = ((lambda j: band_field(jets[j], c["ks_held"], c["M"], parts=c["hparts"])), c["rows"])
+            Zo, norms = c["coefficients_o"](e["sn"], self.base8, N, held=held)
+        self.series_info = dict(pivots=(float(pmin), float(pmax)), norms=norms, t_coef=round(time.time() - t0, 1))
+        if self.opt["save_jet"]:
+            jp = os.path.join(c["out"], f"arcjet_{self.n_pts:03d}_D{float(D):.6f}.npz")
+            np.savez(jp, **{f"z{q}": np.array([np.asarray(z[q]) for z in Zo]) for q in range(8)},
+                     meta=json.dumps(dict(D_str=mp.nstr(D, 34), N=N, parts=8, jet="o", norms=norms, pivots=(float(pmin), float(pmax)))))
+        print(f"  series at D {mp.nstr(D, 15)}: pivots {pmin:.1e}..{pmax:.1e}, |w_1| {norms[1]:.3e}, |w_N| {norms[N]:.3e}, "
+              f"{self.series_info['t_coef']} s", flush=True)
+        return [to_mp_vec(z) for z in Zo]
+
+    def correct(self, xp, Dp, tz, tD, border=True):
+        from octo_corrector import newton_od, q4_of_o, with_horizon
+        from reseed import StartNotProjected
+        opt, t0 = self.opt, time.time()
+        with mp.workdps(DPS_SERIES):
+            Dd = dd_round(Dp)
+            pred8 = to_parts(xp)
+        e = self.at(Dd)
+        rec = dict(D_pred=mp.nstr(Dp, 34), D_start=mp.nstr(Dd, 34))
+        if opt["reseed"]:
+            zr, rsd = e["rs"].reseed(q4_of_o(pred8))
+            rec["reseed"] = dict(ok=rsd["ok"], seconds=rsd["seconds"], dropped=rsd["dropped"])
+            if rsd["ok"]:
+                pred8 = with_horizon(pred8, zr, e["rs"])
+        rec["F_pred"] = omax(e["po"].residual_o(pred8))
+        print(f"  attempt at D {mp.nstr(Dd, 15)}: predicted max|F| {rec['F_pred']:.2e}"
+              + (f", re-seed {'ok' if rec['reseed']['ok'] else 'FAILED'}" if opt["reseed"] else ""), flush=True)
+        if border:
+            core = BorderedCore(self, xp, Dp, tz, tD)
+            so = _bordered_elim_class()(core, log=bool(opt["log_proj"]))
+            y0 = core.join(Dd, pred8)
+        else:
+            core = None
+            so = e["eo"] if e["eo"] is not None else e["po"]
+            y0 = pred8
+        try:
+            y8, hist, conv = newton_od(so, y0, **self.newton_args())
+        except StartNotProjected as ex:
+            rec.update(its=[], F=float("nan"), why=f"start not projected {ex.args[0]}", seconds=round(time.time() - t0, 1))
+            return xp, Dp, False, rec
+        if border:
+            y8 = so.project(y8)
+            D, z8 = core.split(y8)
+            rec["border"] = core.log
+            rec["counts"] = so.counts
+        else:
+            if e["eo"] is not None:
+                y8 = e["eo"].project(y8)
+            D, z8 = Dd, o8(y8)
+        ee = self.at(D)
+        Fz = omax(ee["po"].residual_o(z8))
+        rec.update(its=[dict(F=h.get("F"), lam=h.get("lam")) for h in hist], F=Fz, converged_od=bool(conv),
+                   seconds=round(time.time() - t0, 1), D=mp.nstr(D, 34))
+        print(f"  corrector: {len(hist)} steps, pinned max|F| {Fz:.2e} at D {mp.nstr(D, 20)}, {'converged' if conv else 'NOT converged'}, "
+              f"{rec['seconds']} s" + (f"; denominators {', '.join(format(r['den'], '.2e') for r in core.log)}, |b| "
+                                        f"{', '.join(format(r['b'], '.2e') for r in core.log)}" if core else ""), flush=True)
+        if not conv:
+            return xp, Dp, False, rec
+        self.base8, self.D = o8(z8), D
+        self.n_pts += 1
+        c = self.c
+        from octo_corrector import save_o
+        p = os.path.join(c["out"], f"arc_{self.n_pts:03d}_D{float(D):.6f}.npz")
+        save_o(p, z8, dict(D=float(D), D_str=mp.nstr(D, 34), M=c["M"], nodes=c["nodes"], kt=c["kt"], kc=c["kc"], ks=c["ks"],
+                           kfreeze=c["kf"], pin_held=c["ks_held"], N=c["N"], source=opt["state"], parts=8, arclength=True,
+                           tD=float(tD), segs=[[float(x) for x in sg] for sg in c["segs"]]))
+        rec["state"] = os.path.basename(p)
+        with mp.workdps(DPS_SERIES):
+            return to_mp_vec(z8), D, True, rec
+
+
+def run_chain(c):
+    """anm_run.py --arclength 1: the continuation from the run's base (after anm_run's own base setup), records in
+    OUT/arc.jsonl, states OUT/arc_<n>_D<D>.npz; stops after --steps steps, below --D_min, or at a failed step"""
+    from octo_corrector import load_o
+    opt = c["opt"]
+    z8 = c["last_q"]["z8"] if "z8" in c["last_q"] else load_o(c["state_path"])[0]
+    sysm = ChainSys(c, z8, c["D"])
+    pol = sysm.polish()
+    print(f"base polished at D rounded to double-double ({pol['D']}): max|F| {pol['F_before']:.2e} -> {pol['F_after']:.2e} in "
+          f"{pol['steps']} steps, {'converged' if pol['converged'] else 'NOT converged'}, Delta moved {pol['dDelta']:+.2e}", flush=True)
+    rp = os.path.join(c["out"], "arc.jsonl")
+    with open(rp, "a") as f:
+        f.write(json.dumps(dict(base=opt["state"], polish=pol, opt={k: v for k, v in opt.items()})) + "\n")
+    if not pol["converged"]:
+        print("stopped: the base polish did not converge", flush=True)
+        return 1
+
+    def on_step(rec):
+        with open(rp, "a") as f:
+            f.write(json.dumps(rec, default=str) + "\n")
+    aopt = dict(N=opt["N"], eps=mp.mpf(opt["eps"]), h_max=opt["h_max"], grow=opt["a_grow"], steps=opt["steps"], border=int(opt["border"]),
+                guard=opt["guard"], edge=0, mutate="", direct=0, keep_x=False)
+    stop = (lambda x, D: D < opt["D_min"]) if opt["D_min"] else None
+    with mp.workdps(DPS_SERIES):
+        x0 = to_mp_vec(sysm.base8)
+        recs = continue_arc(sysm, x0, sysm.D, int(opt["arc_sign"]), aopt, stop=stop,
+                            log=lambda s: print(s, flush=True), on_step=on_step)
+    print("done", flush=True)
+    return 0 if recs and recs[-1]["converged"] else 1
+
 
 
 def cmd_plant(argv):
