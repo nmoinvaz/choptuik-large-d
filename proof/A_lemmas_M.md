@@ -887,6 +887,34 @@ At M = 1 the same assembly is Theorem A(M = 1) of §12.6.
 the fixed point holds on each (certify_M.py:152 and 154, certify_M2.py:166 and 193, fixed_point_M.py:462). §7 checks it
 a second time, against runs stored with this note.
 
+**The lemmas' own start sets need no hypothesis of their own (#864).** Lemmas 6a and 6b₁ use step (i) in three
+places, the same at M = 3 and 5 (`python3 start_cover_lemmas_M.py`, which rebuilds each set from the stored runs; raw
+`I864-mac/`):
+
+| use | where it is proved | what must lie inside | M = 3 | M = 5 |
+|---|---|---|---|---|
+| 1. Lemma 6b₁'s start set at s₀: the old sector lemma at the covering's centre c and on the complex box c ± (h + 10⁻³), imaginary parts ± 10⁻³ | in the covering's run (`start_data_u` raises unless both hold) | X_b = c ± h in the complex box; the start point in the lemma's radius, 1/ρ₀ < r₀² | r₀ = 0.1, N = 53: contraction 0.5408 and 0.5431; 0.003817 < 0.01 | r₀ = 0.07, N = 105: contraction 0.3671 and 0.3681; 0.002469 < 0.0049 |
+| 2. Lemma 6b₁'s check: the radius g₀ of G₀, from lemma S(M) | in a stored run of `lemma6_sector_M.py` over x̂ ± 10⁻⁶ (the covering takes g₀ as a constant) | g₀ ≥ 1/(R₊ sin 0.4), ρ₀ > g₀, and X_b in x̂ ± 10⁻⁶ | 257 ≥ 256.79, 262 > 257; slack 9.985×10⁻⁷ | 402 ≥ 401.24, 405 > 402; slack 9.992×10⁻⁷ |
+| 3. Lemma 6a: lemma S and the flat estimate over its centre ± 10⁻⁶ | in the 6a run (`lemma6_jump_M.py` exits unless both hold and its input box lies inside) | the input box x ± h in centre ± 10⁻⁶ | centre x̂; the certificate's p ± 10⁻¹⁰: slack 9.995×10⁻⁷ | centre p̂ (`--x`); p̂ ± 10⁻¹⁸: slack 1.000×10⁻⁶ |
+
+Uses 1 and 3 are part of what (H2) and (H3) assert, that the covering and the 6a run succeeded, in the way (H0) is part
+of every certificate run. Use 2 is (H1) with X_b in place of X_c, and holds. A rerun of each use on its own sets
+(`--rerun`) reproduces the stored start set of the covering in every component (13 of 13 values and 52 of 52
+derivative entries at M = 3, 19 of 19 and 114 of 114 at M = 5), the stored contraction of lemma S (0.8252209105 and
+0.7246665601) and the stored Λ of the 6a runs (0.2922808049 and 0.4233267068). Mutations of the box (h = 2×10⁻⁶, or
+9×10⁻¹¹ past the edge), of the centre, of g₀ and of ρ₀ are each reported as not covered (`--selftest`).
+
+Three statements above are sharper than the runs:
+
+- (H1) lists the old sector lemma among what is proved over X₆. No step of the proof uses that run. The covering runs
+  its own old sector lemma at its centre (use 1, with r₀ = 0.07 at M = 5), and lemma 6a does not use it.
+- Step 3 of the proof takes lemma S and the flat estimate "from H1", over X₆ = x̂ ± 10⁻⁶. The M = 5 run of lemma 6a
+  proves them over p̂ ± 10⁻⁶, its own centre. Both boxes contain X_c.
+- At M = 5 the covering's centre is p̂ cut at 39 decimals, up to 8.8×10⁻³⁹ from p̂ (4.6×10⁻³⁹ in A). The decimal box
+  p̂ ± 10⁻¹⁸ lies in X_b only because arb rounds the covering's radius up, to 10⁻¹⁸ + 2.2×10⁻²⁷. The certificate's own
+  sub-box has the same rounded radius around p̂, so that ball passes X_b's edge by 4.6×10⁻³⁹ in A. (H2) holds with X_c
+  the decimal box.
+
 ## 7. What waits for the point certificate
 
 **Result at M = 3 (added after the certificate).** The certificate's M = 3 run at h = 10⁻¹⁰ ([A_M.md](A_M.md) §6.2)
@@ -1069,6 +1097,10 @@ python3 fixed_point_M.py --data-table --Ms=3 --json=lemmas_M_runs/fixed_point_M_
 python3 fixed_point_M.py --M=3 --data --box=1e-9 --r0=0.0741 --arg=5pi/16 --diag    # start data, printed per component
 python3 start_cover_M2.py --box=data/A_M_box_M3_1e-10.json --rerun   # (H0) at M = 3: RERUN: PASS, exit 0, seconds
 python3 start_cover_M2.py                                  # (H0) at M = 5: COVERED, exit 0, seconds
+python3 start_cover_lemmas_M.py --M=3 --rerun              # the lemmas' own start sets at M = 3: COVERED, RERUN: PASS
+git clone https://github.com/nmoinvaz/choptuik-large-d-raw ../../../choptuik-large-d-raw    # once, beside the checkout
+python3 start_cover_lemmas_M.py --M=5 --raw=../../../choptuik-large-d-raw --rerun     # the same at M = 5, 15 s
+python3 start_cover_lemmas_M.py --M=5 --raw=../../../choptuik-large-d-raw --selftest  # 5 mutations not covered: PASS
 python3 lemma6_sector_M.py --M=3 --scan --json=lemmas_M_runs/lemmaS_scan_M3.json      # lemma S over (r+, k), ~10 min
 python3 lemma6_sector_M.py --M=3 --rp=0.1 --k=20 --box=1e-6 --Z=0.004489 --json=lemmas_M_runs/lemma6_sector_M3_rp0.1_1e-6.json
                                                            # lemma S, old sector lemma, flat estimate over x^ +- 1e-6, ~1 min
