@@ -14,7 +14,7 @@ Papers (drafts, not yet reviewed):
 Choptuik's critical solution is the universal threshold between dispersal and black-hole formation for a massless
 scalar field. It is computed here as a periodic boundary-value problem in self-similar variables, in double-double
 precision across spacetime dimensions D from 3.044 to 73, and past 73 by a chain in quad- and octo-double that holds
-harmonics 5–13 of the centre field on a fit, to D = 259.74, below a fold of its discrete system near D = 259.90
+harmonics 5–13 of the centre field on a fit, to D = 259.89, below a fold of its discrete system near D = 259.90
 (numerical evidence).
 
 - One rational formula in 1/(D − 2) fits its echo period Δ(D) and critical exponent γ(D) for every D ≥ 4.
@@ -74,7 +74,7 @@ How it is done:
   solver in [`solver/`](solver/), with a Rust kernel for its residual (this crate), covers D = 3.6–40. A separate
   double-double (about 32-digit) solver in [`hp/`](hp/) reaches D = 67.77. It reaches 73.27 with the pinned runs, and
   78.12 in a layout where Δ is known to about 10⁻⁶. Past 73 the same residual is continued in D in quad- and
-  octo-double, with harmonics 5–13 of the centre field held on a fit of the full solutions, to D = 259.74.
+  octo-double, with harmonics 5–13 of the centre field held on a fit of the full solutions, to D = 259.89.
 - **Theory.** The large-D expansion, its Stokes multipliers and the inner problem at D = ∞ are in the Large-D section,
   with the scripts that check each step.
 - **Layout.** The physics is in this file, and the software is described at the end.
@@ -964,7 +964,7 @@ The last two columns approach the same limit, as Proposition 1 predicts (c = 1 -
 **The family to D 245.64**, the comparison frontier, the last D where the chain agrees with track C's series within
 its err. Past it the weak pivot's term grows, and near D 259.9 the discrete system's fold distorts Δ and the harmonics
 ([notes/LARGE_D_WALL.md](notes/LARGE_D_WALL.md); `hp/plot_wave_family.py`; the chain now
-reaches 259.74). Times √(D−2), the first harmonic of p1 falls by 11% from D 38 to 245.64 (3.106 to 2.778), against 66%
+reaches 259.89). Times √(D−2), the first harmonic of p1 falls by 11% from D 38 to 245.64 (3.106 to 2.778), against 66%
 without the factor, on its way to the extrapolated 2.72. Within one wave each odd harmonic is a nearly fixed factor
 smaller than the one before: from harmonic 1 to 3 by 10.5 at D 38 and 16.3 at D 245.64. Above D 73 harmonics 5–13
 are held on a fit ([ALGORITHM.md](ALGORITHM.md), section 3), so there only harmonics 1 and 3 are solved values.
@@ -1981,7 +1981,7 @@ near-null band in the Jacobian and an unexplained drift of the gauge mode's root
   points supplies it ([notes/LARGE_D_WALL.md](notes/LARGE_D_WALL.md); [notes/QUAD_DOUBLE.md](notes/QUAD_DOUBLE.md),
   sections 12–13).
   - An exact Taylor continuation in D (the asymptotic numerical method, with the dimension entered as a jet through the
-    kernel) carries the chain past the wall, to D = 259.74 ([ALGORITHM.md](ALGORITHM.md), section 3). It does so only with
+    kernel) carries the chain past the wall, to D = 259.89 ([ALGORITHM.md](ALGORITHM.md), section 3). It does so only with
     harmonics 5–13 of the centre profile held on a fit of the full solutions. Held on a trend instead, they put Δ
     5×10⁻⁸ to 1.4×10⁻⁷ below the 1/D series by D = 85.7 (section 13.19 there), the bias that the fit removes
     ([notes/BIAS.md](notes/BIAS.md)).

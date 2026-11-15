@@ -198,6 +198,19 @@ D,diff_d6,how_d6,states_d6,diff_d10,how_d10,states_d10
 249.3927212715149,-3.1963e-10,interp,I608-dh610/restart2_d6/anm_pin3_D248.7562.npz .. I608-dh610/restart2_d6/anm_pin3_D250.5217.npz,+1.4425e-10,interp,I608-dh610/restart2_d10/anm_pin3_D248.4437.npz .. I608-dh610/restart2_d10/anm_pin3_D250.3145.npz
 249.869558429718,-3.2522e-10,interp,I608-dh610/restart2_d6/anm_pin3_D249.5375.npz .. I608-dh610/restart2_d6/anm_pin3_D250.7124.npz,+7.6003e-10,interp,I608-dh610/restart2_d10/anm_pin3_D249.3227.npz .. I608-dh610/restart2_d10/anm_pin3_D250.7913.npz
 250.16758165359497,-1.6050e-10,interp,I608-dh610/restart2_d6/anm_pin3_D249.5375.npz .. I608-dh610/restart2_d6/anm_pin3_D250.7124.npz,+1.4206e-09,interp,I608-dh610/restart2_d10/anm_pin3_D249.3227.npz .. I608-dh610/restart2_d10/anm_pin3_D250.7913.npz
-250.46560487747192,+2.3886e-10,interp,I608-dh610/restart2_d6/anm_pin3_D249.7816.npz .. I608-dh610/restart2_d6/anm_pin3_D250.9508.npz,+2.3649e-09,interp,I608-dh610/restart2_d10/anm_pin3_D249.6278.npz .. I608-dh610/restart2_d10/anm_pin3_D251.0893.npz
-250.8381339073181,+1.2236e-09,interp,I608-dh610/restart2_d6/anm_pin3_D250.3310.npz .. I608-dh610/restart2_d6/anm_pin3_D251.4351.npz,+4.0833e-09,interp,I608-dh610/restart2_d10/anm_pin3_D249.6278.npz .. I608-dh610/restart2_d10/anm_pin3_D251.0893.npz
-251.30379519462585,+3.3438e-09,interp,I608-dh610/restart2_d6/anm_pin3_D250.7124.npz .. I608-dh610/restart2_d6/anm_pin3_D251.8542.npz,,,
+250.46560487747192,+2.3886e-10,interp,I608-dh610/restart2_d6/anm_pin3_D249.7816.npz .. I608-dh610/restart2_d6/anm_pin3_D250.9508.npz,+2.3621e-09,interp,I608-dh610/restart2_d10/anm_pin3_D249.9330.npz .. I608-dh610/restart2_d10/anm_pin3_D251.2756.npz
+250.8381339073181,+1.2236e-09,interp,I608-dh610/restart2_d6/anm_pin3_D250.3310.npz .. I608-dh610/restart2_d6/anm_pin3_D251.4351.npz,+4.0824e-09,interp,I608-dh610/restart2_d10/anm_pin3_D250.3145.npz .. I608-dh610/restart2_d10/anm_pin3_D251.4619.npz
+251.30379519462585,+3.3438e-09,interp,I608-dh610/restart2_d6/anm_pin3_D250.7124.npz .. I608-dh610/restart2_d6/anm_pin3_D251.8542.npz,+7.3864e-09,interp,I608-dh610/restart2_d10/anm_pin3_D250.7913.npz .. I608-dh610/restart2_d10/anm_pin3_D251.9857.npz
+251.88587180376052,+6.3117e-09,interp,I608-dh610/restart2_d6/anm_pin3_D251.4351.npz .. I608-dh610/restart2_d6/anm_pin3_D252.3272.npz,+1.3924e-08,interp,I608-dh610/restart2_d10/anm_pin3_D251.2756.npz .. I608-dh610/restart2_d10/anm_pin3_D252.5769.npz
+252.2496696844697,+5.8518e-09,interp,I608-dh610/restart2_d6/anm_pin3_D251.8542.npz .. I608-dh610/restart2_d6/anm_pin3_D252.5545.npz,+1.9119e-08,interp,I608-dh610/restart2_d10/anm_pin3_D251.6947.npz .. I608-dh610/restart2_d10/anm_pin3_D252.8043.npz
+252.61346756517887,-8.4616e-10,interp,I608-dh610/restart2_d6/anm_pin3_D252.1453.npz .. I836-dh370/drop/anm_pin3_D252.7855.npz,+2.3817e-08,interp,I608-dh610/restart2_d10/anm_pin3_D252.3495.npz .. I608-dh610/restart3_d10/anm_pin3_D253.0714.npz
+253.06821491606533,-2.9433e-08,interp,I608-dh610/restart2_d6/anm_pin3_D252.3272.npz .. I608-dh610/restart3_d6/anm_pin3_D253.7855.npz,+2.3599e-08,interp,I608-dh610/restart2_d10/anm_pin3_D252.5769.npz .. I608-dh610/restart3_d10/anm_pin3_D253.1964.npz
+253.21032346321735,-4.6220e-08,interp,I608-dh610/restart2_d6/anm_pin3_D252.3272.npz .. I608-dh610/restart3_d6/anm_pin3_D253.7855.npz,,,
+253.35243201036937,-6.8382e-08,interp,I608-dh610/restart2_d6/anm_pin3_D252.3272.npz .. I608-dh610/restart3_d6/anm_pin3_D253.7855.npz,,,
+253.5300676943094,-1.0531e-07,interp,I608-dh610/restart2_d6/anm_pin3_D252.3272.npz .. I608-dh610/restart3_d6/anm_pin3_D253.7855.npz,,,
+253.6410899967719,-1.3434e-07,interp,I608-dh610/restart2_d6/anm_pin3_D252.3272.npz .. I608-dh610/restart3_d6/anm_pin3_D253.7855.npz,,,
+253.66884557238754,-1.4235e-07,interp,I608-dh610/restart2_d6/anm_pin3_D252.3272.npz .. I608-dh610/restart3_d6/anm_pin3_D253.7855.npz,,,
+253.69660114800317,-1.5065e-07,interp,I608-dh610/restart2_d6/anm_pin3_D252.3272.npz .. I608-dh610/restart3_d6/anm_pin3_D253.7855.npz,,,
+253.71394838276294,-1.5599e-07,interp,I608-dh610/restart2_d6/anm_pin3_D252.3272.npz .. I608-dh610/restart3_d6/anm_pin3_D253.7855.npz,,,
+253.7312956175227,-1.6145e-07,interp,I608-dh610/restart2_d6/anm_pin3_D252.3272.npz .. I608-dh610/restart3_d6/anm_pin3_D253.7855.npz,,,
+253.75909561752272,-1.7042e-07,interp,I608-dh610/restart2_d6/anm_pin3_D252.3272.npz .. I608-dh610/restart3_d6/anm_pin3_D253.7855.npz,,,

@@ -2106,9 +2106,9 @@ def chain_reach():
     import csv
     rows = [r for r in csv.DictReader(open(os.path.join(ROOT, "hp/data/delta_all.csv"))) if r["kind"] == "chain_fit"]
     D = max(float(r["D"]) for r in rows)
-    txt = [("README.md", "harmonics 5–13 of the centre field on a fit, to D = 259.74,"),
-           ("README.md", "held on a fit of the full solutions, to D = 259.74.")]
-    return [("the chain's reach in the README, its highest chain_fit row", D, 259.74, 0.01, txt)]
+    txt = [("README.md", "harmonics 5–13 of the centre field on a fit, to D = 259.89,"),
+           ("README.md", "held on a fit of the full solutions, to D = 259.89.")]
+    return [("the chain's reach in the README, its highest chain_fit row", D, 259.89, 0.01, txt)]
 
 
 @check
@@ -2420,9 +2420,9 @@ def chain_dM_table():
                   (f"D {D}: lam_g(M 48) - lam_g(M 32)", float(r["dlam"]), dl, ul, txt)]
     da = [r for r in csv.DictReader(open(os.path.join(ROOT, "hp/data/delta_all.csv"))) if r["kind"] == "chain_fit"]
     de = [float(r["err"]) for r in da if r["err"]]
-    t_err = [(N, "all 285 chain_fit rows (1.4×10⁻¹⁵ to 1.9×10⁻¹), so every row\nkeeps its err")]
-    items += [("chain_fit rows with an err", len(de), 285, 1, t_err), ("smallest chain_fit err", min(de), 1.4e-15, 1e-16, t_err),
-              ("largest chain_fit err", max(de), 0.19, 0.01, t_err),
+    t_err = [(N, "all 320 chain_fit rows (1.4×10⁻¹⁵ to 7.2×10⁻¹), so every row\nkeeps its err")]
+    items += [("chain_fit rows with an err", len(de), 320, 1, t_err), ("smallest chain_fit err", min(de), 1.4e-15, 1e-16, t_err),
+              ("largest chain_fit err", max(de), 0.72, 0.01, t_err),
               ("chain_fit rows without an err", len(da) - len(de), 0, 1, t_err)]
     with mp.workdps(50):
         offD = float(mp.mpf(at("controls", "polish", 20.043653, "D")["Delta48"]) - known20)
@@ -2666,9 +2666,9 @@ def proposed_readme():
     ra = [float(r["ratio_mu"]) for r in kept]
     off = [float(new[k][f"{e}_Dstar"]) - float(r[f"{e}_Dstar"]) for k in new for r in kept if r["D0"] == k
            for e in ("ratio", "dlog")]
-    t_reach = [(W, "harmonics 5–13 of the centre field on a fit, to D = 259.74, below a fold of its discrete system near D = 259.90"),
-               (W, "held on a fit of the full solutions, to D = 259.74."), (W, "the chain now\nreaches 259.74)."),
-               (W, "carries the chain past the wall, to D = 259.74")]
+    t_reach = [(W, "harmonics 5–13 of the centre field on a fit, to D = 259.89, below a fold of its discrete system near D = 259.90"),
+               (W, "held on a fit of the full solutions, to D = 259.89."), (W, "the chain now\nreaches 259.89)."),
+               (W, "carries the chain past the wall, to D = 259.89")]
     t_fits = [(W, "comparison ends. To D = 245.64 its error column is the spread over the fit's degree"),
               (W, "Past 245.64 the chain leaves the 1/n series of the next bullet")]
     t_wp = [(W, "column is 4.4×10⁻³⁷/p_min (err_kind \"weak pivot\")")]
@@ -2678,7 +2678,7 @@ def proposed_readme():
               (W, "D* = 259.903 is the median of the sixteen\n    estimates, from 259.900 to 259.905.")]
     t_mu = [(W, "Δ's exponent there is 0.45 to 0.48 by Dlog Padé"), (W, "and 0.52 to 0.72 by a ratio fit.")]
     t_new = [(W, "moves D* by +0.010 to +0.011 at the two bases where it")]
-    return [("the chain's reach", reach, 259.74, 0.01, t_reach),
+    return [("the chain's reach", reach, 259.89, 0.01, t_reach),
             ("the fold's D*, to 0.01", statistics.median(est), 259.90, 0.01, t_reach),
             ("the highest chain_fit row with the fits err", fits_top, 245.64, 0.01, t_fits),
             ("the weak pivot's K", WP_K, 4.4e-37, 0.1e-37, t_wp),

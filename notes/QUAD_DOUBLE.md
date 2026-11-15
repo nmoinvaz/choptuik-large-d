@@ -2639,7 +2639,7 @@ states have kfreeze 23 (`I252-mac/states/`). Between the kfreeze-23 states at M 
 the pinned system, from the chain rows of hp/data/chain_dM.csv: |Δ(M 48) − Δ(M 32)| + |est| + |the M 32 re-solve's
 move| at each measured D, log-linear in D between them and constant past the ends. It joins the chain_fit row's terms
 as the projector term does, and err stays the largest term. That is a bound of about 3×10⁻²⁵ to D 150 and of the
-quad-double floor above. It stays below the err of all 285 chain_fit rows (1.4×10⁻¹⁵ to 1.9×10⁻¹), so every row
+quad-double floor above. It stays below the err of all 320 chain_fit rows (1.4×10⁻¹⁵ to 7.2×10⁻¹), so every row
 keeps its err.
 
 **Reproduction** (from `hp/`, with a clone of the raw-data repository as RAW and its folder `I636-mac/` for output):
