@@ -224,12 +224,13 @@ point certificate's box, lemma 6a with that certificate's state box at ξ₁ = 0
 certified**, assuming Braaksma's theorem: the three-harmonic selection condition has exactly one zero in the
 certificate's box, and it is simple. At M = 5 the first-order point certificate fails: its derivative enclosures
 overestimate the true variation over the box by 10² to 10⁵ (A_M.md). A second-order chart with C² enclosures, so that
-the Jacobian over the box is enclosed in mean value form (proof/A_M2.md), certifies, given the M-harmonic start-value
-lemma and Braaksma's theorem, exactly one simple zero of the D-jump function in a curved parallelepiped of outer
-half-width 10⁻¹⁰, with A ∈ [2.7185791892117, 2.7185791892118] and ω/ω∞ ∈ [0.99922840320656, 0.99922840320657]. The
-same code reproduces Theorem A(M = 1) and the M = 3 certificate on boxes 10² to 2×10⁴ times larger. An independent
-review with its own integrator (proof/A_M2_review.md) finds the claim holds; its issues are in the controls.
-Lemmas 6a(5) (at the certificate's p̂, #184, after the review #39 found the first run centred on x̂) and 6b₁(5) (independently reviewed, #39) are certified, so A(M = 5) holds under the same assumptions; a second validated integrator (CAPD, #189, #208) reproduces the flows of both lemmas, every row of 6b₁(5) included. An independent review (proof/A_M_review.md) confirms the
+the Jacobian over the box is enclosed in mean value form (proof/A_M2.md), certifies, assuming Braaksma's theorem,
+exactly one simple zero of the D-jump function in a curved parallelepiped of outer half-width 10⁻¹⁰, with
+A ∈ [2.7185791892117, 2.7185791892118] and ω/ω∞ ∈ [0.99922840320656, 0.99922840320657]. Each run proves the M-harmonic
+start-value lemma on its own start sets, which lie inside the lemma's stored runs (proof/A_M2.md §6.6). The same code
+reproduces Theorem A(M = 1) and the M = 3 certificate on boxes 10² to 2×10⁴ times larger. An independent review with
+its own integrator (proof/A_M2_review.md) finds the claim holds; its issues are in the controls.
+Lemmas 6a(5) (at the certificate's p̂, #184, after the review #39 found the first run centred on x̂) and 6b₁(5) (independently reviewed, #39) are certified, so A(M = 5) holds, assuming Braaksma's theorem; a second validated integrator (CAPD, #189, #208) reproduces the flows of both lemmas, every row of 6b₁(5) included. An independent review (proof/A_M_review.md) confirms the
 M = 3 point certificate, H1–H3 and lemma 6a; the majorant code of lemmas S and 6b₀ and the 6b₁ disc certificates are
 not yet reviewed.
 
@@ -412,7 +413,7 @@ theorem rather than its basis.
 | 7 | Corollary C, with a certified large-D solution | Reiterer–Trubowitz method at one D | moderate given 2–6 | GR / computer-assisted proofs |
 
 Stage 2 is done (§4): the five-harmonic inner problem selects ω/ω∞ ∈ [0.99922840320656, 0.99922840320657], assuming
-Braaksma's theorem and the start-value lemma. With the measured convergence in M and the untruncated bracket, stages 1
+Braaksma's theorem. With the measured convergence in M and the untruncated bracket, stages 1
 and 2 would already be a publishable result. Stage 4 is where a new idea is needed.
 
 What is being worked on now, and in what order: [notes/PROOF_QUEUE.md](notes/PROOF_QUEUE.md).
