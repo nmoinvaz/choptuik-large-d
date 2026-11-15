@@ -700,6 +700,12 @@ converged.
   largest θ₁ 4.39×10⁶ (an attempt accepted at its 20th step) and the largest θ₂ 1.04×10⁶. Of 13 attempts refused at the
   limit, K = 1 catches 11 and K = 2 catches 12, saving 7.9 h. Still no accepted attempt would be refused. One d6 attempt
   (θ₁ 3.42×10⁷, θ₂ 1.17×10⁷) escapes both. So the iteration-1 gap between accepted and refused attempts is now a factor
-  of 8 (4.39×10⁶ against 3.42×10⁷), and R = 10⁸ sits above it. `--od_abort_it K` (2e315411) applies the bound at
+  of 8 (4.39×10⁶ against 3.42×10⁷), and R = 10⁸ sits above it.
+- **In the chains (restart3 of #608, with `--od_full_drop 1e-2` and the refusal at iterations 1–2, raw 426cd223).**
+  The refusal fired first on d6's attempt to D 254.0: θ 1.3×10⁵⁶ at iteration 2, refused after 1252 s. d10's attempt at
+  a = 0.5 ran to the limit (3889 s) with θ 1.8×10⁻³ and 1.6×10⁻⁷ at iterations 1 and 2, then 3.4×10¹¹ at iteration 3.
+  Over every log so far (63 accepted attempts, 16 refused at the limit), extending the bound to iteration 3
+  (`--od_abort_it 3`) refuses no accepted attempt and catches that one. The largest accepted θ at iteration 3 is
+  2.5×10⁵, and the time saved grows from 8.3 h to 8.8 h. The chains take it at their next restart. `--od_abort_it K` (2e315411) applies the bound at
   iterations 1 to K. On the replay, K = 2 refuses no accepted attempt, since iteration 2's largest accepted θ is
   1.46×10⁵. `newton_od_toy.py`'s `abort2_check` fires at iteration 2 with K = 2 and not with K = 1.
