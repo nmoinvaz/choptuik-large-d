@@ -51,6 +51,10 @@ in the norm max_i ||eta_i|| / w_i with constant max_i (L w)_i / w_i < 1 (Banach'
         --mutate=scale    [G P] times 1 + 1e-9, likewise
         --mutate=rho0     the start point at |u| = rho0 - 1: the start set must miss the stored one
         --mutate=truth    (planted) Kummer's alpha times 1 + 1e-12: the enclosure must miss it
+        --mutate=forcing  (--two) the forcing of the shorter truncation divided by 1000: its enclosure must miss
+    python3 fixed_point_M_b.py --M=5 --two=95,105 --compare=ray.json
+        two truncations of the full problem at the file's centre: the two enclosures must overlap at the start
+        point and at |z| = R; the ratio of Y_105 - Y_95 to the sum of the radii measures how tight the bounds are
 """
 import json
 import math
@@ -733,6 +737,50 @@ def planted(M=5, xs=None, r0="0.07", arg="3pi/8", rho0=405, mutate=None, prec=51
     return ok
 
 
+# ---------------------------------------------------------------- two truncations of the full problem
+def two_truncations(xs, M, N1, N2, r0="0.07", arg="3pi/8", rho0=405, mutate=None, prec=512, verbose=True):
+    """the fixed points for N1 < N2 terms are the same solution, so eta_N1 = Y_N2 - Y_N1 + eta_N2 is known to
+    eta_N2's radius: at the start point and at |z| = R the two enclosures must overlap, and the ratio of the real and
+    imaginary parts of Y_N2 - Y_N1 to the sum of the radii (at most 1 for an overlap) says how tight the bounds are.
+    With --mutate=forcing the N1 forcing is divided by 1e3 first, and the check must fail."""
+    ctx.prec = prec
+    x = [acb(arb(v)) for v in xs]
+    outs = []
+    for N in (N1, N2):
+        st = Setup(x, M, r0, arg, None, N, None, True, "sharp", None, prec)
+        if mutate == "forcing" and N == N1:
+            st.Fv = {cp: up(v / 1000) for cp, v in st.Fv.items()}
+        outs.append(prove(st, verbose, f"N = {N}: "))
+        if not outs[-1]["ok"]:
+            print("TWO TRUNCATIONS: FAIL (no contraction)")
+            return False
+    o1, o2 = outs
+    s1, s2 = o1["st"], o2["st"]
+    ok, tight = True, 0.0
+    for name, t in (("the start point", arb(1) / arb(rho0)), ("|z| = R", s1.R)):
+        z = t * (I * (2 * s1.arg)).exp()
+        tt = up(t)
+        worst = 0.0
+        for cp in s1.comps:
+            pol1 = {"p": s1.P, "v": s1.V, "c": s1.C}[cp[0]][cp[1]]
+            pol2 = {"p": s2.P, "v": s2.V, "c": s2.C}[cp[0]][cp[1]]
+            a = pol1(z) + disc(eta_radius(o1, cp, tt))
+            b = pol2(z) + disc(eta_radius(o2, cp, tt))
+            o = a.real.overlaps(b.real) and a.imag.overlaps(b.imag)
+            ok = ok and o
+            dl = pol2(z) - pol1(z)
+            ratio = max(float(abs(dl.real).upper()), float(abs(dl.imag).upper())) / float(
+                eta_radius(o1, cp, tt) + eta_radius(o2, cp, tt))
+            worst = max(worst, ratio)
+            if verbose and not o:
+                print(f"  {cp} at {name}: no overlap, ratio {ratio:.3g}")
+        print(f"  at {name}: largest |Re, Im (Y_N2 - Y_N1)| / (radius_N1 + radius_N2) over the components "
+              f"{worst:.3f} (an overlap needs <= 1)")
+        tight = max(tight, worst)
+    print(f"TWO TRUNCATIONS (N = {N1} against N = {N2}): {'PASS' if ok else 'FAIL'}; largest ratio {tight:.3f}")
+    return ok
+
+
 # ---------------------------------------------------------------- command line
 def sball(z, n=50):
     return [z.real.str(n, radius=True, more=True), z.imag.str(n, radius=True, more=True)]
@@ -752,6 +800,13 @@ def main():
     if "planted" in opts:
         ok = planted(M, opts["x"].split(",") if "x" in opts else None, opts.get("r0", "0.07"),
                      opts.get("arg", "3pi/8"), float(opts.get("rho0", "405")), mutate, prec)
+        sys.exit(0 if ok else 3)
+    if "two" in opts:
+        N1, N2 = (int(v) for v in opts["two"].split(","))
+        with open(opts["compare"]) as fh:
+            xs = opts["x"].split(",") if "x" in opts else json.load(fh)["x"]
+        ok = two_truncations(xs, M, N1, N2, opts.get("r0", "0.07"), opts.get("arg", "3pi/8"),
+                             float(opts.get("rho0", "405")), mutate, prec)
         sys.exit(0 if ok else 3)
     if "start" in opts:
         path = opts.get("compare")
