@@ -555,6 +555,22 @@ plans its own prediction.
 The full text is in `I752-mac/README.md`. They are the own test's full-step drop (#709's rule for the own test, an A/B
 at this iterate), N's crawl probed the same way, and the first step's harmonic-13 remainder against a on main's build.
 
+### 12.6 N's natural-test stall is the same pair (#778)
+
+**At Newton step 1 of #742's attempt N, the natural test's simplified correction at λ = 1 lies wholly in the four
+weakest directions (share 1.0000): p1's harmonic-11 and harmonic-13 cos/sin pairs, the own test's pair of 12.3.** Raw
+`I778-mac/` 0dcfce94. `crawl_probe.py anm --od_accept natural` (f3b49b52) rebuilt N to step 1 on #742's build.
+
+| quantity | value |
+|---|---|
+| the rebuild against N.log | the base polish 5 of 5 lines, step 0 11 of 11, step 1 3 of 3; `--mutate digit` fails (10 of 11) |
+| θ at λ = 1 | 9.612×10⁻¹, N's step-1 ratio, and the step formed again equals the stored one bit for bit |
+| σ of the four directions at the iterate | 9.81×10⁻²⁵ and 9.79×10⁻²⁵ (k 11), 6.76×10⁻²⁶ and 3.03×10⁻²⁶ (k 13) |
+| the iterate's step and the trial's step in the k 13 pair | 0.998 and 0.9997 |
+
+So both acceptance tests stall on the same harmonic-13 pair. The iterate is still far from the root (|dz| 2.45×10⁻⁹),
+which is why its σ there are larger than at the roots of 12.3.
+
 ## 13. The natural test's full-step drop (#709)
 
 `newton_od(..., full_drop=f)` (`anm_run.py --od_full_drop`) also accepts a full-step trial whose max|F| falls to f times
