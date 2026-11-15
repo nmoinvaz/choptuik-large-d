@@ -921,6 +921,7 @@ def main_krawczyk(argv):
         print(f"   K(X) = [{K[0].str(12, radius=True)}, {K[1].str(12, radius=True)}]")
         print(f"Krawczyk on |A - {As}| <= {h}, |w/w_inf - {wfs}| <= {h} (xi1 = {r1}): K(X) in int X: {ok}; "
               f"margins {margins[0]:.3e}, {margins[1]:.3e}")
+        return 0 if ok else 1    # a failed test exits 1
 
 
 def main():
@@ -996,4 +997,4 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    sys.exit(main())
