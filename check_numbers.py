@@ -3056,6 +3056,33 @@ def plan_split():
 
 
 @check
+def t4fit():
+    """notes/LARGE_D_WALL.md (#825): T4's pairs at the real series' amplitude mix, from hp/data/jet_t4fit.json
+    (hp/jet_singularity.py planted --case T4fit --jet I712-dh370/repro/jet_pin3_D255.7661.npz)"""
+    import json
+    N = "notes/LARGE_D_WALL.md"
+    j = json.load(open(os.path.join(ROOT, "hp/data/jet_t4fit.json")))
+    run = j["runs"]["T4 background:1e-06"]
+    near = lambda a, arg: [p for p in run["poles"] if abs(p["abs"] / a - 1) <= 0.03 and abs(p["arg"] - arg) <= 3][0]  # noqa: E731
+    pA, pn = near(5.012, 91.4), near(3.998, 44.7)
+    extra = [p for p in run["poles"] if abs(p["abs"] - 3.594) < 0.01][0]
+    fifth = [p for p in j["real_poles"] if abs(p["abs"] - 4.235) < 0.01][0]
+    t_f = [(N, "The four pairs leave a relative residual of 0.86 rms, at most 1.59")]
+    t_r = [(N, "The plant's root test, 3.664, is within 0.5% of the real 3.682")]
+    t_p = [(N, "Padé recovers A at |s| 5.012 and 91.4°, and the near\n  track at 3.998 and 44.7°")]
+    return [("fit rms", j["fit_rms"], 0.86, 0.01, t_f), ("fit largest", j["fit_max"], 1.59, 0.01, t_f),
+            ("the plant's root test", run["rho"], 3.664, 1e-3, t_r), ("the real root test", j["rho_real"], 3.682, 1e-3, t_r),
+            ("A's |s|", pA["abs"], 5.012, 1e-3, t_p), ("A's arg", pA["arg"], 91.4, 0.1, t_p),
+            ("near's |s|", pn["abs"], 3.998, 1e-3, t_p), ("near's arg", pn["arg"], 44.7, 0.1, t_p),
+            ("approximants per track", max(pA["n"], pn["n"]), 3, 1, [(N, "Each needs 3 approximants")]),
+            ("the unplanted pole's |s|", extra["abs"], 3.594, 1e-3, [(N, "stable pole at |s| 3.594 and 43.7°")]),
+            ("the unplanted pole's arg", extra["arg"], 43.7, 0.1, [(N, "stable pole at |s| 3.594 and 43.7°")]),
+            ("the real fifth pole's |s|", fifth["abs"], 4.235, 1e-3, [(N, "at |s| 4.235 and 16°, which the model")]),
+            ("the real fifth pole's arg", fifth["arg"], 16, 1, [(N, "at |s| 4.235 and 16°, which the model")]),
+            ("the verdict", float(j["ok"]), 1, 1, [(N, "At the real series' own amplitude mix, Padé recovers both tracks")])]
+
+
+@check
 def table_errs_all():
     """every row of hp/data/delta_all.csv has an err or a reason named in its err_kind (#764). The full-system
     quad-double rows with one start (71.0, 72.8) take the larger two-start spread of the nearest qd rows below and
