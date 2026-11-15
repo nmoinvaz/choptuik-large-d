@@ -608,8 +608,14 @@ falls from 456 to 374 s and from 530 to 358 s. The planted check at D 200 with t
 **The own test's counterpart (#777) stopped at #713's planted start s0_D252** (raw `I777-mac/` 51eb62e4). The drop took
 step 3 there from 7.19×10⁻¹⁶ to 4.42×10⁻³², but Δ stayed 2.0184×10⁻¹¹ below the planted truth, where #713's run
 ended too (2.1×10⁻¹⁷ apart). The next correction, 1.1×10⁻⁵ in Δ at a pivot of 7.3×10⁻³¹, failed its projection at all
-9 trials. The truth's own pinned residual is 3.58×10⁻²⁰, twelve orders above that end, so which point is the root is
-open. #816 runs Newton from the truth itself, and #817 runs the strong-row chord from this start.
+9 trials. The truth's own pinned residual is 3.58×10⁻²⁰, twelve orders above that end.
+- **Newton from the truth finds no root along Δ either (#816; raw `I816-mac/` 3f23c2f2).** Its first step asks Δ for
+  +1.100878×10⁻⁵, at a smallest pivot of 7.29×10⁻³¹. That is the jump #777's step 4 asked for (+1.103569×10⁻⁵, pivot
+  7.26×10⁻³¹), and 9 of 9 trials fail their projection. #777's −2.0184×10⁻¹¹ is the offset start's own step, through a
+  pivot of 2.35×10⁻¹⁴, not the truth's.
+- So at D 252.6 the planted truth is not a root of the test's system that Newton can place. #713's and #777's ends
+  cannot be judged against it. #823 asks the reduced map along Δ for a root within 10⁻⁵, and #817 (the strong-row
+  chord) is judged on its residual alone.
 
 ## 14. Refusing an attempt at iteration 1 (#784)
 
