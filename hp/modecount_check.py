@@ -21,7 +21,8 @@
    ulp up must differ in one of the four.
 6. CSolver.mode_det by multidouble's blocked complex LU (clu_logdet from 4.5.0) bit for bit against its unblocked
    elimination (mode_det's dense=True, CluControl::Dense, clu_logdet before 4.5.0) on the same matrices, at four lambda
-   on and off the real axis. Control: the blocked one with Re lambda one ulp up must differ in one of the four floats.
+   on and off the real axis, and every pivot of the first (mode_pivots, multidouble's clu_pivots) the same way.
+   Control: the blocked one with Re lambda one ulp up must differ in one of the four floats, and in a pivot.
 
 --mutate=dmat, the control of checks 2 and 5: the complex kernel is built with the differentiation matrix's largest
 entry of row 0 moved by one ulp of its high part (modecount_pivots.csolver), so both must fail.
@@ -191,6 +192,28 @@ def main():
             bad.append("control 6: one ulp of Re lambda left the blocked determinant's four floats unchanged")
         elif not ctl and not all(same):
             bad.append(f"check 6 failed at {lr}{li:+}i")
+    # and every pivot (mode_pivots: ln|u_kk|, arg u_kk, pivot rows) at the first lambda
+    want = None
+    if pts:
+        lr, li = pts[0]
+        rec_bits = lambda r: [bits(np.asarray(r[4])), bits(np.asarray(r[5])), np.asarray(r[6])]  # noqa: E731
+        try:
+            want = rec_bits(st.c.mode_pivots(st.zh, st.zl, float(lr), float(li), dense=True))
+        except TypeError:
+            log("  6. pivots skipped: this modecount_cx build has no mode_pivots(dense=)")
+    if want is not None:
+        for ctl in (False, True):
+            got = rec_bits(st.c.mode_pivots(st.zh, st.zl, float(np.nextafter(lr, np.inf)) if ctl else float(lr),
+                                            float(li)))
+            nd = [int(np.sum(g != w)) for g, w in zip(got, want)]
+            lu.append(dict(re=float(lr), im=float(li), control=ctl, pivots_differing=nd))
+            log(f"  6. {'control (blocked one ulp above), ' if ctl else ''}pivots at lambda {lr!r}{li:+}i: "
+                f"{nd[0]} ln|u_kk|, {nd[1]} arg u_kk, {nd[2]} rows of {len(want[2])} differ"
+                + ("" if ctl else (": pass" if not any(nd) else ": FAIL")))
+            if ctl and not any(nd):
+                bad.append("control 6: one ulp of Re lambda left every pivot unchanged")
+            elif not ctl and any(nd):
+                bad.append(f"check 6 failed on the pivots at {lr}{li:+}i")
     rec["lu_blocked_vs_dense"] = lu
     rec["failed"] = bad
     with open(out, "a") as fo:
