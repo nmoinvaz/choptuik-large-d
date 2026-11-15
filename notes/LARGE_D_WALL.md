@@ -417,6 +417,19 @@ solution's and not the plan's. Its control, D* moved by 0.5, reads as the plan's
 only: the new plan's base polish did not converge, and the series were formed at the stored state (pinned max|F|
 3×10⁻³⁶). Another M was not run, since the octo-double solver is built for M = 32 only.
 
+**The change between the two plans lies on the system's weak directions, as the series itself does (#736; raw
+`I736-mac/`).** `hp/plan_split.py` takes the four weakest right singular vectors of the pinned system at each state.
+Their σ are 3.9×10⁻³² to 1.5×10⁻³¹, and ‖J v₁‖/σ₁ = 1.000000 from the exact Jacobian. The coefficient changes dz_k are
+then split over those vectors and over the rest.
+- At orders 7 and 13 the share of dz_k on their span is 0.9999978 to 0.9999997 at both bases, with either plan's
+  vectors. A planted change of share 0.6 along v₂ comes back to 1.3×10⁻¹³.
+- The part off the span is 4.6×10⁻⁴ to 1.0×10⁻² of dz_k at orders 5–24. The series' own coefficients have the same
+  level, 3.8×10⁻⁴ to 6.5×10⁻³.
+- The two plans (61 and 23 steps) have the same weak span to 10⁻¹⁵, and their σ agree to 9×10⁻⁸. So the plan does not
+  change the weak directions. It moves the series' four coordinates in them, by 0.07–2.6% at orders 7 and 13.
+- This says where the change lives, not why D* stays. Post hoc, the change is not one fixed 4×4 map of the coordinates:
+  the residual is 42–49%, and fitted on orders 5–14 it misses orders 15–24 by 61–72%.
+
 Other layouts give no converged state at D 252.25 (#735, dh370; raw `I735-dh370/` bfd910f3). #603's state re-noded to
 the last nodes 0.80 and 0.92 (nodes 0.3, 0.4, 0.5, 0.6 and the last) starts at max|F| 1.2×10⁻³⁶ and 6.8×10⁻³⁷, and its
 renode controls fail as they must. But the base polish takes a first step of |dz| 0.25 and 0.10, every trial from λ 1 to

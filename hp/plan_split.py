@@ -4,6 +4,7 @@ coefficient z_k between #686's two series at a base, split over the weakest righ
 pinned system at that state (near_null.py's) and over the rest.
 
     cd hp && python3 plan_split.py RAWDIR D0 [--threads=4] [--its=16] [--json=OUT] [--mutate=V]
+    cd hp && python3 plan_split.py RAWDIR posthoc [--dir=data] [--json=OUT]   post hoc, from the two runs' outputs
 
 RAWDIR is a clone of the raw-data repository. At D0 (252.2497 or 252.6135):
   the state   I603-win2/chain/anm_pin3_D<D0>.npz
@@ -191,5 +192,60 @@ def main():
     return 0 if ok_p and ok_c else 1
 
 
+def posthoc(raw):
+    """post hoc (after the registered split), from plan_split_D<D0>.json and _V.npz in --dir: the off-span residual
+    |(1 - V V^T) x| / |x| of dz_k and of z_k, the two plans' sigma and spans, the weak coordinates c_k = V^T z_k, and
+    whether dc_k = B c_k with one 4x4 B over k 5-24 (each order scaled to unit |c_k|): in sample, B from k 5-14
+    predicting k 15-24, and a control pairing dc_k with c_(k+1) that must not fit"""
+    d = args.get("dir", os.path.join(os.path.dirname(os.path.abspath(__file__)), "data"))
+    out = {}
+    for D0 in ("252.2497", "252.6135"):
+        j = json.load(open(os.path.join(d, "plan_split_D%s.json" % D0)))
+        Vz = np.load(os.path.join(d, "plan_split_D%s_V.npz" % D0))
+        Vk, Vn = Vz["V_kept"], Vz["V_new"]
+        zk = load_series(os.path.join(raw, "I685-dh370/repro/jet_pin3_D%s.npz" % D0))[0]
+        zn = load_series(os.path.join(raw, "I686-dh370/newplan/jet_pin3_D%s.npz" % D0))[0]
+        dz = zn - zk
+        off = lambda x, V: float(np.linalg.norm(x - V @ (V.T @ x)) / np.linalg.norm(x))     # noqa: E731
+        sk, sn = np.array(j["plans"]["kept"]["sigma"]), np.array(j["plans"]["new"]["sigma"])
+        cos = np.linalg.svd(Vk.T @ Vn, compute_uv=False)
+        c, dc = Vk.T @ zk.T, Vk.T @ dz.T
+        w = 1 / np.linalg.norm(c, axis=0)
+        C, dC = c * w, dc * w
+
+        def fit(train, test, shift=0):
+            A = C[:, [k + shift for k in train]].T
+            B, *_ = np.linalg.lstsq(A, dC[:, train].T, rcond=None)
+            r_in = np.linalg.norm(dC[:, train].T - A @ B) / np.linalg.norm(dC[:, train])
+            r_out = None
+            if test:
+                At = C[:, [k + shift for k in test]].T
+                r_out = float(np.linalg.norm(dC[:, test].T - At @ B) / np.linalg.norm(dC[:, test]))
+            return float(r_in), r_out
+        rin, _ = fit(list(range(5, 25)), [])
+        r14, rout = fit(list(range(5, 15)), list(range(15, 25)))
+        rctl, _ = fit(list(range(5, 24)), [], shift=1)
+        sv = np.linalg.svd(C[:, 5:25], compute_uv=False)
+        rel = {k: [float(abs(dc[i, k]) / abs(c[i, k])) for i in range(4)] for k in (7, 13)}
+        out[D0] = dict(sigma_kept=[float(x) for x in sk], sigma_rel=[float(x) for x in np.abs(sn / sk - 1)],
+                       span_cos_min=float(cos.min()), off_dz={k: off(dz[k], Vk) for k in range(1, 25)},
+                       off_z={k: off(zk[k], Vk) for k in range(1, 25)}, coord_rel=rel, B_in=rin, B_fit14=r14,
+                       B_out=rout, B_control=rctl, c_singular=[float(x) for x in sv / sv[0]])
+        print("D0 %s: sigma %s; sigma(new)/sigma(kept) - 1 up to %.1e; spans' smallest cosine 1 - %.1e" % (
+            D0, " ".join("%.3e" % x for x in sk), max(out[D0]["sigma_rel"]), 1 - cos.min()))
+        print("  off-span dz_k at k 5-24: %.2e to %.2e; z_k: %.2e to %.2e" % (
+            min(out[D0]["off_dz"][k] for k in range(5, 25)), max(out[D0]["off_dz"][k] for k in range(5, 25)),
+            min(out[D0]["off_z"][k] for k in range(5, 25)), max(out[D0]["off_z"][k] for k in range(5, 25))))
+        print("  weak coordinates' relative change at k 7 and 13: %.1e to %.1e" % (
+            min(min(v) for v in rel.values()), max(max(v) for v in rel.values())))
+        print("  one 4x4 B: in sample %.2f, from k 5-14 %.2f predicting k 15-24 %.2f, control %.2f; c_k singular %s" % (
+            rin, r14, rout, rctl, " ".join("%.2e" % x for x in sv / sv[0])))
+    if "json" in args:
+        json.dump(out, open(args["json"], "w"), indent=1)
+    return 0
+
+
 if __name__ == "__main__":
+    if len(pos) >= 2 and pos[1] == "posthoc":
+        sys.exit(posthoc(pos[0]))
     sys.exit(main())

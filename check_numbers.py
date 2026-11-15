@@ -2989,6 +2989,45 @@ def fold_separation_free():
 
 
 @check
+def plan_split():
+    """notes/LARGE_D_WALL.md (#736): the plans' coefficient change on the weak singular vectors, from
+    hp/data/plan_split_D*.json (hp/plan_split.py RAWDIR D0) and plan_split_posthoc.json (plan_split.py posthoc)"""
+    import json
+    N = "notes/LARGE_D_WALL.md"
+    js = {D: json.load(open(os.path.join(ROOT, "hp/data/plan_split_D%s.json" % D))) for D in ("252.2497", "252.6135")}
+    ph = json.load(open(os.path.join(ROOT, "hp/data/plan_split_posthoc.json")))
+    sh = [r["share"] for j in js.values() for p in ("kept", "new") for r in j["plans"][p]["rows"] if r["k"] in (7, 13)]
+    sig = [x for j in js.values() for x in j["plans"]["kept"]["sigma"]]
+    offd = [v["off_dz"][str(k)] for v in ph.values() for k in range(5, 25)]
+    offz = [v["off_z"][str(k)] for v in ph.values() for k in range(5, 25)]
+    rel = [x for v in ph.values() for r in v["coord_rel"].values() for x in r]
+    t_s = [(N, "share of dz_k on their span is 0.9999978 to 0.9999997")]
+    t_o = [(N, "The part off the span is 4.6×10⁻⁴ to 1.0×10⁻² of dz_k")]
+    t_b = [(N, "the residual is 42–49%, and fitted on orders 5–14 it misses orders 15–24 by 61–72%")]
+    return [("smallest sigma", min(sig), 3.9e-32, 1e-33, [(N, "Their σ are 3.9×10⁻³² to 1.5×10⁻³¹")]),
+            ("largest sigma", max(sig), 1.5e-31, 1e-32, [(N, "Their σ are 3.9×10⁻³² to 1.5×10⁻³¹")]),
+            ("the check's ratio", min(j["plans"]["kept"]["ratio"] for j in js.values()), 1.0, 1e-6,
+             [(N, "‖J v₁‖/σ₁ = 1.000000 from the exact Jacobian")]),
+            ("share at 7 and 13, low", min(sh), 0.9999978, 1e-7, t_s),
+            ("share at 7 and 13, high", max(sh), 0.9999997, 1e-7, t_s),
+            ("planted error", max(j["planted"]["err"] for j in js.values()), 1.3e-13, 1e-14,
+             [(N, "comes back to 1.3×10⁻¹³")]),
+            ("off-span dz, low", min(offd), 4.6e-4, 1e-5, t_o), ("off-span dz, high", max(offd), 1.0e-2, 1e-3, t_o),
+            ("off-span z, low", min(offz), 3.8e-4, 1e-5, [(N, "3.8×10⁻⁴ to 6.5×10⁻³")]),
+            ("off-span z, high", max(offz), 6.5e-3, 1e-4, [(N, "3.8×10⁻⁴ to 6.5×10⁻³")]),
+            ("the spans' agreement", max(1 - v["span_cos_min"] for v in ph.values()), 1e-15, 1e-15,
+             [(N, "the same weak span to 10⁻¹⁵")]),
+            ("the sigma agreement", max(max(v["sigma_rel"]) for v in ph.values()), 9e-8, 1e-8,
+             [(N, "their σ agree to 9×10⁻⁸")]),
+            ("coordinates' change, low", min(rel), 7e-4, 1e-4, [(N, "by 0.07–2.6% at orders 7 and 13")]),
+            ("coordinates' change, high", max(rel), 2.6e-2, 1e-3, [(N, "by 0.07–2.6% at orders 7 and 13")]),
+            ("one B, in sample low", min(v["B_in"] for v in ph.values()), 0.42, 0.01, t_b),
+            ("one B, in sample high", max(v["B_in"] for v in ph.values()), 0.49, 0.01, t_b),
+            ("one B, out of sample low", min(v["B_out"] for v in ph.values()), 0.61, 0.01, t_b),
+            ("one B, out of sample high", max(v["B_out"] for v in ph.values()), 0.72, 0.01, t_b)]
+
+
+@check
 def table_errs_all():
     """every row of hp/data/delta_all.csv has an err or a reason named in its err_kind (#764). The full-system
     quad-double rows with one start (71.0, 72.8) take the larger two-start spread of the nearest qd rows below and
