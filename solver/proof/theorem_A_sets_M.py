@@ -27,9 +27,9 @@ only (2) is checked, for the hull of the run's arb ball (the Krawczyk test on th
     python3 theorem_A_sets_M.py --M=3
     python3 theorem_A_sets_M.py --M=5 --raw=.. --mutate=decimal|centre|kbox
         decimal  X_b's radius replaced by the exact decimal 1e-18: (2) must fail, by |p^ - c|
-        centre   X_b's centre moved by 1e-20 in A: (2) must fail
+        centre   X_b's centre moved by twice its half-width in A: (2) must fail (also at M = 3)
         kbox     the decimal half-widths replaced by half of |K|'s upper bounds: (1) must fail
-    python3 theorem_A_sets_M.py --M=5 --raw=.. --selftest    the clean check and the three mutations
+    python3 theorem_A_sets_M.py --M=5 --raw=.. --selftest    the clean check and the three mutations (M = 3: centre)
 """
 import json
 import os
@@ -70,7 +70,7 @@ def check(M, raw, mutate=None, quiet=False):
     if mutate == "decimal":
         rb = arb(ray["h"])
     if mutate == "centre":
-        c[0] = c[0] + arb("1e-20")
+        c[0] = c[0] + 2 * arb(ray["h"])
     ctx.prec = PREC
     p = CM.exact_p(bx["p"])
     off = [fl(abs(p[i] - c[i])) for i in range(m)]
@@ -142,9 +142,7 @@ def verdict(M, raw, mutate=None, quiet=False):
 
 def selftest(M, raw):
     res = []
-    for mut, want in [(None, True)] + [(mu, False) for mu in (MUTATIONS if M == 5 else ("decimal",))]:
-        if M == 3 and mut == "decimal":
-            continue
+    for mut, want in [(None, True)] + [(mu, False) for mu in (MUTATIONS if M == 5 else ("centre",))]:
         ok = verdict(M, raw, mut, quiet=True)
         res.append(ok == want)
         print(f"  mutation {mut}: holds {ok} (must be {want}): {'ok' if ok == want else 'WRONG'}")
