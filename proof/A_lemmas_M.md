@@ -916,6 +916,14 @@ instead of 251, with every row passing in both. The Mac and the Pi agree with ea
 stored `lemmaS_scan_M3.json` and `.log` are now the Mac's run of this code. The cause of the old file's values was
 not found. The table of §3.3 does not change.
 
+Lemma 6b₁(5)'s covering on p̂ ± 10⁻¹⁸ was rerun there too, under its own tag (#853, raw `I853-rpi5/` fc6db14b). All 366
+discs certify, with the same disc and Lohner step counts per row as win2's (#121). The check passes with the same 366
+tiles, 1188 polar rectangles and 957 links. Dropping tile (9, 5) fails it with win2's three failures, and the
+wrong-sign mutation certifies 0 of 38 discs. Per disc, Λ agrees with win2's to 1.1×10⁻⁸, except one disc of row 17
+(1.1×10⁻⁵). The box radii are 0.924 to 1.088 times win2's, as ball radii differ between builds (AGENTS.md). The Pi's
+enclosures pass the check on the Mac (python-flint 0.9.0, FLINT 3.6.0), with the same counts and the same failures
+when the tile is dropped, and win2's pass on the Pi.
+
 ## 11. Proposed text for A_certify.md and PROOF.md
 
 The coordinator edits those files; this is proposed text only.
