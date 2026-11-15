@@ -26,6 +26,7 @@ def main(argv):
     from hpkernel.driver import load_q
     from reseed import Reseeder
     z4, meta = load_q(args[0])
+    mp.mp.dps = 50              # reseed's command-line precision, which its import set before #831
     rs = Reseeder(meta, mp.mpf(meta["D_str"]), threads=opt["threads"], qd=True)
     polish, kept = rs.invert_q, []
 

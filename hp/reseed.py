@@ -44,8 +44,8 @@ from multidouble import QDLu, dd_add, dd_solve, qd_add_dd, qd_axpy  # noqa: E402
 # refine_o: the corrections allowed past the requested steps at most, the least reduction of |R| per correction under
 # which the rung block's LU is factored again, and the |R| at the arithmetic's floor, below which it is not
 OD_EXTRA, OD_REFACTOR, OD_FLOOR = 6, 1e-4, 1e-80
-
-mp.mp.dps = 50
+# the command line's precision, set under the main guard: an import leaves the importer's precision alone (#831)
+DPS = 50
 
 
 def offsets(M, K):
@@ -90,7 +90,11 @@ class Reseeder:
         self.M, self.nodes = int(meta["M"]), list(meta["nodes"])
         self.K = len(self.nodes)
         self.kt, self.kc, self.ks = meta.get("kt", 36), meta.get("kc", 146), meta.get("ks", 130)
-        self.D, self.threads, self.levels, self.rows = mp.mpf(D), threads, levels, rows
+        # D as given (an mpf is not rounded to the caller's precision), a string parsed at 60 digits or more (#831)
+        if not isinstance(D, mp.mpf):
+            with mp.workdps(max(mp.mp.dps, 60)):
+                D = mp.mpf(D)
+        self.D, self.threads, self.levels, self.rows = D, threads, levels, rows
         self.plan_tol, self.hmax, self.check_tol = plan_tol, hmax, check_tol
         self.check_kt = check_kt or self.kt + 12
         self.it_max, self.horizon_alpha, self.mutate = it_max, horizon_alpha, mutate
@@ -999,6 +1003,7 @@ def projlog(argv):
 
 
 if __name__ == "__main__":
+    mp.mp.dps = DPS
     if len(sys.argv) > 1 and sys.argv[1] == "projlog":
         sys.exit(projlog(sys.argv[2:]))
     if len(sys.argv) > 2 and sys.argv[1] == "check":

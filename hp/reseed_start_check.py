@@ -102,4 +102,5 @@ def main():
 
 
 if __name__ == "__main__":
+    mp.mp.dps = 50              # reseed's command-line precision, which its import set before #831
     sys.exit(main())

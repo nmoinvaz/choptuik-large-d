@@ -70,7 +70,7 @@ from pinning import PinnedQ, PinnedSolver, band_coeffs, band_field  # noqa: E402
 from raw_out import require_raw  # noqa: E402
 import lam_gauge  # noqa: E402
 
-mp.mp.dps = 50            # the comparisons' precision (reseed.py sets the same on import; a bare grade did not import it)
+mp.mp.dps = 50            # the comparisons' precision
 PARTS = ("zh", "zl", "z2", "z3", "z4", "z5", "z6", "z7")
 DPS = 90                 # digits of the resampling: the four quad-double parts span ~64 digits
 P1_CUT = 13               # p1's largest held harmonic; the chain's p1 is zero above it

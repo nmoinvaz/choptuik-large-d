@@ -413,9 +413,7 @@ def real_horizon(sysm, od=3, fast=True, log=print):
     max|R|, the residual there or None), and raises ElimFailed when the projection fails."""
     from multidouble import ODLu, od_axpy
     from octo_corrector import o8, q4_of_o, with_horizon
-    dps = mp.mp.dps
     from reseed import Reseeder, offsets
-    mp.mp.dps = dps             # reseed sets 50 digits on import, which rounds P(z0)'s 1e-65 move of a_h to 0
     M, K = sysm.M, sysm.K
     o = offsets(M, K)
     hc = list(range(o["mh"], o["mh"] + 2 * M))
