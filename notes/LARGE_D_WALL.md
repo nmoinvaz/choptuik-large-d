@@ -409,16 +409,28 @@ seen from D 253.07 to 253.71 with a drift that three points do not establish), s
 reading, not tested). Its own drift over D₀ 255.06–255.77 is −0.008 and −0.042 per unit D₀, three points over 0.7, not
 established. The root test equals neither track's distance exactly.
 
-**The Padé reading of the two tracks is untested: its planted case fails (#761, `jet_singularity.py planted --case
-T4`; raw `I761-mac/`).** The case plants A (|s| 5.01, 91°) and the near track (|s| 4.00, 45°) as seen from D₀
-255.7661, with #685's B and C, in T3's two amplitude mixes.
+**T3's two amplitude mixes split the Padé reading of the two tracks (#761, `jet_singularity.py planted --case T4`; raw
+`I761-mac/`).** The case plants A (|s| 5.01, 91°) and the near track (|s| 4.00, 45°) as seen from D₀ 255.7661, with
+#685's B and C, in T3's two amplitude mixes.
 - With the four pairs' terms balanced at order 12, Padé recovers all four to the planted |s| and argument.
 - When the farthest pair, B at |s| 6.75, dominates every order up to 24, the root-test radius is 6.755. Then A and the
   near track lie inside 0.85 of it, where `stable_poles` drops poles as the approximant's, and neither is found.
 - Its controls fire where the balanced mix passes: leaving out A loses A, and leaving out the near track loses it.
 
-The real series' root test there, 3.68, is below both tracks' |s|, unlike the second mix's 6.755. That fits a mix like
-the first, but it is an inference, not a planted test.
+The real series' root test there, 3.68, is below both tracks' |s|, unlike the second mix's 6.755.
+
+**At the real series' own amplitude mix, Padé recovers both tracks (#825, `planted --case T4fit`; raw `I825-mac/`).**
+- T4's four pairs are held at their D*. They get the complex amplitudes that fit Δ's coefficients at orders 5–24 at
+  D₀ 255.7661, each order weighted by 1/|c_k|.
+- The fit is poor. The four pairs leave a relative residual of 0.86 rms, at most 1.59. The real series has a fifth
+  stable pole, at |s| 4.235 and 16°, which the model does not hold.
+- The plant's root test, 3.664, is within 0.5% of the real 3.682. Padé recovers A at |s| 5.012 and 91.4°, and the near
+  track at 3.998 and 44.7°. Each needs 3 approximants, the fewest a stable pole is allowed.
+- Leaving out either track loses it. The plant also shows an unplanted stable pole at |s| 3.594 and 43.7°, beside the
+  near track.
+
+So Padé separates a pole at |s| 4 from one at 5 at the real series' balance of amplitudes. The plant matches the real
+series' root test, not its coefficients, so this tests the method at that balance, not the real poles themselves.
 
 With the plan made again at the state (#686, dh370; raw `I686-dh370/` bc9add86), the series at D 252.25 and 252.61
 put the nearest singularity at the same D* to 10⁻⁴, inside its spread over the approximants (0.010 and 0.094). Their

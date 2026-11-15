@@ -63,6 +63,8 @@ relative noise 1e-6 (judged) and 1e-12 (reported). Pass, both needed: the plante
 the real series' (#712: 3.682), and A and the near track each with a stable Pade pole within 3% in |s| and 3 degrees.
 The controls leave out A (drop_pole) or the near track (drop_near) from the fitted mix and must fail. Reported, not
 judged: the same plant with orders 1-4 taken from the real series instead of T4's background.
+First run (2026-11-15): PASS. The fit leaves 0.86 rms (1.59 at most) of the coefficients; the plant's root test is
+3.664 against 3.682, and A and the near track are recovered, each in 3 approximants. Both controls fail.
 
 jet: the series at STATE as anm_run.py --jet_o 1 forms it (its coefficients_o and coefficients_q, the held fit's
 Taylor coefficients in eight parts as --held_o 1 gives them), in each variant of --variants:
