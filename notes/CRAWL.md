@@ -695,7 +695,9 @@ converged.
 | wall | 13512 s | 6888 s |
 
 - **A case iteration 1 does not catch.** In #608's chain, d10's attempt at a = 0.4547 has θ 2.8×10⁻⁷ at iteration 1 and
-  6.0×10¹² at iteration 2, and it ran to the step limit.
+  6.0×10¹² at iteration 2, and it ran to the step limit. `--od_abort_it K` (2e315411) applies the bound at iterations 1
+  to K. On the replay, K = 2 refuses no accepted attempt, since iteration 2's largest accepted θ is 1.46×10⁵.
+  `newton_od_toy.py`'s `abort2_check` fires at iteration 2 with K = 2 and not with K = 1.
 - **The replay over #608's later attempts (raw b1966bb7) narrows the gap.** There are 54 accepted attempts, with the
   largest θ₁ 4.39×10⁶ (an attempt accepted at its 20th step) and the largest θ₂ 1.04×10⁶. Of 13 attempts refused at the
   limit, K = 1 catches 11 and K = 2 catches 12, saving 7.9 h. Still no accepted attempt would be refused. One d6 attempt
@@ -706,6 +708,4 @@ converged.
   a = 0.5 ran to the limit (3889 s) with θ 1.8×10⁻³ and 1.6×10⁻⁷ at iterations 1 and 2, then 3.4×10¹¹ at iteration 3.
   Over every log so far (63 accepted attempts, 16 refused at the limit), extending the bound to iteration 3
   (`--od_abort_it 3`) refuses no accepted attempt and catches that one. The largest accepted θ at iteration 3 is
-  2.5×10⁵, and the time saved grows from 8.3 h to 8.8 h. The chains take it at their next restart. `--od_abort_it K` (2e315411) applies the bound at
-  iterations 1 to K. On the replay, K = 2 refuses no accepted attempt, since iteration 2's largest accepted θ is
-  1.46×10⁵. `newton_od_toy.py`'s `abort2_check` fires at iteration 2 with K = 2 and not with K = 1.
+  2.5×10⁵, and the time saved grows from 8.3 h to 8.8 h. The chains take it at their next restart.
