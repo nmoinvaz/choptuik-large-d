@@ -7,7 +7,8 @@ Seeds (one of):
                                     regridded to the nodes (sigdss's own integration) and to the M points
   --from STATE.npz                  a state of this script (any M: resampled; any eta: zero-order continuation in eps)
   --from STATE1.npz --from2 STATE2.npz
-                                    the secant through two states at other couplings, extrapolated linearly in eps
+                                    the secant through two states at other couplings, extrapolated linearly in eps;
+                                    through two states at one coupling and other D, linearly in D (chain.py --Ds)
 
     PYTHONPATH=<site> python3 run_eta.py --eta 7 --M 32 --sigdss <raw>/I631-win/data/...kc39_eta7....npy --kc_seed 39 \
         --out <raw>/I639-mac/data --tag eta7_M32 [--qd] [--threads 4]
@@ -100,7 +101,13 @@ def main():
             if m2["M"] != a.M:
                 z2h = sd.resample_z(z2h, m2["M"], a.M, K)
             e1, e2 = eps_of(m1["eta"]), eps_of(m2["eta"])
-            w = (eps - e1) / (e2 - e1)
+            if e1 != e2:
+                w = (eps - e1) / (e2 - e1)
+            else:
+                # one coupling, two D (#652): the secant in D
+                D1, D2 = float(m1.get("D", 4.0)), float(m2.get("D", 4.0))
+                w = (a.D - D1) / (D2 - D1)
+                seed.update(D_src=D1, D_src2=D2)
             zh, zl = (1 - w) * (zh + zl) + w * z2h, np.zeros_like(zh)
             seed.update(src2=os.path.basename(a.from2), eta_src2=m2["eta"], w=w)
     F0 = sd.fnorm(s.residual([zh, zl]))
