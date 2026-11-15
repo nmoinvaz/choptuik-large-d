@@ -555,6 +555,11 @@ python3 fixed_point.py 0.08             # at start radius 0.08 (N = 80)
 python3 krawczyk.py --xi1=0.3           # Krawczyk budget (dry run) and the mock validation of the test, about 15 s
 ```
 
+These commands, with `validated_int.py krawczyk 1e-9` of §9, were rerun on aarch64 Linux (Raspberry Pi 5, python-flint
+0.9.0, FLINT 3.6.0; #843, raw `I843-rpi5/` 750c51ab). Every command exits 0, and the Krawczyk test passes with margins
+7.925×10⁻¹⁰ and 9.247×10⁻¹⁰. The Pi's point and box runs pass on the Mac, and the stored x86 runs pass on the Pi, with the
+same margins.
+
 ## 9. Step (ii): the validated integration (agent VI)
 
 `validated_int.py` integrates the truncated M = 1 system of §2 in ball arithmetic (python-flint arb at 256 bits). It

@@ -505,6 +505,11 @@ python3 certify_M.py refine 5 --iters=2 --modes=full,full --mixed --tag=c \
     --p=2.7185791892117424130177654812835683278086250673336,0.99922840320656778344019660889181768356642428951284,0.14920357491144750568196056793271935041482093192331,0.014719052490251352879803044913775572795908602649635,0.0084053469057616610714063354028382829968062187683545,0.0014703451815915780266410531538042860832833504910601
 ```
 
+These commands, without `refine` and `plan`, were rerun on aarch64 Linux (Raspberry Pi 5, python-flint 0.9.0, FLINT
+3.6.0; #844, raw `I844-rpi5/` eed07c7e), with `m1 --rerun` recomputing the M = 1 runs. Every run exits 0, and every
+control fails. The Pi's M = 3 box passes the Krawczyk test with relative margins +0.994, +0.997, +0.778 and +0.778, its
+enclosures equal §6.2's, and it passes on the Mac with the same margins, as the stored x86 box does on the Pi.
+
 ## 9. Proposed text for README.md, PROOF.md and A_certify.md
 
 (For the coordinator; numbers to be checked against §6 before use.)
