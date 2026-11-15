@@ -1994,7 +1994,8 @@ near-null band in the Jacobian and an unexplained drift of the gauge mode's root
       Padé agree on D* = 259.90330382883 and Δ* = 1.6323214210731, on an exponent of 1/2 to 8.9×10⁻¹⁵, and on the
       branch that folds back, the mirror, to 8.0×10⁻⁹ ([`hp/data/fold_mirror.csv`](hp/data/fold_mirror.csv)).
     - A plan made at the state, on a base that did not converge, moves D* by +0.010 to +0.011 at the two bases where it
-      was run. Those series miss their own states by 3.2×10⁻⁵, so whether the fold moves with the plan is open.
+      was run. Those series miss their own states by 3.2×10⁻⁵, so whether the fold moves with the plan is
+      open.
     - The 1/n series fitted below D = 245 shows nothing there. It would flag a square root of the continuum anywhere
       from D = 259 to 270 with a coefficient above 2.3–3.0×10⁻¹⁰, and the chain's fold has 0.035
       ([`hp/track_c_fold.py`](hp/track_c_fold.py)).
