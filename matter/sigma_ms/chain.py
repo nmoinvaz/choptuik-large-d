@@ -72,7 +72,7 @@ def main():
     a = ap.parse_args()
     prev = [a.start] if a.start else []
     etas_prev = [None] if a.start else []
-    if a.Ds:
+    if a.Ds or a.D_to:
         Ds_prev = [None] if a.start else []
         if a.start2:                                        # the states' metas carry their D (run_eta.py)
             prev, Ds_prev = [a.start2, a.start], ["start2", "start"]
