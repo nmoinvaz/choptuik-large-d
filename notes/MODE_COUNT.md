@@ -488,6 +488,13 @@ above does. It then held for five cuts while its zeros moved: the shared zero re
   and 2 for the shared zero and its conjugate. Every circle has 0 mismatches, and the control winds +1.
   - So the count held at 10 for every cut from kf 37 to 45, and steps to 11 when nothing is frozen. Whether the added
     zero belongs to the solution or to the M = 48 truncation is #838, the same box at M = 64.
+  - **At M = 64 the double-double determinant cannot answer it (#838; raw `I838-macm3/` 972be0126).** Moving every
+    entry by a random relative 2⁻¹⁰⁶ flips the sign in 5 of 10 draws at λ 2.00 and 2.05 and raises ln|det| by 26–30,
+    and a λ step of ±1×10⁻¹⁰ moves ln|det| by 0.08–4.9. So the exact determinant lies about e²⁸ below double-double's
+    rounding floor, and a scan from 1.90 to 2.10 changes sign 12 times in 20 intervals with no dip. At M = 48 the same
+    draws hold the sign within 3.4×10⁻⁹, and the real-axis sign changes are the predicted one in (2.0, 2.1) and the
+    three real zeros above. The M = 64 count waits for a quad-double mode matrix (#647). #848 repeats the kf 47 count
+    on a second radial layout at M = 48.
 
 **The series' radii, and M = 64 (#141; raw `I141-mac/`, 5eff98e).** The centre series (x = 0 to the first node) takes
 one d/dτ per order, and its radius of convergence falls as M rises. At D = 30 without the cut it is 0.435, 0.324, 0.278
