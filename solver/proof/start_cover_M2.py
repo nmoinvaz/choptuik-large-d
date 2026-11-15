@@ -184,7 +184,8 @@ def same_config(ce, run):
 
 
 def check(bx, rows="all", mutate=None, quiet=False, name=""):
-    """the tests (a), (b), (c); returns (covered, the certificate's data, the covering runs)"""
+    """the tests (a), (b), (c); returns (covered, the certificate's data, the covering runs, and per lemma run the
+    configuration items that differ with the smallest slack of the four sets)"""
     def say(*a):
         if not quiet:
             print(*a)
@@ -211,11 +212,14 @@ def check(bx, rows="all", mutate=None, quiet=False, name=""):
         f"lemma's ray is the path's start ray: {ray_ok}")
     cert_sets = (("p^", "real", ce["p"]), ("hull", "real", ce["hull"]), ("Cauchy(p^)", "cauchy", ce["cb_p"]),
                  ("Cauchy(hull)", "cauchy", ce["cb_hull"]))
-    covering = []
+    covering, why = [], {}
     for run in runs:
         cfg = same_config(ce, run)
         res = [(nm, *inside(S, [v[kind] for v in run["sets"]])) for nm, kind, S in cert_sets]
         allin = all(r[1] for r in res)
+        low = min(res, key=lambda r: r[2])
+        why[run["name"]] = ("configuration differs in " + ", ".join(k_ for k_, v in cfg.items() if not v) + "; "
+                            if not all(cfg.values()) else "") + f"smallest slack {low[2]:+.3e} ({low[0]}, {pn[low[3]]})"
         if all(cfg.values()) and allin:
             covering.append(run)
         say(f"lemma run [{run['name']}]: ray {run['arg']}, r0 {run['r0']}, {'diag' if run['diag'] else 'plain'}, N "
@@ -233,7 +237,7 @@ def check(bx, rows="all", mutate=None, quiet=False, name=""):
     covered = bool(covering) and sha_ok and hw_ok and ray_ok and diag_ok
     say(f"START COVER M2 ({name}, rows {rows}, mutation {mutate}): "
         + (f"COVERED by {', '.join('[' + r['name'] + ']' for r in covering)}" if covered else "NOT COVERED"))
-    return covered, ce, covering
+    return covered, ce, covering, why
 
 
 # ---------------------------------------------------------------- the rerun
@@ -274,7 +278,8 @@ def rerun(bx, ce, covering):
         same_l = abs(l0 - wide["eta"]) <= 1e-9 * wide["eta"] and abs(l1 - wide["deta"]) <= 1e-9 * wide["deta"]
         below = max(e0, b0) <= l0 and max(e1, b1) <= l1
         print(f"  eta {l0!r}, Cauchy part {l1!r}; the row stored {wide['eta']!r}, {wide['deta']!r}: reproduced "
-              f"{same_l}; the certificate's bounds are below the row's: {below}  [{time.time() - t0:.0f} s]", flush=True)
+              f"{same_l}; the certificate's bounds are below the row's: {below}  [{time.time() - t0:.0f} s]",
+              flush=True)
         ok = ok and same_l and below
     print(f"RERUN: {'PASS' if ok else 'FAIL'}")
     return ok
@@ -289,20 +294,21 @@ def main():
         sys.exit(f"{box} is not a C^2 box run of certify_M2.py")
     rows = opts.get("rows", "all")
     if "selftest" in opts:
-        clean, _, _ = check(bx, rows, None, quiet=True, name=box)
-        null, _, _ = check(bx, rows, "edge0", quiet=True, name=box)
-        print(f"clean: {'COVERED' if clean else 'NOT COVERED'} (must be COVERED)")
-        print(f"edge0 (null): {'COVERED' if null else 'NOT COVERED'} (must be COVERED)")
-        fired = 0
-        for mu in MUTATIONS:
-            cov, _, _ = check(bx, rows, mu, quiet=True, name=box)
-            fired += not cov
-            print(f"{mu}: {'COVERED' if cov else 'NOT COVERED'} (must be NOT COVERED)")
-        good = clean and null and fired == len(MUTATIONS)
+        ref = "data 5pi/16 h=1e-6"
+        print(f"start_cover_M2 selftest on {box}, rows {rows}; the slack is against the lemma run [{ref}]  "
+              f"[python-flint {flint.__version__}, FLINT {flint.__FLINT_VERSION__}]")
+        good, fired = True, 0
+        for mu, want in [(None, True), ("edge0", True)] + [(mu, False) for mu in MUTATIONS]:
+            cov, _, _, why = check(bx, rows, mu, quiet=True, name=box)
+            good = good and cov == want
+            fired += (not cov) and (not want)
+            print(f"{'clean' if mu is None else mu + (' (null)' if want else '')}: "
+                  f"{'COVERED' if cov else 'NOT COVERED'} (must be {'COVERED' if want else 'NOT COVERED'}); "
+                  f"{why.get(ref, 'no such lemma run')}")
         print(f"SELFTEST: {'PASS' if good else 'FAIL'} (clean and edge0 covered, {fired} of {len(MUTATIONS)} mutations "
               f"not covered)")
         sys.exit(0 if good else 1)
-    covered, ce, covering = check(bx, rows, opts.get("mutate"), name=box)
+    covered, ce, covering, _ = check(bx, rows, opts.get("mutate"), name=box)
     if "rerun" in opts and covered:
         covered = rerun(bx, ce, covering)
     sys.exit(0 if covered else 1)
