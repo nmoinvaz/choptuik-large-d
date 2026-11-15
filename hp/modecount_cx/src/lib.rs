@@ -10,14 +10,14 @@
 //!
 //! * multidouble's `linalg::clu_logdet`: complex double-double LU with partial pivoting (getf2 order, 8-row lane
 //!   vectors): ln|det| and arg det;
-//! * `pivots::clu_pivots`: the same LU with every pivot recorded (`mode_pivots`, #552);
+//! * multidouble's `linalg::clu_pivots`: the same LU with every pivot recorded (`mode_pivots`, #552);
 //! * `test_field`: the test field's mode matrix (`test_det`, `test_matrix`, `test_matvec`), which holds the a and c
 //!   tangents inside the recursions and so keeps its own copy of them (see there).
 use hpk::dd::DD;
 use hpk::dv::DV;
 use hpk::field::{DMat, Fl};
 use hpk::linalg::{clu_logdet, ld_for};
-use multidouble::linalg::{clu_logdet_control, CluControl};
+use multidouble::linalg::{clu_logdet_control, clu_pivots_control, CluControl};
 use hpk::model::{self as hm, Ctx};
 use multishoot::Rate;
 use numpy::ndarray::Array2;
@@ -26,7 +26,6 @@ use pyo3::exceptions::PyValueError;
 use pyo3::prelude::*;
 use std::sync::Arc;
 
-mod pivots;
 mod test_field;
 
 use test_field::{psi_index, test_matrix_c, Cx, TEST_MUT, TEST_ON};
@@ -240,7 +239,8 @@ impl CSolver {
 
     /// det M(lam) with every pivot of its LU: (ln|det|, arg det, min |u_kk|, max |u_kk|) as `mode_det` returns them,
     /// bit for bit, then ln|u_kk|, arg u_kk and the pivot row chosen at each column k, as arrays in elimination order.
-    #[pyo3(signature = (zh, zl, lr_hi, li_hi, lr_lo=0.0, li_lo=0.0))]
+    /// dense: by the unblocked elimination, as `mode_det`'s.
+    #[pyo3(signature = (zh, zl, lr_hi, li_hi, lr_lo=0.0, li_lo=0.0, dense=false))]
     #[allow(clippy::too_many_arguments, clippy::type_complexity)]
     fn mode_pivots<'py>(
         &self,
@@ -251,6 +251,7 @@ impl CSolver {
         li_hi: f64,
         lr_lo: f64,
         li_lo: f64,
+        dense: bool,
     ) -> PyResult<(f64, f64, f64, f64, Bound<'py, PyArray1<f64>>, Bound<'py, PyArray1<f64>>, Bound<'py, PyArray1<usize>>)> {
         let (h, l) = (slice(&zh, "zh")?, slice(&zl, "zl")?);
         let (api, pool) = (&self.api, &self.pool);
@@ -260,7 +261,7 @@ impl CSolver {
             .detach(|| {
                 pool.install(|| -> Result<_, String> {
                     let (rh, rl, ih, il, ld) = api.mode_matrix_c(h, l, lr, li, true)?;
-                    pivots::clu_pivots(n, ld, rh, rl, ih, il, true)
+                    clu_pivots(n, ld, rh, rl, ih, il, true, if dense { CluControl::Dense } else { CluControl::None })
                 })
             })
             .map_err(PyValueError::new_err)?;
@@ -394,6 +395,22 @@ fn cdet<'py>(rh: PyReadonlyArray2<'py, f64>, rl: PyReadonlyArray2<'py, f64>, ih:
 }
 
 /// `cdet` with every pivot: (ln|det|, arg det, min |u_kk|, max |u_kk|, ln|u_kk|, arg u_kk, pivot rows), by the LU of
+/// multidouble's `clu_pivots_control` as `mode_pivots` returns it: (ln|det|, arg det, min |u_kk|, max |u_kk|), then
+/// ln|u_kk|, arg u_kk and the pivot row of each column
+#[allow(clippy::type_complexity, clippy::too_many_arguments)]
+fn clu_pivots(
+    n: usize,
+    ld: usize,
+    rh: Vec<f64>,
+    rl: Vec<f64>,
+    ih: Vec<f64>,
+    il: Vec<f64>,
+    par: bool,
+    control: CluControl,
+) -> Result<(f64, f64, f64, f64, Vec<f64>, Vec<f64>, Vec<usize>), String> {
+    clu_pivots_control(n, ld, rh, rl, ih, il, par, control).map(|((la, a, pmin, pmax), p)| (la, a, pmin, pmax, p.ln_abs, p.arg, p.rows))
+}
+
 /// `mode_pivots`, for planted matrices (#552).
 #[pyfunction]
 #[allow(clippy::type_complexity)]
@@ -415,7 +432,7 @@ fn cpivots<'py>(
         }
     }
     let [a0, a1, a2, a3] = v;
-    let (la, arg, pmin, pmax, lnu, argu, rows) = pivots::clu_pivots(n, ld, a0, a1, a2, a3, false).map_err(PyValueError::new_err)?;
+    let (la, arg, pmin, pmax, lnu, argu, rows) = clu_pivots(n, ld, a0, a1, a2, a3, false, CluControl::None).map_err(PyValueError::new_err)?;
     Ok((la, arg, pmin, pmax, lnu.into_pyarray(py), argu.into_pyarray(py), rows.into_pyarray(py)))
 }
 
