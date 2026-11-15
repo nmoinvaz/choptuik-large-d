@@ -21,7 +21,9 @@ the full step is accepted at the first step; with full_drop = 0 it is refused; a
 2e-10 of the start's is still refused at full_drop = 1e-20. Control: --mutate=drop accepts a full step on any decrease of |F| (the floor at 1),
 so the third case must fail. The same three cases with the own test (#777): a toy whose Newton step at every point but
 the start carries the weak vector, the own correction #752 found in junk directions, so the own test refuses the full
-step that lands on the root.
+step that lands on the root. In the first case of each test the accepted trial's line, "accepted by the full step's
+drop", must be printed at verbose 1 (#816). Control: --mutate=noline omits that line in the own test, so its first case
+must fail.
 
 The refusal at iteration 1 (#784, newton_od's abort_theta with the natural test): a toy whose LU solves add a weak vector
 1e9 times the step from the first accepted point on, so theta is small at step 0 and about 1e9 at iteration 1. With
@@ -193,30 +195,38 @@ def abort_check():
     return good
 
 
-def drop_check(mutate=False):
+def drop_check(mutate=False, noline=False):
     """the first step from y = 0: at full_drop 1e-20 the full step is accepted by its drop, where the natural test
-    refuses it (theta 1.5); at 0 it is refused; and a full step whose |F| falls only to 2e-10 of the start's 2 is
-    still refused at 1e-20"""
+    refuses it (theta 1.5), and its trial line is printed at verbose 1; at 0 it is refused; and a full step whose |F|
+    falls only to 2e-10 of the start's 2 is still refused at 1e-20"""
     if mutate:
         octo_corrector.DROP_MUT["floor1"] = True
+    if noline:
+        octo_corrector.DROP_MUT["noline"] = True
     z = [np.array([0.0, 0.0])] + [ZERO] * 7
 
     def first(c, fd, cls, accept):
-        with contextlib.redirect_stdout(io.StringIO()):
+        buf = io.StringIO()
+        with contextlib.redirect_stdout(buf):
             _, h, _ = newton_od(cls(c), z, tol=1e-30, it_max=1, accept=accept, full_drop=fd)
         r = h[0] if h else {}
-        return bool(r.get("by_drop")), r.get("lam")
+        # the accepted trial's line at verbose 1 (#816)
+        line = any(" trial lam 1:" in ln and "accepted by the full step's drop" in ln
+                   for ln in buf.getvalue().splitlines())
+        return bool(r.get("by_drop")), r.get("lam"), line
 
     good = True
     for cls, accept in ((Noisy, "natural"), (NoisyOwn, "own")):
-        on, lam_on = first(1e-25, 1e-20, cls, accept)
-        off, lam_off = first(1e-25, 0.0, cls, accept)
-        miss, _ = first(4e-10, 1e-20, cls, accept)
-        on_ok, off_ok, miss_ok = on and lam_on == 1.0, not off and lam_off != 1.0, not miss
+        on, lam_on, line_on = first(1e-25, 1e-20, cls, accept)
+        off, lam_off, _ = first(1e-25, 0.0, cls, accept)
+        miss, _, _ = first(4e-10, 1e-20, cls, accept)
+        on_ok, off_ok, miss_ok = on and lam_on == 1.0 and line_on, not off and lam_off != 1.0, not miss
         g = on_ok and off_ok and miss_ok
         good &= g
-        print(f"full step's drop, {accept} test: accepted by the drop at 1e-20 {on_ok}; refused at 0 {off_ok}; a full step "
-              f"to 2e-10 of the start's refused at 1e-20 {miss_ok}: {'pass' if g else 'FAIL'}")
+        print(f"full step's drop, {accept} test: accepted by the drop at 1e-20 {on_ok} "
+              f"(its trial line printed {line_on}); refused at 0 {off_ok}; a full step to 2e-10 of the start's "
+              f"refused at 1e-20 {miss_ok}: "
+              f"{'pass' if g else 'FAIL'}")
     return good
 
 
@@ -237,7 +247,7 @@ def main():
         print(f"{accept}: converged {conv} in {steps} lines; trial lines printed {printed} (refused {refused}), parsed "
               f"{parsed}: {'pass' if good else 'FAIL'}")
     ok &= chord_check()
-    ok &= drop_check("--mutate=drop" in sys.argv[1:])
+    ok &= drop_check("--mutate=drop" in sys.argv[1:], "--mutate=noline" in sys.argv[1:])
     ok &= abort_check()
     mut = " ".join(a for a in sys.argv[1:] if a.startswith("--mutate="))
     print(f"newton_od_toy{' ' + mut if mut else ''}: {'PASS' if ok else 'FAIL'}")

@@ -211,8 +211,9 @@ def chord_strong(s, z, d, k, it_max=10, tol=1e-40, tol_dz=1e-45, mutate=0, verbo
 
 
 CHORD_MUT = {}          # chord_strong's control: {"noproj": True} keeps the weak components of each correction
-# newton_od_toy.py's control of full_drop (#709): 'floor1' accepts a full step on any decrease of |F|
-DROP_MUT = {"floor1": False}
+# newton_od_toy.py's controls of full_drop (#709): 'floor1' accepts a full step on any decrease of |F|.
+# 'noline' omits the own test's line for a trial accepted by the drop (#816).
+DROP_MUT = {"floor1": False, "noline": False}
 
 
 def junk_subspace_o(s, w, delta_max=1e-2, iters=6, seed=0):
@@ -453,7 +454,8 @@ def newton_od(s, z, tol=1e-40, it_max=12, max_halvings=8, verbose=True, mutate=0
                 if eq:
                     tr.update(dz_eq=nd, dz_eq_t=size(dt, True) if good else float("nan"))
                     rec["trials"].append(tr)
-                if verbose >= 2 or (verbose and not ok):     # every trial at verbose 2, the refused ones at 1 (#666)
+                # every trial at verbose 2; at 1 the refused ones (#666) and the one the drop accepted (#816)
+                if verbose >= 2 or (verbose and (not ok or (by_drop and not DROP_MUT["noline"]))):
                     line = (f"    on {it} trial lam {lam:g}: max|F| {tr['F']:.2e}; raw |dz_t| {tr['dz_t']:.3e} vs |dz| {tr['dz']:.3e}"
                             f" ({'<' if tr['dz_t'] < tr['dz'] else 'not <'})")
                     if eq:
