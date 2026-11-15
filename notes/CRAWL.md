@@ -609,33 +609,50 @@ falls from 456 to 374 s and from 530 to 358 s. The planted check at D 200 with t
 step 3 there from 7.19×10⁻¹⁶ to 4.42×10⁻³², but Δ stayed 2.0184×10⁻¹¹ below the planted truth, where #713's run
 ended too (2.1×10⁻¹⁷ apart). The next correction, 1.1×10⁻⁵ in Δ at a pivot of 7.3×10⁻³¹, failed its projection at all
 9 trials. The truth's own pinned residual is 3.58×10⁻²⁰, twelve orders above that end.
-- **The jump belongs to the start's projection at switch 0, not to the truth (#816, corrected by #823).** #816 ran
-  Newton from the truth with `--switch 0`, which projects the start first. From that projected start the first step
-  asks Δ for +1.100878×10⁻⁵, at a smallest pivot of 7.29×10⁻³¹, and 9 of 9 trials fail their projection. #777's step 4
-  asked for the same jump (+1.103569×10⁻⁵, pivot 7.26×10⁻³¹). From the unprojected truth, at the default switch
-  (10⁻¹⁵, the start's residual below it), the first step is +3.311085×10⁻⁸ in Δ. #777's −2.0184×10⁻¹¹ is the offset
-  start's own step, through a pivot of 2.35×10⁻¹⁴. Raw `I816-mac/` 3f23c2f2, `I823-mac/`.
-- **A 10⁻⁶⁵ move of the horizon data changes Newton's Δ step 332 times (#823; raw `I823-mac/` f976bc4b,
-  `hp/proj_shift.py`).** The switch-0 projection of the truth moves only m_h (by 1.79×10⁻⁶⁶) and a_h (1.70×10⁻⁶⁵), and
-  leaves |F| at 3.5827×10⁻²⁰. Yet the Δ step goes from +3.311085×10⁻⁸ to +1.100878×10⁻⁵, and the smallest pivot from
-  7.1×10⁻²⁹ to 7.3×10⁻³¹. Both steps reproduce the recorded ones exactly, and the per-block control fails as it must.
-  So at D 252.6 the weak step hangs on horizon data far below octo-double's own rounding of other blocks. Whether the
-  step is determined at all at this precision is #827.
-- **Newton's Δ step there is not determined at octo-double precision (#827; raw `I827-mac/` 504238d3,
-  `hp/step_spread.py`).** A random 10⁻⁶⁵ relative perturbation of m_h and a_h moves the Δ step from +3.311×10⁻⁸ to
-  between −8.68×10⁻⁹ and +2.58×10⁻⁸ over four seeds: a deviation of 1.26, against the 10⁻³ bar. The same perturbation
-  of the centre or of any node leaves the step equal as a double (relative 10⁻⁶⁵ to 4×10⁻³⁹). On Δ itself it moves the
-  step by 2.3×10⁻⁵ relative. The zero perturbation reproduces +3.3110848587422764×10⁻⁸ exactly. So at D 252.6 a Δ step
-  carries no information below about 3×10⁻⁸, and #826's Newton from the truth is judged on its residual, not on Δ.
-  #830 measures how this spread grows with D.
-- **The reduced map along Δ is not defined there with free horizon data (#823).** The first strong move, w0 of
-  2.26×10⁻¹⁹, takes max|F| to 8.6×10⁻⁴. The chord then diverges, and newton_strong stops after one LU. So no root
-  reading was possible at 10⁻⁴ or 10⁻⁵. Inferred, the coordinator's reading: the horizon block's gain, about 10³⁷ at
-  this D, is the sensitivity that broke #800's rung and #808's held arm.
-- **Eliminating the horizon data does not define it either (#828; raw `I828-mac/` dc6e9d75, `reduced_cubic.py curve
-  --elim`).** w0's Δ part, 1.48×10⁻²², takes the horizon rows to 8×10¹⁴ at fixed horizon data. They respond linearly
-  in Δ only below about 10⁻²⁶. No horizon data re-solves them there. The elimination reproduces ElimO's +1.100878×10⁻⁵
-  step, and its plant passes while the w0, noelim and hrows controls fail.
+- **Correction (#830's diagnostic, mac752, 2026-11-15): planted, proj_shift and step_spread read the chain's
+  eight-part states in four parts (`load_q`), dropping parts as large as 1.9×10⁻⁶⁵. This reverses the reading of the
+  steps below.**
+  - At the eight-part truth, the plain Newton step in planted's system is +1.100878×10⁻⁵ in Δ, at a smallest pivot of
+    7.2869×10⁻³¹ (#805's p_min). At the four-part read it is +3.311×10⁻⁸, at 7.09×10⁻²⁹. So #816's "projected" step
+    is the step at the real state, and the "unprojected" +3.3×10⁻⁸ of #823 and #826 is the truncation's. The
+    switch-0 projection had moved the horizon data 1.7×10⁻⁶⁵, back near their eight-part values. #823's "332 times
+    from a 10⁻⁶⁵ move" is the truncation, not the projection.
+  - The truth's pinned residual is 3.5827×10⁻²⁰ at both reads (2.2158×10⁻²⁰ at D 240.1244). So it is not the
+    truncation. It is planted's rebuilt system (held values as floats, the plan made at the state) against the chain's
+    own. Through a pivot of 7.3×10⁻³¹, that mismatch puts planted's root about 1.1×10⁻⁵ from the chain's state in Δ
+    (linear). The planted test at D 252.6 was therefore ill-posed: its truth solves another system.
+  - Affected (eight-part I603-win2 states read in four parts): #713's s0_D252, #777, #816, #817, #823, #826, #827,
+    #830. Not affected (four-part states): #468, #504, #523, #555, #644, #674, #709, od-corrector-mac, #713's D200.
+  - #827's spread (Δ step under 10⁻⁶⁵ horizon perturbations) was measured around the four-part start, so it describes
+    that point's sensitivity. #826's two arms are stopped as superseded.
+- Before the correction, the readings were these, kept for the record:
+  - **The jump belongs to the start's projection at switch 0, not to the truth (#816, corrected by #823).** #816 ran
+    Newton from the truth with `--switch 0`, which projects the start first. From that projected start the first step
+    asks Δ for +1.100878×10⁻⁵, at a smallest pivot of 7.29×10⁻³¹, and 9 of 9 trials fail their projection. #777's step 4
+    asked for the same jump (+1.103569×10⁻⁵, pivot 7.26×10⁻³¹). From the unprojected truth, at the default switch
+    (10⁻¹⁵, the start's residual below it), the first step is +3.311085×10⁻⁸ in Δ. #777's −2.0184×10⁻¹¹ is the offset
+    start's own step, through a pivot of 2.35×10⁻¹⁴. Raw `I816-mac/` 3f23c2f2, `I823-mac/`.
+  - **A 10⁻⁶⁵ move of the horizon data changes Newton's Δ step 332 times (#823; raw `I823-mac/` f976bc4b,
+    `hp/proj_shift.py`).** The switch-0 projection of the truth moves only m_h (by 1.79×10⁻⁶⁶) and a_h (1.70×10⁻⁶⁵), and
+    leaves |F| at 3.5827×10⁻²⁰. Yet the Δ step goes from +3.311085×10⁻⁸ to +1.100878×10⁻⁵, and the smallest pivot from
+    7.1×10⁻²⁹ to 7.3×10⁻³¹. Both steps reproduce the recorded ones exactly, and the per-block control fails as it must.
+    So at D 252.6 the weak step hangs on horizon data far below octo-double's own rounding of other blocks. Whether the
+    step is determined at all at this precision is #827.
+  - **Newton's Δ step there is not determined at octo-double precision (#827; raw `I827-mac/` 504238d3,
+    `hp/step_spread.py`).** A random 10⁻⁶⁵ relative perturbation of m_h and a_h moves the Δ step from +3.311×10⁻⁸ to
+    between −8.68×10⁻⁹ and +2.58×10⁻⁸ over four seeds: a deviation of 1.26, against the 10⁻³ bar. The same perturbation
+    of the centre or of any node leaves the step equal as a double (relative 10⁻⁶⁵ to 4×10⁻³⁹). On Δ itself it moves the
+    step by 2.3×10⁻⁵ relative. The zero perturbation reproduces +3.3110848587422764×10⁻⁸ exactly. So at D 252.6 a Δ step
+    carries no information below about 3×10⁻⁸, and #826's Newton from the truth is judged on its residual, not on Δ.
+    #830 measures how this spread grows with D.
+  - **The reduced map along Δ is not defined there with free horizon data (#823).** The first strong move, w0 of
+    2.26×10⁻¹⁹, takes max|F| to 8.6×10⁻⁴. The chord then diverges, and newton_strong stops after one LU. So no root
+    reading was possible at 10⁻⁴ or 10⁻⁵. Inferred, the coordinator's reading: the horizon block's gain, about 10³⁷ at
+    this D, is the sensitivity that broke #800's rung and #808's held arm.
+  - **Eliminating the horizon data does not define it either (#828; raw `I828-mac/` dc6e9d75, `reduced_cubic.py curve
+    --elim`).** w0's Δ part, 1.48×10⁻²², takes the horizon rows to 8×10¹⁴ at fixed horizon data. They respond linearly
+    in Δ only below about 10⁻²⁶. No horizon data re-solves them there. The elimination reproduces ElimO's +1.100878×10⁻⁵
+    step, and its plant passes while the w0, noelim and hrows controls fail.
 - **The strong-row chord at switch 0 gets no further (#817; dh610, raw `I817-dh610/` 6de35956).** With and without the
   drop, both arms accepted step 0 only at λ = 1/64 (3.40×10⁻¹² to 3.34×10⁻¹²), as #713 did. The full steps gave
   2.5×10²² to 2.4×10¹⁶. At 2.1 h a step, the 10⁻⁴⁰ bar could not be met in 12 steps, so the run was stopped there.
