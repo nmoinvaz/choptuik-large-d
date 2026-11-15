@@ -17,6 +17,7 @@ use hpk::dd::DD;
 use hpk::dv::DV;
 use hpk::field::{DMat, Fl};
 use hpk::linalg::{clu_logdet, ld_for};
+use multidouble::linalg::{clu_logdet_control, CluControl};
 use hpk::model::{self as hm, Ctx};
 use multishoot::Rate;
 use numpy::ndarray::Array2;
@@ -218,17 +219,20 @@ impl CSolver {
     }
 
     /// det M(lam) for lam = (lr_hi + lr_lo) + i (li_hi + li_lo): (ln|det|, arg det in (-pi, pi], min |u_kk|, max |u_kk|).
-    #[pyo3(signature = (zh, zl, lr_hi, li_hi, lr_lo=0.0, li_lo=0.0))]
+    /// dense: by multidouble's unblocked elimination (`CluControl::Dense`, clu_logdet before 4.5.0) instead of its
+    /// blocked one, for modecount_check.py's check 6.
+    #[pyo3(signature = (zh, zl, lr_hi, li_hi, lr_lo=0.0, li_lo=0.0, dense=false))]
     #[allow(clippy::too_many_arguments)]
-    fn mode_det(&self, py: Python<'_>, zh: PyReadonlyArray1<'_, f64>, zl: PyReadonlyArray1<'_, f64>, lr_hi: f64, li_hi: f64, lr_lo: f64, li_lo: f64) -> PyResult<(f64, f64, f64, f64)> {
+    fn mode_det(&self, py: Python<'_>, zh: PyReadonlyArray1<'_, f64>, zl: PyReadonlyArray1<'_, f64>, lr_hi: f64, li_hi: f64, lr_lo: f64, li_lo: f64, dense: bool) -> PyResult<(f64, f64, f64, f64)> {
         let (h, l) = (slice(&zh, "zh")?, slice(&zl, "zl")?);
         let (api, pool) = (&self.api, &self.pool);
         let n = api.len() - 1;
         let (lr, li) = (DD::new(lr_hi, lr_lo), DD::new(li_hi, li_lo));
+        let control = if dense { CluControl::Dense } else { CluControl::None };
         py.detach(|| {
             pool.install(|| -> Result<_, String> {
                 let (rh, rl, ih, il, ld) = api.mode_matrix_c(h, l, lr, li, true)?;
-                clu_logdet(n, ld, rh, rl, ih, il, true)
+                clu_logdet_control(n, ld, rh, rl, ih, il, true, control)
             })
         })
         .map_err(PyValueError::new_err)
