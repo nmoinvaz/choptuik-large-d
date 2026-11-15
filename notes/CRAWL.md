@@ -632,6 +632,16 @@ ended too (2.1×10⁻¹⁷ apart). The next correction, 1.1×10⁻⁵ in Δ at a
     gives the old 3.5827×10⁻²⁰ and 2.2158×10⁻²⁰ exactly, so the floats were the cause. The four-part read gives
     1.5×10⁻²⁶ and 1.8×10⁻²⁸, and a plan made at the state 2.7×10⁻³⁶ and 6.1×10⁻³⁶. The four-part states of #468–#709
     and #713's D200 give unchanged results. At the root, the switch-0 projection raises |F| to 2.3×10⁻⁸⁰.
+  - **At the true roots the horizon data do not scramble the Δ step (#840; raw `I840-mac/` dab68b6a,
+    `hp/step_spread.py` with `truth_system`).** Under 10⁻⁶⁵ relative moves of m_h and a_h (four seeds), the spread of
+    Newton's Δ step is 2.67×10⁻³⁸, 1.02×10⁻³³, 5.36×10⁻³⁰ and 2.24×10⁻³⁰ at D 240.1, 245.6, 250.2 and 252.6. That is
+    10⁻²² to 10⁻²⁵ of #805's E = 2.2×10⁻³⁷/p_min. At D 240.1 the deviation is exactly quadratic in the move (power
+    2.0000 over two decades), so it is Newton's second-order term from a point off the root. #827's relative bar reads
+    "not determined" at all four only because a root's own step is tiny (5×10⁻⁸² to 8×10⁻⁴⁹). So the horizon data's
+    sensitivity is not the departure that grows with 1/p_min. The slope of log(spread) is 1.57 per unit D against 1.44,
+    but from 245.6 on the move changes the smallest pivot by 0.66 to 226×, outside the Jacobian's linear range, so that
+    slope mixes regimes. Not explained: Newton's step after a pure 1.69×10⁻⁶⁵ move of Δ returns |dΔ| of 6.5×10¹⁵ (240.1)
+    to 6.7×10²³ (252.6) times the move, not once the move (#850).
 - **The horizon rows' linear range in Δ shrinks slowly with D (#832; raw `I832-mac/` 9a901063).** It is 1.8×10⁻²⁴ at
   D 200 and 2.3×10⁻²⁷ at 253.7, falling 0.119 per unit D and easing to 0.083 at the top. That is far below the weak
   pivot's 1.44, so this range is not what grows with #805's departure. #832's part 1 (the reduced map with Δ weak and
