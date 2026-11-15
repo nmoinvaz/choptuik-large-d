@@ -17,7 +17,8 @@ used, so that a module importing this one runs on the older packages the runners
     python3 octo_corrector.py wall RAW PRED.npz [--threads 3] [--qd 0] [--F_max 1e-36] [--mutate_offset qd]
         [--mutate 10] [--out PREFIX] [--reseed_o 0] [--held_o 0]
     (planted and wall take --switch S, ElimO's projection switch, 1e-15 by default; anm_run.py --elim_switch, #700;
-    and --full_drop F, newton_od's full_drop with either test, 0 by default; anm_run.py --od_full_drop, #709, #777)
+    and --full_drop F, newton_od's full_drop with either test, 0 by default; anm_run.py --od_full_drop, #709, #777;
+    and --keep_projected 1, newton_od's keep_projected, 0 by default; anm_run.py --od_keep_projected, #854)
     python3 octo_corrector.py horizon RAW STATE.npz [--threads 3] [--steps 3] [--mutate_h sign]
     python3 octo_corrector.py digits [--mutate 2]
 
@@ -246,7 +247,7 @@ def junk_subspace_o(s, w, delta_max=1e-2, iters=6, seed=0):
 
 def newton_od(s, z, tol=1e-40, it_max=12, max_halvings=8, verbose=True, mutate=0, junk_w=0, delta_max=1e-2, tol_dz=1e-45,
               lam_stall=0.0, on_first=None, scale_c=None, trace=None, accept="own", strong_chord=0, chord_it=10,
-              full_drop=0.0, abort_theta=0.0, abort_it=1):
+              full_drop=0.0, abort_theta=0.0, abort_it=1, keep_projected=False):
     """Newton in octo-double from the eight-part state z on s (PinnedO, or ElimO around it): newton_qd's mode 'full'
     one level up (hpkernel.driver.newton_qd, its acceptance rule). A trial z + lam dz (lam = 1, 1/2, ...,
     2^-max_halvings) is accepted when the Newton correction there, with its own Jacobian, is smaller than dz (max norms
@@ -294,7 +295,13 @@ def newton_od(s, z, tol=1e-40, it_max=12, max_halvings=8, verbose=True, mutate=0
     most chord_it steps. At #499's starts the weak equations are affine once the strong rows are solved, with the
     first move as their root (#528), so the chord's point is the solution to the chord's precision. It is accepted by
     the natural test against the first step (theta at most 0.75, or max |F| <= tol), and the iteration continues from
-    it with the chosen test; refused, the first step's trials run as without the chord."""
+    it with the chosen test; refused, the first step's trials run as without the chord.
+
+    keep_projected=True (on ElimO, #854): the iterate is the projected point, at the start and at each accepted trial,
+    and the next step is the Newton step from it alone. By default the iterate is the unprojected trial point
+    z + lam dz, and the step from it carries the projection's displacement (ElimO.newton_o), so a trial at lam < 1
+    starts from a point that keeps (1 - lam) of that displacement (#839); under the natural test the displacement also
+    enters theta. Without ElimO it changes nothing."""
     import time
     from multidouble import od_axpy
     z = o8(z)
@@ -305,7 +312,18 @@ def newton_od(s, z, tol=1e-40, it_max=12, max_halvings=8, verbose=True, mutate=0
     def size(d, scaled=eq):
         """the max norm the test compares: of the leading part, or of D_c^-1 times it"""
         return float(np.abs(np.asarray(d[0]) / scale_c).max()) if scaled else float(np.abs(d[0]).max())
-    st = s.newton_o(z, mutate=mutate)
+    keep = bool(keep_projected) and isinstance(s, ElimO)
+
+    def kept(zx):
+        """the iterate made of the point zx: its projection under keep_projected (#854), else zx"""
+        return s.project(zx) if keep else zx
+
+    def newton_at(zx):
+        """newton_o's tuple at the iterate zx: from zx alone under keep_projected (zx is projected), else s's (on
+        ElimO, the projection's displacement included)"""
+        return s.so.newton_o(zx, mutate=mutate) if keep else s.newton_o(zx, mutate=mutate)
+    z = kept(z)
+    st = newton_at(z)
     hist = []
     V = None
     if junk_w:
@@ -371,7 +389,8 @@ def newton_od(s, z, tol=1e-40, it_max=12, max_halvings=8, verbose=True, mutate=0
             if ok_c:
                 refactored = True
                 try:
-                    stt = s.newton_o(zc, mutate=mutate)
+                    zc = kept(zc)
+                    stt = newton_at(zc)
                     ok_c = bool(np.isfinite(stt[0][0]).all() and np.isfinite(stt[1]).all())
                 except ValueError:
                     ok_c = False
@@ -387,10 +406,11 @@ def newton_od(s, z, tol=1e-40, it_max=12, max_halvings=8, verbose=True, mutate=0
             # refused: unless newton_o ran at zc (and failed), J0's LU is still the one factored at z, and the trial
             # loop below runs as without the chord; otherwise it is factored at z again
             if refactored:
-                st = s.newton_o(z, mutate=mutate)
+                st = newton_at(z)
         lam = 1.0
         for _ in range(max_halvings + 1):
             zt = o8(od_axpy(lam, *d, *z))
+            zk = zt             # the point kept if the trial is accepted: zt, or its projection (keep_projected)
             t1 = time.time()
             nwhy = len(s.why) if isinstance(s, ElimO) else 0
             if accept == "natural":
@@ -403,7 +423,9 @@ def newton_od(s, z, tol=1e-40, it_max=12, max_halvings=8, verbose=True, mutate=0
                     disp = o8(od_axpy(-1.0, *zt, *ztp))
                     Ft = o8(base.residual_o(ztp, mutate=mutate))
                     xb = o8(s.olu_solve([np.ascontiguousarray(q) for q in Ft]))
-                    db = o8(od_axpy(-1.0, *xb, *disp))
+                    if keep:
+                        zk = ztp
+                    db = o8(od_axpy(-1.0, *xb, *([zero8] * 8 if keep else disp)))
                     good = bool(np.isfinite(np.asarray(db[0])).all() and np.isfinite(np.asarray(Ft[0])).all())
                 except ValueError:
                     good = False
@@ -433,7 +455,7 @@ def newton_od(s, z, tol=1e-40, it_max=12, max_halvings=8, verbose=True, mutate=0
                     # projection)
                     try:
                         s0 = base.newton_o(ztp, mutate=mutate)
-                        stt = (o8(od_axpy(1.0, *disp, *s0[0])), *s0[1:])
+                        stt = s0 if keep else (o8(od_axpy(1.0, *disp, *s0[0])), *s0[1:])
                         ok = bool(np.isfinite(stt[0][0]).all() and np.isfinite(stt[1]).all())
                     except ValueError:
                         ok = False
@@ -443,7 +465,11 @@ def newton_od(s, z, tol=1e-40, it_max=12, max_halvings=8, verbose=True, mutate=0
                 lam *= 0.5
                 continue
             try:
-                stt = s.newton_o(zt, mutate=mutate)
+                if keep:
+                    zk = s.project(zt)
+                    stt = s.so.newton_o(zk, mutate=mutate)
+                else:
+                    stt = s.newton_o(zt, mutate=mutate)
                 good = np.isfinite(stt[0][0]).all() and np.isfinite(stt[1]).all()
             except ValueError:          # a non-finite or singular Jacobian at the trial point
                 good = False
@@ -483,7 +509,9 @@ def newton_od(s, z, tol=1e-40, it_max=12, max_halvings=8, verbose=True, mutate=0
             if verbose:
                 print(f"  on {it}: |F| {nf:.2e}, |dz| {rec['dz']:.2e}: no trial step accepted, stopping", flush=True)
             return z, hist, False
-        z, st = zt, stt
+        z, st = zk, stt
+        if keep:
+            rec["keep_projected"] = True
         rec.update(lam=lam, F_new=omax(st[1:3]), dz_new=float(np.abs(proj(st[0])[0]).max()), seconds=round(time.time() - t0, 2))
         if eq:
             rec["dz_eq_new"] = size(proj(st[0]))
@@ -629,18 +657,20 @@ class _Dz0Saved(Exception):
 
 def _run_od(so, rs, z8, opt, on_first=None):
     """ElimO around so (PinnedO), newton_od to opt's tol and it_max; the final point (its projection, the point whose
-    residual converged), the history, converged, the octo-double pinned max |F| there and the projections. on_first:
-    newton_od's; a _Dz0Saved it raises carries the projections so far (counts)"""
+    residual converged; with keep_projected the iterate itself, already projected), the history, converged, the
+    octo-double pinned max |F| there and the projections. on_first: newton_od's; a _Dz0Saved it raises carries the
+    projections so far (counts)"""
     el = ElimO(so, rs, switch=float(opt.get("switch", 1e-15)))
+    keep = bool(int(opt.get("keep_projected", 0)))
     try:
         z, hist, conv = newton_od(el, z8, tol=opt["tol"], it_max=opt["it_max"], mutate=opt["mutate"],
                                   junk_w=opt.get("junk", 0), accept=opt.get("accept", "own"),
                                   strong_chord=int(opt.get("strong", 0)), full_drop=float(opt.get("full_drop", 0.0)),
-                                  on_first=on_first)
+                                  on_first=on_first, keep_projected=keep)
     except _Dz0Saved as e:
         e.counts = dict(el.counts)
         raise
-    z = el.project(z)
+    z = z if keep else el.project(z)
     return z, hist, conv, omax(so.residual_o(z)), dict(el.counts)
 
 
@@ -726,7 +756,8 @@ def planted(argv):
     raw, path = argv[0], argv[1]
     opt = _parse(argv[2:], dict(threads=3, rel=1e-12, seed=1, mutate_offset="", mutate=0, it_max=12, qd=1, tol=1e-40, out="",
                                 Delta_ref="", last=0, od=1, accept="own", strong=0, switch=1e-15, full_drop=0.0, reseed_o=0,
-                                reseed_start="ladder", save_dz0="", read="auto", held="auto", plan="auto"))
+                                reseed_start="ladder", save_dz0="", read="auto", held="auto", plan="auto",
+                                keep_projected=0))
     # the truth and its system: an eight-part state's chain's own system, a four-part state's as before (#837)
     z4, meta, (s, sp, sq, so), info = truth_system(raw, path, threads=opt["threads"], read=opt["read"],
                                                    held=opt["held"], plan=opt["plan"],
@@ -743,6 +774,10 @@ def planted(argv):
     import json
     rec = dict(test="planted", state=path, D_str=meta["D_str"], rel=opt["rel"], seed=opt["seed"], mutate_offset=opt["mutate_offset"],
                mutate=opt["mutate"], last=opt["last"], system=info, F_truth=F_truth, F_start=F_start)
+    if opt["keep_projected"]:
+        rec["keep_projected"] = 1
+        print("  keep_projected (#854): newton_od's iterate is the projected point, its step from there alone",
+              flush=True)
 
     def dump():
         if opt["out"]:

@@ -34,6 +34,14 @@ fails and records its stages (reseed.why_failed, #743). At verbose 1 each trial 
 point's max|F| and the u0 rung's, the quad-double polish's and the ladder's residuals, one per failed trial projection
 (every projection but the start's), and kantorovich_log.parse_log still reads every trial line. Control:
 --mutate=nowhy omits those lines, and the case must fail.
+
+The projected iterate (#854, newton_od's keep_projected): ElimO around the toy with a pair of horizon unknowns
+h = A_H y, which a re-seeder's projection sets from y, from the planted start (y as above, h at the root's value 0,
+so that h is off by A_H y). By default and with keep_projected, each test (own, natural) converges to the planted
+root (0) to 1e-6. With keep_projected the start newton_od steps from and the point it returns are projections
+(h = A_H y to 1e-12 of the start's offset), and the first step's h part is A_H times its y part (no projection's
+displacement). By default the start is the unprojected one. Control: --mutate=keepskip leaves the point unprojected
+in the re-seeder (it still reports success), so the option's start keeps the offset and the case must fail.
 """
 import contextlib
 import io
@@ -284,6 +292,102 @@ def why_check(nowhy=False):
     return good
 
 
+A_H = 10.0          # keep_check's horizon pair: h = A_H y
+ZERO4 = np.zeros(4)
+
+
+class ToyH(Toy):
+    """the toy with a pair of horizon unknowns (z = y0, y1, h0, h1) and their equations h - A_H y: the pinned system
+    ElimO wraps in keep_check (#854)"""
+
+    size = 4
+    s, ch, cl = None, ZERO, ZERO
+
+    @staticmethod
+    def _f(z):
+        y = np.asarray(z[0], dtype=float)
+        return np.concatenate([F(y[:2]), y[2:] - A_H * y[:2]])
+
+    def residual_o(self, z, mutate=0):
+        return [self._f(z)] + [ZERO4] * 7
+
+    def newton_o(self, z, mutate=0):
+        y = np.asarray(z[0], dtype=float)
+        self.Jl = np.block([[J(y[:2]), np.zeros((2, 2))], [-A_H * np.eye(2), np.eye(2)]])
+        f = self._f(z)
+        piv = np.abs(np.diag(np.linalg.qr(self.Jl)[1]))
+        return [-np.linalg.solve(self.Jl, f)] + [ZERO4] * 7, f, ZERO4, float(piv.min()), float(piv.max())
+
+    def olu_solve(self, rhs, trans=False):
+        return [np.linalg.solve(self.Jl.T if trans else self.Jl, np.asarray(rhs[0], dtype=float))] + [ZERO4] * 7
+
+
+class ProjRS:
+    """a re-seeder whose projection sets h = A_H y (the horizon pair, layout off["mh"] = 2, M = 1) and records the
+    offset max |h - A_H y| of each point it is handed; skip: the point is returned as it is, reported projected
+    (keep_check's control)"""
+
+    off, M, od = {"mh": 2}, 1, 0
+
+    def __init__(self, skip=False):
+        self.skip, self.seen = skip, []
+
+    def project(self, z4):
+        y = np.asarray(z4[0], dtype=float)
+        self.seen.append(float(np.abs(y[2:] - A_H * y[:2]).max()))
+        if self.skip:
+            return z4, "u0"
+        out = [np.array(p, dtype=float) for p in z4]
+        out[0][2:] = A_H * y[:2]
+        for q in range(1, 4):
+            out[q][2:] = 0.0
+        return tuple(out), "u0"
+
+
+def keep_check(skip=False):
+    """newton_od on ElimO around ToyH from the planted start, by default and with keep_projected (#854), with each
+    test: all converge to the root; with keep_projected the start it steps from and the point it returns satisfy
+    h = A_H y to 1e-12 of the start's offset, and the first step's h part is A_H times its y part to 1e-12 of the
+    step; by default the start it steps from is the unprojected one. skip: the control, the re-seeder leaves every
+    point as it is"""
+    y0 = 0.3
+    z = [np.array([y0, -K / 2 * y0 ** 2 * 1.001, 0.0, 0.0])] + [ZERO4] * 7
+    e0 = A_H * float(np.abs(z[0][:2]).max())        # the start's offset in h
+
+    def off(zz):
+        y = np.asarray(zz[0], dtype=float)
+        return float(np.abs(y[2:] - A_H * y[:2]).max())
+    res = {}
+    for accept, keep in ((a, k) for a in ("own", "natural") for k in (False, True)):
+        rs, first = ProjRS(skip), {}
+        el = octo_corrector.ElimO(ToyH(), rs, switch=0.0, start_F=None)
+        el.sq = SwitchQ()
+
+        def on_first(zs, d):
+            first.update(z=off(zs), d=float(np.abs(np.asarray(d[0])[2:] - A_H * np.asarray(d[0])[:2]).max())
+                         / float(np.abs(d[0]).max()))
+        with contextlib.redirect_stdout(io.StringIO()):
+            zf, hist, conv = newton_od(el, z, tol=1e-14, it_max=60, accept=accept, verbose=1, on_first=on_first,
+                                       keep_projected=keep)
+        zf = zf if keep else el.project(zf)         # the point whose residual converged, as planted's _run_od
+        res[accept, keep] = dict(conv=bool(conv), dist=float(np.abs(np.asarray(zf[0])).max()), start=first["z"] / e0,
+                         d=first["d"], end=off(zf) / e0, lams=[h_.get("lam") for h_ in hist],
+                         trials=max(rs.seen[1:], default=0.0) / e0)
+    good = all(r["conv"] and r["dist"] <= 1e-6 for r in res.values())
+    for a in ("own", "natural"):
+        k_, d_ = res[a, True], res[a, False]
+        good &= k_["start"] <= 1e-12 and k_["end"] <= 1e-12 and k_["d"] <= 1e-12 and d_["start"] >= 0.5
+    for (accept, keep), r in res.items():
+        lams = ", ".join("1" if x == 1 else (f"1/{round(1 / x)}" if x else "none") for x in r["lams"] if x is not None)
+        print(f"  {accept}, {'keep_projected' if keep else 'default'}: converged {r['conv']}, distance to the root "
+              f"{r['dist']:.1e}; offsets (of the start's) at the start stepped from {r['start']:.1e}, at the end "
+              f"{r['end']:.1e}, largest at a trial's projection {r['trials']:.1e}; first step's h - A_H y part "
+              f"{r['d']:.1e} of it; accepted lam {lams}")
+    print(f"the projected iterate: both converge to the root; with keep_projected the start and end are projected and "
+          f"the first step carries no displacement, by default the start is not: {'pass' if good else 'FAIL'}")
+    return good
+
+
 def drop_check(mutate=False, noline=False):
     """the first step from y = 0: at full_drop 1e-20 the full step is accepted by its drop, where the natural test
     refuses it (theta 1.5), and its trial line is printed at verbose 1; at 0 it is refused; and a full step whose |F|
@@ -340,6 +444,7 @@ def main():
     ok &= abort_check()
     ok &= abort2_check()
     ok &= why_check("--mutate=nowhy" in sys.argv[1:])
+    ok &= keep_check("--mutate=keepskip" in sys.argv[1:])
     mut = " ".join(a for a in sys.argv[1:] if a.startswith("--mutate="))
     print(f"newton_od_toy{' ' + mut if mut else ''}: {'PASS' if ok else 'FAIL'}")
     return 0 if ok else 1
