@@ -782,6 +782,21 @@ python3 lam_singularity.py posthoc RAW --json=data/lam_singularity_posthoc.json
   - A shift of both folds by up to ±4×10⁻⁴, the spread of Δ's own D*, lowers the ranges at δ ≥ 10⁻⁶ by at most 13%,
     so the bound holds over it.
   - This is numerical evidence, conditional on the plant's model of the other singularities.
+- **The contamination's size cannot be read with the fold fixed, so #820's condition is not established (#821; raw
+  `I821-mac/`).**
+  - Each series' orders 12–24 were fitted with the fold's three terms and #782's near singularities as free
+    amplitudes. From order 4, as first planned, the near terms absorb the regular part and no plant is recovered.
+  - Plants at 0.003 to 0.3 of the fold's amplitude are recovered to 30% at 8 bases, 259.4928 to 259.6462
+    (`near_amp.py planted`, worst 14%).
+  - There the real fit reads a₂ (D 260.17) at 0.020–0.53 and a₃ (the pair) at 0.53–1.0×10³, far above 0.01. Its
+    residual is 2.6–6.9×10⁻⁷, against the plants' 1.9×10⁻¹¹. By the registered rule, #820's bound does not apply.
+- **Post hoc, those amplitudes are the signature of the fixed fold, not of contamination.**
+  - A plant with both folds 10⁻⁵ above 259.9033 and no near singularities, fitted at 259.9033, reads a₂ 0.11 to
+    1.1×10⁴ and a₃ 1.2 to 7.6×10⁹ over the 26 bases, growing toward the fold as the real ones do.
+  - With D* free at each base, both series put the fold at 259.903301–259.903306, and they agree base by base to
+    |D*(λ_g) − D*(Δ)| ≤ 8.3×10⁻⁷. The residual falls to 4×10⁻⁹–2.1×10⁻⁷ at the usable bases, still above the plants',
+    so the near amplitudes stay unread.
+  - This is an observation without its own plant (`near_amp.py posthoc`).
 
 ## Proposed README text
 

@@ -2916,6 +2916,49 @@ def fold_separation():
 
 
 @check
+def near_amp():
+    """notes/LARGE_D_WALL.md (#821): the near singularities' amplitude in lam_g's and Delta's series, from
+    hp/data/near_amp_planted.json, near_amp.json and near_amp_posthoc.json (hp/near_amp.py planted, real, posthoc)"""
+    import json
+    N = "notes/LARGE_D_WALL.md"
+    ld = lambda f: json.load(open(os.path.join(ROOT, "hp/data", f)))                    # noqa: E731
+    pl, re_, ph = ld("near_amp_planted.json"), ld("near_amp.json"), ld("near_amp_posthoc.json")
+    U = [k for k, v in pl["bases"].items() if v["usable"]]
+    amps = ("0.003", "0.01", "0.03", "0.3")
+    worst = max(abs(pl["bases"][k]["%s:%s" % (n, a)][x] / float(a) - 1) for k in U for n in ("lam", "delta")
+                for a in amps for x in ("a2", "a3"))
+    rb = re_["bases"]
+    ru = [rb[k] for k in rb if rb[k]["usable"]]
+    rng = lambda key: [v[n][key] for v in ru for n in ("lam", "delta")]                  # noqa: E731
+    pres = max(pl["bases"][k]["%s:0.01" % n]["res"] for k in U for n in ("lam", "delta"))
+    o = ph["offset"]["1e-05"]
+    ks = sorted(o, key=float)
+    fr = ph["free"]
+    Ds = [v[n]["Dstar"] for v in fr.values() for n in ("lam", "delta")]
+    sep = max(abs(v["lam"]["Dstar"] - v["delta"]["Dstar"]) for v in fr.values())
+    fres = [fr[k][n]["res"] for k in fr if rb[k]["usable"] for n in ("lam", "delta")]
+    t_u = [(N, "recovered to 30% at 8 bases, 259.4928 to 259.6462")]
+    t_r = [(N, "There the real fit reads a₂ (D 260.17) at 0.020–0.53 and a₃ (the pair) at 0.53–1.0×10³")]
+    t_o = [(N, "reads a₂ 0.11 to\n    1.1×10⁴ and a₃ 1.2 to 7.6×10⁹ over the 26 bases")]
+    return [("usable bases", len(U), 8, 1, t_u), ("first usable", min(float(k) for k in U), 259.4928, 1e-4, t_u),
+            ("last usable", max(float(k) for k in U), 259.6462, 1e-4, t_u),
+            ("worst recovery at the usable bases", worst, 0.14, 0.01, [(N, "(`near_amp.py planted`, worst 14%)")]),
+            ("real a2 low", min(rng("a2")), 0.020, 1e-3, t_r), ("real a2 high", max(rng("a2")), 0.53, 0.01, t_r),
+            ("real a3 low", min(rng("a3")), 0.53, 0.01, t_r), ("real a3 high", max(rng("a3")), 1.0e3, 100, t_r),
+            ("real residual low", min(rng("res")), 2.6e-7, 1e-8, [(N, "residual is 2.6–6.9×10⁻⁷")]),
+            ("real residual high", max(rng("res")), 6.9e-7, 1e-8, [(N, "residual is 2.6–6.9×10⁻⁷")]),
+            ("plants' residual", pres, 1.9e-11, 1e-12, [(N, "against the plants' 1.9×10⁻¹¹")]),
+            ("registered: does not apply", float(not re_["applies"]), 1, 1, [(N, "#820's bound does not apply")]),
+            ("offset 1e-5: a2 first", o[ks[0]]["a2"], 0.11, 0.01, t_o), ("offset 1e-5: a2 last", o[ks[-1]]["a2"], 1.1e4, 1e3, t_o),
+            ("offset 1e-5: a3 first", o[ks[0]]["a3"], 1.2, 0.1, t_o), ("offset 1e-5: a3 last", o[ks[-1]]["a3"], 7.6e9, 1e8, t_o),
+            ("free D* low", min(Ds), 259.903301, 1e-6, [(N, "259.903301–259.903306")]),
+            ("free D* high", max(Ds), 259.903306, 1e-6, [(N, "259.903301–259.903306")]),
+            ("free D*: the separation", sep, 8.3e-7, 1e-8, [(N, "|D*(λ_g) − D*(Δ)| ≤ 8.3×10⁻⁷")]),
+            ("free D*: residual low", min(fres), 4e-9, 1e-9, [(N, "The residual falls to 4×10⁻⁹–2.1×10⁻⁷")]),
+            ("free D*: residual high", max(fres), 2.1e-7, 1e-8, [(N, "The residual falls to 4×10⁻⁹–2.1×10⁻⁷")])]
+
+
+@check
 def table_errs_all():
     """every row of hp/data/delta_all.csv has an err or a reason named in its err_kind (#764). The full-system
     quad-double rows with one start (71.0, 72.8) take the larger two-start spread of the nearest qd rows below and

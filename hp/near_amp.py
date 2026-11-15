@@ -4,6 +4,7 @@ bound, |D*(lam_g) - D*(Delta)| < 1e-6 when that amplitude is at most 0.01, apply
 
     cd hp && python3 near_amp.py planted RAWDIR [--json=OUT]   plants of known amplitude at each base (exits 1 on a fail)
     cd hp && python3 near_amp.py real RAWDIR --planted=P.json [--json=OUT]   the real series at the usable bases
+    cd hp && python3 near_amp.py posthoc RAWDIR [--json=OUT]   post hoc: a common fold offset in plants, and D* free
 
 RAWDIR is a clone of the raw-data repository (I603-win2/chain_nsr, as hp/fold_cancel.py reads it); the bases are
 #818's 26 (hp/data/lam_singularity.json).
@@ -145,7 +146,7 @@ def cmd_real(raw):
         lam, dl = FC.series(raw, D0)
         fl, fd = fit(lam[1:], D0), fit(dl[1:], D0)
         use = any(abs(D0 - u) < 1e-9 for u in usable)
-        out[D0] = dict(lam=fl, delta=fd, usable=use)
+        out[D0] = dict(lam=fl, delta=fd, usable=bool(use))
         if use:
             worst = max(worst, fl["a2"], fl["a3"], fd["a2"], fd["a3"])
         print("  D0 %.4f  lam_g a2 %.3e a3 %.3e (res %.1e) | Delta a2 %.3e a3 %.3e (res %.1e)%s" % (
@@ -155,13 +156,62 @@ def cmd_real(raw):
          if applies else "#820's conditional bound does not apply (largest amplitude at the usable bases %.3e)" % worst)
     print("real:", v)
     if "json" in args:
-        json.dump(dict(largest=worst, applies=applies, verdict=v, bases=out), open(args["json"], "w"), indent=1)
+        json.dump(dict(largest=float(worst), applies=bool(applies), verdict=v, bases=out), open(args["json"], "w"), indent=1)
+    return 0
+
+
+def cmd_posthoc(raw):
+    """post hoc (after the registered real fit): (1) plants with both folds at 259.9033 + eps and no near
+    singularities, fitted at 259.9033 (lam_g's sizes, its regular part); (2) the real series with D* free at each base,
+    the fit's residual minimized over D* in [259.9020, 259.9045]"""
+    global DSTAR
+    from scipy.optimize import minimize_scalar
+    set_kmin()
+    mp.mp.dps = 200
+    co = {float(k): v for k, v in json.load(open(os.path.join(HERE, "data", "fold_cancel_coeffs.json"))).items()}
+    bl = [float(np.median([v["lam"][i] for v in co.values()])) for i in range(3)]
+    out = dict(offset={}, free={})
+    print("(1) plants, both folds at 259.9033 + eps, no near singularities, fitted at 259.9033")
+    for eps in (1e-5, 1e-4, 4e-4):
+        rows = {}
+        for D0 in sorted(co):
+            with mp.workdps(60):
+                reg = LS.regular(D0, 24)
+            f = FC.fold_terms(bl, DSTAR - mp.mpf(D0) + eps)
+            rows[D0] = fit([f[k] + reg[k] for k in range(24)], D0)
+        out["offset"][eps] = rows
+        ks = sorted(rows)
+        print("  eps %g: a2 %.2g to %.2g, a3 %.2g to %.2g, residual %.1e to %.1e" % (
+            eps, rows[ks[0]]["a2"], rows[ks[-1]]["a2"], rows[ks[0]]["a3"], rows[ks[-1]]["a3"], rows[ks[0]]["res"],
+            rows[ks[-1]]["res"]))
+    print("(2) the real series, D* free at each base")
+    fixed = DSTAR
+    for D0 in sorted(co):
+        lam, dl = FC.series(raw, D0)
+        row = {}
+        for name, c in (("lam", lam[1:]), ("delta", dl[1:])):
+            def res(Ds, c=c):
+                global DSTAR
+                DSTAR = mp.mpf(Ds)
+                return fit(c, D0)["res"]
+            m = minimize_scalar(res, bounds=(259.9020, 259.9045), method="bounded", options=dict(xatol=1e-9))
+            DSTAR = mp.mpf(m.x)
+            row[name] = dict(fit(c, D0), Dstar=float(m.x))
+        DSTAR = fixed
+        out["free"][D0] = row
+        print("  D0 %.4f  lam_g D* %.7f a2 %.3e a3 %.3e res %.1e | Delta D* %.7f a2 %.3e a3 %.3e res %.1e" % (
+            D0, row["lam"]["Dstar"], row["lam"]["a2"], row["lam"]["a3"], row["lam"]["res"], row["delta"]["Dstar"],
+            row["delta"]["a2"], row["delta"]["a3"], row["delta"]["res"]))
+    d = [v["lam"]["Dstar"] - v["delta"]["Dstar"] for v in out["free"].values()]
+    print("D*(lam_g) - D*(Delta): largest |.| %.2e" % max(abs(x) for x in d))
+    if "json" in args:
+        json.dump(out, open(args["json"], "w"), indent=1)
     return 0
 
 
 if __name__ == "__main__":
     cmd = sys.argv[1] if len(sys.argv) > 1 else ""
-    fn = dict(planted=cmd_planted, real=cmd_real).get(cmd)
+    fn = dict(planted=cmd_planted, real=cmd_real, posthoc=cmd_posthoc).get(cmd)
     if fn is None or not pos:
         print(__doc__)
         sys.exit(2)
