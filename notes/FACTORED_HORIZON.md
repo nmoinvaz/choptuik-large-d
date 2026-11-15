@@ -274,8 +274,9 @@ pairing σ₃ (mostly Δ) with μ = 1 and σ₁ (the harmonic-3 pair) with μ = 
   the equations' exponents cannot give it. The fast mode at the last node changes by 0.020 per unit of n (E0), and G
   cannot set the weak σ (section 2).
 - **The node law of D 40–61.** There Re s ≈ n/2 lies far below the series' order, f = 1, and the grip follows
-  e^(−nΦ(x_m)) alone. That is the law that matched max|∂Δ/∂F| over 13 orders (LARGE_D_WALL.md); the runs' own ks is
-  to be checked.
+  e^(−nΦ(x_m)) alone. That is the law that matched max|∂Δ/∂F| over 13 orders (LARGE_D_WALL.md). Its 15 runs used
+  ks = 160 and their scan states ks = 100, at least 3.19 Re s from D 40.02 to 60.00, so none lies below 1.9 Re s
+  (`hp/ks_vs_res.py`, #734).
 - **Only the last node is felt.** f depends on u₀ and ks, and e^(−nΦ) on x_K. Neither depends on the other nodes
   (#543, #544).
 - **Δ's discretization error.** If the discrete solution meets the selection only up to its other discretization
@@ -438,8 +439,8 @@ hp/src is not changed by this task.
    −8.92 against −8.96.
 6. **HORIZON_RADIUS.md's discrepancy 3** reads ks = 130 as omitting a tail. By the model it also cuts the selection's
    grip by e^29.7 at D 225.13 to e^63 at D 253.80 (μ = 1), and may amplify Δ's discretization error by as much.
-7. **The σ table of #491's second comment** is in no repository file. `I488-mac/` holds D 237.13 and 242.36 only, so
-   section 4 compares with those two.
+7. **The σ table of #491's second comment** (crawlJ at D 239.54, 240.51, 241.12 and 241.89) is stored in `I734-mac/`
+   of the raw-data repository. Section 4 compares only with `I488-mac/`'s D 237.13 and 242.36.
 
 ## 7. Commands
 

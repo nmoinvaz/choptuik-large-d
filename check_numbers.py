@@ -24,7 +24,7 @@ DOCS = {name: open(os.path.join(ROOT, name), encoding="utf-8").read()
                      "notes/SOLVER_HP.md", "notes/LOW_D.md", "notes/INNER_STOKES.md", "notes/FORMULA_FORMS.md", "notes/LARGE_D_WALL.md",
                      "notes/ECHO_ANALOGUES.md", "notes/REVIEW_GHMG25.md", "notes/MODE_COUNT.md", "matter/SIGMA_DSS.md",
                      "notes/HELD_HARMONICS.md", "notes/CONSISTENCY_AUDIT.md", "PROOF.md", "notes/FIRST_ORDER.md",
-                     "matter/CSS.md", "matter/SIGMA.md", "ALGORITHM.md")}
+                     "matter/CSS.md", "matter/SIGMA.md", "ALGORITHM.md", "notes/FACTORED_HORIZON.md")}
 
 
 def quoted_in(doc, text):
@@ -3080,6 +3080,23 @@ def t4fit():
             ("the real fifth pole's |s|", fifth["abs"], 4.235, 1e-3, [(N, "at |s| 4.235 and 16°, which the model")]),
             ("the real fifth pole's arg", fifth["arg"], 16, 1, [(N, "at |s| 4.235 and 16°, which the model")]),
             ("the verdict", float(j["ok"]), 1, 1, [(N, "At the real series' own amplitude mix, Padé recovers both tracks")])]
+
+
+@check
+def ks_vs_res():
+    """notes/FACTORED_HORIZON.md 4.3 (#734): the ks of the D 40-61 node law's runs against 1.9 Re s, from
+    hp/data/ks_vs_res.csv (hp/ks_vs_res.py)"""
+    import csv
+    N = "notes/FACTORED_HORIZON.md"
+    rows = list(csv.DictReader(open(os.path.join(ROOT, "hp/data/ks_vs_res.csv"))))
+    node = [r for r in rows if r["run"] == "node"]
+    t = [(N, "Its 15 runs used\n  ks = 160 and their scan states ks = 100, at least 3.19 Re s from D 40.02 to 60.00")]
+    return [("node runs", len(node), 15, 1, t), ("node runs' ks", max(int(r["ks"]) for r in node), 160, 1, t),
+            ("the states' ks", max(int(r["ks"]) for r in rows if r["run"] == "state"), 100, 1, t),
+            ("the smallest ks / Re s", min(float(r["ks_over_Re_s"]) for r in rows), 3.19, 0.01, t),
+            ("the lowest D", min(float(r["D"]) for r in rows), 40.02, 0.01, t),
+            ("the highest D", max(float(r["D"]) for r in rows), 60.00, 0.01, t),
+            ("flagged runs", sum(bool(r["flag"]) for r in rows), 0, 1, [(N, "so none lies below 1.9 Re s")])]
 
 
 @check
