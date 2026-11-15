@@ -632,6 +632,10 @@ ended too (2.1×10⁻¹⁷ apart). The next correction, 1.1×10⁻⁵ in Δ at a
   2.26×10⁻¹⁹, takes max|F| to 8.6×10⁻⁴. The chord then diverges, and newton_strong stops after one LU. So no root
   reading was possible at 10⁻⁴ or 10⁻⁵. Inferred, the coordinator's reading: the horizon block's gain, about 10³⁷ at
   this D, is the sensitivity that broke #800's rung and #808's held arm.
+- **Eliminating the horizon data does not define it either (#828; raw `I828-mac/` dc6e9d75, `reduced_cubic.py curve
+  --elim`).** w0's Δ part, 1.48×10⁻²², takes the horizon rows to 8×10¹⁴ at fixed horizon data. They respond linearly
+  in Δ only below about 10⁻²⁶. No horizon data re-solves them there. The elimination reproduces ElimO's +1.100878×10⁻⁵
+  step, and its plant passes while the w0, noelim and hrows controls fail.
 - **The strong-row chord at switch 0 gets no further (#817; dh610, raw `I817-dh610/` 6de35956).** With and without the
   drop, both arms accepted step 0 only at λ = 1/64 (3.40×10⁻¹² to 3.34×10⁻¹²), as #713 did. The full steps gave
   2.5×10²² to 2.4×10¹⁶. At 2.1 h a step, the 10⁻⁴⁰ bar could not be met in 12 steps, so the run was stopped there.
