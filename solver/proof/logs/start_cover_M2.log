@@ -1,5 +1,6 @@
 start_cover_M2: data/A_M2_box_M5_1e-10.json against the stored runs of lemma FP(5), rows all, mutation None  [python-flint 0.9.0, FLINT 3.6.0]
 certificate: ray 5pi/16, r0 0.0622, diag splitting, N 132, Cauchy radius 1e-3, box h 1e-10, w ['1e-18', '1e-19']
+  start data:        certify_M2.start_data2 (certify_M2.py:164, 166, 193): the centre run at p^, passed to both calls
   p^ - x^:           A +2.117e-10  w/w_inf -7.934e-10  B3 +2.394e-10  C3 +3.025e-11  B5 +2.676e-11  C5 +5.592e-12
   hull half-widths:  A 1.000e-10  w/w_inf 1.000e-10  B3 4.115e-11  C3 4.640e-12  B5 4.380e-12  C5 8.198e-13
   largest hull half-width about p^ 1.0000000046778146e-10, the run's stored value 1.0000000046778146e-10: reproduced True
@@ -27,12 +28,13 @@ START COVER M2 (data/A_M2_box_M5_1e-10.json, rows all, mutation None): COVERED b
 rerun, centre run at p^: N 132, k 40, contraction 0.309485, holds True, |eta| <= 8.014e-96  [2 s]
 rerun, start_data_M at p^ (its own line follows):
 start data over X (M = 5, N = 132, k = 40): contraction over X 0.3095, over the Cauchy box (c = [0.00100 +/- 1e-10]) 0.3102; sup |eta| over X 8.01e-96, Cauchy part of the derivatives 3.58e-20
-  eta 8.014066986951313e-96, Cauchy part 3.5831605424491966e-20; the run stored 8.014066986951313e-96, 3.5831605424491966e-20: reproduced True  [16 s]
-rerun, start_data_M over the hull of p(X) (its own line follows):
+  eta 8.014066986951313e-96, Cauchy part 3.5831605424491966e-20  [15 s]
+rerun, start_data_M over the hull (its own line follows):
 start data over X (M = 5, N = 132, k = 40): contraction over X 0.3095, over the Cauchy box (c = [0.00100 +/- 1e-10]) 0.3102; sup |eta| over X 1.03e-31, Cauchy part of the derivatives 3.58e-20
-  eta 1.0338872935585577e-31, Cauchy part 3.583160542619634e-20  [31 s]
+  eta 1.0338872935585577e-31, Cauchy part 3.583160542619634e-20  [28 s]
+  the run stored eta 8.014066986951313e-96 at p^ and Cauchy part 3.5831605424491966e-20 at p^: reproduced True
 rerun, the lemma's row [data 5pi/16 h=1e-6] (data_table's call; its own line follows):
 start data over X (M = 5, N = 132, k = 40): contraction over X 0.3095, over the Cauchy box (c = [0.00100 +/- 1e-10]) 0.3102; sup |eta| over X 1.55e-26, Cauchy part of the derivatives 3.59e-20
-  eta 1.5529642797472744e-26, Cauchy part 3.5852151292860976e-20; the row stored 1.5529642797470365e-26, 3.5852151292863456e-20: reproduced True; the certificate's bounds are below the row's: True  [47 s]
+  eta 1.5529642797472744e-26, Cauchy part 3.5852151292860976e-20; the row stored 1.5529642797470365e-26, 3.5852151292863456e-20: reproduced True; the certificate's bounds are below the row's: True  [45 s]
 RERUN: PASS
 exit 0
