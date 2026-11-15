@@ -210,8 +210,9 @@ symmetry (§6).
 in η⁻¹ to η = 1 and η = 0.3 (`data/sigdss_d5eta15*.jsonl`; at D = 5, Δ = 0.78335 → 0.80584 → 0.96431 for
 η = ∞, 1, 0.3), and from there in D at fixed η with k_c = 15 (`data/sigdss_m1up*.jsonl`, `data/sigdss_m03up*.jsonl`;
 the marches were restarted several times, after root-finder fixes and container restarts, always from saved
-solutions). From D = 9 on (η = 1) and D = 8 on (η = 0.3) the Newton solves use the main solver's smoothness prior on
-the high harmonics (`--reg 1e-8`, as in the ℓ-agent's code; §6) and accept |F| below 10⁻⁶. **Computed:**
+solutions). Above D = 9 (η = 1) and from D = 8 on (η = 0.3) the Newton solves use the main solver's smoothness prior
+on the high harmonics (`--reg 1e-8`, as in the ℓ-agent's code; §6) and accept |F| below 10⁻⁶. At η = 1 the prior
+moves Δ at D = 10 by 3×10⁻³ to 5×10⁻³ (§11). **Computed:**
 
 | D | η = 1: Δ | λ | γ | constraint | max abs u | λ_g | η = 0.3: Δ | λ | γ | constraint | max abs u |
 |---|---|---|---|---|---|---|---|---|---|---|---|
@@ -568,6 +569,28 @@ whether D 10.475 has a second solution is open; the kernel's Newton has no handl
 python3 matter/sigma_ms/chain.py --M 32 --start <D 7.0625 state> --start2 <D 7 state> --eta 1 --D_from 7.0625 \
     --D_to 10.475 --out OUT
 ```
+
+**sigdss seeded from the kernel's chain (#846, #859; winb, raw `I846-winb/` eea37726 and `I859-winb/` e94d22a0).**
+[`sigma_ms/to_sigdss.py`](sigma_ms/to_sigdss.py) maps a kernel state onto sigdss's nodes and harmonics. Its round
+trip of sigdss's D 9 solution returns it to 2×10⁻¹⁶, and a τ shift or a wrong parity fails. The kernel's D 9 and 10
+states solve sigdss's k_c = 15 system to |F| = 6.1×10⁻⁷ and 7.6×10⁻⁷. From them sigdss's Levenberg–Marquardt walks
+along §6's near-null band and stalls before it converges. [`sigdss_band.py`](../solver/matter/sigdss_band.py) bounds
+how far Δ can still move at a state's residual by W = g|F|, with g = |e_Δᵀ J⁻¹|. W at the walks' ends is 1.0×10⁻⁵ to
+1.2×10⁻³, against the 10⁻⁶ that would count as settled, so these values are numerical evidence:
+
+| D | k_c 15, from the kernel | k_c 23, from the kernel | the kernel, M = 32 | sigdss's march, k_c 15 |
+|---|---|---|---|---|
+| 9 | 1.0269062 | 1.0270514 | 1.0270833 | 1.0269044 (no prior) |
+| 10 | 1.0220820 | 1.0232026 | 1.0234372 | 1.0261416 (prior 10⁻⁸) |
+
+- **At D 9 the two solvers have the same solution, and the gap is sigdss's τ truncation.** The k_c = 15 walk ends
+  1.8×10⁻⁶ from sigdss's own root, and its Newton step lands on it (1.0269044). The two lie 1.4×10⁻³ apart in the
+  state but 1.8×10⁻⁶ apart in Δ, so the band moves the high harmonics, not Δ. The gap to the kernel, 1.77×10⁻⁴, falls
+  5.5 times from k_c = 15 to 23.
+- **At D 10 the prior moved sigdss's Δ by 3×10⁻³ to 5×10⁻³.** The march's state has |F| = 4.1×10⁻⁹ in the system
+  without the prior, with a Newton step of −4.4×10⁻³ in Δ. Without the prior the k_c = 15 walk ends 4.06×10⁻³ below
+  the march's value (W = 1.2×10⁻³). The gap to the kernel falls 5.8 times from k_c = 15 to 23. So §5's η = 1 values
+  at D 10 and 10.5 carry the prior's bias, and the kernel's chain is the better value there.
 
 ## 12. References
 
