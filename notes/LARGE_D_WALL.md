@@ -797,6 +797,18 @@ python3 lam_singularity.py posthoc RAW --json=data/lam_singularity_posthoc.json
     |D*(λ_g) − D*(Δ)| ≤ 8.3×10⁻⁷. The residual falls to 4×10⁻⁹–2.1×10⁻⁷ at the usable bases, still above the plants',
     so the near amplitudes stay unread.
   - This is an observation without its own plant (`near_amp.py posthoc`).
+- **The free-D* fits bound the separation: |D*(λ_g) − D*(Δ)| < 10⁻⁵ (#822; raw `I822-mac/`).**
+  - Plants put λ_g's fold δ above Δ's, with a common offset ε of 10⁻⁶ or 10⁻⁵, and are fitted with D* free as #821
+    fits them (`fold_separation.py planted`).
+  - At 23 of the 26 bases, δ = 10⁻⁶ is recovered as 0.81–1.23×10⁻⁶ and δ = 10⁻⁵ as 0.75–1.22×10⁻⁵. δ = 0 reads at
+    most 6.9×10⁻⁸ there.
+  - The minimizer misplaces each series' D* by up to 3.5×10⁻⁶, but the error is common to the two series and cancels
+    in their difference.
+  - The real largest separation at those bases is 8.3×10⁻⁷, at 259.4928. That is just above the smallest recovered
+    10⁻⁶ separation, 8.1×10⁻⁷, so the bound is the next planted δ, 10⁻⁵.
+  - At 21 of the 23 bases the real separation is at most 1.1×10⁻⁷, the plants' δ = 0 level (an observation, not part of
+    the bound).
+  - This is numerical evidence, from one discretization and one plan.
 
 ## Proposed README text
 

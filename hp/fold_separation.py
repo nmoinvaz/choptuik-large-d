@@ -15,8 +15,13 @@ delta = 0, 1e-7, 1e-6, 1e-5. Each series from fold_cancel's median b, with its r
 lam_singularity.regular; Delta: the same divided by r = 0.020646) and relative noise 1e-12. The recovered separation is
 D*(lam_g) - D*(Delta). A base is usable when, at both eps, delta = 1e-6 and 1e-5 are recovered to 30% and delta = 0
 reads below 1e-7 in magnitude. planted passes when 4 or more bases are usable; exit 1 otherwise.
-Reported, not judged: -delta; the near singularities planted at 0.01 of the fold's amplitude; and an unmodelled fourth
-fold term b7 (D* - D)^(7/2) of a size that gives the real fit's residual, a misfit the fit cannot absorb.
+Reported, not judged: -delta, and the near singularities planted at 0.01 of the fold's amplitude. --b7=X adds an
+unmodelled fourth fold term X b1 (D* - D)^(7/2); it was not run, since a probe found that the minimizer alone leaves
+residuals of the real fit's size (1.6e-8 to 6.4e-7 on a plant with exactly the fit's fold terms, against about 1e-11 at
+the true D*).
+First run (2026-11-15, #822): PASS, 23 of 26 bases usable. The minimizer misplaces each series' D* by up to 3.5e-6, but
+the error is common to both and cancels in the separation. The real S is 8.29e-7 (at 259.4928), just above the
+smallest recovered 1e-6 separation (8.07e-7), so the bound is 1e-5.
 
 real: |D*(lam_g) - D*(Delta)| at the usable bases, its largest value S. The bound is |D*(lam_g) - D*(Delta)| < delta0,
 delta0 the smallest planted delta (1e-7, 1e-6, 1e-5) whose smallest recovered separation over the usable bases and
