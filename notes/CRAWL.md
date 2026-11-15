@@ -632,6 +632,12 @@ ended too (2.1×10⁻¹⁷ apart). The next correction, 1.1×10⁻⁵ in Δ at a
     gives the old 3.5827×10⁻²⁰ and 2.2158×10⁻²⁰ exactly, so the floats were the cause. The four-part read gives
     1.5×10⁻²⁶ and 1.8×10⁻²⁸, and a plan made at the state 2.7×10⁻³⁶ and 6.1×10⁻³⁶. The four-part states of #468–#709
     and #713's D200 give unchanged results. At the root, the switch-0 projection raises |F| to 2.3×10⁻⁸⁰.
+- **The horizon rows' linear range in Δ shrinks slowly with D (#832; raw `I832-mac/` 9a901063).** It is 1.8×10⁻²⁴ at
+  D 200 and 2.3×10⁻²⁷ at 253.7, falling 0.119 per unit D and easing to 0.083 at the top. That is far below the weak
+  pivot's 1.44, so this range is not what grows with #805's departure. #832's part 1 (the reduced map with Δ weak and
+  the horizon data eliminated) ran on planted's float-held system from before #837. It found the projection to be the
+  obstruction, since m_h must move 1.65×10⁻²⁰ and only the ladder re-solves it. That reading waits for a rerun in the
+  chain's own system.
 - Before the correction, the readings were these, kept for the record:
   - **The jump belongs to the start's projection at switch 0, not to the truth (#816, corrected by #823).** #816 ran
     Newton from the truth with `--switch 0`, which projects the start first. From that projected start the first step
