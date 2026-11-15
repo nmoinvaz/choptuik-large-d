@@ -28,14 +28,15 @@ START COVER M2 (data/A_M_box_M3_1e-10.json, rows all, mutation None): NOT COVERE
 rerun, centre run at p^: N 95, k 40, contraction 0.315948, holds True, |eta| <= 4.090e-64  [0 s]
 rerun, start_data_M at p^ (its own line follows):
 start data over X (M = 3, N = 95, k = 40): contraction over X 0.3159, over the Cauchy box (c = [0.00100 +/- 1e-10]) 0.3168; sup |eta| over X 4.09e-64, Cauchy part of the derivatives 7.19e-14
-  eta 4.090258839121901e-64, Cauchy part 7.193272230760949e-14  [3 s]
+  eta 4.090258839121901e-64, Cauchy part 7.193272230760949e-14  [4 s]
 rerun, start_data_M over the hull (its own line follows):
 start data over X (M = 3, N = 95, k = 40): contraction over X 0.3159, over the Cauchy box (c = [0.00100 +/- 1e-10]) 0.3168; sup |eta| over X 1.30e-24, Cauchy part of the derivatives 7.19e-14
-  eta 1.2963171081973482e-24, Cauchy part 7.193272488122415e-14  [7 s]
+  eta 1.2963171081973482e-24, Cauchy part 7.193272488122415e-14  [9 s]
   the run stored eta 4.0902588391219086e-64 at p^ and Cauchy part 7.193272488122602e-14 over the hull: reproduced True
 rerun, lemma FP(3) with the certificate's N = 95 on the sets of [data 5pi/16 h=1e-6] (its own line follows):
 start data over X (M = 3, N = 95, k = 40): contraction over X 0.3159, over the Cauchy box (c = [0.00100 +/- 1e-10]) 0.3168; sup |eta| over X 3.17e-20, Cauchy part of the derivatives 7.20e-14
-  holds True: eta 3.1720163310939743e-20, Cauchy part 7.197326719093608e-14; the certificate's bounds are below these: True  [10 s]
-rerun, the start values at p^ with N = 95 (radius 3.3e-66) and with the row's N = 94 (radius 3.3e-66): midpoints 3.5e-67 apart, all 13 overlap: True  [14 s]
+  holds True: eta 3.1720163310939743e-20, Cauchy part 7.197326719093608e-14; the certificate's bounds are below these: True  [12 s]
+  value radius 2.6476e-07, derivative radius 5.5908e-07 (the largest radius of the start values and of their derivatives over the box)
+rerun, the start values at p^ with N = 95 (radius 3.3e-66) and with the row's N = 94 (radius 3.3e-66): midpoints 3.5e-67 apart, all 13 overlap: True  [16 s]
 RERUN: PASS; lemma FP(3) with N = 95 holds on the sets of [data 5pi/16 h=1e-6], which contain the certificate's
 exit 0

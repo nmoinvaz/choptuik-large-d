@@ -375,12 +375,17 @@ def rerun(bx, res, mutate=None):
         ctx.prec = PREC
         xb = [arb(v, arb(wide["h"])) for v in FPM.ZEROS[M]]
         try:
-            _, _, _, eta_l = FPM.start_data_M(xb, M, wide["r0"], wide["arg"], +1, DATA_CAUCHY, centre=centre,
-                                              diag=True, verbose=True)
+            _, vals_w, ders_w, eta_l = FPM.start_data_M(xb, M, wide["r0"], wide["arg"], +1, DATA_CAUCHY,
+                                                        centre=centre, diag=True, verbose=True)
             l0, l1 = bounds(eta_l)
             by_rerun = True
             print(f"  holds True: eta {l0!r}, Cauchy part {l1!r}; the certificate's bounds are below these: "
                   f"{max(e0, b0) <= l0 and max(e1, b1) <= l1}  [{time.time() - t0:.0f} s]", flush=True)
+            # the two ball radii that fixed_point_M.data_table prints for its rows
+            vr = max(max(float(v.real.rad()), float(v.imag.rad())) for v in vals_w)
+            dr = max(max(float(v.real.rad()), float(v.imag.rad())) for dl in ders_w for v in dl)
+            print(f"  value radius {vr:.4e}, derivative radius {dr:.4e} (the largest radius of the start values and "
+                  f"of their derivatives over the box)", flush=True)
         except (RuntimeError, ValueError) as e:
             print(f"  holds False ({e})", flush=True)
         ok = ok and by_rerun

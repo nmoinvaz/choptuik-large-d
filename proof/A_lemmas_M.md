@@ -284,7 +284,7 @@ enclosure. The Cauchy part is the bound on |∂η/∂x| in the (p, v, c) variabl
 | 3 | 3pi/8, 0.085 | ±1e-6 | 5.2×10⁻⁷ | 1.3×10⁻⁶ | 2.4×10⁻⁶ | 1.1×10⁻¹² |
 | 3 | 5pi/16, 0.0741 | ±1e-9 | 2.6×10⁻¹⁰ | 5.6×10⁻¹⁰ | 5.9×10⁻¹⁴ | 2.6×10⁻²³ |
 | 3 | 5pi/16, 0.0741 | ±1e-6 | 2.6×10⁻⁷ | 5.6×10⁻⁷ | 5.9×10⁻¹⁴ | 2.6×10⁻²⁰ |
-| 3 | 5pi/16, 0.0741, cut at N = 95 | ±1e-6 | — | — | 7.2×10⁻¹⁴ | 3.2×10⁻²⁰ |
+| 3 | 5pi/16, 0.0741, cut at N = 95 | ±1e-6 | 2.6×10⁻⁷ | 5.6×10⁻⁷ | 7.2×10⁻¹⁴ | 3.2×10⁻²⁰ |
 | 5 | 3pi/8, 0.07 | ±1e-9 | 7.4×10⁻¹⁰ | 2.7×10⁻⁹ | 1.2×10⁻¹⁰ | 5.1×10⁻²⁰ |
 | 5 | 3pi/8, 0.07 | ±1e-6 | 7.4×10⁻⁷ | 2.7×10⁻⁶ | 1.2×10⁻¹⁰ | 5.1×10⁻¹⁷ |
 | 5 | 5pi/16, 0.0622 | ±1e-9 | 3.9×10⁻¹⁰ | 1.2×10⁻⁹ | 3.6×10⁻²⁰ | 1.6×10⁻²⁹ |
@@ -300,9 +300,10 @@ The truncation N is the optimal order at the centre of a run, and it is not a st
 on the ray 5π/16 it is 94 at x̂ and at the centre of the certificate's h = 10⁻⁹ run, and 95 at the centre of its
 h = 10⁻¹⁰ run, less than 3×10⁻¹³ away. With N = 95 the start data over x̂ ± 10⁻⁶ hold as well. That is the table's
 row "cut at N = 95", with sup|η| ≤ 3.2×10⁻²⁰ over the box and a Cauchy part of 7.1973×10⁻¹⁴
-(`python3 start_cover_M2.py --box=data/A_M_box_M3_1e-10.json --rerun`, `logs/start_cover_M3.log`; #862). Its run prints
-no value or derivative radius. The other rows cut at the optimal order at x̂. At M = 5 the order is 132 at x̂ and at
-the certificate's centre.
+(`python3 start_cover_M2.py --box=data/A_M_box_M3_1e-10.json --rerun`, `logs/start_cover_M3.log`; #862, #868). Its
+value and derivative radii, 2.6476×10⁻⁷ and 5.5908×10⁻⁷, equal those of the row above to the five digits printed: the
+variation over the box sets them, not the truncation. The other rows cut at the optimal order at x̂. At M = 5 the
+order is 132 at x̂ and at the certificate's centre.
 
 **Where the label weights show: the forcing over parameter boxes.** At a point, the forcing is the optimal truncation
 error of the series, and it is far smaller near the zero than away from it. At the M = 3 zero, sup|η| at r₀ = 0.1 is
