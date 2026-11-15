@@ -15,8 +15,10 @@ import sys
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 # the rule the figures are drawn at (the scripts' --front default) and that check_numbers.py's figure_front checks their
-# captions against: "top", the chain's reach (#659). "fits" draws them at the comparison frontier instead.
-FIGURES = "top"
+# captions against: "fits", the comparison frontier, the last D where the chain agrees with track C's series within its
+# err; past it the weak pivot's term grows, and near D 259.9 the discrete system's fold distorts Delta and the harmonics
+# (#659). "top" draws them at the chain's reach instead.
+FIGURES = "fits"
 
 
 def front(rule="top"):
