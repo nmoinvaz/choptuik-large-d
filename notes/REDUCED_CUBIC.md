@@ -789,6 +789,21 @@ The REF pilot (8cbd3f31) printed the same judged lines to every digit.
 | (W4) the share on affine rows; the verdict, at both steps | 2.1×10⁻¹⁸: refutes | 2.1×10⁻¹⁸: refutes | 4.2×10⁻¹⁸: refutes | 1.9×10⁻¹⁸: refutes |
 | exit | 0 | 0 | 0 | 0 |
 
+**On the re-noded layouts U stays on the last matching (#699; raw `I699-mac/` b73b97ce).** `rows` was run at corrector
+starts on #553's layout (x_last 0.77) and #543's (0.80), both above #553's crossing at 0.7428.
+
+| criterion (#699) | x_last 0.77 | x_last 0.80 |
+|---|---|---|
+| share of U on node 4 and the horizon series, above 0.99 | 1 − 3.5×10⁻³² | 1 − 3.2×10⁻³³ |
+| pairing of those two blocks, below 10⁻¹⁵ | 4.4×10⁻³⁰ | 6.4×10⁻³⁹ |
+| U on other blocks | node 3 3.5×10⁻³², node 2 5.2×10⁻⁴² | node 3 3.2×10⁻³³, node 2 2.5×10⁻⁴³ |
+
+- The weak spectrum's bottom is no longer a near-degenerate pair there: σ₂/σ₁ is 1.94 and 1.78, against 1.016 on the
+  chain's layout. That is what the Δ mode becoming the weakest predicts, but no run measured each weak vector's Δ
+  content, so the change of the weakest direction is inferred.
+- Both starts ran with `--base_polish 0`. At 0.80 the first Newton move is 0.43 and lies on span(V), so the along-e
+  diagnostics there are outside the linear regime. U's location depends only on J at the start.
+
 ### 10.8 What 3S = T expresses there (reading; inferred, not shown)
 
 - **The conjecture of affine weak rows is refuted at all four starts.** The weak left vectors do not avoid curvature:
