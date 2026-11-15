@@ -627,6 +627,32 @@ amendments made on planted functions before any fit to the real data.
   the reading of this note's previous section, that the fold may belong to the discrete system: M = 32, the horizon
   series to order 130, harmonics 5–13 held.
 
+### The largest fold of the continuum that track C would pass (#835)
+
+**Track C flags every planted square-root fold a√(D*_p − D) with D*_p in 259–270 once |a| exceeds 2.3–3.0×10⁻¹⁰.**
+At the chain's fold, D*_p 259.903, the bound is 2.5×10⁻¹⁰ (a > 0) and 2.3×10⁻¹⁰ (a < 0). The chain's own a = 0.035 is
+1.4×10⁸ times that, and with it none of the 135 fits is accepted. So the data below 245 rule out a fold of the
+continuum near 260 of more than 10⁻⁸ of the chain's. Script: `hp/track_c_fold.py`. Raw: `I835-mac/`.
+
+**How it is computed.**
+- **The plant:** Δ_real + a g, with g = √(D*_p − D) minus its weighted least-squares fit in the central fit's form
+  (1/(D−1), K 20). It goes through `track_c.py`'s own fits and rules.
+- **The flag (registered):** D₀ is no longer 10, or there is no estimate. That happens when fewer than 5 of the D_min-10
+  fits keep χ²/dof ≤ 4.
+- **The bound:** each fit's χ² is a quadratic in a, which gives the bound exactly. Each bound is verified through the
+  full code path: unflagged at 0.9 |a|_max, flagged (D₀ 20) at 1.1 |a|_max.
+- **Which fits set it:** at every D*_p, the bound is set by the D_min-10 fits 1/(D−2) K18, 1/(D−1) K18 and 1/D K16.
+- **The baseline:** a = 0 reproduces the stored Δ(300), Δ(400) and Δ∞ to 7×10⁻¹⁷.
+
+**Just under the bound, the fold is not covered by E.** At 0.9 |a|_max, the plant passes unflagged but moves Δ(250),
+Δ(300), Δ(400) and Δ∞ by 1.4–2.6 E. The central fit's largest residual on D 150–245 is then 7.1–8.5σ, against the real
+data's 2.76σ. That residual is not one of track C's flags. The first of the 135 fits changes acceptance at |a| of
+1.0–2.4×10⁻¹⁰.
+
+**What the bound assumes.** These rest on track C's own premise: the data below 245 are the continuum's Δ within their
+σ, analytic in 1/n. The plant's amplitude a is constant over the data. A singular term too small to see below 245 and
+growing toward 260, like P1 and P2 above, is not covered by it.
+
 ## The chain past the comparison frontier: a term that grows as the weak pivot falls (#805)
 
 **#603's departure from track C's series past D 246 is not scatter. It is one smooth term of the pinned M = 32 system,

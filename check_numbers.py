@@ -3646,6 +3646,45 @@ def fold_plan():
             [(N, "1.9×10⁻¹⁷ on the kept plan")])]
     return out
 
+
+@check
+def track_c_fold():
+    """notes/LARGE_D_WALL.md "The largest fold of the continuum that track C would pass" (#835): hp/track_c_fold.py run,
+    hp/data/track_c_fold.json"""
+    N = "notes/LARGE_D_WALL.md"
+    b = json.load(open(os.path.join(ROOT, "hp/data/track_c_fold.json")))
+    rec = [r for v in b["bounds"].values() for r in v.values()]
+    am = [r["amax"] for r in rec]
+    c = b["bounds"]["259.903"]
+    t1 = [(N, "once |a| exceeds 2.3–3.0×10⁻¹⁰.")]
+    t2 = [(N, "At the chain's fold, D*_p 259.903, the bound is 2.5×10⁻¹⁰ (a > 0) and 2.3×10⁻¹⁰ (a < 0)")]
+    sh = [v for r in rec for v in r["shift_over_E"].values()]
+    rs = [r["at09"]["resid_max"] for r in rec]
+    fa = [r["first_any"] for r in rec]
+    setters = set(tuple(r["setters"]) for r in rec)
+    return [("smallest bound", min(am), 2.3e-10, 1e-11, t1), ("largest bound", max(am), 3.0e-10, 1e-11, t1),
+            ("bound at 259.903, a > 0", c["+"]["amax"], 2.5e-10, 1e-11, t2),
+            ("bound at 259.903, a < 0", c["-"]["amax"], 2.3e-10, 1e-11, t2),
+            ("the chain's a over the bound", 0.035 / max(c["+"]["amax"], c["-"]["amax"]), 1.4e8, 1e7,
+             [(N, "The chain's own a = 0.035 is"), (N, "1.4×10⁸ times that, and with it none of the 135 fits is accepted")]),
+            ("the chain's fold: fits accepted", b["chain_fold"]["naccepted"], 0, 1,
+             [(N, "none of the 135 fits is accepted")]),
+            ("the chain's fold flagged", float(b["chain_fold"]["flagged"]), 1, 1, []),
+            ("all bounds verified", float(all(r["verified"] for r in rec)), 1, 1,
+             [(N, "unflagged at 0.9 |a|_max, flagged (D₀ 20) at 1.1 |a|_max")]),
+            ("flagged at 1.1x by D0 20", float(all(r["at11"]["D0"] == 20 for r in rec)), 1, 1, []),
+            ("the same three setters everywhere", float(setters == {("1/(D-2) K18", "1/(D-1) K18", "1/D K16")}), 1, 1,
+             [(N, "the D_min-10 fits 1/(D−2) K18, 1/(D−1) K18 and 1/D K16")]),
+            ("a = 0 reproduces, largest difference", max(b["reproduce_diff"].values()), 7e-17, 1e-17,
+             [(N, "reproduces the stored Δ(300), Δ(400) and Δ∞ to 7×10⁻¹⁷")]),
+            ("shift over E, smallest", min(sh), 1.4, 0.1, [(N, "Δ(300), Δ(400) and Δ∞ by 1.4–2.6 E")]),
+            ("shift over E, largest", max(sh), 2.6, 0.1, [(N, "Δ(300), Δ(400) and Δ∞ by 1.4–2.6 E")]),
+            ("residual at 0.9x, smallest", min(rs), 7.1, 0.1, [(N, "is then 7.1–8.5σ, against the real")]),
+            ("residual at 0.9x, largest", max(rs), 8.5, 0.1, [(N, "is then 7.1–8.5σ, against the real")]),
+            ("real residual", b["baseline"]["resid_max"], 2.76, 0.01, [(N, "data's 2.76σ")]),
+            ("first change of any fit, smallest", min(fa), 1.0e-10, 1e-11, [(N, "1.0–2.4×10⁻¹⁰.")]),
+            ("first change of any fit, largest", max(fa), 2.4e-10, 1e-11, [(N, "1.0–2.4×10⁻¹⁰.")])]
+
 def full_dinf():
     sys.path.insert(0, os.path.join(ROOT, "hp"))
     import dd_fits_mp as F
