@@ -439,11 +439,33 @@ the tighter one.
 
 Of `start_data_u`'s pipeline the second implementation replaces `run_M` at the point and on the Cauchy box,
 `series_jet_M`, the evaluation at z₀ and the η discs. It does not replace `lohner_c1`, which turns the values and
-columns into the stored Lohner set; the comparison is made with that set. The point certificate's own start data
-(`certify_M2.py`, from `start_data_M` on its ray and radius) have not been recomputed.
+columns into the stored Lohner set; the comparison is made with that set.
+
+**The point certificates' start data (#866).** A certificate calls `start_data_M` at its centre p̂ and over the hull
+of its box, and each call proves the fixed point on its real set and on that set's Cauchy box. `fixed_point_M_b.py`'s
+`start_data` gives the same data, the state (D, S, C) at ξ₀ with its parameter derivatives, and
+`fixed_point_M_b_check.py cert` compares the two on the four sets of a stored box file, which
+`start_cover_M2.cert_data` rebuilds. The first implementation's side is a rerun of the certificate's own calls, since
+the box files store only their η bounds (raw `I866-mac/`):
+
+| | M = 3, `data/A_M_box_M3_1e-10.json` | M = 5, `data/A_M2_box_M5_1e-10.json` |
+|---|---|---|
+| start ray, r₀, N, k | 5π/16, 0.0741, 95, 93 | 5π/16, 0.0622, 132, 130 |
+| contraction constant at p̂, on its Cauchy box, over the hull, on its Cauchy box | 0.0984, 0.0987, 0.0984, 0.0987 | 0.0886, 0.0888, 0.0886, 0.0888 |
+| sup\|η\| at \|z\| = R (p, v, c): at p̂, over the hull, on the Cauchy boxes | 4.7×10⁻⁶⁵, 1.7×10⁻²⁵, 9.3×10⁻¹⁸ | 1.0×10⁻⁹⁶, 1.3×10⁻³², 4.6×10⁻²⁴ |
+| start values at p̂ that overlap | 13 of 13, midpoints within 2.1×10⁻⁹⁵ | 19 of 19, midpoints within 3.0×10⁻⁹⁵ |
+| derivative entries at p̂ that overlap | 52 of 52 | 114 of 114 |
+| derivative entries over the hull that overlap | 52 of 52 | 114 of 114 |
+| second-order jets of Y_N over the hull (against `certify_M2.series2`) | | 1197 of 1197 |
+| `--mutate=sign` | 0 of 13 values, 0 of 104 derivative entries | 0 of 19 values, 0 of 228 derivative entries |
+| `--mutate=radius` (r₀ = 0.3) | no contraction, row sums 18.8 | no contraction, row sums 21.5 |
+
+The truncation N is the second implementation's own choice and equals the certificate's in both cases. Not recomputed:
+the assembly of `start_data2`'s second-derivative columns from those jets, the Cauchy bound of D²η and the chart's Γ
+term.
 
 Reproduce, from `solver/proof/` (python-flint 0.9.0; each command exits 0 only if its check passes, and takes under
-15 s):
+15 s unless a time is given):
 
 ```
 git clone https://github.com/nmoinvaz/choptuik-large-d-raw ../../../choptuik-large-d-raw    # once, beside the checkout
@@ -454,9 +476,12 @@ python3 fixed_point_M_b_check.py lip --M=5
 python3 fixed_point_M_b.py --M=5 --two=60,105 --compare=$RAY
 python3 fixed_point_M_b.py --M=5 --start --rho0=405 --h=1e-18 --cauchy=1e-3 --compare=$RAY
 python3 fixed_point_M_b.py --M=5 --start --rho0=405 --h=1e-18 --cauchy=1e-3 --compare=$RAY --mutate=sign    # exits 3
+python3 fixed_point_M_b_check.py cert --box=data/A_M_box_M3_1e-10.json                # the M = 3 certificate, 15 s
+python3 fixed_point_M_b_check.py cert --box=data/A_M2_box_M5_1e-10.json --second      # the M = 5 certificate, 3 min
 ```
 
-`I427-mac/run_i427.sh` has all 32 runs, and `exits.txt` there their exit statuses.
+`I427-mac/run_i427.sh` has all 32 runs of #427 and `I866-mac/run_i866.sh` the 6 of #866, with their exit statuses in
+each folder's `exits.txt`.
 
 ## 3. Lemma S and lemma 6b₀
 
