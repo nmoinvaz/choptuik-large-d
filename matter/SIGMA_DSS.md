@@ -555,6 +555,20 @@ The runs of #639 took the same steps by other routes (the η = ∞ state at M = 
 M = 48 from it; η = 5 and 6 at M = 48 resampled from M = 32); the solutions do not depend on the route (two starts at
 η = 7 agree to 6.2×10⁻³²).
 
+**The chain in D at η = 1 (#652; xfkappa, raw `I652-mac/` 5a3d24b4, `table.md`).** The kernel's chain at M = 32 went
+from D 4 to 10.475 with every point converged (|F| ≤ 4.2×10⁻²⁹, constraint ≤ 1.2×10⁻¹⁴) and no branch lost; 18
+failed runs from D 8 on were recovered by halving the step, the smallest 1/128 at D 9.5625. Its Δ agrees with
+sigdss's within 2.4×10⁻⁶ at D 5–8, then parts from it by +1.8×10⁻⁴ at D 9 and −2.7×10⁻³ at D 10, where sigdss
+carried its smoothness prior. Δ peaks near D 9 at 1.02708 and is 1.0201048000 at D 10.475, between §5's two f64
+values there (1.0340 and 0.9935). Neither of those, nor a zero-order seed from the chain's D 10.4375, converges at
+10.475: each walks along §6's near-null band (smallest pivots 10⁻⁸ to 10⁻¹¹). So whether D 10.475 has a second
+solution is open; the kernel's Newton has no handle on the band.
+
+```
+python3 matter/sigma_ms/chain.py --M 32 --start <D 7.0625 state> --start2 <D 7 state> --eta 1 --D_from 7.0625 \
+    --D_to 10.475 --out OUT
+```
+
 ## 12. References
 
 - [HLPTA00] S. Husa, C. Lechner, M. Pürrer, J. Thornburg, P. C. Aichelburg, PRD 62, 104007 (2000),
