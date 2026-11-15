@@ -632,6 +632,13 @@ ended too (2.1×10⁻¹⁷ apart). The next correction, 1.1×10⁻⁵ in Δ at a
     gives the old 3.5827×10⁻²⁰ and 2.2158×10⁻²⁰ exactly, so the floats were the cause. The four-part read gives
     1.5×10⁻²⁶ and 1.8×10⁻²⁸, and a plan made at the state 2.7×10⁻³⁶ and 6.1×10⁻³⁶. The four-part states of #468–#709
     and #713's D200 give unchanged results. At the root, the switch-0 projection raises |F| to 2.3×10⁻⁸⁰.
+  - **From the offset start, in the chain's own system, the corrector crawls (#839; raw `I839-mac/` 68692b2b).** #713's
+    D 252.6 planted test with #837's truth and #713's flags (arm A, seed 1) took no λ above 1/64 after its first steps.
+    Step 8 accepted λ = 1/64 after 117 min (|F| 1.17×10⁻¹³ to 1.16×10⁻¹³, smallest pivot 7.9×10⁻¹⁶). Δ − truth was
+    −2.128×10⁻¹² after 8 steps, heading for −2.203×10⁻¹², the first step's |dz|. The run was stopped there, and the
+    other seed and the drop arm were not run. Under ElimO, `newton_od` keeps the unprojected trial point as its iterate,
+    so a short trial carries (1 − λ) of the projection's displacement. Step 8's trial points have quad-double max|F|
+    ≈ 4.83×10¹⁴ (1 − λ)^1.91. #854 tests a projected iterate.
   - **At the true roots the horizon data do not scramble the Δ step (#840; raw `I840-mac/` dab68b6a,
     `hp/step_spread.py` with `truth_system`).** Under 10⁻⁶⁵ relative moves of m_h and a_h (four seeds), the spread of
     Newton's Δ step is 2.67×10⁻³⁸, 1.02×10⁻³³, 5.36×10⁻³⁰ and 2.24×10⁻³⁰ at D 240.1, 245.6, 250.2 and 252.6. That is
