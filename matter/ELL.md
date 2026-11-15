@@ -167,15 +167,17 @@ $`e^{-0.3k}`$. The constraint is what showed it. The differences shrink by a fac
 ```
 
 (the error bar is dominated by the RK step size, estimated at D = 8 from κ = 0.5 against κ = 1).
-The growth rate at k_c = 23 is λ = 8.410420, i.e.
+The growth rate, converged in k_c (#811), is λ = 8.410158 at k_c = 47 on the table's settings (κ = 0.7, horizon
+series from u = 0.04, 30 terms), i.e.
 
 ```math
-\gamma_{\ell=1}(D=4) = 0.118900 ,
+\gamma_{\ell=1}(D=4) = 0.1189038 ,
 ```
 
 found by bracketing det M(λ) around the published value (a full scan over [0.3, 20] was started and lost to a time
-limit); the gauge rate is 0.895. At k_c = 23 and D = 4 the solution is the least resolved of all points (constraint
-1.5%), so this γ is good to about 10⁻⁴ at best (not checked at higher k_c). Both numbers agree with Olabarrieta et al.
+limit); the gauge rate is 0.895. From k_c 39 to 47, λ moves by 1.6×10⁻⁷. Changing the settings to κ = 0.5, u = 0.01
+and 16 terms moves it by 6×10⁻¹⁰. At k_c = 23, the least resolved of all points (constraint 1.5%), λ was 8.410420
+(γ = 0.118900), 2.6×10⁻⁴ above the converged value. Both numbers agree with Olabarrieta et al.
 within their error bars.
 
 ## 6. ℓ = 1 across D
@@ -185,13 +187,13 @@ pass at k_c = 15 (steps 0.02 → 0.3; `data/march_l1_kc15.jsonl`) reached D = 9.
 8×10⁻⁴ (D = 6) to 5×10⁻² (D = 9.3) as the centre data's high harmonics drifted (|q₁₁| = 0.15 > |q₃| at D = 9): the
 "junk" of [solver/notes.md](../solver/notes.md), here a k_c = 15 truncation artefact. All values below are k_c = 23,
 re-solved from those points (D ≤ 8) or continued at k_c = 23 (D ≥ 8; `data/march_l1_kc23m.jsonl`), with κ = 0.7,
-horizon series from u = 0.04 (30 terms), every point converged to the residual shown. The D = 4 and 5 rows are the
-exception: their stored residuals are recovered only with κ = 0.5 and the horizon series from u = 0.01 (16 terms)
-(#810).
+horizon series from u = 0.04 (30 terms), every point converged to the residual shown. The D = 4 row is the k_c = 47
+solution on these settings (#811). The D = 5 row is the exception: its stored residual is recovered only with κ = 0.5
+and the horizon series from u = 0.01 (16 terms) (#810).
 
 | D | n | Δ | λ = 1/γ | γ | (D − 3)γ | abs(F) | ψ-constraint |
 |---|---|---|---|---|---|---|---|
-| 4 | 2 | 0.4598611 | 8.410420 | 0.118900 | 0.118900 | 5×10⁻¹⁵ | 2×10⁻⁴ (k_c 39) |
+| 4 | 2 | 0.4598611 | 8.410158 | 0.118904 | 0.118904 | 2×10⁻¹⁵ | 3×10⁻⁵ (k_c 47) |
 | 5 | 3 | 0.7833439 | 4.640174 | 0.215509 | 0.431018 | 2×10⁻¹⁵ | 3×10⁻⁴ |
 | 6 | 4 | 0.9115281 | 3.765555 | 0.265565 | 0.796695 | 7×10⁻¹³ | 2×10⁻⁵ |
 | 7 | 5 | 0.9639878 | 3.381429 | 0.295733 | 1.182932 | 3×10⁻¹³ | 2×10⁻⁵ |
@@ -224,15 +226,16 @@ the change from the row's k_c to the next, and the change after must be smaller:
 
 | D | Δ: 23 → 31 | 31 → 39 | λ: 23 → 31 | 31 → 39 | ψ-constraint at 23 / 31 / 39 | the row's values |
 |---|---|---|---|---|---|---|
-| 4 | −4.3×10⁻⁶ | −9.8×10⁻⁸ | **−2.6×10⁻⁴** | −6.5×10⁻⁶ | 2×10⁻² / 2×10⁻³ / 2×10⁻⁴ | Δ (k_c 39) converged; **λ, γ, (D − 3)γ (k_c 23) not** |
+| 4 | −4.3×10⁻⁶ | −9.8×10⁻⁸ | **−2.6×10⁻⁴** | −6.5×10⁻⁶ | 2×10⁻² / 2×10⁻³ / 2×10⁻⁴ | regenerated at k_c 47 (#811): 39 → 47 moves λ by −1.6×10⁻⁷ and Δ by −2×10⁻⁹; converged |
 | 5 | −9×10⁻⁹ | +7×10⁻¹⁰ | −5.5×10⁻⁷ | −5.5×10⁻⁹ | 3×10⁻⁴ / 1.5×10⁻⁵ / 7×10⁻⁷ | converged |
 | 6 | +6.8×10⁻⁸ | — | −2.6×10⁻⁷ | — | 2×10⁻⁵ / 3×10⁻⁷ / — | within the bar (k_c 39 not run) |
 | 7 | +1.7×10⁻⁷ | +4.5×10⁻⁸ | −5.6×10⁻⁷ | −1.5×10⁻⁷ | 2×10⁻⁵ / 1.4×10⁻⁷ / 4×10⁻⁸ | converged |
 | 8 | +3.6×10⁻⁷ | +9.7×10⁻⁸ | −8.4×10⁻⁷ | −2.3×10⁻⁷ | 2×10⁻⁶ / 2×10⁻⁷ / 9×10⁻⁸ | converged |
 | 9 | −5.7×10⁻⁷ | −1.5×10⁻⁷ | +2.6×10⁻⁶ | +6.7×10⁻⁷ | 2×10⁻⁶ / 3×10⁻⁷ / 1.2×10⁻⁷ | converged (λ at 0.86 of its bar) |
 
-So every tabulated value is converged in k_c to the table's accuracy except λ at D = 4, with γ and (D − 3)γ there. Its
-k_c 23 value is 2.6×10⁻⁴ above the k_c 39 one, λ = 8.410158, and γ is 0.118904 at k_c 39 against the table's 0.118900.
+#810 found every tabulated value converged in k_c to the table's accuracy except λ at D = 4, with γ and (D − 3)γ
+there, whose k_c 23 value was 2.6×10⁻⁴ above the k_c 39 one. #811 replaced that row by the k_c 47 solution on the
+table's settings, whose λ is 1.6×10⁻⁷ from k_c 39's (bar 3×10⁻⁶), so every value of the table is now converged in k_c.
 The ψ-constraint falls with k_c at every D, and the table's states give back their stored constraint on re-solve.
 
 #660's stored and rerun constraints differ because the converged states at k_c 23 near D = 10 are not isolated. The
@@ -347,10 +350,9 @@ Only D = 4 was reached, and only partly.
   (§6). What would help, in order of effort: (i) continuing in steps of ≤ 0.05 (converges, ~2 h per unit D here);
   (ii) the project's nonlinear elimination of the weak directions (`solver/ne_solver.py`) or frozen top harmonics of
   the centre data (`hp/`'s kfreeze); (iii) a double-double port (the `hp/` kernel with the ψ field and the L terms).
-- **Growth-rate checks.** λ(D = 4) at k_c = 31 was started twice and lost (container restart, then stopped for load);
-  k_c = 23 is the least resolved point (constraint 1.5%), so γ(4) = 0.118900 should be taken as ±10⁻⁴. The RK error
-  of λ was not measured on its own. Complex growth rates were never searched for, and real ones only near
-  the followed root for D ≥ 6.
+- **Growth-rate checks.** λ(D = 4) is converged in k_c at k_c = 47 (#811): γ(4) = 0.118904, against 0.118900 at
+  k_c 23. The RK error of λ was not measured on its own. Complex growth rates were never searched for, and real ones
+  only near the followed root for D ≥ 6.
 - **ℓ = 2 across D** was not attempted beyond D = 4.
 - The heuristic bracket of §7 should be replaced by fits on larger D before anything is quoted from it.
 

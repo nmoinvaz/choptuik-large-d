@@ -1,4 +1,4 @@
-"""Markdown table of the l = 1 results across D from the data files (D = 4 from the kc 39 / kc 23 runs, D >= 5 from the
+"""Markdown table of the l = 1 results across D from the data files (D = 4 from the kc 47 run of #811, D >= 5 from the
 kc 23 refinement l1_kc23r.jsonl, with the continuation's selection sensitivity |dDelta/dF| where available).
 usage: python ell_table.py"""
 import os, json
@@ -6,9 +6,14 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 dat = lambda f: [json.loads(l) for l in open(os.path.join(HERE, "data", f))] if os.path.exists(os.path.join(HERE, "data", f)) else []
 
 rows = {}
-d4 = dat("l1_D4_kc39.jsonl")[-1]
-g4 = [r for r in dat("l1_kc23_gamma.jsonl") if r["D"] == 4.0][-1]
-rows[4.0] = dict(Delta=d4["Delta"], lam=g4["lam"], F=d4["F"], K=d4["constraint"], kc="39 (λ: 23)")
+c4 = dat("l1_D4_kc47.jsonl")     # D = 4 converged in k_c (#811): k_c 47 on the table's settings, Delta and lambda
+if c4:
+    r = c4[-1]
+    rows[4.0] = dict(Delta=r["Delta"], lam=r["lam"], F=r["F"], K=r["constraint"], kc=str(r["kc"]))
+else:
+    d4 = dat("l1_D4_kc39.jsonl")[-1]
+    g4 = [r for r in dat("l1_kc23_gamma.jsonl") if r["D"] == 4.0][-1]
+    rows[4.0] = dict(Delta=d4["Delta"], lam=g4["lam"], F=d4["F"], K=d4["constraint"], kc="39 (λ: 23)")
 for r in dat("l1_kc23r.jsonl"):
     rows[r["D"]] = dict(Delta=r["Delta"], lam=r.get("lam"), F=r["F"], K=r["constraint"], kc=str(r["kc"]))
 sens = {}
