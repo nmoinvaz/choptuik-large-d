@@ -413,7 +413,9 @@ def real_horizon(sysm, od=3, fast=True, log=print):
     max|R|, the residual there or None), and raises ElimFailed when the projection fails."""
     from multidouble import ODLu, od_axpy
     from octo_corrector import o8, q4_of_o, with_horizon
+    dps = mp.mp.dps
     from reseed import Reseeder, offsets
+    mp.mp.dps = dps             # reseed sets 50 digits on import, which rounds P(z0)'s 1e-65 move of a_h to 0
     M, K = sysm.M, sysm.K
     o = offsets(M, K)
     hc = list(range(o["mh"], o["mh"] + 2 * M))
@@ -3033,6 +3035,10 @@ def main_curve(args, opts, mutate, log, rec, dump):
         log(f"  elimination: {rec['elim_stats']['projections']} projections ({rec['elim_stats']['seconds']} s), the "
             f"largest last rung residual {rec['elim_stats']['rung']:.2e}, the largest max|F| on hrows "
             f"{rec['elim_stats']['hrows']:.2e}")
+    rec["dps"] = mp.mp.dps
+    if mp.mp.dps != 140:        # an import or a call changed the working precision (reseed's 50 digits, #828)
+        log(f"check: FAIL (the working precision is {mp.mp.dps} digits, not 140)")
+        return False
     return ok
 
 
