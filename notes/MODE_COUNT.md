@@ -644,10 +644,12 @@ open":
 
 Issue #622. Subagent of the coordinator on the Mac, 2026-11-13. Code `hp/lam_gauge.py` (λ_g of a state, the checks,
 the table) and `hp/lam_gauge_fit.py` (the fit in 1/n and its planted test). Table `hp/data/lam_gauge.csv`. Logs are in
-folder `I622-mac/` of the raw-data repository (0c554329), and the states were read at its 6913f312.
+folder `I622-mac/` of the raw-data repository (0c554329), and the states were read at its 6913f312. The table was
+rebuilt at 5d1c629a (#814, 10.3).
 
 **Result.** The residual gauge rate λ_g = 1 + ⟨c₁⟩ = 1 − (n − 1)⟨a_h² − 1⟩ of section 1 rises from 0.6138552748 at
-D = 4 to 0.97115850 at D = 244.64. By the map between the gauges λ_g = 4πμ/Δ, with μ Reiterer and Trubowitz's echoing
+D = 4 to 0.97115850 at D = 244.64, the top of 10.4's fit, and to 0.97285094 at D = 259.74, #603's last chain state. By
+the map between the gauges λ_g = 4πμ/Δ, with μ Reiterer and Trubowitz's echoing
 parameter (notes/RT_FORMULATION.md section 2). At D = 4 λ_g is therefore the 2025 review's surface gravity ν_SH of the
 self-similarity horizon (notes/REVIEW_GHMG25.md row 3), and here it reproduces 4πμ/(2K) from Reiterer and Trubowitz's
 constants to 2.7×10⁻²⁷. Past D = 4 the table is 4πμ/Δ, the review's expression evaluated in D dimensions. As D → ∞,
@@ -658,8 +660,11 @@ constants to 2.7×10⁻²⁷. Past D = 4 the table is 4πμ/Δ, the review's exp
 ```
 
 with spreads over fit choices of 4.4×10⁻⁶, 0.0069 and 5 (numerical evidence). The coefficients grow by about 14 per
-order, so the series converges only for n above about 14. μ = λ_g Δ/(4π) has a minimum near D = 38.02 (0.12910162
-there) and tends to Δ_∞/(4π) if λ_g → 1. Two discrepancies are open (10.5).
+order, so the series converges only for n above about 14. μ = λ_g Δ/(4π) has a local minimum near D = 38.02
+(0.12910162 there) and tends to Δ_∞/(4π) if λ_g → 1. Along #603's chain μ has a maximum near D = 256.01 (0.13031003),
+and n(1 − λ_g) one near D = 258.60 (7.0321072). Both then fall steeply toward the chain's fold at D ≈ 259.90
+(notes/LARGE_D_WALL.md, "Where the series is singular"): μ is below its D = 38.02 value from D = 259.05 on and is
+0.12743554 at D = 259.74. Two discrepancies are open (10.5).
 
 ### 10.1 What is computed
 
@@ -697,22 +702,24 @@ The f64 bound is u(8(n − 1) + M max|c₁| + 4), u = 2⁻⁵², the rounding of
 
 ### 10.3 The table
 
-`hp/data/lam_gauge.csv` holds 1510 stored states from D = 4 to 244.64, with one backbone state at each of 1274 D. Each
+`hp/data/lam_gauge.csv` holds 1621 stored states from D = 4 to 259.74, with one backbone state at each of 1371 D. Each
 row gives λ_g to 40 digits, Δ, μ, the f64 value, M, K, the number of parts, the cut and the held harmonics, the stored
-|F| where the state has one, delta_all.csv's error of Δ where it names the state, and the state's path. The rows
-and every column but the two err columns are those of the build at raw 6913f312. The err columns are refreshed from
-the current delta_all.csv by `lam_gauge.py errs` (#765), and `check_numbers.py lam_gauge_errs` fails if a named row
-lacks its err. Since that build, delta_all.csv names #603's chain states in place of #461's from D 216.13 on, and pin
-7's states in place of pin 5's from D 70.65. So 49 rows marked named are no longer named by it. A `table` rebuild
-would follow the new naming and drop the superseded #461 rows that 10.4 quotes (#765). The sources
-are the double-double scans and resolution studies (`hp/data/states`, `hp/data/lowD_states`, folders `T45-win`,
-`T79-win`, `T12-win`, `T13-win`, `I254-mac`, `I609-macm3`, `I624-macm3`, `I252-mac` and two smaller ones), the pinned
-runs of `T73` and `T75`, every state delta_all.csv names, and #603's chain. The backbone is delta_all.csv's state where
-it names one. From D = 225.13 on it is #603's rerun on the exact projector, which is to replace the chain_fit rows
-there, and delta_all.csv's I461 states are kept as superseded rows. Left out are pass-1, failed and checkpoint states,
-predictions, and five states whose stored |F| exceeds 10⁻¹⁸ (among them the M = 48 state at D = 30.07 of section 5).
-`python3 hp/lam_gauge.py summary` prints this table from the CSV. The chain has gone on since (#603's states at
-D = 245.14 and 245.64, raw-data commit bdb59d11), and a rerun of `table` adds them.
+|F| where the state has one, delta_all.csv's error of Δ where it names the state, and the state's path. It was built by
+`lam_gauge.py table` at raw 5d1c629a, where #603's chain reaches D = 259.74 (#814). The sources are the double-double
+scans and resolution studies (`hp/data/states`, `hp/data/lowD_states`, folders `T45-win`, `T79-win`, `T12-win`,
+`T13-win`, `I254-mac`, `I609-macm3`, `I624-macm3`, `I252-mac` and two smaller ones), the pinned runs of `T73` and
+`T75`, every state delta_all.csv names, every state it named at 95b736d4 (when the table was first built, at raw
+6913f312), and #603's chain. The backbone is delta_all.csv's state where it names one. From D = 225.13 on it is #603's
+rerun on the exact projector, which delta_all.csv names from D = 226.13, and the #461 states there are kept as
+superseded rows. Since the first build, delta_all.csv names #461's `crawlB3` states in place of its `crawlG` states from
+D 216.13 to 225.13, pin 7's states in place of pin 5's from D 70.65 to 70.95, and `T84-mac`'s re-solves of pin 7 in
+place of `T75`'s at D 72.0, 72.4, 73.1 and 73.27. The states it named before are kept as alternate rows (superseded
+ones from D 225.13). Every state of the first build is in this one, with λ_g, Δ and μ unchanged to the bit, and
+`check_numbers.py lam_gauge_errs` fails if a named row lacks its err. Left out are pass-1, failed and checkpoint
+states, predictions, and five states whose stored |F| exceeds 10⁻¹⁸ (among them the M = 48 state at D = 30.07 of
+section 5). `python3 hp/lam_gauge.py summary` prints this table from the CSV. 10.4's fit stops at D = 244.64
+(`lam_gauge_fit.DMAX`), the table's top at its first build, so the 97 chain states past it are in the table and not in
+the fit.
 
 | D | λ_g | n(1 − λ_g) | μ = λ_g Δ/(4π) | M | parts | kind | spread at this D |
 |---|---|---|---|---|---|---|---|
@@ -734,8 +741,9 @@ D = 245.14 and 245.64, raw-data commit bdb59d11), and a rerun of `table` adds th
 | 150 | 0.9543663237784518 | 6.7537841 | 0.13000955416 | 32 | 4 | chain |  |
 | 175 | 0.9604491250544841 | 6.8423014 | 0.130106690454 | 32 | 4 | chain |  |
 | 200 | 0.9651012172824055 | 6.909959 | 0.130183349561 | 32 | 4 | chain |  |
-| 225.131 | 0.9687914431998714 | 6.9636043 | 0.130245566676 | 32 | 8 | chain | 2.8e-17 (2 states) |
+| 225.131 | 0.9687914431998714 | 6.9636043 | 0.130245566676 | 32 | 8 | chain | 2.9e-17 (3 states) |
 | 244.637 | 0.9711585000283656 | 6.998004 | 0.130286113376 | 32 | 8 | chain |  |
+| 259.744 | 0.9728509437334254 | 6.9974954 | 0.127435540584 | 32 | 8 | chain |  |
 
 The parts are the arithmetic the state was solved in (2 double-double, 4 quad-double, 8 octo-double). What the table
 can say about each state's error is the spread between stored states at the same D. These spreads are over states, not
@@ -744,9 +752,13 @@ error bounds:
 | states at the same D | D | largest spread of λ_g |
 |---|---|---|
 | double-double, M or layout differs | 11 | 3.2×10⁻⁸ at D = 4, from its M = 48 states (M = 160 against 192 there: 1.6×10⁻²³); 3.6×10⁻¹³ at D = 50.01, 2.2×10⁻¹⁴ at D = 61.03 |
-| pinned, 5 against 7 held harmonics (`T73`, `T75`) | 160 | 1.6×10⁻¹⁴ |
+| pinned, 5 against 7 held harmonics (`T73`, `T75`), and at D = 73.27 pin 7 against its `T84-mac` re-solve | 161 | 1.6×10⁻¹⁴ |
 | pinned against quad-double (`T81`, `T84`) | 7 | 1.0×10⁻¹⁵ |
+| chain, #461's `crawlB3` against its `crawlG` | 9 | 6.0×10⁻²⁰ at D = 223.13 |
 | chain, #603 against I461 | 14 | 3.8×10⁻¹³ at D = 237.13 |
+
+The double-double row counts 11 D, the table's D whose states differ in M. With D = 4.25, whose two M = 48 states differ
+in layout (1.5×10⁻³¹), there are 12 at both builds of the table (#814; reported, not changed).
 
 ### 10.4 D → ∞
 

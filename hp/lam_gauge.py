@@ -40,6 +40,7 @@ u (8 (n - 1) + M max|c1| + 4), u = 2^-52.
 """
 import csv
 import glob
+import io
 import json
 import os
 import re
@@ -337,6 +338,10 @@ SOURCES = [
     ("raw", "T73/t73/pin*_D*.npz", "pinned"),
     ("raw", "T75/pin*_D*.npz", "pinned"),
     ("csv", "hp/data/delta_all.csv", None),
+    # the states delta_all.csv named at the table's first build (95b736d4) and names no longer: #461's chain states
+    # from D 216.13, which notes/MODE_COUNT.md 10.3-10.5 quote as superseded past 225.13, pin 5's at 70.65-70.95 and
+    # T75's pin 7 at 72-73.27 (#814)
+    ("csv_at", "95b736d4:hp/data/delta_all.csv", None),
     ("raw", "I603-win2/base/base_pin3_D*.npz", "chain"),
     ("raw", "I603-win2/chain/anm_pin3_D*.npz", "chain"),
 ]
@@ -371,6 +376,13 @@ def inventory(raw):
                     k = {"chain_fit": "chain"}.get(r["kind"], r["kind"])
                     out.append(("raw:" + r["state"], os.path.join(raw, r["state"]), k, True))
                     named["raw:" + r["state"]] = (r["err"], r["err_kind"])
+            continue
+        if where == "csv_at":
+            text = subprocess.run(["git", "-C", REPO, "show", pat], check=True, capture_output=True, text=True).stdout
+            for r in csv.DictReader(io.StringIO(text)):
+                if r["state"].strip():
+                    k = {"chain_fit": "chain"}.get(r["kind"], r["kind"])
+                    out.append(("raw:" + r["state"], os.path.join(raw, r["state"]), k, False))
             continue
         base = REPO if where == "repo" else raw
         for p in sorted(glob.glob(os.path.join(base, pat))):
@@ -492,7 +504,7 @@ def cmd_table(argv):
 
 
 SUMMARY_D = [4, 5, 6, 8, 10, 15, 20.043653, 30.068824, 40.020065, 50.007491, 61.026449, 70, 80, 100, 125, 150, 175,
-             200, 225.13125, 244.6366]
+             200, 225.13125, 244.6366, 259.7436]
 
 
 def cmd_errs(argv):
