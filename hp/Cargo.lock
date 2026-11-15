@@ -51,6 +51,7 @@ version = "0.1.0"
 dependencies = [
  "multidouble",
  "multishoot",
+ "multisolver",
  "numpy",
  "pyo3",
  "rayon",
@@ -74,18 +75,29 @@ dependencies = [
 
 [[package]]
 name = "multidouble"
-version = "4.2.1"
+version = "4.5.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "9593391294848e15c6925e7091060dc735be646e87a3ce57aa0de307ff48559f"
+checksum = "6dff93c230ba2c754246183befa39993b87a7d70a64573a59bfb383dd0881d64"
 dependencies = [
  "rayon",
 ]
 
 [[package]]
 name = "multishoot"
-version = "1.2.2"
+version = "3.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "2c99e76fa2349d959efe88d82c0a2dc9bf8c72958dfd351cff7d45d548fd87c5"
+checksum = "8f54019b78589fad99cb615a5ed994313c17c380c09100bf3fc1ee4efaa22b9d"
+dependencies = [
+ "multidouble",
+ "multisolver",
+ "rayon",
+]
+
+[[package]]
+name = "multisolver"
+version = "0.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "ad68e6bb44f82886bf828586262fd34ff9d0813cf9d01cf45b7f379f9e224b21"
 dependencies = [
  "multidouble",
  "rayon",

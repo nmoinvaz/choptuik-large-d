@@ -25,9 +25,11 @@ Conventions for the Claude sessions (cloud and local) that run computations here
   arithmetic is the crate multidouble (crates.io, version in `hp/Cargo.toml`; source github.com/nmoinvaz/multidouble,
   release tags X.Y.Z), and its multiple-shooting engine (residual, exact Jacobians, jets, jvp, mode matrix, the exact
   freeze projector) is the crate multishoot (crates.io, version in `hp/Cargo.toml`; source github.com/nmoinvaz/multishoot;
-  hp's `model.rs` supplies the equations, #523): cargo fetches both on the first build (needs access to crates.io). A
-  change to the arithmetic or the engine goes into that repository and a release first, then the version here is
-  bumped, and the bit-identity checks are rerun
+  hp's `model.rs` supplies the equations, #523), and the solvers over that engine (Newton's step, chord, GMRES-refined
+  Newton, Levenberg-Marquardt, ANM series, predictors, weak subspaces, the winding count) are the crate multisolver
+  (crates.io, version in `hp/Cargo.toml`; source github.com/nmoinvaz/multisolver): cargo fetches all three on the first
+  build (needs access to crates.io). A change to the arithmetic, the engine or the solvers goes into that repository
+  and a release first, then the version here is bumped, and the bit-identity checks are rerun
   (`highm_check.py ref` and `scaled`, against a build of the previous version on the same machine; a build on a new
   machine is checked against the stored reference files of the raw-data repository at the resolutions whose plan is
   stored, `ref --compare=<T81/ref_main.json or T45-win/scratch/t45/diag/ref_new.json> --Ms=48,64,80` and

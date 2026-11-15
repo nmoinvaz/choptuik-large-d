@@ -1073,7 +1073,7 @@ pub fn jacobian_in<P: Precision<Native>, const B: usize>(ctx: &Ctx<B>, z: &[&[f6
 
 /// The Newton step in P at z: dz = -J^-1 F in PARTS parts, F, the dense LU in P and the seconds of the residual, the
 /// Jacobian, the factorization and the solve (multishoot's `newton_step`)
-pub fn newton_in<P: Precision<Native>, const B: usize>(ctx: &Ctx<B>, z: &[&[f64]], par: bool) -> Result<multishoot::newton::Step<P>, String> {
+pub fn newton_in<P: Precision<Native>, const B: usize>(ctx: &Ctx<B>, z: &[&[f64]], par: bool) -> Result<multisolver::newton::Step<P>, String> {
     ctx.shooting_in::<P>().newton_step::<P>(z, par)
 }
 

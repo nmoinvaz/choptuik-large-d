@@ -7,7 +7,7 @@ use crate::linalg::{DDLu, ODLu, QDLu, StaircaseLu as BlockLu};
 use crate::qd::QD;
 use multidouble::od::OD;
 use multidouble::precision::{Octo, Precision, Quad};
-use multishoot::newton::Step;
+use multisolver::newton::Step;
 use crate::model::{self, Ctx};
 use crate::v8::V8;
 use numpy::ndarray::Array2;
