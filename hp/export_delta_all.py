@@ -382,9 +382,21 @@ def pinned_rows(Dmin):
     return rows
 
 
+def raw_rel(src):
+    """a state's source as a path in the raw-data repository: a run started from an absolute path inside a clone of it
+    (I841-dh370's restart) records that path, which is cut at the clone's folder"""
+    s = (src or "").replace("\\", "/")
+    if not (s.startswith("/") or s[1:3] == ":/"):    # relative already (POSIX or Windows drive otherwise)
+        return src
+    parts = s.split("/")
+    roots = [i for i, x in enumerate(parts) if x.startswith("choptuik-large-d-raw")]
+    return "/".join(parts[roots[-1] + 1:]) if roots else src
+
+
 def load_state(p):
     z = np.load(os.path.join(RAW, p))
     m = json.loads(str(z["meta"]))
+    m["source"] = raw_rel(m.get("source"))
     parts = [z["zh"][-1], z["zl"][-1]] + ([z["z2"][-1], z["z3"][-1]] if "z3" in z.files else [])
     return m, [fmt(x) for x in parts] + [""] * (4 - len(parts))
 
