@@ -768,6 +768,10 @@ from D = 20.04 to 244.64. It fits polynomials in t = 1/n and in t = 1/D from D_l
 degrees whose rms residual is within a factor 3 of the smallest there. The quoted value is the median of the kept fits,
 and its ± is the half-width of their range: a spread over fit choices, not a bound.
 
+Moved past D 248 (`fit --dmax=D`, a diagnostic outside the selection), the kept fits stop agreeing (#814). The c₀ = 1
+spread of c₁ is 2.7×10⁻⁴ to D 250, 0.12 to 254 and 70 to 260. The chain's λ_g leaves the capped fit by 10⁻¹⁰ from
+D 249.87 and by 9.2×10⁻⁵ at 259.74, as it nears the fold near D 259.90 (10.3; for Δ, notes/LARGE_D_WALL.md track C).
+
 **Planted truth first** (the plants and the pass criteria are in the script's docstring, fixed before the real data
 were fitted). Synthetic λ(t) = 1 − 7.4t + 95t² + t³h(t) on the real D grid, with Gaussian noise of σ = 10⁻¹² and tails
 h that the polynomial does not contain: a pole (T1), a square-root branch point (T2), a complex pole pair (T3), a log
