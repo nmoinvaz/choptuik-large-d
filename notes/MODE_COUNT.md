@@ -435,14 +435,14 @@ while λ_phys moves 2×10⁵ to 5×10⁵ times less. The extras multiply and mov
 A mode whose eigenfunction has weight in the centre harmonics 22–23 would move too, so the third resolution (#231)
 decides. The U zeros are not located.
 
-**The box 2.6 < Re λ < 3.6, |Im λ| ≤ 0.5 at D = 61 on the exact determinant, kf 27 to 41 (#551, #656, #657, #708,
-#749; raw `I551-win2/`, `I656-macm3/`, `I657-win2/` ddc106d0, `I657-macm3/` bcda518c, `I708-macm3/` 3edb2e48,
-`I722-macm3/` 06e7216f, `I749-macm3/` 449e2f79, `I749-win2/` 200cdb36).** M = 48,
+**The box 2.6 < Re λ < 3.6, |Im λ| ≤ 0.5 at D = 61 on the exact determinant, kf 27 to 45 (#551, #656, #657, #708,
+#749, #789; raw `I551-win2/`, `I656-macm3/`, `I657-win2/` ddc106d0, `I657-macm3/` bcda518c, `I708-macm3/` 3edb2e48,
+`I722-macm3/` 06e7216f, `I749-macm3/` 449e2f79, `I749-win2/` 200cdb36, `I789-macm3/` 0e3141ff).** M = 48,
 seed `up23_D61.0264.npz`. det M is the exact determinant of the double-double mode matrix, from python-flint's ball LU
 at 320 bits (`--ball=320`). Four R 0.36 circles at 2.85 ± 0.25i and 3.35 ± 0.25i cover the box. A zero inside two
-circles is counted once, and small circles (R 0.05, or R 0.1 at kf 37) confirm the pair near the real axis and any
-zero shared by a left and a right circle. The control circle at λ_phys winds +1 at every cut. Every circle is resolved,
-with 0 verification mismatches.
+circles is counted once, and small circles (R 0.05, or R 0.1 to 0.15 at kf 37 to 45) confirm the pair near the real axis
+and any zero shared by a left and a right circle. The control circle at λ_phys winds +1 at every cut. Every circle is
+resolved, with 0 verification mismatches.
 
 | kf | count | windings UL, LL, UR, LR | the pair near the real axis |
 |---|---|---|---|
@@ -454,18 +454,26 @@ with 0 verification mismatches.
 | 37 | 10 | +4, +4, +3, +3 | 2.902819 ± 0.057580i |
 | 39 | 10 | +4, +4, +3, +3 | 2.862023 ± 0.069121i |
 | 41 | 10 | +4, +4, +3, +3 | 2.871492 ± 0.033464i |
+| 43 | 10 | +3, +3, +3, +3 | 2.916297 ± 0.040652i |
+| 45 | 10 | +4, +4, +3, +3 | 2.866137 ± 0.040400i |
 
-**The count rose by 2 every second odd cut, 6, 6, 8, 8, 10, 10, and then held at 10 at kf 39 and 41**, where that step
-predicted 12 (#749). At both cuts the shared zero lies in both upper circles (3.134817 + 0.114564i at kf 39,
-3.149784 + 0.190236i at kf 41, from R 0.05 circles winding +1) and its conjugate in both lower ones, and the pair in
-both left ones, so the count is 14 − 4. kf 41's control on macm3 matches win2's ω and λ_g to their printed digits and
-its |F| to 0.2%. The pair's real part falls with the cut to kf 39 and turns back at kf 41 (2.9097, 2.9028, 2.8620,
-2.8715 from kf 35). |Im λ| is not monotone: from 0.037 at kf 27 it drops to 0.004 at kf 29, then roughly
-doubles at each cut but kf 35 to 0.069 at kf 39, and halves to 0.033 at kf 41 (#722's small circle at kf 27 winds +2, its two zeros conjugate to 6e-8, and #657's R 0.36
-circle there agrees within its estimates). Its zeros at one cut are matched to the next by position alone. The other
-zeros are not tracked across cuts. This is numerical evidence on the M = 48 truncation, not certified. A count that
-grew with the cut to kf 35 points to the truncation, as the row above does; that it then held for three cuts leaves
-open whether it settles at 10 or steps again past kf 41.
+**The count rose by 2 every second odd cut, 6, 6, 8, 8, 10, 10, and then held at 10 at kf 39, 41, 43 and 45**, where
+that step predicted 12 at kf 39 and 14 at kf 43 (#749, #789). At kf 39 and 41 the shared zero lies in both upper circles
+(3.134817 + 0.114564i at kf 39, 3.149784 + 0.190236i at kf 41, from R 0.05 circles winding +1) and its conjugate in both
+lower ones, and the pair in both left ones, so the count is 14 − 4. kf 41's control on macm3 matches win2's ω and λ_g to
+their printed digits and its |F| to 0.2%. The pair's real part falls with the cut to kf 39 and turns back at kf 41
+(2.9097, 2.9028, 2.8620, 2.8715 from kf 35). |Im λ| is not monotone: from 0.037 at kf 27 it drops to 0.004 at kf 29,
+then roughly doubles at each cut but kf 35 to 0.069 at kf 39, and halves to 0.033 at kf 41 (#722's small circle at kf 27
+winds +2, its two zeros conjugate to 6e-8, and #657's R 0.36 circle there agrees within its estimates). Its zeros at one
+cut are matched to the next by position alone. The other zeros are not tracked across cuts. This is numerical evidence
+on the M = 48 truncation, not certified. A count that grew with the cut to kf 35 points to the truncation, as the row
+above does. It then held for five cuts while its zeros moved: the shared zero reads 3.135 + 0.115i, 3.150 + 0.190i,
+3.205 + 0.174i and 3.132 + 0.163i at kf 39 to 45 (#789).
+- At kf 43 that zero lies 0.0028 outside the upper left circle, so the left circles wind +3 and only the pair is
+  subtracted. At the other cuts it lies in both upper circles.
+- The conjugate lenses still rest on the mirror (#812). The lower circles' zeros are conjugate to the upper ones' to
+  1e-5 or better.
+- kf 47 freezes none of M = 48's odd harmonics, so it is the uncut system and the last cut there (#812).
 
 **The series' radii, and M = 64 (#141; raw `I141-mac/`, 5eff98e).** The centre series (x = 0 to the first node) takes
 one d/dτ per order, and its radius of convergence falls as M rises. At D = 30 without the cut it is 0.435, 0.324, 0.278
