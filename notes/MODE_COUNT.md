@@ -471,8 +471,15 @@ above does. It then held for five cuts while its zeros moved: the shared zero re
 3.205 + 0.174i and 3.132 + 0.163i at kf 39 to 45 (#789).
 - At kf 43 that zero lies 0.0028 outside the upper left circle, so the left circles wind +3 and only the pair is
   subtracted. At the other cuts it lies in both upper circles.
-- The conjugate lenses still rest on the mirror (#812). The lower circles' zeros are conjugate to the upper ones' to
-  1e-5 or better.
+- The conjugate lenses now each wind +1, at every cut (#812). So the shared zero's conjugate is counted by its own
+  circle, not by the mirror. Their zeros lie 4×10⁻⁷ to 1.2×10⁻⁶ from the upper lenses' conjugates, within 1.2 times
+  the sum of the two circles' estimates. The estimate, the difference between n0 and n0/2 points, is a scale, not a
+  bound.
+- **A zero's position is good to about 10⁻⁶, and the state sets that limit (#813).**
+  - One saved kf 41 state evaluated on win2 and on macm3 gives ln|det| differing by a smooth 1.2–2.1×10⁻⁷, against
+    #813's bar of 10⁻⁹, but the zero agrees to 3×10⁻¹².
+  - The two machines' own kf 41 states, both at |F| 1.3×10⁻¹⁹, differ by 1.9×10⁻⁹ in p at the first node, mostly in
+    harmonics 15–23, and by 4.8×10⁻¹⁶ in Δ. That moves ln|det| by up to 2.9×10⁻² and the zero by 5.9×10⁻⁷ (#749).
 - kf 47 freezes none of M = 48's odd harmonics, so it is the uncut system and the last cut there (#812).
 
 **The series' radii, and M = 64 (#141; raw `I141-mac/`, 5eff98e).** The centre series (x = 0 to the first node) takes
