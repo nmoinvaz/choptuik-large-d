@@ -17,7 +17,7 @@ formulation of hp/pinning.py; their coefficients are zero).
         [--horizon_alpha 0] [--fix1_qlu 0] [--jet_q 0] [--reseed 0] [--pred_q 0] [--reseed_q 0] [--save_pred 0]
         [--jet_o 0] [--corrector od --tol_od 1e-40] [--base_adopt 0] [--base_polish 1] [--keep_plan 1] [--held_fit FILE]
         [--held_o 0] [--reseed_o 0] [--a0 0] [--a_grow 2] [--a_hold 0] [--lam_stall 0] [--save_base 0] [--save_jet 0] [--held_from STATE]
-        [--arclength 0 --guard 0.05 --D_min 0 --arc_sign 1 --border 1]
+        [--arclength 0 --guard 0.05 --D_min 0 --arc_sign 1 --border 1 --turns_max 2]
 
 --corrector qd runs the quad-double Newton of the kernel (hpkernel.driver.newton_qd, Solver.newton_q) on the pinned
 system (pinning.PinnedQ: the held harmonics' offset subtracted from the quad-double residual and added to the step, as
@@ -322,9 +322,10 @@ def main():
     opt.update(elim_switch=1e-15)       # --elim_switch S: ElimO projects a point whose pinned qd |F| exceeds S (#700)
     opt.update(log_proj=0)              # --log_proj 1: a line per failed projection, with each stage's residuals (#743)
     # --arclength 1: the pseudo-arclength continuation of hp/arclength.py from this base (#842), oriented by --arc_sign
-    # (the sign of D's change), no base where the unit tangent's |t_D| < --guard, stopping below --D_min (0: never);
+    # (the sign of D's change), no base where the unit tangent's |t_D| < --guard, stopping below --D_min (0: never) or
+    # after the step that holds the --turns_max-th turn (2: the mirror's own turn);
     # --border 0 is its control (the D-series and the corrector at fixed D)
-    opt.update(arclength=0, guard=0.05, D_min=0.0, arc_sign=1, border=1)
+    opt.update(arclength=0, guard=0.05, D_min=0.0, arc_sign=1, border=1, turns_max=2)
     for k in list(opt):
         f = "--" + k
         if f in args:
