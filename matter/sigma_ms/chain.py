@@ -6,6 +6,7 @@ the fixed coupling --eta instead (#652), the secant through the two previous D, 
     PYTHONPATH=<site> python3 chain.py --M 32 --start <out>/sm_inf_M32.npz --etas 20,14,10,8.5,7,6,5 --out <out> \
         [--threads 4] [--jac dd|mixed] [--extra "..."]
     PYTHONPATH=<site> python3 chain.py --M 32 --start <out>/sm_eta1_M32.npz --eta 1 --Ds 4.5,5,5.5 --out <out>
+        [--start2 <the state before --start>]
 
 The tag of each run is eta<eta>_M<M>. With --resample_from M0, each coupling is instead seeded by that coupling's
 state at M0 (tag eta<eta>_M<M0>), resampled to M. Stops at the first run that does not converge.
@@ -22,6 +23,7 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--M", type=int, required=True)
     ap.add_argument("--start", default="")
+    ap.add_argument("--start2", default="", help="a chain in D: the state before --start, so the first step is a secant")
     ap.add_argument("--etas", default="")
     ap.add_argument("--eta", default="", help="the fixed coupling of a chain in D (--Ds)")
     ap.add_argument("--Ds", default="", help="a chain in D at --eta: comma-separated D values")
@@ -34,6 +36,8 @@ def main():
     etas_prev = [None] if a.start else []
     if a.Ds:
         Ds_prev = [None] if a.start else []
+        if a.start2:                                        # the states' metas carry their D (run_eta.py)
+            prev, Ds_prev = [a.start2, a.start], ["start2", "start"]
         for D in a.Ds.split(","):
             tag = f"eta{a.eta}_D{D}_M{a.M}"
             cmd = [sys.executable, "-u", os.path.join(HERE, "run_eta.py"), "--eta", a.eta, "--D", D, "--M", str(a.M),
