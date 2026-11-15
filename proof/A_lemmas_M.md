@@ -460,9 +460,10 @@ the box files store only their η bounds (raw `I866-mac/`):
 | `--mutate=sign` | 0 of 13 values, 0 of 104 derivative entries | 0 of 19 values, 0 of 228 derivative entries |
 | `--mutate=radius` (r₀ = 0.3) | no contraction, row sums 18.8 | no contraction, row sums 21.5 |
 
-The truncation N is the second implementation's own choice and equals the certificate's in both cases. Not recomputed:
-the assembly of `start_data2`'s second-derivative columns from those jets, the Cauchy bound of D²η and the chart's Γ
-term.
+The truncation N is the second implementation's own choice and equals the certificate's in both cases. The M = 5
+boxes with h = 10⁻⁹ and 10⁻¹¹ (`data/A_M2_box_M5_1e-9.json`, `_1e-11.json`) give the same verdicts in every row, with
+the same four contraction constants (#870, raw `I870-mac/`). Not recomputed: the assembly of `start_data2`'s
+second-derivative columns from those jets, the Cauchy bound of D²η and the chart's Γ term.
 
 Reproduce, from `solver/proof/` (python-flint 0.9.0; each command exits 0 only if its check passes, and takes under
 15 s unless a time is given):
