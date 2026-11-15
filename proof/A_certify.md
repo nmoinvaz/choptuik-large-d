@@ -545,7 +545,7 @@ Rough effort: (1) is done; (2) is the main work, about 1–2 weeks with CAPD or 
 
 ```
 cd solver/proof
-python3 certify_M1.py          # sections 4.1-4.4 (rigorous), about 1 min
+python3 certify_M1.py          # sections 4.1-4.4 (rigorous), under a second
 python3 certify_M1.py --pm     # plus the Poincare-Miranda dry run of section 5 (double precision), about 2 min
 python3 residual_poly.py 0.08  # the forcing bound at another start radius
 python3 fixed_point.py                  # step (i): the start-value contraction at the zero, both rays (rigorous), seconds
