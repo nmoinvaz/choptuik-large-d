@@ -3,7 +3,7 @@
 
     cd hp && python3 modecount_qdet.py STATE.npz RE,IM [RE,IM ...] [--M=N] [--kf=none|13] [--data=hp/data]
                                        [--fmax=1e-20] [--threads=N] [--prec=320] [--ulp] [--ulps=1,2,4,8] [--draws=0]
-                                       [--json=out.json]
+                                       [--centre_tol=T] [--json=out.json]
     python3 hp/modecount_qdet.py --selftest [--mutate=no_lo]
 
 At each lambda the matrix that mode_det factors (CSolver.mode_matrix, four double-double parts) is converted exactly
@@ -16,6 +16,7 @@ matrices differ as much as mode_det's do, the noise is in the matrix entries (th
 quad-double LU cannot remove it. When they agree and mode_det's differ, it is the LU's.
 --ulps=K1,K2,... takes the exact determinant at Re lambda moved by each K f64 ulps up and down (#605): a phase change
 that grows like K is a derivative, one that does not is noise in the matrix's assembly at the ulp scale.
+--centre_tol=T: with --M, the layout of modecount_wind.py's --centre_tol (its saved state, _ct<T>).
 --draws=N adds N determinants of the matrix with every entry moved by a uniform relative amount in [-u, u],
 u = 2^-106 (double-double's rounding): how much one rounding per entry moves arg det. It is a lower bound on the
 matrix's own noise, since the assembly rounds many times per entry.
@@ -187,7 +188,8 @@ def main():
     kf = "default" if "kf" not in opts else (None if opts["kf"] == "none" else int(opts["kf"]))
     threads = int(opts.get("threads", 1))
     st = setup(path, M=int(opts["M"]) if "M" in opts else None, threads=threads, kf=kf,
-               fmax=float(opts.get("fmax", 1e-20)))
+               fmax=float(opts.get("fmax", 1e-20)),
+               centre_tol=float(opts["centre_tol"]) if "centre_tol" in opts else None)
     import modecount_cx
     from flint import ctx
     ctx.threads = threads
