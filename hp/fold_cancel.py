@@ -195,10 +195,17 @@ def cmd_calibrate(raw):
     fitted at every base as coeffs fits it. Judged: the range grows strictly with delta over DELTAS, and the delta = 0
     range lies below the real one. The nominal bound: the separations whose range exceeds the real one are excluded;
     the bound is the smallest such delta of DELTAS, and the largest delta below it is reported as allowed. Reported:
-    -delta, DELTAS_X, and the robust range, the smallest over a common shift EPS of both folds."""
+    -delta, DELTAS_X, and the robust range, the smallest over a common shift EPS of both folds.
+    First run (2026-11-15, #820): not bounded, exit 1. The delta = 0 range, 2.7e-3, is 23 times the real one, set by the
+    contamination at CONT 0.3; the range grows strictly with delta, by about 400 delta. --cont=A (post hoc) plants the
+    contamination at amplitude A instead."""
+    global CONT
     mp.mp.dps = 200
+    if "cont" in args:          # post hoc (#820): the contamination's amplitude, CONT in the registered run
+        CONT = float(args["cont"])
     co = {float(k): v for k, v in json.load(open(args.get("coeffs", os.path.join(HERE, "data", "fold_cancel_coeffs.json")))).items()}
     real = rel_range([v["r"] for v in co.values()])
+    print("contamination amplitude %g%s" % (CONT, " (post hoc, --cont)" if "cont" in args else ""))
     med = lambda key, i: float(np.median([v[key][i] for v in co.values()]))      # noqa: E731
     bl = [med("lam", i) for i in range(3)]
     bd = [med("delta", i) for i in range(3)]

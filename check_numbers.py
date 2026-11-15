@@ -2884,6 +2884,35 @@ def lam_singularity():
 
 
 @check
+def fold_separation():
+    """notes/LARGE_D_WALL.md (#820): r's constancy over #818's bases against planted shifts of lam_g's fold, from
+    hp/data/fold_cancel_calibrate*.json (hp/fold_cancel.py calibrate, registered and post hoc --cont=0, 0.01, 0.03)"""
+    import json
+    N = "notes/LARGE_D_WALL.md"
+    ld = lambda tag: json.load(open(os.path.join(ROOT, "hp/data/fold_cancel_calibrate%s.json" % tag)))  # noqa: E731
+    reg, c0, c1, c3 = ld(""), ld("_cont0"), ld("_cont0.01"), ld("_cont0.03")
+    jr = lambda j, d: j["judged"][d]["range"]                                                         # noqa: E731
+    rob = min(j["robust"][d] / jr(j, d) for j in (c0, c1) for d in j["judged"] if jr(j, d) > 0)
+    t_b = [(N, "There δ = 10⁻⁶ already gives 4.0–4.9×10⁻⁴, and −δ gives 3.3–4.0×10⁻⁴")]
+    return [("the real range", reg["real_range"], 1.2e-4, 1e-5, [(N, "23 times the real 1.2×10⁻⁴")]),
+            ("the registered floor", jr(reg, "0.0"), 2.7e-3, 1e-4, [(N, "the plant's range\n  is already 2.7×10⁻³")]),
+            ("the floor over the real range", jr(reg, "0.0") / reg["real_range"], 23, 1, [(N, "23 times the real")]),
+            ("registered: not bounded", float(reg["bound"] is None and reg["monotonic"] and not reg["floor"]), 1, 1,
+             [(N, "The calibration does not bound the separation as registered")]),
+            ("the slope of the range in delta", jr(c0, "0.0001") / 1e-4, 400, 10, [(N, "by about 400δ")]),
+            ("post hoc 0.01: floor", jr(c1, "0.0"), 9.1e-5, 1e-6, [(N, "at most 9.1×10⁻⁵")]),
+            ("post hoc 0: delta 1e-6", jr(c0, "1e-06"), 4.0e-4, 1e-5, t_b),
+            ("post hoc 0.01: delta 1e-6", jr(c1, "1e-06"), 4.9e-4, 1e-5, t_b),
+            ("post hoc 0.01: -delta 1e-6", c1["minus"]["1e-06"], 3.3e-4, 1e-5, t_b),
+            ("post hoc 0: -delta 1e-6", c0["minus"]["1e-06"], 4.0e-4, 1e-5, t_b),
+            ("post hoc 0.01: the bound", c1["bound"], 1e-6, 1e-7, [(N, "So |D*(λ_g) − D*(Δ)| < 10⁻⁶")]),
+            ("post hoc 0: the bound", c0["bound"], 1e-6, 1e-7, [(N, "So |D*(λ_g) − D*(Δ)| < 10⁻⁶")]),
+            ("post hoc 0.03: floor", jr(c3, "0.0"), 2.7e-4, 1e-5, [(N, "exceeds the real range (2.7×10⁻⁴)")]),
+            ("post hoc 0.03: not bounded", float(c3["bound"] is None), 1, 1, [(N, "From 0.03 on, the floor alone")]),
+            ("the common shift's largest effect", 1 - rob, 0.16, 0.01, [(N, "lowers the ranges by at most 16%")])]
+
+
+@check
 def table_errs_all():
     """every row of hp/data/delta_all.csv has an err or a reason named in its err_kind (#764). The full-system
     quad-double rows with one start (71.0, 72.8) take the larger two-start spread of the nearest qd rows below and

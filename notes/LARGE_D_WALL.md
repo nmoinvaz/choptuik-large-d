@@ -770,6 +770,17 @@ python3 lam_singularity.py posthoc RAW --json=data/lam_singularity_posthoc.json
 - The coefficients' ratio r is 0.020646, constant over the 26 bases to 1.2×10⁻⁴ relative. In the plant with λ_g's fold
   0.01 above Δ's, the fitted r swings by a relative 20. This is an observation, not a bound. #820 calibrates it with
   smaller planted shifts. `hp/fold_cancel.py` (403d9dae) holds the plant and the coefficient fits.
+- **The calibration does not bound the separation as registered (#820; raw `I820-mac/`).** With λ_g's fold planted
+  δ above Δ's, r's relative range over the bases grows strictly with δ, by about 400δ. But at δ = 0 the plant's range
+  is already 2.7×10⁻³, 23 times the real 1.2×10⁻⁴. #782's contamination at 0.3 of the fold's amplitude sets that floor,
+  so the plant cannot resolve the real value (`fold_cancel.py calibrate`, exit 1).
+- **Post hoc, the bound is conditional on the contamination's size.**
+  - Up to 0.01 of the fold's amplitude, the δ = 0 floor stays below the real range, at most 9.1×10⁻⁵.
+  - There δ = 10⁻⁶ already gives 4.0–4.9×10⁻⁴, and −δ gives 3.3–4.0×10⁻⁴. So |D*(λ_g) − D*(Δ)| < 10⁻⁶.
+  - From 0.03 on, the floor alone exceeds the real range (2.7×10⁻⁴), so the real constancy also bounds the
+    contamination.
+  - A shift of both folds by up to ±4×10⁻⁴, the spread of Δ's own D*, lowers the ranges by at most 16%.
+  - This is numerical evidence, conditional on the plant's model of the other singularities.
 
 ## Proposed README text
 
