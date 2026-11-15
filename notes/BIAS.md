@@ -93,11 +93,12 @@ chain_fit's distance of 1.1×10⁻¹⁰ at D 215 from the 1/D series fitted on t
   0.5–2% (13.29), at biases a million times larger than chain_fit's.
 - **Resolution.** The chain runs at M = 32 only. At D 80 its state, resampled to M = 48 in τ and solved again in
   quad-double (`hp/resolution_check.py`, converged to |F| 1.4e-38), moves Δ by −2.4e-25 (raw 98604b2,
-  `resolution-mac/scan_chainfit_D80.log`), so resolution is far below the bias there. Above D 80 the check needs the
+  `resolution-mac/scan_chainfit_D80.log`), and by −2.309e-25 on main's exact freeze projector (#636, #680). So
+  resolution is far below the bias there. Above D 80 the check needs the
   horizon block re-seeded at the new M: without it the start residual grows from 1.7e-9 at 80 to 2e15 at 200.
 
 - **Range.** The first chain stopped at 215, where the octo-double corrector's weakest pivot reaches 7e-16
-  (`T138-win2/chain_od.log`). The chain now reaches 245.6, on the exact projector from 225.13 (#603).
+  (`T138-win2/chain_od.log`). The chain now reaches 259.74, on the exact projector from 225.13 (#603).
   The crawl past the wall (I19-win2, D = 214.6 to 215.03, 7 rows of delta_all.csv) accepted its steps with 4 junk
   directions frozen. Reloaded with the crawl's options and no step, 1 of its 7 saved states and 1 of 3 saved
   predictions converge again, and those two give the crawl's Δ and correction to the printed digits. The other 8 stop
