@@ -371,9 +371,11 @@ class Toy:
 # ------------------------------------------------------------------ the driver
 def continue_arc(sysm, x0, D0, sign0, opt, stop=None, log=print, on_step=None):
     """the continuation from the base (x0, D0) in the direction of sign0 (the sign of D's change): one record per
-    step. opt: N, eps, h_max, grow, steps, border, guard, edge (place one base at |t_D| = guard on the approach to
-    the first turn), mutate, direct (compare compose() with sysm.direct at each base), keep_x (the points' vectors in
-    the records; the chain saves its states instead). on_step(rec) is called after each step."""
+    step. opt: N, eps, h_max, grow, a0 (the first step's length, at most a_max; 0: a_max), hold (a step that needed
+    a halving keeps its length), steps, border, guard, edge (place one base at |t_D| = guard on the approach to the
+    first turn), mutate, direct (compare compose() with sysm.direct at each base), keep_x (the points' vectors in the
+    records; the chain saves its states instead), turns_max (stop after the step whose series holds that many turns
+    in all; 0: never). on_step(rec) is called after each step."""
     N = opt["N"]
     x, D, sign = list(x0), D0, sign0
     t_prev = None
@@ -410,7 +412,7 @@ def continue_arc(sysm, x0, D0, sign0, opt, stop=None, log=print, on_step=None):
         H1 = mp.sqrt(vdot(Z[1], Z[1]) + H[1] ** 2)
         HN = mp.sqrt(vdot(Z[N], Z[N]) + H[N] ** 2)
         a_max = float((opt["eps"] * H1 / HN) ** (mp.mpf(1) / (N - 1))) if HN else opt["h_max"]
-        a = min(a_max, opt["h_max"], (a_prev * opt["grow"]) if a_prev else opt["h_max"])
+        a = min(a_max, opt["h_max"], (a_prev * opt["grow"]) if a_prev else (opt.get("a0") or opt["h_max"]))
         rec.update(a_max=a_max, tD0=float(abs(H[1]) / H1))
         how = "a_max"
         if opt["border"] and opt["guard"]:
@@ -458,8 +460,12 @@ def continue_arc(sysm, x0, D0, sign0, opt, stop=None, log=print, on_step=None):
             + ("".join(f"; turn at s {t['s']:.4f}, D* {t['D'][:22]}" for t in rec.get("turn", []))))
         if not conv:
             break
+        if opt.get("turns_max") and turns >= opt["turns_max"]:
+            log(f"stopped: turn {turns} found (turns_max {opt['turns_max']})")
+            break
         t_prev = (tz, tD)
-        a_prev = a
+        # hold (anm_run.py --a_hold 1): a step that needed a halving keeps its length for the next one
+        a_prev = a / opt["grow"] if opt.get("hold") and attempt > 0 else a
         x, D = xc, Dc
         if stop is not None and stop(x, D):
             break
@@ -783,7 +789,8 @@ class ChainSys:
 
 def run_chain(c):
     """anm_run.py --arclength 1: the continuation from the run's base (after anm_run's own base setup), records in
-    OUT/arc.jsonl, states OUT/arc_<n>_D<D>.npz; stops after --steps steps, below --D_min, or at a failed step"""
+    OUT/arc.jsonl, states OUT/arc_<n>_D<D>.npz; stops after --steps steps, below --D_min, at a failed step, or after
+    the step whose series holds the --turns_max-th turn (2: the mirror's own turn, if it has one)"""
     from octo_corrector import load_o
     opt = c["opt"]
     z8 = c["last_q"]["z8"] if "z8" in c["last_q"] else load_o(c["state_path"])[0]
@@ -801,8 +808,8 @@ def run_chain(c):
     def on_step(rec):
         with open(rp, "a") as f:
             f.write(json.dumps(rec, default=str) + "\n")
-    aopt = dict(N=opt["N"], eps=mp.mpf(opt["eps"]), h_max=opt["h_max"], grow=opt["a_grow"], steps=opt["steps"], border=int(opt["border"]),
-                guard=opt["guard"], edge=0, mutate="", direct=0, keep_x=False)
+    aopt = dict(N=opt["N"], eps=mp.mpf(opt["eps"]), h_max=opt["h_max"], grow=opt["a_grow"], a0=opt["a0"], hold=bool(opt["a_hold"]), steps=opt["steps"], border=int(opt["border"]),
+                guard=opt["guard"], edge=0, mutate="", direct=0, keep_x=False, turns_max=opt["turns_max"])
     stop = (lambda x, D: D < opt["D_min"]) if opt["D_min"] else None
     with mp.workdps(DPS_SERIES):
         x0 = to_mp_vec(sysm.base8)
@@ -810,7 +817,6 @@ def run_chain(c):
                             log=lambda s: print(s, flush=True), on_step=on_step)
     print("done", flush=True)
     return 0 if recs and recs[-1]["converged"] else 1
-
 
 
 def cmd_plant(argv):
