@@ -30,6 +30,15 @@ jobs:
         with:
           python-version: "3.12"
 
+      # stale status claims in proof/ against the README's status table (#757); its selftest lists its plants, exit 1
+      - name: Proof status lint
+        if: runner.os == 'Linux'
+        shell: bash
+        run: |
+          python proof_status_lint.py
+          set +e; python proof_status_lint.py --selftest; rc=$?; set -e
+          test $rc -eq 1
+
       - name: Python bindings
         shell: bash
         run: |
