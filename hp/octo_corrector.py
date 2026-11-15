@@ -243,7 +243,7 @@ def junk_subspace_o(s, w, delta_max=1e-2, iters=6, seed=0):
 
 def newton_od(s, z, tol=1e-40, it_max=12, max_halvings=8, verbose=True, mutate=0, junk_w=0, delta_max=1e-2, tol_dz=1e-45,
               lam_stall=0.0, on_first=None, scale_c=None, trace=None, accept="own", strong_chord=0, chord_it=10,
-              full_drop=0.0, abort_theta=0.0):
+              full_drop=0.0, abort_theta=0.0, abort_it=1):
     """Newton in octo-double from the eight-part state z on s (PinnedO, or ElimO around it): newton_qd's mode 'full'
     one level up (hpkernel.driver.newton_qd, its acceptance rule). A trial z + lam dz (lam = 1, 1/2, ...,
     2^-max_halvings) is accepted when the Newton correction there, with its own Jacobian, is smaller than dz (max norms
@@ -282,7 +282,9 @@ def newton_od(s, z, tol=1e-40, it_max=12, max_halvings=8, verbose=True, mutate=0
     abort_theta=R > 0 (with accept="natural", #784): the attempt stops, not converged, when the full-step trial of
     iteration 1 has theta above R. Over #603's and #608's logs every attempt with theta there above 7e9 ran to the step
     limit and every converged one had at most 5.8e6 (hp/abort_replay.py), so R = 1e8 refuses at iteration 1 what would
-    otherwise cost an hour or more. 0 (the default) leaves the test as it was.
+    otherwise cost an hour or more. 0 (the default) leaves the test as it was. abort_it=K applies the same test at
+    iterations 1 to K: #608's d10 attempt at a = 0.4547 had theta 2.8e-7 at iteration 1 and 6.0e12 at iteration 2,
+    where no converged attempt in those logs exceeds 1.5e5.
 
     strong_chord=k > 0 (#674): the first step is taken whole, and then only the strong rows are solved, by the chord
     dw = (I - V V^T) J0^-1 F through the start's LU (chord_strong, V the k weakest right singular directions of J0), at
@@ -414,12 +416,12 @@ def newton_od(s, z, tol=1e-40, it_max=12, max_halvings=8, verbose=True, mutate=0
                           + f", {round(time.time() - t1, 2)} s", flush=True)
                 if by_drop:
                     rec["by_drop"] = True
-                if abort_theta > 0 and it == 1 and lam == 1.0 and not ok and theta > abort_theta:     # #784
+                if abort_theta > 0 and 1 <= it <= abort_it and lam == 1.0 and not ok and theta > abort_theta:     # #784
                     rec.update(lam=0.0, aborted=theta, seconds=round(time.time() - t0, 2))
                     hist.append(rec)
                     if verbose:
                         print(f"  on {it}: theta at lam 1 {theta:.3e} above abort_theta {abort_theta:g}: attempt refused at "
-                              f"iteration 1", flush=True)
+                              f"iteration {it}", flush=True)
                     return z, hist, False
                 if ok:
                     # the Jacobian at the accepted point, once, for the next step (ElimO.newton_o without a second

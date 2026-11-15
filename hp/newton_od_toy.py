@@ -175,6 +175,33 @@ class Abort:
         return [np.asarray(rhs[0], dtype=float) + w] + [ZERO] * 7
 
 
+class Abort2(Abort):
+    """Abort with the weak vector added from newton_o's third call on, so theta is small at iteration 1 and about 1e9 at
+    iteration 2 (#608's d10 attempt at a = 0.4547, #784's recommended task)"""
+
+    def olu_solve(self, rhs, trans=False):
+        w = np.array([0.0, 1e9]) if self.calls >= 3 else ZERO
+        return [np.asarray(rhs[0], dtype=float) + w] + [ZERO] * 7
+
+
+def abort2_check():
+    """abort_theta 1e8 with abort_it 2 stops Abort2's attempt at iteration 2; with abort_it 1 it does not (the control)"""
+    z = [np.array([0.0, 0.0])] + [ZERO] * 7
+
+    def run(K):
+        with contextlib.redirect_stdout(io.StringIO()):
+            _, h, _ = newton_od(Abort2(), z, tol=1e-30, it_max=4, accept="natural", abort_theta=1e8, abort_it=K)
+        return h
+
+    h2, h1 = run(2), run(1)
+    fired = any("aborted" in r for r in h2) and len(h2) == 3
+    quiet = not any("aborted" in r for r in h1)
+    good = fired and quiet
+    print(f"refusal at iteration 2: stops with abort_it 2 {fired} ({len(h2)} records); not with abort_it 1 {quiet}: "
+          f"{'pass' if good else 'FAIL'}")
+    return good
+
+
 def abort_check():
     """abort_theta 1e8 stops the toy's attempt at iteration 1, 1e10 does not"""
     z = [np.array([0.0, 0.0])] + [ZERO] * 7
@@ -239,6 +266,7 @@ def main():
     ok &= chord_check()
     ok &= drop_check("--mutate=drop" in sys.argv[1:])
     ok &= abort_check()
+    ok &= abort2_check()
     mut = " ".join(a for a in sys.argv[1:] if a.startswith("--mutate="))
     print(f"newton_od_toy{' ' + mut if mut else ''}: {'PASS' if ok else 'FAIL'}")
     return 0 if ok else 1
