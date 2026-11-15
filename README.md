@@ -1990,10 +1990,14 @@ near-null band in the Jacobian and an unexplained drift of the gauge mode's root
     estimates, from 259.900 to 259.905.
     - Δ's exponent there is 0.45 to 0.48 by Dlog Padé, which returns an isolated planted square root
       (`hp/singularity_type.py planted`), and 0.52 to 0.72 by a ratio fit.
+    - From the chain's own Taylor series near the fold, a differential approximant continued around D* and quadratic
+      Padé agree on D* = 259.90330382883 and Δ* = 1.6323214210731, on an exponent of 1/2 to 8.9×10⁻¹⁵, and on the
+      branch that folds back, the mirror, to 8.0×10⁻⁹ ([`hp/data/fold_mirror.csv`](hp/data/fold_mirror.csv)).
     - A plan made at the state, on a base that did not converge, moves D* by +0.010 to +0.011 at the two bases where it
-      was run.
-    - The 1/n series fitted below D = 245 shows nothing there, and a square root of that size planted in the data
-      below 245 makes every fit of it fail.
+      was run. Those series miss their own states by 3.2×10⁻⁵, so whether the fold moves with the plan is open.
+    - The 1/n series fitted below D = 245 shows nothing there. It would flag a square root of the continuum anywhere
+      from D = 259 to 270 with a coefficient above 2.3–3.0×10⁻¹⁰, and the chain's fold has 0.035
+      ([`hp/track_c_fold.py`](hp/track_c_fold.py)).
     - So the fold belongs to the chain's discrete system, its resolution and truncations with harmonics 5–13 held,
       not to the continuum as far as the data below 245 show. This is numerical evidence
       ([notes/LARGE_D_WALL.md](notes/LARGE_D_WALL.md), "Where the series is singular" and "Track C";

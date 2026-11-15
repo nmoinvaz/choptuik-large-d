@@ -3543,9 +3543,11 @@ def fold_mirror():
     a818 = json.load(open(os.path.join(ROOT, "hp/data/lam_singularity_posthoc.json")))
     d818 = [v["delta"][0] for v in a818.values()]
     t_tab = lambda nm: [(N, "| %s |" % nm)]                                 # noqa: E731
-    out = [("M1 against M2 on the mirror", re_["diff"], 8.0e-9, 1e-10, [(N, "8.0×10⁻⁹ over D 259.64–259.90")]),
+    R = "README.md"
+    out = [("M1 against M2 on the mirror", re_["diff"], 8.0e-9, 1e-10, [(N, "8.0×10⁻⁹ over D 259.64–259.90"),
+                                                                        (R, "the mirror, to 8.0×10⁻⁹")]),
            ("M1's largest |mu - 1/2|", max(abs(x - 0.5) for x in co("M1", 6)), 8.9e-15, 1e-16,
-            [(N, "1/2 to 8.9×10⁻¹⁵ at every base")]),
+            [(N, "1/2 to 8.9×10⁻¹⁵ at every base"), (R, "exponent of 1/2 to 8.9×10⁻¹⁵")]),
            ("the plant's noise", pl["noise"], 1e-30, 1e-31, [(N, "relative 10⁻³⁰, above the jets' own")]),
            ("the jets' noise, low", min(nz["noise"]), 5.7e-35, 1e-36, [(N, "5.7×10⁻³⁵ to 7.2×10⁻³⁴.")]),
            ("the jets' noise, high", max(nz["noise"]), 7.2e-34, 1e-35, [(N, "5.7×10⁻³⁵ to 7.2×10⁻³⁴.")]),
@@ -3575,10 +3577,12 @@ def fold_mirror():
             [(N, "10⁻¹² past 259.86")]),
            ("spread over error, M1", ph["spread_over_error"]["M1"], 44, 1, [(N, "the largest spread was 44 (M1) and 116 (M2)")]),
            ("spread over error, M2", ph["spread_over_error"]["M2"], 116, 1, [(N, "the largest spread was 44 (M1) and 116 (M2)")]),
-           ("D*", val(0), 259.90330382883, 1e-11, t_tab("D* | 259.90330382883 | below 10⁻¹³ | below 10⁻¹³")),
+           ("D*", val(0), 259.90330382883, 1e-11, t_tab("D* | 259.90330382883 | below 10⁻¹³ | below 10⁻¹³")
+            + [(R, "D* = 259.90330382883")]),
            ("D*'s spread below 1e-13", float(spr(0) < 1e-13), 1, 1, t_tab("D* | 259.90330382883 | below 10⁻¹³")),
            ("D*'s plant error below 1e-13", float(wst("Dstar") < 1e-13), 1, 1, t_tab("D* | 259.90330382883 | below 10⁻¹³ | below 10⁻¹³")),
-           ("Delta*", val(1), 1.6323214210731, 1e-13, t_tab("Δ* | 1.6323214210731 | below 10⁻¹⁵ | 2.2×10⁻¹⁶")),
+           ("Delta*", val(1), 1.6323214210731, 1e-13, t_tab("Δ* | 1.6323214210731 | below 10⁻¹⁵ | 2.2×10⁻¹⁶")
+            + [(R, "Δ* = 1.6323214210731")]),
            ("Delta*'s spread below 1e-15", float(spr(1) < 1e-15), 1, 1, t_tab("Δ* | 1.6323214210731 | below 10⁻¹⁵")),
            ("Delta*'s plant error", wst("Delta*"), 2.2e-16, 1e-17, t_tab("Δ* | 1.6323214210731 | below 10⁻¹⁵ | 2.2×10⁻¹⁶"))]
     for i, nm, v, s_, w in ((2, "a₁", 0.035020554885, 2.3e-15, 3.9e-14), (3, "a₂", -0.008654817400, 2.1e-14, 3.4e-13),
@@ -3662,7 +3666,8 @@ def track_c_fold():
     rs = [r["at09"]["resid_max"] for r in rec]
     fa = [r["first_any"] for r in rec]
     setters = set(tuple(r["setters"]) for r in rec)
-    return [("smallest bound", min(am), 2.3e-10, 1e-11, t1), ("largest bound", max(am), 3.0e-10, 1e-11, t1),
+    tR = [("README.md", "coefficient above 2.3–3.0×10⁻¹⁰")]
+    return [("smallest bound", min(am), 2.3e-10, 1e-11, t1 + tR), ("largest bound", max(am), 3.0e-10, 1e-11, t1 + tR),
             ("bound at 259.903, a > 0", c["+"]["amax"], 2.5e-10, 1e-11, t2),
             ("bound at 259.903, a < 0", c["-"]["amax"], 2.3e-10, 1e-11, t2),
             ("the chain's a over the bound", 0.035 / max(c["+"]["amax"], c["-"]["amax"]), 1.4e8, 1e7,
