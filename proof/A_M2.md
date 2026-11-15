@@ -371,6 +371,40 @@ small: on the run with secondvar's sign flipped, the M = 3 test still passes wit
 (`logs/A_M2_krawczyk_M3_1e-8_mut_lin2.log`), although the enclosed Y D²g̃ is off by a factor of about two. A wrong
 enclosure can make the test pass; D2 is what rules that out on the runs where it is sharp.
 
+### 6.6 The start data against the stored runs of the start-value lemma
+
+`start_data2` does not read the stored runs of lemma FP(5) (A_lemmas_M.md §2.4). It runs the lemma's computation
+itself, at p̂ and over the hull of p(X), and `start_data_M` raises unless the fixed point holds on each set and on its
+Cauchy box. So the lemma's hypothesis is checked in every run, on the sets that run uses. The sets of the h = 10⁻¹⁰ run
+also lie inside a stored run of the lemma (`python3 start_cover_M2.py --rerun`, `logs/start_cover_M2.log`; #484):
+
+| | lemma FP(5), stored runs | the certificate's start data |
+|---|---|---|
+| start ray and radius | arg ξ = 5π/16, r₀ = 0.0622 (also 3π/8, r₀ = 0.07, N = 105) | arg ξ = 5π/16, r₀ = 0.0622 |
+| splitting, N, weight exponent k | diag, 132, 40 | diag, 132, 40 |
+| code | `fixed_point_M.py`, SHA-256 prefix 589e5a810bc50289 | the same file |
+| centre | x̂ = `fixed_point_M.ZEROS[5]` | p̂, within 7.94×10⁻¹⁰ of x̂ (the largest offset, in ω/ω∞) |
+| real sets | x̂ ± 10⁻⁹ and x̂ ± 10⁻⁶ (the start-data rows) | p̂, and the hull of p(X) with the half-widths of §6.4 |
+| complex sets | the Cauchy boxes of those rows, real parts x̂ ± (h + 10⁻³) and imaginary parts ± 10⁻³; the table's box x̂ ± 10⁻³(1 + i) | the Cauchy boxes of p̂ and of the hull: real parts 10⁻³ beyond each, imaginary parts ± 10⁻³ |
+| contraction on the real set, on the complex set | 0.3095, 0.3102 (x̂ ± 10⁻⁶) | 0.3095, 0.3102 (at p̂ and over the hull) |
+| sup\|η\| on the real set; Cauchy part of ∂η | 1.6×10⁻²⁶; 3.5852×10⁻²⁰ (x̂ ± 10⁻⁶) | 8.0×10⁻⁹⁶ at p̂, 1.0×10⁻³¹ over the hull; 3.5832×10⁻²⁰ |
+
+- All four sets lie in the start-data row over x̂ ± 10⁻⁹ with a slack of 1.07×10⁻¹⁰, and in the row over x̂ ± 10⁻⁶ with
+  a slack of 9.99×10⁻⁷, both in ω/ω∞ (ball in ball, arb's `contains`).
+- They do not lie in the table's complex box x̂ ± 10⁻³(1 + i). The two Cauchy boxes are centred on p̂ and pass its
+  edge by 7.9×10⁻¹⁰ and 8.9×10⁻¹⁰ in ω/ω∞.
+- The diag splitting on a complex box needs M W₀ sup|Im ω/ω∞| ≤ 3/2 (A_M_review.md F3). It is 0.0191 here.
+- The certificate's bounds on η come from its own smaller sets, not from the stored rows. The rerun reproduces the
+  stored ones, 8.014066986951313×10⁻⁹⁶ and 3.5831605424491966×10⁻²⁰, and they are below the rows' bounds.
+- Six mutations of the certificate's side are reported as not covered (`python3 start_cover_M2.py --selftest`,
+  `logs/start_cover_M2_selftest.log`): a box widened to h = 2×10⁻⁶, a hull that passes the edge of x̂ ± 10⁻⁶ by
+  9×10⁻¹¹, a centre moved by 2×10⁻⁶, and another Cauchy radius, ray or truncation. The null mutation, a hull 2×10⁻¹⁰
+  inside that edge, stays covered.
+
+The h = 10⁻⁹ and h = 10⁻¹¹ runs are covered as well (`--box=`, `logs/start_cover_M2_boxes.log`), the first by the row
+over x̂ ± 10⁻⁶ only. What the certificate still takes from the lemma is that its proof (A_lemmas_M.md §2.2) and
+`fixed_point_M.py` are correct.
+
 ## 7. Reproduce
 
 All commands from `solver/proof/`, with python-flint 0.9.0, mpmath and numpy; `fixed_point_M.py` sits next to these
@@ -414,6 +448,8 @@ python3 certify_M2.py controls --box=data/A_M2_box_M5_1e-10.json                
 python3 certify_M2.py d2check --box=data/A_M2_box_M5_1e-10.json --fd=data/A_M2_fd_M5.json                 # pass
 python3 certify_M_recheck.py data/A_M2_box_M5_1e-10.json [--mutate]                                       # pass [fail]
 python3 certify_M2.py export6a --box=data/A_M2_box_M5_1e-10.json --out=data/A_M2_6a_M5_1e-10.json        # for lemma 6a(M)
+python3 start_cover_M2.py --rerun                      # section 6.6: COVERED, RERUN: PASS (exit 0); about 1 min
+python3 start_cover_M2.py --selftest                   # exit 0; each --mutate=widen|edge|centre|cauchy|ray|trunc exits 1
 ```
 
 These commands, without the finite-difference runs and the pilot, were rerun on aarch64 Linux (Raspberry Pi 5,
