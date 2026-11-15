@@ -637,6 +637,57 @@ def start_set(xs, M, h, cauchy, rho0, r0="0.07", arg="3pi/8", sector=None, N=Non
     return True, vals, cols, info
 
 
+def start_data(x, M, r0, arg, cauchy, N=None, k=None, mutate=None, kernel="sharp", prec=512, verbose=True,
+               label=""):
+    """start data in the solvers' variables at xi0 = r0 e^{i arg} (|z0| = R, the edge of the domain) over a real
+    parameter set x (M + 1 arb: a point or a box): the state [D_mu, S_mu, C_nu] (D = xi P, S = z Q, lateral_np's
+    order), valid for every parameter in x, and its derivatives in the M + 1 parameters over x. The contraction is
+    proved on x (eta over x) and on its Cauchy box x +- c + i [-c, c] (Cauchy's estimate for the derivatives of eta).
+    This is the interface of the point certificates (certify_M.start_data, certify_M2.start_data2).
+    Returns (ok, xi0, vals, ders, info); vals and ders are None unless both contractions hold."""
+    ctx.prec = prec
+    odd, even = harmonics(M)
+    cc = arb(cauchy)
+    xr = [acb(arb(v)) for v in x]
+    xc = [acb(arb(v) + arb(0, cc), arb(0, cc)) for v in x]
+    stX = Setup(xr, M, r0, arg, None, N, k, True, kernel, mutate, prec)
+    outX = prove(stX, verbose, f"{label}real set: ")
+    stC = Setup(xc, M, r0, arg, None, stX.N, stX.k, True, kernel, mutate, prec)
+    outC = prove(stC, verbose, f"{label}Cauchy box: ")
+    info = {"N": stX.N, "k": stX.k, "real": outX, "cbox": outC}
+    xi0 = stX.r0 * (I * stX.arg).exp()
+    if not (outX["ok"] and outC["ok"]):
+        return False, xi0, None, None, info
+    z0 = xi0 * xi0
+    Ru, r0u = up(stX.R), up(stX.r0)
+    m = M + 1
+    xj = [Jet(xr[i], [acb(1 if i == j else 0) for j in range(m)]) for i in range(m)]
+    Fj, wj, sj = profile(xj, M)
+    zero, one = Jet(acb(0), [acb(0)] * m), Jet(acb(1), [acb(0)] * m)
+    d, q, g = formal_series(Fj, sj, M, stX.N, zero, one, True, stX.gp)
+    vals, ders = [], [[] for _ in range(m)]
+
+    def add(jet, e, eC):
+        vals.append(jet.v + disc(e))
+        for i in range(m):
+            ders[i].append(jet.d[i] + disc(up(eC / cc)))
+    for mu in odd:
+        Pj = horner([d[j][mu] for j in range(stX.N)], z0, zero)
+        add(Pj * xi0, up(r0u * eta_radius(outX, ("p", mu), Ru)), up(r0u * eta_radius(outC, ("p", mu), Ru)))
+    for mu in odd:
+        # S = z Q and Q = V + (1 + s) P, so |S - S_N| <= R (|v| + |1 + s| |p|)
+        Qj = horner([q[j][mu] for j in range(stX.N)], z0, zero)
+        add(Qj * z0,
+            up(Ru * (eta_radius(outX, ("v", mu), Ru) + stX.s1[mu] * eta_radius(outX, ("p", mu), Ru))),
+            up(Ru * (eta_radius(outC, ("v", mu), Ru) + stC.s1[mu] * eta_radius(outC, ("p", mu), Ru))))
+    for nu in even:
+        Cj = horner([g[j][nu] for j in range(stX.N)], z0, zero)
+        add(Cj, eta_radius(outX, ("c", nu), Ru), eta_radius(outC, ("c", nu), Ru))
+    info["eta"] = max(float(eta_radius(outX, cp, Ru)) for cp in stX.comps)
+    info["eta_cauchy"] = max(float(eta_radius(outC, cp, Ru)) for cp in stC.comps)
+    return True, xi0, vals, ders, info
+
+
 def rad(z):
     return max(float(z.real.rad()), float(z.imag.rad()))
 

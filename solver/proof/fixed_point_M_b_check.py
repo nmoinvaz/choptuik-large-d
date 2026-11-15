@@ -14,9 +14,20 @@ fixed_point_M_b.py, imports neither.
           (b) every entry of the first above 1e-6 is matched to within 20% (second >= 0.8 first): a term missing
               from either matrix would show as a larger gap;
           (c) the same for the forcing in the first's weighted norm.
+    python3 fixed_point_M_b_check.py cert --box=data/A_M2_box_M5_1e-10.json [--second] [--N=..]
+        the start data of a stored point certificate (issue #866). The certificate's four parameter sets (its centre
+        p^, the hull of its box, and the Cauchy box of each) are rebuilt by start_cover_M2.cert_data. The first
+        implementation is run by the certificate's own calls of fixed_point_M.start_data_M (as start_cover_M2 --rerun
+        does), the second by fixed_point_M_b.start_data. Criteria, written before the first run: the second proves
+        the contraction on all four sets; every start value at p^, every derivative entry at p^ and every derivative
+        entry over the hull overlaps the first's, per component (and the values over the hull, which the certificate
+        does not use). --second (kind box2): also the second-order jets of Y_N over the hull along the chart's
+        directions, by the second implementation's recursion on series of length 3, against certify_M2.series2.
     mutations (each must make its check fail, exit status 3):
         m1 --mutate=coef | sign | scale     as in fixed_point_M_b.py
         lip --mutate=drop                   the second implementation without the [ct W] term of Phi_V: (b) must fail
+        cert --mutate=sign | radius         the sign of [G P]: the start data must miss the certificate's;
+                                            r0 = 0.3: no contraction
 """
 import sys
 
@@ -121,12 +132,115 @@ def lip(M, xs, r0, sector, mutate=None):
     return ok
 
 
+def cert(boxfile, mutate=None, second=False, N_in=None):
+    import json
+    import time
+    import certify_M as CM
+    import certify_M2 as C2M
+    import start_cover_M2 as SC
+    from flint import acb_series
+    with open(boxfile) as fh:
+        bx = json.load(fh)
+    ce = SC.cert_data(bx)
+    M, r0, arg, diag, kind, c = ce["M"], ce["r0"], ce["arg"], ce["diag"], ce["kind"], ce["c"]
+    m = M + 1
+    p, hull = ce["p"], ce["hull"]
+    names = FPM.state_order(M)
+    nd = len(names)
+    print(f"{boxfile}: kind {kind}, M = {M}, ray {arg}, r0 = {r0}, Cauchy radius {c}, the certificate's N = {ce['N']}, "
+          f"hull half-width {ce['hw']:.3e}")
+    # the first implementation, by the certificate's own calls
+    t0 = time.time()
+    cen = SC.centre_run(p, M, r0, arg, diag) if kind == "box2" else None
+    ctx.prec = SC.PREC
+    _, v1c, d1c, e1c = FPM.start_data_M([arb(v) for v in p], M, r0, arg, +1, c, centre=cen, diag=diag)
+    _, v1b, d1b, e1b = FPM.start_data_M([arb(v) for v in hull], M, r0, arg, +1, c, centre=cen, diag=diag)
+    print(f"first implementation (start_data_M at p^ and over the hull): sup|eta| {float(e1c[0].upper()):.3e} and "
+          f"{float(e1b[0].upper()):.3e}, Cauchy parts {float(e1c[1].upper()):.3e} and {float(e1b[1].upper()):.3e}  "
+          f"[{time.time() - t0:.0f} s]", flush=True)
+    # the second implementation
+    t0 = time.time()
+    okc, _, v2c, d2c, ic = B.start_data(p, M, r0, arg, c, N=N_in, mutate=mutate, label="p^, ")
+    Np, kp = ic["N"], ic["k"]
+    okb, _, v2b, d2b, ib = B.start_data(hull, M, r0, arg, c, N=Np, k=kp, mutate=mutate, label="hull, ")
+    print(f"second implementation: N = {Np} (the certificate's {ce['N']}), k = {kp}; four contractions hold: "
+          f"{okc and okb}  [{time.time() - t0:.0f} s]", flush=True)
+    if not (okc and okb):
+        print("CERTIFICATE START DATA: FAIL (no contraction)")
+        return False
+    print(f"  sup|eta| in (p, v, c): {ic['eta']:.3e} at p^, {ib['eta']:.3e} over the hull; on the Cauchy boxes "
+          f"{ic['eta_cauchy']:.3e} and {ib['eta_cauchy']:.3e}")
+    ok = True
+
+    def block(title, A1, A2):
+        """A1, A2: lists of acb (first, second); overlap per entry"""
+        nonlocal ok
+        miss = [i for i in range(len(A1)) if not ov(A2[i], A1[i])]
+        inside = sum(bool(A1[i].contains(A2[i])) for i in range(len(A1)))
+        dist = max(float(abs(A2[i].mid() - A1[i].mid()).upper()) for i in range(len(A1)))
+        r1, r2 = max(B.rad(z) for z in A1), max(B.rad(z) for z in A2)
+        print(f"  {title}: {len(A1) - len(miss)} of {len(A1)} overlap ({inside} of the second's balls inside the "
+              f"first's); largest midpoint distance {dist:.2e}; largest radius first {r1:.2e}, second {r2:.2e}"
+              + (f"; MISSES at entries {miss[:8]}" if miss else ""))
+        ok = ok and not miss
+    block("values at p^", v1c, v2c)
+    block("derivatives at p^", [z for col in d1c for z in col], [z for col in d2c for z in col])
+    block("derivatives over the hull", [z for col in d1b for z in col], [z for col in d2b for z in col])
+    block("values over the hull (not used by the certificate)", v1b, v2b)
+    if second and kind == "box2":
+        # second-order jets of Y_N over the hull along the chart's directions and their pair sums (start_data2's jd, js)
+        import certify_M2_lohner as C2
+        t0 = time.time()
+        ctx.prec = CM.KPREC
+        Cm = [[arb(x) for x in r] for r in bx["C"]]
+        G = [[arb(x) for x in r] for r in bx["Gamma"]]
+        ws = list(bx["w"])
+        widths = [arb(bx["h"]), arb(bx["h"])] + [arb(ws[(i // 2) % len(ws)]) for i in range(M - 1)]
+        ctx.prec = SC.PREC
+        T = CM.T_matrix(Cm, M)
+        X = [arb(0, wd) for wd in widths]
+        dirs = C2M.dp_dirs(T, G, X, M)
+        dirs = dirs + [[dirs[j][i] + dirs[k][i] for i in range(m)] for (j, k) in C2.pair_list(m) if j != k]
+        path = CM.path_for(M)
+        j1 = C2M.series2(hull, dirs, M, r0, path[1], ce["N"])
+        t1 = time.time() - t0
+        ctx.prec = 512
+        ctx.cap = 3
+        odd, even = B.harmonics(M)
+        xi0 = acb(arb(r0)) * (B.I * B.angle(arg)).exp()
+        z0 = xi0 * xi0
+        zero, one = acb_series([0], prec=3), acb_series([1], prec=3)
+        a1, a2 = [], []
+        for di, dv in enumerate(dirs):
+            pj = [acb_series([acb(hull[i]), acb(dv[i])], prec=3) for i in range(m)]
+            F, w, sl = B.profile(pj, M)
+            d, q, g = B.formal_series(F, sl, M, ce["N"], zero, one, True, st_gp(mutate))
+            st2 = [B.horner([d[j][mu] for j in range(ce["N"])], z0, zero) * xi0 for mu in odd]
+            st2 += [B.horner([q[j][mu] for j in range(ce["N"])], z0, zero) * z0 for mu in odd]
+            st2 += [B.horner([g[j][nu] for j in range(ce["N"])], z0, zero) for nu in even]
+            for qi in range(nd):
+                cs = st2[qi].coeffs()
+                for o in range(3):
+                    a1.append(j1[di][qi][o])
+                    a2.append(cs[o] if len(cs) > o else acb(0))
+        print(f"  second-order jets: {len(dirs)} directions, first {t1:.0f} s, second {time.time() - t0 - t1:.0f} s")
+        block("jets of Y_N over the hull (orders 0, 1, 2)", a1, a2)
+    print(f"CERTIFICATE START DATA ({boxfile}): {'PASS' if ok else 'FAIL'}")
+    return ok
+
+
+def st_gp(mutate):
+    return {"sign": acb(-1), "scale": 1 + acb("1e-9")}.get(mutate)
+
+
 def main():
     args = [a for a in sys.argv[1:] if not a.startswith("--")]
     opts = {a.split("=", 1)[0][2:]: (a.split("=", 1)[1] if "=" in a else "1") for a in sys.argv[1:] if a.startswith("--")}
     cmd = args[0] if args else "m1"
     if cmd == "m1":
         ok = m1(opts.get("mutate"))
+    elif cmd == "cert":
+        ok = cert(opts["box"], opts.get("mutate"), "second" in opts, int(opts["N"]) if "N" in opts else None)
     else:
         M = int(opts.get("M", "5"))
         xs = opts["x"].split(",") if "x" in opts else FPM.ZEROS[M]
