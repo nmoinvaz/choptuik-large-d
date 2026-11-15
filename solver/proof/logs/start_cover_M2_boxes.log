@@ -1,0 +1,8 @@
+start_cover_M2: data/A_M2_box_M5_1e-9.json against the stored runs of lemma FP(5), rows all, mutation None  [python-flint 0.9.0, FLINT 3.6.0]
+  hull half-widths:  A 1.000e-09  w/w_inf 1.000e-09  B3 4.115e-10  C3 4.640e-11  B5 4.380e-11  C5 8.198e-12
+START COVER M2 (data/A_M2_box_M5_1e-9.json, rows all, mutation None): COVERED by [data 5pi/16 h=1e-6]
+exit 0
+start_cover_M2: data/A_M2_box_M5_1e-11.json against the stored runs of lemma FP(5), rows all, mutation None  [python-flint 0.9.0, FLINT 3.6.0]
+  hull half-widths:  A 1.000e-11  w/w_inf 1.000e-11  B3 4.115e-12  C3 4.640e-13  B5 4.380e-13  C5 8.198e-14
+START COVER M2 (data/A_M2_box_M5_1e-11.json, rows all, mutation None): COVERED by [data 5pi/16 h=1e-9], [data 5pi/16 h=1e-6]
+exit 0
