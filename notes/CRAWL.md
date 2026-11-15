@@ -571,6 +571,26 @@ weakest directions (share 1.0000): p1's harmonic-11 and harmonic-13 cos/sin pair
 So both acceptance tests stall on the same harmonic-13 pair. The iterate is still far from the root (|dz| 2.45×10⁻⁹),
 which is why its σ there are larger than at the roots of 12.3.
 
+### 12.7 On main's build the first step's harmonic-13 remainder is small, and λ = 1 is accepted (#779)
+
+**On main's build (after #523's exact projector), the own test's correction W at the step-1 trial equals the first
+step's harmonic-13 remainder at a = 1, 1/2 and 1/4. That remainder is 74 times smaller than on the old build, so the
+step-1 trial is accepted at λ = 1 at all three.** Raw `I779-mac/` d5009848. `hp/junk_err.py` (0feb1bd1) takes its
+cases as arguments and reproduces #752's log line for line.
+
+| | a = 1 (D 118) | a = 1/2 | a = 1/4 |
+|---|---|---|---|
+| W, the own correction at the step-1 trial | 4.150×10⁻¹⁷ | 4.128×10⁻¹⁸ | 1.567×10⁻¹⁸ |
+| e13, the trial's harmonic-13 error against a root of the same plan | 3.874×10⁻¹⁷ | 4.044×10⁻¹⁸ | 1.425×10⁻¹⁸ |
+| W / e13 (bar: 1 within 10%) | 1.071 | 1.021 | 1.0997 |
+| W / Y, against the bound 0.75 | 0.393 | 0.176 | 0.260 |
+
+W is the trial's whole distance from the root, 91–98% of it in harmonic 13. The old build left 2.92×10⁻¹⁵ at a = 1,
+and its remainder fell 81 times from a = 1 to 1/2, where this build's falls 9.4 times. The roots converged below 10⁻⁶⁰,
+and the control (`--mutate k17`, 10⁻²⁰ planted in harmonic 17) reads 1.00×10⁻²⁰. The D 118 crawl of 12.1–12.3 is
+therefore the old build's. On main's build the harmonic-13 pair still holds the weak directions (12.6), but the first
+step leaves too little error there to stall the own test.
+
 ## 13. The natural test's full-step drop (#709)
 
 `newton_od(..., full_drop=f)` (`anm_run.py --od_full_drop`) also accepts a full-step trial whose max|F| falls to f times
