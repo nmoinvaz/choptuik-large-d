@@ -793,6 +793,8 @@ def run_chain(c):
     the step whose series holds the --turns_max-th turn (2: the mirror's own turn, if it has one)"""
     from octo_corrector import load_o
     opt = c["opt"]
+    if opt.get("arc_diag"):
+        return run_diag(c)
     z8 = c["last_q"]["z8"] if "z8" in c["last_q"] else load_o(c["state_path"])[0]
     sysm = ChainSys(c, z8, c["D"])
     pol = sysm.polish()
@@ -817,6 +819,82 @@ def run_chain(c):
                             log=lambda s: print(s, flush=True), on_step=on_step)
     print("done", flush=True)
     return 0 if recs and recs[-1]["converged"] else 1
+
+
+def run_diag(c):
+    """anm_run.py --arclength 1 --arc_diag 1: the adapter's pieces at the polished base, where each step must be at
+    the base's own level and each pair must agree. (1) The fixed-D Newton step. (2) b = J^-1 F_D, with F_D formed
+    before and after the factorization, against -w_1 of the order-1 series. (3) The four weakest singular values of J
+    and of the bordered matrix (junk_subspace_o). (4) The bordered step, BorderedCore then BorderedElim, with the
+    series' tangent and s = 0. (5) F_D against central differences in D at h 1e-22 and 1e-26. OUT/arc_diag.json."""
+    from octo_corrector import junk_subspace_o, load_o
+    opt = c["opt"]
+    z8 = c["last_q"]["z8"] if "z8" in c["last_q"] else load_o(c["state_path"])[0]
+    sysm = ChainSys(c, z8, c["D"])
+    out = dict(polish=sysm.polish())
+    t0 = time.time()
+
+    def say(k, v):
+        out[k] = v
+        print(f"diag {k}: {json.dumps(v, default=str)} ({time.time() - t0:.0f} s)", flush=True)
+
+    def rel(u, v):
+        return float(vmax(vadd(u, v, -1)) / vmax(v))
+    with mp.workdps(DPS_SERIES):
+        D0, z0 = sysm.D, sysm.base8
+        e = sysm.at(D0)
+        FD_pre = to_mp_vec(sysm.F_D(e, z0))
+        st = e["po"].newton_o(z0)
+        a0 = to_mp_vec(st[0])
+        say("newton_base", dict(F=omax(e["po"].residual_o(z0)), step_max=float(vmax(a0)), step_Delta=float(a0[-1]),
+                                pivots=[float(st[3]), float(st[4])]))
+        FD = sysm.F_D(e, z0)
+        FDm = to_mp_vec(FD)
+        b = to_mp_vec(e["sn"].olu_solve([np.ascontiguousarray(p) for p in FD]))
+        b_pre = to_mp_vec(e["sn"].olu_solve(list(to_parts(FD_pre))))
+        held = None
+        if c["hfit"] is not None:
+            from pinning import band_field
+            with mp.workdps(DPS_KERNEL):
+                jets = c["hfit"].jets(e["D"], 1, c["ks_held"], exact=c["held_x"])
+            held = ((lambda j: band_field(jets[j], c["ks_held"], c["M"], parts=c["hparts"])), c["rows"])
+        with mp.workdps(DPS_KERNEL):
+            Zo, norms = c["coefficients_o"](e["sn"], z0, 1, held=held)
+        w1 = to_mp_vec(Zo[1])
+        say("b", dict(FD_max=float(vmax(FDm)), FD_pre_vs_post=rel(FD_pre, FDm), b_norm=float(vnorm(b)), w1_norm=float(vnorm(w1)),
+                      b_plus_w1=rel(vscale(b, -1), w1), b_pre_vs_post=rel(b_pre, b), b_Delta=float(b[-1]), w1_Delta=float(w1[-1])))
+        e["po"].newton_o(z0)
+        _, sJ, sJd = junk_subspace_o(e["po"], 4, delta_max=2.0)
+        tD = 1 / mp.sqrt(1 + vdot(w1, w1))
+        tz = vscale(w1, tD)
+        core = BorderedCore(sysm, to_mp_vec(z0), D0, tz, tD)
+        y0 = core.join(D0, z0)
+        stc = core.newton_o(y0)
+        sc = to_mp_vec(stc[0])
+        _, sB, sBd = junk_subspace_o(core, 4, delta_max=2.0)
+        say("sigma", dict(J=sorted(float(x) for x in list(sJ) + list(sJd)), bordered=sorted(float(x) for x in list(sB) + list(sBd))))
+        BE = _bordered_elim_class()(core)
+        ste = BE.newton_o(y0)
+        se = to_mp_vec(ste[0])
+        say("bordered_step", dict(core_D=float(sc[0]), core_max=float(vmax(sc[1:])), core_Delta=float(sc[-1]), elim_D=float(se[0]),
+                                  elim_max=float(vmax(se[1:])), elim_Delta=float(se[-1]), log=core.log, counts=BE.counts))
+        for h in (mp.mpf("1e-22"), mp.mpf("1e-26")):
+            Dp, Dm = dd_round(D0 + h), dd_round(D0 - h)
+            Fp = to_mp_vec(sysm.at(Dp)["po"].residual_o(z0))
+            Fm = to_mp_vec(sysm.at(Dm)["po"].residual_o(z0))
+            fd = vscale(vadd(Fp, Fm, -1), 1 / (Dp - Dm))
+            r = c["rows"]
+            held_rows = set(range(r.start, r.stop))
+            dif = vadd(fd, FDm, -1)
+            say(f"FD_h{float(h):.0e}", dict(h_used=float(Dp - D0), rel=rel(fd, FDm),
+                                            held_rows=float(max(abs(dif[i]) for i in held_rows) / vmax(FDm)),
+                                            other_rows=float(max(abs(dif[i]) for i in range(len(dif)) if i not in held_rows) / vmax(FDm)),
+                                            worst_row=int(max(range(len(dif)), key=lambda i: abs(dif[i])))))
+    with open(os.path.join(c["out"], "arc_diag.json"), "w") as f:
+        json.dump(out, f, indent=1, default=str)
+    print("done", flush=True)
+    return 0
+
 
 
 def cmd_plant(argv):
@@ -903,7 +981,59 @@ def cmd_selfcheck(argv):
     return 0 if good else 1
 
 
+def _delta_of_state(path):
+    """(D, Delta) of an eight-part state file (save_o's keys zh, zl, z2..z7, meta D_str), each its parts' exact sum"""
+    f = np.load(path, allow_pickle=True)
+    meta = json.loads(str(f["meta"]))
+    keys = ["zh", "zl"] + [f"z{q}" for q in range(2, 8)]
+    return mp.mpf(meta["D_str"]), mp.fsum(mp.mpf(float(f[k][-1])) for k in keys if k in f)
+
+
+def _jet_delta(path, D):
+    """Delta on a stored D-series (anm_run.py --save_jet 1, eight parts) at D, by Horner in u = D - D_b with D_b the
+    series' D rounded to double-double, and the last two terms' size there (the truncation estimate)"""
+    f = np.load(path, allow_pickle=True)
+    meta = json.loads(str(f["meta"]))
+    Db = dd_round(mp.mpf(meta["D_str"]))
+    zk = [mp.fsum(mp.mpf(float(f[f"z{q}"][k][-1])) for q in range(8)) for k in range(f["z0"].shape[0])]
+    u = D - Db
+    val = mp.mpf(0)
+    for c in reversed(zk):
+        val = val * u + c
+    N = len(zk) - 1
+    return val, abs(zk[N] * u ** N) + abs(zk[N - 1] * u ** (N - 1)), float(u)
+
+
+def cmd_pilotcheck(argv):
+    """#842's pilot: the corrected point's Delta against chain_nsr's stored series at another base, at the point's own
+    D. pass: |Delta - Delta_jet(D)| <= --bar (1e-30) + the jet's truncation estimate there. --shift dD evaluates the
+    jet at D + dD (the control: 1e-28 moves Delta by about 1.3e-29 x 10, so it must fail). --state2: a state of
+    chain_nsr's own near the jet's base, the jet's format check (the same rule)."""
+    opt = dict(pilot="", jet="", state2="", bar=1e-30, shift=0.0)
+    for a in argv:
+        k, _, v = a.lstrip("-").partition("=")
+        if k not in opt:
+            raise SystemExit(f"unknown option {a}")
+        opt[k] = type(opt[k])(v)
+    mp.mp.dps = DPS_SERIES
+    good = True
+    for name, path in (("state2", opt["state2"]), ("pilot", opt["pilot"])):
+        if not path:
+            continue
+        D, dl = _delta_of_state(path)
+        val, trunc, u = _jet_delta(opt["jet"], D + mp.mpf(opt["shift"]))
+        diff = abs(dl - val)
+        ok = diff <= opt["bar"] + trunc
+        good &= ok
+        print(f"{name} {os.path.basename(path)}: D {mp.nstr(D, 25)}, u {u:+.3e}, Delta {mp.nstr(dl, 40)}, jet "
+              f"{mp.nstr(val, 40)}, |diff| {float(diff):.2e} (bar {opt['bar']:.0e} + truncation {float(trunc):.1e})"
+              f"{', shift ' + format(opt['shift'], '.0e') if opt['shift'] else ''} -> {'pass' if ok else 'FAIL'}")
+    return 0 if good else 1
+
+
 if __name__ == "__main__":
+    if len(sys.argv) > 1 and sys.argv[1] == "pilotcheck":
+        sys.exit(cmd_pilotcheck(sys.argv[2:]))
     if len(sys.argv) > 1 and sys.argv[1] == "plant":
         sys.exit(cmd_plant(sys.argv[2:]))
     if len(sys.argv) > 1 and sys.argv[1] == "selfcheck":

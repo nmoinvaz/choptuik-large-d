@@ -325,7 +325,7 @@ def main():
     # (the sign of D's change), no base where the unit tangent's |t_D| < --guard, stopping below --D_min (0: never) or
     # after the step that holds the --turns_max-th turn (2: the mirror's own turn);
     # --border 0 is its control (the D-series and the corrector at fixed D)
-    opt.update(arclength=0, guard=0.05, D_min=0.0, arc_sign=1, border=1, turns_max=2)
+    opt.update(arclength=0, guard=0.05, D_min=0.0, arc_sign=1, border=1, turns_max=2, arc_diag=0)
     for k in list(opt):
         f = "--" + k
         if f in args:
