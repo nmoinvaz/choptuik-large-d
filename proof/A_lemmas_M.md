@@ -32,12 +32,12 @@ Contents
 
 | item | M = 3 | M = 5 | where |
 |---|---|---|---|
-| step (i): the start-value fixed point with derivatives in all M + 1 parameters | **certified** at the `hier.py` zero, at points and over real (±10⁻⁶) and complex (±10⁻³(1 + i)) boxes, on the rays 3π/8 and 5π/16 | **certified**, the same | §2 |
+| step (i): the start-value fixed point with derivatives in all M + 1 parameters | **certified** at the `hier.py` zero x̂, at points and over real (±10⁻⁶) and complex (±10⁻³(1 + i)) boxes, on the rays 3π/8 and 5π/16. The start data over x̂ ± 10⁻⁹ and x̂ ± 10⁻⁶ are certified on their Cauchy boxes as well, real parts x̂ ± (h + 10⁻³) and imaginary parts ± 10⁻³ (§2.4). Those Cauchy boxes contain the point certificate's start sets, and the complex box ±10⁻³(1 + i) does not. The stored runs cut the series at N = 94 and the certificate at N = 95, for which the lemma holds over x̂ ± 10⁻⁶ by a rerun (#862) | **certified**, the same. The Cauchy boxes of the start-data rows contain the point certificate's start sets at its truncation N = 132, and the complex box ±10⁻³(1 + i) does not (#484) | §2 |
 | M = 1 reproduces `fixed_point.py` | start values and start data bit for bit; constants to 10⁻¹⁶ | | §2.4 |
 | lemma S, lemma 6b₀ | **certified** over x̂ ± 10⁻⁶, R₊ = 0.01 (the M = 1 domain) | **certified** over x̂ ± 10⁻⁶, R₊ = 0.0064 | §3 |
 | lemma 6a | **certified** with the certificate's state box at ξ₁ = 0.3: ρ₆ₐ = 0.041 (`lemmas_M_runs/lemma6a_M3_cert.*`); the flat estimate Λ ≤ 0.29 | **certified** on the point certificate's Krawczyk sub-box p̂ ± (10⁻¹⁸, 10⁻²⁶, 10⁻²⁷) at ξ₁ = 0.3, R₊ = 0.08, k = 20: ρ₆ₐ = 0.212, with the centre passed as `--x` = p̂; its controls partial, swap and coords fire, and #39's float flow at p̂ lies within 5×10⁻⁸ of B's radius (raw `I184-macm3/`, 5866dd4; #184). Reproduced at p̂ on win2: ρ₆ₐ = 0.2081 from its own B (raw `I196-win2/`, 1bcd9da; #196). Cross-loaded under #111's rule, macm3's B gives 0.2121 on win2 (#196) and win2's B gives [0.2081327461 ± 2.7×10⁻¹¹] on macm3 (raw `I220-macm3/`, 21520ab; #220), so each enclosure gives ρ₆ₐ < 1 on the other machine. The last ball and win2's own, [0.2081327454 ± 8.8×10⁻¹²], are disjoint by 6.4×10⁻¹⁰, as #111 explains for bounds built from upper bounds. The first runs, below, were centred on the stored double-precision zero x̂, 7.9×10⁻¹⁰ from p̂, because `lemma6_jump_M.py` falls back to x̂ when the box file has no `x` key (#39); they are not proofs at p̂. On x̂ ± (10⁻¹⁸, 10⁻²⁶, 10⁻²⁷): ρ₆ₐ = 0.231 (0.088 on the sub-box 10⁻²⁰, 10⁻²⁷, 10⁻²⁸; at p̂ on that sub-box, 0.0873 on win2, #195); its controls partial, swap and coords fire (raw `I103-macm3/`, 684657c; #103). The whole 10⁻¹⁰ box does not pass: its start box makes B too wide (ρ₆ₐ = 39 at 10⁻¹⁶, #97). Reproduced on win2 (Windows, python-flint 0.9.0; raw `I104-win2/`, f71b04c; #104): ρ₆ₐ = 0.218 from its own B. Cross-loaded (#110), the two B have identical midpoints and radii that differ in the ninth digit, and win2 with macm3's B gives [0.2309898806 ± 4.0e-11] against macm3's [0.2309898799 ± 4.4e-13]: ρ₆ₐ is λ/(1 − λ) times a maximum of upper bounds, which move with every radius. Both machines run FLINT 3.6.0: most of the gap is the reload, which rounds each stored radius up to arb's 30-bit mag (macm3's own B reloaded gives [0.2309898805 ± 3.1e-11]), and the rest is the radii's ninth digit. So both are valid bounds (the criterion of #111) | §4 |
 | lemma 6b₁ | **certified** on the point certificate's box p̂ ± 1.1×10⁻⁹ (C¹ mode, 183 discs, check C1–C8 passes) | **certified** on p̂ ± 10⁻¹⁸ (C¹ mode, all 366 discs of rows 0–17, the covering check C1–C8 passes; its controls fire: a dropped tile (9, 5) fails the check and the wrong-sign mutation certifies 0 of 38 discs; the C¹ sets' planted-truth check passes at h = 10⁻⁹; raw `I37-macm3/`, `I113-macm3/`, `I38-macm3/` 6694698; #37, #112, #113, #38). Reproduced on win2 (Windows, python-flint 0.9.0 with FLINT 3.6.0; raw `I121-win2/`, 0547f83; #121): all 366 discs certify and the check passes, with the same disc counts and Lohner steps per row, max Λ equal to three digits and box radii 0.93–1.10 times macm3's. Reproduced on aarch64 Linux as well (#853, §10) | §5 |
-| Theorem A(M) | **certified** (H1–H3 of §6 hold, §7) | (H1)–(H3) of §6 hold with X_c the Krawczyk sub-box p̂ ± (10⁻¹⁸, 10⁻²⁶, 10⁻²⁷), on which the certificate proves one simple zero: (H1) p̂ lies within 10⁻⁹ of x̂ in every parameter (the certificate's `p` against `fixed_point_M.ZEROS[5]`), (H2) X_c ⊂ p̂ ± 10⁻¹⁸, (H3) #184 (lemma 6a(5) at p̂; #103's run was at x̂, #39). So Theorem A(5) follows as in §6, assuming Braaksma's theorem; the independent review (#39) confirmed lemma 6b₁(5) disc by disc and found the centre gap, closed by #184; a second validated integrator (CAPD 6.1.0, #189) contains the stored enclosures' flows (lemma 6b₁(5)'s ray and all 18 rows, rows 0, 9 and 17 in #189 and the other 15 in #208, raw `I189-mac/` 41823aa and `I208-mac/` 6dba590, and lemma 6a(5)'s B at x̂ and p̂) and found no error in `lipschitz_M` or the kmin check; it awaits the write-up (#40) before it is relied on | §6–7 |
+| Theorem A(M) | **certified** (H0–H3 of §6 hold, §7) | (H0)–(H3) of §6 hold with X_c the Krawczyk sub-box p̂ ± (10⁻¹⁸, 10⁻²⁶, 10⁻²⁷), on which the certificate proves one simple zero: (H0) the stored start-data rows contain the run's start sets at its truncation (#484), (H1) p̂ lies within 10⁻⁹ of x̂ in every parameter (the certificate's `p` against `fixed_point_M.ZEROS[5]`), (H2) X_c ⊂ p̂ ± 10⁻¹⁸, (H3) #184 (lemma 6a(5) at p̂; #103's run was at x̂, #39). So Theorem A(5) follows as in §6, assuming Braaksma's theorem; the independent review (#39) confirmed lemma 6b₁(5) disc by disc and found the centre gap, closed by #184; a second validated integrator (CAPD 6.1.0, #189) contains the stored enclosures' flows (lemma 6b₁(5)'s ray and all 18 rows, rows 0, 9 and 17 in #189 and the other 15 in #208, raw `I189-mac/` 41823aa and `I208-mac/` 6dba590, and lemma 6a(5)'s B at x̂ and p̂) and found no error in `lipschitz_M` or the kmin check; it awaits the write-up (#40) before it is relied on | §6–7 |
 
 - **What carries over verbatim:** the inverse operators, domains and kernel bounds (the fast eigenvalue repeats across
   harmonics), the identification with y± (the same Stokes directions), lemma D, lemma G, the geometric gluing check (its
@@ -284,10 +284,25 @@ enclosure. The Cauchy part is the bound on |∂η/∂x| in the (p, v, c) variabl
 | 3 | 3pi/8, 0.085 | ±1e-6 | 5.2×10⁻⁷ | 1.3×10⁻⁶ | 2.4×10⁻⁶ | 1.1×10⁻¹² |
 | 3 | 5pi/16, 0.0741 | ±1e-9 | 2.6×10⁻¹⁰ | 5.6×10⁻¹⁰ | 5.9×10⁻¹⁴ | 2.6×10⁻²³ |
 | 3 | 5pi/16, 0.0741 | ±1e-6 | 2.6×10⁻⁷ | 5.6×10⁻⁷ | 5.9×10⁻¹⁴ | 2.6×10⁻²⁰ |
+| 3 | 5pi/16, 0.0741, cut at N = 95 | ±1e-6 | — | — | 7.2×10⁻¹⁴ | 3.2×10⁻²⁰ |
 | 5 | 3pi/8, 0.07 | ±1e-9 | 7.4×10⁻¹⁰ | 2.7×10⁻⁹ | 1.2×10⁻¹⁰ | 5.1×10⁻²⁰ |
 | 5 | 3pi/8, 0.07 | ±1e-6 | 7.4×10⁻⁷ | 2.7×10⁻⁶ | 1.2×10⁻¹⁰ | 5.1×10⁻¹⁷ |
 | 5 | 5pi/16, 0.0622 | ±1e-9 | 3.9×10⁻¹⁰ | 1.2×10⁻⁹ | 3.6×10⁻²⁰ | 1.6×10⁻²⁹ |
 | 5 | 5pi/16, 0.0622 | ±1e-6 | 3.9×10⁻⁷ | 1.2×10⁻⁶ | 3.6×10⁻²⁰ | 1.6×10⁻²⁶ |
+
+`start_data_M` runs the fixed point over the real box and over its Cauchy box, real parts x̂ ± (h + 10⁻³) and
+imaginary parts ± 10⁻³, and it raises unless both hold. So each row above is certified on that complex box as well.
+These Cauchy boxes are the sets that contain the point certificates' start sets (§7). The complex box x̂ ± 10⁻³(1 + i)
+of the tables above does not: it is centred on x̂ with no margin, and a certificate's Cauchy box is centred on its own
+p̂.
+
+The truncation N is the optimal order at the centre of a run, and it is not a stable property of the zero. At M = 3
+on the ray 5π/16 it is 94 at x̂ and at the centre of the certificate's h = 10⁻⁹ run, and 95 at the centre of its
+h = 10⁻¹⁰ run, less than 3×10⁻¹³ away. With N = 95 the start data over x̂ ± 10⁻⁶ hold as well. That is the table's
+row "cut at N = 95", with sup|η| ≤ 3.2×10⁻²⁰ over the box and a Cauchy part of 7.1973×10⁻¹⁴
+(`python3 start_cover_M2.py --box=data/A_M_box_M3_1e-10.json --rerun`, `logs/start_cover_M3.log`; #862). Its run prints
+no value or derivative radius. The other rows cut at the optimal order at x̂. At M = 5 the order is 132 at x̂ and at
+the certificate's centre.
 
 **Where the label weights show: the forcing over parameter boxes.** At a point, the forcing is the optimal truncation
 error of the series, and it is far smaller near the zero than away from it. At the M = 3 zero, sup|η| at r₀ = 0.1 is
@@ -821,6 +836,9 @@ then (if ξ₁ > ρ_arc) the real axis to ξ₁.
 **Theorem A(M) (conditional).** Assume Braaksma's theorem (Lemma B4(M)). Suppose the point certificate proves that
 x ↦ (J^path_{D,μ}(ξ₁; x))_{μ = 1, 3, …, M} has exactly one zero in X_c and that it is simple. Suppose further:
 
+- (H0) the certificate's start data are those of step (i) (§2), and step (i) is proved, at the certificate's
+  truncation N, on a set that contains its start sets: its centre p̂, the hull of its run box, and the Cauchy box of
+  each;
 - (H1) X_c ⊂ X₆ = x̂ ± 10⁻⁶, the box over which lemma S(M), the old sector lemma and the flat estimate are proved here
   (§3.3);
 - (H2) X_c ⊂ X_b, the box of a complete 6b₁ covering: at M = 3, X_b = p̂ ± 1.1×10⁻⁹ (§5.3), certified;
@@ -833,12 +851,16 @@ the real (M + 1) × (M + 1) Jacobian of (Re S_μ, Im S_μ)_μ is non-singular at
 
 1. Lemma 6b₀(M) (from H1) and lemma 6b₁(M) (from H2) make y⁺ analytic on Ω = {0 < |ξ| ≤ 0.2, 0 ≤ arg ξ ≤ 3π/8}. The
    certificate's path lies in Ω up to the real leg, and its start value on the 5π/16 ray is y⁺ by the start-value fixed
-   point (step (i), §2). So the path continuation is the continuation along the real axis, and J^path = J.
+   point (step (i), §2, from H0). So the path continuation is the continuation along the real axis, and J^path = J.
 2. The certificate gives one simple zero of J in X_c.
 3. Lemma 6a(M) (H3, with lemma S and the flat estimate from H1) gives J(ξ₁; x) = 0 ⇔ y⁺ ≡ y⁻.
 4. Simplicity transfers to S by §4.2. ∎
 
 At M = 1 the same assembly is Theorem A(M = 1) of §12.6.
+
+(H0) holds for every certificate that ran. Its start-data call runs step (i) on its own four sets and raises unless
+the fixed point holds on each (certify_M.py:152 and 154, certify_M2.py:166 and 193, fixed_point_M.py:462). §7 checks it
+a second time, against runs stored with this note.
 
 ## 7. What waits for the point certificate
 
@@ -848,7 +870,12 @@ p in `A_M_6a_M3_1e-10_in.json`) gives lemma 6a: `lemma6_jump_M.py --M=3 --box=da
 backward flow 0.3 → 0.067 in 449 steps (B's largest radius 2.0×10⁻³, |G_slow⁻¹| ≤ 1.62, |H| ≤ 11.6) and proves
 **ρ₆ₐ = 0.041 < 1** (`lemmas_M_runs/lemma6a_M3_cert.log`, `.json`). Its parallelepiped lies in p̂ ± 1.1×10⁻⁹: the
 centre is within 2.7×10⁻¹³ of p̂ and the hull's half-widths are 10⁻¹⁰, 10⁻¹⁰, 3.9×10⁻¹¹ and 2.5×10⁻¹² in
-(A, ω/ω∞, B₃, C₃). So (H1)–(H3) hold, and **Theorem A(3) is certified**, assuming Braaksma's theorem: the three-harmonic
+(A, ω/ω∞, B₃, C₃). (H0) holds as well. The certificate's own run proves step (i) on its four start sets with N = 95,
+and a rerun proves it with N = 95 over x̂ ± 10⁻⁶ and its Cauchy box, which contain those sets with a slack of
+9.995×10⁻⁷. The stored rows of §2.4 contain them too, but they cut the series at N = 94
+(`python3 start_cover_M2.py --box=data/A_M_box_M3_1e-10.json`: NOT COVERED by a stored row, exit 1, and with `--rerun`:
+RERUN: PASS, exit 0; `logs/start_cover_M3.log`, [A_M.md](A_M.md) §6.2, #862).
+So (H0)–(H3) hold, and **Theorem A(3) is certified**, assuming Braaksma's theorem: the three-harmonic
 selection condition (S₁ = S₃ = 0, for the truncation of `inner_np.py`: b, c on |ν| ≤ 4, each binary product projected)
 has exactly one zero in the certificate's box, and it is simple. An independent review ([A_M_review.md](A_M_review.md))
 confirms the point certificate, H1–H3 and lemma 6a; the majorant code of lemma S, 6b₀ and the flat estimate, and the 6b₁
@@ -870,6 +897,7 @@ Against that, this note's status for M = 3:
 
 | hypothesis of §6 | status here | what it needs from the certificate |
 |---|---|---|
+| (H0) step (i) at the certificate's truncation, on a set that contains its start sets | **certified** by the certificate's own run on its four sets, and over x̂ ± 10⁻⁶ with its Cauchy box at N = 95 (#862). The stored rows of §2.4 are for N = 94 | its centre, box and start ray; then `start_cover_M2.py --box= --rerun` (seconds) |
 | (H1) X_c ⊂ x̂ ± 10⁻⁶ (lemma S, 6b₀, flat estimate) | **certified** over x̂ ± 10⁻⁶; p̂ is within 4×10⁻¹⁰ of x̂ | only the inclusion, which holds for any h ≤ 10⁻⁷ around p̂ |
 | (H2) X_c ⊂ p̂ ± 1.1×10⁻⁹ (lemma 6b₁) | **certified** on that box (§5.3) | the inclusion: its final centre within about 10⁻¹⁰ of p̂ and h ≤ 10⁻⁹ (true of both of its runs) |
 | the path lies in Ω | yes: arc 0.2, start ray 5π/16 within 0.2 of 3π/8, start point at 0.0741 < 0.1 | none |
@@ -886,6 +914,8 @@ to this pilot's hull, so the run with the real B₁ is expected to pass with a s
 
 If the certificate's final box or path differs from the above, these must be rerun:
 
+- another centre, box or start radius: `start_cover_M2.py --box= --rerun` for (H0), seconds. The truncation follows
+  the centre, so a stored row may not cover it;
 - a larger or shifted box: `lemma6_sector_M.py --box=` for (H1), and the covering with `--x=` and `--h=` for (H2), about
   3.5 hours of process time at M = 3;
 - an arc above 0.2: a covering with u_in = 1/ρ_arc², with the inner rows probed first, since they are where the cost and
@@ -894,6 +924,9 @@ If the certificate's final box or path differs from the above, these must be rer
   complex J_{D,μ}(ξ₁), or an invertible linear image of them such as `hier.py`'s de-mixed residuals.
 
 At M = 5 the point certificate is [A_M2.md](A_M2.md)'s, and the summary above gives the status of each lemma at it.
+(H0) holds there by the certificate's own run and by the stored start-data rows over x̂ ± 10⁻⁹ and x̂ ± 10⁻⁶. They have
+its truncation N = 132 and contain its four start sets, with slacks of 1.07×10⁻¹⁰ and 9.99×10⁻⁷ in ω/ω∞
+(`python3 start_cover_M2.py`: COVERED, exit 0; `logs/start_cover_M2.log`, [A_M2.md](A_M2.md) §6.6, #484).
 
 ## 8. Mutation table
 
@@ -1009,6 +1042,8 @@ python3 fixed_point_M.py --table --Ms=3 --json=lemmas_M_runs/fixed_point_M_table
 python3 fixed_point_M.py --table --Ms=5 --json=lemmas_M_runs/fixed_point_M_table_M5.json        # ~6 min
 python3 fixed_point_M.py --data-table --Ms=3 --json=lemmas_M_runs/fixed_point_M_data_M3.json    # start data, ~3 min
 python3 fixed_point_M.py --M=3 --data --box=1e-9 --r0=0.0741 --arg=5pi/16 --diag    # start data, printed per component
+python3 start_cover_M2.py --box=data/A_M_box_M3_1e-10.json --rerun   # (H0) at M = 3: RERUN: PASS, exit 0, seconds
+python3 start_cover_M2.py                                  # (H0) at M = 5: COVERED, exit 0, seconds
 python3 lemma6_sector_M.py --M=3 --scan --json=lemmas_M_runs/lemmaS_scan_M3.json      # lemma S over (r+, k), ~10 min
 python3 lemma6_sector_M.py --M=3 --rp=0.1 --k=20 --box=1e-6 --Z=0.004489 --json=lemmas_M_runs/lemma6_sector_M3_rp0.1_1e-6.json
                                                            # lemma S, old sector lemma, flat estimate over x^ +- 1e-6, ~1 min
