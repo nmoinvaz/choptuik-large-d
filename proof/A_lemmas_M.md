@@ -907,6 +907,15 @@ python3 refine_zero_M.py --M=3 --A=2.726475886 --wf=1.015603095 --x=0.144419478,
 python3 lemmas_M_report.py all                             # the tables of this note, from the saved runs
 ```
 
+The rigorous M = 3 commands above were rerun on aarch64 Linux (Raspberry Pi 5, python-flint 0.9.0, FLINT 3.6.0; #849,
+raw `I849-rpi5/` d2f12fd1), with lemma 6b₁'s covering computed there under its own tag. Its check passes with the stored
+covering's 183 tiles, 579 pieces and 461 links, and `c1check` and `mutations_M.py --all` pass. Every changed bound
+moves by at most 2.1×10⁻¹² relative, except the lemma S scan. The scan's stored file came from an earlier run whose
+|η| is 1681 to 1696 times this code's, whose contraction differs in the 11th digit, and whose N at r₊ = 0.045 is 250
+instead of 251, with every row passing in both. The Mac and the Pi agree with each other to 1.4×10⁻¹³, so the
+stored `lemmaS_scan_M3.json` and `.log` are now the Mac's run of this code. The cause of the old file's values was
+not found. The table of §3.3 does not change.
+
 ## 11. Proposed text for A_certify.md and PROOF.md
 
 The coordinator edits those files; this is proposed text only.
