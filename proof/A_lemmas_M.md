@@ -37,7 +37,7 @@ Contents
 | lemma S, lemma 6b₀ | **certified** over x̂ ± 10⁻⁶, R₊ = 0.01 (the M = 1 domain) | **certified** over x̂ ± 10⁻⁶, R₊ = 0.0064 | §3 |
 | lemma 6a | **certified** with the certificate's state box at ξ₁ = 0.3: ρ₆ₐ = 0.041 (`lemmas_M_runs/lemma6a_M3_cert.*`); the flat estimate Λ ≤ 0.29 | **certified** on the point certificate's Krawczyk sub-box p̂ ± (10⁻¹⁸, 10⁻²⁶, 10⁻²⁷) at ξ₁ = 0.3, R₊ = 0.08, k = 20: ρ₆ₐ = 0.212, with the centre passed as `--x` = p̂; its controls partial, swap and coords fire, and #39's float flow at p̂ lies within 5×10⁻⁸ of B's radius (raw `I184-macm3/`, 5866dd4; #184). Reproduced at p̂ on win2: ρ₆ₐ = 0.2081 from its own B (raw `I196-win2/`, 1bcd9da; #196). Cross-loaded under #111's rule, macm3's B gives 0.2121 on win2 (#196) and win2's B gives [0.2081327461 ± 2.7×10⁻¹¹] on macm3 (raw `I220-macm3/`, 21520ab; #220), so each enclosure gives ρ₆ₐ < 1 on the other machine. The last ball and win2's own, [0.2081327454 ± 8.8×10⁻¹²], are disjoint by 6.4×10⁻¹⁰, as #111 explains for bounds built from upper bounds. The first runs, below, were centred on the stored double-precision zero x̂, 7.9×10⁻¹⁰ from p̂, because `lemma6_jump_M.py` falls back to x̂ when the box file has no `x` key (#39); they are not proofs at p̂. On x̂ ± (10⁻¹⁸, 10⁻²⁶, 10⁻²⁷): ρ₆ₐ = 0.231 (0.088 on the sub-box 10⁻²⁰, 10⁻²⁷, 10⁻²⁸; at p̂ on that sub-box, 0.0873 on win2, #195); its controls partial, swap and coords fire (raw `I103-macm3/`, 684657c; #103). The whole 10⁻¹⁰ box does not pass: its start box makes B too wide (ρ₆ₐ = 39 at 10⁻¹⁶, #97). Reproduced on win2 (Windows, python-flint 0.9.0; raw `I104-win2/`, f71b04c; #104): ρ₆ₐ = 0.218 from its own B. Cross-loaded (#110), the two B have identical midpoints and radii that differ in the ninth digit, and win2 with macm3's B gives [0.2309898806 ± 4.0e-11] against macm3's [0.2309898799 ± 4.4e-13]: ρ₆ₐ is λ/(1 − λ) times a maximum of upper bounds, which move with every radius. Both machines run FLINT 3.6.0: most of the gap is the reload, which rounds each stored radius up to arb's 30-bit mag (macm3's own B reloaded gives [0.2309898805 ± 3.1e-11]), and the rest is the radii's ninth digit. So both are valid bounds (the criterion of #111) | §4 |
 | lemma 6b₁ | **certified** on the point certificate's box p̂ ± 1.1×10⁻⁹ (C¹ mode, 183 discs, check C1–C8 passes) | **certified** on p̂ ± 10⁻¹⁸ (C¹ mode, all 366 discs of rows 0–17, the covering check C1–C8 passes; its controls fire: a dropped tile (9, 5) fails the check and the wrong-sign mutation certifies 0 of 38 discs; the C¹ sets' planted-truth check passes at h = 10⁻⁹; raw `I37-macm3/`, `I113-macm3/`, `I38-macm3/` 6694698; #37, #112, #113, #38). Reproduced on win2 (Windows, python-flint 0.9.0 with FLINT 3.6.0; raw `I121-win2/`, 0547f83; #121): all 366 discs certify and the check passes, with the same disc counts and Lohner steps per row, max Λ equal to three digits and box radii 0.93–1.10 times macm3's. Reproduced on aarch64 Linux as well (#853, §10) | §5 |
-| Theorem A(M) | **certified** (H0–H3 of §6 hold, §7) | (H0)–(H3) of §6 hold with X_c the Krawczyk sub-box p̂ ± (10⁻¹⁸, 10⁻²⁶, 10⁻²⁷), on which the certificate proves one simple zero: (H0) the stored start-data rows contain the run's start sets at its truncation (#484), (H1) p̂ lies within 10⁻⁹ of x̂ in every parameter (the certificate's `p` against `fixed_point_M.ZEROS[5]`), (H2) X_c ⊂ p̂ ± 10⁻¹⁸, (H3) #184 (lemma 6a(5) at p̂; #103's run was at x̂, #39). So Theorem A(5) follows as in §6, assuming Braaksma's theorem; the independent review (#39) confirmed lemma 6b₁(5) disc by disc and found the centre gap, closed by #184; a second validated integrator (CAPD 6.1.0, #189) contains the stored enclosures' flows (lemma 6b₁(5)'s ray and all 18 rows, rows 0, 9 and 17 in #189 and the other 15 in #208, raw `I189-mac/` 41823aa and `I208-mac/` 6dba590, and lemma 6a(5)'s B at x̂ and p̂) and found no error in `lipschitz_M` or the kmin check; it awaits the write-up (#40) before it is relied on | §6–7 |
+| Theorem A(M) | **certified** (H0–H3 of §6 hold, §7) | (H0)–(H3) of §6 hold with X_c the decimal box p(X), X = ±(10⁻¹⁸, 10⁻²⁶, 10⁻²⁷) in the chart around p̂, on which the certificate proves one simple zero (its Krawczyk test holds on the arb ball that contains X, and K(X) lies in X, §7): (H0) the stored start-data rows contain the run's start sets at its truncation (#484), (H1) p̂ lies within 10⁻⁹ of x̂ in every parameter (the certificate's `p` against `fixed_point_M.ZEROS[5]`), (H2) X_c ⊂ X_b, the covering's ball of radius 10⁻¹⁸ + 2.19×10⁻²⁷ around p̂ cut at 39 decimals, with slack 2.19×10⁻²⁷ (§7, #871), (H3) #184 (lemma 6a(5) at p̂; #103's run was at x̂, #39). So Theorem A(5) follows as in §6, assuming Braaksma's theorem; the independent review (#39) confirmed lemma 6b₁(5) disc by disc and found the centre gap, closed by #184; a second validated integrator (CAPD 6.1.0, #189) contains the stored enclosures' flows (lemma 6b₁(5)'s ray and all 18 rows, rows 0, 9 and 17 in #189 and the other 15 in #208, raw `I189-mac/` 41823aa and `I208-mac/` 6dba590, and lemma 6a(5)'s B at x̂ and p̂) and found no error in `lipschitz_M` or the kmin check; it awaits the write-up (#40) before it is relied on | §6–7 |
 
 - **What carries over verbatim:** the inverse operators, domains and kernel bounds (the fast eigenvalue repeats across
   harmonics), the identification with y± (the same Stokes directions), lemma D, lemma G, the geometric gluing check (its
@@ -867,7 +867,8 @@ x ↦ (J^path_{D,μ}(ξ₁; x))_{μ = 1, 3, …, M} has exactly one zero in X_c 
   each;
 - (H1) X_c ⊂ X₆ = x̂ ± 10⁻⁶, the box over which lemma S(M), the old sector lemma and the flat estimate are proved here
   (§3.3);
-- (H2) X_c ⊂ X_b, the box of a complete 6b₁ covering: at M = 3, X_b = p̂ ± 1.1×10⁻⁹ (§5.3), certified;
+- (H2) X_c ⊂ X_b, the box of a complete 6b₁ covering: at M = 3, X_b = p̂ ± 1.1×10⁻⁹ (§5.3), certified; at M = 5, X_b
+  is the ball of radius 10⁻¹⁸ + 2.19×10⁻²⁷ around p̂ cut at 39 decimals (§7);
 - (H3) lemma 6a(M) holds with B₁ the certificate's state box at ξ₁ over X_c.
 
 Then the M-harmonic selection condition y⁺ ≡ y⁻ (all of S_1, …, S_M vanish) holds at exactly one point x* of X_c, and
@@ -911,10 +912,8 @@ Three statements above are sharper than the runs:
   its own old sector lemma at its centre (use 1, with r₀ = 0.07 at M = 5), and lemma 6a does not use it.
 - Step 3 of the proof takes lemma S and the flat estimate "from H1", over X₆ = x̂ ± 10⁻⁶. The M = 5 run of lemma 6a
   proves them over p̂ ± 10⁻⁶, its own centre. Both boxes contain X_c.
-- At M = 5 the covering's centre is p̂ cut at 39 decimals, up to 8.8×10⁻³⁹ from p̂ (4.6×10⁻³⁹ in A). The decimal box
-  p̂ ± 10⁻¹⁸ lies in X_b only because arb rounds the covering's radius up, to 10⁻¹⁸ + 2.2×10⁻²⁷. The certificate's own
-  sub-box has the same rounded radius around p̂, so that ball passes X_b's edge by 4.6×10⁻³⁹ in A. (H2) holds with X_c
-  the decimal box.
+- At M = 5 the covering's centre is p̂ cut at 39 decimals, and X_c and X_b have the same nominal half-width. §7 states
+  both sets exactly and checks the inclusion (#871).
 
 ## 7. What waits for the point certificate
 
@@ -981,6 +980,24 @@ At M = 5 the point certificate is [A_M2.md](A_M2.md)'s, and the summary above gi
 (H0) holds there by the certificate's own run and by the stored start-data rows over x̂ ± 10⁻⁹ and x̂ ± 10⁻⁶. They have
 its truncation N = 132 and contain its four start sets, with slacks of 1.07×10⁻¹⁰ and 9.99×10⁻⁷ in ω/ω∞
 (`python3 start_cover_M2.py`: COVERED, exit 0; `logs/start_cover_M2.log`, [A_M2.md](A_M2.md) §6.6, #484).
+
+**The sets X_c and X_b at M = 5** (`python3 theorem_A_sets_M.py --M=5 --raw=…`: HOLD, exit 0; raw `I871-mac/`, #871).
+Both have half-width 10⁻¹⁸ in (A, ω/ω∞), around centres that differ.
+
+- X_c is the decimal box: the chart image p(X) of X = [−10⁻¹⁸, 10⁻¹⁸]² × [−10⁻²⁶, 10⁻²⁶]² × [−10⁻²⁷, 10⁻²⁷]² around
+  p̂ ([A_M2.md](A_M2.md)'s chart). The certificate's Krawczyk test runs on the arb ball with those radii rounded up
+  (10⁻¹⁸ + 2.19×10⁻²⁷ in the outer coordinates), which contains X. K(X) ⊂ int X on that ball gives uniqueness on X_c,
+  with relative margins 1.000, 1.000, 0.980, 0.980, 0.932, 0.932. K(X) lies in X, which gives existence there: |K| is
+  at most 6.1×10⁻²⁴ in the outer coordinates and 2.0×10⁻²⁸ and 6.8×10⁻²⁹ in the inner ones.
+- X_b is the covering's ball. Its centre c (`ray.json`'s `x`) is p̂ cut at 39 decimals, 4.6×10⁻³⁹ from p̂ in A and
+  8.5×10⁻⁴¹ in ω/ω∞. Its radius is 10⁻¹⁸ + 2.19×10⁻²⁷ in every parameter, the 30-bit number to which arb rounds 10⁻¹⁸
+  up.
+- X_c ⊂ X_b, with slack 2.19×10⁻²⁷ in A and ω/ω∞ and at least 5.9×10⁻¹⁹ in the inner parameters. The inclusion rests
+  on that rounding. With the covering's radius taken as the decimal 10⁻¹⁸ it fails by 4.6×10⁻³⁹ in A
+  (`--mutate=decimal`, exit 1), and the certificate's own arb ball passes X_b's edge by the same amount.
+
+At M = 3 the same script checks the hull of the certificate's box against X_b = c ± 1.1×10⁻⁹: inside, with slack
+9.997×10⁻¹⁰.
 
 ## 8. Mutation table
 
@@ -1102,6 +1119,8 @@ python3 start_cover_lemmas_M.py --M=3 --rerun              # the lemmas' own sta
 git clone https://github.com/nmoinvaz/choptuik-large-d-raw ../../../choptuik-large-d-raw    # once, beside the checkout
 python3 start_cover_lemmas_M.py --M=5 --raw=../../../choptuik-large-d-raw --rerun     # the same at M = 5, 15 s
 python3 start_cover_lemmas_M.py --M=5 --raw=../../../choptuik-large-d-raw --selftest  # 5 mutations not covered: PASS
+python3 theorem_A_sets_M.py --M=5 --raw=../../../choptuik-large-d-raw             # X_c and X_b at M = 5: HOLD, exit 0
+python3 theorem_A_sets_M.py --M=5 --raw=../../../choptuik-large-d-raw --selftest  # 3 mutations fail: PASS
 python3 lemma6_sector_M.py --M=3 --scan --json=lemmas_M_runs/lemmaS_scan_M3.json      # lemma S over (r+, k), ~10 min
 python3 lemma6_sector_M.py --M=3 --rp=0.1 --k=20 --box=1e-6 --Z=0.004489 --json=lemmas_M_runs/lemma6_sector_M3_rp0.1_1e-6.json
                                                            # lemma S, old sector lemma, flat estimate over x^ +- 1e-6, ~1 min
