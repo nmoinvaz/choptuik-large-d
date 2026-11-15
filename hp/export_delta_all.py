@@ -558,13 +558,18 @@ def extrapolate_fits(rows):
     """above the last chain_fit row with a fits term (the comparison chains' frontier) no fit's difference is measured,
     and the largest term elsewhere is that one: there the fits term of the last EXTRAP_N rows that have one is
     extrapolated log-linearly in D, its slope at least 0, and taken where it exceeds the row's own err (err_kind "fits
-    extrapolated", an estimate, not a measured spread)"""
+    extrapolated", an estimate, not a measured spread). The fit's rows are those whose spread is over every comparison
+    fit: a one-sided row's spread is over fewer, so it is measured but not a basis. A negative slope is set to 0, and
+    the level is then the least-squares one at slope 0, the mean of the logs"""
     fr = [(float(r["D"]), float(r["err"])) for r in rows if r["kind"] == "chain_fit" and r["err_kind"].startswith("fits")]
-    if len(fr) < EXTRAP_N:
+    basis = [(float(r["D"]), float(r["err"])) for r in rows if r["kind"] == "chain_fit"
+             and r["err_kind"].startswith("fits") and not r["err_kind"].endswith("one-sided")]
+    if len(basis) < EXTRAP_N:
         return
-    xs, ys = np.array([d for d, _ in fr[-EXTRAP_N:]]), np.log([e for _, e in fr[-EXTRAP_N:]])
+    xs, ys = np.array([d for d, _ in basis[-EXTRAP_N:]]), np.log([e for _, e in basis[-EXTRAP_N:]])
     slope, icpt = np.polyfit(xs, ys, 1)
-    slope = max(slope, 0.0)
+    if slope < 0:
+        slope, icpt = 0.0, float(np.mean(ys))
     for r in rows:
         if r["kind"] == "chain_fit" and float(r["D"]) > fr[-1][0] + TOL_D:
             est = float(np.exp(icpt + slope * float(r["D"])))
