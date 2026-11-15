@@ -28,6 +28,12 @@ must fail.
 The refusal at iteration 1 (#784, newton_od's abort_theta with the natural test): a toy whose LU solves add a weak vector
 1e9 times the step from the first accepted point on, so theta is small at step 0 and about 1e9 at iteration 1. With
 abort_theta 1e8 the attempt stops at iteration 1 marked aborted; with 1e10 it does not (the control).
+
+Why a trial's projection failed (#824): newton_od on ElimO around the toy, with a re-seeder whose projection always
+fails and records its stages (reseed.why_failed, #743). At verbose 1 each trial prints one line under it with the
+point's max|F| and the u0 rung's, the quad-double polish's and the ladder's residuals, one per failed trial projection
+(every projection but the start's), and kantorovich_log.parse_log still reads every trial line. Control:
+--mutate=nowhy omits those lines, and the case must fail.
 """
 import contextlib
 import io
@@ -222,6 +228,62 @@ def abort_check():
     return good
 
 
+class FailRS:
+    """a re-seeder whose projection always fails, with the stage record reseed.why_failed reads (#743's stub)"""
+
+    def project(self, z4):
+        self.last_project = dict(u0=dict(conv=False, its=30, R0=1.0e-20, R=3.0e-22, finite=True),
+                                 u0q=dict(conv=False, its=16, R0=3.0e-22, R=2.0e-40),
+                                 ladder=dict(ok=False, rungs=4, dropped=[],
+                                             last=dict(u=0.0123, conv=False, its=30, R0=1.0e-18, R=5.0e-21)))
+        return z4, "failed"
+
+
+class SwitchQ:
+    """ElimO's switch test: a pinned quad-double residual of 1.5e-20, above its switch 0"""
+
+    def residual_q(self, *z):
+        return np.array([1.5e-20]), np.zeros(1), np.zeros(1), np.zeros(1)
+
+
+class PinnedToy(Toy):
+    """Toy as ElimO's pinned system, which reads s, ch and cl for its PinnedQ (replaced by SwitchQ)"""
+
+    s, ch, cl = None, ZERO, ZERO
+
+
+WHY = ["point max|F| 1.50e-20", "u0 rung 30 its, |R| 1.00e-20 -> 3.00e-22, NOT converged",
+       "u0 quad-double 16 its, |R| 3.00e-22 -> 2.00e-40, NOT converged",
+       "ladder FAILED after 4 rungs, last rung u 0.012300 30 its, |R| 1.00e-18 -> 5.00e-21, NOT converged"]
+
+
+def why_check(nowhy=False):
+    """newton_od on ElimO around the toy from y0 = 0.3, every projection failing: at verbose 1 one reason line per
+    failed trial projection, numbered from 2 (the start's projection is the first), each naming the point's max|F| and
+    the three stages; and parse_log reads every trial line beside them (#824)"""
+    if nowhy:
+        octo_corrector.PROJ_MUT["nowhy"] = True
+    el = octo_corrector.ElimO(PinnedToy(), FailRS(), switch=0.0, start_F=None)
+    el.sq = SwitchQ()
+    y0 = 0.3
+    z = [np.array([y0, -K / 2 * y0 ** 2 * 1.001])] + [ZERO] * 7
+    buf = io.StringIO()
+    with contextlib.redirect_stdout(buf):
+        _, _, conv = newton_od(el, z, tol=1e-14, it_max=40, accept="own", verbose=1)
+    log = buf.getvalue()
+    why = [ln for ln in log.splitlines() if "projection failed (" in ln]
+    trials = el.counts["failed"] - 1
+    named = all(f"projection failed ({k + 2}): " in ln and all(w in ln for w in WHY) for k, ln in enumerate(why))
+    printed = sum(" trial lam " in ln for ln in log.splitlines())
+    atts = parse_log(HEADER + log + FOOTER)
+    parsed = len(atts[0]["trials"]) if len(atts) == 1 else -1
+    good = bool(conv) and trials > 0 and len(why) == trials and named and parsed == printed
+    print(f"why a trial's projection failed: converged {conv}; reason lines {len(why)} for {trials} failed trial "
+          f"projections, each naming the stages {named}; trial lines printed {printed}, parsed {parsed}: "
+          f"{'pass' if good else 'FAIL'}")
+    return good
+
+
 def drop_check(mutate=False, noline=False):
     """the first step from y = 0: at full_drop 1e-20 the full step is accepted by its drop, where the natural test
     refuses it (theta 1.5), and its trial line is printed at verbose 1; at 0 it is refused; and a full step whose |F|
@@ -277,6 +339,7 @@ def main():
     ok &= drop_check("--mutate=drop" in sys.argv[1:], "--mutate=noline" in sys.argv[1:])
     ok &= abort_check()
     ok &= abort2_check()
+    ok &= why_check("--mutate=nowhy" in sys.argv[1:])
     mut = " ".join(a for a in sys.argv[1:] if a.startswith("--mutate="))
     print(f"newton_od_toy{' ' + mut if mut else ''}: {'PASS' if ok else 'FAIL'}")
     return 0 if ok else 1
