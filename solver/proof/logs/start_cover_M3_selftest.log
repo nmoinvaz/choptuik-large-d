@@ -1,0 +1,11 @@
+start_cover_M2 selftest on data/A_M_box_M3_1e-10.json, rows all; the slack is against the lemma run [data 5pi/16 h=1e-6]  [python-flint 0.9.0, FLINT 3.6.0]
+clean: NOT COVERED, sets inside True (must be inside); configuration differs in N; smallest slack +9.995e-07 (hull, A)
+edge0 (null): NOT COVERED, sets inside True (must be inside); configuration differs in N; smallest slack +2.002e-10 (Cauchy(hull), A)
+widen: NOT COVERED, sets inside False (must not be inside); configuration differs in N; smallest slack -1.000e-06 (Cauchy(hull), A)
+edge: NOT COVERED, sets inside False (must not be inside); configuration differs in N; smallest slack -8.912e-11 (hull, A)
+centre: NOT COVERED, sets inside False (must not be inside); smallest slack -1.000e-06 (Cauchy(hull), w/w_inf)
+cauchy: NOT COVERED, sets inside False (must not be inside); configuration differs in N, Cauchy radius; smallest slack -9.990e-04 (Cauchy(hull), A)
+ray: NOT COVERED, sets inside False (must not be inside); configuration differs in ray, N; smallest slack +9.995e-07 (hull, A)
+trunc: COVERED, sets inside True (must change the verdict); smallest slack +9.995e-07 (hull, A)
+SELFTEST: PASS (clean and edge0 inside, 6 of 6 mutations give what they must)
+exit 0

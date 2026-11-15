@@ -1,0 +1,40 @@
+start_cover_M2: data/A_M_box_M3_1e-9.json against the stored runs of lemma FP(3), rows all, mutation None  [python-flint 0.9.0, FLINT 3.6.0]
+certificate: ray 5pi/16, r0 0.0741, diag splitting, N 94 (from the centre run at p^; the run does not store it), Cauchy radius 1e-3, box h 1e-9, w ['1e-16']
+  start data:        certify_M.start_data (certify_M.py:152, 154; the hull at :298): start_data_M at the midpoints of the hull and over the hull, each with its own centre run
+  p^ - x^:           A -3.689e-10  w/w_inf -1.422e-10  B3 -1.790e-11  C3 +1.117e-12
+  hull half-widths:  A 1.000e-09  w/w_inf 1.000e-09  B3 3.868e-10  C3 2.510e-11
+  largest hull half-width about p^ 1.0000000029430911e-09, of which the run stores no value
+(a) fixed_point_M.py sha256 589e5a810bc50289, the certificate recorded 589e5a810bc50289: same file True; the lemma's ray is the path's start ray: True
+lemma run [table 3pi/8]: ray 3pi/8, r0 0.085, diag, N 72, k 40; real x^ +- 1e-6, complex x^ +- 1e-3(1 + i)
+  (a) same ray False, r0 False, splitting True, N False, Cauchy radius True
+  (b) p^ inside True (slack +9.996e-07 at A); hull inside True (slack +9.986e-07 at A); Cauchy(p^) inside False (slack -3.670e-10 at A, imaginary parts +0.0e+00); Cauchy(hull) inside False (slack -1.367e-09 at A, imaginary parts +0.0e+00) -> NOT all inside
+lemma run [table 5pi/16]: ray 5pi/16, r0 0.0741, diag, N 94, k 40; real x^ +- 1e-6, complex x^ +- 1e-3(1 + i)
+  (a) same ray True, r0 True, splitting True, N True, Cauchy radius True
+  (b) p^ inside True (slack +9.996e-07 at A); hull inside True (slack +9.986e-07 at A); Cauchy(p^) inside False (slack -3.670e-10 at A, imaginary parts +0.0e+00); Cauchy(hull) inside False (slack -1.367e-09 at A, imaginary parts +0.0e+00) -> NOT all inside
+lemma run [data 3pi/8 h=1e-9]: ray 3pi/8, r0 0.085, diag, N 72, k 40; real x^ +- 1e-9, Cauchy box x^ +- (1e-9 + 1e-3), imaginary +- 1e-3
+  (a) same ray False, r0 False, splitting True, N False, Cauchy radius True
+  (b) p^ inside True (slack +6.311e-10 at A); hull inside False (slack -3.689e-10 at A); Cauchy(p^) inside True (slack +6.316e-10 at A, imaginary parts +0.0e+00); Cauchy(hull) inside False (slack -3.689e-10 at A, imaginary parts +0.0e+00) -> NOT all inside
+lemma run [data 3pi/8 h=1e-6]: ray 3pi/8, r0 0.085, diag, N 72, k 40; real x^ +- 1e-6, Cauchy box x^ +- (1e-6 + 1e-3), imaginary +- 1e-3
+  (a) same ray False, r0 False, splitting True, N False, Cauchy radius True
+  (b) p^ inside True (slack +9.996e-07 at A); hull inside True (slack +9.986e-07 at A); Cauchy(p^) inside True (slack +9.996e-07 at A, imaginary parts +0.0e+00); Cauchy(hull) inside True (slack +9.986e-07 at A, imaginary parts +0.0e+00) -> all inside
+lemma run [data 5pi/16 h=1e-9]: ray 5pi/16, r0 0.0741, diag, N 94, k 40; real x^ +- 1e-9, Cauchy box x^ +- (1e-9 + 1e-3), imaginary +- 1e-3
+  (a) same ray True, r0 True, splitting True, N True, Cauchy radius True
+  (b) p^ inside True (slack +6.311e-10 at A); hull inside False (slack -3.689e-10 at A); Cauchy(p^) inside True (slack +6.316e-10 at A, imaginary parts +0.0e+00); Cauchy(hull) inside False (slack -3.689e-10 at A, imaginary parts +0.0e+00) -> NOT all inside
+lemma run [data 5pi/16 h=1e-6]: ray 5pi/16, r0 0.0741, diag, N 94, k 40; real x^ +- 1e-6, Cauchy box x^ +- (1e-6 + 1e-3), imaginary +- 1e-3
+  (a) same ray True, r0 True, splitting True, N True, Cauchy radius True
+  (b) p^ inside True (slack +9.996e-07 at A); hull inside True (slack +9.986e-07 at A); Cauchy(p^) inside True (slack +9.996e-07 at A, imaginary parts +0.0e+00); Cauchy(hull) inside True (slack +9.986e-07 at A, imaginary parts +0.0e+00) -> all inside
+(c) diag splitting on the Cauchy boxes: M W0 sup|Im w/w_inf| = 0.01147 <= 3/2: True
+START COVER M2 (data/A_M_box_M3_1e-9.json, rows all, mutation None): COVERED by [data 5pi/16 h=1e-6]
+rerun, centre run at p^: N 94, k 40, contraction 0.315948, holds True, |eta| <= 1.701e-50  [0 s]
+rerun, start_data_M at p^ (its own line follows):
+start data over X (M = 3, N = 94, k = 40): contraction over X 0.3159, over the Cauchy box (c = [0.00100 +/- 1e-10]) 0.3168; sup |eta| over X 1.70e-50, Cauchy part of the derivatives 5.91e-14
+  eta 1.7005408747414044e-50, Cauchy part 5.909998445715587e-14  [3 s]
+rerun, start_data_M over the hull (its own line follows):
+start data over X (M = 3, N = 94, k = 40): contraction over X 0.3159, over the Cauchy box (c = [0.00100 +/- 1e-10]) 0.3168; sup |eta| over X 1.07e-23, Cauchy part of the derivatives 5.91e-14
+  eta 1.0654575341132506e-23, Cauchy part 5.909999835643477e-14  [7 s]
+  the run stored eta 1.7005408747413726e-50 at p^ and Cauchy part 5.909999835643429e-14 over the hull: reproduced True
+rerun, the lemma's row [data 5pi/16 h=1e-6] (data_table's call; its own line follows):
+start data over X (M = 3, N = 94, k = 40): contraction over X 0.3159, over the Cauchy box (c = [0.00100 +/- 1e-10]) 0.3168; sup |eta| over X 2.61e-20, Cauchy part of the derivatives 5.91e-14
+  eta 2.6071325799935294e-20, Cauchy part 5.913326455951834e-14; the row stored 2.607132579993517e-20, 5.913326455951833e-14: reproduced True; the certificate's bounds are below the row's: True  [10 s]
+RERUN: PASS
+exit 0

@@ -380,6 +380,50 @@ the problem the way the scale estimate of §2 says it should: the excess scales 
 radius in the progress lines at step 50 of the real leg is 2.78×10¹ in the first run's log and 2.78 in this one's), while
 w is four times larger.
 
+#### The start data against the stored runs of the start-value lemma
+
+`certify_M.start_data` does not read the stored runs of lemma FP(3) (A_lemmas_M.md §2.4). It calls `start_data_M` at
+p̂ and over the hull of P (certify_M.py:152, 154), and that call raises unless the fixed point holds on the set and on
+its Cauchy box (fixed_point_M.py:462). So the lemma's hypothesis is checked in every run, on the sets that run uses.
+The h = 10⁻¹⁰ run's sets against the stored runs (`python3 start_cover_M2.py --box=data/A_M_box_M3_1e-10.json --rerun`,
+`logs/start_cover_M3.log`; #862):
+
+| | lemma FP(3), stored runs | the certificate's start data |
+|---|---|---|
+| start ray and radius | arg ξ = 5π/16, r₀ = 0.0741 (also 3π/8, r₀ = 0.085, N = 72) | arg ξ = 5π/16, r₀ = 0.0741 |
+| splitting, weight exponent k | diag, 40 | diag, 40 |
+| truncation N | 94, the optimal order at x̂ | 95, the optimal order at p̂ (the run does not store it) |
+| code | `fixed_point_M.py`, SHA-256 prefix 589e5a810bc50289 | the same file |
+| centre | x̂ = `fixed_point_M.ZEROS[3]` | p̂, within 3.69×10⁻¹⁰ of x̂ (the largest offset, in A) |
+| real sets | x̂ ± 10⁻⁹ and x̂ ± 10⁻⁶ (the start-data rows) | p̂, and the hull of P with the half-widths above |
+| complex sets | the Cauchy boxes of those rows, real parts x̂ ± (h + 10⁻³) and imaginary parts ± 10⁻³; the table's box x̂ ± 10⁻³(1 + i) | the Cauchy boxes of p̂ and of the hull: real parts 10⁻³ beyond each, imaginary parts ± 10⁻³ |
+| contraction on the real set, on the complex set | 0.3159, 0.3168 (x̂ ± 10⁻⁶, N = 94) | 0.3159, 0.3168 (at p̂ and over the hull, N = 95) |
+| sup\|η\| on the real set; Cauchy part of ∂η | 2.6×10⁻²⁰; 5.9133×10⁻¹⁴ (x̂ ± 10⁻⁶) | 4.1×10⁻⁶⁴ at p̂, 1.3×10⁻²⁴ over the hull; 7.1933×10⁻¹⁴ |
+
+- The four sets lie in the start-data row over x̂ ± 10⁻⁹ with a slack of 5.3×10⁻¹⁰, and in the row over x̂ ± 10⁻⁶ with
+  a slack of 9.995×10⁻⁷, both in A (ball in ball, arb's `contains`).
+- They do not lie in the table's complex box x̂ ± 10⁻³(1 + i). The two Cauchy boxes are centred on p̂ and pass its
+  edge by 3.7×10⁻¹⁰ and 4.7×10⁻¹⁰ in A.
+- The truncation differs. The stored rows prove the fixed point for the series cut at N = 94, and the certificate uses
+  the series cut at N = 95. So no stored row proves the certificate's own start data, and the script's verdict on the
+  stored rows is NOT COVERED (exit 1). The h = 10⁻⁹ run, whose centre is less than 3×10⁻¹³ away, cuts at N = 94 and
+  is covered by the row over x̂ ± 10⁻⁶ (`logs/start_cover_M3_1e-9.log`).
+- The certificate's own run proves them. The rerun gives the contraction constants of the table and reproduces the
+  stored bounds, 4.0902588391219×10⁻⁶⁴ at p̂ and 7.1932724881226×10⁻¹⁴ over the hull, to 3×10⁻¹⁴ relative.
+- With N = 95 the lemma also holds over x̂ ± 10⁻⁶ and its Cauchy box, which contain the four sets (the rerun:
+  sup|η| ≤ 3.2×10⁻²⁰, Cauchy part 7.1973×10⁻¹⁴).
+- Both truncations enclose y⁺(ξ₀; p̂), and their 13 start values at p̂ overlap: the midpoints are 3.5×10⁻⁶⁷ apart
+  against radii of 3.3×10⁻⁶⁶. With the N = 94 values taken 10⁻³⁰ away in A they do not
+  (`--rerun --mutate=overlap`, `logs/start_cover_M3_mut_overlap.log`, exit 1).
+- The diag splitting on a complex box needs M W₀ sup|Im ω/ω∞| ≤ 3/2 (A_M_review.md F3). It is 0.0115 here.
+- The controls give what they must (`--selftest`, `logs/start_cover_M3_selftest.log`). Five mutations put the sets
+  outside: a box widened to h = 2×10⁻⁶, a hull that passes the edge of x̂ ± 10⁻⁶ by 9×10⁻¹¹, a centre moved by 2×10⁻⁶,
+  and another Cauchy radius or ray. The truncation N − 1 = 94 changes the verdict to COVERED, and the null mutation, a
+  hull 2×10⁻¹⁰ inside that edge, stays inside.
+
+What the certificate still takes from the lemma is that its proof (A_lemmas_M.md §2.2) and `fixed_point_M.py` are
+correct.
+
 ### 6.3 M = 5: not certified here; the centre is ready and the runs are a local-machine task
 
 *Outcome (2026-10-22, T33):* the four runs of §7 were made and the certificate fails; see the summary at the top of this
@@ -500,6 +544,10 @@ python3 certify_M.py krawczyk --box=data/A_M_box_M3_1e-10.json --hier --mutate=h
 python3 certify_M_recheck.py data/A_M_box_M3_1e-10.json                     # independent assembly (mpmath)
 python3 certify_M_recheck.py data/A_M_box_M3_1e-10.json --mutate            # must fail
 python3 certify_M.py export6a --box=data/A_M_box_M3_1e-10.json --out=data/A_M_6a_M3_1e-10.json   # for lemma 6a(M)
+python3 start_cover_M2.py --box=data/A_M_box_M3_1e-10.json            # section 6.2: NOT COVERED by a stored row, exit 1
+python3 start_cover_M2.py --box=data/A_M_box_M3_1e-10.json --rerun    # RERUN: PASS, exit 0; seconds
+python3 start_cover_M2.py --box=data/A_M_box_M3_1e-10.json --rerun --mutate=overlap   # must fail
+python3 start_cover_M2.py --box=data/A_M_box_M3_1e-10.json --selftest # exit 0
 # M = 5 centre (numerics; 25-40 min per iteration): the mixed system, from refine b's p_out
 python3 certify_M.py refine 5 --iters=2 --modes=full,full --mixed --tag=c \
     --p=2.7185791892117424130177654812835683278086250673336,0.99922840320656778344019660889181768356642428951284,0.14920357491144750568196056793271935041482093192331,0.014719052490251352879803044913775572795908602649635,0.0084053469057616610714063354028382829968062187683545,0.0014703451815915780266410531538042860832833504910601
