@@ -206,7 +206,8 @@ def lowD_limits():
     return out
 
 
-# The published gamma, Delta and wiggle periods below D = 14 (#620), as copied from the papers' arXiv sources: ref, D,
+# The published gamma, Delta and wiggle periods below D = 14 (#620, #629), as copied from the papers' arXiv sources and
+# Bland's thesis (its page images): ref, D,
 # quantity, lower and upper end (equal unless a range), uncertainty. A frozen copy of hp/compare_gamma_published.py's
 # rows, which guards the CSV against later edits; that copy's fidelity to the papers is the producer's --verify.
 PUBLISHED_GAMMA = """
@@ -245,6 +246,13 @@ TK2011 7 gamma 0.440 0.440 +-0.006; TK2011 7 T 3.1 3.1 +-0.4; TK2011 8 gamma 0.4
 TK2011 8 T 3.0 3.0 +-0.1; PVG2022 5 gamma 0.415 0.415 none_stated; PVG2022 5 Delta_half 1.6 1.6 none_stated
 PVG2022 5 gamma 0.413 0.413 none_stated; PVG2022 5 gamma 0.4131 0.4131 none_stated
 PVG2022 5 T_log10 1.7 1.7 none_stated; PVG2022 5 gamma 0.41 0.41 none_stated
+Bland2007 4.5 gamma 0.3984 0.3984 +-0.0014; Bland2007 5 gamma 0.4119 0.4119 +-0.0037; Bland2007 6 gamma 0.4302 0.4302 +-0.0042
+Bland2007 7 gamma 0.4405 0.4405 +-0.0058; Bland2007 8 gamma 0.4459 0.4459 +-0.0054; Bland2007 9 gamma 0.4524 0.4524 +-0.0054
+Bland2007 10 gamma 0.4562 0.4562 +-0.0060; Bland2007 11 gamma 0.4588 0.4588 +-0.0053; Bland2007 12 gamma 0.4616 0.4616 +-0.0067
+Bland2007 13 gamma 0.4639 0.4639 +-0.0089; Bland2007 14 gamma 0.4645 0.4645 +-0.0052; Bland2007 4.5 Delta 3.30 3.30 +-0.1
+Bland2007 5 Delta 3.10 3.10 +-0.1; Bland2007 6 Delta 2.98 2.98 +-0.1; Bland2007 7 Delta 2.96 2.96 +-0.1
+Bland2007 8 Delta 2.77 2.77 +-0.1; Bland2007 9 Delta 2.63 2.63 +-0.1; Bland2007 10 Delta 2.50 2.50 +-0.1
+Bland2007 11 Delta 2.46 2.46 +-0.1; Bland2007 12 Delta 2.44 2.44 +-0.1; Bland2007 13 Delta 2.40 2.40 +-0.1
 """
 
 PUBLISHED_GAMMA_NOTE = {   # notes/REVIEW_GHMG25.md section 8: values, within their uncertainty, largest |diff| and its unit
@@ -256,6 +264,7 @@ PUBLISHED_GAMMA_NOTE = {   # notes/REVIEW_GHMG25.md section 8: values, within th
     "BK2007": ("| Bland & Kunstatter 2007 | 14 | 7 | 4.70×10⁻³ (Δ(5), N = 512 and 1536) |", 14, 7, 4.70e-3, 1e-5),
     "TK2011": ("| Taves & Kunstatter 2011 | 18 | 12 | 2.07×10⁻¹ (T(4)) |", 18, 12, 2.07e-1, 1e-3),
     "PVG2022": ("| Porto Veronese & Gundlach 2022 | 6 | 5 | 1.09×10⁻² (Δ_Ψ(5)) |", 6, 5, 1.09e-2, 1e-4),
+    "Bland2007": ("| Bland, thesis 2007 | 21 | 19 | 1.22×10⁻¹ (Δ(5)) |", 21, 19, 1.22e-1, 1e-3),
 }
 
 
@@ -314,8 +323,8 @@ def published_gamma():
         c[1] += abs(d) <= ua * (1 + 1e-9)
         c[2] = max(c[2], abs(d))
         diffs.setdefault(k, []).append(d)
-    out += [("rows of the CSV", len(rows), 97, 1, [("notes/REVIEW_GHMG25.md", "(97 values)")]),
-            ("entries of PUBLISHED_GAMMA", len(want), 97, 1, []),
+    out += [("rows of the CSV", len(rows), 118, 1, [("notes/REVIEW_GHMG25.md", "(118 values)")]),
+            ("entries of PUBLISHED_GAMMA", len(want), 118, 1, []),
             ("rows whose ours differs from the data files by more than 1e-10", bad_ours, 0, 1, []),
             ("rows whose diff is not ours minus the published value", bad_diff, 0, 1, []),
             ("rows whose within is not |diff| <= the uncertainty", bad_within, 0, 1, [])]

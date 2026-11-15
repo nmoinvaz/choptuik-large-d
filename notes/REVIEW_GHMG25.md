@@ -316,7 +316,7 @@ For the coordinator, who edits the README. Each footnote entry is verified in §
 
 Every γ, Δ and wiggle period that the works of rows 7–13 give for the massless scalar below D = 14 was copied from the
 paper's arXiv source, not from the review, into
-[`hp/data/gamma_published_compare.csv`](../hp/data/gamma_published_compare.csv) (97 values). The producer,
+[`hp/data/gamma_published_compare.csv`](../hp/data/gamma_published_compare.csv) (118 values). The producer,
 `hp/compare_gamma_published.py`, holds each value with its locator and a verbatim quote of the source line. It sets
 our value of the same quantity beside it, from `hp/data/delta_dd_lowD.csv`, `hp/data/gamma_dd.jsonl` and
 `hp/data/delta_all.csv`, and writes the difference. Our errors are below 10⁻⁸, except for γ(3.5), which has one
@@ -334,6 +334,7 @@ resolution. Either way they are negligible against every published uncertainty.
 | Bland & Kunstatter, PRD 75, 101501 (2007) | hep-th/0702226v1 | Eqs. (1)–(3), the method, Tables I–II and the summary | 745509 |
 | Taves & Kunstatter, PRD 84, 044034 (2011) | 1105.0878v2 | Secs. 1, 3.2 and 4, with Table 1 | 898119 |
 | Porto Veronese & Gundlach, PRD 106, 104044 (2022) | 2209.08404v1 | Secs. I, IV and V, and Appendix A | 2153661 |
+| Bland, PhD thesis, University of Manitoba (2007) | none; MSpace hdl 1993/20437, the PDF's page images (#629) | Table 4.3 and Sec. 4's fits, printed pp. 142, 159 and 161 | none |
 
 The sources were fetched from arxiv.org/src on 2026-11-13; each is the latest arXiv version, and a journal text may
 differ. No text addressed to an AI agent was found in them. Values that a paper quotes from another one (Bland et al.'s
@@ -371,6 +372,7 @@ rounding bound only, so a "no" there says only that the printed digits differ).
 | Bland & Kunstatter 2007 | 14 | 7 | 4.70×10⁻³ (Δ(5), N = 512 and 1536) |
 | Taves & Kunstatter 2011 | 18 | 12 | 2.07×10⁻¹ (T(4)) |
 | Porto Veronese & Gundlach 2022 | 6 | 5 | 1.09×10⁻² (Δ_Ψ(5)) |
+| Bland, thesis 2007 | 21 | 19 | 1.22×10⁻¹ (Δ(5)) |
 
 - **γ, where the published values are precise.** Bland et al.'s eleven values at D = 4–14 are all within their
   errors, by at most 1.31×10⁻³ (D = 9). Bland and Kunstatter's 0.4131 ± 0.0001 is 2.7×10⁻⁵ from ours. Husain et al.'s
@@ -412,7 +414,15 @@ rounding bound only, so a "no" there says only that the printed digits differ).
   would be 3.03/(2 × 0.424) = 3.57.
 - Taves and Kunstatter quote Bland et al. at D = 8 as γ = 0.4459 ± 0.0054 and T = 3.11 ± 0.1 (Sec. 3.2), where Bland et
   al.'s Table I has 0.446 ± 0.004 and Δ = 2.77. Their abstract credits Bland et al. with an asymptote of 1/2, where
-  Bland et al. 2005 give 0.466. Both may come from Bland's thesis, which was not read for this: *(unverified)*.
+  Bland et al. 2005 give 0.466. Both come from Bland's thesis (#629, read on its page images).
+  - Its Table 4.3 (printed p. 142) has γ(8) = 0.4459 ± 0.0054 and Δ(8) = 2.77 ± 0.1, "the same data reported in Bland
+    et al." with the error bars recalculated.
+  - T = 3.11 is printed in neither work. It is Δ/(2γ), 3.106 from the thesis's digits and 3.105 from the paper's, so
+    it does not tell the two apart.
+  - The asymptote 1/2 is the thesis's Fit 13, constrained to it (Eq. 4.45, p. 161). Its unconstrained Fit 12 gives
+    0.493 ± 0.007 (pp. 159 and 161).
+  - The thesis also extrapolates Δ to 5/2 at large d (Eqs. 4.40–4.42, p. 159). Our large-D limit is 1.6438937 (the
+    README's track C).
 - Porto Veronese and Gundlach's introduction says their scalar-field tests are in "9+1 (physical) dimensions", and
   their Appendix A says 8+1. Their Sec. V B calls Δ_Ψ ≃ 1.6 "in agreement with" Bland et al., whose D = 5 period is the
   full one, 3.10. The two agree only with the factor 2.

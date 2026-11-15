@@ -11,6 +11,14 @@ from DIR/<arXiv id with "/" as "_"><version>/ (for example DIR/gr-qc_9908044v1/,
 `curl -L https://arxiv.org/src/gr-qc/9908044v1 | tar -xz -C DIR/gr-qc_9908044v1`), checks that every quote is in
 them and that every published value and stated uncertainty is in a quote, and exits non-zero otherwise.
 
+One source is not on arXiv: J. Bland's thesis (Bland2007, MSpace hdl 1993/20437), a scan with an OCR text layer. Its
+values were read from the page images (Table 4.3, printed p. 142, PDF p. 155). `--verify` checks the PDF at
+DIR/Bland2007/thesis.pdf against the repository's MD5 and each row's quote against the text layer of that PDF page in
+DIR/Bland2007/thesis.txt (pages separated by form feeds), made by
+`python3 -c "import pymupdf, sys; d = pymupdf.open(sys.argv[1]); open(sys.argv[2], 'w').write(chr(12).join(p.get_text()
+for p in d))" thesis.pdf thesis.txt`. The OCR prints the table's "±" as "+", which the quotes keep. Rows whose OCR is
+garbled (D 7 and 8 Delta, D 9 and 10 gamma) have no quote and are listed as read from the image only.
+
 Quantities, each in its paper's convention as read there (the column convention says where):
   gamma       the length-scale exponent: a radius scales as |p - p*|^gamma, the maximum curvature as |p - p*|^(-2 gamma);
   gamma_mass  the mass exponent, (D - 3) gamma;
@@ -47,7 +55,11 @@ REFS = {
     "BK2007": ("hep-th/0702226v1", "J. Bland and G. Kunstatter, PRD 75, 101501 (2007)"),
     "TK2011": ("1105.0878v2", "T. Taves and G. Kunstatter, PRD 84, 044034 (2011)"),
     "PVG2022": ("2209.08404v1", "B. Porto Veronese and C. Gundlach, PRD 106, 104044 (2022)"),
+    "Bland2007": ("mspace:1993/20437", "J. Bland, PhD thesis, University of Manitoba (2007)"),
 }
+# the thesis's PDF (MSpace bitstream 319e409d-2cfd-46d5-93ca-2bc913dbbbfb, 4213228 bytes), the repository's checksum
+THESIS_MD5 = "b01fdcf99be10de9de38878e57fb49f2"
+THESIS_PAGE = 155       # the PDF page of Table 4.3 (printed p. 142)
 
 CONV = {
     ("GCD1999", "gamma"): "length: subcritical maximum curvature ~ (p* - p)^(-2 gamma) (Secs. II, V)",
@@ -63,6 +75,8 @@ CONV = {
     ("Bland2005", "Delta"): "full: chi(r,t) = chi(r e^Delta, t e^Delta) (Eq. (2)); Delta = 2 T gamma from the residuals' period T (Sec. III)",
     ("BK2007", "gamma"): "length: R_AH ~ (a - a*)^gamma (Eq. (1))",
     ("BK2007", "Delta"): "full: chi(r,t) = chi(r e^Delta, t e^Delta) (Eq. (2)); period of the field at the origin in -ln(u* - u) (Fig. 2)",
+    ("Bland2007", "gamma"): "length: as Bland2005, the same data with the error bars recalculated (Table 4.3 caption)",
+    ("Bland2007", "Delta"): "full: from the periodicity in the scaling graphs (Table 4.3 caption)",
     ("TK2011", "gamma"): "length: the areal radius of the apparent horizon on formation (Sec. 1, Eq. (1.1))",
     ("TK2011", "T"): "Delta/(2 gamma): period T of f in ln|A - A*| (Eq. (1.1)); Table 1 lists Bland et al.'s and Sorkin-Oren's Delta as Delta/(2 gamma) (inferred)",
     ("PVG2022", "gamma"): "length: R_ah ~ (p - p*)^gamma and R_Psi^(-1/2) (Fig. 9)",
@@ -201,6 +215,28 @@ ROWS = [
      [r"the fitted period of the residuals is $\Delta_\text{res} = 1.7$, which is related to the echoing period of the critical solution by $\Delta_\text{res} = \Delta_\Psi/(\ln(10)\gamma)$, resulting in $\Delta_\Psi \simeq 1.6$"]),
     ("PVG2022", 5, "gamma", "q = 0; Gaussian and Gaussian-derivative families", "0.41", "0.41", "none stated", "Sec. V E",
      [r"$\gamma \simeq 0.41$ for $q=0$"]),
+
+    ("Bland2007", 4.5, "gamma", "Gaussian; Lambda = 0", "0.3984", "0.3984", "+-0.0014", "Table 4.3, p. 142 (PDF p. 155)", ["0.3984 + 0.0014"]),
+    ("Bland2007", 5, "gamma", "Gaussian; Lambda = 0", "0.4119", "0.4119", "+-0.0037", "Table 4.3, p. 142 (PDF p. 155)", ["0.4119 + 0.0037"]),
+    ("Bland2007", 6, "gamma", "Gaussian; Lambda = 0", "0.4302", "0.4302", "+-0.0042", "Table 4.3, p. 142 (PDF p. 155)", ["0.4302 + 0.0042"]),
+    ("Bland2007", 7, "gamma", "Gaussian; Lambda = 0", "0.4405", "0.4405", "+-0.0058", "Table 4.3, p. 142 (PDF p. 155)", ["0.4405 + 0.0058"]),
+    ("Bland2007", 8, "gamma", "Gaussian; Lambda = 0", "0.4459", "0.4459", "+-0.0054", "Table 4.3, p. 142 (PDF p. 155)", ["0.4459 + 0.0054"]),
+    ("Bland2007", 9, "gamma", "Gaussian; Lambda = 0", "0.4524", "0.4524", "+-0.0054", "Table 4.3, p. 142 (PDF p. 155)", []),
+    ("Bland2007", 10, "gamma", "Gaussian; Lambda = 0", "0.4562", "0.4562", "+-0.0060", "Table 4.3, p. 142 (PDF p. 155)", []),
+    ("Bland2007", 11, "gamma", "Gaussian; Lambda = 0", "0.4588", "0.4588", "+-0.0053", "Table 4.3, p. 142 (PDF p. 155)", ["0.4588 + 0.0053"]),
+    ("Bland2007", 12, "gamma", "Gaussian; Lambda = 0", "0.4616", "0.4616", "+-0.0067", "Table 4.3, p. 142 (PDF p. 155)", ["0.4616 + 0.0067"]),
+    ("Bland2007", 13, "gamma", "Gaussian; Lambda = 0", "0.4639", "0.4639", "+-0.0089", "Table 4.3, p. 142 (PDF p. 155)", ["0.4639 + 0.0089"]),
+    ("Bland2007", 14, "gamma", "Gaussian; Lambda = 0", "0.4645", "0.4645", "+-0.0052", "Table 4.3, p. 142 (PDF p. 155)", ["0.4645 + 0.0052"]),
+    ("Bland2007", 4.5, "Delta", "periodicity of the scaling graphs", "3.30", "3.30", "+-0.1", "Table 4.3, p. 142 (PDF p. 155)", ["3.30 + 0.1"]),
+    ("Bland2007", 5, "Delta", "periodicity of the scaling graphs", "3.10", "3.10", "+-0.1", "Table 4.3, p. 142 (PDF p. 155)", ["3.10 + 0.1"]),
+    ("Bland2007", 6, "Delta", "periodicity of the scaling graphs", "2.98", "2.98", "+-0.1", "Table 4.3, p. 142 (PDF p. 155)", ["2.98 + 0.1"]),
+    ("Bland2007", 7, "Delta", "periodicity of the scaling graphs", "2.96", "2.96", "+-0.1", "Table 4.3, p. 142 (PDF p. 155)", []),
+    ("Bland2007", 8, "Delta", "periodicity of the scaling graphs", "2.77", "2.77", "+-0.1", "Table 4.3, p. 142 (PDF p. 155)", []),
+    ("Bland2007", 9, "Delta", "periodicity of the scaling graphs", "2.63", "2.63", "+-0.1", "Table 4.3, p. 142 (PDF p. 155)", ["2.63 + 0.1"]),
+    ("Bland2007", 10, "Delta", "periodicity of the scaling graphs", "2.50", "2.50", "+-0.1", "Table 4.3, p. 142 (PDF p. 155)", ["2.50 + 0.1"]),
+    ("Bland2007", 11, "Delta", "periodicity of the scaling graphs", "2.46", "2.46", "+-0.1", "Table 4.3, p. 142 (PDF p. 155)", ["2.46 + 0.1"]),
+    ("Bland2007", 12, "Delta", "periodicity of the scaling graphs", "2.44", "2.44", "+-0.1", "Table 4.3, p. 142 (PDF p. 155)", ["2.44 +0.1"]),
+    ("Bland2007", 13, "Delta", "periodicity of the scaling graphs", "2.40", "2.40", "+-0.1", "Table 4.3, p. 142 (PDF p. 155)", ["2.40 + 0.1"]),
 ]
 
 
@@ -253,7 +289,7 @@ def build():
         diff = o - v
         out.append(dict(D=repr(float(D)), quantity=q, published_ref=ref, conditions=cond, published_lo=lo, published_hi=hi,
                         published_unc=unc, unc_abs=format(ua, ".3g"), unc_kind=uk, convention=CONV[(ref, q)],
-                        locator=f"arXiv:{REFS[ref][0]}, {loc}", ours=format(o, ".10f"), ours_source=src,
+                        locator=(f"MSpace hdl {REFS[ref][0][7:]}, {loc}" if REFS[ref][0].startswith("mspace:") else f"arXiv:{REFS[ref][0]}, {loc}"), ours=format(o, ".10f"), ours_source=src,
                         diff=format(diff, ".2e"), within="yes" if abs(diff) <= ua * (1 + 1e-9) else "no"))
     return out
 
@@ -262,9 +298,41 @@ def norm(s):
     return re.sub(r"\s+", " ", s)
 
 
+def verify_thesis(root, ref):
+    """the thesis's rows: the PDF's MD5, then each quote in the text layer of THESIS_PAGE and each value and stated
+    uncertainty in a quote; rows without a quote are listed as read from the image only. Returns the failures."""
+    import hashlib
+    d = os.path.join(root, ref)
+    try:
+        md5 = hashlib.md5(open(os.path.join(d, "thesis.pdf"), "rb").read()).hexdigest()
+        page = norm(open(os.path.join(d, "thesis.txt"), encoding="utf-8").read().split(chr(12))[THESIS_PAGE - 1])
+    except (OSError, IndexError) as e:
+        print(f"  {ref}: {e}")
+        return 1
+    if md5 != THESIS_MD5:
+        print(f"  {ref}: thesis.pdf has MD5 {md5}, not the repository's {THESIS_MD5}")
+        return 1
+    bad, image = 0, []
+    for r in (r for r in ROWS if r[0] == ref):
+        _, D, q, cond, lo, hi, unc, loc, quotes = r
+        if not quotes:
+            image.append(f"{q}({D})")
+            continue
+        missing = [x for x in quotes if norm(x) not in page]
+        absent = [x for x in (lo, unc.lstrip("+-")) if not any(re.search(r"(?<![0-9.])" + re.escape(x) + r"(?![0-9])", qt) for qt in quotes)]
+        if missing or absent:
+            bad += 1
+            print(f"  FAIL {ref} D {D} {q}: quotes not on PDF p. {THESIS_PAGE} {missing}; values not in a quote {absent}")
+    print(f"  {ref}: MD5 matches; read from the page image only (OCR garbled): {', '.join(image)}")
+    return bad
+
+
 def verify(root):
     bad = 0
     for ref, (ax, _) in REFS.items():
+        if ax.startswith("mspace:"):
+            bad += verify_thesis(root, ref)
+            continue
         d = os.path.join(root, ax.replace("/", "_"))
         tex = [os.path.join(d, f) for f in sorted(os.listdir(d)) if f.endswith(".tex")] if os.path.isdir(d) else []
         if not tex:
@@ -281,7 +349,7 @@ def verify(root):
             if missing or absent:
                 bad += 1
                 print(f"  FAIL {ref} D {D} {q} ({cond}): quotes not in the source {missing}; values not in a quote {absent}")
-    print(f"verify: {len(ROWS) - bad} of {len(ROWS)} rows have every quote in their arXiv source" if not bad else
+    print(f"verify: {len(ROWS) - bad} of {len(ROWS)} rows have every quote in their source" if not bad else
           f"verify: {bad} failures")
     return bad == 0
 
