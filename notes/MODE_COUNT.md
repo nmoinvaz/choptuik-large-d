@@ -799,6 +799,42 @@ branch point (T4), all of size 1200, and one pole at every order (T5). T6 adds 3
 The value with c₀ = 1 is conditional on λ_g → 1, which the free fits support to 9.2×10⁻⁸ but not to the 10⁻¹⁰ the
 fits resolve (10.5).
 
+**Past D 248: the fold's square root or the 1/p_min term** (#815; `hp/lam_fold_fit.py`, raw `I815-mac/`). The data
+are δ = λ_g − R at the chain's states past 244.64, with R the reference fit above. Each state's σ is R's spread over
+the kept c₀ = 1 fits, 6×10⁻¹³ to 1.9×10⁻¹². Four forms are fitted on two windows, N = 258–259.74 (40 states) and
+G = 248–259.74 (92 states):
+
+- S, a square root at a fold, Σₖ₌₀³ aₖuᵏ with u = √(D* − D) and D* free;
+- W, #805's entire 1/p_min term Re[A e^{κ(D − 250)}], with κ free (notes/LARGE_D_WALL.md, #807);
+- C = W + S;
+- C_even, which is C without the odd powers of u.
+
+r is a form's largest residual in units of σ. The rule was fixed on the issue before the real fit:
+- the square root is carried when r(C_even) ≥ 100 r(C) and C's D* lies within 0.01 of Δ's fold, 259.9033;
+- the 1/p_min term is carried when r(S) ≥ 100 r(C);
+- C is complete when r(C) ≤ 10.
+
+The plants give the expected verdict on both windows: a square root at 259.9033, #807's W, their mixtures, and two
+controls. A control that moves the judged D* by 0.5 fails (exit 1).
+
+| window | r(S) | r(W) | r(C) | r(C_even) | C's D* | verdict |
+|---|---|---|---|---|---|---|
+| N | 2.6×10⁶ | 1.8×10⁶ | 1.2×10³ | 1.5×10⁵ | 259.882 | 1/p_min term, C incomplete |
+| G | 1.8×10⁷ | 3.9×10⁶ | 5.4×10⁵ | 3.7×10⁶ | 259.779 | neither, C incomplete |
+| N, post hoc, fold part of degree 5 | 3.3×10⁴ | | 46 | 1.7×10⁵ | 259.910 | both, C incomplete |
+
+So no form describes λ_g past 248 to its σ, and the fit stays capped at D 244.64. On N the square root's ratio passes
+(130), but C puts D* 0.021 below Δ's fold. Post hoc, the fold part was given degree 4 and 5, with C_even's regular part
+of degree 2, and its plants pass. Then C comes within 86σ and 46σ on N, with D* 259.9071 and 259.9099, and both terms
+are carried.
+
+Even there, two things limit what the fit says:
+- the odd and even parts cancel, at 44 and 52 times the largest |δ|, so the square root's coefficient is not
+  determined;
+- C's W has ω 2.5 and 2.4, twice the 1.19 of #805's plant (period 5.3), so on N it is not the term #807 measured.
+
+On G every form misses by 6×10⁴σ or more, like the plant whose period lengthens with D (2.1×10⁴σ).
+
 ### 10.5 Discrepancies (reported, not fixed)
 
 - **The free fits' c₀ is below 1 at every fit choice.** The 36 kept fits give c₀ from 0.99999981663 to 0.999999999914,
@@ -832,6 +868,8 @@ python3 hp/lam_gauge_fit.py planted --sigma=5e-14                               
 python3 hp/lam_gauge_fit.py fit                                                       # 10.4 and 10.5
 python3 hp/lam_gauge_fit.py planted --csv=RAW/I622-mac/lam_gauge_before603.csv --sigma=2.5e-13 \
     --junk=241.887:4.8e-11,240.514:-2.5e-11                                           # 10.5, exits 1
+python3 hp/lam_fold_fit.py planted RAW --json=hp/data/lam_fold_planted.json          # 10.4, #815; --mutate=dstar exits 1
+python3 hp/lam_fold_fit.py real --json=hp/data/lam_fold.json                          # 10.4, #815
 ```
 
 ### 10.7 Proposed README text
