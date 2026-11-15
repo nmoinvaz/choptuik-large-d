@@ -584,3 +584,37 @@ falls from 456 to 374 s and from 530 to 358 s. The planted check at D 200 with t
 2.9e-64 and lies 3.2e-49 from #713's switch-0 state (8.1e-54). Its written bar, 1e-40 against ref_D200, is not met
 (1.7e-39), because ref_D200 itself is converged only to 6.5e-49. The toy check passes and its control
 (`--mutate=drop`, the floor at 1) fails. The own test's counterpart is #777.
+
+**The own test's counterpart (#777) stopped at #713's planted start s0_D252** (raw `I777-mac/` 51eb62e4). The drop took
+step 3 there from 7.19×10⁻¹⁶ to 4.42×10⁻³², but Δ stayed 2.0184×10⁻¹¹ below the planted truth, where #713's run
+ended too (2.1×10⁻¹⁷ apart). The next correction, 1.1×10⁻⁵ in Δ at a pivot of 7.3×10⁻³¹, failed its projection at all
+9 trials. The truth's own pinned residual is 3.58×10⁻²⁰, twelve orders above that end, so which point is the root is
+open. #816 runs Newton from the truth itself, and #817 runs the strong-row chord from this start.
+
+## 14. Refusing an attempt at iteration 1 (#784)
+
+**An attempt whose full-step ratio θ at Newton iteration 1 exceeds 10⁸ is refused there (`--od_abort_theta 1e8`).** It
+saves the hour or more such an attempt spends before the 20-step limit, and refuses no attempt that would have
+converged.
+
+**The replay over #603's and #608's logs** (`hp/abort_replay.py`, 193 attempts in nine logs at raw 129f3049, R 10⁸):
+
+| | iteration 1 | iterations 1 and 2 (`--it 2`) |
+|---|---|---|
+| largest θ of an accepted attempt (52 with a θ₁) | 1.014×10⁶ | 1.458×10⁵ at iteration 2 |
+| attempts refused at the step limit (11), smallest θ₁ | 7.021×10⁹, all caught | all caught |
+| accepted attempts the rule would refuse | 0 | 0 |
+| time saved | 26099 s (7.2 h) | 26099 s |
+
+**The A/B at #608's attempt from D 249.5375** (dh610, raw `I784-dh610/` 129f3049, 4 threads each):
+
+| | A, no option | B, `--od_abort_theta 1e8` |
+|---|---|---|
+| a = 0.4883 | 20 steps, not converged, 8589 s | refused at iteration 1 (θ 1.074×10¹¹), 1971 s |
+| the retry at a = 0.2441 | accepted, 4 steps, max\|F\| 1.2×10⁻⁶⁴ | the same; the two states agree to 0.0 in every unknown |
+| wall | 13512 s | 6888 s |
+
+- **A case iteration 1 does not catch.** In #608's chain, d10's attempt at a = 0.4547 has θ 2.8×10⁻⁷ at iteration 1 and
+  6.0×10¹² at iteration 2. Its outcome is not yet in the logs. `--od_abort_it K` (2e315411) applies the bound at
+  iterations 1 to K. On the replay, K = 2 refuses no accepted attempt, since iteration 2's largest accepted θ is
+  1.46×10⁵. `newton_od_toy.py`'s `abort2_check` fires at iteration 2 with K = 2 and not with K = 1.
