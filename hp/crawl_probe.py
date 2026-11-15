@@ -8,7 +8,7 @@ point where it stops being affine. The rows that jump there are named by block, 
     python3 crawl_probe.py iterate RAW BASE.npz --a A (--jet JET.npz | --pred PRED.npz) --out DIR [--threads 2]
         [--strong 4] [--steps 2] [--check_pred PRED.npz]
     python3 crawl_probe.py probe RAW ITER.npz --out DIR [--threads 2] [--lo 0.5] [--hi 1.0] [--rungs 6]
-        [--tol_lam 1e-6] [--arms U,E] [--theta 1] [--theta_half 0] [--hint 1]
+        [--tol_lam 1e-6] [--arms U,E|none] [--theta 1] [--theta_half 0] [--hint 1]
     python3 crawl_probe.py fixrun RAW ITER.npz --out DIR [--threads 2] [--switch 0] [--steps 6] [--tol 1e-60]
         [--accept natural|own] [--start_lam 0] [--junk 0]
     python3 crawl_probe.py offset RAW ITER.npz [--threads 2]
@@ -19,7 +19,9 @@ point where it stops being affine. The rows that jump there are named by block, 
     python3 crawl_probe.py logcmp OURS.log REF.log --anchor TEXT [--anchor_ref TEXT] [--nth 1] [--nth_ref 1] [--n 4]
         [--mutate digit]
     python3 crawl_probe.py weak RAW [STATE.npz ...] [--iter ITER.npz --lams 0,1] [--w 4] [--threads 2] [--out FILE]
-    (probe also takes --own 1 [--own_lams 1,0.5] [--weak 4]: the default trial test's corrections, own_test)
+    (probe also takes --own 1 [--own_lams 1,0.5] [--weak 4]: the default trial test's corrections, own_test; with
+    --theta 1, --weak w gives the natural test's corrections' share in the w weakest directions at the iterate's
+    projection and their largest unknown groups, #778)
 
 `selftest` is the planted check (fixed before the first real run): a smooth map with a quadratic remainder along the
 exact Newton step, plus a jump of known rows switched on at a known lam_true along that step. Pass: lam* within 1e-6 of
@@ -75,7 +77,9 @@ noise, orthonormalized again).
 code path: the base polish, the series, the prediction, its re-seed and plan, ElimO with the run's switch. Each
 attempt's newton_od is capped at --stop + 1 steps, and its iterate at Newton step --stop is saved with its step and
 the attempt's pieces (crawl_iter_D<D>_s<stop>.npz; probe, fixrun and weak rebuild the attempt from them). The attempt
-is then reported not converged, so anm_run halves a and runs the next. The own test only. `logcmp` compares n lines
+is then reported not converged, so anm_run halves a and runs the next. With --od_accept natural (#778) the start's
+and each accepted step's Jacobian come from PinnedO.newton_o at the trial's projection, and the iterate is that
+trial with the projection's displacement added to its step, as newton_od forms it. `logcmp` compares n lines
 of a rebuilt log with the reference's from the nth line holding an anchor, timings and step numbers dropped; exit 1
 when one differs (--mutate digit is its control). `weak` prints the weakest right singular directions of the pinned
 octo-double Jacobian at stored full-system states or at an iterate's projected trials (sigma, Delta component, unknown
@@ -453,7 +457,7 @@ def probe(argv):
     threads = _opt(argv, "threads", 2)
     lo, hi, rungs = _opt(argv, "lo", 0.5), _opt(argv, "hi", 1.0), _opt(argv, "rungs", 6)
     tol_lam = _opt(argv, "tol_lam", 1e-6)
-    arms = _opt(argv, "arms", "U,E").split(",")
+    arms = [x for x in _opt(argv, "arms", "U,E").split(",") if x and x != "none"]      # --arms none: no ladder (#778)
     os.makedirs(out, exist_ok=True)
     dd = np.load(it_path)
     meta = json.loads(str(dd["meta"]))
@@ -586,6 +590,16 @@ def probe(argv):
         same = all(np.array_equal(np.asarray(dz_new[q]), np.asarray(d[q])) for q in range(8))
         nd = float(np.abs(np.asarray(d[0])).max())
         th = {}
+        # --weak w (#778): the w weakest right singular directions of the Jacobian at the iterate's projection, the LU
+        # the simplified correction is solved with; each correction's share in them (2-norm of the leading parts)
+        wk = _opt(argv, "weak", 0)
+        Vw = None
+        if wk:
+            from octo_corrector import junk_subspace_o
+            Vw, sigw, _ = junk_subspace_o(so, wk, delta_max=2.0)
+            selfchk = max(abs(float(np.linalg.norm(Vw.T @ Vw[:, j])) - 1) for j in range(Vw.shape[1]))
+            print(f"  the {wk} weakest directions at the iterate's projection: sigma " + ", ".join(f"{x:.3e}" for x in sigw)
+                  + f"; each direction's share in them 1 to {selfchk:.1e}", flush=True)
         for lam, modes in ((1.0, ("switch", "forced")),) + (((0.5, ("switch",)),) if _opt(argv, "theta_half", 0) else ()):
             zt = o8(od_axpy(lam, *d, *z))
             for mode in modes:
@@ -596,6 +610,15 @@ def probe(argv):
                 db = o8(od_axpy(-1.0, *xb, *disp))
                 th[f"{lam:g}_{mode}"] = dict(theta=float(np.abs(np.asarray(db[0])).max()) / nd, maxF=omax(Ft),
                                             bound=1 - lam / 4)
+                if Vw is not None:
+                    x = lead(db)
+                    nx = float(np.linalg.norm(x))
+                    grp = unknown_blocks(x, M, K)
+                    th[f"{lam:g}_{mode}"].update(share_weak=float(np.linalg.norm(Vw.T @ x)) / nx if nx > 0 else 0.0,
+                                                 sigma_weak=[float(v) for v in sigw], groups=grp)
+                    top = sorted(grp.items(), key=lambda kv: -kv[1])[:6]
+                    print(f"    its share in the {wk} weakest directions {th[f'{lam:g}_{mode}']['share_weak']:.4f}; largest "
+                          "unknown groups " + ", ".join(f"{g} {v:.2e}" for g, v in top), flush=True)
                 print(f"  natural test at lam {lam:g}, trial {'as the corrector projects it' if mode == 'switch' else 'projected'}: "
                       f"max|F| {omax(Ft):.3e}, simplified correction / |dz| {th[f'{lam:g}_{mode}']['theta']:.3e} (bound {1 - lam / 4:.3f})",
                       flush=True)
@@ -794,12 +817,33 @@ def anm(argv):
     _, _, m0 = anm_run.load_state(os.path.join(raw, state))
     calls = []
 
+    # --od_accept natural (#778): newton_od forms the start's LU by ElimO.newton_o and, at each accepted trial, the
+    # next one by PinnedO.newton_o at the trial's projection (no new projection), so those calls are recorded, with
+    # every projection (its point and the projected point) to recover the unprojected trial
+    natural = "--od_accept" in argv and argv[argv.index("--od_accept") + 1] == "natural"
+    projs = []
+
     class RecElimO(oc.ElimO):
         def newton_o(self, z, mutate=0):
             st = super().newton_o(z, mutate=mutate)
+            if not natural:
+                calls.append((oc.o8(z), st))
+            return st
+
+        def project(self, z):
+            zp = super().project(z)
+            if natural:
+                projs.append((oc.o8(z), oc.o8(zp)))
+            return zp
+    anm_run.ElimO = RecElimO
+    if natural:
+        pin_newton = oc.PinnedO.newton_o
+
+        def rec_pin(self, z, mutate=0):
+            st = pin_newton(self, z, mutate=mutate)
             calls.append((oc.o8(z), st))
             return st
-    anm_run.ElimO = RecElimO
+        oc.PinnedO.newton_o = rec_pin
     phase = dict(series=False, n=0)
     for nm in ("coefficients", "coefficients_q", "coefficients_o"):
         def wrapped(*a, _f=getattr(anm_run, nm), **k):
@@ -811,18 +855,32 @@ def anm(argv):
     def newton_rec(s, z0, **kw):
         if not phase["series"]:
             return nod(s, z0, **kw)
-        if kw.get("accept", "own") != "own" or kw.get("strong_chord") or kw.get("junk_w"):
-            raise SystemExit("anm: the own test only, without --od_strong or --od_junk")
+        if kw.get("accept", "own") != ("natural" if natural else "own") or kw.get("strong_chord") or kw.get("junk_w"):
+            raise SystemExit("anm: the own or the natural test (as --od_accept says), without --od_strong or --od_junk")
         if not isinstance(s, oc.ElimO):
             raise SystemExit("anm: needs --reseed 2 (ElimO)")
         calls.clear()
+        projs.clear()
         kw["it_max"] = stop + 1
         z, hist, conv = nod(s, z0, **kw)
         if len(hist) <= stop or "F_new" not in hist[stop - 1]:
             raise SystemExit(f"anm: the attempt ended after {len(hist)} steps, before step {stop}")
-        # own test: one newton_o per trial, lam = 1, 1/2, ... until one is accepted; call 0 is the start
-        idx = sum(int(round(-np.log2(h["lam"]))) + 1 for h in hist[:stop])
-        zi, st = calls[idx]
+        if natural:
+            # natural test: PinnedO.newton_o once at the start (inside ElimO.newton_o) and once per accepted step, at
+            # the accepted trial's projection; the iterate is that trial, its step the projection's displacement plus
+            # the step from the projected point, formed as newton_od forms it
+            from multidouble import od_axpy
+            idx = stop
+            x, s0 = calls[idx]
+            zt = next((p for p, q in reversed(projs) if all(np.array_equal(q[k], x[k]) for k in range(8))), None)
+            if zt is None:
+                raise SystemExit("anm: no projection found for the accepted trial's Jacobian")
+            disp = oc.o8(od_axpy(-1.0, *zt, *x))
+            zi, st = zt, (oc.o8(od_axpy(1.0, *disp, *s0[0])), *s0[1:])
+        else:
+            # own test: one newton_o per trial, lam = 1, 1/2, ... until one is accepted; call 0 is the start
+            idx = sum(int(round(-np.log2(h["lam"]))) + 1 for h in hist[:stop])
+            zi, st = calls[idx]
         Fi, di = oc.omax(st[1:3]), float(np.abs(np.asarray(st[0][0])).max())
         ok = Fi == hist[stop]["F"] == hist[stop - 1]["F_new"] and di == hist[stop]["dz"]
         Dn = s.rs.D
@@ -835,7 +893,7 @@ def anm(argv):
                     if "--kfreeze" in sys.argv else 3, horizon_alpha=s.rs.horizon_alpha, segs=[[float(x) for x in sg] for sg in so.s.get_segs()],
                     reseed_qd=bool(s.rs.qd), reseed_od=int(s.rs.od), reseed_start=s.rs.qd_start, switch=float(s.switch),
                     stop=stop, call=idx, n_calls=len(calls), hist=hist, F_iter=Fi, dz=di, check_hist=bool(ok),
-                    anm_args=list(sys.argv[1:]))
+                    accept="natural" if natural else "own", anm_args=list(sys.argv[1:]))
         extra = {f"c8_{q}": np.asarray(so.c8[q]) for q in range(8)} if so.c8 is not None else {}
         np.savez(name, **{f"z{q}": np.asarray(zi[q]) for q in range(8)}, **{f"d{q}": np.asarray(st[0][q]) for q in range(8)},
                  ch=np.asarray(so.ch), cl=np.asarray(so.cl), **extra, meta=json.dumps(meta, default=float))
