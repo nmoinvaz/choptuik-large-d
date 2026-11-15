@@ -2703,6 +2703,21 @@ def table_errs():
 
 
 @check
+def lam_gauge_errs():
+    """hp/data/lam_gauge.csv: every row whose state hp/data/delta_all.csv names carries that row's err and err_kind
+    (#765; hp/lam_gauge.py errs refreshes them, every other column kept)"""
+    import csv
+    lg = list(csv.DictReader(x for x in open(os.path.join(ROOT, "hp/data/lam_gauge.csv")) if not x.startswith("#")))
+    da = {"raw:" + r["state"]: r for r in csv.DictReader(open(os.path.join(ROOT, "hp/data/delta_all.csv")))
+          if r["state"].strip()}
+    named = [(r, da[r["state"]]) for r in lg if r["state"] in da]
+    return [("lam_gauge.csv rows named by delta_all.csv without its err", sum(not r["Delta_err"] and d["err"] != ""
+                                                                             for r, d in named), 0, 1, []),
+            ("lam_gauge.csv rows whose err pair differs from delta_all.csv's",
+             sum((r["Delta_err"], r["Delta_err_kind"]) != (d["err"], d["err_kind"]) for r, d in named), 0, 1, [])]
+
+
+@check
 def table_errs_all():
     """every row of hp/data/delta_all.csv has an err or a reason named in its err_kind (#764). The full-system
     quad-double rows with one start (71.0, 72.8) take the larger two-start spread of the nearest qd rows below and
