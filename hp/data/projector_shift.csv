@@ -1,4 +1,5 @@
 D,shift,kind,source
+80.0,3.25165e-27,measured,"I680-mac c499f6bf: exact - rounded, both polishes converged (delta_diff_D80.log)"
 215.0,-4.54717e-19,measured,"I595-mac 2b818f6f: exact - rounded, both polishes converged (delta_diff_s215.log)"
 225.13125,-7.75683e-16,measured,"I595-mac 2b818f6f: exact - rounded, both polishes converged (delta_diff_s225.log)"
 235.13125,-3.5313e-12,measured,"I595-mac 2b818f6f: exact - rounded; the rounded control's Delta from its logged steps, to 5e-17"
