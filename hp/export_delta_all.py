@@ -99,7 +99,7 @@ precedence where two share a D:
           on, where the degree-6 chain stepped at integer D and the degree-10 chain at half-integer D, and at the
           backbone's two half steps below it, 173.5 and 190.5, where both stepped at integer D (#759). err_kind names
           the fit and how: "fits d6", "fits d10", "fits d6 interp", "fits d10 interp", with " one-sided" appended where
-          only some of the comparison fits reach that D (the frontier of a comparison chain). From D 215 on, the
+          only some of the comparison fits reach that D (the frontier of a comparison chain). From D 80 on, the
           freeze projector's rounding enters too: Delta's shift from the double-double projector's rows to the exact
           ones (data/projector_shift.csv, log-linear between its points; #589, #595), err_kind "projector", or
           "projector first order" where it rests on a first-order figure. The runs on the exact projector (EXACT:
@@ -199,9 +199,9 @@ def total(parts):
 
 def projector_err(D):
     """(|shift|, label) of the freeze projector's rounding at D: log-linear in |shift| between the points of
-    data/projector_shift.csv, the last interval's slope past its end; None below its first point (the shift there is
-    below 5e-19 and falls about 0.8 in ln per unit of D). The label is "projector", or "projector first order" where a
-    bracketing point is a first-order figure, not a measured shift."""
+    data/projector_shift.csv, the last interval's slope past its end; None below its first point, D 80 (#680; the shift
+    grows by about 0.14 in ln per unit of D from there to 215 and by about 0.8 from 215 to 235). The label is
+    "projector", or "projector first order" where a bracketing point is a first-order figure, not a measured shift."""
     if not os.path.exists(PROJ):
         return None
     pts = sorted((float(r["D"]), abs(float(r["shift"])), r["kind"]) for r in csv.DictReader(open(PROJ)))
