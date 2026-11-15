@@ -16,7 +16,9 @@ step's Delta component (the f64 nearest its exact sum); Delta_pinned, the pinned
 digits); Delta_q0..Delta_q3, Delta_full1 as four f64 parts, each the nearest f64 to what the ones before leave of it;
 Delta, Delta_full1 to DIGITS significant digits; minus_other_pin, this row's Delta_full1 minus the other pin's at this D
 (a spread between two systems, not a bound); minus_qd, this row's Delta_full1 minus the converged full-system
-quad-double Delta of data/delta_qd.csv at this D, the exact sum of its four parts (empty where none); dd_pin7 and
+quad-double Delta of data/delta_qd.csv at this D, the exact sum of its four parts (empty where none); minus_qd2, this
+row's Delta_full1 minus the second full-system start's converged quad-double Delta at this D, the exact sum of its four
+parts (RAWDIR/qd2start-mac/second.jsonl, its converged records, at D 71.5 and 73.0; empty where none; #762); dd_pin7 and
 dd_pin5, T75's double-double Delta_full1 at this D (DD, Delta_full1 + Delta_full1_lo summed exactly; empty where that
 pin has none); source, the record's file.
 """
@@ -32,7 +34,10 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 OUT = os.path.join(HERE, "data", "delta_pinned_qd.csv")
 QD = os.path.join(HERE, "data", "delta_qd.csv")
 COLS = ["D", "pin", "F_full", "dz", "correction", "Delta_pinned", "Delta_q0", "Delta_q1", "Delta_q2", "Delta_q3",
-        "Delta", "minus_other_pin", "minus_qd", "dd_pin7", "dd_pin5", "source"]
+        "Delta", "minus_other_pin", "minus_qd", "minus_qd2", "dd_pin7", "dd_pin5", "source"]
+# the second full-system starts (qd2start-mac/README.md): the other pin's states polished in quad-double, each converged
+# with its own Taylor plan
+QD2 = "qd2start-mac/second.jsonl"
 # T75's double-double runs, by pin
 DD = {7: "T75/pin7.jsonl", 5: "T75/pin5.jsonl"}
 DIGITS = 40
@@ -53,6 +58,7 @@ def build(mutate=""):
     with mp.workprec(PREC):
         qd = {round(float(r["D"]), 6): exact([float(r[f"Delta_q{i}"]) for i in range(4)])
               for r in csv.DictReader(open(QD))}
+        qd2 = {round(r["D"], 6): exact(r["Delta_q"]) for r in E.records(QD2) if r.get("conv")}
         dd = {pin: {round(r["D"], 6): exact([r["Delta_full1"], r["Delta_full1_lo"]])
                     for r in E.records(f) if "Delta_full1" in r} for pin, f in DD.items()}
         sols = E.pinned_qd()
@@ -73,6 +79,7 @@ def build(mutate=""):
                                  **dict(zip(("Delta_q0", "Delta_q1", "Delta_q2", "Delta_q3"), E.parts4(v))),
                                  Delta=dec(v), minus_other_pin=E.fmt(v - other[0]),
                                  minus_qd=E.fmt(v - qd[k]) if k in qd else "",
+                                 minus_qd2=E.fmt(v - qd2[k]) if k in qd2 else "",
                                  dd_pin7=dec(dd[7][k]) if k in dd[7] else "", dd_pin5=dec(dd[5][k]) if k in dd[5] else "",
                                  source=f))
     return rows
