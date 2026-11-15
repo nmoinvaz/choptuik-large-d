@@ -5,8 +5,9 @@ state and from its projection (#823).
     cd hp && python3 proj_shift.py RAW STATE [--threads 3] [--switch 0] [--reseed_o 3] [--reseed_start pred]
         [--json OUT] [--ref_proj D] [--ref_plain D] [--mutate block]
 
-The system is octo_corrector.py planted's at --rel 0 (pinned_o at the state, Reseeder with the given re-seeder
-options, ElimO at --switch). Printed per block of the layout (centre, node i, m_h, a_h, Delta; reseed.offsets):
+The system is octo_corrector.py planted's at --rel 0 (truth_system: an eight-part state's own chain system, #837;
+Reseeder with the given re-seeder options, ElimO at --switch). Printed per block of the layout (centre, node i, m_h,
+a_h, Delta; reseed.offsets):
 max|z|, max|z_proj - z| and the max of three steps in the block: the plain Newton step at the state (PinnedO), the
 step at the projected point, and ElimO's step from the state (the projection's displacement plus that step, what
 newton_od takes at switch 0). Then the pinned max|F| at both points and each step's Delta part.
@@ -36,14 +37,14 @@ def blocks(M, K, mutate=""):
 
 
 def main(argv):
-    from hpkernel.driver import load_q
     from freeze_round import mpv
     from multidouble import od_axpy
-    from octo_corrector import ElimO, o8, o8_of_q, omax, pinned_o, plant_start
+    from octo_corrector import ElimO, o8, o8_any, omax, plant_start, truth_system
     from reseed import Reseeder
     mp.mp.dps = 150
     raw, path = argv[0], argv[1]
     opt = dict(threads="3", switch="0", reseed_o="3", reseed_start="pred", json="", ref_proj="", ref_plain="",
+               read="auto", held="auto", plan="auto",
                mutate="")
     for k in list(opt):
         if "--" + k in argv:
@@ -52,13 +53,13 @@ def main(argv):
     if unknown:
         raise SystemExit(f"proj_shift.py: unknown options {unknown}")
     t0 = time.time()
-    z4, meta = load_q(os.path.join(raw, path))
-    z4 = o8(z4)
+    # the truth and its system as planted builds them (#837): an eight-part state's chain's own system
+    z4, meta, (s, sp, sq, so), info = truth_system(raw, path, threads=int(opt["threads"]), read=opt["read"],
+                                                   held=opt["held"], plan=opt["plan"])
     D = mp.mpf(meta["D_str"])
-    s, sp, sq, so = pinned_o(meta, z4, threads=int(opt["threads"]))
     rs = Reseeder(meta, D, threads=int(opt["threads"]), qd=True, od=int(opt["reseed_o"]), qd_start=opt["reseed_start"])
     zs, _ = plant_start(z4, rs, 0.0, 1, 0)
-    z = o8_of_q(zs)                                   # planted --rel 0's start, as _run_od receives it
+    z = o8_any(zs)                                   # planted --rel 0's start, as _run_od receives it
     el = ElimO(so, rs, switch=float(opt["switch"]))
     zp = el.project(z)
     L, M, K = len(z[0]), rs.M, rs.K
@@ -66,11 +67,13 @@ def main(argv):
         raise SystemExit(f"proj_shift.py: L {L} is not the layout's 4 M (K + 1) + 1 at M {M}, K {K}")
     disp = mpv(o8(od_axpy(-1.0, *z, *zp)), range(L))
     zv = mpv(z, range(L))
-    rec = dict(state=path, D_str=meta["D_str"], switch=float(opt["switch"]), reseed_o=int(opt["reseed_o"]),
+    rec = dict(state=path, system=info, D_str=meta["D_str"], switch=float(opt["switch"]), reseed_o=int(opt["reseed_o"]),
                reseed_start=opt["reseed_start"], counts=dict(el.counts), mutate=opt["mutate"], blocks=[])
     print(f"proj_shift {path}: D {mp.nstr(D, 15)}, M {M}, K {K}, L {L}; ElimO switch {opt['switch']}, reseed_o "
           f"{opt['reseed_o']}, reseed_start {opt['reseed_start']}; projection {dict(el.counts)} "
           f"({time.time() - t0:.0f} s)", flush=True)
+    print(f"  the system (#837): truth read in {info['read']} of {info['file_parts']} parts, held values "
+          f"{info['held']}, plan {info['plan']}", flush=True)
     F_z, F_p = omax(so.residual_o(z)), omax(so.residual_o(zp))
     steps, dv = {}, {}
     for name, fn in (("plain at the state", lambda: so.newton_o(z)),

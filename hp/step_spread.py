@@ -7,13 +7,13 @@ one block at a time by a relative size (#827), and that spread against D and #80
     cd hp && python3 step_spread.py sum TABLE OUT.json [OUT.json ...] [--K 2.2e-37] [--slope 1.44] [--json SUM]
     cd hp && python3 step_spread.py --selftest [--mutate=bar|band]
 
-The system is proj_shift.py's (octo_corrector.py planted's at --rel 0: pinned_o at the state, its plan and held values;
-no projection). The plain pinned Newton step (PinnedO.newton_o) is taken at the unperturbed state, at the horizon data
-(m_h and a_h) perturbed by rel with random signs, z_i -> z_i (1 + rel s_i), s_i = +-1, for each seed, and (--controls
-1) at each other block (reseed.offsets' centre, nodes, Delta) perturbed alone by the same size with the first seed, the
-centre being the control. Printed per run: the perturbation's largest move, the step's Delta part and the smallest
-pivot. The spread is the largest |dDelta(seed) - dDelta(unperturbed)| over the seeds, exact from the steps' eight
-parts; the seeds' standard deviation is printed beside it.
+The system is proj_shift.py's (octo_corrector.py planted's at --rel 0, truth_system: an eight-part state's own chain
+system, #837; no projection). The plain pinned Newton step (PinnedO.newton_o) is taken at the unperturbed state, at
+the horizon data (m_h and a_h) perturbed by rel with random signs, z_i -> z_i (1 + rel s_i), s_i = +-1, for each
+seed, and (--controls 1) at each other block (reseed.offsets' centre, nodes, Delta) perturbed alone by the same size
+with the first seed, the centre being the control. Printed per run: the perturbation's largest move, the step's Delta
+part and the smallest pivot. The spread is the largest |dDelta(seed) - dDelta(unperturbed)| over the seeds, exact
+from the steps' eight parts; the seeds' standard deviation is printed beside it.
 
 Checks (exit 1 on failure): with --ref, the unperturbed step's Delta part equals it as a double; with --repeat 1, the
 unperturbed step taken a second time has the same eight parts of its Delta part and the same smallest pivot (control:
@@ -144,14 +144,14 @@ def main(argv):
     if argv and argv[0] == "sum":
         return summary(argv[1:])
     import mpmath as mp
-    from hpkernel.driver import load_q
     from multidouble import od_axpy
-    from octo_corrector import o8, o8_of_q, omax, pinned_o, plant_start
+    from octo_corrector import o8, o8_any, omax, plant_start, truth_system
     from proj_shift import blocks
     from reseed import offsets
     mp.mp.dps = 150
     raw, path = argv[0], argv[1]
-    opt = dict(threads="3", rel="1e-65", seeds="1,2,3,4", ref="", json="", repeat="0", controls="1", mutate="")
+    opt = dict(threads="3", rel="1e-65", seeds="1,2,3,4", ref="", json="", repeat="0", controls="1", mutate="",
+               read="auto", held="auto", plan="auto")
     for k in list(opt):
         if "--" + k in argv:
             opt[k] = argv[argv.index("--" + k) + 1]
@@ -160,9 +160,9 @@ def main(argv):
         raise SystemExit(f"step_spread.py: unknown options {unknown}")
     rel, seeds = float(opt["rel"]), [int(x) for x in opt["seeds"].split(",") if x]
     t0 = time.time()
-    z4, meta = load_q(os.path.join(raw, path))
-    z4 = o8(z4)
-    s, sp, sq, so = pinned_o(meta, z4, threads=int(opt["threads"]))
+    # the truth and its system as planted builds them (#837): an eight-part state's chain's own system
+    z4, meta, (s, sp, sq, so), info = truth_system(raw, path, threads=int(opt["threads"]), read=opt["read"],
+                                                   held=opt["held"], plan=opt["plan"])
     M = int(meta["M"])
     K = (len(z4[0]) - 1) // (4 * M) - 1               # reseed.offsets: L = 4 M (K + 1) + 1
     if offsets(M, K)["L"] != len(z4[0]):
@@ -172,11 +172,13 @@ def main(argv):
         off = offsets(M, K)
     RS.K = K
     zs, _ = plant_start(z4, RS, 0.0, 1, 0)
-    z = o8_of_q(zs)                                   # planted --rel 0's start, as proj_shift takes it
+    z = o8_any(zs)                                   # planted --rel 0's start, as proj_shift takes it
     L = len(z[0])
     bl = {name: (lo, hi) for name, lo, hi in blocks(M, K)}
     print(f"step_spread {path}: D {mp.nstr(mp.mpf(meta['D_str']), 15)}, M {M}, K {K}, L {L}; rel {rel:g}, seeds "
           f"{seeds}; pinned max|F| (octo) {omax(so.residual_o(z)):.4e} ({time.time() - t0:.0f} s)", flush=True)
+    print(f"  the system (#837): truth read in {info['read']} of {info['file_parts']} parts, held values "
+          f"{info['held']}, plan {info['plan']}", flush=True)
     zero8 = [np.zeros(L)] * 7
 
     def run(name, which, seed):
@@ -213,7 +215,7 @@ def main(argv):
             runs.append(run(f"{b} seed {seeds[0]}" + (" (control)" if b == "centre" else ""), (b,), seeds[0]))
     ref0 = runs[0]["dDelta"]
     ok = True
-    rec = dict(state=path, D_str=meta["D_str"], rel=rel, seeds=seeds, runs=runs, mutate=opt["mutate"])
+    rec = dict(state=path, system=info, D_str=meta["D_str"], rel=rel, seeds=seeds, runs=runs, mutate=opt["mutate"])
     if opt["ref"]:
         good = ref0 == float(opt["ref"])
         ok &= good
