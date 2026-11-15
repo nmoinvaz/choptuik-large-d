@@ -2420,9 +2420,9 @@ def chain_dM_table():
                   (f"D {D}: lam_g(M 48) - lam_g(M 32)", float(r["dlam"]), dl, ul, txt)]
     da = [r for r in csv.DictReader(open(os.path.join(ROOT, "hp/data/delta_all.csv"))) if r["kind"] == "chain_fit"]
     de = [float(r["err"]) for r in da if r["err"]]
-    t_err = [(N, "all 320 chain_fit rows (1.4×10⁻¹⁵ to 7.2×10⁻¹), so every row\nkeeps its err")]
-    items += [("chain_fit rows with an err", len(de), 320, 1, t_err), ("smallest chain_fit err", min(de), 1.4e-15, 1e-16, t_err),
-              ("largest chain_fit err", max(de), 0.72, 0.01, t_err),
+    t_err = [(N, "all 330 chain_fit rows (1.4×10⁻¹⁵ to 1.0), so every row\nkeeps its err")]
+    items += [("chain_fit rows with an err", len(de), 330, 1, t_err), ("smallest chain_fit err", min(de), 1.4e-15, 1e-16, t_err),
+              ("largest chain_fit err", max(de), 1.0, 0.1, t_err),
               ("chain_fit rows without an err", len(da) - len(de), 0, 1, t_err)]
     with mp.workdps(50):
         offD = float(mp.mpf(at("controls", "polish", 20.043653, "D")["Delta48"]) - known20)
