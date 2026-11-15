@@ -6,6 +6,8 @@ Puiseux variable.
     cd hp && python3 fold_cancel.py coeffs RAWDIR [--json=OUT]    the inputs: b1, b3, b5 of each series at each base
     cd hp && python3 fold_cancel.py planted RAWDIR [--json=OUT]   the plants of the two series' sizes (exits 1 on a fail)
     cd hp && python3 fold_cancel.py real RAWDIR [--json=OUT]      lam_g - r Delta at the bases, r and r (1 +- 0.1)
+    cd hp && python3 fold_cancel.py calibrate RAWDIR [--json=OUT] r's range over the bases against a planted shift of
+                                                                  lam_g's fold (#820; exits 1 on a fail)
 
 RAWDIR is a clone of the raw-data repository (I603-win2/chain_nsr, as hp/lam_singularity.py reads it). The bases are
 #818's 26, where lam_g's own series meet the fold criterion (hp/data/lam_singularity.json's hits).
@@ -102,14 +104,14 @@ def contamination(amp, D0, shift=0.0, N=24):
     return [amp * (mp.binomial(h, k) * (-1) ** k * (1 / s2 ** k + 2 * mp.re(1 / s3 ** k))) for k in range(1, N + 1)]
 
 
-def plant_pair(D0, bl, bd, reg_l, reg_d, shift=0.0, seed=819):
-    """the two planted series c_1..c_24: the fold terms (lam_g's moved by shift), the contamination, the real series'
-    low orders beyond their fitted fold terms (orders 1-9), relative noise 1e-12"""
+def plant_pair(D0, bl, bd, reg_l, reg_d, shift=0.0, seed=819, common=0.0):
+    """the two planted series c_1..c_24: the fold terms (lam_g's moved by shift, both folds by common), the
+    contamination, the real series' low orders beyond their fitted fold terms (orders 1-9), relative noise 1e-12"""
     rng = np.random.default_rng(seed + int(round(D0 * 1e4)) % 100000)
     s = DSTAR - mp.mpf(D0)
     out = []
     for b, reg, sign, sh in ((bl, reg_l, 1, shift), (bd, reg_d, -1, 0.0)):
-        f = fold_terms(b, s + sh)
+        f = fold_terms(b, s + sh + common)
         c = contamination(sign * CONT * b[0] * mp.sqrt(s + sh), D0, sh)
         out.append([(f[k] + c[k] + reg[k]) * (1 + 1e-12 * rng.standard_normal()) for k in range(24)])
     return out
@@ -179,9 +181,80 @@ def cmd_planted(raw):
     return 0 if ok else 1
 
 
+DELTAS = (0.0, 1e-6, 1e-5, 1e-4, 1e-3)          # #820's shifts of lam_g's fold, judged (+delta, common 0)
+DELTAS_X = (3e-6, 3e-5, 3e-4)                    # reported
+EPS = (-4e-4, -2e-4, -1e-4, 0.0, 1e-4, 2e-4, 4e-4)   # a shift of both folds, reported (Delta's D* spread, #782/#818)
+
+
+def rel_range(v):
+    return (max(v) - min(v)) / abs(float(np.median(v)))
+
+
+def cmd_calibrate(raw):
+    """r's relative range over #818's 26 bases for lam_g's fold planted at 259.9033 + delta (Delta's at 259.9033), r
+    fitted at every base as coeffs fits it. Judged: the range grows strictly with delta over DELTAS, and the delta = 0
+    range lies below the real one. The nominal bound: the separations whose range exceeds the real one are excluded;
+    the bound is the smallest such delta of DELTAS, and the largest delta below it is reported as allowed. Reported:
+    -delta, DELTAS_X, and the robust range, the smallest over a common shift EPS of both folds."""
+    mp.mp.dps = 200
+    co = {float(k): v for k, v in json.load(open(args.get("coeffs", os.path.join(HERE, "data", "fold_cancel_coeffs.json")))).items()}
+    real = rel_range([v["r"] for v in co.values()])
+    med = lambda key, i: float(np.median([v[key][i] for v in co.values()]))      # noqa: E731
+    bl = [med("lam", i) for i in range(3)]
+    bd = [med("delta", i) for i in range(3)]
+    reg = {D0: low_orders(raw, D0, co[D0]) for D0 in sorted(co)}
+
+    def rng_of(delta, eps=0.0):
+        rs = []
+        for D0 in sorted(co):
+            ql, qd = plant_pair(D0, bl, bd, reg[D0][0], reg[D0][1], shift=delta, common=eps)
+            rs.append(puiseux(ql, D0)[0][0] / puiseux(qd, D0)[0][0])
+        return rel_range(rs), rs
+
+    print("real r: median %.6f, relative range %.3e over %d bases" % (float(np.median([v["r"] for v in co.values()])),
+                                                                     real, len(co)))
+    out = dict(real_range=real, judged={}, minus={}, extra={}, robust={})
+    for d in DELTAS:
+        rg, rs = rng_of(d)
+        out["judged"][d] = dict(range=rg, r=rs)
+        rob = min(rng_of(d, e)[0] for e in EPS)
+        out["robust"][d] = rob
+        line = "  delta %-7g range %.3e (r %.6f to %.6f) | robust over the common shift %.3e" % (d, rg, min(rs), max(rs), rob)
+        if d:
+            out["minus"][d] = rng_of(-d)[0]
+            line += " | -delta %.3e" % out["minus"][d]
+        print(line)
+    for d in DELTAS_X:
+        out["extra"][d] = rng_of(d)[0]
+        print("  delta %-7g range %.3e (reported)" % (d, out["extra"][d]))
+    rgs = [out["judged"][d]["range"] for d in DELTAS]
+    mono = all(b > a for a, b in zip(rgs, rgs[1:]))
+    floor = rgs[0] < real
+    excl = [d for d in DELTAS if d and out["judged"][d]["range"] > real]
+    allowed = [d for d in DELTAS if out["judged"][d]["range"] <= real]
+    if mono and floor and excl:
+        bound = min(excl)
+        res = "|D*(lam_g) - D*(Delta)| < %g: the planted range exceeds the real %.2e from delta %g on; %g is allowed" % (
+            bound, real, bound, max(d for d in allowed if d < bound))
+    else:
+        bound = None
+        res = "not bounded (%s)" % ", ".join(x for x, ok in (("the range does not grow strictly", mono),
+                                                             ("the delta = 0 range is not below the real one", floor),
+                                                             ("no delta exceeds the real range", bool(excl))) if not ok)
+    rob_excl = [d for d in DELTAS if d and out["robust"][d] > real]
+    rob = min(rob_excl) if rob_excl else None
+    print("monotonic: %s; floor %.3e below the real %.3e: %s" % (mono, rgs[0], real, floor))
+    print("calibrate:", res)
+    print("robust over the common shift (reported): %s" % ("excluded from delta %g on" % rob if rob else "nothing excluded"))
+    out.update(monotonic=mono, floor=floor, bound=bound, robust_bound=rob, verdict=res)
+    if "json" in args:
+        json.dump(out, open(args["json"], "w"), indent=1)
+    return 0 if mono and floor else 1
+
+
 if __name__ == "__main__":
     cmd = sys.argv[1] if len(sys.argv) > 1 else ""
-    fn = dict(coeffs=cmd_coeffs, planted=cmd_planted).get(cmd)
+    fn = dict(coeffs=cmd_coeffs, planted=cmd_planted, calibrate=cmd_calibrate).get(cmd)
     if fn is None or not pos:
         print(__doc__)
         sys.exit(2)
