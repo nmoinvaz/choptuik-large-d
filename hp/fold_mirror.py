@@ -10,8 +10,9 @@ Taylor series in D (#829), by two approximant families that share only the input
     cd hp && python3 fold_mirror.py posthoc RAWDIR --planted=P.json --real=R.json [--json=OUT]
 
 RAWDIR is a clone of the raw-data repository: the jets are I603-win2/chain_nsr/jet_pin3_D*.npz (25 orders, eight
-parts; Delta is the last entry), at the 46 bases from D 258.7829 to 259.8352 that #818 used, and the measured Delta is
-the last entry of each state anm_pin3_D*.npz (every state in [259.64, D*) present in RAWDIR).
+parts; Delta is the last entry), at the 46 bases from D 258.7829 to 259.8352 registered on #829 (#818 used the first
+42, to 259.8184; chain_nsr has since gone on), and the measured Delta is the last entry of each state anm_pin3_D*.npz
+(every state in [259.64, D*) present in RAWDIR).
 
 Near D*, Delta = Delta* + sum_k a_k s^k with s = +sqrt(D* - D) on the chain's sheet and s = -sqrt(D* - D) on the
 mirror. Each method builds a two-valued approximant from the series of two bases (h = D - D_b at the anchor D_b): the
@@ -80,7 +81,7 @@ import numpy as np
 
 DPS = 80
 DSTAR = mp.mpf("259.9033")        # hp/data/fold_259.csv (#603's kept plan)
-D_MIN, D_MAX = 258.78, 259.8353   # #818's 46 bases, 258.7829 .. 259.8352 (chain_nsr has since gone on)
+D_MIN, D_MAX = 258.78, 259.8353   # the 46 bases registered on #829; #818 had the first 42, to 259.8184
 N = 24
 GRID = [mp.mpf(25964 + k) / 100 for k in range(27)]      # 259.64 .. 259.90
 S_LO = 259.64                     # + sheet check: the states in [S_LO, D*)
