@@ -7,7 +7,8 @@ polynomials in t = 1/n (n = D - 2) or t = 1/D, lam_g = c0 + c1 t + c2 t^2 + ... 
 
 Post-hoc options of planted (after the real fit, reported as such): --sigma=S (the noise), --junk=D:offset,... (offsets
 at grid points, as the I461 states' near the frontier), --step=D0:offset (an offset below D0, as between layouts).
---csv=PATH reads another table. --dlos=a,b,... (fit) changes the lower ends, a diagnostic outside the selection.
+--csv=PATH reads another table. --dlos=a,b,... (fit) changes the lower ends, and --dmax=D (fit) the top end (DMAX),
+diagnostics outside the selection.
 
 c0 and c1 are the same in both variables (1/n = 1/D + 2/D^2 + ...). c2 is quoted in 1/n, the 1/D fits' c2 converted
 by c2(1/n) = c2(1/D) - 2 c1.
@@ -209,10 +210,12 @@ def cmd_planted(argv):
 
 
 def cmd_fit(argv):
-    global DLOS
+    global DLOS, DMAX
     for a in argv:
         if a.startswith("--dlos="):           # a diagnostic, not the quoted selection
             DLOS = tuple(float(x) for x in a.split("=", 1)[1].split(","))
+        if a.startswith("--dmax="):           # a diagnostic, not the quoted selection
+            DMAX = mp.mpf(a.split("=", 1)[1])
     pts = backbone()
     print(f"{len(pts)} points, D {mp.nstr(pts[0][0], 8)} to {mp.nstr(pts[-1][0], 8)}")
     free = fits(pts)
