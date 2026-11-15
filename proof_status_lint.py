@@ -9,7 +9,8 @@ The reference is the README's two status tables ("Main results", and "What is pr
 Where columns) and PROOF.md's "| Layer B item | Status |" table, which the README points to for results it does not list
 itself. (H8) takes the status of PROOF.md's row for the global continuation B8, which states it. A result's status words
 are AGENTS.md's (proved, checked symbolically, certified, conditional, conjecture, numerical evidence) and open, as its
-Status cell has them; a Reviews cell records a review when it names a review note, an issue, a re-implementation or CAPD.
+Status cell has them; a Reviews cell records a review when it names a review note, an issue, a re-implementation or
+CAPD.
 
 A line of a proof note is listed when it makes one of three claims that the reference contradicts:
   open    "**open**", "is open", "remains open", "future work", "not yet certified", "(to be written", "estimated in",
@@ -30,8 +31,8 @@ say "superseded" or "since resolved", are skipped. Exit 1 when a line is listed.
 into a copy of the current files ("Theorem A(M = 5) has not been reviewed independently." in proof/A_M2.md, "Theorem
 B(1) is open, future work." in proof/B_chain.md, "With these, lemma 6b₁ is proved." in proof/A_lemmas_M.md): the lint
 must list all three, and then exits 1 as on any listed line (2 when a plant is not listed). --selftest --mutate=word
-plants a consistent line ("lemma 6b₁ is certified") in place of the status-word plant, which must go unlisted: that run
-exits 2, the selftest's own control.
+plants a consistent line ("lemma 6b₁ is certified") in place of the status-word plant, which must go unlisted: that
+run exits 2, the selftest's own control.
 """
 import os
 import re
