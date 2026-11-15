@@ -615,9 +615,16 @@ ended too (2.1×10⁻¹⁷ apart). The next correction, 1.1×10⁻⁵ in Δ at a
   asked for the same jump (+1.103569×10⁻⁵, pivot 7.26×10⁻³¹). From the unprojected truth, at the default switch
   (10⁻¹⁵, the start's residual below it), the first step is +3.311085×10⁻⁸ in Δ. #777's −2.0184×10⁻¹¹ is the offset
   start's own step, through a pivot of 2.35×10⁻¹⁴. Raw `I816-mac/` 3f23c2f2, `I823-mac/`.
-- So the switch-0 projection moves the state far enough that Newton's next step leaves the basin, which bears on
-  #713's, #777's and #817's switch-0 runs. #823 asks the reduced map along Δ for a root near the unprojected truth,
-  where the linear model puts one at |c| ≈ 3.3×10⁻⁸.
+- **A 10⁻⁶⁵ move of the horizon data changes Newton's Δ step 332 times (#823; raw `I823-mac/` f976bc4b,
+  `hp/proj_shift.py`).** The switch-0 projection of the truth moves only m_h (by 1.79×10⁻⁶⁶) and a_h (1.70×10⁻⁶⁵), and
+  leaves |F| at 3.5827×10⁻²⁰. Yet the Δ step goes from +3.311085×10⁻⁸ to +1.100878×10⁻⁵, and the smallest pivot from
+  7.1×10⁻²⁹ to 7.3×10⁻³¹. Both steps reproduce the recorded ones exactly, and the per-block control fails as it must.
+  So at D 252.6 the weak step hangs on horizon data far below octo-double's own rounding of other blocks. Whether the
+  step is determined at all at this precision is #827.
+- **The reduced map along Δ is not defined there with free horizon data (#823).** The first strong move, w0 of
+  2.26×10⁻¹⁹, takes max|F| to 8.6×10⁻⁴. The chord then diverges, and newton_strong stops after one LU. So no root
+  reading was possible at 10⁻⁴ or 10⁻⁵. Inferred, the coordinator's reading: the horizon block's gain, about 10³⁷ at
+  this D, is the sensitivity that broke #800's rung and #808's held arm.
 - **The strong-row chord at switch 0 gets no further (#817; dh610, raw `I817-dh610/` 6de35956).** With and without the
   drop, both arms accepted step 0 only at λ = 1/64 (3.40×10⁻¹² to 3.34×10⁻¹²), as #713 did. The full steps gave
   2.5×10²² to 2.4×10¹⁶. At 2.1 h a step, the 10⁻⁴⁰ bar could not be met in 12 steps, so the run was stopped there.
