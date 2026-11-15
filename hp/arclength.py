@@ -120,13 +120,15 @@ def horner(Z, s, deriv=False):
 # ------------------------------------------------------------------ the series: composition and its tangent
 def compose(W, sign, mutate=""):
     """the arclength series from the D-series W = [w_0, ..., w_N] (vectors), oriented by sign (the sign of h_1):
-    (Z, H, cond), Z[k] the vectors z_k (z_0 = w_0), H[k] the scalars h_k (H[0] = 0), cond[k] the composition's
-    condition number at order k. mutate 'compose' (the control) drops q_k's m >= 2 terms."""
+    (Z, H, cond, mag), Z[k] the vectors z_k (z_0 = w_0), H[k] the scalars h_k (H[0] = 0), mag[k] the norm of the
+    composition's sum of magnitudes sum_m |w_m| |[s^k] h^m| and cond[k] = mag[k] / |z_k|, its condition number at
+    order k. mutate 'compose' (the control) drops q_k's m >= 2 terms."""
     N = len(W) - 1
     a = 1 + vdot(W[1], W[1])
     H = [mp.mpf(0), sign / mp.sqrt(a)]
     Z = [W[0], vscale(W[1], H[1])]
     cond = [mp.mpf(1), mp.mpf(1)]
+    magn = [vnorm(W[0]), vnorm(W[1]) * abs(H[1])]
     c = {1: {1: H[1]}}                       # c[m][k] = [s^k] h(s)^m
     for k in range(2, N + 1):
         for m in range(2, k + 1):
@@ -146,8 +148,9 @@ def compose(W, sign, mutate=""):
         Z.append(zk)
         mag = vadd(mag, [abs(x) for x in W[1]], abs(hk))
         nz = vnorm(zk)
-        cond.append(vnorm(mag) / nz if nz else mp.inf)
-    return Z, H, cond
+        magn.append(vnorm(mag))
+        cond.append(magn[-1] / nz if nz else mp.inf)
+    return Z, H, cond, magn
 
 
 def unit_tangent(Z, H, s):
@@ -373,17 +376,21 @@ def continue_arc(sysm, x0, D0, sign0, opt, stop=None, log=print):
             sign = 1 if ov > 0 else -1
         rec = dict(step=step, D0=float(D), D0_str=mp.nstr(D, 40), sign=sign)
         if opt["border"]:
-            Z, H, cond = compose(W, sign, opt.get("mutate", ""))
+            Z, H, cond, magn = compose(W, sign, opt.get("mutate", ""))
             rec["cond_max"] = float(max(cond))
             rec["cond"] = [float(c) for c in cond]
             if opt.get("direct"):
+                # the second route: each order's difference and the composition's condition number, both scaled by
+                # the bordered recursion's coefficient (a composed z_k = 0 would make its own cond infinite)
                 Zd, Hd = sysm.direct(x, D, N, sign)
-                diffs = []
+                diffs, dcond = [], []
                 for k in range(1, N + 1):
-                    vk = mp.sqrt(vdot(Z[k], Z[k]) + H[k] ** 2)
+                    vk = mp.sqrt(vdot(Zd[k], Zd[k]) + Hd[k] ** 2)
                     dk = mp.sqrt(vdot(vadd(Z[k], Zd[k], -1), vadd(Z[k], Zd[k], -1)) + (H[k] - Hd[k]) ** 2)
-                    diffs.append(float(dk / vk) if vk else float(dk))
+                    diffs.append(float(dk / vk))
+                    dcond.append(float(magn[k] / vk))
                 rec["direct_rel"] = diffs
+                rec["direct_cond"] = dcond
         else:
             Z = [W[k] if k == 0 else vscale(W[k], mp.mpf(sign) ** k) for k in range(N + 1)]
             H = [mp.mpf(0), mp.mpf(sign)] + [mp.mpf(0)] * (N - 1)
@@ -475,12 +482,13 @@ def cmd_plant(argv):
     errs = [(st, float(abs(mp.mpf(t["D"]) - Ds)), float(vmax(vadd([mp.mpf(v) for v in t["x"]], xs, -1)))) for st, t in tr]
     ok_c = bool(errs) and all(e[1] <= 1e-10 and e[2] <= 1e-10 for e in errs)
     # (d) the composed series against the bordered recursion: at most 100 x 10^-dps x the composition's condition
-    # number at every order (amended before the run, after the coordinator's note on the guard's edge)
+    # number at every order (amended before the run, after the coordinator's note on the guard's edge), both scaled
+    # by the bordered coefficient (amended after the first run, whose control left the bar infinite where z_k = 0)
     unit = 10.0 ** (-opt["dps"])
     dmarg = []
     for r in recs:
         if "direct_rel" in r:
-            dmarg.append(max(d / (100 * unit * max(1.0, c)) for d, c in zip(r["direct_rel"], r["cond"][1:])))
+            dmarg.append(max(d / (100 * unit * max(1.0, c)) for d, c in zip(r["direct_rel"], r["direct_cond"])))
     ok_d = bool(dmarg) and max(dmarg) <= 1
     edge = [r for r in recs if r.get("how") == "edge"]
     after_edge = [r for r in recs if edge and r["step"] == edge[0]["step"] + 1]
