@@ -1799,3 +1799,19 @@ margins 8.562×10⁻¹⁰ and 9.706×10⁻¹⁰. Lemma 6a gives ρ₆ₐ = [0.00
 178 tiles, 566 rectangles and 450 links, and the controls give their verdicts (`--mutate=sign` certifies 0 of 7 discs,
 `--drop=5,6` fails with three failures, and `coords` is not caught, ρ₆ₐ = 0.1222, as in §11.6). The Pi's rows, path
 box and jump pass on the Mac with the same counts and ρ₆ₐ = 4.221×10⁻³, and the stored ray and rows pass on the Pi.
+
+They were rerun on Windows x86-64 as well (a Surface laptop, Python 3.14, python-flint 0.9.0, FLINT 3.6.0; #889, raw
+`I889-winb/` 0c89d45f). Every run exits 0, and every control gives its verdict. The ray and the 12 rows equal the
+stored ones, Λ to 8.8×10⁻¹⁶, and the path box's Krawczyk margins are 8.575×10⁻¹⁰ and 9.717×10⁻¹⁰. Windows's rows,
+path box and jump pass on the Mac. ρ₆ₐ depends on the machine, not on the path box. From the stored, the Pi's and
+Windows's boxes it is:
+
+| machine | ρ₆ₐ |
+|---|---|
+| Mac | 0.0042206583 to 0.0042206594 |
+| Windows | 0.0042207076 to 0.0042207087 |
+| Pi | 0.0042206187 |
+| the stored run | 0.0042207115 |
+
+So it moves by 10⁻⁹ relative between boxes on one machine, and by up to 2.2×10⁻⁵ between machines. That is AGENTS.md's case of a bound assembled from upper bounds along an integration path that can differ between machines. Every value
+is far below 1.
