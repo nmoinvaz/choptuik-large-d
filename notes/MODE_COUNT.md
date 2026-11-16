@@ -488,6 +488,11 @@ above does. It then held for five cuts while its zeros moved: the shared zero re
   and 2 for the shared zero and its conjugate. Every circle has 0 mismatches, and the control winds +1.
   - So the count held at 10 for every cut from kf 37 to 45, and steps to 11 when nothing is frozen. Whether the added
     zero belongs to the solution or to the M = 48 truncation is #838, the same box at M = 64.
+  - **The count of 11 does not depend on the radial layout (#848; raw `I848-macm3/` 0cb4f655).** On a second layout,
+    with six nodes (the node 0.15 added), every circle winds as on #812's five-node layout: the tally is 16 less 5
+    overlaps = 11, with 0 mismatches over 8 circles. The control winds +1 at 2.043532, against #812's 2.043534. Ten
+    draws above the noise floor at λ 2.00 and 2.05 keep the sign, and ln|det| moves by at most 3.7×10⁻⁹. Δ, ω and λ_g
+    of the two states are equal.
   - **At M = 64 the double-double determinant cannot answer it (#838; raw `I838-macm3/` 972be0126).** Moving every
     entry by a random relative 2⁻¹⁰⁶ flips the sign in 5 of 10 draws at λ 2.00 and 2.05 and raises ln|det| by 26–30,
     and a λ step of ±1×10⁻¹⁰ moves ln|det| by 0.08–4.9. So the exact determinant lies about e²⁸ below double-double's
