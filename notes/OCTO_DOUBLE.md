@@ -245,10 +245,11 @@ runs inside ElimO too.
 
 **A quad-double LU under the octo-double residual does not contract at D 253 either** (#858, 2026-11-15). Branch
 `hp/mixed-corrector` (not merged) solves each step through the quad-double LU, with F − c in octo-double
-(`octo_corrector.py wall --lu qd`). From #608's prediction at D 253.338 (`I608-dh610/restart4_d6/pred_pin3_D253.3382.npz`)
-it took max |F| from 1.15e-34 to 1.55e-40 and then stayed there. Every trial of its next step, lam 1 to 1/256, had theta
-1.000. There eps_qd times the largest pivot, 1.5e-64 × 1.5e36 ≈ 2×10⁻²⁸, is far above the octo-double LU's smallest
-pivot, 7.9e-32 (the chain's step 5, `I608-dh610/restart4_d6.log`), and the quad-double LU's smallest pivot reads 3.0e-17.
+(`octo_corrector.py wall --lu qd`). From #608's prediction at D 253.338
+(`I608-dh610/restart4_d6/pred_pin3_D253.3382.npz`) it took max |F| from 1.15e-34 to 1.55e-40 and then stayed there.
+Every trial of its next step, lam 1 to 1/256, had theta 1.000. There eps_qd times the largest pivot, 1.5e-64 × 1.5e36
+≈ 2×10⁻²⁸, is far above the octo-double LU's smallest pivot, 7.9e-32 (the chain's step 5,
+`I608-dh610/restart4_d6.log`), and the quad-double LU's smallest pivot reads 3.0e-17.
 The same run with the octo-double LU (`--lu od`) diverged at its first step, max |F| 2.0e32, although the chain's own
 corrector converged from that prediction to 2.0e-76 in 20 steps. The wall check plans its system at the re-seeded
 prediction with the prediction's own held values, not the chain's stored plan and fit, and the cause of the divergence
