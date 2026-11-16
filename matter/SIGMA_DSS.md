@@ -757,10 +757,28 @@ The kernel's value lies above every f64 number at this point:
 | the profile's flat minimum, sweep A (#910) | 1.133391 | +9.6×10⁻³ |
 | the m03up march value | 1.112502 | +3.0×10⁻² |
 
-So 1.1429810 is the prior-free value of the kernel's system at M = 32. Only M = 32 was run, so the kernel's own
-resolution error at D 10.5 is not measured. At η = 1 and D 10 the kernel lies 1.4×10⁻³ above sigdss's k_c = 15 walk
-and 2.3×10⁻⁴ above its k_c = 23 walk (the table above), so a gap of 4×10⁻³ to 6×10⁻³ at D 10.5 may be sigdss's τ
-truncation again (*inferred*, not tested at η = 0.3).
+So 1.1429810 is the prior-free value of the kernel's system. At η = 1 and D 10 the kernel lies 1.4×10⁻³ above
+sigdss's k_c = 15 walk and 2.3×10⁻⁴ above its k_c = 23 walk (the table above), so a gap of 4×10⁻³ to 6×10⁻³ at D 10.5
+may be sigdss's τ truncation again (*inferred*, not tested at η = 0.3).
+
+**The kernel's value does not depend on M (#915; raw `I915-mac/` 509ff844).** The M = 32 states, resampled in τ to
+M = 24 and 48 and solved again, each followed by one more Newton step:
+
+| point | M | max \|F\| | Δ | minus Δ(32) |
+|---|---|---|---|---|
+| η = 0.3, D 10.5 | 24 | 1.54×10⁻³¹ | 1.142980986472450205538266 | +1.0×10⁻²¹ |
+| | 32 (#913) | 1.05×10⁻³¹ | 1.142980986472450205537241 | |
+| | 48 | 1.42×10⁻³¹ | 1.142980986472450205537212 | −2.9×10⁻²³ |
+| η = 1, D 10.475 | 24 | 1.29×10⁻³¹ | 1.020104800025154886837944 | −2.1×10⁻¹⁹ |
+| | 32 (#652's chain) | 1.4×10⁻³¹ | 1.020104800025154887044163 | |
+| | 48 | 1.41×10⁻³¹ | 1.020104800025154887044211 | +4.8×10⁻²³ |
+
+At η = 0.3, D 10.5 the kernel gives Δ = 1.14298098647245020554 at M = 48, with a spread of 2.9×10⁻²³ against M = 32.
+That is the level to which the band lets a converged double-double state fix Δ: #913's three M = 32 states spread
+over 2.3×10⁻²³. M = 24 is already within 10⁻²¹. The centre datum's harmonics fall by about 400 per six harmonics (0.79
+at k = 1, 6×10⁻¹² at k = 25), and the ones a coarser grid drops are the band's, which Δ sees through singular values of
+10⁻¹⁰ and below. The spread is in M only: the x direction was the same in every run (21 nodes, Taylor steps planned
+to 10⁻³², series orders 36, 80, 80).
 
 ## 12. References
 
