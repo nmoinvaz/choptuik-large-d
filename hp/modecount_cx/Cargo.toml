@@ -27,3 +27,9 @@ lto = "fat"
 debug = false
 # not stripped: the stripped Mach-O fails to load on macOS 27 (as hp/Cargo.toml)
 strip = false
+
+# multidouble's Oun (PR #55) and multishoot's jacobian_tangents (PR #44), for every crate in the graph, until their
+# releases; removed then, with the pins moved to them
+[patch.crates-io]
+multidouble = { git = "https://github.com/nmoinvaz/multidouble", branch = "feat/oun-lanes" }
+multishoot = { git = "https://github.com/nmoinvaz/multishoot", branch = "feat/jacobian-tangents" }

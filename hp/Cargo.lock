@@ -76,8 +76,7 @@ dependencies = [
 [[package]]
 name = "multidouble"
 version = "4.7.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "00854379ed6c14f9493def3ced94fc26a67d8f581cc9b21b13f8fed5d178e7d8"
+source = "git+https://github.com/nmoinvaz/multidouble?branch=feat%2Foun-lanes#913830cbba66bcc76b7a0a0ebcbb74726e07e565"
 dependencies = [
  "rayon",
 ]
@@ -85,8 +84,7 @@ dependencies = [
 [[package]]
 name = "multishoot"
 version = "3.1.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "0b3d341bab0a45c915a4e9af02d321f30da51676efe3e28717a060272577b7ca"
+source = "git+https://github.com/nmoinvaz/multishoot?branch=feat%2Fjacobian-tangents#58c0867aecacbb60b71ba35329755af42ffea8e2"
 dependencies = [
  "multidouble",
  "multisolver",

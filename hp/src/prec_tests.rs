@@ -554,6 +554,36 @@ mod od {
         assert!(control > 0, "the control did not change the series");
     }
 
+    /// Pass (fixed before the first run): on the synthetic state moved off its solution, the octo-double Jacobian with
+    /// 2, 4 and 8 tangents per evaluation (model::jacobian_o_tangents, multidouble's Oun) is the one-tangent Jacobian
+    /// (jacobian_in at Octo) in every part of every entry, and the Newton step with 4 (newton_o_tangents) its step, dz
+    /// and pivots alike. Control, which must differ: JAC_MUT_TANGENT_ORDER, each evaluation's tangents read in reverse.
+    #[test]
+    fn ojacobian_tangents_bitwise() {
+        let (mut ctx, zh, zl) = synth();
+        let l = ctx.len();
+        let z = axpy(&parts8(&zh, &zl), 1e-3, &direction(l, usize::MAX));
+        let one = crate::model::jacobian_o_tangents(&ctx, &view(&z), true, 1).unwrap();
+        let differ = |a: &(Vec<Vec<f64>>, usize), b: &(Vec<Vec<f64>>, usize)| -> usize {
+            a.0.iter().zip(&b.0).map(|(p, q)| p.iter().zip(q).filter(|(x, y)| x.to_bits() != y.to_bits()).count()).sum::<usize>()
+                + (a.1 != b.1) as usize
+        };
+        let many: Vec<usize> = [2, 4, 8]
+            .iter()
+            .map(|&n| differ(&one, &crate::model::jacobian_o_tangents(&ctx, &view(&z), true, n).unwrap()))
+            .collect();
+        let s1 = crate::model::newton_o_tangents(&ctx, &view(&z), true, 1).unwrap();
+        let s4 = crate::model::newton_o_tangents(&ctx, &view(&z), true, 4).unwrap();
+        let dz = s1.dz.iter().zip(&s4.dz).map(|(p, q)| p.iter().zip(q).filter(|(x, y)| x.to_bits() != y.to_bits()).count()).sum::<usize>()
+            + (s1.lu.pivot_range() != s4.lu.pivot_range()) as usize;
+        ctx.mutate = crate::model::JAC_MUT_TANGENT_ORDER;
+        let control = differ(&one, &crate::model::jacobian_o_tangents(&ctx, &view(&z), true, 4).unwrap());
+        ctx.mutate = 0;
+        println!("octo-double Jacobian with 2, 4, 8 tangents against 1: entries that differ {many:?}; Newton step with 4: {dz}; control {control}");
+        assert_eq!((many, dz), (vec![0, 0, 0], 0), "a multi-tangent Jacobian or step is not the one-tangent one");
+        assert!(control > 0, "the control did not change the Jacobian");
+    }
+
     /// Pass (fixed before the first run): the octo-double residual, its 24-order jet on (z_0, v) and its Jacobian, at a
     /// state and direction exact in quad-double, each within 1e-58 of the quad-double ones (qsolve), relative to max(1,
     /// |entries|): the quad-double ones' rounding, about 1e-62, with room for the condition of the blocks

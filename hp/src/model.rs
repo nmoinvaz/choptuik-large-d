@@ -27,7 +27,8 @@ use crate::linalg::{ld_for, DDLu, StaircaseLu};
 use crate::qv::QV;
 use multidouble::dual::Param;
 use multidouble::field::{cs_at, cs_range_at, cs_w_at};
-use multidouble::native::{Dtn, OV};
+use multidouble::native::{Dtn, Oun, OV};
+use multidouble::od::OD;
 use multidouble::precision::{Double, Precision};
 use multidouble::simd::Native;
 use multishoot::jacobian::Seed;
@@ -1573,6 +1574,9 @@ impl<const B: usize> Ctx<B> {
         if code != 0 && self.mutate == code {
             s.set_control(Control::HalfParts);
         }
+        if self.mutate == JAC_MUT_TANGENT_ORDER {
+            s.set_control(Control::TangentOrder);
+        }
         s
     }
 }
@@ -1600,6 +1604,59 @@ pub fn residual_jet_in<P: Precision<Native>, const N: usize, const B: usize>(
 /// arrays with leading dimension ld_for(L), ld), part q of entry (i, j) at c[q][j ld + i]
 pub fn jacobian_in<P: Precision<Native>, const B: usize>(ctx: &Ctx<B>, z: &[&[f64]], par: bool) -> Result<(Vec<Vec<f64>>, usize), String> {
     ctx.shooting_in::<P>().jacobian::<P>(z, par)
+}
+
+/// The octo-double exact Jacobian with n tangents per evaluation (multishoot's `jacobian_tangents` with multidouble's
+/// `Oun<n>`, n columns of a block from one evaluation, the value formed once for them): bit for bit `jacobian_in`'s at
+/// `Octo`, which n = 1 is. n is 1, 2, 4 or 8.
+pub fn jacobian_o_tangents<const B: usize>(ctx: &Ctx<B>, z: &[&[f64]], par: bool, n: usize) -> Result<(Vec<Vec<f64>>, usize), String> {
+    let sh = ctx.shooting_in::<multidouble::precision::Octo>();
+    jacobian_tangents_on(&sh, z, par, n)
+}
+
+/// `jacobian_o_tangents` on a layout
+fn jacobian_tangents_on<E: Equations<B>, const B: usize>(
+    sh: &Shooting<E, B>,
+    z: &[&[f64]],
+    par: bool,
+    n: usize,
+) -> Result<(Vec<Vec<f64>>, usize), String> {
+    use multidouble::precision::Octo;
+    match n {
+        1 => sh.jacobian::<Octo>(z, par),
+        2 => sh.jacobian_tangents::<Octo, Oun<2>>(z, par),
+        4 => sh.jacobian_tangents::<Octo, Oun<4>>(z, par),
+        8 => sh.jacobian_tangents::<Octo, Oun<8>>(z, par),
+        _ => Err(format!("tangents must be 1, 2, 4 or 8, not {n}")),
+    }
+}
+
+/// The octo-double layout as a problem whose exact Jacobian takes n tangents per evaluation (`jacobian_tangents_on`)
+struct TangentJac<'a, E: Equations<B>, const B: usize> {
+    sh: &'a Shooting<E, B>,
+    n: usize,
+}
+
+impl<E: Equations<B>, const B: usize> multisolver::Problem<multidouble::precision::Octo> for TangentJac<'_, E, B> {
+    fn len(&self) -> usize {
+        self.sh.len()
+    }
+    fn residual(&self, z: &[&[f64]], par: bool) -> Result<Vec<OD>, String> {
+        self.sh.residual::<multidouble::precision::Octo>(z, par)
+    }
+    fn jacobian(&self, z: &[&[f64]], par: bool) -> Result<(Vec<Vec<f64>>, usize), String> {
+        jacobian_tangents_on(self.sh, z, par, self.n)
+    }
+}
+
+/// `newton_in` at `Octo` with the Jacobian of `jacobian_o_tangents` (n tangents per evaluation): bit for bit
+/// `newton_in`'s, which n = 1 is
+pub fn newton_o_tangents<const B: usize>(ctx: &Ctx<B>, z: &[&[f64]], par: bool, n: usize) -> Result<multisolver::newton::Step<multidouble::precision::Octo>, String> {
+    let sh = ctx.shooting_in::<multidouble::precision::Octo>();
+    if n == 1 {
+        return sh.newton_step::<multidouble::precision::Octo>(z, par);
+    }
+    multisolver::newton::newton_step::<multidouble::precision::Octo, _>(&TangentJac { sh: &sh, n }, z, par)
 }
 
 /// The Newton step in P at z: dz = -J^-1 F in PARTS parts, F, the dense LU in P and the seconds of the residual, the
@@ -1714,6 +1771,9 @@ pub const JET_MUT_KAPPA: u8 = 22;
 /// the control of the series one order at a time (Ctx::mutate): `taylor_coeffs_at` forms (c a^2)_1 - c_1 without
 /// keeping it, so its product with n - 1 reads a coefficient that was never formed
 pub const JET_MUT_AT_KEEP: u8 = 24;
+/// the control of the octo-double Jacobian with several tangents per evaluation (Ctx::mutate): each evaluation's
+/// tangents read in reverse order (multishoot's `Control::TangentOrder`), so its columns land in one another's places
+pub const JAC_MUT_TANGENT_ORDER: u8 = 25;
 
 /// the dimension in the lane's parameter arithmetic (multidouble's Param): the double-double scalar on every lane
 /// but a jet, bit for bit as before; on a jet the series n + h, so the coefficients carry their own derivatives in

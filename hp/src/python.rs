@@ -72,9 +72,9 @@ trait Api: Send + Sync {
     /// model::residual_in at `Octo` at the eight-part state z, F in eight parts; mutate: Ctx::mutate for this call
     fn residual_o(&mut self, z: [&[f64]; 8], mutate: u8) -> Result<O8, String>;
     /// model::jacobian_in at `Octo`: (eight parts, ld)
-    fn jacobian_o(&mut self, z: [&[f64]; 8], mutate: u8) -> Result<(O8, usize), String>;
+    fn jacobian_o(&mut self, z: [&[f64]; 8], mutate: u8, tangents: usize) -> Result<(O8, usize), String>;
     /// model::newton_in at `Octo`
-    fn newton_o(&mut self, z: [&[f64]; 8], mutate: u8) -> Result<Step<Octo>, String>;
+    fn newton_o(&mut self, z: [&[f64]; 8], mutate: u8, tangents: usize) -> Result<Step<Octo>, String>;
     /// model::residual_jet_in at `Octo`: residual_jet in octo-double, each z_k and each output coefficient in eight parts;
     /// lanes: the jet's coefficient count, 0 for the smallest of OJET_LANES that holds nout and zs
     fn residual_jet_o(&mut self, zs: &[[&[f64]; 8]], nout: usize, lanes: usize, mutate: u8) -> Result<Vec<O8>, String>;
@@ -335,11 +335,11 @@ impl<const B: usize> Api for Ctx<B> {
     fn residual_o(&mut self, z: [&[f64]; 8], mutate: u8) -> Result<O8, String> {
         od_sizes!(self, mutate, |c| model::residual_in::<Octo, _>(c, &z, true).map(|f| od_parts(&f)))
     }
-    fn jacobian_o(&mut self, z: [&[f64]; 8], mutate: u8) -> Result<(O8, usize), String> {
-        od_sizes!(self, mutate, |c| model::jacobian_in::<Octo, _>(c, &z, true).map(|(c, ld)| (c.try_into().expect("eight parts"), ld)))
+    fn jacobian_o(&mut self, z: [&[f64]; 8], mutate: u8, tangents: usize) -> Result<(O8, usize), String> {
+        od_sizes!(self, mutate, |c| model::jacobian_o_tangents(c, &z, true, tangents).map(|(c, ld)| (c.try_into().expect("eight parts"), ld)))
     }
-    fn newton_o(&mut self, z: [&[f64]; 8], mutate: u8) -> Result<Step<Octo>, String> {
-        od_sizes!(self, mutate, |c| model::newton_in::<Octo, _>(c, &z, true))
+    fn newton_o(&mut self, z: [&[f64]; 8], mutate: u8, tangents: usize) -> Result<Step<Octo>, String> {
+        od_sizes!(self, mutate, |c| model::newton_o_tangents(c, &z, true, tangents))
     }
     fn residual_jet_o(&mut self, zs: &[[&[f64]; 8]], nout: usize, lanes: usize, mutate: u8) -> Result<Vec<O8>, String> {
         let parts = |f: Vec<Vec<OD>>| -> Vec<O8> { f.iter().map(|v| od_parts(v)).collect() };
@@ -1072,30 +1072,33 @@ impl Solver {
     }
 
     /// The exact Jacobian in octo-double (model::jacobian_in at `Octo`, `Ou` lanes) at the eight-part state z, as eight (L, L)
-    /// arrays, its parts (row = residual, column = unknown). M = 32 only.
-    #[pyo3(signature = (z, mutate=0))]
-    fn jacobian_o<'py>(&mut self, py: Python<'py>, z: Vec<PyReadonlyArray1<'py, f64>>, mutate: u8) -> PyResult<Vec<Bound<'py, PyArray2<f64>>>> {
+    /// arrays, its parts (row = residual, column = unknown). M = 32 only. tangents: Jacobian columns per evaluation
+    /// (1, 2, 4 or 8; model::jacobian_o_tangents), the same bits at any.
+    #[pyo3(signature = (z, mutate=0, tangents=1))]
+    fn jacobian_o<'py>(&mut self, py: Python<'py>, z: Vec<PyReadonlyArray1<'py, f64>>, mutate: u8, tangents: usize) -> PyResult<Vec<Bound<'py, PyArray2<f64>>>> {
         let n = self.api.len();
         let z = parts8(&z, n)?;
         let (api, pool) = (&mut self.api, &self.pool);
-        let (c, ld) = py.detach(|| pool.install(|| api.jacobian_o(z, mutate))).map_err(PyValueError::new_err)?;
+        let (c, ld) = py.detach(|| pool.install(|| api.jacobian_o(z, mutate, tangents))).map_err(PyValueError::new_err)?;
         Ok(c.iter().map(|p| Array2::from_shape_fn((n, n), |(i, j)| p[j * ld + i]).into_pyarray(py)).collect())
     }
 
     /// One Newton step in octo-double (model::newton_in at `Octo`) at the eight-part state z: returns (dz, F hi, F lo, min
     /// |u_kk|, max |u_kk|), dz = -J^-1 F a tuple of its eight parts. The octo-double LU is kept for olu_solve; the
-    /// times are step_timing's. M = 32 only.
-    #[pyo3(signature = (z, mutate=0))]
+    /// times are step_timing's. M = 32 only. tangents: the Jacobian's columns per evaluation (1, 2, 4 or 8;
+    /// model::newton_o_tangents), the same bits at any.
+    #[pyo3(signature = (z, mutate=0, tangents=1))]
     #[allow(clippy::type_complexity)]
     fn newton_o<'py>(
         &mut self,
         py: Python<'py>,
         z: Vec<PyReadonlyArray1<'py, f64>>,
         mutate: u8,
+        tangents: usize,
     ) -> PyResult<(T8<'py>, A1<'py>, A1<'py>, f64, f64)> {
         let z = parts8(&z, self.api.len())?;
         let (api, pool) = (&mut self.api, &self.pool);
-        let st = py.detach(|| pool.install(|| api.newton_o(z, mutate))).map_err(PyValueError::new_err)?;
+        let st = py.detach(|| pool.install(|| api.newton_o(z, mutate, tangents))).map_err(PyValueError::new_err)?;
         self.last_t = st.t;
         let (pmin, pmax) = st.lu.pivot_range();
         let (fh, fl) = f_dd::<Octo>(&st.f);

@@ -35,3 +35,9 @@ debug = false
 # ("mis-aligned LINKEDIT string pool"; found on the Mac runner, comms.txt 2026-10-24 22:44 UTC). Unstripped, the table is
 # aligned. The arithmetic is unchanged; the symbol and debug sections stay, and the code's layout can shift.
 strip = false
+
+# multidouble's Oun (PR #55) and multishoot's jacobian_tangents (PR #44), for every crate in the graph, until their
+# releases; removed then, with the pins moved to them
+[patch.crates-io]
+multidouble = { git = "https://github.com/nmoinvaz/multidouble", branch = "feat/oun-lanes" }
+multishoot = { git = "https://github.com/nmoinvaz/multishoot", branch = "feat/jacobian-tangents" }
