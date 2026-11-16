@@ -564,6 +564,9 @@ python3 matter/sigma_ms/tables.py ../choptuik-large-d-raw --csv matter/sigma_ms/
 python3 matter/sigma_ms/fit_min.py --records ../choptuik-large-d-raw/I639-mac/data/sm_records.jsonl --out matter/sigma_ms/data/fit_min.json
 python3 matter/sigma_ms/chain_table.py ../choptuik-large-d-raw --csv matter/sigma_ms/data/delta_D_eta0.3.csv
 python3 matter/sigma_ms/chain_table.py ../choptuik-large-d-raw --folder I917-mac --eta 1 --also I652-mac --Dmin 10 --D0 10.475 --ref I652-mac,I845-mac,I913-mac --sigdss solver/matter/data/sigdss_m1up.jsonl,solver/matter/data/sigdss_m1hi.jsonl --csv matter/sigma_ms/data/delta_D_eta1.csv
+python3 matter/sigma_ms/mode_check.py ../choptuik-large-d-raw/I652-mac/out/sm_eta1_D9_M32.npz [--mutate sigma_h|real_solve|vtau|rate_horizon|rate_lu|rate_centre|rate_steps]
+python3 matter/sigma_ms/mode_lam.py ../choptuik-large-d-raw/I916-mac/out/sm_eta0.3_D9_M32.npz ../choptuik-large-d-raw/I916-mac/out/sm_eta0.3_D9.5_M32.npz --out OUT --guess 3.175316
+python3 matter/sigma_ms/mode_table.py ../choptuik-large-d-raw --csv matter/sigma_ms/data/lam_D.csv [--mutate gauge|sigdss]
 ```
 
 The runs of #639 took the same steps by other routes (the η = ∞ state at M = 48 from M = 32, then the ε chain at
@@ -845,6 +848,69 @@ The kernel's Δ(D) at η = 1 falls smoothly from D 10 to 11, with slope −0.006
 second derivative from −3.8×10⁻³ to −2.0×10⁻³. sigdss's values rise from D 10 to 10.4746 on one march and lie 0.04
 lower on the other at D 10.475, so above D 10 they do not follow the kernel's curve at η = 1 either. sigdss has no
 η = 1 value above D 10.5.
+
+### The growth rate on the kernel (#918)
+
+Raw `I918-mac/` d88f8fcf. The kernel has a mode matrix now. `model.rs` gives every τ derivative of a perturbation
+e^{λτ} g(τ, x) its rate, in the Taylor steps, the centre series and the horizon series, whose periodic solves are
+factored with the shift, as hp's `model.rs` does. The engine's `mode_matrix` assembles M(λ) from them, with Δ and the
+phase row held fixed. [`mode_lam.py`](sigma_ms/mode_lam.py) takes a growth rate as the sign change of det M from the
+double-double LU, refined by scipy's brentq as in §3. It does not iterate on (mode, λ), since the near-null band (§6)
+is in M at every λ.
+
+[`mode_check.py`](sigma_ms/mode_check.py) checks M at a state, with bounds fixed before its first run. At D 9, η = 1:
+
+| check | bound | result |
+|---|---|---|
+| M(0) against the Jacobian's leading block | 10⁻²⁸ of the largest entry | the same bits |
+| dM/dλ at λ = 1.7, real rates against a complex one | 10⁻⁷ | 5.1×10⁻¹¹ |
+| the τ-translation mode v = ∂_τ z, \|M(0) v\| over \|M(0)\| \|v\| | 10⁻⁹ | 1.0×10⁻¹³ |
+| the gauge root against λ_g = mean(1 − c_x(τ, 1)) | 10⁻¹⁰ | within 5.0×10⁻¹⁴ |
+
+The last is the check of the rate itself. The mode that relabels the light cone grows at exactly λ_g (§6), so det M
+must change sign there, and it does so only if the rate enters every τ derivative. Seven mutations each make their
+check fail. The rate left out of the horizon series, of its solves' factors or of the Taylor steps removes the sign
+change within 1% of λ_g, and left out of the centre series it moves the root by 3.4×10⁻³.
+
+Rates at M = 32 ([`mode_table.py`](sigma_ms/mode_table.py), `sigma_ms/data/lam_D.csv`):
+
+| η | D | λ_g | λ | γ = 1/λ | sigdss's λ | kernel minus sigdss |
+|---|---|---|---|---|---|---|
+| 1 | 6 | 0.848495392 | 3.806221096 | 0.262727775 | 3.806222 (k_c 23) | −5.0×10⁻⁷ |
+| 1 | 9 | 0.824242706 | 3.048323164 | 0.328049208 | 3.048509 (k_c 23) | −1.9×10⁻⁴ |
+| 1 | 10 | 0.822557498 | 2.943442641 | 0.339738232 | 2.919835 (k_c 23) | +2.4×10⁻² |
+| 1 | 10.475 | 0.822379890 | 2.902932743 | 0.344479218 | | |
+| 1 | 10.75 | 0.822425635 | 2.881573903 | 0.347032571 | | |
+| 1 | 11 | 0.822551296 | 2.863317652 | 0.349245219 | | |
+| 0.3 | 9 | 0.808005759 | 3.175331722 | 0.314927726 | 3.175316 (k_c 15) | +1.6×10⁻⁵ |
+| 0.3 | 9.5 | 0.808267508 | 3.112288835 | 0.321306939 | | |
+| 0.3 | 10 | 0.808933366 | 3.057696912 | 0.327043533 | 3.081100 (k_c 23) | −2.3×10⁻² |
+| 0.3 | 10.25 | 0.809391376 | 3.033019318 | 0.329704461 | | |
+| 0.3 | 10.5 | 0.809921140 | 3.009854092 | 0.332242019 | 3.068523 (k_c 23) | −5.9×10⁻² |
+| 0.3 | 10.75 | 0.810515169 | 2.988055282 | 0.334665830 | | |
+| 0.3 | 11 | 0.811166800 | 2.967495609 | 0.336984492 | 3.112436 (k_c 23) | −1.4×10⁻¹ |
+
+- **λ(D) falls at every step from D 9 to 11, at both couplings**, and γ = 1/λ rises to 0.336984 (η = 0.3) and
+  0.349245 (η = 1) at D 11. At η = 0.3 the slope eases from −0.126 to −0.082 per unit D, and at η = 1 from −0.105 to
+  −0.073. sigdss's rise between D 10.5 and 11 (§5) is not on the kernel. At η = 0.3 sigdss lies 0.023 above the kernel
+  at D 10, 0.059 at D 10.5 and 0.145 at D 11, the range where its Δ is off as well (#916). At η = 1, D 10 it lies
+  0.024 below.
+- The gauge root lies within 5.0×10⁻¹⁴ of λ_g, the width of the root search, at all 20 states from D 6 to 11.
+  sigdss's root near λ_g leaves it by 0.064 at D 10 and by 0.25 at D 11 (§6). On the kernel there is no such drift,
+  so it is an error of sigdss's mode matrix above D 9 and not a second mode.
+- Against sigdss where it needs no prior or has two resolutions, each bound written into `mode_table.py` before the
+  kernel's rate was computed: at D 9, +1.6×10⁻⁵ (η = 0.3) and −1.9×10⁻⁴ (η = 1) against 4.2×10⁻⁴; at D 6, η = 1,
+  −5.0×10⁻⁷ against 2.6×10⁻⁶; at D 4, −1.5×10⁻³ (η = 1) and −2.3×10⁻⁴ (η = ∞) against 8.6×10⁻³.
+- Resolution in τ: at D 10.5 and D 11 (η = 0.3) and at D 10.475 (η = 1), the sign change of det M at M = 24, 32 and
+  48 lies in one interval of 5×10⁻¹⁴. In x: at D 10.5, η = 0.3, so does the sign change on #916's 27 nodes.
+- Other real roots: at D 11, η = 0.3, det M changes sign twice on 0.2 ≤ λ ≤ 7 (35 rates, 0.2 apart), between 0.8 and
+  1.0 at the gauge rate and between 2.8 and 3.0 at λ. Two roots closer than 0.2 would not show.
+- D = 4 is coarser in τ, and there the gauge root shows it. At η = ∞ the centre datum's top harmonic is 5.5×10⁻⁴ at
+  M = 32, 1.9×10⁻⁶ at M = 48 and 4.4×10⁻⁸ at M = 64 (2.4×10⁻¹³ at D 9, M = 32), and the gauge root lies 1.5×10⁻⁴,
+  1.5×10⁻⁹ and 5.1×10⁻¹¹ from λ_g. So the bound of 10⁻¹⁰ is met at D 4 only at M = 64, and `mode_check.py`'s
+  translation check reads 3.6×10⁻⁷ at M = 32, above its 10⁻⁹. The rates there: λ = 8.410189 at M = 32 and 8.410158 at
+  M = 48 at η = ∞ (γ = 0.118904 at M = 48; the ℓ = 1 solver's k_c = 23 value is 8.410420, §4), and λ = 8.646844 at
+  η = 1, M = 32 (γ = 0.115649), where the gauge root is 1.3×10⁻⁶ from λ_g.
 
 ## 12. References
 
