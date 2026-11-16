@@ -49,8 +49,10 @@ Contents
   (γ = 0.3245, 0.3259, 0.3213), unchanged to 10⁻⁴ under k_c = 23, a ten times weaker prior and a longer horizon series.
   Without the prior, though, Δ at these states moves by 10⁻³ or more, and the walks have not settled (§11, #892), so the
   turn rests on the prior.
-  At η = 1 the solver found two different solutions at D = 10.475 (Δ = 0.9935 and 1.0340), so η = 1 above D ≈ 10.25 is
-  not reliable. Both are the kernel's one solution there, Δ = 1.0201048, displaced along the band (§11, #845). No fold direction was seen. The gauge mode's root drifts away from its exact value above D ≈ 8 (by 0.25
+  At η = 1 the solver's two values at D = 10.475 (Δ = 0.9935 and 1.0340) are not two solutions. Both converge on the
+  kernel to its one solution there, Δ = 1.0201048, from which the band displaced them (§11, #845). So η = 1 above
+  D ≈ 10.25 is not reliable in this solver. No fold direction was seen. The gauge mode's root drifts away from its
+  exact value above D ≈ 8 (by 0.25
   at D = 11), unexplained; so the D ≥ 10 growth rates are preliminary. Going further needs more care than short runs on
   the shared machine allow (§9).
 - **γ∞ (not established).** Free fits of λ = λ∞ + Σ c_k n⁻ᵏ to D ≤ 9 give λ∞ = 1.76, 2.74, 2.14, 2.31 (η = 1) and 1.87,
@@ -262,8 +264,8 @@ the nodes 0.02 ≤ x ≤ 0.9 and the light cone.)
 - **λ(D) turns at D ≈ 10.5.** λ = 2.9198 → 2.9037 (η = 1) and 3.0814 → 3.0685 (η = 0.3) between D = 10 and 10.5,
   slopes −0.03 per unit D against −0.13 and −0.09 between D = 9 and 10; at η = 0.3, D = 11 gives λ = 3.1127: λ(D) has a
   minimum near D = 10.5, i.e. γ(D) a maximum of about 0.326, and γ(11) = 0.3213. At η = 0.3 the D = 10.5 and 11 values
-  survive k_c = 23, a ten times weaker prior and a longer horizon series to 10⁻⁴ (§6); at η = 1 the D = 10.5 value
-  rests on the second of the two D = 10.475 solutions. Δ keeps decreasing smoothly at η = 0.3 (1.1391, 1.1300, 1.1175
+  survive k_c = 23, a ten times weaker prior and a longer horizon series to 10⁻⁴ (§6). At η = 1 the D = 10.5 value
+  rests on the 1.0340 state at D = 10.475, which the kernel moves to 1.0201048 (§11, #845). Δ keeps decreasing smoothly at η = 0.3 (1.1391, 1.1300, 1.1175
   at D = 10.5, 10.75, 11).
 
 ## 6. Checks along the branch
@@ -282,8 +284,8 @@ the nodes 0.02 ≤ x ≤ 0.9 and the light cone.)
   λ = 3.068601 (2×10⁻⁵ relative) and Δ = 1.138994 (10⁻⁴). D = 11, η = 0.3: λ = 3.112655 (k_c = 15), 3.112436
   (k_c = 23), 3.112305 (k_c = 15 with horizon series of order 30 evaluated at u = 0.04 instead of order 16 at 0.01); at
   D = 10 the longer horizon series gives 3.081369 against 3.081424. So the D = 10.5 and 11 values do not depend on
-  resolution, prior or horizon treatment beyond about 10⁻⁴; what remains open at η = 1 is which of two solutions is the
-  continuation of the branch (§5).
+  resolution, prior or horizon treatment beyond about 10⁻⁴. At η = 1 the two D = 10.475 values are one solution
+  displaced along the band, at Δ = 1.0201048 on the kernel (§11, #845).
 - **The gauge root drifts above D ≈ 8** (`data/sigdss_roots.jsonl`). The horizon-relabelling mode has the exact rate
   λ_g = mean(1 − c_x(τ, 1)), and det M vanishes there to 5×10⁻⁷ at D = 6. At η = 0.3 the real root near λ_g lies at
   0.80907 (λ_g = 0.80916, D = 8), 0.80872 (0.80787, D = 9), 0.87131 (0.80683, D = 10) and 1.06271 (0.81164, D = 11), and
@@ -379,8 +381,8 @@ k_c = 23 by at most 4×10⁻⁴ in λ (5×10⁻⁵ in γ) at D ≤ 9, well below
   unstable mode where this was checked (D = 6) and k_c = 23 checks at D = 6, 9, 10 (computed); at η = 0.3 it continues
   smoothly to D = 10.5 (preliminary). Unlike the CSS branch (fold at D = 8.544 for η = 0.14, SIGMA.md) it shows no sign
   of ending, so it is the candidate for a D = ∞ limit, as STRUCTURE.md expected. Its survival to large D is not
-  established: above D ≈ 10 the near-null band of the centre data makes the solver unreliable (two solutions at
-  D = 10.475 for η = 1).
+  established: above D ≈ 10 the near-null band of the centre data makes the solver unreliable. At D = 10.475 for
+  η = 1 it gave two values of Δ for one solution (§11, #845).
 - γ(D) rises monotonically, 0.116 → 0.342 (η = 1) and 0.116 → 0.325 (η = 0.3) between D = 4 and 10, with a change of
   curvature near D ≈ 9.5; at η = 0.3 it then has a maximum of about 0.326 near D = 10.5 and falls to 0.321 at D = 11
   (preliminary: checked against k_c, prior and horizon series, but the gauge root drifts there). Extrapolations from
@@ -404,8 +406,8 @@ k_c = 23 by at most 4×10⁻⁴ in λ (5×10⁻⁵ in γ) at D ≤ 9, well below
   0.6, Ks ≥ 60) that carried the scalar to D ≈ 30; compare two prior strengths (10⁻⁸, 10⁻⁷) at each target, since the
   prior acts in the same harmonics as the near-null band; and run the ℓ = 1 multiplet (η = ∞) on the same grid with the
   same code so that the offsets of §7 can be extrapolated. Pilot: η = 1 from D = 10 to 10.5 at k_c = 23, which must
-  reproduce a single smooth branch (the k_c = 15 runs found two solutions at D = 10.475); stop condition: two solutions at
-  the same D, constraint above 10⁻³, or three failed steps in a row.
+  reproduce a single smooth branch (the k_c = 15 runs gave two values at D = 10.475, one solution on the kernel, #845);
+  stop condition: two solutions at the same D, constraint above 10⁻³, or three failed steps in a row.
 - **The turn of λ(D) at D ≈ 10.5** (§5) passed the resolution, prior and horizon-series checks at η = 0.3, but it rests
   on two points (D = 10.5, 11) in the range where the gauge root drifts (§6). Whether λ(D) keeps rising (γ falling
   well below 1/2), levels off, or turns back toward 2 is exactly what the larger-D runs above must decide; they should
