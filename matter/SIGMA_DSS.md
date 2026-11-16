@@ -660,6 +660,14 @@ and to about 1.1380 at D 10.5 from both branches, which start 2.7×10⁻² apart
 m03hi). So the system without the prior seems to have one solution near 1.138 at D 10.5, 1.1×10⁻³ below the m03hi
 value that §5 quotes, and none near m03up's.
 
+800 more Jacobians (#907; winb, raw `I907-winb/` e331ca7a) leave that undecided. The D 10.5 m03up walk ends at
+1.125743, 3.6×10⁻⁴ above where a geometric tail would put it (1.12538) and below 1.130. Its step is still shrinking
+(+4.3×10⁻⁶), but more slowly, by 1 part in 1085 per Jacobian against 1 in 730 before. Newton's estimate from that end
+is 1.137754. The D 10.0 walk stopped on its |F| rule after 149 Jacobians, at 1.152421. The width's |F| of 3.6×10⁻⁶ at
+#897's end comes from re-freezing the integration steps at that state, while the walk's frozen steps give 1.6×10⁻⁸
+there. A walk cannot tell a slow approach to 1.138 from a second solution near 1.126. A profile of the least |F| at
+fixed Δ can.
+
 ## 12. References
 
 - [HLPTA00] S. Husa, C. Lechner, M. Pürrer, J. Thornburg, P. C. Aichelburg, PRD 62, 104007 (2000),
