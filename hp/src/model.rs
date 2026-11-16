@@ -26,6 +26,7 @@ use crate::lane::{Dc, Fu, Fun, Lane, F8};
 use crate::linalg::{ld_for, DDLu, StaircaseLu};
 use crate::qv::QV;
 use multidouble::dual::Param;
+use multidouble::field::{cs_at, cs_w_at};
 use multidouble::native::{Dtn, OV};
 use multidouble::precision::{Double, Precision};
 use multidouble::simd::Native;
@@ -375,7 +376,7 @@ pub fn taylor_coeffs<T: Lane, const B: usize>(ctx: &Ctx<B>, x0: f64, omega: T, w
     let kt = w.kt;
     let rate = w.rate;
     let [p, m, a, c] = &mut w.c[..] else { unreachable!("four fields") };
-    let [a2, q2, g, h, pth, mth, ww, vv] = &mut w.aux[..] else { unreachable!("eight scratch series") };
+    let [a2, q2, g, h, pth, mth, ww, vv] = &mut w.aux[..N_AUX] else { unreachable!("eight scratch series") };
     let n1 = dim::<T, B>(ctx) - T::P::one();
     let nh = dim::<T, B>(ctx).mul_f(0.5);
     let x0d = DD::from_f64(x0);
@@ -429,6 +430,128 @@ pub fn taylor_coeffs<T: Lane, const B: usize>(ctx: &Ctx<B>, x0: f64, omega: T, w
         };
         p[k + 1] = ((rp - sp) * iw0).muls(ik1);
         m[k + 1] = ((rm - sm) * iv0).muls(ik1);
+    }
+}
+
+/// the scratch series `taylor_coeffs_at` adds past N_AUX: gu = (c a^2)_k - c_k and hu = a_k - (a a^2)_k (the factors of
+/// n - 1), dp = D p_k and dm = D m_k (the factors of omega), cpm = (c p)_k + (c m)_k (the factor of n / 2), rps =
+/// r_p - s_p and rms = r_m - s_m (the factors of 1/W_0 and 1/V_0), and kept[0..3] = omega (lane 0), 1/W_0, 1/V_0
+const N_AUX_AT: usize = N_AUX + 8;
+
+/// coefficient j of D x (the folded d/dtheta) into coefficient j of out, on a jet lane: D applied to the coefficient's
+/// values in the jet's own coefficient arithmetic (octo-, quad- or double-double), as `MatLane::dmat_apply` forms each
+/// coefficient of a jet
+fn dapply_at<T: Lane, const B: usize>(ctx: &Ctx<B>, x: &Fl<T, B>, j: usize, out: &mut Fl<T, B>) {
+    if T::VAL_OD {
+        let r = ctx.d.apply(&Fl::<OV, B>(std::array::from_fn(|b| x.0[b].coef_od(j))));
+        for b in 0..B {
+            out.0[b].set_coef_od(j, r.0[b]);
+        }
+    } else if T::VAL_QD {
+        let r = ctx.d.apply(&Fl::<QV, B>(std::array::from_fn(|b| x.0[b].coef_qd(j))));
+        for b in 0..B {
+            out.0[b].set_coef_qd(j, r.0[b]);
+        }
+    } else {
+        let r = ctx.d.apply(&Fl::<DV, B>(std::array::from_fn(|b| x.0[b].coef(j))));
+        for b in 0..B {
+            out.0[b].set_coef(j, r.0[b]);
+        }
+    }
+}
+
+/// `taylor_coeffs` for the coefficient of order j in the jet variable alone (multishoot's
+/// `Equations::taylor_coeffs_at`): every series of w, and the scratch series this adds (N_AUX_AT), holds its
+/// coefficients below j from the calls for the lower orders, and coefficient j of each is formed from them in the
+/// order `taylor_coeffs` forms it, so that it is that coefficient bit for bit. Every intermediate that enters a product
+/// is kept as a series, since a product's order j reads its factors' lower orders. delta is the global's lane, whose
+/// omega = 2 pi / delta is kept likewise. Jet lanes only, at rate zero.
+pub fn taylor_coeffs_at<T: Lane, const B: usize>(ctx: &Ctx<B>, x0: f64, delta: &T, w: &mut Work<T, B>, j: usize) {
+    debug_assert!(T::NJ > 0 && w.rate == Rate::ZERO, "taylor_coeffs_at: jet lanes at rate zero");
+    let kt = w.kt;
+    if w.aux.len() < N_AUX_AT {
+        w.aux.resize(N_AUX_AT, vec![Fl::<T, B>::zero(); kt + 2]);
+    }
+    let [p, m, a, c] = &mut w.c[..] else { unreachable!("four fields") };
+    let [a2, q2, g, h, pth, mth, ww, vv, gu, hu, dp, dm, cpm, rps, rms, kept] = &mut w.aux[..N_AUX_AT] else {
+        unreachable!("sixteen scratch series")
+    };
+    let n1 = dim::<T, B>(ctx) - T::P::one();
+    let nh = dim::<T, B>(ctx).mul_f(0.5);
+    let x0d = DD::from_f64(x0);
+    let inv_x0 = DD::ONE / x0d;
+    let x2 = [x0d * x0d, x0d.mul_f(2.0), DD::ONE];
+    let one = Fl::<T, B>::splat(DD::ONE);
+    T::div_at(&T::splat(DD::TWO_PI), delta, j, &mut kept[0].0[0]);
+    let omega = kept[0].0[0];
+    let (mut t, mut u, mut s) = (Fl::<T, B>::zero(), Fl::<T, B>::zero(), Fl::<T, B>::zero());
+    for k in 0..kt {
+        let kf = k as f64;
+        cs_at(&mut a2[k], a, a, k, j);
+        cs_at(&mut t, p, p, k, j);
+        cs_at(&mut u, m, m, k, j);
+        q2[k].copy_at(&(t + u), j);
+        cs_at(&mut t, c, a2, k, j);
+        if !(k == 1 && ctx.mutate == JET_MUT_AT_KEEP) {
+            gu[k].copy_at(&(t - c[k]), j);
+        }
+        gu[k].mulp_at(&n1, j, &mut g[k]);
+        cs_at(&mut t, a, a2, k, j);
+        hu[k].copy_at(&(a[k] - t), j);
+        hu[k].mulp_at(&n1, j, &mut u);
+        cs_at(&mut t, a, q2, k, j);
+        h[k].copy_at(&(t + u), j);
+        dapply_at(ctx, &p[k], j, &mut dp[k]);
+        dapply_at(ctx, &m[k], j, &mut dm[k]);
+        dp[k].mul_t_at(&omega, j, &mut pth[k]);
+        dm[k].mul_t_at(&omega, j, &mut mth[k]);
+        let mut xp = pth[k].muls(x0d);
+        let mut xm = mth[k].muls(x0d);
+        if k > 0 {
+            xp = xp + pth[k - 1];
+            xm = xm + mth[k - 1];
+        }
+        let (mut cp, mut cm) = (Fl::<T, B>::zero(), Fl::<T, B>::zero());
+        cs_at(&mut cp, c, p, k, j);
+        cs_at(&mut cm, c, m, k, j);
+        cpm[k].copy_at(&(cp + cm), j);
+        cpm[k].mulp_at(&nh, j, &mut s);
+        cs_at(&mut t, g, p, k, j);
+        let rp = ((t - xp) - cp) + s;
+        cs_at(&mut u, g, m, k, j);
+        let rm = ((cm - xm) - u) - s;
+        let ik = inv_x0 * recip_int(k + 1);
+        let nc = (g[k] - c[k].mulf(kf)).muls(ik);
+        c[k + 1].copy_at(&nc, j);
+        let na = (h[k].mulf(0.5) - a[k].mulf(kf)).muls(ik);
+        a[k + 1].copy_at(&na, j);
+        let mut xc = c[k].muls(x0d);
+        if k > 0 {
+            xc = xc + c[k - 1];
+        }
+        if k <= 2 {
+            ww[k].copy_at(&(-xc).adds(x2[k]), j);
+            vv[k].copy_at(&xc.adds(x2[k]), j);
+        } else {
+            ww[k].copy_at(&(-xc), j);
+            vv[k].copy_at(&xc, j);
+        }
+        if k == 0 {
+            one.div_at(&ww[0], j, &mut kept[1]);
+            one.div_at(&vv[0], j, &mut kept[2]);
+        }
+        let ik1 = recip_int(k + 1);
+        let (mut sp, mut sm) = (Fl::<T, B>::zero(), Fl::<T, B>::zero());
+        if k >= 1 {
+            cs_w_at(&mut sp, ww, p, k + 1, 1, k, |i| (k + 1 - i) as f64, j);
+            cs_w_at(&mut sm, vv, m, k + 1, 1, k, |i| (k + 1 - i) as f64, j);
+        }
+        rps[k].copy_at(&(rp - sp), j);
+        rms[k].copy_at(&(rm - sm), j);
+        rps[k].mul_at(&kept[1], j, &mut t);
+        p[k + 1].copy_at(&t.muls(ik1), j);
+        rms[k].mul_at(&kept[2], j, &mut u);
+        m[k + 1].copy_at(&u.muls(ik1), j);
     }
 }
 
@@ -959,6 +1082,15 @@ impl<const B: usize> Equations<B> for Dss<'_, B> {
         taylor_coeffs(self.0, x0, omega_of(self.0, g[0]), w);
     }
 
+    /// order k alone on jet lanes at rate zero (`taylor_coeffs_at`), every order on any other lane
+    fn taylor_coeffs_at<T: Lane>(&self, x0: f64, g: &[T], w: &mut Work<T, B>, k: usize) {
+        if T::NJ > 0 && w.rate == Rate::ZERO {
+            taylor_coeffs_at(self.0, x0, &g[0], w, k);
+        } else {
+            self.taylor_coeffs(x0, g, w);
+        }
+    }
+
     fn left_state<T: Lane>(&self, _x: f64, data: &[Fl<T, B>], g: &[T], prep: &HPrep) -> multishoot::State<T, B> {
         centre_state(self.0, &data[0], &data[1], omega_of(self.0, g[0]), &prep.rate).to_vec()
     }
@@ -1180,6 +1312,9 @@ pub const JVP_MUT_DELTA: u8 = 1;
 /// test), and kappa's dependence on n frozen (the horizon exponents at fixed n: must fail the residual test)
 pub const JET_MUT_FREEZE_N: u8 = 21;
 pub const JET_MUT_KAPPA: u8 = 22;
+/// the control of the series one order at a time (Ctx::mutate): `taylor_coeffs_at` forms (c a^2)_1 - c_1 without
+/// keeping it, so its product with n - 1 reads a coefficient that was never formed
+pub const JET_MUT_AT_KEEP: u8 = 24;
 
 /// the dimension in the lane's parameter arithmetic (multidouble's Param): the double-double scalar on every lane
 /// but a jet, bit for bit as before; on a jet the series n + h, so the coefficients carry their own derivatives in
