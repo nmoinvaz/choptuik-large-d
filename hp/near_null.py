@@ -187,7 +187,8 @@ def main():
     keep_plan = opts.get("keep_plan", "1") == "1" and "segs" in m
     if opts.get("keep_plan", "1") == "1" and not keep_plan:
         print("the state has no stored plan: the plan is made again at the state", flush=True)
-    s.set_segs(m["segs"] if keep_plan else s.plan(z[0], z[1], 1e-32, 0.05))
+    segs = m["segs"] if keep_plan else s.plan(z[0], z[1], 1e-32, 0.05)
+    s.set_segs(segs)
     L = len(z[0])
     t0 = time.time()
     out = s.newton_o(z)
@@ -244,7 +245,7 @@ def main():
     if ks_built != ks0:
         # F and J at the state's order beside the run's, on the same plan: the rows that differ, by residual block
         s0 = solver(ks0)
-        s0.set_segs(m["segs"] if keep_plan else s.plan(z[0], z[1], 1e-32, 0.05))
+        s0.set_segs(segs)
         dF = np.abs(np.asarray(od_axpy(-1.0, *[np.asarray(p) for p in s0.residual_o(z)],
                                        *[np.asarray(p) for p in s.residual_o(z)])[0]))
         J0 = [np.ascontiguousarray(np.asarray(p)).ravel() for p in s0.jacobian_o(z)]
