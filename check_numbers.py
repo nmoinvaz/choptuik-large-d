@@ -2602,6 +2602,45 @@ def sigma_ms():
 
 
 @check
+def sigma_lam():
+    """matter/SIGMA_DSS.md section 11: the growth rates on the multishoot kernel (#918), from
+    matter/sigma_ms/data/lam_D.csv (mode_table.py): the table's rows of the base states (M = 32, 21 nodes) from D 6
+    on, each with sigdss's rate of the highest k_c at its point"""
+    S = "matter/SIGMA_DSS.md"
+    import csv as _csv
+    rows = list(_csv.DictReader(open(os.path.join(ROOT, "matter/sigma_ms/data/lam_D.csv"))))
+    sup = lambda x: x.replace("-", "−").translate(str.maketrans("0123456789−", "⁰¹²³⁴⁵⁶⁷⁸⁹⁻"))  # noqa: E731
+    sci = lambda v: (lambda m, e: f"{'−' if v < 0 else '+'}{abs(float(m)):.1f}×10{sup(str(int(e)))}")(*f"{v:.1e}".split("e"))  # noqa: E731
+    best = {}
+    for r in rows:
+        if r["M"] != "32" or r["nodes"] != "21" or float(r["D"]) < 6 or not r["lam"]:
+            continue
+        k = (r["eta"], float(r["D"]))
+        if k not in best or "k_c 23" in r["sigdss"]:
+            best[k] = r
+    out = []
+    for (eta, D), r in sorted(best.items(), key=lambda kv: (-float(kv[0][0]), kv[0][1])):
+        lg, la, ga = float(r["lam_g"]), float(r["lam"]), float(r["gamma"])
+        line = f"| {eta} | {D:g} | {lg:.9f} | {la:.9f} | {ga:.9f} | "
+        if r["sigdss"]:
+            sl, d = float(r["sigdss_lam"]), float(r["kernel_minus_sigdss"])
+            line += f"{sl:.6f} ({r['sigdss'].split(', ')[-1]}) | {sci(d)} |"
+        else:
+            line += "| |"
+        t = [(S, line)]
+        lab = f"eta {eta}, D {D:g}"
+        out += [(f"lambda_g, {lab}", lg, float(f"{lg:.9f}"), 1e-9, t), (f"lambda, {lab}", la, float(f"{la:.9f}"), 1e-9, t),
+                (f"gamma, {lab}", ga, float(f"{ga:.9f}"), 1e-9, t)]
+        if r["sigdss"]:
+            out += [(f"sigdss lambda, {lab}", sl, float(f"{sl:.6f}"), 1e-6, t),
+                    (f"kernel - sigdss, {lab}", d, float(f"{d:.1e}"), 10 ** (math.floor(math.log10(abs(d))) - 1), t)]
+    gd = [float(r["gauge_diff"]) for r in rows if float(r["D"]) >= 6 and r["gauge_diff"]]
+    out += [("largest gauge distance from D 6 on", max(gd), 5.0e-14, 0.1e-14,
+             [(S, "The gauge root lies within 5.0×10⁻¹⁴ of λ_g, the width of the root search")])]
+    return out
+
+
+@check
 def figure_front():
     """the captions of the large-D chain's figures name the D they are drawn at, the comparison frontier of
     hp/chain_front.py (its rule FIGURES, "fits": the highest chain_fit row of hp/data/delta_all.csv whose err is the
