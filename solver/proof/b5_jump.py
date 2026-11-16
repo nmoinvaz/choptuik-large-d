@@ -26,7 +26,8 @@ import math
 import os
 import sys
 
-from flint import arb
+from flint import arb, ctx
+ctx.prec = 192             # the working precision, stated here: that of b5_label.py and b7_ift.py (#887)
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, HERE)

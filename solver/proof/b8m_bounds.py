@@ -21,9 +21,10 @@ B5(1), proof/B5_inner.md section 3) or n^gamma0 ("arc").
     S-residual dropped: the bound b_S must fall below the numerically observed remainder, see b8m_numcheck.py).
 """
 import sys
-from flint import arb, acb
+from flint import arb, acb, ctx
 import b8_alg as E             # compact bound algebra: B, Q, bsup, from_desc, qinv, ...
 import b8m_atoms as AT
+ctx.prec = AT.BF.PREC       # the working precision of the B8 chain, stated here (#887)
 
 B, Q, REG = E.B, E.Q, E.REG
 PI0 = None

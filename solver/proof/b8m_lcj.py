@@ -28,10 +28,11 @@ actual endpoint value a contraction in both norms), so v = 0.
 """
 import json
 import sys
-from flint import arb
+from flint import arb, ctx
 import b8_alg as E
 import b8m_atoms as AT
 import b8m_lc as LC
+ctx.prec = AT.BF.PREC       # the working precision of the B8 chain, stated here (#887)
 
 B, Q = E.B, E.Q
 up, lo = LC.up, LC.lo

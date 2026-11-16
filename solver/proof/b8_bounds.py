@@ -15,8 +15,9 @@ All constants are python-flint balls; sups are upper bounds of balls; nothing is
     python3 b8_bounds.py K L0 [kappa1] [delta] [xF]   (L0 = ln(n_0); prints the bootstrap map and whether it closes)
 """
 import sys
-from flint import arb, acb
+from flint import arb, acb, ctx
 import b8_atoms as AT
+ctx.prec = AT.BF.PREC       # the working precision of the B8 chain, stated here (#887)
 
 PI = arb.pi()
 
