@@ -558,6 +558,7 @@ python3 matter/sigma_ms/chain.py --M 32 --start OUT/sm_etainf_M32.npz --etas 20,
 python3 matter/sigma_ms/chain.py --M 48 --resample_from 32 --etas inf,20,14,10,8.5,7,6,5 --out OUT --extra "--jac mixed --jac_final mixed"
 python3 matter/sigma_ms/tables.py ../choptuik-large-d-raw --csv matter/sigma_ms/data/delta_eta.csv
 python3 matter/sigma_ms/fit_min.py --records ../choptuik-large-d-raw/I639-mac/data/sm_records.jsonl --out matter/sigma_ms/data/fit_min.json
+python3 matter/sigma_ms/chain_table.py ../choptuik-large-d-raw --csv matter/sigma_ms/data/delta_D_eta0.3.csv
 ```
 
 The runs of #639 took the same steps by other routes (the η = ∞ state at M = 48 from M = 32, then the ε chain at
@@ -782,6 +783,38 @@ over 2.3×10⁻²³. M = 24 is already within 10⁻²¹. The centre datum's harm
 at k = 1, 6×10⁻¹² at k = 25), and the ones a coarser grid drops are the band's, which Δ sees through singular values of
 10⁻¹⁰ and below. The spread is in M only: the x direction was the same in every run (21 nodes, Taylor steps planned
 to 10⁻³², series orders 36, 80, 80).
+
+**The x direction, and the kernel's chain from D 9 to 11 at η = 0.3 (#916; raw `I916-mac/` d02cf151).** At D 10.5
+the M = 32 state was carried to 27 nodes by the kernel's own integration ([`renode.py`](sigma_ms/renode.py)) and
+solved again, and solved on the 21 nodes with the Taylor steps planned to 10⁻²⁸. The node set changes Δ by
+9.5×10⁻³¹. The looser plan changes it by 3.6×10⁻²³, or 4.7×10⁻²⁴ with the plan kept between Newton steps, which is
+the level to which the band lets a converged state fix Δ. With the looser plan the residual stays at the plan's own
+error, 1.2×10⁻³⁰ to 4×10⁻²⁹, and does not reach 10⁻³⁰. So Δ on the kernel is fixed to about 3×10⁻²³ by the band, and
+neither M nor the x direction adds to that.
+
+The chain ([`chain.py --eta 0.3`](sigma_ms/chain.py), every point with the band solver) ran from that solution down
+to D 9 and up to D 11 in steps of 0.0625, 35 points with three at sigdss's own D. Every point converged, to max |F| ≤
+2.0×10⁻³¹ after one more Newton step at six of them, and no step was halved. D 10.5 solved again from the chain's
+D 10.375 and 10.4375 agrees with #913's three states to 1.6×10⁻²³. Thirty points took Newton's own steps only, 5 to
+7 of them. [`chain_table.py`](sigma_ms/chain_table.py) makes the table (`sigma_ms/data/delta_D_eta0.3.csv`):
+
+| D | Δ, kernel | sigdss's Δ (march, prior) | kernel minus sigdss |
+|---|---|---|---|
+| 9 | 1.164546055264371 | 1.1649451 (m03up, 10⁻⁸) | −4.0×10⁻⁴ |
+| 9.759375 | 1.154489539614204 | 1.1549598 (m03up, 10⁻⁸) | −4.7×10⁻⁴ |
+| 10 | 1.150875101002367 | 1.1545592 (m03up, 10⁻⁸) | −3.7×10⁻³ |
+| 10.1 | 1.149332344023925 | 1.1517462 (m03hi, 10⁻⁷) | −2.4×10⁻³ |
+| 10.25 | 1.146981042060820 | 1.1486373 (m03hi, 10⁻⁷) | −1.7×10⁻³ |
+| 10.475 | 1.143384871611671 | 1.1400188 (m03hi, 10⁻⁷) | +3.4×10⁻³ |
+| 10.5 | 1.142980986472450 | 1.1391146 (m03hi, 10⁻⁷) | +3.9×10⁻³ |
+| 10.75 | 1.138904641730661 | 1.1299686 (m03hi, 10⁻⁷) | +8.9×10⁻³ |
+| 11 | 1.134776574571409 | 1.1174614 (m03hi, 10⁻⁷) | +1.7×10⁻² |
+
+The kernel's Δ(D) is smooth through D 10 to 11. Its slope goes from −0.0116 at D 9 to −0.0166 at D 11, and its
+second derivative from −5.8×10⁻³ to −5.7×10⁻⁴, with third and fourth differences of one sign each. sigdss's offset is
+not uniform in D. Its values lie above the kernel's curve up to D 10.25 and below it from D 10.475 on, and from D 10.1
+to 11 sigdss's Δ falls by 0.0343 where the kernel's falls by 0.0146. At D 9, where sigdss needs no prior (#892), the
+two differ by 4×10⁻⁴.
 
 ## 12. References
 
