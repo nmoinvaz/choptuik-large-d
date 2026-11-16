@@ -21,7 +21,57 @@ Reviewer: an agent that did not write `newton_band`, `planted_band.py` or any ot
 - [7. What I did not check](#7-what-i-did-not-check)
 - [8. Reproduce](#8-reproduce)
 
-VERDICT_AND_SUMMARY
+## Verdict
+
+**A state that `newton_band` returns as converged is a root of the kernel's unmodified system, to the tolerance it
+was given. SIGMA_DSS.md can call the kernel's D ≥ 10 values checked by an independent review, with the two limits
+below.**
+
+- **By reading** (§1, §2): the function says converged only when max |F| of the kernel's whole residual is below tol.
+  The split, its floor and the damping enter the choice and the acceptance of a step, and nothing is added to the
+  equations.
+- **By the key check** (§3): from the state that the band solver left at η = 0.3, D 10.5, M = 32, one Newton step
+  whose Jacobian is built from `Solver.residual` alone, by finite differences, lands on max |F| = 1.17×10⁻³¹ and
+  moves Δ by 9.6×10⁻²², against bounds of 10⁻³⁰ and 10⁻²⁰. The kernel's own Jacobian equals that finite-difference
+  one to 1.2×10⁻²¹ in every entry. The three stored starts pass with the kernel's Jacobian. The nearest to the bound
+  is the march start, whose Δ moves by 8.8×10⁻²¹.
+- **By the stored states** (§3): all 75 states that the band solver's runs call converged, from D 9 to 11 at η = 1
+  and 0.3, 55 of them at D ≥ 10, have max |F| below 10⁻²⁸ on their stored plan when the reviewer's script evaluates
+  the residual. The largest is 9.6×10⁻²⁹, and each equals its record's value bit for bit.
+- **The claims** (§2): of 40 claims of the docstring and of §11's band paragraphs, 33 hold, 4 differ and 3 were not
+  checked in full. The four are two sentences of the docstring (F3, F4) and two numbers of §11 (F5, F6).
+
+The two limits:
+
+- **The planted test sees less of the function than its place in §11 suggests (F1).** Four of the reviewer's seven
+  mutations of `newton_band` pass it unchanged: the damping inside the band, the floor of the split, the held-back
+  step taken off a chord step, and the fall of B in the acceptance rule. No band trial was ever rejected, in the toy
+  or in any stored run. This reaches no value, since a converged state is judged by its residual.
+- **Δ's error bar is a bound of 8.7×10⁹ max |F| at D 10.5, and §11 quotes a spread (F2).** That is 8.7×10⁻¹⁹ at the
+  runs' tol and 8.7×10⁻²² after the extra Newton step, where §11 says about 3×10⁻²³. The 16 digits of the chain
+  tables are safe at D 10.5.
+
+The review takes `Solver.residual` as the system. That the residual is the σ-model's equations, and that the
+solution is the only one, are outside it (§7).
+
+## Summary of the checks
+
+Criteria were written on the issue before the runs they judge.
+
+| check | criterion | result | verdict |
+|---|---|---|---|
+| R1, the claims against the code | each holds, differs or is unverified | 33 hold, 4 differ, 3 not checked in full (§2) | OK, with F3 to F6 |
+| K1, a Newton step from the residual alone, D 10.5 | max \|F\| ≤ 10⁻³⁰, Δ moves ≤ 10⁻²⁰ | 1.30×10⁻³¹, 9.62×10⁻²² | OK |
+| K1 with the Jacobian from two step sizes | the same | 1.17×10⁻³¹, 9.62×10⁻²² | OK |
+| K2, the kernel's Jacobian, three starts | the same | ≤ 1.20×10⁻³¹, ≤ 8.77×10⁻²¹ | OK, one at 0.88 of the bound |
+| K3, the two Jacobians entry by entry | a difference above 10⁻¹⁵ is a finding | 1.78×10⁻¹⁴ at one step size, which is the finite difference's truncation: 1.2×10⁻²¹ from two step sizes, over all entries | OK after K3b |
+| K4, x = J⁻ᵀe_Δ | −x·F equals the step's ΔΔ to 10⁻³ | equal in the 4 digits printed, at three states; \|x\|₁ = 8.67×10⁹ | OK |
+| R3, `planted_band.py` and its four mutations | exits 0, 1, 1, 1, 1 with the stored numbers | those exits, and all 32 entries of the record equal | OK |
+| R4, the reviewer's `sonly`, named beforehand | the planted test fails | exit 1, by check A | OK |
+| R4, six more mutations | reported either way | `loose` and `nochord` fail; `nodamp`, `nofloor`, `noheld`, `anyB` pass | F1 |
+| R5, §11's numbers about the band | against the stored records | hold but two (F5, F6) | OK, with F5, F6 |
+| R6, every stored state on its plan | max \|F\| < 10⁻²⁸ and equal to the record's to 10⁻³ | 75 states judged, the largest 9.65×10⁻²⁹, all equal bit for bit | OK |
+| R6's control, 10⁻²⁰ added to one unknown | must fail | fails at all 75, after the control itself was corrected (§3) | OK |
 
 ## 1. What the function does
 
@@ -44,11 +94,13 @@ F + J\,(d_s + V_w y) \;=\; -\,J V_w (a - y) \;=\; -\,U_w\,\bigl(s\circ(a-y)\bigr
 ```
 
 So the model's band residual after the step is |s∘(1 − w)∘a|, which the code writes as |r∘(1 − w)| with r = U_wᵀF
-(`Bp`), and the model's resolved residual is |L(a − y)|, the floor E(a − y) (`Eh`). The two agree because r = −s∘a
-when U_w and V_w are exact singular vectors. With the f64 vectors they differ by U_wᵀJ(d_N − V_w a). In the records
-of start A's eleven band steps (raw `I845-mac/`) |r_i| and s_i|a_i| agree to 5×10⁻¹³ of |r_i| or better in the two
-best-resolved directions, and to 4×10⁻⁸ in every direction. For exact vectors L = 0, and d_s is the step of the system bordered with U_w and V_w, as the
-docstring says: J d + U_wξ = −F with V_wᵀd = 0 gives d = d_N − V_w(V_wᵀd_N).
+(`Bp`), and the model's resolved residual is |L(a − y)|, the floor E(a − y) (`Eh`). The two ways of writing the band
+residual agree because r = −s∘a when U_w and V_w are exact singular vectors. With the f64 vectors they differ by
+U_wᵀJ(d_N − V_w a). In the records of start A's eleven band steps (raw `I845-mac/`) |r_i| and s_i|a_i| agree to
+5×10⁻¹³ of |r_i| or better in the two best-resolved directions, and to 4×10⁻⁸ in every direction.
+
+For exact vectors L = 0, and d_s is the step of the system bordered with U_w and V_w, as the docstring says:
+J d + U_wξ = −F with V_wᵀd = 0 gives d = d_N − V_w(V_wᵀd_N).
 
 **The chord correction.** At the trial state t = z + d_s + V_w y the residual is the model's plus a second-order
 term q. A chord step with the iteration's factors is c = −J⁻¹F(t) = V_w(a − y) − J⁻¹q. Its first part is the
@@ -132,7 +184,7 @@ before the runs: after the step max |F| ≤ 10⁻³⁰, and Δ moves by at most 
 | step | Jacobian | \|d\|₂ | Δ moves by | max \|F\| after | verdict |
 |---|---|---|---|---|---|
 | K1 | central differences of `Solver.residual`, h = 2⁻³³ | 1.565×10⁻¹⁵ | +9.618×10⁻²² | 1.30×10⁻³¹ | OK |
-| K1, two step sizes | 4D(h) − D(2h), the h² term removed | K1B_D | K1B_DD | K1B_F | K1B_V |
+| K1, two step sizes | 4D(h) − D(2h), the h² term removed | 1.565×10⁻¹⁵ | +9.618×10⁻²² | 1.17×10⁻³¹ | OK |
 | K2 | `Solver.jacobian` | 1.565×10⁻¹⁵ | +9.618×10⁻²² | 1.08×10⁻³¹ | OK |
 | K2, the m03up start (max \|F\| 4.77×10⁻²⁹) | `Solver.jacobian` | 9.86×10⁻¹⁷ | +1.661×10⁻²³ | 1.20×10⁻³¹ | OK |
 | K2, the march start (max \|F\| 7.02×10⁻³⁰) | `Solver.jacobian` | 1.371×10⁻¹⁵ | +8.769×10⁻²¹ | 1.11×10⁻³¹ | OK, at 0.88 of the bound |
@@ -154,14 +206,29 @@ mark of 10⁻¹⁵ that I had set, so I tested what it is. `rv_fdcol.py` takes t
 2⁻³² and 2⁻³¹. The difference falls by 4.00 per halving of h wherever it is above 10⁻²⁰, and the columns
 extrapolated to h = 0 equal `Solver.jacobian`'s to 6.1×10⁻²² in every entry. So the difference is the finite
 difference's truncation, and on these columns `Solver.jacobian` is the derivative of `Solver.residual` to the
-rounding of the differences, 10⁻³¹/2h ≈ 4×10⁻²².
+rounding of the differences, about 10⁻³¹/2h = 4×10⁻²².
 
 An error of 1.8×10⁻¹⁴ is more than the band's deepest reduced singular values at this state (2.4×10⁻¹⁰ down to
 7.6×10⁻¹⁸), so the first K1 Jacobian is not J inside the band. Its step still lands on 1.30×10⁻³¹ and differs from
-Newton's by 1.55×10⁻²² at most, and by 7.7×10⁻³¹ in Δ. K1B_TEXT
+Newton's by 1.55×10⁻²² at most, and by 7.7×10⁻³¹ in Δ.
+
+The second K1 run takes every column from two step sizes, 4n residuals. Its Jacobian differs from
+`Solver.jacobian` by at most 1.20×10⁻²¹ in any of the 3521² entries (Frobenius norm 6.1×10⁻²⁰). That is below the
+deepest singular value, so this step is Newton's in every direction. It lands on max |F| = 1.17×10⁻³¹ and equals
+K2's step to 7.0×10⁻²⁷, and to 1.4×10⁻³⁴ in Δ. So at this state the whole of `Solver.jacobian` is the derivative of
+`Solver.residual` to 1.2×10⁻²¹, and Newton's step from the residual alone is the kernel's.
 
 **R6, every stored state.** `rv_states.py` loads each state file of the band solver's runs with its plan and
-evaluates `Solver.residual` there. R6_TEXT
+evaluates `Solver.residual` there, in the folders of #845, #913, #915, #916 and #917. Of 77 files, 75 belong to a
+record that says converged, all from `--solver band` runs: 23 at η = 1 and 48 at η = 0.3 with M = 32, and one each at
+M = 24 and 48 for both couplings. They run from D 9 to 11, 55 of them at D ≥ 10. Every one has max |F| < 10⁻²⁸: the
+largest is 9.65×10⁻²⁹, the median 1.4×10⁻³¹, and 60 are below 10⁻³⁰. Every value equals its record's F bit for bit.
+The other two files are a checkpoint without a record and the pilot of start B, whose record says not converged
+(max |F| = 9.4×10⁻¹²).
+
+The control adds 10⁻²⁰ to the first unknown of each state and fails at all 75, with max |F| = 1.0×10⁻²³. Its first
+version added the 10⁻²⁰ to the high part of the double-double value, where it is rounded away, and exited 0. Both
+logs are in the raw folder (`states/mut_state_noop.txt`, `states/mut_state.txt`).
 
 ## 4. How far Δ can move at a converged state
 
@@ -180,10 +247,12 @@ So to first order a residual of size max |F| leaves Δ undetermined by up to |x|
 | 10⁻²⁸, the runs' tol | 8.7×10⁻¹⁹ | Δ moved by 8.8×10⁻²¹ from the march start's converged state (max \|F\| 7.0×10⁻³⁰, bound 6.1×10⁻²⁰) |
 | 10⁻³¹, after one more Newton step | 8.7×10⁻²² | the three states spread over 2.3×10⁻²³ |
 
-The residual at 10⁻³¹ is the rounding of its own evaluation, so the second row is also how far the true root's Δ can
+10⁻³¹ is the floor that every run reaches (the median of R6's 75 states is 1.4×10⁻³¹), which I take to be the
+rounding of the residual's own evaluation (*inferred*). If so, the second row is also how far the true root's Δ can
 lie from a polished state's. §11 gives "about 3×10⁻²³" as the level to which the band lets a converged state fix Δ.
 That number is a spread, over three starts, over M = 32 against 48, and over two plans. The first-order bound is 38
-times larger. The spread is what a residual of random signs gives: K4_RANDOM (F2).
+times larger. The spread is what a residual of random signs gives: |x|₂ times the root-mean-square entry of F is
+1.0×10⁻²³ at each of the three polished states (F2).
 
 ## 5. The planted test, its mutations and the reviewer's
 
@@ -196,11 +265,14 @@ function's own argument, `easy` changes the toy, `root` the reference and `gamma
 sees a missing deflation, a toy without a band, a wrong reference and a wrong residual.
 
 **The reviewer's mutations.** `rv_band_mut.py` runs `planted_band.py` unchanged on a copy of `newton_band` with one
-piece of its text changed. `loose` was written down before the run as the one the test should catch.
+or two pieces of its text changed. `sonly` was named on the issue before any run as the one the test should catch.
+`loose` was written into the script with the same expectation before its run, and it ran first.
 
 | mutation | what changes | exit | which check notices |
 |---|---|---|---|
 | `none` | nothing (the harness) | 0 | |
+| `sonly` | every iteration goes through the split, and a state is converged when S < tol, whatever B is | 1 | A: a state with max \|F\| = 7.6×10⁻²⁴ is returned, at max \|z − z\*\| = 5.5×10⁻¹⁴ |
+| `noshort` | `sonly`'s first half alone, which leaves the function correct | 0 | none, as it should: A converges in 9 steps |
 | `loose` | converged when max \|F\| < 10¹⁰ tol | 1 | A: a state with max \|F\| = 2.45×10⁻²³ is returned, at max \|z − z\*\| = 1.5×10⁻¹³ |
 | `nochord` | no chord corrections | 1 | A: no convergence in 40 iterations, max \|F\| = 7.8×10⁻¹¹ |
 | `nodamp` | the band step scaled as a whole, the version that §11 says stalled at start A | 0 | none. A converges in 9 steps, D in 7 |
@@ -208,8 +280,8 @@ piece of its text changed. `loose` was written down before the run as the one th
 | `noheld` | the held-back band step is left in the chord step | 0 | none. A's last max \|F\| is 3.81×10⁻⁴⁶ against 6.24×10⁻⁴⁶, so the changed line runs |
 | `anyB` | a band trial is accepted without the fall of B | 0 | none, and every number is unchanged |
 
-D notices none of the six. Its Jacobian has no band (condition 8×10³, as the script's header says), and under `loose`
-its last Newton step carries it below either threshold.
+D notices none of the seven. Its Jacobian has no band (condition 8×10³, as the script's header says), and under
+`sonly` and `loose` its last step carries it below either threshold.
 
 **Why the toy cannot see the two refinements.** A's path is four resolved steps, two band steps and three of
 Newton's own. The first band step is limited by the radius (μ = 7.4×10⁻⁹, three doublings, one corrector) and the
@@ -225,13 +297,18 @@ limited by the radius and 65 whole, 2 with a doubling and none with a halving. T
 halved, and 282 of Newton's own. No record ends on a failed line search. So no band trial has been rejected in any
 stored run or in the toy.
 
+The band has 32 members in 140 of the 142 deflated iterations, with 32 singular values below each of 10⁻⁵ to 10⁻¹⁰
+of the largest and 33 below 10⁻⁴. The other two are first iterations from predicted seeds of #916 (max |F| =
+2.5×10⁻³), where the spectrum has no gap and the threshold of 10⁻⁶ takes 30. So the band's size is a property of the
+state near the solution, and E/|a| stays between 0.8×10⁻¹⁴ and 1.9×10⁻¹⁴ at every D from 10.1 to 11.
+
 | part of the function | the planted test | the real runs |
 |---|---|---|
 | the deflation | `noband`, and check C | #652's starts A and B fail without it and converge with it |
-| the convergence test | `loose` | K1, R6 |
+| the convergence test | `sonly`, `loose` | K1, R6 |
 | the chord corrections | `nochord` | 2 to 10 corrections in every band step of run 4 |
 | the damping inside the band | not seen | run 3 stalls without it, run 4 converges (one start) |
-| the floor of the split | not seen | run 1 holds S at the floor, run 3 passes it (one start) |
+| the floor of the split | not seen | run 3's S follows E, 2.7×10⁻¹² at E = 2.7×10⁻¹² in its last step. Run 1, without the floor, is described in raw `I845-mac/README.md` and was not checked |
 | taking the held-back step off a chord step | not seen | none |
 | the fall of B, and the halving of the radius | not seen | never used: no trial was rejected |
 
@@ -241,16 +318,17 @@ By severity. None changes a value of Δ.
 
 **F1. The planted test does not see four parts of the function.** Check coverage, no number changes. `nodamp`,
 `nofloor`, `noheld` and `anyB` pass `planted_band.py` (§5), and no band trial has been rejected in any stored run. The
-two refinements that §11 describes rest on start A's run 4 against runs 1 and 3, and the rejection of a band step
-has never run. This does not reach a value: a converged state is judged by its residual, whatever path led to it
-(§1, §3). It does mean that a later change to these parts would pass every check there is. *Fix:* either a second toy
-on which they matter, with these four mutations as its controls (recommended task 1), or a sentence in §11 saying
-that the planted test covers the deflation, the chord corrections and the convergence test.
+two refinements that §11 describes rest on one start, A's run 4 against its runs 1 and 3, and the rejection of a
+band step has never run. This does not reach a value: a converged state is judged by its residual, whatever path
+led to it (§1, §3). It does mean that a later change to these parts would pass every check there is. *Fix:* either a
+second toy on which they matter, with these four mutations as its controls (recommended task 1), or a sentence in
+§11 saying that the planted test covers the deflation, the chord corrections and the convergence test.
 
 **F2. Δ's error bar at a converged state is |x|₁ max |F|, and §11 quotes a spread.** Statement precision, no number
 changes. At D 10.5 the first-order bound is 8.7×10⁻¹⁹ at the runs' tol and 8.7×10⁻²² after the extra Newton step
-(§4), against "about 3×10⁻²³" in §11, which is a spread. §11's 24-digit values carry two digits below the bound. The
-chain tables' 16 digits are safe at D 10.5, by a factor 600 at tol. Whether |x|₁ grows along the chain is not known.
+(§4), against "about 3×10⁻²³" in §11, which is a spread. The last three digits of §11's 24-digit values are below
+the bound. The chain tables' 16 digits are safe at D 10.5, by a factor 600 at tol. Whether |x|₁ grows along the chain
+is not known.
 *Fix:* name the 3×10⁻²³ as a spread and give the bound beside it, and compute |x|₁ at the chain's points
 (recommended task 2).
 
@@ -301,7 +379,7 @@ python 3.14:
 ```
 export PYTHONPATH=$SITE
 python3 planted_band.py                                  # PLANTED BAND: PASS, exit 0; --mutate NAME exits 1
-python3 review_922/rv_band_mut.py --mutate loose         # PLANTED BAND: FAIL, exit 1 (nochord also)
+python3 review_922/rv_band_mut.py --mutate sonly         # PLANTED BAND: FAIL, exit 1 (loose, nochord also)
 python3 review_922/rv_band_mut.py --mutate nodamp        # PLANTED BAND: PASS, exit 0 (nofloor, noheld, anyB also)
 python3 review_922/rv_newton.py --state ../../../choptuik-large-d-raw/I913-mac/out/sm_hi_D10.5_M32.npz --fd
 python3 review_922/rv_fdcol.py --state ../../../choptuik-large-d-raw/I913-mac/out/sm_hi_D10.5_M32.npz --cols 158 --random 40
@@ -309,6 +387,7 @@ python3 review_922/rv_states.py ../../../choptuik-large-d-raw --folders I845-mac
 ```
 
 The fourth prints `RV_NEWTON (sm_hi_D10.5_M32.npz): PASS` after about 10 minutes, with `--richardson` after about
-20, and without `--fd` after 45 s. The fifth prints `K3b (41 columns): ... 6.08e-22: PASS`. The sixth prints
-R6_LINE. `review_922/run_i922.sh` runs them all with their time caps, and raw `I922-mac/exits.txt` has each run's
-exit status.
+18, and without `--fd` after 45 s. The fifth prints `K3b (41 columns): ... 6.08e-22: PASS`. The sixth prints
+`R6: 77 state files, 75 judged, 0 fail; largest max |F| of the judged 9.646e-29; ... PASS`, and exits 1 with
+`--mutate state`. `review_922/run_i922.sh` runs them all with their time caps, and raw `I922-mac/exits.txt` has each
+run's exit status.

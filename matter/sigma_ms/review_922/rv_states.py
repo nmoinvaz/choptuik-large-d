@@ -8,7 +8,9 @@ there by this script, which calls none of newton_band, newton_solve or run_eta.p
         (1) max |F| is below 1e-28, the runs' tolerance;
         (2) max |F| equals the F of the run's record to 1e-3 of it.
       States without a record, or whose record says not converged, are listed and not judged.
-      --mutate state   1e-20 is added to the first unknown of each state: (1) must fail, and the exit is 1.
+      --mutate state   1e-20 is added to the first unknown of each state, in its low part: (1) must fail, and the
+                       exit is 1. (Added to the high part it is rounded away and nothing changes: the first run of
+                       this control did that and exited 0, raw I922-mac/states/mut_state_noop.txt.)
       Exit 0 only if every judged state meets (1) and (2).
 """
 import argparse
@@ -46,9 +48,9 @@ def main():
             if len(z) != 2:
                 rows.append(dict(folder=folder, file=os.path.basename(path), judged=False, why=f"{len(z)} parts"))
                 continue
-            zh, zl = np.asarray(z[0], float).copy(), np.asarray(z[1], float)
+            zh, zl = np.asarray(z[0], float), np.asarray(z[1], float).copy()
             if a.mutate == "state":
-                zh[0] += 1e-20
+                zl[0] += 1e-20                          # into the low part: the high part would round it away
             key = (str(meta["eta"]), meta["M"], tuple(meta["nodes"]), meta["kt"], meta["kc"], meta["ks"],
                    float(meta.get("D", 4.0)))
             if key not in solvers:

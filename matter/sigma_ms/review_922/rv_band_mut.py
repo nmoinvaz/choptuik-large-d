@@ -5,8 +5,13 @@ one piece of text changed. The exit status is planted_band.py's: 0 if its checks
 noticed), 1 if one fails (noticed).
 
     PYTHONPATH=<site> python3 rv_band_mut.py --mutate NAME [--out FILE.json]
+      sonly    a state is returned as converged when the resolved part S of its residual is below tol, whatever the
+               band part B is (and every iteration goes through the split). This is the mutation named on the issue
+               before any run, as the one the planted test should notice (A, by max |z - z*|).
+      noshort  sonly's first half alone: the whole-step path switched off. The function is then still correct, so
+               the test should pass: this shows that sonly fails by its convergence test.
       loose    max |F| < tol replaced by max |F| < 1e10 tol in the convergence test: the function returns a state that
-               is not converged. Written before the run: the planted test should notice (A, by max |z - z*|).
+               is not converged. Written here before its run: the planted test should notice (A, by max |z - z*|).
       nodamp   the band step scaled as a whole to the radius (weights rad/|a| in every band direction): the version
                that SIGMA_DSS section 11 says stalled at start A
       nofloor  the floor of the split set to zero: E = 0 and E(held) = 0
@@ -29,6 +34,13 @@ MUT = {
                "                log(f\"  band {it}: |F| {nF:.2e} converged, Delta {zh[-1]:.15f}\")",
                "        if nF < 1e10 * tol:\n            rec[\"converged\"] = True\n            if verbose:\n"
                "                log(f\"  band {it}: |F| {nF:.2e} converged, Delta {zh[-1]:.15f}\")")],
+    # sonly: every iteration goes through the split (the whole-step path is switched off), and a state whose resolved
+    # part S is below tol is returned as converged, whatever its band part B is
+    "noshort": [("        if nN <= radius:\n", "        if False:\n")],
+    "sonly": [("        if nN <= radius:\n", "        if False:\n"),
+              ("        S0, B0 = split(Fv)\n",
+               "        S0, B0 = split(Fv)\n        if k and S0 < tol:\n            rec[\"converged\"] = True\n"
+               "            return zh, zl, hist\n")],
     "nodamp": [("            return sg ** 2 / (sg ** 2 + np.exp(2 * hi)), float(np.exp(hi))",
                 "            return np.full(k, rad / nb), 1.0")],
     "nofloor": [("            E = float(np.linalg.norm(L @ a))", "            E = 0.0"),
