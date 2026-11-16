@@ -268,8 +268,11 @@ the nodes 0.02 ≤ x ≤ 0.9 and the light cone.)
   rests on the 1.0340 state at D = 10.475, which the kernel moves to 1.0201048 (§11, #845). Δ keeps decreasing
   smoothly at η = 0.3 (1.1391, 1.1300, 1.1175 at D = 10.5, 10.75, 11). The kernel, without the prior, puts Δ at
   D = 10.5 and η = 0.3 at 1.1429810, 3.9×10⁻³ above sigdss's 1.1391, the same at M = 24, 32 and 48 to 10⁻²¹ (§11,
-  #913, #915). So sigdss's Δ there is off by more than the prior moves it. The growth rates λ above are sigdss's and
-  have no kernel check yet.
+  #913, #915). So sigdss's Δ there is off by more than the prior moves it. On the kernel's chain from D 9 to 11
+  (#916) Δ(D) is smooth, and sigdss's offset from it is not uniform: −4×10⁻⁴ at D 9, −3.7×10⁻³ at 10, +3.9×10⁻³ at
+  10.5 and +1.7×10⁻² at 11. From D 10.1 to 11 sigdss's Δ falls by 0.034 and the kernel's by 0.015, so the extra bend
+  in sigdss's Δ there is sigdss's own. The growth rates λ above are sigdss's, with no kernel check yet, so this turn of
+  λ(D) is not established.
 
 ## 6. Checks along the branch
 
@@ -388,7 +391,8 @@ k_c = 23 by at most 4×10⁻⁴ in λ (5×10⁻⁵ in γ) at D ≤ 9, well below
   η = 1 it gave two values of Δ for one solution (§11, #845).
 - γ(D) rises monotonically, 0.116 → 0.342 (η = 1) and 0.116 → 0.325 (η = 0.3) between D = 4 and 10, with a change of
   curvature near D ≈ 9.5; at η = 0.3 it then has a maximum of about 0.326 near D = 10.5 and falls to 0.321 at D = 11
-  (preliminary: checked against k_c, prior and horizon series, but the gauge root drifts there). Extrapolations from
+  (not established: sigdss's Δ there is off the kernel's by up to 1.7×10⁻², §5 and #916, and the gauge root
+  drifts). Extrapolations from
   D ≤ 9 give γ∞ anywhere in about 0.36–0.57, fits with λ∞ = 2 imposed are as good as free ones, and adding D = 10 makes
   all fits worse. So γ∞ = 1/2 is neither confirmed nor excluded (not established). If the maximum at D ≈ 10.5 is real,
   γ(D) at η = 0.3 does not approach 1/2 from below the way the scalar's does, which would favour γ∞ ≠ 1/2.
