@@ -24,8 +24,11 @@
 //! Copied and adapted from hp's model.rs (the Choptuik scalar: four fields, centre datum p1 with m ~ -p1 x): its
 //! Taylor recursion, centre and horizon series, horizon LUs and refined periodic solves, with the sigma-model terms,
 //! the fifth field psi and the l = 1 centre structure (p ~ m ~ q x, the 2 x 2 order-k system of sigdss_solver.py's
-//! centre_series). The f64 lanes serve the mixed-precision Newton's Jacobian; hp's octo-double, jet and mode-matrix
-//! lanes are not carried over.
+//! centre_series). The f64 lanes serve the mixed-precision Newton's Jacobian. The mode matrix in the growth rate
+//! lambda is hp's (#918): every tau derivative of a perturbation exp(lambda tau) g gains lambda times the perturbation
+//! (`dtau`, the engine's `Rate::shift`), in the Taylor steps, the centre series and the horizon series, whose periodic
+//! solves are factored with the shift (`HPrep::lus_t`, `lus2`; `psolve_dc` for the engine's complex tangents). hp's
+//! octo-double and jet lanes are not carried over.
 use crate::planted::Planted;
 use multidouble::dd::DD;
 use multidouble::field::{cs, cs_w, horner, FieldSolve, Fl};
@@ -36,10 +39,11 @@ use multidouble::native::{DMat, DV};
 use multidouble::precision::Precision;
 use multidouble::simd::Native;
 use multishoot::control::Control;
-use multishoot::lane::Lane;
+use multishoot::lane::{Dc, Lane};
 use multishoot::taylor::Plan;
-use multishoot::{Equations, ExtraRow, Shooting, State, Work};
+use multishoot::{Equations, ExtraRow, ModeMatrix, Rate, Shooting, State, Work};
 use rayon::prelude::*;
+use std::any::Any;
 
 /// fields per point: p, m, a, c, psi
 pub const NF: usize = 5;
@@ -58,6 +62,18 @@ pub const MUT_SIGMA_H: u8 = 2;
 pub const MUT_QD_STATE_DD: u8 = 9;
 /// the quad-double horizon solves without their refinement (to the double-double LU's accuracy)
 pub const MUT_QD_NOREFINE: u8 = 7;
+
+/// the controls of the mode matrix's checks (mode_check.py --mutate): a nonzero growth rate left out of the horizon
+/// series' tau derivatives (the factors of its solves keep it)
+pub const MUT_RATE_HORIZON: u8 = 11;
+/// left out of the factors of the horizon series' solves (its tau derivatives keep it)
+pub const MUT_RATE_LU: u8 = 12;
+/// left out of the centre series
+pub const MUT_RATE_CENTRE: u8 = 13;
+/// left out of the Taylor steps
+pub const MUT_RATE_STEPS: u8 = 14;
+/// the horizon solves of complex tangents with the M x M factors at every rate, the 2M x 2M form ignored
+pub const MUT_RATE_REAL_SOLVE: u8 = 15;
 
 /// refinement steps of a horizon solve in the quad-double lanes (hp's QD_REFINE); a tangent lane takes one more
 const QD_REFINE: usize = 2;
@@ -150,10 +166,12 @@ fn omega_of<T: Lane>(delta: T) -> T {
     T::splat(DD::TWO_PI) / delta
 }
 
-/// d/dtau = omega d/dtheta on an odd field
+/// d/dtau = omega d/dtheta on an odd field, its tangents shifted by the growth rate of a mode-matrix evaluation
+/// (multishoot's `Rate::shift`: perturbations ~ exp(lambda tau) gain lambda times themselves; values are unaffected;
+/// zero rate: unchanged, bit for bit)
 #[inline(always)]
-fn dtau<T: Lane, const B: usize>(ctx: &Ctx<B>, x: &Fl<T, B>, omega: T) -> Fl<T, B> {
-    ctx.d.apply(x).mul_t(omega)
+fn dtau<T: Lane, const B: usize>(ctx: &Ctx<B>, x: &Fl<T, B>, omega: T, rate: &Rate) -> Fl<T, B> {
+    rate.shift(x, ctx.d.apply(x).mul_t(omega))
 }
 
 /// sigma(psi) = sin(kappa psi)/kappa = psi S(w) and gamma(psi) = cos(kappa psi) = C(w), w = kappa^2 psi^2, from the
@@ -185,9 +203,11 @@ fn g_coef<T: Lane, const B: usize>(ctx: &Ctx<B>, c: &[Fl<T, B>], a2: &[Fl<T, B>]
 // Taylor stepping in x
 // ---------------------------------------------------------------------------------------------------------------
 
-/// Taylor coefficients 1..=w.kt of the state about x0, order 0 in w.c[0..5] (p, m, a, c, psi), at the given omega
+/// Taylor coefficients 1..=w.kt of the state about x0, order 0 in w.c[0..5] (p, m, a, c, psi), at the given omega,
+/// its tau derivatives shifted by `w.rate`
 pub fn taylor_coeffs<T: Lane, const B: usize>(ctx: &Ctx<B>, x0: f64, omega: T, w: &mut Work<T, B>) {
     let kt = w.kt;
+    let rate = if ctx.mutate == MUT_RATE_STEPS { Rate::ZERO } else { w.rate };
     let [p, m, a, c, q] = &mut w.c[..] else { unreachable!("five fields") };
     let [a2, q2, g, h, pth, mth, ww, vv, sn, co, ss, g2, sg, hs] = &mut w.aux[..] else {
         unreachable!("fourteen scratch series")
@@ -231,8 +251,8 @@ pub fn taylor_coeffs<T: Lane, const B: usize>(ctx: &Ctx<B>, x0: f64, omega: T, w
             g[k] = g[k] + Fl::cst(&s[3][k]);
             h[k] = h[k] + Fl::cst(&s[2][k]);
         }
-        pth[k] = dtau(ctx, &p[k], omega);
-        mth[k] = dtau(ctx, &m[k], omega);
+        pth[k] = dtau(ctx, &p[k], omega, &rate);
+        mth[k] = dtau(ctx, &m[k], omega, &rate);
         let mut xp = pth[k].muls(x0d);
         let mut xm = mth[k].muls(x0d);
         if k > 0 {
@@ -295,8 +315,10 @@ pub fn work<T: Lane, const B: usize>(kt: usize) -> Work<T, B> {
 /// Centre-series coefficients of p, m, a, c, psi in the scaled variable x / sigma, sigma = series_scale(nodes[0]):
 /// entry k is c_k sigma^k. The order-k system for (P_k, M_k) is sigdss_solver.py's centre_series: sigma's order-k
 /// coefficient carries Q_k = (P_k + M_k)/(2k) (sigma_0 = 0, gamma_0 = 1), which enters the matrix through
-/// al = n/2 - n/(2k).
-pub fn centre_series<T: Lane, const B: usize>(ctx: &Ctx<B>, q1: &Fl<T, B>, c0: &Fl<T, B>, omega: T) -> [Vec<Fl<T, B>>; 5] {
+/// al = n/2 - n/(2k). rate: the growth rate of a mode-matrix evaluation (`Rate::ZERO` otherwise).
+pub fn centre_series<T: Lane, const B: usize>(ctx: &Ctx<B>, q1: &Fl<T, B>, c0: &Fl<T, B>, omega: T, rate: &Rate) -> [Vec<Fl<T, B>>; 5] {
+    let zero_rate = Rate::ZERO;
+    let rate = if ctx.mutate == MUT_RATE_CENTRE { &zero_rate } else { rate };
     let sig = series_scale(ctx.nodes[0]);
     let n = ctx.n;
     let n1 = n - DD::ONE;
@@ -353,8 +375,8 @@ pub fn centre_series<T: Lane, const B: usize>(ctx: &Ctx<B>, q1: &Fl<T, B>, c0: &
             continue;
         }
         // the p, m equations at order k (index sum k; the terms of order k - 1 alone gain one sigma)
-        let dp = dtau(ctx, &pp[k - 1], omega).mul_pwr2(sig);
-        let dm = dtau(ctx, &mm[k - 1], omega).mul_pwr2(sig);
+        let dp = dtau(ctx, &pp[k - 1], omega, rate).mul_pwr2(sig);
+        let dm = dtau(ctx, &mm[k - 1], omega, rate).mul_pwr2(sig);
         let s1p = cs_w(&cc, &pp, k, 1, k - 1, |i| (k - i) as f64);
         let s1m = cs_w(&cc, &mm, k, 1, k - 1, |i| (k - i) as f64);
         let xpx = pp[k - 1].mulf(kf - 1.0).mul_pwr2(sig) - s1p;
@@ -392,8 +414,8 @@ pub fn centre_series<T: Lane, const B: usize>(ctx: &Ctx<B>, q1: &Fl<T, B>, c0: &
     [pp, mm, aa, cc, qq]
 }
 
-pub fn centre_state<T: Lane, const B: usize>(ctx: &Ctx<B>, q1: &Fl<T, B>, c0: &Fl<T, B>, omega: T) -> State<T, B> {
-    let s = centre_series(ctx, q1, c0, omega);
+pub fn centre_state<T: Lane, const B: usize>(ctx: &Ctx<B>, q1: &Fl<T, B>, c0: &Fl<T, B>, omega: T, rate: &Rate) -> State<T, B> {
+    let s = centre_series(ctx, q1, c0, omega, rate);
     let x = DD::from_f64(ctx.nodes[0]).mul_pwr2(1.0 / series_scale(ctx.nodes[0]));
     s.iter().map(|f| horner(f, x)).collect()
 }
@@ -418,9 +440,10 @@ fn horizon_c1<T: Lane, const B: usize>(ctx: &Ctx<B>, ah: &Fl<T, B>, psih: &Fl<T,
     -g0
 }
 
-/// LU factors of (omega D + diag kappa_kk), kk = 0..=ks, at the given (a_h, psi_h, Delta) values:
-/// kappa_kk = (c1 + 1) kk + c1 + 1 - n/2
-pub fn horizon_lus<const B: usize>(ctx: &Ctx<B>, ah: &Fl<DV, B>, psih: &Fl<DV, B>, delta: DD, par: bool) -> Result<Vec<DDLu>, String> {
+/// LU factors of (omega D + diag kappa_kk + shift), kk = 0..=ks, at the given (a_h, psi_h, Delta) values:
+/// kappa_kk = (c1 + 1) kk + c1 + 1 - n/2; shift is zero for the values' systems and the real growth rate for the
+/// tangents' of a mode-matrix evaluation
+pub fn horizon_lus<const B: usize>(ctx: &Ctx<B>, ah: &Fl<DV, B>, psih: &Fl<DV, B>, delta: DD, par: bool, shift: DD) -> Result<Vec<DDLu>, String> {
     let m = Ctx::<B>::M;
     let ld = ld_for(m);
     let omega = DD::TWO_PI / delta;
@@ -437,7 +460,10 @@ pub fn horizon_lus<const B: usize>(ctx: &Ctx<B>, ah: &Fl<DV, B>, psih: &Fl<DV, B
         let mut h = base_h.clone();
         let mut l = base_l.clone();
         for i in 0..m {
-            let kap = (c1s[i] + DD::ONE).mul_f(kk as f64) + c1s[i] + DD::ONE - nh;
+            let mut kap = (c1s[i] + DD::ONE).mul_f(kk as f64) + c1s[i] + DD::ONE - nh;
+            if shift.hi != 0.0 {
+                kap = kap + shift;
+            }
             let v = DD { hi: h[i * ld + i], lo: l[i * ld + i] } + kap;
             h[i * ld + i] = v.hi;
             l[i * ld + i] = v.lo;
@@ -451,18 +477,82 @@ pub fn horizon_lus<const B: usize>(ctx: &Ctx<B>, ah: &Fl<DV, B>, psih: &Fl<DV, B
     }
 }
 
-/// The preparation of one evaluation (multishoot's `Equations::Prep`): the horizon LUs
+/// LU factors of the real 2M x 2M form of (omega D + diag kappa_kk + lambda), kk = 0..=ks, at a complex growth rate
+/// lambda = lr + i li: [[A + lr, -li], [li, A + lr]] acting on (f_re, f_im) (hp's horizon_lus_c)
+pub fn horizon_lus_c<const B: usize>(ctx: &Ctx<B>, ah: &Fl<DV, B>, psih: &Fl<DV, B>, delta: DD, lr: DD, li: DD, par: bool) -> Result<Vec<DDLu>, String> {
+    let m = Ctx::<B>::M;
+    let m2 = 2 * m;
+    let ld = ld_for(m2);
+    let omega = DD::TWO_PI / delta;
+    let c1 = horizon_c1(ctx, ah, psih);
+    let c1s: Vec<DD> = (0..m).map(|i| c1.get(i)).collect();
+    let mut base_h = vec![0.0; ld * m2];
+    let mut base_l = vec![0.0; ld * m2];
+    let mut h = vec![0.0; m];
+    let mut l = vec![0.0; m];
+    for j in 0..m {
+        ctx.d.cols[j].muls(omega).store(&mut h, &mut l);
+        for i in 0..m {
+            // top-left and bottom-right blocks: omega D
+            base_h[j * ld + i] = h[i];
+            base_l[j * ld + i] = l[i];
+            base_h[(j + m) * ld + i + m] = h[i];
+            base_l[(j + m) * ld + i + m] = l[i];
+        }
+        // top-right: -li I (column j + m, row j); bottom-left: +li I (column j, row j + m)
+        base_h[(j + m) * ld + j] = -li.hi;
+        base_l[(j + m) * ld + j] = -li.lo;
+        base_h[j * ld + j + m] = li.hi;
+        base_l[j * ld + j + m] = li.lo;
+    }
+    let nh = ctx.n.mul_f(0.5);
+    let one_kk = |kk: usize| -> Result<DDLu, String> {
+        let mut h = base_h.clone();
+        let mut l = base_l.clone();
+        for i in 0..m {
+            let kap = (c1s[i] + DD::ONE).mul_f(kk as f64) + c1s[i] + DD::ONE - nh + lr;
+            for &ii in &[i, i + m] {
+                let v = DD { hi: h[ii * ld + ii], lo: l[ii * ld + ii] } + kap;
+                h[ii * ld + ii] = v.hi;
+                l[ii * ld + ii] = v.lo;
+            }
+        }
+        DDLu::factor(m2, ld, h, l, false)
+    };
+    if par {
+        (0..=ctx.ks).into_par_iter().map(one_kk).collect()
+    } else {
+        (0..=ctx.ks).map(one_kk).collect()
+    }
+}
+
+/// The preparation of one evaluation (multishoot's `Equations::Prep`): the horizon LUs at the state's double-double
+/// a_h, psi_h and Delta, and for a mode-matrix evaluation its growth rate with the factors it changes
 #[derive(Default)]
 pub struct HPrep {
+    /// (omega D + diag kappa_kk), kk = 0..=ks
     pub lus: Vec<DDLu>,
+    /// the same plus lr, for the tangents at a real rate lr (empty: `lus` serve)
+    pub lus_t: Vec<DDLu>,
+    /// the 2M x 2M real form at a complex rate (`horizon_lus_c`; empty at a real rate)
+    pub lus2: Vec<DDLu>,
+    pub rate: Rate,
+}
+
+impl HPrep {
+    /// the preparation of the LUs alone (rate zero)
+    pub fn of(lus: Vec<DDLu>) -> Self {
+        HPrep { lus, ..Default::default() }
+    }
 }
 
 /// (omega D + diag kappa) f = r with the LU at the values; for tangents the derivative of the system,
-/// A f_d = r_d - omega_d D f_v - kappa_d f_v; quad-double lanes refined to their precision; f64 lanes (the
-/// mixed-precision Newton's Jacobian) with the hi parts of the factors (hp's psolve, its DV, Du, QV, Qu and f64
-/// branches)
+/// A_t f_d = r_d - omega_d D f_v - kappa_d f_v, with A_t = A + lambda (`HPrep::lus_t`; the same LU at rate zero);
+/// quad-double lanes refined to their precision; f64 lanes (the mixed-precision Newton's Jacobian) with the hi parts
+/// of the factors (hp's psolve, its DV, Du, Dc, QV, Qu and f64 branches)
 fn psolve<T: Lane, const B: usize>(ctx: &Ctx<B>, prep: &HPrep, kk: usize, kappa: &Fl<T, B>, rhs: &Fl<T, B>, omega: T) -> Fl<T, B> {
     let lu = &prep.lus[kk];
+    let lu_t = if prep.lus_t.is_empty() { lu } else { &prep.lus_t[kk] };
     assert!(T::NJ == 0 && !T::VAL_OD, "sigmams: the horizon solve has no jet or octo-double branch");
     if T::VAL_F64 || T::TAN_F64 {
         // f64 values: the value solve in f64 with the hi parts of the double-double factors; f64 tangents: each
@@ -478,7 +568,7 @@ fn psolve<T: Lane, const B: usize>(ctx: &Ctx<B>, prep: &HPrep, kk: usize, kappa:
         for k in 0..T::NT {
             let od = F8(omega.tan64(k));
             let r = (rhs.tan64(k) - dfv.mul_t(od)) - kappa.tan64(k) * fv8;
-            let fd = lu.solve_lanes_hi(&r.val());
+            let fd = lu_t.solve_lanes_hi(&r.val());
             for b in 0..B {
                 out.0[b].set_tan64(k, fd.0[b].hi);
             }
@@ -488,7 +578,12 @@ fn psolve<T: Lane, const B: usize>(ctx: &Ctx<B>, prep: &HPrep, kk: usize, kappa:
     if T::VAL_QD {
         // Moler's refinement with the residual in the lane's precision (multidouble's solve_lanes_refine_t)
         let steps = if ctx.mutate == MUT_QD_NOREFINE { 0 } else { QD_REFINE + T::TANGENT as usize };
-        return lu.solve_lanes_refine_t(lu, rhs, steps, |f| *rhs - (ctx.d.apply(f).mul_t(omega) + *kappa * *f));
+        return lu.solve_lanes_refine_t(lu_t, rhs, steps, |f| *rhs - (ctx.d.apply(f).mul_t(omega) + *kappa * *f));
+    }
+    if T::TANGENT {
+        if let Some(f) = psolve_dc(ctx, prep, kk, kappa, rhs, omega) {
+            return f;
+        }
     }
     let fv = lu.solve_lanes(&rhs.val());
     if !T::TANGENT {
@@ -497,11 +592,50 @@ fn psolve<T: Lane, const B: usize>(ctx: &Ctx<B>, prep: &HPrep, kk: usize, kappa:
     let dfv = ctx.d.apply::<DV>(&fv);
     let od = Fl::<DV, B>([omega.tan(); B]);
     let r = (rhs.tan() - dfv * od) - kappa.tan() * fv;
-    let fd = lu.solve_lanes(&r);
+    let fd = lu_t.solve_lanes(&r);
     Fl::from_vt(&fv, &fd)
 }
 
-/// Horizon-series coefficients of p, m, a, c, psi in the scaled variable u / sigma, sigma = series_scale(u0)
+/// psolve on complex tangents (`Dc`, the lanes of multishoot's mode matrix; None for any other lane): the value as
+/// psolve's, each tangent part with psolve's operations on the real tangent, A_t f_d = r_d - omega_d D f_v -
+/// kappa_d f_v; at a real rate the M x M solves of A + lr for the real and imaginary parts, at a complex one the
+/// 2M x 2M real form (`HPrep::lus2`) (hp's psolve_dc)
+fn psolve_dc<T: Lane, const B: usize>(ctx: &Ctx<B>, prep: &HPrep, kk: usize, kappa: &Fl<T, B>, rhs: &Fl<T, B>, omega: T) -> Option<Fl<T, B>> {
+    let kappa = (kappa as &dyn Any).downcast_ref::<Fl<Dc, B>>()?;
+    let rhs = (rhs as &dyn Any).downcast_ref::<Fl<Dc, B>>()?;
+    let omega = (&omega as &dyn Any).downcast_ref::<Dc>()?;
+    let m = Ctx::<B>::M;
+    let lu = &prep.lus[kk];
+    let lu_t = if prep.lus_t.is_empty() { lu } else { &prep.lus_t[kk] };
+    let fv = lu.solve_lanes(&rhs.val());
+    let dfv = ctx.d.apply::<DV>(&fv);
+    let (or, oi) = (Fl::<DV, B>([omega.r; B]), Fl::<DV, B>([omega.i; B]));
+    let rr = (rhs.tan_re() - dfv * or) - kappa.tan_re() * fv;
+    let ri = (rhs.tan_im() - dfv * oi) - kappa.tan_im() * fv;
+    let out = if prep.lus2.is_empty() || ctx.mutate == MUT_RATE_REAL_SOLVE {
+        Fl::<Dc, B>::from_vri(&fv, &lu_t.solve_lanes(&rr), &lu_t.solve_lanes(&ri))
+    } else {
+        let mut hh = vec![0.0; m];
+        let mut ll = vec![0.0; m];
+        let mut b = vec![DD::ZERO; 2 * m];
+        for (part, f) in [&rr, &ri].into_iter().enumerate() {
+            f.store(&mut hh, &mut ll);
+            for i in 0..m {
+                b[part * m + i] = DD { hi: hh[i], lo: ll[i] };
+            }
+        }
+        prep.lus2[kk].solve(&mut b);
+        let part = |o: usize| {
+            let (h, l): (Vec<f64>, Vec<f64>) = b[o..o + m].iter().map(|v| (v.hi, v.lo)).unzip();
+            Fl::<DV, B>::load(&h, &l)
+        };
+        Fl::<Dc, B>::from_vri(&fv, &part(0), &part(m))
+    };
+    (&out as &dyn Any).downcast_ref::<Fl<T, B>>().copied()
+}
+
+/// Horizon-series coefficients of p, m, a, c, psi in the scaled variable u / sigma, sigma = series_scale(u0). prep:
+/// the horizon LUs, and the rate of a mode-matrix evaluation, which shifts the tau derivatives
 pub fn horizon_series<T: Lane, const B: usize>(
     ctx: &Ctx<B>,
     m0: &Fl<T, B>,
@@ -510,6 +644,8 @@ pub fn horizon_series<T: Lane, const B: usize>(
     omega: T,
     prep: &HPrep,
 ) -> [Vec<Fl<T, B>>; 5] {
+    let zero_rate = Rate::ZERO;
+    let rate = if ctx.mutate == MUT_RATE_HORIZON { &zero_rate } else { &prep.rate };
     let sig = series_scale(ctx.u0().hi);
     let isig = 1.0 / sig;
     let n = ctx.n;
@@ -532,7 +668,7 @@ pub fn horizon_series<T: Lane, const B: usize>(
     mm[0] = *m0;
     qq[0] = *psi0;
     a2[0] = aa[0] * aa[0];
-    dm[0] = dtau(ctx, &mm[0], omega);
+    dm[0] = dtau(ctx, &mm[0], omega, rate);
     let sone = one.mul_pwr2(sig);
     // the scaled coefficients of w = (1 - u) - c and z = c + (1 - u)
     let wfun = |c: &Vec<Fl<T, B>>, i: usize| -> Fl<T, B> {
@@ -590,7 +726,7 @@ pub fn horizon_series<T: Lane, const B: usize>(
         let c1 = cc[1].mul_pwr2(isig);
         let kappa = ((c1 + one).mulf(kf) + c1 + one).adds(-nh);
         pp[kk] = psolve(ctx, prep, kk, &kappa, &(-r), omega);
-        dp[kk] = dtau(ctx, &pp[kk], omega);
+        dp[kk] = dtau(ctx, &pp[kk], omega, rate);
         q2[kk] = cs(&pp, &pp, kk) + cs(&mm, &mm, kk);
         if kk == ks {
             break;
@@ -614,7 +750,7 @@ pub fn horizon_series<T: Lane, const B: usize>(
             rq = rq + Fl::cst(&s[4][kk]);
         }
         mm[kk + 1] = ((rest * izc0) / ik1).mul_pwr2(sig);
-        dm[kk + 1] = dtau(ctx, &mm[kk + 1], omega);
+        dm[kk + 1] = dtau(ctx, &mm[kk + 1], omega, rate);
         qq[kk + 1] = ((qq[kk].mulf(kf) - rq) / ik1).mul_pwr2(sig);
     }
     for f in [&mut pp, &mut mm, &mut aa, &mut cc, &mut qq] {
@@ -658,20 +794,37 @@ impl<const B: usize> Equations<B> for Sig<'_, B> {
     type Prep = HPrep;
 
     fn try_prepare(&self, zh: &[f64], zl: &[f64]) -> Result<HPrep, String> {
+        self.try_prepare_rate(zh, zl, Rate::ZERO)
+    }
+
+    /// The horizon LUs at the state, and at a nonzero rate the factors of the shifted solves: at a real rate those
+    /// of A + lr, at a complex one the 2M x 2M real form
+    fn try_prepare_rate(&self, zh: &[f64], zl: &[f64], rate: Rate) -> Result<HPrep, String> {
         let ctx = self.0;
         let m = Ctx::<B>::M;
         let o = ctx.off_h();
         let ah = ctx.fld(zh, zl, o + m);
         let psih = ctx.fld(zh, zl, o + 2 * m);
-        Ok(HPrep { lus: horizon_lus(ctx, &ah, &psih, delta_of(zh, zl), true)? })
+        let delta = delta_of(zh, zl);
+        let lus = horizon_lus(ctx, &ah, &psih, delta, true, DD::ZERO)?;
+        let (lus_t, lus2) = if ctx.mutate == MUT_RATE_LU {
+            (Vec::new(), Vec::new())
+        } else if rate.im.hi != 0.0 {
+            (Vec::new(), horizon_lus_c(ctx, &ah, &psih, delta, rate.re, rate.im, true)?)
+        } else if rate.re.hi != 0.0 {
+            (horizon_lus(ctx, &ah, &psih, delta, true, rate.re)?, Vec::new())
+        } else {
+            (Vec::new(), Vec::new())
+        };
+        Ok(HPrep { lus, lus_t, lus2, rate })
     }
 
     fn taylor_coeffs<T: Lane>(&self, x0: f64, g: &[T], w: &mut Work<T, B>) {
         taylor_coeffs(self.0, x0, omega_of(g[0]), w);
     }
 
-    fn left_state<T: Lane>(&self, _x: f64, data: &[Fl<T, B>], g: &[T], _prep: &HPrep) -> State<T, B> {
-        centre_state(self.0, &data[0], &data[1], omega_of(g[0]))
+    fn left_state<T: Lane>(&self, _x: f64, data: &[Fl<T, B>], g: &[T], prep: &HPrep) -> State<T, B> {
+        centre_state(self.0, &data[0], &data[1], omega_of(g[0]), &prep.rate)
     }
 
     fn right_state<T: Lane>(&self, _x: f64, data: &[Fl<T, B>], g: &[T], prep: &HPrep) -> State<T, B> {
@@ -710,6 +863,13 @@ pub fn newton_mixed_in<P: Precision<Native>, const B: usize>(
 ) -> Result<(Vec<Vec<f64>>, Vec<P::Scalar>, multishoot::MixedLu), String> {
     let storage = if staircase { multishoot::Storage::Staircase } else { multishoot::Storage::Dense };
     ctx.shooting_in::<P>().newton_step_mixed::<P, multidouble::native::Fun<4>>(z, storage, par)
+}
+
+/// The mode matrix M(lambda) at the growth rate lambda = lr + i li: the linearization of the residual for
+/// perturbations exp(lambda tau) g(tau, x), g of the background's form, over the block rows and the unknowns before
+/// Delta, with Delta and the phase row held fixed (multishoot's mode_matrix). M(0) is the Jacobian's leading block.
+pub fn mode_matrix<const B: usize>(ctx: &Ctx<B>, zh: &[f64], zl: &[f64], lr: DD, li: DD, par: bool) -> Result<ModeMatrix, String> {
+    ctx.shooting().mode_matrix(&[zh, zl], Rate::new(lr, li), par)
 }
 
 /// Step points of every segment planned from the node states of z (multishoot's plan_segments: each step's last
