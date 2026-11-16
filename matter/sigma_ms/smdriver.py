@@ -341,6 +341,11 @@ def newton_band(s, zh, zl, tol=1e-28, it_max=40, band_tol=1e-6, radius=None, ban
                        t_svd=round(time.time() - ts, 1))
             if k:
                 Uw, Vw = U[:, weak], Vt[weak].T
+                M = getattr(s, "m", 0)
+                if M:
+                    # where the band lives: its share in the centre data q and c0, and its largest Delta component
+                    rec.update(band_q=float(np.sum(Vw[:M] ** 2) / k), band_c0=float(np.sum(Vw[M:2 * M] ** 2) / k),
+                               band_Delta=float(np.max(np.abs(Vw[-1]))))
             del U, Vt
 
         def split(v):
