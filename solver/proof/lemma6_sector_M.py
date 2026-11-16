@@ -52,12 +52,25 @@ def lemma_S_M(M, rp, k, box="0", verbose=True, mutate=None):
     if not a_eff > 0:
         raise ValueError("a_eff <= 0")
     FP.Maj.BOX = False
-    c0 = FPM.run_M(xs_of(M), M, rp, verbose=False, a_in=a_eff, intbound=L6S.intbound_strict, k_in=k, sym=True)
+    # the centre run, at the point and with the same series code (and the same mutation): its vanishing orders feed the
+    # box run, and over a box its identity checks are required too, since wide balls always contain 0 (#865)
+    kw0 = dict(verbose=False, a_in=a_eff, intbound=L6S.intbound_strict, k_in=k, sym=True)
+    try:
+        c0 = FPM.run_M(xs_of(M), M, rp, mutate="series" if mutate == "series" else None, **kw0)
+        centre_ok = bool(c0["low_ok"] and c0["struct_ok"])
+    except ValueError:
+        # a series whose residual does not vanish to order N - 1 leaves no admissible weight exponent: it fails, and
+        # the unmutated orders are taken so that the box run can still be formed and reported
+        centre_ok = False
+        c0 = FPM.run_M(xs_of(M), M, rp, **kw0)
     isbox = bool(box and float(box) > 0)
     FP.Maj.BOX = isbox
     out = FPM.run_M(xs_of(M, box), M, rp, verbose=False, kmins_in=c0["kmins"], N_in=c0["N"], k_in=k, a_in=a_eff,
                     intbound=L6S.intbound_strict, sym=True, mutate="series" if mutate == "series" else None)
     FP.Maj.BOX = False
+    out["centre_ok"] = centre_ok
+    if isbox:
+        out["ok"] = out["ok"] and centre_ok
     out["a_eff"], out["rp"], out["box"] = a_eff, rp, box
     if verbose:
         Rf = float(Rp.upper())

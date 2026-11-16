@@ -127,10 +127,29 @@ def lemma_S(rp=RP, k=KW, box="0", verbose=True, mutate=None):
     FP.Maj.BOX = bool(box and float(box) > 0)
     W0 = 2 * arb.pi() / arb("1.64389375")
     sa, N, P, Q, C, R = FP.setup(A, acb(W0) * wf, rp, 320, N)
-    if mutate == "series":
-        cs = P[1].coeffs()
-        cs[5] = cs[5] * (1 + acb("1e-6"))
-        P[1] = acb_poly(cs)
+    def mutated(P):
+        if mutate == "series":
+            cs = P[1].coeffs()
+            cs[5] = cs[5] * (1 + acb("1e-6"))
+            P[1] = acb_poly(cs)
+        return P
+    P = mutated(P)
+    centre_ok = True
+    if FP.Maj.BOX:
+        # over a box the lower coefficients need only contain 0, which wide balls always do; so the same series code
+        # (with the same mutation) is checked at the centre, where they must vanish to rounding (#865)
+        FP.Maj.BOX = False
+        sc, _, Pc, Qc, Cc, Rc = FP.setup(acb(A_STAR), acb(W0) * acb(WF_STAR), rp, 320, N)
+        Pc = mutated(Pc)
+        FP.Maj.R = Rc
+        Npc, Nvc, Ncc, _ = FP.residual_numerators(sc, Pc, Qc, Cc)
+        kc = iter(kmins)
+        for mu in sc.odd:
+            centre_ok &= FP.tail_maj(Npc[mu], 1, arb(0.5), next(kc))[2]
+            centre_ok &= FP.tail_maj(Nvc[mu], 2, arb(0.5), next(kc))[2]
+        for nu in sc.even:
+            centre_ok &= FP.tail_maj(Ncc[nu], 0, arb(1), next(kc))[2]
+        FP.Maj.BOX = True
     FP.Maj.R = R
     Np, Nv, Nc, V = FP.residual_numerators(sa, P, Q, C)
     res, lows = {}, []
@@ -155,8 +174,9 @@ def lemma_S(rp=RP, k=KW, box="0", verbose=True, mutate=None):
         L, comps, kw, rows = FP.lipschitz_and_forcing(sa, P, Q, C, k, rho, wts)
         lip = weighted_norm(L, wts)
     selfmap = F + lip * rho
-    ok = bool(lip < 1) and bool(selfmap < rho) and all(lows)
+    ok = bool(lip < 1) and bool(selfmap < rho) and all(lows) and bool(centre_ok)
     out = dict(N=N, k=k, kmins=kmins, lip=lip, F=F, rho=rho, selfmap=selfmap, ok=ok, wts=wts, comps=comps, kw=kw,
+               centre_low_ok=bool(centre_ok),
                sa=sa, P=P, Q=Q, C=C, R=R, a_eff=arb(a_eff), rp=rp, box=box)
     if verbose:
         Rpf = float(R.upper())
