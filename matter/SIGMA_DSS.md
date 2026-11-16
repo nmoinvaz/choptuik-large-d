@@ -732,6 +732,36 @@ points within 0.36%, and the same change moves it from 1.1331 to 1.1452. So swee
 lies 0.0009 below Newton's estimates from the walks' ends. This f64 solver at kc 15 gives no prior-free η = 0.3 value
 at D 10.5. The kernel, whose band solver fixed Δ to 10⁻²³ at η = 1 (#845), is the route to one.
 
+**The kernel at η = 0.3, D 10.5: one solution, Δ = 1.1429810 (#913; raw `I913-mac/` 51c08f6b).** `run_eta.py --solver
+band` took the three f64 states there to the kernel at M = 32, each followed by one more Newton step:
+
+| start | sigdss's Δ | iterations | max \|F\| | Δ |
+|---|---|---|---|---|
+| the m03hi walk's end (#897) | 1.1373236 | 2 resolved, 6 band | 1.05×10⁻³¹ | 1.142980986472450205537241 |
+| the m03up walk's end (#907) | 1.1257430 | 4 resolved, 7 band, 1 Newton | 1.17×10⁻³¹ | 1.142980986472450205537250 |
+| §5's march state (m03hi, prior 10⁻⁷) | 1.1391146 | 2 resolved, 6 band | 1.31×10⁻³¹ | 1.142980986472450205537226 |
+
+The three agree in Δ to 2.3×10⁻²³, and to 8.8×10⁻²¹ before the extra step, so on the kernel the two branch ends and
+the march state are one solution. Their states agree to 2×10⁻¹⁹ in c₀ and 4×10⁻¹⁷ elsewhere, except in q (10⁻¹⁵),
+which the band leaves free. The band is as at η = 1: 32 singular values below 10⁻¹⁰ of the largest, 89% of it in q.
+The control, start B of #845 with the same code, reached the chain's value at D 10.475 again, to 2.7×10⁻²³, in 10
+iterations against 18.
+
+The kernel's value lies above every f64 number at this point:
+
+| f64 number | value | the kernel's minus it |
+|---|---|---|
+| §5's march value (m03hi) | 1.1391146 | +3.9×10⁻³ |
+| Newton's estimate from the m03up walk's end (#907) | 1.137754 | +5.2×10⁻³ |
+| the profile's sharp minimum, sweep B (#910) | 1.136895 | +6.1×10⁻³ |
+| the profile's flat minimum, sweep A (#910) | 1.133391 | +9.6×10⁻³ |
+| the m03up march value | 1.112502 | +3.0×10⁻² |
+
+So 1.1429810 is the prior-free value of the kernel's system at M = 32. Only M = 32 was run, so the kernel's own
+resolution error at D 10.5 is not measured. At η = 1 and D 10 the kernel lies 1.4×10⁻³ above sigdss's k_c = 15 walk
+and 2.3×10⁻⁴ above its k_c = 23 walk (the table above), so a gap of 4×10⁻³ to 6×10⁻³ at D 10.5 may be sigdss's τ
+truncation again (*inferred*, not tested at η = 0.3).
+
 ## 12. References
 
 - [HLPTA00] S. Husa, C. Lechner, M. Pürrer, J. Thornburg, P. C. Aichelburg, PRD 62, 104007 (2000),
