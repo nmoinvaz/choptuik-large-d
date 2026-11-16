@@ -26,7 +26,7 @@ use crate::lane::{Dc, Fu, Fun, Lane, F8};
 use crate::linalg::{ld_for, DDLu, StaircaseLu};
 use crate::qv::QV;
 use multidouble::dual::Param;
-use multidouble::field::{cs_at, cs_w_at};
+use multidouble::field::{cs_at, cs_range_at, cs_w_at};
 use multidouble::native::{Dtn, OV};
 use multidouble::precision::{Double, Precision};
 use multidouble::simd::Native;
@@ -358,6 +358,150 @@ pub fn centre_series<T: Lane, const B: usize>(ctx: &Ctx<B>, p1: &Fl<T, B>, c0: &
         }
     }
     [pp, mm, aa, cc]
+}
+
+/// coefficient j of `horner(s, x)` on a jet lane, in the jet's own coefficient arithmetic (Horner's rule acts on a
+/// jet coefficient by coefficient), the other coefficients zero
+fn horner_at<T: Lane, const B: usize>(s: &[Fl<T, B>], x: DD, j: usize) -> Fl<T, B> {
+    let mut out = Fl::<T, B>::zero();
+    if T::VAL_OD {
+        let v: Vec<Fl<OV, B>> = s.iter().map(|f| Fl(std::array::from_fn(|b| f.0[b].coef_od(j)))).collect();
+        let r = horner(&v, x);
+        for b in 0..B {
+            out.0[b].set_coef_od(j, r.0[b]);
+        }
+    } else if T::VAL_QD {
+        let v: Vec<Fl<QV, B>> = s.iter().map(|f| Fl(std::array::from_fn(|b| f.0[b].coef_qd(j)))).collect();
+        let r = horner(&v, x);
+        for b in 0..B {
+            out.0[b].set_coef_qd(j, r.0[b]);
+        }
+    } else {
+        let v: Vec<Fl<DV, B>> = s.iter().map(|f| Fl(std::array::from_fn(|b| f.0[b].coef(j)))).collect();
+        let r = horner(&v, x);
+        for b in 0..B {
+            out.0[b].set_coef(j, r.0[b]);
+        }
+    }
+    out
+}
+
+/// the series `centre_series_at` keeps (`keep`, each of kc + 1 entries), in this order: the four fields p, m, a, c;
+/// q^2, a^2, and a^2 before a_k (the value `centre_series` reads in (a a^2)_k); and the intermediates that enter a
+/// product: (a a^2)_k, the factor of 1/(k + n - 1), (c a^2)_k over i < k, D p_(k-1), D m_(k-1), (c p)_k + (c m)_k,
+/// r_3, r_4, the factors of 1/c_0 and of the inverse determinant for p_k and for m_k (two each); then omega (lane 0)
+/// and 1/c_0
+const C_SERIES: usize = 20;
+
+/// `centre_series` for the coefficient of order j in the jet variable alone, into the series of `keep` (C_*), which
+/// hold their coefficients below j from the calls for the lower orders: each coefficient j formed in the order
+/// `centre_series` forms it, so that it is that coefficient bit for bit. The entries that `centre_series` reads while
+/// they are still zero (a_k in a^2_k and (a q^2)_k; p_k and m_k in q^2_k, (c p)_k and (c m)_k) are zero while those
+/// sums are formed, and the a^2_k it reads before a_k is kept apart (A2P). Jet lanes only, at rate zero, without the
+/// tangents' early end. delta is the global's lane (omega = 2 pi / delta, kept).
+pub fn centre_series_at<T: Lane, const B: usize>(
+    ctx: &Ctx<B>,
+    p1: &Fl<T, B>,
+    c0: &Fl<T, B>,
+    delta: &T,
+    keep: &mut Vec<Vec<Fl<T, B>>>,
+    j: usize,
+) {
+    debug_assert!(T::NJ > 0 && !tail_active::<T, B>(ctx), "centre_series_at: jet lanes");
+    let kmax = ctx.kc;
+    let z = Fl::<T, B>::zero();
+    if keep.len() < C_SERIES {
+        *keep = vec![vec![z; kmax + 1]; C_SERIES];
+    }
+    let [pp, mm, aa, cc, q2, a2, a2p, t3s, au, ccu, dpp, dmm, cpm, r3s, r4s, pu, pv, mu, mv, kept] = &mut keep[..C_SERIES]
+    else {
+        unreachable!("twenty series")
+    };
+    let sig = series_scale(ctx.nodes[0]);
+    let n = dim::<T, B>(ctx);
+    let n1 = n - T::P::one();
+    let nh = n.mul_f(0.5);
+    let one = Fl::<T, B>::splat(DD::ONE);
+    T::div_at(&T::splat(DD::TWO_PI), delta, j, &mut kept[0].0[0]);
+    let omega = kept[0].0[0];
+    aa[0].copy_at(&one, j);
+    cc[0].copy_at(c0, j);
+    pp[1].copy_at(&p1.mul_pwr2(sig), j);
+    let m1 = -pp[1];
+    mm[1].copy_at(&m1, j);
+    aa[0].mul_at(&aa[0], j, &mut a2[0]);
+    one.div_at(&cc[0], j, &mut kept[1]);
+    let (mut s, mut t, mut u) = (z, z, z);
+    for k in 2..=kmax {
+        let kf = k as f64;
+        // p_k, m_k and a_k are zero where centre_series reads them before forming them
+        let (pk, mk, ak) = (std::mem::replace(&mut pp[k], z), std::mem::replace(&mut mm[k], z), std::mem::replace(&mut aa[k], z));
+        cs_at(&mut t, pp, pp, k, j);
+        cs_at(&mut u, mm, mm, k, j);
+        q2[k].copy_at(&(t + u), j);
+        cs_at(&mut a2p[k], aa, aa, k, j);
+        cs_at(&mut s, aa, q2, k, j);
+        std::mem::swap(&mut a2[k], &mut a2p[k]);
+        cs_at(&mut t3s[k], aa, a2, k, j);
+        std::mem::swap(&mut a2[k], &mut a2p[k]);
+        aa[k] = ak;
+        t3s[k].mulp_at(&n1.mul_f(0.5), j, &mut t);
+        au[k].copy_at(&(s.mulf(0.5) - t), j);
+        au[k].mulp_at(&(T::P::one() / (T::P::from_f64(kf) + n1)), j, &mut aa[k]);
+        cs_at(&mut a2[k], aa, aa, k, j);
+        cs_range_at(&mut ccu[k], cc, a2, k, 0, k - 1, j);
+        ccu[k].mulp_at(&(n1 * T::P::from_dd(recip_int(k))), j, &mut cc[k]);
+        dapply_at(ctx, &pp[k - 1], j, &mut dpp[k - 1]);
+        dapply_at(ctx, &mm[k - 1], j, &mut dmm[k - 1]);
+        dpp[k - 1].mul_t_at(&omega, j, &mut t);
+        dmm[k - 1].mul_t_at(&omega, j, &mut u);
+        let (dp, dm) = (t.mul_pwr2(sig), u.mul_pwr2(sig));
+        let (mut s1p, mut s1m, mut xcxp, mut xcxm) = (z, z, z, z);
+        cs_w_at(&mut s1p, cc, pp, k, 1, k - 1, |i| (k - i) as f64, j);
+        cs_w_at(&mut s1m, cc, mm, k, 1, k - 1, |i| (k - i) as f64, j);
+        let xpx = pp[k - 1].mulf(kf - 1.0).mul_pwr2(sig) - s1p;
+        let xmx = mm[k - 1].mulf(kf - 1.0).mul_pwr2(sig) + s1m;
+        cs_w_at(&mut xcxp, cc, pp, k, 1, k, |i| i as f64, j);
+        cs_w_at(&mut xcxm, cc, mm, k, 1, k, |i| i as f64, j);
+        let (mut cp, mut cm) = (z, z);
+        cs_at(&mut cp, cc, pp, k, j);
+        cs_at(&mut cm, cc, mm, k, j);
+        pp[k] = pk;
+        mm[k] = mk;
+        cpm[k].copy_at(&(cp + cm), j);
+        cpm[k].mulp_at(&nh, j, &mut t);
+        r3s[k].copy_at(&((((dp + xpx) - xcxp) + cp) - t), j);
+        r4s[k].copy_at(&((((dm + xmx) + xcxm) - cm) + t), j);
+        let mu11 = T::P::from_f64(1.0 - kf) - nh;
+        let mu12 = -nh;
+        let mu21 = nh;
+        let mu22 = T::P::from_f64(kf - 1.0) + nh;
+        let idel = T::P::one() / (-(T::P::from_f64(kf - 1.0) * (T::P::from_f64(kf - 1.0) + n)));
+        r4s[k].mulp_at(&mu12, j, &mut t);
+        r3s[k].mulp_at(&mu22, j, &mut u);
+        pu[k].copy_at(&(t - u), j);
+        pu[k].mul_at(&kept[1], j, &mut pv[k]);
+        pv[k].mulp_at(&idel, j, &mut pp[k]);
+        r3s[k].mulp_at(&mu21, j, &mut t);
+        r4s[k].mulp_at(&mu11, j, &mut u);
+        mu[k].copy_at(&(t - u), j);
+        mu[k].mul_at(&kept[1], j, &mut mv[k]);
+        mv[k].mulp_at(&idel, j, &mut mm[k]);
+    }
+}
+
+/// `centre_state` for the coefficient of order j alone (`centre_series_at`, then each field's sum at coefficient j)
+pub fn centre_state_at<T: Lane, const B: usize>(
+    ctx: &Ctx<B>,
+    p1: &Fl<T, B>,
+    c0: &Fl<T, B>,
+    delta: &T,
+    keep: &mut Vec<Vec<Fl<T, B>>>,
+    j: usize,
+) -> State<T, B> {
+    centre_series_at(ctx, p1, c0, delta, keep, j);
+    let x = DD::from_f64(ctx.nodes[0]).mul_pwr2(1.0 / series_scale(ctx.nodes[0]));
+    std::array::from_fn(|f| horner_at(&keep[f], x, j))
 }
 
 pub fn centre_state<T: Lane, const B: usize>(ctx: &Ctx<B>, p1: &Fl<T, B>, c0: &Fl<T, B>, omega: T, rate: &Rate) -> State<T, B> {
@@ -1040,6 +1184,227 @@ pub fn horizon_state<T: Lane, const B: usize>(ctx: &Ctx<B>, m0: &Fl<T, B>, a0: &
     [horner(&s[0], u), horner(&s[1], u), horner(&s[2], u), horner(&s[3], u)]
 }
 
+/// `psolve` on a jet lane for the coefficient of order j alone, into f, whose coefficients below j are the solution's
+/// from the calls for the lower orders: the right-hand side of order j, rhs_j - sum_{i=1..j} (omega_i D + kappa_i)
+/// f_{j-i}, and its solve, each as `psolve`'s jet solve forms them (multidouble's `solve_lanes_jet`,
+/// `solve_lanes_jet_refine` and `solve_lanes_jet_refine_od`, order by order), so that f_j is bit for bit theirs.
+#[allow(clippy::too_many_arguments)]
+fn psolve_at<T: Lane, const B: usize>(
+    ctx: &Ctx<B>,
+    prep: &HPrep,
+    kk: usize,
+    kappa: &Fl<T, B>,
+    rhs: &Fl<T, B>,
+    omega: &T,
+    f: &mut Fl<T, B>,
+    j: usize,
+) {
+    let lu = &prep.lus[kk];
+    if T::VAL_OD {
+        let steps = match ctx.mutate {
+            QD_MUT_NOREFINE => 0,
+            QD_MUT_REFINE4 => 8,
+            _ => OD_REFINE,
+        };
+        let mut r = rhs.coef_od(j);
+        for i in 1..=j {
+            r = (r - ctx.d.apply(&f.coef_od(j - i)).mul_t(omega.coef_od(i))) - kappa.coef_od(i) * f.coef_od(j - i);
+        }
+        let (om0, k0) = (omega.coef_od(0), kappa.coef_od(0));
+        let x = lu.solve_lanes_refine(&r, steps, |y| r - (ctx.d.apply(y).mul_t(om0) + k0 * *y));
+        f.set_coef_od(j, &x);
+    } else if T::VAL_QD {
+        let steps = match ctx.mutate {
+            QD_MUT_NOREFINE => 0,
+            QD_MUT_REFINE4 => 4,
+            _ => QD_REFINE,
+        };
+        let mut r = rhs.coef_qd(j);
+        for i in 1..=j {
+            r = (r - ctx.d.apply(&f.coef_qd(j - i)).mul_t(omega.coef_qd(i))) - kappa.coef_qd(i) * f.coef_qd(j - i);
+        }
+        let (om0, k0) = (omega.coef_qd(0), kappa.coef_qd(0));
+        let x = lu.solve_lanes_refine(&r, steps, |y| r - (ctx.d.apply(y).mul_t(om0) + k0 * *y));
+        f.set_coef_qd(j, &x);
+    } else {
+        let mut r = rhs.coef(j);
+        for i in 1..=j {
+            let x = f.coef(j - i);
+            let dfv = ctx.d.apply::<DV>(&x);
+            let od = Fl::<DV, B>([omega.coef(i); B]);
+            r = (r - dfv * od) - kappa.coef(i) * x;
+        }
+        let x = lu.solve_lanes(&r);
+        f.set_coef(j, &x);
+    }
+}
+
+/// the series `horizon_series_at` keeps (`keep`, each of ks + 2 entries), in this order: p, m, a (alpha with
+/// HALPHA_ON), c, a^2, q^2, the tau derivatives of p and m, p + m, v, w, z, a^2 - 1 (HALPHA_ON); p + m before p_k (the
+/// value `horizon_series` reads in r); and the intermediates that enter a product: the factor of n - 1 in c's
+/// recursion, D p_k, D m_k, (c (p + m))_k before p_k, the factor of n - 1 in a's recursion, (c (p + m))_k, and the
+/// factor of 1/z_0 in m's; then omega (lane 0) and 1/z_0
+const H_SERIES: usize = 22;
+
+/// `horizon_series` for the coefficient of order j in the jet variable alone, into the series of `keep`
+/// (H_SERIES), which hold their coefficients below j from the calls for the lower orders: each coefficient j formed in
+/// the order `horizon_series` forms it, so that it is that coefficient bit for bit, the periodic solves by
+/// `psolve_at`. p_k is zero while the sums that `horizon_series` forms before solving for it read it, and the p + m it
+/// reads then is kept apart. Jet lanes at rate zero, without HALPHA_MUT; the series runs to ks (no early end on jets).
+/// delta is the global's lane (omega = 2 pi / delta, kept).
+pub fn horizon_series_at<T: Lane, const B: usize>(
+    ctx: &Ctx<B>,
+    m0: &Fl<T, B>,
+    a0: &Fl<T, B>,
+    delta: &T,
+    prep: &HPrep,
+    keep: &mut Vec<Vec<Fl<T, B>>>,
+    j: usize,
+) {
+    debug_assert!(T::NJ > 0 && prep.rate.is_zero() && ctx.horizon_alpha != HALPHA_MUT, "horizon_series_at: jet lanes");
+    let ks = ctx.ks;
+    let z = Fl::<T, B>::zero();
+    if keep.len() < H_SERIES {
+        *keep = vec![vec![z; ks + 2]; H_SERIES];
+    }
+    let [pp, mm, aa, cc, a2, q2, dp, dm, pm, vv, ww, zc, am1, pmp, ca1, dpp, dmm, cpmr, agu, cpmf, rest, kept] =
+        &mut keep[..H_SERIES]
+    else {
+        unreachable!("twenty-two series")
+    };
+    let sig = series_scale(ctx.u0().hi);
+    let isig = 1.0 / sig;
+    let n1 = dim::<T, B>(ctx) - T::P::one();
+    let nh = dim::<T, B>(ctx).mul_f(0.5);
+    let nh_kappa = if ctx.mutate == JET_MUT_KAPPA { T::P::from_dd(ctx.n.mul_f(0.5)) } else { nh };
+    let one = Fl::<T, B>::splat(DD::ONE);
+    let alpha = ctx.horizon_alpha != 0;
+    T::div_at(&T::splat(DD::TWO_PI), delta, j, &mut kept[0].0[0]);
+    let omega = kept[0].0[0];
+    let a00 = if alpha { *a0 - one } else { *a0 };
+    aa[0].copy_at(&a00, j);
+    cc[0].copy_at(&one, j);
+    mm[0].copy_at(m0, j);
+    aa[0].mul_at(&aa[0], j, &mut a2[0]);
+    dapply_at(ctx, &mm[0], j, &mut dmm[0]);
+    dmm[0].mul_t_at(&omega, j, &mut dm[0]);
+    let sone = one.mul_pwr2(sig);
+    let wfun = |c: &[Fl<T, B>], i: usize| -> Fl<T, B> {
+        match i {
+            0 => one - c[0],
+            1 => -c[1] - sone,
+            _ => -c[i],
+        }
+    };
+    let zfun = |c: &[Fl<T, B>], i: usize| -> Fl<T, B> {
+        match i {
+            0 => c[0] + one,
+            1 => c[1] - sone,
+            _ => c[i],
+        }
+    };
+    ww[0].copy_at(&wfun(cc, 0), j);
+    zc[0].copy_at(&zfun(cc, 0), j);
+    one.div_at(&zc[0], j, &mut kept[1]);
+    let (mut t, mut u, mut s1, mut s2) = (z, z, z, z);
+    for kk in 0..=ks {
+        let kf = kk as f64;
+        let ik1 = recip_int(kk + 1);
+        if alpha {
+            am1[kk].copy_at(&(aa[kk].mulf(2.0) + a2[kk]), j);
+            cs_at(&mut ca1[kk], cc, am1, kk, j);
+        } else {
+            cs_at(&mut t, cc, a2, kk, j);
+            ca1[kk].copy_at(&(t - cc[kk]), j);
+        }
+        ca1[kk].mulp_at(&n1, j, &mut t);
+        let c_next = (cc[kk].mulf(kf) - t).muls(ik1).mul_pwr2(sig);
+        cc[kk + 1].copy_at(&c_next, j);
+        let w_next = wfun(cc, kk + 1) - wfun(cc, kk).mul_pwr2(sig);
+        ww[kk + 1].copy_at(&w_next, j);
+        let v_k = cc[kk + 1].mulf((kk + 1) as f64).mul_pwr2(isig) - cc[kk].mulf(kf);
+        vv[kk].copy_at(&v_k, j);
+        let z_next = zfun(cc, kk + 1) - zfun(cc, kk).mul_pwr2(sig);
+        zc[kk + 1].copy_at(&z_next, j);
+        // p_k is zero where horizon_series reads it before its solve
+        let pk = std::mem::replace(&mut pp[kk], z);
+        pmp[kk].copy_at(&(pp[kk] + mm[kk]), j);
+        let mut wpu = z;
+        cs_w_at(&mut wpu, pp, ww, kk + 1, 0, kk, |i| i as f64, j);
+        let wpu = wpu.mul_pwr2(isig);
+        let tau = if kk >= 1 { -dp[kk - 1].mul_pwr2(sig) } else { z };
+        cs_at(&mut s1, vv, pp, kk, j);
+        cs_at(&mut s2, cc, pp, kk, j);
+        std::mem::swap(&mut pm[kk], &mut pmp[kk]);
+        cs_at(&mut cpmr[kk], cc, pm, kk, j);
+        std::mem::swap(&mut pm[kk], &mut pmp[kk]);
+        cpmr[kk].mulp_at(&nh, j, &mut t);
+        let r = (((tau - wpu) + s1) + s2) - t;
+        pp[kk] = pk;
+        let c1 = cc[1].mul_pwr2(isig);
+        let kappa = ((c1 + one).mulf(kf) + c1 + one).addp(-nh_kappa);
+        psolve_at(ctx, prep, kk, &kappa, &(-r), &omega, &mut pp[kk], j);
+        dapply_at(ctx, &pp[kk], j, &mut dpp[kk]);
+        dpp[kk].mul_t_at(&omega, j, &mut dp[kk]);
+        cs_at(&mut t, pp, pp, kk, j);
+        cs_at(&mut u, mm, mm, kk, j);
+        q2[kk].copy_at(&(t + u), j);
+        if kk == ks {
+            break;
+        }
+        let ag = if alpha {
+            cs_at(&mut t, aa, a2, kk, j);
+            agu[kk].copy_at(&(-((aa[kk].mulf(2.0) + a2[kk].mulf(3.0)) + t)), j);
+            cs_at(&mut u, aa, q2, kk, j);
+            agu[kk].mulp_at(&n1, j, &mut t);
+            (q2[kk] + u) + t
+        } else {
+            cs_at(&mut u, aa, q2, kk, j);
+            cs_at(&mut t, aa, a2, kk, j);
+            agu[kk].copy_at(&(aa[kk] - t), j);
+            agu[kk].mulp_at(&n1, j, &mut t);
+            u + t
+        };
+        let a_next = (aa[kk].mulf(kf) - ag.mulf(0.5)).muls(ik1).mul_pwr2(sig);
+        aa[kk + 1].copy_at(&a_next, j);
+        cs_at(&mut a2[kk + 1], aa, aa, kk + 1, j);
+        let tau = if kk >= 1 { dm[kk] - dm[kk - 1].mul_pwr2(sig) } else { dm[kk] };
+        pm[kk].copy_at(&(pp[kk] + mm[kk]), j);
+        let mut zmu = z;
+        cs_w_at(&mut zmu, mm, zc, kk + 1, 0, kk, |i| i as f64, j);
+        let zmu = zmu.mul_pwr2(isig);
+        cs_at(&mut s1, vv, mm, kk, j);
+        cs_at(&mut s2, cc, mm, kk, j);
+        cs_at(&mut cpmf[kk], cc, pm, kk, j);
+        cpmf[kk].mulp_at(&nh, j, &mut t);
+        rest[kk].copy_at(&((((tau - zmu) - s1) - s2) + t), j);
+        rest[kk].mul_at(&kept[1], j, &mut u);
+        mm[kk + 1].copy_at(&u.muls(ik1).mul_pwr2(sig), j);
+        dapply_at(ctx, &mm[kk + 1], j, &mut dmm[kk + 1]);
+        dmm[kk + 1].mul_t_at(&omega, j, &mut dm[kk + 1]);
+    }
+}
+
+/// `horizon_state` for the coefficient of order j alone (`horizon_series_at`, then each field's sum at coefficient j,
+/// a's with its value a0 at order 0 as `horizon_series` returns it)
+pub fn horizon_state_at<T: Lane, const B: usize>(
+    ctx: &Ctx<B>,
+    m0: &Fl<T, B>,
+    a0: &Fl<T, B>,
+    delta: &T,
+    prep: &HPrep,
+    keep: &mut Vec<Vec<Fl<T, B>>>,
+    j: usize,
+) -> State<T, B> {
+    horizon_series_at(ctx, m0, a0, delta, prep, keep, j);
+    let u = ctx.u0().mul_pwr2(1.0 / series_scale(ctx.u0().hi));
+    let ks = ctx.ks;
+    let saved = std::mem::replace(&mut keep[2][0], *a0);
+    let s = std::array::from_fn(|f| horner_at(&keep[f][..=ks], u, j));
+    keep[2][0] = saved;
+    s
+}
+
 // ---------------------------------------------------------------------------------------------------------------
 // the equations for multishoot
 // ---------------------------------------------------------------------------------------------------------------
@@ -1095,8 +1460,42 @@ impl<const B: usize> Equations<B> for Dss<'_, B> {
         centre_state(self.0, &data[0], &data[1], omega_of(self.0, g[0]), &prep.rate).to_vec()
     }
 
+    /// order k alone on jet lanes at rate zero (`centre_state_at`), every order on any other lane
+    fn left_state_at<T: Lane>(
+        &self,
+        x: f64,
+        data: &[Fl<T, B>],
+        g: &[T],
+        prep: &HPrep,
+        keep: &mut Vec<Vec<Fl<T, B>>>,
+        k: usize,
+    ) -> multishoot::State<T, B> {
+        if T::NJ > 0 && prep.rate.is_zero() && !tail_active::<T, B>(self.0) {
+            centre_state_at(self.0, &data[0], &data[1], &g[0], keep, k).to_vec()
+        } else {
+            self.left_state(x, data, g, prep)
+        }
+    }
+
     fn right_state<T: Lane>(&self, _x: f64, data: &[Fl<T, B>], g: &[T], prep: &HPrep) -> multishoot::State<T, B> {
         horizon_state(self.0, &data[0], &data[1], omega_of(self.0, g[0]), prep).to_vec()
+    }
+
+    /// order k alone on jet lanes at rate zero without HALPHA_MUT (`horizon_state_at`), every order otherwise
+    fn right_state_at<T: Lane>(
+        &self,
+        x: f64,
+        data: &[Fl<T, B>],
+        g: &[T],
+        prep: &HPrep,
+        keep: &mut Vec<Vec<Fl<T, B>>>,
+        k: usize,
+    ) -> multishoot::State<T, B> {
+        if T::NJ > 0 && prep.rate.is_zero() && !tail_active::<T, B>(self.0) && self.0.horizon_alpha != HALPHA_MUT {
+            horizon_state_at(self.0, &data[0], &data[1], &g[0], prep, keep, k).to_vec()
+        } else {
+            self.right_state(x, data, g, prep)
+        }
     }
 }
 
