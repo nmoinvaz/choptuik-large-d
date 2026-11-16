@@ -55,6 +55,18 @@ def tomp(z):
     return [mp.fsum(mp.mpf(float(P[q][i])) for q in range(len(P))) for i in range(len(P[0]))]
 
 
+def to_parts(v, n=8):
+    """an mpf vector as n float64 arrays, each entry split exactly"""
+    out = [np.zeros(len(v)) for _ in range(n)]
+    for i, x in enumerate(v):
+        r = mp.mpf(x)
+        for q in range(n):
+            f = float(r)
+            out[q][i] = f
+            r -= f
+    return out
+
+
 def unit8(L, i):
     e = np.zeros(L)
     e[i] = 1.0
@@ -237,14 +249,19 @@ def cmd_planted(argv):
     sn, so, _ = st.system()
     F0 = tomp(resid(so, st.z8))
     A = adjoint(st, sn, so, mutate=mut)
-    eps = 1e-45
+    if opt.get("diag"):
+        checks(st, sn, so, A, F0)
+        ps = [abs(v) for v in A["psi"]]
+        i = max(range(st.L), key=lambda j: ps[j])
+        say(f"|psi| {float(mp.sqrt(mp.fdot(A['psi'], A['psi']))):.3e}, max |psi_i| {float(ps[i]):.3e} at row {i} of {st.L}")
+    epss = [float(e) for e in opt.get("eps", "1e-45").split(",")]
     rng = np.random.default_rng(7)
     xs = [("e_Delta", unit8(st.L, st.L - 1)[0])]
     for j in range(2):
         x = rng.standard_normal(st.L)
         xs.append((f"random{j}", x / np.linalg.norm(x)))
     ok = True
-    for name, x in xs:
+    for name, x, eps in [(nm + (f" eps {e:g}" if len(epss) > 1 else ""), x, e) for nm, x in xs for e in epss]:
         x8 = [np.ascontiguousarray(x)] + [np.zeros(st.L)] * 7
         zp, zm = o8(od_axpy(eps, *x8, *st.z8)), o8(od_axpy(-eps, *x8, *st.z8))
         Fp, Fm = tomp(resid(so, zp)), tomp(resid(so, zm))
@@ -256,6 +273,11 @@ def cmd_planted(argv):
         ok &= bool(good)
         say(f"planted {name}: eps x_Delta {float(dz[-1]):+.6e}, psi^T dF {float(p):+.6e}, rel {float(rel_):.1e} -> "
             f"{'pass' if good else 'FAIL'}")
+        if opt.get("diag"):
+            y = tomp(o8(sn.olu_solve([np.ascontiguousarray(q) for q in to_parts(dF)], False)))
+            ey = max(abs(a - b) for a, b in zip(y, dz))
+            say(f"    max|dF| {float(max(abs(v) for v in dF)):.3e}; plain solve (J^-1 dF)_Delta {float(y[-1]):+.6e}, "
+                f"max|J^-1 dF - eps x| {float(ey):.3e}")
     say(f"planted{' (mutation ' + mut + ')' if mut else ''}: {'PASS' if ok else 'FAIL'}")
     return 0 if ok else 1
 
