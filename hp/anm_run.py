@@ -82,7 +82,8 @@ hp/jet_by_order_check.py); --jet_by_order 0 forms it by the jets (Solver.residua
 Solver.series_o uses the jets, with a notice.
 --od_tangents N is the octo-double Jacobian's columns per evaluation (Solver.set_octo_tangents, multidouble's Oun<N>):
 2, the default, forms two columns of a block from one evaluation, the same bits as one at about 1/1.4 of the time at
-D 253 (#921, hp/jac_tangents_check.py); 1 turns it off; 4 and 8 are also allowed.
+D 253 (#921, hp/jac_tangents_check.py); 1 turns it off; 4 and 8 are also allowed. A build without it (before #921)
+takes one, with a notice.
 --reseed 1 replaces each prediction's horizon data (m_h, a_h) by those of the regular solution through its last node
 before the residual, the plan and the corrector (hp/reseed.py, notes/RESEED.md: the node integrated toward the horizon,
 the series inverted on the rungs u0/32 .. u0 in the m and a rows); 0, the default, changes nothing. Records carry each
@@ -326,6 +327,19 @@ def horner_o(Zo, a):
     return p
 
 
+def tangent_kw(make, n):
+    """make_solver's octo_tangents = n, or {} with a notice for an hpkernel built before #921, whose make_solver has
+    no octo_tangents: its Jacobian takes one tangent per evaluation, the same bits, so a chain that pulls main before
+    it rebuilds keeps running."""
+    import inspect
+    if "octo_tangents" in inspect.signature(make).parameters:
+        return {"octo_tangents": n}
+    if n != 1:
+        print("  make_solver: this hpkernel has no octo_tangents (built before #921); the octo-double Jacobian takes "
+              "one tangent per evaluation", flush=True)
+    return {}
+
+
 def main():
     args = list(sys.argv[1:])
     opt = dict(state="T75/pin7_D73.2657.npz", kfreeze=3, N=24, eps=1e-16, h_max=2.0, steps=20, D_max=200.0, corrector="dnp",
@@ -490,8 +504,9 @@ def main():
         # recorded as that point's Delta uncertainty
         dcorr = float(delta_correction(spx, Fh, Fl)) if Fc > tol and np.isfinite(Fc) else 0.0
         return ch, cl, Fc, len(hist), bool(Fc <= tol or Fc <= opt["accept_stall"]), dcorr
+    mk_kw = tangent_kw(make_solver, opt["od_tangents"])
     mk = lambda Dx: make_solver(Dx, M, nodes=nodes, kt=kt, kc=kc, ks=ks, threads=opt["threads"], kfreeze=kf,  # noqa: E731
-                                horizon_alpha=opt["horizon_alpha"], octo_tangents=opt["od_tangents"])
+                                horizon_alpha=opt["horizon_alpha"], **mk_kw)
     ks_held = [k for k in range(kf + 1, 14) if k % 2 == 1]
     if opt["held_o"] and not (opt["held_fit"] and opt["corrector"] == "od" and opt["jet_o"]):
         raise SystemExit("--held_o 1 needs --held_fit, --corrector od and --jet_o 1")
