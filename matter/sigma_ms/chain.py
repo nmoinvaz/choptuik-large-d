@@ -9,6 +9,8 @@ the fixed coupling --eta instead (#652), the secant through the two previous D, 
         [--start2 <the state before --start>]
     PYTHONPATH=<site> python3 chain.py --M 32 --start <D 7.0625 state> --start2 <D 7 state> --eta 1 --D_from 7.0625 \
         --D_to 10.475 [--dD 0.0625 --dD_min 0.0078125 --dD_max 0.125] --out <out>      (adaptive steps in D)
+        --D_to below --D_from runs the chain downward in D. --wrap "CMD ..." puts a command before every run, for
+        example a load gate.
 
 The tag of each run is eta<eta>_M<M>. With --resample_from M0, each coupling is instead seeded by that coupling's
 state at M0 (tag eta<eta>_M<M0>), resampled to M. Stops at the first run that does not converge.
@@ -25,12 +27,16 @@ def adaptive(a, prev, Ds_prev):
     """the chain in D from --D_from to --D_to: a failed run halves the step (stop below --dD_min), three runs in a row
     double it (up to --dD_max) when D is a multiple of the doubled step, so the integers are reached"""
     D, dD, ok_run = a.D_from, a.dD, 0
-    while D < a.D_to - 1e-12:
-        Dn = min(D + dD, a.D_to)
+    sgn = 1 if a.D_to >= a.D_from else -1                   # the chain runs downward when --D_to is below --D_from
+    while sgn * (a.D_to - D) > 1e-12:
+        Dn = D + sgn * dD
+        if sgn * (Dn - a.D_to) > 0:
+            Dn = a.D_to
         Ds = "%.10g" % Dn
         tag = f"eta{a.eta}_D{Ds}_M{a.M}"
-        cmd = [sys.executable, "-u", os.path.join(HERE, "run_eta.py"), "--eta", a.eta, "--D", Ds, "--M", str(a.M),
-               "--out", a.out, "--tag", tag, "--threads", str(a.threads)] + a.extra.split()
+        cmd = a.wrap.split() + [sys.executable, "-u", os.path.join(HERE, "run_eta.py"), "--eta", a.eta, "--D", Ds,
+                                "--M", str(a.M), "--out", a.out, "--tag", tag, "--threads", str(a.threads)] \
+            + a.extra.split()
         if len(prev) >= 2 and Ds_prev[-2] not in (None, Ds_prev[-1]):
             cmd += ["--from", prev[-1], "--from2", prev[-2]]
         else:
@@ -69,6 +75,7 @@ def main():
     ap.add_argument("--threads", type=int, default=4)
     ap.add_argument("--resample_from", type=int, default=0)
     ap.add_argument("--extra", default="")
+    ap.add_argument("--wrap", default="", help="adaptive chain in D: a command put before every run (a load gate)")
     a = ap.parse_args()
     prev = [a.start] if a.start else []
     etas_prev = [None] if a.start else []
