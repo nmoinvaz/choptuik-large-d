@@ -53,4 +53,77 @@ to 0.975, L = 4M(K + 1) + 1 = 28161 and 33793 unknowns.
 | 9 | the corrector: deflated Newton then plain steps (dnp), or quad/octo-double Newton with stall acceptance | `correct` in `anm_run.py`, `newton_od` | `lowD_dd.solve_point`: Newton with the f64 Jacobian, a checkpoint per step, `--stop_lam`, `--floor_ratio`, two passes | `solve_point` unchanged, started from the prediction on the fixed plan |
 | 10 | states in eight parts with `D_str` | `save_o`, `load_o` | two parts with their plan (`driver.save`); `--auto_nodes` re-nodes mid-leg | two parts; a re-noding changes the unknowns, so the series is formed again after it |
 
+## 3. In what sense the series is regular
+
+#927 calls the ANM predictor "the system's own series in D, regular by construction". That holds in one sense and
+fails in another, and the difference decides the design.
+
+- **On the base's plan it holds.** The residual on a fixed plan is a composition of Taylor steps between fixed points
+  in x, so F(z, D) is smooth in both, and the jets give the Taylor coefficients of the solution z*(D) of that fixed-plan
+  system. The partial sum P_N then has F(P_N, D) = O(h^(N+1)) on that plan, within the series' radius.
+- **At the sonic line it fails.** Regularity at x = c, where the p equation is singular, is a property of the solution
+  alone. A state off the branch by ε carries a singular part of about ε there, which is why a predictor's own plan has
+  2–4 times the steps of a solution's ([HIGH_M.md](HIGH_M.md) 1.5). A truncated series is such a state, of every order.
+  A model of the freeze, not shown: the planner keeps each step's truncation term at 10⁻³², so near a singular point of
+  strength ε > 10⁻³² its steps shrink geometrically and never pass it. This fits T135's table, where every order froze
+  at the same D and the frozen x converged with the order.
+
+So the ANM predictor can help only where the prediction is never planned. anm_run.py already works that way (row 8).
+`lowD_taylor_leg.py` did not, and the step that froze was its planning of the prediction, not the series. Whether the
+partial sums are finite on fixed plans below D 3.0432, where the planner freezes and #343's Lagrange predictor read
+NaN, is measured in section 4.
+
+## 4. Measurements on the Mac (#927)
+
+PENDING
+
+## 5. The design: the series as a start inside lowD_highM.py
+
+A new driver modelled on anm_run.py would have to rebuild what `lowD_highM.py` already does at low D (the pair of
+resolutions, the move up in M, the re-noding, the halving, the checkpoints, the two passes). The smaller change keeps
+that driver and adds the series as one more start for the working resolution M_w. Python only, no kernel change.
+
+1. **`hp/lowD_dd.py` `solve_point`** returns its `Solver` with the converged state (about 5 lines). Its LU is already
+   at the final z: the function refreshes it there for the sensitivities ("the LU stored in s must be at the final z").
+   So the series needs no Jacobian of its own. In T106 the base's Jacobian was 2493 of the 5500 s that the base and four
+   orders took at M 320.
+2. **`hp/lowD_highM.py`**, `--predictor anm --anm_N 3` (the default stays Lagrange). After the M_w solve at D_l, keep
+   its Solver. At the next target D_t, form z₁..z_N with `anm_lowd.coefficients` on that solve's plan, add the start
+   ("anm", P_N(D_t)) to `starts_w`, and evaluate every start on the same plan, the one the jets used. `plan_prev`
+   plans the last state anew at 10⁻³² instead. Taking the solve's own plan keeps the prediction's O(h^(N+1)) residual
+   (section 3), and the plan check after convergence (`plan_check`) still reports whether it was lean. About 80 lines.
+3. **M_n keeps its lift** of the M_w solution (`lifted`, then two passes). The lift's |F| is the resolution difference
+   (1.3×10⁻⁵ at M 384, D 3.04335, #343), which a series at M_n would not improve, for another N orders' cost.
+4. **The step** stays on lowD_highM.py's grid. The records carry the series' ratios and a_max = (ε |z₁|/|z_N|)^(1/(N−1))
+   as anm_run.py computes it, so that `--dD` can follow them later. A failed point halves the step and reuses the
+   series, as lowD_taylor_leg.py did.
+5. **Checks that can fail:** the smoke test of T107 A at M 48 (D 4 → 3.99, 3.98); the control `--anm_mutate freeze`
+   (`JET_MUT_FREEZE_N`), whose "anm" start must equal the last state, with the same |F|; and `--anm_mutate drop2`,
+   whose start must lose its advantage over the Lagrange start (|F| up by about |z₂| h²).
+
+**Cost.** In code about 85 lines and the three checks, under a day. In compute, per point at M 320 on win2, N = 3
+orders cost about 3 × (335–642 s of jets + 148–234 s of solves) ≈ 30–45 min at 8 threads (T106), against Newton
+calls of 25–40 min each (#343's leg 2). #343's D 3.04335 took 12 calls at M 320 from the Lagrange start (|F|
+6.4×10⁻⁴), and T106's D″ took 5 from the series' start (|F| 9.8×10⁻⁶) on a fatter plan. If that ratio holds, the series
+saves 4–7 calls (2–4 h) per point where both starts converge, a gain of about 2× at M_w and nothing at M_n.
+Forming the series one order at a time, as `Solver.series_o` does in octo-double (a third of the cost at D 253, #914),
+would need a double-double `series` for B 40/48 in `hp/src/python.rs`: a Rust change and a rebuild, not needed for a
+first test.
+
+## 6. The pilot at M 128
+
+PENDING
+
+## 7. What it decides
+
+PENDING
+
+## Files
+
+- `hp/lowD_fixed_plan.py`: a stored series' partial sums and the Lagrange predictor at target D, on given plans,
+  without planning from them; against converged states where they exist; `--mutate drop2`.
+- `hp/anm_lowd_pilot.py`: one step (series, prediction and Newton on the base's plan) checked against lowD_highM.py's
+  state at the target; `--mutate drop2|kappa|dshift`.
+- Raw: `I927-mac/` of the raw-data repository (its README has the commands and the criteria as fixed before each run).
+
 [^cochelin]: B. Cochelin, Comput. Struct. 53, 1181–1192 (1994), as in [ALGORITHM.md](../ALGORITHM.md)'s footnote 2.
