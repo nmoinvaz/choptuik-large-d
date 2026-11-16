@@ -1813,5 +1813,6 @@ Windows's boxes it is:
 | Pi | 0.0042206187 |
 | the stored run | 0.0042207115 |
 
-So it moves by 10⁻⁹ relative between boxes on one machine, and by up to 2.2×10⁻⁵ between machines. That is AGENTS.md's case of a bound assembled from upper bounds along an integration path that can differ between machines. Every value
-is far below 1.
+So it moves by 10⁻⁹ relative between boxes on one machine, and by up to 2.2×10⁻⁵ between machines. That is AGENTS.md's
+case of a bound assembled from upper bounds along an integration path that can differ between machines. Every value is
+far below 1.
