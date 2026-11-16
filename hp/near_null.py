@@ -2,7 +2,8 @@
 """The weakest directions of the chain's Newton system at a stored state, and where in the unknowns they live.
 
     cd hp && python3 near_null.py RAWDIR STATE [--k=4] [--its=16] [--threads=2] [--kfreeze=K] [--keep_plan=0]
-        [--ks=KS] [--json=OUT] [--save_v=OUT.npy] [--planted=1 [--w=1e-20]] [--mutate=scale_p1|sigma|scale_block|ks]
+        [--ks=KS] [--jv=mp|od|both] [--json=OUT] [--save_v=OUT.npy] [--planted=1 [--w=1e-20]]
+        [--mutate=scale_p1|sigma|scale_block|ks]
 
 The pinned system (the state's kfreeze, as anm_run.py solves it) is factored once in octo-double (Solver.newton_o, the
 LU kept), on the state's stored plan, the one anm_run.py's base polish keeps; --keep_plan=0 makes the plan again at
@@ -41,7 +42,8 @@ Check (exit 1 on failure): sigma_1 converged to 1e-3 relative, and ||J v_1|| / s
 refined in octo-double by three more steps of inverse iteration (scaled with od_axpy of multidouble's Python package),
 and J v_1 is the exact octo-double Jacobian (Solver.jacobian_o, forward-mode duals) times v_1 summed in mpmath at 140
 digits: with ||J|| near 1e34 and sigma near 1e-27 the product needs about 77 digits, which a vector in f64 or a central
-difference of the residual cannot give. Control: --mutate=sigma reports sigma_1 1.05 times too large to the
+difference of the residual cannot give. --jv=od forms the same product in octo-double by columns (od_axpy), about 127
+digits and far faster; --jv=both prints the two and their relative difference (#902). Control: --mutate=sigma reports sigma_1 1.05 times too large to the
 comparison, and the check must fail (at D 242.36 the ratio is then 0.952). The check does not see a mis-applied solve
 of a few percent: --mutate=scale_p1, the p1 rows of every right-hand side times 1.05, moves the ratio by 0.6% only
 (1.0058 at D 242.36), because the weakest vector hardly changes; a single row times 1.01 moves it less (#488).
@@ -242,7 +244,9 @@ def main():
     t1 = time.time()
     J = [np.asarray(p) for p in s.jacobian_o(z)]
     rows = None
+    print(f"  the exact Jacobian at z ({time.time() - t1:.0f} s)", flush=True)
     if ks_built != ks0:
+        t1 = time.time()
         # F and J at the state's order beside the run's, on the same plan: the rows that differ, by residual block
         s0 = solver(ks0)
         s0.set_segs(segs)
@@ -263,14 +267,38 @@ def main():
         rows = dict(blocks=rb, ok=bool(ok_rows))
         print(f"  ks {ks} against {ks0} at z: max|dF|, max|dJ| by residual block: "
               + "; ".join(f"{n} {v['F']:.2e}, {v['J']:.2e}" for n, v in rb.items())
-              + f": {'only the horizon block differs' if ok_rows else 'NOT only the horizon block'}", flush=True)
+              + f": {'only the horizon block differs' if ok_rows else 'NOT only the horizon block'} "
+              f"({time.time() - t1:.0f} s)", flush=True)
         del dJ
-    xv = [mp.fsum(mp.mpf(float(x8[q][c])) for q in range(8)) for c in range(L)]
-    nz = [c for c in range(L) if xv[c] != 0]
-    jv = [mp.fsum(mp.fsum(mp.mpf(float(J[q][r, c])) for q in range(8) if J[q][r, c] != 0) * xv[c] for c in nz) for r in range(L)]
-    jn = mp.sqrt(mp.fsum(a * a for a in jv)) / mp.sqrt(mp.fsum(a * a for a in xv))
+    # ||J v_1||: --jv=mp sums J v_1 at 140 digits (the default); od in octo-double by columns with od_axpy, whose
+    # rounding, about 1e-127 of ||J|| ||v_1||, lies far below sigma_1 here; both prints the two and their difference
+    jv_mode = opts.get("jv", "mp")
+    jn = None
+    if jv_mode in ("mp", "both"):
+        t2 = time.time()
+        xv = [mp.fsum(mp.mpf(float(x8[q][c])) for q in range(8)) for c in range(L)]
+        nz = [c for c in range(L) if xv[c] != 0]
+        jv = [mp.fsum(mp.fsum(mp.mpf(float(J[q][r, c])) for q in range(8) if J[q][r, c] != 0) * xv[c] for c in nz)
+              for r in range(L)]
+        jn = float(mp.sqrt(mp.fsum(a * a for a in jv)) / mp.sqrt(mp.fsum(a * a for a in xv)))
+        print(f"  ||J v_1|| = {jn:.6e} from the exact Jacobian at 140 digits ({time.time() - t2:.0f} s)", flush=True)
+    if jv_mode in ("od", "both"):
+        t2 = time.time()
+        JT = [np.ascontiguousarray(np.asarray(p).T) for p in J]
+        acc = [zero] * 8
+        for c in range(L):
+            col = [JT[q][c] for q in range(8)]
+            for q in range(8):
+                a = float(x8[q][c])
+                if a != 0.0:
+                    acc = od_axpy(a, *col, *acc)
+        del JT
+        jvo = np.asarray(acc[0]) + np.asarray(acc[1])
+        jn_od = float(np.linalg.norm(jvo) / np.linalg.norm(np.asarray(x8[0]) + np.asarray(x8[1])))
+        print(f"  ||J v_1|| = {jn_od:.6e} from the exact Jacobian in octo-double ({time.time() - t2:.0f} s)"
+              + (f"; the two differ by {jn_od / jn - 1:+.2e} of it" if jn is not None else ""), flush=True)
+        jn = jn if jn is not None else jn_od
     ratio = float(jn / (sig[0] * (1.05 if opts.get("mutate") == "sigma" else 1.0)))
-    print(f"  ||J v_1|| = {mp.nstr(jn, 6)} from the exact Jacobian at 140 digits ({time.time() - t1:.0f} s)", flush=True)
     blocks = layout(M, len(nodes))
     rec = {"state": st, "D": float(m["D"]), "ks": ks, "ks_state": ks0, "ks_built": ks_built, "mutate": mut,
            "pivots": [out[3], out[4]], "grip": grip, "rows": rows, "vectors": []}
