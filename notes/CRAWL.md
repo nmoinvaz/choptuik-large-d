@@ -685,6 +685,14 @@ ended too (2.1×10⁻¹⁷ apart). The next correction, 1.1×10⁻⁵ in Δ at a
     #874's state, the gain divided by rel is 7.5556×10⁹² at 10⁻⁹⁰ and 10⁻⁹³, #840's quadratic part. At 10⁻⁹⁶ the gain
     is 1.99×10⁻³, below 1, where the step's own floor sets e₁. So #852's prediction holds from a root: contraction
     at 10⁻⁹⁶, none at 10⁻⁹⁰. #852's gain less #875's is 9.3060×10³ at all three rels, the stored truth's cross term.
+  - **Keeping the projected iterate does not remove the crawl (#854; raw `I854-mac/` cc964d9a, code on
+    `wip/m752-854` 394e45b0, not merged).** With `keep_projected`, newton_od under ElimO steps from the projected point.
+    At D 252.6 it ran 7 steps before it was stopped, ending at max|F| 2.9×10⁻¹³ and |Δ − truth| 2.0×10⁻¹². Every
+    full-step trial is A_s1's, since the projection moves only m_h and a_h, and none of the 16 full-step trials of the
+    two runs projected. Its refused shorter trials lie on 5.36×10⁶⁴·move⁴ within 0.3%. So the crawl is the failure of the
+    full step's projection, decided by where the trial's horizon data start, not by the iterate kept. #839's table
+    paired each step's printed pivot, which is the accepted point's, with the step's starting |dz|. With the point's own
+    |dz| the smallest pivot is 0.0102–0.0108 |dz| at all 16 accepted points.
 - **The horizon rows' linear range in Δ shrinks slowly with D (#832; raw `I832-mac/` 9a901063).** It is 1.8×10⁻²⁴ at
   D 200 and 2.3×10⁻²⁷ at 253.7, falling 0.119 per unit D and easing to 0.083 at the top. That is far below the weak
   pivot's 1.44, so this range is not what grows with #805's departure. #832's part 1 (the reduced map with Δ weak and
