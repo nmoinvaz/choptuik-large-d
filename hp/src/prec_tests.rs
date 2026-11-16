@@ -504,6 +504,46 @@ mod od {
         assert!(moved.is_some(), "the control did not change the jet");
     }
 
+    /// the octo-double residual's series one order at a time (multishoot's JetSession over hp's equations, 12-lane jets)
+    /// given zs one by one, against residual_jet on the same vectors: the number of rows, over every order the session
+    /// has formed after each vector, whose eight parts differ
+    fn session_vs_jet(ctx: &Ctx<1>, zs: &[[&[f64]; 8]], par: bool) -> usize {
+        let sh = ctx.shooting_in::<Octo>();
+        let mut s = sh.jet_session::<Octo, 12>();
+        let mut differ = 0;
+        for k in 0..zs.len() {
+            let next = s.next(&zs[k], par).unwrap();
+            let full = residual_jet_o::<12, 1>(ctx, &zs[..=k], par, k + 2).unwrap();
+            let rows = |a: &[OD], b: &[OD]| a.iter().zip(b).filter(|(x, y)| x.x != y.x).count() + a.len().abs_diff(b.len());
+            differ += rows(&next, &full[k + 1]);
+            for (j, fj) in full.iter().enumerate() {
+                differ += rows(&s.order(j).unwrap(), fj);
+            }
+        }
+        differ
+    }
+
+    /// Pass (fixed before the first run): on the synthetic state, the octo-double residual's series formed one order at
+    /// a time (the segments' Taylor steps by model::taylor_coeffs_at), given z_0 and nine planted vectors one by one as
+    /// the series takes them, equals residual_jet's on the same vectors at every order formed after each vector, bit
+    /// for bit, serial and threaded (0 rows differ). Control, which must differ: JET_MUT_AT_KEEP, one intermediate of
+    /// the Taylor recursion formed without being kept.
+    #[test]
+    fn oseries_by_order_bitwise() {
+        let (mut ctx, zh, zl) = synth();
+        let l = ctx.len();
+        let z = parts8(&zh, &zl);
+        let cs: Vec<[Vec<f64>; 8]> = (1..10).map(|k| coef_k(l, k)).collect();
+        let zs: Vec<[&[f64]; 8]> = std::iter::once(view(&z)).chain(cs.iter().map(view)).collect();
+        let (serial, threaded) = (session_vs_jet(&ctx, &zs, false), session_vs_jet(&ctx, &zs, true));
+        ctx.mutate = crate::model::JET_MUT_AT_KEEP;
+        let control = session_vs_jet(&ctx, &zs, true);
+        ctx.mutate = 0;
+        println!("octo-double series by order against residual_jet: {serial} rows differ serial, {threaded} threaded; control {control}");
+        assert_eq!((serial, threaded), (0, 0), "the series by order is not residual_jet's");
+        assert!(control > 0, "the control did not change the series");
+    }
+
     /// Pass (fixed before the first run): the octo-double residual, its 24-order jet on (z_0, v) and its Jacobian, at a
     /// state and direction exact in quad-double, each within 1e-58 of the quad-double ones (qsolve), relative to max(1,
     /// |entries|): the quad-double ones' rounding, about 1e-62, with room for the condition of the blocks
