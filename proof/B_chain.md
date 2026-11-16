@@ -845,6 +845,12 @@ This gives a 40 × 40 matrix (values and derivatives × 4 components × 5 bands)
 v = (I − M/λ)⁻¹1 at λ = 0.755 give Mv ≤ θv with θ = 0.7355 (recomputed in arb from the saved upper bounds,
 `b8m_lc.py --lipcheck=b8m_lc_lip.json`).
 
+Most of the matrix is rounding noise, and it plays no part in θ. 1108 of the 1600 entries are secants of bounds that
+do not depend on the perturbed input: the difference of two 256-bit evaluations of one number, divided by η. They are
+at most 2.3×10⁻⁶⁹. They scale as 1/η, and as 2⁻⁶⁴ when 64 bits are added, and they change with the last digits of the
+inputs, so two runs can differ in them by a quarter. All 1184 entries below 10⁻⁶⁰ together add at most 2.3×10⁻⁶⁰ to a
+weighted row sum, against θ = 0.7355 (raw `I885-mac/`, #885).
+
 So T is a contraction on the complete set 𝒦_h. This gives existence and uniqueness. Holomorphy in p follows because
 the iterates T_p^k(0) are holomorphic in p and converge uniformly. This proves parts 1–2.
 
