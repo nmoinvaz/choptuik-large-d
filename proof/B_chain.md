@@ -585,6 +585,17 @@ python3 b8m_lcj.py --log=b8m_lc_K4.log --json=b8m_lcj.json   # Lemma J, ~1 min (
 python3 b8m_lcj.py --log=b8m_lc_K4.log --mutate=kernel     # caught (also --mutate=Om; b8m_lcj_mutations.log)
 ```
 
+`b8m_scan.py` and `b8m_lc.py` append their records to `--log`, and every reader takes the last matching record.
+
+These commands, with those of B5_inner.md §10 and B8_constants.md §13, were rerun on aarch64 Linux (Raspberry Pi 5,
+python-flint 0.9.0, FLINT 3.6.0; #882, raw `I882-rpi5/` 4168e06f), on the code before #885. All 64 commands end as
+documented: 35 runs exit 0, 27 controls give their verdicts, and the two scans exit 1 as stated. B5's contraction
+0.9519, n₀ = e^89.75, C₇ = 2.8959×10²⁹ and θ = 0.7355 equal the stored values in every printed digit. Of the 42 stored
+logs, 29 are equal in every digit, and 13 differ only in float noise, in ball radii (all 112 balls overlap) or in where
+an iteration stopped. The 8 appended records close as the stored ones do. The stored scan record at L0 = 62 has 70
+iterations against the current code's 67, since it predates that code (#885, #890). The Pi's adjoint, jump and lemma
+LC log pass on the Mac: `b7_ift.py` gives n₀ = e^89.75, the adjoint check passes, and lemma J gives θ = 0.17593.
+
 ## 12. P1L: plan for the light-cone hypotheses
 
 *The plan as written before the work (queue item P1L). Outcome: (a) and (b) are Lemma LC (§13); (c) is Lemma J (§14).
