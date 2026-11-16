@@ -972,6 +972,35 @@ either harmonic's prediction does. The orders up to 410 converge with no rebuild
 about 404. The chain with the order tied to D (`hp/ks_chain.py`, ks = ⌈1.95 Re s⌉ + 10 per leg of 10 in D) started
 from D 152 at 05:22 UTC on 2026-11-16.
 
+## The departure split by the adjoint (#905)
+
+**At D 250.17 none of the settings an adjoint can split accounts for the departure, and the horizon order is the
+setting it is most sensitive to.** `hp/adjoint_split.py` forms ψ = J⁻ᵀe_Δ once at a stored state, in octo-double, and
+takes ψᵀδF for each setting as Δ's first-order response (xfkappa, raw `I905-mac/` 22e34e61).
+
+- **Where it holds.** The plan's share at D 245.14 is +2.3745×10⁻¹⁴, against #696's Newton +2.374×10⁻¹⁴. The held
+  values' share at D 231.13 is +3.9565×10⁻¹¹ (degree 6) and +1.4102×10⁻¹¹ (degree 10), against Newton's +3.95652×10⁻¹¹
+  and +1.41011×10⁻¹¹.
+- **Where it fails: the horizon order.** For order 131 at D 245.14 it predicts −4.92×10⁻¹¹, against Newton's
+  +3.8×10⁻¹³ (#696). One more order lifts the weakest pivot eightfold there, from 1.1×10⁻²⁶ to 8.6×10⁻²⁶, so Δ's
+  response to the order is far outside any linear range.
+- **At D 250.17,** against chain − series = +1.804×10⁻⁹, the shares are:
+
+| setting | share |
+|---|---|
+| plan | −3.04×10⁻¹⁰ |
+| kc | 1.5×10⁻⁹⁵ |
+| kt | −5.5×10⁻²¹ |
+| held values (degree 6, degree 10) | +4.33×10⁻¹⁰, −1.25×10⁻⁹ |
+| sum (degree 6, degree 10) | +1.3×10⁻¹⁰, −1.55×10⁻⁹ |
+
+  The horizon order's linear response, order 131's, is 66 times the departure.
+- **Reading.** The departure is not the plan's, kc's or kt's. The held values could carry part of it. The horizon order
+  is the setting it responds to most, and the one #902 and #903 change. The held-value shares at 250.17 are larger than
+  #805's extrapolation from D 150–231 (about 5×10⁻¹¹ at 253.5, "not amplified"); the split is shown linear only at 231.
+  Each share is a first-order response, not a bound, and degree 6 against 10 is a spread over fit choices. M 48
+  against 32 is not split, since the octo-double kernel is M = 32 only.
+
 ## Proposed README text
 
 Applied to the README by the coordinator on 2026-11-14 (its checks moved to the README with it). Drafted for the
