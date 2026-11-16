@@ -277,8 +277,9 @@ def newton_band(s, zh, zl, tol=1e-28, it_max=40, band_tol=1e-6, radius=None, ban
     span V_w of the right singular vectors with sig_i < band_tol sig_max, and U_w that of their left vectors. The
     residual splits into the band's part, B = |U_w^T F|_2, and the resolved part, S = |F - U_w U_w^T F|_2, and the step
     into d_b = V_w V_w^T dz_N along the band and d_s = dz_N - d_b, the deflated step: the step of the system bordered
-    with U_w and V_w. (On deflation in bordered systems with a nearly singular block: T. F. Chan, SIAM J. Sci. Stat.
-    Comput. 5 (1984) 121-134, known here from its abstract and from citing papers only; notes/LIT_REVIEW.md.)
+    with U_w and V_w. This is a Lyapunov-Schmidt corrector with a line search (H. B. Keller, Lectures on Numerical
+    Methods in Bifurcation Problems, TIFR 79, Springer 1987: Method III and the bordering algorithm of section 4.11;
+    design 2 of notes/LIT_REVIEW.md's addendum of #527).
       - While S > kappa B the state is off the band's valley: the step is d_s alone, halved until S falls.
       - Otherwise the step is d_s + lam d_b, with lam = min(1, radius / |d_b|) at first. The move along the band leaves
         a residual of second order in the resolved rows. It is removed by up to `correctors` chord steps with the same

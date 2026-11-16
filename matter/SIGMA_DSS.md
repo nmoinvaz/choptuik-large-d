@@ -546,6 +546,7 @@ with `PYTHONPATH=<dir>`; the runs need the raw-data repository cloned beside the
 
 ```
 python3 matter/sigma_ms/planted.py --M 8 [--mutate gamma|sigma_h|dropcol|qd_state]
+python3 matter/sigma_ms/planted_band.py [--mutate noband|easy|root|gamma]
 python3 matter/sigma_ms/fit_min.py --selftest
 python3 matter/sigma_ms/run_eta.py --eta inf --M 32 --sigdss ../choptuik-large-d-raw/I623-win/data/sigdss_sol_ref_i623_kc39_etainf_D4.0000_etainf.npy --kc_seed 39 --out OUT --tag etainf_M32
 python3 matter/sigma_ms/chain.py --M 32 --start OUT/sm_etainf_M32.npz --etas 20,14,10,8.5,7,6,5 --out OUT
@@ -571,6 +572,37 @@ whether D 10.475 has a second solution is open; the kernel's Newton has no handl
 python3 matter/sigma_ms/chain.py --M 32 --start <D 7.0625 state> --start2 <D 7 state> --eta 1 --D_from 7.0625 \
     --D_to 10.475 --out OUT
 ```
+
+**A deflated Newton for starts on the band (#845; raw `I845-mac/`).** `smdriver.newton_band` is a Lyapunov–Schmidt
+corrector with a line search: Keller's Method III with his bordering algorithm [K87], design 2 of
+[notes/LIT_REVIEW.md](../notes/LIT_REVIEW.md)'s addendum of #527. Each iteration takes Newton's exact step and an
+f64 SVD of the dense Jacobian. The singular vectors below 10⁻⁶ of the largest singular value span the band. The
+residual splits into the band's part B and the resolved rows' part S, and the step into its band part and the rest:
+
+- While S exceeds a tenth of B, the step is Newton's without its band part, halved until S falls.
+- After that the band part is added, limited in length. Up to four chord steps, each without its band part, remove
+  what the move leaves in the resolved rows. The step is accepted when B has fallen, and halved otherwise.
+
+No term is added to the equations: near the root the steps are Newton's own, and a converged state has max |F| below
+10⁻²⁸ in the chain's system. A step judged by |F| cannot walk the band. A move of length δ along it lowers B by σδ and
+leaves a residual cδ² in the resolved rows, c their curvature. So |F|² falls only while δ³ < 2Bσ/c², a bound that
+shrinks as B falls, and the walk slows without end. A first version, a trust region on |F|₂ in the singular basis,
+stalled on the toy below in this way. sigdss's Levenberg–Marquardt walks (below) judge their steps by |F| too, so this
+may be how they stall (*inferred*).
+
+[`planted_band.py`](sigma_ms/planted_band.py) plants a root in a toy of 12 unknowns whose Jacobian has three singular
+values of 10⁻⁸ to 10⁻¹⁰, with a start from which Newton's step is 2.7×10⁶ long (`data/planted_band.json`):
+
+| check, as planned before the runs | result |
+|---|---|
+| A, `newton_band` converges within 40 iterations, max \|z − z\*\| < 10⁻¹⁸ | 11 iterations, max \|F\| 1.5×10⁻³⁸, max \|z − z\*\| 7.3×10⁻²⁹ |
+| B, `newton_solve` stalls | stops at its first step: no decrease down to λ = 2⁻¹⁰, as starts A and B of #652 did |
+| C, the control with nothing deflated does not converge in 40 iterations | max \|F\| 2.6×10⁻⁴, band coordinates walked from 0.3 to 1.7 |
+| D, the kernel's planted problem (M = 8) through the deflated path | 12 iterations, 8 directions deflated, max \|z − z\*\| 4.8×10⁻³⁰, \|ΔΔ\| 3.6×10⁻³⁰ |
+
+Its four mutations each fail the test: `noband` fails A, `easy` (no band in the toy) fails B and C, `root` fails A,
+and `gamma` (the kernel's recursion mutated) fails D with max |z − z\*| = 6.2×10⁻¹². C's criterion was rewritten after
+its first run, and the script's header says how.
 
 **sigdss seeded from the kernel's chain (#846, #859; winb, raw `I846-winb/` eea37726 and `I859-winb/` e94d22a0).**
 [`sigma_ms/to_sigdss.py`](sigma_ms/to_sigdss.py) maps a kernel state onto sigdss's nodes and harmonics. Its round
@@ -637,3 +669,6 @@ value that §5 quotes, and none near m03up's.
   [arXiv:0708.0513](https://arxiv.org/abs/0708.0513), as summarised in [LITERATURE.md](LITERATURE.md).
 - The ℓ-multiplet agent's solver and results (worktree `agent-a5bec5ffdf3db4330`, work in progress), as described in §3
   and §7.
+- [K87] H. B. Keller, *Lectures on Numerical Methods in Bifurcation Problems*, TIFR Lectures on Mathematics and
+  Physics 79 (Springer, 1987). Method III (Lyapunov–Schmidt) and §4.11 (the bordering algorithm), as read in full for
+  [notes/LIT_REVIEW.md](../notes/LIT_REVIEW.md)'s addendum of #527.
