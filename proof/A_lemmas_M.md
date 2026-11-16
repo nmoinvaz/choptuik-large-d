@@ -489,6 +489,7 @@ git clone https://github.com/nmoinvaz/choptuik-large-d-raw ../../../choptuik-lar
 RAY=../../../choptuik-large-d-raw/I38-macm3/lemma6b1_runs_M5_cert/ray.json
 python3 fixed_point_M_b.py --planted --M=5
 python3 fixed_point_M_b_check.py m1
+python3 fixed_point_M_b_check.py cli                # the plain command line against a 512-bit reading of --x
 python3 fixed_point_M_b_check.py lip --M=5
 python3 fixed_point_M_b.py --M=5 --two=60,105 --compare=$RAY
 python3 fixed_point_M_b.py --M=5 --start --rho0=405 --h=1e-18 --cauchy=1e-3 --compare=$RAY
