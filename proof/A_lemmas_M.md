@@ -505,6 +505,11 @@ python3 fixed_point_M_b_check.py cert2 --box=data/A_M2_box_M5_1e-10.json        
 `I427-mac/run_i427.sh` has all 32 runs of #427 and `I866-mac/run_i866.sh` the 6 of #866, with their exit statuses in
 each folder's `exits.txt`.
 
+The second implementation's runs were reproduced on aarch64 Linux (#901; Raspberry Pi 5, python-flint 0.9.0, FLINT
+3.6.0; raw `I901-rpi5/` 2d3a07b8). All 53 runs gave their required exit status: 27 checks exit 0 and 26 mutations exit
+3. Every printed number and verdict equals the Mac's. That covers the contraction constants of 40 logs, the overlap
+counts of all 53, and the midpoints and radii of the four JSON start sets.
+
 ## 3. Lemma S and lemma 6b₀
 
 Code: `solver/proof/lemma6_sector_M.py`.
