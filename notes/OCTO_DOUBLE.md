@@ -106,7 +106,10 @@ to the build's time on the Mac, and its peak memory did not rise measurably ther
 
 Every criterion holds: d_oq(k) ≤ 30 d_qa(k), the median ratio is 1.00, the double-double control fails by up to 10²⁵,
 the frozen-dimension control by 1.0 against 2×10⁻¹⁸, and the octo-double series' two forms agree to 10⁻⁸⁰–10⁻⁸⁷. Times:
-the octo-double LU 414 s and its 8-order series 676 s, against 36 s and 54 s in quad-double.
+the octo-double Newton step (`newton_o`, which `ojet_check.py` logs as `lu_o`: the exact Jacobian and its LU) 414 s and
+its 8-order series 676 s, against 36 s and 54 s in quad-double. The Jacobian is nearly all of the step: of one 360.4 s
+`newton_o` on 3 threads, the residual took 2.0 s, the Jacobian 355.2 s, the LU of n = 769 3.2 s and the solve 0.04 s,
+and of the quad-double step's 41.2 s, the Jacobian 40.0 s (raw `od-corrector-mac/probe_time.log`).
 
 d_oq equals d_qa to three digits at every order. So nearly all of the two quad-double forms' difference is the default
 form's error, and the alpha form's quad-double series lies much closer to the octo-double one. The chain runs the
