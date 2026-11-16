@@ -54,6 +54,10 @@ Conventions for the Claude sessions (cloud and local) that run computations here
   eight parts, M = 32 only), `anm_run.py --jet_o 1` and `hp/ojet_check.py` (notes/OCTO_DOUBLE.md). Its Python helpers
   `od_add_dd` and `od_axpy` come from multidouble's Python package at the commit `hp/pyproject.toml` names, so import
   them only on the octo-double path: a runner's older build and package run every other path unchanged.
+  - `anm_run.py --jet_o 1` forms its series one order at a time by default (`Solver.series_o`, multishoot's
+    `JetSession` over hp's equations): the same bits as the jets of growing length (`residual_jet_o`) at about a third
+    of their cost at D 253 (#914, `hp/jet_by_order_check.py`). `--jet_by_order 0` uses the jets instead, and a build
+    without `series_o` falls back to them with a notice.
   - The corrector in octo-double is `anm_run.py --corrector od` with `--tol_od` (1e-40; `--qd_it` steps), from
     `hp/octo_corrector.py` (`PinnedO`, `newton_od`, `ElimO`; notes/OCTO_DOUBLE.md 5). Its states have eight parts
     (`save_o`, `load_o`), which `load_q` reads as four. Its checks are `octo_corrector.py planted` and `wall`, with

@@ -1,6 +1,7 @@
-"""The octo-double series formed one order at a time (Solver.series_o, anm_run.py --jet_by_order 1) against the series by
-jets of growing length (Solver.residual_jet_o, coefficients_o's default), on a stored eight-part state in its chain's
-own system and plan (octo_corrector.truth_system), through one octo-double LU at the state (Solver.newton_o).
+"""The octo-double series formed one order at a time (Solver.series_o, coefficients_o's default) against the series by jets
+of growing length (Solver.residual_jet_o: coefficients_o's by_order=False, anm_run.py --jet_by_order 0), on a stored
+eight-part state in its chain's own system and plan (octo_corrector.truth_system), through one octo-double LU at
+the state (Solver.newton_o).
 
     python3 jet_by_order_check.py RAW STATE.npz [--N 24] [--threads 6] [--Np 6] [--out PREFIX]
 
@@ -61,7 +62,7 @@ def main(argv):
     t_lu = time.time() - t0
     print(f"  newton_o at the state: {t_lu:.1f} s", flush=True)
     t0 = time.time()
-    A, _ = coefficients_o(s, zo, N)
+    A, _ = coefficients_o(s, zo, N, by_order=False)
     t_jet = time.time() - t0
     t0 = time.time()
     Bz, _ = coefficients_o(s, zo, N, by_order=True)
@@ -69,7 +70,7 @@ def main(argv):
     d_main = differ(A, Bz)
     print(f"  N {N}: jets {t_jet:.1f} s, by order {t_ord:.1f} s, ratio {t_jet / t_ord:.2f}; orders that differ {d_main}",
           flush=True)
-    Ap, _ = coefficients_o(s, zo, Np, perturb=planted)
+    Ap, _ = coefficients_o(s, zo, Np, perturb=planted, by_order=False)
     Bp, _ = coefficients_o(s, zo, Np, perturb=planted, by_order=True)
     d_hook = differ(Ap, Bp)
     print(f"  Np {Np} with the planted change in both: orders that differ {d_hook}", flush=True)

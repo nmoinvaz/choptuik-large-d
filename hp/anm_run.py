@@ -15,7 +15,7 @@ formulation of hp/pinning.py; their coefficients are zero).
         [--accept_stall 1e-19] [--junk_only 0] [--threads 4] [--w 24] [--trend T75] [--tol_qd 1e-28] [--accept_stall_qd 0]
         [--qd_it 12] [--qd_w 0] [--refine 1] [--probe 0 --probe_c C] [--plan_tol 1e-32] [--fix1 0] [--F_pred_max 0]
         [--horizon_alpha 0] [--fix1_qlu 0] [--jet_q 0] [--reseed 0] [--pred_q 0] [--reseed_q 0] [--save_pred 0]
-        [--jet_o 0] [--jet_by_order 0] [--corrector od --tol_od 1e-40] [--base_adopt 0] [--base_polish 1] [--keep_plan 1] [--held_fit FILE]
+        [--jet_o 0] [--jet_by_order 1] [--corrector od --tol_od 1e-40] [--base_adopt 0] [--base_polish 1] [--keep_plan 1] [--held_fit FILE]
         [--held_o 0] [--reseed_o 0] [--a0 0] [--a_grow 2] [--a_hold 0] [--lam_stall 0] [--save_base 0] [--save_jet 0] [--held_from STATE]
         [--arclength 0 --guard 0.05 --D_min 0 --arc_sign 1 --border 1 --turns_max 2 --arc_dhold 1e-12 --arc_jet FILE]
 
@@ -76,9 +76,10 @@ summed by Horner's rule in octo-double (od_axpy) and rounded to quad-double, whe
 replaces --jet_q, --pred_q and --fix1, and --probe does not apply. Its series errs by about the octo-double unit times
 G^2 where the quad-double one errs by the quad-double unit times G^2, which reaches the chain's tolerance near D
 170-185; hp/ojet_check.py compares the two on stored states.
---jet_by_order 1 forms --jet_o's series one order at a time (Solver.series_o: hp's equations order by order in
-multishoot's JetSession), the same bits as the jets of growing length (hp/jet_by_order_check.py) at a fraction of
-their cost; 0, the default, keeps the jets.
+--jet_o's series is formed one order at a time (Solver.series_o: hp's equations order by order in multishoot's
+JetSession), the same bits as the jets of growing length at about a third of their cost at D 253 (#914,
+hp/jet_by_order_check.py); --jet_by_order 0 forms it by the jets (Solver.residual_jet_o) instead. A build without
+Solver.series_o uses the jets, with a notice.
 --reseed 1 replaces each prediction's horizon data (m_h, a_h) by those of the regular solution through its last node
 before the residual, the plan and the corrector (hp/reseed.py, notes/RESEED.md: the node integrated toward the horizon,
 the series inverted on the rungs u0/32 .. u0 in the m and a rows); 0, the default, changes nothing. Records carry each
@@ -263,14 +264,14 @@ def coefficients_q(s, zq, N, held=None):
     return Zq, norms
 
 
-def coefficients_o(s, zo, N, held=None, perturb=None, by_order=False):
+def coefficients_o(s, zo, N, held=None, perturb=None, by_order=True):
     """z_1..z_N by the octo-double jet (Solver.residual_jet_o) and the octo-double LU of the last Solver.newton_o, which
     must have been taken at zo (eight parts): the list of eight-part z_k (z_0 first) and their norms. held as in
     coefficients, added in octo-double (od_add_dd). No refinement: the LU is the exact Jacobian's in octo-double.
     perturb(k, b): the order-k right-hand side b (eight parts) changed before its solve, for jet_singularity.py's
-    noise injection (#634). by_order: the series formed one order at a time (Solver.series_o), the same bits
-    (prec_tests::oseries_by_order_bitwise, hp/jet_by_order_check.py), its right-hand sides through the same held rows
-    and perturbation."""
+    noise injection (#634). by_order (the default): the series formed one order at a time (Solver.series_o), the same
+    bits (prec_tests::oseries_by_order_bitwise, hp/jet_by_order_check.py, #914), its right-hand sides through the same
+    held rows and perturbation; False forms it by the jets, as does a build without Solver.series_o (with a notice)."""
     # the octo-double helpers are in multidouble's Python package from f092018 on; imported here so that the other
     # paths run on the older packages the runners have
     from multidouble import od_add_dd, od_axpy
@@ -292,6 +293,10 @@ def coefficients_o(s, zo, N, held=None, perturb=None, by_order=False):
             b = list(perturb(k, b))
         return b
 
+    if by_order and not hasattr(s, "series_o"):
+        print("  coefficients_o: this hpkernel has no Solver.series_o (built before #914); the series by the jets",
+              flush=True)
+        by_order = False
     if by_order:
         hook = None
         if held is not None or perturb is not None:
@@ -325,7 +330,7 @@ def main():
                refine=1, probe=0, probe_c=0.0, plan_tol=1e-32, fix1=0, F_pred_max=0.0, horizon_alpha=0, fix1_qlu=0, jet_q=0, reseed=0, pred_q=0, reseed_q=0,
                save_pred=0, jet_o=0, save_dz0=0)
     opt.update(tol_od=1e-40, od_junk=0)  # --corrector od (hp/octo_corrector.py); --od_junk w freezes junk (QUAD_DOUBLE 13.29)
-    opt.update(jet_by_order=0)          # --jet_by_order 1: --jet_o's series one order at a time (Solver.series_o), the same bits
+    opt.update(jet_by_order=1)          # --jet_by_order 0: --jet_o's series by the jets of growing length (the same bits, slower)
     opt.update(base_adopt=0)            # --base_adopt 1: the base's od polish is adopted whatever it did
     opt.update(base_polish=1)           # --base_polish 0: no polish, the stored state is the base
     opt.update(keep_plan=1)             # --keep_plan 0: plan the base again even when its state stores a plan
