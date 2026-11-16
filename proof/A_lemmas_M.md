@@ -480,8 +480,21 @@ derivatives over the hull. On each of the three boxes (h = 10⁻⁹, 10⁻¹⁰,
 - with the second implementation's D²Y_N dropped (`--mutate=w0`) none of the 399 entries overlaps, and with the sign
   mutation nothing overlaps (exit 3).
 
-The chart (T, Γ, the directions and the pair list) is the certificate's own. The box run and its Krawczyk test were not
-repeated from the second implementation's columns, which are 1.7 times wider.
+The chart (T, Γ, the directions and the pair list) is the certificate's own.
+
+The M = 5 box run was then repeated from the second implementation's start data, which are 1.7 times wider in the
+second-derivative columns (`fixed_point_M_b_check.py box2`, which calls `certify_M2.box2_run` with `start_data2`
+replaced; #880, raw `I880-mac/`). It takes the stored run's 2118 + 863 + 101 steps, and its Krawczyk test passes
+(`kraw`):
+
+| Krawczyk test | relative margins, from the second implementation's start data | stored run |
+|---|---|---|
+| the run's whole box, h = 10⁻¹⁰ | 0.996, 0.998, 0.889, 0.889, 0.912, 0.911 | 0.996, 0.998, 0.889, 0.889, 0.912, 0.911 |
+| the sub-box ±(10⁻¹⁸, 10⁻²⁶, 10⁻²⁷) | 1.000, 1.000, 0.986, 0.986, 0.951, 0.951 | 1.000, 1.000, 0.980, 0.980, 0.932, 0.932 |
+
+The two enclosures of the zero overlap in every parameter. From start data with the sign of [G P] flipped the run
+does not reach ξ₁: its arc was stopped by hand after 52550 steps, against 863, with the step size down to 10⁻⁶. So
+that mutation yields no certificate, but its Krawczyk test was never reached.
 
 Reproduce, from `solver/proof/` (python-flint 0.9.0; each command exits 0 only if its check passes, and takes under
 15 s unless a time is given):
@@ -500,6 +513,8 @@ python3 fixed_point_M_b.py --M=5 --start --rho0=405 --h=1e-18 --cauchy=1e-3 --co
 python3 fixed_point_M_b_check.py cert --box=data/A_M_box_M3_1e-10.json                # the M = 3 certificate, 15 s
 python3 fixed_point_M_b_check.py cert --box=data/A_M2_box_M5_1e-10.json --second      # the M = 5 certificate, 3 min
 python3 fixed_point_M_b_check.py cert2 --box=data/A_M2_box_M5_1e-10.json              # its C² start data, 3 min
+python3 fixed_point_M_b_check.py box2 --box=data/A_M2_box_M5_1e-10.json --out=/tmp/b.json   # the box run again, 55 min
+python3 fixed_point_M_b_check.py kraw --box=/tmp/b.json --stored=data/A_M2_box_M5_1e-10.json --sub=1e-18,1e-26,1e-27
 ```
 
 `I427-mac/run_i427.sh` has all 32 runs of #427 and `I866-mac/run_i866.sh` the 6 of #866, with their exit statuses in
