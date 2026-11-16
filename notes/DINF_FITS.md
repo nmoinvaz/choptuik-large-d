@@ -25,3 +25,34 @@ second machine (runs in [`hp/data/local/`](../hp/data/local/), coordinated throu
 61.03. It was stopped there because the steps in D had shrunk to 0.0015–0.005 and further points add little to Δ∞; why
 the steps shrink, and the solver options used (`hp/scan_hp.py --junk_hold`, `--junk_trend`, `--corrector dnp`), are in
 [`solver/notes.md`](../solver/notes.md).
+
+## Two checks without the planted offset (#906)
+
+The quoted Δ∞ is the centre of 48 fits lowered by 0.8×10⁻⁸, the offset a planted-truth test found
+([NUMERICS_REVIEW.md](NUMERICS_REVIEW.md) F3). `hp/dinf_check.py` tries two estimators that need no offset, each on
+planted_dinf.py's plants T1–T5 before the real points, with the criteria frozen on #906 (rpi5, raw `I906-rpi5/`
+75ef066a; the Mac reproduced the real lines).
+
+**Bulirsch–Stoer extrapolation agrees with the quoted value.** It shares no code with the least-squares fits
+[^bst]. It is the median of 54 tables, in h = 1/D and 1/(D − 2), Dmin 10, 15 and 20, with 8 to 16 points evenly
+spaced in 1/D up to 61.03.
+- On the plants it lands within 4.8×10⁻⁹ of the truth, against a bar of 1.5×10⁻⁸. With the wrong exponent
+  (`--mutate omega2`) it misses all five by 0.032.
+- On the real points it gives 1.64389374643, 4.3×10⁻¹⁰ from 1.643893746. The middle half of the tables spans ±1.2×10⁻⁸,
+  an estimator spread.
+
+**Akaike-weighted model averaging does not work on the real points.** It averages the 120 weighted fits of
+dinf_budget.py's grid [^aic].
+- On the plants it passes, within 2.3×10⁻¹⁰ with no offset, with the weight spread over many fits (largest 0.41 to
+  0.55).
+- On the real points one fit takes all the weight: degree 22 in 1/D, D 15–61.03, cleaned, limit 1.643896209. That is
+  2.5×10⁻⁶ from the quoted value. With the noise estimated from the points (5.3×10⁻¹⁶ and 2.2×10⁻¹⁶ instead of the
+  plants' 10⁻¹⁶ and 7×10⁻¹⁶, `--noise est`) the same fit wins, at 1.643896299.
+- The criterion scores the fit inside the data, and on the real points the degree-22 1/D fit has the lowest χ² by 41
+  against the next. Its limit lies at 1/D = 0, where the highest degrees are least constrained. dinf_budget.py's
+  selection uses the two lowest degrees at the noise floor for that reason. So the average is not used, and the
+  offset stays.
+
+[^bst]: R. Bulirsch, J. Stoer, Numer. Math. 6, 413 (1964) *(unverified)*; the form of K. Krebs, M. Pfannmüller,
+    H. Simon, B. Wehefritz, cond-mat/9402019, section 3.
+[^aic]: W. I. Jay, E. T. Neil, Phys. Rev. D 103, 114502 (2021), arXiv:2008.01069.

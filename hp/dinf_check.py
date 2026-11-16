@@ -23,7 +23,11 @@ in planted_dinf.py.
 A method that fails a graded plant is dropped. Then the real value is printed next to the README's
 1.643893746 +- 1.5e-8, and a disagreement is reported, not fixed.
 
-    python3 dinf_check.py bst|aic [--plants T1,T2,...] [--real 0|1] [--mutate MUT]
+    python3 dinf_check.py bst|aic [--plants T1,T2,...] [--real 0|1] [--mutate MUT] [--noise fixed|est]
+
+--noise est (aic) replaces planted_dinf's noise model by the points' own: the rms residual of the degree-22 1/D fit to
+the cleaned points, for D <= 60.1 and above, estimated on each data set (plant or real) through the same path. aic
+prints its three heaviest fits.
 
 --mutate omega2 runs bst with omega = 2 (a wrong exponent for a series in 1/D) and must fail a graded plant;
 --mutate noweight runs aic with equal weights and must fail a graded plant. Exit 0 when every graded plant passes.
@@ -88,8 +92,27 @@ def run_bst(pts, Ds, omega=1):
     return med, (est[-q - 1] - est[q]) / 2, len(est)
 
 
+NOISE = {"lo": mp.mpf("1e-16"), "hi": mp.mpf("7e-16")}
+
+
 def sigma(d):
-    return mp.mpf("1e-16") if d <= 60.1 else mp.mpf("7e-16")
+    return NOISE["lo"] if d <= 60.1 else NOISE["hi"]
+
+
+def estimate_noise(pts, allD):
+    """the points' own noise: the rms residual of the degree-22 1/D fit to the cleaned points on 10 <= D <= 61.03,
+    separately for D <= 60.1 and above (degrees of freedom shared out by the share of points)"""
+    Ds = F.clean(pts, [d for d in allD if 10 <= d <= 61.03], verbose=False)
+    X, a, b = B.design(Ds, "1/D")
+    y = [pts[d] for d in Ds]
+    c = mp.qr_solve(X, mp.matrix(y))[0]
+    r = [mp.fsum(X[i, j] * c[j] for j in range(B.DMAX + 1)) - y[i] for i in range(len(Ds))]
+    dof = (len(Ds) - B.DMAX - 1) / len(Ds)
+    out = {}
+    for key, sel in (("lo", lambda d: d <= 60.1), ("hi", lambda d: d > 60.1)):
+        rr = [r[i] for i, d in enumerate(Ds) if sel(d)]
+        out[key] = mp.sqrt(mp.fsum(x * x for x in rr) / (len(rr) * dof)) if rr else NOISE[key]
+    return out
 
 
 def fits_weighted(pts, Ds, model):
@@ -123,7 +146,8 @@ def run_aic(pts, allD, equal=False):
                 Ds = F.clean(pts, base, verbose=False) if clean else base
                 for model in ("1/D", "1/n"):
                     for deg, (lim, chi2, se) in fits_weighted(pts, Ds, model).items():
-                        rows.append((lim, chi2 + 2 * (deg + 1) + 2 * (len(full) - len(Ds)), se))
+                        rows.append((lim, chi2 + 2 * (deg + 1) + 2 * (len(full) - len(Ds)), se,
+                                     (dmax, dmin, clean, model, deg, chi2, len(Ds))))
     amin = min(r[1] for r in rows)
     w = [mp.mpf(1) if equal else mp.exp(-(r[1] - amin) / 2) for r in rows]
     W = mp.fsum(w)
@@ -131,7 +155,11 @@ def run_aic(pts, allD, equal=False):
     mean = mp.fsum(wi * r[0] for wi, r in zip(w, rows))
     var = mp.fsum(wi * r[2] ** 2 for wi, r in zip(w, rows)) + mp.fsum(wi * r[0] ** 2 for wi, r in zip(w, rows)) - mean ** 2
     top = max(w)
-    return mean, mp.sqrt(max(var, 0)), len(rows), top
+    heavy = sorted(zip(w, rows), key=lambda x: -x[0])[:3]
+    desc = "; ".join(f"w {mp.nstr(wi, 3)}: D {r[3][1]}..{r[3][0]} {'clean' if r[3][2] else 'all'} {r[3][3]} "
+                     f"deg {r[3][4]}, chi2 {mp.nstr(r[3][5], 4)} on {r[3][6]} points, limit {mp.nstr(r[0], 12)}"
+                     for wi, r in heavy)
+    return mean, mp.sqrt(max(var, 0)), len(rows), top, desc
 
 
 def main():
@@ -139,11 +167,12 @@ def main():
     if not args or args[0] not in ("bst", "aic"):
         raise SystemExit(__doc__)
     what = args[0]
-    opt = {"plants": ",".join(P.PLANTS), "real": "1", "mutate": ""}
+    opt = {"plants": ",".join(P.PLANTS), "real": "1", "mutate": "", "noise": "fixed"}
     for i in range(1, len(args), 2):
         opt[args[i].lstrip("-")] = args[i + 1]
     omega = 2 if opt["mutate"] == "omega2" else 1
     equal = opt["mutate"] == "noweight"
+    noise_est = opt.get("noise", "fixed") == "est"
     T0 = time.time()
     real, _ = F.load_points()
     allD = sorted(real)
@@ -162,10 +191,13 @@ def main():
             ok = abs(est - L) <= BAR_BST
             line = f"median of {n} tables off by {mp.nstr(est - L, 3)}, middle-half spread {mp.nstr(spread, 2)}"
         else:
-            est, sd, n, top = run_aic(pts, allD, equal)
+            if noise_est:
+                NOISE.update(estimate_noise(pts, allD))
+            est, sd, n, top, desc = run_aic(pts, allD, equal)
             ok = abs(est - L) <= BAR_AIC and abs(est - L) <= 2 * sd
             line = (f"{n} fits, mean off by {mp.nstr(est - L, 3)}, sd {mp.nstr(sd, 2)} "
-                    f"({mp.nstr((est - L) / sd, 2) if sd else 'inf'} sd), largest weight {mp.nstr(top, 3)}")
+                    f"({mp.nstr((est - L) / sd, 2) if sd else 'inf'} sd), largest weight {mp.nstr(top, 3)}; noise "
+                    f"{mp.nstr(NOISE['lo'], 3)}, {mp.nstr(NOISE['hi'], 3)}\n    heaviest: {desc}")
         tag = "info" if name == "T6" else ("pass" if ok else "FAIL")
         if name != "T6":
             graded += 1
@@ -178,8 +210,11 @@ def main():
             est, spread, n = run_bst(real, Ds, omega)
             print(f"real: median of {n} tables {mp.nstr(est, 12)}, middle-half spread {mp.nstr(spread, 2)}")
         else:
-            est, sd, n, top = run_aic(real, allD, equal)
-            print(f"real: {n} fits, mean {mp.nstr(est, 12)}, sd {mp.nstr(sd, 2)}, largest weight {mp.nstr(top, 3)}")
+            if noise_est:
+                NOISE.update(estimate_noise(real, allD))
+            est, sd, n, top, desc = run_aic(real, allD, equal)
+            print(f"real: {n} fits, mean {mp.nstr(est, 12)}, sd {mp.nstr(sd, 2)}, largest weight {mp.nstr(top, 3)}; "
+                  f"noise {mp.nstr(NOISE['lo'], 3)}, {mp.nstr(NOISE['hi'], 3)}\n    heaviest: {desc}")
         dev = est - README[0]
         print(f"against the README's {mp.nstr(README[0], 10)} +- {mp.nstr(README[1], 2)}: {mp.nstr(dev, 3)} "
               f"({'inside' if abs(dev) <= README[1] else 'OUTSIDE'} the bar) ({time.time() - T0:.0f} s)", flush=True)
