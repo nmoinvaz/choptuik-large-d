@@ -1,5 +1,6 @@
 """Driver of the sigma-model kernel (sigmams, matter/sigma_ms): set-up, seeds from sigdss states, Newton in double- and
-quad-double, continuation in eps = 1/eta, diagnostics.
+quad-double, a deflated Newton for starts on the near-null band (newton_band), continuation in eps = 1/eta,
+diagnostics.
 
 Double-double vectors are (hi, lo) pairs of float64 arrays, quad-double ones four parts. Layout of z (M half-grid
 points, K nodes; multishoot's, NF = 5, NL = 2, NR = 3):
@@ -262,6 +263,142 @@ def newton_solve(s, zh, zl, tol=1e-28, it_max=16, max_halvings=10, verbose=True,
             after_step(zh, zl)
     F = s.residual([zh, zl])
     nF = fnorm(F)
+    hist.append(dict(it=it_max, F=nF, Delta=float(zh[-1]), t=round(time.time() - t0, 1), converged=nF < tol))
+    return zh, zl, hist
+
+
+def newton_band(s, zh, zl, tol=1e-28, it_max=40, band_tol=1e-6, radius=None, band=True, kappa=0.1, correctors=4,
+                max_halvings=30, verbose=True, log=print, after_step=None):
+    """Deflated Newton in double-double, for starts on the near-null band of the Jacobian (SIGMA_DSS.md section 6).
+    There Newton's step dz_N = -J^-1 F has components of 1e2 to 1e4 along the band, far beyond the reach of the linear
+    model, and backtracking on |F| (newton_solve) scales the useful components down with them.
+
+    Each iteration takes the exact step dz_N (Solver.newton) and an f64 SVD of the dense Jacobian. The band is the
+    span V_w of the right singular vectors with sig_i < band_tol sig_max, and U_w that of their left vectors. The
+    residual splits into the band's part, B = |U_w^T F|_2, and the resolved part, S = |F - U_w U_w^T F|_2, and the step
+    into d_b = V_w V_w^T dz_N along the band and d_s = dz_N - d_b, the deflated step: the step of the system bordered
+    with U_w and V_w. (On deflation in bordered systems with a nearly singular block: T. F. Chan, SIAM J. Sci. Stat.
+    Comput. 5 (1984) 121-134, known here from its abstract and from citing papers only; notes/LIT_REVIEW.md.)
+      - While S > kappa B the state is off the band's valley: the step is d_s alone, halved until S falls.
+      - Otherwise the step is d_s + lam d_b, with lam = min(1, radius / |d_b|) at first. The move along the band leaves
+        a residual of second order in the resolved rows. It is removed by up to `correctors` chord steps with the same
+        factors, each less its band part, c - V_w V_w^T c. The trial is accepted when B has fallen and S is back
+        below kappa B, and lam is halved otherwise. So a band step is judged by the band's own residual, on the valley.
+    The radius doubles after a first trial that gains at least 3/4 of the linear model's fall, lam B, and after a
+    halving it is the accepted step's length. Nothing is added to the equations: near the root lam = 1 and the steps
+    are Newton's own, and the result has max |F| < tol. A step no longer than the radius is tried whole first, with
+    no SVD, and taken if it lowers |F|_2.
+
+    band=False is the control: no band is deflated, which leaves Newton with backtracking on |F|_2.
+    radius: the first limit on the length of a band step (default 1% of |z|_2). Returns zh, zl, history."""
+    hist = []
+    t0 = time.time()
+
+    def vec(parts):
+        return sum(np.asarray(p) for p in parts)
+
+    if radius is None:
+        radius = 0.01 * float(np.linalg.norm(vec([zh, zl])))
+    for it in range(it_max):
+        dz, F, pmin, pmax = s.newton([zh, zl])
+        Fv = vec(F)
+        nF, g0 = float(np.max(np.abs(Fv))), float(np.linalg.norm(Fv))
+        rec = dict(it=it, F=nF, F2=g0, Delta=float(zh[-1]), piv=(pmin, pmax), t=round(time.time() - t0, 1))
+        hist.append(rec)
+        if nF < tol:
+            rec["converged"] = True
+            if verbose:
+                log(f"  band {it}: |F| {nF:.2e} converged, Delta {zh[-1]:.15f}")
+            return zh, zl, hist
+        dN = vec(dz)
+        nN = float(np.linalg.norm(dN))
+        if nN <= radius:
+            # a short step: Newton's own, if it lowers |F|_2
+            th, tl = dd_add(zh, zl, dz[0], dz[1])
+            g1 = float(np.linalg.norm(vec(s.residual([th, tl]))))
+            if np.isfinite(g1) and g1 < g0:
+                rec.update(mode="newton", F2_next=g1, dz=nN, lam=1.0, dDelta=float(dN[-1]), t=round(time.time() - t0, 1))
+                if verbose:
+                    log(f"  band {it} (newton): |F| {nF:.2e}, |F|_2 {g0:.2e} -> {g1:.2e}, |dz| {nN:.1e}, dDelta "
+                        f"{dN[-1]:+.2e}, pivots {pmin:.1e}..{pmax:.1e} ({rec['t']} s)")
+                zh, zl = th, tl
+                if after_step is not None:
+                    after_step(zh, zl)
+                continue
+        Uw = Vw = None
+        k = 0
+        if band:
+            ts = time.time()
+            Jh, Jl = s.jacobian(zh, zl)
+            U, sig, Vt = np.linalg.svd(np.asarray(Jh) + np.asarray(Jl))
+            weak = sig < band_tol * sig[0]
+            k = int(weak.sum())
+            rec.update(sig_max=float(sig[0]), sig_low=[float(x) for x in sig[-8:]], k=k, t_svd=round(time.time() - ts, 1))
+            if k:
+                Uw, Vw = U[:, weak], Vt[weak].T
+            del U, Vt
+
+        def split(v):
+            if not k:
+                return float(np.linalg.norm(v)), 0.0
+            r = Uw.T @ v
+            return float(np.linalg.norm(v - Uw @ r)), float(np.linalg.norm(r))
+
+        S0, B0 = split(Fv)
+        if k:
+            db = Vw @ (Vw.T @ dN)
+            nb = float(np.linalg.norm(db))
+            ds = dd_add(dz[0], dz[1], -db, np.zeros_like(db))
+        else:
+            db, nb, ds = None, 0.0, (dz[0], dz[1])
+        mode = "band" if k and S0 <= max(kappa * B0, 0.1 * tol) else "resolved"
+        lam = min(1.0, radius / nb) if mode == "band" else 1.0
+        ok, nc = False, 0
+        for h in range(max_halvings + 1):
+            if mode == "resolved":
+                th, tl = dd_add(zh, zl, ds[0] * lam, ds[1] * lam)
+                S1, B1 = split(vec(s.residual([th, tl])))
+                ok = np.isfinite(S1) and S1 < S0
+            else:
+                th, tl = dd_add(zh, zl, ds[0], ds[1])
+                th, tl = dd_add(th, tl, db * lam, np.zeros_like(db))
+                S1, B1 = split(vec(s.residual([th, tl])))
+                nc = 0
+                while nc < correctors and np.isfinite(S1) and S1 > max(kappa * B1, 0.1 * tol):
+                    c, _ = s.chord([th, tl])
+                    cb = Vw @ (Vw.T @ vec(c))
+                    ch, cl = dd_add(th, tl, c[0], c[1])
+                    ch, cl = dd_add(ch, cl, -cb, np.zeros_like(cb))
+                    S2, B2 = split(vec(s.residual([ch, cl])))
+                    if not (np.isfinite(S2) and S2 < S1):
+                        break
+                    th, tl, S1, B1, nc = ch, cl, S2, B2, nc + 1
+                ok = np.isfinite(S1) and B1 < (1 - 1e-4 * lam) * B0 and S1 <= max(kappa * B1, S0, 0.1 * tol)
+            if ok:
+                break
+            lam *= 0.5
+        dzt = vec([th, tl]) - vec([zh, zl])
+        rec.update(mode=mode, S=S0, B=B0, S_next=S1, B_next=B1, lam=lam, halvings=h, correctors=nc, dz_newton=nN,
+                   dz_band=nb, dz=float(np.linalg.norm(dzt)), radius=radius, dDelta=float(dzt[-1]),
+                   t=round(time.time() - t0, 1))
+        if verbose:
+            low = ", ".join(f"{x:.1e}" for x in rec.get("sig_low", [])[-4:])
+            log(f"  band {it} ({mode}, {k} deflated, lowest sig {low}): |F| {nF:.2e}, S {S0:.2e} -> {S1:.2e}, B {B0:.2e} -> "
+                f"{B1:.2e}, lam {lam:.3g}, {nc} correctors, |dz| {rec['dz']:.1e} (band step {nb:.1e}, Newton's {nN:.1e}), "
+                f"dDelta {rec['dDelta']:+.2e}, pivots {pmin:.1e}..{pmax:.1e} ({rec['t']} s)")
+        if not ok:
+            rec["failed"] = "line search"
+            return zh, zl, hist
+        zh, zl = th, tl
+        if mode == "band":
+            if h == 0 and lam < 1.0 and B0 - B1 > 0.75 * lam * B0:
+                radius *= 2
+            elif h > 0:
+                radius = lam * nb
+        if after_step is not None:
+            after_step(zh, zl)
+    Fv = vec(s.residual([zh, zl]))
+    nF = float(np.max(np.abs(Fv)))
     hist.append(dict(it=it_max, F=nF, Delta=float(zh[-1]), t=round(time.time() - t0, 1), converged=nF < tol))
     return zh, zl, hist
 

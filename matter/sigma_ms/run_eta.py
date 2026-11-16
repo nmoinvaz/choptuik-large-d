@@ -13,6 +13,9 @@ Seeds (one of):
     PYTHONPATH=<site> python3 run_eta.py --eta 7 --M 32 --sigdss <raw>/I631-win/data/...kc39_eta7....npy --kc_seed 39 \
         --out <raw>/I639-mac/data --tag eta7_M32 [--qd] [--threads 4]
 
+--solver band uses the deflated Newton smdriver.newton_band in place of newton_solve, for a start on the near-null
+band of the Jacobian (SIGMA_DSS.md section 6; --band_tol, --radius).
+
 Writes <out>/sm_<tag>.npz (the state, double-double, and quad-double parts with --qd) and appends a record to
 <out>/sm_records.jsonl: Delta, max |F|, Newton history, Taylor steps, the constraint diagnostic, the series tails, the
 centre datum's top harmonics, timings. Exit status 1 when Newton does not reach --tol.
@@ -62,6 +65,10 @@ def main():
     ap.add_argument("--jac_final", default="dd", help="the Jacobian of the Newton on the final plan")
     ap.add_argument("--chord", type=int, default=0)
     ap.add_argument("--replan", type=int, default=1, help="re-plan the Taylor steps after every Newton step")
+    ap.add_argument("--solver", default="newton", choices=["newton", "band"],
+                    help="newton (newton_solve) or band (newton_band: the near-null band deflated)")
+    ap.add_argument("--band_tol", type=float, default=1e-6, help="band: singular values below this times the largest")
+    ap.add_argument("--radius", type=float, default=0.0, help="band: the first limit on a band step (0: 1%% of |z|)")
     ap.add_argument("--qd", action="store_true")
     ap.add_argument("--qd_jac", default="mixed", help="dd (exact quad-double Jacobian), mixed or chord")
     ap.add_argument("--qd_it", type=int, default=8)
@@ -126,19 +133,26 @@ def main():
         replans.append(sum(len(g) - 1 for g in s.get_segs()))
         log(f"    re-planned: {replans[-1]} steps")
     after = replan if a.replan else None
-    zh, zl, h1 = sd.newton_solve(s, zh, zl, tol=a.tol, it_max=a.it, log=log, jac=a.jac, chord=a.chord, after_step=after)
+
+    def solve(zh_, zl_, jac, after_step=None):
+        if a.solver == "band":
+            return sd.newton_band(s, zh_, zl_, tol=a.tol, it_max=a.it, band_tol=a.band_tol, radius=a.radius or None,
+                                  log=log, after_step=after_step)
+        return sd.newton_solve(s, zh_, zl_, tol=a.tol, it_max=a.it, log=log, jac=jac, chord=a.chord,
+                               after_step=after_step)
+    zh, zl, h1 = solve(zh, zl, a.jac, after)
     # re-plan from the solution and converge on that plan (the plan depends on the state; hp plans once per point)
     tp = time.time()
     s.set_segs(s.plan(zh, zl, a.plan_tol, a.hmax))
     steps1 = [len(g) - 1 for g in s.get_segs()]
     F2 = sd.fnorm(s.residual([zh, zl]))
     log(f"plan from the solution: {sum(steps1)} steps ({time.time() - tp:.1f} s); |F| {F2:.2e}")
-    zh, zl, h2 = sd.newton_solve(s, zh, zl, tol=a.tol, it_max=a.it, log=log, jac=a.jac_final, chord=a.chord)
+    zh, zl, h2 = solve(zh, zl, a.jac_final)
     conv = bool(h2 and h2[-1].get("converged"))
     Fend = h2[-1]["F"] if h2 else float("nan")
     Delta = mp.mpf(zh[-1]) + mp.mpf(zl[-1])
     rec = dict(tag=a.tag, eta=a.eta, D=a.D, M=a.M, K=K, nodes=nodes, kt=a.kt, kc=a.kc, ks=a.ks, plan_tol=a.plan_tol,
-               hmax=a.hmax, seed=seed, F_seed=F0, steps_seed=sum(steps0), replans=replans, jac=a.jac,
+               hmax=a.hmax, seed=seed, F_seed=F0, steps_seed=sum(steps0), replans=replans, jac=a.jac, solver=a.solver,
                jac_final=a.jac_final, chord=a.chord, steps=sum(steps1), steps_seg=steps1, converged=conv, F=Fend,
                Delta=mp.nstr(Delta, 34), Delta_hi=float(zh[-1]), Delta_lo=float(zl[-1]),
                newton=[dict((k, v) for k, v in h.items() if k != "piv") for h in h1 + h2],
