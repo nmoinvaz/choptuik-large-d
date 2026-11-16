@@ -265,8 +265,11 @@ the nodes 0.02 ≤ x ≤ 0.9 and the light cone.)
   slopes −0.03 per unit D against −0.13 and −0.09 between D = 9 and 10; at η = 0.3, D = 11 gives λ = 3.1127: λ(D) has a
   minimum near D = 10.5, i.e. γ(D) a maximum of about 0.326, and γ(11) = 0.3213. At η = 0.3 the D = 10.5 and 11 values
   survive k_c = 23, a ten times weaker prior and a longer horizon series to 10⁻⁴ (§6). At η = 1 the D = 10.5 value
-  rests on the 1.0340 state at D = 10.475, which the kernel moves to 1.0201048 (§11, #845). Δ keeps decreasing smoothly at η = 0.3 (1.1391, 1.1300, 1.1175
-  at D = 10.5, 10.75, 11).
+  rests on the 1.0340 state at D = 10.475, which the kernel moves to 1.0201048 (§11, #845). Δ keeps decreasing
+  smoothly at η = 0.3 (1.1391, 1.1300, 1.1175 at D = 10.5, 10.75, 11). The kernel, without the prior, puts Δ at
+  D = 10.5 and η = 0.3 at 1.1429810, 3.9×10⁻³ above sigdss's 1.1391, the same at M = 24, 32 and 48 to 10⁻²¹ (§11,
+  #913, #915). So sigdss's Δ there is off by more than the prior moves it. The growth rates λ above are sigdss's and
+  have no kernel check yet.
 
 ## 6. Checks along the branch
 
