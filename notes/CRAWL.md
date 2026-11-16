@@ -674,6 +674,12 @@ ended too (2.1×10⁻¹⁷ apart). The next correction, 1.1×10⁻⁵ in Δ at a
     1.56×10⁻⁹⁹ of |z_h| and max|F| = 5.4×10⁻⁹⁴, within the bars of 10⁻⁹⁷ and 10⁻⁹², which the old truth fails. The read
     rebuilds the held offset from the stored state, which moved by 1.8×10⁻¹⁰⁰, so the step differs from #852's path at
     the floor (#884). #857 and #875 run from it.
+  - **From the re-converged truth, Newton returns a pure Δ move exactly (#857; raw `I857-mac/` 949680c7,
+    `linear.py`).** At D 240.1244 with Δ moved by rel 10⁻⁸³ to 10⁻⁸⁵, below the quadratic term's reach, the return is
+    linear, and its coefficient L is the move itself: L − 1 = 0 as a double at 10⁻⁸⁵, from #874's state. So the
+    Jacobian's Δ column is right. From the stored truth, 3.2×10⁻⁵⁷ of |z_h| off its root, L = 1.0832, and the excess
+    8.324447×10⁻² is the same at all three rels. That is the cross term −J⁻¹F''(·, d₀) of a start off the root, as
+    #852 found for the horizon data.
 - **The horizon rows' linear range in Δ shrinks slowly with D (#832; raw `I832-mac/` 9a901063).** It is 1.8×10⁻²⁴ at
   D 200 and 2.3×10⁻²⁷ at 253.7, falling 0.119 per unit D and easing to 0.083 at the top. That is far below the weak
   pivot's 1.44, so this range is not what grows with #805's departure. #832's part 1 (the reduced map with Δ weak and
