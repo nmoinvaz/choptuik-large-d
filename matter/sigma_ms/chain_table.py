@@ -6,16 +6,21 @@ into a csv and a markdown table.
     python3 matter/sigma_ms/chain_table.py ../choptuik-large-d-raw [--folder I916-mac] [--eta 0.3] \
         [--sigdss solver/matter/data/sigdss_m03up.jsonl,solver/matter/data/sigdss_m03hi.jsonl] \
         [--ref I913-mac] [--csv matter/sigma_ms/data/delta_D_eta0.3.csv] [--mutate closure|kink]
+    python3 matter/sigma_ms/chain_table.py ../choptuik-large-d-raw --folder I917-mac --eta 1 --also I652-mac \
+        --Dmin 10 --D0 10.475 --ref I652-mac,I845-mac,I913-mac \
+        --sigdss solver/matter/data/sigdss_m1up.jsonl,solver/matter/data/sigdss_m1hi.jsonl \
+        --csv matter/sigma_ms/data/delta_D_eta1.csv                                  (#917)
 
 Inputs: <folder>/out/sm_records.jsonl (run_eta.py's records of the chain: at each D the converged record of this
-coupling with the smallest max |F|), sigdss's march records (D, Delta, reg: its smoothness prior), and for the
-closure the records of --ref at the chain's starting D.
+coupling with the smallest max |F|), with the records of the --also folders from --Dmin on (an earlier part of the
+chain), sigdss's march records (D, Delta, reg: its smoothness prior), and for the closure the records of the --ref
+folders at the chain's starting D.
 
 Checks, each printed with its verdict; the exit status is 1 when one fails:
   (1) every D of the chain has a converged record with max |F| <= 1e-28;
-  (2) closure: the chain's own record at the starting D, solved again from the chain's neighbours, agrees with every
+  (2) closure: the record of --folder at the starting D, solved again from the chain's neighbours, agrees with every
       converged record of --ref there to 1e-20 in Delta;
-  (3) Delta(D) is smooth: on the grid of equal steps its third differences keep one sign, its fourth differences
+  (3) Delta(D) is smooth: on the multiples of 0.0625 its third differences keep one sign, its fourth differences
       keep one sign, and the largest fourth difference is below 1% of the largest second difference. A jump of
       2e-8 or more at one point, to another solution or by a wrong digit, fails this.
       (Its first version asked that neighbouring second differences change by less than a tenth. That fails where
@@ -59,12 +64,20 @@ def main():
     ap.add_argument("--folder", default="I916-mac")
     ap.add_argument("--eta", default="0.3")
     ap.add_argument("--sigdss", default="solver/matter/data/sigdss_m03up.jsonl,solver/matter/data/sigdss_m03hi.jsonl")
-    ap.add_argument("--ref", default="I913-mac")
+    ap.add_argument("--ref", default="I913-mac", help="comma-separated folders")
+    ap.add_argument("--also", default="", help="comma-separated folders with an earlier part of the chain")
+    ap.add_argument("--Dmin", type=float, default=0.0, help="the table starts here")
     ap.add_argument("--D0", type=float, default=10.5, help="the chain's starting D, where the closure is checked")
     ap.add_argument("--csv", default="")
     ap.add_argument("--mutate", default="", choices=["", "closure", "kink"])
     a = ap.parse_args()
-    ch = best(os.path.join(a.raw, a.folder, "out", "sm_records.jsonl"), a.eta)
+    own = best(os.path.join(a.raw, a.folder, "out", "sm_records.jsonl"), a.eta)
+    ch = dict(own)
+    for fo in [x for x in a.also.split(",") if x]:
+        for D, r in best(os.path.join(a.raw, fo, "out", "sm_records.jsonl"), a.eta).items():
+            if D not in ch or r["F"] < ch[D]["F"]:
+                ch[D] = r
+    ch = {D: r for D, r in ch.items() if D >= a.Dmin - 1e-12}
     Ds = sorted(ch)
     sig = {}
     for f in a.sigdss.split(","):
@@ -81,19 +94,21 @@ def main():
     print(f"(1) {len(Ds)} values of D from {Ds[0]:g} to {Ds[-1]:g}, each converged; largest max |F| {worst:.2e} "
           f"(<= 1e-28): {'PASS' if v1 else 'FAIL'}")
     # (2)
-    d0 = delta(ch[a.D0]) + (mp.mpf("1e-19") if a.mutate == "closure" else 0)
-    refs = best(os.path.join(a.raw, a.ref, "out", "sm_records.jsonl"), a.eta)
-    allref = [json.loads(line) for line in open(os.path.join(a.raw, a.ref, "out", "sm_records.jsonl"))]
+    d0 = delta(own[a.D0]) + (mp.mpf("1e-19") if a.mutate == "closure" else 0)
+    allref = []
+    for fo in a.ref.split(","):
+        allref += [json.loads(line) for line in open(os.path.join(a.raw, fo, "out", "sm_records.jsonl"))]
     allref = [r for r in allref if str(r["eta"]) == a.eta and float(r["D"]) == a.D0 and r["converged"]
               and r["F"] <= 1e-30]
     gap = max(abs(d0 - delta(r)) for r in allref) if allref else mp.inf
-    v2 = bool(allref) and gap <= mp.mpf("1e-20") and a.D0 in refs
+    v2 = bool(allref) and gap <= mp.mpf("1e-20")
     ok &= v2
     print(f"(2) closure at D {a.D0:g}: the chain's {mp.nstr(d0, 25)} against {len(allref)} records of {a.ref} with "
           f"max |F| <= 1e-30: largest difference {mp.nstr(gap, 3)} (<= 1e-20): {'PASS' if v2 else 'FAIL'}")
-    # (3) on the points of the equal-step grid only
+    # (3) on the multiples of 0.0625 only, which must follow one another without a gap
     step = min(b - c for b, c in zip(Ds[1:], Ds))
-    grid = [D for D in Ds if abs((D - Ds[0]) / 0.0625 - round((D - Ds[0]) / 0.0625)) < 1e-9]
+    grid = [D for D in Ds if abs(D / 0.0625 - round(D / 0.0625)) < 1e-9]
+    assert all(abs(q - p - 0.0625) < 1e-9 for p, q in zip(grid, grid[1:])), "a multiple of 0.0625 is missing"
     vals = [delta(ch[D]) for D in grid]
     if a.mutate == "kink":
         vals[len(vals) // 2] += mp.mpf("1e-7")
