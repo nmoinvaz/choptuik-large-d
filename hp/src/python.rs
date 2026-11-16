@@ -78,6 +78,30 @@ trait Api: Send + Sync {
     /// model::residual_jet_in at `Octo`: residual_jet in octo-double, each z_k and each output coefficient in eight parts;
     /// lanes: the jet's coefficient count, 0 for the smallest of OJET_LANES that holds nout and zs
     fn residual_jet_o(&mut self, zs: &[[&[f64]; 8]], nout: usize, lanes: usize, mutate: u8) -> Result<Vec<O8>, String>;
+    /// the octo-double series one order at a time (multishoot's JetSession over hp's equations at `Octo`): from z_0,
+    /// each order k = 1..n's right-hand side -F_k (eight parts) handed to solve(k, b), which returns z_k; z_1..z_n
+    fn series_o(&mut self, z0: [&[f64]; 8], n: usize, solve: &mut (dyn FnMut(usize, O8) -> Result<O8, String> + Send), mutate: u8) -> Result<Vec<O8>, String>;
+}
+
+/// `Api::series_o` on jets of N coefficients
+fn series_o_in<const N: usize, const B: usize>(
+    c: &Ctx<B>,
+    z0: [&[f64]; 8],
+    n: usize,
+    solve: &mut (dyn FnMut(usize, O8) -> Result<O8, String> + Send),
+) -> Result<Vec<O8>, String> {
+    let sh = c.shooting_in::<Octo>();
+    let mut s = sh.jet_session::<Octo, N>();
+    let mut z: O8 = z0.map(|p| p.to_vec());
+    let mut out = Vec::with_capacity(n);
+    for k in 1..=n {
+        let zr: Vec<&[f64]> = z.iter().map(|p| &p[..]).collect();
+        let f = s.next(&zr, true)?;
+        let b: Vec<OD> = f.iter().map(|&x| -x).collect();
+        z = solve(k, od_parts(&b))?;
+        out.push(z.clone());
+    }
+    Ok(out)
 }
 
 /// a quad-double vector as its four parts' arrays
@@ -340,6 +364,22 @@ impl<const B: usize> Api for Ctx<B> {
             28 => model::residual_jet_in::<Octo, 28, _>(c, &zs, true, nout).map(parts),
             32 => model::residual_jet_in::<Octo, 32, _>(c, &zs, true, nout).map(parts),
             _ => Err(format!("nout and the coefficient vectors must be at most 32, not {need}")),
+        })
+    }
+
+    fn series_o(&mut self, z0: [&[f64]; 8], n: usize, solve: &mut (dyn FnMut(usize, O8) -> Result<O8, String> + Send), mutate: u8) -> Result<Vec<O8>, String> {
+        // the session's jets hold the orders 0..=n
+        let Some(lanes) = OJET_LANES.iter().copied().find(|&l| l > n) else {
+            return Err(format!("n must be at most {}, not {n}", OJET_LANES[OJET_LANES.len() - 1] - 1));
+        };
+        od_sizes!(self, mutate, |c| match lanes {
+            8 => series_o_in::<8, _>(c, z0, n, solve),
+            12 => series_o_in::<12, _>(c, z0, n, solve),
+            16 => series_o_in::<16, _>(c, z0, n, solve),
+            20 => series_o_in::<20, _>(c, z0, n, solve),
+            24 => series_o_in::<24, _>(c, z0, n, solve),
+            28 => series_o_in::<28, _>(c, z0, n, solve),
+            _ => series_o_in::<32, _>(c, z0, n, solve),
         })
     }
 }
@@ -1061,6 +1101,43 @@ impl Solver {
         let (fh, fl) = f_dd::<Octo>(&st.f);
         self.olu = Some(st.lu);
         Ok((arr8(py, st.dz.try_into().expect("eight parts")), arr(py, fh), arr(py, fl), pmin, pmax))
+    }
+
+    /// z_1..z_n of the octo-double series formed one order at a time (Api::series_o: multishoot's JetSession over hp's
+    /// equations, model::taylor_coeffs_at, centre_state_at and horizon_state_at), bit for bit hp/anm_run.py
+    /// coefficients_o's series by residual_jet_o: each order's right-hand side b = -F_k (eight parts) goes to rhs(k, b)
+    /// when given, which returns the b to solve (the held rows, a perturbation), and is solved by the octo-double LU of
+    /// the last newton_o (as olu_solve), which must have been taken at z0. Returns the eight-part tuples z_1..z_n.
+    /// mutate: Ctx::mutate for the call (model::JET_MUT_AT_KEEP, the control). M = 32 only.
+    #[pyo3(signature = (z0, n, rhs=None, mutate=0))]
+    fn series_o<'py>(
+        &mut self,
+        py: Python<'py>,
+        z0: Vec<PyReadonlyArray1<'py, f64>>,
+        n: usize,
+        rhs: Option<Bound<'py, PyAny>>,
+        mutate: u8,
+    ) -> PyResult<Vec<T8<'py>>> {
+        let l = self.api.len();
+        let z0 = parts8(&z0, l)?;
+        let lu = self.olu.as_ref().ok_or_else(|| PyValueError::new_err("no octo-double LU (call newton_o at z0 first)"))?;
+        let rhs: Option<Py<PyAny>> = rhs.map(|r| r.unbind());
+        let mut solve = |k: usize, b: O8| -> Result<O8, String> {
+            let b = match &rhs {
+                None => b,
+                Some(f) => Python::attach(|py| -> PyResult<O8> {
+                    let got: Vec<PyReadonlyArray1<f64>> = f.bind(py).call1((k, arr8(py, b)))?.extract()?;
+                    Ok(parts8(&got, l)?.map(|p| p.to_vec()))
+                })
+                .map_err(|e| e.to_string())?,
+            };
+            let mut x: Vec<OD> = (0..l).map(|i| OD::new(std::array::from_fn(|q| b[q][i]))).collect();
+            lu.solve(&mut x);
+            Ok(od_parts(&x))
+        };
+        let (api, pool) = (&mut self.api, &self.pool);
+        let out = py.detach(|| pool.install(|| api.series_o(z0, n, &mut solve, mutate))).map_err(PyValueError::new_err)?;
+        Ok(out.into_iter().map(|z| arr8(py, z)).collect())
     }
 
     /// x with J x = b (J^T x = b with transpose) by the octo-double LU of the last newton_o; b a sequence of eight part
