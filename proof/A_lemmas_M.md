@@ -492,9 +492,13 @@ replaced; #880, raw `I880-mac/`). It takes the stored run's 2118 + 863 + 101 ste
 | the run's whole box, h = 10⁻¹⁰ | 0.996, 0.998, 0.889, 0.889, 0.912, 0.911 | 0.996, 0.998, 0.889, 0.889, 0.912, 0.911 |
 | the sub-box ±(10⁻¹⁸, 10⁻²⁶, 10⁻²⁷) | 1.000, 1.000, 0.986, 0.986, 0.951, 0.951 | 1.000, 1.000, 0.980, 0.980, 0.932, 0.932 |
 
-The two enclosures of the zero overlap in every parameter. From start data with the sign of [G P] flipped the run
-does not reach ξ₁: its arc was stopped by hand after 52550 steps, against 863, with the step size down to 10⁻⁶. So
-that mutation yields no certificate, but its Krawczyk test was never reached.
+The two enclosures of the zero overlap in every parameter. Neither of two mutated runs reaches ξ₁, so neither
+yields a certificate, and neither reaches a Krawczyk test:
+
+- with the sign of [G P] flipped in the start data, the arc was stopped by hand after 52550 steps, against 863, with
+  the step size down to 10⁻⁶;
+- with [G P] times 1 + 10⁻⁹, the ray and the arc take the clean run's steps (2118 and 865), and the real axis was
+  stopped by a step cap fixed beforehand, after 3217 steps against 101 (`box2 --mutate=scale --cap=6200`, exit 3).
 
 Reproduce, from `solver/proof/` (python-flint 0.9.0; each command exits 0 only if its check passes, and takes under
 15 s unless a time is given):
