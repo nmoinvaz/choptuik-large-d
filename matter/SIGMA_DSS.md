@@ -668,6 +668,14 @@ is 1.137754. The D 10.0 walk stopped on its |F| rule after 149 Jacobians, at 1.1
 there. A walk cannot tell a slow approach to 1.138 from a second solution near 1.126. A profile of the least |F| at
 fixed Δ can.
 
+That profile (#909; rpi5, raw `I909-rpi5/` cd97ace6, `sigdss_band.py profile`) holds Δ and relaxes the other unknowns
+for each Δ from 1.120 to 1.142, in steps of 0.002. Sweep A starts from the m03up end and sweep B from the m03hi end.
+Their least |F| differ by more than a factor 3 at half the points, so by the rule fixed before the run the branch
+decides, and Δ alone does not fix the residual. Holding Δ leaves singular values near 6×10⁻¹⁰ (the Mac's test), and
+every point stopped on the 1% rule after 3 to 5 Jacobians. Both profiles have one smooth minimum, though. Sweep A's lies
+at 1.134 (1.01×10⁻⁸) and sweep B's at 1.136 (1.29×10⁻⁹), and neither has a feature near 1.126. A finer grid
+tests whether that location is the system's (#910).
+
 ## 12. References
 
 - [HLPTA00] S. Husa, C. Lechner, M. Pürrer, J. Thornburg, P. C. Aichelburg, PRD 62, 104007 (2000),
