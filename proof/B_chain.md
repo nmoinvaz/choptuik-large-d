@@ -602,10 +602,16 @@ pass on the Mac: `b7_ift.py` gives n₀ = e^89.75, the adjoint check passes, and
 
 The stored outputs of the B8 chain are those of the code after #885, #887 and #891 (`b8_chain_regen.sh`, #890, raw
 `I890-mac/`). Of its 35 files, 12 equal the earlier ones byte for byte, and in the others the numbers differ by at
-most 1.7×10⁻¹¹, with five exceptions: the iteration count at L0 = 62, the Lipschitz matrix, which has its floor
-(§13), the record of the mutated certificate `--mutate=rho2L` (4×10⁻³), the weights that lemma J's `Om` mutation
-prints (4×10⁻⁷), and `b7_ift_d0_0.log` and `b7_ift_d0_1e6.log`, whose earlier versions predated the fix F6 of
-P2b_review.md (C₇ = 2.8233×10²⁹ and 2.8286×10²⁹, against 2.8228 and 2.8280).
+most 1.7×10⁻¹¹, with five exceptions:
+
+- the scan record at L0 = 62, which stops after 67 iterations where the earlier one took 70, with h within 4.2×10⁻⁷;
+- the Lipschitz matrix, which has its floor (§13);
+- the record of the mutated certificate `--mutate=rho2L`, within 4×10⁻³;
+- the weights that lemma J's `Om` mutation prints, within 4×10⁻⁷;
+- `b7_ift_d0_0.log` and `b7_ift_d0_1e6.log`, whose earlier versions predated the fix F6 of P2b_review.md
+  (C₇ = 2.8233×10²⁹ and 2.8286×10²⁹, against 2.8228 and 2.8280).
+
+A second run of the script gives the same 35 files, apart from their wall times.
 
 ## 12. P1L: plan for the light-cone hypotheses
 
