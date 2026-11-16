@@ -107,7 +107,7 @@ The cause is rounding noise (#885, raw `I885-mac/`). An entry of the matrix is a
 the rounding of one number against itself. 1108 of the 1600 entries are of this kind, all below 2.3×10⁻⁶⁹. With
 η = 10⁻³ they shrink by 10³, and at 320 bits by 2⁶⁴, while every entry of 10⁻⁶⁰ or more moves by at most 9×10⁻⁵ and
 2×10⁻⁹. Every entry that moved is below 6.1×10⁻⁶³, and the entries below 10⁻⁶⁰ add at most 2.3×10⁻⁶⁰ to a weighted
-row sum of θ.
+row sum of θ. Since #891 `b8m_lc.py` writes every entry below 10⁻⁵⁰ as 10⁻⁵⁰ (proof/B_chain.md §13).
 
 ## 3. Scripts that work at 53 bits throughout
 
