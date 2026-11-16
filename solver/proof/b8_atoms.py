@@ -14,8 +14,9 @@ for mu = +1 and -1 (the maximum of the two norms is kept).  Structural zeros (Le
     python3 b8_atoms.py [K] [rA] [rW]
 """
 import sys
-from flint import acb, arb, acb_poly
+from flint import acb, arb, acb_poly, ctx
 import b8_formal as BF
+ctx.prec = BF.PREC       # the working precision of the B8 chain, stated here (#887)
 
 X1 = acb_poly([0, 1])
 

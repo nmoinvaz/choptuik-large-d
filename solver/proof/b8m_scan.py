@@ -15,9 +15,10 @@ The run is appended to the log as JSON lines.
 import json
 import sys
 import time
-from flint import arb
+from flint import arb, ctx
 import b8m_atoms as AT
 import b8m_bounds as MB
+ctx.prec = AT.BF.PREC       # the working precision of the B8 chain, stated here (#887)
 
 OPTS = {a.split("=", 1)[0][2:]: (a.split("=", 1)[1] if "=" in a else "1") for a in sys.argv[1:] if a.startswith("--")}
 pos = [a for a in sys.argv[1:] if not a.startswith("--")]

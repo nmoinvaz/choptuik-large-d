@@ -32,10 +32,11 @@ holomorphic in the parameters.
 import json
 import sys
 import time
-from flint import arb
+from flint import arb, ctx
 import b8_alg as E
 import b8m_atoms as AT
 import b8m_bounds as MB
+ctx.prec = AT.BF.PREC       # the working precision of the B8 chain, stated here (#887)
 
 B, Q = E.B, E.Q
 BALL = [False]          # ball mode: up/lo keep the ball (exact majorant arithmetic, for the Lipschitz secants)
