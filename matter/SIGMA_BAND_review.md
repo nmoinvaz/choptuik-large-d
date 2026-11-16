@@ -4,9 +4,9 @@ Task: an independent review of `smdriver.newton_band`, the deflated Newton that 
 on rest on (#845, #913–#917), of its planted test `planted_band.py`, and of what its docstring and
 [SIGMA_DSS.md](SIGMA_DSS.md) §11 say about it, at main 7f88c5bb (#922). The function's last change is 3ab276fb.
 Reviewer: an agent that did not write `newton_band`, `planted_band.py` or any other σ-model code. Check scripts:
-[`sigma_ms/review_922/`](sigma_ms/review_922/) (`rv_newton.py`, `rv_band_mut.py`, `run_i922.sh`). Runs and logs: raw
-`I922-mac/`. [proof/A_M_b_review.md](../proof/A_M_b_review.md) and
-[proof/B_LC_floor_review.md](../proof/B_LC_floor_review.md) were read as the templates.
+[`sigma_ms/review_922/`](sigma_ms/review_922/) (`rv_newton.py`, `rv_fdcol.py`, `rv_states.py`, `rv_band_mut.py`,
+`run_i922.sh`). Runs and logs: raw `I922-mac/` f4135470. The form follows
+[proof/B_LC_floor_review.md](../proof/B_LC_floor_review.md).
 
 ## Contents
 
