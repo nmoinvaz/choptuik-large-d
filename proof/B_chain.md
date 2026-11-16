@@ -605,6 +605,13 @@ an iteration stopped. The 8 appended records close as the stored ones do. The sc
 then had 70 iterations against the code's 67, since it predated that code. The Pi's adjoint, jump and lemma LC log
 pass on the Mac: `b7_ift.py` gives n₀ = e^89.75, the adjoint check passes, and lemma J gives θ = 0.17593.
 
+They were rerun on Windows x86-64 too (a Surface laptop, Python 3.14, python-flint 0.9.0, FLINT 3.6.0; #893, raw
+`I893-winb/` 4356a65c), on the code after #885 and #887 and before the floor of #891. The 64 commands end as documented,
+and B5's contraction, n₀, C₇, θ and lemma J's θ are reproduced. The scan and ρ₂L records, the B5 jumps and lemma LC's
+matrix equal those of the same code on the Mac (`I887-mac/`) in every number. `b7_ift.json` differs in 506 of its
+1024 numbers, by at most 1.7×10⁻⁵, since it reads Windows's own adjoint where the Mac's rerun read the stored one.
+Windows's adjoint, jumps and matrix pass on the Mac (n₀ = e^89.75, C₇ = 2.8959×10²⁹, θ = 0.7355).
+
 The stored outputs of the B8 chain are those of the code after #885, #887 and #891 (`b8_chain_regen.sh`, #890, raw
 `I890-mac/`). Of its 35 files, 12 equal the earlier ones byte for byte, and in the others the numbers differ by at
 most 1.7×10⁻¹¹, with five exceptions:
