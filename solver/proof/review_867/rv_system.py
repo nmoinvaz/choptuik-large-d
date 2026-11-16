@@ -116,8 +116,8 @@ def main():
     opts = {a.split("=", 1)[0][2:]: (a.split("=", 1)[1] if "=" in a else "1") for a in sys.argv[1:] if a.startswith("--")}
     M = int(opts.get("M", "5"))
     mutate = opts.get("mutate")
-    gp = {"scale": 1 + acb("1e-9"), "sign": acb(-1)}.get(mutate)
     ctx.prec = 512
+    gp = {"scale": 1 + acb("1e-9"), "sign": acb(-1)}.get(mutate)
     rng = random.Random(867)
     odd, even = sets(M)
     ok = True

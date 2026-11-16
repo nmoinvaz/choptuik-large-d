@@ -11,9 +11,11 @@ the string and the precision. After the run it also lists the module-level arb a
 loaded from this directory whose relative radius is above 2^-100, which are constants made at import time before
 any precision was set. Everything else of flint is the real module, and the balls made are real balls.
 
-    python3 prec_trace.py [--limit=10] [--low=100] [--json=out.json] -- script.py [arguments ...]
+    python3 prec_trace.py [--limit=10] [--low=100] [--json=out.json] [--prec=N] -- script.py [arguments ...]
         the script runs as __main__ from the current directory for at most --limit seconds; exit status 0 if no
-        early read was recorded, 1 if some were, 2 if the script could not be started
+        early read was recorded, 1 if some were, 2 if the script could not be started. With --prec=N the precision
+        is set to N bits before the script and its modules are loaded: the rerun "at the right precision", whose
+        output is compared with the plain run's
     python3 prec_trace.py --selftest
         a script that reads its argument before setting the precision must be reported, with a 53-bit constant of
         its own, and the same script with the precision set first must not; exit 0 only then
@@ -183,6 +185,8 @@ def main():
     if not target or not os.path.exists(target[0]):
         print(f"prec_trace: no such script {target[:1]}")
         sys.exit(2)
+    if "prec" in opts:
+        _flint.ctx.prec = int(opts["prec"])
     recs, consts, end = trace(target, float(opts.get("limit", "10")))
     print(f"prec_trace: {' '.join(target)}: {end}; {len(recs)} early reads, {len(consts)} low-precision constants")
     for r in recs:
