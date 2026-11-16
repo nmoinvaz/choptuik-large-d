@@ -580,7 +580,7 @@ f64 SVD of the dense Jacobian. The singular vectors below 10⁻⁶ of the larges
 residual splits into the band's part B and the resolved rows' part S, and the step into its band part and the rest:
 
 - While S exceeds a tenth of B, the step is Newton's without its band part, halved until S falls.
-- After that the band part is added, limited in length. Up to four chord steps, each without its band part, remove
+- After that the band part is added, limited in length. Up to ten chord steps, each without its band part, remove
   what the move leaves in the resolved rows. The step is accepted when B has fallen, and halved otherwise.
 
 No term is added to the equations: near the root the steps are Newton's own, and a converged state has max |F| below
@@ -603,6 +603,14 @@ values of 10⁻⁸ to 10⁻¹⁰, with a start from which Newton's step is 2.7×
 Its four mutations each fail the test: `noband` fails A, `easy` (no band in the toy) fails B and C, `root` fails A,
 and `gamma` (the kernel's recursion mutated) fails D with max |z − z\*| = 6.2×10⁻¹². C's criterion was rewritten after
 its first run, and the script's header says how.
+
+**Start B at D 10.475 converges to the chain's solution (#845; raw `I845-mac/` e1615755).** From §5's start B (sigdss,
+Δ 0.9935) at η = 1, M = 32, `run_eta.py --solver band` took 2 resolved steps and then 16 band steps to max |F| =
+6.3×10⁻²⁹, and one more Newton step reached 1.4×10⁻³¹ at Δ = 1.020104800025154887044169. That is 6.7×10⁻²⁴ from the
+kernel's chain (1.020104800025154887044163, #652). So B is not a second solution: the walk carried Δ by +0.0266 along
+the band to the chain's point. The band is 32 singular values below 10⁻¹⁰ of the largest, then a gap to 10⁻⁴. 32 is
+M, 89% of the band lies in the centre datum q, and its largest Δ component is 0.059. At the converged state q is fixed
+only to 4.5×10⁻¹⁶, against the chain's, while Δ agrees to 10⁻²³. Start A (1.0340) is still to run.
 
 **sigdss seeded from the kernel's chain (#846, #859; winb, raw `I846-winb/` eea37726 and `I859-winb/` e94d22a0).**
 [`sigma_ms/to_sigdss.py`](sigma_ms/to_sigdss.py) maps a kernel state onto sigdss's nodes and harmonics. Its round
