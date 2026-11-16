@@ -23,8 +23,10 @@ lipschitz: slopes of the convex majorant, as exact ball-mode secants per candida
 M v < theta v, theta < 1: T is a contraction on K_h, so the light-cone-gauge solution exists, is unique in K_h and is
 holomorphic in the parameters.
 
-    python3 b8m_lc.py K L0 [--rA=2e-6 --rW=2e-6] [--xa=1.5] [--iters=200] [--log=file] [--lip [--eta=1e-6]]
-                      [--mutate=NAME]
+    python3 b8m_lc.py K L0 [--rA=2e-6 --rW=2e-6] [--xa=1.5] [--iters=200] [--log=file] [--mutate=NAME]
+                      [--lip [--eta=1e-6] [--lipfloor=1e-50] [--lipout=b8m_lc_lip.json]]
+    --lipfloor: a matrix entry below it is written as it, still an upper bound (function lipschitz; 0 for none), so
+    that the saved matrix is the same from run to run (b8m_lc_liprep.py).
     mutation: rho2L (the residual rho2 dropped from G on the light-cone region L): the certificate still closes, but
     its bound on R_S in L must then fall below the numerically observed remainder (b8m_lc_numcheck.py with the
     mutated log must fail); b8m_lc_numcheck.py has its own mutations (d0, weight).
@@ -507,7 +509,15 @@ def improve_lc(geo, k, kc, h, verbose=False):
     return o["P"], o["diag"]
 
 
-def lipschitz(geo, k, kc, h, eta="1e-6", verbose=False):
+LIP_FLOOR = "1e-50"
+
+
+def lip_floor(floor):
+    """the floor of the Lipschitz matrix as an exact number (None for no floor)"""
+    return arb(arb(floor).upper()) if float(floor) > 0 else None
+
+
+def lipschitz(geo, k, kc, h, eta="1e-6", verbose=False, floor=LIP_FLOOR):
     """Upper bounds for the Lipschitz matrix of T on K_h in the norm
         N(U) = max over (comp, region) of max( sup |U| / (h w), sup |x U'| / (h' m) )
     (values and derivatives; m = der_weights, h' = sup D0/m). By structural induction over the bound algebra, the
@@ -515,7 +525,10 @@ def lipschitz(geo, k, kc, h, eta="1e-6", verbose=False):
     (sum and product rules; inverses via 1/(l0 - s(t))); every candidate below is a sum of term-wise suprema of
     nonnegative-coefficient power series in t, hence convex in t, and its slope at t = 0 is bounded by the secant
     (M(eta) - M(0))/eta, computed in ball mode (no outward rounding between the two runs; both runs share the
-    same B-object structure). Returns (rows, cols, matrix of arb upper bounds, scales)."""
+    same B-object structure). Returns (rows, cols, matrix of arb upper bounds, scales).
+    A secant of a bound that does not depend on the perturbed input is the rounding of one number against itself
+    over eta, about 1e-69 at 256 bits, and it follows the last digits of the inputs. So an entry below floor is
+    written as floor, which is still an upper bound and is the same in every run."""
     K = geo.K
     eta = arb(eta)
     SUMHYP[0] = True
@@ -579,6 +592,9 @@ def lipschitz(geo, k, kc, h, eta="1e-6", verbose=False):
             if verbose:
                 big = max(M[c].items(), key=lambda kv: float(kv[1]))
                 print(f"  column {c}: largest entry {big[0]} {float(big[1]):.3e}", flush=True)
+        fl = lip_floor(floor)
+        if fl is not None:
+            M = {c: {r: (v if v > fl else fl) for r, v in M[c].items()} for c in cols}
     finally:
         SUMHYP[0] = False
         BALL[0] = False
@@ -720,14 +736,23 @@ def main():
     ok, h, Ph, k, kc, rec = closure(g, iters=int(OPTS.get("iters", "200")))
     if ok and "lip" in OPTS:
         t1 = time.time()
-        rows, cols, M, hp = lipschitz(g, k, kc, h, eta=OPTS.get("eta", "1e-6"), verbose=True)
+        floor = OPTS.get("lipfloor", LIP_FLOOR)
+        rows, cols, M, hp = lipschitz(g, k, kc, h, eta=OPTS.get("eta", "1e-6"), verbose=True, floor=floor)
+        fl = lip_floor(floor)
+        nfl = sum(1 for c in cols for r in rows if fl is not None and not M[c][r] > fl)
+        print(f"Lipschitz matrix: {nfl} of {len(rows) * len(cols)} entries are at the floor {floor}", flush=True)
         Mj = {f"{'/'.join(r)}<-{'/'.join(c)}": float(M[c][r].upper()) for c in cols for r in rows}
         with open(OPTS.get("lipout", "b8m_lc_lip.json"), "w") as fh:
-            json.dump(dict(M=Mj, hprime={f"{a}.{b}": float(c) for (a, b), c in hp.items()}), fh)
+            json.dump(dict(M=Mj, hprime={f"{a}.{b}": float(c) for (a, b), c in hp.items()}, floor=float(floor),
+                           floored=nfl, eta=float(OPTS.get("eta", "1e-6")),
+                           note="M: upper bounds of the secant slopes. An entry below floor is written as floor: "
+                                "the secant of a bound that does not depend on the perturbed input is rounding "
+                                "noise over eta"), fh)
         lam, theta, v = contraction_check(rows, cols, M)
         print(f"Lipschitz matrix: Perron root (float) {lam:.4f}; certified theta = {float(theta.upper()):.4f} "
               f"(< 1: {bool(theta < 1)})", flush=True)
         rec["lip"] = dict(perron_float=lam, theta=float(theta.upper()), contraction=bool(theta < 1), weights=v,
+                          floor=float(floor), floored=nfl,
                           hprime={f"{a}.{b}": float(c) for (a, b), c in hp.items()},
                           M={f"{'/'.join(r)}<-{'/'.join(c)}": float(M[c][r]) for c in cols for r in rows
                              if float(M[c][r]) > 1e-3},
