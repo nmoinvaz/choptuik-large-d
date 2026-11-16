@@ -21,6 +21,8 @@ anm_run.py --held_o 1 holds them at the state's D). Settings, each changed alone
   kc<K>, kt<K> the centre and Taylor orders, on the stored plan
   held<d>      the held values of data/held_fit_d<d>.json in place of data/held_fit.json's, both carried from
                D0 = 73.0, the end of the fits' full-system states (v(D) = v(D0) + fit(D) - fit(D0) along the chains)
+  heldstate:REL  the held values another stored state at the same D carries (its own chain's), against which its
+               Delta difference is the measured response (the held control)
 Each line gives psi^T dF (the setting's share of chain - truth, if the changed setting is the truer one) and
 -psi^T dF (the predicted Delta shift when the setting changes).
 
@@ -239,6 +241,13 @@ def cmd_run(argv):
             kw = dict(kc=int(s[2:]))
         elif s.startswith("kt"):
             kw = dict(kt=int(s[2:]))
+        elif s.startswith("heldstate:"):
+            other = State(raw, s[10:], st.threads)
+            hv = [(mp.mpf(a), mp.mpf(b)) for a, b in other.held]
+            dmax = max(max(abs(mp.mpf(a1) - mp.mpf(a0)), abs(mp.mpf(b1) - mp.mpf(b0))) for (a1, b1), (a0, b0) in zip(hv, st.held))
+            kw = dict(held=hv)
+            dD_states = tomp(other.z8)[-1] - tomp(st.z8)[-1]
+            note = f", that state's held values, moved by at most {mp.nstr(dmax, 3)}; its Delta - this one's {mp.nstr(dD_states, 6)}"
         elif s.startswith("held"):
             hv, dmax = st.held_from(int(s[4:]))
             kw = dict(held=hv)
