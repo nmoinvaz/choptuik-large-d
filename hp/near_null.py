@@ -325,6 +325,7 @@ def main():
     ok = bool(conv[0] < 1e-3 and abs(ratio - 1) < 1e-2) and ok_p and z_same and (rows is None or rows["ok"])
     print(f"  ||J v_1|| / sigma_1 = {ratio:.6f}; z {'unchanged' if z_same else 'CHANGED'} after every kernel call")
     print("check:", "pass" if ok else "FAIL")
+    rec["passed"] = ok
     if opts.get("json"):
         json.dump(rec, open(opts["json"], "w"), indent=1)
     return 0 if ok else 1
