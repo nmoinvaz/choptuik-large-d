@@ -972,6 +972,35 @@ either harmonic's prediction does. The orders up to 410 converge with no rebuild
 about 404. The chain with the order tied to D (`hp/ks_chain.py`, ks = ⌈1.95 Re s⌉ + 10 per leg of 10 in D) started
 from D 152 at 05:22 UTC on 2026-11-16.
 
+## The grip on Δ against the horizon order near the wall (#902)
+
+**The order-130 cut is a real but partial cause of the weak grip on Δ.** xfchecks measured g = 1/‖e_Δᵀ J⁻¹‖₂ at
+#603's stored states, with only the horizon rows changed by `--ks` and no Newton step (raw `I902-mac/` 44d932d4).
+
+| D | ln g(200) − ln g(130) | model P(200), μ = 1 | share | g at order 250 |
+|---|---|---|---|---|
+| 237.13 | +18.51 | +40.25 | 0.46 | 7.1×10⁻¹⁶ |
+| 249.01 | +27.72 | +53.89 | 0.51 | 7.7×10⁻¹⁸ |
+| 253.80 | +34.74 | +60.51 | 0.57 | 6.3×10⁻¹⁸ |
+
+The rise is complete by order 160–200, and it is 43–54% short of the model of FACTORED_HORIZON.md 4.2, as the pivot's
+rise was at D 150 (0.47 of μ = 1, "The horizon order raised at D 150"). At order 250 the grip still falls with D, from
+7.1×10⁻¹⁶ at 237.13 to 6.3×10⁻¹⁸ at 253.80, about e^(−0.28) per unit D. At order 130 it falls about e^(−1.26) per unit D
+over the same range (computed here from the table's two columns). So the cut accounts for most of the grip's fall, and
+an intrinsic weakening remains.
+
+- **Verdict by the registered rule: neither.** "Supports" needed the rise within 30% of the model, and it is 43–54%
+  short. "Refutes" needed it below ln 2, and it is e^34.8 at 253.80.
+- **The modes.** The horizon residual and the harmonic-3 pair follow the model's f (μ = 3, 0.81–0.93 of it). Δ and its
+  harmonic-1 neighbour stop early. σ₃ by index reads "supports", but its identity changes: it is the Δ mode at order 130
+  and a harmonic-3 mode from 160 on. So it disagrees with g, which follows Δ.
+- **Discrepancies.** C1 failed at D 249.01, order 160, where σ₁'s iteration stopped at 1.35×10⁻³ against a bar of
+  10⁻³. g does not use that iteration, and a rerun with 32 iterations is under way. At D 253.80, Δ's pinned step does
+  not settle with the order: −2.6×10⁻⁶, −2.9×10⁻⁷ and −7.7×10⁻⁶ at orders 160, 200 and 250.
+- **The jump to the order is another matter.** A Newton jump from 130 to 250 diverges at D 225.13 and 245.14 (#696,
+  #903's Mac pilot), while a ladder of +2 to +10 per rung converges. Order 142 already holds 82% of order 250's lift at
+  D 225.13.
+
 ## The departure split by the adjoint (#905)
 
 **At D 250.17 none of the settings an adjoint can split accounts for the departure, and the horizon order is the
