@@ -32,8 +32,14 @@ fixed_point_M_b.py, imports neither.
         box at p^, and the Gamma term from its own derivatives over the hull. The chart geometry (T, Gamma, the
         directions d_k, the pair list) is the certificate's. Criteria, written before the first run: the four
         contractions hold and every entry overlaps (values, V0, and 21 pairs x nd components of W0).
+    python3 fixed_point_M_b_check.py cli
+        the plain command line (issue #878): python3 fixed_point_M_b.py --M=5 --x=<the M = 5 certificate's centre>,
+        run as a subprocess, must print the N, k and contraction constant that Setup and prove give for the point
+        read at 512 bits. (Read at python-flint's default 53 bits the decimals are balls of radius 6e-17, and the
+        lemma is then proved on that ball with another truncation.)
     mutations (each must make its check fail, exit status 3):
         m1 --mutate=coef | sign | scale     as in fixed_point_M_b.py
+        cli --mutate=read53                 the comparison made with the point read at 53 bits: must differ
         cert2 --mutate=w0 | sign            the second implementation's D^2 Y_N dropped; the sign of [G P]
         lip --mutate=drop                   the second implementation without the [ct W] term of Phi_V: (b) must fail
         cert --mutate=sign | radius         the sign of [G P]: the start data must miss the certificate's;
@@ -361,6 +367,37 @@ def cert2(boxfile, mutate=None):
     return ok
 
 
+def cli(mutate=None):
+    import json
+    import os
+    import re
+    import subprocess
+    here = os.path.dirname(os.path.abspath(__file__))
+    with open(os.path.join(here, "data", "A_M2_box_M5_1e-10.json")) as fh:
+        X = json.load(fh)["p"]
+    cmd = [sys.executable, os.path.join(here, "fixed_point_M_b.py"), "--M=5", "--x=" + ",".join(X)]
+    out = subprocess.run(cmd, capture_output=True, text=True)
+    m1_ = re.search(r"N = (\d+), k = (\d+)", out.stdout)
+    m2_ = re.search(r"contraction constant max_i \(L w\)_i / w_i <= ([0-9.]+)", out.stdout)
+    if not (m1_ and m2_):
+        print("the command line printed no N, k and constant:\n" + out.stdout[-600:] + out.stderr[-600:])
+        return False
+    got = (int(m1_.group(1)), int(m1_.group(2)), m2_.group(1))
+    ctx.prec = 53 if mutate == "read53" else 512
+    x = [acb(arb(v)) for v in X]
+    r0 = float(x[0].real.rad())
+    ctx.prec = 512
+    st = B.Setup(x, 5, "0.07", "3pi/8")
+    o = B.prove(st, False)
+    want = (st.N, st.k, f"{float(o['lam']):.4f}")
+    ok = got == want and out.returncode == 0 and o["ok"]
+    print(f"command line (exit {out.returncode}): N = {got[0]}, k = {got[1]}, constant {got[2]}")
+    print(f"Setup and prove on the point read at {53 if mutate == 'read53' else 512} bits (radius of A {r0:.1e}): "
+          f"N = {want[0]}, k = {want[1]}, constant {want[2]}")
+    print(f"COMMAND LINE PRECISION: {'PASS' if ok else 'FAIL'}")
+    return ok
+
+
 def st_gp(mutate):
     return {"sign": acb(-1), "scale": 1 + acb("1e-9")}.get(mutate)
 
@@ -371,6 +408,8 @@ def main():
     cmd = args[0] if args else "m1"
     if cmd == "m1":
         ok = m1(opts.get("mutate"))
+    elif cmd == "cli":
+        ok = cli(opts.get("mutate"))
     elif cmd == "cert2":
         ok = cert2(opts["box"], opts.get("mutate"))
     elif cmd == "cert":
