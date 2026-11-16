@@ -1048,6 +1048,8 @@ column), and `mutations_M.py` compares it with the outcome; exit status 0 only i
 | `usys_label` | system: s_mu = i abs(mu) w in the u-form (the label sign lost); the comparisons with the xi-form and with fixed_point's encoding must fire | caught | 0 | yes |
 | `usys_clean` | control: the system self-tests at M = 3, 5 | passes | 0 | yes |
 | `S_series_M3` | lemma S: one coefficient of the harmonic-3 series off by 1e-6 | caught | 0 | yes |
+| `S_series_M3_box` | lemma S over the certificate's box 1e-6: the same mutation, caught by the centre's identity checks | caught | 0 | yes |
+| `S_series_M5_box` | lemma S at M = 5 over the certificate's box 1e-6: the harmonic-5 series off by 1e-6 | caught | 0 | yes |
 | `S_control_rp` | control: lemma S at R+ = 0.13^2, beyond the contraction (0.83 at 0.1, label terms grow like R+) | fails | 2 | yes |
 | `disc_m1` | control: lemma D at M = 1 reproduces lemma6b1_disc.certify | passes | 0 | yes |
 | `jump_partial_M3` | 6a: only J_D,1 = 0 assumed (J_D,3 dropped): G_slow is not square, 6a must not be established | caught | 0 | yes |
@@ -1065,6 +1067,12 @@ Every verdict matches (`python3 mutations_M.py --all`; the entries ran in four b
 - `fp_series_M3` was first seen *not* to fire. Without the structural vanishing check, the harness lowered the weight
   exponent to fit the mutated polynomial and proved a weaker, true lemma about it. The check was added and the entry
   rerun (§2.2).
+- `S_series_M3` fired only at a point until #865 (found on the Pi in #861). Over a box the residual numerators' lower
+  coefficients need only contain 0, which wide balls always do, and the vanishing orders came from an unmutated centre
+  run. `lemma_S_M` now runs the centre with the same series code and requires its identity checks over a box as well.
+  `S_series_M3_box` and `S_series_M5_box` are caught, at 10⁻⁶ and at 10⁻⁹, and the certificate's two runs are
+  bit-identical to the code before the change on the same machine. `lemma6_sector.py` (M = 1) has the same check, and
+  its mutation over the box 10⁻⁹ is caught.
 - `jump_coords_M3` is reported, not caught on the pilot's box: ρ₆ₐ = 0.89 < 1 with the wrong mode normalization (0.12
   at M = 1). On the certificate's state box it is caught (ρ₆ₐ = 1.45; A_M_review.md F8). As at
   M = 1 (§11.6), the error enters at second order through the flat estimate. What guards the normalization is

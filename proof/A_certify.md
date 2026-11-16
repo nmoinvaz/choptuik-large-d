@@ -1352,6 +1352,7 @@ Each test breaks one input and checks that the corresponding check then fails.
 | mutation | where | result |
 |---|---|---|
 | one coefficient of the formal series (D₊₁, order z⁵) changed by a relative 10⁻⁶ | lemma S, `lemma6_sector.py --mutate=series` | **caught**: the residual no longer vanishes below order N, the lemma reports False |
+| the same, over the box 10⁻⁹ | lemma S, `lemma6_sector.py --box=1e-9 --mutate=series` | **caught** since #865: the centre run's identity checks are required over a box too |
 | y⁻ taken as conj(y⁺) without the reflection μ ↦ −μ (wrong mode labelling) | 6a, `lemma6_jump.py --mutate=swap` | **caught**: the start hull has radius 0.40 and the backward integration fails (step-size underflow); 6a is not established |
 | (1 − iμω) instead of (1 + iμω) in the change of variables at ξ_a (wrong mode normalization) | 6a, `lemma6_jump.py --mutate=coords` | **not caught**: ρ₆ₐ = 0.12 < 1 |
 
@@ -1412,6 +1413,7 @@ python3 lemma6_path.py box --h=1e-9 --out=lemma6_path_box_1e-9.json   # lower pa
 python3 lemma6_path.py krawczyk --point=lemma6_path_point.json --box=lemma6_path_box_1e-9.json   # K(X), seconds
 python3 lemma6_jump.py --box=lemma6_path_box_1e-9.json --json=lemma6_jump_1e-9.json   # lemma 6a, ~2-3 min
 python3 lemma6_sector.py --mutate=series                      # mutation: must report False
+python3 lemma6_sector.py --box=1e-9 --mutate=series           # the same over the box: must report False
 python3 lemma6_jump.py --box=lemma6_path_box_1e-9.json --mutate=swap     # mutation: must fail
 python3 lemma6_jump.py --box=lemma6_path_box_1e-9.json --mutate=coords   # mutation: not caught (see 11.6)
 python3 lemma6_usys.py                                         # u-system vs validated_int's system
