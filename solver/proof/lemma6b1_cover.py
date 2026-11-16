@@ -32,6 +32,9 @@ The method (section 12.2). Rows j = 0, 1, ... of polar tiles T_jk = { a_j < |u| 
                                                           radii above 5.12 must fail
     python3 lemma6b1_cover.py check --drop=j,k            mutation test of the gluing check: tile (j, k) left out;
                                                           the check must fail
+    Every command takes --tag=T. Its runs are then read from and written to lemma6b1_runs<T>/ and no other run
+    directory. `rows` skips every row already saved, so a reproduction gives a tag (--tag=_repro) and computes its
+    own rows, without reading the stored ones.
 """
 import json
 import math
@@ -432,6 +435,8 @@ if __name__ == "__main__":
     if opts.get("mutate") == "sign" or cmd == "mutate=sign":
         cmd = "mutate"
     h = opts.get("h", "1e-9")
+    if "tag" in opts:                   # a separate run directory, read and written in place of lemma6b1_runs/
+        RUNS = os.path.join(HERE, "lemma6b1_runs" + opts["tag"])
     if cmd == "design":
         tot_len = 0.0
         for rw in design():

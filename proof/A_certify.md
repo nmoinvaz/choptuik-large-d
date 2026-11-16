@@ -1788,6 +1788,15 @@ python3 lemma6b1_estimate.py                    # route assessment and the branc
 ```
 
 `rows` skips the rows already saved, so it can be restarted after an interruption; `row --j=J` runs one row.
+For that reason a reproduction gives every command one tag, `--tag=_repro`: its runs are then read from and written to
+`lemma6b1_runs_repro/` only, and no stored row is skipped or read.
+
+```
+python3 lemma6b1_cover.py ray --tag=_repro      # -> lemma6b1_runs_repro/ray.json
+python3 lemma6b1_cover.py rows --tag=_repro     # -> lemma6b1_runs_repro/row_JJ.json
+python3 lemma6b1_cover.py check --tag=_repro    # must print PASS, with 178 tiles, 566 polar rectangles and 450 links
+```
+
 `python3 check_numbers.py` (repository root) ties the quoted 178 discs, 12 rows, contraction ≤ 0.439 and 6073 Lohner
 steps to `lemma6b1_check_1e-9.json`.
 
