@@ -132,7 +132,18 @@ def main():
         s.set_segs(s.plan(zh_, zl_, a.plan_tol, a.hmax))
         replans.append(sum(len(g) - 1 for g in s.get_segs()))
         log(f"    re-planned: {replans[-1]} steps")
-    after = replan if a.replan else None
+    ckpt = os.path.join(a.out, f"sm_{a.tag}_ckpt.npz")
+
+    def keep(zh_, zl_):
+        if a.solver == "band":
+            # a band walk is long: the state after every step, so that a stopped run can be continued (--from)
+            sd.save(ckpt, zh_, zl_, dict(eta=a.eta, D=a.D, M=a.M, nodes=nodes, kt=a.kt, kc=a.kc, ks=a.ks,
+                                         segs=s.get_segs(), tag=a.tag + "_ckpt"))
+
+    def after(zh_, zl_):
+        if a.replan:
+            replan(zh_, zl_)
+        keep(zh_, zl_)
 
     def solve(zh_, zl_, jac, after_step=None):
         if a.solver == "band":
@@ -147,7 +158,7 @@ def main():
     steps1 = [len(g) - 1 for g in s.get_segs()]
     F2 = sd.fnorm(s.residual([zh, zl]))
     log(f"plan from the solution: {sum(steps1)} steps ({time.time() - tp:.1f} s); |F| {F2:.2e}")
-    zh, zl, h2 = solve(zh, zl, a.jac_final)
+    zh, zl, h2 = solve(zh, zl, a.jac_final, keep)
     conv = bool(h2 and h2[-1].get("converged"))
     Fend = h2[-1]["F"] if h2 else float("nan")
     Delta = mp.mpf(zh[-1]) + mp.mpf(zl[-1])
