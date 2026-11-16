@@ -46,7 +46,9 @@ fixed_point_M_b.py, imports neither.
         stored run's; the two enclosures of the zero must overlap. PASS only if the test holds on the new run.
     mutations (each must make its check fail, exit status 3):
         m1 --mutate=coef | sign | scale     as in fixed_point_M_b.py
-        box2 --mutate=sign                  the run from start data with the sign of [G P] flipped; kraw on it must fail
+        box2 --mutate=sign | scale          the run from start data with the sign of [G P] flipped, or with [G P]
+                                            times 1 + 1e-9; kraw on it must fail. Give it --cap=N (a step limit):
+                                            the sign-mutated run crawls on the arc and does not end by itself
         cli --mutate=read53                 the comparison made with the point read at 53 bits: must differ
         cert2 --mutate=w0 | sign            the second implementation's D^2 Y_N dropped; the sign of [G P]
         lip --mutate=drop                   the second implementation without the [ct W] term of Phi_V: (b) must fail
@@ -415,10 +417,11 @@ def cert2(boxfile, mutate=None):
     return ok
 
 
-def box2(boxfile, out, mutate=None, pilot=None, log=None):
+def box2(boxfile, out, mutate=None, pilot=None, log=None, cap=None):
     """the second-order box run of a stored certificate, from the second implementation's start data (#880):
     certify_M2.box2_run with the stored run's chart, h and w, and with certify_M2.start_data2 replaced, for this call,
-    by assemble_b. pilot: stop after that many steps (certify_M2's own pilot)."""
+    by assemble_b. pilot: stop after that many steps (certify_M2's own pilot). cap: the same stop, as a limit on a
+    full run: a run that reaches it has failed (no box file), and the command exits 3."""
     import json
     import certify_M2 as C2M
     with open(boxfile) as fh:
@@ -426,12 +429,16 @@ def box2(boxfile, out, mutate=None, pilot=None, log=None):
     orig = C2M.start_data2
 
     def start_b(M, pstr, Cm, G, widths, verbose=True):
-        return assemble_b(M, pstr, Cm, G, widths, mutate if mutate == "sign" else None, mutate == "w0")
+        return assemble_b(M, pstr, Cm, G, widths, mutate if mutate in ("sign", "scale") else None, mutate == "w0")
     C2M.start_data2 = start_b
     try:
-        res = C2M.box2_run(bx["M"], bx["chart"], bx["h"], list(bx["w"]), out, log=log, max_steps=pilot, verbose=True)
+        res = C2M.box2_run(bx["M"], bx["chart"], bx["h"], list(bx["w"]), out, log=log, max_steps=pilot or cap,
+                           verbose=True)
     finally:
         C2M.start_data2 = orig
+    if cap and res.get("kind") != "box2":
+        print(f"BOX RUN: stopped at the cap of {cap} steps, no box file")
+        return False
     return res.get("kind") in ("box2", "pilot2")
 
 
@@ -510,7 +517,7 @@ def main():
         ok = m1(opts.get("mutate"))
     elif cmd == "box2":
         ok = box2(opts["box"], opts["out"], opts.get("mutate"), int(opts["pilot"]) if "pilot" in opts else None,
-                  opts.get("log"))
+                  opts.get("log"), int(opts["cap"]) if "cap" in opts else None)
     elif cmd == "kraw":
         ok = kraw(opts["box"], opts["stored"], opts["sub"].split(",") if "sub" in opts else None)
     elif cmd == "cli":
