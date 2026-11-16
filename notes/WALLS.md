@@ -45,9 +45,19 @@ For the fold at 259.903 the test is under way.
   (track C, #835).
 - The leading candidate is the horizon series, which the chain sums to 130 terms at every D. At D 150, raising the
   order settles Δ to 10⁻¹⁵ by 160 terms ([LARGE_D_WALL.md](LARGE_D_WALL.md), "The horizon order raised at D 150").
-- #902 measures the hold against the order near the fold. #903's chain, with the order raised as D grows, shows
-  whether the fold moves. A fold that stays within 0.01 would be the continuum's, and one that moves by more than 0.05
-  the truncation's.
+- **Near the fold the cut weakens the hold most of all.** Raising the order from 130 lifts the hold on Δ by e^18.5,
+  e^27.7 and e^34.8 at D 237, 249 and 254, complete by order 160–200 (#902). With the series summed in full, the hold
+  still weakens with D, but about e^−0.28 per unit of D, against e^−1.26 at order 130. So the cut is most of the wall,
+  and an intrinsic weakening remains.
+- **The other settings are not the source.** An adjoint split of the departure past D 245 finds the plan, the centre
+  and transition orders, and the held fit too small to explain it, while the order's response is 66 times it (#905).
+  The held fit's degree spread keeps one sign while the departure changes sign twice (#904).
+- **The order has to be climbed.** A jump from 130 to 250 diverges at D 225 and 245, while rungs of +10 or less
+  converge (#903).
+- **Under way:** chains at fixed orders 135, 142 and 160 run from D 200–225 to the fold, and #903's chain raises the
+  order as D grows. A fold that stays within 0.01 of 259.903 would be the continuum's, and one that moves by more than
+  0.05 the truncation's. The details are in [LARGE_D_WALL.md](LARGE_D_WALL.md), from "The grip on Δ against the
+  horizon order near the wall" on.
 
 ## The same mechanism elsewhere
 
