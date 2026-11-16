@@ -631,8 +631,8 @@ def det_fn(s, zh, zl, log=None, cache=None):
 
 def det_root(sd, a, b, xtol=1e-13):
     """the root of det M in [a, b], where its sign changes, by Brent's method on sign * exp(ln|det| - ref) (as
-    hp/gamma_dd.py; R. P. Brent, Algorithms for Minimization without Derivatives, 1973, ch. 4); None without a sign
-    change"""
+    hp/gamma_dd.py; scipy's brentq, whose reference is R. P. Brent, Algorithms for Minimization Without Derivatives,
+    Prentice-Hall, 1973, ch. 3-4); None without a sign change"""
     from scipy.optimize import brentq
     if sd(a)[0] == sd(b)[0]:
         return None
