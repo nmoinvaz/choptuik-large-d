@@ -613,8 +613,10 @@ matrix equal those of the same code on the Mac (`I887-mac/`) in every number. `b
 Windows's adjoint, jumps and matrix pass on the Mac (n₀ = e^89.75, C₇ = 2.8959×10²⁹, θ = 0.7355).
 
 The stored outputs of the B8 chain are those of the code after #885, #887 and #891 (`b8_chain_regen.sh`, #890, raw
-`I890-mac/`). Of its 35 files, 12 equal the earlier ones byte for byte, and in the others the numbers differ by at
-most 1.7×10⁻¹¹, with five exceptions:
+`I890-mac/`). The script reproduces them on aarch64 (#896, raw `I896-rpi5/` ce074867). Of the 35 files, 23 are equal
+there byte for byte, 9 differ only in a time field, and 3 differ in doubles at 1.1×10⁻¹⁴ or in the roundoff-level jump
+of the numerical check. Lemma LC's matrix is equal in all 1600 entries. Of its 35 files, 12 equal the earlier ones
+byte for byte, and in the others the numbers differ by at most 1.7×10⁻¹¹, with five exceptions:
 
 - the scan record at L0 = 62, which stops after 67 iterations where the earlier one took 70, with h within 4.2×10⁻⁷;
 - the Lipschitz matrix, which has its floor (§13);
