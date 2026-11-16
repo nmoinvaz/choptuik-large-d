@@ -563,6 +563,7 @@ python3 matter/sigma_ms/chain.py --M 48 --resample_from 32 --etas inf,20,14,10,8
 python3 matter/sigma_ms/tables.py ../choptuik-large-d-raw --csv matter/sigma_ms/data/delta_eta.csv
 python3 matter/sigma_ms/fit_min.py --records ../choptuik-large-d-raw/I639-mac/data/sm_records.jsonl --out matter/sigma_ms/data/fit_min.json
 python3 matter/sigma_ms/chain_table.py ../choptuik-large-d-raw --csv matter/sigma_ms/data/delta_D_eta0.3.csv
+python3 matter/sigma_ms/chain_table.py ../choptuik-large-d-raw --folder I917-mac --eta 1 --also I652-mac --Dmin 10 --D0 10.475 --ref I652-mac,I845-mac,I913-mac --sigdss solver/matter/data/sigdss_m1up.jsonl,solver/matter/data/sigdss_m1hi.jsonl --csv matter/sigma_ms/data/delta_D_eta1.csv
 ```
 
 The runs of #639 took the same steps by other routes (the η = ∞ state at M = 48 from M = 32, then the ε chain at
@@ -819,6 +820,31 @@ second derivative from −5.8×10⁻³ to −5.7×10⁻⁴, with third and fourt
 not uniform in D. Its values lie above the kernel's curve up to D 10.25 and below it from D 10.475 on, and from D 10.1
 to 11 sigdss's Δ falls by 0.0343 where the kernel's falls by 0.0146. At D 9, where sigdss needs no prior (#892), the
 two differ by 4×10⁻⁴.
+
+**The kernel's chain at η = 1 from D 10.475 to 11 (#917; raw `I917-mac/` bd4f3d47).** From the end of #652's chain,
+`chain.py --eta 1` with the band solver ran to D 10.5 and on to D 11 in steps of 0.0625. All 9 points converged, to max
+|F| ≤ 1.0×10⁻³⁰ after one more Newton step at four of them, and no step was halved. Every point from D 10.5625 on
+took the band solver's deflated steps, two resolved and three band steps each. #652's chain with plain Newton had 18
+failed runs and steps halved down to 1/128 below D 10.475. D 10.475 solved again from the new D 10.5 and 10.5625
+agrees with #652's, #845's and #913's states to 1.7×10⁻²³. `chain_table.py --eta 1` joins the new points to #652's
+from D 10 on (`sigma_ms/data/delta_D_eta1.csv`):
+
+| D | Δ, kernel | sigdss's Δ (march, prior) | kernel minus sigdss |
+|---|---|---|---|
+| 10 | 1.023437249542784 | 1.0261416 (m1up, 10⁻⁸) | −2.7×10⁻³ |
+| 10.1 | 1.022800653369061 | 1.0269908 (m1hi, 10⁻⁷) | −4.2×10⁻³ |
+| 10.25 | 1.021777377751899 | 1.0295102 (m1hi, 10⁻⁷) | −7.7×10⁻³ |
+| 10.3796875 | 1.020832176522758 | 1.0298300 (m1up, 10⁻⁸) | −9.0×10⁻³ |
+| 10.474609375 | 1.020107834653079 | 1.0340058 (m1up, 10⁻⁸) | −1.4×10⁻² |
+| 10.475 | 1.020104800025155 | 0.9934860 (m1hi, 10⁻⁷) | +2.7×10⁻² |
+| 10.5 | 1.019909692894059 | 0.9942924 (m1hi, 10⁻⁷) | +2.6×10⁻² |
+| 10.75 | 1.017868267483358 | | |
+| 11 | 1.015682192797883 | | |
+
+The kernel's Δ(D) at η = 1 falls smoothly from D 10 to 11, with slope −0.0063 at D 10 and −0.0089 at D 11 and a
+second derivative from −3.8×10⁻³ to −2.0×10⁻³. sigdss's values rise from D 10 to 10.4746 on one march and lie 0.04
+lower on the other at D 10.475, so above D 10 they do not follow the kernel's curve at η = 1 either. sigdss has no
+η = 1 value above D 10.5.
 
 ## 12. References
 
