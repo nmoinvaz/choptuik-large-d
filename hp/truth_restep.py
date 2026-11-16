@@ -18,6 +18,10 @@ residuals: each step_spread.py JSON's state read through truth_system, whose pin
 the unperturbed run's recorded one (#884: truth_system's other reads are unchanged). --held float, #837's float-held
 values, is its control and must fail.
 
+blend (#900): z = A + s (B - A) in eight parts, for states A and B of one system (B not re-stepped, A re-stepped from
+B, or both B). Saved with B's meta and meta["restep"] naming B's source with the blend, so that truth_system reads it
+in that system. Reads back equal; s 1 must give B exactly and s 0 A (each printed).
+
 --held_src state holds a re-stepped state's own values, as truth_system did before #884 (the control); the default,
 auto, holds its source's (meta["restep"]["source"]), so that it reads in its source's system.
 
@@ -25,6 +29,7 @@ auto, holds its source's (meta["restep"]["source"]), so that it reads in its sou
   python3 truth_restep.py check RAW STATE [--dz 1e-97] [--F 1e-92] [--threads 3] [--held_ref STATE]
                                 [--match JSON --match_k K] [--json OUT.json] [--held_src auto]
   python3 truth_restep.py residuals RAW JSON... [--threads 3] [--held auto] [--held_src auto]
+  python3 truth_restep.py blend RAW A B OUT --s S
 
 STATE and OUT are relative to RAW, a checkout of the raw-data repository; OUT must be in a task folder of it. Exit 1
 when a check fails.
@@ -193,6 +198,53 @@ def check(argv):
     return 0 if ok else 1
 
 
+def _root(raw, path, meta):
+    """the state whose held values a state is read with: followed through meta["restep"]["source"]"""
+    from octo_corrector import load_o
+    src, m = path, meta
+    while "restep" in m:
+        if m["restep"]["source"] == src:
+            raise SystemExit(f"truth_restep.py: {src}'s restep source names itself")
+        src = m["restep"]["source"]
+        _, m = load_o(os.path.join(raw, src))
+    return src
+
+
+def blend(argv):
+    from multidouble import od_axpy
+    from octo_corrector import load_o, o8, save_o
+    from raw_out import require_raw
+    args, opt = _opts(argv, dict(s=""))
+    raw, pa, pb, out = args
+    if not opt["s"]:
+        raise SystemExit("truth_restep.py blend: --s is required")
+    sv = float(opt["s"])
+    fout = os.path.join(raw, out)
+    require_raw(fout)
+    za, ma = load_o(os.path.join(raw, pa))
+    zb, mb = load_o(os.path.join(raw, pb))
+    ra, rb = _root(raw, pa, ma), _root(raw, pb, mb)
+    if ra != rb or ma.get("segs") != mb.get("segs"):
+        raise SystemExit(f"truth_restep.py blend: {pa} ({ra}) and {pb} ({rb}) are not of one system")
+    dab = o8(od_axpy(-1.0, *za, *zb))           # B - A
+    z = o8(od_axpy(sv, *dab, *za))              # A + s (B - A)
+
+    def lead(x, y):
+        """max|x - y| from the leading part of their eight-part difference"""
+        return float(np.abs(o8(od_axpy(-1.0, *y, *x))[0]).max())
+    m2 = {k: v for k, v in mb.items() if k != "restep"}
+    m2["restep"] = dict(source=rb, steps=0, code="hp/truth_restep.py blend", blend=dict(a=pa, b=pb, s=sv))
+    save_o(fout, z, m2)
+    zr, mr = load_o(fout)
+    back = all(np.array_equal(x, y) for x, y in zip(zr, z)) and mr.get("segs") == mb.get("segs")
+    print(f"truth_restep blend: {out} = {pa} + {sv!r} ({pb} - {pa}); system of {rb}", flush=True)
+    print(f"  max|B - A| {lead(zb, za)!r}; max|z - A| {lead(z, za)!r}; max|z - B| {lead(z, zb)!r}", flush=True)
+    print(f"  saved {out}: eight parts with {pb}'s meta and plan, held values from {rb}; read back "
+          f"{'equal' if back else 'NOT equal'}")
+    print(f"truth_restep blend: {'PASS' if back else 'FAIL'}")
+    return 0 if back else 1
+
+
 def residuals(argv):
     """each step_spread.py JSON's state read through truth_system: its pinned max|F| must equal, as a double, the
     unperturbed run's recorded max|F|"""
@@ -217,7 +269,7 @@ def residuals(argv):
 
 if __name__ == "__main__":
     a = sys.argv[1:]
-    cmds = dict(store=store, check=check, residuals=residuals)
+    cmds = dict(store=store, check=check, residuals=residuals, blend=blend)
     if not a or a[0] not in cmds:
         raise SystemExit(__doc__)
     sys.exit(cmds[a[0]](a[1:]))
