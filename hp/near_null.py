@@ -2,7 +2,7 @@
 """The weakest directions of the chain's Newton system at a stored state, and where in the unknowns they live.
 
     cd hp && python3 near_null.py RAWDIR STATE [--k=4] [--its=16] [--threads=2] [--kfreeze=K] [--keep_plan=0]
-        [--json=OUT] [--planted=1 [--w=1e-20]] [--mutate=scale_p1|sigma|scale_block]
+        [--ks=KS] [--json=OUT] [--save_v=OUT.npy] [--planted=1 [--w=1e-20]] [--mutate=scale_p1|sigma|scale_block|ks]
 
 The pinned system (the state's kfreeze, as anm_run.py solves it) is factored once in octo-double (Solver.newton_o, the
 LU kept), on the state's stored plan, the one anm_run.py's base polish keeps; --keep_plan=0 makes the plan again at
@@ -14,6 +14,17 @@ change of sigma_i over the last two iterations is printed as its convergence. Ea
 layout of z (hpkernel.driver: p1, c0 | node_i: p, m, a, c | m_h, a_h | Delta), and each block's share is projected on
 its harmonics over the half grid: odd harmonics for p1, p, m and m_h, even ones for c0, a, c and a_h. Printed:
 sigma_i, its convergence, the five largest (block, harmonic) components and the share of the norm in Delta.
+
+--ks=KS sums the horizon series to order KS instead of the state's (#902): the system at the stored z, with no Newton
+step taken (newton_o factors J at z and returns its step, which is printed and not applied; z is checked unchanged
+after every kernel call), on the stored plan, which a changed ks keeps. Then F and the exact Jacobian at z are formed
+at both orders, and the rows that differ are listed by residual block (centre, Taylor b, horizon, phase): only the
+horizon block's may differ, and F's must there (check). Its control --mutate=ks builds the solver at the state's
+order while the run is otherwise the --ks run, and must reproduce the state's-order run bit for bit.
+
+Printed for every run: the grip on Delta, 1 / ||e_Delta^T J^-1|| in the 2-norm and the max-norm (one transpose solve
+of e_Delta), the sensitivity of Delta to the residual, which does not depend on the order of the sigma.
+--save_v=OUT.npy saves the k vectors V (f64, L x k), to identify a direction across runs by its overlap.
 
 --kfreeze=K factors the system with a different freeze (1: harmonic 3 of p1 held too), the Jacobian at the same
 state, to test whether a weak direction is a given harmonic.
@@ -155,11 +166,23 @@ def main():
     its = int(opts.get("its", 16))
     z, m = load_o(os.path.join(raw, st))
     z = [np.ascontiguousarray(np.asarray(p, dtype=float)) for p in z]
+    z_in = [p.copy() for p in z]
     M, nodes = int(m["M"]), list(m["nodes"])
     D = m.get("D_str", repr(float(m["D"])))
     kf = int(opts.get("kfreeze", m.get("kfreeze", 3)))
-    s = make_solver(D, M, nodes=nodes, kt=m.get("kt", 36), kc=m.get("kc", 146), ks=m.get("ks", 130),
-                    threads=int(opts.get("threads", 2)), kfreeze=kf)
+    mut = opts.get("mutate", "")
+    ks0 = int(m.get("ks", 130))
+    ks = int(opts.get("ks", ks0))
+    if mut == "ks" and ks == ks0:
+        sys.exit("near_null.py: --mutate=ks needs --ks other than the state's")
+    ks_built = ks0 if mut == "ks" else ks
+
+    def solver(order):
+        return make_solver(D, M, nodes=nodes, kt=m.get("kt", 36), kc=m.get("kc", 146), ks=order,
+                           threads=int(opts.get("threads", 2)), kfreeze=kf)
+    s = solver(ks_built)
+    print(f"ks {ks} (the state's {ks0}); the solver built at ks {ks_built}"
+          + (" (--mutate=ks: the tail past the state's order left out)" if mut == "ks" else ""), flush=True)
     # the stored plan by default, the one the polish keeps (#563); a state saved without one gets a new plan
     keep_plan = opts.get("keep_plan", "1") == "1" and "segs" in m
     if opts.get("keep_plan", "1") == "1" and not keep_plan:
@@ -168,7 +191,13 @@ def main():
     L = len(z[0])
     t0 = time.time()
     out = s.newton_o(z)
-    print(f"{st}: D {float(m['D']):g}, L {L}, octo-double LU {time.time() - t0:.0f} s, pivots {out[3]:.1e}..{out[4]:.1e}", flush=True)
+
+    def unchanged():
+        return all(np.array_equal(a, b) for a, b in zip(z, z_in))
+    z_same = unchanged()
+    print(f"{st}: D {float(m['D']):g}, L {L}, octo-double LU {time.time() - t0:.0f} s, pivots {out[3]:.1e}.."
+          f"{out[4]:.1e}; z {'unchanged' if z_same else 'CHANGED'} by the factorization (its step is not applied)",
+          flush=True)
     # the first Newton step: newton_o's dz, and dz + J^-1 c with the base polish's held offset c (eight parts)
     from multidouble import od_axpy
     from pinning import PinnedSolver, band_coeffs, band_field
@@ -190,6 +219,16 @@ def main():
     V, hist = subspace(solve, L, k, its)
     sig = hist[-1]
     conv = np.abs(hist[-1] - hist[-2]) / hist[-1]
+    # the grip on Delta: the Delta row of J^-1 by one transpose solve of e_Delta
+    e = np.zeros(L)
+    e[-1] = 1.0
+    y8 = s.olu_solve([e] + [zero] * 7, True)
+    y = np.asarray(y8[0]) + np.asarray(y8[1])
+    grip = dict(two=float(1 / np.linalg.norm(y)), max=float(1 / np.abs(y).max()))
+    print(f"  grip on Delta: 1 / ||e_Delta^T J^-1||_2 {grip['two']:.6e} (ln {np.log(grip['two']):+.4f}), "
+          f"1 / max|e_Delta^T J^-1| {grip['max']:.6e}", flush=True)
+    if opts.get("save_v"):
+        np.save(opts["save_v"], V)
     # v_1 refined in octo-double, then ||J v_1|| from the exact Jacobian at 140 digits: it must be sigma_1
     import mpmath as mp
     mp.mp.dps = 140
@@ -201,6 +240,30 @@ def main():
         x8 = [np.ascontiguousarray(p) for p in od_axpy(1.0 / nrm, *[np.asarray(p) for p in y], *([zero] * 8))]
     t1 = time.time()
     J = [np.asarray(p) for p in s.jacobian_o(z)]
+    rows = None
+    if ks_built != ks0:
+        # F and J at the state's order beside the run's, on the same plan: the rows that differ, by residual block
+        s0 = solver(ks0)
+        s0.set_segs(m["segs"] if keep_plan else s.plan(z[0], z[1], 1e-32, 0.05))
+        dF = np.abs(np.asarray(od_axpy(-1.0, *[np.asarray(p) for p in s0.residual_o(z)],
+                                       *[np.asarray(p) for p in s.residual_o(z)])[0]))
+        J0 = [np.ascontiguousarray(np.asarray(p)).ravel() for p in s0.jacobian_o(z)]
+        dJ = np.abs(np.asarray(od_axpy(-1.0, *J0, *[np.ascontiguousarray(p).ravel() for p in J])[0])).reshape(L, L)
+        del J0
+        K = len(nodes)
+        names = ["centre"] + [f"taylor{b}" for b in range(1, K)] + ["horizon", "phase"]
+        starts = [4 * M * j for j in range(K + 2)] + [L]   # 4M rows per block, the phase row last
+        rb = {}
+        for j, name in enumerate(names):
+            lo, hi = starts[j], starts[j + 1]
+            rb[name] = dict(F=float(dF[lo:hi].max()), J=float(dJ[lo:hi].max()), rows=[lo, hi])
+        ok_rows = (all(v["F"] == 0 and v["J"] == 0 for n, v in rb.items() if n != "horizon")
+                   and rb["horizon"]["F"] > 0)
+        rows = dict(blocks=rb, ok=bool(ok_rows))
+        print(f"  ks {ks} against {ks0} at z: max|dF|, max|dJ| by residual block: "
+              + "; ".join(f"{n} {v['F']:.2e}, {v['J']:.2e}" for n, v in rb.items())
+              + f": {'only the horizon block differs' if ok_rows else 'NOT only the horizon block'}", flush=True)
+        del dJ
     xv = [mp.fsum(mp.mpf(float(x8[q][c])) for q in range(8)) for c in range(L)]
     nz = [c for c in range(L) if xv[c] != 0]
     jv = [mp.fsum(mp.fsum(mp.mpf(float(J[q][r, c])) for q in range(8) if J[q][r, c] != 0) * xv[c] for c in nz) for r in range(L)]
@@ -208,7 +271,8 @@ def main():
     ratio = float(jn / (sig[0] * (1.05 if opts.get("mutate") == "sigma" else 1.0)))
     print(f"  ||J v_1|| = {mp.nstr(jn, 6)} from the exact Jacobian at 140 digits ({time.time() - t1:.0f} s)", flush=True)
     blocks = layout(M, len(nodes))
-    rec = {"state": st, "D": float(m["D"]), "pivots": [out[3], out[4]], "vectors": []}
+    rec = {"state": st, "D": float(m["D"]), "ks": ks, "ks_state": ks0, "ks_built": ks_built, "mutate": mut,
+           "pivots": [out[3], out[4]], "grip": grip, "rows": rows, "vectors": []}
     for i in range(k):
         v = V[:, i]
         comps = []
@@ -224,7 +288,6 @@ def main():
         rec["vectors"].append(dict(sigma=float(sig[i]), conv=float(conv[i]), top=[(n, h, a) for a, n, h in comps[:8]],
                                    blocks=share, delta=float(v[-1] ** 2)))
     assert len(blocks) * M + 1 == L and all(o == j * M for j, (_, o, _) in enumerate(blocks)), "layout does not tile z"
-    mut = opts.get("mutate", "")
     rec["plan"] = "stored" if keep_plan else "new"
     for key, label, d8 in (("step", "step dz = -J^-1 F (newton_o)", dz8),
                            ("step_pinned", "pinned step dz + J^-1 c (held offset at the state's coefficients)", dpin8)):
@@ -257,8 +320,10 @@ def main():
         print("planted check:", "pass" if ok_p else "FAIL", "(every block within 1e-10)")
         rec["planted"] = dict(w_norm=float(np.linalg.norm(w)), seed=2, F_z_max=float(np.abs(F8[0]).max()),
                               step=rp, errors=err, mutate=mut, ok=ok_p)
-    ok = bool(conv[0] < 1e-3 and abs(ratio - 1) < 1e-2) and ok_p
-    print(f"  ||J v_1|| / sigma_1 = {ratio:.6f}")
+    z_same = z_same and unchanged()
+    rec["z_unchanged"] = bool(z_same)
+    ok = bool(conv[0] < 1e-3 and abs(ratio - 1) < 1e-2) and ok_p and z_same and (rows is None or rows["ok"])
+    print(f"  ||J v_1|| / sigma_1 = {ratio:.6f}; z {'unchanged' if z_same else 'CHANGED'} after every kernel call")
     print("check:", "pass" if ok else "FAIL")
     if opts.get("json"):
         json.dump(rec, open(opts["json"], "w"), indent=1)
