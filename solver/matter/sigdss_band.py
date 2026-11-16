@@ -3,7 +3,7 @@
 
     python3 solver/matter/sigdss_band.py width STATE --D D --eps EPS [--kc 15] [--json OUT] [--mutate dcol]
     python3 solver/matter/sigdss_band.py walk STATE --D D --eps EPS [--kc 15] [--maxjac 100] [--dtol 1e-9]
-        [--out OUT.npy] [--json OUT]
+        [--settle 3] [--out OUT.npy] [--json OUT]
 
 STATE is a sigdss solution (.npy), or NPZ@D for the entry of a sigdss_run.py continuation file (v, Z) at that D.
 
@@ -15,8 +15,8 @@ step -(J^-1 F)_Delta. Check (exit 1): the two g agree to 1e-6 relative. Control:
 by 1e-6, which raises g by 1e6 where the Delta column is not near-null; the coordinator's acceptance reads it.
 
 walk: Levenberg-Marquardt (sigdss_solver.lm, the steps frozen once from STATE, no stall stop), one Jacobian at a time,
-until Delta moves less than --dtol in one Jacobian (settled), a Jacobian does not lower |F| (stalled), or --maxjac
-Jacobians. Per Jacobian: |F|, Delta, its change.
+until Delta moves less than --dtol in each of --settle (3) Jacobians in a row (settled), a Jacobian does not lower |F|
+(stalled), or --maxjac Jacobians. Per Jacobian: |F|, Delta, its change.
 """
 import json
 import os
@@ -63,7 +63,7 @@ def main(argv):
     if len(argv) < 2 or argv[0] not in ("width", "walk"):
         raise SystemExit(__doc__)
     cmd, spec = argv[0], argv[1]
-    opt = dict(D="", eps="", kc="15", json="", mutate="", maxjac="100", dtol="1e-9", out="")
+    opt = dict(D="", eps="", kc="15", json="", mutate="", maxjac="100", dtol="1e-9", out="", settle="3")
     for k in opt:
         if "--" + k in argv:
             opt[k] = argv[argv.index("--" + k) + 1]
@@ -98,10 +98,15 @@ def main(argv):
                 print("  no decrease of |F|: stalled", flush=True)
                 break
             z, nF0 = zn, float(nF)
-            if abs(dD) < float(opt["dtol"]):
+            # settled: the last --settle Jacobians each moved Delta by less than --dtol (one short LM step is not enough:
+            # #892 stopped on +2.7e-10 while Delta fell 2.3e-5 per Jacobian)
+            quiet = len(hist) >= int(opt["settle"]) and all(abs(h["dDelta"]) < float(opt["dtol"])
+                                                             for h in hist[-int(opt["settle"]):])
+            if quiet:
                 break
         rec.update(hist=hist, Delta=float(z[-1]), F=hist[-1]["F"] if hist else None, stalled=bool(stalled),
-                   settled=bool(hist) and not stalled and abs(hist[-1]["dDelta"]) < float(opt["dtol"]))
+                   settled=bool(hist) and not stalled and len(hist) >= int(opt["settle"])
+                   and all(abs(h["dDelta"]) < float(opt["dtol"]) for h in hist[-int(opt["settle"]):]))
         print(f"sigdss_band walk {spec}: {len(hist)} Jacobians, Delta {z[-1]:.12f}, |F| {rec['F']:.4e}, "
               f"{'settled' if rec['settled'] else 'stalled' if stalled else 'NOT settled'} (dtol {opt['dtol']})",
               flush=True)
