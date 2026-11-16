@@ -612,6 +612,14 @@ adds about −2×10⁻³. So from D 10 on, §5's η = 0.3 points depend on the p
 near D 10.5, computed at these states, is not established. The walk's stop rule now needs three quiet Jacobians in a
 row (`sigdss_band.py --settle`).
 
+The walks continued from those ends (#897; winb, raw `I897-winb/` 75c41860; up to 400 Jacobians, `--settle 3`) did not
+settle either. Those at D 10.0 and 10.5 (m03up) used all 400 Jacobians with Δ still moving by −1.6×10⁻⁶ and +9.9×10⁻⁶
+per Jacobian. Those on the m03hi branch stopped on a stall. No end reached W ≤ 10⁻⁴, so all four read prior-held.
+Newton's steps from the ends, estimates rather than measurements, point to about 1.15177 at D 10.0 (march 1.154559),
+and to about 1.1380 at D 10.5 from both branches, which start 2.7×10⁻² apart (march 1.112502 on m03up and 1.139109 on
+m03hi). So the system without the prior seems to have one solution near 1.138 at D 10.5, 1.1×10⁻³ below the m03hi
+value that §5 quotes, and none near m03up's.
+
 ## 12. References
 
 - [HLPTA00] S. Husa, C. Lechner, M. Pürrer, J. Thornburg, P. C. Aichelburg, PRD 62, 104007 (2000),
