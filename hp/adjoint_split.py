@@ -8,7 +8,7 @@ step is taken, so no cross term of an offset start enters (#852, #857).
 Reference: M. B. Giles, E. Suli, Adjoint methods for PDEs: a posteriori error analysis and postprocessing by duality,
 Acta Numerica 11 (2002) 145-236.
 
-    cd hp && python3 adjoint_split.py run RAW STATE --out FILE.json [--threads 4] [--settings S1,S2,...]
+    cd hp && python3 adjoint_split.py run RAW STATE --out FILE.json [--threads 4] [--settings S1,S2,...] [--project 1]
     cd hp && python3 adjoint_split.py planted RAW STATE [--threads 4] [--mutate notrans|shift]
 
 The base is the state's own system: its ks, kc and kt, its stored plan, and its own held values (eight parts, as
@@ -23,6 +23,13 @@ anm_run.py --held_o 1 holds them at the state's D). Settings, each changed alone
                D0 = 73.0, the end of the fits' full-system states (v(D) = v(D0) + fit(D) - fit(D0) along the chains)
 Each line gives psi^T dF (the setting's share of chain - truth, if the changed setting is the truer one) and
 -psi^T dF (the predicted Delta shift when the setting changes).
+
+--project 1 eliminates the horizon data nonlinearly first, as the chain's corrector does (ElimO): z_s = P_s(z) re-solves
+only the horizon data with the setting's re-seeder, and the prediction is (z_s - z_r)_Delta - psi^T (F_s(z_s) -
+F_r(z_r)), z_r = P_r(z) for the reference. To first order this is the adjoint of the reduced system (the Schur
+complement on the horizon block); without it a change of the horizon rows falls outside the full system's linear
+range (#905: the order-131 shift at D 245.14 came out -4.9e-11 against Newton's +3.8e-13). The zero control is
+psi^T F_base(P_base(z)), the projection's own error seen through psi.
 
 Checks, each of which can fail (exit 1): (1) the rebuilt base reproduces the state, max|F| <= 1e-50; (2) the Newton
 step's Delta at the state equals -psi^T F(z) to 1e-8; (3) the transposed and the plain solve agree, psi^T r = (J^-1
@@ -94,6 +101,20 @@ class State:
                                 rest=[np.asarray(p)[:self.M] for p in self.z8[2:]])
         self.threads = threads
         self.L = len(self.z8[0])
+        self._rs = {}
+
+    def project(self, z8, ks=None, kc=None, kt=None):
+        """z8 with only its horizon data re-solved by the chain's re-seeder of the given orders (reseed.Reseeder with
+        anm_run.py's --reseed_q 1 --reseed_o 3 --reseed_start pred, as ElimO.project): (z', how)"""
+        from octo_corrector import o8, q4_of_o, with_horizon
+        from reseed import Reseeder
+        key = (ks or self.ks, kc or self.kc, kt or self.kt)
+        if key not in self._rs:
+            self._rs[key] = Reseeder(dict(M=self.M, nodes=self.nodes, kt=key[2], kc=key[1], ks=key[0]), self.D,
+                                     threads=self.threads, horizon_alpha=0, qd=True, od=3, qd_start="pred")
+        rs = self._rs[key]
+        zp, how = rs.project(q4_of_o(z8))
+        return (z8 if how == "failed" else o8(with_horizon(z8, zp, rs))), how
 
     def system(self, ks=None, kc=None, kt=None, plan=None, held=None):
         """(solver, PinnedO, segs): the state's system with the given settings changed; plan None keeps the stored
@@ -192,6 +213,17 @@ def cmd_run(argv):
     out = dict(state=rel, D=mp.nstr(st.D, 30), checks=crec, checks_pass=bool(ok), psi_norm=pn, pivots=[A["pmin"], A["pmax"]],
                settings={})
     cache = {}
+    proj = opt.get("project", "0") == "1"
+    if proj:
+        zb, howb = st.project(st.z8)
+        Fb = tomp(resid(so, zb))
+        p0 = mp.fdot(A["psi"], Fb)
+        dzb = float(max(abs(a - b) for a, b in zip(tomp(zb), tomp(st.z8))))
+        out["zero_control"] = dict(projection=howb, dz_max=dzb, psi_F=float(p0), F_max=float(max(abs(x) for x in Fb)))
+        say(f"zero control: the base projected by its own re-seeder ({howb}), max|P z - z| {dzb:.2e}, max|F| "
+            f"{float(max(abs(x) for x in Fb)):.2e}, psi^T F {float(p0):+.3e} (|.| <= 1e-14)")
+    else:
+        zb, Fb = st.z8, F0
     sets = [s for s in opt.get("settings", "ks131,ks131p,plan").split(",") if s]
     for s in sets:
         t0 = time.time()
@@ -214,23 +246,29 @@ def cmd_run(argv):
         else:
             raise SystemExit(f"unknown setting {s}")
         _, so1, segs1 = st.system(**kw)
-        F1 = tomp(resid(so1, st.z8))
-        cache[s] = F1
+        okw = {k: v for k, v in kw.items() if k in ("ks", "kc", "kt")}
+        z1, how1 = st.project(st.z8, **okw) if proj else (st.z8, "-")
+        F1 = tomp(resid(so1, z1))
         if ref is not None:
             if ref not in cache:
                 _, so0, _ = st.system(plan=1e-32)
-                cache[ref] = tomp(resid(so0, st.z8))
-            Fr = cache[ref]
+                cache[ref] = tomp(resid(so0, zb))
+            Fr, zr = cache[ref], zb
         else:
-            Fr = F0
+            Fr, zr = Fb, zb
         dF = [a - b for a, b in zip(F1, Fr)]
         p = mp.fdot(A["psi"], dF)
+        dzD = tomp(z1)[-1] - tomp(zr)[-1]
+        dh = float(max(abs(a - b) for a, b in zip(tomp(z1), tomp(zr))))
         dmax = float(max(abs(x) for x in dF))
-        rec = dict(psi_dF=float(p), dDelta_pred=float(-p), dF_max=dmax, against=ref or "base",
-                   plan_steps=sum(len(g) - 1 for g in segs1), seconds=round(time.time() - t0, 1))
+        pred = dzD - p
+        rec = dict(psi_dF=float(p), dDelta_pred=float(pred), dF_max=dmax, against=ref or "base", projection=how1,
+                   dz_projection_max=dh, dz_projection_Delta=float(dzD), plan_steps=sum(len(g) - 1 for g in segs1),
+                   seconds=round(time.time() - t0, 1))
         out["settings"][s] = rec
-        say(f"  {s:>9} (against {ref or 'base'}{note}): max|dF| {dmax:.3e}, psi^T dF {float(p):+.4e}, "
-            f"predicted Delta shift {float(-p):+.4e}, plan {rec['plan_steps']} steps, {rec['seconds']} s")
+        say(f"  {s:>9} (against {ref or 'base'}{note}{', projected ' + how1 + f', max|z_s - z_r| {dh:.2e}' if proj else ''}): "
+            f"max|dF| {dmax:.3e}, psi^T dF {float(p):+.4e}, predicted Delta shift {float(pred):+.4e}, "
+            f"plan {rec['plan_steps']} steps, {rec['seconds']} s")
         if "out" in opt:
             json.dump(out, open(opt["out"], "w"), indent=1)
     if "out" in opt:
