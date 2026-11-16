@@ -139,7 +139,7 @@ def main():
     print("|---|---|---|---|---|")
     for r in rows:
         if r["sigdss"]:
-            print(f"| {r['D']:.10g} | {r['Delta'][:18]} | {r['max_F']:.1e} | {r['sigdss_Delta']:.7f} ({r['sigdss']}, "
+            print(f"| {r['D']:.12g} | {r['Delta'][:18]} | {r['max_F']:.1e} | {r['sigdss_Delta']:.7f} ({r['sigdss']}, "
                   f"{r['sigdss_prior']:g}) | {r['kernel_minus_sigdss']:+.2e} |")
     if a.csv:
         with open(a.csv, "w", newline="") as fh:
