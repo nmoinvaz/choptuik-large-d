@@ -653,7 +653,9 @@ ended too (2.1×10⁻¹⁷ apart). The next correction, 1.1×10⁻⁵ in Δ at a
     `step_spread.py --blocks Delta` and `power`).** At D 240.1244 the departure from the root's own step is exactly
     quadratic over rel 10⁻⁶⁵ to 10⁻⁶⁷ (p 2.0000, 2.0000), with dev / rel² = 1.1027×10⁸¹ and |dev| / move 6.5×10¹⁵ to
     6.5×10¹³. At 252.6135 it settles toward a quadratic (p 1.6481, 1.9772), with dev / rel² −1.13×10⁸⁹ to −2.67×10⁸⁹, as
-    the move's change of the smallest pivot falls from 4.1×10⁻² to 4.2×10⁻⁴. So the ratio is the second-order term,
+    the move's change of the smallest pivot falls from 4.1×10⁻² to 4.2×10⁻⁴. Below that it is quadratic (#856; raw
+    `I856-mac/` 064359c1): p 1.9978 and 1.9998 over rel 10⁻⁶⁷ to 10⁻⁶⁹, with dev / rel² = −2.686175×10⁸⁹ changing by
+    5.1×10⁻⁴ in the last decade, so #850's "neither" came from its 10⁻⁶⁵ pair only. So the ratio is the second-order term,
     not a failure of the step's linear part, which these rels do not reach. That term would equal a once-the-move
     linear return at rel 1.5×10⁻⁸¹ (240.1) and 6.3×10⁻⁹⁰ (252.6), an extrapolation. These are steps of the plain
     pinned Newton (`PinnedO.newton_o`, no projection), not of the chain's ElimO corrector. The checks reproduce #840's
