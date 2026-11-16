@@ -1072,7 +1072,10 @@ Every verdict matches (`python3 mutations_M.py --all`; the entries ran in four b
   run. `lemma_S_M` now runs the centre with the same series code and requires its identity checks over a box as well.
   `S_series_M3_box` and `S_series_M5_box` are caught, at 10⁻⁶ and at 10⁻⁹, and the certificate's two runs are
   bit-identical to the code before the change on the same machine. `lemma6_sector.py` (M = 1) has the same check, and
-  its mutation over the box 10⁻⁹ is caught.
+  its mutation over the box 10⁻⁹ is caught. On aarch64 Linux and on Windows (#912; raw `I912-rpi5/` 98587d7a and
+  `I912-winb/` 2799f34e) every run has its required status, and the code before the fix misses the box mutation
+  (exit 3). The two certificate JSONs differ from the Mac's only in the last digits of the f64 weights (up to
+  1.2×10⁻¹² relative) and in four of M = 5's ball radii (up to 3%), with equal midpoints and verdicts.
 - `jump_coords_M3` is reported, not caught on the pilot's box: ρ₆ₐ = 0.89 < 1 with the wrong mode normalization (0.12
   at M = 1). On the certificate's state box it is caught (ρ₆ₐ = 1.45; A_M_review.md F8). As at
   M = 1 (§11.6), the error enters at second order through the flat estimate. What guards the normalization is
