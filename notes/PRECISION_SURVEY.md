@@ -53,8 +53,8 @@ These are the defect: a number read at 53 bits and then used at 192 to 512 bits.
 | `fixed_point.py:185` | `A_FAST` = √2/4, the kernel rate, made at import | every M = 1 run of `fixed_point.py` and of `lemma6_sector.py`. `fixed_point_M.py` replaces it with its own rate | make it inside `run`, after the precision is set |
 | `fixed_point.py:193`, `set_sector` | the sector's half-width 0.2 | `fixed_point.py --sector=0.2` (A_certify.md) | set the precision at the top of `main` |
 | `b8_formal.py:32–33` | W₀, A\*, ω\*/ω∞ at import. `params` then takes A\*'s midpoint as the box centre | every run of `b8m_atoms.py`, `b8m_scan.py`, `b8m_h8.py`, `b8m_lc.py`, which raise the precision to 256 bits later | done in #885: the precision is set in `b8_formal.py` before these three lines |
-| `b8m_scan.py:26–27` | the tuning constants `slacks` and `eps` | the three `b8m_scan.py` runs of B8_constants.md and B_chain.md | read them after `atoms()` has set the precision |
-| `b8_bounds.py:21`, `b8m_bounds.py:31`, `b8m_lc.py:54` | π at import | the runs of `b8m_lc.py`, `b8m_h8.py`, `b8m_scan.py` | make π where it is used |
+| `b8m_scan.py:26–27` | the tuning constants `slacks` and `eps` | the three `b8m_scan.py` runs of B8_constants.md and B_chain.md | done in #887: the script states its precision first |
+| `b8_bounds.py:21`, `b8m_bounds.py:31`, `b8m_lc.py:54` | π at import | the runs of `b8m_lc.py`, `b8m_h8.py`, `b8m_scan.py` | done in #885 and #887: the precision is set before these lines |
 | `b5_bounds.py:447` | the default argument `rhoW = arb("1e12")`, at import | every run of `b5_bounds.py`, `b5_label.py`, `b7_ift.py` | none needed: 10¹² is exact at 53 bits |
 | `fixed_point_M_b.py:912–917`, `main` | `--x`, `--box`, `--cbox` on the plain path | none | #878 |
 | `review_867/rv_system.py:119` | the mutation's factor 1 + 10⁻⁹ | the two mutation runs of #867 | fixed on this branch: the reviewer's own script |
@@ -122,7 +122,9 @@ not state.
 | `b8m_lcj.py` | the record of `b8m_lc_K4.log` | 2 commands of B_chain.md | same exit status, 0 of 13 lines differ |
 | `b8_atoms.py`, `b8_bounds.py`, `b8_formal.py`, `b8m_bounds.py` run as scripts | the zero and the domain constants | none documented | not rerun |
 
-*Proposed:* state the working precision at the top of each, even where it stays 53.
+Done in #887: each of these scripts, and `b8m_bounds.py`, `b8m_lc.py` and `b8m_scan.py`, states its working precision
+in one line after its imports, 256 bits in the B8 scripts and 192 bits in `b5_jump.py` and `b5_threshold.py`. The
+tracer then reports no early read for them, and their printed output is unchanged (raw `I887-mac/`).
 
 ## 4. Reads at 53 bits that are intended
 
