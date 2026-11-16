@@ -145,8 +145,9 @@ continuation in D: the base is polished at D rounded to double-double, each step
 (D, z). It needs --jet_o 1 and --corrector od, and takes --N, --eps, --h_max, --a_grow, --steps and the od flags as the
 chain does. Records OUT/arc.jsonl, states OUT/arc_<n>_D<D>.npz (with --save_jet 1 the series as arcjet_<n>_D<D>.npz).
 --arc_dhold H: the bordered corrector holds D (its step is the fixed-D Newton step, the arclength row counted as
-satisfied within H / |t_D|) when the bordered step's D move is at most H; the chain's F moves by about 2e33 dD^2 along
-the tangent, so a move of one double-double ulp of D (~1e-30) puts the point far outside the corrector's basin (#842).
+satisfied within H / |t_D|) when the bordered step's D move is at most H; D resolves about 1e-30 in double-double, so
+a smaller move is rounded to 0 or to a jump of up to an ulp. Each prediction is moved along the tangent to the
+double-double D its corrector runs at (#842).
 --arc_jet FILE: the first base's series read from FILE (an arcjet_*.npz of an earlier run at the same base D and N)
 instead of computed.
 --save_jet 1 saves each base's series z_0..z_N as OUTDIR/jet_pin<k>_D<D>.npz, in all the parts its jet carries (eight

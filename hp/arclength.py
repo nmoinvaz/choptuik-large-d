@@ -506,8 +506,8 @@ class BorderedCore:
     is rounded so that D + dD is, and dz is taken for the rounded dD. The row is reported as 0 once |g| is within
     max(ulp(D), H) / |t_D| (H = --arc_dhold; the rounding of D moves the point along the branch by at most ulp(D)).
     D is held (dD = 0, the step a: the fixed-D Newton step) when the bordered dD is at most H and the row is within
-    that bound: a tangent move of dD costs about 2e33 dD^2 in the chain's F, so one ulp of D (~1e-30) is fatal at the
-    corrector's starts of 1e-35 (#842). newton_o: Keller's block
+    that bound: D resolves about 1e-30 in double-double, so a smaller move would be rounded to 0 or to a jump of up to
+    an ulp, and the arclength row needs no such precision. newton_o: Keller's block
     elimination through the LU at the point (sysm.at(D)), a = -J^-1 (F - c), b = J^-1 F_D, each call's denominator
     t_D - <t_z, b> and |b| logged; olu_solve: the same elimination (transposed: through J^-T)."""
 
@@ -765,16 +765,20 @@ class ChainSys:
         opt, t0 = self.opt, time.time()
         with mp.workdps(DPS_SERIES):
             Dd = dd_round(Dp)
-            pred8 = to_parts(xp)
+            # the prediction moved along the tangent to the double-double D the corrector runs at: left at Dp, its
+            # Delta is off by about w_1 (Dd - Dp) ~ 1e-31, which the re-seed's projection does not see (#842 pilot 2)
+            xs = vadd(xp, tz, (Dd - Dp) / tD)
+            pred8 = to_parts(xs)
         e = self.at(Dd)
-        rec = dict(D_pred=mp.nstr(Dp, 34), D_start=mp.nstr(Dd, 34))
+        rec = dict(D_pred=mp.nstr(Dp, 34), D_start=mp.nstr(Dd, 34), D_round=float(Dd - Dp), Delta_shift=float(xs[-1] - xp[-1]))
         if opt["reseed"]:
             zr, rsd = e["rs"].reseed(q4_of_o(pred8))
             rec["reseed"] = dict(ok=rsd["ok"], seconds=rsd["seconds"], dropped=rsd["dropped"])
             if rsd["ok"]:
                 pred8 = with_horizon(pred8, zr, e["rs"])
         rec["F_pred"] = omax(e["po"].residual_o(pred8))
-        print(f"  attempt at D {mp.nstr(Dd, 15)}: predicted max|F| {rec['F_pred']:.2e}"
+        print(f"  attempt at D {mp.nstr(Dd, 15)} (the prediction moved {rec['D_round']:+.2e} in D, {rec['Delta_shift']:+.2e} in Delta): "
+              f"predicted max|F| {rec['F_pred']:.2e}"
               + (f", re-seed {'ok' if rec['reseed']['ok'] else 'FAILED'}" if opt["reseed"] else ""), flush=True)
         if border:
             core = BorderedCore(self, xp, Dp, tz, tD)
