@@ -1205,6 +1205,7 @@ python3 lemma6b1_cover_M.py check --M=3 --h=1.1e-9 --tag=_cert --x=$P --json=lem
                                                            # C1-C8: must print PASS, 1 s
 python3 lemma6b1_cover_M.py c1check --M=3 --h=1.1e-9 --tag=_cert --x=$P    # planted truth for the C^1 sets, ~5 min
 python3 mutations_M.py [--all]                             # section 8; exit 0 only if every verdict matches
+python3 prec_chain_check.py --raw=../../../choptuik-large-d-raw --selftest    # no decimal read before the precision, 5 min
 python3 refine_zero_M.py --M=3 --A=2.726475886 --wf=1.015603095 --x=0.144419478,0.011087426   # the zero (double precision)
 python3 lemmas_M_report.py all                             # the tables of this note, from the saved runs
 ```

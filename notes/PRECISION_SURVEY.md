@@ -17,6 +17,7 @@ each gives the same exit status. The Theorem A chain at M = 3 and M = 5 has no e
 - [4. Reads at 53 bits that are intended](#4-reads-at-53-bits-that-are-intended)
 - [5. What the survey did not reach](#5-what-the-survey-did-not-reach)
 - [6. Reproduce](#6-reproduce)
+- [7. A standing check on the Theorem A chain](#7-a-standing-check-on-the-theorem-a-chain)
 
 ## How the survey was made
 
@@ -166,3 +167,34 @@ python3 prec_survey.py rerun --limit=240                   # 14 min -> prec_surv
 ```
 
 The collected commands, the traces and the reruns are in raw `I879-mac/`.
+
+## 7. A standing check on the Theorem A chain
+
+The survey is a one-time pass. `solver/proof/prec_chain_check.py` (#888) repeats its test on the commands that
+Theorem A(M) rests on, so that a new early read fails a check.
+
+- **What it traces.** 45 documented commands at M = 3 and 5: step (i) by both implementations
+  (`fixed_point_M.py`, `fixed_point_M_b.py` and its harness), (H0) to (H3) of A_lemmas_M.md §6 (`start_cover_M2.py`,
+  `lemma6_sector_M.py`, the covering's `design`, `ray`, `row`, `check` and `c1check`, `theorem_A_sets_M.py`,
+  `start_cover_lemmas_M.py`, `lemma6_jump_M.py`) and the point certificates (`certify_M.py`, `certify_M2.py`,
+  `certify_M_recheck.py`: box run, Krawczyk test, controls, recheck, export). The placeholders of the notes are
+  filled from the stored files. Each command is traced by `prec_trace.py` for 6 seconds.
+- **What it writes.** Nothing that is stored: outputs go to a temporary directory, and the covering's ray and row
+  runs to a scratch tag that is removed afterwards. The worktree is unchanged after a run.
+- **What passes.** Every trace starts, and no command shows an early read outside three known ones, listed in the
+  script with their reasons: `fixed_point_M.data_table` (§1, held), `fixed_point_M.W0` in the table runs (§1) and
+  `start_cover_M2.lemma_runs` (§4). On main: 45 traced, 30 known reads, 0 new, PASS in 140 s. Without `--raw` the
+  four commands that need raw files are skipped and counted: 41 traced, PASS.
+- **Its control.** `--mutate=early` traces a copy of `fixed_point_M_b.py` in which the line of `main()` that sets the
+  precision is moved below the reads of `--x`, `--box` and `--cbox`, the state before #878. The check then fails
+  and names the six reads of `--x` at 53 bits. `--selftest` runs both and passes only if the clean check passes and
+  the control fails.
+
+The limits are those of §5: a read is seen only if the run reaches it within the time limit and on the path its
+arguments take. Raw `I888-mac/`.
+
+```
+python3 prec_chain_check.py --raw=<raw clone>               # PASS, exit 0, 2.5 min
+python3 prec_chain_check.py --raw=<raw clone> --mutate=early    # FAIL, exit 1: the control
+python3 prec_chain_check.py --raw=<raw clone> --selftest    # PASS, exit 0, 5 min
+```
