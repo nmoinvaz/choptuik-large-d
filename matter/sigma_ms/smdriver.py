@@ -267,7 +267,7 @@ def newton_solve(s, zh, zl, tol=1e-28, it_max=16, max_halvings=10, verbose=True,
     return zh, zl, hist
 
 
-def newton_band(s, zh, zl, tol=1e-28, it_max=40, band_tol=1e-6, radius=None, band=True, kappa=0.1, correctors=4,
+def newton_band(s, zh, zl, tol=1e-28, it_max=40, band_tol=1e-6, radius=None, band=True, kappa=0.1, correctors=10,
                 max_halvings=30, verbose=True, log=print, after_step=None):
     """Deflated Newton in double-double, for starts on the near-null band of the Jacobian (SIGMA_DSS.md section 6).
     There Newton's step dz_N = -J^-1 F has components of 1e2 to 1e4 along the band, far beyond the reach of the linear
@@ -318,7 +318,8 @@ def newton_band(s, zh, zl, tol=1e-28, it_max=40, band_tol=1e-6, radius=None, ban
             th, tl = dd_add(zh, zl, dz[0], dz[1])
             g1 = float(np.linalg.norm(vec(s.residual([th, tl]))))
             if np.isfinite(g1) and g1 < g0:
-                rec.update(mode="newton", F2_next=g1, dz=nN, lam=1.0, dDelta=float(dN[-1]), t=round(time.time() - t0, 1))
+                rec.update(mode="newton", F2_next=g1, dz=nN, lam=1.0, dDelta=float(dN[-1]),
+                           t=round(time.time() - t0, 1))
                 if verbose:
                     log(f"  band {it} (newton): |F| {nF:.2e}, |F|_2 {g0:.2e} -> {g1:.2e}, |dz| {nN:.1e}, dDelta "
                         f"{dN[-1]:+.2e}, pivots {pmin:.1e}..{pmax:.1e} ({rec['t']} s)")
@@ -334,7 +335,10 @@ def newton_band(s, zh, zl, tol=1e-28, it_max=40, band_tol=1e-6, radius=None, ban
             U, sig, Vt = np.linalg.svd(np.asarray(Jh) + np.asarray(Jl))
             weak = sig < band_tol * sig[0]
             k = int(weak.sum())
-            rec.update(sig_max=float(sig[0]), sig_low=[float(x) for x in sig[-8:]], k=k, t_svd=round(time.time() - ts, 1))
+            # the count of singular values below 1e-3, 1e-4, ..., 1e-12 of the largest: where the band ends
+            rec.update(sig_max=float(sig[0]), sig_low=[float(x) for x in sig[-8:]], k=k,
+                       sig_counts=[int(np.sum(sig < 10.0 ** -e * sig[0])) for e in range(3, 13)],
+                       t_svd=round(time.time() - ts, 1))
             if k:
                 Uw, Vw = U[:, weak], Vt[weak].T
             del U, Vt
@@ -354,7 +358,7 @@ def newton_band(s, zh, zl, tol=1e-28, it_max=40, band_tol=1e-6, radius=None, ban
             db, nb, ds = None, 0.0, (dz[0], dz[1])
         mode = "band" if k and S0 <= max(kappa * B0, 0.1 * tol) else "resolved"
         lam = min(1.0, radius / nb) if mode == "band" else 1.0
-        ok, nc = False, 0
+        ok, nc, Sm = False, 0, float("nan")
         for h in range(max_halvings + 1):
             if mode == "resolved":
                 th, tl = dd_add(zh, zl, ds[0] * lam, ds[1] * lam)
@@ -364,7 +368,7 @@ def newton_band(s, zh, zl, tol=1e-28, it_max=40, band_tol=1e-6, radius=None, ban
                 th, tl = dd_add(zh, zl, ds[0], ds[1])
                 th, tl = dd_add(th, tl, db * lam, np.zeros_like(db))
                 S1, B1 = split(vec(s.residual([th, tl])))
-                nc = 0
+                Sm, nc = S1, 0
                 while nc < correctors and np.isfinite(S1) and S1 > max(kappa * B1, 0.1 * tol):
                     c, _ = s.chord([th, tl])
                     cb = Vw @ (Vw.T @ vec(c))
@@ -379,13 +383,15 @@ def newton_band(s, zh, zl, tol=1e-28, it_max=40, band_tol=1e-6, radius=None, ban
                 break
             lam *= 0.5
         dzt = vec([th, tl]) - vec([zh, zl])
-        rec.update(mode=mode, S=S0, B=B0, S_next=S1, B_next=B1, lam=lam, halvings=h, correctors=nc, dz_newton=nN,
+        rec.update(mode=mode, S=S0, B=B0, S_move=Sm, S_next=S1, B_next=B1, lam=lam, halvings=h, correctors=nc,
+                   dz_newton=nN,
                    dz_band=nb, dz=float(np.linalg.norm(dzt)), radius=radius, dDelta=float(dzt[-1]),
                    t=round(time.time() - t0, 1))
         if verbose:
             low = ", ".join(f"{x:.1e}" for x in rec.get("sig_low", [])[-4:])
-            log(f"  band {it} ({mode}, {k} deflated, lowest sig {low}): |F| {nF:.2e}, S {S0:.2e} -> {S1:.2e}, B {B0:.2e} -> "
-                f"{B1:.2e}, lam {lam:.3g}, {nc} correctors, |dz| {rec['dz']:.1e} (band step {nb:.1e}, Newton's {nN:.1e}), "
+            log(f"  band {it} ({mode}, {k} deflated, lowest sig {low}): |F| {nF:.2e}, S {S0:.2e} -> {S1:.2e}, "
+                f"B {B0:.2e} -> {B1:.2e}, lam {lam:.3g} after {h} halvings, {nc} correctors from S {Sm:.1e}, "
+                f"|dz| {rec['dz']:.1e} (band step {nb:.1e}, Newton's {nN:.1e}), "
                 f"dDelta {rec['dDelta']:+.2e}, pivots {pmin:.1e}..{pmax:.1e} ({rec['t']} s)")
         if not ok:
             rec["failed"] = "line search"
