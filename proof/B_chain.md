@@ -566,7 +566,10 @@ python3 b5_jump.py --mutate=sum                     # must be caught
 python3 b8m_scan.py 4 73.89 --d0=1e7 --rA=2e-6 --rW=2e-6 --log=b8m_scan_K4_d0_1e7.log   # B8 with the offset, ~1 min
 python3 b8m_h8.py 4 73.89 --log=b8m_scan_K4_d0_1e7.log --d0=1e7 > b8m_h8_K4_L73.89_d0_1e7.log   # (H8), a few min
 python3 b5_jump.py --h8log=b8m_h8_K4_L73.89_d0_1e7.log --json=b5_jump_d0_1e7.json   # (same for 1e6)
+for d0 in 1e5 1e6 1e7 1e8 1e9; do python3 b8m_scan.py 4 73.89 --d0=$d0 --rA=2e-6 --rW=2e-6 --log=b8m_scan_K4_d0.log; done   # the table of section 4; 1e8 and 1e9 do not close
 python3 b8m_scan.py 4 104.68 --kappa1=0.85 --rA=2e-6 --rW=2e-6 --log=b8m_scan_K4_k0.85.log   # confirmation only
+python3 b8m_h8.py 4 104.68 --log=b8m_scan_K4_k0.85.log --kappa1=0.85 > b8m_h8_K4_L104.68_k0.85.log   # its (H8)
+python3 b8m_scan.py 4 90 --kappa1=0.7308324141810887 --rA=2e-6 --rW=2e-6 --log=b8m_scan_K4_fixedZ.log   # kappa1 = Z cos(kappa) ln n0, confirmation only
 python3 b7_adjoint.py box --hr=1.1e-8 --hi=1e-8 --out=b7_box.json             # ~6 min
 python3 b7_adjoint.py adjoint --box=b7_box.json --out=b7_adjoint.json         # ~1-2 min
 python3 b7_adjoint.py point --out=b7_box_point.json                           # ~6 min
@@ -590,7 +593,8 @@ python3 b8m_lcj.py --log=b8m_lc_K4.log --mutate=kernel     # caught (also --muta
 
 `b8m_scan.py` and `b8m_lc.py` append their records to `--log`, and every reader takes the last matching record.
 `bash b8_chain_regen.sh` runs the commands from `b8m_atoms.py` on, without the `b7_adjoint.py` runs, and writes each
-stored output afresh, with its logs emptied first, in about 20 min on the Mac.
+stored output afresh, with its logs emptied first, in about 20 min on the Mac. It adds a line `exit N`, the command's
+exit status, to the stored logs that end with one.
 
 These commands, with those of B5_inner.md §10 and B8_constants.md §13, were rerun on aarch64 Linux (Raspberry Pi 5,
 python-flint 0.9.0, FLINT 3.6.0; #882, raw `I882-rpi5/` 4168e06f), on the code before #885. All 64 commands end as
