@@ -118,8 +118,9 @@ def check(M, raw, mutate=None, quiet=False):
     if mutate == "kbox":
         dec = [abs(K[i]).upper() / 2 for i in range(m)]
     say(f"X_c, the decimal box: p(X), X = +-({', '.join(xc)}) in the chart around p^")
-    say(f"the ball: radii ({', '.join(sub)}) rounded up ({sub[0]} + {fl(arb(Xball[0].rad()) - arb(sub[0])):.3e}, ...), the "
-        f"certificate's Krawczyk sub-box and the box of lemma 6a's state set [{rn['six_a_box']}]")
+    up0 = fl(arb(Xball[0].rad()) - arb(sub[0]))
+    say(f"the ball: radii ({', '.join(sub)}) rounded up ({sub[0]} + {up0:.3e}, ...), the certificate's Krawczyk "
+        f"sub-box and the box of lemma 6a's state set [{rn['six_a_box']}]")
     # (0)
     ok0 = bool(res["ok"])
     say(f"(0) Krawczyk on the ball: K(X) in int X: {res['ok']}, relative margins "
