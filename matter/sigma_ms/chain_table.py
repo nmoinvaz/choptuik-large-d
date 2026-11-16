@@ -1,0 +1,140 @@
+#!/usr/bin/env python3
+"""Delta(D) of the multishoot kernel's chain at one coupling against sigdss's values (#916), from the raw records,
+into a csv and a markdown table.
+
+    git clone https://github.com/nmoinvaz/choptuik-large-d-raw ../choptuik-large-d-raw     (once, beside the checkout)
+    python3 matter/sigma_ms/chain_table.py ../choptuik-large-d-raw [--folder I916-mac] [--eta 0.3] \
+        [--sigdss solver/matter/data/sigdss_m03up.jsonl,solver/matter/data/sigdss_m03hi.jsonl] \
+        [--ref I913-mac] [--csv matter/sigma_ms/data/delta_D_eta0.3.csv] [--mutate closure|kink]
+
+Inputs: <folder>/out/sm_records.jsonl (run_eta.py's records of the chain: at each D the converged record of this
+coupling with the smallest max |F|), sigdss's march records (D, Delta, reg: its smoothness prior), and for the
+closure the records of --ref at the chain's starting D.
+
+Checks, each printed with its verdict; the exit status is 1 when one fails:
+  (1) every D of the chain has a converged record with max |F| <= 1e-28;
+  (2) closure: the chain's own record at the starting D, solved again from the chain's neighbours, agrees with every
+      converged record of --ref there to 1e-20 in Delta;
+  (3) Delta(D) is smooth: on the grid of equal steps its third differences keep one sign, its fourth differences
+      keep one sign, and the largest fourth difference is below 1% of the largest second difference. A jump of
+      2e-8 or more at one point, to another solution or by a wrong digit, fails this.
+      (Its first version asked that neighbouring second differences change by less than a tenth. That fails where
+      the second difference goes to zero, 12% near D 10.9 at eta = 0.3, with no kink there.)
+--mutate closure shifts the chain's value at the starting D by 1e-19 before check (2), which must then fail.
+--mutate kink shifts the value at the middle grid point by 1e-7 before check (3), which must then fail.
+"""
+import argparse
+import csv
+import json
+import os
+import sys
+
+import mpmath as mp
+
+HERE = os.path.dirname(os.path.abspath(__file__))
+ROOT = os.path.normpath(os.path.join(HERE, "..", ".."))
+mp.mp.dps = 40
+
+
+def delta(r):
+    return mp.mpf(r["Delta_hi"]) + mp.mpf(r["Delta_lo"])
+
+
+def best(path, eta):
+    """{D: the converged record of this coupling with the smallest max |F|}"""
+    out = {}
+    for line in open(path):
+        r = json.loads(line)
+        if str(r["eta"]) != eta or not r["converged"]:
+            continue
+        D = float(r["D"])
+        if D not in out or r["F"] < out[D]["F"]:
+            out[D] = r
+    return out
+
+
+def main():
+    ap = argparse.ArgumentParser()
+    ap.add_argument("raw")
+    ap.add_argument("--folder", default="I916-mac")
+    ap.add_argument("--eta", default="0.3")
+    ap.add_argument("--sigdss", default="solver/matter/data/sigdss_m03up.jsonl,solver/matter/data/sigdss_m03hi.jsonl")
+    ap.add_argument("--ref", default="I913-mac")
+    ap.add_argument("--D0", type=float, default=10.5, help="the chain's starting D, where the closure is checked")
+    ap.add_argument("--csv", default="")
+    ap.add_argument("--mutate", default="", choices=["", "closure", "kink"])
+    a = ap.parse_args()
+    ch = best(os.path.join(a.raw, a.folder, "out", "sm_records.jsonl"), a.eta)
+    Ds = sorted(ch)
+    sig = {}
+    for f in a.sigdss.split(","):
+        name = os.path.basename(f).replace("sigdss_", "").replace(".jsonl", "")
+        for line in open(os.path.join(ROOT, f)):
+            r = json.loads(line)
+            if Ds[0] - 1e-9 <= r["D"] <= Ds[-1] + 1e-9:
+                sig.setdefault(r["D"], []).append((name, r["Delta"], r["reg"]))
+    ok = True
+    # (1)
+    worst = max(ch[D]["F"] for D in Ds)
+    v1 = worst <= 1e-28
+    ok &= v1
+    print(f"(1) {len(Ds)} values of D from {Ds[0]:g} to {Ds[-1]:g}, each converged; largest max |F| {worst:.2e} "
+          f"(<= 1e-28): {'PASS' if v1 else 'FAIL'}")
+    # (2)
+    d0 = delta(ch[a.D0]) + (mp.mpf("1e-19") if a.mutate == "closure" else 0)
+    refs = best(os.path.join(a.raw, a.ref, "out", "sm_records.jsonl"), a.eta)
+    allref = [json.loads(line) for line in open(os.path.join(a.raw, a.ref, "out", "sm_records.jsonl"))]
+    allref = [r for r in allref if str(r["eta"]) == a.eta and float(r["D"]) == a.D0 and r["converged"]
+              and r["F"] <= 1e-30]
+    gap = max(abs(d0 - delta(r)) for r in allref) if allref else mp.inf
+    v2 = bool(allref) and gap <= mp.mpf("1e-20") and a.D0 in refs
+    ok &= v2
+    print(f"(2) closure at D {a.D0:g}: the chain's {mp.nstr(d0, 25)} against {len(allref)} records of {a.ref} with "
+          f"max |F| <= 1e-30: largest difference {mp.nstr(gap, 3)} (<= 1e-20): {'PASS' if v2 else 'FAIL'}")
+    # (3) on the points of the equal-step grid only
+    step = min(b - c for b, c in zip(Ds[1:], Ds))
+    grid = [D for D in Ds if abs((D - Ds[0]) / 0.0625 - round((D - Ds[0]) / 0.0625)) < 1e-9]
+    vals = [delta(ch[D]) for D in grid]
+    if a.mutate == "kink":
+        vals[len(vals) // 2] += mp.mpf("1e-7")
+
+    def diff(v):
+        return [q - p for p, q in zip(v, v[1:])]
+    d2 = diff(diff(vals))
+    d3 = diff(d2)
+    d4 = diff(d3)
+    one3 = all(x > 0 for x in d3) or all(x < 0 for x in d3)
+    one4 = all(x > 0 for x in d4) or all(x < 0 for x in d4)
+    ratio = max(abs(x) for x in d4) / max(abs(x) for x in d2)
+    v3 = one3 and one4 and ratio < 0.01
+    ok &= v3
+    h = mp.mpf("0.0625")
+    print(f"(3) smoothness on the {len(grid)} grid points (step 0.0625; smallest step of all points {step:g}): the "
+          f"second derivative runs from {mp.nstr(d2[0] / h ** 2, 4)} to {mp.nstr(d2[-1] / h ** 2, 4)}; third "
+          f"differences of one sign {one3}, fourth of one sign {one4}, largest fourth over largest second "
+          f"{mp.nstr(ratio, 3)} (< 0.01): {'PASS' if v3 else 'FAIL'}")
+    rows = []
+    for D in Ds:
+        de = delta(ch[D])
+        for name, sd_, reg in sig.get(D, [(None, None, None)]):
+            rows.append(dict(D=D, Delta=mp.nstr(de, 30), max_F=ch[D]["F"], sigdss=name or "", sigdss_Delta=sd_ or "",
+                             sigdss_prior=reg if reg is not None else "",
+                             kernel_minus_sigdss=(float(de) - sd_) if sd_ else ""))
+    print("\n| D | Δ, kernel | max \\|F\\| | sigdss's Δ (march, prior) | kernel minus sigdss |")
+    print("|---|---|---|---|---|")
+    for r in rows:
+        if r["sigdss"]:
+            print(f"| {r['D']:.10g} | {r['Delta'][:18]} | {r['max_F']:.1e} | {r['sigdss_Delta']:.7f} ({r['sigdss']}, "
+                  f"{r['sigdss_prior']:g}) | {r['kernel_minus_sigdss']:+.2e} |")
+    if a.csv:
+        with open(a.csv, "w", newline="") as fh:
+            w = csv.DictWriter(fh, fieldnames=list(rows[0]))
+            w.writeheader()
+            w.writerows(rows)
+        print(f"\n{len(rows)} rows -> {a.csv}")
+    print(f"\nCHAIN TABLE{' (mutation ' + a.mutate + ')' if a.mutate else ''}: {'PASS' if ok else 'FAIL'}")
+    sys.exit(0 if ok else 1)
+
+
+if __name__ == "__main__":
+    main()
