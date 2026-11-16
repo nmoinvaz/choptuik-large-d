@@ -75,8 +75,9 @@ trait Api: Send + Sync {
     fn jacobian_o(&mut self, z: [&[f64]; 8], mutate: u8) -> Result<(O8, usize), String>;
     /// model::newton_in at `Octo`
     fn newton_o(&mut self, z: [&[f64]; 8], mutate: u8) -> Result<Step<Octo>, String>;
-    /// model::residual_jet_in at `Octo`: residual_jet in octo-double, each z_k and each output coefficient in eight parts
-    fn residual_jet_o(&mut self, zs: &[[&[f64]; 8]], nout: usize, mutate: u8) -> Result<Vec<O8>, String>;
+    /// model::residual_jet_in at `Octo`: residual_jet in octo-double, each z_k and each output coefficient in eight parts;
+    /// lanes: the jet's coefficient count, 0 for the smallest of OJET_LANES that holds nout and zs
+    fn residual_jet_o(&mut self, zs: &[[&[f64]; 8]], nout: usize, lanes: usize, mutate: u8) -> Result<Vec<O8>, String>;
 }
 
 /// a quad-double vector as its four parts' arrays
@@ -86,6 +87,10 @@ type O8 = [Vec<f64>; 8];
 
 /// f on the context as Ctx<4> (M = 32), with Ctx::mutate set for the call: the octo-double lanes are instantiated for
 /// this size only (the release build's memory, notes/OCTO_DOUBLE.md)
+/// the octo-double jet's coefficient counts (Solver.residual_jet_o): every fourth from 12, so that the series' order k
+/// (nout k + 1, hp/anm_run.py coefficients_o) pays for at most three unused orders past the eighth
+const OJET_LANES: [usize; 7] = [8, 12, 16, 20, 24, 28, 32];
+
 macro_rules! od_sizes {
     ($me:expr, $mutate:expr, |$c:ident| $body:expr) => {{
         let me: &mut dyn std::any::Any = $me;
@@ -312,15 +317,29 @@ impl<const B: usize> Api for Ctx<B> {
     fn newton_o(&mut self, z: [&[f64]; 8], mutate: u8) -> Result<Step<Octo>, String> {
         od_sizes!(self, mutate, |c| model::newton_in::<Octo, _>(c, &z, true))
     }
-    fn residual_jet_o(&mut self, zs: &[[&[f64]; 8]], nout: usize, mutate: u8) -> Result<Vec<O8>, String> {
+    fn residual_jet_o(&mut self, zs: &[[&[f64]; 8]], nout: usize, lanes: usize, mutate: u8) -> Result<Vec<O8>, String> {
         let parts = |f: Vec<Vec<OD>>| -> Vec<O8> { f.iter().map(|v| od_parts(v)).collect() };
         let zs: Vec<Vec<&[f64]>> = zs.iter().map(|z| z.to_vec()).collect();
-        od_sizes!(self, mutate, |c| match nout {
-            0 => Err("nout must be at least 1".to_string()),
-            1..=8 => model::residual_jet_in::<Octo, 8, _>(c, &zs, true, nout).map(parts),
-            9..=24 => model::residual_jet_in::<Octo, 24, _>(c, &zs, true, nout).map(parts),
-            25..=32 => model::residual_jet_in::<Octo, 32, _>(c, &zs, true, nout).map(parts),
-            _ => Err(format!("nout must be at most 32, not {nout}")),
+        if nout == 0 {
+            return Err("nout must be at least 1".to_string());
+        }
+        // a product's order k sums orders 0..k only, so the outputs do not depend on the lane count, bitwise; the
+        // smallest count that holds them costs the least (prec_tests::ojet_lanes_bitwise)
+        let need = nout.max(zs.len());
+        let n = match lanes {
+            0 => OJET_LANES.iter().copied().find(|&n| n >= need).unwrap_or(0),
+            n if OJET_LANES.contains(&n) && n >= need => n,
+            n => return Err(format!("lanes must be 0 or one of {OJET_LANES:?} holding {need} coefficients, not {n}")),
+        };
+        od_sizes!(self, mutate, |c| match n {
+            8 => model::residual_jet_in::<Octo, 8, _>(c, &zs, true, nout).map(parts),
+            12 => model::residual_jet_in::<Octo, 12, _>(c, &zs, true, nout).map(parts),
+            16 => model::residual_jet_in::<Octo, 16, _>(c, &zs, true, nout).map(parts),
+            20 => model::residual_jet_in::<Octo, 20, _>(c, &zs, true, nout).map(parts),
+            24 => model::residual_jet_in::<Octo, 24, _>(c, &zs, true, nout).map(parts),
+            28 => model::residual_jet_in::<Octo, 28, _>(c, &zs, true, nout).map(parts),
+            32 => model::residual_jet_in::<Octo, 32, _>(c, &zs, true, nout).map(parts),
+            _ => Err(format!("nout and the coefficient vectors must be at most 32, not {need}")),
         })
     }
 }
@@ -987,15 +1006,17 @@ impl Solver {
 
     /// residual_jet in octo-double (model::residual_jet_in at `Octo`): zs a list of the coefficient vectors z_k, each a sequence
     /// of its eight parts, the first the state itself; the coefficients of orders 0..nout-1 of F, a list of nout
-    /// tuples of eight arrays. M = 32 only; nout <= 32 (the jets of 8, 24 and 32 coefficients). mutate: as
-    /// residual_jet_q's, with model::OD_MUT_STATE_QD for QD_MUT_STATE_DD.
-    #[pyo3(signature = (zs, nout, mutate=0))]
+    /// tuples of eight arrays. M = 32 only; nout <= 32. lanes: the jet's coefficient count, one of OJET_LANES (8, 12,
+    /// ..., 32) holding nout and zs, or 0 (the default) for the smallest such; the outputs are the same bits at any.
+    /// mutate: as residual_jet_q's, with model::OD_MUT_STATE_QD for QD_MUT_STATE_DD.
+    #[pyo3(signature = (zs, nout, mutate=0, lanes=0))]
     fn residual_jet_o<'py>(
         &mut self,
         py: Python<'py>,
         zs: Vec<Vec<PyReadonlyArray1<'py, f64>>>,
         nout: usize,
         mutate: u8,
+        lanes: usize,
     ) -> PyResult<Vec<T8<'py>>> {
         if zs.is_empty() {
             return Err(PyValueError::new_err("zs must be a non-empty list of eight-part sequences"));
@@ -1006,7 +1027,7 @@ impl Solver {
             zo.push(parts8(z, l)?);
         }
         let (api, pool) = (&mut self.api, &self.pool);
-        let out = py.detach(|| pool.install(|| api.residual_jet_o(&zo, nout, mutate))).map_err(PyValueError::new_err)?;
+        let out = py.detach(|| pool.install(|| api.residual_jet_o(&zo, nout, lanes, mutate))).map_err(PyValueError::new_err)?;
         Ok(out.into_iter().map(|f| arr8(py, f)).collect())
     }
 

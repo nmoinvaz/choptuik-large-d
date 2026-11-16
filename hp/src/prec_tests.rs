@@ -444,6 +444,66 @@ mod od {
         v.iter().map(|x| x.to_f64().abs()).fold(1.0, f64::max)
     }
 
+    /// the coefficient vector z_k of a planted jet state: ((i (k + 3)) mod 11 − 5) / 7 times 2^-3k in octo-double, all
+    /// eight parts, Delta excluded
+    fn coef_k(l: usize, k: usize) -> [Vec<f64>; 8] {
+        let s = (-3.0 * k as f64).exp2();
+        let xs: Vec<OD> = (0..l - 1).map(|i| (OD::from_f64(((i * (k + 3)) % 11) as f64 - 5.0) / OD::from_f64(7.0)).mul_f(s)).collect();
+        std::array::from_fn(|q| xs.iter().map(|x| x.x[q]).chain([0.0]).collect())
+    }
+
+    /// the octo-double jet with n lanes (one of Solver.residual_jet_o's counts)
+    fn jet_n(ctx: &Ctx<1>, n: usize, zs: &[[&[f64]; 8]], par: bool, nout: usize) -> Vec<Vec<OD>> {
+        match n {
+            8 => residual_jet_o::<8, 1>(ctx, zs, par, nout),
+            12 => residual_jet_o::<12, 1>(ctx, zs, par, nout),
+            16 => residual_jet_o::<16, 1>(ctx, zs, par, nout),
+            20 => residual_jet_o::<20, 1>(ctx, zs, par, nout),
+            24 => residual_jet_o::<24, 1>(ctx, zs, par, nout),
+            28 => residual_jet_o::<28, 1>(ctx, zs, par, nout),
+            32 => residual_jet_o::<32, 1>(ctx, zs, par, nout),
+            _ => unreachable!(),
+        }
+        .unwrap()
+    }
+
+    /// the first (order, row) whose eight parts differ
+    fn first_diff(a: &[Vec<OD>], b: &[Vec<OD>]) -> Option<(usize, usize)> {
+        assert_eq!(a.len(), b.len());
+        (0..a.len()).flat_map(|k| (0..a[k].len()).map(move |i| (k, i))).find(|&(k, i)| a[k][i].x != b[k][i].x)
+    }
+
+    /// Pass (fixed before the first run): the octo-double jet's orders 0..nout − 1 are the same bits at every lane count
+    /// of Solver.residual_jet_o (8, 12, ..., 28) as at 32, with nout − 1 coefficient vectors given, as the series takes
+    /// them (hp/anm_run.py coefficients_o), at the smallest and the largest nout of each count, serial and threaded.
+    /// Control, which must differ: the last coefficient vector moved by one unit in the last place at one entry.
+    #[test]
+    fn ojet_lanes_bitwise() {
+        let (ctx, zh, zl) = synth();
+        let l = ctx.len();
+        let z = parts8(&zh, &zl);
+        let cs: Vec<[Vec<f64>; 8]> = (1..32).map(|k| coef_k(l, k)).collect();
+        let zs_of = |nout: usize| -> Vec<[&[f64]; 8]> { std::iter::once(view(&z)).chain(cs[..nout - 2].iter().map(view)).collect() };
+        let mut checked = 0;
+        for (n, nout) in [(8, 2), (8, 8), (12, 9), (12, 12), (16, 13), (16, 16), (20, 17), (20, 20), (24, 21), (24, 24), (28, 25), (28, 28)] {
+            for par in [false, true] {
+                let zs = zs_of(nout);
+                let (a, b) = (jet_n(&ctx, n, &zs, par, nout), jet_n(&ctx, 32, &zs, par, nout));
+                assert_eq!(first_diff(&a, &b), None, "lanes {n} against 32 at nout {nout}, par {par}");
+                checked += 1;
+            }
+        }
+        // the control: one ulp in the last given vector reaches the last order
+        let nout = 28;
+        let mut last = cs[nout - 3].clone();
+        last[0][5] = f64::from_bits(last[0][5].to_bits() + 1);
+        let mut zs = zs_of(nout);
+        *zs.last_mut().unwrap() = view(&last);
+        let moved = first_diff(&jet_n(&ctx, 28, &zs_of(nout), true, nout), &jet_n(&ctx, 32, &zs, true, nout));
+        println!("ojet lanes: {checked} comparisons bitwise; the control first differs at (order, row) {moved:?}");
+        assert!(moved.is_some(), "the control did not change the jet");
+    }
+
     /// Pass (fixed before the first run): the octo-double residual, its 24-order jet on (z_0, v) and its Jacobian, at a
     /// state and direction exact in quad-double, each within 1e-58 of the quad-double ones (qsolve), relative to max(1,
     /// |entries|): the quad-double ones' rounding, about 1e-62, with room for the condition of the blocks
