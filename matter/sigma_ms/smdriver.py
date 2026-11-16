@@ -18,7 +18,7 @@ import time
 import mpmath as mp
 import numpy as np
 
-from multidouble import dd_add, dd_from_mp, dd_norm, qd_axpy  # noqa: F401
+from multidouble import dd_add, dd_from_mp, dd_matvec, dd_norm, qd_axpy  # noqa: F401
 from sigmams import Solver
 
 HERE = os.path.dirname(os.path.abspath(__file__))
@@ -280,11 +280,16 @@ def newton_band(s, zh, zl, tol=1e-28, it_max=40, band_tol=1e-6, radius=None, ban
     with U_w and V_w. This is a Lyapunov-Schmidt corrector with a line search (H. B. Keller, Lectures on Numerical
     Methods in Bifurcation Problems, TIFR 79, Springer 1987: Method III and the bordering algorithm of section 4.11;
     design 2 of notes/LIT_REVIEW.md's addendum of #527).
-      - While S > kappa B the state is off the band's valley: the step is d_s alone, halved until S falls.
+    The f64 vectors span the band to about 1e-14, so the image of d_b has a part E = |r_b - U_w U_w^T r_b|_2 in the
+    resolved rows, r_b = J d_b formed in double-double: about 1.5e-14 |d_b|, which is 1e-11 for a band step of 1e3. A
+    deflated step leaves that much of S, whatever it does, so E is the floor of S in what follows.
+      - While S > max(kappa B, 2 E) the state is off the band's valley: the step is d_s alone, halved until S falls.
       - Otherwise the step is d_s + lam d_b, with lam = min(1, radius / |d_b|) at first. The move along the band leaves
         a residual of second order in the resolved rows. It is removed by up to `correctors` chord steps with the same
-        factors, each less its band part, c - V_w V_w^T c. The trial is accepted when B has fallen and S is back
-        below kappa B, and lam is halved otherwise. So a band step is judged by the band's own residual, on the valley.
+        factors. A chord step c = -J^-1 F proposes the rest of the band step again, so (1 - lam) d_b is taken off it
+        exactly, and then the band part of what remains, by V_w V_w^T. The trial is accepted when B has fallen and S
+        is back below max(kappa B, 2 (1 - lam) E), and lam is halved otherwise. So a band step is judged by the
+        band's own residual, on the valley.
     The radius doubles after a first trial that gains at least 3/4 of the linear model's fall, lam B, and after a
     halving it is the accepted step's length. Nothing is added to the equations: near the root lam = 1 and the steps
     are Newton's own, and the result has max |F| < tol. A step no longer than the radius is tried whole first, with
@@ -355,13 +360,17 @@ def newton_band(s, zh, zl, tol=1e-28, it_max=40, band_tol=1e-6, radius=None, ban
             return float(np.linalg.norm(v - Uw @ r)), float(np.linalg.norm(r))
 
         S0, B0 = split(Fv)
+        E = 0.0
         if k:
             db = Vw @ (Vw.T @ dN)
             nb = float(np.linalg.norm(db))
             ds = dd_add(dz[0], dz[1], -db, np.zeros_like(db))
+            # what the image of the band step leaves in the resolved rows: the floor of S
+            E = split(vec(dd_matvec(Jh, Jl, db, np.zeros_like(db))))[0]
+            del Jh, Jl
         else:
             db, nb, ds = None, 0.0, (dz[0], dz[1])
-        mode = "band" if k and S0 <= max(kappa * B0, 0.1 * tol) else "resolved"
+        mode = "band" if k and S0 <= max(kappa * B0, 2 * E, 0.1 * tol) else "resolved"
         lam = min(1.0, radius / nb) if mode == "band" else 1.0
         ok, nc, Sm = False, 0, float("nan")
         for h in range(max_halvings + 1):
@@ -374,8 +383,9 @@ def newton_band(s, zh, zl, tol=1e-28, it_max=40, band_tol=1e-6, radius=None, ban
                 th, tl = dd_add(th, tl, db * lam, np.zeros_like(db))
                 S1, B1 = split(vec(s.residual([th, tl])))
                 Sm, nc = S1, 0
-                while nc < correctors and np.isfinite(S1) and S1 > max(kappa * B1, 0.1 * tol):
+                while nc < correctors and np.isfinite(S1) and S1 > max(kappa * B1, 1.5 * (1 - lam) * E, 0.1 * tol):
                     c, _ = s.chord([th, tl])
+                    c = dd_add(c[0], c[1], -(1 - lam) * db, np.zeros_like(db))
                     cb = Vw @ (Vw.T @ vec(c))
                     ch, cl = dd_add(th, tl, c[0], c[1])
                     ch, cl = dd_add(ch, cl, -cb, np.zeros_like(cb))
@@ -383,20 +393,21 @@ def newton_band(s, zh, zl, tol=1e-28, it_max=40, band_tol=1e-6, radius=None, ban
                     if not (np.isfinite(S2) and S2 < S1):
                         break
                     th, tl, S1, B1, nc = ch, cl, S2, B2, nc + 1
-                ok = np.isfinite(S1) and B1 < (1 - 1e-4 * lam) * B0 and S1 <= max(kappa * B1, S0, 0.1 * tol)
+                ok = np.isfinite(S1) and B1 < (1 - 1e-4 * lam) * B0 and \
+                    S1 <= max(kappa * B1, S0, 2 * (1 - lam) * E, 0.1 * tol)
             if ok:
                 break
             lam *= 0.5
         dzt = vec([th, tl]) - vec([zh, zl])
-        rec.update(mode=mode, S=S0, B=B0, S_move=Sm, S_next=S1, B_next=B1, lam=lam, halvings=h, correctors=nc,
+        rec.update(mode=mode, S=S0, B=B0, E=E, S_move=Sm, S_next=S1, B_next=B1, lam=lam, halvings=h, correctors=nc,
                    dz_newton=nN,
                    dz_band=nb, dz=float(np.linalg.norm(dzt)), radius=radius, dDelta=float(dzt[-1]),
                    t=round(time.time() - t0, 1))
         if verbose:
             low = ", ".join(f"{x:.1e}" for x in rec.get("sig_low", [])[-4:])
-            log(f"  band {it} ({mode}, {k} deflated, lowest sig {low}): |F| {nF:.2e}, S {S0:.2e} -> {S1:.2e}, "
-                f"B {B0:.2e} -> {B1:.2e}, lam {lam:.3g} after {h} halvings, {nc} correctors from S {Sm:.1e}, "
-                f"|dz| {rec['dz']:.1e} (band step {nb:.1e}, Newton's {nN:.1e}), "
+            log(f"  band {it} ({mode}, {k} deflated, lowest sig {low}): |F| {nF:.2e}, S {S0:.2e} -> {S1:.2e} "
+                f"(E {E:.1e}), B {B0:.2e} -> {B1:.2e}, lam {lam:.3g} after {h} halvings, {nc} correctors from "
+                f"S {Sm:.1e}, |dz| {rec['dz']:.1e} (band step {nb:.1e}, Newton's {nN:.1e}), "
                 f"dDelta {rec['dDelta']:+.2e}, pivots {pmin:.1e}..{pmax:.1e} ({rec['t']} s)")
         if not ok:
             rec["failed"] = "line search"
