@@ -25,10 +25,12 @@ notes, Lemma W): if m0 <= deg_x-terms and every x^m eps^j term has m <= 2j + w, 
 """
 import os
 import sys
-from flint import acb, arb, acb_poly, arb_poly
+from flint import acb, arb, acb_poly, arb_poly, ctx
 
 sys.setrecursionlimit(10000)
 HERE = os.path.dirname(os.path.abspath(__file__))
+PREC = 256           # the working precision of the B8 chain (b8m_atoms.atoms' default)
+ctx.prec = PREC      # set before the constants below: python-flint starts at 53 bits (#879, #885)
 W0 = 2 * arb.pi() / arb("1.64389375")
 A_STAR, WF_STAR = arb("2.5421480475"), arb("0.7769940136")   # Theorem A(M = 1) zero (A, omega/omega_inf)
 
