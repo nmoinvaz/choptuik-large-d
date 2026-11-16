@@ -616,7 +616,7 @@ python3 b8m_model.py                       # section 1.2
 python3 b8m_formal.py 1 4 --check          # Lemma F
 python3 b8m_atoms.py 4 0 0                 # atoms and structural zeros at the centre (b8m_atoms_K4.log)
 python3 b8m_identities.py                  # Lemma R (b8m_identities.log); --mutate=rho2old, --mutate=q
-nice -n 10 python3 b8m_scan.py 4 73.89,70,66,62 --rA=2e-6 --rW=2e-6 --log=b8m_scan_K4_box.log      # ~1-5 min each
+nice -n 10 python3 b8m_scan.py 4 73.89,70,66,62,58 --rA=2e-6 --rW=2e-6 --log=b8m_scan_K4_box.log   # ~1-5 min each
 python3 b8m_h8.py 4 73.89 --log=b8m_scan_K4_box.log --rA=2e-6 --rW=2e-6      # (H8)(ii); --centre for the series check
 python3 b8m_numcheck.py 1000 4 --log=b8m_scan_K4_box.log      # section 9 (b8m_numcheck_n1e3.log; saves the .npz)
 python3 b8m_numcheck.py 1000 4 --log=b8m_scan_K4_box.log --load=b8m_numcheck_n1000.npz --mutate=weight   # must fail
