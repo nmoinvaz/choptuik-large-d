@@ -32,10 +32,11 @@ def differ(A, B):
 
 
 def planted(k, b):
-    """b with entry 3 + k of its leading part moved by 2^-200 of itself (a fixed change in every order)"""
+    """b with its largest entry's leading part moved by 2^-40 of itself, a change every order's solve sees (a change
+    below the ulp of a lower part rounds away and tests nothing)"""
     b = [np.array(p) for p in b]
-    i = (3 + k) % len(b[0])
-    b[1][i] = b[1][i] + b[0][i] * 2.0 ** -200
+    i = int(np.argmax(np.abs(b[0])))
+    b[0][i] = b[0][i] + abs(b[0][i]) * 2.0 ** -40
     return b
 
 
