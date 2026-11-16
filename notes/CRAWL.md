@@ -680,6 +680,11 @@ ended too (2.1×10⁻¹⁷ apart). The next correction, 1.1×10⁻⁵ in Δ at a
     Jacobian's Δ column is right. From the stored truth, 3.2×10⁻⁵⁷ of |z_h| off its root, L = 1.0832, and the excess
     8.324447×10⁻² is the same at all three rels. That is the cross term −J⁻¹F''(·, d₀) of a start off the root, as
     #852 found for the horizon data.
+  - **From the re-converged truth, the first step's gain on a horizon move is purely quadratic (#875; raw `I875-mac/`
+    8f20c6c6, `step_spread.py --steps 2`).** At D 240.1244 with m_h and a_h moved by rel 10⁻⁹⁰, 10⁻⁹³ and 10⁻⁹⁶ from
+    #874's state, the gain divided by rel is 7.5556×10⁹² at 10⁻⁹⁰ and 10⁻⁹³, #840's quadratic part. At 10⁻⁹⁶ the gain
+    is 1.99×10⁻³, below 1, where the step's own floor sets e₁. So #852's prediction holds from a root: contraction
+    at 10⁻⁹⁶, none at 10⁻⁹⁰. #852's gain less #875's is 9.3060×10³ at all three rels, the stored truth's cross term.
 - **The horizon rows' linear range in Δ shrinks slowly with D (#832; raw `I832-mac/` 9a901063).** It is 1.8×10⁻²⁴ at
   D 200 and 2.3×10⁻²⁷ at 253.7, falling 0.119 per unit D and easing to 0.083 at the top. That is far below the weak
   pivot's 1.44, so this range is not what grows with #805's departure. #832's part 1 (the reduced map with Δ weak and
