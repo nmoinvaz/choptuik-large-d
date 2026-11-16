@@ -1000,6 +1000,14 @@ takes ψᵀδF for each setting as Δ's first-order response (xfkappa, raw `I905
   #805's extrapolation from D 150–231 (about 5×10⁻¹¹ at 253.5, "not amplified"); the split is shown linear only at 231.
   Each share is a first-order response, not a bound, and degree 6 against 10 is a spread over fit choices. M 48
   against 32 is not split, since the octo-double kernel is M = 32 only.
+- **The held fit is not the source (#904; raw `I904-mac/` 0dac0819, `hp/held_spread.py`).** #608's degree-6 and
+  degree-10 chains, each summed from its own series at matched D from 248 to 253.43, give a spread d6 − d10 that grows
+  at the weak pivot's rate past D 248.7. |d6 − d10|·p_min is 0.7–2.1×10⁻³⁸, about a tenth of the departure's envelope
+  of 2.2×10⁻³⁷/p_min. The spread is smooth and keeps one sign, though, while the departure changes sign twice: their
+  ratio goes from +0.04 to +1.53 to −0.36 over 251–253.43, against a constant within 30% if the held values carried
+  it. At D 250.17 the chains' d6 − d10 is −1.58×10⁻⁹, 0.94 of the adjoint's −1.68×10⁻⁹. So the adjoint's held share
+  holds there. Discrepancy: #608's jets miss their next states by its own logged corrector moves, 10⁻¹⁹ to 4×10⁻¹⁵
+  per step, against #603's ≤ 10⁻²⁸. That is at most 2×10⁻⁴ of d6 − d10 here, but it is unexplained.
 
 ## Proposed README text
 
