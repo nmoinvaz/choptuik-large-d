@@ -1790,3 +1790,12 @@ python3 lemma6b1_estimate.py                    # route assessment and the branc
 `rows` skips the rows already saved, so it can be restarted after an interruption; `row --j=J` runs one row.
 `python3 check_numbers.py` (repository root) ties the quoted 178 discs, 12 rows, contraction ≤ 0.439 and 6073 Lohner
 steps to `lemma6b1_check_1e-9.json`.
+
+These commands and those of §11.7 were rerun on aarch64 Linux (Raspberry Pi 5, python-flint 0.9.0, FLINT 3.6.0; #873,
+raw `I873-rpi5/` 7fe32c93), every row recomputed with `row --j=J`. Lemma S and the lower path pass, with Krawczyk
+margins 8.562×10⁻¹⁰ and 9.706×10⁻¹⁰. Lemma 6a gives ρ₆ₐ = [0.004220618728 ± 2.23×10⁻¹³] < 1, against the stored
+[0.004220711508 ± 1.90×10⁻¹³]. The two are 2.2×10⁻⁵ apart and disjoint, as a bound assembled from upper bounds can be
+(AGENTS.md). All 178 discs certify, with Λ equal to the stored rows' to 5.9×10⁻⁸ per disc. The check passes with
+178 tiles, 566 rectangles and 450 links, and the controls give their verdicts (`--mutate=sign` certifies 0 of 7 discs,
+`--drop=5,6` fails with three failures, and `coords` is not caught, ρ₆ₐ = 0.1222, as in §11.6). The Pi's rows, path
+box and jump pass on the Mac with the same counts and ρ₆ₐ = 4.221×10⁻³, and the stored ray and rows pass on the Pi.
