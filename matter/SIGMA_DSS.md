@@ -851,7 +851,7 @@ lower on the other at D 10.475, so above D 10 they do not follow the kernel's cu
 
 ### The growth rate on the kernel (#918)
 
-Raw `I918-mac/` d88f8fcf. The kernel has a mode matrix now. `model.rs` gives every τ derivative of a perturbation
+Raw `I918-mac/` 4108d6af. The kernel has a mode matrix now. `model.rs` gives every τ derivative of a perturbation
 e^{λτ} g(τ, x) its rate, in the Taylor steps, the centre series and the horizon series, whose periodic solves are
 factored with the shift, as hp's `model.rs` does. The engine's `mode_matrix` assembles M(λ) from them, with Δ and the
 phase row held fixed. [`mode_lam.py`](sigma_ms/mode_lam.py) takes a growth rate as the sign change of det M from the
