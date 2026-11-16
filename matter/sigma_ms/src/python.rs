@@ -1,8 +1,8 @@
 //! Python bindings: `Solver(M, n_hi, n_lo, k2_hi, k2_lo, dmat_hi, dmat_lo, phase_hi, phase_lo, nodes, segs, kt, kc,
 //! ks, threads, match_node)`. Double-double arrays are (hi, lo) pairs of float64 arrays, quad-double ones four parts.
 //! A lean copy of hp's python.rs: the residual, the exact Jacobian and the Newton step in double-double and
-//! quad-double, the Taylor plan, the series (for their tail checks), Taylor integration, and the planted sources and
-//! controls.
+//! quad-double, the mode matrix in the growth rate and its determinant, the Taylor plan, the series (for their tail
+//! checks), Taylor integration, and the planted sources and controls.
 use crate::model::{self, Ctx};
 use crate::planted::Planted;
 use multidouble::dd::DD;
@@ -44,6 +44,7 @@ trait Api: Send + Sync {
     fn m(&self) -> usize;
     fn residual(&self, z: &[&[f64]]) -> Result<Vec<Vec<f64>>, String>;
     fn jacobian(&self, zh: &[f64], zl: &[f64]) -> Result<(Vec<f64>, Vec<f64>, usize), String>;
+    fn mode_matrix(&self, zh: &[f64], zl: &[f64], lr: DD, li: DD) -> Result<multishoot::ModeMatrix, String>;
     fn newton(&self, z: &[&[f64]]) -> Result<Step, String>;
     fn newton_mixed(&self, z: &[&[f64]], staircase: bool) -> Result<Step, String>;
     fn plan(&self, zh: &[f64], zl: &[f64], tol: f64, hmax: f64) -> Vec<Vec<f64>>;
@@ -82,6 +83,9 @@ impl<const B: usize> Api for Ctx<B> {
         let jl = c.pop().expect("two parts");
         let jh = c.pop().expect("two parts");
         Ok((jh, jl, ld))
+    }
+    fn mode_matrix(&self, zh: &[f64], zl: &[f64], lr: DD, li: DD) -> Result<multishoot::ModeMatrix, String> {
+        model::mode_matrix(self, zh, zl, lr, li, true)
     }
     fn newton(&self, z: &[&[f64]]) -> Result<Step, String> {
         match z.len() {
@@ -134,11 +138,11 @@ impl<const B: usize> Api for Ctx<B> {
         let delta = model::delta_of(zh, zl);
         let omega = DV::splat(DD::TWO_PI / delta);
         let (s, sig) = if which == 0 {
-            (model::centre_series(self, &self.fld(zh, zl, 0), &self.fld(zh, zl, m), omega), model::series_scale(self.nodes[0]))
+            (model::centre_series(self, &self.fld(zh, zl, 0), &self.fld(zh, zl, m), omega, &multishoot::Rate::ZERO), model::series_scale(self.nodes[0]))
         } else {
             let o = self.off_h();
             let (mh, ah, ph) = (self.fld(zh, zl, o), self.fld(zh, zl, o + m), self.fld(zh, zl, o + 2 * m));
-            let prep = model::HPrep { lus: model::horizon_lus(self, &ah, &ph, delta, true)? };
+            let prep = model::HPrep::of(model::horizon_lus(self, &ah, &ph, delta, true, DD::ZERO)?);
             (model::horizon_series(self, &mh, &ah, &ph, omega, &prep), model::series_scale(self.u0().hi))
         };
         let nk = s[0].len();
@@ -383,6 +387,78 @@ impl Solver {
             a.into_pyarray(py)
         };
         Ok((to2(jh), to2(jl)))
+    }
+
+    /// The mode matrix M(lambda) at the growth rate lambda = lr + i li (each a double-double), Delta fixed and without
+    /// the phase row: four (L-1, L-1) arrays, the hi and lo parts of its real part and of its imaginary part
+    #[pyo3(signature = (zh, zl, lr_hi, lr_lo=0.0, li_hi=0.0, li_lo=0.0))]
+    #[allow(clippy::type_complexity, clippy::too_many_arguments)]
+    fn mode_matrix<'py>(
+        &self,
+        py: Python<'py>,
+        zh: PyReadonlyArray1<'py, f64>,
+        zl: PyReadonlyArray1<'py, f64>,
+        lr_hi: f64,
+        lr_lo: f64,
+        li_hi: f64,
+        li_lo: f64,
+    ) -> PyResult<Vec<Bound<'py, PyArray2<f64>>>> {
+        let (h, l) = (slice(&zh, "zh")?, slice(&zl, "zl")?);
+        let (api, pool) = (&self.api, &self.pool);
+        let (lr, li) = (DD::new(lr_hi, lr_lo), DD::new(li_hi, li_lo));
+        let mm = py.detach(|| pool.install(|| api.mode_matrix(h, l, lr, li))).map_err(PyValueError::new_err)?;
+        let (n, ld) = (mm.n, mm.ld);
+        let to2 = |c: &Vec<f64>| {
+            let mut a = Array2::<f64>::zeros((n, n));
+            for j in 0..n {
+                for i in 0..n {
+                    a[[i, j]] = c[j * ld + i];
+                }
+            }
+            a.into_pyarray(py)
+        };
+        Ok(vec![to2(&mm.re[0]), to2(&mm.re[1]), to2(&mm.im[0]), to2(&mm.im[1])])
+    }
+
+    /// det M(lambda) at a real growth rate by the double-double LU of the mode matrix's real part: (sign, ln|det|,
+    /// min |u_kk|, max |u_kk|, max |imaginary part|, which is zero). Its sign changes at the growth rate of a mode.
+    #[pyo3(signature = (zh, zl, lam_hi, lam_lo=0.0))]
+    fn mode_det(&self, py: Python<'_>, zh: PyReadonlyArray1<'_, f64>, zl: PyReadonlyArray1<'_, f64>, lam_hi: f64, lam_lo: f64) -> PyResult<(f64, f64, f64, f64, f64)> {
+        let (h, l) = (slice(&zh, "zh")?, slice(&zl, "zl")?);
+        let (api, pool) = (&self.api, &self.pool);
+        let lam = DD::new(lam_hi, lam_lo);
+        py.detach(|| {
+            pool.install(|| -> Result<_, String> {
+                let mm = api.mode_matrix(h, l, lam, DD::ZERO)?;
+                let im = mm.im[0].iter().fold(0.0f64, |a, v| a.max(v.abs()));
+                let (n, ld) = (mm.n, mm.ld);
+                let [rh, rl]: [Vec<f64>; 2] = mm.re.try_into().map_err(|_| "two real parts".to_string())?;
+                let lu = DDLu::factor(n, ld, rh, rl, true)?;
+                let (s, la) = lu.logdet();
+                let (pmin, pmax) = lu.pivot_range();
+                Ok((s, la, pmin, pmax, im))
+            })
+        })
+        .map_err(PyValueError::new_err)
+    }
+
+    /// (ln|det M(lambda)|, arg det M(lambda)) at a complex growth rate, by the complex double-double LU
+    #[pyo3(signature = (zh, zl, lr_hi, lr_lo=0.0, li_hi=0.0, li_lo=0.0))]
+    #[allow(clippy::too_many_arguments)]
+    fn mode_logdet(
+        &self,
+        py: Python<'_>,
+        zh: PyReadonlyArray1<'_, f64>,
+        zl: PyReadonlyArray1<'_, f64>,
+        lr_hi: f64,
+        lr_lo: f64,
+        li_hi: f64,
+        li_lo: f64,
+    ) -> PyResult<(f64, f64)> {
+        let (h, l) = (slice(&zh, "zh")?, slice(&zl, "zl")?);
+        let (api, pool) = (&self.api, &self.pool);
+        let (lr, li) = (DD::new(lr_hi, lr_lo), DD::new(li_hi, li_lo));
+        py.detach(|| pool.install(|| api.mode_matrix(h, l, lr, li)?.logdet(true))).map_err(PyValueError::new_err)
     }
 
     /// The Newton step dz = -J^-1 F in the state's precision (two parts: double-double, four: quad-double), with the
