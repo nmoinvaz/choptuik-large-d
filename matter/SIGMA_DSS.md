@@ -50,7 +50,7 @@ Contents
   Without the prior, though, Δ at these states moves by 10⁻³ or more, and the walks have not settled (§11, #892), so the
   turn rests on the prior.
   At η = 1 the solver found two different solutions at D = 10.475 (Δ = 0.9935 and 1.0340), so η = 1 above D ≈ 10.25 is
-  not reliable. No fold direction was seen. The gauge mode's root drifts away from its exact value above D ≈ 8 (by 0.25
+  not reliable. Both are the kernel's one solution there, Δ = 1.0201048, displaced along the band (§11, #845). No fold direction was seen. The gauge mode's root drifts away from its exact value above D ≈ 8 (by 0.25
   at D = 11), unexplained; so the D ≥ 10 growth rates are preliminary. Going further needs more care than short runs on
   the shared machine allow (§9).
 - **γ∞ (not established).** Free fits of λ = λ∞ + Σ c_k n⁻ᵏ to D ≤ 9 give λ∞ = 1.76, 2.74, 2.14, 2.31 (η = 1) and 1.87,
@@ -564,9 +564,9 @@ from D 4 to 10.475 with every point converged (|F| ≤ 4.2×10⁻²⁹, constrai
 failed runs from D 8 on were recovered by halving the step, the smallest 1/128 at D 9.5625. Its Δ agrees with
 sigdss's within 2.4×10⁻⁶ at D 5–8, then parts from it by +1.8×10⁻⁴ at D 9 and −2.7×10⁻³ at D 10. sigdss carried
 its smoothness prior at D 10 but not at D 9 (reg 0 there, #846). Δ peaks near D 9 at 1.02708 and is 1.0201048000 at
-D 10.475, between §5's two f64 values there (1.0340 and 0.9935). Neither of those, nor a zero-order seed from the
-chain's D 10.4375, converges at 10.475: each walks along §6's near-null band (smallest pivots 10⁻⁸ to 10⁻¹¹). So
-whether D 10.475 has a second solution is open; the kernel's Newton has no handle on the band.
+D 10.475, between §5's two f64 values there (1.0340 and 0.9935). With `newton_solve` neither of those, nor a zero-order
+seed from the chain's D 10.4375, converges at 10.475: each walks along §6's near-null band (smallest pivots 10⁻⁸ to
+10⁻¹¹). With the deflated Newton below both converge, to the chain's point.
 
 ```
 python3 matter/sigma_ms/chain.py --M 32 --start <D 7.0625 state> --start2 <D 7 state> --eta 1 --D_from 7.0625 \
@@ -580,8 +580,21 @@ f64 SVD of the dense Jacobian. The singular vectors below 10⁻⁶ of the larges
 residual splits into the band's part B and the resolved rows' part S, and the step into its band part and the rest:
 
 - While S exceeds a tenth of B, the step is Newton's without its band part, halved until S falls.
-- After that the band part is added, limited in length. Up to ten chord steps, each without its band part, remove
-  what the move leaves in the resolved rows. The step is accepted when B has fallen, and halved otherwise.
+- After that a band step is added, limited in length. Up to ten chord steps, each without its band part, remove
+  what the move leaves in the resolved rows. The step is accepted when B has fallen, and shortened otherwise.
+
+Two refinements came from start A below, where Newton's band step is 10² to 10⁴ long:
+
+- **The split has a floor.** The f64 vectors span the band to about 10⁻¹⁴, so removing a band step of length ℓ leaves
+  E ≈ 1.5×10⁻¹⁴ ℓ in the resolved rows. E is computed from the image of the held-back band step, formed in
+  double-double, and S is asked to come down to 2E, not below it. Each chord step proposes the held-back band step
+  again, and that part is taken off exactly before the rest is projected.
+- **The band step is damped inside the band.** The band gets its own basis from the reduced Jacobian UᵀJV, formed in
+  double-double, with reduced singular values s_i from 3.6×10⁻¹⁰ down to 6×10⁻¹⁸. The step in direction i is Newton's
+  times s_i²/(s_i² + μ²), with μ set by the length limit: the directions the Jacobian resolves best move first. At
+  start A the four best-resolved directions hold 97% of B² and 0.2% of the squared length of Newton's band step.
+  Scaled as a whole, that step spends its length on the deepest directions: a run that did so gained 3% of B per
+  iteration and was stalling after 29, and the damped step converged in 11 band iterations.
 
 No term is added to the equations: near the root the steps are Newton's own, and a converged state has max |F| below
 10⁻²⁸ in the chain's system. A step judged by |F| cannot walk the band. A move of length δ along it lowers B by σδ and
@@ -595,22 +608,55 @@ values of 10⁻⁸ to 10⁻¹⁰, with a start from which Newton's step is 2.7×
 
 | check, as planned before the runs | result |
 |---|---|
-| A, `newton_band` converges within 40 iterations, max \|z − z\*\| < 10⁻¹⁸ | 11 iterations, max \|F\| 1.5×10⁻³⁸, max \|z − z\*\| 7.3×10⁻²⁹ |
+| A, `newton_band` converges within 40 iterations, max \|z − z\*\| < 10⁻¹⁸ | 9 iterations, max \|F\| 6.2×10⁻⁴⁶, max \|z − z\*\| 2.2×10⁻³⁶ |
 | B, `newton_solve` stalls | stops at its first step: no decrease down to λ = 2⁻¹⁰, as starts A and B of #652 did |
 | C, the control with nothing deflated does not converge in 40 iterations | max \|F\| 2.6×10⁻⁴, band coordinates walked from 0.3 to 1.7 |
-| D, the kernel's planted problem (M = 8) through the deflated path | 12 iterations, 8 directions deflated, max \|z − z\*\| 4.8×10⁻³⁰, \|ΔΔ\| 3.6×10⁻³⁰ |
+| D, the kernel's planted problem (M = 8) through the deflated path | 7 iterations, 8 directions deflated, max \|z − z\*\| 1.2×10⁻²⁹, \|ΔΔ\| 1.2×10⁻²⁹ |
 
 Its four mutations each fail the test: `noband` fails A, `easy` (no band in the toy) fails B and C, `root` fails A,
 and `gamma` (the kernel's recursion mutated) fails D with max |z − z\*| = 6.2×10⁻¹². C's criterion was rewritten after
 its first run, and the script's header says how.
 
-**Start B at D 10.475 converges to the chain's solution (#845; raw `I845-mac/` e1615755).** From §5's start B (sigdss,
-Δ 0.9935) at η = 1, M = 32, `run_eta.py --solver band` took 2 resolved steps and then 16 band steps to max |F| =
-6.3×10⁻²⁹, and one more Newton step reached 1.4×10⁻³¹ at Δ = 1.020104800025154887044169. That is 6.7×10⁻²⁴ from the
-kernel's chain (1.020104800025154887044163, #652). So B is not a second solution: the walk carried Δ by +0.0266 along
-the band to the chain's point. The band is 32 singular values below 10⁻¹⁰ of the largest, then a gap to 10⁻⁴. 32 is
-M, 89% of the band lies in the centre datum q, and its largest Δ component is 0.059. At the converged state q is fixed
-only to 4.5×10⁻¹⁶, against the chain's, while Δ agrees to 10⁻²³. Start A (1.0340) is still to run.
+**Starts A and B at D 10.475 both converge to the chain's solution (#845; raw `I845-mac/`).** §5's two sigdss states
+at η = 1, taken to the kernel at M = 32 with `run_eta.py --solver band`:
+
+| start | sigdss's Δ | iterations | max \|F\| | Δ | minus the chain's |
+|---|---|---|---|---|---|
+| B | 0.9934860 | 2 resolved, 16 band | 6.3×10⁻²⁹ | 1.020104800025154887012 | −3.2×10⁻²⁰ |
+| B, one more Newton step | | | 1.4×10⁻³¹ | 1.020104800025154887044169 | +6.7×10⁻²⁴ |
+| A | 1.0340058 | 5 resolved, 11 band | 6.5×10⁻²⁹ | 1.020104800025154886997 | −4.7×10⁻²⁰ |
+| A, one more Newton step | | | 9.9×10⁻³² | 1.020104800025154887044174 | +1.1×10⁻²³ |
+| the chain (#652) | | | 1.4×10⁻³¹ | 1.020104800025154887044163 | |
+
+So neither is a second solution: each lies on the band of the chain's solution, and the walks carried Δ by +0.0266
+and −0.0139 to it. The two agree with each other to 4.6×10⁻²⁴ in Δ after the extra step. This does not show that
+D 10.475 has no other solution, only that §5's two values do not mark one. The band is 32 singular values below 10⁻¹⁰
+of the largest, then a gap to 10⁻⁴. 32 is M, 89% of the band lies in the centre datum q, and its largest Δ component
+is 0.059. At the converged states q is fixed only to 5×10⁻¹⁶ (A, B and the chain differ by that much there, at
+residuals of 10⁻³¹), while c₀ agrees to 5×10⁻²⁰, the rest of the state to 2×10⁻¹⁷ and Δ to 10⁻²³.
+
+Start B converged with the first version of the band step, Newton's band step scaled as a whole, which was 2 to 9
+long there. Start A's is 1.2×10⁴ long at the seed and 73 when the band steps begin. Run 4, with the two refinements
+above, took these band steps (S, E and B before the step, lengths in |z|₂, where |z|₂ = 35.5):
+
+| iteration | S | E | B | band step taken, of Newton's | Δ after |
+|---|---|---|---|---|---|
+| 5 | 5.2×10⁻¹² | 1.1×10⁻¹² | 8.11×10⁻¹¹ | 0.36 of 73 | 1.0187254 |
+| 6 | 5.7×10⁻¹³ | 1.4×10⁻¹³ | 2.26×10⁻¹¹ | 0.72 of 8.9 | 1.0209673 |
+| 7 | 5.5×10⁻¹³ | 1.2×10⁻¹³ | 7.54×10⁻¹² | 1.4 of 7.3 | 1.0209605 |
+| 8 | 1.7×10⁻¹³ | 1.0×10⁻¹³ | 6.69×10⁻¹² | 1.4 of 5.7 | 1.0201206 |
+| 9 | 2.7×10⁻¹³ | 7.1×10⁻¹⁴ | 4.53×10⁻¹² | 1.4 of 4.6 | 1.0201124 |
+| 10 | 8.6×10⁻¹⁴ | 5.2×10⁻¹⁴ | 2.67×10⁻¹² | 1.4 of 3.5 | 1.0200891 |
+| 11 | 4.3×10⁻¹⁴ | 3.6×10⁻¹⁴ | 1.51×10⁻¹² | 1.4 of 2.2 | 1.0200695 |
+| 12 | 1.6×10⁻¹⁴ | 1.3×10⁻¹⁴ | 1.28×10⁻¹² | 0.88, all of it | 1.0200926 |
+| 13 | 8.7×10⁻¹⁶ | 7.3×10⁻¹⁶ | 3.49×10⁻¹³ | 0.047, all | 1.0201047 |
+| 14 | 1.2×10⁻¹⁷ | 1.3×10⁻¹⁷ | 1.23×10⁻¹⁵ | 7.9×10⁻⁴, all | 1.0201048 |
+| 15 | 1.2×10⁻²¹ | 1.3×10⁻²¹ | 1.85×10⁻¹⁹ | 7.8×10⁻⁸, all | 1.0201048 |
+
+B is 5.8×10⁻²⁸ after the last step. Three earlier runs of start A were stopped (raw `I845-mac/README.md`): run 1 on the
+code that solved B (11 iterations, S at the split's floor, 2% of B per iteration, Δ at 1.02997), run 2 on a left space
+taken from J·V, which mixed S into B (4 iterations), and run 3 with the floor but the band step scaled as a whole (29
+iterations, B from 8.1×10⁻¹¹ to 4.4×10⁻¹¹ and stalling, Newton's band step grown to 170, Δ at 1.02072).
 
 **sigdss seeded from the kernel's chain (#846, #859; winb, raw `I846-winb/` eea37726 and `I859-winb/` e94d22a0).**
 [`sigma_ms/to_sigdss.py`](sigma_ms/to_sigdss.py) maps a kernel state onto sigdss's nodes and harmonics. Its round
