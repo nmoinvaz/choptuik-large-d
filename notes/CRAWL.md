@@ -668,8 +668,12 @@ ended too (2.1×10⁻¹⁷ apart). The next correction, 1.1×10⁻⁵ in Δ at a
     truth is 3.2085×10⁻⁵⁷ of |z_h| from its root. Off a root, Newton's map has the derivative −J⁻¹F''(·, d₀) (derived
     by hand), so that offset turns the move into a first-order change. #852's prediction (contraction at 10⁻⁹⁶, none
     at 10⁻⁹⁰) assumed a start at the root, and it fails. The unperturbed path's own steps fall to 2.37×10⁻⁹⁸ and
-    1.16×10⁻⁹⁹ of |z_h|. A re-converged truth is #874, and #852's test from it is #875. The same cross term may move
-    #857's linear return of a Δ move.
+    1.16×10⁻⁹⁹ of |z_h|. The same cross term may move #857's linear return of a Δ move.
+  - **A re-converged truth at D 240.1244 (#874; raw `I874-mac/` 35875edf, `hp/truth_restep.py`).** Two plain steps
+    from #837's truth, stored as `I874-mac/anm_pin3_D240.1244_u2.npz`. Read back through `truth_system`, its own step is
+    1.56×10⁻⁹⁹ of |z_h| and max|F| = 5.4×10⁻⁹⁴, within the bars of 10⁻⁹⁷ and 10⁻⁹², which the old truth fails. The read
+    rebuilds the held offset from the stored state, which moved by 1.8×10⁻¹⁰⁰, so the step differs from #852's path at
+    the floor (#884). #857 and #875 run from it.
 - **The horizon rows' linear range in Δ shrinks slowly with D (#832; raw `I832-mac/` 9a901063).** It is 1.8×10⁻²⁴ at
   D 200 and 2.3×10⁻²⁷ at 253.7, falling 0.119 per unit D and easing to 0.083 at the top. That is far below the weak
   pivot's 1.44, so this range is not what grows with #805's departure. #832's part 1 (the reduced map with Δ weak and
