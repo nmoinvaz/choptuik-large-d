@@ -224,16 +224,22 @@ def chord_phase(s, zh, zl, tol, start_below, max_steps, log, mutate=0):
     return zh, zl, recs, F < tol
 
 
+def dname(D):
+    """D in a state's file name: 4 decimals when D has at most 4, else 6. Steps below 1e-4 give D with 5 decimals, and
+    at 4 those round onto a neighbour's name, whose converged state a resume would then take as this D's (#343)"""
+    return f"{D:.4f}" if abs(D * 1e4 - round(D * 1e4)) < 1e-6 else f"{D:.6f}"
+
+
 def solve_point(D, M, zh, zl, src, a, nodes, outdir, log, segs=None):
     """one (D, M) solve with checkpoints; returns (converged, zh, zl). segs: the Taylor step points to use (default:
     planned from the start z with --tol_step, --hmax; a checkpoint's own plan takes precedence on resume)"""
     t0 = time.time()
-    done = os.path.join(outdir, f"{a.tag}_D{D:.4f}_M{M}.npz")
+    done = os.path.join(outdir, f"{a.tag}_D{dname(D)}_M{M}.npz")
     if a.resume and os.path.exists(done):
         zh, zl, _ = load(done)
         log(f"D {D} M {M}: already converged ({done}); skipped")
         return True, zh, zl
-    ckpt = os.path.join(outdir, f"{a.tag}_D{D:.4f}_M{M}_ckpt.npz")
+    ckpt = os.path.join(outdir, f"{a.tag}_D{dname(D)}_M{M}_ckpt.npz")
     fp = start_fingerprint(zh, zl, segs)
     meta_c = dict(D=D, M=M, nodes=nodes, kt=a.kt, kc=a.kcs, ks=a.ks, start=fp)
     res = resume_checkpoint(ckpt, fp, log) if a.resume else None
@@ -299,7 +305,7 @@ def solve_point(D, M, zh, zl, src, a, nodes, outdir, log, segs=None):
                    source=src, threads=a.threads, converged=False)
         with open(a.out, "a") as f:
             f.write(json.dumps(rec) + "\n")
-        save(os.path.join(outdir, f"{a.tag}_D{D:.4f}_M{M}_fail.npz"), zh, zl,
+        save(os.path.join(outdir, f"{a.tag}_D{dname(D)}_M{M}_fail.npz"), zh, zl,
              dict(D=D, M=M, nodes=nodes, kt=a.kt, kc=a.kcs, ks=a.ks))
         log(f"D {D} M {M}: NOT converged, |F| {F:.1e} after {len(hist)} iterations ({dt:.0f}s); stopping")
         return False, zh, zl

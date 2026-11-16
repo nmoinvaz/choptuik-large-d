@@ -232,7 +232,7 @@ def main():
         return np.asarray(h) + np.asarray(l)
 
     def state_path(D, M):
-        return os.path.join(STATES, f"{st['tag']}_D{D:.4f}_M{M}.npz")
+        return os.path.join(STATES, f"{st['tag']}_D{lowD_dd.dname(D)}_M{M}.npz")
 
     def plan_of(z, M, D, tol=None):
         """Taylor plan (--tol_step or tol, --hmax) of a state z (an f64 array, or a (hi, lo) pair: a converged state's
@@ -329,7 +329,7 @@ def main():
         # 1149-step plan; the local machine's diagnosis, comms 2026-10-24 01:37)
         lifted_best = best[1].startswith("lift")
         if (two_pass and ((a.two_pass_above and best[0] > a.two_pass_above) or lifted_best or force_two)
-                and not os.path.exists(os.path.join(STATES, f"{st['tag']}_D{D:.4f}_M{M}.npz"))):
+                and not os.path.exists(os.path.join(STATES, f"{st['tag']}_D{lowD_dd.dname(D)}_M{M}.npz"))):
             # the reused plan does not fit the starts: a lifted or predicted state is not regular at the sonic line, so
             # on a lean plan its |F| is mostly Taylor error, and Newton's correction of it lies in the weak directions
             # (at D 3.25, M 160 the lifted M 128 solution had |F| 3.5e-3 on the reused 257-step plan, and Newton went
@@ -382,17 +382,17 @@ def main():
             ok = False
         if not ok:
             # a later try at this (D, M) must not resume from the failed run's checkpoint
-            ck = os.path.join(STATES, f"{tag or st['tag']}_D{D:.4f}_M{M}_ckpt.npz")
+            ck = os.path.join(STATES, f"{tag or st['tag']}_D{lowD_dd.dname(D)}_M{M}_ckpt.npz")
             if os.path.exists(ck):
                 os.replace(ck, ck[:-len(".npz")] + "_failed.npz")
         if tol is not None:
-            return ok, None, os.path.join(STATES, f"{tag or st['tag']}_D{D:.4f}_M{M}.npz")
+            return ok, None, os.path.join(STATES, f"{tag or st['tag']}_D{lowD_dd.dname(D)}_M{M}.npz")
         rec = find_record(a.points, D, M, st["nodes"]) if ok else None
         if ok and rec is None:
             return False, None, None
         if rec is not None:
             rec["wall"] = round(time.time() - t, 1)
-        return ok, rec, os.path.join(STATES, f"{tag or st['tag']}_D{D:.4f}_M{M}.npz")
+        return ok, rec, os.path.join(STATES, f"{tag or st['tag']}_D{lowD_dd.dname(D)}_M{M}.npz")
 
     def solve_up(D, path_src, M2):
         """the solve at a larger M2 from a converged state, in two passes: pass 1 from the state resampled to M2 on that
@@ -570,7 +570,7 @@ def main():
                         h, l, m = load(p_)
                         if m["M"] != M_:
                             continue
-                        out = os.path.join(STATES, f"{st['tag']}_D{D_:.4f}_M{M_}_rn.npz")
+                        out = os.path.join(STATES, f"{st['tag']}_D{lowD_dd.dname(D_)}_M{M_}_rn.npz")
                         if not os.path.exists(out):
                             s0 = make_solver(D_, M_, nodes=old, kt=a.kt, kc=kc, ks=ks, threads=a.threads)
                             s0.set_segs(m.get("segs") or s0.plan(h, l, a.tol_step, a.hmax))
