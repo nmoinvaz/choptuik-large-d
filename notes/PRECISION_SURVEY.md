@@ -52,7 +52,7 @@ These are the defect: a number read at 53 bits and then used at 192 to 512 bits.
 | `fixed_point_M.py:81`, `W0` | 1.64389375, from `r0_inner_np` in `table` and `data_table` | every `--table` and `--data-table` run | none needed: the value becomes a float printed to four decimals |
 | `fixed_point.py:185` | `A_FAST` = √2/4, the kernel rate, made at import | every M = 1 run of `fixed_point.py` and of `lemma6_sector.py`. `fixed_point_M.py` replaces it with its own rate | make it inside `run`, after the precision is set |
 | `fixed_point.py:193`, `set_sector` | the sector's half-width 0.2 | `fixed_point.py --sector=0.2` (A_certify.md) | set the precision at the top of `main` |
-| `b8_formal.py:32–33` | W₀, A\*, ω\*/ω∞ at import. `params` then takes A\*'s midpoint as the box centre | every run of `b8m_atoms.py`, `b8m_scan.py`, `b8m_h8.py`, `b8m_lc.py`, which raise the precision to 256 bits later | set the precision in `b8_formal.py` before these three lines |
+| `b8_formal.py:32–33` | W₀, A\*, ω\*/ω∞ at import. `params` then takes A\*'s midpoint as the box centre | every run of `b8m_atoms.py`, `b8m_scan.py`, `b8m_h8.py`, `b8m_lc.py`, which raise the precision to 256 bits later | done in #885: the precision is set in `b8_formal.py` before these three lines |
 | `b8m_scan.py:26–27` | the tuning constants `slacks` and `eps` | the three `b8m_scan.py` runs of B8_constants.md and B_chain.md | read them after `atoms()` has set the precision |
 | `b8_bounds.py:21`, `b8m_bounds.py:31`, `b8m_lc.py:54` | π at import | the runs of `b8m_lc.py`, `b8m_h8.py`, `b8m_scan.py` | make π where it is used |
 | `b5_bounds.py:447` | the default argument `rhoW = arb("1e12")`, at import | every run of `b5_bounds.py`, `b5_label.py`, `b7_ift.py` | none needed: 10¹² is exact at 53 bits |
@@ -99,9 +99,15 @@ The numbers are relative differences. The rows on the ray 5π/16, which contain 
 **Lemma LC's Lipschitz matrix** (`b8m_lc.py 4 73.89 --rA=2e-6 --rW=2e-6 --lip`, which writes `b8m_lc_lip.json`). Run as
 written, it reproduces the stored file in all 1600 entries. With the precision set first, 552 entries move by more
 than 10⁻⁹, by factors between 0.733 and 1.014, and the certified contraction constant is θ = 0.7355 from either matrix
-(`--lipcheck`). This is the only place where the early constants show beyond the last digits. I did not establish why
-single entries move by a quarter while θ keeps four digits. The stored matrix is a valid bound either way, since a
-53-bit ball contains the decimal.
+(`--lipcheck`). This is the only place where the early constants show beyond the last digits. The stored matrix is a
+valid bound either way, since a 53-bit ball contains the decimal.
+
+The cause is rounding noise (#885, raw `I885-mac/`). An entry of the matrix is a secant, the difference of two
+256-bit evaluations divided by η = 10⁻⁶. Where the bound does not depend on the perturbed input, that difference is
+the rounding of one number against itself. 1108 of the 1600 entries are of this kind, all below 2.3×10⁻⁶⁹. With
+η = 10⁻³ they shrink by 10³, and at 320 bits by 2⁶⁴, while every entry of 10⁻⁶⁰ or more moves by at most 9×10⁻⁵ and
+2×10⁻⁹. Every entry that moved is below 6.1×10⁻⁶³, and the entries below 10⁻⁶⁰ add at most 2.3×10⁻⁶⁰ to a weighted
+row sum of θ.
 
 ## 3. Scripts that work at 53 bits throughout
 
