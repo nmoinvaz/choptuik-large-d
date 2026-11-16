@@ -14,9 +14,17 @@ state keeps the source's held values.
 step_spread.py --steps JSON (#852's I852-mac/steps_D240.json): store from its step 1 on, check against its step
 --match_k. A state other than that path's iterate (the control) must not match.
 
-  python3 truth_restep.py store RAW STATE OUT [--steps 2] [--threads 3] [--match JSON]
+residuals: each step_spread.py JSON's state read through truth_system, whose pinned max|F| must equal, as a double,
+the unperturbed run's recorded one (#884: truth_system's other reads are unchanged). --held float, #837's float-held
+values, is its control and must fail.
+
+--held_src state holds a re-stepped state's own values, as truth_system did before #884 (the control); the default,
+auto, holds its source's (meta["restep"]["source"]), so that it reads in its source's system.
+
+  python3 truth_restep.py store RAW STATE OUT [--steps 2] [--threads 3] [--match JSON] [--held_src auto]
   python3 truth_restep.py check RAW STATE [--dz 1e-97] [--F 1e-92] [--threads 3] [--held_ref STATE]
-                                [--match JSON --match_k K] [--json OUT.json]
+                                [--match JSON --match_k K] [--json OUT.json] [--held_src auto]
+  python3 truth_restep.py residuals RAW JSON... [--threads 3] [--held auto] [--held_src auto]
 
 STATE and OUT are relative to RAW, a checkout of the raw-data repository; OUT must be in a task folder of it. Exit 1
 when a check fails.
@@ -44,12 +52,12 @@ def _opts(argv, opt):
     return args, opt
 
 
-def _load(raw, path, threads):
+def _load(raw, path, threads, held_src="auto"):
     """the state as step_spread.py takes it: truth_system, then planted's start at rel 0; and max|z_h|"""
     from octo_corrector import o8_any, plant_start, truth_system
     from proj_shift import blocks
     from reseed import offsets
-    z4, meta, sysm, info = truth_system(raw, path, threads=threads)
+    z4, meta, sysm, info = truth_system(raw, path, threads=threads, held_src=held_src)
     M = int(meta["M"])
     K = (len(z4[0]) - 1) // (4 * M) - 1
 
@@ -100,16 +108,16 @@ def store(argv):
     from multidouble import od_axpy
     from octo_corrector import load_o, o8, save_o
     from raw_out import require_raw
-    args, opt = _opts(argv, dict(steps="2", threads="3", match=""))
+    args, opt = _opts(argv, dict(steps="2", threads="3", match="", held_src="auto"))
     raw, path, out = args
     fout = os.path.join(raw, out)
     require_raw(fout)
     n = int(opt["steps"])
     t0 = time.time()
-    z, meta, (s, sp, sq, so), info, zh = _load(raw, path, int(opt["threads"]))
+    z, meta, (s, sp, sq, so), info, zh = _load(raw, path, int(opt["threads"]), opt["held_src"])
     print(f"truth_restep store {path}: D {meta['D_str'][:16]}, {n} steps, then the step at z_{n}; max|z_h| {zh!r}; "
-          f"read in {info['read']} of {info['file_parts']} parts, held values {info['held']}, plan {info['plan']} "
-          f"({time.time() - t0:.0f} s)", flush=True)
+          f"read in {info['read']} of {info['file_parts']} parts, held values {info['held']} from {info['held_from']}, "
+          f"plan {info['plan']} ({time.time() - t0:.0f} s)", flush=True)
     ref = _ref(opt["match"], path) if opt["match"] else None
     ok, zk, hist = True, z, []
     for k in range(1, n + 2):
@@ -140,18 +148,20 @@ def store(argv):
 def check(argv):
     from multidouble import od_axpy
     from octo_corrector import o8, omax
-    args, opt = _opts(argv, dict(dz="1e-97", F="1e-92", threads="3", held_ref="", match="", match_k="0", json=""))
+    args, opt = _opts(argv, dict(dz="1e-97", F="1e-92", threads="3", held_ref="", match="", match_k="0", json="",
+                                 held_src="auto"))
     raw, path = args
     t0 = time.time()
-    z, meta, (s, sp, sq, so), info, zh = _load(raw, path, int(opt["threads"]))
+    z, meta, (s, sp, sq, so), info, zh = _load(raw, path, int(opt["threads"]), opt["held_src"])
     print(f"truth_restep check {path}: D {meta['D_str'][:16]}; max|z_h| {zh!r}; read in {info['read']} of "
-          f"{info['file_parts']} parts, held values {info['held']}, plan {info['plan']}"
+          f"{info['file_parts']} parts, held values {info['held']} from {info['held_from']}, plan {info['plan']}"
           + (f"; restep of {meta['restep']['source']} by {meta['restep']['steps']} steps" if "restep" in meta else "")
           + f" ({time.time() - t0:.0f} s)", flush=True)
     rec = dict(state=path, zh=zh, info=info)
     if opt["held_ref"]:
         from octo_corrector import truth_system
-        _, _, (_, sp0, _, _), _ = truth_system(raw, opt["held_ref"], threads=int(opt["threads"]))
+        _, _, (_, sp0, _, _), _ = truth_system(raw, opt["held_ref"], threads=int(opt["threads"]),
+                                               held_src=opt["held_src"])
         if sp.c8 is None or sp0.c8 is None:
             raise SystemExit("truth_restep.py: --held_ref needs both held offsets in eight parts")
         dh = float(np.abs(np.asarray(o8(od_axpy(-1.0, *sp0.c8, *sp.c8))[0])).max())
@@ -183,8 +193,31 @@ def check(argv):
     return 0 if ok else 1
 
 
+def residuals(argv):
+    """each step_spread.py JSON's state read through truth_system: its pinned max|F| must equal, as a double, the
+    unperturbed run's recorded max|F|"""
+    from octo_corrector import o8_any, omax, truth_system
+    args, opt = _opts(argv, dict(threads="3", held="auto", held_src="auto"))
+    raw, refs = args[0], args[1:]
+    print(f"truth_restep residuals: {len(refs)} states, held {opt['held']}, held_src {opt['held_src']}", flush=True)
+    ok = True
+    for f in refs:
+        js = json.load(open(f))
+        u = next(r for r in js["runs"] if r["run"] == "unperturbed")
+        z4, meta, (s, sp, sq, so), info = truth_system(raw, js["state"], threads=int(opt["threads"]), held=opt["held"],
+                                                       held_src=opt["held_src"])
+        F = omax(so.residual_o(o8_any(z4)))
+        same = F == u["F"]
+        ok &= same
+        print(f"  {js['state']}: pinned max|F| {F!r} against {os.path.basename(f)}'s {u['F']!r}: "
+              f"{'equal' if same else 'NOT equal'} (held values {info['held']} from {info['held_from']})", flush=True)
+    print(f"truth_restep residuals: {'PASS' if ok else 'FAIL'}")
+    return 0 if ok else 1
+
+
 if __name__ == "__main__":
     a = sys.argv[1:]
-    if not a or a[0] not in ("store", "check"):
+    cmds = dict(store=store, check=check, residuals=residuals)
+    if not a or a[0] not in cmds:
         raise SystemExit(__doc__)
-    sys.exit((store if a[0] == "store" else check)(a[1:]))
+    sys.exit(cmds[a[0]](a[1:]))

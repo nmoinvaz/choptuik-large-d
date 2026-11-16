@@ -583,10 +583,11 @@ def D_of(meta):
         return mp.mpf(meta["D_str"])
 
 
-def pinned_o(meta, z, threads=2, plan_tol=1e-32, mutate_offset="", held_exact=False, segs=None):
+def pinned_o(meta, z, threads=2, plan_tol=1e-32, mutate_offset="", held_exact=False, segs=None, held_z=None):
     """reseed.pinned's solver at the state's D, with the segments planned at z at plan_tol (segs: a stored plan
-    instead, #837), and its PinnedO wrapper: (s, PinnedSolver, PinnedQ, PinnedO). The held values are z's own, as
-    floats, or with held_exact taken from all of z's parts and carried in eight (anm_run.py --held_o 1)."""
+    instead, #837), and its PinnedO wrapper: (s, PinnedSolver, PinnedQ, PinnedO). The held values are z's own (held_z:
+    another state's, #884), as floats, or with held_exact taken from all of its parts and carried in eight
+    (anm_run.py --held_o 1)."""
     import mpmath as mp
     from hpkernel.driver import make_solver
     from pinning import PinnedQ, PinnedSolver, band_coeffs, band_field
@@ -596,8 +597,9 @@ def pinned_o(meta, z, threads=2, plan_tol=1e-32, mutate_offset="", held_exact=Fa
                     threads=threads, kfreeze=meta["kfreeze"])
     s.set_segs(segs if segs else s.plan(np.asarray(z[0]), np.asarray(z[1]), plan_tol, 0.05))
     ks_held = [k for k in range(int(meta["kfreeze"]) + 1, 14) if k % 2 == 1]
-    co = band_coeffs(np.asarray(z[0])[:M], np.asarray(z[1])[:M], M, ks_held, exact=held_exact,
-                     rest=[np.asarray(p)[:M] for p in z[2:]] if held_exact else ())
+    hz = z if held_z is None else held_z
+    co = band_coeffs(np.asarray(hz[0])[:M], np.asarray(hz[1])[:M], M, ks_held, exact=held_exact,
+                     rest=[np.asarray(p)[:M] for p in hz[2:]] if held_exact else ())
     h = band_field(co, ks_held, M, parts=8 if held_exact else 2)
     sp = PinnedSolver(s, M, h[0], h[1], h_rest=h[2:])
     return s, sp, PinnedQ(s, sp.ch, sp.cl), PinnedO(s, sp.ch, sp.cl, mutate_offset=mutate_offset, c8=sp.c8)
@@ -678,31 +680,46 @@ def o8_any(z):
     return o8(z) if len(z) == 8 else o8_of_q(z)
 
 
-def truth_system(raw, path, threads=3, read="auto", held="auto", plan="auto", mutate_offset=""):
+def _read_state(fp, read):
+    """(z, meta, parts read, parts in the file) of a stored state, by truth_system's read rule"""
+    from hpkernel.driver import load_q
+    eight = has_o(fp)
+    if read == "8" or (read == "auto" and eight):
+        z, meta = load_o(fp)
+        return z, meta, 8, 8 if eight else 4
+    z, meta = load_q(fp)
+    return o8(z), meta, 4, 8 if eight else 4
+
+
+def truth_system(raw, path, threads=3, read="auto", held="auto", plan="auto", mutate_offset="", held_src="auto"):
     """a stored state and the pinned system of the checks (#837): (z, meta, (s, PinnedSolver, PinnedQ, PinnedO), info).
     auto: a state saved in eight parts (anm_run.py --corrector od) is read in eight and solved in its chain's own
     system, the held values carried in eight parts from all of its parts (as --held_o 1 holds them) and its stored plan
     (as --keep_plan 1 keeps it); a four-part state is read in four, with its held values as floats and a plan made at
     it, as before. The controls each restore one old behaviour: read '4' (load_q), held 'float', plan 'state'. z is in
-    the parts read (four or eight)."""
+    the parts read (four or eight). held_src auto: a state re-stepped by truth_restep.py (meta["restep"]) holds its
+    source's values, followed to the first state that is not re-stepped, so that it reads in its source's system
+    (#884); 'state' holds its own (the control, as before #884)."""
     import os
-    from hpkernel.driver import load_q
+    if held_src not in ("auto", "state"):
+        raise SystemExit(f"truth_system: held_src {held_src!r}: auto or state")
     fp = os.path.join(raw, path)
-    eight = has_o(fp)
-    if read == "8" or (read == "auto" and eight):
-        z, meta = load_o(fp)
-        nread = 8
-    else:
-        z, meta = load_q(fp)
-        z, nread = o8(z), 4
+    z, meta, nread, nfile = _read_state(fp, read)
+    eight = nfile == 8
     exact = held == "exact" or (held == "auto" and eight)
     stored = plan == "stored" or (plan == "auto" and eight)
     if stored and not meta.get("segs"):
         raise SystemExit(f"{path}: no stored plan (segs) in its meta")
+    hz, src, m = None, path, meta
+    while held_src == "auto" and "restep" in m:
+        if m["restep"]["source"] in (path, src):
+            raise SystemExit(f"{path}: its restep source {src} names itself")
+        src = m["restep"]["source"]
+        hz, m, _, _ = _read_state(os.path.join(raw, src), read)
     sysm = pinned_o(meta, z, threads=threads, mutate_offset=mutate_offset, held_exact=exact,
-                    segs=meta["segs"] if stored else None)
-    info = dict(file_parts=8 if eight else 4, read=nread, held="eight parts" if exact else "floats",
-                plan="stored" if stored else "made at the state")
+                    segs=meta["segs"] if stored else None, held_z=hz)
+    info = dict(file_parts=nfile, read=nread, held="eight parts" if exact else "floats",
+                plan="stored" if stored else "made at the state", held_from=src)
     return z, meta, sysm, info
 
 
