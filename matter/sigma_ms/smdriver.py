@@ -1,6 +1,6 @@
 """Driver of the sigma-model kernel (sigmams, matter/sigma_ms): set-up, seeds from sigdss states, Newton in double- and
 quad-double, a deflated Newton for starts on the near-null band (newton_band), continuation in eps = 1/eta,
-diagnostics.
+diagnostics, and the growth rates of perturbations from the mode matrix's determinant (det_fn, det_root).
 
 Double-double vectors are (hi, lo) pairs of float64 arrays, quad-double ones four parts. Layout of z (M half-grid
 points, K nodes; multishoot's, NF = 5, NL = 2, NR = 3):
@@ -555,6 +555,111 @@ def harmonics_q(zh, M):
     full = np.concatenate([q, -q])
     c = np.fft.rfft(full) / (2 * M)
     return {k: float(2 * abs(c[k])) for k in range(1, M, 2)}
+
+
+# ------------------------------------------------------------------ growth rates (the mode matrix, #918)
+def solver_of(meta, threads=2):
+    """the Solver of a saved state: its coupling, D, tau points, nodes, series orders and planned steps"""
+    eta = None if meta["eta"] in ("inf", None) else float(meta["eta"])
+    s = make_solver(eta, int(meta["M"]), nodes=meta["nodes"], kt=meta["kt"], kc=meta["kc"], ks=meta["ks"],
+                    threads=threads, D=float(meta.get("D", 4.0)))
+    s.set_segs(meta["segs"])
+    return s
+
+
+def gauge_rate(zh, zl, meta, dps=40):
+    """lambda_g = mean over tau of 1 - c_x(tau, 1), the growth rate of the mode that relabels the light cone: a
+    neighbouring ingoing null ray x = 1 + d(tau) leaves the cone as d' = (1 - c_x(tau, 1)) d. From the horizon data
+    a_h, psi_h with the kernel's own x c_x at c = 1 (model.rs, horizon_c1): (n-1)(a^2 - 1) - 2 n a^2 sigma^2,
+    sigma = sin(kappa psi)/kappa. Returns an mpmath number."""
+    M, K = int(meta["M"]), len(meta["nodes"])
+    o = 2 * M + 5 * M * K
+    with mp.workdps(dps):
+        n = mp.mpf(float(meta.get("D", 4.0))) - 2
+        k2 = mp.mpf(0) if meta["eta"] in ("inf", None) else n / mp.mpf(float(meta["eta"]))
+        tot = mp.mpf(0)
+        for j in range(M):
+            a = mp.mpf(float(zh[o + M + j])) + mp.mpf(float(zl[o + M + j]))
+            psi = mp.mpf(float(zh[o + 2 * M + j])) + mp.mpf(float(zl[o + 2 * M + j]))
+            sg = psi if k2 == 0 else mp.sin(mp.sqrt(k2) * psi) / mp.sqrt(k2)
+            tot += 1 - (n - 1) * (a * a - 1) + 2 * n * a * a * sg * sg
+        return tot / M
+
+
+def dmat_even(M):
+    """d/dtheta of a field of period pi (the even fields a, c) from its M half-grid samples, in f64"""
+    k = np.fft.fftfreq(M, 1.0 / M)
+    if M % 2 == 0:
+        k[M // 2] = 0.0
+    eye = np.eye(M)
+    return np.real(np.fft.ifft(2j * k[:, None] * np.fft.fft(eye, axis=0), axis=0))
+
+
+def dtau_state(zh, meta, wrong=False):
+    """d/dtau of every unknown before Delta (f64): omega d/dtheta with the odd operator on q, p, m, psi, m_h, psi_h
+    and the even one on c0, a, c, a_h. This is the tau-translation mode, which the mode matrix at rate 0 annihilates
+    up to the tau truncation. wrong=True takes the odd operator for the even fields too (the check's control)."""
+    M, K = int(meta["M"]), len(meta["nodes"])
+    om = 2 * np.pi / zh[-1]
+    dh, dl = dmat_odd(M)
+    Do = dh + dl
+    De = Do if wrong else dmat_even(M)
+    even = [False, True] + [False, False, True, True, False] * K + [False, True, False]
+    v = np.zeros(len(zh) - 1)
+    for i, ev in enumerate(even):
+        v[i * M:(i + 1) * M] = om * ((De if ev else Do) @ zh[i * M:(i + 1) * M])
+    return v
+
+
+def det_fn(s, zh, zl, log=None, cache=None):
+    """lam -> (sign, ln|det M(lam)|) at the state, by the double-double LU (Solver.mode_det); memoized in cache"""
+    cache = {} if cache is None else cache
+
+    def sd(lam):
+        lam = float(lam)
+        if lam not in cache:
+            t = time.time()
+            sg, la, pmin, pmax, im = s.mode_det(zh, zl, lam)
+            assert im == 0.0, "a real rate gave an imaginary part"
+            cache[lam] = (sg, la)
+            if log:
+                log(f"    lam {lam:.15f}: sign {sg:+.0f} ln|det| {la:.6f} pivots {pmin:.2e}..{pmax:.2e} "
+                    f"({time.time() - t:.1f} s)")
+        return cache[lam]
+    return sd
+
+
+def det_root(sd, a, b, xtol=1e-13):
+    """the root of det M in [a, b], where its sign changes, by Brent's method on sign * exp(ln|det| - ref) (as
+    hp/gamma_dd.py; R. P. Brent, Algorithms for Minimization without Derivatives, 1973, ch. 4); None without a sign
+    change"""
+    from scipy.optimize import brentq
+    if sd(a)[0] == sd(b)[0]:
+        return None
+    ref = 0.5 * (sd(a)[1] + sd(b)[1])
+    return brentq(lambda x: sd(x)[0] * np.exp(sd(x)[1] - ref), a, b, xtol=xtol, rtol=1e-15)
+
+
+def det_root_near(sd, guess, widths=(1e-3, 1e-2, 5e-2), xtol=1e-13):
+    """the root of det M nearest guess: the first of the brackets guess (1 -+ w) with a sign change, the half that
+    holds it. Returns (root or None, the bracket's w)."""
+    for w in widths:
+        lo, hi = guess * (1 - w), guess * (1 + w)
+        if sd(lo)[0] != sd(hi)[0]:
+            if sd(guess)[0] != sd(lo)[0]:
+                return det_root(sd, lo, guess, xtol), w
+            return det_root(sd, guess, hi, xtol), w
+    return None, widths[-1]
+
+
+def sign_bracket(cache, root):
+    """the two neighbouring rates of the determinants in cache (det_fn's) that hold the root between them, with
+    opposite signs: the root's enclosure by the sign of det M"""
+    ks = sorted(cache)
+    for p, q in zip(ks, ks[1:]):
+        if p <= root <= q and cache[p][0] != cache[q][0]:
+            return p, q
+    return None
 
 
 # ------------------------------------------------------------------ files
