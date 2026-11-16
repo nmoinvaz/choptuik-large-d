@@ -412,6 +412,7 @@ set at 262e^{−3iπ/4} (`lemma6b1_runs_M3_cert/ray.json`, p̂ ± 1.1×10⁻⁹,
 | M = 1 with gravity | the enclosures of (D, S, C)(ξ₀) overlap `fixed_point.py`'s 7 start values | passes; midpoints equal to 6×10⁻⁹⁷ |
 | the two Lipschitz matrices at the first implementation's N, k and ball, with the kernel bounds of §4.4 | every entry of the second is ≤ the first's and ≥ 0.8 of it; the same for the forcing | passes; ratios 0.88–1.00 (M = 1), 0.86–1.00 (M = 3), 0.81–1.00 (M = 5); forcing ratios 0.99995, 0.99985, 0.99998; contraction constants in the first's weights 0.2143 against 0.2145, 0.3354 against 0.3359, 0.25000 against 0.25004 |
 | two truncations of the full M = 5 problem at p̂, N = 60 and 95 against 105 | the two enclosures of the one solution overlap at z₀ and at \|z\| = R | passes; the difference uses 0.83 and 0.68 of the summed radii at \|z\| = R |
+| the fast kernel's bound (`--kernel`, #877): the 1417 cases that the module asks `fast_norm` for in five runs (M = 5 at x̂: the point, the complex box, the sector, k = 40; M = 3), at r = R, R/2, R/100, R/10⁴ and e = e_min, e_min + 0.05 | r^{pw} I_n lies at or below the bound, with I_n = U(1, 2 − n, a/r)/r enclosed by arb (Tricomi's U) | passes; 0 of 11336 values above, the largest 0.999815 of the bound. `review_867/rv_kernel.py` gives the same numbers by mpmath quadrature |
 
 The lowest ratios of the third row are the entries p ← c and v ← c, where the second implementation's bound of Q_N is
 the tighter one.
@@ -428,6 +429,7 @@ the tighter one.
 | `--planted --mutate=truth` (Kummer's α times 1 + 10⁻¹²) | the enclosure misses the mutated truth by 2.3×10⁻¹³ |
 | `lip --mutate=drop` (the majorant without the [(C − 1)W] term) | the v rows fall to half of the first implementation's |
 | `--two=60,105 --mutate=forcing` (the N = 60 forcing divided by 1000) | the N = 60 enclosure misses the N = 105 one by a factor 820 |
+| `--kernel --mutate=offbyone` (the bound with a + (m + 2 + e)R, one integration by parts too many) | 2834 of the 11336 values exceed the bound, by up to 0.68% |
 
 **What the two implementations share.**
 
@@ -490,6 +492,7 @@ RAY=../../../choptuik-large-d-raw/I38-macm3/lemma6b1_runs_M5_cert/ray.json
 python3 fixed_point_M_b.py --planted --M=5
 python3 fixed_point_M_b_check.py m1
 python3 fixed_point_M_b_check.py cli                # the plain command line against a 512-bit reading of --x
+python3 fixed_point_M_b.py --kernel                 # the fast kernel's bound against its integral
 python3 fixed_point_M_b_check.py lip --M=5
 python3 fixed_point_M_b.py --M=5 --two=60,105 --compare=$RAY
 python3 fixed_point_M_b.py --M=5 --start --rho0=405 --h=1e-18 --cauchy=1e-3 --compare=$RAY
