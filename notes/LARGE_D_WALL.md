@@ -950,6 +950,28 @@ misses it by 3.2×10⁻⁵, with a last term of 1.3×10⁻¹⁵. Script: `hp/fol
 - **What would decide it:** new-plan series that meet their own states, at bases within 0.1 of D*. That is #829's
   configuration, about 8 series.
 
+## The horizon order raised at D 150 (#903's pilots)
+
+**At D 150 the horizon series cut at order 130 costs Δ about 10⁻¹⁵, and the smallest pivot a factor e^0.25. Both
+settle by order 160.** #903 polished T138's state at D 150 (`T138-win2/chain/anm_pin3_D150.0000.npz`) at five orders,
+with chain_nsr's flags and corrector (win2, raw `I903-win2/` 186beee0). Every polish converged, to max |F| ≤ 4.3×10⁻⁶⁸.
+
+| ks | Δ − Δ(previous ks) | p_min | wall |
+|---|---|---|---|
+| 130 | | 5.9×10⁻⁸ (T138's) | |
+| 160 | 1.34×10⁻¹⁵ | 7.62×10⁻⁸ | |
+| 250 | 8.5×10⁻²⁰ | 7.6×10⁻⁸ | 344 s |
+| 410 | 2.4×10⁻⁴⁰ | 7.6×10⁻⁸ | 725 s |
+
+Two steps at ks 160, to D 151 and 152, converged at full step length, with p_min above T138's by the same factor
+(e^0.26 and e^0.25). The linear model of [FACTORED_HORIZON.md](FACTORED_HORIZON.md) 4.2, extended below D 225 with
+Re s linear in D, predicts the saturation: ln f = −0.00 from order 160 on. It overpredicts the cut's cost, though.
+For the first harmonic it gives −ln f(130) = 0.53, 0.59 and 0.66 at D 150, 151 and 152, and for the third 0.22, 0.27
+and 0.33. The measured ln(p₁₆₀/p₁₃₀) is 0.25, 0.26 and 0.25, so it does not grow with D over these two units as
+either harmonic's prediction does. The orders up to 410 converge with no rebuild, as the order needed at D 400 is
+about 404. The chain with the order tied to D (`hp/ks_chain.py`, ks = ⌈1.95 Re s⌉ + 10 per leg of 10 in D) started
+from D 152 at 05:22 UTC on 2026-11-16.
+
 ## Proposed README text
 
 Applied to the README by the coordinator on 2026-11-14 (its checks moved to the README with it). Drafted for the
