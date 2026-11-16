@@ -1201,6 +1201,14 @@ point, as `mutations_M.py` runs it, but not over a parameter box (#865). The sto
 all 27 rows to 2.6×10⁻¹¹ relative, so the stored `lemmaS_scan_M5.log` and `.json` are now the Mac's run. The table of
 §3.3 keeps its values, and its r₊ = 0.05 row now gives all three k.
 
+Both sets were also rerun on Windows x86-64 (a Surface laptop, Python 3.14, python-flint 0.9.0, FLINT 3.6.0; #876, raw
+`I876-winb/` 8dddc5d6), with lemma 6b₁(3)'s covering under its own tag and lemma 6a(3) at the certificate's box. Every
+run exits 0, and every control gives its stated verdict, `mutations_M.py --all` included. The 6b₁(3) check passes
+with 183 tiles, 579 pieces and 461 links. Lemma 6a(3) gives ρ₆ₐ = 0.04128 against the stored 0.04135, and lemma 6a(5)
+gives 0.2133 against the Pi's 0.2125 and macm3's 0.2121. The B of 6a(5) has the Pi's midpoints in all 722 strings and
+radii up to 24% apart. macm3's and the Pi's B pass on Windows, and Windows's covering and B pass on the Mac (ρ₆ₐ =
+[0.2133038160 ± 2.11×10⁻¹¹]). With #121 (6b₁(5) on win2), every lemma of A(M = 3) and A(M = 5) has a Windows run.
+
 ## 11. Proposed text for A_certify.md and PROOF.md
 
 The coordinator edits those files; this is proposed text only.
