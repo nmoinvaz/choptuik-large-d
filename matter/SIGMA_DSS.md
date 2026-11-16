@@ -47,6 +47,8 @@ Contents
   that ignores it stalls at D ≈ 10.5; with a smoothness prior in both the Newton solve and the tangent it passes
   D = 10.5. At η = 0.3 the branch stays smooth to D = 11 and λ(D) turns: 3.0814, 3.0685, 3.1127 at D = 10, 10.5, 11
   (γ = 0.3245, 0.3259, 0.3213), unchanged to 10⁻⁴ under k_c = 23, a ten times weaker prior and a longer horizon series.
+  Without the prior, though, Δ at these states moves by 10⁻³ or more, and the walks have not settled (§11, #892), so the
+  turn rests on the prior.
   At η = 1 the solver found two different solutions at D = 10.475 (Δ = 0.9935 and 1.0340), so η = 1 above D ≈ 10.25 is
   not reliable. No fold direction was seen. The gauge mode's root drifts away from its exact value above D ≈ 8 (by 0.25
   at D = 11), unexplained; so the D ≥ 10 growth rates are preliminary. Going further needs more care than short runs on
@@ -591,6 +593,24 @@ how far Δ can still move at a state's residual by W = g|F|, with g = |e_Δᵀ J
   without the prior, with a Newton step of −4.4×10⁻³ in Δ. Without the prior the k_c = 15 walk ends 4.06×10⁻³ below
   the march's value (W = 1.2×10⁻³). The gap to the kernel falls 5.8 times from k_c = 15 to 23. So §5's η = 1 values
   at D 10 and 10.5 carry the prior's bias, and the kernel's chain is the better value there.
+
+**At η = 0.3, without the prior (#892; rpi5, raw `I892-rpi5/` 11007115).** The march's states at η = 0.3 were taken into
+the system without the prior: `width` at each, then a walk of up to 150 Jacobians from each prior-carrying state. The
+control at D 8.0, solved without the prior, holds: its walk moves Δ by 6.2×10⁻¹⁰ against W = 6.6×10⁻⁸.
+
+| state (§5) | prior | march Δ | \|F\| without it | W | walk's end − march | reading |
+|---|---|---|---|---|---|---|
+| D 9.0 | 10⁻⁸ | 1.164945055 | 3.4×10⁻¹² | 1.7×10⁻⁶ | −2×10⁻¹⁶ (settled) | prior-free |
+| D 10.0 | 10⁻⁸ | 1.154559202 | 3.2×10⁻⁹ | 5.0×10⁻³ | −8.1×10⁻⁴ after 150, still falling | undecided |
+| D 10.5 | 10⁻⁸ | 1.112502242 | 8.4×10⁻⁷ | 6.1 | +2.6×10⁻³, still rising | prior-held |
+| D 10.5, branch m03hi | 10⁻⁷ | 1.139109365 | 2.6×10⁻⁹ | 6.3×10⁻³ | −1.4×10⁻³, stalled | prior-held |
+| D 11.0, branch m03hi | 10⁻⁷ | 1.117461404 | 1.2×10⁻⁸ | 0.46 | −1.5×10⁻³, stalled | prior-held |
+
+The two m03hi walks ended on a stall while Δ still moved by about 2×10⁻⁵ per Jacobian, so their ends are not settled
+values, and their readings rest on the 10⁻³ line inside the march states' W. At D 10, Newton's step from the walk's end
+adds about −2×10⁻³. So from D 10 on, §5's η = 0.3 points depend on the prior by 10⁻³ or more, and the turn of λ(D)
+near D 10.5, computed at these states, is not established. The walk's stop rule now needs three quiet Jacobians in a
+row (`sigdss_band.py --settle`).
 
 ## 12. References
 
