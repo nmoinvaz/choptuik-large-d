@@ -995,7 +995,8 @@ an intrinsic weakening remains.
   harmonic-1 neighbour stop early. σ₃ by index reads "supports", but its identity changes: it is the Δ mode at order 130
   and a harmonic-3 mode from 160 on. So it disagrees with g, which follows Δ.
 - **Discrepancies.** C1 failed at D 249.01, order 160, where σ₁'s iteration stopped at 1.35×10⁻³ against a bar of
-  10⁻³. g does not use that iteration, and a rerun with 32 iterations is under way. At D 253.80, Δ's pinned step does
+  10⁻³. A rerun with 32 iterations passes (7.96×10⁻⁷) with g bit-equal (raw `I902-mac/` 41cb857e). So C1 passes, and
+  the verdict stays neither. At D 253.80, Δ's pinned step does
   not settle with the order: −2.6×10⁻⁶, −2.9×10⁻⁷ and −7.7×10⁻⁶ at orders 160, 200 and 250.
 - **The jump to the order is another matter.** A Newton jump from 130 to 250 diverges at D 225.13 and 245.14 (#696,
   #903's Mac pilot), while a ladder of +2 to +10 per rung converges. Order 142 already holds 82% of order 250's lift at
