@@ -526,9 +526,10 @@ def lipschitz(geo, k, kc, h, eta="1e-6", verbose=False, floor=LIP_FLOOR):
     nonnegative-coefficient power series in t, hence convex in t, and its slope at t = 0 is bounded by the secant
     (M(eta) - M(0))/eta, computed in ball mode (no outward rounding between the two runs; both runs share the
     same B-object structure). Returns (rows, cols, matrix of arb upper bounds, scales).
-    A secant of a bound that does not depend on the perturbed input is the rounding of one number against itself
-    over eta, about 1e-69 at 256 bits, and it follows the last digits of the inputs. So an entry below floor is
-    written as floor, which is still an upper bound and is the same in every run."""
+    An entry at or below floor is written as floor, whatever its cause, which is still an upper bound and is the
+    same in every run. Most such entries are secants of bounds that do not depend on the perturbed input: the
+    rounding of one number against itself over eta, about 1e-69 at 256 bits, which follows the last digits of the
+    inputs. A few are real bounds below the floor (B_chain.md 13.4; #894's F2)."""
     K = geo.K
     eta = arb(eta)
     SUMHYP[0] = True

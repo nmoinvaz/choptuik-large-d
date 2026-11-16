@@ -894,9 +894,13 @@ inputs, so two runs can differ in them by a quarter (raw `I885-mac/`, #885).
 
 So `lipschitz` writes every entry below 10⁻⁵⁰ as 10⁻⁵⁰, which is still an upper bound, and the certified matrix is
 the one saved. 1204 entries are at this floor: the 1184 below 10⁻⁶⁰ and 20 bounds between 10⁻⁶⁰ and 10⁻⁵⁰. They add
-at most 2.4×10⁻⁴⁸ to a weighted row sum, against θ = 0.7355. Two runs whose centres A\* differ by 10⁻¹⁷ then agree
+at most 2.4×10⁻⁴⁸ to a row sum weighted with the certificate's weights, against θ = 0.7355. Two runs whose centres A\* differ by 10⁻¹⁷ then agree
 to 5.3×10⁻¹¹ in every entry, which is the change of h_β in the band N0, and without the floor 636 entries differ by
-more than 10⁻⁹ (`b8m_lc_liprep.py` and its `--mutate=nofloor`, raw `I891-mac/`, #891).
+more than 10⁻⁹ (`b8m_lc_liprep.py` and its `--mutate=nofloor`, raw `I891-mac/`, #891). The same script runs the
+certificate's command once more without the floor and checks the floor itself: no entry may be lowered, entries above
+the floor must equal their unfloored values, and the rest must be the floor. Its control `--mutate=cap` writes every
+entry as the floor, which agrees with itself from run to run and gives θ ≈ 0. Only this check catches it: 396 entries
+are lowered (#894's F1).
 
 So T is a contraction on the complete set 𝒦_h. This gives existence and uniqueness. Holomorphy in p follows because
 the iterates T_p^k(0) are holomorphic in p and converge uniformly. This proves parts 1–2.
