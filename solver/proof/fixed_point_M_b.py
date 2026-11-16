@@ -43,7 +43,12 @@ in the norm max_i ||eta_i|| / w_i with constant max_i (L w)_i / w_i < 1 (Banach'
     python3 fixed_point_M_b.py --planted [--M=5]
         the linear problem (no gravity), whose lateral solution is 2 F x^alpha U(alpha, 1/2, x), x = -1/(2z),
         alpha = (1 + s)/2 (Kummer's U, evaluated by arb): the enclosure must contain it
+    python3 fixed_point_M_b.py --kernel
+        the fast kernel's bound against its integral I_n = U(1, 2 - n, a/r) / r (Tricomi's U, by arb), on every case
+        (mm, pw, a, e_min, R) that the module asks fast_norm for in five runs at the stored zeros, at four radii and
+        two exponents each. The quadrature version, with mpmath, is review_867/rv_kernel.py.
     mutations (each must make its check fail; the exit status is then 3):
+        --mutate=offbyone (--kernel) the bound with a + (m + 2 + e) R, one integration by parts too many
         --mutate=radius   r0 = 0.3: the contraction must fail
         --mutate=coef     one series coefficient off by a relative 1e-6: the low orders of the residual no longer vanish
         --mutate=sign     the sign of [G P], in the series and the residual alike: a contraction for another system,
@@ -313,12 +318,18 @@ def slow_norm(sp, kj, ki, R):
     return tot
 
 
+KERNEL_LOG = None              # kernel_check sets a dict here to record the cases fast_norm is asked for
+
+
 def fast_norm(sp, kj, ki, R, a, emin, kernel="sharp"):
     """sup_{r <= R} r^-ki int_0^r e^{-a(1/rho - 1/r)} (rho/r)^e sp(rho) rho^kj d rho, e >= emin >= 0"""
     tot = arb(0)
     for m, c in sp.items():
         mm = m + kj
         pw = mm + 2 - ki
+        if KERNEL_LOG is not None and kernel == "sharp":
+            KERNEL_LOG[(mm, pw, a.str(40, radius=False), emin.str(40, radius=False),
+                        R.mid().str(40, radius=False))] = (a, emin, R)
         if mm < -1 or pw < 0:
             raise ValueError(f"fast row: exponent {mm} below the weight {ki} - 2")
         if pw == 0:
@@ -759,15 +770,84 @@ def compare(M, vals, cols, path, verbose=True):
                                  "column_worst": cworst}
 
 
+# ---------------------------------------------------------------- the fast kernel's bound against its integral
+# the numerical zeros of hier.py / nested.py (double precision), the centres of the planted and kernel checks
+ZEROS = {1: ["2.5421480475", "0.7769940136"],
+         3: ["2.726475886", "1.015603095", "0.144419478488", "0.011087425887"],
+         5: ["2.718579189", "0.999228404", "0.149203574672", "0.014719052460", "0.008405346879", "0.001470345176"]}
+
+
+def kernel_integral(n, r, a):
+    """I_n = int_0^inf e^{-a tau} (1 + r tau)^-n d tau, enclosed by arb. With t = r tau it is U(1, 2 - n, a/r) / r,
+    Tricomi's U(1, b, x) = int_0^inf e^{-x t} (1 + t)^(b - 2) dt. After 1/rho = 1/r + tau the fast row's integral is
+    int_0^r e^{-a(1/rho - 1/r)} (rho/r)^e rho^mm d rho = r^(mm + 2) I_n, n = mm + 2 + e."""
+    return (acb(a / r).hypgeom_u(acb(1), acb(2 - n)) / r).real
+
+
+def kernel_check(mutate=None, prec=512, verbose=True):
+    """the bound of fast_norm against the true integral, on the cases the module itself asks for. The cases
+    (mm, pw, a, e_min, R) are recorded while the module runs at the stored zeros: M = 5 at the point, on the complex
+    box, on a sector of rays and with k = 40, and M = 3 at r0 = 0.1. For each case and each r = R, R/2, R/100, R/10^4,
+    e = e_min and e_min + 0.05, the enclosure of r^pw I_n must lie certainly at or below the bound, and the
+    enclosures must satisfy 1 = a I_(n-1) + (n - 1) r I_n. mutate = "offbyone": the bound with a + (mm + 2 + e) R,
+    one integration by parts too many (fast_norm called with e_min + 1); the check must then fail."""
+    global KERNEL_LOG
+    ctx.prec = prec
+    c, h = arb("1e-3"), arb("1e-18")
+    x5 = [acb(arb(v)) for v in ZEROS[5]]
+    x5c = [acb(arb(v) + arb(0, h + c), arb(0, c)) for v in ZEROS[5]]
+    KERNEL_LOG = {}
+    try:
+        runs = [("M = 5, the point", Setup(x5, 5, "0.07", "3pi/8")),
+                ("M = 5, the complex box", Setup(x5c, 5, "0.07", "3pi/8", None, 105)),
+                ("M = 5, sector 0.2", Setup(x5, 5, "0.07", "3pi/8", "0.2")),
+                ("M = 5, sector 0.2, k = 40", Setup(x5, 5, "0.07", "3pi/8", "0.2", None, 40)),
+                ("M = 3, r0 = 0.1", Setup([acb(arb(v)) for v in ZEROS[3]], 3, "0.1", "3pi/8"))]
+        for name, st in runs:
+            out = prove(st, False)
+            if verbose:
+                print(f"  {name}: N = {st.N}, k = {st.k}, a = {float(st.a):.5f}, e_min = {float(st.emin):.4f}, "
+                      f"contraction constant {float(out['lam']):.4f}, proved {out['ok']}")
+        cases = KERNEL_LOG
+    finally:
+        KERNEL_LOG = None
+    worst, where, bad, n_val, ident_ok, ident_rad = 0.0, None, 0, 0, True, 0.0
+    shift = arb(1) if mutate == "offbyone" else arb(0)
+    for (mm, pw, _, _, _), (a, emin, R) in sorted(cases.items(), key=lambda kv: kv[0]):
+        bound = fast_norm({0: arb(1)}, mm, mm + 2 - pw, R, a, emin + shift)
+        for e in (emin, emin + arb("0.05")):
+            n = mm + 2 + e
+            for fr in (arb(1), arb(1) / 2, arb(1) / 100, arb(1) / 10000):
+                r = R * fr
+                true = r ** pw * kernel_integral(n, r, a)
+                n_val += 1
+                if not true <= bound:
+                    bad += 1
+                ratio = float((true / bound).upper())
+                if ratio > worst:
+                    worst, where = ratio, (mm, pw, float(a), float(e.mid()), float(r.mid()))
+        n = mm + 2 + emin
+        one = a * kernel_integral(n - 1, R, a) + (n - 1) * R * kernel_integral(n, R, a)
+        ident_ok = ident_ok and bool(one.contains(1))
+        ident_rad = max(ident_rad, float(one.rad()))
+    ok = bad == 0 and ident_ok and len(cases) > 0
+    pws, mms = [k[1] for k in cases], [k[0] for k in cases]
+    print(f"  {len(cases)} distinct cases (mm, pw, a, e_min, R); pw from {min(pws)} to {max(pws)}, mm from {min(mms)} to "
+          f"{max(mms)}")
+    print(f"  the identity 1 = a I_(n-1) + (n - 1) r I_n: every enclosure contains 1: {ident_ok} (largest radius "
+          f"{ident_rad:.1e})")
+    print(f"  largest true value / bound: {worst:.6f} at (mm, pw, a, e, r) = {where}; values not certainly at or below "
+          f"the bound: {bad} of {n_val}")
+    print(f"KERNEL BOUND{' [MUTATION ' + mutate + ']' if mutate else ''}: {'PASS' if ok else 'FAIL'}")
+    return ok
+
+
 # ---------------------------------------------------------------- planted truth: the linear problem
 def planted(M=5, xs=None, r0="0.07", arg="3pi/8", rho0=405, mutate=None, prec=512, verbose=True):
     """no gravity: P_mu = 2 F_mu x^alpha U(alpha, 1/2, x) and V_mu = 2 z P_mu', x = -1/(2z), alpha = (1 + s_mu)/2"""
     ctx.prec = prec
     odd, _ = harmonics(M)
-    xs = xs or {1: ["2.5421480475", "0.7769940136"],
-                3: ["2.726475886", "1.015603095", "0.144419478488", "0.011087425887"],
-                5: ["2.718579189", "0.999228404", "0.149203574672", "0.014719052460", "0.008405346879",
-                    "0.001470345176"]}[M]
+    xs = xs or ZEROS[M]
     st = Setup([acb(arb(v)) for v in xs], M, r0, arg, None, None, None, False, "sharp",
                mutate if mutate in ("radius", "coef") else None, prec)
     out = prove(st, verbose, "linear problem: ")
@@ -861,6 +941,8 @@ def main():
     print(f"python-flint {flint.__version__}, FLINT {flint.__FLINT_VERSION__}, {prec} bits"
           + (f", MUTATION {mutate}" if mutate else ""))
     t0 = time.time()
+    if "kernel" in opts:
+        sys.exit(0 if kernel_check(mutate, prec) else 3)
     if "planted" in opts:
         ok = planted(M, opts["x"].split(",") if "x" in opts else None, opts.get("r0", "0.07"),
                      opts.get("arg", "3pi/8"), float(opts.get("rho0", "405")), mutate, prec)
