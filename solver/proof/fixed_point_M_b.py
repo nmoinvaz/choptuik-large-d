@@ -854,6 +854,7 @@ def main():
     M = int(opts.get("M", "5"))
     mutate = opts.get("mutate")
     prec = int(opts.get("prec", "512"))
+    ctx.prec = prec                 # before --x, --box or --cbox becomes a ball: at 53 bits a decimal is a ball of 1e-16
     N = int(opts["N"]) if "N" in opts else None
     k = int(opts["k"]) if "k" in opts else None
     kernel = opts.get("kernel", "sharp")
