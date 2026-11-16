@@ -472,7 +472,8 @@ inclusion-monotone in the widths |Q|, |DQ| (both increasing in C_E/n), and the d
 so passing at n₀ gives every n ≥ n₀ (the script also checks that every later row of the scan passes).
 So for every n ≥ n₀ = e^{89.75} exactly one p_n ∈ X satisfies L_{u*}(Ψ_out) = 0, and
 $`\lvert p_n - p_*\rvert_\infty \le C_7/n`$ with C₇ = 2.90×10²⁹ = e^{67.84}. With B5(2) for the data of d₀ = 0 and 10⁶ the
-threshold is the same and C₇ = e^{67.81}, e^{67.82} (`b7_ift_d0_0.log`, `b7_ift_d0_1e6.log`). Mutation: J_D(x̂) shifted by 5×10⁻¹¹ (a wrong input that moves
+threshold is the same and C₇ = 2.8233×10²⁹ and 2.8286×10²⁹, both below e^{67.82} (`b7_ift_d0_0.log`,
+`b7_ift_d0_1e6.log`). Mutation: J_D(x̂) shifted by 5×10⁻¹¹ (a wrong input that moves
 the zero of J_D out of X) fails at every n of the scan (`--mutate=JD`), caught.
 
 ### 8.4 Theorem B(1)
