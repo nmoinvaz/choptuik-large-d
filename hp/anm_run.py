@@ -17,7 +17,7 @@ formulation of hp/pinning.py; their coefficients are zero).
         [--horizon_alpha 0] [--fix1_qlu 0] [--jet_q 0] [--reseed 0] [--pred_q 0] [--reseed_q 0] [--save_pred 0]
         [--jet_o 0] [--corrector od --tol_od 1e-40] [--base_adopt 0] [--base_polish 1] [--keep_plan 1] [--held_fit FILE]
         [--held_o 0] [--reseed_o 0] [--a0 0] [--a_grow 2] [--a_hold 0] [--lam_stall 0] [--save_base 0] [--save_jet 0] [--held_from STATE]
-        [--arclength 0 --guard 0.05 --D_min 0 --arc_sign 1 --border 1 --turns_max 2]
+        [--arclength 0 --guard 0.05 --D_min 0 --arc_sign 1 --border 1 --turns_max 2 --arc_dhold 1e-12 --arc_jet FILE]
 
 --corrector qd runs the quad-double Newton of the kernel (hpkernel.driver.newton_qd, Solver.newton_q) on the pinned
 system (pinning.PinnedQ: the held harmonics' offset subtracted from the quad-double residual and added to the step, as
@@ -144,6 +144,11 @@ continuation in D: the base is polished at D rounded to double-double, each step
 (coefficients_o) composed with D(s), and its corrector is newton_od with the chain's flags on the bordered system in
 (D, z). It needs --jet_o 1 and --corrector od, and takes --N, --eps, --h_max, --a_grow, --steps and the od flags as the
 chain does. Records OUT/arc.jsonl, states OUT/arc_<n>_D<D>.npz (with --save_jet 1 the series as arcjet_<n>_D<D>.npz).
+--arc_dhold H: the bordered corrector holds D (its step is the fixed-D Newton step, the arclength row counted as
+satisfied within H / |t_D|) when the bordered step's D move is at most H; the chain's F moves by about 2e33 dD^2 along
+the tangent, so a move of one double-double ulp of D (~1e-30) puts the point far outside the corrector's basin (#842).
+--arc_jet FILE: the first base's series read from FILE (an arcjet_*.npz of an earlier run at the same base D and N)
+instead of computed.
 --save_jet 1 saves each base's series z_0..z_N as OUTDIR/jet_pin<k>_D<D>.npz, in all the parts its jet carries (eight
 with --jet_o, four with --jet_q, two otherwise; keys z0..z<P-1>, each an (N + 1, L) array, order k in row k), its meta
 recording the norms and pivots. --save_jet 2 saves it and stops before the first attempt, so the series alone is the
@@ -325,7 +330,8 @@ def main():
     # (the sign of D's change), no base where the unit tangent's |t_D| < --guard, stopping below --D_min (0: never) or
     # after the step that holds the --turns_max-th turn (2: the mirror's own turn);
     # --border 0 is its control (the D-series and the corrector at fixed D)
-    opt.update(arclength=0, guard=0.05, D_min=0.0, arc_sign=1, border=1, turns_max=2, arc_diag=0)
+    # --arc_dhold H: D held where the bordered step's D move is at most H; --arc_jet FILE: the first series read
+    opt.update(arclength=0, guard=0.05, D_min=0.0, arc_sign=1, border=1, turns_max=2, arc_diag=0, arc_dhold=1e-12, arc_jet="")
     for k in list(opt):
         f = "--" + k
         if f in args:

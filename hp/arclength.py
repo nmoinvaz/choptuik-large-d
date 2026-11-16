@@ -504,7 +504,10 @@ class BorderedCore:
     """the pinned octo-double system in the unknowns y = (D, z) (D first, so Delta stays the last unknown), with the
     pseudo-arclength row g = <t_z, z - z_p> + t_D (D - D_p) first, for newton_od. D is double-double: each step's dD
     is rounded so that D + dD is, and dz is taken for the rounded dD. The row is reported as 0 once |g| is within
-    ulp(D) / |t_D| (the rounding of D moves the point along the branch by at most that). newton_o: Keller's block
+    max(ulp(D), H) / |t_D| (H = --arc_dhold; the rounding of D moves the point along the branch by at most ulp(D)).
+    D is held (dD = 0, the step a: the fixed-D Newton step) when the bordered dD is at most H and the row is within
+    that bound: a tangent move of dD costs about 2e33 dD^2 in the chain's F, so one ulp of D (~1e-30) is fatal at the
+    corrector's starts of 1e-35 (#842). newton_o: Keller's block
     elimination through the LU at the point (sysm.at(D)), a = -J^-1 (F - c), b = J^-1 F_D, each call's denominator
     t_D - <t_z, b> and |b| logged; olu_solve: the same elimination (transposed: through J^-T)."""
 
@@ -512,6 +515,7 @@ class BorderedCore:
         self.sysm, self.L = sysm, sysm.L
         self.size = self.L + 1
         self.zp, self.Dp, self.tz, self.tD = zp, mp.mpf(Dp), tz, mp.mpf(tD)
+        self.hold_max = mp.mpf(sysm.opt.get("arc_dhold", 0) or 0)
         self.last = None
         self.log = []
 
@@ -536,9 +540,12 @@ class BorderedCore:
         with mp.workdps(DPS_SERIES):
             return vdot(self.tz, vadd(to_mp_vec(z), self.zp, -1)) + self.tD * (D - self.Dp)
 
+    def g_tol(self, D):
+        return max(abs(D) * mp.mpf(2) ** -105, self.hold_max) / abs(self.tD)
+
     def g_eff(self, D, z):
         g = self.g(D, z)
-        return mp.mpf(0) if abs(g) <= abs(D) * mp.mpf(2) ** -105 / abs(self.tD) else g
+        return mp.mpf(0) if abs(g) <= self.g_tol(D) else g
 
     def residual_o(self, y, mutate=0):
         D, z = self.split(y)
@@ -556,11 +563,16 @@ class BorderedCore:
             g = self.g(D, z)
             den = self.tD - vdot(self.tz, bm)
             dD = -(g + vdot(self.tz, am)) / den
-            dDr = dd_round(D + dD) - D
+            hold = bool(abs(dD) <= self.hold_max and abs(g) <= self.g_tol(D))
+            dDr = mp.mpf(0) if hold else dd_round(D + dD) - D
             step = self.join(dDr, to_parts(vadd(am, bm, -dDr)))
             ge = self.g_eff(D, z)
-            self.last = dict(D=D, e=e, b=bm, FD=FD, den=den)
-            self.log.append(dict(D=mp.nstr(D, 34), den=float(den), b=float(vnorm(bm)), dD=float(dD), dD_rounded=float(dDr), g=float(g)))
+            self.last = dict(D=D, e=e, b=bm, FD=FD, den=den, hold=hold)
+            self.log.append(dict(D=mp.nstr(D, 34), den=float(den), b=float(vnorm(bm)), dD=float(dD), dD_rounded=float(dDr), g=float(g),
+                                 hold=hold))
+            print(f"      border at D {mp.nstr(D, 34)}: g {float(g):+.2e}, dD {float(dD):+.2e} -> "
+                  f"{'held' if hold else format(float(dDr), '+.2e')}, den {float(den):.4f}, |b| {float(vnorm(bm)):.4f}, "
+                  f"|a| {float(max(abs(x) for x in am)):.2e}", flush=True)
             gh = float(ge)
             gl = float(ge - gh)
         return step, np.concatenate(([gh], np.asarray(Fh))), np.concatenate(([gl], np.asarray(Fl))), pmin, pmax
@@ -571,6 +583,8 @@ class BorderedCore:
         rz = [np.ascontiguousarray(p[1:]) for p in rhs]
         with mp.workdps(DPS_SERIES):
             rg = mp.fsum(mp.mpf(float(p[0])) for p in rhs)
+            if last.get("hold"):        # D held: the map is block-diag(1, J), as newton_o's step
+                return self.join(rg, e["sn"].olu_solve(rz, trans))
             if not trans:
                 a = to_mp_vec(e["sn"].olu_solve(rz))
                 yD = (rg - vdot(self.tz, a)) / last["den"]
@@ -705,9 +719,28 @@ class ChainSys:
         self.base8 = o8(z8)
         return dict(D=mp.nstr(self.D, 34), F_before=F0, F_after=F1, steps=len(hist), converged=bool(conv), dDelta=dDelta)
 
+    def series_from_file(self, path, D, N):
+        """the series of an earlier run's arcjet file (--arc_jet), refused unless its D and N are this base's"""
+        d = np.load(path, allow_pickle=False)
+        meta = json.loads(str(d["meta"]))
+        with mp.workdps(DPS_SERIES):
+            dD = abs(mp.mpf(meta["D_str"]) - D)
+            if meta.get("N") != N or dD > abs(D) * mp.mpf(10) ** -32:
+                raise SystemExit(f"--arc_jet {path}: its D {meta['D_str']} / N {meta.get('N')} are not the base's "
+                                 f"{mp.nstr(D, 34)} / {N}")
+            Zo = [tuple(np.asarray(d[f"z{q}"][k], dtype=float) for q in range(8)) for k in range(N + 1)]
+            self.series_info = dict(pivots=tuple(meta["pivots"]), norms=meta["norms"], t_coef=0.0, from_file=path)
+            norms = meta["norms"]
+            print(f"  series at D {mp.nstr(D, 15)} read from {path}: |w_1| {norms[1]:.3e}, |w_N| {norms[N]:.3e}", flush=True)
+            return [to_mp_vec(z) for z in Zo]
+
     def dseries(self, x, D, N):
         c = self.c
         from pinning import band_field
+        if self.opt.get("arc_jet") and not getattr(self, "jet_read", False):
+            self.jet_read = True
+            self.at(D)
+            return self.series_from_file(self.opt["arc_jet"], D, N)
         e = self.at(D)
         t0 = time.time()
         with mp.workdps(DPS_KERNEL):
