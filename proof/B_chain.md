@@ -588,15 +588,24 @@ python3 b8m_lcj.py --log=b8m_lc_K4.log --mutate=kernel     # caught (also --muta
 ```
 
 `b8m_scan.py` and `b8m_lc.py` append their records to `--log`, and every reader takes the last matching record.
+`bash b8_chain_regen.sh` runs the commands from `b8m_atoms.py` on, without the `b7_adjoint.py` runs, and writes each
+stored output afresh, with its logs emptied first, in about 20 min on the Mac.
 
 These commands, with those of B5_inner.md §10 and B8_constants.md §13, were rerun on aarch64 Linux (Raspberry Pi 5,
 python-flint 0.9.0, FLINT 3.6.0; #882, raw `I882-rpi5/` 4168e06f), on the code before #885. All 64 commands end as
 documented: 35 runs exit 0, 27 controls give their verdicts, and the two scans exit 1 as stated. B5's contraction
 0.9519, n₀ = e^89.75, C₇ = 2.8959×10²⁹ and θ = 0.7355 equal the stored values in every printed digit. Of the 42 stored
 logs, 29 are equal in every digit, and 13 differ only in float noise, in ball radii (all 112 balls overlap) or in where
-an iteration stopped. The 8 appended records close as the stored ones do. The stored scan record at L0 = 62 has 70
-iterations against the current code's 67, since it predates that code (#885, #890). The Pi's adjoint, jump and lemma
-LC log pass on the Mac: `b7_ift.py` gives n₀ = e^89.75, the adjoint check passes, and lemma J gives θ = 0.17593.
+an iteration stopped. The 8 appended records close as the stored ones do. The scan record at L0 = 62 that was stored
+then had 70 iterations against the code's 67, since it predated that code. The Pi's adjoint, jump and lemma LC log
+pass on the Mac: `b7_ift.py` gives n₀ = e^89.75, the adjoint check passes, and lemma J gives θ = 0.17593.
+
+The stored outputs of the B8 chain are those of the code after #885, #887 and #891 (`b8_chain_regen.sh`, #890, raw
+`I890-mac/`). Of its 35 files, 12 equal the earlier ones byte for byte, and in the others the numbers differ by at
+most 1.7×10⁻¹¹, with five exceptions: the iteration count at L0 = 62, the Lipschitz matrix, which has its floor
+(§13), the record of the mutated certificate `--mutate=rho2L` (4×10⁻³), the weights that lemma J's `Om` mutation
+prints (4×10⁻⁷), and `b7_ift_d0_0.log` and `b7_ift_d0_1e6.log`, whose earlier versions predated the fix F6 of
+P2b_review.md (C₇ = 2.8233×10²⁹ and 2.8286×10²⁹, against 2.8228 and 2.8280).
 
 ## 12. P1L: plan for the light-cone hypotheses
 
@@ -867,8 +876,7 @@ So `lipschitz` writes every entry below 10⁻⁵⁰ as 10⁻⁵⁰, which is sti
 the one saved. 1204 entries are at this floor: the 1184 below 10⁻⁶⁰ and 20 bounds between 10⁻⁶⁰ and 10⁻⁵⁰. They add
 at most 2.4×10⁻⁴⁸ to a weighted row sum, against θ = 0.7355. Two runs whose centres A\* differ by 10⁻¹⁷ then agree
 to 5.3×10⁻¹¹ in every entry, which is the change of h_β in the band N0, and without the floor 636 entries differ by
-more than 10⁻⁹ (`b8m_lc_liprep.py` and its `--mutate=nofloor`, raw `I891-mac/`, #891). The stored `b8m_lc_lip.json`
-was made before the floor.
+more than 10⁻⁹ (`b8m_lc_liprep.py` and its `--mutate=nofloor`, raw `I891-mac/`, #891).
 
 So T is a contraction on the complete set 𝒦_h. This gives existence and uniqueness. Holomorphy in p follows because
 the iterates T_p^k(0) are holomorphic in p and converge uniformly. This proves parts 1–2.
