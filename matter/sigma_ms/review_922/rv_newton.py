@@ -151,12 +151,12 @@ def main():
             Jkh, Jkl = (np.asarray(x) for x in dd_add(Jkh, Jkl, 2 * Jkh, 2 * Jkl))
             Fs = dd_add(np.asarray(F[0]), np.asarray(F[1]), 2 * np.asarray(F[0]), 2 * np.asarray(F[1]))
         diff = sum(np.asarray(x) for x in dd_add(Jfh, Jfl, -Jkh, -Jkl))
-        if a.richardson:
-            diff = diff / 3
+        sc = 3.0 if a.richardson else 1.0
+        diff = diff / sc
         i, j = np.unravel_index(np.argmax(np.abs(diff)), diff.shape)
         res["K3"] = dict(max_abs_diff=float(np.abs(diff).max()), where=[int(i), int(j)],
-                         J_max=float(np.abs(Jkh).max()), fro_diff=float(np.linalg.norm(diff)),
-                         fro_J=float(np.linalg.norm(Jkh)))
+                         J_max=float(np.abs(Jkh).max()) / sc, fro_diff=float(np.linalg.norm(diff)),
+                         fro_J=float(np.linalg.norm(Jkh)) / sc)
         log(f"  K3, finite-difference Jacobian against Solver.jacobian: largest entry difference "
             f"{res['K3']['max_abs_diff']:.2e} at ({i}, {j}) (largest entry of J {res['K3']['J_max']:.2e}); Frobenius "
             f"{res['K3']['fro_diff']:.2e} of {res['K3']['fro_J']:.2e}  ({time.time() - t0:.0f} s)")
