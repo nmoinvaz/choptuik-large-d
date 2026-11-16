@@ -504,17 +504,20 @@ mod od {
         assert!(moved.is_some(), "the control did not change the jet");
     }
 
-    /// the octo-double residual's series one order at a time (multishoot's JetSession over hp's equations, 12-lane jets)
+    /// the residual's series in P one order at a time (multishoot's JetSession over hp's equations, 12-lane jets)
     /// given zs one by one, against residual_jet on the same vectors: the number of rows, over every order the session
-    /// has formed after each vector, whose eight parts differ
-    fn session_vs_jet(ctx: &Ctx<1>, zs: &[[&[f64]; 8]], par: bool) -> usize {
-        let sh = ctx.shooting_in::<Octo>();
-        let mut s = sh.jet_session::<Octo, 12>();
+    /// has formed after each vector, whose parts differ
+    fn session_vs_jet<P: multidouble::precision::Precision<multidouble::simd::Native>>(ctx: &Ctx<1>, zs: &[Vec<&[f64]>], par: bool) -> usize {
+        let sh = ctx.shooting_in::<P>();
+        let mut s = sh.jet_session::<P, 12>();
+        let rows = |a: &[P::Scalar], b: &[P::Scalar]| {
+            a.iter().zip(b).filter(|(x, y)| (0..P::PARTS).any(|q| P::part(**x, q).to_bits() != P::part(**y, q).to_bits())).count()
+                + a.len().abs_diff(b.len())
+        };
         let mut differ = 0;
         for k in 0..zs.len() {
             let next = s.next(&zs[k], par).unwrap();
-            let full = residual_jet_o::<12, 1>(ctx, &zs[..=k], par, k + 2).unwrap();
-            let rows = |a: &[OD], b: &[OD]| a.iter().zip(b).filter(|(x, y)| x.x != y.x).count() + a.len().abs_diff(b.len());
+            let full = crate::model::residual_jet_in::<P, 12, 1>(ctx, &zs[..=k], par, k + 2).unwrap();
             differ += rows(&next, &full[k + 1]);
             for (j, fj) in full.iter().enumerate() {
                 differ += rows(&s.order(j).unwrap(), fj);
@@ -523,24 +526,31 @@ mod od {
         differ
     }
 
-    /// Pass (fixed before the first run): on the synthetic state, the octo-double residual's series formed one order at
-    /// a time (the segments' Taylor steps by model::taylor_coeffs_at), given z_0 and nine planted vectors one by one as
-    /// the series takes them, equals residual_jet's on the same vectors at every order formed after each vector, bit
-    /// for bit, serial and threaded (0 rows differ). Control, which must differ: JET_MUT_AT_KEEP, one intermediate of
-    /// the Taylor recursion formed without being kept.
+    /// Pass (fixed before the first run): on the synthetic state, the residual's series formed one order at a time
+    /// (multishoot's JetSession over Dss: the segments by model::taylor_coeffs_at, the centre by centre_state_at, the
+    /// horizon by horizon_state_at), given z_0 and nine planted vectors one by one as the series takes them, equals
+    /// residual_jet's on the same vectors at every order formed after each vector, bit for bit, in octo-double serial
+    /// and threaded and in quad- and double-double threaded (0 rows differ). Control, which must differ:
+    /// JET_MUT_AT_KEEP, one intermediate of the Taylor recursion formed without being kept.
     #[test]
     fn oseries_by_order_bitwise() {
+        use multidouble::precision::{Double, Quad};
         let (mut ctx, zh, zl) = synth();
         let l = ctx.len();
         let z = parts8(&zh, &zl);
         let cs: Vec<[Vec<f64>; 8]> = (1..10).map(|k| coef_k(l, k)).collect();
-        let zs: Vec<[&[f64]; 8]> = std::iter::once(view(&z)).chain(cs.iter().map(view)).collect();
-        let (serial, threaded) = (session_vs_jet(&ctx, &zs, false), session_vs_jet(&ctx, &zs, true));
+        let zs = |parts: usize| -> Vec<Vec<&[f64]>> {
+            std::iter::once(&z).chain(cs.iter()).map(|v| v[..parts].iter().map(|p| &p[..]).collect()).collect()
+        };
+        let (serial, threaded) = (session_vs_jet::<Octo>(&ctx, &zs(8), false), session_vs_jet::<Octo>(&ctx, &zs(8), true));
+        let (quad, double) = (session_vs_jet::<Quad>(&ctx, &zs(4), true), session_vs_jet::<Double>(&ctx, &zs(2), true));
         ctx.mutate = crate::model::JET_MUT_AT_KEEP;
-        let control = session_vs_jet(&ctx, &zs, true);
+        let control = session_vs_jet::<Octo>(&ctx, &zs(8), true);
         ctx.mutate = 0;
-        println!("octo-double series by order against residual_jet: {serial} rows differ serial, {threaded} threaded; control {control}");
-        assert_eq!((serial, threaded), (0, 0), "the series by order is not residual_jet's");
+        println!(
+            "series by order against residual_jet, rows that differ: octo-double {serial} serial, {threaded} threaded; quad-double {quad}; double-double {double}; control {control}"
+        );
+        assert_eq!((serial, threaded, quad, double), (0, 0, 0, 0), "the series by order is not residual_jet's");
         assert!(control > 0, "the control did not change the series");
     }
 
