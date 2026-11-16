@@ -24,7 +24,7 @@ DOCS = {name: open(os.path.join(ROOT, name), encoding="utf-8").read()
                      "notes/SOLVER_HP.md", "notes/LOW_D.md", "notes/INNER_STOKES.md", "notes/FORMULA_FORMS.md", "notes/LARGE_D_WALL.md",
                      "notes/ECHO_ANALOGUES.md", "notes/REVIEW_GHMG25.md", "notes/MODE_COUNT.md", "matter/SIGMA_DSS.md",
                      "notes/HELD_HARMONICS.md", "notes/CONSISTENCY_AUDIT.md", "PROOF.md", "notes/FIRST_ORDER.md",
-                     "matter/CSS.md", "matter/SIGMA.md", "ALGORITHM.md", "notes/FACTORED_HORIZON.md")}
+                     "matter/CSS.md", "matter/SIGMA.md", "ALGORITHM.md", "notes/FACTORED_HORIZON.md", "proof/B_chain.md")}
 
 
 def quoted_in(doc, text):
@@ -46,6 +46,16 @@ def check(fn):
 # Each check returns a list of items (label, computed value, quoted value, unit, documents-and-texts).
 # An item passes when |computed - quoted| <= unit/2 (the quoted value is the computed one rounded) and every text is
 # present in its document.
+
+@check
+def lemma_lc_theta():
+    """lemma LC's contraction constant, from the certificate's log b8m_lc_K4.log (its JSON line's lip.theta) (#894)"""
+    rec = json.loads(open(os.path.join(ROOT, "solver/proof/b8m_lc_K4.log")).readline())
+    txt = [("proof/B_chain.md", "give Mv ≤ θv with θ = 0.7355")]
+    return [("lemma LC's theta", rec["lip"]["theta"], 0.7355, 1e-4, txt),
+            ("lemma LC's floored entries", rec["lip"]["floored"], 1204, 1,
+             [("proof/B_chain.md", "1204 entries are at this floor")])]
+
 
 @check
 def data_points():
