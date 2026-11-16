@@ -7,10 +7,10 @@ digits of the inputs. b8m_lc.py writes every entry below its floor (--lipfloor, 
 the certificate's command twice, with the centre A* of the box as it is and moved by --dA, and compares the two
 saved matrices entry by entry.
 
-    python3 b8m_lc_liprep.py --out=DIR [--dA=1e-17] [--tol=1e-9] [--mutate=nofloor]
-        two runs of  b8m_lc.py 4 73.89 --rA=2e-6 --rW=2e-6 --lip , about 3 min each, written to DIR (which must not
-        be solver/proof: the runs must not touch the stored files). Exit 0 if every entry agrees to --tol relative
-        and both matrices give theta < 1.
+    python3 b8m_lc_liprep.py [--out=DIR] [--dA=1e-17] [--tol=1e-9] [--mutate=nofloor]
+        two runs of  b8m_lc.py 4 73.89 --rA=2e-6 --rW=2e-6 --lip , about 3 min each, written to DIR (a new
+        temporary directory by default; not solver/proof, since the runs must not touch the stored files). Exit 0
+        if every entry agrees to --tol relative and both matrices give theta < 1.
         --mutate=nofloor: both runs with --lipfloor=0. The noise entries then differ, and the script must exit 1.
     python3 b8m_lc_liprep.py --compare=a.json,b.json [--tol=1e-9]
         compares two saved matrices only.
@@ -21,6 +21,7 @@ import json
 import os
 import subprocess
 import sys
+import tempfile
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 OPTS = {a.split("=", 1)[0][2:]: (a.split("=", 1)[1] if "=" in a else "1") for a in sys.argv[1:] if a.startswith("--")}
@@ -65,10 +66,11 @@ def main():
         pa, pb = OPTS["compare"].split(",")
         rcs = [0, 0]
     else:
-        out = os.path.abspath(OPTS.get("out", ""))
-        if "out" not in OPTS or out == HERE:
-            sys.exit("b8m_lc_liprep: give --out=DIR, a directory other than solver/proof")
+        out = os.path.abspath(OPTS["out"]) if "out" in OPTS else tempfile.mkdtemp(prefix="b8m_lc_liprep_")
+        if out == HERE:
+            sys.exit("b8m_lc_liprep: --out must be a directory other than solver/proof")
         os.makedirs(out, exist_ok=True)
+        print(f"output directory {out}", flush=True)
         mut = OPTS.get("mutate", "")
         assert mut in ("", "nofloor"), f"unknown mutation {mut}"
         extra = ["--lipfloor=0"] if mut == "nofloor" else []

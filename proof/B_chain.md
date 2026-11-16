@@ -533,7 +533,7 @@ re-implemented B7, Lemma LC and Lemma J and audited lemma L, B5(2) and Lemma P; 
 | `b5_label.py` | lemma L (L1): the Volterra/Grönwall bound ε_L(0.0081) ≤ 0.3527; the identity for (J_F − 𝒢)/z (`jf_div`); the 2 × 2 eigen-decomposition over 𝒦 (`eigen`); (L2) via `lemma6_sector.flat_estimate` on lemma S over 𝒦 | `b5_bounds.py` (inner enclosures on cells), `b5_formulas.py` (Jacobian blocks), `lemma6_sector.py`, `fixed_point.py` |
 | `b5_jump.py` | B5(2): C_E = e^{76.940} (d₀ = 10⁷ data), the superposition of B5(1)'s super-solutions | the B5(1) certificate JSON, the (H8) logs |
 | `b8m_bounds.py --d0` | the two added terms of B8_constants.md §8.4 | B8 (unchanged otherwise) |
-| `b8m_lc.py` | Lemma LC: the closure with constants per band and the region L (`build_L`: the bounded forms of §13.3; `kernel_lc`: N_L; the S-, c- and d-formulas on L in `evaluate`); the Lipschitz matrix (`lipschitz`: ball-mode secants per candidate, the sum hypotheses on the ray parts, the perturbation of the derivative bounds through `CONTAINS`) and the Perron check (`contraction_check`) | `b8m_bounds.py` (`known`, the atoms), `b8_alg.py` (the up/lo functions are swapped for ball-mode versions; `b8_alg` itself is unchanged) |
+| `b8m_lc.py` | Lemma LC: the closure with constants per band and the region L (`build_L`: the bounded forms of §13.3; `kernel_lc`: N_L; the S-, c- and d-formulas on L in `evaluate`); the Lipschitz matrix (`lipschitz`: ball-mode secants per candidate, the sum hypotheses on the ray parts, the perturbation of the derivative bounds through `CONTAINS`, the floor of the entries) and the Perron check (`contraction_check`) | `b8m_bounds.py` (`known`, the atoms), `b8_alg.py` (the up/lo functions are swapped for ball-mode versions; `b8_alg` itself is unchanged) |
 | `b8m_lcj.py` | Lemma J: the forward differentiation `DQ` (the secant coefficients, inverses with frozen lower bounds, the v_c′ pseudo-component on L), the gain matrix Γ and its derivation (§14), the endpoint at x* | `b8m_lc.py`, `b8m_bounds.py` |
 | `b7_adjoint.py` | Lemma P: `start_data_c` (fixed_point.start_data for complex boxes), `AdjLohner.step` (validated_int's step plus the adjoint block), the secant argument B̄_k ∈ J_k | `validated_int.py`, `fixed_point.py`, `lemma6_common.py` |
 | `b7_ift.py` | B7: `ell_bound` (the pairing and its remainder terms), the Krawczyk assembly, `min_bd_JD`, the degree condition | Theorem A's saved runs |
@@ -577,6 +577,8 @@ python3 b7_ift.py --adj=b7_adjoint.json --jump=b5_jump_d0_1e7.json --json=b7_ift
 python3 b7_ift.py --adj=b7_adjoint.json --jump=b5_jump_d0_1e7.json --mutate=JD         # caught (b7_ift_mutJD.log)
 python3 b8m_lc.py 4 73.89 --rA=2e-6 --rW=2e-6 --lip --log=b8m_lc_K4.log   # Lemma LC, ~4 + 8 min (b8m_lc_K4.out)
 python3 b8m_lc.py --lipcheck=b8m_lc_lip.json        # contraction constant from the saved matrix: theta = 0.7355
+python3 b8m_lc_liprep.py                            # the saved matrix is the same from run to run, ~6 min
+python3 b8m_lc_liprep.py --mutate=nofloor           # must fail: without the floor, 636 entries differ
 python3 b8m_lc.py 4 73.89 --rA=2e-6 --rW=2e-6 --mutate=rho2L --log=b8m_lc_K4_mut_rho2L.log   # mutated certificate
 python3 b8m_lc_numcheck.py 1000 --log=b8m_lc_K4_mut_rho2L.log --mutlc   # must fail (b8m_lc_numcheck_mut.log)
 python3 b8m_lc_numcheck.py 1000 --log=b8m_lc_K4.log # numerical check at n = 1e3 (b8m_lc_numcheck_n1e3.log)
@@ -856,11 +858,17 @@ This gives a 40 × 40 matrix (values and derivatives × 4 components × 5 bands)
 v = (I − M/λ)⁻¹1 at λ = 0.755 give Mv ≤ θv with θ = 0.7355 (recomputed in arb from the saved upper bounds,
 `b8m_lc.py --lipcheck=b8m_lc_lip.json`).
 
-Most of the matrix is rounding noise, and it plays no part in θ. 1108 of the 1600 entries are secants of bounds that
-do not depend on the perturbed input: the difference of two 256-bit evaluations of one number, divided by η. They are
-at most 2.3×10⁻⁶⁹. They scale as 1/η, and as 2⁻⁶⁴ when 64 bits are added, and they change with the last digits of the
-inputs, so two runs can differ in them by a quarter. All 1184 entries below 10⁻⁶⁰ together add at most 2.3×10⁻⁶⁰ to a
-weighted row sum, against θ = 0.7355 (raw `I885-mac/`, #885).
+Most of the secants are rounding noise, and they play no part in θ. 1108 of the 1600 are secants of bounds that do
+not depend on the perturbed input: the difference of two 256-bit evaluations of one number, divided by η. They are at
+most 2.3×10⁻⁶⁹. They scale as 1/η, and as 2⁻⁶⁴ when 64 bits are added, and they change with the last digits of the
+inputs, so two runs can differ in them by a quarter (raw `I885-mac/`, #885).
+
+So `lipschitz` writes every entry below 10⁻⁵⁰ as 10⁻⁵⁰, which is still an upper bound, and the certified matrix is
+the one saved. 1204 entries are at this floor: the 1184 below 10⁻⁶⁰ and 20 bounds between 10⁻⁶⁰ and 10⁻⁵⁰. They add
+at most 2.4×10⁻⁴⁸ to a weighted row sum, against θ = 0.7355. Two runs whose centres A\* differ by 10⁻¹⁷ then agree
+to 5.3×10⁻¹¹ in every entry, which is the change of h_β in the band N0, and without the floor 636 entries differ by
+more than 10⁻⁹ (`b8m_lc_liprep.py` and its `--mutate=nofloor`, raw `I891-mac/`, #891). The stored `b8m_lc_lip.json`
+was made before the floor.
 
 So T is a contraction on the complete set 𝒦_h. This gives existence and uniqueness. Holomorphy in p follows because
 the iterates T_p^k(0) are holomorphic in p and converge uniformly. This proves parts 1–2.
