@@ -1,6 +1,6 @@
 """The octo-double exact Jacobian with several tangents per evaluation (Solver.jacobian_o(z, tangents=n): multishoot's
 jacobian_tangents with multidouble's Oun<n>, n columns of a block from one evaluation) against one tangent (n = 1,
-Solver.jacobian_o's default), on a stored eight-part state in its chain's own system and stored plan
+Solver.jacobian_o(z, tangents=1)), on a stored eight-part state in its chain's own system and stored plan
 (octo_corrector.truth_system).
 
     python3 jac_tangents_check.py RAW STATE.npz [--threads 6] [--ns 2,4,8] [--out PREFIX]
@@ -39,7 +39,7 @@ def main(argv):
     print(f"jac_tangents_check {state}: D {meta.get('D_str', meta.get('D'))!s:.18}, {info['plan']} plan, n {ns}, "
           f"{opt['threads']} threads", flush=True)
     t0 = time.time()
-    J1 = s.jacobian_o(list(zo))
+    J1 = s.jacobian_o(list(zo), tangents=1)
     t1 = time.time() - t0
     print(f"  n 1: {t1:.1f} s", flush=True)
     secs, diffs = {1: t1}, {}
@@ -51,7 +51,7 @@ def main(argv):
         print(f"  n {n}: {secs[n]:.1f} s ({t1 / secs[n]:.2f}x), entries that differ from n 1: {diffs[n]}", flush=True)
         del Jn
     best = min(ns, key=lambda n: secs[n])
-    st1 = s.newton_o(list(zo))
+    st1 = s.newton_o(list(zo), tangents=1)
     stb = s.newton_o(list(zo), tangents=best)
     step_differ = differ(st1[0], stb[0]) + int(st1[3] != stb[3]) + int(st1[4] != stb[4])
     print(f"  Newton step with n {best} against n 1: {step_differ} entries or pivots differ", flush=True)

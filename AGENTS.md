@@ -58,6 +58,10 @@ Conventions for the Claude sessions (cloud and local) that run computations here
     `JetSession` over hp's equations): the same bits as the jets of growing length (`residual_jet_o`) at about a third
     of their cost at D 253 (#914, `hp/jet_by_order_check.py`). `--jet_by_order 0` uses the jets instead, and a build
     without `series_o` falls back to them with a notice.
+  - The octo-double exact Jacobian forms two columns per evaluation by default (`Solver.set_octo_tangents`, multidouble's
+    `Oun<2>`, multishoot's `jacobian_tangents`): the same bits as one at about 1/1.4 of the time at D 253 (#921,
+    `hp/jac_tangents_check.py`). `anm_run.py --od_tangents 1` turns it off, and `newton_o` / `jacobian_o` take
+    `tangents=` per call.
   - The corrector in octo-double is `anm_run.py --corrector od` with `--tol_od` (1e-40; `--qd_it` steps), from
     `hp/octo_corrector.py` (`PinnedO`, `newton_od`, `ElimO`; notes/OCTO_DOUBLE.md 5). Its states have eight parts
     (`save_o`, `load_o`), which `load_q` reads as four. Its checks are `octo_corrector.py planted` and `wall`, with

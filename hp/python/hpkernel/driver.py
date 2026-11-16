@@ -79,10 +79,11 @@ def plow_odd(M, kf, dps=40):
 
 
 def make_solver(D, M, nodes=None, kt=36, kc=40, ks=120, segs=None, threads=0, kfreeze=None, match_node=None,
-                horizon_alpha=0):
+                horizon_alpha=0, octo_tangents=None):
     """kfreeze: pin the p1 harmonics k > kfreeze to zero and drop the matching of p's harmonics k > kfreeze at the
     horizon block (see model.rs Ctx::freeze). horizon_alpha: Solver.set_horizon_alpha (0, the default, as before; 1
-    the horizon series in alpha = a - 1; 2 its control)."""
+    the horizon series in alpha = a - 1; 2 its control). octo_tangents: Solver.set_octo_tangents, the octo-double
+    Jacobian's columns per evaluation (None keeps the solver's default, 2; 1 the one-tangent Jacobian)."""
     nodes = list(NODES_OLD if nodes is None else nodes)
     with mp.workdps(40):
         nh, nl = dd_from_mp([mp.mpf(D) - 2])
@@ -94,6 +95,8 @@ def make_solver(D, M, nodes=None, kt=36, kc=40, ks=120, segs=None, threads=0, kf
     s = Solver(M, float(nh[0]), float(nl[0]), dh, dl, ph, pl, nodes, segs or [], kt, kc, ks, threads, a, b, match_node)
     if horizon_alpha:
         s.set_horizon_alpha(horizon_alpha)
+    if octo_tangents is not None:
+        s.set_octo_tangents(octo_tangents)
     return s
 
 

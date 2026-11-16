@@ -15,7 +15,7 @@ formulation of hp/pinning.py; their coefficients are zero).
         [--accept_stall 1e-19] [--junk_only 0] [--threads 4] [--w 24] [--trend T75] [--tol_qd 1e-28] [--accept_stall_qd 0]
         [--qd_it 12] [--qd_w 0] [--refine 1] [--probe 0 --probe_c C] [--plan_tol 1e-32] [--fix1 0] [--F_pred_max 0]
         [--horizon_alpha 0] [--fix1_qlu 0] [--jet_q 0] [--reseed 0] [--pred_q 0] [--reseed_q 0] [--save_pred 0]
-        [--jet_o 0] [--jet_by_order 1] [--corrector od --tol_od 1e-40] [--base_adopt 0] [--base_polish 1] [--keep_plan 1] [--held_fit FILE]
+        [--jet_o 0] [--jet_by_order 1] [--od_tangents 2] [--corrector od --tol_od 1e-40] [--base_adopt 0] [--base_polish 1] [--keep_plan 1] [--held_fit FILE]
         [--held_o 0] [--reseed_o 0] [--a0 0] [--a_grow 2] [--a_hold 0] [--lam_stall 0] [--save_base 0] [--save_jet 0] [--held_from STATE]
         [--arclength 0 --guard 0.05 --D_min 0 --arc_sign 1 --border 1 --turns_max 2 --arc_dhold 1e-12 --arc_jet FILE]
 
@@ -80,6 +80,9 @@ G^2 where the quad-double one errs by the quad-double unit times G^2, which reac
 JetSession), the same bits as the jets of growing length at about a third of their cost at D 253 (#914,
 hp/jet_by_order_check.py); --jet_by_order 0 forms it by the jets (Solver.residual_jet_o) instead. A build without
 Solver.series_o uses the jets, with a notice.
+--od_tangents N is the octo-double Jacobian's columns per evaluation (Solver.set_octo_tangents, multidouble's Oun<N>):
+2, the default, forms two columns of a block from one evaluation, the same bits as one at about 1/1.4 of the time at
+D 253 (#921, hp/jac_tangents_check.py); 1 turns it off; 4 and 8 are also allowed.
 --reseed 1 replaces each prediction's horizon data (m_h, a_h) by those of the regular solution through its last node
 before the residual, the plan and the corrector (hp/reseed.py, notes/RESEED.md: the node integrated toward the horizon,
 the series inverted on the rungs u0/32 .. u0 in the m and a rows); 0, the default, changes nothing. Records carry each
@@ -330,6 +333,7 @@ def main():
                refine=1, probe=0, probe_c=0.0, plan_tol=1e-32, fix1=0, F_pred_max=0.0, horizon_alpha=0, fix1_qlu=0, jet_q=0, reseed=0, pred_q=0, reseed_q=0,
                save_pred=0, jet_o=0, save_dz0=0)
     opt.update(tol_od=1e-40, od_junk=0)  # --corrector od (hp/octo_corrector.py); --od_junk w freezes junk (QUAD_DOUBLE 13.29)
+    opt.update(od_tangents=2)           # --od_tangents 1: the octo-double Jacobian one column per evaluation (the same bits, slower)
     opt.update(jet_by_order=1)          # --jet_by_order 0: --jet_o's series by the jets of growing length (the same bits, slower)
     opt.update(base_adopt=0)            # --base_adopt 1: the base's od polish is adopted whatever it did
     opt.update(base_polish=1)           # --base_polish 0: no polish, the stored state is the base
@@ -487,7 +491,7 @@ def main():
         dcorr = float(delta_correction(spx, Fh, Fl)) if Fc > tol and np.isfinite(Fc) else 0.0
         return ch, cl, Fc, len(hist), bool(Fc <= tol or Fc <= opt["accept_stall"]), dcorr
     mk = lambda Dx: make_solver(Dx, M, nodes=nodes, kt=kt, kc=kc, ks=ks, threads=opt["threads"], kfreeze=kf,  # noqa: E731
-                                horizon_alpha=opt["horizon_alpha"])
+                                horizon_alpha=opt["horizon_alpha"], octo_tangents=opt["od_tangents"])
     ks_held = [k for k in range(kf + 1, 14) if k % 2 == 1]
     if opt["held_o"] and not (opt["held_fit"] and opt["corrector"] == "od" and opt["jet_o"]):
         raise SystemExit("--held_o 1 needs --held_fit, --corrector od and --jet_o 1")

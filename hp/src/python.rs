@@ -497,6 +497,9 @@ struct Solver {
     olu: Option<ODLu>,
     /// seconds of the last newton / newton_mixed call: residual, Jacobian, factorization, solve (step_timing)
     last_t: [f64; 4],
+    /// the octo-double Jacobian's columns per evaluation when newton_o and jacobian_o are not given `tangents`
+    /// (set_octo_tangents; 2 by default, 1 the one-tangent Jacobian), the same bits at any (#921)
+    octo_tangents: usize,
 }
 
 impl Solver {
@@ -622,7 +625,7 @@ impl Solver {
         // a large stack for the workers: the field arrays live on the stack and grow with M (a state of Dtn<8> lanes
         // at M = 384 is 120 kB); the pages are only touched as needed
         let pool = Arc::new(rayon::ThreadPoolBuilder::new().num_threads(t).stack_size(256 << 20).build().unwrap());
-        Ok(Solver { api, pool, lu: None, qlu: None, olu: None, last_t: [0.0; 4] })
+        Ok(Solver { api, pool, lu: None, qlu: None, olu: None, last_t: [0.0; 4], octo_tangents: 2 })
     }
 
     #[getter]
@@ -1071,11 +1074,29 @@ impl Solver {
         Ok(out.into_iter().map(|f| arr8(py, f)).collect())
     }
 
+    /// The octo-double Jacobian's columns per evaluation for newton_o and jacobian_o calls without `tangents`: 1, 2,
+    /// 4 or 8 (multidouble's Oun; 2 by default, the fastest at D 253 in #921, 1 the one-tangent Jacobian). The same
+    /// bits at any.
+    fn set_octo_tangents(&mut self, n: usize) -> PyResult<()> {
+        if ![1, 2, 4, 8].contains(&n) {
+            return Err(PyValueError::new_err(format!("octo tangents must be 1, 2, 4 or 8, not {n}")));
+        }
+        self.octo_tangents = n;
+        Ok(())
+    }
+
+    /// the octo-double Jacobian's columns per evaluation (set_octo_tangents)
+    #[getter]
+    fn octo_tangents(&self) -> usize {
+        self.octo_tangents
+    }
+
     /// The exact Jacobian in octo-double (model::jacobian_in at `Octo`, `Ou` lanes) at the eight-part state z, as eight (L, L)
     /// arrays, its parts (row = residual, column = unknown). M = 32 only. tangents: Jacobian columns per evaluation
-    /// (1, 2, 4 or 8; model::jacobian_o_tangents), the same bits at any.
-    #[pyo3(signature = (z, mutate=0, tangents=1))]
-    fn jacobian_o<'py>(&mut self, py: Python<'py>, z: Vec<PyReadonlyArray1<'py, f64>>, mutate: u8, tangents: usize) -> PyResult<Vec<Bound<'py, PyArray2<f64>>>> {
+    /// (1, 2, 4 or 8; model::jacobian_o_tangents; the solver's set_octo_tangents when not given), the same bits at any.
+    #[pyo3(signature = (z, mutate=0, tangents=None))]
+    fn jacobian_o<'py>(&mut self, py: Python<'py>, z: Vec<PyReadonlyArray1<'py, f64>>, mutate: u8, tangents: Option<usize>) -> PyResult<Vec<Bound<'py, PyArray2<f64>>>> {
+        let tangents = tangents.unwrap_or(self.octo_tangents);
         let n = self.api.len();
         let z = parts8(&z, n)?;
         let (api, pool) = (&mut self.api, &self.pool);
@@ -1086,16 +1107,17 @@ impl Solver {
     /// One Newton step in octo-double (model::newton_in at `Octo`) at the eight-part state z: returns (dz, F hi, F lo, min
     /// |u_kk|, max |u_kk|), dz = -J^-1 F a tuple of its eight parts. The octo-double LU is kept for olu_solve; the
     /// times are step_timing's. M = 32 only. tangents: the Jacobian's columns per evaluation (1, 2, 4 or 8;
-    /// model::newton_o_tangents), the same bits at any.
-    #[pyo3(signature = (z, mutate=0, tangents=1))]
+    /// model::newton_o_tangents; the solver's set_octo_tangents when not given), the same bits at any.
+    #[pyo3(signature = (z, mutate=0, tangents=None))]
     #[allow(clippy::type_complexity)]
     fn newton_o<'py>(
         &mut self,
         py: Python<'py>,
         z: Vec<PyReadonlyArray1<'py, f64>>,
         mutate: u8,
-        tangents: usize,
+        tangents: Option<usize>,
     ) -> PyResult<(T8<'py>, A1<'py>, A1<'py>, f64, f64)> {
+        let tangents = tangents.unwrap_or(self.octo_tangents);
         let z = parts8(&z, self.api.len())?;
         let (api, pool) = (&mut self.api, &self.pool);
         let st = py.detach(|| pool.install(|| api.newton_o(z, mutate, tangents))).map_err(PyValueError::new_err)?;
