@@ -280,22 +280,28 @@ def newton_band(s, zh, zl, tol=1e-28, it_max=40, band_tol=1e-6, radius=None, ban
     with U_w and V_w. This is a Lyapunov-Schmidt corrector with a line search (H. B. Keller, Lectures on Numerical
     Methods in Bifurcation Problems, TIFR 79, Springer 1987: Method III and the bordering algorithm of section 4.11;
     design 2 of notes/LIT_REVIEW.md's addendum of #527).
-    The f64 vectors span the band to about 1e-14, so the image of d_b has a part E = |r_b - U_w U_w^T r_b|_2 in the
-    resolved rows, r_b = J d_b formed in double-double: about 1.5e-14 |d_b|, which is 1e-11 for a band step of 1e3. A
-    deflated step leaves that much of S, whatever it does, so E is the floor of S in what follows.
-      - While S > max(kappa B, 2 E) the state is off the band's valley: the step is d_s alone, halved until S falls.
-      - Otherwise the step is d_s + lam d_b, with lam = min(1, radius / |d_b|) at first. The move along the band leaves
-        a residual of second order in the resolved rows. It is removed by up to `correctors` chord steps with the same
-        factors. A chord step c = -J^-1 F proposes the rest of the band step again, so (1 - lam) d_b is taken off it
-        exactly, and then the band part of what remains, by V_w V_w^T. The trial is accepted when B has fallen and S
-        is back below max(kappa B, 2 (1 - lam) E), and lam is halved otherwise. So a band step is judged by the
-        band's own residual, on the valley.
-    When the first trial holds, up to `grow` doublings of lam are tried in the same iteration, each kept while it
-    lowers B further: a trial costs a few residuals and chord steps, an iteration a factorization and an SVD. The
-    radius is then the accepted step's length, doubled if the step gained at least half of the linear model's fall,
-    lam B. Nothing is added to the equations: near the root lam = 1 and the steps
-    are Newton's own, and the result has max |F| < tol. A step no longer than the radius is tried whole first, with
-    no SVD, and taken if it lowers |F|_2.
+
+    Inside the band the f64 SVD resolves nothing below 1e-16 sig_max, so the band gets its own basis: J V_w is formed
+    in double-double, and the SVD of the reduced Jacobian U_w^T J V_w rotates U_w and V_w within their spans, with
+    reduced singular values s_i. The f64 vectors span the band to about 1e-14, so the image of a band move y has a
+    part |L y|_2 in the resolved rows, L = J V_w - U_w U_w^T J V_w: about 1.5e-14 |y|, which is 1e-11 for a band step
+    of 1e3. A step that holds back the band move y leaves that much of S, whatever else it does: the floor E(y).
+      - While S > max(kappa B, 2 E(a)), a = V_w^T dz_N, the state is off the band's valley: the step is d_s alone,
+        halved until S falls.
+      - Otherwise the step is d_s + V_w y, with y the damped band step of length at most the radius,
+            y_i = a_i s_i^2 / (s_i^2 + mu^2)        (Levenberg-Marquardt's damping, here on the reduced problem):
+        the band directions that the Jacobian resolves best move first, and the deepest are held back. With Newton's
+        band step scaled as a whole they are not: its length sits in the deepest directions, which carry little of B.
+        The move leaves a residual of second order in the resolved rows. It is removed by up to `correctors` chord
+        steps with the same factors. A chord step c = -J^-1 F proposes the held-back band step again, so V_w (a - y)
+        is taken off it exactly, and then the band part of what remains, by V_w V_w^T. The trial is accepted when B
+        has fallen and S is back below max(kappa B, 2 E(a - y)), and the radius is halved otherwise. So a band step
+        is judged by the band's own residual, on the valley.
+    When the first trial holds, up to `grow` doublings of the radius are tried in the same iteration, each kept while
+    it lowers B further: a trial costs a few residuals and chord steps, an iteration a factorization and an SVD. The
+    radius is then the accepted step's length, doubled if the step gained at least half of the linear model's fall.
+    Nothing is added to the equations: near the root mu = 0 and the steps are Newton's own, and the result has
+    max |F| < tol. A step no longer than the radius is tried whole first, with no SVD, and taken if it lowers |F|_2.
 
     band=False is the control: no band is deflated, which leaves Newton with backtracking on |F|_2.
     radius: the first limit on the length of a band step (default 1% of |z|_2). Returns zh, zl, history."""
@@ -325,8 +331,7 @@ def newton_band(s, zh, zl, tol=1e-28, it_max=40, band_tol=1e-6, radius=None, ban
             th, tl = dd_add(zh, zl, dz[0], dz[1])
             g1 = float(np.linalg.norm(vec(s.residual([th, tl]))))
             if np.isfinite(g1) and g1 < g0:
-                rec.update(mode="newton", F2_next=g1, dz=nN, lam=1.0, dDelta=float(dN[-1]),
-                           t=round(time.time() - t0, 1))
+                rec.update(mode="newton", F2_next=g1, dz=nN, dDelta=float(dN[-1]), t=round(time.time() - t0, 1))
                 if verbose:
                     log(f"  band {it} (newton): |F| {nF:.2e}, |F|_2 {g0:.2e} -> {g1:.2e}, |dz| {nN:.1e}, dDelta "
                         f"{dN[-1]:+.2e}, pivots {pmin:.1e}..{pmax:.1e} ({rec['t']} s)")
@@ -334,7 +339,7 @@ def newton_band(s, zh, zl, tol=1e-28, it_max=40, band_tol=1e-6, radius=None, ban
                 if after_step is not None:
                     after_step(zh, zl)
                 continue
-        Uw = Vw = None
+        Uw = Vw = L = sg = a = r = None
         k = 0
         if band:
             ts = time.time()
@@ -343,51 +348,79 @@ def newton_band(s, zh, zl, tol=1e-28, it_max=40, band_tol=1e-6, radius=None, ban
             weak = sig < band_tol * sig[0]
             k = int(weak.sum())
             # the count of singular values below 1e-3, 1e-4, ..., 1e-12 of the largest: where the band ends
-            rec.update(sig_max=float(sig[0]), sig_low=[float(x) for x in sig[-8:]], k=k,
-                       sig_counts=[int(np.sum(sig < 10.0 ** -e * sig[0])) for e in range(3, 13)],
-                       t_svd=round(time.time() - ts, 1))
+            rec.update(sig_max=float(sig[0]), k=k,
+                       sig_counts=[int(np.sum(sig < 10.0 ** -e * sig[0])) for e in range(3, 13)])
             if k:
-                Uw, Vw = U[:, weak], Vt[weak].T
+                Uw, Vw = np.ascontiguousarray(U[:, weak]), np.ascontiguousarray(Vt[weak].T)
+                JV = np.empty_like(Vw)
+                zero = np.zeros(len(dN))
+                for j in range(k):
+                    JV[:, j] = vec(dd_matvec(Jh, Jl, np.ascontiguousarray(Vw[:, j]), zero))
+                # the band's own basis, from the reduced Jacobian
+                P, sg, Qt = np.linalg.svd(Uw.T @ JV)
+                Uw, Vw, JV = Uw @ P, Vw @ Qt.T, JV @ Qt.T
+                L = JV - Uw @ (Uw.T @ JV)
+                a, r = Vw.T @ dN, Uw.T @ Fv
                 M = getattr(s, "m", 0)
                 if M:
                     # where the band lives: its share in the centre data q and c0, and its largest Delta component
                     rec.update(band_q=float(np.sum(Vw[:M] ** 2) / k), band_c0=float(np.sum(Vw[M:2 * M] ** 2) / k),
                                band_Delta=float(np.max(np.abs(Vw[-1]))))
-            del U, Vt
+                rec.update(band_sig=[float(x) for x in sg], band_r=[float(abs(x)) for x in r],
+                           band_a=[float(abs(x)) for x in a])
+            rec["t_svd"] = round(time.time() - ts, 1)
+            del U, Vt, Jh, Jl
 
         def split(v):
             if not k:
                 return float(np.linalg.norm(v)), 0.0
-            r = Uw.T @ v
-            return float(np.linalg.norm(v - Uw @ r)), float(np.linalg.norm(r))
+            rv = Uw.T @ v
+            return float(np.linalg.norm(v - Uw @ rv)), float(np.linalg.norm(rv))
 
         S0, B0 = split(Fv)
         E = 0.0
         if k:
-            db = Vw @ (Vw.T @ dN)
-            nb = float(np.linalg.norm(db))
+            db = Vw @ a
+            nb = float(np.linalg.norm(a))
             ds = dd_add(dz[0], dz[1], -db, np.zeros_like(db))
-            # what the image of the band step leaves in the resolved rows: the floor of S
-            E = split(vec(dd_matvec(Jh, Jl, db, np.zeros_like(db))))[0]
-            del Jh, Jl
+            E = float(np.linalg.norm(L @ a))
         else:
-            db, nb, ds = None, 0.0, (dz[0], dz[1])
+            nb, ds = 0.0, (dz[0], dz[1])
         mode = "band" if k and S0 <= max(kappa * B0, 2 * E, 0.1 * tol) else "resolved"
-        lam = min(1.0, radius / nb) if mode == "band" else 1.0
 
-        def trial(lam):
-            """the trial state at this lam: (accepted, zh, zl, S, B, chord steps taken, S before them)"""
+        def damped(rad):
+            """the weights w_i = s_i^2 / (s_i^2 + mu^2) for which |w a| = rad, and mu (bisection in log mu, the length
+            falling as mu grows); all 1 and mu = 0 when the whole band step is no longer than rad"""
+            if nb <= rad:
+                return np.ones(k), 0.0
+            lo, hi = np.log(max(sg.min(), 1e-300)) - 40.0, np.log(sg.max()) + 40.0
+            for _ in range(200):
+                mid = 0.5 * (lo + hi)
+                if np.linalg.norm(a * sg ** 2 / (sg ** 2 + np.exp(2 * mid))) > rad:
+                    lo = mid
+                else:
+                    hi = mid
+            return sg ** 2 / (sg ** 2 + np.exp(2 * hi)), float(np.exp(hi))
+
+        def trial(x):
+            """the trial state: for a resolved step, d_s scaled by x; for a band step, the damped band step of length
+            x. Returns (accepted, zh, zl, S, B, chord steps taken, S before them, the linear model's B, mu, length)"""
             if mode == "resolved":
-                th, tl = dd_add(zh, zl, ds[0] * lam, ds[1] * lam)
+                th, tl = dd_add(zh, zl, ds[0] * x, ds[1] * x)
                 S1, B1 = split(vec(s.residual([th, tl])))
-                return np.isfinite(S1) and S1 < S0, th, tl, S1, B1, 0, float("nan")
+                return np.isfinite(S1) and S1 < S0, th, tl, S1, B1, 0, float("nan"), B0, 0.0, 0.0
+            w, mu = damped(x)
+            y = Vw @ (w * a)
+            held = Vw @ ((1 - w) * a)
+            Eh = float(np.linalg.norm(L @ ((1 - w) * a)))
+            Bp = float(np.linalg.norm(r * (1 - w)))
             th, tl = dd_add(zh, zl, ds[0], ds[1])
-            th, tl = dd_add(th, tl, db * lam, np.zeros_like(db))
+            th, tl = dd_add(th, tl, y, np.zeros_like(y))
             S1, B1 = split(vec(s.residual([th, tl])))
             Sm, nc = S1, 0
-            while nc < correctors and np.isfinite(S1) and S1 > max(kappa * B1, 1.5 * (1 - lam) * E, 0.1 * tol):
+            while nc < correctors and np.isfinite(S1) and S1 > max(kappa * B1, 1.5 * Eh, 0.1 * tol):
                 c, _ = s.chord([th, tl])
-                c = dd_add(c[0], c[1], -(1 - lam) * db, np.zeros_like(db))
+                c = dd_add(c[0], c[1], -held, np.zeros_like(held))
                 cb = Vw @ (Vw.T @ vec(c))
                 ch, cl = dd_add(th, tl, c[0], c[1])
                 ch, cl = dd_add(ch, cl, -cb, np.zeros_like(cb))
@@ -395,40 +428,42 @@ def newton_band(s, zh, zl, tol=1e-28, it_max=40, band_tol=1e-6, radius=None, ban
                 if not (np.isfinite(S2) and S2 < S1):
                     break
                 th, tl, S1, B1, nc = ch, cl, S2, B2, nc + 1
-            ok = np.isfinite(S1) and B1 < (1 - 1e-4 * lam) * B0 and \
-                S1 <= max(kappa * B1, S0, 2 * (1 - lam) * E, 0.1 * tol)
-            return ok, th, tl, S1, B1, nc, Sm
+            ok = np.isfinite(S1) and B1 < B0 - 1e-4 * (B0 - Bp) and S1 <= max(kappa * B1, S0, 2 * Eh, 0.1 * tol)
+            return ok, th, tl, S1, B1, nc, Sm, Bp, mu, float(np.linalg.norm(w * a))
 
+        x = radius if mode == "band" else 1.0
         for h in range(max_halvings + 1):
-            ok, th, tl, S1, B1, nc, Sm = trial(lam)
-            if ok:
+            t = trial(x)
+            if t[0]:
                 break
-            lam *= 0.5
+            x *= 0.5
         grown = 0
-        if ok and mode == "band" and h == 0:
-            while grown < grow and lam < 1.0:
-                t2 = trial(min(1.0, 2 * lam))
-                if not (t2[0] and t2[4] < B1):
+        if t[0] and mode == "band" and h == 0:
+            while grown < grow and t[8] > 0:
+                t2 = trial(2 * x)
+                if not (t2[0] and t2[4] < t[4]):
                     break
-                (ok, th, tl, S1, B1, nc, Sm), lam, grown = t2, min(1.0, 2 * lam), grown + 1
+                t, x, grown = t2, 2 * x, grown + 1
+        ok, th, tl, S1, B1, nc, Sm, Bp, mu, ny = t
         dzt = vec([th, tl]) - vec([zh, zl])
-        rec.update(mode=mode, S=S0, B=B0, E=E, S_move=Sm, S_next=S1, B_next=B1, lam=lam, halvings=h, grown=grown,
-                   correctors=nc,
-                   dz_newton=nN,
-                   dz_band=nb, dz=float(np.linalg.norm(dzt)), radius=radius, dDelta=float(dzt[-1]),
-                   t=round(time.time() - t0, 1))
+        rec.update(mode=mode, S=S0, B=B0, E=E, S_move=Sm, S_next=S1, B_next=B1, B_model=Bp, mu=mu, halvings=h,
+                   grown=grown, correctors=nc, dz_newton=nN, dz_band=nb, dz_band_taken=ny,
+                   dz=float(np.linalg.norm(dzt)), radius=radius, dDelta=float(dzt[-1]), t=round(time.time() - t0, 1))
         if verbose:
-            low = ", ".join(f"{x:.1e}" for x in rec.get("sig_low", [])[-4:])
-            log(f"  band {it} ({mode}, {k} deflated, lowest sig {low}): |F| {nF:.2e}, S {S0:.2e} -> {S1:.2e} "
-                f"(E {E:.1e}), B {B0:.2e} -> {B1:.2e}, lam {lam:.3g} ({h} halvings, {grown} doublings), {nc} "
-                f"correctors from S {Sm:.1e}, |dz| {rec['dz']:.1e} (band step {nb:.1e}, Newton's {nN:.1e}), "
-                f"dDelta {rec['dDelta']:+.2e}, pivots {pmin:.1e}..{pmax:.1e} ({rec['t']} s)")
+            if mode == "band":
+                how = (f"band step {ny:.1e} of {nb:.1e} (mu {mu:.1e}, {h} halvings, {grown} doublings, model B "
+                       f"{Bp:.2e}), {nc} correctors from S {Sm:.1e}")
+            else:
+                how = f"lam {x:.3g} ({h} halvings), band step {nb:.1e} held"
+            log(f"  band {it} ({mode}, {k} deflated): |F| {nF:.2e}, S {S0:.2e} -> {S1:.2e} (E {E:.1e}), "
+                f"B {B0:.2e} -> {B1:.2e}, {how}, |dz| {rec['dz']:.1e}, dDelta {rec['dDelta']:+.2e}, pivots "
+                f"{pmin:.1e}..{pmax:.1e} ({rec['t']} s)")
         if not ok:
             rec["failed"] = "line search"
             return zh, zl, hist
         zh, zl = th, tl
-        if mode == "band" and lam < 1.0:
-            radius = lam * nb * (2 if h == 0 and B0 - B1 > 0.5 * lam * B0 else 1)
+        if mode == "band" and mu > 0:
+            radius = x * (2 if h == 0 and B0 - B1 > 0.5 * (B0 - Bp) else 1)
         if after_step is not None:
             after_step(zh, zl)
     Fv = vec(s.residual([zh, zl]))
