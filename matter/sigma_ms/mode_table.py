@@ -6,8 +6,8 @@ records, against sigdss's values, into a csv and a markdown table.
     python3 matter/sigma_ms/mode_table.py ../choptuik-large-d-raw [--folder I918-mac] [--Dmin 9]
         [--csv matter/sigma_ms/data/lam_D.csv] [--mutate gauge|sigdss]
 
-Input: <folder>/out/sm_lam.jsonl, for each (eta, D, M) its last record with a growth rate. sigdss's rates are read
-from solver/matter/data.
+Input: <folder>/out/sm_lam.jsonl, for each (eta, D, M, number of nodes) its last record with a growth rate. sigdss's
+rates are read from solver/matter/data. The base states have M = 32 and the 21 nodes of smdriver.NODES.
 
 Checks, each printed with its verdict; the exit status is 1 when one fails. The bounds were written here before the
 kernel's first growth rate was computed.
@@ -22,8 +22,10 @@ kernel's first growth rate was computed.
         D 9, eta 1     |kernel - sigdss (k_c 23)| <= sigdss's |k_c 15 - k_c 23| there (4.2e-4)
         D 9, eta 0.3   |kernel - sigdss (k_c 15)| <= the same 4.2e-4 (sigdss has one value at this point)
       A comparison whose kernel state is absent is listed as absent and fails.
-Then, without a verdict, lambda(D) at eta = 0.3 from D 10 to 11 at M = 32: its differences, where it is smallest, and
-the largest |lambda(M) - lambda(32)| over the other M as the resolution's spread.
+Then, without a verdict, lambda(D) of the base states at each coupling from --Dmin on: its slopes, whether it falls
+at every step or where it is smallest, and the resolution's spread, the largest |lambda - lambda(base)| over the
+states with another M or another node set, each rate taken as the middle of the two rates that enclose its sign
+change.
 --mutate gauge adds 1e-9 to one gauge distance in the range, which check (1) must catch; --mutate sigdss shifts the
 kernel's rate at D 9, eta 1 by 1e-3, which check (2) must catch.
 """
@@ -96,9 +98,12 @@ def main():
         r = json.loads(line)
         if r.get("lam") is None and r.get("gauge_diff") is None:
             continue
-        key = (str(r["eta"]), float(r["D"]), int(r["M"]))
+        key = (str(r["eta"]), float(r["D"]), int(r["M"]), int(r["K"]))
         recs[key] = dict(recs.get(key, {}), **{k: v for k, v in r.items() if v is not None})
-    keys = sorted(recs, key=lambda k: (-float("inf") if k[0] == "inf" else -float(k[0]), k[1], k[2]))
+    keys = sorted(recs, key=lambda k: (-float("inf") if k[0] == "inf" else -float(k[0]), k[1], k[3], k[2]))
+
+    def base(k):
+        return (k[0], k[1], 32, 21)
     ok = True
     # (1)
     inr = [k for k in keys if k[1] >= a.Dmin and "gauge_diff" in recs[k]]
@@ -112,15 +117,15 @@ def main():
           f"{worst:.1e} (<= 1e-10): {'PASS' if v1 else 'FAIL'}")
     for k in keys:
         if k[1] < a.Dmin and k in gd:
-            print(f"      validation state eta {k[0]}, D {k[1]:g}, M {k[2]}: {gd[k]:.1e} "
+            print(f"      validation state eta {k[0]}, D {k[1]:g}, M {k[2]}, {k[3]} nodes: {gd[k]:.1e} "
                   f"({'within' if gd[k] <= 1e-10 else 'outside'} 1e-10)")
     # (2)
     lam = {k: recs[k]["lam"] for k in keys if "lam" in recs[k]}
     if a.mutate == "sigdss":
-        lam[("1", 9.0, 32)] += 1e-3
+        lam[("1", 9.0, 32, 21)] += 1e-3
     print("(2) against sigdss:")
     for eta, D, ref, src, bound, bsrc in references():
-        k = (eta, D, 32)
+        k = (eta, D, 32, 21)
         if k not in lam:
             ok = False
             print(f"      eta {eta}, D {D:g}: no kernel state: FAIL")
@@ -130,29 +135,49 @@ def main():
         ok &= v
         print(f"      eta {eta}, D {D:g}: kernel {lam[k]:.9f}, {src} {ref:.9f}, difference {d:+.2e} "
               f"(<= {bound:.1e} in size, {bsrc}): {'PASS' if v else 'FAIL'}")
-    # the turn
-    seq = [(k[1], lam[k]) for k in keys if k[0] == "0.3" and k[2] == 32 and 10.0 <= k[1] <= 11.0 and k in lam]
-    if len(seq) >= 3:
+    # lambda(D) of the base states, and the resolution's spread, from the enclosures of the sign changes
+    def mid(k):
+        p, q = recs[k]["lam_sign_change"]
+        return 0.5 * (p + q)
+
+    def half(k):
+        p, q = recs[k]["lam_sign_change"]
+        return 0.5 * (q - p)
+
+    for eta in ("0.3", "1"):
+        seq = [(k[1], lam[k]) for k in keys if k[0] == eta and k == base(k) and k[1] >= a.Dmin and k in lam]
+        if len(seq) < 3:
+            continue
         dl = [(q[0], (q[1] - p[1]) / (q[0] - p[0])) for p, q in zip(seq, seq[1:])]
         lo = min(seq, key=lambda x: x[1])
-        spread = [(k, abs(lam[k] - lam[(k[0], k[1], 32)])) for k in keys
-                  if k[0] == "0.3" and k[2] != 32 and k in lam and (k[0], k[1], 32) in lam]
-        sp = max((x[1] for x in spread), default=float("nan"))
-        print(f"lambda(D) at eta 0.3, M 32, D 10 to 11: {', '.join(f'{D:g}: {v:.9f}' for D, v in seq)}")
+        spread = [(k, mid(k) - mid(base(k)), half(k) + half(base(k))) for k in keys
+                  if k[0] == eta and k != base(k) and k[1] >= a.Dmin and k in lam and base(k) in lam]
+        print(f"lambda(D) at eta {eta}, M 32, D {seq[0][0]:g} to {seq[-1][0]:g}: "
+              f"{', '.join(f'{D:g}: {v:.9f}' for D, v in seq)}")
         print(f"    slopes d lambda / dD up to each D: {', '.join(f'{D:g}: {v:+.5f}' for D, v in dl)}")
-        print(f"    smallest at D {lo[0]:g}; lambda(11) minus the smallest {seq[-1][1] - lo[1]:.3e}; resolution spread "
-              f"(largest |lambda(M) - lambda(32)| over {[(k[1], k[2]) for k, _ in spread]}) {sp:.1e}")
+        if all(v < 0 for _, v in dl):
+            print(f"    lambda falls at every step, by {seq[0][1] - seq[-1][1]:.6f} in all and by "
+                  f"{seq[-2][1] - seq[-1][1]:.6f} over the last one")
+        else:
+            print(f"    smallest at D {lo[0]:g}; lambda at D {seq[-1][0]:g} minus the smallest {seq[-1][1] - lo[1]:.3e}")
+        for k, d, u in spread:
+            print(f"    resolution: D {k[1]:g}, M {k[2]}, {k[3]} nodes: lambda minus the base's {d:+.1e} +- {u:.0e} "
+                  f"(the two sign changes' half widths)")
+        if spread:
+            print(f"    largest {max(abs(d) + u for _, d, u in spread):.1e}")
     sig = sigdss_all()
+    sig[("inf", 4.0)] = [("l = 1 solver, k_c 23", sig_lam("sigdss_l1_reference.jsonl", 4.0, None, 23))]
     rows = []
     for k in keys:
         r = recs[k]
         gs, ls = r.get("gauge_sign_change") or ["", ""], r.get("lam_sign_change") or ["", ""]
-        for src, sl in sig.get((k[0], k[1]), [("", "")]) if k[2] == 32 else [("", "")]:
-            rows.append(dict(eta=k[0], D=k[1], M=k[2], F=r.get("F", ""), lam_g=r.get("lam_g", ""), gauge_lo=gs[0],
+        for src, sl in sig.get((k[0], k[1]), [("", "")]) if k == base(k) else [("", "")]:
+            rows.append(dict(eta=k[0], D=k[1], M=k[2], nodes=k[3], F=r.get("F", ""), lam_g=r.get("lam_g", ""),
+                             gauge_lo=gs[0],
                              gauge_hi=gs[1], gauge_diff=r.get("gauge_diff", ""), lam=r.get("lam", ""), lam_lo=ls[0],
                              lam_hi=ls[1], gamma=1 / r["lam"] if "lam" in r else "", sigdss=src, sigdss_lam=sl,
                              kernel_minus_sigdss=(r["lam"] - sl) if "lam" in r and sl != "" else ""))
-    print("\n| η | D | M | λ_g | gauge root's distance | λ | γ = 1/λ | sigdss's λ | kernel minus sigdss |")
+    print("\n| η | D | M, nodes | λ_g | gauge root's distance | λ | γ = 1/λ | sigdss's λ | kernel minus sigdss |")
     print("|---|---|---|---|---|---|---|---|---|")
     for r in rows:
         g = f"{r['gauge_diff']:.1e}" if r["gauge_diff"] != "" else ""
@@ -160,7 +185,7 @@ def main():
         ga = f"{r['gamma']:.10f}" if r["gamma"] != "" else ""
         s_ = f"{r['sigdss_lam']:.6f} ({r['sigdss']})" if r["sigdss"] else ""
         d = f"{r['kernel_minus_sigdss']:+.1e}" if r["kernel_minus_sigdss"] != "" else ""
-        print(f"| {r['eta']} | {r['D']:g} | {r['M']} | {r['lam_g']:.10f} | {g} | {la} | {ga} | {s_} | {d} |")
+        print(f"| {r['eta']} | {r['D']:g} | {r['M']}, {r['nodes']} | {r['lam_g']:.10f} | {g} | {la} | {ga} | {s_} | {d} |")
     if a.csv:
         with open(a.csv, "w", newline="") as fh:
             w = csv.DictWriter(fh, fieldnames=list(rows[0]))
