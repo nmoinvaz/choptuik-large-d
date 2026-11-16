@@ -100,12 +100,25 @@ def main():
                 t0 = time.time()
                 s = solver_for(bm, Dt, a.threads, segs)
                 with np.errstate(all="ignore"):
-                    F = fmax(s, ph, pl)
+                    fh, fl = s.residual(ph, pl)
+                    f = np.asarray(fh) + np.asarray(fl)
+                    F = float(np.abs(f).max())
                 r[f"F[{pname}]"] = F if np.isfinite(F) else str(F)
+                if not np.isfinite(F):
+                    # the row blocks with non-finite rows (4M rows each, model.rs Ctx::block_inputs: block 0 the
+                    # centre series to the first node, block b < K the segment from node b - 1 to node b, block K
+                    # the horizon series to the last node) and their segments in x
+                    bad = sorted({int(i) // (4 * bm["M"]) for i in np.flatnonzero(~np.isfinite(f))})
+                    nodes = [0.0] + list(bm["nodes"]) + [1.0]
+                    r[f"bad_blocks[{pname}]"] = bad
+                    r[f"bad_nodes[{pname}]"] = [f"{nodes[b]:g}->{nodes[b + 1]:g}" if b < len(nodes) - 2 else
+                                                f"{nodes[-1]:g}->{nodes[-2]:g}" for b in bad]
                 r[f"t[{pname}]"] = round(time.time() - t0, 1)
             put(**r)
             fmt = lambda v: f"{v:.2e}" if isinstance(v, float) else v  # noqa: E731
-            print(f"D {Dt} (h {h:+.5f}) {lab}: " + ", ".join(f"|F| {fmt(r[f'F[{p}]'])} on {p.split('/')[-1]}" for p in plans)
+            print(f"D {Dt} (h {h:+.5f}) {lab}: " + ", ".join(f"|F| {fmt(r[f'F[{p}]'])} on {p.split('/')[-1]}"
+                                                            + (f" (non-finite in segments {r[f'bad_nodes[{p}]']})"
+                                                               if f"bad_nodes[{p}]" in r else "") for p in plans)
                   + (f"; vs ref max {r['max_err']:.2e}, Delta {r['dDelta']:+.2e}" if ref is not None else "")
                   + f" ({sum(r[f't[{p}]'] for p in plans):.0f} s)", flush=True)
     put(stage="end")

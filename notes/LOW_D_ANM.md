@@ -30,9 +30,9 @@ What they found (raw folders `T106-win2`, `T107-win2`, `T115-win2`, `T135-win`, 
 | T107, T115 | D 3.04375, M 320/384, N 4 then 3 | z₄ polluted at this base (ratio 2.7×10⁻⁷ at M 320); the plan of the predicted state at 3.0425 froze in the segment 0.01 → 0.02 at x 0.013725 (1.3 million steps without moving x) |
 | T135, #798 | D 3.04375, M 384, N 3 | the plans of the partial sums n = 1–3 freeze for D ≤ 3.0431 (h ≤ −0.00065) and finish for D ≥ 3.0432; the base state itself plans to 3.04305; the frozen x converges with the order (0.013725 at 3.0425) |
 
-So the ANM predictor is about 70–300 times closer to the branch than the cubic at the same step, Newton from it takes
-full steps, and the series' radius is about D − 3 (0.044 at 3.044). It stopped on two things: the high orders are
-polluted from order 4–5 near D 3.044, and every predicted state below D ≈ 3.0431 freezes the planner.
+So the ANM prediction's residual at 3.04375 was 67 times below the cubic's, Newton from it took full steps, and the
+series' radius is about D − 3 (0.05 at 3.045). It stopped on two things: the high orders are polluted from order 4–5
+near D 3.044, and every predicted state below D ≈ 3.0432 froze the planner.
 
 ## 2. What anm_run.py assumes, against what the low-D legs need
 
@@ -75,6 +75,34 @@ NaN, is measured in section 4.
 
 ## 4. Measurements on the Mac (#927)
 
+All on the Mac under load (one process, 4 threads, nice 10), with `/Users/nathan/venv-314`'s hpkernel of 2026-11-08,
+which has `residual_jet` at every M; the main checkout's `.venv` hpkernel has no jet residual.
+
+**4.1 The series at D 3.175, M 128** (`I927-mac/series_D3.175_M128.log`). From lowD_highM.py's converged state on its
+618-step plan: `newton_mixed` 257 s, then per order 37–60 s of jets and 12–20 s of GMRES (3–4 products, all
+converged). The max-norm ratios |z_(k−1)|/|z_k| for k = 2–7 are 0.129, 0.185, 0.170, 0.220, 0.087 and 0.019. The
+radius is about D − 3 here too, and the series is polluted from order 6, one order later than at D 3.045. A
+step of h = 0.025 (h/R ≈ 0.15) cannot reach 10⁻¹² before the pollution, which is why the pilot (section 6) steps
+by 0.001.
+
+**4.2 The partial sums against converged states, M 384** (`I927-mac/fixed_plan/agree*`). T135's stored series (z₀..z₃
+at T105's M 384 state at D 3.04375, on its stored 8319-step plan) against #343's converged M 384 states:
+
+| target (h) | order 0 | order 1 | order 2 | order 3 | Lagrange through the earlier states |
+|---|---|---|---|---|---|
+| 3.04355 (−0.0002): max \|P − z\| | 2.83 | 1.13×10⁻² | 4.75×10⁻⁵ | 1.98×10⁻⁷ | 2.83 (one state) |
+| 3.04355: Δ(P) − Δ | +1.62×10⁻³ | +2.21×10⁻⁶ | +4.22×10⁻⁹ | +1.03×10⁻¹¹ | +1.62×10⁻³ |
+| 3.04335 (−0.0004): max \|P − z\| | 5.68 | 4.54×10⁻² | 3.82×10⁻⁴ | 3.18×10⁻⁶ | 2.28×10⁻² (two states) |
+| 3.04335: Δ(P) − Δ | +3.24×10⁻³ | +8.86×10⁻⁶ | +3.38×10⁻⁸ | +1.65×10⁻¹⁰ | +4.44×10⁻⁶ |
+
+At h = −0.0004 each order gains a factor of about 120 in the max norm and 200–370 in Δ, so the radius is about 0.05
+in the state (D − 3 = 0.044) and 0.08–0.15 in Δ. At 3.04335 the order-3 sum lies 7000 times closer in the max norm, and
+27000 times in Δ, than the Lagrange predictor through the same two D that #343's leg used there at M 320. The control
+`--mutate drop2` (z₂ left out) moves orders 2 and 3 at 3.04335 to +8.86×10⁻⁶ and +8.83×10⁻⁶, the size of z₂'s term, as
+fixed before the run.
+
+**4.3 Residuals on fixed plans at D 3.04315** (`I927-mac/fixed_plan/d304315*`).
+
 PENDING
 
 ## 5. The design: the series as a start inside lowD_highM.py
@@ -105,12 +133,20 @@ that driver and adds the series as one more start for the working resolution M_w
 orders cost about 3 × (335–642 s of jets + 148–234 s of solves) ≈ 30–45 min at 8 threads (T106), against Newton
 calls of 25–40 min each (#343's leg 2). #343's D 3.04335 took 12 calls at M 320 from the Lagrange start (|F|
 6.4×10⁻⁴), and T106's D″ took 5 from the series' start (|F| 9.8×10⁻⁶) on a fatter plan. If that ratio holds, the series
-saves 4–7 calls (2–4 h) per point where both starts converge, a gain of about 2× at M_w and nothing at M_n.
+saves 4–7 calls (2–5 h) per point where both starts converge, a gain of about 2× at M_w and nothing at M_n.
 Forming the series one order at a time, as `Solver.series_o` does in octo-double (a third of the cost at D 253, #914),
 would need a double-double `series` for B 40/48 in `hp/src/python.rs`: a Rust change and a rebuild, not needed for a
 first test.
 
 ## 6. The pilot at M 128
+
+`hp/anm_lowd_pilot.py` is one step of the design's core, on the base's plan throughout. It plans the base at 10⁻³²
+(lowD_highM.py's `plan_prev`), takes the f64 LU there, forms the series, evaluates the prediction on that plan and
+corrects it with `newton_solve` (jac "f64", as `solve_point`). The check, fixed before the run (`I927-mac/README.md`
+section 3), compares with lowD_highM.py's own converged state at the target. (A) Δ of the prediction within 10⁻¹² of
+the reference. (B) The corrector converged, and its Δ within 10⁻¹². The base is lowD_highM.py's state at D 3.15, M 128
+(17 nodes, 0.000625 to 0.9), and the reference is a lowD_highM.py run from that state's M 128/160 pair with
+`--dD 0.001`. The step is 0.001 because section 4.1 rules out 0.025.
 
 PENDING
 
