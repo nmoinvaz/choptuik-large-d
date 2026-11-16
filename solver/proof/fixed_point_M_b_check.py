@@ -37,8 +37,16 @@ fixed_point_M_b.py, imports neither.
         run as a subprocess, must print the N, k and contraction constant that Setup and prove give for the point
         read at 512 bits. (Read at python-flint's default 53 bits the decimals are balls of radius 6e-17, and the
         lemma is then proved on that ball with another truncation.)
+    python3 fixed_point_M_b_check.py box2 --box=data/A_M2_box_M5_1e-10.json --out=new.json [--log=f] [--pilot=N]
+        the second-order box run of that certificate again, from the second implementation's start data (issue #880):
+        certify_M2.box2_run with the stored chart, h and w, its start_data2 replaced for this call by the assembly that
+        cert2 compares. certify_M2.py is not edited. About 40 min at M = 5; --pilot stops after N steps.
+    python3 fixed_point_M_b_check.py kraw --box=new.json --stored=data/A_M2_box_M5_1e-10.json [--sub=1e-18,1e-26,1e-27]
+        the Krawczyk test on the new run, on its whole box and on the sub-box, with the relative margins beside the
+        stored run's; the two enclosures of the zero must overlap. PASS only if the test holds on the new run.
     mutations (each must make its check fail, exit status 3):
         m1 --mutate=coef | sign | scale     as in fixed_point_M_b.py
+        box2 --mutate=sign                  the run from start data with the sign of [G P] flipped; kraw on it must fail
         cli --mutate=read53                 the comparison made with the point read at 53 bits: must differ
         cert2 --mutate=w0 | sign            the second implementation's D^2 Y_N dropped; the sign of [G P]
         lip --mutate=drop                   the second implementation without the [ct W] term of Phi_V: (b) must fail
@@ -245,59 +253,52 @@ def cert(boxfile, mutate=None, second=False, N_in=None):
     return ok
 
 
-def cert2(boxfile, mutate=None):
-    import json
+def assemble_b(M, pstr, Cm, G, widths, msys=None, drop_d2=False, verbose=True):
+    """the C^2 start data of a second-order box run from the second implementation, with certify_M2.start_data2's
+    arguments and return values (vals, cols, wcol, W0cols, info). The chart geometry (p^, T, Gamma, the directions,
+    the pair list, the hull of p(X)) is built by the certificate's helpers as start_data2 builds it. Everything that
+    start_data2 takes from fixed_point_M.py comes from fixed_point_M_b.py here: the values and first derivatives at
+    p^, the first derivatives over the hull, D^2 Y_N over the hull (the recursion on series of length 3, by
+    polarization) and the bound e_q of eta on the Cauchy box at p^ in the Cauchy estimate e_q (2 nu / (c - hw))^2.
+    msys: a mutation of the second implementation's system ("sign"); drop_d2: D^2 Y_N set to zero."""
+    import hashlib
     import time
     import certify_M as CM
     import certify_M2 as C2M
     import certify_M2_lohner as C2
-    import start_cover_M2 as SC
+    import certify_M_sys as CS
     from flint import acb_series
-    with open(boxfile) as fh:
-        bx = json.load(fh)
-    assert bx["kind"] == "box2", "cert2 is for the second-order (box2) runs"
-    ce = SC.cert_data(bx)
-    M, r0, arg, c = ce["M"], ce["r0"], ce["arg"], ce["c"]
+    t0 = time.time()
     m = M + 1
-    p, hull = ce["p"], ce["hull"]
-    nd = len(FPM.state_order(M))
-    msys = mutate if mutate == "sign" else None
-    # the chart, as certify_M2.load_chart and box2_run build it
-    ctx.prec = CM.KPREC
-    Cm = [[arb(x) for x in r] for r in bx["C"]]
-    G = [[arb(x) for x in r] for r in bx["Gamma"]]
-    ws = list(bx["w"])
-    widths = [arb(bx["h"]), arb(bx["h"])] + [arb(ws[(i // 2) % len(ws)]) for i in range(M - 1)]
-    # the first implementation: the certificate's own call
-    t0 = time.time()
-    v1, cols1, _, W1, info1 = C2M.start_data2(M, bx["p"], Cm, G, widths, verbose=False)
-    pairs = C2.pair_list(m)
-    print(f"{boxfile}: M = {M}, ray {arg}, r0 = {r0}, h = {bx['h']}, w = {ws}; start_data2: N = {info1['N']}, "
-          f"second-derivative bound of eta {info1['eta_d2_bound']:.3e}, {len(pairs)} pairs  [{time.time() - t0:.0f} s]",
-          flush=True)
-    # the second implementation
-    t0 = time.time()
-    okc, xi0, v2, d2c, ic = B.start_data(p, M, r0, arg, c, mutate=msys, verbose=False)
-    okb, _, _, d2b, ib = B.start_data(hull, M, r0, arg, c, N=ic["N"], k=ic["k"], mutate=msys, verbose=False)
-    print(f"second implementation: N = {ic['N']}, k = {ic['k']}; four contractions hold: {okc and okb} (constants "
-          + ", ".join(f"{float(o['lam']):.4f}" for o in (ic["real"], ic["cbox"], ib["real"], ib["cbox"]) if "lam" in o)
-          + f")  [{time.time() - t0:.0f} s]", flush=True)
-    if not (okc and okb):
-        print("C2 START DATA: FAIL (no contraction)")
-        return False
-    ctx.prec = SC.PREC
+    path = CM.path_for(M)
+    r0, arg, c = path[0], CM.ARG[M], C2M.CAUCHY
+    ctx.prec = 320
+    p = CM.exact_p(pstr)
+    ctx.prec = 320
     T = CM.T_matrix(Cm, M)
     X = [arb(0, wd) for wd in widths]
-    dirs = C2M.dp_dirs(T, G, X, M)
-    sums = [[dirs[j][i] + dirs[k][i] for i in range(m)] for (j, k) in pairs if j != k]
-    cc = arb(c)
+    hull = C2M.p_of_x(p, T, G, X, M)
     hw = max(float(abs(hull[i] - p[i]).upper()) for i in range(m))
+    assert hw < 0.5 * float(arb(c).mid()), "the box must lie well inside the Cauchy box"
+    okc, xi0, v2, d2c, ic = B.start_data(p, M, r0, arg, c, mutate=msys, verbose=False)
+    okb, _, _, d2b, ib = B.start_data(hull, M, r0, arg, c, N=ic["N"], k=ic["k"], mutate=msys, verbose=False)
+    lams = [float(o["lam"]) for o in (ic["real"], ic["cbox"], ib["real"], ib["cbox"]) if "lam" in o]
+    if verbose:
+        print(f"second implementation: N = {ic['N']}, k = {ic['k']}; four contractions hold: {okc and okb} (constants "
+              + ", ".join(f"{v:.4f}" for v in lams) + f")  [{time.time() - t0:.0f} s]", flush=True)
+    if not (okc and okb):
+        raise RuntimeError("second implementation: fixed point not verified on the certificate's four sets")
+    nd = len(v2)
+    ctx.prec = 320
+    dirs = C2M.dp_dirs(T, G, X, M)
+    pairs = C2.pair_list(m)
+    sums = [[dirs[j][i] + dirs[k][i] for i in range(m)] for (j, k) in pairs if j != k]
     nu = max(float(abs(dirs[k][i]).upper()) for k in range(m) for i in range(m))
+    wcol = [CS.W0() * T[1][k] for k in range(m)]
     ctx.prec = 512
+    cc = arb(c)
     fac = (2 * arb(nu) / (cc - arb(hw))) ** 2
-    # V0_k = sum_i T_ik d/dp_i, at p^
-    cols2 = [[sum((acb(T[i][k]) * d2c[i][q] for i in range(m)), acb(0)) for q in range(nd)] for k in range(m)]
-    # D^2 Y_N over the hull: second-order jets along d_k and along d_j + d_k (polarization)
+    cols = [[sum((acb(T[i][k]) * d2c[i][q] for i in range(m)), acb(0)) for q in range(nd)] for k in range(m)]
     ctx.cap = 3
     odd, even = B.harmonics(M)
     z0 = xi0 * xi0
@@ -310,7 +311,7 @@ def cert2(boxfile, mutate=None):
         d, q, g = B.formal_series(F, sl, M, N, zero, one, True, st_gp(msys))
         st = [B.horner([d[j][mu] for j in range(N)], z0, zero) * xi0 for mu in odd]
         st += [B.horner([q[j][mu] for j in range(N)], z0, zero) * z0 for mu in odd]
-        st += [B.horner([g[j][nu] for j in range(N)], z0, zero) for nu in even]
+        st += [B.horner([g[j][nu_] for j in range(N)], z0, zero) for nu_ in even]
         out = []
         for v in st:
             cs = v.coeffs()
@@ -319,14 +320,14 @@ def cert2(boxfile, mutate=None):
     jd = [jets(dv) for dv in dirs]
     js = iter([jets(dv) for dv in sums])
     e_q = ic["e_cauchy"]
-    W2 = []
+    W = []
     for (j, k) in pairs:
         if j == k:
             dd = [2 * jd[j][q] for q in range(nd)]
         else:
             jsk = next(js)
             dd = [jsk[q] - jd[j][q] - jd[k][q] for q in range(nd)]
-        if mutate == "w0":
+        if drop_d2:
             dd = [acb(0) for _ in range(nd)]
         col = []
         for q in range(nd):
@@ -335,10 +336,57 @@ def cert2(boxfile, mutate=None):
                 for i in range(2, m):
                     v = v + d2b[i][q] * C2M.gam(G, i - 2, j, k)
             col.append(v)
-        W2.append(col)
-    print(f"  second implementation's assembly: hull half-width {hw:.3e}, nu = {nu:.3f}, Cauchy factor "
-          f"{float(fac.mid()):.4e}, its largest bound of D^2 eta {max(float((e * fac).upper()) for e in e_q):.3e}  "
-          f"[{time.time() - t0:.0f} s]", flush=True)
+        W.append(col)
+    sha = hashlib.sha256(open(B.__file__, "rb").read()).hexdigest()[:16]
+    info = {"start": f"fixed_point_M_b.start_data (the second implementation; sha256 {sha}), arg {arg}, diag "
+                     f"splitting, N = {N}, k = {ic['k']}; second derivatives: its series jets + Cauchy"
+                     + (f"; MUTATION {msys}" if msys else "") + ("; MUTATION w0" if drop_d2 else ""),
+            "rigorous": not (msys or drop_d2), "N": N, "k": ic["k"], "eta": ic["eta"], "eta_cauchy": ic["eta_cauchy"],
+            "eta_d2_bound": max(float((e * fac).upper()) for e in e_q), "hull_halfwidth": hw, "nu": nu,
+            "contraction": lams, "sec": time.time() - t0, "mutate": [x for x in (msys, "w0" if drop_d2 else None) if x]}
+    if verbose:
+        print(f"  second implementation's assembly: hull half-width {hw:.3e}, nu = {nu:.3f}, Cauchy factor "
+              f"{float(fac.mid()):.4e}, its largest bound of D^2 eta {info['eta_d2_bound']:.3e}  "
+              f"[{time.time() - t0:.0f} s]", flush=True)
+    return v2, cols, wcol, W, info
+
+
+def chart_of(bx):
+    """(Cm, G, widths) of a stored box2 run, as certify_M2.load_chart and box2_run build them"""
+    import certify_M as CM
+    ctx.prec = CM.KPREC
+    Cm = [[arb(x) for x in r] for r in bx["C"]]
+    G = [[arb(x) for x in r] for r in bx["Gamma"]]
+    ws = list(bx["w"])
+    widths = [arb(bx["h"]), arb(bx["h"])] + [arb(ws[(i // 2) % len(ws)]) for i in range(bx["M"] - 1)]
+    return Cm, G, widths
+
+
+def cert2(boxfile, mutate=None):
+    import json
+    import time
+    import certify_M2 as C2M
+    import certify_M2_lohner as C2
+    with open(boxfile) as fh:
+        bx = json.load(fh)
+    assert bx["kind"] == "box2", "cert2 is for the second-order (box2) runs"
+    M = bx["M"]
+    m = M + 1
+    nd = len(FPM.state_order(M))
+    Cm, G, widths = chart_of(bx)
+    # the first implementation: the certificate's own call
+    t0 = time.time()
+    v1, cols1, _, W1, info1 = C2M.start_data2(M, bx["p"], Cm, G, widths, verbose=False)
+    pairs = C2.pair_list(m)
+    print(f"{boxfile}: M = {M}, h = {bx['h']}, w = {list(bx['w'])}; start_data2: N = {info1['N']}, "
+          f"second-derivative bound of eta {info1['eta_d2_bound']:.3e}, {len(pairs)} pairs  [{time.time() - t0:.0f} s]",
+          flush=True)
+    try:
+        v2, cols2, _, W2, _ = assemble_b(M, bx["p"], Cm, G, widths, mutate if mutate == "sign" else None,
+                                         mutate == "w0")
+    except RuntimeError as e:
+        print(f"C2 START DATA: FAIL ({e})")
+        return False
     ok = True
 
     def block(title, A1, A2):
@@ -364,6 +412,58 @@ def cert2(boxfile, mutate=None):
         print(f"    pair ({j}, {k}): max |W0| {mx:.3e}, midpoints within {dist:.2e}, radius first {r1:.2e}, second "
               f"{r2:.2e}")
     print(f"C2 START DATA ({boxfile}): {'PASS' if ok else 'FAIL'}")
+    return ok
+
+
+def box2(boxfile, out, mutate=None, pilot=None, log=None):
+    """the second-order box run of a stored certificate, from the second implementation's start data (#880):
+    certify_M2.box2_run with the stored run's chart, h and w, and with certify_M2.start_data2 replaced, for this call,
+    by assemble_b. pilot: stop after that many steps (certify_M2's own pilot)."""
+    import json
+    import certify_M2 as C2M
+    with open(boxfile) as fh:
+        bx = json.load(fh)
+    orig = C2M.start_data2
+
+    def start_b(M, pstr, Cm, G, widths, verbose=True):
+        return assemble_b(M, pstr, Cm, G, widths, mutate if mutate == "sign" else None, mutate == "w0")
+    C2M.start_data2 = start_b
+    try:
+        res = C2M.box2_run(bx["M"], bx["chart"], bx["h"], list(bx["w"]), out, log=log, max_steps=pilot, verbose=True)
+    finally:
+        C2M.start_data2 = orig
+    return res.get("kind") in ("box2", "pilot2")
+
+
+def kraw(newfile, storedfile, sub=None):
+    """the Krawczyk test of a box2 run made from the second implementation's start data, beside the stored run's"""
+    import json
+    import certify_M2 as C2M
+    import start_cover_M2 as SC
+    with open(newfile) as fh:
+        bn = json.load(fh)
+    with open(storedfile) as fh:
+        bo = json.load(fh)
+    assert bn["p"] == bo["p"] and bn["h"] == bo["h"] and list(bn["w"]) == list(bo["w"]) and bn["C"] == bo["C"], \
+        "the two runs have another centre, chart or box"
+    names = SC.pnames(bn["M"])
+    print(f"new run: {newfile}: {bn['steps']} steps, {bn['sec']:.0f} s; start: {bn['start']['start']}")
+    print(f"stored run: {storedfile}: {bo['steps']} steps; start: {bo['start']['start'][:60]}...")
+    ok = True
+    for sb in [None] + ([sub] if sub else []):
+        rn = C2M.krawczyk2_test(bn, sub=sb, verbose=False)
+        ro = C2M.krawczyk2_test(bo, sub=sb, verbose=False)
+        ctx.prec = 320
+        over = all(bool(rn["pstar"][i].overlaps(ro["pstar"][i])) for i in range(len(names)))
+        where = "the run's whole box" if sb is None else "the sub-box +-(" + ", ".join(sb) + ")"
+        print(f"Krawczyk on {where}: K(X) in int X: new {rn['ok']}, stored {ro['ok']}")
+        print("  relative margins, new:    " + ", ".join(f"{r:+.3f}" for r in rn["rel_margins"]))
+        print("  relative margins, stored: " + ", ".join(f"{r:+.3f}" for r in ro["rel_margins"]))
+        print("  zero's enclosure, radius new / stored: " + ", ".join(
+            f"{names[i]} {float(rn['pstar'][i].rad()):.2e} / {float(ro['pstar'][i].rad()):.2e}" for i in range(len(names)))
+            + f"; the two enclosures overlap in every parameter: {over}")
+        ok = ok and rn["ok"] and over
+    print(f"KRAWCZYK ON THE SECOND IMPLEMENTATION'S START DATA: {'PASS' if ok else 'FAIL'}")
     return ok
 
 
@@ -408,6 +508,11 @@ def main():
     cmd = args[0] if args else "m1"
     if cmd == "m1":
         ok = m1(opts.get("mutate"))
+    elif cmd == "box2":
+        ok = box2(opts["box"], opts["out"], opts.get("mutate"), int(opts["pilot"]) if "pilot" in opts else None,
+                  opts.get("log"))
+    elif cmd == "kraw":
+        ok = kraw(opts["box"], opts["stored"], opts["sub"].split(",") if "sub" in opts else None)
     elif cmd == "cli":
         ok = cli(opts.get("mutate"))
     elif cmd == "cert2":
