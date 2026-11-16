@@ -1975,6 +1975,8 @@ near-null band in the Jacobian and an unexplained drift of the gauge mode's root
 
 ## Limits and open problems
 
+- **Walls in general.** Every wall met so far was the method's: each moved when the digits, the series or the steps
+  changed, and Δ(D) stayed smooth through it. [notes/WALLS.md](notes/WALLS.md) lists them and what they share.
 - **The large-D wall.** The double-double continuation stalls near D = 73 in its working layout and near 78 with the
   last node moved toward the horizon. The horizon series' radius of convergence falls with the accuracy of the horizon
   data, R = R₀ + C ln(1/δ)/(n − 1), so Newton needs a guess good to about e^{−0.3 n}, and no predictor from stored
