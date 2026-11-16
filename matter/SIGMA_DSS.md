@@ -676,6 +676,14 @@ every point stopped on the 1% rule after 3 to 5 Jacobians. Both profiles have on
 at 1.134 (1.01×10⁻⁸) and sweep B's at 1.136 (1.29×10⁻⁹), and neither has a feature near 1.126. A finer grid
 tests whether that location is the system's (#910).
 
+It does not settle it (#910; rpi5, raw `I910-rpi5/` 2cbbb1c3; Δ from 1.130 to 1.140 in steps of 0.001, up to 60
+Jacobians). A parabola through each sweep's three lowest points puts sweep A's minimum at 1.133391 and sweep B's at
+1.136895. They are 0.0035 apart, between the frozen marks of 0.002 (agrees) and 0.004 (differs), so no estimate is
+given. Sweep B's minimum is sharp: a change of 0.1% in each |F| moves it by 1×10⁻⁵. Sweep A's is flat, its three lowest
+points within 0.36%, and the same change moves it from 1.1331 to 1.1452. So sweep A cannot locate a minimum. Sweep B's
+lies 0.0009 below Newton's estimates from the walks' ends. This f64 solver at kc 15 gives no prior-free η = 0.3 value
+at D 10.5. The kernel, whose band solver fixed Δ to 10⁻²³ at η = 1 (#845), is the route to one.
+
 ## 12. References
 
 - [HLPTA00] S. Husa, C. Lechner, M. Pürrer, J. Thornburg, P. C. Aichelburg, PRD 62, 104007 (2000),
