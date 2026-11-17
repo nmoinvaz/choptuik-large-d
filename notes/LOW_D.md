@@ -724,3 +724,8 @@ The step is below #798's onset (about 0.0006 for predictions of order 1 to 3), a
    line for 8 h, the longest point allowed), the branch meets a singular point near x 0.014 there. That is reported as
    the result, with the last converged D and the frozen x.
 Anything else is reported as it is.
+
+## 17. The Taylor series as a start, on fixed plans (#927)
+
+The series of sections 14–16 evaluated on fixed plans, the blocker below D ≈ 3.0433 and a design that puts the series into
+`lowD_highM.py` as one more start are in [LOW_D_ANM.md](LOW_D_ANM.md).
