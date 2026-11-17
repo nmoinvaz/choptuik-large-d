@@ -3,8 +3,8 @@
 Status of everything here: numerical evidence. Nothing is rigorous. It bears on the type bounds of routes A3 and P5,
 which follow from the farthest singularity of the Borel transform (proof/D_entire.md sections 1 and 7). Sections 1–4
 are #547, sections 5–6 are #548, section 7 is #670, section 8 is #669, section 9 is #672, section 10 is #683,
-section 11 is #684, section 12 is #667, section 13 is #689, section 14 is #702, section 15 is #703, and section 16
-is #718.
+section 11 is #684, section 12 is #667, section 13 is #689, section 14 is #702, section 15 is #703, section 16
+is #718, and section 17 is #746.
 
 - **#547.** A calibrated estimator recovers the far end of smooth-density plants within 0.009, but it fails #547's
   acceptance. On the real series two controls fire, so no far end is quoted (§4).
@@ -2283,3 +2283,71 @@ In 7.4, at the end of the bullet "With the zero in place, a set near P0 + κ⋆ 
 +  the lattice's outer edges. The end points nearer than |t| ≈ 2.4 fail because they would need more than 13–28% of
 +  σ₂₂ (notes/PADE_FAR_END.md §16).
 ```
+
+## 17. The misfit's profile over M on #718's ring records (#746)
+
+#718's judge reads the twin misfit at 22 terms only, and found that every end point at |t| ≥ 2.48 passes (a) and (c′).
+Its records also keep χ at 20 and 21 terms, with the zero held at ZLOC and with the plant's own zero located. Here
+those three χ, the profile over M, are judged against the real series', on the records, with no new plant. The question
+is whether the profile narrows #718's passing region, or pins the set to a place.
+
+### 17.1 Method
+
+`solver/inner_amp/misfit_profile_746.py`, beside #718's script, reading `I718-mac/ring.jsonl` (raw-data 88feab35 or
+later), `control.json` and `ring.json`. It imports none of the plants' machinery, so it shares only the records with
+#718.
+
+- **The profile.** χ_M in zk/chord (the κ⋆ chord basis with the zero at ZLOC), M = 20, 21, 22, in error units. Held:
+  `twin["kstar/chord"]["chi"]`. Relocated: `reloc["chi"]`, the plant's own zero located as in §15.1, which exists for a
+  plant that passes (a) and was not excluded by l2₂₀(ZLOC) < 0.1 χ₂₂(real). The real series' χ_M(real) at each node is
+  `control.json`'s `real_twin`, at ZLOC, the zero that was located for it (§14), so its held and relocated profiles
+  are one profile.
+- **The ratio.** ρ_M = χ_M / χ_M(real) at the same node, in the same basis.
+- **The plants, positions, groups and node rule** are #718's (§16.1), read from the records. A plant's status at a node
+  is the judge's (a) and (c′) or (c″) as stored, and is recomputed from the stored χ₂₂ and M_min as a check.
+- **What the records can decide.** #718's node rule ran a plant at 0.99 and 1.01 only until one plant per position and
+  group passed there. A plant that passes at ω∞ with no record at another node has an unknown status, and a plant with
+  a failing record at any node fails. A position's status is the best of its groups' and a group's the best of its
+  plants', in the order pass, unknown, fail.
+
+### 17.2 Frozen criteria
+
+Written here, and committed, before any plant's χ at 20 or 21 terms was read.
+
+| check | criterion |
+|---|---|
+| (d′) | held profile: 1/5 ≤ ρ_M ≤ 5 for M = 20, 21 and 22, with (c′)'s M_min = 23 |
+| (d″) | relocated profile: the same, with `reloc["chi"]` and `reloc["M_min"]` |
+| plant, P′ | (a), (c′) and (d′) at ω/ω∞ = 0.99, 1.00 and 1.01. A plant failing (a) or (c′) at ω∞ is not a candidate |
+| plant, P″ (apart) | (a), (c″) and (d″) at the three nodes. A plant not relocated fails (d″), as it fails (c″) |
+| location rule | #718's (§16.2), on P′ and apart on P″ |
+| candidate | a position that passes, with its four lattice neighbours inside the lattice and failing for every group. Its four diagonal points have no records, so a candidate is not located, and its stage 2 is a recommended task |
+| narrows | a position that #718 passes (34 with (c′), 37 with (c″)) fails P′, or P″. Positions with an unknown status are counted apart, and bracket the passing set |
+| reported | per position and group, its status under P′ and P″, with the passing positions' \|Q\|, arg Q and the lattice edges they touch |
+| R-a | with (d) off, the script reproduces #718: `ring.json`'s verdict for every position and group (pass, hit plant, candidate count `n_wf1`) and the lists passing, edge, candidates and located for (c′) and (c″); §16.4's counts at ω∞ (3477, 5064, 3401 and 3433 for (a), (c′), (a) + (c′), (a) + (c″)); no unknown status; no duplicate (id, wf) |
+| R-b | stored (a), (c′), (c″) agree with their recomputation from the stored χ₂₂, M_min and the real χ₂₂ |
+| J+ | the real series' profile against itself passes (d′) and (d″) at every node, with ρ_M = 1 to 10⁻⁹ and, at ω∞, χ_M(real) of §15.5 (4745, 4359, 402, to its digits) |
+| edge | planted ρ_M at F(1 ∓ 10⁻⁹), (1/F)(1 ± 10⁻⁹) and at 10 and 1/10, for each M alone, each side: inside passes, outside fails |
+| mutations | `--mutate=scale_chi` (χ₂₁ of every plant and of J+ × 10; `scale_chi:20` and `scale_chi:22` for the other M): J+ and the edge check fail. `--mutate=drop_node` (every record at 1.01 dropped): R-a fails. Each exits 1 |
+| exit | 1 when R-a, R-b, J+ or the edge check fails, and for a mutation that does not make its check fail. The verdict itself is not a failure |
+
+F = 5 is about twice the real series' own spread of χ₂₂ over its far-end chord bases at ZLOC (191–427, §15.3), and it
+lies below 10, so that a tenfold error at one M fires. It is fixed here and not scanned.
+
+Each variant answers the question for itself. At 20 and 21 terms the real zero was located on l2 at 20 terms (§14), so
+a held plant carries an offset the real series does not (§13.5), and the relocated variant is the like-for-like one.
+A narrowing that the held variant shows alone is reported as that offset.
+
+Seen before the freeze, and disclosed.
+
+- §15.5's published profile ranges at ω∞: the real series at ZLOC has χ = 4745, 4359 and 402 at 20, 21 and 22 terms;
+  of its 48 plants that pass (a) and (c′) the held ρ are 3.5–21, 0.25–1.65 and 0.11–0.78, and the relocated ρ are
+  0.23–1.32, 0.23–1.30 and 0.28–1.67. F = 5 was set knowing these, so at the §15 corner the relocated variant is
+  expected to pass and the held one to fail at 20 terms. The test is the other 38 positions and the other shapes.
+- The records' key names, and for the first plant record its non-χ fields (position, η, share of σ₂₂). No χ at 20 or 21
+  terms of any plant, and none of the real series at 0.99 or 1.01, was read. The key names of `control.json` and
+  `ring.json` were read, not their values.
+
+Context, reported and not judged: per position, over the plants that pass (a) and (c′) at ω∞, the range of ρ₂₀, ρ₂₁
+and ρ₂₂ and of the shape ratios χ₂₀/χ₂₂ and χ₂₁/χ₂₂ against the real series' (held and relocated); and whether the
+shape ratios move with η at a fixed position and with |Q|, which is what a third feature at fixed χ₂₂ would need.
