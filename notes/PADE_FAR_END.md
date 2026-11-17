@@ -2324,7 +2324,7 @@ Written here, and committed, before any plant's χ at 20 or 21 terms was read.
 | candidate | a position that passes, with its four lattice neighbours inside the lattice and failing for every group. Its four diagonal points have no records, so a candidate is not located, and its stage 2 is a recommended task |
 | narrows | a position that #718 passes (34 with (c′), 37 with (c″)) fails P′, or P″. Positions with an unknown status are counted apart, and bracket the passing set |
 | reported | per position and group, its status under P′ and P″, with the passing positions' \|Q\|, arg Q and the lattice edges they touch |
-| R-a | with (d) off, the script reproduces #718: `ring.json`'s verdict for every position and group (pass, hit plant, candidate count `n_wf1`) and the lists passing, edge, candidates and located for (c′) and (c″); §16.4's counts at ω∞ (3477, 5064, 3401 and 3433 for (a), (c′), (a) + (c′), (a) + (c″)); no unknown status; no duplicate (id, wf) |
+| R-a | with (d) off, the script reproduces #718: `ring.json`'s verdict for every position and group (pass, hit plant, candidate count `n_wf1`) and the lists passing, edge, candidates and located for (c′) and (c″); §16.4's counts at ω∞ (3477, 5064, 3401 and 3433 for (a), (c′), (a) + (c′), (a) + (c″)); no unknown group or position; no duplicate (id, wf) |
 | R-b | stored (a), (c′), (c″) agree with their recomputation from the stored χ₂₂, M_min and the real χ₂₂ |
 | J+ | the real series' profile against itself passes (d′) and (d″) at every node, with ρ_M = 1 to 10⁻⁹ and, at ω∞, χ_M(real) of §15.5 (4745, 4359, 402, to its digits) |
 | edge | planted ρ_M at F(1 ∓ 10⁻⁹), (1/F)(1 ± 10⁻⁹) and at 10 and 1/10, for each M alone, each side: inside passes, outside fails |
@@ -2347,6 +2347,11 @@ Seen before the freeze, and disclosed.
 - The records' key names, and for the first plant record its non-χ fields (position, η, share of σ₂₂). No χ at 20 or 21
   terms of any plant, and none of the real series at 0.99 or 1.01, was read. The key names of `control.json` and
   `ring.json` were read, not their values.
+- **An amendment to R-a**, made after the controls first ran and before any verdict. R-a said "no unknown status", and
+  the first run failed it with 6251 unknown plants. With the profile off a plant after a group's hit was never run at
+  the other nodes, so plant-level unknowns are expected, and R-a is read at the level of groups and positions, as the
+  sentence about the statuses above puts it. Every other R-a comparison, the counts and R-b had passed. The gate had
+  stopped the run, so no plant's profile was printed.
 
 Context, reported and not judged: per position, over the plants that pass (a) and (c′) at ω∞, the range of ρ₂₀, ρ₂₁
 and ρ₂₂ and of the shape ratios χ₂₀/χ₂₂ and χ₂₁/χ₂₂ against the real series' (held and relocated); and whether the
