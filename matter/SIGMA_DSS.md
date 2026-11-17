@@ -606,7 +606,7 @@ Two refinements came from start A below, where Newton's band step is 10² to 10�
   double-double, with reduced singular values s_i from 3.6×10⁻¹⁰ down to 6×10⁻¹⁸. The step in direction i is Newton's
   times s_i²/(s_i² + μ²), with μ set by the length limit: the directions the Jacobian resolves best move first. At
   start A the four best-resolved directions hold 97% of B² and 0.2% of the squared length of Newton's band step.
-  Scaled as a whole, that step spends its length on the deepest directions: a run that did so gained 3% of B per
+  Scaled as a whole, that step spends its length on the deepest directions: a run that did so gained 2.4% of B per
   iteration and was stalling after 29, and the damped step converged in 11 band iterations.
 
 No term is added to the equations: near the root the steps are Newton's own, and a converged state has max |F| below
@@ -628,7 +628,10 @@ values of 10⁻⁸ to 10⁻¹⁰, with a start from which Newton's step is 2.7×
 
 Its four mutations each fail the test: `noband` fails A, `easy` (no band in the toy) fails B and C, `root` fails A,
 and `gamma` (the kernel's recursion mutated) fails D with max |z − z\*| = 6.2×10⁻¹². C's criterion was rewritten after
-its first run, and the script's header says how.
+its first run, and the script's header says how. The planted test covers the deflation, the chord corrections and the convergence
+test. It does not see the damping inside the band, the split's floor, the held-back step taken off a chord step, or
+B's fall in the acceptance rule: four mutations of these pass it (#922, F1). A converged state is still judged by its
+residual alone, so no value rests on them.
 
 **Starts A and B at D 10.475 both converge to the chain's solution (#845; raw `I845-mac/`).** §5's two sigdss states
 at η = 1, taken to the kernel at M = 32 with `run_eta.py --solver band`:
@@ -645,7 +648,7 @@ So neither is a second solution: each lies on the band of the chain's solution, 
 and −0.0139 to it. The two agree with each other to 4.6×10⁻²⁴ in Δ after the extra step. This does not show that
 D 10.475 has no other solution, only that §5's two values do not mark one. The band is 32 singular values below 10⁻¹⁰
 of the largest, then a gap to 10⁻⁴. 32 is M, 89% of the band lies in the centre datum q, and its largest Δ component
-is 0.059. At the converged states q is fixed only to 5×10⁻¹⁶ (A, B and the chain differ by that much there, at
+is 0.071 at the solution (0.059 to 0.083 over the D 10.475 runs; #922). At the converged states q is fixed only to 5×10⁻¹⁶ (A, B and the chain differ by that much there, at
 residuals of 10⁻³¹), while c₀ agrees to 5×10⁻²⁰, the rest of the state to 2×10⁻¹⁷ and Δ to 10⁻²³.
 
 Start B converged with the first version of the band step, Newton's band step scaled as a whole, which was 2 to 9
@@ -796,8 +799,10 @@ the M = 32 state was carried to 27 nodes by the kernel's own integration ([`reno
 solved again, and solved on the 21 nodes with the Taylor steps planned to 10⁻²⁸. The node set changes Δ by
 9.5×10⁻³¹. The looser plan changes it by 3.6×10⁻²³, or 4.7×10⁻²⁴ with the plan kept between Newton steps, which is
 the level to which the band lets a converged state fix Δ. With the looser plan the residual stays at the plan's own
-error, 1.2×10⁻³⁰ to 4×10⁻²⁹, and does not reach 10⁻³⁰. So Δ on the kernel is fixed to about 3×10⁻²³ by the band, and
-neither M nor the x direction adds to that.
+error, 1.2×10⁻³⁰ to 4×10⁻²⁹, and does not reach 10⁻³⁰. So the kernel's states spread in Δ by about 3×10⁻²³, and
+neither M nor the x direction adds to that. That is a spread, not a bound. The first-order bound on Δ's error at a
+converged state is 8.7×10⁹ max |F| at D 10.5: 8.7×10⁻¹⁹ at the runs' tolerance, and 8.7×10⁻²² after the extra Newton
+step (#922, SIGMA_BAND_review.md F2). The chain tables' 16 digits are within it.
 
 The chain ([`chain.py --eta 0.3`](sigma_ms/chain.py), every point with the band solver) ran from that solution down
 to D 9 and up to D 11 in steps of 0.0625, 35 points with three at sigdss's own D. Every point converged, to max |F| ≤

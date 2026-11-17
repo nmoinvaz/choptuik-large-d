@@ -295,11 +295,13 @@ def newton_band(s, zh, zl, tol=1e-28, it_max=40, band_tol=1e-6, radius=None, ban
         The move leaves a residual of second order in the resolved rows. It is removed by up to `correctors` chord
         steps with the same factors. A chord step c = -J^-1 F proposes the held-back band step again, so V_w (a - y)
         is taken off it exactly, and then the band part of what remains, by V_w V_w^T. The trial is accepted when B
-        has fallen and S is back below max(kappa B, 2 E(a - y)), and the radius is halved otherwise. So a band step
+        has fallen and S is at most max(kappa B, S before the step, 2 E(a - y), 0.1 tol), and the radius is halved
+        otherwise. So a band step
         is judged by the band's own residual, on the valley.
     When the first trial holds, up to `grow` doublings of the radius are tried in the same iteration, each kept while
     it lowers B further: a trial costs a few residuals and chord steps, an iteration a factorization and an SVD. The
-    radius is then the accepted step's length, doubled if the step gained at least half of the linear model's fall.
+    radius changes only after a step it limited (mu > 0): it becomes the accepted step's length after a halving, and is
+    doubled when no halving was needed.
     Nothing is added to the equations: near the root mu = 0 and the steps are Newton's own, and the result has
     max |F| < tol. A step no longer than the radius is tried whole first, with no SVD, and taken if it lowers |F|_2.
 
