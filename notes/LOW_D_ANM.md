@@ -7,11 +7,11 @@ continuation in D[^cochelin], drive the low-D legs instead of `hp/lowD_highM.py`
 ## Answer
 
 **The Taylor series does not carry the low-D legs past the point where they stall.** At D 3.04315, where #343's leg 2
-met a NaN Lagrange predictor and stalled from its last state, the series' order-1 and order-3 sums from D 3.04375, at M
-384, have a non-finite residual on both fixed plans, as the Lagrange predictor does (section 4.3). The order-3 sum fails
-from 3.04325 on, in the segment x 0.01 → 0.02 where T135's planner froze. At 3.04335, where the leg converged, it is
-finite and 7000 times closer to the solution than the Lagrange predictor. The obstacle is the regularity at the sonic
-line, which no truncated series has (section 3), so the decision goes to #926's projection.
+met a NaN Lagrange predictor and stalled from its last state, the series' order-1 and order-3 sums from D 3.04375
+(resolution 384) have a non-finite residual on both fixed plans, as the Lagrange predictor does (section 4.3). The
+order-3 sum fails from 3.04325 on, in the segment x 0.01 → 0.02 where T135's planner froze. At 3.04335, where the leg
+converged, it is finite and 7000 times closer to the solution than the Lagrange predictor. The obstacle is the
+regularity at the sonic line, which no truncated series has (section 3), so the decision goes to #926's projection.
 
 Where the starts are finite, the series is the better start. Section 5 puts it into `lowD_highM.py` as one more start,
 about 85 lines of Python and no kernel change, for an estimated 2× fewer Newton calls at the working resolution. The
