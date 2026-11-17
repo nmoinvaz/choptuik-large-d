@@ -168,15 +168,22 @@ Forming the series one order at a time, as `Solver.series_o` does in octo-double
 would need a double-double `series` for B 40/48 in `hp/src/python.rs`: a Rust change and a rebuild, not needed for a
 first test.
 
-## 6. The pilot at M 128
+## 6. The pilot
 
 `hp/anm_lowd_pilot.py` is one step of the design's core, on the base's plan throughout. It plans the base at 10⁻³²
 (lowD_highM.py's `plan_prev`), takes the f64 LU there, forms the series, evaluates the prediction on that plan and
 corrects it with `newton_solve` (jac "f64", as `solve_point`). The check, fixed before the run (`I927-mac/README.md`
 section 3), compares with lowD_highM.py's own converged state at the target. (A) Δ of the prediction within 10⁻¹² of
-the reference. (B) The corrector converged, and its Δ within 10⁻¹². The base is lowD_highM.py's state at D 3.15, M 128
-(17 nodes, 0.000625 to 0.9), and the reference is a lowD_highM.py run from that state's M 128/160 pair with
-`--dD 0.001`. The step is 0.001 because section 4.1 rules out 0.025.
+the reference. (B) The corrector converged, and its Δ within 10⁻¹². Three controls must each fail the check: z₂ left
+out of the sum (`drop2`), the jets with κ's dependence on n frozen, a wrong D derivative (`kappa`), and the step taken
+to D + 10⁻⁹ (`dshift`, which must also fail B).
+
+The design put the pilot at M 128 near D 3.15, from lowD_highM.py's states there with steps of 0.001 (section 4.1
+rules out 0.025). The Mac's load rose to 100–137 before any pilot run, and an M 128 Jacobian took 257 s at a load of
+22, so it moved, by an amendment written before the runs, to the smallest M where lowD_highM.py has a stored pair at
+low D: M 48/64 at D 3.7 (`lowDv_D3.7000_M48.npz`, 13 nodes 0.005 to 0.8). The references are a lowD_highM.py run from
+that pair with `--dD 0.005`, and the step is 0.005 (h/R ≈ 0.007). The M 128 design stays runnable as written
+(`run_pilot.sh` with `PAIR=128`).
 
 PENDING
 
