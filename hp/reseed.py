@@ -86,7 +86,7 @@ class Reseeder:
 
     def __init__(self, meta, D, threads=2, levels=5, rows="ma", plan_tol=1e-32, hmax=0.05, check_tol=1e-36,
                  check_kt=None, it_max=30, horizon_alpha=0, mutate="none", floor_rule="stall", qd=False, od=0,
-                 qd_start="ladder"):
+                 qd_start="ladder", project_start="u0"):
         self.M, self.nodes = int(meta["M"]), list(meta["nodes"])
         self.K = len(self.nodes)
         self.kt, self.kc, self.ks = meta.get("kt", 36), meta.get("kc", 146), meta.get("ks", 130)
@@ -114,6 +114,11 @@ class Reseeder:
         # are rounded to double-double, about 1e-32 off, whose pole lies inside u0 past D ~ 249), and runs the ladder
         # only when that does not converge
         self.qd_start = qd_start
+        # project_start: "u0" (the default) starts project() with the double-double u0 rung, as before; "pred" first
+        # polishes the point's own four-part horizon data in quad-double, as reseed() does with qd_start "pred". The
+        # double-double u0 rung reads the horizon series in double-double, which is rounding noise past order ~100
+        # near D 229 (#903), so the projection then fails
+        self.project_start = project_start
         # od: the number of octo-double corrections of the horizon data after the quad-double polish (refine_o), taken
         # where the data are put on an eight-part point (octo_corrector.with_horizon); 0: none
         self.od = int(od)
@@ -590,12 +595,24 @@ class Reseeder:
         M, o = self.M, self.off
         sl_ = slice(o["mh"], o["mh"] + 2 * M)
         u0 = self.us[-1]
+        pre = {}
+        if self.project_start == "pred" and self.qd and len(z) == 4:
+            d4, hq, cq = self.invert_q(z, tuple(np.ascontiguousarray(np.asarray(p, dtype=float)[sl_]) for p in z))
+            pre = dict(pred_q=dict(conv=bool(cq), its=len(hq) - 1, R0=hq[0]["R"], R=hq[-1]["R"]))
+            if cq:
+                self.last_project = pre
+                out = [np.array(p, dtype=float) for p in z]
+                for q in range(4):
+                    out[q][sl_] = d4[q]
+                return tuple(np.ascontiguousarray(p) for p in out), "u0q"
         nh = zh[o["node"](self.K - 1):o["node"](self.K - 1) + 4 * M]
         nl = zl[o["node"](self.K - 1):o["node"](self.K - 1) + 4 * M]
         dh, dl, hist, conv = self.invert(u0, zh, zl, np.array(nh), np.array(nl), np.array(zh[sl_]), np.array(zl[sl_]))
         # last_project: what each stage of this call did, for the log of a failed projection (#743); no effect on z'
-        self.last_project = lp = dict(u0=dict(conv=bool(conv), its=len(hist) - 1, R0=hist[0]["R"], R=hist[-1]["R"],
-                                              finite=bool(np.all(np.isfinite(dh)))))
+        lp = dict(pre)
+        lp.update(u0=dict(conv=bool(conv), its=len(hist) - 1, R0=hist[0]["R"], R=hist[-1]["R"],
+                          finite=bool(np.all(np.isfinite(dh)))))
+        self.last_project = lp
         how = "u0"
         if self.qd and len(z) == 4 and np.all(np.isfinite(dh)):
             # the double-double u0 rung as the start (converged or at its floor), then the quad-double polish

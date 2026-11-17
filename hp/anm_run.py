@@ -16,7 +16,7 @@ formulation of hp/pinning.py; their coefficients are zero).
         [--qd_it 12] [--qd_w 0] [--refine 1] [--probe 0 --probe_c C] [--plan_tol 1e-32] [--fix1 0] [--F_pred_max 0]
         [--horizon_alpha 0] [--fix1_qlu 0] [--jet_q 0] [--reseed 0] [--pred_q 0] [--reseed_q 0] [--save_pred 0]
         [--jet_o 0] [--jet_by_order 1] [--od_tangents 2] [--corrector od --tol_od 1e-40] [--base_adopt 0] [--base_polish 1] [--keep_plan 1] [--held_fit FILE]
-        [--held_o 0] [--reseed_o 0] [--a0 0] [--a_grow 2] [--a_hold 0] [--lam_stall 0] [--save_base 0] [--save_jet 0] [--held_from STATE]
+        [--held_o 0] [--reseed_o 0] [--project_start u0] [--a0 0] [--a_grow 2] [--a_hold 0] [--lam_stall 0] [--save_base 0] [--save_jet 0] [--held_from STATE]
         [--arclength 0 --guard 0.05 --D_min 0 --arc_sign 1 --border 1 --turns_max 2 --arc_dhold 1e-12 --arc_jet FILE]
 
 --corrector qd runs the quad-double Newton of the kernel (hpkernel.driver.newton_qd, Solver.newton_q) on the pinned
@@ -126,6 +126,10 @@ and #608's logs). 0, the default, is off. --od_abort_it K applies it at iteratio
 --reseed_start pred (with --reseed_q 1) runs the re-seed's quad-double polish from the prediction's own four-part
 horizon data first, and the double-double ladder only when that does not converge; ladder, the default, polishes the
 ladder's data as before (#693: past D ~ 249 the ladder's double-double data put the pole inside u0).
+--project_start pred (with --reseed 2 and --reseed_q 1) starts each projection inside the corrector with the quad-double
+polish of the point's own four-part horizon data, and the double-double u0 rung and ladder only when that does not
+converge; u0, the default, starts with the double-double u0 rung as before. The double-double horizon series is
+rounding noise past order ~100 near D 229 (#903), where the u0 rung then fails the projection.
 --elim_switch S (with --reseed 2) projects every point of the corrector whose pinned quad-double max|F| exceeds S
 (octo_corrector.ElimO for --corrector od, reseed.ElimQ for qd; 1e-15 by default). With 0 every point is projected,
 which for qd needs --reseed_q 1 (a double-double projection holds every point at its floor). Below the
@@ -359,6 +363,7 @@ def main():
     opt.update(od_abort_theta=0.0)      # --od_abort_theta R: the natural test refuses at iteration 1 when theta(lam 1) > R (#784)
     opt.update(od_abort_it=1)           # --od_abort_it K: that refusal at iterations 1 to K
     opt.update(reseed_start="ladder")   # --reseed_start pred: the re-seed's quad-double polish from the point's own data (#693)
+    opt.update(project_start="u0")      # --project_start pred: the projection's quad-double polish from the point's own data
     opt.update(held_fit="")             # --held_fit FILE (pinning.HeldFit; notes/HELD_HARMONICS.md)
     opt.update(held_from="")            # --held_from STATE: the base's held values from STATE's, by the fit (#808)
     # --held_o 1: the held values and their Taylor coefficients as mpf instead of floats, and the held field in eight
@@ -654,7 +659,7 @@ def main():
             if opt["reseed"] == 2:
                 elim["rs"] = Reseeder(dict(M=M, nodes=nodes, kt=kt, kc=kc, ks=ks), D, threads=opt["threads"],
                                       horizon_alpha=opt["horizon_alpha"], qd=bool(opt["reseed_q"]), od=opt["reseed_o"],
-                                      qd_start=opt["reseed_start"])
+                                      qd_start=opt["reseed_start"], project_start=opt["project_start"])
             zh_p, zl_p, F0_p, _, conv_p, _ = correct(sp, zh, zl, opt["tol"],
                                                      z8_start=load_o(os.path.join(raw, opt["state"]))[0])
             elim["rs"] = None
@@ -950,7 +955,7 @@ def main():
                     # inside the corrector
                     rs_n = Reseeder(dict(M=M, nodes=nodes, kt=kt, kc=kc, ks=ks), Dn, threads=opt["threads"],
                                     horizon_alpha=opt["horizon_alpha"], qd=bool(opt["reseed_q"]), od=opt["reseed_o"],
-                                      qd_start=opt["reseed_start"])
+                                      qd_start=opt["reseed_start"], project_start=opt["project_start"])
                     dz0_at.update(D=float(Dn), D_str=str(Dn), a=float(a))
                     if opt["save_pred"] and pred4 is not None:
                         # the prediction before its re-seed, for testing the re-seed on it (13.26)
