@@ -7,11 +7,11 @@ continuation in D[^cochelin], drive the low-D legs instead of `hp/lowD_highM.py`
 ## Answer
 
 **The Taylor series does not carry the low-D legs past the point where they stall.** At D 3.04315, where #343's leg 2
-met a NaN Lagrange predictor and stalled from its last state, the series' order-1 and order-3 sums from D 3.04375
-(M 384) have a non-finite residual on both fixed plans, as the Lagrange predictor does (section 4.3). The order-3 sum
-fails from 3.04325 on, in the segment x 0.01 → 0.02 where T135's planner froze. At 3.04335, where the leg converged, it is finite
-and 7000 times closer to the solution than the Lagrange predictor. The obstacle is the regularity at the sonic line,
-which no truncated series has (section 3), so the decision goes to #926's projection.
+met a NaN Lagrange predictor and stalled from its last state, the series' order-1 and order-3 sums from D 3.04375 (M
+384) have a non-finite residual on both fixed plans, as the Lagrange predictor does (section 4.3). The order-3 sum fails
+from 3.04325 on, in the segment x 0.01 → 0.02 where T135's planner froze. At 3.04335, where the leg converged, it is
+finite and 7000 times closer to the solution than the Lagrange predictor. The obstacle is the regularity at the sonic
+line, which no truncated series has (section 3), so the decision goes to #926's projection.
 
 Where the starts are finite, the series is the better start. Section 5 puts it into `lowD_highM.py` as one more start,
 about 85 lines of Python and no kernel change, for an estimated 2× fewer Newton calls at the working resolution. The
@@ -79,8 +79,8 @@ fixed plan and fails in practice at the sonic line, below D ≈ 3.0433.
   solution alone. A state off the branch by ε carries a singular part of about ε there, which is why a predictor's own
   plan has 2–4 times the steps of a solution's ([HIGH_M.md](HIGH_M.md) 1.5). A truncated series is such a state, of
   every order. Below D ≈ 3.0433 the measured consequence is that every predicted state's integration fails in the
-  segment x 0.01 → 0.02, on a fixed plan (section 4.3, from h = −0.0005 with an order-3 error of about 10⁻⁵) as well as in the
-  planner (T135 and #798, from h = −0.00065, at x near 0.0137 in the same segment).
+  segment x 0.01 → 0.02, on a fixed plan (section 4.3, from h = −0.0005 with an order-3 error of about 10⁻⁵) as well as
+  in the planner (T135 and #798, from h = −0.00065, at x near 0.0137 in the same segment).
 
 The two onsets lie within 0.00015 of each other in D and in the same segment, so the obstacle is the predicted state,
 not the planning of it. `lowD_taylor_leg.py` froze in the planner, and on the base's plan it would have read NaN at
