@@ -4,6 +4,7 @@ saved states, M the mode matrix (mode_check.py checks it).
 
     PYTHONPATH=<site> python3 matter/sigma_ms/mode_lam.py STATE.npz [STATE.npz ...] --out DIR --guess LAM
         [--threads 2] [--widths 1e-3,1e-2,5e-2] [--scan A,B,N] [--no_gauge] [--no_phys] [--xtol 1e-13] [--gate 31]
+        [--prev D1:LAM1,D2:LAM2] [--gauge_window 1e-12]
 
 For each state, in the order given:
   the gauge rate lambda_g = mean over tau of 1 - c_x(tau, 1) (exact for the mode that relabels the light cone) and
@@ -16,7 +17,10 @@ A root is the sign change of det M, from the double-double LU, located by Brent'
 Newton iteration on (mode, lambda) is not used: the Jacobian's near-null band (SIGMA_DSS.md section 6) is in M at
 every lambda, and its small singular values do not change sign.
 
---gate L waits before each state until the machine's 1-minute load is below L.
+--gate L waits before each state until the machine's 1-minute load is below L. --prev gives the rates of states
+done before, so that the first state's guess is their line in D as well (a chain continued in a later run).
+--gauge_window W first takes det M at lambda_g - W and lambda_g + W only: opposite signs enclose the gauge root within
+W of lambda_g with two determinants, and equal signs fall back to the search of --gauge_widths.
 
 Appends one record per state to DIR/sm_lam.jsonl and logs to DIR/sm_lam_<tag>.log. Exit status 1 when a state's
 residual exceeds --fmax (1e-26), or a root is not bracketed.
@@ -48,11 +52,14 @@ def main():
     ap.add_argument("--xtol", type=float, default=1e-13)
     ap.add_argument("--fmax", type=float, default=1e-26)
     ap.add_argument("--gate", type=float, default=0.0)
+    ap.add_argument("--prev", default="", help="D:lambda pairs of states done before, in the order of the chain")
+    ap.add_argument("--gauge_window", type=float, default=0.0)
     a = ap.parse_args()
     os.makedirs(a.out, exist_ok=True)
     widths = tuple(float(x) for x in a.widths.split(","))
     gwidths = tuple(float(x) for x in a.gauge_widths.split(","))
-    prev = []  # (D, lambda) of the states done
+    # (D, lambda) of the states done
+    prev = [tuple(float(v) for v in x.split(":")) for x in a.prev.split(",") if x]
     bad = False
     for path in a.states:
         z, meta = sd.load(path)
@@ -87,8 +94,12 @@ def main():
             cache = {}
             fn = sd.det_fn(s, zh, zl, log, cache)
             if not a.no_gauge:
-                root, w = sd.det_root_near(fn, lg, gwidths, a.xtol)
-                br = None if root is None else sd.sign_bracket(cache, root)
+                w = a.gauge_window
+                if w and fn(lg - w)[0] != fn(lg + w)[0]:
+                    root, br = lg, (lg - w, lg + w)
+                else:
+                    root, w = sd.det_root_near(fn, lg, gwidths, a.xtol)
+                    br = None if root is None else sd.sign_bracket(cache, root)
                 rec.update(gauge_root=root, gauge_sign_change=br, gauge_bracket=w,
                            gauge_diff=None if br is None else max(abs(br[0] - lg), abs(br[1] - lg)))
                 if br is None:

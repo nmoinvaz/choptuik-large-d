@@ -5,9 +5,12 @@ records, against sigdss's values, into a csv and a markdown table.
     git clone https://github.com/nmoinvaz/choptuik-large-d-raw ../choptuik-large-d-raw     (once, beside the checkout)
     python3 matter/sigma_ms/mode_table.py ../choptuik-large-d-raw [--folder I918-mac] [--Dmin 9]
         [--csv matter/sigma_ms/data/lam_D.csv] [--mutate gauge|sigdss]
+    python3 matter/sigma_ms/mode_table.py ../choptuik-large-d-raw --folder I928-mac --also I918-mac --Dfine 11 \
+        --Dspread DLAST --csv matter/sigma_ms/data/lam_D.csv [--mutate gauge|sigdss|spread]            (#928)
 
-Input: <folder>/out/sm_lam.jsonl, for each (eta, D, M, number of nodes) its last record with a growth rate. sigdss's
-rates are read from solver/matter/data. The base states have M = 32 and the 21 nodes of smdriver.NODES.
+Input: <folder>/out/sm_lam.jsonl, for each (eta, D, M, number of nodes) its last record with a growth rate, after
+the records of the --also folders (an earlier part of the chain). sigdss's rates are read from solver/matter/data.
+The base states have M = 32 and the 21 nodes of smdriver.NODES.
 
 Checks, each printed with its verdict; the exit status is 1 when one fails. The bounds were written here before the
 kernel's first growth rate was computed.
@@ -22,12 +25,18 @@ kernel's first growth rate was computed.
         D 9, eta 1     |kernel - sigdss (k_c 23)| <= sigdss's |k_c 15 - k_c 23| there (4.2e-4)
         D 9, eta 0.3   |kernel - sigdss (k_c 15)| <= the same 4.2e-4 (sigdss has one value at this point)
       A comparison whose kernel state is absent is listed as absent and fails.
+  (3) With --Dspread D (#928): at that D, at each coupling that has a base state there, the states at M = 24 and
+      M = 48 both exist, and each one's rate is within 1e-10 of the base's, the enclosures' half widths included.
 Then, without a verdict, lambda(D) of the base states at each coupling from --Dmin on: its slopes, whether it falls
 at every step or where it is smallest, and the resolution's spread, the largest |lambda - lambda(base)| over the
 states with another M or another node set, each rate taken as the middle of the two rates that enclose its sign
-change.
+change. With --Dfine D, also the base states on the multiples of 0.0625 from that D on: the first differences of
+lambda per unit D, the second per unit D squared, and one word. That word is "falling" when every first difference
+is negative, "turning" when the last one is positive, and "flat" when the last one is negative but below 1% of the
+first one in size. These three rules were written before the rates past D 11 were computed.
 --mutate gauge adds 1e-9 to one gauge distance in the range, which check (1) must catch; --mutate sigdss shifts the
-kernel's rate at D 9, eta 1 by 1e-3, which check (2) must catch.
+kernel's rate at D 9, eta 1 by 1e-3, which check (2) must catch; --mutate spread shifts the M = 48 rate at --Dspread
+by 1e-9, which check (3) must catch.
 """
 import argparse
 import csv
@@ -89,12 +98,18 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("raw")
     ap.add_argument("--folder", default="I918-mac")
+    ap.add_argument("--also", default="", help="comma-separated folders with an earlier part of the chain")
     ap.add_argument("--Dmin", type=float, default=9.0)
+    ap.add_argument("--Dfine", type=float, default=0.0, help="differences on the multiples of 0.0625 from this D on")
+    ap.add_argument("--Dspread", type=float, default=0.0, help="check (3): M = 24 and 48 against 32 at this D")
     ap.add_argument("--csv", default="")
-    ap.add_argument("--mutate", default="", choices=["", "gauge", "sigdss"])
+    ap.add_argument("--mutate", default="", choices=["", "gauge", "sigdss", "spread"])
     a = ap.parse_args()
     recs = {}
-    for line in open(os.path.join(a.raw, a.folder, "out", "sm_lam.jsonl")):
+    lines = []
+    for fo in [x for x in a.also.split(",") if x] + [a.folder]:
+        lines += list(open(os.path.join(a.raw, fo, "out", "sm_lam.jsonl")))
+    for line in lines:
         r = json.loads(line)
         if r.get("lam") is None and r.get("gauge_diff") is None:
             continue
@@ -144,8 +159,47 @@ def main():
         p, q = recs[k]["lam_sign_change"]
         return 0.5 * (q - p)
 
+    # (3)
+    if a.Dspread:
+        print(f"(3) M = 24 and 48 against M = 32 at D {a.Dspread:g}:")
+        some = False
+        for eta in ("0.3", "1"):
+            b = (eta, a.Dspread, 32, 21)
+            if b not in lam:
+                continue
+            some = True
+            for M in (24, 48):
+                k = (eta, a.Dspread, M, 21)
+                if k not in lam:
+                    ok = False
+                    print(f"      eta {eta}, M {M}: no state: FAIL")
+                    continue
+                d = mid(k) - mid(b) + (1e-9 if a.mutate == "spread" and M == 48 else 0.0)
+                u = half(k) + half(b)
+                v = abs(d) + u <= 1e-10
+                ok &= v
+                print(f"      eta {eta}, M {M}: lambda minus the base's {d:+.1e} +- {u:.0e} (<= 1e-10 in size): "
+                      f"{'PASS' if v else 'FAIL'}")
+        if not some:
+            ok = False
+            print("      no base state there: FAIL")
     for eta in ("0.3", "1"):
         seq = [(k[1], lam[k]) for k in keys if k[0] == eta and k == base(k) and k[1] >= a.Dmin and k in lam]
+        fine = [(D, v) for D, v in seq if a.Dfine and D >= a.Dfine - 1e-9 and abs(D / 0.0625 - round(D / 0.0625)) < 1e-9]
+        if len(fine) >= 3:
+            assert all(abs(q[0] - p[0] - 0.0625) < 1e-9 for p, q in zip(fine, fine[1:])), "a multiple of 0.0625 is missing"
+            d1 = [(q[1] - p[1]) / 0.0625 for p, q in zip(fine, fine[1:])]
+            d2 = [(q - p) / 0.0625 for p, q in zip(d1, d1[1:])]
+            word = "turning" if d1[-1] > 0 else "flat" if abs(d1[-1]) < 0.01 * abs(d1[0]) else \
+                "falling" if all(x < 0 for x in d1) else "not of one sign"
+            print(f"lambda(D) at eta {eta} on the multiples of 0.0625 from D {fine[0][0]:g} to {fine[-1][0]:g}: {word}")
+            print(f"    lambda: {', '.join(f'{D:g}: {v:.9f}' for D, v in fine)}")
+            print(f"    first differences per unit D: {', '.join(f'{x:+.5f}' for x in d1)}")
+            print(f"    second differences per unit D squared: {', '.join(f'{x:+.4f}' for x in d2)}")
+            if d2 and d1[-1] < 0 and d2[-1] > 0:
+                dz = fine[-1][0] - 0.03125 - d1[-1] / d2[-1]
+                print(f"    the last slope and second difference, continued as a line, reach slope 0 at D {dz:.1f} "
+                      f"(an extrapolation, not a result)")
         if len(seq) < 3:
             continue
         dl = [(q[0], (q[1] - p[1]) / (q[0] - p[0])) for p, q in zip(seq, seq[1:])]
