@@ -15,8 +15,8 @@ the regularity at the sonic line, which no truncated series has (section 3), so 
 Where the starts are finite, the series is the better start. Section 5 puts it into `lowD_highM.py` as one more start,
 about 85 lines of Python and no kernel change, for an estimated 2× fewer Newton calls at the working resolution. The
 pilot of section 6 checks one such step at M 128 against lowD_highM.py's own solution. A low-D Taylor continuation
-already existed (`hp/anm_lowd.py`, `hp/lowD_taylor_leg.py`, T106 and T107, 2026-11-04/05). Its legs froze while
-planning the predicted state, which anm_run.py does only once the prediction's |F| is below 10⁻⁶.
+already existed (`hp/anm_lowd.py`, `hp/lowD_taylor_leg.py`, T106 and T107, 2026-11-04/05). Its legs froze in the
+planner near D 3.0425 for the same reason, in the same segment of x.
 
 ## 1. What already exists at low D
 
@@ -59,29 +59,30 @@ to 0.975, L = 4M(K + 1) + 1 = 28161 and 33793 unknowns.
 | 5 | octo-double jets and corrector, since rounding grows like G² | `--jet_o`, `--corrector od` | double-double jets are clean to order 3–4 near D 3.044 and polluted after (section 1) | double-double; a quad-double jet at M 320 would need `qd_sizes!` for B 40/48 and a quad-double block LU, which multishoot does not have (days of Rust, a release, rebuilds), with no evidence that precision is the cause |
 | 6 | D carried in mpmath (`D_str`), the step exact | `anm_run.py` (`mp.mpf(m["D_str"])`) | D is a float on a grid (3.04335); states store float D | float D; it moves Δ by about dΔ/dD × 4×10⁻¹⁶ = 3×10⁻¹⁵, below the 10⁻¹² checks |
 | 7 | the step a = min(a_max, h_max), a_max = (ε \|z₁\|/\|z_N\|)^(1/(N−1)); a failed correction halves a (three times) | `anm_run.py` step loop | targets on a D grid shared by two resolutions (the pair M_w, M_n; err_est is their difference); a failed point inserts the midpoint | step = min(a_max, the next grid D); a series at each of M_w and M_n, or M_w's lifted with `driver.resample_z` |
-| 8 | the plan is taken once, at the first base; each prediction is evaluated on it and planned anew only when its \|F\| ≤ 10⁻⁶ | `anm_run.py` attempt loop (`segs_n = segs`; `if Fp <= 1e-6: segs_n = sn.plan(...)`) | `lowD_highM.py` reuses the last converged state's plan (`plan_prev`); `lowD_taylor_leg.py` and `anm_lowd.py` plan from the predicted state, the step that froze (T107, T115, T135) | anm_run.py's rule: the base's plan for the series, the prediction and the corrector |
+| 8 | the plan is taken once, at the first base; each prediction is evaluated on it and planned anew only when its \|F\| ≤ 10⁻⁶ | `anm_run.py` attempt loop (`segs_n = segs`; `if Fp <= 1e-6: segs_n = sn.plan(...)`) | `lowD_highM.py` reuses the last converged state's plan (`plan_prev`); `lowD_taylor_leg.py` and `anm_lowd.py` plan from the predicted state, where T107, T115 and T135 froze | anm_run.py's rule, the base's plan for the series, the prediction and the corrector; it fails at about the same D (section 3) |
 | 9 | the corrector: deflated Newton then plain steps (dnp), or quad/octo-double Newton with stall acceptance | `correct` in `anm_run.py`, `newton_od` | `lowD_dd.solve_point`: Newton with the f64 Jacobian, a checkpoint per step, `--stop_lam`, `--floor_ratio`, two passes | `solve_point` unchanged, started from the prediction on the fixed plan |
 | 10 | states in eight parts with `D_str` | `save_o`, `load_o` | two parts with their plan (`driver.save`); `--auto_nodes` re-nodes mid-leg | two parts; a re-noding changes the unknowns, so the series is formed again after it |
 
 ## 3. In what sense the series is regular
 
-#927 calls the ANM predictor "the system's own series in D, regular by construction". That holds in one sense and
-fails in another, and the difference decides the design.
+#927 calls the ANM predictor "the system's own series in D, regular by construction". That holds in principle on a
+fixed plan and fails in practice at the sonic line, below D ≈ 3.0433.
 
-- **On the base's plan it holds.** The residual on a fixed plan is a composition of Taylor steps between fixed points
-  in x, so F(z, D) is smooth in both, and the jets give the Taylor coefficients of the solution z*(D) of that fixed-plan
-  system. The partial sum P_N then has F(P_N, D) = O(h^(N+1)) on that plan, within the series' radius.
-- **At the sonic line it fails.** Regularity at x = c, where the p equation is singular, is a property of the solution
-  alone. A state off the branch by ε carries a singular part of about ε there, which is why a predictor's own plan has
-  2–4 times the steps of a solution's ([HIGH_M.md](HIGH_M.md) 1.5). A truncated series is such a state, of every order.
-  A model of the freeze, not shown: the planner keeps each step's truncation term at 10⁻³², so near a singular point of
-  strength ε > 10⁻³² its steps shrink geometrically and never pass it. This fits T135's table, where every order froze
-  at the same D and the frozen x converged with the order.
+- **In principle, on a fixed plan.** The residual on a fixed plan is a composition of Taylor steps between fixed points
+  in x, so F(z, D) is smooth near the base, and the jets give the Taylor coefficients of the fixed-plan system's
+  solution z*(D). The partial sum P_N then has F(P_N, D) = O(h^(N+1)) on that plan, as long as F stays finite between
+  P_N and z*(D).
+- **In practice, at the sonic line.** Regularity at x = c, where the p equation is singular, is a property of the
+  solution alone. A state off the branch by ε carries a singular part of about ε there, which is why a predictor's own
+  plan has 2–4 times the steps of a solution's ([HIGH_M.md](HIGH_M.md) 1.5). A truncated series is such a state, of every
+  order. Below D ≈ 3.0433 the measured consequence is that every predicted state's integration fails in the segment
+  x 0.01 → 0.02, on a fixed plan (section 4.3, from h = −0.0005 with an order-3 error of about 10⁻⁵) as well as in the
+  planner (T135 and #798, from h = −0.00065, at x near 0.0137 in the same segment).
 
-So the ANM predictor can help only where the prediction is never planned. anm_run.py already works that way (row 8).
-`lowD_taylor_leg.py` did not, and the step that froze was its planning of the prediction, not the series. Whether the
-partial sums are finite on fixed plans below D 3.0432, where the planner freezes and #343's Lagrange predictor read
-NaN, is measured in section 4.
+The two onsets lie within 0.00015 of each other in D and in the same segment, so the obstacle is the predicted state,
+not the planning of it. `lowD_taylor_leg.py` froze in the planner, and on the base's plan it would have read NaN at
+about the same D. Keeping the base's plan, anm_run.py's rule (row 8), does not get past the obstacle. It only spares
+the planning time above it.
 
 ## 4. Measurements on the Mac (#927)
 
@@ -119,7 +120,7 @@ lowD_highM.py re-plans that state at 10⁻³², which this stands in for.
 | D (h) | prediction | \|F\| on the base's plan | \|F\| on 3.04335's plan |
 |---|---|---|---|
 | 3.04335 (−0.0004) | order 3 | 1.33×10⁻⁶ | |
-| 3.04325 (−0.0005) | order 3 | PENDING | |
+| 3.04325 (−0.0005) | order 3 | nan (segment 0.01 → 0.02) | |
 | 3.04315 (−0.0006) | order 3 | nan | nan |
 | 3.04315 | order 1 | nan | nan |
 | 3.04315 | Lagrange through 3.04375, 3.04355, 3.04335 | nan | nan |
