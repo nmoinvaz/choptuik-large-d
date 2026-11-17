@@ -16,7 +16,8 @@ BSP=""
 case "$("$PY" -m pip install --help)" in *--break-system-packages*) BSP=--break-system-packages ;; esac
 # build for this interpreter and install only its wheel: dist/ may hold wheels of other Pythons (#179)
 TAG=$("$PY" -c "import sys; print(f'cp{sys.version_info[0]}{sys.version_info[1]}')")
-RUSTFLAGS="-C target-cpu=native" nice -n 2 maturin build --release -i "$PY" --out "$ROOT/dist"
+# HP_PROFILE names the Cargo profile: release by default, release-dev (hp/Cargo.toml) for faster working builds
+RUSTFLAGS="-C target-cpu=native" nice -n 2 maturin build --profile "${HP_PROFILE:-release}" -i "$PY" --out "$ROOT/dist"
 "$PY" -m pip install $BSP --force-reinstall --no-deps "$ROOT"/dist/hpkernel-0.1.0-"$TAG"-*.whl
 # the driver's double-double helpers: multidouble's Python package at the commit pyproject.toml names (needs Rust).
 # Its version number does not change between commits, so pip would keep an installed older one ("already
