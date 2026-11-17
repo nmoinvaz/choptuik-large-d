@@ -17,6 +17,7 @@ control).
 import argparse
 import json
 import os
+import re
 import sys
 import time
 
@@ -29,7 +30,9 @@ from raw_out import FLAG, HELP, require_raw  # noqa: E402
 def solve(path, mode, threads, dshift=0.0, plan_tol=1e-32):
     z, m = load_q(path)
     D, M = float(m["D"]) + dshift, int(m["M"])
-    pin = int(m.get("kfreeze", 0))
+    # the pin: the state's kfreeze, else its file name's pinN_ (T73's and T75's states record it only there)
+    hit = re.search(r"pin(\d+)_", os.path.basename(path))
+    pin = int(m["kfreeze"]) if "kfreeze" in m else int(hit.group(1)) if hit else 0
     if mode == "full":
         s = make_solver(D, M, nodes=list(m["nodes"]), kt=m["kt"], kc=m["kc"], ks=m["ks"], threads=threads, kfreeze=13)
         s.set_segs(s.plan(z[0], z[1], plan_tol, 0.05))
@@ -37,7 +40,9 @@ def solve(path, mode, threads, dshift=0.0, plan_tol=1e-32):
         plan_steps = sum(len(g) - 1 for g in s.get_segs())
     else:
         from reseed import pinned
-        _, _, sq = pinned(m, D, z, threads=threads)
+        if not pin:
+            raise SystemExit(f"{path}: no pin in its meta (kfreeze) or its name (pinN_), so no pinned system")
+        _, _, sq = pinned(dict(m, kfreeze=pin), D, z, threads=threads)
         plan_steps = None
     t0 = time.time()
     zq, hist, conv = newton_qd(sq, z, tol=1e-50, it_max=10, verbose=False)
@@ -73,7 +78,7 @@ def main():
         if rec["conv"] and not a.mutate:
             tag = "" if a.plan_tol == 1e-32 else f"_p{a.plan_tol:g}"
             save_q(os.path.join(sdir, rec["state"][:-4] + f"_{a.mode}{tag}.npz"), zq,
-                   dict(m, solver="qd", kfreeze=13 if a.mode == "full" else m.get("kfreeze")))
+                   dict(m, solver="qd", kfreeze=13 if a.mode == "full" else rec["pin"]))
 
 
 if __name__ == "__main__":
