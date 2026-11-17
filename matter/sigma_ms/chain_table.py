@@ -16,6 +16,11 @@ coupling with the smallest max |F|), with the records of the --also folders from
 chain), sigdss's march records (D, Delta, reg: its smoothness prior), and for the closure the records of the --ref
 folders at the chain's starting D.
 
+A point of the quad-double hand-over (#928, run_eta.py --qd --qd_accept: past D 12.4 the double-double Newton stalls
+near 1e-27 on the band) counts with its quad-double residual and its quad-double Delta, and only when run_eta.py
+accepted it. Such points are marked: the csv's method column reads qd and its handover_tol the double-double
+stage's tolerance, and check (1) counts them apart.
+
 Checks, each printed with its verdict; the exit status is 1 when one fails:
   (1) every D of the chain has a converged record with max |F| <= 1e-28;
   (2) closure: the record of --folder at the starting D, solved again from the chain's neighbours, agrees with every
@@ -41,8 +46,17 @@ ROOT = os.path.normpath(os.path.join(HERE, "..", ".."))
 mp.mp.dps = 40
 
 
+def is_qd(r):
+    return bool(r.get("qd", {}).get("accepted"))
+
+
 def delta(r):
-    return mp.mpf(r["Delta_hi"]) + mp.mpf(r["Delta_lo"])
+    return mp.mpf(r["qd"]["Delta"]) if is_qd(r) else mp.mpf(r["Delta_hi"]) + mp.mpf(r["Delta_lo"])
+
+
+def res(r):
+    """max |F| of a record: the quad-double residual of an accepted quad-double point, else the double-double one"""
+    return r["qd"]["F_final"] if is_qd(r) else r["F"]
 
 
 def best(path, eta):
@@ -50,10 +64,12 @@ def best(path, eta):
     out = {}
     for line in open(path):
         r = json.loads(line)
-        if str(r["eta"]) != eta or not r["converged"]:
+        if str(r["eta"]) != eta or not r["converged"] or r.get("M", 32) != 32:
             continue
+        if "handover_tol" in r.get("qd", {}) and r["qd"]["handover_tol"] > 1e-28 and not is_qd(r):
+            continue                                        # a hand-over run that the quad-double stage did not accept
         D = float(r["D"])
-        if D not in out or r["F"] < out[D]["F"]:
+        if D not in out or res(r) < res(out[D]):
             out[D] = r
     return out
 
@@ -75,7 +91,7 @@ def main():
     ch = dict(own)
     for fo in [x for x in a.also.split(",") if x]:
         for D, r in best(os.path.join(a.raw, fo, "out", "sm_records.jsonl"), a.eta).items():
-            if D not in ch or r["F"] < ch[D]["F"]:
+            if D not in ch or res(r) < res(ch[D]):
                 ch[D] = r
     ch = {D: r for D, r in ch.items() if D >= a.Dmin - 1e-12}
     Ds = sorted(ch)
@@ -88,18 +104,25 @@ def main():
                 sig.setdefault(r["D"], []).append((name, r["Delta"], r["reg"]))
     ok = True
     # (1)
-    worst = max(ch[D]["F"] for D in Ds)
+    worst = max(res(ch[D]) for D in Ds)
     v1 = worst <= 1e-28
     ok &= v1
+    qd = [D for D in Ds if is_qd(ch[D])]
+    note = ""
+    if qd:
+        note = (f"; {len(qd)} of them in quad-double from D {qd[0]:g} on (hand-over at "
+                f"{max(ch[D]['qd']['handover_tol'] for D in qd):g}), largest quad-double max |F| "
+                f"{max(res(ch[D]) for D in qd):.2e}, largest double-double one "
+                f"{max(res(ch[D]) for D in Ds if D not in qd):.2e}")
     print(f"(1) {len(Ds)} values of D from {Ds[0]:g} to {Ds[-1]:g}, each converged; largest max |F| {worst:.2e} "
-          f"(<= 1e-28): {'PASS' if v1 else 'FAIL'}")
+          f"(<= 1e-28){note}: {'PASS' if v1 else 'FAIL'}")
     # (2)
     d0 = delta(own[a.D0]) + (mp.mpf("1e-19") if a.mutate == "closure" else 0)
     allref = []
     for fo in a.ref.split(","):
         allref += [json.loads(line) for line in open(os.path.join(a.raw, fo, "out", "sm_records.jsonl"))]
     allref = [r for r in allref if str(r["eta"]) == a.eta and float(r["D"]) == a.D0 and r["converged"]
-              and r["F"] <= 1e-30]
+              and r["F"] <= 1e-30 and r.get("M", 32) == 32]
     gap = max(abs(d0 - delta(r)) for r in allref) if allref else mp.inf
     v2 = bool(allref) and gap <= mp.mpf("1e-20")
     ok &= v2
@@ -132,9 +155,11 @@ def main():
     for D in Ds:
         de = delta(ch[D])
         for name, sd_, reg in sig.get(D, [(None, None, None)]):
-            rows.append(dict(D=D, Delta=mp.nstr(de, 30), max_F=ch[D]["F"], sigdss=name or "", sigdss_Delta=sd_ or "",
+            rows.append(dict(D=D, Delta=mp.nstr(de, 30), max_F=res(ch[D]), sigdss=name or "", sigdss_Delta=sd_ or "",
                              sigdss_prior=reg if reg is not None else "",
-                             kernel_minus_sigdss=(float(de) - sd_) if sd_ else ""))
+                             kernel_minus_sigdss=(float(de) - sd_) if sd_ else "",
+                             method="qd" if is_qd(ch[D]) else "dd",
+                             handover_tol=ch[D]["qd"]["handover_tol"] if is_qd(ch[D]) else ""))
     print("\n| D | Δ, kernel | max \\|F\\| | sigdss's Δ (march, prior) | kernel minus sigdss |")
     print("|---|---|---|---|---|")
     for r in rows:

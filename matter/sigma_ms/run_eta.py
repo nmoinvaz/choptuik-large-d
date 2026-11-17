@@ -16,6 +16,13 @@ Seeds (one of):
 --solver band uses the deflated Newton smdriver.newton_band in place of newton_solve, for a start on the near-null
 band of the Jacobian (SIGMA_DSS.md section 6; --band_tol, --radius).
 
+--qd continues a converged double-double state with Newton in quad-double (--qd_jac dd: the exact quad-double
+Jacobian). With --qd_accept B the run's exit status is that of the quad-double stage: 0 when the quad-double
+residual of its final state is at most B. This is the hand-over of #928: past D 12.4 at M = 32 the double-double
+Newton stalls near 1e-27 on the band, whose rows the double-double residual no longer resolves, so --tol is set to
+about 3e-27 and the 1e-28 bound is met in quad-double. The record's qd entry holds the quad-double residuals, the
+final one (F_final), the hand-over tolerance and whether the state was accepted.
+
 Writes <out>/sm_<tag>.npz (the state, double-double, and quad-double parts with --qd) and appends a record to
 <out>/sm_records.jsonl: Delta, max |F|, Newton history, Taylor steps, the constraint diagnostic, the series tails, the
 centre datum's top harmonics, timings. Exit status 1 when Newton does not reach --tol.
@@ -72,6 +79,8 @@ def main():
     ap.add_argument("--qd", action="store_true")
     ap.add_argument("--qd_jac", default="mixed", help="dd (exact quad-double Jacobian), mixed or chord")
     ap.add_argument("--qd_it", type=int, default=8)
+    ap.add_argument("--qd_accept", type=float, default=0.0,
+                    help="with --qd: the exit status is 0 when the final quad-double max |F| is at most this")
     ap.add_argument("--threads", type=int, default=4)
     a = ap.parse_args()
     os.makedirs(a.out, exist_ok=True)
@@ -177,8 +186,10 @@ def main():
     if a.qd and conv:
         z4, hq = sd.newton_qd(s, sd.qparts(zh, zl), tol=1e-55, it_max=a.qd_it, log=log, jac=a.qd_jac)
         Dq = sum(mp.mpf(p[-1]) for p in z4)
+        Fq = sd.fnorm(s.residual(z4))
         rec.update(qd=dict(F=[h["F"] for h in hq], converged=bool(hq[-1].get("converged")), Delta=mp.nstr(Dq, 60),
-                           Delta_qd_minus_dd=mp.nstr(Dq - Delta, 6)))
+                           Delta_qd_minus_dd=mp.nstr(Dq - Delta, 6), F_final=Fq, jac=a.qd_jac, handover_tol=a.tol,
+                           accepted=bool(a.qd_accept and Fq <= a.qd_accept), t=[h["t"] for h in hq]))
         log(f"quad-double: |F| {hq[-1]['F']:.2e}, Delta {rec['qd']['Delta']}, minus dd {rec['qd']['Delta_qd_minus_dd']}")
     meta = dict(eta=a.eta, D=a.D, M=a.M, nodes=nodes, kt=a.kt, kc=a.kc, ks=a.ks, segs=s.get_segs(), tag=a.tag)
     if z4 is not None:
@@ -189,6 +200,8 @@ def main():
     with open(os.path.join(a.out, "sm_records.jsonl"), "a") as f:
         f.write(json.dumps(rec) + "\n")
     log(f"done {sd.now()} ({rec['t']} s)")
+    if a.qd and a.qd_accept:
+        sys.exit(0 if conv and rec["qd"]["accepted"] else 1)
     sys.exit(0 if conv else 1)
 
 
