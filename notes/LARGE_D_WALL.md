@@ -1039,6 +1039,42 @@ takes ψᵀδF for each setting as Δ's first-order response (xfkappa, raw `I905
   holds there. Discrepancy: #608's jets miss their next states by its own logged corrector moves, 10⁻¹⁹ to 4×10⁻¹⁵
   per step, against #603's ≤ 10⁻²⁸. That is at most 2×10⁻⁴ of d6 − d10 here, but it is unexplained.
 
+## Orders 150 and 160 stop near D 233, and the Δ mode's collapse there is the cut's (#937, #944, #941)
+
+**Fixed orders 150 and 160 stall near D 233–234 because the prediction misses Newton's basin along the weak directions,
+and the Δ mode's collapse that causes it belongs to the order, not to the problem.** The order-tied chain passed D 232
+with its pivots 5×10⁵ to 6×10⁶ times #603's (#903).
+
+- **The basin and the prediction (#944).** At order 160, D 234, each accepted octo-double step is 5.6–9.9×10⁻¹⁷ long, so
+  Newton's basin along the weak directions is about 10⁻¹⁶. The prediction's first step is 1.18×10⁻¹⁴, 6.79×10⁻¹⁶ and
+  1.34×10⁻¹⁵ at a = 0.5, 0.25 and 0.125. Below a = 0.25 its error stops shrinking with the step, and the run crawls,
+  about 5 h per eighth of a unit of D (dh370, raw `I944-dh370/` a7056623). Order 150 at D 233 converges at a = 0.125,
+  in 16 steps (74 min), and stalls near 3×10⁻²⁴ at a = 0.5 and 0.25 (dh170, raw `I944-dh170/` 6acafd5b). At a = 1 the
+  start's re-seed fails before the corrector in every run.
+- **The corrector is not the limit.** `--od_junk 4` cannot help, since the weak directions carry Δ. `--od_weak_first 1`
+  (the first step's weakest directions held to its strong part) converges order 150 at a = 0.125 in 11 steps, with
+  the stored states at D 233.125 and 226 met to 3.7×10⁻⁴⁸ and 5.4×10⁻⁹¹, and fails where the default fails.
+- **The Δ mode against the order (#941).** `near_null.py --k=6` at the order-tied chain's converged order-240 states, the
+  order-160 chain's and an order-135 control (dh370, raw `I941-dh370/` 9da736f7). The ratio is order 240's σ_Δ over
+  order 160's, interpolated log-linearly in D except at 232.0, where both have a state.
+
+| D | σ_Δ, order 240 | ratio to order 160 | σ_pair, order 240 | σ_pair, order 160 |
+|---|---|---|---|---|
+| 229.05 | 1.764×10⁻¹⁴ | 1.7 | 2.915×10⁻¹⁰ | |
+| 229.98 | 1.202×10⁻¹⁴ | 14.5 | 2.915×10⁻¹⁰ | |
+| 230.93 | 8.156×10⁻¹⁵ | 115 | 2.913×10⁻¹⁰ | |
+| 232.00 | 5.277×10⁻¹⁵ | 1152 | 2.944×10⁻¹⁰ | 1.505×10⁻²⁰ |
+
+At order 240, σ_Δ falls 1.51 per unit D with a log slope that stays at 0.412–0.405, and the harmonic-3 pair is flat.
+At order 160 the Δ mode and the pair fall together, about 14–15 per unit, and the order-135 control's σ_Δ falls 2.1
+per unit. So no singular point of the high-order problem lies at D 232–235, and the fold near D 259.90 stays the
+reading to test. The Δ values of the two orders agree to a few 10⁻¹² (same branch).
+
+- **Withdrawn.** xfchecks's reading "order-converged at D 231" took order-160 roots to order 200 without a Newton
+  solve. Its σ_Δ/σ_pair of 0.33 belongs to that order-200 reading, where the pair rises above the Δ mode. At order 160
+  dh370 and xfchecks agree on 219–257.
+- **Open.** Whether order 240 is itself converged for the Δ mode at D 232, by a ks ladder 200–320 (#948).
+
 ## Proposed README text
 
 Applied to the README by the coordinator on 2026-11-14 (its checks moved to the README with it). Drafted for the
