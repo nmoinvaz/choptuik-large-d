@@ -11,7 +11,7 @@ integration meets the singular point itself.
         [--refine R] [--below 1e-2] [--threads 4] [--mutate none|dshift] [--predict D_target]
     cd hp && python3 sonic_valley.py tangency OUT.jsonl [--M M] [--last N] [--mutate none|slope]
     cd hp && python3 sonic_valley.py planted [--mutate none|grid|slope]
-    cd hp && python3 sonic_valley.py planplant OUT.jsonl TRUTH.npz COARSE.npz [--refine 4] [--levels 2]
+    cd hp && python3 sonic_valley.py planplant OUT.jsonl TRUTH.npz COARSE.npz [--refine 4] [--levels 2] [--shape point|field]
         [--delta 1e-8] [--threads 4] [--mutate none|norefine]
     cd hp && python3 sonic_valley.py startcase OUT.jsonl STATE.npz [STATE.npz ...] --predict D [--plan own|stored|FILE]
         [--tol_step 1e-32] [--save_plan FILE.json] [--refine 4] [--levels 2] [--threads 4]
@@ -45,7 +45,10 @@ TRUTH on that split plan (information: its truncation error); and the perturbed 
 Pass: COARSE's plan does not fit TRUTH (|F| nan or above 1e-20), the gate admits the perturbed TRUTH, TRUTH is finite
 on the split plan, and the perturbed TRUTH's residual on its own plan lies between delta / 100 and 1e4 delta.
 --mutate norefine (no split: the gate then admits nothing and no own plan is made) must make it fail. Exit 1 on
-failure. (Its first form also required TRUTH's residual on the split plan within 100 times its own: at 3.04335 on the
+failure. --shape point (the default) moves each tau point of a node state on its own, with random signs, which loads
+the top tau harmonics and the parity the fields lack; --shape field moves each node state's field by one random
+multiple of itself (delta u, u uniform in +-[0.5, 1]), a smooth error like a predictor's (#932: point is nan at split
+4 and 16 for delta 1e-8 to 1e-12 while the predictor is finite at split 4). (Its first form also required TRUTH's residual on the split plan within 100 times its own: at 3.04335 on the
 plan of 3.0475 split 16 times it was 2.9e-21 against 1.2e-28, so lowD_highM.py converges on no split plan.)
 startcase: lowD_highM.py's two starts at the target --predict from the given converged states (oldest first), the
 predictor and the last state, read on the reused plan (--plan own: the last state's plan at its own D and --tol_step,
@@ -270,7 +273,11 @@ def planplant(a, out):
     for b in range(len(nodes)):
         for f_ in range(4):
             o = 2 * M + 4 * M * b + f_ * M
-            ph[o:o + M] += a.delta * rng.uniform(0.5, 1, M) * rng.choice([-1, 1], M) * np.abs(z[o:o + M]).max()
+            if a.shape == "field":
+                # one factor per node state and field: the error keeps the field's tau structure
+                ph[o:o + M] += a.delta * rng.uniform(0.5, 1) * rng.choice([-1, 1]) * z[o:o + M]
+            else:
+                ph[o:o + M] += a.delta * rng.uniform(0.5, 1, M) * rng.choice([-1, 1], M) * np.abs(z[o:o + M]).max()
     # the gate, as lowD_highM.py --sonic_refine takes it: the coarse plan split R, R^2, ... times near x = c until the
     # perturbed truth is finite on it
     gate, r, sg = None, 1, mc["segs"]
@@ -371,6 +378,8 @@ def main():
     ap.add_argument("--mutate", default="")
     ap.add_argument("--levels", type=int, default=2)
     ap.add_argument("--delta", type=float, default=1e-8)
+    ap.add_argument("--shape", choices=["point", "field"], default="point", help="planplant: how the truth is moved "
+                    "(point: each tau point on its own; field: one multiple of each node state's field)")
     ap.add_argument("--last", type=int, default=0)
     ap.add_argument("--save_plan", default=None)
     ap.add_argument(FLAG, action="store_true", help=HELP)
