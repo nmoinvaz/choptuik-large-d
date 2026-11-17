@@ -385,7 +385,11 @@ astray or to load a rule added on the way (5.4). The 10-hour budget counts the p
   of the next point's M_n start (the M_w solution resampled to M_n) passes 10⁻²⁰ (5.4); every resolution is then
   re-noded and re-solved at that D, and the three earlier states per resolution re-noded for the predictors.
 - **Giving up early:** a solve stops after two steps in a row with line-search factors ≤ 1/8 (`lowD_dd.solve_point`,
-  optional `stop_lam`; off by default there).
+  optional `stop_lam`; off by default there). It also fails after three accepted steps that together do not halve
+  max |F| (`lowD_highM.py --stall 3 --stall_factor 0.5`, `driver.newton_solve`'s `stall`, #925). Otherwise the line
+  search's 1e-4·λ decrease test lets such a solve run to `--it_max` (D 3.04315, M 320, #343). Replayed on 379 stored
+  solves, the rule fails one that converged within 14 steps (D 3.425, M 96, T39-win), at the cost of one halved step.
+  `hp/test_stall.py` is its check.
 
 ### 5.2 The points
 
