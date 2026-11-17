@@ -125,7 +125,6 @@ lowD_highM.py re-plans that state at 10⁻³², which this stands in for.
 | 3.04315 | order 1 | nan | nan |
 | 3.04315 | Lagrange through 3.04375, 3.04355, 3.04335 | nan | nan |
 | 3.04315 | order 0 (the series' base state, D 3.04375) | | 8.10×10⁻² |
-| 3.04315 | the 3.04335 state itself (the leg's "last state") | | PENDING |
 
 The order-3 sum is finite at 3.04335, where the leg converged, and close to the solution there (4.2). At 3.04325 and
 3.04315 it is not finite, and at 3.04315 neither is the order-1 sum or the Lagrange predictor, on either plan. The
