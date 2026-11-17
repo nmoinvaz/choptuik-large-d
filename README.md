@@ -565,8 +565,8 @@ Where the values in the table come from:
   2×10⁻⁸, the half-integer series included.
 - **D = 1000 and ∞** assume analyticity in 1/D. The half-integer series differ there by 3×10⁻⁶ and more.
 - **Δ for D = 250–400** is the 1/n series fitted to the rows up to D = 245.64 (track C, `hp/track_c.py`): 1.684955205950
-  ± 8.0×10⁻¹¹ at D = 250, 1.678171015415 ± 1.24×10⁻¹⁰ at 300 and 1.669658064111 ± 2.33×10⁻¹⁰ at 400. Its limit,
-  1.6438937453 ± 1.9×10⁻⁹, lies inside the Δ∞ above. Each ± is a spread over fit choices, calibrated on planted
+  ± 8.1×10⁻¹¹ at D = 250, 1.678171015417 ± 1.25×10⁻¹⁰ at 300 and 1.669658064111 ± 2.31×10⁻¹⁰ at 400. Its limit,
+  1.6438937453 ± 1.85×10⁻⁹, lies inside the Δ∞ above. Each ± is a spread over fit choices, calibrated on planted
   functions. It is not a bound, and it is conditional on Δ being analytic in 1/n below D = 245, up to exponentially
   small terms ([notes/LARGE_D_WALL.md](notes/LARGE_D_WALL.md), "Track C").
 

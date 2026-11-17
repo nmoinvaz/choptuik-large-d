@@ -2741,8 +2741,8 @@ def proposed_readme():
     t_fits = [(W, "comparison ends. To D = 245.64 its error column is the spread over the fit's degree"),
               (W, "Past 245.64 the chain leaves the 1/n series of the next bullet")]
     t_wp = [(W, "column is 4.4×10⁻³⁷/p_min (err_kind \"weak pivot\")")]
-    t_ser = [(W, "1.684955205950\n  ± 8.0×10⁻¹¹ at D = 250, 1.678171015415 ± 1.24×10⁻¹⁰ at 300 and 1.669658064111 ± 2.33×10⁻¹⁰ at 400.")]
-    t_lim = [(W, "1.6438937453 ± 1.9×10⁻⁹, lies inside the Δ∞ above.")]
+    t_ser = [(W, "1.684955205950\n  ± 8.1×10⁻¹¹ at D = 250, 1.678171015417 ± 1.25×10⁻¹⁰ at 300 and 1.669658064111 ± 2.31×10⁻¹⁰ at 400.")]
+    t_lim = [(W, "1.6438937453 ± 1.85×10⁻⁹, lies inside the Δ∞ above.")]
     t_fold = [(W, "at eight bases from D = 259.26 to 259.67 place a square-root"),
               (W, "D* = 259.903 is the median of the sixteen\n    estimates, from 259.900 to 259.905.")]
     t_mu = [(W, "Δ's exponent there is 0.45 to 0.48 by Dlog Padé"), (W, "and 0.52 to 0.72 by a ratio fit.")]
@@ -2752,13 +2752,13 @@ def proposed_readme():
             ("the highest chain_fit row with the fits err", fits_top, 245.64, 0.01, t_fits),
             ("the weak pivot's K", WP_K, 4.4e-37, 0.1e-37, t_wp),
             ("the series at D 250", val(ser["250.0"]), 1.684955205950, 1e-12, t_ser),
-            ("its E at D 250", float(ser["250.0"]["E"]), 8.0e-11, 0.1e-11, t_ser),
-            ("the series at D 300", val(ser["300.0"]), 1.678171015415, 1e-12, t_ser),
-            ("its E at D 300", float(ser["300.0"]["E"]), 1.24e-10, 0.01e-10, t_ser),
+            ("its E at D 250", float(ser["250.0"]["E"]), 8.1e-11, 0.1e-11, t_ser),
+            ("the series at D 300", val(ser["300.0"]), 1.678171015417, 1e-12, t_ser),
+            ("its E at D 300", float(ser["300.0"]["E"]), 1.25e-10, 0.01e-10, t_ser),
             ("the series at D 400", val(ser["400.0"]), 1.669658064111, 1e-12, t_ser),
-            ("its E at D 400", float(ser["400.0"]["E"]), 2.33e-10, 0.01e-10, t_ser),
+            ("its E at D 400", float(ser["400.0"]["E"]), 2.31e-10, 0.01e-10, t_ser),
             ("the series' limit", val(lim), 1.6438937453, 1e-10, t_lim),
-            ("the limit's E", float(lim["E"]), 1.9e-9, 0.1e-9, t_lim),
+            ("the limit's E", float(lim["E"]), 1.85e-9, 0.01e-9, t_lim),
             ("the limit inside Delta_inf's bar (1 = yes)", int(abs(val(lim) - 1.643893746) <= 1.5e-8), 1, 1, t_lim),
             ("bases on the chain's plan", len(kept), 8, 1, t_fold),
             ("their first D", min(float(r["D0"]) for r in kept), 259.26, 0.01, t_fold),
@@ -2786,8 +2786,8 @@ def series_rows():
             if r["kind"] == "series"}
     W = "notes/LARGE_D_WALL.md"
     items = []
-    for D, v, e, ue in ((250.0, "1.684955205950", "8.0×10⁻¹¹", 1e-12), (300.0, "1.678171015415", "1.24×10⁻¹⁰", 1e-12),
-                        (400.0, "1.669658064111", "2.33×10⁻¹⁰", 1e-12)):
+    for D, v, e, ue in ((250.0, "1.684955205950", "8.1×10⁻¹¹", 1e-12), (300.0, "1.678171015417", "1.25×10⁻¹⁰", 1e-12),
+                        (400.0, "1.669658064111", "2.31×10⁻¹⁰", 1e-12)):
         r = rows[D]
         txt = [(W, f"| {D:.0f} | {v} | {e} |")]
         mant, ex = e.split("×10")
@@ -2835,7 +2835,7 @@ def table_errs():
             and r["err_kind"].endswith(" interp")]
     return [("pinned rows without an err or a named reason", bare("pinned"), 0, 1, []),
             ("chain_fit rows without an err or a named reason", bare("chain_fit"), 0, 1, []),
-            ("pin 7 rows with the pins' spread where T75's pin 7 meets T73's pin 5", len(cross), 7, 1, []),
+            ("pin 7 rows with the pins' spread where T75's pin 7 meets T73's pin 5", len(cross), 5, 1, []),
             ("half-step chain_fit rows with the fits interpolated", len(half), 2, 1, [])]
 
 
@@ -3188,12 +3188,13 @@ def table_errs_all():
     m64 = [r for r in rows if r["source"] == "data/delta_dd.csv:lowD-M64" and 4.25 <= float(r["D"]) <= 8.2]
     return [("rows of any kind without an err or a named reason", sum(not r["err"] and not r["err_kind"] for r in rows),
              0, 1, []),
-            ("qd rows with the neighbouring starts' spread", len(kinds("starts neighbours")), 2, 1, []),
+            ("qd rows with the neighbouring starts' spread", len(kinds("starts neighbours")), 0, 1, []),
+            ("rows whose err is the kernel gap: 53 qd and 3 pinned quad-double (#940)", len(kinds("kernel")), 56, 1, []),
             ("low-D rows with the neighbouring dM", len(kinds("dM neighbours")), 6, 1, []),
             ("low-D rows with the dM below only", len(kinds("dM neighbours one-sided")), 0, 1, []),
             ("M 64 rows from 4.25 to 8.2", len(m64), 21, 1, []),
-            ("qd err at 71.0 (starts neighbours)", err("qd", 71.0), 3.8e-28, 0.1e-28, []),
-            ("qd err at 72.8 (starts neighbours)", err("qd", 72.8), 8.4e-28, 0.1e-28, []),
+            ("qd err at 71.0 (kernel)", err("qd", 71.0), 2.4e-23, 0.1e-23, []),
+            ("qd err at 72.8 (kernel)", err("qd", 72.8), 2.4e-23, 0.1e-23, []),
             ("M 80 err at 3.72 (dM neighbours)", err("dd", 3.72), 1.3e-9, 0.1e-9, []),
             ("M 64 err at 4.25 (dM)", err("dd", 4.25), 5.2e-9, 0.1e-9, [("notes/LOW_D.md", "−5.2×10⁻⁹ at D 4.25")]),
             ("M 64 err at 7 (dM)", err("dd", 7.0), 1.8e-17, 0.1e-17, txt7),
@@ -3316,8 +3317,9 @@ def pinned_qd_table():
                   ("D with a full-system value where pin 7's full step is the smaller",
                    sum(float(r["dz"]) < float(rows[(round(float(r["D"]), 4), 5)]["dz"]) for r in qd if r["pin"] == "7"), 4,
                    1, [(N, "Pin 7, whose full step is the smaller there")])]
-        sp = {round(float(r["D"]), 4): r["spread"] for r in csv.DictReader(open(os.path.join(ROOT, "hp/data/delta_qd.csv")))}
-        items += [(f"delta_qd.csv's two-start spread at {D}", float(sp[D] or nan), q, 0.1e-28,
+        sp = {round(float(r["D"]), 4): r.get("spread_nov5") or r["spread"]
+              for r in csv.DictReader(open(os.path.join(ROOT, "hp/data/delta_qd.csv")))}
+        items += [(f"delta_qd.csv's Nov 5 two-start spread at {D}", float(sp[D] or nan), q, 0.1e-28,
                    [(N, "(3.8e-28 at 71.5 and 8.4e-28 at 73.0, a spread between Taylor plans")])
                   for D, q in ((71.5, 3.8e-28), (73.0, 8.4e-28))]
         items += [("71.0: the pins against the full system", max(abs(float(rows[(71.0, p)]["minus_qd"])) for p in (7, 5)),

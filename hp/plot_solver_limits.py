@@ -90,7 +90,7 @@ def main():
     spec = [  # label, kind, color slot (the extrapolation takes the neutral last slot)
         ("double-double (hp/, M ≤ 384)", "dd", 0),
         ("double-double, pinned runs", "pinned", 1),
-        ("quad-double scan (scan_qd.py)", "qd", 2),
+        ("quad-double, full system (qd_window.py)", "qd", 2),
         ("ANM chain, quad-double corrector", "chain_q", 3),
         ("ANM chain, octo-double corrector", "chain_o", 6),
         ("1/n series fit: an extrapolation, not a solve", "series", 9),

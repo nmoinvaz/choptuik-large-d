@@ -880,7 +880,8 @@ table above said inside to about 71):
 | 71.5 | 1.78402924877823188 - 6.717132e-17 | stalls at 1.4e-20 | |
 | 72.0, 72.4 | stalls at 3e-19, 6e-20 | stalls | |
 
-So the full system's Delta is known to about 3e-28 at D 68.5, 69.5 and 70.5 (two starts, two plans), thirteen digits
+So within one kernel the full system's Delta agrees to about 3e-28 at D 68.5, 69.5 and 70.5 (two starts, two plans;
+across kernels it moves by up to 2.4e-23, below), thirteen digits
 past the double-double data's 2e-15 check error, and to the single converged solution at 71.0 and 71.5, where the
 corrected pinned pairs above lie within 2.0e-28 (71.0) and 3.8e-28 (71.5) of it. From 72 on no start of double-double
 quality reaches the full basin, as the table of basins said. At the frontier the two pins' quad-double values differ by
@@ -904,6 +905,16 @@ Against the second solutions (`minus_qd2` of `hp/data/delta_pinned_qd.csv`, #762
 the second solution at 71.5 and +2.9e-29 at 73.0, against +3.8e-28 and -8.1e-28 from the first; pin 5's lies -5.1e-32
 at 71.5 and +1.9e-26 at 73.0. So pin 7's offsets from the first solutions are, to 3e-29, the difference between the
 first and the second solutions.
+
+**The kernel's share (#940, 2026-11-17).** The full system's quad-double Δ here depends on the kernel's arithmetic
+far more than on the start or the plan. Solved again with today's hpkernel (multidouble 4.5.0, `hp/qd_window.py`, raw
+`I940-dh610/` eb1003b2), the states of D 67.8-70.5 converge as before (|F| below 1e-53). Two starts still agree to
+8.9e-28 at most, and the plan (tolerance 1e-32 against 1e-34) moves Δ by about 1e-27 at most. But each solution lies
+7.4e-24 to 2.4e-23 from the Nov 5 kernel's solution of the same state (multidouble 2.1.0, raw `I940-mac/` ea130628),
+with either sign, and the Nov 5 kernel reproduces T84-mac's records exactly. The full system is singular to about
+1e-29 here (12.4), so the converged root moves along its weak direction with the arithmetic's rounding. The spreads
+above measure one kernel's starts and plans, not the error of Δ. `export_qd.py` now gives each quad-double row the
+largest kernel gap, 2.4e-23, as its err (err_kind "kernel"), and the pins' quad-double rows take it as a floor.
 
 Freezing p1's harmonics 3-13 or 9-13 as bare band fields (qd_freezeh.py) does not deflate: the first projected step
 of 5e-7 leaves a residual of 5e-7, identical for both sets, because a bare harmonic is not a weak direction of J
