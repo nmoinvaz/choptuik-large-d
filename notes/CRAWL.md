@@ -651,10 +651,12 @@ ended too (2.1×10⁻¹⁷ apart). The next correction, 1.1×10⁻⁵ in Δ at a
     6.7×10²³ (252.6) times the move, not once the move. #850 reads this as the step's second-order term (next bullet).
   - **Inside the Jacobian's linear range, the spread stays quadratic past D 245 (#851; raw `I851-dh370/` e83f03fa,
     `step_spread.py` at rel 10⁻⁷⁰, 10⁻⁷⁵ and 10⁻⁸⁰).** The power is 2.0000 and 2.0000 at D 245.6366, and 2.0161 and
-    2.0000 at 252.6135. At 250.1676 it is 2.0006 down to 10⁻⁷⁵ and changes sign at 10⁻⁸⁰, below that state's own
-    convergence (#946). The coefficient |dev| / rel² at 10⁻⁷⁵ is 9.24×10⁹⁶, 8.73×10⁹⁹ and 1.054×10¹⁰², a ln-slope of
-    about 1.65 per unit D (least squares over three points, against 1.44 and 2.88), while the smallest pivot falls from
-    4.37×10⁻²⁷ to 1.07×10⁻²⁹ and 7.29×10⁻³¹.
+    2.0000 at 252.6135. At 250.1676 it is 2.0006 down to 10⁻⁷⁵ and changes sign at 10⁻⁸⁰, below the stored state's own
+    convergence. Re-converged to 3.0×10⁻⁹² (#946; raw `I946-dh370/` 335a0c63), it gives 2.0000 at rel 10⁻⁷⁷ to 10⁻⁸⁵
+    with both seeds, so the term is quadratic at all three D. The coefficient |dev| / rel² at 10⁻⁸⁰ is 9.24×10⁹⁶,
+    8.73×10⁹⁹ and 1.054×10¹⁰² (seed 1; seed 2 lies 1.9 to 3.5% lower), a ln-slope of 1.649 per unit D (least squares
+    over three points; 1.650 for seed 2, so the seed moves it by 1e-3), against 1.44 and 2.88, while the smallest pivot
+    falls from 4.37×10⁻²⁷ to 1.07×10⁻²⁹ and 7.29×10⁻³¹.
   - **After a pure Δ move, Newton's Δ step is quadratic in the move (#850; raw `I850-mac/` 811e84e2,
     `step_spread.py --blocks Delta` and `power`).** At D 240.1244 the departure from the root's own step is exactly
     quadratic over rel 10⁻⁶⁵ to 10⁻⁶⁷ (p 2.0000, 2.0000), with dev / rel² = 1.1027×10⁸¹ and |dev| / move 6.5×10¹⁵ to
