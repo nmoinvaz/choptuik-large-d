@@ -48,9 +48,10 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 RESOLVED = 1e-8
 # task folders of the raw-data repository whose *points*.jsonl are read, with the commit the CSV was last built from:
 # T82-win, the continuation below D = 3.05 at steps of 0.0025 (lowD_highM.py from T45's states, the Windows machine),
-# 83e99d6 (2026-10-31, D 3.045 at M 320/384)
+# 83e99d6 (2026-10-31, D 3.045 at M 320/384); I343-win2, the leg from D 3.04375 in steps of at most 0.00035 (#343),
+# 4ffbf3c9 (2026-11-17, D 3.04355 and 3.04335 at M 320/384; it stopped above the sonic closing, notes/LOW_D.md 17)
 RAW_ROOT = os.path.join(HERE, "..", "..", "choptuik-large-d-raw")
-RAW_TASKS = ("T82-win", "T100-win2", "T105-win2")
+RAW_TASKS = ("T82-win", "T100-win2", "T105-win2", "I343-win2")
 # relayout.py's M 64 states from T79-win's M 48 states (#766 at D 7.0 and 8.2, raw 7b58975a; #775 at the other 16 D of
 # 4.25 to 8.1375, raw ceefdbe8)
 RELAYOUT_TASKS = ("I766-win", "I775-win")
