@@ -750,6 +750,10 @@ residual 1.5×10⁻⁴ of the gaps' range); with four or six points the gaps ben
 extrapolation by 2.3×10⁻⁴ in D. #798's frozen plans bracket the same point at M 384: orders 1 to 3 plan at 3.0432
 and freeze at 3.0431, where the prediction crosses x = c. The plan's steps in the segment grow roughly as the inverse
 square root of the gap, and the smallest, 2.6–2.9×10⁻⁷, lie at the valley.
+At M 384 the same line through the three lowest gaps (1.0596×10⁻⁴, 3.5532×10⁻⁵, 2.4227×10⁻⁵ and 1.2913×10⁻⁵ at
+3.045, 3.04375, 3.04355 and 3.04335, each at τ grid point 27 of 384, near x 0.0143) reaches 0 at D = 3.043122,
+1.6×10⁻⁶ from M 320's. So the closing is the solution's, not the τ grid's (#933, raw `I933-win2/` c26a8373; the
+`dshift` and `slope` controls exit 1).
 
 **The NaN at D 3.04315 was the plan's, not the predictor's.** #343's predictor at 3.04315, Lagrange through the M 320
 states at 3.04375, 3.04355 and 3.04335, read on the last state's stored plan, goes non-finite in this segment at x
