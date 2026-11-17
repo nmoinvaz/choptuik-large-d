@@ -246,7 +246,7 @@ def junk_subspace_o(s, w, delta_max=1e-2, iters=6, seed=0):
 
 def newton_od(s, z, tol=1e-40, it_max=12, max_halvings=8, verbose=True, mutate=0, junk_w=0, delta_max=1e-2, tol_dz=1e-45,
               lam_stall=0.0, on_first=None, scale_c=None, trace=None, accept="own", strong_chord=0, chord_it=10,
-              full_drop=0.0, abort_theta=0.0, abort_it=1):
+              full_drop=0.0, abort_theta=0.0, abort_it=1, weak_first=0):
     """Newton in octo-double from the eight-part state z on s (PinnedO, or ElimO around it): newton_qd's mode 'full'
     one level up (hpkernel.driver.newton_qd, its acceptance rule). A trial z + lam dz (lam = 1, 1/2, ...,
     2^-max_halvings) is accepted when the Newton correction there, with its own Jacobian, is smaller than dz (max norms
@@ -294,7 +294,11 @@ def newton_od(s, z, tol=1e-40, it_max=12, max_halvings=8, verbose=True, mutate=0
     most chord_it steps. At #499's starts the weak equations are affine once the strong rows are solved, with the
     first move as their root (#528), so the chord's point is the solution to the chord's precision. It is accepted by
     the natural test against the first step (theta at most 0.75, or max |F| <= tol), and the iteration continues from
-    it with the chosen test; refused, the first step's trials run as without the chord."""
+    it with the chosen test; refused, the first step's trials run as without the chord.
+    weak_first=1 (with strong_chord k, #944): the first step's components along the k weakest right directions of J0 are
+    dropped before the chord, so the weak coordinates stay at the start's while the strong rows are solved, and only the
+    later Newton steps move them. Past D 233 at orders 150 and 160 the whole first step moves |F| from 1.8e-33 to 7.9e9
+    along those directions, whose second derivative is about 6e37, so their basin is far below the step's size."""
     import time
     from multidouble import od_axpy
     z = o8(z)
@@ -351,6 +355,16 @@ def newton_od(s, z, tol=1e-40, it_max=12, max_halvings=8, verbose=True, mutate=0
             # #528/#674: keep the first step's weak coordinates and solve the strong rows by the chord through the
             # start's LU (chord_strong). With the strong rows solved the weak equations are affine there (3S = T), and
             # their root is the first move.
+            if weak_first:
+                # #944: keep the weak coordinates at the start's for the first step (chord_strong's V, every direction)
+                Vw, _, _ = junk_subspace_o(s, strong_chord, delta_max=2.0)
+                for _ in range(2):
+                    cw = Vw @ (Vw.T @ (np.asarray(d[0]) + np.asarray(d[1])))
+                    d = o8(od_axpy(-1.0, np.ascontiguousarray(cw), *([zero8] * 7), *o8(d)))
+                rec["weak_first"] = True
+                if verbose:
+                    print(f"  on 0: the first step's components along the {strong_chord} weakest directions dropped "
+                          f"(--od_weak_first), |d| {float(np.abs(d[0]).max()):.3e}", flush=True)
             zc, ok_c, chord = chord_strong(s, z, d, strong_chord, chord_it, tol, tol_dz, mutate, verbose)
             theta = float("inf")
             if ok_c:

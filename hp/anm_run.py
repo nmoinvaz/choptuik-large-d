@@ -116,7 +116,9 @@ step found by halving is kept (past D 232 steps of 1.0 are refused at every base
 Newton correction through the LU at the iterate, octo_corrector.newton_od) instead of each trial's own Newton
 correction (own, the default; #644). --od_strong k takes the corrector's first step whole and then solves only the
 strong rows, by the chord through the start's LU with the k weakest right directions of the start's Jacobian
-removed from each correction (octo_corrector.chord_strong; #528, #674). 0, the default, is off.
+removed from each correction (octo_corrector.chord_strong; #528, #674). 0, the default, is off. --od_weak_first 1 (with
+--od_strong k) drops the first step's components along those k directions before the chord, so the weak coordinates
+stay at the prediction's until the later Newton steps (newton_od's weak_first, #944). 0, the default, is off.
 --od_full_drop F also accepts a full-step trial whose max|F| is at most F times the iterate's, whatever its
 simplified-correction ratio (--od_accept natural, #709) or its own correction (the default own test, #777)
 (newton_od's full_drop). 0, the default, is off.
@@ -355,6 +357,7 @@ def main():
     opt.update(a0=0.0, a_grow=2.0, a_hold=0, lam_stall=0.0)    # the step's start, growth and hold; the corrector's stall rule
     opt.update(od_accept="own")                                 # the octo-double corrector's trial test (#644)
     opt.update(od_strong=0)             # --od_strong k: the strong-row chord after the first step (#674)
+    opt.update(od_weak_first=0)         # --od_weak_first 1: with --od_strong k, the first step's weak components dropped (#944)
     opt.update(od_full_drop=0.0)        # --od_full_drop f: either test also accepts a full step whose |F| falls to f (#709, #777)
     opt.update(od_abort_theta=0.0)      # --od_abort_theta R: the natural test refuses at iteration 1 when theta(lam 1) > R (#784)
     opt.update(od_abort_it=1)           # --od_abort_it K: that refusal at iterations 1 to K
@@ -439,7 +442,7 @@ def main():
                                            lam_stall=opt["lam_stall"], on_first=save_dz0 if opt["save_dz0"] else None,
                                            accept=opt["od_accept"], strong_chord=int(opt["od_strong"]),
                                            full_drop=opt["od_full_drop"], abort_theta=opt["od_abort_theta"],
-                                           abort_it=opt["od_abort_it"])
+                                           abort_it=opt["od_abort_it"], weak_first=int(opt["od_weak_first"]))
             except StartNotProjected as e:
                 print(f"      elim projections {e.args[0]}: the start's projection failed, attempt stopped", flush=True)
                 Fh, Fl = spx.residual(z0[0], z0[1])
