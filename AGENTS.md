@@ -237,7 +237,7 @@ tasks' fields until 2026-11-10 was removed, and its fields are on the issues as 
 - **Raw output** goes to the raw-data repository as before, in a folder `I<issue>-<machine>/` (for example `I37-win2/`),
   whose README.md starts `# I<issue>-<machine>: <what it holds>`, then the machine and the issue's URL. The comms-era
   `T<n>-<machine>/` folders stay as they are.
-- **Posts.** The work is recorded on the issue, by the agent that did it, and kept short. A progress post (hourly) is at
+- **Posts.** The work is recorded on the issue, by the agent that did it, and kept short. A progress post (every 3 hours, Nathan 2026-11-17) is at
   most five lines: the state, the ETA, cpu and memory, and the newest raw commit. It is skipped when nothing changed
   since the last one. Tables, logs and step histories go in the raw folder's README (or, for a task without a raw
   folder, a file on its branch), and the post links to it. A message to the coordinator never replaces the issue post: a
