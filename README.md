@@ -752,6 +752,18 @@ solved past D 73, and how a fit of the full solutions stands in for them. It cov
 Newton's method, the continuation in D with its predictor, re-seed and corrector, the double-, quad- and octo-double
 number types, and why their precision has to grow with D.
 
+![How far each solver reaches in D and what stops it, with the error of each row's Δ along D](hp/solver_limits.svg)
+
+**How far each solver reaches** (`hp/plot_solver_limits.py`, from the rows of `hp/data/delta_all.csv`):
+
+- **Double-double** reaches from D = 3.043 to 67.77, and the pinned runs to 73.27. At the low end the sonic gap
+  min c − x closes near D = 3.0431, where the x integration meets x = c inside the domain
+  ([notes/LOW_D.md](notes/LOW_D.md) 17).
+- **The continuation in D** runs with a quad-double corrector from D 74 to 214.5. There the quad-double floor rises
+  above 10⁻²⁸, and an octo-double corrector carries it to 259.899, below the fold of the discrete system at D* = 259.90.
+- **The error panel** shows each row's err: a change of resolution, a fit spread, a gap between pins or starts, or
+  the weak pivot near the fold. Each is an estimate, not a bound, and the weak pivot's rises to 1.5 at the fold.
+
 ## Validation and controls
 
 ### Checks of the solver (`hp/`)

@@ -2111,6 +2111,26 @@ def gamma_35():
 
 
 @check
+def solver_limits():
+    """README, "How far each solver reaches": each solver's reach in hp/data/delta_all.csv, the quad-double corrector's
+    last chain row, the fold's D* (hp/data/fold_259.csv) and the largest weak-pivot err (hp/plot_solver_limits.py)"""
+    import csv
+    sys.path.insert(0, os.path.join(ROOT, "hp"))
+    import plot_solver_limits as P
+    by, err = P.rows_by_solver()
+    N = "README.md"
+    return [("double-double's lowest D", min(by["dd"]), 3.043, 0.001, [(N, "reaches from D = 3.043 to 67.77")]),
+            ("double-double's highest D", max(by["dd"]), 67.77, 0.01, [(N, "reaches from D = 3.043 to 67.77")]),
+            ("the pinned runs' highest D", max(by["pinned"]), 73.27, 0.01, [(N, "and the pinned runs to 73.27")]),
+            ("the quad-double corrector's last chain row", max(by["chain_q"]), 214.5, 0.1,
+             [(N, "quad-double corrector from D 74 to 214.5")]),
+            ("the chain's first row", min(by["chain_q"]), 74, 1, [(N, "quad-double corrector from D 74 to 214.5")]),
+            ("the octo-double chain's reach", max(by["chain_o"]), 259.899, 0.001, [(N, "octo-double corrector carries it to 259.899")]),
+            ("the fold's D*", P.fold_dstar(), 259.90, 0.01, [(N, "the fold of the discrete system at D* = 259.90")]),
+            ("the largest weak-pivot err", max(e for _, e in err["chain_o"]), 1.5, 0.1, [(N, "rises to 1.5 at the fold")])]
+
+
+@check
 def chain_reach():
     """the README's reach of the large-D chain: a chain_fit row of hp/data/delta_all.csv at that D (#603)"""
     import csv
