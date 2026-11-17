@@ -725,7 +725,59 @@ The step is below #798's onset (about 0.0006 for predictions of order 1 to 3), a
    the result, with the last converged D and the frozen x.
 Anything else is reported as it is.
 
-## 17. The Taylor series as a start, on fixed plans (#927)
+## 17. The sonic valley near D 3.043 (#926, 2026-11-16)
 
-The series of sections 14–16 evaluated on fixed plans, the blocker below D ≈ 3.0433 and a design that puts the series into
-`lowD_highM.py` as one more start are in [LOW_D_ANM.md](LOW_D_ANM.md).
+The p equation, x (x − c) p_x = −ω x p_τ + G p − c p + (n/2) c (p + m), is singular where x = c. At the horizon the
+layout puts c = 1 at x = 1, and the horizon series is regular there by construction. Inside, the converged states keep
+c above x, but near D 3.04 the minimum over τ of c − x has a narrow valley at x ≈ 0.0143 (τ grid point 22–23 of 320),
+in the segment 0.01 → 0.02. Its floor, the gap g = min c − x, closes linearly as D falls. `hp/sonic_valley.py gap`
+measures it: each state's node states integrated through the segments near x = c along the state's own plan, the
+smallest c − x on the grid and between grid points (raw `I926-mac/`, 680ddfc2, README section 1). On six M 320
+states, each on its own plan:
+
+| D | gap on the grid | between grid points | x | steps of the plan in 0.01 → 0.02 |
+|---|---|---|---|---|
+| 3.0475 | 2.447×10⁻⁴ | 2.446×10⁻⁴ | 0.01477 | 992 |
+| 3.045 | 1.060×10⁻⁴ | 1.059×10⁻⁴ | 0.01445 | 1684 |
+| 3.044375 | 7.104×10⁻⁵ | 7.077×10⁻⁵ | 0.01437 | 2150 |
+| 3.04375 | 3.588×10⁻⁵ | 3.553×10⁻⁵ | 0.01434 | 3253 |
+| 3.04355 | 2.449×10⁻⁵ | 2.421×10⁻⁵ | 0.01431 | 4102 |
+| 3.04335 | 1.310×10⁻⁵ | 1.288×10⁻⁵ | 0.01429 | 4679 |
+
+The line through the three lowest points reaches g = 0 at D = 3.043120 (M 320, `sonic_valley.py tangency --last 3`,
+residual 1.5×10⁻⁴ of the gaps' range); with four or six points the gaps bend slightly (quadratic coefficient −0.13 to
+−0.65) and the zero moves to 3.043108–3.043122. That spread is over fit choices, not a bound, and the whole is an
+extrapolation by 2.3×10⁻⁴ in D. #798's frozen plans bracket the same point at M 384: orders 1 to 3 plan at 3.0432
+and freeze at 3.0431, where the prediction crosses x = c. The plan's steps in the segment grow roughly as the inverse
+square root of the gap, and the smallest, 2.6–2.9×10⁻⁷, lie at the valley.
+
+**The NaN at D 3.04315 was the plan's, not the predictor's.** #343's predictor at 3.04315, Lagrange through the M 320
+states at 3.04375, 3.04355 and 3.04335, read on the last state's stored plan, goes non-finite in this segment at x
+0.01404; the last state itself at 3.04315's equations does too, at x 0.01418 (`I926-mac/explore/`). On the same plan
+with the segment's steps split 4 times the predictor stays finite, with min c − x 1.69×10⁻⁶ at x 0.01426, where the
+line gives 1.71×10⁻⁶ for the solution at 3.04315, and its mismatch at the node 0.02 is 1.4×10⁻⁵. So the predictor
+does not cross x = c. The plan, on which the 3.04335 state converged with a gap 7.7 times wider, is too coarse: the
+integration there is stiff like 1/(c − x), and a Taylor step past its stability limit blows up while c − x is still
+positive. #926's premise, a predictor irregular at the sonic line, does not hold, and while c stays above x there are
+no regularity conditions to project onto.
+
+The remedy built instead is the plan. `lowD_highM.py --sonic_refine R` reads the starts again on the reused plan with
+the steps near x = c split R, then R², times when a start is NaN on it, and a start that is finite there goes to the
+two passes on its own plan. The split plan is only a gate. On the converged 3.04335 state the plan of 3.0475 is NaN,
+split 4 times still NaN, and split 16 times finite but at 2.9×10⁻²¹ against the state's own 1.2×10⁻²⁸, because its
+steps are placed for the 3.0475 valley (`I926-mac/planplant_run2_accuracy.log`). The planted check of the gate, the
+same state with every node state moved by 10⁻⁸ and then planned on its own, was stopped on the loaded Mac after the
+split-4 gate (NaN, as for the truth) and is a runner's, as is whether Newton converges at 3.04315 from the admitted
+predictor (`I926-mac/runner_task_M320.md`).
+
+**What it means for the legs.** Above the closing the legs can go on with the refined plan, at a cost that grows as the
+gap closes. At the closing the x integration meets the singular point x = c, and T135's and #798's predictions below
+it freeze where they cross x = c. Whether the family continues below with c under x on a patch of the (x, τ) plane,
+where regularity at the patch's boundary would have to be imposed as at a sonic point, or ends there, is open. The
+closing is *numerical evidence*; the rest is not shown. `lowD_highM.py --sonic_stop` stops a leg before a target at or
+below the closing extrapolated from its last gaps.
+
+## 18. The Taylor series as a start, on fixed plans (#927)
+
+The series of sections 14–16 evaluated on fixed plans, where it fails below D ≈ 3.0433 for section 17's reason, and a
+design that puts the series into `lowD_highM.py` as one more start are in [LOW_D_ANM.md](LOW_D_ANM.md).
