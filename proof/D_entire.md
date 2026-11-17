@@ -494,6 +494,11 @@ chord.
   gives both at all three nodes. Their strength falls about 500 times outward, and the passing region reaches the
   lattice's outer edges. The end points nearer than |t| ≈ 2.4 fail because they would need more than 13–28% of σ₂₂
   (notes/PADE_FAR_END.md §16).
+  Neither does the misfit's profile over 20–22 terms (#746). With each plant's zero located as the real one was, the
+  plants' χ₂₀/χ₂₂ and χ₂₁/χ₂₂ are 0.67–0.91 times the real series' at every end point, so a factor-5 window on the
+  three χ removes one end point, at |t| = 2.25, and none at |t| ≥ 2.48 (11 of them are undecided on the records).
+  With the zero held the profile depends on |t|, but is 12.5–46 times the real one's everywhere
+  (notes/PADE_FAR_END.md §17).
 - **The real poles reach the chord sooner than either plant.** At k = 10 the poles with s ≤ 0.71 lie within 0.015 of
   the chord, and the last one, at s = 0.88, lies 0.074 from it, on the side away from the arc. J 1250 and J 1500 agree to
   0.03 in R. k = 11 is not determined by the data.
