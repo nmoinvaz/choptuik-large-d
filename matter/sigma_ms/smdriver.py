@@ -500,9 +500,10 @@ def newton_qd(s, z, tol=1e-55, it_max=8, verbose=True, log=print, jac="dd"):
         zn = list(qd_axpy(1.0, *dz, *z))
         Fn = s.residual(zn)
         n1 = fnorm(Fn)
-        rec.update(F_next=n1, dDelta=float(dz[0][-1] + dz[1][-1]))
+        rec.update(F_next=n1, dDelta=float(dz[0][-1] + dz[1][-1]), dz=float(np.max(np.abs(dz[0] + dz[1]))))
         if verbose:
-            log(f"  newton_qd {it}: |F| {nF:.2e} -> {n1:.2e}, dDelta {rec['dDelta']:+.2e} ({rec['t']} s)")
+            log(f"  newton_qd {it}: |F| {nF:.2e} -> {n1:.2e}, max |dz| {rec['dz']:.2e}, dDelta {rec['dDelta']:+.2e} "
+                f"({rec['t']} s)")
         if not (np.isfinite(n1) and n1 < nF):
             rec["failed"] = "no decrease"
             break

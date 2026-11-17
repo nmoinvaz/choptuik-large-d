@@ -18,10 +18,12 @@ band of the Jacobian (SIGMA_DSS.md section 6; --band_tol, --radius).
 
 --qd continues a converged double-double state with Newton in quad-double (--qd_jac dd: the exact quad-double
 Jacobian). With --qd_accept B the run's exit status is that of the quad-double stage: 0 when the quad-double
-residual of its final state is at most B. This is the hand-over of #928: past D 12.4 at M = 32 the double-double
+residual of its final state is at most B and the Newton's history shows a start inside its basin (qd_basin). This is the hand-over of #928: past D 12.4 at M = 32 the double-double
 Newton stalls near 1e-27 on the band, whose rows the double-double residual no longer resolves, so --tol is set to
 about 3e-27 and the 1e-28 bound is met in quad-double. The record's qd entry holds the quad-double residuals, the
-final one (F_final), the hand-over tolerance and whether the state was accepted.
+final one (F_final), the hand-over tolerance, the double-double residual at the hand-over (handover_F), each step's
+max |F| and max |dz|, and whether the state was accepted. --handover_max H also hands over a state whose
+double-double stage stalled above --tol, when its residual is at most H.
 
 Writes <out>/sm_<tag>.npz (the state, double-double, and quad-double parts with --qd) and appends a record to
 <out>/sm_records.jsonl: Delta, max |F|, Newton history, Taylor steps, the constraint diagnostic, the series tails, the
@@ -43,6 +45,26 @@ import smdriver as sd  # noqa: E402
 # enough digits for the sums of a state's parts (quad-double: about 64 digits); at mpmath's default of 53 bits the
 # records' Delta string held the hi part only (the runs of #639 before this line; Delta_hi and Delta_lo are exact)
 mp.mp.dps = 80
+
+
+def qd_basin(hq, Fq, bound):
+    """Whether the quad-double Newton's history shows a start inside its basin (#928, the limit (2') of the raw
+    folder's qd_protocol.md): max |F| is at most the bound within 4 steps and at the end; it never rises from one
+    step to the next; from the second step on it is at most 1e10 times the square of the step before, or below
+    1e-55, the Newton's own tolerance; and the step's size max |dz| is at most 1e10 times the square of the step
+    before at every step after the first. The first step is exempt in max |F| because a displacement along the
+    near-null band shows in the residual only at second order: that step is quadratic in dz, not in |F|.
+    Returns (all hold, each one)."""
+    taken = [h for h in hq if "F_next" in h and "failed" not in h]
+    r = [hq[0]["F"]] + [h["F_next"] for h in taken]
+    dz = [h["dz"] for h in taken]
+    k = next((i for i, v in enumerate(r) if v <= bound), None)
+    c = dict(within_4_steps=k is not None and k <= 4,
+             no_rise=all(q <= p for p, q in zip(r, r[1:])),
+             F_quadratic=all(r[i + 1] <= max(1e10 * r[i] ** 2, 1e-55) for i in range(1, len(r) - 1)),
+             dz_quadratic=all(dz[i] <= 1e10 * dz[i - 1] ** 2 for i in range(1, len(dz))),
+             final=bool(Fq <= bound))
+    return all(c.values()), c
 
 
 def eps_of(eta):
@@ -81,6 +103,8 @@ def main():
     ap.add_argument("--qd_it", type=int, default=8)
     ap.add_argument("--qd_accept", type=float, default=0.0,
                     help="with --qd: the exit status is 0 when the final quad-double max |F| is at most this")
+    ap.add_argument("--handover_max", type=float, default=0.0,
+                    help="with --qd: hand a double-double state over that stalled above --tol but at most here")
     ap.add_argument("--threads", type=int, default=4)
     a = ap.parse_args()
     os.makedirs(a.out, exist_ok=True)
@@ -183,13 +207,19 @@ def main():
     log(f"double-double: converged {conv}, |F| {Fend:.2e}, Delta {rec['Delta']}, constraint {rec['constraint']:.2e}, "
         f"tails {rec['tail_centre']:.1e} {rec['tail_horizon']:.1e}")
     z4 = None
-    if a.qd and conv:
+    over = bool(a.qd and not conv and a.handover_max and Fend <= a.handover_max)
+    if over:
+        log(f"hand-over above --tol: the double-double stage ended at |F| {Fend:.2e} (<= {a.handover_max:g})")
+    if a.qd and (conv or over):
         z4, hq = sd.newton_qd(s, sd.qparts(zh, zl), tol=1e-55, it_max=a.qd_it, log=log, jac=a.qd_jac)
         Dq = sum(mp.mpf(p[-1]) for p in z4)
         Fq = sd.fnorm(s.residual(z4))
+        basin_ok, basin = qd_basin(hq, Fq, a.qd_accept) if a.qd_accept else (False, {})
         rec.update(qd=dict(F=[h["F"] for h in hq], converged=bool(hq[-1].get("converged")), Delta=mp.nstr(Dq, 60),
                            Delta_qd_minus_dd=mp.nstr(Dq - Delta, 6), F_final=Fq, jac=a.qd_jac, handover_tol=a.tol,
-                           accepted=bool(a.qd_accept and Fq <= a.qd_accept), t=[h["t"] for h in hq]))
+                           handover_F=Fend, handover_max=a.handover_max, steps=[dict(F=h["F"], F_next=h.get("F_next"),
+                                                                                    dz=h.get("dz")) for h in hq],
+                           basin=basin, accepted=bool(a.qd_accept and basin_ok), t=[h["t"] for h in hq]))
         log(f"quad-double: |F| {hq[-1]['F']:.2e}, Delta {rec['qd']['Delta']}, minus dd {rec['qd']['Delta_qd_minus_dd']}")
     meta = dict(eta=a.eta, D=a.D, M=a.M, nodes=nodes, kt=a.kt, kc=a.kc, ks=a.ks, segs=s.get_segs(), tag=a.tag)
     if z4 is not None:
@@ -201,7 +231,7 @@ def main():
         f.write(json.dumps(rec) + "\n")
     log(f"done {sd.now()} ({rec['t']} s)")
     if a.qd and a.qd_accept:
-        sys.exit(0 if conv and rec["qd"]["accepted"] else 1)
+        sys.exit(0 if (conv or over) and rec["qd"]["accepted"] else 1)
     sys.exit(0 if conv else 1)
 
 

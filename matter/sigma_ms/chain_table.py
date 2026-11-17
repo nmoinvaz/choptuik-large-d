@@ -18,8 +18,9 @@ folders at the chain's starting D.
 
 A point of the quad-double hand-over (#928, run_eta.py --qd --qd_accept: past D 12.4 the double-double Newton stalls
 near 1e-27 on the band) counts with its quad-double residual and its quad-double Delta, and only when run_eta.py
-accepted it. Such points are marked: the csv's method column reads qd and its handover_tol the double-double
-stage's tolerance, and check (1) counts them apart.
+accepted it. Such points are marked: the csv's method column reads qd, its handover_tol the double-double stage's
+tolerance and its handover_F the double-double residual at which the state was handed over, and check (1) counts
+them apart.
 
 Checks, each printed with its verdict; the exit status is 1 when one fails:
   (1) every D of the chain has a converged record with max |F| <= 1e-28;
@@ -159,7 +160,8 @@ def main():
                              sigdss_prior=reg if reg is not None else "",
                              kernel_minus_sigdss=(float(de) - sd_) if sd_ else "",
                              method="qd" if is_qd(ch[D]) else "dd",
-                             handover_tol=ch[D]["qd"]["handover_tol"] if is_qd(ch[D]) else ""))
+                             handover_tol=ch[D]["qd"]["handover_tol"] if is_qd(ch[D]) else "",
+                             handover_F=ch[D]["qd"].get("handover_F", ch[D]["F"]) if is_qd(ch[D]) else ""))
     print("\n| D | Δ, kernel | max \\|F\\| | sigdss's Δ (march, prior) | kernel minus sigdss |")
     print("|---|---|---|---|---|")
     for r in rows:
