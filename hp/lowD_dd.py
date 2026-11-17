@@ -224,6 +224,16 @@ def chord_phase(s, zh, zl, tol, start_below, max_steps, log, mutate=0):
     return zh, zl, recs, F < tol
 
 
+STALL_NOTICE = []
+
+
+def stall_in_driver():
+    """True when the installed driver.newton_solve has the stall rule (its option stall, #925). An hpkernel built before
+    it has not, and solve_point then applies the same rule itself, with one residual evaluation per step."""
+    import inspect
+    return "stall" in inspect.signature(newton_solve).parameters
+
+
 def dname(D):
     """D in a state's file name: 4 decimals when D has at most 4, else 6. Steps below 1e-4 give D with 5 decimals, and
     at 4 those round onto a neighbour's name, whose converged state a resume would then take as this D's (#343)"""
@@ -259,15 +269,37 @@ def solve_point(D, M, zh, zl, src, a, nodes, outdir, log, segs=None):
         # deflated phase only (the weakest w directions removed from the step), then plain Newton below
         zh, zl, hist = deflated_newton(s, zh, zl, tol=a.tol, it_max=a.dn_its, w=a.w, verbose=True, jac=a.jac)
         save(ckpt, np.asarray(zh), np.asarray(zl), dict(meta_c, it=len(hist)))
+    # optional (a.stall, default off): the stall rule, driver.newton_solve(stall=...): a.stall accepted steps that together
+    # do not bring max |F| below a.stall_factor of its value before them fail the solve (#925). Its window counts the
+    # steps of this call of solve_point, so a resumed solve starts a new one.
+    stall, stall_factor = getattr(a, "stall", 0), getattr(a, "stall_factor", 0.5)
+    in_driver = bool(stall) and stall_in_driver()
+    if stall and not in_driver and not STALL_NOTICE:
+        STALL_NOTICE.append(True)
+        log("  newton_solve: this hpkernel has no stall option (built before #925); solve_point applies the stall rule "
+            "itself, one residual per step")
     # plain Newton with backtracking, one iteration per call so that every accepted step is checkpointed
     for it in range(a.it_max):
         if hist and (hist[-1].get("accepted") or ("lam" not in hist[-1] and "piv" in hist[-1] and hist[-1]["F"] < a.tol)
                      or "failed" in hist[-1] or hist[-1].get("chord_converged")):
             break
-        zh, zl, h1 = newton_solve(s, zh, zl, tol=a.tol, it_max=1, verbose=True, jac=a.jac)
+        kw = dict(stall=stall, stall_factor=stall_factor, prior=hist) if in_driver else {}
+        zh, zl, h1 = newton_solve(s, zh, zl, tol=a.tol, it_max=1, verbose=True, jac=a.jac, **kw)
         hist += h1
-        if h1 and "lam" in h1[-1]:
+        if any("lam" in h for h in h1):
             save(ckpt, np.asarray(zh), np.asarray(zl), dict(meta_c, it=len(hist)))
+        Fb = [h["F"] for h in hist if "lam" in h]
+        if stall and not in_driver and h1 and "lam" in h1[-1] and len(Fb) >= stall:
+            # the driver's rule at script level: max |F| at the accepted point, the residual its line search evaluated
+            fh, fl = s.residual(zh, zl)
+            F1 = float(np.abs(np.asarray(fh) + np.asarray(fl)).max())
+            if not F1 < a.tol and not F1 <= stall_factor * Fb[-stall]:
+                hist.append(dict(it=0, F=F1, failed="stall", F_from=Fb[-stall], steps=stall, Delta=float(zh[-1]),
+                                 script=True))
+        if hist and hist[-1].get("failed") == "stall":
+            log(f"D {D} M {M}: |F| {hist[-1]['F_from']:.2e} -> {hist[-1]['F']:.2e} over {stall} accepted steps, not "
+                f"below {stall_factor:g} of it (a stall); giving up")
+            break
         # optional (a.chord_from, default off): after a full step, chord steps with that step's LU while |F| halves
         # each step (notes/LOW_D_SPEEDUP.md, step 3); the final LU refresh below then serves the sensitivities
         if getattr(a, "chord_from", 0) and h1 and h1[-1].get("lam") == 1.0:
@@ -303,6 +335,8 @@ def solve_point(D, M, zh, zl, src, a, nodes, outdir, log, segs=None):
         rec = dict(D=D, M=M, Delta=float(zh[-1]), Delta_lo=float(zl[-1]), F=F, its=len(hist), seconds=round(dt, 1),
                    nodes=nodes, kt=a.kt, kcs=a.kcs, ks=a.ks, tol_step=a.tol_step, hmax=a.hmax, solver=a.solver,
                    source=src, threads=a.threads, converged=False)
+        if hist and "failed" in hist[-1]:
+            rec["failed"] = hist[-1]["failed"]      # why Newton stopped: "line search" or "stall"
         with open(a.out, "a") as f:
             f.write(json.dumps(rec) + "\n")
         save(os.path.join(outdir, f"{a.tag}_D{dname(D)}_M{M}_fail.npz"), zh, zl,

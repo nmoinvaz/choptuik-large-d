@@ -49,8 +49,10 @@ A failed solve (the helper's included) inserts the midpoint between the last con
 step); with --helper_fallback a failed helper does not fail the point: M_w then starts from its own predictor and is
 solved in two passes as in 2a, and the pair record says so (helper_fallback); a solve gives up after two steps in a
 row with line-search factors <= --stop_lam (1/8: Newton wandering in the
-weak directions from a predictor too far off, as at D 3.15 from |F| 0.7), and stops at the residual floor (|F| below
---accept and falling by less than --floor_ratio in a step).
+weak directions from a predictor too far off, as at D 3.15 from |F| 0.7), and after --stall (3) accepted steps that
+together do not bring max |F| below --stall_factor (1/2) of its value before them (a stall: at D 3.04315, M 320, |F| sat
+at 1.4e-2 over steps at line-search factors 1/2 and 1/4, which the line search accepts; #925), and stops at the residual
+floor (|F| below --accept and falling by less than --floor_ratio in a step).
 Stop rules (each recorded with its reason): the largest M in --Ms cannot keep the difference below --diff_max; a
 point fails with the step below --min_step; the projected time of the next point (the last point's solves or its
 running time, the larger) exceeds --point_hours; --hours of wall time in all, counted across restarts, or the next
@@ -148,6 +150,10 @@ def main():
                     "step reduced it by less than this factor (the residual floor, which rises with M; 0: never)")
     ap.add_argument("--stop_lam", type=float, default=0.125, help="a solve gives up after two steps in a row with "
                     "line-search factors at most this (Newton wandering in the weak directions; 0: never)")
+    ap.add_argument("--stall", type=int, default=3, help="a solve fails when this many accepted steps together do not "
+                    "bring max |F| below --stall_factor of its value before them (driver.newton_solve's stall rule, or "
+                    "lowD_dd.solve_point's for an older hpkernel; 0: never)")
+    ap.add_argument("--stall_factor", type=float, default=0.5)
     ap.add_argument("--two_pass_above", type=float, default=1e-3, help="solve M_w or M_n in two passes when its best "
                     "start's |F| on the reused plan is above this (0: never)")
     ap.add_argument("--resume", action="store_true")
@@ -212,7 +218,8 @@ def main():
         return argparse.Namespace(out=a.points, tag=tag or st["tag"], resume=True, kt=a.kt, kcs=kc, ks=ks, tol_step=a.tol_step,
                                   hmax=a.hmax, solver="newton", it_max=it_max or a.it_max, tol=tol or a.tol, accept=tol or a.accept,
                                   lm=0, jac="f64", threads=a.threads, svd=0, dn_its=2, w=24, stop_lam=a.stop_lam,
-                                  floor_ratio=a.floor_ratio, chord_from=a.chord_from)
+                                  floor_ratio=a.floor_ratio, chord_from=a.chord_from, stall=a.stall,
+                                  stall_factor=a.stall_factor)
 
     def save_prog():
         st["t_used"] = time.time() - t_start
