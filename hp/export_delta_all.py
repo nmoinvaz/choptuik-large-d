@@ -53,7 +53,9 @@ double-double); kind; err and err_kind; the source record; published_ref, publis
 precise value of data/published_delta.csv at this D (6 decimals), as printed, and this row's Delta minus it (empty
 where none is listed); the state file (relative to RAWDIR, empty where none was stored). The kinds, in order of
 precedence where two share a D:
-  qd      the full system converged in quad-double (data/delta_qd.csv, export_qd.py). err: the spread between two
+  qd      the full system converged in quad-double (data/delta_qd.csv, export_qd.py). err: where export_qd.py gives
+          one, its largest term: the two starts' spread ("starts"), #940's plan change ("plan") or the gap between the
+          Nov 5 kernel's solution and today's ("kernel"), each an estimate, not a bound. Otherwise the spread between two
           starts with their own Taylor plans (err_kind "starts"), not a bound. At 71.0 and 72.8 the second start
           stalled (raw qd2start-mac/second.jsonl, |F| 2e-19 and 8e-18), so the row has one start, and err is the larger
           spread of the nearest rows below and above with two starts (err_kind "starts neighbours", #764), an
@@ -76,7 +78,8 @@ precedence where two share a D:
           solution converged in quad-double plus the full-system Newton step's Delta component, four parts each), it
           replaces the double-double rows at that D. The row is the pin with the most free harmonics (pin 7, or 3 at
           the frontier D 73.265722), its eight parts summed exactly and written as four, and err the difference of
-          the two pins' exact sums (err_kind "pins qd"), a spread between two systems, not a bound.
+          the two pins' exact sums (err_kind "pins qd"), a spread between two systems, not a bound, or the
+          quad-double rows' kernel gap where that is larger (err_kind "kernel", #940).
           (b) a double-double row that only one pin reached takes the larger of the dd-qd gaps at the nearest D below
           and above it with a quad-double value, that of (a) or the full system's of data/delta_qd.csv (68.5 to
           73.265722). A gap is the largest difference between a double-double Delta_full1 of either pin at that D and
@@ -237,7 +240,9 @@ def qd_state(src):
     """the converged state of a delta_qd.csv source"""
     f, _, start = src.partition(":")
     if start:
-        return os.path.join(os.path.dirname(f), start[:-4] + "_full.npz")
+        # beside the records, or in their run's states folder (#940's runs/states)
+        cands = [os.path.join(os.path.dirname(f), *sub, start[:-4] + "_full.npz") for sub in ((), ("runs", "states"))]
+        return next((c for c in cands if os.path.exists(os.path.join(RAW, c))), cands[0])
     folder, name = os.path.split(f)
     r = json.loads(open(os.path.join(RAW, f)).readline())
     return os.path.join(folder, r["state"])
@@ -249,6 +254,10 @@ def qd_err(qd):
     two = sorted((float(r["D"]), float(r["spread"])) for r in qd if r["spread"])
     out = {}
     for r in qd:
+        if r.get("err"):
+            # export_qd.py's largest term: the starts' spread, the plan change or the kernel gap
+            out[r["D"]] = (r["err"], r["err_kind"] if r["err_kind"] != "spread" else "starts")
+            continue
         D = float(r["D"])
         lo, hi = [s for d, s in two if d < D][-1:], [s for d, s in two if d > D][:1]
         out[r["D"]] = ((r["spread"], "starts") if r["spread"] else
@@ -353,13 +362,20 @@ def pinned_rows(Dmin):
     ref = defaultdict(list)
     for r in csv.DictReader(open(os.path.join(HERE, "data", "delta_qd.csv"))):
         ref[round(float(r["D"]), 6)].append(total([r[f"Delta_q{i}"] for i in range(4)]))
+    # the kernel gap of export_qd.py's rows (#940): a quad-double value of the near-singular system moves with the
+    # arithmetic's rounding by about this much, so it is a floor under the pins' spread
+    kgap = max((float(r["err"]) for r in csv.DictReader(open(os.path.join(HERE, "data", "delta_qd.csv")))
+                if r.get("err_kind") == "kernel"), default=0.0)
     for k, sols in qd.items():
         pin, v, f, r = sols[0]
         err = max((abs(v - w) for _, w, _, _ in sols[1:]), default=None)
+        kind = "pins qd"
+        if err is not None and kgap > err:
+            err, kind = mp.mpf(kgap), "kernel"
         st = f"{os.path.dirname(f)}/{r['state']}"
         rows.append(dict(D=fmt(r["D"]), **dict(zip(("Delta_q0", "Delta_q1", "Delta_q2", "Delta_q3"), parts4(v))),
                          kind="pinned", err="" if err is None else f"{float(err):.1e}",
-                         err_kind="" if err is None else "pins qd", source=f"{f}:D{r['D']}",
+                         err_kind="" if err is None else kind, source=f"{f}:D{r['D']}",
                          state=st if os.path.exists(os.path.join(RAW, st)) else ""))
         ref[k] += [w for _, w, _, _ in sols]
     # the dd-qd gap: the largest difference between a double-double Delta_full1 and a quad-double value at a D
