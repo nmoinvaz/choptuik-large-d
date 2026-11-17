@@ -47,20 +47,21 @@ import smdriver as sd  # noqa: E402
 mp.mp.dps = 80
 
 
-def qd_basin(hq, Fq, bound):
+def qd_basin(hq, Fq, bound, first_rise=1.0):
     """Whether the quad-double Newton's history shows a start inside its basin (#928, the limit (2') of the raw
     folder's qd_protocol.md): max |F| is at most the bound within 4 steps and at the end; it never rises from one
     step to the next; from the second step on it is at most 1e10 times the square of the step before, or below
     1e-55, the Newton's own tolerance; and the step's size max |dz| is at most 1e10 times the square of the step
     before at every step after the first. The first step is exempt in max |F| because a displacement along the
-    near-null band shows in the residual only at second order: that step is quadratic in dz, not in |F|.
+    near-null band shows in the residual only at second order: that step is quadratic in dz, not in |F|. With
+    first_rise above 1 the first step may also raise max |F|, by less than that factor.
     Returns (all hold, each one)."""
     taken = [h for h in hq if "F_next" in h and "failed" not in h]
     r = [hq[0]["F"]] + [h["F_next"] for h in taken]
     dz = [h["dz"] for h in taken]
     k = next((i for i, v in enumerate(r) if v <= bound), None)
     c = dict(within_4_steps=k is not None and k <= 4,
-             no_rise=all(q <= p for p, q in zip(r, r[1:])),
+             no_rise=all(q <= p * (first_rise if i == 0 else 1.0) for i, (p, q) in enumerate(zip(r, r[1:]))),
              F_quadratic=all(r[i + 1] <= max(1e10 * r[i] ** 2, 1e-55) for i in range(1, len(r) - 1)),
              dz_quadratic=all(dz[i] <= 1e10 * dz[i - 1] ** 2 for i in range(1, len(dz))),
              final=bool(Fq <= bound))
@@ -103,6 +104,8 @@ def main():
     ap.add_argument("--qd_it", type=int, default=8)
     ap.add_argument("--qd_accept", type=float, default=0.0,
                     help="with --qd: the exit status is 0 when the final quad-double max |F| is at most this")
+    ap.add_argument("--qd_first_rise", type=float, default=1.0,
+                    help="with --qd: the first quad-double step may raise max |F| by less than this factor")
     ap.add_argument("--handover_max", type=float, default=0.0,
                     help="with --qd: hand a double-double state over that stalled above --tol but at most here")
     ap.add_argument("--threads", type=int, default=4)
@@ -211,13 +214,14 @@ def main():
     if over:
         log(f"hand-over above --tol: the double-double stage ended at |F| {Fend:.2e} (<= {a.handover_max:g})")
     if a.qd and (conv or over):
-        z4, hq = sd.newton_qd(s, sd.qparts(zh, zl), tol=1e-55, it_max=a.qd_it, log=log, jac=a.qd_jac)
+        z4, hq = sd.newton_qd(s, sd.qparts(zh, zl), tol=1e-55, it_max=a.qd_it, log=log, jac=a.qd_jac,
+                              first_rise=a.qd_first_rise)
         Dq = sum(mp.mpf(p[-1]) for p in z4)
         Fq = sd.fnorm(s.residual(z4))
-        basin_ok, basin = qd_basin(hq, Fq, a.qd_accept) if a.qd_accept else (False, {})
+        basin_ok, basin = qd_basin(hq, Fq, a.qd_accept, a.qd_first_rise) if a.qd_accept else (False, {})
         rec.update(qd=dict(F=[h["F"] for h in hq], converged=bool(hq[-1].get("converged")), Delta=mp.nstr(Dq, 60),
                            Delta_qd_minus_dd=mp.nstr(Dq - Delta, 6), F_final=Fq, jac=a.qd_jac, handover_tol=a.tol,
-                           handover_F=Fend, handover_max=a.handover_max, steps=[dict(F=h["F"], F_next=h.get("F_next"),
+                           handover_F=Fend, handover_max=a.handover_max, first_rise=a.qd_first_rise, steps=[dict(F=h["F"], F_next=h.get("F_next"),
                                                                                     dz=h.get("dz")) for h in hq],
                            basin=basin, accepted=bool(a.qd_accept and basin_ok), t=[h["t"] for h in hq]))
         log(f"quad-double: |F| {hq[-1]['F']:.2e}, Delta {rec['qd']['Delta']}, minus dd {rec['qd']['Delta_qd_minus_dd']}")

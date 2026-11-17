@@ -474,10 +474,13 @@ def newton_band(s, zh, zl, tol=1e-28, it_max=40, band_tol=1e-6, radius=None, ban
     return zh, zl, hist
 
 
-def newton_qd(s, z, tol=1e-55, it_max=8, verbose=True, log=print, jac="dd"):
+def newton_qd(s, z, tol=1e-55, it_max=8, verbose=True, log=print, jac="dd", first_rise=1.0):
     """Newton in quad-double: full steps while max |F| falls. jac "dd": the exact quad-double Jacobian (Solver.newton
     with four parts); "mixed": the f64 Jacobian in staircase storage with the quad-double residual (Solver.newton_mixed,
     linear convergence to the same root); "chord": the first step's factors (exact) kept for the later steps.
+    first_rise: the first step is also taken when max |F| rises by less than this factor (1: only when it falls). On
+    the near-null band the first step removes a displacement that the residual shows only at second order, and its
+    remainder can exceed the start by a factor of order one (#928).
     Returns z, history."""
     z = [np.asarray(p, dtype=float) for p in z]
     hist = []
@@ -504,7 +507,7 @@ def newton_qd(s, z, tol=1e-55, it_max=8, verbose=True, log=print, jac="dd"):
         if verbose:
             log(f"  newton_qd {it}: |F| {nF:.2e} -> {n1:.2e}, max |dz| {rec['dz']:.2e}, dDelta {rec['dDelta']:+.2e} "
                 f"({rec['t']} s)")
-        if not (np.isfinite(n1) and n1 < nF):
+        if not (np.isfinite(n1) and (n1 < nF or (it == 0 and n1 < first_rise * nF))):
             rec["failed"] = "no decrease"
             break
         z = zn
