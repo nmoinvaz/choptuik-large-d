@@ -6,7 +6,8 @@ instead of fold_mirror's 0.02, so that a moved fold is found.
 
     PYTHONPATH=<worktree>/hp python3 fold_est_903.py planted [--bases=B1,..] [--win=0.5] [--noise=1e-30] [--json=OUT]
     PYTHONPATH=<worktree>/hp python3 fold_est_903.py real JETDIR [--Dmin=..] [--win=0.5] [--json=OUT]
-    PYTHONPATH=<worktree>/hp python3 fold_est_903.py verdict CHAINDIR RAW [--Dmin=257.5] [--json=OUT]
+    PYTHONPATH=<worktree>/hp python3 fold_est_903.py verdict CHAINDIR RAW [--Dmin=257.5] [--ref_Dstar=259.9033 --ref_err=0]
+                                                     [--json=OUT]
     PYTHONPATH=<worktree>/hp python3 fold_est_903.py mkplant OUTDIR --shift=S --bases=B1,..   (a synthetic chain)
 
 verdict, the rule registered on #903 for a chain's jets (CHAINDIR/jet_pin3_D*.npz, 25 orders, eight parts) from
@@ -14,7 +15,9 @@ D_b >= Dmin, with RAW a clone of the raw-data repository: (1) control 1, at #603
 the estimate within TOL_B of 259.9033, else no verdict (exit 1); (2) a chain base counts when it has an estimate and
 the plant, rerun at its D_b, recovers every shift within TOL_B; (3) stop when the first two counted bases agree on D*
 within 1e-3 (exit 0; otherwise exit 2, continue the chain); (4) the shift is D* at the counted base nearest the fold
-minus 259.9033, its spread the larger of that base's error and the largest departure of a counted base's D* from it;
+minus the reference (--ref_Dstar, 259.9033 by default; t5: a re-planned ks 130 chain's D*, #841's, for the order's
+effect alone), its spread the larger of that base's error and the largest departure of a counted base's D* from it,
+plus the reference's error --ref_err;
 |shift| +- spread above 0.05 throughout: the truncation moves the fold; below 0.01 throughout: it does not; else
 between, reported; (5) D* - D*_603 at #603's nearest base, for each counted base. A fold moved by more than WIN is not
 found (no base counts).
@@ -220,7 +223,8 @@ def cmd_verdict():
     dmin = float(args.get("Dmin", 257.5))
     ref = os.path.join(raw, "I603-win2", "chain_nsr")
     D0 = float(fm.DSTAR)
-    out = dict(chain=jd, win=WIN, Dstar_ref=D0)
+    REF, REF_ERR = float(args.get("ref_Dstar", D0)), float(args.get("ref_err", 0))
+    out = dict(chain=jd, win=WIN, Dstar_ref=REF, ref_err=REF_ERR)
     r603 = run_dir(ref, min(dmin - 0.1, 258.9), quiet=True)
     ctrl = [r for r in r603 if 258.9 <= r["D"] <= 259.84]
     miss = [abs(r["Dstar"] - D0) if r["Dstar"] is not None else float("inf") for r in ctrl]
@@ -263,8 +267,8 @@ def cmd_verdict():
             code = 0
     if counted:
         top = counted[-1]
-        shift = top["Dstar"] - D0
-        spread = max(top["err"], max(abs(r["Dstar"] - top["Dstar"]) for r in counted))
+        shift = top["Dstar"] - REF
+        spread = max(top["err"], max(abs(r["Dstar"] - top["Dstar"]) for r in counted)) + REF_ERR
         lo, hi = shift - spread, shift + spread
         amin = 0.0 if lo <= 0 <= hi else min(abs(lo), abs(hi))
         amax = max(abs(lo), abs(hi))
@@ -272,9 +276,10 @@ def cmd_verdict():
               "within 0.01: the truncation does not move the fold" if amax < 0.01 else "between 0.01 and 0.05: reported")
         out.update(shift=shift, spread=spread, band=bd, base=top["D"], Dstar=top["Dstar"],
                    diff_603=[r["diff_603"] for r in counted])
-        print("shift%s: D* %.8f at the counted base nearest the fold, %.6f; D* - %.4f = %+.6f, spread %.1e (approximants, "
-              "methods and counted bases; not a bound): %s" % ("" if out["stop"] else " (provisional, the stop test is not met)",
-                                                              top["Dstar"], top["D"], D0, shift, spread, bd))
+        print("shift%s: D* %.8f at the counted base nearest the fold, %.6f; D* - %.8f = %+.6f, spread %.1e (approximants, "
+              "methods and counted bases, plus the reference's %.1e; not a bound): %s" % (
+                  "" if out["stop"] else " (provisional, the stop test is not met)", top["Dstar"], top["D"], REF, shift,
+                  spread, REF_ERR, bd))
         print("matched: D* - D*_603 at #603's nearest base, over the counted bases: %s" % ", ".join(
             "%+.2e" % x for x in out["diff_603"]))
     if "json" in args:
