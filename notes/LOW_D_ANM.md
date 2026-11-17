@@ -8,13 +8,16 @@ continuation in D[^cochelin], drive the low-D legs instead of `hp/lowD_highM.py`
 
 **The Taylor series does not carry the low-D legs past the point where they stall.** At D 3.04315, where #343's leg 2
 met a NaN Lagrange predictor and stalled from its last state, the series' order-1 and order-3 sums from D 3.04375 (M 384)
-have a non-finite residual on both fixed plans, as the Lagrange predictor does (section 4.3). At 3.04335, where the leg
-converged, the order-3 sum is finite and 7000 times closer to the solution than the Lagrange predictor. The obstacle is
-the regularity at the sonic line, which no truncated series has (section 3), so the decision goes to #926's projection.
+have a non-finite residual on both fixed plans, as the Lagrange predictor does (section 4.3). The order-3 sum fails from
+3.04325 on, in the segment x 0.01 → 0.02 where T135's planner froze. At 3.04335, where the leg converged, it is finite
+and 7000 times closer to the solution than the Lagrange predictor. The obstacle is the regularity at the sonic line,
+which no truncated series has (section 3), so the decision goes to #926's projection.
 
 Where the starts are finite, the series is the better start. Section 5 puts it into `lowD_highM.py` as one more start,
 about 85 lines of Python and no kernel change, for an estimated 2× fewer Newton calls at the working resolution. The
-pilot of section 6 checks one such step at M 128 against lowD_highM.py's own solution. A low-D Taylor continuation
+pilot of section 6 takes such a step at M 48 from D 3.7 to 3.695. Its prediction agrees with lowD_highM.py's converged
+Δ to 8.7×10⁻¹⁷ and its corrected state to 3.1×10⁻³⁰, and the check fails under a dropped z₂, a wrong D derivative and
+a shifted D. A low-D Taylor continuation
 already existed (`hp/anm_lowd.py`, `hp/lowD_taylor_leg.py`, T106 and T107, 2026-11-04/05). Its legs froze in the
 planner near D 3.0425 for the same reason, in the same segment of x.
 
@@ -185,7 +188,33 @@ low D: M 48/64 at D 3.7 (`lowDv_D3.7000_M48.npz`, 13 nodes 0.005 to 0.8). The re
 that pair with `--dD 0.005`, and the step is 0.005 (h/R ≈ 0.007). The M 128 design stays runnable as written
 (`run_pilot.sh` with `PAIR=128`).
 
-PENDING
+**Result, step 1** (D 3.7 → 3.695, `I927-mac/pilot48/step1.log`): PASS. The base's plan has 63 steps and its LU's
+pivots run from 1.8×10⁻³ to 4.9. All six orders' GMRES converged in 4 products, and the ratios |z_(k−1)|/|z_k| are
+0.46, 0.54, 0.56, 0.75 and 0.84, so the radius is about D − 3 here too. Against lowD_highM.py's converged M 48 state at
+3.695:
+
+| order n | max \|P_n − z\| | Δ(P_n) − Δ |
+|---|---|---|
+| 0 | 2.60×10⁻¹ | +3.07×10⁻⁴ |
+| 1 | 2.79×10⁻³ | +1.46×10⁻⁵ |
+| 2 | 2.61×10⁻⁵ | +9.23×10⁻⁸ |
+| 3 | 2.31×10⁻⁷ | +4.89×10⁻¹⁰ |
+| 4 | 1.54×10⁻⁹ | +2.56×10⁻¹² |
+| 5 | 9.14×10⁻¹² | +1.46×10⁻¹⁴ |
+| 6 | 1.03×10⁻¹³ | +8.74×10⁻¹⁷ |
+
+(A) holds at 8.7×10⁻¹⁷. The prediction's |F| on the fixed plan is 1.1×10⁻¹³, against 3.7×10⁻³ for the base state.
+Newton from it took 3 calls with full steps to |F| 1.4×10⁻³⁰, and (B) holds at 3.1×10⁻³⁰. lowD_highM.py itself took
+four Newton calls in its first pass and two in its second from its start of |F| 3.7×10⁻³.
+
+**Controls**, each with exit 1:
+
+| control | Δ(P₆) − Δ | (A) | (B) |
+|---|---|---|---|
+| `drop2`, z₂ left out of the sum | +1.45×10⁻⁵ | fails | not run |
+| `kappa`, the jets with κ's n frozen | −2.31×10⁻² | fails | not run |
+| `dshift`, the step to D + 10⁻⁹ | +6.43×10⁻¹¹ | fails | fails, +6.43×10⁻¹¹ after convergence |
+
 
 ## 7. What it decides
 
