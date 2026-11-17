@@ -403,10 +403,17 @@ def load_state(p):
 
 def chain_states():
     """every anm_run.py state of the raw-data repository, and the states of each folder in D"""
-    states = {}
+    states, skipped = {}, set()
     for p in glob.glob(os.path.join(RAW, "**", "anm_pin3_D*.npz"), recursive=True):
         rel = os.path.relpath(p, RAW)
+        # A state outside an anm_run.py run folder is a hand-made one under a chain's name (I900-mac's blends, #900).
+        # It can never pass lineage_check, so it is no candidate for a backbone.
+        if not os.path.exists(os.path.join(os.path.dirname(p), "anm_run.jsonl")):
+            skipped.add(os.path.dirname(rel))
+            continue
         states[rel] = load_state(rel)
+    if skipped:
+        print(f"chain: skipped anm_pin3 states outside anm_run.py runs in {', '.join(sorted(skipped))}")
     by_dir = defaultdict(list)
     for rel in states:
         by_dir[os.path.dirname(rel)].append(rel)
