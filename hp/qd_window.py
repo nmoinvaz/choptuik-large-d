@@ -10,7 +10,9 @@ from double-double starts up to D 70.5; notes/QUAD_DOUBLE.md 12.4-12.5). pinned:
 system, p1's harmonics above its pin held at the state's own values (reseed.pinned, the PinnedQ of hp/pinning.py,
 T84-mac/qd_pinned.py's system). One record per state in OUT.jsonl, in qd_fullleg's fields plus mode, pin and source.
 A converged state is saved in --states (default: OUT's folder) as <name>_<mode>.npz, never beside its input.
---mutate dshift solves at D + 1e-6 and must change Delta by more than its spread (the control).
+--mutate dshift solves at D + --dshift (1e-10, small enough that the full system's narrow basin still holds the
+start) and must converge to a Delta moved by about dDelta/dD times the shift, far above the starts' spread (the
+control).
 """
 import argparse
 import json
@@ -52,6 +54,7 @@ def main():
     ap.add_argument("--threads", type=int, default=2)
     ap.add_argument("--states", default=None)
     ap.add_argument("--mutate", choices=["dshift"], default=None)
+    ap.add_argument("--dshift", type=float, default=1e-10)
     ap.add_argument("--plan_tol", type=float, default=1e-32, help="full mode: the Taylor plan's step tolerance; a finer "
                     "one (1e-34) measures the plan's share of the error")
     ap.add_argument(FLAG, action="store_true", help=HELP)
@@ -60,7 +63,7 @@ def main():
     require_raw(a.out, os.path.join(sdir, "x"), allow=a.allow_unraw)
     os.makedirs(sdir, exist_ok=True)
     for path in a.states_in:
-        zq, m, rec = solve(path, a.mode, a.threads, 1e-6 if a.mutate == "dshift" else 0.0, a.plan_tol)
+        zq, m, rec = solve(path, a.mode, a.threads, a.dshift if a.mutate == "dshift" else 0.0, a.plan_tol)
         rec["mutate"] = a.mutate
         print(f"{rec['state']}: D {rec['D']}: {a.mode}, {'converged' if rec['conv'] else 'NOT converged'}, |F| "
               f"{rec['F']:.2e}, {rec['steps']} steps, {rec['seconds']} s, Delta {zq[0][-1]:.17f} {zq[1][-1]:+.6e} "
