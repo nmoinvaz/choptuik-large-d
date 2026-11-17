@@ -7,19 +7,20 @@ continuation in D[^cochelin], drive the low-D legs instead of `hp/lowD_highM.py`
 ## Answer
 
 **The Taylor series does not carry the low-D legs past the point where they stall.** At D 3.04315, where #343's leg 2
-met a NaN Lagrange predictor and stalled from its last state, the series' order-1 and order-3 sums from D 3.04375 (M
-384) have a non-finite residual on both fixed plans, as the Lagrange predictor does (section 4.3). The order-3 sum fails
+met a NaN Lagrange predictor and stalled from its last state, the series' order-1 and order-3 sums from D 3.04375, at M
+384, have a non-finite residual on both fixed plans, as the Lagrange predictor does (section 4.3). The order-3 sum fails
 from 3.04325 on, in the segment x 0.01 → 0.02 where T135's planner froze. At 3.04335, where the leg converged, it is
 finite and 7000 times closer to the solution than the Lagrange predictor. The obstacle is the regularity at the sonic
 line, which no truncated series has (section 3), so the decision goes to #926's projection.
 
 Where the starts are finite, the series is the better start. Section 5 puts it into `lowD_highM.py` as one more start,
 about 85 lines of Python and no kernel change, for an estimated 2× fewer Newton calls at the working resolution. The
-pilot of section 6 takes such a step at M 48 from D 3.7 to 3.695. Its prediction agrees with lowD_highM.py's converged
-Δ to 8.7×10⁻¹⁷ and its corrected state to 3.1×10⁻³⁰, and the check fails under a dropped z₂, a wrong D derivative and
-a shifted D. A low-D Taylor continuation
-already existed (`hp/anm_lowd.py`, `hp/lowD_taylor_leg.py`, T106 and T107, 2026-11-04/05). Its legs froze in the
-planner near D 3.0425 for the same reason, in the same segment of x.
+pilot of section 6 takes two such steps at M 48, D 3.7 → 3.695 → 3.69. Their predictions agree with lowD_highM.py's
+converged Δ to 9×10⁻¹⁷ and their corrected states to 4×10⁻³⁰, and the check fails under a dropped z₂, a wrong D
+derivative and a shifted D.
+
+A low-D Taylor continuation already existed (`hp/anm_lowd.py`, `hp/lowD_taylor_leg.py`, T106 and T107, 2026-11-04/05).
+Its legs froze in the planner near D 3.0425 for the same reason, in the same segment of x.
 
 ## 1. What already exists at low D
 
@@ -208,6 +209,11 @@ pivots run from 1.8×10⁻³ to 4.9. All six orders' GMRES converged in 4 produc
 Newton from it took 3 calls with full steps to |F| 1.4×10⁻³⁰, and (B) holds at 3.1×10⁻³⁰. lowD_highM.py itself took
 four Newton calls in its first pass and two in its second from its start of |F| 3.7×10⁻³.
 
+**Result, step 2** (D 3.695 → 3.69 from step 1's corrected state, `I927-mac/pilot48/step2.log`): PASS. The reference is
+a second lowD_highM.py run from its converged 3.695 pair (the first stopped on its `--hours` rule after one point).
+The ratios are 0.47, 0.53, 0.57, 0.75 and 0.83, the partial sums fall as in step 1 to Δ(P₆) − Δ = +9.0×10⁻¹⁷ (A), and
+the corrector converged in 3 full steps to |F| 4.1×10⁻³⁰ with Δ 3.5×10⁻³⁰ from the reference (B).
+
 **Controls**, each with exit 1:
 
 | control | Δ(P₆) − Δ | (A) | (B) |
@@ -238,6 +244,7 @@ projection of #926.
   without planning from them; against converged states where they exist; `--mutate drop2`.
 - `hp/anm_lowd_pilot.py`: one step (series, prediction and Newton on the base's plan) checked against lowD_highM.py's
   state at the target; `--mutate drop2|kappa|dshift`.
-- Raw: `I927-mac/` of the raw-data repository (its README has the commands and the criteria as fixed before each run).
+- Raw: `I927-mac/` of the raw-data repository at 5abcc546 (its README has the commands, the criteria as fixed before
+  each run, the tables and the recommended tasks).
 
 [^cochelin]: B. Cochelin, Comput. Struct. 53, 1181–1192 (1994), as in [ALGORITHM.md](../ALGORITHM.md)'s footnote 2.
