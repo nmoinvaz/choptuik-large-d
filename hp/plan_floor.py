@@ -14,7 +14,10 @@ control must not fall below (a): a coarser plan cannot remove truncation. One re
 --by_block: on the own plan, max |F| of each block of 4M rows (node block j, the last row Delta's) and the 8 largest
 rows as (block, field, tau index). --newton JAC (f64g, f64, f64h, f64hg, dd): Newton from the state on its own plan
 with that step (hpkernel.driver.newton_solve, tol 1e-28, --it_max steps), one record per step: a residual that falls
-below the own plan's floor says the step's accuracy, not the state, set it.
+below the own plan's floor says the step's accuracy, not the state, set it. --delta_corr: on the own plan, the
+linearised Delta correction -y.F of the state's residual, y = J^-T e_Delta through the f64 LU of Solver.newton_mixed
+(as lowD_dd.sensitivity reads it), with sum |y_i F_i| as its bound and max |y| per block: the residual floor's effect
+on Delta, to set against the resolution step.
 """
 import argparse
 import json
@@ -26,6 +29,7 @@ import numpy as np  # noqa: E402
 
 import sonic_valley  # noqa: E402
 from hpkernel.driver import load, make_solver, newton_solve  # noqa: E402
+from multidouble import dd_dot  # noqa: E402
 from raw_out import FLAG, HELP, require_raw  # noqa: E402
 
 
@@ -52,7 +56,8 @@ def main():
     ap.add_argument("--by_block", action="store_true")
     ap.add_argument("--newton", default=None, choices=["f64g", "f64", "f64h", "f64hg", "dd"])
     ap.add_argument("--it_max", type=int, default=6)
-    ap.add_argument("--skip_plans", action="store_true", help="only --by_block and --newton")
+    ap.add_argument("--skip_plans", action="store_true", help="only --by_block, --delta_corr and --newton")
+    ap.add_argument("--delta_corr", action="store_true")
     ap.add_argument(FLAG, action="store_true", help=HELP)
     a = ap.parse_args()
     require_raw(a.out, allow=a.allow_unraw)
@@ -97,6 +102,23 @@ def main():
                 fo.write(json.dumps(dict(state=os.path.basename(path), D=D, M=M, by_block=blocks,
                                          top=[dict(row=int(i), block=int(i) // B, field=(int(i) % B) // M, tau=int(i) % M,
                                                    F=float(F[i])) for i in top])) + "\n")
+        if a.delta_corr:
+            s.set_segs(own)
+            s.newton_mixed(zh, zl)             # factors the f64 Jacobian at the state; its LU serves J^-T
+            L = s.size
+            e = np.zeros(L)
+            e[-1] = 1.0
+            yh, yl = (np.asarray(v) for v in s.lu_solve_t(e, np.zeros(L)))
+            fh, fl = (np.asarray(v) for v in s.residual(zh, zl))
+            dD = -float(dd_dot(yh, yl, fh, fl)[0])
+            bound = float(np.sum(np.abs(yh) * np.abs(fh + fl)))
+            B = 4 * M
+            sens = [float(np.abs(yh[j * B:(j + 1) * B]).max()) for j in range((L - 1) // B)]
+            print(f"  Delta correction -y.F {dD:+.3e}, bound sum|y F| {bound:.3e}, max|y| by block: "
+                  + ", ".join(f"{j}:{v:.1e}" for j, v in enumerate(sens)), flush=True)
+            with open(a.out, "a") as fo:
+                fo.write(json.dumps(dict(state=os.path.basename(path), D=D, M=M, delta_corr=dD, bound=bound,
+                                         sens=sens)) + "\n")
         if a.newton:
             s.set_segs(own)
             _, _, hist = newton_solve(s, zh, zl, tol=1e-28, it_max=a.it_max, verbose=True, jac=a.newton)
