@@ -35,3 +35,11 @@ debug = false
 # ("mis-aligned LINKEDIT string pool"; found on the Mac runner, comms.txt 2026-10-24 22:44 UTC). Unstripped, the table is
 # aligned. The arithmetic is unchanged; the symbol and debug sections stay, and the code's layout can shift.
 strip = false
+
+# Working builds: thin LTO over 16 codegen units compiles far faster than release's fat LTO over one. Rust neither fuses
+# nor reorders floating-point operations, so the arithmetic should match release, but compare a run's digits with a
+# release build before quoting them. Built with `HP_PROFILE=release-dev hp/build.sh`.
+[profile.release-dev]
+inherits = "release"
+lto = "thin"
+codegen-units = 16
