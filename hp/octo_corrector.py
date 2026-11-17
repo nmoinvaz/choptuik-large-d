@@ -295,9 +295,9 @@ def newton_od(s, z, tol=1e-40, it_max=12, max_halvings=8, verbose=True, mutate=0
     first move as their root (#528), so the chord's point is the solution to the chord's precision. It is accepted by
     the natural test against the first step (theta at most 0.75, or max |F| <= tol), and the iteration continues from
     it with the chosen test; refused, the first step's trials run as without the chord.
-    weak_first=1 (with strong_chord k, #944): the first step's components along the k weakest right directions of J0 are
-    dropped before the chord, so the weak coordinates stay at the start's while the strong rows are solved, and only the
-    later Newton steps move them. Past D 233 at orders 150 and 160 the whole first step moves |F| from 1.8e-33 to 7.9e9
+    weak_first=1 (with strong_chord k, #944): for the first iteration the k weakest right directions of J0 take the junk
+    subspace's place: the first step and the correction each of its trials is judged by leave them out, so the weak
+    coordinates stay at the start's while the strong rows are solved, and only the later Newton steps move them. Past D 233 at orders 150 and 160 the whole first step moves |F| from 1.8e-33 to 7.9e9
     along those directions, whose second derivative is about 6e37, so their basin is far below the step's size."""
     import time
     from multidouble import od_axpy
@@ -319,6 +319,13 @@ def newton_od(s, z, tol=1e-40, it_max=12, max_halvings=8, verbose=True, mutate=0
                   f"{len(sd)} weak ones with Delta content kept", flush=True)
     zero8 = np.zeros(len(z[0]))
     small = 0
+    # weak_first (#944): for the first iteration the k weakest right directions of J0 (every one, Delta content or not)
+    # take the junk subspace's place, so the first step and the correction it is judged by both leave them out
+    weak_V, V_base = None, V
+    if weak_first and strong_chord:
+        weak_V, _, _ = junk_subspace_o(s, strong_chord, delta_max=2.0)
+        if verbose:
+            print(f"  od: --od_weak_first: the first step leaves out the {strong_chord} weakest directions", flush=True)
 
     def proj(d):
         """the eight-part step with its components along V removed"""
@@ -328,6 +335,8 @@ def newton_od(s, z, tol=1e-40, it_max=12, max_halvings=8, verbose=True, mutate=0
         return o8(od_axpy(-1.0, np.ascontiguousarray(c), *([zero8] * 7), *o8(d)))
 
     for it in range(it_max + 1):
+        if it == 1 and weak_V is not None:
+            V = V_base          # from the second step on, the weak directions move
         nf = omax(st[1:3])
         if V is not None and V.shape[1] and float(np.abs(proj(st[0])[0]).max()) < tol_dz:
             if verbose:
@@ -342,6 +351,8 @@ def newton_od(s, z, tol=1e-40, it_max=12, max_halvings=8, verbose=True, mutate=0
             return z, hist, True
         if it == it_max:
             break
+        if it == 0 and weak_V is not None:
+            V = weak_V
         d = proj(st[0])
         if it == 0 and on_first is not None:
             on_first(z, d)
@@ -355,16 +366,8 @@ def newton_od(s, z, tol=1e-40, it_max=12, max_halvings=8, verbose=True, mutate=0
             # #528/#674: keep the first step's weak coordinates and solve the strong rows by the chord through the
             # start's LU (chord_strong). With the strong rows solved the weak equations are affine there (3S = T), and
             # their root is the first move.
-            if weak_first:
-                # #944: keep the weak coordinates at the start's for the first step (chord_strong's V, every direction)
-                Vw, _, _ = junk_subspace_o(s, strong_chord, delta_max=2.0)
-                for _ in range(2):
-                    cw = Vw @ (Vw.T @ (np.asarray(d[0]) + np.asarray(d[1])))
-                    d = o8(od_axpy(-1.0, np.ascontiguousarray(cw), *([zero8] * 7), *o8(d)))
+            if weak_V is not None:
                 rec["weak_first"] = True
-                if verbose:
-                    print(f"  on 0: the first step's components along the {strong_chord} weakest directions dropped "
-                          f"(--od_weak_first), |d| {float(np.abs(d[0]).max()):.3e}", flush=True)
             zc, ok_c, chord = chord_strong(s, z, d, strong_chord, chord_it, tol, tol_dz, mutate, verbose)
             theta = float("inf")
             if ok_c:
