@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
-"""How far each solver reaches in D, and what stops it: one row per solver of hp/data/delta_all.csv on a log D axis.
+"""How far each solver reaches in D, what stops it, and the error of its Delta: one row per solver of
+hp/data/delta_all.csv on a D axis, and below it each row's err.
 
     cd hp && python3 plot_solver_limits.py RAWDIR [-o solver_limits.svg]
 
@@ -35,15 +36,19 @@ def chain_folder(src):
 
 
 def rows_by_solver():
+    """D of every row per solver, and (D, err) of the rows with an err"""
     rows = list(csv.DictReader(open(os.path.join(HERE, "data", "delta_all.csv"))))
     out = {k: [] for k in ("dd", "pinned", "qd", "chain_q", "chain_o", "series")}
+    err = {k: [] for k in out}
     for r in rows:
         k = r["kind"]
         if k == "chain_fit":
             k = "chain_q" if chain_folder(r["source"]) in QD_CORRECTED else "chain_o"
         if k in out:
             out[k].append(float(r["D"]))
-    return out
+            if r["err"]:
+                err[k].append((float(r["D"]), float(r["err"])))
+    return out, err
 
 
 def sonic_closing(raw):
@@ -78,7 +83,7 @@ def main():
     ap.add_argument("raw")
     ap.add_argument("-o", default=os.path.join(HERE, "solver_limits.svg"))
     a = ap.parse_args()
-    by = rows_by_solver()
+    by, err = rows_by_solver()
     Dc, gap_pts = sonic_closing(a.raw)
     Ds = fold_dstar()
     q_end, o_start = max(by["chain_q"]), min(by["chain_o"])
@@ -91,9 +96,10 @@ def main():
         ("1/n series fit: an extrapolation, not a solve", "series", 9),
     ]
     n = len(spec)
-    print(f"{'solver':48s} {'rows':>5s} {'D from':>11s} {'D to':>11s}")
+    print(f"{'solver':48s} {'rows':>5s} {'D from':>11s} {'D to':>11s} {'err from':>9s} {'err to':>9s}")
     for label, k, _ in spec:
-        print(f"{label:48s} {len(by[k]):5d} {min(by[k]):11.5f} {max(by[k]):11.5f}")
+        e = [v for _, v in err[k]]
+        print(f"{label:48s} {len(by[k]):5d} {min(by[k]):11.5f} {max(by[k]):11.5f} {min(e):9.1e} {max(e):9.1e}")
     print(f"\nsonic closing (I933-win2, M 384, line through D {', '.join(f'{d:.5f}' for d, _ in gap_pts)}): D {Dc:.6f}")
     print(f"quad-double corrector: last row D {q_end:.4f}; octo-double corrector: first row D {o_start:.4f}")
     print(f"fold of the discrete system (fold_259.csv, median of the kept estimates): D* {Ds:.4f}")
@@ -128,8 +134,35 @@ def main():
     callout(svg, xmap(Ds), row_y["chain_o"], f"fold, D* {Ds:.2f}", dx=40,
             dy=(row_y["dd"] + row_y["pinned"]) / 2 - row_y["chain_o"])
     better_hint(svg, x, top, w, h, "axis", label="farther")
+
+    # the error of each row's Delta, on the same D axis
+    top2 = caption(svg, 16, top + h + 70, "The error of each solver's Δ along D",
+                   "the err column of delta_all.csv per row: a resolution change, a fit spread, a pin or start gap, or "
+                   "the weak pivot near the fold (estimates, not bounds)")
+    h2 = 240
+    lo_e, hi_e = 1e-30, 10.0
+    orig_l = dg.nice_log_ticks
+    dg.nice_log_ticks = lambda lo, hi: [10.0 ** e for e in range(-30, 1, 5)] if (lo, hi) == (lo_e, hi_e) else orig_l(lo, hi)
+    try:
+        xm2, ym2 = axes(svg, x, top2, w, h2, (0, 400), (lo_e, hi_e, "log"), "spacetime dimension D",
+                        "error estimate of Δ", xfmt=lambda v: f"{v:g}", yfmt=lambda v: "1" if round(math.log10(v)) == 0 else f"1e{round(math.log10(v))}")
+    finally:
+        dg.nice_log_ticks = orig_l
+    for label, k, slot in spec:
+        dots = "".join(f'<circle cx="{xm2(d):.1f}" cy="{ym2(min(max(e, lo_e), hi_e)):.1f}" r="1.8"/>'
+                       for d, e in sorted(err[k]))
+        svg.add(f'<g fill="{SERIES[slot]}"><title>{dg.esc(label)}: err {min(v for _, v in err[k]):.1e} to '
+                f'{max(v for _, v in err[k]):.1e}</title>{dots}</g>')
+    short = {"dd": "double-double", "pinned": "pinned", "qd": "quad-double", "chain_q": "chain, qd corrector",
+             "chain_o": "chain, od corrector", "series": "series fit"}
+    dg.legend(svg, x + w, top2 - 8, [(short[k], SERIES[slot]) for _, k, slot in spec])
+    Dw, ew = max(err["chain_o"], key=lambda p: p[1])
+    callout(svg, xm2(Dw), ym2(ew), f"weak pivot at the fold: {ew:.2g}", dx=-60, dy=14)
+    Dd, ed = max(err["dd"], key=lambda p: p[1])
+    callout(svg, xm2(Dd), ym2(ed), f"resolution change at D {Dd:g}: {ed:.2g}", dx=60, dy=-24)
+    better_hint(svg, x, top2, w, h2, "right", label="better", reverse=True)
     fh = footnote(svg, [f"hp/data/delta_all.csv, fold_259.csv at {commit()}", "sonic closing: raw I933-win2",
-                        "chain correctors: T138-win2 logs"], "drawn on " + host_specs(), [], top + h + 46, REPO)
+                        "chain correctors: T138-win2 logs"], "drawn on " + host_specs(), [], top2 + h2 + 46, REPO)
     open(a.o, "w").write(svg.finish(fh))
     print(f"\nwrote {a.o}")
 
