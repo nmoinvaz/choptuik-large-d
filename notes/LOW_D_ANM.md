@@ -124,13 +124,17 @@ lowD_highM.py re-plans that state at 10⁻³², which this stands in for.
 | 3.04315 (−0.0006) | order 3 | nan | nan |
 | 3.04315 | order 1 | nan | nan |
 | 3.04315 | Lagrange through 3.04375, 3.04355, 3.04335 | nan | nan |
+| 3.04315 | order 0 (the series' base state, D 3.04375) | | 8.10×10⁻² |
 | 3.04315 | the 3.04335 state itself (the leg's "last state") | | PENDING |
 
-The order-3 sum is finite at 3.04335, where the leg converged, and close to the solution there (4.2). At 3.04315 it
-is not finite on either plan, and neither is the order-1 sum or the Lagrange predictor. The Lagrange case reproduces at
-M 384 what #343's leg 2 met at M 320.
-
-PENDING
+The order-3 sum is finite at 3.04335, where the leg converged, and close to the solution there (4.2). At 3.04325 and
+3.04315 it is not finite, and at 3.04315 neither is the order-1 sum or the Lagrange predictor, on either plan. The
+Lagrange case reproduces at M 384 what #343's leg 2 met at M 320. In the two cases where the probe recorded where (the
+order-3 sums at 3.04325 and 3.04315 on the base's plan), the non-finite rows are those of the segment x 0.01 → 0.02,
+where T135's planner froze at x 0.0137. The series' base state itself, 0.0006 away in D and so about |z₁| h ≈ 8 off
+in the max norm (an estimate), is finite at 3.04315. The farther state passes and the nearer ones fail, as in T135's table, where the base
+state planned down to 3.04305. So accuracy does not help: a state near the branch below D ≈ 3.0433 is not finite in
+that segment, whatever predicted it.
 
 ## 5. The design: the series as a start inside lowD_highM.py
 
