@@ -6,7 +6,17 @@ continuation in D[^cochelin], drive the low-D legs instead of `hp/lowD_highM.py`
 
 ## Answer
 
-PENDING
+**The Taylor series does not carry the low-D legs past the point where they stall.** At D 3.04315, where #343's leg 2
+met a NaN Lagrange predictor and stalled from its last state, the series' order-1 and order-3 sums from D 3.04375 (M 384)
+have a non-finite residual on both fixed plans, as the Lagrange predictor does (section 4.3). At 3.04335, where the leg
+converged, the order-3 sum is finite and 7000 times closer to the solution than the Lagrange predictor. The obstacle is
+the regularity at the sonic line, which no truncated series has (section 3), so the decision goes to #926's projection.
+
+Where the starts are finite, the series is the better start. Section 5 puts it into `lowD_highM.py` as one more start,
+about 85 lines of Python and no kernel change, for an estimated 2× fewer Newton calls at the working resolution. The
+pilot of section 6 checks one such step at M 128 against lowD_highM.py's own solution. A low-D Taylor continuation
+already existed (`hp/anm_lowd.py`, `hp/lowD_taylor_leg.py`, T106 and T107, 2026-11-04/05). Its legs froze while
+planning the predicted state, which anm_run.py does only once the prediction's |F| is below 10⁻⁶.
 
 ## 1. What already exists at low D
 
@@ -101,7 +111,23 @@ in the state (D − 3 = 0.044) and 0.08–0.15 in Δ. At 3.04335 the order-3 sum
 `--mutate drop2` (z₂ left out) moves orders 2 and 3 at 3.04335 to +8.86×10⁻⁶ and +8.83×10⁻⁶, the size of z₂'s term, as
 fixed before the run.
 
-**4.3 Residuals on fixed plans at D 3.04315** (`I927-mac/fixed_plan/d304315*`).
+**4.3 Residuals on fixed plans below D 3.0434** (`I927-mac/fixed_plan/`). The same series and #343's states, each
+prediction's max |F| on fixed plans, with no planning from it. "Base" is the series' own plan (T105's state, 8319
+steps). "3.04335" is the stored plan of #343's converged state there (8090 steps), the plan the leg would reuse.
+lowD_highM.py re-plans that state at 10⁻³², which this stands in for.
+
+| D (h) | prediction | \|F\| on the base's plan | \|F\| on 3.04335's plan |
+|---|---|---|---|
+| 3.04335 (−0.0004) | order 3 | 1.33×10⁻⁶ | |
+| 3.04325 (−0.0005) | order 3 | PENDING | |
+| 3.04315 (−0.0006) | order 3 | nan | nan |
+| 3.04315 | order 1 | nan | nan |
+| 3.04315 | Lagrange through 3.04375, 3.04355, 3.04335 | nan | nan |
+| 3.04315 | the 3.04335 state itself (the leg's "last state") | | PENDING |
+
+The order-3 sum is finite at 3.04335, where the leg converged, and close to the solution there (4.2). At 3.04315 it
+is not finite on either plan, and neither is the order-1 sum or the Lagrange predictor. The Lagrange case reproduces at
+M 384 what #343's leg 2 met at M 320.
 
 PENDING
 
@@ -152,7 +178,18 @@ PENDING
 
 ## 7. What it decides
 
-PENDING
+#927 asked whether to invest in the Taylor continuation at low D, or keep the Lagrange predictor with the sonic-line
+projection of #926.
+
+- **Keep the Lagrange predictor and do #926 first.** The series does not remove the NaN predictors at the sonic line.
+  At D 3.04315 its sums are as non-finite as the Lagrange predictor on the plans the leg would use. Longer steps toward
+  D = 3 need a start that is regular at x = c, whatever predicted it.
+- **The series is worth adding after #926 works, and combines with it.** A projection maps a predicted state onto the
+  sonic line's regularity conditions, so the closer the predicted state, the smaller the projection's change. The
+  order-3 sum is 7000 times closer than the Lagrange predictor at 3.04335 (section 4.2). The change is section 5's,
+  about a day of Python.
+- **No quad- or octo-double machinery is needed at low D.** None of anm_run.py's large-D parts (pinning, the re-seed,
+  octo-double, M = 32) addresses a low-D obstacle (section 2).
 
 ## Files
 
