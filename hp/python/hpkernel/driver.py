@@ -235,10 +235,23 @@ def exact_last_step(s, zh, zl, tol):
     return zh, zl, out
 
 
+def stalled(F_before, F_after, window, factor):
+    """the stall rule of newton_solve: F_before, max |F| before each accepted step of the solve so far (the last one
+    included); F_after, max |F| after the last. True when the last `window` accepted steps together did not bring max |F|
+    to at most `factor` times its value before the first of them (a nan counts as not brought down)."""
+    return bool(window) and len(F_before) >= window and not F_after <= factor * F_before[-window]
+
+
 def newton_solve(s, zh, zl, tol=1e-28, it_max=12, chord=0, verbose=True, ls=True, max_halvings=10, jac="dd", mixed=None,
-                 gmres=None, dd_finish=True, dd_last=False):
+                 gmres=None, dd_finish=True, dd_last=False, stall=0, stall_factor=0.5, prior=None):
     """Newton with exact Jacobians and backtracking on |F|_2 (Armijo, factor 1/2); optional chord steps with the
     stored LU after full Newton steps. Returns zh, zl, history.
+    stall (0, the default: off): the solve ends with a record failed="stall" after an accepted step when the last
+    `stall` accepted steps together did not bring max |F| below stall_factor times its value before the first of them
+    (stalled). The line search accepts any decrease of 1e-4 lam relative, so without it a solve that sits at one |F|
+    takes steps until it_max (#343, D 3.04315, M 320: |F| 2.7e-2, 1.35e-2, 1.35e-2, 1.41e-2 at lam 1/2, 1/2, 1/4).
+    prior: the history of earlier calls of the same solve, whose accepted steps (records with lam) count toward the
+    window (lowD_dd.solve_point takes one iteration per call). The rule needs the line search (ls).
     jac="f64": mixed precision, each step with the f64 Jacobian (s.newton_mixed(zh, zl, **mixed), mixed a dict of its
     options or None; the residual stays double-double, so the solution is the same; notes/MIXED_PRECISION.md). A step
     along which the line search finds no decrease is then retried once with the exact Jacobian (s.newton), and once
@@ -257,6 +270,7 @@ def newton_solve(s, zh, zl, tol=1e-28, it_max=12, chord=0, verbose=True, ls=True
     def search(zh, zl, dh, dl, n0):
         lam = 1.0
         accepted = not ls
+        F1 = None
         for h in range(max_halvings + 1):
             th, tl = dd_add(zh, zl, dh * lam, dl * lam)
             if not ls:
@@ -265,9 +279,10 @@ def newton_solve(s, zh, zl, tol=1e-28, it_max=12, chord=0, verbose=True, ls=True
             n1 = rnorm(Th, Tl)
             if np.isfinite(n1) and n1 <= (1 - 1e-4 * lam) * n0:
                 accepted = True
+                F1 = dd_norm(Th, Tl)  # max |F| at the accepted point (the stall rule)
                 break
             lam *= 0.5
-        return accepted, lam, th, tl
+        return accepted, lam, th, tl, F1
 
     cur = jac
     for it in range(it_max):
@@ -300,7 +315,7 @@ def newton_solve(s, zh, zl, tol=1e-28, it_max=12, chord=0, verbose=True, ls=True
                 print(f"  newton {it}: |F| {nF:.2e} converged (last |dz| {dd_norm(dh, dl):.1e}) Delta {zh[-1]:.15f}{polish}",
                       flush=True)
             break
-        accepted, lam, th, tl = search(zh, zl, dh, dl, n0)
+        accepted, lam, th, tl, F1 = search(zh, zl, dh, dl, n0)
         if not accepted and cur != "dd":
             if s.m <= DENSE_M_MAX:
                 if verbose:
@@ -315,7 +330,7 @@ def newton_solve(s, zh, zl, tol=1e-28, it_max=12, chord=0, verbose=True, ls=True
                     print(f"  newton {it}: |F| {nF:.2e}: no decrease along the f64-Jacobian step; retrying with the dd4 "
                           f"Jacobian (M > {DENSE_M_MAX}: no exact dense Jacobian)", flush=True)
                 dh, dl, Fh, Fl, pmin, pmax = s.newton_mixed(zh, zl, **dict(mixed or {}, tangents=4, dd_base=True))
-            accepted, lam, th, tl = search(zh, zl, dh, dl, n0)
+            accepted, lam, th, tl, F1 = search(zh, zl, dh, dl, n0)
         if not accepted:
             hist.append(dict(it=it, F=nF, failed="line search", Delta=float(zh[-1]), t=round(time.time() - t0, 1)))
             if verbose:
@@ -333,6 +348,15 @@ def newton_solve(s, zh, zl, tol=1e-28, it_max=12, chord=0, verbose=True, ls=True
         if verbose:
             print(f"  newton {it}: |F| {nF:.2e} |dz| {rec['dz']:.2e} lam {lam:.3g} dDelta {rec['dDelta']:+.2e} "
                   f"Delta {zh[-1]:.15f} piv {pmin:.1e}..{pmax:.1e}  t {rec['t']}s", flush=True)
+        Fb = [h["F"] for h in list(prior or []) + hist if "lam" in h]
+        # (below tol the next iteration converges: no stall)
+        if ls and not F1 < tol and stalled(Fb, F1, stall, stall_factor):
+            hist.append(dict(it=it, F=F1, failed="stall", F_from=Fb[-stall], steps=stall, Delta=float(zh[-1]),
+                             t=round(time.time() - t0, 1)))
+            if verbose:
+                print(f"  newton {it}: |F| {Fb[-stall]:.2e} -> {F1:.2e} over {stall} accepted steps, not below "
+                      f"{stall_factor:g} of it: a stall, giving up", flush=True)
+            break
         if lam == 1.0:
             for c in range(chord):
                 ch, cl, Fh2, Fl2 = s.chord(zh, zl)
