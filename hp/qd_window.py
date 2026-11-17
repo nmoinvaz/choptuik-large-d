@@ -46,12 +46,14 @@ def solve(path, mode, threads, dshift=0.0, plan_tol=1e-32, dkt=0):
         from reseed import pinned
         if not pin:
             raise SystemExit(f"{path}: no pin in its meta (kfreeze) or its name (pinN_), so no pinned system")
-        _, _, sq = pinned(dict(m, kfreeze=pin), D, z, threads=threads)
-        plan_steps = None
+        s, _, sq = pinned(dict(m, kfreeze=pin), D, z, threads=threads)
+        if plan_tol != 1e-32:
+            s.set_segs(s.plan(z[0], z[1], plan_tol, 0.05))     # pinned() plans at 1e-32
+        plan_steps = sum(len(g) - 1 for g in s.get_segs())
     t0 = time.time()
     zq, hist, conv = newton_qd(sq, z, tol=1e-50, it_max=10, verbose=False)
     f = hist[-1].get("F_new", hist[-1]["F"]) if hist else float("nan")
-    return zq, m, dict(state=os.path.basename(path), source=path, D=D, mode=mode, pin=pin, plan_tol=plan_tol if mode == "full" else None, conv=bool(conv), F=f,
+    return zq, m, dict(state=os.path.basename(path), source=path, D=D, mode=mode, pin=pin, plan_tol=plan_tol, conv=bool(conv), F=f,
                        steps=len(hist), plan_steps=plan_steps, Delta_q=[float(p[-1]) for p in zq], seconds=round(time.time() - t0), hist=hist)
 
 
