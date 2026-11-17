@@ -51,6 +51,14 @@ solved in two passes as in 2a, and the pair record says so (helper_fallback); a 
 row with line-search factors <= --stop_lam (1/8: Newton wandering in the
 weak directions from a predictor too far off, as at D 3.15 from |F| 0.7), and stops at the residual floor (|F| below
 --accept and falling by less than --floor_ratio in a step).
+The sonic valley (notes/LOW_D.md 17): near D 3.043 min over tau of c - x, where the p equation is singular, has a valley
+at x ~ 0.0143 whose floor, the gap min c - x, closes linearly as D falls, and the x integration through it is stiff
+like 1 / (c - x). A plan made for one gap then blows up at a smaller one on the starts, the last state's too.
+--sonic_refine R reads the starts again on the reused plan with the steps of the segments near x = c split R (then
+R^2, ..., --sonic_levels) times when a start's |F| is nan on it; a start finite on such a plan is solved in two passes
+on its own plan (the split plan is a gate: its truncation error would floor Newton); --sonic_stop records the valley's
+gap for each M_n solution (at the start also for the last 4 M_n states of the history) and stops before a target at
+or below the D where the line through the last 3 or 4 gaps reaches 0.
 Stop rules (each recorded with its reason): the largest M in --Ms cannot keep the difference below --diff_max; a
 point fails with the step below --min_step; the projected time of the next point (the last point's solves or its
 running time, the larger) exceeds --point_hours; --hours of wall time in all, counted across restarts, or the next
@@ -79,6 +87,7 @@ os.environ.setdefault("OPENBLAS_NUM_THREADS", "1")
 import numpy as np  # noqa: E402
 
 import lowD_dd  # noqa: E402
+import sonic_valley  # noqa: E402
 from hpkernel.driver import load, make_solver, predict, renode, resample_z, save  # noqa: E402
 from raw_out import FLAG, HELP, require_raw  # noqa: E402
 
@@ -157,6 +166,17 @@ def main():
                     "predictor in two passes instead of failing the point (off: the point fails and the step is halved)")
     ap.add_argument("--helper_it_max", type=int, default=None, help="Newton iterations of the M_c helper (default "
                     "--it_max; a test of --helper_fallback forces the helper to fail with 1)")
+    ap.add_argument("--sonic_refine", type=int, default=0, help="when a start's |F| is nan on the reused plan, read the "
+                    "starts again on that plan with the steps of the segments near x = c split R, then R^2, ... times "
+                    "(--sonic_levels); a start finite on the first such plan is solved on its own plan, in two passes "
+                    "where the solve has them (0, the default: off; notes/LOW_D.md 17)")
+    ap.add_argument("--sonic_levels", type=int, default=2, help="--sonic_refine: refinements tried (R, R^2, ...)")
+    ap.add_argument("--sonic_below", type=float, default=1e-2, help="a segment is near x = c when min over tau of c - x "
+                    "at one of its end nodes is below this")
+    ap.add_argument("--sonic_stop", action="store_true", help="after each pair, record the gap of the sonic valley of "
+                    "the M_n solution (sonic_valley.valley on its own plan); stop before a target at or below the D "
+                    "where the line through the last 3 or more gaps at this M_n reaches 0 (the x integration then "
+                    "meets x = c)")
     ap.add_argument(FLAG, action="store_true", help=HELP)
     a = ap.parse_args()
     STATES = a.states
@@ -273,12 +293,60 @@ def main():
         s = make_solver(D, M, nodes=st["nodes"], kt=a.kt, kc=kc, ks=ks, threads=a.threads)
         s.set_segs(segs)
         best = None
+        nan_starts = refined = False
         for lab, z in starts:
             zz = (np.asarray(z[0], float), np.asarray(z[1], float)) if isinstance(z, tuple) else (np.asarray(z, float), np.zeros(len(z)))
             F = float(np.abs(np.add(*s.residual(*zz))).max())
             log(f"  D {D} M {M}: start '{lab}' |F| {F:.2e} ({sum(len(g) - 1 for g in segs)} steps)")
+            nan_starts |= not np.isfinite(F)
             if np.isfinite(F) and (best is None or F < best[0]):
                 best = (F, lab, zz)
+        if nan_starts and a.sonic_refine > 1:
+            # --sonic_refine: a start whose residual is nan on the reused plan, refined near the sonic valley. Near D
+            # 3.043 the gap min over tau of c - x closes linearly with D (notes/LOW_D.md 17), and the x integration
+            # there is stiff like 1 / (c - x): the plan of the last state, made for a wider gap, blows up on the starts
+            # at the new D, the last state's too, while the predictor itself keeps c above x (#926: at 3.04315, M 320,
+            # finite with min c - x 1.7e-6 on the last plan with its valley steps split 4 times). Each step of
+            # the segments near x = c is split R, then R^2, ... times (--sonic_levels) until a start is finite; all
+            # starts are then read on that plan. It is a gate, not a plan to converge on (below)
+            zv = np.add(*[np.asarray(v, float) for v in starts[-1][1]]) if isinstance(starts[-1][1], tuple) \
+                else np.asarray(starts[-1][1], float)
+            for lev in range(1, a.sonic_levels + 1):
+                r = a.sonic_refine ** lev
+                segs_r = sonic_valley.refine_near(segs, zv, M, st["nodes"], r, a.sonic_below)
+                if segs_r == segs:
+                    log(f"  D {D} M {M}: no segment near x = c (min c - x above {a.sonic_below:g} at every node); "
+                        f"no refinement")
+                    break
+                s.set_segs(segs_r)
+                best_r = None
+                for lab, z in starts:
+                    zz = (np.asarray(z[0], float), np.asarray(z[1], float)) if isinstance(z, tuple) else (np.asarray(z, float), np.zeros(len(z)))
+                    F = float(np.abs(np.add(*s.residual(*zz))).max())
+                    log(f"  D {D} M {M}: start '{lab}' |F| {F:.2e} on the reused plan with its steps near x = c split "
+                        f"{r} times ({sum(len(g) - 1 for g in segs_r)} steps)")
+                    if np.isfinite(F) and (best_r is None or F < best_r[0]):
+                        best_r = (F, lab, zz)
+                if best_r is not None:
+                    if best is None or best_r[0] < best[0]:
+                        best, segs, refined = best_r, segs_r, True
+                        log(f"  D {D} M {M}: the refined plan is used ({sum(len(g) - 1 for g in segs)} steps)")
+                    break
+            s.set_segs(segs)
+            if refined and not two_pass:
+                # the refined plan only admits the start: its steps are the reused plan's, split, and placed for
+                # the last state's valley, so its truncation error can floor Newton (#926's planted check: 2.9e-21
+                # on the truth at 3.04335, split 16, against 1.2e-28 on its own plan). The admitted start is regular
+                # through the valley, so it has a plan of its own (with two passes, the block below plans it)
+                zz = best[2]
+                segs = s.plan(*zz, a.tol_step, a.hmax)
+                s.set_segs(segs)
+                F = float(np.abs(np.add(*s.residual(*zz))).max())
+                log(f"  D {D} M {M}: plan from start '{best[1]}' admitted by the refined plan: "
+                    f"{sum(len(g) - 1 for g in segs)} steps, |F| {F:.2e}")
+                if not np.isfinite(F):
+                    return False, None, None
+                best = (F, best[1], zz)
         if best is None and any(lab == "last state" for lab, _ in starts):
             # the last converged state is one of the starts, so its residual on the reused plan is nan as well, and
             # s.plan() from it does not return either (T105 C at D 3.0425, M 320: one core for 3 h, 2026-11-04 16:25
@@ -328,7 +396,7 @@ def main():
         # the 3.125 solution, and Newton found no decrease; at 3.125 the same lift converged in 4 iterations on its own
         # 1149-step plan; the local machine's diagnosis, comms 2026-10-24 01:37)
         lifted_best = best[1].startswith("lift")
-        if (two_pass and ((a.two_pass_above and best[0] > a.two_pass_above) or lifted_best or force_two)
+        if (two_pass and ((a.two_pass_above and best[0] > a.two_pass_above) or lifted_best or force_two or refined)
                 and not os.path.exists(os.path.join(STATES, f"{st['tag']}_D{lowD_dd.dname(D)}_M{M}.npz"))):
             # the reused plan does not fit the starts: a lifted or predicted state is not regular at the sonic line, so
             # on a lean plan its |F| is mostly Taylor error, and Newton's correction of it lies in the weak directions
@@ -336,6 +404,7 @@ def main():
             # astray: line-search factors 1/4, 1/128, 1/16). Each start on its own plan instead, then two passes.
             why = (f"best start |F| {best[0]:.1e} > {a.two_pass_above:.0e} on the reused plan" if best[0] > a.two_pass_above
                    else f"best start '{best[1]}' is a lift (|F| {best[0]:.1e} on the reused plan)" if lifted_best
+                   else f"the reused plan refined near x = c admits start '{best[1]}' (|F| {best[0]:.1e})" if refined
                    else "after a failed helper (--helper_fallback)")
             log(f"  D {D} M {M}: {why}; two passes")
             # only a start whose residual is finite on the current plan gets its own plan: s.plan() on a state whose
@@ -421,6 +490,27 @@ def main():
         z = lifted(path, M_new)
         s0 = make_solver(m["D"], M_new, nodes=st["nodes"], kt=a.kt, kc=kc, ks=ks, threads=a.threads)
         return lowD_dd.tails(s0, z, 0 * z, st["nodes"], M_new)
+
+    def sonic_gap(path):
+        """the sonic valley of a converged state on its own plan: (smallest c - x on the grid, its x), or None when
+        no segment is near x = c (sonic_valley.valley_segments)"""
+        h, l, m = load(path)
+        h, l = np.asarray(h), np.asarray(l)
+        s0 = make_solver(m["D"], m["M"], nodes=list(m["nodes"]), kt=a.kt, kc=kc, ks=ks, threads=a.threads)
+        out = None
+        for b in sonic_valley.valley_segments(h + l, m["M"], list(m["nodes"]), a.sonic_below):
+            r = sonic_valley.valley(s0, h, l, list(m["nodes"]), m["M"], b, list(m["segs"][b]))
+            if r["finite"] and (out is None or r["gap"] < out[0]):
+                out = (r["gap"], r["x"])
+        return out
+
+    def sonic_closing(Mn):
+        """the D where the line through the recorded valley gaps at Mn (the last 4 at most) reaches 0, or None
+        with fewer than 3"""
+        pts = [(d, y) for d, y, m_ in st.get("sonic", []) if m_ == Mn][-4:]
+        if len(pts) < 3:
+            return None
+        return sonic_valley.fit_line([p[0] for p in pts], [p[1] for p in pts])[0]
 
     def write_pair(D, rw, rn, decision, extra=None):
         Dw = rw["Delta"] + rw["Delta_lo"]
@@ -593,6 +683,16 @@ def main():
         save_prog()
         return None
 
+    if a.sonic_stop and not st.get("sonic"):
+        # the gaps of the M_n states already converged (the last 4 at most, each on its own plan), so that a started
+        # or resumed leg has its line at once
+        for D_, p_ in st["hist_n"][-4:]:
+            if load(p_)[2].get("segs"):
+                sd = sonic_gap(p_)
+                if sd is not None:
+                    st.setdefault("sonic", []).append([D_, sd[0], st["Mn"]])
+                    log(f"D {D_}: sonic valley of the M {st['Mn']} state: min c - x {sd[0]:.4e} at x {sd[1]:.6f}")
+        save_prog()
     while True:
         if st.get("post"):
             why = post_point(st["post"])
@@ -613,6 +713,12 @@ def main():
         if proj and time.time() - t_start + proj > a.hours * 3600:
             return stop(f"the next point (projected {proj / 3600:.1f} h) would end after {a.hours} h of wall time "
                         f"({(time.time() - t_start) / 3600:.2f} h used)")
+        if a.sonic_stop:
+            Dz = sonic_closing(st["Mn"])
+            if Dz is not None and Dt <= Dz:
+                return stop(f"the sonic valley closes at D {Dz:.6f} (the line through the last valley gaps at M "
+                            f"{st['Mn']}), at or above the next target {Dt}: there the x integration meets x = c "
+                            f"(notes/LOW_D.md 17)")
         if not st.get("point_start") or abs(st["point_start"][0] - Dt) > 1e-9:
             st["point_start"] = [Dt, time.time() - t_start]
         log(f"--- D {Dt} (from {Dl}), M {st['Mw']} / {st['Mn']}, nodes {st['nodes'][0]}..{st['nodes'][-1]}")
@@ -665,6 +771,12 @@ def main():
         if rc:
             extra = dict(Mc=Mc, Delta_c=rc["Delta"], Delta_c_lo=rc["Delta_lo"], F_c=rc["F"], its_c=rc["its"],
                          seconds_c=rc["seconds"], diff_c=(rw["Delta"] - rc["Delta"]) + (rw["Delta_lo"] - rc["Delta_lo"]))
+        if a.sonic_stop:
+            sd = sonic_gap(path_n)
+            if sd is not None:
+                st.setdefault("sonic", []).append([Dt, sd[0], Mn])
+                extra = dict(extra or {}, sonic_gap_n=sd[0], sonic_x_n=sd[1])
+                log(f"D {Dt}: sonic valley of the M {Mn} solution: min c - x {sd[0]:.4e} at x {sd[1]:.6f}")
         _, diff = write_pair(Dt, rw, rn, "pair", extra)
         st["hist_w"].append([Dt, path_w])
         st["hist_n"].append([Dt, path_n])
