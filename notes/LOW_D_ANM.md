@@ -12,6 +12,9 @@ met a NaN Lagrange predictor and stalled from its last state, the series' order-
 order-3 sum fails from 3.04325 on, in the segment x 0.01 → 0.02 where T135's planner froze. At 3.04335, where the leg
 converged, it is finite and 7000 times closer to the solution than the Lagrange predictor. The obstacle is the
 regularity at the sonic line, which no truncated series has (section 3), so the decision goes to #926's projection.
+#926 then found that these non-finite residuals are the fixed plan's, not the predictions': on the same plan with
+its steps near x = c split 4 times, #343's predictor at 3.04315 stays finite with c above x, and the gap min c − x
+closes linearly to 0 near D 3.0431 at M 320 ([LOW_D.md](LOW_D.md) 17).
 
 Where the starts are finite, the series is the better start. Section 5 puts it into `lowD_highM.py` as one more start,
 about 85 lines of Python and no kernel change, for an estimated 2× fewer Newton calls at the working resolution. The
