@@ -43,6 +43,10 @@ is #718, and section 17 is #746.
   gives both the real DA2 scatter and the real twin misfit within a factor 10 at all three nodes (35 plants). None has
   #541's far poles, so none reproduces the real series. The low set now matches the misfit only at 10⁻⁵–10⁻⁴ of σ₂₂,
   and the far end alone still accounts for none of it (§15).
+- **#746.** The misfit's profile at 20, 21 and 22 terms does not locate the second set. With each plant's zero located,
+  its χ₂₀/χ₂₂ and χ₂₁/χ₂₂ are 0.67–0.91 times the real series' at every end point of #718's lattice, so a factor-5
+  window removes one inner end point and none at |t| ≥ 2.48. With the zero held it removes 12, at |t| = 2.48–2.86, but
+  that is the zero's offset at 20 terms (§17).
 
 ## 1. Question
 
@@ -2356,3 +2360,93 @@ Seen before the freeze, and disclosed.
 Context, reported and not judged: per position, over the plants that pass (a) and (c′) at ω∞, the range of ρ₂₀, ρ₂₁
 and ρ₂₂ and of the shape ratios χ₂₀/χ₂₂ and χ₂₁/χ₂₂ against the real series' (held and relocated); and whether the
 shape ratios move with η at a fixed position and with |Q|, which is what a third feature at fixed χ₂₂ would need.
+
+### 17.3 Results: the controls
+
+All runs used one process under `nice -n 10` on the rpi5 (1.1 s and 34 MB each), 2026-11-17 from 22:20 UTC, with
+`misfit_profile_746.py` at f464eed4. The records are in the raw-data repository's `I746-rpi5/` (7239150e), over
+`I718-mac/` at 9d4b8d1d.
+
+| check | result | verdict |
+|---|---|---|
+| records | 5967 plant records, 303, 5392 and 272 at 0.99, 1.00 and 1.01, no duplicate; 42 positions, 252 position-groups | OK |
+| counts at ω∞ | (a) 3477, (c′) 5064, (a) + (c′) 3401, (a) + (c″) 3433, as §16.4 | OK |
+| R-b | stored (a), (c′), (c″) and ratios recomputed from the stored χ₂₂, M_min and the real χ₂₂: 0 of 5967 differ | OK |
+| R-a | with (d) off: `ring.json`'s pass, hit plant and `n_wf1` for every position, group and criterion, and its four lists, reproduced; no unknown group or position | OK |
+| J+ | ρ_M = 1 at every node, held and relocated; χ(real, ω∞) = 4744.8, 4359.1, 401.8 | OK |
+| edge | planted ρ at F(1 ∓ 10⁻⁹), (1/F)(1 ± 10⁻⁹), 10, 1/10, 1 for each M | OK |
+| `--mutate=scale_chi`, `:20`, `:22` | J+ and the edge check fail; exit 1 | all fire |
+| `--mutate=drop_node` | R-a fails; exit 1 | fires |
+
+R-a is the independent check of the location rule: it shares only the records with #718's code. R-a's wording was
+amended once, before any verdict (§17.2).
+
+### 17.4 Results: the profile
+
+`misfit_profile_746.py`, `profile.log` and `profile.json` in the raw folder, whose README holds the maps and the
+tables.
+
+| | #718 passes | pass | unknown | fail | at \|t\| ≥ 2.48: fail, unknown | candidates |
+|---|---|---|---|---|---|---|
+| P′, held | 34 | 0 | 22 | 12 | 12, 22 | none |
+| P″, relocated | 37 | 24 | 12 | 1 | 0, 11 | none |
+
+- **Held.** P′ fails 12 end points at |t| = 2.48–2.86. At each, no plant passes (a), (c′) and (d′) at ω∞, from 6 to
+  121 plants, so each failure is exact. The 22 unknown, at |t| ≥ 2.86, each have plants that pass at ω∞ and no record at
+  another node, so P′ leaves 0 to 22 of #718's 34.
+- **Relocated.** P″ fails one end point, (0, −1) at |t| = 2.25, where #718's (c″) passed 2 of 6 shapes. At |t| ≥ 2.48
+  no end point fails, 11 are unknown, and the passing ones still reach the lattice edge at 11 positions.
+- **No candidate** in either variant, so nothing is located and no stage 2 follows.
+
+The shape of the profile, as the plant's χ₂₀/χ₂₂ and χ₂₁/χ₂₂ in units of the real series' (11.8 and 10.8 at ω∞), over
+the plants that pass (a) and (c′), or (c″), at ω∞. Context, not judged.
+
+| \|t\| band | held χ₂₀/χ₂₂ | held χ₂₁/χ₂₂ | relocated χ₂₀/χ₂₂ | relocated χ₂₁/χ₂₂ |
+|---|---|---|---|---|
+| 1.9–2.4 | 32–46 | 2.3–2.8 | 0.80–0.91 | 0.79–0.87 |
+| 2.4–2.8 | 24–39 | 2.0–2.6 | 0.75–0.87 | 0.75–0.88 |
+| 2.8–3.2 | 16–27 | 1.6–2.1 | 0.67–0.81 | 0.67–0.80 |
+| 3.2–3.8 | 12.5–19.5 | 1.4–1.8 | 0.67–0.76 | 0.67–0.74 |
+
+- Held, the shape is a function of position: over η at a fixed position, shape, α and phase it agrees to 3.5×10⁻¹⁴ in
+  log₁₀, and it falls with |t| (Spearman −0.96 over 3401 plants). It stays 12.5–46 times the real series' at every
+  position.
+- Relocated, it is 0.67–0.91 times the real series' at every plant, a spread of 1.4 that is smaller than the real
+  series' own χ₂₂ spread over its far-end bases (2.1, §15.3).
+
+Post-freeze, labeled so. The held unknowns pass at ω∞ by 0.007–0.032 decades, against a drift of ρ_M between nodes of
+0.12 decades (median over 575 plants run at both, largest 0.21). The relocated unknowns pass by 0.18–0.63 decades,
+against a drift of 0.095 (largest 0.13). That is a heuristic on the plants that were run at several nodes, not a
+verdict. Deciding the 12 relocated unknowns takes at most 4475 plant-node runs.
+
+### 17.5 What this means
+
+- **The profile does not locate the set.** Neither variant leaves a position with four failing lattice neighbours,
+  and the relocated passing region still reaches the lattice's outer edges.
+- **It narrows the region only through the zero's offset, and by one inner point.** Held, it removes the 12 end points
+  at |t| = 2.48–2.86, but the held χ₂₀ is large for every plant because the zero is held while the real one was located
+  on l2 at 20 terms (§14), and each of those 12 passes or is unknown relocated. Relocated, it removes one end point
+  at |t| = 2.25 and none at |t| ≥ 2.48, with 11 of the 12 unknown at |t| ≥ 2.48 and their margins above the drift.
+  So #718's statement that every end point at |t| ≥ 2.48 passes stands, as far as the records decide it.
+- **There is a profile feature, and it is the wrong one to use.** Held, χ₂₀/χ₂₂ is a function of |t| alone and spans
+  a factor 3.7 over the lattice, always 12.5 times or more the real one. Relocated, it is the real one's within a factor
+  1.5 at every end point, inside the real series' own basis spread, so it cannot tell one place from another.
+- **What could still locate it.** The far Padé poles (#747), which no plant has, and the outer edge past |t| = 3.76
+  (#748). Neither is in the records.
+- **Error bars.** Every factor is a ratio of two least-squares misfits in the same basis, with the real series'
+  measured errors as the unit. The ranges are spreads over plants and nodes, not error bars. The margins and drifts are
+  distances in decades, not uncertainties.
+- **Status.** Numerical evidence on plants. The verdict is the frozen one, with the unknown statuses counted apart.
+
+### 17.6 Proposed text for proof/D_entire.md
+
+In 7.4, at the end of the bullet "With the zero in place, a set near P0 + κ⋆ gives two of the three features (#703)":
+
+```diff
+   σ₂₂ (notes/PADE_FAR_END.md §16).
++  Neither does the misfit's profile over 20–22 terms (#746). With each plant's zero located as the real one was, the
++  plants' χ₂₀/χ₂₂ and χ₂₁/χ₂₂ are 0.67–0.91 times the real series' at every end point, so a factor-5 window on the
++  three χ removes one end point, at |t| = 2.25, and none at |t| ≥ 2.48 (11 of them are undecided on the records).
++  With the zero held the profile depends on |t|, but is 12.5–46 times the real one's everywhere
++  (notes/PADE_FAR_END.md §17).
+```
