@@ -7,9 +7,9 @@ continuation in D[^cochelin], drive the low-D legs instead of `hp/lowD_highM.py`
 ## Answer
 
 **The Taylor series does not carry the low-D legs past the point where they stall.** At D 3.04315, where #343's leg 2
-met a NaN Lagrange predictor and stalled from its last state, the series' order-1 and order-3 sums from D 3.04375 (M 384)
-have a non-finite residual on both fixed plans, as the Lagrange predictor does (section 4.3). The order-3 sum fails from
-3.04325 on, in the segment x 0.01 → 0.02 where T135's planner froze. At 3.04335, where the leg converged, it is finite
+met a NaN Lagrange predictor and stalled from its last state, the series' order-1 and order-3 sums from D 3.04375
+(M 384) have a non-finite residual on both fixed plans, as the Lagrange predictor does (section 4.3). The order-3 sum
+fails from 3.04325 on, in the segment x 0.01 → 0.02 where T135's planner froze. At 3.04335, where the leg converged, it is finite
 and 7000 times closer to the solution than the Lagrange predictor. The obstacle is the regularity at the sonic line,
 which no truncated series has (section 3), so the decision goes to #926's projection.
 
@@ -77,9 +77,9 @@ fixed plan and fails in practice at the sonic line, below D ≈ 3.0433.
   P_N and z*(D).
 - **In practice, at the sonic line.** Regularity at x = c, where the p equation is singular, is a property of the
   solution alone. A state off the branch by ε carries a singular part of about ε there, which is why a predictor's own
-  plan has 2–4 times the steps of a solution's ([HIGH_M.md](HIGH_M.md) 1.5). A truncated series is such a state, of every
-  order. Below D ≈ 3.0433 the measured consequence is that every predicted state's integration fails in the segment
-  x 0.01 → 0.02, on a fixed plan (section 4.3, from h = −0.0005 with an order-3 error of about 10⁻⁵) as well as in the
+  plan has 2–4 times the steps of a solution's ([HIGH_M.md](HIGH_M.md) 1.5). A truncated series is such a state, of
+  every order. Below D ≈ 3.0433 the measured consequence is that every predicted state's integration fails in the
+  segment x 0.01 → 0.02, on a fixed plan (section 4.3, from h = −0.0005 with an order-3 error of about 10⁻⁵) as well as in the
   planner (T135 and #798, from h = −0.00065, at x near 0.0137 in the same segment).
 
 The two onsets lie within 0.00015 of each other in D and in the same segment, so the obstacle is the predicted state,
@@ -96,8 +96,8 @@ which has `residual_jet` at every M; the main checkout's `.venv` hpkernel has no
 618-step plan: `newton_mixed` 257 s, then per order 37–60 s of jets and 12–20 s of GMRES (3–4 products, all
 converged). The max-norm ratios |z_(k−1)|/|z_k| for k = 2–7 are 0.129, 0.185, 0.170, 0.220, 0.087 and 0.019. The
 radius is about D − 3 here too, and the series is polluted from order 6, one order later than at D 3.045. A
-step of h = 0.025 (h/R ≈ 0.15) cannot reach 10⁻¹² before the pollution, which is why the pilot (section 6) steps
-by 0.001.
+step of h = 0.025 (h/R ≈ 0.15) cannot reach 10⁻¹² before the pollution, which is why the pilot's first design stepped
+by 0.001 (section 6).
 
 **4.2 The partial sums against converged states, M 384** (`I927-mac/fixed_plan/agree*`). T135's stored series (z₀..z₃
 at T105's M 384 state at D 3.04375, on its stored 8319-step plan) against #343's converged M 384 states:
@@ -134,9 +134,9 @@ The order-3 sum is finite at 3.04335, where the leg converged, and close to the 
 Lagrange case reproduces at M 384 what #343's leg 2 met at M 320. In the two cases where the probe recorded where (the
 order-3 sums at 3.04325 and 3.04315 on the base's plan), the non-finite rows are those of the segment x 0.01 → 0.02,
 where T135's planner froze at x 0.0137. The series' base state itself, 0.0006 away in D and so about |z₁| h ≈ 8 off
-in the max norm (an estimate), is finite at 3.04315. The farther state passes and the nearer ones fail, as in T135's table, where the base
-state planned down to 3.04305. So accuracy does not help: a state near the branch below D ≈ 3.0433 is not finite in
-that segment, whatever predicted it.
+in the max norm (an estimate), is finite at 3.04315. The farther state passes and the nearer ones fail, as in T135's
+table, where the base state planned down to 3.04305. So accuracy does not help: a state near the branch below
+D ≈ 3.0433 is not finite in that segment, whatever predicted it.
 
 ## 5. The design: the series as a start inside lowD_highM.py
 
@@ -152,7 +152,8 @@ that driver and adds the series as one more start for the working resolution M_w
    its Solver. At the next target D_t, form z₁..z_N with `anm_lowd.coefficients` on that solve's plan, add the start
    ("anm", P_N(D_t)) to `starts_w`, and evaluate every start on the same plan, the one the jets used. `plan_prev`
    plans the last state anew at 10⁻³² instead. Taking the solve's own plan keeps the prediction's O(h^(N+1)) residual
-   (section 3), and the plan check after convergence (`plan_check`) still reports whether it was lean. About 80 lines.
+   above the obstacle (section 3; 1.1×10⁻¹³ against the base state's 3.7×10⁻³ in the pilot, section 6), and the plan
+   check after convergence (`plan_check`) still reports whether it was lean. About 80 lines.
 3. **M_n keeps its lift** of the M_w solution (`lifted`, then two passes). The lift's |F| is the resolution difference
    (1.3×10⁻⁵ at M 384, D 3.04335, #343), which a series at M_n would not improve, for another N orders' cost.
 4. **The step** stays on lowD_highM.py's grid. The records carry the series' ratios and a_max = (ε |z₁|/|z_N|)^(1/(N−1))
