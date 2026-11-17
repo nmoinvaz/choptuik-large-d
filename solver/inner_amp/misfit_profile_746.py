@@ -438,6 +438,61 @@ def context(D, real, mut):
     return out
 
 
+def post_freeze(D, real, mut, verdict_pos):
+    """written after the verdict was read, so labeled so, and not frozen: how close each position's plants come to the real
+    profile, how far the profile drifts across nodes, and what it would take to decide the unknown statuses"""
+    out = {}
+    lf = math.log10(F)
+    for name, crit in (("held", "c"), ("relocated", "c2")):
+        pos_best, per_pos = {}, {}
+        for (pid, wf), r in D.rec.items():
+            if wf != WF0 or not r["a"]:
+                continue
+            chi = r["chi"] if crit == "c" else (r["reloc"]["chi"] if r["reloc"] is not None else None)
+            if chi is None or not (r["c"] if crit == "c" else r["c2"]):
+                continue
+            d = max(abs(log10(chi[M] / real[wf]["chi"][M])) for M in MS)
+            pos_best[r["pos"]] = min(pos_best.get(r["pos"], math.inf), d)
+            pp = per_pos.setdefault(r["pos"], {"n_ac": 0, "n_d": 0})
+            pp["n_ac"] += 1
+            pp["n_d"] += d <= lf
+        # drift of rho_M between a node and wf 1.00, over the plants run at both
+        drift = []
+        for (pid, wf), r in D.rec.items():
+            if wf == WF0:
+                continue
+            r0 = D.rec.get((pid, WF0))
+            if r0 is None:
+                continue
+            c1 = r["chi"] if crit == "c" else (r["reloc"]["chi"] if r["reloc"] is not None else None)
+            c0 = r0["chi"] if crit == "c" else (r0["reloc"]["chi"] if r0["reloc"] is not None else None)
+            if c1 is None or c0 is None:
+                continue
+            drift.append(max(abs(log10((c1[M] / real[wf]["chi"][M]) / (c0[M] / real[WF0]["chi"][M]))) for M in MS))
+        drift.sort()
+        # the unknown plants: candidates at wf 1.00 with a missing node and no failing record
+        unk_plants, unk_runs, margin = 0, 0, {}
+        for (p, g), pids in D.groups.items():
+            for pid in pids:
+                if plant_status(D, pid, crit, True, real, mut) == "unknown":
+                    unk_plants += 1
+                    unk_runs += sum(1 for wf in (0.99, 1.01) if (pid, wf) not in D.rec)
+                    r = D.rec[(pid, WF0)]
+                    chi = r["chi"] if crit == "c" else r["reloc"]["chi"]
+                    d = max(abs(log10(chi[M] / real[WF0]["chi"][M])) for M in MS)
+                    margin[p] = max(margin.get(p, -math.inf), lf - d)
+        unk_pos = [p for p, v in verdict_pos[crit].items() if v["status"] == "unknown"]
+        dmax = drift[-1] if drift else math.nan
+        out[name] = {"best_dist_by_pos": pos_best, "n_by_pos": per_pos,
+                     "drift": {"n": len(drift), "median": median(drift) if drift else None,
+                               "p90": drift[int(0.9 * (len(drift) - 1))] if drift else None, "max": dmax},
+                     "unknown_plants": unk_plants, "unknown_runs_upper": unk_runs,
+                     "unknown_positions": len(unk_pos),
+                     "unknown_positions_margin_gt_maxdrift": sorted(p for p in unk_pos if margin.get(p, -1) > dmax),
+                     "unknown_positions_margin": {p: margin.get(p) for p in unk_pos}}
+    return out
+
+
 # ---------------------------------------------------------------- main
 def main():
     ap = argparse.ArgumentParser(description=__doc__.split("\n")[0])
@@ -505,6 +560,28 @@ def main():
                 f"undecided {[pid_str(ab) for ab in summ['candidates_undecided']]}")
             res[name] = {"summary": summ, "positions": {p: {k: v for k, v in x.items()} for p, x in pr.items()}}
         result["verdict"] = res
+        say("\n--- post-freeze (after the verdict was read; not frozen, not judged) ---")
+        pf = post_freeze(D, real, mut, {"c": res["P'"]["positions"], "c2": res["P''"]["positions"]})
+        result["post_freeze"] = pf
+        for name, v in pf.items():
+            say(f"\n{name}: the closest a plant at each position comes to the real profile, max_M |log10 rho_M| over the "
+                f"plants passing (a) and (c{'′' if name == 'held' else '″'}) at wf 1.00 (window edge {math.log10(F):.3f})")
+            say("| b \\ a | " + " | ".join(f"{a:+d}" for a in LAT_A) + " |")
+            say("|---|" + "---|" * len(LAT_A))
+            by_ab = {D.pos_Q[p][0]: p for p in D.pos_Q}
+            for b in reversed(LAT_B):
+                cells = []
+                for a in LAT_A:
+                    p = by_ab[(a, b)]
+                    d = v["best_dist_by_pos"].get(p)
+                    cells.append("-" if d is None else f"{d:.2f} ({v['n_by_pos'][p]['n_d']}/{v['n_by_pos'][p]['n_ac']})")
+                say(f"| {b:+d} | " + " | ".join(cells) + " |")
+            dr = v["drift"]
+            say(f"drift of rho_M between wf 1.00 and the other nodes over {dr['n']} plants run at both: median "
+                f"{dr['median']:.3f}, 90th percentile {dr['p90']:.3f}, max {dr['max']:.3f} decades")
+            say(f"unknown: {v['unknown_plants']} plants at {v['unknown_positions']} positions, up to "
+                f"{v['unknown_runs_upper']} plant-node runs to decide them; positions whose best candidate's margin "
+                f"exceeds the largest drift: {len(v['unknown_positions_margin_gt_maxdrift'])} of {v['unknown_positions']}")
         ctx = context(D, real, mut)
         result["context"] = ctx
         for name, c in ctx.items():
