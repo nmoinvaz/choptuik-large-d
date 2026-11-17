@@ -51,10 +51,9 @@ Contents
   turn rests on the prior.
   At η = 1 the solver's two values at D = 10.475 (Δ = 0.9935 and 1.0340) are not two solutions. Both converge on the
   kernel to its one solution there, Δ = 1.0201048, from which the band displaced them (§11, #845). So η = 1 above
-  D ≈ 10.25 is not reliable in this solver. No fold direction was seen. The gauge mode's root drifts away from its
-  exact value above D ≈ 8 (by 0.25
-  at D = 11), unexplained; so the D ≥ 10 growth rates are preliminary. Going further needs more care than short runs on
-  the shared machine allow (§9).
+  D ≈ 10.25 is not reliable in this solver. No fold direction was seen. sigdss's gauge root drifts away from its exact
+  value above D ≈ 8 (by 0.25 at D = 11), and the kernel's does not (§6, #918). So above D 9 the growth rates are the
+  kernel's (§11).
 - **γ∞ (not established).** Free fits of λ = λ∞ + Σ c_k n⁻ᵏ to D ≤ 9 give λ∞ = 1.76, 2.74, 2.14, 2.31 (η = 1) and 1.87,
   2.66, 2.15, 2.34 (η = 0.3) for 1–4 powers (D ≥ 5); imposing λ∞ = 2 fits about as well (residuals within a factor 2,
   except a fragile factor 7 at η = 1 with four powers). A planted control shows the method would separate λ∞ = 2.3 from
@@ -261,18 +260,19 @@ the nodes 0.02 ≤ x ≤ 0.9 and the light cone.)
   D ≈ 10.25 the solver does not follow a single smooth branch, and the η = 1 values there are not reliable (at D = 10.25
   the weakest Jacobian directions are still the junk band, s/s_max = 1.1×10⁻¹¹ at harmonics 9–11 with Δ components
   ≤ 4×10⁻⁵, `data/sigdss_svd.jsonl`, so no isolated fold direction was seen).
-- **λ(D) turns at D ≈ 10.5.** λ = 2.9198 → 2.9037 (η = 1) and 3.0814 → 3.0685 (η = 0.3) between D = 10 and 10.5,
-  slopes −0.03 per unit D against −0.13 and −0.09 between D = 9 and 10; at η = 0.3, D = 11 gives λ = 3.1127: λ(D) has a
-  minimum near D = 10.5, i.e. γ(D) a maximum of about 0.326, and γ(11) = 0.3213. At η = 0.3 the D = 10.5 and 11 values
-  survive k_c = 23, a ten times weaker prior and a longer horizon series to 10⁻⁴ (§6). At η = 1 the D = 10.5 value
-  rests on the 1.0340 state at D = 10.475, which the kernel moves to 1.0201048 (§11, #845). Δ keeps decreasing
+- **λ(D) falls through D = 11; sigdss's turn at D ≈ 10.5 is withdrawn.** sigdss gave λ = 3.0814, 3.0685 and 3.1127
+  at D = 10, 10.5 and 11 (η = 0.3), a minimum near 10.5 that survived its k_c, prior and horizon-series checks (§6).
+  On the kernel λ falls at every step from D 9 to 11 at both couplings, resolved to 5×10⁻¹⁴ in M and in the nodes
+  (§11, #918). At η = 0.3 it falls from 3.1753 (D 9) to 3.0099 (10.5) and 2.9675 (11), and at η = 1 from 3.0483 to
+  2.8633. So sigdss's rates lie 0.023, 0.059 and 0.145 above the kernel's at D = 10, 10.5 and 11, and the turn was
+  sigdss's. Above D 9, λ and γ are the kernel's (§11's table). At η = 1 sigdss's D = 10.5 value
+  rested on the 1.0340 state at D = 10.475, which the kernel moves to 1.0201048 (§11, #845). Δ keeps decreasing
   smoothly at η = 0.3 (1.1391, 1.1300, 1.1175 at D = 10.5, 10.75, 11). The kernel, without the prior, puts Δ at
   D = 10.5 and η = 0.3 at 1.1429810, 3.9×10⁻³ above sigdss's 1.1391, the same at M = 24, 32 and 48 to 10⁻²¹ (§11,
   #913, #915). So sigdss's Δ there is off by more than the prior moves it. On the kernel's chain from D 9 to 11
   (#916) Δ(D) is smooth, and sigdss's offset from it is not uniform: −4×10⁻⁴ at D 9, −3.7×10⁻³ at 10, +3.9×10⁻³ at
   10.5 and +1.7×10⁻² at 11. From D 10.1 to 11 sigdss's Δ falls by 0.034 and the kernel's by 0.015, so the extra bend
-  in sigdss's Δ there is sigdss's own. The growth rates λ above are sigdss's, with no kernel check yet, so this turn of
-  λ(D) is not established.
+  in sigdss's Δ there is sigdss's own.
 
 ## 6. Checks along the branch
 
@@ -298,8 +298,9 @@ the nodes 0.02 ≤ x ≤ 0.9 and the light cone.)
   no other root lies in 0.05 ≤ λ ≤ 1.6 at D = 10 and 11. The departure, 9×10⁻⁵, 9×10⁻⁴, 0.064, 0.25, is the same with the
   longer horizon series (1.06371 at D = 11), so it is not a horizon-series artifact. Either the mode matrix becomes
   inaccurate in this direction above D ≈ 9, growing roughly tenfold per unit D like the near-null band, or a real mode
-  crosses near λ_g and the two mix; this was not resolved. The physical root passes the k_c, prior and horizon-series
-  checks above, but this drift is the main reason the D ≥ 10 growth rates are marked preliminary.
+  crosses near λ_g and the two mix. The kernel settles it: its gauge root lies within 5×10⁻¹⁴ of λ_g at all 20 states
+  from D 6 to 11, and a scan of 35 rates on 0.2 ≤ λ ≤ 7 at D 11 finds only the gauge root and λ (#918). So the drift
+  is sigdss's mode matrix, not a second mode.
 - **The near-null band** ([`sigdss_svd.py`](../solver/matter/sigdss_svd.py), `data/sigdss_svd.jsonl`). At D = 9, η = 1
   the smallest singular values of the Jacobian are 1.5×10⁻¹⁰, 6.6×10⁻¹⁰, 1.8×10⁻⁹, 5.3×10⁻⁹ relative (in Re/Im pairs),
   with singular vectors almost entirely in the centre datum q(τ), harmonics k = 7–11, and Δ components below 10⁻⁶. This
@@ -389,10 +390,10 @@ k_c = 23 by at most 4×10⁻⁴ in λ (5×10⁻⁵ in γ) at D ≤ 9, well below
   of ending, so it is the candidate for a D = ∞ limit, as STRUCTURE.md expected. Its survival to large D is not
   established: above D ≈ 10 the near-null band of the centre data makes the solver unreliable. At D = 10.475 for
   η = 1 it gave two values of Δ for one solution (§11, #845).
-- γ(D) rises monotonically, 0.116 → 0.342 (η = 1) and 0.116 → 0.325 (η = 0.3) between D = 4 and 10, with a change of
-  curvature near D ≈ 9.5; at η = 0.3 it then has a maximum of about 0.326 near D = 10.5 and falls to 0.321 at D = 11
-  (not established: sigdss's Δ there is off the kernel's by up to 1.7×10⁻², §5 and #916, and the gauge root
-  drifts). Extrapolations from
+- γ(D) rises monotonically, 0.116 → 0.342 (η = 1) and 0.116 → 0.325 (η = 0.3) between D = 4 and 10 by sigdss (the
+  kernel gives 0.3397 and 0.3270 at D = 10, #918), with a change of
+  curvature near D ≈ 9.5. On the kernel it keeps rising to D = 11, to 0.3370 (η = 0.3) and 0.3492 (η = 1) (§11,
+  #918); sigdss's maximum near D = 10.5 was its own. Extrapolations from
   D ≤ 9 give γ∞ anywhere in about 0.36–0.57, fits with λ∞ = 2 imposed are as good as free ones, and adding D = 10 makes
   all fits worse. So γ∞ = 1/2 is neither confirmed nor excluded (not established). If the maximum at D ≈ 10.5 is real,
   γ(D) at η = 0.3 does not approach 1/2 from below the way the scalar's does, which would favour γ∞ ≠ 1/2.
@@ -415,11 +416,9 @@ k_c = 23 by at most 4×10⁻⁴ in λ (5×10⁻⁵ in γ) at D ≤ 9, well below
   same code so that the offsets of §7 can be extrapolated. Pilot: η = 1 from D = 10 to 10.5 at k_c = 23, which must
   reproduce a single smooth branch (the k_c = 15 runs gave two values at D = 10.475, one solution on the kernel, #845);
   stop condition: two solutions at the same D, constraint above 10⁻³, or three failed steps in a row.
-- **The turn of λ(D) at D ≈ 10.5** (§5) passed the resolution, prior and horizon-series checks at η = 0.3, but it rests
-  on two points (D = 10.5, 11) in the range where the gauge root drifts (§6). Whether λ(D) keeps rising (γ falling
-  well below 1/2), levels off, or turns back toward 2 is exactly what the larger-D runs above must decide; they should
-  also explain the gauge-root drift (track the root near λ_g against D and resolution, and look for a second real
-  mode near it).
+- **λ(D) past D = 11.** On the kernel λ falls through D = 11 at both couplings, and sigdss's turn and gauge-root
+  drift were sigdss's (§5, §6, #918). Whether λ(D) keeps falling toward 2 (γ rising toward 1/2), or levels off, is what
+  the kernel's chain past D = 11 must decide.
 - **Mode count.** Complex growth rates and the opposite parity sector were not counted (§6). `sigdss_count.py`
   (argument principle over Re λ ∈ [0.05, 12], −ω/2 ≤ Im λ ≤ 3ω/2, light-cone resonance poles removed) is ready but not
   run or tested; at k_c = 15 it needs a few hundred complex mode matrices.
