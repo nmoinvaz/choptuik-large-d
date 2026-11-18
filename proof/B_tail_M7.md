@@ -353,7 +353,10 @@ In ratio form, which is what the data measure:
 
 > **(R)** sup_B |δ_{M+2}| ≤ κ sup_B |δ_M| for odd M ≥ 5, with κ ≤ 1/4.
 
-(T1) and (T2) give (R) with κ = ρ_*² e^{2σ} (1 + O(Q e^{σ(M+2)} |f_{M+2}| / Λ)).
+(T1) and (T2) give the geometric bound |δ_M| ≤ b_M := Λ C_f e^{σ(M+2)} ρ_*^{M+1} + Q (C_f e^{σ(M+2)} ρ_*^{M+1})², with
+b_{M+2}/b_M ≤ ρ_*² e^{2σ}. That is not (R), which bounds each increment by the previous one and would need a lower bound
+on |δ_M| as well. With (T3) the bound gives |s_∞ − s₇| ≤ Σ_{M≥7} b_M directly, with Λ, C_f and Q needed explicitly
+(notes/P6_scope.md §1.3, which found the earlier wording's step not to follow).
 
 Three remarks fix what the statement is and is not.
 
@@ -551,7 +554,7 @@ a consistency check and a formal (order-by-order) version of (R), not a route to
 This is the linear part of (T2), uniformly in ν.
 
 Everything else in Lemma T is either proved above (R, O, L, C, H), a contraction estimate of a standard kind (T1, in
-X_σ, B_tail.md §6), or a consistency statement (T3) that follows from (★) and (T1). The data say (★) holds with room to
+X_σ, B_tail.md §6), or a consistency statement (T3) that follows from (★), (T1) and (H_∞). The data say (★) holds with room to
 spare: the coupling per pair is g₅ ≈ 1.2 and g₇ ≈ 0.85, i.e. an effective σ of ½ ln g ≈ 0.1 and below 0, while 0.736
 is needed. The naive bound, through the linear connection coefficients, is e^{πων/2} = e^{6.0ν}.
 
