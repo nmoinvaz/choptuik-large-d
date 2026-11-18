@@ -2881,3 +2881,31 @@ fails. The threshold 10 was read off the D1–D5 table above, where the two grou
 is not a fit. The rest of 19.1 is unchanged, and the gate is scale invariant, since χ² is. The development protocol of 19.2 now
 runs on E3 and E4, with E1 and E2 kept in the selection (`develop ... E1,E2,E3,E4`), and the lowest score is chosen. The members of
 E3 and E4 are in the script's `members`.
+
+### 19.7 Development, round 2
+
+`develop ... E3,E4` (`I668-rpi5/development_r1.log`, script at 597c2c59, 05:20–05:26 UTC).
+
+| preset | D1 | D2 | D3 | D4 | D5 | score |
+|---|---|---|---|---|---|---|
+| E3, error / noise | 1.2×10⁻⁴ / 0.0035 | 0.0167 / 0.0459 | 0.0143 / 0.0108 | 0.0176 / 0.0069 | 0.0115 / 0.0074 | 4.59 |
+| E4, error / noise | 2.4×10⁻⁴ / 0.0047 | 0.0106 / 0.136 | 0.0192 / 0.0093 | 0.115 / 0.128 | 0.0091 / 0.0094 | 13.56 |
+
+Both are above 1, E3 on D2's noise (and D3's, 0.0108), E4 on D2 and D4. E3's family matters and not only the gate. The table of
+E3's members (`I668-rpi5/table_E3.log`, stage `table`) shows that the members with ν = 2 or 3 are the ones that move under the
+noise, by 0.06–2 on D2 and D3 (the farthest zero jumps to another zero), while those with ν = 4 move by 0.0001–0.007 and
+miss the far end of D2 by 0.016–0.10. Three of the 17 members repeat another's solution exactly ((3,4,6) at lp 1 and 2 give
+(4,4,5)'s, (4,5,7) at lp 0 gives (5,5,6)'s, whose extra coefficient the fit sets to 10⁻⁷ or less), and are kept.
+
+Two presets are added, both gated as in 19.6 (χ²/ν ≤ 10, ν ≥ 1, at least 3 counted members).
+
+| preset | members | the zero a member gives |
+|---|---|---|
+| E5 | E3's members with ν = 3 or 4 (11) | the farthest admissible zero |
+| E6 | E3's 17 members | the admissible zero (window, Im t > 0) nearest to t₀, the componentwise median of the farthest zeros of the counted members with ν ≥ 3; no estimate if fewer than 3 such members |
+
+E6's rule is scale equivariant, since t₀ and the window scale with the series. The protocol of 19.2 allows a third round, and
+this is the second. The development selects by the lowest score over E1–E6.
+
+**Seen before this freeze.** A duplicate check printed two members' χ² on the real series at ω∞ (not a plant): (4,4,5) and
+(3,4,6) at lp 1 have χ²/ν = 7×10⁵, and (5,5,6) and (4,5,7) at lp 0 have 88, both above the gate. The gate is not changed for it.

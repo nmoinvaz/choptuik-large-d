@@ -59,16 +59,18 @@ FROZEN = {                          # written in notes/PADE_FAR_END.md 19.3 befo
 
 # ---------------------------------------------------------------- the members
 GATE = 10.0                         # 19.6: a member of a gated preset counts only if chi2 / nu <= GATE, nu >= 1
-GATED = ("E3", "E4")
+GATED = ("E3", "E4", "E5", "E6")
 MIN_COUNTED = 3                     # a gated estimate needs this many counted members
 
 
 def members(preset):
-    """[(degs, lp, nmax)] of a preset. E0: #547's members (square). E1, E2: 19.1. E3, E4: 19.6."""
+    """[(degs, lp, nmax)] of a preset. E0: #547's members (square). E1, E2: 19.1. E3, E4: 19.6. E5, E6: 19.7."""
     out = []
     if preset == "E4":
         return members("E1")
-    if preset == "E3":
+    if preset == "E5":
+        return [m for m in members("E3") if NMAX - m[1] - (sum(m[0]) + 2) in (3, 4)]
+    if preset in ("E3", "E6"):
         for d2 in (5, 6, 7):
             for d1 in (d2 - 2, d2 - 1, d2):
                 for d0 in (d1 - 1, d1):
@@ -244,11 +246,20 @@ def counted(info, preset):
 
 
 def estimate(sig, eps, preset, mut=None):
-    """(median of the counted members' farthest admissible zero, [member records], MAD); (None, ..., None) if none
-    admissible, or fewer than MIN_COUNTED counted members in a gated preset"""
+    """(median of the counted members' zeros, [member records], MAD); (None, ..., None) if none admissible, or fewer than
+    MIN_COUNTED counted members in a gated preset. A member's zero is its farthest admissible one, and in E6 the
+    admissible zero nearest to the median of the farthest zeros of the counted members with nu >= 3 (19.7)."""
     mz, scale = member_zeros(sig, eps, preset, mut)
     got = [{"degs": d, "lp": lp, "t": farthest_w(ts, scale) if ts else None, "chi2": i["chi2"], "nu": i["nu"],
             "counted": counted(i, preset)} for d, lp, ts, i in mz]
+    if preset == "E6":
+        rg = np.array([g["t"] for g in got if g["t"] is not None and g["counted"] and g["nu"] >= 3])
+        if len(rg) < MIN_COUNTED:
+            return None, got, None
+        t0 = complex(np.median(rg.real), np.median(rg.imag))
+        for g, (_, _, ts, _) in zip(got, mz):
+            adm = [complex(t) for t in ts if WINDOW[0] * scale < abs(t) < WINDOW[1] * scale and mp.im(t) > 0] if ts else []
+            g["t"] = min(adm, key=lambda t: abs(t - t0)) if adm else None
     fs = np.array([g["t"] for g in got if g["t"] is not None and g["counted"]])
     if len(fs) == 0 or (preset in GATED and len(fs) < MIN_COUNTED):
         return None, got, None
