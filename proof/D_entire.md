@@ -499,6 +499,11 @@ chord.
   three χ removes one end point, at |t| = 2.25, and none at |t| ≥ 2.48 (11 of them are undecided on the records).
   With the zero held the profile depends on |t|, but is 12.5–46 times the real one's everywhere
   (notes/PADE_FAR_END.md §17).
+  A second set of the same family gives #541's far Padé poles at all three nodes only inside the noise (#747): a
+  segment 0.40–0.47 long ending near 1.50 + 1.08i at ω∞, with 1–5% of σ₂₂, has d_P ≤ 0.03 (smallest D₃ 0.0217). At that
+  strength the tolerance is below the noise, as the plant's own poles move by 0.04–0.06 under noise at the measured
+  errors, and the judge was validated only at strengths of σ₂₂ and above. So the pass fits the real series' noise draw,
+  and locates nothing. Nothing passes at 30% of σ₂₂ or more (notes/PADE_FAR_END.md §18).
 - **The real poles reach the chord sooner than either plant.** At k = 10 the poles with s ≤ 0.71 lie within 0.015 of
   the chord, and the last one, at s = 0.88, lies 0.074 from it, on the side away from the arc. J 1250 and J 1500 agree to
   0.03 in R. k = 11 is not determined by the data.
