@@ -43,3 +43,8 @@ strip = false
 inherits = "release"
 lto = "thin"
 codegen-units = 16
+
+# multidouble's order-k Cauchy sums by lane vector (cs_lane_at, cs_at_splits), for every crate in the graph, until its
+# release; removed then, with the pin moved to it
+[patch.crates-io]
+multidouble = { git = "https://github.com/nmoinvaz/multidouble", branch = "perf/field-par-at-sums" }
