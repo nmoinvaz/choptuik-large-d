@@ -1933,5 +1933,10 @@ The medians behind R, over the same 48 right-hand sides:
   a's and 3.5×10⁻²¹ from b's, and its K = 7 root 5.9×10⁻¹⁹ and 5.6×10⁻¹⁹ from theirs. Its K = 0 median alone is
   18 times below a's and 172 times below b's. 42 of its 48 K = 7 starts stopped at the 250-product cap, against 46 of
   a's and none of b's; #745's check that the cap does not set the bound was made on a's starts only.
-- Open: whether each sample's median bound follows its root's solve residual, which would make the rough bound at
-  this D a reading of the residual rather than of the K = 7 rows.
+- **The bounds do not follow the roots' residuals.** The residuals that `rt_sigma.py` prints at its start, max |F| at
+  192 bits, are 4.39×10⁻³¹, 5.12×10⁻³¹ and 6.91×10⁻³¹ at K = 0 (a, b, c) and 6.21×10⁻²⁹, 4.46×10⁻²⁹ and
+  6.20×10⁻²⁹ at K = 7. They lie within a factor 1.6 while the medians spread 172 and 60 times, and in no common order:
+  c has the largest K = 0 residual and the smallest median. In every start x is led by μ (|x_μ| = max |x|), so all
+  three samples share one weak direction.
+- Open: whether that direction is null at the exact root, so that its bound measures the sample's distance from the
+  root (#963).
