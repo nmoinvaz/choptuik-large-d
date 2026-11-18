@@ -509,13 +509,15 @@ struct Solver {
 }
 
 /// The last newton_o: its octo-double LU and the call that formed it, the bits of the state's eight parts, mutate and
-/// tangents (olu_pivots_at). It is dropped wherever the context changes (set_segs, set_horizon_alpha), and a failed
-/// newton_o leaves the previous one with its own call.
+/// tangents (olu_pivots_at), and the octo-double residual it formed at the state (newton_o_residual). It is dropped
+/// wherever the context changes (set_segs, set_horizon_alpha), and a failed newton_o leaves the previous one with its
+/// own call.
 struct OctoLast {
     lu: ODLu,
     z: Vec<u64>,
     mutate: u8,
     tangents: usize,
+    f: O8,
 }
 
 /// the bits of an octo-double vector's eight parts, part after part
@@ -1154,8 +1156,19 @@ impl Solver {
         self.last_t = st.t;
         let (pmin, pmax) = st.lu.pivot_range();
         let (fh, fl) = f_dd::<Octo>(&st.f);
-        self.olu = Some(OctoLast { lu: st.lu, z: bits8(&z), mutate, tangents });
+        self.olu = Some(OctoLast { lu: st.lu, z: bits8(&z), mutate, tangents, f: od_parts(&st.f) });
         Ok((arr8(py, st.dz.try_into().expect("eight parts")), arr(py, fh), arr(py, fl), pmin, pmax))
+    }
+
+    /// The residual F in eight parts that the last newton_o formed (its F hi and F lo are its first two parts rounded),
+    /// when that call was at the eight-part state z (every part's bits equal) with this mutate; None otherwise. It is
+    /// residual_o(z, mutate) bit for bit, the same evaluation (multisolver's newton_step forms F by the problem's
+    /// residual, model::residual_in at `Octo`, at any tangents), so a caller that needs both saves one octo-double
+    /// residual (hp/octo_corrector.py PinnedO.newton_o).
+    #[pyo3(signature = (z, mutate=0))]
+    fn newton_o_residual<'py>(&self, py: Python<'py>, z: Vec<PyReadonlyArray1<'py, f64>>, mutate: u8) -> PyResult<Option<T8<'py>>> {
+        let z = parts8(&z, self.api.len())?;
+        Ok(self.olu.as_ref().filter(|o| o.at(&z, mutate, None)).map(|o| arr8(py, o.f.clone())))
     }
 
     /// The pivots (min |u_kk|, max |u_kk|) of the octo-double LU the last newton_o kept, when that call was at the
