@@ -10,6 +10,12 @@ into a csv and a markdown table.
         --Dmin 10 --D0 10.475 --ref I652-mac,I845-mac,I913-mac \
         --sigdss solver/matter/data/sigdss_m1up.jsonl,solver/matter/data/sigdss_m1hi.jsonl \
         --csv matter/sigma_ms/data/delta_D_eta1.csv                                  (#917)
+    python3 matter/sigma_ms/chain_table.py ../choptuik-large-d-raw --folder I928-mac --eta 0.3 --also I916-mac \
+        --D0 11 --ref I916-mac --csv matter/sigma_ms/data/delta_D_eta0.3.csv         (#928: the chains to D 13)
+    python3 matter/sigma_ms/chain_table.py ../choptuik-large-d-raw --folder I928-mac --eta 1 \
+        --also I652-mac,I917-mac --Dmin 10 --D0 11 --ref I917-mac \
+        --sigdss solver/matter/data/sigdss_m1up.jsonl,solver/matter/data/sigdss_m1hi.jsonl \
+        --csv matter/sigma_ms/data/delta_D_eta1.csv
 
 Inputs: <folder>/out/sm_records.jsonl (run_eta.py's records of the chain: at each D the converged record of this
 coupling with the smallest max |F|), with the records of the --also folders from --Dmin on (an earlier part of the
@@ -65,10 +71,13 @@ def best(path, eta):
     out = {}
     for line in open(path):
         r = json.loads(line)
-        if str(r["eta"]) != eta or not r["converged"] or r.get("M", 32) != 32:
+        if str(r["eta"]) != eta or r.get("M", 32) != 32:
             continue
-        if "handover_tol" in r.get("qd", {}) and r["qd"]["handover_tol"] > 1e-28 and not is_qd(r):
-            continue                                        # a hand-over run that the quad-double stage did not accept
+        if r.get("qd", {}).get("handover_tol", 0) > 1e-28:
+            if not is_qd(r):
+                continue                                    # a hand-over run that the quad-double stage did not accept
+        elif not r["converged"]:
+            continue
         D = float(r["D"])
         if D not in out or res(r) < res(out[D]):
             out[D] = r
@@ -111,8 +120,8 @@ def main():
     qd = [D for D in Ds if is_qd(ch[D])]
     note = ""
     if qd:
-        note = (f"; {len(qd)} of them in quad-double from D {qd[0]:g} on (hand-over at "
-                f"{max(ch[D]['qd']['handover_tol'] for D in qd):g}), largest quad-double max |F| "
+        note = (f"; {len(qd)} of them in quad-double from D {qd[0]:g} on (handed over at a double-double max |F| "
+                f"of up to {max(ch[D]['qd'].get('handover_F', ch[D]['F']) for D in qd):.2e}), largest quad-double max |F| "
                 f"{max(res(ch[D]) for D in qd):.2e}, largest double-double one "
                 f"{max(res(ch[D]) for D in Ds if D not in qd):.2e}")
     print(f"(1) {len(Ds)} values of D from {Ds[0]:g} to {Ds[-1]:g}, each converged; largest max |F| {worst:.2e} "
