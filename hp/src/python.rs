@@ -6,7 +6,7 @@ use crate::field::{DMat, Fl, State};
 use crate::linalg::{DDLu, ODLu, QDLu, StaircaseLu as BlockLu};
 use crate::qd::QD;
 use multidouble::od::OD;
-use multidouble::precision::{Octo, Precision, Quad};
+use multidouble::precision::{Double, Octo, Precision, Quad};
 use multisolver::newton::Step;
 use crate::model::{self, Ctx};
 use crate::v8::V8;
@@ -85,6 +85,9 @@ trait Api: Send + Sync {
     /// each order k = 1..n's right-hand side -F_k (eight parts) handed to solve(k, b), which returns z_k; z_1..z_n.
     /// split: Ctx::series_split for the call
     fn series_o(&mut self, z0: [&[f64]; 8], n: usize, solve: &mut (dyn FnMut(usize, O8) -> Result<O8, String> + Send), mutate: u8, split: u8) -> Result<Vec<O8>, String>;
+    /// jac_sub::jacobian_sub_in in the precision of z's part count (2 Double, 4 Quad, 8 Octo): J[rows, cols] as z's
+    /// number of row-major part arrays; mutate: Ctx::mutate for this call
+    fn jacobian_sub(&mut self, z: &[&[f64]], rows: &[usize], cols: &[usize], mutate: u8) -> Result<Vec<Vec<f64>>, String>;
 }
 
 /// `Api::series_o` on jets of N coefficients
@@ -425,6 +428,20 @@ impl<const B: usize> Api for Ctx<B> {
             c.series_split = 0;
             r
         })
+    }
+
+    fn jacobian_sub(&mut self, z: &[&[f64]], rows: &[usize], cols: &[usize], mutate: u8) -> Result<Vec<Vec<f64>>, String> {
+        match z.len() {
+            2 => {
+                self.mutate = mutate;
+                let r = crate::jac_sub::jacobian_sub_in::<Double, B>(self, z, rows, cols, true);
+                self.mutate = 0;
+                r
+            }
+            4 => qd_sizes!(self, mutate, |c| crate::jac_sub::jacobian_sub_in::<Quad, _>(c, z, rows, cols, true)),
+            8 => od_sizes!(self, mutate, |c| crate::jac_sub::jacobian_sub_in::<Octo, _>(c, z, rows, cols, true)),
+            n => Err(format!("jacobian_sub: z must be 2, 4 or 8 part arrays, not {n}")),
+        }
     }
 }
 
@@ -1309,6 +1326,33 @@ impl Solver {
         let mut x: Vec<OD> = (0..lu.n).map(|i| OD::new(std::array::from_fn(|q| b[q][i]))).collect();
         py.detach(|| if transpose { lu.solve_t(&mut x) } else { lu.solve(&mut x) });
         Ok(arr8(py, od_parts(&x)))
+    }
+
+    /// The block J[rows, cols] of the exact Jacobian at z, two, four or eight part arrays (double-, quad- or octo-double):
+    /// bit for bit those entries of jacobian, jacobian_q or jacobian_o at z, formed from only the column tasks that
+    /// reach them (jac_sub::jacobian_sub_in). Returns as many (len(rows), len(cols)) arrays as z has parts. rows, cols:
+    /// sequences of indices, in any order, repeats allowed. A solver with frozen rows (kfreeze) is refused. Four parts
+    /// at M = 32 and 48 only, eight at M = 32. mutate: Ctx::mutate for the call, as jacobian_q's and jacobian_o's.
+    #[pyo3(signature = (z, rows, cols, mutate=0))]
+    fn jacobian_sub<'py>(
+        &mut self,
+        py: Python<'py>,
+        z: Vec<PyReadonlyArray1<'py, f64>>,
+        rows: Vec<usize>,
+        cols: Vec<usize>,
+        mutate: u8,
+    ) -> PyResult<Vec<Bound<'py, PyArray2<f64>>>> {
+        let n = self.api.len();
+        let zs: Vec<&[f64]> = z.iter().map(|a| slice(a, "z")).collect::<PyResult<_>>()?;
+        if zs.iter().any(|p| p.len() != n) {
+            return Err(PyValueError::new_err(format!("each part must have length {n}")));
+        }
+        let (api, pool) = (&mut self.api, &self.pool);
+        let c = py.detach(|| pool.install(|| api.jacobian_sub(&zs, &rows, &cols, mutate))).map_err(PyValueError::new_err)?;
+        let (nr, nc) = (rows.len(), cols.len());
+        c.into_iter()
+            .map(|p| Array2::from_shape_vec((nr, nc), p).map(|a| a.into_pyarray(py)).map_err(|e| PyValueError::new_err(e.to_string())))
+            .collect()
     }
 
     /// Mode matrix M(lam) (Delta fixed, no phase row) as two (L-1, L-1) arrays.
