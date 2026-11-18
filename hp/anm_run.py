@@ -15,7 +15,7 @@ formulation of hp/pinning.py; their coefficients are zero).
         [--accept_stall 1e-19] [--junk_only 0] [--threads 4] [--w 24] [--trend T75] [--tol_qd 1e-28] [--accept_stall_qd 0]
         [--qd_it 12] [--qd_w 0] [--refine 1] [--probe 0 --probe_c C] [--plan_tol 1e-32] [--fix1 0] [--F_pred_max 0]
         [--horizon_alpha 0] [--fix1_qlu 0] [--jet_q 0] [--reseed 0] [--pred_q 0] [--reseed_q 0] [--save_pred 0]
-        [--jet_o 0] [--jet_by_order 1] [--od_tangents 2] [--corrector od --tol_od 1e-40] [--base_adopt 0] [--base_polish 1] [--keep_plan 1] [--held_fit FILE]
+        [--jet_o 0] [--jet_by_order 1] [--jet_tangent_from 0] [--series_split 0] [--od_tangents 2] [--corrector od --tol_od 1e-40] [--base_adopt 0] [--base_polish 1] [--keep_plan 1] [--held_fit FILE]
         [--held_o 0] [--reseed_o 0] [--a0 0] [--a_grow 2] [--a_hold 0] [--lam_stall 0] [--save_base 0] [--save_jet 0] [--held_from STATE]
         [--arclength 0 --guard 0.05 --D_min 0 --arc_sign 1 --border 1 --turns_max 2 --arc_dhold 1e-12 --arc_jet FILE]
         [--a_rule step|reseed --a_scale 1 --a_drop 10 --a_rise 3.16]
@@ -281,7 +281,7 @@ def coefficients_q(s, zq, N, held=None):
     return Zq, norms
 
 
-def coefficients_o(s, zo, N, held=None, perturb=None, by_order=True, tangent_from=0):
+def coefficients_o(s, zo, N, held=None, perturb=None, by_order=True, tangent_from=0, split=0):
     """z_1..z_N by the octo-double jet (Solver.residual_jet_o) and the octo-double LU of the last Solver.newton_o, which
     must have been taken at zo (eight parts): the list of eight-part z_k (z_0 first) and their norms. held as in
     coefficients, added in octo-double (od_add_dd). No refinement: the LU is the exact Jacobian's in octo-double.
@@ -291,7 +291,9 @@ def coefficients_o(s, zo, N, held=None, perturb=None, by_order=True, tangent_fro
     held rows and perturbation; False forms it by the jets, as does a build without Solver.series_o (with a notice).
     tangent_from F > 0: by order, the orders from F on formed once and moved by their tangents (multishoot's
     JetSession::tangent_from), equal to the series formed twice to rounding, not bit for bit; a build without it forms
-    every order twice, with a notice."""
+    every order twice, with a notice. split 1: by order, the horizon series' middle terms formed ahead of each order
+    (Ctx::series_split, #952; the same bits in every test, not guaranteed); a build without it forms the default, with a
+    notice."""
     # the octo-double helpers are in multidouble's Python package from f092018 on; imported here so that the other
     # paths run on the older packages the runners have
     from multidouble import od_add_dd, od_axpy
@@ -330,6 +332,12 @@ def coefficients_o(s, zo, N, held=None, perturb=None, by_order=True, tangent_fro
             except TypeError:
                 print("  coefficients_o: this hpkernel's series_o has no tangent_from; every order formed twice", flush=True)
                 kw = {}
+        if split:
+            try:
+                s.series_o(list(Zo[0]), 0, None, split=int(split), **kw)
+                kw["split"] = int(split)
+            except TypeError:
+                print("  coefficients_o: this hpkernel's series_o has no split; the default horizon series", flush=True)
         for z in s.series_o(list(Zo[0]), N, hook, **kw):
             Zo.append(o8(z))
             norms.append(float(dd_norm(Zo[-1][0], Zo[-1][1])))
@@ -397,6 +405,7 @@ def main():
     opt.update(od_tangents=2)           # --od_tangents 1: the octo-double Jacobian one column per evaluation (the same bits, slower)
     opt.update(jet_by_order=1)          # --jet_by_order 0: --jet_o's series by the jets of growing length (the same bits, slower)
     opt.update(jet_tangent_from=0)      # --jet_tangent_from F: by order, orders from F on moved by their tangents (equal to rounding, faster)
+    opt.update(series_split=0)          # --series_split 1: by order, the horizon series' middle terms formed ahead of each order (#952)
     opt.update(base_adopt=0)            # --base_adopt 1: the base's od polish is adopted whatever it did
     opt.update(base_polish=1)           # --base_polish 0: no polish, the stored state is the base
     opt.update(keep_plan=1)             # --keep_plan 0: plan the base again even when its state stores a plan
@@ -942,7 +951,7 @@ def main():
             # the corrector's last LU when it was taken at zo on this solver (base_lu_o), else formed here
             pmin, pmax, base_lu = base_lu_o(s, zo)
             Zo, norms = coefficients_o(s, zo, N, held=held_arg, by_order=bool(opt["jet_by_order"]),
-                                       tangent_from=opt["jet_tangent_from"])
+                                       tangent_from=opt["jet_tangent_from"], split=opt["series_split"])
             Zh, Zl, refine = [np.asarray(z[0]) for z in Zo], [np.asarray(z[1]) for z in Zo], [()]
         elif opt["jet_q"]:
             # --jet_q 1: the series from the quad-double jet through the quad-double LU at the base's four parts
