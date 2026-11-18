@@ -2840,3 +2840,44 @@ only). None changes a criterion of 19.3 for the plants or the real series.
 
 The selftest passes with all five of its mutations (`e0_row`, `selftest_row`, `err_x1e3_tail`, `abs_window`,
 `selftest_sigma18`) firing, at the script of the commit that holds this section.
+
+### 19.6 Development, round 1: both presets score above 1, and a χ² gate is added
+
+`develop` on D1–D5 (`I668-rpi5/development.log`, script at db8c9539, 2026-11-18 05:07 UTC). Error and noise as in 19.3, draws
+547000 + i.
+
+| preset | D1 | D2 | D3 | D4 | D5 | score |
+|---|---|---|---|---|---|---|
+| E1, error / noise | 2.4×10⁻⁴ / 0.0031 | 0.0103 / 0.0254 | 0.0238 / 0.0062 | 0.0213 / 0.0166 | 0.0070 / 0.0195 | 2.54 |
+| E2, error / noise | 0.0018 / 0.0015 | 0.0665 / 0.0357 | 0.0249 / 0.0105 | 0.0314 / 0.0092 | 0.0067 / 0.0154 | 3.57 |
+
+Both presets score above 1, so the protocol of 19.2 allows an amendment round. E1 would be chosen, and it fails C1 on D3 and
+D4 and C3 on D2, D4 and D5.
+
+**Read from D1–D5 before this round** (a throwaway per-member diagnostic, which the stage `table` of the script
+reproduces for E1 in `I668-rpi5/table_E1.log`, and the same through the E0 members, the square ensemble, in the diagnostic
+run). On the same plants and draws, the square E0 members, which are #547's DA2, give noise 0.0050, 0.256, 0.0230 and
+0.0056 on D1, D2, D4 and D5, so the weights cut the noise of D2 tenfold and of D4 by a quarter, and raise D5's from 0.0056
+to 0.0195. The members of E1 split in two.
+
+- The members with 4–8 surplus equations (nu ≥ 4 at degrees up to 5) move by 0 to 10⁻⁴ over the draws and miss the far end by
+  0.05–0.35. They are rigid, since the accurate low orders fix them, and biased.
+- The square and nearly square members, nu = 0 or 1, have the far end within 0.003–0.03 and move by up to 0.03 with some
+  members jumping by 1–3 to another zero.
+- Their weighted misfit separates the two. χ²/ν of the rigid members is 2×10² or more on every plant (up to 10¹⁴), and of the
+  members with nu = 1 to 3 at degree 5 or more it is 2.2 or less on D1–D5. These are noise-free plants, so their χ² is far
+  below ν when the plant is consistent, and a noisy series has χ² near ν.
+
+So the measured errors say which members to believe. **E3 and E4** are added, both gated.
+
+| preset | members | gate |
+|---|---|---|
+| E4 | E1's 11 members | counted only if ν ≥ 1 and χ²/ν ≤ 10 |
+| E3 | 17 members, degrees (d₀, d₁, d₂) with d₂ = 5, 6, 7, d₁ = d₂ − 2 … d₂, d₀ = d₁ − 1 or d₁, lp = 0, 1, 2, keeping those with ν = 2, 3 or 4 equations in surplus | the same |
+
+χ² = Σ_n |R_n|² / V_n at the member's last solve, with the V of that solve, and ν = equations − unknowns. A gated estimate is the
+median over the counted members with an admissible zero, and needs at least 3 of them, or there is no estimate and C1
+fails. The threshold 10 was read off the D1–D5 table above, where the two groups are separated by two orders of magnitude, and
+is not a fit. The rest of 19.1 is unchanged, and the gate is scale invariant, since χ² is. The development protocol of 19.2 now
+runs on E3 and E4, with E1 and E2 kept in the selection (`develop ... E1,E2,E3,E4`), and the lowest score is chosen. The members of
+E3 and E4 are in the script's `members`.

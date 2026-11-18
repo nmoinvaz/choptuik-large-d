@@ -58,9 +58,24 @@ FROZEN = {                          # written in notes/PADE_FAR_END.md 19.3 befo
 
 
 # ---------------------------------------------------------------- the members
+GATE = 10.0                         # 19.6: a member of a gated preset counts only if chi2 / nu <= GATE, nu >= 1
+GATED = ("E3", "E4")
+MIN_COUNTED = 3                     # a gated estimate needs this many counted members
+
+
 def members(preset):
-    """[(degs, lp, nmax)] of a preset. E0: #547's members (square). E1, E2: 19.1."""
+    """[(degs, lp, nmax)] of a preset. E0: #547's members (square). E1, E2: 19.1. E3, E4: 19.6."""
     out = []
+    if preset == "E4":
+        return members("E1")
+    if preset == "E3":
+        for d2 in (5, 6, 7):
+            for d1 in (d2 - 2, d2 - 1, d2):
+                for d0 in (d1 - 1, d1):
+                    for lp in (0, 1, 2):
+                        if NMAX - lp - (d0 + d1 + d2 + 2) in (2, 3, 4):
+                            out.append(([d0, d1, d2], lp, NMAX))
+        return out
     if preset == "E0":
         for degs, lp in pf.members(2):
             nq = sum(d + 1 for d in degs) - 1
@@ -150,20 +165,22 @@ def lsq(A, b, V):
 
 
 def fit(a, s, degs, lp, nmax, mode="weighted", mut=None):
-    """(rows, cols, x, V used in the last solve) or None when there are fewer equations than unknowns"""
+    """(rows, cols, x, V used in the last solve, chi2 at x with that V) or None when there are fewer equations than
+    unknowns"""
     rows, cols, A, b = eqs(a, degs, lp, nmax)
     if A.rows < A.cols:
         return None
     if mut == "e0_row" and A.rows == A.cols:
         b[2] = b[2] * (1 + mp.mpf("1e-6"))
     if mode == "unweighted" or A.rows == A.cols:
-        return rows, cols, lsq(A, b, None), None
+        return rows, cols, lsq(A, b, None), None, mp.mpf(0)
     V = [(mp.rf(n + 1, 2) * s[n + 2]) ** 2 for n in rows]
     x = lsq(A, b, V)
     for _ in range(2):
         V = row_var(rows, cols, degs, s, x)
         x = lsq(A, b, V)
-    return rows, cols, x, V
+    r = A * x - b
+    return rows, cols, x, V, mp.fsum(abs(r[i]) ** 2 / V[i] for i in range(len(rows)))
 
 
 def zeros_of(degs, cols, x):
@@ -213,17 +230,27 @@ def member_zeros(sig, eps, preset, mut=None):
             f = fit(a, s, degs, lp, nmax, mode, mut if preset == "E0" else None)
             ts = zeros_of(degs, f[1], f[2]) if f else None
         except (ZeroDivisionError, ValueError, mp.NoConvergence):
-            ts = None
-        out.append((degs, lp, ts))
+            f, ts = None, None
+        nu = (nmax - lp) - (sum(d + 1 for d in degs) - 1)
+        out.append((degs, lp, ts, {"chi2": float(f[4]) if f else None, "nu": nu}))
     return out, scale_of(a, mut)
 
 
+def counted(info, preset):
+    """whether a member counts: always for an ungated preset, else nu >= 1 and chi2 / nu <= GATE (19.6)"""
+    if preset not in GATED:
+        return True
+    return info["chi2"] is not None and info["nu"] >= 1 and info["chi2"] / info["nu"] <= GATE
+
+
 def estimate(sig, eps, preset, mut=None):
-    """(median of the members' farthest admissible zero, [member records], MAD); (None, ..., None) if none admissible"""
+    """(median of the counted members' farthest admissible zero, [member records], MAD); (None, ..., None) if none
+    admissible, or fewer than MIN_COUNTED counted members in a gated preset"""
     mz, scale = member_zeros(sig, eps, preset, mut)
-    got = [{"degs": d, "lp": lp, "t": farthest_w(ts, scale) if ts else None} for d, lp, ts in mz]
-    fs = np.array([g["t"] for g in got if g["t"] is not None])
-    if len(fs) == 0:
+    got = [{"degs": d, "lp": lp, "t": farthest_w(ts, scale) if ts else None, "chi2": i["chi2"], "nu": i["nu"],
+            "counted": counted(i, preset)} for d, lp, ts, i in mz]
+    fs = np.array([g["t"] for g in got if g["t"] is not None and g["counted"]])
+    if len(fs) == 0 or (preset in GATED and len(fs) < MIN_COUNTED):
         return None, got, None
     med = complex(np.median(fs.real), np.median(fs.imag))
     return med, got, float(np.median(np.abs(fs - med)))
@@ -278,7 +305,7 @@ def selftest(mut=None):
         for mutated in (None, "e0_row"):
             worst = 0
             mz, _ = member_zeros(sig, eps, "E0", mut if mut == "e0_row" and mutated is None else mutated)
-            for (degs, lp, ts), (degs0, lp0) in zip(mz, pf.members(2)):
+            for (degs, lp, ts, _), (degs0, lp0) in zip(mz, pf.members(2)):
                 worst = max(worst, _rel(ts, pf.da_zeros(sig, degs0, lp0)))
             if mutated is None:
                 print(f"B-regression, {lab}: E0 zeros against da_zeros, largest relative difference {float(worst):.1e} "
@@ -298,7 +325,7 @@ def selftest(mut=None):
     mem = members("E1")
     for idx in (0, 5, 9):
         degs, lp, nmax = mem[idx]
-        rows, cols, x, V = fit(a, s, degs, lp, nmax)
+        rows, cols, x, V, _ = fit(a, s, degs, lp, nmax)
         for mutated in (False, True):
             mp.mp.dps = 250
             _, _, A, b = eqs(a, degs, lp, nmax)
@@ -323,12 +350,12 @@ def selftest(mut=None):
     base, _ = member_zeros(dn, eps, "E1")
     gm = "err_x1e3_tail" if mut == "err_x1e3_tail" else "err_x1e3"
     sc, _ = member_zeros(dn, eps, "E1", gm)
-    worst = max(_rel(t1, t0) for (_, _, t1), (_, _, t0) in zip(sc, base))
+    worst = max(_rel(t1, t0) for (_, _, t1, _), (_, _, t0, _) in zip(sc, base))
     print(f"S2 gauge, errors x 1e3 in the weights: largest relative change of a member's zeros {float(worst):.1e} "
           f"(pass < 1e-30)")
     ok &= worst < mp.mpf("1e-30")
     tl, _ = member_zeros(dn, eps, "E1", "err_x1e3_tail")
-    worst = max(_rel(t1, t0) for (_, _, t1), (_, _, t0) in zip(tl, base))
+    worst = max(_rel(t1, t0) for (_, _, t1, _), (_, _, t0, _) in zip(tl, base))
     print(f"S2 mutation (errors x 1e3 for k >= 12 only): {float(worst):.1e} (must exceed 1e-9)")
     ok &= worst > mp.mpf("1e-9")
     # S3: equivariance under sigma_k -> c^k sigma_k, on D1 and on the real series, c = 1.03 and 1.9
@@ -410,13 +437,13 @@ def timing():
     return True
 
 
-def develop(outdir):
-    """19.2 step 1: D1-D5 with E1 and E2, error and noise (draws 547000 + i), score = max of error/0.02, noise/0.01"""
+def develop(outdir, presets=("E1", "E2"), tag=""):
+    """19.2 step 1: D1-D5 with the presets, error and noise (draws 547000 + i), score = max of error/0.02, noise/0.01"""
     real = pg.load_scan(pg.REAL["J1250"])
     names = [n for n, v in pf.PLANTS.items() if v[5] == "D"]
     rec = {"names": names, "presets": {}}
-    path = os.path.join(outdir, "development.json")
-    for preset in ("E1", "E2"):
+    path = os.path.join(outdir, f"development{tag}.json")
+    for preset in presets:
         rec["presets"][preset] = {}
         for name in names:
             r = plant_record(name, real, preset, None, with_fresh=False)
@@ -428,10 +455,38 @@ def develop(outdir):
             sys.stdout.flush()
             json.dump(jsonable(rec), open(path, "w"), indent=1)
     tot = {p: max(r["score"] for r in rec["presets"][p].values()) for p in rec["presets"]}
-    chosen = "E1" if tot["E1"] <= tot["E2"] else "E2"
+    chosen = min(tot, key=lambda p: (tot[p], p))
     rec["scores"], rec["chosen"] = tot, chosen
     json.dump(jsonable(rec), open(path, "w"), indent=1)
     print(f"development scores {tot}; chosen {chosen}" + ("; BOTH ABOVE 1" if min(tot.values()) > 1 else ""))
+    return True
+
+
+def table(outdir, preset):
+    """19.6: per member of a preset, on D1-D5: nu, chi2/nu, the far-end error of its farthest zero, and the largest shift
+    of that zero over the draws 547000 + i"""
+    real = pg.load_scan(pg.REAL["J1250"])
+    for name in [n for n, v in pf.PLANTS.items() if v[5] == "D"]:
+        kind, wf, R, dex, stretch, st = pf.PLANTS[name]
+        pl = pf.FarPlant(wf, kind, real[wf], R, dex, stretch)
+        sig = pl.sigma()
+        mp.mp.dps = DPS
+        eps, P1 = eps_of(wf), complex(pl.P1)
+        mz, scale = member_zeros(sig, eps, preset)
+        base = [farthest_w(ts, scale) if ts else None for _, _, ts, _ in mz]
+        shift = [0.0] * len(mz)
+        for i in range(NSEED):
+            ns = pg.noisy([mp.mpc(z) for z in sig[:N_COEF]], SEED_547 + i, eps)
+            mzn, scn = member_zeros(ns, eps, preset)
+            for k, (_, _, tsn, _) in enumerate(mzn):
+                tn = farthest_w(tsn, scn) if tsn else None
+                shift[k] = max(shift[k], abs(tn - base[k]) if (tn is not None and base[k] is not None) else float("inf"))
+        print(name)
+        for k, (degs, lp, ts, info) in enumerate(mz):
+            c = info["chi2"]
+            print(f"   {str(degs):10s} lp {lp} nu {info['nu']:2d} chi2/nu {('%.2e' % (c / max(info['nu'], 1))) if c is not None else 'none':>9s}"
+                  f"  far-end err {('%.4f' % abs(base[k] - P1)) if base[k] is not None else 'none':>7s}  max shift {shift[k]:.4f}")
+        sys.stdout.flush()
     return True
 
 
@@ -549,7 +604,10 @@ def main():
     require_raw(os.path.join(outdir, "x.json"), allow=allow)
     os.makedirs(outdir, exist_ok=True)
     if stage == "develop":
-        develop(outdir)
+        develop(outdir, tuple(argv[2].split(",")) if len(argv) > 2 else ("E1", "E2"), argv[3] if len(argv) > 3 else "")
+        sys.exit(0)
+    if stage == "table":
+        table(outdir, argv[2])
         sys.exit(0)
     if stage == "plants":
         r = run_plants(outdir, mut)
