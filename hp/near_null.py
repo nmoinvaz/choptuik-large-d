@@ -30,7 +30,9 @@ Check (exit 1 on failure): sigma_1 converged to 1e-3 relative, and ||J v_1|| / s
 refined in octo-double by three more steps of inverse iteration (scaled with od_axpy of multidouble's Python package),
 and J v_1 is the exact octo-double Jacobian (Solver.jacobian_o, forward-mode duals) times v_1 summed in mpmath at 140
 digits: with ||J|| near 1e34 and sigma near 1e-27 the product needs about 77 digits, which a vector in f64 or a central
-difference of the residual cannot give. Control: --mutate=sigma reports sigma_1 1.05 times too large to the
+difference of the residual cannot give. The Jacobian is the one newton_o factored, kept with its LU (keep_jacobian,
+Solver.jacobian_o_kept: jacobian_o's bits), and F below is newton_o's (newton_o_residual: residual_o's bits); a build
+without them forms each again. Control: --mutate=sigma reports sigma_1 1.05 times too large to the
 comparison, and the check must fail (at D 242.36 the ratio is then 0.952). The check does not see a mis-applied solve
 of a few percent: --mutate=scale_p1, the p1 rows of every right-hand side times 1.05, moves the ratio by 0.6% only
 (1.0058 at D 242.36), because the weakest vector hardly changes; a single row times 1.01 moves it less (#488).
@@ -167,7 +169,10 @@ def main():
     s.set_segs(m["segs"] if keep_plan else s.plan(z[0], z[1], 1e-32, 0.05))
     L = len(z[0])
     t0 = time.time()
-    out = s.newton_o(z)
+    # the LU and, kept with it, the Jacobian the check below multiplies (newton_o's keep_jacobian, the same step bit for
+    # bit): one Jacobian instead of two; a build without it forms the Jacobian again there (with a notice)
+    keep = hasattr(s, "jacobian_o_kept")
+    out = s.newton_o(z, keep_jacobian=True) if keep else s.newton_o(z)
     print(f"{st}: D {float(m['D']):g}, L {L}, octo-double LU {time.time() - t0:.0f} s, pivots {out[3]:.1e}..{out[4]:.1e}", flush=True)
     # the first Newton step: newton_o's dz, and dz + J^-1 c with the base polish's held offset c (eight parts)
     from multidouble import od_axpy
@@ -200,7 +205,12 @@ def main():
         nrm = float(np.linalg.norm(np.asarray(y[0])))
         x8 = [np.ascontiguousarray(p) for p in od_axpy(1.0 / nrm, *[np.asarray(p) for p in y], *([zero] * 8))]
     t1 = time.time()
-    J = [np.asarray(p) for p in s.jacobian_o(z)]
+    J = s.jacobian_o_kept(z) if keep else None
+    if J is None:
+        print("  the Jacobian formed again (this hpkernel has no jacobian_o_kept)" if not keep else
+              "  the Jacobian formed again (newton_o's was not kept at z)", flush=True)
+        J = s.jacobian_o(z)
+    J = [np.asarray(p) for p in J]
     xv = [mp.fsum(mp.mpf(float(x8[q][c])) for q in range(8)) for c in range(L)]
     nz = [c for c in range(L) if xv[c] != 0]
     jv = [mp.fsum(mp.fsum(mp.mpf(float(J[q][r, c])) for q in range(8) if J[q][r, c] != 0) * xv[c] for c in nz) for r in range(L)]
@@ -236,7 +246,9 @@ def main():
         wn = float(opts.get("w", 1e-20))
         g = np.random.default_rng(2).standard_normal(L)
         w = (V[:, 0] + g / np.linalg.norm(g)) * (wn / np.sqrt(2))
-        F8 = [np.ascontiguousarray(np.asarray(p)) for p in s.residual_o(z)]
+        # the residual newton_o formed at z (Solver.newton_o_residual, residual_o's bits), else formed again
+        F8 = s.newton_o_residual(z) if hasattr(s, "newton_o_residual") else None
+        F8 = [np.ascontiguousarray(np.asarray(p)) for p in (s.residual_o(z) if F8 is None else F8)]
         t2 = time.time()
         Jw = [zero] * 8
         for c in range(L):
