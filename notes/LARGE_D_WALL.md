@@ -1083,7 +1083,12 @@ reading to test. The Δ values of the two orders agree to a few 10⁻¹² (same 
 - **Withdrawn.** xfchecks's reading "order-converged at D 231" took order-160 roots to order 200 without a Newton
   solve. Its σ_Δ/σ_pair of 0.33 belongs to that order-200 reading, where the pair rises above the Δ mode. At order 160
   dh370 and xfchecks agree on 219–257.
-- **Open.** Whether order 240 is itself converged for the Δ mode at D 232, by a ks ladder 200–320 (#948).
+- **Order 240 is converged for the Δ mode at D 232 (#948).** Base polishes at ks 250 to 320 from the order-tied chain's
+  state give σ_Δ = 5.2769245045×10⁻¹⁵ at every order, within 1.4×10⁻⁹ of ks 240's, with the harmonic-3 pair flat at
+  2.944×10⁻¹⁰. Δ(K) − Δ(240) is 4.69×10⁻¹⁷ from ks 250 on, and 1.2×10⁻²⁴ between 300 and 320 (dh370, raw `I948-dh370/`
+  9d95365f). Rungs at 230 and 235 crawl as in #944 and don't converge, so the chain's rule sits just above Newton's
+  limit there. At D 222, ks 160 and 230 give the same σ_Δ to 0.1%. So the fall of σ_Δ along the order-tied chain,
+  1.51 per unit D, belongs to the problem, not to the cut.
 
 ## Order 142 follows track C past #603's departure (#903)
 
