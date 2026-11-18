@@ -23,6 +23,7 @@
 pub mod field;
 pub mod lane;
 pub mod model;
+pub mod series_split;
 
 // The arithmetic, the dual lanes and the dense LU live in the multidouble crate (crates.io; github.com/nmoinvaz/multidouble),
 // split out of this one; re-exported under their old paths so the solver code reads as before. Its lane types are
