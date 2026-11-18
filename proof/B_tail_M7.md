@@ -187,6 +187,17 @@ their r₁ carries errors of order 1: r₁ = −3.83 − 4.30i at p₅ and +0.79
 about 1.5×10⁻⁴ of it, consistent but not sharp. At ξ₁ = 0.13 level 3 stopped at 8×10⁻⁵ (`…_xi013_at_newton2.log`). The
 check at the 2×10⁻⁵ level is part of the local task (§3.1).
 
+**Rechecked on two architectures, 2026-11-18 (#964–#977).** The local task's solves were rerun on rpi5 (aarch64) and
+win2 (x86), with the compiled backend's checks passing on both. A solve repeated from its own end state is a fixed point
+and gives no new sample, so the noise estimates below come from starts perturbed by 10⁻⁷.
+- **Tolerance:** at ξ₁ = 0.15 the zero moves by +2.3×10⁻⁵ in A from rtol 10⁻¹² to 10⁻¹³, then agrees between
+  10⁻¹³ and 10⁻¹⁴ within their estimates: (2.719243, 1.000026) ± 4.6×10⁻⁶ and (2.719234, 1.000025) ± 9.1×10⁻⁶ on x86
+  (#977), (2.719236, 1.000026) ± 9.9×10⁻⁶ on aarch64 (#974).
+- **The zero, revised:** A₇ = 2.71924 and ω₇/ω∞ = 1.000025, ± 1×10⁻⁵ (the noise estimate). This is within the
+  quoted ±2×10⁻⁵ in ω and 2.3×10⁻⁵ off in A.
+- **Radius:** still unchecked at this accuracy. At ξ₁ = 0.14 level 3 floors at |r₃| 6×10⁻⁷ to 2×10⁻⁶, and the zero's
+  estimate is 1.2×10⁻³ (#974), so the test cannot resolve 2×10⁻⁵. At 0.16 no solve reaches the 10⁻⁶ bar (#965).
+
 ## 3. The truncation sequence with M = 7
 
 `python3 trunc_seq_M7.py --c7=1.000022,2.719219,0.148977988,0.014770713,0.008424206,0.001511189,0.000474205,0.00012168`
@@ -576,7 +587,7 @@ individual labels, and so meets e^{πνω/2} before the cancellation. Two candid
 | Lazy residual: every entry hier reads bit-identical (`hier_nb.py selftest`) | numerical check, with a mutation control |
 | Right-hand-side cap: a capped segment is NaN, the other radii bit-identical (`inner_nb.py capcheck`) | numerical check, with a mutation control |
 | M = 7 at p₅: F₅/F₁ = 0.003104 + 0.000557i, \|F₇/F₅\| = 0.0573 | numerical evidence (levels 3, 5, 7 at their floors, ξ₁ = 0.15) |
-| M = 7 zero (A, c₇) = (2.71922, 1.000022), ± 2×10⁻⁵ (noise estimate) | numerical evidence (six converged fixed-(A, ω) solves at ξ₁ = 0.15, affine fit); radius independence at this accuracy not yet checked (local task §3.1) |
+| M = 7 zero (A, c₇) = (2.71922, 1.000022), ± 2×10⁻⁵ (noise estimate); at rtol 10⁻¹³–10⁻¹⁴ (2.71924, 1.000025) ± 1×10⁻⁵ | numerical evidence (six converged fixed-(A, ω) solves at ξ₁ = 0.15, affine fit; reproduced on aarch64 and x86 with perturbed starts, §2, #964–#977); radius independence at this accuracy not checked (ξ₁ 0.14's noise 1.2×10⁻³, 0.16 misses the bar) |
 | B_tail.md's prediction c₇ ∈ [0.99997, 1.00017]; κ₇ in −0.045 to −0.057 | confirmed (numerical evidence): c₇ = 1.000022, κ₇ = −0.0485 |
 | hier's M-model expanded in A is exact through σ_M (M = 1, 3, 5) and changes σ_{M+1} by 14% (M = 1), 0.12% (M = 3), 7×10⁻⁶ (M = 5) | numerical evidence (fits); the exactness through σ_M is Lemma O, *proved* |
 | B_tail.md §4's Galerkin explosion comes from dropping the even harmonic M + 1 | numerical evidence (M = 3, 5) plus Lemma O (the fit bases also differ slightly: shifts up to 2M + 2 here, 2M there) |
