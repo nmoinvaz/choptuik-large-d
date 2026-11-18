@@ -4,7 +4,7 @@ Status of everything here: numerical evidence. Nothing is rigorous. It bears on 
 which follow from the farthest singularity of the Borel transform (proof/D_entire.md sections 1 and 7). Sections 1–4
 are #547, sections 5–6 are #548, section 7 is #670, section 8 is #669, section 9 is #672, section 10 is #683,
 section 11 is #684, section 12 is #667, section 13 is #689, section 14 is #702, section 15 is #703, section 16
-is #718, and section 17 is #746.
+is #718, section 17 is #746, and section 18 is #747.
 
 - **#547.** A calibrated estimator recovers the far end of smooth-density plants within 0.009, but it fails #547's
   acceptance. On the real series two controls fire, so no far end is quoted (§4).
@@ -47,6 +47,10 @@ is #718, and section 17 is #746.
   its χ₂₀/χ₂₂ and χ₂₁/χ₂₂ are 0.67–0.91 times the real series' at every end point of #718's lattice, so a factor-5
   window removes one inner end point and none at |t| ≥ 2.48. With the zero held it removes 12, at |t| = 2.48–2.86, but
   that is the zero's offset at 20 terms (§17).
+- **#747.** A second set of #718's family does give #541's far Padé poles alone, at a strength where the test cannot
+  tell it from noise. No lattice plant of 30720 does (smallest d_P 0.070), but a refinement of eight starts reaches
+  d_P ≤ 0.03 at all three nodes for 202 plants, all in one place, ending near 1.50 + 1.08i with η = 0.011–0.054. At that
+  strength the real series' own noise moves a plant's poles by 0.03–0.08, so the pass fits one noise draw (§18).
 
 ## 1. Question
 
@@ -2540,7 +2544,7 @@ density in the radial group only; strengths above η = 1; the zero factor, held 
 k = 8, 9, 10 only, from σ₀–σ₂₀; and (a) and (c′), which are not judged here. A joint judge of whatever passes is a
 recommended task.
 
-### 18.3 Results: the first planted truth fired
+### 18.3 Results: the controls and the first planted truth
 
 `pade_far_poles.py control`, 2026-11-18 00:19 UTC, one process under `nice -n 10` on the rpi5, script at 10b90d9b. The
 selftest (R1–R3), J+, J− and R4 passed. The first P did not.
@@ -2571,3 +2575,111 @@ Diagnostics after it fired, not frozen (`diag/` in the raw folder): the three ma
 Levenberg–Marquardt, over three nodes at η = 1, φ = 0, reach at best 0.031. Their weights are of opposite signs and
 differ by a factor of 4, and they hold 66% of σ₂₂ at order 22 and 6% at order 12. Solved at ω∞ alone with η and φ free,
 the solve stalls at 0.086, so even the exact structure passes (b) only with heavy tuning.
+
+**P′ and the mutations** (`control`, script at 458ba32b, 2026-11-18 00:38–00:42 UTC; the files are `control.json` and
+`control_mutate_*.json`).
+
+| check | result | verdict |
+|---|---|---|
+| P′, the plant (chord2, a = b = 1, L = 0.3, α = log, η = 1, φ = 90°) | copy 2's d_P 1.0×10⁻², 2.8×10⁻³, 7.7×10⁻⁴ at ω/ω∞ = 0.99, 1.00, 1.01, admissible, with 71% of σ₂₂ | pass |
+| P′, its four lattice neighbours | d_P 0.231–0.264 at every node | all fail, as they must |
+| P′, the plant without its second set | d_P 1.15 at every node. Copy 1's reference poles lie 0.9–1.1 from #541's, since Q is at \|Q\| = 2.7 | context |
+| `--mutate=shift_poles` | J+ gives 0.05 and P′'s plant fails; exit 1 | fires |
+| `--mutate=tol` | the neighbours pass at 3.0, so P′ fails; exit 1 | fires |
+| `--mutate=noise` | the plant fails at noise × 10¹⁰; exit 1 | fires |
+| `--mutate=len` | R4 fails; exit 1 | fires |
+
+P′'s context ladder, the same plant at other strengths, judged by the same rule. At η = 10⁻² the plant fails (d_P
+0.083, 0.076, 0.074), at η = 10⁻¹ it fails (0.103, 0.040, 0.011), and at η = 10 it passes (6×10⁻⁴, 3×10⁻⁴, 5×10⁻⁵).
+The neighbours fail at every rung. So the gate passes at η = 1 and 10, where the second set holds most of σ₂₂, and 0.03
+is below the noise floor at η ≤ 0.1. P′ is a gate at η = 1 only, and §18.4 shows where that matters.
+
+### 18.4 Results: the scan
+
+`pade_far_poles.py scan`, 2026-11-18 00:42–04:32 UTC, one process under `nice -n 10`, script at 458ba32b, 35520 records
+(`plants.jsonl`, `scan.json`, `scan.log` of `I747-rpi5/`). Its verdict is the frozen one: **yes**, a second set of this
+family gives (b).
+
+| criterion | result | verdict |
+|---|---|---|
+| stage A, 30720 plants at ω∞ | all 64 positions, 4 groups, 15 strengths, 4 phases, in 174 min, none left out; all 30720 admissible; smallest d_P 0.0701 (chord2, horizontal, L = 0.3, position (−2, −1), η = 10, φ = 180°) | none passes |
+| stage B, 8 starts × 200 evaluations | D₃ from 0.083–0.112 to 0.0217, 0.0291, 0.0312, 0.0324, 0.0379, 0.0652, 0.0654, 0.0674 | 2 starts pass |
+| stage C | no stage-A plant has d_P ≤ 0.06, so none runs | empty |
+| passes | 202 plants, all from stages B4 (136, arc) and B7 (66, chord2), admissible, d_P ≤ 0.03 at all three nodes; recheck through `pade_record` agrees | **yes** |
+| located | no lattice position passes, so no candidate; the stage 2 is a recommended task | none |
+| closest | D₃ = 0.0217 (arc, o = −0.529 − 0.157i, L = 0.445, θ = 39.0°, η = 0.0438, φ = 149.1°); smallest d_P at ω∞ 0.0068 | context |
+
+The 202 passing plants lie in one place. At ω∞ the best ends at Q = 1.499 + 1.079i, after 0.445 from A = 1.153 + 0.799i
+at 39°, beside #541's k = 10 pole (1.457 + 1.069i). Over the 202, Re o is −0.538 to −0.513, Im o −0.177 to −0.132, L
+0.40 to 0.47, θ 30° to 47°, η 0.011 to 0.054 and φ 121° to 178°. In lattice units the offset is (a, b) = (−2.1, −0.6),
+between the positions (−2, −1) and (−2, 0), where stage A's smallest d_P are 0.070 and 0.111. The best plant's second
+set holds 0.5% of σ₁₂ and 4.6% of σ₂₂, and its main fit reproduces σ₀–σ₁₂ within 6×10⁻⁵.
+
+Stage A's smallest d_P by strength (admissible) runs from 0.167 at η = 10⁻⁶ to 0.094 at 10⁻² and 0.070–0.089 from
+η = 0.1 to 10, 32 plants of 30720 below 0.1. Over the 1600 plants run at the three nodes, the smallest D₃ by strength is
+0.026 for η < 0.03 (67 pass), 0.0217 for 0.03–0.1 (135 pass), 0.052 for 0.1–0.3, 0.0312 for 0.3–1 (at η = 0.96), 0.036
+for 1–3 and 0.065 for 3–10 (none passes at η ≥ 0.1). Starts 0 and 1 stopped at the bound η = 10. These are post-freeze
+tabulations.
+
+### 18.5 After the freeze: the noise and the width of the pass
+
+`pade_far_poles.py robust`, added after the scan at 0c861b7d, judges nothing (`robust.log`, `robust.json`). For the best arc plant,
+the best chord2 plant and the passing plant of the largest η (0.054), at each node, 16 copies of the plant's series with
+independent noise at the real series' measured per-order errors (the noise of P′, seeds 747300 + 1000 i + 100 j + n).
+
+| plant | noiseless d_P at ω/ω∞ = 0.99, 1.00, 1.01 | with noise, median distance from the plant's own poles | draws within 0.03 of its own poles, all three nodes | draws within 0.03 of #541's, all three nodes |
+|---|---|---|---|---|
+| arc, η = 0.0438 | 0.022, 0.011, 0.022 | 0.060, 0.055, 0.042 | 0 of 16 | 0 of 16 |
+| chord2, η = 0.0112 | 0.029, 0.018, 0.029 | 0.043, 0.039, 0.036 | 0 of 16 | 0 of 16 |
+| arc, η = 0.0539 | 0.027, 0.011, 0.025 | 0.061, 0.056, 0.044 | 0 of 16 | 0 of 16 |
+
+So noise at the real series' error level moves these plants' poles by 0.036–0.061 at the median, more than the
+tolerance. A series that was one of these plants plus noise would miss the plant by more than 0.03 in every draw. The
+plants meet 0.03 against #541's poles by fitting the one noise draw in the real series, with six parameters and 18
+numbers. The same noise leaves a plant's d_P from #541's at 0.029–0.078 at the median, the lowest at ω/ω∞ = 1.01
+(12 and 13 of 16 within 0.03 for the first two).
+
+The width of the pass, for the best plant, noiseless, with the move made at all three nodes (D₃, from 0.0217):
+
+| move | 0.025 | 0.05 | 0.10 |
+|---|---|---|---|
+| Re o (±) | 0.051, 0.057 | 0.087, 0.091 | 0.182, 0.151 |
+| Im o (±) | 0.049, 0.040 | 0.086, 0.070 | 0.144, 0.135 |
+
+Moves of the other parameters give D₃ = 0.043 (η × 0.5), 0.056 (η × 2), 0.045 (L × 0.8), 0.034 (L × 1.25), 0.027 and
+0.033 (θ ∓ 10°) and 0.050 and 0.035 (φ ∓ 30°). So the pass is narrow in the end point, about 0.01–0.02 wide, and wider
+in θ and φ. The end point's width is below the noise's effect on the poles (about 0.04–0.06, which the slope of the
+table turns into 0.03–0.05 of offset).
+
+### 18.6 What this means
+
+- **(b) alone can be met by a second set of this family.** The set is a segment 0.40–0.47 long at 30°–47° ending near
+  1.50 + 1.08i at ω∞, holding 0.5% of σ₁₂ and 1–5% of σ₂₂, at a place no lattice point of #718's reaches (the lattice
+  position nearest it has d_P 0.070). So the absence of such a plant in #703 and #718 is a statement about their grids
+  (a ≥ −1, b ≥ −2, L = 0.3, radial) and not about the family.
+- **The pass is a fit to the noise, and does not locate the set.** The passes lie at η = 0.011–0.054. P′'s ladder shows
+  the tolerance below the noise floor there (§18.3), and §18.5 measures it on the passing plants themselves, 0 of 16
+  draws within 0.03 of their own poles. Where P′ passes, at η ≥ 1, no plant passes: the smallest D₃ over η ≥ 0.3 is
+  0.0312, at η = 0.96, not within 0.03 after 200 evaluations. So the instrument is calibrated at the strengths where
+  nothing passes and not at the strengths where something does.
+- **It does not reproduce the real series.** (a) and (c′) are not judged here. The strengths (η ≤ 0.054) are inside
+  #718's (c′) window, so a joint judge of the 202 passers is the next test, and a passer's d_P would then need a
+  tolerance that includes the noise.
+- **What was left out.** What §18.2 lists, and one more thing: the refinement ran from 8 starts of 200 evaluations, and
+  the two starts that passed ended in one place. The other six ended at D₃ 0.031–0.067, so neither a second basin nor a
+  pass at η ≥ 0.3 is excluded.
+- **Error bars.** Every d_P is a distance between two sets of Padé poles of one fixed series, with no error bar. The
+  16-draw medians and counts in §18.5 are a spread over noise draws at the measured errors, not a bound.
+- **Status.** Numerical evidence on plants.
+
+### 18.7 Proposed text for proof/D_entire.md
+
+In 7.4, after the bullet on #746's profile:
+
+```diff
++  A second set of the same family does give #541's far Padé poles at all three nodes (#747): a segment 0.40–0.47 long
++  at 30°–47° ending near 1.50 + 1.08i at ω∞, with 1–5% of σ₂₂, has d_P ≤ 0.03 (smallest D₃ 0.0217). The tolerance is
++  below the noise at that strength (the plant's own poles move by 0.04–0.06 under noise at the measured errors), so
++  the pass is a fit to the real series' noise draw, and (a) and (c′) are not judged
++  (notes/PADE_FAR_END.md §18).
+```
