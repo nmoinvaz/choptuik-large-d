@@ -2625,7 +2625,7 @@ def sigma_ms():
 def sigma_lam():
     """matter/SIGMA_DSS.md section 11: the growth rates on the multishoot kernel (#918), from
     matter/sigma_ms/data/lam_D.csv (mode_table.py): the table's rows of the base states (M = 32, 21 nodes) from D 6
-    on, each with sigdss's rate of the highest k_c at its point"""
+    to 11, each with sigdss's rate of the highest k_c at its point (the rows past D 11 are #928's, sigma_chain13)"""
     S = "matter/SIGMA_DSS.md"
     import csv as _csv
     rows = list(_csv.DictReader(open(os.path.join(ROOT, "matter/sigma_ms/data/lam_D.csv"))))
@@ -2633,7 +2633,7 @@ def sigma_lam():
     sci = lambda v: (lambda m, e: f"{'−' if v < 0 else '+'}{abs(float(m)):.1f}×10{sup(str(int(e)))}")(*f"{v:.1e}".split("e"))  # noqa: E731
     best = {}
     for r in rows:
-        if r["M"] != "32" or r["nodes"] != "21" or float(r["D"]) < 6 or not r["lam"]:
+        if r["M"] != "32" or r["nodes"] != "21" or not 6 <= float(r["D"]) <= 11 or not r["lam"]:
             continue
         k = (r["eta"], float(r["D"]))
         if k not in best or "k_c 23" in r["sigdss"]:
@@ -2654,9 +2654,50 @@ def sigma_lam():
         if r["sigdss"]:
             out += [(f"sigdss lambda, {lab}", sl, float(f"{sl:.6f}"), 1e-6, t),
                     (f"kernel - sigdss, {lab}", d, float(f"{d:.1e}"), 10 ** (math.floor(math.log10(abs(d))) - 1), t)]
-    gd = [float(r["gauge_diff"]) for r in rows if float(r["D"]) >= 6 and r["gauge_diff"]]
-    out += [("largest gauge distance from D 6 on", max(gd), 5.0e-14, 0.1e-14,
+    gd = [float(r["gauge_diff"]) for r in rows if 6 <= float(r["D"]) <= 11 and r["gauge_diff"]]
+    out += [("largest gauge distance from D 6 to 11", max(gd), 5.0e-14, 0.1e-14,
              [(S, "The gauge root lies within 5.0×10⁻¹⁴ of λ_g, the width of the root search")])]
+    return out
+
+
+@check
+def sigma_chain13():
+    """matter/SIGMA_DSS.md section 11: the sigma-model kernel's chain and growth rate past D 11 (#928), from
+    matter/sigma_ms/data/delta_D_eta0.3.csv, delta_D_eta1.csv (chain_table.py) and lam_D.csv (mode_table.py): the
+    table's rows, every 0.25 in D from 11 to 13, with the first difference of lambda over the grid step of 0.0625 that
+    ends at D and the second difference of the two steps before"""
+    S = "matter/SIGMA_DSS.md"
+    d = os.path.join(ROOT, "matter/sigma_ms/data")
+    import csv as _csv
+    lam, gd = {}, []
+    for r in _csv.DictReader(open(os.path.join(d, "lam_D.csv"))):
+        if r["M"] == "32" and r["nodes"] == "21" and r["lam"]:
+            lam[(r["eta"], float(r["D"]))] = float(r["lam"])
+            if float(r["D"]) > 11:
+                gd.append(float(r["gauge_diff"]))
+    sg = lambda v, p: ("−" if v < 0 else "+") + f"{abs(v):.{p}f}"  # noqa: E731
+    out, h = [], 0.0625
+    for eta in ("0.3", "1"):
+        de = {float(r["D"]): r for r in _csv.DictReader(open(os.path.join(d, f"delta_D_eta{eta}.csv")))}
+        for i in range(9):
+            D = 11 + 0.25 * i
+            l0, De = lam[(eta, D)], float(de[D]["Delta"])
+            ga = 1 / l0
+            d1 = (l0 - lam[(eta, D - h)]) / h if (eta, D - h) in lam else None
+            d2 = ((l0 - lam[(eta, D - h)]) - (lam[(eta, D - h)] - lam[(eta, D - 2 * h)])) / h ** 2 \
+                if (eta, D - 2 * h) in lam else None
+            m = "quad-double" if de[D]["method"] == "qd" else "double-double"
+            line = (f"| {eta} | {D:g} | {De:.12f} | {m} | {l0:.9f} | {ga:.6f} | "
+                    f"{'' if d1 is None else sg(d1, 5)} | {'' if d2 is None else sg(d2, 4)} |")
+            t, lab = [(S, line)], f"eta {eta}, D {D:g}"
+            out += [(f"Delta, {lab}", De, float(f"{De:.12f}"), 1e-12, t), (f"lambda, {lab}", l0, float(f"{l0:.9f}"), 1e-9, t),
+                    (f"gamma, {lab}", ga, float(f"{ga:.6f}"), 1e-6, t)]
+            if d1 is not None:
+                out += [(f"first difference, {lab}", d1, float(f"{d1:.5f}"), 1e-5, t)]
+            if d2 is not None:
+                out += [(f"second difference, {lab}", d2, float(f"{d2:.4f}"), 1e-4, t)]
+    out += [("rates past D 11", len(gd), 70, 1, [(S, "within 10⁻¹² of λ_g at all 70 points past D 11")]),
+            ("largest gauge distance past D 11", max(gd), 1e-12, 1e-13, [(S, "within 10⁻¹² of λ_g at all 70 points past D 11")])]
     return out
 
 
