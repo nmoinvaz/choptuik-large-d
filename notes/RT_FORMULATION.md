@@ -1888,10 +1888,11 @@ python3 solver/rt/rt_sigma.py RAW/I145-mac/cont/cont_32x101_D50.0075_32x101.npz 
 
 ## 14. The K = 7 rows' effect on the rough bounds at D 40.02 depends on the start (#671–#943)
 
-**At D 40.02 the ratio R of the K = 7 and K = 0 rough bounds is set by the start, not by the rows.** R is
+**At D 40.02 the ratio R of the K = 7 and K = 0 rough bounds is set by the root pair's start, not by the rows.** R is
 median(K 7) / median(K 0) of `rt_sigma.py --rough` bounds over random starts, at the K = 7 root
-`I671-win/solves/k7_D40_D40.0201_32x121.npz` and its K = 0 control. A start family is the seed's distribution of
-start vectors (start a, start b).
+a K = 7 root and its K = 0 control at D 40.02. The two pairs differ in the Newton start their roots were solved from:
+start a's are #671's (`I671-win/solves/k7_D40_D40.0201_32x121.npz` and its control), and start b's are made from
+#145's 32 × 141 root (#701). The 12 or 48 starts of each run are `rt_sigma.py`'s random start vectors.
 
 | task | starts | R | 95% bootstrap over starts | reading |
 |---|---|---|---|---|
@@ -1911,4 +1912,5 @@ start vectors (start a, start b).
   shows no effect (#681).
 - Status: numerical evidence. The intervals are bootstrap spreads over starts, not enclosures. Raw `I681-win/`,
   `I701-win/`, `I721-win2/`, `I745-win2/` (fca34c8e), `I745-rpi5/` (fd9d22ca), `I943-win/` (c9573179).
-- Open: a third start family c, to see whether R spreads over starts or takes two values (#943's recommendation).
+- Open: a third root pair, from another Newton start, to see whether R spreads over roots or takes two values (#943's
+  recommendation).
