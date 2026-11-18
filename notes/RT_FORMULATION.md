@@ -1885,3 +1885,30 @@ python3 solver/rt/rt_branch_cheb.py --lam 5.68,26.23,26.23 --om 0,0,3.87   # 13.
 python3 solver/rt/rt_sigma.py RAW/I145-mac/cont/cont_32x101_D50.0075_32x101.npz --rough --starts 2
                                                              # 13.7: 1.5e-33 (about 4 min); --planted exits 0
 ```
+
+## 14. The K = 7 rows' effect on the rough bounds at D 40.02 depends on the start (#671–#943)
+
+**At D 40.02 the ratio R of the K = 7 and K = 0 rough bounds is set by the start, not by the rows.** R is
+median(K 7) / median(K 0) of `rt_sigma.py --rough` bounds over random starts, at the K = 7 root
+`I671-win/solves/k7_D40_D40.0201_32x121.npz` and its K = 0 control. A start family is the seed's distribution of
+start vectors (start a, start b).
+
+| task | starts | R | 95% bootstrap over starts | reading |
+|---|---|---|---|---|
+| #681, start a | 12 | 0.98 | | undecided by its rule |
+| #701, start b | 12 | 5.90 | 2.13–14.67 | P2 undecided |
+| #721, start b | 48 | 6.06 | 4.56–9.26 | |
+| #943, start a | 48 | 0.98 | 0.60–1.43 | within [1/3, 3] |
+| #943, R_a / R_b | 48 | 0.162 | 0.083–0.248 | excludes 1 |
+
+- **The product cap does not set start a's bounds.** At 1000 products, none of start a's first 12 starts reached the
+  cap. They stopped at 336–654 products, and their bounds equal #681's (made at 250) to four printed digits, so R_a
+  stays 0.98 (#745; #720 had checked 3 starts). In #943, 46 of 48 K 7 starts stopped at the 250 cap, and #745 covers
+  12 of them.
+- **Across machines.** On x86 (win2) and aarch64 (rpi5), start a's first 8 bounds are equal in every printed digit,
+  while their product counts differ by a factor 0.80–1.38 (#745). Rounding moves where a start stops, not its bound.
+- **At D 50 and 55** the K = 7 rows raise the median bound 6–7 times and change the class, while at D 40.02 start a
+  shows no effect (#681).
+- Status: numerical evidence. The intervals are bootstrap spreads over starts, not enclosures. Raw `I681-win/`,
+  `I701-win/`, `I721-win2/`, `I745-win2/` (fca34c8e), `I745-rpi5/` (fd9d22ca), `I943-win/` (c9573179).
+- Open: a third start family c, to see whether R spreads over starts or takes two values (#943's recommendation).
