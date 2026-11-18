@@ -4,7 +4,7 @@ Status of everything here: numerical evidence. Nothing is rigorous. It bears on 
 which follow from the farthest singularity of the Borel transform (proof/D_entire.md sections 1 and 7). Sections 1–4
 are #547, sections 5–6 are #548, section 7 is #670, section 8 is #669, section 9 is #672, section 10 is #683,
 section 11 is #684, section 12 is #667, section 13 is #689, section 14 is #702, section 15 is #703, section 16
-is #718, section 17 is #746, and section 18 is #747.
+is #718, section 17 is #746, section 18 is #747, and section 19 is #668.
 
 - **#547.** A calibrated estimator recovers the far end of smooth-density plants within 0.009, but it fails #547's
   acceptance. On the real series two controls fire, so no far end is quoted (§4).
@@ -51,6 +51,9 @@ is #718, section 17 is #746, and section 18 is #747.
   tell it from noise. No lattice plant of 30720 does (smallest d_P 0.070), but a refinement of eight starts reaches
   d_P ≤ 0.03 at all three nodes for 202 plants, all in one place, ending near 1.50 + 1.08i with η = 0.011–0.054. At that
   strength the real series' own noise moves a plant's poles by 0.03–0.08, so the pass fits one noise draw (§18).
+- **#668.** An error-weighted, χ²-gated least-squares differential approximant (E6) fails #547's criteria on 35 plants,
+  but far less than #547's DA2: C1 fails on 6 plants (7 in #547) and C3 on 6 (24 in #547), all of them arcjump. The 26
+  plants of the other four families pass both, within 0.015 and 0.008. The controls and the real series were not run (§19.9).
 
 ## 1. Question
 
@@ -2942,3 +2945,50 @@ the counted members' zeros nearest to t₀. The judged run is all 35 plants with
 on the five development plants** and not on the 35, since a run of 35 takes about 55 minutes and the 5 take 8, and a mutation that
 fires on D1–D5 fires. They are judged on C1 and C3 of those plants. `unweighted` computes no χ², so it has no gate. With
 `err_flat`, which replaces the measured profile by a constant relative error, a run on D1–D5 that is reported and not judged.
+
+### 19.9 Results: the 35 plants with the frozen estimator
+
+`plants I668-rpi5/` with the code at 43481472 (preset E6, nothing changed since the freeze of 19.8), 05:33–06:24 UTC,
+`I668-rpi5/plants.log` and `plants.json`, about 88 s per plant. The criteria are those of 19.3. **The acceptance is not met:**
+C1 and C3 fail, on the same family.
+
+| criterion | result | verdict |
+|---|---|---|
+| C1, every plant within 0.02 | 29 of 35 pass; 6 fail, all arcjump: R1.80 0.045, R1.85 0.042, R−0.05 0.023, R+0.05 0.043, R1.75 0.053, R1.9 0.041 | **FAIL** |
+| C2, the 9 pairs differ by more than 0.03 | all 9, smallest 0.046 | pass |
+| C3, noise ≤ 0.01 over 10 draws | 29 of 35 pass; 6 fail, all arcjump: D2 0.038, wf0.99 0.033, wf1.01 0.069, R−0.05 0.026, R+0.05 0.040, R1.9 inf | **FAIL** |
+| C3′, the same on fresh draws (668000+i) | the same 6 fail, largest 0.077 | **FAIL** |
+| B1, the ratio law misses the κ⋆ plants by more than 0.05 | all 9 | holds |
+
+By family (the largest error and noise over each family):
+
+| family | plants | C1 | C3 | largest error | largest noise |
+|---|---|---|---|---|---|
+| chord2 | 16 | 16 | 16 | 0.0149 | 0.0079 |
+| arc | 8 | 8 | 8 | 0.0147 | 0.0076 |
+| arcmid | 1 | 1 | 1 | 0.0139 | 0.0051 |
+| arcsteps | 1 | 1 | 1 | 0.0101 | 0.0074 |
+| arcjump | 9 | 3 | 3 | 0.0531 | inf |
+
+No arcjump plant passes both: D2, wf0.99 and wf1.01 pass C1 and fail C3, R1.80, R1.85 and R1.75 fail C1 and pass C3, and
+R−0.05, R+0.05 and R1.9 fail both. Against #547's DA2 (§3), C1 fails on 6 plants and not 7, and C3 on 6 and not 24. The 29
+plants that pass have noise at most 0.0079, where #547's reached 0.36 on the arcjump plants. **The weights and the gate remove
+the noise on every plant of the four smooth-density families, and not on the jump.**
+
+The arcjump failures are of two kinds. At R1.75, R1.80, R1.85 and R1.9 the error is 0.041–0.053 and the estimate's modulus
+is 0.033–0.042 below the plant's, with a noise of 0.006–0.009 (R1.9 aside), so it is a bias, and 9–13 of the 17 members are
+counted. At D2, wf0.99, wf1.01 and R−0.05 the error is 0.013–0.023 and the noise 0.026–0.069, with 14–16 members counted,
+as D2's was in 19.8. R+0.05 has both, an error of 0.043 and a noise of 0.040. For R1.9 a noise draw left fewer than 3 counted
+members, so its noise is `inf` by the rule of 19.3 and that estimate does not exist.
+
+**Not run.** The controls (`--mutate=unweighted`, `err_reversed`, `noise1000`, `err_flat` on D1–D5), the real series and the
+scale1.03 equivariance control were not run: the coordinator reassigned the runner on 2026-11-18, with C1 and C3 failed on the
+validation plants. So whether the weights are what removes the noise (the controls of 19.3) is **not tested** here, and the
+real series has no result, estimate or spread, and none is quoted. The selftest of 19.3 (S1–S4 and the B-regression) did run and
+pass before the plants, with its five mutations firing.
+
+**For the coordinator.** (1) The selection rule was amended after the development scores (19.8). The original rule would have
+chosen E1, which misses C1 or C3 on four of five development plants, so the amendment did not make E6 pass the validation. (2) On
+the arcjump plants E6 fails in the same place #547's DA2 did, so the error-weighting alone does not meet #547's criteria for a
+jump in the Borel density. (3) The 26 non-jump plants pass at 0.015 and 0.008, which is a pass of C1 and C3 on those families
+only, and the acceptance asks for all 35.
