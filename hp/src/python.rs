@@ -75,6 +75,9 @@ trait Api: Send + Sync {
     fn jacobian_o(&mut self, z: [&[f64]; 8], mutate: u8, tangents: usize) -> Result<(O8, usize), String>;
     /// model::newton_in at `Octo`
     fn newton_o(&mut self, z: [&[f64]; 8], mutate: u8, tangents: usize) -> Result<Step<Octo>, String>;
+    /// newton_o with its Jacobian kept: the step and (eight parts, ld) of the Jacobian it factored (newton_o_kept)
+    #[allow(clippy::type_complexity)]
+    fn newton_o_keep(&mut self, z: [&[f64]; 8], mutate: u8, tangents: usize) -> Result<(Step<Octo>, (Vec<Vec<f64>>, usize)), String>;
     /// model::residual_jet_in at `Octo`: residual_jet in octo-double, each z_k and each output coefficient in eight parts;
     /// lanes: the jet's coefficient count, 0 for the smallest of OJET_LANES that holds nout and zs
     fn residual_jet_o(&mut self, zs: &[[&[f64]; 8]], nout: usize, lanes: usize, mutate: u8) -> Result<Vec<O8>, String>;
@@ -103,6 +106,38 @@ fn series_o_in<const N: usize, const B: usize>(
         out.push(z.clone());
     }
     Ok(out)
+}
+
+/// model::newton_o_tangents's problem with a copy of its Jacobian kept: the residual (model::residual_in at `Octo`) and
+/// the Jacobian (model::jacobian_o_tangents) that newton_o_tangents's problem forms, so that multisolver's newton_step
+/// on it is that step bit for bit
+struct KeepJac<'a, const B: usize> {
+    ctx: &'a Ctx<B>,
+    tangents: usize,
+    kept: std::cell::RefCell<Option<(Vec<Vec<f64>>, usize)>>,
+}
+
+impl<const B: usize> multisolver::Problem<Octo> for KeepJac<'_, B> {
+    fn len(&self) -> usize {
+        self.ctx.len()
+    }
+    fn residual(&self, z: &[&[f64]], par: bool) -> Result<Vec<OD>, String> {
+        model::residual_in::<Octo, B>(self.ctx, z, par)
+    }
+    fn jacobian(&self, z: &[&[f64]], par: bool) -> Result<(Vec<Vec<f64>>, usize), String> {
+        let j = model::jacobian_o_tangents(self.ctx, z, par, self.tangents)?;
+        *self.kept.borrow_mut() = Some(j.clone());
+        Ok(j)
+    }
+}
+
+/// `Api::newton_o_keep`: the step of model::newton_o_tangents and the Jacobian it factored
+#[allow(clippy::type_complexity)]
+fn newton_o_kept<const B: usize>(c: &Ctx<B>, z: &[&[f64]; 8], tangents: usize) -> Result<(Step<Octo>, (Vec<Vec<f64>>, usize)), String> {
+    let pr = KeepJac { ctx: c, tangents, kept: std::cell::RefCell::new(None) };
+    let st = multisolver::newton::newton_step::<Octo, _>(&pr, z, true)?;
+    let j = pr.kept.into_inner().ok_or_else(|| "newton_o: no Jacobian was kept".to_string())?;
+    Ok((st, j))
 }
 
 /// a quad-double vector as its four parts' arrays
@@ -342,6 +377,9 @@ impl<const B: usize> Api for Ctx<B> {
     fn newton_o(&mut self, z: [&[f64]; 8], mutate: u8, tangents: usize) -> Result<Step<Octo>, String> {
         od_sizes!(self, mutate, |c| model::newton_o_tangents(c, &z, true, tangents))
     }
+    fn newton_o_keep(&mut self, z: [&[f64]; 8], mutate: u8, tangents: usize) -> Result<(Step<Octo>, (Vec<Vec<f64>>, usize)), String> {
+        od_sizes!(self, mutate, |c| newton_o_kept(c, &z, tangents))
+    }
     fn residual_jet_o(&mut self, zs: &[[&[f64]; 8]], nout: usize, lanes: usize, mutate: u8) -> Result<Vec<O8>, String> {
         let parts = |f: Vec<Vec<OD>>| -> Vec<O8> { f.iter().map(|v| od_parts(v)).collect() };
         let zs: Vec<Vec<&[f64]>> = zs.iter().map(|z| z.to_vec()).collect();
@@ -509,15 +547,16 @@ struct Solver {
 }
 
 /// The last newton_o: its octo-double LU and the call that formed it, the bits of the state's eight parts, mutate and
-/// tangents (olu_pivots_at), and the octo-double residual it formed at the state (newton_o_residual). It is dropped
-/// wherever the context changes (set_segs, set_horizon_alpha), and a failed newton_o leaves the previous one with its
-/// own call.
+/// tangents (olu_pivots_at), the octo-double residual it formed at the state (newton_o_residual) and, when asked to
+/// keep it, its Jacobian (eight parts, ld; jacobian_o_kept). It is dropped wherever the context changes (set_segs,
+/// set_horizon_alpha), and a failed newton_o leaves the previous one with its own call.
 struct OctoLast {
     lu: ODLu,
     z: Vec<u64>,
     mutate: u8,
     tangents: usize,
     f: O8,
+    jac: Option<(O8, usize)>,
 }
 
 /// the bits of an octo-double vector's eight parts, part after part
@@ -1139,8 +1178,9 @@ impl Solver {
     /// One Newton step in octo-double (model::newton_in at `Octo`) at the eight-part state z: returns (dz, F hi, F lo, min
     /// |u_kk|, max |u_kk|), dz = -J^-1 F a tuple of its eight parts. The octo-double LU is kept for olu_solve; the
     /// times are step_timing's. M = 32 only. tangents: the Jacobian's columns per evaluation (1, 2, 4 or 8;
-    /// model::newton_o_tangents; the solver's set_octo_tangents when not given), the same bits at any.
-    #[pyo3(signature = (z, mutate=0, tangents=None))]
+    /// model::newton_o_tangents; the solver's set_octo_tangents when not given), the same bits at any. keep_jacobian:
+    /// a copy of the Jacobian is kept too, for jacobian_o_kept (the same step, bit for bit).
+    #[pyo3(signature = (z, mutate=0, tangents=None, keep_jacobian=false))]
     #[allow(clippy::type_complexity)]
     fn newton_o<'py>(
         &mut self,
@@ -1148,16 +1188,47 @@ impl Solver {
         z: Vec<PyReadonlyArray1<'py, f64>>,
         mutate: u8,
         tangents: Option<usize>,
+        keep_jacobian: bool,
     ) -> PyResult<(T8<'py>, A1<'py>, A1<'py>, f64, f64)> {
         let tangents = tangents.unwrap_or(self.octo_tangents);
         let z = parts8(&z, self.api.len())?;
         let (api, pool) = (&mut self.api, &self.pool);
-        let st = py.detach(|| pool.install(|| api.newton_o(z, mutate, tangents))).map_err(PyValueError::new_err)?;
+        let (st, jac) = py
+            .detach(|| {
+                pool.install(|| -> Result<_, String> {
+                    if keep_jacobian {
+                        let (st, (c, ld)) = api.newton_o_keep(z, mutate, tangents)?;
+                        Ok((st, Some((c.try_into().expect("eight parts"), ld))))
+                    } else {
+                        Ok((api.newton_o(z, mutate, tangents)?, None))
+                    }
+                })
+            })
+            .map_err(PyValueError::new_err)?;
         self.last_t = st.t;
         let (pmin, pmax) = st.lu.pivot_range();
         let (fh, fl) = f_dd::<Octo>(&st.f);
-        self.olu = Some(OctoLast { lu: st.lu, z: bits8(&z), mutate, tangents, f: od_parts(&st.f) });
+        self.olu = Some(OctoLast { lu: st.lu, z: bits8(&z), mutate, tangents, f: od_parts(&st.f), jac });
         Ok((arr8(py, st.dz.try_into().expect("eight parts")), arr(py, fh), arr(py, fl), pmin, pmax))
+    }
+
+    /// The Jacobian the last newton_o formed and factored, as jacobian_o returns it (eight (L, L) arrays; bit for bit
+    /// jacobian_o at that state), when that call was at the eight-part state z (every part's bits equal) with this
+    /// mutate and tangents (the solver's set_octo_tangents when not given) and kept it (keep_jacobian); None otherwise.
+    /// A caller that needs the LU and the Jacobian forms the Jacobian once (hp/near_null.py).
+    #[pyo3(signature = (z, mutate=0, tangents=None))]
+    fn jacobian_o_kept<'py>(
+        &self,
+        py: Python<'py>,
+        z: Vec<PyReadonlyArray1<'py, f64>>,
+        mutate: u8,
+        tangents: Option<usize>,
+    ) -> PyResult<Option<Vec<Bound<'py, PyArray2<f64>>>>> {
+        let tangents = tangents.unwrap_or(self.octo_tangents);
+        let n = self.api.len();
+        let z = parts8(&z, n)?;
+        let kept = self.olu.as_ref().filter(|o| o.at(&z, mutate, Some(tangents))).and_then(|o| o.jac.as_ref());
+        Ok(kept.map(|(c, ld)| c.iter().map(|p| Array2::from_shape_fn((n, n), |(i, j)| p[j * ld + i]).into_pyarray(py)).collect()))
     }
 
     /// The residual F in eight parts that the last newton_o formed (its F hi and F lo are its first two parts rounded),
