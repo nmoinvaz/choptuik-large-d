@@ -463,9 +463,19 @@ pub fn centre_series_at<T: Lane, const B: usize>(
             ],
             j,
         );
+        // control JET_MUT_AT_ROUND_C: (a q^2)_k formed in the first round, before q^2_k
+        let early = ctx.mutate == JET_MUT_AT_ROUND_C;
+        if early {
+            sums_at(vec![SumAt::new(&mut s, aa, q2, k)], j);
+        }
         q2[k].copy_at(&(t + u), j);
         std::mem::swap(&mut a2[k], &mut a2p[k]);
-        sums_at(vec![SumAt::new(&mut s, aa, q2, k), SumAt::new(&mut t3s[k], aa, a2, k)], j);
+        let round = if early {
+            vec![SumAt::new(&mut t3s[k], aa, a2, k)]
+        } else {
+            vec![SumAt::new(&mut s, aa, q2, k), SumAt::new(&mut t3s[k], aa, a2, k)]
+        };
+        sums_at(round, j);
         std::mem::swap(&mut a2[k], &mut a2p[k]);
         aa[k] = ak;
         t3s[k].mulp_at(&n1.mul_f(0.5), j, &mut t);
@@ -1332,7 +1342,8 @@ pub fn horizon_series_at<T: Lane, const B: usize>(
     one.div_at(&zc[0], j, &mut kept[1]);
     // The sums of order kk in five rounds, each round's sums independent and formed together (sums_at): those whose
     // factors are all formed when kk begins; those that read c_(kk+1); those that read p_kk; (a q^2); a^2_(kk+1). Each
-    // sum reads what it reads in horizon_series, so the reordering changes no bit.
+    // sum reads what it reads in horizon_series, so the reordering changes no bit. With Ctx::series_split, orders
+    // j >= 2 of octo-double jets take series_split::series_od instead, whose sums are not in rounds.
     let (mut t, mut u, mut s1, mut s2, mut s1m, mut s2m, mut umm, mut taa2, mut wpu, mut zmu) = (z, z, z, z, z, z, z, z, z, z);
     let wi = |i: usize| i as f64;
     for kk in 0..=ks {
@@ -1823,6 +1834,9 @@ pub const JAC_MUT_TANGENT_ORDER: u8 = 25;
 /// p_k in place, as a sum moved past p_k's solve would read it, so (c p)_k reads p_k's lower coefficients where
 /// `horizon_series` reads zero
 pub const JET_MUT_AT_ROUND: u8 = 26;
+/// the control of the centre's order-k rounds (Ctx::mutate): `centre_series_at` forms (a q^2)_k in its first round,
+/// before q^2_k, so the term a_0 (q^2)_k reads q^2_k's coefficient j unformed
+pub const JET_MUT_AT_ROUND_C: u8 = 27;
 
 /// the dimension in the lane's parameter arithmetic (multidouble's Param): the double-double scalar on every lane
 /// but a jet, bit for bit as before; on a jet the series n + h, so the coefficients carry their own derivatives in

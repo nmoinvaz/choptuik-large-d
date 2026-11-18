@@ -542,8 +542,9 @@ mod od {
     /// Pass (fixed before the first run): on the synthetic state at M = 32 (B = 4, so each order-k sum of the centre
     /// and horizon blocks has four lane vectors to form on separate tasks), the octo-double series formed one order at a
     /// time equals residual_jet's at every order formed after each of five planted vectors, bit for bit, in a rayon pool
-    /// of one thread and in one of four (0 rows differ), and the two pools' series are the same bits. Control, which
-    /// must differ from residual_jet: JET_MUT_AT_ROUND, the horizon block's first round of sums formed with p_k in place.
+    /// of one thread and in one of four (0 rows differ), and the two pools' series are the same bits. Controls, each of
+    /// which must differ from residual_jet: JET_MUT_AT_ROUND, the horizon block's first round of sums formed with p_k
+    /// in place, and JET_MUT_AT_ROUND_C, the centre block's (a q^2)_k formed in its first round, before q^2_k.
     #[test]
     fn oseries_by_order_threads_bitwise() {
         let (mut ctx, zh, zl) = synth_b::<4>();
@@ -558,14 +559,18 @@ mod od {
         let pools = b1.iter().zip(&b4).filter(|(x, y)| x != y).count() + b1.len().abs_diff(b4.len());
         ctx.mutate = crate::model::JET_MUT_AT_ROUND;
         let control = four.install(|| session_vs_jet::<Octo, 4>(&ctx, &zs, true));
+        ctx.mutate = crate::model::JET_MUT_AT_ROUND_C;
+        let control_c = four.install(|| session_vs_jet::<Octo, 4>(&ctx, &zs, true));
         ctx.mutate = 0;
         println!(
             "series by order at M = 32 against residual_jet, rows that differ: {d1} on one thread, {d4} on four; words \
-             that differ between the pools {pools} of {}; control {control}",
+             that differ between the pools {pools} of {}; controls: the horizon's round {control}, the centre's \
+             {control_c}",
             b1.len()
         );
         assert_eq!((d1, d4, pools), (0, 0, 0), "the series by order is not residual_jet's, or depends on the pool");
-        assert!(control > 0, "the control did not change the series");
+        assert!(control > 0, "the horizon's control did not change the series");
+        assert!(control_c > 0, "the centre's control did not change the series");
     }
 
     /// Pass (fixed before the first run): on the synthetic state, the residual's series formed one order at a time
@@ -584,7 +589,10 @@ mod od {
         let zs = |parts: usize| -> Vec<Vec<&[f64]>> {
             std::iter::once(&z).chain(cs.iter()).map(|v| v[..parts].iter().map(|p| &p[..]).collect()).collect()
         };
-        let (serial, threaded) = (session_vs_jet::<Octo, 1>(&ctx, &zs(8), false), session_vs_jet::<Octo, 1>(&ctx, &zs(8), true));
+        // sums_at splits on the current pool, so par = false is serial only in a pool of one thread
+        let one = rayon::ThreadPoolBuilder::new().num_threads(1).stack_size(256 << 20).build().unwrap();
+        let serial = one.install(|| session_vs_jet::<Octo, 1>(&ctx, &zs(8), false));
+        let threaded = session_vs_jet::<Octo, 1>(&ctx, &zs(8), true);
         let (quad, double) = (session_vs_jet::<Quad, 1>(&ctx, &zs(4), true), session_vs_jet::<Double, 1>(&ctx, &zs(2), true));
         ctx.mutate = crate::model::JET_MUT_AT_KEEP;
         let control = session_vs_jet::<Octo, 1>(&ctx, &zs(8), true);
