@@ -356,7 +356,7 @@ mod od {
     use crate::linalg::{ld_for, ODLu};
     use crate::model::{Ctx, JET_MUT_FREEZE_N, OD_MUT_STATE_QD, QD_MUT_NOREFINE, QD_MUT_REFINE4};
     use crate::qd::QD;
-    use crate::qd_residual::synth;
+    use crate::qd_residual::{synth, synth_b};
     use multidouble::od::{OdAcc, OD};
     use multidouble::precision::Octo;
 
@@ -507,7 +507,16 @@ mod od {
     /// the residual's series in P one order at a time (multishoot's JetSession over hp's equations, 12-lane jets)
     /// given zs one by one, against residual_jet on the same vectors: the number of rows, over every order the session
     /// has formed after each vector, whose parts differ
-    fn session_vs_jet<P: multidouble::precision::Precision<multidouble::simd::Native>>(ctx: &Ctx<1>, zs: &[Vec<&[f64]>], par: bool) -> usize {
+    fn session_vs_jet<P: multidouble::precision::Precision<multidouble::simd::Native>, const B: usize>(ctx: &Ctx<B>, zs: &[Vec<&[f64]>], par: bool) -> usize {
+        session_and_jet::<P, B>(ctx, zs, par).0
+    }
+
+    /// `session_vs_jet`, and the bits of every part of every row of the orders the session holds after the last vector
+    fn session_and_jet<P: multidouble::precision::Precision<multidouble::simd::Native>, const B: usize>(
+        ctx: &Ctx<B>,
+        zs: &[Vec<&[f64]>],
+        par: bool,
+    ) -> (usize, Vec<u64>) {
         let sh = ctx.shooting_in::<P>();
         let mut s = sh.jet_session::<P, 12>();
         let rows = |a: &[P::Scalar], b: &[P::Scalar]| {
@@ -517,13 +526,46 @@ mod od {
         let mut differ = 0;
         for k in 0..zs.len() {
             let next = s.next(&zs[k], par).unwrap();
-            let full = crate::model::residual_jet_in::<P, 12, 1>(ctx, &zs[..=k], par, k + 2).unwrap();
+            let full = crate::model::residual_jet_in::<P, 12, B>(ctx, &zs[..=k], par, k + 2).unwrap();
             differ += rows(&next, &full[k + 1]);
             for (j, fj) in full.iter().enumerate() {
                 differ += rows(&s.order(j).unwrap(), fj);
             }
         }
-        differ
+        let bits = (0..=zs.len())
+            .flat_map(|j| s.order(j).unwrap())
+            .flat_map(|x| (0..P::PARTS).map(move |q| P::part(x, q).to_bits()))
+            .collect();
+        (differ, bits)
+    }
+
+    /// Pass (fixed before the first run): on the synthetic state at M = 32 (B = 4, so each order-k sum of the centre
+    /// and horizon blocks has four lane vectors to form on separate tasks), the octo-double series formed one order at a
+    /// time equals residual_jet's at every order formed after each of five planted vectors, bit for bit, in a rayon pool
+    /// of one thread and in one of four (0 rows differ), and the two pools' series are the same bits. Control, which
+    /// must differ from residual_jet: JET_MUT_AT_ROUND, the horizon block's first round of sums formed with p_k in place.
+    #[test]
+    fn oseries_by_order_threads_bitwise() {
+        let (mut ctx, zh, zl) = synth_b::<4>();
+        let l = ctx.len();
+        let z = parts8(&zh, &zl);
+        let cs: Vec<[Vec<f64>; 8]> = (1..6).map(|k| coef_k(l, k)).collect();
+        let zs: Vec<Vec<&[f64]>> = std::iter::once(&z).chain(cs.iter()).map(|v| v.iter().map(|p| &p[..]).collect()).collect();
+        let pool = |n: usize| rayon::ThreadPoolBuilder::new().num_threads(n).stack_size(256 << 20).build().unwrap();
+        let (one, four) = (pool(1), pool(4));
+        let (d1, b1) = one.install(|| session_and_jet::<Octo, 4>(&ctx, &zs, true));
+        let (d4, b4) = four.install(|| session_and_jet::<Octo, 4>(&ctx, &zs, true));
+        let pools = b1.iter().zip(&b4).filter(|(x, y)| x != y).count() + b1.len().abs_diff(b4.len());
+        ctx.mutate = crate::model::JET_MUT_AT_ROUND;
+        let control = four.install(|| session_vs_jet::<Octo, 4>(&ctx, &zs, true));
+        ctx.mutate = 0;
+        println!(
+            "series by order at M = 32 against residual_jet, rows that differ: {d1} on one thread, {d4} on four; words \
+             that differ between the pools {pools} of {}; control {control}",
+            b1.len()
+        );
+        assert_eq!((d1, d4, pools), (0, 0, 0), "the series by order is not residual_jet's, or depends on the pool");
+        assert!(control > 0, "the control did not change the series");
     }
 
     /// Pass (fixed before the first run): on the synthetic state, the residual's series formed one order at a time
@@ -542,10 +584,10 @@ mod od {
         let zs = |parts: usize| -> Vec<Vec<&[f64]>> {
             std::iter::once(&z).chain(cs.iter()).map(|v| v[..parts].iter().map(|p| &p[..]).collect()).collect()
         };
-        let (serial, threaded) = (session_vs_jet::<Octo>(&ctx, &zs(8), false), session_vs_jet::<Octo>(&ctx, &zs(8), true));
-        let (quad, double) = (session_vs_jet::<Quad>(&ctx, &zs(4), true), session_vs_jet::<Double>(&ctx, &zs(2), true));
+        let (serial, threaded) = (session_vs_jet::<Octo, 1>(&ctx, &zs(8), false), session_vs_jet::<Octo, 1>(&ctx, &zs(8), true));
+        let (quad, double) = (session_vs_jet::<Quad, 1>(&ctx, &zs(4), true), session_vs_jet::<Double, 1>(&ctx, &zs(2), true));
         ctx.mutate = crate::model::JET_MUT_AT_KEEP;
-        let control = session_vs_jet::<Octo>(&ctx, &zs(8), true);
+        let control = session_vs_jet::<Octo, 1>(&ctx, &zs(8), true);
         ctx.mutate = 0;
         println!(
             "series by order against residual_jet, rows that differ: octo-double {serial} serial, {threaded} threaded; quad-double {quad}; double-double {double}; control {control}"
@@ -629,6 +671,60 @@ mod od {
         let (_, control) = session_tangent_vs_jet::<Octo>(&ctx, &zs(8), 1, true, true);
         println!("control, the kept series not moved: {control:.3e}");
         assert!(control > bound::<Octo>(), "the control did not move the series");
+    }
+
+    /// The series by order on a stored context (FILE, written by hp/dump_ctx.py; M = 32), from its state and NORD - 1
+    /// of oseries_by_order_bitwise's planted vectors (NORD orders formed, default 3), in a rayon pool of THREADS
+    /// (default 4), REPS times (default 2) each way, alternately: with every order-k sum serial, as the series formed them
+    /// before (field::SERIAL_AT), and split by lane and in rounds. Printed: the seconds of each, and the words of the
+    /// two ways' series that differ, which must be none.
+    ///     FILE=ctx.bin NORD=3 THREADS=4 REPS=2 cargo test --release --lib bench_oseries_by_order -- --ignored --nocapture
+    #[test]
+    #[ignore]
+    fn bench_oseries_by_order() {
+        use crate::field::SERIAL_AT;
+        use std::sync::atomic::Ordering;
+        let v = crate::model::ctxfile::read(&std::env::var("FILE").expect("FILE"));
+        assert_eq!(crate::model::ctxfile::m_of(&v), 32, "FILE: an M = 32 context");
+        let (ctx, zh, zl) = crate::model::ctxfile::load::<4>(&v);
+        let env = |k: &str, d: usize| std::env::var(k).ok().and_then(|s| s.parse().ok()).unwrap_or(d);
+        let (nord, threads, reps) = (env("NORD", 3).clamp(1, 10), env("THREADS", 4), env("REPS", 2));
+        let l = ctx.len();
+        let z = parts8(&zh, &zl);
+        let cs: Vec<[Vec<f64>; 8]> = (1..nord).map(|k| coef_k(l, k)).collect();
+        let zs: Vec<Vec<&[f64]>> = std::iter::once(&z).chain(cs.iter()).map(|v| v.iter().map(|p| &p[..]).collect()).collect();
+        let pool = rayon::ThreadPoolBuilder::new().num_threads(threads).stack_size(256 << 20).build().unwrap();
+        let run = |serial: bool| -> (f64, Vec<u64>) {
+            SERIAL_AT.store(serial, Ordering::Relaxed);
+            let out = pool.install(|| {
+                let sh = ctx.shooting_in::<Octo>();
+                let mut s = sh.jet_session::<Octo, 12>();
+                let t0 = std::time::Instant::now();
+                for zk in &zs {
+                    s.next(zk, true).unwrap();
+                }
+                let secs = t0.elapsed().as_secs_f64();
+                (secs, (0..=zs.len()).flat_map(|j| s.order(j).unwrap()).flat_map(|x| x.x.map(f64::to_bits)).collect())
+            });
+            SERIAL_AT.store(false, Ordering::Relaxed);
+            out
+        };
+        println!("series by order, ks {}, kc {}, kt {}, {nord} orders, {threads} threads", ctx.ks, ctx.kc, ctx.kt);
+        let (mut ts, mut tp, mut differ) = (Vec::new(), Vec::new(), 0);
+        for r in 0..reps {
+            let (a, ba) = run(true);
+            let (b, bb) = run(false);
+            differ += ba.iter().zip(&bb).filter(|(x, y)| x != y).count() + ba.len().abs_diff(bb.len());
+            println!("  rep {r}: serial sums {a:.2} s, split {b:.2} s, ratio {:.2}", a / b);
+            ts.push(a);
+            tp.push(b);
+        }
+        let med = |v: &mut Vec<f64>| {
+            v.sort_by(f64::total_cmp);
+            v[v.len() / 2]
+        };
+        println!("  median: serial sums {:.2} s, split {:.2} s; words that differ {differ}", med(&mut ts), med(&mut tp));
+        assert_eq!(differ, 0, "the split series is not the serial one");
     }
 
     /// Pass (fixed before the first run): on the synthetic state moved off its solution, the octo-double Jacobian with

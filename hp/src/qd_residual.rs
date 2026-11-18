@@ -36,7 +36,12 @@ type CDV = Counted<DV>;
 /// 0.005..0.1, four Taylor steps per segment; the state: centre data p1 = 0.3 sin(theta), c0 = 0.6 + 0.05 cos(2
 /// theta), the nodes integrated outward from the centre in double-double, the horizon data from the last node.
 pub(crate) fn synth() -> (Ctx<1>, Vec<f64>, Vec<f64>) {
-    let m = 8usize;
+    synth_b::<1>()
+}
+
+/// `synth` at M = 8 B: the same construction on 8 B points
+pub(crate) fn synth_b<const B: usize>() -> (Ctx<B>, Vec<f64>, Vec<f64>) {
+    let m = 8 * B;
     let nn = 2 * m;
     let mut dh = vec![0.0; m * m];
     for i in 0..m {
@@ -52,13 +57,13 @@ pub(crate) fn synth() -> (Ctx<1>, Vec<f64>, Vec<f64>) {
             dh[i * m + j] = v;
         }
     }
-    let d = DMat::<1>::from_rows(&dh, &vec![0.0; m * m]);
+    let d = DMat::<B>::from_rows(&dh, &vec![0.0; m * m]);
     let th: Vec<f64> = (0..m).map(|j| PI * j as f64 / m as f64).collect();
-    let phase = Fl::<DV, 1>::load(&th.iter().map(|t| t.sin()).collect::<Vec<_>>(), &vec![0.0; m]);
+    let phase = Fl::<DV, B>::load(&th.iter().map(|t| t.sin()).collect::<Vec<_>>(), &vec![0.0; m]);
     let nodes = vec![0.005, 0.01, 0.02, 0.05, 0.1];
     let segs: Vec<Vec<f64>> = nodes.windows(2).map(|w| (0..=4).map(|k| w[0] + (w[1] - w[0]) * k as f64 / 4.0).collect()).collect();
     let k = nodes.len();
-    let ctx = Ctx::<1> { n: DD::from_f64(1.7), d, phase, nodes, segs, kt: 20, kc: 30, ks: 30, freeze: None, match_node: k - 1, lam: DD::ZERO, mutate: 0, f64_dd: 0, horizon_alpha: 0, series_split: 0 };
+    let ctx = Ctx::<B> { n: DD::from_f64(1.7), d, phase, nodes, segs, kt: 20, kc: 30, ks: 30, freeze: None, match_node: k - 1, lam: DD::ZERO, mutate: 0, f64_dd: 0, horizon_alpha: 0, series_split: 0 };
     let l = ctx.len();
     let (mut zh, mut zl) = (vec![0.0; l], vec![0.0; l]);
     let p1: Vec<f64> = th.iter().map(|t| 0.3 * (2.0 * t).sin()).collect();
@@ -69,9 +74,9 @@ pub(crate) fn synth() -> (Ctx<1>, Vec<f64>, Vec<f64>) {
     zh[l - 1] = delta.hi;
     zl[l - 1] = delta.lo;
     let omega = DV::splat(DD::TWO_PI / delta);
-    let put = |zh: &mut Vec<f64>, zl: &mut Vec<f64>, off: usize, f: &Fl<DV, 1>| f.store(&mut zh[off..off + m], &mut zl[off..off + m]);
-    let mut s: State<DV, 1> = centre_state(&ctx, &ctx.fld(&zh, &zl, 0), &ctx.fld(&zh, &zl, m), omega, &Rate::ZERO);
-    let mut w = work::<DV, 1>(ctx.kt);
+    let put = |zh: &mut Vec<f64>, zl: &mut Vec<f64>, off: usize, f: &Fl<DV, B>| f.store(&mut zh[off..off + m], &mut zl[off..off + m]);
+    let mut s: State<DV, B> = centre_state(&ctx, &ctx.fld(&zh, &zl, 0), &ctx.fld(&zh, &zl, m), omega, &Rate::ZERO);
+    let mut w = work::<DV, B>(ctx.kt);
     for b in 0..k {
         if b > 0 {
             s = taylor_path(&ctx, &s, &ctx.segs[b - 1], omega, &mut w);
