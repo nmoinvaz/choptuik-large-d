@@ -561,11 +561,15 @@ python3 matter/sigma_ms/chain.py --M 32 --start OUT/sm_etainf_M32.npz --etas 20,
 python3 matter/sigma_ms/chain.py --M 48 --resample_from 32 --etas inf,20,14,10,8.5,7,6,5 --out OUT --extra "--jac mixed --jac_final mixed"
 python3 matter/sigma_ms/tables.py ../choptuik-large-d-raw --csv matter/sigma_ms/data/delta_eta.csv
 python3 matter/sigma_ms/fit_min.py --records ../choptuik-large-d-raw/I639-mac/data/sm_records.jsonl --out matter/sigma_ms/data/fit_min.json
-python3 matter/sigma_ms/chain_table.py ../choptuik-large-d-raw --csv matter/sigma_ms/data/delta_D_eta0.3.csv
-python3 matter/sigma_ms/chain_table.py ../choptuik-large-d-raw --folder I917-mac --eta 1 --also I652-mac --Dmin 10 --D0 10.475 --ref I652-mac,I845-mac,I913-mac --sigdss solver/matter/data/sigdss_m1up.jsonl,solver/matter/data/sigdss_m1hi.jsonl --csv matter/sigma_ms/data/delta_D_eta1.csv
+python3 matter/sigma_ms/chain_table.py ../choptuik-large-d-raw
+python3 matter/sigma_ms/chain_table.py ../choptuik-large-d-raw --folder I917-mac --eta 1 --also I652-mac --Dmin 10 --D0 10.475 --ref I652-mac,I845-mac,I913-mac --sigdss solver/matter/data/sigdss_m1up.jsonl,solver/matter/data/sigdss_m1hi.jsonl
+python3 matter/sigma_ms/chain_table.py ../choptuik-large-d-raw --folder I928-mac --eta 0.3 --also I916-mac --D0 11 --ref I916-mac --csv matter/sigma_ms/data/delta_D_eta0.3.csv
+python3 matter/sigma_ms/chain_table.py ../choptuik-large-d-raw --folder I928-mac --eta 1 --also I652-mac,I917-mac --Dmin 10 --D0 11 --ref I917-mac --sigdss solver/matter/data/sigdss_m1up.jsonl,solver/matter/data/sigdss_m1hi.jsonl --csv matter/sigma_ms/data/delta_D_eta1.csv
 python3 matter/sigma_ms/mode_check.py ../choptuik-large-d-raw/I652-mac/out/sm_eta1_D9_M32.npz [--mutate sigma_h|real_solve|vtau|rate_horizon|rate_lu|rate_centre|rate_steps]
 python3 matter/sigma_ms/mode_lam.py ../choptuik-large-d-raw/I916-mac/out/sm_eta0.3_D9_M32.npz ../choptuik-large-d-raw/I916-mac/out/sm_eta0.3_D9.5_M32.npz --out OUT --guess 3.175316
-python3 matter/sigma_ms/mode_table.py ../choptuik-large-d-raw --csv matter/sigma_ms/data/lam_D.csv [--mutate gauge|sigdss]
+python3 matter/sigma_ms/mode_table.py ../choptuik-large-d-raw [--mutate gauge|sigdss]
+python3 matter/sigma_ms/mode_table.py ../choptuik-large-d-raw --folder I928-mac --also I918-mac --Dfine 11 --csv matter/sigma_ms/data/lam_D.csv [--mutate gauge|sigdss]
+python3 matter/sigma_ms/mode_table.py ../choptuik-large-d-raw --folder I928-mac --also I918-mac --Dfine 11 --Dspread 13 [--mutate spread]
 ```
 
 The runs of #639 took the same steps by other routes (the η = ∞ state at M = 48 from M = 32, then the ε chain at
@@ -915,6 +919,80 @@ Rates at M = 32 ([`mode_table.py`](sigma_ms/mode_table.py), `sigma_ms/data/lam_D
   translation check reads 3.6×10⁻⁷ at M = 32, above its 10⁻⁹. The rates there: λ = 8.410189 at M = 32 and 8.410158 at
   M = 48 at η = ∞ (γ = 0.118904 at M = 48; the ℓ = 1 solver's k_c = 23 value is 8.410420, §4), and λ = 8.646844 at
   η = 1, M = 32 (γ = 0.115649), where the gauge root is 1.3×10⁻⁶ from λ_g.
+
+### The chain and the growth rate past D 11 (#928)
+
+Raw `I928-mac/` 070e0b1f. The chains of #916 and #917 go on from D 11 to 13 in steps of 0.0625 at both couplings, with
+a rate at every point.
+
+In double-double the chain converges to max |F| ≤ 10⁻²⁸ up to D 12.46875 at η = 0.3 and D 12.34375 at η = 1. Past
+that the band solver stalls between 10⁻²⁸ and 10⁻²⁷. The residual is still accurate there: it agrees with its
+quad-double evaluation to 1.3×10⁻³¹. What is lost is the band. Its smallest singular value falls from 8.6×10⁻¹⁹ of
+the largest at D 11.06 to 3.5×10⁻²¹ at D 12.5, so a displacement along it moves the band rows by less than the
+residual's rounding, and the step along it is noise. The displacement left behind, 3×10⁻¹³ in the centre datum's top
+harmonics, costs about 10⁻²⁷ at second order in the other rows.
+
+From there the points are quad-double (`run_eta.py --qd --qd_accept`). The double-double band solver runs to 3×10⁻²⁷
+or to its stall, and Newton with the exact quad-double Jacobian finishes, in 2 or 3 steps. The switch is at D 12.5
+for η = 0.3 and at D 12.375 for η = 1. A quad-double point is accepted on its Newton's history, by a rule set with the
+coordinator and kept in the raw folder's `qd_protocol.md` with the two checks that came before it:
+
+- max |F| is at most 10⁻²⁸ within 4 steps;
+- it does not rise after the first step, and at the first step by at most a factor of 10;
+- from the second step on max |F|, and after the first step the step's size max |dz|, is at most 10¹⁰ times the
+  square of the step before.
+
+The first step is treated apart because a displacement along the band shows in the residual only at second order: that
+step is quadratic in dz, not in |F|. The allowance of a rise at the first step was added after the rule had rejected
+one point, D 12.5625 at η = 0.3, whose first step raised max |F| by a factor of 1.5 and was followed by quadratic
+convergence. It was not fixed in advance.
+
+All 20 quad-double points are accepted, with a final max |F| of 4.7×10⁻⁵⁷ or below at η = 0.3 and 3.6×10⁻⁵⁶ or below
+at η = 1. They were handed over at 1.1×10⁻²⁸ to 2.5×10⁻²⁶, and the first step changed max |F| by a factor of 0.036 to
+5.3. At D 12.375, η = 0.3, where both arithmetics have a state, Δ agrees to 1.1×10⁻²¹; the double-double Δ near its
+stop is good to about 10⁻²⁰.
+
+Every fourth point ([`chain_table.py`](sigma_ms/chain_table.py), [`mode_table.py`](sigma_ms/mode_table.py); all
+points in `sigma_ms/data/delta_D_eta0.3.csv`, `delta_D_eta1.csv` and `lam_D.csv`). The differences of λ are over the
+grid's step of 0.0625, per unit D and per unit D²:
+
+| η | D | Δ | arithmetic | λ | γ = 1/λ | first difference of λ | second difference |
+|---|---|---|---|---|---|---|---|
+| 0.3 | 11 | 1.134776574571 | double-double | 2.967495609 | 0.336984 |  |  |
+| 0.3 | 11.25 | 1.130617116738 | double-double | 2.948063543 | 0.339206 | −0.07613 | +0.0168 |
+| 0.3 | 11.5 | 1.126443099051 | double-double | 2.929660914 | 0.341336 | −0.07215 | +0.0154 |
+| 0.3 | 11.75 | 1.122268448954 | double-double | 2.912200951 | 0.343383 | −0.06850 | +0.0141 |
+| 0.3 | 12 | 1.118104678981 | double-double | 2.895606654 | 0.345351 | −0.06514 | +0.0130 |
+| 0.3 | 12.25 | 1.113961287633 | double-double | 2.879809445 | 0.347245 | −0.06205 | +0.0120 |
+| 0.3 | 12.5 | 1.109846089628 | quad-double | 2.864748026 | 0.349071 | −0.05919 | +0.0111 |
+| 0.3 | 12.75 | 1.105765488930 | quad-double | 2.850367435 | 0.350832 | −0.05655 | +0.0103 |
+| 0.3 | 13 | 1.101724705242 | quad-double | 2.836618231 | 0.352532 | −0.05409 | +0.0096 |
+| 1 | 11 | 1.015682192798 | double-double | 2.863317652 | 0.349245 |  |  |
+| 1 | 11.25 | 1.013376361537 | double-double | 2.846060689 | 0.351363 | −0.06761 | +0.0149 |
+| 1 | 11.5 | 1.010972115315 | double-double | 2.829713327 | 0.353393 | −0.06410 | +0.0136 |
+| 1 | 11.75 | 1.008487782561 | double-double | 2.814196730 | 0.355341 | −0.06088 | +0.0124 |
+| 1 | 12 | 1.005939127155 | double-double | 2.799441306 | 0.357214 | −0.05794 | +0.0114 |
+| 1 | 12.25 | 1.003339724005 | double-double | 2.785385365 | 0.359017 | −0.05522 | +0.0105 |
+| 1 | 12.5 | 1.000701274604 | quad-double | 2.771974017 | 0.360754 | −0.05272 | +0.0097 |
+| 1 | 12.75 | 0.998033873052 | quad-double | 2.759158241 | 0.362429 | −0.05041 | +0.0090 |
+| 1 | 13 | 0.995346231042 | quad-double | 2.746894109 | 0.364048 | −0.04826 | +0.0083 |
+
+- **λ falls at every one of the 32 steps from D 11 to 13, at both couplings**, and γ = 1/λ rises to 0.352532
+  (η = 0.3) and 0.364048 (η = 1) at D 13. The first difference eases from −0.0794 to −0.0541 per unit D at η = 0.3 and
+  from −0.0705 to −0.0483 at η = 1, and the second from +0.0176 to +0.0096 and from +0.0156 to +0.0083, each
+  monotonically. By the rule written into `mode_table.py` before these rates were computed the reading is "falling":
+  no first difference is positive, and the last is 68% of the first in size, far from the 1% that would read "flat".
+- The gauge root lies within 10⁻¹² of λ_g at all 70 points past D 11, by two determinants at λ_g ± 10⁻¹².
+- Δ(D) is smooth on the whole chain (`chain_table.py`: third and fourth differences of one sign each), and the
+  closures at D 11 agree with #916's and #917's values to 8.0×10⁻²⁴ and 3.2×10⁻²³. At η = 1, Δ passes below 1
+  between D 12.5 and 12.75.
+- Resolution in τ at D 13. At η = 0.3 the rates at M = 24 and 48 have their sign change in the same interval of
+  5×10⁻¹⁴ as M = 32, with Δ(24) − Δ(32) = 7.4×10⁻²⁴ and Δ(48) − Δ(32) = 2.9×10⁻³¹. At η = 1 the same holds for M = 24,
+  with Δ(24) − Δ(32) = −6.3×10⁻²². The M = 48 state at η = 1 was not obtained. Its double-double stage wanders
+  between 3×10⁻²⁵ and 6×10⁻²⁴; handed over at 4.6×10⁻²⁵, its first quad-double step raised max |F| by a factor of 87,
+  which the rule rejects, and no further attempt was made. So `mode_table.py --Dspread 13` fails on that one state
+  and exits 1.
+- These points do not show where λ levels off. A value for D → ∞ needs a fit with its own planted test (§8).
 
 ## 12. References
 
