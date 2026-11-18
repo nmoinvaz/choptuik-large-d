@@ -110,7 +110,7 @@ class Reseeder:
 
     def __init__(self, meta, D, threads=2, levels=5, rows="ma", plan_tol=1e-32, hmax=0.05, check_tol=1e-36,
                  check_kt=None, it_max=30, horizon_alpha=0, mutate="none", floor_rule="stall", qd=False, od=0,
-                 qd_start="ladder"):
+                 qd_start="ladder", qd_bar=1e-24):
         self.M, self.nodes = int(meta["M"]), list(meta["nodes"])
         self.K = len(self.nodes)
         self.kt, self.kc, self.ks = meta.get("kt", 36), meta.get("kc", 146), meta.get("ks", 130)
@@ -141,6 +141,13 @@ class Reseeder:
         # od: the number of octo-double corrections of the horizon data after the quad-double polish (refine_o), taken
         # where the data are put on an eight-part point (octo_corrector.with_horizon); 0: none
         self.od = int(od)
+        # qd_bar: the residual below which the quad-double polish counts as converged (polish_q). Its floor is about
+        # eps_qd G, and G grows with D and ks: at D 238 the order-tied chain's polish ends at 1e-24 to 4e-24 for ks 250
+        # and 291, against 3e-25 to 8e-25 where it passes (#903). A bar above 1e-24 leaves the rest to refine_o, whose
+        # first correction takes such data to about 1e-33 (ks_chain2 at D 232.5), so it needs od > 0
+        self.qd_bar = float(qd_bar)
+        if self.qd_bar > 1e-24 and self.od <= 0:
+            raise ValueError(f"qd_bar {self.qd_bar:g} above 1e-24 needs octo-double corrections (od > 0)")
         self.x_node = self.nodes[-1]
         u0 = 1.0 - self.x_node
         # the rungs u0 / 2^j, j = J..0 (exact in f64: u0 is the f64 value 1 - x_K-1 and the divisions are by powers of 2)
@@ -359,7 +366,7 @@ class Reseeder:
         rung, and the a_h and m_h steps followed by Newton do (the first Newton step may raise |R| before it falls
         quadratically; notes/QUAD_DOUBLE.md 13.27). pre="", take_all=False is the rule of 13.26, and with it_max=6,
         refactor_max=0 the earlier one. Returns d4, the history and whether it converged (at least one step taken and
-        the residual below 1e-24)."""
+        the residual below qd_bar, 1e-24 by default)."""
         M, a, o = self.M, self.aoff, self.off
         u = self.us[-1]
         s = self.rung_solver(u)
@@ -450,7 +457,7 @@ class Reseeder:
                     lu = factor(d)                          # the Jacobian at the current data
                     refactors += 1
         hist.append(dict(it=len(hist), R=nR, refactors=refactors))     # the accepted residual, as invert() ends
-        return d, hist, steps > 0 and nR < 1e-24
+        return d, hist, steps > 0 and nR < self.qd_bar
 
     # ------------------------------------------------------------------ the re-seed
     def refine_o(self, z8, steps=None, mutate=""):

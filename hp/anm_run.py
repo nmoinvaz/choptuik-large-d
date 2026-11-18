@@ -16,7 +16,7 @@ formulation of hp/pinning.py; their coefficients are zero).
         [--qd_it 12] [--qd_w 0] [--refine 1] [--probe 0 --probe_c C] [--plan_tol 1e-32] [--fix1 0] [--F_pred_max 0]
         [--horizon_alpha 0] [--fix1_qlu 0] [--jet_q 0] [--reseed 0] [--pred_q 0] [--reseed_q 0] [--save_pred 0]
         [--jet_o 0] [--jet_by_order 1] [--jet_tangent_from 0] [--series_split 0] [--od_tangents 2] [--corrector od --tol_od 1e-40] [--base_adopt 0] [--base_polish 1] [--keep_plan 1] [--held_fit FILE]
-        [--held_o 0] [--reseed_o 0] [--a0 0] [--a_grow 2] [--a_hold 0] [--lam_stall 0] [--save_base 0] [--save_jet 0] [--held_from STATE]
+        [--held_o 0] [--reseed_o 0] [--reseed_qd_bar 1e-24] [--a0 0] [--a_grow 2] [--a_hold 0] [--lam_stall 0] [--save_base 0] [--save_jet 0] [--held_from STATE]
         [--arclength 0 --guard 0.05 --D_min 0 --arc_sign 1 --border 1 --turns_max 2 --arc_dhold 1e-12 --arc_jet FILE]
         [--a_rule step|reseed --a_scale 1 --a_drop 10 --a_rise 3.16]
 
@@ -423,6 +423,9 @@ def main():
     # parts instead of two (with --held_fit and --corrector od); --reseed_o K: K octo-double corrections of the
     # re-seeded horizon data (reseed.Reseeder.refine_o)
     opt.update(held_o=0, reseed_o=0)
+    # --reseed_qd_bar B: the quad-double polish of the re-seed counts as converged below B (default 1e-24). B above
+    # 1e-24 needs --reseed_o K > 0, whose octo-double corrections take the data from the quad-double floor down (#903)
+    opt.update(reseed_qd_bar=1e-24)
     opt.update(save_base=0)             # --save_base 1: the polished base saved (with --corrector od)
     opt.update(save_jet=0)              # --save_jet 1: each base's series saved; 2: saved, then stop (#634)
     opt.update(ks=0)                    # --ks K: the horizon series' order instead of the state's (#696)
@@ -723,7 +726,7 @@ def main():
             if opt["reseed"] == 2:
                 elim["rs"] = Reseeder(dict(M=M, nodes=nodes, kt=kt, kc=kc, ks=ks), D, threads=opt["threads"],
                                       horizon_alpha=opt["horizon_alpha"], qd=bool(opt["reseed_q"]), od=opt["reseed_o"],
-                                      qd_start=opt["reseed_start"])
+                                      qd_start=opt["reseed_start"], qd_bar=opt["reseed_qd_bar"])
             zh_p, zl_p, F0_p, _, conv_p, _ = correct(sp, zh, zl, opt["tol"],
                                                      z8_start=load_o(os.path.join(raw, opt["state"]))[0])
             elim["rs"] = None
@@ -1032,7 +1035,7 @@ def main():
                     # inside the corrector
                     rs_n = Reseeder(dict(M=M, nodes=nodes, kt=kt, kc=kc, ks=ks), Dn, threads=opt["threads"],
                                     horizon_alpha=opt["horizon_alpha"], qd=bool(opt["reseed_q"]), od=opt["reseed_o"],
-                                      qd_start=opt["reseed_start"])
+                                      qd_start=opt["reseed_start"], qd_bar=opt["reseed_qd_bar"])
                     dz0_at.update(D=float(Dn), D_str=str(Dn), a=float(a))
                     if opt["save_pred"] and pred4 is not None:
                         # the prediction before its re-seed, for testing the re-seed on it (13.26)
