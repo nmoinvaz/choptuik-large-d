@@ -1947,4 +1947,10 @@ The medians behind R, over the same 48 right-hand sides:
 - **The samples do not differ like a random move.** Samples a, b and c are 2.1×10⁻²¹ to 3.5×10⁻²¹ apart, about
   1.7×10⁻²⁰ of max |z|, yet their bounds sit at 10⁻³⁵ to 10⁻³³, while a random move of 10⁻²⁰ already reads
   5×10⁻²⁴. Their differences then lie close to the null direction, as they would along a family of roots.
-- Open: whether a move along the line through two samples keeps the bound at the root's level (#968).
+- **Along the line through two samples the bound stays at the root's level (#968).** Sample c moved toward sample a
+  (`rt_perturb.py --along`) gives medians of 7.7×10⁻³⁴, 4.8×10⁻³³ and 1.7×10⁻³² at δ = 10⁻²⁰, 10⁻¹⁹ and 10⁻¹⁸, which
+  is 10⁻¹⁰ to 10⁻¹² of the random moves' at the same δ. That is the pre-set reading "along a family": at D 40.02 the
+  RT system's roots form a set with a − c tangent to it, so the system lacks at least one condition. Raw `I968-win/`
+  (982bf580).
+- Open: sample b lies off the line through c and a (cosine 0.234). If b − c is also tangent, the set is at least
+  two-dimensional (#969).
