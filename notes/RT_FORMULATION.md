@@ -1938,5 +1938,13 @@ The medians behind R, over the same 48 right-hand sides:
   6.20×10⁻²⁹ at K = 7. They lie within a factor 1.6 while the medians spread 172 and 60 times, and in no common order:
   c has the largest K = 0 residual and the smallest median. In every start x is led by μ (|x_μ| = max |x|), so all
   three samples share one weak direction.
-- Open: whether that direction is null at the exact root, so that its bound measures the sample's distance from the
-  root (#963).
+- **The μ-led direction is null at the root (#963).** Sample c's K = 0 root, moved by a planted random δ (relative to
+  max |z|, `solver/rt/rt_perturb.py`), gives median bounds of 5.46×10⁻²⁴, 2.68×10⁻²² and 4.06×10⁻²¹ at δ = 10⁻²⁰,
+  10⁻¹⁹ and 10⁻¹⁸, against 1.48×10⁻³⁵ at the root itself. That is 3.7×10¹¹ to 2.7×10¹⁴ times higher, rising at each
+  δ, which is the pre-set reading "null at the root". The δ = 0 control reproduces #951's first 12 bounds. At the
+  moved states μ's share of x falls from 1.00 to 10⁻⁴ to 2×10⁻³. So a rough bound along this direction reads the
+  distance from the root, not the K = 7 rows, here and at D 50 and 55. Raw `I963-win/` (49c56cd8).
+- **The samples do not differ like a random move.** Samples a, b and c are 2.1×10⁻²¹ to 3.5×10⁻²¹ apart, about
+  1.7×10⁻²⁰ of max |z|, yet their bounds sit at 10⁻³⁵ to 10⁻³³, while a random move of 10⁻²⁰ already reads
+  5×10⁻²⁴. Their differences then lie close to the null direction, as they would along a family of roots.
+- Open: whether a move along the line through two samples keeps the bound at the root's level (#968).
