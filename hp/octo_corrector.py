@@ -30,7 +30,7 @@ fails. `digits` checks delta_digits, the 40-digit Delta anm_run.py prints (#556)
 import json
 
 import numpy as np
-from hpkernel.driver import qmax, qparts
+from hpkernel.driver import Solver, qmax, qparts
 from multidouble import qd_add_dd
 
 
@@ -116,6 +116,9 @@ def has_o(path):
     return "z7" in np.load(path)
 
 
+_NOTICED = set()        # the fallback notices printed once per run
+
+
 class PinnedO:
     """PinnedQ's offset for the octo-double methods: the kernel's frozen rows read coefficient - held value, so the
     octo-double Newton converges to the pinned solution. ch, cl: the PinnedSolver's offset. residual_o returns F - c in
@@ -123,7 +126,8 @@ class PinnedO:
     F - c formed from an octo-double residual_o: the kernel's F there is rounded to double-double, 2^-106 |c| ~ 1e-35
     on the held rows (|c| ~ 8e-4), above the tolerance. mutate_offset (the control): 'qd' adds J^-1 c through the
     quad-double LU at the point's quad-double rounding instead of the octo-double one. c8: the offset in eight parts
-    (PinnedSolver's c8, anm_run.py --held_o 1), used instead of ch, cl in residual_o and in the step."""
+    (PinnedSolver's c8, anm_run.py --held_o 1), used instead of ch, cl in residual_o and in the step. newton_o takes
+    F from the kernel's newton_o itself (kept_residual), the same bits as residual_o at its point."""
 
     def __init__(self, s, ch, cl, mutate_offset="", c8=None):
         self.s = s
@@ -135,17 +139,36 @@ class PinnedO:
     def __getattr__(self, name):
         return getattr(self.s, name)
 
-    def residual_o(self, z, mutate=0):
+    def minus_c(self, F):
+        """F - c in eight parts, F a residual of the kernel in eight parts"""
         from multidouble import od_add_dd, od_axpy
-        F = self.s.residual_o(list(o8(z)), mutate=mutate)
         if self.c8 is not None:
             return o8(od_axpy(-1.0, *self.c8, *o8(F)))
         return o8(od_add_dd(*o8(F), -self.ch, -self.cl))
+
+    def residual_o(self, z, mutate=0):
+        return self.minus_c(self.s.residual_o(list(o8(z)), mutate=mutate))
+
+    def kept_residual(self, z, mutate=0):
+        """the octo-double residual the last newton_o formed, when it was at z with mutate (Solver.newton_o_residual,
+        residual_o's bits there), else None. None also when s is not the kernel's Solver itself (a wrapper's newton_o
+        may not be its residual's), when residual_o is overridden, or when the build has no newton_o_residual (with a
+        notice)."""
+        if not isinstance(self.s, Solver) or type(self).residual_o is not PinnedO.residual_o or "residual_o" in vars(self):
+            return None
+        if not hasattr(self.s, "newton_o_residual"):
+            if "newton_o_residual" not in _NOTICED:
+                _NOTICED.add("newton_o_residual")
+                print("  PinnedO: this hpkernel has no Solver.newton_o_residual; each step forms its residual again",
+                      flush=True)
+            return None
+        return self.s.newton_o_residual(list(z), mutate=mutate)
 
     def newton_o(self, z, mutate=0):
         from multidouble import od_axpy
         z = o8(z)
         d, _, _, pmin, pmax = self.s.newton_o(list(z), mutate=mutate)
+        F = self.kept_residual(z, mutate=mutate)          # this newton_o's residual, read before any other call
         if self.mutate_offset == "qd":
             self.s.newton_q(*q4_of_o(z), mutate=mutate)
             x = o8_of_q(self.s.qlu_solve(self.ch, self.cl, self.zero, self.zero))
@@ -154,7 +177,7 @@ class PinnedO:
         else:
             x = o8(self.s.olu_solve([self.ch, self.cl] + [self.zero] * 6))        # J^-1 c
         d = o8(od_axpy(1.0, *x, *o8(d)))
-        F = self.residual_o(z, mutate=mutate)
+        F = self.residual_o(z, mutate=mutate) if F is None else self.minus_c(F)
         return d, F[0], F[1], pmin, pmax
 
 
