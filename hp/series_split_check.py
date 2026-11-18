@@ -73,11 +73,14 @@ def main(argv):
     Zs = series(s, zo, N, split=SPLIT_MIDDLE, mutate=mut)
     t_split = time.time() - t0
     print(f"  N {N}: default {t_ref:.1f} s, split {t_split:.1f} s, ratio {t_ref / t_split:.2f}", flush=True)
+    # set_horizon_alpha drops the octo-double LU, so each form's LU is formed again at the state (outside the timings)
     s.set_horizon_alpha(1)
+    s.newton_o(list(zo))
     t0 = time.time()
     Za = series(s, zo, N)
     t_alpha = time.time() - t0
     s.set_horizon_alpha(0)
+    s.newton_o(list(zo))
     Zc = series(s, zo, Np, split=SPLIT_MIDDLE, mutate=SPLIT_MUT_DROP_L1)
     d_s, d_a, d_c = rel(Zs, Z), rel(Za, Z), rel(Zc, Z[:Np + 1])
     thr = [1e3 * max(d, 2.0 ** -420) for d in d_a]
