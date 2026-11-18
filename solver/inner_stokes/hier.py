@@ -188,6 +188,13 @@ class Hier:
         self.K = K
         if self.verbose:
             print(f"   Jacobian K computed ({self.M + 1 if self.predict else self.M - 1} residuals) [{time.time() - T0:.0f} s]", flush=True)
+        if self.verbose >= 2:
+            # the blocks of K by level: max |K| of rows r_l against the unknowns of level nu (a, w: level 1)
+            lev = [nu for nu in range(1, self.M + 1, 2)]
+            print("   K by level, max |d r_l / d x_nu| (rows l, columns nu): " + "  ".join(f"nu {nu}" for nu in lev), flush=True)
+            for l in lev:
+                cols = [float(np.abs(K[np.ix_(idx(l), idx(nu))]).max()) for nu in lev]
+                print(f"     l {l}: " + "  ".join(f"{c:.2e}" for c in cols), flush=True)
 
     def res_raw(self, x):
         """packed residual: r_nu for nu <= 3 at xi_top; for nu >= 5 at the level's current mode radius ('low' while
