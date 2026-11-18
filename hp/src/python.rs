@@ -493,13 +493,36 @@ struct Solver {
     lu: Option<Lu>,
     /// the quad-double LU of the last newton_q (qlu_solve)
     qlu: Option<QDLu>,
-    /// the octo-double LU of the last newton_o (olu_solve)
-    olu: Option<ODLu>,
+    /// the octo-double LU of the last newton_o (olu_solve), with that call
+    olu: Option<OctoLast>,
     /// seconds of the last newton / newton_mixed call: residual, Jacobian, factorization, solve (step_timing)
     last_t: [f64; 4],
     /// the octo-double Jacobian's columns per evaluation when newton_o and jacobian_o are not given `tangents`
     /// (set_octo_tangents; 2 by default, 1 the one-tangent Jacobian), the same bits at any (#921)
     octo_tangents: usize,
+}
+
+/// The last newton_o: its octo-double LU and the call that formed it, the bits of the state's eight parts, mutate and
+/// tangents (olu_pivots_at). It is dropped wherever the context changes (set_segs, set_horizon_alpha), and a failed
+/// newton_o leaves the previous one with its own call.
+struct OctoLast {
+    lu: ODLu,
+    z: Vec<u64>,
+    mutate: u8,
+    tangents: usize,
+}
+
+/// the bits of an octo-double vector's eight parts, part after part
+fn bits8(z: &[&[f64]; 8]) -> Vec<u64> {
+    z.iter().flat_map(|p| p.iter().map(|x| x.to_bits())).collect()
+}
+
+impl OctoLast {
+    /// whether this newton_o was at z, every part's bits equal (so -0 differs from +0), with mutate, and with tangents
+    /// unless None
+    fn at(&self, z: &[&[f64]; 8], mutate: u8, tangents: Option<usize>) -> bool {
+        self.mutate == mutate && tangents.is_none_or(|t| t == self.tangents) && self.z == bits8(z)
+    }
 }
 
 impl Solver {
@@ -1124,8 +1147,21 @@ impl Solver {
         self.last_t = st.t;
         let (pmin, pmax) = st.lu.pivot_range();
         let (fh, fl) = f_dd::<Octo>(&st.f);
-        self.olu = Some(st.lu);
+        self.olu = Some(OctoLast { lu: st.lu, z: bits8(&z), mutate, tangents });
         Ok((arr8(py, st.dz.try_into().expect("eight parts")), arr(py, fh), arr(py, fl), pmin, pmax))
+    }
+
+    /// The pivots (min |u_kk|, max |u_kk|) of the octo-double LU the last newton_o kept, when that call was at the
+    /// eight-part state z (every part's bits equal) with this mutate and tangents (the solver's set_octo_tangents when
+    /// not given); None otherwise, or with no LU kept. The LU is dropped wherever the context changes (set_segs,
+    /// set_horizon_alpha) and a failed newton_o keeps the previous call's, so a match means that newton_o at z would
+    /// form this LU again, and olu_solve and series_o can use it as it stands (hp/anm_run.py's series base after the
+    /// octo-double corrector).
+    #[pyo3(signature = (z, mutate=0, tangents=None))]
+    fn olu_pivots_at(&self, z: Vec<PyReadonlyArray1<'_, f64>>, mutate: u8, tangents: Option<usize>) -> PyResult<Option<(f64, f64)>> {
+        let tangents = tangents.unwrap_or(self.octo_tangents);
+        let z = parts8(&z, self.api.len())?;
+        Ok(self.olu.as_ref().filter(|o| o.at(&z, mutate, Some(tangents))).map(|o| o.lu.pivot_range()))
     }
 
     /// z_1..z_n of the octo-double series formed one order at a time (Api::series_o: multishoot's JetSession over hp's
@@ -1145,7 +1181,7 @@ impl Solver {
     ) -> PyResult<Vec<T8<'py>>> {
         let l = self.api.len();
         let z0 = parts8(&z0, l)?;
-        let lu = self.olu.as_ref().ok_or_else(|| PyValueError::new_err("no octo-double LU (call newton_o at z0 first)"))?;
+        let lu = self.olu.as_ref().map(|o| &o.lu).ok_or_else(|| PyValueError::new_err("no octo-double LU (call newton_o at z0 first)"))?;
         let rhs: Option<Py<PyAny>> = rhs.map(|r| r.unbind());
         let mut solve = |k: usize, b: O8| -> Result<O8, String> {
             let b = match &rhs {
@@ -1169,7 +1205,7 @@ impl Solver {
     /// arrays (each entry renormalized), x their tuple
     #[pyo3(signature = (b, transpose=false))]
     fn olu_solve<'py>(&self, py: Python<'py>, b: Vec<PyReadonlyArray1<'py, f64>>, transpose: bool) -> PyResult<T8<'py>> {
-        let lu = self.olu.as_ref().ok_or_else(|| PyValueError::new_err("no octo-double LU (call newton_o first)"))?;
+        let lu = self.olu.as_ref().map(|o| &o.lu).ok_or_else(|| PyValueError::new_err("no octo-double LU (call newton_o first)"))?;
         let b = parts8(&b, lu.n)?;
         let mut x: Vec<OD> = (0..lu.n).map(|i| OD::new(std::array::from_fn(|q| b[q][i]))).collect();
         py.detach(|| if transpose { lu.solve_t(&mut x) } else { lu.solve(&mut x) });
