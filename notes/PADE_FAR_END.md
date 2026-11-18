@@ -2684,3 +2684,134 @@ In 7.4, after the bullet on #746's profile:
 +  the pass is a fit to the real series' noise draw, and (a) and (c′) are not judged
 +  (notes/PADE_FAR_END.md §18).
 ```
+
+## 19. An error-weighted far-end estimator, recalibrated on #547's plants (#668)
+
+#547's DA2 fails C1–C3 (§4.1): 7 of 35 plants miss by more than 0.02, and the noise spread reaches 0.36. #747 showed that the
+measured errors, not the method's structure, now set the limit (§18.5). Here the differential approximant is fitted by
+least squares with each equation weighted by its measured error, and judged against #547's criteria, unchanged, on
+#547's 35 plants. Status of everything here: numerical evidence.
+
+### 19.1 Estimator
+
+`solver/inner_amp/pade_farend_w.py`, on #547's plants (`FarPlant`, `PLANTS`, `PAIRS`) and #547's noise (`pg.noisy`,
+`pg.noise_eps` in the measured mode), called unchanged.
+
+**Equations.** In u = 1/t, f(u) = Σ a_k u^k with a_k = k! σ_k, k ≤ 22. A member is a second-order inhomogeneous
+approximant of degrees (d₀, d₁, d₂) as in §2.1, with Q₂(0) = 1. Its equation at order n is
+
+```
+R_n(q) = Σ_j Σ_{i≤d_j} q_{j,i} c_j(n − i) = 0,   c_j(m) = (m+1)_j a_{m+j}  (0 for m < 0),   q_{2,0} = 1,
+```
+
+for n = lp + 1, …, 20, where (x)_j is the rising factorial. The orders n ≤ lp are the ones P absorbs, so these are #547's
+conditions with P eliminated. A member has nq = Σ(d_j + 1) − 1 unknowns and 20 − lp equations, and is used only if
+20 − lp ≥ nq. With 20 − lp = nq the system is square and the solution is #547's exact one. The far end of a member is
+its farthest zero t = 1/u of Q₂ in the window below, with Im t > 0.
+
+**Weights.** The error of a_k is s_k = ε_k |a_k|, with ε_k the measured relative error of σ_k (`pg.noise_eps`:
+0 at k = 0, 3.3×10⁻²⁶ at k = 1, 1.4×10⁻¹² at k = 22, for the node of the series). The error of equation n is
+
+```
+V_n(q) = Σ_j Σ_{i≤d_j} |q_{j,i}|² ((n − i + 1)_j s_{n−i+j})²,
+```
+
+and the fit minimizes Σ_n |R_n(q)|² / V_n. V depends on q, so the fit is solved three times. The first solve uses the
+proxy V_n⁽⁰⁾ = ((n+1)₂ s_{n+2})², the error of the equation's highest coefficient a_{n+2}, which enters with q_{2,0} = 1. The
+second and third use V_n at the previous solution. The count is fixed at three, so that the estimator is a deterministic
+function of (σ, ε). Each solve is a complex Householder QR (`mp.qr_solve`) at 100 digits.
+
+**Window.** #547's window 1.2 < |t| < 3 is absolute, and #547's scale1.03 control failed because it pushed zeros through
+the edge at 3. Here the window is (1.2, 3.0) ρ/ρ_ref, with ρ = (|a₁₂|/|a₆|)^(1/6) and ρ_ref = 1.2370. ρ is 1.23696 for the
+real series at ω/ω∞ = 1.00 (J 1250), 1.23870 at 0.99 and 1.23517 at 1.01, and the plants, fitted to σ₀–σ₁₂, match it to
+about 10⁻⁴. A scaling a_k → c^k a_k scales ρ by c, V_n by c^(2n+4) (a common factor of the Q₂(0) = 1 normalization
+aside) and every zero by c, so the estimator is equivariant under it exactly, up to rounding.
+
+**Estimate.** The componentwise median over the members that have an admissible zero, as in §2.1, with the median
+absolute deviation of the members as `spread`. No admissible member gives no estimate, which fails C1.
+
+**Ensembles.** The members differ from #547's in the degree of P, which is lowered so that the accurate low orders
+constrain Q instead of being absorbed by P, and in the degrees, which may be lower.
+
+| preset | (d₂, drop) | lp | equations | members |
+|---|---|---|---|---|
+| E0 | #547's `members(2)` | its own (top − 2, top) | square | 11, a regression only, not a candidate |
+| E1 | d₂ = 4, 5, 6; drop 0, 1; degrees (d₂ − drop, d₂ − drop, d₂) | 0, 2 | n = lp + 1…20 | 11 |
+| E2 | d₂ = 3, 4, 5; drop 0, 1 | 0, 2 | n = lp + 1…20 | 12 |
+
+E1 keeps (6,6,6) at lp = 0 only, which is square, and (5,5,6) at lp = 0 and 2, since 20 − lp must be at least nq.
+
+### 19.2 Protocol
+
+1. **Development.** The five development plants of #547 (D1–D5, §2.2) choose the preset. For E1 and E2 the score is the
+   largest over D1–D5 of max(error/0.02, noise/0.01), with the error and the noise as in 19.3 and the noise draws
+   547000 + i. The lower score is chosen, E1 on a tie. Nothing else is tuned. If both presets score above 1, the
+   protocol allows up to three amendment rounds, each adding presets that are written into this section, with the D1–D5
+   scores that prompted it, before they run. No other plant is judged during development.
+2. **Freeze.** The chosen preset, with the criteria below, is committed before the 30 validation plants are run. The
+   judged run is all 35 plants with the frozen preset, the development plants included, as in #547.
+3. **Controls**, then **the real series** (19.3).
+
+### 19.3 Frozen criteria
+
+C1–C3, B1 and the real range are #547's (§3), unchanged. Plants, pairs and noise are #547's: `PLANTS`, `PAIRS`, 10 draws of
+relative complex Gaussian noise at the measured per-order errors of the plant's node, seeds 547000 + i. The weights use the
+same ε_k and the |a_k| of the series being estimated, noisy or not.
+
+| check | criterion |
+|---|---|
+| C1 recovery | every plant: \|estimate − P1\| ≤ 0.02 |
+| C2 response | the 9 pairs of #547 (`PAIRS`): the estimates differ by more than 0.03 |
+| C3 noise | every plant: the largest shift of the estimate over the 10 draws is ≤ 0.01 |
+| C3′ fresh draws | the same on 10 other draws, seeds 668000 + i, ≤ 0.01 on every plant. It exists because the preset is chosen on the draws of C3 |
+| B1 baseline | the ratio law over k = 12–21 misses every plant with P1 = κ⋆ by more than 0.05 |
+| real range | the real estimate counts as calibrated only if its modulus lies in 1.62–1.90 |
+| scale1.03 | `--mutate=scale1.03` on the real series at ω/ω∞ = 1.00, J 1250: σ_k × 1.03^k, with ε unchanged (relative). The estimate must equal 1.03 times the unmutated one within 10⁻⁶ and move by more than 0.03 |
+| acceptance | the issue's: C1–C3 on all 35 plants and scale1.03 on the real series. C3′ is added to it. If C1–C3 hold and C3′ fails, both verdicts are reported, and the real number is quoted as not robust to fresh draws |
+| quote | only if the acceptance holds. The real far end at ω/ω∞ = 1.00 (J 1250), with each error bar named: the calibration (the largest plant error, an empirical spread over the 35 plants, not a bound), the noise (the largest shift over the 10 draws), the member spread (the MAD) and J (J 1250 against J 1500). The other two nodes are listed apart. If the acceptance fails, the real run is reported as a diagnostic and no far end is quoted |
+| B-regression | the ensemble E0 through this code gives the same zeros of Q₂ as `pade_farend.da_zeros` for each of its 11 members, on the plant D1 and on the real series at ω∞, within 10⁻³⁰ relative. `--mutate=e0_row` (one equation dropped from the E0 path) must fail it |
+
+The selftest (`python3 pade_farend_w.py selftest`) checks, each with a mutation that must fire:
+
+1. **S1 solver.** The weighted solution of three members of E1 against an independent solve of the normal equations by
+   `mp.lu_solve` at 250 digits, with the same V_n: the coefficients q agree within 10⁻³⁰ relative. `--mutate=selftest_row`
+   (one equation's weight × 1.01 in the normal-equations path) must fail it.
+2. **S2 gauge.** The errors ε multiplied by 10³ in the weights change no zero of any member of E1 on D1 beyond 10⁻³⁰
+   relative (a uniform error scale is not part of the weights). `--mutate=err_x1e3_tail` (× 10³ for k ≥ 12 only) must
+   move the estimate by more than 10⁻⁹.
+3. **S3 equivariance.** On D1's series and the real series at ω∞, with c = 1.03 and 1.6, the estimate of σ_k c^k equals c
+   times the estimate within 10⁻²⁰. `--mutate=abs_window` (the window not scaled by ρ) must fail it at c = 1.6.
+4. **S4 planted exactness.** A density in #547's semi-classical class, whose function has an exact low-degree DA
+   (selftest 1 of §3), through the E1 member (4,4,4) at lp = 0: the far end to 10⁻¹⁰. `--mutate=selftest_sigma18`
+   (σ₁₈ × 1.01) must make it fail.
+
+The mutations on the plants, each a run of all 35 plants, at the frozen preset:
+
+| mutation | what it does | it must |
+|---|---|---|
+| `--mutate=unweighted` | V_n = 1 for every equation, one solve | fail C1, C2 or C3. This is the fall back to #547's failures |
+| `--mutate=err_reversed` | the weights use ε_(23−k) for ε_k, k = 1…22. The noise is not changed | fail C1, C2 or C3 |
+| `--mutate=noise1000` | the noise draws at 1000 times the measured ε. The weights keep ε | fail C3 |
+
+A mutation that does not fail what it must is a finding, not a pass (exit 2), and its meaning is written here. On the
+real series, `--mutate=sigma7` (σ₇ × 1.01) is reported and not judged, as in §3.
+
+**Exits.** 0 all pass. 1 a check failed, or a mutation fired as it must. 2 a mutation did not fire. A verdict is not a
+failure. **Raw output** goes to `I668-rpi5/` of the raw-data repository, and `raw_out.require_raw` refuses another path.
+
+### 19.4 Disclosed before the freeze
+
+- #547's published results (§4), in the aggregate. The per-plant records of `I547-mac/plants.json` were not read.
+- The ε_k and ρ above, printed from `pg.noise_eps` and the real σ_k, and a check that `mp.qr_solve` solves a complex
+  overdetermined random system to its stationarity condition at 100 digits (10⁻¹⁰⁰).
+- A timing check of #547's plant D1 and its DA2 estimate, printing times only: 0.7 s for the plant and its σ_k, 1.1 s for
+  11 members, 34 MB.
+- The equations' form, the three-solve count, the presets and the window were chosen from the structure of the problem and
+  from §4 and §18, not from any plant's error under this estimator.
+
+**Prior art.** Differential approximants are Guttmann and Joyce's and Hunter and Baker's (§3). Least-squares Padé
+approximants, which fit more equations than unknowns by the singular value decomposition to tolerate noisy coefficients, are
+P. Gonnet, S. Güttel and L. N. Trefethen, SIAM Rev. 55, 101–117 (2013), doi:10.1137/110853236 (the record was checked in the
+SIAM and Oxford listings, not the full text). The paper was not read, and nothing here says that its use in differential
+approximants, or the weighting by measured errors, is new. The weighting is the generalized least squares estimator, reweighted
+from the previous solution.
