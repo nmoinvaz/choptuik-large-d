@@ -85,18 +85,18 @@ dependencies = [
 
 [[package]]
 name = "multidouble"
-version = "4.8.2"
+version = "4.9.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e07dddc48149904f4a3281f82bad443f0283823da205ffb71afb08915b1b50f6"
+checksum = "fcd4b1ce5676d0023a817238e398fb58a04e66e56e53475e739129da0abfecf2"
 dependencies = [
  "rayon",
 ]
 
 [[package]]
 name = "multishoot"
-version = "3.2.0"
+version = "3.3.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f2e750cd23dcbbc69059626a077c2a000a54a033a8e772d42342e9ededffee44"
+checksum = "5801dee340bf2ee4e2826c5bce6d500e4712ad06a6e7e9a786099adf3ca4e6cb"
 dependencies = [
  "multidouble",
  "multisolver",
