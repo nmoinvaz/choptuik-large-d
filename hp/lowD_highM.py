@@ -184,6 +184,10 @@ def main():
                     "the M_n solution (sonic_valley.valley on its own plan); stop before a target at or below the D "
                     "where the line through the last 3 or more gaps at this M_n reaches 0 (the x integration then "
                     "meets x = c)")
+    ap.add_argument("--prefer_start", default="", help="two passes: take the start of this label ('predictor', 'lift of "
+                    "M_w', 'last state') when it has a finite |F| on its own plan, not the one of smallest |F|. Near a weak "
+                    "direction |F| is no measure of the distance to the root: at D 3.04315, M 384 the lift had the smaller "
+                    "|F| (1.3e-5 against the predictor's 2.6e-5) and Newton from it stalled at |dz| 0.1-1.3 (#945)")
     ap.add_argument(FLAG, action="store_true", help=HELP)
     a = ap.parse_args()
     STATES = a.states
@@ -436,7 +440,11 @@ def main():
                     own.append((F, lab, zz, sg))
             if not own:
                 return False, None, None
-            F1, lab1, zz1, sg1 = min(own, key=lambda o: o[0])
+            pref = [o for o in own if a.prefer_start and o[1] == a.prefer_start]
+            F1, lab1, zz1, sg1 = pref[0] if pref else min(own, key=lambda o: o[0])
+            if pref:
+                log(f"  D {D} M {M}: start '{lab1}' taken by --prefer_start (|F| {F1:.2e}; smallest "
+                    f"{min(o[0] for o in own):.2e})")
             t = time.time()
             ok1, _, p1 = solve(D, M, [(lab1, zz1)], sg1, tag=st["tag"] + "_p1", tol=1e-14)
             if not ok1:
