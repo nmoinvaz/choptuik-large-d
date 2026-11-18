@@ -392,11 +392,12 @@ k_c = 23 by at most 4×10⁻⁴ in λ (5×10⁻⁵ in γ) at D ≤ 9, well below
   η = 1 it gave two values of Δ for one solution (§11, #845).
 - γ(D) rises monotonically, 0.116 → 0.342 (η = 1) and 0.116 → 0.325 (η = 0.3) between D = 4 and 10 by sigdss (the
   kernel gives 0.3397 and 0.3270 at D = 10, #918), with a change of
-  curvature near D ≈ 9.5. On the kernel it keeps rising to D = 11, to 0.3370 (η = 0.3) and 0.3492 (η = 1) (§11,
-  #918); sigdss's maximum near D = 10.5 was its own. Extrapolations from
+  curvature near D ≈ 9.5. On the kernel it keeps rising at every step to D = 13, to 0.352532 (η = 0.3) and 0.364048
+  (η = 1), with λ's slope there −0.054 and −0.048 per unit D and still easing (§11, #918, #928); sigdss's maximum near
+  D = 10.5 was its own. Extrapolations from
   D ≤ 9 give γ∞ anywhere in about 0.36–0.57, fits with λ∞ = 2 imposed are as good as free ones, and adding D = 10 makes
-  all fits worse. So γ∞ = 1/2 is neither confirmed nor excluded (not established). If the maximum at D ≈ 10.5 is real,
-  γ(D) at η = 0.3 does not approach 1/2 from below the way the scalar's does, which would favour γ∞ ≠ 1/2.
+  all fits worse. So γ∞ = 1/2 is neither confirmed nor excluded (not established). The kernel's points do not show
+  where λ levels off, so γ∞ needs a fit to them with its own planted test.
 - What the data do support is the structural half of the prediction at finite D: the σ-model's γ(D) depends on η and
   lies below the ℓ = 1 multiplet's by an amount that is nearly independent of D for 6 ≤ D ≤ 9 (−0.003 at η = 1, −0.016 at
   η = 0.3) and grows as η decreases, i.e. it vanishes in the direction η → ∞ where the σ-model becomes the multiplet.
@@ -416,9 +417,9 @@ k_c = 23 by at most 4×10⁻⁴ in λ (5×10⁻⁵ in γ) at D ≤ 9, well below
   same code so that the offsets of §7 can be extrapolated. Pilot: η = 1 from D = 10 to 10.5 at k_c = 23, which must
   reproduce a single smooth branch (the k_c = 15 runs gave two values at D = 10.475, one solution on the kernel, #845);
   stop condition: two solutions at the same D, constraint above 10⁻³, or three failed steps in a row.
-- **λ(D) past D = 11.** On the kernel λ falls through D = 11 at both couplings, and sigdss's turn and gauge-root
-  drift were sigdss's (§5, §6, #918). Whether λ(D) keeps falling toward 2 (γ rising toward 1/2), or levels off, is what
-  the kernel's chain past D = 11 must decide.
+- **λ(D) past D = 13.** On the kernel λ falls through D = 13 at both couplings (§11, #928), and sigdss's turn and
+  gauge-root drift were sigdss's (§5, §6, #918). Whether λ(D) keeps falling toward 2 (γ rising toward 1/2), or levels
+  off, needs the chain past D = 13 and a fit with a planted test.
 - **Mode count.** Complex growth rates and the opposite parity sector were not counted (§6). `sigdss_count.py`
   (argument principle over Re λ ∈ [0.05, 12], −ω/2 ≤ Im λ ≤ 3ω/2, light-cone resonance poles removed) is ready but not
   run or tested; at k_c = 15 it needs a few hundred complex mode matrices.
