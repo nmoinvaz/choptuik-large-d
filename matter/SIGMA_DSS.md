@@ -922,7 +922,7 @@ Rates at M = 32 ([`mode_table.py`](sigma_ms/mode_table.py), `sigma_ms/data/lam_D
 
 ### The chain and the growth rate past D 11 (#928)
 
-Raw `I928-mac/` 070e0b1f. The chains of #916 and #917 go on from D 11 to 13 in steps of 0.0625 at both couplings, with
+Raw `I928-mac/` 5dfa9ba9. The chains of #916 and #917 go on from D 11 to 13 in steps of 0.0625 at both couplings, with
 a rate at every point.
 
 In double-double the chain converges to max |F| ≤ 10⁻²⁸ up to D 12.46875 at η = 0.3 and D 12.34375 at η = 1. Past
