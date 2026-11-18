@@ -21,12 +21,12 @@
 //! endpoint maps, and the horizon LUs as the preparation of an evaluation.
 use crate::dd::DD;
 use crate::dv::DV;
-use crate::field::{cs, cs_range, cs_w, horner, DMat, Fl, State, TangentTail};
+use crate::field::{cs, cs_range, cs_w, horner, sums_at, DMat, Fl, State, SumAt, TangentTail};
 use crate::lane::{Dc, Fu, Fun, Lane, F8};
 use crate::linalg::{ld_for, DDLu, StaircaseLu};
 use crate::qv::QV;
 use multidouble::dual::Param;
-use multidouble::field::{cs_at, cs_range_at, cs_w_at};
+use multidouble::field::{cs_at, cs_w_at};
 use multidouble::native::{Dtn, Oun, OV};
 use multidouble::od::OD;
 use multidouble::precision::{Double, Precision};
@@ -443,41 +443,53 @@ pub fn centre_series_at<T: Lane, const B: usize>(
     mm[1].copy_at(&m1, j);
     aa[0].mul_at(&aa[0], j, &mut a2[0]);
     one.div_at(&cc[0], j, &mut kept[1]);
-    let (mut s, mut t, mut u) = (z, z, z);
+    // The sums of order k in five rounds, each round's sums independent and formed together (sums_at): those whose
+    // factors are all formed when k begins; (a q^2) and (a a^2); a^2_k; (c a^2) over i < k; those that read c_k. Each
+    // sum reads what it reads in centre_series, so the reordering changes no bit.
+    let (mut s, mut t, mut u, mut s1p, mut s1m, mut xcxp, mut xcxm, mut cp, mut cm) = (z, z, z, z, z, z, z, z, z);
+    let wi = |i: usize| i as f64;
     for k in 2..=kmax {
         let kf = k as f64;
+        let wk = |i: usize| (k - i) as f64;
         // p_k, m_k and a_k are zero where centre_series reads them before forming them
         let (pk, mk, ak) = (std::mem::replace(&mut pp[k], z), std::mem::replace(&mut mm[k], z), std::mem::replace(&mut aa[k], z));
-        cs_at(&mut t, pp, pp, k, j);
-        cs_at(&mut u, mm, mm, k, j);
+        sums_at(
+            vec![
+                SumAt::new(&mut t, pp, pp, k),
+                SumAt::new(&mut u, mm, mm, k),
+                SumAt::new(&mut a2p[k], aa, aa, k),
+                SumAt::new(&mut s1p, cc, pp, k).range(1, k - 1).weighted(&wk),
+                SumAt::new(&mut s1m, cc, mm, k).range(1, k - 1).weighted(&wk),
+            ],
+            j,
+        );
         q2[k].copy_at(&(t + u), j);
-        cs_at(&mut a2p[k], aa, aa, k, j);
-        cs_at(&mut s, aa, q2, k, j);
         std::mem::swap(&mut a2[k], &mut a2p[k]);
-        cs_at(&mut t3s[k], aa, a2, k, j);
+        sums_at(vec![SumAt::new(&mut s, aa, q2, k), SumAt::new(&mut t3s[k], aa, a2, k)], j);
         std::mem::swap(&mut a2[k], &mut a2p[k]);
         aa[k] = ak;
         t3s[k].mulp_at(&n1.mul_f(0.5), j, &mut t);
         au[k].copy_at(&(s.mulf(0.5) - t), j);
         au[k].mulp_at(&(T::P::one() / (T::P::from_f64(kf) + n1)), j, &mut aa[k]);
-        cs_at(&mut a2[k], aa, aa, k, j);
-        cs_range_at(&mut ccu[k], cc, a2, k, 0, k - 1, j);
+        sums_at(vec![SumAt::new(&mut a2[k], aa, aa, k)], j);
+        sums_at(vec![SumAt::new(&mut ccu[k], cc, a2, k).range(0, k - 1)], j);
         ccu[k].mulp_at(&(n1 * T::P::from_dd(recip_int(k))), j, &mut cc[k]);
         dapply_at(ctx, &pp[k - 1], j, &mut dpp[k - 1]);
         dapply_at(ctx, &mm[k - 1], j, &mut dmm[k - 1]);
         dpp[k - 1].mul_t_at(&omega, j, &mut t);
         dmm[k - 1].mul_t_at(&omega, j, &mut u);
         let (dp, dm) = (t.mul_pwr2(sig), u.mul_pwr2(sig));
-        let (mut s1p, mut s1m, mut xcxp, mut xcxm) = (z, z, z, z);
-        cs_w_at(&mut s1p, cc, pp, k, 1, k - 1, |i| (k - i) as f64, j);
-        cs_w_at(&mut s1m, cc, mm, k, 1, k - 1, |i| (k - i) as f64, j);
         let xpx = pp[k - 1].mulf(kf - 1.0).mul_pwr2(sig) - s1p;
         let xmx = mm[k - 1].mulf(kf - 1.0).mul_pwr2(sig) + s1m;
-        cs_w_at(&mut xcxp, cc, pp, k, 1, k, |i| i as f64, j);
-        cs_w_at(&mut xcxm, cc, mm, k, 1, k, |i| i as f64, j);
-        let (mut cp, mut cm) = (z, z);
-        cs_at(&mut cp, cc, pp, k, j);
-        cs_at(&mut cm, cc, mm, k, j);
+        sums_at(
+            vec![
+                SumAt::new(&mut xcxp, cc, pp, k).range(1, k).weighted(&wi),
+                SumAt::new(&mut xcxm, cc, mm, k).range(1, k).weighted(&wi),
+                SumAt::new(&mut cp, cc, pp, k),
+                SumAt::new(&mut cm, cc, mm, k),
+            ],
+            j,
+        );
         pp[k] = pk;
         mm[k] = mk;
         cpm[k].copy_at(&(cp + cm), j);
@@ -1318,15 +1330,42 @@ pub fn horizon_series_at<T: Lane, const B: usize>(
     ww[0].copy_at(&wfun(cc, 0), j);
     zc[0].copy_at(&zfun(cc, 0), j);
     one.div_at(&zc[0], j, &mut kept[1]);
-    let (mut t, mut u, mut s1, mut s2) = (z, z, z, z);
+    // The sums of order kk in five rounds, each round's sums independent and formed together (sums_at): those whose
+    // factors are all formed when kk begins; those that read c_(kk+1); those that read p_kk; (a q^2); a^2_(kk+1). Each
+    // sum reads what it reads in horizon_series, so the reordering changes no bit.
+    let (mut t, mut u, mut s1, mut s2, mut s1m, mut s2m, mut umm, mut taa2, mut wpu, mut zmu) = (z, z, z, z, z, z, z, z, z, z);
+    let wi = |i: usize| i as f64;
     for kk in 0..=ks {
         let kf = kk as f64;
         let ik1 = recip_int(kk + 1);
+        // past ks horizon_series forms neither a's nor m's next coefficient
+        let more = kk < ks;
+        // p_k is zero where horizon_series reads it before its solve
+        let pk = std::mem::replace(&mut pp[kk], z);
+        pmp[kk].copy_at(&(pp[kk] + mm[kk]), j);
         if alpha {
             am1[kk].copy_at(&(aa[kk].mulf(2.0) + a2[kk]), j);
-            cs_at(&mut ca1[kk], cc, am1, kk, j);
-        } else {
-            cs_at(&mut t, cc, a2, kk, j);
+        }
+        std::mem::swap(&mut pm[kk], &mut pmp[kk]);
+        if ctx.mutate == JET_MUT_AT_ROUND {
+            pp[kk] = pk;
+        }
+        let mut round = vec![
+            if alpha { SumAt::new(&mut ca1[kk], cc, am1, kk) } else { SumAt::new(&mut t, cc, a2, kk) },
+            SumAt::new(&mut s2, cc, pp, kk),
+            SumAt::new(&mut cpmr[kk], cc, pm, kk),
+            SumAt::new(&mut umm, mm, mm, kk),
+        ];
+        if more {
+            round.push(SumAt::new(&mut taa2, aa, a2, kk));
+            round.push(SumAt::new(&mut s2m, cc, mm, kk));
+        }
+        sums_at(round, j);
+        if ctx.mutate == JET_MUT_AT_ROUND {
+            pp[kk] = z;
+        }
+        std::mem::swap(&mut pm[kk], &mut pmp[kk]);
+        if !alpha {
             ca1[kk].copy_at(&(t - cc[kk]), j);
         }
         ca1[kk].mulp_at(&n1, j, &mut t);
@@ -1338,58 +1377,52 @@ pub fn horizon_series_at<T: Lane, const B: usize>(
         vv[kk].copy_at(&v_k, j);
         let z_next = zfun(cc, kk + 1) - zfun(cc, kk).mul_pwr2(sig);
         zc[kk + 1].copy_at(&z_next, j);
-        // p_k is zero where horizon_series reads it before its solve
-        let pk = std::mem::replace(&mut pp[kk], z);
-        pmp[kk].copy_at(&(pp[kk] + mm[kk]), j);
-        let mut wpu = z;
-        cs_w_at(&mut wpu, pp, ww, kk + 1, 0, kk, |i| i as f64, j);
-        let wpu = wpu.mul_pwr2(isig);
+        let mut round = vec![SumAt::new(&mut wpu, pp, ww, kk + 1).range(0, kk).weighted(&wi), SumAt::new(&mut s1, vv, pp, kk)];
+        if more {
+            round.push(SumAt::new(&mut zmu, mm, zc, kk + 1).range(0, kk).weighted(&wi));
+            round.push(SumAt::new(&mut s1m, vv, mm, kk));
+        }
+        sums_at(round, j);
+        let wpus = wpu.mul_pwr2(isig);
         let tau = if kk >= 1 { -dp[kk - 1].mul_pwr2(sig) } else { z };
-        cs_at(&mut s1, vv, pp, kk, j);
-        cs_at(&mut s2, cc, pp, kk, j);
-        std::mem::swap(&mut pm[kk], &mut pmp[kk]);
-        cs_at(&mut cpmr[kk], cc, pm, kk, j);
-        std::mem::swap(&mut pm[kk], &mut pmp[kk]);
         cpmr[kk].mulp_at(&nh, j, &mut t);
-        let r = (((tau - wpu) + s1) + s2) - t;
+        let r = (((tau - wpus) + s1) + s2) - t;
         pp[kk] = pk;
         let c1 = cc[1].mul_pwr2(isig);
         let kappa = ((c1 + one).mulf(kf) + c1 + one).addp(-nh_kappa);
         psolve_at(ctx, prep, kk, &kappa, &(-r), &omega, &mut pp[kk], j);
         dapply_at(ctx, &pp[kk], j, &mut dpp[kk]);
         dpp[kk].mul_t_at(&omega, j, &mut dp[kk]);
-        cs_at(&mut t, pp, pp, kk, j);
-        cs_at(&mut u, mm, mm, kk, j);
-        q2[kk].copy_at(&(t + u), j);
+        if more {
+            pm[kk].copy_at(&(pp[kk] + mm[kk]), j);
+        }
+        let mut round = vec![SumAt::new(&mut t, pp, pp, kk)];
+        if more {
+            round.push(SumAt::new(&mut cpmf[kk], cc, pm, kk));
+        }
+        sums_at(round, j);
+        q2[kk].copy_at(&(t + umm), j);
         if kk == ks {
             break;
         }
         let ag = if alpha {
-            cs_at(&mut t, aa, a2, kk, j);
-            agu[kk].copy_at(&(-((aa[kk].mulf(2.0) + a2[kk].mulf(3.0)) + t)), j);
-            cs_at(&mut u, aa, q2, kk, j);
+            agu[kk].copy_at(&(-((aa[kk].mulf(2.0) + a2[kk].mulf(3.0)) + taa2)), j);
+            sums_at(vec![SumAt::new(&mut u, aa, q2, kk)], j);
             agu[kk].mulp_at(&n1, j, &mut t);
             (q2[kk] + u) + t
         } else {
-            cs_at(&mut u, aa, q2, kk, j);
-            cs_at(&mut t, aa, a2, kk, j);
-            agu[kk].copy_at(&(aa[kk] - t), j);
+            sums_at(vec![SumAt::new(&mut u, aa, q2, kk)], j);
+            agu[kk].copy_at(&(aa[kk] - taa2), j);
             agu[kk].mulp_at(&n1, j, &mut t);
             u + t
         };
         let a_next = (aa[kk].mulf(kf) - ag.mulf(0.5)).muls(ik1).mul_pwr2(sig);
         aa[kk + 1].copy_at(&a_next, j);
-        cs_at(&mut a2[kk + 1], aa, aa, kk + 1, j);
+        sums_at(vec![SumAt::new(&mut a2[kk + 1], aa, aa, kk + 1)], j);
         let tau = if kk >= 1 { dm[kk] - dm[kk - 1].mul_pwr2(sig) } else { dm[kk] };
-        pm[kk].copy_at(&(pp[kk] + mm[kk]), j);
-        let mut zmu = z;
-        cs_w_at(&mut zmu, mm, zc, kk + 1, 0, kk, |i| i as f64, j);
-        let zmu = zmu.mul_pwr2(isig);
-        cs_at(&mut s1, vv, mm, kk, j);
-        cs_at(&mut s2, cc, mm, kk, j);
-        cs_at(&mut cpmf[kk], cc, pm, kk, j);
+        let zmus = zmu.mul_pwr2(isig);
         cpmf[kk].mulp_at(&nh, j, &mut t);
-        rest[kk].copy_at(&((((tau - zmu) - s1) - s2) + t), j);
+        rest[kk].copy_at(&((((tau - zmus) - s1m) - s2m) + t), j);
         rest[kk].mul_at(&kept[1], j, &mut u);
         mm[kk + 1].copy_at(&u.muls(ik1).mul_pwr2(sig), j);
         dapply_at(ctx, &mm[kk + 1], j, &mut dmm[kk + 1]);
@@ -1786,6 +1819,10 @@ pub const JET_MUT_AT_KEEP: u8 = 24;
 /// the control of the octo-double Jacobian with several tangents per evaluation (Ctx::mutate): each evaluation's
 /// tangents read in reverse order (multishoot's `Control::TangentOrder`), so its columns land in one another's places
 pub const JAC_MUT_TANGENT_ORDER: u8 = 25;
+/// the control of the order-k sums formed together (Ctx::mutate): `horizon_series_at` forms its first round of sums with
+/// p_k in place, as a sum moved past p_k's solve would read it, so (c p)_k reads p_k's lower coefficients where
+/// `horizon_series` reads zero
+pub const JET_MUT_AT_ROUND: u8 = 26;
 
 /// the dimension in the lane's parameter arithmetic (multidouble's Param): the double-double scalar on every lane
 /// but a jet, bit for bit as before; on a jet the series n + h, so the coefficients carry their own derivatives in
