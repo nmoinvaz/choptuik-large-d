@@ -129,6 +129,7 @@ macro_rules! make_ctx {
                 mutate: 0,
                 f64_dd: 0,
                 horizon_alpha: 0,
+                series_split: 0,
             }) as Box<dyn CApi>, )*
             _ => return Err(PyValueError::new_err("M must be one of 16, 32, 40, 48, 64, 80")),
         }
