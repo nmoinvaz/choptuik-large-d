@@ -1240,6 +1240,13 @@ inside u₀ = 0.3 at every D of #603's chain. The re-seed's quad-double polish s
 from D 249.39 on are that start's (notes/HORIZON_RADIUS.md). The chain's own data, about 1e-39 off, have a radius of
 0.71–0.77 there.
 
+**Discrepancy, unexplained (#950, #903).** On the order-tied chain the re-seed's acceptance edge does not follow the
+line's level. Replayed offline from the chain's saved series (`hp/step_rule_check.py offline`), the edge sits at
+1.2–1.9 times the line on leg 6 (ks 230) and 0.067–0.076 times it on leg 7 (ks 240), a twentyfold drop at the order
+change. On leg 7 one level separates its 19 accepted from its 5 failed re-seeds, while on leg 6 no single level on the
+line's D trend does. `anm_run.py --a_rule reseed` keeps the line's D and u₀ dependence and learns its level within each
+run for this reason.
+
 ### 13.7 T1–T4 in the prototype: the collocation block fails T3 (2026-11-03 19:00 UTC)
 
 `solver/dss_colloc.py` is the block of 13.2 inside the reference solver (`dss.py`, DSSMulti): the kernel's stored
