@@ -18,8 +18,8 @@ direction for issue #979; not reviewed. Status words as in AGENTS.md.
   M = 9 measures. The measured κ₅ and κ₇ compare δ₃ with δ₁ and δ₅ with δ₃. They support (R) by extrapolation only, and
   the first coupling ratio wholly inside (★)'s range is also M = 9's (§2.2).
 - **The M = 7 error bar is not the binding input.** Across rtol 10⁻¹² to 10⁻¹⁴ on x86 and aarch64, κ₇ stays in −0.0485
-  to −0.0488 and the limit in 0.999985–0.999991 (§2.3). Radius independence (Lemma R) is untested at 2×10⁻⁵. It tests
-  the numerics, not (★).
+  to −0.0488 and the limit in 0.999985–0.999991 (§2.3). The zero has converged in rtol from 10⁻¹³ on, at the size of
+  its noise estimates (#977). Radius independence (Lemma R) is untested at 2×10⁻⁵. It tests the numerics, not (★).
 - **One step of B_tail_M7.md §5.2 does not follow.** (T1) and (T2) are upper bounds. They give a geometric bound on
   |δ_M|, not the ratio inequality (R) (§1.3). The telescoping still closes from (T1)–(T3), but it then needs Λ and C_f
   explicitly, in place of the measured sup|δ₅|.
@@ -145,17 +145,23 @@ The zero at ξ₁ = 0.15 by integrator tolerance and machine, with what `trunc_s
 | 10⁻¹³ | win2, x86 (#975) | (2.719240, 1.000025) | 4.1×10⁻⁶ | −0.0487 | 0.851 | 0.999988 | 0.248 |
 | 10⁻¹³ | rpi5, aarch64 (#965) | (2.719236, 1.000028) | 5.8×10⁻⁶ | −0.0488 | 0.854 | 0.999991 | 0.249 |
 | 10⁻¹³ | rpi5, aarch64 (#974 run 4, 4 centre solves) | (2.719236, 1.000026) | 9.9×10⁻⁶ | −0.0487 | 0.852 | 0.999989 | 0.248 |
+| 10⁻¹³ | win2 (#977 run 2, perturbed repeats) | (2.719243, 1.000026) | 4.6×10⁻⁶ | −0.0487 | 0.851 | 0.999989 | 0.248 |
 | 10⁻¹⁴ | win2 (#976) | (2.719232, 1.000023) | 7.7×10⁻⁶ | −0.0485 | 0.848 | 0.999986 | 0.246 |
+| 10⁻¹⁴ | win2 (#976 and #977 run 1, 3 centre solves) | (2.719234, 1.000025) | 9.1×10⁻⁶ | −0.0486 | 0.850 | 0.999988 | 0.247 |
 
-The estimate column is `m7_outer.py --local`'s noise estimate from repeated centre solves. It is not an enclosure. Every
-row passes fit3_repeat's harmonics to `trunc_seq_M7.py`, since the newer runs' states were not read here, so g₇ holds
+The estimate column is `m7_outer.py --local`'s estimate (noise plus Jacobian terms) from repeated centre solves. It is
+not an enclosure. Every row passes fit3_repeat's harmonics to `trunc_seq_M7.py`, since the newer runs' states were not
+read here, so g₇ holds
 |F₇/F₅| = 0.0572 fixed.
 
-- Across the rows the zero moves by at most 2.0×10⁻⁵ in A and 6×10⁻⁶ in ω/ω∞. κ₇ moves by 3×10⁻⁴, under 1%. The tail
+- Across the rows the zero moves by at most 2.3×10⁻⁵ in A and 6×10⁻⁶ in ω/ω∞. κ₇ moves by 3×10⁻⁴, under 1%. The tail
   above M = 7 stays near 0.25 in r₁, and the margin for a 10⁻³ box stays at 16.
 - In A the ratio (A₇ − A₅)/(A₅ − A₃) runs from −0.081 to −0.084 over the rows. It is more sensitive, since 2×10⁻⁵ is 3%
   of A's increment of 6.4×10⁻⁴ (arithmetic on the table and B_tail_M7.md §3).
-- #977 (10⁻¹³ and 10⁻¹⁴ under one repeat rule) had not posted a result when this was written.
+- Under one repeat rule the 10⁻¹³ and 10⁻¹⁴ zeros are 8.4×10⁻⁶ apart, against estimates of 4.6×10⁻⁶ and 9.1×10⁻⁶
+  (#977). So the zero has converged in rtol from 10⁻¹³ on, at the size of these estimates, and the stored 10⁻¹² zero is
+  low in A by 1.4×10⁻⁵ (against the 10⁻¹⁴ zero) to 2.3×10⁻⁵ (against the 10⁻¹³ zero). #977 notes that each estimate
+  rests on 2 or 3 distinct centre solves.
 
 For (★), the M = 7 zero is settled enough. Its open part is the radius check below.
 
@@ -309,10 +315,10 @@ from the timings in #965 and #974.
 (T1) and (H_∞)".
 
 **proof/B_tail_M7.md** §9, the row of the M = 7 zero, append: "rtol 10⁻¹³ and 10⁻¹⁴ on x86 and aarch64 move it by at
-most 2.0×10⁻⁵ in A and 6×10⁻⁶ in ω/ω∞ (#965, #975, #976), and four centre solves at ξ₁ = 0.15 give a noise estimate
-of 9.9×10⁻⁶ (#974). Radius independence is untested at 2×10⁻⁵. The ξ₁ = 0.14
-zero's noise estimate is 1.2×10⁻³ (#974), and ξ₁ = 0.16 gives no accepted zero (#964, #965)." Revise this once #977
-posts.
+most 2.3×10⁻⁵ in A and 6×10⁻⁶ in ω/ω∞ (#965, #975, #976, #977). Under one repeat rule the 10⁻¹³ and 10⁻¹⁴ zeros agree
+within their noise estimates (#977), so the 10⁻¹² zero quoted here is low in A by 1.4–2.3×10⁻⁵. Four centre solves at ξ₁
+= 0.15 give a noise estimate of 9.9×10⁻⁶ (#974). Radius independence is untested at 2×10⁻⁵. The ξ₁ = 0.14 zero's noise
+estimate is 1.2×10⁻³ (#974), and ξ₁ = 0.16 gives no accepted zero (#964, #965)."
 
 ## 6. Discrepancies
 
@@ -321,8 +327,9 @@ posts.
    defined.
 3. B_tail_M7.md §9 lists κ₅ = −0.069 and κ₇ = −0.049 as the numerical evidence for (R). Both lie outside (R)'s stated
    range M ≥ 5 (§2.2). That is not wrong, but the evidence is an extrapolation.
-4. At rtol 10⁻¹³ the M = 7 zero moved by 2.04×10⁻⁵ in A, 2% beyond the quoted ±2×10⁻⁵ (#975). At 10⁻¹⁴ it came back to
-   within it (#976). Those issues already report this, and it changes none of (★)'s inputs by more than 1% (§2.3).
+4. The quoted M = 7 zero, (2.71922, 1.000022) ± 2×10⁻⁵ at rtol 10⁻¹², is low in A by 1.4×10⁻⁵ to 2.3×10⁻⁵ against
+   the rtol-converged zeros of #977, at or just beyond its own error bar. #975 and #977 already report this. It changes
+   none of (★)'s inputs by more than 1% (§2.3).
 
 ## 7. Reproduce
 
@@ -335,7 +342,9 @@ python3 trunc_seq_M7.py --c7=1.000022,2.719219,$X          # rtol 1e-12 (stored)
 python3 trunc_seq_M7.py --c7=1.000025476,2.719240421,$X    # rtol 1e-13, win2 (#975): -0.0487, 0.851, L 0.999988, 0.248
 python3 trunc_seq_M7.py --c7=1.000028,2.719236,$X          # rtol 1e-13, rpi5 (#965): -0.0488, 0.854, L 0.999991, 0.249
 python3 trunc_seq_M7.py --c7=1.000026,2.719236,$X          # rtol 1e-13, rpi5 (#974): -0.0487, 0.852, L 0.999989, 0.248
+python3 trunc_seq_M7.py --c7=1.000025865,2.719242554,$X    # rtol 1e-13, win2 (#977 run 2): -0.0487, 0.851, L 0.999989, 0.248
 python3 trunc_seq_M7.py --c7=1.000022996,2.719232205,$X    # rtol 1e-14, win2 (#976): -0.0485, 0.848, L 0.999986, 0.246
+python3 trunc_seq_M7.py --c7=1.000024742,2.719234224,$X    # rtol 1e-14, win2 (#976 + #977 run 1): -0.0486, 0.850, L 0.999988, 0.247
 ```
 
 The remaining numbers derived here are arithmetic on quoted values, with the formula given where they appear: ½ ln g,
