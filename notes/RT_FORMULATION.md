@@ -1820,7 +1820,9 @@ not to the roots themselves.
   10⁻¹³.
 - **Section 10's cause.** Section 10 attributes the weak direction to the horizon's singular branch. That is not
   confirmed. The rows exclude λ₂'s branch without changing the outcome, λ₄'s branch cannot be told apart from smooth
-  at these N, and the weakest directions measured (13.7) do not follow either exponent in D.
+  at these N, and the weakest directions measured (13.7) do not follow either exponent in D. Caveat (2026-11-18):
+  those gains are rough bounds read at roots, which §14 found to measure the distance from a set of roots (#963), so a
+  trend in D read from them is not a measurement of a weak direction (notes/P7_scope.md §3.5).
 - **Section 11's N mod 4 families.** They depend on the collocation rows near ξ = −1. With K = 7 Taylor rows there,
   the difference between the families' pairs disappears at D = 60 (13.6).
 - **Starts.** A root of one grid is a root of the next to about 10⁻³⁰. From it, Newton on the other grid jumps to a

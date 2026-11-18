@@ -396,9 +396,10 @@ and if that zero is the unique simple zero in a box containing the numerical lim
   the numerically extrapolated ω∞ = 3.82213590 (±4×10⁻⁸) and A∞ ≈ 2.70–2.72. A box of radius 10⁻³ suffices for the
   identification; it does not need the numerics' digits.
 - **That the computed branch is the branch of Theorem B.** The double-double solutions at D = 8.25–67.77 are numerical.
-  A Reiterer–Trubowitz-style computer-assisted existence proof at one large D (say D = 40–60), with the certified solution
-  inside the basin of Theorem B's construction, would close this; alternatively, Theorem B's construction at n ≥ n₀ with
-  explicit n₀ and a certified solution at some D ≥ n₀ + 2.
+  A certified solution at one D is necessary but not sufficient. Theorem B's uniqueness class exists only for n ≥ n₀,
+  so the identification needs an explicit n₀ ≤ D − 2 for the equations the solvers solve, and a certified solution at
+  that D inside the class. For the one-harmonic model n₀ = e^{89.75}. The scoping is
+  [notes/P7_scope.md](notes/P7_scope.md).
 
 The numerical agreement (ω*/ω∞ = 0.999975–1.00005 under the assumption above) then becomes a consistency check of the
 theorem rather than its basis.
