@@ -1952,5 +1952,9 @@ The medians behind R, over the same 48 right-hand sides:
   is 10⁻¹⁰ to 10⁻¹² of the random moves' at the same δ. That is the pre-set reading "along a family": at D 40.02 the
   RT system's roots form a set with a − c tangent to it, so the system lacks at least one condition. Raw `I968-win/`
   (982bf580).
-- Open: sample b lies off the line through c and a (cosine 0.234). If b − c is also tangent, the set is at least
-  two-dimensional (#969).
+- **b − c is tangent too, so the set of roots is at least two-dimensional (#969).** Sample b lies off the line through
+  c and a (cosine 0.234; 97% of b − c is orthogonal to a − c). Moving c toward b gives medians of 1.6×10⁻³³ and
+  4.8×10⁻³³ at δ = 10⁻²⁰ and 10⁻¹⁹, 3×10⁻¹⁰ and 2×10⁻¹¹ of the random moves', the pre-set reading "along the root set".
+  μ is the largest entry of both differences but under 1% of either in the 2-norm. Raw `I969-win/` (0e8e685e).
+- Open: whether the whole plane of a − c and b − c is tangent, tested inside it (#972), and how many conditions
+  the RT system at D 40.02 lacks.
