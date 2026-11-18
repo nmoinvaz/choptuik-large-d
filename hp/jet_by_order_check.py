@@ -17,9 +17,10 @@ their tangents (series_o's tangent_from, multishoot's JetSession::tangent_from) 
 twice. Pass, fixed before the first run: z_1..z_F the same bits; and the moved series solves the order equations as
 well as the other, max over k of rho_k <= 2^10 times the other's, where rho_k = max |F_k| / max |z_k| and F_k is
 order k of residual_jet_o on z_0..z_N (one jet of N + 1 coefficients per series). Reported: the seconds of each
-form, their ratio, and max |z_k - z'_k| / max |z_k| per order (rounding amplified by the Jacobian's condition, not a
-pass criterion). Control, which must fail the rho test: the tangent update without the kept series
-(model::JET_MUT_TANGENT_KEEP) at order Np."""
+form and their ratio. The two series also agree, max |z_k - z'_k| / max |z_k| <= 1e-40 at every order (rounding
+amplified by the Jacobian's condition: at most 6.7e-46 in #957's runs at D 229.05 and 232.0, rho alone being the
+same for both forms to the bit). Controls: the tangent update without the kept series (model::JET_MUT_TANGENT_KEEP)
+at order Np must fail the rho test, and the moved series with order Np scaled by 1 + 1e-30 must fail the agreement."""
 import json
 import sys
 import time
@@ -28,6 +29,7 @@ import numpy as np
 
 JET_MUT_AT_KEEP = 24
 JET_MUT_TANGENT_KEEP = 28
+REL_MAX = 1e-40
 
 
 def same_words(p, q):
@@ -81,11 +83,20 @@ def tangent_mode(s, zo, opt, state, t_lu):
     t_one = time.time() - t0
     d = differ(A, Bz)
     low = [k for k in d if k <= F]
-    rel = []
-    for k in range(1, N + 1):
-        diff = od_axpy(-1.0, *(np.ascontiguousarray(np.asarray(p)) for p in Bz[k]),
-                       *(np.ascontiguousarray(np.asarray(p)) for p in A[k]))
-        rel.append(float(np.max(np.abs(diff[0]))) / max(float(np.max(np.abs(np.asarray(A[k][0])))), 1e-300))
+    c8 = lambda z8: [np.ascontiguousarray(np.asarray(p)) for p in z8]
+
+    def agree(Z):
+        """max |z_k - z'_k| / max |z_k| per order, z' of Z and z of the twice-formed series, in octo-double"""
+        out = []
+        for k in range(1, N + 1):
+            diff = od_axpy(-1.0, *c8(Z[k]), *c8(A[k]))
+            out.append(float(np.max(np.abs(diff[0]))) / max(float(np.max(np.abs(np.asarray(A[k][0])))), 1e-300))
+        return out
+    rel = agree(Bz)
+    # control: order Np of the moved series scaled by 1 + 1e-30, which the agreement must refuse
+    Pz = list(Bz)
+    Pz[Np] = list(od_axpy(1e-30, *c8(Bz[Np]), *c8(Bz[Np])))
+    rel_c = agree(Pz)
     print(f"  N {N}: formed twice {t_two:.1f} s, moved from order {F} {t_one:.1f} s, ratio {t_two / t_one:.2f}; "
           f"orders <= {F} that differ {low}", flush=True)
     print("  max |z_k - z'_k| / max |z_k|: " + " ".join(f"{k + 1}:{r:.1e}" for k, r in enumerate(rel)), flush=True)
@@ -95,13 +106,16 @@ def tangent_mode(s, zo, opt, state, t_lu):
     Cz = [A[0]] + [list(z8) for z8 in s.series_o(list(zo), Np, None, mutate=JET_MUT_TANGENT_KEEP, tangent_from=F)]
     rC = rho(s, Cz, Np)
     print(f"  control, the kept series not moved: rho max {max(rC):.2e}", flush=True)
-    ok = not low and max(rB) <= bound
-    controls = max(rC) > bound
+    ok = not low and max(rB) <= bound and max(rel) <= REL_MAX
+    controls = max(rC) > bound and max(rel_c) > REL_MAX
     summ = dict(state=state, N=N, Np=Np, tangent_from=F, threads=opt["threads"], s_lu=round(t_lu, 2),
                 s_twice=round(t_two, 2), s_tangent=round(t_one, 2), ratio=round(t_two / t_one, 3), differ_low=low,
-                rel=rel, rho_twice=rA, rho_tangent=rB, rho_control=rC, passed=ok, controls_fired=controls)
+                rel=rel, rel_control=rel_c, rho_twice=rA, rho_tangent=rB, rho_control=rC, passed=ok,
+                controls_fired=controls)
     print(f"  {'PASS' if ok else 'FAIL'}: orders 1..{F} the same bits {'yes' if not low else 'NO'}, rho within the "
-          f"bound {'yes' if max(rB) <= bound else 'NO'}; control {'fired' if controls else 'DID NOT FIRE'}", flush=True)
+          f"bound {'yes' if max(rB) <= bound else 'NO'}, agreement max {max(rel):.1e} (<= {REL_MAX:.0e} "
+          f"{'yes' if max(rel) <= REL_MAX else 'NO'}); controls: rho {max(rC):.1e}, agreement {max(rel_c):.1e}, "
+          f"{'fired' if controls else 'DID NOT FIRE'}", flush=True)
     if opt["out"]:
         with open(opt["out"] + ".json", "w") as f:
             json.dump(summ, f, indent=1)
