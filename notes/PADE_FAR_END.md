@@ -2450,3 +2450,79 @@ In 7.4, at the end of the bullet "With the zero in place, a set near P0 + κ⋆ 
 +  With the zero held the profile depends on |t|, but is 12.5–46 times the real one's everywhere
 +  (notes/PADE_FAR_END.md §17).
 ```
+
+## 18. The far Padé poles alone: a scan of second sets for (b) (#747)
+
+#703 and #718 judged (a), (b) and (c′) together, and no plant of either had the far Padé poles within 0.136. (b) was
+never the target of a scan, and the (c′) window kept every strength at or below η = 0.2. Here (b) is scanned alone, over
+end points and cut directions wider than #718's, with strengths that (c′) would have excluded, before any joint judge.
+
+### 18.1 Method
+
+`solver/inner_amp/pade_far_poles.py`, on #718's code (`pade_second_ring`, `pade_second_zero`, `pade_second_set`, called
+unchanged).
+
+- **Plants.** #718's (§16.1): `ZMain` at ZLOC, `second_part`, `make_plant`, the main density refitted to the real σ₀–σ₁₂
+  minus the second set's part. The second set is the density s⁴ (1 − s)^α on the segment from A = Q − L e^{iθ} to Q,
+  with Q = P0 + κ⋆ + o at each node, o the offset. Radial means θ = arg Q at the node, which is #718's segment
+  (`ring_curve`). Horizontal means θ = 0, so the cut runs left from Q, the way #541's three poles line up (1.355 +
+  1.051i, 1.407 + 1.061i, 1.457 + 1.069i at ω∞, collinear within 0.01). Its strength is the share η e^{iφ} of σ₂₂(real),
+  as in §15.
+- **The judge.** `pade_record`'s d_P: the largest over k = 8, 9, 10 of the distance from #541's pole REF541[ω][k] to the
+  nearest pole of the [k/k] approximant of a_j = j! σ_j, j ≤ 2k, at 120 digits. (b) passes at a node if d_P ≤ 0.03
+  (#667's). The scan computes the poles only (`mp.pade` and `mp.polyroots` of the denominator, as `pade_geometry.pade`
+  does), which is about 0.38 s a plant against 0.67 s, and R1 checks it bit for bit against `pade_record`.
+- **Admissible.** A plant is admissible if its main fit reproduces σ₀–σ₁₂ within 1e-2 (`fit_resid`, at M = 6, or 8
+  when 6 gives more). Past 1e-2 the plant is not a member of #667's family, and does not count.
+- **A plant passes** if it is admissible and has d_P ≤ 0.03 at ω/ω∞ = 0.99, 1.00 and 1.01 with the same η, φ, shape and
+  offset. A lattice position passes if a plant there does.
+- **The measured cost** of one plant on the rpi5 is 0.4 s with the poles-only path and 36 MB, so the grid below, the
+  refinement and the controls come to about 4 h, inside the 6 h one process may take here beside the other jobs.
+
+### 18.2 Frozen criteria
+
+Written here, and committed, before any plant was judged. The script's `FROZEN` repeats them.
+
+| check | criterion |
+|---|---|
+| stage A, at ω∞ | Q = P0 + κ⋆ + 0.25 (a + ib), a, b = −3, …, 4 (64 positions, with #718's 42, a ≥ −1 and b ≥ −2, inside). Groups (kind, L, direction): (chord2, 0.3, radial), (arc, 0.3, radial), (chord2, 0.3, horizontal), (chord2, 0.6, horizontal); near-end exponent 4. α = 0 or β − 1. η = 10^(−6 + j/2), j = 0, …, 12 (1e-6 to 1). φ = 0°, 90°, 180°, 270°. That makes 26624 plants, in the order a, b, group, α, η, φ |
+| stage A cap | stage A stops after 4 h of its own wall time, and the positions not reached are listed as left out |
+| stage B | from the 8 best stage-A starts (admissible, smallest d_P at ω∞, one per (kind, a, b, group, α)), Nelder–Mead (`scipy.optimize.minimize`) on x = (log₁₀ η, φ°, Re o, Im o, L, θ°), kind, α and near-end exponent held, with the objective D₃ = the largest d_P over the three nodes, or 1 + the largest `fit_resid` if a node is inadmissible, or 10 if a Padé fails. The offset is held at every node as in stage A and θ is absolute (a radial start takes θ = arg Q at ω∞). Initial simplex x₀ + s_i e_i, s = (0.5, 45, 0.06, 0.06, 0.08, 20), the sign flipped at a bound. Bounds: log₁₀ η in [−6, 0], Re o and Im o in [−1, 1.25], L in [0.05, 1.2]. At most 200 evaluations, `xatol` 1e-3, `fatol` 1e-5 |
+| stage C | every admissible stage-A plant with d_P ≤ 0.06 at ω∞ (the 300 smallest if more) runs at ω/ω∞ = 0.99 and 1.01 |
+| passes | as in 18.1 |
+| the answer | **yes**, a second set of this family gives (b), if any plant of stages A to C passes. **No**, if none does, which is then a statement about this family and its strengths only, with what the scan left out stated beside it |
+| located | #718's rule on the 64 lattice positions, with a position's status pass or fail by its stage-A plants at ω∞ and stage C. A passing position whose four lattice neighbours exist and fail is a candidate. Its diagonal points are not run, so no position is located here and the stage 2 is a recommended task |
+| closest | D₃ for every plant run at the three nodes, and the smallest d_P at ω∞ over every plant. Context, not judged: the smallest d_k per k over stage A, the map of the smallest d_P per position, and the shares of σ₁₂ and σ₂₂ of the closest plants |
+| R1, selftest | the poles-only d_P equals `pade_record`'s bit for bit, and the nearest poles too, for 6 plants at ω∞ (chord2 and arc, η = 0, a radial and a horizontal second set). `--mutate=prec` (the poles-only path at 30 digits) must fail it |
+| R2, selftest | the radial curves equal `ring_curve`'s bit for bit at the 64 positions and L = 0.3, 0.6. The horizontal curves have A = Q − L exactly. The second set's exact moments on a horizontal and a θ = 30° segment against `mpmath.quad` at k = 0, 7, 15, 22, 31 within 1e-40 relative. `--mutate=dir` (θ + 10⁻⁶ rad) must fail it |
+| R3, selftest | the point masses' moments, mom_k = Σ_j w_j t_j^k / k!, against `mpmath` powers at 60 digits for k = 0, 7, 15, 22, 31, within 1e-50 relative. `--mutate=pole_w` (one weight × (1 + 10⁻⁶)) must fail it |
+| R4, regression | 12 of #718's plants through this path, the first record at ω∞ of `I718-mac/ring.jsonl` for each of (chord2, arc) × L = 0.3 radial positions (+1, +1), (0, 0), (−1, −1) × α = 0, β − 1: d_P within 10⁻⁶ relative of the stored one (the Mac's `lstsq` and this machine's differ in the last digits). `control --mutate=len` (L × 1.01) must fail it |
+| J+ | the real series' d_P ≤ 1e-9 at every node |
+| J− | the η = 0 chord2 and arc plants at ω∞ have d_P > 0.03, and within 10⁻⁶ relative of #718's (`I718-mac/pilot.json`, 0.219 and 0.225) |
+| P, planted truth | the main chord2, and the main arc, with three point masses at REF541[ω][8], [9] and [10] of the node, equal weights, φ = 0, the share η_P of σ₂₂ for η_P = 10^(−3 + j/2), j = 0, …, 6 (1e-3 to 1). For each main kind, some rung has d_P ≤ 0.03 at all three nodes, admissible or not. The lowest such rung that is admissible, if there is one, is the sensitivity, and is reported. The same plant with no point masses is J− |
+| `--mutate=shift_poles` | the reference poles moved by +0.05: every rung of P and J+ must fail at some node. The run exits 1 |
+| gate | stage A runs only if the selftest, J+, J−, P and R4 pass. A stage runs on the records of the one before |
+| exits | 0 all pass. 1 a control failed, or a mutation fired as it must. 2 a mutation did not fire. A verdict is not a failure |
+
+The planted truth shows what the scan can see. A pole that holds less than the lowest passing rung of P is below its
+sensitivity, whatever the verdict says about the family.
+
+Seen before the freeze, and disclosed.
+
+- #703's and #718's published d_P: the smallest is 0.136 over #703's 94 plants at three nodes, 0.139 at ω∞ over #718's
+  5392 plants, 0.232–0.270 for the 197 that pass (a) and (c′) at all three nodes, and 0.219 and 0.225 for the η = 0
+  plants (§15.5, §16.3, §16.4). No d_P of `I718-mac/ring.jsonl` was read before the freeze, and R4 reads 12 of them as a
+  regression.
+- #541's reference poles REF541, printed from `pade_twin_end` for the choice of the horizontal direction.
+- A timing check of one plant (chord2, radial position (+1, +1), L = 0.3, α = 0, η = 1e-2 and 1e-1, φ = 0), once with
+  `pade_record` and once through `mp.pade` and `mp.polyroots` piece by piece, printed times and memory, no d_P. It gave
+  0.67 s and 0.38 s a plant, and 36 MB.
+- The grid's directions and lengths were chosen from the reference poles' geometry and the measured cost, not from any
+  d_P of a plant.
+
+What the budget left out, so that "no" is read as a statement about this family only: second sets other than one
+segment with near-end exponent 4 (no arcs, no two segments, no steps, no point masses outside P); lengths other than 0.3
+and 0.6 and directions other than radial and horizontal on the grid (stage B moves them, from 8 starts); the arc main
+density in the radial group only; strengths above η = 1; the zero factor, held at ZLOC as in §15–§17; the Padé poles of
+k = 8, 9, 10 only, from σ₀–σ₂₀; and (a) and (c′), which are not judged here. A joint judge of whatever passes is a
+recommended task.
