@@ -20,14 +20,24 @@ import numpy as np
 JET_MUT_AT_KEEP = 24
 
 
+def same_words(p, q):
+    """p and q the same in every finite word, bit for bit, and non-finite at the same places; an inf's or a NaN's sign
+    and payload bits are not compared, since they can differ from run to run (at ks 240 the planted change drives the
+    last orders past double range in both forms, #954)"""
+    p, q = np.asarray(p), np.asarray(q)
+    fp, fq = np.isfinite(p), np.isfinite(q)
+    return np.array_equal(fp, fq) and np.array_equal(p[fp].view(np.uint64), q[fq].view(np.uint64))
+
+
 def differ(A, B):
-    """the orders k >= 1 at which the series A and B differ in any bit of any part"""
+    """the orders k >= 1 at which the series A and B differ in any bit of any finite word, or in where they are
+    non-finite"""
     out = []
     for k in range(1, max(len(A), len(B))):
         if k >= len(A) or k >= len(B):
             out.append(k)
             continue
-        if any(not np.array_equal(np.asarray(p).view(np.uint64), np.asarray(q).view(np.uint64)) for p, q in zip(A[k], B[k])):
+        if any(not same_words(p, q) for p, q in zip(A[k], B[k])):
             out.append(k)
     return out
 
