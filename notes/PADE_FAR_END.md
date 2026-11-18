@@ -2884,7 +2884,7 @@ E3 and E4 are in the script's `members`.
 
 ### 19.7 Development, round 2
 
-`develop ... E3,E4` (`I668-rpi5/development_r1.log`, script at 597c2c59, 05:20–05:26 UTC).
+`develop ... E3,E4` (`I668-rpi5/development_r1.log`, script at 597c2c59, 05:13–05:19 UTC).
 
 | preset | D1 | D2 | D3 | D4 | D5 | score |
 |---|---|---|---|---|---|---|
