@@ -21,6 +21,7 @@
 //! the layout, the residual, the Jacobians, the jets and Newton's step are the multishoot crate's; this crate adds the
 //! equations.
 pub mod field;
+pub mod jac_sub;
 pub mod lane;
 pub mod model;
 

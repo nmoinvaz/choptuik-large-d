@@ -48,6 +48,30 @@ OD_EXTRA, OD_REFACTOR, OD_FLOOR = 6, 1e-4, 1e-80
 DPS = 50
 
 
+_NOTICED = set()        # the fallback notices printed once per run
+
+
+def jac_block(s, z, rows, cols):
+    """the block J[rows][:, cols] at z (two or four part arrays) in its parts, from only the column tasks that reach it
+    (Solver.jacobian_sub: the full Jacobian's entries there, bit for bit), so that a rung block costs the horizon
+    block's columns alone; a build without jacobian_sub takes it from the full Jacobian (jac_block_full), with a
+    notice"""
+    if hasattr(s, "jacobian_sub"):
+        J = s.jacobian_sub([np.ascontiguousarray(p) for p in z], [int(r) for r in rows], [int(c) for c in cols])
+        return [np.asarray(p) for p in J]
+    if "jacobian_sub" not in _NOTICED:
+        _NOTICED.add("jacobian_sub")
+        print("  reseed: this hpkernel has no Solver.jacobian_sub; each rung block is taken from the full Jacobian",
+              flush=True)
+    return jac_block_full(s, z, rows, cols)
+
+
+def jac_block_full(s, z, rows, cols):
+    """J[rows][:, cols] at z (two or four part arrays) from the full Jacobian (Solver.jacobian or jacobian_q)"""
+    J = s.jacobian(*z) if len(z) == 2 else s.jacobian_q(*z)
+    return [np.asarray(p)[np.ix_(rows, cols)] for p in J]
+
+
 def offsets(M, K):
     """z offsets of the layout (hpkernel.driver's docstring): node i, m_h, a_h, and the length"""
     return dict(node=lambda i: 2 * M + 4 * M * i, mh=2 * M + 4 * M * K, ah=3 * M + 4 * M * K, L=4 * M * (K + 1) + 1)
@@ -255,8 +279,7 @@ class Reseeder:
         stall = self.floor_rule == "stall"
         nd_prev = None
         for it in range(self.it_max):
-            Jh, Jl = (np.asarray(v) for v in s.jacobian(*put(dh, dl)))
-            Ah = np.ascontiguousarray(Jh[np.ix_(rows, cols)]); Al = np.ascontiguousarray(Jl[np.ix_(rows, cols)])
+            Ah, Al = (np.ascontiguousarray(v) for v in jac_block(s, put(dh, dl), rows, cols))
             if len(rows) == len(cols):
                 xh, xl = dd_solve(Ah, Al, np.ascontiguousarray(-Rh), np.ascontiguousarray(-Rl))
             else:
@@ -370,8 +393,7 @@ class Reseeder:
         if not np.isfinite(nR):
             return d, hist, False
         def block(d):
-            J = s.jacobian_q(*put(d))
-            return [np.asarray(J[q])[np.ix_(rows, cols)] for q in range(4)]           # the rung block
+            return jac_block(s, put(d), rows, cols)                                     # the rung block
 
         def factor(d):
             return QDLu(*block(d))
@@ -484,8 +506,7 @@ class Reseeder:
                 break
             if lu is None or (k > 0 and hist[-1] > OD_REFACTOR * hist[-2] and hist[-1] > OD_FLOOR
                                 and mutate != "badlu_keep"):
-                J = s.jacobian_q(*put(d, 4))
-                blk = [np.array(np.asarray(J[q])[np.ix_(rows, cols)]) for q in range(4)]
+                blk = [np.array(b) for b in jac_block(s, put(d, 4), rows, cols)]
                 if lu is None and mutate in ("badlu", "badlu_keep"):
                     for q in range(4):
                         blk[q][:, 0] *= 1.01         # the plant: a first LU whose chord steps gain only about 1e-2
