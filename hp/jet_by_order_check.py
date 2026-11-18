@@ -3,14 +3,17 @@ of growing length (Solver.residual_jet_o: coefficients_o's by_order=False, anm_r
 eight-part state in its chain's own system and plan (octo_corrector.truth_system), through one octo-double LU at
 the state (Solver.newton_o).
 
-    python3 jet_by_order_check.py RAW STATE.npz [--N 24] [--threads 6] [--Np 6] [--out PREFIX]
+    python3 jet_by_order_check.py RAW STATE.npz [--N 24] [--threads 6] [--Np 6] [--out PREFIX] [--save S.npz]
+        [--compare S.npz]
 
 Pass, fixed before the first run: z_1..z_N the same bits in all eight parts by both forms; the same with a planted
 change of every order's right-hand side (a hook that moves one entry of b by a fixed relative 2^-200, given to both
 forms, which tests that series_o applies anm_run's held rows and perturbations where coefficients_o does), at order
-Np. Reported: the seconds of each form and their ratio. Controls, each of which must differ from the jets' series: the
-order-by-order series with one kept intermediate dropped (series_o's mutate model::JET_MUT_AT_KEEP), and with the
-planted change given to the order-by-order form only. Exit 1 on failure."""
+Np; with --compare, z_1..z_N by order the same bits as those --save wrote from another run (another thread count).
+Reported: the seconds of each form and their ratio. Controls, each of which must differ from the jets' series: the
+order-by-order series with one kept intermediate dropped (series_o's mutate model::JET_MUT_AT_KEEP), with the horizon
+block's first round of order-k sums formed with p_k in place (model::JET_MUT_AT_ROUND), and with the planted change
+given to the order-by-order form only. Exit 1 on failure."""
 import json
 import sys
 import time
@@ -18,6 +21,7 @@ import time
 import numpy as np
 
 JET_MUT_AT_KEEP = 24
+JET_MUT_AT_ROUND = 26
 
 
 def differ(A, B):
@@ -45,7 +49,7 @@ def main(argv):
     from anm_run import coefficients_o
     from octo_corrector import truth_system
     raw, state = argv[0], argv[1]
-    opt = dict(N=24, threads=6, Np=6, out="")
+    opt = dict(N=24, threads=6, Np=6, out="", save="", compare="")
     for k in list(opt):
         if "--" + k in argv:
             v = argv[argv.index("--" + k) + 1]
@@ -77,17 +81,29 @@ def main(argv):
     # controls
     Cz = [A[0]] + [list(z8) for z8 in s.series_o(list(zo), Np, None, mutate=JET_MUT_AT_KEEP)]
     c_keep = differ(A[:Np + 1], Cz)
+    Cr = [A[0]] + [list(z8) for z8 in s.series_o(list(zo), Np, None, mutate=JET_MUT_AT_ROUND)]
+    c_round = differ(A[:Np + 1], Cr)
     Ch, _ = coefficients_o(s, zo, Np, perturb=planted, by_order=True)
     c_hook = differ(A[:Np + 1], Ch)
-    print(f"  controls: a kept intermediate dropped, orders that differ {c_keep}; the planted change in the "
-          f"order-by-order form only, {c_hook}", flush=True)
-    ok = not d_main and not d_hook
-    controls = bool(c_keep) and bool(c_hook)
+    print(f"  controls: a kept intermediate dropped, orders that differ {c_keep}; a round of sums with p_k in place, "
+          f"{c_round}; the planted change in the order-by-order form only, {c_hook}", flush=True)
+    if opt["save"]:
+        np.savez(opt["save"], **{f"z{k}_{q}": np.asarray(p) for k in range(1, len(Bz)) for q, p in enumerate(Bz[k])})
+    d_saved = []
+    if opt["compare"]:
+        with np.load(opt["compare"]) as f:
+            Sz = [None] + [[f[f"z{k}_{q}"] for q in range(8)] for k in range(1, N + 1)]
+        d_saved = differ(Bz, Sz)
+        print(f"  against {opt['compare']}: orders that differ {d_saved}", flush=True)
+    ok = not d_main and not d_hook and not d_saved
+    controls = bool(c_keep) and bool(c_round) and bool(c_hook)
     summ = dict(state=state, N=N, Np=Np, threads=opt["threads"], s_lu=round(t_lu, 2), s_jets=round(t_jet, 2),
                 s_by_order=round(t_ord, 2), ratio=round(t_jet / t_ord, 3), differ=d_main, differ_hook=d_hook,
-                control_keep=c_keep, control_hook=c_hook, passed=ok, controls_fired=controls)
+                differ_saved=d_saved, control_keep=c_keep, control_round=c_round, control_hook=c_hook, passed=ok,
+                controls_fired=controls)
     print(f"  {'PASS' if ok else 'FAIL'}: {N - len(d_main)} of {N} orders the same bits, {Np - len(d_hook)} of {Np} "
-          f"with the hook; controls {'fired' if controls else 'DID NOT FIRE'}", flush=True)
+          f"with the hook{'' if not opt['compare'] else f', {N - len(d_saved)} of {N} as saved'}; controls "
+          f"{'fired' if controls else 'DID NOT FIRE'}", flush=True)
     if opt["out"]:
         with open(opt["out"] + ".json", "w") as f:
             json.dump(summ, f, indent=1)
