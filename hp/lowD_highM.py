@@ -96,15 +96,16 @@ from raw_out import FLAG, HELP, require_raw  # noqa: E402
 STATES = os.path.join(HERE, "data", "lowD_states")
 
 
-def find_record(path, D, M, nodes):
+def find_record(path, D, M, nodes, fmax=1e-24):
     """the last converged record of (D, M) on these nodes in a lowD_dd.solve_point jsonl (also after a resumed run,
-    where solve_point skips a converged (D, M) without writing a record)"""
+    where solve_point skips a converged (D, M) without writing a record), with |F| at most fmax (the run's --accept,
+    never below 1e-24)"""
     out = None
     if os.path.exists(path):
         for ln in open(path):
             if ln.strip():
                 r = json.loads(ln)
-                if (r.get("converged") and r["F"] <= 1e-24 and abs(r["D"] - D) < 1e-9 and r["M"] == M
+                if (r.get("converged") and r["F"] <= fmax and abs(r["D"] - D) < 1e-9 and r["M"] == M
                         and list(r["nodes"]) == list(nodes)):
                     out = r
     return out
@@ -463,7 +464,7 @@ def main():
                 os.replace(ck, ck[:-len(".npz")] + "_failed.npz")
         if tol is not None:
             return ok, None, os.path.join(STATES, f"{tag or st['tag']}_D{lowD_dd.dname(D)}_M{M}.npz")
-        rec = find_record(a.points, D, M, st["nodes"]) if ok else None
+        rec = find_record(a.points, D, M, st["nodes"], max(1e-24, a.accept)) if ok else None
         if ok and rec is None:
             return False, None, None
         if rec is not None:
@@ -578,7 +579,7 @@ def main():
                 ok2, r2, p2 = solve_up(Dt, st["hist_n"][-1][1], M2)
                 if not ok2:
                     return f"the move up to M {M2} failed at D {Dt}"
-                rn = find_record(a.points, Dt, Mn, st["nodes"])
+                rn = find_record(a.points, Dt, Mn, st["nodes"], max(1e-24, a.accept))
                 _, d2 = write_pair(Dt, rn, r2, f"moved up ({why})")
                 st["Mc"], st["hist_c"] = Mw, st["hist_w"]
                 st["Mw"], st["Mn"] = Mn, M2
@@ -596,7 +597,7 @@ def main():
                 f"{this / 3600:.2f} h): no node change")
         elif post["stage"] == "nodes":
             if "new_nodes" not in post:
-                rlast = find_record(a.points, Dt, st["Mn"], st["nodes"])
+                rlast = find_record(a.points, Dt, st["Mn"], st["nodes"], max(1e-24, a.accept))
                 tc, th = rlast.get("tail_c", 0.0), rlast.get("tail_h", 0.0)
                 new = list(st["nodes"])
                 # the start of the next point's M_n: the M_w solution resampled to M_n; its centre series converges far
