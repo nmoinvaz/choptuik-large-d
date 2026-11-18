@@ -9,11 +9,13 @@ the state (Solver.newton_o).
 Pass, fixed before the first run: z_1..z_N the same bits in all eight parts by both forms; the same with a planted
 change of every order's right-hand side (a hook that moves one entry of b by a fixed relative 2^-200, given to both
 forms, which tests that series_o applies anm_run's held rows and perturbations where coefficients_o does), at order
-Np; with --compare, z_1..z_N by order the same bits as those --save wrote from another run (another thread count).
-Reported: the seconds of each form and their ratio. Controls, each of which must differ from the jets' series: the
-order-by-order series with one kept intermediate dropped (series_o's mutate model::JET_MUT_AT_KEEP), with the horizon
-block's first round of order-k sums formed with p_k in place (model::JET_MUT_AT_ROUND), and with the planted change
-given to the order-by-order form only. Exit 1 on failure.
+Np; with --compare, z_1..z_N by order the same bits as those --save wrote from another run (another thread count; the
+file records N and the thread count, and its N must be at least this run's). Reported: the seconds of each form and
+their ratio. Controls, each of which must differ from the jets' series: the order-by-order series with one kept
+intermediate dropped (series_o's mutate model::JET_MUT_AT_KEEP), with the horizon block's first round of order-k sums
+formed with p_k in place (model::JET_MUT_AT_ROUND), with the centre block's (a q^2)_k formed in its first round, before
+q^2_k (model::JET_MUT_AT_ROUND_C), and with the planted change given to the order-by-order form only; with --compare,
+the horizon round control's series must also differ from the saved one. Exit 1 on failure.
 
 --tangent_from F > 0 checks instead the order-by-order series whose orders from F on are formed once and moved by
 their tangents (series_o's tangent_from, multishoot's JetSession::tangent_from) against the one that forms each order
@@ -32,6 +34,7 @@ import numpy as np
 
 JET_MUT_AT_KEEP = 24
 JET_MUT_AT_ROUND = 26
+JET_MUT_AT_ROUND_C = 27
 JET_MUT_TANGENT_KEEP = 28
 REL_MAX = 1e-40
 
@@ -166,24 +169,34 @@ def main(argv):
     c_keep = differ(A[:Np + 1], Cz)
     Cr = [A[0]] + [list(z8) for z8 in s.series_o(list(zo), Np, None, mutate=JET_MUT_AT_ROUND)]
     c_round = differ(A[:Np + 1], Cr)
+    Cc = [A[0]] + [list(z8) for z8 in s.series_o(list(zo), Np, None, mutate=JET_MUT_AT_ROUND_C)]
+    c_round_c = differ(A[:Np + 1], Cc)
     Ch, _ = coefficients_o(s, zo, Np, perturb=planted, by_order=True)
     c_hook = differ(A[:Np + 1], Ch)
     print(f"  controls: a kept intermediate dropped, orders that differ {c_keep}; a round of sums with p_k in place, "
-          f"{c_round}; the planted change in the order-by-order form only, {c_hook}", flush=True)
+          f"{c_round}; the centre's (a q^2)_k before q^2_k, {c_round_c}; the planted change in the order-by-order "
+          f"form only, {c_hook}", flush=True)
     if opt["save"]:
-        np.savez(opt["save"], **{f"z{k}_{q}": np.asarray(p) for k in range(1, len(Bz)) for q, p in enumerate(Bz[k])})
-    d_saved = []
+        np.savez(opt["save"], N=N, threads=opt["threads"],
+                 **{f"z{k}_{q}": np.asarray(p) for k in range(1, len(Bz)) for q, p in enumerate(Bz[k])})
+    d_saved, c_saved, t_saved = [], [1], None
     if opt["compare"]:
         with np.load(opt["compare"]) as f:
+            if int(f["N"]) < N:
+                raise SystemExit(f"--compare: {opt['compare']} holds N {int(f['N'])}, fewer than this run's {N}")
+            t_saved = int(f["threads"])
             Sz = [None] + [[f[f"z{k}_{q}"] for q in range(8)] for k in range(1, N + 1)]
         d_saved = differ(Bz, Sz)
-        print(f"  against {opt['compare']}: orders that differ {d_saved}", flush=True)
+        c_saved = differ(Cr, Sz[:Np + 1])
+        print(f"  against {opt['compare']} ({t_saved} threads; this run {opt['threads']}): orders that differ "
+              f"{d_saved}; control (the round control's series against it) {c_saved}", flush=True)
     ok = not d_main and not d_hook and not d_saved
-    controls = bool(c_keep) and bool(c_round) and bool(c_hook)
+    controls = bool(c_keep) and bool(c_round) and bool(c_round_c) and bool(c_hook) and bool(c_saved)
     summ = dict(state=state, N=N, Np=Np, threads=opt["threads"], s_lu=round(t_lu, 2), s_jets=round(t_jet, 2),
                 s_by_order=round(t_ord, 2), ratio=round(t_jet / t_ord, 3), differ=d_main, differ_hook=d_hook,
-                differ_saved=d_saved, control_keep=c_keep, control_round=c_round, control_hook=c_hook, passed=ok,
-                controls_fired=controls)
+                differ_saved=d_saved, threads_saved=t_saved, control_keep=c_keep, control_round=c_round,
+                control_round_c=c_round_c, control_hook=c_hook, control_saved=c_saved if opt["compare"] else None,
+                passed=ok, controls_fired=controls)
     print(f"  {'PASS' if ok else 'FAIL'}: {N - len(d_main)} of {N} orders the same bits, {Np - len(d_hook)} of {Np} "
           f"with the hook{'' if not opt['compare'] else f', {N - len(d_saved)} of {N} as saved'}; controls "
           f"{'fired' if controls else 'DID NOT FIRE'}", flush=True)
