@@ -3,7 +3,7 @@
 
 #703 and #718 judged (a) the DA2 scatter, (b) the far Pade poles and (c') the twin misfit together, and no plant had d_P
 below 0.136. Here only (b) is judged, over end points and cut directions wider than #718's and strengths that (c')
-excluded (eta up to 1). Plants are #718's (pade_second_ring, pade_second_zero, pade_second_set, called unchanged): the
+excluded (eta up to 10). Plants are #718's (pade_second_ring, pade_second_zero, pade_second_set, called unchanged): the
 main density (chord2 or arc, zero factor at ZLOC) refitted to the real sigma_0..sigma_12 minus the second set's part. The
 second set is the density s^4 (1-s)^alpha on the segment from A = Q - L e^(i theta) to Q, Q = P0 + kappa_* + o at each
 node, with the share eta e^(i phi) of sigma_22(real). Radial: theta = arg Q (#718's ring_curve). Horizontal: theta = 0.
@@ -15,7 +15,7 @@ if its main fit reproduces sigma_0..sigma_12 within 1e-2, and passes if it is ad
 1.00 and 1.01 with the same parameters.
 
     python3 pade_far_poles.py --selftest [--mutate=prec|dir|pole_w]
-    python3 pade_far_poles.py control OUTDIR [--mutate=shift_poles|len] [--ring=I718-mac/ring.jsonl] [--allow_unraw]
+    python3 pade_far_poles.py control OUTDIR [--mutate=shift_poles|len|tol|noise] [--ring=I718-mac/ring.jsonl] [--allow_unraw]
     python3 pade_far_poles.py scan OUTDIR [--max_hours=4] [--allow_unraw]   (reads OUTDIR/control.json; resumes)
     python3 pade_far_poles.py report OUTDIR [--allow_unraw]    (post-freeze maps of plants.jsonl, judges nothing)
 
@@ -47,26 +47,35 @@ GROUPS = (("chord2", 0.3, "radial"), ("arc", 0.3, "radial"), ("chord2", 0.3, "ho
           ("chord2", 0.6, "horizontal"))
 P_NEAR = 4
 ALPHAS, PHASES = ss.ALPHAS, ss.PHASES
-ETAS = tuple(10.0 ** (-6 + j / 2) for j in range(13))
+ETAS = tuple(10.0 ** (-6 + j / 2) for j in range(15))
 N_A = len(LAT) ** 2 * len(GROUPS) * len(ALPHAS) * len(ETAS) * len(PHASES)
 A_CAP_H = 4.0
 N_START, MAXFEV = 8, 200
 STEPS = (0.5, 45.0, 0.06, 0.06, 0.08, 20.0)   # log10 eta, phi deg, Re o, Im o, L, theta deg
-BOX = ((-6.0, 0.0), (None, None), (-1.0, 1.25), (-1.0, 1.25), (0.05, 1.2), (None, None))
+BOX = ((-6.0, 1.0), (None, None), (-1.0, 1.25), (-1.0, 1.25), (0.05, 1.2), (None, None))
 C_LIM, C_CAP = 0.06, 300
-RUNGS = tuple(10.0 ** (-3 + j / 2) for j in range(7))      # P: the point masses' share of sigma_22
+RUNGS = tuple(10.0 ** (-3 + j / 2) for j in range(10))     # finding: the point masses' share of sigma_22 (1e-3 to 30)
+# P', the planted truth: this plant of the scan's family, built twice with independent noise draws at the measured
+# per-order errors (pg.noisy, seeds SEED1 + node index and SEED2 + node index); copy 1's [k/k] pole nearest to Q is the
+# reference of order k, standing in for #541's; the judge, run with copy 2, must pass the plant and fail its four
+# lattice neighbours (same shape, strength and phase)
+PRIME = {"kind": "chord2", "ab": (1, 1), "o": (0.25, 0.25), "L": 0.3, "theta": None, "P": P_NEAR, "alpha": "log", "eta": 1.0, "phase": 90}
+NEIGH = ((1, 0), (-1, 0), (0, 1), (0, -1))
+SEED1, SEED2 = 747100, 747200
+LADDER = (1e-2, 1e-1, 10.0)                 # context: the same test at other strengths, judges nothing
 TOL_JP = 1e-9                               # J+: the real series' d_P
 TOL_PLUS = 1e-6                             # J- and R4: d_P against #718's, relative (another machine's lstsq)
 SWAP_MB = 150                               # stop if swap use grows by this over its value at the start
 FROZEN = {                                  # written before any plant was judged (notes/PADE_FAR_END.md 18.2)
     "stage_a": "Q = P0 + kappa_* + 0.25 (a + ib), a, b = -3..4 (64); groups (kind, L, direction) (chord2, 0.3, radial), "
                "(arc, 0.3, radial), (chord2, 0.3, horizontal), (chord2, 0.6, horizontal), near-end exponent 4; alpha 0 or "
-               "beta - 1; eta 1e-6..1 in half decades (13); phi 0, 90, 180, 270; 26624 plants at wf 1.00, in the order a, "
+               "beta - 1; eta 1e-6..10 in half decades (15, amended from 13 up to 1); phi 0, 90, 180, 270; 30720 plants at wf "
+               "1.00, in the order a, "
                "b, group, alpha, eta, phi; stops after 4 h and lists what it did not reach",
     "stage_b": "from the 8 best admissible stage-A starts by d_P at wf 1.00, one per (kind, a, b, group, alpha), "
                "Nelder-Mead on (log10 eta, phi, Re o, Im o, L, theta) with D3 = the largest d_P over the three nodes (1 + "
                "the largest fit_resid if a node is inadmissible, 10 if a Pade fails); simplex steps (0.5, 45, 0.06, "
-               "0.06, 0.08, 20), bounds log10 eta [-6, 0], Re o and Im o [-1, 1.25], L [0.05, 1.2]; 200 evaluations, "
+               "0.06, 0.08, 20), bounds log10 eta [-6, 1] (amended from 0), Re o and Im o [-1, 1.25], L [0.05, 1.2]; 200 evaluations, "
                "xatol 1e-3, fatol 1e-5; theta absolute (radial start: arg Q at wf 1.00)",
     "stage_c": "every admissible stage-A plant with d_P <= 0.06 at wf 1.00 (the 300 smallest) at wf 0.99 and 1.01",
     "passes": "admissible and d_P <= 0.03 at the three nodes, same parameters; the answer is yes if any plant of stages "
@@ -85,12 +94,17 @@ FROZEN = {                                  # written before any plant was judge
           "control --mutate=len (L x 1.01) fails it",
     "J": "J+ the real series' d_P <= 1e-9 at every node; J- the eta = 0 chord2 and arc plants at wf 1.00 have d_P > 0.03 "
          "and within 1e-6 relative of I718-mac/pilot.json's",
-    "P": "main chord2 and main arc with three point masses at REF541[wf][8], [9], [10], equal weights, phi 0, the share "
-         "10^(-3 + j/2), j 0..6, of sigma_22: for each kind some rung has d_P <= 0.03 at the three nodes, admissible or "
-         "not; the lowest admissible one is the sensitivity",
-    "mutation": "control --mutate=shift_poles (the reference poles + 0.05): J+ and P must fail; --mutate=len: R4 must "
-                "fail",
-    "gate": "scan runs only if the selftest, J+, J-, P and R4 pass",
+    "P_point_masses": "FINDING, not a check: main chord2 and main arc with three equal point masses at REF541[wf][8], "
+                      "[9], [10], phi 0, the share 10^(-3 + j/2) of sigma_22, j 0..9. As a check (j 0..6) it fired in "
+                      "the first run and was replaced by P'",
+    "Pprime": "the plant (chord2, radial, L 0.3, P 4, alpha 0, a = b = 1, eta 1, phi 90), built twice at each node with "
+              "independent noise (pg.noisy, measured errors, seeds 747100 + i and 747200 + i); the reference of order k is "
+              "copy 1's [k/k] pole nearest to Q; with copy 2 the plant passes (admissible, d_P <= 0.03 at the three nodes) "
+              "and each of its four lattice neighbours fails; context at eta 1e-2, 1e-1, 10 and the eta = 0 plant",
+    "mutation": "control --mutate=shift_poles (the reference poles of J+ and of P' + 0.05): J+ and P''s plant must fail; "
+                "--mutate=tol (P''s tolerance 3.0): P' must fail; --mutate=noise (copy 2's noise x 1e10): P''s plant "
+                "must fail; --mutate=len: R4 must fail",
+    "gate": "scan runs only if the selftest, J+, J-, P' and R4 pass",
 }
 
 
@@ -130,9 +144,9 @@ def pole_part(main, pts, mut=None):
 
 
 # ---------------------------------------------------------------- (b): the poles only
-def poles(sig, wf, ref=None, dps=None):
-    """pade_second_set.pade_record's {k: {dist, nearest}}, from mp.pade and the denominator's roots only"""
-    ref = ref or ss.REF541[wf]
+def all_poles(sig, wf, dps=None):
+    """{k: the [k/k] approximant's poles t (complex), or None if the Pade failed}, from mp.pade and the denominator's
+    roots only"""
     out = {}
     with mp.workdps(dps or pg.DPS_PADE):
         s = [mp.mpc(z) for z in sig[:N23]]
@@ -141,12 +155,22 @@ def poles(sig, wf, ref=None, dps=None):
                 a = [mp.factorial(j) * s[j] for j in range(2 * k + 1)]
                 _, q = mp.pade(a, k, k)
                 us = mp.polyroots(q[::-1], maxsteps=500, extraprec=2 * mp.mp.prec)
-                ts = [complex(1 / u) for u in us]
-            except (ZeroDivisionError, ValueError, mp.libmp.NoConvergence) as e:
-                out[k] = {"dist": math.inf, "nearest": None, "error": type(e).__name__}
-                continue
-            t = min(ts, key=lambda z: abs(z - ref[k]))
-            out[k] = {"dist": abs(t - ref[k]), "nearest": t}
+                out[k] = [complex(1 / u) for u in us]
+            except (ZeroDivisionError, ValueError, mp.libmp.NoConvergence):
+                out[k] = None
+    return out
+
+
+def poles(sig, wf, ref=None, dps=None):
+    """pade_second_set.pade_record's {k: {dist, nearest}} for the reference poles ref (REF541 by default)"""
+    ref = ref or ss.REF541[wf]
+    out = {}
+    for k, ts in all_poles(sig, wf, dps).items():
+        if ts is None:
+            out[k] = {"dist": math.inf, "nearest": None, "error": "pade"}
+            continue
+        t = min(ts, key=lambda z: abs(z - ref[k]))
+        out[k] = {"dist": abs(t - ref[k]), "nearest": t}
     return out
 
 
@@ -299,6 +323,90 @@ def selftest(mut=None):
     return ok
 
 
+# ---------------------------------------------------------------- P', the planted truth
+def noisy_copy(node, sig, seed, mult=1.0):
+    eps = [e * mult for e in tc.err_model(node.wf)[0]]
+    with mp.workdps(pg.DPS_PLANT):
+        return pg.noisy([mp.mpc(z) for z in sig[:N23]], seed, eps)
+
+
+def prime_test(nodes, spec, log, mut=None, context=False):
+    """P' for one plant: its reference poles from noise copy 1, the judge on copy 2 for the plant, its four lattice
+    neighbours and, as context, the plant without its second set"""
+    tol = 3.0 if mut == "tol" else TOL_POLE
+    shift = 0.05 if mut == "shift_poles" else 0.0
+    mult = 1e10 if mut == "noise" else 1.0
+    out = {"spec": {k: v for k, v in spec.items() if k != "o"}, "tol": tol, "nodes": {}}
+    per = {"true": {}, "eta0": {}}
+    for da, db in NEIGH:
+        per[(da, db)] = {}
+    adm = True
+    for i, wf in enumerate(NODES):
+        node = nodes[wf]
+        w, Q = node.part(spec)
+        sig, info = ss.make_plant(node.mains[spec["kind"]], w, spec["eta"], spec["phase"])
+        ap = all_poles(noisy_copy(node, sig, SEED1 + i), wf)
+        if any(ap[k] is None for k in KS):
+            ref = {k: complex(math.nan, math.nan) for k in KS}
+        else:
+            ref = {k: min(ap[k], key=lambda t: abs(t - Q)) + shift for k in KS}
+        adm &= info["fit_resid"] <= ADM
+        out["nodes"][wf] = {"ref": {k: [ref[k].real, ref[k].imag] for k in KS},
+                            "ref_minus_REF541": {k: abs(ref[k] - ss.REF541[wf][k]) for k in KS},
+                            "fit_resid": info["fit_resid"], "share12": info["share"][12], "share22": info["share"][22]}
+        sig2 = noisy_copy(node, sig, SEED2 + i, mult)
+        per["true"][wf] = d_P(poles(sig2, wf, ref))
+        for da, db in NEIGH:
+            a, b = spec["ab"][0] + da, spec["ab"][1] + db
+            sp = dict(spec, ab=(a, b), o=lat_o(a, b))
+            wn, _ = node.part(sp)
+            sn, _ = ss.make_plant(node.mains[sp["kind"]], wn, sp["eta"], sp["phase"])
+            per[(da, db)][wf] = d_P(poles(noisy_copy(node, sn, SEED2 + i, mult), wf, ref))
+        s0, _ = ss.make_plant(node.mains[spec["kind"]], None, 0, 0)
+        per["eta0"][wf] = d_P(poles(noisy_copy(node, s0, SEED2 + i, mult), wf, ref))
+    true_pass = adm and all(v <= tol for v in per["true"].values())
+    neigh_fail = {f"{da:+d},{db:+d}": not all(v <= tol for v in per[(da, db)].values()) for da, db in NEIGH}
+    out.update({"d_P_true": per["true"], "d_P_neighbours": {f"{da:+d},{db:+d}": per[(da, db)] for da, db in NEIGH},
+                "d_P_eta0": per["eta0"], "admissible": adm, "true_pass": true_pass, "neighbours_fail": neigh_fail,
+                "pass": true_pass and all(neigh_fail.values())})
+    tag = "context" if context else "P'"
+    pos = spec["ab"]
+    log(f"{tag} {spec['kind']} {pos} eta {spec['eta']:g} phi {spec['phase']}: the plant, copy 2 against copy 1's poles: "
+        f"d_P " + ", ".join(f"{per['true'][wf]:.2e}" for wf in NODES) + f" (admissible {adm}, pass <= {tol:g}) -> "
+        f"{'pass' if true_pass else 'FAIL'}; share22 {out['nodes'][1.0]['share22']:.2f}")
+    for da, db in NEIGH:
+        key = f"{da:+d},{db:+d}"
+        log(f"{tag}   neighbour {(pos[0] + da, pos[1] + db)}: d_P " + ", ".join(f"{per[(da, db)][wf]:.4f}" for wf in NODES)
+            + f" -> {'fails' if neigh_fail[key] else 'PASSES'}")
+    log(f"{tag}   the plant without its second set: d_P " + ", ".join(f"{per['eta0'][wf]:.4f}" for wf in NODES)
+        + f"; copy 1's reference poles from REF541: " + ", ".join(
+            f"{max(out['nodes'][wf]['ref_minus_REF541'].values()):.3f}" for wf in NODES)
+        + (f" -> {tag} {'OK' if out['pass'] else 'BAD'}" if not context else ""))
+    return out
+
+
+def point_finding(nodes, log):
+    """the finding that replaced the first planted truth: three equal point masses at REF541[wf][8, 9, 10] beside the
+    main cut; the nearest pole of each [k/k] to the mass of its own order"""
+    rec = {}
+    for kind in ss.KINDS:
+        rows = []
+        for eta in RUNGS:
+            per = {}
+            for wf in NODES:
+                main = nodes[wf].mains[kind]
+                w = pole_part(main, [ss.REF541[wf][k] for k in KS])
+                sig, info = ss.make_plant(main, w, eta, 0)
+                pl = poles(sig, wf)
+                per[wf] = {"d": {k: pl[k]["dist"] for k in KS}, "d_P": d_P(pl), "fit_resid": info["fit_resid"]}
+            rows.append({"eta": eta, "nodes": per})
+            log(f"FINDING point masses {kind} eta_P {eta:.3g}: d_P " + ", ".join(f"{per[wf]['d_P']:.4f}" for wf in NODES)
+                + "; d_8, d_9, d_10 at wf 1.00 " + ", ".join(f"{per[1.0]['d'][k]:.3f}" for k in KS)
+                + f"; fit_resid {per[1.0]['fit_resid']:.1e}")
+        rec[kind] = rows
+    return rec
+
+
 # ---------------------------------------------------------------- control stage
 def ring_plants(path):
     """12 of #718's plants: the first wf 1.00 record for each (chord2, arc) x L 0.3 radial (+1, +1), (0, 0), (-1, -1) x
@@ -322,7 +430,7 @@ def ring_plants(path):
 def run_control(outdir, mut, ring_path):
     log = tz.Log(outdir, "control", mut)
     rec = {"frozen": FROZEN, "mutate": mut, "nodes": {}}
-    ok = {k: True for k in ("selftest", "J+", "J-", "P", "R4")}
+    ok = {k: True for k in ("selftest", "J+", "J-", "Pprime", "R4")}
     ok["selftest"] = selftest(None)
     nodes = {}
     for wf in NODES:
@@ -349,30 +457,17 @@ def run_control(outdir, mut, ring_path):
         rec["nodes"][WF0][f"J- {kind}"] = {"d_P": dp, "d_P_718": old, "pass": good}
         log(f"J- wf {WF0} {kind} eta 0: d_P {dp:.6f} (#718 {old:.6f}; pass > 0.03 and within {TOL_PLUS:.0e}) -> "
             f"{'OK' if good else 'BAD'}")
-    # P: the planted poles
-    rec["P"] = {}
-    for kind in ss.KINDS:
-        rows = []
-        for eta in RUNGS:
-            per = {}
-            for wf in NODES:
-                main = nodes[wf].mains[kind]
-                w = pole_part(main, [ss.REF541[wf][k] for k in KS])
-                sig, info = ss.make_plant(main, w, eta, 0)
-                per[wf] = {"d_P": d_P(poles(sig, wf, refs[wf])), "adm": info["fit_resid"] <= ADM,
-                           "fit_resid": info["fit_resid"]}
-            passes = all(v["d_P"] <= TOL_POLE for v in per.values())
-            adm = all(v["adm"] for v in per.values())
-            rows.append({"eta": eta, "nodes": per, "passes": passes, "admissible": adm})
-            log(f"P {kind} eta_P {eta:.3g}: d_P " + ", ".join(f"{per[wf]['d_P']:.4f}" for wf in NODES)
-                + f"; fit_resid " + ", ".join(f"{per[wf]['fit_resid']:.1e}" for wf in NODES)
-                + f" -> passes {passes}, admissible {adm}")
-        some = any(r["passes"] for r in rows)
-        low = next((r["eta"] for r in rows if r["passes"] and r["admissible"]), None)
-        ok["P"] &= some
-        rec["P"][kind] = {"rows": rows, "some_rung_passes": some, "lowest_admissible_passing": low}
-        log(f"P {kind}: some rung passes at the three nodes: {some} -> {'OK' if some else 'BAD'}; lowest admissible "
-            f"passing rung {low}")
+    # P': the planted truth, in the scan's own family
+    rec["Pprime"] = prime_test(nodes, PRIME, log, mut)
+    ok["Pprime"] = rec["Pprime"]["pass"]
+    if not mut:
+        rec["Pprime_context"] = {}
+        for eta in LADDER:
+            sp = dict(PRIME, eta=eta)
+            r = prime_test(nodes, sp, log, None, context=True)
+            rec["Pprime_context"][f"{eta:g}"] = r
+        # the finding: three point poles at REF541's places, beside the main cut
+        rec["finding_point_poles"] = point_finding(nodes, log)
     # R4: #718's plants through this path
     rec["R4"] = []
     for r in ring_plants(ring_path):
@@ -392,7 +487,11 @@ def run_control(outdir, mut, ring_path):
         log(f"R4: found {len(rec['R4'])} of 12 plants in the ring file -> BAD")
     rec["checks"] = ok
     if mut == "shift_poles":
-        fired = (not ok["J+"]) and (not ok["P"])
+        fired = (not ok["J+"]) and (not rec["Pprime"]["true_pass"])
+    elif mut == "tol":
+        fired = not ok["Pprime"]
+    elif mut == "noise":
+        fired = not rec["Pprime"]["true_pass"]
     elif mut == "len":
         fired = not ok["R4"]
     else:
@@ -673,7 +772,7 @@ def main():
     if len(pos) != 2 or pos[0] not in ("control", "scan", "report"):
         raise SystemExit(__doc__)
     stage, outdir = pos
-    if stage == "control" and mut not in (None, "shift_poles", "len"):
+    if stage == "control" and mut not in (None, "shift_poles", "len", "tol", "noise"):
         raise SystemExit(f"unknown control mutation {mut}")
     if stage != "control" and mut:
         raise SystemExit(f"{stage} has no mutation")

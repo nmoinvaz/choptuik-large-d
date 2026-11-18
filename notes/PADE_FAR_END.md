@@ -2485,9 +2485,9 @@ Written here, and committed, before any plant was judged. The script's `FROZEN` 
 
 | check | criterion |
 |---|---|
-| stage A, at ω∞ | Q = P0 + κ⋆ + 0.25 (a + ib), a, b = −3, …, 4 (64 positions, with #718's 42, a ≥ −1 and b ≥ −2, inside). Groups (kind, L, direction): (chord2, 0.3, radial), (arc, 0.3, radial), (chord2, 0.3, horizontal), (chord2, 0.6, horizontal); near-end exponent 4. α = 0 or β − 1. η = 10^(−6 + j/2), j = 0, …, 12 (1e-6 to 1). φ = 0°, 90°, 180°, 270°. That makes 26624 plants, in the order a, b, group, α, η, φ |
+| stage A, at ω∞ | Q = P0 + κ⋆ + 0.25 (a + ib), a, b = −3, …, 4 (64 positions, with #718's 42, a ≥ −1 and b ≥ −2, inside). Groups (kind, L, direction): (chord2, 0.3, radial), (arc, 0.3, radial), (chord2, 0.3, horizontal), (chord2, 0.6, horizontal); near-end exponent 4. α = 0 or β − 1. η = 10^(−6 + j/2), j = 0, …, 14 (1e-6 to 10). φ = 0°, 90°, 180°, 270°. That makes 30720 plants, in the order a, b, group, α, η, φ |
 | stage A cap | stage A stops after 4 h of its own wall time, and the positions not reached are listed as left out |
-| stage B | from the 8 best stage-A starts (admissible, smallest d_P at ω∞, one per (kind, a, b, group, α)), Nelder–Mead (`scipy.optimize.minimize`) on x = (log₁₀ η, φ°, Re o, Im o, L, θ°), kind, α and near-end exponent held, with the objective D₃ = the largest d_P over the three nodes, or 1 + the largest `fit_resid` if a node is inadmissible, or 10 if a Padé fails. The offset is held at every node as in stage A and θ is absolute (a radial start takes θ = arg Q at ω∞). Initial simplex x₀ + s_i e_i, s = (0.5, 45, 0.06, 0.06, 0.08, 20), the sign flipped at a bound. Bounds: log₁₀ η in [−6, 0], Re o and Im o in [−1, 1.25], L in [0.05, 1.2]. At most 200 evaluations, `xatol` 1e-3, `fatol` 1e-5 |
+| stage B | from the 8 best stage-A starts (admissible, smallest d_P at ω∞, one per (kind, a, b, group, α)), Nelder–Mead (`scipy.optimize.minimize`) on x = (log₁₀ η, φ°, Re o, Im o, L, θ°), kind, α and near-end exponent held, with the objective D₃ = the largest d_P over the three nodes, or 1 + the largest `fit_resid` if a node is inadmissible, or 10 if a Padé fails. The offset is held at every node as in stage A and θ is absolute (a radial start takes θ = arg Q at ω∞). Initial simplex x₀ + s_i e_i, s = (0.5, 45, 0.06, 0.06, 0.08, 20), the sign flipped at a bound. Bounds: log₁₀ η in [−6, 1], Re o and Im o in [−1, 1.25], L in [0.05, 1.2]. At most 200 evaluations, `xatol` 1e-3, `fatol` 1e-5 |
 | stage C | every admissible stage-A plant with d_P ≤ 0.06 at ω∞ (the 300 smallest if more) runs at ω/ω∞ = 0.99 and 1.01 |
 | passes | as in 18.1. Every plant with d_P ≤ 0.03 at a node is rechecked through `pade_record`, and a disagreement exits 1 |
 | the answer | **yes**, a second set of this family gives (b), if any plant of stages A to C passes. **No**, if none does, which is then a statement about this family and its strengths only, with what the scan left out stated beside it |
@@ -2499,13 +2499,16 @@ Written here, and committed, before any plant was judged. The script's `FROZEN` 
 | R4, regression | 12 of #718's plants through this path, the first record at ω∞ of `I718-mac/ring.jsonl` for each of (chord2, arc) × L = 0.3 radial positions (+1, +1), (0, 0), (−1, −1) × α = 0, β − 1: d_P within 10⁻⁶ relative of the stored one (the Mac's `lstsq` and this machine's differ in the last digits). `control --mutate=len` (L × 1.01) must fail it |
 | J+ | the real series' d_P ≤ 1e-9 at every node |
 | J− | the η = 0 chord2 and arc plants at ω∞ have d_P > 0.03, and within 10⁻⁶ relative of #718's (`I718-mac/pilot.json`, 0.219 and 0.225) |
-| P, planted truth | the main chord2, and the main arc, with three point masses at REF541[ω][8], [9] and [10] of the node, equal weights, φ = 0, the share η_P of σ₂₂ for η_P = 10^(−3 + j/2), j = 0, …, 6 (1e-3 to 1). For each main kind, some rung has d_P ≤ 0.03 at all three nodes, admissible or not. The lowest such rung that is admissible, if there is one, is the sensitivity, and is reported. The same plant with no point masses is J− |
-| `--mutate=shift_poles` | the reference poles moved by +0.05: every rung of P and J+ must fail at some node. The run exits 1 |
-| gate | stage A runs only if the selftest, J+, J−, P and R4 pass. A stage runs on the records of the one before |
-| exits | 0 all pass. 1 a control failed, or a mutation fired as it must. 2 a mutation did not fire. A verdict is not a failure |
+| P′, planted truth | the plant (chord2 main, radial segment, L = 0.3, near-end exponent 4, α = 0, a = b = 1, η = 1, φ = 90°), a lattice position with its four neighbours in the lattice, at |Q| = 2.7. At each node it is built twice, with independent noise at the real series' measured per-order errors (`pg.noisy`, relative complex Gaussian, `tc.err_model`, seeds 747100 + i for copy 1 and 747200 + i for copy 2, i the node's index). The reference pole of order k is copy 1's [k/k] pole nearest to Q, standing in for #541's. The scan's judge, with copy 2 and the same noise draw for every plant, must pass the plant (admissible, d_P ≤ 0.03 at the three nodes) and must fail each of its four lattice neighbours (a ± 1, b), (a, b ± 1) with the same shape, η and φ, where a plant fails if d_P > 0.03 at any node. If the plant fails, 0.03 is below the noise floor. If a neighbour passes, d_P cannot resolve the lattice. In either case the scan stops, and its "no" would mean nothing. Context, judging nothing: the same test at η = 1e-2, 1e-1 and 10, the plant without its second set, and how far copy 1's reference poles lie from #541's |
+| the first planted truth, a finding | three equal point masses at REF541[ω][8], [9], [10], φ = 0, the share η_P = 10^(−3 + j/2) of σ₂₂, j = 0, …, 6, on the chord2 and the arc main. It was the first P, a gate, and fired (§18.3), so P′ replaced it. The run is kept as a finding with j up to 9, and it checks nothing |
+| `--mutate=shift_poles` | the reference poles moved by +0.05, in J+ (#541's) and in P′ (copy 1's): J+ and P′'s plant must fail. The run exits 1 |
+| `--mutate=tol`, `--mutate=noise` | P′'s tolerance 3.0, so its neighbours pass: P′ must fail. Copy 2's noise × 10¹⁰: P′'s plant must fail. Each exits 1 |
+| `control --mutate=len` | L × 1.01 in R4's plants: R4 must fail. Exits 1 |
+| gate | stage A runs only if the selftest, J+, J−, P′ and R4 pass. A stage runs on the records of the one before |
+| exits | 0 all pass. 1 a control failed, or a mutation fired as it must. 2 a mutation did not fire. 3 stopped on swap. A verdict is not a failure |
 
-The planted truth shows what the scan can see. A pole that holds less than the lowest passing rung of P is below its
-sensitivity, whatever the verdict says about the family.
+P′ shows what the scan can resolve. The scan compares a plant's Padé poles with the real series' Padé poles, so its
+planted truth is a plant's Padé poles, and not singularities placed at the real poles' places.
 
 Seen before the freeze, and disclosed.
 
@@ -2523,9 +2526,48 @@ Seen before the freeze, and disclosed.
   the poles-only path at 30 digits, and the same doubles came out, so it did not fire. It runs at 12 digits now, which
   gives a difference of 3.2×10⁻² and fires. The selftest prints no d_P, only the difference between the two paths.
 
+- **An amendment to the planted truth and to the grid**, made after the controls first ran and before any scan plant was
+  judged. The first P (three point masses at #541's places) fired: its smallest d_P is 0.109 (§18.3). The coordinator
+  replaced it by P′ above, which is a gate, and P stays as a finding. The strengths were extended from η = 1 to η = 10
+  (the grid from 26624 to 30720 plants, and the refinement's bound from 0 to 1 in log₁₀ η), because tuned point masses
+  that reach d_P = 0.031 hold 66% of σ₂₂ at order 22 and 6% at order 12. The first run's files are kept apart as
+  `control_first_run_P_fired.*`. P′'s plant and strength are named here before P′ ran, and no neighbour's d_P was seen.
+
 What the budget left out, so that "no" is read as a statement about this family only: second sets other than one
 segment with near-end exponent 4 (no arcs, no two segments, no steps, no point masses outside P); lengths other than 0.3
 and 0.6 and directions other than radial and horizontal on the grid (stage B moves them, from 8 starts); the arc main
 density in the radial group only; strengths above η = 1; the zero factor, held at ZLOC as in §15–§17; the Padé poles of
 k = 8, 9, 10 only, from σ₀–σ₂₀; and (a) and (c′), which are not judged here. A joint judge of whatever passes is a
 recommended task.
+
+### 18.3 Results: the first planted truth fired
+
+`pade_far_poles.py control`, 2026-11-18 00:19 UTC, one process under `nice -n 10` on the rpi5, script at 10b90d9b. The
+selftest (R1–R3), J+, J− and R4 passed. The first P did not.
+
+| check | result | verdict |
+|---|---|---|
+| selftest R1, R2, R3 | the poles-only path equals `pade_record` bit for bit; curves exact; moments 2.4×10⁻⁵⁶; point masses 8.7×10⁻³⁰ | OK |
+| selftest mutations `prec` (12 digits), `dir`, `pole_w` | difference 3.2×10⁻², `A = Q − L` false, moments 3.3×10⁻⁷; each exits 1 | all fire |
+| J+, the real series' d_P | 0 at every node | OK |
+| J−, the η = 0 plants' d_P | 0.219236 and 0.225410, equal to #718's | OK |
+| R4, 12 of #718's plants | d_P within 7×10⁻¹⁴ relative of the stored ones | OK |
+| the first P, three equal point masses at #541's places | d_P 0.109–0.216 at every rung η_P = 1e-3 to 1, no rung ≤ 0.03 | **fired** |
+
+The first P at ω∞, d_P by strength, chord2 and arc main:
+
+| η_P | 1e-3 | 1e-2 | 1e-1 | 1 |
+|---|---|---|---|---|
+| chord2 | 0.197 | 0.148 | 0.150 | 0.127 |
+| arc | 0.207 | 0.165 | 0.148 | 0.111 |
+
+**The finding.** Beside the main chord's cut, [8/8] to [10/10] do not find three point poles at #541's places. Their
+nearest poles lie 0.11–0.22 away, so a singularity at the place of a Padé pole does not give that pole. The cause is
+resolution, not a fault in the code. Three pure point masses with no main are found exactly (d = 0), and one mass at
+η_P = 1 is found by [8/8], [9/9] and [10/10] only to 0.055, 0.032 and 0.022. #541's far Padé poles need not mark
+singularities at their own places, and the scan must compare Padé poles with Padé poles.
+
+Diagnostics after it fired, not frozen (`diag/` in the raw folder): the three masses with complex weights solved by
+Levenberg–Marquardt, over three nodes at η = 1, φ = 0, reach at best 0.031. Their weights are of opposite signs and
+differ by a factor of 4, and they hold 66% of σ₂₂ at order 22 and 6% at order 12. Solved at ω∞ alone with η and φ free,
+the solve stalls at 0.086, so even the exact structure passes (b) only with heavy tuning.
