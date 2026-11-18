@@ -22,6 +22,8 @@ def h(arrs):
 
 
 def main(argv):
+    # LF line ends on every platform, so a Windows output compares byte for byte with Linux's (#962)
+    sys.stdout.reconfigure(newline="\n")
     from anm_run import coefficients_o
     from octo_corrector import truth_system
     raw, state = argv[0], argv[1]
