@@ -18,6 +18,7 @@ formulation of hp/pinning.py; their coefficients are zero).
         [--jet_o 0] [--jet_by_order 1] [--od_tangents 2] [--corrector od --tol_od 1e-40] [--base_adopt 0] [--base_polish 1] [--keep_plan 1] [--held_fit FILE]
         [--held_o 0] [--reseed_o 0] [--a0 0] [--a_grow 2] [--a_hold 0] [--lam_stall 0] [--save_base 0] [--save_jet 0] [--held_from STATE]
         [--arclength 0 --guard 0.05 --D_min 0 --arc_sign 1 --border 1 --turns_max 2 --arc_dhold 1e-12 --arc_jet FILE]
+        [--a_rule step|reseed --a_scale 1 --a_drop 10 --a_rise 3.16]
 
 --corrector qd runs the quad-double Newton of the kernel (hpkernel.driver.newton_qd, Solver.newton_q) on the pinned
 system (pinning.PinnedQ: the held harmonics' offset subtracted from the quad-double residual and added to the step, as
@@ -112,6 +113,15 @@ state's pinned octo-double max |F| exceeds --tol_od, and the line "base: ..." gi
 first is --a0 (h_max when 0), a refused attempt halves it, and after an accepted step the next is
 --a_grow times longer, up to h_max; with --a_hold 1 it grows only after a step accepted at its first attempt, so a
 step found by halving is kept (past D 232 steps of 1.0 are refused at every base and 0.5 accepted, #461).
+--a_rule reseed (with --jet_o 1, --reseed and --reseed_start pred) sets each base's step by hp/step_rule.py instead:
+the a at which the series' estimated truncation error in the a_h rows, e_N+1 a^(N+1), equals a level s times the
+horizon series' basin at D + a by 13.6's pole law (the re-seed accepts while the prediction's a_h lies in it). A
+failed re-seed sets s to its attempt's level over --a_drop (10) and tries the a this gives, a failed corrector halves
+the step, and a first attempt accepted at the rule's step raises s by --a_rise (sqrt 10); --a_scale (1) is the first
+s. It replaces --a0, --a_grow and --a_hold, allows eight attempts, and records the estimate and s (a_rule,
+rule_level). With a refused re-seed costing about a twentieth of a base, the step stays near the re-seed's edge
+instead of halving from it; N up to 31 and --h_max above 1 let it lengthen (hp/step_rule_check.py). step, the
+default, is the rule above.
 --od_accept natural judges the octo-double corrector's trials by Deuflhard's natural monotonicity test (the simplified
 Newton correction through the LU at the iterate, octo_corrector.newton_od) instead of each trial's own Newton
 correction (own, the default; #644). --od_strong k takes the corrector's first step whole and then solves only the
@@ -179,6 +189,7 @@ from pinning import HeldFit, PinnedQ, PinnedSolver, band_coeffs, band_field, qd_
 from raw_out import pop_allow, require_raw  # noqa: E402
 from octo_corrector import ElimO, PinnedO, delta_digits, has_o, load_o, newton_od, o8, o8_of_q, omax, q4_of_o, save_o, with_horizon  # noqa: E402,F401
 from reseed import ElimQ, Reseeder, StartNotProjected  # noqa: E402
+from step_rule import ReseedRule, ah_norms, pole_delta  # noqa: E402
 from taylor_predict import formula_delta  # noqa: E402
 
 
@@ -379,6 +390,9 @@ def main():
     # --border 0 is its control (the D-series and the corrector at fixed D)
     # --arc_dhold H: D held where the bordered step's D move is at most H; --arc_jet FILE: the first series read
     opt.update(arclength=0, guard=0.05, D_min=0.0, arc_sign=1, border=1, turns_max=2, arc_diag=0, arc_dhold=1e-12, arc_jet="")
+    # --a_rule reseed: the step from the series' a_h tail and the re-seed's basin (hp/step_rule.py); its first level is
+    # --a_scale, lowered by --a_drop after a failed re-seed and raised by --a_rise after a first attempt at its step
+    opt.update(a_rule="step", a_scale=1.0, a_drop=10.0, a_rise=10.0 ** 0.5)
     for k in list(opt):
         f = "--" + k
         if f in args:
@@ -394,6 +408,12 @@ def main():
                          or (opt["reseed"] and not opt["reseed_q"])):
         raise SystemExit("--jet_o 1 needs --corrector qd or od, and with --reseed also --reseed_q 1; it replaces --jet_q, --pred_q "
                          "and --fix1, and --probe does not apply")
+    if opt["a_rule"] not in ("step", "reseed"):
+        raise SystemExit(f"--a_rule: step or reseed, not {opt['a_rule']}")
+    if opt["a_rule"] == "reseed" and (not (opt["jet_o"] and opt["reseed"] and opt["reseed_start"] == "pred") or opt["arclength"]
+                                      or not (opt["a_scale"] > 0 and opt["a_drop"] > 1 and opt["a_rise"] >= 1)):
+        raise SystemExit("--a_rule reseed needs --jet_o 1, --reseed 1 or 2 and --reseed_start pred, not --arclength, and "
+                         "--a_scale > 0, --a_drop > 1, --a_rise >= 1")
     out_dir = out
     os.makedirs(out, exist_ok=True)
     rec_path = os.path.join(out, "anm_run.jsonl")
@@ -409,6 +429,8 @@ def main():
         raise SystemExit(f"--jet_o 1: the octo-double solver is built for M = 32 and N <= 31, not M {M}, N {N}")
     if opt["corrector"] == "od" and (M != 32 or (opt["reseed"] and not opt["reseed_q"])):
         raise SystemExit(f"--corrector od: the octo-double solver is built for M = 32 (not {M}), and with --reseed it needs --reseed_q 1")
+    # --a_rule reseed: the re-seed matches the series to the last node at u0 = 1 - x_last (reseed.Reseeder)
+    rule = ReseedRule(1.0 - nodes[-1], opt["a_scale"], opt["a_drop"], opt["a_rise"]) if opt["a_rule"] == "reseed" else None
     D_start = D
     junk_only = bool(opt["junk_only"])
 
@@ -915,17 +937,26 @@ def main():
                 return
         a_max = (opt["eps"] * norms[1] / norms[N]) ** (1.0 / (N - 1)) if norms[N] else opt["h_max"]
         room = float(opt["D_max"] - D)
-        a = min(a_max, opt["h_max"], room) if a is None else min(a, a_max, opt["h_max"], room)
+        if rule is None:
+            a = min(a_max, opt["h_max"], room) if a is None else min(a, a_max, opt["h_max"], room)
+        else:
+            a = rule.start(ah_norms(Zh, M, len(nodes)), D, min(a_max, opt["h_max"], room))
         ratios = [norms[k - 1] / norms[k] if norms[k] else None for k in range(2, N + 1)]
         rec = dict(step=step, D0=float(D), D0_str=str(D), pin=kf, N=N, pivots=(float(pmin), float(pmax)), norms=norms, a_max=a_max,
                    t_coef=t_coef, refine_last=refine[-1], fix1=fix1, ratios_2_5=ratios[:4], trend=opt["trend"], slopes=slopes, held=ks_held,
                    horizon_alpha=opt["horizon_alpha"], jet_q=opt["jet_q"], jet_o=opt["jet_o"], held_fit=opt["held_fit"])
         print(f"step {step}: D {mp.nstr(D, 12)}, pivots {pmin:.1e}..{pmax:.1e}, |z_1| {norms[1]:.2e}, |z_N| {norms[N]:.2e}, ratios 2-5 "
               + " ".join(f"{r:.1f}" for r in ratios[:4] if r) + f", a_max {a_max:.3f}, {t_coef:.0f} s", flush=True)
+        if rule is not None:
+            rec["a_rule"] = dict(rule.record(), a=a)
+            print(f"  a_rule reseed: a_h tail e_N+1 {rule.e_next:.2e} (ratio {rule.rho:.2f}), level {rule.scale:.3g} of the "
+                  f"pole line {pole_delta(D + a, rule.u0):.2e}: a {a:.4f}{' (capped)' if rule.capped else ''}", flush=True)
         if opt["probe"]:
             sys.exit(probe(D, zh, zl, Zh, Zl, refine, held_arg))
         converged = False
-        for attempt in range(4):
+        # --a_rule reseed: a failed re-seed costs about a twentieth of a base and shortens the step by drop^(-1/(N+1)),
+        # so it gets eight attempts
+        for attempt in range(4 if rule is None else 8):
             screens = []
             while True:
                 ph, pl = series_at(zh, zl, Zh, Zl, a)
@@ -1004,6 +1035,8 @@ def main():
             att = dict(attempt=attempt, a=a, D=float(Dn), D_str=str(Dn), F_pred=Fp, F_final=Fc, tol=tol, steps=nsteps, accepted=accepted, t_corr=t_corr,
                        Delta=float(ch[-1] + cl[-1]), dDelta_formula=float(ch[-1] + cl[-1]) - fd, dDelta_corr=dcorr,
                        moved=float(dd_norm(*dd_add(ch, cl, -ph, -pl))), screens=screens, reseed=rsd)
+            if rule is not None:
+                att.update(rule_err=rule.err(a), rule_level=rule.level(a))     # the a_h error estimated at a, and over the line
             rec.setdefault("attempts", []).append(att)
             print(f"    a {a:.3f} -> D {mp.nstr(Dn, 12)}: predicted |F| {Fp:.2e}, {opt['corrector']} {nsteps} steps -> {Fc:.2e} (tol {tol:.1e}"
                   f"{', stall accepted, Delta correction ' + format(dcorr, '+.1e') if accepted and Fc > tol else ''}), "
@@ -1011,13 +1044,21 @@ def main():
                   f"moved {att['moved']:.1e}, {t_corr:.0f} s", flush=True)
             if accepted:
                 converged = True
+                if rule is not None and rsd is not None and not rsd["ok"]:
+                    rule.refused(a)                # converged without its re-seed: the rule's level still drops
                 break
-            a *= 0.5
+            if rule is not None and rsd is not None and not rsd["ok"]:
+                a = rule.refused(a)                # a failed re-seed lowers the rule's level; a failed corrector halves
+            else:
+                a *= 0.5
         rec["converged"] = converged
+        if rule is not None:
+            rec["a_rule"]["scale_after"] = rule.scale
         with open(rec_path, "a") as f:
             f.write(json.dumps(rec) + "\n")
         if not converged:
-            print("stopped: no convergence after three halvings", flush=True)
+            print("stopped: no convergence after three halvings" if rule is None else
+                  "stopped: no convergence after eight attempts", flush=True)
             break
         D, zh, zl, s, sp, segs = Dn, ch, cl, sn, spn, segs_n
         # re-base the trend on the new state (its harmonics sit on the trend's values at D, to the corrector's floor)
@@ -1032,7 +1073,10 @@ def main():
             print(f"      Delta of the saved state, its eight parts summed exactly: {delta_digits(last_q['z8'])}", flush=True)
         else:
             save(os.path.join(out, f"anm_pin{kf}_D{float(D):.4f}.npz"), zh, zl, meta_out)
-        if not opt["a_hold"] or attempt == 0:
+        if rule is not None:
+            # the next base's step is the rule's again, its level raised only after its own step passed unscreened
+            rule.accepted(attempt == 0 and not screens and rsd is not None and rsd["ok"])
+        elif not opt["a_hold"] or attempt == 0:
             a = min(opt["a_grow"] * a, opt["h_max"])          # the next step may grow again
     print("done", flush=True)
 
