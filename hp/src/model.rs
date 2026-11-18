@@ -85,7 +85,18 @@ pub struct Ctx<const B: usize> {
     /// HALPHA_MUT, the control, carries alpha but forms them from 1 + alpha as before (the cancellation put back).
     /// All lanes read it.
     pub horizon_alpha: u8,
+    /// The form of the horizon series one jet order at a time (SPLIT_*): 0, the default, `horizon_series_at`;
+    /// SPLIT_MIDDLE forms each Cauchy sum's middle terms ahead of the pass on octo-double jets (`series_split`). Only
+    /// `horizon_state_at` reads it.
+    pub series_split: u8,
 }
+
+/// `Ctx::series_split`: the middle terms of the horizon series' Cauchy sums formed ahead of each jet order, in
+/// parallel (`series_split::horizon_series_at_split`): the default's sums in another order, which can differ from
+/// its bits at the octo-double rounding
+pub const SPLIT_MIDDLE: u8 = 1;
+/// the control of SPLIT_MIDDLE's accuracy check (Ctx::mutate): the middle terms without the jet order l = 1
+pub const SPLIT_MUT_DROP_L1: u8 = 31;
 
 /// `Ctx::f64_dd`: the horizon series' periodic solves (`psolve`) in double-double for the f64 lanes, value and
 /// tangents, with the full double-double LU factors instead of their hi parts
@@ -228,7 +239,7 @@ pub fn check_freeze<const B: usize>(lo: &DMat<B>) -> Result<usize, String> {
 }
 
 #[inline(always)]
-fn recip_int(k: usize) -> DD {
+pub(crate) fn recip_int(k: usize) -> DD {
     DD::ONE / DD::from_f64(k as f64)
 }
 
@@ -586,7 +597,7 @@ const N_AUX_AT: usize = N_AUX + 8;
 /// coefficient j of D x (the folded d/dtheta) into coefficient j of out, on a jet lane: D applied to the coefficient's
 /// values in the jet's own coefficient arithmetic (octo-, quad- or double-double), as `MatLane::dmat_apply` forms each
 /// coefficient of a jet
-fn dapply_at<T: Lane, const B: usize>(ctx: &Ctx<B>, x: &Fl<T, B>, j: usize, out: &mut Fl<T, B>) {
+pub(crate) fn dapply_at<T: Lane, const B: usize>(ctx: &Ctx<B>, x: &Fl<T, B>, j: usize, out: &mut Fl<T, B>) {
     if T::VAL_OD {
         let r = ctx.d.apply(&Fl::<OV, B>(std::array::from_fn(|b| x.0[b].coef_od(j))));
         for b in 0..B {
@@ -1190,7 +1201,7 @@ pub fn horizon_state<T: Lane, const B: usize>(ctx: &Ctx<B>, m0: &Fl<T, B>, a0: &
 /// f_{j-i}, and its solve, each as `psolve`'s jet solve forms them (multidouble's `solve_lanes_jet`,
 /// `solve_lanes_jet_refine` and `solve_lanes_jet_refine_od`, order by order), so that f_j is bit for bit theirs.
 #[allow(clippy::too_many_arguments)]
-fn psolve_at<T: Lane, const B: usize>(
+pub(crate) fn psolve_at<T: Lane, const B: usize>(
     ctx: &Ctx<B>,
     prep: &HPrep,
     kk: usize,
@@ -1245,7 +1256,7 @@ fn psolve_at<T: Lane, const B: usize>(
 /// value `horizon_series` reads in r); and the intermediates that enter a product: the factor of n - 1 in c's
 /// recursion, D p_k, D m_k, (c (p + m))_k before p_k, the factor of n - 1 in a's recursion, (c (p + m))_k, and the
 /// factor of 1/z_0 in m's; then omega (lane 0) and 1/z_0
-const H_SERIES: usize = 22;
+pub(crate) const H_SERIES: usize = 22;
 
 /// `horizon_series` for the coefficient of order j in the jet variable alone, into the series of `keep`
 /// (H_SERIES), which hold their coefficients below j from the calls for the lower orders: each coefficient j formed in
@@ -1386,8 +1397,9 @@ pub fn horizon_series_at<T: Lane, const B: usize>(
     }
 }
 
-/// `horizon_state` for the coefficient of order j alone (`horizon_series_at`, then each field's sum at coefficient j,
-/// a's with its value a0 at order 0 as `horizon_series` returns it)
+/// `horizon_state` for the coefficient of order j alone (`horizon_series_at`, or its split form with
+/// Ctx::series_split, then each field's sum at coefficient j, a's with its value a0 at order 0 as `horizon_series`
+/// returns it)
 pub fn horizon_state_at<T: Lane, const B: usize>(
     ctx: &Ctx<B>,
     m0: &Fl<T, B>,
@@ -1397,7 +1409,7 @@ pub fn horizon_state_at<T: Lane, const B: usize>(
     keep: &mut Vec<Vec<Fl<T, B>>>,
     j: usize,
 ) -> State<T, B> {
-    horizon_series_at(ctx, m0, a0, delta, prep, keep, j);
+    crate::series_split::horizon_series_at_form(ctx, m0, a0, delta, prep, keep, j);
     let u = ctx.u0().mul_pwr2(1.0 / series_scale(ctx.u0().hi));
     let ks = ctx.ks;
     let saved = std::mem::replace(&mut keep[2][0], *a0);
@@ -1778,7 +1790,7 @@ pub const JAC_MUT_TANGENT_ORDER: u8 = 25;
 /// the dimension in the lane's parameter arithmetic (multidouble's Param): the double-double scalar on every lane
 /// but a jet, bit for bit as before; on a jet the series n + h, so the coefficients carry their own derivatives in
 /// n (the Taylor continuation in D, notes/QUAD_DOUBLE.md 13.15); JET_MUT_FREEZE_N keeps it a constant
-fn dim<T: Lane, const B: usize>(ctx: &Ctx<B>) -> T::P {
+pub(crate) fn dim<T: Lane, const B: usize>(ctx: &Ctx<B>) -> T::P {
     if ctx.mutate == JET_MUT_FREEZE_N {
         T::P::from_dd(ctx.n)
     } else {
@@ -1918,7 +1930,7 @@ pub(crate) mod ctxfile {
         let l = v[i] as usize;
         let zh = v[i + 1..i + 1 + l].to_vec();
         let zl = v[i + 1 + l..i + 1 + 2 * l].to_vec();
-        let ctx = Ctx::<B> { n, d, phase, nodes, segs, kt, kc, ks, freeze: None, match_node: k - 1, lam: DD::ZERO, mutate: 0, f64_dd: 0, horizon_alpha: 0 };
+        let ctx = Ctx::<B> { n, d, phase, nodes, segs, kt, kc, ks, freeze: None, match_node: k - 1, lam: DD::ZERO, mutate: 0, f64_dd: 0, horizon_alpha: 0, series_split: 0 };
         assert_eq!(ctx.len(), l);
         (ctx, zh, zl)
     }

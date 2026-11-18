@@ -79,8 +79,9 @@ trait Api: Send + Sync {
     /// lanes: the jet's coefficient count, 0 for the smallest of OJET_LANES that holds nout and zs
     fn residual_jet_o(&mut self, zs: &[[&[f64]; 8]], nout: usize, lanes: usize, mutate: u8) -> Result<Vec<O8>, String>;
     /// the octo-double series one order at a time (multishoot's JetSession over hp's equations at `Octo`): from z_0,
-    /// each order k = 1..n's right-hand side -F_k (eight parts) handed to solve(k, b), which returns z_k; z_1..z_n
-    fn series_o(&mut self, z0: [&[f64]; 8], n: usize, solve: &mut (dyn FnMut(usize, O8) -> Result<O8, String> + Send), mutate: u8) -> Result<Vec<O8>, String>;
+    /// each order k = 1..n's right-hand side -F_k (eight parts) handed to solve(k, b), which returns z_k; z_1..z_n.
+    /// split: Ctx::series_split for the call
+    fn series_o(&mut self, z0: [&[f64]; 8], n: usize, solve: &mut (dyn FnMut(usize, O8) -> Result<O8, String> + Send), mutate: u8, split: u8) -> Result<Vec<O8>, String>;
 }
 
 /// `Api::series_o` on jets of N coefficients
@@ -367,19 +368,24 @@ impl<const B: usize> Api for Ctx<B> {
         })
     }
 
-    fn series_o(&mut self, z0: [&[f64]; 8], n: usize, solve: &mut (dyn FnMut(usize, O8) -> Result<O8, String> + Send), mutate: u8) -> Result<Vec<O8>, String> {
+    fn series_o(&mut self, z0: [&[f64]; 8], n: usize, solve: &mut (dyn FnMut(usize, O8) -> Result<O8, String> + Send), mutate: u8, split: u8) -> Result<Vec<O8>, String> {
         // the session's jets hold the orders 0..=n
         let Some(lanes) = OJET_LANES.iter().copied().find(|&l| l > n) else {
             return Err(format!("n must be at most {}, not {n}", OJET_LANES[OJET_LANES.len() - 1] - 1));
         };
-        od_sizes!(self, mutate, |c| match lanes {
-            8 => series_o_in::<8, _>(c, z0, n, solve),
-            12 => series_o_in::<12, _>(c, z0, n, solve),
-            16 => series_o_in::<16, _>(c, z0, n, solve),
-            20 => series_o_in::<20, _>(c, z0, n, solve),
-            24 => series_o_in::<24, _>(c, z0, n, solve),
-            28 => series_o_in::<28, _>(c, z0, n, solve),
-            _ => series_o_in::<32, _>(c, z0, n, solve),
+        od_sizes!(self, mutate, |c| {
+            c.series_split = split;
+            let r = match lanes {
+                8 => series_o_in::<8, _>(c, z0, n, solve),
+                12 => series_o_in::<12, _>(c, z0, n, solve),
+                16 => series_o_in::<16, _>(c, z0, n, solve),
+                20 => series_o_in::<20, _>(c, z0, n, solve),
+                24 => series_o_in::<24, _>(c, z0, n, solve),
+                28 => series_o_in::<28, _>(c, z0, n, solve),
+                _ => series_o_in::<32, _>(c, z0, n, solve),
+            };
+            c.series_split = 0;
+            r
         })
     }
 }
@@ -556,6 +562,7 @@ macro_rules! make_ctx {
                 mutate: 0,
                 f64_dd: 0,
                 horizon_alpha: 0,
+                series_split: 0,
             }) as Box<dyn Api>, )*
             _ => return Err(PyValueError::new_err("M must be one of 8, 16, 32, 40, 48, 64, 80, 96, 128, 160, 192, 256, 320, 384, 512")),
         }
@@ -1133,8 +1140,12 @@ impl Solver {
     /// coefficients_o's series by residual_jet_o: each order's right-hand side b = -F_k (eight parts) goes to rhs(k, b)
     /// when given, which returns the b to solve (the held rows, a perturbation), and is solved by the octo-double LU of
     /// the last newton_o (as olu_solve), which must have been taken at z0. Returns the eight-part tuples z_1..z_n.
-    /// mutate: Ctx::mutate for the call (model::JET_MUT_AT_KEEP, the control). M = 32 only.
-    #[pyo3(signature = (z0, n, rhs=None, mutate=0))]
+    /// mutate: Ctx::mutate for the call (model::JET_MUT_AT_KEEP, the control). split: the horizon series' form
+    /// (Ctx::series_split; 0, the default, as before; 1, model::SPLIT_MIDDLE, each Cauchy sum's middle terms formed
+    /// ahead of the order, in parallel, the same sums in another order, so other bits at most at the octo-double
+    /// rounding, hp/series_split_check.py). M = 32 only.
+    #[pyo3(signature = (z0, n, rhs=None, mutate=0, split=0))]
+    #[allow(clippy::too_many_arguments)]
     fn series_o<'py>(
         &mut self,
         py: Python<'py>,
@@ -1142,7 +1153,11 @@ impl Solver {
         n: usize,
         rhs: Option<Bound<'py, PyAny>>,
         mutate: u8,
+        split: u8,
     ) -> PyResult<Vec<T8<'py>>> {
+        if split > model::SPLIT_MIDDLE {
+            return Err(PyValueError::new_err(format!("split must be 0 or {}, not {split}", model::SPLIT_MIDDLE)));
+        }
         let l = self.api.len();
         let z0 = parts8(&z0, l)?;
         let lu = self.olu.as_ref().ok_or_else(|| PyValueError::new_err("no octo-double LU (call newton_o at z0 first)"))?;
@@ -1161,7 +1176,7 @@ impl Solver {
             Ok(od_parts(&x))
         };
         let (api, pool) = (&mut self.api, &self.pool);
-        let out = py.detach(|| pool.install(|| api.series_o(z0, n, &mut solve, mutate))).map_err(PyValueError::new_err)?;
+        let out = py.detach(|| pool.install(|| api.series_o(z0, n, &mut solve, mutate, split))).map_err(PyValueError::new_err)?;
         Ok(out.into_iter().map(|z| arr8(py, z)).collect())
     }
 
