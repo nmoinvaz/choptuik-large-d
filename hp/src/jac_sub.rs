@@ -121,31 +121,37 @@ mod tests {
         z
     }
 
-    /// entries of J[rows, cols] that differ from the full Jacobian's in any part (bits)
-    fn differ<P: Precision<Native>>(ctx: &Ctx<1>, z: &[Vec<f64>], rows: &[usize], cols: &[usize], ulp: bool) -> usize {
+    /// for each (rows, cols) case, the entries of J[rows, cols] whose bits differ from the full Jacobian's in any part;
+    /// the full Jacobian formed once. ulp: the control, one ulp up in the last part of each block's first entry.
+    fn differ<P: Precision<Native>>(ctx: &Ctx<1>, z: &[Vec<f64>], cases: &[(&[usize], &[usize])], ulp: bool) -> Vec<usize> {
         let zv: Vec<&[f64]> = z.iter().map(|p| &p[..]).collect();
         let (full, ld) = jacobian_in::<P, 1>(ctx, &zv, true).unwrap();
-        let mut sub = jacobian_sub_in::<P, 1>(ctx, &zv, rows, cols, true).unwrap();
-        if ulp {
-            let x = &mut sub[P::PARTS - 1][0];
-            *x = f64::from_bits(x.to_bits() + 1);
-        }
-        let nc = cols.len();
-        let mut n = 0;
-        for (i, &r) in rows.iter().enumerate() {
-            for (j, &c) in cols.iter().enumerate() {
-                n += (0..P::PARTS).any(|q| sub[q][i * nc + j].to_bits() != full[q][c * ld + r].to_bits()) as usize;
-            }
-        }
-        n
+        cases
+            .iter()
+            .map(|&(rows, cols)| {
+                let mut sub = jacobian_sub_in::<P, 1>(ctx, &zv, rows, cols, true).unwrap();
+                if ulp {
+                    let x = &mut sub[P::PARTS - 1][0];
+                    *x = f64::from_bits(x.to_bits() + 1);
+                }
+                let nc = cols.len();
+                let mut n = 0;
+                for (i, &r) in rows.iter().enumerate() {
+                    for (j, &c) in cols.iter().enumerate() {
+                        n += (0..P::PARTS).any(|q| sub[q][i * nc + j].to_bits() != full[q][c * ld + r].to_bits()) as usize;
+                    }
+                }
+                n
+            })
+            .collect()
     }
 
     /// Pass (fixed before the first run): on the synthetic context moved off its solution, J[rows, cols] from
     /// jacobian_sub_in is the full Jacobian's (jacobian_in) in every part of every entry, in double-, quad- and
     /// octo-double, for (a) the horizon block's m and a rows by its m_h and a_h columns, the re-seed's block, and (b)
     /// every row by columns that hold the targets' -1 (the last node's), the phase row's weights (p1's), Delta, a
-    /// segment's input and a repeated index, in no order. Control, which must differ: one ulp of the block's first
-    /// entry, in its last part.
+    /// segment's input and a repeated index, in no order. Control, which must differ by one entry in each block: one
+    /// ulp of the block's first entry, in its last part (quad-double).
     #[test]
     fn jacobian_sub_bitwise() {
         let (ctx, zh, zl) = synth();
@@ -156,17 +162,12 @@ mod tests {
         let all_rows: Vec<usize> = (0..l).rev().chain([3, 3]).collect();
         let t = ctx.off_node(k - 1);
         let mix_cols: Vec<usize> = vec![l - 1, t + 2, 1, t + m + 5, ctx.off_node(1) + 3, 0, t + 2, ctx.off_node(k) + 1];
-        let mut got = Vec::new();
-        for (rows, cols) in [(&rung_rows, &rung_cols), (&all_rows, &mix_cols)] {
-            got.push(differ::<Double>(&ctx, &state(&zh, &zl, 2), rows, cols, false));
-            got.push(differ::<Quad>(&ctx, &state(&zh, &zl, 4), rows, cols, false));
-            got.push(differ::<Octo>(&ctx, &state(&zh, &zl, 8), rows, cols, false));
-        }
-        let control = [
-            differ::<Double>(&ctx, &state(&zh, &zl, 2), &rung_rows, &rung_cols, true),
-            differ::<Octo>(&ctx, &state(&zh, &zl, 8), &all_rows, &mix_cols, true),
-        ];
-        println!("J[rows, cols] against the full Jacobian, entries that differ (dd, qd, od; rung block, then mixed): {got:?}; control {control:?}");
+        let cases: [(&[usize], &[usize]); 2] = [(&rung_rows, &rung_cols), (&all_rows, &mix_cols)];
+        let mut got = differ::<Double>(&ctx, &state(&zh, &zl, 2), &cases, false);
+        got.extend(differ::<Quad>(&ctx, &state(&zh, &zl, 4), &cases, false));
+        got.extend(differ::<Octo>(&ctx, &state(&zh, &zl, 8), &cases, false));
+        let control = differ::<Quad>(&ctx, &state(&zh, &zl, 4), &cases, true);
+        println!("J[rows, cols] against the full Jacobian, entries that differ (dd, qd, od; rung block, mixed): {got:?}; control {control:?}");
         assert_eq!(got, vec![0; 6], "a block entry is not the full Jacobian's");
         assert!(control.iter().all(|&n| n == 1), "the control did not change exactly one entry");
     }
