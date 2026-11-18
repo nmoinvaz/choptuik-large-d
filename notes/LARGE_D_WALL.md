@@ -1075,6 +1075,23 @@ reading to test. The Δ values of the two orders agree to a few 10⁻¹² (same 
   dh370 and xfchecks agree on 219–257.
 - **Open.** Whether order 240 is itself converged for the Δ mode at D 232, by a ks ladder 200–320 (#948).
 
+## Order 142 follows track C past #603's departure (#903)
+
+**The departure of #603's chain from track C past D 246 is its order-130 cut.** Order 142, with #603's flags otherwise,
+was continued from D 225.13 to 251.13 (xfkappa, raw `I903-mac/chain_fixed/` 56d68b67). At #603's eleven states from
+D 246.26 to 250.84, Δ(142) minus track C's 1/n series runs smoothly and monotonically from −2.25×10⁻¹² to
+−3.06×10⁻¹². That is inside track C's spread over its 19 fits (±8.1×10⁻¹¹), while #603's chain departs from the same
+series by up to 2.74×10⁻⁸ at 250.84. The last digits are limited to about ±5×10⁻¹³ by the printed comparison. Each
+series met the chain's next state within 2.0×10⁻³⁰ (bound 10⁻¹⁸; the base mutation fails as it should). Re-planning
+at D 225.13 moves Δ by −1.1×10⁻²⁰, so the rungs' lifts belong to the order.
+
+- **It stopped where orders 150 and 160 did, for the same reason.** At D 251.008 the corrector's first damped step
+  left the basin at a 0.477 and 0.238, with |F| going from 2×10⁻³⁵ to 10⁻²³. At a 0.119 it recovered in 15 iterations.
+  The arm was stopped at D 251.128, with every state kept, since orders 130, 135 and the order-tied chain cover the
+  fold's dependence on the order. It can resume from there.
+- **Discrepancy, unexplained.** Its rung refinement floors at 10⁻⁴³–10⁻⁵⁴ (10⁻²⁸–10⁻³⁰ at a 1 near D 242–246), where
+  #603's at order 130 with the same flags reaches 2×10⁻⁷⁹ in three corrections.
+
 ## Proposed README text
 
 Applied to the README by the coordinator on 2026-11-14 (its checks moved to the README with it). Drafted for the
