@@ -1002,6 +1002,16 @@ an intrinsic weakening remains.
   #903's Mac pilot), while a ladder of +2 to +10 per rung converges. Order 142 already holds 82% of order 250's lift at
   D 225.13.
 
+### The grip near the fold at fixed orders (#903)
+
+**Orders 135 and 142 leave a growing part of the horizon cut, so their folds are those orders' folds.** xfchecks read
+L = ln g(200) − ln g(K) at the fixed-order chains' bases, with the same method (raw `I903-mac-grip/` dbc6640f). It
+exceeds ln 10 at every base from D 229 and rises with D: +9.79 to +21.73 at order 135 (to D 254.70), and +3.84 to
++9.61 at order 142 (to D 250.25). At order 200 the Δ mode falls a steady 1.488 and 1.475 per unit D, as order 240's
+does along the order-tied chain (1.51, #941). At orders 135 and 142 it falls 2.2 to 3.1 and 1.9 to 2.4 per unit, and
+the fall accelerates. So a fold read from a fixed-order chain likely lies below the problem's, and the fold estimates
+from orders 130, 135 and 142 (D* ≈ 259.90) are read as those orders' folds until the order-tied chain reaches them.
+
 ## The departure split by the adjoint (#905)
 
 **At D 250.17 none of the settings an adjoint can split accounts for the departure, and the horizon order is the
