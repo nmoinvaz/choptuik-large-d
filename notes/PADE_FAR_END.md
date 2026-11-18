@@ -2815,3 +2815,28 @@ P. Gonnet, S. Güttel and L. N. Trefethen, SIAM Rev. 55, 101–117 (2013), doi:1
 SIAM and Oxford listings, not the full text). The paper was not read, and nothing here says that its use in differential
 approximants, or the weighting by measured errors, is new. The weighting is the generalized least squares estimator, reweighted
 from the previous solution.
+
+### 19.5 Amendments before any plant was judged
+
+Made after the selftest first ran and before any plant was judged under this estimator (the timing check printed times
+only). None changes a criterion of 19.3 for the plants or the real series.
+
+- **The QR.** `mp.qr_solve` refuses a column whose squared norm is below the absolute eps, and it raised "numerically
+  singular" on S4's series, which is consistent to 50 digits. The script has its own Householder QR with the unitary
+  complex reflector, after scaling the columns to unit norm, a reparametrization that leaves the minimizer alone. S1
+  checks it against the normal equations. The ε of the weights are mpf, so that a uniform scale is exact in S2.
+- **S1 and S2 on a noisy series.** On the noise-free D1 the weights barely matter, since the plant is consistent to 60
+  digits and the mutation moved q by 10⁻⁵¹. They use D1 plus the measured noise, draw 547000. The members of S1 are
+  indices 0, 5 and 9 of E1, since index 10 is square and has no weights.
+- **S1 thresholds.** QR and normal equations agree to 10⁻⁸⁶–10⁻⁹⁰. The pass bound is 10⁻⁶⁰, and the mutation (one
+  weight × 1.01) must exceed it. It moves q by 1.1×10⁻²⁴, 6.5×10⁻²³ and 1.5×10⁻⁴⁶: a series that a degree-4 member fits to
+  the noise level is insensitive to the weights, which §19.6 reads against the plants.
+- **S3.** The estimate is a double, so the pass bound is 10⁻¹² and not 10⁻²⁰ (the deviations are 4.4×10⁻¹⁶). The
+  stress factor of `abs_window` is c = 1.9 and not 1.6, since a zero of modulus above 1.58 leaves the absolute window at
+  1.9 whatever the far end is.
+- **`e0_row`.** One right side × (1 + 10⁻⁶), not a dropped equation, which leaves a square system underdetermined.
+- **Timing.** 2.0 s for one estimate of 11 or 12 members, so a plant with its 21 estimates costs about 45 s and the
+  35 plants about 25 min.
+
+The selftest passes with all five of its mutations (`e0_row`, `selftest_row`, `err_x1e3_tail`, `abs_window`,
+`selftest_sigma18`) firing, at the script of the commit that holds this section.
