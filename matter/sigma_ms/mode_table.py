@@ -6,7 +6,9 @@ records, against sigdss's values, into a csv and a markdown table.
     python3 matter/sigma_ms/mode_table.py ../choptuik-large-d-raw [--folder I918-mac] [--Dmin 9]
         [--csv matter/sigma_ms/data/lam_D.csv] [--mutate gauge|sigdss]
     python3 matter/sigma_ms/mode_table.py ../choptuik-large-d-raw --folder I928-mac --also I918-mac --Dfine 11 \
-        --Dspread DLAST --csv matter/sigma_ms/data/lam_D.csv [--mutate gauge|sigdss|spread]            (#928)
+        --csv matter/sigma_ms/data/lam_D.csv [--mutate gauge|sigdss]                                   (#928)
+    python3 matter/sigma_ms/mode_table.py ../choptuik-large-d-raw --folder I928-mac --also I918-mac --Dfine 11 \
+        --Dspread 13 [--mutate spread]            (#928: check (3); it fails at eta 1, M 48, which has no state)
 
 Input: <folder>/out/sm_lam.jsonl, for each (eta, D, M, number of nodes) its last record with a growth rate, after
 the records of the --also folders (an earlier part of the chain). sigdss's rates are read from solver/matter/data.
