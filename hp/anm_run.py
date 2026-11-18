@@ -340,6 +340,29 @@ def horner_o(Zo, a):
     return p
 
 
+_NOTICED = set()        # the fallback notices printed once per run
+
+
+def base_lu_o(s, zo):
+    """The octo-double LU at zo for the series (coefficients_o), with its pivots and how it was had: (pmin, pmax,
+    'kept') when s's last newton_o was at zo, bit for bit in all eight parts, with the default mutate and tangents and
+    no change of s's context since (Solver.olu_pivots_at), as after the octo-double corrector converged at zo on this
+    solver; else (pmin, pmax, 'formed') from a newton_o at zo. Either LU is the same bits, since newton_o at the same
+    state on the same context forms the same LU (hp/dup_eval_check.py base). A build without olu_pivots_at forms it,
+    with a notice."""
+    zo = list(zo)
+    if hasattr(s, "olu_pivots_at"):
+        piv = s.olu_pivots_at(zo)
+        if piv is not None:
+            return piv[0], piv[1], "kept"
+    elif "olu_pivots_at" not in _NOTICED:
+        _NOTICED.add("olu_pivots_at")
+        print("  base_lu_o: this hpkernel has no Solver.olu_pivots_at; the series' octo-double LU is formed at every base",
+              flush=True)
+    st = s.newton_o(zo)
+    return st[3], st[4], "formed"
+
+
 def tangent_kw(make, n):
     """make_solver's octo_tangents = n, or {} with a notice for an hpkernel built before #921, whose make_solver has
     no octo_tangents: its Jacobian takes one tangent per evaluation, the same bits, so a chain that pulls main before
@@ -895,6 +918,7 @@ def main():
                     if (any(any(sl) for sl in slopes) or hfit is not None) else None)
         fix1 = None
         Zo = None
+        base_lu = None
         if opt["jet_o"]:
             # --jet_o 1: the series from the octo-double jet through the octo-double LU at the base's four parts
             # promoted to eight
@@ -903,7 +927,8 @@ def main():
             if "z8" in last_q or ("z4" not in last_q and has_o(os.path.join(raw, opt["state"]))):
                 # the base in eight parts: the octo-double corrector's, or a state it stored
                 zo = last_q["z8"] if "z8" in last_q else load_o(os.path.join(raw, opt["state"]))[0]
-            pmin, pmax = s.newton_o(list(zo))[3:5]
+            # the corrector's last LU when it was taken at zo on this solver (base_lu_o), else formed here
+            pmin, pmax, base_lu = base_lu_o(s, zo)
             Zo, norms = coefficients_o(s, zo, N, held=held_arg, by_order=bool(opt["jet_by_order"]))
             Zh, Zl, refine = [np.asarray(z[0]) for z in Zo], [np.asarray(z[1]) for z in Zo], [()]
         elif opt["jet_q"]:
@@ -944,7 +969,8 @@ def main():
         ratios = [norms[k - 1] / norms[k] if norms[k] else None for k in range(2, N + 1)]
         rec = dict(step=step, D0=float(D), D0_str=str(D), pin=kf, N=N, pivots=(float(pmin), float(pmax)), norms=norms, a_max=a_max,
                    t_coef=t_coef, refine_last=refine[-1], fix1=fix1, ratios_2_5=ratios[:4], trend=opt["trend"], slopes=slopes, held=ks_held,
-                   horizon_alpha=opt["horizon_alpha"], jet_q=opt["jet_q"], jet_o=opt["jet_o"], held_fit=opt["held_fit"])
+                   horizon_alpha=opt["horizon_alpha"], jet_q=opt["jet_q"], jet_o=opt["jet_o"], held_fit=opt["held_fit"],
+                   base_lu=base_lu)
         print(f"step {step}: D {mp.nstr(D, 12)}, pivots {pmin:.1e}..{pmax:.1e}, |z_1| {norms[1]:.2e}, |z_N| {norms[N]:.2e}, ratios 2-5 "
               + " ".join(f"{r:.1f}" for r in ratios[:4] if r) + f", a_max {a_max:.3f}, {t_coef:.0f} s", flush=True)
         if rule is not None:
