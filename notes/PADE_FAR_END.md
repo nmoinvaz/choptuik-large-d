@@ -2489,11 +2489,11 @@ Written here, and committed, before any plant was judged. The script's `FROZEN` 
 | stage A cap | stage A stops after 4 h of its own wall time, and the positions not reached are listed as left out |
 | stage B | from the 8 best stage-A starts (admissible, smallest d_P at ω∞, one per (kind, a, b, group, α)), Nelder–Mead (`scipy.optimize.minimize`) on x = (log₁₀ η, φ°, Re o, Im o, L, θ°), kind, α and near-end exponent held, with the objective D₃ = the largest d_P over the three nodes, or 1 + the largest `fit_resid` if a node is inadmissible, or 10 if a Padé fails. The offset is held at every node as in stage A and θ is absolute (a radial start takes θ = arg Q at ω∞). Initial simplex x₀ + s_i e_i, s = (0.5, 45, 0.06, 0.06, 0.08, 20), the sign flipped at a bound. Bounds: log₁₀ η in [−6, 0], Re o and Im o in [−1, 1.25], L in [0.05, 1.2]. At most 200 evaluations, `xatol` 1e-3, `fatol` 1e-5 |
 | stage C | every admissible stage-A plant with d_P ≤ 0.06 at ω∞ (the 300 smallest if more) runs at ω/ω∞ = 0.99 and 1.01 |
-| passes | as in 18.1 |
+| passes | as in 18.1. Every plant with d_P ≤ 0.03 at a node is rechecked through `pade_record`, and a disagreement exits 1 |
 | the answer | **yes**, a second set of this family gives (b), if any plant of stages A to C passes. **No**, if none does, which is then a statement about this family and its strengths only, with what the scan left out stated beside it |
 | located | #718's rule on the 64 lattice positions, with a position's status pass or fail by its stage-A plants at ω∞ and stage C. A passing position whose four lattice neighbours exist and fail is a candidate. Its diagonal points are not run, so no position is located here and the stage 2 is a recommended task |
 | closest | D₃ for every plant run at the three nodes, and the smallest d_P at ω∞ over every plant. Context, not judged: the smallest d_k per k over stage A, the map of the smallest d_P per position, and the shares of σ₁₂ and σ₂₂ of the closest plants |
-| R1, selftest | the poles-only d_P equals `pade_record`'s bit for bit, and the nearest poles too, for 6 plants at ω∞ (chord2 and arc, η = 0, a radial and a horizontal second set). `--mutate=prec` (the poles-only path at 30 digits) must fail it |
+| R1, selftest | the poles-only d_P equals `pade_record`'s bit for bit, and the nearest poles too, for 6 plants at ω∞ (chord2 and arc, η = 0, a radial and a horizontal second set). `--mutate=prec` (the poles-only path at 12 digits) must fail it |
 | R2, selftest | the radial curves equal `ring_curve`'s bit for bit at the 64 positions and L = 0.3, 0.6. The horizontal curves have A = Q − L exactly. The second set's exact moments on a horizontal and a θ = 30° segment against `mpmath.quad` at k = 0, 7, 15, 22, 31 within 1e-40 relative. `--mutate=dir` (θ + 10⁻⁶ rad) must fail it |
 | R3, selftest | the point masses' moments, mom_k = Σ_j w_j t_j^k / k!, against `mpmath` powers at 60 digits for k = 0, 7, 15, 22, 31, within 1e-50 relative. `--mutate=pole_w` (one weight × (1 + 10⁻⁶)) must fail it |
 | R4, regression | 12 of #718's plants through this path, the first record at ω∞ of `I718-mac/ring.jsonl` for each of (chord2, arc) × L = 0.3 radial positions (+1, +1), (0, 0), (−1, −1) × α = 0, β − 1: d_P within 10⁻⁶ relative of the stored one (the Mac's `lstsq` and this machine's differ in the last digits). `control --mutate=len` (L × 1.01) must fail it |
@@ -2519,6 +2519,9 @@ Seen before the freeze, and disclosed.
   0.67 s and 0.38 s a plant, and 36 MB.
 - The grid's directions and lengths were chosen from the reference poles' geometry and the measured cost, not from any
   d_P of a plant.
+- **An amendment to R1**, made after the selftest first ran and before any plant was judged. `--mutate=prec` first ran
+  the poles-only path at 30 digits, and the same doubles came out, so it did not fire. It runs at 12 digits now, which
+  gives a difference of 3.2×10⁻² and fires. The selftest prints no d_P, only the difference between the two paths.
 
 What the budget left out, so that "no" is read as a statement about this family only: second sets other than one
 segment with near-end exponent 4 (no arcs, no two segments, no steps, no point masses outside P); lengths other than 0.3
