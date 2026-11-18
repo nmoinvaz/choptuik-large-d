@@ -554,6 +554,83 @@ mod od {
         assert!(control > 0, "the control did not change the series");
     }
 
+    /// the residual's series in P one order at a time with the orders from `from` on moved by their tangents
+    /// (multishoot's JetSession::tangent_from over hp's equations, 12-lane jets), given zs one by one, against
+    /// residual_jet on the same vectors: (rows of the orders below `from` that differ in any bit, the largest normwise
+    /// relative difference max |a - b| / max |b| of a moved order, NaN if any is)
+    fn session_tangent_vs_jet<P: multidouble::precision::Precision<multidouble::simd::Native>>(
+        ctx: &Ctx<1>,
+        zs: &[Vec<&[f64]>],
+        from: usize,
+        par: bool,
+        control: bool,
+    ) -> (usize, f64) {
+        let mut sh = ctx.shooting_in::<P>();
+        if control {
+            sh.set_control(multishoot::control::Control::JetTangentKeep);
+        }
+        let mut s = sh.jet_session::<P, 12>();
+        s.tangent_from(Some(from));
+        let mag = |x: P::Scalar| P::to_dd(x).hi.abs();
+        let (mut below, mut worst) = (0, 0.0f64);
+        for k in 0..zs.len() {
+            s.next(&zs[k], par).unwrap();
+            let full = crate::model::residual_jet_in::<P, 12, 1>(ctx, &zs[..=k], par, k + 2).unwrap();
+            for (j, fj) in full.iter().enumerate() {
+                let oj = s.order(j).unwrap();
+                if j < from {
+                    below += oj.iter().zip(fj).filter(|(x, y)| (0..P::PARTS).any(|q| P::part(**x, q).to_bits() != P::part(**y, q).to_bits())).count()
+                        + oj.len().abs_diff(fj.len());
+                } else {
+                    let d = oj.iter().zip(fj).map(|(&x, &y)| mag(x - y)).fold(0.0f64, |a, b| if b.is_nan() || b > a { b } else { a });
+                    let sc = fj.iter().map(|&y| mag(y)).fold(0.0f64, f64::max);
+                    let r = if sc > 0.0 { d / sc } else { d };
+                    worst = if r.is_nan() || r > worst { r } else { worst };
+                }
+            }
+        }
+        (below, worst)
+    }
+
+    /// Pass (fixed before the first run): on the synthetic state, the residual's series one order at a time with the
+    /// orders from 1 on, and from 3 on, moved by their tangents (multishoot's JetSession::tangent_from: the change of
+    /// order 1 of a session on two-coefficient jets), given z_0 and nine planted vectors one by one, agrees with
+    /// residual_jet's at every order formed after each vector to a normwise relative 2^-(53 PARTS - 20), in
+    /// octo-double serial and threaded and in quad- and double-double threaded, and with the tangent from 3 its orders
+    /// 0..2 are residual_jet's bit for bit. Control, which must exceed the bound: multishoot's Control::JetTangentKeep,
+    /// the tangent update without the series hp's functions keep.
+    #[test]
+    fn oseries_tangent_accuracy() {
+        use multidouble::precision::{Double, Precision, Quad};
+        use multidouble::simd::Native;
+        let (ctx, zh, zl) = synth();
+        let l = ctx.len();
+        let z = parts8(&zh, &zl);
+        let cs: Vec<[Vec<f64>; 8]> = (1..10).map(|k| coef_k(l, k)).collect();
+        let zs = |parts: usize| -> Vec<Vec<&[f64]>> {
+            std::iter::once(&z).chain(cs.iter()).map(|v| v[..parts].iter().map(|p| &p[..]).collect()).collect()
+        };
+        fn bound<P: Precision<Native>>() -> f64 {
+            2f64.powi(-(53 * P::PARTS as i32 - 20))
+        }
+        for from in [1, 3] {
+            let runs = [
+                ("octo-double serial", session_tangent_vs_jet::<Octo>(&ctx, &zs(8), from, false, false), bound::<Octo>()),
+                ("octo-double threaded", session_tangent_vs_jet::<Octo>(&ctx, &zs(8), from, true, false), bound::<Octo>()),
+                ("quad-double", session_tangent_vs_jet::<Quad>(&ctx, &zs(4), from, true, false), bound::<Quad>()),
+                ("double-double", session_tangent_vs_jet::<Double>(&ctx, &zs(2), from, true, false), bound::<Double>()),
+            ];
+            for (name, (below, worst), b) in runs {
+                println!("tangent from {from}, {name}: {below} rows differ below order {from}, moved orders within {worst:.3e} (bound {b:.3e})");
+                assert_eq!(below, 0, "{name}: an order below {from} changed");
+                assert!(worst <= b, "{name}: {worst:.3e} past {b:.3e}");
+            }
+        }
+        let (_, control) = session_tangent_vs_jet::<Octo>(&ctx, &zs(8), 1, true, true);
+        println!("control, the kept series not moved: {control:.3e}");
+        assert!(control > bound::<Octo>(), "the control did not move the series");
+    }
+
     /// Pass (fixed before the first run): on the synthetic state moved off its solution, the octo-double Jacobian with
     /// 2, 4 and 8 tangents per evaluation (model::jacobian_o_tangents, multidouble's Oun) is the one-tangent Jacobian
     /// (jacobian_in at Octo) in every part of every entry, and the Newton step with 4 (newton_o_tangents) its step, dz

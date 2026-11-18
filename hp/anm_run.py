@@ -281,14 +281,17 @@ def coefficients_q(s, zq, N, held=None):
     return Zq, norms
 
 
-def coefficients_o(s, zo, N, held=None, perturb=None, by_order=True):
+def coefficients_o(s, zo, N, held=None, perturb=None, by_order=True, tangent_from=0):
     """z_1..z_N by the octo-double jet (Solver.residual_jet_o) and the octo-double LU of the last Solver.newton_o, which
     must have been taken at zo (eight parts): the list of eight-part z_k (z_0 first) and their norms. held as in
     coefficients, added in octo-double (od_add_dd). No refinement: the LU is the exact Jacobian's in octo-double.
     perturb(k, b): the order-k right-hand side b (eight parts) changed before its solve, for jet_singularity.py's
     noise injection (#634). by_order (the default): the series formed one order at a time (Solver.series_o), the same
     bits (prec_tests::oseries_by_order_bitwise, hp/jet_by_order_check.py, #914), its right-hand sides through the same
-    held rows and perturbation; False forms it by the jets, as does a build without Solver.series_o (with a notice)."""
+    held rows and perturbation; False forms it by the jets, as does a build without Solver.series_o (with a notice).
+    tangent_from F > 0: by order, the orders from F on formed once and moved by their tangents (multishoot's
+    JetSession::tangent_from), equal to the series formed twice to rounding, not bit for bit; a build without it forms
+    every order twice, with a notice."""
     # the octo-double helpers are in multidouble's Python package from f092018 on; imported here so that the other
     # paths run on the older packages the runners have
     from multidouble import od_add_dd, od_axpy
@@ -319,7 +322,15 @@ def coefficients_o(s, zo, N, held=None, perturb=None, by_order=True):
         if held is not None or perturb is not None:
             def hook(k, b):
                 return [np.ascontiguousarray(p) for p in adjust(k, [np.array(p) for p in b])]
-        for z in s.series_o(list(Zo[0]), N, hook):
+        kw = {}
+        if tangent_from > 0:
+            kw = dict(tangent_from=int(tangent_from))
+            try:
+                s.series_o(list(Zo[0]), 0, None, **kw)
+            except TypeError:
+                print("  coefficients_o: this hpkernel's series_o has no tangent_from; every order formed twice", flush=True)
+                kw = {}
+        for z in s.series_o(list(Zo[0]), N, hook, **kw):
             Zo.append(o8(z))
             norms.append(float(dd_norm(Zo[-1][0], Zo[-1][1])))
         return Zo, norms
@@ -385,6 +396,7 @@ def main():
     opt.update(tol_od=1e-40, od_junk=0)  # --corrector od (hp/octo_corrector.py); --od_junk w freezes junk (QUAD_DOUBLE 13.29)
     opt.update(od_tangents=2)           # --od_tangents 1: the octo-double Jacobian one column per evaluation (the same bits, slower)
     opt.update(jet_by_order=1)          # --jet_by_order 0: --jet_o's series by the jets of growing length (the same bits, slower)
+    opt.update(jet_tangent_from=0)      # --jet_tangent_from F: by order, orders from F on moved by their tangents (equal to rounding, faster)
     opt.update(base_adopt=0)            # --base_adopt 1: the base's od polish is adopted whatever it did
     opt.update(base_polish=1)           # --base_polish 0: no polish, the stored state is the base
     opt.update(keep_plan=1)             # --keep_plan 0: plan the base again even when its state stores a plan
@@ -929,7 +941,8 @@ def main():
                 zo = last_q["z8"] if "z8" in last_q else load_o(os.path.join(raw, opt["state"]))[0]
             # the corrector's last LU when it was taken at zo on this solver (base_lu_o), else formed here
             pmin, pmax, base_lu = base_lu_o(s, zo)
-            Zo, norms = coefficients_o(s, zo, N, held=held_arg, by_order=bool(opt["jet_by_order"]))
+            Zo, norms = coefficients_o(s, zo, N, held=held_arg, by_order=bool(opt["jet_by_order"]),
+                                       tangent_from=opt["jet_tangent_from"])
             Zh, Zl, refine = [np.asarray(z[0]) for z in Zo], [np.asarray(z[1]) for z in Zo], [()]
         elif opt["jet_q"]:
             # --jet_q 1: the series from the quad-double jet through the quad-double LU at the base's four parts

@@ -83,12 +83,26 @@ trait Api: Send + Sync {
     fn residual_jet_o(&mut self, zs: &[[&[f64]; 8]], nout: usize, lanes: usize, mutate: u8) -> Result<Vec<O8>, String>;
     /// the octo-double series one order at a time (multishoot's JetSession over hp's equations at `Octo`): from z_0,
     /// each order k = 1..n's right-hand side -F_k (eight parts) handed to solve(k, b), which returns z_k; z_1..z_n.
-    /// split: Ctx::series_split for the call
-    fn series_o(&mut self, z0: [&[f64]; 8], n: usize, solve: &mut (dyn FnMut(usize, O8) -> Result<O8, String> + Send), mutate: u8, split: u8) -> Result<Vec<O8>, String>;
+    /// split: Ctx::series_split for the call. tangent_from: the session's JetSession::tangent_from, the orders from it
+    /// on moved by their tangents
+    #[allow(clippy::too_many_arguments)]
+    fn series_o(
+        &mut self,
+        z0: [&[f64]; 8],
+        n: usize,
+        solve: &mut (dyn FnMut(usize, O8) -> Result<O8, String> + Send),
+        mutate: u8,
+        split: u8,
+        tangent_from: Option<usize>,
+    ) -> Result<Vec<O8>, String>;
     /// jac_sub::jacobian_sub_in in the precision of z's part count (2 Double, 4 Quad, 8 Octo): J[rows, cols] as z's
     /// number of row-major part arrays; mutate: Ctx::mutate for this call
     fn jacobian_sub(&mut self, z: &[&[f64]], rows: &[usize], cols: &[usize], mutate: u8) -> Result<Vec<Vec<f64>>, String>;
 }
+
+/// series_o's control of the series moved by its tangents (Ctx::mutate): multishoot's `Control::JetTangentKeep`, the
+/// tangent update without the series hp's order-k functions keep
+const JET_MUT_TANGENT_KEEP: u8 = 28;
 
 /// `Api::series_o` on jets of N coefficients
 fn series_o_in<const N: usize, const B: usize>(
@@ -96,9 +110,14 @@ fn series_o_in<const N: usize, const B: usize>(
     z0: [&[f64]; 8],
     n: usize,
     solve: &mut (dyn FnMut(usize, O8) -> Result<O8, String> + Send),
+    tangent_from: Option<usize>,
 ) -> Result<Vec<O8>, String> {
-    let sh = c.shooting_in::<Octo>();
+    let mut sh = c.shooting_in::<Octo>();
+    if c.mutate == JET_MUT_TANGENT_KEEP {
+        sh.set_control(multishoot::control::Control::JetTangentKeep);
+    }
     let mut s = sh.jet_session::<Octo, N>();
+    s.tangent_from(tangent_from);
     let mut z: O8 = z0.map(|p| p.to_vec());
     let mut out = Vec::with_capacity(n);
     for k in 1..=n {
@@ -409,7 +428,15 @@ impl<const B: usize> Api for Ctx<B> {
         })
     }
 
-    fn series_o(&mut self, z0: [&[f64]; 8], n: usize, solve: &mut (dyn FnMut(usize, O8) -> Result<O8, String> + Send), mutate: u8, split: u8) -> Result<Vec<O8>, String> {
+    fn series_o(
+        &mut self,
+        z0: [&[f64]; 8],
+        n: usize,
+        solve: &mut (dyn FnMut(usize, O8) -> Result<O8, String> + Send),
+        mutate: u8,
+        split: u8,
+        tangent_from: Option<usize>,
+    ) -> Result<Vec<O8>, String> {
         // the session's jets hold the orders 0..=n
         let Some(lanes) = OJET_LANES.iter().copied().find(|&l| l > n) else {
             return Err(format!("n must be at most {}, not {n}", OJET_LANES[OJET_LANES.len() - 1] - 1));
@@ -417,13 +444,13 @@ impl<const B: usize> Api for Ctx<B> {
         od_sizes!(self, mutate, |c| {
             c.series_split = split;
             let r = match lanes {
-                8 => series_o_in::<8, _>(c, z0, n, solve),
-                12 => series_o_in::<12, _>(c, z0, n, solve),
-                16 => series_o_in::<16, _>(c, z0, n, solve),
-                20 => series_o_in::<20, _>(c, z0, n, solve),
-                24 => series_o_in::<24, _>(c, z0, n, solve),
-                28 => series_o_in::<28, _>(c, z0, n, solve),
-                _ => series_o_in::<32, _>(c, z0, n, solve),
+                8 => series_o_in::<8, _>(c, z0, n, solve, tangent_from),
+                12 => series_o_in::<12, _>(c, z0, n, solve, tangent_from),
+                16 => series_o_in::<16, _>(c, z0, n, solve, tangent_from),
+                20 => series_o_in::<20, _>(c, z0, n, solve, tangent_from),
+                24 => series_o_in::<24, _>(c, z0, n, solve, tangent_from),
+                28 => series_o_in::<28, _>(c, z0, n, solve, tangent_from),
+                _ => series_o_in::<32, _>(c, z0, n, solve, tangent_from),
             };
             c.series_split = 0;
             r
@@ -1280,8 +1307,10 @@ impl Solver {
     /// mutate: Ctx::mutate for the call (model::JET_MUT_AT_KEEP, the control). split: the horizon series' form
     /// (Ctx::series_split; 0, the default, as before; 1, model::SPLIT_MIDDLE, each Cauchy sum's middle terms formed
     /// ahead of the order, in parallel, the same sums in another order, so other bits at most at the octo-double
-    /// rounding, hp/series_split_check.py). M = 32 only.
-    #[pyo3(signature = (z0, n, rhs=None, mutate=0, split=0))]
+    /// rounding, hp/series_split_check.py). tangent_from: the orders from it on formed once and moved by their tangents
+    /// (multishoot's JetSession::tangent_from; JET_MUT_TANGENT_KEEP = 28 its control), which agree with the series formed
+    /// twice to rounding rather than bit for bit; None forms every order twice. M = 32 only.
+    #[pyo3(signature = (z0, n, rhs=None, mutate=0, split=0, tangent_from=None))]
     #[allow(clippy::too_many_arguments)]
     fn series_o<'py>(
         &mut self,
@@ -1291,6 +1320,7 @@ impl Solver {
         rhs: Option<Bound<'py, PyAny>>,
         mutate: u8,
         split: u8,
+        tangent_from: Option<usize>,
     ) -> PyResult<Vec<T8<'py>>> {
         if split > model::SPLIT_MIDDLE {
             return Err(PyValueError::new_err(format!("split must be 0 or {}, not {split}", model::SPLIT_MIDDLE)));
@@ -1313,7 +1343,7 @@ impl Solver {
             Ok(od_parts(&x))
         };
         let (api, pool) = (&mut self.api, &self.pool);
-        let out = py.detach(|| pool.install(|| api.series_o(z0, n, &mut solve, mutate, split))).map_err(PyValueError::new_err)?;
+        let out = py.detach(|| pool.install(|| api.series_o(z0, n, &mut solve, mutate, split, tangent_from))).map_err(PyValueError::new_err)?;
         Ok(out.into_iter().map(|z| arr8(py, z)).collect())
     }
 
