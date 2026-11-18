@@ -1888,8 +1888,8 @@ python3 solver/rt/rt_sigma.py RAW/I145-mac/cont/cont_32x101_D50.0075_32x101.npz 
 
 ## 14. The rough bounds at D 40.02 jump under floor-level changes of the root (#671–#951)
 
-**At D 40.02 the rough bounds are not a property of the root: two solves of the same root, apart only at the
-double-double floor, give bound ratios 0.98 and 6.06.** Pairs a and b agree to 2.9×10⁻²⁰ (K = 7; 15 of 13,665 f64
+**At D 40.02 the rough bounds are not a property of the root: three solves of the same root, apart only at the
+double-double floor, give bound ratios 0.98, 6.06 and 51.8.** Pairs a and b agree to 2.9×10⁻²⁰ (K = 7; 15 of 13,665 f64
 entries differ) and 2.1×10⁻²¹ (K = 0; one entry), with the same D, grid and 48 random right-hand sides
 (`default_rng(163)`), yet #720 found their bounds 10 to 60 times apart. So the K = 7 rows' effect cannot be read from
 rough bounds at this D (#951). R is
@@ -1905,6 +1905,15 @@ start a's are #671's (`I671-win/solves/k7_D40_D40.0201_32x121.npz` and its contr
 | #721, start b | 48 | 6.06 | 4.56–9.26 | |
 | #943, start a | 48 | 0.98 | 0.60–1.43 | within [1/3, 3] |
 | #943, R_a / R_b | 48 | 0.162 | 0.083–0.248 | excludes 1 |
+| #951, sample c | 48 | 51.8 | 26.6–80.6 | outside both a's and b's |
+
+The medians behind R, over the same 48 right-hand sides:
+
+| sample | median K 7 | median K 0 |
+|---|---|---|
+| a | 2.658×10⁻³⁴ | 2.713×10⁻³⁴ |
+| b | 1.582×10⁻³² | 2.610×10⁻³³ |
+| c | 7.847×10⁻³⁴ | 1.514×10⁻³⁵ |
 
 - **The product cap does not set start a's bounds.** At 1000 products, none of start a's first 12 starts reached the
   cap. They stopped at 336–654 products, and their bounds equal #681's (made at 250) to four printed digits, so R_a
@@ -1915,8 +1924,14 @@ start a's are #671's (`I671-win/solves/k7_D40_D40.0201_32x121.npz` and its contr
 - **At D 50 and 55** the K = 7 rows raise the median bound 6–7 times and change the class, while at D 40.02 start a
   shows no effect (#681).
 - Status: numerical evidence. The intervals are bootstrap spreads over starts, not enclosures. Raw `I681-win/`,
-  `I701-win/`, `I721-win2/`, `I745-win2/` (fca34c8e), `I745-rpi5/` (fd9d22ca), `I943-win/` (c9573179).
+  `I701-win/`, `I721-win2/`, `I745-win2/` (fca34c8e), `I745-rpi5/` (fd9d22ca), `I943-win/` (c9573179),
+  `I951-win/` (ce8df9a5).
 - **A third solve re-found pair a (#951).** #145's 32 × 101 root is pair a's own start, so it reproduced a bit for bit.
   #145's 32 × 121 root (`I145-mac/fol/fol_32x121_D40.0201_32x121.npz`) is within 2.2×10⁻²¹ of pair a's K = 0 root, so
   it is a third floor-level sample of the same root, not a new one.
-- Open: how far R spreads over floor-level samples of one root (#951, on the 32 × 121 root).
+- **R spreads over 50 times across three samples of one root (#951).** Sample c's K = 0 root is 2.2×10⁻²¹ from
+  a's and 3.5×10⁻²¹ from b's, and its K = 7 root 5.9×10⁻¹⁹ and 5.6×10⁻¹⁹ from theirs. Its K = 0 median alone is
+  18 times below a's and 172 times below b's. 42 of its 48 K = 7 starts stopped at the 250-product cap, against 46 of
+  a's and none of b's; #745's check that the cap does not set the bound was made on a's starts only.
+- Open: whether each sample's median bound follows its root's solve residual, which would make the rough bound at
+  this D a reading of the residual rather than of the K = 7 rows.
