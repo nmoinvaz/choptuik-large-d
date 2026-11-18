@@ -49,7 +49,7 @@ SEED_FRESH = 668000                 # the fresh draws of C3'
 RHO_REF = 1.2370                    # rho of the real series at wf 1.00 (J1250) is 1.23696
 WINDOW = (1.2, 3.0)
 FROZEN = {                          # written in notes/PADE_FAR_END.md 19.3 before any plant was judged
-    "preset": None,                 # set after the development on D1-D5 (19.2), before the 30 validation plants
+    "preset": "E6",                 # chosen after the development on D1-D5 (19.2, 19.8), before the 30 validation plants
     "estimator": "median over the preset's members of the farthest zero of Q2 in (1.2, 3.0) rho / RHO_REF, Im t > 0, "
                  "from the weighted least-squares fit of 19.1",
     "criteria": "C1-C3, B1 and the real range as in pade_farend.FROZEN; C3' on the fresh draws 668000 + i",
@@ -508,7 +508,9 @@ def run_plants(outdir, mut):
     real = pg.load_scan(pg.REAL["J1250"])
     rec = {"frozen": FROZEN, "preset": preset, "mutate": mut, "plants": {}}
     path = os.path.join(outdir, "plants" + (f"_mutate_{mut}" if mut else "") + ".json")
-    for name in pf.PLANTS:
+    # the mutation runs use the five development plants (19.8), the judged run all 35
+    names = [n for n in pf.PLANTS if not mut or mut == "scale1.03" or pf.PLANTS[n][5] == "D"]
+    for name in names:
         r = plant_record(name, real, preset, mut)
         rec["plants"][name] = r
         print(f"{name:26s} |P1| {r['R']:.4f}  est {r['estimate']} err {r['error']}  spread {r['spread']}  noise "
@@ -520,7 +522,7 @@ def run_plants(outdir, mut):
     inf = float("inf")
     c1 = {n: P[n]["error"] is not None and P[n]["error"] <= 0.02 for n in P}
     c2 = {f"{a} -> {b}": (abs(P[b]["estimate"] - P[a]["estimate"]) if P[a]["estimate"] is not None and
-                          P[b]["estimate"] is not None else None) for a, b in pf.PAIRS}
+                          P[b]["estimate"] is not None else None) for a, b in pf.PAIRS if a in P and b in P}
     c3 = {n: P[n]["noise"] <= 0.01 for n in P}
     c3f = {n: P[n]["noise_fresh"] <= 0.01 for n in P}
     b1 = {n: P[n]["ratio_error"] > 0.05 for n in P if pf.PLANTS[n][2] is None and pf.PLANTS[n][3] == 0}

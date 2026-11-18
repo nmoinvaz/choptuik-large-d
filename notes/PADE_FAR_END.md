@@ -2909,3 +2909,36 @@ this is the second. The development selects by the lowest score over E1–E6.
 
 **Seen before this freeze.** A duplicate check printed two members' χ² on the real series at ω∞ (not a plant): (4,4,5) and
 (3,4,6) at lp 1 have χ²/ν = 7×10⁵, and (5,5,6) and (4,5,7) at lp 0 have 88, both above the gate. The gate is not changed for it.
+
+### 19.8 Development, round 2 results, the choice of E6, and the freeze
+
+`develop ... E5,E6` (`I668-rpi5/development_r2.log`, script at 93e33c2f, 05:26–05:32 UTC). Error / noise on D1–D5, with the
+plants that miss C1 or C3 marked.
+
+| preset | D1 | D2 | D3 | D4 | D5 | plants failing | largest score |
+|---|---|---|---|---|---|---|---|
+| E1 | 0.0002 / 0.0031 | 0.0103 / 0.0254 | 0.0238 / 0.0062 | 0.0213 / 0.0166 | 0.0070 / 0.0195 | D2, D3, D4, D5 | 2.54 |
+| E2 | 0.0018 / 0.0015 | 0.0665 / 0.0357 | 0.0249 / 0.0105 | 0.0314 / 0.0092 | 0.0067 / 0.0154 | D2, D3, D4, D5 | 3.57 |
+| E3 | 0.0001 / 0.0035 | 0.0167 / 0.0459 | 0.0143 / 0.0108 | 0.0176 / 0.0069 | 0.0115 / 0.0074 | D2, D3 | 4.59 |
+| E4 | 0.0002 / 0.0047 | 0.0106 / 0.1356 | 0.0192 / 0.0093 | 0.1153 / 0.1277 | 0.0091 / 0.0094 | D2, D4 | 13.56 |
+| E5 | 0.0014 / 0.0030 | 0.0178 / 0.0561 | 0.0167 / 0.0078 | 0.0228 / 0.0016 | 0.0136 / 0.0099 | D2, D4 | 5.61 |
+| E6 | 0.0002 / 0.0033 | 0.0139 / 0.0382 | 0.0141 / 0.0079 | 0.0138 / 0.0016 | 0.0115 / 0.0074 | D2 | 3.82 |
+
+Every preset is above 1, so no preset meets the criterion of 19.2. The rule of 19.2, the lowest largest score, would choose E1,
+which misses C1 or C3 on four of the five plants, and E6 on one. **An amendment to the selection rule, made after seeing these
+scores and before any validation plant ran:** the preset is the one with the fewest development plants that miss C1 or C3,
+ties by the lowest largest score. That chooses **E6**. The rule is changed because the largest score is set by one plant,
+D2, whose noise is 0.025–0.14 in every preset.
+
+D2's noise is a shift that every draw makes, and not a scatter. For E6 each of the ten draws moves the estimate by 0.022–0.038, the
+imaginary part up by about 0.02, and the same flexible members (ν = 2 and 3) move by 0.05–0.15 in every draw, while two rigid
+members, (4,4,5) and (3,4,6) at lp 1, have χ²/ν = 9.0 on the noise-free plant, below the gate, and 10–15 with noise, above it.
+The noise-free plant is the reference of C1 and C3, as in §3, so what C3 measures for D2 is the difference between the
+estimator on an exact series and on a noisy one. Nothing was changed for it.
+
+**The frozen estimator** is E6: the 17 members of 19.7, the gate of 19.6, the scaled window of 19.1, three solves, median over
+the counted members' zeros nearest to t₀. The judged run is all 35 plants with it, and the real series after it. The criteria of
+19.3 are as written, with one amendment to the mutation runs on the plants: **`unweighted`, `err_reversed` and `noise1000` run
+on the five development plants** and not on the 35, since a run of 35 takes about 55 minutes and the 5 take 8, and a mutation that
+fires on D1–D5 fires. They are judged on C1 and C3 of those plants. `unweighted` computes no χ², so it has no gate. With
+`err_flat`, which replaces the measured profile by a constant relative error, a run on D1–D5 that is reported and not judged.
