@@ -2623,9 +2623,10 @@ tabulations.
 
 ### 18.5 After the freeze: the noise and the width of the pass
 
-`pade_far_poles.py robust`, added after the scan at 0c861b7d, judges nothing (`robust.log`, `robust.json`). For the best arc plant,
-the best chord2 plant and the passing plant of the largest η (0.054), at each node, 16 copies of the plant's series with
-independent noise at the real series' measured per-order errors (the noise of P′, seeds 747300 + 1000 i + 100 j + n).
+`pade_far_poles.py robust`, added after the scan at 0c861b7d, judges nothing (`robust.log`, `robust.json`). For the best
+arc plant, the best chord2 plant and the passing plant of the largest η (0.054), at each node, 16 copies of the plant's
+series with independent noise at the real series' measured per-order errors (the noise of P′, seeds 747300 + 1000 i +
+100 j + n).
 
 | plant | noiseless d_P at ω/ω∞ = 0.99, 1.00, 1.01 | with noise, median distance from the plant's own poles | draws within 0.03 of its own poles, all three nodes | draws within 0.03 of #541's, all three nodes |
 |---|---|---|---|---|
