@@ -18,6 +18,7 @@ if its main fit reproduces sigma_0..sigma_12 within 1e-2, and passes if it is ad
     python3 pade_far_poles.py control OUTDIR [--mutate=shift_poles|len|tol|noise] [--ring=I718-mac/ring.jsonl] [--allow_unraw]
     python3 pade_far_poles.py scan OUTDIR [--max_hours=4] [--allow_unraw]   (reads OUTDIR/control.json; resumes)
     python3 pade_far_poles.py report OUTDIR [--allow_unraw]    (post-freeze maps of plants.jsonl, judges nothing)
+    python3 pade_far_poles.py robust OUTDIR [--allow_unraw]    (post-freeze noise and moves of the passing plants, judges nothing)
 
 Exit 0 all pass, 1 a control failed or a mutation fired as it must, 2 a mutation did not fire, 3 stopped on swap.
 Numerical evidence on plants, not a bound. notes/PADE_FAR_END.md 18.
@@ -753,6 +754,78 @@ def run_report(outdir):
     return 0
 
 
+SEED3, N_DRAW = 747300, 16
+
+
+def _dist(ap, ref):
+    """d_P of the pole sets ap (from all_poles) against the reference poles ref"""
+    if any(ap[k] is None for k in KS):
+        return math.inf
+    return max(min(abs(t - ref[k]) for t in ap[k]) for k in KS)
+
+
+def run_robust(outdir):
+    """After the freeze, judges nothing. For three passing plants of the scan: (i) how far noise at the real series'
+    measured per-order errors moves their [k/k] poles, from the noiseless plant's own and from #541's; (ii) d_P under
+    small moves of the best one's parameters"""
+    log = tz.Log(outdir, "robust", None)
+    verdict = json.load(open(os.path.join(outdir, "scan.json")))["verdict"]
+    full = three_node(load(os.path.join(outdir, "plants.jsonl")))
+    d3 = {pid: max(r["d_P"] for r in full[pid].values()) for pid in verdict["passing_plants"]}
+    best = {kind: min((p for p in d3 if p.startswith(kind)), key=d3.get) for kind in ("arc", "chord2")}
+    wide = max(d3, key=lambda p: full[p][WF0]["eta"])
+    picks = [("best arc", best["arc"]), ("best chord2", best["chord2"]), ("largest eta", wide)]
+    nodes = {wf: FNode(wf) for wf in NODES}
+    rec = {"plants": {}, "moves": []}
+    for pi, (lab, pid) in enumerate(picks):
+        spec = spec_of(full[pid][WF0])
+        log(f"{lab}: {pid} (D3 {d3[pid]:.4f}, eta {spec['eta']:.4g}, phi {spec['phase']:.1f})")
+        per = {}
+        for i, wf in enumerate(NODES):
+            node = nodes[wf]
+            w, Q = node.part(spec)
+            sig, info = ss.make_plant(node.mains[spec["kind"]], w, spec["eta"], spec["phase"])
+            clean = all_poles(sig, wf)
+            own = {k: min(clean[k], key=lambda t: abs(t - ss.REF541[wf][k])) for k in KS}
+            dr, ds = [], []
+            for n in range(N_DRAW):
+                ap = all_poles(noisy_copy(node, sig, SEED3 + 1000 * pi + 100 * i + n), wf)
+                dr.append(_dist(ap, ss.REF541[wf]))
+                ds.append(_dist(ap, own))
+            per[wf] = {"clean_vs_REF541": _dist(clean, ss.REF541[wf]), "noisy_vs_REF541": dr, "noisy_vs_own": ds}
+            med = lambda v: float(np.median(v))
+            log(f"  wf {wf}: noiseless d_P {per[wf]['clean_vs_REF541']:.4f}; with noise vs #541's poles median {med(dr):.4f} "
+                f"(min {min(dr):.4f}, {sum(x <= TOL_POLE for x in dr)}/{N_DRAW} <= 0.03); vs the plant's own poles median "
+                f"{med(ds):.4f} (max {max(ds):.4f}, {sum(x <= TOL_POLE for x in ds)}/{N_DRAW} <= 0.03)")
+        joint_r = [max(per[wf]["noisy_vs_REF541"][n] for wf in NODES) for n in range(N_DRAW)]
+        joint_s = [max(per[wf]["noisy_vs_own"][n] for wf in NODES) for n in range(N_DRAW)]
+        log(f"  the three nodes together, per draw: vs #541's poles {sum(x <= TOL_POLE for x in joint_r)}/{N_DRAW} <= 0.03, "
+            f"vs its own poles {sum(x <= TOL_POLE for x in joint_s)}/{N_DRAW} <= 0.03")
+        rec["plants"][pid] = {"label": lab, "per_node": {str(wf): v for wf, v in per.items()}, "joint_vs_REF541": joint_r,
+                              "joint_vs_own": joint_s}
+    # (ii) moves of the best passing plant, noiseless, the same move at the three nodes
+    pid = min(d3, key=d3.get)
+    base = spec_of(full[pid][WF0])
+    moves = [("none", {})]
+    for dlt in (0.025, 0.05, 0.1):
+        moves += [(f"o re {s * dlt:+.3f}", {"o": (base["o"][0] + s * dlt, base["o"][1])}) for s in (-1, 1)]
+        moves += [(f"o im {s * dlt:+.3f}", {"o": (base["o"][0], base["o"][1] + s * dlt)}) for s in (-1, 1)]
+    moves += [("eta x0.5", {"eta": base["eta"] * 0.5}), ("eta x2", {"eta": base["eta"] * 2}),
+              ("L x0.8", {"L": base["L"] * 0.8}), ("L x1.25", {"L": base["L"] * 1.25}),
+              ("theta -10", {"theta": base["theta"] - 10}), ("theta +10", {"theta": base["theta"] + 10}),
+              ("phi -30", {"phase": base["phase"] - 30}), ("phi +30", {"phase": base["phase"] + 30})]
+    log(f"moves of {pid} (noiseless, D3 = the largest d_P over the three nodes):")
+    for lab, ch in moves:
+        sp = dict(base, **ch)
+        rs = [evaluate(nodes[wf], sp, "R") for wf in NODES]
+        dd = max(r["d_P"] for r in rs)
+        ok = all(r["adm"] for r in rs)
+        log(f"  {lab:>12}: D3 {dd:.4f}{'' if ok else ' (inadmissible)'}{'  PASS' if ok and dd <= TOL_POLE else ''}")
+        rec["moves"].append({"move": lab, "D3": dd, "admissible": ok})
+    log.dump(rec)
+    return 0
+
+
 def main():
     argv = sys.argv[1:]
     from raw_out import pop_allow, require_raw
@@ -769,7 +842,7 @@ def main():
             sys.exit(1 if not ok else 2)
         sys.exit(0 if ok else 1)
     pos = [a for a in argv if not a.startswith("--")]
-    if len(pos) != 2 or pos[0] not in ("control", "scan", "report"):
+    if len(pos) != 2 or pos[0] not in ("control", "scan", "report", "robust"):
         raise SystemExit(__doc__)
     stage, outdir = pos
     if stage == "control" and mut not in (None, "shift_poles", "len", "tol", "noise"):
@@ -788,7 +861,7 @@ def main():
         sys.exit(0 if rec["controls_pass"] else 1)
     if stage == "scan":
         sys.exit(run_scan(outdir, hours))
-    sys.exit(run_report(outdir))
+    sys.exit(run_robust(outdir) if stage == "robust" else run_report(outdir))
 
 
 if __name__ == "__main__":
