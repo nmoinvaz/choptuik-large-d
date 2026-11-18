@@ -57,6 +57,8 @@ mod mode_tests;
 mod freeze_tests;
 #[cfg(test)]
 mod prec_tests;
+#[cfg(test)]
+mod split_tests;
 
 #[cfg(feature = "python")]
 mod python;
