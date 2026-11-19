@@ -215,6 +215,54 @@ What would count:
   (≤ 4.2×10⁻¹⁰ at σ₁–σ₅, B_tail_M7.md §4). The script takes only M, K, J and wf, so a finer fit is a code change and a
   pilot.
 
+### 2.6 The truncated models' amplitude series past σ_{M+1} (#1016)
+
+`amp_flint_par.py --trunc M` computes hier's model 𝔐_M with the phys fit. It keeps odd harmonics ≤ M and even ≤ M + 1
+in every product, in e^{−P} and ⟨F²⟩, and in the de-mixing sum, tunes harmonics 3..M, and fits the families present.
+
+**What holds** (numerical evidence, `amp_trunc_checks.py`, raw I1016-mac):
+- With M ≥ K it is bit for bit the untruncated run, in sigma_str, f and fit_info. This was checked at K 7 with one
+  process (M 7 and 9) and at K 9 with two (M 9). `--trunc 5` at K 7 first differs at σ₃, which is the control.
+- σ₁..σ_M equal the full series to the 20 stored digits at J 1000 and 1500, for M = 3 (K 9) and M = 5 (K 11). The phys
+  fit's errors are 2×10⁻²⁸ to 4×10⁻²³.
+- amp_trunc.py's truncation (even harmonics ≤ M − 1) first changes σ_M, by 7.5×10⁻⁵ at M = 3 and 5.0×10⁻⁸ at M = 5, as
+  B_tail_M7.md §3 found.
+
+**The finding: hier's truncated models carry ln j terms in their late orders, which the full model lacks.** At S_1's
+first truncated order k = 2M + 3, the normalised sequence is c ln j + S + O(1/j):
+
+| model | k | c (coefficient of ln j in S_1^(k)'s sequence) | relative change, J 1000 → 1500 |
+|---|---|---|---|
+| 𝔐₃ | 9 | 2.4005×10⁻⁴ − 9.551×10⁻⁵ i | 6×10⁻¹⁷ |
+| 𝔐₅ | 13 | 2.7216×10⁻⁸ + 9.765×10⁻⁸ i | 6.5×10⁻¹² |
+
+The full model's sequence fitted the same way gives c ≈ 1×10⁻¹³, which is noise. A fit without the log column, phys or
+legacy, absorbs c ln j into S. Its σ_{M+1} then drifts by (c/S_1^(1)) ln J, which accounts for the measured drift with
+ratio 1.033 at both M. This is the ln J drift #996 saw, 3.9×10⁻⁶ per doubling at M = 3. With `--fit-logs 1` (ln j
+columns) the constant is J-independent, to 3×10⁻¹⁷ at M = 3 and 2.4×10⁻¹⁹ at M = 5. But it is then defined only
+together with the log's scale, since rescaling j by λ moves it by c ln λ.
+
+**The tuned harmonics carry logs from their own first truncated order, 2M + 4 − ν.** That is where the omitted harmonic
+M + 2 reaches harmonic ν, through the lapse harmonic M + 2 − ν: k = 7 for ν = 3 at M = 3. The logs sit on different
+families in different sequences (`amp_trunc_basis.py`, steps of the fitted constant over Mf 6 → 8 → 10):
+
+| sequence of 𝔐₃ | the basis that converges | steps | what fails |
+|---|---|---|---|
+| S_1^(9) | ln j on the main family | 1.7×10⁻¹⁰, 9.9×10⁻¹⁴ | neighbour logs alone, about 1×10⁻⁴ |
+| S₃^(7) | ln j on every neighbour family | 1.2×10⁻¹⁰, 1.0×10⁻¹² | with a main-family log, 6×10⁻⁵ to 1.3 |
+
+A log column that is absent hurts the fit. Over the fit window ln j is nearly a combination of 1 and the 1/j terms, so
+a spurious column trades with the constant. So no fixed basis serves every (ν, k). Without the right one, f₃^(7) is
+off by a few percent (fit error 1.5×10⁻⁷ against |S₃| = 4.3×10⁻⁶) and f₃^(9) is undetermined (fit error 1.4). The
+series then fails from σ₅ on: in a pilot at K 17, S_1's fit error is 0.14 at k = 11, and σ is near 10³ by k = 15.
+
+**Consequence.** The amplitude-series route to #996's p_M is closed past σ_{M+1}. The constants of a truncated model's
+late orders need a log convention, which hier's zero would have to fix. The higher orders cannot be computed reliably
+to test any convention, so no convention can be calibrated this way. Even Δσ_{M+1} itself is J-dependent without the log
+and convention-dependent with it (§6 item 5). With the log separated at λ = 1, Δσ₄ = 1.354×10⁻⁵ + 4.84×10⁻⁶ i for M = 3
+and Δσ₆ = −3.98×10⁻⁹ + 9.66×10⁻⁹ i for M = 5. Both still carry the tuned harmonics' fit errors, which are not
+quantified.
+
 ## 3. Candidate routes to (★)
 
 These are named, not claimed. Each lists where the idea is in the notes, the literature the notes cite for it and how
@@ -353,6 +401,10 @@ estimate is 1.2×10⁻³ (#974), and ξ₁ = 0.16 gives no accepted zero (#964, 
 4. The quoted M = 7 zero, (2.71922, 1.000022) ± 2×10⁻⁵ at rtol 10⁻¹², is low in A by 1.4×10⁻⁵ to 2.3×10⁻⁵ against
    the rtol-converged zeros of #977, at or just beyond its own error bar. #975 and #977 already report this. It changes
    none of (★)'s inputs by more than 1% (§2.3).
+5. B_tail_M7.md §4 and §9 quote Δσ₄ = (−2.83 − 2.45i)×10⁻⁵ (M = 3) and Δσ₆ = (7.7 + 1.9i)×10⁻⁹ (M = 5) from legacy fits
+   at J = 500, and the lowest-order ratios 0.035 and 0.012 built on them (§2.1 here). These are not converged numbers.
+   The truncated models' sequences at those orders carry ln j terms. Without the log the shifts drift with J, and with
+   it they depend on the log's scale. At λ = 1 they are 1.354×10⁻⁵ + 4.84×10⁻⁶ i and −3.98×10⁻⁹ + 9.66×10⁻⁹ i (§2.6).
 
 ## 7. Reproduce
 
