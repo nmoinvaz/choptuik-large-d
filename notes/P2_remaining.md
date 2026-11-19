@@ -260,6 +260,30 @@ disc's centre to the whole disc, with a bound M on |y − y₀|. This section re
 - **Planted checks, which must pass.** The equation against `SysU.rhs` (relative 10⁻⁴⁰ at 10 random points), and the
   integrator against the stored ray box at s₁.
 
-### 4.2 Results
+### 4.2 Results (paused 2026-11-19 at the coordinator's word, before the comparison with the stored margins)
 
-Not yet run.
+The own numbers are committed (ce097b2b). The stored per-disc margins have not yet been read for the comparison.
+
+- **Planted checks pass.** The equation matches `SysU.rhs` at 10 random points to a relative 3.5×10⁻⁵⁸
+  (`p2c_disc_checkint.log`). The integrator lands inside each stored ray box from s_j to s_{j+1}, at deviations of
+  10⁻²⁰ to 1.7×10⁻⁹ against box radii of 2×10⁻⁹ to 8×10⁻⁸.
+- **All 178 discs, protocol inputs: 177 certified** (`p2c_disc_all.log`, 512 s).
+  - All 12 start-ray discs, with exact stored inputs, are certified. Their Λ are 0.1699 for (0, 0) and 0.4397 for
+    (11, 0).
+  - **Disc (11, 1) is not certified (Λ = 1.494)**, on its reconstructed box (4 × the stored radius 1.0×10⁻⁶).
+- **Located.** It is input size, not a certificate error.
+  - The reconstructed input at (6, 7) is y⁺: three integration paths agree to 10⁻²².
+  - This implementation's Picard iteration on ball series amplifies the input box's radius more than the certificate
+    does. On (6, 7) a box of 10⁻¹² gives max M⁰ = 0.88, and the protocol's 4 × box radius gives 5.08.
+  - Rerunning (11, 1) at 0, 1, 2 and 3 times the stored radius certifies it with Λ = 0.393, 0.453, 0.541 and 0.674
+    (`p2c_disc_diag_11_1.log`, outside the protocol).
+- **Controls fail as they must.** K1, disc (11, 0) at radius 16 with u* inside, gives Λ = 4.7×10⁸. K2, the sign
+  mutation, fails all 12 ray discs at order 0 of the V defect.
+- **Development fixes**, found on discs (0, 0) and (11, 0) before the full run, whose stored Λ and sup had been seen
+  (§4.1):
+  - python-flint's series cap, 10 by default, which truncated the Taylor series;
+  - the weight orientation, ω_i = 1/v_i;
+  - the z-ball, which now uses lemma D's own enclosure 1/c + disc(r/(|c|(|c| − r))). python-flint's inverse of the
+    box was 8 times looser.
+- **Left to do:** the comparison with the stored per-disc Λ and sup; a centred enclosure, so that the reconstructed
+  boxes need not be small; then (11, 1) at the protocol's inputs.
