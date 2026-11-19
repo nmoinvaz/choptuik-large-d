@@ -9,7 +9,9 @@
 //! concurrent evaluations of the timed group.
 use crate::field::{cs, cs_w, horner, Fl, State};
 use crate::lane::{Dtn, Fu, Fun, Lane};
+use crate::field::DMat;
 use crate::model::{ctxfile, delta_of, horizon_lus, taylor_coeffs, work, Ctx, HPrep, BY_FIELDS};
+use crate::v8::V8;
 use multidouble::dd::DD;
 use multidouble::precision::Double;
 use multishoot::jacobian::Seed;
@@ -139,6 +141,94 @@ fn step_split<T: Lane, const B: usize>(ctx: &Ctx<B>, zh: &[f64], zl: &[f64], b: 
     best
 }
 
+/// D f (`MatLane::dmat_apply` of `Fun<N>`), each lane vector's accumulators held over a chunk of 8 columns, the
+/// column scalars broadcast from memory: every accumulator takes the columns in the order j = 0..M as there
+fn apply_chunk<const N: usize, const B: usize>(dm: &DMat<B>, f: &Fl<Fun<N>, B>) -> Fl<Fun<N>, B> {
+    let mut out = [Fun::<N> { v: V8::zero(), d: [V8::zero(); N] }; B];
+    for jb in 0..B {
+        let sv = f.0[jb].v.to_array();
+        let sd: [[f64; 8]; N] = std::array::from_fn(|i| f.0[jb].d[i].to_array());
+        for (b, o) in out.iter_mut().enumerate() {
+            let (mut av, mut ad) = (o.v, o.d);
+            for jl in 0..8 {
+                let c = dm.cols64[8 * jb + jl][b];
+                av = V8::splat(sv[jl]).fma(c, av);
+                for i in 0..N {
+                    ad[i] = V8::splat(sd[i][jl]).fma(c, ad[i]);
+                }
+            }
+            o.v = av;
+            o.d = ad;
+        }
+    }
+    Fl(out)
+}
+
+/// D f with each lane vector's accumulators held over all M columns (the rows of D read with stride B)
+fn apply_rows<const N: usize, const B: usize>(dm: &DMat<B>, f: &Fl<Fun<N>, B>) -> Fl<Fun<N>, B> {
+    let sv: [[f64; 8]; B] = std::array::from_fn(|jb| f.0[jb].v.to_array());
+    let sd: [[[f64; 8]; B]; N] = std::array::from_fn(|i| std::array::from_fn(|jb| f.0[jb].d[i].to_array()));
+    let mut out = [Fun::<N> { v: V8::zero(), d: [V8::zero(); N] }; B];
+    for (b, o) in out.iter_mut().enumerate() {
+        let (mut av, mut ad) = (V8::zero(), [V8::zero(); N]);
+        for jb in 0..B {
+            for jl in 0..8 {
+                let c = dm.cols64[8 * jb + jl][b];
+                av = V8::splat(sv[jb][jl]).fma(c, av);
+                for i in 0..N {
+                    ad[i] = V8::splat(sd[i][jb][jl]).fma(c, ad[i]);
+                }
+            }
+        }
+        o.v = av;
+        o.d = ad;
+    }
+    Fl(out)
+}
+
+/// the tau derivative's variants on the coefficients of a step: seconds for 2 kt applies (best of `reps`, alternating),
+/// and the entries whose bits differ from `DMat::apply`'s
+fn apply_variants<const B: usize>(ctx: &Ctx<B>, zh: &[f64], zl: &[f64], b: usize, reps: usize) -> ([f64; 3], usize) {
+    let s0 = node_state::<Fun<4>, B>(ctx, zh, zl, b - 1);
+    let xs = &ctx.segs[b - 1];
+    let omega = <Fun<4> as crate::lane::BaseLane>::splat(DD::TWO_PI) / <Fun<4> as crate::lane::BaseLane>::splat(delta_of(zh, zl));
+    let kt = ctx.kt;
+    let mut w = work::<Fun<4>, B>(kt);
+    for (f, sf) in s0.iter().enumerate() {
+        w.c[f][0] = *sf;
+    }
+    taylor_coeffs(ctx, xs[0], omega, &mut w);
+    let mut best = [f64::INFINITY; 3];
+    let mut nd = 0;
+    let bits = |x: &Fl<Fun<4>, B>| -> Vec<u64> {
+        x.0.iter().flat_map(|l| std::iter::once(l.v).chain(l.d).flat_map(|v| v.to_array()).map(f64::to_bits)).collect()
+    };
+    for _ in 0..reps {
+        for (vi, slot) in best.iter_mut().enumerate() {
+            let t0 = Instant::now();
+            let mut outs = Vec::with_capacity(2 * kt);
+            for k in 0..kt {
+                for f in [0, 1] {
+                    let x = &w.c[f][k];
+                    outs.push(match vi {
+                        0 => ctx.d.apply(x),
+                        1 => apply_chunk(&ctx.d, x),
+                        _ => apply_rows(&ctx.d, x),
+                    });
+                }
+            }
+            *slot = slot.min(t0.elapsed().as_secs_f64());
+            if vi > 0 {
+                for (i, o) in outs.iter().enumerate() {
+                    let r = ctx.d.apply(&w.c[i % 2][i / 2]);
+                    nd += bits(o).iter().zip(bits(&r)).filter(|(a, b)| **a != *b).count();
+                }
+            }
+        }
+    }
+    (best, nd)
+}
+
 /// bitwise comparison of the lane-vector and field-wide forms on block b's first group: the number of entries whose
 /// bits differ
 fn diff_bits<T: Lane, const B: usize>(ctx: &Ctx<B>, zh: &[f64], zl: &[f64], prep: &HPrep, b: usize) -> (usize, usize) {
@@ -249,6 +339,15 @@ fn profile<const B: usize>(v: &[f64]) {
         c2,
         f1 / c1,
         f0 / c0
+    );
+    let (ta, nd) = apply_variants::<B>(&ctx, &zh, &zl, b, 5);
+    println!(
+        "  Fun<4> tau derivatives of a step (2 kt applies): DMat::apply {:.3} ms, chunks of 8 columns {:.3} ms ({:.2}x), rows {:.3} ms ({:.2}x); {nd} entries differ from DMat::apply",
+        ta[0] * 1e3,
+        ta[1] * 1e3,
+        ta[0] / ta[1],
+        ta[2] * 1e3,
+        ta[0] / ta[2]
     );
     if std::env::var("BLOCKS").is_err() {
         return;
