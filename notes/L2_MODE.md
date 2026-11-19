@@ -25,6 +25,10 @@ experiment (a) of §2.1, a sympy check at leading order in 1/n. The script is `s
   λ₂(D) = c₂/n + O(1/n²) if it continues. A reading, not proved: it is a volume-preserving linear stretch of space
   applied to the lump, which the leading-order inner equations do not see (§6). What this does not cover is listed in
   §7. The next step is (b), c₂ (§8).
+- **Step (b): c₂ = −λ₁ = −3.0324, so the ℓ = 2 mode is stable at large D** (§9; *conditional* on the hypotheses of
+  §9.6, the value through FIRST_ORDER.md's fit of λ₁). The ℓ = 2 forcing is minus the ℓ = 0 one plus a term with zero
+  multiplier (*checked symbolically*), and the M = 1, 3, 5 models give c₂ = −7.96, −2.48, −3.046 against λ₁ = 7.81,
+  2.50, 3.044 from the same code.
 
 ## 1. The ansatz
 
@@ -306,7 +310,8 @@ What it assumes is listed in §8.5.
 
 - The kernel of the n = ∞ ℓ = 2 multiplier map at λ = 0 is one-dimensional, spanned by D₂Z₀. With the conjugation of
   §8.3 it is the image of ℓ = 0's kernel at λ = 2, the s-translation, whose simplicity Proposition 5 and FIRST_ORDER.md
-  use. That holds if the constraint rows allow V₁ + V₂ = 0 for a general ℓ = 2 perturbation, which is open.
+  use. That holds if the constraint rows allow V₁ + V₂ = 0 for a general ℓ = 2 perturbation, which is open. (§9.1
+  reaches V₁ + V₂ = 0 as a gauge at leading order, by hand.)
 - Item 2 of §8.4 takes the Stokes jump of the ℓ = 2 perturbation along rays at fixed χ. The multiplier map of the
   angular problem is not written down.
 - Only linear order in e, and the O(p) × O(q) ansatz with zero shift.
@@ -323,7 +328,213 @@ What it assumes is listed in §8.5.
 Cost: DIRECTION_REVIEW.md's 2–4 agent-days for (b), and CPU of the order of FIRST_ORDER.md's λ₁ runs, since the
 machinery is the same.
 
-## 9. Reproduce
+## 9. c₂ in the M-harmonic truncation, and c₂ = −λ₁ (#1010)
+
+This section carries out §8.5's recommended task. It evaluates c₂ at M = 1, 3 and 5 by the solvability route, with the
+ℓ = 2 forcing of §8.3, and finds a relation that fixes c₂ in the full problem. The scripts are in `solver/inner_pert/`.
+`l2_c2_forcing.py` (sympy) extracts the forcing, `l2_c2.py` runs the jets, and `l2_c2_summary.py` prints the table of
+§9.5. Written 2026-11-19 for issue #1010.
+
+**Result.**
+
+- **c₂ = −λ₁** (*conditional* on the hypotheses named in §9.6). The ℓ = 2 forcing, conjugated to the ℓ = 0 problem
+  at λ = 2, is minus FIRST_ORDER.md's ℓ = 0 forcing plus the leading operator applied to (δc, δΦ) = (0, Φ_s). That
+  identity is *checked symbolically* (§9.2). The field (0, Φ_s) is local in the background and has zero multiplier,
+  so it drops out of the solvability condition (§9.4). The two conditions then differ only in sign.
+- **So the ℓ = 2 mode is stable at large D and approaches marginality from below.** FIRST_ORDER.md §6 gives
+  λ₁ = 3.0324 ± 0.0001 (a spread over fit choices of the double-double growth rates), so c₂ = −3.0324 ± 0.0001 and
+  λ₂ = −3.0324/n + O(1/n²). The value is numerical evidence through λ₁. In the same convention the ℓ = 0 mode has
+  λ₀ = 2 + λ₁/n, so λ₀ + λ₂ = 2 + O(1/n²).
+- **The truncated models agree** (numerical evidence, §9.5). c₂ is −7.96, −2.48 and −3.046 at M = 1, 3 and 5. The
+  same code with the ℓ = 0 forcing gives λ₁ = 7.81, 2.50 and 3.044. c₂ + λ₁ falls from −0.15 to −0.0016. c₂ is
+  negative at M = 3 and M = 5 at every slice tried, so the sign may be read.
+- **The planted checks pass, and the control fires** (§9.5). The ℓ = 0 forcing through the same code gives
+  λ₁ = 3.0443 at M = 5, 0.39% from the fit. M = 1's λ* comes out as 1.7691220084. The forcing with the leading
+  background only moves c₂ to −25.6 at M = 5.
+
+### 9.1 The ℓ = 2 problem as the ℓ = 0 problem at λ = 2
+
+By the conjugation of §8.3, the correction is W₂ = sY w on the lapse and the scalar (Y = cos 2χ, V₁ + V₂ = 0). Here w
+obeys the n = ∞ ℓ = 0 rows at λ = 2, forced by F̃ = F/(sY) in the W and E^t_t rows, and D₂Z₀ becomes the
+s-translation ∂_sZ₀. `l2_c2_forcing.py` divides F by s cos 2χ at a rational point (cos χ = 3/5) and checks the
+quotient at the two numval test points of §8.3. For the deformation no χ or explicit s is left. The control keeps an
+explicit s (§9.2).
+
+**The map to the solver.** At leading order W = −FO_Y/(2c) and E^t_t = −FO_C/c exactly (§8.2). Here FO_Y and FO_C are
+FIRST_ORDER.md §1's Y- and C-equations, and its S-equation holds identically in (Φ, c). In the solver's variables
+(y = √s Y, σ = √2 s S, T = −t, ρ = Tξ), the forcing enters the y- and c-equations of `first_order_jet.py` as
+
+```math
+F_y = \sqrt2\,\rho^2\,c\,\tilde F[W],\qquad F_c = \rho^2\,c\,\tilde F[E^t_t],
+```
+
+with the σ-equation unforced. The t-derivatives at fixed s come from ∂_t = −∂_T + T⁻¹(ξ∂_ξ + ω∂_θ), with Φ_t = cY/2 and
+Y = √2 y/ρ. Each ξ∂_ξ comes from the model's own ODEs. F̃ has T-weight 4 in every term, and F_y and F_c weight 2,
+which is λ = 2.
+
+**The mode and the slice.** ∂_sZ₀ has profile d₁ (the ξ³ coefficient of y) and c(0) = 2g₁ (twice the ξ² coefficient
+of c). The s-translation acts harmonic by harmonic in θ, so it is an exact mode of every truncated model. Its jump is
+5×10⁻¹¹ of |Sch| |f₂| at M = 1 and 3, and 8×10⁻⁷ at M = 5. The time reparametrizations at λ = 2, which remove c(0)
+in the ℓ = 0 problem, mix θ-harmonics and are not exact in a truncated model. FIRST_ORDER.md fixes c(0) = 0, so its
+∂_sZ₀ must carry the gauge step P(θ), and its symmetry route fails in truncation (FIRST_ORDER.md §4). Here the slice
+
+```math
+c(0) = 2g_1\,(\varphi\cdot f),\qquad \varphi\cdot f_2 = 1 ,
+```
+
+with φ on the harmonic-1 profile components, contains ∂_sZ₀ exactly. In the full problem it is a gauge slice whenever
+φ·f_D ≠ 0, f_D being the profile of the gauge-stepped mode. Solvability on it reads
+
+```math
+c_2 = -\,\frac{\varphi\cdot A^{-1}S(W^F)}{\varphi\cdot A^{-1}S(W^\lambda)} ,
+```
+
+where A is the profile-to-multiplier map at c(0) = 0 and λ = 2 (its harmonic-1 Schur complement Sch after
+`first_order_hier.py`'s deflation). W^F is the response to −F̃ with zero data, and W^λ is the d/dλ component of the
+mode. When the model's own λ* is near 2, A is nearly singular and c₂ does not depend on φ. §9.5 reports the left
+singular vector of Sch (the primary value) and three φ (e₁, e₂, f₂), whose spread measures the truncation.
+
+**For ℓ = 2, c(0) is a gauge freedom too** (a hand computation at leading order, not checked symbolically). In the
+frame with zero shift, a time shift ξ^t needs spatial displacements ∂_tξ^s = (2sc²/n)∂_sξ^t and
+∂_tξ^χ = c²∂_χξ^t/(2ns), and these change the warps by
+
+```math
+\partial_t\,\delta(V_1+V_2) = 2c^2\Big(\partial_s + \frac{\cot\chi-\tan\chi}{4s}\,\partial_\chi\Big)\xi^t .
+```
+
+So any ℓ = 2 part of V₁ + V₂ can be removed by a ξ^t = Y τ(s, t), which settles at leading order §8.5's open question
+of whether V₁ + V₂ = 0 can be imposed. On ξ^t = Y τ the operator is Y(τ_s − τ/s), so the residual gauge is
+ξ^t = sY T(t). It acts on (L, P) as sY((cT)_t, TΦ_t), which is sY times ℓ = 0's time reparametrization. The
+outer normalization c(x = 1) = 1 sees it only at O(1/n), since s = O(1/n) on the light cone, so it is not fixed
+at leading order.
+
+### 9.2 The forcing, and its decomposition
+
+Per unit e, with P_k = ∂_t^kΦ and C_k = ∂_t^k c at fixed s (κ = 1), `l2_c2_forcing.py` gives
+
+```math
+\tilde F^{(2)}[W] = -\frac{2}{c^7}\big(5c^3\Phi_t^2\Phi_{tt} - c^3\Phi_{tttt} - 5c^2c_t\Phi_t^3 + 6c^2c_t\Phi_{ttt} + 4c^2c_{tt}\Phi_{tt} + c^2c_{ttt}\Phi_t - 15c\,c_t^2\Phi_{tt} - 10c\,c_tc_{tt}\Phi_t + 15c_t^3\Phi_t\big),
+```
+```math
+\tilde F^{(2)}[E^t_t] = \frac{2}{c^6}\big(2c^2\Phi_t^4 - c^2\Phi_t\Phi_{ttt} + c^2\Phi_{tt}^2 + c\,c_t\Phi_t\Phi_{tt} + c\,c_{tt}\Phi_t^2 - 2c_t^2\Phi_t^2\big),
+```
+
+which are §8.3's F/(sY). For the ℓ = 0 shift of §8.2 (FIRST_ORDER.md §4's s-translation breaking terms, in t-derivative
+form) it gives F̃⁽⁰⁾. Their sum is
+
+```math
+\tilde F^{(2)} + \tilde F^{(0)} = \mathcal L_0\big[(\delta c,\delta\Phi) = (0,\Phi_s)\big]:\qquad
+W:\ -\frac{4\,c_s\Phi_s}{c},\qquad E^t_t:\ \frac{2\,\Phi_t\Phi_{ts}}{c^2},
+```
+
+identically in both rows. Here 𝓛₀ is the ℓ = 0 operator of §8.3, and (0, Φ_s) is the scalar half of the s-translation
+(c_s, Φ_s). **Control:** the lapse half (c_s, 0) leaves a difference of twice the right-hand side, since
+𝓛₀[(c_s, Φ_s)] = 0. A second identity checks the conversion of §9.1 itself. F̃⁽⁰⁾, converted to the solver's variables,
+equals FIRST_ORDER.md's terms −(2/ξ²)c(ξσ_ξ − 2σ + Eσ) and −(2/ξ²)c(Ψ + 2E) to 1.1×10⁻¹⁵, on random untruncated data
+(check 2 of §9.3). That fixes the map, the normalization and the signs.
+
+**The control forcing** (the leading background rules only) has the form sY(f₁ + s f₂) in both rows. Since
+s = T²ξ²/2, s f₂ carries the same λ = 2 weight, so the control is a valid forcing with an explicit ξ². With the O(1/n)
+background, the s² parts cancel.
+
+### 9.3 The forcing in the jets, and its checks
+
+`l2_c2.py` builds each forcing as an expression graph in the model's own algebra. Its products are the model's
+truncated products, its ξ∂_ξ comes from the model's ODEs by the Leibniz rule, and its 1/c is the truncated inverse. The
+forcing's series at ξ₀ and its right-hand side along the integration are therefore one analytic function of ξ. The
+graphs have 95 to 849 nodes. `l2_c2.py --checks`, each check with a mutation that makes it fail:
+
+| check | result (threshold) | mutation → result |
+|---|---|---|
+| 1. the graph evaluator, on SymForce's terms in SymForce's association, against `first_order_jet.SymForce` (M = 3; series orders < 60 and the right-hand side) | 1.8×10⁻¹⁵, 1.5×10⁻¹⁵, 4.7×10⁻¹³ (10⁻¹¹) | `force` (SymForce's sign) → 2.0; `series` → 1.0×10⁻⁶ |
+| 2. F̃⁽⁰⁾ converted = FIRST_ORDER.md's terms, untruncated (L = 40, random fields) | 1.1×10⁻¹⁵ (10⁻⁹) | `ident` (a term of F̃⁽⁰⁾[E^t_t] dropped) → 4.5×10⁻² |
+| 3. summed series = right-hand side at \|ξ\| = 0.05, F(0) = 0, dropped negative powers of ξ (l0, l2, F_λ, G) | ≤ 2.6×10⁻¹² (10⁻¹⁰); 0; ≤ 6.7×10⁻¹⁴ (10⁻¹²) | `series` → 1.0×10⁻⁶ |
+| 3. the same for the control | **1.7×10⁻¹⁰ (10⁻¹⁰); dropped 2.9×10⁻¹¹ (10⁻¹²): fails** | |
+
+**Discrepancy, reported.** The control fails check 3 by a factor of 1.7 at the fixed radius. Its forcing carries Φ to
+sixth order in t, so more nested divisions by ξ² than the others. The diagnostic in `--checks` shows that the
+difference falls with the radius, 4.5×10⁻¹⁰, 1.7×10⁻¹⁰, 1.5×10⁻¹¹ and 1.2×10⁻¹² at |ξ| = 0.04, 0.05, 0.07 and 0.10.
+The series truncation error there is below 10⁻³³, so the difference is rounding amplified by powers of 1/|ξ|, not a
+mismatch of the series. The jets start at r₀ ≥ 0.062, and the control's c₂ (−25.6 at M = 5) differs from c₂ by about
+22.5, so this does not affect the control's verdict. The threshold was not changed.
+
+**The F_λ representative.** l2_mode's F_λ = 𝓛₀[ln(−t) D₂Z₀] is taken in (Φ, c). Since Y = 2Φ_t/C, ln(−t) times the
+mode in (Φ, c) is ln(−t) times the mode in the solver's variables plus the local field δy = −σ/(ξc). So its response
+differs from the jets' d/dλ component by that field minus the homogeneous solution with its data (profile −s₀/2,
+c(0) = 0). The relation holds to 9.8×10⁻², 5.3×10⁻³ and 1.3×10⁻⁴ at M = 1, 3 and 5. The ℓ projections differ by
+5.6×10⁻², 2.6×10⁻³ and 1.1×10⁻⁴. These fall with M like a truncation effect, and the jets' d/dλ is used throughout.
+
+### 9.4 Why c₂ = −λ₁
+
+In the full problem, with A the λ = 2 profile-to-multiplier map at c(0) = 0:
+
+1. **A is singular** (FIRST_ORDER.md §4, Proposition 5). Its left null vector ℓ also annihilates the c(0) columns B.
+   Each c(0) is reached by a time reparametrization at λ = 2, whose multiplier vanishes, so B k = −A f_g for the
+   reparametrization's profile f_g, and ℓ·B = 0.
+2. **Solvability does not depend on the data.** With ℓ·A = ℓ·B = 0, the O(1/n) condition is
+   ℓ·S(W^F) + c₂ ℓ·S(W^λ) = 0, whatever the correction's profile and c(0). This holds for ℓ = 0 with its forcing
+   (λ₁) and, through the conjugation, for ℓ = 2 with F̃⁽²⁾ (c₂).
+3. **The denominators are equal.** Both use the λ-derivative of the same mode, ∂_sZ₀ in the ℓ = 0 rows. FIRST_ORDER.md
+   uses the gauge-stepped mode, which differs from ∂_sZ₀ by a reparametrization, and ℓ annihilates the
+   reparametrization's λ-derivative by item 1. The two F_λ representatives of §9.3 differ by a local field, whose
+   contribution ℓ also kills.
+4. **The local field drops out.** By §9.2, W^{F⁽²⁾} = −W^{F⁽⁰⁾} − W^G, where W^G is the response to
+   G = 𝓛₀[(0, Φ_s)]. Since (0, Φ_s) solves 𝓛₀V = G, W^G = V − (the homogeneous solution with V's data (f_V, 0)). V is
+   a local field of a background with zero jump, so S(V) = 0, and ℓ·S(W^G) = −ℓ·A f_V = 0.
+
+So c₂ = −ℓ·S(W^{F⁽²⁾})/ℓ·S(W^λ) = +ℓ·S(W^{F⁽⁰⁾})/ℓ·S(W^λ) = −λ₁. In a truncated model items 1 and 4 hold only up to
+the truncation, and c₂ + λ₁ is G's own value. That is the "G alone" column of §9.5. It is equal to c₂ + λ₁ to all
+digits shown, since the graphs are linear in the forcing's monomials.
+
+### 9.5 Numbers
+
+`python3 l2_c2_summary.py` (stored at `logs/l2_c2_summary.log`), xi1 = 0.2. The c₂ and λ₁ values are those of the left
+singular vector of Sch, and "c₂ over φ" is the range over that vector and φ = e₁, e₂, f₂:
+
+| M | c₂ | c₂ over φ | λ₁ (same code) | λ₁ (SymForce's terms) | c₂ + λ₁ | G alone | c₂, control |
+|---|---|---|---|---|---|---|---|
+| 1 | −7.9591 | −9.0861 to −5.9481 | 7.8094 | 2.7288 | −0.1496 | −0.1496 | −11.04 |
+| 3 | −2.4825 | −2.5215 to −2.4505 | 2.5041 | 2.8819 | 0.0216 | 0.0216 | −8.13 |
+| 5 | −3.0458 | −3.0475 to −3.0438 | 3.0443 | 3.0416 | −0.0016 | −0.0016 | −25.56 |
+
+Verdicts against the bars fixed before the runs:
+
+- Planted λ* (M = 1): 1.7691220084 against 1.769122008. OK (bar 10⁻⁸).
+- Planted λ₁ (M = 5), the converted ℓ = 0 forcing on the ℓ = 2 code path: 3.0443 against the fit 3.0324, 0.39%. OK
+  (bar 1%).
+- The same with SymForce's terms: 3.0416, 0.30%. OK. With every graph forcing's sign flipped (`--mutate=gsign`), the
+  two give −3.0443 and −3.0416. BAD, as required.
+- Control: c₂ moves by 5.65 at M = 3 and by 22.5 at M = 5, against ten times the larger of the slice spread and
+  |c₂ + λ₁| (0.71 and 0.037). OK.
+- Mode: the corrected jump of ∂_sZ₀ is at most 8.2×10⁻⁷ of |Sch| |f₂|. OK (bar 10⁻⁵).
+- Sign: negative over the whole range at M = 3 (−2.52 to −2.45) and at M = 5 (−3.048 to −3.044). The two agree.
+
+**Convergence.** c₂ follows λ₁'s own M sequence, which alternates from M = 3 on, as FIRST_ORDER.md's sequences do. M = 3
+is the least converged point. Its λ₁ in this slice is 2.50, against 3.08 and 2.83 in FIRST_ORDER.md's two gauges. At
+M = 5 the slice gives 3.044, between FIRST_ORDER.md's 3.0223 (light-cone gauge data) and 3.0471 (both set to 0). The
+fit 3.0324 lies in the same interval. The M = 3 to M = 5 step of c₂ (0.563) equals that of λ₁ (0.540) to the size of
+c₂ + λ₁ at M = 3, so c₂ at M = 3 and 5 agree to the sequence's own rate. M = 1 is far from converged in every
+quantity (λ₁ is 7.81 by the converted forcing and 2.73 by SymForce's association).
+
+### 9.6 What is assumed, and what is not covered
+
+- **For c₂ = −λ₁:**
+  - FIRST_ORDER.md §4's symmetry route in the full problem, with ℓ annihilating the reparametrization columns.
+    FIRST_ORDER.md checked that route against the direct route in the untruncated series, to 3×10⁻¹⁵.
+  - §8.5's hypotheses: the one-dimensional kernel and multipliers along rays. V₁ + V₂ = 0 is now a gauge choice at
+    leading order (§9.1, by hand).
+  - Conjecture 1 and the lemma chain at O(1/n), as for λ₁ itself.
+- **The value −3.0324** is FIRST_ORDER.md's fit of λ₁, numerical evidence. The truncated sequence supports it but does
+  not replace it.
+- Only p = q = (n + 1)/2. The p = 1 representative has its own F (§8.3), which was not run.
+- Linear order in e, and the O(p) × O(q) ansatz with zero shift.
+
+**Proposed text for the README** (for the maintainer): "At large D the non-spherical ℓ = 2 perturbation of the
+critical solution has growth rate λ₂ = c₂/n + O(1/n²), with c₂ = −λ₁ = −3.0324 by a solvability identity of the inner
+problem (conditional on the selection hypotheses). The mode is marginal at D = ∞ and stable at large finite D
+(notes/L2_MODE.md §9)."
+
+## 10. Reproduce
 
 From `solver/inner_pert/` with venv-314 (sympy 1.14.0):
 
@@ -334,4 +545,18 @@ python3 l2_mode.py --check --mutate=curv     # the fibre curvature dropped: FAIL
 python3 l2_mode.py --first-order             # section 8 (~12 min): the O(1/n) background, planted checks 1 and 2
                                              # with their controls, F with its control, L0 on D2 Z0, F_lambda; PASS
 python3 l2_mode.py --first-order --print     # the same, and prints the operator L0, F and F_lambda
+python3 l2_c2_forcing.py                     # section 9.2 (~6 min): Ft = F/(sY) for l2, the control, l0 and F_lambda,
+                                             # and Ft(l2) + Ft(l0) = L0[(0, Phi_s)] with its control; PASS, exit 0
+python3 l2_c2.py --checks                    # section 9.3 (~1 min): checks 1-3 and the radius diagnostic; exit 1,
+                                             # from the control's check 3 (reported in 9.3); the others hold
+python3 l2_c2.py --checks --mutate=ident     # check 2 fails; --mutate=series: checks 1 and 3 fail; --mutate=force: 1
+python3 l2_c2.py 1 --planted-lam             # planted: lambda* of M = 1 = 1.7691220084; PASS
+for M in 1 3 5; do python3 l2_c2.py $M --forcing=l2,l2_ctrl,l0,sym --lamcheck; done   # c2, control, lambda_1 (M = 5:
+                                                                                      # ~8 min)
+for M in 1 3 5; do python3 l2_c2.py $M --forcing=l2,l0,G,sym --lamcheck; done   # G alone and the F_lambda relation
+python3 l2_c2.py 5 --forcing=l0,sym --mutate=gsign           # the planted lambda_1 with every forcing flipped: -3.04
+python3 l2_c2_summary.py                     # the table and verdicts of 9.5; PASS, exit 0
 ```
+
+The c₂ runs read the stored zeros `data/first_order_hier_M{1,3,5}_xi0.2.json`, and use numpy, scipy, mpmath and
+sympy. Their logs are in `solver/inner_pert/logs/l2_c2_*.log`.
