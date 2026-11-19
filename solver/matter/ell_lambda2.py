@@ -323,7 +323,7 @@ def mseq():
     print(f"\nl = 1 (data/ell_lambda_l1.json, from raw I994-mac): lambda* M = 1 {a1:.9f}, M = 3 {a3:.6f} "
           f"(range {a3lo:.6f} to {a3hi:.6f}); step 1->3 {D:+.6f}")
     for lab, lim, tail in rows:
-        print(f"   calibrated by {lab}: M = 3 -> inf {tail:+.6f}, lambda_inf {lim:.6f}, lambda_inf - 2 = {lim - 2:+.6f} "
+        print(f"   calibrated by {lab}: M = 3 -> inf {tail:+.6f}, lambda_inf {lim:.6f} (gamma {1 / lim:.6f}), lambda_inf - 2 = {lim - 2:+.6f} "
               f"(M = 3 range: {a3lo + tail - 2:+.6f} to {a3hi + tail - 2:+.6f})")
     need = (2 - a3) / D
     print(f"\n   lambda_inf = 2 would need the M = 3 -> inf correction {2 - a3:+.6f}, i.e. {need:+.3f} times the 1 -> 3 step "
