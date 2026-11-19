@@ -195,8 +195,11 @@ and gives no new sample, so the noise estimates below come from starts perturbed
   (#977), (2.719236, 1.000026) ± 9.9×10⁻⁶ on aarch64 (#974).
 - **The zero, revised:** A₇ = 2.71924 and ω₇/ω∞ = 1.000025, ± 1×10⁻⁵ (the noise estimate). This is within the
   quoted ±2×10⁻⁵ in ω and 2.3×10⁻⁵ off in A.
-- **Radius:** still unchecked at this accuracy. At ξ₁ = 0.14 level 3 floors at |r₃| 6×10⁻⁷ to 2×10⁻⁶, and the zero's
-  estimate is 1.2×10⁻³ (#974), so the test cannot resolve 2×10⁻⁵. At 0.16 no solve reaches the 10⁻⁶ bar (#965).
+- **Radius:** checked to about 2×10⁻⁴, not 2×10⁻⁵. At ξ₁ = 0.14 level 3 floors at |r₃| 6×10⁻⁷ to 2×10⁻⁶, and the
+  zero's estimate is 1.2×10⁻³ (#974). At 0.16 no solve reaches the 10⁻⁶ bar (#965). At 0.145 every role passes the bar,
+  and the zero (2.719313, 0.999999) lies 8.3×10⁻⁵ from 0.15's, 0.41 of the sum of the two estimates (1.94×10⁻⁴ at 0.145,
+  raw I989-win2 b5e41ff5). At 0.155 only 1 of 15 solves passes (#989). The floor after perturbed repeats rises from
+  3×10⁻⁸ at 0.15 to 3×10⁻⁷ at 0.145 and above 10⁻⁵ at 0.155. #1000 measures the 0.145 estimate from 8 perturbed starts.
 
 ## 3. The truncation sequence with M = 7
 

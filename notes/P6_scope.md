@@ -19,7 +19,8 @@ direction for issue #979; not reviewed. Status words as in AGENTS.md.
   the first coupling ratio wholly inside (★)'s range is also M = 9's (§2.2).
 - **The M = 7 error bar is not the binding input.** Across rtol 10⁻¹² to 10⁻¹⁴ on x86 and aarch64, κ₇ stays in −0.0485
   to −0.0488 and the limit in 0.999985–0.999991 (§2.3). The zero has converged in rtol from 10⁻¹³ on, at the size of
-  its noise estimates (#977). Radius independence (Lemma R) is untested at 2×10⁻⁵. It tests the numerics, not (★).
+  its noise estimates (#977). Radius independence (Lemma R) holds to about 2×10⁻⁴ over ξ₁ 0.145–0.15 and is untested
+  at 2×10⁻⁵ (#989, B_tail_M7.md §2). It tests the numerics, not (★).
 - **One step of B_tail_M7.md §5.2 does not follow.** (T1) and (T2) are upper bounds. They give a geometric bound on
   |δ_M|, not the ratio inequality (R) (§1.3). The telescoping still closes from (T1)–(T3), but it then needs Λ and C_f
   explicitly, in place of the measured sup|δ₅|.
@@ -27,7 +28,9 @@ direction for issue #979; not reviewed. Status words as in AGENTS.md.
   Costin–Tanveer papers were read in full for #987 (LIT_REVIEW.md §6.1), and the inner problem is not in their class.
   Xie–Tanveer was not reached, and Olde Daalhuis was read at metadata level only (LIT_REVIEW.md §6).
 - **M = 9 is blocked at level 5.** Its first level-5 solve stalls at |r₅| ≈ 43 with the floor rule off and at rtol
-  10⁻¹² alike (#974), so the first test of (R) waits on a level-5 design change (§2.5).
+  10⁻¹² alike (#974). Level 5's approach radius (0.095–0.125) moves the approach stage's |g| but not the polish stage's
+  end, |r₅| ≈ 42.5 at polish radius 0.15 (#980). So the first test of (R) waits on the polish radius (#999, `hier.py
+  --polish`).
 - **First steps (§4).** A level-5 approach-radius pilot at M = 9 (#974's recommendation 1), then δ₇(p₇) = r₁^{[9]}(p₇)
   at the M = 7 zero. In parallel, check symbolically whether Lemma W's cancellations hold identically in ν.
 
