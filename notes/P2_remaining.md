@@ -44,14 +44,84 @@ Sizes are line counts of the certificate scripts at main b081fbb2. Costs are est
   - c: Γ⁰_{c,j} = ln(1 + δ/2) sup_I ℓ_{F_c,j}.
   - β: Γ⁰_{β,j} = sup_I ℓ_{ĝ,j}/(n − 1).
   - The pseudo-component of δD/(x − 1) is added to ℓ_G and ℓ_ĝ, as P2b adds it.
-- **Pass criteria.** θ₀ < 1 on the certificate's class constants (`--h=cert`) and on P2b's own (`--h=p2b_lc_cells.json`).
-  The certificate's θ₀ = 5.8×10⁻⁵ is compared, not required. P2_review.md §3.3's θ₀ ≤ 1.8×10⁻⁵, from the saved Γ₀,
-  is compared too. A difference larger than a factor 10 is located after the commit, by reading the certificate's
-  block.
+- **Pass criteria.** θ₀ < 1 on the certificate's class constants (`--h=cert`) and on P2b's own
+  (`--h=p2b_lc_cells.json`). The certificate's θ₀ = 5.8×10⁻⁵ is compared, not required. P2_review.md §3.3's
+  θ₀ ≤ 1.8×10⁻⁵, from the saved Γ₀, is compared too. A difference larger than a factor 10 is located after the commit,
+  by reading the certificate's block.
 - **Controls.** `--planted`: the Perron certification on a rank-one matrix of known root, and the Γ⁰ assembly against
   hand values, must pass. `--planted --mutate=perron` must fail. `--mutate=nodecay`, the backward kernel times n₀
   (the certificate's own mutation in B_chain.md §14), must give θ₀ > 1 and exit 1.
 
 ### 2.2 Results
 
-Not yet run.
+**θ₀ < 1 is confirmed. The certificate's Γ⁰ agrees with this one entry by entry, up to the differences explained
+below, and its Perron root is 1.08×10⁻¹⁶ against 1.03×10⁻¹⁶ here. The printed θ₀ = 5.8×10⁻⁵ is a valid upper bound,
+about 10¹¹ above the root.** The own numbers were committed (59591319) before `b8m_lcj.py` was opened. Logs are in
+`solver/proof/review_p2c/`, run with `/Users/nathan/venv-314/bin/python` (mpmath 1.3.0), in about 3 s each.
+
+| run | Perron root of Γ⁰ | certified θ₀ | exit |
+|---|---|---|---|
+| `--h=cert` (the certificate's class) | 1.029×10⁻¹⁶ | 1.000×10⁻¹² | 0 |
+| `--h=p2b_lc_cells.json` (P2b's own class) | 1.029×10⁻¹⁶ | 1.000×10⁻¹² | 0 |
+| `--h=cert --rate=half` (the weighted form's kernel factor) | 1.198×10⁻¹⁶ | 1.000×10⁻¹² | 0 |
+| `--planted` | 0.2070 (planted 0.2070) | 0.2104 | 0 |
+| `--planted --mutate=perron` | 2.054 | 2.069 | 1 (fails as it must) |
+| `--h=cert --mutate=nodecay` (pre-set control) | 0.553 | 0.564 | 0 (**did not fire**) |
+| `--h=cert --mutate=gaininv` (added after the run) | 9.08×10¹⁵ | 9.27×10¹⁵ | 1 (fails as it must) |
+
+The certified θ₀ sits at 10⁻¹² because the certification's weight search adds 10⁻¹² to its trial root.
+
+- **On L every loop of Γ⁰ is tiny.** The O(1) entries are Γ⁰_{V,S} = |ω| ln(1.025) = 0.0733 and Γ⁰_{c,β} = 0.0247,
+  since ℓ_{F_c,β} = 1. Every entry that closes a loop with them is O(ρ) or O(1/n), and ρ = (1 + |x|)²/n ≈ 4/n on L.
+  So θ₀ is about the square root of the largest two-cycle, Γ⁰_{c,β}Γ⁰_{β,c} = 0.0247 × 2.2×10⁻³¹.
+- **The pre-set control did not fire, and that is reported, not hidden.** The backward kernel times n₀ multiplies the
+  S row's O(ρ) coefficients by n₀ and leaves them O(1). The largest loop, S → V → S, then reaches 0.31, and θ₀ = 0.564.
+  The certificate's own mutation fires in the weighted norm of the main contraction, where the S row is not O(ρ).
+  Here it is not a test. The control added after the run, with that reason recorded in the script's docstring,
+  inverts the β row's gain at n = n₀. It is the factor (n₀ − 1)² that a multiplication in place of a division would
+  make, and it fails at θ₀ = 9.3×10¹⁵. The inversion for every n ≥ n₀ is unbounded, and P2b's algebra refuses it
+  with an error.
+
+### 2.3 The comparison with the certificate
+
+`b8m_lcj.py`'s block (the comment "the a priori norm (m = 1 on (1, 1 + delta/2], s_V = s_c = 1)" and the lines after
+it) and its saved Γ₀ (`b8m_lcj.json`) were read after the commit. The certificate's Perron root was recomputed with
+this review's certification (`p2c_cert_gamma0.py`, `p2c_cert_gamma0.log`).
+
+| entry | certificate | here | the difference |
+|---|---|---|---|
+| Γ⁰_{V,S} | 0.07424 | 0.07333 | the certificate integrates dy/y over (1, 1 + δ/2] as δ/2, here as ln(1 + δ/2) |
+| Γ⁰_{S,V}, Γ⁰_{S,c} | 4.21×10⁻³², 6.58×10⁻³¹ | 3.39×10⁻³², 5.30×10⁻³¹ | P1's secant coefficients are 1.2 to 1.25 times P2b's, which is conservative |
+| the β row and column | Γ⁰_{β,V} = 5.34, Γ⁰_{β,c} = 27.2; Γ⁰_{S,β} = 3.7×10⁻⁶³ | 4.3×10⁻³², 2.2×10⁻³¹; 3.6×10⁻³¹ | the certificate's shape is s_β = 1/n, here 1: a diagonal scaling, which leaves the Perron root unchanged |
+| Γ⁰_{c,S} | 4.24×10⁻³³ | 5.17×10⁻³⁵ | the certificate's c row carries F_c's pseudo-component (fcpL × cpj), which P2b's F_c node does not have (§2.4) |
+| the kernel factor | (1 + h_H)/(1 − h_H), h_H over the whole segment, 0.108 | the same form, h_H on L, 9.7×10⁻³² | both use the full decay rate, which m = 1 allows |
+| Perron root | 1.08×10⁻¹⁶ | 1.03×10⁻¹⁶ | agreement to 5% |
+| printed θ₀ | 5.84×10⁻⁵ | 1.0×10⁻¹² | the certificate's power iteration floors each weight at 10⁻¹², and the tight weight needs a ratio of about 4×10²³ (`p2c_cert_gamma0.log`). Its θ₀ is a valid bound, only loose. P2_review.md §3.3's 1.8×10⁻⁵ is a bound of the same kind |
+
+### 2.4 Discrepancies (reported, not fixed)
+
+1. **F_c's pseudo-component on L.** The certificate's c row adds fcpL × cpj (`b8m_lcj.py`, the Gam0["c"] line): the
+   derivative of δF_c with respect to sup_{[1,x]}|v_c′|. P2b's F_c node has no such entry (its pseudo-component
+   derivative is 0, `p2b_lc.cell_eval`), so P2b's Lemma J and this check omit a term that the certificate includes.
+   Which form is right needs the bounded form of F_c on L, which B_chain.md §13.3 does not write out. The term cannot
+   change θ₀'s verdict, since the c row's loops are O(ρ). Whether it changes P2b's main θ (0.164, against the
+   certificate's 0.176) was not checked.
+2. **The printed θ₀ is loose by a factor of about 10¹¹.** That is harmless, because the lemma needs only θ₀ < 1.
+   B_chain.md §14 quotes 5.8×10⁻⁵, and P2_review.md §3.3 quotes ≤ 1.8×10⁻⁵. A proposed wording for B_chain.md §14:
+   "(θ₀ ≤ 6×10⁻⁵, a loose bound; the Perron root of Γ⁰ is about 10⁻¹⁶, #988)".
+3. **This review's pre-set real-data control did not fire** (§2.2). That is a defect of the control, not of the
+   certificate.
+
+### 2.5 Reproduce
+
+From `solver/proof/review_p2c/`, with python and mpmath (P2b's modules are imported from `../review_p2b/`):
+
+```
+python3 p2c_theta0.py --planted                       # PASS, exit 0
+python3 p2c_theta0.py --planted --mutate=perron       # FAIL, exit 1
+python3 p2c_theta0.py --h=cert --log=p2c_theta0_cert.log              # theta0 1.0e-12, exit 0
+python3 p2c_theta0.py --h=p2b_lc_cells.json --log=p2c_theta0_own.log  # theta0 1.0e-12, exit 0
+python3 p2c_theta0.py --h=cert --mutate=gaininv       # theta0 9.3e15, exit 1
+python3 p2c_theta0.py --h=cert --mutate=nodecay       # theta0 0.564, exit 0 (the pre-set control; it did not fire)
+python3 p2c_cert_gamma0.py                            # the certificate's Gamma0: Perron root 1.08e-16
+```

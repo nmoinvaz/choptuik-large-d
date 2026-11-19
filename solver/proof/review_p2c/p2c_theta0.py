@@ -26,8 +26,12 @@ either P2b's own class constants (--h=p2b_lc_cells.json) or the certificate's (-
 
 --planted runs the Gamma0 assembly and the Perron certification on planted inputs with a known Perron root
 (a rank-one matrix u w^T, root w.u); --planted --mutate=perron raises one entry so that the root exceeds 1, and the
-check must fail. --mutate=nodecay multiplies the backward kernel by n0 (b8m_lcj's own mutation, as in B_chain.md 14),
-and theta0 must then exceed 1 (exit 1). --rate=half uses 1/2 - h_H, the weighted-norm form, for the comparison only.
+check must fail. --mutate=nodecay multiplies the backward kernel by n0 (b8m_lcj's own mutation, as in B_chain.md 14);
+the protocol fixed before the run required theta0 > 1 from it, and it gave 0.564: in the m = 1 norm the S row's
+coefficients are O(rho) = O(1/n), so a factor n0 leaves them O(1) (P2_remaining.md 2.2). Added after that run, with that
+reason: --mutate=gaininv multiplies the beta row by (n0 - 1) instead of dividing by n - 1 (an inverted gain at n = n0;
+the inversion for every n >= n0 is unbounded, and P2b's algebra refuses it), and theta0
+must then exceed 1 (exit 1). --rate=half uses 1/2 - h_H, the weighted-norm form, for the comparison only.
 """
 import json
 import os
@@ -150,9 +154,14 @@ def main():
         ell[("G", j)] = coef(r["G"][0], j)
         ell[("F", j)] = coef(r["Fc"][0], j)
         ell[("g", j)] = up(coef(r["ghat"][0], j, gain_w) * st.c1mnu)
+        if MUT == "gaininv":
+            ell[("g", j)] = up(ell[("g", j)] * (st.n0 - 1) ** 2)        # times (n0 - 1) instead of over (n - 1)
     Q = {j: coef(r["Fc"][0], j, (1, 1, 0)) for j in COMPJ}                 # sup_I ell_{F_c,j}/|s|
     lpG = coef(r["G"][0], L.PCIDX)
     lpg = up(coef(r["ghat"][0], L.PCIDX, gain_w) * st.c1mnu)
+    if MUT == "gaininv":
+        lpg = up(lpg * (st.n0 - 1) ** 2)
+    lpF = coef(r["Fc"][0], L.PCIDX)                                      # F_c's own pseudo-component (P2b: none)
     for j in COMPJ:
         ell[("G", j)] = up(ell[("G", j)] + lpG * Q[j])
         ell[("g", j)] = up(ell[("g", j)] + lpg * Q[j])
@@ -172,6 +181,7 @@ def main():
     for f in ("G", "F", "g"):
         lines.append(f"    {f}: " + ", ".join(f"{j} {mp.nstr(E[(f, j)], 5)}" for j in COMPJ))
     lines.append(f"  pseudo-component: ell_G,pc = {mp.nstr(mpup(lpG), 5)}, ell_g,pc/(n-1) = {mp.nstr(mpup(lpg), 5)}, "
+                 f"ell_Fc,pc = {mp.nstr(mpup(lpF), 5)}, "
                  "Q_j = " + ", ".join(f"{j} {mp.nstr(mpup(Q[j]), 5)}" for j in COMPJ))
     lines.append("  Gamma0 (rows S, V, beta, c; columns S, V, beta, c):")
     for i in COMPJ:
