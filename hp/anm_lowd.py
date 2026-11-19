@@ -87,6 +87,8 @@ def main():
     ap.add_argument("--tol_step", type=float, default=1e-32)
     ap.add_argument("--hmax", type=float, default=0.05)
     ap.add_argument("--step_tol", type=float, default=1e-20)
+    ap.add_argument("--save_series", default="", help="write z_0..z_N (double-double parts) and Delta's coefficients to "
+                    "this .npz, for a singularity analysis of Delta(D) (#997)")
     ap.add_argument(FLAG, action="store_true", help=HELP)
     a = ap.parse_args()
     require_raw(a.out)
@@ -117,7 +119,14 @@ def main():
     ratio = ctl / orders[0]["rhs"]
     norms = [float(dd_norm(zh, zl))] + [o["norm"] for o in orders]
     radii = [norms[k - 1] / norms[k] for k in range(2, len(norms)) if norms[k]]
-    put(stage="coefficients", N=a.N, orders=orders, control_rhs1=ctl, control_ratio=ratio, radii=radii)
+    # Delta's Taylor coefficients in D at D0: the last unknown of each z_k, its two parts summed
+    delta_k = [float(Zh[k][-1]) + float(Zl[k][-1]) for k in range(len(Zh))]
+    put(stage="coefficients", N=a.N, orders=orders, control_rhs1=ctl, control_ratio=ratio, radii=radii,
+        delta_k=delta_k)
+    if a.save_series:
+        np.savez(a.save_series, zh=np.array(Zh), zl=np.array(Zl), delta_hi=np.array([float(z[-1]) for z in Zh]),
+                 delta_lo=np.array([float(z[-1]) for z in Zl]), D0=D0, M=meta["M"], state=a.state)
+        print(f"series written to {a.save_series}: Delta_k = " + ", ".join(f"{d:.6e}" for d in delta_k), flush=True)
     print(f"control (dimension frozen): |[F]_1| {ctl:.2e}, {ratio:.1e} of the real one "
           f"({'fires' if ratio < 1e-10 else 'DOES NOT FIRE'}); radii |z_k-1|/|z_k| {', '.join(f'{r:.3g}' for r in radii)}", flush=True)
     if not ratio < 1e-10:
