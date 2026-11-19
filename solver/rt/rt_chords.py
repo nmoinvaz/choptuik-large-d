@@ -329,6 +329,30 @@ def main():
                       flush=True)
             out["T0c"] = res
             print(f"T0c  {time.time() - t0:.0f} s", flush=True)
+    if "e" in tests:      # outside the readings: how the K = 7 chords sit against the K = 0 plane, and per field
+        a7, b7 = chord(dd["a7"], dd["c7"]), chord(dd["b7"], dd["c7"])
+        o7 = b7 - (b7 @ a7) / (a7 @ a7) * a7
+        Q = np.linalg.qr(np.c_[ch["a-c"], ch["b-c"]])[0]
+        inplane = lambda v: float(np.linalg.norm(Q.T @ v) / np.linalg.norm(v))              # noqa: E731
+        res = {"cos(a7-c7, a-c)": cos(a7, ch["a-c"]), "cos(a7-c7, b-c)": cos(a7, ch["b-c"]),
+               "in K0 plane: a7-c7": inplane(a7), "in K0 plane: orth part of b7-c7": inplane(o7)}
+        print("E    " + ", ".join(f"{k} {v:.4f}" for k, v in res.items()), flush=True)
+        for k, v in (("a-c", ch["a-c"]), ("b-c", ch["b-c"]), ("a7-c7", a7), ("orth(b7-c7)", o7)):
+            w1, w2, w3, w4, mu = rt.unpack(v)
+            per = {}
+            for name, f, anti in (("w1", w1[0][:, rt.pos], False), ("w2", w2[0], False), ("w3", w3[0], False),
+                                  ("w4", w4[0], True)):
+                tot = float(np.sum(f ** 2))
+                if anti:
+                    G = np.fft.fft(f * rt.shift[:, None], axis=0)
+                    low = float(np.sum(np.abs(G[0]) ** 2 + np.abs(G[Nt - 1]) ** 2)) / Nt
+                else:
+                    low = Nt * float(np.sum(f.mean(axis=0) ** 2))
+                per[name] = low / tot
+            res[k + " lowest-harmonic share by field"] = per
+            print(f"E    {k}: share of each field's 2-norm^2 in its lowest harmonic (0, or +-1/2 for w4): "
+                  + ", ".join(f"{q} {w:.4f}" for q, w in per.items()), flush=True)
+        out["extra"] = res
     if "d" in tests:
         t0 = time.time()
         rc, _, txt = branch_cheb([21.0], [0.0], planted=True)
