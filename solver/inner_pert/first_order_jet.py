@@ -21,6 +21,11 @@ mask is kept. A base direction carries any of:
     force   a callable giving extra forcing (y, c equations) from the value component (symmetry-breaking terms).
 Initial data per kept component: d0 (coefficient of xi in y, i.e. 2 x profile) and g0 (c at xi = 0).
 
+The scalar l-multiplet (#994, solver/inner_stokes/inner_ell.py; matter/STRUCTURE.md 3 (d)): with ELL = l the transport of
+y and sigma gains l (L -> xi^2 d_xi + xi (l + omega d_theta + lambda), every component) and E is weighted by
+(xi^2/2)^ELL_GRAV (ELL_GRAV = None: l), in c and in the sigma equation; demix_matrix uses the weight-l fast modes.
+ELL = 0 is the model above operation for operation. The O(1/n) terms and the forcings are those of l = 0 only.
+
     from first_order_jet import JetModel
 """
 import numpy as np
@@ -35,7 +40,10 @@ DELTA = np.pi / 8
 #   q1c   drops the O(1/n) term (c Psi) of the c equation (and so of the sigma equation)
 #   force flips the sign of the s-translation breaking forcing (SymForce)
 #   rhs   flips the O(1/n) term of the y equation in the right-hand side only (not in the series)
+#   ellpert  (ELL >= 1) drops the shift l from the transport of every component but the background's, which breaks
+#            the exact lambda = 1 mode (time translation) of the l-model
 MUTATE = set()
+ELL, ELL_GRAV = 0, None          # the l-multiplet's weight and its gravity weight (module defaults read by JetModel)
 SGN_Y = lambda: -1.0 if "q1y" in MUTATE else 1.0
 SGN_YR = lambda: -1.0 if ("q1y" in MUTATE or "rhs" in MUTATE) else 1.0
 SGN_C = lambda: 0.0 if "q1c" in MUTATE else 1.0
@@ -58,7 +66,12 @@ class JetModel:
         masks: kept component masks (0 first, closed under subsets); data: {mask: (Fh_k, g0h_k)} initial data of each
         non-zero component: profile harmonics (d0 = 2 Fh_k) and c(0) harmonics (dict, even mu)."""
         self.M, self.w = M, w
+        self.ell = ELL
+        self.ellg = ELL if ELL_GRAV is None else ELL_GRAV
         self.L = L = M + 2
+        self.ellc = np.full((len(masks), 1), float(ELL))      # the shift l per component
+        if "ellpert" in MUTATE:
+            self.ellc[1:] = 0.0
         k = np.arange(-L, L + 1)
         self.k = k
         self.odd = (np.abs(k) <= M) & (k % 2 == 1)
@@ -88,6 +101,7 @@ class JetModel:
         self.qbit = next((1 << b for b, d in enumerate(dirs) if d.q1), 0)
         self.lbit = next((1 << b for b, d in enumerate(dirs) if d.dlam), 0)
         self.fdirs = [(1 << b, d.force) for b, d in enumerate(dirs) if d.force is not None]
+        assert not (self.ellg and (self.qbit or self.fdirs)), "the O(1/n) terms and forcings are l = 0's only"
         # shift maps: component i -> component of mask | bit
         self.qmap = self._shiftmap(self.qbit)
         self.lmap = [(i, j) for i, j in self._shiftmap(self.lbit) if self.masks[i] & self.pertbits] if self.lbit else []
@@ -166,10 +180,13 @@ class JetModel:
             fn.prepare(self, xi0, J + 3)
         D, S, G, E, CE, PS, CP, OM = [self.d0.copy()], [], [self.g0.copy()], [None], [None], [None], [None], []
         Z = np.zeros_like(self.d0)
+        Eu = []
         mags = [np.abs(D[0][0]).max()]
         for j in range(J):
             # (a) s_j
             R = (2 * j + 1) * D[j] + self.lmul(D[j]) + self.wmul(D[j])
+            if self.ell:
+                R = R + self.ellc * D[j]
             for i in range(1, j + 1):
                 R = R - self.mul(G[i], S[j - i], o)
             for b, fn in self.fdirs:
@@ -195,6 +212,9 @@ class JetModel:
             for i in range(m):
                 em = em + self.mul(D[i], D[m - 1 - i], e)
             em = q * em / 2
+            if self.ellg:                            # E_w[m] = (q/2)^l E[m - l]: (xi^2/2)^l E in scaled form
+                Eu.append(em)                        # Eu[m - 1] = the unweighted E_m
+                em = (q / 2) ** self.ellg * Eu[m - 1 - self.ellg] if m - self.ellg >= 1 else Z.copy()
             E.append(em)
             cm = Z.copy()
             for i in range(m):
@@ -217,7 +237,10 @@ class JetModel:
                 gm = gm + fn.series_c(m, self)
             G.append(gm / (2 * m))
             # (c) d_{j+1}
-            num = q * ((2 * j + 2) * S[j] + self.lmul(S[j]) + self.wmul(S[j]))
+            if self.ell:
+                num = q * ((2 * j + 2) * S[j] + self.lmul(S[j]) + self.wmul(S[j]) + self.ellc * S[j])
+            else:
+                num = q * ((2 * j + 2) * S[j] + self.lmul(S[j]) + self.wmul(S[j]))
             for i in range(1, j + 2):
                 num = num - (2 * j + 2) * self.mul(G[i], D[j + 1 - i], o)
             dn = self.ginv_solve(G[0], num * o / (2 * j + 2), o)
@@ -245,9 +268,14 @@ class JetModel:
     def rhs(self, xi, Y):
         o, e = self.odd, self.even
         D, S, C = self.unpack(Y)
-        trans = lambda X: xi * (self.wmul(X) + self.lmul(X))
+        if self.ell:
+            trans = lambda X: xi * (self.wmul(X) + self.lmul(X) + self.ellc * X)
+        else:
+            trans = lambda X: xi * (self.wmul(X) + self.lmul(X))
         dD = (self.mul(C, S, o) - trans(D)) / (xi * xi)
         E = self.mul(D, D, e) / 2
+        if self.ellg:
+            E = E * (xi * xi / 2) ** self.ellg
         cE = self.mul(C, E, e)
         ext_y, ext_c = 0, 0
         if self.qbit or self.fdirs:
@@ -421,10 +449,18 @@ def demix_matrix(x, M, r1, NTH=64):
     kk = np.fft.fftfreq(NTH, 1 / NTH)
     Fth = sum(v * np.exp(1j * mu * th) for mu, v in Fh.items()).real
     F2 = np.fft.fft(Fth ** 2) / NTH
-    Pi = np.real(np.fft.ifft(np.where(kk != 0, F2 / (1j * kk + (kk == 0)), 0)) * NTH) / w
-    lsc = 1 / (2 * r1 * r1) - 2 * F2mean(Fh) * np.log(r1)
+    ell, lg = ELL, (ELL if ELL_GRAV is None else ELL_GRAV)
+    if lg == 0:
+        Pi = np.real(np.fft.ifft(np.where(kk != 0, F2 / (1j * kk + (kk == 0)), 0)) * NTH) / w
+        lsc = 1 / (2 * r1 * r1) - 2 * F2mean(Fh) * np.log(r1)
+    else:                                            # inner_stokes/nested_ell.py's Pi_l (no log at l >= 1)
+        coef = 2.0 ** (2 - lg) * r1 ** (2 * lg) / ((2 * lg + 2) * (2 * lg + 2j * kk * w))
+        Pi = np.real(np.fft.ifft(F2 * coef) * NTH)
+        lsc = 1 / (2 * r1 * r1)
+    if ell:
+        lsc = lsc + 2 * ell * np.log(r1)
     nus = list(range(1, M + 1, 2))
-    fac = np.array([r1 ** (2j * nu * w) * np.exp(lsc - np.log(2 * np.pi * abs(Kp(1j * nu * w)))) for nu in nus])
+    fac = np.array([r1 ** (2j * nu * w) * np.exp(lsc - np.log(2 * np.pi * abs(Kp(1j * nu * w + ell)))) for nu in nus])
     E = np.exp(-Pi)
 
     def f(Jd):
