@@ -20,8 +20,8 @@ import amp_flint as AF  # noqa: E402
 
 
 class AmpTrunc(AF.Amp):
-    def __init__(self, wf, K, J, Mh, prec=320, Mf=4):
-        super().__init__(wf, K, J, prec=prec, fams=tuple(range(2, 2 * Mh + 1, 2)), Mf=Mf)
+    def __init__(self, wf, K, J, Mh, prec=320, Mf=4, dps=60):
+        super().__init__(wf, K, J, prec=prec, fams=tuple(range(2, 2 * Mh + 1, 2)), Mf=Mf, dps=dps)
         self.H = Mh
         self.W = 4 * Mh + 1
         Z = acb(0)

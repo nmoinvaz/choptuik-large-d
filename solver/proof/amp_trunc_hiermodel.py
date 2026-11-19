@@ -17,7 +17,11 @@ which assumes H odd; with H = M + 1 even it would read the even (empty) entries 
 the odd harmonics |mu| <= min(H_odd, k'), H_odd = M. The de-mixing factor e^{-P} is amp_flint's (truncated at |mu| <= H
 in its products, as in amp_trunc.py).
 
-    python3 amp_trunc_hiermodel.py M K J [wf]   writes trunc_hier_M<M>_K<K>_J<J>_w<wf>.json (sigma_k, tuned f)
+    python3 amp_trunc_hiermodel.py M K J [wf] [dps]   writes trunc_hier_M<M>_K<K>_J<J>_w<wf>[_dps<dps>].json
+
+dps is mpmath's working digits for the late-order fits (default 60, amp_flint's). The fit basis has 13 + 8(M + 1)
+columns; at 60 digits it is numerically singular from M = 9 on (93 columns; qr_solve refuses at sigma_1), and 120
+digits solves it (#996).
 """
 import sys
 import os
@@ -30,8 +34,8 @@ import amp_flint as AF  # noqa: E402
 
 
 class AmpHierModel(AmpTrunc):
-    def __init__(self, wf, K, J, M, prec=320, Mf=4):
-        super().__init__(wf, K, J, M + 1, prec=prec, Mf=Mf)
+    def __init__(self, wf, K, J, M, prec=320, Mf=4, dps=60):
+        super().__init__(wf, K, J, M + 1, prec=prec, Mf=Mf, dps=dps)
         self.Hodd = M
 
     def S_at(self, nu, k):
@@ -99,9 +103,11 @@ class AmpHierModel(AmpTrunc):
 if __name__ == "__main__":
     M, K, J = int(sys.argv[1]), int(sys.argv[2]), int(sys.argv[3])
     wf = float(sys.argv[4]) if len(sys.argv) > 4 else 1.0
-    a = AmpHierModel(wf, K, J, M)
+    dps = int(sys.argv[5]) if len(sys.argv) > 5 else 60
+    a = AmpHierModel(wf, K, J, M, dps=dps)
     sig, f = a.run()
-    out = os.path.join(os.path.dirname(os.path.abspath(__file__)), f"trunc_hier_M{M}_K{K}_J{J}_w{wf:.4f}.json")
-    json.dump({"M": M, "H": M + 1, "wf": wf, "K": K, "J": J,
+    tag = f"_dps{dps}" if dps != 60 else ""
+    out = os.path.join(os.path.dirname(os.path.abspath(__file__)), f"trunc_hier_M{M}_K{K}_J{J}_w{wf:.4f}{tag}.json")
+    json.dump({"M": M, "H": M + 1, "wf": wf, "K": K, "J": J, "dps": dps,
                "sigma_str": [[mp.nstr(z.real, 20), mp.nstr(z.imag, 20)] for z in sig], "f": f}, open(out, "w"))
     print("wrote", out)
