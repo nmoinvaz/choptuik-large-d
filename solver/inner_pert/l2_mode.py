@@ -43,24 +43,26 @@ def lin(expr):
     return sp.expand(expr.subs(e, 0)) + e * sp.expand(sp.diff(expr, e).subs(e, 0))
 
 
-A1, B1, C1, V1, V2, L1 = (sp.Function(f)(s, t, chi) for f in ("A", "B", "C", "V1", "V2", "L"))
+A1, B1, C1, V1, V2, L1, P1 = (sp.Function(f)(s, t, chi) for f in ("A", "B", "C", "V1", "V2", "L", "P"))
 
 
 def setup(dS, p="half", flat=False, corr=None):
     """metric (3x3 base), warps U_k with dimensions m_k, and the scalar, for the deformation dS(s, chi). corr: the
-    O(e) corrections {A, B, C, V1, V2, L} (default all the unknown functions): g_ss += e A/(2s), g_s chi += e B,
-    g_chi chi += 2 s e C (each of relative order 1/n), U_k += e V_k / n, and the lapse c += e L (order one)"""
+    O(e) corrections {A, B, C, V1, V2, L, P} (default all the unknown functions): g_ss += e A/(2s), g_s chi += e B,
+    g_chi chi += 2 s e C (each of relative order 1/n), U_k += e V_k / n, the lapse c += e L and the scalar
+    Phi += e P (order one)"""
     S = s + e * dS
     if flat:
         c, mu, Ph = sp.Integer(1), sp.Integer(0), sp.Integer(0)
     else:
         c, mu, Ph = follow(c0, dS), follow(mu0, dS), follow(Ph0, dS)
-    K = {"A": A1, "B": B1, "C": C1, "V1": V1, "V2": V2, "L": L1}
+    K = {"A": A1, "B": B1, "C": C1, "V1": V1, "V2": V2, "L": L1, "P": P1}
     if corr is not None:
         K = {k: corr.get(k, sp.Integer(0)) for k in K}
     if flat:
         K = {k: sp.Integer(0) for k in K}
     c = c + e * K["L"]
+    Ph = Ph + e * K["P"]
     Ss, Sc = sp.diff(S, s), sp.diff(S, chi)
     grad2 = 2 * s / n * Ss ** 2 + Sc ** 2 / (2 * n * s)
     g = sp.zeros(3, 3)
@@ -377,3 +379,216 @@ def first_order_map_check(rules=None, drop_1n=False):
         x = x.subs(hh, 0) + hh * sp.diff(x, hh).subs(hh, 0)       # first order in h
         out[name] = sp.simplify(reduce_bg1(x.subs(kap, 1), R))
     return out
+
+
+def epart1(dS, p="half", corr=None, comps=None, rules=None, drop_1n=False):
+    """{component: (O(1) part, O(1/n) part)} of the e-linear residual at its natural order, on shell with the O(1/n)
+    background (rules), i.e. the value of x_natural + x_(natural-1)/n reduced to O(1/n). drop_1n: the leading rules only
+    (the control)"""
+    R = rules or bg_rules1()
+    if drop_1n:
+        R = {k: v.subs(hh, 0) for k, v in R.items()}
+    Em, F, W = residuals(*setup(dS, p, corr=corr))
+    C = {k: Em[i] for k, i in IDX.items()}
+    C["W"] = W
+    for k, Fk in enumerate(F):
+        C[f"F{k}"] = Fk
+    out = {}
+    for name, x in C.items():
+        if comps and name not in comps:
+            continue
+        kn = KNAT.get(name, -1)
+        L = dict(laurent_n(sp.diff(x, e).subs(e, 0), kn - 1))
+        if any(pw > kn for pw in L):
+            raise ValueError(f"{name}: a term above the natural order needs O(1/n^2) rules")
+        v = reduce_bg1(L.get(kn, 0) + hh * L.get(kn - 1, 0), R)
+        out[name] = (sp.simplify(v.coeff(hh, 0)), sp.simplify(v.coeff(hh, 1)))
+    return out
+
+
+def l0_first_order_corr():
+    """the l = 0 shift that translates FIRST_ORDER's (C, Y, S) exactly and keeps mu = eta to O(1/n): A = -d_s^expl eta,
+    lapse L = c A / (2n) (so that C = c (1 - mu/(2n)) translates)"""
+    Cf = c0 * (1 - mu0 / (2 * n))
+    Yf = 2 * sp.diff(Ph0, t) / Cf
+    Sf = 2 * sp.diff(Ph0, s)
+    deta = Yf ** 2 / 2 + (-Yf ** 2 / 2 + 2 * s * Sf ** 2 - 4 * s * Yf * sp.diff(Yf, s)) / n
+    A = -deta
+    return {"A": A, "B": 0, "C": 0, "V1": 0, "V2": 0, "L": c0 * A / (2 * n)}
+
+
+def l0_first_order_check(rules=None, drop_1n=False):
+    """planted: the l = 0 shift's O(1/n) e-parts of W and E^t_t are -(1/2c) and -(1/c) times FIRST_ORDER 4's s-translation
+    breaking terms of the Y and C equations, C (2 S_s + Y^2 S/2) and C (S^2/2 - Y Y_s); returns the differences"""
+    R = rules or bg_rules1()
+    out = epart1(sp.Integer(1), "half", l0_first_order_corr(), ["W", "E^t_t"], R, drop_1n)
+    Y_, S_ = 2 * sp.diff(Ph0, t) / c0, 2 * sp.diff(Ph0, s)
+    predW = -(2 * sp.diff(S_, s) + Y_ ** 2 * S_ / 2) / 2
+    predE = -(S_ ** 2 / 2 - Y_ * sp.diff(Y_, s))
+    R1 = {k: v.subs(hh, 0) for k, v in (rules or R).items()}
+    res = {}
+    for name, pred in (("W", predW), ("E^t_t", predE)):
+        o0, o1 = out[name]
+        d = sp.simplify(reduce_bg(sp.expand(o1 - pred)).subs(kap, 1))
+        res[name] = (sp.simplify(o0.subs(kap, 1)), d)
+    return res
+
+
+# ---------------------------------------------------------------- the O(1/n) step, fast zero tests (#1001)
+def numval(expr, point=0):
+    """the value of an on-shell expression (t-derivatives of c, Phi at fixed s; s, chi explicit) on explicit test
+    functions, to 50 digits: a zero test that avoids simplify. Two points with different functions"""
+    T = sp.Symbol("T")
+    fs = [(sp.sin(T) + sp.Rational(3, 10) * T ** 2 + 1, 1 + sp.Rational(1, 5) * sp.cos(T), sp.Rational(37, 100),
+           sp.Rational(61, 100), sp.Rational(43, 100)),
+          (sp.exp(T / 3) - sp.Rational(1, 2) * T ** 3, 2 - sp.sin(2 * T) / 7, sp.Rational(-21, 100),
+           sp.Rational(113, 100), sp.Rational(9, 10))][point]
+    fP, fc, tv, sv, xv = fs
+    rep = {}
+    for a in expr.atoms(sp.Derivative):
+        if a.expr in (c0, Ph0):
+            k = dict(a.variable_count).get(t, 0)
+            if dict(a.variable_count).get(s, 0):
+                raise ValueError("an s-derivative is left: reduce first")
+            rep[a] = sp.diff(fc if a.expr == c0 else fP, T, k)
+    x = expr.xreplace(rep).xreplace({c0: fc, Ph0: fP})
+    x = x.subs({T: tv, t: tv, s: sv, chi: xv, kap: 1, hh: 0})
+    return sp.N(x, 50)
+
+
+def is_zero_num(expr):
+    return all(abs(numval(expr, k)) < 1e-30 for k in (0, 1))
+
+
+def epart1_raw(dS, p="half", corr=None, comps=None, rules=None, drop_1n=False, dS_is_zero=False):
+    """epart1 without simplify: {component: (O(1) part, O(1/n) part)}, on shell with the O(1/n) background"""
+    R = rules or bg_rules1()
+    if drop_1n:
+        R = {k: v.subs(hh, 0) for k, v in R.items()}
+    Em, F, W = residuals(*setup(dS, p, corr=corr))
+    C = {k: Em[i] for k, i in IDX.items()}
+    C["W"] = W
+    for k, Fk in enumerate(F):
+        C[f"F{k}"] = Fk
+    out = {}
+    for name, x in C.items():
+        if comps and name not in comps:
+            continue
+        kn = KNAT.get(name, -1)
+        L = dict(laurent_n(sp.diff(x, e).subs(e, 0), kn - 1))
+        if any(pw > kn for pw in L):
+            raise ValueError(f"{name}: a term above the natural order needs O(1/n^2) rules")
+        v = reduce_bg1(L.get(kn, 0) + hh * L.get(kn - 1, 0), R)
+        out[name] = (v.coeff(hh, 0), v.coeff(hh, 1))
+    return out
+
+
+def deformation_as_corrections(dS, Afix):
+    """D2 Z0 written as explicit O(e) corrections at dS = 0: L = dS c_s, P = dS Phi_s, and the e-part of the normal
+    metric (mu(S)/n) dS^2/|grad S|^2 + e Afix ds^2/(2s) as A/(2s), B, 2 s C"""
+    S = s + e * dS
+    Ss, Sc = sp.diff(S, s), sp.diff(S, chi)
+    grad2 = 2 * s / n * Ss ** 2 + Sc ** 2 / (2 * n * s)
+    mu = mu0 + e * dS * sp.diff(mu0, s)
+    d1 = lambda x: sp.diff(x, e).subs(e, 0)
+    gss = mu / n * Ss ** 2 / grad2 + e * Afix / (2 * s)
+    gsc = mu / n * Ss * Sc / grad2
+    gcc = mu / n * Sc ** 2 / grad2
+    return {"L": dS * sp.diff(c0, s), "P": dS * sp.diff(Ph0, s), "A": sp.simplify(d1(gss) * 2 * s),
+            "B": sp.simplify(d1(gsc)), "C": sp.simplify(d1(gcc) / (2 * s)), "V1": 0, "V2": 0}
+
+
+def natural_raw(dS, p="half", corr=None, comps=None):
+    """{component: on-shell (leading rules) natural-order e-part}, without simplify"""
+    Em, F, W = residuals(*setup(dS, p, corr=corr))
+    C = {k: Em[i] for k, i in IDX.items()}
+    C["W"] = W
+    for k, Fk in enumerate(F):
+        C[f"F{k}"] = Fk
+    out = {}
+    for name, x in C.items():
+        if comps and name not in comps:
+            continue
+        kn = KNAT.get(name, -1)
+        L = dict(laurent_n(sp.diff(x, e).subs(e, 0), kn))
+        out[name] = reduce_bg(L.get(kn, sp.Integer(0)))
+    return out
+
+
+def first_order():
+    """#1001: the O(1/n) step, every expectation fixed here. Zero tests by numval at two test points (|x| < 1e-30)"""
+    ok = True
+
+    def say(label, good, detail=""):
+        nonlocal ok
+        ok &= good
+        print(f"{label}: {detail}  ({'as required' if good else '** NOT AS REQUIRED **'})", flush=True)
+
+    R = bg_rules1()
+    # 1. the background on shell to O(1/n)
+    Em, F, W = residuals(*setup(sp.Integer(0), "half", corr={}))
+    C = {k: Em[i] for k, i in IDX.items()}
+    C["W"] = W
+    for k, Fk in enumerate(F):
+        C[f"F{k}"] = Fk
+    bad = []
+    for name, x in C.items():
+        kn = KNAT.get(name, -1)
+        L = dict(laurent_n(x.subs(e, 0), kn - 1))
+        if L and not is_zero_num(reduce_bg1(L.get(kn, 0) + hh * L.get(kn - 1, 0), R).subs(hh, 1)):
+            bad.append(name)
+    say("background, every component on shell to O(1/n)", not bad, "all zero" if not bad else "nonzero in " + ", ".join(bad))
+    # 2. planted 1: FIRST_ORDER.md 1 through the map, and its control
+    p1 = first_order_map_check(R)
+    c1 = first_order_map_check(R, drop_1n=True)
+    say("planted 1, the heat system and eta of FIRST_ORDER.md 1", all(v == 0 for v in p1.values()),
+        ", ".join(f"{k} {'0' if v == 0 else 'nonzero'}" for k, v in p1.items()))
+    say("planted 1 control, leading rules only", all(v != 0 for v in c1.values()),
+        ", ".join(f"{k} {'0' if v == 0 else 'nonzero'}" for k, v in c1.items()))
+    # 3. planted 2: the l = 0 shift's O(1/n) forcing, and its control
+    Y_, S_ = 2 * sp.diff(Ph0, t) / c0, 2 * sp.diff(Ph0, s)
+    pred = {"W": -(2 * sp.diff(S_, s) + Y_ ** 2 * S_ / 2) / 2, "E^t_t": -(S_ ** 2 / 2 - Y_ * sp.diff(Y_, s))}
+    for lab, drop in (("planted 2, l = 0 forcing = FIRST_ORDER.md 4's s-translation breaking terms", False),
+                      ("planted 2 control, leading background only", True)):
+        out = epart1_raw(sp.Integer(1), "half", l0_first_order_corr(), ["W", "E^t_t"], R, drop)
+        diffs = {k: reduce_bg(sp.expand(out[k][1] - pred[k])) for k in pred}
+        zeros = {k: is_zero_num(v) for k, v in diffs.items()}
+        o1zero = all(is_zero_num(out[k][0]) for k in pred)
+        want = (not drop)
+        say(lab, (all(zeros.values()) == want) and o1zero,
+            ", ".join(f"{k} {'equal' if z else 'differs'}" for k, z in zeros.items()) + f"; O(1) parts {'zero' if o1zero else 'nonzero'}")
+    # 4. the l = 2 forcing F, and its control
+    zero = {k: sp.Integer(0) for k in ("A", "B", "C", "V1", "V2", "L", "P")}
+    dS = s * sp.cos(2 * chi)
+    corr = dict(zero, A=mu0 * sp.cos(2 * chi))
+    out = epart1_raw(dS, "half", corr, None, R)
+    outc = epart1_raw(dS, "half", corr, None, R, drop_1n=True)
+    o1zero = all(is_zero_num(v[0]) for v in out.values())
+    nzF = [k for k, v in out.items() if not is_zero_num(v[1])]
+    differ = [k for k in out if not is_zero_num(outc[k][1] - out[k][1])]
+    say("l = 2, O(1) parts on the O(1/n) shell", o1zero, "all zero" if o1zero else "nonzero")
+    say("l = 2, the O(1/n) forcing F", bool(nzF), "nonzero in " + ", ".join(nzF))
+    say("l = 2 control, F with the leading background only", bool(differ), "differs in " + ", ".join(differ))
+    # 5. the operator on the deformation, and F_lambda
+    dc = deformation_as_corrections(dS, mu0 * sp.cos(2 * chi))
+    L0d = natural_raw(sp.Integer(0), "half", dc)
+    allz = all(is_zero_num(v) for v in L0d.values())
+    say("L0 on D2 Z0 written as corrections", allz, "all zero" if allz else "nonzero")
+    lg = sp.log(-t)
+    Fl = natural_raw(sp.Integer(0), "half", {k: lg * v for k, v in dc.items()})
+    nzl = [k for k, v in Fl.items() if not all(abs(sp.re(numval(v, q))) < 1e-30 for q in (0, 1))]
+    say("F_lambda = L0[ln(-t) D2 Z0]", bool(nzl), "nonzero in " + ", ".join(nzl))
+    if "--print" in sys.argv:
+        print("\nF (l = 2, O(1/n) forcing, per unit e, on shell):")
+        for k, v in out.items():
+            print(f"  {k}: {sp.expand(v[1])}")
+        print("\nF_lambda:")
+        for k, v in Fl.items():
+            print(f"  {k}: {sp.expand(v)}")
+    return ok
+
+
+if __name__ == "__main__" and "--first-order" in sys.argv:
+    good = first_order()
+    print("PASS" if good else "FAIL")
+    sys.exit(0 if good else 1)
