@@ -38,6 +38,16 @@ def total(q):
     return sum(map(mp.mpf, q))
 
 
+EXACT = {}   # the grouping key round(D, 4) -> the record's own D, which the row reports (a 4-decimal D is up to
+             # 5e-5 off a state's D, e.g. 67.742203, and Delta moves by up to 1e-7 over that, #997's discrepancy)
+
+
+def key_of(D):
+    k = round(D, 4)
+    EXACT.setdefault(k, D)
+    return k
+
+
 def window():
     """#940's converged full-system solutions by D, and each D's pin-5 plan change"""
     sols, plan = {}, {}
@@ -46,7 +56,7 @@ def window():
         r = json.loads(line)
         if r.get("mode") != "full" or not r["conv"] or r.get("mutate"):
             continue
-        k = round(r["D"], 4)
+        k = key_of(r["D"])
         if r.get("plan_tol", 1e-32) == 1e-32:
             sols.setdefault(k, []).append((r["Delta_q"], f"I940-dh610/qd_window.jsonl:{r['state']}"))
             if r["state"].startswith("pin5"):
@@ -72,16 +82,16 @@ for f in sorted(glob.glob(os.path.join(raw, "T84-mac", "fullleg_pin*.jsonl"))):
     for line in open(f):
         r = json.loads(line)
         if r["conv"]:
-            old.setdefault(round(r["D"], 4), []).append((r["Delta_q"], f"T84-mac/{os.path.basename(f)}:{r['state']}"))
+            old.setdefault(key_of(r["D"]), []).append((r["Delta_q"], f"T84-mac/{os.path.basename(f)}:{r['state']}"))
 for f in sorted(glob.glob(os.path.join(raw, "T81", "conv_pin*_D7*.jsonl"))):
     for line in open(f):
         r = json.loads(line)
         if r.get("ok") and r.get("F", 1) < 1e-50:
-            old.setdefault(round(r["D"], 4), []).append((r["Delta_q"], f"T81/{os.path.basename(f)}"))
+            old.setdefault(key_of(r["D"]), []).append((r["Delta_q"], f"T81/{os.path.basename(f)}"))
 for line in open(os.path.join(raw, "qd2start-mac", "second.jsonl")):
     r = json.loads(line)
     if r["conv"]:
-        old.setdefault(round(r["D"], 4), []).append((r["Delta_q"], f"qd2start-mac/second.jsonl:{r['state']}"))
+        old.setdefault(key_of(r["D"]), []).append((r["Delta_q"], f"qd2start-mac/second.jsonl:{r['state']}"))
 new, plan = window()
 old_spread = {}
 for D, sl in old.items():
@@ -110,7 +120,7 @@ for D in sorted(sols):
     if kgap is not None:
         terms["kernel"] = kgap
     kind = max(terms, key=terms.get) if terms else ""
-    rows.append(dict(D=D, Delta_q0=repr(parts[0]), Delta_q1=repr(parts[1]), Delta_q2=repr(parts[2]),
+    rows.append(dict(D=repr(EXACT.get(D, D)), Delta_q0=repr(parts[0]), Delta_q1=repr(parts[1]), Delta_q2=repr(parts[2]),
                      Delta_q3=repr(parts[3]), n_solutions=len(distinct),
                      spread=f"{float(terms['spread']):.1e}" if "spread" in terms else "",
                      plan=f"{float(terms['plan']):.1e}" if "plan" in terms else "",
@@ -123,5 +133,5 @@ with open(out, "w", newline="") as fh:
     w.writerows(rows)
 print(f"{len(rows)} rows ({len(new)} from #940) -> {out}; kernel gap {'%.1e' % float(kgap) if kgap is not None else 'not measured'}")
 for r in rows:
-    print(f"  D {r['D']:8.4f} Delta {r['Delta_q0']} {float(r['Delta_q1']):+.6e} {float(r['Delta_q2']):+.3e}  solutions "
+    print(f"  D {float(r['D']):8.4f} Delta {r['Delta_q0']} {float(r['Delta_q1']):+.6e} {float(r['Delta_q2']):+.3e}  solutions "
           f"{r['n_solutions']} spread {r['spread'] or '-'} plan {r['plan'] or '-'} err {r['err'] or '-'} ({r['err_kind'] or '-'})")
