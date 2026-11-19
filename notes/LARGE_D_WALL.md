@@ -1129,6 +1129,14 @@ at D 225.13 moves Δ by −1.1×10⁻²⁰, so the rungs' lifts belong to the or
   at the two states. The re-solve at 1.5e-35 moved Δ by −3.1×10⁻³⁹ from the first state, the predicted amount to the
   digits printed (raw `I949-dh170/` 7e3e593f; #949, #966). The residual lies along J's large singular directions
   (pinned step norm 3.3×10⁻⁴³ against |F| ≈ 1.5×10⁻³⁵), so the bound overstates Δ's error by about 40 orders here.
+- **The corrector's floor at D 251.88 is the projection's.** The same D 251.2845 state reads max |F| 5.29×10⁻³⁶ when
+  ElimO skips the projection (leg 5's base polish) and 4.38×10⁻³⁵ after one ladder projection (leg 6's). In leg 6's
+  log the re-seed's octo-double refinement (`--reseed_o 3`) takes the rung's max |R| from 6.06×10⁻¹⁶ to 5.17×10⁻³⁰,
+  and its next eight corrections leave 5.17×10⁻³⁰ unchanged, a hard floor rather than slow convergence (raw
+  `I966-dh370/ks_chain3b/leg06_D251.2845_ks293/anm_run.log`). Step 2's attempt to D 251.8782 at `tol_od 1.5e-35`
+  levelled at 4–6×10⁻³⁵ with |dz| from 10⁻³⁸ to 10⁻⁶³ (#966). `anm_run.py --od_floor_delta B` accepts an iterate
+  whose own Newton correction has |dΔ| ≤ B, with max |dz| and max |F| at most 10⁻³⁰ (octo_corrector.floor_accept;
+  check `hp/od_floor_check.py`, whose `--mutate=nodelta` and `--mutate=off` fail).
 
 ## Proposed README text
 
