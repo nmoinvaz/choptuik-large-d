@@ -14,6 +14,9 @@ window k = K1..K2 gives h* = 1/a and mu = -b/a - 1. Real alternating ratios put 
         P2: the same at D0 3.0475, window 3..6: |D* - 3.000| <= 0.01;
         P3 (control): D* = 3.0431 (the sonic closing), at D0 3.0475, window 3..6: |D* - 3.0431| <= 0.002, which
             shows the fit can see a singularity that close;
+        P4 (a limit, not counted): as P1 with window 3..6, the orders that M 256 and M 160 share at D 3.15 (#997,
+            added before that fit). It returns 2.35 for a planted 3.000, so orders 3..6 at D 3.15 cannot locate D*,
+            and no reading is taken from that base;
         --mutate: P1 read with the ratios' sign flipped, which must not return D* within 0.01 of 3.000 (exit 1).
 Exit 0 when every check passes (with --mutate: when the mutated check fails, as it must).
 """
@@ -48,14 +51,15 @@ def planted_series(Dstar, mu, D0, N=12):
 def planted(mutate):
     checks = []
     for name, Ds, mu, D0, k1, k2, tol in (("P1", 3.0, 0.7, 3.15, 5, 9, 0.01), ("P2", 3.0, 0.7, 3.0475, 3, 6, 0.01),
-                                         ("P3", 3.0431, 0.7, 3.0475, 3, 6, 0.002)):
+                                         ("P3", 3.0431, 0.7, 3.0475, 3, 6, 0.002), ("P4", 3.0, 0.7, 3.15, 3, 6, 0.02)):
         dk = planted_series(Ds, mu, D0)
         sign = -1.0 if (mutate and name == "P1") else 1.0
         h, m, res = fit(dk, k1, k2, sign)
         ok = abs(D0 + h - Ds) <= tol
         print(f"{name}: planted D* {Ds}, mu {mu}, D0 {D0}, window {k1}..{k2}: D* {D0 + h:.4f}, mu {m:.3f}, "
               f"rms {res:.2e}: {'PASS' if ok else 'FAIL'}{' (mutated)' if sign < 0 else ''}")
-        checks.append((name, ok))
+        if name != "P4":
+            checks.append((name, ok))
     if mutate:
         return 0 if not dict(checks)["P1"] else 1
     return 0 if all(ok for _, ok in checks) else 1
