@@ -311,8 +311,10 @@ with the footnote Shafer 1974. The numbers would need checks in `check_numbers.p
 1. **Calibrate Δ∞.** Run `hp/planted_dinf.py`'s plants T1 to T5, with their junk points, through `algfit.py` with the
    criteria frozen first. If the 10⁻¹⁰ level holds, the README's bar on Δ∞ falls a hundredfold. Decision it informs:
    whether to quote Δ∞ to ten digits.
-2. **Fix the seven rows.** `hp/export_delta_all.py` should take a quad-double row's D from the state, not from the
-   file name. Until then a weighted fit that includes those rows is off by up to 8.4×10⁻⁸ at 10⁻²³.
+2. **Fix the seven rows.** Done in main 2a1f83f6: `hp/export_qd.py` rounded D to four places to group the records and
+   wrote that key as the row's D. The rows now carry the record's own D (67.742203, ...), where they replace the pinned
+   rows of the same D. The runs above predate the fix and use the amendment; with the fixed table the loader's rule drops
+   nothing, so a rerun without `--no_amend` should give the amended results.
 3. **γ(D).** The same code fits λ = 1/γ. The README's γ formula is rational with 9 constants.
 4. **The chain's reference.** `hp/anm_run.py`'s "formula diff" uses the README formula, 1.6×10⁻⁶ off above D 130. The
    24-constant form is within the chain's err there.
