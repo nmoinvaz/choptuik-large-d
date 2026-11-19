@@ -22,6 +22,11 @@ ELL.md 7's windows (#1025).
                                        resolution if |move| > |S| at some D (bar fixed before the k_c 55 runs)
     python3 ell_delta.py steep --planted [--mutate=steep]   the same on a synthetic quadratic lambda: a move of
                                        0.1 S reads real, -1.5 S resolution; the mutation flips the comparison (exit 1)
+    python3 ell_delta.py kcneed [FILE] per D (13 on) with two or more k_c: the k_c at which lambda's error, taken as
+                                       A e^(-alpha k_c), falls to 1e-6 and to 0.1 |S|; alpha from lambda's moves when
+                                       three k_c shrink, else from the psi-constraint's decay (flagged when the moves grow)
+    python3 ell_delta.py kcneed --planted [--mutate=kcneed]   planted exponential errors: alpha and the k_c to 1e-9;
+                                       the mutation inverts alpha (exit 1)
     python3 ell_delta.py leak          |K'_nu/K'_1| at the l = 0 and l = 1 M = 3 zeros: the weight with which an error
                                        in the harmonic-nu condition leaks into the harmonic-1 one, and that times eps
 
@@ -250,7 +255,8 @@ def collect(raw):
         top = ks[-1]
         err = abs(by[D][top][0] - by[D][ks[-2]][0]) if len(ks) > 1 else None
         pts.append(dict(D=D, lam=by[D][top][0], kc=top, lam_err=err if err is not None else 0.0, has_err=err is not None,
-                        kcs={str(k): by[D][k][0] for k in ks}, source=by[D][top][1], constraint=by[D][top][2]))
+                        kcs={str(k): by[D][k][0] for k in ks}, kcs_constraint={str(k): by[D][k][2] for k in ks},
+                        source=by[D][top][1], constraint=by[D][top][2]))
         print(f"D {D:g}: k_c {ks}, lambda {by[D][top][0]:.10f}" + (f", change from k_c {ks[-2]} {err:.1e}" if err is not None else ""))
     json.dump(dict(points=pts, note="built by ell_delta.py collect"), open(os.path.join(HERE, "data", "ell_lam_highD.json"), "w"), indent=1)
     return True
@@ -302,6 +308,72 @@ def steep(fn, planted=False):
     return True
 
 
+def kc_need(lam, con, target):
+    """the k_c at which lambda's remaining k_c error falls to target, for an error A e^(-alpha k_c). lam, con: {k_c:
+    lambda, psi-constraint} at one D, k_c spaced equally. alpha from lambda's last two moves when there are three k_c
+    (and they shrink), else from the psi-constraint's decay over the top two k_c (an assumption: lambda's error decays
+    as the constraint does). The error left at the top k_c is its last move times r / (1 - r), r = e^(-alpha dk)."""
+    ks = sorted(lam)
+    dk = ks[-1] - ks[-2]
+    m1 = abs(lam[ks[-1]] - lam[ks[-2]])
+    src = "constraint"
+    grow = len(ks) >= 3 and abs(lam[ks[-2]] - lam[ks[-3]]) <= m1     # lambda's moves do not shrink: not the model
+    if len(ks) >= 3 and not grow:
+        m0 = abs(lam[ks[-2]] - lam[ks[-3]])
+        alpha, src = (np.log(m1 / m0) if "kcneed" in MUT else np.log(m0 / m1)) / dk, "lambda"
+    else:
+        alpha = (np.log(con[ks[-1]] / con[ks[-2]]) if "kcneed" in MUT else np.log(con[ks[-2]] / con[ks[-1]])) / dk
+    if alpha <= 0:
+        return dict(alpha=float(alpha), src=src, err=None, k=None, grow=grow)
+    r = np.exp(-alpha * dk)
+    err = m1 * r / (1 - r)
+    return dict(alpha=float(alpha), src=src, err=float(err), k=float(ks[-1] + np.log(err / target) / alpha), grow=grow)
+
+
+def kcneed(fn, planted=False):
+    if planted:
+        good = True
+        for lab, alpha in (("three k_c", 0.3), ("constraint", 0.25)):
+            ks = (39, 47, 55) if lab == "three k_c" else (47, 55)
+            lam = {k: 2.0 + 50 * np.exp(-alpha * k) for k in ks}
+            con = {k: 7 * np.exp(-alpha * k) for k in ks}
+            T = 1e-6
+            want = np.log(50 / T) / alpha
+            o = kc_need(lam, con, T)
+            ok = o["k"] is not None and abs(o["k"] - want) < 1e-9 and abs(o["err"] - 50 * np.exp(-alpha * ks[-1])) < 1e-12
+            good &= ok
+            print(f"planted, {lab} (alpha {alpha}): alpha {o['alpha']:.6f} from {o['src']}, k_c needed for 1e-6 "
+                  f"{o['k'] if o['k'] is None else round(o['k'], 6)} (want {want:.6f}) ({'OK' if ok else 'BAD'})"
+                  + (f"  [MUTATION {MUT}]" if MUT else ""))
+        return good
+    pts = json.load(open(fn))["points"]
+    print("| D | k_c (λ₁) | ψ-constraint by k_c | α per k_c (from) | error left at top k_c | k_c for \\|S\\| | k_c for 1e-6 |")
+    print("|---|---|---|---|---|---|---|")
+    lo = {p["D"]: p["kcs"]["47"] for p in pts if "47" in p["kcs"]}
+    rows, _ = steep_verdict(lo, lo)
+    S = {r[0]: abs(r[4]) for r in rows}
+    for p in pts:
+        if p["D"] < 13 or len(p["kcs"]) < 2 or not p.get("kcs_constraint"):
+            continue
+        lam = {int(k): v for k, v in p["kcs"].items()}
+        con = {int(k): v for k, v in p["kcs_constraint"].items()}
+        if any(v is None for v in con.values()):
+            continue
+        ks = sorted(lam)
+        if len(set(np.diff(ks))) > 1:
+            ks = ks[-2:]
+            lam, con = {k: lam[k] for k in ks}, {k: con[k] for k in ks}
+        o = kc_need(lam, con, 1e-6)
+        oS = kc_need(lam, con, 0.1 * S[p["D"]]) if p["D"] in S else None
+        print(f"| {p['D']:g} | " + ", ".join(f"{k}: {lam[k]:.7f}" for k in ks) + " | "
+              + ", ".join(f"{con[k]:.1e}" for k in ks) + f" | {o['alpha']:.3f} ({o['src']}"
+              + ("; lambda's moves grow, so not this model" if o["grow"] else "") + ") | "
+              + (f"{o['err']:.1e} | " if o["err"] else "- | ")
+              + (f"{oS['k']:.0f} | " if oS and oS["k"] else "- | ") + (f"{o['k']:.0f} |" if o["k"] else "- |"))
+    print("k_c for |S|: the k_c at which the remaining error is 0.1 |S| (S as in steep)")
+    return True
+
+
 def leak():
     """|K'_nu / K'_1| (inner_np.Kp at i nu w + l) at the M = 3 zeros: the weight with which an error in the harmonic-nu
     condition leaks into the harmonic-1 one (nested_ell.py, hier.py). l = 0: FIRST_ORDER.md's zero (w/w_inf
@@ -327,6 +399,9 @@ if __name__ == "__main__":
         good = steep(rest[0] if rest else os.path.join(HERE, "data", "ell_lam_highD.json"), "--planted" in sys.argv)
     elif cmd == "leak":
         good = leak()
+    elif cmd == "kcneed":
+        rest = [a_ for a_ in sys.argv[2:] if not a_.startswith("--")]
+        good = kcneed(rest[0] if rest else os.path.join(HERE, "data", "ell_lam_highD.json"), "--planted" in sys.argv)
     elif cmd == "fold":
         rest = [a_ for a_ in sys.argv[2:] if not a_.startswith("--")]
         good = fold(rest[0] if rest else os.path.join(HERE, "data", "l1kc47F1025.jsonl"))
