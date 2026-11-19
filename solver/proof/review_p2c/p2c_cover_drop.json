@@ -1,0 +1,31 @@
+{
+ "plant": "drop",
+ "ok": false,
+ "tiles": 177,
+ "pieces": 559,
+ "links": 441,
+ "span": 381,
+ "cells": 9309,
+ "examined": 33232,
+ "g2_margin": 21.35885181475321,
+ "fails": {
+  "g1": [],
+  "g2": [],
+  "g3": [
+   "row 5: tiles 5, 7 do not overlap"
+  ],
+  "g4": [
+   "cell (133.125, 133.203125, -1.162208433566915, -1.1620146675726557) in no disc",
+   "cell (133.203125, 133.28125, -1.1624021995611742, -1.162208433566915) in no disc",
+   "cell (133.203125, 133.28125, -1.1625959655554334, -1.1624021995611742) in no disc",
+   "cell (133.125, 133.203125, -1.1624021995611742, -1.162208433566915) in no disc",
+   "cell (133.125, 133.203125, -1.1625959655554334, -1.1624021995611742) in no disc",
+   "... 11772 cells in no disc"
+  ],
+  "g5": [
+   "tile (5, 7): its partner (5, 6) is missing",
+   "tile (6, 5): meeting set not shown connected (2 of 3 pieces linked)"
+  ],
+  "g6": []
+ }
+}

@@ -1,0 +1,8 @@
+P2c covering check (lemma 6b1, M = 1): runs /Users/nathan/Source/choptuik-large-d-991/solver/proof/lemma6b1_runs, plant = drop
+G1 data: 12 rows, 178 discs, 177 tiles in the gluing: ok
+G2 closed tiles in their open discs: ok (smallest margin in r^2 - d^2: 21.36)
+G3 open tiles cover A1: FAIL row 5: tiles 5, 7 do not overlap
+G4 A1 in polar cells, each in one open disc: FAIL cell (133.125, 133.203125, -1.162208433566915, -1.1620146675726557) in no disc; cell (133.203125, 133.28125, -1.1624021995611742, -1.162208433566915) in no disc; cell (133.203125, 133.28125, -1.1625959655554334, -1.1624021995611742) in no disc; cell (133.125, 133.203125, -1.1624021995611742, -1.162208433566915) in no disc; cell (133.125, 133.203125, -1.1625959655554334, -1.1624021995611742) in no disc; ... 11772 cells in no disc (9309 cells proven, 33232 examined)
+G5 gluing: FAIL tile (5, 7): its partner (5, 6) is missing; tile (6, 5): meeting set not shown connected (2 of 3 pieces linked) (559 pieces, 441 proven links among pieces, 381 of them in spanning trees)
+G6 every partner earlier, all reached from (0, 0), s0 in G0: ok
+=> FAIL (11 s)
