@@ -781,6 +781,14 @@ where regularity at the patch's boundary would have to be imposed as at a sonic 
 closing is *numerical evidence*; the rest is not shown. `lowD_highM.py --sonic_stop` stops a leg before a target at or
 below the closing extrapolated from its last gaps.
 
+**D 3.04315, the last point above the closing (#945).** The leg's restart (win2, `--accept 1e-20 --prefer_start
+predictor --chord_from 1e-16`) solved D 3.04315 at M 320 and 384, each stopped by the residual-floor rule. Δ(384) =
+2.431590741783993, and Δ(384) − Δ(320) = −1.008×10⁻¹⁰, the row's error (`hp/data/delta_dd_lowD.csv`). The floor
+|F| is 7.35×10⁻²¹ at M 320 and 9.6×10⁻²⁵ at M 384. Δ's own Newton correction there is −1.0×10⁻¹⁷ and −2.9×10⁻²², and
+`export_lowD.floor_ok` admits floor-accepted records by that measure (check `hp/export_lowD_floor_check.py`). The
+M 384 gap is 1.5875×10⁻⁶ at x 0.014236, 0.2–1.1% below the line through 3.04375, 3.04355 and 3.04335. The centre tail,
+2.6×10⁻²² at M 384, misses its 10⁻³⁰ target (raw `I945-win2/` e32ba4a4).
+
 ## 18. The Taylor series as a start, on fixed plans (#927)
 
 The series of sections 14–16 evaluated on fixed plans, where it fails below D ≈ 3.0433 for section 17's reason, and a
