@@ -424,7 +424,7 @@ def main():
     ap.add_argument("--r1", type=float, default=None,
                     help="comparison radius xi1 (M = 1: 0.17; M = 3: 0.2, nested.py's)")
     ap.add_argument("--r1b", type=float, default=None,
-                    help="second xi1 at which each zero is located again (M = 1: 0.2)")
+                    help="second xi1 at which each zero is located again (M = 1: 0.2; M = 3: 0.17)")
     ap.add_argument("--ymax", type=float, default=1e2, help="no value where max |Y| on the path exceeds this")
     ap.add_argument("--selftest", action="store_true")
     ap.add_argument("--mutate", default=None, choices=["conj", "nosplit"])
@@ -437,7 +437,7 @@ def main():
     tag = a.tag or f"M{a.M}_A{a.A}_wf{a.wf}" + (f"_plant{a.plant}" if plant else "")
 
     a.r1 = a.r1 or (0.17 if a.M == 1 else 0.2)
-    a.r1b = a.r1b or (0.2 if a.M == 1 else None)
+    a.r1b = a.r1b or (0.2 if a.M == 1 else 0.17)
     cache = a.cache or os.path.join(a.out, f"points_M{a.M}_r{a.r1}.jsonl")
     F = Multiplier(a.M, cache, a.procs, plant, r1=a.r1, ymax=a.ymax)
     if a.M == 3:
@@ -451,6 +451,10 @@ def main():
         # the zero set does not depend on xi1: locate each zero again at r1b, from the same cell
         Fb = Multiplier(a.M, os.path.join(a.out, f"points_M{a.M}_r{a.r1b}.jsonl"), 1, plant, r1=a.r1b,
                         ymax=a.ymax)
+        if a.M == 3:                              # seed F_3 from the first radius's tuned values
+            for k, r in F.extra.items():
+                Fb.extra.setdefault(k, dict(F3re=r.get("F3re", float("nan")), F3im=r.get("F3im", float("nan")),
+                                            info=r.get("info")))
         for z in res["zeros"]:
             z["located_r1b"] = locate(Fb, *z["cell"])
         Fb.close()
