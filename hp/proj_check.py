@@ -3,11 +3,16 @@
 at its floor (od_stop), ElimO's octo-double projection (proj_o), and the rung residual formed from its own blocks
 (reseed.res_rows, Solver.residual_sub).
 
-    cd hp && python3 proj_check.py mock [--mutate=ulp|nopred|nostop|stall4|sign|o_nobar]
-    cd hp && python3 proj_check.py bits RAW STATE.npz [--threads 10] [--mutate ulp]
-    cd hp && python3 proj_check.py time RAW STATE.npz [--threads 10] [--rep 2] [--paths default,pred,stop,o]
-    cd hp && python3 proj_check.py accuracy RAW STATE.npz [--threads 10] [--mutate sign|o_nobar]
+    cd hp && python3 proj_check.py mock [--mutate=ulp|nopred|nostop|stall4|sign|o_nobar|raise]
+    cd hp && python3 proj_check.py bits RAW STATE.npz [--threads 10] [--plants 0,auto] [--ladder L] [--mutate ulp]
+    cd hp && python3 proj_check.py time RAW STATE.npz [--threads 10] [--plants auto] [--ladder L] [--rep 2]
+        [--paths default,pred,stop,o] [--tol 2e-34]
+    cd hp && python3 proj_check.py accuracy RAW STATE.npz [--threads 10] [--plants auto] [--ladder L] [--tol 2e-34]
+        [--mutate sign|o_nobar]
     cd hp && python3 proj_check.py floor RAW STATE.npz [--threads 10]
+
+Exit codes: 0 pass, 1 the check failed, 2 a check error (the check raised, or there was nothing to compare), so that a
+control fails only through its mutation.
 
 mock runs no kernel: a rung of M = 2 (MockRung) whose m and a rows are a smooth map of the horizon data, evaluated in
 mpmath from the parts given and rounded to as many, with the a_h columns times a gain of 1e30 (the mass mode's role).
@@ -26,26 +31,34 @@ Its cases and pass criteria, fixed before the first run:
   F (ElimO proj_o, planted truth): from the root's data moved by 1e-20 relative (m_h; a_h by 1e-20 over the gain),
     the projection is counted 'u0o' and its data lie within 1e-60 of the root's (relative, max over the data).
   G (res_rows): with Solver.residual_sub the rung rows come from it, and they equal res_rows_full's bit for bit.
+  H (a rung block with a non-finite entry): refine_o ends 'error' with the point unchanged instead of raising, and
+    ElimO counts the projection 'failed' and returns its point unchanged.
 Controls, each of which must fail (exit 1): ulp (one ulp of D's 'pred' output), nopred (D's second run with
 proj_start 'u0'), nostop (A's od_stop off), stall4 (OD_STALL at OD_REFACTOR: B stops at the poor LU), sign (F's
 corrections with the wrong sign: refused, so not 'u0o'), o_nobar (with sign, the bar off: accepted, and the truth
-test fails).
+test fails), raise (refine_o raises as before #1032: H fails).
 
 bits, time, accuracy and floor run the kernel on a stored eight-part chain state (octo_corrector.truth_system), with
 the chain's Reseeder settings (qd, od 3, qd_start pred, qd_bar 1e-13); STATE is relative to RAW, the raw-data clone.
-  bits: the state's horizon data moved by 0, 1e-24 and 1e-20 (relative, random signs), each projected by
-    Reseeder.project and with_horizon on the default path and under proj_start 'pred': every part of the result
-    compared by its bits where the default ended 'ladder'. Then res_rows against res_rows_full on the rung point in
-    two, four and eight parts. Exit 1 on a difference; --mutate ulp (one ulp of the 'pred' result) must fail.
-  time: one projection per path and repeat, with the seconds of each stage (the double-double rung, the quad-double
-    polishes, the re-seed, refine_o) and the kernel calls by kind: default, pred (proj_start 'pred'), stop ('pred' and
-    od_stop), o (refine_o alone with the stop, ElimO's proj_o).
-  accuracy: from the state's data moved by 1e-24 and 1e-20, the projections of the default path, of 'pred' with
-    od_stop and of proj_o: the rung's max |R|, the pinned octo-double max |F| at the projected point, and the data's
-    distance from the default's projection of the unmoved state. Pass: on each plant the cheaper paths' pinned
-    max |F| is at most 10 times the default's or below 2e-34 (the chain's tol_od), their distance at most 10 times the
-    default's plus 1e-60, and proj_o accepted. --mutate sign (refine_o's corrections with the wrong sign) and
-    --mutate o_nobar (sign with the bar off) must fail.
+  A plant moves each horizon datum j by rel r_j / c_j, c_j the largest entry of the rung block's column j (r_j random
+  signs and sizes 0.5-1), so that it puts about rel into the rung's |R|: a corrector's trial. 'auto' is the largest
+  plant of the ladder (--ladder, default 1e-33 to 1e-21 by factors of 1000) at which the default projection converges,
+  probed from the smallest up to the first failure. A plant where the default fails is refused, so two failures are
+  never compared, and a check with nothing left to compare exits 2.
+  bits: plants 0 and auto, each projected by Reseeder.project on the default path and under proj_start 'pred':
+    every part of the result compared by its bits where the default ended 'ladder' (and after with_horizon on the
+    first). Then res_rows against res_rows_full on the rung point in two, four and eight parts. Exit 1 on a
+    difference; --mutate ulp (one ulp of the 'pred' result) must fail. Without a plant where the default ended
+    'ladder' it exits 2, whatever the residual comparisons gave.
+  time: at the auto plant, one projection per path and repeat, with the seconds of each stage (the double-double
+    rung, the quad-double polishes, the re-seed, refine_o) and the kernel calls by kind: default, pred (proj_start
+    'pred'), stop ('pred' and od_stop), o (project_o, ElimO's proj_o with the bar at --tol).
+  accuracy: at the auto plant, the projections of the default path, of 'pred' with od_stop and of proj_o (its bar at
+    --tol, the chain's tol_od 2e-34): the rung's max |R|, the pinned octo-double max |F| at the projected point, and
+    the data's distance from the default's projection of the unmoved state. Pass: the cheaper paths' pinned max |F|
+    is at most 10 times the default's or below --tol, their distance at most 10 times the default's plus 1e-60, and
+    proj_o accepted. --mutate sign (proj_o's corrections with the wrong sign) and --mutate o_nobar (sign with the bar
+    off) must fail with exit 1.
   floor: refine_o from the state's data rounded to quad-double, as with_horizon leaves them, with per correction the
     rung's |R|, whether R and the data changed bit for bit, and the correction's size in the m_h and a_h columns;
     then the change of the rung residual when one m_h and one a_h datum are moved by 2^-k of themselves (k 200 to
@@ -86,12 +99,12 @@ class MockRung:
     the a_h columns. Every method evaluates in mpmath from the parts given and rounds to as many parts. floor_qd:
     residual_o reads d in its quad-double rounding (a hard floor). pole_dd: residual_q is not finite where the data's
     parts 2 and 3 are zero. dd_fail: the double-double residual's rung rows are 1e6 everywhere. sub: has
-    residual_sub. calls counts the calls by name and parts."""
+    residual_sub. jac_nan: the rung block's first entry is not finite. calls counts the calls by name and parts."""
 
     M = 2
 
-    def __init__(self, gain=1e30, floor_qd=False, pole_dd=False, dd_fail=False, sub=False):
-        self.gain, self.floor_qd, self.pole_dd, self.dd_fail = gain, floor_qd, pole_dd, dd_fail
+    def __init__(self, gain=1e30, floor_qd=False, pole_dd=False, dd_fail=False, sub=False, jac_nan=False):
+        self.gain, self.floor_qd, self.pole_dd, self.dd_fail, self.jac_nan = gain, floor_qd, pole_dd, dd_fail, jac_nan
         M = self.M
         self.L = 4 * M * 3 + 1
         self.r0, self.c0, self.t0 = 8 * M + M, 2 * M + 8 * M, 2 * M + 4 * M + M     # rung rows, data, node 1's m
@@ -175,6 +188,8 @@ class MockRung:
                     v = split(J[i][j] if 0 <= i < 2 * self.M and 0 <= j < 2 * self.M else mp.mpf(0), parts)
                     for q in range(parts):
                         out[q][a, b] = v[q]
+        if self.jac_nan:
+            out[0][0, 0] = np.nan
         return out
 
 
@@ -321,7 +336,7 @@ def mock(argv):
         def residual_q(self, *z):
             return [np.ones(mk.L)] + [np.zeros(mk.L)] * 3
 
-    el = ElimO(SO(), rs, switch=0.0, start_F=None, proj_o=1)
+    el = ElimO(SO(), rs, switch=0.0, start_F=None, proj_o=1, proj_o_bar=1e-27)
     el.sq = SQ()
     zp = el.project(z8)
     e0, e1 = dist_root(z8, dstar, mk), dist_root(zp, dstar, mk)
@@ -329,6 +344,40 @@ def mock(argv):
     print(f"F ElimO proj_o: counts {el.counts}, rung |R| {' -> '.join(f'{r:.2e}' for r in rs.last_o)}, distance from "
           f"the root {e0:.2e} -> {e1:.2e}: {'PASS' if ok['F'] else 'FAIL'}")
     PROJ_MUT["o_nobar"] = False
+
+    # H: a rung block that cannot be factored: refine_o returns the data as they were, and ElimO counts a failure
+    mk = MockRung(jac_nan=True)
+    z8, _ = mock_point(mk, 1e-20)
+    rs = mock_reseeder(mk, qd=True, od=3)
+    reseed.REFINE_MUT["raise"] = mutate == "raise"
+    try:
+        zh_, hh = rs.refine_o(z8)
+        end_h = rs.last_o_end
+
+        class RS:
+            M, off, od, last_project = rs.M, rs.off, 3, None
+
+            def project(self, z4):
+                return z4, "u0q"
+
+            def refine_o(self, z, steps=None, mutate="", stop=None):
+                return rs.refine_o(z, steps, mutate, stop)
+
+            def __getattr__(self, name):
+                return getattr(rs, name)
+
+        el = ElimO(SO(), RS(), switch=0.0, start_F=None)
+        el.sq = SQ()
+        zq = el.project(z8)
+        ok["H"] = (end_h == "error" and len(hh) == 1 and same_bits(zh_, z8) and el.counts["failed"] == 1
+                   and el.counts["u0q"] == 0 and same_bits(zq, z8))
+        print(f"H a rung block with a non-finite entry: refine_o end '{end_h}', |R| {hh}, the point unchanged: "
+              f"{same_bits(zh_, z8)}; ElimO counts {el.counts}, its point unchanged: {same_bits(zq, z8)}: "
+              f"{'PASS' if ok['H'] else 'FAIL'}")
+    except ValueError as e:
+        ok["H"] = False
+        print(f"H a rung block with a non-finite entry: refine_o raised {e!r}: FAIL")
+    reseed.REFINE_MUT["raise"] = False
 
     # G: res_rows from residual_sub
     mk = MockRung(sub=True)
@@ -384,22 +433,76 @@ def load8(raw, path):
     return z, meta
 
 
-def plant(z8, rs, rel, seed=1):
-    """z8 with m_h moved by rel and a_h by rel / G relative (G = x_K-1^-(n-1), the mass mode's gain), random signs
-    and sizes 0.5-1, so that the rung's |R| is about rel: a corrector's trial, whose data sit within the Newton step's
-    second-order term of the rung's solution"""
+LADDER = "1e-33,1e-30,1e-27,1e-24,1e-21"     # the plants probed for the basin, as the rung's |R| they make
+
+
+def col_scale(rs, z8):
+    """the largest entry of each column of the rung block (quad-double, jac_block) at z8's rung point: the change of
+    the rung's |R| per unit of each datum. At D 251.88, ks 293 a move of 2^-212 of a_h_0 changes |R| by 6.4e-16 and
+    of m_h_0 by 1.3e-19 (raw I1032-dh370/floor.log), far above the mass mode's gain alone."""
+    from dup_eval_check import rung_point
+    s = rs.rung_solver(rs.us[-1])
+    J = reseed.jac_block(s, rung_point(rs, z8, 4), rs.rung_rows(), np.r_[rs.aoff["mh"]:rs.aoff["mh"] + 2 * rs.M])
+    return np.max(np.abs(np.asarray(J[0])), axis=0)
+
+
+def plant(z8, rs, rel, scale, seed=1):
+    """z8 with each horizon datum j moved by rel r_j / scale_j (col_scale; r_j random signs and sizes 0.5-1), so that
+    each column moves the rung's |R| by about rel: a corrector's trial, whose data sit within the Newton step's
+    second-order term of the rung's solution. rel 0: z8 itself"""
     from multidouble import od_axpy
     from octo_corrector import o8
     if rel == 0:
         return o8(z8)
     M, sl = rs.M, slice(rs.off["mh"], rs.off["mh"] + 2 * rs.M)
-    G = float(rs.x_node) ** -(float(rs.D) - 3.0)
     rng = np.random.default_rng(seed)
     r = rng.uniform(0.5, 1.0, 2 * M) * rng.choice([-1.0, 1.0], 2 * M)
     dz = np.zeros(len(z8[0]))
-    dz[sl] = rel * r * np.asarray(z8[0])[sl] * np.r_[np.ones(M), np.full(M, 1.0 / G)]
+    dz[sl] = rel * r / np.asarray(scale)
     zero = np.zeros(len(dz))
     return o8(od_axpy(1.0, dz, *([zero] * 7), *o8(z8)))
+
+
+def default_projection(meta, threads, zp):
+    """the default projection of the eight-part point zp, as ElimO makes it: (z', how, rs, seconds, p), p the
+    quad-double projection's four parts and z' the point after with_horizon; how is 'failed' also when the
+    octo-double corrections could form no rung block (refine_o's 'error')"""
+    from octo_corrector import q4_of_o, with_horizon
+    rs = chain_rs(meta, threads)
+    t0 = time.time()
+    p, how = rs.project(q4_of_o(zp))
+    zo = zp
+    if how != "failed":
+        zo = with_horizon(zp, p, rs)
+        if rs.last_o_end == "error":
+            how = "failed"
+    return zo, how, rs, time.time() - t0, p
+
+
+def plants_of(spec, meta, z8, threads, scale, ladder):
+    """the plants of spec ("0,auto", "1e-30", ...). auto: the largest plant of the ladder at which the default
+    projection converges, probed from the smallest up to the first failure (none: no auto plant). Returns the plants
+    and the probes' default projections by plant (zp, z', how, rs, seconds, p)"""
+    out, probes = [], {}
+    for x in spec.split(","):
+        if x != "auto":
+            out.append(float(x))
+            continue
+        found = None
+        for rel in (float(v) for v in ladder.split(",")):
+            zp = plant(z8, chain_rs(meta, 1), rel, scale)
+            zo, how, rs, sec, p = default_projection(meta, threads, zp)
+            probes[rel] = (zp, zo, how, rs, sec, p)
+            print(f"  basin probe: plant {rel:g}, the default projection '{how}', rung |R| "
+                  f"{rs.last_o[-1] if how != 'failed' else float('nan'):.2e}, {sec:.0f} s", flush=True)
+            if how == "failed":
+                break
+            found = rel
+        if found is None:
+            print("  basin probe: the default projection fails at every plant of the ladder: no auto plant", flush=True)
+        else:
+            out.append(found)
+    return out, probes
 
 
 class Timed:
@@ -449,18 +552,30 @@ def fmt(rec):
 def bits(argv):
     """the default projection against proj_start 'pred' and res_rows against res_rows_full, bit for bit"""
     from octo_corrector import D_of, o8, q4_of_o, with_horizon
-    raw, path, opt = _opts(argv, threads=10, mutate="", plants="0,1e-24,1e-20", sub=0)
+    raw, path, opt = _opts(argv, threads=10, mutate="", plants="0,auto", ladder=LADDER, sub=0)
     z8, meta = load8(raw, path)
     print(f"bits {path}: D {mp.nstr(D_of(meta), 12)}, ks {meta.get('ks')}, threads {opt['threads']}, mutate "
           f"'{opt['mutate']}'", flush=True)
-    ok, tested = True, 0
-    for k, rel in enumerate(float(x) for x in opt["plants"].split(",")):
+    scale = col_scale(chain_rs(meta, opt["threads"]), z8)
+    plants, probes = plants_of(opt["plants"], meta, z8, opt["threads"], scale, opt["ladder"])
+    ok, tested, rows_tested, refused = True, 0, 0, 0
+    for k, rel in enumerate(plants):
         rs0, rs1 = chain_rs(meta, opt["threads"]), chain_rs(meta, opt["threads"], proj_start="pred")
-        zp = plant(z8, rs0, rel)
+        zp = plant(z8, rs0, rel, scale)
         z4 = q4_of_o(zp)
         t0 = time.time()
-        p0, how0 = rs0.project(z4)
+        if rel in probes:                       # the probe's own default projection, the same call
+            p0, how0, t0 = probes[rel][5], probes[rel][2], t0 - probes[rel][4]
+            if how0 != "failed":
+                rs0 = probes[rel][3]
+        else:
+            p0, how0 = rs0.project(z4)
         t1 = time.time()
+        if how0 == "failed":
+            refused += 1
+            print(f"  plant {rel:g}: the default projection failed ({t1 - t0:.1f} s): refused, two failures are not "
+                  "compared", flush=True)
+            continue
         p1, how1 = rs1.project(z4)
         t2 = time.time()
         if opt["mutate"] == "ulp":
@@ -480,7 +595,7 @@ def bits(argv):
             d = float(np.max(np.abs(np.asarray(dq[0]) + np.asarray(dq[1]))))
             line += f" (the default converged at u0q, so the paths differ as documented: horizon data by {d:.2e})"
         print(line, flush=True)
-        if k == 0:
+        if k == 0 and how0 == "ladder":
             t3 = time.time()
             w0, w1 = with_horizon(zp, p0, rs0), with_horizon(zp, p1, rs1)
             print(f"    with_horizon (refine_o, 3 steps) on both: eight parts the same: {same_bits(w0, w1)}, "
@@ -505,55 +620,68 @@ def bits(argv):
             same = same_bits(a, b)
             print(f"  res_rows in {parts} parts: residual_sub {t1 - t0:.2f} s, full residual {t2 - t1:.2f} s, the same: "
                   f"{same}", flush=True)
-            ok, tested = ok and same, tested + 1
+            ok, rows_tested = ok and same, rows_tested + 1
     else:
         print("  this hpkernel has no Solver.residual_sub: res_rows not tested", flush=True)
         if opt["sub"]:
             return 2
-    print(f"bits: {'PASS' if ok and tested else 'FAIL'} ({tested} comparisons)", flush=True)
-    return 0 if ok and tested else 1
+    counts = f"{tested} projection comparisons, {rows_tested} residual comparisons, {refused} plants refused"
+    if not tested:
+        # the residual rows alone do not stand for the projections' bit identity (#1038's review)
+        print(f"bits: no plant where the default ended 'ladder', so the default and 'pred' projections were not "
+              f"compared ({counts}): a check error, not a result", flush=True)
+        return 2
+    print(f"bits: {'PASS' if ok else 'FAIL'} ({counts})", flush=True)
+    return 0 if ok else 1
 
 
 def timing(argv):
-    """the seconds of one projection by path, stage and kernel call"""
+    """the seconds of one projection by path, stage and kernel call, at a plant from the basin (plants_of)"""
     from octo_corrector import D_of, project_o, q4_of_o, with_horizon
-    raw, path, opt = _opts(argv, threads=10, rep=2, paths="default,pred,stop,o", plant=1e-24)
+    raw, path, opt = _opts(argv, threads=10, rep=2, paths="default,pred,stop,o", plants="auto", ladder=LADDER,
+                           tol=2e-34)
     z8, meta = load8(raw, path)
-    print(f"time {path}: D {mp.nstr(D_of(meta), 12)}, ks {meta.get('ks')}, threads {opt['threads']}, plant "
-          f"{opt['plant']:g}", flush=True)
-    zp = plant(z8, chain_rs(meta, opt["threads"]), opt["plant"])
-    z4 = q4_of_o(zp)
-    for name in opt["paths"].split(","):
-        for r in range(opt["rep"]):
-            kw = dict(default={}, pred=dict(proj_start="pred"), stop=dict(proj_start="pred", od_stop=True), o={})[name]
-            rs = chain_rs(meta, opt["threads"], **kw)
-            rec = {}
-            instrument(rs, rec)
-            t0 = time.time()
-            if name == "o":
-                _, ho, end, acc = project_o(rs, zp)
-                how = f"u0o {'accepted' if acc else 'refused'}, end {end}"
-            else:
-                p, how = rs.project(z4)
-                if how != "failed":
-                    with_horizon(zp, p, rs)
-                ho = rs.last_o if how != "failed" else []
-            print(f"  {name} #{r + 1}: {time.time() - t0:.1f} s, '{how}', rung |R| "
-                  f"{' -> '.join(f'{x:.2e}' for x in ho)}; {fmt(rec)}", flush=True)
+    print(f"time {path}: D {mp.nstr(D_of(meta), 12)}, ks {meta.get('ks')}, threads {opt['threads']}", flush=True)
+    scale = col_scale(chain_rs(meta, opt["threads"]), z8)
+    plants, _ = plants_of(opt["plants"], meta, z8, opt["threads"], scale, opt["ladder"])
+    if not plants:
+        print("time: no plant: a check error, not a result", flush=True)
+        return 2
+    for rel in plants:
+        zp = plant(z8, chain_rs(meta, 1), rel, scale)
+        z4 = q4_of_o(zp)
+        print(f" plant {rel:g}:", flush=True)
+        for name in opt["paths"].split(","):
+            for r in range(opt["rep"]):
+                kw = dict(default={}, pred=dict(proj_start="pred"), stop=dict(proj_start="pred", od_stop=True), o={})[name]
+                rs = chain_rs(meta, opt["threads"], **kw)
+                rec = {}
+                instrument(rs, rec)
+                t0 = time.time()
+                if name == "o":
+                    _, ho, end, acc = project_o(rs, zp, opt["tol"])
+                    how = f"u0o {'accepted' if acc else 'refused'}, end {end}"
+                else:
+                    p, how = rs.project(z4)
+                    if how != "failed":
+                        with_horizon(zp, p, rs)
+                        how += f", refine_o end {rs.last_o_end}"
+                    ho = rs.last_o if how != "failed" else []
+                print(f"  {name} #{r + 1}: {time.time() - t0:.1f} s, '{how}', rung |R| "
+                      f"{' -> '.join(f'{x:.2e}' for x in ho)}; {fmt(rec)}", flush=True)
     return 0
 
 
 def accuracy(argv):
-    """the cheaper projections against the default on planted trials of a stored state"""
+    """the cheaper projections against the default on planted trials of a stored state, at plants from the basin"""
     from octo_corrector import D_of, PROJ_MUT, omax, project_o, q4_of_o, truth_system, with_horizon
-    raw, path, opt = _opts(argv, threads=10, mutate="", plants="1e-24,1e-20", tol=2e-34)
+    raw, path, opt = _opts(argv, threads=10, mutate="", plants="auto", ladder=LADDER, tol=2e-34)
     z8, meta = load8(raw, path)
     if SMOKE.get("ks"):
         from octo_corrector import pinned_o
         so, info = pinned_o(meta, z8, threads=opt["threads"], held_exact=True, segs=meta["segs"])[3], "smoke"
     else:
         _, _, (_, _, _, so), info = truth_system(raw, path, threads=opt["threads"])
-    PROJ_MUT["o_nobar"] = opt["mutate"] == "o_nobar"
     sl = slice(chain_rs(meta, 1).off["mh"], chain_rs(meta, 1).off["mh"] + 2 * int(meta["M"]))
 
     def dist(a, b):
@@ -567,24 +695,45 @@ def accuracy(argv):
     print(f"accuracy {path}: D {mp.nstr(D_of(meta), 12)}, {info}; the reference (the default projection of the state) "
           f"pinned max|F| {omax(so.residual_o(zref)):.2e}, rung |R| {rs.last_o[-1]:.2e}, {time.time() - t0:.0f} s",
           flush=True)
-    ok = True
-    for rel in (float(x) for x in opt["plants"].split(",")):
+    scale = col_scale(rs, z8)
+    plants, probes = plants_of(opt["plants"], meta, z8, opt["threads"], scale, opt["ladder"])
+    PROJ_MUT["o_nobar"] = opt["mutate"] == "o_nobar"
+    ok, tested = True, 0
+    for rel in plants:
         out = {}
         for name in ("default", "stop", "o"):
-            rs = chain_rs(meta, opt["threads"], **(dict(proj_start="pred", od_stop=True) if name == "stop" else {}))
-            zp = plant(z8, rs, rel)
+            zp = plant(z8, chain_rs(meta, 1), rel, scale)
             t0 = time.time()
             if name == "o":
-                zo, ho, end, acc = project_o(rs, zp, mutate="sign" if opt["mutate"] in ("sign", "o_nobar") else "")
+                rs = chain_rs(meta, opt["threads"])
+                zo, ho, end, acc = project_o(rs, zp, opt["tol"],
+                                             mutate="sign" if opt["mutate"] in ("sign", "o_nobar") else "")
                 R, how = ho[-1], f"u0o {'accepted' if acc else 'refused'} ({end})"
+            elif name == "default" and rel in probes:
+                _, zo, how, rs, sec, _ = probes[rel]
+                t0 -= sec
+                R, acc = (rs.last_o[-1] if how != "failed" else float("nan")), how != "failed"
+            elif name == "default":
+                zo, how, rs, _, _ = default_projection(meta, opt["threads"], zp)
+                R, acc = (rs.last_o[-1] if how != "failed" else float("nan")), how != "failed"
             else:
+                rs = chain_rs(meta, opt["threads"], proj_start="pred", od_stop=True)
                 p, how = rs.project(q4_of_o(zp))
-                zo = with_horizon(zp, p, rs)
-                R, acc = rs.last_o[-1], how != "failed"
+                zo = zp if how == "failed" else with_horizon(zp, p, rs)
+                if how != "failed" and rs.last_o_end == "error":
+                    how = "failed"
+                R, acc = (rs.last_o[-1] if how != "failed" else float("nan")), how != "failed"
+            if name == "default" and how == "failed":
+                print(f"  plant {rel:g}: the default projection failed: refused, the paths are compared only where it "
+                      "converges", flush=True)
+                break
             out[name] = dict(F=omax(so.residual_o(zo)), R=R, dist=dist(zo, zref), how=how, acc=bool(acc),
                              sec=time.time() - t0)
             print(f"  plant {rel:g} {name}: '{how}', rung |R| {R:.2e}, pinned max|F| {out[name]['F']:.2e}, distance from "
                   f"the reference {out[name]['dist']:.2e}, {out[name]['sec']:.0f} s", flush=True)
+        if "default" not in out:
+            continue
+        tested += 1
         d = out["default"]
         for name in ("stop", "o"):
             c = out[name]
@@ -593,7 +742,11 @@ def accuracy(argv):
             ok = ok and good
             print(f"    {name} against the default: {'ok' if good else 'NOT ok'}", flush=True)
     PROJ_MUT["o_nobar"] = False
-    print(f"accuracy{' --mutate ' + opt['mutate'] if opt['mutate'] else ''}: {'PASS' if ok else 'FAIL'}", flush=True)
+    if not tested:
+        print("accuracy: no plant where the default projection converges: a check error, not a result", flush=True)
+        return 2
+    print(f"accuracy{' --mutate ' + opt['mutate'] if opt['mutate'] else ''}: {'PASS' if ok else 'FAIL'} "
+          f"({tested} plants)", flush=True)
     return 0 if ok else 1
 
 
@@ -675,6 +828,13 @@ if __name__ == "__main__":
         del sys.argv[i:i + 2]
     cmds = dict(mock=mock, bits=bits, time=timing, accuracy=accuracy, floor=floor)
     if len(sys.argv) > 1 and sys.argv[1] in cmds:
-        sys.exit(cmds[sys.argv[1]](sys.argv[2:]))
+        try:
+            rc = cmds[sys.argv[1]](sys.argv[2:])
+        except Exception:
+            import traceback
+            traceback.print_exc()
+            print(f"proj_check.py {sys.argv[1]}: the check raised, a check error and not its result (exit 2)", flush=True)
+            rc = 2
+        sys.exit(rc)
     print(__doc__)
     sys.exit(2)
