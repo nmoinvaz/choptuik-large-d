@@ -580,6 +580,6 @@ python3 l2_c2_summary.py                     # the table and verdicts of 9.5; PA
 ```
 
 The c₂ runs read the stored zeros `data/first_order_hier_M{1,3,5}_xi0.2.json`, and use numpy, scipy, mpmath and
-sympy. Their logs are in folder I1010-mac of the raw-data repository (commit 8c8a27a4; clone it beside the checkout,
+sympy. Their logs are in folder I1010-mac of the raw-data repository (commit 525f445f; clone it beside the checkout,
 `git clone https://github.com/nmoinvaz/choptuik-large-d-raw ../choptuik-large-d-raw`). The result JSONs stay in
 `solver/inner_pert/data/`.
