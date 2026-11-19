@@ -122,6 +122,17 @@ def calib():
     for k, lab in ((2, "c + a/n"), (3, "c + a/n + b/n^2")):
         w = windows(n, lam - 2, k)
         print(f"   {lab:16s} c - 0 on consecutive n: " + "; ".join(f"n {int(q[0][0])}-{int(q[0][-1])}: {q[1]:+.4f}" for q in w))
+    Dmax = float(next((a.split("=", 1)[1] for a in sys.argv if a.startswith("--Dmax=")), 12))
+    print(f"   least-squares polynomials in 1/n, limit free, on D 5 .. {Dmax:g} (the limit is 0):")
+    for Dlo in (5.0, 6.0, 7.0):
+        m = (D >= Dlo) & (D <= Dmax)
+        for deg in range(2, 6):
+            if deg + 2 > m.sum():
+                continue
+            A = np.stack([n[m] ** -j for j in range(deg + 1)], 1)
+            cf, *_ = np.linalg.lstsq(A, lam[m] - 2, rcond=None)
+            rms = float(np.sqrt(np.mean((A @ cf - (lam[m] - 2)) ** 2)))
+            print(f"      D {Dlo:g} .. {Dmax:g}, degree {deg}: limit {cf[0]:+.4f} (rms {rms:.1e})")
     return True
 
 
@@ -129,7 +140,7 @@ def collect(raw):
     srcs = [os.path.join(HERE, "data", f) for f in ("l1_D4_kc47.jsonl", "l1_kc23r.jsonl", "l1_kc31r.jsonl")]
     srcs += [os.path.join(raw, "I810-mac", "out", f"l1kc{k}{s_}s810.jsonl") for k in (23, 31, 39) for s_ in ("d4", "d5", "")]
     srcs += [os.path.join(raw, "I660-mac", "out", f"l1kc{k}t660.jsonl") for k in (23, 31, 39)]
-    srcs += [os.path.join(raw, "I1025-mac", "out", f"l1kc{k}r1025.jsonl") for k in (31, 39, 47, 55)]
+    srcs += [os.path.join(raw, "I1025-mac", "out", f"l1kc{k}{t_}1025.jsonl") for k in (31, 39, 47, 55) for t_ in ("r", "L")]
     by = {}
     for f in srcs:
         if not os.path.exists(f):
