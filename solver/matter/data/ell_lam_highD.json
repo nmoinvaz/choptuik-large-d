@@ -229,6 +229,42 @@
    },
    "source": "I1025-mac/out/l1kc47Fr1025.jsonl",
    "constraint": 0.00022051340553099944
+  },
+  {
+   "D": 15.5,
+   "lam": 2.337552489014135,
+   "kc": 47,
+   "lam_err": 0.0,
+   "has_err": false,
+   "kcs": {
+    "47": 2.337552489014135
+   },
+   "source": "I1025-mac/out/l1kc47Fr1025.jsonl",
+   "constraint": 0.0004902655569889908
+  },
+  {
+   "D": 16.0,
+   "lam": 2.247129257178688,
+   "kc": 47,
+   "lam_err": 0.0,
+   "has_err": false,
+   "kcs": {
+    "47": 2.247129257178688
+   },
+   "source": "I1025-mac/out/l1kc47Fr1025.jsonl",
+   "constraint": 0.0010107474328209668
+  },
+  {
+   "D": 16.5,
+   "lam": 2.1548214799814693,
+   "kc": 47,
+   "lam_err": 0.0,
+   "has_err": false,
+   "kcs": {
+    "47": 2.1548214799814693
+   },
+   "source": "I1025-mac/out/l1kc47Fr1025.jsonl",
+   "constraint": 0.001942166993050071
   }
  ],
  "note": "built by ell_delta.py collect"
