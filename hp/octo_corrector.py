@@ -608,7 +608,8 @@ class ElimO:
     Reseeder.refine_o from its own eight parts, on to its floor), counted 'u0o', and the quad-double projection runs
     only when that ends above proj_o_bar or by its step cap, or not finite ('u0o_refused'). The rung rows are rows of
     the corrector's residual, so proj_o_bar is its tolerance (anm_run.py passes --tol_od): a projection that ends above
-    it cannot give a converged iterate. A corrector's iterate and
+    it cannot give a converged iterate. A quad-double projection whose octo-double corrections cannot form the rung
+    block (refine_o's 'error', a ValueError before #1032) is counted 'failed', and the point is returned as it was. A corrector's iterate and
     trials keep their horizon data within the Newton step's second-order term of the rung's solution, inside the
     refinement's basin, while each quad-double polish forms up to 16 rung Jacobians per sweep. 0, the default, leaves
     the projection as it was."""
@@ -655,9 +656,20 @@ class ElimO:
             self.why.append((self.counts["failed"], why_failed(nf, getattr(self.rs, "last_project", None))))
             if self.log:
                 print(f"      projection failed ({self.counts['failed']}): {self.why[-1][1]}", flush=True)
+        if how != "failed":
+            zw = with_horizon(z, zp, self.rs)
+            if getattr(self.rs, "od", 0) and getattr(self.rs, "last_o_end", "") == "error":
+                # the octo-double corrections could form no rung block or LU there (#1032; a ValueError before)
+                self.counts[how] -= 1
+                how = "failed"
+                self.counts["failed"] += 1
+                self.why.append((self.counts["failed"], f"point max|F| {nf:.2e}; the quad-double projection converged, "
+                                 "its octo-double corrections could not form the rung block"))
+                if self.log:
+                    print(f"      projection failed ({self.counts['failed']}): {self.why[-1][1]}", flush=True)
         if how == "failed" and first and self.start_F is not None and nf > self.start_F:
             raise StartNotProjected(dict(self.counts))
-        return z if how == "failed" else with_horizon(z, zp, self.rs)
+        return z if how == "failed" else zw
 
     def residual_o(self, z, mutate=0):
         return self.so.residual_o(self.project(z), mutate=mutate)

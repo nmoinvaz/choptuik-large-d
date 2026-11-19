@@ -47,6 +47,8 @@ OD_EXTRA, OD_REFACTOR, OD_FLOOR = 6, 1e-4, 1e-80
 # refine_o with stop (#1032): a correction from a freshly factored LU that lowers |R| by less than this factor ends the
 # corrections, the floor (a poor first LU, 'badlu', still gains about 1e-2 and is refactored)
 OD_STALL = 0.5
+# proj_check.py's control of refine_o's guard (#1032): 'raise' lets a non-finite rung block raise as before
+REFINE_MUT = {"raise": False}
 # the command line's precision, set under the main guard: an import leaves the importer's precision alone (#831)
 DPS = 50
 
@@ -515,11 +517,14 @@ class Reseeder:
         Reseeder's od_stop) ends the corrections at the floor: when a correction made with an LU factored at the
         point it corrected lowers |R| by less than OD_STALL, so that refactoring cannot help, or when |R| is at most
         OD_FLOOR (#1032: at D 251.88 the rung's |R| went 6.06e-16 -> 5.17e-30 and then stayed there through seven
-        refactorings). last_o_end records why the corrections ended: 'steps', 'cap' (OD_EXTRA used up), 'floor' or
-        'nonfinite'."""
+        refactorings). last_o_end records why the corrections ended: 'steps', 'cap' (OD_EXTRA used up), 'floor',
+        'nonfinite' (the residual) or 'error': the rung block or its LU could not be formed (QDLu refuses a non-finite
+        block, as at a point outside the projection's basin), and the data are returned as they were before that
+        correction, where a ValueError was raised before #1032."""
         from multidouble import od_axpy
         steps = self.od if steps is None else int(steps)
         stop = self.od_stop if stop is None else bool(stop)
+        self.last_o_end = ""
         M, a, o = self.M, self.aoff, self.off
         s = self.rung_solver(self.us[-1])
         rows = self.rung_rows()
@@ -560,17 +565,23 @@ class Reseeder:
             if stop and (hist[-1] <= OD_FLOOR or (fresh and hist[-1] > OD_STALL * hist[-2])):
                 self.last_o_end = "floor"           # the arithmetic's floor, or a fresh LU's correction did not halve |R|
                 break
-            if lu is None or (k > 0 and hist[-1] > OD_REFACTOR * hist[-2] and hist[-1] > OD_FLOOR
-                                and mutate != "badlu_keep"):
-                blk = [np.array(b) for b in jac_block(s, put(d, 4), rows, cols)]
-                if lu is None and mutate in ("badlu", "badlu_keep"):
-                    for q in range(4):
-                        blk[q][:, 0] *= 1.01         # the plant: a first LU whose chord steps gain only about 1e-2
-                lu, since = QDLu(*[np.ascontiguousarray(b) for b in blk]), 0
-                fresh = True
-            else:
-                fresh = False
-            x = [np.ascontiguousarray(np.asarray(p)) for p in lu.solve(*[-r for r in R[:4]])]
+            try:
+                if lu is None or (k > 0 and hist[-1] > OD_REFACTOR * hist[-2] and hist[-1] > OD_FLOOR
+                                    and mutate != "badlu_keep"):
+                    blk = [np.array(b) for b in jac_block(s, put(d, 4), rows, cols)]
+                    if lu is None and mutate in ("badlu", "badlu_keep"):
+                        for q in range(4):
+                            blk[q][:, 0] *= 1.01         # the plant: a first LU whose chord steps gain only about 1e-2
+                    lu, since = QDLu(*[np.ascontiguousarray(b) for b in blk]), 0
+                    fresh = True
+                else:
+                    fresh = False
+                x = [np.ascontiguousarray(np.asarray(p)) for p in lu.solve(*[-r for r in R[:4]])]
+            except ValueError:
+                if REFINE_MUT["raise"]:
+                    raise
+                self.last_o_end = "error"           # no rung block or LU here: the data as they were
+                break
             d = [np.ascontiguousarray(np.asarray(p))
                  for p in od_axpy(-1.0 if mutate == "sign" else 1.0, *x, *([zero] * 4), *d)]
             since += 1
