@@ -4,6 +4,12 @@ ELL.md 7's windows (#1025).
 
     python3 ell_delta.py planted       the window code on synthetic delta(n) = c + a/n + b/n^2 + e/n^3 with known c
     python3 ell_delta.py planted --mutate=window    a window off by one point: the exactness checks must fail
+    python3 ell_delta.py collect RAWDIR   data/ell_lam_highD.json from the k_c runs: per D the highest k_c's lambda and,
+                                       as lam_err, its change from the next lower k_c (RAWDIR: a checkout of
+                                       choptuik-large-d-raw with I660-mac, I810-mac and I1025-mac)
+    python3 ell_delta.py calib         the same windows on the scalar's own lambda_0(D), whose limit is exactly 2
+                                       (GAMMA.md 5), at integer D 5 .. 20 (lambda_0 interpolated as below): how far
+                                       the windows are from their limit at these n for a real sequence of this kind
     python3 ell_delta.py table [FILE]  delta, n delta and the windows from the l = 1 points in FILE
                                        (default data/ell_lam_highD.json)
 
@@ -105,10 +111,53 @@ def table(fn):
     return True
 
 
+def calib():
+    Ds, L = lam0_table()
+    D = np.arange(5.0, 21.0)
+    n = D - 2
+    lam = np.array([lam0_at(d, Ds, L)[0] for d in D])
+    e0 = max(lam0_at(d, Ds, L)[1] for d in D)
+    print(f"lambda_0 at D 5 .. 20 (max interpolation error {e0:.1e}); n (lambda_0 - 2): "
+          + ", ".join(f"{v:.4f}" for v in n * (lam - 2)))
+    for k, lab in ((2, "c + a/n"), (3, "c + a/n + b/n^2")):
+        w = windows(n, lam - 2, k)
+        print(f"   {lab:16s} c - 0 on consecutive n: " + "; ".join(f"n {int(q[0][0])}-{int(q[0][-1])}: {q[1]:+.4f}" for q in w))
+    return True
+
+
+def collect(raw):
+    srcs = [os.path.join(HERE, "data", f) for f in ("l1_D4_kc47.jsonl", "l1_kc23r.jsonl", "l1_kc31r.jsonl")]
+    srcs += [os.path.join(raw, "I810-mac", "out", f"l1kc{k}{s_}s810.jsonl") for k in (23, 31, 39) for s_ in ("d4", "d5", "")]
+    srcs += [os.path.join(raw, "I660-mac", "out", f"l1kc{k}t660.jsonl") for k in (23, 31, 39)]
+    srcs += [os.path.join(raw, "I1025-mac", "out", f"l1kc{k}r1025.jsonl") for k in (31, 39, 47, 55)]
+    by = {}
+    for f in srcs:
+        if not os.path.exists(f):
+            continue
+        for line in open(f):
+            r = json.loads(line)
+            if r.get("lam") and r.get("l", 1) == 1:
+                by.setdefault(round(r["D"], 6), {})[r["kc"]] = (r["lam"], os.path.relpath(f, raw) if f.startswith(raw) else os.path.relpath(f, HERE))
+    pts = []
+    for D in sorted(by):
+        ks = sorted(by[D])
+        top = ks[-1]
+        err = abs(by[D][top][0] - by[D][ks[-2]][0]) if len(ks) > 1 else None
+        pts.append(dict(D=D, lam=by[D][top][0], kc=top, lam_err=err if err is not None else 0.0,
+                        kcs={str(k): by[D][k][0] for k in ks}, source=by[D][top][1]))
+        print(f"D {D:g}: k_c {ks}, lambda {by[D][top][0]:.10f}" + (f", change from k_c {ks[-2]} {err:.1e}" if err is not None else ""))
+    json.dump(dict(points=pts, note="built by ell_delta.py collect"), open(os.path.join(HERE, "data", "ell_lam_highD.json"), "w"), indent=1)
+    return True
+
+
 if __name__ == "__main__":
     cmd = sys.argv[1]
     if cmd == "planted":
         good = planted()
+    elif cmd == "calib":
+        good = calib()
+    elif cmd == "collect":
+        good = collect(os.path.abspath(sys.argv[2]))
     else:
         rest = [a for a in sys.argv[2:] if not a.startswith("--")]
         good = table(rest[0] if rest else os.path.join(HERE, "data", "ell_lam_highD.json"))
