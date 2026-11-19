@@ -25,7 +25,7 @@ Threads do not help: python-flint keeps the GIL during a product (two threads ta
 started with 'spawn', so this runs the same way on Windows; keep calls under an  if __name__ == "__main__":  guard.
 
     python3 amp_flint_par.py wf K J [prec_bits] [--procs N] [--fit phys [--mf LO:HI] [--fit-step S] [--phys-prec B]]
-                             [--out FILE]
+                             [--trunc M [--trunc-even E]] [--out FILE]
         writes sigF_w<wf>_K<K>_J<J>.json (or FILE), same keys as amp_flint.py (plus 'procs', 'seconds', 'timing',
         'order_times', 'sigma_rad'; with --fit phys also 'sigma_err', 'fit_info', 'mf', 'fit_step', 'phys_prec')
 
@@ -45,6 +45,13 @@ started with 'spawn', so this runs the same way on Windows; keep calls under an 
    which |G| ~ 1e29 amplifies, and printed values > 1 that did not mean the fit had failed.
 For K >= 13 use --fit phys with prec 640 (see the docstring of fit_phys); the legacy basis is reliable only to k = 11
 (sigma_5, to ~1e-9 at J = 1000; sigma_1..4 are biased by ~3e-10 at J = 500).
+
+5. --trunc M: hier.py's M-harmonic model (inner_np's truncation; #1016, solver/proof/amp_trunc_hiermodel.py): odd
+   harmonics |mu| <= M (y, sigma, F) and even harmonics |mu| <= M + 1 (c, E) in every product, in the e^{-P} and <F^2>
+   series, and in the de-mixing sum; harmonics 3..M tuned; the phys fit takes the families present, |nu'| <= min(k, M).
+   It is a projection applied after each product (tables keep the full width), so with M >= K nothing changes and the
+   output is bit for bit the untruncated one. --trunc-even E sets the even cap instead of M + 1 (E = M - 1 is
+   solver/proof/amp_trunc.py's truncation, B_tail.md 4, the control of #1016).
 """
 import sys
 import os
@@ -251,6 +258,10 @@ class AmpPar(Amp):
         self.mf = tuple(kw.pop("mf", (4, 12)))
         self.fit_step = int(kw.pop("fit_step", 1))
         self.phys_prec = kw.pop("phys_prec", None)
+        # hier's truncated model (--trunc M): odd harmonics |mu| <= M, even |mu| <= M + 1 (or trunc_even)
+        self.trunc = kw.pop("trunc", None)
+        te = kw.pop("trunc_even", None)
+        self.trunc_even = None if self.trunc is None else (self.trunc + 1 if te is None else te)
         super().__init__(wf, K, J, prec=prec, **kw)
         self.params = dict(wf=wf, K=K, J=J, prec=prec, fit_prec=fit_prec, **kw)
         self.prec, self.procs = prec, max(1, int(procs))
@@ -320,6 +331,29 @@ class AmpPar(Amp):
             out.append(full)
         return out
 
+    def cap(self, k):
+        """the largest |mu| kept at order k (odd orders carry odd harmonics, even orders even ones); None: no truncation"""
+        if self.trunc is None:
+            return None
+        return self.trunc if k % 2 else self.trunc_even
+
+    def truncate_rows(self, C, k):
+        """zero the entries |mu| > cap(k) of a compressed table (row j: mu = -k, -k + 2, ..., k)"""
+        c = self.cap(k)
+        if c is None or c >= k:
+            return C
+        keep = [abs(-k + 2 * i) <= c for i in range(k + 1)]
+        return [[x if kp else ZERO for x, kp in zip(row, keep)] for row in C]
+
+    def tmul(self, A, B):
+        """amp_flint's theta-function product; with --trunc every product of the e^{-P}, <F^2> series (all of even
+        harmonics) keeps |mu| <= the even cap"""
+        out = super().tmul(A, B)
+        if self.trunc is None or self.trunc_even >= self.H:
+            return out
+        H, c = self.H, self.trunc_even
+        return [x if abs(i - H) <= c else ZERO for i, x in enumerate(out)]
+
     def products(self, k, tasks):
         """sum of the products in tasks (all of order k), by group, as full-width (2H+1) rows"""
         t0 = time.time()
@@ -349,7 +383,7 @@ class AmpPar(Amp):
             for g, T in part.items():
                 res[g] = T if g not in res else _add_rows(res[g], T)
         zero = [[ZERO] * (k + 1) for _ in range(J + 1)]
-        return {g: self.expand(res.get(g, zero), k) for g in set(t[0] for t in tasks) | set(res)}
+        return {g: self.expand(self.truncate_rows(res.get(g, zero), k), k) for g in set(t[0] for t in tasks) | set(res)}
 
     # --- passes (same algebra as amp_flint.Amp)
     def pass_even(self, k):
@@ -491,8 +525,9 @@ class AmpPar(Amp):
         for nu in nus:
             tab = self.fit_data(nu)[3]
             ys = self._ys(nu, k, tab, self.fit_step)
-            args[nu] = (_ser_rows([[self.w.mid()]]), nu, k, self.jlo, self.J, self.M, self.mf[0], self.mf[1], self.fit_step,
-                        self.phys_prec)
+            kfam = k if self.trunc is None else min(k, self.trunc)      # the families present (--trunc: |nu'| <= M)
+            args[nu] = (_ser_rows([[self.w.mid()]]), nu, kfam, self.jlo, self.J, self.M, self.mf[0], self.mf[1],
+                        self.fit_step, self.phys_prec)
             yb[nu] = ys
         res = {}
         if self.workers:
@@ -548,7 +583,8 @@ class AmpPar(Amp):
                     continue
                 Ek = E[kpp]
                 terms = []
-                for mu in range(-min(H, kp), min(H, kp) + 1, 2):
+                mlim = min(H, kp) if self.trunc is None else min(H, kp, self.trunc)   # --trunc: odd |mu| <= M
+                for mu in range(-mlim, mlim + 1, 2):
                     i = H + nu - mu
                     if 0 <= i <= 2 * H and not (Ek[i] == 0):
                         terms.append((H + mu, Ek[i]))
@@ -604,7 +640,7 @@ class AmpPar(Amp):
             else:
                 self.pass_odd(k)
                 if tune and k >= 3:
-                    nus = list(range(3, k + 1, 2))
+                    nus = list(range(3, (k if self.trunc is None else min(k, self.trunc)) + 1, 2))
                     if self.fit_mode == "phys":
                         t1 = time.time()
                         pre = self.S_many(nus, k)
@@ -675,6 +711,8 @@ def main(argv):
     fit_step = _opt(argv, "--fit-step", 1, int)
     phys_prec = _opt(argv, "--phys-prec", None, int)
     out = _opt(argv, "--out", None)
+    trunc = _opt(argv, "--trunc", None, int)
+    trunc_even = _opt(argv, "--trunc-even", None, int)
     import os
     sys.path.append(os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..", "hp"))
     from raw_out import pop_allow, require_raw
@@ -687,9 +725,13 @@ def main(argv):
     kw = {}
     if fit != "legacy":
         kw = dict(fit=fit, mf=tuple(int(x) for x in mf.split(":")), fit_step=fit_step, phys_prec=phys_prec)
+    if trunc is not None:
+        kw.update(trunc=trunc, trunc_even=trunc_even)
     A = AmpPar(wf, K, J, prec=prec, procs=procs, **kw)
     A.partial_path = out + ".partial.json"     # sigma so far after each odd order, replaced at each one
     A.partial_meta = {"wf": wf, "K": K, "J": J, "prec": prec}
+    if trunc is not None:
+        A.partial_meta.update(trunc=trunc, trunc_even=A.trunc_even)
     sig, f = A.run()
     secs = time.time() - t0
     tm = {k: round(v, 1) for k, v in A.timing.items()}
@@ -702,6 +744,8 @@ def main(argv):
     if fit != "legacy":
         rec.update({"fit": fit, "mf": list(A.mf), "fit_step": A.fit_step, "phys_prec": A.phys_prec,
                     "sigma_err": A.sigma_err, "fit_info": A.fit_info})
+    if trunc is not None:
+        rec.update({"trunc": trunc, "trunc_even": A.trunc_even})
     json.dump(rec, open(out or f"sigF_w{wf:.4f}_K{K}_J{J}.json", "w"))
 
 
