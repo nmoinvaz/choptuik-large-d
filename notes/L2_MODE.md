@@ -146,18 +146,182 @@ reading:
 4. **The outer region and the light cone.** Only the inner region's leading order is checked.
 5. **The sign of c₂.** The check says λ₂ = 0 at D = ∞. Whether the mode is unstable at large finite D is (b).
 
-## 8. Scoping (b): c₂
+## 8. Step (b), first step: the O(1/n) problem for c₂ (#1001)
 
-The review proposes (b) by [FIRST_ORDER.md](FIRST_ORDER.md)'s method, which gave λ₁ = 3.0324 for ℓ = 0 to 0.3% at
-M = 5. That needs three things:
-- the O(1/n) inner equations of FIRST_ORDER.md §1 extended to the O(p) × O(q) ansatz, or the linearised ℓ = 2 equations
-  to O(1/n), which this script's machinery gives directly (the residuals at the next power of n);
-- the O(1/n) correction to the deformed solution;
-- a solvability condition for c₂ in the M-harmonic truncation, as FIRST_ORDER.md §4 does for λ₁.
+If the mode continues to finite n, λ₂(D) = c₂/n + O(1/n²), and the sign of c₂ decides whether the critical solution
+gains a second, non-spherical unstable mode at large D. This section reduces the ℓ = 2 residuals one power of n below
+their natural orders with the O(1/n) background, writes the O(1/n) equations for the deformation's correction, and asks
+whether c₂ follows from a solvability condition on the inner problem alone, as λ₁ does in
+[FIRST_ORDER.md](FIRST_ORDER.md) §4. Written 2026-11-19 for issue #1001.
 
-The first step is the residuals of the ℓ = 2 case one power of n below their natural orders. The script computes them
-already, but does not reduce them. That step decides whether c₂ follows from a solvability condition or needs the
-O(1/n) outer data too. Cost (DIRECTION_REVIEW.md): 2–4 agent-days.
+**Result.**
+
+- **c₂ follows from a solvability condition on the inner problem alone.** No O(1/n) outer data are needed. The finite-n
+  deformation fails the finite-n equations at O(1/n) only by a forcing F built from the n = ∞ background and the inner
+  equations' O(1/n) terms. c₂ multiplies a second forcing F_λ, from the ln(−t) of e^{c₂τ/n}. c₂ is then fixed by
+  requiring the correction to have zero multiplier, as FIRST_ORDER.md §4's symmetry route fixes λ₁ (§8.4).
+- **The O(1/n) equations for the correction are written down** (§8.3). They are 𝓛₀[W₂] = −F + c₂F_λ, with F and F_λ
+  explicit. F is nonzero in every component, ∝ cos 2χ in the scalar-type rows and ∝ sin χ cos χ in the χ rows. The
+  p = 1 representative gives the same structure, with its own F.
+- **On the lapse and the scalar, the ℓ = 2 operator is the ℓ = 0 operator conjugated by sY** (*checked symbolically*,
+  with V₁ + V₂ = 0, §8.3). So c₂ can reuse FIRST_ORDER.md's λ = 2 multiplier map, null vector and profile, with a new
+  forcing.
+- **Both planted checks pass, and both controls fire** (*checked symbolically*, §8.1–8.2):
+  - this background equals FIRST_ORDER.md §1's heat system and η to O(1/n) through C = α/a, Y = 2Φ_t/C, S = 2Φ_s;
+  - the ℓ = 0 shift reproduces §4's λ₁ forcing exactly;
+  - dropping the O(1/n) background changes the background, the ℓ = 0 forcing and the ℓ = 2 forcing.
+- **Assumed, not shown** (§8.5): a one-dimensional kernel at λ = 0, V₁ + V₂ = 0 for general ℓ = 2 perturbations, and
+  the multiplier of the angular problem taken along rays.
+
+### 8.1 The background to O(1/n)
+
+E^t_t, W and E^χ_χ one order below their natural orders give the background's O(1/n) rules (`bg_rules1`):
+
+```math
+c_s = \frac{\kappa\Phi_t^2}{c} + \frac{c}{n}\,E^t_{t,1},\qquad \Phi_s = \frac1c\Big(\frac{\Phi_t}{c}\Big)_t - \frac1n W_1,\qquad
+\mu = \frac{2s\,c_s}{c} - \frac{2s}{n}\,E^\chi_{\chi,2},
+```
+
+Here E^t_{t,1}, W₁ and E^χ_{χ,2} are those residuals' coefficients one power of n below natural, each reduced by the
+leading rules. With the rules every component vanishes on shell to O(1/n), including E^t_s, E^s_s and the fibre
+equations, which were not used. In the p = 1 frame the same rules make every component vanish too.
+
+**Planted check 1, against FIRST_ORDER.md §1.** Through
+
+```math
+C = \frac{\alpha}{a} = \frac{c}{\sqrt{1+\mu/n}},\qquad Y = \frac{2\Phi_t}{C},\qquad S = 2\Phi_s\qquad(\kappa = 1),
+```
+
+this background is FIRST_ORDER.md §1's heat system to O(1/n), its Y-equation and C-equation (the S-equation holds
+identically), and μ is its slaved η = ½y² + (1/n)(½y² + ½σ² − ξyy_ξ). All three residuals vanish (`--first-order`). The
+two derivations are independent: this one from Einstein's equations in the O(p) × O(q) frame, FIRST_ORDER's from the
+solver's equations. The map is exact: the wave equation in polar-areal form gives Y_t = CS + (1/n)C(S + 2sS_s + ½sY²S)
+by itself. **Control:** with the leading rules only, all three leave O(1/n) residuals.
+
+### 8.2 Planted check 2: the ℓ = 0 shift gives FIRST_ORDER.md's λ₁ forcing
+
+FIRST_ORDER.md §4's symmetry route forces the correction W of the λ = 2 mode by the s-translation breaking terms of the
+O(1/n) equations, C(2S_s + ½Y²S) in the Y-equation and C(½S² − YY_s) in the C-equation, the S-equation unforced. Here
+the ℓ = 0 shift is built to translate (C, Y, S) exactly. Φ follows S. The normal metric part takes
+A = −∂_s^{expl}η, so that μ = η holds to O(1/n). The lapse takes L = cA/(2n), so that C translates. Since
+W = −FO_Y/(2c) and E^t_t = −FO_C/c at leading order, their O(1/n) parts must be −½(2S_s + ½Y²S) and −(½S² − YY_s).
+They are, with zero difference and zero O(1) parts (`--first-order`). **Control:** with the leading background only,
+both differ from the forcing.
+
+### 8.3 The O(1/n) equations for the ℓ = 2 correction
+
+Write the finite-n mode as e^{λτ}(D₂Z_n + W₂/n), with D₂ the deformation of §4, λ = c₂/n and
+e^{λτ} = (−t)^{−λ} = 1 − (c₂/n) ln(−t) + …. At O(1/n) the correction obeys
+
+```math
+\mathcal L_0[W_2] = -F + c_2\,F_\lambda ,\qquad F_\lambda = \mathcal L_0\big[\ln(-t)\,D_2Z_0\big],
+```
+
+where 𝓛₀ is the leading-order linearised operator on the O(e) fields (lapse L, scalar P, metric A, B, C, warps V₁, V₂),
+F is the deformation's own O(1/n) residual on shell (the reduced residuals one order below natural, with W₂ = 0), and
+F_λ comes from t-derivatives acting on ln(−t), since 𝓛₀[D₂Z₀] = 0.
+
+**The operator.** Its order-one rows are
+
+```math
+W:\ P_s - \frac{P_{tt}}{c^2} + \frac{c_tP_t}{c^3} + \frac{\Phi_tL_t}{c^3} + \frac{2\Phi_{tt}L}{c^3} - \frac{3\Phi_tc_tL}{c^4} + \frac{(\cot\chi-\tan\chi)P_\chi}{4s} - \frac{\Phi_t(V_1+V_2)_t}{2c^2},
+```
+```math
+E^t_t:\ -\frac{L_s}{c} + \frac{2\kappa\Phi_tP_t}{c^2} - \frac{\kappa\Phi_t^2L}{c^3} + \frac{(\tan\chi-\cot\chi)L_\chi}{4sc} + \frac{(V_1+V_2)_{tt}}{2c^2} - \frac{c_t(V_1+V_2)_t}{2c^3},
+```
+
+and the momentum constraints E^t_s, E^t_χ and the O(1/n) spatial rows bring in A, B, C and the warps (all printed by
+`--first-order --print`). With V₁ + V₂ = 0 and L = sY γ, P = sY ψ, Y = cos 2χ, the angular terms cancel the extra γ and
+ψ that ∂_s(s·) produces, and
+
+```math
+W[sY\gamma, sY\psi] = sY\,W^{(0)}[\gamma,\psi],\qquad E^t_t[sY\gamma, sY\psi] = sY\,E^{t(0)}_t[\gamma,\psi],
+```
+
+the ℓ = 0 operator (`--first-order`, item 6, exact in sympy). Control: with cos²χ in place of cos 2χ, which is not an
+ℓ = 2 harmonic, the differences are −γ/(2c) and ψ/2. So on the lapse and the scalar the ℓ = 2 problem at n = ∞ is the
+ℓ = 0 problem conjugated by sY, which is the review's λ = 2 − ℓ in operator form. Whether the constraint rows allow
+V₁ + V₂ = 0 for every ℓ = 2 perturbation, and not only for the deformation, is not shown here (§8.5).
+
+**The forcing** (`--first-order --print` prints every component). Per unit e, on shell, with κ = 1 and Y = cos 2χ:
+
+```math
+F[E^t_t] = \frac{2sY}{c^6}\big(2c^2\Phi_t^4 - c^2\Phi_t\Phi_{ttt} + c^2\Phi_{tt}^2 + c\,\Phi_t^2c_{tt} + c\,\Phi_t\Phi_{tt}c_t - 2\Phi_t^2c_t^2\big),\qquad
+F[E^t_\chi] = -\frac{2s\sin 2\chi}{c^5}\,\Phi_t\big(c\,\Phi_{tt} - \Phi_tc_t\big),
+```
+```math
+F_\lambda[E^t_t] = \frac{2sY}{t\,c^5}\,\Phi_t\big(c\,\Phi_{tt} - \Phi_tc_t\big),\qquad
+F_\lambda[E^t_\chi] = \frac{s\sin 2\chi}{t\,c^4}\,\Phi_t^2 .
+```
+
+F[W] has nine terms of the same kind times −2sY/c⁷, and the other rows are of the same form. In F_λ the ln(−t) and iπ
+parts cancel exactly, because 𝓛₀[D₂Z₀] = 0. What is left are 1/t terms, zero in E^χ_χ and the fibre rows, which carry
+no t-derivative. The deformation written as explicit corrections is L = sY c_s, P = sY Φ_s, A = (sμ_s + μ)Y,
+B = −μ sin 2χ, with C = V₁ = V₂ = 0. 𝓛₀ annihilates it, a second check of §4's result.
+
+| `--first-order` (about 12 min, one process at nice 10) | result | required |
+|---|---|---|
+| background, every component on shell to O(1/n) | all zero | zero |
+| planted 1: FIRST_ORDER.md §1's Y- and C-equations and η | all zero | zero |
+| planted 1 control, leading rules only | all nonzero | nonzero |
+| planted 2: the ℓ = 0 shift's W and E^t_t against §4's forcing | equal; O(1) parts zero | equal |
+| planted 2 control, leading background only | both differ | differ |
+| ℓ = 2: O(1) parts on the O(1/n) shell | all zero | zero |
+| ℓ = 2: the O(1/n) forcing F | nonzero in all ten components | nonzero |
+| ℓ = 2 control, F with the leading background only | differs in all ten | differs |
+| p = 1: background on shell to O(1/n) with the same rules | all zero | zero |
+| p = 1, ℓ = 2, δS = s(cos²χ − sin²χ/n): O(1) parts | all zero | zero |
+| p = 1, ℓ = 2: F, and its control | nonzero in all nine; control differs in all nine | nonzero; differs |
+| 𝓛₀ on D₂Z₀ written as corrections | all zero | zero |
+| F_λ | nonzero in the seven rows with t-derivatives | nonzero |
+| conjugation of W and E^t_t by sY (V₁ + V₂ = 0) | zero difference | zero |
+
+The zero tests evaluate each on-shell expression exactly, on explicit test functions Φ(t) and c(t) at two points, to 50
+digits, against 10⁻³⁰. After the reduction only t-derivatives at fixed s remain, so this decides identities that
+`simplify` takes too long to settle. Planted 2 was also settled by `simplify`, with zero difference
+(`l0_first_order_check()`, about 12 min).
+
+### 8.4 Inner solvability or outer data
+
+c₂ follows from a solvability condition on the inner problem alone, by the analogue of FIRST_ORDER.md §4's symmetry
+route:
+
+1. **The forcing is inner.** F and F_λ are built from the n = ∞ background Z₀ and the inner equations' O(1/n) terms. The
+   reduction used only the inner rules of §8.1 and the deformation, with no Z₁, no K₁ or ω₁ (FIRST_ORDER.md §3) and no
+   outer matching. That is the property that makes the symmetry route need only n = ∞ objects for λ₁.
+2. **The finite-n deformation has zero multiplier.** Along each ray D₂ acts as sY ∂_s at fixed t, which is (Y/2) ξ∂_ξ at
+   fixed τ. That commutes with taking the jump across the Stokes line in ξ, so the jump of D₂Z_n is (Y/2) ξ∂_ξ of the
+   jump of Z_n, and it vanishes when Z_n is selected.
+3. **Solvability.** The multiplier of W₂ must vanish, and it is linear in the forcing, so
+   c₂ = −ℓ·S(W^F)/(ℓ·S(W^λ)), with W^F and W^λ the responses to −F and F_λ and ℓ the left null vector of the n = ∞ ℓ = 2
+   multiplier map at λ = 0.
+4. **It survives truncation.** ℓ = 0's symmetry route fails in a truncated model because its gauge step multiplies by
+   P(θ), which mixes θ-harmonics (FIRST_ORDER.md §4). δS = s cos 2χ vanishes at the centre, so ℓ = 2 needs no gauge
+   step. D₂ acts harmonic by harmonic in θ, and the route should hold in the M-harmonic models too (not checked).
+
+So no O(1/n) outer data are needed. This is a structural argument (items 1–4), with item 1 checked by the reduction.
+What it assumes is listed in §8.5.
+
+### 8.5 What is assumed, and the next task
+
+- The kernel of the n = ∞ ℓ = 2 multiplier map at λ = 0 is one-dimensional, spanned by D₂Z₀. With the conjugation of
+  §8.3 it is the image of ℓ = 0's kernel at λ = 2, the s-translation, whose simplicity Proposition 5 and FIRST_ORDER.md
+  use. That holds if the constraint rows allow V₁ + V₂ = 0 for a general ℓ = 2 perturbation, which is open.
+- Item 2 of §8.4 takes the Stokes jump of the ℓ = 2 perturbation along rays at fixed χ. The multiplier map of the
+  angular problem is not written down.
+- Only linear order in e, and the O(p) × O(q) ansatz with zero shift.
+
+**Recommended next task: c₂ in the M-harmonic truncation.**
+- Map F and F_λ to FIRST_ORDER.md's inner variables (y, σ, c) with the map of §8.1.
+- Solve 𝓛₀W = −F and 𝓛₀W = F_λ on the hierarchical solver's states at M = 1, 3, 5, through the n = ∞ ℓ = 0 machinery at
+  λ = 2, using the conjugation.
+- Take c₂ from the ratio of the two multipliers' projections on ℓ.
+- Planted check: the same code with FIRST_ORDER's ℓ = 0 forcing must return λ₁ = 3.0324 at M = 5.
+- Control: F with its O(1/n) background terms dropped must change c₂.
+- First, settle V₁ + V₂ = 0 by solving the ℓ = 2 constraint rows symbolically for A, B, C at V = 0.
+
+Cost: DIRECTION_REVIEW.md's 2–4 agent-days for (b), and CPU of the order of FIRST_ORDER.md's λ₁ runs, since the
+machinery is the same.
 
 ## 9. Reproduce
 
@@ -167,4 +331,7 @@ From `solver/inner_pert/` with venv-314 (sympy 1.14.0):
 python3 l2_mode.py --flat                    # planted: flat space, zero residuals; PASS
 python3 l2_mode.py --check                   # sections 2-5 (~45 s); PASS, exit 0
 python3 l2_mode.py --check --mutate=curv     # the fibre curvature dropped: FAIL, exit 1
+python3 l2_mode.py --first-order             # section 8 (~12 min): the O(1/n) background, planted checks 1 and 2
+                                             # with their controls, F with its control, L0 on D2 Z0, F_lambda; PASS
+python3 l2_mode.py --first-order --print     # the same, and prints the operator L0, F and F_lambda
 ```
