@@ -30,7 +30,8 @@ xi0 and its right-hand side along the integration are one analytic function of x
                                               c2 (and lambda_1 for l0, sym) at the stored zero of M (data/
                                               first_order_hier_M{M}_xi{xi1}.json); results to data/l2_c2_M{M}_xi{xi1}_{forcings}.json
     python3 l2_c2.py 5 --forcing=l0,sym --mutate=gsign    every graph forcing's sign flipped: the planted lambda_1
-                                              must leave its 1% bar (it changes sign)
+                                              must leave its 1% bar (it changes sign), exit 1. At M = 5 a run with
+                                              l0 or sym exits 1 whenever their lambda_1 is more than 1% from 3.0324
     python3 l2_c2.py 1 --planted-lam          the planted lambda* of M = 1 through first_order_hier.find_lam
 """
 import json
@@ -50,6 +51,7 @@ import first_order_hier as H                            # noqa: E402
 from first_order_jet import JetModel, Dir, Fh_from, W0, SymForce  # noqa: E402
 
 MUT = next((a.split("=", 1)[1] for a in sys.argv if a.startswith("--mutate=")), "")
+LAM1_FIT = 3.0324                                       # FIRST_ORDER.md 6, the double-double fit of lambda_1
 FJ.MUTATE.update(m for m in MUT.split(",") if m)
 T0 = time.time()
 
@@ -736,7 +738,16 @@ def main():
     fn = os.path.join(HERE, "data", f"l2_c2_{tag}_{'-'.join(names)}{'_' + MUT if MUT else ''}.json")
     json.dump(out, open(fn, "w"), indent=1)
     log(f"wrote {fn}")
-    return True
+    good = True
+    if M == 5:                         # the planted lambda_1 (notes/L2_MODE.md 9.5): the l = 0 forcings within 1% of the fit
+        for nm in ("l0", "sym"):
+            if nm in out:
+                rel = abs(out[nm]["ell"] - LAM1_FIT) / LAM1_FIT
+                ok = rel <= 0.01
+                good &= ok
+                log(f"planted lambda_1 (M = 5), {nm}: {out[nm]['ell']:.4f} against {LAM1_FIT}, {100 * rel:.2f}%: "
+                    f"{'OK' if ok else 'BAD'} (bar 1%)")
+    return good
 
 
 if __name__ == "__main__":

@@ -575,7 +575,7 @@ python3 l2_c2.py 1 --planted-lam             # planted: lambda* of M = 1 = 1.769
 for M in 1 3 5; do python3 l2_c2.py $M --forcing=l2,l2_ctrl,l0,sym --lamcheck; done   # c2, control, lambda_1 (M = 5:
                                                                                       # ~8 min)
 for M in 1 3 5; do python3 l2_c2.py $M --forcing=l2,l0,G,sym --lamcheck; done   # G alone and the F_lambda relation
-python3 l2_c2.py 5 --forcing=l0,sym --mutate=gsign           # the planted lambda_1 with every forcing flipped: -3.04
+python3 l2_c2.py 5 --forcing=l0,sym --mutate=gsign           # the planted lambda_1 flipped: -3.04, BAD, exit 1
 python3 l2_c2_summary.py                     # the table and verdicts of 9.5; PASS, exit 0
 ```
 
