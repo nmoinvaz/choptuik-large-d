@@ -26,7 +26,7 @@ experiment (a) of §2.1, a sympy check at leading order in 1/n. The script is `s
   applied to the lump, which the leading-order inner equations do not see (§6). What this does not cover is listed in
   §7. The next step is (b), c₂ (§8).
 - **Step (b): c₂ = −λ₁ = −3.0324, so the ℓ = 2 mode is stable at large D** (§9; *conditional* on the hypotheses of
-  §9.6, the value through FIRST_ORDER.md's fit of λ₁). The ℓ = 2 forcing is minus the ℓ = 0 one plus a term with zero
+  §9.7, the value through FIRST_ORDER.md's fit of λ₁). The ℓ = 2 forcing is minus the ℓ = 0 one plus a term with zero
   multiplier (*checked symbolically*), and the M = 1, 3, 5 models give c₂ = −7.96, −2.48, −3.046 against λ₁ = 7.81,
   2.50, 3.044 from the same code.
 
@@ -337,7 +337,7 @@ This section carries out §8.5's recommended task. It evaluates c₂ at M = 1, 3
 
 **Result.**
 
-- **c₂ = −λ₁** (*conditional* on the hypotheses named in §9.6). The ℓ = 2 forcing, conjugated to the ℓ = 0 problem
+- **c₂ = −λ₁** (*conditional* on the hypotheses named in §9.7). The ℓ = 2 forcing, conjugated to the ℓ = 0 problem
   at λ = 2, is minus FIRST_ORDER.md's ℓ = 0 forcing plus the leading operator applied to (δc, δΦ) = (0, Φ_s). That
   identity is *checked symbolically* (§9.2). The field (0, Φ_s) is local in the background and has zero multiplier,
   so it drops out of the solvability condition (§9.4). The two conditions then differ only in sign.
@@ -348,6 +348,8 @@ This section carries out §8.5's recommended task. It evaluates c₂ at M = 1, 3
 - **The truncated models agree** (numerical evidence, §9.5). c₂ is −7.96, −2.48 and −3.046 at M = 1, 3 and 5. The
   same code with the ℓ = 0 forcing gives λ₁ = 7.81, 2.50 and 3.044. c₂ + λ₁ falls from −0.15 to −0.0016. c₂ is
   negative at M = 3 and M = 5 at every slice tried, so the sign may be read.
+- **The p = 1 representative gives the same forcing** (*checked symbolically*, §9.6). Its F/(s cos²χ) equals the
+  p = q F/(s cos 2χ) identically, so the decomposition and c₂ = −λ₁ hold for it unchanged, as SO(n + 1) requires.
 - **The planted checks pass, and the control fires** (§9.5). The ℓ = 0 forcing through the same code gives
   λ₁ = 3.0443 at M = 5, 0.39% from the fit. M = 1's λ* comes out as 1.7691220084. The forcing with the leading
   background only moves c₂ to −25.6 at M = 5.
@@ -488,8 +490,8 @@ digits shown, since the graphs are linear in the forcing's monomials.
 
 ### 9.5 Numbers
 
-`python3 l2_c2_summary.py` (its log is in raw I1010-mac, 8c8a27a4), xi1 = 0.2. The c₂ and λ₁ values are those of the left
-singular vector of Sch, and "c₂ over φ" is the range over that vector and φ = e₁, e₂, f₂:
+`python3 l2_c2_summary.py` (its log is in raw I1010-mac, 8c8a27a4), xi1 = 0.2. The c₂ and λ₁ values are those of the
+left singular vector of Sch, and "c₂ over φ" is the range over that vector and φ = e₁, e₂, f₂:
 
 | M | c₂ | c₂ over φ | λ₁ (same code) | λ₁ (SymForce's terms) | c₂ + λ₁ | G alone | c₂, control |
 |---|---|---|---|---|---|---|---|
@@ -516,7 +518,24 @@ fit 3.0324 lies in the same interval. The M = 3 to M = 5 step of c₂ (0.563) eq
 c₂ + λ₁ at M = 3, so c₂ at M = 3 and 5 agree to the sequence's own rate. M = 1 is far from converged in every
 quantity (λ₁ is 7.81 by the converted forcing and 2.73 by SymForce's association).
 
-### 9.6 What is assumed, and what is not covered
+### 9.6 The p = 1 representative
+
+For p = 1 (y ∈ ℝ, z ∈ ℝⁿ, one fibre with warp V₂) the ℓ = 2 harmonic is n y² − |z|², proportional to
+s(cos²χ − sin²χ/n), and §8.3 gave its forcing F. `l2_c2_forcing.py --p1` gives:
+
+1. The ℓ = 0 rows W and E^t_t of the p = 1 frame equal those of p = q identically.
+2. On the lapse and the scalar (V₂ = 0), the p = 1 operator is the ℓ = 0 one conjugated by s cos²χ, with zero
+   difference. **Control:** with s cos 2χ, which is not an ℓ = 2 harmonic of this frame, the differences are −ψ and γ/c.
+3. With the O(1/n) background, F has zero O(1) parts, and F/(s cos²χ) has no χ. This was checked at the rational point
+   and at both numval test points.
+4. F/(s cos²χ) equals the p = q F/(s cos 2χ) of §9.2 identically in both rows. The control forcings, with the leading
+   background only, are equal too. So F̃(p = 1) + F̃⁽⁰⁾ = 𝓛₀[(0, Φ_s)], and the control does not satisfy that
+   identity.
+
+Both representatives are members of one ℓ = 2 multiplet of SO(n + 1), so c₂ must be the same for both. The two frames
+reach it separately, and with an identical F̃ the jets would repeat §9.5's numbers, so no p = 1 jet run was made.
+
+### 9.7 What is assumed, and what is not covered
 
 - **For c₂ = −λ₁:**
   - FIRST_ORDER.md §4's symmetry route in the full problem, with ℓ annihilating the reparametrization columns.
@@ -526,7 +545,7 @@ quantity (λ₁ is 7.81 by the converted forcing and 2.73 by SymForce's associat
   - Conjecture 1 and the lemma chain at O(1/n), as for λ₁ itself.
 - **The value −3.0324** is FIRST_ORDER.md's fit of λ₁, numerical evidence. The truncated sequence supports it but does
   not replace it.
-- Only p = q = (n + 1)/2. The p = 1 representative has its own F (§8.3), which was not run.
+- Two representatives, p = q = (n + 1)/2 and p = 1 (§9.6). Other p were not tried.
 - Linear order in e, and the O(p) × O(q) ansatz with zero shift.
 
 **Proposed text for the README** (for the maintainer): "At large D the non-spherical ℓ = 2 perturbation of the
@@ -547,6 +566,8 @@ python3 l2_mode.py --first-order             # section 8 (~12 min): the O(1/n) b
 python3 l2_mode.py --first-order --print     # the same, and prints the operator L0, F and F_lambda
 python3 l2_c2_forcing.py                     # section 9.2 (~6 min): Ft = F/(sY) for l2, the control, l0 and F_lambda,
                                              # and Ft(l2) + Ft(l0) = L0[(0, Phi_s)] with its control; PASS, exit 0
+python3 l2_c2_forcing.py --p1                # section 9.6 (~20 s, after the line above): the p = 1 frame, conjugation
+                                             # and forcing, Ft(p1) = Ft(l2); PASS, exit 0
 python3 l2_c2.py --checks                    # section 9.3 (~1 min): checks 1-3 and the radius diagnostic; exit 1,
                                              # from the control's check 3 (reported in 9.3); the others hold
 python3 l2_c2.py --checks --mutate=ident     # check 2 fails; --mutate=series: checks 1 and 3 fail; --mutate=force: 1
