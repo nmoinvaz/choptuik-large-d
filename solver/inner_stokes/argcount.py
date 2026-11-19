@@ -14,7 +14,8 @@ The multiplier:
          The zero set does not depend on xi1 (J = 0 means y+ = y-), so each zero is also located at a second xi1.
   M = 3: nested.inner at xi1 = --r1 (F_3 tuned so that S_3 = 0, warm-started from the nearest point already computed;
          the base grid is computed in rings outward from the known M = 3 zero), r_1; a point whose inner solve leaves
-         |r_3| >= 1e-8 has no value. Cells with a point of no value are reported unresolved.
+         |r_3| >= 1e-8 has no value, nor one whose final path exceeds --ymax or whose |r_1| is under 10 sigma.
+  Cells with a point of no value are reported unresolved.
 
 The count:
   1. a base grid of cells over the box (offset by a small irrational amount so that no known zero lies on an edge);
@@ -87,16 +88,48 @@ def f_M1(args):
         return [float("nan"), float("nan"), str(ex)[:80], float("nan"), float("nan")]
 
 
+_PATH = {}
+
+
+def _probe_inner_np():
+    """inner_np with its solve_ivp wrapped to record max |Y| and the end |Y| of each jumps() path (the same call,
+    so the same bits); jumps() resets the record, so after nested.inner it holds the final evaluation's path"""
+    import inner_np as I
+    if getattr(I, "_argcount_probe", False):
+        return I
+    ivp, jumps = I.solve_ivp, I.Inner.jumps
+
+    def solve_ivp(*a, **k):
+        sol = ivp(*a, **k)
+        _PATH["ymax"] = max(_PATH.get("ymax", 0.0), float(np.abs(sol.y).max()))
+        _PATH["yend"] = float(np.abs(sol.y[:, -1]).max())
+        return sol
+
+    def jumps_probe(self, *a, **k):
+        _PATH.clear()
+        return jumps(self, *a, **k)
+
+    I.solve_ivp, I.Inner.jumps, I._argcount_probe = solve_ivp, jumps_probe, True
+    return I
+
+
 def f_M3(args):
+    """[Re, Im, |r_3|, F3re, F3im, max |Y|, sigma]; sigma = 1e-15 |Y(xi1)| times residual_demixed's scale for r_1"""
+    I = _probe_inner_np()
     import nested
     (A, wf), F3, r1 = args
+    nan = float("nan")
     try:
         F3n, R, r3 = nested.inner(A, wf, complex(*F3), r1)
+        w = I.W0 * wf
+        Fh = I.Fh_from(np.array([A, wf, -2 * F3n.imag, 2 * F3n.real]), 3)
+        sc = np.exp(1 / (2 * r1 * r1)) * r1 ** (-2 * I.F2mean(Fh)) / (2 * np.pi * abs(I.Kp(1j * w)))
+        ym, sig = _PATH.get("ymax", nan), 1e-15 * _PATH.get("yend", nan) * sc
         if not float(r3) < 1e-8:                  # the inner solve did not tune S_3 to zero: no value
-            return [float("nan"), float("nan"), float(r3), F3[0], F3[1]]
-        return [R.real, R.imag, float(r3), F3n.real, F3n.imag]
+            return [nan, nan, float(r3), F3[0], F3[1], ym, sig]
+        return [R.real, R.imag, float(r3), F3n.real, F3n.imag, ym, sig]
     except Exception as ex:
-        return [float("nan"), float("nan"), str(ex)[:80], F3[0], F3[1]]
+        return [nan, nan, str(ex)[:80], F3[0], F3[1], nan, nan]
 
 
 class Multiplier:
@@ -109,7 +142,7 @@ class Multiplier:
         if cache and os.path.exists(cache):
             for line in open(cache):
                 r = json.loads(line)
-                if M == 1 and r.get("r1") != r1:
+                if r.get("r1") != r1 and (M == 1 or "r1" in r):
                     raise SystemExit(f"cache {cache} holds points at r1 {r.get('r1')}, not {r1}")
                 self.store((r["A"], r["wf"]), r)
         self.F3seed = {}
@@ -142,15 +175,15 @@ class Multiplier:
                 if self.M == 1:
                     rec.update(r1=self.r1, ymax=r[3], sig=r[4])
                 if self.M == 3:
-                    rec.update(F3re=r[3], F3im=r[4])
+                    rec.update(r1=self.r1, F3re=r[3], F3im=r[4], ymax=r[5], sig=r[6])
                 self.store(k, rec)
                 fh.write(json.dumps(rec) + "\n")
 
     def store(self, k, r):
-        """a point's value, or none (NaN) when its M = 1 path came near a singularity (max |Y| > ymax) or |R_1| is
-        within 10 sigma of its rounding floor (the phase is then unknown)"""
+        """a point's value, or none (NaN) when its path came near a singularity (max |Y| > ymax) or |R_1| is within
+        10 sigma of its rounding floor (the phase is then unknown)"""
         v = complex(r["re"], r["im"])
-        if self.M == 1 and not (r.get("ymax", 0.0) <= self.ymax and abs(v) >= 10 * r.get("sig", 0.0)):
+        if not (r.get("ymax", 0.0) <= self.ymax and abs(v) >= 10 * r.get("sig", 0.0)):
             v = complex(float("nan"), float("nan"))
         self.vals[k] = v
         self.extra[k] = r
@@ -175,7 +208,7 @@ class Multiplier:
 
     def floor(self, p):
         """the rounding floor sigma of the value (M = 1), times the planted factor"""
-        s = self.extra[self.key(p)].get("sig", 0.0) if self.M == 1 else 0.0
+        s = self.extra[self.key(p)].get("sig", 0.0)
         return float(s * (abs(self.shape(p, 1.0)) if self.plant is not None else 1.0))
 
     def __call__(self, p):
@@ -392,7 +425,7 @@ def main():
                     help="comparison radius xi1 (M = 1: 0.17; M = 3: 0.2, nested.py's)")
     ap.add_argument("--r1b", type=float, default=None,
                     help="second xi1 at which each zero is located again (M = 1: 0.2)")
-    ap.add_argument("--ymax", type=float, default=1e2, help="M = 1: no value where max |Y| on the path exceeds this")
+    ap.add_argument("--ymax", type=float, default=1e2, help="no value where max |Y| on the path exceeds this")
     ap.add_argument("--selftest", action="store_true")
     ap.add_argument("--mutate", default=None, choices=["conj", "nosplit"])
     a = ap.parse_args()
