@@ -12,6 +12,7 @@ writes them to data/l2_c2_forcing.json for l2_c2.py. Four forcings:
     l2_ctrl   the same with the leading background only (the control of #1010)
     l0        the l = 0 shift's (L2_MODE.md 8.2, FIRST_ORDER.md 4's s-translation breaking terms; the planted case)
     l2_lam    F_lambda = L0[ln(-t) D2 Z0], divided by s cos 2chi (a check of the d/dlambda normalisation)
+    G         L0[(0, Phi_s)]: checked here to equal Ft(l2) + Ft(l0) identically (with the control (c_s, 0))
 
     python3 l2_c2_forcing.py          about 10 min; exit 0 iff every check below holds
 """
@@ -122,6 +123,20 @@ def main():
         Fl2[k] = v.coeff(lg, 0)
     res["l2_lam"] = reduce_rows(Fl2)
     log("l2_lam: Ft = " + "; ".join(f"{k}: {v}" for k, v in res["l2_lam"].items()))
+    # the decomposition Ft(l2) = -Ft(l0) + L0[(0, Phi_s)] (L0: the l = 0 rows; (0, Phi_s) is the scalar part of the
+    # s-translation, a local field of the background); control: (c_s, 0), the lapse part, must not do it
+    res["G"] = {}
+    for lab, V, want in (("(0, Phi_s)", dict(zero, P=sp.diff(Ph0, s)), True),
+                         ("control (c_s, 0)", dict(zero, L=sp.diff(c0, s)), False)):
+        Lr = M2.natural_raw(sp.Integer(0), "half", V, rows)
+        for k in rows:
+            Gk = sp.cancel(symbolize(Lr[k]))
+            d = sp.cancel(res["l2"][k] + res["l0"][k] - Gk)
+            good = (d == 0) == want
+            ok &= good
+            if want:
+                res["G"][k] = sp.factor(Gk)
+            log(f"Ft(l2) + Ft(l0) - L0[{lab}], {k}: {'0' if d == 0 else d}  ({'as required' if good else 'NOT AS REQUIRED'})")
     # the control must differ from l2
     for k in rows:
         d = sp.cancel(res["l2"][k] - res["l2_ctrl"][k])

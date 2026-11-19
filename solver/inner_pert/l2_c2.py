@@ -26,9 +26,9 @@ xi0 and its right-hand side along the integration are one analytic function of x
     python3 l2_c2.py --checks                 the graph checks (seconds): evaluator against SymForce, the l = 0
                                               identity, series against right-hand side; exit 0 iff all pass
     python3 l2_c2.py --checks --mutate=ident  a dropped term in the converted l = 0 forcing: the identity must fail
-    python3 l2_c2.py M [--xi1=0.2] [--forcing=l2,l2_ctrl,l0,sym] [--lamcheck]
+    python3 l2_c2.py M [--xi1=0.2] [--forcing=l2,l2_ctrl,l0,sym,G] [--lamcheck]
                                               c2 (and lambda_1 for l0, sym) at the stored zero of M (data/
-                                              first_order_hier_M{M}_xi{xi1}.json); results to data/l2_c2_M{M}_xi{xi1}.json
+                                              first_order_hier_M{M}_xi{xi1}.json); results to data/l2_c2_M{M}_xi{xi1}_{forcings}.json
     python3 l2_c2.py 1 --planted-lam          the planted lambda* of M = 1 through first_order_hier.find_lam
 """
 import json
@@ -661,9 +661,20 @@ def c2_run(x, M, xi1, names, lamcheck=False):
                mode_scale=float(np.linalg.norm(Sch) * np.linalg.norm(f2[:2])))
     log(f"   mode d_s Z0: corrected jump {out['mode_jump']:.2e} against |Sch| |f2_1| {out['mode_scale']:.2e}")
     if lamcheck:
-        dl = np.linalg.norm(corr["l2_lam"] - corr["lam"]) / np.linalg.norm(corr["lam"])
-        out["lamcheck"] = float(dl)
-        log(f"   F_lambda forcing against the d/dlambda component: relative difference {dl:.2e}")
+        # l2_mode's F_lambda = L0[ln(-t) d_s Z0] in (Phi, c) maps to the solver's ln(-t) d_s Z0 plus the local field
+        # dy = -sigma/(xi c) (from Y = 2 Phi_t / C, at T = 1), whose multiplier vanishes; the two responses differ by
+        # the homogeneous solution with that field's data, profile -s0/2 (d0 = -s0), c(0) = 0: corr difference
+        # = -Sch f_x (harmonic 1). Required: that relation to truncation level, and equal ell projections.
+        bg = bg_series(x, M, 1.0, 3)
+        s0 = bg.ser["S"][0][0]
+        fx = prof_vec({int(k): -s0[k + bg.L] / 2 for k in range(-M, M + 1) if k % 2}, M)
+        dlt = corr["l2_lam"] - corr["lam"]
+        rel = float(np.linalg.norm(dlt + Sch @ fx[:2]) / np.linalg.norm(corr["lam"]))
+        relp = float(abs(ll @ dlt) / abs(ll @ corr["lam"]))
+        out.update(lamcheck=rel, lamcheck_raw=float(np.linalg.norm(dlt) / np.linalg.norm(corr["lam"])), lamcheck_ell=relp,
+                   corr_l2_lam=corr["l2_lam"].tolist())
+        log(f"   F_lambda forcing against the d/dlambda component: raw difference {out['lamcheck_raw']:.2e}; after the "
+            f"local field's homogeneous part {rel:.2e}; ell projections differ by {relp:.2e}")
     for nm in names:
         if nm == "l2_lam":
             continue
@@ -697,7 +708,7 @@ def main():
         return good
     names = opts.get("--forcing", "l2,l2_ctrl,l0,sym").split(",")
     out = c2_run(x, M, xi1, names, lamcheck="--lamcheck" in opts)
-    fn = os.path.join(HERE, "data", f"l2_c2_{tag}{'_' + MUT if MUT else ''}.json")
+    fn = os.path.join(HERE, "data", f"l2_c2_{tag}_{'-'.join(names)}{'_' + MUT if MUT else ''}.json")
     json.dump(out, open(fn, "w"), indent=1)
     log(f"wrote {fn}")
     return True

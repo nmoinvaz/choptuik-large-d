@@ -15,6 +15,10 @@
   "E^t_t": "Mul(Integer(2), Pow(Symbol('C0'), Integer(-5)), Symbol('P1'), Pow(Symbol('t', positive=True), Integer(-1)), Add(Mul(Symbol('C0'), Symbol('P2')), Mul(Integer(-1), Symbol('C1'), Symbol('P1'))))",
   "W": "Mul(Pow(Symbol('C0'), Integer(-6)), Pow(Symbol('t', positive=True), Integer(-2)), Add(Mul(Pow(Symbol('C0'), Integer(2)), Pow(Symbol('P1'), Integer(3)), Symbol('t', positive=True)), Mul(Pow(Symbol('C0'), Integer(2)), Symbol('P2')), Mul(Integer(-1), Integer(2), Pow(Symbol('C0'), Integer(2)), Symbol('P3'), Symbol('t', positive=True)), Mul(Integer(-1), Symbol('C0'), Symbol('C1'), Symbol('P1')), Mul(Integer(7), Symbol('C0'), Symbol('C1'), Symbol('P2'), Symbol('t', positive=True)), Mul(Integer(2), Symbol('C0'), Symbol('C2'), Symbol('P1'), Symbol('t', positive=True)), Mul(Integer(-1), Integer(7), Pow(Symbol('C1'), Integer(2)), Symbol('P1'), Symbol('t', positive=True))))"
  },
+ "G": {
+  "W": "Mul(Integer(-1), Integer(4), Pow(Symbol('C0'), Integer(-5)), Pow(Symbol('P1'), Integer(2)), Add(Mul(Symbol('C0'), Symbol('P2')), Mul(Integer(-1), Symbol('C1'), Symbol('P1'))))",
+  "E^t_t": "Mul(Integer(2), Pow(Symbol('C0'), Integer(-6)), Symbol('P1'), Add(Mul(Pow(Symbol('C0'), Integer(2)), Symbol('P3')), Mul(Integer(-1), Integer(3), Symbol('C0'), Symbol('C1'), Symbol('P2')), Mul(Integer(-1), Symbol('C0'), Symbol('C2'), Symbol('P1')), Mul(Integer(3), Pow(Symbol('C1'), Integer(2)), Symbol('P1'))))"
+ },
  "symbols": {
   "P": "Phi_t..Phi_tttt at fixed s",
   "C": "c..c_ttt at fixed s",
