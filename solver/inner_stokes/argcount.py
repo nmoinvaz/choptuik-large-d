@@ -32,9 +32,11 @@ The count:
 find it. Values are cached (--cache, one JSON line per point), so a planted run reuses the plain run's points.
 
     python3 argcount.py --M=1 --A=0.5,6 --wf=0.2,3 --nA=22 --nwf=28 --out=DIR [--procs=2] [--plant=A0,wf0]
+    python3 argcount.py --M=1 --recount=DIR/leaves_TAG.jsonl --r1=0.2 --r1b=0.25 --out=DIR --tag=TAG_r0.2
     python3 argcount.py --selftest      # a planted map with four zeros, two of them a close pair of opposite sign
     python3 argcount.py --selftest --mutate=nosplit   # no splitting of winding-0 cells: the pair is missed, FAIL
     python3 argcount.py --selftest --mutate=conj      # the map conjugated: every sign flips, FAIL
+    python3 argcount.py --selftest --mutate=norecount # the recount keeps the hole: the pair stays unresolved, FAIL
 """
 import argparse
 import json
@@ -313,10 +315,10 @@ def locate(F, a0, a1, w0, w1):
 
 
 def count(F, box, nA, nwf, dphi=0.5, hmin=1e-5, hzero=0.02, hpair=0.01, tvsplit=math.pi, eta=0.25, log=print,
-          maxcells=20000):
+          maxcells=20000, off=OFF):
     (A0, A1), (W0_, W1) = box
-    As = np.linspace(A0 + OFF[0], A1 + OFF[0], nA + 1)
-    Ws = np.linspace(W0_ + OFF[1], W1 + OFF[1], nwf + 1)
+    As = np.linspace(A0 + off[0], A1 + off[0], nA + 1)
+    Ws = np.linspace(W0_ + off[1], W1 + off[1], nwf + 1)
     base = [(a, w) for a in As for w in Ws]
     if getattr(F, "M", 1) == 3:
         # continuation: rings outward from the known M = 3 zero, so each batch is seeded by the previous ones
@@ -368,11 +370,27 @@ def count(F, box, nA, nwf, dphi=0.5, hmin=1e-5, hzero=0.02, hpair=0.01, tvsplit=
                 leaf_sum=sum(L["W"] for L in leaves), leaves=leaves)
 
 
+def recount(F, leaves, dphi=0.5):
+    """count each unresolved leaf of an earlier count as its own box (corners unchanged, no offset)"""
+    boxes = [((L["a0"], L["a1"]), (L["w0"], L["w1"])) for L in leaves if not L["ok"]]
+    res = dict(zeros=[], leaves=[], unresolved=[], nleaves=0, splits=0, leaf_sum=0, boundary_winding=0.0, boxes=[])
+    for bx in boxes:
+        r = count(F, bx, 1, 1, dphi=dphi, off=(0.0, 0.0))
+        res["boxes"].append(dict(box=bx, boundary_winding=r["boundary_winding"], leaf_sum=r["leaf_sum"],
+                                 unresolved=len(r["unresolved"])))
+        for k in ("zeros", "leaves", "unresolved"):
+            res[k] += r[k]
+        for k in ("nleaves", "splits", "leaf_sum", "boundary_winding"):
+            res[k] += r[k]
+    res["npoints"] = len(F.vals)
+    return res
+
+
 # ------------------------------------------------------------------------------------------- selftest
 class Analytic:
     """a planted map with known zeros: prod (dA + i s_k dwf) or its conjugate per zero, times a zero-free factor"""
-    def __init__(self, zeros, mutate=None):
-        self.zs, self.vals, self.plant, self.mutate = zeros, {}, None, mutate
+    def __init__(self, zeros, mutate=None, hole=None):
+        self.zs, self.vals, self.plant, self.mutate, self.hole = zeros, {}, None, mutate, hole
 
     def raw(self, pts):
         for p in pts:
@@ -383,6 +401,8 @@ class Analytic:
             for (a, w, sgn) in self.zs:
                 d = complex(p[0] - a, 2 * (p[1] - w))
                 v *= d if sgn > 0 else d.conjugate()
+            if self.hole and math.hypot(p[0] - self.hole[0], 2 * (p[1] - self.hole[1])) < self.hole[2]:
+                v = complex(float("nan"), float("nan"))     # no value here, as below a rounding floor
             self.vals[k] = v
 
     def __call__(self, p):
@@ -405,7 +425,17 @@ def selftest(mutate=None):
     ok = found == want and round(res["boundary_winding"]) == 2 and not res["unresolved"]
     print(f"selftest{' --mutate=' + mutate if mutate else ''}: planted {want}; found {found}; boundary winding "
           f"{res['boundary_winding']:.3f}; points {res['npoints']}: {'PASS' if ok else 'FAIL'}")
-    return ok
+    # the radius ladder: a hole of no value over the close pair leaves its cells unresolved; a recount of them
+    # with the hole gone (a second radius) must recover the pair, and the union must hold all four zeros
+    Fh = Analytic(zs, mutate, hole=(3.425, 0.365, 0.15))
+    r1 = count(Fh, ((0.5, 6.0), (0.2, 3.0)), 22, 28)
+    r2 = recount(Analytic(zs, mutate, hole=None if mutate != "norecount" else (3.425, 0.365, 0.15)), r1["leaves"])
+    got = sorted((round(z["located"]["A"], 3), round(z["located"]["wf"], 3), z["W"])
+                 for z in r1["zeros"] + r2["zeros"] if z["located"])
+    ok2 = bool(r1["unresolved"]) and not r2["unresolved"] and got == want and r1["leaf_sum"] + r2["leaf_sum"] == 2
+    print(f"selftest recount: {len(r1['unresolved'])} cells unresolved by the hole, {len(r2['unresolved'])} after the "
+          f"recount; found {got}: {'PASS' if ok2 else 'FAIL'}")
+    return ok and ok2
 
 
 def main():
@@ -426,8 +456,10 @@ def main():
     ap.add_argument("--r1b", type=float, default=None,
                     help="second xi1 at which each zero is located again (M = 1: 0.2; M = 3: 0.17)")
     ap.add_argument("--ymax", type=float, default=1e2, help="no value where max |Y| on the path exceeds this")
+    ap.add_argument("--recount", default=None,
+                    help="leaves file of an earlier count: recount each of its unresolved cells as its own box")
     ap.add_argument("--selftest", action="store_true")
-    ap.add_argument("--mutate", default=None, choices=["conj", "nosplit"])
+    ap.add_argument("--mutate", default=None, choices=["conj", "nosplit", "norecount"])
     a = ap.parse_args()
     if a.selftest:
         return 0 if selftest(a.mutate) else 1
@@ -445,7 +477,15 @@ def main():
         F.extra[(-1.0, -1.0)] = dict(F3re=float(((2.7264758856 / 2j) * (0.0532 + 0.0041j)).real),
                                      F3im=float(((2.7264758856 / 2j) * (0.0532 + 0.0041j)).imag), info=0.0)
     t0 = time.time()
-    res = count(F, box, a.nA, a.nwf, dphi=a.dphi)
+    if a.recount:
+        # a rung of the radius ladder: the zero set does not depend on xi1, and each cell is counted at one xi1,
+        # so a cell left unresolved at one radius (its rounding floor or a path near a singularity) is counted
+        # again at another, with no grid offset (its corners are the earlier cell's)
+        res = recount(F, list(map(json.loads, open(a.recount))), dphi=a.dphi)
+        res["recount"] = a.recount
+        box = f"{len(res['boxes'])} unresolved cells of {a.recount}"
+    else:
+        res = count(F, box, a.nA, a.nwf, dphi=a.dphi)
     F.close()
     if a.r1b:
         # the zero set does not depend on xi1: locate each zero again at r1b, from the same cell
@@ -466,7 +506,8 @@ def main():
     with open(os.path.join(a.out, f"leaves_{tag}.jsonl"), "w") as fh:
         for L in leaves:
             fh.write(json.dumps(L) + "\n")
-    print(f"M = {a.M}, box A {box[0]}, wf {box[1]}, plant {plant}: boundary winding {res['boundary_winding']:.3f}, "
+    where = f"recount of {box}" if a.recount else f"box A {box[0]}, wf {box[1]}"
+    print(f"M = {a.M} at xi1 {a.r1}, {where}, plant {plant}: boundary winding {res['boundary_winding']:.3f}, "
           f"sum over leaves {res['leaf_sum']}, {res['nleaves']} leaves after {res['splits']} splits, "
           f"{res['npoints']} points, {len(res['unresolved'])} unresolved cells, {res['sec']:.0f} s")
     for z in res["zeros"]:
