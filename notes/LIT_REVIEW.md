@@ -480,6 +480,100 @@ The year range is unrestricted unless a year is named.
   - Failed (FULL-TEXT-UNREAD): the scispace copy of Ismail et al. (empty) and its Optica pages (loading placeholder);
     the SPIE page of the 2017 paper (empty); MDPI through `WebFetch` (HTTP 403, read through Chrome instead); the
     Pollnau–Ismail book chapter (2018), of which only a university proxy mirror surfaced, not used.
+- **2026-11-19, issue #987** (P6 route 1; the arXiv PDFs that `WebFetch` returned as binary were extracted with pypdf
+  7.1.1 from the copies the tool saved; URLs and the extraction record in the raw-data repository,
+  `I987-mac/read_log.md`, commit 7e6fcbc4):
+  - Full extraction: Costin–Tanveer arXiv:math/0608290v1 (41 pages, the Ann. IHP C paper); Costin–Tanveer
+    arXiv:math/0612063v2 (30 pages). Every statement and the main proofs were read; the estimate lemmas' proofs
+    (2007 §§4–5 and §7.4–7.5, NS §§3–4 and §6) were skimmed for further hypotheses, and none was found.
+  - Failed (FULL-TEXT-UNREAD): Xie–Tanveer, ARMA 166 (2003) 219–286. Springer redirected to a sign-in page,
+    ResearchGate returned 403, and the MaRDI record (Publication:1566401) holds only the title. No preprint surfaced.
+    Its abstract was seen only as a search tool quoted it (a secondary source): analytic symmetric fingers exist for
+    small surface tension if and only if a Stokes constant of a simpler nonlinear ODE vanishes.
+  - What the two papers assume and prove, and how the inner problem fits them, is §6.1.
+
+### 6.1 Costin–Tanveer against the inner problem (issue #987)
+
+**O. Costin, S. Tanveer, Ann. Inst. H. Poincaré Anal. Non Linéaire 24 (2007) 795–823**, arXiv:math/0608290v1
+(11 Aug 2006). Verified: the arXiv first page (title, authors, date); the journal fields as REF_CHECK.md has them
+(numdam). REF_CHECK.md does not list the arXiv number.
+
+- *Problem* (§2.1, Eqs. (3)–(5)). u_t + P(∂_x)u + g(x, t, {∂_x^j u}_{|j|≤n}) = 0 with u(x, 0) = u_I(x), u ∈ ℂ^r,
+  t ∈ (0, T), and x large in a poly-sector of ℂ^d. Differentiating gives the normalized quasilinear system (5) for
+  f ∈ ℂ^m (u and its derivatives of order below n), with P diagonal and each P_j of order n.
+- *Hypotheses* (Assumptions 1, §2.1).
+  1. The cone condition Re P_{n;j}(−p) > 0 for max_i |arg p_i| ≤ φ, for some φ ∈ (0, π/(2n)) (Eq. (9)).
+  2. The coefficients b_q analytic in D_{π/(2n), ρ₀} × {|f| < ε}.
+  3. Algebraic decay at large x: |x^{α_r} r|, |x^{α_r} f_I| and |x^{α_q} b_{q,k}| bounded, with α_r ≥ 1
+     (Eqs. (11)–(13)).
+  4. n > 1.
+
+  Theorem 2 adds Condition 2: b_{q,k} and r analytic in x_i^{−1/N_i} at infinity. §5 and Lemma 41 assume
+  "Condition 1", and the only such condition the paper defines is Condition 2.
+- *Spaces.* The inverse Laplace (Borel) transform is in x, with p in the sector S_φ (Eq. (16)). A_φ (Definitions
+  11–12) holds the functions analytic in S_φ with the norm ‖G‖_ν = M₀^d sup ∏_i(1 + |p_i|²) e^{−ν|p|} |G| (Eq. (27)).
+  B(ν, n, S), with the weight e^{−ν(t+1)Σ_j(|p_j| + |p_j|ⁿ)} (Eq. (60)), controls F outside S_φ.
+- *Results.*
+  - Theorem 1 (§2.2, proved in §4). There is a unique solution, analytic in D_{φ,ρ₀;x} with |x₁||f| bounded, and
+    f = O(x^{−α_r}).
+  - Theorem 2 (§2.3, proved in §5). Under Condition 2, f is the Borel sum of its own asymptotic series in the
+    variable x^{n/(n−1)} (Eq. (14)). F₁ is analytic at 0 in ramified p, analytic in |arg p_i| < nφ/(n−1) +
+    π/(2(n−1)) and exponentially bounded there. The step from the Borel variable dual to x to the one dual to
+    x^{n/(n−1)} is an Écalle acceleration (Lemma 42).
+  - Theorem 3 (§6.2–6.4, d = 1). Existence and asymptotics for small t in ζ = x t^{−1/n̂}, in Settings 1 and 2.
+  - The mechanism is the integral equation (25), which inverts ∂_t + P(−p) by e^{−P(−p)(t−τ)}. Lemma 10
+    (Re P_j(−p) > C|p|ⁿ) makes that inverse smoothing, and Lemmas 33–36 give the contraction in A_φ.
+
+**O. Costin, S. Tanveer, arXiv:math/0612063v2** (20 Dec 2006), *Borel summability of Navier–Stokes equation in ℝ³
+and small time existence*. Verified: the arXiv first page. No journal reference was checked.
+
+- *Problem* (Eq. (1.1)). v_t − Δv = −P[v·∇v] + f with v(x, 0) = v₀, x ∈ ℝ³, t ∈ ℝ⁺. §1 notes that the periodic problem
+  on T³ goes the same way.
+- *Spaces.* ‖v̂‖_{µ,β} = sup_k (1 + |k|)^µ e^{β|k|} |v̂(k)| on the Fourier transform (Definition 1.1); β > 0 means
+  analytic in a strip of width β. In the Borel variable p, dual to 1/t: A^α, with sup_{p≥0}(1 + p²)e^{−αp}‖·‖_{µ,β};
+  A^α_1, which is L¹(e^{−αp}dp) of ‖·‖_{µ,β}; and A^∞_L (Definition 2.5). Each is a Banach algebra under Laplace
+  convolution in p followed by Fourier convolution in k (Lemma 2.6).
+- *Hypotheses.* ‖v̂₀‖_{µ+2,β} < ∞, ‖f̂‖_{µ,β} < ∞ and µ > 3, with β ≥ 0 for Theorem 1.1 and β > 0 for Theorem 1.2.
+- *Results.*
+  - Theorem 1.1. A unique solution exists for Re 1/t > α, with α from Eq. (2.39), and the strip width is preserved
+    for t ∈ [0, 1/α).
+  - Theorem 1.2. For β > 0, v = v₀ + ∫₀^∞ U(x, p) e^{−p/t} dp, with U analytic in a neighbourhood of ℝ⁺ ∪ {0},
+    exponentially bounded, and analytic in x for |Im x| < β. The bounds are Gevrey-1, |v_m| ≤ m! A₀ B₀^m.
+  - The mechanism: the Borel transform turns ∂_t − Δ into p∂²_p + 2∂_p + |k|², inverted by a Bessel kernel that is
+    bounded by about 0.6 (Eq. (2.10), Remark 2.1), followed by a contraction (Lemmas 2.7–2.8). Analyticity at p = 0
+    comes from Taylor coefficients bounded by e^{−β|k|} Q_{2l}(β|k|) (Lemma 3.2). Along ℝ⁺ the radius of convergence
+    is 1/(4B), uniform in the base point (Lemmas 4.2 and 4.13), and B grows as β falls (Eq. (3.58)). So the strip
+    width in x is traded for a radius in p.
+
+**The inner problem against them.** In u = ξ² the inner problem is u²Z′ = H(u, Z) for the harmonic components
+(C_selection.md §4.1). u = 0 is a rank-1 irregular point with the fast exponential e^{−1/(2u)}, at rate ½ for every
+harmonic at leading order. The slow components are regular-singular, with exponents carrying 1 + iμω. θ is periodic,
+F is analytic in |Im θ| < σ_F = 1.43, and the label is θ₀ = θ − 2ω ln ξ = θ − ω ln u.
+
+| Hypothesis | Costin–Tanveer 2007 | Costin–Tanveer NS | The inner problem | Fits? |
+|---|---|---|---|---|
+| the singular variable and its Borel dual | large x in a poly-sector; summable in x^{n/(n−1)} | small t, Borel in 1/t, Gevrey-1 | small u, Borel in 1/u, Gevrey-1 | NS's, with u as t; not 2007's, where n = 1 has no x^{n/(n−1)} |
+| the operator that is inverted | order n > 1 in x with the cone condition (Assumptions 1(1), 1(4)) | ∂_t − Δ: \|k\|² ≥ 0, a bounded Bessel kernel | first order at an irregular point, u²∂_u. The θ-operator ω∂_θ ↦ iμω is first order and skew, in the exponents 1 + iμω and in the O(u) terms | no, for both. No smoothing absorbs the factor μ |
+| where the series' divergence comes from | the higher x-derivatives | Δ's derivative loss, in a problem regular at t = 0 | the irregular point. The fast rate ½ does not depend on θ at leading order | no |
+| the Borel transform on ℝ⁺ | analytic in a sector | analytic in a neighbourhood of ℝ⁺ (Theorem 1.2): no Stokes phenomenon | singular at p = ½ and its multiples on ℝ⁺. The multipliers are the jump between the lateral sums at arg p = 0± | no. This is the setting of Costin (Duke Math. J. 93 (1998)) for finite systems, whose stated hypotheses the inner problem does not meet (C_selection.md §4.1: a repeated fast eigenvalue, zero slow eigenvalues) |
+| the periodic variable and its norm | none (x lies in a sector) | ℝ³ or T³ with e^{β\|k\|}(1 + \|k\|)^µ; the strip is kept | θ ∈ T with X_σ's weights e^{σ\|ν\|} | yes, in NS's periodic form, once Lemma 2.2's convolution constant is redone for sums over ℤ |
+| data | u_I at t = 0 | v₀ and f | none free: Y(0) = 2F and C(0) = 1 fix the series | yes, in form (the series' first terms play v₀ and v₁) |
+| the nonlinearity | quasilinear, with derivatives up to order n | quadratic, one derivative | polynomial (cubic) with ξy_ξ and no θ-derivative | yes |
+| transport of the periodic variable | none | none | the label moves with arg u: on the ray arg u = φ, θ₀ shifts by −iωφ | not covered. NS's strip-for-radius trade (Lemma 3.2) is the nearest device |
+
+So neither paper's theorems apply to the inner problem. Two hypotheses fail. The θ-operator is first order and skew,
+with no parabolic smoothing, and the Borel transform has the Stokes singularity at p = ½ on ℝ⁺, which NS's
+conclusion rules out. The 2007 paper fails a third, n > 1, since the inner problem is first order in its singular
+variable. What would carry over is NS's machinery with θ in place of x: the weighted-Fourier norm in the periodic
+variable, the exponentially weighted Borel-plane spaces A^α and A^α_1, and the trade of strip width for a radius in p.
+What neither supplies is the continuation of the Borel transform past its singularities at p = k/2 on ℝ⁺ (the lateral
+sums and the jump), uniformly in the harmonic. That is the X_σ-valued form of Costin's 1998 analysis, which no source
+read here gives. Characteristic variables (u, θ₀) would remove the transport but put u^{±iμω} into the coefficients,
+which are then not meromorphic at u = 0, outside the hypotheses of Braaksma's and Costin's theorems as stated.
+
+*Discrepancy (reported, not fixed).* PROOF.md §3 credits both papers with "Borel summability for PDEs with data
+analytic in a strip, with weighted-Fourier-space norms", and P6_scope.md §3 repeats it. That holds for math/0612063.
+The 2007 paper works at large |x| in poly-sectors of ℂ^d, with algebraic decay and no strip or Fourier norm.
 
 ## 7. Citation chains
 

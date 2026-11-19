@@ -23,8 +23,9 @@ direction for issue #979; not reviewed. Status words as in AGENTS.md.
 - **One step of B_tail_M7.md §5.2 does not follow.** (T1) and (T2) are upper bounds. They give a geometric bound on
   |δ_M|, not the ratio inequality (R) (§1.3). The telescoping still closes from (T1)–(T3), but it then needs Λ and C_f
   explicitly, in place of the measured sup|δ₅|.
-- **Five candidate routes are named (§3). None has been checked against its source.** The notes read the key
-  literature (Costin–Tanveer, Xie–Tanveer, Olde Daalhuis) at metadata level only (LIT_REVIEW.md §6).
+- **Five candidate routes are named (§3). Only route 1's literature has been checked against its source.** The two
+  Costin–Tanveer papers were read in full for #987 (LIT_REVIEW.md §6.1), and the inner problem is not in their class.
+  Xie–Tanveer was not reached, and Olde Daalhuis was read at metadata level only (LIT_REVIEW.md §6).
 - **M = 9 is blocked at level 5.** Its first level-5 solve stalls at |r₅| ≈ 43 with the floor rule off and at rtol
   10⁻¹² alike (#974), so the first test of (R) waits on a level-5 design change (§2.5).
 - **First steps (§4).** A level-5 approach-radius pilot at M = 9 (#974's recommendation 1), then δ₇(p₇) = r₁^{[9]}(p₇)
@@ -221,10 +222,29 @@ far that was read (LIT_REVIEW.md §6), and what the route would need.
    where the label θ₀ meets F's singularities. For real F the jump is 2i Im y⁺ on the Stokes line. So (★) becomes a
    bound on Im δy⁺ there, a Laplace integral along arg ζ = 0⁺. In the label variable that is a Borel estimate on a strip
    of half-width about 0.74, inside the profile's 1.43.
-   - *Literature.* Costin–Tanveer (Ann. IHP C 24 (2007) 795–823, and their Navier–Stokes paper arXiv:math/0612063) prove
-     Borel summability for evolution PDEs with data analytic in a strip, in weighted Fourier norms (PROOF.md §3).
-     Xie–Tanveer (ARMA 166 (2003)) continues into complex domains with weighted spaces. Both were read at metadata level
-     only.
+   - *Literature.* Costin–Tanveer's Ann. IHP C 24 (2007) 795–823 (arXiv:math/0608290) proves existence and Borel
+     summability at large |x| in poly-sectors for evolution PDEs of order n > 1 under a cone condition. Their
+     Navier–Stokes paper (arXiv:math/0612063) proves Borel summability in 1/t with data analytic in a strip, in
+     weighted Fourier norms. Both were read in full for #987 (LIT_REVIEW.md §6.1). Xie–Tanveer (ARMA 166 (2003))
+     continues into complex domains with weighted spaces. It was not reached (a sign-in page, a 403 and a title-only
+     record).
+   - *Reading (#987).* The inner problem is not in either paper's class. It fits the Navier–Stokes paper in three
+     respects: it is Gevrey-1 in the small variable (u = ξ² in place of t), the periodic variable carries strip
+     weights, and the nonlinearity has no θ-derivative. Two hypotheses fail.
+     - The θ-operator ω∂_θ is first order and skew. No parabolic kernel absorbs the factor μ, as the Bessel kernel
+       absorbs |k|² there.
+     - The Borel transform in 1/u is singular at p = ½ on ℝ⁺, and the multipliers are the jump between lateral sums.
+       Their Theorem 1.2 has U analytic in a neighbourhood of ℝ⁺, with no Stokes phenomenon.
+
+     The 2007 paper also fails n > 1, since the inner problem is first order in u. What carries over is the
+     Navier–Stokes paper's machinery with θ in place of x: the weighted-Fourier norm, the Borel-plane spaces A^α and
+     A^α_1, and Lemma 3.2's trade of strip width for a radius in p. The trade is the form route 1 needs, because on
+     the ray arg u = φ the label moves by −iωφ, so a complex Laplace direction costs strip width in proportion to
+     |φ|, while the lateral sums at arg p = 0± need only small rotations. What no source read here supplies is
+     the X_σ-valued form of Costin's 1998 rank-1 analysis: the continuation past p = k/2 and the jump, with bounds
+     uniform in the harmonic. That is the extension route 1 needs, and the Needs below stand with the first one
+     answered. Changing to the characteristic variables (u, θ₀) removes the transport, but it puts u^{±iμω} into the
+     coefficients, which leaves Braaksma's and Costin's meromorphic hypotheses.
    - *Needs.* First, a check that the inner problem fits Costin–Tanveer's hypotheses. As written it is an ODE system in
      ξ coupled through θ, with the label carried along θ₀ = θ − 2ω ln ξ, not an evolution PDE in ℝ⁺ × ℂ^d. Second,
      lateral sums built along paths near the Stokes line. Every construction so far (`inner_np.py`) starts on the
@@ -285,7 +305,7 @@ coefficient vanishes (PROOF.md §3). Neither is a route to (★).
 | 1b | the ratio of moduli in one normalisation | an M = 5 fixed-(A, ω) solve at p₃, ξ₁ 0.15, giving δ₃(p₃) in the units of \|δ₅(p₅)\| = 6.9 | one M = 5 solve, minutes | \|δ₅(p₅)\|/\|δ₃(p₃)\| beside κ₇ read in ω (−0.049) and in A (−0.081). It shows which number (R)'s κ is |
 | 2 | the M = 9 zero | the outer fit of `m7_outer.py`, adapted to M = 9, over solves at p₇, p₇ + (2×10⁻⁴, 0) and p₇ + (0, 10⁻⁴) | 3 roles × 2 to 3 solves × 46 min, about 5 to 7 h on rpi5 | κ₉, and g₉ ≤ 4.36 (σ_eff ≤ 0.736). c₉ against c₇ + d₇κ₇ |
 | 3 | route 3's cancellations, uniform in ν | generalize `_sym_tail` of `exact_sigma.py` (D_entire.md §6.2) to the first tuned order of harmonic ν, with ν symbolic in sympy | desk work and sympy, a few days (estimate); no long run | If the O(1/j) cancellations are identities in ν, write them as *checked symbolically* and go to the remainder bound. If they hold only for some ν, stop route 3 |
-| 4 | route 1 against its literature | read Costin–Tanveer 2007 and math/0612063 in full, and record in LIT_REVIEW.md what they assume and prove, against the inner problem's form | reading, 1 to 2 days (estimate) | whether the inner problem is in their class, and if not, which hypothesis fails |
+| 4 | route 1 against its literature | done in #987 (§3, route 1; LIT_REVIEW.md §6.1): read Costin–Tanveer 2007 and math/0612063 in full, and record in LIT_REVIEW.md what they assume and prove, against the inner problem's form | reading, 1 to 2 days (estimate) | whether the inner problem is in their class, and if not, which hypothesis fails |
 | 5 | route 2's limit operator | write identity H's G_ν in normalised units for general ν, and evaluate it at ν = 7 and 9 from stages 1 and 2 | unknown until stage 3 shows how G is computed | If a limit exists, bound it and its rate. If not, drop route 2 |
 | 6 | Theorem A(M = 7) on B, with s₅ and s₇ enclosed | the A(M = 5) design (A_M2.md) scaled to M = 7 | weeks of runs and engineering (DINF_ANALYTIC.md §4.2) | only after a route to (★) has passed stages 3 to 5, and only if P5 has not made Lemma T unnecessary for Theorem A(∞) (route 4) |
 
