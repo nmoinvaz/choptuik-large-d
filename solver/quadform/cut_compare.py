@@ -6,7 +6,8 @@
 On the points of algfit.load_points with D <= 67.77: the stored series (hp/data/formula_cut.json, 29 constants, fitted
 to an earlier table), the same series refitted with K + 1 = 24, 26 and 29 constants (weighted least squares at 1024
 bits, as hp/formula_cut_fit.py), and the quadratic formula of --file. For each: chi2/dof and the largest |miss|/sigma
-on the fitted points, then the largest |miss| and |miss|/sigma on the points above 67.77, which no fit saw.
+on the fitted points, then the largest |miss| and |miss|/sigma on the points above 67.77, which no fit saw, and for
+the quadratic the same by kind of point.
 """
 import json
 import os
@@ -63,7 +64,22 @@ def main():
     Q = json.load(open(path))
     rows.append(report(f"quadratic {tuple(Q['degrees_pqr'])}, float64", Q["n_const"],
                        lambda D: arb(F.f64_value(Q, D)), fit_pts, allp))
-    json.dump(dict(points=len(fit_pts), rows=rows, produced_by="solver/quadform/cut_compare.py"),
+    kinds = {}
+    for D, y, s, k in allp:                                 # the quadratic against the unseen points, by kind
+        if D > 67.77 + 1e-9:
+            m = abs(F.f64_value(Q, D) - float(y))
+            kinds.setdefault(k, []).append((m / s, m, D))
+    by_kind = {}
+    for k, v in kinds.items():
+        w = max(v)
+        by_kind[k] = dict(n=len(v), max_miss=max(m for _, m, _ in v), worst_over_sigma=w[0], worst_at=w[2],
+                          over_5_sigma=sum(a > 5 for a, _, _ in v),
+                          over_5_sigma_D=[min((d for a, _, d in v if a > 5), default=None),
+                                          max((d for a, _, d in v if a > 5), default=None)])
+        print(f"  unseen {k:9s} n {len(v):4d} max miss {by_kind[k]['max_miss']:.1e} worst {w[0]:.3g} sigma at D {w[2]:.4f}; "
+              f"{by_kind[k]['over_5_sigma']} beyond 5 sigma, D {by_kind[k]['over_5_sigma_D']}")
+    json.dump(dict(points=len(fit_pts), rows=rows, quadratic_unseen_by_kind=by_kind,
+                   produced_by="solver/quadform/cut_compare.py"),
               open(ARGS.get("out", os.path.join(A.HERE, "data", "cut_compare.json")), "w"), indent=1)
 
 
