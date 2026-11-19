@@ -240,6 +240,22 @@ def dname(D):
     return f"{D:.4f}" if abs(D * 1e4 - round(D * 1e4)) < 1e-6 else f"{D:.6f}"
 
 
+def floor_stop(hist, accept, ratio):
+    """the residual-floor rule: (F_before, F_now) when |F| is below accept and the last full step (with its chord phase)
+    cut it by less than ratio, else None. A full step's record carries the |F| at its start, so without chords the rule
+    compares two starts and lags one step; a chord phase's record carries the |F| after it, so with chords it compares
+    the last full step's start with the state after its chords and fires one full step earlier (#945: 3.10e-24 ->
+    1.97e-24 after M 384's fourth step, which the starts-only rule saw only after the fifth)."""
+    Fs = [h["F"] for h in hist if "lam" in h]
+    if hist and "chords" in hist[-1] and Fs:
+        F0, F1 = Fs[-1], hist[-1]["F"]
+    elif len(Fs) >= 2:
+        F0, F1 = Fs[-2], Fs[-1]
+    else:
+        return None
+    return (F0, F1) if F1 < accept and F1 > ratio * F0 else None
+
+
 def solve_point(D, M, zh, zl, src, a, nodes, outdir, log, segs=None):
     """one (D, M) solve with checkpoints; returns (converged, zh, zl). segs: the Taylor step points to use (default:
     planned from the start z with --tol_step, --hmax; a checkpoint's own plan takes precedence on resume)"""
@@ -316,9 +332,9 @@ def solve_point(D, M, zh, zl, src, a, nodes, outdir, log, segs=None):
             break
         # optional (a.floor_ratio, default off): stop at the residual floor, when |F| is below a.accept and the last
         # step reduced it by less than this factor (at M = 256 the floor is 2-4e-28, above a tolerance of 1e-28)
-        Fs = [h["F"] for h in hist if "lam" in h]
-        if getattr(a, "floor_ratio", 0) and len(Fs) >= 2 and Fs[-1] < a.accept and Fs[-1] > a.floor_ratio * Fs[-2]:
-            log(f"D {D} M {M}: |F| {Fs[-2]:.1e} -> {Fs[-1]:.1e}: below {a.accept:g} and no longer falling (the residual "
+        fl = floor_stop(hist, a.accept, a.floor_ratio) if getattr(a, "floor_ratio", 0) else None
+        if fl:
+            log(f"D {D} M {M}: |F| {fl[0]:.1e} -> {fl[1]:.1e}: below {a.accept:g} and no longer falling (the residual "
                 f"floor); stopping")
             break
     _rh, _rl = s.residual(zh, zl)
