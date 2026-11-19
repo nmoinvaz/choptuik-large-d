@@ -1,4 +1,5 @@
 D,Delta_q0,Delta_q1,Delta_q2,Delta_q3,kind,err,err_kind,source,published_ref,published_Delta,published_diff,state
+3.04315,2.431590741783993,1.4182355652441853e-16,,,dd,1.0e-10,dM,data/delta_dd.csv:lowD-M384,,,,
 3.04335,2.4332179889888024,-6.311333383611548e-17,,,dd,9.6e-11,dM,data/delta_dd.csv:lowD-M384,,,,
 3.04355,2.4348407709485724,1.9036413852535694e-16,,,dd,9.2e-11,dM,data/delta_dd.csv:lowD-M384,,,,
 3.04375,2.436459113272686,1.942128257010364e-16,,,dd,8.8e-11,dM,data/delta_dd.csv:lowD-M384,,,,
