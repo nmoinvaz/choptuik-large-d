@@ -2,17 +2,18 @@
 """The quadratic formula for Delta(D) with a given number of constants, beside the rational one (post hoc, not one of
 the frozen experiments; notes/QUADRATIC_FORMULA.md 5).
 
-    cd solver/quadform && python3 formula.py fit [--N=11] [--dmin=4] [--weights=sigma|uniform] [--out=data/formula_q11.json]
-    cd solver/quadform && python3 formula.py check [--file=data/formula_q11.json] [--mutate=coef]
+    cd solver/quadform && python3 formula.py fit [--N=11] [--dmin=4] [--dmax=245.64] [--weights=sigma|uniform]
+                                                 [--spread=3] [--Mmax=4] [--out=data/formula_q11.json]
+    cd solver/quadform && python3 formula.py check [--file=data/formula_q11.json] [--digits=K] [--mutate=coef]
 
 fit: every quadratic form (p, q, r) with p + q + r + 2 = N and degrees within 3 of each other, and every rational
-[L/M] with M <= 4, fitted by algfit.fit on all the points dmin <= D <= 245.64; each class enters its form with the
+[L/M] with M <= Mmax, fitted by algfit.fit on all the points dmin <= D <= dmax; each class enters its form with the
 smallest sum of squares. Prints the largest |miss| by range for both and for the README's stored formula, and writes
 the quadratic's P, Q, R as decimal coefficients of eps^j, eps = 1 / (D - 2), scaled so that Q(0) = 1, with the sign
 of the root.
 check: evaluates the written coefficients in float64, Delta = 2 R / (-Q + s sqrt(Q^2 - 4 P R)), on the same points,
-and exits 1 unless the largest |miss| per range is within 2e-10 + 1% of the stored one (--mutate=coef scales one
-coefficient by 1 + 1e-6: it must exit 1).
+and exits 1 unless the largest |miss| per range is within 5e-15 + 5% of the stored one (--mutate=coef scales one
+coefficient by 1 + 1e-6: it must exit 1; --digits=K first rounds every coefficient to K significant digits).
 """
 import json
 import math
@@ -64,14 +65,18 @@ def f64_value(F, D):
 
 def fit():
     N, dmin, wt = int(ARGS.get("N", 11)), float(ARGS.get("dmin", 4)), ARGS.get("weights", "sigma")
-    pts = [p for p in A.load_points() if p[0] >= dmin - 1e-9]
+    dmax, spread = float(ARGS.get("dmax", A.DMAX)), int(ARGS.get("spread", 3))
+    pts = [p for p in A.load_points() if dmin - 1e-9 <= p[0] <= dmax + 1e-9]
     print(f"formula, N {N}, weights {wt}: {len(pts)} points, D {pts[0][0]:.4f} to {pts[-1][0]:.2f}", flush=True)
-    best = {}
-    for cls, forms in (("rational", A.rational_forms(N)), ("quadratic", A.quadratic_forms(N, 3))):
+    best, cands = {}, []
+    classes = [("rational", A.rational_forms(N, int(ARGS.get("Mmax", 4)))), ("quadratic", A.quadratic_forms(N, spread))]
+    for cls, forms in classes:
         for degs in forms:
             M = A.fit(pts, degs, uniform=(wt == "uniform"))
             print(f"  {cls:9s} {A.form_name(degs):>10s} ss {M.info['ss']:.3e} max miss {M.info['max_miss']:.2e} "
                   f"ok {M.info['ok']} defect {A.real_axis_defect(M, dmin)}", flush=True)
+            cands.append(dict(cls=cls, form=A.form_name(degs), ss=M.info["ss"], max_miss=M.info["max_miss"],
+                              ok=M.info["ok"], defect=bool(A.real_axis_defect(M, dmin))))
             if M.info["ok"] and not A.real_axis_defect(M, dmin) and (cls not in best or M.info["ss"] < best[cls].info["ss"]):
                 best[cls] = M
     allp = A.load_points()
@@ -97,8 +102,8 @@ def fit():
     F = dict(form="P Delta^2 + Q Delta + R = 0; Delta = 2 R / (-Q + sign sqrt(Q^2 - 4 P R)); P, Q, R = sum_j c_j eps^j; "
                   "eps = 1 / (D - 2)", degrees_pqr=[M.degs[2], M.degs[1], M.degs[0]], n_const=M.n - 1, sign=sign,
              P=[mp.nstr(c, 22) for c in P], Q=[mp.nstr(c, 22) for c in Q], R=[mp.nstr(c, 22) for c in R],
-             fitted_on=[dmin, A.DMAX], weights=wt, points=len(pts), Delta_inf=vinf.mid().str(14, radius=False),
-             real_branch_points_D=bps, max_miss_by_range=rows, produced_by="solver/quadform/formula.py fit")
+             fitted_on=[dmin, dmax], weights=wt, chi2dof=M.info["chi2dof"], max_over_sigma=M.info["max_over_sigma"], points=len(pts), Delta_inf=vinf.mid().str(14, radius=False),
+             real_branch_points_D=bps, max_miss_by_range=rows, candidates=cands, produced_by="solver/quadform/formula.py fit")
     F["max_miss_f64"] = by_range(allp, lambda D, y: f64_value(F, D) - float(y))
     print("  float64 from the written coefficients: " + "  ".join(f"{r} {e:.1e}" for r, e in F["max_miss_f64"].items()))
     print(f"  Delta_inf {F['Delta_inf']}, real branch points at D = {bps}")
@@ -111,13 +116,16 @@ def fit():
 def check():
     path = ARGS.get("file", os.path.join(A.HERE, "data", "formula_q11.json"))
     F = json.load(open(path))
+    if "digits" in ARGS:                                   # the coefficients as a table would print them
+        for k in ("P", "Q", "R"):
+            F[k] = [mp.nstr(mp.mpf(c), int(ARGS["digits"])) for c in F[k]]
     if ARGS.get("mutate") == "coef":
         F["Q"][1] = mp.nstr(mp.mpf(F["Q"][1]) * (1 + mp.mpf("1e-6")), 22)
     got = by_range(A.load_points(), lambda D, y: f64_value(F, D) - float(y))
     key = [k for k in F["max_miss_by_range"] if k.startswith("quadratic")][0]
     ok = True
     for r, e in F["max_miss_by_range"][key].items():
-        good = got[r] <= 2e-10 + 1.01 * e
+        good = got[r] <= 5e-15 + 1.05 * e
         ok = ok and good
         print(f"  D {r:12s} stored {e:.2e}  float64 from the file {got[r]:.2e}  {'ok' if good else 'FAIL'}")
     print(f"check {os.path.basename(path)}: {'PASS' if ok else 'FAIL'}")

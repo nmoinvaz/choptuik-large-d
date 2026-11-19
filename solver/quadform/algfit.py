@@ -470,7 +470,12 @@ def exp_B(name):
             up = [v for v in real_bp if v < pts[0][0] and v > 2]
             neg = [v for v in real_bp if v < 2]
             vinf, _ = M.value("inf", arb(DINF))
+            at_up = None
+            if up:                                  # Delta at the upper branch point, -Q / (2 P) there (post hoc)
+                Ak = M.A(M.trow(max(up)))
+                at_up = float(-Ak[1] / (2 * Ak[2]))
             row = dict(N=N, form=form_name(degs), chi2dof=M.info["chi2dof"], max_over_sigma=M.info["max_over_sigma"],
+                       delta_at_upper=at_up,
                        ok=M.info["ok"], defect=bool(defect), accepted=bool(M.info["ok"] and not defect and M.info["chi2dof"] <= 4),
                        bp_upper=max(up) if up else None, bp_neg=max(neg) if neg else None, real_bp=real_bp,
                        complex_bp=[[z.real, z.imag] for z in bps if z.imag > 1e-9 * max(1.0, abs(z.real))],
