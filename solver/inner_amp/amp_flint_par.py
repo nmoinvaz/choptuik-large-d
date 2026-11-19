@@ -25,7 +25,8 @@ Threads do not help: python-flint keeps the GIL during a product (two threads ta
 started with 'spawn', so this runs the same way on Windows; keep calls under an  if __name__ == "__main__":  guard.
 
     python3 amp_flint_par.py wf K J [prec_bits] [--procs N] [--fit phys [--mf LO:HI] [--fit-step S] [--phys-prec B]]
-                             [--trunc M [--trunc-even E]] [--out FILE]
+                             [--trunc M [--trunc-even E] [--trunc-fams present|all]] [--fit-logs N [--fit-logs-from K0]]
+                             [--out FILE]
         writes sigF_w<wf>_K<K>_J<J>.json (or FILE), same keys as amp_flint.py (plus 'procs', 'seconds', 'timing',
         'order_times', 'sigma_rad'; with --fit phys also 'sigma_err', 'fit_info', 'mf', 'fit_step', 'phys_prec')
 
@@ -51,7 +52,13 @@ For K >= 13 use --fit phys with prec 640 (see the docstring of fit_phys); the le
    series, and in the de-mixing sum; harmonics 3..M tuned; the phys fit takes the families present, |nu'| <= min(k, M).
    It is a projection applied after each product (tables keep the full width), so with M >= K nothing changes and the
    output is bit for bit the untruncated one. --trunc-even E sets the even cap instead of M + 1 (E = M - 1 is
-   solver/proof/amp_trunc.py's truncation, B_tail.md 4, the control of #1016).
+   solver/proof/amp_trunc.py's truncation, B_tail.md 4, the control of #1016). --trunc-fams all fits every family
+   |nu'| <= k instead of those present.
+6. --fit-logs N (#1016): ln^L j times the main family's terms, L = 1..N, as fixed columns of the phys fit at orders
+   k >= --fit-logs-from (default 2M + 3 with --trunc M). At the first truncated order of a truncated model the
+   sequence is c ln j + S + O(1/j) (at M = 3, k = 9: c = 2.4005e-4 - 9.551e-5 i, the same at J 1000 and 1500); without
+   the log column the fitted S drifts like c ln J, the ln J drift #996 saw with the legacy fit. S is then the constant
+   next to c ln j (that convention fixes it), and c goes to 'fit_logc'. N = 0 is the basis of item 4, unchanged.
 """
 import sys
 import os
@@ -129,12 +136,15 @@ def phys_families(nu, kmax):
     return [nup - nu for nup in range(-kmax, kmax + 1, 2) if nup != nu]
 
 
-def fit_phys(wmid, nu, k, jlo, J, M, mf_lo, mf_hi, step, fit_prec, ys):
+def fit_phys(wmid, nu, k, jlo, J, M, mf_lo, mf_hi, step, fit_prec, logs, ys):
     """Late-order fit of y_j (j = jlo, jlo + step, ..., <= J) with the 'physical' basis: the main family (1 and M terms
     1/(j+g0-1)...(j+g0-m)) plus every family nu' (odd, |nu'| <= k, nu' != nu), each with Mf terms
     Gamma(j+g')/Gamma(j+g0) / ((j+g'-1)...(j+g'-m)), m = 1..Mf. Columns are ordered by level m, so the bases for
     Mf = mf_lo..mf_hi are prefixes of one matrix: one normal matrix N = A^H A (at fit_prec, on midpoints) serves them all.
-    Returns [(Mf, S, relative residual)] with S = the coefficient of the constant column (the multiplier)."""
+    Returns [(Mf, S, relative residual)] with S = the coefficient of the constant column (the multiplier).
+    logs > 0 (--fit-logs): ln^L j times the main family's 1 + M terms, L = 1..logs, as further fixed columns after the
+    main family, for a sequence R_j = c ln j + S + O(1/j) (a truncated model's first truncated order, #1016); then S
+    is returned as (S, c) with c the coefficient of ln j. logs = 0 is the basis above, unchanged."""
     p0 = ctx.prec
     ctx.prec = fit_prec
     try:
@@ -149,6 +159,12 @@ def fit_phys(wmid, nu, k, jlo, J, M, mf_lo, mf_hi, step, fit_prec, ys):
             for m in range(1, M + 1):
                 t = t / (j + g0 - m)
                 main.append(t)
+            lmain = []
+            if logs:
+                lj = arb(j).log()
+                for L in range(1, logs + 1):
+                    lp = lj ** L
+                    lmain.extend(x * lp for x in main)
             lg0 = (j + g0).lgamma()
             levels = []
             ts = []
@@ -162,7 +178,7 @@ def fit_phys(wmid, nu, k, jlo, J, M, mf_lo, mf_hi, step, fit_prec, ys):
                     ts[i] = (gs, t)
                     lev.append(t)
                 levels.extend(lev)
-            rows.append(main + levels)
+            rows.append(main + lmain + levels)
         n = len(rows[0])
         sc = [max(abs(r[c]).mid() for r in rows) for c in range(n)]
         A = acb_mat([[r[c].mid() / sc[c] for c in range(n)] for r in rows])
@@ -175,7 +191,7 @@ def fit_phys(wmid, nu, k, jlo, J, M, mf_lo, mf_hi, step, fit_prec, ys):
         out = []
         nf = len(fams)
         for Mf in range(mf_lo, mf_hi + 1):
-            p = M + 1 + nf * Mf
+            p = M + 1 + logs * (M + 1) + nf * Mf
             Np = acb_mat([[N[i, l] for l in range(p)] for i in range(p)])
             bp = acb_mat([[b[i, 0]] for i in range(p)])
             c = Np.solve(bp, algorithm="approx")
@@ -184,6 +200,8 @@ def fit_phys(wmid, nu, k, jlo, J, M, mf_lo, mf_hi, step, fit_prec, ys):
             r2 = (ny2 - cb.real).mid()
             rel = float((abs(r2) / ny2).sqrt().mid()) if ny2 != 0 else float("nan")
             S = (c[0, 0] / sc[0]).mid()
+            if logs:
+                S = (S, (c[M + 1, 0] / sc[M + 1]).mid())
             out.append((Mf, S, rel))
         return out
     finally:
@@ -197,7 +215,7 @@ def pick_plateau(res):
     for (m0, S0, r0), (m1, S1, r1) in zip(res, res[1:]):
         if not (r1 < r0):
             continue
-        d = float(abs(S1 - S0).mid())
+        d = float(abs((S1[0] if isinstance(S1, tuple) else S1) - (S0[0] if isinstance(S0, tuple) else S0)).mid())
         if best is None or d < best[2]:
             best = (m1, S1, d, r1)
     if best is None:
@@ -216,7 +234,7 @@ def _worker(conn, prec):
             _, args, yblob = msg
             ys = _de_rows(yblob)[0]
             res = fit_phys(*args, ys)
-            conn.send_bytes(pickle.dumps([(m, _ser_rows([[S]]), r) for m, S, r in res],
+            conn.send_bytes(pickle.dumps([(m, _ser_rows([list(S) if isinstance(S, tuple) else [S]]), r) for m, S, r in res],
                                          protocol=pickle.HIGHEST_PROTOCOL))
             ctx.prec = prec
         elif op == "put":
@@ -262,6 +280,12 @@ class AmpPar(Amp):
         self.trunc = kw.pop("trunc", None)
         te = kw.pop("trunc_even", None)
         self.trunc_even = None if self.trunc is None else (self.trunc + 1 if te is None else te)
+        self.trunc_fams = kw.pop("trunc_fams", "present")      # phys families with --trunc: |nu'| <= M, or "all" (<= k)
+        # --fit-logs N: ln^L j companions (L <= N) of the main family in the phys fit at orders k >= fit_logs_from
+        self.fit_logs = int(kw.pop("fit_logs", 0))
+        flf = kw.pop("fit_logs_from", None)
+        self.fit_logs_from = flf if flf is not None else (2 * self.trunc + 3 if self.trunc is not None else 0)
+        self.fit_logc = {}                       # "k_nu" -> coefficient of ln j at the chosen Mf
         super().__init__(wf, K, J, prec=prec, **kw)
         self.params = dict(wf=wf, K=K, J=J, prec=prec, fit_prec=fit_prec, **kw)
         self.prec, self.procs = prec, max(1, int(procs))
@@ -525,9 +549,10 @@ class AmpPar(Amp):
         for nu in nus:
             tab = self.fit_data(nu)[3]
             ys = self._ys(nu, k, tab, self.fit_step)
-            kfam = k if self.trunc is None else min(k, self.trunc)      # the families present (--trunc: |nu'| <= M)
+            kfam = k if (self.trunc is None or self.trunc_fams == "all") else min(k, self.trunc)
+            logs = self.fit_logs if (self.fit_logs and k >= self.fit_logs_from) else 0
             args[nu] = (_ser_rows([[self.w.mid()]]), nu, kfam, self.jlo, self.J, self.M, self.mf[0], self.mf[1],
-                        self.fit_step, self.phys_prec)
+                        self.fit_step, self.phys_prec, logs)
             yb[nu] = ys
         res = {}
         if self.workers:
@@ -540,7 +565,8 @@ class AmpPar(Amp):
                                                  protocol=pickle.HIGHEST_PROTOCOL))
                 for (p, conn), nu in zip(self.workers, batch):
                     out = pickle.loads(conn.recv_bytes())
-                    res[nu] = [(m, _de_rows(Sb)[0][0], r) for m, Sb, r in out]
+                    res[nu] = [(m, (lambda row: row[0] if len(row) == 1 else tuple(row))(_de_rows(Sb)[0]), r)
+                               for m, Sb, r in out]
         else:
             for nu in nus:
                 res[nu] = fit_phys(*args[nu], yb[nu])
@@ -548,6 +574,9 @@ class AmpPar(Amp):
         out = {}
         for nu in nus:
             Mf, S, err, rel = pick_plateau(res[nu])
+            if isinstance(S, tuple):
+                S, c = S
+                self.fit_logc[f"{k}_{nu}"] = c
             self.fit_info[f"{k}_{nu}"] = (Mf, err, rel)
             out[nu] = (S, err)
         return out
@@ -713,6 +742,9 @@ def main(argv):
     out = _opt(argv, "--out", None)
     trunc = _opt(argv, "--trunc", None, int)
     trunc_even = _opt(argv, "--trunc-even", None, int)
+    trunc_fams = _opt(argv, "--trunc-fams", "present")
+    fit_logs = _opt(argv, "--fit-logs", 0, int)
+    fit_logs_from = _opt(argv, "--fit-logs-from", None, int)
     import os
     sys.path.append(os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..", "hp"))
     from raw_out import pop_allow, require_raw
@@ -725,8 +757,10 @@ def main(argv):
     kw = {}
     if fit != "legacy":
         kw = dict(fit=fit, mf=tuple(int(x) for x in mf.split(":")), fit_step=fit_step, phys_prec=phys_prec)
+        if fit_logs:
+            kw.update(fit_logs=fit_logs, fit_logs_from=fit_logs_from)
     if trunc is not None:
-        kw.update(trunc=trunc, trunc_even=trunc_even)
+        kw.update(trunc=trunc, trunc_even=trunc_even, trunc_fams=trunc_fams)
     A = AmpPar(wf, K, J, prec=prec, procs=procs, **kw)
     A.partial_path = out + ".partial.json"     # sigma so far after each odd order, replaced at each one
     A.partial_meta = {"wf": wf, "K": K, "J": J, "prec": prec}
@@ -745,7 +779,10 @@ def main(argv):
         rec.update({"fit": fit, "mf": list(A.mf), "fit_step": A.fit_step, "phys_prec": A.phys_prec,
                     "sigma_err": A.sigma_err, "fit_info": A.fit_info})
     if trunc is not None:
-        rec.update({"trunc": trunc, "trunc_even": A.trunc_even})
+        rec.update({"trunc": trunc, "trunc_even": A.trunc_even, "trunc_fams": A.trunc_fams})
+    if A.fit_logs:
+        rec.update({"fit_logs": A.fit_logs, "fit_logs_from": A.fit_logs_from,
+                    "fit_logc": {k: [mp.nstr(to_mp(c).real, 20), mp.nstr(to_mp(c).imag, 20)] for k, c in A.fit_logc.items()}})
     json.dump(rec, open(out or f"sigF_w{wf:.4f}_K{K}_J{J}.json", "w"))
 
 
