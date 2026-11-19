@@ -91,10 +91,10 @@ this review's certification (`p2c_cert_gamma0.py`, `p2c_cert_gamma0.log`).
 | entry | certificate | here | the difference |
 |---|---|---|---|
 | Γ⁰_{V,S} | 0.07424 | 0.07333 | the certificate integrates dy/y over (1, 1 + δ/2] as δ/2, here as ln(1 + δ/2) |
-| Γ⁰_{S,V}, Γ⁰_{S,c} | 4.21×10⁻³², 6.58×10⁻³¹ | 3.39×10⁻³², 5.30×10⁻³¹ | P1's secant coefficients are 1.2 to 1.25 times P2b's, which is conservative |
+| Γ⁰_{S,V}, Γ⁰_{S,c} | 4.21×10⁻³², 6.58×10⁻³¹ | 3.39×10⁻³², 5.30×10⁻³¹ | the ratio, 1.242, is the kernel factor (next row). With it removed, the secant coefficients agree to four digits (4.2110×10⁻³² and 6.5832×10⁻³¹) |
 | the β row and column | Γ⁰_{β,V} = 5.34, Γ⁰_{β,c} = 27.2; Γ⁰_{S,β} = 3.7×10⁻⁶³ | 4.3×10⁻³², 2.2×10⁻³¹; 3.6×10⁻³¹ | the certificate's shape is s_β = 1/n, here 1: a diagonal scaling, which leaves the Perron root unchanged |
 | Γ⁰_{c,S} | 4.24×10⁻³³ | 5.17×10⁻³⁵ | the certificate's c row carries F_c's pseudo-component (fcpL × cpj), which P2b's F_c node does not have (§2.4) |
-| the kernel factor | (1 + h_H)/(1 − h_H), h_H over the whole segment, 0.108 | the same form, h_H on L, 9.7×10⁻³² | both use the full decay rate, which m = 1 allows |
+| the kernel factor | (1 + h_H)/(1 − h_H) = 1.242, with h_H = 0.108 over the whole segment | the same form, with h_H on L, 9.7×10⁻³², so 1.000 | both use the full decay rate, which m = 1 allows. The certificate's h_H is conservative on L |
 | Perron root | 1.08×10⁻¹⁶ | 1.03×10⁻¹⁶ | agreement to 5% |
 | printed θ₀ | 5.84×10⁻⁵ | 1.0×10⁻¹² | the certificate's power iteration floors each weight at 10⁻¹², and the tight weight needs a ratio of about 4×10²³ (`p2c_cert_gamma0.log`). Its θ₀ is a valid bound, only loose. P2_review.md §3.3's 1.8×10⁻⁵ is a bound of the same kind |
 
