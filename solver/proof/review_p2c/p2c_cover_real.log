@@ -1,0 +1,8 @@
+P2c covering check (lemma 6b1, M = 1): runs /Users/nathan/Source/choptuik-large-d-991/solver/proof/lemma6b1_runs, plant = None
+G1 data: 12 rows, 178 discs, 178 tiles in the gluing: ok
+G2 closed tiles in their open discs: ok (smallest margin in r^2 - d^2: 21.36)
+G3 open tiles cover A1: ok
+G4 A1 in polar cells, each in one open disc: ok (8930 cells proven, 8930 examined)
+G5 gluing: ok (566 pieces, 450 proven links among pieces, 388 of them in spanning trees)
+G6 every partner earlier, all reached from (0, 0), s0 in G0: ok
+=> PASS (1 s)
