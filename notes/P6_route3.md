@@ -533,7 +533,7 @@ de-mixing) fails every target, with ratios 1.29 to 2.01, and exits 1.
 ### 10.5 What is not covered
 
 1. **The head j < j₀ = 2ν.** That is about 2ν terms of each Darboux sum, where the 1/j expansion does not apply. The
-   bound says nothing there, and it is what (★)'s lowest-order form still needs.
+   bound says nothing there, and it is what (★)'s lowest-order form still needs. §11 certifies it.
 2. **The untuned label ν + 2.** Its weight P ≈ e^{πω} ≈ 1.6×10⁵ is in C_{ν+2}. In the tuned problem that label's own
    family is removed, so the constant there is not this one (§10.4).
 3. **Orders beyond one A² step**, and the whole series in the amplitude at A* (B_tail_M7.md §8.3).
@@ -551,4 +551,167 @@ python3 route3_bound.py --check --mutate=plant    # planted violation: FAIL, exi
 python3 route3_bound.py --check --mutate=psi      # h2 x 3/2: fails at nu = 3, 5, 7, exit 1
 python3 route3_tuned.py 7 800                     # 10.4 (~5 min): the form holds on amp_flint's tuned sequences; PASS
 python3 route3_tuned.py 7 800 --mutate=demix      # control: FAIL, exit 1
+```
+
+## 11. The head j < 2ν (#1015)
+
+Script `solver/proof/route3_head.py`, on `route3_cancel.py`'s exact recursion (`dr_builder`) and §10's lemmas. The
+object is §10's one-step model, with one perturbation of label μ ∈ {ν − 2, ν, ν + 2} and amplitude p. The normalised
+multiplier is R₀ + Σ_{j≥0} ΔR_j/K_ν. §10 bounds the sum over j ≥ j₀ = max(2ν, 10), and this section bounds the head,
+0 ≤ j < j₀. Written 2026-11-19 for issue #1015.
+
+**Result.** Let H_μ(ν) = Σ_{j<j₀}|ΔR_j/K_ν|/|p|. For every odd ν ≥ 3 (*certified*)
+
+```math
+H_\mu(\nu) \le \Lambda^{\rm head}_\mu\,e^{0.736\nu},\qquad \Lambda^{\rm head}_{\nu-2} = 0.011012,\quad \Lambda^{\rm head}_\nu = 0.058818,\quad \Lambda^{\rm head}_{\nu+2} = 3.3073 .
+```
+
+- **So the head closes uniformly in ν.** The sup is reached at ν = 3. For ν ≤ 99 H comes from the exact recursion in
+  ball arithmetic. Beyond, a closed form from the hand lemma B7 gives e^{−0.736ν}H ≤ 1.5×10⁻²⁶, 3.1×10⁻²⁶ and 2.5×10⁻²¹
+  (§11.3).
+- **The whole Darboux sum, with §10's tail** (*certified*): sup_ν e^{−0.736ν} Σ_{j≥0}|ΔR_j/K_ν|/|p| ≤ 1.0534, 2.1427 and
+  1.7463×10⁵. The tail's C_μ ν/(j₀ − 1) dominates these, against the head's 0.011012, 0.058818 and 3.3073. The last
+  constant carries the untuned weight P ≈ 1.6×10⁵ (§10.5 item 2).
+- **The head does not grow with ν at all** (numerical evidence beyond the certificate, §11.1). H falls from 0.100 to
+  0.034 for μ = ν − 2, from 0.535 to 0.406 for μ = ν, and levels off near 15 for μ = ν + 2 over ν = 3 to 99. The tail's
+  form C_μ ν/j² also holds throughout the head, at most 8.1×10⁻³ of the bound.
+- **Checked against the exact recursion** at ν = 3 to 21, at every head term, with no violation (§11.4). The worst
+  ratios actual/bound are 0.024, 0.024 and 8.4×10⁻⁶. A planted violation is caught in all 30 runs.
+- No cancellation is needed. The head is a finite sum, so the triangle inequality on every convolution term suffices.
+  The cancellations of §2 matter only for the tail.
+
+### 11.1 Scoping
+
+`python3 route3_head.py --scope` (256 bits, about 3 min). It computes the exact recursion over the head for odd ν = 3 to
+21, one perturbation at a time, per unit |p|. "Termwise" bounds every convolution term separately, using either exact
+|T| or §10's ν-free reduction B3 (with B2's weights):
+
+| ν | μ | j₀ | max_{1≤j<j₀} j²\|ΔR_j/K\|/ν (at j) | / C_μ | H | signed head | termwise, exact T | termwise, B3 |
+|---|---|---|---|---|---|---|---|---|
+| 3 | ν − 2 | 10 | 0.003511 (1) | 1.2×10⁻⁴ | 0.1002 | 0.09806 | 0.1576 | 6.189 |
+| 3 | ν | 10 | 0.3161 (9) | 5.6×10⁻³ | 0.5351 | 0.4065 | 1.492 | 12.52 |
+| 3 | ν + 2 | 10 | 257.2 (9) | 5.4×10⁻⁵ | 30.09 | 18.7 | 186.8 | 8.143×10⁵ |
+| 9 | ν − 2 | 18 | 0.003075 (4) | 1.1×10⁻⁴ | 0.04914 | 0.04873 | 0.163 | 15.38 |
+| 9 | ν | 18 | 0.4121 (17) | 7.3×10⁻³ | 0.4209 | 0.3687 | 0.7201 | 32.88 |
+| 9 | ν + 2 | 18 | 61.15 (17) | 1.3×10⁻⁵ | 9.881 | 7.209 | 89.15 | 2.81×10⁶ |
+| 15 | ν − 2 | 30 | 0.003531 (7) | 1.2×10⁻⁴ | 0.04205 | 0.04174 | 0.2545 | 33.66 |
+| 15 | ν | 30 | 0.4466 (29) | 7.9×10⁻³ | 0.414 | 0.3661 | 0.6864 | 70.62 |
+| 15 | ν + 2 | 30 | 79.69 (29) | 1.7×10⁻⁵ | 11.79 | 8.424 | 166.6 | 6.152×10⁶ |
+| 21 | ν − 2 | 42 | 0.003746 (10) | 1.3×10⁻⁴ | 0.03922 | 0.03895 | 0.3522 | 59.94 |
+| 21 | ν | 42 | 0.4616 (41) | 8.1×10⁻³ | 0.4112 | 0.3649 | 0.673 | 124.3 |
+| 21 | ν + 2 | 42 | 89.5 (41) | 1.9×10⁻⁵ | 12.76 | 9.031 | 245.8 | 1.08×10⁷ |
+
+Fitted over ν = 9 to 21, H grows like ν^−0.26, ν^−0.03 and ν^0.30. The exact termwise bound grows like ν^0.91, ν^−0.08
+and ν^1.20, and the B3 termwise bound like ν^1.61, ν^1.57 and ν^1.59. Every finite-sum bound grows polynomially, so
+e^{−0.736ν} absorbs it. That was the scoping's question, and it decided to certify. The largest term is at j = 0 for μ =
+ν − 2 and ν, where the near-end, de-mixing and ψ terms all have their full size. For μ = ν + 2 it is at j = j₀ − 1,
+where the weight ρ^{ν+2}_j has grown toward P.
+
+### 11.2 The lemma B7, and its closed form
+
+**B7 (the head, term by term).** Let t₁ = r₀, A₀ = (2 + t₁)²/8 and c_j = |2j + 2 + iνω|/(4(j + 1)). N_μ = 3, 6, 3 is the
+number of (lapse pair, y label) triples with one perturbation factor, and n_μ = 1, 2, 1 of them have the perturbation
+in the y slot. Then for every j ≥ 0 and odd ν ≥ 3
+
+```math
+\frac{|\Delta R_j/K_\nu|}{|p|} \le P_\mu A_0\Big[c_j\,\frac{n_\mu\Sigma_\mu(j) + (N_\mu - n_\mu)\Sigma_1(j)}{r_{j-1}r_j} + \frac{N_\mu H_{j+1}}{r_j}\Big] + D_j ,\qquad \Sigma_\lambda(j) = \sum_{i=1}^{j}\frac{|2(j-i)+1+i\lambda\omega|}{i} ,
+```
+
+with the first term absent for j = 0, H_n the harmonic numbers, and P_μ as in B3. D_j is the de-mixing and ψ terms,
+Σ_r 2|E_r| w_r + h₂(1/|α_ν + j| + 1/|β_ν + j|), with |ρ^r| ≤ w_r from B2 (w = 1 for |λ_r| ≤ ν and P_{ν+2} for
+λ_r = ν + 2).
+
+*Proof.* In Darboux form (D_entire.md §6.1), ΔR_j/K_ν = −b_j/T^ν_{j+1} + Σ_r E_r d₀^r (ρ^r_{j+1} − ρ^r_j) plus the ψ
+term for λ_r = ν. Here b_j = c_j Ss_j + Sd_{j+1}, which is `route3_cancel.order3`'s d̃_{j+1} = a^ν_j d̃_j − b_j. Ss_j is
+the sum over triples and 1 ≤ i ≤ j of g_i s^r_{j−i}, Sd_{j+1} the same over 1 ≤ i ≤ j + 1 of g_i d^r_{j+1−i}, and g_i =
+(8i)⁻¹ Σ_{l<i} d^p_l d^q_{i−1−l}.
+
+1. Every input has |d₀| = 1 per unit amplitude. So by B3 each product of three inputs, divided by |T^ν_{j+1}|, is at
+   most P_μ t_l t_{i−1−l} t_n/t_{j+1}.
+2. Σ_l t_l t_{i−1−l} ≤ (2 + t₁)t_{i−1} (D_entire.md §6.3). Then t_{i−1}t_n ≤ (2 + t₁)t_{i−1+n}, which is one term of
+   the same sum.
+3. For Ss, i − 1 + n = j − 1, and t_{j−1}/t_{j+1} = 1/(r_{j−1}r_j). For Sd it is j, and t_j/t_{j+1} = 1/r_j.
+4. |s^r_n| = |2n + 1 + iλ_rω||d^r_n|, and Σ_{i≤j+1} 1/(8i) = H_{j+1}/8.
+5. The de-mixing and ψ terms are bounded by B2 and |α_ν + j| ≥ νω/2. ∎ (*proved*)
+
+**The closed form.** The bound sums over the head to at most
+
+```math
+G_\mu(\nu) = P_\mu A_0 N_\mu\,\ell\,\Big[T_1 + (\nu+2)\omega + \frac{\nu\omega}{2}S_a + \frac{\nu(\nu+2)\omega^2}{4}S_b + \frac1{r_0} + \ln(2j_0-1)\Big] + j_0\bar D ,
+```
+
+with ℓ = 1 + ln j₀, T₁ = 2 + ln(2j₀ − 1), S_a = Σ_{j≥1} 1/((j + 1)(j − ½)) = (2/3)(1 + 2 ln 2) and
+S_b = Σ_{j≥1} 1/((j + 1)(j² − ¼)) = (8/3)(1 − ln 2). D̄ is D_j with 1/|α_ν + j| ≤ 2/(νω), and P_μ ≤ P_sup for μ = ν + 2.
+It follows from these inequalities:
+
+- c_j ≤ ½ + νω/(4(j + 1)), and |2(j − i) + 1 + iλω| ≤ 2(j − i) + 1 + (ν + 2)ω;
+- H_j ≤ 1 + ln j₀ on the head, r_{j−1}r_j ≥ j² − ¼ and r_j ≥ j + ½ (B1);
+- Σ_{j=1}^{N} 1/(j − ½) ≤ 2 + ln(2N − 1), Σ_{j=1}^{N} 1/(j + ½) ≤ ln(2N + 1) (integral comparison) and
+  Σ_{j≥1} 1/(j² − ¼) = 2 (telescoping);
+- S_a and S_b by partial fractions, with ψ(2) − ψ(½) = 1 + 2 ln 2 and ψ(3/2) = 2 − γ − 2 ln 2 (DLMF §5.4).
+
+Every piece of G is nonnegative and of the form ν^a L₁L₂, with a ≤ 2 and L₁, L₂ logarithms of ν, or a factor that falls
+with ν. So d ln(e^{−0.736ν} G)/dν ≤ −0.736 + 4/ν < 0 for ν ≥ 7, and sup_{ν>ν₁} e^{−0.736ν} G = e^{−0.736(ν₁+2)} G(ν₁ +
+2). (*proved*; `--lemmas` checks S_a, S_b, the telescoping sum and the two inequalities numerically, and samples the
+decrease.)
+
+### 11.3 The certified constants
+
+`python3 route3_head.py --certify` (about 10 min, one process at nice 10). For odd ν = 3 to 99, H_μ(ν) is the sum of the
+upper ends of the exact recursion's balls at 512 bits. The relative-radius guard of §10.3 never asked for more. Beyond
+ν = 99, the closed form at ν = 101 is used:
+
+| ν | H, μ = ν − 2 | H, μ = ν | H, μ = ν + 2 |
+|---|---|---|---|
+| 3 | 0.10019 | 0.53510 | 30.088 |
+| 5 | 0.065829 | 0.43644 | 7.1812 |
+| 11 | 0.045827 | 0.41776 | 10.690 |
+| 21 | 0.039215 | 0.41116 | 12.761 |
+| 41 | 0.035921 | 0.40770 | 14.103 |
+| 99 | 0.033976 | 0.40557 | 15.025 |
+
+| perturbation | sup e^{−0.736ν} H, ν ≤ 99 (at ν) | e^{−0.736ν} G at ν = 101 | Λ^head | sup e^{−0.736ν}(H + C_μ ν/(j₀ − 1)) (at ν) |
+|---|---|---|---|---|
+| ν − 2 | 0.011012 (3) | 1.53×10⁻²⁶ | **0.011012** | **1.0534** (3) |
+| ν | 0.058818 (3) | 3.07×10⁻²⁶ | **0.058818** | **2.1427** (3) |
+| ν + 2 | 3.3073 (3) | 2.52×10⁻²¹ | **3.3073** | **1.7463×10⁵** (3) |
+
+The last column uses §10's Σ_{j≥j₀} |ΔR_j/K_ν| ≤ C_μ|p| ν/(j₀ − 1), with the J₀ = 10 constants. Beyond ν = 99 it uses
+the same closed form, and it is at most 1.5×10⁻²⁶, 3.1×10⁻²⁶ and 2.5×10⁻²¹ there.
+
+### 11.4 The checks
+
+- **B7 against the exact recursion** (`--check`, 256 bits, about 2 min). At every head term of odd ν = 3 to 21 and each
+  perturbation there is no violation. The worst ratios actual/bound are 0.02352 (μ = ν − 2), 0.02388 (ν) and 8.35×10⁻⁶
+  (ν + 2).
+- **The closed form above the per-term sum.** Σ_{j<j₀} B₇ ≤ G at every odd ν = 3 to 201. The worst ratios are 0.028,
+  0.032 and 0.037, so G is loose. That is harmless where it is used, beyond ν = 99.
+- **Planted violation.** `--check --mutate=plant` adds three times the bound at five head j per run. It is caught in all
+  30 runs, five violations each, exit 1.
+- **Control of the closed form.** `--check --mutate=gsmall` divides G by 100, and the second check then fails at 291
+  points (ratios 2.79 to 3.70), exit 1.
+
+### 11.5 What is not covered
+
+The same limits as §10.5 items 2 to 4 apply:
+
+- The untuned label ν + 2, whose P is in the third constant.
+- Orders beyond one A² step.
+- The physical ω only.
+
+Tuned inputs (§10.4) enter the head as they enter the tail. Under (H1) the inputs keep an envelope, and B7 holds with
+|p| replaced by X̄_μ. The head needs no cancellation, so (H2) is not used here.
+
+### 11.6 Reproduce
+
+From `solver/proof/` with venv-314 (python-flint 0.9.0, FLINT 3.6.0). The logs are in folder I1015-mac of the raw-data
+repository.
+
+```
+python3 route3_head.py --scope                     # 11.1 (~3 min)
+python3 route3_head.py --lemmas                    # 11.2's closed forms and inequalities; PASS
+python3 route3_head.py --check                     # 11.4 (~2 min); PASS, exit 0
+python3 route3_head.py --check --mutate=plant      # planted violation: FAIL, exit 1
+python3 route3_head.py --check --mutate=gsmall     # G / 100: FAIL, exit 1
+python3 route3_head.py --certify                   # 11.3 (~10 min): Lambda_head and the whole sum's constants
 ```
