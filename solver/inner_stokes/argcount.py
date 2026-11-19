@@ -92,6 +92,9 @@ def f_M1(args):
 
 _PATH = {}
 _BOUND = {}            # this worker's point: right-hand-side calls per integration, wall-clock deadline (#1021)
+NOISE3_CAP = 1e7       # --m3noisecap's default, from data (#1021): valued points reach noise_3 1.9e3 (A 4.36,
+                       # xi1 0.175), false starts 2.0e10-4.8e10; above A 4.5 real noise passes the cap before xi1
+                       # 0.17 (A 5.11: 9.5e6 at 0.19, 2.5e8 at 0.18), so there it does not separate the two
 
 
 class PointBound(Exception):
@@ -668,11 +671,13 @@ class Analytic:
 class _Synth3:
     """a synthetic M = 3 residual for _continue3's acceptance: linear in v about S_3's zero v*(xi1) with a small
     rtol-proportional error inside |v - v*| < 0.05, and far from it a constant |r_3| 4e7 whose two tolerances differ
-    by 2e10 (an unresolved integration); nested.inner's start lands there at 0.25 and near v* at 0.2"""
+    by 2e10 (an unresolved integration); nested.inner's start lands there at 0.25 and near v* at 0.2; cgood sets
+    the error inside (noise_3 = 0.9e-12 cgood), jscale the slope"""
     Jt = np.array([[5e3, 1e2], [-3e2, 4e3]])
 
-    def __init__(self):
+    def __init__(self, cgood=1e6, jscale=1.0):
         self.rtol, self.calls = 1e-12, []
+        self.cgood, self.Jt = cgood, _Synth3.Jt * jscale
         synth = self
 
         class Inner:
@@ -689,7 +694,7 @@ class _Synth3:
         self.Inner().jumps()                       # _res3 swaps jumps() to set another rtol
         v, d = x[2:], x[2:] - self.vstar(r1)
         if np.abs(d).max() < 0.05:
-            r3 = self.Jt @ d + self.rtol * 1e6
+            r3 = self.Jt @ d + self.rtol * self.cgood
         else:
             r3 = np.full(2, 4e7) + 2e10 * self.rtol / 1e-12
         return np.array([1 + v[0], 2 + v[1], r3[0], r3[1]])
@@ -706,7 +711,7 @@ def selftest_m3accept(mutate=None):
     S = _Synth3()
     _BOUND.clear()
     if mutate != "nocap":
-        _BOUND["noise3"] = 1e2
+        _BOUND["noise3"] = NOISE3_CAP
     got, trail, stops = _continue3(S, S, 3.66, 0.9, (0.0, -0.1), 0.17)
     _BOUND.clear()
     err = float(np.abs(got[0] - S.vstar(0.17)).max()) if got else float("inf")
@@ -720,7 +725,7 @@ def selftest_m3accept(mutate=None):
     if mutate == "starts":
         _MUTATE.add("starts")
     _BOUND.clear()
-    _BOUND.update(noise3=1e2, starts=[0.2, 0.25])
+    _BOUND.update(noise3=NOISE3_CAP, starts=[0.2, 0.25])
     got, trail, stops = _continue3(S, S, 3.66, 0.9, (0.0, -0.1), 0.17, starts=_starts())
     _BOUND.clear()
     _MUTATE.clear()
@@ -728,7 +733,21 @@ def selftest_m3accept(mutate=None):
     ok2 = err < 1e-9 and trail[0] == 0.2 and 0.25 not in S.calls and not stops
     print(f"selftest M = 3 start order 0.2, 0.25: starts evaluated {S.calls}, trail {trail}, stops {stops}, "
           f"end |v - v*| {err:.2g}: {'PASS' if ok2 else 'FAIL'}")
-    return ok and ok2
+    # a valued point's noise_3 near 1e3 (as at larger A): the default cap accepts it and still skips the false start;
+    # --mutate=lowcap sets the cap to 1e2, which rejects it, so the point gets no value
+    S = _Synth3(cgood=1.1e15, jscale=1e5)
+    _BOUND.clear()
+    if mutate != "nocap":
+        _BOUND["noise3"] = 1e2 if mutate == "lowcap" else NOISE3_CAP
+    got, trail, stops = _continue3(S, S, 3.66, 0.9, (0.0, -0.1), 0.17)
+    _BOUND.clear()
+    z = S.vstar(0.17) - np.linalg.solve(S.Jt, np.full(2, 1e-12 * S.cgood))   # S_3's zero on the rtol 1e-12 path
+    err = float(np.abs(got[0] - z).max()) if got else float("inf")
+    n3 = float(_floor3(S, 3.66, 0.9, got[0], 0.17)[2:].max()) if got else float("nan")
+    ok3 = err < 1e-9 and trail[0] == 0.2 and 0.25 in S.calls
+    print(f"selftest M = 3 acceptance at noise3 {n3:.3g}: trail {trail}, stops {stops}, end |v - v*| {err:.2g}: "
+          f"{'PASS' if ok3 else 'FAIL'}")
+    return ok and ok2 and ok3
 
 
 def selftest(mutate=None):
@@ -784,12 +803,12 @@ def main():
                          "recorded without value, with the cause; 0 for none (#1021)")
     ap.add_argument("--m3wall", type=float, default=3600.0,
                     help="M = 3: seconds per point past which it is recorded without value, with the cause; 0 for none")
-    ap.add_argument("--m3noisecap", type=float, default=1e2,
+    ap.add_argument("--m3noisecap", type=float, default=NOISE3_CAP,
                     help="M = 3: the continuation accepts a radius only if noise_3 is below this as well; 0 for none")
     ap.add_argument("--selftest", action="store_true")
     ap.add_argument("--m3starts", default="0.25,0.2",
                     help="M = 3: the continuation's start radii in the order tried; those at or below xi1 are skipped")
-    ap.add_argument("--mutate", default=None, choices=["conj", "nosplit", "norecount", "nocap", "starts"])
+    ap.add_argument("--mutate", default=None, choices=["conj", "nosplit", "norecount", "nocap", "starts", "lowcap"])
     a = ap.parse_args()
     if a.selftest:
         return 0 if selftest(a.mutate) else 1
