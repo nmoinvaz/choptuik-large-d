@@ -101,6 +101,168 @@ mapped samples), the plan's length on mapped grids (it multiplies the cost of a 
 uniform M 48 state at D 4 is too under-resolved, 4×10⁻⁷ in Δ, to be mapped onto the same M). These runs need more than
 the Mac's two threads until T103 ends.
 
+## Step 5, the measurement (#1033, 2026-11-19)
+
+`hp/tau_map_gain.py` measures, for each arctan map L, the modes M′ the mapped grid needs for Δ within 10⁻¹² of the
+uniform grid's, the steps of its Taylor plan, and the cost of a Newton call against the uniform grid's. A call is 99.5%
+Jacobian (appendix A, 1.2), and a Jacobian costs the plan's steps times c(M), the seconds per step, which grows about
+like M³. The solves need hp's built module, so they run on a Linux runner (the commands below). What needs no kernel
+has been run. The results section is filled from the runner's raw folder `I1033-<machine>/`.
+
+### What the stored states say
+
+`cd hp && python3 tau_map_gain.py stored <states>` on the uniform states (raw `T82-win/states`, `T100-win2/states`,
+the stored states at D 3.0475 and 3.044375; each state's stored plan):
+
+| D | M | Δ − Δ(previous M) | plan steps | of them in 0.01 → 0.02 (the valley) | from x 0.6 to the horizon |
+|---|---|---|---|---|---|
+| 3.0475 | 256 | | 1557 | 850 | 273 |
+| 3.0475 | 320 | −1.95×10⁻⁹ | 1619 | 992 | 231 |
+| 3.0475 | 384 | −3.77×10⁻¹¹ | 1623 | 942 | 277 |
+| 3.044375 | 320 | | 2832 | 2150 | 232 |
+| 3.044375 | 384 | −7.67×10⁻¹¹ | 2796 | 2070 | 278 |
+
+- At M 384 the valley segment holds 58% (3.0475) and 74% (3.044375) of the plan. Its steps hardly change with M
+  (850, 992 and 942 at M 256, 320 and 384), so they follow the solution's regularity near x = c (LOW_D.md 17), not the
+  top harmonic's stiffness. A mapped grid that resolves the same solution should then keep the plan's length. This
+  is the hypothesis the runs test.
+- At 3.0475 the three levels converge geometrically, with a ratio of differences of 0.019, which puts Δ(384) about
+  7.4×10⁻¹³ from its limit. That figure is an estimate that assumes geometric convergence, not a bound. So the uniform
+  grid needs about M 384 for Δ to 10⁻¹², and Δ(384) can serve as the reference at that level. At 3.044375 only two
+  levels exist, and the 10⁻¹² criterion is judged against Δ(384), whose own error is not estimated.
+- `stored` on the D 3.7 ladder (hp/data/lowD_states, highm15) gives the first check's bound: |Δ(128) − Δ(96)| =
+  3.36×10⁻¹¹, while Δ(128) lies 3.2×10⁻¹⁵ from Δ(256).
+
+### Mode counts for every L
+
+The study's scan, extended to L 0.9 to 0.2 (`cd hp && python3 tau_map_study.py RAW --state <state> --eps
+1e-4,1e-3,1e-5 --sine "" --arctan 0.9,0.8,0.7,0.6,0.5,0.4,0.3,0.2 --out data/tau_map_study_L_D3.0444.json`, and
+`_D3.0475.json` for the other state, the raw clone as RAW), gives these factors of fewer modes for the slowest block
+at eps 10⁻⁴ and D 3.044375:
+
+| L | 0.9 | 0.8 | 0.7 | 0.6 | 0.5 | 0.4 | 0.3 | 0.2 |
+|---|---|---|---|---|---|---|---|---|
+| fewer modes | 1.11 | 1.22 | 1.39 | 1.60 | 1.89 | 2.35 | 2.76 | 2.95 |
+
+At the other two levels and at D 3.0475 the factors agree to within 0.08 for L ≥ 0.3. The gain is about 1/L down to
+L 0.4 and saturates below 0.3, where the pulse's motion across the nodes sets the limit (reading (ii) above). The
+kernel builds M = 128, 160, 192, 256, 320 and 384 in this range (`hp/src/python.rs`, `make_ctx`). Dividing 384 by the
+factor and rounding up to one of these sizes predicts M′ = 384 at L 0.9, so no gain is available there, 320 at L 0.8
+and 0.7, 256 at 0.6 and 0.5, 192 at 0.4 and 160 at 0.3. Those are the study's proxy. The runs measure M′ by Δ itself.
+
+Two risks follow from the map's shape. At the same M the mapped grid's top harmonics are stiffer by up to 1/L, which
+is why the earlier L 0.7 solve overflowed on the uniform plan. At M′ ≈ L·M the stiffness is the uniform grid's
+again. Also, the map is centred on the centre field's pulse (s0 1.83–1.96), so the valley's τ point (grid point 27 of
+384, θ ≈ 0.22) lies near s0 − π/2, where the grid is sparsest (spacing 1/L times the uniform one). Whether the valley
+needs τ resolution there is part of what the runs show.
+
+### Design
+
+- **Starts.** The uniform M 384 state is interpolated onto the mapped grid in double-double (`tau_map.interp_dd`, the
+  folded periodic sinc kernel built in mpmath). `map_state` keeps only f64, and a converged state's plan needs its lo
+  parts: rounded to f64 it doubles the steps (`lowD_highM.py`, `plan_of`).
+- **Solve.** These are the legs' two passes, on the mapped grid. Pass 1 runs on the start's own plan to |F| < 10⁻¹⁴.
+  Pass 2 runs on the plan of the pass-1 state to 10⁻²⁸. Both use the f64 Jacobian in block storage. Then the converged
+  state's own plan is made, the lean plan a leg reuses. A start is planned only after its residual is finite on a gate
+  plan: the stored plan, then that plan split 2, 4 and 8 times, then the valley split further (`gate_plan`). Planning
+  from a state that is nan does not return.
+- **Cost.** The projected cost of a call is the own plan's steps times c(M′), against the uniform grid's own plan at
+  M 384. It is given three ways. The first is the M³ law. The second is c(M) from `cost`: one f64 Newton call per
+  repetition on a converged state at each M, on that state's own plan, as wall seconds per plan step on the same
+  machine. The third is measured: the wall seconds of the pass-2 calls against those of the L 1 solve at M 384, also
+  on the same machine. A plan made at another M is refused (`require_plan_at`), because its steps are too long for the
+  tangents of a larger M. On win2 the D 3.7 state resampled to M 320 on the M 256 plan gave a nan pivot; the control
+  `cost --mutate plan_m` exits 1. `Solver.step_timing()` is not used. In block storage its second entry is only the
+  staircase LU's fill, a copy, because multishoot computes every block's columns before the factorization (multishoot
+  3.3.0, `jacobian_staircase`). So since #523 its four entries no longer add up to the call.
+- **Modes needed.** For each L this is the smallest M′ whose Δ, and the Δ of every larger M′ of that L, lies within
+  10⁻¹² of the uniform Δ(384).
+
+### Checks, fixed before the runs
+
+1. `tau_map_gain.py selftest` (no kernel, run on the Mac). `interp_dd`'s identity map returns a state bit for bit, and
+   planted band-limited fields pass through five grid pairs within 4.6×10⁻³² (bound 10⁻²⁸). One pair has a target
+   point 10⁻¹⁷ from a source point, because a map's centre is a float. The mapped d/dθ of a planted field is exact to
+   2.9×10⁻³¹ (bound 10⁻²⁶), and the mapped phase row reproduces the uniform sum to 8.7×10⁻³³. The exact values come
+   from the map's closed form and a Newton inverse, not from `tau_map`'s own map. Part 3 runs `report` on planted solve
+   records. A failed identity solve must make it exit 1, and a failed larger M′ must leave no smaller M′ certified. Part
+   4 tests the resume rules: a checkpoint of another configuration is refused, a converged result not yet published is
+   recovered, and only a converged, saved result is reused. Each of the eight controls makes it fail:
+   - `lo`, the lo parts dropped (up to 8.5×10⁻¹⁷);
+   - `parity`, the odd kernel for even fields (0.9–1.4);
+   - `dps40`, the interpolation matrix at 40 digits (2.1×10⁻²⁵ at the near point);
+   - `inverse`, the inverse map skipped (1.3–1.5);
+   - `gp`, the derivative rows without 1/g′ (0.31);
+   - `phase_gp`, the phase row without g′ (0.19);
+   - `lenient`, `report` dropping failed records, as it did at first (it exits 0 and certifies M′ 80 past a failed
+     M′ 96);
+   - `unbound`, any checkpoint restored and any record with Δ reused, as at first.
+2. `check` at D 3.7. The mapped Δ at M 128 must equal the uniform Δ(128) within the uniform grid's own resolution error
+   there, 3.36×10⁻¹¹, at L 0.9, 0.7 and 0.5. The control `--mutate gp` must exit 1. `--mutate phase_gp` is no control,
+   because the phase row fixes only the τ origin. Dropping its g′ moves Δ by no more than the resolution error, and
+   only the derivative rows' g′ can be tested through Δ.
+3. `report` at low D. For each L at its largest M′, |Δ − Δ(384)| must lie within the uniform grid's own resolution
+   error |Δ(384) − Δ(320)|, which is 3.77×10⁻¹¹ at 3.0475 and 7.67×10⁻¹¹ at 3.044375.
+4. The identities. An L 1 solve from the stored M 384 state must converge to its stored Δ within 10⁻²⁰, with its own
+   plan within 10% of the stored plan's steps. An L 1 solve at M 320 from the M 384 state must reach the stored
+   Δ(320) within 10⁻²⁰. The plan bound was 1% at first and is 10%: the plan's tolerance (10⁻³⁰) sits near
+   double-double's resolution, so copies of one converged state that differ below 10⁻²⁵ get plans a few percent
+   apart (the Mac's D 3.7 pilot). Plan differences of that size between grids are noise. The control
+   `report --mutate delta` moves every stored Δ by 10⁻¹⁰ and must exit 1.
+
+### Runs for a Linux runner, cheapest decisive first
+
+From `hp/` of a checkout of this branch, with hp built from main (any build since #523), the raw-data clone beside
+the checkout, and 8 threads per job. The durations are estimates. They assume 0.35 s per plan step for an M 384
+Jacobian at 8 threads (0.61 s at 4 threads on win2, section 1.1, with T98's 1.75× from 4 to 8 threads), c(M)
+between the M³ and the M² law below that, one pass-1 call on a plan about 2.7 times the lean one, and three pass-2
+calls.
+
+```bash
+RAW=$(cd ../../choptuik-large-d-raw && pwd); MACH=<machine>; OUT=$RAW/I1033-$MACH; mkdir -p $OUT/states
+printf '# I1033-%s: the tau-mapped grid at low D, measured (hp/tau_map_gain.py)\n\n%s, https://github.com/nmoinvaz/choptuik-large-d/issues/1033\n' $MACH $MACH > $OUT/README.md
+A=$RAW/T82-win/states/lowDhm_x0.000157-0.975_D3.0475; B=$RAW/T100-win2/states/lowDhm_x0.000157-0.975_D3.0444
+G="nice -n 10 python3 tau_map_gain.py"; S37=data/lowD_states/highm15_D3.7000
+
+# run 0, seconds: exit 0, then exit 1 for each control
+$G selftest; for m in lo parity dps40 inverse gp phase_gp lenient unbound; do $G selftest --mutate $m >/dev/null; echo "control $m: exit $? (1)"; done
+# run 1, D 3.7, about 15 min: the check (exit 0), its control (exit 1), the phase row (information), the gain at D 3.7
+$G check --threads 8 --out $OUT/check37.jsonl
+$G check --threads 8 --Ls 0.7 --mutate gp --out $OUT/check37.jsonl; echo "control gp: exit $? (1)"
+$G check --threads 8 --Ls 0.7 --mutate phase_gp --out $OUT/check37.jsonl
+$G solve ${S37}_M128.npz --pairs 1:128,0.9:96,0.7:80,0.7:96,0.5:64,0.5:80,0.3:64,0.3:80 --threads 8 --states $OUT/states --out $OUT/solve37.jsonl
+$G report $OUT/solve37.jsonl --ref ${S37}_M256.npz --uniform ${S37}_M128.npz --json $OUT/report37.json
+# run 2, about 45 min: c(M) on this machine, each converged state at its own M on its own plan
+$G cost ${S37}_M128.npz ${S37}_M160.npz ${S37}_M192.npz ${S37}_M256.npz ${A}_M256.npz ${A}_M320.npz ${A}_M384.npz --threads 8 --reps 2 --out $OUT/cost2.jsonl
+$G cost ${A}_M320.npz ${A}_M384.npz --mutate plan_m --out $OUT/cost2_control.jsonl; echo "control plan_m: exit $? (1)"
+# run 3, D 3.0475, about 45 min, the decisive pilot: the uniform call, then L 0.4 and 0.5 at M' 192
+$G solve ${A}_M384.npz --pairs 1:384,0.4:192,0.5:192 --threads 8 --states $OUT/states --out $OUT/solve_D3.0475.jsonl
+$G report $OUT/solve_D3.0475.jsonl --ref ${A}_M384.npz --ref2 ${A}_M320.npz --cost $OUT/cost2.jsonl --json $OUT/report_D3.0475.json
+# run 4, D 3.0475, the ladder: two jobs side by side, about 3.2 h and 2.7 h
+$G solve ${A}_M384.npz --pairs 0.9:320,0.8:320,0.7:320,0.8:256,0.7:256 --threads 8 --states $OUT/states --out $OUT/solve_D3.0475.jsonl
+$G solve ${A}_M384.npz --pairs 1:320,0.6:256,0.5:256,0.6:192,0.5:160,0.4:160,0.3:160,0.3:128,0.2:160,0.2:128 --threads 8 --states $OUT/states --out $OUT/solve_D3.0475b.jsonl
+$G report $OUT/solve_D3.0475*.jsonl --ref ${A}_M384.npz --ref2 ${A}_M320.npz --cost $OUT/cost2.jsonl --json $OUT/report_D3.0475.json
+# run 5, D 3.044375, about 5 h: the uniform call and, for each L, the M' that passed at 3.0475 and the one below
+$G solve ${B}_M384.npz --pairs 1:384,1:320,<L:M' pairs from run 4> --threads 8 --states $OUT/states --out $OUT/solve_D3.0444.jsonl
+$G report $OUT/solve_D3.0444.jsonl --ref ${B}_M384.npz --ref2 ${B}_M320.npz --cost $OUT/cost2.jsonl --json $OUT/report_D3.0444.json
+```
+
+Each solve checkpoints every Newton call in `$OUT/states` and resumes where it stopped. A configuration is the
+source state, L, M′ and the map's centre s0, all in the file names, and a checkpoint restores only into its own
+configuration. A rerun skips a configuration only when it converged and its state was saved, so a failed or
+unconverged one continues from its checkpoint. Calls are capped (4 in pass 1, 5 in pass 2), so every job ends. Run 3
+decides whether to go on. It goes on if both maps converge and L 0.4 at M′ 192 gives Δ within 10⁻¹² of Δ(384). Its
+own plan's steps against the L 1 solve's then show whether the plan holds, and the wall seconds of its pass-2 calls
+against the L 1 call's give the measured gain per call.
+
+L 0.9 is tried only at M′ 320. At M′ 384 the mapped grid cannot cost less than the uniform one, so if 320 misses
+10⁻¹² the answer for L 0.9 is that it gains nothing, and run 5 leaves it out. Run 5 repeats both identities
+(`1:384` and `1:320`) at D 3.044375.
+
+### Results
+
+Pending the runs above.
+
 ## Appendix A: code analysis
 
 
