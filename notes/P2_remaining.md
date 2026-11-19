@@ -530,8 +530,8 @@ python3 p2c_h8_compare.py $RAW > $RAW/logs/compare.log   # (P3, P4) PASS, exit 0
 
 Issue #1019. Lemma B5(1) (B5_inner.md §§2–5) bounds W = Y⁺_out − Z⁺_in on the working domain by |W_j| ≤ x_j m_j/n, given
 (H8). The bound comes from a super-solution b + Lx < x of a 10 × 10 system whose constants are suprema over the sector
-Σ_Z = {0 < |t| ≤ Z, 0 ≤ arg t ≤ π/2 + κ} (κ = 0.3, Z = 0.0085). This section first settles whether B5's data cover (H8)'s
-certified δ (§6.0), then recomputes the lemma's constants and super-solutions.
+Σ_Z = {0 < |t| ≤ Z, 0 ≤ arg t ≤ π/2 + κ} (κ = 0.3, Z = 0.0085). This section first settles whether B5's data cover
+(H8)'s certified δ (§6.0), then recomputes the lemma's constants and super-solutions.
 
 ### 6.0 The δ question (answered first, `I1019-mac/delta/`, d80a66c2)
 
@@ -539,10 +539,10 @@ certified δ (§6.0), then recomputes the lemma's constants and super-solutions.
   centre, from `b5_data.log`. That is |φ₁|, |[F²]| and 2|[F²]|, without B8's remainder, the box spread or η, so it is
   not (H8)'s δ. Its label "upper values" is wrong: each entry is below the exact coefficient (76.56019, 3.2312583,
   6.4625167, §5.2). It feeds only that script's superseded estimate and B5_inner.md §5.2's illustration.
-- The chain's x_Φ and C_E come from `b5_jump.py`, which reads the certified δ from `b8m_h8_K4_L73.89.log` at full precision.
-  Rerun as stored, it reproduces `b5_jump.log`: x_Φ = (39784.4, 38775.8), C_E = 2.532366×10³³. With B8_constants.md
-  §8.3's rounded-up δ (8.3×10⁻⁵, 79.04, 3.232, 6.464) the result is x_Φ = (39789.7, 38781.0), C_E = 2.532706×10³³. So the
-  stored values stand.
+- The chain's x_Φ and C_E come from `b5_jump.py`, which reads the certified δ from `b8m_h8_K4_L73.89.log` at full
+  precision. Rerun as stored, it reproduces `b5_jump.log`: x_Φ = (39784.4, 38775.8), C_E = 2.532366×10³³. With
+  B8_constants.md §8.3's rounded-up δ (8.3×10⁻⁵, 79.04, 3.232, 6.464) the result is x_Φ = (39789.7, 38781.0), C_E =
+  2.532706×10³³. So the stored values stand.
 
 ### 6.1 Protocol, fixed before the run
 
