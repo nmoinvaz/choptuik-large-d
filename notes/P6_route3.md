@@ -371,3 +371,184 @@ python3 route3_growth.py --fit 3 --mutate=demix             # FAIL, exit 1
 python3 route3_growth.py --fit 21 --pert=0 --mutate=psi     # FAIL, exit 1
 python3 route3_growth.py --fit 21 --wf=0.05 --others        # the families +-1 at small w; PASS
 ```
+
+## 10. A remainder bound C ν/j² for j ≥ 2ν (#990)
+
+Script `solver/proof/route3_bound.py`, on `route3_cancel.py`'s `tail()` and `dr_builder()`. The object is §1's
+one-step model with one perturbation of label μ ∈ {ν − 2, ν, ν + 2} and amplitude p on the A sin θ background. Its
+increment splits exactly as
+
+```math
+\frac{\Delta R_j}{K_\nu} = \sum_\lambda C_\lambda(j)\,\rho^\lambda_j + r_j ,
+```
+
+with C_λ the exact near-end, far-end, de-mixing and ψ terms of `tail()`, where the cancellations live, and r_j the
+interior convolution terms: Ss and Sd at 3 ≤ i ≤ j, and g_{j+1}'s inner terms 1 ≤ l ≤ j − 1.
+
+**Result.** For odd ν ≥ 3 and j ≥ max(2ν, 10) (*certified*):
+
+```math
+\Big|\frac{\Delta R_j}{K_\nu}\Big| \le C_\mu\,|p|\,\frac{\nu}{j^2},\qquad C_{\nu-2} = 28.45,\quad C_\nu = 56.87,\quad C_{\nu+2} = 4.77\times10^6 .
+```
+
+- **How it is certified.** The hand lemmas B1–B4 are *proved* (§10.1). The sups are evaluated in ball arithmetic
+  (`route3_bound.py`, python-flint 0.9.0, FLINT 3.6.0, the exact C_λ from sympy 1.14.0).
+- **Consequence: the Darboux tail beyond j₀ is uniform in ν.** Σ_{j≥j₀} |ΔR_j/K_ν| ≤ C_μ|p| ν/(j₀ − 1) ≤ C_μ|p|/(2 −
+  1/3), since j₀ ≥ 2ν and ν ≥ 3.
+- **The families ±1 are bounded through their weight.** Their coefficients grow like ν², but sup ν|ρ^{±1}_{j₀}| ≤
+  4.7×10⁻⁴.
+- **Checked against the exact recursion** at ν = 3 to 21 and j < 1600, with no violation. The worst actual/bound ratios
+  are 1.3×10⁻⁵, 1.8×10⁻² and 2.7×10⁻². A planted violation is caught in all 30 runs.
+- **Tuned inputs keep the form,** *conditional* on two named hypotheses, an envelope (H1) and the cancellation (H2). On
+  `amp_flint`'s real tuned sequences at the first tuned orders of harmonics 3, 5 and 7, the increments stay O(j⁻²)
+  (numerical evidence, §10.4). The de-mixing control fails there.
+- **The large-parameter literature was not needed.** The bound uses only B1's elementary inequalities and two Γ
+  identities (DLMF §5.4), so Paris, Temme and Olde Daalhuis were not read for it.
+- **Not covered:** the head j < 2ν of each sum, which (★)'s lowest-order form still needs (§10.5).
+
+### 10.1 The hand lemmas
+
+All for real ω and real labels. a^λ_m = (m + α_λ)(m + β_λ)/(m + 1) is the step T^λ_{m+1}/T^λ_m, α_λ = (1 + iλω)/2,
+β_λ = (2 + iλω)/2, t_n = |T^1_n| and r_m = |a^1_m|.
+
+- **B1 (steps).** |a^λ_m| ≥ m + ½ for every m ≥ 0, and |a^λ_m| ≤ |a^ν_m| whenever |λ| ≤ |ν|. *Proof.*
+  |m + α_λ|² = (m + ½)² + λ²ω²/4 and |m + β_λ|² = (m + 1)² + λ²ω²/4 both increase with |λ|, and
+  |a^λ_m| ≥ (m + ½)(m + 1)/(m + 1). ∎ (*proved*)
+- **B2 (weights).** ρ^λ_l = T^λ_l/T^ν_l has ρ_0 = 1 and |ρ_{l+1}/ρ_l| = |a^λ_l|/|a^ν_l|.
+  - (i) For |λ| < |ν|, |ρ^λ_l| ≤ 1 and it decreases in l, by B1.
+  - (ii) For λ = ν + 2 with ν > 0 it increases, to P_{ν+2} = |Γ(α_ν)Γ(β_ν)/(Γ(α_{ν+2})Γ(β_{ν+2}))|. That limit follows
+    from ∏_{m<L}(m + α′)/(m + α) = Γ(L + α′)Γ(α)/(Γ(L + α)Γ(α′)) and |Γ(L + α′)/Γ(L + α)| → |L^{iω}| = 1, since α′ − α =
+    iω. With α_ν = ½ + iνω/2, β_ν = 1 + iνω/2, |Γ(½ + iy)|² = π/cosh πy and |Γ(1 + iy)|² = πy/sinh πy (DLMF §5.4), one
+    has
+    |Γ(α_ν)Γ(β_ν)|² = π²νω/sinh(πνω). So P_{ν+2}² = ν sinh(π(ν + 2)ω)/((ν + 2) sinh(πνω)) ≤ e^{2πω}/(1 − e^{−2πνω}), by
+    sinh(A + B)/sinh A ≤ e^B/(1 − e^{−2A}). ∎ (*proved*; `--lemmas` checks both identities and the closed form against
+    mpmath's Γ ratio.)
+- **B3 (reduction).** In every interior term exactly one of the three factors carries the perturbation's label μ, and
+  the other two carry the background's ±1. Each such term satisfies |T^p_a T^q_b T^r_c|/|T^ν_N| ≤ P_μ t_a t_b t_c/t_N
+  with a + b + c < N, where P_μ = 1 for μ ≤ ν and P_μ = P_{ν+2} for μ = ν + 2. *Proof.* |T^{−1}_n| = |T^1_n| = t_n,
+  since T^{−1} is the conjugate of T^1 for real ω. For the perturbation's factor at index k, |T^μ_k| = |ρ^μ_k||T^ν_k| ≤
+  P_μ|T^ν_k| by B2, and |T^ν_k|/|T^ν_N| = ∏_{m=k}^{N−1} 1/|a^ν_m| ≤ ∏ 1/r_m = t_k/t_N by B1. ∎ (*proved*)
+- **B4 (prefactors).** For j ≥ κν and x = 1/j, |c^ν_j| = |2j + 2 + iνω|/(4(j + 1)) ≤ (2 + 2x + ω/κ)/(4(1 + x)). For
+  |λ| ≤ ν + 2, |2l + 1 + iλω| ≤ 2l + 1 + (ν + 2)ω. ∎ (*proved*)
+- **B5 (the interior).** B3 turns every interior sum into the ν = 1 sums of D_entire.md §6.3, with B4's prefactors in
+  place of ν = 1's. That section's log-convexity grouping applies unchanged: r_m increases for m ≥ 1, so Σ_l t_l t_{n−l}
+  ≤ (2 + t₁) t_n and t_{j−k}/t_{j+1} ≤ ∏_{q≤k}(j − q + ½)^{−1}. The grouping covers i = 3, 4 ≤ i ≤ j − 3, j − 2, j − 1
+  and j in Ss, the corresponding Sd terms, and g_{j+1}'s inner terms. `Cr_sup` assembles it in arb over x ∈ [0, 1/J₀]
+  and checks r_m's monotonicity as D_entire.md does. Every interior term is O(j⁻³), except Ss at i = j, whose factor (1
+  + (ν + 2)ω) makes it O(ν/j³). So the bound is written as j²|r_j|/(νP_μ|p|) ≤ Cr. (*certified*)
+- **B6 (the families ±1).** By B2(i), |ρ^{±1}_j| ≤ |ρ^{±1}_{j₀}| for j ≥ j₀. W = sup over odd ν ≥ 3 of ν|ρ^{±1}_{j₀(ν)}|
+  combines two pieces. For ν ≤ 99 it is an arb product. For ν ≥ 101 it is the hand bound ν q^M, with M = ⌊νω/4⌋ ≤ j₀ and
+  q = ((νω/4 + 1)² + ω²/4)/(ν²ω²/4) < e^{−1}. That bound decreases in ν, and each step factor below M is at most q.
+  (*certified* below ν = 101, *proved* above)
+
+### 10.2 The certified constants
+
+`python3 route3_bound.py --constants` (κ = 2, J₀ = 10, a 48 × 48 grid of (s, u) boxes, about 2.5 min) at
+ω = 2π/1.64389375:
+
+| perturbation μ | family λ | sup j²\|C_λ\|/ν^d, certified | lower bound (box centres) | d | weight |
+|---|---|---|---|---|---|
+| ν − 2 | ν − 2 | 0.5638 | 0.4719 | 1 | 1 |
+| ν − 2 | +1 | 0.9229 | 0.9003 | 2 | W |
+| ν | ν | 1.1028 | 0.9944 | 1 | 1 |
+| ν | −1 | 1.0454 | 1.0071 | 2 | W |
+| ν | +1 | 0.9530 | 0.9183 | 2 | W |
+| ν + 2 | ν + 2 | 1.1775 | 1.0320 | 1 | P |
+| ν + 2 | −1 | 2.6323 | 2.5528 | 2 | W |
+
+The sups are over s = 1/ν ∈ [0, 1/3] and u = ν/j ∈ [0, 1/2], so they hold for every real ν ≥ 3 and j ≥ 2ν. The rational
+function's denominator is evaluated as a product of its factors, each bounded away from zero, and its numerator in
+Horner form. The box-centre values bound the sup from below, and they show the grid's overestimate is within 20%.
+
+| constant | value |
+|---|---|
+| P = sup P_{ν+2} (B2) | ≤ 1.63995×10⁵ (e^{πω} = 1.63995×10⁵) |
+| W = sup ν\|ρ^{±1}_{j₀}\| (B6) | ≤ 4.728×10⁻⁴ (hand tail at ν = 101: 1.2×10⁻⁵⁵) |
+| Cr, interior (B5), μ = ν ∓ 2 (3 triples) | ≤ 27.885 |
+| Cr, interior, μ = ν (6 triples) | ≤ 55.770 |
+| **C_{ν−2}** | **28.449** |
+| **C_ν** | **56.874** |
+| **C_{ν+2}** | **4.7661×10⁶** |
+
+C_μ = Σ_λ S_λ w_λ + Cr P_μ. The interior bound dominates. It comes from the crude grouping at J₀ = 10 and shrinks like
+1/J₀, while the near-end and far-end part is of order one. With J₀ = 100 (`--constants --J0=100`) the same bound holds
+for j ≥ max(2ν, 100) with C_{ν−2} = 1.599, C_ν = 3.173 and C_{ν+2} = 3.629×10⁵, the interior parts falling to 1.035 and
+2.070 and W to 4.2×10⁻⁵. The check of §10.3 was run against the J₀ = 10 constants.
+
+### 10.3 The check against the exact recursion
+
+`python3 route3_bound.py --check` (512-bit balls, about 7.5 min) evaluates ΔR_j/K_ν by the exact recursion at ν = 3, 5,
+…, 21, for every j from j₀ to 1599 and each perturbation, against the bound. There is no violation. The largest ratio
+actual/bound is 1.3×10⁻⁵ for μ = ν − 2, 1.8×10⁻² for μ = ν and 2.7×10⁻² for μ = ν + 2. The largest relative ball radius
+is 6×10⁻³², at ν = 21. A guard stops the run if any value's relative radius exceeds 10⁻⁶. An earlier version built ω
+at 128 bits before raising the precision, and that propagated radius made the recursion NaN, which the guard now
+catches.
+
+**Planted violation.** `--check --mutate=plant` adds three times the bound at five j per ν and perturbation. It is
+caught in all 30 runs, five violations each, and the script exits 1.
+
+**ψ control.** `--check --mutate=psi` scales h₂ by 3/2 in the recursion, which leaves an O(1/j) term in the
+same-label family. The bound then fails for the perturbation of label ν at ν = 3, 5 and 7, first at j = 680, 1135 and
+1590, and the script exits 1. The crossing point grows like ν, because the O(1/j) term overtakes C_ν ν/j² at j ∝ ν. So
+from ν = 9 on it lies beyond j = 1600. The perturbations ν ± 2 carry no ψ term and are unaffected.
+
+### 10.4 What tuned inputs change
+
+For ν ≥ 5 the inputs at harmonic ν's first tuned order are tuned sequences (§5 item 1). The bound uses two properties
+of its inputs, and tuned inputs keep them only under hypotheses.
+
+- **(H1) An envelope:** |X_l[μ]| ≤ X̄_μ |T^μ_l| for every l. A tuned input is X_l = −T^μ_l Σ_{i≥l} b_i/T^μ_{i+1} plus
+  de-mixing terms, since its multiplier is tuned to zero. So X̄_μ is the supremum of that tail, finite when the Darboux
+  sums converge. Given (H1), B3 holds with |p| replaced by X̄_μ, and the interior bound survives with that factor.
+- **(H2) The cancellation:** the target's increment has no O(1/j) part. In the one-step model this is §2's pairing,
+  which assumes each input's late orders follow its own label's family. A tuned input's own family is removed, so its
+  late orders follow deeper families κ ≠ λ, and the one-step pairing alone would leave a term ∝ (κ − λ)/j (§5 item 1).
+  (H2) says that the full de-mixing by e^{−Π}, at every order, supplies the partner, so that the full expansion's
+  normalised multiplier sequence has no O(1/j) increments.
+
+Under (H1) and (H2) the form C ν/j² survives, with C multiplied by X̄_μ and recomputed for the families the tuned
+inputs carry (*conditional* on (H1) and (H2)).
+
+**The test** (`python3 route3_tuned.py 7 800`, about 5 min). It takes `amp_flint.py`'s real expansion to order 7, with
+its tuning, and the exact normalised multiplier sequence R_j of `S_at` for every j ≥ 2, the sequence that `S_at` fits.
+It reports j²|ΔR_j/K_ν|/ν. Fixed before the run: the form holds if the window maxima over [J/8, J/4], [J/4, J/2] and
+[J/2, J] grow by at most 1.25 per window. An O(1/j) part would give about 2.
+
+| ν | order | first tuned order | M1 | M2 | M3 | M2/M1 | M3/M2 | form |
+|---|---|---|---|---|---|---|---|---|
+| 3 | 3 | yes | 2.543e-6 | 2.186e-6 | 2.025e-6 | 0.86 | 0.93 | holds |
+| 5 | 5 | yes | 2.155e-12 | 1.438e-12 | 1.17e-12 | 0.67 | 0.81 | holds |
+| 7 | 7 | yes | 7.381e-19 | 3.335e-19 | 2.258e-19 | 0.45 | 0.68 | holds |
+| 1 | 3 | no | 2.556 | 2.607 | 2.622 | 1.02 | 1.01 | holds |
+| 1 | 5 | no | 2.346 | 2.376 | 2.377 | 1.01 | 1.00 | holds |
+| 3 | 5 | no | 2.026e-6 | 1.823e-6 | 1.801e-6 | 0.90 | 0.99 | holds |
+| 5 | 7 | no | 1.864e-12 | 1.267e-12 | 1.051e-12 | 0.68 | 0.83 | holds |
+
+So (H2) holds at the first tuned orders of harmonics 3, 5 and 7 and at the four later orders tried (numerical evidence).
+The tuned inputs keep the increments O(j⁻²) times a bounded factor. The small M values for ν = 5 and 7 are the tuned
+amplitudes. The windows do not resolve a log j factor: one of the size D_entire.md §6.6 reports for harmonic 1 at
+order 5 would give about 1.1 per window, inside the bar. **Control:** `--mutate=demix` (E × 3/2 in every target's
+de-mixing) fails every target, with ratios 1.29 to 2.01, and exits 1.
+
+### 10.5 What is not covered
+
+1. **The head j < j₀ = 2ν.** That is about 2ν terms of each Darboux sum, where the 1/j expansion does not apply. The
+   bound says nothing there, and it is what (★)'s lowest-order form still needs.
+2. **The untuned label ν + 2.** Its weight P ≈ e^{πω} ≈ 1.6×10⁵ is in C_{ν+2}. In the tuned problem that label's own
+   family is removed, so the constant there is not this one (§10.4).
+3. **Orders beyond one A² step**, and the whole series in the amplitude at A* (B_tail_M7.md §8.3).
+4. **The physical ω only.** The constants are certified at ω = 2π/1.64389375 as a ball, not over an ω interval.
+
+### 10.6 Reproduce
+
+From `solver/proof/` with venv-314:
+
+```
+python3 route3_bound.py --lemmas                  # B2's Gamma identities and closed form, B2(i)'s monotonicity; PASS
+python3 route3_bound.py --constants               # 10.2 (~2.5 min); --J0=100 for the tighter constants
+python3 route3_bound.py --check                   # 10.3 (~7.5 min, 512 bits); PASS, exit 0
+python3 route3_bound.py --check --mutate=plant    # planted violation: FAIL, exit 1
+python3 route3_bound.py --check --mutate=psi      # h2 x 3/2: fails at nu = 3, 5, 7, exit 1
+python3 route3_tuned.py 7 800                     # 10.4 (~5 min): the form holds on amp_flint's tuned sequences; PASS
+python3 route3_tuned.py 7 800 --mutate=demix      # control: FAIL, exit 1
+```
