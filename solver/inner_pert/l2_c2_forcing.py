@@ -14,7 +14,8 @@ writes them to data/l2_c2_forcing.json for l2_c2.py. Four forcings:
     l2_lam    F_lambda = L0[ln(-t) D2 Z0], divided by s cos 2chi (a check of the d/dlambda normalisation)
     G         L0[(0, Phi_s)]: checked here to equal Ft(l2) + Ft(l0) identically (with the control (c_s, 0))
 
-    python3 l2_c2_forcing.py          about 10 min; exit 0 iff every check below holds
+    python3 l2_c2_forcing.py          about 6 min; exit 0 iff every check below holds
+    python3 l2_c2_forcing.py --p1     the p = 1 representative (p1()): its frame, conjugation, forcing and decomposition
 """
 import json
 import os
@@ -63,23 +64,26 @@ def desymbolize(x):
     return x.xreplace(rep)
 
 
-def reduce_rows(rows):
-    """{row: F} -> {row: F / (s cos 2chi)} as a rational function of P, C (t, s allowed), checked free of chi.
-    chi is set to the rational point cos chi = 3/5, sin chi = 4/5 (cos 2chi = -7/25), so every coefficient is rational"""
+def reduce_rows(rows, Yh=sp.cos(2 * chi)):
+    """{row: F} -> {row: F / (s Yh)} (Yh = cos 2chi for p = q, cos^2 chi for p = 1) as a rational function of P, C (t, s
+    allowed), checked free of chi. chi is set to the rational point cos chi = 3/5, sin chi = 4/5, so every coefficient
+    is rational"""
     out = {}
+    pt = {sp.cos(chi): sp.Rational(3, 5), sp.sin(chi): sp.Rational(4, 5)}
+    Y0 = sp.expand_trig(Yh).subs(pt)
     for k, F in rows.items():
-        x = sp.expand_trig(symbolize(F)).subs({sp.cos(chi): sp.Rational(3, 5), sp.sin(chi): sp.Rational(4, 5)})
+        x = sp.expand_trig(symbolize(F)).subs(pt)
         if x.has(chi):
             raise ValueError(f"{k}: chi left after the rational point")
-        x0 = sp.cancel(sp.together(x / (s * sp.Rational(-7, 25))))
+        x0 = sp.cancel(sp.together(x / (s * Y0)))
         free = x0.free_symbols - set(P) - set(C) - {t, s}       # s = T^2 xi^2 / 2 is allowed (the control has it)
         if free:
             raise ValueError(f"{k}: explicit {free} left")
         x0 = sp.factor(x0)
-        # the reduction holds at other (s, chi): F - s cos 2chi Ft vanishes on both numval test points
-        d = F - s * sp.cos(2 * chi) * desymbolize(x0)
+        # the reduction holds at other (s, chi): F - s Yh Ft vanishes on both numval test points
+        d = F - s * Yh * desymbolize(x0)
         if not M2.is_zero_num(d):
-            raise ValueError(f"{k}: F / (s cos 2chi) depends on s or chi")
+            raise ValueError(f"{k}: F / (s Yh) depends on s or chi")
         out[k] = x0
     return out
 
@@ -145,14 +149,72 @@ def main():
         log(f"control, {k}: l2 - l2_ctrl {'nonzero' if good else 'ZERO'}")
     fn = os.path.join(HERE, "data", "l2_c2_forcing.json")
     json.dump({name: {k: sp.srepr(v) for k, v in d.items()} for name, d in res.items()}
-              | {"symbols": dict(P="Phi_t..Phi_tttt at fixed s", C="c..c_ttt at fixed s", kappa=1,
+              | {"symbols": dict(P="P_k = d^k Phi/dt^k at fixed s", C="C_k = d^k c/dt^k at fixed s", kappa=1,
                                  rows="W and E^t_t, per unit e, divided by s cos 2chi (l0: dS = 1)")},
               open(fn, "w"), indent=1)
     log(f"wrote {fn}")
     return ok
 
 
+def p1():
+    """the p = 1 representative (y in R, z in R^n, one fibre S^(n-1) with warp V2): the l = 2 harmonic is
+    s (cos^2 chi - sin^2 chi / n), at leading order s cos^2 chi. Checks: (1) the l = 0 rows of this frame are those of
+    p = q; (2) the conjugation by s cos^2 chi on the lapse and the scalar (V2 = 0), with the control cos 2chi, which is
+    not an l = 2 harmonic of this frame; (3) the forcing F / (s cos^2 chi) has no chi and its O(1) parts vanish;
+    (4) against p = q: Ft(p1) - Ft(l2), and the decomposition Ft(p1) + Ft(l0) = L0[(0, Phi_s)]. By SO(n + 1) both are
+    members of one l = 2 multiplet, so c2 must agree"""
+    ok = True
+    R = M2.bg_rules1()
+    log("O(1/n) background rules")
+    zero = {k: sp.Integer(0) for k in ("A", "B", "C", "V1", "V2", "L", "P")}
+    rows = ["W", "E^t_t"]
+    gam, psi = sp.Function("gamma")(s, t), sp.Function("psi")(s, t)
+    r1 = M2.natural_raw(sp.Integer(0), "one", dict(zero, L=gam, P=psi), rows)
+    rq = M2.natural_raw(sp.Integer(0), "half", dict(zero, L=gam, P=psi), rows)
+    for k in rows:
+        d = sp.simplify(sp.expand(r1[k] - rq[k]))
+        good = d == 0
+        ok &= good
+        log(f"1. l = 0 rows, p = 1 frame - p = q frame, {k}: {'0' if good else d}  ({'as required' if good else 'NOT AS REQUIRED'})")
+    for lab, Yc, want in (("s cos^2 chi", sp.cos(chi) ** 2, True), ("control s cos 2chi", sp.cos(2 * chi), False)):
+        r2 = M2.natural_raw(sp.Integer(0), "one", dict(zero, L=s * Yc * gam, P=s * Yc * psi), rows)
+        for k in rows:
+            d = sp.simplify(sp.expand(r2[k] - s * Yc * r1[k]))
+            good = (d == 0) == want
+            ok &= good
+            log(f"2. conjugation by {lab}, {k}: {'0' if d == 0 else d}  ({'as required' if good else 'NOT AS REQUIRED'})")
+    dS1 = s * (sp.cos(chi) ** 2 - sp.sin(chi) ** 2 / M2.n)
+    corr1 = dict(zero, A=M2.mu0 * dS1 / s)
+    res = {}
+    for name, drop in (("p1", False), ("p1_ctrl", True)):
+        out = M2.epart1_raw(dS1, "one", corr1, rows, R, drop_1n=drop)
+        o1 = all(M2.is_zero_num(out[k][0]) for k in rows)
+        ok &= o1
+        res[name] = reduce_rows({k: out[k][1] for k in rows}, sp.cos(chi) ** 2)
+        log(f"3. {name}: O(1) parts {'zero' if o1 else 'NONZERO'}; Ft = " + "; ".join(f"{k}: {v}" for k, v in res[name].items()))
+    d = json.load(open(os.path.join(HERE, "data", "l2_c2_forcing.json")))
+    q = {nm: {k: sp.sympify(v) for k, v in d[nm].items()} for nm in ("l2", "l0", "G", "l2_ctrl")}
+    for k in rows:
+        dd = sp.cancel(res["p1"][k] - q["l2"][k])
+        dec = sp.cancel(res["p1"][k] + q["l0"][k] - q["G"][k])
+        good = dec == 0
+        ok &= good
+        log(f"4. {k}: Ft(p1) - Ft(l2) = {dd};  Ft(p1) + Ft(l0) - L0[(0, Phi_s)] = {dec}  "
+            f"({'as required' if good else 'NOT AS REQUIRED'})")
+        dc = sp.cancel(res["p1_ctrl"][k] + q["l0"][k] - q["G"][k])
+        log(f"   control, {k}: Ft(p1_ctrl) + Ft(l0) - L0[(0, Phi_s)] {'zero' if dc == 0 else 'nonzero'}; "
+            f"Ft(p1_ctrl) - Ft(l2_ctrl) = {sp.cancel(res['p1_ctrl'][k] - q['l2_ctrl'][k])}")
+        ok &= dc != 0
+    fn = os.path.join(HERE, "data", "l2_c2_forcing_p1.json")
+    json.dump({name: {k: sp.srepr(v) for k, v in dd_.items()} for name, dd_ in res.items()}
+              | {"symbols": dict(P="P_k = d^k Phi/dt^k at fixed s", C="C_k = d^k c/dt^k at fixed s", kappa=1,
+                                 rows="W and E^t_t, per unit e, divided by s cos^2 chi, p = 1 frame")},
+              open(fn, "w"), indent=1)
+    log(f"wrote {fn}")
+    return ok
+
+
 if __name__ == "__main__":
-    good = main()
+    good = p1() if "--p1" in sys.argv else main()
     print("PASS" if good else "FAIL")
     sys.exit(0 if good else 1)
