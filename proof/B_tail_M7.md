@@ -200,10 +200,12 @@ and gives no new sample, so the noise estimates below come from starts perturbed
   and the zero (2.719313, 0.999999) lies 8.3×10⁻⁵ from 0.15's, 0.41 of the sum of the two estimates (1.94×10⁻⁴ at 0.145,
   raw I989-win2 b5e41ff5). At 0.155 only 1 of 15 solves passes (#989). The floor after perturbed repeats rises from
   3×10⁻⁸ at 0.15 to 3×10⁻⁷ at 0.145 and above 10⁻⁵ at 0.155.
-- **Radius, sampled:** eight perturbed centre solves at 0.145 give (2.719293, 1.000003), 6.3×10⁻⁵ from 0.15's with
-  δω = −2.2×10⁻⁵ (#1000, raw I1000-rpi5 f891c78f). That is 1.3 times the sum of the two estimates, with the dA and dw
-  offsets still single solves. So a radius dependence the size of the 1.1×10⁻⁵ gap between §3's limit and 1
-  (DIRECTION_REVIEW.md) is not excluded. #1002 samples every input.
+- **Radius, sampled:** with every input sampled (8 centre, 8 dA and 8 dw solves at each radius, #1002, raw
+  I1002-rpi5 6ffbdb60), Z(0.145) = (2.719248, 1.000033) ± 9.1×10⁻⁶ and Z(0.15) = (2.719237, 1.000026) ± 1.6×10⁻⁶
+  (standard errors). The shift is +1.2×10⁻⁵ in A and +7.3×10⁻⁶ in ω, 1.47 combined standard errors, and 1.12 in ω
+  alone, so no radius dependence is resolved. #1000's δω = −2.2×10⁻⁵ came from one dA solve of #989 on win2, which
+  lies 11 standard deviations from rpi5's eight. A rerun from its exact start on rpi5 lands with them, so the two
+  builds round differently from the first iteration. #989's 0.145 zero above used that solve too.
 
 ## 3. The truncation sequence with M = 7
 
