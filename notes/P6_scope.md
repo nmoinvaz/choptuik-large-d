@@ -31,6 +31,14 @@ direction for issue #979; not reviewed. Status words as in AGENTS.md.
   10⁻¹² alike (#974). Level 5's approach radius (0.095–0.125) moves the approach stage's |g| but not the polish stage's
   end, |r₅| ≈ 42.5 at polish radius 0.15 (#980). So the first test of (R) waits on the polish radius (#999, `hier.py
   --polish`).
+- **M = 9's zero is not reachable in double precision at ξ₁ 0.11 (#1012, #1028).** With level 5's finite-difference
+  step raised (`--h5=1e-4`), the solves end at level 5's evaluation noise (|r₅| about 10⁻⁴ to 10⁻³) and level 3's
+  (|r₃| 11 to 22 against its noise 24). The corrected r₁ then scatters from start to start: 1.58×10⁶ in norm over four
+  seeded centre solves (90% interval of the true spread 9.8×10⁵ to 4.6×10⁶), above the 7.7×10⁵ of re-evaluating one
+  state. Through J's smallest singular value 1.03×10¹⁰ that is an ω error of about 1.5×10⁻⁴, above the 10⁻⁴ set
+  before the runs, and J refitted on the four centres is not resolved at #1012's offsets (1.2σ and 1.6σ). More seeded
+  runs would narrow the interval but leave the error near 10⁻⁴. So the M = 9 zero needs a more precise inner solve
+  (the nested levels in double-double) before (R)'s first instance can be read from it.
 - **First steps (§4).** A level-5 approach-radius pilot at M = 9 (#974's recommendation 1), then δ₇(p₇) = r₁^{[9]}(p₇)
   at the M = 7 zero. In parallel, check symbolically whether Lemma W's cancellations hold identically in ν.
 
