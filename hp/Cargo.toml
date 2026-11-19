@@ -43,3 +43,8 @@ strip = false
 inherits = "release"
 lto = "thin"
 codegen-units = 16
+
+# multidouble's f64 matrix products by chunks of 8 columns (MatLane::dmat_apply), for every crate in the graph, until
+# its release; removed then, with the pin moved to it (#998)
+[patch.crates-io]
+multidouble = { git = "https://github.com/nmoinvaz/multidouble", branch = "perf/dmat-apply-chunks" }

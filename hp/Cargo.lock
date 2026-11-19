@@ -76,8 +76,7 @@ dependencies = [
 [[package]]
 name = "multidouble"
 version = "4.9.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "fcd4b1ce5676d0023a817238e398fb58a04e66e56e53475e739129da0abfecf2"
+source = "git+https://github.com/nmoinvaz/multidouble?branch=perf%2Fdmat-apply-chunks#6dfd5b03cd529b8be641e7ddaafcac94381bad09"
 dependencies = [
  "rayon",
 ]
