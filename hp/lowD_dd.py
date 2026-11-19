@@ -367,6 +367,13 @@ def solve_point(D, M, zh, zl, src, a, nodes, outdir, log, segs=None):
         rec.update(peak_rss_mb=peak_rss_mb())
     # seconds of each Newton iteration of this run (Newton step plus its line search; resumed iterations not included)
     rec.update(t_its=[h["t"] for h in hist if "t" in h and h.get("lm") is None])
+    # the Newton steps' seconds by part, from Solver.step_timing through newton_solve's records (residual, Jacobian
+    # fill, its factorization, solve; in block storage the fill and factorization are the blocks' sums): which part a
+    # faster Jacobian would cut (#945, notes/LOW_D.md 17)
+    for part in ("t_res", "t_jac", "t_lu", "t_solve"):
+        v = [h[part] for h in hist if part in h and h.get("lm") is None]
+        if v:
+            rec[part + "_its"] = [round(float(x), 1) for x in v]
     if a.svd:
         t1 = time.time()
         sv, dc = weakest(s, a.svd)
