@@ -14,6 +14,7 @@ from about D 150 on, and the cut grows to e^-30 of the matching determinant at D
 Each leg is one anm_run.py with the given flags plus --ks K --keep_plan 0 --D_max D1, into OUT/leg<i>_D<D0>_ks<K>.
 --keep_plan 0 re-plans the base for the new order, and the base is polished at that order before the first step.
 The driver stops when a leg exits non-zero, when a leg moves D by less than --min_progress (0.05), or at --D_stop.
+With --ks_retry R a leg that moved D by less than --min_progress is first run again at ks + 1 up to ks + R.
 It resumes from the highest-D state of its legs when started again with the same OUT. Every leg is recorded in
 OUT/ks_chain.jsonl.
 
@@ -72,7 +73,7 @@ def main():
     if "--" in argv:
         i = argv.index("--")
         argv, extra = argv[:i], argv[i + 1:]
-    opt = dict(state=None, D_stop=400.0, leg=10.0, mult=1.95, pad=10, min_progress=0.05, dry=False,
+    opt = dict(state=None, D_stop=400.0, leg=10.0, mult=1.95, pad=10, min_progress=0.05, ks_retry=0, dry=False,
                py=sys.executable, anm=os.path.join(HERE, "anm_run.py"))
     pos = []
     it = iter(argv)
@@ -109,24 +110,33 @@ def main():
     i = len(glob.glob(os.path.join(out, "leg*")))
     while D0 < opt["D_stop"] - 1e-9:
         D1 = min(D0 + opt["leg"], opt["D_stop"])
-        K = order_for(D1, a, b, opt["mult"], opt["pad"])
-        leg = os.path.join(out, f"leg{i:02d}_D{D0:.4f}_ks{K}")
-        cmd = [opt["py"], "-u", opt["anm"], raw, leg, "--state", st] + extra + \
-              ["--ks", str(K), "--keep_plan", "0", "--D_max", repr(D1)]
-        print(f"leg {i}: D {D0:.4f} -> {D1:.4f} at ks {K} from {st}", flush=True)
-        if opt["dry"]:
-            print("  " + " ".join(cmd), flush=True)
-            return 0
-        os.makedirs(leg, exist_ok=True)
-        t = time.time()
-        with open(os.path.join(leg, "anm_run.log"), "a") as log:
-            rc = subprocess.call(cmd, stdout=log, stderr=subprocess.STDOUT)
-        Dn, stn = last_state(raw, out, opt["state"])
-        rec = dict(leg=i, D_from=D0, D_to=D1, ks=K, state=st, rc=rc, wall_s=round(time.time() - t), D_end=Dn,
-                   state_end=stn, utc=time.strftime("%Y-%m-%d %H:%M:%S", time.gmtime()))
-        with open(rec_path, "a") as fh:
-            fh.write(json.dumps(rec) + "\n")
-        print(f"  exit {rc}, wall {rec['wall_s']} s, last state D {Dn:.4f}", flush=True)
+        K0 = order_for(D1, a, b, opt["mult"], opt["pad"])
+        # --ks_retry R: a leg that moves D by less than --min_progress (its base polish at the new order failed, or its
+        # first attempts did) is run again at ks + 1, ..., ks + R before the driver stops. Near D 238 single target
+        # orders fail their base polish while their neighbours converge (#971, #973: of ks 293 to 307 only 293 failed)
+        for tryk in range(opt["ks_retry"] + 1):
+            K = K0 + tryk
+            leg = os.path.join(out, f"leg{i:02d}_D{D0:.4f}_ks{K}")
+            cmd = [opt["py"], "-u", opt["anm"], raw, leg, "--state", st] + extra + \
+                  ["--ks", str(K), "--keep_plan", "0", "--D_max", repr(D1)]
+            print(f"leg {i}: D {D0:.4f} -> {D1:.4f} at ks {K} from {st}" + (f" (retry {tryk})" if tryk else ""),
+                  flush=True)
+            if opt["dry"]:
+                print("  " + " ".join(cmd), flush=True)
+                return 0
+            os.makedirs(leg, exist_ok=True)
+            t = time.time()
+            with open(os.path.join(leg, "anm_run.log"), "a") as log:
+                rc = subprocess.call(cmd, stdout=log, stderr=subprocess.STDOUT)
+            Dn, stn = last_state(raw, out, opt["state"])
+            rec = dict(leg=i, D_from=D0, D_to=D1, ks=K, retry=tryk, state=st, rc=rc, wall_s=round(time.time() - t),
+                       D_end=Dn, state_end=stn, utc=time.strftime("%Y-%m-%d %H:%M:%S", time.gmtime()))
+            with open(rec_path, "a") as fh:
+                fh.write(json.dumps(rec) + "\n")
+            print(f"  exit {rc}, wall {rec['wall_s']} s, last state D {Dn:.4f}", flush=True)
+            if Dn >= D0 + opt["min_progress"] or tryk == opt["ks_retry"]:
+                break
+            print(f"  the leg moved D by less than {opt['min_progress']} at ks {K}; again at ks {K + 1}", flush=True)
         if rc != 0:
             print("ks_chain: the leg exited non-zero; stop", flush=True)
             return rc
