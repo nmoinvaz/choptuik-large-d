@@ -1123,6 +1123,12 @@ at D 225.13 moves Δ by −1.1×10⁻²⁰, so the rungs' lifts belong to the or
   fails (first chord 1.5×10⁻⁶, then 4×10²⁶), as did 304 in #966 (#971, #973). So the failures are single orders, not
   a size of jump or a residue mod 4, and a +2 jump to ks 293 passed from D 243.84 (ks_chain3b). `ks_chain.py
   --ks_retry R` (main 0fca0da2) runs a leg that makes no progress again at ks + 1 up to ks + R.
+- **Δ's error at a state is the pinned Newton correction's Δ component, not |F|/σ_Δ.** At D 251.2845 (ks 293,
+  ks_chain3b) the bound |F|/σ_Δ is about 3.5×10⁻¹⁷ at `tol_od 1e-34` and 5×10⁻¹⁸ at 1.5e-35, over a bar of 10⁻¹⁸.
+  near_null's pinned step (the correction with the pin's offset held) has Δ components +3.095×10⁻³⁹ and −2.251×10⁻⁵⁹
+  at the two states. The re-solve at 1.5e-35 moved Δ by −3.1×10⁻³⁹ from the first state, the predicted amount to the
+  digits printed (raw `I949-dh170/` 7e3e593f; #949, #966). The residual lies along J's large singular directions
+  (pinned step norm 3.3×10⁻⁴³ against |F| ≈ 1.5×10⁻³⁵), so the bound overstates Δ's error by about 40 orders here.
 
 ## Proposed README text
 
