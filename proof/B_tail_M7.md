@@ -205,7 +205,10 @@ and gives no new sample, so the noise estimates below come from starts perturbed
   (standard errors). The shift is +1.2×10⁻⁵ in A and +7.3×10⁻⁶ in ω, 1.47 combined standard errors, and 1.12 in ω
   alone, so no radius dependence is resolved. #1000's δω = −2.2×10⁻⁵ came from one dA solve of #989 on win2, which
   lies 11 standard deviations from rpi5's eight. A rerun from its exact start on rpi5 lands with them, so the two
-  builds round differently from the first iteration. #989's 0.145 zero above used that solve too.
+  builds round differently from the first iteration. #989's 0.145 zero above used that solve too. With 32 centre
+  solves at 0.145 (#1004, raw I1004-rpi5 e4ea2cc0) the shift is +1.1×10⁻⁶ in A and +5.1×10⁻⁶ in ω, 0.79 combined
+  standard errors, so radius dependence is absent by the rule; ω alone is at 2.0, and one outlying solve moves the
+  combined figure to 1.72.
 
 ## 3. The truncation sequence with M = 7
 
