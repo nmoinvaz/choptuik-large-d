@@ -381,8 +381,8 @@ resolution steps and the figures hp/lowD.svg, hp/lowD_errors.svg and hp/lowD_sqr
   `hp/export_delta_all.py` as runs land.
 - **Left panel:** Δ at the largest M at each D. A point is filled where the two largest M agree to 10⁻⁸ (or M = 80
   alone at D ≥ 3.7, where M 80 → 96 is 1.2×10⁻⁹), hollow where they do not yet.
-- **Every point,** resolved or not, lies within 1.8×10⁻⁵ of the √(D − 3) formula below. The five lowest, at
-  D = 3.04335–3.045, are off by 1.1–1.8×10⁻⁵, and the rest within 8×10⁻⁶.
+- **Every point,** resolved or not, lies within 1.9×10⁻⁵ of the √(D − 3) formula below. The six lowest, at
+  D = 3.04315–3.045, are off by 1.1–1.9×10⁻⁵, and the rest within 8×10⁻⁶.
 - **Middle panel:** γ, from the exact growth-mode matrix at the largest M.
 - **Right panel:** how much Δ moves when M is raised. The step from M = 80 to 96 grows a hundredfold from D = 3.7 to
   3.4, while M = 96 → 128 stays at 1–2×10⁻⁹ down to D = 3.4.

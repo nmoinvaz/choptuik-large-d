@@ -586,8 +586,8 @@ def lowD_formula_bound():
         if D <= 4.0 and (D not in best or M > best[D][0]):
             best[D] = (M, float(r["Delta_hi"]) + float(r["Delta_lo"] or 0))
     err = sorted(abs(P.formula(P.C_DELTA, D) - v) for D, (M, v) in best.items())
-    return [("worst point against the sqrt(D - 3) formula, D <= 4", err[-1], 1.8e-5, 1e-6, [("README.md", "lies within 1.8×10⁻⁵ of the √(D − 3) formula")]),
-            ("sixth worst point (the rest)", err[-6], 8e-6, 1e-6, [("README.md", "the rest within 8×10⁻⁶")])]
+    return [("worst point against the sqrt(D - 3) formula, D <= 4", err[-1], 1.9e-5, 1e-6, [("README.md", "lies within 1.9×10⁻⁵ of the √(D − 3) formula")]),
+            ("seventh worst point (the rest)", err[-7], 8e-6, 1e-6, [("README.md", "the rest within 8×10⁻⁶")])]
 
 
 @check
