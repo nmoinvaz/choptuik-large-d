@@ -31,7 +31,7 @@ r_l - K_lH K_HH^-1 r_H (K by finite differences, M - 1 residuals) is r_l at the 
 Use --schur for M >= 7 (it also helps at M = 5).
 
     python -u hier.py M A wf [--fixA] [--x=B3,C3,...] [--seed=FILE] [--xi1=0.2] [--procs N] [--verbose=2]
-                             [--schur] [--predict] [--floor] [--tol=T] [--fasttrial] [--approach=NU:XI,...] [--polish=NU:XI,...]
+                             [--schur] [--predict] [--floor] [--tol=T] [--fasttrial] [--approach=NU:XI,...] [--polish=NU:XI,...] [--floor_max=X]
   --fixA       (A, w) fixed: solve S_3..S_M = 0, report F_nu/F_1 and r_1
   --schur      leakage Jacobian K after the first inner solve; Schur-corrected residuals from then on
   --predict    (implies --schur) K also over (A, w); every nested re-solve starts from the linear prediction of the
@@ -139,6 +139,7 @@ class Hier:
         self.xref, self.xorder, self.count = {}, {}, 0
         self.fasttrial = False # --fasttrial: near the floor try lam = 1, 0.25 only, then refresh J (default: 6 halvings)
         self.floorstop = False # --floor: stop nested solves at 3x the measured noise floor of their level
+        self.floor_max = np.inf  # --floor_max=X: the 'fresh Jacobian no longer halves |g|' stop only below |g| = X
         self.floor = {}        # (level, mode) -> measured floor of |r_l| (median end value of floor-discovery solves)
         self.floorhist = {}
         self.ltop = top        # the run's top level (workers: the main process's), for --tol / --floor
@@ -250,7 +251,7 @@ class Hier:
             xs.append(xt)
         if POOL is not None and l >= self.top:
             st = (self.predict, dict(self.xref), dict(self.xorder), self.count, self.tol, self.ltop, self.fasttrial,
-                  self.floorstop, dict(self.floor))
+                  self.floorstop, dict(self.floor), self.floor_max)
             outs = POOL.map(_worker, [(self.M, self.r1, l + 2, xt, dict(self.mode), dict(self.J), self.K, st,
                                        dict(getattr(self, "approach", {})), dict(getattr(self, "polish", {})))
                                       for xt in xs])
@@ -364,10 +365,10 @@ class Hier:
             if self.at_floor(key, l, g):
                 why = "at the recorded floor"
                 break
-            if floor:                          # a fresh Jacobian no longer halves |g|: noise floor
+            if floor and np.linalg.norm(g) < self.floor_max:   # a fresh Jacobian no longer halves |g|: noise floor
                 why = "a fresh Jacobian no longer halves |g|"
                 self.record_floor(key, l, g)
-                break
+                break                          # above --floor_max slow progress is the nonlinearity's: go on
             self.fresh[key] = False
             if slow:
                 self.J[key] = self.fdjac(l, x, g)
@@ -389,7 +390,7 @@ def _worker(args):
     h.J = Jc                                   # warm chord Jacobians from the main process
     h.fresh = {k: False for k in Jc}
     h.K = K
-    (h.predict, h.xref, h.xorder, h.count, h.tol, h.ltop, h.fasttrial, h.floorstop, h.floor) = st
+    (h.predict, h.xref, h.xorder, h.count, h.tol, h.ltop, h.fasttrial, h.floorstop, h.floor, h.floor_max) = st
     x, r = h.solve_from(l, x)
     return x, r, NEV[0] - n0
 
@@ -436,6 +437,9 @@ def main():
     h.tol = float(opts.get("--tol", 0.0))
     h.fasttrial = "--fasttrial" in opts
     h.floorstop = "--floor" in opts
+    # --floor_max=X: at M = 9 levels 5 and 3 stopped on 'a fresh Jacobian no longer halves |g|' at |r5| 1-10 and |r3|
+    # 2e4, far above any noise floor (#1007); above X that slow progress is taken as nonlinearity and the solve goes on
+    h.floor_max = float(opts.get("--floor_max", "inf"))
     h.schur = "--schur" in opts or h.predict
     # --approach=NU:XI,...: a level's approach radius set by hand, in place of level_radius's (M = 9: level 5's first
     # solve stalls at the M <= 7 radius 0.119, #974)
