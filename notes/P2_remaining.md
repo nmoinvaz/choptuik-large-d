@@ -125,3 +125,49 @@ python3 p2c_theta0.py --h=cert --mutate=gaininv       # theta0 9.3e15, exit 1
 python3 p2c_theta0.py --h=cert --mutate=nodecay       # theta0 0.564, exit 0 (the pre-set control; it did not fire)
 python3 p2c_cert_gamma0.py                            # the certificate's Gamma0: Perron root 1.08e-16
 ```
+
+## 3. Item 2(a): lemma 6b₁'s M = 1 covering, its geometry checked independently
+
+Issue #991. Lemma 6b₁ (A_certify.md §12.3–12.4) glues 178 discs of lemma D into an analytic continuation of y⁺ over
+A₁ = {25 ≤ |u| ≤ 260, −3π/4 ≤ arg u ≤ 0}. This section checks the geometry of that covering. The discs' own
+certificates are item 2(b).
+
+### 3.1 Protocol, fixed before the run
+
+- **Independence.** `lemma6b1_cover.py` and the certificate's check output `lemma6b1_check_1e-9.json` are not opened
+  before the numbers are committed. Only the top-level key names of that output were seen while finding the data. The
+  inputs are the stored runs `lemma6b1_runs/row_00.json` to `row_11.json`. They give per row ρ_j (the decimal the run
+  used), r_j and n_j, and per disc t_jk and its certificate flag. The definitions of the tiles, the gluing order and
+  the agreement points are A_certify.md §12.3's statements: a_j = ρ_j − 0.6r_j, b_j = ρ_j + 0.6r_j,
+  α_j = 0.6 · (3π/4)/K_j, φ_jk = −(3π/4)(1 − t_jk) and G₀ = {|u| > 257, −3π/4 − 0.4 < arg u < 0}. Here a_j, b_j and
+  α_j are taken as exact rationals and π-multiples, not as the certificate's binary floats. A lemma G proof may
+  choose its tiles inside the discs, so passing with these tiles proves the gluing on its own.
+- **Arithmetic.** mpmath intervals (`iv`, 200 bits) for every quantity involving π, sin or cos, and exact rationals
+  elsewhere. A comparison counts only when it is proven. A strict inequality needs the upper end of one side below the
+  lower end of the other.
+- **What is checked** (`solver/proof/review_p2c/p2c_cover.py`).
+  - G1. The data: 12 rows, 178 discs, every disc flagged certified, t_j0 = 0 and t_jK = 1, and r_j < ρ_j.
+  - G2. Each closed tile lies in its open disc. The distance from the centre is largest at a corner of the closed
+    polar rectangle, so the four corners are checked.
+  - G3. The open tiles cover the closed A₁. The bands cover [25, 260] with strict overlaps, and in every row the
+    angular intervals cover [−3π/4, 0] with strict overlaps.
+  - G4. A second, tile-free route: A₁ is split into closed polar cells, and each cell is proven to lie in one open
+    disc. Cells are bisected until that holds, with a cap of 10⁵ cells.
+  - G5. The gluing, tile by tile in §12.3's order. Each meeting set M_m (T_m against G₀ and every earlier tile) is
+    built from the pairwise intersections not proven empty. M_m must be connected through proven-nonempty overlaps,
+    which is undecided if a needed overlap is not proven. The agreement point q_m must lie in T_m and in the partner
+    piece. The partner is G₀ for (0, 0), tile (j, k − 1) for k ≥ 1 with q at mid-angle on the arc, and tile
+    (j − 1, 0) for k = 0 with q on the ray at radius (a_{j−1} + b_j)/2. The curve along which the two functions agree
+    must lie in both discs: for k ≥ 1 the half-arcs, 2ρ_j sin(Δφ/4) < r_j; for k = 0 the ray segments,
+    ρ_{j−1} − |q| < r_{j−1} and |q| − ρ_j < r_j.
+  - G6. Reachability: every tile's partner comes earlier in the order, so every tile is reached from (0, 0) on the
+    start ray, and s₀ = 262e^{−3iπ/4} lies in G₀.
+- **Pass criteria.** G1 to G6 all hold. The counts of pieces and links are reported and compared afterwards with
+  A_certify.md §12.4's 566 and 450, which are not required to match, since the meeting sets are counted here in a
+  different way.
+- **Planted failures, which must each fail.** (P1) Disc (5, 6) is removed. (P2) Row 3's α is set to 0.49 Δφ, so
+  consecutive tiles of that row no longer overlap and the links between them break. Both run through the same code.
+
+### 3.2 Results
+
+Not yet run.
