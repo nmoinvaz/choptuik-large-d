@@ -10,6 +10,11 @@ ELL.md 7's windows (#1025).
     python3 ell_delta.py calib         the same windows on the scalar's own lambda_0(D), whose limit is exactly 2
                                        (GAMMA.md 5), at integer D 5 .. 20 (lambda_0 interpolated as below): how far
                                        the windows are from their limit at these n for a real sequence of this kind
+    python3 ell_delta.py fold [FILE]   a fold of the branch in D from ell_leap --fold records (default
+                                       data/l1kc47F1025.jsonl): D* from sigma_fold^2 = c (D* - D) on the last 3, 4, 5
+                                       points, then Delta and lambda at the fold from x(D) = x* + k sqrt(D* - D) + m (D* - D)
+    python3 ell_delta.py fold --planted   the same code on a synthetic fold (D* 16.37): D*, Delta* and lambda* to 1e-9;
+                                       --mutate=sigma fits sigma instead of sigma^2 and must miss D* (exit 1)
     python3 ell_delta.py table [FILE]  delta, n delta and the windows from the l = 1 points in FILE
                                        (default data/ell_lam_highD.json)
 
@@ -136,6 +141,56 @@ def calib():
     return True
 
 
+def fold_fit(D, sv, X, k):
+    """D* from the last k points of sigma^2 = c (D* - D) (sigma itself under --mutate=sigma), then each series in X
+    fitted as x* + kk sqrt(D* - D) + m (D* - D) on the same points; returns D*, {name: x*}"""
+    Dk, sk = D[-k:], sv[-k:]
+    y = sk if "sigma" in MUT else sk ** 2
+    A = np.stack([np.ones(k), Dk], 1)
+    (c0, c1), *_ = np.linalg.lstsq(A, y, rcond=None)
+    Ds = -c0 / c1
+    out = {}
+    for name, x in X.items():
+        r = np.sqrt(np.maximum(Ds - Dk, 0))
+        B = np.stack([np.ones(k), r, Ds - Dk], 1)
+        cf, *_ = np.linalg.lstsq(B, x[-k:], rcond=None)
+        out[name] = float(cf[0])
+    return float(Ds), out
+
+
+def fold(fn):
+    if "--planted" in sys.argv:
+        Dst, Xs = 16.37, dict(Delta=0.9812, lam=2.21)
+        D = np.array([14.0, 14.5, 15.0, 15.5, 15.75, 16.0, 16.125])
+        sv = 3.1e-7 * np.sqrt(Dst - D)
+        X = dict(Delta=Xs["Delta"] - 0.05 * np.sqrt(Dst - D) + 0.004 * (Dst - D),
+                 lam=Xs["lam"] + 0.21 * np.sqrt(Dst - D) - 0.01 * (Dst - D))
+        good = True
+        for k in (3, 4, 5):
+            Ds, xs = fold_fit(D, sv, X, k)
+            e = max(abs(Ds - Dst), abs(xs["Delta"] - Xs["Delta"]), abs(xs["lam"] - Xs["lam"]))
+            good &= e < 1e-9
+            print(f"planted fold D* {Dst}: last {k} points give D* {Ds:.10f}, Delta* {xs['Delta']:.10f}, lambda* {xs['lam']:.10f}; "
+                  f"max error {e:.1e} (bar 1e-9)" + (f"  [MUTATION {MUT}]" if MUT else ""))
+        print("PASS" if good else "FAIL")
+        return good
+    rows = [json.loads(l_) for l_ in open(fn)]
+    rows = [r for r in rows if "sv_fold" in r]
+    D = np.array([r["D"] for r in rows])
+    sv = np.array([r["sv_fold"] for r in rows])
+    print("| D | Delta | sigma_fold | cos | sigma_1(J) | sigma_min(bordered) / max | abs(J+ dF/dn) | abs(dDelta/dF) | constraint |")
+    print("|---|---|---|---|---|---|---|---|---|")
+    for r in rows:
+        print(f"| {r['D']:g} | {r['Delta']:.7f} | {r['sv_fold']:.3e} | {r['cos_fold']:.3f} | {r['sv_J_small'][0]:.3e} | "
+              f"{r['sv_B_min'] / r['sv_B_max']:.2e} | {r['tan_norm']:.2e} | {r['dDelta_dF']:.2e} | {r['constraint']:.1e} |")
+    X = dict(Delta=np.array([r["Delta"] for r in rows]))
+    for k in (3, 4, 5):
+        if len(D) >= k:
+            Ds, xs = fold_fit(D, sv, X, k)
+            print(f"last {k} points: D* {Ds:.4f}, Delta* {xs['Delta']:.6f}")
+    return True
+
+
 def collect(raw):
     srcs = [os.path.join(HERE, "data", f) for f in ("l1_D4_kc47.jsonl", "l1_kc23r.jsonl", "l1_kc31r.jsonl")]
     srcs += [os.path.join(raw, "I810-mac", "out", f"l1kc{k}{s_}s810.jsonl") for k in (23, 31, 39) for s_ in ("d4", "d5", "")]
@@ -165,6 +220,9 @@ if __name__ == "__main__":
     cmd = sys.argv[1]
     if cmd == "planted":
         good = planted()
+    elif cmd == "fold":
+        rest = [a_ for a_ in sys.argv[2:] if not a_.startswith("--")]
+        good = fold(rest[0] if rest else os.path.join(HERE, "data", "l1kc47F1025.jsonl"))
     elif cmd == "calib":
         good = calib()
     elif cmd == "collect":
