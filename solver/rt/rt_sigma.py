@@ -1,7 +1,8 @@
 """An upper bound on the smallest gain of the RT Jacobian at a state, and the direction that attains it (issue #163).
 
     python3 solver/rt/rt_sigma.py STATE.npz [--starts 3] [--rough] [--prec 192] [--horizon K] [--max_products 250]
-    python3 solver/rt/rt_sigma.py --planted [--mutate=shift]
+        [--save_x X.npz]
+    python3 solver/rt/rt_sigma.py --planted [--mutate=shift] [--deep K --save_x X.npz]
 
 For each of --starts smooth random right-hand sides v (max|v| = 1) it solves J x = v with rt_mpsolve's flexible GMRES
 (products by exact central differences of the arb residual, the f64 LU of the f64 Jacobian as preconditioner,
@@ -17,6 +18,11 @@ fgmres and LUdd (the f64 LU is exact for it); the best bound over three starts m
 along that entry to 1e-6. (Revised after the first run of this version, whose window was a factor 3: the bound's
 slack is 1 / |u . v| for the weakest left vector u, and it came out 14.) --mutate=shift adds 1e-20 to the tiny entry
 of the operator applied (not to the preconditioner), which moves the bound by a factor 100 (exit 1 then).
+--save_x X.npz (issue #983, default off, the printed output unchanged but for one closing line) writes each start's
+x / max|x|, its v (max|v| = 1) and its bound, the vectors in double-double parts, for rt_xcount.py, which counts the
+deep directions from them. --planted --deep K (K = 2 to 4, with --save_x) plants K tiny entries, 1e-22 times 1, 2,
+4, 8, and uses 12 starts; the best bound and x's content are checked as for K = 1, and rt_xcount.py X.npz --expect K
+must then find K. K = 1, the default, is the planted check above, unchanged.
 """
 import os
 for _v in ("VECLIB_MAXIMUM_THREADS", "OMP_NUM_THREADS", "OPENBLAS_NUM_THREADS"):
@@ -30,6 +36,7 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from rt_model import RT
 from rt_mp import RTmp
 import rt_mpsolve as mps
+from rt_xcount import write_x
 
 arb = flint.arb
 
@@ -70,21 +77,42 @@ def bounds(apply, prec, vs, max_products, log=print):
     return out
 
 
-def planted(mutate=None):
+def dd_parts(v):
+    """an object array of arb midpoints as double-double (hi, lo)"""
+    hi = np.array([float(x) for x in v])
+    return hi, np.array([float(x - arb(h)) for x, h in zip(v, hi)])
+
+
+def save_x(path, res, vs, **meta):
+    """each start's x / max|x|, v / max|v| (as bounds() used it) and bound, for rt_xcount.py"""
+    xs = [dd_parts(x) for _, x in res]
+    vn = [dd_parts(mps.mids(v * arb(1.0 / mps.amax(v)))) for v in vs]
+    write_x(path, [x[0] for x in xs], [x[1] for x in xs], [v[0] for v in vn], [v[1] for v in vn],
+            [b for b, _ in res], **meta)
+
+
+def planted(mutate=None, deep=1, save=None):
     flint.ctx.prec = 192
     rng = np.random.default_rng(1)
     L = 400
     s = np.exp(rng.uniform(np.log(1e-3), 0, size=L))
     s[123] = 1e-22
+    tiny = [123] + [37, 211, 307][:deep - 1]
+    for m, i in enumerate(tiny[1:], start=1):
+        s[i] = 1e-22 * 2 ** m
     so = mps.obj(s)
     if mutate == "shift":
         so[123] = so[123] + arb("1e-20")
     apply = lambda u: mps.mids(so * u)
     P = mps.LUdd(np.diag(s))
-    res = bounds(apply, P, [mps.obj(rng.normal(size=L)) for _ in range(3)], 80)
+    vs = [mps.obj(rng.normal(size=L)) for _ in range(3 if deep == 1 else 12)]
+    res = bounds(apply, P, vs, 80)
+    if save:
+        save_x(save, res, vs, D=0.0, planted_deep=deep)
+        print(f"  saved x of {len(res)} starts to {save}")
     best, x = min(res, key=lambda r: r[0])
     xf = np.abs(mps.to_f64(x))
-    off = np.delete(xf, 123).max()
+    off = np.delete(xf, tiny).max()
     ok = 1e-22 <= best * (1 + 1e-12) and best < 1e-20 and off < 1e-6
     print(f"planted: best bound {best:.4e} (in [1e-22, 1e-20]), largest other component {off:.1e} (< 1e-6): "
           f"{'ok' if ok else 'FAIL'}")
@@ -101,9 +129,11 @@ def main():
     ap.add_argument("--max_products", type=int, default=250)
     ap.add_argument("--planted", action="store_true")
     ap.add_argument("--mutate", default=None, choices=["shift"])
+    ap.add_argument("--save_x", default=None, help="X.npz: each start's x, v and bound, for rt_xcount.py")
+    ap.add_argument("--deep", type=int, default=1, help="--planted only: the number of tiny entries (1 to 4)")
     a = ap.parse_args()
     if a.planted:
-        sys.exit(0 if planted(a.mutate) else 1)
+        sys.exit(0 if planted(a.mutate, a.deep, a.save_x) else 1)
     flint.ctx.prec = a.prec
     d = np.load(a.state)
     D, Nt, N = float(d["D"]), int(d["Nt"]), int(d["N"])
@@ -127,6 +157,10 @@ def main():
     best = min(r[0] for r in res)
     print(f"  best bound on the smallest gain (max norm) {best:.3e}; the bounds of the starts span a factor "
           f"{max(r[0] for r in res) / best:.1f}")
+    if a.save_x:
+        save_x(a.save_x, res, vs, state=os.path.basename(a.state), D=D, Nt=Nt, N=N, K=K, rough=a.rough,
+               seed=163, prec=a.prec, max_products=a.max_products)
+        print(f"  saved x of {len(res)} starts to {a.save_x}")
 
 
 if __name__ == "__main__":
