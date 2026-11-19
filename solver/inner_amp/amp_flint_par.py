@@ -47,6 +47,7 @@ For K >= 13 use --fit phys with prec 640 (see the docstring of fit_phys); the le
 (sigma_5, to ~1e-9 at J = 1000; sigma_1..4 are biased by ~3e-10 at J = 500).
 """
 import sys
+import os
 import json
 import time
 import pickle
@@ -634,6 +635,14 @@ class AmpPar(Amp):
                     print(f"k {k}: S_1^({k}) = {mp.nstr(to_mp(S), 15)}  {self._fitlabel(k, 1, rs)}  sigma = "
                           f"{mp.nstr(to_mp(S / S1[1]), 15)}  [{time.time() - t0:.0f}s]", flush=True)
                 sig.append(S / S1[1])
+                if getattr(self, "partial_path", None):
+                    # a killed run (no checkpoint: memory, a reboot) keeps every finished order (#1003)
+                    tmp = self.partial_path + ".tmp"
+                    with open(tmp, "w") as fh:
+                        json.dump({**getattr(self, "partial_meta", {}), "k_done": k,
+                                   "sigma_str": [[mp.nstr(to_mp(z).real, 20), mp.nstr(to_mp(z).imag, 20)] for z in sig],
+                                   "f": f_out, "seconds": round(time.time() - t0, 1)}, fh)
+                    os.replace(tmp, self.partial_path)
         self.sig_acb = sig
         if self.fit_mode == "phys":
             # error of sigma_n = S^(2n+1)/S^(1) from the fit plateaus of the two multipliers
@@ -679,6 +688,8 @@ def main(argv):
     if fit != "legacy":
         kw = dict(fit=fit, mf=tuple(int(x) for x in mf.split(":")), fit_step=fit_step, phys_prec=phys_prec)
     A = AmpPar(wf, K, J, prec=prec, procs=procs, **kw)
+    A.partial_path = out + ".partial.json"     # sigma so far after each odd order, replaced at each one
+    A.partial_meta = {"wf": wf, "K": K, "J": J, "prec": prec}
     sig, f = A.run()
     secs = time.time() - t0
     tm = {k: round(v, 1) for k, v in A.timing.items()}
