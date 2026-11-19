@@ -1958,5 +1958,10 @@ The medians behind R, over the same 48 right-hand sides:
   c and a (cosine 0.234; 97% of b − c is orthogonal to a − c). Moving c toward b gives medians of 1.6×10⁻³³ and
   4.8×10⁻³³ at δ = 10⁻²⁰ and 10⁻¹⁹, 3×10⁻¹⁰ and 2×10⁻¹¹ of the random moves', the pre-set reading "along the root set".
   μ is the largest entry of both differences but under 1% of either in the 2-norm. Raw `I969-win/` (0e8e685e).
-- Open: whether the whole plane of a − c and b − c is tangent, tested inside it (#972), and how many conditions
-  the RT system at D 40.02 lacks.
+- **The whole plane is tangent (#972).** Two more moves inside it, along the part of b − c orthogonal to a − c and
+  along the sum of the two unit differences, give medians of 2.3×10⁻³³ to 1.1×10⁻³² at δ = 10⁻²⁰ and 10⁻¹⁹. That is
+  10⁻¹¹ to 10⁻⁹ of the random moves', the pre-set reading "in the root set". Four non-parallel directions in the plane
+  read tangent, consistent with a two-dimensional set of roots through the samples (12 right-hand sides on four rays;
+  curvature and directions out of the plane are not seen). Raw `I972-win/` (0fa56a56).
+- Open: how many conditions the RT system at D 40.02 lacks, and which. P7_scope.md §3.4 names the candidates, and
+  #983 excluded three of them; #985 counts the deep directions.
