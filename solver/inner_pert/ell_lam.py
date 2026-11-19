@@ -20,6 +20,12 @@ translation) are exact roots of every l, so first_order_run.find_lam's g = det S
                                       l >= 1: the same lambda* at every xi1 (relative 1e-6)
     python3 ell_lam.py scan L A wf [xi1]   g(lambda) = det S / (lambda (lambda - 1)) on lambda in [0.1, 6]: its sign
                                       changes (real roots) and local minima of |g|
+    python3 ell_lam.py lam3 L A wf f3re f3im [--lam=2.0] [--xi1=X,...]   M = 3: the zero re-solved by
+                                      first_order_hier.find_zero (deflated Newton, exact jets) from nested_ell's
+                                      (A, w/w_inf, F3/F1 = f3re + i f3im), then lambda* by first_order_hier.find_lam;
+                                      l = 0: planted, FIRST_ORDER.md's M = 3 zero (A 2.7264759, w/w_inf 1.015603095)
+                                      and lambda* 2.006804459 (bars 1e-6, 1e-7, 1e-7); l >= 1: the same zero and
+                                      lambda* at every xi1 (relative 1e-6)
 """
 import importlib.util
 import os
@@ -173,6 +179,53 @@ def scan(ell, A, wf, xi1):
     return True
 
 
+def lam3(ell, A, wf, f3):
+    import first_order_hier as H
+    FJ.ELL = ell
+    F3 = (A / 2j) * f3
+    x = np.array([A, wf, -2 * F3.imag, 2 * F3.real])
+    l0 = float(opt("lam", 2.0))
+    if opt("xi1", None) is not None:
+        xis = [float(t) for t in opt("xi1", "").split(",")]
+    elif ell == 0:
+        xis = [0.2, 0.175]
+    else:
+        import inner_ell as E
+        xis = [E.r1_for(wf, ell, t) for t in (1e-6, 1e-5, 1e-4)]
+    log(f"l {ell}, M 3, start A {A}, w/w_inf {wf}, F3/F1 {f3}; xi1 {xis}; start lambda {l0}")
+    res = []
+    for xi1 in xis:
+        if ell:
+            # F3 to full precision first (nested_ell's ladder): a start whose harmonic-3 jump is not ~0 is nonlinear
+            # at xi1 (tau_3 ~ 1e9) and the deflated Newton diverges
+            import nested_ell as N
+            nz = N.Nested(ell, xi1, N.ladder(wf, ell, xi1))
+            v, R1, r3, _ = nz.inner(A, wf, x[2:].copy())
+            x = np.array([A, wf, v[0], v[1]])
+            log(f"   F3 on the harmonic-3 ladder at xi1 {xi1}: |r_3| {r3:.1e}, Schur-corrected |r_1| {abs(R1):.1e}")
+        xz, r, K, L = H.find_zero(x.copy(), 3, xi1)
+        F3z = xz[2] / 2j + xz[3] / 2
+        log(f"zero at xi1 {xi1}: A {xz[0]:.10f}  w/w_inf {xz[1]:.10f}  (Delta {1.64389375 / xz[1]:.7f})  F3/F1 "
+            f"{F3z / (xz[0] / 2j):.8f}  |r_1| {np.linalg.norm(r[:2]):.1e}  |r_3| {np.linalg.norm(r[2:]):.1e}")
+        lm = H.find_lam(xz, 3, xi1, l0)
+        Sch, C, Lm, resH = H.sch_lam(xz, 3, xi1, lm)
+        log(f"RESULT xi1 {xi1}: A {xz[0]:.10f}  w/w_inf {xz[1]:.10f}  lambda* {lm:.12f}  (gamma {1 / lm:.10f}); "
+            f"Sch singular values {np.linalg.svd(Sch, compute_uv=False)}")
+        res.append((xz[0], xz[1], lm))
+    z = np.array(res)
+    spread = np.max(np.abs(z - z[0]), axis=0) / np.abs(z[0])
+    print(f"relative spread over xi1: A {spread[0]:.1e}, w/w_inf {spread[1]:.1e}, lambda* {spread[2]:.1e}")
+    if ell == 0:
+        d = np.abs(z[0] - np.array([2.7264759, 1.015603095, 2.006804459]))
+        good = d[0] < 1e-6 and d[1] < 1e-7 and d[2] < 1e-7
+        print(f"planted (l = 0 M = 3, FIRST_ORDER.md: A 2.7264759, w/w_inf 1.015603095, lambda* 2.006804459; bars 1e-6, "
+              f"1e-7, 1e-7): |d| {d[0]:.1e}, {d[1]:.1e}, {d[2]:.1e}  ({'OK' if good else 'BAD'})")
+    else:
+        good = spread.max() < 1e-6
+        print(f"the same zero and lambda* at every xi1 (relative 1e-6): {'OK' if good else 'BAD'}")
+    return good
+
+
 if __name__ == "__main__":
     cmd = sys.argv[1]
     rest = [a for a in sys.argv[2:] if not a.startswith("--")]
@@ -186,6 +239,8 @@ if __name__ == "__main__":
         good = modes(ell, A, wf, float(rest[3]) if len(rest) > 3 else xi1_default(ell, wf))
     elif cmd == "lam":
         good = lam(int(rest[0]), float(rest[1]), float(rest[2]))
+    elif cmd == "lam3":
+        good = lam3(int(rest[0]), float(rest[1]), float(rest[2]), complex(float(rest[3]), float(rest[4])))
     elif cmd == "scan":
         ell, A, wf = int(rest[0]), float(rest[1]), float(rest[2])
         good = scan(ell, A, wf, float(rest[3]) if len(rest) > 3 else xi1_default(ell, wf))
