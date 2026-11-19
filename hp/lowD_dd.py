@@ -300,6 +300,7 @@ def solve_point(D, M, zh, zl, src, a, nodes, outdir, log, segs=None):
                      or "failed" in hist[-1] or hist[-1].get("chord_converged")):
             break
         kw = dict(stall=stall, stall_factor=stall_factor, prior=hist) if in_driver else {}
+        log(f"D {D} M {M}: Newton call {it + 1} of at most {a.it_max}")  # the driver numbers each call's step 0
         zh, zl, h1 = newton_solve(s, zh, zl, tol=a.tol, it_max=1, verbose=True, jac=a.jac, **kw)
         hist += h1
         if any("lam" in h for h in h1):
