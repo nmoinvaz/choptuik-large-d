@@ -15,10 +15,10 @@ read are integrated; the used entries are bit-identical to hier's (`hier_nb.py s
 
     python -u hier_nb.py M A wf [hier.py options] [--pretune]
     python3 hier_nb.py selftest [--mutate=radius]       lazy against full residual (the mutation must fail)
-Options of this wrapper (removed before hier.main sees the arguments): --pretune; --h1=ABS, --h3=REL, --h5=REL, --h7=REL
-(finite-difference steps of levels 1, 3, 5 and 7, default hier's 1e-6 relative; --h5 for M = 9, where level 5's Newton
-direction is refused at every trial length at |r5| ~ 11, #1011); the environment variable INNER_NB_RTOL (integrator
-tolerance, inner_nb.py).
+Options of this wrapper (removed before hier.main sees the arguments): --pretune; --h1=ABS, --h3, --h5, --h7, --h9=REL
+(finite-difference steps of levels 1, 3, 5, 7 and 9, default hier's 1e-6 relative; --h5 for M = 9, where level 5's
+Newton direction is refused at every trial length at |r5| ~ 11, #1011); the environment variable INNER_NB_RTOL
+(integrator tolerance, inner_nb.py).
 e.g. the M = 7 selection from the M = 5 zero:
     python -u hier_nb.py 7 2.718579189229888 0.9992284031945021 --x=0.1492035749173264,0.01471905249087869,\
 0.008405346906375517,0.0014703451817031647 --pretune --schur --predict --floor --procs 2 --verbose=2
@@ -38,7 +38,7 @@ import inner_np as I                                    # noqa: E402
 
 LAZY = [os.environ.get("HIER_NB_LAZY", "1") == "1"]
 FD_STEP = {}                                            # --h1=ABS, --h3=REL (see LazyHier.h); also read in workers via env
-for _k, _env in ((1, "HIER_NB_H1"), (3, "HIER_NB_H3"), (5, "HIER_NB_H5"), (7, "HIER_NB_H7")):
+for _k, _env in ((1, "HIER_NB_H1"), (3, "HIER_NB_H3"), (5, "HIER_NB_H5"), (7, "HIER_NB_H7"), (9, "HIER_NB_H9")):
     if os.environ.get(_env):
         FD_STEP[_k] = float(os.environ[_env])
 MUT_RADIUS = [False]                                    # selftest --mutate=radius: read the approach level at the smallest radius
@@ -61,7 +61,7 @@ class LazyHier(H.Hier):
         M = 5's, and hier's steps (|dr_3| ~ 1e-2 for C_3) can fall below them."""
         if l == 1 and FD_STEP.get(1):
             return np.array([FD_STEP[1], FD_STEP[1]])
-        if l in (3, 5, 7) and FD_STEP.get(l):           # --h3/--h5/--h7=REL: relative steps at that level
+        if l in (3, 5, 7, 9) and FD_STEP.get(l):        # --h3/--h5/--h7/--h9=REL: relative steps at that level
             b = x[H.idx(l)]
             return FD_STEP[l] * np.maximum(np.abs(b), 1e-3 * np.abs(x[0]))
         return super().h(l, x)
@@ -160,12 +160,12 @@ def main():
     argv = sys.argv[1:]
     if argv and argv[0] == "selftest":
         sys.exit(0 if selftest("--mutate=radius" in argv) else 1)
-    for k in (1, 3, 5, 7):                              # --h1/--h3/--h5/--h7 -> environment, so workers see them too
+    for k in (1, 3, 5, 7, 9):                           # --h1/--h3/.../--h9 -> environment, so workers see them too
         a = [t for t in argv if t.startswith(f"--h{k}=")]
         if a:
             os.environ[f"HIER_NB_H{k}"] = a[0].split("=", 1)[1]
             FD_STEP[k] = float(os.environ[f"HIER_NB_H{k}"])
-    argv = [t for t in argv if not any(t.startswith(f"--h{k}=") for k in (1, 3, 5, 7))]
+    argv = [t for t in argv if not any(t.startswith(f"--h{k}=") for k in (1, 3, 5, 7, 9))]
     if "--pretune" in argv:
         argv = [a for a in argv if a != "--pretune"]
         args = [a for a in argv if not a.startswith("--")]
