@@ -7,10 +7,11 @@ the winding number of R_1 along the boundary of a cell is the sum of the signs (
 determinant) of the zeros inside. A cell of winding 0 may still hold a pair of opposite sign.
 
 The multiplier:
-  M = 1: lateral_np.jump(1, w_inf wf, A sin theta) at xi1 = --r1 (0.2), R_1 times xi1^(-A^2) (a positive factor, so
-         no phase change). A point whose path reaches max |Y| > --ymax (1e2) has no value: the path then passes near
-         a movable singularity of y+, and R_1 jumps where the parameters carry one across it (seen at xi1 = 0.3 and
-         0.25, absent on the same lines at 0.2). The zero set does not depend on xi1 (J = 0 means y+ = y-).
+  M = 1: lateral_np.jump(1, w_inf wf, A sin theta) at xi1 = --r1, R_1 times xi1^(-A^2) (a positive factor, so no
+         phase change). A point whose path reaches max |Y| > --ymax (1e2) has no value: the path then passes near a
+         movable singularity of y+, and R_1 jumps where the parameters carry one across it (at xi1 = 0.3, 0.25 and
+         0.2 on lines of A up to 5; none at 0.17). A point with |R_1| < 10 sigma (its rounding floor) has no value.
+         The zero set does not depend on xi1 (J = 0 means y+ = y-), so each zero is also located at a second xi1.
   M = 3: nested.inner at xi1 = --r1 (F_3 tuned so that S_3 = 0, warm-started from the nearest point already computed;
          the base grid is computed in rings outward from the known M = 3 zero), r_1; a point whose inner solve leaves
          |r_3| >= 1e-8 has no value. Cells with a point of no value are reported unresolved.
@@ -51,9 +52,11 @@ OFF = (0.0123456, 0.00654321)        # grid offset in (A, wf), so that the known
 
 # ------------------------------------------------------------------------------------------- the multipliers
 def m1_value(A, wf, r1):
-    """R_1 of lateral_np.jump(1, ...) along the same ray and arc (same solve_ivp calls, so the same bits), and
-    max |Y| on the path: a large value means the path passes near a movable singularity of y+, whose side
-    decides the branch, so R_1 jumps as the parameters move it across the path (#995)"""
+    """R_1 of lateral_np.jump(1, ...) along the same ray and arc (same solve_ivp calls, so the same bits), max |Y|
+    on the path, and sigma, R_1's rounding floor. A large max |Y| means the path passes near a movable singularity
+    of y+, whose side decides the branch, so R_1 jumps as the parameters move it across the path (#995). J is a
+    difference of two O(|Y|) values, and its error is about 4e-16 |Y| at every rtol from 1e-12 to 3e-14, so
+    sigma = 1e-15 |Y(xi1)| / |reference| (in R_1's units; at large A, J ~ xi1^(A^2) e^(-1/(2 xi1^2)) nears it)."""
     from scipy.integrate import solve_ivp
     from lateral_np import NP, Fharm, Kp, W0, fast_lin, series_data
     w, Fh, r0, phi0 = W0 * wf, Fharm(A), 0.1, 3 * np.pi / 8
@@ -68,18 +71,20 @@ def m1_value(A, wf, r1):
     D = s2.y[:nm.no, -1]
     i = {mu: k for k, mu in enumerate(nm.odd)}
     s = 1j * w
-    R = (D[i[1]] - np.conj(D[i[-1]])) / (2j * np.pi * Kp(s) * fast_lin(s, r1) * (2 * Fh[1]))
-    return complex(R) * r1 ** (-A * A), float(max(np.abs(s1.y).max(), np.abs(s2.y).max())), float(err)
+    ref = 2j * np.pi * Kp(s) * fast_lin(s, r1) * (2 * Fh[1]) * r1 ** (A * A)
+    R = (D[i[1]] - np.conj(D[i[-1]])) / ref
+    sig = 1e-15 * np.abs(s2.y[:, -1]).max() / abs(ref)
+    return complex(R), float(max(np.abs(s1.y).max(), np.abs(s2.y).max())), float(sig), float(err)
 
 
 def f_M1(args):
-    """[Re, Im, series error, max |Y|] (the guard on max |Y| is applied by Multiplier, so the cache keeps values)"""
+    """[Re, Im, series error, max |Y|, sigma] (the guards are applied by Multiplier, so the cache keeps values)"""
     p, r1 = args
     try:
-        v, ym, err = m1_value(p[0], p[1], r1)
-        return [v.real, v.imag, err, ym]
+        v, ym, sig, err = m1_value(p[0], p[1], r1)
+        return [v.real, v.imag, err, ym, sig]
     except Exception as ex:
-        return [float("nan"), float("nan"), str(ex)[:80], float("nan")]
+        return [float("nan"), float("nan"), str(ex)[:80], float("nan"), float("nan")]
 
 
 def f_M3(args):
@@ -135,16 +140,17 @@ class Multiplier:
                 k = self.key(p)
                 rec = dict(A=k[0], wf=k[1], re=r[0], im=r[1], info=r[2])
                 if self.M == 1:
-                    rec.update(r1=self.r1, ymax=r[3])
+                    rec.update(r1=self.r1, ymax=r[3], sig=r[4])
                 if self.M == 3:
                     rec.update(F3re=r[3], F3im=r[4])
                 self.store(k, rec)
                 fh.write(json.dumps(rec) + "\n")
 
     def store(self, k, r):
-        """a point's value, or none (NaN) when its M = 1 path came near a singularity (max |Y| > ymax)"""
+        """a point's value, or none (NaN) when its M = 1 path came near a singularity (max |Y| > ymax) or |R_1| is
+        within 10 sigma of its rounding floor (the phase is then unknown)"""
         v = complex(r["re"], r["im"])
-        if self.M == 1 and not r.get("ymax", 0.0) <= self.ymax:
+        if self.M == 1 and not (r.get("ymax", 0.0) <= self.ymax and abs(v) >= 10 * r.get("sig", 0.0)):
             v = complex(float("nan"), float("nan"))
         self.vals[k] = v
         self.extra[k] = r
@@ -205,7 +211,9 @@ class Counter:
                 step = wrap(math.atan2(b.imag, b.real) - math.atan2(a.imag, a.real)) if (
                     np.isfinite(a) and np.isfinite(b)) else float("nan")
                 L = math.hypot(pts[i + 1][0] - pts[i][0], pts[i + 1][1] - pts[i][1])
-                if not (abs(step) < self.dphi):
+                if not math.isfinite(step):
+                    ok = False                       # a point with no value: bisecting would not give it one
+                elif not (abs(step) < self.dphi):
                     if L > self.hmin:
                         new.append(((pts[i][0] + pts[i + 1][0]) / 2, (pts[i][1] + pts[i + 1][1]) / 2))
                         bad = True
@@ -356,7 +364,10 @@ def main():
     ap.add_argument("--out", default=None)
     ap.add_argument("--tag", default=None)
     ap.add_argument("--cache", default=None)
-    ap.add_argument("--r1", type=float, default=0.2, help="comparison radius xi1 of the jump (both M; 0.2 is nested.py's)")
+    ap.add_argument("--r1", type=float, default=None,
+                    help="comparison radius xi1 (M = 1: 0.17; M = 3: 0.2, nested.py's)")
+    ap.add_argument("--r1b", type=float, default=None,
+                    help="second xi1 at which each zero is located again (M = 1: 0.2)")
     ap.add_argument("--ymax", type=float, default=1e2, help="M = 1: no value where max |Y| on the path exceeds this")
     ap.add_argument("--selftest", action="store_true")
     ap.add_argument("--mutate", default=None, choices=["conj", "nosplit"])
@@ -367,6 +378,9 @@ def main():
     plant = tuple(float(v) for v in a.plant.split(",")) if a.plant else None
     os.makedirs(a.out, exist_ok=True)
     tag = a.tag or f"M{a.M}_A{a.A}_wf{a.wf}" + (f"_plant{a.plant}" if plant else "")
+
+    a.r1 = a.r1 or (0.17 if a.M == 1 else 0.2)
+    a.r1b = a.r1b or (0.2 if a.M == 1 else None)
     cache = a.cache or os.path.join(a.out, f"points_M{a.M}_r{a.r1}.jsonl")
     F = Multiplier(a.M, cache, a.procs, plant, r1=a.r1, ymax=a.ymax)
     if a.M == 3:
@@ -376,8 +390,15 @@ def main():
     t0 = time.time()
     res = count(F, box, a.nA, a.nwf, dphi=a.dphi)
     F.close()
+    if a.r1b:
+        # the zero set does not depend on xi1: locate each zero again at r1b, from the same cell
+        Fb = Multiplier(a.M, os.path.join(a.out, f"points_M{a.M}_r{a.r1b}.jsonl"), 1, plant, r1=a.r1b,
+                        ymax=a.ymax)
+        for z in res["zeros"]:
+            z["located_r1b"] = locate(Fb, *z["cell"])
+        Fb.close()
     res["sec"] = time.time() - t0
-    res.update(M=a.M, box=box, plant=plant, dphi=a.dphi, nA=a.nA, nwf=a.nwf, r1=a.r1, ymax=a.ymax)
+    res.update(M=a.M, box=box, plant=plant, dphi=a.dphi, nA=a.nA, nwf=a.nwf, r1=a.r1, r1b=a.r1b, ymax=a.ymax)
     leaves = res.pop("leaves")
     with open(os.path.join(a.out, f"count_{tag}.json"), "w") as fh:
         json.dump(res, fh, indent=1)
@@ -391,7 +412,9 @@ def main():
         loc = z["located"]
         print(f"  zero of sign {z['W']:+d} in cell A {z['cell'][0]:.4f}-{z['cell'][1]:.4f}, wf {z['cell'][2]:.4f}-"
               f"{z['cell'][3]:.4f}: " + (f"located at A {loc['A']:.6f}, wf {loc['wf']:.6f} (|R| {loc['absF']:.1e}, "
-                                          f"Jacobian sign {loc['sign']:+d})" if loc else "not located"))
+                                          f"Jacobian sign {loc['sign']:+d})" if loc else "not located")
+              + (f"; at xi1 {a.r1b}: " + (f"A {z['located_r1b']['A']:.6f}, wf {z['located_r1b']['wf']:.6f}"
+                                         if z.get("located_r1b") else "not located") if a.r1b else ""))
     return 0
 
 
