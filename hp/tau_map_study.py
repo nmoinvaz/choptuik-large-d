@@ -15,6 +15,10 @@ the mapped fields are the state's trigonometric interpolants evaluated on a grid
 compression does not alias) and transformed there.
 
     python3 tau_map_study.py RAWDIR [--state T100-win2/states/lowDhm_x0.000157-0.975_D3.0444_M384.npz] [--eps 1e-10,1e-12] [--out data/tau_map_study.json]
+        [--sine 0.5,0.7,0.9] [--arctan 0.5,0.3,0.2,0.1]
+
+--sine and --arctan list each family's parameters (an empty list skips the family); the defaults are the runs of
+data/tau_map_study.json (made with --eps 1e-4,1e-3), which they reproduce bit for bit.
 
 Minutes, one thread. Prints the table and writes the JSON.
 """
@@ -63,8 +67,12 @@ def main():
     ap.add_argument("--state", default="T100-win2/states/lowDhm_x0.000157-0.975_D3.0444_M384.npz")
     ap.add_argument("--eps", default="1e-10,1e-12")
     ap.add_argument("--fine", type=int, default=8)
+    ap.add_argument("--sine", default="0.5,0.7,0.9")
+    ap.add_argument("--arctan", default="0.5,0.3,0.2,0.1")
     ap.add_argument("--out", default=os.path.join(os.path.dirname(os.path.abspath(__file__)), "data", "tau_map_study.json"))
     a = ap.parse_args()
+    if not (a.sine.strip(",") or a.arctan.strip(",")):
+        ap.error("--sine and --arctan are both empty: no map to study")
     d = np.load(os.path.join(a.raw, a.state))
     meta = json.loads(str(d["meta"]))
     M, K = int(meta["M"]), len(meta["nodes"])             # K nodes, each with p, m, a, c
@@ -89,7 +97,8 @@ def main():
     pp = [(n, float(sf[np.argmax(np.abs(vals[:, i]))] % np.pi)) for i, n in enumerate(names) if n.endswith(" p")]
     print("pulse of p mod pi: " + ", ".join(f"{n.replace('node ', 'n').replace(' p', '')} {v:.2f}" for n, v in pp))
     rows = []
-    for fam, params in (("sine", (0.5, 0.7, 0.9)), ("arctan", (0.5, 0.3, 0.2, 0.1))):
+    fams = [(f, tuple(float(v) for v in getattr(a, f).split(",") if v)) for f in ("sine", "arctan")]
+    for fam, params in fams:
         for par_ in params:
             best = None
             for s0 in np.linspace(0, np.pi, 24, endpoint=False):
