@@ -313,8 +313,8 @@ with the footnote Shafer 1974. The numbers would need checks in `check_numbers.p
    whether to quote Δ∞ to ten digits.
 2. **Fix the seven rows.** Done in main 2a1f83f6: `hp/export_qd.py` rounded D to four places to group the records and
    wrote that key as the row's D. The rows now carry the record's own D (67.742203, ...), where they replace the pinned
-   rows of the same D. The runs above predate the fix and use the amendment; with the fixed table the loader's rule drops
-   nothing, so a rerun without `--no_amend` should give the amended results.
+   rows of the same D. The runs above predate the fix and use the amendment. With the fixed table the loader's rule
+   drops nothing, so a rerun without `--no_amend` should give the amended results.
 3. **γ(D).** The same code fits λ = 1/γ. The README's γ formula is rational with 9 constants.
 4. **The chain's reference.** `hp/anm_run.py`'s "formula diff" uses the README formula, 1.6×10⁻⁶ off above D 130. The
    24-constant form is within the chain's err there.
