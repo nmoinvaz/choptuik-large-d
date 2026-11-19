@@ -205,6 +205,11 @@ within the series' estimator range for A₀. **Control that must fail:** ⟨F²�
 
 **New?** The identity is Ecker et al.'s. Its use as a test of the selection rule is new here.
 
+**Result (#638, [EEG_PROFILE.md](EEG_PROFILE.md) §3.5.2).** The frozen test fails narrowly: c₁ lies 6.2×10⁻⁶ below the
+range of 2⟨F²⟩ at the K = 22 zero. Through the identity c₁ implies A = 2.71920533, which matches the states' own
+A∞ = 2.71920535 to 1.9×10⁻⁸, so the gap lies in the selection's x₀ estimate (1.1×10⁻⁶ in A, under its imaginary
+residue of 6×10⁻⁶). The two agree to 4×10⁻⁷ relative. Settling the rest needs σ₂₃ onward.
+
 ### 2.5 The truncation sequence against the amplitude expansion
 
 **What.** The truncation zeros are 0.777, 1.0156, 0.999228 and 1.000022–1.000028 (rtol-converged,

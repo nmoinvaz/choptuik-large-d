@@ -474,6 +474,39 @@ python3 ainf_from_states.py selection                                       # R1
 Raw output: folder `AC54-mac/` of the raw-data repository, at its commit 7b3077a8 (logs, JSON, the commands as run in
 `run_all.cmd`, exits in `exits.txt`).
 
+#### 3.5.2 The identity as a test of the selection's amplitude (#638)
+
+Ecker et al.'s Eq. (15), read as lim n(1 − λ_g) = ⟨β̃²⟩ = 2⟨F²⟩ (notes/DIRECTION_REVIEW.md §2.4), ties the gauge rate's
+fitted c₁ = 7.4165644 ± 4.4×10⁻⁶ (MODE_COUNT.md §10, a spread over fit choices) to the D = ∞ profile. In this gauge
+2⟨F²⟩ = A² + Σ_{ν≥3} 2|F_ν|²·2, with the harmonics F_ν(A) of the amplitude expansion (K = 45, J 1250 and 1500, ω∞).
+The test fixed before the run: c₁ lies within the range of 2⟨F²⟩(x₀), x₀ = A₀² the zero of S₁ over the six Padé
+approximants whose spread §14 of PADE_FAR_END.md quotes. Controls: ⟨F²⟩ for 2⟨F²⟩, and the fundamental alone. Script
+`solver/eeg_profile/amp_identity.py`. *Status:* **numerical evidence**, conditional on Eq. (15), which is Ecker et al.'s
+and is not derived here.
+
+| quantity | value | kind |
+|---|---|---|
+| x₀ over [10/10] … [12/10], both J | 7.3940838–7.3941332 | spread over Padé orders |
+| the diagonal zero at orders 20, 21, 22 | 7.39412468, 7.39409536, 7.39408707 | converging, ratio about 0.28 |
+| Im x₀ at ω∞, [11/11] | −3.3×10⁻⁵ | the estimator's residue: x₀ should be real if ω∞ is selected |
+| harmonic share Σ_{ν≥3} / 2⟨F²⟩ | 3.03×10⁻³ | — |
+| 2⟨F²⟩(x₀) | 7.4165706–7.4166204 | from the x₀ range |
+| c₁ − 2⟨F²⟩(x₀) | −6.2×10⁻⁶ to −5.6×10⁻⁵ | **fails**: 1.4 times c₁'s spread below the range |
+| control ⟨F²⟩ | 3.7083 | fires |
+| control, fundamental alone | c₁ − x₀ = +0.0224 | fires, 3600 times the miss |
+
+- **The test fails narrowly, and the cause lies in x₀, not in c₁.** With the expansion's harmonics, c₁ implies
+  A = 2.71920533 (±8×10⁻⁷ from c₁'s spread). The states' central profiles give A∞ = 2.71920535 directly (§3.5.1). The
+  two finite-D routes agree to 1.9×10⁻⁸. They share the solver and the states, but not the observable or the fit. Both
+  lie 1.1×10⁻⁶ below the selection's lowest estimate, A₀ = 2.71920646, and 1.0×10⁻⁵ below its highest.
+- **The gap is smaller than the estimator's own residue.** At ω∞ the [11/11] zero has Im x₀ = −3.3×10⁻⁵, 6×10⁻⁶ in A.
+  The real part is not accurate to the 1×10⁻⁶ the gap needs. So the selection's amplitude agrees with finite D to
+  4×10⁻⁷ relative, against the README's 1%, but the K = 22 series cannot yet resolve the remaining gap.
+- **What would settle it.** σ₂₃ and beyond at ω∞, so that x₀ converges to 10⁻⁶ in A. If the gap persists, the
+  selected amplitude departs from the finite-D one at 4×10⁻⁷, which would bear on Conjecture 1.
+- **#638's control n − 1 → n cannot fail.** The leading coefficient c₁ is the same in 1/n and 1/(n + 1)
+  (`hp/lam_gauge_fit.py`), so it was replaced by the fundamental-alone control.
+
 ## 4. What this means
 
 - Eq. (16) is the one-pole-pair (geometric) truncation of the $`D = \infty`$ echo. Its $`w`$ is the first harmonic
