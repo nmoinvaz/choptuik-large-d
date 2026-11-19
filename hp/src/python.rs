@@ -181,9 +181,10 @@ macro_rules! od_sizes {
         let me: &mut dyn std::any::Any = $me;
         if let Some($c) = me.downcast_mut::<Ctx<4>>() {
             $c.mutate = $mutate;
-            let r = $body;
+            // reset on a panic too (series_split's fast form asserts its exactness), then unwind as before
+            let r = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| $body));
             $c.mutate = 0;
-            r
+            r.unwrap_or_else(|p| std::panic::resume_unwind(p))
         } else {
             Err("the octo-double solver is built for M = 32 only".to_string())
         }
@@ -446,7 +447,7 @@ impl<const B: usize> Api for Ctx<B> {
         };
         od_sizes!(self, mutate, |c| {
             c.series_split = split;
-            let r = match lanes {
+            let r = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| match lanes {
                 8 => series_o_in::<8, _>(c, z0, n, solve, tangent_from),
                 12 => series_o_in::<12, _>(c, z0, n, solve, tangent_from),
                 16 => series_o_in::<16, _>(c, z0, n, solve, tangent_from),
@@ -454,9 +455,10 @@ impl<const B: usize> Api for Ctx<B> {
                 24 => series_o_in::<24, _>(c, z0, n, solve, tangent_from),
                 28 => series_o_in::<28, _>(c, z0, n, solve, tangent_from),
                 _ => series_o_in::<32, _>(c, z0, n, solve, tangent_from),
-            };
+            }));
+            // the form is the call's alone, a panic's included
             c.series_split = 0;
-            r
+            r.unwrap_or_else(|p| std::panic::resume_unwind(p))
         })
     }
 
@@ -1324,9 +1326,11 @@ impl Solver {
     /// mutate: Ctx::mutate for the call (model::JET_MUT_AT_KEEP, the control). split: the horizon series' form
     /// (Ctx::series_split; 0, the default, as before; 1, model::SPLIT_MIDDLE, each Cauchy sum's middle terms formed
     /// ahead of the order, in parallel, the same sums in another order, so other bits at most at the octo-double
-    /// rounding, hp/series_split_check.py). tangent_from: the orders from it on formed once and moved by their tangents
-    /// (multishoot's JetSession::tangent_from; JET_MUT_TANGENT_KEEP = 28 its control), which agree with the series formed
-    /// twice to rounding rather than bit for bit; None forms every order twice. M = 32 only.
+    /// rounding, hp/series_split_check.py; 2, model::SPLIT_FAST, those middle terms by the block-scaled exact products
+    /// of hp/src/fastmul.rs, other bits at about the octo-double rounding). tangent_from: the orders from it on formed
+    /// once and moved by their tangents (multishoot's JetSession::tangent_from; JET_MUT_TANGENT_KEEP = 28 its
+    /// control), which agree with the series formed twice to rounding rather than bit for bit; None forms every order
+    /// twice. M = 32 only.
     #[pyo3(signature = (z0, n, rhs=None, mutate=0, split=0, tangent_from=None))]
     #[allow(clippy::too_many_arguments)]
     fn series_o<'py>(
@@ -1339,8 +1343,12 @@ impl Solver {
         split: u8,
         tangent_from: Option<usize>,
     ) -> PyResult<Vec<T8<'py>>> {
-        if split > model::SPLIT_MIDDLE {
-            return Err(PyValueError::new_err(format!("split must be 0 or {}, not {split}", model::SPLIT_MIDDLE)));
+        if split > model::SPLIT_FAST {
+            return Err(PyValueError::new_err(format!(
+                "split must be 0, {} or {}, not {split}",
+                model::SPLIT_MIDDLE,
+                model::SPLIT_FAST
+            )));
         }
         let l = self.api.len();
         let z0 = parts8(&z0, l)?;

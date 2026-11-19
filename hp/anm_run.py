@@ -306,8 +306,9 @@ def coefficients_o(s, zo, N, held=None, perturb=None, by_order=True, tangent_fro
     tangent_from F > 0: by order, the orders from F on formed once and moved by their tangents (multishoot's
     JetSession::tangent_from), equal to the series formed twice to rounding, not bit for bit; a build without it forms
     every order twice, with a notice. split 1: by order, the horizon series' middle terms formed ahead of each order
-    (Ctx::series_split, #952; the same bits in every test, not guaranteed); a build without it forms the default, with a
-    notice."""
+    (Ctx::series_split, #952; the same bits in every test, not guaranteed); split 2: those middle terms by block-scaled
+    exact products (model::SPLIT_FAST, #1034; other bits at about the octo-double rounding); a build without the form
+    asked for forms the default, with a notice."""
     # the octo-double helpers are in multidouble's Python package from f092018 on; imported here so that the other
     # paths run on the older packages the runners have
     from multidouble import od_add_dd, od_axpy
@@ -346,12 +347,19 @@ def coefficients_o(s, zo, N, held=None, perturb=None, by_order=True, tangent_fro
             except TypeError:
                 print("  coefficients_o: this hpkernel's series_o has no tangent_from; every order formed twice", flush=True)
                 kw = {}
+        if int(split) not in (0, 1, 2):
+            raise SystemExit(f"--series_split must be 0, 1 or 2, not {split}")
         if split:
             try:
                 s.series_o(list(Zo[0]), 0, None, split=int(split), **kw)
                 kw["split"] = int(split)
             except TypeError:
                 print("  coefficients_o: this hpkernel's series_o has no split; the default horizon series", flush=True)
+            except ValueError as e:
+                if "split must be" not in str(e):
+                    raise
+                print(f"  coefficients_o: this hpkernel's series_o has no split {int(split)}; the default horizon series",
+                      flush=True)
         for z in s.series_o(list(Zo[0]), N, hook, **kw):
             Zo.append(o8(z))
             norms.append(float(dd_norm(Zo[-1][0], Zo[-1][1])))
@@ -419,7 +427,7 @@ def main():
     opt.update(od_tangents=2)           # --od_tangents 1: the octo-double Jacobian one column per evaluation (the same bits, slower)
     opt.update(jet_by_order=1)          # --jet_by_order 0: --jet_o's series by the jets of growing length (the same bits, slower)
     opt.update(jet_tangent_from=0)      # --jet_tangent_from F: by order, orders from F on moved by their tangents (equal to rounding, faster)
-    opt.update(series_split=0)          # --series_split 1: by order, the horizon series' middle terms formed ahead of each order (#952)
+    opt.update(series_split=0)          # --series_split 1: by order, the horizon series' middle terms formed ahead of each order (#952); 2: by fast exact products (#1034)
     opt.update(base_adopt=0)            # --base_adopt 1: the base's od polish is adopted whatever it did
     opt.update(base_polish=1)           # --base_polish 0: no polish, the stored state is the base
     opt.update(keep_plan=1)             # --keep_plan 0: plan the base again even when its state stores a plan
