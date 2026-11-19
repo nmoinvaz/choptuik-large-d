@@ -1,0 +1,14 @@
+P2c theta0 (Lemma J's a priori map on (1, 1 + delta/2], m = 1, unit shapes): class constants p2b_lc_cells.json, ln n0 = 73.89, rate = full, mutate = None
+  h_H on L = 9.65026e-32, |omega| = 2.9697844, ln(1 + delta/2) = 0.024692613
+  sup_I ell (G with the pseudo-component, F_c, g/(n - 1)):
+    G: S 7.6097e-64, V 3.39e-32, B 3.6484e-31, C 5.2998e-31
+    F: S 2.0921e-33, V 0.0, B 1.0, C 1.1037e-31
+    g: S 7.0578e-64, V 4.3417e-32, B 1.7768e-62, C 2.2074e-31
+  pseudo-component: ell_G,pc = 3.1231e-31, ell_g,pc/(n-1) = 1.2906e-62, Q_j = S 2.1457e-33, V 0.0, B 1.0256, C 1.0768e-31
+  Gamma0 (rows S, V, beta, c; columns S, V, beta, c):
+     7.6097e-64     3.39e-32   3.6484e-31   5.2998e-31
+       0.073332          0.0          0.0          0.0
+     7.0578e-64   4.3417e-32   1.7768e-62   2.2074e-31
+     5.1659e-35          0.0     0.024693   2.7254e-33
+  Perron root 1.029140e-16; certified theta0 = 1.000105e-12 (weight [1.0000000155693363, 73324038648.59406, 1.0000000086328005, 24690021035.696022])
+  theta0 < 1: yes
