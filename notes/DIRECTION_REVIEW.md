@@ -183,6 +183,19 @@ known zero shows (0.777 → 1.016). **Then:** seed hp at D = 40 from a surviving
 
 **New?** Excited echoing solutions of the real massless scalar: not found (§4).
 
+**Result so far (#1013, #1020, #1026, #1027; numerical evidence, one inner solver).** At M = 3 three zeros besides the
+known one are located at ξ₁ 0.25, 0.3 and 0.35 to 3×10⁻¹¹ (#1020, raw `I1020-dh610/`): (A, ω/ω∞) = (2.3388, 0.0962),
+(2.5986, 0.2218) and (2.8448, 0.2180), with signs −1, −1 and +1. By the rule fixed before the runs, none persists to
+M = 5 (#1026, raw `I1026-dh610/`). Walks from two of them end at two M = 5 zeros at lower ω, (2.2275, 0.0926) and
+(2.5839, 0.1414), which do not move with ξ₁. They lie 0.39 and 0.27 from their M = 3 starts, against M 1 → 3 shifts of
+0.073 and 0.089. At M = 7 (#1027, raw `I1027-dh610/`) neither has a zero at ξ₁ 0.15. At ξ₁ 0.25 each has one, at
+(2.2333, 0.0657) and (2.5733, 0.1005), with the same ratios at ξ₁ 0.2 and 0.3. Their harmonics do not decay:
+|F₅/F₃| is 0.59 and 0.56 and |F₇/F₅| is 0.68 and 0.63, against 0.055–0.057 per pair at the known zero. So by #1027's
+rule the truncation sequence does not converge at these zeros, and the truncation route cannot establish them as
+excited solutions. All of this comes from `hier_nb.py`, which has been checked against the amplitude expansion only at
+the known zero. The same check at the two low-ω zeros is #1029. Unvalued cells of the M = 3 count remain (#1021), and
+the box A 3.6–5.1 is being counted (#1013 step 4).
+
 ### 2.4 The amplitude as a second test of Conjecture 1
 
 **What.** Ecker et al.'s Eq. (15) (arXiv:2611.07007, as read in [EEG_PROFILE.md](EEG_PROFILE.md) §1) says
