@@ -193,6 +193,16 @@ def _accept3(I, A, wf, v, r, rr):
     return True, None
 
 
+_MUTATE = set()        # selftest mutations of the M = 3 path
+
+
+def _starts():
+    """the continuation's start radii in the order tried: _BOUND["starts"] (--m3starts), default (0.25, 0.2)"""
+    if "starts" in _MUTATE:                        # --mutate=starts: the option is ignored
+        return (0.25, 0.2)
+    return tuple(_BOUND.get("starts", (0.25, 0.2)))
+
+
 def _continue3(I, nested, A, wf, F3, r1, starts=(0.25, 0.2), h0=0.01, hmin=0.00125):
     """S_3 = 0 at xi1 = r1 by continuation in xi1 from a radius where it converges: at each radius the noise-safe
     Newton, accepted when |r_3| <= 3 x its noise and that noise is below the cap (_accept3); the step in xi1 is
@@ -247,8 +257,8 @@ def f_M3(args):
     accepted when |r_3| is at its rounding noise; its sigma then includes r_1's noise and the error the residual r_3
     induces in r_1 (|J_1 J_3^-1| (|r_3| + noise_3)), so the guard |R| >= 10 sigma keeps its phase. Points the first
     solve accepts are unchanged. args[4], if given, bounds the point: dict(rhs=right-hand-side calls per integration,
-    wall=seconds, noise3=the acceptance's cap on noise_3); a point stopped by a bound has no value, and its record
-    says which bound and where."""
+    wall=seconds, noise3=the acceptance's cap on noise_3, starts=the start radii in order); a point stopped by a
+    bound has no value, and its record says which bound and where."""
     I = _probe_inner_np()
     import nested
     (A, wf), F3, r1 = args[:3]
@@ -267,7 +277,7 @@ def f_M3(args):
             return [R.real, R.imag, float(r3), F3n.real, F3n.imag, ym, sig]
         if not fix:                               # the inner solve did not tune S_3 to zero: no value
             return [nan, nan, float(r3), F3[0], F3[1], ym, sig]
-        got, trail, stops = _continue3(I, nested, A, wf, F3, r1)
+        got, trail, stops = _continue3(I, nested, A, wf, F3, r1, starts=_starts())
         more = dict(bound=stops) if stops else {}   # only a bounded point's record gains a field
         if got is None:
             return [nan, nan, float(r3), F3[0], F3[1], ym, sig, dict(trail=trail, ok=False, **more)]
@@ -662,7 +672,7 @@ class _Synth3:
     Jt = np.array([[5e3, 1e2], [-3e2, 4e3]])
 
     def __init__(self):
-        self.rtol = 1e-12
+        self.rtol, self.calls = 1e-12, []
         synth = self
 
         class Inner:
@@ -685,6 +695,7 @@ class _Synth3:
         return np.array([1 + v[0], 2 + v[1], r3[0], r3[1]])
 
     def inner(self, A, wf, F3, rs):
+        self.calls.append(rs)
         v = np.array([0.1, 0.05]) if rs > 0.22 else self.vstar(rs) + 0.01
         return v[0] / 2j + v[1] / 2, 0j, 1.0
 
@@ -702,7 +713,22 @@ def selftest_m3accept(mutate=None):
     ok = err < 1e-9 and trail[0] == 0.2
     print(f"selftest M = 3 acceptance{' --mutate=' + mutate if mutate else ''}: trail {trail}, stops {stops}, "
           f"end |v - v*| {err:.2g}: {'PASS' if ok else 'FAIL'}")
-    return ok
+    # --m3starts=0.2,0.25: the 0.2 start is tried first, so the false start at 0.25 is never evaluated;
+    # --mutate=starts ignores the option, and the 0.25 start is then evaluated (and rejected by the cap)
+    S = _Synth3()
+    _MUTATE.clear()
+    if mutate == "starts":
+        _MUTATE.add("starts")
+    _BOUND.clear()
+    _BOUND.update(noise3=1e2, starts=[0.2, 0.25])
+    got, trail, stops = _continue3(S, S, 3.66, 0.9, (0.0, -0.1), 0.17, starts=_starts())
+    _BOUND.clear()
+    _MUTATE.clear()
+    err = float(np.abs(got[0] - S.vstar(0.17)).max()) if got else float("inf")
+    ok2 = err < 1e-9 and trail[0] == 0.2 and 0.25 not in S.calls and not stops
+    print(f"selftest M = 3 start order 0.2, 0.25: starts evaluated {S.calls}, trail {trail}, stops {stops}, "
+          f"end |v - v*| {err:.2g}: {'PASS' if ok2 else 'FAIL'}")
+    return ok and ok2
 
 
 def selftest(mutate=None):
@@ -761,7 +787,9 @@ def main():
     ap.add_argument("--m3noisecap", type=float, default=1e2,
                     help="M = 3: the continuation accepts a radius only if noise_3 is below this as well; 0 for none")
     ap.add_argument("--selftest", action="store_true")
-    ap.add_argument("--mutate", default=None, choices=["conj", "nosplit", "norecount", "nocap"])
+    ap.add_argument("--m3starts", default="0.25,0.2",
+                    help="M = 3: the continuation's start radii in the order tried; those at or below xi1 are skipped")
+    ap.add_argument("--mutate", default=None, choices=["conj", "nosplit", "norecount", "nocap", "starts"])
     a = ap.parse_args()
     if a.selftest:
         return 0 if selftest(a.mutate) else 1
@@ -773,7 +801,11 @@ def main():
     a.r1 = a.r1 or (0.17 if a.M == 1 else 0.2)
     a.r1b = a.r1b or (0.2 if a.M == 1 else 0.17)
     cache = a.cache or os.path.join(a.out, f"points_M{a.M}_r{a.r1}.jsonl")
-    bounds = {k: v for k, v in (("rhs", a.m3maxrhs), ("wall", a.m3wall), ("noise3", a.m3noisecap)) if v} or None
+    bounds = {k: v for k, v in (("rhs", a.m3maxrhs), ("wall", a.m3wall), ("noise3", a.m3noisecap)) if v}
+    starts = [float(x) for x in a.m3starts.split(",")]
+    if starts != [0.25, 0.2]:
+        bounds["starts"] = starts
+    bounds = bounds or None
     F = Multiplier(a.M, cache, a.procs, plant, r1=a.r1, ymax=a.ymax, m3fix=a.m3fix, retry=a.retry, bounds=bounds)
     if a.M == 3:
         # seed the continuation at the known M = 3 zero's tuned F_3
