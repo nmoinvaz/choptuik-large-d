@@ -199,7 +199,9 @@ and gives no new sample, so the noise estimates below come from starts perturbed
   zero's estimate is 1.2×10⁻³ (#974). At 0.16 no solve reaches the 10⁻⁶ bar (#965). At 0.145 every role passes the bar,
   and the zero (2.719313, 0.999999) lies 8.3×10⁻⁵ from 0.15's, 0.41 of the sum of the two estimates (1.94×10⁻⁴ at 0.145,
   raw I989-win2 b5e41ff5). At 0.155 only 1 of 15 solves passes (#989). The floor after perturbed repeats rises from
-  3×10⁻⁸ at 0.15 to 3×10⁻⁷ at 0.145 and above 10⁻⁵ at 0.155. #1000 measures the 0.145 estimate from 8 perturbed starts.
+  3×10⁻⁸ at 0.15 to 3×10⁻⁷ at 0.145 and above 10⁻⁵ at 0.155. Eight perturbed centre solves at 0.145 (#1000, raw I1000-rpi5 f891c78f) give (2.719293, 1.000003), 6.3×10⁻⁵ from
+  0.15's with δω = −2.2×10⁻⁵. That is 1.3 times the sum of the two estimates, with the dA and dw offsets still single
+  solves. So a radius dependence of the size of §3's 1.1×10⁻⁵ tension is not excluded. #1002 samples every input.
 
 ## 3. The truncation sequence with M = 7
 
