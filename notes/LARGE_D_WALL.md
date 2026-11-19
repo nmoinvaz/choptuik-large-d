@@ -1160,18 +1160,28 @@ at D 225.13 moves Δ by −1.1×10⁻²⁰, so the rungs' lifts belong to the or
   with 23 iterations, the third sweep of `invert_q`, in 236 s (`anm_run.jsonl`).
 - **Opt-in changes (#1032, `hp/proj_check.py`).** `--proj_start pred` polishes the point's own data first and keeps
   the old path as the fallback, with that polish handed on, so where the u0 path fails the result is the old one bit
-  for bit. `--reseed_o_stop 1` ends `refine_o` where a correction from a fresh LU does not halve |R|. On a floor like
-  leg 6's (the check's mock, case A) that is 4 rung residuals and 2 rung Jacobians instead of 10 and 8. `--proj_o 1`
-  projects by `refine_o` alone from the point's eight parts, the quad-double path only when it ends above
-  `--proj_o_bar`. The rung residual now comes from its own blocks (`Solver.residual_sub`, the centre series and the
-  segment skipped, the same bits). The rung Jacobian has come from the horizon block's columns since ff530c32
-  (`Solver.jacobian_sub`). On dh610 at ks 240 that block took 3.32 s against the full Jacobian's 3.89 s (raw
-  `I954-dh610/B_dup_eval.log`), so the horizon block's own columns dominate it.
-- **The refinement's floor, still unexplained.** By reading `refine_o` and the kernel, every correction reaches the
-  octo-double residual: the data enter in all eight parts, and the horizon solves' refinement converges past the
-  double-double LU's reach (notes/CRAWL.md 7). `proj_check.py floor` records, correction by correction, whether the
-  rung residual's bits change, and how far the residual follows a datum moved by 2⁻ᵏ of itself. It decides between a
-  residual that stops seeing the data below some part and a quad-double Jacobian whose steps stop helping.
+  for bit. On the converged D 251.8782 state that projection took 141 s against the default's 261 s, the same bits
+  (dh370, raw `I1032-dh370/bits.log`). `--reseed_o_stop 1` ends `refine_o` where a correction from a fresh LU does not
+  halve |R|. On a floor like leg 6's (the check's mock, case A) that is 4 rung residuals and 2 rung Jacobians instead
+  of 10 and 8. `--proj_o 1` projects by `refine_o` alone from the point's eight parts, and the quad-double path runs
+  only when that ends above `--proj_o_bar`, by default the corrector's `--tol_od`: the rung rows are rows of the
+  corrector's residual, so a projection above it cannot give a converged iterate. The rung residual now comes from its
+  own blocks (`Solver.residual_sub`, the centre series and the segment skipped, the same bits). The rung Jacobian has
+  come from the horizon block's columns since ff530c32 (`Solver.jacobian_sub`). On dh610 at ks 240 that block took
+  3.32 s against the full Jacobian's 3.89 s (raw `I954-dh610/B_dup_eval.log`), so the horizon block's own columns
+  dominate it.
+- **The rung block is far stronger than the mass mode's gain.** At D 251.8782 (ks 293) a move of 2⁻²¹² of the first
+  a_h datum changes the rung's |R| by 6.4×10⁻¹⁶ and of the first m_h datum by 1.3×10⁻¹⁹, each within four digits of
+  the quad-double Jacobian's prediction from 2⁻²⁰⁰ to 2⁻³²⁰ (raw `I1032-dh370/floor.log`). So the m_h columns are not
+  about 1 here, as `cols_least_squares`' docstring has them from notes/QUAD_DOUBLE.md 13.27. A plant sized by the mass
+  mode's gain alone (m_h moved by 10⁻²⁴ of itself, a_h by 10⁻²⁴/G) put the projections outside their basin (|R| 10²⁵¹,
+  raw `I1032-dh370/accuracy.log`), and the checks now size each datum's plant by its column of the block.
+- **The refinement's floor belongs to the re-seed of a prediction.** From the converged D 251.8782 state's data
+  rounded to quad-double, `refine_o` reaches 7.86×10⁻³⁶ in four corrections and stays there, the residual changing
+  bits at every correction and reading all eight parts (their first four alone give 5.3×10⁻¹⁷; raw
+  `I1032-dh370/floor.log`). The stuck 5.17×10⁻³⁰ of leg 6's log is the re-seed's refinement at the leg's predicted
+  point. What holds it there is still open. `--reseed_o_stop` ends both after one stalled correction from a fresh LU,
+  where the default's further refactorings gain nothing.
 
 ## Proposed README text
 
