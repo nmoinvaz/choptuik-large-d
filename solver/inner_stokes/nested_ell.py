@@ -23,7 +23,7 @@ that the ulp-level r_3 does not leak into r_1. A genuine zero does not move with
     python3 nested_ell.py zero L A wf [--xi1=X,...] [--F3=re,im] [--expect=A,wf] [--mutate=grav]
         l = 0: the planted M = 3 zero (FIRST_ORDER.md: A 2.7264759, w/w_inf 1.015603095) at xi1 0.175, 0.2, 0.225
         l >= 1: xi1 from inner_ell.r1_for at tau 1e-6, 1e-5, 1e-4 (the harmonic-1 jump's size against the slow
-        solution), pass: the same zero at every xi1 (relative 1e-6) and Newton steps there below 1e-8;
+        solution), pass: the same zero at every xi1 (relative 1e-6) and Newton steps there below 1e-7;
         --expect: that zero (relative 1e-6)
 """
 import os
@@ -129,10 +129,10 @@ class Nested:
         r1 = R0[:2] - K[:2] @ dv
         return v, r1[0] + 1j * r1[1], float(np.abs(R0[2:]).max()), float(np.abs(K[:2]).max() / np.abs(K[2:]).max())
 
-    def solve(self, A, wf, v, its=12, stop=1e-10):
-        """Newton on (A, w/w_inf) until the relative step is below stop (r_1 has a noise floor, so no residual bar);
-        returns A, wf, v, r_1 and the last relative step"""
-        rel = np.inf
+    def solve(self, A, wf, v, its=12, stop=1e-10, floor=1e-7):
+        """Newton on (A, w/w_inf) until the relative step is below stop, or below floor and no smaller than the step
+        before (r_1's noise floor: no residual bar); returns A, wf, v, r_1 and the last relative step"""
+        rel, prev = np.inf, np.inf
         for it in range(its):
             v, R, r3, leak = self.inner(A, wf, v)
             F3 = v[0] / 2j + v[1] / 2
@@ -144,8 +144,9 @@ class Nested:
             rel = max(abs(step[0]) / A, abs(step[1]) / wf)
             log(f"   it {it}: A {A:.9f} w/w_inf {wf:.9f}  r_1 {R:.4e}  |r_3| {r3:.1e}  |K_13|/|K_33| {leak:.1e}  "
                 f"F3/F1 {F3 / (A / 2j):.7f}  relative step {rel:.1e}  ({self.nev} residuals)")
-            if rel < stop:
+            if rel < stop or (rel < floor and rel >= prev):
                 break
+            prev = rel
             lam = min(1.0, 0.2 / rel)                                       # at most 20% per step
             A, wf = A + lam * step[0], wf + lam * step[1]
         return A, wf, v, R, rel
@@ -201,8 +202,8 @@ def zero(ell, A, wf):
         print(f"planted (l = 0 M = 3, FIRST_ORDER.md's A 2.7264759, w/w_inf 1.015603095; bars 1e-5, 1e-6): |dA| {dA:.1e}, "
               f"|dw| {dw:.1e}  ({'OK' if good else 'BAD'})")
     else:
-        good = spread.max() < 1e-6 and max(q[2] for q in zs) < 1e-8
-        print(f"the same zero at every xi1 (relative spread < 1e-6, last Newton steps < 1e-8 relative): "
+        good = spread.max() < 1e-6 and max(q[2] for q in zs) < 1e-7
+        print(f"the same zero at every xi1 (relative spread < 1e-6, last Newton steps < 1e-7 relative): "
               f"{'OK' if good else 'BAD'}")
     ex = opt("expect", None)
     if ex is not None:
