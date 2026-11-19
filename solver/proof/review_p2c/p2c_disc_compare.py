@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """P2c review (#992): this review's lemma D margins (p2c_disc.py records) against the certificate's stored ones
-(lemma6b1_runs/row_XX.json: Lam, sup = M, box_rad), disc by disc, after the own numbers were committed (ce097b2b).
+(lemma6b1_runs/row_XX.json: Lam, sup = M, box_rad), disc by disc, after the own numbers were committed (ac394431).
 
-    python3 p2c_disc_compare.py p2c_disc_all.jsonl [p2c_disc_all_infl2.jsonl ...]
+    python3 p2c_disc_compare.py DIR/p2c_disc_all.jsonl [DIR/p2c_disc_all_infl2.jsonl ...]   # DIR: I992-mac
 
 Per row: the largest Lambda and M of each side, the range of the ratios mine/stored, and every disc that one side
 certifies and the other does not. The row maxima of the stored files are also printed for A_certify.md 12.4's table.

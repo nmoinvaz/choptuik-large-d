@@ -28,8 +28,10 @@ inflated to 4 times the stored box radius plus 1e-15).
 
     python3 p2c_disc.py --checkeq                    # the equation against lemma6_usys.SysU.rhs at random points
     python3 p2c_disc.py --checkint                   # the integrator from each s_j to s_{j+1} against the stored boxes
-    python3 p2c_disc.py --discs=SPEC [--mutate=sign] [--radius=R] [--tag=T]
+    python3 p2c_disc.py --discs=SPEC [--mutate=sign] [--radius=R] [--infl=I] [--tag=T] --out=DIR
         SPEC: ray (the 12 k = 0 discs), row11, corners, sample (ray + row11 + corners), all, or j:k,j:k,...
+        DIR: where the records p2c_disc_TAG.jsonl go, a task folder of the raw-data repository (I992-mac holds the
+        review's); without --out they go to the working directory
 --mutate=sign computes the defect with the fast term's sign flipped (V_u = +V/2 + ...), the Taylor coefficients with
 the true equation: every certificate must fail. --radius=R replaces the disc radius (the too-large-disc control).
 """
@@ -359,7 +361,10 @@ def main():
     want = select(OPTS.get("discs", "ray"), R_)
     tag = OPTS.get("tag", OPTS.get("discs", "ray") + (f"_mut_{MUT}" if MUT else "")
                    + (f"_r{OPTS['radius']}" if "radius" in OPTS else ""))
-    outp = os.path.join(HERE, f"p2c_disc_{tag}.jsonl")
+    tag = tag.replace(":", "-").replace(",", "_")   # no ':' or ',' in file names (Windows cannot check them out)
+    out = OPTS.get("out", os.getcwd())
+    os.makedirs(out, exist_ok=True)
+    outp = os.path.join(out, f"p2c_disc_{tag}.jsonl")
     fh = open(outp, "w")
     recon = {}
     nok = nall = 0
