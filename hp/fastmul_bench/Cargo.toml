@@ -1,0 +1,17 @@
+# fastmul's planted checks and timings against the naive octo-double product, outside hp's build (the module only
+# needs multidouble): cargo run --release [-- --no-check | --no-bench | --reps R]
+[package]
+name = "fastmul_bench"
+version = "0.1.0"
+edition = "2021"
+publish = false
+
+[dependencies]
+multidouble = "=4.9.1"  # hp/Cargo.toml's version
+
+[profile.release]
+opt-level = 3
+codegen-units = 1
+lto = "thin"
+
+[workspace]

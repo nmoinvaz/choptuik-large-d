@@ -2,3 +2,5 @@
 /dist/
 __pycache__/
 *.so
+/fastmul_bench/target/
+/fastmul_bench/Cargo.lock
