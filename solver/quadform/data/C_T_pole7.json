@@ -1,0 +1,480 @@
+{
+ "experiment": "C",
+ "data": "T_pole7",
+ "n": 1235,
+ "rows": [
+  {
+   "cls": "quadratic",
+   "N": 12,
+   "form": "(3,3,4)",
+   "chi2dof": 4525.322335247294,
+   "ok": true,
+   "max_over_sigma": 1560.337433761374,
+   "defect": false,
+   "secs": 1.8
+  },
+  {
+   "cls": "quadratic",
+   "N": 12,
+   "form": "(3,4,3)",
+   "chi2dof": 4525.322153622218,
+   "ok": true,
+   "max_over_sigma": 1560.3374335676237,
+   "defect": false,
+   "secs": 2.6
+  },
+  {
+   "cls": "quadratic",
+   "N": 12,
+   "form": "(4,3,3)",
+   "chi2dof": 4525.321881916106,
+   "ok": true,
+   "max_over_sigma": 1560.3374257801995,
+   "defect": false,
+   "secs": 2.4
+  },
+  {
+   "cls": "quadratic",
+   "N": 14,
+   "form": "(4,4,4)",
+   "chi2dof": 0.9730043632203831,
+   "ok": true,
+   "max_over_sigma": 3.6835632005144494,
+   "defect": false,
+   "secs": 3.3
+  },
+  {
+   "cls": "quadratic",
+   "N": 16,
+   "form": "(4,5,5)",
+   "chi2dof": 0.9740355790195727,
+   "ok": true,
+   "max_over_sigma": 3.6844776665930152,
+   "defect": true,
+   "secs": 4.1
+  },
+  {
+   "cls": "quadratic",
+   "N": 16,
+   "form": "(5,4,5)",
+   "chi2dof": 0.9641630056826477,
+   "ok": true,
+   "max_over_sigma": 3.6733127159355146,
+   "defect": true,
+   "secs": 3.4
+  },
+  {
+   "cls": "quadratic",
+   "N": 16,
+   "form": "(5,5,4)",
+   "chi2dof": 0.9758574775304175,
+   "ok": true,
+   "max_over_sigma": 3.681129154814261,
+   "defect": true,
+   "secs": 4.7
+  },
+  {
+   "cls": "quadratic",
+   "N": 18,
+   "form": "(5,5,6)",
+   "chi2dof": 0.9695705444709263,
+   "ok": true,
+   "max_over_sigma": 3.6547711588424967,
+   "defect": true,
+   "secs": 4.9
+  },
+  {
+   "cls": "quadratic",
+   "N": 18,
+   "form": "(5,6,5)",
+   "chi2dof": 0.9695705225196336,
+   "ok": true,
+   "max_over_sigma": 3.654768905358954,
+   "defect": true,
+   "secs": 5.2
+  },
+  {
+   "cls": "quadratic",
+   "N": 18,
+   "form": "(6,5,5)",
+   "chi2dof": 0.9695705177306435,
+   "ok": true,
+   "max_over_sigma": 3.6547721230174126,
+   "defect": true,
+   "secs": 5.2
+  },
+  {
+   "cls": "quadratic",
+   "N": 20,
+   "form": "(6,6,6)",
+   "chi2dof": 0.9749373703789893,
+   "ok": true,
+   "max_over_sigma": 3.6786850302208887,
+   "defect": true,
+   "secs": 7.6
+  },
+  {
+   "cls": "quadratic",
+   "N": 22,
+   "form": "(6,7,7)",
+   "chi2dof": 0.9698440000232075,
+   "ok": true,
+   "max_over_sigma": 3.6703397573311984,
+   "defect": true,
+   "secs": 12.8
+  },
+  {
+   "cls": "quadratic",
+   "N": 22,
+   "form": "(7,6,7)",
+   "chi2dof": 0.9613433657358026,
+   "ok": true,
+   "max_over_sigma": 3.6733622566766817,
+   "defect": true,
+   "secs": 10.4
+  },
+  {
+   "cls": "quadratic",
+   "N": 22,
+   "form": "(7,7,6)",
+   "chi2dof": 0.9574720957843377,
+   "ok": true,
+   "max_over_sigma": 3.6747924098547653,
+   "defect": true,
+   "secs": 8.9
+  },
+  {
+   "cls": "quadratic",
+   "N": 24,
+   "form": "(7,7,8)",
+   "chi2dof": 0.9655853386840658,
+   "ok": true,
+   "max_over_sigma": 3.6714468371457265,
+   "defect": true,
+   "secs": 8.4
+  },
+  {
+   "cls": "quadratic",
+   "N": 24,
+   "form": "(7,8,7)",
+   "chi2dof": 0.9655854365284512,
+   "ok": true,
+   "max_over_sigma": 3.6714460685426022,
+   "defect": true,
+   "secs": 8.6
+  },
+  {
+   "cls": "quadratic",
+   "N": 24,
+   "form": "(8,7,7)",
+   "chi2dof": 0.9655855377202632,
+   "ok": true,
+   "max_over_sigma": 3.6714454222654798,
+   "defect": true,
+   "secs": 7.4
+  },
+  {
+   "cls": "quadratic",
+   "N": 26,
+   "form": "(8,8,8)",
+   "chi2dof": 1.6786278024105874,
+   "ok": false,
+   "max_over_sigma": 18.6262097196242,
+   "defect": true,
+   "secs": 6.3
+  },
+  {
+   "cls": "quadratic",
+   "N": 28,
+   "form": "(8,9,9)",
+   "chi2dof": 0.9778088697732527,
+   "ok": true,
+   "max_over_sigma": 3.526269413574841,
+   "defect": true,
+   "secs": 10.2
+  },
+  {
+   "cls": "quadratic",
+   "N": 28,
+   "form": "(9,8,9)",
+   "chi2dof": 0.9778063501304053,
+   "ok": true,
+   "max_over_sigma": 3.5257353838559276,
+   "defect": true,
+   "secs": 10.2
+  },
+  {
+   "cls": "quadratic",
+   "N": 28,
+   "form": "(9,9,8)",
+   "chi2dof": 0.9778062145488461,
+   "ok": true,
+   "max_over_sigma": 3.525446872566464,
+   "defect": true,
+   "secs": 9.9
+  },
+  {
+   "cls": "rational",
+   "N": 12,
+   "form": "[9/2]",
+   "chi2dof": 13684378349557.098,
+   "ok": true,
+   "max_over_sigma": 37387851.20067954,
+   "defect": false,
+   "secs": 1.1
+  },
+  {
+   "cls": "rational",
+   "N": 12,
+   "form": "[7/4]",
+   "chi2dof": 15205589.37917886,
+   "ok": true,
+   "max_over_sigma": 41918.27222094992,
+   "defect": false,
+   "secs": 1.0
+  },
+  {
+   "cls": "rational",
+   "N": 14,
+   "form": "[11/2]",
+   "chi2dof": 438272780333.9873,
+   "ok": true,
+   "max_over_sigma": 5442553.12834239,
+   "defect": false,
+   "secs": 1.0
+  },
+  {
+   "cls": "rational",
+   "N": 14,
+   "form": "[9/4]",
+   "chi2dof": 466431.9836118913,
+   "ok": true,
+   "max_over_sigma": 5936.901322066917,
+   "defect": false,
+   "secs": 0.9
+  },
+  {
+   "cls": "rational",
+   "N": 14,
+   "form": "[7/6]",
+   "chi2dof": 0.9710333203502819,
+   "ok": true,
+   "max_over_sigma": 3.650475364872905,
+   "defect": false,
+   "secs": 0.9
+  },
+  {
+   "cls": "rational",
+   "N": 16,
+   "form": "[13/2]",
+   "chi2dof": 14183666569.003534,
+   "ok": true,
+   "max_over_sigma": 1129413.184544504,
+   "defect": false,
+   "secs": 1.2
+  },
+  {
+   "cls": "rational",
+   "N": 16,
+   "form": "[11/4]",
+   "chi2dof": 17783.76497313839,
+   "ok": true,
+   "max_over_sigma": 1192.7781619568116,
+   "defect": false,
+   "secs": 1.1
+  },
+  {
+   "cls": "rational",
+   "N": 16,
+   "form": "[9/6]",
+   "chi2dof": 0.9707448282007934,
+   "ok": true,
+   "max_over_sigma": 3.675170289532972,
+   "defect": false,
+   "secs": 1.2
+  },
+  {
+   "cls": "rational",
+   "N": 18,
+   "form": "[15/2]",
+   "chi2dof": 463452810.3134868,
+   "ok": true,
+   "max_over_sigma": 229087.57774596504,
+   "defect": false,
+   "secs": 1.4
+  },
+  {
+   "cls": "rational",
+   "N": 18,
+   "form": "[13/4]",
+   "chi2dof": 592.1606820789266,
+   "ok": true,
+   "max_over_sigma": 260.18093431490263,
+   "defect": false,
+   "secs": 1.3
+  },
+  {
+   "cls": "rational",
+   "N": 18,
+   "form": "[11/6]",
+   "chi2dof": 4.019246319987243,
+   "ok": true,
+   "max_over_sigma": 22.884665695260736,
+   "defect": false,
+   "secs": 2.2
+  },
+  {
+   "cls": "rational",
+   "N": 20,
+   "form": "[17/2]",
+   "chi2dof": 17502282.10703229,
+   "ok": true,
+   "max_over_sigma": 37025.52827319436,
+   "defect": false,
+   "secs": 1.6
+  },
+  {
+   "cls": "rational",
+   "N": 20,
+   "form": "[15/4]",
+   "chi2dof": 16.241472543749964,
+   "ok": true,
+   "max_over_sigma": 40.278094311011216,
+   "defect": false,
+   "secs": 1.6
+  },
+  {
+   "cls": "rational",
+   "N": 20,
+   "form": "[13/6]",
+   "chi2dof": 1.0749811007979753,
+   "ok": true,
+   "max_over_sigma": 3.9643589019362087,
+   "defect": false,
+   "secs": 2.9
+  },
+  {
+   "cls": "rational",
+   "N": 22,
+   "form": "[19/2]",
+   "chi2dof": 770918.7339500716,
+   "ok": true,
+   "max_over_sigma": 6576.1127386088,
+   "defect": false,
+   "secs": 2.2
+  },
+  {
+   "cls": "rational",
+   "N": 22,
+   "form": "[17/4]",
+   "chi2dof": 1.4894965230905612,
+   "ok": true,
+   "max_over_sigma": 6.017690273715102,
+   "defect": false,
+   "secs": 2.5
+  },
+  {
+   "cls": "rational",
+   "N": 22,
+   "form": "[15/6]",
+   "chi2dof": 0.9773979406423962,
+   "ok": true,
+   "max_over_sigma": 3.719068760994287,
+   "defect": false,
+   "secs": 3.5
+  },
+  {
+   "cls": "rational",
+   "N": 24,
+   "form": "[21/2]",
+   "chi2dof": 35344.818701388525,
+   "ok": true,
+   "max_over_sigma": 1547.5306207868723,
+   "defect": false,
+   "secs": 2.0
+  },
+  {
+   "cls": "rational",
+   "N": 24,
+   "form": "[19/4]",
+   "chi2dof": 0.9902935027706229,
+   "ok": true,
+   "max_over_sigma": 3.783701083375119,
+   "defect": false,
+   "secs": 2.3
+  },
+  {
+   "cls": "rational",
+   "N": 24,
+   "form": "[17/6]",
+   "chi2dof": 16.293251453678476,
+   "ok": true,
+   "max_over_sigma": 40.25296488271321,
+   "defect": false,
+   "secs": 4.1
+  },
+  {
+   "cls": "rational",
+   "N": 26,
+   "form": "[23/2]",
+   "chi2dof": 1911.9986423295622,
+   "ok": true,
+   "max_over_sigma": 536.9006358797944,
+   "defect": false,
+   "secs": 2.3
+  },
+  {
+   "cls": "rational",
+   "N": 26,
+   "form": "[21/4]",
+   "chi2dof": 0.9762389595123474,
+   "ok": true,
+   "max_over_sigma": 3.6873736960285135,
+   "defect": false,
+   "secs": 3.2
+  },
+  {
+   "cls": "rational",
+   "N": 26,
+   "form": "[19/6]",
+   "chi2dof": 1.4921283201966218,
+   "ok": true,
+   "max_over_sigma": 6.019122749060529,
+   "defect": false,
+   "secs": 3.4
+  },
+  {
+   "cls": "rational",
+   "N": 28,
+   "form": "[25/2]",
+   "chi2dof": 129.6775503041701,
+   "ok": true,
+   "max_over_sigma": 136.54270069607614,
+   "defect": false,
+   "secs": 2.9
+  },
+  {
+   "cls": "rational",
+   "N": 28,
+   "form": "[23/4]",
+   "chi2dof": 1.9173935907638067,
+   "ok": true,
+   "max_over_sigma": 7.686457432867359,
+   "defect": false,
+   "secs": 5.7
+  },
+  {
+   "cls": "rational",
+   "N": 28,
+   "form": "[21/6]",
+   "chi2dof": 0.9912975767095733,
+   "ok": true,
+   "max_over_sigma": 3.7861552310205955,
+   "defect": false,
+   "secs": 7.0
+  }
+ ],
+ "first": {},
+ "pass_C": false,
+ "prec_bits": 1024
+}
