@@ -16,7 +16,7 @@ formulation of hp/pinning.py; their coefficients are zero).
         [--qd_it 12] [--qd_w 0] [--refine 1] [--probe 0 --probe_c C] [--plan_tol 1e-32] [--fix1 0] [--F_pred_max 0]
         [--horizon_alpha 0] [--fix1_qlu 0] [--jet_q 0] [--reseed 0] [--pred_q 0] [--reseed_q 0] [--save_pred 0]
         [--jet_o 0] [--jet_by_order 1] [--jet_tangent_from 0] [--series_split 0] [--od_tangents 2] [--corrector od --tol_od 1e-40] [--base_adopt 0] [--base_polish 1] [--keep_plan 1] [--held_fit FILE]
-        [--held_o 0] [--reseed_o 0] [--reseed_qd_bar 1e-24] [--a0 0] [--a_grow 2] [--a_hold 0] [--lam_stall 0] [--od_floor_delta 0] [--save_base 0] [--save_jet 0] [--held_from STATE]
+        [--held_o 0] [--reseed_o 0] [--reseed_qd_bar 1e-24] [--proj_start u0] [--reseed_o_stop 0] [--proj_o 0 --proj_o_bar 0] [--a0 0] [--a_grow 2] [--a_hold 0] [--lam_stall 0] [--od_floor_delta 0] [--save_base 0] [--save_jet 0] [--held_from STATE]
         [--arclength 0 --guard 0.05 --D_min 0 --arc_sign 1 --border 1 --turns_max 2 --arc_dhold 1e-12 --arc_jet FILE]
         [--a_rule step|reseed --a_scale 1 --a_drop 10 --a_rise 3.16]
 
@@ -150,6 +150,16 @@ made the chain crawl at λ = 1/2 past D 251 (#700, notes/CRAWL.md).
 --log_proj 1 prints one line per failed projection of the corrector: the point's pinned max|F| and each stage of
 Reseeder.project, the u0 rung, its quad-double polish and the ladder's last rung (reseed.why_failed, #743). It only
 prints. The lines are numbered, and the last one's number equals the run's printed count of failed projections.
+Three opt-in ways to cheapen the corrector's projections (#1032; the defaults leave them as they were). --proj_start
+pred (with --reseed_q 1) polishes the point's own four-part data in quad-double first, counted 'pred', and runs the
+double-double u0 rung, its polish and the re-seed only when that fails. Past D 249 at order 293 the u0 rung's
+double-double data put the pole inside u0 (#693), so their polish failed at every projection and each ended in the
+re-seed's polish of the point's own data, counted 'ladder'. Where that holds the result is the same bit for bit.
+--reseed_o_stop 1 ends the octo-double corrections (--reseed_o) at their floor, where a correction from a freshly
+factored LU does not halve the rung's |R|. --proj_o 1 (with --corrector od, --reseed 2 and --reseed_o K) projects
+each point by those corrections alone from its own eight parts, counted 'u0o', and runs the quad-double projection
+only when they end above --proj_o_bar (0, the default: --tol_od) or by their step cap ('u0o_refused'). The three
+are refused with --arclength, whose corrector (hp/arclength.py) builds its own re-seeder without them.
 --ks K sums the horizon series to order K instead of the state's own ks (130 on the chain), and saves it with the
 states (#696). The unknowns are the same, so a state converged at one ks starts at another with |F| of about the
 series' terms between the two orders. A changed ks plans the base again (a stored plan stalled the polish), so its
@@ -438,6 +448,10 @@ def main():
     opt.update(ks=0)                    # --ks K: the horizon series' order instead of the state's (#696)
     opt.update(elim_switch=1e-15)       # --elim_switch S: ElimO projects a point whose pinned qd |F| exceeds S (#700)
     opt.update(log_proj=0)              # --log_proj 1: a line per failed projection, with each stage's residuals (#743)
+    # #1032: --proj_start pred, the projection polishes the point's own data first (Reseeder proj_start);
+    # --reseed_o_stop 1, the octo-double corrections end at their floor (Reseeder od_stop); --proj_o 1, ElimO projects
+    # by the octo-double refinement alone first, accepted at or below --proj_o_bar (0: --tol_od)
+    opt.update(proj_start="u0", reseed_o_stop=0, proj_o=0, proj_o_bar=0.0)
     # --arclength 1: the pseudo-arclength continuation of hp/arclength.py from this base (#842), oriented by --arc_sign
     # (the sign of D's change), no base where the unit tangent's |t_D| < --guard, stopping below --D_min (0: never) or
     # after the step that holds the --turns_max-th turn (2: the mirror's own turn);
@@ -468,6 +482,14 @@ def main():
                                       or not (opt["a_scale"] > 0 and opt["a_drop"] > 1 and opt["a_rise"] >= 1)):
         raise SystemExit("--a_rule reseed needs --jet_o 1, --reseed 1 or 2 and --reseed_start pred, not --arclength, and "
                          "--a_scale > 0, --a_drop > 1, --a_rise >= 1")
+    if opt["proj_start"] not in ("u0", "pred") or (opt["proj_start"] == "pred" and not opt["reseed_q"]):
+        raise SystemExit(f"--proj_start: u0 or pred, not {opt['proj_start']}; pred needs --reseed_q 1")
+    if opt["proj_o"] and not (opt["corrector"] == "od" and opt["reseed"] == 2 and opt["reseed_o"] > 0):
+        raise SystemExit("--proj_o 1 needs --corrector od, --reseed 2 and --reseed_o K > 0")
+    if opt["arclength"] and (opt["proj_start"] != "u0" or opt["reseed_o_stop"] or opt["proj_o"]):
+        # hp/arclength.py's ChainSys builds its own Reseeder and ElimO, which do not take them (#1032)
+        raise SystemExit("--proj_start, --reseed_o_stop and --proj_o do not reach the arclength corrector "
+                         "(hp/arclength.py ChainSys); run them without --arclength")
     out_dir = out
     os.makedirs(out, exist_ok=True)
     rec_path = os.path.join(out, "anm_run.jsonl")
@@ -511,7 +533,8 @@ def main():
             # --corrector od: the octo-double Newton (hp/octo_corrector.py), with --reseed 2 inside ElimO
             so = PinnedO(spx.s, spx.ch, spx.cl, c8=spx.c8)
             if elim.get("rs") is not None:
-                so = ElimO(so, elim["rs"], switch=opt["elim_switch"], log=bool(opt["log_proj"]))
+                so = ElimO(so, elim["rs"], switch=opt["elim_switch"], log=bool(opt["log_proj"]), proj_o=opt["proj_o"],
+                           proj_o_bar=opt["proj_o_bar"] or opt["tol_od"])
             z0 = z8_start if z8_start is not None else o8_of_q(z4_start if z4_start is not None else qparts(ph, pl))
             try:
                 z8, hist, conv = newton_od(so, z0, tol=opt["tol_od"], it_max=opt["qd_it"], verbose=True, junk_w=opt["od_junk"],
@@ -735,7 +758,8 @@ def main():
             if opt["reseed"] == 2:
                 elim["rs"] = Reseeder(dict(M=M, nodes=nodes, kt=kt, kc=kc, ks=ks), D, threads=opt["threads"],
                                       horizon_alpha=opt["horizon_alpha"], qd=bool(opt["reseed_q"]), od=opt["reseed_o"],
-                                      qd_start=opt["reseed_start"], qd_bar=opt["reseed_qd_bar"])
+                                      qd_start=opt["reseed_start"], qd_bar=opt["reseed_qd_bar"],
+                                      proj_start=opt["proj_start"], od_stop=bool(opt["reseed_o_stop"]))
             zh_p, zl_p, F0_p, _, conv_p, _ = correct(sp, zh, zl, opt["tol"],
                                                      z8_start=load_o(os.path.join(raw, opt["state"]))[0])
             elim["rs"] = None
@@ -1044,7 +1068,8 @@ def main():
                     # inside the corrector
                     rs_n = Reseeder(dict(M=M, nodes=nodes, kt=kt, kc=kc, ks=ks), Dn, threads=opt["threads"],
                                     horizon_alpha=opt["horizon_alpha"], qd=bool(opt["reseed_q"]), od=opt["reseed_o"],
-                                      qd_start=opt["reseed_start"], qd_bar=opt["reseed_qd_bar"])
+                                      qd_start=opt["reseed_start"], qd_bar=opt["reseed_qd_bar"],
+                                      proj_start=opt["proj_start"], od_stop=bool(opt["reseed_o_stop"]))
                     dz0_at.update(D=float(Dn), D_str=str(Dn), a=float(a))
                     if opt["save_pred"] and pred4 is not None:
                         # the prediction before its re-seed, for testing the re-seed on it (13.26)
