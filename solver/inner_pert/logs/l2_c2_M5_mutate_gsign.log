@@ -1,0 +1,8 @@
+M 5: Sch(2) [[-42278.79330839179, 76549.15741872336], [29574.555483289267, -53590.259537910075]]  singular values [1.06741931e+05 1.70898451e+01]  (deflated r_H 4.0e-05) [4 s]
+   deflation of e|l and the forced directions: max |r_H| of the deflated directions by iteration ['8.5e+12', '1.6e+03', '1.4e+00', '2.9e+00'] [70 s]
+   mode d_s Z0: corrected jump 8.54e+00 against |Sch| |f2_1| 7.50e+06 [70 s]
+   l0: lambda_1 = -3.044257 (left singular vector); phi e1 -3.044799, e2 -3.042482, f2 -3.045678 [70 s]
+   sym: lambda_1 = -3.041565 (left singular vector); phi e1 -3.042104, e2 -3.039796, f2 -3.042980 [70 s]
+wrote /Users/nathan/Source/choptuik-l2-c2calc/solver/inner_pert/data/l2_c2_M5_xi0.2_l0-sym_gsign.json [70 s]
+PASS
+exit 0

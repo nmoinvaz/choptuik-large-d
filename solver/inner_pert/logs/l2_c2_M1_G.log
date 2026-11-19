@@ -1,0 +1,11 @@
+M 1: Sch(2) [[-7795.747650419811, 20252.463855305796], [-2989.3960337172816, 2682.3369071358875]]  singular values [21995.93109873  1801.77930649]  (deflated r_H 0.0e+00) [0 s]
+   deflation of e|l and the forced directions: max |r_H| of the deflated directions by iteration ['0.0e+00'] [8 s]
+   mode d_s Z0: corrected jump 5.16e-05 against |Sch| |f2_1| 1.05e+06 [8 s]
+   F_lambda forcing against the d/dlambda component: raw difference 1.46e-01; after the local field's homogeneous part 9.83e-02; ell projections differ by 5.58e-02 [8 s]
+   l2: c2 = -7.959089 (left singular vector); phi e1 -8.322476, e2 -5.948067, f2 -9.086115 [8 s]
+   l0: lambda_1 = 7.809440 (left singular vector); phi e1 8.133418, e2 6.016516, f2 8.814239 [8 s]
+   G: c2 = -0.149648 (left singular vector); phi e1 -0.189058, e2 0.068449, f2 -0.271875 [8 s]
+   sym: lambda_1 = 2.728833 (left singular vector); phi e1 2.935753, e2 1.583715, f2 3.370585 [8 s]
+wrote /Users/nathan/Source/choptuik-l2-c2calc/solver/inner_pert/data/l2_c2_M1_xi0.2_l2-l0-G-sym.json [8 s]
+PASS
+exit 0

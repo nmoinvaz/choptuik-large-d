@@ -1,0 +1,37 @@
+=== --checks 
+1. graph evaluator = SymForce (series orders < 60, and right-hand side at xi0): series y 1.8e-15, series c 1.5e-15, rhs 4.7e-13 (< 1e-11)  (as required)
+2. l2_mode's l = 0 forcing, converted = FIRST_ORDER's s-translation breaking (untruncated, random data): max relative difference 1.1e-15 (< 1e-9)  (as required)
+3. l0: summed series = right-hand side at |xi| = 0.05; F(0) = 0; dropped negative powers: 2.6e-12 (< 1e-10); |F(0)| 0.0e+00; dropped 6.7e-14 (< 1e-12); 196 nodes  (as required)
+3. l2: summed series = right-hand side at |xi| = 0.05; F(0) = 0; dropped negative powers: 2.1e-12 (< 1e-10); |F(0)| 0.0e+00; dropped 6.7e-14 (< 1e-12); 196 nodes  (as required)
+3. l2_ctrl: summed series = right-hand side at |xi| = 0.05; F(0) = 0; dropped negative powers: 1.7e-10 (< 1e-10); |F(0)| 0.0e+00; dropped 2.9e-11 (< 1e-12); 849 nodes  (** NOT AS REQUIRED **)
+3. l2_lam: summed series = right-hand side at |xi| = 0.05; F(0) = 0; dropped negative powers: 3.9e-14 (< 1e-10); |F(0)| 0.0e+00; dropped 0.0e+00 (< 1e-12); 107 nodes  (as required)
+3. G: summed series = right-hand side at |xi| = 0.05; F(0) = 0; dropped negative powers: 6.4e-14 (< 1e-10); |F(0)| 0.0e+00; dropped 0.0e+00 (< 1e-12); 95 nodes  (as required)
+FAIL
+=== --checks --mutate=ident
+1. graph evaluator = SymForce (series orders < 60, and right-hand side at xi0): series y 1.8e-15, series c 1.5e-15, rhs 4.7e-13 (< 1e-11)  (as required)
+2. l2_mode's l = 0 forcing, converted = FIRST_ORDER's s-translation breaking (untruncated, random data): max relative difference 4.5e-02 (< 1e-9)  (** NOT AS REQUIRED **)
+3. l0: summed series = right-hand side at |xi| = 0.05; F(0) = 0; dropped negative powers: 2.6e-12 (< 1e-10); |F(0)| 0.0e+00; dropped 6.7e-14 (< 1e-12); 191 nodes  (as required)
+3. l2: summed series = right-hand side at |xi| = 0.05; F(0) = 0; dropped negative powers: 2.1e-12 (< 1e-10); |F(0)| 0.0e+00; dropped 6.7e-14 (< 1e-12); 191 nodes  (as required)
+3. l2_ctrl: summed series = right-hand side at |xi| = 0.05; F(0) = 0; dropped negative powers: 1.7e-10 (< 1e-10); |F(0)| 0.0e+00; dropped 2.9e-11 (< 1e-12); 841 nodes  (** NOT AS REQUIRED **)
+3. l2_lam: summed series = right-hand side at |xi| = 0.05; F(0) = 0; dropped negative powers: 3.9e-14 (< 1e-10); |F(0)| 0.0e+00; dropped 0.0e+00 (< 1e-12); 102 nodes  (as required)
+3. G: summed series = right-hand side at |xi| = 0.05; F(0) = 0; dropped negative powers: 1.0e-15 (< 1e-10); |F(0)| 0.0e+00; dropped 0.0e+00 (< 1e-12); 71 nodes  (as required)
+FAIL
+=== --checks --mutate=series
+1. graph evaluator = SymForce (series orders < 60, and right-hand side at xi0): series y 1.0e-06, series c 1.5e-15, rhs 4.7e-13 (< 1e-11)  (** NOT AS REQUIRED **)
+2. l2_mode's l = 0 forcing, converted = FIRST_ORDER's s-translation breaking (untruncated, random data): max relative difference 1.1e-15 (< 1e-9)  (as required)
+3. l0: summed series = right-hand side at |xi| = 0.05; F(0) = 0; dropped negative powers: 1.0e-06 (< 1e-10); |F(0)| 0.0e+00; dropped 6.7e-14 (< 1e-12); 196 nodes  (** NOT AS REQUIRED **)
+3. l2: summed series = right-hand side at |xi| = 0.05; F(0) = 0; dropped negative powers: 1.0e-06 (< 1e-10); |F(0)| 0.0e+00; dropped 6.7e-14 (< 1e-12); 196 nodes  (** NOT AS REQUIRED **)
+3. l2_ctrl: summed series = right-hand side at |xi| = 0.05; F(0) = 0; dropped negative powers: 1.0e-06 (< 1e-10); |F(0)| 0.0e+00; dropped 2.9e-11 (< 1e-12); 849 nodes  (** NOT AS REQUIRED **)
+3. l2_lam: summed series = right-hand side at |xi| = 0.05; F(0) = 0; dropped negative powers: 1.0e-06 (< 1e-10); |F(0)| 0.0e+00; dropped 0.0e+00 (< 1e-12); 107 nodes  (** NOT AS REQUIRED **)
+3. G: summed series = right-hand side at |xi| = 0.05; F(0) = 0; dropped negative powers: 1.0e-06 (< 1e-10); |F(0)| 0.0e+00; dropped 0.0e+00 (< 1e-12); 95 nodes  (** NOT AS REQUIRED **)
+FAIL
+=== --checks --mutate=force
+1. graph evaluator = SymForce (series orders < 60, and right-hand side at xi0): series y 2.0e+00, series c 2.0e+00, rhs 2.0e+00 (< 1e-11)  (** NOT AS REQUIRED **)
+2. l2_mode's l = 0 forcing, converted = FIRST_ORDER's s-translation breaking (untruncated, random data): max relative difference 1.1e-15 (< 1e-9)  (as required)
+3. l0: summed series = right-hand side at |xi| = 0.05; F(0) = 0; dropped negative powers: 2.6e-12 (< 1e-10); |F(0)| 0.0e+00; dropped 6.7e-14 (< 1e-12); 196 nodes  (as required)
+3. l2: summed series = right-hand side at |xi| = 0.05; F(0) = 0; dropped negative powers: 2.1e-12 (< 1e-10); |F(0)| 0.0e+00; dropped 6.7e-14 (< 1e-12); 196 nodes  (as required)
+3. l2_ctrl: summed series = right-hand side at |xi| = 0.05; F(0) = 0; dropped negative powers: 1.7e-10 (< 1e-10); |F(0)| 0.0e+00; dropped 2.9e-11 (< 1e-12); 849 nodes  (** NOT AS REQUIRED **)
+3. l2_lam: summed series = right-hand side at |xi| = 0.05; F(0) = 0; dropped negative powers: 3.9e-14 (< 1e-10); |F(0)| 0.0e+00; dropped 0.0e+00 (< 1e-12); 107 nodes  (as required)
+3. G: summed series = right-hand side at |xi| = 0.05; F(0) = 0; dropped negative powers: 6.4e-14 (< 1e-10); |F(0)| 0.0e+00; dropped 0.0e+00 (< 1e-12); 95 nodes  (as required)
+FAIL
+exit

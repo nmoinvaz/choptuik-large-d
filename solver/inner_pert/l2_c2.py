@@ -29,6 +29,8 @@ xi0 and its right-hand side along the integration are one analytic function of x
     python3 l2_c2.py M [--xi1=0.2] [--forcing=l2,l2_ctrl,l0,sym,G] [--lamcheck]
                                               c2 (and lambda_1 for l0, sym) at the stored zero of M (data/
                                               first_order_hier_M{M}_xi{xi1}.json); results to data/l2_c2_M{M}_xi{xi1}_{forcings}.json
+    python3 l2_c2.py 5 --forcing=l0,sym --mutate=gsign    every graph forcing's sign flipped: the planted lambda_1
+                                              must leave its 1% bar (it changes sign)
     python3 l2_c2.py 1 --planted-lam          the planted lambda* of M = 1 through first_order_hier.find_lam
 """
 import json
@@ -464,6 +466,8 @@ class GraphForce:
         self.sy, self.sc = v[self.Fy.id], v[self.Fc.id]
         if "series" in MUT:                              # the series check's mutation: the series off by 1e-6
             self.sy = self.sy * (1 + 1e-6)
+        self.sgn = -1.0 if "gsign" in MUT else 1.0       # the planted lambda_1's mutation: every graph forcing flipped
+        self.sy, self.sc = self.sgn * self.sy, self.sgn * self.sc
         self.slot = model.idx[self.bit]
         self.L = model.L
         self.reg = (np.abs(self.sy[0]).max() / np.abs(self.sy[1:5]).max(),        # F_y, F_c at u = 0: must vanish
@@ -482,7 +486,7 @@ class GraphForce:
 
     def point(self, xi, D0, S0, C0):
         v = eval_point(self.order, self.sp, D0 / xi, S0 / (xi * xi), C0, xi)
-        return v[self.Fy.id], v[self.Fc.id]
+        return self.sgn * v[self.Fy.id], self.sgn * v[self.Fc.id]
 
     def rhs(self, xi, model, D, S, C, E, dD, dS):
         fy, fc = self.point(xi, D[0], S[0], C[0])
@@ -561,7 +565,7 @@ def checks():
     say("2. l2_mode's l = 0 forcing, converted = FIRST_ORDER's s-translation breaking (untruncated, random data)",
         worst < 1e-9, f"max relative difference {worst:.1e} (< 1e-9)")
     # 3. series = right-hand side for the converted forcings on the M = 3 background, and regularity at xi = 0
-    for name in ("l0", "l2", "l2_ctrl", "l2_lam"):
+    for name in ("l0", "l2", "l2_ctrl", "l2_lam", "G"):
         sc = -1.0 if name == "l2_lam" else 1.0
         gf = GraphForce(1, lambda g, d=Fd[name], sc=sc: converted_graph(g, d, sc))
         jm = JetModel(M, w, Fh_from(x, M), [Dir("W", lam=2.0, force=gf)], [0, 1], {})
@@ -582,6 +586,25 @@ def checks():
         say(f"3. {name}: summed series = right-hand side at |xi| = 0.05; F(0) = 0; dropped negative powers",
             d < 1e-10 and reg < 1e-12 and gf.dropped < 1e-12,
             f"{d:.1e} (< 1e-10); |F(0)| {reg:.1e}; dropped {gf.dropped:.1e} (< 1e-12); {size} nodes")
+    # diagnostic (not a check): the same comparison at four radii. Rounding in the nested divisions by xi^2 of the
+    # Euler derivatives grows like a power of 1/|xi|; a mismatch of the series would not fall with |xi|
+    for name in ("l2", "l2_ctrl"):
+        line = []
+        for r in (0.04, 0.05, 0.07, 0.1):
+            gf = GraphForce(1, lambda g, d=Fd[name]: converted_graph(g, d, 1.0))
+            jm = JetModel(M, w, Fh_from(x, M), [Dir("W", lam=2.0, force=gf)], [0, 1], {})
+            xs = r * np.exp(1j * (np.pi / 2 + FJ.DELTA) / 2)
+            bg = JetModel(M, w, Fh_from(x, M), [], [0], {})
+            _, jt, terr = bg.series_at(xs, 600)
+            gf.prepare(jm, xs, jt + 4)
+            D0 = xs * sum(dd[0] for dd in bg.ser["D"][:jt])
+            S0 = xs * xs * sum(dd[0] for dd in bg.ser["S"][:jt])
+            C0 = sum(dd[0] for dd in bg.ser["G"][:jt])
+            fy, fc = gf.point(xs, D0, S0, C0)
+            sy, scs = sum(gf.sy[:jt + 1]), sum(gf.sc[:jt + 1])
+            d = max(np.abs(fy - sy).max() / np.abs(fy).max(), np.abs(fc - scs).max() / np.abs(fc).max())
+            line.append(f"|xi| {r:.2f}: {d:.1e} (series truncation {terr:.0e})")
+        print(f"diagnostic, {name}: summed series - right-hand side by radius: " + "; ".join(line), flush=True)
     return ok
 
 
@@ -705,6 +728,8 @@ def main():
         lam = H.find_lam(x, M, xi1, 2.0)
         good = abs(lam - 1.769122008) < 1e-8
         log(f"planted: lambda* of M = {M} from 2.0: {lam:.10f} against 1.769122008 (|difference| < 1e-8)")
+        json.dump(dict(M=M, xi1=xi1, lam=lam, want=1.769122008, good=bool(good)),
+                  open(os.path.join(HERE, "data", f"l2_c2_{tag}_planted_lam.json"), "w"), indent=1)
         return good
     names = opts.get("--forcing", "l2,l2_ctrl,l0,sym").split(",")
     out = c2_run(x, M, xi1, names, lamcheck="--lamcheck" in opts)
