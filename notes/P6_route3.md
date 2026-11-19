@@ -705,7 +705,7 @@ Tuned inputs (§10.4) enter the head as they enter the tail. Under (H1) the inpu
 ### 11.6 Reproduce
 
 From `solver/proof/` with venv-314 (python-flint 0.9.0, FLINT 3.6.0). The logs are in folder I1015-mac of the raw-data
-repository.
+repository (commit f30c95b0; `git clone https://github.com/nmoinvaz/choptuik-large-d-raw ../choptuik-large-d-raw`).
 
 ```
 python3 route3_head.py --scope                     # 11.1 (~3 min)
