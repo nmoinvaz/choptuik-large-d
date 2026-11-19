@@ -583,3 +583,11 @@ The c₂ runs read the stored zeros `data/first_order_hier_M{1,3,5}_xi0.2.json`,
 sympy. Their logs are in folder I1010-mac of the raw-data repository (commit 525f445f; clone it beside the checkout,
 `git clone https://github.com/nmoinvaz/choptuik-large-d-raw ../choptuik-large-d-raw`). The result JSONs stay in
 `solver/inner_pert/data/`.
+
+**Reproduced on aarch64 (#1036).** All 20 commands ran on rpi5 with the verdicts listed, and c₂ < 0 at M = 1, 3 and 5
+(−7.9591, −2.4825, −3.0458), with c₂ + λ₁ = −0.1496, +0.0216 and −0.0016. At M = 1 and 3, c₂ and λ₁ equal the Mac's at
+all six printed digits. At M = 5, c₂ is −3.045765 against the Mac log's −3.045841, 2.5×10⁻⁵ relative, at the zero's
+own solve tolerance (deflated r_H 4.8×10⁻⁵ against 4.0×10⁻⁵) and 25 times below the spread over the run's slices. A
+rerun on the Mac gave −3.045854, so M = 5's sixth digit is not reproducible on either machine. The `--mutate=gsign` log
+in I1010-mac ends PASS because it predates e75ba9fa's bar. The rerun ends BAD, exit 1, as listed above (raw
+I1036-rpi5 c8ed8717).
