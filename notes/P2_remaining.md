@@ -400,7 +400,8 @@ parameter in the box. B8 gives δ = (8.3×10⁻⁵, 79.04, 3.232, 6.464) (§8.3,
     Φ_{±1} at εz, −15.714 ± 74.930i; C at ε, −3.2313 and −1.6156; ϑ at ε, −6.4625 and −3.2313. The inner series also
     agrees with Theorem A's `series_arb.py` (not B8's code) to 10⁻⁴⁰ relative, and the series' residual in the
     reduced system has the orders of Lemma F.2.
-  - **(P2)** This review's δ, as rigorous upper bounds over the box for all n ≥ n₀, satisfies δ ≤ δ_ref = (1, 200, 10, 20).
+  - **(P2)** This review's δ, as rigorous upper bounds over the box for all n ≥ n₀, is at most
+    δ_ref = (1, 200, 10, 20).
   - **(P3)** After the own numbers are committed, they are compared with `b8m_h8`'s logs.
     - The T parts of δ_Φ, δ_C and δ_ϑ must agree to 10⁻³ relative.
     - The R parts of P, C and ϑ, which use the same formulas, must agree to 10⁻² relative.
