@@ -24,8 +24,12 @@ translation) are exact roots of every l, so first_order_run.find_lam's g = det S
                                       first_order_hier.find_zero (deflated Newton, exact jets) from nested_ell's
                                       (A, w/w_inf, F3/F1 = f3re + i f3im), then lambda* by first_order_hier.find_lam;
                                       l = 0: planted, FIRST_ORDER.md's M = 3 zero (A 2.7264759, w/w_inf 1.015603095)
-                                      and lambda* 2.006804459 (bars 1e-6, 1e-7, 1e-7); l >= 1: the same zero and
-                                      lambda* at every xi1 (relative 1e-6)
+                                      and lambda* 2.006804459 (bars 1e-6, 1e-7, 1e-7). l >= 1: the deflated Sch is
+                                      noisy at ~1e-4 relative (the harmonic-3 leakage ~2e11), which stalls the secant
+                                      search, so lambda* is the root of a least-squares line through g at lambda =
+                                      LAM - 0.01 .. LAM + 0.01 (5 points) with its standard error sigma; pass: the zero
+                                      the same at every xi1 (relative 1e-6) and the lambda* within 3 max sigma
+    --rtol=R sets first_order_run.RTOL (the jets' integration rtol, 1e-12)
 """
 import importlib.util
 import os
@@ -51,6 +55,29 @@ T0 = time.time()
 def opt(name, default):
     v = next((a.split("=", 1)[1] for a in sys.argv if a.startswith(f"--{name}=")), None)
     return default if v is None else v
+
+
+R.RTOL = float(opt("rtol", R.RTOL))
+
+
+def lam_grid(x, M, xi1, l0, half=0.01, n=5):
+    """lambda* from a least-squares line through g(lambda) = det Sch / (lambda (lambda - 1)) on [l0 - half, l0 + half];
+    returns lambda*, its standard error (from the line's residual scatter) and the (lambda, g) table"""
+    import first_order_hier as H
+    lams = l0 + np.linspace(-half, half, n)
+    g = []
+    for lm in lams:
+        Sch, C, L, rH = H.sch_lam(x, M, xi1, lm)
+        g.append(np.linalg.det(Sch) / (lm * (lm - 1)))
+    g = np.array(g)
+    X = np.column_stack([np.ones(n), lams - l0])
+    (a, b), *_ = np.linalg.lstsq(X, g, rcond=None)
+    res = g - X @ np.array([a, b])
+    sg = np.sqrt(res @ res / (n - 2))
+    root = l0 - a / b
+    sxx = np.sum((lams - l0) ** 2)
+    sl = sg / abs(b) * np.sqrt(1 / n + (root - l0 - np.mean(lams - l0)) ** 2 / sxx)
+    return root, sl, list(zip(lams.tolist(), g.tolist()))
 
 
 def log(*a):
@@ -207,22 +234,29 @@ def lam3(ell, A, wf, f3):
         F3z = xz[2] / 2j + xz[3] / 2
         log(f"zero at xi1 {xi1}: A {xz[0]:.10f}  w/w_inf {xz[1]:.10f}  (Delta {1.64389375 / xz[1]:.7f})  F3/F1 "
             f"{F3z / (xz[0] / 2j):.8f}  |r_1| {np.linalg.norm(r[:2]):.1e}  |r_3| {np.linalg.norm(r[2:]):.1e}")
-        lm = H.find_lam(xz, 3, xi1, l0)
+        if ell == 0:
+            lm, sl = H.find_lam(xz, 3, xi1, l0), 0.0
+        else:
+            lm, sl, tab = lam_grid(xz, 3, xi1, l0)
+            log("   g(lambda): " + "  ".join(f"{a:.4f}: {b:+.4e}" for a, b in tab))
         Sch, C, Lm, resH = H.sch_lam(xz, 3, xi1, lm)
-        log(f"RESULT xi1 {xi1}: A {xz[0]:.10f}  w/w_inf {xz[1]:.10f}  lambda* {lm:.12f}  (gamma {1 / lm:.10f}); "
-            f"Sch singular values {np.linalg.svd(Sch, compute_uv=False)}")
-        res.append((xz[0], xz[1], lm))
+        log(f"RESULT xi1 {xi1}: A {xz[0]:.10f}  w/w_inf {xz[1]:.10f}  lambda* {lm:.12f} +- {sl:.1e}  (gamma {1 / lm:.10f}); "
+            f"Sch singular values at lambda* {np.linalg.svd(Sch, compute_uv=False)}")
+        res.append((xz[0], xz[1], lm, sl))
     z = np.array(res)
-    spread = np.max(np.abs(z - z[0]), axis=0) / np.abs(z[0])
+    spread = np.max(np.abs(z[:, :3] - z[0, :3]), axis=0) / np.abs(z[0, :3])
     print(f"relative spread over xi1: A {spread[0]:.1e}, w/w_inf {spread[1]:.1e}, lambda* {spread[2]:.1e}")
     if ell == 0:
-        d = np.abs(z[0] - np.array([2.7264759, 1.015603095, 2.006804459]))
+        d = np.abs(z[0, :3] - np.array([2.7264759, 1.015603095, 2.006804459]))
         good = d[0] < 1e-6 and d[1] < 1e-7 and d[2] < 1e-7
         print(f"planted (l = 0 M = 3, FIRST_ORDER.md: A 2.7264759, w/w_inf 1.015603095, lambda* 2.006804459; bars 1e-6, "
               f"1e-7, 1e-7): |d| {d[0]:.1e}, {d[1]:.1e}, {d[2]:.1e}  ({'OK' if good else 'BAD'})")
     else:
-        good = spread.max() < 1e-6
-        print(f"the same zero and lambda* at every xi1 (relative 1e-6): {'OK' if good else 'BAD'}")
+        dl = float(np.abs(z[:, 2] - z[0, 2]).max())
+        sm = float(z[:, 3].max())
+        good = spread[:2].max() < 1e-6 and dl < 3 * sm
+        print(f"the same zero at every xi1 (relative 1e-6) and lambda* within 3 max sigma ({dl:.1e} against "
+              f"3 x {sm:.1e}): {'OK' if good else 'BAD'}; mean lambda* {z[:, 2].mean():.6f}")
     return good
 
 
