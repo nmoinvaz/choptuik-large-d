@@ -311,3 +311,69 @@ if __name__ == "__main__" and "--check" in sys.argv:
     good = check()
     print("PASS" if good else "FAIL")
     sys.exit(0 if good else 1)
+
+
+# ---------------------------------------------------------------- the background to O(1/n) (#1001)
+hh = sp.Symbol("h", positive=True)                       # h = 1/n in the on-shell rules
+
+
+def trunc_h(x, order=1):
+    x = sp.expand(x)
+    return sum(x.coeff(hh, k) * hh ** k for k in range(order + 1))
+
+
+def bg_rules1():
+    """on-shell rules to O(1/n): c_s, Phi_s, mu with their 1/n parts (from E^t_t, W, E^chi_chi one order below
+    natural), the 1/n parts reduced by the leading rules. Returns {c0: c_s, Ph0: Phi_s, mu0: mu} as series in h"""
+    Em, F, W = residuals(*setup(sp.Integer(0), "half", corr={}))
+    Ett = dict(laurent_n(Em[0, 0].subs(e, 0), -1))
+    Ww = dict(laurent_n(W.subs(e, 0), -1))
+    Ecc = dict(laurent_n(Em[2, 2].subs(e, 0), -2))
+    R0 = rhs()
+    Rc1 = sp.simplify(reduce_bg(c0 * Ett[-1]))
+    RP1 = sp.simplify(reduce_bg(-Ww[-1]))
+    X2 = sp.simplify(reduce_bg(Ecc[-2]))
+    Rc = R0[c0] + hh * Rc1
+    RP = R0[Ph0] + hh * RP1
+    Rmu = 2 * s * Rc / c0 - 2 * s * hh * X2
+    return {c0: Rc, Ph0: RP, mu0: trunc_h(Rmu)}
+
+
+def reduce_bg1(expr, rules, order=1):
+    """eliminate mu and every s-derivative of c and Phi with the O(1/n) rules, keeping powers of h up to order"""
+    expr = expr.subs(mu0, rules[mu0]).doit() if expr.has(mu0) else expr
+    for _ in range(10):
+        atoms = [a for a in expr.atoms(sp.Derivative) if a.expr in (c0, Ph0) and any(v == s for v, k in a.variable_count)]
+        if not atoms:
+            break
+        rep = {}
+        for a in atoms:
+            ks = dict(a.variable_count)
+            ns_, nt = ks.get(s, 0), ks.get(t, 0)
+            base = rules[a.expr]
+            for _ in range(ns_ - 1):
+                base = sp.diff(base, s)
+            rep[a] = sp.diff(base, t, nt) if nt else base
+        expr = trunc_h(expr.xreplace(rep), order)
+    return trunc_h(expr, order)
+
+
+def first_order_map_check(rules=None, drop_1n=False):
+    """planted: the O(1/n) background in these variables against notes/FIRST_ORDER.md 1's heat system, through
+    C = c / sqrt(1 + mu/n) (= alpha/a), Y = 2 Phi_t / C, S = 2 Phi_s, at kappa = 1; and mu against eta. Each returned
+    residual must vanish to O(1/n). drop_1n uses the leading rules only (the control)"""
+    R = rules or bg_rules1()
+    if drop_1n:
+        R = {k: v.subs(hh, 0) for k, v in R.items()}
+    R = {k: v.subs(kap, 1) for k, v in R.items()}
+    Cf = c0 * (1 - hh * mu0 / 2)                          # c / sqrt(1 + h mu) to O(h)
+    Yf = 2 * sp.diff(Ph0, t) / Cf
+    Sf = 2 * sp.diff(Ph0, s)
+    FO1 = sp.diff(Yf, t) - Cf * Sf - hh * Cf * (Sf + 2 * s * sp.diff(Sf, s) + s * Yf ** 2 * Sf / 2)
+    FO3 = sp.diff(Cf, s) - Cf * (Yf ** 2 / 4 + hh * (s * Sf ** 2 / 2 - Yf ** 2 / 2 - s * Yf * sp.diff(Yf, s)))
+    eta = s * Yf ** 2 / 2 + hh * (-s * Yf ** 2 / 2 + s ** 2 * Sf ** 2 - 2 * s ** 2 * Yf * sp.diff(Yf, s))
+    out = {}
+    for name, x in (("Y equation", FO1), ("C equation", FO3), ("mu - eta", mu0 - eta)):
+        x = x.subs(hh, 0) + hh * sp.diff(x, hh).subs(hh, 0)       # first order in h
+        out[name] = sp.simplify(reduce_bg1(x.subs(kap, 1), R))
+    return out
