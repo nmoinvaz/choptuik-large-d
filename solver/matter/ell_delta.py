@@ -96,22 +96,50 @@ def lam0_at(D, Ds, L):
 
 
 def table(fn):
+    """the delta table against delta(inf) = lambda_inf(l = 1) - 2 (#994's M = 3 value, data/ell_lambda_l1.json), with the
+    k_c bar (|lambda(top k_c) - lambda(next lower)| <= 1e-6) and the psi-constraint of every record, the D where delta
+    crosses 0 (linear interpolation between the bracketing points, and the spread from moving each by its k_c change),
+    and the windows"""
     rows = json.load(open(fn))["points"]
     Ds, L = lam0_table()
-    nn, dd, ee = [], [], []
-    print("| D | n | λ₁ | k_c (λ₁ change to the last) | λ₀ (interpolation error) | δ = λ₁ − λ₀ | n δ |")
-    print("|---|---|---|---|---|---|---|")
+    l1inf = json.load(open(os.path.join(HERE, "data", "ell_lambda_l1.json")))["M3"]["lam"]
+    dinf = l1inf - 2
+    nn, dd, ee, DD = [], [], [], []
+    print(f"delta(inf) = lambda_inf(l = 1) - lambda_0(inf) = {l1inf:.6f} - 2 = {dinf:+.6f} (#994, M = 3; "
+          f"lambda_0(inf) = 2, GAMMA.md 5)\n")
+    print("| D | n | λ₁ | k_c | k_c bar: change from the next lower k_c | ψ-constraint | λ₀ (interp. error) | δ = λ₁ − λ₀ | "
+          "δ − δ(∞) | n δ | n δ(∞) |")
+    print("|---|---|---|---|---|---|---|---|---|---|---|")
     for r in sorted(rows, key=lambda q: q["D"]):
         D, l1 = r["D"], r["lam"]
         l0, e0 = lam0_at(D, Ds, L)
         n = D - 2
-        nn.append(n); dd.append(l1 - l0); ee.append(e0 + r.get("lam_err", 0.0))
-        print(f"| {D:g} | {n:g} | {l1:.7f} | {r.get('kc', '')} ({r.get('lam_err', 0):.1e}) | {l0:.7f} ({e0:.1e}) | "
-              f"{l1 - l0:.6f} | {n * (l1 - l0):.4f} |")
-    nn, dd = np.array(nn), np.array(dd)
+        d = l1 - l0
+        nn.append(n); dd.append(d); ee.append(r.get("lam_err", 0.0)); DD.append(D)
+        bar = (("OK" if r["lam_err"] <= 1e-6 else "BAD") + f" ({r['lam_err']:.1e})") if r.get("has_err", True) else "single k_c"
+        con = r.get("constraint")
+        print(f"| {D:g} | {n:g} | {l1:.7f} | {r.get('kc', '')} | {bar} | {con:.1e} | {l0:.7f} ({e0:.1e}) | {d:.6f} | "
+              f"{d - dinf:+.6f} | {n * d:.4f} | {n * dinf:.4f} |" if con is not None else
+              f"| {D:g} | {n:g} | {l1:.7f} | {r.get('kc', '')} | {bar} | | {l0:.7f} ({e0:.1e}) | {d:.6f} | "
+              f"{d - dinf:+.6f} | {n * d:.4f} | {n * dinf:.4f} |")
+    nn, dd, ee, DD = map(np.array, (nn, dd, ee, DD))
+    cr = [i for i in range(len(dd) - 1) if dd[i] > 0 >= dd[i + 1]]
+    if cr:
+        i = cr[0]
+        lin = lambda a, b: DD[i] + (DD[i + 1] - DD[i]) * a / (a - b)
+        Dc = lin(dd[i], dd[i + 1])
+        alts = [lin(dd[i] + s1 * ee[i], dd[i + 1] + s2 * ee[i + 1]) for s1 in (-1, 1) for s2 in (-1, 1)]
+        print(f"\ndelta crosses 0 between D {DD[i]:g} and {DD[i + 1]:g}: D = {Dc:.4f} (linear), k_c spread "
+              f"{min(alts):.4f} to {max(alts):.4f}")
+    else:
+        print(f"\ndelta has not crossed 0 (last D {DD[-1]:g}, delta {dd[-1]:+.6f})")
+    if dd[-1] < -0.05:
+        slope = (dd[-1] - dd[-2]) / (DD[-1] - DD[-2])
+        print(f"delta {dd[-1]:+.4f} is past -0.05, slope {slope:+.4f} per unit D at the last step: "
+              + ("NOT levelling" if slope < -0.02 else "levelling"))
     print("\nwindows (c = the limit of delta):")
     for k, lab in ((2, "c + a/n"), (3, "c + a/n + b/n^2")):
-        for ns, c in windows(nn, dd, k):
+        for ns, c in windows(nn, dd, k)[-6:]:
             print(f"   {lab:16s} n = {', '.join(f'{v:g}' for v in ns)}: c {c:+.4f}")
     return True
 
@@ -203,14 +231,15 @@ def collect(raw):
         for line in open(f):
             r = json.loads(line)
             if r.get("lam") and r.get("l", 1) == 1:
-                by.setdefault(round(r["D"], 6), {})[r["kc"]] = (r["lam"], os.path.relpath(f, raw) if f.startswith(raw) else os.path.relpath(f, HERE))
+                by.setdefault(round(r["D"], 6), {})[r["kc"]] = (r["lam"], os.path.relpath(f, raw) if f.startswith(raw) else os.path.relpath(f, HERE),
+                                                                r.get("constraint"))
     pts = []
     for D in sorted(by):
         ks = sorted(by[D])
         top = ks[-1]
         err = abs(by[D][top][0] - by[D][ks[-2]][0]) if len(ks) > 1 else None
-        pts.append(dict(D=D, lam=by[D][top][0], kc=top, lam_err=err if err is not None else 0.0,
-                        kcs={str(k): by[D][k][0] for k in ks}, source=by[D][top][1]))
+        pts.append(dict(D=D, lam=by[D][top][0], kc=top, lam_err=err if err is not None else 0.0, has_err=err is not None,
+                        kcs={str(k): by[D][k][0] for k in ks}, source=by[D][top][1], constraint=by[D][top][2]))
         print(f"D {D:g}: k_c {ks}, lambda {by[D][top][0]:.10f}" + (f", change from k_c {ks[-2]} {err:.1e}" if err is not None else ""))
     json.dump(dict(points=pts, note="built by ell_delta.py collect"), open(os.path.join(HERE, "data", "ell_lam_highD.json"), "w"), indent=1)
     return True
