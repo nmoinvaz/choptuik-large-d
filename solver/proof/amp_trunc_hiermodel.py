@@ -21,7 +21,9 @@ in its products, as in amp_trunc.py).
 
 dps is mpmath's working digits for the late-order fits (default 60, amp_flint's). The fit basis has 13 + 8(M + 1)
 columns; at 60 digits it is numerically singular from M = 9 on (93 columns; qr_solve refuses at sigma_1), and 120
-digits solves it (#996).
+digits solves it (#996). Below that point it fails silently: at M = 7 (77 columns) and 60 digits sigma_1 and sigma_2
+are off by 1.6e-6 and 6.6e-6 while the fit residual reads 1e-61, since a least-squares residual does not show the
+basis's conditioning. Every run is to be checked against one at higher dps (#996's control).
 """
 import sys
 import os
