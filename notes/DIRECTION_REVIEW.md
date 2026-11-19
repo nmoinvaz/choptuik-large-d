@@ -275,12 +275,12 @@ their own gauge. Whether those are converged solutions below 3.043 is not record
 **New?** Taylor coefficients of Δ in D, and a D → 3 limit problem: not checked in the literature, new as far as the
 notes show.
 
-**First reading (#997, `hp/series_singularity.py`).** Δ's Taylor series in D at D 3.15 (M 128 and 160) and at D 3.0475
-(M 256) put its nearest singularity at D 2.994–2.998 by the ratio method, 3.000 ± 0.001 after the plants' biases, not
-at the sonic closing 3.0431, which a planted control shows the fit would see. So Δ(D) continues through the sonic
-closing, as this section's "coordinate wall" reading expects, to a singularity at D = 3 within about 0.005 (numerical
-evidence; M agrees through order 8 only). The global fits of notes/QUADRATIC_FORMULA.md put a branch point at
-2.990–3.003.
+**First reading (#997, `hp/series_singularity.py`), corrected.** At D 3.15, M 256 and M 160 agree only through order 6,
+and a planted singularity at D 3.000 reads 2.35 from orders 3–6 there, so that base gives no reading. The earlier
+D 2.998 used orders 7–9, which are not converged in M. At D 3.0475 (M 256, one M) the ratio fit over orders 3–6 puts
+the nearest singularity at D 2.994, where plants at 3.000 and at the sonic closing 3.0431 are both recovered. It is
+not yet numerical evidence: a second M at D 3.0475 has to agree first. The global fits of
+notes/QUADRATIC_FORMULA.md put a branch point at 2.990–3.003.
 
 ### 2.7 Smaller items
 
