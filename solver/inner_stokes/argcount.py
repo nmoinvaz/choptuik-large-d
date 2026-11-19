@@ -500,6 +500,8 @@ def main():
     ap.add_argument("--r1b", type=float, default=None,
                     help="second xi1 at which each zero is located again (M = 1: 0.2; M = 3: 0.17)")
     ap.add_argument("--ymax", type=float, default=1e2, help="no value where max |Y| on the path exceeds this")
+    ap.add_argument("--seed", default=None,
+                    help="M = 3: points file (any xi1) whose tuned F_3 values seed the inner solves")
     ap.add_argument("--recount", default=None,
                     help="leaves file of an earlier count: recount each of its unresolved cells as its own box")
     ap.add_argument("--selftest", action="store_true")
@@ -520,6 +522,9 @@ def main():
         # seed the continuation at the known M = 3 zero's tuned F_3
         F.extra[(-1.0, -1.0)] = dict(F3re=float(((2.7264758856 / 2j) * (0.0532 + 0.0041j)).real),
                                      F3im=float(((2.7264758856 / 2j) * (0.0532 + 0.0041j)).imag), info=0.0)
+        if a.seed:                                # F_3 from another radius's points (seeds only, no values)
+            for r in map(json.loads, open(a.seed)):
+                F.extra.setdefault((r["A"], r["wf"]), dict(F3re=r["F3re"], F3im=r["F3im"], info=r["info"]))
     t0 = time.time()
     if a.recount:
         # a rung of the radius ladder: the zero set does not depend on xi1, and each cell is counted at one xi1,
