@@ -496,6 +496,7 @@ class InnerState:
         S_ = {m: H.pr(Cb, Phib, ODD, big)[m] - (Qb[m] * (self.D[m] + 1)).shift(0, 1)
               + H.pr(CE0, Pb, ODD, big)[m].shift(0, 1) for m in ODD}
         self.S_low = max(float(abs(S_[m].coef(0, j)).b) for m in ODD for j in (0, 1))
+        self.S_low_zero = all(0 in S_[m].coef(0, j).real and 0 in S_[m].coef(0, j).imag for m in ODD for j in (0, 1))
         self.Q0p = {m: H.Ser({(0, j - 2): v / 2 for (a, j), v in S_[m].c.items() if j >= 2}, big) for m in ODD}
 
     def at(self, tt, tmax, ball=True):
@@ -924,10 +925,15 @@ def check_sector():
           f"{__import__('time').time() - t0:.0f} s): largest gamma entries "
           + "; ".join(f"{k[0][0]}{k[0][1]:+d} <- {k[1][0]}{k[1][1]:+d} {mp.nstr(v, 5)}" for v, k in big))
     print(f"  R_C = {mp.nstr(RC, 6)} (B5_inner.md 5.2: 3.43), T_F (eps -> 0 part) = {mp.nstr(TF, 6)} (4.15)")
-    print(f"  S = C Phi + A2^0 on the truncated series: largest z^0, z^1 coefficient {S.S_low:.1e} (exact division by z^2)")
-    w3 = check_lemma3_formula(H, S)
-    print(f"  Lemma 3's formula at eps = 0 against this review's eps-series, 3 interior points: largest relative "
-          f"difference {mp.nstr(w3, 3)}: {'PASS' if w3 < mpf(10) ** -15 else 'FAIL'}")
+    print(f"  S = C Phi + A2^0 on the truncated series: its z^0, z^1 coefficients (largest {S.S_low:.1e}) are balls "
+          f"around 0: {S.S_low_zero} (dropped as Lemma 3's identity, exact division by z^2)")
+    if "box" in OPTS:
+        w3 = mpf(0)
+        print("  Lemma 3's formula against the eps-series: a centre check (over the box both sides are wide balls)")
+    else:
+        w3 = check_lemma3_formula(H, S)
+        print(f"  Lemma 3's formula at eps = 0 against this review's eps-series, 3 interior points: largest relative "
+              f"difference {mp.nstr(w3, 3)}: {'PASS' if w3 < mpf(10) ** -15 else 'FAIL'}")
     nr, na = int(OPTS.get("nr", 8)), int(OPTS.get("na", 24))
     Rp = R_phi(H, S, nr, na)
     print(f"  R_Phi (Lemma 3's formula on the cells, eta included, eps <= eps0) = {mp.nstr(Rp, 6)} (B5: 91.5)")
@@ -980,7 +986,7 @@ def check_sector():
                       for name, (x, ok) in res.items()})
         with open(os.path.join(OPTS["out"], f"p2c_b5_{tag}.json"), "w") as fh:
             json.dump(rec, fh, indent=1)
-    return w3 < mpf(10) ** -15 and okP2
+    return w3 < mpf(10) ** -15 and okP2 and S.S_low_zero
 
 
 if __name__ == "__main__":
