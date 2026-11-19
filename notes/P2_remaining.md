@@ -421,8 +421,8 @@ parameter in the box. B8 gives δ = (8.3×10⁻⁵, 79.04, 3.232, 6.464) (§8.3,
 
 ### 5.2 Results (own numbers, committed before the comparison)
 
-The logs and records are in the raw-data repository's folder `I1017-mac/` (b5deb210). The code is `p2c_h8.py` at 1506f53f,
-run with mpmath 256-bit intervals.
+The logs and records are in the raw-data repository's folder `I1017-mac/` (b5deb210). The code is `p2c_h8.py` at
+1506f53f, run with mpmath 256-bit intervals.
 
 - **(P1) passes.**
   - The series Z^K solves the reduced system on a + j ≤ 4, with residual coefficients at most 3.8×10⁻⁶⁵ at the box
