@@ -243,8 +243,9 @@ CHORD_MUT = {}          # chord_strong's control: {"noproj": True} keeps the wea
 # newton_od_toy.py's controls of full_drop (#709): 'floor1' accepts a full step on any decrease of |F|.
 # 'noline' omits the own test's line for a trial accepted by the drop (#816).
 DROP_MUT = {"floor1": False, "noline": False}
-# newton_od_toy.py's control of a failed projection's reason (#824): 'nowhy' omits newton_od's line.
-PROJ_MUT = {"nowhy": False}
+# newton_od_toy.py's control of a failed projection's reason (#824): 'nowhy' omits newton_od's line. proj_check.py's
+# control of ElimO's octo-double projection (#1032): 'o_nobar' accepts it whatever it ends at.
+PROJ_MUT = {"nowhy": False, "o_nobar": False}
 
 
 def junk_subspace_o(s, w, delta_max=1e-2, iters=6, seed=0):
@@ -581,6 +582,19 @@ def with_horizon(z8, z4, rs):
     return o8(out)
 
 
+def project_o(rs, z8, bar=2e-34, mutate=""):
+    """ElimO's octo-double projection (proj_o, #1032): the rung's horizon data of z8 (eight parts) corrected by
+    rs.refine_o from the point's own eight parts, with the stop at the floor and rs.od + OD_EXTRA corrections per LU,
+    so that the corrections run on to the floor instead of ending after rs.od of them. Returns (z', hist, end,
+    accepted): accepted when |R| ends finite, at most bar, and by the floor or the requested corrections, not by the
+    step cap (PROJ_MUT o_nobar: whatever it ends at). mutate: refine_o's (the checks' controls)."""
+    from reseed import OD_EXTRA
+    zo, ho = rs.refine_o(o8(z8), steps=max(int(rs.od), 1) + OD_EXTRA, mutate=mutate, stop=True)
+    end = getattr(rs, "last_o_end", "")
+    ok = PROJ_MUT["o_nobar"] or bool(np.isfinite(ho[-1]) and ho[-1] <= bar and end in ("floor", "steps"))
+    return o8(zo), ho, end, ok
+
+
 class ElimO:
     """reseed.ElimQ for eight-part iterates: residual_o and newton_o project the point first while its pinned max |F|
     exceeds switch, and newton_o's step includes the projection's displacement. The projection is the quad-double one
@@ -588,9 +602,18 @@ class ElimO:
     4-7 zero, the other unknowns keeping all eight. Below switch the point is not projected (plain octo-double Newton
     finishes). start_F: a start whose projection fails at max |F| above start_F raises reseed.StartNotProjected
     (None: never), as ElimQ. The switch test is the pinned quad-double residual of the rounding (PinnedQ), far above
-    its floor there."""
+    its floor there.
 
-    def __init__(self, so, rs, switch=1e-15, start_F=1e-6, log=False):
+    proj_o (#1032): a point above the switch is first projected by the octo-double rung refinement alone (project_o:
+    Reseeder.refine_o from its own eight parts, on to its floor), counted 'u0o', and the quad-double projection runs
+    only when that ends above proj_o_bar or by its step cap, or not finite ('u0o_refused'). The rung rows are rows of
+    the corrector's residual, so proj_o_bar is its tolerance (anm_run.py passes --tol_od): a projection that ends above
+    it cannot give a converged iterate. A corrector's iterate and
+    trials keep their horizon data within the Newton step's second-order term of the rung's solution, inside the
+    refinement's basin, while each quad-double polish forms up to 16 rung Jacobians per sweep. 0, the default, leaves
+    the projection as it was."""
+
+    def __init__(self, so, rs, switch=1e-15, start_F=1e-6, log=False, proj_o=0, proj_o_bar=2e-34):
         from pinning import PinnedQ
         self.so, self.rs, self.switch, self.start_F = so, rs, switch, start_F
         self.sq = PinnedQ(so.s, so.ch, so.cl)
@@ -598,6 +621,11 @@ class ElimO:
         self.first = True
         self.log = log                  # log=True prints one line per failed projection (reseed.why_failed, #743)
         self.why = []                   # (count, reason) of each failed projection, for newton_od's lines (#824)
+        self.proj_o, self.proj_o_bar = int(proj_o), proj_o_bar
+        if self.proj_o and (getattr(rs, "od", 0) <= 0 or proj_o_bar is None):
+            raise ValueError("proj_o needs the Reseeder's octo-double corrections (od > 0, anm_run.py --reseed_o) and "
+                             "proj_o_bar, the corrector's tolerance")
+        self.o_refused = []             # (count, max |R| history, end) of each refused octo-double projection
 
     def __getattr__(self, name):
         return getattr(self.so, name)
@@ -613,8 +641,16 @@ class ElimO:
         if nf <= self.switch:
             self.counts["skipped"] += 1
             return z
+        if self.proj_o:
+            zo, ho, end, ok = project_o(self.rs, z, self.proj_o_bar)
+            if ok:
+                self.counts["u0o"] = self.counts.get("u0o", 0) + 1
+                self.rs.last_o = ho
+                return zo
+            self.o_refused.append((self.counts.get("u0o_refused", 0) + 1, ho, end))
+            self.counts["u0o_refused"] = self.counts.get("u0o_refused", 0) + 1
         zp, how = self.rs.project(z4)
-        self.counts[how] += 1
+        self.counts[how] = self.counts.get(how, 0) + 1          # 'pred' appears once it occurs (#1032)
         if how == "failed":
             self.why.append((self.counts["failed"], why_failed(nf, getattr(self.rs, "last_project", None))))
             if self.log:

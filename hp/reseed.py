@@ -44,6 +44,9 @@ from multidouble import QDLu, dd_add, dd_solve, qd_add_dd, qd_axpy  # noqa: E402
 # refine_o: the corrections allowed past the requested steps at most, the least reduction of |R| per correction under
 # which the rung block's LU is factored again, and the |R| at the arithmetic's floor, below which it is not
 OD_EXTRA, OD_REFACTOR, OD_FLOOR = 6, 1e-4, 1e-80
+# refine_o with stop (#1032): a correction from a freshly factored LU that lowers |R| by less than this factor ends the
+# corrections, the floor (a poor first LU, 'badlu', still gains about 1e-2 and is refactored)
+OD_STALL = 0.5
 # the command line's precision, set under the main guard: an import leaves the importer's precision alone (#831)
 DPS = 50
 
@@ -136,7 +139,7 @@ class Reseeder:
 
     def __init__(self, meta, D, threads=2, levels=5, rows="ma", plan_tol=1e-32, hmax=0.05, check_tol=1e-36,
                  check_kt=None, it_max=30, horizon_alpha=0, mutate="none", floor_rule="stall", qd=False, od=0,
-                 qd_start="ladder", qd_bar=1e-24):
+                 qd_start="ladder", qd_bar=1e-24, proj_start="u0", od_stop=False):
         self.M, self.nodes = int(meta["M"]), list(meta["nodes"])
         self.K = len(self.nodes)
         self.kt, self.kc, self.ks = meta.get("kt", 36), meta.get("kc", 146), meta.get("ks", 130)
@@ -174,6 +177,17 @@ class Reseeder:
         self.qd_bar = float(qd_bar)
         if self.qd_bar > 1e-24 and self.od <= 0:
             raise ValueError(f"qd_bar {self.qd_bar:g} above 1e-24 needs octo-double corrections (od > 0)")
+        # proj_start (#1032): "u0" starts project() with the double-double u0 rung and its quad-double polish, as
+        # before; "pred" first polishes the point's own four-part data in quad-double (the re-seed's first stage under
+        # qd_start "pred") and runs the "u0" path only when that does not converge. Past D 249 at order 293 the u0
+        # rung's data are rounded to double-double, whose pole lies inside u0 (#693), so its polish fails at every
+        # projection and the re-seed's polish from the point's data is what succeeds (counted 'ladder')
+        if proj_start not in ("u0", "pred"):
+            raise ValueError(f"proj_start {proj_start!r}: 'u0' or 'pred'")
+        self.proj_start = proj_start
+        # od_stop (#1032): refine_o ends at its floor, where a correction made with an LU factored at the point it
+        # corrects does not halve |R| (OD_STALL), instead of refactoring there until its step cap
+        self.od_stop = bool(od_stop)
         self.x_node = self.nodes[-1]
         u0 = 1.0 - self.x_node
         # the rungs u0 / 2^j, j = J..0 (exact in f64: u0 is the f64 value 1 - x_K-1 and the divisions are by powers of 2)
@@ -485,7 +499,7 @@ class Reseeder:
         return d, hist, steps > 0 and nR < self.qd_bar
 
     # ------------------------------------------------------------------ the re-seed
-    def refine_o(self, z8, steps=None, mutate=""):
+    def refine_o(self, z8, steps=None, mutate="", stop=None):
         """the u0 rung's horizon data in octo-double: z8 (eight parts) with its 2M horizon data moved by steps Newton
         corrections. The residual is the rung rows of Solver.residual_o at all eight parts, and each step solves the
         rung block of the quad-double Jacobian at the point's quad-double rounding (QDLu, factored once). The
@@ -497,9 +511,15 @@ class Reseeder:
         the rung's max |R| before each correction and after the last. A residual that is not finite returns the
         point as it stands. mutate 'sign' applies each correction with the wrong sign (the control of
         octo_corrector.py horizon); 'badlu' factors the first LU with the block's first column times 1.01, which
-        the refactoring must recover from, and 'badlu_keep' keeps that LU throughout (its control)."""
+        the refactoring must recover from, and 'badlu_keep' keeps that LU throughout (its control). stop (None: the
+        Reseeder's od_stop) ends the corrections at the floor: when a correction made with an LU factored at the
+        point it corrected lowers |R| by less than OD_STALL, so that refactoring cannot help, or when |R| is at most
+        OD_FLOOR (#1032: at D 251.88 the rung's |R| went 6.06e-16 -> 5.17e-30 and then stayed there through seven
+        refactorings). last_o_end records why the corrections ended: 'steps', 'cap' (OD_EXTRA used up), 'floor' or
+        'nonfinite'."""
         from multidouble import od_axpy
         steps = self.od if steps is None else int(steps)
+        stop = self.od_stop if stop is None else bool(stop)
         M, a, o = self.M, self.aoff, self.off
         s = self.rung_solver(self.us[-1])
         rows = self.rung_rows()
@@ -524,6 +544,7 @@ class Reseeder:
         d = [np.ascontiguousarray(z8[q][sl_]) for q in range(8)]
         zero = np.zeros(2 * M)
         hist, lu, since = [], None, 0
+        fresh = False           # whether the last correction used an LU factored at the point it corrected
         # Each LU gets the requested number of corrections (since: those made with the current one), at most OD_EXTRA
         # beyond steps in all, and none when steps is 0. A correction that lowers |R| by less than OD_REFACTOR
         # refactors the LU at the point reached, above the floor OD_FLOOR. At some points the first correction from the once-factored LU raised
@@ -534,6 +555,10 @@ class Reseeder:
             R = [np.ascontiguousarray(p) for p in res_rows(s, put(d, 8), rows)]
             hist.append(float(np.max(np.abs(R[0] + R[1]))))
             if k == last or not np.isfinite(hist[-1]) or since >= steps:
+                self.last_o_end = "nonfinite" if not np.isfinite(hist[-1]) else ("steps" if since >= steps else "cap")
+                break
+            if stop and (hist[-1] <= OD_FLOOR or (fresh and hist[-1] > OD_STALL * hist[-2])):
+                self.last_o_end = "floor"           # the arithmetic's floor, or a fresh LU's correction did not halve |R|
                 break
             if lu is None or (k > 0 and hist[-1] > OD_REFACTOR * hist[-2] and hist[-1] > OD_FLOOR
                                 and mutate != "badlu_keep"):
@@ -542,6 +567,9 @@ class Reseeder:
                     for q in range(4):
                         blk[q][:, 0] *= 1.01         # the plant: a first LU whose chord steps gain only about 1e-2
                 lu, since = QDLu(*[np.ascontiguousarray(b) for b in blk]), 0
+                fresh = True
+            else:
+                fresh = False
             x = [np.ascontiguousarray(np.asarray(p)) for p in lu.solve(*[-r for r in R[:4]])]
             d = [np.ascontiguousarray(np.asarray(p))
                  for p in od_axpy(-1.0 if mutate == "sign" else 1.0, *x, *([zero] * 4), *d)]
@@ -550,10 +578,17 @@ class Reseeder:
             z8[q][sl_] = d[q]
         return tuple(np.ascontiguousarray(p) for p in z8), hist
 
-    def reseed(self, z, verbose=False):
+    def own_polish(self, z):
+        """the quad-double polish of the u0 rung from the four-part point z's own horizon data (invert_q): the re-seed's
+        first stage under qd_start 'pred' (#693) and project()'s under proj_start 'pred' (#1032)"""
+        sl_ = slice(self.off["mh"], self.off["mh"] + 2 * self.M)
+        return self.invert_q(z, tuple(np.ascontiguousarray(np.asarray(p, dtype=float)[sl_]) for p in z))
+
+    def reseed(self, z, verbose=False, own=None):
         """z: a state of two or four parts (hi, lo[, z2, z3]). Returns (z', diag): z' has the same parts with m_h and a_h
         replaced (their lower parts zero), diag the per-rung records; diag['ok'] is False when a rung's Newton did not
-        converge or a target is not finite (z' is then z unchanged)."""
+        converge or a target is not finite (z' is then z unchanged). own: own_polish(z) when the caller has it already
+        (project() under proj_start 'pred'), used under qd_start 'pred' instead of polishing again (the same bits)."""
         t0 = time.time()
         zh, zl = np.asarray(z[0], dtype=float), np.asarray(z[1], dtype=float)
         M, o = self.M, self.off
@@ -562,7 +597,7 @@ class Reseeder:
             # the quad-double polish from the point's own four-part horizon data (#693); the ladder below only if it fails
             sl_ = slice(o["mh"], o["mh"] + 2 * M)
             tq = time.time()
-            d4, hq, cq = self.invert_q(z, tuple(np.ascontiguousarray(np.asarray(p, dtype=float)[sl_]) for p in z))
+            d4, hq, cq = self.own_polish(z) if own is None else own
             pre = [dict(u=self.us[-1], qd=True, start="pred", conv=cq, its=len(hq) - 1, R0=hq[0]["R"], R=hq[-1]["R"],
                         seconds=round(time.time() - tq, 2))]
             if verbose:
@@ -637,10 +672,24 @@ class Reseeder:
     def project(self, z):
         """z (four parts) with its horizon data re-inverted at u0 only, from its own data (a warm start for points near
         the regular family: the corrector's iterates); the full ladder (reseed) when that Newton does not converge.
-        Returns (z', how): how is 'u0', 'ladder' or 'failed' (z' = z)."""
+        Returns (z', how): how is 'u0', 'u0q', 'ladder' or 'failed' (z' = z), and 'pred' when proj_start 'pred'
+        polished the point's own data first and that converged. When it does not, the path that follows is the
+        default's, with that polish handed to the re-seed, so z' is the default's bit for bit; the two differ only
+        where the u0 path converges, which past D 249 at order 293 it does not (#1032)."""
         zh, zl = np.asarray(z[0], dtype=float), np.asarray(z[1], dtype=float)
         M, o = self.M, self.off
         sl_ = slice(o["mh"], o["mh"] + 2 * M)
+        own = None
+        if self.proj_start == "pred" and self.qd and len(z) == 4:
+            # #1032: the point's own data polished first; converged, the u0 rung and the ladder are not run
+            own = self.own_polish(z)
+            d4, hq, cq = own
+            if cq:
+                self.last_project = dict(pred=dict(conv=True, its=len(hq) - 1, R0=hq[0]["R"], R=hq[-1]["R"]))
+                out = [np.array(p, dtype=float) for p in z]
+                for q in range(4):
+                    out[q][sl_] = d4[q]
+                return tuple(np.ascontiguousarray(p) for p in out), "pred"
         u0 = self.us[-1]
         nh = zh[o["node"](self.K - 1):o["node"](self.K - 1) + 4 * M]
         nl = zl[o["node"](self.K - 1):o["node"](self.K - 1) + 4 * M]
@@ -648,6 +697,8 @@ class Reseeder:
         # last_project: what each stage of this call did, for the log of a failed projection (#743); no effect on z'
         self.last_project = lp = dict(u0=dict(conv=bool(conv), its=len(hist) - 1, R0=hist[0]["R"], R=hist[-1]["R"],
                                               finite=bool(np.all(np.isfinite(dh)))))
+        if own is not None:
+            lp["pred"] = dict(conv=False, its=len(own[1]) - 1, R0=own[1][0]["R"], R=own[1][-1]["R"])
         how = "u0"
         if self.qd and len(z) == 4 and np.all(np.isfinite(dh)):
             # the double-double u0 rung as the start (converged or at its floor), then the quad-double polish
@@ -660,7 +711,7 @@ class Reseeder:
                 return tuple(np.ascontiguousarray(p) for p in out), "u0q"
             conv = False
         if not conv:
-            zr, diag = self.reseed(z)
+            zr, diag = self.reseed(z, own=own)
             last = {k: v for k, v in (diag["rungs"][-1] if diag["rungs"] else {}).items() if k != "hist"}
             lp["ladder"] = dict(ok=bool(diag["ok"]), rungs=len(diag["rungs"]), dropped=list(diag.get("dropped", [])),
                                 last=last)
@@ -682,7 +733,10 @@ def why_failed(nf, lp):
 
     def stage(d):
         return f"{d['its']} its, |R| {d['R0']:.2e} -> {d['R']:.2e}, {'converged' if d['conv'] else 'NOT converged'}"
-    out = [f"point max|F| {nf:.2e}", "u0 rung " + stage(lp["u0"]) + ("" if lp["u0"]["finite"] else ", data not finite")]
+    out = [f"point max|F| {nf:.2e}"]
+    if "pred" in lp:
+        out.append("own data quad-double " + stage(lp["pred"]))
+    out.append("u0 rung " + stage(lp["u0"]) + ("" if lp["u0"]["finite"] else ", data not finite"))
     if "u0q" in lp:
         out.append("u0 quad-double " + stage(lp["u0q"]))
     if "ladder" in lp:
@@ -730,7 +784,7 @@ class ElimQ:
             self.counts["skipped"] += 1
             return z
         zp, how = self.rs.project(z)
-        self.counts[how] += 1
+        self.counts[how] = self.counts.get(how, 0) + 1          # 'pred' appears once it occurs (#1032)
         if how == "failed" and self.log:
             print(f"      projection failed ({self.counts['failed']}): "
                   + why_failed(nf, getattr(self.rs, "last_project", None)), flush=True)
