@@ -49,9 +49,10 @@ RESOLVED = 1e-8
 # task folders of the raw-data repository whose *points*.jsonl are read, with the commit the CSV was last built from:
 # T82-win, the continuation below D = 3.05 at steps of 0.0025 (lowD_highM.py from T45's states, the Windows machine),
 # 83e99d6 (2026-10-31, D 3.045 at M 320/384); I343-win2, the leg from D 3.04375 in steps of at most 0.00035 (#343),
-# 4ffbf3c9 (2026-11-17, D 3.04355 and 3.04335 at M 320/384; it stopped above the sonic closing, notes/LOW_D.md 17)
+# 4ffbf3c9 (2026-11-17, D 3.04355 and 3.04335 at M 320/384; it stopped above the sonic closing, notes/LOW_D.md 17);
+# I945-win2/leg, the restart of that leg's stall at D 3.04315 (#945), e32ba4a4 (2026-11-19, D 3.04315 at M 320/384)
 RAW_ROOT = os.path.join(HERE, "..", "..", "choptuik-large-d-raw")
-RAW_TASKS = ("T82-win", "T100-win2", "T105-win2", "I343-win2")
+RAW_TASKS = ("T82-win", "T100-win2", "T105-win2", "I343-win2", "I945-win2/leg")
 # relayout.py's M 64 states from T79-win's M 48 states (#766 at D 7.0 and 8.2, raw 7b58975a; #775 at the other 16 D of
 # 4.25 to 8.1375, raw ceefdbe8)
 RELAYOUT_TASKS = ("I766-win", "I775-win")
@@ -83,7 +84,9 @@ def raw_records(raw_root=RAW_ROOT):
         if not os.path.isdir(folder):
             sys.exit(f"export_lowD: {folder} is missing; clone https://github.com/nmoinvaz/choptuik-large-d-raw "
                      f"beside the checkout or pass --raw ROOT")
-        out += list(records("*points*.jsonl", folder))
+        for r in records("*points*.jsonl", folder):
+            r["_src"] = f"{task}/{os.path.basename(r['_src'])}"      # the task folder's path, also for a subfolder
+            out.append(r)
     return out
 
 
@@ -104,6 +107,18 @@ def relayout_records(raw_root=RAW_ROOT):
     return out
 
 
+FLOOR_F = 1e-20          # lowD_dd.py --accept, the floor rule's acceptance level (#945)
+FLOOR_DDELTA = 1e-15     # Delta's own Newton correction allowed for a record accepted at the floor
+
+
+def floor_ok(r):
+    """a record that lowD_dd.py's floor rule accepted above |F| 1e-25 (#945) counts when |F| is at most FLOOR_F and
+    Delta's own Newton correction dDelta_est is at most FLOOR_DDELTA, so that its Delta error is far below the M changes
+    the table quotes (D 3.04315: -1.0e-17 at M 320 and -2.9e-22 at M 384, against a change of -1.0e-10)"""
+    e = r.get("dDelta_est")
+    return r.get("F") is not None and r["F"] <= FLOOR_F and e is not None and abs(e) <= FLOOR_DDELTA
+
+
 def build(raw_root=RAW_ROOT):
     """the rows of delta_dd_lowD.csv (dicts), sorted by D and M"""
     best, polluted = {}, {}
@@ -111,7 +126,7 @@ def build(raw_root=RAW_ROOT):
             + relayout_records(raw_root):
         if r.get("converged") is False or r.get("Delta") is None or r.get("D", 99) >= 8.25:
             continue
-        if r.get("F") is not None and r["F"] > 1e-25:
+        if r.get("F") is not None and r["F"] > 1e-25 and not floor_ok(r):
             continue
         key = (round(r["D"], 6), int(r["M"]))
         d = r["Delta"]
