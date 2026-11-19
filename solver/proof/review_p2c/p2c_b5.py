@@ -486,6 +486,17 @@ class InnerState:
         self.w = wf * H.WINF
         from mpmath import iv
         self.D = {m: 1 + iv.mpc(0, m) * self.w for m in ODD}
+        # S = C Phi - z D2 Q + z B0 P on the truncated series, exactly (products of polynomials, no inverse), then
+        # Q0' = S/(2 z^2) (its z^0 and z^1 terms vanish: checked)
+        big = H.keep_inner(4 * J + 4)
+        L = lambda f: {k: H.Ser(dict(v.c), big) for k, v in f.items()}
+        Pb, Phib, Cb, Qb = L(P), L(Phi), L(C), L(Q)
+        E0 = {k: v * (iv.mpf(1) / 2) for k, v in H.pr(Pb, Pb, EVEN, big).items()}
+        CE0 = H.pr(Cb, E0, EVEN, big)
+        S_ = {m: H.pr(Cb, Phib, ODD, big)[m] - (Qb[m] * (self.D[m] + 1)).shift(0, 1)
+              + H.pr(CE0, Pb, ODD, big)[m].shift(0, 1) for m in ODD}
+        self.S_low = max(float(abs(S_[m].coef(0, j)).b) for m in ODD for j in (0, 1))
+        self.Q0p = {m: H.Ser({(0, j - 2): v / 2 for (a, j), v in S_[m].c.items() if j >= 2}, big) for m in ODD}
 
     def at(self, tt, tmax):
         """interval enclosures on the cell: P, Phi/t, C, (C - 1)/t, Q (eta included); bound arithmetic in iv"""
@@ -509,7 +520,104 @@ class InnerState:
         if tmax > 0:
             # eta_Phi/|t| carries (|t|/Z)^12/|t|, increasing in |t|: bounded by its value at tmax
             Phit = {m: v + disc(ePhi / iv.mpf(tmax)) for m, v in Phit.items()}
+        # Q0' = S/(2 z^2): eta_S <= |C|_1 eta_Phi + eta_c |Phi|... + |t| (|D2| eta_Q + d(B0 P)); over |t|^2, increasing
+        Q0p = {m: horner(self.Q0p[m], tt) for m in ODD}
+        if tmax > 0:
+            Pn = max((abs(v) for v in P.values()), key=lambda v: v.b)
+            Phin = max((abs(v) for v in Phit.values()), key=lambda v: v.b) * iv.mpf(tmax)
+            E0n = 2 * Pn * Pn
+            dB0P = 3 * (ec * E0n + Cn * 4 * Pn * ep_) * Pn + 3 * Cn * E0n * ep_
+            eS = Cn * ePhi + 3 * ec * Phin + iv.mpf(tmax) * ((Dm + 1) * eQ + dB0P)
+            Q0p = {m: v + disc(eS / (2 * iv.mpf(tmax) ** 2)) for m, v in Q0p.items()}
+        self.last_Q0p = Q0p
         return P, Phit, C, Ct, Q
+
+
+class IVK:
+    """interval vectors (dicts over harmonics) and 2 x 2 operators on odd vectors"""
+    def __init__(self):
+        from mpmath import iv
+        self.iv = iv
+        self.z0 = iv.mpc(0)
+
+    def add(self, *fs):
+        return {k: sum((f[k] for f in fs), self.z0) for k in fs[0]}
+
+    def sc(self, f, s):
+        return {k: v * s for k, v in f.items()}
+
+    def pr(self, f, g, out):
+        return {k: sum((f[i] * g[j] for i in f for j in g if i + j == k), self.z0) for k in out}
+
+    def op(self, c):
+        return {m: {q: c.get(m - q, self.z0) for q in ODD} for m in ODD}
+
+    def ap(self, M, f):
+        return {m: sum((M[m][q] * f[q] for q in ODD), self.z0) for m in ODD}
+
+    def mm(self, X, Y):
+        return {m: {q: sum((X[m][p] * Y[p][q] for p in ODD), self.z0) for q in ODD} for m in ODD}
+
+    def madd(self, *Xs):
+        return {m: {q: sum((X[m][q] for X in Xs), self.z0) for q in ODD} for m in ODD}
+
+    def msc(self, X, s):
+        return {m: {q: X[m][q] * s for q in ODD} for m in ODD}
+
+    def eye(self):
+        return {m: {q: (self.iv.mpc(1) if m == q else self.z0) for q in ODD} for m in ODD}
+
+    def diag(self, d):
+        return {m: {q: (d[m] if m == q else self.z0) for q in ODD} for m in ODD}
+
+    def inv(self, X):
+        a, b, c, d = X[1][1], X[1][-1], X[-1][1], X[-1][-1]
+        det = a * d - b * c
+        if 0 in det.real and 0 in det.imag:
+            raise RuntimeError("an operator is not invertible on a cell")
+        return {1: {1: d / det, -1: -b / det}, -1: {1: -c / det, -1: a / det}}
+
+    def mag(self, f):
+        return max((abs(v) for v in f.values()), key=lambda v: v.b)
+
+
+def lemma3_value(K, st, Q0p, D, tt, e, ez):
+    """t r_Phi/eps by Lemma 3's formula (B5_inner.md 2) on enclosures; e = eps, ez = eps/t (intervals)"""
+    iv = K.iv
+    P, Phit, C, Ct, Q0 = st
+    half = iv.mpf(1) / 2
+    one_e = 1 - e
+    Dm, D2m = K.diag(D), K.diag({m: D[m] + 1 for m in ODD})
+    Cm = K.op(C)
+    CC = K.mm(Cm, Cm)
+    E0 = K.sc(K.pr(P, P, EVEN), half)
+    CE0 = K.pr(C, E0, EVEN)
+    C0p = K.sc(CE0, half)
+    B0, C0pm = K.op(CE0), K.op(C0p)
+    Phi_in_p = K.add(K.ap(Cm, Q0p), K.pr(C0p, Q0, ODD), K.sc(K.ap(Dm, Phit), -half))      # Phi'_in
+    Emat = K.madd(K.mm(Cm, K.madd(K.eye(), K.msc(Dm, -e))), K.msc(B0, e * one_e * tt))
+    dQ = K.ap(K.inv(Emat), K.add(K.sc(K.ap(CC, Phit), -1), K.sc(K.ap(Cm, K.ap(B0, P)), -one_e),
+                                 K.ap(Cm, K.ap(Dm, Q0)), K.sc(K.ap(B0, Q0), -one_e * tt)))
+    Q = K.add(Q0, K.sc(dQ, e))
+    QQ = K.pr(Q, Q, EVEN)
+    H = K.add(K.sc(E0, -1), K.sc(QQ, tt * half), K.sc(K.pr(E0, E0, EVEN), e * tt),
+              K.sc(K.pr(E0, QQ, EVEN), e * tt * tt * half))
+    CH = K.pr(C, H, EVEN)
+    C0E0 = K.pr(C0p, E0, EVEN)
+    Acal = K.add(K.ap(C0pm, dQ), K.sc(K.ap(C0pm, Q), -1), K.sc(K.ap(C0pm, K.ap(Dm, Q)), -one_e), K.sc(K.ap(B0, Q), one_e),
+                 K.sc(K.pr(C0E0, Q, ODD), one_e * one_e * tt), K.sc(K.pr(CH, Q, ODD), one_e * half))
+    terms = K.add(
+        K.ap(CC, Phi_in_p),
+        K.sc(K.ap(K.madd(K.msc(K.mm(Cm, Dm), -1), K.msc(B0, one_e * tt)), Q0p), tt),
+        K.sc(K.ap(Emat, K.add(K.ap(D2m, dQ), K.ap(B0, P))), -half),
+        K.sc(K.ap(CC, Phit), -1),
+        K.sc(K.ap(K.madd(K.mm(C0pm, Cm), K.mm(Cm, C0pm)), Phit), one_e * tt),
+        K.sc(Acal, tt),
+        K.sc(K.ap(Cm, K.ap(B0, Phit)), one_e * half * tt),
+        K.sc(K.add(K.ap(C0pm, K.ap(B0, P)), K.ap(Cm, K.pr(C0E0, P, ODD))), tt * one_e * one_e),
+        K.sc(K.ap(Cm, K.pr(CH, P, ODD)), one_e * half))
+    Mm = K.madd(K.eye(), K.msc(CC, -ez))
+    return K.ap(K.inv(Mm), terms)
 
 
 def tG0_dir(st, D, tt, dP, dPhi, dC):
@@ -600,6 +708,47 @@ def sector_constants(H, A, wf, nr=8, na=24):
     return gam, RC, TF, S
 
 
+def R_phi(H, S, nr, na, n0=None):
+    """R_Phi = sup over the sector and eps <= eps0 (|eps/t| <= tau0) of |t r_Phi/eps| by Lemma 3's formula"""
+    from mpmath import iv
+    K = IVK()
+    L0 = iv.mpf("73.89")
+    eps0 = iv.exp(-L0)
+    tau0 = iv.exp(-(1 - 2 * iv.mpf("0.3")) * L0)
+    e = iv.mpf([0, 1]) * eps0
+    ez = iv.mpc(iv.mpf([-1, 1]) * tau0, iv.mpf([-1, 1]) * tau0)
+    R = mpf(0)
+    for tt, tmax, tmin in cells(nr, na):
+        st = S.at(tt, tmax)
+        v = lemma3_value(K, st, S.last_Q0p, S.D, tt, e, ez)
+        R = max(R, mpf(K.mag(v).b.a))
+    return R
+
+
+def check_lemma3_formula(H, S):
+    """Lemma 3's formula at eps = 0 against this review's eps-series r/(tau z^2), at thin interior points (no eta)"""
+    from mpmath import iv
+    K = IVK()
+    J = 30
+    keep = H.keep_box(3, J)
+    emb = lambda f: {k: H.Ser(dict(v.c), keep) for k, v in f.items()}
+    r = residual_series(H, S.w, emb(S.P), emb(S.Phi), emb(S.C), keep)
+    worst = mpf(0)
+    for rad, ang in ((mpf("0.05"), mpf("0.3")), (mpf("0.1"), mpf("1.2")), (mpf("0.2"), mpf("1.7"))):
+        tt = iv.mpc(mp.mpf(ZMAX * rad * mp.cos(ang)), mp.mpf(ZMAX * rad * mp.sin(ang)))
+        P = {m: horner(S.P[m], tt) for m in ODD}
+        Phit = {m: horner(S.Phit[m], tt) for m in ODD}
+        C = {k: horner(S.C[k], tt) for k in EVEN}
+        Q = {m: horner(S.Q[m], tt) for m in ODD}
+        Q0p = {m: horner(S.Q0p[m], tt) for m in ODD}
+        f = lemma3_value(K, (P, Phit, C, None, Q), Q0p, S.D, tt, iv.mpf(0), iv.mpc(0))
+        for m in ODD:
+            ser = sum((v * tt ** (j - 2) for (a, j), v in r[m].c.items() if a == 1), iv.mpc(0))
+            d = abs(f[m] - ser).b / abs(ser).b
+            worst = max(worst, mpf(d.a))
+    return worst
+
+
 def check_sector():
     H = series_tools()
     A, wf = H.params(True)
@@ -610,7 +759,13 @@ def check_sector():
           f"{__import__('time').time() - t0:.0f} s): largest gamma entries "
           + "; ".join(f"{k[0][0]}{k[0][1]:+d} <- {k[1][0]}{k[1][1]:+d} {mp.nstr(v, 5)}" for v, k in big))
     print(f"  R_C = {mp.nstr(RC, 6)} (B5_inner.md 5.2: 3.43), T_F (eps -> 0 part) = {mp.nstr(TF, 6)} (4.15)")
-    return True
+    print(f"  S = C Phi + A2^0 on the truncated series: largest z^0, z^1 coefficient {S.S_low:.1e} (exact division by z^2)")
+    w3 = check_lemma3_formula(H, S)
+    print(f"  Lemma 3's formula at eps = 0 against this review's eps-series, 3 interior points: largest relative "
+          f"difference {mp.nstr(w3, 3)}: {'PASS' if w3 < mpf(10) ** -15 else 'FAIL'}")
+    Rp = R_phi(H, S, int(OPTS.get("nr", 8)), int(OPTS.get("na", 24)))
+    print(f"  R_Phi (Lemma 3's formula on the cells, eta included, eps <= eps0) = {mp.nstr(Rp, 6)} (B5: 91.5)")
+    return w3 < mpf(10) ** -15
 
 
 if __name__ == "__main__":
