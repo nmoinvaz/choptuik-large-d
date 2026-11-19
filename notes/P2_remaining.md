@@ -260,9 +260,10 @@ disc's centre to the whole disc, with a bound M on |y − y₀|. This section re
 - **Planted checks, which must pass.** The equation against `SysU.rhs` (relative 10⁻⁴⁰ at 10 random points), and the
   integrator against the stored ray box at s₁.
 
-### 4.2 Results (paused 2026-11-19 at the coordinator's word, before the comparison with the stored margins)
+### 4.2 Results
 
-The own numbers are committed (ce097b2b). The stored per-disc margins have not yet been read for the comparison.
+The own numbers were committed (ce097b2b) before the stored per-disc margins were read for the comparison (§4.3).
+The work paused there at the coordinator's word on 2026-11-19 and resumed the same day.
 
 - **Planted checks pass.** The equation matches `SysU.rhs` at 10 random points to a relative 3.5×10⁻⁵⁸
   (`p2c_disc_checkint.log`). The integrator lands inside each stored ray box from s_j to s_{j+1}, at deviations of
@@ -285,5 +286,70 @@ The own numbers are committed (ce097b2b). The stored per-disc margins have not y
   - the weight orientation, ω_i = 1/v_i;
   - the z-ball, which now uses lemma D's own enclosure 1/c + disc(r/(|c|(|c| − r))). python-flint's inverse of the
     box was 8 times looser.
-- **Left to do:** the comparison with the stored per-disc Λ and sup; a centred enclosure, so that the reconstructed
-  boxes need not be small; then (11, 1) at the protocol's inputs.
+- **Disc (11, 1)** is finished in §4.4, and the comparison is in §4.3.
+
+### 4.3 The comparison with the certificate
+
+`p2c_disc_compare.py` reads the stored per-disc Λ, sup (the bound M) and box radius from `lemma6b1_runs/row_XX.json`
+and sets them beside this review's (`p2c_disc_compare.log`).
+
+- **Same inputs, same margins.** On the 12 start-ray discs the input is the stored box itself. Λ agrees to at most
+  5.6×10⁻⁶ relative and M to at most 3.1×10⁻¹¹ on rows 0 to 10. On (11, 0) both are larger here by 1.6×10⁻³ (Λ 0.43968
+  against 0.43897, M 15.489 against 15.469). That is the input-size effect of §4.2 on the stored box of 7.9×10⁻⁸
+  (attributed, not proven).
+- **Arc discs.** Their inputs here are larger than the certificate's: 4 times (protocol) or 2 times (§4.4) the stored
+  radius, centred on this review's midpoint. Λ agrees to 0.2% on rows 0 to 10 at both sizes. M agrees to 0.3% on
+  rows 0 to 3 and 7 to 10. On rows 4 to 6 and 11 it is larger, and more so at 4 times than at 2 times (row 4 agrees
+  at 2 times):
+
+| row | max Λ, stored | here, 4× | here, 2× | max M, stored | here, 4× | here, 2× |
+|---|---|---|---|---|---|---|
+| 4 | 0.1793 | 0.1793 | 0.1793 | 0.4023 | 0.4347 | 0.4023 |
+| 5 | 0.1833 | 0.1833 | 0.1833 | 0.6173 | 1.19 | 0.6372 |
+| 6 | 0.1909 | 0.1910 | 0.1909 | 1.067 | 5.081 | 2.614 |
+| 11 | 0.4390 | 0.6482 (6 of 7) | 0.5410 | 15.47 | 84.45 (6 of 7) | 43.01 |
+
+- **The stored files against A_certify.md §12.4.** The row maxima of Λ, box radius and sup in the stored files
+  round to the table's entries (for example row 11: 0.4390, 1.77×10⁻⁵, 15.47 against 0.439, 1.8×10⁻⁵, 15.5).
+
+### 4.4 Disc (11, 1)
+
+- **At the protocol's input** (4 × its stored box radius 1.024×10⁻⁶, plus 10⁻¹⁵) it is not certified: Λ = 1.494.
+- **Cause: the input box.** The bound M grows by 9.85×10⁶ per unit of input radius, between 0 and 1 times the stored
+  radius (`p2c_disc_11_1_growth.log`). The growth allowed by the Lipschitz bound over the disc,
+  exp((n + 2)Λ) at the thin input, is 1.49×10⁷.
+  - So the growth comes from the Lipschitz-based bound, not from the ball series alone.
+  - A centred (Gronwall) form would carry the same factor. On the 4.1×10⁻⁶ box it would allow a drift of about 60,
+    so it was not pursued.
+- **The input that is needed.** The certificate's box at (11, 1) contains y⁺(c) and has radius at most 1.024×10⁻⁶
+  (A_certify.md §12.4: the Lohner box at the centre, the input of lemma D).
+  - It therefore lies inside this review's midpoint ± (2 × 1.024×10⁻⁶ + |midpoint − y⁺(c)|) on each axis.
+  - The midpoint agrees with y⁺(c) to 10⁻²² by three paths. That is the protocol's non-rigorous assumption, and its
+    10⁻¹⁵ covers it.
+  - So 2 times the stored radius plus 10⁻¹⁵ contains the certificate's box. The 4 times of §4.1 was a margin chosen
+    beforehand, not a need.
+- **At 2 times, all 178 discs are certified** (`p2c_disc_all_infl2.log`, 212 s). Disc (11, 1) has Λ = 0.541 and max
+  M = 43.0, against the stored 0.418 and 14.6.
+
+**Status.** The protocol's inputs certify 177 of 178 discs. The smallest inputs that contain the certificate's boxes,
+under the same assumption, certify 178 of 178, and both controls fail.
+- **The 12 start-ray discs** are confirmed outright, on the stored inputs.
+- **The 166 arc discs:** the review covers lemma D's computation on boxes assumed to contain the certificate's. That
+  assumption, the midpoint's accuracy, is not proven (§4.1).
+- **Versions:** python-flint 0.9.0 and FLINT 3.6.0.
+
+### 4.5 Reproduce
+
+From `solver/proof/review_p2c/`, with python-flint 0.9.0:
+
+```
+python3 p2c_disc.py --checkeq                                  # PASS, exit 0
+python3 p2c_disc.py --checkint                                 # PASS, exit 0
+python3 p2c_disc.py --discs=all > p2c_disc_all.log             # 177 of 178, exit 1 (about 510 s)
+python3 p2c_disc.py --discs=all --infl=2 --tag=all_infl2 > p2c_disc_all_infl2.log   # 178 of 178, exit 0
+python3 p2c_disc.py --discs=11:1 --infl=0 --tag=diag_11_1_infl0  # and --infl=1, 2, 3 (tags ..._infl1, 2, 3)
+python3 p2c_disc.py --discs=11:0 --radius=16 > p2c_disc_K1_toolarge.log   # K1: not certified, exit 1
+python3 p2c_disc.py --discs=ray --mutate=sign > p2c_disc_K2_sign.log      # K2: 0 of 12, exit 1
+python3 p2c_disc_compare.py p2c_disc_all.jsonl p2c_disc_all_infl2.jsonl > p2c_disc_compare.log
+python3 p2c_disc_11_1_growth.py > p2c_disc_11_1_growth.log
+```
