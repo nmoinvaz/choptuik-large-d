@@ -98,6 +98,9 @@ trait Api: Send + Sync {
     /// jac_sub::jacobian_sub_in in the precision of z's part count (2 Double, 4 Quad, 8 Octo): J[rows, cols] as z's
     /// number of row-major part arrays; mutate: Ctx::mutate for this call
     fn jacobian_sub(&mut self, z: &[&[f64]], rows: &[usize], cols: &[usize], mutate: u8) -> Result<Vec<Vec<f64>>, String>;
+    /// jac_sub::residual_sub_in in the precision of z's part count (2 Double, 4 Quad, 8 Octo): F[rows] as z's number
+    /// of part arrays; mutate: Ctx::mutate for this call
+    fn residual_sub(&mut self, z: &[&[f64]], rows: &[usize], mutate: u8) -> Result<Vec<Vec<f64>>, String>;
 }
 
 /// series_o's control of the series moved by its tangents (Ctx::mutate): multishoot's `Control::JetTangentKeep`, the
@@ -468,6 +471,20 @@ impl<const B: usize> Api for Ctx<B> {
             4 => qd_sizes!(self, mutate, |c| crate::jac_sub::jacobian_sub_in::<Quad, _>(c, z, rows, cols, true)),
             8 => od_sizes!(self, mutate, |c| crate::jac_sub::jacobian_sub_in::<Octo, _>(c, z, rows, cols, true)),
             n => Err(format!("jacobian_sub: z must be 2, 4 or 8 part arrays, not {n}")),
+        }
+    }
+
+    fn residual_sub(&mut self, z: &[&[f64]], rows: &[usize], mutate: u8) -> Result<Vec<Vec<f64>>, String> {
+        match z.len() {
+            2 => {
+                self.mutate = mutate;
+                let r = crate::jac_sub::residual_sub_in::<Double, B>(self, z, rows, true);
+                self.mutate = 0;
+                r
+            }
+            4 => qd_sizes!(self, mutate, |c| crate::jac_sub::residual_sub_in::<Quad, _>(c, z, rows, true)),
+            8 => od_sizes!(self, mutate, |c| crate::jac_sub::residual_sub_in::<Octo, _>(c, z, rows, true)),
+            n => Err(format!("residual_sub: z must be 2, 4 or 8 part arrays, not {n}")),
         }
     }
 }
@@ -1383,6 +1400,29 @@ impl Solver {
         c.into_iter()
             .map(|p| Array2::from_shape_vec((nr, nc), p).map(|a| a.into_pyarray(py)).map_err(|e| PyValueError::new_err(e.to_string())))
             .collect()
+    }
+
+    /// The rows F[rows] of the residual at z, two, four or eight part arrays (double-, quad- or octo-double): bit for
+    /// bit those entries of residual, residual_q or residual_o at z, formed from only the blocks that hold them
+    /// (jac_sub::residual_sub_in), so that the re-seed's rung skips the centre series. Returns as many arrays of
+    /// len(rows) as z has parts. rows: a sequence of indices, in any order, repeats allowed. A solver with frozen rows
+    /// (kfreeze) is refused. Four parts at M = 32 and 48 only, eight at M = 32. mutate: Ctx::mutate for the call.
+    #[pyo3(signature = (z, rows, mutate=0))]
+    fn residual_sub<'py>(
+        &mut self,
+        py: Python<'py>,
+        z: Vec<PyReadonlyArray1<'py, f64>>,
+        rows: Vec<usize>,
+        mutate: u8,
+    ) -> PyResult<Vec<Bound<'py, PyArray1<f64>>>> {
+        let n = self.api.len();
+        let zs: Vec<&[f64]> = z.iter().map(|a| slice(a, "z")).collect::<PyResult<_>>()?;
+        if zs.iter().any(|p| p.len() != n) {
+            return Err(PyValueError::new_err(format!("each part must have length {n}")));
+        }
+        let (api, pool) = (&mut self.api, &self.pool);
+        let f = py.detach(|| pool.install(|| api.residual_sub(&zs, &rows, mutate))).map_err(PyValueError::new_err)?;
+        Ok(f.into_iter().map(|p| p.into_pyarray(py)).collect())
     }
 
     /// Mode matrix M(lam) (Delta fixed, no phase row) as two (L-1, L-1) arrays.

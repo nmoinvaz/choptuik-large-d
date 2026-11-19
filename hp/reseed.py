@@ -72,6 +72,32 @@ def jac_block_full(s, z, rows, cols):
     return [np.asarray(p)[np.ix_(rows, cols)] for p in J]
 
 
+def res_rows(s, z, rows):
+    """F[rows] at z (two, four or eight part arrays) in its parts, from only the blocks that hold those rows
+    (Solver.residual_sub: the full residual's entries there, bit for bit), so that a rung residual skips the centre
+    series (block 0) and the segment; a build without residual_sub takes F from the full residual (res_rows_full),
+    with a notice"""
+    if hasattr(s, "residual_sub"):
+        return [np.asarray(p) for p in s.residual_sub([np.ascontiguousarray(p) for p in z], [int(r) for r in rows])]
+    if "residual_sub" not in _NOTICED:
+        _NOTICED.add("residual_sub")
+        print("  reseed: this hpkernel has no Solver.residual_sub; each rung residual is taken from the full residual",
+              flush=True)
+    return res_rows_full(s, z, rows)
+
+
+def res_rows_full(s, z, rows):
+    """F[rows] at z (two, four or eight part arrays) from the full residual (Solver.residual, residual_q or
+    residual_o)"""
+    if len(z) == 2:
+        F = s.residual(*z)
+    elif len(z) == 4:
+        F = s.residual_q(*z)
+    else:
+        F = s.residual_o(list(z))
+    return [np.asarray(F[q])[rows] for q in range(len(z))]
+
+
 def offsets(M, K):
     """z offsets of the layout (hpkernel.driver's docstring): node i, m_h, a_h, and the length"""
     return dict(node=lambda i: 2 * M + 4 * M * i, mh=2 * M + 4 * M * K, ah=3 * M + 4 * M * K, L=4 * M * (K + 1) + 1)
@@ -272,8 +298,8 @@ class Reseeder:
             return vh, vl
 
         def res(ch, cl):
-            Fh, Fl = (np.asarray(v) for v in s.residual(*put(ch, cl)))
-            return Fh[rows], Fl[rows]
+            Fh, Fl = res_rows(s, put(ch, cl), rows)
+            return Fh, Fl
 
         hist = []
         Rh, Rl = res(dh, dl)
@@ -390,8 +416,7 @@ class Reseeder:
             return tuple(np.ascontiguousarray(x) for x in v)
 
         def res(d):
-            F = s.residual_q(*put(d))
-            return [np.asarray(F[q])[rows] for q in range(4)]
+            return res_rows(s, put(d), rows)
 
         d = [np.ascontiguousarray(np.asarray(x, dtype=float)) for x in d4]
         R = res(d)
@@ -506,8 +531,7 @@ class Reseeder:
         # a 0.0625 at D 242.48).
         last = steps + (OD_EXTRA if steps > 0 else 0)
         for k in range(last + 1):
-            F = s.residual_o(put(d, 8))
-            R = [np.ascontiguousarray(np.asarray(F[q])[rows]) for q in range(8)]
+            R = [np.ascontiguousarray(p) for p in res_rows(s, put(d, 8), rows)]
             hist.append(float(np.max(np.abs(R[0] + R[1]))))
             if k == last or not np.isfinite(hist[-1]) or since >= steps:
                 break
