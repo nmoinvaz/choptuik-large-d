@@ -17,7 +17,7 @@ mutation's expected verdict is not met.
 
 Methods: quadratic approximants, Shafer 1974, SIAM J. Numer. Anal. 11, 447 (as cited in
 solver/inner_amp/pade_chord_arc.py); the reweighted linear least squares for rational fits, Sanathanan and Koerner
-1963, IEEE Trans. Autom. Control 8, 56 (unverified).
+1963, IEEE Trans. Autom. Control 8, 56.
 """
 import csv
 import json

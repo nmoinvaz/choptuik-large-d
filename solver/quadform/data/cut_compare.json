@@ -92,5 +92,40 @@
    }
   }
  ],
+ "quadratic_unseen_by_kind": {
+  "pinned": {
+   "n": 843,
+   "max_miss": 5.25135490647699e-13,
+   "worst_over_sigma": 47.73959005888173,
+   "worst_at": 73.121091,
+   "over_5_sigma": 11,
+   "over_5_sigma_D": [
+    73.074665,
+    73.26397
+   ]
+  },
+  "qd": {
+   "n": 46,
+   "max_miss": 1.1102230246251565e-15,
+   "worst_over_sigma": 1.1102230246251565,
+   "worst_at": 70.15,
+   "over_5_sigma": 0,
+   "over_5_sigma_D": [
+    null,
+    null
+   ]
+  },
+  "chain_fit": {
+   "n": 190,
+   "max_miss": 2.4206192605902288e-11,
+   "worst_over_sigma": 0.6051548151475572,
+   "worst_at": 245.6366177558899,
+   "over_5_sigma": 0,
+   "over_5_sigma_D": [
+    null,
+    null
+   ]
+  }
+ },
  "produced_by": "solver/quadform/cut_compare.py"
 }

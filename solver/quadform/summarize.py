@@ -103,8 +103,43 @@ def table_F():
         print(f"  sign: {F['sign']}\n")
 
 
+def table_dinf():
+    root = os.path.join(HERE, "..", "..")
+    truth = {"T_cut": float(json.load(open(os.path.join(root, "hp", "data", "formula_cut.json")))["Delta_inf"]),
+             "T_pow": 1.6438937, "T_pole7": 1.6438937,
+             "T_pole": float(json.load(open(os.path.join(root, "solver", "data", "formula_coefficients.json")))["a"][0])}
+    print("Delta_inf of the forms of B with chi2/dof <= 4 (defect or not), against the plants' limits (post hoc)\n")
+    print("| points | forms | largest miss of the limit | Delta_inf, lowest to highest |")
+    print("|---|---|---|---|")
+    for s in SETS:
+        d = load(f"B_{s}.json")
+        if not d:
+            continue
+        v = [float(r["dinf"]) for r in d["rows"] if r["chi2dof"] <= 4]
+        miss = f"{max(abs(x - truth[s]) for x in v):.1e}" if s in truth and v else ""
+        print(f"| {s} | {len(v)} | {miss} | {min(v):.12f} to {max(v):.12f} |" if v else f"| {s} | 0 | | |")
+    d = load("B_real.json")
+    v = [float(r["dinf"]) for r in d["rows"] if r["N"] >= 21]
+    print(f"\nreal, the {len(v)} forms with N >= 21: Delta_inf {min(v):.12f} to {max(v):.12f}\n")
+    c = load("cut_compare.json")
+    if c:
+        print("the cut-plane series and the 24-constant quadratic on the same points to D 67.77, then on unseen points\n")
+        print("| formula | constants | chi2/dof | max miss/sigma | unseen 67.77-130 | unseen 130-245.64 |")
+        print("|---|---|---|---|---|---|")
+        for r in c["rows"]:
+            h = list(r["held"].values())
+            print(f"| {r['name']} | {r['n_const']} | {r['chi2dof']:.3g} | {r['max_over_sigma']:.3g} | {h[0]['max_miss']:.1e} | "
+                  f"{h[1]['max_miss']:.1e} ({h[1]['max_over_sigma']:.2g} sigma) |")
+        print()
+        for k, v in c["quadratic_unseen_by_kind"].items():
+            print(f"  unseen {k}: {v['n']} rows, max miss {v['max_miss']:.1e}, {v['over_5_sigma']} beyond 5 sigma "
+                  f"(D {v['over_5_sigma_D'][0]} to {v['over_5_sigma_D'][1]})")
+        print()
+
+
 if __name__ == "__main__":
     table_A()
     table_B()
     table_C()
+    table_dinf()
     table_F()
