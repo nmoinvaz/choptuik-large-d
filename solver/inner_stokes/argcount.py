@@ -155,7 +155,12 @@ class Multiplier:
 
     def raw(self, pts):
         """the multiplier at the points not yet cached"""
-        todo = [p for p in pts if self.key(p) not in self.vals]
+        todo, seen = [], set()
+        for p in pts:                               # each new point once
+            k = self.key(p)
+            if k not in self.vals and k not in seen:
+                seen.add(k)
+                todo.append(p)
         if not todo:
             return
         if self.M == 1:
@@ -241,77 +246,111 @@ class Counter:
     def edge(self, p, q):
         """(phase increment from p to q, total variation, min |F|, resolved) with the pieces refined"""
         key = (Multiplier.key(p), Multiplier.key(q))
+        rkey = (key[1], key[0])
+        if key not in self.edges and rkey not in self.edges:
+            self.prefetch([(p, q)])
         if key in self.edges:
             return self.edges[key]
-        rkey = (key[1], key[0])
-        if rkey in self.edges:
-            d, tv, mn, ok = self.edges[rkey]
-            return (-d, tv, mn, ok)
-        pts = [p, q]
-        ok = True
-        while True:
-            self.F.raw(pts)
-            vals = [self.F(x) for x in pts]
-            new, bad = [pts[0]], False
-            for i in range(len(pts) - 1):
-                a, b = vals[i], vals[i + 1]
-                step = wrap(math.atan2(b.imag, b.real) - math.atan2(a.imag, a.real)) if (
-                    np.isfinite(a) and np.isfinite(b)) else float("nan")
-                L = math.hypot(pts[i + 1][0] - pts[i][0], pts[i + 1][1] - pts[i][1])
-                if not math.isfinite(step):
-                    ok = False                       # a point with no value: bisecting would not give it one
-                elif not (abs(step) < self.dphi):
-                    if L > self.hmin:
-                        new.append(((pts[i][0] + pts[i + 1][0]) / 2, (pts[i][1] + pts[i + 1][1]) / 2))
-                        bad = True
-                    else:
+        d, tv, mn, ok = self.edges[rkey]
+        return (-d, tv, mn, ok)
+
+    def prefetch(self, pairs):
+        """refine several edges together, each by the same rule, so that each round's new points go to F in one call:
+        a piece is bisected while its phase step is >= dphi and it is longer than hmin; a point with no value ends
+        its edge as unresolved (bisecting would not give it one)"""
+        act = {}
+        for p, q in pairs:
+            key = (Multiplier.key(p), Multiplier.key(q))
+            rkey = (key[1], key[0])
+            if not (key in self.edges or rkey in self.edges or key in act or rkey in act):
+                act[key] = [[p, q], True]
+        while act:
+            self.F.raw([x for pts, _ in act.values() for x in pts])
+            for key in list(act):
+                pts, ok = act[key]
+                vals = [self.F(x) for x in pts]
+                new, bad = [pts[0]], False
+                for i in range(len(pts) - 1):
+                    a, b = vals[i], vals[i + 1]
+                    step = wrap(math.atan2(b.imag, b.real) - math.atan2(a.imag, a.real)) if (
+                        np.isfinite(a) and np.isfinite(b)) else float("nan")
+                    L = math.hypot(pts[i + 1][0] - pts[i][0], pts[i + 1][1] - pts[i][1])
+                    if not math.isfinite(step):
                         ok = False
-                new.append(pts[i + 1])
-            if not bad:
-                break
-            pts = new
-        vals = [self.F(x) for x in pts]
-        steps = [wrap(math.atan2(b.imag, b.real) - math.atan2(a.imag, a.real)) for a, b in zip(vals[:-1], vals[1:])]
-        fin = [abs(v) for v in vals if np.isfinite(v)]
-        res = (sum(steps), sum(abs(s) for s in steps), min(fin) if fin else float("nan"),
-               ok and all(map(np.isfinite, vals)))
-        self.edges[key] = res
-        return res
+                    elif not (abs(step) < self.dphi):
+                        if L > self.hmin:
+                            new.append(((pts[i][0] + pts[i + 1][0]) / 2, (pts[i][1] + pts[i + 1][1]) / 2))
+                            bad = True
+                        else:
+                            ok = False
+                    new.append(pts[i + 1])
+                if bad:
+                    act[key] = [new, ok]
+                    continue
+                steps = [wrap(math.atan2(b.imag, b.real) - math.atan2(a.imag, a.real))
+                         for a, b in zip(vals[:-1], vals[1:])]
+                fin = [abs(v) for v in vals if np.isfinite(v)]
+                self.edges[key] = (sum(steps), sum(abs(s) for s in steps), min(fin) if fin else float("nan"),
+                                   ok and all(map(np.isfinite, vals)))
+                del act[key]
+
+    @staticmethod
+    def corners(a0, a1, w0, w1):
+        return [(a0, w0), (a1, w0), (a1, w1), (a0, w1)]      # counter-clockwise in (A, wf)
+
+    def cell_edges(self, a0, a1, w0, w1):
+        c = self.corners(a0, a1, w0, w1)
+        return [(c[i], c[(i + 1) % 4]) for i in range(4)]
 
     def cell(self, a0, a1, w0, w1):
-        corners = [(a0, w0), (a1, w0), (a1, w1), (a0, w1)]      # counter-clockwise in (A, wf)
         tot, tv, mn, ok = 0.0, 0.0, 1e300, True
-        for i in range(4):
-            d, v, m, o = self.edge(corners[i], corners[(i + 1) % 4])
+        for p, q in self.cell_edges(a0, a1, w0, w1):
+            d, v, m, o = self.edge(p, q)
             tot, tv, mn, ok = tot + d, tv + v, min(mn, m), ok and o
         return (round(tot / (2 * math.pi)) if ok else 0), tot / (2 * math.pi), tv, mn, ok
 
 
 def locate(F, a0, a1, w0, w1):
-    """Newton on (Re F, Im F) from the cell centre with finite-difference Jacobians (steps 1e-2 of the cell, on the
+    return locate_many(F, [(a0, a1, w0, w1)])[0]
+
+
+def locate_many(F, cells):
+    """Newton on (Re F, Im F) from each cell's centre with finite-difference Jacobians (steps 1e-2 of the cell, on the
     unguarded values: near the zero |R| falls below the rounding floor by design); None if it leaves the double.
-    Near the floor the iterates jitter at sigma / |grad R|, so it ends after 20 steps if they do not settle."""
-    x = np.array([(a0 + a1) / 2, (w0 + w1) / 2])
-    ha, hw = (a1 - a0) * 1e-2, (w1 - w0) * 1e-2
+    Near the floor the iterates jitter at sigma / |grad R|, so it ends after 20 steps if they do not settle. The
+    cells advance in lockstep, so each step's points go to F in one call."""
+    st = []
+    for a0, a1, w0, w1 in cells:
+        st.append(dict(c=(a0, a1, w0, w1), x=np.array([(a0 + a1) / 2, (w0 + w1) / 2]), h=((a1 - a0) * 1e-2,
+                       (w1 - w0) * 1e-2), J=None, live=True, fail=False))
+    pts = lambda s: [tuple(s["x"]), (s["x"][0] + s["h"][0], s["x"][1]), (s["x"][0], s["x"][1] + s["h"][1])]
     for _ in range(20):
-        pts = [tuple(x), (x[0] + ha, x[1]), (x[0], x[1] + hw)]
-        F.raw(pts)
-        f0, fa, fw = (F.value(p) for p in pts)
-        if not all(map(np.isfinite, (f0, fa, fw))):
-            return None
-        J = np.array([[(fa - f0).real / ha, (fw - f0).real / hw], [(fa - f0).imag / ha, (fw - f0).imag / hw]])
-        try:
-            dx = np.linalg.solve(J, -np.array([f0.real, f0.imag]))
-        except np.linalg.LinAlgError:
-            return None
-        x = x + dx
-        if not (2 * a0 - a1 <= x[0] <= 2 * a1 - a0 and 2 * w0 - w1 <= x[1] <= 2 * w1 - w0):
-            return None
-        if np.hypot(dx[0] / (a1 - a0), dx[1] / (w1 - w0)) < 1e-9:
+        act = [s for s in st if s["live"]]
+        if not act:
             break
-    F.raw([tuple(x)])
-    return dict(A=float(x[0]), wf=float(x[1]), absF=abs(F.value(tuple(x))), floor=F.floor(tuple(x)),
-                sign=int(np.sign(np.linalg.det(J))))
+        F.raw([p for s in act for p in pts(s)])
+        for s in act:
+            (a0, a1, w0, w1), (ha, hw) = s["c"], s["h"]
+            f0, fa, fw = (F.value(p) for p in pts(s))
+            if not all(map(np.isfinite, (f0, fa, fw))):
+                s["live"], s["fail"] = False, True
+                continue
+            J = np.array([[(fa - f0).real / ha, (fw - f0).real / hw], [(fa - f0).imag / ha, (fw - f0).imag / hw]])
+            try:
+                dx = np.linalg.solve(J, -np.array([f0.real, f0.imag]))
+            except np.linalg.LinAlgError:
+                s["live"], s["fail"] = False, True
+                continue
+            s["x"], s["J"] = s["x"] + dx, J
+            x = s["x"]
+            if not (2 * a0 - a1 <= x[0] <= 2 * a1 - a0 and 2 * w0 - w1 <= x[1] <= 2 * w1 - w0):
+                s["live"], s["fail"] = False, True
+            elif np.hypot(dx[0] / (a1 - a0), dx[1] / (w1 - w0)) < 1e-9:
+                s["live"] = False
+    F.raw([tuple(s["x"]) for s in st if not s["fail"]])
+    return [None if s["fail"] else dict(A=float(s["x"][0]), wf=float(s["x"][1]), absF=abs(F.value(tuple(s["x"]))),
+                                        floor=F.floor(tuple(s["x"])), sign=int(np.sign(np.linalg.det(s["J"]))))
+            for s in st]
 
 
 def count(F, box, nA, nwf, dphi=0.5, hmin=1e-5, hzero=0.02, hpair=0.01, tvsplit=math.pi, eta=0.25, log=print,
@@ -330,24 +369,31 @@ def count(F, box, nA, nwf, dphi=0.5, hmin=1e-5, hzero=0.02, hpair=0.01, tvsplit=
     queue = [(As[i], As[i + 1], Ws[k], Ws[k + 1], 0) for i in range(nA) for k in range(nwf)]
     leaves, splits = [], 0
     while queue:
-        a0, a1, w0, w1, depth = queue.pop()
-        W, wraw, tv, mn, ok = C.cell(a0, a1, w0, w1)
-        size = max((a1 - a0), (w1 - w0))
-        split = ok and ((W != 0 and size > hzero) or (W == 0 and tv >= tvsplit and size > hpair))
-        if ok and not split and W == 0 and size > hpair and tvsplit < float("inf"):
+        # one wave: every cell of the queue at once, so that each refinement round goes to F in one call
+        wave, queue = queue, []
+        C.prefetch([e for c in wave for e in C.cell_edges(*c[:4])])
+        dec = []
+        for a0, a1, w0, w1, depth in wave:
+            W, wraw, tv, mn, ok = C.cell(a0, a1, w0, w1)
+            size = max((a1 - a0), (w1 - w0))
+            split = ok and ((W != 0 and size > hzero) or (W == 0 and tv >= tvsplit and size > hpair))
             # resolution: R at the centre against the bilinear interpolant of the corners; a pair of opposite sign
             # well inside a cell leaves the boundary's winding at 0 but shows here
-            cen = ((a0 + a1) / 2, (w0 + w1) / 2)
-            F.raw([cen])
-            fb = sum(F(c) for c in [(a0, w0), (a1, w0), (a1, w1), (a0, w1)]) / 4
-            split = abs(F(cen) - fb) > eta * abs(fb)
-        if split and splits < maxcells:
-            am, wm = (a0 + a1) / 2, (w0 + w1) / 2
-            queue += [(a0, am, w0, wm, depth + 1), (am, a1, w0, wm, depth + 1), (a0, am, wm, w1, depth + 1),
-                      (am, a1, wm, w1, depth + 1)]
-            splits += 1
-            continue
-        leaves.append(dict(a0=a0, a1=a1, w0=w0, w1=w1, W=W, wraw=wraw, tv=tv, minabs=mn, ok=ok, depth=depth))
+            test = ok and not split and W == 0 and size > hpair and tvsplit < float("inf")
+            dec.append(((a0, a1, w0, w1, depth), (W, wraw, tv, mn, ok), split, test))
+        F.raw([((c[0] + c[1]) / 2, (c[2] + c[3]) / 2) for c, _, _, test in dec if test])
+        for (a0, a1, w0, w1, depth), (W, wraw, tv, mn, ok), split, test in dec:
+            if test:
+                cen = ((a0 + a1) / 2, (w0 + w1) / 2)
+                fb = sum(F(c) for c in C.corners(a0, a1, w0, w1)) / 4
+                split = abs(F(cen) - fb) > eta * abs(fb)
+            if split and splits < maxcells:
+                am, wm = (a0 + a1) / 2, (w0 + w1) / 2
+                queue += [(a0, am, w0, wm, depth + 1), (am, a1, w0, wm, depth + 1), (a0, am, wm, w1, depth + 1),
+                          (am, a1, wm, w1, depth + 1)]
+                splits += 1
+                continue
+            leaves.append(dict(a0=a0, a1=a1, w0=w0, w1=w1, W=W, wraw=wraw, tv=tv, minabs=mn, ok=ok, depth=depth))
     # the boundary of the whole box
     Wb = 0.0
     for e in [((As[0], Ws[0]), (As[-1], Ws[0])), ((As[-1], Ws[0]), (As[-1], Ws[-1])),
@@ -359,11 +405,9 @@ def count(F, box, nA, nwf, dphi=0.5, hmin=1e-5, hzero=0.02, hpair=0.01, tvsplit=
             pa = (p[0] + (q[0] - p[0]) * i / n, p[1] + (q[1] - p[1]) * i / n)
             pb = (p[0] + (q[0] - p[0]) * (i + 1) / n, p[1] + (q[1] - p[1]) * (i + 1) / n)
             Wb += C.edge(pa, pb)[0]
-    zeros = []
-    for L in leaves:
-        if L["W"] != 0:
-            z = locate(F, L["a0"], L["a1"], L["w0"], L["w1"])
-            zeros.append(dict(cell=[L["a0"], L["a1"], L["w0"], L["w1"]], W=L["W"], located=z))
+    zl = [L for L in leaves if L["W"] != 0]
+    zs = locate_many(F, [(L["a0"], L["a1"], L["w0"], L["w1"]) for L in zl])
+    zeros = [dict(cell=[L["a0"], L["a1"], L["w0"], L["w1"]], W=L["W"], located=z) for L, z in zip(zl, zs)]
     unresolved = [L for L in leaves if not L["ok"]]
     return dict(zeros=zeros, boundary_winding=Wb / (2 * math.pi), nleaves=len(leaves), splits=splits,
                 unresolved=[[L["a0"], L["a1"], L["w0"], L["w1"]] for L in unresolved], npoints=len(F.vals),
@@ -489,14 +533,14 @@ def main():
     F.close()
     if a.r1b:
         # the zero set does not depend on xi1: locate each zero again at r1b, from the same cell
-        Fb = Multiplier(a.M, os.path.join(a.out, f"points_M{a.M}_r{a.r1b}.jsonl"), 1, plant, r1=a.r1b,
+        Fb = Multiplier(a.M, os.path.join(a.out, f"points_M{a.M}_r{a.r1b}.jsonl"), a.procs, plant, r1=a.r1b,
                         ymax=a.ymax)
         if a.M == 3:                              # seed F_3 from the first radius's tuned values
             for k, r in F.extra.items():
                 Fb.extra.setdefault(k, dict(F3re=r.get("F3re", float("nan")), F3im=r.get("F3im", float("nan")),
                                             info=r.get("info")))
-        for z in res["zeros"]:
-            z["located_r1b"] = locate(Fb, *z["cell"])
+        for z, zb in zip(res["zeros"], locate_many(Fb, [z["cell"] for z in res["zeros"]])):
+            z["located_r1b"] = zb
         Fb.close()
     res["sec"] = time.time() - t0
     res.update(M=a.M, box=box, plant=plant, dphi=a.dphi, nA=a.nA, nwf=a.nwf, r1=a.r1, r1b=a.r1b, ymax=a.ymax)
