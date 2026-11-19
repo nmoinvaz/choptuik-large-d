@@ -94,10 +94,12 @@ rate is λ = 2 − ℓ:
 |---|---|---|---|
 | 0 | a constant: the r² shift | 2 | Proposition 5, exact at D = ∞ |
 | 1 | a·x: translation | 1 | exact at every D (a gauge mode) |
-| 2 | x·Cx with C traceless | 0 | this argument |
+| 2 | x·Cx with C traceless | 0 | checked symbolically at leading order in 1/n, gravity included ([L2_MODE.md](L2_MODE.md), #993) |
 | 3 | a cubic harmonic | −1 | this argument |
 
-The ℓ = 0 and ℓ = 1 rows are known, which is the argument's only check so far. If it holds, ℓ = 2 is a zero mode at
+The ℓ = 0 and ℓ = 1 rows are known. The ℓ = 2 row was checked by experiment (a): the lapse and scalar equations
+need no correction, and only the O(1/n) spatial metric along the normal adjusts (L2_MODE.md). Its sign at finite
+D, c₂ in λ₂ = c₂/n, is experiment (b). If it holds, ℓ = 2 is a zero mode at
 D = ∞, the analogue of the free shape of a large-D black-hole membrane, and λ₂(D) = c₂/n + O(1/n²). The sign of c₂
 decides whether Choptuik's solution has a second unstable mode at large D. If c₂ > 0, it would cross zero at some
 finite D_c, and above D_c critical collapse would have codimension two, and spherical tuning would no longer find the
