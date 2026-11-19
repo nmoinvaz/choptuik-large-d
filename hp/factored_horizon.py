@@ -65,11 +65,12 @@ D 242.36 (6.99e-20, I461-win2/crawlJ/anm_run.jsonl step 8). Control --mutate=nh 
 exact 1/k in place of hp's recip_int (the rows then miss by the mass mode's response to that rounding).
 
 gain: the reference fixed point (Anderson from the slaved start, or with --ref_start old from B* = 1/a^2 of the old
-series, to |g(y) - y| <= 1e-8 eps_qd, cached in --ref FILE; --start none stops there);
-then one run, --accel plain or anderson (memory --mem), from --start slaved (beta = 0, gamma = 0), naive (q = 0 and
-gamma from the datum) or warm (the fixed point of data moved by --warm relative), to 1e-4 eps_qd or --maxit sweeps.
-Per sweep: the largest error of the rows and of y against the reference. Reported: the error ratio per sweep and the
-sweeps to eps_qd = 2^-212. Stage 1 passes on the sweeps if 5 or fewer reach eps_qd.
+series, to |g(y) - y| <= 1e-8 eps_qd, cached in --ref FILE with its state, precision, gamma and 1/k, and refused for any
+other; --start none stops there); then one run, --accel plain or anderson (memory --mem), from --start slaved (beta = 0,
+gamma = 0), naive (q = 0 and gamma from the datum) or warm (the fixed point of data moved by --warm relative, which must
+converge to 1e-8 eps_qd within --maxit, as its last iterate is its own reference), to 1e-4 eps_qd or --maxit sweeps. Per
+sweep: the largest error of the rows and of y against the reference. Reported: the error ratio per sweep and the sweeps
+to eps_qd = 2^-212. Stage 1 passes on the sweeps if 5 or fewer reach eps_qd.
 
 p1: P1 of FACTORED_HORIZON 5, at --prec bits. a_K is the old series' a at u0, the fixed point Anderson's to
 2^-(prec-16) or --maxit sweeps (from --ref's fixed point if given). Pass: max |R_fact - R_old| <= eps_qd G (qd's old
@@ -663,17 +664,33 @@ def setup(path, prec, ks=None, move=0):
     return meta, seg, mh, ah, delta, node, om, R_old, aK, t_old
 
 
-def save_ref(path, ref, seg):
+def ref_key(state, mode):
+    """what a cached reference is the fixed point of: the state, the precision, gamma's datum and the 1/k"""
+    return dict(state=os.path.basename(state), prec=mp.mp.prec, gamma=mode, recip="dd" if RECIP_DD[0] else "exact")
+
+
+def save_ref(path, ref, key):
     with open(path, "w") as fh:
-        json.dump(dict(prec=mp.mp.prec, rows=[str(v) for v in ref["rows"]], y=[str(v) for v in ref["y"]],
-                       gamma=[str(v) for v in ref["gamma"]], sweeps=ref["sweeps"], hist=ref["hist"]), fh)
+        json.dump(dict(key, rows=[str(v) for v in ref["rows"]], y=[str(v) for v in ref["y"]],
+                       gamma_values=[str(v) for v in ref["gamma"]], sweeps=ref["sweeps"], hist=ref["hist"]), fh)
 
 
-def load_ref(path, seg):
+def load_ref(path, key):
+    """the cached reference at path, refused unless it was made for key (ref_key). The two references of #1035 were
+    written before the key was stored and carry only prec; they are accepted with a notice."""
     with open(path) as fh:
         d = json.load(fh)
+    if "state" in d:
+        bad = {k: (d.get(k), v) for k, v in key.items() if d.get(k) != v}
+        if bad:
+            raise SystemExit(f"{path} is the fixed point of another problem: {bad}")
+    else:
+        if d["prec"] != key["prec"]:
+            raise SystemExit(f"{path} was made at {d['prec']} bits")
+        print(f"notice: {path} does not record its state, gamma and 1/k (accepted as given)", flush=True)
     return dict(rows=[mp.mpf(v) for v in d["rows"]], y=[mp.mpf(v) for v in d["y"]],
-                gamma=[mp.mpf(v) for v in d["gamma"]], sweeps=d["sweeps"], hist=d["hist"], prec=d["prec"])
+                gamma=[mp.mpf(v) for v in d.get("gamma_values", d.get("gamma"))], sweeps=d["sweeps"], hist=d["hist"],
+                prec=d["prec"])
 
 
 def cmd_gain(path, prec, mem, warm, maxit, mode, start, accel, refpath, ref_start="slaved"):
@@ -685,10 +702,9 @@ def cmd_gain(path, prec, mem, warm, maxit, mode, start, accel, refpath, ref_star
     pr = lambda tag: (lambda r: print(f"  {tag} sweep {r['sweep']:2d}: |g(y)-y| {r['fp_res']:.2e}"  # noqa: E731
                                       + (f", rows err {r['err_rows']:.2e}, y err {r['err_y']:.2e}" if 'err_rows' in r else "")
                                       + f", newton {r['newton']}, {r['t']} s", flush=True))
+    key = ref_key(path, mode)
     if refpath and os.path.exists(refpath):
-        ref = load_ref(refpath, seg)
-        if ref["prec"] != prec:
-            raise SystemExit(f"{refpath} was made at {ref['prec']} bits")
+        ref = load_ref(refpath, key)
     else:
         B0r = None
         if ref_start == "old":                         # from B* = 1/a^2 of the old series (D 73: the slaved start diverges)
@@ -702,7 +718,7 @@ def cmd_gain(path, prec, mem, warm, maxit, mode, start, accel, refpath, ref_star
         if ref["hist"][-1]["fp_res"] > float(EPS_QD) * 1e-8:
             print(f"gain: the reference stops at |g(y)-y| {ref['hist'][-1]['fp_res']:.2e}, above 1e-8 eps_qd")
         if refpath:
-            save_ref(refpath, ref, seg)
+            save_ref(refpath, ref, key)
     if start == "none":                                # --start none: the reference alone
         return dict(cmd="gain", state=os.path.basename(path), D=seg.D_str, prec=prec, ref_hist=ref["hist"], ok=True), True
     refp = (ref["rows"], ref["y"])
@@ -717,6 +733,12 @@ def cmd_gain(path, prec, mem, warm, maxit, mode, start, accel, refpath, ref_star
         r = fixed_point(seg, vscale(mh, f), vscale(aK, f), seg.omega(delta * f), node, B0=B0, gam0=g0, accel=accel,
                         mem=mem, maxit=maxit, mode=mode, tol=mp.mpf(EPS_QD) * mp.mpf("1e-8"), log=pr(tag),
                         keep=ys)
+        if r["hist"][-1]["fp_res"] > float(EPS_QD) * 1e-8:
+            # the last iterate is the run's own reference, so it must have converged
+            print(f"gain {tag}: the moved problem did not converge in {maxit} sweeps (|g(y)-y| "
+                  f"{r['hist'][-1]['fp_res']:.2e}); no errors are measured", flush=True)
+            return dict(cmd="gain", state=os.path.basename(path), D=seg.D_str, prec=prec, start=start, accel=accel,
+                        hist=r["hist"], sweeps_to_qd=None, ok=False), False
         for rec, (yy, rr) in zip(r["hist"], ys):
             rec["err_rows"] = float(amax(vsub(rr, r["rows"])))
             rec["err_y"] = float(amax(vsub(yy, r["y"])))
@@ -747,8 +769,11 @@ def cmd_p1(path, prec, mutate, mode, mem, maxit, refpath=None, move=0):
                          flush=True)
     B0 = g0 = None
     if refpath:
-        ref = load_ref(refpath, seg)
-        B0, g0 = from_y(seg, ref["y"]), ref["gamma"]
+        # the start only: a reference of another 1/k or of unmoved data is a fine start, so the key is not enforced
+        with open(refpath) as fh:
+            d = json.load(fh)
+        B0 = from_y(seg, [mp.mpf(v) for v in d["y"]])
+        g0 = [mp.mpf(v) for v in d.get("gamma_values", d.get("gamma"))]
     r = fixed_point(seg, mh, aK, om, node, B0=B0, gam0=g0, accel="anderson", mem=mem, maxit=maxit, mode=mode,
                     mutate=mutate, log=pr)
     d = vsub(r["rows"], R_old)

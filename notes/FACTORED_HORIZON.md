@@ -561,17 +561,18 @@ describe the agreement rather than test it; the tests are 4.5 and #696. M5 print
 nothing.
 
 The prototype of 5.1 (mpmath 1.3, numpy 2.5) runs from `hp/`, with the raw-data repository cloned beside the checkout
-(`git clone https://github.com/nmoinvaz/choptuik-large-d-raw ../choptuik-large-d-raw`) and `RAW=../../choptuik-large-d-raw`:
+(`git clone https://github.com/nmoinvaz/choptuik-large-d-raw ../choptuik-large-d-raw`), `RAW=../../choptuik-large-d-raw`
+and the cached reference in a task folder of it, `OUT=$RAW/I1035-<machine>` (made first, with its README):
 
 ```
 python3 factored_horizon.py selftest                   # 7 of 7 pass, exit 0 (half a minute)
 python3 factored_horizon.py selftest --mutate=sign     # S2, S4, S6 FAIL, exit 1 (also nh: S0; bsl: S1; miller: S3; nofp: S5)
 python3 factored_horizon.py check $RAW/I603-win2/chain/anm_pin3_D241.9602.npz --bound 2e-64       # PASS, worst 2.0e-65
 python3 factored_horizon.py check $RAW/I603-win2/chain/anm_pin3_D241.9602.npz --bound 2e-64 --mutate=nh   # FAIL, 8.9e51
-python3 factored_horizon.py gain $RAW/I461-win2/crawlJ/anm_pin3_D242.3642.npz --prec 288 --start none --ref ref242.json
-python3 factored_horizon.py gain $RAW/I461-win2/crawlJ/anm_pin3_D242.3642.npz --prec 288 --accel plain --maxit 36 --ref ref242.json   # 32
-python3 factored_horizon.py p1 $RAW/I461-win2/crawlJ/anm_pin3_D242.3642.npz --prec 288 --ref ref242.json --maxit 12   # 7.3e-39
-python3 factored_horizon.py p1 $RAW/I461-win2/crawlJ/anm_pin3_D242.3642.npz --prec 288 --ref ref242.json --maxit 36 --move 1e-8 --mutate=sign
+python3 factored_horizon.py gain $RAW/I461-win2/crawlJ/anm_pin3_D242.3642.npz --prec 288 --start none --ref $OUT/ref242.json
+python3 factored_horizon.py gain $RAW/I461-win2/crawlJ/anm_pin3_D242.3642.npz --prec 288 --accel plain --maxit 36 --ref $OUT/ref242.json   # 32
+python3 factored_horizon.py p1 $RAW/I461-win2/crawlJ/anm_pin3_D242.3642.npz --prec 288 --ref $OUT/ref242.json --maxit 12   # 7.3e-39
+python3 factored_horizon.py p1 $RAW/I461-win2/crawlJ/anm_pin3_D242.3642.npz --prec 288 --ref $OUT/ref242.json --maxit 36 --move 1e-8 --mutate=sign
 python3 factored_horizon.py loop $RAW/I461-win2/crawlJ/anm_pin3_D242.3642.npz --prec 512 --h 1e-110
 ```
 
