@@ -34,7 +34,9 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 OPTS = {a.split("=", 1)[0][2:]: (a.split("=", 1)[1] if "=" in a else "1") for a in sys.argv[1:] if a.startswith("--")}
 MUT = OPTS.get("mutate")
 A_STAR = "2.5421480475"                      # b5_numeric.A_STAR (the centre of Theorem A(M = 1)'s box)
-DELTA0 = {"P": "0", "F": "76.56", "C": "3.23125", "v": "6.46251"}     # b5_data.log (leading data, upper values)
+# B5's leading O(1/n) coefficients only (b5_data.log), with no B8 remainder and rounded down. This estimate is
+# superseded: the chain's x_Phi and C_E come from b5_jump.py with the certified delta (#1019).
+DELTA0 = {"P": "0", "F": "76.56", "C": "3.23125", "v": "6.46251"}
 
 
 def superpose(ss, delta):

@@ -247,7 +247,7 @@ $`V^{-1}L_{u_*}(Y) = e^{1/(2u_*)}u_*^{-\Lambda}V^{-1}Y_\Phi`$ and $`\lvert u_*^{
 \lvert\tilde E\rvert_\infty \le \frac{e^{1/(2u_*)}\,u_*^{1-\mu_+}\,\lVert V^{-1}\rVert_\infty\,(x_{\Phi,-1} + x_{\Phi,+1})}{n} .
 ```
 
-x_Φ is the B5(1) super-solution for the (H8) data certified by B8, δ = (8.2×10⁻⁵, 79.03, 3.231, 6.463), by
+x_Φ is the B5(1) super-solution for the (H8) data certified by B8, δ = (8.3×10⁻⁵, 79.04, 3.232, 6.464), by
 superposition of the certified super-solutions (B5_inner.md §5.2): x_Φ = (39784, 38776) for μ = (−1, +1). With
 e^{1/(2u*)} = e^{61.728}, $`u_*^{1-\mu_+}`$ = 33.84 and ‖V⁻¹‖ ≤ 1.481, C_E = 2.53×10³³ = e^{76.914}. ∎
 
@@ -282,10 +282,10 @@ integrals: P_V and P_c increase by $`\lvert 2F\rvert_1d_0 \le 4\max_\mu\lvert F_
 
 | d₀ | closes | h = (h_V, h_S, h_β, h_c) | P(h)/h | (H8): δ = (δ_P, δ_Φ, δ_C, δ_ϑ) |
 |---|---|---|---|---|
-| 0 (certified before) | yes | (2.41×10⁶, 6.27×10⁶, 6.17×10⁵, 1.67×10⁵) | ≤ 0.990 | (8.2×10⁻⁵, 79.03, 3.231, 6.463) |
+| 0 (certified before) | yes | (2.41×10⁶, 6.27×10⁶, 6.17×10⁵, 1.67×10⁵) | ≤ 0.990 | (8.3×10⁻⁵, 79.04, 3.232, 6.464) |
 | 10⁵ | yes | (3.00×10⁶, 6.58×10⁶, 6.72×10⁵, 2.80×10⁵) | ≤ 0.983 | not run |
-| 10⁶ | yes | (1.07×10⁷, 1.45×10⁷, 1.45×10⁶, 1.37×10⁶) | ≤ 0.988 | (8.2×10⁻⁵, 82.18, 3.231, 6.463) |
-| 10⁷ | yes | (9.71×10⁷, 1.20×10⁸, 1.13×10⁷, 1.28×10⁷) | ≤ 0.989 | (8.2×10⁻⁵, 122.31, 3.231, 6.463) |
+| 10⁶ | yes | (1.07×10⁷, 1.45×10⁷, 1.45×10⁶, 1.37×10⁶) | ≤ 0.988 | (8.3×10⁻⁵, 82.18, 3.232, 6.464) |
+| 10⁷ | yes | (9.71×10⁷, 1.20×10⁸, 1.13×10⁷, 1.28×10⁷) | ≤ 0.989 | (8.3×10⁻⁵, 122.31, 3.232, 6.464) |
 | 10⁸ | no (c lower bound lost) | | | |
 
 So B8(1) and (H8) hold for every normalization $`\lvert c(0) - c^K(0)\rvert_1 \le 10^7n^{-5}`$, n ≥ e^{73.89}, with δ ≤ δ_ref.
