@@ -81,7 +81,17 @@ def load_points():
         key = round(D, 9)
         if key not in best or s < best[key][2]:
             best[key] = (D, v, s, k)
-    return [best[k] for k in sorted(best)]
+    out = [best[k] for k in sorted(best)]
+    if "no_amend" in ARGS:
+        return out
+    # amendment 1 (note, section 3): a qd row within 1e-4 of another row's D carries a D rounded to 4 decimals (its
+    # state file's name) with the Delta of the unrounded D, up to 8.4e-8 off at its quoted 2.4e-23
+    keep = []
+    for i, p in enumerate(out):
+        near = [q for q in out[max(0, i - 2):i + 3] if q is not p and abs(q[0] - p[0]) < 1e-4]
+        if not (p[3] == "qd" and near):
+            keep.append(p)
+    return keep
 
 
 # ---------------------------------------------------------------- plants
