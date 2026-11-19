@@ -358,3 +358,62 @@ python3 p2c_disc.py --discs=ray --mutate=sign --out=$RAW > $RAW/p2c_disc_K2_sign
 python3 p2c_disc_compare.py $RAW/p2c_disc_all.jsonl $RAW/p2c_disc_all_infl2.jsonl > $RAW/p2c_disc_compare.log
 python3 p2c_disc_11_1_growth.py $RAW > $RAW/p2c_disc_11_1_growth.log
 ```
+
+## 5. Item 3: (H8), B8's continuation turned into B5(1)'s data, checked independently
+
+Issue #1017. (H8)(ii) (B8_constants.md §8.2–8.3) bounds W = Y⁺_out − Z⁺_in on the inner arc |x| = n^γ in B5's
+variables, |W_P| ≤ δ_P/n, |W_Φ| ≤ δ_Φn^{−2+2γ}, |W_C| ≤ δ_C/n, |W_ϑ| ≤ δ_ϑ/n, for every n ≥ e^{73.89} and every
+parameter in the box. B8 gives δ = (8.3×10⁻⁵, 79.04, 3.232, 6.464) (§8.3, rounded up), B_chain.md §4 the same as
+(8.2×10⁻⁵, 79.03, 3.231, 6.463), and δ_Φ = 122.31 for the normalization offset d₀ = 10⁷. This section recomputes them.
+
+### 5.1 Protocol, fixed before the run
+
+- **Independence.** `b8m_h8.py` and its logs are not opened until this review's numbers are committed. Nor are
+  `b8m_formal.py`, `b8m_atoms.py`, `b8m_bounds.py` and `b8_alg.py`. The code (`solver/proof/review_p2c/p2c_h8.py`) is
+  written from B8_constants.md §1.2's reduced system, §2's statement of the series and §8.2's formulas.
+  - **Shared inputs:** the certified h for d₀ = 0 and 10⁷ (the `hyp` entries of `b8m_scan_K4_box.log` and
+    `b8m_scan_K4_d0_1e7.log`, item 4's output), lemma S's η bound (5.5×10⁻⁷ for v at |z| = 0.0085, scaling as |z|¹²,
+    from `b5_bounds_k0.3_Z0.0085.log`), K = 4, γ = 0.3, ln n₀ = 73.89, ω∞ = 2π/1.64389375, and the parameter box
+    (A, ω/ω∞) ∈ (2.5421480475, 0.7769940136) + 2×10⁻⁶(1 + i)[−1, 1]² (B8_constants.md §8.4, item 3).
+  - **Seen before this protocol:** B8_constants.md §0, §1–8 (the h, the atom table of §3, the (R), (T), η table of §8.3
+    with its leading coefficients) and B_chain.md §4's d₀ table.
+- **Method, own.** Arithmetic is mpmath complex intervals (iv) at 256 bits, not python-flint.
+  - **Series.** The reduced system is solved as a double series in (ε, z) with z = x²/n. In these variables it is
+    regular in ε: the ε⁰ part is the inner system, and Z^K is the part with a + j ≤ K for monomials ε^a z^j.
+    The gauge is c^K = 1 at x = 1, that is at z = ε, and V(0) = [c(0)2F] at every order.
+  - **T.** Z^K is converted exactly to (P, Φ, C, ϑ), with C⁻¹ and 1/(1 − ε) as series with bounded tails. The ε⁰ part
+    of the full series converted the same way is Z_in. The difference T − Z_in is bounded monomial by monomial on the
+    arc, where |ε^a z^j| = n^{−a−0.4j}.
+    - The structural zeros are imposed. These are the ε⁰ terms up to z^K, by Lemma F.3, and P's z⁰ terms at ε ≥ 1,
+      since P(0) = 2F at every order.
+    - The inner tail K < j ≤ 30 comes from the same solver. η is added as stated.
+  - **R.** W^R is bounded from h on the arc: X = 1 + n^γ, ρ = X²/n, w₁ = ρ^{K+1}, w = θρ^{K+1}. P, C and ϑ follow by
+    §8.2's formulas.
+    - Φ needs xR'. xR_V' = ΩR_S and xR_c' = [R_cβ] + [c^KR_β] − ρ₄ are used as stated.
+    - xR_S' is this review's own route, not Lemma R's G₁ and W₂ decomposition. It is the mean-value bound of
+      D⁻¹(AS − x²BV) between Z^K and Z^K + R over the ball of R, plus Z^K's own residual xS^K' − D^{K,−1}(…), each
+      bounded on the arc. R_β = R̂_β + qR_S takes q's bound from its definition in Lemma R.
+  - **All n ≥ n₀.** Every term is n^{−e} times a constant with e ≥ 0, so it is evaluated at n₀. A term with e < 0
+    stops the run.
+- **Pass criteria.**
+  - **(P1)** At the box centre, the leading coefficients agree with B8's printed values to all their digits:
+    Φ_{±1} at εz, −15.714 ± 74.930i; C at ε, −3.2313 and −1.6156; ϑ at ε, −6.4625 and −3.2313. The inner series also
+    agrees with Theorem A's `series_arb.py` (not B8's code) to 10⁻⁴⁰ relative, and the series' residual in the
+    reduced system has the orders of Lemma F.2.
+  - **(P2)** This review's δ, as rigorous upper bounds over the box for all n ≥ n₀, satisfies δ ≤ δ_ref = (1, 200, 10, 20).
+  - **(P3)** After the own numbers are committed, they are compared with `b8m_h8`'s logs.
+    - The T parts of δ_Φ, δ_C and δ_ϑ must agree to 10⁻³ relative.
+    - The R parts of P, C and ϑ, which use the same formulas, must agree to 10⁻² relative.
+    - The R part of Φ comes by another route. It is reported against B8's 2.46, and a difference of more than a factor
+      10 either way is investigated.
+    - δ_P is expected to be far below B8's 8.3×10⁻⁵, because B8's value is the width of a ball whose centre is
+      exactly 0.
+  - **(P4)** At d₀ = 10⁷, with its h, δ_Φ is reported against 122.31, under (P3)'s rule for Φ.
+- **Controls, which must each fail.**
+  - **(K1)** The planted perturbation: A scaled by 1 + 10⁻³ in the series. (P1) must fail by more than its rounding.
+  - **(K2)** h_S scaled by 1 + 10⁻³. (P3)'s comparison of the R part of P must flag it. This is valid only if the
+    unperturbed agreement is better than 10⁻³, which is recorded.
+  - **(K3)** The sign control: the series solved with the sign of the x²Ω term of A flipped, while the residual check
+    uses the true system. The residual orders of (P1) must fail.
+- **Output.** The logs and records go to the raw-data repository as `I1017-mac/`. The code, and this section, stay in
+  the branch.
