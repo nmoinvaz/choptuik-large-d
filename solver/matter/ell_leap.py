@@ -20,7 +20,8 @@ sqrt(D* - D)), and |J^+ dF/dn| (the tangent's size, which diverges at the fold).
 --fmax or the constraint above --cmax) halves h and retries from the same two states, and a fall of sigma_1(J) by
 more than half over one step halves h for the next. That singular value is the fold candidate's, the weak mode
 with the largest |cos| (sv_fold, cos_fold), because J also has near-null junk directions (#810). Below --hmin the
-run stops. Every state is saved
+run stops. Also recorded: the number of singular values below 1e-12 sigma_max (n_null) and the four smallest above
+it with the tangent's |cos| on their vectors (sv_reg_small, cos_t_reg), where a fold mode would show. Every state is saved
 (sol_{tag}_D{D:.6f}.npy).
 """
 import argparse
@@ -84,6 +85,12 @@ while D < a.D_end - 1e-9:
                    tan_norm=float(np.linalg.norm(np.linalg.lstsq(J, Fn, rcond=None)[0])))
         i_f = int(np.argmax(rec["cos_t_v"]))          # the fold candidate: the weak mode the tangent lies along
         rec.update(sv_fold=rec["sv_J_small"][i_f], cos_fold=rec["cos_t_v"][i_f], i_fold=i_f)
+        # the smallest singular values above the numerical null space (sigma > 1e-12 sigma_max): at k_c 47 J has
+        # several at the rounding floor (1e-16 against 7) that the tangent does not lie along (#1025)
+        reg = np.nonzero(sv > 1e-12 * sv[0])[0]
+        last = reg[-4:][::-1]
+        rec.update(n_null=int(len(sv) - len(reg)), sv_reg_small=sv[last].tolist(),
+                   cos_t_reg=[float(abs(tz @ Vt[i]) / nt) for i in last])
     print(json.dumps(rec), flush=True)
     if not ok:
         if a.fold and h / 2 >= a.hmin:
