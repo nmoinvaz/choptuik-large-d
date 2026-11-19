@@ -1987,4 +1987,12 @@ The medians behind R, over the same 48 right-hand sides:
   four deep directions are tangent at sample c, as (H4) at k = ½ and 3/2 predicts: four real conditions missing. Along
   the second direction the printed max|F| is 2.3×10⁻²⁹ at 10⁻²⁰ and 2.3×10⁻²⁸ at 10⁻¹⁹, linear in δ and 20 to 77 times
   the in-plane moves' (7×10⁻¹² of a random move's); one ray per direction, at c only. Raw `I1018-win/` (a8718ccc).
+- **The tangency holds out to 370 times the longer chord (#1022).** Moves of c along the same two directions at
+  δ = 10⁻¹⁸ and 10⁻¹⁷ (37 and 370 times |b − c|) read m/m_rand 6.1×10⁻¹² and 1.5×10⁻¹² at 10⁻¹⁸, 1.2×10⁻¹¹ and
+  4.1×10⁻¹² at 10⁻¹⁷, eight orders below the 10⁻³ bar, with no trend toward it from 10⁻²⁰. The random move at 10⁻¹⁸
+  repeats #963's bit for bit. The printed max|F| stays exactly linear in δ (q₁ 2.34×10⁻²⁹ to 2.34×10⁻²⁶ from 10⁻²⁰
+  to 10⁻¹⁷, q₀ 5.33×10⁻³⁰ to 5.33×10⁻²⁸ from 10⁻¹⁹), 1.6×10⁻¹³ to 7×10⁻¹² of a random move's, with no quadratic
+  term. So J q is small but not zero. That fits q lying within about 10⁻¹¹ of the root set's tangent space, and it
+  also fits weak, not null, directions of an isolated, ill-conditioned root. These scans do not separate the two. The
+  four-dimensional root set is therefore numerical evidence with that caveat. Raw `I1022-win/` (411505a7).
 - Open: (H4)'s four rows at k = ½ and 3/2, which should isolate the roots at D 40.02 (P7_scope.md §5, stage 2).
