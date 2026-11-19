@@ -8,7 +8,9 @@ determinant) of the zeros inside. A cell of winding 0 may still hold a pair of o
 
 The multiplier:
   M = 1: lateral_np.jump(1, w_inf wf, A sin theta), R_1 times xi1^(-A^2) (a positive factor, so no phase change);
-  M = 3: nested.inner (F_3 tuned so that S_3 = 0, warm-started from the nearest point already computed), r_1.
+  M = 3: nested.inner (F_3 tuned so that S_3 = 0, warm-started from the nearest point already computed; the base
+         grid is computed in rings outward from the known M = 3 zero), r_1; a point whose inner solve leaves
+         |r_3| >= 1e-8 has no value (its cells are reported unresolved).
 
 The count:
   1. a base grid of cells over the box (offset by a small irrational amount so that no known zero lies on an edge);
@@ -61,6 +63,8 @@ def f_M3(args):
     (A, wf), F3 = args
     try:
         F3n, R, r3 = nested.inner(A, wf, complex(*F3), 0.2)
+        if not float(r3) < 1e-8:                  # the inner solve did not tune S_3 to zero: no value
+            return [float("nan"), float("nan"), float(r3), F3[0], F3[1]]
         return [R.real, R.imag, float(r3), F3n.real, F3n.imag]
     except Exception as ex:
         return [float("nan"), float("nan"), str(ex)[:80], F3[0], F3[1]]
@@ -219,7 +223,13 @@ def count(F, box, nA, nwf, dphi=0.5, hmin=1e-5, hzero=0.02, hpair=0.01, tvsplit=
     (A0, A1), (W0_, W1) = box
     As = np.linspace(A0 + OFF[0], A1 + OFF[0], nA + 1)
     Ws = np.linspace(W0_ + OFF[1], W1 + OFF[1], nwf + 1)
-    F.raw([(a, w) for a in As for w in Ws])
+    base = [(a, w) for a in As for w in Ws]
+    if getattr(F, "M", 1) == 3:
+        # continuation: rings outward from the known M = 3 zero, so each batch is seeded by the previous ones
+        base.sort(key=lambda p: (p[0] - 2.7265) ** 2 + 4 * (p[1] - 1.0156) ** 2)
+        for i in range(0, len(base), max(1, 2 * F.procs)):
+            F.raw(base[i:i + max(1, 2 * F.procs)])
+    F.raw(base)
     C = Counter(F, dphi, hmin)
     queue = [(As[i], As[i + 1], Ws[k], Ws[k + 1], 0) for i in range(nA) for k in range(nwf)]
     leaves, splits = [], 0
