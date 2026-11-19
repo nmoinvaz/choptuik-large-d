@@ -1973,4 +1973,13 @@ The medians behind R, over the same 48 right-hand sides:
   the first, 4% above the count's 10⁻⁴ cutoff, and a cutoff just above it gives d = 3, which reads "none fits". The
   gap after it does not depend on the cutoff. d = 2 at D 20.04 as well, so only the move separates D 35 from D 20.
   Raw `I985-win/` (15b36899).
-- Open: adding (H4)'s rows at k = ½ and 3/2 should isolate the roots at D 40.02 (P7_scope.md §5, stage 2).
+- **The count is the root set's, and the span is one subspace (#1006).** At samples a and b (12 starts) and c (24
+  starts) the count is again d = 4, with s₅/s₄ 1.95×10⁻⁴, 1.98×10⁻⁴ and 1.56×10⁻⁴, and chord shares 1.000000. The
+  drop after s₄ is a factor 5×10³ to 6.4×10³ at all three and does not depend on the cutoff. 24 starts add no fifth
+  direction. The principal angles between the three samples' spans of p₁ … p₄ (`solver/rt/rt_angles.py`, Björck and
+  Golub's cosines) are all below 0.005° (cosines ≥ 0.999999997), against 0.017 for a random four-dimensional span.
+  So the four deep directions are one subspace of the RT system at D 40.02, as (H4) at k = ½ and 3/2 predicts.
+  Raw `I1006-win/` (3039cc78).
+- Open: whether the two deep directions out of the samples' plane are tangent to the root set too (a root set of
+  dimension 4) or only weak, and then (H4)'s rows at k = ½ and 3/2, which should isolate the roots at D 40.02
+  (P7_scope.md §5, stage 2).
