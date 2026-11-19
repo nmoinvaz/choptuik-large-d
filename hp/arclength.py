@@ -655,6 +655,10 @@ class ChainSys:
             raise SystemExit("--arclength 1 takes the held values from --held_fit (or constant), not --trend")
 
     def at(self, D):
+        if not (mp.isfinite(D) and D > 2):
+            # n = D - 2 > 0 is the kernel's and the held fit's domain; a corrector iterate outside it (a blown-up
+            # chord, |dw| 1.9e23 in #1008) is refused as a failed evaluation, not a TypeError from an mpc sqrt
+            raise ValueError(f"D {mp.nstr(D, 6)} outside the system's domain D > 2")
         from octo_corrector import ElimO, PinnedO
         from pinning import band_field
         from reseed import Reseeder
