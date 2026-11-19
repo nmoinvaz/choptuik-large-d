@@ -36,7 +36,8 @@ scripts and outputs stayed in the session's scratchpad, so they are described he
   3. **A countable family of D = ∞ solutions.** The Saffman–Taylor template that PROOF.md adopts has a discrete
      infinity of selected solutions. Here S₁ is numerically entire of exponential type, so it generically has
      infinitely many zeros, and each one that becomes real at some ω is a candidate excited echoing solution. No note
-     asks this.
+     asks this. A ten-minute probe of the one-harmonic multiplier finds the known zero, no other zero where its grid
+     resolves the phase, and two unresolved valleys at ω/ω∞ < 0.7 and A > 3.
   4. **The amplitude as a second sharp test of Conjecture 1.** The gauge rate's fitted c₁ = 7.4165644 ± 4.4×10⁻⁶ is
      2⟨F∞²⟩ by Ecker et al.'s Eq. (15), so the finite-D data fix the D = ∞ amplitude to about 10⁻⁶, against the
      README's "measured 2.70–2.72".
@@ -76,14 +77,16 @@ whether it is new. "Not found" means not found in the searches listed in §4, wh
 ωΔ/2π = 0.3 for the least damped non-spherical mode, polar ℓ = 2, that is λ ≈ −0.02 + 0.55i at D = 4. Every other
 non-spherical mode is damped by κΔ ≤ −0.30. In D = 5, Porto Veronese and Gundlach (arXiv:2209.08404) find that weak
 gravitational-wave perturbations of the scalar critical solution decay, in a cohomogeneity-two ansatz whose wave is a
-tensor-type deformation. The scalar-type ℓ = 2 sector above D = 4 has not been computed by anyone found.
+squashing of S³, transverse and traceless on the sphere, so tensor-type as this review reads it (abstract only). The scalar-type ℓ = 2 sector above D = 4 has not been computed by anyone found.
 
 **An argument for λ = 0 at D = ∞ (this review's; not checked).** In the inner region r ~ √n the field depends on x
 through s = r²/(2n), and the flat Laplacian is ∂_s at leading order because (n/r)∂_r dominates ∂_r². For a field
 φ(S(x), t), Δφ = φ″|∇S|² + φ′ΔS. If S = r²/(2n) + h(x)/(2n) with h a harmonic polynomial of degree ℓ, then ΔS =
 1 + O(1/n) and |∇S|² = O(1/n), so Δφ = φ_S at leading order, the same as for S = s. If the gravitational equations
-also depend on x only through S at leading order (the step to check), then the deformed solution is again a solution,
-and its derivative in h is a mode. Since h scales as r^ℓ ∝ s^{ℓ/2}, the mode's rate is λ = 2 − ℓ:
+also depend on x only through S at leading order, then the deformed solution is again a solution, and its derivative
+in h is a mode. That is the step to check, and it can fail: the level sets of S are ellipsoids, whose curvature varies
+with angle at relative order |C|, and the spheres' curvature n(n − 1)/r² enters the lapse equation multiplied by
+a² − 1 = O(1/n), so at order one. Whether the variation cancels there is not settled by this argument. Since h scales as r^ℓ ∝ s^{ℓ/2}, the mode's rate is λ = 2 − ℓ:
 
 | ℓ | h | λ | status |
 |---|---|---|---|
@@ -160,7 +163,12 @@ P7's link L5 needs.
 grid, A = 0.6–6.0, ω/ω∞ = 0.3–3.0, counted by the winding around each cell. It recovers the known zero (winding +1 in
 the cell A 2.4–2.6, ω/ω∞ 0.7–0.8). For ω/ω∞ ≥ 1.2 with A ≤ 4.6, and for A ≤ 2.4 everywhere, the phase moves by less than
 1.5 rad between grid points and no other zero appears. For ω/ω∞ < 1 with A > 2.6, and for A > 4.6, the phase turns by up
-to π between points, so the coarse grid can neither count nor exclude zeros there. REFINED_PLACEHOLDER
+to π between points, so the coarse grid can neither count nor exclude zeros there. A refined grid of that region,
+A = 2.6–4.0 in steps of 0.05 and ω/ω∞ = 0.3–1.0 in steps of 0.025, has net winding 0 on its boundary. Inside it, two
+valleys where |R₁| drops about tenfold below its neighbours run along ω/ω∞ ≈ 0.36 (A 3.1–3.85) and along a diagonal
+from (A, ω/ω∞) = (3.0, 0.56) to (3.95, 0.69). Along both, cells of winding +1 and −1 alternate, with phase steps of
+2–3 rad between points. That is either a chain of zeros of opposite orientation (R₁ is a map of two real variables, so
+both signs occur) or a valley still under-resolved. The probe does not decide which.
 
 **First experiment.** An adaptive argument-principle count of the M = 1 and M = 3 multipliers on A ≤ 6,
 ω/ω∞ = 0.2–3, refining every cell edge until the phase step is below 0.5 rad. **Pass:** the known M = 1 and M = 3 zeros
@@ -178,8 +186,8 @@ known zero shows (0.777 → 1.016). **Then:** seed hp at D = 40 from a surviving
 c₁ = 7.4165644 ± 4.4×10⁻⁶ over D 20–245. At the M = 7 zero ([proof/B_tail_M7.md](../proof/B_tail_M7.md), A = 2.719219
 and the harmonic coefficients of its `--c7` line), A² + Σ(B_ν² + C_ν²) = 7.41664, 7×10⁻⁵ above the fit (this review's
 arithmetic). With the M = 7 harmonics held, the identity gives A∞ = 2.719205. M = 7's own A is 2.71922–2.71924, and its
-next truncation increment is about −5×10⁻⁵ (the ratio −0.082 per pair, P6_scope.md §2.3, times A₇ − A₅ = 6.2×10⁻⁴), so
-the two agree within the truncation.
+next truncation increment is about −5×10⁻⁵ (the ratio −0.082 per pair times A's increment of 6.4×10⁻⁴, both from
+P6_scope.md §2.3), so the two agree within the truncation.
 
 **Why.** The selection rule gives two real numbers, ω and A. ω is compared at 10⁻⁸. A is compared in the README at 1%
 ("2.720, against a measured 2.70–2.72"). The identity makes the amplitude a test at about 10⁻⁶, using only data the
