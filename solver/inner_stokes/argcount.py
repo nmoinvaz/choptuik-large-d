@@ -91,18 +91,37 @@ def f_M1(args):
 
 
 _PATH = {}
+_BOUND = {}            # this worker's point: right-hand-side calls per integration, wall-clock deadline (#1021)
+
+
+class PointBound(Exception):
+    """an integration or the point's wall time passed its bound; the point is recorded without value, with the cause"""
+
+    def __init__(self, msg, wall):
+        super().__init__(msg)
+        self.wall = wall
 
 
 def _probe_inner_np():
     """inner_np with its solve_ivp wrapped to record max |Y| and the end |Y| of each jumps() path (the same call,
-    so the same bits); jumps() resets the record, so after nested.inner it holds the final evaluation's path"""
+    so the same bits); jumps() resets the record, so after nested.inner it holds the final evaluation's path.
+    The right-hand side is called unchanged, counted against _BOUND (the bounds stop it; they change no value)."""
     import inner_np as I
     if getattr(I, "_argcount_probe", False):
         return I
     ivp, jumps = I.solve_ivp, I.Inner.jumps
 
-    def solve_ivp(*a, **k):
-        sol = ivp(*a, **k)
+    def solve_ivp(fun, *a, **k):
+        n, nmax, until = [0], _BOUND.get("rhs", math.inf), _BOUND.get("until", math.inf)
+
+        def counted(t, y):
+            n[0] += 1
+            if n[0] > nmax:
+                raise PointBound(f"integration past {nmax:.3g} right-hand-side calls", False)
+            if not n[0] % 1000 and time.monotonic() > until:
+                raise PointBound(f"wall bound {_BOUND['wall']:.0f} s", True)
+            return fun(t, y)
+        sol = ivp(counted, *a, **k)
         _PATH["ymax"] = max(_PATH.get("ymax", 0.0), float(np.abs(sol.y).max()))
         _PATH["yend"] = float(np.abs(sol.y[:, -1]).max())
         return sol
@@ -164,32 +183,45 @@ def _floor3(I, A, wf, v, r1):
 
 def _continue3(I, nested, A, wf, F3, r1, starts=(0.25, 0.2), h0=0.01, hmin=0.00125):
     """S_3 = 0 at xi1 = r1 by continuation in xi1 from a radius where it converges: at each radius the noise-safe
-    Newton, accepted when |r_3| <= 3 x its noise; the step in xi1 is halved when a radius is not reached"""
-    trail = []
+    Newton, accepted when |r_3| <= 3 x its noise; the step in xi1 is halved when a radius is not reached. A start
+    whose integration passes its bound is skipped, and a bound in the march, or the wall bound, ends it; each such
+    stop is returned as [xi1, cause]"""
+    trail, stops = [], []
     for rs in starts:
         if rs <= r1:
             continue
-        F3s, _, _ = nested.inner(A, wf, complex(*F3), rs)
-        v = np.array([-2 * F3s.imag, 2 * F3s.real])
-        v, r, J = _refine3(I, A, wf, v, rs)
-        if np.abs(r[2:]).max() <= 3 * _floor3(I, A, wf, v, rs)[2:].max():
+        try:
+            F3s, _, _ = nested.inner(A, wf, complex(*F3), rs)
+            v = np.array([-2 * F3s.imag, 2 * F3s.real])
+            v, r, J = _refine3(I, A, wf, v, rs)
+            ok = np.abs(r[2:]).max() <= 3 * _floor3(I, A, wf, v, rs)[2:].max()
+        except PointBound as ex:
+            stops.append([rs, str(ex)])
+            if ex.wall:
+                return None, trail, stops
+            continue
+        if ok:
             trail.append(rs)
             break
     else:
-        return None, trail
+        return None, trail, stops
     rr, h = trail[-1], h0
     while rr > r1:
         rn = max(round(rr - h, 6), r1)
-        v2, r2, J2 = _refine3(I, A, wf, v, rn)
-        if np.abs(r2[2:]).max() <= 3 * _floor3(I, A, wf, v2, rn)[2:].max():
+        try:
+            v2, r2, J2 = _refine3(I, A, wf, v, rn)
+            ok = np.abs(r2[2:]).max() <= 3 * _floor3(I, A, wf, v2, rn)[2:].max()
+        except PointBound as ex:
+            return None, trail, stops + [[rn, str(ex)]]
+        if ok:
             v, r, J, rr = v2, r2, J2, rn
             trail.append(rn)
             h = min(h0, 2 * h)
         else:
             h /= 2
             if h < hmin:
-                return None, trail
-    return (v, r, J), trail
+                return None, trail, stops
+    return (v, r, J), trail, stops
 
 
 def f_M3(args):
@@ -197,11 +229,15 @@ def f_M3(args):
     r_1. With fix (#1021), a point whose inner solve leaves |r_3| >= 1e-8 is solved again by continuation in xi1 and
     accepted when |r_3| is at its rounding noise; its sigma then includes r_1's noise and the error the residual r_3
     induces in r_1 (|J_1 J_3^-1| (|r_3| + noise_3)), so the guard |R| >= 10 sigma keeps its phase. Points the first
-    solve accepts are unchanged."""
+    solve accepts are unchanged. args[4], if given, bounds the point: dict(rhs=right-hand-side calls per integration,
+    wall=seconds); a point stopped by a bound has no value, and its record says which bound and where."""
     I = _probe_inner_np()
     import nested
     (A, wf), F3, r1 = args[:3]
     fix = len(args) > 3 and args[3]
+    _BOUND.clear()
+    if len(args) > 4 and args[4]:
+        _BOUND.update(args[4], until=time.monotonic() + args[4].get("wall", math.inf))
     nan = float("nan")
     try:
         F3n, R, r3 = nested.inner(A, wf, complex(*F3), r1)
@@ -213,9 +249,10 @@ def f_M3(args):
             return [R.real, R.imag, float(r3), F3n.real, F3n.imag, ym, sig]
         if not fix:                               # the inner solve did not tune S_3 to zero: no value
             return [nan, nan, float(r3), F3[0], F3[1], ym, sig]
-        got, trail = _continue3(I, nested, A, wf, F3, r1)
+        got, trail, stops = _continue3(I, nested, A, wf, F3, r1)
+        more = dict(bound=stops) if stops else {}   # only a bounded point's record gains a field
         if got is None:
-            return [nan, nan, float(r3), F3[0], F3[1], ym, sig, dict(trail=trail, ok=False)]
+            return [nan, nan, float(r3), F3[0], F3[1], ym, sig, dict(trail=trail, ok=False, **more)]
         v, r, J = got
         n = _floor3(I, A, wf, v, r1)
         r = _res3(I, A, wf, v, r1)                # the last evaluation is the default path (for _PATH)
@@ -227,15 +264,25 @@ def f_M3(args):
         dr1 = float(np.abs(J[:2] @ np.abs(np.linalg.inv(J[2:])) @ np.full(2, r3f + float(n[2:].max()))).max())
         sigf = max(sig0, float(n[:2].max()) + dr1)
         return [float(r[0]), float(r[1]), r3f, F3f.real, F3f.imag, ym, sigf,
-                dict(trail=trail, ok=True, noise3=float(n[2:].max()), noise1=float(n[:2].max()), dr1=dr1, sig0=sig0)]
+                dict(trail=trail, ok=True, noise3=float(n[2:].max()), noise1=float(n[:2].max()), dr1=dr1, sig0=sig0,
+                     **more)]
     except Exception as ex:
         return [nan, nan, str(ex)[:80], F3[0], F3[1], nan, nan]
 
 
+def _indexed(job):
+    """(index, fn(args), CPU seconds) for the pool's unordered map"""
+    fn, i, a = job
+    c = time.process_time()
+    r = fn(a)
+    return i, r, time.process_time() - c
+
+
 class Multiplier:
-    def __init__(self, M, cache, procs, plant=None, mutate=None, r1=0.2, ymax=1e2, m3fix=False, retry=False):
+    def __init__(self, M, cache, procs, plant=None, mutate=None, r1=0.2, ymax=1e2, m3fix=False, retry=False,
+                 bounds=None):
         self.M, self.procs, self.plant, self.mutate = M, procs, plant, mutate
-        self.r1, self.ymax, self.m3fix = r1, ymax, m3fix
+        self.r1, self.ymax, self.m3fix, self.bounds = r1, ymax, m3fix, bounds
         self.vals, self.extra = {}, {}
         self.cache = cache
         self.pool = None
@@ -273,16 +320,20 @@ class Multiplier:
         else:
             fn = f_M3
             args = [(p, self.seed(p), self.r1) + ((True,) if self.m3fix else ()) for p in todo]
+            if self.bounds:
+                args = [a[:3] + (self.m3fix, self.bounds) for a in args]
+        jobs = [(fn, i, a) for i, a in enumerate(args)]
         if self.procs > 1:
             if self.pool is None:
                 import multiprocessing as mp_
                 self.pool = mp_.get_context("spawn").Pool(self.procs)
-            res = self.pool.map(fn, args, chunksize=1)
+            it = self.pool.imap_unordered(_indexed, jobs)
         else:
-            res = [fn(a) for a in args]
+            it = map(_indexed, jobs)
+        recs = [None] * len(todo)
         with open(self.cache, "a") as fh:
-            for p, r in zip(todo, res):
-                k = self.key(p)
+            for i, r, cpu in it:                    # each point's record and log line as soon as it returns
+                k = self.key(todo[i])
                 rec = dict(A=k[0], wf=k[1], re=r[0], im=r[1], info=r[2])
                 if self.M == 1:
                     rec.update(r1=self.r1, ymax=r[3], sig=r[4])
@@ -290,8 +341,28 @@ class Multiplier:
                     rec.update(r1=self.r1, F3re=r[3], F3im=r[4], ymax=r[5], sig=r[6])
                     if len(r) > 7:
                         rec["fix"] = r[7]
-                self.store(k, rec)
                 fh.write(json.dumps(rec) + "\n")
+                fh.flush()
+                print(f"  point A {k[0]:.7f} wf {k[1]:.8f}: {self.note(rec)}, {cpu:.0f} CPU s", flush=True)
+                recs[i] = rec
+        for p, rec in zip(todo, recs):              # stored in batch order, so the seeds do not depend on the
+            self.store(self.key(p), rec)            # order in which the points returned
+
+    def note(self, r):
+        """a record in words: the value, or why there is none"""
+        v, fx = complex(r["re"], r["im"]), r.get("fix") or {}
+        if not isinstance(r["info"], float):
+            return f"no value: {r['info']}"
+        if np.isfinite(v):
+            if not (r.get("ymax", 0.0) <= self.ymax and abs(v) >= 10 * r.get("sig", 0.0)):
+                return f"no value: |R| {abs(v):.3g} within 10 sigma ({r['sig']:.3g}) or max|Y| {r['ymax']:.3g}"
+            return (f"R {v:.6g}, |r3| {r['info']:.2g}" + (f", continuation {fx['trail']}" if fx else "")
+                    + (f", stops {fx['bound']}" if fx.get("bound") else ""))
+        if fx.get("bound"):
+            return f"no value: {fx['bound'][-1][1]} at xi1 {fx['bound'][-1][0]}, continuation {fx['trail']}"
+        if fx:
+            return f"no value: continuation lost S3's zero after {fx['trail']}"
+        return f"no value: |r3| {r['info']:.3g} (inner solve)"
 
     def store(self, k, r):
         """a point's value, or none (NaN) when its path came near a singularity (max |Y| > ymax) or |R_1| is within
@@ -614,6 +685,11 @@ def main():
     ap.add_argument("--m3fix", action="store_true",
                     help="M = 3: continuation in xi1 where the inner solve leaves |r_3| >= 1e-8 (#1021)")
     ap.add_argument("--retry", action="store_true", help="M = 3: compute again the cached points without value")
+    ap.add_argument("--m3maxrhs", type=float, default=2.4e6,
+                    help="M = 3: right-hand-side calls per integration (DOP853: 12 a step) past which the point is "
+                         "recorded without value, with the cause; 0 for none (#1021)")
+    ap.add_argument("--m3wall", type=float, default=3600.0,
+                    help="M = 3: seconds per point past which it is recorded without value, with the cause; 0 for none")
     ap.add_argument("--selftest", action="store_true")
     ap.add_argument("--mutate", default=None, choices=["conj", "nosplit", "norecount"])
     a = ap.parse_args()
@@ -627,7 +703,8 @@ def main():
     a.r1 = a.r1 or (0.17 if a.M == 1 else 0.2)
     a.r1b = a.r1b or (0.2 if a.M == 1 else 0.17)
     cache = a.cache or os.path.join(a.out, f"points_M{a.M}_r{a.r1}.jsonl")
-    F = Multiplier(a.M, cache, a.procs, plant, r1=a.r1, ymax=a.ymax, m3fix=a.m3fix, retry=a.retry)
+    bounds = {k: v for k, v in (("rhs", a.m3maxrhs), ("wall", a.m3wall)) if v} or None
+    F = Multiplier(a.M, cache, a.procs, plant, r1=a.r1, ymax=a.ymax, m3fix=a.m3fix, retry=a.retry, bounds=bounds)
     if a.M == 3:
         # seed the continuation at the known M = 3 zero's tuned F_3
         F.extra[(-1.0, -1.0)] = dict(F3re=float(((2.7264758856 / 2j) * (0.0532 + 0.0041j)).real),
@@ -648,8 +725,8 @@ def main():
     F.close()
     if a.r1b:
         # the zero set does not depend on xi1: locate each zero again at r1b, from the same cell
-        Fb = Multiplier(a.M, os.path.join(a.out, f"points_M{a.M}_r{a.r1b}.jsonl"), a.procs, plant, r1=a.r1b, m3fix=a.m3fix,
-                        ymax=a.ymax)
+        Fb = Multiplier(a.M, os.path.join(a.out, f"points_M{a.M}_r{a.r1b}.jsonl"), a.procs, plant, r1=a.r1b,
+                        m3fix=a.m3fix, ymax=a.ymax, bounds=bounds)
         if a.M == 3:                              # seed F_3 from the first radius's tuned values
             for k, r in F.extra.items():
                 Fb.extra.setdefault(k, dict(F3re=r.get("F3re", float("nan")), F3im=r.get("F3im", float("nan")),
