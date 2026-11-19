@@ -11,6 +11,13 @@ Stage A (this file's checks):
   --phiz     section 1.3's Phi_z formula against the total derivative of the Phi relation along B8's flow (central
              differences at 256 bits), and Lemma 2's G0 against the eps -> 0 limit of Phi_z - Phi/(2 z^2).
              --mutate=G0 drops G0's C B0 P/(2z) term (K2): the G0 check must fail.
+Stage B:
+  --residual Lemma 3 from the eps-expansion: z^2 f^eps_Phi - z^2 f^0_Phi on the inner series as a power series in
+             (tau = eps/z, z), its structural zeros (tau^0: Lemma 2; z^0, z^1 at every tau order: Lemma 3), and
+             F_R = t r_Phi/eps = r/(tau z^2) at t -> 0 (R(0), B5_inner.md 2: 35.18).
+             --mutate=offsol (K1 as the protocol wrote it) perturbs the inner series by A (1 + 1e-3); A enters only
+             through P(0) = 2F, so this is another solution, not off the solution (R(0) moves, Lemma 3 still holds).
+             --mutate=offphi (K1b) puts the state off the solution, Phi + 1e-3 z: Lemma 3's zeros must fail.
 """
 import os
 import random
@@ -277,8 +284,162 @@ def check_phiz():
     return ok1 and ok2
 
 
+# ------------------------------------------------------------------------------ stage B: series in (tau, z)
+def series_tools():
+    import p2c_h8 as H
+    return H
+
+
+def inner_b5(H, A, wf, J):
+    """the inner series in B5's variables (P, Phi, C, Theta, Q) from #1017's solver (eps^0 part of B8's system)"""
+    Min = H.Model(A, wf, H.keep_inner(J))
+    Z = Min.solve(iters=2 * J + 10)
+    V, S, beta, c = Z
+    keep = H.keep_inner(J)
+    C = H.op_of(c, keep)
+    P = H.apply(H.matinv(C), H.vadd(V, S))
+    Phi = {m: P[m].zdz() for m in ODD}
+    Theta = {k: H.div_z(beta[k]) for k in EVEN}
+    Q = {m: H.div_z(S[m]) for m in ODD}
+    return P, Phi, c, Theta, Q
+
+
+def residual_series(H, w, P, Phi, C, keep):
+    """r = z^2 (f^eps_Phi - f^0_Phi) on the state (P, Phi, C, theta = 0), a power series in (tau, z); eps = tau z"""
+    Ser = H.Ser
+    one = Ser.const(1, keep)
+    E = lambda f: f.shift(1, 1)                       # times eps = tau z
+    T = lambda f: f.shift(1, 0)                       # times tau = eps/z
+    Zs = lambda f: f.shift(0, 1)                      # times z
+    vE = lambda f: {k: E(v) for k, v in f.items()}
+    vT = lambda f: {k: T(v) for k, v in f.items()}
+    vZ = lambda f: {k: Zs(v) for k, v in f.items()}
+    mE = lambda X: {m: {q: E(X[m][q]) for q in ODD} for m in ODD}
+    mT = lambda X: {m: {q: T(X[m][q]) for q in ODD} for m in ODD}
+    mZ = lambda X: {m: {q: Zs(X[m][q]) for q in ODD} for m in ODD}
+    madd_ = lambda *Xs: {m: {q: sum((X[m][q] for X in Xs), Ser({}, keep)) for q in ODD} for m in ODD}
+    msub_ = lambda X, Y: {m: {q: X[m][q] - Y[m][q] for q in ODD} for m in ODD}
+    vadd_ = lambda *fs: {k: sum((f[k] for f in fs), Ser({}, keep)) for k in fs[0]}
+    vsub_ = lambda f, g: {k: f[k] - g[k] for k in f}
+    vsc = lambda f, s: {k: v * s for k, v in f.items()}
+    I2 = {m: {q: (one if m == q else Ser({}, keep)) for q in ODD} for m in ODD}
+    from mpmath import iv
+    Dg = {m: 1 + iv.mpc(0, m) * w for m in ODD}
+    D2g = {m: 2 + iv.mpc(0, m) * w for m in ODD}
+    Dv = lambda f: {m: f[m] * Dg[m] for m in ODD}
+    D2v = lambda f: {m: f[m] * D2g[m] for m in ODD}
+    Dm = {m: {q: (Ser.const(Dg[m], keep) if m == q else Ser({}, keep)) for q in ODD} for m in ODD}
+    ap_, mm_, pr_, op_, inv_ = H.apply, H.matmul, H.pr, H.op_of, H.matinv
+    half = mpf(1) / 2
+    PP = pr_(P, P, EVEN, keep)
+    Theta = vsc(PP, half)                              # theta = 0: Theta = E0 = [PP]/2
+    Cm = op_(C, keep)
+    CT = pr_(C, Theta, EVEN, keep)
+    Bm = op_(CT, keep)
+    CC = mm_(Cm, Cm)
+    epf = lambda f: vsub_(vE(f), vE(vE(f)))           # eps (1 - eps) on vectors
+    mep = lambda X: msub_(mE(X), mE(mE(X)))
+    # E = C (I - eps D) + eps' z B ; M = I - tau C^2
+    Emat = madd_(msub_(Cm, mE(mm_(Cm, Dm))), mZ(mep(Bm)))
+    Mmat = msub_(I2, mT(CC))
+    # Q from E Q = M Phi + D P - eps' C B P
+    Q = ap_(inv_(Emat), vsub_(vadd_(ap_(Mmat, Phi), Dv(P)), epf(ap_(Cm, ap_(Bm, P)))))
+    QQ = pr_(Q, Q, EVEN, keep)
+    Ee = vsc(vadd_(PP, vE(vZ(QQ))), half)              # E_eps = ([PP] + eps z [QQ])/2
+    # C_z = (1 - eps)[C Theta]/2 ; z Theta_z = (h/eps)/2 with h/eps = z[QQ]/2 - Theta + z([Theta E_eps] - (1 - eps)[Theta Theta])
+    Cz = vsc(vsub_(CT, vE(CT)), half)
+    TT = pr_(Theta, Theta, EVEN, keep)
+    hoe = vadd_(vsc(vZ(QQ), half), vsc(Theta, -1), vZ(vsub_(pr_(Theta, Ee, EVEN, keep), vsub_(TT, vE(TT)))))
+    zThz = vsc(hoe, half)
+    Czm = op_(Cz, keep)
+    # eps' B_z = (1 - eps) eps op(C_z Theta) + (1 - eps) tau op(C z Theta_z)
+    CzT = pr_(Cz, Theta, EVEN, keep)
+    CzTh = pr_(C, zThz, EVEN, keep)
+    epBz = madd_(mep(op_(CzT, keep)), msub_(mT(op_(CzTh, keep)), mE(mT(op_(CzTh, keep)))))
+    # eps' z B_z = z * eps' B_z
+    A2 = vadd_(vsc(vZ(D2v(Q)), -1), vZ(vsub_(ap_(Bm, P), vE(ap_(Bm, P)))))
+    Sx = vadd_(ap_(Cm, Phi), A2)                       # C Phi + A2
+    # z^2 M_z Phi = eps C^2 Phi - eps z (C_z C + C C_z) Phi
+    z2MzPhi = vsub_(vE(ap_(CC, Phi)), vE(vZ(ap_(madd_(mm_(Czm, Cm), mm_(Cm, Czm)), Phi))))
+    # E_z = C_z (I - eps D) + eps' B + eps' z B_z
+    Ez = madd_(msub_(Czm, mE(mm_(Czm, Dm))), mep(Bm), mZ(epBz))
+    br = vadd_(vsc(ap_(Emat, Sx), half), vsc(z2MzPhi, -1), vZ(vZ(ap_(Ez, Q))),
+               vsc(vZ(vsub_(Dv(Phi), epf(ap_(Cm, ap_(Bm, Phi))))), -half),
+               vZ(vZ(vadd_(epf(ap_(Czm, ap_(Bm, P))), ap_(Cm, ap_(epBz, P))))))
+    Fe = ap_(inv_(Mmat), br)
+    # z^2 f^0 = Phi/2 + (C^2 - I) Phi/2 + z C (B0 P - D2 Q0)/2 + z^2 [C0' Q0] - z D Phi/2
+    E0 = Theta
+    CE0 = pr_(C, E0, EVEN, keep)
+    B0 = op_(CE0, keep)
+    Q0 = ap_(inv_(Cm), vadd_(Phi, Dv(P)))
+    F0 = vadd_(vsc(Phi, half), vsc(ap_(msub_(CC, I2), Phi), half), vsc(vZ(ap_(Cm, vsub_(ap_(B0, P), D2v(Q0)))), half),
+               vZ(vZ(pr_(vsc(CE0, half), Q0, ODD, keep))), vsc(vZ(Dv(Phi)), -half))
+    return vsub_(Fe, F0)
+
+
+def check_residual():
+    H = series_tools()
+    from mpmath import iv
+    A, wf = H.params(True)
+    Ain = A * (1 + iv.mpf("1e-3")) if MUT == "offsol" else A
+    J = 24
+    P, Phi, C, Theta, Q = inner_b5(H, Ain, wf, J)
+    if MUT == "offphi":                                # K1b: off the solution, Phi + 1e-3 z (B5_inner.md 6's kind)
+        for m in ODD:
+            Phi[m] = Phi[m] + H.Ser({(0, 1): iv.mpc(iv.mpf("1e-3"))}, Phi[m].keep)
+    keep = H.keep_box(3, J)
+    emb = lambda f: {k: H.Ser(dict(v.c), keep) for k, v in f.items()}
+    w = wf * H.WINF
+    r = residual_series(H, w, emb(P), emb(Phi), emb(C), keep)
+    worst0, worst01, R0 = mpf(0), mpf(0), {}
+    for m in ODD:
+        for (a, j), v in r[m].c.items():
+            mag = mpf(abs(v).b)
+            if a == 0:                                 # relative to the size of the state's coefficient there
+                ref = max(mpf(abs(Phi[m].coef(0, j)).b), mpf(abs(Phi[m].coef(0, max(j - 1, 0))).b), mpf(10) ** -300)
+                worst0 = max(worst0, mag / ref)
+            elif j <= 1:
+                worst01 = max(worst01, mag)
+            if (a, j) == (1, 2):
+                R0[m] = mpc(mp.mpf(v.real.mid.a), mp.mpf(v.imag.mid.a))
+    ok0 = worst0 < mpf(10) ** -40
+    # K1's check (protocol 6.1): |t r_Phi/eps| at tau -> 0 on |t| = 1e-6 Z against |t| = Z, 0 <= arg t <= pi/2 + kappa
+    Zr = mpf("0.0085")
+    az = mp.pi / 2 + mpf("0.3")
+    def FR(tt):
+        out = mpf(0)
+        for m in ODD:
+            s = mpc(0)
+            for (a, j), v in r[m].c.items():
+                if a == 1:
+                    s += mpc(mp.mpf(v.real.mid.a), mp.mpf(v.imag.mid.a)) * tt ** (j - 2)
+            out = max(out, abs(s))
+        return out
+    pts = [az * k / 31 for k in range(32)]
+    big = max(FR(Zr * mp.expj(f)) for f in pts)
+    small = max(FR(Zr * mpf("1e-6") * mp.expj(f)) for f in pts)
+    okK1 = small <= 3 * big
+    ok01 = worst01 < mpf(10) ** -40
+    r0 = max(abs(v) for v in R0.values())
+    okR = abs(r0 - mpf("35.18")) < mpf("0.005")
+    print(f"--residual: z^2 (f^eps - f^0) on the inner series (z^{J}), as a series in (tau, z)"
+          + (f" [mutate {MUT}]" if MUT else "") + ":")
+    print(f"  tau^0 part (Lemma 2: zero): largest coefficient relative to the state's {mp.nstr(worst0, 3)}: "
+          f"{'PASS' if ok0 else 'FAIL'}")
+    print(f"  z^0 and z^1 at tau >= 1 (Lemma 3: zero): largest coefficient {mp.nstr(worst01, 3)}: "
+          f"{'PASS' if ok01 else 'FAIL'}")
+    print("  R(0) = t r_Phi/eps at t -> 0: " + ", ".join(f"[{m}] {mp.nstr(v, 8)} (|.| {mp.nstr(abs(v), 6)})"
+                                                     for m, v in R0.items())
+          + f"; against B5_inner.md 2's 35.18: {'PASS' if okR else 'FAIL'}")
+    print(f"  K1's check: max |t r_Phi/eps| on |t| = 1e-6 Z {mp.nstr(small, 5)}, on |t| = Z {mp.nstr(big, 5)}; "
+          f"at most 3 times: {'PASS' if okK1 else 'FAIL'}")
+    return ok0 and ok01 and okR and okK1
+
+
 if __name__ == "__main__":
     ok = True
+    if "residual" in OPTS:
+        ok &= check_residual()
     if "model" in OPTS:
         ok &= check_model()
     if "phiz" in OPTS:
