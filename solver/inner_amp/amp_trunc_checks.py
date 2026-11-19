@@ -15,7 +15,13 @@ outputs in one folder DIR, named as run_trunc_checks.sh writes them:
             change is below a tenth of the legacy fit's over the same J (L_full_K9_J*.json from amp_flint_par.py without
             --fit, L3_K9_J*.json from solver/proof/amp_trunc_hiermodel.py 3 9 J).
 
-    python3 amp_trunc_checks.py DIR [planted|exact|control|J|all]      exit 0 iff every check run holds
+  Jlog      added after the J check failed (#1016), for its diagnosed cause: the truncated model's sequence at its
+            first truncated order k = 2M + 3 is c ln j + S + O(1/j). With amp_flint_par.py --fit-logs 1 (T3log_K9_J*,
+            T5log_K13_J* against F_K13_J*): the constant's change from J 1000 to 1500 is below a tenth of the legacy
+            fit's (the J check's bar), and c changes by less than 1e-6 of itself. Diagnostic, not a check: c / S_1^(1)
+            times ln(1500/1000) against the no-log fit's drift of sigma_(M+1).
+
+    python3 amp_trunc_checks.py DIR [planted|exact|control|J|Jlog|all]      exit 0 iff every check run holds
 """
 import json
 import os
@@ -149,10 +155,53 @@ def Jcheck(d):
     return ok
 
 
+def logc(rec, key):
+    re, im = rec["fit_logc"][key]
+    return mp.mpc(mp.mpf(re), mp.mpf(im))
+
+
+def Jlog(d):
+    ok = True
+    legacy = None
+    a, b = load(d, "L_full_K9_J1000.json"), load(d, "L3_K9_J1000.json")
+    a2, b2 = load(d, "L_full_K9_J1500.json"), load(d, "L3_K9_J1500.json")
+    if None not in (a, b, a2, b2):
+        legacy = float(abs((sig(a2, 4) - sig(b2, 4)) - (sig(a, 4) - sig(b, 4))))
+    for M, K, full, nolog in ((3, 9, "F_K11_J{J}.json", "T3_K9_J{J}.json"), (5, 13, "F_K13_J{J}.json", "T5_K13_J{J}.json")):
+        n = M + 1
+        F = {J: load(d, full.format(J=J)) for J in (1000, 1500)}
+        T = {J: load(d, f"T{M}log_K{K}_J{J}.json") for J in (1000, 1500)}
+        N = {J: load(d, nolog.format(J=J)) for J in (1000, 1500)}
+        if None in list(F.values()) + list(T.values()):
+            print(f"Jlog: M {M}: files missing")
+            ok = False
+            continue
+        D = {J: sig(F[J], n) - sig(T[J], n) for J in (1000, 1500)}
+        dc = float(abs(D[1500] - D[1000]))
+        key = f"{2 * n + 1}_1"
+        c = {J: logc(T[J], key) for J in (1000, 1500)}
+        crel = float(abs(c[1500] - c[1000]) / abs(c[1000]))
+        bar = 0.1 * legacy if legacy is not None else float("nan")
+        good = dc < bar and crel < 1e-6
+        ok &= good
+        w = mp.mpf(1) * 2 * mp.pi / mp.mpf("1.64389375")
+        s1 = -1j * mp.rgamma((1 + 1j * w) / 2) * mp.rgamma((2 + 1j * w) / 2)       # S_1^(1) = d_0 / (Gamma Gamma), d_0 = -i
+        cs = c[1000] / s1
+        print(f"Jlog M {M}: Delta sigma_{n} (log-separated) at J 1000 {mp.nstr(D[1000], 14)}, at J 1500 {mp.nstr(D[1500], 14)}; "
+              f"change {dc:.2e} against 0.1 x legacy {bar:.2e}; log coefficient c = {mp.nstr(c[1000], 14)}, relative J change "
+              f"{crel:.1e}  ({'as required' if good else 'NOT AS REQUIRED'})")
+        if None not in N.values():
+            drift = sig(N[1500], n) - sig(N[1000], n)
+            pred = cs * mp.log(mp.mpf(1500) / 1000)
+            print(f"   diagnostic: c / S_1^(1) = {mp.nstr(cs, 6)}; times ln 1.5: {mp.nstr(pred, 6)}; the no-log fit's drift of "
+                  f"sigma_{n}^[{M}]: {mp.nstr(drift, 6)}; ratio {mp.nstr(abs(drift / pred), 4)}")
+    return ok
+
+
 if __name__ == "__main__":
     d = sys.argv[1]
     which = sys.argv[2] if len(sys.argv) > 2 else "all"
-    fns = {"planted": planted, "exact": exact, "control": control, "J": Jcheck}
+    fns = {"planted": planted, "exact": exact, "control": control, "J": Jcheck, "Jlog": Jlog}
     ok = True
     for name, fn in fns.items():
         if which in (name, "all"):
