@@ -73,20 +73,22 @@ whether it is new. "Not found" means not found in the searches listed in §4, wh
 
 ### 2.1 The ℓ = 2 mode: near-marginal at D = 4, and argued to be exactly marginal at D = ∞
 
-**What.** Martín-García and Gundlach (PRD 59, 064031 (1999), gr-qc/9809059, Table 1) give κΔ = −0.07 and
-ωΔ/2π = 0.3 for the least damped non-spherical mode, polar ℓ = 2, that is λ ≈ −0.02 + 0.55i at D = 4. Every other
-non-spherical mode is damped by κΔ ≤ −0.30. In D = 5, Porto Veronese and Gundlach (arXiv:2209.08404) find that weak
-gravitational-wave perturbations of the scalar critical solution decay, in a cohomogeneity-two ansatz whose wave is a
-squashing of S³, transverse and traceless on the sphere, so tensor-type as this review reads it (abstract only). The scalar-type ℓ = 2 sector above D = 4 has not been computed by anyone found.
+**What.** Martín-García and Gundlach (PRD 59, 064031 (1999), gr-qc/9809059, Table 1) give κΔ = −0.07 and ωΔ/2π = 0.3 for
+the least damped non-spherical mode, polar ℓ = 2, that is λ ≈ −0.02 + 0.55i at D = 4. Every other non-spherical mode is
+damped by κΔ ≤ −0.30. In D = 5, Porto Veronese and Gundlach (arXiv:2209.08404) find that weak gravitational-wave
+perturbations of the scalar critical solution decay, in a cohomogeneity-two ansatz whose wave is a squashing of S³,
+transverse and traceless on the sphere, so tensor-type as this review reads it (abstract only). The scalar-type ℓ = 2
+sector above D = 4 has not been computed by anyone found.
 
 **An argument for λ = 0 at D = ∞ (this review's; not checked).** In the inner region r ~ √n the field depends on x
-through s = r²/(2n), and the flat Laplacian is ∂_s at leading order because (n/r)∂_r dominates ∂_r². For a field
-φ(S(x), t), Δφ = φ″|∇S|² + φ′ΔS. If S = r²/(2n) + h(x)/(2n) with h a harmonic polynomial of degree ℓ, then ΔS =
-1 + O(1/n) and |∇S|² = O(1/n), so Δφ = φ_S at leading order, the same as for S = s. If the gravitational equations
-also depend on x only through S at leading order, then the deformed solution is again a solution, and its derivative
-in h is a mode. That is the step to check, and it can fail: the level sets of S are ellipsoids, whose curvature varies
-with angle at relative order |C|, and the spheres' curvature n(n − 1)/r² enters the lapse equation multiplied by
-a² − 1 = O(1/n), so at order one. Whether the variation cancels there is not settled by this argument. Since h scales as r^ℓ ∝ s^{ℓ/2}, the mode's rate is λ = 2 − ℓ:
+through s = r²/(2n), and the flat Laplacian is ∂_s at leading order because (n/r)∂_r dominates ∂_r². For a field φ(S(x),
+t), Δφ = φ″|∇S|² + φ′ΔS. If S = r²/(2n) + h(x)/(2n) with h a harmonic polynomial of degree ℓ, then ΔS = 1 + O(1/n) and
+|∇S|² = O(1/n), so Δφ = φ_S at leading order, the same as for S = s. If the gravitational equations also depend on x
+only through S at leading order, then the deformed solution is again a solution, and its derivative in h is a mode. That
+is the step to check, and it can fail: the level sets of S are ellipsoids, whose curvature varies with angle at relative
+order |C|, and the spheres' curvature n(n − 1)/r² enters the lapse equation multiplied by a² − 1 = O(1/n), so at order
+one. Whether the variation cancels there is not settled by this argument. Since h scales as r^ℓ ∝ s^{ℓ/2}, the mode's
+rate is λ = 2 − ℓ:
 
 | ℓ | h | λ | status |
 |---|---|---|---|
