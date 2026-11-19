@@ -104,7 +104,7 @@ def table(fn):
     Ds, L = lam0_table()
     l1inf = json.load(open(os.path.join(HERE, "data", "ell_lambda_l1.json")))["M3"]["lam"]
     dinf = l1inf - 2
-    nn, dd, ee, DD = [], [], [], []
+    nn, dd, ee, DD, hh = [], [], [], [], []
     print(f"delta(inf) = lambda_inf(l = 1) - lambda_0(inf) = {l1inf:.6f} - 2 = {dinf:+.6f} (#994, M = 3; "
           f"lambda_0(inf) = 2, GAMMA.md 5)\n")
     print("| D | n | λ₁ | k_c | k_c bar: change from the next lower k_c | ψ-constraint | λ₀ (interp. error) | δ = λ₁ − λ₀ | "
@@ -115,7 +115,7 @@ def table(fn):
         l0, e0 = lam0_at(D, Ds, L)
         n = D - 2
         d = l1 - l0
-        nn.append(n); dd.append(d); ee.append(r.get("lam_err", 0.0)); DD.append(D)
+        nn.append(n); dd.append(d); ee.append(r.get("lam_err", 0.0)); DD.append(D); hh.append(r.get("has_err", True))
         bar = (("OK" if r["lam_err"] <= 1e-6 else "BAD") + f" ({r['lam_err']:.1e})") if r.get("has_err", True) else "single k_c"
         con = r.get("constraint")
         print(f"| {D:g} | {n:g} | {l1:.7f} | {r.get('kc', '')} | {bar} | {con:.1e} | {l0:.7f} ({e0:.1e}) | {d:.6f} | "
@@ -129,10 +129,14 @@ def table(fn):
         lin = lambda a, b: DD[i] + (DD[i + 1] - DD[i]) * a / (a - b)
         Dc = lin(dd[i], dd[i + 1])
         alts = [lin(dd[i] + s1 * ee[i], dd[i + 1] + s2 * ee[i + 1]) for s1 in (-1, 1) for s2 in (-1, 1)]
-        print(f"\ndelta crosses 0 between D {DD[i]:g} and {DD[i + 1]:g}: D = {Dc:.4f} (linear), k_c spread "
-              f"{min(alts):.4f} to {max(alts):.4f}")
+        spread = (f"k_c spread {min(alts):.4f} to {max(alts):.4f}" if hh[i] and hh[i + 1] else
+                  "k_c spread not measured (single k_c at " + ", ".join(f"D {DD[j]:g}" for j in (i, i + 1) if not hh[j]) + ")")
+        print(f"\ndelta crosses 0 between D {DD[i]:g} and {DD[i + 1]:g}: D = {Dc:.4f} (linear), {spread}")
     else:
         print(f"\ndelta has not crossed 0 (last D {DD[-1]:g}, delta {dd[-1]:+.6f})")
+    sl = np.diff(dd) / np.diff(DD)
+    print("slope of delta per unit D over the last steps: "
+          + ", ".join(f"D {DD[j]:g}-{DD[j + 1]:g} {sl[j]:+.4f}" for j in range(max(0, len(sl) - 6), len(sl))))
     if dd[-1] < -0.05:
         slope = (dd[-1] - dd[-2]) / (DD[-1] - DD[-2])
         print(f"delta {dd[-1]:+.4f} is past -0.05, slope {slope:+.4f} per unit D at the last step: "
