@@ -58,6 +58,12 @@ def omax(F):
     return float(np.abs(np.asarray(F[0]) + np.asarray(F[1])).max())
 
 
+def floor_accept(F, dz, dDelta, delta_tol, F_max, dz_max):
+    """newton_od's floor rule (#966): an iterate is accepted when its own Newton correction is small in Delta
+    (|dDelta| <= delta_tol) and in every unknown (max |dz| <= dz_max), with max |F| <= F_max. Off at delta_tol 0."""
+    return bool(delta_tol > 0 and F <= F_max and dz <= dz_max and abs(dDelta) <= delta_tol)
+
+
 def delta_digits(z, digits=40, parts=None):
     """Delta, the last unknown, as the exact sum of the last entries of all parts of z (or of the first `parts`), to
     `digits` significant digits (#556). The sum is taken at 64 x 53 bits, beyond any exponent spread that matters
@@ -269,7 +275,7 @@ def junk_subspace_o(s, w, delta_max=1e-2, iters=6, seed=0):
 
 def newton_od(s, z, tol=1e-40, it_max=12, max_halvings=8, verbose=True, mutate=0, junk_w=0, delta_max=1e-2, tol_dz=1e-45,
               lam_stall=0.0, on_first=None, scale_c=None, trace=None, accept="own", strong_chord=0, chord_it=10,
-              full_drop=0.0, abort_theta=0.0, abort_it=1, weak_first=0):
+              full_drop=0.0, abort_theta=0.0, abort_it=1, weak_first=0, floor_delta=0.0, floor_F=1e-30, floor_dz=1e-30):
     """Newton in octo-double from the eight-part state z on s (PinnedO, or ElimO around it): newton_qd's mode 'full'
     one level up (hpkernel.driver.newton_qd, its acceptance rule). A trial z + lam dz (lam = 1, 1/2, ...,
     2^-max_halvings) is accepted when the Newton correction there, with its own Jacobian, is smaller than dz (max norms
@@ -321,7 +327,12 @@ def newton_od(s, z, tol=1e-40, it_max=12, max_halvings=8, verbose=True, mutate=0
     weak_first=1 (with strong_chord k, #944): for the first iteration the k weakest right directions of J0 take the junk
     subspace's place: the first step and the correction each of its trials is judged by leave them out, so the weak
     coordinates stay at the start's while the strong rows are solved, and only the later Newton steps move them. Past D 233 at orders 150 and 160 the whole first step moves |F| from 1.8e-33 to 7.9e9
-    along those directions, whose second derivative is about 6e37, so their basin is far below the step's size."""
+    along those directions, whose second derivative is about 6e37, so their basin is far below the step's size.
+
+    floor_delta=B > 0 (#966): the iteration also ends converged, above tol, at an iterate whose own Newton correction
+    has |dDelta| <= B and max |dz| <= floor_dz, with max |F| <= floor_F (floor_accept). Delta's first-order error is
+    then |dDelta|. At D 251.2845 a state at max |F| 3.5e-35 had dDelta 3.1e-39, and its re-solve at a lower tol moved
+    Delta by that amount (notes/LARGE_D_WALL.md). 0 (the default) leaves the iteration as it was."""
     import time
     from multidouble import od_axpy
     z = o8(z)
@@ -371,6 +382,14 @@ def newton_od(s, z, tol=1e-40, it_max=12, max_halvings=8, verbose=True, mutate=0
             if verbose:
                 print(f"  on {it}: |F| {nf:.2e} converged, Delta {z[0][-1]:.17f} {z[1][-1]:+.4e}", flush=True)
             hist.append(dict(it=it, F=nf, dz=float(np.abs(st[0][0]).max()), mode="full"))
+            return z, hist, True
+        dzf, dDf = float(np.abs(st[0][0]).max()), float(st[0][0][-1] + st[0][1][-1])
+        if floor_accept(nf, dzf, dDf, floor_delta, floor_F, floor_dz):
+            if verbose:
+                print(f"  on {it}: |F| {nf:.2e} above tol at the floor, own correction |dz| {dzf:.2e}, dDelta {dDf:+.2e}: "
+                      f"converged by the floor rule (|dDelta| <= {floor_delta:.0e}), Delta {z[0][-1]:.17f} "
+                      f"{z[1][-1]:+.4e}", flush=True)
+            hist.append(dict(it=it, F=nf, dz=dzf, dDelta=dDf, mode="full", floor=True))
             return z, hist, True
         if it == it_max:
             break

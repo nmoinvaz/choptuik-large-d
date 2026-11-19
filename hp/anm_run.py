@@ -16,7 +16,7 @@ formulation of hp/pinning.py; their coefficients are zero).
         [--qd_it 12] [--qd_w 0] [--refine 1] [--probe 0 --probe_c C] [--plan_tol 1e-32] [--fix1 0] [--F_pred_max 0]
         [--horizon_alpha 0] [--fix1_qlu 0] [--jet_q 0] [--reseed 0] [--pred_q 0] [--reseed_q 0] [--save_pred 0]
         [--jet_o 0] [--jet_by_order 1] [--jet_tangent_from 0] [--series_split 0] [--od_tangents 2] [--corrector od --tol_od 1e-40] [--base_adopt 0] [--base_polish 1] [--keep_plan 1] [--held_fit FILE]
-        [--held_o 0] [--reseed_o 0] [--reseed_qd_bar 1e-24] [--a0 0] [--a_grow 2] [--a_hold 0] [--lam_stall 0] [--save_base 0] [--save_jet 0] [--held_from STATE]
+        [--held_o 0] [--reseed_o 0] [--reseed_qd_bar 1e-24] [--a0 0] [--a_grow 2] [--a_hold 0] [--lam_stall 0] [--od_floor_delta 0] [--save_base 0] [--save_jet 0] [--held_from STATE]
         [--arclength 0 --guard 0.05 --D_min 0 --arc_sign 1 --border 1 --turns_max 2 --arc_dhold 1e-12 --arc_jet FILE]
         [--a_rule step|reseed --a_scale 1 --a_drop 10 --a_rise 3.16]
 
@@ -135,6 +135,10 @@ simplified-correction ratio (--od_accept natural, #709) or its own correction (t
 --od_abort_theta R (with --od_accept natural) refuses an attempt at Newton iteration 1 when the full-step trial's
 simplified-correction ratio there exceeds R (newton_od's abort_theta, #784; hp/abort_replay.py fixed R = 1e8 from #603's
 and #608's logs). 0, the default, is off. --od_abort_it K applies it at iterations 1 to K (1, the default, as before).
+--od_floor_delta B also ends the octo-double corrector converged above --tol_od, at an iterate whose own Newton
+correction has |dDelta| <= B and max |dz| <= --od_floor_dz (1e-30), with max |F| <= --od_floor_F (1e-30)
+(newton_od's floor rule, #966): past D 251 the projection's floor holds max |F| above the tol, while Delta's
+first-order error, that correction's Delta part, is many orders smaller. 0, the default, is off.
 --reseed_start pred (with --reseed_q 1) runs the re-seed's quad-double polish from the prediction's own four-part
 horizon data first, and the double-double ladder only when that does not converge; ladder, the default, polishes the
 ladder's data as before (#693: past D ~ 249 the ladder's double-double data put the pole inside u0).
@@ -416,6 +420,9 @@ def main():
     opt.update(od_full_drop=0.0)        # --od_full_drop f: either test also accepts a full step whose |F| falls to f (#709, #777)
     opt.update(od_abort_theta=0.0)      # --od_abort_theta R: the natural test refuses at iteration 1 when theta(lam 1) > R (#784)
     opt.update(od_abort_it=1)           # --od_abort_it K: that refusal at iterations 1 to K
+    # --od_floor_delta B: the octo-double corrector also converges above --tol_od at an iterate whose own Newton
+    # correction has |dDelta| <= B and max |dz| <= --od_floor_dz, with max |F| <= --od_floor_F (#966; 0: off)
+    opt.update(od_floor_delta=0.0, od_floor_F=1e-30, od_floor_dz=1e-30)
     opt.update(reseed_start="ladder")   # --reseed_start pred: the re-seed's quad-double polish from the point's own data (#693)
     opt.update(held_fit="")             # --held_fit FILE (pinning.HeldFit; notes/HELD_HARMONICS.md)
     opt.update(held_from="")            # --held_from STATE: the base's held values from STATE's, by the fit (#808)
@@ -511,7 +518,9 @@ def main():
                                            lam_stall=opt["lam_stall"], on_first=save_dz0 if opt["save_dz0"] else None,
                                            accept=opt["od_accept"], strong_chord=int(opt["od_strong"]),
                                            full_drop=opt["od_full_drop"], abort_theta=opt["od_abort_theta"],
-                                           abort_it=opt["od_abort_it"], weak_first=int(opt["od_weak_first"]))
+                                           abort_it=opt["od_abort_it"], weak_first=int(opt["od_weak_first"]),
+                                           floor_delta=opt["od_floor_delta"], floor_F=opt["od_floor_F"],
+                                           floor_dz=opt["od_floor_dz"])
             except StartNotProjected as e:
                 print(f"      elim projections {e.args[0]}: the start's projection failed, attempt stopped", flush=True)
                 Fh, Fl = spx.residual(z0[0], z0[1])
