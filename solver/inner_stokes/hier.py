@@ -310,10 +310,13 @@ class Hier:
         if key not in self.J:
             self.J[key] = self.fdjac(l, x, g)
             self.fresh[key] = True
+        why = f"maxit {maxit}"                  # the stop reason, printed at --verbose=2
         for it in range(maxit):
             if self.at_floor(key, l, g):
+                why = "at the recorded floor"
                 break
             if self.tol and self.K is not None and l > self.ltop and np.linalg.norm(g) < self.tol:
+                why = "below --tol"
                 break                          # inner level in the linear regime: the Schur correction does the rest
             try:
                 step = -np.linalg.solve(self.J[key], g)
@@ -321,6 +324,7 @@ class Hier:
                 step = -np.linalg.lstsq(self.J[key], g, rcond=None)[0]
             scale = np.abs(x[idx(l)]).max() + 1e-3 * abs(x[0])
             if np.abs(step).max() < 2e-16 * scale:
+                why = "step below rounding"
                 self.record_floor(key, l, g)
                 break
             accepted = False
@@ -338,14 +342,17 @@ class Hier:
                     gt = rt[idx(l)]
                     ok = np.all(np.isfinite(rt)) and np.linalg.norm(gt) < (1 - 1e-4 * lam) * np.linalg.norm(g)
                 except Exception:
-                    ok = False
+                    ok, gt = False, None
+                if self.verbose >= 3:
+                    nt = "failed" if gt is None else f"{np.linalg.norm(gt):.3e}"
+                    print(f"     level {l} ({key[1]}) it {it} trial lam {lam:.4g}: |r_{l}| {nt} against "
+                          f"{np.linalg.norm(g):.3e}: {'accepted' if ok else 'rejected'}", flush=True)
                 if ok:
                     accepted = True
                     break
             if not accepted:
                 if self.fresh[key]:
-                    if self.verbose >= 2:
-                        print(f"   level {l} ({key[1]}): stop at |g| {np.linalg.norm(g):.2e} (noise floor)", flush=True)
+                    why = "every trial rejected with a fresh Jacobian (noise floor)"
                     self.record_floor(key, l, g)
                     break
                 self.J[key] = self.fdjac(l, x, g)
@@ -355,8 +362,10 @@ class Hier:
             floor = self.fresh[key] and np.linalg.norm(gt) > 0.5 * np.linalg.norm(g)
             x, r, g = xt, rt, gt
             if self.at_floor(key, l, g):
+                why = "at the recorded floor"
                 break
             if floor:                          # a fresh Jacobian no longer halves |g|: noise floor
+                why = "a fresh Jacobian no longer halves |g|"
                 self.record_floor(key, l, g)
                 break
             self.fresh[key] = False
@@ -366,6 +375,8 @@ class Hier:
             if self.verbose and (l == self.top or self.verbose > 1):
                 print(f"level {l} it {it}: |r_{l}| {np.linalg.norm(g):.3e}  lam {lam:.3g}  x {np.round(x, 9).tolist()}  "
                       f"[{time.time() - T0:.0f} s, {NEV[0]} residuals]", flush=True)
+        if self.verbose >= 2:
+            print(f"   level {l} ({key[1]}): stop at |r_{l}| {np.linalg.norm(g):.2e}: {why}", flush=True)
         return x, r
 
 
