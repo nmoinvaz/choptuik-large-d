@@ -7,10 +7,13 @@ the winding number of R_1 along the boundary of a cell is the sum of the signs (
 determinant) of the zeros inside. A cell of winding 0 may still hold a pair of opposite sign.
 
 The multiplier:
-  M = 1: lateral_np.jump(1, w_inf wf, A sin theta), R_1 times xi1^(-A^2) (a positive factor, so no phase change);
-  M = 3: nested.inner (F_3 tuned so that S_3 = 0, warm-started from the nearest point already computed; the base
-         grid is computed in rings outward from the known M = 3 zero), r_1; a point whose inner solve leaves
-         |r_3| >= 1e-8 has no value (its cells are reported unresolved).
+  M = 1: lateral_np.jump(1, w_inf wf, A sin theta) at xi1 = --r1 (0.2), R_1 times xi1^(-A^2) (a positive factor, so
+         no phase change). A point whose path reaches max |Y| > --ymax (1e2) has no value: the path then passes near
+         a movable singularity of y+, and R_1 jumps where the parameters carry one across it (seen at xi1 = 0.3 and
+         0.25, absent on the same lines at 0.2). The zero set does not depend on xi1 (J = 0 means y+ = y-).
+  M = 3: nested.inner at xi1 = --r1 (F_3 tuned so that S_3 = 0, warm-started from the nearest point already computed;
+         the base grid is computed in rings outward from the known M = 3 zero), r_1; a point whose inner solve leaves
+         |r_3| >= 1e-8 has no value. Cells with a point of no value are reported unresolved.
 
 The count:
   1. a base grid of cells over the box (offset by a small irrational amount so that no known zero lies on an edge);
@@ -47,22 +50,43 @@ OFF = (0.0123456, 0.00654321)        # grid offset in (A, wf), so that the known
 
 
 # ------------------------------------------------------------------------------------------- the multipliers
-def f_M1(p):
-    from lateral_np import jump, Fharm, W0
-    A, wf = p
+def m1_value(A, wf, r1):
+    """R_1 of lateral_np.jump(1, ...) along the same ray and arc (same solve_ivp calls, so the same bits), and
+    max |Y| on the path: a large value means the path passes near a movable singularity of y+, whose side
+    decides the branch, so R_1 jumps as the parameters move it across the path (#995)"""
+    from scipy.integrate import solve_ivp
+    from lateral_np import NP, Fharm, Kp, W0, fast_lin, series_data
+    w, Fh, r0, phi0 = W0 * wf, Fharm(A), 0.1, 3 * np.pi / 8
+    Y0, jt, err = series_data(Fh, w, 1, r0 * np.exp(1j * phi0), True)
+    nm = NP(1, w, True)
+    u = np.exp(1j * phi0)
+    s1 = solve_ivp(lambda t, Z: nm.rhs(t * u, Z) * u, (r0, r1), Y0, method="DOP853", rtol=1e-12, atol=1e-15)
+    s2 = solve_ivp(lambda t, Z: nm.rhs(r1 * np.exp(1j * t), Z) * 1j * r1 * np.exp(1j * t), (phi0, 0.0),
+                   s1.y[:, -1], method="DOP853", rtol=1e-12, atol=1e-15)
+    if not (s1.success and s2.success):
+        raise RuntimeError(s1.message if not s1.success else s2.message)
+    D = s2.y[:nm.no, -1]
+    i = {mu: k for k, mu in enumerate(nm.odd)}
+    s = 1j * w
+    R = (D[i[1]] - np.conj(D[i[-1]])) / (2j * np.pi * Kp(s) * fast_lin(s, r1) * (2 * Fh[1]))
+    return complex(R) * r1 ** (-A * A), float(max(np.abs(s1.y).max(), np.abs(s2.y).max())), float(err)
+
+
+def f_M1(args):
+    """[Re, Im, series error, max |Y|] (the guard on max |Y| is applied by Multiplier, so the cache keeps values)"""
+    p, r1 = args
     try:
-        R, JD, JS, err = jump(1, W0 * wf, Fharm(A), r1=0.3)
-        v = complex(R[1]) * 0.3 ** (-A * A)
-        return [v.real, v.imag, err]
+        v, ym, err = m1_value(p[0], p[1], r1)
+        return [v.real, v.imag, err, ym]
     except Exception as ex:
-        return [float("nan"), float("nan"), str(ex)[:80]]
+        return [float("nan"), float("nan"), str(ex)[:80], float("nan")]
 
 
 def f_M3(args):
     import nested
-    (A, wf), F3 = args
+    (A, wf), F3, r1 = args
     try:
-        F3n, R, r3 = nested.inner(A, wf, complex(*F3), 0.2)
+        F3n, R, r3 = nested.inner(A, wf, complex(*F3), r1)
         if not float(r3) < 1e-8:                  # the inner solve did not tune S_3 to zero: no value
             return [float("nan"), float("nan"), float(r3), F3[0], F3[1]]
         return [R.real, R.imag, float(r3), F3n.real, F3n.imag]
@@ -71,17 +95,18 @@ def f_M3(args):
 
 
 class Multiplier:
-    def __init__(self, M, cache, procs, plant=None, mutate=None):
+    def __init__(self, M, cache, procs, plant=None, mutate=None, r1=0.2, ymax=1e2):
         self.M, self.procs, self.plant, self.mutate = M, procs, plant, mutate
+        self.r1, self.ymax = r1, ymax
         self.vals, self.extra = {}, {}
         self.cache = cache
         self.pool = None
         if cache and os.path.exists(cache):
             for line in open(cache):
                 r = json.loads(line)
-                k = (r["A"], r["wf"])
-                self.vals[k] = complex(r["re"], r["im"])
-                self.extra[k] = r
+                if M == 1 and r.get("r1") != r1:
+                    raise SystemExit(f"cache {cache} holds points at r1 {r.get('r1')}, not {r1}")
+                self.store((r["A"], r["wf"]), r)
         self.F3seed = {}
 
     @staticmethod
@@ -94,10 +119,10 @@ class Multiplier:
         if not todo:
             return
         if self.M == 1:
-            fn, args = f_M1, todo
+            fn, args = f_M1, [(p, self.r1) for p in todo]
         else:
             fn = f_M3
-            args = [(p, self.seed(p)) for p in todo]
+            args = [(p, self.seed(p), self.r1) for p in todo]
         if self.procs > 1:
             if self.pool is None:
                 import multiprocessing as mp_
@@ -108,12 +133,21 @@ class Multiplier:
         with open(self.cache, "a") as fh:
             for p, r in zip(todo, res):
                 k = self.key(p)
-                self.vals[k] = complex(r[0], r[1])
                 rec = dict(A=k[0], wf=k[1], re=r[0], im=r[1], info=r[2])
+                if self.M == 1:
+                    rec.update(r1=self.r1, ymax=r[3])
                 if self.M == 3:
                     rec.update(F3re=r[3], F3im=r[4])
-                self.extra[k] = rec
+                self.store(k, rec)
                 fh.write(json.dumps(rec) + "\n")
+
+    def store(self, k, r):
+        """a point's value, or none (NaN) when its M = 1 path came near a singularity (max |Y| > ymax)"""
+        v = complex(r["re"], r["im"])
+        if self.M == 1 and not r.get("ymax", 0.0) <= self.ymax:
+            v = complex(float("nan"), float("nan"))
+        self.vals[k] = v
+        self.extra[k] = r
 
     def seed(self, p):
         """M = 3: F_3 from the nearest computed point (its tuned F_3), else the known zero's ratio"""
@@ -322,6 +356,8 @@ def main():
     ap.add_argument("--out", default=None)
     ap.add_argument("--tag", default=None)
     ap.add_argument("--cache", default=None)
+    ap.add_argument("--r1", type=float, default=0.2, help="comparison radius xi1 of the jump (both M; 0.2 is nested.py's)")
+    ap.add_argument("--ymax", type=float, default=1e2, help="M = 1: no value where max |Y| on the path exceeds this")
     ap.add_argument("--selftest", action="store_true")
     ap.add_argument("--mutate", default=None, choices=["conj", "nosplit"])
     a = ap.parse_args()
@@ -331,8 +367,8 @@ def main():
     plant = tuple(float(v) for v in a.plant.split(",")) if a.plant else None
     os.makedirs(a.out, exist_ok=True)
     tag = a.tag or f"M{a.M}_A{a.A}_wf{a.wf}" + (f"_plant{a.plant}" if plant else "")
-    cache = a.cache or os.path.join(a.out, f"points_M{a.M}.jsonl")
-    F = Multiplier(a.M, cache, a.procs, plant)
+    cache = a.cache or os.path.join(a.out, f"points_M{a.M}_r{a.r1}.jsonl")
+    F = Multiplier(a.M, cache, a.procs, plant, r1=a.r1, ymax=a.ymax)
     if a.M == 3:
         # seed the continuation at the known M = 3 zero's tuned F_3
         F.extra[(-1.0, -1.0)] = dict(F3re=float(((2.7264758856 / 2j) * (0.0532 + 0.0041j)).real),
@@ -341,7 +377,7 @@ def main():
     res = count(F, box, a.nA, a.nwf, dphi=a.dphi)
     F.close()
     res["sec"] = time.time() - t0
-    res.update(M=a.M, box=box, plant=plant, dphi=a.dphi, nA=a.nA, nwf=a.nwf)
+    res.update(M=a.M, box=box, plant=plant, dphi=a.dphi, nA=a.nA, nwf=a.nwf, r1=a.r1, ymax=a.ymax)
     leaves = res.pop("leaves")
     with open(os.path.join(a.out, f"count_{tag}.json"), "w") as fh:
         json.dump(res, fh, indent=1)
