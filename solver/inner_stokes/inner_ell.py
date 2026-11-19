@@ -144,7 +144,8 @@ _FL = {}
 
 def ratio1(A, wf, ell, r1, ell_grav=None):
     """R = J_1 / (2 pi i K'(i w + l) f_lin(r1) 2 F_1), the jump over the flat jump: smooth in (A, w), R -> 1 as A -> 0,
-    and R = 0 is the selection (no trivial root at A = 0)"""
+    and R = 0 is the selection (no trivial root at A = 0). With the gravity weight l = 0 it is also divided by the
+    dressing r1^(A^2), which would otherwise make |R| underflow at large A."""
     w = I.W0 * wf
     key = (round(wf, 14), ell, r1)
     if key not in _FL:
@@ -152,7 +153,10 @@ def ratio1(A, wf, ell, r1, ell_grav=None):
     m = InnerEll(1, w, {1: A / 2j, -1: -A / 2j}, ell=ell, ell_grav=ell_grav)
     J, info = m.jumps((r1,), rtol=RTOL)
     ratio1.info = info                         # (r0, series terms, smallest/first term)
-    return J[r1][1 + m.L] / (_FL[key] * 2 * (A / 2j))
+    R = J[r1][1 + m.L] / (_FL[key] * 2 * (A / 2j))
+    if (ell if ell_grav is None else ell_grav) == 0:
+        R = R / r1 ** (A * A)                  # l = 0's dressing r1^(2<F^2>), <F^2> = A^2/2 (inner_np.residual)
+    return R
 
 
 def tau(wf, ell, r1):
