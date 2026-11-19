@@ -436,8 +436,182 @@ def check_residual():
     return ok0 and ok01 and okR and okK1
 
 
+# ------------------------------------------------------------------------- stage C: constants over the sector
+KAPPA, ZMAX, GAM = mpf("0.3"), mpf("0.0085"), mpf("0.3")
+ALPHA_Z = mp.pi / 2 + KAPPA
+# lemma S's eta at |z| = Z (B5_inner.md 5.1, quoted to 2 digits there): inflated by 10 % here; |z|^12 (p, v), ^13 (c)
+ETA = dict(p=mpf("3.0e-8"), v=mpf("6.1e-7"), c=mpf("7.2e-11"))
+
+
+def cells(nr=8, na=24, r0frac=mpf("0.12")):
+    """a disc cell |t| <= r0 and polar cells covering Sigma_Z; each as (complex box, |t| upper, |t| lower)"""
+    from mpmath import iv
+    out = []
+    r0 = ZMAX * r0frac
+    out.append((iv.mpc(iv.mpf([-r0, r0]), iv.mpf([-r0, r0])), r0 * mp.sqrt(2), mpf(0)))
+    for i in range(nr):
+        ra, rb = r0 + (ZMAX - r0) * i / nr, r0 + (ZMAX - r0) * (i + 1) / nr
+        for k in range(na):
+            fa, fb = ALPHA_Z * k / na, ALPHA_Z * (k + 1) / na
+            R, F = iv.mpf([ra, rb]), iv.mpf([fa, fb])
+            out.append((iv.mpc(R * iv.cos(F), R * iv.sin(F)), rb, ra))
+    return out
+
+
+def horner(s, tt):
+    """value of a z-series (a = 0 part) at the interval point tt"""
+    from mpmath import iv
+    js = sorted(j for (a, j) in s.c if a == 0)
+    if not js:
+        return iv.mpc(0)
+    out = iv.mpc(0)
+    for j in range(js[-1], -1, -1):
+        out = out * tt + s.c.get((0, j), iv.mpc(0))
+    return out
+
+
+class InnerState:
+    """the inner series (B5 variables) and its exact divisions, evaluated on a cell with lemma S's eta"""
+    def __init__(self, H, A, wf, J=30):
+        self.H = H
+        P, Phi, C, Theta, Q = inner_b5(H, A, wf, J)
+        self.P, self.Phi, self.C, self.Q = P, Phi, C, Q
+        self.Phit = {m: H.div_z(Phi[m]) for m in ODD}                       # Phi/t
+        self.Ct = {k: H.div_z(C[k] - (1 if k == 0 else 0)) for k in EVEN}  # (C - 1)/t
+        self.w = wf * H.WINF
+        from mpmath import iv
+        self.D = {m: 1 + iv.mpc(0, m) * self.w for m in ODD}
+
+    def at(self, tt, tmax):
+        """interval enclosures on the cell: P, Phi/t, C, (C - 1)/t, Q (eta included); bound arithmetic in iv"""
+        from mpmath import iv
+        q = iv.mpf(tmax) / iv.mpf(ZMAX)
+        ep_, ev, ec = iv.mpf(ETA["p"]) * q ** 12, iv.mpf(ETA["v"]) * q ** 12, iv.mpf(ETA["c"]) * q ** 13
+        disc = lambda r: iv.mpc(iv.mpf([-r.b, r.b]), iv.mpf([-r.b, r.b]))
+        P = {m: horner(self.P[m], tt) + disc(ep_) for m in ODD}
+        C = {k: horner(self.C[k], tt) + disc(ec) for k in EVEN}
+        Ct = {k: horner(self.Ct[k], tt) for k in EVEN}
+        if tmax > 0:
+            # eta_c/|t| carries (|t|/Z)^13/|t|, increasing in |t|: bounded by its value at tmax
+            Ct = {k: v + disc(ec / iv.mpf(tmax)) for k, v in Ct.items()}
+        Dm = max((abs(self.D[m]) for m in ODD), key=lambda v: v.b)
+        eQ = ev + Dm * ep_                                    # Q = v + D P
+        Q = {m: horner(self.Q[m], tt) + disc(eQ) for m in ODD}
+        Cn = sum((abs(v) for v in C.values()), iv.mpf(0))
+        Qn = max((abs(v) for v in Q.values()), key=lambda v: v.b)
+        ePhi = Cn * eQ + 3 * ec * (Qn + eQ) + Dm * ep_        # Phi = C Q - D P
+        Phit = {m: horner(self.Phit[m], tt) for m in ODD}
+        if tmax > 0:
+            # eta_Phi/|t| carries (|t|/Z)^12/|t|, increasing in |t|: bounded by its value at tmax
+            Phit = {m: v + disc(ePhi / iv.mpf(tmax)) for m, v in Phit.items()}
+        return P, Phit, C, Ct, Q
+
+
+def tG0_dir(st, D, tt, dP, dPhi, dC):
+    """the directional derivative of t G0 (Lemma 2) at the state st = (P, Phi/t, C, (C-1)/t), direction
+    (dP, dPhi, dC) in the original variables; no negative power of t (C - 1 = t Ct, Phi = t Phit)"""
+    from mpmath import iv
+    P, Phit, C, Ct, _ = st
+    zero = iv.mpc(0)
+    padd = lambda *fs: {k: sum((f[k] for f in fs), zero) for k in fs[0]}
+    psc = lambda f, s: {k: v * s for k, v in f.items()}
+    ppr = lambda f, g, out: {k: sum((f[i] * g[j] for i in f for j in g if i + j == k), zero) for k in out}
+    opv = lambda c, f: ppr(c, f, ODD)
+    half = iv.mpf(1) / 2
+    Phi = psc(Phit, tt)
+    E0 = psc(ppr(P, P, EVEN), half)
+    CE0 = ppr(C, E0, EVEN)
+    Dv = lambda f: {m: f[m] * D[m] for m in ODD}
+    D2v = lambda f: {m: f[m] * (D[m] + 1) for m in ODD}
+    # Q0 = C^-1 (Phi + D P)
+    a, b, c, d = C[0], C[2], C[-2], C[0]           # [C f]_1 = C0 f1 + C2 f-1, [C f]_-1 = C-2 f1 + C0 f-1
+    det = a * d - b * c
+    Cinv = lambda f: {1: (d * f[1] - b * f[-1]) / det, -1: (-c * f[1] + a * f[-1]) / det}
+    Q0 = Cinv(padd(Phi, Dv(P)))
+    dQ0 = Cinv(padd(dPhi, Dv(dP), psc(opv(dC, Q0), -1)))
+    dE0 = ppr(P, dP, EVEN)
+    dCE0 = padd(ppr(dC, E0, EVEN), ppr(C, dE0, EVEN))
+    Cp1 = {k: C[k] + (1 if k == 0 else 0) for k in EVEN}          # C + I
+    # d A1 = (dC C + C dC) Phit/2 + Ct (C + I) dPhi/2
+    dA1 = padd(psc(padd(opv(dC, opv(C, Phit)), opv(C, opv(dC, Phit))), half), psc(opv(Ct, opv(Cp1, dPhi)), half))
+    # A2 = C (B0 P - D2 Q0)/2
+    inner = padd(opv(CE0, P), psc(D2v(Q0), -1))
+    dinner = padd(opv(dCE0, P), opv(CE0, dP), psc(D2v(dQ0), -1))
+    dA2 = psc(padd(opv(dC, inner), opv(C, dinner)), half)
+    # A3 = t [C0' Q0], C0' = [C E0]/2
+    dA3 = psc(padd(ppr(psc(dCE0, half), Q0, ODD), ppr(psc(CE0, half), dQ0, ODD)), tt)
+    dA4 = psc(Dv(dPhi), -half)
+    return padd(dA1, dA2, dA3, dA4)
+
+
+def comp_index():
+    return [("P", m) for m in ODD] + [("Phi", m) for m in ODD] + [("C", k) for k in EVEN] + [("th", k) for k in EVEN]
+
+
+def sector_constants(H, A, wf, nr=8, na=24):
+    """gamma blocks (Phi rows from t G0, C rows from [C(E0 + theta)]/2), R_C, T_F on the cells (sup over the sector)"""
+    from mpmath import iv
+    S = InnerState(H, A, wf)
+    zero = iv.mpc(0)
+    gam = {}
+    RC, TF = mpf(0), mpf(0)
+    for tt, tmax, tmin in cells(nr, na):
+        st = S.at(tt, tmax)
+        P, Phit, C, Ct, Q = st
+        for (blk, idx) in comp_index():
+            if blk == "th":
+                continue
+            dP = {m: (iv.mpc(1) if (blk == "P" and m == idx) else zero) for m in ODD}
+            dPhi = {m: (iv.mpc(1) if (blk == "Phi" and m == idx) else zero) for m in ODD}
+            dC = {k: (iv.mpc(1) if (blk == "C" and k == idx) else zero) for k in EVEN}
+            dg = tG0_dir(st, S.D, tt, dP, dPhi, dC)
+            for m in ODD:
+                key = (("Phi", m), (blk, idx))
+                gam[key] = max(gam.get(key, mpf(0)), mpf(abs(dg[m]).b))
+        # C rows: d/dY of [C (E0 + theta)]/2 at theta = 0: [dC E0]/2 + [C [P dP]]/2 + [C dtheta]/2
+        E0 = {k: sum((P[i] * P[j] for i in ODD for j in ODD if i + j == k), zero) / 2 for k in EVEN}
+        for (blk, idx) in comp_index():
+            if blk == "Phi":
+                continue
+            for nu in EVEN:
+                v = zero
+                if blk == "C":
+                    v = E0.get(nu - idx, zero) / 2 if (nu - idx) in E0 else zero
+                elif blk == "P":
+                    dE = {k: sum((P[i] * (1 if j == idx else 0) for i in ODD for j in ODD if i + j == k), zero)
+                          for k in EVEN}
+                    v = sum((C[a] * dE[b] for a in EVEN for b in EVEN if a + b == nu), zero) / 2
+                elif blk == "th":
+                    v = C[nu - idx] / 2 if (nu - idx) in C else zero
+                key = (("C", nu), (blk, idx))
+                gam[key] = max(gam.get(key, mpf(0)), mpf(abs(v).b))
+        CE0 = {k: sum((C[a] * E0[b] for a in EVEN for b in EVEN if a + b == k), zero) for k in EVEN}
+        RC = max(RC, max(mpf(abs(v).b) for v in CE0.values()) / 2)
+        # t Xi(Y_in) at eps -> 0, theta = 0: (-E0 + t [QQ]/2 - [P Phi])/2  (the eps part is O(eps), bounded below)
+        QQ = {k: sum((Q[i] * Q[j] for i in ODD for j in ODD if i + j == k), zero) for k in EVEN}
+        PPhi = {k: sum((P[i] * Phit[j] * tt for i in ODD for j in ODD if i + j == k), zero) for k in EVEN}
+        tXi = {k: (-E0[k] + tt * QQ[k] / 2 - PPhi[k]) / 2 for k in EVEN}
+        TF = max(TF, max(mpf(abs(v).b) for v in tXi.values()))
+    return gam, RC, TF, S
+
+
+def check_sector():
+    H = series_tools()
+    A, wf = H.params(True)
+    t0 = __import__("time").time()
+    gam, RC, TF, S = sector_constants(H, A, wf, nr=int(OPTS.get("nr", 8)), na=int(OPTS.get("na", 24)))
+    big = sorted(((v, k) for k, v in gam.items()), reverse=True)[:8]
+    print(f"--sector at the box centre ({len(cells(int(OPTS.get('nr', 8)), int(OPTS.get('na', 24))))} cells, "
+          f"{__import__('time').time() - t0:.0f} s): largest gamma entries "
+          + "; ".join(f"{k[0][0]}{k[0][1]:+d} <- {k[1][0]}{k[1][1]:+d} {mp.nstr(v, 5)}" for v, k in big))
+    print(f"  R_C = {mp.nstr(RC, 6)} (B5_inner.md 5.2: 3.43), T_F (eps -> 0 part) = {mp.nstr(TF, 6)} (4.15)")
+    return True
+
+
 if __name__ == "__main__":
     ok = True
+    if "sector" in OPTS:
+        ok &= check_sector()
     if "residual" in OPTS:
         ok &= check_residual()
     if "model" in OPTS:
