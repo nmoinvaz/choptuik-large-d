@@ -25,7 +25,8 @@ Threads do not help: python-flint keeps the GIL during a product (two threads ta
 started with 'spawn', so this runs the same way on Windows; keep calls under an  if __name__ == "__main__":  guard.
 
     python3 amp_flint_par.py wf K J [prec_bits] [--procs N] [--fit phys [--mf LO:HI] [--fit-step S] [--phys-prec B]]
-                             [--trunc M [--trunc-even E] [--trunc-fams present|all]] [--fit-logs N [--fit-logs-from K0]]
+                             [--trunc M [--trunc-even E] [--trunc-fams present|all]]
+                             [--fit-logs N [--fit-logs-from K0] [--fit-log-lambda L]]
                              [--out FILE]
         writes sigF_w<wf>_K<K>_J<J>.json (or FILE), same keys as amp_flint.py (plus 'procs', 'seconds', 'timing',
         'order_times', 'sigma_rad'; with --fit phys also 'sigma_err', 'fit_info', 'mf', 'fit_step', 'phys_prec')
@@ -59,6 +60,7 @@ For K >= 13 use --fit phys with prec 640 (see the docstring of fit_phys); the le
    sequence is c ln j + S + O(1/j) (at M = 3, k = 9: c = 2.4005e-4 - 9.551e-5 i, the same at J 1000 and 1500); without
    the log column the fitted S drifts like c ln J, the ln J drift #996 saw with the legacy fit. S is then the constant
    next to c ln j (that convention fixes it), and c goes to 'fit_logc'. N = 0 is the basis of item 4, unchanged.
+   --fit-log-lambda L uses ln^L(j / L) instead, so S becomes the sequence's log polynomial at ln j = ln L.
 """
 import sys
 import os
@@ -147,6 +149,8 @@ def fit_phys(wmid, nu, k, jlo, J, M, mf_lo, mf_hi, step, fit_prec, logs, ys):
     is returned as (S, c) with c the coefficient of ln j. logs = 0 is the basis above, unchanged."""
     p0 = ctx.prec
     ctx.prec = fit_prec
+    logs, loglam = (logs if isinstance(logs, tuple) else (logs, 1.0))
+    loglam = arb(loglam).log() if logs else None
     try:
         w = _de_rows(wmid)[0][0] if isinstance(wmid, tuple) else acb(wmid)
         g0 = acb(0, nu) * w + acb(1) / 2
@@ -161,7 +165,7 @@ def fit_phys(wmid, nu, k, jlo, J, M, mf_lo, mf_hi, step, fit_prec, logs, ys):
                 main.append(t)
             lmain = []
             if logs:
-                lj = arb(j).log()
+                lj = arb(j).log() - loglam                       # ln(j / lambda), --fit-log-lambda
                 for L in range(1, logs + 1):
                     lp = lj ** L
                     lmain.extend(x * lp for x in main)
@@ -200,8 +204,9 @@ def fit_phys(wmid, nu, k, jlo, J, M, mf_lo, mf_hi, step, fit_prec, logs, ys):
             r2 = (ny2 - cb.real).mid()
             rel = float((abs(r2) / ny2).sqrt().mid()) if ny2 != 0 else float("nan")
             S = (c[0, 0] / sc[0]).mid()
-            if logs:
-                S = (S, (c[M + 1, 0] / sc[M + 1]).mid())
+            if logs:                                     # (S, c_1, ..., c_N): the coefficients of ln^L(j / lambda)
+                S = (S,) + tuple((c[M + 1 + (L - 1) * (M + 1), 0] / sc[M + 1 + (L - 1) * (M + 1)]).mid()
+                                 for L in range(1, logs + 1))
             out.append((Mf, S, rel))
         return out
     finally:
@@ -285,6 +290,7 @@ class AmpPar(Amp):
         self.fit_logs = int(kw.pop("fit_logs", 0))
         flf = kw.pop("fit_logs_from", None)
         self.fit_logs_from = flf if flf is not None else (2 * self.trunc + 3 if self.trunc is not None else 0)
+        self.fit_log_lambda = float(kw.pop("fit_log_lambda", 1.0))   # log columns ln^L(j / lambda)
         self.fit_logc = {}                       # "k_nu" -> coefficient of ln j at the chosen Mf
         super().__init__(wf, K, J, prec=prec, **kw)
         self.params = dict(wf=wf, K=K, J=J, prec=prec, fit_prec=fit_prec, **kw)
@@ -550,7 +556,7 @@ class AmpPar(Amp):
             tab = self.fit_data(nu)[3]
             ys = self._ys(nu, k, tab, self.fit_step)
             kfam = k if (self.trunc is None or self.trunc_fams == "all") else min(k, self.trunc)
-            logs = self.fit_logs if (self.fit_logs and k >= self.fit_logs_from) else 0
+            logs = (self.fit_logs, self.fit_log_lambda) if (self.fit_logs and k >= self.fit_logs_from) else 0
             args[nu] = (_ser_rows([[self.w.mid()]]), nu, kfam, self.jlo, self.J, self.M, self.mf[0], self.mf[1],
                         self.fit_step, self.phys_prec, logs)
             yb[nu] = ys
@@ -575,8 +581,8 @@ class AmpPar(Amp):
         for nu in nus:
             Mf, S, err, rel = pick_plateau(res[nu])
             if isinstance(S, tuple):
-                S, c = S
-                self.fit_logc[f"{k}_{nu}"] = c
+                S, cs = S[0], S[1:]
+                self.fit_logc[f"{k}_{nu}"] = cs
             self.fit_info[f"{k}_{nu}"] = (Mf, err, rel)
             out[nu] = (S, err)
         return out
@@ -745,6 +751,7 @@ def main(argv):
     trunc_fams = _opt(argv, "--trunc-fams", "present")
     fit_logs = _opt(argv, "--fit-logs", 0, int)
     fit_logs_from = _opt(argv, "--fit-logs-from", None, int)
+    fit_log_lambda = _opt(argv, "--fit-log-lambda", 1.0, float)
     import os
     sys.path.append(os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..", "hp"))
     from raw_out import pop_allow, require_raw
@@ -758,7 +765,7 @@ def main(argv):
     if fit != "legacy":
         kw = dict(fit=fit, mf=tuple(int(x) for x in mf.split(":")), fit_step=fit_step, phys_prec=phys_prec)
         if fit_logs:
-            kw.update(fit_logs=fit_logs, fit_logs_from=fit_logs_from)
+            kw.update(fit_logs=fit_logs, fit_logs_from=fit_logs_from, fit_log_lambda=fit_log_lambda)
     if trunc is not None:
         kw.update(trunc=trunc, trunc_even=trunc_even, trunc_fams=trunc_fams)
     A = AmpPar(wf, K, J, prec=prec, procs=procs, **kw)
@@ -781,8 +788,9 @@ def main(argv):
     if trunc is not None:
         rec.update({"trunc": trunc, "trunc_even": A.trunc_even, "trunc_fams": A.trunc_fams})
     if A.fit_logs:
-        rec.update({"fit_logs": A.fit_logs, "fit_logs_from": A.fit_logs_from,
-                    "fit_logc": {k: [mp.nstr(to_mp(c).real, 20), mp.nstr(to_mp(c).imag, 20)] for k, c in A.fit_logc.items()}})
+        rec.update({"fit_logs": A.fit_logs, "fit_logs_from": A.fit_logs_from, "fit_log_lambda": A.fit_log_lambda,
+                    "fit_logc": {k: [[mp.nstr(to_mp(c).real, 20), mp.nstr(to_mp(c).imag, 20)] for c in cs]
+                                 for k, cs in A.fit_logc.items()}})
     json.dump(rec, open(out or f"sigF_w{wf:.4f}_K{K}_J{J}.json", "w"))
 
 

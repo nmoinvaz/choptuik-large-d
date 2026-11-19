@@ -156,7 +156,8 @@ def Jcheck(d):
 
 
 def logc(rec, key):
-    re, im = rec["fit_logc"][key]
+    v = rec["fit_logc"][key]
+    re, im = v[0] if isinstance(v[0], list) else v               # newer files: a list over the log powers
     return mp.mpc(mp.mpf(re), mp.mpf(im))
 
 
