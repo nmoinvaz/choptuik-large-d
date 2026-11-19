@@ -306,7 +306,10 @@ needs one correction, reported here and not fixed in B_tail.md:
 | `amp_trunc.py`, M = 3 | all ≤ 3 | σ₃ changed by 5.3×10⁻⁴ | σ₄ = −399 (true −0.0289 + 0.0108i) | B_tail.md §4 |
 | `amp_trunc.py`, M = 5 | all ≤ 5 | σ₅ changed by 4.4×10⁻⁴ | σ₆ = −1371 (true −0.00028 − 0.00108i) | B_tail.md §4 |
 
-(`python3 trunc_seq_M7.py --amp`.) Lemma O's prediction holds exactly in both truncations: hier's model first changes at
+(`python3 trunc_seq_M7.py --amp`.) The sizes of these changes depend on the fit's J. At J = 1000 the M = 3 change in
+σ₄ is 4.1×10⁻⁵, 9% above the 3.74×10⁻⁵ here (#996, raw I996-dh170 82241bef). Runs at J = 1500 and at higher mpmath
+digits are under way, since at M = 7 a 60-digit fit is off by 10⁻⁶ while its residual reads 10⁻⁶¹ (#996). Which
+orders change is not affected. Lemma O's prediction holds exactly in both truncations: hier's model first changes at
 σ_{M+1}, `amp_trunc.py`'s at σ_M. And the explosion is a property of dropping the even harmonic M + 1, not of Galerkin
 truncation (the two runs also differ in the late-order fit basis, neighbour shifts up to 2M + 2 here against 2M there;
 `amp_trunc.py`'s basis has every family its own model contains, so this should not matter, but it was not tested
