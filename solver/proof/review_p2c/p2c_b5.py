@@ -498,15 +498,24 @@ class InnerState:
         self.S_low = max(float(abs(S_[m].coef(0, j)).b) for m in ODD for j in (0, 1))
         self.Q0p = {m: H.Ser({(0, j - 2): v / 2 for (a, j), v in S_[m].c.items() if j >= 2}, big) for m in ODD}
 
-    def at(self, tt, tmax):
-        """interval enclosures on the cell: P, Phi/t, C, (C - 1)/t, Q (eta included); bound arithmetic in iv"""
+    def at(self, tt, tmax, ball=True):
+        """interval enclosures on the cell: P, Phi/t, C, (C - 1)/t, Q (eta included); bound arithmetic in iv.
+        ball: also the bootstrap ball around Y_in (B5_inner.md 4), with the a priori radius max x <= 1e12:
+        |W_j| <= 1e12 eps m_j, so P, Phi/t, C, theta move by 1e12 eps0 and (C - 1)/t by 1e12 tau0 (eps/|t| <= tau0)"""
         from mpmath import iv
         q = iv.mpf(tmax) / iv.mpf(ZMAX)
         ep_, ev, ec = iv.mpf(ETA["p"]) * q ** 12, iv.mpf(ETA["v"]) * q ** 12, iv.mpf(ETA["c"]) * q ** 13
+        if ball:
+            L0 = iv.mpf("73.89")
+            bb, bt = iv.mpf("1e12") * iv.exp(-L0), iv.mpf("1e12") * iv.exp(-2 * iv.mpf("0.3") * L0)
+            ep_, ec = ep_ + bb, ec + bb
+            ev = ev + 10 * bb
+        else:
+            bt = iv.mpf(0)
         disc = lambda r: iv.mpc(iv.mpf([-r.b, r.b]), iv.mpf([-r.b, r.b]))
         P = {m: horner(self.P[m], tt) + disc(ep_) for m in ODD}
         C = {k: horner(self.C[k], tt) + disc(ec) for k in EVEN}
-        Ct = {k: horner(self.Ct[k], tt) for k in EVEN}
+        Ct = {k: horner(self.Ct[k], tt) + disc(bt) for k in EVEN}
         if tmax > 0:
             # eta_c/|t| carries (|t|/Z)^13/|t|, increasing in |t|: bounded by its value at tmax
             Ct = {k: v + disc(ec / iv.mpf(tmax)) for k, v in Ct.items()}
@@ -714,12 +723,12 @@ def R_phi(H, S, nr, na, n0=None):
     K = IVK()
     L0 = iv.mpf("73.89")
     eps0 = iv.exp(-L0)
-    tau0 = iv.exp(-(1 - 2 * iv.mpf("0.3")) * L0)
+    tau0 = iv.exp(-2 * iv.mpf("0.3") * L0)
     e = iv.mpf([0, 1]) * eps0
     ez = iv.mpc(iv.mpf([-1, 1]) * tau0, iv.mpf([-1, 1]) * tau0)
     R = mpf(0)
     for tt, tmax, tmin in cells(nr, na):
-        st = S.at(tt, tmax)
+        st = S.at(tt, tmax, ball=False)
         v = lemma3_value(K, st, S.last_Q0p, S.D, tt, e, ez)
         R = max(R, mpf(K.mag(v).b.a))
     return R
@@ -749,13 +758,169 @@ def check_lemma3_formula(H, S):
     return worst
 
 
+def g_scaled(K, P, Phit, C, th, D, tt, e, tau):
+    """g = t f^eps_Phi (section 1.3) in the scaled state (P, Phi/t, C, theta), with eps = e and eps/t = tau;
+    no negative power of t"""
+    iv = K.iv
+    half = iv.mpf(1) / 2
+    one_e = 1 - e
+    ep = e * one_e
+    Dm, D2m = K.diag(D), K.diag({m: D[m] + 1 for m in ODD})
+    PP = K.pr(P, P, EVEN)
+    Theta = K.add(th, K.sc(PP, half))
+    Cm = K.op(C)
+    CT = K.pr(C, Theta, EVEN)
+    Bm = K.op(CT)
+    CC = K.mm(Cm, Cm)
+    Mm = K.madd(K.eye(), K.msc(CC, -tau))
+    Emat = K.madd(K.mm(Cm, K.madd(K.eye(), K.msc(Dm, -e))), K.msc(Bm, ep * tt))
+    Q = K.ap(K.inv(Emat), K.add(K.sc(K.ap(Mm, Phit), tt), K.ap(Dm, P), K.sc(K.ap(Cm, K.ap(Bm, P)), -ep)))
+    QQ = K.pr(Q, Q, EVEN)
+    Ee = K.sc(K.add(PP, K.sc(QQ, e * tt)), half)
+    h = K.add(Ee, K.sc(Theta, -(1 + e)), K.sc(K.add(K.pr(Theta, Ee, EVEN), K.sc(K.pr(Theta, Theta, EVEN), -one_e)), e * tt))
+    Cz = K.sc(CT, one_e * half)
+    Czm = K.op(Cz)
+    tepBz = K.msc(K.op(K.add(K.sc(K.pr(Cz, Theta, EVEN), e * tt), K.sc(K.pr(C, h, EVEN), half))), one_e)   # t eps' B_z
+    A2t = K.add(K.sc(K.ap(D2m, Q), -1), K.sc(K.ap(Bm, P), one_e))                                          # A2/t
+    tMzPhi = K.add(K.sc(K.ap(CC, Phit), tau * tt), K.sc(K.ap(K.madd(K.mm(Czm, Cm), K.mm(Cm, Czm)), Phit), -tau * tt * tt))
+    tEzQ = K.add(K.sc(K.ap(K.mm(Czm, K.madd(K.eye(), K.msc(Dm, -e))), Q), tt), K.sc(K.ap(Bm, Q), ep * tt),
+                 K.sc(K.ap(tepBz, Q), tt))
+    br = K.add(K.sc(K.ap(Emat, K.add(K.ap(Cm, Phit), A2t)), half), K.sc(tMzPhi, -1), tEzQ,
+               K.sc(K.ap(K.madd(Dm, K.msc(K.mm(Cm, Bm), -ep)), Phit), -half * tt),
+               K.sc(K.ap(Czm, K.ap(Bm, P)), ep * tt), K.ap(Cm, K.ap(tepBz, P)))
+    return K.ap(K.inv(Mm), br)
+
+
+def tXi(K, P, Phit, C, th, D, tt, e, tau):
+    """t Xi: t times the theta-rate of section 1.3 minus its principal term -(1 + eps) theta/(2 eps t)"""
+    iv = K.iv
+    half = iv.mpf(1) / 2
+    PP = K.pr(P, P, EVEN)
+    E0 = K.sc(PP, half)
+    Theta = K.add(th, E0)
+    one_e = 1 - e
+    ep = e * one_e
+    Cm = K.op(C)
+    Bm = K.op(K.pr(C, Theta, EVEN))
+    CC = K.mm(Cm, Cm)
+    Dm = K.diag(D)
+    Mm = K.madd(K.eye(), K.msc(CC, -tau))
+    Emat = K.madd(K.mm(Cm, K.madd(K.eye(), K.msc(Dm, -e))), K.msc(Bm, ep * tt))
+    Q = K.ap(K.inv(Emat), K.add(K.sc(K.ap(Mm, Phit), tt), K.ap(Dm, P), K.sc(K.ap(Cm, K.ap(Bm, P)), -ep)))
+    QQ = K.pr(Q, Q, EVEN)
+    PPhi = K.sc(K.pr(P, Phit, EVEN), tt)
+    return K.add(K.sc(K.add(K.sc(E0, -1), K.sc(QQ, tt * half), K.sc(PPhi, -1)), half),
+                 K.sc(K.add(K.pr(E0, th, EVEN), K.pr(th, th, EVEN)), -tt * half),
+                 K.sc(K.add(K.pr(Theta, Theta, EVEN), K.sc(K.pr(Theta, QQ, EVEN), tt * half)), e * tt * half))
+
+
+def eps_parts(S, nr, na, tau1="1e-2", rho="1e-3"):
+    """ell_j <= 4 G tau0/(tau1 rho) (Schwarz in tau, Cauchy in the scaled state), G = sup |g| over the cells,
+    |tau| <= tau1 and the scaled-state polydisc of radius rho; Lambda_theta <= sup |t Xi|/rho on the same polydisc;
+    T_F = sup |t Xi(Y_in)| with eps <= eps0"""
+    from mpmath import iv
+    K = IVK()
+    L0 = iv.mpf("73.89")
+    eps0, tau0 = iv.exp(-L0), iv.exp(-2 * iv.mpf("0.3") * L0)
+    t1, rh = iv.mpf(tau1), iv.mpf(rho)
+    dsk = lambda r: iv.mpc(iv.mpf([-1, 1]) * r, iv.mpf([-1, 1]) * r)
+    e_all = iv.mpf([0, 1]) * eps0
+    G, Gx, TF = mpf(0), mpf(0), mpf(0)
+    for tt, tmax, tmin in cells(nr, na):
+        P, Phit, C, Ct, Q = S.at(tt, tmax)
+        th0 = {k: iv.mpc(0) for k in EVEN}
+        # the polydisc: every scaled component +- rho; tau in the disc of radius tau1, eps = tau t
+        Pp = {m: v + dsk(rh) for m, v in P.items()}
+        Ftp = {m: v + dsk(rh) for m, v in Phit.items()}
+        Cp = {k: v + dsk(rh) for k, v in C.items()}
+        thp = {k: dsk(rh) for k in EVEN}
+        tau = dsk(t1)
+        g = g_scaled(K, Pp, Ftp, Cp, thp, S.D, tt, tau * tt, tau)
+        G = max(G, mpf(K.mag(g).b.a))
+        xi = tXi(K, Pp, Ftp, Cp, thp, S.D, tt, e_all, dsk(tau0))
+        Gx = max(Gx, mpf(K.mag(xi).b.a))
+        xi0 = tXi(K, P, Phit, C, th0, S.D, tt, e_all, dsk(tau0))
+        TF = max(TF, mpf(K.mag(xi0).b.a))
+    ell = (4 * iv.mpf(G) * tau0 / (t1 * rh)).b
+    lam_th = (iv.mpf(Gx) / rh).b
+    return mpf(ell.a), mpf(lam_th.a), TF, G
+
+
+def assemble(gam, RC, TF, RP, ell, lam_th):
+    """L and the forcing F per B5_inner.md 4's table (unweighted entries over P, Phi, C, theta components)"""
+    from mpmath import iv
+    comps = comp_index()
+    Zi = iv.mpf("0.0085")
+    kap = iv.mpf("0.3")
+    a = iv.sin(kap) / 2
+    f1 = 1 / (a - iv.sin(kap) * Zi)
+    f2 = 1 / (a - 2 * iv.sin(kap) * Zi)
+    eps0 = iv.exp(-iv.mpf("73.89"))
+    L = {r: {c: iv.mpf(0) for c in comps} for r in comps}
+    for r in comps:
+        for c in comps:
+            g = iv.mpf(gam.get((r, c), mpf(0)))
+            if r[0] == "P" and c == ("Phi", r[1]):
+                L[r][c] = Zi / 2
+            elif r[0] == "Phi" and c[0] in ("P", "C"):
+                L[r][c] = (g + iv.mpf(ell)) * f1
+            elif r[0] == "Phi" and c[0] == "Phi":
+                L[r][c] = g * Zi * f2 + iv.mpf(ell) * f1
+            elif r[0] == "Phi" and c[0] == "th":
+                L[r][c] = iv.mpf(ell) * f1
+            elif r[0] == "C" and c[0] in ("P", "C", "th"):
+                L[r][c] = g * Zi + eps0 * (g + 1) * Zi
+            elif r[0] == "th":
+                L[r][c] = 2 * eps0 * iv.mpf(lam_th)
+    F = {}
+    for r in comps:
+        F[r] = {"P": iv.mpf(0), "Phi": iv.mpf(RP) * f1, "C": iv.mpf(RC) * Zi, "th": 2 * iv.mpf(TF)}[r[0]]
+    return comps, L, F, (f1, f2)
+
+
+def supersolution(comps, L, b, margin="1e-8"):
+    """x with b + L x < x: x = (I - L)^-1 (b + m 1) with m = margin max b, solved in mp on L's upper ends, so that
+    every row keeps the slack m (rows without data included); then checked in iv"""
+    from mpmath import iv, matrix, lu_solve
+    n = len(comps)
+    A = matrix(n, n)
+    rhs = matrix(n, 1)
+    for i, r in enumerate(comps):
+        for j, c in enumerate(comps):
+            A[i, j] = (1 if i == j else 0) - mpf(L[r][c].b.a)
+        rhs[i] = mpf(iv.mpf(b[r]).b.a)
+    m = mpf(margin) * max(rhs[i] for i in range(n))
+    for i in range(n):
+        rhs[i] += m
+    x0 = lu_solve(A, rhs)
+    x = {c: iv.mpf(x0[j]) for j, c in enumerate(comps)}
+    ok = all(x0[j] > 0 for j in range(n))
+    for r in comps:
+        lhs = iv.mpf(b[r]) + sum((L[r][c] * x[c] for c in comps), iv.mpf(0))
+        ok &= bool(lhs.b < x[r].a)
+    return x, ok
+
+
+def perron_norm(comps, L):
+    """the Perron-weighted norm max_i (L v)_i / v_i for v the (approximate) Perron vector of L's upper ends"""
+    from mpmath import iv
+    v = {c: mpf(1) for c in comps}
+    for _ in range(400):
+        nv = {r: sum((mpf(L[r][c].b.a) * v[c] for c in comps), mpf(0)) + mpf(10) ** -40 for r in comps}
+        m = max(nv.values())
+        v = {c: nv[c] / m for c in comps}
+    vals = [(sum((L[r][c] * iv.mpf(v[c]) for c in comps), iv.mpf(0)) / iv.mpf(v[r])).b for r in comps]
+    return mpf(max(vals, key=lambda q: q).a)
+
+
 def check_sector():
     H = series_tools()
-    A, wf = H.params(True)
+    A, wf = H.params("box" not in OPTS)       # --box: B8's box +- 2e-6 (1 + i), which contains B5's (+- 2e-6, +- 1e-6 i)
     t0 = __import__("time").time()
     gam, RC, TF, S = sector_constants(H, A, wf, nr=int(OPTS.get("nr", 8)), na=int(OPTS.get("na", 24)))
     big = sorted(((v, k) for k, v in gam.items()), reverse=True)[:8]
-    print(f"--sector at the box centre ({len(cells(int(OPTS.get('nr', 8)), int(OPTS.get('na', 24))))} cells, "
+    print(f"--sector {'over the box' if 'box' in OPTS else 'at the box centre'} "
+          f"({len(cells(int(OPTS.get('nr', 8)), int(OPTS.get('na', 24))))} cells, "
           f"{__import__('time').time() - t0:.0f} s): largest gamma entries "
           + "; ".join(f"{k[0][0]}{k[0][1]:+d} <- {k[1][0]}{k[1][1]:+d} {mp.nstr(v, 5)}" for v, k in big))
     print(f"  R_C = {mp.nstr(RC, 6)} (B5_inner.md 5.2: 3.43), T_F (eps -> 0 part) = {mp.nstr(TF, 6)} (4.15)")
@@ -763,9 +928,59 @@ def check_sector():
     w3 = check_lemma3_formula(H, S)
     print(f"  Lemma 3's formula at eps = 0 against this review's eps-series, 3 interior points: largest relative "
           f"difference {mp.nstr(w3, 3)}: {'PASS' if w3 < mpf(10) ** -15 else 'FAIL'}")
-    Rp = R_phi(H, S, int(OPTS.get("nr", 8)), int(OPTS.get("na", 24)))
+    nr, na = int(OPTS.get("nr", 8)), int(OPTS.get("na", 24))
+    Rp = R_phi(H, S, nr, na)
     print(f"  R_Phi (Lemma 3's formula on the cells, eta included, eps <= eps0) = {mp.nstr(Rp, 6)} (B5: 91.5)")
-    return w3 < mpf(10) ** -15
+    ell, lam_th, TFe, G = eps_parts(S, nr, na)
+    print(f"  eps-parts ell_j <= {mp.nstr(ell, 3)} (G <= {mp.nstr(G, 4)}); Lambda_theta <= {mp.nstr(lam_th, 4)}; "
+          f"T_F with eps <= eps0 = {mp.nstr(TFe, 6)}")
+    comps, L, F, (f1, f2) = assemble(gam, RC, max(TF, TFe), Rp, ell, lam_th)
+    if MUT in ("jacC", "jacC2", "jacP2"):
+        # K3: the Phi <- C block x 1.5 (the protocol's); supplements: Phi <- C x 2, and Phi <- P x 2 (B5_inner.md 6's own)
+        fac, blk = {"jacC": ("1.5", "C"), "jacC2": ("2", "C"), "jacP2": ("2", "P")}[MUT]
+        for r in comps:
+            for c in comps:
+                if r[0] == "Phi" and c[0] == blk:
+                    L[r][c] = L[r][c] * __import__("mpmath").iv.mpf(fac)
+    lam = perron_norm(comps, L)
+    big = sorted(((mpf(L[r][c].b.a), r, c) for r in comps for c in comps), reverse=True)[:4]
+    print(f"  L: f1 = {mp.nstr(mpf(f1.b.a), 6)}, largest entries " + "; ".join(
+        f"{r[0]}{r[1]:+d} <- {c[0]}{c[1]:+d} {mp.nstr(v, 5)}" for v, r, c in big)
+          + f"; Perron-weighted norm {mp.nstr(lam, 5)} (B5: 0.9663)" + (f" [mutate {MUT}]" if MUT else ""))
+    from mpmath import iv
+    unit = lambda blk: {c: (iv.mpf(1) if c[0] == blk else iv.mpf(0)) for c in comps}
+    delta_ref = dict(P="1", Phi="200", C="10", th="20")
+    delta_h8 = dict(P="8.3e-5", Phi="79.04", C="3.232", th="6.464")
+    cases = [("forcing only", F), ("unit P", unit("P")), ("unit Phi", unit("Phi")), ("unit C", unit("C")),
+             ("unit theta", unit("th")),
+             ("delta_ref", {c: F[c] + iv.mpf(delta_ref[c[0]]) for c in comps}),
+             ("(H8) rounded up", {c: F[c] + iv.mpf(delta_h8[c[0]]) for c in comps})]
+    allok = True
+    res = {}
+    for name, b in cases:
+        x, ok = supersolution(comps, L, b)
+        res[name] = (x, ok)
+        allok &= ok
+        mx = {blk: max(mpf(x[c].b.a) for c in comps if c[0] == blk) for blk in ("P", "Phi", "C", "th")}
+        print(f"  super-solution, {name}: certified {ok}; x (max over harmonics) P {mp.nstr(mx['P'], 5)}, "
+              f"Phi {mp.nstr(mx['Phi'], 5)}, C {mp.nstr(mx['C'], 5)}, theta {mp.nstr(mx['th'], 5)}")
+    xh = res["(H8) rounded up"][0]
+    print(f"  x_Phi for (H8) rounded up: (mu = -1, +1) = ({mp.nstr(mpf(xh[('Phi', -1)].b.a), 7)}, "
+          f"{mp.nstr(mpf(xh[('Phi', 1)].b.a), 7)}) (b5_jump with the same delta: 39789.7, 38781.0)")
+    okP2 = allok and lam < 1 and max(mpf(x[c].b.a) for x, _ in res.values() for c in comps) <= mpf(10) ** 12
+    print(f"(P2) every super-solution certified, Perron norm < 1, max x <= 1e12: {'PASS' if okP2 else 'FAIL'}")
+    if "out" in OPTS:
+        import json
+        os.makedirs(OPTS["out"], exist_ok=True)
+        tag = ("box" if "box" in OPTS else "centre") + f"_nr{nr}_na{na}" + (f"_mut_{MUT}" if MUT else "")
+        rec = dict(mutate=MUT, box="box" in OPTS, nr=nr, na=na, cells=len(cells(nr, na)), R_Phi=str(Rp), R_C=str(RC),
+                   T_F=str(max(TF, TFe)), ell=str(ell), Lambda_theta=str(lam_th), perron=str(lam), P2=bool(okP2),
+                   L={f"{r[0]}{r[1]:+d}<-{c[0]}{c[1]:+d}": str(mpf(L[r][c].b.a)) for r in comps for c in comps},
+                   x={name: {f"{c[0]}{c[1]:+d}": str(mpf(x[c].b.a)) for c in comps} | {"certified": ok}
+                      for name, (x, ok) in res.items()})
+        with open(os.path.join(OPTS["out"], f"p2c_b5_{tag}.json"), "w") as fh:
+            json.dump(rec, fh, indent=1)
+    return w3 < mpf(10) ** -15 and okP2
 
 
 if __name__ == "__main__":
