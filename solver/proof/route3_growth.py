@@ -81,12 +81,33 @@ def sym():
         vals = [abs(f(n, w0)) for n in NUS]
         print(f"| {name} | {pk} | " + " | ".join(mp.nstr(v, 4) for v in vals) + " |")
         print(f"| {name} | j* | " + " | ".join(mp.nstr(v / abs(complex(piece)), 4) for v in vals) + " |")
+    print("\nlog10 |rho^lam_j| = log10 |T^lam_j / T^nu_j| at the physical w (exact, from log-gamma), j = 600 and 1600:\n")
+    print("| family | j | " + " | ".join(f"nu {n}" for n in NUS) + " |")
+    print("|---|---|" + "---|" * len(NUS))
+    for name in ("nu-2", "nu+2", "+1", "-1"):
+        for jv in (600, 1600):
+            row = [mp.log10(abs(rho_exact(NAMES[name].subs(R.nu, n), n, jv, w0))) for n in NUS]
+            print(f"| {name} | {jv} | " + " | ".join(mp.nstr(v, 3) for v in row) + " |")
+    print("\nthe first odd nu at which j* = |c2|/|piece| exceeds J (the Darboux sums' range, exact_sigma J = 600, "
+          "D_entire J = 1600):\n")
+    for (name, pk), (c2, piece) in co.items():
+        f = sp.lambdify((R.nu, R.w), c2, "mpmath")
+        first = {Jd: next((n for n in range(3, 4001, 2) if abs(f(n, w0)) / abs(complex(piece)) > Jd), None)
+                 for Jd in (600, 1600)}
+        print(f"  {name:5s} {pk}: J = 600 at nu = {first[600]},  J = 1600 at nu = {first[1600]}")
     print(f"\nsup over odd nu >= 3 of |c2(nu)| exp(-{SIGMA} nu), and its argmax (nu up to 401):\n")
     for (name, pk), (c2, piece) in co.items():
         f = sp.lambdify((R.nu, R.w), c2, "mpmath")
         best = max((abs(f(n, w0)) * mp.exp(-SIGMA * n), n) for n in range(3, 403, 2))
         print(f"  {name:5s} {pk}: {mp.nstr(best[0], 4)} at nu = {best[1]}")
     return True
+
+
+def rho_exact(lam, NU, jv, w0):
+    """T^lam_j / T^NU_j, T^lam_j = (alpha)_j (beta)_j / j! = Gamma(alpha + j) Gamma(beta + j) / (Gamma(alpha) Gamma(beta) j!)"""
+    lg = lambda l: (mp.loggamma((1 + 1j * l * w0) / 2 + jv) + mp.loggamma((2 + 1j * l * w0) / 2 + jv)
+                    - mp.loggamma((1 + 1j * l * w0) / 2) - mp.loggamma((2 + 1j * l * w0) / 2))
+    return mp.exp(lg(int(lam)) - lg(NU))
 
 
 # ---------------------------------------------------------------- the fit on the exact recursion
@@ -219,6 +240,14 @@ def allnu(J=1600):
     print("\nslope of log|c| against log nu, nu = 9 to 21 (numerical evidence for c3):")
     for name, (s2, s3) in sl.items():
         print(f"  {name:5s}: c2 (symbolic) {mp.nstr(s2, 4)},  c3 (fit) {mp.nstr(s3, 4)}")
+    print("\n| ν | max \\|fit − symbolic\\| | max spread | \\|c3\\| ν − 2 | \\|c3\\| ν | \\|c3\\| ν + 2 | pass |")
+    print("|---|---|---|---|---|---|---|")
+    for NU in NUS:
+        rows = {nm: r for r in table if r[0] == NU for nm in [r[1]]}
+        dmax = max(abs(r[2] - r[3]) for r in rows.values())
+        smax = max(r[4] for r in rows.values())
+        c3 = " | ".join(mp.nstr(abs(rows[nm][5]), 4) for nm in ("nu-2", "nu", "nu+2"))
+        print(f"| {NU} | {mp.nstr(dmax, 2)} | {mp.nstr(smax, 2)} | {c3} | {'yes' if all(r[7] for r in rows.values()) else 'no'} |")
     print("\n| ν | family | c2 symbolic | c2 fit − symbolic | fit spread | c3 fit | c3 spread | pass |")
     print("|---|---|---|---|---|---|---|---|")
     for NU, name, a0, c2, s0, a1, s1, good in table:

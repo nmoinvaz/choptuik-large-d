@@ -21,6 +21,9 @@ not reviewed. Status words as in AGENTS.md.
   O(1/j) part, and the sympy decomposition matches it to O(j⁻³). The controls fire as set in 47 of 48 runs. In one,
   `near2` at ν = 5 and small ω, interference between families hides a missing j⁻² term from the growth test, so
   `--matrix` exits 1. The cause is shown and the bar is unchanged.
+- **The j⁻² remainder grows polynomially** (§9, #986). It grows exactly like ν and ν² (*checked symbolically*), and the
+  fitted j⁻³ coefficient grows like about ν² over ν = 9 to 21 (numerical evidence). e^{−0.736ν} absorbs both with a
+  constant of at most 2.55, and the families ±1 are suppressed by |ρ^{±1}| ≈ 10^{−2.5(ν−1)}.
 - **Decision** (P6_scope.md §4, stage 3). The identities hold, so route 3 does not stop here. Its next gate is the
   remainder bound, which now has a concrete form to test: a j⁻² coefficient of order ν, and a range j ≲ ν² where the
   1/j expansion does not apply (§5, §6).
@@ -176,6 +179,8 @@ not have this blind spot, but it was not written.
 
 ## 6. Next step for route 3
 
+*Done in §9 (#986): the growth is measured and polynomial. The text below is the plan as it stood.*
+
 The remainder bound. The cheapest first step is to measure, with `--numeric`, how j³|ΔR_j/K − Σ C_λ ρ^λ_j| / Σ|ρ| grows
 with ν at ν = 3 to 21. That takes minutes per ν at J = 800 on one process, and it gives the exponent a bound must carry.
 After that comes the log-convexity bound of D_entire.md §6.3 (`remainder_sup`) written with ν symbolic. The decision it
@@ -207,4 +212,162 @@ python3 route3_cancel.py --selfcheck --mutate=selfcheck   # FAIL, exit 1
 python3 route3_cancel.py --matrix              # nu = 3, 5, 7, every mode and mutation (~2 min); exits 1 today, on the
                                                # one near2 row of section 4
 python3 route3_cancel.py --numeric 5 800 --wf=0.05 --pert=0 --mutate=near2   # that row with one perturbation: FAIL
+```
+
+## 9. How the j⁻² remainder grows with ν (#986)
+
+Script `solver/proof/route3_growth.py`, on `route3_cancel.py`'s `tail()` and its numeric increment. That increment now
+sits in `dr_builder()` with a degree argument, and `route3_cancel.py`'s checks give the same numbers as before.
+
+**Verdict.** The growth is polynomial, and the decay that (★) allows absorbs it.
+
+- lim j² C_λ is a polynomial in ν, of degree 1 in the families ν and ν ± 2 and of degree 2 in the families ±1
+  (*checked symbolically*, §9.1).
+- The fitted j⁻² coefficient of the exact recursion equals it at ν = 3 to 21 in all 30 runs. The fitted j⁻³ coefficient
+  grows like ν to a power between 1.6 and 2.4 over ν = 9 to 21 (numerical evidence, §9.2).
+- Against (★): sup over odd ν ≥ 3 of |c₂(ν)| e^{−0.736ν} is at most 2.55 per unit amplitude in every family, reached at
+  ν = 3 or 5. So the polynomial growth costs a constant, not a rate (§9.3).
+- Weighted by |ρ^λ_j| at the physical ω, the family ν + 2 dominates by about 10⁵, then the family ν. The ±1 families'
+  ν² comes with |ρ^{±1}_j| ≈ 10^{−2.5(ν−1)} (§9.4).
+- Within the Darboux sums' range the remainder exceeds its family's cancelled 1/j piece only in the families ±1:
+  - at j = 600, for ν ≥ 17 to 21;
+  - at j = 1600, for ν ≥ 29 to 33.
+
+  In the families ν and ν ± 2 that happens only from ν ≈ 311 at j = 600 and ν ≈ 835 at j = 1600 (§9.4).
+
+### 9.1 The exact coefficients
+
+`python3 route3_growth.py --sym` (from `solver/proof/`, about 3 s). The background is b₊ = −i, b₋ = i, and every value
+is per unit perturbation amplitude:
+
+| family | perturbation | lim j² C_λ, exact | degree in ν | cancelling piece, coefficient of 1/j |
+|---|---|---|---|---|
+| ν | p₀ | (2iνω + ω² − 7)/8 | 1 | 1/2 (ψ) |
+| ν − 2 | p₋ | −(2iνω + ω² − 7iω − 7)/16 | 1 | −1/4 (de-mixing) |
+| ν + 2 | p₊ | −(2iνω + ω² + 7iω − 7)/16 | 1 | −1/4 (de-mixing) |
+| +1 | p₋ | −(ν²ω² − 4νω² − 3iνω + 5ω² + 7iω − 14)/16 | 2 | −1/2 (de-mixing) |
+| +1 | p₀ | (ν²ω² − 3iνω + ω² + 7iω − 14)/16 | 2 | 1/2 (de-mixing) |
+| −1 | p₀ | (ν²ω² − 3iνω + ω² − 7iω − 14)/16 | 2 | 1/2 (de-mixing) |
+| −1 | p₊ | −(ν²ω² + 4νω² − 3iνω + 5ω² − 7iω − 14)/16 | 2 | −1/2 (de-mixing) |
+
+The cancelling pieces do not depend on ν. Each is computed as twice the O(1/j) coefficient under the 3/2 mutation of its
+term. At ν = 1 the families ν and ν − 2 give exactly D_entire.md §6.2's j²F and j²G, with p₀ = −i and p₋ = i (sympy).
+The planted fit of §9.2 recovers those two values numerically.
+
+### 9.2 The fit on the exact recursion
+
+`python3 route3_growth.py --all` (about 5 min on one process at nice 10). The exact recursion runs at J = 1600 in
+512-bit balls, one perturbation at a time at the physical ω. A least-squares fit of j² ΔR_j/K_ν against Σ_λ ρ^λ_j Σ_k
+a_{λ,k} j^{−k} on 128 points of [J/4, J] follows, with the exact ρ^λ_j. The fitted families are those whose
+|ρ| is within 10⁻¹² of the largest. a_{λ,0} is the measured c₂ and a_{λ,1} the measured c₃. The error estimate is the
+spread over K = 6, 8, 10 terms and the ranges [J/4, J] and [J/2, J]. The pass rule, fixed before the runs, is
+|a₀ − c₂| ≤ 10 × spread, with the spread at most 10⁻³ |c₂|.
+
+- **Planted truth.** The same fit on the harmonic-1 background (ν = 1, no perturbation) recovers j²F and j²G to
+  2.5×10⁻¹⁶ and 3.0×10⁻¹⁶, with spreads 1.4×10⁻¹² and 1.7×10⁻¹² (`--planted`). With h₂ × 3/2 in the recursion it fails
+  by 2.3×10³ (`--planted --mutate=psi`).
+- **ν = 3 to 21.** Every run passes:
+
+| ν | max \|fit − symbolic\| | max spread | \|c₃\|, ν − 2 | \|c₃\|, ν | \|c₃\|, ν + 2 | pass |
+|---|---|---|---|---|---|---|
+| 3 | 3.5e-13 | 6.4e-10 | 18.6 | 48.47 | 63.93 | yes |
+| 5 | 2.6e-12 | 9.1e-8 | 18.09 | 108.8 | 113.8 | yes |
+| 7 | 3.1e-11 | 1.1e-7 | 41.25 | 197.2 | 178.0 | yes |
+| 9 | 1.4e-10 | 6.9e-8 | 79.01 | 314.4 | 256.8 | yes |
+| 11 | 4.9e-10 | 1.9e-7 | 131.6 | 460.6 | 350.1 | yes |
+| 13 | 1.5e-9 | 4.4e-7 | 198.9 | 636.0 | 457.9 | yes |
+| 15 | 3.9e-9 | 9.4e-7 | 280.9 | 840.6 | 580.4 | yes |
+| 17 | 9.3e-9 | 1.9e-6 | 377.5 | 1074.0 | 717.4 | yes |
+| 19 | 2.0e-8 | 3.5e-6 | 488.8 | 1337.0 | 869.0 | yes |
+| 21 | 4.2e-8 | 6.1e-6 | 614.7 | 1630.0 | 1035.0 | yes |
+
+  At ν = 3 the label ν − 2 is the background's +1, so that column is the merged family, and its symbolic value is the
+  sum of both rows of §9.1.
+- **The growth of c₃.** Least-squares slopes of log|c| against log ν over ν = 9 to 21:
+
+  | family | slope of c₂ (symbolic) | slope of c₃ (fit) |
+  |---|---|---|
+  | ν − 2 | 1.34 | 2.42 |
+  | ν | 0.99 | 1.94 |
+  | ν + 2 | 0.79 | 1.65 |
+
+  The c₂ slopes are not yet the asymptotic 1 because of the constant terms. The c₃ slopes are near 2. So, as a reading
+  of numerical evidence, c₃/c₂ grows like ν, and the 1/j expansion in these families is in powers of about ν/j.
+- **The families ±1.** These are invisible at the physical ω, so they were checked at wf = 0.05, where every |ρ| is of
+  order 1 (`--fit NU --wf=0.05 --others` at ν = 3, 9, 15, 21). All 27 fits that resolve their family, 12 dominant and 15
+  others, agree with §9.1 to at most 5.7×10⁻¹³, and the ±1 families are among them.
+- **Controls.** `--fit 3 --mutate=demix` fails all three families. At ν = 21, `--pert=0 --mutate=psi` and
+  `--pert=p --mutate=demix` fail by 1.2×10³ and 9.6×10².
+
+### 9.3 Against the decay (★) allows
+
+(★) lets the coupling of the pair ν grow like e^{σν} with σ ≤ 0.736 (B_tail_M7.md §8.4). A polynomial fits under any
+σ > 0. The constant it costs at σ = 0.736 is sup over odd ν ≥ 3 of |c₂(ν)| e^{−0.736ν}, which `--sym` evaluates from the
+exact polynomials at the physical ω:
+
+| family, perturbation | ν, p₀ | ν − 2, p₋ | ν + 2, p₊ | +1, p₋ | +1, p₀ | −1, p₀ | −1, p₊ |
+|---|---|---|---|---|---|---|---|
+| sup \|c₂\| e^{−0.736ν} | 0.332 | 0.0585 | 0.345 | 0.214 | 0.909 | 1.00 | 2.55 |
+| at ν | 3 | 3 | 3 | 5 | 3 | 3 | 3 |
+
+So the j⁻² remainder adds at most a constant of order 1 to (★)'s Λ, not a rate. The fitted c₃ grows polynomially as
+well, over the range measured. This verdict covers the coefficients, not the full remainder at j ≲ ν (§9.5).
+
+### 9.4 Which families dominate, and where the remainder overtakes the leading term
+
+**By weight.** Each family enters ΔR_j/K_ν multiplied by ρ^λ_j = T^λ_j/T^ν_j. Its exact log10 |ρ^λ_j| at the physical ω,
+from log-gamma (`--sym`), is:
+
+| family | j = 600, ν = 3 | ν = 11 | ν = 21 | j = 1600, ν = 3 | ν = 11 | ν = 21 |
+|---|---|---|---|---|---|---|
+| ν − 2 | −4.96 | −5.07 | −4.98 | −4.97 | −5.13 | −5.11 |
+| ν + 2 | 5.06 | 5.05 | 4.96 | 5.09 | 5.13 | 5.11 |
+| +1, −1 | −4.96 | −25.2 | −50.3 | −4.97 | −25.4 | −51.1 |
+
+The weights go as follows:
+
+- The family ν + 2 carries the raw weight of one pair, about e^{πω} ≈ 10⁵. It is the untuned label ν + 2 acting on ν, so
+  in the tuned problem, where Ŝ_{ν+2} = 0 removes that label's own family, it would not appear in this form.
+- The family ν carries |ρ| = 1, with a coefficient of order ν.
+- The family ν − 2 carries about 10⁻⁵.
+- The families ±1 carry about 10^{−2.5(ν−1)}, which outweighs their ν² by far.
+
+**Where the remainder overtakes the cancelled term.** For j < j* = |c₂|/|piece| the j⁻² term is larger than either of
+the two 1/j terms it is left over from, so the large-j form is not yet reliable there. Measured against the Darboux
+sums' j, J = 600 in `exact_sigma.py` and J = 1600 in D_entire.md §6, `--sym` gives the first odd ν at which j* exceeds
+J:
+
+| family, perturbation | ν, p₀ | ν − 2, p₋ | ν + 2, p₊ | +1, p₋ | +1, p₀ | −1, p₀ | −1, p₊ |
+|---|---|---|---|---|---|---|---|
+| j* > 600 from ν = | 315 | 319 | 311 | 21 | 19 | 19 | 17 |
+| j* > 1600 from ν = | 839 | 841 | 835 | 33 | 31 | 31 | 29 |
+
+At ν = 21, j* is 33 to 47 in the families ν and ν ± 2 and 660 to 967 in the families ±1. So in the range route 3 cares
+about (ν up to a few tens), only the families ±1 have a remainder larger than the leading term at the sums' j. Their
+weight |ρ^{±1}| ≤ 10^{−20} from ν = 9 on makes that harmless at the physical ω.
+
+### 9.5 What this does not settle
+
+1. **The full remainder at small j.** c₂ is exact and c₃ is measured. The 1/j expansion itself needs j ≫ ν in the
+   families ν and ν ± 2 and j ≫ ν² in the families ±1, so the range j ≲ j* is not covered by these coefficients. That
+   is where Lemma W's term-by-term majorant would be needed (§5 item 3).
+2. **Tuned inputs** (§5 item 1). The dominant family here, ν + 2, is an artefact of an untuned input label.
+3. **The remainder bound itself.** These are coefficients and fits, numerical evidence for the growth, not a bound.
+
+**Next step for route 3.** The remainder bound in the form these numbers suggest is C ν^p / j² for j ≥ j₀(ν) ∝ ν, with
+p = 1 in the families ν and ν ± 2. The families ±1 can be bounded separately through their weight |ρ^{±1}|, which
+decays like 10^{−2.5ν}. The log-convexity bound of D_entire.md §6.3 written with ν symbolic would be its first form. A
+proof of (★) at A* still needs each increment's whole series (B_tail_M7.md §8.3).
+
+### 9.6 Reproduce
+
+From `solver/proof/` with venv-314:
+
+```
+python3 route3_growth.py --sym                              # 9.1, 9.3, 9.4 (~3 s)
+python3 route3_growth.py --planted                          # PASS; --mutate=psi: FAIL, exit 1
+python3 route3_growth.py --all                              # 9.2: planted, then nu = 3..21 (~5 min); PASS
+python3 route3_growth.py --fit 3 --mutate=demix             # FAIL, exit 1
+python3 route3_growth.py --fit 21 --pert=0 --mutate=psi     # FAIL, exit 1
+python3 route3_growth.py --fit 21 --wf=0.05 --others        # the families +-1 at small w; PASS
 ```
