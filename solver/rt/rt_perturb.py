@@ -2,7 +2,8 @@
 
     python3 solver/rt/rt_perturb.py STATE.npz OUT.npz --delta 1e-19 [--seed 977] [--along OTHER.npz
         [--along2 OTHER2.npz --mode sum|orth]]
-    python3 solver/rt/rt_perturb.py --selftest [--along | --orth]
+    python3 solver/rt/rt_perturb.py STATE.npz OUT.npz --delta 1e-20 --dir Q.npz --dir_k K
+    python3 solver/rt/rt_perturb.py --selftest [--along | --orth | --dir]
 
 OUT holds STATE's keys with z = zh + zl moved by delta max|z| r, where r has independent normal entries
 (numpy default_rng(seed)) scaled to max|r| = 1, every entry the scalar mu included. The sum is formed in double-double
@@ -15,7 +16,9 @@ the same for a move along a planted second sample, and also checks that the move
 difference (cosine above 1 - 1e-6). With --along2, d1 = OTHER - z and d2 = OTHER2 - z: --mode sum takes
 r = d1/max|d1| + d2/max|d2| (a direction inside the plane of the three samples), --mode orth the part of d2
 orthogonal to d1 in the 2-norm. --selftest --orth checks that the orth move's cosine with d1 is below 1e-9 and that it
-lies in the plane (its part outside d1 and d2 below 1e-9 of it).
+lies in the plane (its part outside d1 and d2 below 1e-9 of it). --dir Q.npz --dir_k K takes r along row K of Q.npz's q
+(rt_angles.py --complement's directions of the deep span out of the samples' plane), scaled to max|r| = 1.
+--selftest --dir checks that such a move is parallel to the planted row (cosine above 1 - 1e-12) at the planted size.
 """
 import argparse
 import sys
@@ -42,11 +45,13 @@ def diff(other, zh, zl):
     return dh + dl
 
 
-def move(zh, zl, delta, seed, along=None, along2=None, mode="sum"):
+def move(zh, zl, delta, seed, along=None, along2=None, mode="sum", direction=None):
     """z + delta max|z| r in double-double; the move itself is a double vector. along: (oh, ol), a second sample;
     r is then (o - z) / max|o - z| instead of a seeded random vector. along2 with mode: the sum of the two unit
     differences, or the part of the second orthogonal to the first"""
-    if along is None:
+    if direction is not None:
+        r = np.asarray(direction, dtype=float).copy()
+    elif along is None:
         r = np.random.default_rng(seed).normal(size=zh.shape)
     else:
         r = diff(along, zh, zl)
@@ -89,6 +94,21 @@ def selftest_orth():
     return ok
 
 
+def selftest_dir():
+    rng = np.random.default_rng(7)
+    zh = rng.normal(size=4000)
+    zl = zh * 2.0 ** -60 * rng.uniform(-1, 1, size=4000)
+    q = rng.normal(size=4000)
+    nh, nl = move(zh, zl, 1e-25, 0, direction=q)
+    dh, dl = dd_add(nh, nl, -zh, -zl)
+    d = dh + dl
+    cos = float(d @ q / (np.linalg.norm(d) * np.linalg.norm(q)))
+    ok = cos > 1 - 1e-12 and abs(realised(zh, zl, nh, nl) - 1e-25) <= 1e-6 * 1e-25
+    print(f"selftest --dir: realised {realised(zh, zl, nh, nl):.6e}, cosine with the planted row {cos:.15f}: "
+          f"{'PASS' if ok else 'FAIL'}")
+    return ok
+
+
 def selftest(mutate, along=False):
     rng = np.random.default_rng(5)
     zh = rng.normal(size=4000)
@@ -123,12 +143,16 @@ def main():
     ap.add_argument("--along2", default=None, help="OTHER2.npz, with --along and --mode")
     ap.add_argument("--mode", default="sum", choices=["sum", "orth"])
     ap.add_argument("--orth", action="store_true", help="--selftest of the orth move")
+    ap.add_argument("--dir", nargs="?", const="", default=None, help="Q.npz from rt_angles.py --complement")
+    ap.add_argument("--dir_k", type=int, default=0)
     ap.add_argument("--selftest", action="store_true")
     ap.add_argument("--mutate", action="store_true")
     a = ap.parse_args()
     if a.selftest:
         if a.orth:
             return 0 if selftest_orth() else 1
+        if a.dir is not None:
+            return 0 if selftest_dir() else 1
         return 0 if selftest(a.mutate, along=a.along is not None) else 1
     d = np.load(a.state)
     out = {k: d[k] for k in d.files}
@@ -143,12 +167,16 @@ def main():
     if a.along2:
         o2 = np.load(a.along2)
         other2 = (np.asarray(o2["zh"], dtype=float), np.asarray(o2["zl"], dtype=float))
-    nh, nl = move(zh, zl, a.delta, a.seed, along=other, along2=other2, mode=a.mode)
+    direction = np.load(a.dir)["q"][a.dir_k] if a.dir else None
+    if direction is not None and direction.shape != zh.shape:
+        raise SystemExit(f"--dir: row {a.dir_k} has {direction.size} entries, {a.state} {zh.size}")
+    nh, nl = move(zh, zl, a.delta, a.seed, along=other, along2=other2, mode=a.mode, direction=direction)
     out["zh"], out["zl"] = nh, nl
     if "Z" in out:
         out["Z"] = nh.copy()
     np.savez(a.out, **out)
-    how = f"along {a.along}, max|other - z| / max|z| {realised(zh, zl, *other):.6e}" if other else f"seed {a.seed}"
+    how = (f"along {a.along}, max|other - z| / max|z| {realised(zh, zl, *other):.6e}" if other else
+           f"along {a.dir} row {a.dir_k}" if a.dir else f"seed {a.seed}")
     if other2 is not None:
         how += f"; with {a.along2} ({a.mode})"
     print(f"{a.state} -> {a.out}: max|z| {float(np.abs(zh + zl).max()):.6e}, delta {a.delta:g}, {how}, "
