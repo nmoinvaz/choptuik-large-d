@@ -1,0 +1,11 @@
+lam it 0: lam 2.000000000000  g +1.981591e+07  Sch sv [21995.93109873  1801.77930649]  r_H of the deflated directions 0.0e+00  step -1.19e-01 [0 s]
+lam it 1: lam 1.881313305347  g +5.910413e+06  Sch sv [16262.57934853   602.58713161]  r_H of the deflated directions 0.0e+00  step -7.66e-02 [1 s]
+lam it 2: lam 1.804689533585  g +1.363788e+06  Sch sv [13437.1559049    147.39075356]  r_H of the deflated directions 0.0e+00  step -3.10e-02 [1 s]
+lam it 3: lam 1.773717269535  g +1.548789e+05  Sch sv [12455.18033244    17.06510694]  r_H of the deflated directions 0.0e+00  step -4.51e-03 [2 s]
+lam it 4: lam 1.769210253545  g +2.918842e+03  Sch sv [1.23192226e+04 3.22442180e-01]  r_H of the deflated directions 0.0e+00  step -8.82e-05 [2 s]
+lam it 5: lam 1.769122077677  g +2.289535e+00  Sch sv [1.23165797e+04 2.52935727e-04]  r_H of the deflated directions 0.0e+00  step -6.92e-08 [3 s]
+lam it 6: lam 1.769122008461  g +7.151571e-04  Sch sv [1.23165776e+04 7.90067206e-08]  r_H of the deflated directions 0.0e+00  step -2.16e-11 [3 s]
+lam it 7: lam 1.769122008440  g +3.926869e-05  Sch sv [1.23165776e+04 4.33809183e-09]  r_H of the deflated directions 0.0e+00  step -1.19e-12 [4 s]
+planted: lambda* of M = 1 from 2.0: 1.7691220084 against 1.769122008 (|difference| < 1e-8) [4 s]
+PASS
+exit 0
