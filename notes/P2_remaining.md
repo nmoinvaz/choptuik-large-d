@@ -215,3 +215,51 @@ python3 p2c_cover.py --log=p2c_cover_real.log        # PASS, exit 0 (about 2 s)
 python3 p2c_cover.py --plant=drop --log=p2c_cover_drop.log   # FAIL, exit 1 (about 11 s)
 python3 p2c_cover.py --plant=gap --log=p2c_cover_gap.log     # FAIL, exit 1
 ```
+
+## 4. Item 2(b): lemma 6b₁'s M = 1 disc certificates, a second implementation
+
+Issue #992. Lemma D (A_certify.md §12.2) certifies, for each of the 178 discs, that y⁺ continues analytically from the
+disc's centre to the whole disc, with a bound M on |y − y₀|. This section re-implements that certificate.
+
+### 4.1 Protocol, fixed before the run
+
+- **Independence.** `lemma6b1_disc.py` and `lemma6b1_estimate.py` are not opened. The code
+  (`solver/proof/review_p2c/p2c_disc.py`) is written from A_certify.md §12.2's statement of lemma D and from
+  §4.4's equations in the u = 1/z variables of §11.4. The only shared things are the inputs: the stored runs, the
+  equation's form and coefficients, κ = 100, the order n_j and the radius r_j. The equation is compared with
+  `lemma6_usys.SysU.rhs` at random points, the only use of the certificate's code. Seen before this protocol: the
+  stored Λ and sup bounds of discs (0, 0) to (0, 4) and (11, 0) to (11, 2) (the first lines of `rows.log` and
+  `row_11.log`, and row_00's first record), and A_certify.md §12.4's per-row maxima.
+- **Method, own.** The arithmetic is python-flint 0.9 balls (acb) at 192 bits, in code written here.
+  - Taylor coefficients: Picard iteration on truncated power series (acb_series), started from the input box, n + 1
+    times.
+  - Defect: in the form with denominators cleared, d̃ = u^m (p′ − F(u, p)) with m = 1 for P and V and m = 2 for C. It
+    is an exact polynomial in τ (acb_poly products), so no expansion of 1/u with a remainder is needed. Its coefficients
+    below order n must contain 0, and |d(τ)| ≤ |τ|ⁿ Δ̃/(|c| − r)^m with Δ̃ = Σ_{k≥n} |d̃_k| r^{k−n}.
+  - Lipschitz matrix: forward-mode derivatives (series of length 2) of F over the box B, the z-ball 1/(c + disc(r))
+    and the ω-ball.
+  - Check: lemma D's contraction with Perron weights, Λ = r/(n + 2) · max_i Σ_j ω_i L_ij/ω_j < 1,
+    ρ = 2F₀/(1 − Λ), and b_j ≥ ρ r^{n+1}/ω_j, iterated with B = Y₀ + disc(M⁰ + b) until it holds. M_j = M⁰_j + b_j.
+- **Inputs.**
+  - The 12 discs on the start ray (k = 0) use the stored row-start boxes (`lemma6b1_runs/ray.json`, `starts`), exactly.
+    They include the corners (0, 0) and (11, 0) and the disc with the largest stored Λ, (11, 0).
+  - The 166 arc discs have no stored box. Their boxes are reconstructed by this review: its own high-precision,
+    non-rigorous integration along the arc from the stored row-start box's midpoint, inflated to 4 times the stored
+    box radius plus 10⁻¹⁵. A certificate there covers lemma D's computation on that box. It covers the certificate's
+    box only if that box lies inside, which is assumed, not proven. The integrator is first checked against the stored
+    ray boxes: from s₀ along the ray to s₁, its value must lie within the stored box at s₁.
+- **Sample, then all.** First the 12 ray discs, all of row 11 (the smallest margins), and the real-axis corner discs
+  (0, 24) and (11, 6). Then all 178 if a disc costs under 30 s.
+- **Pass criteria.** Every disc certified (Λ < 1, the vanishing orders hold, b closes). The margins (Λ and max_j M_j)
+  are recorded and committed before the stored ones are read in full, then compared.
+- **Controls, which must each fail.**
+  - (K1) A too-large disc: disc (11, 0)'s stored input with radius 16. The branch point u* = 9.6746e^{−2.1198i}
+    (A_certify.md §12.1) lies at distance about 15.7 from its centre, so it is inside.
+  - (K2) The sign mutation: the defect computed with the fast term's sign flipped (V_u = +V/2 + …), while the Taylor
+    coefficients use the true equation, on the 12 ray discs. Every certificate must fail.
+- **Planted checks, which must pass.** The equation against `SysU.rhs` (relative 10⁻⁴⁰ at 10 random points), and the
+  integrator against the stored ray box at s₁.
+
+### 4.2 Results
+
+Not yet run.
