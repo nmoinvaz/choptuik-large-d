@@ -715,3 +715,9 @@ python3 route3_head.py --check --mutate=plant      # planted violation: FAIL, ex
 python3 route3_head.py --check --mutate=gsmall     # G / 100: FAIL, exit 1
 python3 route3_head.py --certify                   # 11.3 (~10 min): Lambda_head and the whole sum's constants
 ```
+
+**Reproduced on aarch64 (#1030).** All the commands of §10 and §11 ran on rpi5 (python-flint 0.9.0, FLINT 3.6.0):
+14 of 14 exits as listed, the five controls failing. `route3_bound.py --constants` printed 28.4491, 56.8735 and
+4.76610×10⁶ (with `--J0=100`, 1.59898, 3.17310 and 3.62864×10⁵), the values quoted in §10, and the six
+`route3_head.py` logs are byte-identical to the Mac's in raw I1015-mac (raw I1030-rpi5, cc9c41c5). §10's own Mac logs
+were not stored, so its commands have one stored run, rpi5's.
