@@ -181,11 +181,24 @@ def _floor3(I, A, wf, v, r1):
     return np.abs(_res3(I, A, wf, v, r1) - _res3(I, A, wf, v, r1, 1e-13))
 
 
+def _accept3(I, A, wf, v, r, rr):
+    """(accepted, cause): |r_3| at its rounding noise (<= 3 x noise_3), with that noise below the cap _BOUND["noise3"]
+    (#1021): where the integration is unresolved, the two tolerances differ by more than the residual, and the first
+    test then passes far from S_3's zero (3.6623, 0.9065 at xi1 0.25: |r_3| 4.1e7, noise_3 2.0e10)"""
+    n = float(_floor3(I, A, wf, v, rr)[2:].max())
+    if not np.abs(r[2:]).max() <= 3 * n:
+        return False, None
+    if n > _BOUND.get("noise3", math.inf):
+        return False, f"noise3 {n:.3g} above the cap {_BOUND['noise3']:g}"
+    return True, None
+
+
 def _continue3(I, nested, A, wf, F3, r1, starts=(0.25, 0.2), h0=0.01, hmin=0.00125):
     """S_3 = 0 at xi1 = r1 by continuation in xi1 from a radius where it converges: at each radius the noise-safe
-    Newton, accepted when |r_3| <= 3 x its noise; the step in xi1 is halved when a radius is not reached. A start
-    whose integration passes its bound is skipped, and a bound in the march, or the wall bound, ends it; each such
-    stop is returned as [xi1, cause]"""
+    Newton, accepted when |r_3| <= 3 x its noise and that noise is below the cap (_accept3); the step in xi1 is
+    halved when a radius is not reached. A start rejected by the cap is skipped, and so is a start
+    whose integration passes its bound; a bound in the march, or the wall bound, ends it; each such stop, and each
+    march step the cap rejects, is returned as [xi1, cause]"""
     trail, stops = [], []
     for rs in starts:
         if rs <= r1:
@@ -194,12 +207,14 @@ def _continue3(I, nested, A, wf, F3, r1, starts=(0.25, 0.2), h0=0.01, hmin=0.001
             F3s, _, _ = nested.inner(A, wf, complex(*F3), rs)
             v = np.array([-2 * F3s.imag, 2 * F3s.real])
             v, r, J = _refine3(I, A, wf, v, rs)
-            ok = np.abs(r[2:]).max() <= 3 * _floor3(I, A, wf, v, rs)[2:].max()
+            ok, cause = _accept3(I, A, wf, v, r, rs)
         except PointBound as ex:
             stops.append([rs, str(ex)])
             if ex.wall:
                 return None, trail, stops
             continue
+        if cause:
+            stops.append([rs, cause])
         if ok:
             trail.append(rs)
             break
@@ -210,9 +225,11 @@ def _continue3(I, nested, A, wf, F3, r1, starts=(0.25, 0.2), h0=0.01, hmin=0.001
         rn = max(round(rr - h, 6), r1)
         try:
             v2, r2, J2 = _refine3(I, A, wf, v, rn)
-            ok = np.abs(r2[2:]).max() <= 3 * _floor3(I, A, wf, v2, rn)[2:].max()
+            ok, cause = _accept3(I, A, wf, v2, r2, rn)
         except PointBound as ex:
             return None, trail, stops + [[rn, str(ex)]]
+        if cause:
+            stops.append([rn, cause])
         if ok:
             v, r, J, rr = v2, r2, J2, rn
             trail.append(rn)
@@ -230,7 +247,8 @@ def f_M3(args):
     accepted when |r_3| is at its rounding noise; its sigma then includes r_1's noise and the error the residual r_3
     induces in r_1 (|J_1 J_3^-1| (|r_3| + noise_3)), so the guard |R| >= 10 sigma keeps its phase. Points the first
     solve accepts are unchanged. args[4], if given, bounds the point: dict(rhs=right-hand-side calls per integration,
-    wall=seconds); a point stopped by a bound has no value, and its record says which bound and where."""
+    wall=seconds, noise3=the acceptance's cap on noise_3); a point stopped by a bound has no value, and its record
+    says which bound and where."""
     I = _probe_inner_np()
     import nested
     (A, wf), F3, r1 = args[:3]
@@ -637,6 +655,56 @@ class Analytic:
         return 0.0
 
 
+class _Synth3:
+    """a synthetic M = 3 residual for _continue3's acceptance: linear in v about S_3's zero v*(xi1) with a small
+    rtol-proportional error inside |v - v*| < 0.05, and far from it a constant |r_3| 4e7 whose two tolerances differ
+    by 2e10 (an unresolved integration); nested.inner's start lands there at 0.25 and near v* at 0.2"""
+    Jt = np.array([[5e3, 1e2], [-3e2, 4e3]])
+
+    def __init__(self):
+        self.rtol = 1e-12
+        synth = self
+
+        class Inner:
+            def jumps(self, r1s=(0.2,), r0=None, rtol=1e-12):
+                synth.rtol = rtol
+        self.Inner = Inner
+
+    @staticmethod
+    def vstar(r1):
+        return np.array([0.3 + (0.2 - r1), 0.01])
+
+    def residual_demixed(self, x, M, r1=0.2):
+        self.rtol = 1e-12
+        self.Inner().jumps()                       # _res3 swaps jumps() to set another rtol
+        v, d = x[2:], x[2:] - self.vstar(r1)
+        if np.abs(d).max() < 0.05:
+            r3 = self.Jt @ d + self.rtol * 1e6
+        else:
+            r3 = np.full(2, 4e7) + 2e10 * self.rtol / 1e-12
+        return np.array([1 + v[0], 2 + v[1], r3[0], r3[1]])
+
+    def inner(self, A, wf, F3, rs):
+        v = np.array([0.1, 0.05]) if rs > 0.22 else self.vstar(rs) + 0.01
+        return v[0] / 2j + v[1] / 2, 0j, 1.0
+
+
+def selftest_m3accept(mutate=None):
+    """the acceptance on _Synth3: with the cap, the false start at 0.25 is skipped and the march from 0.2 ends at
+    v*(0.17); --mutate=nocap drops the cap, the false start is taken, and the end is far from v*"""
+    S = _Synth3()
+    _BOUND.clear()
+    if mutate != "nocap":
+        _BOUND["noise3"] = 1e2
+    got, trail, stops = _continue3(S, S, 3.66, 0.9, (0.0, -0.1), 0.17)
+    _BOUND.clear()
+    err = float(np.abs(got[0] - S.vstar(0.17)).max()) if got else float("inf")
+    ok = err < 1e-9 and trail[0] == 0.2
+    print(f"selftest M = 3 acceptance{' --mutate=' + mutate if mutate else ''}: trail {trail}, stops {stops}, "
+          f"end |v - v*| {err:.2g}: {'PASS' if ok else 'FAIL'}")
+    return ok
+
+
 def selftest(mutate=None):
     zs = [(2.54, 0.777, +1), (3.4, 0.36, -1), (3.45, 0.37, +1), (1.2, 2.2, +1)]
     F = Analytic(zs, mutate)
@@ -657,7 +725,7 @@ def selftest(mutate=None):
     ok2 = bool(r1["unresolved"]) and not r2["unresolved"] and got == want and r1["leaf_sum"] + r2["leaf_sum"] == 2
     print(f"selftest recount: {len(r1['unresolved'])} cells unresolved by the hole, {len(r2['unresolved'])} after the "
           f"recount; found {got}: {'PASS' if ok2 else 'FAIL'}")
-    return ok and ok2
+    return ok and ok2 and selftest_m3accept(mutate)
 
 
 def main():
@@ -690,8 +758,10 @@ def main():
                          "recorded without value, with the cause; 0 for none (#1021)")
     ap.add_argument("--m3wall", type=float, default=3600.0,
                     help="M = 3: seconds per point past which it is recorded without value, with the cause; 0 for none")
+    ap.add_argument("--m3noisecap", type=float, default=1e2,
+                    help="M = 3: the continuation accepts a radius only if noise_3 is below this as well; 0 for none")
     ap.add_argument("--selftest", action="store_true")
-    ap.add_argument("--mutate", default=None, choices=["conj", "nosplit", "norecount"])
+    ap.add_argument("--mutate", default=None, choices=["conj", "nosplit", "norecount", "nocap"])
     a = ap.parse_args()
     if a.selftest:
         return 0 if selftest(a.mutate) else 1
@@ -703,7 +773,7 @@ def main():
     a.r1 = a.r1 or (0.17 if a.M == 1 else 0.2)
     a.r1b = a.r1b or (0.2 if a.M == 1 else 0.17)
     cache = a.cache or os.path.join(a.out, f"points_M{a.M}_r{a.r1}.jsonl")
-    bounds = {k: v for k, v in (("rhs", a.m3maxrhs), ("wall", a.m3wall)) if v} or None
+    bounds = {k: v for k, v in (("rhs", a.m3maxrhs), ("wall", a.m3wall), ("noise3", a.m3noisecap)) if v} or None
     F = Multiplier(a.M, cache, a.procs, plant, r1=a.r1, ymax=a.ymax, m3fix=a.m3fix, retry=a.retry, bounds=bounds)
     if a.M == 3:
         # seed the continuation at the known M = 3 zero's tuned F_3
