@@ -1980,6 +1980,11 @@ The medians behind R, over the same 48 right-hand sides:
   Golub's cosines) are all below 0.005° (cosines ≥ 0.999999997), against 0.017 for a random four-dimensional span.
   So the four deep directions are one subspace of the RT system at D 40.02, as (H4) at k = ½ and 3/2 predicts.
   Raw `I1006-win/` (3039cc78).
-- Open: whether the two deep directions out of the samples' plane are tangent to the root set too (a root set of
-  dimension 4) or only weak, and then (H4)'s rows at k = ½ and 3/2, which should isolate the roots at D 40.02
-  (P7_scope.md §5, stage 2).
+- **The other two deep directions are tangent too, so the root set is four-dimensional (#1018).** The two directions
+  of the deep span orthogonal to the samples' plane (`rt_angles.py --complement`; cosine with the chords below 5e-16)
+  were each taken as a move of c (`rt_perturb.py --dir`) at δ = 10⁻²⁰ and 10⁻¹⁹. The medians are 7.4×10⁻³⁴ to
+  4.0×10⁻³³, which is 1.3×10⁻¹² to 3.9×10⁻¹⁰ of the random moves', the pre-set reading "tangent". With #968–#972 all
+  four deep directions are tangent at sample c, as (H4) at k = ½ and 3/2 predicts: four real conditions missing. Along
+  the second direction the printed max|F| is 2.3×10⁻²⁹ at 10⁻²⁰ and 2.3×10⁻²⁸ at 10⁻¹⁹, linear in δ and 20 to 77 times
+  the in-plane moves' (7×10⁻¹² of a random move's); one ray per direction, at c only. Raw `I1018-win/` (a8718ccc).
+- Open: (H4)'s four rows at k = ½ and 3/2, which should isolate the roots at D 40.02 (P7_scope.md §5, stage 2).
