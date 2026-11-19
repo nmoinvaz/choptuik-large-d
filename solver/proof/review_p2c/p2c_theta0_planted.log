@@ -1,3 +1,3 @@
 planted: Perron root of u w^T 0.207000, numerical 0.207000, certified theta 0.210383: PASS
 planted: Gamma0 assembly against hand values: PASS
-planted exit 0
+exit 0
