@@ -31,7 +31,7 @@ r_l - K_lH K_HH^-1 r_H (K by finite differences, M - 1 residuals) is r_l at the 
 Use --schur for M >= 7 (it also helps at M = 5).
 
     python -u hier.py M A wf [--fixA] [--x=B3,C3,...] [--seed=FILE] [--xi1=0.2] [--procs N] [--verbose=2]
-                             [--schur] [--predict] [--floor] [--tol=T] [--fasttrial] [--approach=NU:XI,...]
+                             [--schur] [--predict] [--floor] [--tol=T] [--fasttrial] [--approach=NU:XI,...] [--polish=NU:XI,...]
   --fixA       (A, w) fixed: solve S_3..S_M = 0, report F_nu/F_1 and r_1
   --schur      leakage Jacobian K after the first inner solve; Schur-corrected residuals from then on
   --predict    (implies --schur) K also over (A, w); every nested re-solve starts from the linear prediction of the
@@ -150,6 +150,7 @@ class Hier:
         low = {nu: level_radius(nu, w, self.r1) for nu in range(1, self.M + 1, 2)}
         low.update({nu: xi for nu, xi in getattr(self, "approach", {}).items() if nu in low})   # --approach
         pol = {nu: polish_radius(nu, w, F2, self.r1) for nu in range(1, self.M + 1, 2)}
+        pol.update({nu: xi for nu, xi in getattr(self, "polish", {}).items() if nu in pol})       # --polish
         return low, pol
 
     def res(self, x):
@@ -251,7 +252,8 @@ class Hier:
             st = (self.predict, dict(self.xref), dict(self.xorder), self.count, self.tol, self.ltop, self.fasttrial,
                   self.floorstop, dict(self.floor))
             outs = POOL.map(_worker, [(self.M, self.r1, l + 2, xt, dict(self.mode), dict(self.J), self.K, st,
-                                       dict(getattr(self, "approach", {}))) for xt in xs])
+                                       dict(getattr(self, "approach", {})), dict(getattr(self, "polish", {})))
+                                      for xt in xs])
             NEV[0] += sum(o[2] for o in outs)
         else:
             outs = [self.solve_from(l + 2, xt) + (0,) for xt in xs]
@@ -368,10 +370,10 @@ class Hier:
 
 
 def _worker(args):
-    M, r1, l, x, mode, Jc, K, st, approach = args
+    M, r1, l, x, mode, Jc, K, st, approach, polish = args
     n0 = NEV[0]
     h = Hier(M, r1, top=99, verbose=0)
-    h.approach = approach                      # --approach, as in the main process
+    h.approach, h.polish = approach, polish    # --approach and --polish, as in the main process
     h.mode = mode
     h.J = Jc                                   # warm chord Jacobians from the main process
     h.fresh = {k: False for k in Jc}
@@ -427,6 +429,9 @@ def main():
     # --approach=NU:XI,...: a level's approach radius set by hand, in place of level_radius's (M = 9: level 5's first
     # solve stalls at the M <= 7 radius 0.119, #974)
     h.approach = {int(t.split(":")[0]): float(t.split(":")[1]) for t in str(opts.get("--approach", "")).split(",") if ":" in t}
+    # --polish=NU:XI,...: a level's polish radius set by hand (M = 9: level 5's polish solve ends at |r_5| 42.5 whatever
+    # its approach radius, #980)
+    h.polish = {int(t.split(":")[0]): float(t.split(":")[1]) for t in str(opts.get("--polish", "")).split(",") if ":" in t}
     low, pol = h.radii(x)
     print("level radii (approach -> polish): " + ", ".join(f"r_{nu} {low[nu]:.4f} -> {pol[nu]:.4f}" for nu in low), flush=True)
     r0 = h.res(x)
