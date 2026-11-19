@@ -461,3 +461,67 @@ The logs and records are in the raw-data repository's folder `I1017-mac/` (b5deb
   directly.
 - **Harness fix:** a first comparison with `series_arb.py` built its inputs at 53 bits, before raising flint's
   precision, and so differed at 10⁻¹⁰. At 256 bits the difference is 1.4×10⁻⁶⁵.
+
+### 5.3 The comparison with `b8m_h8.py`'s logs
+
+`p2c_h8_compare.py` reads this review's records and B8's logs (`b8m_h8_K4_L73.89.log`, `b8m_h8_K4_L73.89_d0_1e7.log` and
+`b8m_h8_centre.log`), opened only after §5.2 was committed (`I1017-mac/logs/compare.log`).
+
+| | here | `b8m_h8` | relative | bar |
+|---|---|---|---|---|
+| T of Φ | 76.5792 | 76.5684 | 1.4×10⁻⁴ | 10⁻³, pass |
+| T of C | 3.2312634 | 3.2312634 | 1.4×10⁻⁹ | 10⁻³, pass |
+| T of ϑ | 6.4634016 | 6.4631590 | 3.8×10⁻⁵ | 10⁻³, pass |
+| R of P | 7.7474365×10⁻²⁶ | 7.7474365×10⁻²⁶ | 2.6×10⁻¹⁰ | 10⁻², pass |
+| R of C | 1.3538021×10⁻²⁷ | 1.3538021×10⁻²⁷ | 2.9×10⁻¹⁷ | 10⁻², pass |
+| R of ϑ | 3.4352230×10⁻¹⁴ | 3.4352230×10⁻¹⁴ | 2.4×10⁻¹⁰ | 10⁻², pass |
+| R of Φ (another route) | 2.46266 | 2.46251 | 6.2×10⁻⁵ | factor 10, pass |
+| δ_Φ at d₀ = 10⁷ (P4) | 122.3203 | 122.3093 | 9.0×10⁻⁵ | reported |
+| R of Φ at d₀ = 10⁷ | 45.74109 | 45.74093 | 3.3×10⁻⁶ | factor 10, pass |
+
+- **At the box centre**, this review's T parts equal `b8m_h8_centre.log`'s in all six printed digits: P 5.58426×10⁻¹²,
+  Φ 76.5602, C 3.23126 and ϑ 6.46252.
+  - Over the box, Φ's T differs by 1.4×10⁻⁴. That is the width of the coefficient balls over the box, 0.019 here
+    against 0.008 in B8.
+- **δ_P.** B8's 8.2255×10⁻⁵ is the width of the ball of P's ε z⁰ coefficient, which is exactly 0 (P(0) = 2F). With
+  that zero imposed, δ_P = 5.59×10⁻¹², the εz term. B8's bound is valid, only loose.
+- **R of Φ** comes by this review's route, the mean value of the S-equation plus Z^K's residual, not Lemma R's G₁ and
+  W₂. It agrees with B8's to 6.2×10⁻⁵. Here it is almost all the main term D⁻¹C²R_S, 2.395 of 2.463 (§5.2).
+- **K2 is not flagged at the protocol's bar.** h_S × (1 + 10⁻³) moves R_P by 6.6×10⁻⁴ relative to B8's, against an
+  unperturbed agreement of 2.6×10⁻¹⁰. The bar of 10⁻² set in §5.1 is too loose to catch it. Any bar between the two
+  would catch it. This is a defect of the protocol, recorded rather than corrected after the fact: as run, K2 did not
+  fire.
+
+### 5.4 Discrepancies (reported, not fixed)
+
+- **B_chain.md rounds δ down.** §3.2 and §4's table quote δ = (8.2×10⁻⁵, 79.03, 3.231, 6.463) for d₀ = 0. The certified
+  bounds are (8.2255×10⁻⁵, 79.0309, 3.231263, 6.463159), so every entry is below its bound. Upper bounds are rounded
+  up, as B8_constants.md §8.3 does: (8.3×10⁻⁵, 79.04, 3.232, 6.464).
+  - x_Φ = (39784, 38776) is the superposition for these data (B_chain.md §3.2). If it was computed from the
+    rounded-down values, it belongs to slightly smaller data, and needs a rerun with the rounded-up δ.
+  - The d₀ = 10⁶ and 10⁷ entries (82.18 and 122.31) are rounded up correctly.
+- **η of C.** B8_constants.md §8.2 states that lemma S's η scales as |z|¹³ for c. `b8m_h8`'s η for C, 4.4×10⁻¹⁰⁴,
+  equals its η for P, which is |z|¹². That is conservative and immaterial: 7.6×10⁻¹¹⁵ here with |z|¹³.
+
+**Status.** (H8)(ii)'s δ, for every n ≥ e^{73.89} over the box, is confirmed by an independent computation. It shares
+with B8 only the certified h, lemma S's η bound, the parameter box and the hand-proved lemmas (Lemma F, the formulas of
+§1.2 and §8.2). The two agree, and both lie within δ_ref. Its series is checked independently against Theorem A's
+`series_arb.py`. Versions: mpmath (iv) at 256 bits, and python-flint 0.9.0 only for `series_arb.py`.
+
+### 5.5 Reproduce
+
+From `solver/proof/review_p2c/`, with the raw-data repository cloned beside this checkout (§4.5):
+
+```
+RAW=../../../../choptuik-large-d-raw/I1017-mac
+python3 p2c_h8.py --centre                       # (P1) PASS, exit 0
+python3 p2c_h8.py --centre --mutate=A            # K1: FAIL, exit 1
+python3 p2c_h8.py --centre --mutate=sign         # K3: FAIL, exit 1
+python3 p2c_h8.py --out=$RAW                     # (P2) PASS, exit 0 (about 50 s)
+python3 p2c_h8.py --point --out=$RAW             # the same at the box centre
+python3 p2c_h8.py --d0=1e7 --out=$RAW            # (P4)
+python3 p2c_h8.py --mutate=hS --out=$RAW         # K2
+python3 p2c_h8_compare.py $RAW > $RAW/logs/compare.log   # (P3, P4) PASS, exit 0
+```
+
+`$RAW/run.sh` runs the first seven with their logs.
