@@ -17,6 +17,13 @@ ELL.md 7's windows (#1025).
                                        --mutate=sigma fits sigma instead of sigma^2 and must miss D* (exit 1)
     python3 ell_delta.py table [FILE]  delta, n delta and the windows from the l = 1 points in FILE
                                        (default data/ell_lam_highD.json)
+    python3 ell_delta.py steep [FILE]  the k_c test of lambda_1's steepening past D 15: the move from k_c 47 to 55 at
+                                       each D against the steepening S(D), lambda_47 minus its line through D 14.5, 15;
+                                       resolution if |move| > |S| at some D (bar fixed before the k_c 55 runs)
+    python3 ell_delta.py steep --planted [--mutate=steep]   the same on a synthetic quadratic lambda: a move of
+                                       0.1 S reads real, -1.5 S resolution; the mutation flips the comparison (exit 1)
+    python3 ell_delta.py leak          |K'_nu/K'_1| at the l = 0 and l = 1 M = 3 zeros: the weight with which an error
+                                       in the harmonic-nu condition leaks into the harmonic-1 one, and that times eps
 
 Windows (as ELL.md 7 and ell_fit.py): on consecutive n, the exact interpolants c + a/n (two points) and
 c + a/n + b/n^2 (three points), and c is their limit n -> infinity. In x = 1/n they are polynomial extrapolations to
@@ -249,10 +256,77 @@ def collect(raw):
     return True
 
 
+def steep_verdict(lo, hi, D0=14.5, D1=15.0, Ds=(15.5, 16.0, 16.5, 17.0, 17.5)):
+    """the k_c test of lambda_1's steepening (#1025, coordinator): S(D) = lambda_lo(D) minus the line through lambda_lo
+    at D0, D1 (the steepening's size at D), against the move to the higher k_c, c(D) = lambda_hi(D) - lambda_lo(D).
+    The steepening is resolution if |c| > |S| at any D in Ds where both are known."""
+    s0 = (lo[D1] - lo[D0]) / (D1 - D0)
+    rows = []
+    for D in Ds:
+        if D in lo and D in hi:
+            S = lo[D] - (lo[D1] + s0 * (D - D1))
+            c = hi[D] - lo[D]
+            res = abs(c) < abs(S) if "steep" in MUT else abs(c) > abs(S)
+            rows.append((D, lo[D], hi[D], c, S, res))
+    return rows, any(r[-1] for r in rows)
+
+
+def steep(fn, planted=False):
+    if planted:
+        D = [14.5, 15.0, 15.5, 16.0, 16.5, 17.0]
+        lo = {d: 2.5 - 0.15 * (d - 14.5) - 0.02 * (d - 14.5) ** 2 for d in D}
+        S = {d: lo[d] - (lo[15.0] + (lo[15.0] - lo[14.5]) / 0.5 * (d - 15.0)) for d in D}
+        good = True
+        for lab, hi, want in (("k_c move 0.1 S + 1e-4 (real)", {d: lo[d] + 0.1 * S[d] + 1e-4 for d in D}, False),
+                              ("k_c move -1.5 S (resolution)", {d: lo[d] - 1.5 * S[d] for d in D}, True)):
+            _, res = steep_verdict(lo, hi)
+            ok = res == want
+            good &= ok
+            print(f"planted, {lab}: verdict {'resolution' if res else 'real'} ({'OK' if ok else 'BAD'})"
+                  + (f"  [MUTATION {MUT}]" if MUT else ""))
+        return good
+    pts = json.load(open(fn))["points"]
+    lo = {p["D"]: p["kcs"]["47"] for p in pts if "47" in p["kcs"]}
+    hi = {p["D"]: p["kcs"]["55"] for p in pts if "55" in p["kcs"]}
+    rows, res = steep_verdict(lo, hi)
+    print("| D | λ₁ k_c 47 | λ₁ k_c 55 | c = move to k_c 55 | S = steepening at k_c 47 | \\|c\\| > \\|S\\| |")
+    print("|---|---|---|---|---|---|")
+    for D, a, b, c, S, r in rows:
+        print(f"| {D:g} | {a:.7f} | {b:.7f} | {c:+.2e} | {S:+.2e} | {'yes' if r else 'no'} |")
+    ks = sorted(hi)
+    if len(ks) > 1:
+        print("k_c 55 slopes per unit D: " + ", ".join(
+            f"D {ks[i]:g}-{ks[i + 1]:g} {(hi[ks[i + 1]] - hi[ks[i]]) / (ks[i + 1] - ks[i]):+.4f}" for i in range(len(ks) - 1)))
+    print(("verdict: the steepening is resolution (k_c 55 moves lambda_1 by more than it at some D)" if res else
+           "verdict: the k_c 55 move is below the steepening at every D") if rows else "no D with both k_c 47 and 55")
+    return True
+
+
+def leak():
+    """|K'_nu / K'_1| (inner_np.Kp at i nu w + l) at the M = 3 zeros: the weight with which an error in the harmonic-nu
+    condition leaks into the harmonic-1 one (nested_ell.py, hier.py). l = 0: FIRST_ORDER.md's zero (w/w_inf
+    1.015603095); l = 1: #994's (data/ell_lambda_l1.json)."""
+    sys.path.insert(0, os.path.join(HERE, "..", "inner_stokes"))
+    import inner_np as IN
+    wf1 = json.load(open(os.path.join(HERE, "data", "ell_lambda_l1.json")))["zero"]["M3"]["wf"]
+    eps = np.finfo(float).eps
+    for l, wf in ((0, 1.015603095), (1, wf1)):
+        w = IN.W0 * wf
+        k1 = abs(IN.Kp(1j * w + l))
+        r = {n: abs(IN.Kp(1j * n * w + l)) / k1 for n in (3, 5, 7)}
+        print(f"l = {l}, w/w_inf {wf}: " + ", ".join(f"|K'_{n}/K'_1| {v:.2e} (times eps {v * eps:.1e})" for n, v in r.items()))
+    return True
+
+
 if __name__ == "__main__":
     cmd = sys.argv[1]
     if cmd == "planted":
         good = planted()
+    elif cmd == "steep":
+        rest = [a_ for a_ in sys.argv[2:] if not a_.startswith("--")]
+        good = steep(rest[0] if rest else os.path.join(HERE, "data", "ell_lam_highD.json"), "--planted" in sys.argv)
+    elif cmd == "leak":
+        good = leak()
     elif cmd == "fold":
         rest = [a_ for a_ in sys.argv[2:] if not a_.startswith("--")]
         good = fold(rest[0] if rest else os.path.join(HERE, "data", "l1kc47F1025.jsonl"))
