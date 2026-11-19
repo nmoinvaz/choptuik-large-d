@@ -488,7 +488,7 @@ digits shown, since the graphs are linear in the forcing's monomials.
 
 ### 9.5 Numbers
 
-`python3 l2_c2_summary.py` (stored at `logs/l2_c2_summary.log`), xi1 = 0.2. The c₂ and λ₁ values are those of the left
+`python3 l2_c2_summary.py` (its log is in raw I1010-mac, 8c8a27a4), xi1 = 0.2. The c₂ and λ₁ values are those of the left
 singular vector of Sch, and "c₂ over φ" is the range over that vector and φ = e₁, e₂, f₂:
 
 | M | c₂ | c₂ over φ | λ₁ (same code) | λ₁ (SymForce's terms) | c₂ + λ₁ | G alone | c₂, control |
@@ -559,4 +559,6 @@ python3 l2_c2_summary.py                     # the table and verdicts of 9.5; PA
 ```
 
 The c₂ runs read the stored zeros `data/first_order_hier_M{1,3,5}_xi0.2.json`, and use numpy, scipy, mpmath and
-sympy. Their logs are in `solver/inner_pert/logs/l2_c2_*.log`.
+sympy. Their logs are in folder I1010-mac of the raw-data repository (commit 8c8a27a4; clone it beside the checkout,
+`git clone https://github.com/nmoinvaz/choptuik-large-d-raw ../choptuik-large-d-raw`). The result JSONs stay in
+`solver/inner_pert/data/`.
