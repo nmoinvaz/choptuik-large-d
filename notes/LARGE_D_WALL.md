@@ -1107,6 +1107,23 @@ at D 225.13 moves Δ by −1.1×10⁻²⁰, so the rungs' lifts belong to the or
 - **Discrepancy, unexplained.** Its rung refinement floors at 10⁻⁴³–10⁻⁵⁴ (10⁻²⁸–10⁻³⁰ at a 1 near D 242–246), where
   #603's at order 130 with the same flags reaches 2×10⁻⁷⁹ in three corrections.
 
+## The order-tied chain past D 238: a re-seed floor, and single orders that do not take a jump (#903, #966, #971, #973)
+
+- **The stall at D 237.5 to 238.2 was the re-seed's precision, not the order.** ks 250 (leg 8) stopped at D 237.53
+  and ks 291 at 238.18, so 41 more orders bought 0.65 in D. Every failed re-seed there ended its quad-double polish
+  at |R| 1.0×10⁻²⁴ to 4.1×10⁻²⁴ against a fixed bar of 10⁻²⁴, flat in the step a (#903 comment 6990709157). That is the
+  polish's floor, ε_qd G. `anm_run.py --reseed_qd_bar` (main 664ef3dd) lets the octo-double refinement take over
+  above it. With it ks_chain3b passed D 238 (#966), and ks_chain2 on the main build reached D 242. On ks_chain2 the
+  accepted polishes' |R| grows about 11× per unit D (4×10⁻²⁵ at D 238.68, 5.7×10⁻²² at 241.68), so the chains now run
+  with the bar at 10⁻¹⁵.
+- **The harmonic-3 pair's fall near D 238 is the problem's.** σ_pair at D 237.71 is the same at ks 291, 295 and 299
+  to 3×10⁻⁹ relative (#949). Its slope rises from 0.075 to 0.44 per unit D over D 237.7 to 238.8. Its fold fits give
+  no stable D*, the estimates moved up with each state, and both chains passed them.
+- **Order jumps.** From ks 291 at D 237.7132, base polishes to ks 295, 297, 299, 301, 303 and 307 converge, while ks 293
+  fails (first chord 1.5×10⁻⁶, then 4×10²⁶), as did 304 in #966 (#971, #973). So the failures are single orders, not
+  a size of jump or a residue mod 4, and a +2 jump to ks 293 passed from D 243.84 (ks_chain3b). `ks_chain.py
+  --ks_retry R` (main 0fca0da2) runs a leg that makes no progress again at ks + 1 up to ks + R.
+
 ## Proposed README text
 
 Applied to the README by the coordinator on 2026-11-14 (its checks moved to the README with it). Drafted for the
