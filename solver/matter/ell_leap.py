@@ -16,12 +16,12 @@ states data/sol_{tag}_D{D:.4f}.npy at multiples of --every (and the last two, fo
 --fold (a fold of the branch in D, #1025): each point also records the four smallest singular values of J (and the
 largest), |cos| of the secant tangent t_z = z - z_prev with their right singular vectors, the smallest singular value
 of the bordered matrix [[J, dF/dn], [t_z^T, t_D]] (regular at a regular fold, where sigma_1(J) -> 0 like
-sqrt(D* - D)), and |J^+ dF/dn| (the tangent's size, which diverges at the fold). Steps adapt: a failed solve (|F| above
---fmax or the constraint above --cmax) halves h and retries from the same two states, and a fall of sigma_1(J) by
-more than half over one step halves h for the next. That singular value is the fold candidate's, the weak mode
-with the largest |cos| (sv_fold, cos_fold), because J also has near-null junk directions (#810). Below --hmin the
-run stops. Also recorded: the number of singular values below 1e-12 sigma_max (n_null) and the four smallest above
-it with the tangent's |cos| on their vectors (sv_reg_small, cos_t_reg), where a fold mode would show. Every state is saved
+sqrt(D* - D)), and |J^+ dF/dn| (the tangent's size, which diverges at the fold). Also recorded: the weak mode with the
+largest |cos| (sv_fold, cos_fold), the number of singular values below 1e-12 sigma_max (n_null, near-null junk
+directions, #810) and the four smallest above it with the tangent's |cos| on their vectors (sv_reg_small, cos_t_reg),
+where a fold mode would show. Steps adapt: a failed solve (|F| above --fmax or the constraint above --cmax) halves h
+and retries from the same two states, and a fall of the smallest regular singular value by more than half, or a
+doubling of |J^+ dF/dn|, over one step halves h for the next. Below --hmin the run stops. Every state is saved
 (sol_{tag}_D{D:.6f}.npy).
 """
 import argparse
@@ -101,11 +101,14 @@ while D < a.D_end - 1e-9:
         sys.exit(1)
     open(out, "a").write(json.dumps(rec) + "\n")
     if a.fold:
-        sv1 = rec["sv_fold"]
-        if sv1_prev is not None and sv1 < 0.5 * sv1_prev and h / 2 >= a.hmin:
+        # fold watch on the regular weak mode and the tangent size; sv_fold sits at the rounding floor (1e-16 against
+        # sigma_max 7 at k_c 47) and halved h on noise in the first k_c 47 run (#1025)
+        sv1, tn = rec["sv_reg_small"][0], rec["tan_norm"]
+        if sv1_prev is not None and (sv1 < 0.5 * sv1_prev[0] or tn > 2 * sv1_prev[1]) and h / 2 >= a.hmin:
             h /= 2
-            print(f"the fold candidate's singular value fell from {sv1_prev:.3e} to {sv1:.3e}; h -> {h}", flush=True)
-        sv1_prev = sv1
+            print(f"fold watch: sigma_reg {sv1_prev[0]:.3e} -> {sv1:.3e}, |J^+ dF/dn| {sv1_prev[1]:.3g} -> {tn:.3g}; "
+                  f"h -> {h}", flush=True)
+        sv1_prev = (sv1, tn)
         np.save(os.path.join(HERE, "data", f"sol_{a.tag}_D{Dn:.6f}.npy"), z)
     if abs(Dn / a.every - round(Dn / a.every)) < 1e-9 or Dn >= a.D_end - 1e-9:
         np.save(os.path.join(HERE, "data", f"sol_{a.tag}_D{Dn:.4f}.npy"), z)
