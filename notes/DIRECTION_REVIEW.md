@@ -193,7 +193,11 @@ M = 5 (#1026, raw `I1026-dh610/`). Walks from two of them end at two M = 5 zeros
 |F₅/F₃| is 0.59 and 0.56 and |F₇/F₅| is 0.68 and 0.63, against 0.055–0.057 per pair at the known zero. So by #1027's
 rule the truncation sequence does not converge at these zeros, and the truncation route cannot establish them as
 excited solutions. All of this comes from `hier_nb.py`, which has been checked against the amplitude expansion only at
-the known zero. The same check at the two low-ω zeros is #1029. Unvalued cells of the M = 3 count remain (#1021), and
+the known zero. The same check at the two low-ω zeros is inconclusive (#1029, raw `I1029-win/` 06b61354). At
+ω/ω∞ 0.1005 the series' F₃ terms at A 2.57 are 4.0, 40 and 200–460 at orders 3, 5 and 7, where the known zero's are
+0.086, 0.013 and 0.0016, so the series diverges at those amplitudes and its late-order fits fail from order 9. The
+amplitude expansion cannot reach these zeros, and the low-ω readings rest on one solver. Unvalued cells of the M = 3
+count remain (#1021), and
 the box A 3.6–5.1 is being counted (#1013 step 4).
 
 ### 2.4 The amplitude as a second test of Conjecture 1
