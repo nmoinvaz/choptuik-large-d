@@ -720,4 +720,5 @@ python3 route3_head.py --certify                   # 11.3 (~10 min): Lambda_head
 14 of 14 exits as listed, the five controls failing. `route3_bound.py --constants` printed 28.4491, 56.8735 and
 4.76610×10⁶ (with `--J0=100`, 1.59898, 3.17310 and 3.62864×10⁵), the values quoted in §10, and the six
 `route3_head.py` logs are byte-identical to the Mac's in raw I1015-mac (raw I1030-rpi5, cc9c41c5). §10's own Mac logs
-were not stored, so its commands have one stored run, rpi5's.
+were not stored. Instead its eight commands ran again on x86 (winb, Windows 11, the same library versions, #1039),
+and every printed line equals rpi5's, timings aside, with the same exits.
