@@ -2,14 +2,16 @@
 """P2c review (#992): how disc (11, 1)'s bound grows with its input box, from the records of
 p2c_disc.py --discs=11:1 --infl=I --tag=diag_11_1_inflI (I = 0..3), against the Lipschitz growth over the disc.
 
-    python3 p2c_disc_11_1_growth.py > p2c_disc_11_1_growth.log
+    python3 p2c_disc_11_1_growth.py DIR > DIR/p2c_disc_11_1_growth.log     # DIR: the records' folder (I992-mac)
 """
 import json
 import math
 import os
+import sys
 
 HERE = os.path.dirname(os.path.abspath(__file__))
-R = {i: json.loads(open(os.path.join(HERE, f"p2c_disc_diag_11_1_infl{i}.jsonl")).readline()) for i in range(4)}
+DIR = sys.argv[1]
+R = {i: json.loads(open(os.path.join(DIR, f"p2c_disc_diag_11_1_infl{i}.jsonl")).readline()) for i in range(4)}
 row = json.load(open(os.path.join(os.path.dirname(HERE), "lemma6b1_runs", "row_11.json")))
 box, n = row["discs"][1]["box_rad"], row["n"]
 print(f"disc (11, 1): n {n}, r {row['r']}, stored box_rad {box:.4g}")

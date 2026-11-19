@@ -262,13 +262,15 @@ disc's centre to the whole disc, with a bound M on |y − y₀|. This section re
 
 ### 4.2 Results
 
-The own numbers were committed (ce097b2b) before the stored per-disc margins were read for the comparison (§4.3).
+The own numbers were committed (ac394431) before the stored per-disc margins were read for the comparison (§4.3).
+The logs and records named below are in the raw-data repository's folder `I992-mac/` (ccf0c978).
 The work paused there at the coordinator's word on 2026-11-19 and resumed the same day.
 
-- **Planted checks pass.** The equation matches `SysU.rhs` at 10 random points to a relative 3.5×10⁻⁵⁸
-  (`p2c_disc_checkint.log`). The integrator lands inside each stored ray box from s_j to s_{j+1}, at deviations of
-  10⁻²⁰ to 1.7×10⁻⁹ against box radii of 2×10⁻⁹ to 8×10⁻⁸.
-- **All 178 discs, protocol inputs: 177 certified** (`p2c_disc_all.log`, 512 s).
+- **Planted checks pass.** The equation matches `SysU.rhs` at 10 random points to a relative 3.5×10⁻⁵⁸ (`--checkeq`).
+  The integrator lands inside each stored ray box from s_j to s_{j+1}, at deviations of 9.6×10⁻²⁴ to 1.3×10⁻²⁰
+  against box radii of 2×10⁻⁹ to 8×10⁻⁸ (`p2c_disc_checkint.log`). The first run of this check, before the series-cap
+  fix below, had deviations up to 1.7×10⁻⁹ and passed too (`p2c_disc_checkint_devel.log`).
+- **All 178 discs, protocol inputs: 177 certified** (`p2c_disc_all.log`, 511 s).
   - All 12 start-ray discs, with exact stored inputs, are certified. Their Λ are 0.1699 for (0, 0) and 0.4397 for
     (11, 0).
   - **Disc (11, 1) is not certified (Λ = 1.494)**, on its reconstructed box (4 × the stored radius 1.0×10⁻⁶).
@@ -340,16 +342,19 @@ under the same assumption, certify 178 of 178, and both controls fail.
 
 ### 4.5 Reproduce
 
-From `solver/proof/review_p2c/`, with python-flint 0.9.0:
+From `solver/proof/review_p2c/`, with python-flint 0.9.0, and the raw-data repository cloned beside this checkout
+(`git clone https://github.com/nmoinvaz/choptuik-large-d-raw ../choptuik-large-d-raw` from the checkout's root). The
+records go to a task folder there, given by `--out`; `I992-mac/` holds this review's.
 
 ```
+RAW=../../../../choptuik-large-d-raw/I992-mac
 python3 p2c_disc.py --checkeq                                  # PASS, exit 0
-python3 p2c_disc.py --checkint                                 # PASS, exit 0
-python3 p2c_disc.py --discs=all > p2c_disc_all.log             # 177 of 178, exit 1 (about 510 s)
-python3 p2c_disc.py --discs=all --infl=2 --tag=all_infl2 > p2c_disc_all_infl2.log   # 178 of 178, exit 0
-python3 p2c_disc.py --discs=11:1 --infl=0 --tag=diag_11_1_infl0  # and --infl=1, 2, 3 (tags ..._infl1, 2, 3)
-python3 p2c_disc.py --discs=11:0 --radius=16 > p2c_disc_K1_toolarge.log   # K1: not certified, exit 1
-python3 p2c_disc.py --discs=ray --mutate=sign > p2c_disc_K2_sign.log      # K2: 0 of 12, exit 1
-python3 p2c_disc_compare.py p2c_disc_all.jsonl p2c_disc_all_infl2.jsonl > p2c_disc_compare.log
-python3 p2c_disc_11_1_growth.py > p2c_disc_11_1_growth.log
+python3 p2c_disc.py --checkint > $RAW/p2c_disc_checkint.log    # PASS, exit 0
+python3 p2c_disc.py --discs=all --out=$RAW > $RAW/p2c_disc_all.log    # 177 of 178, exit 1 (about 510 s)
+python3 p2c_disc.py --discs=all --infl=2 --tag=all_infl2 --out=$RAW > $RAW/p2c_disc_all_infl2.log   # 178 of 178, exit 0
+python3 p2c_disc.py --discs=11:1 --infl=0 --tag=diag_11_1_infl0 --out=$RAW   # and --infl=1, 2, 3 (tags ..._infl1, 2, 3)
+python3 p2c_disc.py --discs=11:0 --radius=16 --out=$RAW > $RAW/p2c_disc_K1_toolarge.log   # K1: not certified, exit 1
+python3 p2c_disc.py --discs=ray --mutate=sign --out=$RAW > $RAW/p2c_disc_K2_sign.log      # K2: 0 of 12, exit 1
+python3 p2c_disc_compare.py $RAW/p2c_disc_all.jsonl $RAW/p2c_disc_all_infl2.jsonl > $RAW/p2c_disc_compare.log
+python3 p2c_disc_11_1_growth.py $RAW > $RAW/p2c_disc_11_1_growth.log
 ```
