@@ -56,7 +56,7 @@ For K >= 13 use --fit phys with prec 640 (see the docstring of fit_phys); the le
    solver/proof/amp_trunc.py's truncation, B_tail.md 4, the control of #1016). --trunc-fams all fits every family
    |nu'| <= k instead of those present.
 6. --fit-logs N (#1016): ln^L j times the main family's terms, L = 1..N, as fixed columns of the phys fit at orders
-   k >= --fit-logs-from (default 2M + 3 with --trunc M). At the first truncated order of a truncated model the
+   k >= --fit-logs-from (default, per harmonic nu, the model's first truncated order 2M + 4 - nu). There the
    sequence is c ln j + S + O(1/j) (at M = 3, k = 9: c = 2.4005e-4 - 9.551e-5 i, the same at J 1000 and 1500); without
    the log column the fitted S drifts like c ln J, the ln J drift #996 saw with the legacy fit. S is then the constant
    next to c ln j (that convention fixes it), and c goes to 'fit_logc'. N = 0 is the basis of item 4, unchanged.
@@ -288,8 +288,9 @@ class AmpPar(Amp):
         self.trunc_fams = kw.pop("trunc_fams", "present")      # phys families with --trunc: |nu'| <= M, or "all" (<= k)
         # --fit-logs N: ln^L j companions (L <= N) of the main family in the phys fit at orders k >= fit_logs_from
         self.fit_logs = int(kw.pop("fit_logs", 0))
-        flf = kw.pop("fit_logs_from", None)
-        self.fit_logs_from = flf if flf is not None else (2 * self.trunc + 3 if self.trunc is not None else 0)
+        # first order with log columns: given, or per harmonic the model's first truncated order k = 2M + 4 - nu (the
+        # omitted harmonic M + 2 reaches harmonic nu through the lapse harmonic M + 2 - nu)
+        self.fit_logs_from = kw.pop("fit_logs_from", None)
         self.fit_log_lambda = float(kw.pop("fit_log_lambda", 1.0))   # log columns ln^L(j / lambda)
         self.fit_logc = {}                       # "k_nu" -> coefficient of ln j at the chosen Mf
         super().__init__(wf, K, J, prec=prec, **kw)
@@ -556,7 +557,9 @@ class AmpPar(Amp):
             tab = self.fit_data(nu)[3]
             ys = self._ys(nu, k, tab, self.fit_step)
             kfam = k if (self.trunc is None or self.trunc_fams == "all") else min(k, self.trunc)
-            logs = (self.fit_logs, self.fit_log_lambda) if (self.fit_logs and k >= self.fit_logs_from) else 0
+            kf = self.fit_logs_from if self.fit_logs_from is not None else (
+                2 * self.trunc + 4 - abs(nu) if self.trunc is not None else 0)
+            logs = (self.fit_logs, self.fit_log_lambda) if (self.fit_logs and k >= kf) else 0
             args[nu] = (_ser_rows([[self.w.mid()]]), nu, kfam, self.jlo, self.J, self.M, self.mf[0], self.mf[1],
                         self.fit_step, self.phys_prec, logs)
             yb[nu] = ys
