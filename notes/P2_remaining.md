@@ -525,3 +525,65 @@ python3 p2c_h8_compare.py $RAW > $RAW/logs/compare.log   # (P3, P4) PASS, exit 0
 ```
 
 `$RAW/run.sh` runs the first seven with their logs.
+
+## 6. Item 5: B5(1), the inner fixed point, checked independently
+
+Issue #1019. Lemma B5(1) (B5_inner.md §§2–5) bounds W = Y⁺_out − Z⁺_in on the working domain by |W_j| ≤ x_j m_j/n, given
+(H8). The bound comes from a super-solution b + Lx < x of a 10 × 10 system whose constants are suprema over the sector
+Σ_Z = {0 < |t| ≤ Z, 0 ≤ arg t ≤ π/2 + κ} (κ = 0.3, Z = 0.0085). This section first settles whether B5's data cover (H8)'s
+certified δ (§6.0), then recomputes the lemma's constants and super-solutions.
+
+### 6.0 The δ question (answered first, `I1019-mac/delta/`, d80a66c2)
+
+- `b5_threshold.py`'s DELTA0 = (0, 76.56, 3.23125, 6.46251) is B5's own leading O(1/n) coefficients of W at the box
+  centre, from `b5_data.log`. That is |φ₁|, |[F²]| and 2|[F²]|, without B8's remainder, the box spread or η, so it is
+  not (H8)'s δ. Its label "upper values" is wrong: each entry is below the exact coefficient (76.56019, 3.2312583,
+  6.4625167, §5.2). It feeds only that script's superseded estimate and B5_inner.md §5.2's illustration.
+- The chain's x_Φ and C_E come from `b5_jump.py`, which reads the certified δ from `b8m_h8_K4_L73.89.log` at full precision.
+  Rerun as stored, it reproduces `b5_jump.log`: x_Φ = (39784.4, 38775.8), C_E = 2.532366×10³³. With B8_constants.md
+  §8.3's rounded-up δ (8.3×10⁻⁵, 79.04, 3.232, 6.464) the result is x_Φ = (39789.7, 38781.0), C_E = 2.532706×10³³. So the
+  stored values stand.
+
+### 6.1 Protocol, fixed before the run
+
+- **Independence.** `b5_bounds.py`, `b5_formulas.py`, `b5_numeric.py`, `b5_system.py`, `b5_data.py` and their logs are
+  not opened until this review's numbers are committed. The code (`solver/proof/review_p2c/p2c_b5.py`) is written from
+  B5_inner.md §§1–4.
+  - **Shared inputs:** κ, Z, κ₁ = 0.6, γ = 0.3, ln n₀ = 73.89, δ_ref = (1, 200, 10, 20), the parameter box (§5.1:
+    centre ± 2×10⁻⁶ real, ± 10⁻⁶ imaginary), and lemma S's certified η bound at |z| = 0.0085 (B5_inner.md §5.1: p
+    2.7×10⁻⁸, v 5.5×10⁻⁷, c 6.5×10⁻¹¹, weight exponent k = 12).
+  - **Seen before:** B5_inner.md in full, `b5_threshold.py`, `b5_jump.py` and their logs (§6.0), and the stored
+    super-solutions of §5.2.
+- **Method, own.** mpmath complex intervals at 256 bits, not python-flint.
+  - **Inner solution.** The inner series to z³⁰ comes from #1017's solver (ε⁰ part of B8's reduced system, checked
+    there against `series_arb.py` to 10⁻⁶⁵), converted to (P, Φ, C, Q). η enters as stated, through its weighted bound.
+  - **Model.** Lemma 1's system and the Φ- and ϑ-rates of §1.3 are coded from the note. They are checked at random
+    complex states against B8's reduced system of #1017 (another statement of the same M-model): the same solution,
+    rates converted.
+  - **G⁰ and the Jacobian blocks** by forward-mode derivatives of my own G⁰. The sup over Σ_Z is taken on my own cells,
+    polar cells with the series evaluated in intervals plus η.
+  - **R_Φ** from the ε-expansion of f^ε_Φ − f^0_Φ on the inner series, computed as a series in (ε/z, z), not from
+    Lemma 3's formula. Lemma 3's claim, that the ε/z² term cancels, is then a check. The tail in τ = ε/t ≤ τ₀ is bounded
+    separately. R_C, T_F and Λ_ϑ follow §4's definitions, and the ε-parts ℓ_j follow §4's Schwarz–Cauchy bound with my
+    own G.
+  - **L** is assembled per §4's table. Super-solutions are found by iterating x ← (b + Lx)(1 + margin) and certified by
+    b + Lx < x in intervals. This is done for the forcing, unit data, δ_ref and (H8)'s rounded-up δ.
+- **Pass criteria.**
+  - **(P1)** Lemma 1 agrees with B8's reduced system to 10⁻⁴⁰ relative at 10 random states. G⁰ equals the ε → 0 limit
+    of my exact Φ-rate minus Φ/(2z²) to 10⁻⁴⁰. The ε/z² part of r_Φ on the inner series vanishes to 10⁻⁴⁰ at the
+    centre. The value at t → 0, R(0), agrees with B5_inner.md §2's 35.18 to its digits.
+  - **(P2)** With my constants, the super-solution for δ_ref is certified (b + Lx < x strictly), max x ≤ 10¹², and the
+    Perron-weighted norm of L is below 1.
+  - **(P3)** After my numbers are committed, they are compared with `b5_bounds_k0.3_Z0.0085.log`: L's largest entries,
+    the norm Λ, R_Φ, R_C, T_F and every super-solution. These are upper bounds by different cells, so the reading is a
+    ratio. A ratio outside [1/3, 3] is investigated, and a ratio inside is reported as is.
+- **Controls, each with a bar that its mutation crosses by a wide margin.**
+  - **(K1) Off the solution.** The inner series is perturbed by A × (1 + 10⁻³) in Y_in only, the model keeping A. Lemma
+    3's cancellation then fails, so |t r_Φ/ε| grows like 1/|t|. The check, max over |t| = 10⁻⁶ Z of |t r_Φ/ε| at most
+    3 × its max at |t| = Z, must fail. On the solution the two are within a few tens of percent.
+  - **(K2) Term control.** G⁰ without its 𝒞ℬ₀P/(2z) term. The (P1) check of G⁰ against the limit of the exact rate
+    (bar 10⁻⁴⁰) must fail.
+  - **(K3) The contraction must be able to fail.** The Φ ← C block of L is scaled by 1.5. The super-solution for δ_ref
+    must then not be certified, because the norm is above 1.
+- **Output.** The logs and records go to the raw-data repository as `I1019-mac/b5/`. The code, and this section, stay in
+  the branch.
