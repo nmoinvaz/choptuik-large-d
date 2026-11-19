@@ -453,6 +453,35 @@ class DSSEll(DSSSpec):
             self.lam = 0.0
         return Mm
 
+    def mode_matrix_c(self, z, lam, eps=1e-7, step_scale=None):
+        """As mode_matrix, for complex lam, by central differences (the perturbed members are complex; as
+        sigdss_solver.mode_matrix_c). step_scale: per-column factors on the differencing denominators (a mutation)."""
+        sizes, K, L = self.layout()
+        nv = L - 1
+        Mm = np.zeros((nv, nv), complex)
+        blocks, offs = self._block_list()
+        blk = 3 * self.n_odd + 2 * self.n_even
+        node0 = offs[2]
+        D = z[-1]
+        self.lam = complex(lam)
+        try:
+            for b, (c0, nf, fun, tgt) in enumerate(blocks):
+                base = z[c0:c0 + nf]
+                hh = eps * np.maximum(1.0, np.abs(base))
+                X = np.repeat(base[None, :], 2 * nf + 1, axis=0).astype(complex)
+                X[1:nf + 1] += np.diag(hh); X[nf + 1:] -= np.diag(hh)
+                om = np.full(2 * nf + 1, 2 * np.pi / D, dtype=complex)
+                R = self.tospec(fun(X, om))
+                den = 2 * hh * (step_scale[c0:c0 + nf] if step_scale is not None else 1.0)
+                Rd = (R[1:nf + 1] - R[nf + 1:]) / den[:, None]
+                r0 = b * blk
+                Mm[r0:r0 + blk, c0:c0 + nf] = Rd.T
+                t0 = node0 + blk * tgt
+                Mm[r0:r0 + blk, t0:t0 + blk] -= np.eye(blk)
+        finally:
+            self.lam = 0.0
+        return Mm
+
     # ---------- conversions ----------
     def regrid_from(self, z, other):
         """Solution vector of another DSSEll (other kc and/or N, same nodes) on this one's harmonics."""
