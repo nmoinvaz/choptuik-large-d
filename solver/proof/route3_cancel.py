@@ -366,6 +366,7 @@ def numeric(NU, J, wf=1.0, pert="all", mut=None, quiet=False):
     labels = [(1, -Iv, 0), (-1, Iv, 0)] + [(NU + sh, eps * (acb(*amp[k]) if on(k) else acb(0)), 1)
                                           for sh, k in ((-2, "m"), (0, "0"), (2, "p"))]
     T, seq, d3 = order3(labels, NU, J, wv, 1)
+    sN = Iv * NU * wv
     TN = T[NU]
     aN, bN = (1 + sN) / 2, (2 + sN) / 2
     sc = {"demix": 1, "psi": 1}
