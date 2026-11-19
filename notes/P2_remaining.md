@@ -587,3 +587,67 @@ Issue #1019. Lemma B5(1) (B5_inner.md §§2–5) bounds W = Y⁺_out − Z⁺_in
     must then not be certified, because the norm is above 1.
 - **Output.** The logs and records go to the raw-data repository as `I1019-mac/b5/`. The code, and this section, stay in
   the branch.
+
+### 6.2 Results (own numbers, committed before the comparison)
+
+The logs and records are in `I1019-mac/b5/` (09c7f920). The code is `p2c_b5.py` at 5f58c30b, and d3d9cdef for the box
+rerun. It uses mpmath 256-bit intervals.
+
+- **(P1) passes.**
+  - Lemma 1 agrees with B8's reduced system to 2.8×10⁻⁷⁷. So B5_inner.md and B8_constants.md state the same M-model,
+    each coded from its own note.
+  - §1.3's Φ_z equals the total derivative along the flow to 4.0×10⁻⁴⁹, and G⁰ equals the ε → 0 limit to 6.0×10⁻⁶⁸.
+  - On the inner series, z²(f^ε − f⁰) as a series in (τ, z) has vanishing τ⁰ part (8.8×10⁻⁶⁰ relative) and vanishing
+    z⁰, z¹ parts at every τ order (3.5×10⁻⁷⁵): Lemma 3's cancellation.
+  - R(0) = 35.1835.
+  - Lemma 3's formula, coded from the note, agrees with that ε-series to 1.9×10⁻⁴⁹ at interior points. It is
+    therefore used for R_Φ on the cells.
+- **(P2) passes**, over the box, for every n ≥ e^{73.89}. The run uses 3073 polar cells: 32 uniform radial bins on
+  [0.1Z, Z], 16 geometric bins below, 64 angular bins and an origin box. The bootstrap ball is included, with a priori
+  radius x ≤ 10¹².
+
+| constant | here (box) | B5_inner.md §5.2, certified | §5.2, double precision (not rigorous) |
+|---|---|---|---|
+| L, Φ₋₁ ← C₀ | 245.7 | 278 | 237 |
+| L, Φ₊₁ ← C₀ | 199.5 | 235 | 196 |
+| L, Φ₊₁ ← C₂ | 144.0 | 173 | 137 |
+| L, Φ ← P | 98.0 | 101 | 97 |
+| Perron-weighted norm of L | 0.9410 | 0.9663 | 0.937 |
+| R_Φ | 49.58 | 91.5 | 32–40; 35.18 at z → 0 |
+| R_C | 3.345 | 3.43 | 3.23 at z → 0 |
+| T_F | 3.934 | 4.15 | |
+| ε-parts ℓ_j | ≤ 5.0×10⁻¹⁴ | ≤ 7.6×10⁻¹⁴ | |
+
+  Every bound here lies between B5's double-precision samples and its certified bounds.
+
+  The super-solutions are all certified (b + Lx < x), with the maximum over harmonics shown:
+
+| right-hand side | x_P | x_Φ | x_C | x_ϑ |
+|---|---|---|---|---|
+| forcing only | 16.07 | 3782 | 0.435 | 7.87 |
+| unit data in P | 7.135 | 1444 | 0.163 | 10⁻⁸ |
+| unit data in Φ | 0.0438 | 10.30 | 0.0010 | 10⁻⁸ |
+| unit data in C | 17.70 | 4164 | 1.464 | 10⁻⁸ |
+| unit data in ϑ | 0.0789 | 18.55 | 0.0065 | 1.000 |
+| δ_ref = (1, 200, 10, 20) | 210.5 | 49297 | 15.57 | 27.87 |
+| (H8)'s δ rounded up (8.3×10⁻⁵, 79.04, 3.232, 6.464) | 77.24 | 18174 | 5.288 | 14.33 |
+
+  For (H8)'s δ, x_Φ = (18174.4, 17603.9) for μ = (−1, +1). `b5_jump.py` gives (39789.7, 38781.0) with the same δ
+  (§6.0). The two are consistent bounds: this one is tighter by the smaller R_Φ and contraction.
+- **Controls.**
+  - **K2** (G⁰ without 𝒞ℬ₀P/(2z)) fails its check at 5.5×10⁻³ against 10⁻⁴⁰.
+  - **K1 as written** (A × (1 + 10⁻³) in Y_in) is not off the solution. A enters only through P(0) = 2F, so it is
+    another solution, and Lemma 3 still holds. It moved R(0) to 35.265 and so failed the R(0) check, not the growth
+    check that it was meant to fail. That is a design error of the protocol. **K1b** (Φ + 10⁻³z, B5_inner.md §6's
+    kind) is off the solution: Lemma 3's zeros fail at 5×10⁻⁴, and |t r_Φ/ε| reaches 58844 at |t| = 10⁻⁶Z against 43
+    at Z.
+  - **K3 as written** (Φ ← C × 1.5) did not fire: the norm is 0.955, and δ_ref's super-solution is still certified.
+    So did a × 2 supplement (0.964). The Φ ← C loop closes through the small C rows (γZ ≈ 0.03), and the norm is set by
+    the Φ ↔ P loop. That is a design error of the protocol: the block was chosen from B5's numbers, not from the loop
+    structure. **K3c** (Φ ← P × 2, B5_inner.md §6's own mutation) fires: norm 1.243 (B5 reports 1.27), and no
+    positive super-solution, with exit 1.
+- **Development fixes**, made before these runs:
+  - R_Φ by Lemma 3's formula rather than by the ε-series, whose rigorous tail bound lost the ε-cancellation;
+  - the super-solution as (I − L)⁻¹(b + m·1), so that rows without data keep slack;
+  - τ₀ = n^{−2γ}, where a first version used n^{−(1−2γ)}, which was only conservative;
+  - the box run's centre-only checks.
