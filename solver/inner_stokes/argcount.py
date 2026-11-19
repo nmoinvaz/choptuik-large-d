@@ -168,8 +168,20 @@ class Multiplier:
             best = (z.real, z.imag)
         return best
 
+    def value(self, p):
+        """the value without the guards"""
+        r = self.extra[self.key(p)]
+        return self.shape(p, complex(r["re"], r["im"]))
+
+    def floor(self, p):
+        """the rounding floor sigma of the value (M = 1), times the planted factor"""
+        s = self.extra[self.key(p)].get("sig", 0.0) if self.M == 1 else 0.0
+        return float(s * (abs(self.shape(p, 1.0)) if self.plant is not None else 1.0))
+
     def __call__(self, p):
-        v = self.vals[self.key(p)]
+        return self.shape(p, self.vals[self.key(p)])
+
+    def shape(self, p, v):
         if self.plant is not None:
             v = v * complex(p[0] - self.plant[0], 2 * (p[1] - self.plant[1]))
         if self.mutate == "conj":
@@ -225,7 +237,9 @@ class Counter:
             pts = new
         vals = [self.F(x) for x in pts]
         steps = [wrap(math.atan2(b.imag, b.real) - math.atan2(a.imag, a.real)) for a, b in zip(vals[:-1], vals[1:])]
-        res = (sum(steps), sum(abs(s) for s in steps), min(abs(v) for v in vals), ok and all(map(np.isfinite, vals)))
+        fin = [abs(v) for v in vals if np.isfinite(v)]
+        res = (sum(steps), sum(abs(s) for s in steps), min(fin) if fin else float("nan"),
+               ok and all(map(np.isfinite, vals)))
         self.edges[key] = res
         return res
 
@@ -235,17 +249,21 @@ class Counter:
         for i in range(4):
             d, v, m, o = self.edge(corners[i], corners[(i + 1) % 4])
             tot, tv, mn, ok = tot + d, tv + v, min(mn, m), ok and o
-        return round(tot / (2 * math.pi)), tot / (2 * math.pi), tv, mn, ok
+        return (round(tot / (2 * math.pi)) if ok else 0), tot / (2 * math.pi), tv, mn, ok
 
 
 def locate(F, a0, a1, w0, w1):
-    """Newton on (Re F, Im F) from the cell centre with finite-difference Jacobians; None if it leaves the double"""
+    """Newton on (Re F, Im F) from the cell centre with finite-difference Jacobians (steps 1e-2 of the cell, on the
+    unguarded values: near the zero |R| falls below the rounding floor by design); None if it leaves the double.
+    Near the floor the iterates jitter at sigma / |grad R|, so it ends after 20 steps if they do not settle."""
     x = np.array([(a0 + a1) / 2, (w0 + w1) / 2])
-    ha, hw = (a1 - a0) * 1e-3, (w1 - w0) * 1e-3
-    for _ in range(12):
+    ha, hw = (a1 - a0) * 1e-2, (w1 - w0) * 1e-2
+    for _ in range(20):
         pts = [tuple(x), (x[0] + ha, x[1]), (x[0], x[1] + hw)]
         F.raw(pts)
-        f0, fa, fw = (F(p) for p in pts)
+        f0, fa, fw = (F.value(p) for p in pts)
+        if not all(map(np.isfinite, (f0, fa, fw))):
+            return None
         J = np.array([[(fa - f0).real / ha, (fw - f0).real / hw], [(fa - f0).imag / ha, (fw - f0).imag / hw]])
         try:
             dx = np.linalg.solve(J, -np.array([f0.real, f0.imag]))
@@ -257,7 +275,8 @@ def locate(F, a0, a1, w0, w1):
         if np.hypot(dx[0] / (a1 - a0), dx[1] / (w1 - w0)) < 1e-9:
             break
     F.raw([tuple(x)])
-    return dict(A=float(x[0]), wf=float(x[1]), absF=abs(F(tuple(x))), sign=int(np.sign(np.linalg.det(J))))
+    return dict(A=float(x[0]), wf=float(x[1]), absF=abs(F.value(tuple(x))), floor=F.floor(tuple(x)),
+                sign=int(np.sign(np.linalg.det(J))))
 
 
 def count(F, box, nA, nwf, dphi=0.5, hmin=1e-5, hzero=0.02, hpair=0.01, tvsplit=math.pi, eta=0.25, log=print,
@@ -336,6 +355,11 @@ class Analytic:
     def __call__(self, p):
         v = self.vals[Multiplier.key(p)]
         return v.conjugate() if self.mutate == "conj" else v
+
+    value = __call__
+
+    def floor(self, p):
+        return 0.0
 
 
 def selftest(mutate=None):
