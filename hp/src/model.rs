@@ -26,7 +26,7 @@ use crate::lane::{Dc, Fu, Fun, Lane, F8};
 use crate::linalg::{ld_for, DDLu, StaircaseLu};
 use crate::qv::QV;
 use multidouble::dual::Param;
-use multidouble::field::{cs_at, cs_w_at};
+use multidouble::field::{cs_at, cs_lane_into, cs_w_at, cs_w_lane_into};
 use multidouble::native::{Dtn, Oun, OV};
 use multidouble::od::OD;
 use multidouble::precision::{Double, Precision};
@@ -549,8 +549,32 @@ pub fn centre_state<T: Lane, const B: usize>(ctx: &Ctx<B>, p1: &Fl<T, B>, c0: &F
 // ---------------------------------------------------------------------------------------------------------------
 
 /// Taylor coefficients 1..=w.kt of the state about x0, order 0 in w.c[0..4] (p, m, a, c): the recursion of
-/// `Dss::taylor_coeffs` at the given omega, its tau derivatives shifted by `w.rate`
+/// `Dss::taylor_coeffs` at the given omega, its tau derivatives shifted by `w.rate`. The f64 lanes (`VAL_F64`,
+/// `TAN_F64`) form it one lane vector at a time (`taylor_coeffs_cols`), bitwise the same.
+#[inline(always)]
 pub fn taylor_coeffs<T: Lane, const B: usize>(ctx: &Ctx<B>, x0: f64, omega: T, w: &mut Work<T, B>) {
+    if (T::VAL_F64 || T::TAN_F64) && !by_fields() {
+        taylor_coeffs_cols(ctx, x0, omega, w)
+    } else {
+        taylor_coeffs_fields(ctx, x0, omega, w)
+    }
+}
+
+// Tests only: `taylor_coeffs` takes the field-wide form (`taylor_coeffs_fields`) on the f64 lanes too, on this thread,
+// the reference of the lane-vector form's bit-identity checks
+#[cfg(test)]
+thread_local!(pub(crate) static BY_FIELDS: std::cell::Cell<bool> = const { std::cell::Cell::new(false) });
+
+#[inline(always)]
+fn by_fields() -> bool {
+    #[cfg(test)]
+    return BY_FIELDS.with(|f| f.get());
+    #[cfg(not(test))]
+    false
+}
+
+/// `taylor_coeffs` with each operation on whole fields: every Cauchy sum runs over all B lane vectors before the next
+fn taylor_coeffs_fields<T: Lane, const B: usize>(ctx: &Ctx<B>, x0: f64, omega: T, w: &mut Work<T, B>) {
     let kt = w.kt;
     let rate = w.rate;
     let [p, m, a, c] = &mut w.c[..] else { unreachable!("four fields") };
@@ -608,6 +632,115 @@ pub fn taylor_coeffs<T: Lane, const B: usize>(ctx: &Ctx<B>, x0: f64, omega: T, w
         };
         p[k + 1] = ((rp - sp) * iw0).muls(ik1);
         m[k + 1] = ((rm - sm) * iv0).muls(ik1);
+    }
+}
+
+/// lane vector b of `cs_range(x, y, k, lo, hi)` (multidouble's `cs_lane_into`, bitwise that sum's lane vector b)
+#[inline(always)]
+fn lane_cs<T: Lane, const B: usize>(x: &[Fl<T, B>], y: &[Fl<T, B>], k: usize, lo: usize, hi: usize, b: usize) -> T {
+    let mut s = T::zero();
+    cs_lane_into(&mut s, b, x, y, k, lo, hi);
+    s
+}
+
+/// lane vector b of `cs_w(x, y, k, lo, hi, w)` (multidouble's `cs_w_lane_into`, bitwise)
+#[inline(always)]
+fn lane_cs_w<T: Lane, const B: usize>(x: &[Fl<T, B>], y: &[Fl<T, B>], k: usize, lo: usize, hi: usize, b: usize, w: impl Fn(usize) -> f64) -> T {
+    let mut s = T::zero();
+    cs_w_lane_into(&mut s, b, x, y, k, lo, hi, w);
+    s
+}
+
+/// `taylor_coeffs_fields` one lane vector at a time, for the f64 lanes. At each order the tau derivatives come first
+/// (D couples the points, and reads only p_k and m_k); the rest of the order acts on each point alone, so it runs lane
+/// vector by lane vector: every Cauchy sum of the order and the four new coefficients for vector b, then b + 1. Each
+/// sum is its lane vector's alone in the order j = lo..=hi (`lane_cs`), as the interleaved field-wide sums take it,
+/// and every other operation is the field operation's on that vector, so the coefficients are the field-wide form's
+/// bit for bit. A vector's terms of one order (9 series of k + 1 entries) stay in cache across its 12 sums, where the
+/// field-wide form streams each series through the cache once per sum (notes/MIXED_PRECISION.md, memory traffic).
+fn taylor_coeffs_cols<T: Lane, const B: usize>(ctx: &Ctx<B>, x0: f64, omega: T, w: &mut Work<T, B>) {
+    let kt = w.kt;
+    let rate = w.rate;
+    let [p, m, a, c] = &mut w.c[..] else { unreachable!("four fields") };
+    let [a2, q2, g, h, pth, mth, ww, vv] = &mut w.aux[..N_AUX] else { unreachable!("eight scratch series") };
+    let n1 = dim::<T, B>(ctx) - T::P::one();
+    let nh = dim::<T, B>(ctx).mul_f(0.5);
+    let x0d = DD::from_f64(x0);
+    let inv_x0 = DD::ONE / x0d;
+    // the double-double constants as `Fl::muls` and `Fl::adds` splat them
+    let sx0 = DV::splat(x0d);
+    let x2 = [x0d * x0d, x0d.mul_f(2.0), DD::ONE].map(DV::splat);
+    let one = T::splat(DD::ONE);
+    let mut iw0 = [T::zero(); B];
+    let mut iv0 = [T::zero(); B];
+    for k in 0..kt {
+        let kf = k as f64;
+        pth[k] = dtau(ctx, &p[k], omega, &rate);
+        mth[k] = dtau(ctx, &m[k], omega, &rate);
+        let ik = DV::splat(inv_x0 * recip_int(k + 1));
+        let ik1 = DV::splat(recip_int(k + 1));
+        for b in 0..B {
+            let a2k = lane_cs(a, a, k, 0, k, b);
+            a2[k].0[b] = a2k;
+            q2[k].0[b] = lane_cs(p, p, k, 0, k, b) + lane_cs(m, m, k, 0, k, b);
+            let gk = (lane_cs(c, a2, k, 0, k, b) - c[k].0[b]).mulp(n1);
+            g[k].0[b] = gk;
+            let hk = lane_cs(a, q2, k, 0, k, b) + (a[k].0[b] - lane_cs(a, a2, k, 0, k, b)).mulp(n1);
+            h[k].0[b] = hk;
+            let mut xp = pth[k].0[b].mulc(sx0);
+            let mut xm = mth[k].0[b].mulc(sx0);
+            if k > 0 {
+                xp = xp + pth[k - 1].0[b];
+                xm = xm + mth[k - 1].0[b];
+            }
+            let cp = lane_cs(c, p, k, 0, k, b);
+            let cm = lane_cs(c, m, k, 0, k, b);
+            let cpm = cp + cm;
+            let rp = ((lane_cs(g, p, k, 0, k, b) - xp) - cp) + cpm.mulp(nh);
+            let rm = ((cm - xm) - lane_cs(g, m, k, 0, k, b)) - cpm.mulp(nh);
+            c[k + 1].0[b] = (gk - c[k].0[b].mulf(kf)).mulc(ik);
+            a[k + 1].0[b] = (hk.mulf(0.5) - a[k].0[b].mulf(kf)).mulc(ik);
+            // W = x (x - c), V = x (x + c)
+            let mut xc = c[k].0[b].mulc(sx0);
+            if k > 0 {
+                xc = xc + c[k - 1].0[b];
+            }
+            let (wk, vk) = if k <= 2 { ((-xc).addc(x2[k]), xc.addc(x2[k])) } else { (-xc, xc) };
+            ww[k].0[b] = wk;
+            vv[k].0[b] = vk;
+            if k == 0 {
+                iw0[b] = one / wk;
+                iv0[b] = one / vk;
+            }
+            let (sp, sm) = if k >= 1 {
+                (lane_cs_w(ww, p, k + 1, 1, k, b, |j| (k + 1 - j) as f64), lane_cs_w(vv, m, k + 1, 1, k, b, |j| (k + 1 - j) as f64))
+            } else {
+                (T::zero(), T::zero())
+            };
+            p[k + 1].0[b] = ((rp - sp) * iw0[b]).mulc(ik1);
+            m[k + 1].0[b] = ((rm - sm) * iv0[b]).mulc(ik1);
+        }
+        if k == 0 && ctx.mutate == COLS_MUT_ULP {
+            ulp_up(&mut p[1].0[0]);
+        }
+    }
+}
+
+/// `Ctx::mutate` for the f64 lanes: the lane-vector form's p_1 one ulp off in one lane (its first tangent, or its value
+/// on lanes without tangents), the control of its bit-identity checks (cols_tests)
+pub const COLS_MUT_ULP: u8 = 40;
+
+/// lane 0 of x moved to the next f64 up: its first f64 tangent, or its value on lanes without
+fn ulp_up<T: Lane>(x: &mut T) {
+    if T::TAN_F64 {
+        let mut t = x.tan64(0).to_array();
+        t[0] = t[0].next_up();
+        x.set_tan64(0, crate::v8::V8::from_array(t));
+    } else {
+        let v = x.val();
+        let mut hi = v.hi.to_array();
+        hi[0] = hi[0].next_up();
+        *x = T::from_vt(DV { hi: crate::v8::V8::from_array(hi), lo: v.lo }, DV::zero());
     }
 }
 

@@ -60,6 +60,10 @@ mod freeze_tests;
 mod prec_tests;
 #[cfg(test)]
 mod split_tests;
+#[cfg(test)]
+mod cols_tests;
+#[cfg(test)]
+mod fill_bench;
 
 #[cfg(feature = "python")]
 mod python;
