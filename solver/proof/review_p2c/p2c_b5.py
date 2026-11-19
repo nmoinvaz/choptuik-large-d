@@ -443,14 +443,19 @@ ALPHA_Z = mp.pi / 2 + KAPPA
 ETA = dict(p=mpf("3.0e-8"), v=mpf("6.1e-7"), c=mpf("7.2e-11"))
 
 
-def cells(nr=8, na=24, r0frac=mpf("0.12")):
-    """a disc cell |t| <= r0 and polar cells covering Sigma_Z; each as (complex box, |t| upper, |t| lower)"""
+def cells(nr=8, na=24, rmin_frac=mpf("1e-4"), split=mpf("0.1")):
+    """polar cells covering Sigma_Z: nr uniform radial bins on [split Z, Z], nr/2 geometric bins on [1e-4 Z, split Z],
+    na angular bins, and a box |Re t|, |Im t| <= 1e-4 Z at the origin; each as (complex box, |t| upper, |t| lower)"""
     from mpmath import iv
     out = []
-    r0 = ZMAX * r0frac
+    r0 = ZMAX * rmin_frac
     out.append((iv.mpc(iv.mpf([-r0, r0]), iv.mpf([-r0, r0])), r0 * mp.sqrt(2), mpf(0)))
-    for i in range(nr):
-        ra, rb = r0 + (ZMAX - r0) * i / nr, r0 + (ZMAX - r0) * (i + 1) / nr
+    ng = max(1, nr // 2)
+    rs = split * ZMAX
+    rad = [r0 * (rs / r0) ** (mpf(i) / ng) for i in range(ng)] + [rs + (ZMAX - rs) * mpf(i) / nr for i in range(nr + 1)]
+    rad[-1] = ZMAX
+    for i in range(len(rad) - 1):
+        ra, rb = rad[i], rad[i + 1]
         for k in range(na):
             fa, fb = ALPHA_Z * k / na, ALPHA_Z * (k + 1) / na
             R, F = iv.mpf([ra, rb]), iv.mpf([fa, fb])
