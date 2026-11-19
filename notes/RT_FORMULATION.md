@@ -1963,5 +1963,14 @@ The medians behind R, over the same 48 right-hand sides:
   10⁻¹¹ to 10⁻⁹ of the random moves', the pre-set reading "in the root set". Four non-parallel directions in the plane
   read tangent, consistent with a two-dimensional set of roots through the samples (12 right-hand sides on four rays;
   curvature and directions out of the plane are not seen). Raw `I972-win/` (0fa56a56).
-- Open: how many conditions the RT system at D 40.02 lacks, and which. P7_scope.md §3.4 names the candidates, and
-  #983 excluded three of them; #985 counts the deep directions.
+- **Four deep directions, which read (H4) at k = ½ and 3/2 (#985).** #983 excluded (HP), (HN) and (HC) from the stored
+  chords, leaving (H4), the scalar's horizon branch, and (H2), λ₂'s branch. At D 40.02 the count of deep directions is
+  d = 4, with a clean gap after the fourth singular value (5.3×10³). The chords a − c and b − c lie in their span
+  with share 1.000000, so the deep directions are the root set's. By the rule fixed before the run, d = 4 reads (H4)
+  with k = 3/2 as well as ½. At D 34.99, where the k = ½ branch lies below the floor, a null direction appears
+  (d = 2, m/m₀ = 1.3×10¹¹ against the bar 100). At D 20.04, where it lies above, there is none (m/m₀ = 0.9994, best
+  bound 2.6×10⁻²⁴). The control reproduces #951's first 12 lines. Caveat: the fourth singular value is 1.04×10⁻⁴ of
+  the first, 4% above the count's 10⁻⁴ cutoff, and a cutoff just above it gives d = 3, which reads "none fits". The
+  gap after it does not depend on the cutoff. d = 2 at D 20.04 as well, so only the move separates D 35 from D 20.
+  Raw `I985-win/` (15b36899).
+- Open: adding (H4)'s rows at k = ½ and 3/2 should isolate the roots at D 40.02 (P7_scope.md §5, stage 2).
