@@ -569,6 +569,28 @@ def first_order():
     say("l = 2, O(1) parts on the O(1/n) shell", o1zero, "all zero" if o1zero else "nonzero")
     say("l = 2, the O(1/n) forcing F", bool(nzF), "nonzero in " + ", ".join(nzF))
     say("l = 2 control, F with the leading background only", bool(differ), "differs in " + ", ".join(differ))
+    # 4b. the same for p = 1, where dS = s (cos^2 chi - sin^2 chi / n) carries a 1/n part itself
+    Em1, F1_, W1_ = residuals(*setup(sp.Integer(0), "one", corr={}))
+    C1 = {k: Em1[i] for k, i in IDX.items()}
+    C1["W"] = W1_
+    for k, Fk in enumerate(F1_):
+        C1[f"F{k}"] = Fk
+    bad1 = []
+    for name, x in C1.items():
+        kn = KNAT.get(name, -1)
+        L = dict(laurent_n(x.subs(e, 0), kn - 1))
+        if L and not is_zero_num(reduce_bg1(L.get(kn, 0) + hh * L.get(kn - 1, 0), R).subs(hh, 1)):
+            bad1.append(name)
+    say("p = 1 background on shell to O(1/n), the same rules", not bad1, "all zero" if not bad1 else "nonzero in " + ", ".join(bad1))
+    dS1 = s * (sp.cos(chi) ** 2 - sp.sin(chi) ** 2 / n)
+    corr1 = dict(zero, A=mu0 * dS1 / s)
+    out1 = epart1_raw(dS1, "one", corr1, None, R)
+    out1c = epart1_raw(dS1, "one", corr1, None, R, drop_1n=True)
+    say("p = 1, l = 2: O(1) parts on the O(1/n) shell", all(is_zero_num(v[0]) for v in out1.values()), "all zero")
+    nz1 = [k for k, v in out1.items() if not is_zero_num(v[1])]
+    df1 = [k for k in out1 if not is_zero_num(out1c[k][1] - out1[k][1])]
+    say("p = 1, l = 2: the O(1/n) forcing F", bool(nz1), "nonzero in " + ", ".join(nz1))
+    say("p = 1 control, F with the leading background only", bool(df1), "differs in " + ", ".join(df1))
     # 5. the operator on the deformation, and F_lambda
     dc = deformation_as_corrections(dS, mu0 * sp.cos(2 * chi))
     L0d = natural_raw(sp.Integer(0), "half", dc)
@@ -578,7 +600,18 @@ def first_order():
     Fl = natural_raw(sp.Integer(0), "half", {k: lg * v for k, v in dc.items()})
     nzl = [k for k, v in Fl.items() if not all(abs(sp.re(numval(v, q))) < 1e-30 for q in (0, 1))]
     say("F_lambda = L0[ln(-t) D2 Z0]", bool(nzl), "nonzero in " + ", ".join(nzl))
+    # 6. the conjugation: on the lapse and the scalar, the l = 2 operator is the l = 0 one times sY (V1 + V2 = 0)
+    gam, psi = sp.Function("gamma")(s, t), sp.Function("psi")(s, t)
+    Y2 = sp.cos(2 * chi)
+    rows2 = natural_raw(sp.Integer(0), "half", dict(zero, L=s * Y2 * gam, P=s * Y2 * psi), ["W", "E^t_t"])
+    rows0 = natural_raw(sp.Integer(0), "half", dict(zero, L=gam, P=psi), ["W", "E^t_t"])
+    conj = {k: sp.simplify(sp.expand(rows2[k] - s * Y2 * rows0[k])) for k in rows2}
+    say("conjugation: W and E^t_t at (sY gamma, sY psi) minus sY times the l = 0 rows", all(v == 0 for v in conj.values()),
+        ", ".join(f"{k} {'0' if v == 0 else 'nonzero'}" for k, v in conj.items()))
     if "--print" in sys.argv:
+        print("\nL0 (the leading operator on general corrections, on shell):")
+        for k, v in natural_raw(sp.Integer(0), "half", None).items():
+            print(f"  {k}: {sp.expand(v)}")
         print("\nF (l = 2, O(1/n) forcing, per unit e, on shell):")
         for k, v in out.items():
             print(f"  {k}: {sp.expand(v[1])}")
