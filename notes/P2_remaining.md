@@ -170,4 +170,48 @@ certificates are item 2(b).
 
 ### 3.2 Results
 
-Not yet run.
+**The geometry is confirmed. The open tiles cover A₁, each closed tile lies in its open disc, A₁ is also covered by
+the discs directly, and every link of lemma G holds. Both planted coverings fail.** The own numbers were committed
+(148a63c4) before `lemma6b1_cover.py` and `lemma6b1_check_1e-9.json` were opened. Logs and JSON are in
+`solver/proof/review_p2c/` (`p2c_cover_real.log`, `_drop.log`, `_gap.log`), run with
+`/Users/nathan/venv-314/bin/python` (mpmath 1.3.0) in 1 to 11 s each.
+
+| check | real covering | P1: disc (5, 6) removed | P2: row 3's α = 0.49 Δφ |
+|---|---|---|---|
+| G1 data | ok: 12 rows, 178 discs, all certified | ok (177 tiles) | ok |
+| G2 tiles in discs | ok, smallest margin r² − d² = 21.4 | ok | ok |
+| G3 tiles cover A₁ | ok | **FAIL**: row 5's tiles 5 and 7 do not overlap | **FAIL**: row 3's consecutive tiles do not overlap |
+| G4 cells in discs | ok: 8930 cells, none bisected | **FAIL**: a sliver near \|u\| = 133, arg u = −1.162 lies in no disc | ok (the discs are unchanged) |
+| G5 gluing | ok: 566 pieces, 450 proven links (388 in spanning trees) | **FAIL**: tile (5, 7) has no partner; the meeting set of tile (6, 5) is not shown connected | **FAIL**, 32 failures: tiles (3, 1) to (3, 17) have no piece with their partner, and 15 tiles of row 4 have meeting sets not shown connected |
+| G6 reach, s₀ ∈ G₀ | ok | ok | ok |
+| exit | 0 | 1 | 1 |
+
+- The tiles here are exact (a_j = ρ_j − 3r_j/5, α_j = (3/5)(3π/4)/K_j). Lemma G may use any tiles inside the discs,
+  so these checks prove the gluing by themselves. Their agreement with the certificate's float tiles is a cross-check.
+- G4 is the tile-free route. It covers A₁ with closed polar cells of 2.5 in |u| and 3π/380 in angle, and each is
+  proven inside one open disc with no bisection needed. Under P1 it finds the uncovered sliver where disc (5, 6) was,
+  which shows that the discs, and not only the tiles, would then fail to cover.
+- P1 fails in the same three places the certificate's own control `check --drop=5,6` reports (A_certify.md §12.5):
+  tile (5, 7) has no agreement point, tile (6, 5)'s meeting set is disconnected, and (5, 6)'s direction is not
+  covered.
+
+### 3.3 The comparison with the certificate
+
+The certificate's check output (`lemma6b1_check_1e-9.json`) reports ok, no failures, 178 tiles, 566 pieces and 450
+links. These are the same counts as here, from code that shares nothing with it but the statements of A_certify.md
+§12.3 and the stored runs. Its tiles are the same formulas in binary floats (α_j = 0.6 Δφ_j, a_j = ρ_j − 0.6 r_j,
+`lemma6b1_cover.py`), which differ from the exact ones here in the last bits. No discrepancy was found.
+
+One wording point, not a discrepancy: PROOF.md §4 and issue #991 describe the annular sector as
+0.0624 ≤ |ξ| ≤ 0.2. A₁ = {25 ≤ |u| ≤ 260} is 0.0620 ≤ |ξ| ≤ 0.2, which contains it. G₀ = {|u| > 257} covers the rest
+down to |ξ| = 0.06238.
+
+### 3.4 Reproduce
+
+From `solver/proof/review_p2c/`, with python and mpmath:
+
+```
+python3 p2c_cover.py --log=p2c_cover_real.log        # PASS, exit 0 (about 2 s)
+python3 p2c_cover.py --plant=drop --log=p2c_cover_drop.log   # FAIL, exit 1 (about 11 s)
+python3 p2c_cover.py --plant=gap --log=p2c_cover_gap.log     # FAIL, exit 1
+```
