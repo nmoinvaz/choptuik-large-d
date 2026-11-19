@@ -1,11 +1,12 @@
-//! Tests of the split horizon series (`series_split`, Ctx::series_split = SPLIT_MIDDLE) on the synthetic context of
-//! qd_residual::synth, through multishoot's JetSession at `Octo` as Solver.series_o runs it.
+//! Tests of the split horizon series (`series_split`, Ctx::series_split = SPLIT_MIDDLE, and with the fast middle
+//! terms SPLIT_FAST) on the synthetic context of qd_residual::synth, through multishoot's JetSession at `Octo` as
+//! Solver.series_o runs it (the fast product itself: fastmul_check).
 //!
 //! ```text
 //! cargo test --profile release-dev --lib split_    criteria fixed before the first run (the doc of each test)
-//! cargo test --profile release-dev --lib bench_split -- --ignored --nocapture    the series' time by both forms
+//! cargo test --profile release-dev --lib bench_split -- --ignored --nocapture    the series' time by the forms
 //! ```
-use crate::model::{Ctx, HALPHA_ON, SPLIT_MIDDLE, SPLIT_MUT_DROP_L1};
+use crate::model::{Ctx, HALPHA_ON, SPLIT_FAST, SPLIT_MIDDLE, SPLIT_MUT_DROP_L1};
 use crate::qd_residual::synth;
 use multidouble::od::OD;
 use multidouble::precision::Octo;
@@ -60,8 +61,12 @@ fn series_with(ctx: &mut Ctx<1>, zs: &[[Vec<f64>; 8]], split: u8, alpha: u8, mut
     f
 }
 
-/// max_i |a_i - b_i| / max_i |b_i|, the difference formed in octo-double
+/// max_i |a_i - b_i| / max_i |b_i|, the difference formed in octo-double; infinite when a part is not finite
 fn rel(a: &[OD], b: &[OD]) -> f64 {
+    // a row that is not finite on either side fails every threshold (f64::max would drop a NaN)
+    if a.iter().chain(b).any(|x| x.x.iter().any(|p| !p.is_finite())) {
+        return f64::INFINITY;
+    }
     let d = a.iter().zip(b).map(|(x, y)| (*x - *y).to_f64().abs()).fold(0.0, f64::max);
     d / b.iter().map(|y| y.to_f64().abs()).fold(f64::MIN_POSITIVE, f64::max)
 }
@@ -140,8 +145,8 @@ fn split_series_accuracy() {
     assert!(ctrl_fail > 1e3, "the control did not fail by more than 1e3");
 }
 
-/// The series' time by both forms on the synthetic context with its horizon order raised to KS (default 120) and
-/// 12 orders, interleaved REPS times (default 3): seconds per run and the ratio.
+/// The series' time by the three forms (default, SPLIT_MIDDLE, SPLIT_FAST) on the synthetic context with its horizon
+/// order raised to KS (default 120) and 12 orders, interleaved REPS times (default 3): seconds per run and the ratios.
 #[test]
 #[ignore]
 fn bench_split() {
@@ -151,9 +156,12 @@ fn bench_split() {
     let (mut ctx, zs) = planted(n);
     ctx.ks = ks;
     let threads = rayon::current_num_threads();
-    let mut t = [Vec::new(), Vec::new()];
+    let mut t = [Vec::new(), Vec::new(), Vec::new()];
+    let forms = [0, SPLIT_MIDDLE, SPLIT_FAST];
     for r in 0..reps {
-        for (f, split) in [0, SPLIT_MIDDLE].into_iter().enumerate() {
+        // the forms' order rotated each rep, so no form always runs first or after the same one
+        for f in (0..forms.len()).map(|i| (i + r) % forms.len()) {
+            let split = forms[f];
             let t0 = Instant::now();
             let s = series_with(&mut ctx, &zs, split, 0, 0);
             let dt = t0.elapsed().as_secs_f64();
@@ -166,10 +174,11 @@ fn bench_split() {
         v.sort_by(f64::total_cmp);
         (v[v.len() / 2], v[0], v[v.len() - 1])
     };
-    let (a, b) = (med(&mut t[0]), med(&mut t[1]));
+    let (a, b, c) = (med(&mut t[0]), med(&mut t[1]), med(&mut t[2]));
     println!(
-        "ks {ks}, {n} orders, {threads} threads: default {:.2} s ({:.2}-{:.2}), split {:.2} s ({:.2}-{:.2}), ratio {:.2}",
-        a.0, a.1, a.2, b.0, b.1, b.2, a.0 / b.0
+        "ks {ks}, {n} orders, {threads} threads: default {:.2} s ({:.2}-{:.2}), split {:.2} s ({:.2}-{:.2}), fast {:.2} s \
+         ({:.2}-{:.2}); default / split {:.2}, split / fast {:.2}",
+        a.0, a.1, a.2, b.0, b.1, b.2, c.0, c.1, c.2, a.0 / b.0, b.0 / c.0
     );
 }
 
@@ -187,12 +196,18 @@ fn session4(ctx: &Ctx<4>, zs: &[[Vec<f64>; 8]]) -> Vec<Vec<OD>> {
 }
 
 /// The accuracy criteria of `split_series_accuracy` and both forms' times on a chain's context and its own series
-/// (FILE, JET; NORD orders, default 8, at most 11; KS overrides the context's horizon order):
+/// (FILE, JET; NORD orders, default 8, at most 11; KS overrides the context's horizon order; SPLIT the form under
+/// test, 1 = SPLIT_MIDDLE by default or 2 = SPLIT_FAST; REPS = 1 runs each timed form once instead of twice):
 ///
 ///     FILE=ctx.bin JET=jet.bin cargo test --profile release-dev --lib split_file -- --ignored --nocapture
 #[test]
 #[ignore]
 fn split_file() {
+    // the threads' stacks of Solver's pool (python.rs): the global pool's 2 MiB overflowed on this context
+    rayon::ThreadPoolBuilder::new().stack_size(256 << 20).build().unwrap().install(split_file_in);
+}
+
+fn split_file_in() {
     let v = crate::model::ctxfile::read(&std::env::var("FILE").expect("FILE"));
     let (mut ctx, _, _) = crate::model::ctxfile::load::<4>(&v);
     if let Some(ks) = std::env::var("KS").ok().and_then(|v| v.parse().ok()) {
@@ -225,12 +240,23 @@ fn split_file() {
         );
         (f, dt)
     };
+    let form: u8 = std::env::var("SPLIT").ok().and_then(|v| v.parse().ok()).unwrap_or(SPLIT_MIDDLE);
+    assert!(form == SPLIT_MIDDLE || form == SPLIT_FAST, "SPLIT must be {SPLIT_MIDDLE} or {SPLIT_FAST}");
+    let twice = std::env::var("REPS").map(|v| v != "1").unwrap_or(true);
+    *crate::series_split::FAST_STATS.lock().unwrap() = (0, 0, 0, 0, 0.0);
     let (base, t0) = run(&mut ctx, 0, 0, 0);
-    let (split, t1) = run(&mut ctx, SPLIT_MIDDLE, 0, 0);
-    let (base2, t2) = run(&mut ctx, 0, 0, 0);
-    let (split2, t3) = run(&mut ctx, SPLIT_MIDDLE, 0, 0);
+    let (split, t1) = run(&mut ctx, form, 0, 0);
+    let (base2, t2) = if twice { run(&mut ctx, 0, 0, 0) } else { (base.clone(), t0) };
+    let (split2, t3) = if twice { run(&mut ctx, form, 0, 0) } else { (split.clone(), t1) };
     let (alpha, _) = run(&mut ctx, 0, HALPHA_ON, 0);
-    let (ctrl, _) = run(&mut ctx, SPLIT_MIDDLE, 0, SPLIT_MUT_DROP_L1);
+    let (ctrl, _) = run(&mut ctx, form, 0, SPLIT_MUT_DROP_L1);
+    if form == SPLIT_FAST {
+        let g = *crate::series_split::FAST_STATS.lock().unwrap();
+        println!(
+            "fast middle terms: {} products, {} block pairs, at most {} blocks of a factor and {} digits, max_frac {:.2e}",
+            g.0, g.1, g.2, g.3, g.4
+        );
+    }
     let rerun: usize = (0..n).map(|k| rows_differ(&base[k], &base2[k]) + rows_differ(&split[k], &split2[k])).sum();
     let floor = (-420.0f64).exp2();
     let (mut worst, mut ctrl_fail) = (0.0f64, 0.0f64);
@@ -248,7 +274,7 @@ fn split_file() {
     let order1 = rows_differ(&split[0], &base[0]);
     println!("checksums: default {:016x}, split {:016x}", checksum(&base), checksum(&split));
     println!(
-        "ks {}, {n} orders, {} threads: default {t0:.1} s and {t2:.1} s, split {t1:.1} s and {t3:.1} s, ratio {:.2}; \
+        "split {form}, ks {}, {n} orders, {} threads: default {t0:.1} s and {t2:.1} s, split {t1:.1} s and {t3:.1} s, ratio {:.2}; \
          order 1 {order1} rows differ; reruns {rerun} rows differ; worst d_split / threshold {worst:.2e}; control \
          {ctrl_fail:.2e}",
         ctx.ks,
@@ -257,5 +283,63 @@ fn split_file() {
     );
     assert_eq!(order1 + rerun, 0, "order 1 or a rerun differs");
     assert!(worst <= 1.0, "the split form differs by more than 1e3 d_oa");
+    assert!(ctrl_fail > 1e3, "the control did not fail by more than 1e3");
+}
+
+/// Pass (fixed before the first run), on the synthetic state with 12 planted orders, with its horizon order raised to
+/// KS (default 60): the fast form (SPLIT_FAST) against the default as `split_series_accuracy` checks the split form:
+/// - order 1 the default's bits;
+/// - at every order k >= 2, d_fast(k) <= 1e3 max(d_oa(k), 2^-420);
+/// - its bits do not depend on the thread count (1 thread against 4);
+/// - every exact convolution's values lie within 1/4 of their integers (FAST_STATS);
+/// - the default form and SPLIT_MIDDLE are untouched by it: their series after a fast run are the bits of runs before.
+///
+/// Control, which must fail by more than 1e3: the fast form without l = 1 (SPLIT_MUT_DROP_L1).
+#[test]
+fn split_fast_accuracy() {
+    let n = 12;
+    let (mut ctx, zs) = planted(n);
+    ctx.ks = std::env::var("KS").ok().and_then(|v| v.parse().ok()).unwrap_or(60);
+    *crate::series_split::FAST_STATS.lock().unwrap() = (0, 0, 0, 0, 0.0);
+    let base = series_with(&mut ctx, &zs, 0, 0, 0);
+    let mid = series_with(&mut ctx, &zs, SPLIT_MIDDLE, 0, 0);
+    let fast = series_with(&mut ctx, &zs, SPLIT_FAST, 0, 0);
+    let alpha = series_with(&mut ctx, &zs, 0, HALPHA_ON, 0);
+    let ctrl = series_with(&mut ctx, &zs, SPLIT_FAST, 0, SPLIT_MUT_DROP_L1);
+    let pool = |t: usize| rayon::ThreadPoolBuilder::new().num_threads(t).build().unwrap();
+    let one = pool(1).install(|| series_with(&mut ctx, &zs, SPLIT_FAST, 0, 0));
+    let four = pool(4).install(|| series_with(&mut ctx, &zs, SPLIT_FAST, 0, 0));
+    let thread_differ: usize = (0..n).map(|k| rows_differ(&one[k], &four[k]) + rows_differ(&one[k], &fast[k])).sum();
+    let base2 = series_with(&mut ctx, &zs, 0, 0, 0);
+    let mid2 = series_with(&mut ctx, &zs, SPLIT_MIDDLE, 0, 0);
+    let untouched: usize = (0..n).map(|k| rows_differ(&base[k], &base2[k]) + rows_differ(&mid[k], &mid2[k])).sum();
+    let g = *crate::series_split::FAST_STATS.lock().unwrap();
+    println!(" k   d_fast     d_mid      d_oa       d_ctrl     |F_k|");
+    let floor = (-420.0f64).exp2();
+    let (mut worst, mut ctrl_fail) = (0.0f64, 0.0f64);
+    for k in 1..=n {
+        let (df, dm, da, dc) =
+            (rel(&fast[k - 1], &base[k - 1]), rel(&mid[k - 1], &base[k - 1]), rel(&alpha[k - 1], &base[k - 1]), rel(&ctrl[k - 1], &base[k - 1]));
+        let fk = base[k - 1].iter().map(|y| y.to_f64().abs()).fold(0.0, f64::max);
+        println!("{k:2}   {df:.2e}   {dm:.2e}   {da:.2e}   {dc:.2e}   {fk:.2e}");
+        let thr = 1e3 * da.max(floor);
+        if k >= 2 {
+            worst = worst.max(df / thr);
+            ctrl_fail = ctrl_fail.max(dc / thr);
+        }
+    }
+    let order1 = rows_differ(&fast[0], &base[0]);
+    println!("fast series' checksum {:016x}", checksum(&fast));
+    println!(
+        "fast series, ks {}: order 1 {order1} rows differ; worst d_fast / threshold {worst:.2e}; threads 1 against 4 and \
+         the default pool {thread_differ} rows differ; default and split 1 rerun {untouched} rows differ; {} products, \
+         {} block pairs, at most {} blocks and {} digits, max_frac {:.2e}; control max d_ctrl / threshold {ctrl_fail:.2e}",
+        ctx.ks, g.0, g.1, g.2, g.3, g.4
+    );
+    assert_eq!(order1, 0, "the fast form's order 1 is not the default's");
+    assert!(worst <= 1.0, "the fast form differs by more than 1e3 d_oa");
+    assert_eq!(thread_differ, 0, "the fast form depends on the thread count");
+    assert_eq!(untouched, 0, "a fast run changed the other forms' bits");
+    assert!(g.4 < 0.25, "an exact convolution's value lies {} from its integer", g.4);
     assert!(ctrl_fail > 1e3, "the control did not fail by more than 1e3");
 }

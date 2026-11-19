@@ -11,14 +11,18 @@
 //! rounding boundary; on the synthetic context and on a D 253 chain context the series were the same bits.
 //! `split_tests` and hp/series_split_check.py bound the difference by the two horizon forms' (Ctx::horizon_alpha).
 //!
+//! With SPLIT_FAST the middle terms are instead truncated u-products by block-scaled exact convolution
+//! (`middles_fast`, `fastmul`), one per sum, lane vector and order l, the sum's terms grouped by l.
+//!
 //! The split of a product into the terms on known coefficients and those on the newest one is that of relaxed
 //! multiplication: J. van der Hoeven, Relax, but don't be too lazy, J. Symbolic Comput. 34(6), 479-542 (2002),
 //! doi:10.1006/jsco.2002.0562.
 use crate::field::Fl;
 use crate::lane::Lane;
+use crate::fastmul;
 use crate::model::{
     dapply_at, dim, horizon_series_at, psolve_at, recip_int, series_scale, Ctx, HPrep, H_SERIES, JET_MUT_KAPPA,
-    SPLIT_MUT_DROP_L1,
+    SPLIT_FAST, SPLIT_MUT_DROP_L1,
 };
 use crate::dd::DD;
 use multidouble::dual::{Lane as BaseLane, Param};
@@ -185,6 +189,125 @@ fn middles<const N: usize, const B: usize>(
     mids
 }
 
+/// what the fast middle terms did, summed over calls (tests' report only): products, block pairs, the largest
+/// block count of a factor and of digits, and the largest distance of an exact convolution's value from its integer
+#[cfg(test)]
+pub(crate) static FAST_STATS: std::sync::Mutex<(usize, usize, usize, usize, f64)> =
+    std::sync::Mutex::new((0, 0, 0, 0, 0.0));
+
+/// with FASTMUL_DUMP=DIR (tests only; not from the control's runs), the factors of lane vector 0's products at l = 1,
+/// j/2 and j - 1 into
+/// DIR/j{j}_s{s}_l{l}.bin: n, the two lengths, then each factor's coefficients as eight lanes of eight parts (f64,
+/// little-endian), for hp/fastmul_bench's --dump
+#[cfg(test)]
+fn dump(xs: &[OV], ys: &[OV], n: usize, j: usize, s: usize, b: usize, l: usize) {
+    let Ok(dir) = std::env::var("FASTMUL_DUMP") else { return };
+    if b != 0 || (l != 1 && l != j / 2 && l != j - 1) {
+        return;
+    }
+    let mut out: Vec<f64> = vec![n as f64, xs.len() as f64, ys.len() as f64];
+    for v in xs.iter().chain(ys) {
+        for od in v.lanes() {
+            out.extend_from_slice(&od.x);
+        }
+    }
+    let bytes: Vec<u8> = out.iter().flat_map(|x| x.to_le_bytes()).collect();
+    std::fs::write(format!("{dir}/j{j}_s{s}_l{l}.bin"), bytes).expect("FASTMUL_DUMP");
+}
+
+/// `middles` by block-scaled exact products (Ctx::series_split = SPLIT_FAST): for each sum and lane vector, the
+/// middle terms at every u-order as sum_(l) of the truncated u-products of (w_i x_(i,l), zero for i < lo) and
+/// (y_(m,j-l), zero for m < hoff) by `fastmul::mullow`, each into the sum's per-index accumulators in the order l.
+/// S_CPMR's terms at i = 0, which read p + m before p_kk's solve (`yk`), are added directly, and a square's products
+/// at l and j - l (S_PP, S_MM, S_A2N) are formed once and added twice. Each product errs by
+/// 2^-424 of its terms' absolute sum or less, about the octo-double rounding of its terms. The bits depend on no
+/// thread count (each sum and lane vector is one task) and on no libm (the convolutions are exact).
+fn middles_fast<const N: usize, const B: usize>(
+    sums: &[HSum; NSUMS],
+    keep: &[Vec<F<N, B>>],
+    ks: usize,
+    j: usize,
+    drop1: bool,
+) -> Vec<[ODotAcc; B]> {
+    let per = ks + 1;
+    let l0 = if drop1 { 2 } else { 1 };
+    let cfg = fastmul::Cfg::default();
+    let tasks: Vec<(usize, usize)> = (0..NSUMS).flat_map(|s| (0..B).map(move |b| (s, b))).collect();
+    let out: Vec<(Vec<ODotAcc>, fastmul::Stats)> = tasks
+        .par_iter()
+        .map(|&(s, b)| {
+            let d = &sums[s];
+            let n = per + d.dk;
+            let mut acc = vec![ODotAcc::zero(); n];
+            let mut st = fastmul::Stats::default();
+            let (x, y) = (&keep[d.x], &keep[d.y]);
+            let (nx, ny) = (n.min(x.len()), n.min(y.len()));
+            // with yk the term i = 0 reads another series (below)
+            let ilo = if d.yk.is_some() { d.lo.max(1) } else { d.lo };
+            let mut xs = vec![OV::zero(); nx];
+            let mut ys = vec![OV::zero(); ny];
+            // a square's products at l and j - l are the same: the pair formed once, at l < j - l, and added twice
+            let square = d.x == d.y && !d.w && d.yk.is_none() && d.lo == 0 && d.hoff == 0;
+            for l in l0..j {
+                let e2 = match (square, j - l) {
+                    (true, m) if m < l && m >= l0 => continue,
+                    (true, m) if m > l => 1,
+                    _ => 0,
+                };
+                for (i, v) in xs.iter_mut().enumerate() {
+                    let c = x[i].0[b].c[l];
+                    *v = if i < ilo {
+                        OV::zero()
+                    } else if d.w {
+                        c.mul_f(i as f64)
+                    } else {
+                        c
+                    };
+                }
+                for (m, v) in ys.iter_mut().enumerate() {
+                    *v = if m < d.hoff { OV::zero() } else { y[m].0[b].c[j - l] };
+                }
+                #[cfg(test)]
+                if !drop1 {
+                    dump(&xs, &ys, n, j, s, b, l);
+                }
+                st.merge(&fastmul::mullow_pow2(&xs, &ys, n, &cfg, e2, &mut acc));
+            }
+            if let Some(o) = d.yk {
+                debug_assert!(d.dk == 0 && d.lo == 0 && d.hoff == 0 && !d.w, "series_split: yk on S_CPMR's form only");
+                for kk in 0..per {
+                    for l in l0..j {
+                        acc[kk].add_prod_mut(&x[0].0[b].c[l], &keep[o][kk].0[b].c[j - l]);
+                    }
+                }
+            }
+            assert!(st.max_frac < 0.25, "series_split: an exact convolution's value {} from its integer", st.max_frac);
+            (acc, st)
+        })
+        .collect();
+    let mut mids = vec![[ODotAcc::zero(); B]; NSUMS * per];
+    #[cfg(test)]
+    let mut tot = fastmul::Stats::default();
+    for ((s, b), (acc, _st)) in tasks.iter().zip(out) {
+        let d = &sums[*s];
+        for kk in 0..per {
+            if (d.inner && kk == ks) || range(d, kk).is_none() {
+                continue;
+            }
+            mids[s * per + kk][*b] = acc[kk + d.dk];
+        }
+        #[cfg(test)]
+        tot.merge(&_st);
+    }
+    #[cfg(test)]
+    {
+        let mut g = FAST_STATS.lock().unwrap();
+        let most = tot.blocks.0.max(tot.blocks.1);
+        *g = (g.0 + tot.calls, g.1 + tot.pairs, g.2.max(most), g.3.max(tot.digits), g.4.max(tot.max_frac));
+    }
+    mids
+}
+
 /// The sums' edge terms in the u-order loop: coefficient j of sum `s` at u-order kk, its middle accumulators plus
 /// x_(i,0) y_(k-i,j) and x_(i,j) y_(k-i,0) for i = lo..=hi. x and y must be the series the sum names (checked by
 /// address against `base`, the series' storage), y_kk read from yk where the sum says.
@@ -304,7 +427,12 @@ fn series_od<const N: usize, const B: usize>(
     let sums = sums(alpha);
     #[cfg(test)]
     let t0 = std::time::Instant::now();
-    let mids = middles(&sums, keep, ks, j, ctx.mutate == SPLIT_MUT_DROP_L1);
+    let drop1 = ctx.mutate == SPLIT_MUT_DROP_L1;
+    let mids = if ctx.series_split == SPLIT_FAST {
+        middles_fast(&sums, keep, ks, j, drop1)
+    } else {
+        middles(&sums, keep, ks, j, drop1)
+    };
     #[cfg(test)]
     let t1 = std::time::Instant::now();
     let ed = Edges::<B> {

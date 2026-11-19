@@ -86,8 +86,8 @@ pub struct Ctx<const B: usize> {
     /// All lanes read it.
     pub horizon_alpha: u8,
     /// The form of the horizon series one jet order at a time (SPLIT_*): 0, the default, `horizon_series_at`;
-    /// SPLIT_MIDDLE forms each Cauchy sum's middle terms ahead of the pass on octo-double jets (`series_split`). Only
-    /// `horizon_state_at` reads it.
+    /// SPLIT_MIDDLE forms each Cauchy sum's middle terms ahead of the pass on octo-double jets (`series_split`), and
+    /// SPLIT_FAST forms them so by block-scaled exact products (`fastmul`). Only `horizon_state_at` reads it.
     pub series_split: u8,
 }
 
@@ -95,6 +95,10 @@ pub struct Ctx<const B: usize> {
 /// parallel (`series_split::horizon_series_at_split`): the default's sums in another order, which can differ from
 /// its bits at the octo-double rounding
 pub const SPLIT_MIDDLE: u8 = 1;
+/// `Ctx::series_split`: SPLIT_MIDDLE with the middle terms as truncated u-products by `fastmul::mullow` (block scaling
+/// and exact integer convolution), each accurate to 2^-424 of its terms' absolute sum, so other bits than
+/// SPLIT_MIDDLE's at about the octo-double rounding
+pub const SPLIT_FAST: u8 = 2;
 /// the control of SPLIT_MIDDLE's accuracy check (Ctx::mutate): the middle terms without the jet order l = 1
 pub const SPLIT_MUT_DROP_L1: u8 = 31;
 
