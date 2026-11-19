@@ -1138,6 +1138,41 @@ at D 225.13 moves Δ by −1.1×10⁻²⁰, so the rungs' lifts belong to the or
   whose own Newton correction has |dΔ| ≤ B, with max |dz| and max |F| at most 10⁻³⁰ (octo_corrector.floor_accept;
   check `hp/od_floor_check.py`, whose `--mutate=nodelta` and `--mutate=off` fail).
 
+## What the corrector's projections cost past D 250 (#1032)
+
+- **Past D 251 every point is projected.** In ks_chain3b's legs 0 and 1 and the first steps of leg 2 (D 237.7–248.8),
+  ElimO's switch (pinned quad-double max |F| at most 10⁻¹⁵) skipped all 11 points in 11 of the 12 accepted attempts
+  (the one to D 247.28 projected 3), and each leg's base polish projected 3. From D 249.47 to 250.71 the accepted
+  attempts projected 2–6 points and skipped 3–5. From the attempts at D 251.28 on, none is skipped: 4–7 projections
+  per attempt, and 26 in one to D 251.31. Leg 6's converged base (D 251.2845) is projected too, where leg 5's (D
+  250.7060) was skipped (raw `I966-dh370/ks_chain3b/leg0*/anm_run.log`, the `elim projections` lines). There the
+  quad-double rounding of a converged state alone puts its pinned max |F| above the switch. So the step time's rise
+  from about 1 h to 5 h per unit D (#966) is the projections' count as well as their cost.
+- **The count 'ladder' is the re-seed's polish of the point's own data, not the ladder.** `Reseeder.project` runs the
+  double-double u0 rung, then the quad-double polish of that rung's data, then the re-seed. The double-double rung's
+  floor ε_dd G (G = x_K−1^−(n−1), the mass mode's gain) is far above 1 here, and its data, rounded to double-double,
+  put the series' pole inside u0 past D 249 (#693). At order 293 their polish never converged: 0 'u0' and 0 'u0q' in
+  every attempt of legs 0–6. At order 130 it still converged at D 252.8 (12–19 'u0q' per attempt, raw
+  `I608-dh610/restart4_d6.log`). Under `--reseed_start pred` the re-seed's first stage polishes the point's own
+  four-part data, and that converged at every projection there, since none failed past leg 2. A six-rung ladder would
+  have ended in the same failing polish of double-double data. So each projection pays for two stages that cannot
+  succeed before the one that does. The re-seed of leg 6's predictions was that polish alone: one rung record at u 0.3
+  with 23 iterations, the third sweep of `invert_q`, in 236 s (`anm_run.jsonl`).
+- **Opt-in changes (#1032, `hp/proj_check.py`).** `--proj_start pred` polishes the point's own data first and keeps
+  the old path as the fallback, with that polish handed on, so where the u0 path fails the result is the old one bit
+  for bit. `--reseed_o_stop 1` ends `refine_o` where a correction from a fresh LU does not halve |R|. On a floor like
+  leg 6's (the check's mock, case A) that is 4 rung residuals and 2 rung Jacobians instead of 10 and 8. `--proj_o 1`
+  projects by `refine_o` alone from the point's eight parts, the quad-double path only when it ends above
+  `--proj_o_bar`. The rung residual now comes from its own blocks (`Solver.residual_sub`, the centre series and the
+  segment skipped, the same bits). The rung Jacobian has come from the horizon block's columns since ff530c32
+  (`Solver.jacobian_sub`). On dh610 at ks 240 that block took 3.32 s against the full Jacobian's 3.89 s (raw
+  `I954-dh610/B_dup_eval.log`), so the horizon block's own columns dominate it.
+- **The refinement's floor, still unexplained.** By reading `refine_o` and the kernel, every correction reaches the
+  octo-double residual: the data enter in all eight parts, and the horizon solves' refinement converges past the
+  double-double LU's reach (notes/CRAWL.md 7). `proj_check.py floor` records, correction by correction, whether the
+  rung residual's bits change, and how far the residual follows a datum moved by 2⁻ᵏ of itself. It decides between a
+  residual that stops seeing the data below some part and a quad-double Jacobian whose steps stop helping.
+
 ## Proposed README text
 
 Applied to the README by the coordinator on 2026-11-14 (its checks moved to the README with it). Drafted for the
