@@ -354,18 +354,13 @@ def selfcheck(J=200):
     return rel < 1e-60
 
 
-def numeric(NU, J, wf=1.0, pert="all", mut=None, quiet=False):
-    mut = MUT if mut is None else mut
-    from flint import acb, arb, ctx
-    ctx.prec = 256
-    wv = acb(arb(str(wf)) * 2 * arb.pi() / arb("1.64389375"))     # w = wf * 2 pi / 1.64389375, as exact_sigma.py
+def dr_builder(labels, NU, J, wv, deg, mut=""):
+    """DR_j / K_NU from the exact order-3 recursion (order3), with the de-mixing and psi terms of the model, keeping the
+    products of total degree deg; returns (DR as a function of j, T^lam_l by label, T^NU_l). mut: demix or psi scale
+    E or h2 by 3/2"""
+    from flint import acb
     Iv = acb(0, 1)
-    eps = acb(10) ** -40
-    amp = {"m": (1, 0), "0": ("0.7", "0.3"), "p": ("-0.4", "1.1")}
-    on = lambda k: pert in ("all", k)
-    labels = [(1, -Iv, 0), (-1, Iv, 0)] + [(NU + sh, eps * (acb(*amp[k]) if on(k) else acb(0)), 1)
-                                          for sh, k in ((-2, "m"), (0, "0"), (2, "p"))]
-    T, seq, d3 = order3(labels, NU, J, wv, 1)
+    T, seq, d3 = order3(labels, NU, J, wv, deg)
     sN = Iv * NU * wv
     TN = T[NU]
     aN, bN = (1 + sN) / 2, (2 + sN) / 2
@@ -385,17 +380,32 @@ def numeric(NU, J, wf=1.0, pert="all", mut=None, quiet=False):
         for lr, gr, dr, _ in seq:
             h = NU - lr
             if h != 0:
-                v += -F2(h, 1 - gr) / (Iv * h * wv) * sc["demix"] * dr[jv] / TN[jv]
+                v += -F2(h, deg - gr) / (Iv * h * wv) * sc["demix"] * dr[jv] / TN[jv]
         return v
 
     def dpsi(jv):
         out = acb(0)
         for lr, gr, dr, _ in seq:
             if lr == NU:
-                out += F2(0, 1 - gr) / 2 * sc["psi"] * dr[0] * (1 / (aN + jv) + 1 / (bN + jv))
+                out += F2(0, deg - gr) / 2 * sc["psi"] * dr[0] * (1 / (aN + jv) + 1 / (bN + jv))
         return out
 
-    DR = lambda jv: (R(jv + 1) - R(jv) + dpsi(jv)) / eps
+    return (lambda jv: R(jv + 1) - R(jv) + dpsi(jv)), T, TN
+
+
+def numeric(NU, J, wf=1.0, pert="all", mut=None, quiet=False):
+    mut = MUT if mut is None else mut
+    from flint import acb, arb, ctx
+    ctx.prec = 256
+    wv = acb(arb(str(wf)) * 2 * arb.pi() / arb("1.64389375"))     # w = wf * 2 pi / 1.64389375, as exact_sigma.py
+    Iv = acb(0, 1)
+    eps = acb(10) ** -40
+    amp = {"m": (1, 0), "0": ("0.7", "0.3"), "p": ("-0.4", "1.1")}
+    on = lambda k: pert in ("all", k)
+    labels = [(1, -Iv, 0), (-1, Iv, 0)] + [(NU + sh, eps * (acb(*amp[k]) if on(k) else acb(0)), 1)
+                                          for sh, k in ((-2, "m"), (0, "0"), (2, "p"))]
+    DR0, T, TN = dr_builder(labels, NU, J, wv, 1, mut)
+    DR = lambda jv: DR0(jv) / eps
     # tail()'s C_lam at nu = NU, evaluated with the same labels (degree 1)
     samp = {"m": sp.Integer(1), "0": sp.Rational(7, 10) + sp.Rational(3, 10) * I, "p": -sp.Rational(4, 10) + sp.Rational(11, 10) * I}
     sym_in = [(1, -I, 0), (-1, I, 0)] + [(NU + sh, samp[k] if on(k) else sp.Integer(0), 1)
