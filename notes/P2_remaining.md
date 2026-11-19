@@ -651,3 +651,66 @@ rerun. It uses mpmath 256-bit intervals.
   - the super-solution as (I − L)⁻¹(b + m·1), so that rows without data keep slack;
   - τ₀ = n^{−2γ}, where a first version used n^{−(1−2γ)}, which was only conservative;
   - the box run's centre-only checks.
+
+### 6.3 The comparison with `b5_bounds`
+
+`p2c_b5_compare.py` sets this review's box record beside `b5_bounds_k0.3_Z0.0085.json`, opened after §6.2 was committed
+(`I1019-mac/b5/logs/compare.log`).
+
+- **Constants**, as ratios here/b5_bounds: Perron norm 0.974, R_Φ 0.542, R_C 0.977, T_F 0.948, ε-part 0.66. L's largest
+  entries are 0.88 (Φ₋₁ ← C₀) to 0.97 (Φ ← P). Every one is inside [1/3, 3].
+- **Super-solutions.** Every case is certified on both sides. Inside [1/3, 3]:
+  - δ_ref: P 0.54, Φ 0.53, C 0.75–0.81, ϑ 0.96;
+  - unit data in P: 0.68–0.71;
+  - unit data in C: 0.60–0.90;
+  - unit data in ϑ: 0.46–1.00.
+- **Ten ratios outside [1/3, 3]**, investigated as the protocol asks:
+  - forcing only: P and Φ 0.24–0.25, C 0.17–0.19;
+  - unit data in Φ: the C components, 0.22–0.29.
+
+  They are the product of two factors measured separately. One is R_Φ (ratio 0.542). The other is the amplification
+  of Φ data through the P ↔ Φ loop (unit-Φ x_Φ ratio 0.436). Their product, 0.237, matches the forcing-only Φ ratio of
+  0.247. The C components follow through the C ← P coupling. Both computations are upper bounds, and this one is
+  tighter. No discrepancy is found.
+- **What the tighter bound would give B5(2).** C_E ∝ x_Φ,₋₁ + x_Φ,₊₁ (B_chain.md §3.2). With this review's x_Φ for
+  (H8)'s rounded-up δ, C_E would be 1.1533×10³³ = e^{76.128}, against `b5_jump`'s 2.532706×10³³ = e^{76.915}. That
+  is not certified by reviewed code, and it is reported for information only.
+
+### 6.4 Discrepancies (reported, not fixed), and status
+
+- **The δ question (§6.0).** `b5_threshold.py`'s DELTA0 is B5's leading data, rounded down despite its label. It is
+  not (H8)'s δ. The chain's x_Φ and C_E use the certified δ, so they stand.
+- **B5's certified constants are conservative.** They are larger than this review's by factors up to 1.8 (R_Φ), and
+  its super-solutions by up to 4 (forcing only). Both are valid bounds.
+- **The η bound** is quoted to two digits in B5_inner.md §5.1 (2.7×10⁻⁸, 5.5×10⁻⁷, 6.5×10⁻¹¹). This review inflated
+  those values by 10 % rather than read them from `b5_bounds`'s record. Its effect on every constant is below the
+  digits shown.
+- **Protocol defects of this review**, recorded rather than corrected:
+  - K1 was not off the solution.
+  - K3 targeted a block that does not set the contraction.
+  - Their supplements K1b and K3c, chosen as in B5_inner.md §6, fire.
+
+**Status.** B5(1) for M = 1 is confirmed for every n ≥ e^{73.89} over the box (B8's ±2×10⁻⁶(1 + i), which contains
+B5's) by an independent computation. Its constants come out tighter than the certificate's, and its super-solution for
+δ_ref is certified (Perron norm 0.941).
+- **What it shares** with `b5_bounds`: lemma S's η bound, the parameter box and the statements of B5_inner.md §§1–4.
+  Lemma 3's formula is shared, and checked here against an independent ε-expansion to 1.9×10⁻⁴⁹.
+- **The inner series** is #1017's, checked against `series_arb.py`.
+- **Not done:** this review's code has not itself been reviewed. Versions: mpmath (iv) at 256 bits.
+
+### 6.5 Reproduce
+
+From `solver/proof/review_p2c/`, with the raw-data repository cloned beside this checkout (§4.5):
+
+```
+RAW=../../../../choptuik-large-d-raw/I1019-mac/b5
+python3 p2c_b5.py --model --phiz                    # stage A, PASS, exit 0
+python3 p2c_b5.py --phiz --mutate=G0                # K2: FAIL, exit 1
+python3 p2c_b5.py --residual                        # stage B, PASS, exit 0 (about 20 s)
+python3 p2c_b5.py --residual --mutate=offphi        # K1b: FAIL, exit 1
+python3 p2c_b5.py --sector --box --nr=32 --na=64 --out=$RAW    # stage C over the box, (P2) PASS, exit 0 (about 2 min)
+python3 p2c_b5.py --sector --nr=16 --na=32 --mutate=jacP2 --out=$RAW   # K3c: no super-solution, exit 1
+python3 p2c_b5_compare.py $RAW > $RAW/logs/compare.log                  # (P3)
+```
+
+`$RAW/run_c.sh` runs the stage-C set and the K3 variants. The stage-A and stage-B logs are beside them.
