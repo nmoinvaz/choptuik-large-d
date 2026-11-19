@@ -418,3 +418,46 @@ parameter in the box. B8 gives δ = (8.3×10⁻⁵, 79.04, 3.232, 6.464) (§8.3,
     uses the true system. The residual orders of (P1) must fail.
 - **Output.** The logs and records go to the raw-data repository as `I1017-mac/`. The code, and this section, stay in
   the branch.
+
+### 5.2 Results (own numbers, committed before the comparison)
+
+The logs and records are in the raw-data repository's folder `I1017-mac/` (b5deb210). The code is `p2c_h8.py` at 1506f53f,
+run with mpmath 256-bit intervals.
+
+- **(P1) passes.**
+  - The series Z^K solves the reduced system on a + j ≤ 4, with residual coefficients at most 3.8×10⁻⁶⁵ at the box
+    centre. The lowest nonzero residual grade is 5 for S, β and c.
+  - The leading coefficients at the centre are Φ_{±1} = −15.71416905 ± 74.93015179i at εz (modulus 76.56019), C at ε
+    −3.231258348 and −1.615629174 (that is −A²/2 and −A²/4), and ϑ at ε −6.462516695 and −3.231258348. They agree with
+    B8_constants.md §8.2's printed digits. P's ε z⁰ coefficient is 0, and its εz coefficient is half of Φ's.
+  - The inner series, c and P to z³⁰, agrees with `series_arb.py` to 1.4×10⁻⁶⁵ relative, with every ball overlapping.
+    The bar was 10⁻⁴⁰.
+  - Over the box, Z^K's ε⁰ part equals the inner series to z⁴, as Lemma F.3 states. At the centre the structural zeros
+    removed are at most 4×10⁻⁶⁷.
+- **(P2) passes**, for every n ≥ e^{73.89} over the box:
+
+| | series (T) | remainder (R) | η | δ | δ_ref |
+|---|---|---|---|---|---|
+| P | 5.59×10⁻¹² | 7.75×10⁻²⁶ | 4.4×10⁻¹⁰⁴ | 5.59×10⁻¹² | 1 |
+| Φ | 76.5792 | 2.463 | 3×10⁻⁸⁹ | 79.0419 | 200 |
+| C | 3.23126 | 1.35×10⁻²⁷ | 7.6×10⁻¹¹⁵ | 3.23126 | 10 |
+| ϑ | 6.4634 | 3.44×10⁻¹⁴ | 0 | 6.4634 | 20 |
+
+  - **Φ's remainder** (2.463) is almost all the main term D⁻¹C²R_S (2.395). The series' residual r_S adds 0.068, from
+    its ε⁰z⁵ term (τ²⁰); ‖q‖ ≤ 7.4×10⁻¹³.
+  - **δ_P** is the εz term φ₁/2 · n₀^{−0.4}, since the ε z⁰ coefficient is 0.
+  - **At the box centre** (`--point`): δ_Φ = 79.0226 (T 76.5602, R 2.462), δ_C = 3.23126 and δ_ϑ = 6.46252. So the
+    box widens Φ's T by 0.019 here.
+- **(P4).** At d₀ = 10⁷, with that run's h, R_Φ = 45.74 and δ_Φ = 122.32. The other δ are unchanged, and the R parts
+  are R_P = 2.29×10⁻²⁴, R_C = 1.04×10⁻²⁵ and R_ϑ = 6.29×10⁻¹³.
+- **Controls.**
+  - **K1** (A × (1 + 10⁻³)) fails (P1) on B8's digits, with exit 1.
+  - **K3** (the x²Ω sign flipped in the solver) fails the residual orders (5.8×10³ on a + j ≤ 4) and the comparison
+    with `series_arb.py`, with exit 1.
+  - **K2** (h_S × (1 + 10⁻³)) moves R_P from 7.747×10⁻²⁶ to 7.753×10⁻²⁶, that is by 7.7×10⁻⁴, and δ_Φ by 2.4×10⁻³. Its
+    reading is in §5.3.
+- **Development fix** (before these runs): the S update first subtracted G's (1 − ε)C²S term after adding it, so the
+  interval widths doubled at every Picard step. Over the box Φ's leading ball was 87 wide. G's rest is now computed
+  directly.
+- **Harness fix:** a first comparison with `series_arb.py` built its inputs at 53 bits, before raising flint's
+  precision, and so differed at 10⁻¹⁰. At 256 bits the difference is 1.4×10⁻⁶⁵.
