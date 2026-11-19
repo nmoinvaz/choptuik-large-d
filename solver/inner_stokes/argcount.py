@@ -115,11 +115,93 @@ def _probe_inner_np():
     return I
 
 
+def _res3(I, A, wf, v, r1, rtol=1e-12):
+    """residual_demixed (M = 3) at (A, wf, v), with the integration tolerance rtol (1e-12 is the default path)"""
+    x = np.array([A, wf, v[0], v[1]])
+    if rtol == 1e-12:
+        return I.residual_demixed(x, 3, r1=r1)
+    jumps = I.Inner.jumps
+
+    def jt(self, r1s=(0.2,), r0=None, rtol_=1e-12):
+        return jumps(self, r1s, r0, rtol)
+    I.Inner.jumps = jt
+    try:
+        return I.residual_demixed(x, 3, r1=r1)
+    finally:
+        I.Inner.jumps = jumps
+
+
+def _refine3(I, A, wf, v, r1, hrel=1e-4, iters=20):
+    """damped Newton on S_3 = 0 with central differences at a step 1e-4 |v|, above the residual's rounding noise
+    (least_squares' default step, sqrt(eps) |v|, moves r_3 by less than its noise at small xi1 and large A, #1021);
+    returns (v, residual, Jacobian of the full residual in v)"""
+    r = _res3(I, A, wf, v, r1)
+    J = None
+    for _ in range(iters):
+        h = hrel * max(float(np.abs(v).max()), 1e-3)
+        J = np.column_stack([(_res3(I, A, wf, v + h * e, r1) - _res3(I, A, wf, v - h * e, r1)) / (2 * h)
+                             for e in np.eye(2)])
+        try:
+            dv = np.linalg.solve(J[2:], -r[2:])
+        except np.linalg.LinAlgError:
+            break
+        lam, rn = 1.0, None
+        while lam >= 1e-3:
+            rn = _res3(I, A, wf, v + lam * dv, r1)
+            if np.abs(rn[2:]).max() < np.abs(r[2:]).max():
+                break
+            lam /= 2
+        if rn is None or not np.abs(rn[2:]).max() < np.abs(r[2:]).max():
+            break
+        v, r = v + lam * dv, rn
+    return v, r, J
+
+
+def _floor3(I, A, wf, v, r1):
+    """the residual's rounding noise at v: the same residual at rtol 1e-12 and 1e-13"""
+    return np.abs(_res3(I, A, wf, v, r1) - _res3(I, A, wf, v, r1, 1e-13))
+
+
+def _continue3(I, nested, A, wf, F3, r1, starts=(0.25, 0.2), h0=0.01, hmin=0.00125):
+    """S_3 = 0 at xi1 = r1 by continuation in xi1 from a radius where it converges: at each radius the noise-safe
+    Newton, accepted when |r_3| <= 3 x its noise; the step in xi1 is halved when a radius is not reached"""
+    trail = []
+    for rs in starts:
+        if rs <= r1:
+            continue
+        F3s, _, _ = nested.inner(A, wf, complex(*F3), rs)
+        v = np.array([-2 * F3s.imag, 2 * F3s.real])
+        v, r, J = _refine3(I, A, wf, v, rs)
+        if np.abs(r[2:]).max() <= 3 * _floor3(I, A, wf, v, rs)[2:].max():
+            trail.append(rs)
+            break
+    else:
+        return None, trail
+    rr, h = trail[-1], h0
+    while rr > r1:
+        rn = max(round(rr - h, 6), r1)
+        v2, r2, J2 = _refine3(I, A, wf, v, rn)
+        if np.abs(r2[2:]).max() <= 3 * _floor3(I, A, wf, v2, rn)[2:].max():
+            v, r, J, rr = v2, r2, J2, rn
+            trail.append(rn)
+            h = min(h0, 2 * h)
+        else:
+            h /= 2
+            if h < hmin:
+                return None, trail
+    return (v, r, J), trail
+
+
 def f_M3(args):
-    """[Re, Im, |r_3|, F3re, F3im, max |Y|, sigma]; sigma = 1e-15 |Y(xi1)| times residual_demixed's scale for r_1"""
+    """[Re, Im, |r_3|, F3re, F3im, max |Y|, sigma(, fix)]; sigma = 1e-15 |Y(xi1)| times residual_demixed's scale for
+    r_1. With fix (#1021), a point whose inner solve leaves |r_3| >= 1e-8 is solved again by continuation in xi1 and
+    accepted when |r_3| is at its rounding noise; its sigma then includes r_1's noise and the error the residual r_3
+    induces in r_1 (|J_1 J_3^-1| (|r_3| + noise_3)), so the guard |R| >= 10 sigma keeps its phase. Points the first
+    solve accepts are unchanged."""
     I = _probe_inner_np()
     import nested
-    (A, wf), F3, r1 = args
+    (A, wf), F3, r1 = args[:3]
+    fix = len(args) > 3 and args[3]
     nan = float("nan")
     try:
         F3n, R, r3 = nested.inner(A, wf, complex(*F3), r1)
@@ -127,27 +209,50 @@ def f_M3(args):
         Fh = I.Fh_from(np.array([A, wf, -2 * F3n.imag, 2 * F3n.real]), 3)
         sc = np.exp(1 / (2 * r1 * r1)) * r1 ** (-2 * I.F2mean(Fh)) / (2 * np.pi * abs(I.Kp(1j * w)))
         ym, sig = _PATH.get("ymax", nan), 1e-15 * _PATH.get("yend", nan) * sc
-        if not float(r3) < 1e-8:                  # the inner solve did not tune S_3 to zero: no value
+        if float(r3) < 1e-8:
+            return [R.real, R.imag, float(r3), F3n.real, F3n.imag, ym, sig]
+        if not fix:                               # the inner solve did not tune S_3 to zero: no value
             return [nan, nan, float(r3), F3[0], F3[1], ym, sig]
-        return [R.real, R.imag, float(r3), F3n.real, F3n.imag, ym, sig]
+        got, trail = _continue3(I, nested, A, wf, F3, r1)
+        if got is None:
+            return [nan, nan, float(r3), F3[0], F3[1], ym, sig, dict(trail=trail, ok=False)]
+        v, r, J = got
+        n = _floor3(I, A, wf, v, r1)
+        r = _res3(I, A, wf, v, r1)                # the last evaluation is the default path (for _PATH)
+        F3f = v[0] / 2j + v[1] / 2
+        Fh = I.Fh_from(np.array([A, wf, v[0], v[1]]), 3)
+        sc = np.exp(1 / (2 * r1 * r1)) * r1 ** (-2 * I.F2mean(Fh)) / (2 * np.pi * abs(I.Kp(1j * w)))
+        ym, sig0 = _PATH.get("ymax", nan), 1e-15 * _PATH.get("yend", nan) * sc
+        r3f = float(np.abs(r[2:]).max())
+        dr1 = float(np.abs(J[:2] @ np.abs(np.linalg.inv(J[2:])) @ np.full(2, r3f + float(n[2:].max()))).max())
+        sigf = max(sig0, float(n[:2].max()) + dr1)
+        return [float(r[0]), float(r[1]), r3f, F3f.real, F3f.imag, ym, sigf,
+                dict(trail=trail, ok=True, noise3=float(n[2:].max()), noise1=float(n[:2].max()), dr1=dr1, sig0=sig0)]
     except Exception as ex:
         return [nan, nan, str(ex)[:80], F3[0], F3[1], nan, nan]
 
 
 class Multiplier:
-    def __init__(self, M, cache, procs, plant=None, mutate=None, r1=0.2, ymax=1e2):
+    def __init__(self, M, cache, procs, plant=None, mutate=None, r1=0.2, ymax=1e2, m3fix=False, retry=False):
         self.M, self.procs, self.plant, self.mutate = M, procs, plant, mutate
-        self.r1, self.ymax = r1, ymax
+        self.r1, self.ymax, self.m3fix = r1, ymax, m3fix
         self.vals, self.extra = {}, {}
         self.cache = cache
         self.pool = None
         if cache and os.path.exists(cache):
             for line in open(cache):
                 r = json.loads(line)
+                if retry and M == 3 and not (Multiplier.valued3(r)):
+                    continue                          # --retry: a point without value is computed again
                 if r.get("r1") != r1 and (M == 1 or "r1" in r):
                     raise SystemExit(f"cache {cache} holds points at r1 {r.get('r1')}, not {r1}")
                 self.store((r["A"], r["wf"]), r)
         self.F3seed = {}
+
+    @staticmethod
+    def valued3(r):
+        """an M = 3 record with a value: tuned below 1e-8, or by the continuation at its rounding noise (#1021)"""
+        return (isinstance(r.get("info"), float) and r["info"] < 1e-8) or bool((r.get("fix") or {}).get("ok"))
 
     @staticmethod
     def key(p):
@@ -167,7 +272,7 @@ class Multiplier:
             fn, args = f_M1, [(p, self.r1) for p in todo]
         else:
             fn = f_M3
-            args = [(p, self.seed(p), self.r1) for p in todo]
+            args = [(p, self.seed(p), self.r1) + ((True,) if self.m3fix else ()) for p in todo]
         if self.procs > 1:
             if self.pool is None:
                 import multiprocessing as mp_
@@ -183,6 +288,8 @@ class Multiplier:
                     rec.update(r1=self.r1, ymax=r[3], sig=r[4])
                 if self.M == 3:
                     rec.update(r1=self.r1, F3re=r[3], F3im=r[4], ymax=r[5], sig=r[6])
+                    if len(r) > 7:
+                        rec["fix"] = r[7]
                 self.store(k, rec)
                 fh.write(json.dumps(rec) + "\n")
 
@@ -199,7 +306,7 @@ class Multiplier:
         """M = 3: F_3 from the nearest computed point (its tuned F_3), else the known zero's ratio"""
         best, bd = None, 1e300
         for k, r in self.extra.items():
-            if "F3re" in r and math.isfinite(r["F3re"]) and isinstance(r["info"], float) and r["info"] < 1e-8:
+            if "F3re" in r and math.isfinite(r["F3re"]) and Multiplier.valued3(r):
                 d = (k[0] - p[0]) ** 2 + (k[1] - p[1]) ** 2
                 if d < bd:
                     best, bd = (r["F3re"], r["F3im"]), d
@@ -504,6 +611,9 @@ def main():
                     help="M = 3: points file (any xi1) whose tuned F_3 values seed the inner solves")
     ap.add_argument("--recount", default=None,
                     help="leaves file of an earlier count: recount each of its unresolved cells as its own box")
+    ap.add_argument("--m3fix", action="store_true",
+                    help="M = 3: continuation in xi1 where the inner solve leaves |r_3| >= 1e-8 (#1021)")
+    ap.add_argument("--retry", action="store_true", help="M = 3: compute again the cached points without value")
     ap.add_argument("--selftest", action="store_true")
     ap.add_argument("--mutate", default=None, choices=["conj", "nosplit", "norecount"])
     a = ap.parse_args()
@@ -517,7 +627,7 @@ def main():
     a.r1 = a.r1 or (0.17 if a.M == 1 else 0.2)
     a.r1b = a.r1b or (0.2 if a.M == 1 else 0.17)
     cache = a.cache or os.path.join(a.out, f"points_M{a.M}_r{a.r1}.jsonl")
-    F = Multiplier(a.M, cache, a.procs, plant, r1=a.r1, ymax=a.ymax)
+    F = Multiplier(a.M, cache, a.procs, plant, r1=a.r1, ymax=a.ymax, m3fix=a.m3fix, retry=a.retry)
     if a.M == 3:
         # seed the continuation at the known M = 3 zero's tuned F_3
         F.extra[(-1.0, -1.0)] = dict(F3re=float(((2.7264758856 / 2j) * (0.0532 + 0.0041j)).real),
@@ -538,7 +648,7 @@ def main():
     F.close()
     if a.r1b:
         # the zero set does not depend on xi1: locate each zero again at r1b, from the same cell
-        Fb = Multiplier(a.M, os.path.join(a.out, f"points_M{a.M}_r{a.r1b}.jsonl"), a.procs, plant, r1=a.r1b,
+        Fb = Multiplier(a.M, os.path.join(a.out, f"points_M{a.M}_r{a.r1b}.jsonl"), a.procs, plant, r1=a.r1b, m3fix=a.m3fix,
                         ymax=a.ymax)
         if a.M == 3:                              # seed F_3 from the first radius's tuned values
             for k, r in F.extra.items():
