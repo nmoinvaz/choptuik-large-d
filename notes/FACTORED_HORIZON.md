@@ -19,7 +19,7 @@ status words are AGENTS.md's.
 | can G be factored out | yes, exactly: B = 1/a² obeys a linear equation, and its datum moves to the last node | checked symbolically (S1–S5) |
 | the mass mode's gain before and after | x_K^−(n−1) e^(F²(1−x_K²)/n + O(n⁻²)) before; 1 after, for every n and x_K | checked symbolically (S2, S5) |
 | the share of the fast mode's shadow that ks = 130 keeps | ln f = −41.05 at D 237.13 and −63.05 at D 253.80 (μ = 1); f = 1 to 1% from ks ≈ 1.9 Re s | numerical evidence (M3) |
-| does the factored segment's inner solve reach quad-double in 5 sweeps | no: 29 to 32 from the slaved value and 21 from a warm start at D 242.36, and at D 73 the sweeps diverge from the slaved value | numerical evidence (5.1) |
+| does the factored segment's inner solve reach quad-double in 5 sweeps | no: 29 to 32 from the slaved value and 21 from a warm start at D 242.36; at D 73, 31 from a warm start, and the sweeps diverge from the slaved value | numerical evidence (5.1) |
 
 The linear model reproduces three measurements with no fitted parameter (M4):
 
@@ -34,7 +34,7 @@ The order of work this suggests:
    truncation, the chain runs at ks ≈ 1.9 Re s.
 2. The mass mode factored at the last node (section 3), for the strong side: the ε·G floors, the re-seed's polish and
    the corrector's quadratic jump. It needs an inner solve on the horizon segment. Stage 1 of section 5 measured it at
-   20 to 30 sweeps of the old pass (5.1), so this route is not recommended with that solve.
+   21 to 32 sweeps of the old pass (5.1), so this route is not recommended with that solve.
 
 ## 1. The two exponents in the horizon segment
 
@@ -427,26 +427,26 @@ hp/src is not changed by this task.
 ### 5.1 Stage 1's result: the prototype in mpmath (#1035)
 
 **The fixed point needs 21 to 32 sweeps to quad-double, not 5, so stage 1 fails its criterion and stage 2 is not worth
-building with this inner solve.** At D 242.36 the sweeps from the slaved start reach eps_qd = 2⁻²¹² in 32 (plain) and
-29 (Anderson mixing, memory 5), and from a warm start in 21. At D 73 a warm start takes 31, and the sweeps diverge from
-the slaved start. Once the error is small it falls by a factor of order 1/n per sweep, as 3.4 inferred, and the mixing
-does not change that. P1 holds against hp's series with an exact 1/k. With hp's own 1/k it holds at D 242.36 and
-fails at D 73, by that rounding alone, and it fails at D 242.36 too once a_h is moved off the stored value. All of it
-is numerical evidence at two stored states, from `hp/factored_horizon.py`.
+building with this inner solve.** At D 242.36 the sweeps from the slaved start reach eps_qd = 2⁻²¹² in 32 (plain), 29
+(Anderson mixing, memory 5) and 30 (memory 20), and from a warm start in 21. At D 73 a warm start takes 31, and the
+sweeps diverge from the slaved start. Once the error is small it falls by a factor of order 1/n per sweep, as 3.4
+inferred, and the mixing does not change that. P1 holds against hp's series with an exact 1/k. With hp's own 1/k it
+holds at D 242.36 and fails at D 73, by that rounding alone, and it fails at D 242.36 too once a_h is moved off the
+stored value. All of it is numerical evidence at two stored states, from `hp/factored_horizon.py`.
 
 | | D 73.0 | D 242.36 |
 |---|---|---|
 | state (raw-data repository) | `T81/conv_pin5_D73.0000_D73.000000.npz` | `I461-win2/crawlJ/anm_pin3_D242.3642.npz` |
 | G = x_K^−(n−1) | 7.0×10¹⁰ | 1.2×10³⁷ |
-| sweeps to eps_qd from the slaved start (B = 1, γ = 0), plain / Anderson | diverge (1.3, 1.5×10³, 1.5×10³) | 32 / 29 (by \|g(y) − y\|) |
+| sweeps to eps_qd from the slaved start (B = 1, γ = 0), plain / Anderson | diverge (1.3, 1.5×10³, 1.5×10³) | 32 / 29 (memory 5, by \|g(y) − y\|), 30 (memory 20) |
 | sweeps to eps_qd from a warm start (data moved by 10⁻²⁰), Anderson | 31 | 21 |
 | error ratio per sweep, geometric mean of the last six (1/n) | 1.2×10⁻², warm (1.4×10⁻²) | 7.3×10⁻³ warm, 1.2×10⁻² slaved plain (4.2×10⁻³) |
 | one sweep of the linearized map on a random perturbation (`loop`), then the next four | 1.5×10⁶, then 0.12, 0.059, 0.037, 0.026 | 8.7×10²⁰, then 0.021, 0.010, 0.0066, 0.0048 |
 | γ, the mass mode's amplitude at the node, at the stored state | 9.5×10⁻²⁸ | 4.8×10⁻³⁵ |
 | P1 with hp's 1/k: max \|R_fact − R_old\| (eps_qd G) | 1.4×10⁻³⁷ (1.1×10⁻⁵³): fails | 7.3×10⁻³⁹ (1.8×10⁻²⁷): passes |
 | P1 with an exact 1/k in both (eps_qd G; 100·2⁻²⁸⁸ G) | 3.2×10⁻⁸⁰ (1.1×10⁻⁵³; 1.4×10⁻⁷⁴): passes both | 4.4×10⁻⁷⁰ (1.8×10⁻²⁷; 2.4×10⁻⁴⁸): passes both |
-| P1 with a_h moved by 10⁻⁸/G (γ about 10⁻⁸), hp's 1/k; with an exact 1/k; the control `--mutate=sign` | not run | 6.7×10⁻¹⁸; ⟨P1MX⟩; 4.5×10⁻¹² |
-| one sweep, and the old series, in the prototype at 288 bits | 12 to 14 s, 5 to 10 s | 14 to 18 s, 9 to 10 s |
+| P1 with a_h moved by 10⁻⁸/G (γ about 10⁻⁸), hp's 1/k; with an exact 1/k; the control `--mutate=sign` | not run | 6.7×10⁻¹⁸; 9.9×10⁻⁷⁰; 4.5×10⁻¹² |
+| one sweep, and the old series, in the prototype at 288 bits | 12 to 14 s, 5 to 10 s | 13 to 18 s, 5 to 10 s |
 
 **The prototype.** It transcribes `horizon_series` and `horizon_state` for the two-node layout into mpmath, with hp's
 constants: n and the folded d/dθ rounded to double-double as hpkernel's driver makes them, 2π in double-double,
@@ -479,12 +479,12 @@ at order 130 moves by 1.0×10⁻⁷ in u₀^k units. B_sl's backward recursion t
 with weights near 1 in those units, since (k + 1)/((n − 1 + k) u₀) is about 1 near the mass mode's peak order, (n − 1)
 u₀/(1 − u₀) ≈ 102 there. The linearized map is far from normal. One sweep magnifies a random perturbation by 8.7×10²⁰ at
 D 242.36 and 1.5×10⁶ at D 73, and the later sweeps shrink it. From the slaved value at D 242.36 the sweeps never meet
-that growth, and they converge by a factor of order 1/n per sweep. Anderson's mixing with memory 5 saves a few sweeps at
-most, so the slow part is not a few directions. At D 73, Re s is 35 to 41 over τ, far inside K = 130, and y moved by
-10⁻³⁰ at order 20 moves p by up to 2.4×10⁻²² further up. There the slaved start's error, β itself (2×10⁻³ at order 0),
-drives the transient, and the sweeps diverge, as they do from the naive start (q = 0, and γ from the datum, where \|g(y)
-− y\| goes 0.56, 34, 34, 34). Started from 1/a² of the old series itself they converge, to eps_qd in 20 sweeps and to
-2×10⁻⁷³ in 25.
+that growth, and they converge by a factor of order 1/n per sweep. Anderson's mixing saves two or three sweeps at most,
+with memory 5 or 20, so the slow part is not a few directions. At D 73, Re s is 35 to 41 over τ, far inside K = 130, and
+y moved by 10⁻³⁰ at order 20 moves p by up to 2.4×10⁻²² further up. There the slaved start's error, β itself (2×10⁻³ at
+order 0), drives the transient, and the sweeps diverge, as they do from the naive start (q = 0, and γ from the datum,
+where \|g(y) − y\| goes 0.56, 34, 34, 34). Started from 1/a² of the old series itself they converge, to eps_qd in 20
+sweeps and to 2×10⁻⁷³ in 25.
 
 **P1.** With a_K set to the old series' a at u₀, the factored segment recovers the stored a_h, and its rows equal the
 old ones up to hp's rounding of 1/k.
@@ -495,16 +495,17 @@ old ones up to hp's rounding of 1/k.
   and 1.4×10⁻³⁷, so P1 passes at D 242.36 (eps_qd G = 1.8×10⁻²⁷) and fails at D 73 (1.1×10⁻⁵³).
 - With a_h moved by 10⁻⁸/G the old series holds a mass mode of about 10⁻⁸ at the node, and with hp's 1/k the p rows
   then differ by 6.7×10⁻¹⁸ at D 242.36, well above eps_qd G. That is the rounding of 1/k on the mass mode's
-  coefficients, magnified by the p series' transient. With an exact 1/k the difference is ⟨P1MX⟩.
+  coefficients, magnified by the p series' transient. With an exact 1/k the difference is 9.9×10⁻⁷⁰, and P1 passes
+  both bounds.
 - The control as written cannot fire at the stored states. Their γ is 9.5×10⁻²⁸ (D 73) and 4.8×10⁻³⁵ (D 242.36), so
   χ̂ barely enters the rows, and `--mutate=sign` changed the difference at D 242.36 only from 7.3×10⁻³⁹ to 1.7×10⁻³⁸.
   With a_h moved by 10⁻⁸/G (`--move 1e-8`) it fires, at 4.5×10⁻¹².
 
-**What this leaves.** The factored segment removes G only through an inner solve, and this one costs 20 to 30 sweeps,
-each 1.3 to 2.2 times the old series in the prototype (noisy timings on the shared Mac). Quad-double in place of
-octo-double gains 6.5 to 9 per operation (OCTO_DOUBLE.md 3), so the horizon block would cost three to ten times what it
-does now (an estimate from these ratios). Jacobian columns and jet orders iterate alike, and they have no warm start.
-A Newton step on the coupled system in place of the sweeps needs the Jacobian of q in B, with (K + 1) M = 4224 unknowns
+**What this leaves.** The factored segment removes G only through an inner solve, and this one costs 21 to 32 sweeps,
+each 1.3 to 2.5 times the old series in the prototype (noisy timings on the shared Mac). Quad-double in place of
+octo-double gains 6.5 to 9 per operation (OCTO_DOUBLE.md 3), so the horizon block would cost three to twelve times what it
+does now (an estimate from these ratios). Jacobian columns and jet orders iterate alike, and they have no warm start. A
+Newton step on the coupled system in place of the sweeps needs the Jacobian of q in B, with (K + 1) M = 4224 unknowns
 per evaluation, which costs more than the whole horizon block. Stage 2 as designed is therefore not recommended. The
 reach past D ≈ 295 rests on the other routes, the truncation of section 4 or a 16-part type. Two predictions of 3.6 are
 untested here, the factored rows' floor of ε·O(1) and the larger basin (P2, P4).
@@ -575,8 +576,8 @@ python3 factored_horizon.py loop $RAW/I461-win2/crawlJ/anm_pin3_D242.3642.npz --
 ```
 
 One process each. The reference takes about ten minutes, a gain or P1 run three to nine, a check ten seconds. The
-D 73 runs take `--ref_start old` for the reference, as the slaved start diverges there. The runs' logs and records are
-in the raw-data repository, `I1035-mac/`.
+D 73 runs take `--ref_start old` for the reference, as the slaved start diverges there. The logs and records of the
+runs quoted in 5.1 are for `I1035-mac/` of the raw-data repository.
 
 ## 8. Prior art used
 
