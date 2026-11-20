@@ -17,7 +17,7 @@ formulation of hp/pinning.py; their coefficients are zero).
         [--horizon_alpha 0] [--fix1_qlu 0] [--jet_q 0] [--reseed 0] [--pred_q 0] [--reseed_q 0] [--save_pred 0]
         [--jet_o 0] [--jet_by_order 1] [--jet_tangent_from 0] [--series_split 0] [--od_tangents 2] [--corrector od --tol_od 1e-40] [--base_adopt 0] [--base_polish 1] [--keep_plan 1] [--held_fit FILE]
         [--held_o 0] [--reseed_o 0] [--reseed_qd_bar 1e-24] [--proj_start u0] [--reseed_o_stop 0] [--proj_o 0 --proj_o_bar 0] [--a0 0] [--a_grow 2] [--a_hold 0] [--lam_stall 0] [--od_floor_delta 0] [--save_base 0] [--save_jet 0] [--held_from STATE]
-        [--exact_recip 0]
+        [--exact_recip 0] [--od_start_F 1e-6]
         [--arclength 0 --guard 0.05 --D_min 0 --arc_sign 1 --border 1 --turns_max 2 --arc_dhold 1e-12 --arc_jet FILE]
         [--a_rule step|reseed --a_scale 1 --a_drop 10 --a_rise 3.16]
 
@@ -151,6 +151,10 @@ made the chain crawl at λ = 1/2 past D 251 (#700, notes/CRAWL.md).
 --log_proj 1 prints one line per failed projection of the corrector: the point's pinned max|F| and each stage of
 Reseeder.project, the u0 rung, its quad-double polish and the ladder's last rung (reseed.why_failed, #743). It only
 prints. The lines are numbered, and the last one's number equals the run's printed count of failed projections.
+--od_start_F F (with --corrector od and --reseed 2) is ElimO's start_F: an attempt whose start's projection fails
+while the start's pinned quad-double max|F| exceeds F stops there (1e-6, the default, as before). 0 sets no bound, so
+the corrector goes on from the unprojected start. A flag-on polish of a flag-off state misses its rows by the flag's
+change, 2.0e-5 at D 251.88, and stops at its start by default (notes/EXACT_RECIP.md 3.3, #1043).
 Three opt-in ways to cheapen the corrector's projections (#1032; the defaults leave them as they were). --proj_start
 pred (with --reseed_q 1) polishes the point's own four-part data in quad-double first, counted 'pred', and runs the
 double-double u0 rung, its polish and the re-seed only when that fails. Past D 249 at order 293 the u0 rung's
@@ -488,6 +492,7 @@ def main():
     # --a_scale, lowered by --a_drop after a failed re-seed and raised by --a_rise after a first attempt at its step
     opt.update(a_rule="step", a_scale=1.0, a_drop=10.0, a_rise=10.0 ** 0.5)
     opt.update(exact_recip=0)           # --exact_recip 1: the horizon series' 1/k rounded once to each lane's precision (#1043)
+    opt.update(od_start_F=1e-6)         # --od_start_F F: ElimO's start_F, the start's bound (0: none; #1043)
     for k in list(opt):
         f = "--" + k
         if f in args:
@@ -566,6 +571,7 @@ def main():
             so = PinnedO(spx.s, spx.ch, spx.cl, c8=spx.c8)
             if elim.get("rs") is not None:
                 so = ElimO(so, elim["rs"], switch=opt["elim_switch"], log=bool(opt["log_proj"]), proj_o=opt["proj_o"],
+                           start_F=opt["od_start_F"] if opt["od_start_F"] > 0 else None,
                            proj_o_bar=opt["proj_o_bar"] or opt["tol_od"])
             z0 = z8_start if z8_start is not None else o8_of_q(z4_start if z4_start is not None else qparts(ph, pl))
             try:
