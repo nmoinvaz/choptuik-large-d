@@ -223,7 +223,9 @@ fn direct(x: &[OV], y: &[OV], o: usize, nout: usize, cfg: &Cfg, e2: i32, acc: &m
         // no scale, so none that could underflow a small coefficient of a wide factor
         (x.to_vec(), y.to_vec())
     } else if cfg.mutate == MUT_E2_PLAIN {
-        (x.iter().map(|v| v.mul_pwr2(2f64.powi(e2))).collect::<Vec<_>>(), y.to_vec())
+        // the control: 2^e2 as one f64 on the first factor, by a plain multiply (infinite for a large e2)
+        let f = V8::splat(2f64.powi(e2));
+        (x.iter().map(|v| OV { c: v.c.map(|p| p.mul(f)) }).collect::<Vec<_>>(), y.to_vec())
     } else {
         let top = |v: &[OV]| -> [i32; LN] {
             std::array::from_fn(|l| {
