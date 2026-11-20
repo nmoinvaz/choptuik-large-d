@@ -1216,8 +1216,13 @@ The series takes 0.56 times the default's time at split 2, and the step 0.84 tim
 states. Split 2 agrees with them to about 10⁻¹²⁰ relative and not bit for bit, which is its tests' criterion
 (`split_fast_accuracy`, `split_series_accuracy`, `fastmul_planted`, and `series_split_check.py` at D 253.34 and 237.53,
 each with a control that fires). On x86 its checksums do not move with multidouble's SIMD backend (Sse2 against Avx2).
-Across platforms they differ, because the tests' synthetic inputs come from libm. So the product's independence from
-libm is not yet tested on real inputs.
+Across platforms they differ, because the tests' synthetic inputs come from libm: the hashes of those inputs already
+differ between win2 and the Mac (`split_inputs_hash`). On libm-free inputs, the same construction with sin, cos and tan
+from Taylor series in plain f64 arithmetic (`qd_residual::synth_det`, test `split_xplat`), win2 and the Mac give the
+same inputs hash (5f95f417b17d3166), split checksum (a1ca213203d6e285) and fast checksum (47fd7fabd2134782) at main
+7ca74dd5. So the series' arithmetic, the fast product's included, has the same bits on both, and the mismatch was the
+inputs alone (raw `I1034-win2/split_xplat` 1baeaaa3). The test's guard on det_sin and det_cos (within 10⁻¹⁴ of libm)
+fails, as it must, on a series cut at x¹⁵ (2.1×10⁻⁵).
 
 ## Lower-precision Newton matrices: valid only where they save nothing (speed item 2)
 
