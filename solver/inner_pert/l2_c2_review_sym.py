@@ -33,6 +33,7 @@ Added after section 9 was read:
   J  every other row (momentum constraints, spatial rows, fibres) vanishes on k at its natural order
   J2 the chi-chi row at its natural order holds the second t-derivative of the metric function C
   P  the p = 1 frame: F2 = 2 s cos^2(chi) Q, the same F2/(s Y2) as p = q                      (--mutate=k)
+  Q  the compact forms of F2/(s Y2) and of L0[(0, Phi_s)] in the heat variables               (--mutate=sign)
   K  the stored forcings of data/l2_c2_forcing.json equal this derivation                    (--mutate=sign)
 
 Run: python3 l2_c2_review_sym.py [--mutate=NAME]      (about 25 s, one process; fibre, lin, bg, k, sign)
@@ -417,6 +418,13 @@ def main():
     report("E2 the l = 0 forcing of FIRST_ORDER.md's mode is its section 4 forcing in these rows", okE2)
     okE3 = is_zero(F2W / (s * cos2) + sg * F0W_FO - LW2) and is_zero(F2E / (s * cos2) + sg * F0E_FO - LE2)
     report("E3 identity with FIRST_ORDER.md's l = 0 forcing: F2/(s Y2) + F0_FO = L0[(0, Phi_s)]", okE3)
+
+    # ---- Q: the compact forms (review note, finding 2), in FIRST_ORDER.md's heat variables at leading order ---
+    okQ = (is_zero(F2W / (s * cos2) - (sp.diff(S_, s) - Y_**2 * S_ / 4))
+           and is_zero(F2E / (c * s * cos2) - (S_**2 / 2 - Y_ * sp.diff(Y_, s) / 2 + Y_**4 / 8))
+           and is_zero(sg * LW2 + Y_**2 * S_ / 2) and is_zero(LE2 / c - (Y_ * sp.diff(Y_, s) / 2 + Y_**4 / 8)))
+    report('Q  compact forms: F2/(s Y2) = (S_s - Y^2 S/4, S^2/2 - Y Y_s/2 + Y^4/8) and '
+           'L0[(0, Phi_s)] = (-Y^2 S/2, Y Y_s/2 + Y^4/8), rows (W, E^t_t)', okQ)
 
     # ---- F: L2_MODE.md section 8.3's printed F[E^t_t] -------------------------------------------------------
     Ptt, Pttt, ctt = sp.diff(P, t, 2), sp.diff(P, t, 3), sp.diff(c, t, 2)
