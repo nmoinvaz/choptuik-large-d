@@ -304,9 +304,10 @@ notes show.
 **First reading (#997, `hp/series_singularity.py`), corrected.** At D 3.15, M 256 and M 160 agree only through order 6,
 and a planted singularity at D 3.000 reads 2.35 from orders 3–6 there, so that base gives no reading. The earlier
 D 2.998 used orders 7–9, which are not converged in M. At D 3.0475 (M 256, one M) the ratio fit over orders 3–6 puts
-the nearest singularity at D 2.994, where plants at 3.000 and at the sonic closing 3.0431 are both recovered. It is
-not yet numerical evidence: a second M at D 3.0475 has to agree first. The global fits of
-notes/QUADRATIC_FORMULA.md put a branch point at 2.990–3.003.
+the nearest singularity at D 2.994, where plants at 3.000 and at the sonic closing 3.0431 are both recovered. That
+reading is withdrawn by the rule fixed before the second M (#1014). At M 320, orders 0–5 of the same series agree
+with M 256 to 1.1×10⁻⁴, but order 6 differs by 3.8×10⁻³, over the 10⁻³ bar, and orders 7 on differ (raw
+`I1014-dh170/` 50c44f88). The global fits of notes/QUADRATIC_FORMULA.md put a branch point at 2.990–3.003.
 
 ### 2.7 Smaller items
 
