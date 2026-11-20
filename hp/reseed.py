@@ -141,7 +141,7 @@ class Reseeder:
 
     def __init__(self, meta, D, threads=2, levels=5, rows="ma", plan_tol=1e-32, hmax=0.05, check_tol=1e-36,
                  check_kt=None, it_max=30, horizon_alpha=0, mutate="none", floor_rule="stall", qd=False, od=0,
-                 qd_start="ladder", qd_bar=1e-24, proj_start="u0", od_stop=False):
+                 qd_start="ladder", qd_bar=1e-24, proj_start="u0", od_stop=False, exact_recip=0):
         self.M, self.nodes = int(meta["M"]), list(meta["nodes"])
         self.K = len(self.nodes)
         self.kt, self.kc, self.ks = meta.get("kt", 36), meta.get("kc", 146), meta.get("ks", 130)
@@ -153,6 +153,9 @@ class Reseeder:
         self.plan_tol, self.hmax, self.check_tol = plan_tol, hmax, check_tol
         self.check_kt = check_kt or self.kt + 12
         self.it_max, self.horizon_alpha, self.mutate = it_max, horizon_alpha, mutate
+        # exact_recip (#1043): the rungs' solvers take the chain's 1/k in the horizon series (make_solver's), so that
+        # the re-seeded data solve the system the corrector solves
+        self.exact_recip = int(exact_recip)
         # the rung's floor test: 'abs' (the design: a step below 1e-24 with the residual no longer halving); 'stall'
         # (amendment 10: also the residual no longer halving with the step no longer shrinking tenfold, or no trial
         # lowering the residual after such a step; the steps stall at the floor eps_dd G above 1e-24 past D ~ 95); 'rel'
@@ -208,8 +211,10 @@ class Reseeder:
         plain mismatch) and with one Taylor step per segment (its rows are not used)"""
         key = (tuple(nodes), kt or self.kt)
         if key not in self._aux:
+            # exact_recip is passed only when set, so that a build from before #1043 runs the default
+            rk = dict(exact_recip=self.exact_recip) if self.exact_recip else {}
             s = make_solver(self.D, self.M, nodes=list(nodes), kt=kt or self.kt, kc=self.kc, ks=self.ks, threads=self.threads,
-                            kfreeze=None, horizon_alpha=self.horizon_alpha)
+                            kfreeze=None, horizon_alpha=self.horizon_alpha, **rk)
             s.set_segs([[nodes[i], nodes[i + 1]] for i in range(len(nodes) - 1)])
             self._aux[key] = s
         return self._aux[key]
@@ -819,14 +824,21 @@ class ElimQ:
 
 
 # ------------------------------------------------------------------ the unit check
+def recip_of(meta):
+    """make_solver's exact_recip for a state: its saved mode (#1043; a state without the key predates the flag, 0),
+    passed only when set, so that a build from before the flag runs the default"""
+    e = int(meta.get("exact_recip", 0))
+    return {"exact_recip": e} if e else {}
+
+
 def pinned(meta, D, z, threads=2):
     """the chain's solver at D (kfreeze from meta, segs planned at z at 1e-32 as anm_run.py plans a prediction) and its
     pinned quad-double wrapper, with the held harmonics at the state's own values (a converged chain state holds them
-    at the trend's values at its D)"""
+    at the trend's values at its D), in the state's own exact_recip mode"""
     from pinning import PinnedQ, PinnedSolver, band_coeffs, band_field
     M = int(meta["M"])
     s = make_solver(D, M, nodes=meta["nodes"], kt=meta.get("kt", 36), kc=meta.get("kc", 146), ks=meta.get("ks", 130),
-                    threads=threads, kfreeze=meta["kfreeze"])
+                    threads=threads, kfreeze=meta["kfreeze"], **recip_of(meta))
     s.set_segs(s.plan(np.asarray(z[0]), np.asarray(z[1]), 1e-32, 0.05))
     ks_held = [k for k in range(int(meta["kfreeze"]) + 1, 14) if k % 2 == 1]
     hh, hl = band_field(band_coeffs(np.asarray(z[0])[:M], np.asarray(z[1])[:M], M, ks_held), ks_held, M)
@@ -869,7 +881,8 @@ def check(argv):
     zs[0][sl_] = zs[0][sl_] * (1 + opt["delta_h"] * r)
     zs[1][sl_] = 0.0; zs[2][sl_] = 0.0; zs[3][sl_] = 0.0
     rs = Reseeder(meta, D, threads=opt["threads"], levels=opt["levels"], rows=opt["rows"], mutate=opt["mutate"],
-                  plan_tol=opt["plan_tol"], floor_rule=opt["floor_rule"], qd=bool(opt["qd"]))
+                  plan_tol=opt["plan_tol"], floor_rule=opt["floor_rule"], qd=bool(opt["qd"]),
+                  exact_recip=int(meta.get("exact_recip", 0)))
     print(f"check {path}: D {mp.nstr(D, 12)}, G {G:.2e}, truth max|F| (pinned, quad-double) {F_truth:.2e}, double-double "
           f"|F|_2 phi {phi:.2e}; start: horizon data off by {opt['delta_h']:.0e}; rungs {[round(u, 6) for u in rs.us]}, rows "
           f"{opt['rows']}, mutate {opt['mutate']}, plan_tol {opt['plan_tol']:.0e}", flush=True)
@@ -955,7 +968,8 @@ def jac(argv):
     s, sp, sq = pinned(meta, D, z4, threads=2)
     print(f"{argv[0]}: D {mp.nstr(D, 12)}, G = x_K-1^-(n-1) {float(meta['nodes'][-1]) ** -(float(D) - 3):.3e}")
     # the chain's kernel (the p rows projected by the freeze: rank 4 at kfreeze 3) and the same without the freeze
-    s0 = make_solver(D, M, nodes=meta["nodes"], kt=meta.get("kt", 36), kc=meta.get("kc", 146), ks=meta.get("ks", 130), threads=2)
+    s0 = make_solver(D, M, nodes=meta["nodes"], kt=meta.get("kt", 36), kc=meta.get("kc", 146), ks=meta.get("ks", 130), threads=2,
+                     **recip_of(meta))
     s0.set_segs(s.get_segs())
     for label, sx in (("freeze (the chain's)", s), ("no freeze", s0)):
         Jh, Jl = (np.asarray(v) for v in sx.jacobian(z4[0], z4[1]))
@@ -985,7 +999,7 @@ def checkq(argv):
     opt = parse(argv, dict(threads=4, legacy=0, rule136=0, sweeps=0))
     z4, meta = load_q(argv[0])
     D = mp.mpf(meta["D_str"])
-    rs = Reseeder(meta, D, threads=opt["threads"], qd=True)
+    rs = Reseeder(meta, D, threads=opt["threads"], qd=True, exact_recip=int(meta.get("exact_recip", 0)))
     if opt["legacy"] or opt["rule136"]:
         inv = rs.invert_q
         kw0 = dict(pre="", take_all=False) if opt["rule136"] else dict(pre="", take_all=False, it_max=6, refactor_max=0)
@@ -1014,7 +1028,7 @@ def truthq(argv):
     opt = parse(argv, dict(threads=4, sweeps=0, delta=1e-32, seed=1))
     z4, meta = load_q(argv[0])
     D = mp.mpf(meta["D_str"])
-    rs = Reseeder(meta, D, threads=opt["threads"], qd=True)
+    rs = Reseeder(meta, D, threads=opt["threads"], qd=True, exact_recip=int(meta.get("exact_recip", 0)))
     if opt["sweeps"]:
         inv = rs.invert_q
         rs.invert_q = lambda z, d, **kw: inv(z, d, **dict(kw, sweeps=opt["sweeps"]))
@@ -1050,7 +1064,7 @@ def checkstart(argv):
     z4, meta = load_q(argv[0])
     D = mp.mpf(meta["D_str"])
     _, _, sq = pinned(meta, D, z4, threads=opt["threads"])
-    rs = Reseeder(meta, D, threads=opt["threads"], qd=True)
+    rs = Reseeder(meta, D, threads=opt["threads"], qd=True, exact_recip=int(meta.get("exact_recip", 0)))
     t0 = time.time()
     zr, diag = rs.reseed(z4)
     el = ElimQ(sq, rs, start_F=opt["start_F"] if opt["start_F"] > 0 else None)

@@ -17,6 +17,7 @@ formulation of hp/pinning.py; their coefficients are zero).
         [--horizon_alpha 0] [--fix1_qlu 0] [--jet_q 0] [--reseed 0] [--pred_q 0] [--reseed_q 0] [--save_pred 0]
         [--jet_o 0] [--jet_by_order 1] [--jet_tangent_from 0] [--series_split 0] [--od_tangents 2] [--corrector od --tol_od 1e-40] [--base_adopt 0] [--base_polish 1] [--keep_plan 1] [--plan_auto 0 --plan_w 20] [--held_fit FILE]
         [--held_o 0] [--reseed_o 0] [--reseed_qd_bar 1e-24] [--proj_start u0] [--reseed_o_stop 0] [--proj_o 0 --proj_o_bar 0] [--a0 0] [--a_grow 2] [--a_hold 0] [--lam_stall 0] [--od_floor_delta 0] [--save_base 0] [--save_jet 0] [--held_from STATE]
+        [--exact_recip 0]
         [--arclength 0 --guard 0.05 --D_min 0 --arc_sign 1 --border 1 --turns_max 2 --arc_dhold 1e-12 --arc_jet FILE]
         [--a_rule step|reseed --a_scale 1 --a_drop 10 --a_rise 3.16]
 
@@ -192,6 +193,12 @@ instead of computed.
 arclength step of --floor_a (comma-separated, 0 first), and a control with w_1 scaled by 1 + --floor_mutate;
 --floor_polish 1 polishes the base first; --floor_dh H1,H2,... instead tests the residual's smoothness in D at the
 base (arclength.run_floor).
+--exact_recip 1 multiplies the horizon series by 1/k rounded once to each lane's precision (make_solver's
+exact_recip, Solver.set_exact_recip; #1043) in every solver of the run, the re-seeder's included, instead of 1/k
+rounded to double-double (recip_int) and widened: another discrete problem, whose states the stored ones miss by up to
+8.4e-7 at D 242.36 (notes/FACTORED_HORIZON.md 6, item 9). 0, the default, changes nothing. Records and saved states
+carry the flag. A build without Solver.set_exact_recip refuses 1. With --steps 0 --save_base 1 the run is a polish of
+the stored state at its own D, so two runs that differ in this flag alone give Delta's change (notes/EXACT_RECIP.md).
 --save_jet 1 saves each base's series z_0..z_N as OUTDIR/jet_pin<k>_D<D>.npz, in all the parts its jet carries (eight
 with --jet_o, four with --jet_q, two otherwise; keys z0..z<P-1>, each an (N + 1, L) array, order k in row k), its meta
 recording the norms and pivots. --save_jet 2 saves it and stops before the first attempt, so the series alone is the
@@ -425,6 +432,17 @@ def tangent_kw(make, n):
     return {}
 
 
+def recip_kw(make, mode):
+    """make_solver's exact_recip = mode when it is set (#1043), {} when it is 0, so that the default runs on an hpkernel
+    built before the flag; a build without it refuses 1, which it cannot run."""
+    import inspect
+    if not mode:
+        return {}
+    if "exact_recip" not in inspect.signature(make).parameters:
+        raise SystemExit("--exact_recip 1: this hpkernel's make_solver has no exact_recip (built before #1043); rebuild hp")
+    return {"exact_recip": int(mode)}
+
+
 def main():
     args = list(sys.argv[1:])
     opt = dict(state="T75/pin7_D73.2657.npz", kfreeze=3, N=24, eps=1e-16, h_max=2.0, steps=20, D_max=200.0, corrector="dnp",
@@ -483,6 +501,7 @@ def main():
     # --a_rule reseed: the step from the series' a_h tail and the re-seed's basin (hp/step_rule.py); its first level is
     # --a_scale, lowered by --a_drop after a failed re-seed and raised by --a_rise after a first attempt at its step
     opt.update(a_rule="step", a_scale=1.0, a_drop=10.0, a_rise=10.0 ** 0.5)
+    opt.update(exact_recip=0)           # --exact_recip 1: the horizon series' 1/k rounded once to each lane's precision (#1043)
     for k in list(opt):
         f = "--" + k
         if f in args:
@@ -504,6 +523,8 @@ def main():
                                       or not (opt["a_scale"] > 0 and opt["a_drop"] > 1 and opt["a_rise"] >= 1)):
         raise SystemExit("--a_rule reseed needs --jet_o 1, --reseed 1 or 2 and --reseed_start pred, not --arclength, and "
                          "--a_scale > 0, --a_drop > 1, --a_rise >= 1")
+    if opt["exact_recip"] not in (0, 1):
+        raise SystemExit(f"--exact_recip: 0 or 1, not {opt['exact_recip']}")
     if opt["proj_start"] not in ("u0", "pred") or (opt["proj_start"] == "pred" and not opt["reseed_q"]):
         raise SystemExit(f"--proj_start: u0 or pred, not {opt['proj_start']}; pred needs --reseed_q 1")
     if opt["proj_o"] and not (opt["corrector"] == "od" and opt["reseed"] == 2 and opt["reseed_o"] > 0):
@@ -522,6 +543,9 @@ def main():
     if opt["ks"]:
         print(f"horizon series to order {opt['ks']} instead of the state's {ks}", flush=True)
         ks = opt["ks"]
+    if int(m.get("exact_recip", 0)) != opt["exact_recip"]:
+        print(f"the horizon series' 1/k: the state was solved with exact_recip {int(m.get('exact_recip', 0))}, this run "
+              f"takes {opt['exact_recip']}", flush=True)
     kf, N = opt["kfreeze"], opt["N"]
     if opt["jet_o"] and (M != 32 or not 1 <= N <= 31):
         raise SystemExit(f"--jet_o 1: the octo-double solver is built for M = 32 and N <= 31, not M {M}, N {N}")
@@ -630,7 +654,7 @@ def main():
         # recorded as that point's Delta uncertainty
         dcorr = float(delta_correction(spx, Fh, Fl)) if Fc > tol and np.isfinite(Fc) else 0.0
         return ch, cl, Fc, len(hist), bool(Fc <= tol or Fc <= opt["accept_stall"]), dcorr
-    mk_kw = tangent_kw(make_solver, opt["od_tangents"])
+    mk_kw = dict(tangent_kw(make_solver, opt["od_tangents"]), **recip_kw(make_solver, opt["exact_recip"]))
     mk = lambda Dx: make_solver(Dx, M, nodes=nodes, kt=kt, kc=kc, ks=ks, threads=opt["threads"], kfreeze=kf,  # noqa: E731
                                 horizon_alpha=opt["horizon_alpha"], **mk_kw)
     ks_held = [k for k in range(kf + 1, 14) if k % 2 == 1]
@@ -791,7 +815,8 @@ def main():
                 elim["rs"] = Reseeder(dict(M=M, nodes=nodes, kt=kt, kc=kc, ks=ks), D, threads=opt["threads"],
                                       horizon_alpha=opt["horizon_alpha"], qd=bool(opt["reseed_q"]), od=opt["reseed_o"],
                                       qd_start=opt["reseed_start"], qd_bar=opt["reseed_qd_bar"],
-                                      proj_start=opt["proj_start"], od_stop=bool(opt["reseed_o_stop"]))
+                                      proj_start=opt["proj_start"], od_stop=bool(opt["reseed_o_stop"]),
+                                      exact_recip=opt["exact_recip"])
             zh_p, zl_p, F0_p, _, conv_p, _ = correct(sp, zh, zl, opt["tol"],
                                                      z8_start=load_o(os.path.join(raw, opt["state"]))[0])
             elim["rs"] = None
@@ -802,6 +827,7 @@ def main():
                     p = os.path.join(out, f"base_pin{kf}_D{float(D):.4f}.npz")
                     save_o(p, last_q["z8"], dict(D=float(D), D_str=str(D), M=M, nodes=nodes, kt=kt, kc=kc, ks=ks, kfreeze=kf,
                                                  pin_held=ks_held, N=N, source=opt["state"], parts=8, held_from=opt["held_from"],
+                                                 exact_recip=opt["exact_recip"], horizon_alpha=opt["horizon_alpha"],
                                                  segs=[[float(x) for x in sg] for sg in segs],
                                                  base_polish=dict(converged=bool(conv_p), max_F=Fs, tol_od=opt["tol_od"])))
                     print(f"base polish saved as {p}", flush=True)
@@ -1045,7 +1071,7 @@ def main():
                      meta=json.dumps(dict(D=float(D), D_str=str(D), M=M, N=N, kfreeze=kf, parts=len(jet[0]),
                                           jet="o" if opt["jet_o"] else ("q" if opt["jet_q"] else "dd"), norms=norms,
                                           pivots=(float(pmin), float(pmax)), state=opt["state"], held_fit=opt["held_fit"],
-                                          held_o=opt["held_o"], t_coef=t_coef)))
+                                          held_o=opt["held_o"], t_coef=t_coef, exact_recip=opt["exact_recip"])))
             print(f"step {step}: the series saved as {jp} ({len(jet[0])} parts, {t_coef:.0f} s)", flush=True)
             if opt["save_jet"] == 2:
                 print("done (--save_jet 2: the series alone)", flush=True)
@@ -1060,7 +1086,7 @@ def main():
         rec = dict(step=step, D0=float(D), D0_str=str(D), pin=kf, N=N, pivots=(float(pmin), float(pmax)), norms=norms, a_max=a_max,
                    t_coef=t_coef, refine_last=refine[-1], fix1=fix1, ratios_2_5=ratios[:4], trend=opt["trend"], slopes=slopes, held=ks_held,
                    horizon_alpha=opt["horizon_alpha"], jet_q=opt["jet_q"], jet_o=opt["jet_o"], held_fit=opt["held_fit"],
-                   base_lu=base_lu)
+                   base_lu=base_lu, exact_recip=opt["exact_recip"])
         print(f"step {step}: D {mp.nstr(D, 12)}, pivots {pmin:.1e}..{pmax:.1e}, |z_1| {norms[1]:.2e}, |z_N| {norms[N]:.2e}, ratios 2-5 "
               + " ".join(f"{r:.1f}" for r in ratios[:4] if r) + f", a_max {a_max:.3f}, {t_coef:.0f} s", flush=True)
         if rule is not None:
@@ -1101,7 +1127,8 @@ def main():
                     rs_n = Reseeder(dict(M=M, nodes=nodes, kt=kt, kc=kc, ks=ks), Dn, threads=opt["threads"],
                                     horizon_alpha=opt["horizon_alpha"], qd=bool(opt["reseed_q"]), od=opt["reseed_o"],
                                       qd_start=opt["reseed_start"], qd_bar=opt["reseed_qd_bar"],
-                                      proj_start=opt["proj_start"], od_stop=bool(opt["reseed_o_stop"]))
+                                      proj_start=opt["proj_start"], od_stop=bool(opt["reseed_o_stop"]),
+                                      exact_recip=opt["exact_recip"])
                     dz0_at.update(D=float(Dn), D_str=str(Dn), a=float(a))
                     if opt["save_pred"] and pred4 is not None:
                         # the prediction before its re-seed, for testing the re-seed on it (13.26)
@@ -1182,7 +1209,8 @@ def main():
         base_coeffs = coeffs_of(zh, zl)
         n0 = float(D) - 2.0
         meta_out = dict(D=float(D), D_str=str(D), M=M, nodes=nodes, kt=kt, kc=kc, ks=ks, kfreeze=kf, pin_held=ks_held, N=N, a=a, source=opt["state"],
-                        segs=[[float(x) for x in sg] for sg in segs])       # the run's plan, which the state solves
+                        segs=[[float(x) for x in sg] for sg in segs],       # the run's plan, which the state solves
+                        exact_recip=opt["exact_recip"], horizon_alpha=opt["horizon_alpha"])
         if opt["corrector"] == "qd" and "z4" in last_q:
             save_q(os.path.join(out, f"anm_pin{kf}_D{float(D):.4f}.npz"), last_q["z4"], meta_out)
         elif opt["corrector"] == "od" and "z8" in last_q:
