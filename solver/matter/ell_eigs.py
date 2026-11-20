@@ -32,6 +32,12 @@ planted: the same contour and polish code on T(lam) = A - lam B - lam^2 C (n 40,
   every true eigenvalue inside found after the polish (1e-10), none extra. Eigenvalues near the contour outside leak
   into A_0 at about (r/R)^N; they come out outside the circle and are listed, not counted. --mutate=beyn drops the lam weight of A_1,
   and the check must fail (exit 1).
+       python ell_eigs.py planted_ill
+planted_ill: the production contour (N 24, p 12) on T(lam) joined to m = 8 directions eps expm(lam K) diag(s), small
+  at every lam (rel 1e-13 and 1e-17 of |T|, as M's smallest singular values at k_c 31 and its rcond at k_c 47-55),
+  turning with lam and holding no eigenvalue, mixed by fixed random orthogonal P, Q; a circle with no true eigenvalue
+  inside and one with one (radius a quarter of the gap); rel 1e-2 is the well-conditioned control. Pass: the polished
+  eigenvalues inside, merged within 1e-8, are the true ones inside (1e-8). Beyn on M^-1 V fails it at 1e-13 and 1e-17 (#1025: winb's D 17.5 scans saturated A_0's rank).
 The ARPACK start vector and the probes are fixed, so a rerun gives the same numbers.
 Records (one per call): data/ell_eigs.jsonl, or --out.
 """
@@ -168,6 +174,66 @@ def planted():
     return good
 
 
+def ill_operator(rel, m=8, seed=2):
+    """T~(lam) = P [T(lam) + E(lam)] Q (direct sum, T as in planted, n0 40), E(lam) = eps expm(lam K) diag(s): m
+    directions eps = rel |T(0.5)|_2 small at every lam, turning with lam (K real skew), with det E != 0 everywhere, so
+    T~ has T's eigenvalues and no others; P, Q fixed random orthogonal. Returns T~ and T's eigenvalues."""
+    rng = np.random.default_rng(1)
+    n0 = 40
+    A, B, C = (rng.standard_normal((n0, n0)) for _ in range(3))
+    T = lambda lam: A - lam * B - lam ** 2 * C
+    L0 = np.block([[np.zeros((n0, n0)), np.eye(n0)], [A, -B]])
+    L1 = np.block([[np.eye(n0), np.zeros((n0, n0))], [np.zeros((n0, n0)), C]])
+    true = sl.eigvals(L0, L1)
+    true = true[np.isfinite(true)]
+    g = np.random.default_rng(seed)
+    K = g.standard_normal((m, m)); K = K - K.T
+    s = np.exp(g.uniform(np.log(0.5), np.log(2.0), m))
+    eps = rel * np.linalg.norm(T(0.5), 2)
+    P = np.linalg.qr(g.standard_normal((n0 + m, n0 + m)))[0]
+    Q = np.linalg.qr(g.standard_normal((n0 + m, n0 + m)))[0]
+
+    def Tt(lam):
+        Z = np.zeros((n0 + m, n0 + m), complex if np.iscomplexobj(lam) else float)
+        Z[:n0, :n0] = T(lam)
+        Z[n0:, n0:] = eps * (sl.expm(lam * K) * s[None, :])
+        return P @ Z @ Q
+    return Tt, true
+
+
+def planted_ill(N=24, p=12):
+    """the production contour (N 24, p 12) on ill_operator at rel 1e-2 (a well-conditioned control), 1e-13 (M's
+    smallest singular values at k_c 31, D 13) and 1e-17 (rcond at k_c 47 and 55, D 17.5), with no true eigenvalue
+    inside the circle and with one, each circle a quarter of the gap to the nearest eigenvalue outside (leakage about
+    4^-24). Pass, on what the scan reports: after the polish, with values within 1e-8 merged, the eigenvalues inside
+    are the true ones inside, each within 1e-8. Fixed before any fix of ell_eigs (#1025, coordinator 2026-11-20)."""
+    allgood = True
+    for rel in (1e-2, 1e-13, 1e-17):
+        Tt, true = ill_operator(rel)
+        re = np.sort(true[np.abs(true.imag) < 1e-12].real)
+        c1 = re[np.argmin(np.abs(re - 0.5))]
+        dd = np.sort(np.abs(true - c1))
+        g = np.linspace(-2, 2, 4001)                    # the 'none' circle: the real point farthest from the spectrum
+        dist = np.array([np.min(np.abs(true - x)) for x in g])
+        c0 = g[np.argmax(dist)]
+        for case, c, r in (("none", c0, 0.25 * dist.max()), ("one", c1, 0.25 * dd[1])):
+            inside = [t for t in true if abs(t - c) < r]
+            ev, sv = beyn(Tt, c, r, N, p)
+            got = []
+            for q in polish(Tt, Tt, ev, c, r):
+                lq = complex(*q["lam"])
+                if q["inside"] and all(abs(lq - u) >= 1e-8 for u in got):
+                    got.append(lq)
+            found = sum(min((abs(u - t) for u in got), default=np.inf) < 1e-8 for t in inside)
+            ok = found == len(inside) and len(got) == len(inside)
+            allgood &= ok
+            print(f"planted_ill: rel {rel:.0e}, {case}: circle |lam - {c:.6f}| = {r:.6f} holds {len(inside)}; A_0's "
+                  f"rank {len(ev)} of p {p} (singular values {sv[0]:.1e} .. {sv[-1]:.1e}); {found} found, {len(got)} "
+                  f"reported inside ({'OK' if ok else 'BAD'})", flush=True)
+    print(f"planted_ill: {'OK' if allgood else 'BAD'}")
+    return allgood
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("state"); ap.add_argument("D", type=float); ap.add_argument("kc", type=int)
@@ -271,4 +337,6 @@ def main():
 if __name__ == "__main__":
     if sys.argv[1] == "planted":
         sys.exit(0 if planted() else 1)
+    if sys.argv[1] == "planted_ill":
+        sys.exit(0 if planted_ill() else 1)
     main()
