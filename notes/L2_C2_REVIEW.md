@@ -674,5 +674,5 @@ python3 l2_c2_review_num.py diag             # finding 25's table (~90 s)
 The c2 runs read the stored zeros `data/first_order_hier_M{1,3,5}_xi0.2.json` and compare with
 `data/l2_c2_M{1,3,5}_xi0.2_l2-l0-G-sym.json`. They write nothing unless `--out=FILE` is given. The logs and result
 files of the runs quoted here, and the logs of the original's commands rerun for finding 28, are in folder
-I1010-mac-review of the raw-data repository (commit 66b1a005; clone it beside the checkout,
+I1010-mac-review of the raw-data repository (commit a676fbce; clone it beside the checkout,
 `git clone https://github.com/nmoinvaz/choptuik-large-d-raw ../choptuik-large-d-raw`).
