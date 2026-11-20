@@ -63,6 +63,8 @@ mod prec_tests;
 #[cfg(test)]
 mod split_tests;
 #[cfg(test)]
+mod recip_tests;
+#[cfg(test)]
 mod fastmul_check;
 #[cfg(test)]
 mod cols_tests;
