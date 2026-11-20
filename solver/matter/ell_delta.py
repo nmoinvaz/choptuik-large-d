@@ -147,15 +147,17 @@ def table(fn):
     else:
         print(f"\ndelta has not crossed 0 (last D {DD[-1]:g}, delta {dd[-1]:+.6f})")
     sl = np.diff(dd) / np.diff(DD)
-    sb = (ee[:-1] + ee[1:]) / np.diff(DD)            # the slope's k_c bar: both ends moved by their k_c change
-    print("slope of delta per unit D over the last steps (± its k_c bar): "
+    sb = (ee[:-1] + ee[1:]) / np.diff(DD)            # the slope's k_c spread: both ends moved by their k_c change
+    print("slope of delta per unit D over the last steps (± its k_c spread, the change between the two highest k_c, "
+          "not a converged bound): "
           + ", ".join(f"D {DD[j]:g}-{DD[j + 1]:g} {sl[j]:+.4f} ± {sb[j]:.4f}" for j in range(max(0, len(sl) - 6), len(sl))))
     if dd[-1] < -0.05:
         slope, bar = sl[-1], sb[-1]
         held = "holds" if dd[-1] + ee[-1] < -0.05 else "does not hold"
         verdict = ("levelling" if slope >= -0.02 else "NOT levelling" if slope + bar < -0.02 else
-                   f"NOT levelling at the central value; its k_c bar reaches {slope + bar:+.4f}, so levelling is not excluded")
-        print(f"delta {dd[-1]:+.4f} is past -0.05 (within its k_c bar {ee[-1]:.1e}: {held}), "
+                   f"NOT levelling at the central value; its k_c spread reaches {slope + bar:+.4f}, so levelling is "
+                   "not excluded")
+        print(f"delta {dd[-1]:+.4f} is past -0.05 (within its k_c spread {ee[-1]:.1e}, not a converged bound: {held}), "
               f"slope {slope:+.4f} ± {bar:.4f} per unit D at the last step: {verdict}")
     print("\nwindows (c = the limit of delta):")
     for k, lab in ((2, "c + a/n"), (3, "c + a/n + b/n^2")):
