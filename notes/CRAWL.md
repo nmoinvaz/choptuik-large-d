@@ -865,7 +865,7 @@ is refused when its corrector damps (any λ below 1) or its first contraction θ
 **What the border costs now.**
 - The mpmath arithmetic of BorderedCore at L = 769 and 140 digits (`to_mp_vec`, the dot products, `to_parts`) takes
   under 0.1 s per newton_o and about 0.02 s per residual (M5, five repeats, measured by the script in this section's
-  pull request, #PR). That is under 0.05% of a correction.
+  pull request, #1049). That is under 0.05% of a correction.
 - The kernel's part is F_D (`residual_jet_o` with two coefficients, on the eight-lane jet) and b = J⁻¹ F_D. Its cost
   is inferred from two logs of macm3 at order 135, the same kernel build at 6 threads. Outside their trials AB1's
   corrections 1–5 took 115.8–120.5 s. Corrections 36 and 39 of the D chain's second attempt at its step 53
