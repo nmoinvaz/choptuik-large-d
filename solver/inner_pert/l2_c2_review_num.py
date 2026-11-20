@@ -2,7 +2,7 @@
 """A second implementation of c2 in the M = 1 model, for the review of L2_MODE.md section 9 (notes/L2_C2_REVIEW.md, #1010).
 
 It imports nothing from first_order_*.py, l2_c2*.py or inner_np.py. What it shares with them is listed in the review
-note, section 4: the M-harmonic model (which products are truncated, and where), the slice formula for c2, the rule
+note, section 6: the M-harmonic model (which products are truncated, and where), the slice formula for c2, the rule
 that fixes the association of the forcing's products, and scipy's DOP853.
 
 What is its own:
@@ -366,7 +366,7 @@ def build_converted(R, rows):
 
 
 def build_compact(R, which):
-    """The same forcings in the heat variables, with s-derivatives instead of t-derivatives (review note, section 3):
+    """The same forcings in the heat variables, with s-derivatives instead of t-derivatives (review note, finding 2):
     sym: FIRST_ORDER.md section 4's terms; Gc: L0[(0, Phi_s)]; l2c = -sym + Gc."""
     Y, S, C = R.Y, R.S, R.C
     YY = R.mul(Y, Y)

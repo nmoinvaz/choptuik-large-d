@@ -326,8 +326,8 @@ Findings are numbered through the whole note. Each is marked agreement, correcti
 12. **Correction: the primary value depends on the matching radius.** §9.5's primary c₂ uses the left singular vector
     of Sch(2). When Sch is not singular that vector depends on the normalisation of the jump, and so on ξ₁. At M = 1
     the second implementation gives −7.9591 at ξ₁ = 0.2 and −7.9436 at ξ₁ = 0.25. The slice values c₂(φ) are the same
-    at both radii to 10⁻¹⁰. FIRST_ORDER.md §4 makes the same remark about its symmetry route. At M = 5, where Sch is
-    nearly singular, the effect is within the slice spread.
+    at both radii to 10⁻¹⁰. FIRST_ORDER.md §4 makes the same remark about its symmetry route. At M = 5 the effect was
+    not measured. The three slices there agree to 0.004.
 
 ## 3. The solvability argument (§9.4), by hand
 
@@ -547,8 +547,8 @@ Read in full: `l2_c2_forcing.py`, `l2_c2.py` and `l2_c2_summary.py`, and the par
     r₀ ≥ 0.062, where the control's error is below 10⁻¹⁰, against a shift of 22.5 in c₂.
 26. **Code: `l2_c2.py --checks` exits 1 in its normal state** (§10 documents it). A script whose normal exit is 1
     cannot signal a new failure. The compact form of finding 2 needs one Euler derivative where §9.2's form needs
-    four, and would remove most of the nested divisions. Short of that, the control's comparison could be made at
-    |ξ| = 0.07, inside the range the jets use, with the reason written beside it.
+    three and the control five, and would remove most of the nested divisions. Short of that, the control's
+    comparison could be made at |ξ| = 0.07, inside the range the jets use, with the reason written beside it.
 27. **Code: two statements are looser than the code.** Neither is an error.
     - §9.1 says the forced response has "zero data". For M ≥ 3 `c2_run` gives it higher-harmonic profile data, the
       deflation coefficients. The Schur-corrected jump does not depend on them, and this review's one-shot solve
@@ -658,5 +658,5 @@ python3 l2_c2_review_num.py diag             # finding 25's table (~90 s)
 The c2 runs read the stored zeros `data/first_order_hier_M{1,3,5}_xi0.2.json` and compare with
 `data/l2_c2_M{1,3,5}_xi0.2_l2-l0-G-sym.json`. They write nothing unless `--out=FILE` is given. The logs and result
 files of the runs quoted here, and the logs of the original's commands rerun for finding 28, are in folder
-I1010-mac-review of the raw-data repository (clone it beside the checkout,
+I1010-mac-review of the raw-data repository (commit 1ddaac09; clone it beside the checkout,
 `git clone https://github.com/nmoinvaz/choptuik-large-d-raw ../choptuik-large-d-raw`).
