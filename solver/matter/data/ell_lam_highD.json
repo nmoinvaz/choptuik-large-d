@@ -19,7 +19,8 @@
     "47": 2.6612747202400022e-05
    },
    "source": "data/l1_D4_kc47.jsonl",
-   "constraint": 2.6612747202400022e-05
+   "constraint": 2.6612747202400022e-05,
+   "signtested": false
   },
   {
    "D": 5.0,
@@ -38,7 +39,8 @@
     "39": 6.847854519507609e-07
    },
    "source": "I810-mac/out/l1kc39d5s810.jsonl",
-   "constraint": 6.847854519507609e-07
+   "constraint": 6.847854519507609e-07,
+   "signtested": false
   },
   {
    "D": 6.0,
@@ -55,7 +57,8 @@
     "31": 2.8535365633062933e-07
    },
    "source": "data/l1_kc31r.jsonl",
-   "constraint": 2.8535365633062933e-07
+   "constraint": 2.8535365633062933e-07,
+   "signtested": false
   },
   {
    "D": 7.0,
@@ -74,7 +77,8 @@
     "39": 4.330381498677806e-08
    },
    "source": "I810-mac/out/l1kc39s810.jsonl",
-   "constraint": 4.330381498677806e-08
+   "constraint": 4.330381498677806e-08,
+   "signtested": false
   },
   {
    "D": 8.0,
@@ -93,7 +97,8 @@
     "39": 8.748631539554132e-08
    },
    "source": "I810-mac/out/l1kc39s810.jsonl",
-   "constraint": 8.748631539554132e-08
+   "constraint": 8.748631539554132e-08,
+   "signtested": false
   },
   {
    "D": 9.0,
@@ -112,7 +117,8 @@
     "39": 1.1912405360643656e-07
    },
    "source": "I810-mac/out/l1kc39s810.jsonl",
-   "constraint": 1.1912405360643656e-07
+   "constraint": 1.1912405360643656e-07,
+   "signtested": false
   },
   {
    "D": 10.0,
@@ -131,7 +137,8 @@
     "39": 2.3798538203144737e-07
    },
    "source": "I660-mac/out/l1kc39t660.jsonl",
-   "constraint": 2.3798538203144737e-07
+   "constraint": 2.3798538203144737e-07,
+   "signtested": false
   },
   {
    "D": 10.5,
@@ -150,7 +157,8 @@
     "47": 1.2042655930243225e-07
    },
    "source": "I1025-mac/out/l1kc47r1025.jsonl",
-   "constraint": 1.2042655930243225e-07
+   "constraint": 1.2042655930243225e-07,
+   "signtested": false
   },
   {
    "D": 11.0,
@@ -169,7 +177,8 @@
     "47": 1.6442524164287626e-06
    },
    "source": "I1025-mac/out/l1kc47r1025.jsonl",
-   "constraint": 1.6442524164287626e-06
+   "constraint": 1.6442524164287626e-06,
+   "signtested": false
   },
   {
    "D": 11.5,
@@ -188,7 +197,8 @@
     "47": 2.3212093371205237e-06
    },
    "source": "I1025-mac/out/l1kc47r1025.jsonl",
-   "constraint": 2.3212093371205237e-06
+   "constraint": 2.3212093371205237e-06,
+   "signtested": false
   },
   {
    "D": 12.0,
@@ -207,7 +217,8 @@
     "47": 5.83250885451198e-07
    },
    "source": "I1025-mac/out/l1kc47r1025.jsonl",
-   "constraint": 5.83250885451198e-07
+   "constraint": 5.83250885451198e-07,
+   "signtested": false
   },
   {
    "D": 12.5,
@@ -222,7 +233,8 @@
     "39": 5.758642436212992e-06
    },
    "source": "I1025-mac/out/l1kc39L1025.jsonl",
-   "constraint": 5.758642436212992e-06
+   "constraint": 5.758642436212992e-06,
+   "signtested": false
   },
   {
    "D": 13.0,
@@ -239,7 +251,8 @@
     "39": 2.3643248200645983e-05
    },
    "source": "I1025-mac/out/l1kc39L1025.jsonl",
-   "constraint": 2.3643248200645983e-05
+   "constraint": 2.3643248200645983e-05,
+   "signtested": false
   },
   {
    "D": 13.5,
@@ -256,7 +269,8 @@
     "47": 1.2121762790011303e-05
    },
    "source": "I1025-mac/out/l1kc47L1025.jsonl",
-   "constraint": 1.2121762790011303e-05
+   "constraint": 1.2121762790011303e-05,
+   "signtested": false
   },
   {
    "D": 14.0,
@@ -275,7 +289,8 @@
     "47": 3.5135531228912315e-05
    },
    "source": "I1025-mac/out/l1kc47L1025.jsonl",
-   "constraint": 3.5135531228912315e-05
+   "constraint": 3.5135531228912315e-05,
+   "signtested": false
   },
   {
    "D": 14.5,
@@ -292,7 +307,8 @@
     "55": 1.907873869426562e-05
    },
    "source": "I1025-mac/out/l1kc55Fb1025.jsonl",
-   "constraint": 1.907873869426562e-05
+   "constraint": 1.907873869426562e-05,
+   "signtested": false
   },
   {
    "D": 15.0,
@@ -311,7 +327,8 @@
     "63": 3.5977652518640637e-06
    },
    "source": "I1025-win2c/out/l1kc63Fy1025.jsonl",
-   "constraint": 3.5977652518640637e-06
+   "constraint": 3.5977652518640637e-06,
+   "signtested": true
   },
   {
    "D": 15.5,
@@ -330,7 +347,8 @@
     "63": 1.1012167335220554e-05
    },
    "source": "I1025-win2c/out/l1kc63Fz1025.jsonl",
-   "constraint": 1.1012167335220554e-05
+   "constraint": 1.1012167335220554e-05,
+   "signtested": true
   },
   {
    "D": 16.0,
@@ -349,7 +367,8 @@
     "63": 2.87752284221681e-05
    },
    "source": "I1025-mac/out/l1kc63Fm1025.jsonl",
-   "constraint": 2.87752284221681e-05
+   "constraint": 2.87752284221681e-05,
+   "signtested": true
   },
   {
    "D": 16.25,
@@ -366,7 +385,8 @@
     "55": 0.0002554880727452102
    },
    "source": "I1025-win2b/out/l1kc55Fu1025.jsonl",
-   "constraint": 0.0002554880727452102
+   "constraint": 0.0002554880727452102,
+   "signtested": true
   },
   {
    "D": 16.5,
@@ -385,7 +405,8 @@
     "63": 6.950470105397352e-05
    },
    "source": "I1025-win/out/l1kc63Fw1025b.jsonl",
-   "constraint": 6.950470105397352e-05
+   "constraint": 6.950470105397352e-05,
+   "signtested": true
   },
   {
    "D": 16.75,
@@ -400,7 +421,8 @@
     "47": 0.0028105329478793446
    },
    "source": "I1025-mac/out/l1kc47Fq1025.jsonl",
-   "constraint": 0.0028105329478793446
+   "constraint": 0.0028105329478793446,
+   "signtested": true
   },
   {
    "D": 17.0,
@@ -419,7 +441,8 @@
     "63": 0.00014730973667168853
    },
    "source": "I1025-win/out/l1kc63Fw1025.jsonl",
-   "constraint": 0.00014730973667168853
+   "constraint": 0.00014730973667168853,
+   "signtested": true
   }
  ],
  "note": "built by ell_delta.py collect"
