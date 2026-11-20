@@ -15,7 +15,7 @@ formulation of hp/pinning.py; their coefficients are zero).
         [--accept_stall 1e-19] [--junk_only 0] [--threads 4] [--w 24] [--trend T75] [--tol_qd 1e-28] [--accept_stall_qd 0]
         [--qd_it 12] [--qd_w 0] [--refine 1] [--probe 0 --probe_c C] [--plan_tol 1e-32] [--fix1 0] [--F_pred_max 0]
         [--horizon_alpha 0] [--fix1_qlu 0] [--jet_q 0] [--reseed 0] [--pred_q 0] [--reseed_q 0] [--save_pred 0]
-        [--jet_o 0] [--jet_by_order 1] [--jet_tangent_from 0] [--series_split 0] [--od_tangents 2] [--corrector od --tol_od 1e-40] [--base_adopt 0] [--base_polish 1] [--keep_plan 1] [--held_fit FILE]
+        [--jet_o 0] [--jet_by_order 1] [--jet_tangent_from 0] [--series_split 0] [--od_tangents 2] [--corrector od --tol_od 1e-40] [--base_adopt 0] [--base_polish 1] [--keep_plan 1] [--plan_auto 0 --plan_w 20] [--held_fit FILE]
         [--held_o 0] [--reseed_o 0] [--reseed_qd_bar 1e-24] [--proj_start u0] [--reseed_o_stop 0] [--proj_o 0 --proj_o_bar 0] [--a0 0] [--a_grow 2] [--a_hold 0] [--lam_stall 0] [--od_floor_delta 0] [--save_base 0] [--save_jet 0] [--held_from STATE]
         [--arclength 0 --guard 0.05 --D_min 0 --arc_sign 1 --border 1 --turns_max 2 --arc_dhold 1e-12 --arc_jet FILE]
         [--a_rule step|reseed --a_scale 1 --a_drop 10 --a_rise 3.16]
@@ -53,6 +53,9 @@ residual through the stored LU, the series rebuilt on it, and its predictions at
 chain's recorded |F_pred| / a at this base: the probe exits 1 unless its own double-double value at a = 1/16 is within
 1% of it (the check that the probe reproduces the chain). Results go to OUTDIR/probe.jsonl.
 --plan_tol T is the tolerance of the first base's Taylor plan (1e-32; the chain replans each prediction at 1e-32).
+--plan_auto 1 chooses the run's Taylor order where the base is planned (no stored plan, or --keep_plan 0) by the
+cost of the planned steps, k^2 + w k per step with w --plan_w (Solver.plan_auto; notes/LOW_D_SPEEDUP.md); a stored plan
+keeps the state's order. Planning the base again moves Delta by itself past D 230 (#461).
 A run started from a saved four-part state polishes it from all four parts, so a restart continues where the chain
 stopped (from the first two alone the polish starts eps_dd G off the root, outside its basin past D ~ 131).
 --fix1 1 corrects z_1 at every base by the quad-double model's order-1 residual (central differences at 2^-29 and
@@ -436,6 +439,10 @@ def main():
     opt.update(base_adopt=0)            # --base_adopt 1: the base's od polish is adopted whatever it did
     opt.update(base_polish=1)           # --base_polish 0: no polish, the stored state is the base
     opt.update(keep_plan=1)             # --keep_plan 0: plan the base again even when its state stores a plan
+    # --plan_auto 1: where the base is planned (no stored plan, or --keep_plan 0), the run's Taylor order is first chosen
+    # by the cost of the planned steps (Solver.plan_auto, step cost k^2 + w k with w --plan_w), and every plan of the run
+    # is made at it; a stored plan keeps the state's order
+    opt.update(plan_auto=0, plan_w=20)
     opt.update(a0=0.0, a_grow=2.0, a_hold=0, lam_stall=0.0)    # the step's start, growth and hold; the corrector's stall rule
     opt.update(od_accept="own")                                 # the octo-double corrector's trial test (#644)
     opt.update(od_strong=0)             # --od_strong k: the strong-row chord after the first step (#674)
@@ -744,6 +751,16 @@ def main():
     else:
         segs = None
     s = mk(D)
+    if not segs and opt["plan_auto"]:
+        if hasattr(s, "plan_auto"):
+            kt_, sg_, passes_, dropped_ = s.plan_auto(zh, zl, opt["plan_tol"], 0.05, w=opt["plan_w"])
+            print(f"--plan_auto 1: Taylor order {kt_} ({sum(len(g) - 1 for g in sg_)} steps at {opt['plan_tol']:g}, step "
+                  f"cost k^2 + {opt['plan_w']} k) instead of {kt}" + (f"; dropped (overflow) {dropped_}" if dropped_ else ""),
+                  flush=True)
+            kt = kt_
+            s = mk(D)
+        else:
+            print(f"--plan_auto 1: this hpkernel has no Solver.plan_auto (built before it); the run keeps kt {kt}", flush=True)
     if not segs:
         segs = s.plan(zh, zl, opt["plan_tol"], 0.05)
     s.set_segs(segs); sp = wrap(s)

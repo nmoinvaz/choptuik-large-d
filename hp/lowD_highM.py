@@ -145,6 +145,11 @@ def main():
     ap.add_argument("--accept", type=float, default=1e-27)
     ap.add_argument("--it_max", type=int, default=14)
     ap.add_argument("--kt", type=int, default=36)
+    ap.add_argument("--plan_auto", type=int, default=0, choices=[0, 1], help="1: the run's Taylor order chosen once by "
+                    "the cost of the planned steps from the M_n start (lowD_dd.choose_kt), kept in the progress file "
+                    "(0, the default: --kt)")
+    ap.add_argument("--plan_w", type=int, default=lowD_dd.PLAN_W, help="--plan_auto 1: the weight w of the step cost "
+                    "k^2 + w k")
     ap.add_argument("--tol_step", type=float, default=1e-30)
     ap.add_argument("--hmax", type=float, default=0.05)
     ap.add_argument("--plan_margin", type=float, default=1e-2, help="the step tolerance of the plan reused from the "
@@ -234,6 +239,14 @@ def main():
         st["tag"] = make_tag(st["nodes"])
         log(f"series orders kc {old[0]} -> {kc}, ks {old[1]} -> {ks}: re-solving D {st['post']['D']} at every resolution "
             f"under the tag {st['tag']}")
+    if a.plan_auto:
+        # the run's Taylor order, chosen once from the latest M_n state at its own D and kept in the progress file, so
+        # that a resume plans at the same order
+        if "kt_auto" not in st:
+            zh_, zl_, m_ = load(st["hist_n"][-1][1])
+            st["kt_auto"] = lowD_dd.choose_kt(m_["D"], m_["M"], zh_, zl_, a, st["nodes"], log, kc=kc, ks=ks)
+        a.kt = st["kt_auto"]
+        log(f"Taylor order {a.kt} (--plan_auto 1)")
     t_start = time.time() - st["t_used"]
     if st["targets"] is None:
         n = int(round((D0 - a.D_end) / a.dD))

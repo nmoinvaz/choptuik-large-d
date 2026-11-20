@@ -256,6 +256,31 @@ def floor_stop(hist, accept, ratio):
     return (F0, F1) if F1 < accept and F1 > ratio * F0 else None
 
 
+# --plan_w's default: the weight w of the step cost k^2 + w k for the f64 Jacobian's Fun<4> lanes at M 320-384, which
+# are 99.5% of a low-D Newton call (notes/LOW_D_SPEEDUP.md, "The Taylor order by the cost of planned steps")
+PLAN_W = 20
+
+
+def choose_kt(D, M, zh, zl, a, nodes, log, kc=None, ks=None):
+    """--plan_auto 1: the run's Taylor order, chosen once by the cost of the planned steps (Solver.plan_auto, multishoot's
+    plan_segments_auto; hp/src/plan_auto.rs) from the state z at its own M and D: the candidates around the order of
+    least cost per unit length at --tol_step, then every order near the first choice, with the step cost k^2 + w k, w
+    --plan_w. The run then plans with Solver.plan at that order as it would at --kt. A kernel without plan_auto keeps
+    --kt, with a notice."""
+    s0 = make_solver(D, M, nodes=nodes, kt=a.kt, kc=kc or a.kcs, ks=ks or a.ks, threads=a.threads)
+    if not hasattr(s0, "plan_auto"):
+        log(f"--plan_auto 1: this hpkernel has no Solver.plan_auto (built before it); the run keeps --kt {a.kt}")
+        return a.kt
+    t0 = time.time()
+    kt, segs, passes, dropped = s0.plan_auto(np.asarray(zh, float), np.asarray(zl, float), a.tol_step, a.hmax, w=a.plan_w)
+    steps = sum(len(g) - 1 for g in segs)
+    cands = "; ".join(" ".join(f"{k}:{'-' if st is None else sum(st)}" for k, st, _ in p) for p in passes)
+    log(f"--plan_auto 1: Taylor order {kt} ({steps} steps at --tol_step {a.tol_step:g}, step cost k^2 + {a.plan_w} k) "
+        f"instead of --kt {a.kt}; candidates (order:steps) {cands}" + (f"; dropped (overflow) {dropped}" if dropped else "")
+        + f"; {time.time() - t0:.1f} s")
+    return kt
+
+
 def solve_point(D, M, zh, zl, src, a, nodes, outdir, log, segs=None):
     """one (D, M) solve with checkpoints; returns (converged, zh, zl). segs: the Taylor step points to use (default:
     planned from the start z with --tol_step, --hmax; a checkpoint's own plan takes precedence on resume)"""
@@ -420,6 +445,9 @@ def main():
     ap.add_argument("--seed_nodes", default=None, help="nodes of the f64 seed's layout (default the x_K = 0.6 set); the "
                     "seed is re-noded to --nodes when they differ")
     ap.add_argument("--kt", type=int, default=36)
+    ap.add_argument("--plan_auto", type=int, default=0, choices=[0, 1], help="1: the Taylor order chosen once by the "
+                    "cost of the planned steps from the start (choose_kt; 0, the default: --kt)")
+    ap.add_argument("--plan_w", type=int, default=PLAN_W, help="--plan_auto 1: the weight w of the step cost k^2 + w k")
     ap.add_argument("--kcs", type=int, default=60)
     ap.add_argument("--ks", type=int, default=100)
     ap.add_argument("--tol_step", type=float, default=1e-32)
@@ -519,6 +547,8 @@ def main():
             nb = (len(F) - 1) // (4 * M)
             log(f"D {D} M {M}: start |F| {F.max():.2e}; per block " + " ".join(f"{F[b * 4 * M:(b + 1) * 4 * M].max():.1e}" for b in range(nb)))
         return
+    if a.plan_auto:
+        a.kt = choose_kt(D, Mo, zh, zl, a, nodes, log)
     for M in Ms:
         if M != Mo:
             zh, zl = resample_z(np.asarray(zh) + np.asarray(zl), Mo, M, len(nodes))
