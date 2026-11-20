@@ -1,12 +1,45 @@
 {
  "note": "the delta table's quoted rows whose own record passed signtest.py at lambda -/+ 0.02 (agree at both, opposite signs), with the raw log (#1025); ell_delta.py table marks every other row 'no signtest yet'",
  "signtested": [
-  {"source": "I1025-win2c/out/l1kc63Fy1025.jsonl", "D": 15.0, "log": "I1025-win2c/signtest.log"},
-  {"source": "I1025-win2c/out/l1kc63Fz1025.jsonl", "D": 15.5, "log": "I1025-win2c/signtest.log"},
-  {"source": "I1025-mac/out/l1kc63Fm1025.jsonl", "D": 16.0, "log": "I1025-mac/lane_t_b2.log"},
-  {"source": "I1025-win2b/out/l1kc55Fu1025.jsonl", "D": 16.25, "log": "I1025-win2b/signtest.log"},
-  {"source": "I1025-win/out/l1kc63Fw1025b.jsonl", "D": 16.5, "log": "I1025-win/out/signtest_l1kc63_1025.jsonl"},
-  {"source": "I1025-mac/out/l1kc47Fq1025.jsonl", "D": 16.75, "log": "I1025-win2b/signtest_list.log"},
-  {"source": "I1025-win/out/l1kc63Fw1025.jsonl", "D": 17.0, "log": "I1025-win/out/signtest_l1kc63_1025.jsonl"}
+  {
+   "source": "I1025-win2c/out/l1kc63Fy1025.jsonl",
+   "D": 15.0,
+   "log": "I1025-win2c/signtest.log"
+  },
+  {
+   "source": "I1025-win2c/out/l1kc63Fz1025.jsonl",
+   "D": 15.5,
+   "log": "I1025-win2c/signtest.log"
+  },
+  {
+   "source": "I1025-mac/out/l1kc63Fm1025.jsonl",
+   "D": 16.0,
+   "log": "I1025-mac/lane_t_b2.log"
+  },
+  {
+   "source": "I1025-win2b/out/l1kc55Fu1025.jsonl",
+   "D": 16.25,
+   "log": "I1025-win2b/signtest.log"
+  },
+  {
+   "source": "I1025-win2b/out/l1kc63Fu1025.jsonl",
+   "D": 16.25,
+   "log": "I1025-win2b/signtest_kc63.log"
+  },
+  {
+   "source": "I1025-win/out/l1kc63Fw1025b.jsonl",
+   "D": 16.5,
+   "log": "I1025-win/out/signtest_l1kc63_1025.jsonl"
+  },
+  {
+   "source": "I1025-mac/out/l1kc47Fq1025.jsonl",
+   "D": 16.75,
+   "log": "I1025-win2b/signtest_list.log"
+  },
+  {
+   "source": "I1025-win/out/l1kc63Fw1025.jsonl",
+   "D": 17.0,
+   "log": "I1025-win/out/signtest_l1kc63_1025.jsonl"
+  }
  ]
 }
