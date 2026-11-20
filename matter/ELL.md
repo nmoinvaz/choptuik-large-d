@@ -332,9 +332,11 @@ reproduces blocks 0–11 of `DSSEll.mode_matrix` to 8.2×10⁻¹⁵ at D = 13, k
 - **The horizon series' truncation grows with k_c.** At the solvers' u₀ = 0.04 and Ks = 30, the series' worst tangent
   residual is 9×10⁻¹⁵ at k_c 31, D = 13. At D = 16 it is 9.4×10⁻¹⁰, 1.0×10⁻⁷ and 5.7×10⁻⁶ at k_c 47, 55 and 63, and
   at k_c 55 it falls slowly with D (1.8×10⁻⁷ at D = 14.5, 1.4×10⁻⁸ at D = 19). It scales as u³⁰, so it is the cut at
-  order 30 of a convergent series (5.7×10⁻¹⁵ at u = 0.02). Both builds share it, and its effect on λ has not been
-  measured. Until it is, the change of λ with k_c mixes angular resolution with a horizon truncation that grows with
-  k_c (`dd_b12_noise_note.log`, `lane_a2u.log`, `lane_a2k.log`).
+  order 30 of a convergent series (5.7×10⁻¹⁵ at u = 0.02). Both builds share it (`dd_b12_noise_note.log`,
+  `lane_a2u.log`, `lane_a2k.log`). At k_c 55, D = 16 it moves λ by 1.0×10⁻⁵: with Ks = 45 (residual 9.9×10⁻¹⁹) on a
+  re-solved state, the hybrid root moves from 2.2440428 to 2.2440328 (`u0resolve_note.log`, `lane_slotA2.log`). Moving
+  u₀ to 0.02 moves the root by −8.1×10⁻⁴ instead, but that re-solve's discrete system differs (3078 steps against 2565,
+  Δ by −3.0×10⁻⁶), so the shift belongs to the horizon segment, not the cut. At k_c 63 the effect is not measured.
 
 ## 7. Extrapolation to D = ∞
 
