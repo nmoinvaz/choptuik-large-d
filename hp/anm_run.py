@@ -16,7 +16,7 @@ formulation of hp/pinning.py; their coefficients are zero).
         [--qd_it 12] [--qd_w 0] [--refine 1] [--probe 0 --probe_c C] [--plan_tol 1e-32] [--fix1 0] [--F_pred_max 0]
         [--horizon_alpha 0] [--fix1_qlu 0] [--jet_q 0] [--reseed 0] [--pred_q 0] [--reseed_q 0] [--save_pred 0]
         [--jet_o 0] [--jet_by_order 1] [--jet_tangent_from 0] [--series_split 0] [--od_tangents 2] [--corrector od --tol_od 1e-40] [--base_adopt 0] [--base_polish 1] [--keep_plan 1] [--plan_auto 0 --plan_w 20] [--held_fit FILE]
-        [--held_o 0] [--reseed_o 0] [--reseed_qd_bar 1e-24] [--proj_start u0] [--reseed_o_stop 0] [--proj_o 0 --proj_o_bar 0] [--a0 0] [--a_grow 2] [--a_hold 0] [--lam_stall 0] [--od_floor_delta 0] [--save_base 0] [--save_jet 0] [--held_from STATE]
+        [--held_o 0] [--reseed_o 0] [--reseed_qd_bar 1e-24] [--proj_start u0] [--reseed_o_stop 0] [--proj_o 0 --proj_o_bar 0] [--a0 0] [--a_grow 2] [--a_hold 0] [--lam_stall 0] [--od_floor_delta 0] [--od_broyden 0] [--od_times 0] [--save_base 0] [--save_jet 0] [--held_from STATE]
         [--exact_recip 0] [--od_start_F 1e-6]
         [--arclength 0 --guard 0.05 --D_min 0 --arc_sign 1 --border 1 --turns_max 2 --arc_dhold 1e-12 --arc_jet FILE]
         [--a_rule step|reseed --a_scale 1 --a_drop 10 --a_rise 3.16]
@@ -143,6 +143,15 @@ and #608's logs). 0, the default, is off. --od_abort_it K applies it at iteratio
 correction has |dDelta| <= B and max |dz| <= --od_floor_dz (1e-30), with max |F| <= --od_floor_F (1e-30)
 (newton_od's floor rule, #966): past D 251 the projection's floor holds max |F| above the tol, while Delta's
 first-order error, that correction's Delta part, is many orders smaller. 0, the default, is off.
+--od_broyden 1 (with --od_accept natural and --od_junk 0) takes Broyden's updates between the octo-double corrector's
+factorizations (newton_od's broyden: QNERR as multisolver's quasi.rs, through the octo-double LU of the last
+factorization): after a full step accepted with |db| / |dz| below --od_broyden_theta (0.5), the next steps are the
+updates', one projection, residual and solve each and no Jacobian, while each contracts by less than that bound, for
+at most --od_broyden_max (20) updates; a refused one forms the factors where it started. A trial at --tol_od ends the
+corrector without factors there, and base_lu_o forms the series' LU. Each run prints "od Broyden: L factorizations, Q
+update steps, R refused". It is refused with --od_junk w > 0. 0, the default, is off. --od_times 1 prints, after
+each octo-double corrector run, the seconds of its factorizations, of its trials' projections, of their residuals and
+solves, and of the updates (newton_od's times); it only measures.
 --reseed_start pred (with --reseed_q 1) runs the re-seed's quad-double polish from the prediction's own four-part
 horizon data first, and the double-double ladder only when that does not converge; ladder, the default, polishes the
 ladder's data as before (#693: past D ~ 249 the ladder's double-double data put the pole inside u0).
@@ -220,7 +229,7 @@ from hpkernel.driver import make_solver, newton_solve, deflated_newton, delta_co
 from multidouble import dd_add, dd_horner, dd_scale, dd_norm, qd_add_dd  # noqa: E402
 from pinning import HeldFit, PinnedQ, PinnedSolver, band_coeffs, band_field, qd_axpy  # noqa: E402
 from raw_out import pop_allow, require_raw  # noqa: E402
-from octo_corrector import ElimO, PinnedO, delta_digits, has_o, load_o, newton_od, o8, o8_of_q, omax, q4_of_o, save_o, with_horizon  # noqa: E402,F401
+from octo_corrector import ElimO, PinnedO, delta_digits, has_o, load_o, newton_od, o8, o8_of_q, od_qn_kw, omax, q4_of_o, save_o, with_horizon  # noqa: E402,F401
 from reseed import ElimQ, Reseeder, StartNotProjected  # noqa: E402
 from step_rule import ReseedRule, ah_norms, pole_delta  # noqa: E402
 from taylor_predict import formula_delta  # noqa: E402
@@ -475,6 +484,10 @@ def main():
     # --od_floor_delta B: the octo-double corrector also converges above --tol_od at an iterate whose own Newton
     # correction has |dDelta| <= B and max |dz| <= --od_floor_dz, with max |F| <= --od_floor_F (#966; 0: off)
     opt.update(od_floor_delta=0.0, od_floor_F=1e-30, od_floor_dz=1e-30)
+    # --od_broyden 1: Broyden's updates between the octo-double corrector's factorizations (newton_od's broyden, with
+    # --od_accept natural), its contraction bound --od_broyden_theta and at most --od_broyden_max updates per factors
+    opt.update(od_broyden=0, od_broyden_theta=0.5, od_broyden_max=20)
+    opt.update(od_times=0)              # --od_times 1: the octo-double corrector's seconds by part ("od times: ...")
     opt.update(reseed_start="ladder")   # --reseed_start pred: the re-seed's quad-double polish from the point's own data (#693)
     opt.update(held_fit="")             # --held_fit FILE (pinning.HeldFit; notes/HELD_HARMONICS.md)
     opt.update(held_from="")            # --held_from STATE: the base's held values from STATE's, by the fit (#808)
@@ -532,6 +545,8 @@ def main():
         raise SystemExit(f"--exact_recip: 0 or 1, not {opt['exact_recip']}")
     if opt["proj_start"] not in ("u0", "pred") or (opt["proj_start"] == "pred" and not opt["reseed_q"]):
         raise SystemExit(f"--proj_start: u0 or pred, not {opt['proj_start']}; pred needs --reseed_q 1")
+    if opt["od_broyden"] and not (opt["corrector"] == "od" and opt["od_accept"] == "natural" and not opt["od_junk"]):
+        raise SystemExit("--od_broyden 1 needs --corrector od, --od_accept natural and --od_junk 0")
     if opt["proj_o"] and not (opt["corrector"] == "od" and opt["reseed"] == 2 and opt["reseed_o"] > 0):
         raise SystemExit("--proj_o 1 needs --corrector od, --reseed 2 and --reseed_o K > 0")
     if opt["arclength"] and (opt["proj_start"] != "u0" or opt["reseed_o_stop"] or opt["proj_o"]):
@@ -595,7 +610,7 @@ def main():
                                            full_drop=opt["od_full_drop"], abort_theta=opt["od_abort_theta"],
                                            abort_it=opt["od_abort_it"], weak_first=int(opt["od_weak_first"]),
                                            floor_delta=opt["od_floor_delta"], floor_F=opt["od_floor_F"],
-                                           floor_dz=opt["od_floor_dz"])
+                                           floor_dz=opt["od_floor_dz"], **od_qn_kw(opt))
             except StartNotProjected as e:
                 print(f"      elim projections {e.args[0]}: the start's projection failed, attempt stopped", flush=True)
                 Fh, Fl = spx.residual(z0[0], z0[1])

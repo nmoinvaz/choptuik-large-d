@@ -702,10 +702,11 @@ class ChainSys:
         return o8(f1)
 
     def newton_args(self):
+        from octo_corrector import od_qn_kw
         opt = self.opt
         return dict(tol=opt["tol_od"], it_max=opt["qd_it"], verbose=True, junk_w=opt["od_junk"], lam_stall=opt["lam_stall"],
                     accept=opt["od_accept"], strong_chord=int(opt["od_strong"]), full_drop=opt["od_full_drop"],
-                    abort_theta=opt["od_abort_theta"], abort_it=opt["od_abort_it"])
+                    abort_theta=opt["od_abort_theta"], abort_it=opt["od_abort_it"], **od_qn_kw(opt))
 
     def polish(self):
         """the base solved at D rounded to double-double (its held values there): the chain's corrector at fixed D"""
