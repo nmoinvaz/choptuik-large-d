@@ -369,3 +369,32 @@ fn split_fast_accuracy() {
     assert!(g.4 < 0.25, "an exact convolution's value lies {} from its integer", g.4);
     assert!(ctrl_fail > 1e3, "the control did not fail by more than 1e3");
 }
+
+/// FNV-1a of f64 bits
+fn hash_f64(xs: impl IntoIterator<Item = f64>) -> u64 {
+    let mut h = 0xcbf29ce484222325u64;
+    for x in xs {
+        h = (h ^ x.to_bits()).wrapping_mul(0x100000001b3);
+    }
+    h
+}
+
+/// The inputs of the split and fast checksums, hashed, to tell whether two platforms' checksums part at the inputs
+/// (#1034 step 2: win2 and the Mac print different fast and split checksums). `libm` hashes the f64 sin, cos and tan
+/// values qd_residual::synth takes from the platform's libm; `state` hashes synth's z_0 (zh, zl), built from them by
+/// double-double arithmetic; `planted` hashes split_tests' z_1..z_11. Equal `libm` hashes with unequal `state` ones
+/// put the difference in the arithmetic; unequal `libm` hashes put it in the platform's libm. Prints only.
+#[test]
+fn split_inputs_hash() {
+    use std::f64::consts::PI;
+    let (m, nn) = (8usize, 16usize);
+    let tans = (-(nn as i64) + 1..nn as i64).filter(|k| *k != 0).map(|k| (k as f64 * PI / nn as f64).tan());
+    let th: Vec<f64> = (0..m).map(|j| PI * j as f64 / m as f64).collect();
+    let trig = th.iter().flat_map(|t| [t.sin(), (2.0 * t).sin(), (4.0 * t).cos()]);
+    let libm = hash_f64(tans.chain(trig));
+    let (_, zh, zl) = synth();
+    let state = hash_f64(zh.iter().chain(zl.iter()).copied());
+    let (_, zs) = planted(12);
+    let planted_h = hash_f64(zs[1..].iter().flat_map(|z| z.iter().flatten().copied()));
+    println!("split inputs: libm {libm:016x}, state {state:016x}, planted {planted_h:016x}");
+}
