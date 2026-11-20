@@ -417,6 +417,15 @@ class Multiplier:
             best = (z.real, z.imag)
         return best
 
+    @staticmethod
+    def seed_record(r):
+        """the fields of a record that seed() reads, for a seed taken from another file or radius; 'fix' is kept so
+        that a point valued by the continuation seeds its neighbours as in its own run (#1021)"""
+        s = dict(F3re=r.get("F3re", float("nan")), F3im=r.get("F3im", float("nan")), info=r.get("info"))
+        if "seedfix" not in _MUTATE:                  # --mutate=seedfix: 'fix' dropped
+            s["fix"] = r.get("fix")
+        return s
+
     def value(self, p):
         """the value without the guards"""
         r = self.extra[self.key(p)]
@@ -750,6 +759,25 @@ def selftest_m3accept(mutate=None):
     return ok and ok2 and ok3
 
 
+def selftest_seed(mutate=None):
+    """seeds copied from another file or radius (--seed, --r1b): a neighbour valued by the continuation (|r_3| 0.05,
+    fix ok) must seed a point before a directly tuned point 0.84 away, as at A 3.55, w/w_inf 0.41 (#1021);
+    --mutate=seedfix drops 'fix' from the copy, and the far point then seeds it"""
+    _MUTATE.clear()
+    if mutate == "seedfix":
+        _MUTATE.add("seedfix")
+    F = Multiplier(3, None, 1)
+    near = dict(A=3.547111225, wf=0.40654321, F3re=0.0060005, F3im=-0.3829243, info=0.05, fix=dict(ok=True))
+    far = dict(A=3.0123456, wf=1.05654321, F3re=0.0056425, F3im=-0.0880019, info=3e-10)
+    for r in (near, far):
+        F.extra.setdefault((r["A"], r["wf"]), Multiplier.seed_record(r))
+    _MUTATE.clear()
+    got = F.seed((3.5467206, 0.41029321))
+    ok = got == (near["F3re"], near["F3im"])
+    print(f"selftest M = 3 seed from a continuation-valued neighbour: seed {got}: {'PASS' if ok else 'FAIL'}")
+    return ok
+
+
 def selftest(mutate=None):
     zs = [(2.54, 0.777, +1), (3.4, 0.36, -1), (3.45, 0.37, +1), (1.2, 2.2, +1)]
     F = Analytic(zs, mutate)
@@ -770,7 +798,7 @@ def selftest(mutate=None):
     ok2 = bool(r1["unresolved"]) and not r2["unresolved"] and got == want and r1["leaf_sum"] + r2["leaf_sum"] == 2
     print(f"selftest recount: {len(r1['unresolved'])} cells unresolved by the hole, {len(r2['unresolved'])} after the "
           f"recount; found {got}: {'PASS' if ok2 else 'FAIL'}")
-    return ok and ok2 and selftest_m3accept(mutate)
+    return ok and ok2 and selftest_m3accept(mutate) and selftest_seed(mutate)
 
 
 def main():
@@ -808,7 +836,8 @@ def main():
     ap.add_argument("--selftest", action="store_true")
     ap.add_argument("--m3starts", default="0.25,0.2",
                     help="M = 3: the continuation's start radii in the order tried; those at or below xi1 are skipped")
-    ap.add_argument("--mutate", default=None, choices=["conj", "nosplit", "norecount", "nocap", "starts", "lowcap"])
+    ap.add_argument("--mutate", default=None, choices=["conj", "nosplit", "norecount", "nocap", "starts", "lowcap",
+                                                       "seedfix"])
     a = ap.parse_args()
     if a.selftest:
         return 0 if selftest(a.mutate) else 1
@@ -832,7 +861,7 @@ def main():
                                      F3im=float(((2.7264758856 / 2j) * (0.0532 + 0.0041j)).imag), info=0.0)
         if a.seed:                                # F_3 from another radius's points (seeds only, no values)
             for r in map(json.loads, open(a.seed)):
-                F.extra.setdefault((r["A"], r["wf"]), dict(F3re=r["F3re"], F3im=r["F3im"], info=r["info"]))
+                F.extra.setdefault((r["A"], r["wf"]), Multiplier.seed_record(r))
     t0 = time.time()
     if a.recount:
         # a rung of the radius ladder: the zero set does not depend on xi1, and each cell is counted at one xi1,
@@ -850,8 +879,7 @@ def main():
                         m3fix=a.m3fix, ymax=a.ymax, bounds=bounds)
         if a.M == 3:                              # seed F_3 from the first radius's tuned values
             for k, r in F.extra.items():
-                Fb.extra.setdefault(k, dict(F3re=r.get("F3re", float("nan")), F3im=r.get("F3im", float("nan")),
-                                            info=r.get("info")))
+                Fb.extra.setdefault(k, Multiplier.seed_record(r))
         for z, zb in zip(res["zeros"], locate_many(Fb, [z["cell"] for z in res["zeros"]])):
             z["located_r1b"] = zb
         Fb.close()
