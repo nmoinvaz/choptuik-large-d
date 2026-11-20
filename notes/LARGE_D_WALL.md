@@ -1198,6 +1198,23 @@ at D 225.13 moves Δ by −1.1×10⁻²⁰, so the rungs' lifts belong to the or
   was refused, while leg 10 accepts some (1 of 7, then 3 of 4). Each leg also changes D, so the table is not an A/B.
   The chain keeps the flag from leg 10 on.
 
+## The Taylor order by the cost of planned steps (speed item 3, 2026-11-20)
+
+**On the chain's state at D 256.53 the order of least planned cost is 14, not the chain's 36, and the octo-double
+Jacobian is 1.23 times faster on that plan: 133 s against 163 s, medians of three on the Mac.** `Solver.plan_auto`
+(notes/LOW_D_SPEEDUP.md, "The Taylor order by the cost of planned steps") planned it at the chain's tol 10⁻³² and hmax
+0.05. It has 54 steps against 23, and each step at order 14 costs about a fifth of one at 36, so the Taylor blocks
+cost about half.
+
+- **The chain does not take it.** Its states keep their plans, and `anm_run.py --plan_auto 1` chooses an order only
+  where the base is planned. Planning a base again moves Δ by itself past D 230 (#461), and #833's new-plan series
+  did not meet their own states. A chain on the new order needs that question settled first: one base solved on both
+  plans, and the Δ difference against the step's error.
+- **The plan holds its tolerance.** The Taylor blocks' double-double residual at the state is 5.6×10⁻³¹ on the auto
+  plan and 6.2×10⁻³¹ on a plan at 36 from the same state. At D 256.85 the order is 14 again (53 steps), and at D 73
+  (I940-dh610's pin-5 state) it is 24, with an estimated Taylor cost 0.68 times that at 36.
+- The A/B for a Linux runner is `hp/plan_auto_gain.py abo` (notes/LOW_D_SPEEDUP.md, runs for a Linux runner).
+
 ## Proposed README text
 
 Applied to the README by the coordinator on 2026-11-14 (its checks moved to the README with it). Drafted for the
