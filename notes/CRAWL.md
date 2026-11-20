@@ -815,3 +815,98 @@ and AB1's was accepted after projection (7.9×10⁻⁵²). D is identical to run
 - **The chain** (`ks_chain3b`, #966) also runs at the default switch with the natural test, and converges in 2–3
   corrections a step. Whether its first full steps (leg 7 step 2: 5.19×10⁻²⁶ → 4.47×10⁻¹⁷, then 1.18×10⁻³¹) are the
   same unprojected trial is untested.
+
+## 16. The libraries' arclength does not fit hp's corrector (#1008, speed item 4)
+
+**hp's pseudo-arclength corrector cannot run on multisolver 0.2.1's `arclength` and multishoot 4.0.0's `family`
+without a port of the corrector to Rust, and the border they would replace is about 7% of a correction, an estimate
+from unmatched corrections.**
+Nothing was implemented. The corrector's time is that of the fixed-D Newton step: the octo-double Jacobian and LU,
+and the projected trials. Neither library changes those.
+
+**The libraries' design.** `Shooting::in_global` views the layout as a family in one of its globals and drops the
+extra row that fixes it. dF/dp is one J v on that global's column. `InGlobal::bordered_lu` factors the bordered
+matrix, the layout's f64 Jacobian with the dropped row replaced by the tangent, in f64, and solves in double-double.
+`arclength::continuation` predicts along the tangent, w + ds t, and corrects by `newton_with` on `Bordered` with
+Deuflhard's correction rule. It solves the bordered matrix again at each corrected point for the next tangent. A step
+is refused when its corrector damps (any λ below 1) or its first contraction θ₀ reaches `theta_max`, and ds follows
+θ₀. `locate_fold` places a fold by regula falsi in s, with one corrector per iterate.
+
+**Where hp's corrector differs** (`hp/arclength.py`, #842):
+- *D is not a global.* hp's layout has one global, Δ, and one extra row, the phase row (`hp/src/model.rs`, `Dss`).
+  D enters as the context's constant n = D − 2 in double-double, which only the jet lanes carry as a variable (`dim`,
+  multidouble's `Param::var`). So `in_global` can give only the family in Δ. D as a second global, with a row that
+  fixes it, would change the layout's length to L + 1, and with it every state, plan and bit-identity check.
+- *The factors must be octo-double.* At arc step 4 the octo-double LU's pivots span 2.7×10⁻³⁰ to 1.3×10³⁷ (raw
+  `I1008-macm3/ab1.log`). The mass mode's gain G is about 0.7^−(D−3) ≈ 5×10³⁹ at D 259, and the quad-double series
+  errs by about the quad-double unit times G² (notes/OCTO_DOUBLE.md). A corrector on f64 or double-double factors
+  contracts at best by about the factors' unit times that amplification, far above 1 (inferred, not run).
+  multisolver's `exact` would factor `Bordered` in octo-double, which costs what hp's LU of J costs. The border does
+  not regularize J's weak directions either: at D 259.887 J's four weakest singular values are 5.7×10⁻³⁸ to
+  5.0×10⁻³⁵, and the bordered matrix's are the same to 1% (raw `I842-mac/diag/diag.log`).
+- *The residual and its projection are Python.* hp's F is PinnedO's: the kernel's octo-double residual
+  (`Solver.residual_o`) less the offset c on the held rows, the held fit's values at D, which `pinning.py` forms in
+  mpmath at 50 digits. ElimO projects an iterate or trial onto the solution of the horizon's rung equations (the
+  re-seeder's ladder) only when its pinned quad-double max |F| exceeds the switch (`--elim_switch`, 10⁻¹⁵ by
+  default). Below it the point goes on unprojected, and section 15 shows that this can decide how long a correction
+  takes. The natural test counts the projection's displacement. `newton_with` has no projection hook, and a `Family`
+  is a Rust trait.
+- *D is double-double.* `Bordered` carries p in P, here octo-double. hp's kernel reads n in double-double, so F would
+  change in steps of |D|·2⁻¹⁰⁵ ≈ 6×10⁻³⁰ in p. BorderedCore rounds each dD so that D + dD is a double-double and
+  takes dz for the rounded dD. It counts the row as 0 within max(|D|·2⁻¹⁰⁵, H)/|t_D| and holds D below
+  `--arc_dhold` H.
+- *The predictor.* hp predicts with the order-24 series in s. At arc step 4 (a 0.0711) the prediction lay 8.8×10⁻¹⁶
+  from the root (AB1's first |dz|). The tangent alone is off by about |w₂| a² ≈ 4.9×10⁻⁹ there (the norms of
+  `I1008-macm3/run1/arcjet_002_D259.311977.npz`), 5.6×10⁶ times farther. AB1's full first step of 8.8×10⁻¹⁶ already
+  left the projection's basin, and its half step did not (section 15).
+- *The step rule.* hp's corrector damped arc steps 4, 5 and 6: AB1 accepted λ ½ at correction 0, and AB2 and arc
+  step 6 accepted λ ¼ three times each (raw `I1008-macm3/README.md`). `continuation` refuses every step whose
+  corrector damps.
+- *The tangent.* hp takes it from the next base's series, which the predictor needs anyway. multisolver's `tangent`
+  factors the bordered matrix at each corrected point and forms its Jacobian once more for the refinement. In
+  octo-double that is two Jacobians and one LU per arc step, more than one newton_o (about 95 s on macm3).
+
+**What the border costs now.**
+- The mpmath arithmetic of BorderedCore at L = 769 and 140 digits (`to_mp_vec`, the dot products, `to_parts`) takes
+  under 0.1 s per newton_o and about 0.02 s per residual (M5, five repeats, measured by the script in this section's
+  pull request, #PR). That is under 0.05% of a correction.
+- The kernel's part is F_D (`residual_jet_o` with two coefficients, on the eight-lane jet) and b = J⁻¹ F_D. Its cost
+  is inferred from two logs of macm3 at order 135, the same kernel build at 6 threads. Outside their trials AB1's
+  corrections 1–5 took 115.8–120.5 s. Corrections 36 and 39 of the D chain's second attempt at its step 53
+  (`I903-macm3/chain_k135b.log`, a 0.182, unprojected trials of 0.43 s) took 95.5 and 95.8 s outside theirs. The
+  difference of 20–25 s would be F_D, b and, at `--elim_switch 0`, the second projection of each accepted point, if
+  the rest of the work outside the trials were the same in both. The logs do not show that, since the corrections
+  come from two runs and are not matched. So the border's 6.5–7.1% of each of AB1's corrections 1–5 (295–385 s) is
+  an estimate from unmatched corrections, not a measured bound.
+- In AB1, D was held at every correction (dD −1.47×10⁻¹⁷, below `--arc_dhold` 10⁻¹²). Every step taken was the
+  fixed-D Newton step, and b decided only the hold.
+
+**The smallest library changes that would make it fit:**
+1. multishoot: a family in a parameter of the equations, not a global. The equations would read p from the lane, as
+   hp's jets read n (`Param`), dF/dp would come from the order-1 jet coefficient, and no row would be dropped.
+2. multishoot: `bordered_lu` in the corrector's precision, or multisolver's `exact` on `Bordered` in its place.
+3. multisolver: a projection hook in `newton_with`, the identity by default. It would be called on each iterate and
+   trial and project only above the switch, as ElimO does, with its displacement counted in the simplified
+   correction.
+4. multisolver: a parameter held in less than P (`Family::round_p`, the identity by default), with BorderedCore's row
+   tolerance and hold.
+5. multisolver: a `step` from the caller's prediction, with the end tangent optional and damped corrections accepted.
+   hp could instead keep its own driver and call `Bordered` and `newton_with`, which are public.
+
+With all five, hp's pinned residual and its projection would still be Python, reached from Rust by callbacks as
+`Solver.series_o`'s `rhs` is. The gain would be about the border's estimated 20–25 s per correction, less a tangent
+per arc step.
+
+**Where the corrector's time goes** (for #1008; untested here):
+- macm3 runs the 1f3cda09 kernel (raw `I1008-macm3/README.md`). It predates `Solver.series_o` (#914), two tangents
+  per evaluation of the octo-double Jacobian (#921), `newton_o_residual` (af57065d) and `jacobian_sub` (ff530c32).
+  Each gives the same bits as the path it replaces. At D 253 #914's series costs about a third of the jets', and
+  #921's Jacobian about 1/1.4 of one tangent's time. Arc step 6's series took 1091 s by the jets.
+- Projected trials dominate the corrections. In the D chain's attempt above, a correction whose accepted trial was
+  projected took about 265 s, and one whose accepted trial was not took 96 s. #1032's opt-in `--proj_start pred`
+  took 141 s against the default's 261 s for one projection on dh370 (notes/LARGE_D_WALL.md).
+- On hp's side, F_D and b cannot simply be kept while D is held. Both depend on z: F_D is the jet at z, and b is
+  solved through the LU at z. b also sets den = t_D − ⟨t_z, b⟩, and with it dD and the hold. With g the arclength
+  row and a the fixed-D step, a kept b′ leaves the step unchanged exactly when D is held under both: |g| within the
+  row's tolerance and |g + ⟨t_z, a⟩| at most H·min(|den|, |den′|). Testing that needs the fresh b, so saving the
+  estimated 20–25 s per correction would need a bound on how far ⟨t_z, b⟩ moves with z, which is not derived here.
