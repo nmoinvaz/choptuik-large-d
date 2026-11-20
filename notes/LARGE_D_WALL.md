@@ -1198,6 +1198,27 @@ at D 225.13 moves Δ by −1.1×10⁻²⁰, so the rungs' lifts belong to the or
   was refused, while leg 10 accepts some (1 of 7, then 3 of 4). Each leg also changes D, so the table is not an A/B.
   The chain keeps the flag from leg 10 on.
 
+## The series' middle terms by fast exact products (#1034)
+
+`anm_run.py --series_split 2` forms the horizon series' middle terms (jet orders 1 ≤ l ≤ j − 1) as truncated
+u-products by a block-scaled exact FFT convolution (`hp/src/fastmul.rs`, PRs #1041, #1045, #1046; van der Hoeven 2008,
+the blocks of Arb's `arb_poly_mullow_block`). `--series_split 1` (#952) forms the same terms ahead of each order by
+naive octo-double sums, and 0 is the default. On dh610 at main 9980cd93, one chain step from leg 8's state at
+D 237.527 (ks 250) to D 238.027 (a = 0.5), loaded, one run each (raw `I1034-dh610/` b030d5b5):
+
+| `--series_split` | step s | series s | corrector s |
+|---|---|---|---|
+| 0 | 955 | 280 | 211 |
+| 1 | 916 | 237 | 215 |
+| 2 | 800 | 158 | 184 |
+
+The series takes 0.56 times the default's time at split 2, and the step 0.84 times. Splits 0 and 1 give byte-identical
+states. Split 2 agrees with them to about 10⁻¹²⁰ relative and not bit for bit, which is its tests' criterion
+(`split_fast_accuracy`, `split_series_accuracy`, `fastmul_planted`, and `series_split_check.py` at D 253.34 and 237.53,
+each with a control that fires). On x86 its checksums do not move with multidouble's SIMD backend (Sse2 against Avx2).
+Across platforms they differ, because the tests' synthetic inputs come from libm. So the product's independence from
+libm is not yet tested on real inputs.
+
 ## Proposed README text
 
 Applied to the README by the coordinator on 2026-11-14 (its checks moved to the README with it). Drafted for the
