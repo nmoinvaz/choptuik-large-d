@@ -7,7 +7,7 @@
 //! cargo test --profile release-dev --lib bench_split -- --ignored --nocapture    the series' time by the forms
 //! ```
 use crate::model::{Ctx, HALPHA_ON, SPLIT_FAST, SPLIT_MIDDLE, SPLIT_MUT_DROP_L1};
-use crate::qd_residual::synth;
+use crate::qd_residual::{det_cos, det_sin, synth, synth_det};
 use multidouble::od::OD;
 use multidouble::precision::Octo;
 use std::time::Instant;
@@ -397,4 +397,36 @@ fn split_inputs_hash() {
     let (_, zs) = planted(12);
     let planted_h = hash_f64(zs[1..].iter().flat_map(|z| z.iter().flatten().copied()));
     println!("split inputs: libm {libm:016x}, state {state:016x}, planted {planted_h:016x}");
+}
+
+/// The split and fast checksums on libm-free inputs (qd_residual::synth_det), to compare the series' arithmetic across
+/// platforms (#1034 step 2): their inputs have the same bits everywhere, so equal `inputs` hashes with unequal checksums
+/// mean the arithmetic differs. Asserts only that det_sin and det_cos are within 1e-14 of the platform's sin and cos
+/// at the points synth takes (which fails if a term of their series is dropped); prints the hashes and checksums.
+#[test]
+fn split_xplat() {
+    use std::f64::consts::PI;
+    let pts: Vec<f64> = (0..8).flat_map(|j| { let t = PI * j as f64 / 8.0; [t, 2.0 * t, 4.0 * t] })
+        .chain((1..16).map(|k| k as f64 * PI / 16.0)).collect();
+    let worst = pts.iter().map(|x| (det_sin(*x) - x.sin()).abs().max((det_cos(*x) - x.cos()).abs())).fold(0.0, f64::max);
+    assert!(worst < 1e-14, "det_sin or det_cos is {worst:.2e} from libm");
+    // control: det_sin's series cut at x^15 must miss the bound, or the bound could not see a dropped term
+    let cut = |x: f64| {
+        let y = x - 2.0 * PI * (x / (2.0 * PI)).round();
+        let mut s = 0.0;
+        for k in (0..7).rev() {
+            s = 1.0 - y * y / ((2 * k + 2) as f64 * (2 * k + 3) as f64) * s;
+        }
+        y * s
+    };
+    let ctrl = pts.iter().map(|x| (cut(*x) - x.sin()).abs()).fold(0.0, f64::max);
+    assert!(ctrl >= 1e-14, "the cut series' {ctrl:.2e} passes the bound, so the bound is blind");
+    let (mut ctx, zh, zl) = synth_det();
+    let l = ctx.len();
+    let inputs = hash_f64(pts.iter().flat_map(|x| [det_sin(*x), det_cos(*x)]).chain(zh.iter().chain(zl.iter()).copied()));
+    let zs: Vec<[Vec<f64>; 8]> = std::iter::once(parts8(&zh, &zl)).chain((1..12).map(|k| coef_k(l, k))).collect();
+    let split = series_with(&mut ctx, &zs, SPLIT_MIDDLE, 0, 0);
+    ctx.ks = 60;
+    let fast = series_with(&mut ctx, &zs, SPLIT_FAST, 0, 0);
+    println!("split xplat: det vs libm {worst:.2e} (control {ctrl:.2e}); inputs {inputs:016x}, split {:016x}, fast {:016x}", checksum(&split), checksum(&fast));
 }

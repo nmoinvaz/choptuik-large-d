@@ -41,6 +41,47 @@ pub(crate) fn synth() -> (Ctx<1>, Vec<f64>, Vec<f64>) {
 
 /// `synth` at M = 8 B: the same construction on 8 B points
 pub(crate) fn synth_b<const B: usize>() -> (Ctx<B>, Vec<f64>, Vec<f64>) {
+    synth_trig::<B>(f64::sin, f64::cos, f64::tan)
+}
+
+/// `synth` with sin, cos and tan taken from det_sin and det_cos instead of the platform's libm, so that its inputs
+/// have the same bits on every IEEE-754 platform (#1034: win2's and the Mac's libm give different inputs)
+pub(crate) fn synth_det() -> (Ctx<1>, Vec<f64>, Vec<f64>) {
+    synth_trig::<1>(det_sin, det_cos, |d| det_sin(d) / det_cos(d))
+}
+
+/// x reduced to [-pi, pi] by x - 2 pi round(x / 2 pi), in f64
+fn det_reduce(x: f64) -> f64 {
+    x - 2.0 * PI * (x / (2.0 * PI)).round()
+}
+
+/// sin by its Taylor series to x^31 after det_reduce, Horner in f64: only +, -, * and /, so the same bits on every
+/// IEEE-754 platform; accurate to about 1e-15 on [-pi, pi], which these inputs need (they are synthetic)
+pub(crate) fn det_sin(x: f64) -> f64 {
+    let y = det_reduce(x);
+    let y2 = y * y;
+    let mut s = 0.0;
+    for k in (0..16).rev() {
+        let n = (2 * k + 2) as f64 * (2 * k + 3) as f64;
+        s = 1.0 - y2 / n * s;
+    }
+    y * s
+}
+
+/// cos by its Taylor series to x^30 after det_reduce, as det_sin
+pub(crate) fn det_cos(x: f64) -> f64 {
+    let y = det_reduce(x);
+    let y2 = y * y;
+    let mut s = 0.0;
+    for k in (0..16).rev() {
+        let n = (2 * k + 1) as f64 * (2 * k + 2) as f64;
+        s = 1.0 - y2 / n * s;
+    }
+    s
+}
+
+/// the construction of `synth_b`, with its sin, cos and tan passed in
+fn synth_trig<const B: usize>(sin: fn(f64) -> f64, cos: fn(f64) -> f64, tan: fn(f64) -> f64) -> (Ctx<B>, Vec<f64>, Vec<f64>) {
     let m = 8 * B;
     let nn = 2 * m;
     let mut dh = vec![0.0; m * m];
@@ -51,7 +92,7 @@ pub(crate) fn synth_b<const B: usize>() -> (Ctx<B>, Vec<f64>, Vec<f64>) {
                 if jj != i {
                     let k = i as i64 - jj as i64;
                     let d = k as f64 * PI / nn as f64;
-                    v += sgn * 0.5 * if k.rem_euclid(2) == 0 { 1.0 } else { -1.0 } / d.tan();
+                    v += sgn * 0.5 * if k.rem_euclid(2) == 0 { 1.0 } else { -1.0 } / tan(d);
                 }
             }
             dh[i * m + j] = v;
@@ -59,15 +100,15 @@ pub(crate) fn synth_b<const B: usize>() -> (Ctx<B>, Vec<f64>, Vec<f64>) {
     }
     let d = DMat::<B>::from_rows(&dh, &vec![0.0; m * m]);
     let th: Vec<f64> = (0..m).map(|j| PI * j as f64 / m as f64).collect();
-    let phase = Fl::<DV, B>::load(&th.iter().map(|t| t.sin()).collect::<Vec<_>>(), &vec![0.0; m]);
+    let phase = Fl::<DV, B>::load(&th.iter().map(|t| sin(*t)).collect::<Vec<_>>(), &vec![0.0; m]);
     let nodes = vec![0.005, 0.01, 0.02, 0.05, 0.1];
     let segs: Vec<Vec<f64>> = nodes.windows(2).map(|w| (0..=4).map(|k| w[0] + (w[1] - w[0]) * k as f64 / 4.0).collect()).collect();
     let k = nodes.len();
     let ctx = Ctx::<B> { n: DD::from_f64(1.7), d, phase, nodes, segs, kt: 20, kc: 30, ks: 30, freeze: None, match_node: k - 1, lam: DD::ZERO, mutate: 0, f64_dd: 0, horizon_alpha: 0, series_split: 0 };
     let l = ctx.len();
     let (mut zh, mut zl) = (vec![0.0; l], vec![0.0; l]);
-    let p1: Vec<f64> = th.iter().map(|t| 0.3 * (2.0 * t).sin()).collect();
-    let c0: Vec<f64> = th.iter().map(|t| 0.6 + 0.05 * (4.0 * t).cos()).collect();
+    let p1: Vec<f64> = th.iter().map(|t| 0.3 * sin(2.0 * t)).collect();
+    let c0: Vec<f64> = th.iter().map(|t| 0.6 + 0.05 * cos(4.0 * t)).collect();
     zh[..m].copy_from_slice(&p1);
     zh[m..2 * m].copy_from_slice(&c0);
     let delta = DD::new(3.4645583951137432, 1.7408255559455386e-17);
