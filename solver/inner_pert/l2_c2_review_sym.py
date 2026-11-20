@@ -40,16 +40,21 @@ Mutations of the inputs, so that every check can fail (G1 is itself a control): 
 l = 0 rows and a factor in the hand Q: E0, E1, E2, H and others), mu (the radial part of the metric doubled: C0, B3
 and others), warp (I's V1 = -V2 case given V1 = -2 V2), static (J2's metric function without t).
 
-Run: python3 l2_c2_review_sym.py [--mutate=NAME]      (about 25 s, one process; fibre, lin, bg, k, sign, hand, mu,
-                                                       warp, static)
+Run: python3 l2_c2_review_sym.py [--mutate=NAME] [--forcing-json=FILE]
+(about 25 s, one process; NAME is fibre, lin, bg, k, sign, hand, mu, warp or static, and any other name or argument
+exits 2 before any work; FILE replaces data/l2_c2_forcing.json in check K, which fails if its file is missing)
 """
 import sys
 import sympy as sp
 
+MUTATIONS = ('fibre', 'lin', 'bg', 'k', 'sign', 'hand', 'mu', 'warp', 'static')
 MUT = None
+FORCING_JSON = None                 # check K's file; default data/l2_c2_forcing.json
 for a in sys.argv[1:]:
     if a.startswith('--mutate='):
         MUT = a.split('=', 1)[1]
+    if a.startswith('--forcing-json='):
+        FORCING_JSON = a.split('=', 1)[1]
 
 t, s, u, n, nu = sp.symbols('t s u n nu', positive=True)
 X = (t, s, u)
@@ -540,8 +545,10 @@ def main():
     # K: the stored forcings of l2_c2_forcing.py (data/l2_c2_forcing.json) against this derivation, both rows
     import json
     import os
-    fn = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'data', 'l2_c2_forcing.json')
-    if os.path.exists(fn):
+    fn = FORCING_JSON or os.path.join(os.path.dirname(os.path.abspath(__file__)), 'data', 'l2_c2_forcing.json')
+    if not os.path.exists(fn):          # a missing file is a failed check, not a skipped one
+        report('K  data/l2_c2_forcing.json: its l2, l0 and G rows equal this derivation', False, 'no file ' + fn)
+    else:
         d = json.load(open(fn))
         NPs = 8
         Pk = sp.symbols('P1:%d' % (NPs + 1))
@@ -565,4 +572,11 @@ def main():
 
 
 if __name__ == '__main__':
+    bad = [a for a in sys.argv[1:] if not (a.startswith('--mutate=') or a.startswith('--forcing-json='))]
+    if MUT is not None and MUT not in MUTATIONS:
+        bad.append('--mutate=%s' % MUT)
+    if bad:                             # before any work: a mistyped control must not look like a completed one
+        print('unknown: %s\nusage: l2_c2_review_sym.py [--mutate=%s] [--forcing-json=FILE]'
+              % ('; '.join(bad), '|'.join(MUTATIONS)), file=sys.stderr)
+        sys.exit(2)
     main()
