@@ -13,6 +13,8 @@ far below double rounding. Differences of method, all exact in exact arithmetic:
   - the horizon series' periodic solves are a float64 LU refined with double-double residuals.
 
     python ell_ddm.py selftest [--mutate=slices|ops]
+    python ell_ddm.py check|sshres|det|root ... [--mutate=lam|hionly]   (lam: tangents without lambda; hionly: every
+                                                 double-double result rounded to double, the build's precision control)
         operators against DSSEll's float64 ones (1e-14), the Ozaki product against ddnp.matmul (1e-28 relative), and
         dual-number derivatives against the analytic ones in double-double (1e-28); --mutate=slices (2 slices) and
         --mutate=ops (one harmonic off) must fail.
@@ -30,6 +32,9 @@ import ddnp as dd                                    # noqa: E402
 
 MUTATE = next((a.split("=", 1)[1] for a in sys.argv if a.startswith("--mutate=")), "")
 NSLICE = 2 if MUTATE == "slices" else 5
+if MUTATE == "hionly":                       # control: every double-double result keeps its high part only (double precision)
+    for _nm in ("add", "sub", "mul", "div", "mul_d", "add_d", "neg"):
+        setattr(dd, _nm, (lambda f: lambda *a: (lambda r: dd.R(r.h, np.zeros_like(r.h)))(f(*a)))(getattr(dd, _nm)))
 
 
 # ---------------------------------------------------------------- exact tau operators
@@ -100,6 +105,8 @@ class Op:
                 rest = P if rest is None else rest + P
         if rest is not None:
             acc = dd.add_d(acc, rest)
+        if MUTATE == "hionly":
+            acc = dd.R(acc.h, np.zeros_like(acc.h))
         return dd.R(acc.h.reshape(shp[:-1] + (-1,)), acc.l.reshape(shp[:-1] + (-1,)))
 
 
