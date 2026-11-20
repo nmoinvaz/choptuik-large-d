@@ -41,7 +41,7 @@ pub mod v8 {
 /// 8-lane double-double on the compile-time backend
 pub mod dv {
     pub use multidouble::dv::*;
-    pub use multidouble::native::{DotAcc, DV};
+    pub use multidouble::native::{DDotAcc as DotAcc, DV};
 }
 /// 8-lane quad-double on the compile-time backend
 pub mod qv {
