@@ -242,7 +242,9 @@ pub fn check() -> bool {
 /// - the long-pair route's 2^e2 at the ends of the range: 8193 copies of 2^-600 times 2^-600 with e2 = 1200, and of
 ///   2^1023 times 2^-1000 with e2 = 1, exactly 1 and 2^24 each, which MUT_E2_PLAIN makes fail;
 /// - outputs at the bottom of the range by the FFT route: 2^-1074 times 2^-1074 (zero) and 2^-537 times 2^-537
-///   (2^-1074), n = 1.
+///   (2^-1074), n = 1;
+/// - a block too wide for the digits (1 and 2^-1024 squared with spread 1024 and no slope), by the direct route,
+///   whose first coefficient is exactly 1.
 pub fn check_edges(mutate: u8) -> bool {
     let cfg = Cfg { mutate, ..Cfg::default() };
     let one = OV::splat_f(1.0);
@@ -282,6 +284,14 @@ pub fn check_edges(mutate: u8) -> bool {
         if st.max_frac < 0.25 { r } else { f64::INFINITY }
     };
     let (u1, u2) = (tiny((-1074f64).exp2()), tiny((-537f64).exp2()));
+    // a spread too wide for the digits (1 and 2^-1024 in one block, no slope): the direct route, c_0 exactly 1
+    let wide = Cfg { scale: false, spread: 1024, ..cfg };
+    let w2 = vec![one, OV::splat_f((-1024f64).exp2())];
+    let mut accw = vec![ODotAcc::zero(); 2];
+    let stw = crate::fastmul::mullow(&w2, &w2, 2, &wide, &mut accw);
+    let cw: Vec<OV> = accw.into_iter().map(|a| a.finish()).collect();
+    let (rw, _, _) = compare(&cw, &mullow_naive(&w2, &w2, 2), &w2, &w2);
+    let wide_ok = exact(&cw[..1], 1.0) && rw <= 1e-120 && stw.direct > 0;
     let ok = r1 <= 1e-120
         && r2 <= 1e-120
         && st.max_frac < 0.25
@@ -289,12 +299,14 @@ pub fn check_edges(mutate: u8) -> bool {
         && e2a
         && e2b
         && u1 <= 1e-120
-        && u2 <= 1e-120;
+        && u2 <= 1e-120
+        && wide_ok;
     println!(
         "edges (mutate {mutate}): n 8193 past the FFT tables rel {r1:.2e}; a lane scaled out of range rel {r2:.2e} \
          (max_frac {:.1e}); e2 1200 and 1 on the long route exact {e2a}, {e2b}; 2^-1074 and 2^-537 squared rel \
-         {u1:.1e}, {u2:.1e}: {}",
+         {u1:.1e}, {u2:.1e}; spread 1024 by {} direct pairs, c_0 exactly 1 {wide_ok}: {}",
         st2.max_frac,
+        stw.direct,
         if ok { "PASS" } else { "FAIL" }
     );
     ok

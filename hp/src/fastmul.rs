@@ -40,6 +40,9 @@ const R16: f64 = 65536.0;
 const IR16: f64 = 1.0 / 65536.0;
 /// largest FFT length (a block pair of up to 2^LMAX_LOG2 - 1 terms)
 const LMAX_LOG2: usize = 13;
+/// most digits per coefficient: W = 16 T_MAX - 2 = 958 bits keeps the scaled coefficient finite, and its scale
+/// 2^k (k <= W + 1074) within pow2_split's 2^2044; parts_of's limbs hold the 2 T_MAX + 2 digits of a product
+const T_MAX: usize = 60;
 
 /// lane-wise f64 values
 type L8 = [f64; LN];
@@ -79,6 +82,8 @@ pub struct Stats {
     pub calls: usize,
     /// block pairs multiplied
     pub pairs: usize,
+    /// of them, those formed by ODotAcc (past the FFT tables or too wide in digits)
+    pub direct: usize,
     /// blocks of a and of b
     pub blocks: (usize, usize),
     /// the largest distance of an inverse transform's value from its integer (exact while below 1/2); infinite when a
@@ -92,6 +97,7 @@ impl Stats {
     pub fn merge(&mut self, o: &Stats) {
         self.calls += o.calls;
         self.pairs += o.pairs;
+        self.direct += o.direct;
         self.blocks = (self.blocks.0.max(o.blocks.0), self.blocks.1.max(o.blocks.1));
         self.max_frac = self.max_frac.max(o.max_frac);
         self.digits = self.digits.max(o.digits);
@@ -193,32 +199,40 @@ fn mullow_pairs(
             }
             st.pairs += 1;
             let (x, y) = (&a[xa.start..xa.end], &b[xb.start..xb.end]);
-            if x.len().min(n - o) + y.len().min(n - o) - 1 > 1 << LMAX_LOG2 {
-                // past the FFT tables: this pair by ODotAcc, 2^e2 split per lane between the factors so that both
-                // and their products keep the range of the result (each factor scaled exactly, in steps)
-                let (xs, ys) = if cfg.mutate == MUT_E2_PLAIN {
-                    (x.iter().map(|v| v.mul_pwr2(2f64.powi(e2))).collect::<Vec<_>>(), y.to_vec())
-                } else {
-                    let top = |v: &[OV]| -> [i32; LN] {
-                        std::array::from_fn(|l| {
-                            v.iter().map(|c| c.c[0].to_array()[l]).filter(|&p| p != 0.0).map(expo).max().unwrap_or(0)
-                        })
-                    };
-                    let (tx, ty) = (top(x), top(y));
-                    let al: [i32; LN] = std::array::from_fn(|l| (ty[l] - tx[l] + e2).div_euclid(2));
-                    let be: [i32; LN] = std::array::from_fn(|l| e2 - al[l]);
-                    (x.iter().map(|v| scale_lanes(v, &al)).collect(), y.iter().map(|v| scale_lanes(v, &be)).collect())
-                };
-                for k in 0..n - o {
-                    for i in 0..xs.len().min(k + 1) {
-                        if k - i < ys.len() {
-                            acc[o + k].add_prod_mut(&xs[i], &ys[k - i]);
-                        }
-                    }
-                }
+            let (la, lb) = (x.len().min(n - o), y.len().min(n - o));
+            // past the FFT tables, or digits too wide for digits8 and parts_of: the pair by ODotAcc
+            if la + lb - 1 > 1 << LMAX_LOG2 || plan(cfg, xa.spread, xb.spread, la, lb).is_none() {
+                st.direct += 1;
+                direct(x, y, o, n - o, cfg, e2, acc);
                 continue;
             }
             pair(x, y, xa, xb, s, n - o, o, cfg, e2, acc, st, ws);
+        }
+    }
+}
+
+/// x times y truncated to nout terms added into acc\[o..\] by ODotAcc, 2^e2 split per lane between the factors so
+/// that both and their products keep the range of the result (each factor scaled exactly, in steps); the terms of
+/// each index in the order of x's
+fn direct(x: &[OV], y: &[OV], o: usize, nout: usize, cfg: &Cfg, e2: i32, acc: &mut [ODotAcc]) {
+    let (xs, ys) = if cfg.mutate == MUT_E2_PLAIN {
+        (x.iter().map(|v| v.mul_pwr2(2f64.powi(e2))).collect::<Vec<_>>(), y.to_vec())
+    } else {
+        let top = |v: &[OV]| -> [i32; LN] {
+            std::array::from_fn(|l| {
+                v.iter().map(|c| c.c[0].to_array()[l]).filter(|&p| p != 0.0).map(expo).max().unwrap_or(0)
+            })
+        };
+        let (tx, ty) = (top(x), top(y));
+        let al: [i32; LN] = std::array::from_fn(|l| (ty[l] - tx[l] + e2).div_euclid(2));
+        let be: [i32; LN] = std::array::from_fn(|l| e2 - al[l]);
+        (x.iter().map(|v| scale_lanes(v, &al)).collect(), y.iter().map(|v| scale_lanes(v, &be)).collect())
+    };
+    for k in 0..nout {
+        for i in 0..xs.len().min(k + 1) {
+            if k - i < ys.len() {
+                acc[o + k].add_prod_mut(&xs[i], &ys[k - i]);
+            }
         }
     }
 }
@@ -378,7 +392,8 @@ fn shorten(
 
 /// A block pair's digits: t per coefficient (even), W = 16 t - 2 >= prec + spread + 5 bits, which keeps every
 /// coefficient to 2^-(prec + 1) of itself, and the weights q0..=2t-2 formed (nq of them, even): those below sum to
-/// under 2^-prec of the smallest term, 2^(2W - h_a - h_b - 2).
+/// under 2^-prec of the smallest term, 2^(2W - h_a - h_b - 2). None past T_MAX digits, which digits8's scales and
+/// parts_of's limbs do not hold.
 struct Plan {
     t: usize,
     w: i32,
@@ -386,14 +401,17 @@ struct Plan {
     nq: usize,
 }
 
-fn plan(cfg: &Cfg, ha: i32, hb: i32, la: usize, lb: usize) -> Plan {
+fn plan(cfg: &Cfg, ha: i32, hb: i32, la: usize, lb: usize) -> Option<Plan> {
     let t = ((cfg.prec + ha.max(hb) + 7 + DB - 1) / DB) as usize;
     let t = t + t % 2;
+    if t > T_MAX {
+        return None;
+    }
     let w = DB * t as i32 - 2;
     let lg = ((t * la.min(lb)) as f64).log2().ceil() as i32;
     let q0 = (((2 * w - ha - hb - 2 - cfg.prec - 14 - lg) / DB).max(0) as usize).min(2 * t - 2);
     let nq = (2 * t - 1 - q0).div_ceil(2) * 2;
-    Plan { t, w, q0, nq }
+    Some(Plan { t, w, q0, nq })
 }
 
 /// The estimated seconds of the block pairs reaching below n, per pair: 0.76 us per coefficient's digits, 6.5 ns
@@ -410,7 +428,11 @@ fn cost(ba: &[Block], bb: &[Block], n: usize, cfg: &Cfg) -> f64 {
             let (la, lb) = ((xa.end - xa.start).min(n - o), (xb.end - xb.start).min(n - o));
             let lc = (la + lb - 1).min(n - o);
             let l = (la + lb - 1).next_power_of_two();
-            let pl = plan(cfg, xa.spread, xb.spread, la, lb);
+            let Some(pl) = plan(cfg, xa.spread, xb.spread, la, lb) else {
+                // the pair goes to `direct`: costed as la lb octo-double products (0.6 us for 8 lanes each)
+                c += 0.6e-6 * (la * lb) as f64;
+                continue;
+            };
             let prods: usize = (pl.q0..=2 * pl.t - 2).map(|q| q.min(pl.t - 1) - q.saturating_sub(pl.t - 1) + 1).sum();
             let bfly = (l / 2) as f64 * (l as f64).log2().max(1.0);
             c += 0.76e-6 * (la + lb) as f64
@@ -514,7 +536,7 @@ pub(crate) fn digits8(x: &OV, k: &[i32; LN], t: usize, d: &mut [V8]) {
 /// chunks of 53 bits from its top bit down, each part a chunk with v's sign, so the parts do not overlap and their sum
 /// is v 2^e truncated below the eighth chunk (2^-424 of v or less).
 fn parts_of(d: &[L8], ln: usize, e: i32) -> [f64; 8] {
-    const NL: usize = 18;
+    const NL: usize = T_MAX / 2 + 3;
     let nl = d.len().div_ceil(4) + 1;
     assert!(nl <= NL, "parts_of: {} digits", d.len());
     let mut w = [0u64; NL];
@@ -797,7 +819,7 @@ fn pair(
     debug_assert!(m <= LMAX_LOG2, "fastmul: block pair of {} terms", la + lb - 1);
     let l = 1usize << m;
     let tb = tables(m);
-    let Plan { t, w, q0, nq } = plan(cfg, xa.spread, xb.spread, la, lb);
+    let Plan { t, w, q0, nq } = plan(cfg, xa.spread, xb.spread, la, lb).expect("a pair within T_MAX digits");
     st.digits = st.digits.max(t);
     let t0 = std::time::Instant::now();
     load(x, la, xa.start, &xa.frame, s, t, l, &mut ws.xs, &mut ws.dig, tb, cfg.mutate);
