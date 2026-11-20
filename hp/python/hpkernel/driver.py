@@ -79,11 +79,13 @@ def plow_odd(M, kf, dps=40):
 
 
 def make_solver(D, M, nodes=None, kt=36, kc=40, ks=120, segs=None, threads=0, kfreeze=None, match_node=None,
-                horizon_alpha=0, octo_tangents=None):
+                horizon_alpha=0, octo_tangents=None, exact_recip=0, recip_planted=0):
     """kfreeze: pin the p1 harmonics k > kfreeze to zero and drop the matching of p's harmonics k > kfreeze at the
     horizon block (see model.rs Ctx::freeze). horizon_alpha: Solver.set_horizon_alpha (0, the default, as before; 1
     the horizon series in alpha = a - 1; 2 its control). octo_tangents: Solver.set_octo_tangents, the octo-double
-    Jacobian's columns per evaluation (None keeps the solver's default, 2; 1 the one-tangent Jacobian)."""
+    Jacobian's columns per evaluation (None keeps the solver's default, 2; 1 the one-tangent Jacobian).
+    exact_recip, recip_planted: Solver.set_exact_recip (0, the default, the horizon series' 1/k in double-double as
+    before; 1 that 1/k rounded once to each lane's precision, #1043; recip_planted k > 0 its planted change at k)."""
     nodes = list(NODES_OLD if nodes is None else nodes)
     with mp.workdps(40):
         nh, nl = dd_from_mp([mp.mpf(D) - 2])
@@ -97,6 +99,11 @@ def make_solver(D, M, nodes=None, kt=36, kc=40, ks=120, segs=None, threads=0, kf
         s.set_horizon_alpha(horizon_alpha)
     if octo_tangents is not None:
         s.set_octo_tangents(octo_tangents)
+    if exact_recip or recip_planted:
+        if not hasattr(s, "set_exact_recip"):
+            raise RuntimeError("exact_recip: this hpkernel has no Solver.set_exact_recip (built before #1043); "
+                               "rebuild hp with hp/build.sh")
+        s.set_exact_recip(int(exact_recip), int(recip_planted))
     return s
 
 

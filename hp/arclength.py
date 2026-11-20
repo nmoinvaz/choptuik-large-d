@@ -673,7 +673,8 @@ class ChainSys:
             spn = c["wrap_at"](sn, Dd)
             po = PinnedO(spn.s, spn.ch, spn.cl, c8=spn.c8)
             rs = (Reseeder(dict(M=c["M"], nodes=c["nodes"], kt=c["kt"], kc=c["kc"], ks=c["ks"]), Dd, threads=opt["threads"],
-                           horizon_alpha=opt["horizon_alpha"], qd=bool(opt["reseed_q"]), od=opt["reseed_o"], qd_start=opt["reseed_start"])
+                           horizon_alpha=opt["horizon_alpha"], qd=bool(opt["reseed_q"]), od=opt["reseed_o"], qd_start=opt["reseed_start"],
+                           exact_recip=opt.get("exact_recip", 0))
                   if opt["reseed"] else None)
             eo = ElimO(po, rs, switch=opt["elim_switch"], start_F=None, log=bool(opt["log_proj"])) if opt["reseed"] == 2 else None
             held1 = (band_field(c["hfit"].jets(Dd, 1, c["ks_held"], exact=c["held_x"])[1], c["ks_held"], c["M"], parts=c["hparts"])
@@ -724,9 +725,13 @@ class ChainSys:
         return dict(D=mp.nstr(self.D, 34), F_before=F0, F_after=F1, steps=len(hist), converged=bool(conv), dDelta=dDelta)
 
     def series_from_file(self, path, D, N):
-        """the series of an earlier run's arcjet file (--arc_jet), refused unless its D and N are this base's"""
+        """the series of an earlier run's arcjet file (--arc_jet), refused unless its D, N and exact_recip are this
+        base's (a file without exact_recip predates the flag and was made with it off)"""
         d = np.load(path, allow_pickle=False)
         meta = json.loads(str(d["meta"]))
+        er_file, er_run = int(meta.get("exact_recip", 0)), int(self.opt.get("exact_recip", 0))
+        if er_file != er_run:
+            raise SystemExit(f"--arc_jet {path}: its series was made with exact_recip {er_file}, this run takes {er_run}")
         with mp.workdps(DPS_SERIES):
             dD = abs(mp.mpf(meta["D_str"]) - D)
             if meta.get("N") != N or dD > abs(D) * mp.mpf(10) ** -32:
@@ -758,7 +763,8 @@ class ChainSys:
         if self.opt["save_jet"]:
             jp = os.path.join(c["out"], f"arcjet_{self.n_pts:03d}_D{float(D):.6f}.npz")
             np.savez(jp, **{f"z{q}": np.array([np.asarray(z[q]) for z in Zo]) for q in range(8)},
-                     meta=json.dumps(dict(D_str=mp.nstr(D, 34), N=N, parts=8, jet="o", norms=norms, pivots=(float(pmin), float(pmax)))))
+                     meta=json.dumps(dict(D_str=mp.nstr(D, 34), N=N, parts=8, jet="o", norms=norms, pivots=(float(pmin), float(pmax)),
+                                          exact_recip=int(self.opt.get("exact_recip", 0)))))
         print(f"  series at D {mp.nstr(D, 15)}: pivots {pmin:.1e}..{pmax:.1e}, |w_1| {norms[1]:.3e}, |w_N| {norms[N]:.3e}, "
               f"{self.series_info['t_coef']} s", flush=True)
         return [to_mp_vec(z) for z in Zo]
@@ -822,7 +828,8 @@ class ChainSys:
         p = os.path.join(c["out"], f"arc_{self.n_pts:03d}_D{float(D):.6f}.npz")
         save_o(p, z8, dict(D=float(D), D_str=mp.nstr(D, 34), M=c["M"], nodes=c["nodes"], kt=c["kt"], kc=c["kc"], ks=c["ks"],
                            kfreeze=c["kf"], pin_held=c["ks_held"], N=c["N"], source=opt["state"], parts=8, arclength=True,
-                           tD=float(tD), segs=[[float(x) for x in sg] for sg in c["segs"]]))
+                           tD=float(tD), segs=[[float(x) for x in sg] for sg in c["segs"]],
+                           exact_recip=int(opt.get("exact_recip", 0))))
         rec["state"] = os.path.basename(p)
         with mp.workdps(DPS_SERIES):
             return to_mp_vec(z8), D, True, rec
