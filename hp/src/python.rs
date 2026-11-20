@@ -602,7 +602,8 @@ struct Solver {
     qlu: Option<QDLu>,
     /// the octo-double LU of the last newton_o (olu_solve), with that call
     olu: Option<OctoLast>,
-    /// seconds of the last newton / newton_mixed call: residual, Jacobian, factorization, solve (step_timing)
+    /// seconds of the last newton / newton_mixed call: residual, Jacobian (in block storage only the staircase fill),
+    /// factorization, solve (step_timing)
     last_t: [f64; 4],
     /// the octo-double Jacobian's columns per evaluation when newton_o and jacobian_o are not given `tangents`
     /// (set_octo_tangents; 2 by default, 1 the one-tangent Jacobian), the same bits at any (#921)
@@ -929,7 +930,8 @@ impl Solver {
     /// deliberate breakage of the block path for the controls of hp/highm_check.py (1 a pivot scaled by 1 + 1e-6,
     /// 2 the Delta copies untied). jac_mutate (block path only): as jacobian_f64's mutate (1 drops the tau
     /// derivative from the f64 lanes; hp/highm_check.py profile uses it to time the tau derivative). horizon_dd: as
-    /// jacobian_f64's (dense path only). The seconds of the parts are kept for step_timing.
+    /// jacobian_f64's (dense path only). The seconds of the parts are kept for step_timing, whose second entry is in
+    /// block storage only the copy of the columns into the staircase blocks (the columns are formed before, untimed).
     #[allow(clippy::type_complexity, clippy::too_many_arguments)]
     #[pyo3(signature = (zh, zl, tangents=4, dd_base=false, lu="f64", block=None, block_mutate=0, jac_mutate=0, horizon_dd=0))]
     fn newton_mixed<'py>(
@@ -1010,8 +1012,9 @@ impl Solver {
         Ok((arr(py, b.iter().map(|v| v.hi).collect()), arr(py, b.iter().map(|v| v.lo).collect()), arr(py, fh), arr(py, fl), pmin, pmax))
     }
 
-    /// The stored LU: (bytes held by its factors, in block storage, and for block storage the seconds spent building
-    /// the Jacobian's blocks and factoring them).
+    /// The stored LU: (bytes held by its factors, in block storage, and for block storage the seconds of the staircase
+    /// LU's fill and of its factorization). The fill only copies the columns, which multishoot's jacobian_staircase
+    /// forms for every block before the factorization starts; their time is in neither (#1040).
     fn lu_info(&self) -> PyResult<(usize, bool, Option<f64>, Option<f64>)> {
         match &self.lu {
             None => Err(PyValueError::new_err("no stored LU")),
@@ -1020,8 +1023,14 @@ impl Solver {
         }
     }
 
-    /// Seconds spent in the parts of the last newton or newton_mixed call: (residual, Jacobian, factorization, solve).
-    /// In block storage the Jacobian's blocks are built and factored in turn; their sums are reported.
+    /// Seconds spent in the parts of the last newton, newton_q, newton_o or newton_mixed call: (residual, Jacobian,
+    /// factorization, solve). In dense storage (all but newton_mixed with block=True) the four hold the whole call.
+    /// In block storage (newton_mixed with block=True, the default above M = 128) the second is, since multishoot
+    /// (#523), only the staircase LU's fill: multishoot's jacobian_staircase forms every block's columns before the
+    /// factorization, and the fill copies them into the blocks. The third is the staircase factorization's sum over
+    /// its steps. The columns, the Jacobian's own work, are in none of the four: the Jacobian's seconds are the call's
+    /// wall clock less the residual, factorization and solve (driver.newton_step's t_jac; #1040,
+    /// hp/step_timing_check.py).
     fn step_timing(&self) -> (f64, f64, f64, f64) {
         (self.last_t[0], self.last_t[1], self.last_t[2], self.last_t[3])
     }
