@@ -174,7 +174,7 @@ needs τ resolution there is part of what the runs show.
   tangents of a larger M. On win2 the D 3.7 state resampled to M 320 on the M 256 plan gave a nan pivot; the control
   `cost --mutate plan_m` exits 1. `Solver.step_timing()` is not used. In block storage its second entry is only the
   staircase LU's fill, a copy, because multishoot computes every block's columns before the factorization (multishoot
-  3.3.0, `jacobian_staircase`). So since #523 its four entries no longer add up to the call.
+  3.3.0, `jacobian_staircase`). So since #523 its four entries no longer add up to the call (HIGH_M.md §4, #1040).
 - **Modes needed.** For each L this is the smallest M′ whose Δ, and the Δ of every larger M′ of that L, lies within
   10⁻¹² of the uniform Δ(384).
 
@@ -309,6 +309,8 @@ rows that stop at D 3.075 (`hp/data/solve_times.csv`, 85.8 h); the three points 
 
 The Jacobian is 99.5 % of a call; the LU and the residual together under 0.5 % (HIGH_M.md §4, lines 312–352, found the
 same at M 160–256). There is nothing to gain in the linear algebra: a Newton–Krylov or a better LU attacks 0.3 %.
+These shares were measured on builds before #523. Since then the Jacobian is read from the call's wall clock, because
+step_timing's own Jacobian entry holds only the copy into the blocks (HIGH_M.md §4, #1040).
 
 ### 1.3 The Jacobian's structure and cost
 

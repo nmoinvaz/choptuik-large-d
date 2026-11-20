@@ -169,7 +169,8 @@ that driver and adds the series as one more start for the working resolution M_w
 
 **Cost.** In code about 85 lines and the three checks, under a day. In compute, per point at M 320 on win2, N = 3
 orders cost about 3 × (335–642 s of jets + 148–234 s of solves) ≈ 30–45 min at 8 threads (T106), against Newton
-calls of 25–40 min each (#343's leg 2). #343's D 3.04335 took 12 calls at M 320 from the Lagrange start (|F|
+calls of 25–40 min each (#343's leg 2; its records give 23–27 min per M 320 iteration, `t_its` of raw
+`I343-win2/leg2_points.jsonl`). #343's D 3.04335 took 12 calls at M 320 from the Lagrange start (|F|
 6.4×10⁻⁴), and T106's D″ took 5 from the series' start (|F| 9.8×10⁻⁶) on a fatter plan. If that ratio holds, the series
 saves 4–7 calls (2–5 h) per point where both starts converge, a gain of about 2× at M_w and nothing at M_n.
 Forming the series one order at a time, as `Solver.series_o` does in octo-double (a third of the cost at D 253, #914),
