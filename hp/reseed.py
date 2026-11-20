@@ -141,7 +141,7 @@ class Reseeder:
 
     def __init__(self, meta, D, threads=2, levels=5, rows="ma", plan_tol=1e-32, hmax=0.05, check_tol=1e-36,
                  check_kt=None, it_max=30, horizon_alpha=0, mutate="none", floor_rule="stall", qd=False, od=0,
-                 qd_start="ladder", qd_bar=1e-24, proj_start="u0", od_stop=False):
+                 qd_start="ladder", qd_bar=1e-24, proj_start="u0", od_stop=False, exact_recip=0):
         self.M, self.nodes = int(meta["M"]), list(meta["nodes"])
         self.K = len(self.nodes)
         self.kt, self.kc, self.ks = meta.get("kt", 36), meta.get("kc", 146), meta.get("ks", 130)
@@ -153,6 +153,9 @@ class Reseeder:
         self.plan_tol, self.hmax, self.check_tol = plan_tol, hmax, check_tol
         self.check_kt = check_kt or self.kt + 12
         self.it_max, self.horizon_alpha, self.mutate = it_max, horizon_alpha, mutate
+        # exact_recip (#1043): the rungs' solvers take the chain's 1/k in the horizon series (make_solver's), so that
+        # the re-seeded data solve the system the corrector solves
+        self.exact_recip = int(exact_recip)
         # the rung's floor test: 'abs' (the design: a step below 1e-24 with the residual no longer halving); 'stall'
         # (amendment 10: also the residual no longer halving with the step no longer shrinking tenfold, or no trial
         # lowering the residual after such a step; the steps stall at the floor eps_dd G above 1e-24 past D ~ 95); 'rel'
@@ -208,8 +211,10 @@ class Reseeder:
         plain mismatch) and with one Taylor step per segment (its rows are not used)"""
         key = (tuple(nodes), kt or self.kt)
         if key not in self._aux:
+            # exact_recip is passed only when set, so that a build from before #1043 runs the default
+            rk = dict(exact_recip=self.exact_recip) if self.exact_recip else {}
             s = make_solver(self.D, self.M, nodes=list(nodes), kt=kt or self.kt, kc=self.kc, ks=self.ks, threads=self.threads,
-                            kfreeze=None, horizon_alpha=self.horizon_alpha)
+                            kfreeze=None, horizon_alpha=self.horizon_alpha, **rk)
             s.set_segs([[nodes[i], nodes[i + 1]] for i in range(len(nodes) - 1)])
             self._aux[key] = s
         return self._aux[key]
