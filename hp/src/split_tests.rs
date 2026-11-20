@@ -126,7 +126,9 @@ fn split_series_accuracy() {
         println!("{k:2}   {ds:.2e}   {da:.2e}   {dc:.2e}   {fk:.2e}");
         let thr = 1e3 * da.max(floor);
         if k >= 2 {
-            worst = worst.max(ds / thr);
+            // a difference or alpha reference that is not finite fails (max drops a NaN); the floor stays for
+            // finite ones
+            worst = if ds.is_finite() && da.is_finite() { worst.max(ds / thr) } else { f64::INFINITY };
             ctrl_fail = ctrl_fail.max(dc / thr);
         }
     }
@@ -267,7 +269,9 @@ fn split_file_in() {
         println!("{k:2}   {ds:.2e}   {da:.2e}   {dc:.2e}   {fk:.2e}");
         let thr = 1e3 * da.max(floor);
         if k >= 2 {
-            worst = worst.max(ds / thr);
+            // a difference or alpha reference that is not finite fails (max drops a NaN); the floor stays for
+            // finite ones
+            worst = if ds.is_finite() && da.is_finite() { worst.max(ds / thr) } else { f64::INFINITY };
             ctrl_fail = ctrl_fail.max(dc / thr);
         }
     }
@@ -318,13 +322,15 @@ fn split_fast_accuracy() {
     let floor = (-420.0f64).exp2();
     let (mut worst, mut ctrl_fail) = (0.0f64, 0.0f64);
     for k in 1..=n {
-        let (df, dm, da, dc) =
-            (rel(&fast[k - 1], &base[k - 1]), rel(&mid[k - 1], &base[k - 1]), rel(&alpha[k - 1], &base[k - 1]), rel(&ctrl[k - 1], &base[k - 1]));
+        let d = |f: &[Vec<OD>]| rel(&f[k - 1], &base[k - 1]);
+        let (df, dm, da, dc) = (d(&fast), d(&mid), d(&alpha), d(&ctrl));
         let fk = base[k - 1].iter().map(|y| y.to_f64().abs()).fold(0.0, f64::max);
         println!("{k:2}   {df:.2e}   {dm:.2e}   {da:.2e}   {dc:.2e}   {fk:.2e}");
         let thr = 1e3 * da.max(floor);
         if k >= 2 {
-            worst = worst.max(df / thr);
+            // a difference or alpha reference that is not finite fails (max drops a NaN); the floor stays for
+            // finite ones
+            worst = if df.is_finite() && da.is_finite() { worst.max(df / thr) } else { f64::INFINITY };
             ctrl_fail = ctrl_fail.max(dc / thr);
         }
     }
