@@ -1198,6 +1198,73 @@ at D 225.13 moves Δ by −1.1×10⁻²⁰, so the rungs' lifts belong to the or
   was refused, while leg 10 accepts some (1 of 7, then 3 of 4). Each leg also changes D, so the table is not an A/B.
   The chain keeps the flag from leg 10 on.
 
+## Broyden's updates between the corrector's factorizations (speed round 3, item 1)
+
+- **What it does.** `anm_run.py --od_broyden 1` (`newton_od`'s `broyden`, with `--od_accept natural`) forms no new
+  octo-double Jacobian after a full step accepted with a simplified-correction ratio below `--od_broyden_theta` (0.5,
+  2-norms). The next steps are Broyden's good updates (Broyden, Math. Comp. 19 (1965) 577) in the error-oriented form
+  QNERR (Deuflhard 2004, ch. 2), as multisolver 0.2.1's `newton_quasi` applies it. Each step costs one projection, one
+  residual and one solve through the last factors. A step is taken while its contraction is below the bound or its
+  max |F| is at most `--tol_od`. A refused one forms the factors where it started, and that iteration runs as before.
+  After `--od_broyden_max` (20) updates the factors are formed again.
+- **Where it lives, and why there.** It is in hp's Python driver, over the octo-double LU of the last `newton_o`
+  (`olu_solve`). The library's quasi-Newton cannot take the corrector's projections (`ElimO`, `BorderedElim`), which
+  are Python, nor its natural test, strong chord or floor rule. On `ElimO` the simplified correction includes the
+  projection's displacement, as the natural test's does. The updates then solve F(P(z)) + J_r (z − P(z)) = 0, whose
+  root near the solution is the projected system's. The scalars come from double-double inner products of the
+  leading two parts (multidouble's `dd_dot`) at 160 bits, and they are applied in octo-double as double-double numbers.
+- **Rules kept.** With `--od_floor_delta` an iterate at max |F| ≤ `--od_floor_F` gets its own factors, so the floor
+  rule reads its own Newton correction as before. A step after the strong chord is never an update: the chord's step
+  is not a Newton step of the start's factors. A trial or a chord point at the tolerance ends the corrector without
+  factors there. In the continuation in D, `base_lu_o` then forms the next series' LU, which the default path keeps
+  from the corrector, so that LU is only deferred. In the arclength run it is saved, since `ChainSys.dseries` forms its
+  own at every base. Where the bordered D is not held (`--arc_dhold`), the residual is taken at D rounded to
+  double-double, which the updates do not see. A stall there shows as a refused update, whose factors round D. Off,
+  every call is the one without the option.
+- **What it can save.** These are the default path's factorizations per corrector run, from `hp/od_broyden_ab.py`'s
+  count on the stored logs:
+
+  | log | runs (polish, then attempts) | LUs | seconds per LU |
+  |---|---|---|---|
+  | ks_chain3b leg 10 (`I966-dh370`) | polish; attempts to D 256.53, 256.85, 257.15 | 3; 3, 2, 3 | 113 |
+  | #1008 AB1 (`I1008-macm3/ab1.log`) | anm_run's polish, the arc polish; arc step 4 | 1, 2; 7 | 117 |
+
+  The attempt to D 256.85 (from the D 256.53 state) had 2: the start's, and the chord point's, which the series takes.
+  So it has nothing to save. The attempt to D 257.15 (from the D 256.85 state) has one LU after its first accepted trial
+  that the updates can replace. AB1's arc step 4 has five factorizations after its damped first step. There each trial
+  costs 180–260 s, because every point is projected (`--elim_switch 0`), against about 117 s for the LU. So the gain
+  depends on how many update steps replace each Newton step. The planted case A below took 18 update steps for 5 Newton
+  steps, since its Jacobian's change is spread over all unknowns. The updates pay where the change sits in a few
+  directions, as at a nearly singular root, or where a trial costs well below a factorization. The stored runs point the
+  right way: every accepted full-step trial in the two logs has a simplified-correction ratio (max norm) far below 0.5,
+  9.3×10⁻¹⁵ to 1.9×10⁻⁶ in leg 10 and 1.6×10⁻²⁴ to 8.0×10⁻³ in AB1 (their `trial lam 1 ... accepted` lines). So the
+  factors at the previous iterate already contract strongly there, and each such step would start the updates.
+- **Checks** (`hp/od_broyden_check.py`, planted systems in mpmath at 1200 bits behind the octo-double interface; the
+  Mac, 2026-11-20). Every case passes, and each control fails only its own case:
+
+  | case | what | result |
+  |---|---|---|
+  | A | planted root, tol 1e-60, with and without | both converge, max\|z − z*\| 2.2e-88 and 2.7e-64 (bound 2.5e-60); 6 LUs against 1 with 18 updates |
+  | B | every trial against a dense Broyden iteration | 19 trials each, worst 2.3e-32 of the step (bound 1e-25) |
+  | C | a planted case that must refactor | refused at update 1, as the reference; converged, 2 LUs (7 without) |
+  | D | ElimO, three unknowns eliminated | both converge to the root; 6 LUs against 1 |
+  | G | with the strong chord; with the floor rule | 2 LUs against 6; ends by the floor rule after its own factors |
+  | E | the off path against the base branch's module | 9 configurations bit for bit |
+  | F | the A/B script's counts against the toy's calls; `--od_times` | 16 runs equal; its line counts every LU and changes no bit |
+
+  The controls: `--mutate=norank1` (the rank-one terms dropped) fails B, `norefuse` fails C, `bits` fails E, and
+  `count` and `deferred` fail F. `od_broyden_ab.py --mutate=dsame` fails its Delta test.
+- **The A/B on a Linux runner** (pending). Both arms run on one machine in one session, from the branch's worktree on
+  the same hpkernel build, and with `--od_times 1`. That option prints each corrector run's seconds split into its
+  factorizations, its trials' projections (on the chain a projection can cost more than an LU), their residuals and
+  solves, and the updates. The change is Python only, so any build with the octo-double kernel serves. The pass
+  criteria, fixed before the runs, are `od_broyden_ab.py`'s: (1) both attempts converge; (2) the same D, and |Δ_B − Δ_A|
+  ≤ 10⁻³⁰ with all eight parts summed; (3) B forms no more LUs in the attempt, counting the one it defers to the next
+  series in the D chain. The gain is the attempt's corrector seconds, with a deferred LU charged at A's median. The
+  error is |Δ_B − Δ_A|. The chain steps use `--a_rule step --a0` at the chain's own step length, so both arms reach the
+  same D whatever their polish leaves in the base. The arclength step reads AB1's series, and its polish ends at the
+  same point in both arms, so both start from the same prediction.
+
 ## Proposed README text
 
 Applied to the README by the coordinator on 2026-11-14 (its checks moved to the README with it). Drafted for the
