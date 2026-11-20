@@ -1182,6 +1182,21 @@ at D 225.13 moves Δ by −1.1×10⁻²⁰, so the rungs' lifts belong to the or
   `I1032-dh370/floor.log`). The stuck 5.17×10⁻³⁰ of leg 6's log is the re-seed's refinement at the leg's predicted
   point. What holds it there is still open. `--reseed_o_stop` ends both after one stalled correction from a fresh LU,
   where the default's further refactorings gain nothing.
+- **`--proj_o 1` in the chain, legs 7–10 near D 253–257** (dh370, #966; raw up to 7bca38e2 and the 09:21 #903 post).
+  `--proj_start pred --reseed_o_stop 1` throughout; legs 8 and 10 add `--proj_o 1`. Corrections per step, then the
+  corrector's seconds:
+
+  | leg | `--proj_o` | D | corrections | corrector s | ended by |
+  |---|---|---|---|---|---|
+  | 7 | off | 253.34–254.18 | 1, 2, 2 | 1111, 1666, 1416 | floor rule |
+  | 8 | on | 254.59–255.00 | 1, 1 | 1350, 1775 | floor rule |
+  | 9 | off | 255.40–256.18 | 2, 3, 3 | 1947, 2512, 2300 | floor rule |
+  | 10 | on | 256.53–256.85 | 2, 1 | 1537, 503 | tolerance (2×10⁻³⁴) |
+
+  Leg 10 is the first leg since leg 6 whose steps converge by the tolerance and not by the floor rule. Its re-seed
+  refinement ends at 2.8×10⁻³¹ and 9.9×10⁻³¹, against leg 9's 4×10⁻²⁷ to 4.7×10⁻²⁶. In leg 8 every `u0o` projection
+  was refused, while leg 10 accepts some (1 of 7, then 3 of 4). Each leg also changes D, so the table is not an A/B.
+  The chain keeps the flag from leg 10 on.
 
 ## Proposed README text
 
