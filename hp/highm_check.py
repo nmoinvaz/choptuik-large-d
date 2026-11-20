@@ -54,7 +54,8 @@ lift: a converged state (--start, default hp/data/lowD_states/lowDv_D3.7000_M80.
   counts, the series tails (lowD_dd.tails), the timings, the stored LU's bytes, the load average and the peak RSS of
   the process (run one M per process). A rerun skips an M already in --out.
 profile: at a state (--start, default the D = 3.7 state resampled to --M): seconds of a residual, of newton_mixed in
-  block storage (residual + Jacobian + LU + solve), of its Jacobian build and of the block factorization
+  block storage (residual + Jacobian + LU + solve), of its Jacobian build (the call less step_timing's residual, LU and
+  solve; lu_info's fill, a copy of the columns, is recorded apart, #1040) and of the block factorization
   (Solver.lu_info), and of the Jacobian build without the tau derivative (jac_mutate=1; the difference is the tau
   derivative's time; not with --no_dtau_split), --reps times, 2 threads; the LU's MB, the load and the peak RSS.
   --plan_tol / --hmax: a coarser Taylor plan for timing and memory at large M (the Jacobian's time is about proportional
@@ -92,6 +93,14 @@ def opts_of(argv):
 
 def peak_rss_mb():
     return lowD_dd.peak_rss_mb()
+
+
+def jacobian_seconds(s, wall):
+    """the Jacobian's seconds in the last newton_mixed call, which took `wall` seconds: the wall less step_timing's
+    residual, factorization and solve. In block storage lu_info's fill (step_timing's second entry) is only the copy
+    of the columns that multishoot forms before the staircase LU (#1040, step_timing_check.py)."""
+    tr, _, tf, ts = s.step_timing()
+    return wall - tr - tf - ts
 
 
 def source_for(M):
@@ -496,17 +505,18 @@ def lift(opts):
     s.set_segs(mm["segs"])
     t = time.time(); s.residual(zh, zl); t_res = time.time() - t
     t = time.time(); s.newton_mixed(zh, zl); t_nm = time.time() - t
-    nbytes, isblock, t_jac, t_fac = s.lu_info()
+    nbytes, isblock, t_fill, t_fac = s.lu_info()
+    t_jac = None if t_fill is None else jacobian_seconds(s, t_nm)
     t_nodtau = None
     if isblock and not opts.get("no_dtau_timing"):
-        s.newton_mixed(zh, zl, jac_mutate=1)
-        t_nodtau = s.lu_info()[2]
+        t = time.time(); s.newton_mixed(zh, zl, jac_mutate=1); t_nodtau = jacobian_seconds(s, time.time() - t)
     rec = dict(D=D, M=M, N=s.size, tag=tag, Delta=fin["Delta"], Delta_lo=fin["Delta_lo"], F=fin["F"], converged=True,
                start=os.path.basename(start), start_M=Mo, renoded=renoded, nodes=nodes, kt=m["kt"], kc=m["kc"], ks=m["ks"], tol_step=1e-30,
                hmax=0.05, steps=fin["steps"], steps_pass1=passes[0]["steps"] if len(passes) > 1 else None,
                its=[p["its"] for p in passes], tail_c=fin["tail_c"], tail_h=fin["tail_h"],
                t_its=[p.get("t_its") for p in passes], s_residual=round(t_res, 2), s_newton_step=round(t_nm, 2),
                s_jacobian=None if t_jac is None else round(t_jac, 2), s_factor=None if t_fac is None else round(t_fac, 2),
+               s_fill=None if t_fill is None else round(t_fill, 2),
                s_jacobian_no_dtau=None if t_nodtau is None else round(t_nodtau, 2), lu_mb=round(nbytes / 2 ** 20, 1),
                lu_block=isblock, load=lowD_dd.load_avg(), peak_rss_mb=peak_rss_mb(), threads=threads,
                wall=round(time.time() - t0, 1), jac="f64")
@@ -538,14 +548,16 @@ def profile(opts):
                steps=sum(len(g) - 1 for g in s.get_segs()), residual=[], newton_mixed=[], jac=[], factor=[])
     for _ in range(reps):
         t = time.time(); s.residual(zh, zl); out["residual"].append(round(time.time() - t, 2))
-        t = time.time(); s.newton_mixed(zh, zl, block=True); out["newton_mixed"].append(round(time.time() - t, 2))
-        _, _, tj, tf = s.lu_info()
-        out["jac"].append(round(tj, 2))
+        t = time.time(); s.newton_mixed(zh, zl, block=True); tw = time.time() - t
+        out["newton_mixed"].append(round(tw, 2))
+        _, _, tfill, tf = s.lu_info()
+        out["jac"].append(round(jacobian_seconds(s, tw), 2))
+        out.setdefault("fill", []).append(round(tfill, 2))
         out["factor"].append(round(tf, 2))
         # the same Jacobian without the tau derivative (Ctx::mutate 1): its time difference is the tau derivative's
         if not opts.get("no_dtau_split"):
-            s.newton_mixed(zh, zl, block=True, jac_mutate=1)
-            out.setdefault("jac_no_dtau", []).append(round(s.lu_info()[2], 2))
+            t = time.time(); s.newton_mixed(zh, zl, block=True, jac_mutate=1)
+            out.setdefault("jac_no_dtau", []).append(round(jacobian_seconds(s, time.time() - t), 2))
     out["lu_mb"] = round(s.lu_info()[0] / 2 ** 20, 1)
     out["load"] = lowD_dd.load_avg()
     out["peak_rss_mb"] = peak_rss_mb()
