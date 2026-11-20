@@ -13,7 +13,7 @@ far below double rounding. Differences of method, all exact in exact arithmetic:
   - the horizon series' periodic solves are a float64 LU refined with double-double residuals.
 
     python ell_ddm.py selftest [--mutate=slices|ops]
-        operators against DSSEll's float64 ones (1e-14), the Ozaki product against ddnp.matmul (1e-30 relative), and
+        operators against DSSEll's float64 ones (1e-14), the Ozaki product against ddnp.matmul (1e-28 relative), and
         dual-number derivatives against the analytic ones in double-double (1e-28); --mutate=slices (2 slices) and
         --mutate=ops (one harmonic off) must fail.
 References: Ozaki, Ogita, Oishi and Rump, Numer. Algorithms 59, 95 (2012) (error-free splitting of matrix products);
@@ -89,11 +89,17 @@ class Op:
         shp = X.shape
         Xh = X.h.reshape(-1, shp[-1]); Xl = X.l.reshape(-1, shp[-1])
         xs = _slices(Xh, Xl, axis=-1, n=self.n)
-        acc = None
-        for p in range(NSLICE):
-            for q in range(NSLICE - p):
+        acc = dd.R(xs[0] @ self.sl[0])                     # level 0, exact
+        if NSLICE > 1:
+            s, e = dd.two_sum(xs[0] @ self.sl[1], xs[1] @ self.sl[0])   # level 1 (about 2^-22 of level 0), exact
+            acc = dd.add(acc, dd.R(s, e))
+        rest = None                                          # levels >= 2 (2^-44 and below), summed in float64:
+        for p in range(NSLICE):                              # their rounding is about 2^-97 of the result
+            for q in range(max(0, 2 - p), NSLICE - p):
                 P = xs[p] @ self.sl[q]
-                acc = dd.R(P) if acc is None else dd.add(acc, dd.R(P))
+                rest = P if rest is None else rest + P
+        if rest is not None:
+            acc = dd.add_d(acc, rest)
         return dd.R(acc.h.reshape(shp[:-1] + (-1,)), acc.l.reshape(shp[:-1] + (-1,)))
 
 
@@ -510,9 +516,9 @@ def selftest():
     ref = dd.matmul(X, ops["Dm"])
     got = Op(ops["Dm"]).rmul(X)
     rel = float(np.max(np.abs((got.h - ref.h) + (got.l - ref.l)) / np.max(np.abs(ref.h), axis=1, keepdims=True)))
-    good = rel < 1e-30
-    print(f"selftest Ozaki product ({NSLICE} slices) vs ddnp.matmul: largest error {rel:.1e} of the row's largest entry (bar "
-          f"1e-30): {'OK' if good else 'BAD'}", flush=True)
+    good = rel < 1e-28
+    print(f"selftest Ozaki product ({NSLICE} slices, levels >= 2 summed in float64) vs ddnp.matmul: largest error {rel:.1e} "
+          f"of the row's largest entry (bar 1e-28): {'OK' if good else 'BAD'}", flush=True)
     ok &= good
     # dual numbers: f(u) = u^3 / (1 + u) - 2 u; its tangent against f'(u) t = ((2u^3 + 3u^2) / (1 + u)^2 - 2) t in dd
     u0 = dd.R(g.uniform(0.2, 2.0, (1, 5)))
