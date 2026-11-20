@@ -12,8 +12,8 @@
 //! removed (`Cfg { scale: false, blocks: false }`) differ by more than 1e-120 somewhere; a NaN planted in one output
 //! coefficient fails `compare`, and one planted in an input makes `Stats::max_frac` infinite. Empty factors, in
 //! either order, give zeros in both products. The edge cases (`check_edges`) have the controls
-//! `--mutate zero_lane`, `--mutate e2_plain` and `--mutate e2_split_always` of hp/fastmul_bench, each of which
-//! must make the run exit 1, and `fastmul_planted` runs all three.
+//! `--mutate zero_lane`, `--mutate e2_plain` and `--mutate e2_split_always` of hp/fastmul_bench, and
+//! `check_digits` has `--mutate digit`; each must make the run exit 1, and `fastmul_planted` runs all four.
 //!
 //! Planted cases (8 lanes, random signs, all eight parts random, each lane its own offsets):
 //! - `flat`: |a_i| ~ 2^(-0.7 i) and |b_i| ~ 2^(-0.4 i), each times 2^(+-4) at random (a series of the chain's kind);
@@ -25,6 +25,9 @@ use crate::fastmul::{mullow, mullow_naive, Cfg, Stats};
 use multidouble::native::{ODotAcc, OV};
 use multidouble::od::OD;
 use std::time::Instant;
+
+/// the control of `check_digits` (its argument; fastmul's own controls are Cfg::mutate's): one digit one off
+pub const MUT_DIGIT: u8 = 3;
 
 struct Rng(u64);
 
@@ -392,7 +395,7 @@ pub fn bench(name: &str, n: usize, reps: usize, inner: usize) {
 }
 
 /// digits8 against the value: sum_r d_r 2^(16 r) - x 2^k per lane, in octo-double
-pub fn check_digits() -> bool {
+pub fn check_digits(mutate: u8) -> bool {
     let mut r = Rng(5);
     let mut worst = 0.0f64;
     for it in 0..2000 {
@@ -404,7 +407,11 @@ pub fn check_digits() -> bool {
         let k: [i32; 8] = std::array::from_fn(|_| w - e - 1 - (it % 7) as i32);
         let mut dv = vec![multidouble::native::V8::zero(); t];
         crate::fastmul::digits8(&x, &k, t, &mut dv);
-        let d: Vec<[f64; 8]> = dv.iter().map(|v| v.to_array()).collect();
+        let mut d: Vec<[f64; 8]> = dv.iter().map(|v| v.to_array()).collect();
+        if mutate == MUT_DIGIT && it == 0 {
+            // the control: digit 3 of lane 2 one off, an error of 2^48 in a finite lane
+            d[3][2] += 1.0;
+        }
         for l in 0..8 {
             let mut acc = OD::ZERO;
             for (q, dq) in d.iter().enumerate() {
@@ -416,7 +423,7 @@ pub fn check_digits() -> bool {
             worst = if diff.is_finite() { worst.max(diff) } else { f64::INFINITY };
         }
     }
-    println!("digits8: worst |sum d 2^16r - x 2^k| = {worst:.3e} (pass <= 8)");
+    println!("digits8 (mutate {mutate}): worst |sum d 2^16r - x 2^k| = {worst:.3e} (pass <= 8)");
     worst <= 8.0
 }
 
@@ -543,20 +550,24 @@ pub fn check_dumps(dir: &str, reps: usize) -> bool {
 #[allow(dead_code)] // hp/fastmul_bench's
 pub fn run(args: &[String]) -> i32 {
     let reps: usize = args.iter().position(|a| a == "--reps").map(|i| args[i + 1].parse().unwrap()).unwrap_or(7);
-    // --mutate zero_lane | e2_plain | e2_split_always: check_edges under that control, which must then fail
-    // (exit 1)
+    // --mutate zero_lane | e2_plain | e2_split_always | digit: check_edges or check_digits under that control,
+    // which must then fail (exit 1)
     let mutate = match args.iter().position(|a| a == "--mutate").map(|i| args[i + 1].as_str()) {
         None => 0,
         Some("zero_lane") => crate::fastmul::MUT_ZERO_LANE,
         Some("e2_plain") => crate::fastmul::MUT_E2_PLAIN,
+        Some("digit") => MUT_DIGIT,
         Some("e2_split_always") => crate::fastmul::MUT_E2_SPLIT_ALWAYS,
-        Some(m) => panic!("--mutate {m}: zero_lane, e2_plain or e2_split_always"),
+        Some(m) => {
+            eprintln!("--mutate {m}: zero_lane, e2_plain, e2_split_always or digit");
+            return 2;
+        }
     };
     if let Some(i) = args.iter().position(|a| a == "--dump") {
         return if check_dumps(&args[i + 1], reps.min(3)) { 0 } else { 1 };
     }
     let ok = args.iter().any(|a| a == "--no-check")
-        || check_digits() & check_unit() & check_empty() & check_edges(mutate) & check();
+        || check_digits(mutate) & check_unit() & check_empty() & check_edges(mutate) & check();
     if !args.iter().any(|a| a == "--no-bench") {
         for &n in &[128usize, 251, 512] {
             let inner = (2_000_000 / (n * n)).max(1);
@@ -590,7 +601,8 @@ pub fn run(args: &[String]) -> i32 {
 #[cfg(test)]
 #[test]
 fn fastmul_planted() {
-    assert!(check_digits(), "digits8");
+    assert!(check_digits(0), "digits8");
+    assert!(!check_digits(MUT_DIGIT), "the digit control did not fail");
     assert!(check_unit(), "products by one coefficient");
     assert!(check_empty(), "empty factors");
     assert!(check_edges(0), "edge cases");
