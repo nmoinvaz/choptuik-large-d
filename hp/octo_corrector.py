@@ -17,7 +17,8 @@ used, so that a module importing this one runs on the older packages the runners
     python3 octo_corrector.py wall RAW PRED.npz [--threads 3] [--qd 0] [--F_max 1e-36] [--mutate_offset qd]
         [--mutate 10] [--out PREFIX] [--reseed_o 0] [--held_o 0]
     (planted and wall take --switch S, ElimO's projection switch, 1e-15 by default; anm_run.py --elim_switch, #700;
-    and --full_drop F, newton_od's full_drop with either test, 0 by default; anm_run.py --od_full_drop, #709, #777)
+    and --full_drop F, newton_od's full_drop with either test, 0 by default; anm_run.py --od_full_drop, #709, #777;
+    and --broyden 1, newton_od's Broyden updates, with --accept natural; anm_run.py --od_broyden)
     python3 octo_corrector.py horizon RAW STATE.npz [--threads 3] [--steps 3] [--mutate_h sign]
     python3 octo_corrector.py digits [--mutate 2]
 
@@ -246,6 +247,35 @@ DROP_MUT = {"floor1": False, "noline": False}
 # newton_od_toy.py's control of a failed projection's reason (#824): 'nowhy' omits newton_od's line. proj_check.py's
 # control of ElimO's octo-double projection (#1032): 'o_nobar' accepts it whatever it ends at.
 PROJ_MUT = {"nowhy": False, "o_nobar": False}
+# od_broyden_check.py's controls of newton_od's Broyden updates: 'norank1' drops their rank-one terms, so each update
+# step is the chord's simplified Newton step through the last factors; 'norefuse' takes every update step, whatever
+# its contraction
+QN_MUT = {"norank1": False, "norefuse": False}
+QN_PREC = 160           # bits of the updates' scalars, formed from double-double inner products
+QN_TINY = 1e-290        # |s|^2 below this leaves double-double's range (its lower part subnormal): factors anew
+
+
+def _qn_dot(a, b):
+    """<a, b> of two eight-part vectors from their leading two parts in double-double (multidouble's dd_dot, to about
+    (n / 8 + 12) 2^-106 of sum |a_i b_i|), as an mpf at QN_PREC bits"""
+    import mpmath as mp
+    from multidouble import dd_dot
+    h, lo = dd_dot(*(np.ascontiguousarray(np.asarray(p, dtype=float)) for p in (a[0], a[1], b[0], b[1])))
+    with mp.workprec(QN_PREC):
+        return mp.mpf(float(h)) + mp.mpf(float(lo))
+
+
+def _qn_axpy(c, x, y=None):
+    """y + c x in octo-double (y = 0 when None), the mpf c applied as its double-double rounding, c_hi x then c_lo x"""
+    import mpmath as mp
+    from multidouble import od_axpy
+    with mp.workprec(QN_PREC):
+        ch = float(c)
+        cl = float(c - ch)
+    x = o8(x)
+    y = o8([np.zeros(len(x[0]))] * 8) if y is None else o8(y)
+    r = o8(od_axpy(ch, *x, *y))
+    return o8(od_axpy(cl, *x, *r)) if cl != 0.0 else r
 
 
 def junk_subspace_o(s, w, delta_max=1e-2, iters=6, seed=0):
@@ -276,7 +306,8 @@ def junk_subspace_o(s, w, delta_max=1e-2, iters=6, seed=0):
 
 def newton_od(s, z, tol=1e-40, it_max=12, max_halvings=8, verbose=True, mutate=0, junk_w=0, delta_max=1e-2, tol_dz=1e-45,
               lam_stall=0.0, on_first=None, scale_c=None, trace=None, accept="own", strong_chord=0, chord_it=10,
-              full_drop=0.0, abort_theta=0.0, abort_it=1, weak_first=0, floor_delta=0.0, floor_F=1e-30, floor_dz=1e-30):
+              full_drop=0.0, abort_theta=0.0, abort_it=1, weak_first=0, floor_delta=0.0, floor_F=1e-30, floor_dz=1e-30,
+              broyden=0, broyden_theta=0.5, broyden_max=20, info=None, times=0):
     """Newton in octo-double from the eight-part state z on s (PinnedO, or ElimO around it): newton_qd's mode 'full'
     one level up (hpkernel.driver.newton_qd, its acceptance rule). A trial z + lam dz (lam = 1, 1/2, ...,
     2^-max_halvings) is accepted when the Newton correction there, with its own Jacobian, is smaller than dz (max norms
@@ -333,9 +364,37 @@ def newton_od(s, z, tol=1e-40, it_max=12, max_halvings=8, verbose=True, mutate=0
     floor_delta=B > 0 (#966): the iteration also ends converged, above tol, at an iterate whose own Newton correction
     has |dDelta| <= B and max |dz| <= floor_dz, with max |F| <= floor_F (floor_accept). Delta's first-order error is
     then |dDelta|. At D 251.2845 a state at max |F| 3.5e-35 had dDelta 3.1e-39, and its re-solve at a lower tol moved
-    Delta by that amount (notes/LARGE_D_WALL.md). 0 (the default) leaves the iteration as it was."""
+    Delta by that amount (notes/LARGE_D_WALL.md). 0 (the default) leaves the iteration as it was.
+
+    broyden=1 (with accept="natural", junk_w 0 and no scale_c): Broyden's good updates between factorizations (C. G.
+    Broyden, Math. Comp. 19 (1965) 577), in the error-oriented form QNERR (Deuflhard, Newton Methods for Nonlinear
+    Problems, Springer 2004, ch. 2) as multisolver's newton_quasi (quasi.rs, 0.2.1) applies it. After a full-step trial
+    (lam 1, no direction removed) accepted with |db| / |dz| < broyden_theta (2-norms, db its simplified correction
+    through the factors at z), no Jacobian is formed there: the next step is s = v / (1 - alpha), v the simplified
+    correction, alpha = <s_k, v> / |s_k|^2, and at its point v is the simplified correction through the same factors
+    followed by the updates v += s_i <s_(i-1), v> / |s_(i-1)|^2. An update step is taken when Theta = |v| / |s| <
+    broyden_theta, or when its max |F| <= tol. Refused, the factors are formed at the iterate it started from and that
+    iteration's trials run as without the updates. Each update step costs one projection, one residual and one solve. On
+    ElimO the simplified correction includes the projection's displacement, as the natural test's does, so the updates
+    solve F(P(z)) + J_r (z - P(z)) = 0 with J_r the last factors, whose root near the solution is the projected
+    system's. The factors are formed again at the new iterate after broyden_max updates, when 1 / |s|^2 is not finite,
+    and with floor_delta > 0 at an iterate with max |F| <= floor_F, so that the floor rule reads its own Newton
+    correction. A trial (or the strong chord's point) with max |F| <= tol ends the iteration converged without the
+    factors there: a caller that needs them forms them (anm_run.base_lu_o). The scalars are formed in QN_PREC bits from
+    double-double inner products of the leading two parts (_qn_dot) and applied in octo-double as double-double numbers
+    (_qn_axpy). info (a dict) receives the factorizations formed (lus), the update steps taken (quasi) and refused
+    (refused). 0 (the default) leaves the iteration as it was.
+
+    times=1 (anm_run.py --od_times 1): the line "od times: ..." at the end, the seconds of the factorizations (newton_o;
+    on ElimO the start's and the strong chord's include their point's projection), of the trials' projections, of their
+    residuals and solves, and of the updates' vector operations (_qn_dot, _qn_axpy), with their counts. The seconds are
+    only measured and printed. 0 (the default) prints nothing."""
     import time
     from multidouble import od_axpy
+    if broyden and (accept != "natural" or junk_w or scale_c is not None or trace is not None):
+        raise ValueError("newton_od: broyden needs accept='natural', junk_w 0, no scale_c and no trace")
+    if broyden and not 0.0 < broyden_theta <= 0.5:
+        raise ValueError(f"newton_od: broyden_theta must lie in (0, 1/2], not {broyden_theta}")
     z = o8(z)
     eq = scale_c is not None
     if eq:
@@ -344,7 +403,17 @@ def newton_od(s, z, tol=1e-40, it_max=12, max_halvings=8, verbose=True, mutate=0
     def size(d, scaled=eq):
         """the max norm the test compares: of the leading part, or of D_c^-1 times it"""
         return float(np.abs(np.asarray(d[0]) / scale_c).max()) if scaled else float(np.abs(d[0]).max())
-    st = s.newton_o(z, mutate=mutate)
+    tm = dict(lu=0.0, n_lu=0, proj=0.0, n_proj=0, rs=0.0, n_rs=0, upd=0.0)     # times: seconds and counts
+
+    def timed(key, f, *args, **kw):
+        """f(*args, **kw), its seconds added to tm[key] and its count to tm['n_' + key]"""
+        t_ = time.time()
+        try:
+            return f(*args, **kw)
+        finally:
+            tm[key] += time.time() - t_
+            tm["n_" + key] += 1
+    st = timed("lu", s.newton_o, z, mutate=mutate)
     hist = []
     V = None
     if junk_w:
@@ -368,22 +437,170 @@ def newton_od(s, z, tol=1e-40, it_max=12, max_halvings=8, verbose=True, mutate=0
             return d
         c = V @ (V.T @ (np.asarray(d[0]) + np.asarray(d[1])))
         return o8(od_axpy(-1.0, np.ascontiguousarray(c), *([zero8] * 7), *o8(d)))
+    cnt = dict(lus=1, quasi=0, refused=0)     # factorizations formed (the start's above), update steps taken, refused
+    qn = None           # broyden: the updates' steps since the factors, 1 / |s_i|^2, the next step, the iterate's max |F|
+    here = None         # broyden: the iterate's projection and displacement, for factors formed there later
+    qn_ref = None       # broyden: the refused update step, recorded with the Newton step that follows it
+    elim0 = isinstance(s, ElimO)
+    base0 = s.so if elim0 else s
+    if broyden:
+        import mpmath as mp
+
+    def fin(conv):
+        """the return value, the counts given to info, and with broyden their line"""
+        if info is not None:
+            info.update(cnt)
+        if broyden and verbose:
+            print(f"  od Broyden: {cnt['lus']} factorizations, {cnt['quasi']} update steps, {cnt['refused']} refused",
+                  flush=True)
+        if times and verbose:
+            print(f"  od times: {tm['n_lu']} factorizations {tm['lu']:.1f} s, {tm['n_proj']} trial projections "
+                  f"{tm['proj']:.1f} s, {tm['n_rs']} trial residuals and solves {tm['rs']:.1f} s, updates {tm['upd']:.1f} s",
+                  flush=True)
+        return z, hist, conv
+
+    def factor_at(h):
+        """broyden: the factors at an iterate already projected (h: its projection and displacement) and its Newton
+        step from the unprojected iterate, as the natural test forms them at an accepted trial; ValueError when not
+        finite"""
+        cnt["lus"] += 1
+        s0 = timed("lu", base0.newton_o, h[0], mutate=mutate)
+        sh = (o8(od_axpy(1.0, *h[1], *s0[0])), *s0[1:])
+        if not (np.isfinite(sh[0][0]).all() and np.isfinite(sh[1]).all()):
+            raise ValueError("the factors at the iterate are not finite")
+        return sh
+
+    def qn_line(it, rec, tail):
+        if verbose:
+            print(f"  on {it}: |F| {rec['F']:.2e} -> {rec['F_new']:.2e}, |dz| {rec['dz']:.2e} -> {rec['dz_new']:.2e}, lam {rec['lam']:g}, "
+                  f"dDelta {rec['dDelta']:+.2e}, piv {rec['piv'][0]:.1e}..{rec['piv'][1]:.1e}, {rec['seconds']} s; {tail}",
+                  flush=True)
+
+    def qn_begin(d, db, ft, lam):
+        """broyden, at an accepted natural trial z + lam d with simplified correction db and max |F| ft: 'converged'
+        when ft <= tol; the updates' state when the step is full (lam 1, no direction removed), the floor rule cannot
+        apply there and |db| / |d| < broyden_theta (2-norms); else None (the factors are formed there)"""
+        if ft <= tol:
+            return "converged"
+        if lam != 1.0 or not (V is None or V.shape[1] == 0) or (floor_delta > 0 and ft <= floor_F):
+            return None
+        t_ = time.time()
+        with mp.workprec(QN_PREC):
+            n2 = _qn_dot(d, d)
+            if not n2 > QN_TINY:
+                return None
+            th2 = float(mp.sqrt(_qn_dot(db, db) / n2))
+            if not th2 < broyden_theta:
+                return None
+            inv0 = 1 / n2
+            c = 1 / (1 - _qn_dot(d, db) * inv0)
+        nxt = o8(db) if QN_MUT["norank1"] else _qn_axpy(c, db)
+        tm["upd"] += time.time() - t_
+        return dict(S=[o8(d)], inv=[inv0], next=nxt, F=ft, piv=[st[3], st[4]], theta2=th2)
 
     for it in range(it_max + 1):
         if it == 1 and weak_V is not None:
             V = V_base          # from the second step on, the weak directions move
+        if qn is not None:
+            # broyden: the update step s = v / (1 - alpha) from z, through the factors of the last factorization
+            if it == it_max:
+                break
+            nf, t0, sk = qn["F"], time.time(), qn["next"]
+            zt = o8(od_axpy(1.0, *sk, *z))
+            nwhy = len(s.why) if elim0 else 0
+            try:
+                ztp = timed("proj", s.project, zt) if elim0 else zt
+                disp = o8(od_axpy(-1.0, *zt, *ztp))
+                t_ = time.time()
+                Ft = o8(base0.residual_o(ztp, mutate=mutate))
+                v = o8(od_axpy(-1.0, *o8(s.olu_solve([np.ascontiguousarray(q) for q in Ft])), *disp))
+                tm["rs"] += time.time() - t_
+                tm["n_rs"] += 1
+                good = bool(np.isfinite(np.asarray(v[0])).all() and np.isfinite(np.asarray(Ft[0])).all())
+            except ValueError:
+                good = False
+            ft, Theta = (omax(Ft) if good else float("nan")), float("inf")
+            t_ = time.time()
+            with mp.workprec(QN_PREC):
+                n2 = _qn_dot(sk, sk)
+                S, inv = qn["S"] + [sk], qn["inv"] + [1 / n2 if n2 > QN_TINY else mp.inf]
+                if good:
+                    if not QN_MUT["norank1"]:
+                        for i in range(1, len(S)):          # J_(k+1)^-1 = (I + s_i s_(i-1)^T / |s_(i-1)|^2) ... J_r^-1
+                            v = _qn_axpy(_qn_dot(S[i - 1], v) * inv[i - 1], S[i], v)
+                    Theta = float(mp.sqrt(_qn_dot(v, v) * inv[-1])) if mp.isfinite(inv[-1]) else float("inf")
+            tm["upd"] += time.time() - t_
+            ok = good and (Theta < broyden_theta or ft <= tol or QN_MUT["norefuse"])
+            if verbose:
+                print(f"    on {it} update trial {len(S) - 1}: max|F| {ft:.2e}; Theta = |v| / |s| = {Theta:.3e} (bound "
+                      f"{broyden_theta:.3f}); {'accepted' if ok else 'refused'}, {round(time.time() - t0, 2)} s", flush=True)
+            _why(s, it, 1.0, nwhy, verbose)
+            if ok:
+                cnt["quasi"] += 1
+                z, here = zt, (ztp, disp)
+                rec = dict(it=it, F=nf, dz=float(np.abs(sk[0]).max()), dDelta=float(sk[0][-1] + sk[1][-1]), piv=qn["piv"],
+                           mode="quasi", lam=1.0, F_new=ft, update=len(S) - 1, Theta=Theta)
+                if ft <= tol:
+                    rec.update(dz_new=float("nan"), seconds=round(time.time() - t0, 2))
+                    hist.append(rec)
+                    qn_line(it, rec, f"update {len(S) - 1}, Theta {Theta:.3e}, quasi-Newton")
+                    if verbose:
+                        print(f"  on {it + 1}: |F| {ft:.2e} converged, Delta {z[0][-1]:.17f} {z[1][-1]:+.4e}", flush=True)
+                    hist.append(dict(it=it + 1, F=ft, dz=float("nan"), mode="quasi"))
+                    return fin(True)
+                why = ("max |F| at most floor_F (the floor rule)" if floor_delta > 0 and ft <= floor_F else
+                       f"{len(S) - 1} updates" if len(S) > broyden_max else
+                       "|s|^2 out of range" if not mp.isfinite(inv[-1]) else "")
+                if not why:
+                    t_ = time.time()
+                    with mp.workprec(QN_PREC):
+                        c = 1 / (1 - _qn_dot(S[-1], v) * inv[-1])
+                    nxt = v if QN_MUT["norank1"] else _qn_axpy(c, v)
+                    tm["upd"] += time.time() - t_
+                    qn = dict(qn, S=S, inv=inv, next=nxt, F=ft)
+                    rec.update(dz_new=float(np.abs(nxt[0]).max()), seconds=round(time.time() - t0, 2))
+                    hist.append(rec)
+                    qn_line(it, rec, f"update {len(S) - 1}, Theta {Theta:.3e}, quasi-Newton")
+                    small = 0
+                    continue
+                # the updates end at the new iterate: its factors, and the next step is Newton's
+                qn = None
+                try:
+                    st = factor_at(here)
+                except ValueError:
+                    rec.update(dz_new=float("nan"), seconds=round(time.time() - t0, 2))
+                    hist.append(rec)
+                    if verbose:
+                        print(f"  on {it}: the factors at the update step's point are not finite, stopping", flush=True)
+                    return fin(False)
+                rec.update(dz_new=float(np.abs(st[0][0]).max()), piv=[st[3], st[4]], refactor=why,
+                           seconds=round(time.time() - t0, 2))
+                hist.append(rec)
+                qn_line(it, rec, f"update {len(S) - 1}, Theta {Theta:.3e}, quasi-Newton, factors formed again ({why})")
+                small = 0
+                continue
+            # refused: the factors at z, where the step started, and this iteration's trials as without the updates
+            cnt["refused"] += 1
+            qn_ref, qn = dict(update=len(S) - 1, Theta=Theta, F=ft), None
+            try:
+                st = factor_at(here)
+            except ValueError:
+                hist.append(dict(it=it, F=nf, mode="quasi", lam=0.0, quasi_refused=qn_ref))
+                if verbose:
+                    print(f"  on {it}: the factors at the iterate are not finite, stopping", flush=True)
+                return fin(False)
         nf = omax(st[1:3])
         if V is not None and V.shape[1] and float(np.abs(proj(st[0])[0]).max()) < tol_dz:
             if verbose:
                 print(f"  on {it}: projected correction below {tol_dz:.0e} with the junk frozen: converged at |F| {nf:.2e}, "
                       f"Delta {z[0][-1]:.17f} {z[1][-1]:+.4e}", flush=True)
             hist.append(dict(it=it, F=nf, dz=float(np.abs(proj(st[0])[0]).max()), mode="sel", junk_floor=True))
-            return z, hist, True
+            return fin(True)
         if nf <= tol:
             if verbose:
                 print(f"  on {it}: |F| {nf:.2e} converged, Delta {z[0][-1]:.17f} {z[1][-1]:+.4e}", flush=True)
             hist.append(dict(it=it, F=nf, dz=float(np.abs(st[0][0]).max()), mode="full"))
-            return z, hist, True
+            return fin(True)
         dzf, dDf = float(np.abs(st[0][0]).max()), float(st[0][0][-1] + st[0][1][-1])
         if floor_accept(nf, dzf, dDf, floor_delta, floor_F, floor_dz):
             if verbose:
@@ -391,7 +608,7 @@ def newton_od(s, z, tol=1e-40, it_max=12, max_halvings=8, verbose=True, mutate=0
                       f"converged by the floor rule (|dDelta| <= {floor_delta:.0e}), Delta {z[0][-1]:.17f} "
                       f"{z[1][-1]:+.4e}", flush=True)
             hist.append(dict(it=it, F=nf, dz=dzf, dDelta=dDf, mode="full", floor=True))
-            return z, hist, True
+            return fin(True)
         if it == it_max:
             break
         if it == 0 and weak_V is not None:
@@ -405,6 +622,8 @@ def newton_od(s, z, tol=1e-40, it_max=12, max_halvings=8, verbose=True, mutate=0
                    mode="sel" if V is not None else "full")
         if eq:
             rec.update(dz_eq=nd, trials=[])
+        if qn_ref is not None:
+            rec["quasi_refused"], qn_ref = qn_ref, None
         if strong_chord and it == 0:
             # #528/#674: keep the first step's weak coordinates and solve the strong rows by the chord through the
             # start's LU (chord_strong). With the strong rows solved the weak equations are affine there (3S = T), and
@@ -427,11 +646,25 @@ def newton_od(s, z, tol=1e-40, it_max=12, max_halvings=8, verbose=True, mutate=0
                 print(f"  on 0: strong chord ({strong_chord} weak directions), {len(chord['steps'])} steps after the full "
                       f"first step; theta at its point {theta:.3e} (bound 0.750): {'accepted' if ok_c else 'refused'}, "
                       f"{round(time.time() - t0, 2)} s", flush=True)
+            if ok_c and broyden and omax(Fz) <= tol:
+                # broyden: the chord's point is converged, so no factors are formed there
+                z = zc
+                rec.update(lam=1.0, F_new=omax(Fz), dz_new=float("nan"), seconds=round(time.time() - t0, 2))
+                hist.append(rec)
+                if verbose:
+                    print(f"  on {it}: |F| {nf:.2e} -> {rec['F_new']:.2e}, |dz| {rec['dz']:.2e} -> nan, lam 1, dDelta "
+                          f"{rec['dDelta']:+.2e}, piv {st[3]:.1e}..{st[4]:.1e}, {rec['seconds']} s; the chord's point at "
+                          f"tol, no factors there", flush=True)
+                    print(f"  on {it + 1}: |F| {rec['F_new']:.2e} converged, Delta {z[0][-1]:.17f} {z[1][-1]:+.4e}",
+                          flush=True)
+                hist.append(dict(it=it + 1, F=rec["F_new"], dz=float("nan"), mode="full"))
+                return fin(True)
             refactored = False
             if ok_c:
                 refactored = True
                 try:
-                    stt = s.newton_o(zc, mutate=mutate)
+                    cnt["lus"] += 1
+                    stt = timed("lu", s.newton_o, zc, mutate=mutate)
                     ok_c = bool(np.isfinite(stt[0][0]).all() and np.isfinite(stt[1]).all())
                 except ValueError:
                     ok_c = False
@@ -447,9 +680,12 @@ def newton_od(s, z, tol=1e-40, it_max=12, max_halvings=8, verbose=True, mutate=0
             # refused: unless newton_o ran at zc (and failed), J0's LU is still the one factored at z, and the trial
             # loop below runs as without the chord; otherwise it is factored at z again
             if refactored:
-                st = s.newton_o(z, mutate=mutate)
+                cnt["lus"] += 1
+                st = timed("lu", s.newton_o, z, mutate=mutate)
         lam = 1.0
+        qn_new = None
         for _ in range(max_halvings + 1):
+            qn_new = None
             zt = o8(od_axpy(lam, *d, *z))
             t1 = time.time()
             nwhy = len(s.why) if isinstance(s, ElimO) else 0
@@ -459,10 +695,13 @@ def newton_od(s, z, tol=1e-40, it_max=12, max_halvings=8, verbose=True, mutate=0
                 elim = isinstance(s, ElimO)
                 base = s.so if elim else s
                 try:
-                    ztp = s.project(zt) if elim else zt
+                    ztp = timed("proj", s.project, zt) if elim else zt
                     disp = o8(od_axpy(-1.0, *zt, *ztp))
+                    t_ = time.time()
                     Ft = o8(base.residual_o(ztp, mutate=mutate))
                     xb = o8(s.olu_solve([np.ascontiguousarray(q) for q in Ft]))
+                    tm["rs"] += time.time() - t_
+                    tm["n_rs"] += 1
                     db = o8(od_axpy(-1.0, *xb, *disp))
                     good = bool(np.isfinite(np.asarray(db[0])).all() and np.isfinite(np.asarray(Ft[0])).all())
                 except ValueError:
@@ -487,12 +726,15 @@ def newton_od(s, z, tol=1e-40, it_max=12, max_halvings=8, verbose=True, mutate=0
                     if verbose:
                         print(f"  on {it}: theta at lam 1 {theta:.3e} above abort_theta {abort_theta:g}: attempt refused at "
                               f"iteration {it}", flush=True)
-                    return z, hist, False
-                if ok:
+                    return fin(False)
+                if ok and broyden:
+                    qn_new = qn_begin(d, db, ft, lam)
+                if ok and qn_new is None:
                     # the Jacobian at the accepted point, once, for the next step (ElimO.newton_o without a second
                     # projection)
                     try:
-                        s0 = base.newton_o(ztp, mutate=mutate)
+                        cnt["lus"] += 1
+                        s0 = timed("lu", base.newton_o, ztp, mutate=mutate)
                         stt = (o8(od_axpy(1.0, *disp, *s0[0])), *s0[1:])
                         ok = bool(np.isfinite(stt[0][0]).all() and np.isfinite(stt[1]).all())
                     except ValueError:
@@ -503,7 +745,8 @@ def newton_od(s, z, tol=1e-40, it_max=12, max_halvings=8, verbose=True, mutate=0
                 lam *= 0.5
                 continue
             try:
-                stt = s.newton_o(zt, mutate=mutate)
+                cnt["lus"] += 1
+                stt = timed("lu", s.newton_o, zt, mutate=mutate)
                 good = np.isfinite(stt[0][0]).all() and np.isfinite(stt[1]).all()
             except ValueError:          # a non-finite or singular Jacobian at the trial point
                 good = False
@@ -542,7 +785,25 @@ def newton_od(s, z, tol=1e-40, it_max=12, max_halvings=8, verbose=True, mutate=0
             hist.append(rec)
             if verbose:
                 print(f"  on {it}: |F| {nf:.2e}, |dz| {rec['dz']:.2e}: no trial step accepted, stopping", flush=True)
-            return z, hist, False
+            return fin(False)
+        if qn_new is not None:
+            # broyden: no factors at the accepted point; the iteration ends there, or the updates begin
+            z, here = zt, (ztp, disp)
+            rec.update(lam=lam, F_new=ft, seconds=round(time.time() - t0, 2))
+            if qn_new == "converged":
+                rec["dz_new"] = float("nan")
+                hist.append(rec)
+                qn_line(it, rec, "at tol, no factors there")
+                if verbose:
+                    print(f"  on {it + 1}: |F| {ft:.2e} converged, Delta {z[0][-1]:.17f} {z[1][-1]:+.4e}", flush=True)
+                hist.append(dict(it=it + 1, F=ft, dz=float("nan"), mode="full"))
+                return fin(True)
+            qn = qn_new
+            rec.update(dz_new=float(np.abs(qn["next"][0]).max()), theta2=qn["theta2"])
+            hist.append(rec)
+            qn_line(it, rec, f"updates begin (|db| / |dz| {qn['theta2']:.3e}), no factors there")
+            small = 0
+            continue
         z, st = zt, stt
         rec.update(lam=lam, F_new=omax(st[1:3]), dz_new=float(np.abs(proj(st[0])[0]).max()), seconds=round(time.time() - t0, 2))
         if eq:
@@ -556,8 +817,17 @@ def newton_od(s, z, tol=1e-40, it_max=12, max_halvings=8, verbose=True, mutate=0
         if small >= 2:
             if verbose:
                 print(f"  on {it}: lam at or below {lam_stall:g} twice in a row, stopping (stalled)", flush=True)
-            return z, hist, False
-    return z, hist, False
+            return fin(False)
+    return fin(False)
+
+
+def od_qn_kw(opt):
+    """newton_od's arguments for anm_run.py --od_broyden 1 (its counts are printed in the line "od Broyden: ...") and
+    --od_times 1 (the line "od times: ..."); {} when both are off, so that the call is the one without them"""
+    kw = {"times": 1} if opt.get("od_times") else {}
+    if opt.get("od_broyden"):
+        kw.update(broyden=1, broyden_theta=opt["od_broyden_theta"], broyden_max=opt["od_broyden_max"])
+    return kw
 
 
 def _why(s, it, lam, n0, verbose):
@@ -743,7 +1013,7 @@ def _run_od(so, rs, z8, opt, on_first=None):
         z, hist, conv = newton_od(el, z8, tol=opt["tol"], it_max=opt["it_max"], mutate=opt["mutate"],
                                   junk_w=opt.get("junk", 0), accept=opt.get("accept", "own"),
                                   strong_chord=int(opt.get("strong", 0)), full_drop=float(opt.get("full_drop", 0.0)),
-                                  on_first=on_first)
+                                  on_first=on_first, **({"broyden": 1} if opt.get("broyden") else {}))
     except _Dz0Saved as e:
         e.counts = dict(el.counts)
         raise
@@ -833,7 +1103,7 @@ def planted(argv):
     raw, path = argv[0], argv[1]
     opt = _parse(argv[2:], dict(threads=3, rel=1e-12, seed=1, mutate_offset="", mutate=0, it_max=12, qd=1, tol=1e-40, out="",
                                 Delta_ref="", last=0, od=1, accept="own", strong=0, switch=1e-15, full_drop=0.0, reseed_o=0,
-                                reseed_start="ladder", save_dz0="", read="auto", held="auto", plan="auto"))
+                                reseed_start="ladder", save_dz0="", read="auto", held="auto", plan="auto", broyden=0))
     # the truth and its system: an eight-part state's chain's own system, a four-part state's as before (#837)
     z4, meta, (s, sp, sq, so), info = truth_system(raw, path, threads=opt["threads"], read=opt["read"],
                                                    held=opt["held"], plan=opt["plan"],
@@ -931,7 +1201,8 @@ def wall(argv):
     from reseed import Reseeder
     raw, path = argv[0], argv[1]
     opt = _parse(argv[2:], dict(threads=3, mutate_offset="", mutate=0, it_max=12, qd=0, tol=1e-40, out="", F_max=1e-36, junk=0,
-                                reseed_o=0, held_o=0, switch=1e-15, accept="own", full_drop=0.0, reseed_start="ladder"))
+                                reseed_o=0, held_o=0, switch=1e-15, accept="own", full_drop=0.0, reseed_start="ladder",
+                                broyden=0))
     z4, meta = load_q(os.path.join(raw, path))
     D = D_of(meta)
     rs = Reseeder(meta, D, threads=opt["threads"], qd=True, od=opt["reseed_o"], qd_start=opt["reseed_start"])
