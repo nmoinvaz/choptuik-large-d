@@ -12,6 +12,7 @@ reference). Checks at the root lam_A:
   ref: sign of det(M + W_B) at lam_A -/+ d_ref (1e-6): opposite signs put the B root within d_ref of the A root;
   rot: at both ends, the sign of det(M + W_A) from LU(Q (M + W_A)) sign(det Q) for 3 random orthogonal Q agrees with
        LU(M + W_A)'s (the sign is resolved), and the same for M itself.
+--all_roots also finds the roots of det M and det(M + W_B) themselves (the lift's shift, where M's sign is resolved).
 --scan lo:hi:step first evaluates the three determinants on a grid and lists every sign change (real roots near
 lambda_1: a neighbour shows there).
 usage: python ell_lam.py STATE D kc guess --refs RA,RB [--record LAM] [--scan lo:hi:step] [--d_raw 1e-8]
@@ -50,6 +51,7 @@ def main():
     ap.add_argument("--kappa", type=float, default=0.7); ap.add_argument("--u0", type=float, default=0.04)
     ap.add_argument("--Ks", type=int, default=30); ap.add_argument("--out", default=None)
     ap.add_argument("--scan", default=None)
+    ap.add_argument("--all_roots", action="store_true")
     a = ap.parse_args()
     t0 = time.time()
     z = np.load(a.state)
@@ -86,19 +88,26 @@ def main():
         rec.update(scan=sc, scan_signs=tabs, scan_changes=chg)
         for nm, t, c in zip(["M", "M + W_A", "M + W_B"], tabs, chg):
             print(f"scan {nm}: signs {''.join('+' if v > 0 else '-' if v < 0 else '0' for v in t)}; changes {c}", flush=True)
-    root, nch = None, 0
-    for wd in (0.02, 0.06, 0.15, 0.35):
-        grid = a.guess * (1 + wd * np.array([-1.0, 0.0, 1.0]))
-        sg = [sgA(l) for l in grid]
-        ch = [i for i in range(2) if sg[i] != sg[i + 1]]
-        if ch:
-            nch = len(ch)
-            i = ch[0] if len(ch) == 1 else min(ch, key=lambda i: abs(0.5 * (grid[i] + grid[i + 1]) - a.guess))
-            ref = 0.5 * (dets(grid[i])[1][1] + dets(grid[i + 1])[1][1])
-            f = lambda l: dets(l)[1][0] * np.exp(dets(l)[1][1] - ref)
-            root = brentq(f, grid[i], grid[i + 1], xtol=1e-10, rtol=1e-14)
-            rec.update(grid=[float(x) for x in grid], grid_signs_A=[float(x) for x in sg])
-            break
+    def root_of(j):
+        """the sign change of determinant j (0 M, 1 M + W_A, 2 M + W_B) nearest the guess, by the widening grid"""
+        for wd in (0.02, 0.06, 0.15, 0.35):
+            grid = a.guess * (1 + wd * np.array([-1.0, 0.0, 1.0]))
+            sg = [dets(l)[j][0] for l in grid]
+            ch = [i for i in range(2) if sg[i] != sg[i + 1]]
+            if ch:
+                i = ch[0] if len(ch) == 1 else min(ch, key=lambda i: abs(0.5 * (grid[i] + grid[i + 1]) - a.guess))
+                ref = 0.5 * (dets(grid[i])[j][1] + dets(grid[i + 1])[j][1])
+                f = lambda l: dets(l)[j][0] * np.exp(dets(l)[j][1] - ref)
+                return brentq(f, grid[i], grid[i + 1], xtol=1e-10, rtol=1e-14), len(ch), [float(x) for x in grid], sg
+        return None, 0, None, None
+    root, nch, grid, sg = root_of(1)
+    if root is not None:
+        rec.update(grid=grid, grid_signs_A=[float(x) for x in sg])
+    if a.all_roots:                                   # each determinant's own root: the lift's shift, measured
+        for j, nm in ((0, "M"), (2, "B")):
+            rj, nj, _, _ = root_of(j)
+            rec[f"root_{nm}"], rec[f"n_signchanges_{nm}"] = rj, nj
+        print(f"roots: A {root}, B {rec['root_B']}, M {rec['root_M']}", flush=True)
     rec.update(lam=root, n_signchanges=nch)
     if root is None:
         print(json.dumps(rec), flush=True)
