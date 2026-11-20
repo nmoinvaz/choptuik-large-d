@@ -1,0 +1,7 @@
+{"note": "lambda records that ell_delta.py collect leaves out, with the check each failed (#1025)",
+ "excluded": [
+  {"source": "I1025-win2b/out/l1kc55Fv1025.jsonl", "D": 16.75, "reason": "lam 1.9305 is 7.8% off its guess 2.0928, and signtest disagrees at 1.91 and 1.95 (win2b)"},
+  {"source": "I1025-win/out/l1kc63Fw1025.jsonl", "D": 17.5, "reason": "signtest disagrees at lam -/+ 0.02 (winb, out/signtest_l1kc63_1025.jsonl)"},
+  {"source": "I1025-mac/out/l1kc55Fs1025.jsonl", "D": 17.5, "reason": "two sign changes in its bracket; det M's sign is noise past D 17 at k_c 55"},
+  {"source": "I1025-mac/out/l1kc55Fs1025.jsonl", "D": 18.0, "reason": "det M's sign flips 5 times over 1.77-1.96 (detscan_kc55_D18.log); signtest disagrees at 1.84"}
+ ]}
