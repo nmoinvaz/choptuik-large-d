@@ -251,6 +251,8 @@ def collect(raw):
     srcs += [os.path.join(raw, "I1025-mac", "out", f"l1kc{k}{t_}1025.jsonl") for k in (47, 55) for t_ in ("Fq", "Fp")]
     srcs += [os.path.join(raw, "I1025-mac", "out", "l1kc63Fb1025.jsonl")]   # lane J: D 16.25, 16.75 and k_c 63 at D 16.5
     srcs += [os.path.join(raw, "I1025-win2b", "out", f"l1kc55F{t_}1025.jsonl") for t_ in ("v", "u")]   # win2b: D 16.75, 16.25
+    srcs += [os.path.join(raw, "I1025-mac", "out", f) for f in ("l1kc71Fm1025.jsonl", "l1kc63Fm1025.jsonl")]   # lane T
+    srcs += [os.path.join(raw, "I1025-win", "out", "l1kc71Fw1025.jsonl")]   # winb: k_c 71 at D 16.5
     by = {}
     for f in srcs:
         if not os.path.exists(f):
