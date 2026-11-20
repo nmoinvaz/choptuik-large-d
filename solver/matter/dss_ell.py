@@ -559,6 +559,17 @@ def harmonic_weights(S, p=4):
     return np.concatenate(w + [[0.0]])
 
 
+def svd_robust(J):
+    """thin SVD by LAPACK gesdd, and by gesvd when gesdd does not converge (it fails on some finite Jacobians at
+    k_c 63 with macOS Accelerate, #1025)"""
+    try:
+        return np.linalg.svd(J, full_matrices=False)
+    except np.linalg.LinAlgError:
+        import scipy.linalg as sla
+        print("svd fallback: gesdd did not converge, gesvd instead", flush=True)
+        return sla.svd(J, full_matrices=False, lapack_driver="gesvd")
+
+
 def lm(S, z, tol=1e-12, maxjac=30, ncorr=2, verbose=True, mus=None, stall=3, prep=None, reg=0.0, regp=4,
        return_jac=False):
     """Levenberg-Marquardt: one SVD per (complex-step) Jacobian, all damping trials (with chord corrections)
@@ -578,7 +589,7 @@ def lm(S, z, tol=1e-12, maxjac=30, ncorr=2, verbose=True, mus=None, stall=3, pre
         if nF < tol:
             break
         _, J = S.jacobian(z)
-        U, s, Vt = np.linalg.svd(J, full_matrices=False)
+        U, s, Vt = svd_robust(J)
         filt = np.stack([s / (s * s + (mu * s[0]) ** 2) for mu in mus])
         step = lambda Fb: -((U.T @ Fb.T).T * filt) @ Vt
         Zt = z[None, :] + step(np.repeat(F[None, :], len(mus), 0))
@@ -629,7 +640,7 @@ def _lm_reg(S, z, tol, maxjac, ncorr, verbose, mus, prep, reg, regp, return_jac=
         if mu_r is None:
             mu_r = reg * np.linalg.norm(J, 2)
         Ja = np.vstack([J, mu_r * np.diag(w)])
-        U, s, Vt = np.linalg.svd(Ja, full_matrices=False)
+        U, s, Vt = svd_robust(Ja)
         filt = np.stack([s / (s * s + (mu * s[0]) ** 2) for mu in mus])
         pad = np.zeros(len(w))
         step = lambda Fb: -((U.T @ np.concatenate([Fb, np.repeat(pad[None, :], len(Fb), 0)], axis=1).T).T * filt) @ Vt

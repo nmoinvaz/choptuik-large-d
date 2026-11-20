@@ -75,7 +75,12 @@ for D in [float(v) for v in a.Ds.split(",")]:
     z, nF, _ = lm(S, z, tol=a.tol, maxjac=4, verbose=False, reg=a.reg)
     _, J = S.jacobian(z)
     eD = np.zeros(len(z)); eD[-1] = 1.0
-    sensD = float(np.linalg.norm(np.linalg.lstsq(J.T, eD, rcond=None)[0]))     # |dDelta/dF|, as in ell_march.py
+    try:
+        sensD = float(np.linalg.norm(np.linalg.lstsq(J.T, eD, rcond=None)[0]))     # |dDelta/dF|, as in ell_march.py
+    except np.linalg.LinAlgError:                                               # gelsd did not converge: gelss
+        import scipy.linalg as sla
+        print("lstsq fallback: gelsd did not converge, gelss instead", flush=True)
+        sensD = float(np.linalg.norm(sla.lstsq(J.T, eD, lapack_driver="gelss")[0]))
     rec = dict(D=D, l=a.l, kc=a.kc, kappa=a.kappa, rk=a.rk, reg=a.reg, u0=a.u0, Ks=a.Ks, src=a.src, Delta=float(z[-1]), Delta_src=float(z0[-1]),
                F=float(nF), F_start=F0, steps=int(sum(steps.values())), constraint=S.constraint(z), dDelta_dF=sensD,
                lam_gauge=S.gauge_lambda(z))
