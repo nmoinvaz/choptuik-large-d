@@ -25,6 +25,7 @@ pub mod field;
 pub mod jac_sub;
 pub mod lane;
 pub mod model;
+pub mod plan_auto;
 pub mod series_split;
 
 // The arithmetic, the dual lanes and the dense LU live in the multidouble crate (crates.io; github.com/nmoinvaz/multidouble),
