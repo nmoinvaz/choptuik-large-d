@@ -550,6 +550,10 @@ pub fn check_dumps(dir: &str, reps: usize) -> bool {
 #[allow(dead_code)] // hp/fastmul_bench's
 pub fn run(args: &[String]) -> i32 {
     let reps: usize = args.iter().position(|a| a == "--reps").map(|i| args[i + 1].parse().unwrap()).unwrap_or(7);
+    if reps == 0 {
+        eprintln!("--reps must be at least 1, not 0");
+        return 2;
+    }
     // --mutate zero_lane | e2_plain | e2_split_always | digit: check_edges or check_digits under that control,
     // which must then fail (exit 1)
     let mutate = match args.iter().position(|a| a == "--mutate").map(|i| args[i + 1].as_str()) {
