@@ -15,6 +15,7 @@ The re-solves are for a Linux runner (section 3). Status words are AGENTS.md's.
 | Δ(exact 1/k) − Δ(recip_int) at D 73 | +1.743109×10⁻²⁵, above #1043's bound of 10⁻²⁵, which left out the solve's gain of 4.3×10¹⁷; a second solve path predicts it to 10⁻⁹; 0.7% of the quoted error | numerical evidence, dh610's release build (3.3) |
 | the same at D 241.96 | +3.290002×10⁻¹³; 0.87% of the quoted error | numerical evidence, dh610's release build (3.3) |
 | the same at D 251.88 | no value: the flag-on polish stops at its start, whose projection fails; without that bound its first Newton step is 4.56×10⁻² and no trial is accepted | dh610's release build (3.3, 3.4) |
+| the same at D 246.44 and 249.47 | no value: both flag-on polishes stop at their start, whose projection fails from a miss of 3.29×10⁻⁶ and 9.02×10⁻⁶ (growing about 1.4 times per unit D, 2.02×10⁻⁵ at 251.88); so D 241.96's change is the last measured one | dh610's release build (3.5) |
 | does the first-order response predict Δ's change at large D | no: at D 241.96 it gives 11.5 times the measured change, and its `prow` control 5.1 times unknown 0's own; suspected cause, untested: second-order terms along the weak directions | numerical evidence, Mac release-dev build on dh610's bases (3.3) |
 
 ## 1. The flag
@@ -372,6 +373,17 @@ X ≤ 10⁻⁵⁰ and `base polish saved as` follows.
 
 Expected time: about 1 h per polish at ks 293 (dh610's D 251.88 pair: 3857 s flag off, 1462 s flag on), so 2–6 h for
 the four (an estimate).
+
+**Result: reading (b).** dh610 ran the pairs at 4204c9f9 on 2026-11-20 (PR #1054 comment at 19:19 UTC, raw
+`I1054-dh610/` a58ca739). Both flag-off polishes converged (7.6×10⁻⁸³ and 1.8×10⁻⁸² in one step each). Both flag-on
+polishes stopped at their start, "the start's projection failed, attempt stopped". Their pinned max|F| at the start is
+3.29×10⁻⁶ (D 246.44) and 9.02×10⁻⁶ (D 249.47), above the 10⁻⁶ start bound, with the projection's u0 rung at |R|
+2.3×10²³ and 8.3×10²⁴, not converged. The flag-on miss of the stored states grows about 1.4 times per unit D (log10
+slope 0.145 between neighbours), which run back to D 241.96 gives about 7×10⁻⁷, just under the bound, where the
+projection succeeded. So the basin of the flag-on polish from a flag-off state ends between D 241.96 and 246.44, and
+the measured change stays +3.290002×10⁻¹³ at D 241.96 (0.87% of its quoted 3.8×10⁻¹¹). No line through the changes
+could be fitted, as only one exists. Not shown: whether `--od_start_F 0` converges at these smaller misses (at D 251.88
+it took no step), and where between D 241.96 and 246.44 the projection starts to fail.
 
 ## 4. Discrepancies (reported, not fixed)
 
