@@ -17,9 +17,14 @@ What is its own:
   - the linear algebra: raw harmonic-1 jumps and a 2 x 2 real solve in profile space. No de-mixing is needed for the
     slice values c2(phi). The de-mixing map is applied only to reproduce the "left singular vector" value.
 
-    python3 l2_c2_review_num.py checks [--mutate=fc]
+    python3 l2_c2_review_num.py checks [--mutate=bg|lin|dlam|ser|fc]
                                               planted checks of this code (the zero, finite differences, exact modes,
-                                              lambda*, the forcings two ways and in two forms); exit 0 iff all pass
+                                              lambda*, the forcings two ways and in two forms); exit 0 iff all pass.
+                                              Mutations, each in the right-hand side or the series only: bg (the
+                                              background's gravity term off by 1e-6), lin (a sign in the linearised
+                                              y equation), dlam (a term of the d/dlambda equation dropped), ser (the
+                                              series' Euler derivative off by 1e-6), fc (the sign of F_c in the
+                                              t-derivative forms). Every check fails under at least one
     python3 l2_c2_review_num.py diag          the control forcing's two evaluations by radius (a diagnostic for 9.3)
     python3 l2_c2_review_num.py c2 [--M=1] [--r1=0.2] [--delta=0.6283] [--own-zero] [--mutate=fc] [--tol=1e-6]
                                               c2, lambda_1 and G on the slices phi = e1, e2, f2 (and the left singular
@@ -171,7 +176,8 @@ class SerRing:
         return (self.al.imu[None, :] * a[0], a[1])
 
     def E(self, a):
-        return (2 * np.arange(a[0].shape[0])[:, None] * a[0], a[1])
+        sc = 1 + 1e-6 if MUT == 'ser' else 1.0          # mutation: the series' Euler derivative off by 1e-6
+        return (sc * 2 * np.arange(a[0].shape[0])[:, None] * a[0], a[1])
 
     def xi2(self, a, k):
         x = np.zeros_like(a[0])
@@ -450,7 +456,8 @@ class Lateral:
         dD = (cv(C, S, 1) - xi * tr * D) / x2
         E = cv(D, D, 0) / 2
         cE = cv(C, E, 0)
-        dS = (cv(C, xi * dD, 1) + cv(cE, D, 1) - cv(C, D, 1) - xi * tr * S) / x2
+        gm = 1 + 1e-6 if MUT == 'bg' else 1.0           # mutation: the background's gravity term off by 1e-6
+        dS = (cv(C, xi * dD, 1) + gm * cv(cE, D, 1) - cv(C, D, 1) - xi * tr * S) / x2
         out = [self.pack(dD, dS, cE / xi)]
         fpt = {}
         if self.forces:
@@ -462,7 +469,8 @@ class Lateral:
             pD, pS, pC = self.unpack(Yv[(i + 1) * n:(i + 2) * n])
             st[cp.name] = (pD, pS)
             Lm = tr + cp.lam
-            num = cv(pC, S, 1) + cv(C, pS, 1) - xi * Lm * pD
+            sl = -1.0 if MUT == 'lin' else 1.0          # mutation: a sign in the linearised y equation
+            num = sl * cv(pC, S, 1) + cv(C, pS, 1) - xi * Lm * pD
             pcE = cv(pC, E, 0) + cv(C, cv(D, pD, 0), 0)
             if cp.force:
                 fy, fc = fpt[cp.force]
@@ -473,7 +481,7 @@ class Lateral:
             pdD = num / x2
             r2 = (cv(pC, xi * dD, 1) + cv(C, xi * pdD, 1) + cv(pcE, D, 1) + cv(cE, pD, 1) - cv(pC, D, 1) - cv(C, pD, 1)
                   - xi * Lm * pS)
-            if cp.parent:
+            if cp.parent and MUT != 'dlam':             # mutation: the parent's sigma dropped from d/dlambda
                 r2 = r2 - xi * st[cp.parent][1]
             out.append(self.pack(pdD, r2 / x2, pcE / xi))
         return np.concatenate(out)
