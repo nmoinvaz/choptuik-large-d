@@ -7,7 +7,7 @@ edition = "2021"
 publish = false
 
 [dependencies]
-multidouble = "=5.0.0"  # hp/Cargo.toml's version
+multidouble = "=5.1.0"  # hp/Cargo.toml's version
 
 [profile.release]
 opt-level = 3
