@@ -304,10 +304,16 @@ notes show.
 **First reading (#997, `hp/series_singularity.py`), corrected.** At D 3.15, M 256 and M 160 agree only through order 6,
 and a planted singularity at D 3.000 reads 2.35 from orders 3–6 there, so that base gives no reading. The earlier
 D 2.998 used orders 7–9, which are not converged in M. At D 3.0475 (M 256, one M) the ratio fit over orders 3–6 puts
-the nearest singularity at D 2.994, where plants at 3.000 and at the sonic closing 3.0431 are both recovered. That
-reading is withdrawn by the rule fixed before the second M (#1014). At M 320, orders 0–5 of the same series agree
-with M 256 to 1.1×10⁻⁴, but order 6 differs by 3.8×10⁻³, over the 10⁻³ bar, and orders 7 on differ (raw
-`I1014-dh170/` 50c44f88). The global fits of notes/QUADRATIC_FORMULA.md put a branch point at 2.990–3.003.
+the nearest singularity at D 2.994, where plants at 3.000 and at the sonic closing 3.0431 are both recovered. At M 320,
+orders 0–5 of the same series agree with M 256 to 1.1×10⁻⁴, but order 6 differs by 3.8×10⁻³, over the 10⁻³ bar
+(raw `I1014-dh170/` 50c44f88), so the rule fixed before the second M withdrew the one-M reading (#1014). A third M
+settles it. M 384, on a 4502-step plan, agrees with M 320 on orders 3–6 to 5.9×10⁻⁶ and on orders 0–7 to 10⁻³ (raw
+`I1014-dh170/` 74bf7387), under the rule fixed before that run. So M 256's order 6 was the one not converged. The
+ratio fit over orders 3–6 gives D* 2.9941 at M 320 and at M 384 (2.9939 at M 256); at M 384 the windows 3–7 and 4–8
+give 2.9936 and 2.9923, a spread over fit windows (raw `I1014-mac/`). Numerical evidence. The plant at the same base
+and window reads a true 3.000 as 2.9948, so the reading is consistent with a branch point at D = 3 within the fit's
+bias there, and does not place D* below 3. The global fits of notes/QUADRATIC_FORMULA.md put a branch point at
+2.990–3.003.
 
 ### 2.7 Smaller items
 
