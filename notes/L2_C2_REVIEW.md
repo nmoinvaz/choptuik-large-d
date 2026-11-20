@@ -244,7 +244,7 @@ FIRST_ORDER.md's printed forcing), so each tests the other.
 - §1.4 calls the identity "*proved* by hand". The hand derivation drops O(1/n²) terms with stated reasons and has not
   been read by anyone else. The status to quote is *checked symbolically*.
 
-**Checks added to `l2_c2_review_sym.py` after reading §9.** The script now takes about 25 s and prints 24 lines.
+**Checks added to `l2_c2_review_sym.py` after reading §9.** The script now takes about 25 s and prints 25 lines.
 
 | check | result | mutations under which it fails |
 |---|---|---|
@@ -252,6 +252,7 @@ FIRST_ORDER.md's printed forcing), so each tests the other.
 | J: every other row (E^t_s, E^t_χ, E^s_s, E^s_χ, E^χ_χ, both fibre rows) vanishes on k at its natural order | zero | `lin`, `k` |
 | J2: the χχ row at its natural order holds ∂ₜ² of the metric function C | present | |
 | P: the p = 1 frame. Its spherical rows are those of p = q exactly in n, and on k = e(dy² − dz·dz/n) the O(1) parts vanish and F₂ = 2s cos²χ Q | zero difference | `fibre`, `lin`, `k` |
+| Q: the compact forms of finding 2, for F̃⁽²⁾ and for 𝓛₀[(0, Φₛ)], both rows | zero difference | `fibre`, `lin`, `k`, `sign` |
 | K: the l2, l0 and G rows of `data/l2_c2_forcing.json` equal this derivation | zero difference | `fibre`, `lin`, `k`, `sign` |
 
 ## 2. Comparison with L2_MODE.md §9 and the code
@@ -272,9 +273,9 @@ Findings are numbered through the whole note. Each is marked agreement, correcti
    | W | Sₛ − ¼Y²S | −Sₛ − ¼Y²S | −½Y²S |
    | E^t_t | ½S² − ½YYₛ + ⅛Y⁴ | −½S² + YYₛ | ½YYₛ + ⅛Y⁴ |
 
-   §9 gives no reason for the identity. §1.4 does: the mode is minus a constant traceless metric, which rescales
-   the radial second derivatives by 1 + e Y₂, and the s-translation's residual is minus the explicit s-derivative of
-   the same terms.
+   (Check Q.) §9 gives no reason for the identity. §1.4 does: the mode is minus a constant traceless metric, which
+   rescales the radial second derivatives by 1 + e Y₂, and the s-translation's residual is minus the explicit
+   s-derivative of the same terms.
 3. **Agreement: the extra field is a matter of the ℓ = 0 representative.** With the ℓ = 0 mode ∂ₛ(c, Φ) of the lapse,
    F̃⁽²⁾ + F̃⁽⁰⁾ = 0 and there is no G. G = 𝓛₀[(0, Φₛ)] = 𝓛₀[(−cₛ, 0)] appears because FIRST_ORDER.md translates
    C = α/a (§1.4). §9.2's control "(cₛ, 0) leaves twice the right-hand side" is the same statement with the sign.
@@ -311,8 +312,9 @@ Findings are numbered through the whole note. Each is marked agreement, correcti
     The ℓ = 2 content of the claim is the symbolic identity, the conjugation and the hypotheses of §3. The issue's
     summary and the Result bullet ("the truncated models agree") should say this.
 11. **Correction: c₂ at M = 1 depends on how the forcing is written.** The compact form of finding 2 is the same
-    function of the fields as §9.2's form in the full problem. In a truncated model the products associate
-    differently. The second implementation (§4) gives at M = 1:
+    function of the fields as §9.2's form in the full problem (check Q, and to 2.5×10⁻¹⁵ on untruncated random
+    fields, §4's check 7). In a truncated model the products associate differently. The second implementation (§4)
+    gives at M = 1:
 
     | forcing | c₂ on φ = e₁, e₂, f₂ | G on e₁, e₂, f₂ |
     |---|---|---|
@@ -367,9 +369,10 @@ the ansatz. Against (a)–(d) and the steps that lead to the reduced problem:
 
 14. **Gap: the selection of an ℓ = 2 perturbation is its own hypothesis.** "As for λ₁ itself" is not right. Conjecture
     1 and the lemma chain of C_selection.md concern the spherical solution, and FIRST_ORDER.md §3 extends them to
-    spherical perturbations. Nothing in the repository relates the regularity of a non-spherical perturbation at the
-    light cone to its inner multipliers. That the condition is "the multiplier of w = W₂/(s Y₂) vanishes" is the
-    ℓ = 2 analogue of Conjecture 1. It should be listed as such.
+    spherical perturbations. A search of notes/, proof/ and the README for "non-spherical" found no statement that
+    relates the regularity of a non-spherical perturbation at the light cone to its inner multipliers. That the
+    condition is "the multiplier of w = W₂/(s Y₂) vanishes" is the ℓ = 2 analogue of Conjecture 1. It should be
+    listed as such.
 15. **Gap: the outer region at O(1/n) for ℓ = 2.** FIRST_ORDER.md §3 shows that the outer maps (matching factor,
     transport, light-cone constant) multiply a multiplier that already vanishes. For ℓ = 2 those maps are different
     ones. The conjugation by s Y₂ is a statement about the inner rows at leading order. In the outer region the
@@ -392,11 +395,24 @@ the ansatz. Against (a)–(d) and the steps that lead to the reduced problem:
 18. **Gap, small: the ansatz for the correction.** Check I and the gauge V₁ + V₂ = 0 cover corrections of the form of
     L2_MODE.md §1 (zero shift, metric of relative order 1/n). §9.7 lists the ansatz for the mode. It holds for W₂ too.
 
-None of findings 14–18 changes the algebra. They change what "conditional" stands on. In the note's own words the
-status is: the identity *checked symbolically*, c₂ = −λ₁ *conditional* on (i) Conjecture 1
-and FIRST_ORDER.md's route for λ₁, (ii) the ℓ = 2 selection hypothesis of finding 14, (iii) the ℓ = 2 outer maps of
-finding 15, (iv) the existence of the continuation, with its metric part (finding 17), (v) a simple eigenvalue, and
-(vi) the ansatz at linear order in e. The value −3.0324 is *numerical evidence* through λ₁'s fit.
+None of findings 14–18 changes the algebra. They change what "conditional" stands on. In AGENTS.md's status words:
+the identity is *checked symbolically*, and c₂ = −λ₁ is *conditional* on
+
+- (i) Conjecture 1 and FIRST_ORDER.md's route for λ₁;
+- (ii) the ℓ = 2 selection hypothesis of finding 14;
+- (iii) the ℓ = 2 outer maps of finding 15;
+- (iv) the existence of the continuation, with its metric part (finding 17);
+- (v) a simple eigenvalue, (d) above;
+- (vi) the ansatz, at linear order in e, for the mode and for its correction.
+
+The value −3.0324 is *numerical evidence* through λ₁'s fit.
+
+**A remark outside §9.** [DIRECTION_REVIEW.md](DIRECTION_REVIEW.md) §2.1 quotes the least damped ℓ = 2 mode at D = 4
+as λ ≈ −0.02 + 0.55i (Martín-García and Gundlach; the paper was not read for this review), and suggests that
+c₂ < 0 "would also explain why it is so slow already at D = 4". The mode of §9 is real through O(1/n): its Floquet
+multiplier e^{λΔ} is real and single. A complex pair at D = 4 cannot be its continuation in D unless it meets a
+second real mode on the way. So the two may be different modes, and §9 says nothing about D = 4. L2_MODE.md does not
+claim that it does.
 
 ## 4. The numerical check: a second implementation of c₂
 
@@ -404,7 +420,8 @@ finding 15, (iv) the existence of the continuation, with its metric part (findin
 §6 lists what it shares with them. In short: the model and the conventions are shared, because a truncated number is
 defined only with them, and no code is.
 
-**Its own planted checks** (`l2_c2_review_num.py checks`, 10 s; exit 0 iff all pass):
+**Its own planted checks** (`l2_c2_review_num.py checks`, 10 s; exit 0 iff all pass; `--mutate=fc` makes check 7
+fail):
 
 | check | result | bar |
 |---|---|---|
@@ -414,6 +431,7 @@ defined only with them, and no code is.
 | 4. λ* of the M = 1 model, secant on det A(λ) | 1.7691220085, against 1.7691220084 | 10⁻⁷ |
 | 5. d/dλ of the mode by the variational equation against centred differences in λ | 4.6×10⁻⁸ | 10⁻⁶ |
 | 6. each forcing two ways at \|ξ\| = 0.12: summed series, and Taylor-jet value at the point | 1.1×10⁻¹³ | 10⁻⁸ |
+| 7. the compact forms against the t-derivative forms without truncation (L = 40, random fields): l2, l0 against SymForce's terms, G | 2.5×10⁻¹⁵ | 10⁻⁹ |
 
 Checks 1 and 4 are also results: the stored zero and FIRST_ORDER.md's λ* = 1.769122008 are reproduced by code that
 shares only the model with the code that made them.
@@ -438,11 +456,11 @@ Variations, each a separate run:
 | run | result | verdict |
 |---|---|---|
 | `--mutate=fc` (the sign of F_c flipped in the converted forcings) | c₂ = −3.87, −0.71, −4.89; relative differences 0.46 to 1.2; exit 1 | fails, as required |
-| ray π/2 + π/8 and ξ₁ = 0.25 | slice values within 2.6×10⁻¹⁰ of ξ₁ = 0.2's; the left-singular-vector values move: c₂ −7.94356, λ₁ 7.79560 | slices do not depend on the path or ξ₁ (finding 12) |
+| ray π/2 + π/8 and ξ₁ = 0.25 | slice values within 2.6×10⁻¹⁰ of l2_c2.py's; the left-singular-vector values move: c₂ −7.94356, λ₁ 7.79560 | slices do not depend on the path or ξ₁ (finding 12) |
 | own zero (check 1's) and ray π/2 + 0.9 | within 4.4×10⁻⁹ | OK (bar 10⁻⁶) |
 
-**c₂ at M = 3** (`--M=3`, 7 min), at the stored zero. The raw 4 × 4 jump matrix is solved in one shot, with rows and
-columns scaled (condition number 1.5×10⁹), where l2_c2.py deflates and takes a Schur complement:
+**c₂ at M = 3** (`--M=3`, 4 to 7 min), at the stored zero. The raw 4 × 4 jump matrix is solved in one shot, with rows
+and columns scaled (condition number 1.5×10⁹), where l2_c2.py deflates and takes a Schur complement:
 
 | forcing | φ = e₁ | e₂ | f₂ | max relative difference from l2_c2.py |
 |---|---|---|---|---|
@@ -625,14 +643,14 @@ From `solver/inner_pert/` with venv-314 (Python 3.14.7, sympy 1.14.0, numpy 2.5.
 process at nice 10, on the Mac (Apple M5):
 
 ```
-python3 l2_c2_review_sym.py                  # sections 1.6 and 2 (~25 s): 24 checks; "all passed", exit 0
+python3 l2_c2_review_sym.py                  # sections 1.6 and 2 (~25 s): 25 checks; "all passed", exit 0
 python3 l2_c2_review_sym.py --mutate=sign    # also fibre, lin, bg, k: the listed checks fail, exit 1
-python3 l2_c2_review_num.py checks           # section 4's six planted checks (~10 s); PASS, exit 0
+python3 l2_c2_review_num.py checks           # section 4's seven planted checks (~10 s); PASS, exit 0
 python3 l2_c2_review_num.py c2               # M = 1 (~2 min): the table of section 4; PASS, exit 0
 python3 l2_c2_review_num.py c2 --mutate=fc   # FAIL, exit 1
 python3 l2_c2_review_num.py c2 --r1=0.25 --delta=0.3927   # another ray and radius; PASS (slices only)
 python3 l2_c2_review_num.py c2 --own-zero --delta=0.9     # its own zero, a third ray; PASS
-python3 l2_c2_review_num.py c2 --M=3         # ~7 min; PASS, exit 0
+python3 l2_c2_review_num.py c2 --M=3         # 4 to 7 min; PASS, exit 0
 python3 l2_c2_review_num.py c2 --M=5 --tol=1e-3   # ~10 min; FAIL, exit 1 (section 4: WATCH, the one-shot solve)
 python3 l2_c2_review_num.py diag             # finding 25's table (~90 s)
 ```

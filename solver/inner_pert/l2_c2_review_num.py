@@ -17,8 +17,9 @@ What is its own:
   - the linear algebra: raw harmonic-1 jumps and a 2 x 2 real solve in profile space. No de-mixing is needed for the
     slice values c2(phi). The de-mixing map is applied only to reproduce the "left singular vector" value.
 
-    python3 l2_c2_review_num.py checks        planted checks of this code (exact modes, finite differences, the zero,
-                                              lambda*); exit 0 iff all pass
+    python3 l2_c2_review_num.py checks [--mutate=fc]
+                                              planted checks of this code (the zero, finite differences, exact modes,
+                                              lambda*, the forcings two ways and in two forms); exit 0 iff all pass
     python3 l2_c2_review_num.py diag          the control forcing's two evaluations by radius (a diagnostic for 9.3)
     python3 l2_c2_review_num.py c2 [--M=1] [--r1=0.2] [--delta=0.6283] [--own-zero] [--mutate=fc] [--tol=1e-6]
                                               c2, lambda_1 and G on the slices phi = e1, e2, f2 (and the left singular
@@ -52,11 +53,12 @@ def log(*a):
 class Alg:
     """harmonics -L..L, L = M + 2; odd fields on |mu| <= M, even fields on |mu| <= M + 1; every product projected"""
 
-    def __init__(self, M):
-        self.M, self.L = M, M + 2
+    def __init__(self, M, L=None, full=False):
+        self.M, self.L = M, (M + 2 if L is None else L)
         k = np.arange(-self.L, self.L + 1)
         self.k = k
-        self.mask = {1: ((np.abs(k) <= M) & (k % 2 == 1)).astype(float), 0: ((np.abs(k) <= M + 1) & (k % 2 == 0)).astype(float)}
+        lo, le = (self.L, self.L) if full else (M, M + 1)      # full: no projection below L (an untruncated test)
+        self.mask = {1: ((np.abs(k) <= lo) & (k % 2 == 1)).astype(float), 0: ((np.abs(k) <= le) & (k % 2 == 0)).astype(float)}
         self.imu = 1j * k
         self.N = 2 * self.L + 1
 
@@ -677,6 +679,25 @@ def checks():
         worst = max(worst, d)
     say('6. forcings: summed series = Taylor-jet value at |xi| = 0.12 (all six)',
         worst < 1e-8, 'max relative %.1e (< 1e-8) (series truncation %.0e)' % (worst, terr))
+    # 7. the compact forms against the t-derivative forms, without truncation (L = 40, random fields at a point):
+    #    products then associate, so the two forms of each forcing must agree to rounding
+    alF = Alg(3, L=40, full=True)
+    rng = np.random.default_rng(11)
+
+    def rnd(par, top, amp):
+        zz = (rng.normal(size=alF.N) + 1j * rng.normal(size=alF.N)) * amp
+        return zz * ((np.abs(alF.k) <= top) & (alF.k % 2 == par)) * np.exp(-0.3 * np.abs(alF.k))
+    worst = 0.0
+    for trial in range(3):
+        Yh, Sh, Cc = rnd(1, 3, 1.0), rnd(1, 3, 1.0), rnd(0, 2, 0.1)
+        Cc[alF.L] = 1.0
+        Rf = JetRing(alF, w, 0.3 * np.exp(0.4j * (trial + 1)), Yh, Sh, Cc)
+        for a, b in (('l2', 'l2c'), ('l0', 'sym'), ('G', 'Gc')):
+            ay, ac = FORCE_BUILDERS[a](Rf)
+            by, bc = FORCE_BUILDERS[b](Rf)
+            worst = max(worst, np.abs(ay[0] - by[0]).max() / np.abs(by[0]).max(), np.abs(ac[0] - bc[0]).max() / np.abs(bc[0]).max())
+    say('7. compact forms = t-derivative forms without truncation (l2, l0 against SymForce\'s terms, G)', worst < 1e-9,
+        'max relative %.1e (< 1e-9)' % worst)
     return ok
 
 
