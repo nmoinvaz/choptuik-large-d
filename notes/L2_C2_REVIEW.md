@@ -255,6 +255,16 @@ FIRST_ORDER.md's printed forcing), so each tests the other.
 | Q: the compact forms of finding 2, for F̃⁽²⁾ and for 𝓛₀[(0, Φₛ)], both rows | zero difference | `fibre`, `lin`, `k`, `sign` |
 | K: the l2, l0 and G rows of `data/l2_c2_forcing.json` equal this derivation | zero difference | `fibre`, `lin`, `k`, `sign` |
 
+§1.6 left E0, E1, E2 and H without a mutation, and C0, I, B3 and J2 had none either. Four mutations of the inputs
+were added so that every check can fail (G1 is itself a control):
+
+| mutation | checks that fail |
+|---|---|
+| `hand`: a sign in the hand-linearised ℓ = 0 rows, and a factor in the hand Q_W | D, D1, E0, E1, E2, E3, G, H, P, K |
+| `mu`: the radial part of the background metric doubled | A, C0, C, C2, D, D1, E0, E2, Q, F, B3, J, P, K |
+| `warp`: check I's case V₁ = −V₂ given V₁ = −2V₂ | I |
+| `static`: check J2's metric function without t | J2 |
+
 ## 2. Comparison with L2_MODE.md §9 and the code
 
 Findings are numbered through the whole note. Each is marked agreement, correction, gap or code.
@@ -648,7 +658,8 @@ process at nice 10, on the Mac (Apple M5):
 
 ```
 python3 l2_c2_review_sym.py                  # sections 1.6 and 2 (~25 s): 25 checks; "all passed", exit 0
-python3 l2_c2_review_sym.py --mutate=sign    # also fibre, lin, bg, k: the listed checks fail, exit 1
+python3 l2_c2_review_sym.py --mutate=sign    # also fibre, lin, bg, k, hand, mu, warp, static: the listed checks
+                                             # fail, exit 1
 python3 l2_c2_review_num.py checks           # section 4's seven planted checks (~10 s); PASS, exit 0
 python3 l2_c2_review_num.py checks --mutate=bg   # also lin, dlam, ser, fc: the listed checks fail, exit 1
 python3 l2_c2_review_num.py c2               # M = 1 (~2 min): the table of section 4; PASS, exit 0
