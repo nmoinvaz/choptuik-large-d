@@ -21,7 +21,7 @@ use crate::field::Fl;
 use crate::lane::Lane;
 use crate::fastmul;
 use crate::model::{
-    dapply_at, dim, horizon_series_at, psolve_at, recip_int, series_scale, Ctx, HPrep, H_SERIES, JET_MUT_KAPPA,
+    dapply_at, dim, horizon_series_at, mul_recip, psolve_at, series_scale, Ctx, HPrep, H_SERIES, JET_MUT_KAPPA,
     SPLIT_FAST, SPLIT_MUT_DROP_L1,
 };
 use crate::dd::DD;
@@ -502,7 +502,6 @@ fn series_od<const N: usize, const B: usize>(
     let (mut t, mut u, mut rhs) = (z, z, z);
     for kk in 0..=ks {
         let kf = kk as f64;
-        let ik1 = recip_int(kk + 1);
         if alpha {
             setj(&mut am1[kk], j, &(c(&aa[kk]).mulf(2.0) + c(&a2[kk])));
             setj(&mut ca1[kk], j, &ed.sum(S_CA, kk, cc, am1, None));
@@ -511,7 +510,7 @@ fn series_od<const N: usize, const B: usize>(
             setj(&mut ca1[kk], j, &(s - c(&cc[kk])));
         }
         ca1[kk].mulp_at(&n1, j, &mut t);
-        let c_next = (c(&cc[kk]).mulf(kf) - c(&t)).muls(ik1).mul_pwr2(sig);
+        let c_next = mul_recip(ctx, c(&cc[kk]).mulf(kf) - c(&t), kk + 1).mul_pwr2(sig);
         setj(&mut cc[kk + 1], j, &c_next);
         setj(&mut ww[kk + 1], j, &(wj(cc, kk + 1) - wj(cc, kk).mul_pwr2(sig)));
         setj(&mut vv[kk], j, &(c(&cc[kk + 1]).mulf((kk + 1) as f64).mul_pwr2(isig) - c(&cc[kk]).mulf(kf)));
@@ -552,7 +551,7 @@ fn series_od<const N: usize, const B: usize>(
             agu[kk].mulp_at(&n1, j, &mut t);
             ua + c(&t)
         };
-        let a_next = (c(&aa[kk]).mulf(kf) - ag.mulf(0.5)).muls(ik1).mul_pwr2(sig);
+        let a_next = mul_recip(ctx, c(&aa[kk]).mulf(kf) - ag.mulf(0.5), kk + 1).mul_pwr2(sig);
         setj(&mut aa[kk + 1], j, &a_next);
         setj(&mut a2[kk + 1], j, &ed.sum(S_A2N, kk, aa, aa, None));
         let tau = if kk >= 1 { c(&dm[kk]) - c(&dm[kk - 1]).mul_pwr2(sig) } else { c(&dm[kk]) };
@@ -564,7 +563,7 @@ fn series_od<const N: usize, const B: usize>(
         cpmf[kk].mulp_at(&nh, j, &mut t);
         setj(&mut rest[kk], j, &((((tau - zmu) - s1) - s2) + c(&t)));
         rest[kk].mul_at(&kept[1], j, &mut u);
-        setj(&mut mm[kk + 1], j, &c(&u).muls(ik1).mul_pwr2(sig));
+        setj(&mut mm[kk + 1], j, &mul_recip(ctx, c(&u), kk + 1).mul_pwr2(sig));
         dapply_at(ctx, &mm[kk + 1], j, &mut dmm[kk + 1]);
         dmm[kk + 1].mul_t_at(&omega, j, &mut dm[kk + 1]);
     }

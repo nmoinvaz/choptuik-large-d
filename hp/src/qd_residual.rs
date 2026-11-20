@@ -104,7 +104,7 @@ fn synth_trig<const B: usize>(sin: fn(f64) -> f64, cos: fn(f64) -> f64, tan: fn(
     let nodes = vec![0.005, 0.01, 0.02, 0.05, 0.1];
     let segs: Vec<Vec<f64>> = nodes.windows(2).map(|w| (0..=4).map(|k| w[0] + (w[1] - w[0]) * k as f64 / 4.0).collect()).collect();
     let k = nodes.len();
-    let ctx = Ctx::<B> { n: DD::from_f64(1.7), d, phase, nodes, segs, kt: 20, kc: 30, ks: 30, freeze: None, match_node: k - 1, lam: DD::ZERO, mutate: 0, f64_dd: 0, horizon_alpha: 0, series_split: 0 };
+    let ctx = Ctx::<B> { n: DD::from_f64(1.7), d, phase, nodes, segs, kt: 20, kc: 30, ks: 30, freeze: None, match_node: k - 1, lam: DD::ZERO, mutate: 0, f64_dd: 0, horizon_alpha: 0, series_split: 0, exact_recip: 0, recip_planted: 0 };
     let l = ctx.len();
     let (mut zh, mut zl) = (vec![0.0; l], vec![0.0; l]);
     let p1: Vec<f64> = th.iter().map(|t| 0.3 * sin(2.0 * t)).collect();
