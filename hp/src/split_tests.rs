@@ -13,10 +13,10 @@ use multidouble::precision::Octo;
 use std::time::Instant;
 
 /// the session's jet lanes (orders 0..=14)
-const LANES: usize = 16;
+pub(crate) const LANES: usize = 16;
 
 /// the eight parts of a double-double state (the lower six zero)
-fn parts8(zh: &[f64], zl: &[f64]) -> [Vec<f64>; 8] {
+pub(crate) fn parts8(zh: &[f64], zl: &[f64]) -> [Vec<f64>; 8] {
     std::array::from_fn(|q| match q {
         0 => zh.to_vec(),
         1 => zl.to_vec(),
@@ -33,7 +33,7 @@ fn coef_k(l: usize, k: usize) -> [Vec<f64>; 8] {
 }
 
 /// z_0 (the synthetic state) and z_1..z_(n-1) planted
-fn planted(n: usize) -> (Ctx<1>, Vec<[Vec<f64>; 8]>) {
+pub(crate) fn planted(n: usize) -> (Ctx<1>, Vec<[Vec<f64>; 8]>) {
     let (ctx, zh, zl) = synth();
     let l = ctx.len();
     let zs = std::iter::once(parts8(&zh, &zl)).chain((1..n).map(|k| coef_k(l, k))).collect();
@@ -42,7 +42,7 @@ fn planted(n: usize) -> (Ctx<1>, Vec<[Vec<f64>; 8]>) {
 
 /// F_1..F_n of the residual's series by the session (`Octo`, LANES lanes), given z_0..z_(n-1) one by one, each
 /// order k with z_k zero as Solver.series_o hands it to its solve
-fn session(ctx: &Ctx<1>, zs: &[[Vec<f64>; 8]], par: bool) -> Vec<Vec<OD>> {
+pub(crate) fn session(ctx: &Ctx<1>, zs: &[[Vec<f64>; 8]], par: bool) -> Vec<Vec<OD>> {
     let sh = ctx.shooting_in::<Octo>();
     let mut s = sh.jet_session::<Octo, LANES>();
     zs.iter()
@@ -63,7 +63,7 @@ fn series_with(ctx: &mut Ctx<1>, zs: &[[Vec<f64>; 8]], split: u8, alpha: u8, mut
 
 /// max_i |a_i - b_i| / max_i |b_i|, the difference formed in octo-double; infinite when a part or a difference is
 /// not finite
-fn rel(a: &[OD], b: &[OD]) -> f64 {
+pub(crate) fn rel(a: &[OD], b: &[OD]) -> f64 {
     // a row or a difference that is not finite fails every threshold (f64::max would drop a NaN)
     if a.iter().chain(b).any(|x| x.x.iter().any(|p| !p.is_finite())) {
         return f64::INFINITY;
@@ -101,7 +101,7 @@ fn checksum(f: &[Vec<OD>]) -> u64 {
 }
 
 /// the rows of a and b whose parts differ
-fn rows_differ(a: &[OD], b: &[OD]) -> usize {
+pub(crate) fn rows_differ(a: &[OD], b: &[OD]) -> usize {
     a.iter().zip(b).filter(|(x, y)| x.x.iter().zip(y.x.iter()).any(|(p, q)| p.to_bits() != q.to_bits())).count()
 }
 
