@@ -313,6 +313,29 @@ ladder in M's small singular values:
   ladder's bottom, with the mode matrix in double-double (to about 10⁻³² σ_max), or removes the ladder, by integrating
   the decaying modes in their stable direction or by orthonormalizing the shooting basis at each node.
 
+**The mode matrix in double-double (#1025 route (c), `ell_ddm.py`, raw `I1025-mac/`, numerical evidence).** The dd build
+reproduces blocks 0–11 of `DSSEll.mode_matrix` to 8.2×10⁻¹⁵ at D = 13, k_c 31. Its horizon series meets the x-ODE
+(evaluated in mpmath) to 4×10⁻²⁵ there. The findings so far:
+
+- **The float64 horizon block carries a rounding error, and the λ records carry it with it.** The float64 horizon
+  series recursion amplifies rounding, from 10⁻¹⁶ at order 0 to 3×10⁻¹⁰ at order 5, so block 12 is good to only
+  about 10⁻¹¹ at D = 13. The float64 record at D = 13, k_c 31 lies 3.3×10⁻⁷ above the dd root. With the dd block 12
+  swapped in, the float64 M's root lies 2.3×10⁻¹¹ from the dd root (`dd_B2_swap.log`).
+- **At k_c 55, D = 17.5 float64's sign noise comes from that block.** Over λ = 1.935–1.965 the dd M reads − throughout,
+  while float64 changes sign at least 9 times. A hybrid (float64 blocks 0–11, dd block 12) matches the dd M's sign at
+  all six λ and its ln|det M| to 2.5×10⁻⁵ (`dd_hybrid.log`). The hybrid changes sign once over 1.89–1.965, between 1.925
+  and 1.93, which brackets λ₁ (`dd_hybrid_bracket.log`, not yet confirmed by the dd M). The double-precision horizon
+  blocks are off by about 10⁻¹⁰ and move ln|det M| by 0.1–2.5. Random noise of that size on block 12 moves it 10–100×
+  less and flips no sign up to 10⁻⁹, so their error lies along the directions det M is most sensitive to
+  (`dd_b12_cause_note.log`, `dd_b12_noise_note.log`). The dd sign test's control (the same build in double arithmetic)
+  did not flip the sign, so that test's reading is void.
+- **The horizon series' truncation grows with k_c.** At the solvers' u₀ = 0.04 and Ks = 30, the series' worst tangent
+  residual is 9×10⁻¹⁵ at k_c 31, D = 13. At D = 16 it is 9.4×10⁻¹⁰, 1.0×10⁻⁷ and 5.7×10⁻⁶ at k_c 47, 55 and 63, and
+  at k_c 55 it falls slowly with D (1.8×10⁻⁷ at D = 14.5, 1.4×10⁻⁸ at D = 19). It scales as u³⁰, so it is the cut at
+  order 30 of a convergent series (5.7×10⁻¹⁵ at u = 0.02). Both builds share it, and its effect on λ has not been
+  measured. Until it is, the change of λ with k_c mixes angular resolution with a horizon truncation that grows with
+  k_c (`dd_b12_noise_note.log`, `lane_a2u.log`, `lane_a2k.log`).
+
 ## 7. Extrapolation to D = ∞
 
 **Direct fits of λ(D)** ([`ell_fit.py`](../solver/matter/ell_fit.py), `data/ell_fit.json`), D = 5–9, with λ∞ free and with
