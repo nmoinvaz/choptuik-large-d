@@ -2,7 +2,7 @@
 """Independent symbolic check of L2_MODE.md section 9's identity (issue #1010's review).
 
 Written for notes/L2_C2_REVIEW.md before section 9 and l2_c2*.py were read. It shares no code with l2_mode.py or
-l2_c2_forcing.py. What it shares with them is listed in the review note, section 4.
+l2_c2_forcing.py. What it shares with them is listed in the review note, section 6.
 
 Frame. The l = 2 mode is taken as a metric perturbation, not as a deformation of the fields. The linear map
 x -> (1 + a H)x of space, H traceless, applied to the spherical solution is a diffeomorphism. It gives the fields that
@@ -408,9 +408,8 @@ def main():
     okE1 = is_zero(LW1 - LW2) and is_zero(LE1 - LE2)
     report('E1 L0[(-c_s, 0)] = L0[(0, Phi_s)] on shell (their difference is L0 on the translation mode)', okE1)
     F0W_FO, F0E_FO = F0W + LW1, F0E + LE1
-    # FIRST_ORDER.md section 4's forcing in the heat variables: -(d_s explicit) of the O(1/n) terms, i.e.
-    # FO_Y row: -C (2 S_s + Y^2 S/2), FO_C row: -C (S^2/2 - Y Y_s); in my rows W = -FO_Y/(2c), E = -FO_C,
-    # and n L_n[mode] in the FO rows is +(d_s explicit of what is subtracted) -> see the note, section 1.4.
+    # FIRST_ORDER.md section 4's forcing in these rows (W = -FO_Y/(2c), E = -FO_C): -(2 S_s + Y^2 S/2)/2 in W and
+    # -c (S^2/2 - Y Y_s) in E, the values L2_MODE.md 8.2 states (the review note, section 1.4)
     Y_, S_ = 2 * Pt / c, 2 * Ps
     FOfW = -(2 * sp.diff(S_, s) + half * Y_**2 * S_) / 2
     FOfE = -c * (half * S_**2 - Y_ * sp.diff(Y_, s))
