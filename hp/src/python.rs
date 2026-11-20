@@ -36,6 +36,11 @@ trait Api: Send + Sync {
     /// f64 Jacobian, column-major: (J, ld); `F64Jac` the lanes; mutate: Ctx::mutate for this call (0 = none)
     fn jacobian_f64(&mut self, zh: &[f64], zl: &[f64], mutate: u8, how: F64Jac) -> Result<(Vec<f64>, usize), String>;
     fn plan(&self, zh: &[f64], zl: &[f64], tol: f64, hmax: f64) -> Vec<Vec<f64>>;
+    /// the Taylor order of least estimated cost and its plan (plan_auto::plan_auto); does not change the context
+    #[allow(clippy::too_many_arguments)]
+    fn plan_auto(&self, zh: &[f64], zl: &[f64], tol: f64, hmax: f64, w: usize, orders: Option<&[usize]>, kmax: usize, refine: bool, mutate: u8) -> Result<crate::plan_auto::Choice, String>;
+    fn kt(&self) -> usize;
+    fn set_kt(&mut self, kt: usize);
     fn set_segs(&mut self, segs: Vec<Vec<f64>>) -> Result<(), String>;
     fn segs(&self) -> Vec<Vec<f64>>;
     fn integrate(&self, zh: &[f64], zl: &[f64], sh: &[f64], sl: &[f64], xs: &[f64]) -> V;
@@ -282,6 +287,15 @@ impl<const B: usize> Api for Ctx<B> {
                 model::plan_path(self, &s, self.nodes[from], self.nodes[to], omega, tol, hmax)
             })
             .collect()
+    }
+    fn plan_auto(&self, zh: &[f64], zl: &[f64], tol: f64, hmax: f64, w: usize, orders: Option<&[usize]>, kmax: usize, refine: bool, mutate: u8) -> Result<crate::plan_auto::Choice, String> {
+        crate::plan_auto::plan_auto(self, zh, zl, tol, hmax, w, orders, kmax, refine, mutate)
+    }
+    fn kt(&self) -> usize {
+        self.kt
+    }
+    fn set_kt(&mut self, kt: usize) {
+        self.kt = kt;
     }
     fn set_segs(&mut self, segs: Vec<Vec<f64>>) -> Result<(), String> {
         if segs.len() + 1 != self.k() {
@@ -1700,6 +1714,64 @@ impl Solver {
         let (h, l) = (slice(&zh, "zh")?, slice(&zl, "zl")?);
         let (api, pool) = (&self.api, &self.pool);
         Ok(py.detach(|| pool.install(|| api.plan(h, l, tol, hmax))))
+    }
+
+    /// The Taylor order of least estimated cost and its plan (hp/src/plan_auto.rs; multishoot's plan_segments_auto):
+    /// every candidate order planned from the node states in z, the step cost k^2 + w k, the candidates `orders`
+    /// (default multishoot's Plan::candidate_orders(tol)) and, with refine, every order near the first pass's choice,
+    /// then the orders past it while it is the lowest or highest of its pass; none above kmax (0: no bound). An order at
+    /// which a Taylor coefficient is not finite is dropped. mutate 1 inverts the step cost (the control of
+    /// hp/plan_auto_gain.py). Returns (kt, segs, passes, dropped), each pass a list of (order, steps per segment or
+    /// None, estimated cost or None) by increasing order (None: dropped once it cost more than the cheapest). Does not
+    /// change the solver: set_kt(kt) and set_segs(segs) apply it. Its points are multishoot's planner's, so at the
+    /// solver's own order they differ from plan()'s in the last bits.
+    #[pyo3(signature = (zh, zl, tol, hmax, w=20, orders=None, kmax=0, refine=true, mutate=0))]
+    #[allow(clippy::too_many_arguments, clippy::type_complexity)]
+    fn plan_auto(
+        &self,
+        py: Python<'_>,
+        zh: PyReadonlyArray1<'_, f64>,
+        zl: PyReadonlyArray1<'_, f64>,
+        tol: f64,
+        hmax: f64,
+        w: usize,
+        orders: Option<Vec<usize>>,
+        kmax: usize,
+        refine: bool,
+        mutate: u8,
+    ) -> PyResult<(usize, Vec<Vec<f64>>, Vec<Vec<(usize, Option<Vec<usize>>, Option<f64>)>>, Vec<usize>)> {
+        let (h, l) = (slice(&zh, "zh")?, slice(&zl, "zl")?);
+        if h.len() != self.api.len() || l.len() != self.api.len() {
+            return Err(PyValueError::new_err(format!("z must have length {}", self.api.len())));
+        }
+        if orders.as_ref().is_some_and(|o| o.is_empty() || o.iter().any(|&k| k < 2)) {
+            return Err(PyValueError::new_err("orders must be a non-empty list of orders >= 2"));
+        }
+        let (api, pool) = (&self.api, &self.pool);
+        let c = py
+            .detach(|| pool.install(|| api.plan_auto(h, l, tol, hmax, w, orders.as_deref(), kmax, refine, mutate)))
+            .map_err(PyValueError::new_err)?;
+        let passes: Vec<Vec<(usize, Option<Vec<usize>>, Option<f64>)>> =
+            c.passes.iter().map(|p| p.candidates.iter().map(|q| (q.kt, q.steps.clone(), q.cost)).collect()).collect();
+        Ok((c.kt, c.segs, passes, c.dropped))
+    }
+
+    /// The Taylor order (coefficients 0..=kt)
+    #[getter]
+    fn kt(&self) -> usize {
+        self.api.kt()
+    }
+
+    /// Sets the Taylor order (at least 2), for a plan of plan_auto; set_segs then sets its points. Drops the stored LU.
+    fn set_kt(&mut self, kt: usize) -> PyResult<()> {
+        if kt < 2 {
+            return Err(PyValueError::new_err(format!("kt must be at least 2, not {kt}")));
+        }
+        self.lu = None;
+        self.qlu = None;
+        self.olu = None;
+        self.api.set_kt(kt);
+        Ok(())
     }
 
     /// Taylor-integrate a state (hi, lo; 4M) along the x points xs with Delta from z; returns the final state.
