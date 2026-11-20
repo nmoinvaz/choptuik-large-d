@@ -778,3 +778,35 @@ converged.
   Over every log so far (63 accepted attempts, 16 refused at the limit), extending the bound to iteration 3
   (`--od_abort_it 3`) refuses no accepted attempt and catches that one. The largest accepted θ at iteration 3 is
   2.5×10⁵, and the time saved grows from 8.3 h to 8.8 h. The chains take it at their next restart.
+
+## 15. The arclength corrector's λ = ½ tail is the same switch (#1008)
+
+**At order 135 near D 259.4 the pseudo-arclength corrector spent most of each arc step at λ = ½. `--elim_switch 0`
+removes that tail.** Each corrector reached |F| of about 10⁻³⁹ in 4 corrections. Then about 25 corrections followed in
+which the full step's trial had a quad-double |F| below the switch (10⁻¹⁵). That trial went unprojected, and its own |F|
+of about 2.2×10³⁷ |dz|² (2.4×10⁻¹⁶ at |dz| 3.3×10⁻²⁷) failed the natural test. The half step was projected and passed at
+a ratio of 0.5000, so |F| and |dz| halved per correction until |dz| was about 10⁻³⁴. This is §1's jump, met in the
+arclength run of #1008, whose flags came from the chain's and so kept the default switch.
+
+**The A/B at arc step 4 from the same base, series and a** (macm3, raw `I1008-macm3/` 6bd06e711, pass criteria fixed
+before the run):
+
+| | run1, default switch | AB1, `--elim_switch 0` |
+|---|---|---|
+| corrector steps | 36 | 7 |
+| accepted λ | 1 ×7, ½ ×28 | 1 ×5, ½ ×1 |
+| corrector time | 9997 s | 2945 s |
+| projections: ladder, failed, skipped | 29, 2, 35 | 8, 2, 0 |
+| final max\|F\| | 8.31×10⁻⁷⁰ | 8.62×10⁻⁷⁰ |
+
+The first 4 corrections are identical. At correction 4, run1's full-step trial was refused unprojected (|F| 2.4×10⁻¹⁶)
+and AB1's was accepted after projection (7.9×10⁻⁵²). D is identical to run1's state to its 40 digits, and Δ agrees to
+9.47×10⁻⁴⁰. Every unknown agrees to 2.6×10⁻³⁸.
+
+- **Not covered by the switch:** arc step 5's crawl. Every trial refused there was a failed projection (|F| 10⁷ to
+  2×10¹⁰ before projecting), and every accepted one was unprojected. The residual jumps between λ 1/16 and 1/8 along a
+  step of about 5×10⁻¹⁵. Its prediction lay about 1.0×10⁻¹³·a from the root against 1.2–1.6×10⁻¹⁴·a at arc steps 1–4,
+  and that is unexplained. AB2 repeats it with `--elim_switch 0`.
+- **The chain** (`ks_chain3b`, #966) also runs at the default switch with the natural test, and converges in 2–3
+  corrections a step. Whether its first full steps (leg 7 step 2: 5.19×10⁻²⁶ → 4.47×10⁻¹⁷, then 1.18×10⁻³¹) are the
+  same unprojected trial is untested.
