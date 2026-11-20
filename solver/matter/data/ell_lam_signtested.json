@@ -2,6 +2,86 @@
  "note": "the delta table's quoted rows whose own record passed signtest.py at lambda -/+ 0.02 (agree at both, opposite signs), with the raw log (#1025); ell_delta.py table marks every other row 'no signtest yet'",
  "signtested": [
   {
+   "source": "data/l1_D4_kc47.jsonl",
+   "D": 4.0,
+   "log": "I1025-rpi5/signtest_lowD.log"
+  },
+  {
+   "source": "I810-mac/out/l1kc39d5s810.jsonl",
+   "D": 5.0,
+   "log": "I1025-rpi5/signtest_lowD.log"
+  },
+  {
+   "source": "data/l1_kc31r.jsonl",
+   "D": 6.0,
+   "log": "I1025-rpi5/signtest_lowD.log"
+  },
+  {
+   "source": "I810-mac/out/l1kc39s810.jsonl",
+   "D": 7.0,
+   "log": "I1025-rpi5/signtest_lowD.log"
+  },
+  {
+   "source": "I810-mac/out/l1kc39s810.jsonl",
+   "D": 8.0,
+   "log": "I1025-rpi5/signtest_lowD.log"
+  },
+  {
+   "source": "I810-mac/out/l1kc39s810.jsonl",
+   "D": 9.0,
+   "log": "I1025-rpi5/signtest_lowD.log"
+  },
+  {
+   "source": "I660-mac/out/l1kc39t660.jsonl",
+   "D": 10.0,
+   "log": "I1025-rpi5/signtest_lowD.log"
+  },
+  {
+   "source": "I1025-mac/out/l1kc47r1025.jsonl",
+   "D": 10.5,
+   "log": "I1025-win/signtest_lowD/signtest_lowD.log"
+  },
+  {
+   "source": "I1025-mac/out/l1kc47r1025.jsonl",
+   "D": 11.0,
+   "log": "I1025-win/signtest_lowD/signtest_lowD.log"
+  },
+  {
+   "source": "I1025-mac/out/l1kc47r1025.jsonl",
+   "D": 11.5,
+   "log": "I1025-win/signtest_lowD/signtest_lowD.log"
+  },
+  {
+   "source": "I1025-mac/out/l1kc47r1025.jsonl",
+   "D": 12.0,
+   "log": "I1025-win/signtest_lowD/signtest_lowD.log"
+  },
+  {
+   "source": "I1025-mac/out/l1kc39L1025.jsonl",
+   "D": 12.5,
+   "log": "I1025-rpi5/signtest_lowD.log"
+  },
+  {
+   "source": "I1025-mac/out/l1kc39L1025.jsonl",
+   "D": 13.0,
+   "log": "I1025-rpi5/signtest_lowD.log"
+  },
+  {
+   "source": "I1025-mac/out/l1kc47L1025.jsonl",
+   "D": 13.5,
+   "log": "I1025-win/signtest_lowD/signtest_lowD.log"
+  },
+  {
+   "source": "I1025-mac/out/l1kc47L1025.jsonl",
+   "D": 14.0,
+   "log": "I1025-win/signtest_lowD/signtest_lowD.log"
+  },
+  {
+   "source": "I1025-mac/out/l1kc55Fb1025.jsonl",
+   "D": 14.5,
+   "log": "I1025-win/signtest_lowD/signtest_lowD.log"
+  },
+  {
    "source": "I1025-win2c/out/l1kc63Fy1025.jsonl",
    "D": 15.0,
    "log": "I1025-win2c/signtest.log"
