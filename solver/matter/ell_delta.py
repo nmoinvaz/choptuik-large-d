@@ -120,9 +120,9 @@ def table(fn):
     nn, dd, ee, DD, hh = [], [], [], [], []
     print(f"delta(inf) = lambda_inf(l = 1) - lambda_0(inf) = {l1inf:.6f} - 2 = {dinf:+.6f} (#994, M = 3; "
           f"lambda_0(inf) = 2, GAMMA.md 5)\n")
-    print("| D | n | λ₁ | k_c | signtest | k_c bar: change from the next lower k_c | ψ-constraint | λ₀ (interp. error) | "
+    print("| D | n | λ₁ | λ₁ from | k_c | signtest | k_c bar: change from the next lower k_c | ψ-constraint | λ₀ (interp. error) | "
           "δ = λ₁ − λ₀ | δ − δ(∞) | n δ | n δ(∞) |")
-    print("|---|---|---|---|---|---|---|---|---|---|---|---|")
+    print("|---|---|---|---|---|---|---|---|---|---|---|---|---|")
     for r in sorted(rows, key=lambda q: q["D"]):
         D, l1 = r["D"], r["lam"]
         l0, e0 = lam0_at(D, Ds, L)
@@ -133,10 +133,14 @@ def table(fn):
             "single k_c (not in crossing or slopes)"
         con = r.get("constraint")
         sgt = "passed" if r.get("signtested") else "no signtest yet"
-        print(f"| {D:g} | {n:g} | {l1:.7f} | {r.get('kc', '')} | {sgt} | {bar} | {con:.1e} | {l0:.7f} ({e0:.1e}) | {d:.6f} | "
+        how = r.get("method", "float64") + (" (note)" if r.get("note") else "")
+        print(f"| {D:g} | {n:g} | {l1:.7f} | {how} | {r.get('kc', '')} | {sgt} | {bar} | {con:.1e} | {l0:.7f} ({e0:.1e}) | {d:.6f} | "
               f"{d - dinf:+.6f} | {n * d:.4f} | {n * dinf:.4f} |" if con is not None else
-              f"| {D:g} | {n:g} | {l1:.7f} | {r.get('kc', '')} | {sgt} | {bar} | | {l0:.7f} ({e0:.1e}) | {d:.6f} | "
+              f"| {D:g} | {n:g} | {l1:.7f} | {how} | {r.get('kc', '')} | {sgt} | {bar} | | {l0:.7f} ({e0:.1e}) | {d:.6f} | "
               f"{d - dinf:+.6f} | {n * d:.4f} | {n * dinf:.4f} |")
+    for r in sorted(rows, key=lambda q: q["D"]):
+        if r.get("note"):
+            print(f"\nnote, D {r['D']:g} (k_c {r.get('kc', '')}, {r.get('source', '')}): {r['note']}")
     nn, dd, ee, DD = map(np.array, (nn, dd, ee, DD))
     nw, dw = nn, dd                                  # the windows keep every row
     m = np.array(hh, bool)                           # rows with two or more valid k_c
@@ -263,6 +267,7 @@ def collect(raw):
     srcs += [os.path.join(raw, "I1025-win2b", "out", f"l1kc{k}Fw1025.jsonl") for k in (47, 55)]   # win2b redos: D 17, D 16.5
     srcs += [os.path.join(raw, "I1025-win2c", "out", f"l1kc63F{t_}1025.jsonl") for t_ in ("y", "z")]   # win2c: D 15, D 15.5
     srcs += [os.path.join(raw, "I1025-win2b", "out", "l1kc63Fu1025.jsonl")]   # win2b: k_c 63 at D 16.25
+    srcs += [os.path.join(raw, "I1025-win2b", "out", "l1kc71Fw1025c.jsonl")]   # win2b: k_c 71 at D 16.5 (the recheck)
     exf = os.path.join(HERE, "data", "ell_lam_excluded.json")   # records that failed a check (signtest, guess, sign changes)
     excl = {(e["source"], round(e["D"], 6)): e["reason"] for e in json.load(open(exf))["excluded"]} if os.path.exists(exf) else {}
     by = {}
@@ -280,6 +285,8 @@ def collect(raw):
                                                                 r.get("constraint"))
     stf = os.path.join(HERE, "data", "ell_lam_signtested.json")   # quoted rows whose own record passed signtest.py
     stset = {(e["source"], round(e["D"], 6)) for e in json.load(open(stf))["signtested"]} if os.path.exists(stf) else set()
+    ntf = os.path.join(HERE, "data", "ell_lam_notes.json")   # remarks printed beside a quoted row
+    notes = {(e["source"], round(e["D"], 6)): e["note"] for e in json.load(open(ntf))["notes"]} if os.path.exists(ntf) else {}
     pts = []
     for D in sorted(by):
         ks = sorted(by[D])
@@ -287,7 +294,8 @@ def collect(raw):
         err = abs(by[D][top][0] - by[D][ks[-2]][0]) if len(ks) > 1 else None
         pts.append(dict(D=D, lam=by[D][top][0], kc=top, lam_err=err if err is not None else 0.0, has_err=err is not None,
                         kcs={str(k): by[D][k][0] for k in ks}, kcs_constraint={str(k): by[D][k][2] for k in ks},
-                        source=by[D][top][1], constraint=by[D][top][2], signtested=(by[D][top][1], D) in stset))
+                        source=by[D][top][1], constraint=by[D][top][2], signtested=(by[D][top][1], D) in stset,
+                        method="float64", note=notes.get((by[D][top][1], D))))   # ell_refine's float64 roots; no hybrid yet
         print(f"D {D:g}: k_c {ks}, lambda {by[D][top][0]:.10f}" + (f", change from k_c {ks[-2]} {err:.1e}" if err is not None else ""))
     json.dump(dict(points=pts, note="built by ell_delta.py collect"), open(os.path.join(HERE, "data", "ell_lam_highD.json"), "w"), indent=1)
     return True

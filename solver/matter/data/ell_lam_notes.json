@@ -1,0 +1,10 @@
+{
+ "note": "remarks that ell_delta.py table prints beside a quoted row (#1025)",
+ "notes": [
+  {
+   "source": "I1025-win2b/out/l1kc71Fw1025c.jsonl",
+   "D": 16.5,
+   "note": "the re-search's same-k_c LM pass moved Delta by -3.63e-7 from winb's saved state (Delta_src 1.0117774685 to Delta 1.0117771055 in the record), so the root is on a slightly different state than winb's; win2b's observation, not tested (raw I1025-win2b README). float64 until P4's hybrid re-root (win2b, amendment 7) lands"
+  }
+ ]
+}

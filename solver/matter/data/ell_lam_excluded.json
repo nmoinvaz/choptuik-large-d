@@ -39,7 +39,7 @@
   {
    "source": "I1025-win/out/l1kc71Fw1025.jsonl",
    "D": 16.5,
-   "reason": "pending the coordinator's ruling: lam 2.1454677 equals its guess (the k_c 63 value) to 4.3e-9, at its bracket's edge; a signtest at -/+1e-4 and 1e-6 is proposed"
+   "reason": "out by its own rule (raw I1025-win README 2c1a63d4): win2b's re-search from guess 2.1408016 (l1kc71Fw1025c) found 2.1471294563, 1.66e-3 away, not within 1e-6; the coordinator's ruling, 2026-11-20"
   },
   {
    "source": "I1025-mac/out/l1kc47Fr1025.jsonl",

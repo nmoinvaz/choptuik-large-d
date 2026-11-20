@@ -20,7 +20,9 @@
    },
    "source": "data/l1_D4_kc47.jsonl",
    "constraint": 2.6612747202400022e-05,
-   "signtested": true
+   "signtested": true,
+   "method": "float64",
+   "note": null
   },
   {
    "D": 5.0,
@@ -40,7 +42,9 @@
    },
    "source": "I810-mac/out/l1kc39d5s810.jsonl",
    "constraint": 6.847854519507609e-07,
-   "signtested": true
+   "signtested": true,
+   "method": "float64",
+   "note": null
   },
   {
    "D": 6.0,
@@ -58,7 +62,9 @@
    },
    "source": "data/l1_kc31r.jsonl",
    "constraint": 2.8535365633062933e-07,
-   "signtested": true
+   "signtested": true,
+   "method": "float64",
+   "note": null
   },
   {
    "D": 7.0,
@@ -78,7 +84,9 @@
    },
    "source": "I810-mac/out/l1kc39s810.jsonl",
    "constraint": 4.330381498677806e-08,
-   "signtested": true
+   "signtested": true,
+   "method": "float64",
+   "note": null
   },
   {
    "D": 8.0,
@@ -98,7 +106,9 @@
    },
    "source": "I810-mac/out/l1kc39s810.jsonl",
    "constraint": 8.748631539554132e-08,
-   "signtested": true
+   "signtested": true,
+   "method": "float64",
+   "note": null
   },
   {
    "D": 9.0,
@@ -118,7 +128,9 @@
    },
    "source": "I810-mac/out/l1kc39s810.jsonl",
    "constraint": 1.1912405360643656e-07,
-   "signtested": true
+   "signtested": true,
+   "method": "float64",
+   "note": null
   },
   {
    "D": 10.0,
@@ -138,7 +150,9 @@
    },
    "source": "I660-mac/out/l1kc39t660.jsonl",
    "constraint": 2.3798538203144737e-07,
-   "signtested": true
+   "signtested": true,
+   "method": "float64",
+   "note": null
   },
   {
    "D": 10.5,
@@ -158,7 +172,9 @@
    },
    "source": "I1025-mac/out/l1kc47r1025.jsonl",
    "constraint": 1.2042655930243225e-07,
-   "signtested": true
+   "signtested": true,
+   "method": "float64",
+   "note": null
   },
   {
    "D": 11.0,
@@ -178,7 +194,9 @@
    },
    "source": "I1025-mac/out/l1kc47r1025.jsonl",
    "constraint": 1.6442524164287626e-06,
-   "signtested": true
+   "signtested": true,
+   "method": "float64",
+   "note": null
   },
   {
    "D": 11.5,
@@ -198,7 +216,9 @@
    },
    "source": "I1025-mac/out/l1kc47r1025.jsonl",
    "constraint": 2.3212093371205237e-06,
-   "signtested": true
+   "signtested": true,
+   "method": "float64",
+   "note": null
   },
   {
    "D": 12.0,
@@ -218,7 +238,9 @@
    },
    "source": "I1025-mac/out/l1kc47r1025.jsonl",
    "constraint": 5.83250885451198e-07,
-   "signtested": true
+   "signtested": true,
+   "method": "float64",
+   "note": null
   },
   {
    "D": 12.5,
@@ -234,7 +256,9 @@
    },
    "source": "I1025-mac/out/l1kc39L1025.jsonl",
    "constraint": 5.758642436212992e-06,
-   "signtested": true
+   "signtested": true,
+   "method": "float64",
+   "note": null
   },
   {
    "D": 13.0,
@@ -252,7 +276,9 @@
    },
    "source": "I1025-mac/out/l1kc39L1025.jsonl",
    "constraint": 2.3643248200645983e-05,
-   "signtested": true
+   "signtested": true,
+   "method": "float64",
+   "note": null
   },
   {
    "D": 13.5,
@@ -270,7 +296,9 @@
    },
    "source": "I1025-mac/out/l1kc47L1025.jsonl",
    "constraint": 1.2121762790011303e-05,
-   "signtested": true
+   "signtested": true,
+   "method": "float64",
+   "note": null
   },
   {
    "D": 14.0,
@@ -290,7 +318,9 @@
    },
    "source": "I1025-mac/out/l1kc47L1025.jsonl",
    "constraint": 3.5135531228912315e-05,
-   "signtested": true
+   "signtested": true,
+   "method": "float64",
+   "note": null
   },
   {
    "D": 14.5,
@@ -308,7 +338,9 @@
    },
    "source": "I1025-mac/out/l1kc55Fb1025.jsonl",
    "constraint": 1.907873869426562e-05,
-   "signtested": true
+   "signtested": true,
+   "method": "float64",
+   "note": null
   },
   {
    "D": 15.0,
@@ -328,7 +360,9 @@
    },
    "source": "I1025-win2c/out/l1kc63Fy1025.jsonl",
    "constraint": 3.5977652518640637e-06,
-   "signtested": true
+   "signtested": true,
+   "method": "float64",
+   "note": null
   },
   {
    "D": 15.5,
@@ -348,7 +382,9 @@
    },
    "source": "I1025-win2c/out/l1kc63Fz1025.jsonl",
    "constraint": 1.1012167335220554e-05,
-   "signtested": true
+   "signtested": true,
+   "method": "float64",
+   "note": null
   },
   {
    "D": 16.0,
@@ -368,7 +404,9 @@
    },
    "source": "I1025-mac/out/l1kc63Fm1025.jsonl",
    "constraint": 2.87752284221681e-05,
-   "signtested": true
+   "signtested": true,
+   "method": "float64",
+   "note": null
   },
   {
    "D": 16.25,
@@ -388,27 +426,33 @@
    },
    "source": "I1025-win2b/out/l1kc63Fu1025.jsonl",
    "constraint": 4.544237199031933e-05,
-   "signtested": true
+   "signtested": true,
+   "method": "float64",
+   "note": null
   },
   {
    "D": 16.5,
-   "lam": 2.1454677042524617,
-   "kc": 63,
-   "lam_err": 0.004666055169960437,
+   "lam": 2.1471294562703465,
+   "kc": 71,
+   "lam_err": 0.0016617520178847656,
    "has_err": true,
    "kcs": {
     "47": 2.1548214799814693,
     "55": 2.1408016490825013,
-    "63": 2.1454677042524617
+    "63": 2.1454677042524617,
+    "71": 2.1471294562703465
    },
    "kcs_constraint": {
     "47": 0.001942166993050071,
     "55": 0.00038609706531759455,
-    "63": 6.950470105397352e-05
+    "63": 6.950470105397352e-05,
+    "71": 3.0950201081847665e-05
    },
-   "source": "I1025-win/out/l1kc63Fw1025b.jsonl",
-   "constraint": 6.950470105397352e-05,
-   "signtested": true
+   "source": "I1025-win2b/out/l1kc71Fw1025c.jsonl",
+   "constraint": 3.0950201081847665e-05,
+   "signtested": true,
+   "method": "float64",
+   "note": "the re-search's same-k_c LM pass moved Delta by -3.63e-7 from winb's saved state (Delta_src 1.0117774685 to Delta 1.0117771055 in the record), so the root is on a slightly different state than winb's; win2b's observation, not tested (raw I1025-win2b README). float64 until P4's hybrid re-root (win2b, amendment 7) lands"
   },
   {
    "D": 16.75,
@@ -424,7 +468,9 @@
    },
    "source": "I1025-mac/out/l1kc47Fq1025.jsonl",
    "constraint": 0.0028105329478793446,
-   "signtested": true
+   "signtested": true,
+   "method": "float64",
+   "note": null
   },
   {
    "D": 17.0,
@@ -444,7 +490,9 @@
    },
    "source": "I1025-win/out/l1kc63Fw1025.jsonl",
    "constraint": 0.00014730973667168853,
-   "signtested": true
+   "signtested": true,
+   "method": "float64",
+   "note": null
   }
  ],
  "note": "built by ell_delta.py collect"

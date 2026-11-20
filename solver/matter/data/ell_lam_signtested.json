@@ -120,6 +120,11 @@
    "source": "I1025-win/out/l1kc63Fw1025.jsonl",
    "D": 17.0,
    "log": "I1025-win/out/signtest_l1kc63_1025.jsonl"
+  },
+  {
+   "source": "I1025-win2b/out/l1kc71Fw1025c.jsonl",
+   "D": 16.5,
+   "log": "I1025-win2b/signtest_kc71c.log"
   }
  ]
 }
