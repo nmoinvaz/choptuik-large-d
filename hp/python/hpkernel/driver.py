@@ -194,9 +194,13 @@ def newton_step(s, zh, zl, jac="dd", mixed=None, gmres=None, verbose=False):
     factorization (the double-double one for dd, else the f64 LU of the f64 Jacobian, with the horizon block in
     double-double for f64h / f64hg), which chord, lu_solve, lu_solve_t and weak_subspace then use. mixed: further
     options of Solver.newton_mixed; gmres: options of gmres_refine (GMRES above, for f64g / f64hg).
-    Returns dh, dl, Fh, Fl, pmin, pmax, info: info = dict(t_res, t_jac, t_lu, t_solve, t_prod, products) in seconds."""
+    Returns dh, dl, Fh, Fl, pmin, pmax, info: info = dict(t_call, t_res, t_jac, t_fill, t_lu, t_solve, t_prod, products)
+    in seconds. t_call is the kernel call's wall clock; t_res, t_lu and t_solve are Solver.step_timing's residual,
+    factorization and solve; t_jac is the Jacobian, t_call less those three; t_fill is step_timing's second entry, the
+    Jacobian in dense storage but only the staircase blocks' copy in block storage (#1040, hp/step_timing_check.py)."""
     if jac not in JACS:
         raise ValueError(f"jac must be one of {JACS}, not {jac!r}")
+    t0 = time.perf_counter()
     if jac == "dd":
         dh, dl, Fh, Fl, pmin, pmax = s.newton(zh, zl)
     else:
@@ -204,9 +208,12 @@ def newton_step(s, zh, zl, jac="dd", mixed=None, gmres=None, verbose=False):
         if jac in ("f64h", "f64hg"):
             kw["horizon_dd"] = HORIZON_DD
         dh, dl, Fh, Fl, pmin, pmax = s.newton_mixed(zh, zl, **kw)
+    t_call = time.perf_counter() - t0
     st = getattr(s, "step_timing", None)       # (absent in builds before notes/LARGE_D_MIXED.md)
     tr, tj, tf, ts = st() if st else (float("nan"),) * 4
-    info = dict(t_res=tr, t_jac=tj, t_lu=tf, t_solve=ts, t_prod=0.0, products=0)
+    # the Jacobian from the wall clock: multishoot forms the block columns before the staircase LU, outside every entry
+    info = dict(t_call=t_call, t_res=tr, t_jac=t_call - tr - tf - ts, t_fill=tj, t_lu=tf, t_solve=ts, t_prod=0.0,
+                products=0)
     if jac in ("f64g", "f64hg"):
         g = dict(GMRES, **(gmres or {}))
         dh, dl, gi = gmres_refine(s, zh, zl, -np.asarray(Fh), -np.asarray(Fl), verbose=verbose, **g)
@@ -258,10 +265,10 @@ def newton_solve(s, zh, zl, tol=1e-28, it_max=12, chord=0, verbose=True, ls=True
     |F| < tol the step computed at that point is still taken if |F| stays below tol: the linear convergence leaves an
     error of about that step's size in the near-null directions, which |F| does not see.
     jac="f64h", "f64g", "f64hg": the large-D variants of newton_step (notes/LARGE_D_MIXED.md), with the same two
-    rules; gmres: options of gmres_refine. Their history records carry the step's time split (t_res, t_jac, t_lu,
-    t_solve, t_prod) and the products. With dd_finish (their default) the remaining steps are exact once a mixed step
-    is cut below lam = 1/4, needs the exact retry, or its correction loop ends without converging (as in
-    deflated_newton). dd_last: see deflated_newton."""
+    rules; gmres: options of gmres_refine. Their history records carry the step's time split (t_call, t_res, t_jac,
+    t_fill, t_lu, t_solve, t_prod; newton_step) and the products. With dd_finish (their default) the remaining steps
+    are exact once a mixed step is cut below lam = 1/4, needs the exact retry, or its correction loop ends without
+    converging (as in deflated_newton). dd_last: see deflated_newton."""
     if jac not in JACS:
         raise ValueError(f"jac must be one of {JACS}, not {jac!r}")
     hist = []
