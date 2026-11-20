@@ -420,18 +420,22 @@ claim that it does.
 §6 lists what it shares with them. In short: the model and the conventions are shared, because a truncated number is
 defined only with them, and no code is.
 
-**Its own planted checks** (`l2_c2_review_num.py checks`, 10 s; exit 0 iff all pass; `--mutate=fc` makes check 7
-fail):
+**Its own planted checks** (`l2_c2_review_num.py checks`, 10 s; exit 0 iff all pass). Each mutation breaks the
+right-hand side or the series only, and every check fails under at least one:
 
-| check | result | bar |
-|---|---|---|
-| 1. the M = 1 zero by its own Newton on the raw jump, from five digits, against the stored zero | difference 2.8×10⁻¹¹ | 10⁻⁸ |
-| 2. the linearised code against the nonlinear one: profile sin θ at λ = 0 is d(jump)/dA, five-point differences | 1.3×10⁻⁷ | 10⁻⁶ |
-| 3. exact modes: A(0)F′ = 0 and A(1)(F + ωF′) = 0; control: A(0.5) is not singular | 6.4×10⁻¹¹, 1.2×10⁻¹⁰; control σ_min/σ_max 2.0×10⁻² | 10⁻⁶; > 10⁻³ |
-| 4. λ* of the M = 1 model, secant on det A(λ) | 1.7691220085, against 1.7691220084 | 10⁻⁷ |
-| 5. d/dλ of the mode by the variational equation against centred differences in λ | 4.6×10⁻⁸ | 10⁻⁶ |
-| 6. each forcing two ways at \|ξ\| = 0.12: summed series, and Taylor-jet value at the point | 1.1×10⁻¹³ | 10⁻⁸ |
-| 7. the compact forms against the t-derivative forms without truncation (L = 40, random fields): l2, l0 against SymForce's terms, G | 2.5×10⁻¹⁵ | 10⁻⁹ |
+| check | result | bar | fails under |
+|---|---|---|---|
+| 1. the M = 1 zero by its own Newton on the raw jump, from five digits, against the stored zero | difference 2.8×10⁻¹¹ | 10⁻⁸ | `bg` |
+| 2. the linearised code against the nonlinear one: profile sin θ at λ = 0 is d(jump)/dA, five-point differences | 1.3×10⁻⁷ | 10⁻⁶ | `bg`, `lin` |
+| 3. exact modes: A(0)F′ = 0 and A(1)(F + ωF′) = 0; control: A(0.5) is not singular | 6.4×10⁻¹¹, 1.2×10⁻¹⁰; control σ_min/σ_max 2.0×10⁻² | 10⁻⁶; > 10⁻³ | `bg`, `lin` |
+| 4. λ* of the M = 1 model, secant on det A(λ) | 1.7691220085, against 1.7691220084 | 10⁻⁷ | `bg`, `lin` |
+| 5. d/dλ of the mode by the variational equation against centred differences in λ | 4.6×10⁻⁸ | 10⁻⁶ | `dlam` |
+| 6. each forcing two ways at \|ξ\| = 0.12: summed series, and Taylor-jet value at the point | 1.1×10⁻¹³ | 10⁻⁸ | `ser` |
+| 7. the compact forms against the t-derivative forms without truncation (L = 40, random fields): l2, l0 against SymForce's terms, G | 2.5×10⁻¹⁵ | 10⁻⁹ | `fc` |
+
+The mutations: `bg`, the background's gravity term off by 10⁻⁶; `lin`, a sign in the linearised y-equation; `dlam`,
+a term of the d/dλ equation dropped; `ser`, the series' Euler derivative off by 10⁻⁶; `fc`, the sign of F_c in the
+t-derivative forms.
 
 Checks 1 and 4 are also results: the stored zero and FIRST_ORDER.md's λ* = 1.769122008 are reproduced by code that
 shares only the model with the code that made them.
@@ -646,6 +650,7 @@ process at nice 10, on the Mac (Apple M5):
 python3 l2_c2_review_sym.py                  # sections 1.6 and 2 (~25 s): 25 checks; "all passed", exit 0
 python3 l2_c2_review_sym.py --mutate=sign    # also fibre, lin, bg, k: the listed checks fail, exit 1
 python3 l2_c2_review_num.py checks           # section 4's seven planted checks (~10 s); PASS, exit 0
+python3 l2_c2_review_num.py checks --mutate=bg   # also lin, dlam, ser, fc: the listed checks fail, exit 1
 python3 l2_c2_review_num.py c2               # M = 1 (~2 min): the table of section 4; PASS, exit 0
 python3 l2_c2_review_num.py c2 --mutate=fc   # FAIL, exit 1
 python3 l2_c2_review_num.py c2 --r1=0.25 --delta=0.3927   # another ray and radius; PASS (slices only)
