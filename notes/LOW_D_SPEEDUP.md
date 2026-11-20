@@ -261,7 +261,41 @@ L 0.9 is tried only at M′ 320. At M′ 384 the mapped grid cannot cost less th
 
 ### Results
 
-Pending the runs above.
+**At D 3.04–3.05, an arctan map with L 0.3–0.4 reaches the uniform M 384 grid's Δ to 10⁻¹² with M′ 160–192 modes,
+2.0–2.4 times fewer. Its Newton call costs about 0.06–0.08 of the uniform grid's, measured, so it is 12–17 times
+cheaper.** Runs 3–4 on win2 at D 3.0475 (raw `I1033-win2/` ee9cdc53) and run 5 on dh610 at D 3.044375 (raw
+`I1033-dh610/` 55a49ace). Costs are measured per Newton call against the uniform grid's own plan, under load
+(side-by-side jobs on win2, other runs on dh610), so they read about 1.25 times higher than a call run alone.
+
+| D | L | smallest M′ within 10⁻¹² | Δ − Δ(384) | own plan / uniform | cost measured |
+|---|---|---|---|---|---|
+| 3.0475 | 0.8 | 320 | −1.74×10⁻¹³ | 0.66 | 0.673 |
+| 3.0475 | 0.7 | 256 | +6.47×10⁻¹³ | 0.66 | 0.262 |
+| 3.0475 | 0.5 | 192 | +5.13×10⁻¹³ | 0.45 | 0.088 |
+| 3.0475 | 0.4 | 192 | −1.93×10⁻¹³ | 0.43 | 0.081 |
+| 3.0475 | 0.3 | 160 | −3.23×10⁻¹³ | 0.37 | 0.058 |
+| 3.044375 | 0.4 | 192 | −3.49×10⁻¹³ | 0.46 | 0.065 |
+
+- **L 0.9 gains nothing** (+2.91×10⁻¹² at M′ 320). **L 0.6 at M′ 256 did not converge**: |F| stalled at
+  1.43×10⁻²⁸ against the 10⁻²⁸ tolerance, with its Δ within 3×10⁻¹³. **L 0.2 fails** at M′ 160 and 128: pass 1's line
+  search makes no progress from |F| 10⁻⁴ to 10⁻³.
+- At D 3.044375, **L 0.5 at M′ 192 misses by 12%** (1.12×10⁻¹²), and it has no entry. The uniform grid's own
+  error there is |Δ(320) − Δ(384)| = 7.67×10⁻¹¹ (3.77×10⁻¹¹ at D 3.0475).
+- **The reference is 3.2×10⁻¹³ off.** At D 3.0475, the converged mapped solves at L 0.7, 0.5 and 0.3 (M′ 320, 256 and
+  160) agree with each other to 3.4×10⁻¹⁵, at −3.21×10⁻¹³ from Δ(384). The records cannot say whether that is M 384's
+  resolution or its stored coarse plan (1623 steps; dh170 found T82-win's stored M 320 and 384 states solve only
+  such plans, #1014). Measured from the common value, the M′ needed per L does not change (win2b's analysis,
+  `plan_vs_delta_1033.py`, raw b1f73b1b). That analysis also refuted the coordinator's guess that plan length
+  sorts the solves near +3.8×10⁻¹¹: it is M′ at each L that does.
+- **The identity's plan-size check fails at both D.** The L 1 M′ 384 solve's own plan is 2842 steps against the
+  stored 1623 at D 3.0475, and 3785 against 2796 at D 3.044375. Its Δ reproduces the stored one to 10⁻³⁰. The
+  stored plans are the coarse ones above, so the check's 10% bound compares two plan families. That is not
+  explained further.
+- **Builds.** win2's runs 0–4 used the multidouble 4.1.0 build of fc697f3a (venv-i600), and dh610's run 5 used
+  multidouble 4.9.0 and multishoot 3.3.0 (hp 76fdcbc9). Each run's gains compare its own two grids on one build.
+  Between runs, only the L 1 identities cross builds.
+- Open (dh610's recommendations on #1033): the ladder's missing rungs at D 3.044375 (L 0.5 at M′ 224 and 256, L 0.4 at
+  176, L 0.3), and the plan-size mismatch.
 
 ## Appendix A: code analysis
 
