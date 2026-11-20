@@ -10,8 +10,8 @@ follow S = s + e s Y2 and the spatial metric delta + k, with k = 2 a H constant 
 deformation of L2_MODE.md section 1 (fields follow S, flat metric kept) is that diffeomorphism minus k, and its residual
 in the finite-n equations is minus the linearised equations applied to k. For p = q, k = e (dy.dy - dz.dz).
 
-Curvature. Warped products over the base (t, s, u), u = tan(chi/2), with two sphere fibres (O'Neill 1983, ch. 7;
-the formulas are re-derived in first-order perturbation theory here and tested on planted cases):
+Curvature. Warped products over the base (t, s, u), u = tan(chi/2), with two sphere fibres: the formulas of
+L2_MODE.md section 1, written out in first-order perturbation theory here and tested on planted cases (A, B):
   R_ab = Rb_ab - sum_k m_k (D_a D_b U_k + d_a U_k d_b U_k),   box f = boxb f + sum_k m_k dU_k . df .
 
 Checks (each exits non-zero on failure; --mutate=NAME breaks one input, and the check must then fail):
@@ -35,7 +35,7 @@ Added after section 9 was read:
   P  the p = 1 frame: F2 = 2 s cos^2(chi) Q, the same F2/(s Y2) as p = q                      (--mutate=k)
   K  the stored forcings of data/l2_c2_forcing.json equal this derivation                    (--mutate=sign)
 
-Run: python3 l2_c2_review_sym.py [--mutate=NAME]      (about 1 min, one process)
+Run: python3 l2_c2_review_sym.py [--mutate=NAME]      (about 25 s, one process; fibre, lin, bg, k, sign)
 """
 import sys
 import sympy as sp

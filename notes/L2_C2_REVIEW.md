@@ -6,8 +6,38 @@ A review of [L2_MODE.md](L2_MODE.md) §9, which claims that the ℓ = 2 mode's g
 Status words as in AGENTS.md.
 
 The order of work is part of the record. §1 was derived, checked with `solver/inner_pert/l2_c2_review_sym.py` and
-committed before L2_MODE.md §9.1–9.6 and the `l2_c2*.py` files were opened. Only L2_MODE.md §§1–8 and FIRST_ORDER.md
-were read for it. §2 onward was written after reading them.
+committed (5112139e) before L2_MODE.md §9.1–9.6 and the `l2_c2*.py` files were opened. Only L2_MODE.md §§1–8 and
+FIRST_ORDER.md were read for it. §2 onward was written after reading them.
+
+## Verdict
+
+**Confirmed with corrections.** c₂ = −λ₁ follows from what L2_MODE.md §9 says it follows from, and it stays
+*conditional*. The corrections are to the list of hypotheses and to what the truncated numbers are said to show.
+Nothing found changes the sign or the value.
+
+| statement of §9 | after the review | where |
+|---|---|---|
+| F̃⁽²⁾ + F̃⁽⁰⁾ = 𝓛₀[(0, Φₛ)] | *checked symbolically* by two codes with no shared source, and derived by hand in another frame | §1, findings 1–3 |
+| the ℓ = 2 rows are the ℓ = 0 rows conjugated by sY | *checked symbolically* twice | finding 7 |
+| V₁ + V₂ = 0 is a gauge, with residual gauge sY T(t) | by hand, twice, independently | finding 8 |
+| a local field with zero multiplier drops out (§9.4) | correct, under (a)–(d) of §3 | finding 13 |
+| c₂ = −λ₁ | *conditional*. §9.7's hypotheses are not the complete set | findings 14–18 |
+| c₂ = −3.0324 | *numerical evidence*, through FIRST_ORDER.md's fit of λ₁ | |
+| c₂ = −7.96, −2.48, −3.046 at M = 1, 3, 5 | reproduced by a second implementation at M = 1 and 3, and to four digits at M = 5. They test the ℓ = 0 machinery, not the ℓ = 2 step | findings 10–12, 19, 20 |
+| the code | no bug found. Three small points (22, 23, 26) | findings 21–28 |
+
+The main findings, by number:
+
+- **1–3.** The identity holds, and it has a two-line reason: the mode is a linear stretch of space minus a constant
+  traceless metric k, which rescales the radial second derivatives by 1 + eY₂. So F⁽²⁾ = 2sY₂Q, and the s-translation
+  gives F⁽⁰⁾ = −2Q. The field (0, Φₛ) comes only from FIRST_ORDER.md translating C = α/a and not the lapse.
+- **9.** L2_MODE.md §8.4 item 4 ("ℓ = 2 needs no gauge step") contradicts §9.1, which is right.
+- **10–12.** c₂(M) + λ₁(M) = G(M) by linearity. The M table tests that G → 0 and that the slice gives λ₁. At M = 1
+  another way of writing the same forcing gives c₂ = −2.6 where §9.5 has −7.96.
+- **14, 15, 17.** Missing hypotheses: that an ℓ = 2 perturbation is selected by its inner multiplier at all, that the
+  ℓ = 2 outer maps add nothing at O(1/n), and that the correction's metric part exists.
+- **19, 20.** The second implementation reproduces l2_c2.py's numbers, and the other form of the forcing converges
+  to the same value at M = 5 (−3.042 against −3.046).
 
 ## 1. The derivation, made before reading §9
 
@@ -211,6 +241,18 @@ FIRST_ORDER.md's printed forcing), so each tests the other.
   reach them at O(1). So the forcing depends on the mode's metric part, and B3 is what makes §1.3's F₂ the forcing of
   L2_MODE.md's mode.
 - §1.1's Y₂ is the harmonic x·Hx/r² normalised so that εh/(2n) = e s Y₂.
+- §1.4 calls the identity "*proved* by hand". The hand derivation drops O(1/n²) terms with stated reasons and has not
+  been read by anyone else. The status to quote is *checked symbolically*.
+
+**Checks added to `l2_c2_review_sym.py` after reading §9.** The script now takes about 25 s and prints 24 lines.
+
+| check | result | mutations under which it fails |
+|---|---|---|
+| B3: L2_MODE.md §8.3's deformation, with A = (sμₛ + μ)Y₂, B = −μ sin 2χ, C = V = 0, is 𝓛_ξ(background) − k | equal | |
+| J: every other row (E^t_s, E^t_χ, E^s_s, E^s_χ, E^χ_χ, both fibre rows) vanishes on k at its natural order | zero | `lin`, `k` |
+| J2: the χχ row at its natural order holds ∂ₜ² of the metric function C | present | |
+| P: the p = 1 frame. Its spherical rows are those of p = q exactly in n, and on k = e(dy² − dz·dz/n) the O(1) parts vanish and F₂ = 2s cos²χ Q | zero difference | `fibre`, `lin`, `k` |
+| K: the l2, l0 and G rows of `data/l2_c2_forcing.json` equal this derivation | zero difference | `fibre`, `lin`, `k`, `sign` |
 
 ## 2. Comparison with L2_MODE.md §9 and the code
 
@@ -219,7 +261,7 @@ Findings are numbered through the whole note. Each is marked agreement, correcti
 ### 2.1 The forcing and the identity
 
 1. **Agreement: the identity.** §9.2's F̃⁽²⁾ + F̃⁽⁰⁾ = 𝓛₀[(0, Φₛ)], with the rows −4cₛΦₛ/c (W) and 2ΦₜΦₜₛ/c² (E^t_t), is
-   §1.4's result. It is *proved* by hand in §1.3–1.4 and *checked symbolically* by two codes that share no source
+   §1.4's result. It is derived by hand in §1.3–1.4 and *checked symbolically* by two codes that share no source
    (`l2_c2_forcing.py`; `l2_c2_review_sym.py`, checks E–E3). The forcings stored in `data/l2_c2_forcing.json` (l2, l0
    and G, both rows) equal this note's, as rational functions of the t-derivatives (check K, added after reading).
 2. **Agreement, and a shorter form.** §9.2 prints F̃⁽²⁾[W] as nine terms with Φ to fourth order in t. With
@@ -243,8 +285,8 @@ Findings are numbered through the whole note. Each is marked agreement, correcti
    statement that every other row (the two momentum constraints, the three spatial rows of the base, the two fibre
    rows) vanishes on k at its natural order. It does (check J, p = q only).
 6. **Agreement: every representative** (§9.6). §1.3 uses only that H is traceless and that k_NN = e Y₂. So F̃⁽²⁾ is
-   the same for every ℓ = 2 harmonic, p = 1 included, by the hand derivation. §9.6 reaches it for p = 1 with a second
-   symbolic run. The symbolic script of this review covers p = q only.
+   the same for every ℓ = 2 harmonic, by the hand derivation. §9.6 reaches it for p = 1 with a second symbolic run,
+   and so does this review's script in its own frame (check P).
 7. **Agreement: the conjugation and its control** (§8.3; checks G, G1), and the map to the solver's variables (§9.1):
    Fᵧ = √2ρ²c F̃[W] and F_c = ρ²c F̃[E^t_t], entering as L₂W_y = … + Fᵧ. The y-equation's residual is −√2ρ²c times the
    W row, and the correction obeys 𝓛₀W = −F, which gives that sign.
@@ -351,7 +393,7 @@ the ansatz. Against (a)–(d) and the steps that lead to the reduced problem:
     L2_MODE.md §1 (zero shift, metric of relative order 1/n). §9.7 lists the ansatz for the mode. It holds for W₂ too.
 
 None of findings 14–18 changes the algebra. They change what "conditional" stands on. In the note's own words the
-status is: the identity *checked symbolically* (and *proved* by hand here), c₂ = −λ₁ *conditional* on (i) Conjecture 1
+status is: the identity *checked symbolically*, c₂ = −λ₁ *conditional* on (i) Conjecture 1
 and FIRST_ORDER.md's route for λ₁, (ii) the ℓ = 2 selection hypothesis of finding 14, (iii) the ℓ = 2 outer maps of
 finding 15, (iv) the existence of the continuation, with its metric part (finding 17), (v) a simple eigenvalue, and
 (vi) the ansatz at linear order in e. The value −3.0324 is *numerical evidence* through λ₁'s fit.
@@ -411,12 +453,192 @@ columns scaled (condition number 1.5×10⁹), where l2_c2.py deflates and takes 
 | l2c (c₂, compact form) | −2.88001265 | −2.93466923 | −2.85904257 | not in l2_c2.py |
 | Gc (G, compact form) | −0.00942324 | −0.01719802 | −0.00644029 | not in l2_c2.py |
 
-19. **Agreement: l2_c2.py's numbers at M = 1 and M = 3 are reproduced**, to 1.3×10⁻¹⁰ and 4.7×10⁻⁸ (bar 10⁻⁶). That
-    covers the expression graph, the conversion to the solver's variables, the forced series, the d/dλ component, the
-    slice formula and, at M = 3, the deflation. Status: *numerical evidence* that the code does what §9.1–9.3 say.
-    It is not evidence for c₂ = −λ₁ beyond finding 10.
-20. **The compact form converges too, from the other side.** With the forcing in s-derivatives, c₂ is −2.86, −1.28,
-    −3.37 at M = 1 and −2.880, −2.935, −2.859 at M = 3, and its G is 0.075, 0.302, 0.002 and then −0.009, −0.017,
-    −0.006. §9.2's form gives G = −0.19, 0.07, −0.27 and then 0.023, 0.016, 0.026. The two forms of G have opposite
-    signs at M = 3 and both fall. That is what a truncation residue of an exact zero looks like. Status: *numerical
-    evidence*, two points per form.
+**c₂ at M = 5** (`--M=5 --tol=1e-3`, 10 min), at the stored zero, by the same one-shot solve of the raw 6 × 6 jump
+matrix. Its condition number is 7.6×10¹⁷, so this is at the limit of double precision. FIRST_ORDER.md §5 says the
+same of its one-shot Jacobian at M = 5, and that is why l2_c2.py deflates. The run measures its own error: the
+linearity residuals c₂ + λ₁ − G, which are 10⁻¹⁰ or less at M = 1 and 3, are 3.2×10⁻⁵ and 1.2×10⁻⁴ here.
+
+| forcing | φ = e₁ | e₂ | f₂ | l2_c2.py on e₁, e₂, f₂ | max absolute difference |
+|---|---|---|---|---|---|
+| l2 (c₂) | −3.04653 | −3.04372 | −3.04760 | −3.04647, −3.04377, −3.04749 | 1.0×10⁻⁴ |
+| l0 (λ₁) | 3.04487 | 3.04246 | 3.04579 | 3.04482, 3.04250, 3.04570 | 8.8×10⁻⁵ |
+| G | −0.00163 | −0.00123 | −0.00178 | −0.00165, −0.00127, −0.00179 | 3.7×10⁻⁵ |
+| sym | 3.04227 | 3.03986 | 3.04318 | 3.04212, 3.03981, 3.04300 | 1.8×10⁻⁴ |
+| l2c (c₂, compact form) | −3.04174 | −3.03894 | −3.04280 | not in l2_c2.py | |
+| Gc (G, compact form) | 0.00041 | 0.00080 | 0.00026 | not in l2_c2.py | |
+
+Verdict: WATCH. The run's bar was a relative 10⁻³ on every entry, and it exits 1: G, which is 2000 times smaller
+than c₂, is off by 1 to 3% of itself. The absolute differences, 2×10⁻⁵ to 1.8×10⁻⁴, are of the size of the run's own
+linearity residuals, so the cause is the one-shot solve, not a disagreement. The bar was not changed. At M = 5 this
+run supports l2_c2.py's values to four digits and no more.
+
+19. **Agreement: l2_c2.py's numbers at M = 1 and M = 3 are reproduced**, to 1.3×10⁻¹⁰ and 4.7×10⁻⁸ (bar 10⁻⁶), and at
+    M = 5 to four digits (the limit of this implementation's one-shot solve). That covers the expression graph, the
+    conversion to the solver's variables, the forced series, the d/dλ component, the slice formula and, at M = 3
+    and 5, the deflation. Status: *numerical evidence* that the code does what §9.1–9.3 say. It is not evidence for
+    c₂ = −λ₁ beyond finding 10.
+20. **Agreement: the compact form converges to the same value.** With the forcing in s-derivatives:
+
+    | M | c₂, §9.2's form, on e₁, e₂, f₂ | c₂, compact form | G, §9.2's form | G, compact form |
+    |---|---|---|---|---|
+    | 1 | −8.322, −5.948, −9.086 | −2.860, −1.281, −3.368 | −0.189, 0.068, −0.272 | 0.075, 0.302, 0.002 |
+    | 3 | −2.470, −2.522, −2.450 | −2.880, −2.935, −2.859 | 0.023, 0.016, 0.026 | −0.009, −0.017, −0.006 |
+    | 5 | −3.0465, −3.0437, −3.0476 | −3.0417, −3.0389, −3.0428 | −0.0016, −0.0012, −0.0018 | 0.0004, 0.0008, 0.0003 |
+
+    (All from this review's code. The M = 5 row carries an error of about 10⁻⁴.) The two forms differ by a factor of
+    three at M = 1 and by 0.005 at M = 5, and at M = 3 and 5 their G have opposite signs on every slice. That is
+    what the truncation residue of an exact zero looks like. Both c₂ sequences end 0.3–0.5% from −3.0324, the size
+    FIRST_ORDER.md gives for the truncation at M = 5. Status: *numerical evidence*.
+
+## 5. Code review
+
+Read in full: `l2_c2_forcing.py`, `l2_c2.py` and `l2_c2_summary.py`, and the parts of `l2_mode.py`,
+`first_order_jet.py`, `first_order_run.py` and `first_order_hier.py` that they call.
+
+21. **Agreement: no bug found.** `l2_c2_forcing.py`'s output equals this review's derivation (check K). `l2_c2.py`'s
+    numbers are reproduced at M = 1, 3 and, to four digits, 5 (finding 19). The sign chain from the residual of the
+    mode to the forcing in the y- and c-equations was redone by hand (finding 7).
+22. **Code: a check that cannot fail.** Check 3 of `l2_c2.py --checks` tests "F(0) = 0" for the converted forcings.
+    `converted_graph` ends with a multiplication by ξ², which shifts the series by one order, so the order-0
+    coefficient is zero by construction. The log prints `|F(0)| 0.0e+00` for all five. The test of the dropped
+    negative powers, in the same line, is the one that can fail, and it does for the control.
+23. **Code: the planted λ\* does not run the new code.** `l2_c2.py 1 --planted-lam` calls
+    `first_order_hier.find_lam`. It exercises the stored zero and the jets, which FIRST_ORDER.md had checked, and
+    nothing of the graph, the conversion or the slice. The planted checks that do test the new path are check 2
+    (the converted ℓ = 0 forcing against SymForce's terms, with the mutation `ident`) and λ₁ at M = 5 (with
+    `gsign`). The value itself is confirmed by §4's check 4.
+24. **Agreement: the planted λ₁ and the control test what they claim.** The planted λ₁ fixes the sign and the
+    normalisation of the whole chain against a number from the double-double fits, to its 1% bar, and `gsign` makes
+    it fail. The control replaces the forcing by the one with the leading background only, and c₂ moves by 5.65 and
+    22.5 at M = 3 and 5. It shows that c₂ depends on the O(1/n) background terms. It is not a test of the identity,
+    and §9.5 does not present it as one. At M = 1 the control moves c₂ by 3.08, less than ten times the slice spread
+    (31.4), and `l2_c2_summary.py` leaves M = 1 out of that verdict. The note could say so.
+25. **Agreement: the cause of the control's failed check 3 is rounding in the point values** (§9.3's discrepancy).
+    `l2_c2_review_num.py diag` evaluates the same control polynomial with this review's two rings on the M = 3
+    background. Its series ring differentiates the series itself and never divides by ξ². Its point ring divides.
+
+    | \|ξ\| | 0.04 | 0.05 | 0.07 | 0.10 |
+    |---|---|---|---|---|
+    | control, this code | 4.1×10⁻¹⁰ | 1.9×10⁻¹⁰ | 1.6×10⁻¹¹ | 1.7×10⁻¹² |
+    | control, l2_c2.py (§9.3, rerun here) | 4.5×10⁻¹⁰ | 1.7×10⁻¹⁰ | 1.5×10⁻¹¹ | 1.2×10⁻¹² |
+    | l2, this code | 3.3×10⁻¹² | 2.5×10⁻¹² | 4.2×10⁻¹³ | 1.1×10⁻¹³ |
+    | l2, l2_c2.py | 3.6×10⁻¹² | 2.1×10⁻¹² | 4.1×10⁻¹³ | 7.1×10⁻¹⁴ |
+
+    Two codes with different series arithmetic give the same differences, falling with the radius, with the
+    series truncation below 10⁻³³. So the differences sit in the point evaluation, as §9.3 says. The jets start at
+    r₀ ≥ 0.062, where the control's error is below 10⁻¹⁰, against a shift of 22.5 in c₂.
+26. **Code: `l2_c2.py --checks` exits 1 in its normal state** (§10 documents it). A script whose normal exit is 1
+    cannot signal a new failure. The compact form of finding 2 needs one Euler derivative where §9.2's form needs
+    four, and would remove most of the nested divisions. Short of that, the control's comparison could be made at
+    |ξ| = 0.07, inside the range the jets use, with the reason written beside it.
+27. **Code: two statements are looser than the code.** Neither is an error.
+    - §9.1 says the forced response has "zero data". For M ≥ 3 `c2_run` gives it higher-harmonic profile data, the
+      deflation coefficients. The Schur-corrected jump does not depend on them, and this review's one-shot solve
+      with true zero data agrees at M = 3 to 4.7×10⁻⁸.
+    - The primary value depends on ξ₁ (finding 12).
+
+    No unstated approximation was found.
+28. **Agreement: the documented commands run as written** (L2_MODE.md §10; one process at nice 10, venv-314). Run
+    here: `l2_mode.py --flat` and `--check`, `l2_c2_forcing.py` (390 s) and `--p1`, `l2_c2.py --checks` (exit 1, as
+    documented), `l2_c2.py 1 --planted-lam`, both M = 1 runs, and `l2_c2_summary.py`. Each prints the numbers
+    §9 quotes. Not rerun: `l2_mode.py --first-order` (§8) and the M = 3 and 5 runs of `l2_c2.py`.
+    Two stored files are older than the code, in fields that carry no result:
+    - `data/l2_c2_M1_xi0.2_l2-l2_ctrl-l0-sym.json` has `lamcheck` 0.146, the F_λ comparison that §9.3 replaced. A
+      fresh run writes 0.098 and three new fields. Every c₂ value in it is the same to the last digit.
+    - `data/l2_c2_forcing.json`'s `symbols` text differs from what the script writes. The expressions are the same.
+
+    The reruns' changes to those two files were not committed.
+
+## 6. What the review's checks share with the original
+
+AGENTS.md: an independent check shares none of the machinery under test, and what the two share is recorded.
+
+**The symbolic check** (`l2_c2_review_sym.py`) against `l2_mode.py` and `l2_c2_forcing.py`:
+
+| | original | review | shared? |
+|---|---|---|---|
+| source code | `l2_mode.py`, `l2_c2_forcing.py` | written new, nothing imported | no |
+| frame | the fields follow S, the flat metric is kept, the metric corrections are solved for | a constant metric perturbation k on the spherical background, no field perturbation | no |
+| ℓ = 0 forcing | an explicit shift built to translate (C, Y, S) | a Gateaux derivative of the O(1/n) rows minus their s-derivative | no |
+| zero tests | numerical values on test functions at two points, 50 digits | exact cancellation of rational functions | no |
+| curvature | warped product over (t, s, χ), two fibres | the same reduction, over (t, s, tan χ/2), first-order perturbation theory written out | the method, and p = q |
+| planted tests of the curvature | flat space | Schwarzschild–Tangherlini; a diffeomorphism, off shell | no |
+| rows | W and E^t_t | W and c E^t_t | yes, the choice of rows |
+| reduction on shell | s as the evolution variable | the same idea, own code | the idea |
+| computer algebra | sympy 1.14.0 | sympy 1.14.0 | yes |
+| inputs read before the derivation | | L2_MODE.md §§1–8 and FIRST_ORDER.md: the ansatz, the two rows, FIRST_ORDER.md's heat system and forcing, and §8.3's printed F[E^t_t] (used only in checks C2, E2 and F) | yes |
+
+A hand derivation (§1.2–1.4) stands beside both codes and shares only the last row.
+
+**The numerical check** (`l2_c2_review_num.py`) against `l2_c2.py` and the `first_order_*.py` it runs on:
+
+| | original | review | shared? |
+|---|---|---|---|
+| source code | `l2_c2.py`, `first_order_jet.py`, `first_order_run.py`, `first_order_hier.py` | written new, nothing imported | no |
+| the model: which harmonics, which products are projected, and where | `inner_np.py`'s | the same | **yes**, a truncated number is defined by it |
+| the zero (A, ω, …) | the stored one | the stored one. At M = 1 also its own Newton, 2.8×10⁻¹¹ away | yes, except that run |
+| the forcing's polynomials | `data/l2_c2_forcing.json` | `l2_c2_review_sym.py`'s own reduction of 2sY₂Q (check K: equal) | no |
+| the association of the forcing's products | the graph of `expr_graph` | the same rule, read from `l2_c2.py` | **yes**, the M = 1 number depends on it (finding 11) |
+| the conversion: Φₜ = [C Yh]/√2, ∂ₜ = p + E + ω∂_θ at T = 1, Fᵧ = √2ξ²[C F̃_W], F_c = ξ²[C F̃_E] | §9.1 | the same formulas, re-derived by hand (finding 7) | the formulas |
+| Euler derivatives of the forcing | Leibniz rule and the model's ODEs, expanded symbolically into a graph of 95–849 nodes | Taylor coefficients in ε of the fields at ξe^ε along the path; the series' own derivative in the series | no |
+| the series | jets; the σ equation as (ξ∂_ξ − 1)(c y) | hand-written recursions; the σ equation in `inner_np.py`'s form | no |
+| linearisation, d/dλ | jet arithmetic | by hand; a variational equation | no |
+| the path | ray arg ξ² = π/2 + π/8 | π/2 + π/5, π/2 + 0.9, and π/2 + π/8 in one run | no, except that run |
+| the integrator | scipy DOP853, rtol 10⁻¹² | the same | yes, a library |
+| the slice formula for c₂(φ) | §9.1 | the same | yes |
+| linear algebra | de-mixed and normalised jumps, deflation, a Schur complement | raw jumps, one solve in profile space | no |
+| the de-mixing map | `inner_np.residual_demixed`'s formula | the same formula, retyped, and only for the left-singular-vector value at M = 1 | yes, for that column |
+| ω∞ = 2π/1.64389375 | | | yes |
+
+So the numerical check can catch an error in the implementation of §9.1–9.3. It cannot catch an error in what is
+shared: the model, the slice, the association rule and the conversion formulas. The conversion formulas were
+checked by hand, and `l2_c2.py`'s check 2 tests them against SymForce on untruncated data.
+
+## 7. Proposed changes to L2_MODE.md
+
+The reviewer does not edit L2_MODE.md. In the order of the findings:
+
+- **§6** (finding 4): the reading is exact at linear order in e. "The deformation of §1 with its metric corrections is
+  the Lie derivative of the spherical solution along ξ = (ε/4)Hx·∂ₓ minus the constant metric (ε/2)H
+  (*checked symbolically*, `l2_c2_review_sym.py` B3)."
+- **§8.4 item 4** (finding 9): replace "needs no gauge step … (not checked)" by a pointer to §9.1: the conjugated mode
+  has c(0) ≠ 0, the ℓ = 2 problem has the residual gauge sY T(t), and a truncated model needs a slice.
+- **§8.5 and §9.7** (finding 16): state the kernel hypothesis for the reduced lapse–scalar problem, modulo the gauge
+  family and the time-independent diffeomorphisms of relative order 1/n.
+- **§9.2** (findings 2 and 3): add the compact form and the reason for the identity. Say that G is absent for the
+  ℓ = 0 mode ∂ₛ(c, Φ) of the lapse.
+- **§9.4 item 3** (§3): add that the reparametrisation family exists for λ near 2.
+- **§9.5 and the Result bullet** (findings 10–12): say that c₂ + λ₁ = G by linearity, that the table tests G → 0 and the
+  slice's λ₁, and that neither is specific to ℓ = 2. Give the slice values beside the primary one, or say that the
+  primary one depends on ξ₁. Do not quote −7.96 without "not converged, and dependent on the form of the forcing".
+- **§9.7** (findings 14, 15, 17, 18): replace "Conjecture 1 and the lemma chain at O(1/n), as for λ₁ itself" by the
+  list at the end of §3: the ℓ = 2 selection hypothesis, the ℓ = 2 outer maps, the existence of the continuation
+  with its metric part, a simple eigenvalue, and the ansatz for the correction.
+- **§9.3, §10** (findings 22, 23, 26): drop or fix the F(0) test, name what the planted λ* covers, and make
+  `--checks` exit 0 in its normal state.
+- The proposed README sentence can stand, with "conditional on the selection hypotheses" spelled as "conditional on
+  Conjecture 1 and on its analogue for non-spherical perturbations, which is not stated anywhere yet".
+
+## 8. Reproduce
+
+From `solver/inner_pert/` with venv-314 (Python 3.14.7, sympy 1.14.0, numpy 2.5.4, scipy 1.18.1, mpmath 1.3.0), one
+process at nice 10, on the Mac (Apple M5):
+
+```
+python3 l2_c2_review_sym.py                  # sections 1.6 and 2 (~25 s): 24 checks; "all passed", exit 0
+python3 l2_c2_review_sym.py --mutate=sign    # also fibre, lin, bg, k: the listed checks fail, exit 1
+python3 l2_c2_review_num.py checks           # section 4's six planted checks (~10 s); PASS, exit 0
+python3 l2_c2_review_num.py c2               # M = 1 (~2 min): the table of section 4; PASS, exit 0
+python3 l2_c2_review_num.py c2 --mutate=fc   # FAIL, exit 1
+python3 l2_c2_review_num.py c2 --r1=0.25 --delta=0.3927   # another ray and radius; PASS (slices only)
+python3 l2_c2_review_num.py c2 --own-zero --delta=0.9     # its own zero, a third ray; PASS
+python3 l2_c2_review_num.py c2 --M=3         # ~7 min; PASS, exit 0
+python3 l2_c2_review_num.py c2 --M=5 --tol=1e-3   # ~10 min; FAIL, exit 1 (section 4: WATCH, the one-shot solve)
+python3 l2_c2_review_num.py diag             # finding 25's table (~90 s)
+```
+
+The c2 runs read the stored zeros `data/first_order_hier_M{1,3,5}_xi0.2.json` and compare with
+`data/l2_c2_M{1,3,5}_xi0.2_l2-l0-G-sym.json`. They write nothing unless `--out=FILE` is given. The logs and result
+files of the runs quoted here, and the logs of the original's commands rerun for finding 28, are in folder
+I1010-mac-review of the raw-data repository (clone it beside the checkout,
+`git clone https://github.com/nmoinvaz/choptuik-large-d-raw ../choptuik-large-d-raw`).
