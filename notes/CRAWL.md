@@ -806,7 +806,12 @@ and AB1's was accepted after projection (7.9×10⁻⁵²). D is identical to run
 - **Not covered by the switch:** arc step 5's crawl. Every trial refused there was a failed projection (|F| 10⁷ to
   2×10¹⁰ before projecting), and every accepted one was unprojected. The residual jumps between λ 1/16 and 1/8 along a
   step of about 5×10⁻¹⁵. Its prediction lay about 1.0×10⁻¹³·a from the root against 1.2–1.6×10⁻¹⁴·a at arc steps 1–4,
-  and that is unexplained. AB2 repeats it with `--elim_switch 0`.
+  and that is unexplained. **AB2 repeated it with `--elim_switch 0` and converged** (raw beef4c538): 9 corrections at
+  λ ¼, ¼, ¼, ½, then 1 ×5, max|F| 6.57×10⁻⁶⁵, corrector 5367 s, D 259.427504026. The 7 refused trials (λ 1 and ½ at
+  corrections 0–3) were all failed projections (|F| 1.3×10⁷ to 6.7×10⁸ before projecting). run1's attempt 2 of the
+  same step, at the default switch, was refused by the stall rule after 8 corrections at λ 1/16 and 1/32 (11457 s).
+  The two differ in the switch and in a (by 4.4×10⁻⁶ relative), one run each. AB2's first |dz| was 1.96×10⁻¹⁵ against
+  4.82×10⁻¹⁵, which is unexplained: the switch also projects the start, but AB1's first |dz| equals run1's.
 - **The chain** (`ks_chain3b`, #966) also runs at the default switch with the natural test, and converges in 2–3
   corrections a step. Whether its first full steps (leg 7 step 2: 5.19×10⁻²⁶ → 4.47×10⁻¹⁷, then 1.18×10⁻³¹) are the
   same unprojected trial is untested.
