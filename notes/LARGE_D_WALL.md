@@ -1219,6 +1219,110 @@ each with a control that fires). On x86 its checksums do not move with multidoub
 Across platforms they differ, because the tests' synthetic inputs come from libm. So the product's independence from
 libm is not yet tested on real inputs.
 
+## Lower-precision Newton matrices: valid only where they save nothing (speed item 2)
+
+**No Newton matrix factored in a lower precision is both valid and worth building, at the chain's front (D 250–257),
+at #1008's arclength corrector (D 259.4) or at low D (D 3.04–3.05). Nothing was built.** At the chain's front this
+rests, for the one matrix that would pay, a Jacobian formed in quad-double, on its step at D 188.02, not on a
+measurement at D 250–257 (below). An inexact Newton keeps the
+residual in full precision and replaces the Jacobian J by a cheaper matrix M. Its error shrinks per step by ρ, the
+spectral radius of M⁻¹(M − J), so it converges while ρ < 1. For M the factors of J rounded to a unit roundoff u, ρ is
+about c·u·κ_eq. Here κ_eq is J's condition number after its rows and columns are scaled to max norm 1 (Ruiz). Row
+scaling does not change the condition number that governs Gaussian elimination's rounding (Skeel, J. ACM 26 (1979)
+494–526, doi:10.1145/322139.322148, verified 2026-11-20), but it does change the LU's pivot ratio. The law is that of
+refinement with a low-precision LU (Carson and Higham, SIAM J. Sci. Comput. 40 (2018) A817–A847, verified in
+LOW_D_SPEEDUP.md).
+
+**The cost is in forming J, not in factoring it.** Lowering only the factorization (multisolver 0.2.1's `Lowered`)
+saves the LU's share, about 1%. Lowering the formation saves most of a Jacobian, but the mass mode's gain amplifies the
+formation's rounding, and that was measured not to be valid. The seconds below are medians from
+`python3 lowered_lu.py scope RAW --at 448fdb5f` (in `hp/`, RAW the raw-data clone), over legs 5–10 of the chain. At
+that raw commit leg 10 ended at D 257.15; the chain's logs have grown since, and `--at` reads them as they were then.
+
+| where | Newton matrix now | forming it | its LU | rest of a step |
+|---|---|---|---|---|
+| chain, ks 293, dh370, 10 threads | octo-double J and LU (`newton_o`) | 112.6–113.6 s per `newton_o` | 3.2 of 360.4 s at D 188 (OCTO_DOUBLE.md 3) | trials 23–346 s; per base the series 394–396 s, the re-seed 235–239 s |
+| #1008, ks 135, macm3, 6 threads | the same, bordered by elimination | 116.6 s per correction | as above | trials 196 s per correction |
+| low D, M 320–384 | f64 J and LU, double-double residual (`newton_mixed`) | 98–99.5% of a call | 0.2–0.3% of a call (LOW_D_SPEEDUP.md 1) | |
+
+**Where each lower precision is valid.** u is 2⁻²⁰⁹ for quad-double, 2⁻¹⁰⁴ for double-double and 2⁻⁵³ for f64, as
+multidouble and multisolver state their contractions.
+- **The chain at D 250.7–257.1.** The corrector's pivot ratios are 3.2×10⁶³ to 2.7×10⁶⁷. Over 35 bases from D 237.7
+  they rise by a factor of 10^0.517 = 3.3 per unit of D. κ_eq is known at one state, #502's D 242.36 (raw `I502-mac/`,
+  the chain's layout 0.3–0.7, ks 130): σ_max 11.96 of the equilibrated leading part over #502's σ₁ = 1.59×10⁻⁶⁰ gives
+  κ_eq = 7.5×10⁶⁰. So u_qd·κ_eq is 9.1×10⁻³ there, and u_dd·κ_eq is 3.7×10²⁹.
+  - Double-double and f64 factors are not valid at large D.
+  - A quad-double factor of the exact J is unsettled at D 250–257. Carried from D 242.36, u_qd·κ_eq is 190 to 4.1×10⁵
+    if κ_eq grows as the pivot ratio, and 0.27 to 3.7 if it grows as the inverse of the smallest pivot. This is an
+    estimate, and the carry also crosses from ks 130 to ks 293. The plants below give c from 1.7×10⁻⁴ to 0.1, so ρ
+    there could be anything from far below 0.1 to far above 1. `measure` (below) settles it. Either way it saves
+    about 1% of a Jacobian.
+  - A Jacobian formed in quad-double (`newton_q`'s, from its own tangents) was not valid at D 188.02: its Newton step
+    was 45% off the octo-double one (OCTO_DOUBLE.md 5.1). At D 250–257 it was not measured on the chain's system;
+    `measure`'s Q variant (below) is that measurement. #858's run at D 253.34 does not decide it. Its start was a
+    prediction (`I608-dh610/restart4_d6/pred_pin3_D253.3382.npz`), not a converged chain state, and its octo-double
+    control diverged at the first step (max|F| 2.0×10³² to 1.4×10²² at the eight trials it reached before it was
+stopped). So the quad-double LU's stall
+    there (max|F| 1.15×10⁻³⁴ to 1.55×10⁻⁴⁰, then θ = 1.000 at every trial) has no octo-double run to be compared with
+    (raw `I858-dh610/` at 07169c6f).
+- **#1008 at D 259.31–259.38** (ks 135). The pivot ratios are 3.5×10⁶⁶ to 5.4×10⁶⁶. In AB1's arc step the bordered
+  system's denominator is 1.000 and |b| is 0.003 at every correction, so the border adds nothing to J's conditioning.
+  multishoot 4.0.0's `InGlobal::bordered_lu` forms the whole bordered matrix from the f64 lanes and factors it in f64,
+  not only the border. That is not valid here: an f64 factor needs u_f64·κ_eq ≪ 1, and an f64-formed horizon block was
+  already off by 0.13–3.4 of the step at D 50–60 (LARGE_D_MIXED.md 1).
+- **Low D at D 3.04–3.05** (raw `T82-win/down25.log`, `T100-win2/down25e.log`). The pivot ratios are 4.9×10⁵ to
+  1.4×10¹², so u_f64 times them is at most 2×10⁻⁴. The f64 Jacobian and LU are valid there, and `lowD_highM.py`
+  already runs them (`newton_mixed`, the f64 LU in block storage above M = 128). In the M 320 solve at D 3.044375,
+  |F| at the start of each call is 3.2×10⁻³, 1.3×10⁻⁶ and 1.9×10⁻¹¹, and 8.8×10⁻²⁸ at its end. Nothing is left to
+  lower.
+
+**The law on planted problems** (`python3 lowered_lu.py planted`, no kernel; criteria fixed before the first run, in
+its docstring). The plant is a nonlinear system of 8 unknowns with rows scaled by up to 10^±12. Its residual is formed
+at 400 bits, and its Jacobian is rounded to 106 bits and factored there by partial pivoting.
+- Inside, u·κ_eq = 3.6×10⁻³: the iteration converged in 23 steps to the residual's floor at ρ = 3.6×10⁻⁴, that is
+  0.10·u·κ_eq. u times the LU's pivot ratio was 2.3×10¹⁷ there, so the pivot ratio would have refused a valid case.
+- Outside, u·κ_eq = 36: every trial was refused after 2 steps (ρ 1.49).
+- An undamped sweep gives ρ = 3.1×10⁻⁴ at u·κ_eq 1.1×10⁻², 0.43 at 11 and 4.2 at 36, so ρ passes 1 between 11 and 36.
+  `--seed 2`, `3` and `4` give ρ/(u·κ_eq) of 0.079, 0.061 and 0.043.
+- The controls fail it, as they must. `--mutate lowres` (the residual at 106 bits too) stops the inside run at a
+  forward error of 2.0×10⁻⁴, and `--mutate exactlu` (the factors at 400 bits) lets the outside run converge.
+- `measure --planted K` runs `measure`'s own code, with no kernel, on a planted matrix of 48 unknowns (`--n 48`) with
+  condition 10^K. At K = 40 and 62, ρ of the quad-double factor is 7.0×10⁻⁴ and 1.7×10⁻⁴ of u_qd·10^K, and the
+  double-double, f64 and quad-double-formed matrices give ρ ≥ 1. `--mutate scale` moves one entry of the octo-double
+  control by 10⁻⁴⁰ of itself. It lifts the control's ρ from 5.8×10⁻⁹³ to 5.7×10⁻⁵ and fails the run.
+
+**The measurement that settles the chain's row** (a Linux runner with the built module; about 4–6 min per state on
+dh370, estimated, one at a time). `measure` forms the exact octo-double J at a stored eight-part state on the chain's
+own system (`octo_corrector.truth_system`). It then estimates ρ for J's octo-, quad- and double-double and f64 factors
+and for the quad-double Jacobian, by six steps of power iteration from two starts. The states, under RAW:
+- `I461-win2/crawlJ/anm_pin3_D242.3642.npz` (#502's, ks 130);
+- `I966-dh370/ks_chain3b/leg00_D237.7132_ks291/anm_pin3_D242.8630.npz` (ks 291);
+- in `I966-dh370/ks_chain3b/`: `leg02_D247.2801_ks293/anm_pin3_D250.7060.npz`,
+  `leg06_D251.2845_ks293/anm_pin3_D252.8861.npz`, `leg08_D254.1769_ks293/anm_pin3_D255.0004.npz`,
+  `leg10_D256.1776_ks293/anm_pin3_D256.5265.npz` and `leg10_D256.1776_ks293/anm_pin3_D257.1452.npz`;
+- `I1008-macm3/run1/arc_002_D259.311977.npz` (ks 135).
+
+```text
+cd hp
+python3 lowered_lu.py measure --planted 40 --n 48 && python3 lowered_lu.py measure --planted 62 --n 48
+python3 lowered_lu.py measure --planted 40 --n 48 --mutate scale       # must exit 1
+python3 lowered_lu.py measure RAW STATE --threads 10 --out OUT.json    # each state above
+python3 lowered_lu.py measure RAW I966-dh370/ks_chain3b/leg02_D247.2801_ks293/anm_pin3_D250.7060.npz --mutate scale  # must exit 1
+```
+
+- Pass, fixed before the run: every state's run exits 0 (the octo-double control's ρ at most 10⁻⁴⁵), and the two
+  mutated runs exit 1.
+- Predicted from the above: the quad-double factor's ρ ≤ 0.1 at D 242.36; double-double and f64 ρ ≥ 1 at every state;
+  the quad-double Jacobian's ρ ≥ 0.5 from D 252.9 on. The quad-double factor's ρ by D tells which growth law holds.
+- What it decides: no change to the corrector follows from either outcome, since the factor it tests saves about 1%.
+  It replaces the estimate in the chain's row with measured contractions.
+
+**Against the brief.** The brief put κ at 1.5×10⁴⁹ at D 222, doubling per unit of D. The equilibrated κ is 7.5×10⁶⁰ at
+D 242.36, and the pivot ratio grows 3.3 times per unit of D. The brief also expected a quad-double Newton matrix to
+serve to about D 260. A quad-double-formed one failed at D 188, as measured, and at D 250–257 it is predicted, not
+measured, to fail. A quad-double factor of the exact J
+reaches u_qd·κ_eq = 1 at D 246.3 or 253.9 by the two growth laws, and it saves about 1%.
+
 ## Proposed README text
 
 Applied to the README by the coordinator on 2026-11-14 (its checks moved to the README with it). Drafted for the
