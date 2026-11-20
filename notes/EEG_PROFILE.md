@@ -507,6 +507,35 @@ and is not derived here.
 - **#638's control n − 1 → n cannot fail.** The leading coefficient c₁ is the same in 1/n and 1/(n + 1)
   (`hp/lam_gauge_fit.py`), so it was replaced by the fundamental-alone control.
 
+#### 3.5.3 Two more orders close the gap (#1003)
+
+**With σ₂₃ and σ₂₄ the selection's amplitude comes down to the finite-D value: its lowest estimate is 2.71920536,
+1×10⁻⁸ above the states' A∞ = 2.71920535, and the identity test of §3.5.2 now passes.** The amplitude series at ω∞
+to K = 49 was run at J 1250 (dh610) and J 1500 (win2). σ₀…σ₂₂ equal the K = 45 files at each J, and σ₂₃, σ₂₄ agree
+between the two J to 6.8×10⁻¹³ and 3.4×10⁻¹² (the two-J spread, against a 10⁻⁸ bar). Raw `I1003-dh610/` 1c4fe4e4 and
+`I1003-win2/` f1907758; copies in `solver/inner_amp/scan49J1250/` and `scan49J1500/`. The reading was fixed on #1003
+before the run. It uses #638's six near-diagonal Padé approximants shifted by one in each index, [11/11], [11/12],
+[12/11], [12/12], [11/13] and [13/11], with x₀'s hull over both J. The selection matches finite D at 10⁻⁷ if the hull's
+lower end in A lies within 10⁻⁷ of A∞, and departs if it lies 4×10⁻⁷ or more above. Script
+`solver/eeg_profile/amp_identity.py --set k49`. *Status:* **numerical evidence**, conditional on Eq. (15) as before.
+
+| quantity | K = 45 (§3.5.2) | K = 49 | kind |
+|---|---|---|---|
+| x₀ over the set, both J | 7.3940838–7.3941332 | 7.3940778–7.3941186 | spread over Padé orders |
+| A₀ = √x₀ | 2.71920646–2.71921554 | 2.71920536–2.71921287 | the same spread, in A |
+| A₀'s lower end − A∞ | +1.1×10⁻⁶ | +1×10⁻⁸ | **within 10⁻⁷: matches** |
+| the diagonal zero at orders 22, 23, 24 | 7.39408707, —, — | 7.39408707, 7.39411860, 7.39407778 | not monotone at 23 |
+| Im x₀ at ω∞, at the set's diagonal | −3.3×10⁻⁵ ([11/11]) | +2.9×10⁻⁶ ([12/12]) | 11 times smaller |
+| c₁ − 2⟨F²⟩(x₀) | −6.2×10⁻⁶ to −5.6×10⁻⁵ | −1.3×10⁻⁷ to −4.1×10⁻⁵ | **passes** at the lower end |
+| controls ⟨F²⟩ and the fundamental alone | fire | fire | — |
+
+- **The lower end is the highest-order diagonal.** [12/12] gives x₀ = 7.39407777 (A 2.71920536) at both J, and it
+  moved down from [11/11]'s 7.39408707 by 9.3×10⁻⁶. The odd-order [11/12] lies above both (7.39411860), and it sets the
+  hull's upper end, so the hull is still 7.5×10⁻⁶ wide in A. The decision rule reads the lower end, as fixed before.
+- **Im x₀ at ω∞ fell eleven-fold**, to 2.9×10⁻⁶, about 5×10⁻⁷ in A. That is the size of the remaining uncertainty in
+  the real part, so the selection's amplitude now agrees with the two finite-D routes to about 10⁻⁷ relative, against
+  the README's 1%.
+
 ## 4. What this means
 
 - Eq. (16) is the one-pole-pair (geometric) truncation of the $`D = \infty`$ echo. Its $`w`$ is the first harmonic

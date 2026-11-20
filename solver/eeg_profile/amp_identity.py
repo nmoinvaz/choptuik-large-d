@@ -28,7 +28,14 @@ identity (2 <F^2>(A) = c1 with the expansion's harmonics) against the finite-D s
 below the range of 2 <F^2>(x0), so the test fails (exit 1); c1 implies A = 2.71920533, 1.9e-8 from the states' A_inf
 (notes/EEG_PROFILE.md 3.5.2).
 
+Result with K = 49 (#1003, --set k49 on solver/inner_amp/scan49J1250 and scan49J1500, sigma_0 .. sigma_24, the set
+shifted by one and fixed before the run): the planted zero and both controls pass, and c1 now lies inside the range,
+at its lower end; the selection's x0 hull gives A0 = 2.71920536 .. 2.71921287, its lower end 1e-8 above the states'
+A_inf (notes/EEG_PROFILE.md 3.5.3).
+
     python3 amp_identity.py            exit 0 iff the planted zero is found, c1 passes and both controls fail
+    python3 amp_identity.py --set k49 --json ../inner_amp/scan49J1250/sigF_w1.0000_K49_J1250_p1280.json \
+        --json ../inner_amp/scan49J1500/sigF_w1.0000_K49_J1500_p1280.json
 """
 import contextlib
 import io
@@ -36,6 +43,15 @@ import os
 import sys
 
 import mpmath as mp
+
+import argparse  # noqa: E402
+
+_ap = argparse.ArgumentParser(description="the selection rule's amplitude against the gauge rate's c1")
+_ap.add_argument("--set", choices=("k45", "k49"), default="k45",
+                 help="the Pade set: k45, #638's six (sigma to 22); k49, the same shifted by one (sigma to 24, #1003)")
+_ap.add_argument("--json", action="append", default=None,
+                 help="an amplitude file (sigF_*.json), once per J; default: the K 45 files of solver/inner_amp")
+OPT = _ap.parse_args()
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, HERE)
@@ -46,7 +62,7 @@ with contextlib.redirect_stdout(io.StringIO()):     # tuned_profile runs its own
 
 C1, C1_ERR = mp.mpf("7.4165644"), mp.mpf("4.4e-6")     # MODE_COUNT.md section 10 (README "1 - 7.4165644/n + ...")
 NEAR = mp.mpf("7.394")
-JSONS = TP.DEFAULT
+JSONS = OPT.json or TP.DEFAULT
 NUMAX = 25
 
 
@@ -63,7 +79,11 @@ def pade_zero(c, m, n, near=NEAR):
     return min(roots, key=lambda z: abs(z - near))
 
 
-ORDERS = [(10, 10), (10, 11), (11, 10), (11, 11), (10, 12), (12, 10)]
+SETS = {"k45": [(10, 10), (10, 11), (11, 10), (11, 11), (10, 12), (12, 10)],     # #638, fixed before its run
+        "k49": [(11, 11), (11, 12), (12, 11), (12, 12), (11, 13), (13, 11)]}     # #1003, fixed before its run
+ORDERS = SETS[OPT.set]
+TOP = max(sum(mn) for mn in ORDERS)         # the highest sigma the set uses (22 or 24)
+DIAG = (TOP // 2, TOP - TOP // 2)           # its diagonal approximant, whose Im is printed
 
 
 def zeros(c):
@@ -76,9 +96,9 @@ def two_F2(f, K, A):
 
 
 def planted():
-    """S(x) = (1 - x/xp) exp(-0.3 x) (1 + 0.1 i x), Taylor to order 22: the ORDERS' zeros must give xp"""
+    """S(x) = (1 - x/xp) exp(-0.3 x) (1 + 0.1 i x), Taylor to order TOP: the ORDERS' zeros must give xp"""
     xp = mp.mpf("7.39123456789")
-    c = mp.taylor(lambda x: (1 - x / xp) * mp.exp(-0.3 * x) * (1 + 0.1j * x), 0, 22)
+    c = mp.taylor(lambda x: (1 - x / xp) * mp.exp(-0.3 * x) * (1 + 0.1j * x), 0, TOP)
     z = zeros(c)
     err = max(abs(v - xp) for v in z.values())
     ok = err < 1e-10
@@ -96,12 +116,12 @@ def main():
         z = zeros(sig)
         re = [mp.re(v) for v in z.values()]
         print(f"J {J}: " + ", ".join(f"[{m}/{n}] {mp.nstr(mp.re(v), 10)}" for (m, n), v in z.items())
-              + f"; Im at [11/11] {mp.nstr(mp.im(z[(11, 11)]), 3)}")
+              + f"; Im at [{DIAG[0]}/{DIAG[1]}] {mp.nstr(mp.im(z[DIAG]), 3)}")
         for zz in re:
             xs.append(zz)
             vals.append((J, zz, two_F2(f, K, mp.sqrt(zz))))
         trend = []
-        for top in range(16, 23):
+        for top in range(16, TOP + 1):
             m = top // 2
             zz = pade_zero(sig[:top + 1], m, top - m)
             trend.append(f"[{m}/{top - m}] {mp.nstr(mp.re(zz), 9)}")
