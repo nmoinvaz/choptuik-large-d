@@ -221,7 +221,39 @@ def sens(argv):
     return 0
 
 
+def scan(argv):
+    """float64 signs of det M over the 5 exact variants (lu_double and LAPACK slogdet) at each lambda: where do the
+    float64 signs disagree (the noise window around a root)?"""
+    import argparse
+    from dss_ell import DSSEll, NODES_STD
+    ap = argparse.ArgumentParser()
+    ap.add_argument("state"); ap.add_argument("D", type=float); ap.add_argument("kc", type=int); ap.add_argument("lams")
+    ap.add_argument("--out", default=None)
+    o = ap.parse_args(argv)
+    z = np.load(o.state)
+    S = DSSEll(kc=o.kc, nodes=NODES_STD, n=o.D - 2, ell=1, Delta_ref=z[-1], Ks=30, u0=0.04)
+    S.freeze_from(z, 0.7)
+    out = o.out or os.path.join(HERE, "data", "ell_dd_scan_1025.jsonl")
+    for lam in (float(v) for v in o.lams.split(",")):
+        t0 = time.time()
+        with np.errstate(all="ignore"):
+            M = S.mode_matrix(z, lam)
+        rows = []
+        for name, V, a, b, lsc in variants(M):
+            sf, lf = lu_double(V, a, b)
+            sl, ll = np.linalg.slogdet(V)
+            rows.append(dict(variant=name, f64=sf, lapack=float(sl), ln=lf - lsc))
+        sg = [r["f64"] for r in rows] + [r["lapack"] for r in rows]
+        rec = dict(D=o.D, kc=o.kc, lam=lam, rows=rows, agree=len(set(sg)) == 1, seconds=round(time.time() - t0))
+        print(f"lambda {lam}: float64 signs {[r['f64'] for r in rows]}, LAPACK {[r['lapack'] for r in rows]}: "
+              f"{'agree' if rec['agree'] else 'DISAGREE'} ({rec['seconds']} s)", flush=True)
+        open(out, "a").write(json.dumps(rec) + "\n")
+    return 0
+
+
 if __name__ == "__main__":
     if sys.argv[1] == "selftest":
         sys.exit(selftest())
+    if sys.argv[1] == "scan":
+        sys.exit(scan(sys.argv[2:]))
     sys.exit(sens([a for a in sys.argv[2:] if not a.startswith("--mutate=")]))
