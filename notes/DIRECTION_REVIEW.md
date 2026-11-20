@@ -200,6 +200,15 @@ amplitude expansion cannot reach these zeros, and the low-ω readings rest on on
 count remain (#1021), and
 the box A 3.6–5.1 is being counted (#1013 step 4).
 
+**S₃ = 0 has several sheets at M = 3 (#1021).** At fixed (A, ω) the tuning condition S₃ = 0 has more than one root F₃,
+and argcount's solve lands on the one its seed is nearest. A graph of the 11 050 valued points of every stored count
+(neighbours joined when their F₃ differ by at most 0.1) splits into 5 sheets. The known zero's sheet (9716 points)
+also holds #1020's (2.5986, 0.2218) and (2.8448, 0.2180) and the new zeros of #1021's boxes 7, 16 and 11–15, each
+joined to the known zero by steps of at most 0.0092. #1020's (2.3388, 0.0962) lies on another sheet (every path to
+the known zero needs a step of at least 0.161), so it is a zero of a different branch of S₃ = 0, not an excited
+solution of the same selection. No winding counted in #1013 or #1021 crosses a sheet switch, while 22 cells of
+#1020's wider count at ξ₁ 0.25 do (xfchecks' `diag/sheet_check.py` and `sheet_connect.py`, raw `I1021-mac/`).
+
 ### 2.4 The amplitude as a second test of Conjecture 1
 
 **What.** Ecker et al.'s Eq. (15) (arXiv:2611.07007, as read in [EEG_PROFILE.md](EEG_PROFILE.md) §1) says
