@@ -229,10 +229,8 @@ fn direct(x: &[OV], y: &[OV], o: usize, nout: usize, cfg: &Cfg, e2: i32, acc: &m
         (x.iter().map(|v| scale_lanes(v, &al)).collect(), y.iter().map(|v| scale_lanes(v, &be)).collect())
     };
     for k in 0..nout {
-        for i in 0..xs.len().min(k + 1) {
-            if k - i < ys.len() {
-                acc[o + k].add_prod_mut(&xs[i], &ys[k - i]);
-            }
+        for i in k.saturating_sub(ys.len() - 1)..xs.len().min(k + 1) {
+            acc[o + k].add_prod_mut(&xs[i], &ys[k - i]);
         }
     }
 }
