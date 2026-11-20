@@ -61,14 +61,34 @@ fn series_with(ctx: &mut Ctx<1>, zs: &[[Vec<f64>; 8]], split: u8, alpha: u8, mut
     f
 }
 
-/// max_i |a_i - b_i| / max_i |b_i|, the difference formed in octo-double; infinite when a part is not finite
+/// max_i |a_i - b_i| / max_i |b_i|, the difference formed in octo-double; infinite when a part or a difference is
+/// not finite
 fn rel(a: &[OD], b: &[OD]) -> f64 {
-    // a row that is not finite on either side fails every threshold (f64::max would drop a NaN)
+    // a row or a difference that is not finite fails every threshold (f64::max would drop a NaN)
     if a.iter().chain(b).any(|x| x.x.iter().any(|p| !p.is_finite())) {
         return f64::INFINITY;
     }
-    let d = a.iter().zip(b).map(|(x, y)| (*x - *y).to_f64().abs()).fold(0.0, f64::max);
+    let mut d = 0.0f64;
+    for (x, y) in a.iter().zip(b) {
+        let v = (*x - *y).to_f64().abs();
+        if !v.is_finite() {
+            return f64::INFINITY;
+        }
+        d = d.max(v);
+    }
     d / b.iter().map(|y| y.to_f64().abs()).fold(f64::MIN_POSITIVE, f64::max)
+}
+
+/// `rel` on a difference that is not finite from finite rows (f64::MAX against -f64::MAX, whose difference
+/// overflows) is infinite, and on ordinary rows the relative difference
+#[test]
+fn split_rel_non_finite() {
+    let (big, nbig) = (OD::from_f64(f64::MAX), OD::from_f64(-f64::MAX));
+    let r = rel(&[big, OD::from_f64(1.0)], &[nbig, OD::from_f64(1.0)]);
+    println!("rel of MAX against -MAX: {r:e}");
+    assert_eq!(r, f64::INFINITY, "a difference that is not finite gave {r}");
+    let r2 = rel(&[OD::from_f64(3.0)], &[OD::from_f64(2.0)]);
+    assert_eq!(r2, 0.5, "rel of 3 against 2 gave {r2}");
 }
 
 /// a hash of every part's bits of a series (FNV-1a), to compare a form's bits across builds
