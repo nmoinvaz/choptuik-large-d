@@ -385,6 +385,69 @@ the measured change stays +3.290002×10⁻¹³ at D 241.96 (0.87% of its quoted 
 could be fitted, as only one exists. Not shown: whether `--od_start_F 0` converges at these smaller misses (at D 251.88
 it took no step), and where between D 241.96 and 246.44 the projection starts to fail.
 
+### 3.6 The two follow-ups of 3.5: the lifted bound below D 251.88, and the basin's edge
+
+Both run in main's code (a worktree of main from 394c9f2d on, which holds `--od_start_F`) with dh610's venv-i1054,
+the only dh610 build with `Solver.set_exact_recip`. Main's kernel differs from venv-i1054's by #1055's `plan_auto`,
+which these runs do not call, and #1056's dependency versions, which #1056's checks found bit for bit on the flag-off
+paths; hp/python is unchanged since venv-i1054's build (5f488e2b), and main's run path imports no multidouble name
+newer than that venv's package. `F` is 3.5's.
+
+(1) `--od_start_F 0` at D 246.44 and 249.47, against 3.5's flag-off bases:
+
+```sh
+for S in leg01_D243.8361_ks293/anm_pin3_D246.4399 leg02_D247.2801_ks293/anm_pin3_D249.4664; do
+  T=${S##*_D}
+  python3 -u anm_run.py $RAW $OUT/resolve${T}_r1b --state I966-dh370/ks_chain3b/$S.npz $F --exact_recip 1 \
+    --od_start_F 0 > $OUT/resolve${T}_r1b.log 2>&1
+  python3 exact_recip_check.py delta $OUT/resolve${T}_r0/base_pin3_D$T.npz $OUT/resolve${T}_r1b/base_pin3_D$T.npz \
+    --out $OUT/delta${T}b.json > $OUT/delta${T}b.log 2>&1
+done
+```
+
+Reading, fixed before the runs, per D by 3.5's rule (X ≤ 10⁻⁵⁰ and `base polish saved as`):
+- It converges: the result is the change, with its share of the nearest row's quoted error (D 246.2616: 2.1×10⁻¹⁰;
+  D 249.3927: 1.0×10⁻⁸, both weak pivot). With both and D 241.96's, the least-squares line of log10 |change| in D
+  is evaluated at D 251.88, as an extrapolation, against 4.7×10⁻⁷; with D 246.44 alone the line is through two
+  points and has no spread, which is said with it.
+- It does not: there is no value at that D, and the result is the log's first Newton step (`on 0:`, its |dz|) and
+  its `projection failed (n)` lines, as at D 251.88 (3.4).
+
+Expected time: about 25 min per D when no trial is accepted (D 251.88: 1462 s), and up to about 2 h when it
+converges (an estimate).
+
+(2) The default-bound pair (3.5's) at the four bases between D 241.96 and 246.44:
+
+```sh
+for S in leg00_D237.7132_ks291/anm_pin3_D242.8630 leg00_D237.7132_ks291/anm_pin3_D243.8361 \
+         leg01_D243.8361_ks293/anm_pin3_D244.7177 leg01_D243.8361_ks293/anm_pin3_D245.5586; do
+  T=${S##*_D}
+  for R in 0 1; do
+    python3 -u anm_run.py $RAW $OUT/resolve${T}_r$R --state I966-dh370/ks_chain3b/$S.npz $F --exact_recip $R \
+      > $OUT/resolve${T}_r$R.log 2>&1
+  done
+  python3 exact_recip_check.py delta $OUT/resolve${T}_r0/base_pin3_D$T.npz $OUT/resolve${T}_r1/base_pin3_D$T.npz \
+    --out $OUT/delta$T.json > $OUT/delta$T.log 2>&1
+done
+```
+
+The first two are leg 0's states, at ks 291; the others are at ks 293. Reading, fixed before the runs, per D by 3.5's
+rule:
+- Both converge: the result is the change, with its share of the nearest row's quoted error (D 242.7053: 3.4×10⁻¹¹;
+  243.6366: 2.9×10⁻¹¹; 244.6366: 3.8×10⁻¹¹; 245.6366: 4.0×10⁻¹¹, each a fit spread).
+- The flag-on polish stops at its start: the result is its start's pinned max|F| (its `projection failed (1)` line).
+- The flag-on polish starts but ends above 10⁻⁵⁰ (a stall, or the `--qd_it` cap): there is no value at that D, and the
+  result is its steps and last max|F|. For the bracket it counts as not converging, as a stop at the start does.
+- The flag-off polish does not converge: the stored state does not polish on this kernel, and the D gives no reading.
+
+The basin's edge is then bracketed by the last D whose flag-on polish converges and the first where it stops. The
+start misses of 3.5, carried back at 1.4 times per unit D, give 1.0×10⁻⁶ at D 242.86 and 1.4×10⁻⁶ at 243.84, so the
+start bound would be passed between them, if the start's projection fails there. This is a prediction, not a
+measurement. Both of those states are leg 0's, at ks 291; the ks changes to 293 between D 243.84 and 244.72.
+
+Expected time: about 1 min per flag-off polish, about 6 min per flag-on polish that stops at its start, and about 1–3
+h per one that converges (D 241.96's took 49 min at ks 130): 0.5–10 h for the four (an estimate).
+
 ## 4. Discrepancies (reported, not fixed)
 
 1. **The flag covers the horizon series alone, as #1043 asks, but 1/k is not the only double-double constant of the
