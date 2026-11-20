@@ -133,7 +133,8 @@ def table(fn):
             "single k_c (not in crossing or slopes)"
         con = r.get("constraint")
         sgt = "passed" if r.get("signtested") else "no signtest yet"
-        how = r.get("method", "float64") + (" (note)" if r.get("note") else "")
+        how = r.get("method", "float64") + (f", P4 gap {r['p4_gap']:+.2e}" if r.get("p4_gap") is not None else "") + \
+            (" (note)" if r.get("note") else "")
         print(f"| {D:g} | {n:g} | {l1:.7f} | {how} | {r.get('kc', '')} | {sgt} | {bar} | {con:.1e} | {l0:.7f} ({e0:.1e}) | {d:.6f} | "
               f"{d - dinf:+.6f} | {n * d:.4f} | {n * dinf:.4f} |" if con is not None else
               f"| {D:g} | {n:g} | {l1:.7f} | {how} | {r.get('kc', '')} | {sgt} | {bar} | | {l0:.7f} ({e0:.1e}) | {d:.6f} | "
@@ -141,6 +142,10 @@ def table(fn):
     for r in sorted(rows, key=lambda q: q["D"]):
         if r.get("note"):
             print(f"\nnote, D {r['D']:g} (k_c {r.get('kc', '')}, {r.get('source', '')}): {r['note']}")
+    gaps = [(r["D"], r["p4_gap"]) for r in sorted(rows, key=lambda q: q["D"]) if r.get("p4_gap") is not None]
+    if gaps:
+        print("\nthe k_c bar and the spreads below are float64 k_c spreads. P4's hybrid re-roots differ from the float64 records by "
+              + ", ".join(f"{g:+.2e} at D {D:g}" for D, g in gaps) + ", which the float64 spreads do not cover")
     nn, dd, ee, DD = map(np.array, (nn, dd, ee, DD))
     nw, dw = nn, dd                                  # the windows keep every row
     m = np.array(hh, bool)                           # rows with two or more valid k_c
@@ -286,7 +291,7 @@ def collect(raw):
     stf = os.path.join(HERE, "data", "ell_lam_signtested.json")   # quoted rows whose own record passed signtest.py
     stset = {(e["source"], round(e["D"], 6)) for e in json.load(open(stf))["signtested"]} if os.path.exists(stf) else set()
     ntf = os.path.join(HERE, "data", "ell_lam_notes.json")   # remarks printed beside a quoted row
-    notes = {(e["source"], round(e["D"], 6)): e["note"] for e in json.load(open(ntf))["notes"]} if os.path.exists(ntf) else {}
+    notes = {(e["source"], round(e["D"], 6)): e for e in json.load(open(ntf))["notes"]} if os.path.exists(ntf) else {}
     pts = []
     for D in sorted(by):
         ks = sorted(by[D])
@@ -295,7 +300,8 @@ def collect(raw):
         pts.append(dict(D=D, lam=by[D][top][0], kc=top, lam_err=err if err is not None else 0.0, has_err=err is not None,
                         kcs={str(k): by[D][k][0] for k in ks}, kcs_constraint={str(k): by[D][k][2] for k in ks},
                         source=by[D][top][1], constraint=by[D][top][2], signtested=(by[D][top][1], D) in stset,
-                        method="float64", note=notes.get((by[D][top][1], D))))   # ell_refine's float64 roots; no hybrid yet
+                        method="float64", note=notes.get((by[D][top][1], D), {}).get("note"),   # ell_refine's float64 roots
+                        p4_gap=notes.get((by[D][top][1], D), {}).get("p4_gap")))   # P4's hybrid minus this record
         print(f"D {D:g}: k_c {ks}, lambda {by[D][top][0]:.10f}" + (f", change from k_c {ks[-2]} {err:.1e}" if err is not None else ""))
     json.dump(dict(points=pts, note="built by ell_delta.py collect"), open(os.path.join(HERE, "data", "ell_lam_highD.json"), "w"), indent=1)
     return True

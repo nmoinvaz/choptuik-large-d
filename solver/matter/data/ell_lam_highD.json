@@ -22,7 +22,8 @@
    "constraint": 2.6612747202400022e-05,
    "signtested": true,
    "method": "float64",
-   "note": null
+   "note": null,
+   "p4_gap": null
   },
   {
    "D": 5.0,
@@ -44,7 +45,8 @@
    "constraint": 6.847854519507609e-07,
    "signtested": true,
    "method": "float64",
-   "note": null
+   "note": null,
+   "p4_gap": null
   },
   {
    "D": 6.0,
@@ -64,7 +66,8 @@
    "constraint": 2.8535365633062933e-07,
    "signtested": true,
    "method": "float64",
-   "note": null
+   "note": null,
+   "p4_gap": null
   },
   {
    "D": 7.0,
@@ -86,7 +89,8 @@
    "constraint": 4.330381498677806e-08,
    "signtested": true,
    "method": "float64",
-   "note": null
+   "note": null,
+   "p4_gap": null
   },
   {
    "D": 8.0,
@@ -108,7 +112,8 @@
    "constraint": 8.748631539554132e-08,
    "signtested": true,
    "method": "float64",
-   "note": null
+   "note": null,
+   "p4_gap": null
   },
   {
    "D": 9.0,
@@ -130,7 +135,8 @@
    "constraint": 1.1912405360643656e-07,
    "signtested": true,
    "method": "float64",
-   "note": null
+   "note": null,
+   "p4_gap": null
   },
   {
    "D": 10.0,
@@ -152,7 +158,8 @@
    "constraint": 2.3798538203144737e-07,
    "signtested": true,
    "method": "float64",
-   "note": null
+   "note": null,
+   "p4_gap": null
   },
   {
    "D": 10.5,
@@ -174,7 +181,8 @@
    "constraint": 1.2042655930243225e-07,
    "signtested": true,
    "method": "float64",
-   "note": null
+   "note": null,
+   "p4_gap": null
   },
   {
    "D": 11.0,
@@ -196,7 +204,8 @@
    "constraint": 1.6442524164287626e-06,
    "signtested": true,
    "method": "float64",
-   "note": null
+   "note": null,
+   "p4_gap": null
   },
   {
    "D": 11.5,
@@ -218,7 +227,8 @@
    "constraint": 2.3212093371205237e-06,
    "signtested": true,
    "method": "float64",
-   "note": null
+   "note": null,
+   "p4_gap": null
   },
   {
    "D": 12.0,
@@ -240,7 +250,8 @@
    "constraint": 5.83250885451198e-07,
    "signtested": true,
    "method": "float64",
-   "note": null
+   "note": null,
+   "p4_gap": null
   },
   {
    "D": 12.5,
@@ -258,7 +269,8 @@
    "constraint": 5.758642436212992e-06,
    "signtested": true,
    "method": "float64",
-   "note": null
+   "note": null,
+   "p4_gap": null
   },
   {
    "D": 13.0,
@@ -278,7 +290,8 @@
    "constraint": 2.3643248200645983e-05,
    "signtested": true,
    "method": "float64",
-   "note": null
+   "note": null,
+   "p4_gap": null
   },
   {
    "D": 13.5,
@@ -298,7 +311,8 @@
    "constraint": 1.2121762790011303e-05,
    "signtested": true,
    "method": "float64",
-   "note": null
+   "note": null,
+   "p4_gap": null
   },
   {
    "D": 14.0,
@@ -320,7 +334,8 @@
    "constraint": 3.5135531228912315e-05,
    "signtested": true,
    "method": "float64",
-   "note": null
+   "note": null,
+   "p4_gap": null
   },
   {
    "D": 14.5,
@@ -340,7 +355,8 @@
    "constraint": 1.907873869426562e-05,
    "signtested": true,
    "method": "float64",
-   "note": null
+   "note": null,
+   "p4_gap": null
   },
   {
    "D": 15.0,
@@ -362,7 +378,8 @@
    "constraint": 3.5977652518640637e-06,
    "signtested": true,
    "method": "float64",
-   "note": null
+   "note": null,
+   "p4_gap": null
   },
   {
    "D": 15.5,
@@ -384,7 +401,8 @@
    "constraint": 1.1012167335220554e-05,
    "signtested": true,
    "method": "float64",
-   "note": null
+   "note": null,
+   "p4_gap": null
   },
   {
    "D": 16.0,
@@ -406,7 +424,8 @@
    "constraint": 2.87752284221681e-05,
    "signtested": true,
    "method": "float64",
-   "note": null
+   "note": null,
+   "p4_gap": null
   },
   {
    "D": 16.25,
@@ -428,7 +447,8 @@
    "constraint": 4.544237199031933e-05,
    "signtested": true,
    "method": "float64",
-   "note": null
+   "note": null,
+   "p4_gap": null
   },
   {
    "D": 16.5,
@@ -452,7 +472,8 @@
    "constraint": 3.0950201081847665e-05,
    "signtested": true,
    "method": "float64",
-   "note": "the re-search's same-k_c LM pass moved Delta by -3.63e-7 from winb's saved state (Delta_src 1.0117774685 to Delta 1.0117771055 in the record), so the root is on a slightly different state than winb's; win2b's observation, not tested (raw I1025-win2b README). float64 until P4's hybrid re-root (win2b, amendment 7) lands"
+   "note": "the re-search's same-k_c LM pass moved Delta by -3.63e-7 from winb's saved state (Delta_src 1.0117774685 to Delta 1.0117771055 in the record), so the root is on a slightly different state than winb's; win2b's observation, not tested (raw I1025-win2b README). float64 until P4's hybrid re-root (win2b, amendment 7) lands",
+   "p4_gap": null
   },
   {
    "D": 16.75,
@@ -470,7 +491,8 @@
    "constraint": 0.0028105329478793446,
    "signtested": true,
    "method": "float64",
-   "note": null
+   "note": "P4's hybrid re-root on this record's state is 2.0967005853, -1.293e-02 from the float64 record (raw I1025-mac/out/ell_p4_hybrid_1025.jsonl); the float64 value stays quoted until P4's rows are in",
+   "p4_gap": -0.012934141553060385
   },
   {
    "D": 17.0,
@@ -492,7 +514,8 @@
    "constraint": 0.00014730973667168853,
    "signtested": true,
    "method": "float64",
-   "note": null
+   "note": "P4's hybrid re-root on this record's state is 2.0399399392, +1.339e-02 from the float64 record (raw I1025-mac/out/ell_p4_hybrid_1025.jsonl). Its system check was read under P4 amendment 5, written after the row started: |F| 2.2770621748e-10 against the record's 2.2759514360e-10, 4.9e-4 relative, equal steps (2744); the old rule (1e-6) would have failed it. The float64 value stays quoted until P4's rows are in",
+   "p4_gap": 0.013393441809182782
   }
  ],
  "note": "built by ell_delta.py collect"
