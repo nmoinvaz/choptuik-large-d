@@ -310,7 +310,10 @@ rows that stop at D 3.075 (`hp/data/solve_times.csv`, 85.8 h); the three points 
 The Jacobian is 99.5 % of a call; the LU and the residual together under 0.5 % (HIGH_M.md §4, lines 312–352, found the
 same at M 160–256). There is nothing to gain in the linear algebra: a Newton–Krylov or a better LU attacks 0.3 %.
 These shares were measured on builds before #523. Since then the Jacobian is read from the call's wall clock, because
-step_timing's own Jacobian entry holds only the copy into the blocks (HIGH_M.md §4, #1040).
+step_timing's own Jacobian entry holds only the copy into the blocks (HIGH_M.md §4, #1040). In #945's M 384 records,
+made since #523, the residual alone took 92–115 s of Newton iterations of 7137–9737 s (raw
+`I945-win2/leg/leg_points.jsonl`, the last record), over the 0.5% above. Whether the build or that run's plan and
+series orders cause the difference is not known.
 
 ### 1.3 The Jacobian's structure and cost
 
