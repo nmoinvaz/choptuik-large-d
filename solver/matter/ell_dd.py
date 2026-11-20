@@ -19,10 +19,11 @@ module asks first which part needs double-double: the LU or the matrix's entries
             orthogonal factors, rounded to double): over 5 variants the dd sign must equal mpmath's exact sign of the
             rounded matrix at every variant, and the float64 path must miss it at one variant at least (else the
             planted case is too easy to test anything).
-    python ell_dd.py sens STATE D kc LAMS [--eps 1e-16,1e-15,1e-14] [--seeds 3] [--blocks] [--out FILE]
+    python ell_dd.py sens STATE D kc LAMS [--eps 1e-16,1e-15,1e-14] [--seeds 2] [--blocks] [--block_eps 1e-16]
+                          [--out FILE]
         E1: dd sign and ln|det| of M at each lambda over 5 variants, beside the float64 path's;
         E2: the dd sign after relative noise eps * xi on M's propagator entries (all blocks, and with --blocks one
-            block at a time; the -I blocks stay exact).
+            block at a time at the --block_eps levels; the -I blocks stay exact).
 Reference: double-double arithmetic after Dekker (Numer. Math. 18, 224 (1971)) and Hida, Li and Bailey (QD, 2001), as
 in ddnp.py."""
 import json
@@ -166,7 +167,8 @@ def sens(argv):
     from dss_ell import DSSEll, NODES_STD
     ap = argparse.ArgumentParser()
     ap.add_argument("state"); ap.add_argument("D", type=float); ap.add_argument("kc", type=int); ap.add_argument("lams")
-    ap.add_argument("--eps", default="1e-16,1e-15,1e-14"); ap.add_argument("--seeds", type=int, default=3)
+    ap.add_argument("--eps", default="1e-16,1e-15,1e-14"); ap.add_argument("--seeds", type=int, default=2)
+    ap.add_argument("--block_eps", default="1e-16")
     ap.add_argument("--blocks", action="store_true"); ap.add_argument("--out", default=None)
     ap.add_argument("--mutate", default=None)
     o = ap.parse_args([a for a in argv])
@@ -199,8 +201,9 @@ def sens(argv):
             for b_, (c0, nf, fun, tgt) in enumerate(blocks):
                 mb = np.zeros_like(mask); mb[b_ * blk:(b_ + 1) * blk, c0:c0 + nf] = True
                 sel.append((f"block {b_}", mb))
+        beps = {float(v) for v in o.block_eps.split(",")}
         for eps in (float(v) for v in o.eps.split(",")):
-            for nm, mk in sel:
+            for nm, mk in (sel if eps in beps else sel[:1]):
                 sg = []
                 for sd in range(o.seeds):
                     xi = np.random.default_rng(100 + sd).standard_normal(M.shape)
