@@ -18,6 +18,7 @@ far below double rounding. Differences of method, all exact in exact arithmetic:
         operators against DSSEll's float64 ones (1e-14), the Ozaki product against ddnp.matmul (1e-28 relative), and
         dual-number derivatives against the analytic ones in double-double (1e-28); --mutate=slices (2 slices) and
         --mutate=ops (one harmonic off) must fail.
+    check and sshres take --Ks K --u0 U (default 30 and 0.04, the records' horizon series)
 References: Ozaki, Ogita, Oishi and Rump, Numer. Algorithms 59, 95 (2012) (error-free splitting of matrix products);
 double-double arithmetic as in ddnp.py (Dekker 1971; Hida, Li and Bailey 2001)."""
 import math
@@ -552,10 +553,11 @@ def check(argv):
     ap = argparse.ArgumentParser()
     ap.add_argument("state"); ap.add_argument("D", type=float); ap.add_argument("kc", type=int); ap.add_argument("lam", type=float)
     ap.add_argument("--blocks", default=None); ap.add_argument("--bar", type=float, default=1e-12)
+    ap.add_argument("--Ks", type=int, default=30); ap.add_argument("--u0", type=float, default=0.04)   # the horizon series
     ap.add_argument("--out", default=None)
     o = ap.parse_args([a for a in argv if not a.startswith("--mutate=")])
     z = np.load(o.state)
-    S = DSSEll(kc=o.kc, nodes=NODES_STD, n=o.D - 2, ell=1, Delta_ref=z[-1], Ks=30, u0=0.04)
+    S = DSSEll(kc=o.kc, nodes=NODES_STD, n=o.D - 2, ell=1, Delta_ref=z[-1], Ks=o.Ks, u0=o.u0)
     S.freeze_from(z, 0.7)
     t0 = time.time()
     with np.errstate(all="ignore"):
@@ -598,10 +600,11 @@ def sshres(argv):
     ap = argparse.ArgumentParser()
     ap.add_argument("state"); ap.add_argument("D", type=float); ap.add_argument("kc", type=int); ap.add_argument("lam", type=float)
     ap.add_argument("--us", default="0.04,0.02"); ap.add_argument("--bar", type=float, default=1e-18)
+    ap.add_argument("--Ks", type=int, default=30); ap.add_argument("--u0", type=float, default=0.04)   # the horizon series
     ap.add_argument("--ncols", type=int, default=4); ap.add_argument("--out", default=None)
     o = ap.parse_args([a for a in argv if not a.startswith("--mutate=")])
     z = np.load(o.state)
-    S = DSSEll(kc=o.kc, nodes=NODES_STD, n=o.D - 2, ell=1, Delta_ref=z[-1], Ks=30, u0=0.04)
+    S = DSSEll(kc=o.kc, nodes=NODES_STD, n=o.D - 2, ell=1, Delta_ref=z[-1], Ks=o.Ks, u0=o.u0)
     S.freeze_from(z, 0.7)
     E = DDEll(S)
     blocks, offs = S._block_list()
