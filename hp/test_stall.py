@@ -164,9 +164,9 @@ def solve(path, D, zh, zl, meta, d, threads, stall, factor, it_max, tag, segs=No
     finally:
         lowD_dd.newton_solve = NEW
     point = json.loads(open(out).read().splitlines()[-1])
-    point.pop("seconds", None)
-    point.pop("t_its", None)
-    point.pop("peak_rss_mb", None)
+    # the times, and the per-part seconds of lowD_dd's records (t_jac_its from the wall clock since #1040)
+    for k in ("seconds", "t_its", "peak_rss_mb") + tuple(p + "_its" for p in TIMES if p.startswith("t_")):
+        point.pop(k, None)
     return ok, np.asarray(h), np.asarray(l), rec, lines, point
 
 
