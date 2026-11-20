@@ -91,19 +91,40 @@ def ruhe(Mf, lam0, tol=1e-9, maxit=15, real=False, dl=1e-4):
     return lam, maxit, hist
 
 
-def beyn_eigs(A0, A1, rank_tol):
+LIFT_TAU = 1e-14                                      # below this times sigma_max a singular value's sign is not resolved
+
+
+def floor_lift(Mref, tau=LIFT_TAU):
+    """W = sigma_max U_f V_f^H from the singular directions of Mref below tau sigma_max (#1025: centre modes decaying
+    outward, which the outer conditions see only below rounding). M + W keeps M's regular eigenvalues when the floor is
+    exact and lifts the floor to sigma_max, so det(M + W) has a resolved sign. Mref is taken at a real reference lambda
+    away from the roots, and W is fixed (M + W stays analytic in lambda). --mutate=nolift returns W = 0."""
+    U, s, Vh = np.linalg.svd(Mref)
+    k = int(np.sum(s < tau * s[0]))
+    info = dict(k=k, sigma_max=float(s[0]), floor_top=float(s[-k] / s[0]) if k else None,
+                above=float(s[-k - 1] / s[0]) if k < len(s) else None)
+    if k == 0:
+        return None, info
+    W = s[0] * (U[:, -k:] @ Vh[-k:])
+    return (0.0 * W if "nolift" in MUT else W), info
+
+
+def beyn_eigs(A0, A1, rank_tol, abs_floor=0.0):
     U, s, Wh = np.linalg.svd(A0, full_matrices=False)
-    k = int(np.sum(s > rank_tol * s[0])) if s[0] > 0 else 0
+    k = int(np.sum(s > max(rank_tol * s[0], abs_floor))) if s[0] > 0 else 0
     if k == 0:
         return np.array([]), s
     return np.linalg.eigvals((U[:, :k].conj().T @ A1 @ Wh[:k].conj().T) / s[:k]), s
 
 
-def beyn(Mf, c, r, N, p, rank_tol=1e-9, seed=7, half=False):
+def beyn(Mf, c, r, N, p, rank_tol=1e-9, seed=7, half=False, abs_tol=1e-10):
     """eigenvalues of M inside |lam - c| = r (c real, M(conj lam) = conj M(lam)) and A_0's singular values; with
-    half, also the eigenvalues from the rule on every other point (N/2, a free error estimate)"""
+    half, also the eigenvalues from the rule on every other point (N/2, a free error estimate). The rank counts only
+    singular values above abs_tol times the integrand's size (N max |X_j|), so an empty circle, where A_0 is
+    quadrature noise, gives none."""
     V = None
     A = np.zeros(4, object)                           # A0, A1 on all points; A0, A1 on the even points
+    xs = 0.0
     for j in range(N // 2):
         th = 2 * np.pi * (j + 0.5) / N                # upper half; the lower half by conjugation
         lam = c + r * np.exp(1j * th)
@@ -111,14 +132,16 @@ def beyn(Mf, c, r, N, p, rank_tol=1e-9, seed=7, half=False):
         if V is None:
             V = np.random.default_rng(seed).standard_normal((M.shape[0], p))
         X = sl.solve(M, V) * (r * np.exp(1j * th) / N)
+        xs = max(xs, float(np.linalg.norm(X, 2)))
         a0, a1 = 2 * X.real, 2 * (X if "beyn" in MUT else lam * X).real
         A[0] = A[0] + a0; A[1] = A[1] + a1
         if j % 2 == 0:
             A[2] = A[2] + 2 * a0; A[3] = A[3] + 2 * a1
-    ev, s = beyn_eigs(A[0], A[1], rank_tol)
+    fl = abs_tol * N * xs
+    ev, s = beyn_eigs(A[0], A[1], rank_tol, fl)
     if not half:
         return ev, s
-    return ev, s, beyn_eigs(A[2], A[3], rank_tol)[0]
+    return ev, s, beyn_eigs(A[2], A[3], rank_tol, fl)[0]
 
 
 def polish(Mr, Mc, ev, c, r, nopolish_complex=False):
@@ -132,8 +155,9 @@ def polish(Mr, Mc, ev, c, r, nopolish_complex=False):
             lam, it, h = e, 0, []
         else:
             lam, it, h = ruhe(Mr, float(e.real), real=True) if real else ruhe(Mc, complex(e))
+        conv = (h[-1] < 1e-9 * max(1.0, abs(lam))) if h else None   # None: not polished
         rec = dict(beyn=[float(e.real), float(e.imag)], lam=[float(np.real(lam)), float(np.imag(lam))], its=it,
-                   last_mu=h[-1] if h else None, moved=float(abs(lam - e)), polished=bool(h),
+                   last_mu=h[-1] if h else None, moved=float(abs(lam - e)), polished=bool(h), converged=conv,
                    inside=bool(abs(lam - c) < r))
         out.append(rec)
         if not real:
@@ -174,14 +198,17 @@ def planted():
     return good
 
 
-def ill_operator(rel, m=8, seed=2):
-    """T~(lam) = P [T(lam) + E(lam)] Q (direct sum, T as in planted, n0 40), E(lam) = eps expm(lam K) diag(s): m
-    directions eps = rel |T(0.5)|_2 small at every lam, turning with lam (K real skew), with det E != 0 everywhere, so
-    T~ has T's eigenvalues and no others; P, Q fixed random orthogonal. Returns T~ and T's eigenvalues."""
+def ill_operator(rel, m=8, seed=2, coupled=False):
+    """S(lam) = P [T0(lam) + E(lam)] Q (direct sum; T0 = A - lam B - lam^2 C as in planted, n0 40), E(lam) = eps
+    expm(lam K) diag(s): m directions eps = rel |T0(0.5)|_2 small at every lam, turning with lam (K real skew), det E != 0
+    everywhere; P, Q fixed random orthogonal. Decoupled: S itself. Coupled (the shooting structure of M): Z = [[T, F],
+    [G, S + G T^-1 F]] with a well-conditioned chain block T = 3 I + 0.1 lam R (nb 60) and O(1) couplings F, G, so
+    det Z = det T det S: the eigenvalues and the floor sit in the Schur complement S, and the floor's singular vectors
+    carry chain components, as M's centre modes carry node 0 and 1 parts. Returns the operator and T0's eigenvalues."""
     rng = np.random.default_rng(1)
     n0 = 40
     A, B, C = (rng.standard_normal((n0, n0)) for _ in range(3))
-    T = lambda lam: A - lam * B - lam ** 2 * C
+    T0 = lambda lam: A - lam * B - lam ** 2 * C
     L0 = np.block([[np.zeros((n0, n0)), np.eye(n0)], [A, -B]])
     L1 = np.block([[np.eye(n0), np.zeros((n0, n0))], [np.zeros((n0, n0)), C]])
     true = sl.eigvals(L0, L1)
@@ -189,48 +216,68 @@ def ill_operator(rel, m=8, seed=2):
     g = np.random.default_rng(seed)
     K = g.standard_normal((m, m)); K = K - K.T
     s = np.exp(g.uniform(np.log(0.5), np.log(2.0), m))
-    eps = rel * np.linalg.norm(T(0.5), 2)
-    P = np.linalg.qr(g.standard_normal((n0 + m, n0 + m)))[0]
-    Q = np.linalg.qr(g.standard_normal((n0 + m, n0 + m)))[0]
+    eps = rel * np.linalg.norm(T0(0.5), 2)
+    n = n0 + m
+    P = np.linalg.qr(g.standard_normal((n, n)))[0]
+    Q = np.linalg.qr(g.standard_normal((n, n)))[0]
+    nb = 60
+    R = g.standard_normal((nb, nb)) / np.sqrt(nb)
+    F, G = g.standard_normal((nb, n)), g.standard_normal((n, nb))
 
-    def Tt(lam):
-        Z = np.zeros((n0 + m, n0 + m), complex if np.iscomplexobj(lam) else float)
-        Z[:n0, :n0] = T(lam)
+    def S(lam):
+        Z = np.zeros((n, n), complex if np.iscomplexobj(lam) else float)
+        Z[:n0, :n0] = T0(lam)
         Z[n0:, n0:] = eps * (sl.expm(lam * K) * s[None, :])
         return P @ Z @ Q
-    return Tt, true
+    if not coupled:
+        return S, true
+
+    def Zf(lam):
+        T = 3 * np.eye(nb) + 0.1 * lam * R
+        return np.block([[T, F], [G, S(lam) + G @ np.linalg.solve(T, F)]])
+    return Zf, true
 
 
-def planted_ill(N=24, p=12):
+def planted_ill(N=24, p=12, lift=False):
     """the production contour (N 24, p 12) on ill_operator at rel 1e-2 (a well-conditioned control), 1e-13 (M's
-    smallest singular values at k_c 31, D 13) and 1e-17 (rcond at k_c 47 and 55, D 17.5), with no true eigenvalue
-    inside the circle and with one, each circle a quarter of the gap to the nearest eigenvalue outside (leakage about
-    4^-24). Pass, on what the scan reports: after the polish, with values within 1e-8 merged, the eigenvalues inside
-    are the true ones inside, each within 1e-8. Fixed before any fix of ell_eigs (#1025, coordinator 2026-11-20)."""
+    smallest singular values at k_c 31, D 13) and 1e-17 (rcond at k_c 47 and 55, D 17.5), decoupled and coupled, with
+    no true eigenvalue inside the circle and with one, each circle a quarter of the gap to the nearest eigenvalue
+    outside (leakage about 4^-24). Pass, on what the scan reports: after the polish, with values within 1e-8 merged,
+    the eigenvalues inside are the true ones inside, each within 1e-8 (fixed before any fix, #1025, coordinator
+    2026-11-20). The fixed scan reports whether each polish converged, and only converged ones count as eigenvalues.
+    lift: the floor lift (floor_lift) from the operator at the real reference c + r."""
     allgood = True
-    for rel in (1e-2, 1e-13, 1e-17):
-        Tt, true = ill_operator(rel)
-        re = np.sort(true[np.abs(true.imag) < 1e-12].real)
-        c1 = re[np.argmin(np.abs(re - 0.5))]
-        dd = np.sort(np.abs(true - c1))
-        g = np.linspace(-2, 2, 4001)                    # the 'none' circle: the real point farthest from the spectrum
-        dist = np.array([np.min(np.abs(true - x)) for x in g])
-        c0 = g[np.argmax(dist)]
-        for case, c, r in (("none", c0, 0.25 * dist.max()), ("one", c1, 0.25 * dd[1])):
-            inside = [t for t in true if abs(t - c) < r]
-            ev, sv = beyn(Tt, c, r, N, p)
-            got = []
-            for q in polish(Tt, Tt, ev, c, r):
-                lq = complex(*q["lam"])
-                if q["inside"] and all(abs(lq - u) >= 1e-8 for u in got):
-                    got.append(lq)
-            found = sum(min((abs(u - t) for u in got), default=np.inf) < 1e-8 for t in inside)
-            ok = found == len(inside) and len(got) == len(inside)
-            allgood &= ok
-            print(f"planted_ill: rel {rel:.0e}, {case}: circle |lam - {c:.6f}| = {r:.6f} holds {len(inside)}; A_0's "
-                  f"rank {len(ev)} of p {p} (singular values {sv[0]:.1e} .. {sv[-1]:.1e}); {found} found, {len(got)} "
-                  f"reported inside ({'OK' if ok else 'BAD'})", flush=True)
-    print(f"planted_ill: {'OK' if allgood else 'BAD'}")
+    for coupled in (False, True):
+        for rel in (1e-2, 1e-13, 1e-17):
+            Tt, true = ill_operator(rel, coupled=coupled)
+            re = np.sort(true[np.abs(true.imag) < 1e-12].real)
+            c1 = re[np.argmin(np.abs(re - 0.5))]
+            dd = np.sort(np.abs(true - c1))
+            g = np.linspace(-2, 2, 4001)                # the 'none' circle: the real point farthest from the spectrum
+            dist = np.array([np.min(np.abs(true - x)) for x in g])
+            c0 = g[np.argmax(dist)]
+            for case, c, r in (("none", c0, 0.25 * dist.max()), ("one", c1, 0.25 * dd[1])):
+                inside = [t for t in true if abs(t - c) < r]
+                Mf, k = Tt, 0
+                if lift:
+                    W, info = floor_lift(Tt(c + r))
+                    k = info["k"]
+                    if W is not None:
+                        Mf = (lambda W: (lambda lam: Tt(lam) + W))(W)
+                ev, sv = beyn(Mf, c, r, N, p)
+                got = []
+                for q in polish(Mf, Mf, ev, c, r):
+                    lq = complex(*q["lam"])
+                    if q["inside"] and q["converged"] is not False and all(abs(lq - u) >= 1e-8 for u in got):
+                        got.append(lq)
+                found = sum(min((abs(u - t) for u in got), default=np.inf) < 1e-8 for t in inside)
+                ok = found == len(inside) and len(got) == len(inside)
+                allgood &= ok
+                print(f"planted_ill: {'coupled' if coupled else 'decoupled'}, rel {rel:.0e}, {case}: circle "
+                      f"|lam - {c:.6f}| = {r:.6f} holds {len(inside)}; lifted {k}; A_0's rank {len(ev)} of p {p} "
+                      f"(singular values {sv[0]:.1e} .. {sv[-1]:.1e}); {found} found, {len(got)} reported inside "
+                      f"({'OK' if ok else 'BAD'})" + (f"  [MUTATION {MUT}]" if MUT else ""), flush=True)
+    print(f"planted_ill{' --lift' if lift else ''}: {'OK' if allgood else 'BAD'}")
     return allgood
 
 
@@ -338,5 +385,5 @@ if __name__ == "__main__":
     if sys.argv[1] == "planted":
         sys.exit(0 if planted() else 1)
     if sys.argv[1] == "planted_ill":
-        sys.exit(0 if planted_ill() else 1)
+        sys.exit(0 if planted_ill(lift="--lift" in sys.argv) else 1)
     main()
