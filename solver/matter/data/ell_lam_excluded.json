@@ -30,6 +30,11 @@
    "source": "I1025-mac/out/l1kc47Fr1025.jsonl",
    "D": 17.0,
    "reason": "signtest disagrees at lam + 0.02 (signs -,-,-,+; win2b, I1025-win2b/signtest_list.log)"
+  },
+  {
+   "source": "I1025-mac/out/l1kc71Fm1025.jsonl",
+   "D": 17.0,
+   "reason": "signtest disagrees at lam - 0.02 (signs -,+,-,-; Mac, lane_t_a.log); 52 singular values below 1e-15"
   }
  ]
 }
