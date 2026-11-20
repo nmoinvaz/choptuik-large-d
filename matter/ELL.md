@@ -268,6 +268,51 @@ then hit the same wall as the ℓ = 0 scalar at D ≈ 26 (rounding against selec
 [STRUCTURE.md](STRUCTURE.md): for ℓ ≥ 1, gravity at x = O(1) is O(n^(−ℓ−1)) instead of O(1/n), so the beyond-all-orders
 selection is weaker at a given D.
 
+**Past D = 17: the mode matrix's singular-value ladder (#1025, raw `I1025-mac/`, numerical evidence).** #1025 continued
+the branch to D ≈ 19.5 (`ell_leap.py`) and took λ₁ from the sign changes of det M(λ) (`ell_refine.py`, M =
+`DSSEll.mode_matrix`). Past D = 17 at k_c 55–63 that sign is noise, and λ₁ is established only to D = 17. The cause is a
+ladder in M's small singular values:
+
+- **The ladder.** At D = 13, k_c 31 the singular values below 3×10⁻⁹ σ_max come in pairs. At λ₁ − 0.01 the pair means
+  are 9.8×10⁻¹⁴, 4.1×10⁻¹³, 1.2×10⁻¹², 2.7×10⁻¹², 5.0×10⁻¹², 8.9×10⁻¹², 1.6×10⁻¹¹, 3.3×10⁻¹¹, 7.1×10⁻¹¹, 1.8×10⁻¹⁰,
+  5.2×10⁻¹⁰ and 2.0×10⁻⁹ of σ_max, and further pairs lie above. Neighbouring pairs differ by a factor of 1.8–4.2, and
+  they barely move with λ (`svdiso_control_note.log`).
+- **What the ladder is.** At k_c 55, D = 17 the 34 directions below 10⁻¹⁵ σ_max take 99.3% of their input weight from
+  the centre block's free data, and their output lies in the last two shooting blocks, half in each (`floormap.log`).
+  They are modes regular at the centre that decay outward and reach the outer conditions only at the size of their
+  singular value. The count grows with k_c and D: 4 values below 10⁻¹² σ_max at k_c 31, D = 13; 48 at k_c 55, D = 17;
+  54–56 at k_c 63, D = 16.5–17.5, the smallest at 10⁻¹⁷–10⁻²⁰. Whether these deeper floors are also paired was not
+  checked.
+- **λ₁'s zero sits at the bottom of the ladder.** At D = 13, λ₁'s own singular value falls with a slope of about
+  2.5×10⁻⁶ σ_max per unit λ: 7.8×10⁻⁸, 2.5×10⁻⁸, 6.9×10⁻⁹ and 2.7×10⁻⁹ at λ₁ + 0.03, 0.01, 0.003 and 0.001. On its way
+  down it passes through the ladder and splits each pair; at each crossing its singular vector shares weight with the
+  partner (overlaps 0.88 and 0.47). Near the root the value that goes to zero is the ladder's bottom member: 6.2×10⁻¹⁴,
+  2.4×10⁻¹⁴ and 4.8×10⁻¹⁵ at λ₁ − 10⁻⁵, −3×10⁻⁶ and −10⁻⁶, and 5.7×10⁻¹⁵ at λ₁, while its partner rises to 2.7×10⁻¹³.
+  So det M changes sign at λ₁ through the ladder's bottom member.
+- **Why the sign fails past D = 17.** At D = 13 the bottom (10⁻¹³) is well above rounding, so the sign is resolved. At
+  k_c 55, D = 18 the bottom lies below rounding, and det M flips sign 5 times over λ = 1.77–1.96 with every matrix
+  finite and log|det M| ≈ −1620 (`detscan_kc55_D18.log`). The sign of LU(QM)·sign(det Q) for random orthogonal Q disagrees
+  with LU(M)'s there and at k_c 63, D = 17.5; it agrees at k_c 55, D = 17 and k_c 63, D = 16.5 (`signtest.py`). That
+  test checks the LU's rounding, not the error made in building M. So a record whose floor already reaches below
+  rounding (k_c 55 at D = 17, smallest 1.6×10⁻¹⁷; k_c 63 at D = 16.5, 6×10⁻¹⁹) is resolved for the computed M, which is
+  weaker than resolved for the exact one.
+- **Why the floor lift moved λ₁ by a fixed amount.** The lift M + σ_max U_f V_fᵀ (`ell_lam.py`,
+  `ell_eigs.floor_lift`) replaces the 40 singular directions below 10⁻¹⁴ σ_max at a reference λ. Those include the
+  bottom members that carry the zero, so the lifted determinant's root is set by what is left. At k_c 55, D = 17 it is
+  2.040111 against M's own 2.025719, a shift of +1.4392×10⁻², +1.4393×10⁻² and +1.4392×10⁻² with references 0.1, 0.01
+  and 0.001 from the root. A lift that only removed rounding noise would move the root by an amount that shrinks with
+  the reference's distance (the prediction in `lift_offset_prediction.log`, written before the runs); this one does
+  not. The lift passed every planted test, and none of them had a ladder carrying the zero.
+- **Why a fit of λ₁'s singular value fails.** Fitting σ(λ) ≈ s′|λ − λ₁| needs a stretch of λ where that value is
+  isolated from the others. At D = 13 there is none: the pairs lie closer than a factor 9 everywhere from 10⁻¹³ to above
+  10⁻⁷, so no value is a factor 3 from both neighbours. A fit through the crossings is biased: in a planted case with
+  D = 13's mixing, the fitted roots miss det M's zero by −4.4×10⁻⁴ and +1.1×10⁻⁴. Two tests posed this way stopped on
+  their D = 13 controls (`svdtrack_criteria.log`, `svdiso_criteria.log` and the notes beside them).
+- **Consequences.** The eigenvalue scans of `ell_eigs.py` (a contour-integral method) fail for the same reason: their
+  moment matrices are set by the ladder, not by eigenvalues inside the contour. A working route either resolves the
+  ladder's bottom, with the mode matrix in double-double (to about 10⁻³² σ_max), or removes the ladder, by integrating
+  the decaying modes in their stable direction or by orthonormalizing the shooting basis at each node.
+
 ## 7. Extrapolation to D = ∞
 
 **Direct fits of λ(D)** ([`ell_fit.py`](../solver/matter/ell_fit.py), `data/ell_fit.json`), D = 5–9, with λ∞ free and with
