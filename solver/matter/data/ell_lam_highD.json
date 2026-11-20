@@ -420,21 +420,6 @@
    },
    "source": "I1025-win/out/l1kc63Fw1025.jsonl",
    "constraint": 0.00014730973667168853
-  },
-  {
-   "D": 17.5,
-   "lam": 1.8831582965844342,
-   "kc": 47,
-   "lam_err": 0.0,
-   "has_err": false,
-   "kcs": {
-    "47": 1.8831582965844342
-   },
-   "kcs_constraint": {
-    "47": 0.007092496187138931
-   },
-   "source": "I1025-mac/out/l1kc47Fr1025.jsonl",
-   "constraint": 0.007092496187138931
   }
  ],
  "note": "built by ell_delta.py collect"

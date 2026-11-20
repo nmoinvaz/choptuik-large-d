@@ -111,7 +111,8 @@ def table(fn):
     """the delta table against delta(inf) = lambda_inf(l = 1) - 2 (#994's M = 3 value, data/ell_lambda_l1.json), with the
     k_c bar (|lambda(top k_c) - lambda(next lower)| <= 1e-6) and the psi-constraint of every record, the D where delta
     crosses 0 (linear interpolation between the bracketing points, and the spread from moving each by its k_c change),
-    and the windows"""
+    and the windows. The crossing and the slopes use only rows with two or more valid k_c; single-k_c rows are printed
+    and marked."""
     rows = json.load(open(fn))["points"]
     Ds, L = lam0_table()
     l1inf = json.load(open(os.path.join(HERE, "data", "ell_lambda_l1.json")))["M3"]["lam"]
@@ -128,22 +129,27 @@ def table(fn):
         n = D - 2
         d = l1 - l0
         nn.append(n); dd.append(d); ee.append(r.get("lam_err", 0.0)); DD.append(D); hh.append(r.get("has_err", True))
-        bar = (("OK" if r["lam_err"] <= 1e-6 else "BAD") + f" ({r['lam_err']:.1e})") if r.get("has_err", True) else "single k_c"
+        bar = (("OK" if r["lam_err"] <= 1e-6 else "BAD") + f" ({r['lam_err']:.1e})") if r.get("has_err", True) else \
+            "single k_c (not in crossing or slopes)"
         con = r.get("constraint")
         print(f"| {D:g} | {n:g} | {l1:.7f} | {r.get('kc', '')} | {bar} | {con:.1e} | {l0:.7f} ({e0:.1e}) | {d:.6f} | "
               f"{d - dinf:+.6f} | {n * d:.4f} | {n * dinf:.4f} |" if con is not None else
               f"| {D:g} | {n:g} | {l1:.7f} | {r.get('kc', '')} | {bar} | | {l0:.7f} ({e0:.1e}) | {d:.6f} | "
               f"{d - dinf:+.6f} | {n * d:.4f} | {n * dinf:.4f} |")
     nn, dd, ee, DD = map(np.array, (nn, dd, ee, DD))
+    nw, dw = nn, dd                                  # the windows keep every row
+    m = np.array(hh, bool)                           # rows with two or more valid k_c
+    if (~m).any():
+        print("\nleft out of the crossing and the slopes (single k_c): " + ", ".join(f"D {v:g}" for v in DD[~m]))
+    dd, ee, DD = dd[m], ee[m], DD[m]
     cr = [i for i in range(len(dd) - 1) if dd[i] > 0 >= dd[i + 1]]
     if cr:
         i = cr[0]
         lin = lambda a, b: DD[i] + (DD[i + 1] - DD[i]) * a / (a - b)
         Dc = lin(dd[i], dd[i + 1])
         alts = [lin(dd[i] + s1 * ee[i], dd[i + 1] + s2 * ee[i + 1]) for s1 in (-1, 1) for s2 in (-1, 1)]
-        spread = (f"k_c spread {min(alts):.4f} to {max(alts):.4f}" if hh[i] and hh[i + 1] else
-                  "k_c spread not measured (single k_c at " + ", ".join(f"D {DD[j]:g}" for j in (i, i + 1) if not hh[j]) + ")")
-        print(f"\ndelta crosses 0 between D {DD[i]:g} and {DD[i + 1]:g}: D = {Dc:.4f} (linear), {spread}")
+        print(f"\ndelta crosses 0 between D {DD[i]:g} and {DD[i + 1]:g}: D = {Dc:.4f} (linear), "
+              f"k_c spread {min(alts):.4f} to {max(alts):.4f}")
     else:
         print(f"\ndelta has not crossed 0 (last D {DD[-1]:g}, delta {dd[-1]:+.6f})")
     sl = np.diff(dd) / np.diff(DD)
@@ -161,7 +167,7 @@ def table(fn):
               f"slope {slope:+.4f} ± {bar:.4f} per unit D at the last step: {verdict}")
     print("\nwindows (c = the limit of delta):")
     for k, lab in ((2, "c + a/n"), (3, "c + a/n + b/n^2")):
-        for ns, c in windows(nn, dd, k)[-6:]:
+        for ns, c in windows(nw, dw, k)[-6:]:
             print(f"   {lab:16s} n = {', '.join(f'{v:g}' for v in ns)}: c {c:+.4f}")
     return True
 

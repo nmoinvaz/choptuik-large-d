@@ -40,6 +40,11 @@
    "source": "I1025-win/out/l1kc71Fw1025.jsonl",
    "D": 16.5,
    "reason": "pending the coordinator's ruling: lam 2.1454677 equals its guess (the k_c 63 value) to 4.3e-9, at its bracket's edge; a signtest at -/+1e-4 and 1e-6 is proposed"
+  },
+  {
+   "source": "I1025-mac/out/l1kc47Fr1025.jsonl",
+   "D": 17.5,
+   "reason": "no passing signtest on raw (none was run); a row counts only with one (coordinator's rule)"
   }
  ]
 }
