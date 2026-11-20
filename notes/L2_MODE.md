@@ -300,8 +300,9 @@ route:
    c₂ = −ℓ·S(W^F)/(ℓ·S(W^λ)), with W^F and W^λ the responses to −F and F_λ and ℓ the left null vector of the n = ∞ ℓ = 2
    multiplier map at λ = 0.
 4. **It survives truncation.** ℓ = 0's symmetry route fails in a truncated model because its gauge step multiplies by
-   P(θ), which mixes θ-harmonics (FIRST_ORDER.md §4). δS = s cos 2χ vanishes at the centre, so ℓ = 2 needs no gauge
-   step. D₂ acts harmonic by harmonic in θ, and the route should hold in the M-harmonic models too (not checked).
+   P(θ), which mixes θ-harmonics (FIRST_ORDER.md §4). An earlier reading held that ℓ = 2 needs no gauge step. §9.1
+   corrects it: the conjugated mode has c(0) ≠ 0, the ℓ = 2 problem has the residual gauge sY T(t), and a truncated
+   model needs a slice (the #1010 review, notes/L2_C2_REVIEW.md, finding 9).
 
 So no O(1/n) outer data are needed. This is a structural argument (items 1–4), with item 1 checked by the reduction.
 What it assumes is listed in §8.5.
@@ -347,7 +348,11 @@ This section carries out §8.5's recommended task. It evaluates c₂ at M = 1, 3
   λ₀ = 2 + λ₁/n, so λ₀ + λ₂ = 2 + O(1/n²).
 - **The truncated models agree** (numerical evidence, §9.5). c₂ is −7.96, −2.48 and −3.046 at M = 1, 3 and 5. The
   same code with the ℓ = 0 forcing gives λ₁ = 7.81, 2.50 and 3.044. c₂ + λ₁ falls from −0.15 to −0.0016. c₂ is
-  negative at M = 3 and M = 5 at every slice tried, so the sign may be read.
+  negative at M = 3 and M = 5 at every slice tried, so the sign may be read. As the review notes (L2_C2_REVIEW.md,
+  findings 10–12), c₂(M) + λ₁(M) = G(M) by linearity, so the table tests that G → 0 and that the slice gives λ₁, both
+  properties of the ℓ = 0 machinery and not of the ℓ = 2 step. M = 1's value is not converged and depends on how the
+  forcing is written (−2.62 in the compact form against −7.96 here). Its primary value also moves with ξ₁ (−7.9591 at
+  0.2, −7.9436 at 0.25), while the slice values do not.
 - **The p = 1 representative gives the same forcing** (*checked symbolically*, §9.6). Its F/(s cos²χ) equals the
   p = q F/(s cos 2χ) identically, so the decomposition and c₂ = −λ₁ hold for it unchanged, as SO(n + 1) requires.
 - **The planted checks pass, and the control fires** (§9.5). The ℓ = 0 forcing through the same code gives
@@ -537,12 +542,25 @@ reach it separately, and with an identical F̃ the jets would repeat §9.5's num
 
 ### 9.7 What is assumed, and what is not covered
 
+**Independent review** (#1010, notes/L2_C2_REVIEW.md, PR #1053): confirmed with corrections. The identity
+F̃⁽²⁾ + F̃⁽⁰⁾ = 𝓛₀[(0, Φ_s)] is *checked symbolically* by a second derivation in another frame, with no shared code,
+and a second implementation reproduces c₂ at M = 1 and 3 (to 1.3×10⁻¹⁰ and 4.7×10⁻⁸) and at M = 5 to four digits.
+The corrections are in the hypotheses below and in §9's reading of the M table, and none changes the sign or the
+value.
+
 - **For c₂ = −λ₁:**
   - FIRST_ORDER.md §4's symmetry route in the full problem, with ℓ annihilating the reparametrization columns.
     FIRST_ORDER.md checked that route against the direct route in the untruncated series, to 3×10⁻¹⁵.
   - §8.5's hypotheses: the one-dimensional kernel and multipliers along rays. V₁ + V₂ = 0 is now a gauge choice at
     leading order (§9.1, by hand).
-  - Conjecture 1 and the lemma chain at O(1/n), as for λ₁ itself.
+  - The ℓ = 2 analogue of Conjecture 1: that a non-spherical perturbation is selected by its inner multiplier. No
+    lemma chain exists for non-spherical perturbations, so this is not "as for λ₁ itself" (review, finding 14).
+  - That the ℓ = 2 outer maps add nothing at O(1/n). The conjugation is an inner statement only (finding 15).
+  - That the continuation exists with its metric part, whose evolution equations are its own. So c₂ = −λ₁ is a
+    necessary condition (finding 17).
+  - A simple eigenvalue, the kernel hypothesis stated for the reduced lapse–scalar problem modulo the gauge family
+    and the time-independent diffeomorphisms of relative order 1/n (finding 16), and the ansatz (zero shift, metric
+    of relative order 1/n) for the correction too (finding 18).
 - **The value −3.0324** is FIRST_ORDER.md's fit of λ₁, numerical evidence. The truncated sequence supports it but does
   not replace it.
 - Two representatives, p = q = (n + 1)/2 and p = 1 (§9.6). Other p were not tried.
@@ -550,7 +568,8 @@ reach it separately, and with an identical F̃ the jets would repeat §9.5's num
 
 **Proposed text for the README** (for the maintainer): "At large D the non-spherical ℓ = 2 perturbation of the
 critical solution has growth rate λ₂ = c₂/n + O(1/n²), with c₂ = −λ₁ = −3.0324 by a solvability identity of the inner
-problem (conditional on the selection hypotheses). The mode is marginal at D = ∞ and stable at large finite D
+problem (conditional on Conjecture 1 and on its analogue for non-spherical perturbations, which is not stated
+anywhere yet). The mode is marginal at D = ∞ and stable at large finite D
 (notes/L2_MODE.md §9)."
 
 ## 10. Reproduce
