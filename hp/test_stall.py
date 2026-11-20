@@ -47,7 +47,7 @@ from hpkernel.driver import load  # noqa: E402
 import lowD_dd  # noqa: E402
 
 STATES = os.path.join(HERE, "data", "lowD_states")
-TIMES = ("t", "t_res", "t_jac", "t_lu", "t_solve", "t_prod", "script")
+TIMES = ("t", "t_call", "t_res", "t_jac", "t_fill", "t_lu", "t_solve", "t_prod", "script")
 NEW = lowD_dd.newton_solve
 HAS = "stall" in inspect.signature(NEW).parameters
 PATHS = (["driver"] if HAS else []) + ["script"]
