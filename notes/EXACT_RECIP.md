@@ -16,6 +16,7 @@ The re-solves are for a Linux runner (section 3). Status words are AGENTS.md's.
 | the same at D 241.96 | +3.290002×10⁻¹³; 0.87% of the quoted error | numerical evidence, dh610's release build (3.3) |
 | the same at D 251.88 | no value: the flag-on polish stops at its start, whose projection fails; without that bound its first Newton step is 4.56×10⁻² and no trial is accepted | dh610's release build (3.3, 3.4) |
 | the same at D 246.44 and 249.47 | no value: both flag-on polishes stop at their start, whose projection fails from a miss of 3.29×10⁻⁶ and 9.02×10⁻⁶ (growing about 1.4 times per unit D, 2.02×10⁻⁵ at 251.88); so D 241.96's change is the last measured one | dh610's release build (3.5) |
+| where the flag-on polish's basin ends | between D 241.96 and 242.86: at the four bases D 242.86–245.56 the flag-on start misses by 1.00×10⁻⁶ to 2.45×10⁻⁶ and stops; lifting the bound at D 246.44 and 249.47 does not converge either | dh610's release build (3.6) |
 | does the first-order response predict Δ's change at large D | no: at D 241.96 it gives 11.5 times the measured change, and its `prow` control 5.1 times unknown 0's own; suspected cause, untested: second-order terms along the weak directions | numerical evidence, Mac release-dev build on dh610's bases (3.3) |
 
 ## 1. The flag
@@ -447,6 +448,23 @@ measurement. Both of those states are leg 0's, at ks 291; the ks changes to 293 
 
 Expected time: about 1 min per flag-off polish, about 6 min per flag-on polish that stops at its start, and about 1–3
 h per one that converges (D 241.96's took 49 min at ks 130): 0.5–10 h for the four (an estimate).
+
+**Results** (dh610, venv-i1054, 2026-11-20; PR #1054 comments 7051048042 and 7051557411, raw `I1054-dh610/` ae8e6740).
+(1) With `--od_start_F 0`, neither flag-on polish converges, at D 246.44 or 249.47. The start's projection fails, the
+polish takes one step, and it is not adopted. So lifting the bound gives no value there, and no line can be fitted.
+(2) With the default bound, all four flag-off polishes converge, and all four flag-on ones stop at their start:
+
+| D | ks | flag-on start's pinned max\|F\| |
+|---|---|---|
+| 242.86 | 291 | 1.00×10⁻⁶ |
+| 243.84 | 291 | 1.38×10⁻⁶ |
+| 244.72 | 293 | 1.85×10⁻⁶ |
+| 245.56 | 293 | 2.45×10⁻⁶ |
+
+The misses rise about 1.37 times per unit D, as 3.5's did, and the first, at D 242.86, lies just above the 10⁻⁶ bound,
+as predicted. So the basin's edge is between D 241.96 and 242.86, and the measured change stays +3.290002×10⁻¹³ at D
+241.96 alone. Not shown: whether the unbounded polish converges at D 242.86, where the miss is smallest (dh610's
+recommended task).
 
 ## 4. Discrepancies (reported, not fixed)
 
