@@ -835,7 +835,7 @@ def run_chain(c):
     from octo_corrector import load_o
     opt = c["opt"]
     if opt.get("arc_diag"):
-        return run_diag(c)
+        return run_floor(c) if int(opt["arc_diag"]) == 2 else run_diag(c)
     z8 = c["last_q"]["z8"] if "z8" in c["last_q"] else load_o(c["state_path"])[0]
     sysm = ChainSys(c, z8, c["D"])
     pol = sysm.polish()
@@ -935,6 +935,131 @@ def run_diag(c):
         json.dump(out, f, indent=1, default=str)
     print("done", flush=True)
     return 0
+
+
+def run_floor(c):
+    """anm_run.py --arclength 1 --arc_diag 2 (#1008): where the floor of the predicted max|F| comes from (about 1e-36
+    at D 259.4-259.5 for every arclength step a, so the corrector's first |dz| is that floor times the gain). At the
+    stored base, not polished, with the series of --arc_jet (or formed), for each a of --floor_a (a = 0 is the base):
+    the prediction as correct() forms it, moved along the tangent to its double-double D; its octo-double max|F|
+    before and after the re-seed, with the re-seed's octo-double rung residuals (Reseeder.last_o); and where each max
+    sits (the held rows, the rows at the horizon data's offsets, the rest, the five largest rows). --floor_polish 1 polishes the base first: the held
+    values are taken relative to the run's own first state, so a later state of a run misses this run's held rows by
+    the fit's offset between the two states (7.7e-38 at run2's arc step 7, as run2's own polish removed 4.4e-38).
+    Control: w_1 scaled by 1 + --floor_mutate at the largest a must raise max|F| before the re-seed by at least 100
+    times, or the probe cannot see an error of the series. Exit 1 when the control does not fire or the base's own
+    max|F| (a = 0, before the re-seed) exceeds 1e-60. OUT/arc_floor.json."""
+    from octo_corrector import load_o, q4_of_o, with_horizon
+    opt = c["opt"]
+    z8 = c["last_q"]["z8"] if "z8" in c["last_q"] else load_o(c["state_path"])[0]
+    sysm = ChainSys(c, z8, c["D"])
+    with mp.workdps(DPS_SERIES):
+        sysm.D = dd_round(sysm.D)
+    t0 = time.time()
+    rows = c["rows"]
+    pol = sysm.polish() if int(opt["floor_polish"]) else None
+    if pol is not None:
+        print(f"floor: base polished: max|F| {pol['F_before']:.2e} -> {pol['F_after']:.2e} in {pol['steps']} steps "
+              f"({time.time() - t0:.0f} s)", flush=True)
+
+    hz = None
+
+    def where(F):
+        v = np.abs(np.asarray(F[0], dtype=float) + np.asarray(F[1], dtype=float))
+        held = np.zeros(len(v), dtype=bool)
+        if rows is not None:
+            held[rows] = True
+        hor = np.zeros(len(v), dtype=bool)
+        if hz is not None:
+            hor[hz] = True
+        top = np.argsort(v)[::-1][:5]
+        return dict(max=float(v.max()), held_rows=float(v[held].max()) if held.any() else None,
+                    other_rows=float(v[~held].max()), horizon_rows=float(v[hor].max()) if hor.any() else None,
+                    rest_rows=float(v[~held & ~hor].max()), top=[[int(i), float(v[i])] for i in top])
+
+    def probe(W, a, tag):
+        with mp.workdps(DPS_SERIES):
+            Z, H, _, _ = compose(W, int(opt["arc_sign"]), "")
+            am = mp.mpf(a)
+            xp, Dp = horner(Z, am), sysm.D + horner(H, am)
+            tz, tD = unit_tangent(Z, H, am)
+            Dd = dd_round(Dp)
+            pred8 = to_parts(vadd(xp, tz, (Dd - Dp) / tD))
+        e = sysm.at(Dd)
+        rec = dict(tag=tag, a=a, D=mp.nstr(Dd, 34), D_round=float(Dd - Dp), before=where(e["po"].residual_o(pred8)))
+        if e["rs"] is not None:
+            ts = time.time()
+            zr, rsd = e["rs"].reseed(q4_of_o(pred8))
+            rec["reseed"] = dict(ok=bool(rsd["ok"]), seconds=round(time.time() - ts, 1))
+            if rsd["ok"]:
+                rec["after"] = where(e["po"].residual_o(with_horizon(pred8, zr, e["rs"])))
+                rec["refine_o"] = dict(rungs=[float(x) for x in (getattr(e["rs"], "last_o", None) or [])],
+                                       end=getattr(e["rs"], "last_o_end", ""))
+        aft = rec.get("after")
+
+        def say(w):
+            return (f"{w['max']:.2e} (held " + ("none" if w["held_rows"] is None else f"{w['held_rows']:.2e}")
+                    + ", horizon " + ("none" if w["horizon_rows"] is None else f"{w['horizon_rows']:.2e}")
+                    + f", rest {w['rest_rows']:.2e})")
+        print(f"floor {tag}: a {a:g}, D {mp.nstr(Dd, 15)}: max|F| before the re-seed {say(rec['before'])}, after "
+              + (say(aft) if aft else "none")
+              + (f", refine_o {['%.2e' % x for x in rec['refine_o']['rungs']]} {rec['refine_o']['end']}" if "refine_o" in rec else "")
+              + f" ({time.time() - t0:.0f} s)", flush=True)
+        return rec
+
+    with mp.workdps(DPS_SERIES):
+        W = sysm.dseries(to_mp_vec(sysm.base8), sysm.D, opt["N"])
+    e0 = sysm.at(sysm.D)
+    if e0["rs"] is not None:
+        # the rows at the horizon data's offsets (m_h, a_h; 2M of them): the rows the re-seed's data feed
+        hz = slice(int(e0["rs"].off["mh"]), int(e0["rs"].off["mh"]) + 2 * int(e0["rs"].M))
+    out = dict(D=mp.nstr(sysm.D, 34), state=opt["state"], arc_jet=opt["arc_jet"], polish=pol, base=where(e0["po"].residual_o(sysm.base8)),
+               offsets={k: int(v) for k, v in dict(e0["rs"].off).items() if isinstance(v, (int, np.integer))} if e0["rs"] is not None else None,
+               points=[])
+    if str(opt["floor_dh"]):
+        # (#1008) the residual's smoothness in D at the base: R(h) = F(z_0, D + h) - (D_h - D) F_D(z_0), D_h the
+        # double-double D + h. A smooth F leaves R ~ h^2 F_DD; a D-dependent coefficient rounded below octo-double
+        # leaves a remainder that does not fall with h. Control: F_D scaled by 1 + --floor_mutate * 1e14 must raise R
+        # in proportion to h.
+        FD = to_mp_vec(sysm.F_D(e0, sysm.base8))
+        out["dh"] = []
+        for h in [float(s) for s in str(opt["floor_dh"]).split(",")]:
+            with mp.workdps(DPS_SERIES):
+                Dh = dd_round(sysm.D + mp.mpf(h))
+            e = sysm.at(Dh)
+            with mp.workdps(DPS_SERIES):
+                F1 = to_mp_vec(e["po"].residual_o(sysm.base8))
+                hu = Dh - sysm.D
+                R = vadd(F1, FD, -hu)
+                Rm = vadd(F1, vscale(FD, 1 + mp.mpf(opt["floor_mutate"]) * mp.mpf(10) ** 14), -hu)
+            rec = dict(h=h, h_used=float(hu), R=where(to_parts(R)), R_control=where(to_parts(Rm)))
+            out["dh"].append(rec)
+            w, wm = rec["R"], rec["R_control"]
+            print(f"floor dh {h:g} (used {float(hu):.3e}): R max {w['max']:.2e} (held {w['held_rows']:.2e}, horizon "
+                  f"{w['horizon_rows']:.2e}, rest {w['rest_rows']:.2e}, top rows {[i for i, _ in w['top']]}); "
+                  f"control {wm['max']:.2e} ({time.time() - t0:.0f} s)", flush=True)
+        with open(os.path.join(c["out"], "arc_floor.json"), "w") as f:
+            json.dump(out, f, indent=1, default=str)
+        print("done", flush=True)
+        return 0
+    alist = [float(s) for s in str(opt["floor_a"]).split(",")]
+    for a in alist:
+        out["points"].append(probe(W, a, "series"))
+    with mp.workdps(DPS_SERIES):
+        Wm = list(W)
+        Wm[1] = vscale(W[1], 1 + mp.mpf(opt["floor_mutate"]))
+    ctl = probe(Wm, alist[-1], f"control (w_1 x (1 + {opt['floor_mutate']:g}))")
+    ref = out["points"][-1]["before"]["max"]
+    ctl["fires"] = bool(ctl["before"]["max"] >= 100 * ref)
+    out["control"] = ctl
+    base_ok = out["points"][0]["a"] == 0 and out["points"][0]["before"]["max"] <= 1e-60
+    out["base_ok"] = bool(base_ok)
+    with open(os.path.join(c["out"], "arc_floor.json"), "w") as f:
+        json.dump(out, f, indent=1, default=str)
+    print(f"floor control: {'FIRES' if ctl['fires'] else 'DOES NOT FIRE'} ({ctl['before']['max']:.2e} against "
+          f"{ref:.2e}); base at a = 0: {'ok' if base_ok else 'NOT at its own level, or a = 0 not first'}", flush=True)
+    print("done", flush=True)
+    return 0 if (ctl["fires"] and base_ok) else 1
 
 
 

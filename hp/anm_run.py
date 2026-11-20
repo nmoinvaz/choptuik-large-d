@@ -184,6 +184,11 @@ a smaller move is rounded to 0 or to a jump of up to an ulp. Each prediction is 
 double-double D its corrector runs at (#842).
 --arc_jet FILE: the first base's series read from FILE (an arcjet_*.npz of an earlier run at the same base D and N)
 instead of computed.
+--arc_diag 1 checks the adapter's pieces at the polished base (arclength.run_diag); --arc_diag 2 is the floor probe
+(arclength.run_floor, #1008): at the stored base, unpolished, the predicted max|F| before and after the re-seed at each
+arclength step of --floor_a (comma-separated, 0 first), and a control with w_1 scaled by 1 + --floor_mutate;
+--floor_polish 1 polishes the base first; --floor_dh H1,H2,... instead tests the residual's smoothness in D at the
+base (arclength.run_floor).
 --save_jet 1 saves each base's series z_0..z_N as OUTDIR/jet_pin<k>_D<D>.npz, in all the parts its jet carries (eight
 with --jet_o, four with --jet_q, two otherwise; keys z0..z<P-1>, each an (N + 1, L) array, order k in row k), its meta
 recording the norms and pivots. --save_jet 2 saves it and stops before the first attempt, so the series alone is the
@@ -466,6 +471,8 @@ def main():
     # --border 0 is its control (the D-series and the corrector at fixed D)
     # --arc_dhold H: D held where the bordered step's D move is at most H; --arc_jet FILE: the first series read
     opt.update(arclength=0, guard=0.05, D_min=0.0, arc_sign=1, border=1, turns_max=2, arc_diag=0, arc_dhold=1e-12, arc_jet="")
+    # --arc_diag 2: the floor probe of hp/arclength.py run_floor (#1008), at the a of --floor_a, control --floor_mutate
+    opt.update(floor_a="0,1e-4,1e-3,0.0138854375", floor_mutate=1e-20, floor_polish=0, floor_dh="")
     # --a_rule reseed: the step from the series' a_h tail and the re-seed's basin (hp/step_rule.py); its first level is
     # --a_scale, lowered by --a_drop after a failed re-seed and raised by --a_rise after a first attempt at its step
     opt.update(a_rule="step", a_scale=1.0, a_drop=10.0, a_rise=10.0 ** 0.5)
