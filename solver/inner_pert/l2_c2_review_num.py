@@ -19,9 +19,12 @@ What is its own:
 
     python3 l2_c2_review_num.py checks        planted checks of this code (exact modes, finite differences, the zero,
                                               lambda*); exit 0 iff all pass
-    python3 l2_c2_review_num.py c2 [--r1=0.2] [--delta=0.6283] [--own-zero] [--mutate=fc]
-                                              c2, lambda_1 and G at M = 1 on the slices phi = e1, e2, f2, compared with
-                                              data/l2_c2_M1_xi0.2_l2-l0-G-sym.json; exit 0 iff they agree to 1e-6
+    python3 l2_c2_review_num.py diag          the control forcing's two evaluations by radius (a diagnostic for 9.3)
+    python3 l2_c2_review_num.py c2 [--M=1] [--r1=0.2] [--delta=0.6283] [--own-zero] [--mutate=fc] [--tol=1e-6]
+                                              c2, lambda_1 and G on the slices phi = e1, e2, f2 (and the left singular
+                                              vector at M = 1), compared with data/l2_c2_M{M}_xi0.2_l2-l0-G-sym.json;
+                                              exit 0 iff they agree to --tol. M = 3 takes the one-shot solve of the
+                                              raw 4 x 4 jump matrix, rows and columns scaled
 """
 import json
 import os
@@ -259,7 +262,7 @@ def _series_inverse(al, c):
     return z
 
 
-NPD = 6
+NPD = 8
 Psym = sp.symbols('P1:%d' % (NPD + 1))
 Csym = sp.symbols('C0:%d' % NPD)
 
@@ -296,17 +299,22 @@ def review_forcings():
     return out
 
 
+Ssym = sp.Symbol('s', positive=True)
+
+
 def monomials(expr):
-    """[(coefficient, exponents of P1.., exponents of C0..)] of a rational function with a monomial denominator"""
+    """[(coefficient, exponents of P1.., exponents of C0.., exponent of s)] of a rational function with a monomial
+    denominator. An explicit s (only the control forcing of l2_c2_forcing.py has one) is T^2 xi^2/2"""
     num, den = sp.fraction(sp.together(expr))
-    gens = list(Psym) + list(Csym)
+    gens = list(Psym) + list(Csym) + [Ssym]
     dp = sp.Poly(den, *gens)
     assert len(dp.terms()) == 1, 'the denominator is not a monomial'
     dmon, dco = dp.terms()[0]
     out = []
     for mon, co in sp.Poly(sp.expand(num), *gens).terms():
         e = [a - b for a, b in zip(mon, dmon)]
-        out.append((complex(co / dco), e[:NPD], e[NPD:]))
+        assert e[2 * NPD] >= 0
+        out.append((complex(co / dco), e[:NPD], e[NPD:2 * NPD], e[2 * NPD]))
     return out
 
 
@@ -325,23 +333,28 @@ def build_converted(R, rows):
     res = []
     for key in ('W', 'E^t_t'):
         acc = None
-        for co, eP, eC in monomials(rows[key]):
-            facs, tp = [], 0
+        for co, eP, eC, es in monomials(rows[key]):
+            facs, tp = [], -2 * es
+            co = co * 0.5 ** es
             for k in range(NPD):
-                while len(phi) <= k + 1:
-                    phi.append(dt(phi[-1]))
-                facs += [phi[k + 1]] * eP[k]
+                if eP[k]:
+                    while len(phi) <= k + 1:
+                        phi.append(dt(phi[-1]))
+                    facs += [phi[k + 1]] * eP[k]
             for k in range(1, NPD):
                 assert eC[k] >= 0
-                while len(cq) <= k:
-                    cq.append(dt(cq[-1]))
-                facs += [cq[k]] * eC[k]
+                if eC[k]:
+                    while len(cq) <= k:
+                        cq.append(dt(cq[-1]))
+                    facs += [cq[k]] * eC[k]
             facs += [(0, R.C)] * max(eC[0], 0) + [(0, invC)] * max(-eC[0], 0)
             nd = None
             for pp, qq in facs:
                 tp += pp
                 nd = qq if nd is None else R.mul(nd, qq)
             assert tp == 4, 'T-weight %d, not 4' % tp
+            if es:
+                nd = R.xi2(nd, es)
             acc = (co * nd[0], nd[1]) if acc is None else (acc[0] + co * nd[0], nd[1])
         res.append(acc)
     fy = R.xi2(R.mul(R.C, res[0]), 1)
@@ -540,18 +553,53 @@ def own_zero(x, r1, delta):
     return x
 
 
-def hom_matrix(x, lam, r1, delta, extra=()):
-    """A(lam): columns = raw harmonic-1 jumps of the profiles sin, cos with dc(0) = 0; and the jumps of `extra`"""
-    al = Alg(1)
-    comps = [Comp('a', lam, 2 * Fprof(al, 1, 0)), Comp('b', lam, 2 * Fprof(al, 0, 1))] + list(extra)
-    lat = Lateral(1, W_INF * x[1], Fprof(al, x[0], 0.0), comps, delta=delta)
+def Fbg(al, x):
+    """F = A sin(theta) + sum_nu (B_nu sin(nu theta) + C_nu cos(nu theta)), x = (A, w/w_inf, B3, C3, ...)"""
+    F = Fprof(al, x[0], 0.0)
+    for i, nu in enumerate(range(3, al.M + 1, 2)):
+        B, C = x[2 + 2 * i], x[3 + 2 * i]
+        F[al.L + nu] = B / 2j + C / 2
+        F[al.L - nu] = -B / 2j + C / 2
+    return F
+
+
+def basis_prof(al, i):
+    """profile direction i: sin(nu theta) for even i, cos(nu theta) for odd i, nu = 1, 3, ..."""
+    nu = 1 + 2 * (i // 2)
+    F = np.zeros(al.N, complex)
+    if i % 2 == 0:
+        F[al.L + nu], F[al.L - nu] = 1 / 2j, -1 / 2j
+    else:
+        F[al.L + nu], F[al.L - nu] = 0.5, 0.5
+    return F
+
+
+def jvec(al, Jd):
+    """raw jump on the harmonics nu = 1, 3, ..., M as a real vector (Re, Im pairs)"""
+    return np.concatenate([ri(Jd[al.L + nu]) for nu in range(1, al.M + 1, 2)])
+
+
+def hom_matrix(x, lam, r1, delta, extra=(), M=1, rtol=1e-12):
+    """A(lam): columns = raw jumps of the profile directions with dc(0) = 0; and the jumps of `extra`"""
+    al = Alg(M)
+    nb = M + 1
+    comps = [Comp('h%d' % i, lam, 2 * basis_prof(al, i)) for i in range(nb)] + list(extra)
+    lat = Lateral(M, W_INF * x[1], Fbg(al, x), comps, delta=delta, rtol=rtol)
     J = lat.jumps(r1)
-    A = np.column_stack([ri(J['a'][al.L + 1]), ri(J['b'][al.L + 1])])
-    return A, {k: ri(v[al.L + 1]) for k, v in J.items()}, lat
+    A = np.column_stack([jvec(al, J['h%d' % i]) for i in range(nb)])
+    return A, {k: jvec(al, v) for k, v in J.items()}, lat
 
 
-def stored_x():
-    return np.array(json.load(open(os.path.join(HERE, 'data', 'first_order_hier_M1_xi0.2.json')))['x'])
+def eq_solve(A, b):
+    """A^-1 b with rows and columns scaled to unit norm first"""
+    rs = 1 / np.linalg.norm(A, axis=1)
+    As = A * rs[:, None]
+    cs = 1 / np.linalg.norm(As, axis=0)
+    return np.linalg.solve(As * cs[None, :], b * rs) * cs
+
+
+def stored_x(M=1):
+    return np.array(json.load(open(os.path.join(HERE, 'data', 'first_order_hier_M%d_xi0.2.json' % M)))['x'])
 
 
 def checks():
@@ -641,59 +689,74 @@ def make_builders():
 
 
 def c2_run():
+    M = int(OPTS.get('--M', 1))
     r1 = float(OPTS.get('--r1', 0.2))
     delta = float(OPTS.get('--delta', np.pi / 5))
-    al = Alg(1)
-    x = stored_x()
+    rtol = float(OPTS.get('--rtol', 1e-12))
+    al = Alg(M)
+    x = stored_x(M)
     if '--own-zero' in OPTS:
+        assert M == 1
         x = own_zero([2.54215, 0.77699], r1, delta)
     w = W_INF * x[1]
     FORCE_BUILDERS.update(make_builders())
-    names = ['l2', 'l0', 'G', 'sym', 'l2c', 'Gc']
-    bg = bg_series(al, w, Fprof(al, x[0], 0.0), 1.0, 3)
+    names = OPTS.get('--forcing', 'l2,l0,G,sym,l2c,Gc').split(',')
+    bg = bg_series(al, w, Fbg(al, x), 1.0, 3)
     d1, g1 = bg['D'][1], bg['G'][1]
-    f2 = np.array([-2 * d1[al.L + 1].imag, 2 * d1[al.L + 1].real])
+    f2 = np.concatenate([[-2 * d1[al.L + nu].imag, 2 * d1[al.L + nu].real] for nu in range(1, M + 1, 2)])
     comps = [Comp('mode', 2.0, 2 * d1, 2 * g1), Comp('lam', 2.0, parent='mode')]
     comps += [Comp(nm, 2.0, force=nm) for nm in names]
-    A, J, lat = hom_matrix(x, 2.0, r1, delta, comps)
-    log('M 1, x = (%.13f, %.13f), r1 %.3f, ray arg xi^2 = pi/2 + %.4f, r0 %.4f, series cut at j = %d (%.0e), dropped %.1e'
-        % (x[0], x[1], r1, delta, lat.info['r0'], lat.info['jt'], lat.info['terr'], lat.info.get('dropped', 0)))
-    Ai = np.linalg.inv(A)
-    p = {k: Ai @ v for k, v in J.items()}
-    log('   mode d_s Z0: profile f2 = (%.6f, %.6f), dc(0) = 2 g1 = %s' % (f2[0], f2[1], np.round(2 * g1[al.mask[0] > 0].real, 6)))
-    log('   jump of the mode over |A| |f2|: %.1e' % (np.linalg.norm(J['mode']) / (np.linalg.norm(A) * np.linalg.norm(f2))))
-    T = demix1(x, r1)
-    Sch = T @ A
-    U, sv, Vt = np.linalg.svd(Sch)
-    ll = U[:, -1]
-    phis = {'e1': np.array([1.0, 0.0]), 'e2': np.array([0.0, 1.0]), 'f2': f2 / np.linalg.norm(f2)}
+    A, J, lat = hom_matrix(x, 2.0, r1, delta, comps, M=M, rtol=rtol)
+    log('M %d, x = %s, r1 %.3f, ray arg xi^2 = pi/2 + %.4f, r0 %.4f, series cut at j = %d (%.0e), rtol %.0e'
+        % (M, np.array2string(x, precision=13), r1, delta, lat.info['r0'], lat.info['jt'], lat.info['terr'], rtol))
+    p = {k: eq_solve(A, v) for k, v in J.items()}
+    log('   mode d_s Z0: profile f2 = %s, dc(0) = 2 g1 = %s' % (np.round(f2, 6), np.round(2 * g1[al.mask[0] > 0].real, 6)))
+    log('   jump of the mode over |A| |f2|: %.1e; cond(A) %.1e'
+        % (np.linalg.norm(J['mode']) / (np.linalg.norm(A) * np.linalg.norm(f2)), np.linalg.cond(A)))
+    z = np.zeros(M + 1)
+    e1, e2, ff = z.copy(), z.copy(), z.copy()
+    e1[0], e2[1] = 1, 1
+    ff[:2] = f2[:2] / np.linalg.norm(f2[:2])
+    phis = {'e1': e1, 'e2': e2, 'f2': ff}
     res = {}
     for nm in names:
-        v = {k: float(-(ph @ p[nm]) / (ph @ p['lam'])) for k, ph in phis.items()}
-        v['ell'] = float(-(ll @ T @ J[nm]) / (ll @ T @ J['lam']))
-        res[nm] = v
-    ref = json.load(open(os.path.join(HERE, 'data', 'l2_c2_M1_xi0.2_l2-l0-G-sym.json')))
+        res[nm] = {k: float(-(ph @ p[nm]) / (ph @ p['lam'])) for k, ph in phis.items()}
+    keys = ['e1', 'e2', 'f2']
+    if M == 1:
+        T = demix1(x, r1)
+        Sch = T @ A
+        U, sv, Vt = np.linalg.svd(Sch)
+        ll = U[:, -1]
+        for nm in names:
+            res[nm]['ell'] = float(-(ll @ T @ J[nm]) / (ll @ T @ J['lam']))
+        keys.append('ell')
+    ref = json.load(open(os.path.join(HERE, 'data', 'l2_c2_M%d_xi0.2_l2-l0-G-sym.json' % M)))
+    tol = float(OPTS.get('--tol', 1e-6))
     ok = True
     print()
     print('%-5s %-4s %14s %14s %10s' % ('', 'phi', 'this code', 'l2_c2.py', 'rel diff'))
     for nm in names:
-        for k in ('e1', 'e2', 'f2', 'ell'):
+        for k in keys:
             mine = res[nm][k]
             if nm in ref:
                 theirs = ref[nm][k]
                 rel = abs(mine - theirs) / abs(theirs)
-                if k != 'ell' or abs(r1 - 0.2) < 1e-12:
-                    ok &= rel < 1e-6
+                if k != 'ell' or abs(r1 - 0.2) < 1e-12:      # the left-singular-vector value depends on r1
+                    ok &= rel < tol
                 print('%-5s %-4s %14.8f %14.8f %10.1e' % (nm, k, mine, theirs, rel))
             else:
                 print('%-5s %-4s %14.8f %14s' % (nm, k, mine, '-'))
-    dS = np.abs(Sch - np.array(ref['Sch2'])).max() / np.abs(ref['Sch2']).max()
-    df = np.abs(f2 - np.array(ref['f2'][:2])).max() / np.abs(ref['f2'][:2]).max()
     print()
-    print('Sch(2), de-mixed: max relative difference from l2_c2.py %.1e; f2: %.1e' % (dS, df))
-    print('linearity: c2 + lambda_1 - G over phi: %s' % ', '.join('%.1e' % (res['l2'][k] + res['l0'][k] - res['G'][k]) for k in phis))
-    print('compact:   c2c + lambda_1(sym) - Gc over phi: %s' % ', '.join('%.1e' % (res['l2c'][k] + res['sym'][k] - res['Gc'][k]) for k in phis))
-    out = dict(M=1, x=x.tolist(), r1=r1, delta=delta, info=lat.info, f2=f2.tolist(), res=res, agree=bool(ok),
+    if M == 1:
+        dS = np.abs(Sch - np.array(ref['Sch2'])).max() / np.abs(ref['Sch2']).max()
+        print('Sch(2), de-mixed: max relative difference from l2_c2.py %.1e' % dS)
+    df = np.abs(f2 - np.array(ref['f2'])).max() / np.abs(ref['f2']).max()
+    print('f2: max relative difference from l2_c2.py %.1e' % df)
+    if all(nm in res for nm in ('l2', 'l0', 'G')):
+        print('linearity: c2 + lambda_1 - G over phi: %s' % ', '.join('%.1e' % (res['l2'][k] + res['l0'][k] - res['G'][k]) for k in phis))
+    if all(nm in res for nm in ('l2c', 'sym', 'Gc')):
+        print('compact:   c2c + lambda_1(sym) - Gc over phi: %s' % ', '.join('%.1e' % (res['l2c'][k] + res['sym'][k] - res['Gc'][k]) for k in phis))
+    out = dict(M=M, x=x.tolist(), r1=r1, delta=delta, rtol=rtol, info=lat.info, f2=f2.tolist(), res=res, agree=bool(ok), tol=tol,
                A=A.tolist(), J={k: v.tolist() for k, v in J.items()})
     fn = OPTS.get('--out')
     if fn:
@@ -702,8 +765,41 @@ def c2_run():
     return ok
 
 
+def diag():
+    """The control forcing of l2_c2_forcing.py (leading background only, read from data/l2_c2_forcing.json) and the
+    l = 2 forcing, each evaluated two ways on the stored M = 3 background at four radii on l2_c2.py's ray: the summed
+    series (Euler derivatives are exact, no division by xi^2) and the Taylor-jet value at the point (divisions by
+    xi^2). L2_MODE.md 9.3 reports that its own two evaluations of the control differ by 1.7e-10 at |xi| = 0.05 and
+    attributes it to rounding in nested divisions by xi^2. Not a check: it prints the differences."""
+    M = 3
+    al = Alg(M)
+    x = stored_x(M)
+    w = W_INF * x[1]
+    d = json.load(open(os.path.join(HERE, 'data', 'l2_c2_forcing.json')))
+    P8, C8 = sp.symbols('P1:9'), sp.symbols('C0:8')
+    assert P8[:NPD] == Psym and C8[:NPD] == Csym
+    rows = {nm: {k: sp.sympify(v) for k, v in d[nm].items()} for nm in ('l2', 'l2_ctrl')}
+    for nm in ('l2', 'l2_ctrl'):
+        line = []
+        for r in (0.04, 0.05, 0.07, 0.1):
+            xi0 = r * np.exp(1j * (np.pi / 2 + np.pi / 8) / 2)
+            q = xi0 * xi0
+            bgs = bg_series(al, w, Fbg(al, x), q, int(1.2 / (2 * r * r)) + 60)
+            jt, terr = optimal(bgs)
+            Rs = SerRing(al, w, bgs, q, jt + 8)
+            D0, S0, C0 = summed(bgs, jt, xi0)
+            Rj = JetRing(al, w, xi0, D0 / xi0, S0 / q, C0)
+            sy, sc = build_converted(Rs, rows[nm])
+            py, pc = build_converted(Rj, rows[nm])
+            dd = max(np.abs(sy[:jt + 1].sum(0) - py[0]).max() / np.abs(py[0]).max(),
+                     np.abs(sc[:jt + 1].sum(0) - pc[0]).max() / np.abs(pc[0]).max())
+            line.append('|xi| %.2f: %.1e (series truncation %.0e)' % (r, dd, terr))
+        log('%s: summed series - point value, relative: %s' % (nm, '; '.join(line)))
+    return True
+
+
 if __name__ == '__main__':
     cmd = next((a for a in sys.argv[1:] if not a.startswith('--')), 'c2')
-    good = checks() if cmd == 'checks' else c2_run()
+    good = checks() if cmd == 'checks' else diag() if cmd == 'diag' else c2_run()
     print('PASS' if good else 'FAIL')
     sys.exit(0 if good else 1)

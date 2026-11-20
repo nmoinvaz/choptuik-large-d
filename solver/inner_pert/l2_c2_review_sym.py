@@ -28,6 +28,12 @@ Checks (each exits non-zero on failure; --mutate=NAME breaks one input, and the 
   G  conjugation: the O(1) rows on (s Y2 gamma, s Y2 psi) are s Y2 times the l = 0 rows; control cos^2 chi
   H  the slicing family ((eps c)_t, eps Phi_t), eps(t) free, is in the kernel of the l = 0 rows
   I  which metric perturbations reach the two rows at O(1): the fibre warps only, through V1 + V2
+Added after section 9 was read:
+  B3 the deformation of L2_MODE.md 8.3, with its metric corrections, is exactly Lie_xi(background) - k
+  J  every other row (momentum constraints, spatial rows, fibres) vanishes on k at its natural order
+  J2 the chi-chi row at its natural order holds the second t-derivative of the metric function C
+  P  the p = 1 frame: F2 = 2 s cos^2(chi) Q, the same F2/(s Y2) as p = q                      (--mutate=k)
+  K  the stored forcings of data/l2_c2_forcing.json equal this derivation                    (--mutate=sign)
 
 Run: python3 l2_c2_review_sym.py [--mutate=NAME]      (about 1 min, one process)
 """
@@ -125,7 +131,31 @@ def rows(g0, h, U0, dU, m, phi0, dphi):
                 cd1 += m[k] * (sp.diff(dU[k], X[b]) * sp.diff(phi0, X[c]) + sp.diff(U0[k], X[b]) * sp.diff(dphi, X[c]))
             box0 += gi0[b, c] * cd0
             box1 += gi0[b, c] * cd1 + gi1[b, c] * cd0
+    FIB.clear()
+    for k in range(len(m)):
+        def dotp(f0, f1, h0, h1):
+            d0 = sum(gi0[a, b] * sp.diff(f0, X[a]) * sp.diff(h0, X[b]) for a in range(N) for b in range(N))
+            d1 = sum(gi1[a, b] * sp.diff(f0, X[a]) * sp.diff(h0, X[b])
+                     + gi0[a, b] * (sp.diff(f1, X[a]) * sp.diff(h0, X[b]) + sp.diff(f0, X[a]) * sp.diff(h1, X[b]))
+                     for a in range(N) for b in range(N))
+            return d0, d1
+        bx0 = sum(gi0[b, c] * (sp.diff(U0[k], X[b], X[c]) - sum(G0[a][b][c] * sp.diff(U0[k], X[a]) for a in range(N)))
+                  for b in range(N) for c in range(N))
+        bx1 = sum(gi1[b, c] * (sp.diff(U0[k], X[b], X[c]) - sum(G0[a][b][c] * sp.diff(U0[k], X[a]) for a in range(N)))
+                  + gi0[b, c] * (sp.diff(dU[k], X[b], X[c]) - sum(G0[a][b][c] * sp.diff(dU[k], X[a])
+                                                                 + G1[a][b][c] * sp.diff(U0[k], X[a]) for a in range(N)))
+                  for b in range(N) for c in range(N))
+        f0 = (m[k] - 1) * sp.exp(-2 * U0[k]) - bx0
+        f1 = (m[k] - 1) * sp.exp(-2 * U0[k]) * (-2 * dU[k]) - bx1
+        for l in range(len(m)):
+            d0, d1 = dotp(U0[k], dU[k], U0[l], dU[l])
+            f0 -= m[l] * d0
+            f1 -= m[l] * d1
+        FIB.append((f0, f1))
     return R0, R1, box0, box1, gi0, gi1
+
+
+FIB = []          # the fibre rows of the last call of rows()
 
 
 def two_rows(g0, h, U0, dU, m, phi0, dphi, cc):
@@ -433,6 +463,85 @@ def main():
     okI = [z for _, z in names] == [True, True, True, True, False]
     report('I  at O(1) the two rows see only V1 + V2 among the metric perturbations of relative order 1/n', okI,
            '; '.join('%s: %s' % (l, 'absent' if z else 'present') for l, z in names))
+
+    # ---- checks added after reading section 9 (the review note, section 2) -----------------------------------
+    # B3: the Lie derivative of the background's metric along xi is the lapse part s Y2 c_s, plus k, plus the
+    #     corrections A = (s mu_s + mu) Y2, B = -mu sin 2chi, C = 0 that L2_MODE.md 8.3 gives for the deformation
+    dm = (hL - hF).applyfunc(sp.cancel)
+    okB4 = (sp.cancel(dm[0, 0] + 2 * cF * s * cos2 * sp.diff(cF, s)) == 0
+            and sp.cancel(dm[1, 1] - (s * sp.diff(muF, s) + muF) * cos2 / (2 * s)) == 0
+            and sp.cancel(dm[1, 2] + muF * sin2 * dchi_du) == 0 and sp.cancel(dm[2, 2]) == 0
+            and sp.cancel(dm[0, 1]) == 0 and sp.cancel(dm[0, 2]) == 0)
+    report("B3 L2_MODE.md 8.3's deformation is exactly Lie_xi(background) - k: L = s Y2 c_s, A = (s mu_s + mu) Y2, "
+           "B = -mu sin 2chi, C = V = 0", okB4)
+
+    # J: every other row on k at its natural order: the mixed components E^a_b = g^{ac} E_cb and the fibre rows
+    _, _, _, _, R0k, R1k = two_rows(g0, -hk, U0, [-dUk[0], -dUk[1]], m, PhF, sp.Integer(0), cF)
+    fib = list(FIB)
+    gi0 = g0.inv()
+    okJ, worstJ = True, []
+    for (a, b, pw, nm) in ((0, 1, 0, 'E^t_s'), (0, 2, 0, 'E^t_chi'), (1, 1, -1, 'E^s_s'), (1, 2, -1, 'E^s_chi'),
+                           (2, 2, -1, 'E^chi_chi')):
+        ex = gi0[a, a] * R1k[a, b]      # the background rows vanish on shell, so only g0^{aa} dE_ab is left
+        co = leading(ex, pw + 1)        # coefficients of n^(pw+1) and n^pw: nothing above the natural order
+        z = is_zero(slave(co[0])) and is_zero(slave(co[1]))
+        okJ = okJ and z
+        if not z:
+            worstJ.append(nm)
+    for kf in range(2):
+        co = leading(fib[kf][1], 0)
+        z = is_zero(slave(co[0])) and is_zero(slave(co[1]))
+        okJ = okJ and z
+        if not z:
+            worstJ.append('F%d' % kf)
+    report('J  every other row vanishes on k at its natural order (so k/n is a second kernel element of the '
+           'leading problem)', okJ, 'nonzero: %s' % worstJ if worstJ else '')
+
+    # J2: the spatial rows are evolution equations for the metric functions: C_tt is in the chi-chi row at O(1)
+    Cf = sp.Function('Cm')(s, t, u)
+    hm = sp.zeros(3, 3)
+    hm[2, 2] = 2 * s * Cf * dchi_du**2
+    _, _, _, _, _, R1c = two_rows(g0, hm, U0, [0, 0], m, PhF, sp.Integer(0), cF)
+    lead_cc = leading(R1c[2, 2] / (2 * n * s * dchi_du**2), -1)[0]
+    has_tt = sp.diff(Cf, t, 2) in sp.expand(lead_cc.doit()).atoms(sp.Derivative)
+    report('J2 the chi-chi row at its natural order contains the second t-derivative of the metric function C', has_tt)
+
+    # P: the p = 1 frame (y in R, z in R^n, one fibre S^(n-1)): k = e (dy^2 - dz.dz/n), k_NN = cos^2 chi - sin^2 chi/n
+    g1 = sp.diag(-cF**2, (n + muF) / (2 * s), 2 * n * s * dchi_du**2)
+    U1 = [sp.log(2 * n * s) / 2 + sp.log(sinx)]
+    m1 = [n - 1]
+    h1 = sp.zeros(3, 3)
+    h1[1, 1] = n * (cosx**2 - sinx**2 / n) / (2 * s)
+    h1[1, 2] = h1[2, 1] = -n * sinx * cosx * (1 + 1 / n) * dchi_du
+    h1[2, 2] = 2 * n * s * (sinx**2 - cosx**2 / n) * dchi_du**2
+    if MUT == 'k':
+        h1[1, 1] = n * (cosx**2 - sinx**2 / n + sp.Rational(1, 10)) / (2 * s)
+    W0p, W1p, E0p, E1p, _, _ = two_rows(g1, -h1, U1, [1 / (2 * n)], m1, PhF, sp.Integer(0), cF)
+    okP0 = is_zero(W0p - W0, onshell=False) and is_zero(E0p - E0, onshell=False)
+    Wp, Ep = leading(W1p), leading(E1p)
+    okP1 = is_zero(Wp[0], onshell=False) and is_zero(Ep[0], onshell=False)
+    okP2 = is_zero(slave(Wp[1]) - 2 * s * cosx**2 * QW) and is_zero(slave(Ep[1]) - 2 * s * cosx**2 * QE)
+    report('P  p = 1 frame: the spherical rows are those of p = q exactly in n; on k the O(1) parts vanish and '
+           'F2 = 2 s cos^2(chi) Q, so F2/(s Y2) is the p = q one', okP0 and okP1 and okP2)
+
+    # K: the stored forcings of l2_c2_forcing.py (data/l2_c2_forcing.json) against this derivation, both rows
+    import json
+    import os
+    fn = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'data', 'l2_c2_forcing.json')
+    if os.path.exists(fn):
+        d = json.load(open(fn))
+        NPs = 8
+        Pk = sp.symbols('P1:%d' % (NPs + 1))
+        Ck = sp.symbols('C0:%d' % NPs)
+        back = {Pk[i]: sp.diff(PhF, t, i + 1) for i in range(NPs)}
+        back.update({Ck[i]: (sp.diff(cF, t, i) if i else cF) for i in range(NPs)})
+        mine = {'l2': (F2W / (s * cos2), F2E / (cF * s * cos2)), 'l0': (F0W_FO, F0E_FO / cF), 'G': (LW2, LE2 / cF)}
+        okK = True
+        for nm, (mw, me) in mine.items():
+            tw = sp.sympify(d[nm]['W']).xreplace(back)
+            te = sp.sympify(d[nm]['E^t_t']).xreplace(back)
+            okK = okK and is_zero(sg * mw - tw) and is_zero(sg * me - te)
+        report('K  data/l2_c2_forcing.json: its l2, l0 and G rows equal this derivation', okK)
 
     print()
     if MUT:
