@@ -25,11 +25,17 @@ What is its own:
                                               y equation), dlam (a term of the d/dlambda equation dropped), ser (the
                                               series' Euler derivative off by 1e-6), fc (the sign of F_c in the
                                               t-derivative forms). Every check fails under at least one
+    python3 l2_c2_review_num.py selftest      the guards of both review scripts (~1 min): a failed integration, a zero
+                                              that did not converge, a nan in a maximum, agreement with nothing
+                                              compared, unknown commands, options and mutations, check K without its
+                                              file. Each test fails when its guard is removed; exit 0 iff all pass
     python3 l2_c2_review_num.py diag          the control forcing's two evaluations by radius (a diagnostic for 9.3)
     python3 l2_c2_review_num.py c2 [--M=1] [--r1=0.2] [--delta=0.6283] [--own-zero] [--mutate=fc] [--tol=1e-6]
                                               c2, lambda_1 and G on the slices phi = e1, e2, f2 (and the left singular
                                               vector at M = 1), compared with data/l2_c2_M{M}_xi0.2_l2-l0-G-sym.json;
-                                              exit 0 iff they agree to --tol. M = 3 takes the one-shot solve of the
+                                              exit 0 iff they agree to --tol, 1 if not, 3 (UNVERIFIED) if --forcing
+                                              named nothing that l2_c2.py has. An unknown command, option or mutation
+                                              exits 2. M = 3 takes the one-shot solve of the
                                               raw 4 x 4 jump matrix, rows and columns scaled
 """
 import json
@@ -53,6 +59,37 @@ T0 = time.time()
 
 def log(*a):
     print(*a, '[%.0f s]' % (time.time() - T0), flush=True)
+
+
+def need(cond, msg):
+    """a condition the results depend on; an explicit raise, since python -O removes assert statements"""
+    if not cond:
+        raise RuntimeError(msg)
+
+
+def fin_max(worst, *vals):
+    """max(worst, *vals), or inf if any of them is not finite (max() can drop a nan, depending on its position)"""
+    v = (worst,) + vals
+    return float(max(v)) if all(np.isfinite(x) for x in v) else float('inf')
+
+
+COMMANDS = ('c2', 'checks', 'diag', 'selftest')
+MUTATIONS = ('bg', 'lin', 'dlam', 'ser', 'fc')
+OPTIONS = ('--M', '--r1', '--delta', '--rtol', '--tol', '--forcing', '--out', '--own-zero', '--mutate')
+
+
+def usage_check(argv):
+    """the command, or exit 2 on an unknown command, option or mutation, before any numerical work"""
+    pos = [a for a in argv if not a.startswith('--')]
+    bad = [a for a in pos if a not in COMMANDS] + [a for a in OPTS if a not in OPTIONS]
+    if len(pos) > 1:
+        bad.append('more than one command: ' + ' '.join(pos))
+    if MUT and MUT not in MUTATIONS:
+        bad.append('--mutate=%s (the mutations are %s)' % (MUT, ', '.join(MUTATIONS)))
+    if bad:
+        print('unknown: %s\ncommands: %s; options: %s' % ('; '.join(bad), ', '.join(COMMANDS), ' '.join(OPTIONS)), file=sys.stderr)
+        sys.exit(2)
+    return pos[0] if pos else 'c2'
 
 
 class Alg:
@@ -298,10 +335,10 @@ def review_forcings():
             rep = {}
             for a in ex.atoms(sp.Derivative):
                 kt = sum(1 for v in a.variables if v == t)
-                assert all(v == t for v in a.variables)
+                need(all(v == t for v in a.variables), 'an s-derivative is left after the reduction')
                 rep[a] = Psym[kt - 1] if a.expr == P else Csym[kt]
             ex = ex.xreplace(rep).xreplace({c: Csym[0]})
-            assert not ex.has(P) and not ex.has(s)
+            need(not ex.has(P) and not ex.has(s), 'Phi or s is left in a forcing')
             rows[key] = sp.cancel(sp.together(ex))
         out[name] = rows
     return out
@@ -316,12 +353,12 @@ def monomials(expr):
     num, den = sp.fraction(sp.together(expr))
     gens = list(Psym) + list(Csym) + [Ssym]
     dp = sp.Poly(den, *gens)
-    assert len(dp.terms()) == 1, 'the denominator is not a monomial'
+    need(len(dp.terms()) == 1, 'the denominator is not a monomial')
     dmon, dco = dp.terms()[0]
     out = []
     for mon, co in sp.Poly(sp.expand(num), *gens).terms():
         e = [a - b for a, b in zip(mon, dmon)]
-        assert e[2 * NPD] >= 0
+        need(e[2 * NPD] >= 0, 'a negative power of s')
         out.append((complex(co / dco), e[:NPD], e[NPD:2 * NPD], e[2 * NPD]))
     return out
 
@@ -350,7 +387,7 @@ def build_converted(R, rows):
                         phi.append(dt(phi[-1]))
                     facs += [phi[k + 1]] * eP[k]
             for k in range(1, NPD):
-                assert eC[k] >= 0
+                need(eC[k] >= 0, 'a negative power of a derivative of c')
                 if eC[k]:
                     while len(cq) <= k:
                         cq.append(dt(cq[-1]))
@@ -360,7 +397,7 @@ def build_converted(R, rows):
             for pp, qq in facs:
                 tp += pp
                 nd = qq if nd is None else R.mul(nd, qq)
-            assert tp == 4, 'T-weight %d, not 4' % tp
+            need(tp == 4, 'T-weight %d, not 4' % tp)
             if es:
                 nd = R.xi2(nd, es)
             acc = (co * nd[0], nd[1]) if acc is None else (acc[0] + co * nd[0], nd[1])
@@ -486,17 +523,19 @@ class Lateral:
             out.append(self.pack(pdD, r2 / x2, pcE / xi))
         return np.concatenate(out)
 
+    def integrate(self, fun, a, b, Y, what):
+        """the state at b, or RuntimeError if the integration failed or stopped before b"""
+        sol = solve_ivp(fun, (a, b), Y, method='DOP853', rtol=self.rtol, atol=1e-16)
+        if not sol.success or sol.t[-1] != b:
+            raise RuntimeError('the %s integration from %g to %g stopped at %g: %s' % (what, a, b, sol.t[-1], sol.message))
+        return sol.y[:, -1]
+
     def jumps(self, r1):
         """harmonic +1 of y+ - conj(y+ reflected) at xi = r1, for the background and every component"""
         Y = self.start()
         u = np.exp(1j * self.phi)
-        sol = solve_ivp(lambda tt, Z: self.rhs(tt * u, Z) * u, (self.r0, r1), Y, method='DOP853', rtol=self.rtol, atol=1e-16)
-        assert sol.success, sol.message
-        Y = sol.y[:, -1]
-        sol = solve_ivp(lambda tt, Z: self.rhs(r1 * np.exp(1j * tt), Z) * 1j * r1 * np.exp(1j * tt), (self.phi, 0.0), Y,
-                        method='DOP853', rtol=self.rtol, atol=1e-16)
-        assert sol.success, sol.message
-        Y = sol.y[:, -1]
+        Y = self.integrate(lambda tt, Z: self.rhs(tt * u, Z) * u, self.r0, r1, Y, 'ray')
+        Y = self.integrate(lambda tt, Z: self.rhs(r1 * np.exp(1j * tt), Z) * 1j * r1 * np.exp(1j * tt), self.phi, 0.0, Y, 'arc')
         n = self.nper
         out = {}
         for i, name in enumerate(['bg'] + [c.name for c in self.comps]):
@@ -545,10 +584,12 @@ def bg_jump(x, r1, delta, rtol=1e-12):
     return lat.jumps(r1)['bg'][al.L + 1]
 
 
-def own_zero(x, r1, delta):
-    """Newton on the raw harmonic-1 jump of the M = 1 background, Jacobian by centred differences"""
+def own_zero(x, r1, delta, maxit=8, tol=1e-9):
+    """Newton on the raw harmonic-1 jump of the M = 1 background, Jacobian by centred differences. RuntimeError if
+    no step falls below tol in maxit steps. At the zero the jump's rounding noise (about 5e-16) gives steps of 1e-10
+    to 4e-10, so a smaller tol is met only by chance"""
     x = np.array(x, float)
-    for it in range(8):
+    for it in range(maxit):
         r = ri(bg_jump(x, r1, delta))
         Jm = np.zeros((2, 2))
         for p, h in ((0, 1e-5), (1, 1e-6)):
@@ -558,9 +599,9 @@ def own_zero(x, r1, delta):
         dx = -np.linalg.solve(Jm, r)
         log('   zero it %d: |J| %.2e  step %.2e  x %s' % (it, np.linalg.norm(r), np.abs(dx).max(), x))
         x = x + dx
-        if np.abs(dx).max() < 3e-11:
-            break
-    return x
+        if np.abs(dx).max() < tol:
+            return x
+    raise RuntimeError('own_zero: no step below %.0e in %d steps (last %.2e); no zero to use' % (tol, maxit, np.abs(dx).max()))
 
 
 def Fbg(al, x):
@@ -682,9 +723,8 @@ def checks():
     for name in sorted(FORCE_BUILDERS):
         sy, sc = FORCE_BUILDERS[name](Rs)
         py, pc = FORCE_BUILDERS[name](Rj)
-        d = max(np.abs(sy[:jt + 1].sum(0) - py[0]).max() / np.abs(py[0]).max(),
-                np.abs(sc[:jt + 1].sum(0) - pc[0]).max() / np.abs(pc[0]).max())
-        worst = max(worst, d)
+        worst = fin_max(worst, np.abs(sy[:jt + 1].sum(0) - py[0]).max() / np.abs(py[0]).max(),
+                        np.abs(sc[:jt + 1].sum(0) - pc[0]).max() / np.abs(pc[0]).max())
     say('6. forcings: summed series = Taylor-jet value at |xi| = 0.12 (all six)',
         worst < 1e-8, 'max relative %.1e (< 1e-8) (series truncation %.0e)' % (worst, terr))
     # 7. the compact forms against the t-derivative forms, without truncation (L = 40, random fields at a point):
@@ -703,7 +743,8 @@ def checks():
         for a, b in (('l2', 'l2c'), ('l0', 'sym'), ('G', 'Gc')):
             ay, ac = FORCE_BUILDERS[a](Rf)
             by, bc = FORCE_BUILDERS[b](Rf)
-            worst = max(worst, np.abs(ay[0] - by[0]).max() / np.abs(by[0]).max(), np.abs(ac[0] - bc[0]).max() / np.abs(bc[0]).max())
+            worst = fin_max(worst, np.abs(ay[0] - by[0]).max() / np.abs(by[0]).max(),
+                            np.abs(ac[0] - bc[0]).max() / np.abs(bc[0]).max())
     say('7. compact forms = t-derivative forms without truncation (l2, l0 against SymForce\'s terms, G)', worst < 1e-9,
         'max relative %.1e (< 1e-9)' % worst)
     return ok
@@ -725,7 +766,7 @@ def c2_run():
     al = Alg(M)
     x = stored_x(M)
     if '--own-zero' in OPTS:
-        assert M == 1
+        need(M == 1, '--own-zero is for M = 1')
         x = own_zero([2.54215, 0.77699], r1, delta)
     w = W_INF * x[1]
     FORCE_BUILDERS.update(make_builders())
@@ -761,21 +802,12 @@ def c2_run():
         keys.append('ell')
     ref = json.load(open(os.path.join(HERE, 'data', 'l2_c2_M%d_xi0.2_l2-l0-G-sym.json' % M)))
     tol = float(OPTS.get('--tol', 1e-6))
-    ok = True
+    status, ncmp, lines = compare(res, ref, names, keys, tol, r1)
     print()
     print('%-5s %-4s %14s %14s %10s' % ('', 'phi', 'this code', 'l2_c2.py', 'rel diff'))
-    for nm in names:
-        for k in keys:
-            mine = res[nm][k]
-            if nm in ref:
-                theirs = ref[nm][k]
-                rel = abs(mine - theirs) / abs(theirs)
-                if k != 'ell' or abs(r1 - 0.2) < 1e-12:      # the left-singular-vector value depends on r1
-                    ok &= rel < tol
-                print('%-5s %-4s %14.8f %14.8f %10.1e' % (nm, k, mine, theirs, rel))
-            else:
-                print('%-5s %-4s %14.8f %14s' % (nm, k, mine, '-'))
+    print('\n'.join(lines))
     print()
+    print('%d values compared with l2_c2.py at tolerance %.0e: %s' % (ncmp, tol, status))
     if M == 1:
         dS = np.abs(Sch - np.array(ref['Sch2'])).max() / np.abs(ref['Sch2']).max()
         print('Sch(2), de-mixed: max relative difference from l2_c2.py %.1e' % dS)
@@ -785,13 +817,34 @@ def c2_run():
         print('linearity: c2 + lambda_1 - G over phi: %s' % ', '.join('%.1e' % (res['l2'][k] + res['l0'][k] - res['G'][k]) for k in phis))
     if all(nm in res for nm in ('l2c', 'sym', 'Gc')):
         print('compact:   c2c + lambda_1(sym) - Gc over phi: %s' % ', '.join('%.1e' % (res['l2c'][k] + res['sym'][k] - res['Gc'][k]) for k in phis))
-    out = dict(M=M, x=x.tolist(), r1=r1, delta=delta, rtol=rtol, info=lat.info, f2=f2.tolist(), res=res, agree=bool(ok), tol=tol,
-               A=A.tolist(), J={k: v.tolist() for k, v in J.items()})
+    out = dict(M=M, x=x.tolist(), r1=r1, delta=delta, rtol=rtol, info=lat.info, f2=f2.tolist(), res=res, status=status,
+               compared=ncmp, agree=(status == 'PASS'), tol=tol, A=A.tolist(), J={k: v.tolist() for k, v in J.items()})
     fn = OPTS.get('--out')
     if fn:
         json.dump(out, open(fn, 'w'), indent=1)
         log('wrote ' + fn)
-    return ok
+    return status
+
+
+def compare(res, ref, names, keys, tol, r1):
+    """(status, number of values compared, table lines) of res against l2_c2.py's stored values ref. PASS needs every
+    compared value within tol and at least one compared; with none, UNVERIFIED. A forcing that l2_c2.py does not have
+    is printed and not compared. The left-singular-vector value is compared only at r1 = 0.2, the radius l2_c2.py
+    used, since it depends on r1. A nan fails."""
+    ok, ncmp, lines = True, 0, []
+    for nm in names:
+        for k in keys:
+            mine = res[nm][k]
+            if nm in ref:
+                theirs = ref[nm][k]
+                rel = abs(mine - theirs) / abs(theirs)
+                if k != 'ell' or abs(r1 - 0.2) < 1e-12:
+                    ncmp += 1
+                    ok = ok and bool(rel < tol)
+                lines.append('%-5s %-4s %14.8f %14.8f %10.1e' % (nm, k, mine, theirs, rel))
+            else:
+                lines.append('%-5s %-4s %14.8f %14s' % (nm, k, mine, '-'))
+    return ('UNVERIFIED' if ncmp == 0 else 'PASS' if ok else 'FAIL'), ncmp, lines
 
 
 def diag():
@@ -806,7 +859,7 @@ def diag():
     w = W_INF * x[1]
     d = json.load(open(os.path.join(HERE, 'data', 'l2_c2_forcing.json')))
     P8, C8 = sp.symbols('P1:9'), sp.symbols('C0:8')
-    assert P8[:NPD] == Psym and C8[:NPD] == Csym
+    need(P8[:NPD] == Psym and C8[:NPD] == Csym, 'the symbols of data/l2_c2_forcing.json are not P1.., C0..')
     rows = {nm: {k: sp.sympify(v) for k, v in d[nm].items()} for nm in ('l2', 'l2_ctrl')}
     for nm in ('l2', 'l2_ctrl'):
         line = []
@@ -827,8 +880,108 @@ def diag():
     return True
 
 
+def selftest():
+    """The guards of the two review scripts (PR #1053's review threads). Each test fails when its guard is removed:
+    S1 a failed or incomplete integration, S2 a zero that did not converge, S3 a non-finite error in a maximum,
+    S4 agreement reported with nothing compared, S5 an unknown command, mutation or option, S6 an unknown mutation of
+    l2_c2_review_sym.py, S7 its check K without the stored forcings. S5-S7 run the scripts as subprocesses."""
+    import subprocess
+    global solve_ivp, bg_jump
+    ok = True
+
+    def say(label, good, detail):
+        nonlocal ok
+        ok &= bool(good)
+        log(('PASS  ' if good else 'FAIL  ') + label + ':  ' + detail)
+
+    def outcome(fn):
+        try:
+            fn()
+            return 'no error'
+        except RuntimeError as e:
+            return 'RuntimeError: %s' % e
+        except BaseException as e:                     # noqa: BLE001 (the kind of failure is what is tested)
+            return '%s: %s' % (type(e).__name__, e)
+    al = Alg(1)
+    x0 = stored_x()
+    real_ivp, real_jump = solve_ivp, bg_jump
+
+    class Sol:
+        pass
+
+    def fake_ivp(mode):
+        def f(fun, span, y0, **kw):
+            r = Sol()
+            r.success, r.message, r.status = (mode != 'failed'), 'planted failure', (-1 if mode == 'failed' else 0)
+            r.t = np.array([span[0], 0.5 * (span[0] + span[1])])       # stops half way
+            r.y = np.repeat(np.asarray(y0)[:, None], 2, axis=1)
+            return r
+        return f
+    got = []
+    for mode in ('failed', 'short'):
+        solve_ivp = fake_ivp(mode)
+        try:
+            got.append(outcome(lambda: Lateral(1, W_INF * x0[1], Fprof(al, x0[0], 0.0), []).jumps(0.2)))
+        finally:
+            solve_ivp = real_ivp
+    say('S1 an integration that fails, or stops short of its end point, raises RuntimeError',
+        got[0].startswith('RuntimeError') and 'planted failure' in got[0] and got[1].startswith('RuntimeError'),
+        'failed: %s; short: %s' % (got[0][:60], got[1][:60]))
+    bg_jump = lambda x, r1, delta, rtol=1e-12: complex(np.cos(x[0]) + 2.0, x[1] ** 2 + 1.0)   # no real zero
+    try:
+        g = outcome(lambda: own_zero([2.5, 0.8], 0.2, 0.6))
+    finally:
+        bg_jump = real_jump
+    say('S2 own_zero on a function with no zero raises RuntimeError', g.startswith('RuntimeError'), g[:80])
+    try:
+        v = [fin_max(1e-12, float('nan')), fin_max(float('nan'), 1e-12), fin_max(0.0, float('inf')), fin_max(1e-3, 1e-12)]
+        good = v[0] == np.inf and v[1] == np.inf and v[2] == np.inf and v[3] == 1e-3
+        g = str(v)
+    except BaseException as e:                         # noqa: BLE001
+        good, g = False, '%s: %s' % (type(e).__name__, e)
+    say('S3 a maximum of errors with a non-finite entry is inf', good, g[:80])
+    try:
+        ref = {'l2': {'e1': -8.0, 'e2': -6.0, 'f2': -9.0}}
+        keys = ['e1', 'e2', 'f2']
+        a = compare({'l2c': {'e1': -2.0, 'e2': -1.0, 'f2': -3.0}}, ref, ['l2c'], keys, 1e-6, 0.2)
+        b = compare({'l2': dict(ref['l2'])}, ref, ['l2'], keys, 1e-6, 0.2)
+        c = compare({'l2': {'e1': -8.1, 'e2': -6.0, 'f2': -9.0}}, ref, ['l2'], keys, 1e-6, 0.2)
+        d = compare({'l2': {'e1': float('nan'), 'e2': -6.0, 'f2': -9.0}}, ref, ['l2'], keys, 1e-6, 0.2)
+        good = (a[0], a[1]) == ('UNVERIFIED', 0) and (b[0], b[1]) == ('PASS', 3) and c[0] == 'FAIL' and d[0] == 'FAIL'
+        g = 'nothing compared: %s; equal: %s; one off: %s; one nan: %s' % (a[0], b[0], c[0], d[0])
+    except BaseException as e:                         # noqa: BLE001
+        good, g = False, '%s: %s' % (type(e).__name__, e)
+    say('S4 the comparison with l2_c2.py: UNVERIFIED when nothing was compared, FAIL on a difference or a nan', good, g[:120])
+    py = [sys.executable] + (['-O'] if sys.flags.optimize else [])
+    me = os.path.abspath(__file__)
+    sym = os.path.join(HERE, 'l2_c2_review_sym.py')
+
+    def run(args, timeout):
+        try:
+            r = subprocess.run(py + args, capture_output=True, text=True, timeout=timeout)
+            return r.returncode, r.stdout, r.stderr
+        except subprocess.TimeoutExpired:
+            return 'still running after %d s' % timeout, '', ''
+    r1 = run([me, 'chekcs'], 20)
+    r2 = run([me, 'checks', '--mutate=bgg'], 40)
+    r3 = run([me, 'c2', '--m=3'], 20)
+    say('S5 an unknown command, mutation or option exits 2 at once',
+        r1[0] == 2 and r2[0] == 2 and r3[0] == 2 and 'unknown' in r1[2] and 'unknown' in r2[2] and 'unknown' in r3[2],
+        'chekcs: %s; --mutate=bgg: %s; --m=3: %s' % (r1[0], r2[0], r3[0]))
+    r = run([sym, '--mutate=sing'], 120)
+    say('S6 l2_c2_review_sym.py --mutate=sing (no such mutation) exits 2 at once', r[0] == 2 and 'unknown' in r[2], 'exit %s' % r[0])
+    r = run([sym, '--forcing-json=' + os.path.join(HERE, 'data', 'no_such_file.json')], 300)
+    say('S7 l2_c2_review_sym.py without the stored forcings fails check K and exits 1',
+        r[0] == 1 and 'FAIL  K' in r[1] and 'all passed' not in r[1], 'exit %s; K line: %s' %
+        (r[0], next((ln[:40] for ln in r[1].splitlines() if ln[6:8] == 'K '), 'none')))
+    return ok
+
+
 if __name__ == '__main__':
-    cmd = next((a for a in sys.argv[1:] if not a.startswith('--')), 'c2')
-    good = checks() if cmd == 'checks' else diag() if cmd == 'diag' else c2_run()
+    cmd = usage_check(sys.argv[1:])
+    good = {'checks': checks, 'diag': diag, 'selftest': selftest, 'c2': c2_run}[cmd]()
+    if cmd == 'c2':                                    # c2_run returns PASS, FAIL or UNVERIFIED
+        print(good)
+        sys.exit({'PASS': 0, 'FAIL': 1}.get(good, 3))
     print('PASS' if good else 'FAIL')
     sys.exit(0 if good else 1)

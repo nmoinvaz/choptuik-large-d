@@ -6,8 +6,9 @@ A review of [L2_MODE.md](L2_MODE.md) §9, which claims that the ℓ = 2 mode's g
 Status words as in AGENTS.md.
 
 The order of work is part of the record. §1 was derived, checked with `solver/inner_pert/l2_c2_review_sym.py` and
-committed (5112139e) before L2_MODE.md §9.1–9.6 and the `l2_c2*.py` files were opened. Only L2_MODE.md §§1–8 and
-FIRST_ORDER.md were read for it. §2 onward was written after reading them.
+committed (4792f8f5, which was 5112139e before the branch was rebased onto main) before L2_MODE.md §9.1–9.6 and the
+`l2_c2*.py` files were opened. Only L2_MODE.md §§1–8 and FIRST_ORDER.md were read for it. §2 onward was written
+after reading them.
 
 ## Verdict
 
@@ -232,7 +233,7 @@ in 1/n, and reduces on the leading shell with s as the evolution variable. All p
 E0, E1, E2 and H have no mutation of their own. E0 and E2 are two routes to the same F₀ (a Gateaux derivative, and
 FIRST_ORDER.md's printed forcing), so each tests the other.
 
-**Corrections to §1, made after reading §9.** They are kept apart so that §1 stays as it was committed (5112139e).
+**Corrections to §1, made after reading §9.** They are kept apart so that §1 stays as it was committed (4792f8f5).
 
 - §1.1's display is loose. L2_MODE.md §8.3's deformation, with its metric corrections A = (sμₛ + μ)Y₂ and
   B = −μ sin 2χ, **is** 𝓛_ξ(g, φ) − (k, 0), with no further terms (check B3). The corrections are the Lie derivative of
@@ -333,11 +334,20 @@ Findings are numbered through the whole note. Each is marked agreement, correcti
 
     This is the same effect as §9.5's λ₁ = 7.81 against 2.73 for the two associations of the ℓ = 0 forcing. L2_MODE.md
     says that M = 1 is far from converged. The value −7.96 should not be quoted without that.
-12. **Correction: the primary value depends on the matching radius.** §9.5's primary c₂ uses the left singular vector
-    of Sch(2). When Sch is not singular that vector depends on the normalisation of the jump, and so on ξ₁. At M = 1
-    the second implementation gives −7.9591 at ξ₁ = 0.2 and −7.9436 at ξ₁ = 0.25. The slice values c₂(φ) are the same
-    at both radii to 10⁻¹⁰. FIRST_ORDER.md §4 makes the same remark about its symmetry route. At M = 5 the effect was
-    not measured. The three slices there agree to 0.004.
+12. **Correction: the primary value depends on the matching radius ξ₁, and not on the ray.** §9.5's primary c₂ uses
+    the left singular vector of Sch(2). When Sch is not singular that vector depends on the normalisation of the
+    jump, and so on ξ₁. The second implementation gives the primary c₂ at M = 1 on two rays at two radii, with one
+    of the two changed at a time:
+
+    | | ξ₁ = 0.2 | ξ₁ = 0.25 |
+    |---|---|---|
+    | ray arg ξ² = π/2 + π/5 | −7.95908853 | −7.94356367 |
+    | ray arg ξ² = π/2 + π/8 | −7.95908853 | −7.94356367 |
+
+    Changing ξ₁ alone moves it by 0.0155, on either ray. Changing the ray alone moves it by less than 10⁻¹⁰, at
+    either radius. The slice values c₂(φ) are the same in all four runs to 2.6×10⁻¹⁰. FIRST_ORDER.md §4 makes the
+    same remark about its symmetry route. At M = 5 the effect was not measured. The three slices there agree to
+    0.004.
 
 ## 3. The solvability argument (§9.4), by hand
 
@@ -435,7 +445,7 @@ right-hand side or the series only, and every check fails under at least one:
 
 | check | result | bar | fails under |
 |---|---|---|---|
-| 1. the M = 1 zero by its own Newton on the raw jump, from five digits, against the stored zero | difference 2.8×10⁻¹¹ | 10⁻⁸ | `bg` |
+| 1. the M = 1 zero by its own Newton on the raw jump, from five digits, against the stored zero | difference 1.3×10⁻¹⁰ | 10⁻⁸ | `bg` |
 | 2. the linearised code against the nonlinear one: profile sin θ at λ = 0 is d(jump)/dA, five-point differences | 1.3×10⁻⁷ | 10⁻⁶ | `bg`, `lin` |
 | 3. exact modes: A(0)F′ = 0 and A(1)(F + ωF′) = 0; control: A(0.5) is not singular | 6.4×10⁻¹¹, 1.2×10⁻¹⁰; control σ_min/σ_max 2.0×10⁻² | 10⁻⁶; > 10⁻³ | `bg`, `lin` |
 | 4. λ* of the M = 1 model, secant on det A(λ) | 1.7691220085, against 1.7691220084 | 10⁻⁷ | `bg`, `lin` |
@@ -447,8 +457,28 @@ The mutations: `bg`, the background's gravity term off by 10⁻⁶; `lin`, a sig
 a term of the d/dλ equation dropped; `ser`, the series' Euler derivative off by 10⁻⁶; `fc`, the sign of F_c in the
 t-derivative forms.
 
+Check 1's Newton stops at the first step below 10⁻⁹. At the zero the jump's rounding noise, about 5×10⁻¹⁶, gives
+steps of 1 to 4×10⁻¹⁰, so a smaller tolerance is met only by chance. An earlier version used 3×10⁻¹¹ and returned
+its eighth iterate when no step met it. It now raises an error (S2 below).
+
 Checks 1 and 4 are also results: the stored zero and FIRST_ORDER.md's λ* = 1.769122008 are reproduced by code that
 shares only the model with the code that made them.
+
+**The guards of the two scripts** (`l2_c2_review_num.py selftest`, 35 s; added for the PR's review threads). Each
+test was written before its guard and run against the code without it, where all seven fail. With the guards all
+seven pass, under `python -O` too.
+
+| test | without the guard | with it |
+|---|---|---|
+| S1: an integration that fails, or stops short of its end point | AssertionError (nothing at all under `-O`); the short one goes unnoticed | RuntimeError with the solver's message |
+| S2: `own_zero` on a function with no zero | returns its eighth iterate | RuntimeError |
+| S3: a maximum of errors that holds a nan (checks 6 and 7) | the nan can be dropped | inf, so the check fails |
+| S4: the comparison with l2_c2.py when nothing is compared, when a value is off, when a value is nan | PASS with nothing compared | UNVERIFIED, FAIL, FAIL |
+| S5: an unknown command, option or mutation (`chekcs`, `--m=3`, `--mutate=bgg`) | runs the default c2, or the unmutated checks, and exits 0 | exit 2 before any work |
+| S6: `l2_c2_review_sym.py --mutate=sing` | runs the unmutated checks, exits 0 | exit 2 before any work |
+| S7: `l2_c2_review_sym.py` without the stored forcings (`--forcing-json=` a missing file) | skips check K, "all passed", exit 0 | check K fails, exit 1 |
+
+Every other assert that a result depends on is now an explicit raise as well.
 
 **c₂ at M = 1** (`l2_c2_review_num.py c2`, 2 min), at the stored zero, on the ray arg ξ² = π/2 + π/5, ξ₁ = 0.2,
 against `data/l2_c2_M1_xi0.2_l2-l0-G-sym.json`:
@@ -470,8 +500,11 @@ Variations, each a separate run:
 | run | result | verdict |
 |---|---|---|
 | `--mutate=fc` (the sign of F_c flipped in the converted forcings) | c₂ = −3.87, −0.71, −4.89; relative differences 0.46 to 1.2; exit 1 | fails, as required |
-| ray π/2 + π/8 and ξ₁ = 0.25 | slice values within 2.6×10⁻¹⁰ of l2_c2.py's; the left-singular-vector values move: c₂ −7.94356, λ₁ 7.79560 | slices do not depend on the path or ξ₁ (finding 12) |
+| ξ₁ = 0.25 on the same ray, π/2 + π/5 | slice values within 2.6×10⁻¹⁰ of l2_c2.py's; the left-singular-vector values move: c₂ −7.94356, λ₁ 7.79560 | the primary value depends on ξ₁ (finding 12) |
+| ray π/2 + π/8 at the same ξ₁ = 0.2 | all 16 values within 9.3×10⁻¹¹ of l2_c2.py's, the left-singular-vector ones included | nothing depends on the ray |
+| ray π/2 + π/8 and ξ₁ = 0.25, both changed | as the first row, to 3×10⁻¹³ in the left-singular-vector values | consistent with the two rows above |
 | own zero (check 1's) and ray π/2 + 0.9 | within 4.4×10⁻⁹ | OK (bar 10⁻⁶) |
+| `--forcing=l2c,Gc`, which names nothing l2_c2.py has | 0 values compared; UNVERIFIED, exit 3 | does not report agreement, as required |
 
 **c₂ at M = 3** (`--M=3`, 4 to 7 min), at the stored zero. The raw 4 × 4 jump matrix is solved in one shot, with rows
 and columns scaled (condition number 1.5×10⁹), where l2_c2.py deflates and takes a Schur complement:
@@ -615,7 +648,7 @@ A hand derivation (§1.2–1.4) stands beside both codes and shares only the las
 | Euler derivatives of the forcing | Leibniz rule and the model's ODEs, expanded symbolically into a graph of 95–849 nodes | Taylor coefficients in ε of the fields at ξe^ε along the path; the series' own derivative in the series | no |
 | the series | jets; the σ equation as (ξ∂_ξ − 1)(c y) | hand-written recursions; the σ equation in `inner_np.py`'s form | no |
 | linearisation, d/dλ | jet arithmetic | by hand; a variational equation | no |
-| the path | ray arg ξ² = π/2 + π/8 | π/2 + π/5, π/2 + 0.9, and π/2 + π/8 in one run | no, except that run |
+| the path | ray arg ξ² = π/2 + π/8 | π/2 + π/5, π/2 + 0.9, and π/2 + π/8 in two runs | no, except those runs |
 | the integrator | scipy DOP853, rtol 10⁻¹² | the same | yes, a library |
 | the slice formula for c₂(φ) | §9.1 | the same | yes |
 | linear algebra | de-mixed and normalised jumps, deflation, a Schur complement | raw jumps, one solve in profile space | no |
@@ -664,7 +697,11 @@ python3 l2_c2_review_num.py checks           # section 4's seven planted checks 
 python3 l2_c2_review_num.py checks --mutate=bg   # also lin, dlam, ser, fc: the listed checks fail, exit 1
 python3 l2_c2_review_num.py c2               # M = 1 (~2 min): the table of section 4; PASS, exit 0
 python3 l2_c2_review_num.py c2 --mutate=fc   # FAIL, exit 1
-python3 l2_c2_review_num.py c2 --r1=0.25 --delta=0.3927   # another ray and radius; PASS (slices only)
+python3 l2_c2_review_num.py c2 --r1=0.25                  # the same ray, another radius; PASS (slices only)
+python3 l2_c2_review_num.py c2 --delta=0.3927             # another ray, the same radius; PASS (all 16 values)
+python3 l2_c2_review_num.py c2 --r1=0.25 --delta=0.3927   # both changed; PASS (slices only)
+python3 l2_c2_review_num.py c2 --forcing=l2c,Gc           # nothing to compare: UNVERIFIED, exit 3
+python3 l2_c2_review_num.py selftest         # the guards (~35 s); PASS, exit 0; also under python3 -O
 python3 l2_c2_review_num.py c2 --own-zero --delta=0.9     # its own zero, a third ray; PASS
 python3 l2_c2_review_num.py c2 --M=3         # 4 to 7 min; PASS, exit 0
 python3 l2_c2_review_num.py c2 --M=5 --tol=1e-3   # ~10 min; FAIL, exit 1 (section 4: WATCH, the one-shot solve)
