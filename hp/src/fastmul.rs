@@ -61,7 +61,7 @@ pub struct Cfg {
     pub blocks: bool,
     /// the controls of fastmul_check's edge cases, 0 off: MUT_ZERO_LANE scales zero lanes as the others,
     /// MUT_E2_PLAIN scales the long-pair route's first factor by 2^e2 as one f64, MUT_E2_SPLIT_ALWAYS splits 2^e2
-    /// between the factors also at e2 = 0
+    /// between the factors also at e2 = 0, MUT_E2_PRESCALE splits it between the factors at e2 != 0
     pub mutate: u8,
 }
 
@@ -72,6 +72,9 @@ pub const MUT_E2_PLAIN: u8 = 2;
 /// `Cfg::mutate`: the long-pair route's split of 2^e2 between the factors also at e2 = 0 (where it can underflow a
 /// small coefficient of a wide factor)
 pub const MUT_E2_SPLIT_ALWAYS: u8 = 4;
+/// `Cfg::mutate`: the long-pair route's 2^e2 split between the factors by their top exponents at e2 != 0, as before
+/// each term was scaled on its own (a wide factor's small coefficients can underflow)
+pub const MUT_E2_PRESCALE: u8 = 5;
 
 impl Default for Cfg {
     fn default() -> Self {
@@ -215,18 +218,31 @@ fn mullow_pairs(
     }
 }
 
-/// x times y truncated to nout terms added into acc\[o..\] by ODotAcc, the factors as they are at e2 = 0, else 2^e2
-/// split per lane between them so that both and their products keep the range of the result (each factor scaled
-/// exactly, in steps); the terms of each index in the order of x's
+/// x times y truncated to nout terms added into acc\[o..\] by ODotAcc, the terms of each index in the order of x's.
+/// At e2 = 0 the factors are used as they are. Otherwise each term's 2^e2 is split per lane between its two
+/// coefficients by their own exponents, so that both and their product keep the range of the term: only a term
+/// below 2^-1022 itself rounds (`parts_of`'s limit).
 fn direct(x: &[OV], y: &[OV], o: usize, nout: usize, cfg: &Cfg, e2: i32, acc: &mut [ODotAcc]) {
-    let (xs, ys) = if e2 == 0 && cfg.mutate != MUT_E2_SPLIT_ALWAYS {
-        // no scale, so none that could underflow a small coefficient of a wide factor
-        (x.to_vec(), y.to_vec())
-    } else if cfg.mutate == MUT_E2_PLAIN {
+    let prescale = (e2 != 0 && cfg.mutate == MUT_E2_PRESCALE) || (e2 == 0 && cfg.mutate == MUT_E2_SPLIT_ALWAYS);
+    let plain = e2 != 0 && cfg.mutate == MUT_E2_PLAIN;
+    if e2 != 0 && !prescale && !plain {
+        let ex = |v: &OV| -> [i32; LN] { v.c[0].to_array().map(|p| if p == 0.0 { 0 } else { expo(p) }) };
+        let (xe, ye): (Vec<_>, Vec<_>) = (x.iter().map(ex).collect(), y.iter().map(ex).collect());
+        for k in 0..nout {
+            for i in k.saturating_sub(y.len() - 1)..x.len().min(k + 1) {
+                let al: [i32; LN] = std::array::from_fn(|l| (ye[k - i][l] - xe[i][l] + e2).div_euclid(2));
+                let be: [i32; LN] = std::array::from_fn(|l| e2 - al[l]);
+                acc[o + k].add_prod_mut(&scale_lanes(&x[i], &al), &scale_lanes(&y[k - i], &be));
+            }
+        }
+        return;
+    }
+    let (xs, ys) = if plain {
         // the control: 2^e2 as one f64 on the first factor, by a plain multiply (infinite for a large e2)
         let f = V8::splat(2f64.powi(e2));
         (x.iter().map(|v| OV { c: v.c.map(|p| p.mul(f)) }).collect::<Vec<_>>(), y.to_vec())
-    } else {
+    } else if prescale {
+        // the controls: 2^e2 split between the factors by their top exponents
         let top = |v: &[OV]| -> [i32; LN] {
             std::array::from_fn(|l| {
                 v.iter().map(|c| c.c[0].to_array()[l]).filter(|&p| p != 0.0).map(expo).max().unwrap_or(0)
@@ -236,6 +252,9 @@ fn direct(x: &[OV], y: &[OV], o: usize, nout: usize, cfg: &Cfg, e2: i32, acc: &m
         let al: [i32; LN] = std::array::from_fn(|l| (ty[l] - tx[l] + e2).div_euclid(2));
         let be: [i32; LN] = std::array::from_fn(|l| e2 - al[l]);
         (x.iter().map(|v| scale_lanes(v, &al)).collect(), y.iter().map(|v| scale_lanes(v, &be)).collect())
+    } else {
+        // no scale, so none that could underflow a small coefficient of a wide factor
+        (x.to_vec(), y.to_vec())
     };
     for k in 0..nout {
         for i in k.saturating_sub(ys.len() - 1)..xs.len().min(k + 1) {
