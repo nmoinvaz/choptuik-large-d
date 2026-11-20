@@ -536,8 +536,8 @@ def main():
                    seconds_w=rw["seconds"], seconds_n=rn["seconds"], steps_w=rw.get("steps"), steps_n=rn.get("steps"),
                    steps_own_w=rw.get("steps_own"), steps_own_n=rn.get("steps_own"), t_its_w=rw.get("t_its"),
                    t_its_n=rn.get("t_its"),
-                   **{f"{part}_its_{w}": r.get(f"{part}_its") for part in ("t_jac", "t_lu") for w, r in (("w", rw), ("n", rn))
-                      if r.get(f"{part}_its") is not None},
+                   **{f"{part}_its_{w}": r.get(f"{part}_its") for part in ("t_call", "t_jac", "t_lu")
+                      for w, r in (("w", rw), ("n", rn)) if r.get(f"{part}_its") is not None},
                    tail_c=rn.get("tail_c"), tail_h=rn.get("tail_h"), tail_c_w=rw.get("tail_c"), tail_h_w=rw.get("tail_h"),
                    kc=kc, ks=ks, tails_ok=all(t is None or t <= a.tail_max for t in (rn.get("tail_c"), rn.get("tail_h"),
                                                                                    rw.get("tail_c"), rw.get("tail_h"))),

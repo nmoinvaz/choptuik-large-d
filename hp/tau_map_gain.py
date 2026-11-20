@@ -55,7 +55,7 @@ cost: c(M), the wall seconds per plan step of one f64 Newton call on this machin
 on its own stored plan (default the D 3.7 ladder at M 128 to 256; raw T82-win/states for 256 to 384). A plan made at
 another M is refused (require_plan_at): its steps are too long for the tangents of a larger M (on win2 the D 3.7 state
 resampled to M 320 on the M 256 plan gave a nan pivot). Control: --mutate plan_m (the first state's plan for every M)
-must exit 1. step_timing's t_jac is not used: in block storage it times only the staircase LU's fill.
+must exit 1. step_timing's second entry is not used: in block storage it times only the staircase LU's fill (#1040).
 
 stored (no kernel): the stored states' Delta, their plans' steps (the busiest segment and its steps) and top harmonics,
 and the Delta differences between consecutive M at each D.
@@ -422,7 +422,8 @@ def newton_f64(s, zh, zl, tol, it_max, hist, save=None, stop_below=False):
         except ValueError as e:                               # a non-finite Jacobian: the LU refuses it
             hist.append(dict(it=len(hist), failed=f"jacobian: {e}"))
             return zh, zl, False
-        # t_step: the step's wall seconds (residual, Jacobian, LU, solve); step_timing's t_jac is the block fill only
+        # t_step: the step's wall seconds (residual, Jacobian, LU, solve); step_timing's second entry (info's t_fill,
+        # and its t_jac before #1040) is the block fill only
         t_step = round(time.time() - t0, 2)
         n0, nF = rnorm(Fh, Fl), dd_norm(Fh, Fl)
         rec = dict(it=len(hist), F=nF, dz=dd_norm(dh, dl), piv=[pmin, pmax], t_step=t_step,
@@ -474,8 +475,8 @@ def newton_f64(s, zh, zl, tol, it_max, hist, save=None, stop_below=False):
 
 def call_seconds(hist):
     """the wall seconds of each Newton call of a pass: t_step plus the dd4 retry's t_retry, or for records made before
-    t_step the call's t (the step, its retry and its line-search residuals, about 1% more); never step_timing's t_jac,
-    the block fill only"""
+    t_step the call's t (the step, its retry and its line-search residuals, about 1% more); never t_jac, which in
+    records made before #1040 is step_timing's second entry, the block fill only"""
     return [h["t_step"] + h.get("t_retry", 0.0) if "t_step" in h else h["t"] for h in hist if "F" in h and "t" in h]
 
 
