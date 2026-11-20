@@ -36,7 +36,12 @@ Added after section 9 was read:
   Q  the compact forms of F2/(s Y2) and of L0[(0, Phi_s)] in the heat variables               (--mutate=sign)
   K  the stored forcings of data/l2_c2_forcing.json equal this derivation                    (--mutate=sign)
 
-Run: python3 l2_c2_review_sym.py [--mutate=NAME]      (about 25 s, one process; fibre, lin, bg, k, sign)
+Mutations of the inputs, so that every check can fail (G1 is itself a control): hand (a sign in the hand-linearised
+l = 0 rows and a factor in the hand Q: E0, E1, E2, H and others), mu (the radial part of the metric doubled: C0, B3
+and others), warp (I's V1 = -V2 case given V1 = -2 V2), static (J2's metric function without t).
+
+Run: python3 l2_c2_review_sym.py [--mutate=NAME]      (about 25 s, one process; fibre, lin, bg, k, sign, hand, mu,
+                                                       warp, static)
 """
 import sys
 import sympy as sp
@@ -177,7 +182,8 @@ def two_rows(g0, h, U0, dU, m, phi0, dphi, cc):
 
 def background(cc, mu, phi, nn=n):
     """Base metric, warps and fibre dimensions of the spherical background in the p = q frame."""
-    g0 = sp.diag(-cc**2, (nn + mu) / (2 * s), 2 * nn * s * dchi_du**2)
+    mf = 2 if MUT == 'mu' else 1                      # mutation: the radial part of the metric doubled
+    g0 = sp.diag(-cc**2, (nn + mf * mu) / (2 * s), 2 * nn * s * dchi_du**2)
     U0 = [sp.log(2 * nn * s) / 2 + sp.log(cosx), sp.log(2 * nn * s) / 2 + sp.log(sinx)]
     m = [(nn - 1) / 2, (nn - 1) / 2]
     return g0, U0, m
@@ -261,7 +267,7 @@ def L0_rows(Lp, Pp):
     """The l = 0 leading rows on a lapse perturbation Lp and a scalar perturbation Pp (hand-linearised)."""
     c, P = cF, PhF
     W = (sp.diff(Pp, s) - sp.diff(Pp, t, 2) / c**2 + sp.diff(c, t) * sp.diff(Pp, t) / c**3
-         + 2 * sp.diff(P, t, 2) * Lp / c**3 + sp.diff(P, t) * sp.diff(Lp, t) / c**3
+         + (-2 if MUT == 'hand' else 2) * sp.diff(P, t, 2) * Lp / c**3 + sp.diff(P, t) * sp.diff(Lp, t) / c**3
          - 3 * sp.diff(c, t) * sp.diff(P, t) * Lp / c**4)
     E = -sp.diff(Lp, s) + 2 * sp.diff(P, t) * sp.diff(Pp, t) / c - sp.diff(P, t)**2 * Lp / c**2
     return W, E
@@ -379,7 +385,7 @@ def main():
     report('D0 l = 2: the O(1) parts of both rows vanish off shell', okD0)
     F2W, F2E = slave(Wk[1]), slave(Ek[1])
     # Q: the part of the O(1/n) spherical rows that multiplies 2s
-    QW = sp.diff(P, s, 2) - Ps * Pt**2 / c**2
+    QW = sp.diff(P, s, 2) - (2 if MUT == 'hand' else 1) * Ps * Pt**2 / c**2
     QE = -(sp.diff(c, s, 2) - cs**2 / c - sp.diff(Ps * Pt / c, t))
     okD = is_zero(F2W - 2 * s * cos2 * QW) and is_zero(F2E - 2 * s * cos2 * QE)
     report('D  l = 2: F2 = 2 s Y2 Q in both rows (on the leading shell)', okD)
@@ -459,7 +465,7 @@ def main():
             ('g_ss, relative order 1/n', {(1, 1): Af / (2 * s)}, [0, 0]),
             ('g_s chi, relative order 1/n', {(1, 2): Af * dchi_du}, [0, 0]),
             ('g_chi chi, relative order 1/n', {(2, 2): 2 * s * Af * dchi_du**2}, [0, 0]),
-            ('warp V1 = -V2', {}, [Af / n, -Af / n]),
+            ('warp V1 = -V2', {}, [Af / n, -Af / ((2 if MUT == 'warp' else 1) * n)]),
             ('warp V1 = V2', {}, [Af / n, Af / n])):
         hm = sp.zeros(3, 3)
         for (a, b), v in hmat.items():
@@ -505,7 +511,7 @@ def main():
            'leading problem)', okJ, 'nonzero: %s' % worstJ if worstJ else '')
 
     # J2: the spatial rows are evolution equations for the metric functions: C_tt is in the chi-chi row at O(1)
-    Cf = sp.Function('Cm')(s, t, u)
+    Cf = sp.Function('Cm')(s, u) if MUT == 'static' else sp.Function('Cm')(s, t, u)
     hm = sp.zeros(3, 3)
     hm[2, 2] = 2 * s * Cf * dchi_du**2
     _, _, _, _, _, R1c = two_rows(g0, hm, U0, [0, 0], m, PhF, sp.Integer(0), cF)
