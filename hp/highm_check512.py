@@ -2,7 +2,8 @@
 """The small check of the largest sizes (notes/HIGH_M.md 9.2): a converged state resampled to each M, its own Taylor
 plan (1e-30, 0.05), the residual (|F|, seconds), the series tails and the peak RSS; with --newton also one Newton step
 (Solver.newton_mixed, block storage) on the same plan or a coarser one (--newton_plan=tol,hmax): its seconds, the
-Jacobian's and the factorization's, the block LU's MB and the peak RSS. Records in data/lowD_highM/check512.jsonl.
+Jacobian's (the call less step_timing's residual, factorization and solve, #1040), the factorization's, the block LU's
+MB and the peak RSS. Records in data/lowD_highM/check512.jsonl.
 
     cd hp && python3 highm_check512.py [--start=STATE.npz] [--newton] [--newton_plan=own|thinK|tol,hmax] [--kc=K --ks=K] M [M ...]
 """
@@ -62,13 +63,17 @@ def main():
             t = time.time()
             dh, dl, _, _, p0, p1 = s.newton_mixed(z, 0 * z, block=True)
             t_nm = time.time() - t
-            lu_bytes, _, t_jac, t_fac = s.lu_info()
+            lu_bytes, _, t_fill, t_fac = s.lu_info()
+            # the Jacobian from the wall clock: lu_info's fill is only the copy of the block columns (#1040)
+            tr, _, tf, ts = s.step_timing()
+            t_jac = t_nm - tr - tf - ts
             # the step's effect: |F(z + dz)| on the residual's plan (a Newton step from a resampled start: far below |F|)
             s.set_segs(sg)
             th, tl = np.asarray(dh, float), np.asarray(dl, float)
             F1 = float(np.abs(np.add(*s.residual(z + th, tl))).max())
             rec.update(newton_plan=[tol, hmax], newton_steps=sum(len(g) - 1 for g in sg2), s_newton=round(t_nm, 1),
-                       s_jacobian=round(t_jac, 1), s_factor=round(t_fac, 2), lu_mb=round(lu_bytes / 2 ** 20, 1),
+                       s_jacobian=round(t_jac, 1), s_fill=round(t_fill, 2), s_factor=round(t_fac, 2),
+                       lu_mb=round(lu_bytes / 2 ** 20, 1),
                        pivots=[p0, p1], dDelta=float(dh[-1]) + float(dl[-1]), F_after_step=F1)
         rec.update(peak_rss_mb=rss(), load=lowD_dd.load_avg())
         print(json.dumps(rec), flush=True)
