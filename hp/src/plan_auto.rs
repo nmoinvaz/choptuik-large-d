@@ -235,6 +235,8 @@ mod tests {
             f64_dd: 0,
             horizon_alpha: 0,
             series_split: 0,
+            exact_recip: 0,
+            recip_planted: 0,
         };
         let (mut zh, mut zl) = (vec![0.0; ctx.len()], vec![0.0; ctx.len()]);
         for (i, s) in p.states.iter().enumerate() {

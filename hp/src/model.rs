@@ -24,8 +24,10 @@ use crate::dv::DV;
 use crate::field::{cs, cs_range, cs_w, horner, sums_at, DMat, Fl, State, SumAt, TangentTail};
 use crate::lane::{Dc, Fu, Fun, Lane, F8};
 use crate::linalg::{ld_for, DDLu, StaircaseLu};
+use crate::qd::QD;
 use crate::qv::QV;
 use multidouble::dual::Param;
+use multidouble::exact::Dy;
 use multidouble::field::{cs_at, cs_lane_into, cs_w_at, cs_w_lane_into};
 use multidouble::native::{Dtn, Oun, OV};
 use multidouble::od::OD;
@@ -89,6 +91,13 @@ pub struct Ctx<const B: usize> {
     /// SPLIT_MIDDLE forms each Cauchy sum's middle terms ahead of the pass on octo-double jets (`series_split`), and
     /// SPLIT_FAST forms them so by block-scaled exact products (`fastmul`). Only `horizon_state_at` reads it.
     pub series_split: u8,
+    /// The horizon series' factor 1/k (RECIP_*): 0, the default, `recip_int(k)`, 1/k rounded to double-double, in
+    /// every lane (the quad- and octo-double lanes widen it); RECIP_EXACT, 1/k rounded once to each lane's precision
+    /// (`recip_value`, `mul_recip`). Every lane reads it. The centre series and the Taylor steps keep `recip_int`.
+    pub exact_recip: u8,
+    /// The planted change of hp/exact_recip_check.py: k > 0 multiplies the horizon series' 1/k by 1 + 2^-106 at that k
+    /// alone (`recip_value`); 0, the default, none
+    pub recip_planted: usize,
 }
 
 /// `Ctx::series_split`: the middle terms of the horizon series' Cauchy sums formed ahead of each jet order, in
@@ -245,6 +254,154 @@ pub fn check_freeze<const B: usize>(lo: &DMat<B>) -> Result<usize, String> {
 #[inline(always)]
 pub(crate) fn recip_int(k: usize) -> DD {
     DD::ONE / DD::from_f64(k as f64)
+}
+
+/// `Ctx::exact_recip`: the horizon series' 1/k rounded once to each lane's precision (`recip_value`), in place of
+/// `recip_int(k)` widened
+pub const RECIP_EXACT: u8 = 1;
+/// the relative change of the planted 1/k (`Ctx::recip_planted`), 2^-106
+pub const RECIP_PLANT: f64 = 1.232595164407831e-32;
+/// `Ctx::mutate`, the control of recip_tests' rounding check: the last part of the lane's 1/k one ulp up (the hi part
+/// on an f64 value, lo on double-double, the fourth part on quad-double, the eighth on octo-double), wherever
+/// `mul_recip` forms 1/k from `recip_value`
+pub const RECIP_MUT_ULP: u8 = 41;
+
+/// 2^e, exactly, for e in the normal range
+fn pow2(e: i64) -> f64 {
+    assert!((-1022..=1023).contains(&e), "pow2: 2^{e} is not a normal f64");
+    f64::from_bits(((e + 1023) as u64) << 52)
+}
+
+/// 1/k in eight parts by greedy round-to-nearest, r_0 = RN(1/k) and r_i = RN(1/k - r_0 - ... - r_(i-1)): each part is
+/// rounded once from the exact remainder N / (k 2^E), N an integer with |N| <= k / 2 after the first part. A prefix of
+/// P parts is 1/k rounded to P parts (P = 2: its nearest double-double), the form multidouble's types keep: each part
+/// at most half the ulp of the one before, zeros only at the end.
+pub fn recip_parts(k: u64) -> [f64; 8] {
+    assert!((1..1u64 << 60).contains(&k), "recip_parts: k = {k}");
+    let d = k as u128;
+    let kb = 128 - d.leading_zeros() as i64;
+    let mut out = [0.0; 8];
+    let (mut n, mut neg, mut e) = (1u128, false, 0i64);
+    for r in out.iter_mut() {
+        if n == 0 {
+            break;
+        }
+        // n 2^s / k in [2^52, 2^53): n <= k, so s >= 52 and n 2^s < 2^(kb + 53)
+        let mut s = 52 - ((128 - n.leading_zeros() as i64) - kb);
+        let mut a = n << s;
+        if a / d < 1 << 52 {
+            s += 1;
+            a <<= 1;
+        }
+        let q0 = a / d;
+        let rem = a - q0 * d;
+        let q = q0 + (2 * rem > d || (2 * rem == d && q0 & 1 == 1)) as u128;
+        let m = q as f64 * pow2(-(e + s));
+        *r = if neg { -m } else { m };
+        // the remainder (a - q k) / (k 2^(e + s)), of either sign
+        let rr = a as i128 - (q * d) as i128;
+        neg ^= rr < 0;
+        n = rr.unsigned_abs();
+        e += s;
+    }
+    out
+}
+
+/// r (1 + 2^-106) exactly, rounded to eight parts by greedy round-to-nearest (multidouble's exact dyadic arithmetic):
+/// the planted 1/k
+fn recip_planted_parts(r: &[f64; 8]) -> [f64; 8] {
+    let terms: Vec<f64> = r.iter().flat_map(|&x| [x, x * RECIP_PLANT]).collect();
+    let mut v = Dy::sum(&terms);
+    let mut out = [0.0; 8];
+    for o in out.iter_mut() {
+        *o = v.to_f64();
+        if *o == 0.0 {
+            break;
+        }
+        v = v.sub(&Dy::from_f64(*o));
+    }
+    out
+}
+
+/// The horizon series' factor 1/k under ctx, as the parts of an octo-double: `recip_int(k)`'s two by default, 1/k's
+/// eight with RECIP_EXACT (`recip_parts`), and at k = Ctx::recip_planted either times 1 + 2^-106. A lane of fewer parts
+/// takes the first ones, which with RECIP_EXACT are 1/k's own rounding to that many.
+pub fn recip_value<const B: usize>(ctx: &Ctx<B>, k: usize) -> [f64; 8] {
+    let r = if ctx.exact_recip == RECIP_EXACT {
+        recip_parts(k as u64)
+    } else {
+        let d = recip_int(k);
+        [d.hi, d.lo, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+    };
+    if ctx.recip_planted == k {
+        recip_planted_parts(&r)
+    } else {
+        r
+    }
+}
+
+/// The parts of r that a lane of type T carries: 8 octo-double, 4 quad-double, 1 an f64 value, else 2
+pub(crate) fn recip_lane_parts<T: Lane>() -> usize {
+    if T::VAL_OD {
+        8
+    } else if T::VAL_QD {
+        4
+    } else if T::VAL_F64 {
+        1
+    } else {
+        2
+    }
+}
+
+/// 1/k's parts r as a constant of a quad- or octo-double lane T: r_0 + r_1, which `T::splat` puts in exactly, and the
+/// further pairs added in the lane's arithmetic, whose sum is then exact (recip_tests checks its parts)
+pub(crate) fn recip_lane<T: Lane>(r: &[f64; 8]) -> T {
+    let dd = |i: usize| T::splat(DD { hi: r[i], lo: r[i + 1] });
+    if T::VAL_OD {
+        ((dd(0) + dd(2)) + dd(4)) + dd(6)
+    } else {
+        dd(0) + dd(2)
+    }
+}
+
+/// x times the horizon series' 1/k under ctx. By default `x.muls(recip_int(k))`, as before. Otherwise from
+/// `recip_value`: on the f64 and double-double lanes `muls` of its double-double part (an f64 value reads the hi
+/// part, 1/k's nearest f64 under RECIP_EXACT); on the quad- and octo-double lanes the lane's own product with its
+/// rounding of 1/k, coefficient by coefficient on a jet (`coef_qd`, `coef_od`) and by `mul_t` on any other lane, whose
+/// tangents the dual's product scales by the same constant.
+#[inline(always)]
+pub(crate) fn mul_recip<T: Lane, const B: usize>(ctx: &Ctx<B>, x: Fl<T, B>, k: usize) -> Fl<T, B> {
+    if ctx.exact_recip == 0 && ctx.recip_planted != k {
+        return x.muls(recip_int(k));
+    }
+    let mut r = recip_value(ctx, k);
+    let np = recip_lane_parts::<T>();
+    if ctx.mutate == RECIP_MUT_ULP {
+        r[np - 1] = r[np - 1].next_up();
+    }
+    if np <= 2 {
+        return x.muls(DD { hi: r[0], lo: r[1] });
+    }
+    if T::NJ == 0 {
+        return x.mul_t(recip_lane::<T>(&r));
+    }
+    let mut y = x;
+    if T::VAL_OD {
+        let c = OV::splat(OD { x: r });
+        for (yb, xb) in y.0.iter_mut().zip(&x.0) {
+            for i in 0..T::NJ {
+                yb.set_coef_od(i, xb.coef_od(i) * c);
+            }
+        }
+    } else {
+        let c = QV::splat(QD { x: [r[0], r[1], r[2], r[3]] });
+        for (yb, xb) in y.0.iter_mut().zip(&x.0) {
+            for i in 0..T::NJ {
+                yb.set_coef_qd(i, xb.coef_qd(i) * c);
+            }
+        }
+    }
+    y
 }
 
 /// d/dtau = omega D, its tangents shifted by the growth rate of a mode-matrix evaluation (multishoot's `Rate::shift`:
@@ -1289,7 +1446,6 @@ pub fn horizon_series<T: Lane, const B: usize>(ctx: &Ctx<B>, m0: &Fl<T, B>, a0: 
     // from order-kk terms gains sigma, a term of index sum kk - 1 gains sigma, one of index sum kk + 1 loses it.
     for kk in 0..=ks {
         let kf = kk as f64;
-        let ik1 = recip_int(kk + 1);
         // (c (a^2 - 1))_kk
         let ca1 = if ctl {
             cs(&cc, &af2, kk) - cc[kk]
@@ -1299,7 +1455,7 @@ pub fn horizon_series<T: Lane, const B: usize>(ctx: &Ctx<B>, m0: &Fl<T, B>, a0: 
         } else {
             cs(&cc, &a2, kk) - cc[kk]
         };
-        cc[kk + 1] = (cc[kk].mulf(kf) - ca1.mulp(n1)).muls(ik1).mul_pwr2(sig);
+        cc[kk + 1] = mul_recip(ctx, cc[kk].mulf(kf) - ca1.mulp(n1), kk + 1).mul_pwr2(sig);
         ww[kk + 1] = wfun(&cc, kk + 1) - wfun(&cc, kk).mul_pwr2(sig);
         vv[kk] = cc[kk + 1].mulf((kk + 1) as f64).mul_pwr2(isig) - cc[kk].mulf(kf);
         zc[kk + 1] = zfun(&cc, kk + 1) - zfun(&cc, kk).mul_pwr2(sig);
@@ -1326,7 +1482,7 @@ pub fn horizon_series<T: Lane, const B: usize>(ctx: &Ctx<B>, m0: &Fl<T, B>, a0: 
         } else {
             cs(&aa, &q2, kk) + (aa[kk] - cs(&aa, &a2, kk)).mulp(n1)
         };
-        aa[kk + 1] = (aa[kk].mulf(kf) - ag.mulf(0.5)).muls(ik1).mul_pwr2(sig);
+        aa[kk + 1] = mul_recip(ctx, aa[kk].mulf(kf) - ag.mulf(0.5), kk + 1).mul_pwr2(sig);
         a2[kk + 1] = cs(&aa, &aa, kk + 1);
         if ctl {
             af[kk + 1] = aa[kk + 1];
@@ -1336,7 +1492,7 @@ pub fn horizon_series<T: Lane, const B: usize>(ctx: &Ctx<B>, m0: &Fl<T, B>, a0: 
         pm[kk] = pp[kk] + mm[kk];
         let zmu = cs_w(&mm, &zc, kk + 1, 0, kk, |i| i as f64).mul_pwr2(isig);
         let rest = (((tau - zmu) - cs(&vv, &mm, kk)) - cs(&cc, &mm, kk)) + cs(&cc, &pm, kk).mulp(nh);
-        mm[kk + 1] = (rest * izc0).muls(ik1).mul_pwr2(sig);
+        mm[kk + 1] = mul_recip(ctx, rest * izc0, kk + 1).mul_pwr2(sig);
         dm[kk + 1] = dtau(ctx, &mm[kk + 1], omega, rate);
     }
     if alpha {
@@ -1485,7 +1641,6 @@ pub fn horizon_series_at<T: Lane, const B: usize>(
     let wi = |i: usize| i as f64;
     for kk in 0..=ks {
         let kf = kk as f64;
-        let ik1 = recip_int(kk + 1);
         // past ks horizon_series forms neither a's nor m's next coefficient
         let more = kk < ks;
         // p_k is zero where horizon_series reads it before its solve
@@ -1517,7 +1672,7 @@ pub fn horizon_series_at<T: Lane, const B: usize>(
             ca1[kk].copy_at(&(t - cc[kk]), j);
         }
         ca1[kk].mulp_at(&n1, j, &mut t);
-        let c_next = (cc[kk].mulf(kf) - t).muls(ik1).mul_pwr2(sig);
+        let c_next = mul_recip(ctx, cc[kk].mulf(kf) - t, kk + 1).mul_pwr2(sig);
         cc[kk + 1].copy_at(&c_next, j);
         let w_next = wfun(cc, kk + 1) - wfun(cc, kk).mul_pwr2(sig);
         ww[kk + 1].copy_at(&w_next, j);
@@ -1564,7 +1719,7 @@ pub fn horizon_series_at<T: Lane, const B: usize>(
             agu[kk].mulp_at(&n1, j, &mut t);
             u + t
         };
-        let a_next = (aa[kk].mulf(kf) - ag.mulf(0.5)).muls(ik1).mul_pwr2(sig);
+        let a_next = mul_recip(ctx, aa[kk].mulf(kf) - ag.mulf(0.5), kk + 1).mul_pwr2(sig);
         aa[kk + 1].copy_at(&a_next, j);
         sums_at(vec![SumAt::new(&mut a2[kk + 1], aa, aa, kk + 1)], j);
         let tau = if kk >= 1 { dm[kk] - dm[kk - 1].mul_pwr2(sig) } else { dm[kk] };
@@ -1572,7 +1727,7 @@ pub fn horizon_series_at<T: Lane, const B: usize>(
         cpmf[kk].mulp_at(&nh, j, &mut t);
         rest[kk].copy_at(&((((tau - zmus) - s1m) - s2m) + t), j);
         rest[kk].mul_at(&kept[1], j, &mut u);
-        mm[kk + 1].copy_at(&u.muls(ik1).mul_pwr2(sig), j);
+        mm[kk + 1].copy_at(&mul_recip(ctx, u, kk + 1).mul_pwr2(sig), j);
         dapply_at(ctx, &mm[kk + 1], j, &mut dmm[kk + 1]);
         dmm[kk + 1].mul_t_at(&omega, j, &mut dm[kk + 1]);
     }
@@ -2118,7 +2273,7 @@ pub(crate) mod ctxfile {
         let l = v[i] as usize;
         let zh = v[i + 1..i + 1 + l].to_vec();
         let zl = v[i + 1 + l..i + 1 + 2 * l].to_vec();
-        let ctx = Ctx::<B> { n, d, phase, nodes, segs, kt, kc, ks, freeze: None, match_node: k - 1, lam: DD::ZERO, mutate: 0, f64_dd: 0, horizon_alpha: 0, series_split: 0 };
+        let ctx = Ctx::<B> { n, d, phase, nodes, segs, kt, kc, ks, freeze: None, match_node: k - 1, lam: DD::ZERO, mutate: 0, f64_dd: 0, horizon_alpha: 0, series_split: 0, exact_recip: 0, recip_planted: 0 };
         assert_eq!(ctx.len(), l);
         (ctx, zh, zl)
     }

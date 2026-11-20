@@ -62,6 +62,10 @@ trait Api: Send + Sync {
     fn jvp(&mut self, zh: &[f64], zl: &[f64], vh: &[f64], vl: &[f64], mutate: u8, cut: bool) -> Result<(Vec<f64>, Vec<f64>, Vec<f64>, Vec<f64>), String>;
     /// Ctx::horizon_alpha (model::HALPHA_*)
     fn set_horizon_alpha(&mut self, mode: u8);
+    /// Ctx::exact_recip (model::RECIP_*) and Ctx::recip_planted
+    fn set_exact_recip(&mut self, mode: u8, planted: usize);
+    /// the horizon series' 1/k under the context (model::recip_value), eight parts
+    fn recip_value(&self, k: usize) -> [f64; 8];
     /// model::residual_in at `Quad` at the four-part state z, F in four parts; mutate: Ctx::mutate for this call
     fn residual_q(&mut self, z: [&[f64]; 4], mutate: u8) -> Result<Q4, String>;
     /// model::jacobian_in at `Quad`: (four parts, ld)
@@ -382,6 +386,13 @@ impl<const B: usize> Api for Ctx<B> {
     fn set_horizon_alpha(&mut self, mode: u8) {
         self.horizon_alpha = mode;
     }
+    fn set_exact_recip(&mut self, mode: u8, planted: usize) {
+        self.exact_recip = mode;
+        self.recip_planted = planted;
+    }
+    fn recip_value(&self, k: usize) -> [f64; 8] {
+        model::recip_value(self, k)
+    }
     fn residual_q(&mut self, z: [&[f64]; 4], mutate: u8) -> Result<Q4, String> {
         qd_sizes!(self, mutate, |c| model::residual_in::<Quad, _>(c, &z, true).map(|f| std::array::from_fn(|q| f.iter().map(|v| v.x[q]).collect())))
     }
@@ -627,7 +638,7 @@ struct Solver {
 /// The last newton_o: its octo-double LU and the call that formed it, the bits of the state's eight parts, mutate and
 /// tangents (olu_pivots_at), the octo-double residual it formed at the state (newton_o_residual) and, when asked to
 /// keep it, its Jacobian (eight parts, ld; jacobian_o_kept). It is dropped wherever the context changes (set_segs,
-/// set_horizon_alpha), and a failed newton_o leaves the previous one with its own call.
+/// set_horizon_alpha, set_exact_recip), and a failed newton_o leaves the previous one with its own call.
 struct OctoLast {
     lu: ODLu,
     z: Vec<u64>,
@@ -705,6 +716,8 @@ macro_rules! make_ctx {
                 f64_dd: 0,
                 horizon_alpha: 0,
                 series_split: 0,
+                exact_recip: 0,
+                recip_planted: 0,
             }) as Box<dyn Api>, )*
             _ => return Err(PyValueError::new_err("M must be one of 8, 16, 32, 40, 48, 64, 80, 96, 128, 160, 192, 256, 320, 384, 512")),
         }
@@ -804,6 +817,33 @@ impl Solver {
         self.olu = None;
         self.api.set_horizon_alpha(mode);
         Ok(())
+    }
+
+    /// The horizon series' factor 1/k (Ctx::exact_recip): 0 (the default) `recip_int(k)`, 1/k rounded to
+    /// double-double, in every lane, as before; 1 (model::RECIP_EXACT) 1/k rounded once to each lane's precision, its
+    /// nearest double-double, quad-double or octo-double (#1043). planted = k > 0 multiplies that 1/k by 1 + 2^-106
+    /// at k alone, the planted change of hp/exact_recip_check.py; 0, the default, none. The centre series and the
+    /// Taylor steps keep the double-double 1/k. Drops the stored LUs.
+    #[pyo3(signature = (mode, planted=0))]
+    fn set_exact_recip(&mut self, mode: u8, planted: usize) -> PyResult<()> {
+        if mode > model::RECIP_EXACT {
+            return Err(PyValueError::new_err(format!("exact_recip must be 0 or 1, not {mode}")));
+        }
+        self.lu = None;
+        self.qlu = None;
+        self.olu = None;
+        self.api.set_exact_recip(mode, planted);
+        Ok(())
+    }
+
+    /// The horizon series' 1/k at order k under set_exact_recip, as the eight parts of an octo-double (model::
+    /// recip_value): the octo-double lanes multiply by all eight, the quad-double ones by the first four, the
+    /// double-double ones by the first two, an f64 value by the first.
+    fn horizon_recip(&self, k: usize) -> PyResult<Vec<f64>> {
+        if k == 0 || k >= 1 << 40 {
+            return Err(PyValueError::new_err(format!("k must be in 1..2^40, not {k}")));
+        }
+        Ok(self.api.recip_value(k).to_vec())
     }
 
     fn set_segs(&mut self, segs: Vec<Vec<f64>>) -> PyResult<()> {
@@ -1331,7 +1371,7 @@ impl Solver {
     /// The pivots (min |u_kk|, max |u_kk|) of the octo-double LU the last newton_o kept, when that call was at the
     /// eight-part state z (every part's bits equal) with this mutate and tangents (the solver's set_octo_tangents when
     /// not given); None otherwise, or with no LU kept. The LU is dropped wherever the context changes (set_segs,
-    /// set_horizon_alpha) and a failed newton_o keeps the previous call's, so a match means that newton_o at z would
+    /// set_horizon_alpha, set_exact_recip) and a failed newton_o keeps the previous call's, so a match means that newton_o at z would
     /// form this LU again, and olu_solve and series_o can use it as it stands (hp/anm_run.py's series base after the
     /// octo-double corrector).
     #[pyo3(signature = (z, mutate=0, tangents=None))]
