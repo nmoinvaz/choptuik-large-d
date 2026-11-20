@@ -60,7 +60,8 @@ pub struct Cfg {
     /// the slope's guarantee removed)
     pub blocks: bool,
     /// the controls of fastmul_check's edge cases, 0 off: MUT_ZERO_LANE scales zero lanes as the others,
-    /// MUT_E2_PLAIN scales the long-pair route's first factor by 2^e2 as one f64
+    /// MUT_E2_PLAIN scales the long-pair route's first factor by 2^e2 as one f64, MUT_E2_SPLIT_ALWAYS splits 2^e2
+    /// between the factors also at e2 = 0
     pub mutate: u8,
 }
 
@@ -68,6 +69,9 @@ pub struct Cfg {
 pub const MUT_ZERO_LANE: u8 = 1;
 /// `Cfg::mutate`: the long-pair route's 2^e2 formed as one f64 on the first factor (it can overflow)
 pub const MUT_E2_PLAIN: u8 = 2;
+/// `Cfg::mutate`: the long-pair route's split of 2^e2 between the factors also at e2 = 0 (where it can underflow a
+/// small coefficient of a wide factor)
+pub const MUT_E2_SPLIT_ALWAYS: u8 = 4;
 
 impl Default for Cfg {
     fn default() -> Self {
@@ -211,11 +215,14 @@ fn mullow_pairs(
     }
 }
 
-/// x times y truncated to nout terms added into acc\[o..\] by ODotAcc, 2^e2 split per lane between the factors so
-/// that both and their products keep the range of the result (each factor scaled exactly, in steps); the terms of
-/// each index in the order of x's
+/// x times y truncated to nout terms added into acc\[o..\] by ODotAcc, the factors as they are at e2 = 0, else 2^e2
+/// split per lane between them so that both and their products keep the range of the result (each factor scaled
+/// exactly, in steps); the terms of each index in the order of x's
 fn direct(x: &[OV], y: &[OV], o: usize, nout: usize, cfg: &Cfg, e2: i32, acc: &mut [ODotAcc]) {
-    let (xs, ys) = if cfg.mutate == MUT_E2_PLAIN {
+    let (xs, ys) = if e2 == 0 && cfg.mutate != MUT_E2_SPLIT_ALWAYS {
+        // no scale, so none that could underflow a small coefficient of a wide factor
+        (x.to_vec(), y.to_vec())
+    } else if cfg.mutate == MUT_E2_PLAIN {
         (x.iter().map(|v| v.mul_pwr2(2f64.powi(e2))).collect::<Vec<_>>(), y.to_vec())
     } else {
         let top = |v: &[OV]| -> [i32; LN] {

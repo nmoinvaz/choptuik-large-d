@@ -12,8 +12,8 @@
 //! removed (`Cfg { scale: false, blocks: false }`) differ by more than 1e-120 somewhere; a NaN planted in one output
 //! coefficient fails `compare`, and one planted in an input makes `Stats::max_frac` infinite. Empty factors, in
 //! either order, give zeros in both products. The edge cases (`check_edges`) have the controls
-//! `--mutate zero_lane` and `--mutate e2_plain` of hp/fastmul_bench, each of which must make the run exit 1, and
-//! `fastmul_planted` runs both.
+//! `--mutate zero_lane`, `--mutate e2_plain` and `--mutate e2_split_always` of hp/fastmul_bench, each of which
+//! must make the run exit 1, and `fastmul_planted` runs all three.
 //!
 //! Planted cases (8 lanes, random signs, all eight parts random, each lane its own offsets):
 //! - `flat`: |a_i| ~ 2^(-0.7 i) and |b_i| ~ 2^(-0.4 i), each times 2^(+-4) at random (a series of the chain's kind);
@@ -244,7 +244,9 @@ pub fn check() -> bool {
 /// - outputs at the bottom of the range by the FFT route: 2^-1074 times 2^-1074 (zero) and 2^-537 times 2^-537
 ///   (2^-1074), n = 1;
 /// - a block too wide for the digits (1 and 2^-1024 squared with spread 1024 and no slope), by the direct route,
-///   whose first coefficient is exactly 1.
+///   whose first coefficient is exactly 1;
+/// - the direct route at e2 = 0 on a wide factor (2^1023 and 2^-900 times one, blocks off, spread 2048), exactly
+///   2^1023 and 2^-900, which MUT_E2_SPLIT_ALWAYS makes fail.
 pub fn check_edges(mutate: u8) -> bool {
     let cfg = Cfg { mutate, ..Cfg::default() };
     let one = OV::splat_f(1.0);
@@ -292,6 +294,13 @@ pub fn check_edges(mutate: u8) -> bool {
     let cw: Vec<OV> = accw.into_iter().map(|a| a.finish()).collect();
     let (rw, _, _) = compare(&cw, &mullow_naive(&w2, &w2, 2), &w2, &w2);
     let wide_ok = exact(&cw[..1], 1.0) && rw <= 1e-120 && stw.direct > 0;
+    // a wide factor by the direct route at e2 = 0 (blocks off, spread 2048): 2^1023 and 2^-900 times one, exactly
+    let flat = Cfg { scale: false, blocks: false, spread: 2048, ..cfg };
+    let w3 = vec![OV::splat_f(1023f64.exp2()), OV::splat_f((-900f64).exp2())];
+    let mut acc3 = vec![ODotAcc::zero(); 2];
+    let st3 = crate::fastmul::mullow(&w3, &[one], 2, &flat, &mut acc3);
+    let c3: Vec<OV> = acc3.into_iter().map(|a| a.finish()).collect();
+    let wide0_ok = exact(&c3[..1], 1023f64.exp2()) && exact(&c3[1..], (-900f64).exp2()) && st3.direct > 0;
     let ok = r1 <= 1e-120
         && r2 <= 1e-120
         && st.max_frac < 0.25
@@ -300,11 +309,13 @@ pub fn check_edges(mutate: u8) -> bool {
         && e2b
         && u1 <= 1e-120
         && u2 <= 1e-120
-        && wide_ok;
+        && wide_ok
+        && wide0_ok;
     println!(
         "edges (mutate {mutate}): n 8193 past the FFT tables rel {r1:.2e}; a lane scaled out of range rel {r2:.2e} \
          (max_frac {:.1e}); e2 1200 and 1 on the long route exact {e2a}, {e2b}; 2^-1074 and 2^-537 squared rel \
-         {u1:.1e}, {u2:.1e}; spread 1024 by {} direct pairs, c_0 exactly 1 {wide_ok}: {}",
+         {u1:.1e}, {u2:.1e}; spread 1024 by {} direct pairs, c_0 exactly 1 {wide_ok}; 2^1023 and 2^-900 times one \
+         at e2 0 exact {wide0_ok}: {}",
         st2.max_frac,
         stw.direct,
         if ok { "PASS" } else { "FAIL" }
@@ -532,12 +543,14 @@ pub fn check_dumps(dir: &str, reps: usize) -> bool {
 #[allow(dead_code)] // hp/fastmul_bench's
 pub fn run(args: &[String]) -> i32 {
     let reps: usize = args.iter().position(|a| a == "--reps").map(|i| args[i + 1].parse().unwrap()).unwrap_or(7);
-    // --mutate zero_lane | e2_plain: check_edges under that control, which must then fail (exit 1)
+    // --mutate zero_lane | e2_plain | e2_split_always: check_edges under that control, which must then fail
+    // (exit 1)
     let mutate = match args.iter().position(|a| a == "--mutate").map(|i| args[i + 1].as_str()) {
         None => 0,
         Some("zero_lane") => crate::fastmul::MUT_ZERO_LANE,
         Some("e2_plain") => crate::fastmul::MUT_E2_PLAIN,
-        Some(m) => panic!("--mutate {m}: zero_lane or e2_plain"),
+        Some("e2_split_always") => crate::fastmul::MUT_E2_SPLIT_ALWAYS,
+        Some(m) => panic!("--mutate {m}: zero_lane, e2_plain or e2_split_always"),
     };
     if let Some(i) = args.iter().position(|a| a == "--dump") {
         return if check_dumps(&args[i + 1], reps.min(3)) { 0 } else { 1 };
@@ -584,5 +597,6 @@ fn fastmul_planted() {
     // their controls, which must fail
     assert!(!check_edges(crate::fastmul::MUT_ZERO_LANE), "the zero-lane control did not fail");
     assert!(!check_edges(crate::fastmul::MUT_E2_PLAIN), "the e2 control did not fail");
+    assert!(!check_edges(crate::fastmul::MUT_E2_SPLIT_ALWAYS), "the e2 = 0 split control did not fail");
     assert!(check(), "planted products");
 }
