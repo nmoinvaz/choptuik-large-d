@@ -541,7 +541,10 @@ pub(crate) fn digits8(x: &OV, k: &[i32; LN], t: usize, d: &mut [V8]) {
 
 /// The integer v = sum_q d\[q\]\[ln\] 2^(16 q) (balanced digits of lane ln) times 2^e as eight parts: |v| cut into
 /// chunks of 53 bits from its top bit down, each part a chunk with v's sign, so the parts do not overlap and their sum
-/// is v 2^e truncated below the eighth chunk (2^-424 of v or less).
+/// is v 2^e truncated below the eighth chunk (2^-424 of v or less). Each chunk is scaled with one rounding
+/// (`scalbn`), so below 2^-1022 each part rounds to the subnormal grid on its own and a result can be off by up to
+/// 8 2^-1075 = 2^-1072, absolute: hp's series coefficients are never that small, and that error lies below every
+/// term they are summed with.
 fn parts_of(d: &[L8], ln: usize, e: i32) -> [f64; 8] {
     const NL: usize = T_MAX / 2 + 3;
     let nl = d.len().div_ceil(4) + 1;
