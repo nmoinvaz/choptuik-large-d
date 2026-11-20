@@ -253,6 +253,8 @@ def collect(raw):
     srcs += [os.path.join(raw, "I1025-win2b", "out", f"l1kc55F{t_}1025.jsonl") for t_ in ("v", "u")]   # win2b: D 16.75, 16.25
     srcs += [os.path.join(raw, "I1025-mac", "out", f) for f in ("l1kc71Fm1025.jsonl", "l1kc63Fm1025.jsonl")]   # lane T
     srcs += [os.path.join(raw, "I1025-win", "out", "l1kc71Fw1025.jsonl")]   # winb: k_c 71 at D 16.5
+    srcs += [os.path.join(raw, "I1025-win2b", "out", f"l1kc{k}Fw1025.jsonl") for k in (47, 55)]   # win2b redos: D 17, D 16.5
+    srcs += [os.path.join(raw, "I1025-win2c", "out", f"l1kc63F{t_}1025.jsonl") for t_ in ("y", "z")]   # win2c: D 15, D 15.5
     exf = os.path.join(HERE, "data", "ell_lam_excluded.json")   # records that failed a check (signtest, guess, sign changes)
     excl = {(e["source"], round(e["D"], 6)): e["reason"] for e in json.load(open(exf))["excluded"]} if os.path.exists(exf) else {}
     by = {}
