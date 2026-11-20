@@ -352,6 +352,14 @@ a realistic FFT about 1.7 times, more at M = 384–512. For the continuation bel
 derivative is the first optimization I would make; it is not in this branch. (*At M = 256 a kernel build ran at lower
 priority, nice 15, during the timed step; the load average was 2.2.)
 
+**The Jacobian's time since #523.** The Jacobian column above was read from `Solver.lu_info`'s fill, which on these
+builds formed the block columns. Since #523 multishoot forms every block's columns before the staircase LU, and the
+fill, `lu_info`'s and `Solver.step_timing`'s second entry, only copies them. So the columns' time is in no entry. In the
+low-D records of raw `I997-dh610/m256.jsonl` (M 256) and `I945-win2/leg/leg_points.jsonl` (M 384) that entry
+(`t_jac_its`) is 0.0–0.2 s, in Newton iterations (`t_its`) of 260–273 s and 7137–9737 s. `driver.newton_step`
+(`t_jac`), `highm_check.py` and `highm_check512.py` now read the Jacobian as the call's wall time less the residual,
+factorization and solve, and `hp/step_timing_check.py` checks that reading (#1040).
+
 ## 5. The pilot toward D = 3
 
 ### 5.1 How it runs

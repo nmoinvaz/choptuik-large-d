@@ -214,7 +214,9 @@ sensitivities still come from the f64 LU. §4 measures how far they are from the
 
 **What was built** (`hp/python/hpkernel/driver.py`). `newton_step(s, zh, zl, jac, mixed=None, gmres=None)` makes one
 Newton step with one of five Jacobian variants and returns the step, F, the pivots and the step's seconds by part
-(`Solver.step_timing`: residual, Jacobian, LU, solves; plus the products' time and count):
+(`Solver.step_timing`: residual, Jacobian, LU, solves; plus the products' time and count). Since #1040 the Jacobian's
+seconds are the call's wall clock less the other three, because in block storage step_timing's Jacobian entry is only
+the copy into the staircase blocks (HIGH_M.md §4):
 
 | `jac` | step |
 |---|---|
