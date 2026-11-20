@@ -695,7 +695,7 @@ def _setup(state, D, kc):
     return S, z
 
 
-def det_dd(E, z, lam, nvar=5, log=None):
+def det_dd(E, z, lam, nvar=5, log=None, noise_eps=None, seeds=2):
     """sign and ln|det| of the double-double M(lambda) by ell_dd.lu_dd over the exact variants (dd entries kept)"""
     import time
     from ell_dd import lu_dd, bandwidths
@@ -720,6 +720,24 @@ def det_dd(E, z, lam, nvar=5, log=None):
     if log:
         log(f"  lambda {lam!r}: dd M built in {tb:.0f} s; dd LU signs {[r['sign'] for r in out]}, ln|det| {out[0]['ln']:.12f} "
             f"(spread over variants {max(r['ln'] for r in out) - min(r['ln'] for r in out):.1e}), {out[0]['sec']} s per LU")
+    noise = []
+    for eps in (noise_eps or []):
+        S = E.S
+        blocks, offs = S._block_list()
+        blk = 3 * S.n_odd + 2 * S.n_even
+        mask = np.zeros(M.shape, bool)
+        for b_, (c0, nf, fun, tgt) in enumerate(blocks):
+            mask[b_ * blk:(b_ + 1) * blk, c0:c0 + nf] = True
+        sg = []
+        for sd in range(seeds):
+            xi = np.random.default_rng(100 + sd).standard_normal(M.shape) * mask
+            A = dd.add(M, dd.mul_d(M, eps * xi))
+            sg.append(lu_dd(A, lb, ub)[0])
+        noise.append(dict(eps=eps, signs=sg))
+        if log:
+            log(f"  lambda {lam!r}: relative noise {eps:g} on the dd propagator entries: dd signs {sg}")
+    if noise_eps is not None:
+        return out, noise
     return out
 
 
@@ -728,17 +746,22 @@ def detcmd(argv):
     import argparse, json
     ap = argparse.ArgumentParser()
     ap.add_argument("state"); ap.add_argument("D", type=float); ap.add_argument("kc", type=int); ap.add_argument("lams")
-    ap.add_argument("--out", default=None)
+    ap.add_argument("--out", default=None); ap.add_argument("--noise", default=None)
     o = ap.parse_args([a for a in argv if not a.startswith("--mutate=")])
     S, z = _setup(o.state, o.D, o.kc)
     E = DDEll(S)
     recs = []
+    neps = [float(v) for v in o.noise.split(",")] if o.noise else None
     for lam in (float(v) for v in o.lams.split(",")):
-        r = det_dd(E, z, lam, log=lambda m: print(m, flush=True))
+        r = det_dd(E, z, lam, log=lambda m: print(m, flush=True), noise_eps=neps)
+        noise = None
+        if neps is not None:
+            r, noise = r
         with np.errstate(all="ignore"):
             sf, lf = np.linalg.slogdet(S.mode_matrix(z, lam))
         rec = dict(D=o.D, kc=o.kc, lam=lam, mutate=MUTATE or None, dd=r, dd_agree=len({x["sign"] for x in r}) == 1,
-                   f64_sign=float(sf), f64_ln=float(lf))
+                   f64_sign=float(sf), f64_ln=float(lf), noise=noise,
+                   noise_robust=None if noise is None else all(s == r[0]["sign"] for e in noise for s in e["signs"]))
         print(f"  lambda {lam!r}: dd signs agree {rec['dd_agree']}, dd {r[0]['sign']:+.0f} vs float64 {sf:+.0f}; ln|det| dd "
               f"{r[0]['ln']:.10f}, float64 {lf:.10f}", flush=True)
         recs.append(rec)
