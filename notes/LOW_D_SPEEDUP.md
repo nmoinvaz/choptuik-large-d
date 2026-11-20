@@ -297,6 +297,176 @@ cheaper.** Runs 3–4 on win2 at D 3.0475 (raw `I1033-win2/` ee9cdc53) and run 5
 - Open (dh610's recommendations on #1033): the ladder's missing rungs at D 3.044375 (L 0.5 at M′ 224 and 256, L 0.4 at
   176, L 0.3), and the plan-size mismatch.
 
+## The Taylor order by the cost of planned steps (speed item 3, 2026-11-20)
+
+**At low D the order hp plans at, kt 36, is already close to the cheapest: the best order saves at most 1.6% of the
+Taylor steps' estimated cost at D 3.0475 (M 320) and 0.5% at D 3.044375 (M 384), at step-cost weights 20 to 40, so it
+does not speed the low-D points. On the
+chain's state at D 256.53 the best order is 14, and the octo-double Jacobian takes 133 s on its plan against 163 s on
+the stored plan at 36 (medians of three on the Mac), 1.23 times faster.** The chain keeps its stored plans, since
+planning again moves Δ past D 230 (#461), so the chain does not take the gain yet (notes/LARGE_D_WALL.md, "The
+Taylor order by the cost of planned steps").
+
+hp plans every run at one Taylor order, `kt`. multishoot 4.0.0's `Shooting::plan_segments_auto` (fb68bc3) plans each
+candidate order from the node states and keeps the one of least estimated cost: the steps times a step cost k² + w k.
+It counts steps and never times anything, so the choice is the same on every machine. A Jacobian and a residual cost
+the plan's steps times a step cost, and at low D a Newton call is 99.5% Jacobian (appendix A, 1.2), so a cheaper plan
+would speed every call.
+
+- **The kernel** (`hp/src/plan_auto.rs`): `Solver.plan_auto(zh, zl, tol, hmax, w=20, orders=None, kmax=0,
+  refine=True, mutate=0)` returns the order, its points, each pass's candidates and the orders dropped. It does not
+  change the solver; `Solver.kt` reads the order and `Solver.set_kt` sets it.
+  - Its passes: multishoot's ladder of 7 orders around the a-priori optimum, then every order near the first choice
+    (`OrderChoice::refined_orders`). While the order kept is the lowest or highest of its pass, further passes go past
+    it, up to 8.
+  - The planner is multishoot's (roots by `kth_root`). At the same order its points differ from `Solver.plan`'s
+    (`powf`) in the last bits.
+  - An order is dropped when a Taylor coefficient overflows, or when tol / e_k underflows to a step of zero. Near
+    x = c at low D the ladder's orders 63 and 84 are dropped this way, and 53 plans.
+- **The scripts**, opt-in and bit-identical when off. `lowD_dd.py --plan_auto 1 [--plan_w W]` and `lowD_highM.py
+  --plan_auto 1` choose the run's order once from the start, then plan with `Solver.plan` at that order as at `--kt`.
+  lowD_highM keeps the order in its progress file, so a resume plans at it. `anm_run.py --plan_auto 1` chooses it only
+  where the base is planned: with no stored plan, or with `--keep_plan 0`.
+
+### Checks, fixed before the runs
+
+- **Planted truth** (`hp/plan_auto_gain.py planted`, no kernel; `cargo test --release --lib plan_auto`).
+  - With p = m = 0, hp's Taylor recursion keeps p and m at zero and reduces to x a′ = (n−1)(a − a³)/2 and
+    x c′ = (n−1) c (a² − 1). The solution is a² = u/(1 + u) with u = K₂ x^(n−1), and c = C (1 + u)/x^(n−1).
+  - The plant: D 6, K₂ 8 (branch points of a at |x| = 0.5), C 10⁻⁸ (a pole of c at x = 0, and c < x on the nodes),
+    nodes 0.02, 0.05, 0.1, 0.2 and 0.4, tol 10⁻³², hmax 0.5.
+  - The script forms the Taylor coefficients from the closed forms by power-series arithmetic in mpmath, not by hp's
+    recursion. It applies the planner's rule at every order from 12 to 120 and writes the steps to
+    `hp/data/plan_auto/planted.txt`.
+  - Its own check: the series satisfy both recursions and sum to the closed forms to 10⁻²⁸ (4.5×10⁻³⁷). Its control,
+    `--mutate n` (the plant at n + 0.25), fails `--check` against the stored file.
+  - **multishoot's planner on hp's equations takes the table's steps at all 109 orders.** Control: the equations at
+    n + 0.25 do not.
+  - **plan_auto keeps the table's least cost**, order 38 at k² + 20k (22 steps, cost 48488, against 50400 at 36). The
+    first pass keeps 37, so the second pass decides. Control: the inverted cost 2⁴⁰/(k² + 20k) keeps a costlier
+    order.
+  - **The paths meet the exact solution.** Each segment's Taylor path, on the auto plan and on order 36's, ends on the
+    exact state of its target node within 10 tol per step (6.2×10⁻³³ against bounds of 2.2×10⁻³⁰ and 2.5×10⁻³⁰).
+    Control: the auto plan's points summed at 12 orders fewer exceed it.
+- **Stored states** (`cargo test --lib plan_orders -- --ignored`, on a context from `hp/dump_ctx.py`): the order kept
+  costs at most 5% more than the least over the table of orders, and its Taylor blocks' residual is at most
+  max(10⁻²⁸, 10 times that on `Solver.plan`'s plan at kt 36). Control: `MUTATE=1`, the inverted cost.
+- **The A/B** (`hp/plan_auto_gain.py ab`, `abo`, `report`; `selftest` checks `report` on planted records). Both arms
+  are planned from the stored state at the run's tol, so the order is the only difference.
+  - `ab` (low D): one f64 Newton call on each plan. Pass: the two Δ after the call agree to 10⁻²⁰ (tau_map_gain.py's
+    bound for one solution at one M), |F| after it is below 10⁻²⁸ on both, and the auto plan's estimated cost is at
+    most the fixed one's. The gain is the fixed call's wall seconds over the auto call's; the error is the Δ
+    difference.
+  - `abo` (the chain, M 32): the octo-double Jacobian on the stored plan and on the auto plan. Pass: the auto plan's
+    octo-double residual of the Taylor blocks is at most max(10⁻³⁰, 10 times the stored plan's), and its estimated
+    cost is at most the stored plan's. The gain is the Jacobian's median wall seconds, stored over auto.
+  - Controls: `--mutate invert` must fail the cost criterion, and `report --mutate delta` (Δ moved by 10⁻¹⁸) the Δ
+    one. The selftest found that control vacuous at first: 10⁻¹⁸ added to Δ's hi part is below its ulp. It now moves
+    the lo part.
+
+### The step cost by lane
+
+`cargo test --profile release-dev --lib bench_step_cost -- --ignored`: the seconds of one Taylor step (the
+coefficients and the four Horner sums) at orders 12 to 96, from node K/2 of a stored state, on the Mac (M5, one
+thread, median of 9–15 repetitions, other jobs running). The fit is t ≈ a (k² + w k), least squares in the relative
+error. "Misfit" is the largest relative error of the fit, with w fitted and with w fixed at 20.
+
+| lanes | M | used by | w | misfit | at w 20 |
+|---|---|---|---|---|---|
+| `DV` | 32 | residual, planner | 48 | 28% | 32% |
+| `QV` | 32 | quad-double residual | 27 | 9% | 12% |
+| `Qu` | 32 | quad-double Jacobian | 20 | 12% | 12% |
+| `OV` | 32 | octo-double residual | 17 | 5% | 7% |
+| `Oun<2>` | 32 | octo-double Jacobian | 21 | 10% | 10% |
+| `Fun<4>` | 320 | f64 Jacobian | 41 | 9% | 24% |
+| `Fun<4>` | 384 | f64 Jacobian | 22 | 8% | 10% |
+| `DV` | 384 | residual, planner | 128 | 16% | 44% |
+
+- **multishoot's default k² + 20k fits the Jacobians' lanes**: w 20–21 for `Qu` and `Oun<2>` at M 32 and 22 for
+  `Fun<4>` at M 384. `Fun<4>` at M 320 reads 41 alone and 36 with three steps at once (M 384 with three: 28).
+- `DV` at M 32 is a few tenths of a millisecond per step and too noisy to fit (28%). At M 384 its τ derivative, a
+  double-double matrix product, dominates, so w is 128. It is the residual's lane, a small part of a call.
+- The weight barely moves the choice at low D: the best order's cost there is within 1.6% of kt 36's at any w from
+  20 to 40 (below). `--plan_w` stays at 20.
+
+### Planning on stored states
+
+`cargo test --profile release-dev --lib plan_orders -- --ignored` on the Mac. Steps are multishoot's planner's; tol
+and hmax are the runs' (10⁻³⁰ and 0.05 at low D, 10⁻³² and 0.05 at M 32). "Ratio" is the kept order's estimated
+cost over kt 36's on the same planner, at w 20, 30 and 40.
+
+| state | M | steps at kt 36 | order kept (w 20) | its steps | ratio, w 20 / 30 / 40 |
+|---|---|---|---|---|---|
+| chain leg 10, D 256.53 | 32 | 23 | 14 | 54 | 0.554 / 0.609 / 0.649 |
+| chain leg 10, D 256.85 | 32 | 23 | 14 | 53 | 0.544 / 0.597 / 0.637 |
+| I940-dh610 pin 5, D 73 | 32 | 10 | 24 | 13 | 0.681 / 0.709 / 0.730 |
+| T82-win, D 3.0475 | 320 | 2096 | 36 | 2096 | 1.000 / 0.994 / 0.984 |
+| T100-win2, D 3.044375 | 384 | 3539 | 34 | 3881 | 0.999 / 1.000 / 0.996 |
+
+- **At low D the cost is flat in the order near 36.** At D 3.0475, orders 30 to 48 cost within 4% of each other; at
+  D 3.044375, orders 33 to 37 within 0.4%. The segment near x = c (0.01 to 0.02) holds 63% and 75% of the steps at
+  36. There, from order 24 to 48, its steps fall 3.5 times (2862 to 826 at M 320) while a step's cost rises 3.1 times.
+  Orders 63 and 84 are dropped at both states: near x = c their coefficients reach the top of the f64 range.
+- **On the chain's states the cost falls toward low orders.** The steps grow slowly as the order falls (23 at 36, 54
+  at 14, 100 at 12), so the step's k² falls faster than the step count rises. The two first passes keep 22 and 16, at
+  the bottom of their ranges, and the third pass finds 14. Without it the choice is 7.6% above the least over the
+  table, and the 5% check failed on it; the edge passes were added for that.
+- **The Taylor blocks' residual holds.** On the chain's states it is 5.6×10⁻³¹ and 5.4×10⁻³¹ on the auto plan against
+  6.2×10⁻³¹ and 8.9×10⁻³¹ on kt 36's.
+- **A converged low-D state is 10⁻²¹ off its own equations on a new plan at the same order.** The stored states'
+  Taylor rows are 1.8×10⁻²⁹ and 7.1×10⁻³⁰ on their stored plans, and 2.4×10⁻²¹ and 1.7×10⁻²² on `Solver.plan`'s
+  plans at kt 36 from the same states. Those have 2096 and 3539 steps against the stored 1619 and 2796, which were
+  planned from the pass-1 states (step 5's plan-size mismatch). So a low-D A/B starts both arms from |F| near 10⁻²¹.
+- **The chain's octo-double Jacobian is 1.23 times faster on the auto plan** (`cargo test --lib jac_o_plans --
+  --ignored`, D 256.53, the Mac at 3 threads under load 4–9): 189.0, 159.7 and 163.1 s on the stored plan at order
+  36, against 137.4, 131.0 and 133.1 s at order 14, alternating. The medians, 163.1 and 133.1 s, give 1.23; the pairs
+  give 1.20 to 1.38. The two plans differ only in the Taylor blocks' columns. With their step cost halved (`Oun<2>`'s
+  measured cost per step times the steps: 0.51), the Taylor blocks are about 38% of the Jacobian at order 36.
+- Every number here is printed by the test named, on a context of the raw state named (raw origin/main 6585e559).
+  The contexts were written in `hp/dump_ctx.py`'s format by its code with the compiled kernel stubbed out, since this
+  Mac builds no release module; n = D − 2 came from `D_str` where the state has it. The printouts are handed on for a
+  raw folder.
+
+### Runs for a Linux runner
+
+From `hp/` of a checkout of `perf/plan-auto`, with hp built from it (`hp/build.sh`; `Solver.plan_auto` is new), the
+raw-data clone beside the checkout, and 8 threads. Run 1 is the decisive one; run 2 measures what the planning
+predicts to be under 1% and can be skipped.
+
+```bash
+RAW=$(cd ../../choptuik-large-d-raw && pwd); MACH=<machine>; OUT=$RAW/I<issue>-$MACH; mkdir -p $OUT/ctx
+printf '# I<issue>-%s: the Taylor order by the cost of planned steps (hp/plan_auto_gain.py)\n\n%s, speed item 3\n' $MACH $MACH > $OUT/README.md
+G="nice -n 10 python3 plan_auto_gain.py"; T="nice -n 10 cargo test --profile release-dev --lib"
+L=$RAW/I966-dh370/ks_chain3b/leg10_D256.1776_ks293; A=$RAW/T82-win/states/lowDhm_x0.000157-0.975_D3.0475
+B=$RAW/T100-win2/states/lowDhm_x0.000157-0.975_D3.0444
+# run 0, about 2 min after the build: the planted truth, the report's selftest and the Rust checks (exit 0), the controls (exit 1)
+$G planted --check data/plan_auto/planted.txt; $G planted --check data/plan_auto/planted.txt --mutate n >/dev/null; echo "control n: exit $? (1)"
+$G selftest; $T plan_auto 2>&1 | tail -3
+# run 1, about 20 min: the step cost and the plans on this machine; the chain's octo-double Jacobian on both plans
+for s in $L/anm_pin3_D256.5265 $L/anm_pin3_D256.8479 ${A}_M320 ${B}_M384; do python3 dump_ctx.py $s.npz $OUT/ctx/$(basename $s).bin; done
+for c in anm_pin3_D256.5265 lowDhm_x0.000157-0.975_D3.0444_M384; do FILE=$OUT/ctx/$c.bin THREADS=8 $T bench_step_cost -- --ignored --nocapture; done > $OUT/bench.log
+for c in $OUT/ctx/anm_*.bin; do FILE=$c W=20,30,40 RAYON_NUM_THREADS=8 $T plan_orders -- --ignored --nocapture; done > $OUT/plan_orders.log 2>&1
+for c in $OUT/ctx/lowDhm_*.bin; do FILE=$c KS=24:60:4 W=20,40 RAYON_NUM_THREADS=8 $T plan_orders -- --ignored --nocapture; done >> $OUT/plan_orders.log 2>&1
+FILE=$OUT/ctx/anm_pin3_D256.5265.bin MUTATE=1 KMAX=96 $T plan_orders -- --ignored; echo "control invert: exit $? (101)"
+$G abo $L/anm_pin3_D256.5265.npz --out $OUT/abo.jsonl --threads 8 --reps 3
+$G abo $L/anm_pin3_D256.8479.npz --out $OUT/abo.jsonl --threads 8 --reps 3
+$G abo $L/anm_pin3_D256.5265.npz --out $OUT/abo_control.jsonl --threads 8 --reps 1 --kmax 96 --mutate invert
+$G report $OUT/abo.jsonl; $G report $OUT/abo_control.jsonl; echo "control invert: exit $? (1)"
+# run 2, optional, about 1 h per state: one f64 Newton call per plan at low D
+$G ab ${A}_M320.npz --out $OUT/ab.jsonl --threads 8
+$G ab ${B}_M384.npz --out $OUT/ab.jsonl --threads 8
+$G report $OUT/ab.jsonl; $G report $OUT/ab.jsonl --mutate delta; echo "control delta: exit $? (1)"
+```
+
+- Run 1's `plan_orders` takes about 15–25 min per low-D state on the Mac's 3 threads (each order's plan 15–50 s, the
+  auto choice about 20 orders) and seconds per chain state. `abo` forms 2 × `--reps` octo-double Jacobians per
+  state, 130–190 s each on the Mac at 3 threads.
+- The bit-identity checks of AGENTS.md (`highm_check.py ref` and `scaled` with `--compare`) cover the paths this
+  change leaves alone; plan_auto adds methods and changes no existing one. With `--plan_auto 0` the scripts run as
+  before, since the flag only adds a branch.
+- `dump_ctx.py` takes n = D − 2 from the float `D`, not `D_str`, which moves the chain's n by about 10⁻¹⁴ of itself.
+  The plans read it only through the Taylor coefficients, so a step count could change only at a boundary.
+
 ## Appendix A: code analysis
 
 
