@@ -137,7 +137,21 @@ its double-double one by 2.3×10⁻⁶ in the horizon block and by at most 9×10
 
 REAL_PLACEHOLDER
 
-## 5. Reproduction
+## 5. What it means for hp, and what is proposed
+
+PROPOSALS_PLACEHOLDER
+
+## 6. Discrepancies with the notes (reported, not fixed)
+
+- **Bland's D 3.02 point** (notes/LIT_REVIEW.md, the 2026-11-04 entry): "They cite Bland's thesis (2007) for D = 3.02:
+  Δ = 0.1379 ± 0.0042". In their repository 0.1379 ± 0.0042 is Bland's γ at 3.02 (`plots/gBlandThesis.dat`), and his Δ
+  there is 2.083 ± 0.024 (`plots/DeltaBlandThesis.dat`). Their paper's own sentence was not reread here.
+- **"fits Δ ≈ 3.88 (D − 3)^0.15 on 3.01–3.05"** (notes/LOW_D.md §6; notes/DIRECTION_REVIEW.md §2.6: "Ecker et al.'s
+  plotting notebook fits values on 3.01–3.05"): the notebook plots a curve with hard-coded coefficients over 3.01–3.05;
+  it fits no values there, and the repository has no solution below 3.046 (section 1). DIRECTION_REVIEW's open question,
+  whether their values below 3.043 are converged, has the answer that there are none.
+
+## 7. Reproduction
 
 From `solver/lowd_sonic/` with `PYTHONPATH` naming an hpkernel site (here #1043's build), the raw-data repository
 cloned beside the checkout as `../choptuik-large-d-raw`, and hp's states from it (`T82-win/states/`, `T105-win2/states/`,
