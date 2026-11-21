@@ -520,6 +520,15 @@ read the fold's shift directly (#1008, macm3b; raw `I1008-macm3/`) stopped at D 
 tangent turned (t_D 0.99999562): every attempt's first correction stayed near 10⁻¹⁴ whatever the step, a gain of
 3.4×10²¹ on a predicted |F| at its floor of about 10⁻³⁵.
 
+**At order 293 Δ's nearest singularities are two complex-conjugate pairs, and no real fold (#966).** Over 26 bases of
+ks_chain3b from D 256.18 to 261.51 (legs 10, 13 and 14, raw `I966-mac-sing/` 60dfcf1e, xfchecks), `singularity_type.py
+rows` reads no real square-root point, and `jet_singularity.py locate` finds Δ's nearest stable Padé poles off the axis
+at P1 = 262.081 ± 0.973i (15 consecutive bases from 257.15, ranges 0.006 and 0.007) and P2 = 258.361 ± 2.269i. The root
+test equals the distance to the nearer pair to 2.2% at every base: P2 up to D 259.46, P1 from 259.74. So P1 does not
+come from the D 260.85 crossing, the order-130 fold at 259.903 does not appear at order 293, and the real-axis radius of
+the chain's series stays at least 0.973 near D 262.08, against steps of 0.11 to 0.13 (numerical evidence; whether P1 is
+a pole or a branch point, and whether it moves with the order, is not read).
+
 ### The refusals are the corrector's
 
 The corrector's first Newton move is the prediction's error to first order. At the accepted steps it equals the
