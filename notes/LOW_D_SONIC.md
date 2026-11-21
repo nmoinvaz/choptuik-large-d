@@ -140,7 +140,33 @@ its double-double one by 2.3×10⁻⁶ in the horizon block and by at most 9×10
 
 ## 4. The real test
 
-REAL_PLACEHOLDER
+Start: hp's D 3.045 state at M 320 (raw `T82-win/states/lowDhm_x0.000157-0.975_D3.0450_M320.npz`, Δ
+2.4464747275328005), renoded to 15 nodes (0.000313, 0.16, 0.3, 0.5, 0.7, 0.9 dropped, to keep hp's LU small; L =
+20481), the warp designed from it (ε₀ 2×10⁻³, max |φ| 1.58×10⁻⁴), hp's M 320 states at 3.04375, 3.04355, 3.04335 and
+3.04315 as the predictor's history. Command in raw `real/run_real.sh`, log `real/real.log`, records `real/real.jsonl`.
+
+The runs before the one of record, each stopped by a failure that changed the method (logs in raw `real/`):
+
+| attempt | Newton matrix | outcome | what it showed |
+|---|---|---|---|
+| 1 | `--jac band` | refused | hp's dense Jacobian exists only for M ≤ 128 |
+| 2 | `--jac hp --aa_m 8` | diverged at 3.045 | hp's own band rows are too far from the warped band's at M 320 |
+| 3 | `--jac wood` | **R1 passed**; non-finite at 3.04375 after one step | the Woodbury matrix converges in one step at 3.045 |
+| 4 | `--jac wood --replan 1` | diverged at 3.045 | Solver.plan is not local to a segment |
+| 5 | `--jac wood`, plan split after the Jacobian | diverged at 3.045 | the residual's plan and the Jacobian's must be the same |
+
+**R1** (attempt 3, `real_attempt3_wood_noreplan.log`): at D 3.045 the first residual is 2.27×10⁻⁸, all in the band rows
+(the warped band against hp's node, the τ truncation of M 320), and one step takes it to 1.9×10⁻¹³. Δ =
+2.4464747275327916: 6.66×10⁻¹¹ from hp's M 384 value 2.4464747274661773 (bar 10⁻⁸; **OK**) and −8.9×10⁻¹⁵ from hp's own
+M 320 value. The band's smallest g_p is 1.48×10⁻³ and its smallest c − x 1.06×10⁻⁴.
+
+**Why attempt 3 stopped at 3.04375.** On the stored plan of hp's 3.045 state the hybrid solution's last two segments
+(to 0.95 and 0.975) leave residuals of 9.6×10⁻¹⁴ and 4.2×10⁻¹¹ once their steps are split 2 or 4 times, against
+2.1×10⁻¹⁴ unsplit (raw `real/plancheck.log`): the stored plan is not converged for the hybrid's states, whose top
+harmonics differ from hp's at 10⁻⁸. The run of record splits every step outside the band twice (four times next to the
+band) before the Jacobian is formed.
+
+REAL_RESULT_PLACEHOLDER
 
 ## 5. What it means for hp, and what is proposed
 
