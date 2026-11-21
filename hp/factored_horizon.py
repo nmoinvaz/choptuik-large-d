@@ -1181,6 +1181,16 @@ def rung_newton(seg, h, mh_fixed, delta, node, J, tol, rows, maxit=10):
     return h, hist, R
 
 
+def raise_state_id(meta, z):
+    """the identity of the data a rung's Jacobian is taken at: sha256 of D_str, M, the nodes and the exact sums of the
+    horizon data, Delta and the last node (40 digits each)"""
+    import hashlib
+    mh, ah, delta, node = horizon_data(meta, z)
+    key = json.dumps([str(meta.get("D_str", meta["D"])), int(meta["M"]), list(meta["nodes"])]
+                     + [mp.nstr(v, 40) for v in list(mh) + list(ah) + [delta] + list(node)])
+    return hashlib.sha256(key.encode()).hexdigest()[:16]
+
+
 def cmd_raisecheck(path, prec, ks, cache, mutate="", rows="a"):
     """5.3's Mac-side check: at the state's own Delta and node, the rung at order ks with hp's 1/k, solved from the
     stored data (the start projection), then along Delta moves of RAISE_MOVES from the linear predictor (the
@@ -1188,7 +1198,8 @@ def cmd_raisecheck(path, prec, ks, cache, mutate="", rows="a"):
     a_h, m_h fixed), factored_raise.py's projection; 'ma': the chain's (the m and a rows for m_h and a_h). Passes when
     the second-order start converges at the largest move; mutate 'linear' judges the linear start instead (the
     control, expected to fail there). The Jacobian's columns are cached by index (m_h 0..M-1, a_h M..2M-1, each
-    holding all 2M rung rows), so 'a' forms the a_h columns and 'ma' adds the m_h ones."""
+    holding all 2M rung rows), so 'a' forms the a_h columns and 'ma' adds the m_h ones. The cache records ks, the
+    precision and the state's identity (raise_state_id), and a cache of other data is refused."""
     RECIP_DD[0] = True
     mp.mp.prec = prec
     meta, z = load_state(path)
@@ -1206,11 +1217,13 @@ def cmd_raisecheck(path, prec, ks, cache, mutate="", rows="a"):
           f"c {rec['stored']['c']:.3e} (p all harmonics {rec['stored']['p']:.3e}); G {float(seg.G):.3e}", flush=True)
     # the Jacobian of the 2M rung rows ('ma') in (m_h, a_h), column by column, cached
     cols = {}
+    sid = raise_state_id(meta, z)
     if cache and os.path.exists(cache):
         with open(cache) as fh:
             c = json.load(fh)
-        if int(c.get("ks", ks)) != ks or int(c.get("prec", prec)) != prec:
-            raise SystemExit(f"{cache}: ks {c.get('ks')} / prec {c.get('prec')}, not {ks} / {prec}")
+        if int(c.get("ks", -1)) != ks or int(c.get("prec", -1)) != prec or c.get("state_id") != sid:
+            raise SystemExit(f"{cache}: ks {c.get('ks')}, prec {c.get('prec')}, state {c.get('state_id')}; this run is "
+                             f"ks {ks}, prec {prec}, state {sid}: the columns are not this run's")
         cols = {int(k): [mp.mpf(v) for v in col] for k, col in c["cols"].items()}
     need = list(range(M, 2 * M)) if rows == "a" else list(range(2 * M))
     eta = mp.mpf(RAISE_ETA)
@@ -1223,7 +1236,8 @@ def cmd_raisecheck(path, prec, ks, cache, mutate="", rows="a"):
         cols[j] = [(x - y) / e for x, y in zip(Fj, F0)]
         if cache:
             with open(cache, "w") as fh:
-                json.dump(dict(ks=ks, prec=prec, cols={str(k): [str(v) for v in col] for k, col in cols.items()}), fh)
+                json.dump(dict(ks=ks, prec=prec, state_id=sid, cols={str(k): [str(v) for v in col]
+                                                                      for k, col in cols.items()}), fh)
         if (n + 1) % 8 == 0:
             print(f"  column {j + 1} of the rung's 2M, {time.time() - t0:.0f} s", flush=True)
     if rows == "a":
