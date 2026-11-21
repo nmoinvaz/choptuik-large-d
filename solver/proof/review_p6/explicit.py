@@ -262,7 +262,8 @@ def sup_box(B, smax, umax, tol=0.005, maxboxes=400000):
 
 
 def check_numeric(k, Cl, nus=(3, 5, 9, 21), js=(10, 25, 60, 200)):
-    """sum_lam C_lam(j) rho^lam_j against model.split()'s explicit terms (mp)"""
+    """PC2: sum_lam C_lam(j) rho^lam_j against model.split()'s explicit terms, and model.split()'s explicit terms plus
+    its interior against model.darboux()'s increment (mp). Returns the worst relative difference of either."""
     C, W = model.ctx('mp', 320)
     worst = mp.mpf(0)
     for nv in nus:
@@ -271,6 +272,8 @@ def check_numeric(k, Cl, nus=(3, 5, 9, 21), js=(10, 25, 60, 200)):
             S_ = model.Seqs(nv, mu, jj + 1, C, W)
             fam, inter = model.split(nv, mu, jj, C, W, S_)
             target = sum(fam.values())
+            whole = model.darboux(nv, mu, jj + 1, C, W, S_)[jj]
+            worst = max(worst, abs(target + inter - whole) / abs(whole))
             tot = mp.mpc(0)
             for lam, (N, D) in Cl.items():
                 lv = int(lam.subs(nu, nv))
@@ -308,7 +311,8 @@ def main():
         fam = families(k, mutate)
         Cl = {lam: combine(ts) for lam, ts in fam.items()}
         num_err = check_numeric(k, Cl, nus=(3, 9), js=(10, 60)) if quick else check_numeric(k, Cl)
-        print(f"mu = nu{k:+d}: sum C_lam rho_lam vs model.split explicit terms: {mp.nstr(num_err, 3)}", flush=True)
+        print(f"mu = nu{k:+d}: PC2, sum C_lam rho_lam vs model.split explicit terms, and explicit + interior vs "
+              f"model.darboux: {mp.nstr(num_err, 3)}", flush=True)
         if num_err > mp.mpf('1e-30'):
             ok_all = False
         for lam, (N, D) in Cl.items():
