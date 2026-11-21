@@ -512,6 +512,14 @@ kept plan's series put D* at 259.9032 to 259.9036 by both estimators, with expon
 (Dlog). So on #603's plan D* = 259.903 from six bases between 259.49 and 259.67, and #792 (dh610; raw `I792-dh610/` 8f7b2dcf) adds 259.5502 and 259.5901 with D* 259.903 to 259.904 and exponents +0.53 (ratio) and +0.47 (Dlog), Padé's real pole at 259.910 to 259.912. The root-test bar, fixed at
 |259.95 − D₀| before D* was known, fails at 259.6657 by 0.1% (−5.1% against 5%).
 
+**The fold belongs to the order-130 system (#1008, #966).** ks_chain3b, at horizon order 293 on the same layout,
+continued in D through D 259.903 to D 261.27 (50 states, raw `I966-dh370/`), which continuation in D cannot do across a
+fold. Its Δ stays on track C's series to 10⁻⁷ where #603's order-130 rows bend away by up to 0.049 near D 259.9. So the
+square-root point at 259.903 is the order-130 truncation's (numerical evidence). The order-135 arclength run meant to
+read the fold's shift directly (#1008, macm3b; raw `I1008-macm3/`) stopped at D 259.5750 by its stall rule before its
+tangent turned (t_D 0.99999562): every attempt's first correction stayed near 10⁻¹⁴ whatever the step, a gain of
+3.4×10²¹ on a predicted |F| at its floor of about 10⁻³⁵.
+
 ### The refusals are the corrector's
 
 The corrector's first Newton move is the prediction's error to first order. At the accepted steps it equals the
