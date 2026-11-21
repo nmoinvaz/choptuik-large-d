@@ -9,7 +9,7 @@
               above every head term (worst ratio 0.49), so --check still passes. Kept as a record.
   --mutate=b7 M7', the whole of B7 / 100; --check then fails, exit 1.
 
-  --json PATH writes the certified numbers.
+  --json=PATH writes the certified numbers, each end rounded outward.
 """
 import sys
 import json
@@ -130,8 +130,8 @@ def certify(out):
         lam_head = max(best.b, eg.b)
         print(f"mu = nu{k:+d}: sup_nu<=99 e^(-0.736 nu) H <= {model.up(best, 8)} at nu = {at}; e^(-0.736*101) G(101) <= "
               f"{model.up(eg, 3)}; Lambda_head <= {model.up(lam_head, 8)}", flush=True)
-        res[k] = {'Lambda_head': str(lam_head), 'at': at, 'eG101': str(eg.b),
-                  'H': {str(n): [str(v[0].a), str(v[0].b)] for n, v in rows.items()}}
+        res[k] = {'Lambda_head': model.up(lam_head, 45), 'at': at, 'eG101': model.up(eg, 45),
+                  'H': {str(n): model.ivjson(v[0]) for n, v in rows.items()}}
     if out:
         json.dump(res, open(out, 'w'), indent=1)
     return True

@@ -43,6 +43,8 @@ def main():
         fired = [l.strip() for l in p.stdout.splitlines() if any(k in l for k in ('FAIL', 'UNBOUNDED', ': NO', 'NO'))]
         fired = '; '.join(f[:90] for f in fired[:3]) if want else '-'
         print(f"| {name} | {script} {' '.join(args)} | {want} | {got} | {fired} |", flush=True)
+        if not good:
+            print(f"  unexpected outcome; stderr tail: {p.stderr.strip()[-400:]!r}", flush=True)
     print(f"controls.py {'PASS' if ok else 'FAIL'}")
     sys.exit(0 if ok else 1)
 

@@ -56,6 +56,9 @@ def increments(nu, mu, j_lo, J, C, w):
 def main():
     cons = json.load(open(sys.argv[1]))
     J = int(sys.argv[2]) if len(sys.argv) > 2 and sys.argv[2].isdigit() else 600
+    if J <= 42:
+        print("J must exceed j0(21) = 42, or the harmonics near 21 are not tested")
+        sys.exit(2)
     plant = '--mutate=plant' in sys.argv
     C, w = model.ctx('mp', 192)
     t0 = time.time()
@@ -72,9 +75,13 @@ def main():
                     cache[(nu, k)] = vals
                 else:
                     vals = cache[(nu, k)]
+                if not vals:
+                    print(f"no increments compared at nu = {nu}")
+                    ok = False
+                stride = max(1, (J - j0) // 5)
                 for idx, (jj, v) in enumerate(sorted(vals.items())):
                     bound = cons_m[k] * nu / mp.mpf(jj) ** 2
-                    if plant and idx % ((J - j0) // 5) == 0:
+                    if plant and idx % stride == 0:
                         v = 3 * bound
                     if v > bound:
                         nviol += 1
