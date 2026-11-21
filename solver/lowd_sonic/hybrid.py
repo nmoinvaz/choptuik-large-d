@@ -166,7 +166,7 @@ def main():
     ap.add_argument("--save", default="")
     ap.add_argument("--expect", default="")
     ap.add_argument("--mutate", default="none")
-    ap.add_argument("--jac", default="band", choices=["band", "hp"])
+    ap.add_argument("--jac", default="band", choices=["band", "hp", "wood"])
     ap.add_argument("--chunk", type=int, default=0)
     ap.add_argument("--aa_m", type=int, default=0)
     ap.add_argument("--time_cap", type=float, default=6 * 3600)
@@ -241,6 +241,44 @@ def main():
         log(f"Jacobian at D {D0}: hp's f64 Jacobian with its own plan, LU kept for the chord steps")
         s0.newton_mixed(zh, zl)
         solve = lambda Fh, Fl: tuple(np.asarray(v) for v in s0.lu_solve(-Fh, -Fl))
+    elif a.jac == "wood":
+        import scipy.linalg as sla
+        log(f"Jacobian at D {D0}: hp's f64 Jacobian and LU, its band rows corrected to the warped band's by Woodbury")
+        s0.newton_mixed(zh, zl)
+        log(f"  hp Jacobian and LU: {time.time() - tj:.0f}s")
+        hy0 = Hybrid(D0, M, nodes, kt, kc, ks, segs, band, phi, a.threads, a.kappa, a.mutate)
+        z0 = zh + zl
+        hy0.band_rows(z0)
+        tb = time.time()
+        G = hy0.band_jacobian(z0, chunk=a.chunk)
+        log(f"  band Jacobian: {time.time() - tb:.0f}s ({hy0.last})")
+        L = s0.size
+        r0 = hy0.rows.start
+        oA = 2 * M + 4 * M * hy0.ia
+        oB = 2 * M + 4 * M * hy0.ib
+        tw = time.time()
+        Rh = np.zeros((4 * M, L))
+        Rh[np.arange(4 * M), r0 + np.arange(4 * M)] = 1.0
+        Wh, Wl = s0.lu_solve_many(Rh, np.zeros_like(Rh))
+        del Rh
+        W = (np.asarray(Wh) + np.asarray(Wl)).T                           # (L, 4M) = J0^-1 R
+        del Wh, Wl
+
+        def T(v):
+            """the warped band's rows of the Jacobian applied to v (L,) or (L, k)"""
+            return G[:, :4 * M] @ v[oA:oA + 4 * M] - v[oB:oB + 4 * M] + np.multiply.outer(G[:, 4 * M], v[-1])
+
+        TW = T(W)
+        LU_TW = sla.lu_factor(TW, check_finite=False)
+        dU = np.abs(np.diag(LU_TW[0]))
+        log(f"  W = J0^-1 R and T W: {time.time() - tw:.0f}s, |u_kk(T W)| {dU.min():.3e}..{dU.max():.3e}")
+
+        def solve(Fh, Fl):
+            # J^-1 F = y - W (T W)^-1 (T y - F_band), y = J0^-1 F, J = J0 with the band rows T (Woodbury; J0 W = R)
+            yh, yl = s0.lu_solve(Fh, Fl)
+            y = np.asarray(yh) + np.asarray(yl)
+            c = sla.lu_solve(LU_TW, T(y) - (Fh[hy0.rows] + Fl[hy0.rows]), check_finite=False)
+            return -(y - W @ c), np.zeros_like(y)
     else:
         import scipy.linalg as sla
         log(f"Jacobian at D {D0}: hp's f64 Jacobian, its band rows replaced by the warped band's (forward differences)")
