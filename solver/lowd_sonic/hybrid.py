@@ -316,7 +316,7 @@ def main():
             m2 = dict(meta)
             m2.update(D=D, M=M, nodes=nodes, segs=hy.segs, band=list(band), warp=a.warp, band_pts=list(hy.pts))
             np.savez(os.path.join(a.save, f"hyb_D{D:.6f}_M{M}.npz"), zh=zh_, zl=zl_, meta=json.dumps(m2))
-        hist.append((D, zh_ + zl_))
+        hist = [h for h in hist if h[0] != D] + [(D, zh_ + zl_)]
     sys.exit(0 if ok_all else 1)
 
 
