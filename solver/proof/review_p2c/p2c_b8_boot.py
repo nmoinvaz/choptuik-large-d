@@ -414,11 +414,13 @@ class Pmap:
             gam = lambda i: self.g[i]["gamma"]
             mx = lambda xs: max(xs, key=lambda z: z.upper())
             zero = arb(0)
+            bfac = self.beta_fac
         else:
             fv = lambda k, i: aff(self.fl[k][i], h)
             gam = lambda i: self.gfl[i]
             mx = max
             zero = 0.0
+            bfac = float(self.beta_fac.upper().mid())
         cl = self.cells
         # prefix maxima over the ray (for P_S) and over the sector (for P_beta)
         ray_r = [(float(cl[i][1].r_hi.mid()), fv("IS", i)) for i in self.ray]
@@ -435,12 +437,12 @@ class Pmap:
             IS = mx([fv("IS", i), run_ray])
             PS.append((fv("locS", i) + gam(i) * IS, i))
             run_b = mx([run_b, fv("IB", i)])
-            PB.append((fv("locB", i) + self.beta_fac * run_b, i))
+            PB.append((fv("locB", i) + bfac * run_b, i))
             Ic.append(fv("Ic", i))
         iF = self.F
         all_ray = mx([v for _, v in ray_r])
         PS.append((fv("locS", iF) + gam(iF) * mx([fv("IS", iF), all_ray]), iF))
-        PB.append((fv("locB", iF) + self.beta_fac * mx([run_b, fv("IB", iF)]), iF))
+        PB.append((fv("locB", iF) + bfac * mx([run_b, fv("IB", iF)]), iF))
         Ic.append(fv("Ic", iF))
         st = self.st
         if exact:
@@ -457,6 +459,63 @@ class Pmap:
             key = (lambda t: float(t[0].upper().mid())) if exact else (lambda t: t[0])
             return out, {"S_at": max(PS, key=key)[1], "B_at": max(PB, key=key)[1]}
         return out
+
+
+    def pieces(self):
+        """P as a max of affine maps: per component, a list of (b, a) with P_i(h) = max_k b_k + a_k . h (floats)."""
+        fl, cl = self.fl, self.cells
+        bfac = float(self.beta_fac.upper().mid())
+        slow = float(self.slow.upper().mid())
+        add = lambda f, g, c: [f[i] + c * g[i] for i in range(5)]
+        PS, PB, Pc = [], [], []
+        rays = [(float(cl[i][1].r_hi.mid()), i) for i in self.ray]
+        seen_ib = []
+        for i in self.sector:
+            rh = float(cl[i][1].r_hi.mid())
+            g = self.gfl[i]
+            for j in [i] + [jr for r, jr in rays if r <= rh * (1 + 1e-12)]:
+                PS.append(add(fl["locS"][i], fl["IS"][j], g))
+            seen_ib.append(i)
+            for j in seen_ib:
+                PB.append(add(fl["locB"][i], fl["IB"][j], bfac))
+            Pc.append([slow * v for v in fl["Ic"][i]])
+        iF = self.F
+        for j in [iF] + [jr for _, jr in rays]:
+            PS.append(add(fl["locS"][iF], fl["IS"][j], self.gfl[iF]))
+        for j in seen_ib + [iF]:
+            PB.append(add(fl["locB"][iF], fl["IB"][j], bfac))
+        Pc.append([slow * v for v in fl["Ic"][iF]])
+        om = float(self.omega_abs.upper().mid())
+        d0 = float(self.st.d0.upper().mid())
+        F1 = float(self.absF.upper().mid())
+        PV = [[2 * F1 * d0, 0.0, om * slow, 0.0, 0.0]]
+        Pc = [[v[0] + d0] + v[1:] for v in Pc]
+        return [PV, PS, PB, Pc]
+
+
+def closure_lp(P, hstar, Hmax):
+    """{h : P(h) < h} is convex and polyhedral: maximize the margin s in b_k + a_k . h <= h_i - s h*_i over the
+    pieces of every component, then take the point of least sum h_i/h*_i at half that margin (y = h/h*)."""
+    import numpy as np
+    from scipy.optimize import linprog
+    rows, rhs = [], []
+    for i, comp in enumerate(P.pieces()):
+        for pc in comp:
+            r = [pc[1 + j] * hstar[j] / hstar[i] for j in range(4)]
+            r[i] -= 1.0
+            rows.append(r + [1.0])
+            rhs.append(-pc[0] / hstar[i])
+    A, b = np.array(rows), np.array(rhs)
+    ymax = [Hmax[j] / hstar[j] for j in range(4)]
+    bnds = [(0, ymax[j]) for j in range(4)] + [(-1, 1)]
+    r1 = linprog([0, 0, 0, 0, -1], A_ub=A, b_ub=b, bounds=bnds, method="highs")
+    if r1.status != 0 or r1.x[4] <= 0:
+        return None, (float(r1.x[4]) if r1.status == 0 else None), len(rows)
+    s = float(r1.x[4]) / 2
+    bnds2 = [(0, ymax[j]) for j in range(4)] + [(s, s)]
+    r2 = linprog([1, 1, 1, 1, 0], A_ub=A, b_ub=b, bounds=bnds2, method="highs")
+    y = r2.x[:4] if r2.status == 0 else r1.x[:4]
+    return [float(y[j] * hstar[j]) for j in range(4)], float(r1.x[4]), len(rows)
 
 
 def iterate(P, Hmax, steps=4000, tol=1e-12):
@@ -494,8 +553,8 @@ def spectral_radius(J):
     return float(max(abs(np.linalg.eigvals(np.array(J, dtype=float)))))
 
 
-def closure_test(P, hstar):
-    """Find h = h* + t u with P(h) < h strictly (balls), (I - J) u = h*."""
+def closure_test(P, hstar, Hmax=None):
+    """Find h with P(h) < h strictly (balls): first h = h* + t u, (I - J) u = h*; then the polyhedral fallback."""
     J = jacobian(P, hstar)
     rho = spectral_radius(J)
     IJ = [[(1.0 if i == j else 0.0) - J[i][j] for j in range(4)] for i in range(4)]
@@ -507,11 +566,21 @@ def closure_test(P, hstar):
         u = [abs(ui) + 1e-3 * hstar[i] for i, ui in enumerate(u)]
     for t in (1e-4, 3e-4, 1e-3, 3e-3, 1e-2, 3e-2, 0.1, 0.3):
         h = [hstar[i] + t * u[i] for i in range(4)]
+        if Hmax is not None and any(h[i] > Hmax[i] for i in range(4)):
+            break                                  # the bounds hold for h <= Hmax only
         hb = [arb(repr(float(v))) for v in h]
         Pb = P(hb, exact=True)
         if all(Pb[i].upper() < hb[i].lower() for i in range(4)):
             return {"t": t, "h": hb, "P": Pb, "ratio": [float((Pb[i] / hb[i]).upper().mid()) for i in range(4)],
-                    "rhoJ": rho}, rho
+                    "rhoJ": rho, "method": "h*+tu"}, rho
+    if Hmax is not None:
+        h, smax, nrows = closure_lp(P, hstar, Hmax)
+        if h is not None:
+            hb = [arb(repr(float(v))) for v in h]
+            Pb = P(hb, exact=True)
+            if all(Pb[i].upper() < hb[i].lower() for i in range(4)):
+                return {"t": None, "h": hb, "P": Pb, "ratio": [float((Pb[i] / hb[i]).upper().mid()) for i in range(4)],
+                        "rhoJ": rho, "method": f"polyhedral ({nrows} pieces, margin {smax:.3g})"}, rho
     return None, rho
 
 
@@ -535,7 +604,7 @@ def run_L0(L0, d0, domain, at, Hmax0=None, res=None, quiet=False):
     Hmax = Hmax0 or [3e7, 8e7, 5e6, 2e6]
     if float(d0) > 0 and Hmax0 is None:
         Hmax = [3e8, 3e8, 3e7, 3e7]
-    for attempt in range(6):
+    for attempt in range(10):
         st = Setting(L0, d0, domain, KAPPA, Hmax)
         try:
             P, dt = build(st, at, om_abs, absF, res)
@@ -546,19 +615,22 @@ def run_L0(L0, d0, domain, at, Hmax0=None, res=None, quiet=False):
             if it >= 4000:
                 return {"L0": L0, "closed": False, "why": "iteration did not converge", "Hmax": Hmax}
             # iterate exceeded Hmax: retry larger (the bounds were only valid for h <= Hmax)
-            Hmax = [max(Hmax[i], 3 * hlast[i]) for i in range(4)]
+            Hmax = [max(float(Hmax[i]), 3 * float(hlast[i])) for i in range(4)]
+            if max(Hmax) > 1e11:
+                return {"L0": L0, "closed": False, "why": "the iterate passes 1e11 (no fixed point found)", "Hmax": Hmax}
             if not quiet:
                 log(f"  L0 = {L0}: iterate passed Hmax, retrying with Hmax = {[f'{v:.3g}' for v in Hmax]}")
             continue
-        # tighten Hmax to the fixed point once (sharper folding), then test
-        if max(Hmax[i] / hstar[i] for i in range(4)) > 4 and attempt < 5:
-            Hmax = [2 * v for v in hstar]
+        # self-consistent Hmax: h* <= Hmax <= 1.2 h* (the bounds hold for h <= Hmax; folding stays sharp)
+        if any(not (1.0 <= Hmax[i] / hstar[i] <= 1.2) for i in range(4)):
+            Hmax = [1.1 * v for v in hstar]
             continue
-        cert, rho = closure_test(P, hstar)
+        cert, rho = closure_test(P, hstar, Hmax)
         if cert and all(cert["h"][i].upper() <= Hmax[i] for i in range(4)):
             _, det = P(cert["h"], exact=True, detail=True)
             return {"L0": L0, "closed": True, "hstar": hstar, "h": [float(v.upper().mid()) for v in cert["h"]],
                     "P": [float(v.upper().mid()) for v in cert["P"]], "ratio": cert["ratio"], "t": cert["t"],
+                    "method": cert["method"],
                     "rhoJ": rho, "Hmax": Hmax, "s_star": float(P.s_star.mid()),
                     "gamma_F": float(P.g[P.F]["gamma"].upper().mid()), "K_F": float(P.g[P.F]["KF"].upper().mid()),
                     "H_F": float(P.g[P.F]["H"].upper().mid()), "N_F": float(P.g[P.F]["NF"].mid()),
@@ -812,7 +884,7 @@ def fmt(r):
         return f"L0 = {r['L0']}: NOT CLOSED ({r['why']})"
     h = ", ".join(f"{v:.4e}" for v in r["h"])
     q = ", ".join(f"{v:.4f}" for v in r["ratio"])
-    return (f"L0 = {r['L0']}: CLOSED h = ({h}), P(h)/h = ({q}), rho(J) = {r['rhoJ']:.4f}, t = {r['t']}, "
+    return (f"L0 = {r['L0']}: CLOSED h = ({h}), P(h)/h = ({q}), rho(J) = {r['rhoJ']:.4f}, by {r['method']}, "
             f"rho_max = {r['rho_max']:.5f}, s_* = {r['s_star']:.4f}, K_F = {r['K_F']:.4f}, H_F = {r['H_F']:.3f}, "
             f"N_F = {r['N_F']:.1f}, gamma_F = {r['gamma_F']:.4f}, S at {r['S_at']}, beta at {r['B_at']}, "
             f"{r['ncells']} cells, {r['seconds']:.0f} s")
