@@ -547,6 +547,10 @@ along a weak-type move loses its G-sized part when a_K is held instead of a_h.
   Jacobian of a(u₀) in a_h, from a predictor quadratic in t. A cross-check runs the stage-1 fixed point at D 242.36 and
   D 73 along Δ at t = ±10⁻²⁰ (warm from 5.1's references, 288 bits). The two Q_fact must agree to 1%, or both lie
   below their own noise.
+- **The base.** Both maps use an exact 1/k, so that A and the fixed point solve one discrete problem. With an exact 1/k
+  the stored a_h misses the node's a by 8.4×10⁻⁷ at D 242.36 (5.1). So a_h is first re-solved by A until a's sum at u₀
+  equals the node's a, and that is the base for both maps.
+- **The predictor.** A's predictor is linear in t at ±10⁻²⁵, and its quadratic term is taken from those two solves.
 - **Precision.** 448 bits for the old series and A. The noise is about 2^−448·G·t⁻² per Q entry, 4×10⁻⁵⁹ at D 242.36
   for t = 10⁻²⁰.
 
