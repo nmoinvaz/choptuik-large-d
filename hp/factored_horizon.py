@@ -154,11 +154,21 @@ def _dd_add(a, b):
     return _quick_two_sum(s, e + f)
 
 
+def _fma_exact(x, y, z):
+    """x y + z rounded once, from the exact rational value (Fraction's float() rounds to nearest even): math.fma
+    before Python 3.13"""
+    from fractions import Fraction
+    return float(Fraction(x) * Fraction(y) + Fraction(z))
+
+
+_FMA = getattr(math, "fma", _fma_exact)
+
+
 def _dd_mul_f(a, b):
     """multidouble dd.rs `DD::mul_f`"""
     p = a[0] * b
-    e = math.fma(a[0], b, -p)
-    return _quick_two_sum(p, math.fma(a[1], b, e))
+    e = _FMA(a[0], b, -p)
+    return _quick_two_sum(p, _FMA(a[1], b, e))
 
 
 _RECIP = {}
@@ -1282,7 +1292,8 @@ def cmd_raisecheck(path, prec, ks, cache, mutate="", rows="a"):
         wv = mp.lu_solve(J, mp.matrix(q2))
         ws[float(tau)] = [-wv[i] for i in range(n_u)]
     w, w2 = ws[RAISE_TAUS[0]], ws[RAISE_TAUS[1]]
-    sc = float(amax(vsub(w, w2)) / amax(w))
+    nw, nd = amax(w), amax(vsub(w, w2))
+    sc = 0.0 if nd == 0 else (float("inf") if nw == 0 else float(nd / nw))     # two zero estimates agree
     rec["predictor"] = dict(s=float(amax(s_)), w=float(amax(w)), t2_check=sc)
     print(f"  predictor: |s| {float(amax(s_)):.3e}, |w| {float(amax(w)):.3e} (t^2 check {sc:.2e} between tau "
           f"{RAISE_TAUS[0]:g} and {RAISE_TAUS[1]:g}); {time.time() - t0:.0f} s", flush=True)

@@ -71,8 +71,9 @@ T2_BAR = 0.1                                       # the predictor's t^2 check b
 # ------------------------------------------------------------------ the corrector (any system)
 def second_order(sy, z, dz, log=print):
     """w = -J_r^-1 q2, q2 = [r(z + tau dz) + r(z - tau dz) - 2 r(z)] / (2 tau^2) the rung rows' second difference along
-    the step, from the first pair of TAUS whose two values agree to T2_BAR (else the smallest pair's, flagged).
-    Returns (w, check, tau)."""
+    the step, from the first pair of TAUS whose two values agree to T2_BAR. When no pair agrees, w is zero (the step
+    goes on without the t^2 term, its trials staged as any failed projection is) and the check returned is the last
+    pair's. Returns (w, check, tau)."""
     r0 = sy.rung(z)
     last = None
     for ta, tb in TAUS:
@@ -82,13 +83,15 @@ def second_order(sy, z, dz, log=print):
             rm = sy.rung(sy.axpy(-tau, dz, z))
             q2 = sy.rscale(sy.radd(sy.radd(rp, rm), sy.rscale(r0, -2.0)), 0.5 / (tau * tau))
             ws.append(sy.hscale(sy.rung_solve(z, q2), -1.0))
-        chk = sy.hnorm(sy.hadd(ws[0], sy.hscale(ws[1], -1.0))) / max(sy.hnorm(ws[0]), 1e-300)
+        nd, nw = sy.hnorm(sy.hadd(ws[0], sy.hscale(ws[1], -1.0))), sy.hnorm(ws[0])
+        chk = 0.0 if nd == 0 else (float("inf") if nw == 0 else nd / nw)     # two zero estimates agree
         last = (ws[0], chk, ta)
         if chk <= T2_BAR:
             return last
         log(f"    predictor: t^2 check {chk:.2e} at tau {ta:g} above {T2_BAR}; a smaller tau", flush=True)
-    log(f"    predictor: no pair of TAUS passed the t^2 check (last {last[1]:.2e}); its w is used, flagged", flush=True)
-    return last
+    log(f"    predictor: no pair of TAUS passed the t^2 check (last {last[1]:.2e}); the step goes on without the t^2 "
+        "term", flush=True)
+    return sy.hscale(last[0], 0.0), last[1], None
 
 
 def staged_trial(sy, z, dz, lam, w, n, log=print):
@@ -139,12 +142,14 @@ def raise_newton(sy, z, tol, it_max=12, halvings=10, stages=16, mode="factored",
         if mode in ("factored", "nopred", "sign"):
             w, chk, tau = second_order(sy, z, dz, log)
             rec.update(t2_check=chk, tau=tau, w=sy.hnorm(w))
+            if tau is None:
+                rec["predictor"] = "none: no pair of TAUS agreed"
             if mode == "nopred":
                 w = sy.hscale(w, 0.0)
             elif mode == "sign":
                 w = sy.hscale(w, -1.0)
         log(f"  on {it}: max|F| {nF:.3e}, |dz| {ndz:.3e}, dDelta {rec['dDelta']:+.3e}"
-            + (f", predictor |w| {rec['w']:.2e} (t^2 check {rec['t2_check']:.1e} at tau {rec['tau']:g})" if "w" in rec
+            + (f", predictor |w| {rec['w']:.2e} (t^2 check {rec['t2_check']:.1e} at tau {rec['tau']})" if "w" in rec
                else "") + (f", {extra['line']}" if extra.get("line") else "") + f", {time.time() - t0:.1f} s",
             flush=True)
         lam, took = 1.0, None
@@ -195,8 +200,9 @@ def raise_newton(sy, z, tol, it_max=12, halvings=10, stages=16, mode="factored",
 
 # ------------------------------------------------------------------ the chain (hpkernel; Linux)
 def kernel_report():
-    """hpkernel's path, ISA and crate versions, and the commit of the worktree its wheel was built in (if pip
-    recorded it); also this script's checkout. Returns a dict for the record."""
+    """hpkernel's path, ISA and crate versions, the worktree its wheel was built in (if pip recorded the wheel's path)
+    and that worktree's HEAD now, which is the build's commit only if the worktree has not moved since; also this
+    script's checkout. Returns a dict for the record."""
     import hpkernel
     d = os.path.dirname(hpkernel.__file__)
     crates = set()
@@ -372,7 +378,9 @@ class Chain:
 
     def rung_solve(self, z8, r):
         """J_r^-1 r: the rung block of the quad-double Jacobian at z8's leading four parts, factored once per point"""
-        key = tuple(float(np.asarray(z8[0])[i]) for i in (0, self.hs.start, self.hs.stop - 1, -1))
+        import hashlib
+        key = hashlib.sha1(b"".join(np.ascontiguousarray(np.asarray(p, dtype=float)).tobytes()
+                                    for p in z8[:4])).digest()
         if self._lu is None or self._lu[0] != key:
             self._lu = (key, self._block_lu(self._two_node(z8, 4)))
         x = self._lu[1].solve(*[np.ascontiguousarray(p) for p in r[:4]])
@@ -452,6 +460,9 @@ def exact_entries(parts, dps=200):
 def compare(parts_a, parts_b, bar):
     """the largest entry difference |a - b| (exact sums) and Delta's (the last entry), and whether the first is at most
     bar"""
+    if len(parts_a[0]) != len(parts_b[0]) or not len(parts_a[0]):
+        return dict(max=float("inf"), at=-1, delta=float("nan"), ok=False,
+                    why=f"lengths {len(parts_a[0])} and {len(parts_b[0])}")
     with mp.workdps(200):
         a, b = exact_entries(parts_a), exact_entries(parts_b)
         d = [abs(x - y) for x, y in zip(a, b)]
@@ -495,9 +506,10 @@ def run(argv):
     t_start = time.time()
     print(f"# {time.strftime('%Y-%m-%d %H:%M:%S', time.gmtime())} UTC factored_raise.py {' '.join(argv)}", flush=True)
     kinfo = kernel_report()
-    print(f"hpkernel {kinfo['path']} ({kinfo['isa']}; {', '.join(kinfo['crates'])}); built from "
-          f"{kinfo.get('build_worktree', '?')} at HEAD {kinfo.get('build_worktree_head', '?')} (hp/src clean: "
-          f"{kinfo.get('build_worktree_src_clean', '?')}); this script at {kinfo['script_head']}", flush=True)
+    print(f"hpkernel {kinfo['path']} ({kinfo['isa']}; {', '.join(kinfo['crates'])}); its wheel was built in "
+          f"{kinfo.get('build_worktree', '?')}, whose HEAD is now {kinfo.get('build_worktree_head', '?')} (hp/src "
+          f"clean now: {kinfo.get('build_worktree_src_clean', '?')}; the build's own commit is not recorded); this "
+          f"script at {kinfo['script_head']}", flush=True)
     probe_kernel()
     sp = os.path.join(raw, opt["state"])
     z8, meta = load_parts(sp)
@@ -543,13 +555,16 @@ def run(argv):
         c = compare(list(z), zr, float(opt["bar"]))
         with mp.workdps(60):
             dref = float(exact_entries(zr, 60)[-1] - d0)
-        rec["compare"] = dict(ref=opt["ref"], ref_ks=mr.get("ks"), same_plan=same_plan, bar=float(opt["bar"]),
-                              dDelta_ref=dref, **c)
-        print(f"against {opt['ref']} (ks {mr.get('ks')}, plan {'the same' if same_plan else 'DIFFERENT'}): largest "
-              f"entry difference {c['max']:.3e} at entry {c['at']}, Delta {c['delta']:+.3e}; the raise moved Delta by "
-              f"{dDelta:+.6e}, the reference's by {dref:+.6e}: {'PASS' if c['ok'] and same_plan else 'FAIL'} "
-              f"(bar {float(opt['bar']):g})", flush=True)
-        ok = ok and c["ok"] and same_plan
+        same_ks = int(mr.get("ks", -1)) == ks
+        rec["compare"] = dict(ref=opt["ref"], ref_ks=mr.get("ks"), same_ks=same_ks, same_plan=same_plan,
+                              bar=float(opt["bar"]), dDelta_ref=dref, **c)
+        good = c["ok"] and same_plan and same_ks
+        print(f"against {opt['ref']} (ks {mr.get('ks')}{'' if same_ks else f', NOT the raise order {ks}'}, plan "
+              f"{'the same' if same_plan else 'DIFFERENT'}): largest entry difference {c['max']:.3e} at entry "
+              f"{c['at']}{' (' + c['why'] + ')' if 'why' in c else ''}, Delta {c['delta']:+.3e}; the raise moved Delta "
+              f"by {dDelta:+.6e}, the reference's by {dref:+.6e}: {'PASS' if good else 'FAIL'} (bar "
+              f"{float(opt['bar']):g}; the entries {'within' if c['ok'] else 'NOT within'} it)", flush=True)
+        ok = ok and good
     with open(os.path.join(out, "raise.json"), "w") as fh:
         json.dump(rec, fh, indent=1, default=str)
     return 0 if ok else 1
@@ -684,7 +699,7 @@ def stepgate(log, outdir):
     """stage 3's chain step (5.3): anm_run.py --steps 1 from the polished base wrote its jet_pin file, accepted a step
     by the chain's own rules (an anm_pin state saved, its Delta line printed) and did not stop. Returns (ok, reason)."""
     t = open(log, errors="replace").read()
-    jl = re.search(r"step 0: the series saved as (\S+jet_pin\d+_D[0-9.]+\.npz)", t)
+    jl = re.search(r"step 0: the series saved as (.+?jet_pin\d+_D[0-9.]+\.npz) \(", t)
     jet = bool(jl) and os.path.exists(os.path.join(outdir, os.path.basename(jl.group(1))))
     saved = "Delta of the saved state, its eight parts summed exactly" in t
     st = glob.glob(os.path.join(outdir, "anm_pin*_D*.npz"))
@@ -722,7 +737,9 @@ def gate_selftest():
               ("step stopped", "step", step_ok.replace("done", "stopped: no convergence after eight attempts"),
                ["jet_pin3_D262.0099.npz", "anm_pin3_D262.1021.npz"], False),
               ("step not saved", "step", step_ok.replace("      Delta of the saved state", "      Delta of a"),
-               ["jet_pin3_D262.0099.npz"], False)]
+               ["jet_pin3_D262.0099.npz"], False),
+              ("step, a path with a space", "step", step_ok.replace("/x/jet_pin3", "/x y/jet_pin3"),
+               ["jet_pin3_D262.0099.npz", "anm_pin3_D262.1021.npz"], True)]
     for name, kind, text, files, want in cases:
         with tempfile.TemporaryDirectory() as d:
             lp = os.path.join(d, "run.log")
@@ -760,8 +777,10 @@ def selftest(argv):
               f"|z - truth| {mp.nstr(err, 3)}; expected {'to converge' if want else 'to fail'}: "
               f"{'ok' if good == want else 'WRONG'}", flush=True)
     # the state writer: a stored state written again and read back exactly, with the raise's meta
+    import tempfile
     here = os.path.dirname(os.path.abspath(__file__))
-    tmp = os.path.join(os.environ.get("TMPDIR", "/tmp"), f"factored_raise_selftest_{os.getpid()}.npz")
+    tmpdir = tempfile.TemporaryDirectory()
+    tmp = os.path.join(tmpdir.name, "state.npz")
     st = next(iter(sorted(glob.glob(os.path.join(here, "data", "**", "*.npz"), recursive=True))), None)
     st = next((a for a in argv if a.endswith(".npz")), st)
     if st:
@@ -775,6 +794,11 @@ def selftest(argv):
         print(f"  state writer on {os.path.basename(st)}: parts and meta read back "
               f"{'exactly' if same else 'DIFFERENT'}, keys {'as save_o' if keys else 'WRONG'}", flush=True)
         # the comparison: a copy with one entry moved by a known amount (in its lowest part)
+        short = [p[:-1].copy() for p in parts]
+        c = compare(parts, short, 1e-60)
+        res.append(("comparison of unequal lengths", not c["ok"]))
+        print(f"  comparison of unequal lengths: {'refused' if not c['ok'] else 'ACCEPTED'} ({c.get('why')}): "
+              f"{'ok' if not c['ok'] else 'WRONG'}", flush=True)
         for amt, want in ((1e-65, True), (1e-55, False)):
             cp = [p.copy() for p in parts]
             cp[7][5] = cp[7][5] + amt
@@ -783,13 +807,10 @@ def selftest(argv):
             res.append((f"comparison {amt:g}", got))
             print(f"  comparison, one entry moved by {amt:g}: largest difference {c['max']:.3e} at {c['at']}, "
                   f"{'within' if c['ok'] else 'above'} the bar 1e-60: {'ok' if got else 'WRONG'}", flush=True)
-        try:
-            os.remove(tmp)
-        except OSError:
-            pass
     else:
         print("  no stored state found for the writer's check (give one: selftest STATE.npz)", flush=True)
         res.append(("state writer", False))
+    tmpdir.cleanup()
     res += gate_selftest()
     if mutate == "gate":                    # the control: a broken expectation must fail the selftest
         res.append(("gate control (--mutate=gate)", polishgate(os.devnull, os.path.dirname(os.devnull))[0]))

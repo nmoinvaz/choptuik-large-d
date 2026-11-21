@@ -651,8 +651,9 @@ held values taken from the state's eight parts, as with `--held_o 1`.
   (5.2).
 - **The predictor.** Method A starts from a_h + λ da_h + λ² w, with w = −J_a⁻¹ q₂. Here q₂ is the a rows' second
   difference along dz at τ = 2⁻¹⁰ and 2⁻¹², and J_a their block in a_h. The two τ must agree to 10%; if they do not,
-  the pair 2⁻²⁰ and 2⁻²² is tried, then 2⁻³⁰ and 2⁻³². If method A fails from that start, the step is split into 2, 4,
-  ..., 16 stages. Each stage starts from the last stage's result plus the predictor's increment.
+  the pair 2⁻²⁰ and 2⁻²² is tried, then 2⁻³⁰ and 2⁻³². If no pair agrees, the step goes on without the t² term. If
+  method A fails from its start, the step is split into 2, 4, ..., 16 stages. Each stage starts from the last stage's
+  result plus the predictor's increment.
 - **Acceptance.** A trial is accepted by Deuflhard's natural test: the simplified correction |J(z)⁻¹ F(z_t)| is at most
   1 − λ/4 times |dz|, in max norms of the leading parts. It is also accepted when max|F| ≤ tol. λ is halved up to 10
   times, and the raise takes at most 12 Newton steps.
@@ -670,7 +671,7 @@ raw-data repository) and `--ks 315 --keep_plan 1`. The order then no longer chan
 polish solves the raise's system.
 
 **What the script rests on: kernel-free checks on the Mac.**
-- **`factored_raise.py selftest`**: 24 of 24 pass, and `--mutate=nopred`, `old`, `linear` and `gate` each make it
+- **`factored_raise.py selftest`**: 26 of 26 pass, and `--mutate=nopred`, `old`, `linear` and `gate` each make it
   exit 1.
   - A model with three unknowns: a weak one (σ 10⁻⁶), a node value and a horizon datum. G = 10³⁰ sits in the rung row
     and in the c row, and the rung has a pole at a miss of 10³. Its raise moves the weak unknown by 10⁻¹⁰, so the
@@ -678,9 +679,10 @@ polish solves the raise's system.
   - The factored raise converges to 2.7×10⁻¹⁰⁷ from the model's solution. The old map, the projection from the
     linear step, the projection without the second-order term, and the one with that term's sign flipped each fail.
   - The state writer reads a stored state back exactly.
-  - The comparison accepts a planted 10⁻⁶⁵ and refuses a planted 10⁻⁵⁵ against a bar of 10⁻⁶⁰.
-  - The stage-3 gates run on sixteen planted logs, under the chain's rule and under part 4's 10⁻⁶⁰, and each broken one
-    fails.
+  - The comparison accepts a planted 10⁻⁶⁵ and refuses a planted 10⁻⁵⁵ against a bar of 10⁻⁶⁰. It also refuses states
+    of unequal length, and a reference of another order.
+  - The stage-3 gates run on seventeen planted logs, under the chain's rule and under part 4's 10⁻⁶⁰, and each
+    broken one fails.
 - **`factored_horizon.py raisecheck`** at D 262.0099, ks 315, with hp's 1/k, 512 bits. It solves the rung from the
   stored data, then follows Δ moves of 10⁻¹⁶, 10⁻¹⁵ and 10⁻¹⁴ from the linear and the second-order predictors. It passes
   when the second-order start converges at 10⁻¹⁴ and the t² term holds to 10%. It runs with `--rows a` (method A) and
@@ -740,7 +742,7 @@ with its README. Run one process at a time, at nice 10 with 10 threads, and chec
 P0=I1064-dh610/ho2_D237.7132/ks307/base_pin3_D237.7132.npz            # blob 861c79ff
 PR=I1064-dh170/p315/ks315/base_pin3_D237.7132.npz                     # blob 0f4858ee
 S3=I966-dh370/ks_chain3b/leg14_D261.1415_ks293/anm_pin3_D262.0099.npz # blob eb34f3c8
-python3 factored_raise.py selftest $RAW/$P0                            # 24 of 24 pass, exit 0
+python3 factored_raise.py selftest $RAW/$P0                            # 26 of 26 pass, exit 0
 python3 factored_raise.py selftest $RAW/$P0 --mutate=nopred            # exit 1
 # stage 2
 nice -n 10 python3 -u factored_raise.py $RAW $OUT/planted --state $P0 --ks 315 --threads 10 --ref $PR --bar 1e-60 > $OUT/planted.log 2>&1              # PASS, exit 0
