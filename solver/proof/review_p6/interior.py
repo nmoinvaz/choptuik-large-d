@@ -236,14 +236,14 @@ def main():
     W = W_iv()
     t0 = time.time()
     T = Tseq(J1 + 2, W)
-    print(f"t_n, G_i to {J1 + 2} [{time.time() - t0:.0f}s]; t_1 = {mp.nstr(T.t[1].b, 8)}, w = {mp.nstr(W.mid, 12)}", flush=True)
+    print(f"t_n, G_i to {J1 + 2} [{time.time() - t0:.0f}s]; t_1 <= {model.up(T.t[1], 8)}, w in [{model.dn(W, 12)}, {model.up(W, 12)}]", flush=True)
     ok = True
     m_ok, top, mstar = checks_monotone(T, W)
-    print(f"r_m increasing for 1 <= m <= {top} (checked), above m > w^2/2 - 1 = {mp.nstr(mstar.b, 6)} (proved): "
+    print(f"r_m increasing for 1 <= m <= {top} (checked), above m > w^2/2 - 1 <= {model.up(mstar, 5)} (proved): "
           f"{'yes' if m_ok else 'NO'}")
     ok &= m_ok
     cw = check_conv(T, J1)
-    print(f"max_n<={J1} U_n/(2 + t_1) <= {mp.nstr(cw.b, 6)}: {'yes' if cw.b <= 1 else 'NO'}")
+    print(f"max_n<={J1} U_n/(2 + t_1) <= {model.up(cw, 4)}: {'yes' if cw.b <= 1 else 'NO'}")
     ok &= cw.b <= 1
     pf = check_prefactors(W, 'nuprefac' in mut)
     print(f"B4 prefactor bounds >= exact prefactors (nu = 3..41, j >= 2 nu): {'yes' if pf else 'NO'}")
@@ -253,11 +253,11 @@ def main():
           f" (bar 1e-25): {'yes' if eq < mp.mpf('1e-25') else 'NO'}")
     ok &= eq < mp.mpf('1e-25')
     P, p_ok = P_bound()
-    print(f"P <= e^(pi w) = {mp.nstr(P.b, 8)}: closed form checks {'yes' if p_ok else 'NO'}")
+    print(f"P <= e^(pi w) <= {model.up(P, 7)}: closed form checks {'yes' if p_ok else 'NO'}")
     ok &= p_ok
     Wb, at, hand, q, M, w_ok = W_bound(T)
-    print(f"W: max_nu<=99 nu|rho_j0| <= {mp.nstr(Wb.b, 6)} at nu = {at}; nu >= 101: nu q^M <= {mp.nstr(hand.b, 3)} "
-          f"(q = {mp.nstr(q.b, 4)}, M = {M}): {'yes' if w_ok else 'NO'}")
+    print(f"W: max_nu<=99 nu|rho_j0| <= {model.up(Wb, 5)} at nu = {at}; nu >= 101: nu q^M <= {model.up(hand, 3)} "
+          f"(q <= {model.up(q, 4)}, M = {M}): {'yes' if w_ok else 'NO'}")
     ok &= w_ok
     # the majorant sups
     b4 = iv.mpf(0)
@@ -276,14 +276,22 @@ def main():
             if vt.b > tgt[k].b:
                 tgt[k], tgt_at[k] = vt, jj
         if jj in (10, 11, 12, 20, 50, 100, 500, 1000, 2000):
-            print(f"  j = {jj}: B4 per triple j^2(A/3 + B) <= {mp.nstr(v.b, 6)} [{time.time() - t0:.0f}s]", flush=True)
+            print(f"  j = {jj}: B4 per triple j^2(A/3 + B) <= {model.up(v, 5)} [{time.time() - t0:.0f}s]", flush=True)
     tb = tail_bound(T, J1, W)
-    print(f"B4 per triple: max over 10 <= j <= {J1} <= {mp.nstr(b4.b, 8)} at j = {b4_at}; every j > {J1}: <= {mp.nstr(tb, 4)}")
+    print(f"B4 per triple: max over 10 <= j <= {J1} <= {model.up(b4, 6)} at j = {b4_at}; every j > {J1}: <= {model.up(tb, 3)}")
     cr = max(b4.b, tb)
-    print(f"Cr (B4 mode): 3 triples {mp.nstr(3 * cr, 8)}, 6 triples {mp.nstr(6 * cr, 8)}")
+    print(f"Cr (B4 mode): 3 triples <= {model.up(3 * cr, 6)}, 6 triples <= {model.up(6 * cr, 6)}")
+    res = {'Cr_B4': {'-2': str(3 * cr), '0': str(6 * cr), '2': str(3 * cr)}, 'Cr_tight': {},
+           'P': str(P.b), 'W': str(max(Wb.b, hand.b)), 'W_at': at, 'W_hand101': str(hand.b), 'tail_per_triple': str(tb)}
     for k in (-2, 0, 2):
         ntr = 6 if k == 0 else 3
-        print(f"Cr (tight), mu = nu{k:+d}: <= {mp.nstr(max(tgt[k].b, ntr * tb), 8)} (max at j = {tgt_at[k]})")
+        ct = max(tgt[k].b, ntr * tb)
+        res['Cr_tight'][str(k)] = str(ct)
+        print(f"Cr (tight), mu = nu{k:+d}: <= {model.up(ct, 6)} (max at j = {tgt_at[k]})")
+    out = [a.split('=', 1)[1] for a in sys.argv[1:] if a.startswith('--json=')]
+    if out and ok:
+        import json
+        json.dump(res, open(out[0], 'w'), indent=1)
     print(f"interior.py {'PASS' if ok else 'FAIL'} [{time.time() - t0:.0f}s]")
     sys.exit(0 if ok else 1)
 
