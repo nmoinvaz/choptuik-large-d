@@ -20,7 +20,7 @@ status words are AGENTS.md's.
 | the mass mode's gain before and after | x_K^−(n−1) e^(F²(1−x_K²)/n + O(n⁻²)) before; 1 after, for every n and x_K | checked symbolically (S2, S5) |
 | the share of the fast mode's shadow that ks = 130 keeps | ln f = −41.05 at D 237.13 and −63.05 at D 253.80 (μ = 1); f = 1 to 1% from ks ≈ 1.9 Re s | numerical evidence (M3) |
 | does the factored segment's inner solve reach quad-double in 5 sweeps | no: 29 to 32 from the slaved value and 21 from a warm start at D 242.36; at D 73, 31 from a warm start, and the sweeps diverge from the slaved value | numerical evidence (5.1) |
-| does holding a_K remove the G-sized part of the horizon rows' curvature | yes, along the three moves tested at D 73.0 and D 242.36: Q_fact / Q_old is 1.3×10⁻¹⁹ to 2.7×10⁻¹⁶ and 4.5×10⁻⁶⁴ to 5.1×10⁻⁶⁰ | numerical evidence (5.2) |
+| does holding a_K remove the G-sized part of the horizon rows' curvature | yes at the state, along the three moves tested at D 73.0 and D 242.36: Q_fact / Q_old is 1.3×10⁻¹⁹ to 2.7×10⁻¹⁶ and 4.5×10⁻⁶⁴ to 5.1×10⁻⁶⁰, measured at t ≤ 10⁻¹⁹. It says nothing about steps of the raise's size (about 10⁻¹⁴): at D 262.0099, ks 315, the factored map's higher orders (t⁶) dominate past about t = 4×10⁻¹⁹ along Δ with m_h fixed (5.3) | numerical evidence (5.2, 5.3) |
 
 The linear model reproduces three measurements with no fitted parameter (M4):
 
@@ -36,7 +36,8 @@ The order of work this suggests:
 2. The mass mode factored at the last node (section 3), for the strong side: the ε·G floors, the re-seed's polish and
    the corrector's quadratic jump. It needs an inner solve on the horizon segment. Stage 1 of section 5 measured it at
    21 to 32 sweeps of the old pass (5.1), so this route is not recommended with that solve. Holding a_K removes the
-   horizon rows' G-sized curvature (5.2), so a one-off factored raise is worth building.
+   horizon rows' G-sized curvature at the state (5.2), which made a one-off factored raise worth building. Whether it
+   carries a step of the raise's size is stage 2's question (5.3).
 
 ## 1. The two exponents in the horizon segment
 
@@ -577,7 +578,10 @@ along a weak-type move loses its G-sized part when a_K is held instead of a_h.
 
 **Result: gate 1.** Every ratio is below 10⁻¹⁰, along all three moves at both states. Holding a_K instead of a_h
 removes the G-sized part of the horizon rows' curvature, so a narrow stage 2 is worth building. At D 242.36 the
-verdict rests on the amended plant and the t² checks, not on a plant at the gate level (below). The ratios are
+verdict rests on the amended plant and the t² checks, not on a plant at the gate level (below). The gate reads the
+second derivative at the state, measured at t ≤ 10⁻¹⁹. It says nothing about steps of the raise's size, about 10⁻¹⁴:
+at D 262.0099, ks 315, the factored map's higher orders (t⁶) dominate past about t = 4×10⁻¹⁹ along Δ with m_h fixed
+(5.3). The ratios are
 quotients of each Q's largest entry, and each Q holds to the digits shown (its t² check):
 
 | state | move | Q_fact | Q_old | Q_fact / Q_old | Q_fact's t² check | Q_old's t² check at 10⁻²⁰ |
