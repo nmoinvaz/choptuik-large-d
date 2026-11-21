@@ -37,6 +37,10 @@ Commands, from hp/ (STATE an .npz of the chain, read with numpy; parts zh, zl, z
     python3 factored_horizon.py p1 STATE [--ref REF.json] [--prec 512] [--mutate=sign] [--gamma a|B] [--recip dd|exact]
         [--move 1e-8]
     python3 factored_horizon.py loop STATE [--prec 512] [--its 5] [--h 1e-100] [--orders 60,100,125]
+    python3 factored_horizon.py curvjac STATE --prec 448 --cache CACHE.json
+    python3 factored_horizon.py curv STATE --prec 448 --cache CACHE.json --move D|m1|m3 [--plant CURV_D.json]
+    python3 factored_horizon.py curvx STATE --prec 288 --ref REF.json --t 0|1e-20|-1e-20
+    python3 factored_horizon.py curvxq X_t.json X_minus_t.json X_0.json --t 1e-20 --curv CURV_D.json
 --out FILE.json writes the command's record. Exit 1 when a check fails.
 
 selftest, planted truth on a small problem (n = 100, M = 8, K = 40, x_K = 0.7, a_h the slaved value moved by
@@ -78,6 +82,13 @@ floor, the issue's criterion), and the sharp reading <= 100 2^-prec G (the old s
 Control --mutate=sign must fail. At a stored state gamma is the mass mode's amplitude left by the convergence, 1e-28
 or less, so chi_hat hardly enters the rows and the control cannot fire there; --move 1e-8 moves a_h by 1e-8 / G,
 gamma about 1e-8. --recip exact puts an exact 1/k in both series (hp's rounded 1/k has no counterpart in B's rows).
+
+curvjac, curv, curvx, curvxq: the curvature test of 5.2 (stage 1b). With an exact 1/k, the base is the stored state
+with a_h re-solved so that a's sum at u0 equals the node's a (curvjac, which also caches the M x M Jacobian of a(u0) in
+a_h). curv reads Q = [R(t) + R(-t) - 2 R(0)] / t^2 over the p, m and c rows along one move, Q_old at fixed a_h over
+CURV_PAIRS_OLD and Q_fact at fixed a_K (method A: a_h re-solved per t) at CURV_PAIR, with the t^2 checks, the ratio and
+its gate; with --plant (a curv record along D) it adds c t^2 to Delta and checks the planted term's recovery to 1%.
+curvx and curvxq repeat Q_fact along D with the stage-1 fixed point, the cross-check.
 
 loop: the sweep map at a converged state (gamma by B's sum): B* = 1/a^2 from the old series, |g(B*) - B*|, gamma*,
 the power iteration of the linearized map from a random perturbation of size --h, and the forward pass's response in
@@ -860,6 +871,255 @@ def cmd_loop(path, prec, its, h, orders, seed=2):
                 gamma_star=float(amax(gstar)), re_s=[min(kres), max(kres)], power=ratios, response={str(k): v for k, v in resp.items()}), True
 
 
+# ------------------------------------------------------------------ stage 1b: the curvature test (5.2)
+CURV_PAIRS_OLD = ((1e-20, 1e-19), (1e-30, 1e-29), (1e-40, 1e-39), (1e-50, 1e-49))
+CURV_PAIR = (1e-20, 1e-19)
+CURV_T1 = 1e-25                                    # the level that fixes the predictor's quadratic term
+PMC = None                                         # row indices of p, m and c (set per segment)
+
+
+def pmc_rows(seg):
+    M = seg.M
+    return list(range(0, 2 * M)) + list(range(3 * M, 4 * M))
+
+
+def move(seg, name):
+    """(delta m_h, delta Delta) of a named move: 'D' (delta Delta = 1) or 'm<h>' (delta m_h = cos(h theta_j) on the half
+    grid, an odd field for odd h)"""
+    M = seg.M
+    if name == "D":
+        return [mp.mpf(0)] * M, mp.mpf(1)
+    h = int(name[1:])
+    return [mp.cos(h * 2 * mp.pi * j / (2 * M)) for j in range(M)], mp.mpf(0)
+
+
+def old_at(seg, mh, ah, delta, node, dm, dD, t, c2=0):
+    """the old rows and a's sum at u0 for m_h + t dm, a_h, Delta + t dD + c2 t^2"""
+    t = mp.mpf(t)
+    s = series(seg, [m + t * d for m, d in zip(mh, dm)], seg.omega(delta + t * dD + mp.mpf(c2) * t * t), a0=ah)
+    R, vals = rows_old(seg, s, node)
+    return R, vals[2]
+
+
+def solve_ah(seg, mh, guess, delta, node, dm, dD, t, aK, J, tol, c2=0, maxit=8):
+    """method A: the a_h with a's sum at u0 equal to a_K at the moved data, by Newton with the fixed Jacobian J of a(u0)
+    in a_h, from the guess. Returns (rows with the a row a_K - a(node), a_h, |F| history)."""
+    ah, hist = list(guess), []
+    for _ in range(maxit):
+        R, au = old_at(seg, mh, ah, delta, node, dm, dD, t, c2)
+        F = vsub(au, aK)
+        hist.append(float(amax(F)))
+        if hist[-1] <= tol or (len(hist) > 1 and hist[-1] > 0.1 * hist[-2]) or len(hist) == maxit:
+            break                                  # R and a_h stay those of the last evaluation
+        st = mp.lu_solve(J, mp.matrix(F))
+        ah = [a - st[i] for i, a in enumerate(ah)]
+    M = seg.M
+    R = R[:2 * M] + vsub(aK, node[2 * M:3 * M]) + R[3 * M:]
+    return R, ah, hist
+
+
+def second_diff(Rp, Rm, R0, t, rows):
+    t = mp.mpf(t)
+    return [(Rp[i] + Rm[i] - 2 * R0[i]) / (t * t) for i in rows]
+
+
+def qmax(Q):
+    return float(amax(Q)) if Q else 0.0
+
+
+def scales(Q1, Q2):
+    """the relative change between two second-difference quotients (the t^2 check): max |Q2 - Q1| / max(|Q1|, |Q2|)"""
+    big = max(amax(Q1), amax(Q2))
+    return float(amax(vsub(Q2, Q1)) / big) if big else float("inf")
+
+
+def curv_cache(path):
+    with open(path) as fh:
+        d = json.load(fh)
+    return d
+
+
+def cmd_curvjac(path, prec, out_cache):
+    """the curvature test's base (5.2): an exact 1/k, a_h re-solved so that a's sum at u0 equals the node's a, and the
+    M x M Jacobian of a(u0) in a_h by forward differences (step a_h 1e-50 per point), cached for cmd_curv"""
+    RECIP_DD[0] = False
+    meta, seg, mh, ah, delta, node, om, R_old, aK, t_old = setup(path, prec)
+    M = seg.M
+    t0 = time.time()
+    eta = mp.mpf("1e-50")
+    J = mp.matrix(M, M)
+    for j in range(M):
+        a2 = list(ah)
+        a2[j] = ah[j] * (1 + eta)
+        _, au = old_at(seg, mh, a2, delta, node, [mp.mpf(0)] * M, 0, 0)
+        for i in range(M):
+            J[i, j] = (au[i] - aK[i]) / (ah[j] * eta)
+        print(f"  column {j + 1}/{M}, {time.time() - t0:.0f} s", flush=True)
+    a_node = node[2 * M:3 * M]
+    tol = mp.mpf(2) ** (-prec + 10) * seg.G
+    R0, ahs, hist = solve_ah(seg, mh, ah, delta, node, [mp.mpf(0)] * M, 0, 0, a_node, J, tol)
+    diag = [abs(J[i, i]) for i in range(M)]
+    off = max(abs(J[i, j]) for i in range(M) for j in range(M) if i != j)
+    print(f"curvjac {os.path.basename(path)} D {seg.D_str[:12]} prec {prec}, exact 1/k: a(u0) - a(node) with the stored "
+          f"a_h {fmt(amax(vsub(aK, a_node)))}; re-based in {len(hist)} passes to {hist[-1]:.2e}; a_h moved by "
+          f"{fmt(amax([(x - y) / y for x, y in zip(ahs, ah)]))} relative; J diagonal {fmt(min(diag))}..{fmt(max(diag))}, "
+          f"largest off-diagonal {fmt(off)} (G {fmt(seg.G)}); {time.time() - t0:.0f} s", flush=True)
+    with open(out_cache, "w") as fh:
+        json.dump(dict(state=os.path.basename(path), prec=prec, ah=[str(v) for v in ahs],
+                       J=[[str(J[i, j]) for j in range(M)] for i in range(M)], rebase_hist=hist), fh)
+    return dict(cmd="curvjac", state=os.path.basename(path), D=seg.D_str, prec=prec, rebase_hist=hist,
+                diag=[float(min(diag)), float(max(diag))], off=float(off)), True
+
+
+def curv_base(path, prec, cache):
+    RECIP_DD[0] = False
+    mp.mp.prec = prec
+    meta, z = load_state(path)
+    seg = seg_of(meta)
+    mh, ah_stored, delta, node = horizon_data(meta, z)
+    c = curv_cache(cache)
+    if c["state"] != os.path.basename(path) or c["prec"] != prec:
+        raise SystemExit(f"{cache} is for {c['state']} at {c['prec']} bits")
+    M = seg.M
+    ah = [mp.mpf(v) for v in c["ah"]]
+    J = mp.matrix([[mp.mpf(v) for v in row] for row in c["J"]])
+    aK = node[2 * M:3 * M]
+    return seg, mh, ah, delta, node, J, aK
+
+
+def cmd_curv(path, prec, cache, name, plant_from=None):
+    """the curvature test along one move (5.2): Q_old at fixed a_h over the pairs of CURV_PAIRS_OLD, Q_fact at fixed a_K
+    by method A at CURV_PAIR, the t^2 checks and the ratio; with plant_from (a curv record along D), the planted
+    quadratic term instead"""
+    seg, mh, ah, delta, node, J, aK = curv_base(path, prec, cache)
+    M = seg.M
+    rows = pmc_rows(seg)
+    dm, dD = move(seg, name)
+    tol = mp.mpf(2) ** (-prec + 10) * seg.G
+    t0 = time.time()
+    R0, a0 = old_at(seg, mh, ah, delta, node, dm, dD, 0)
+    rec = dict(cmd="curv", state=os.path.basename(path), D=seg.D_str, prec=prec, move=name, recip="exact",
+               base_F=float(amax(vsub(a0, aK))))
+    # the predictor: a_h(t) = a_h + t s + t^2 w, s from the derivative of a(u0) along the move at fixed a_h
+    eta = mp.mpf("1e-45")
+    _, ae = old_at(seg, mh, ah, delta, node, dm, dD, eta)
+    da = [(x - y) / eta for x, y in zip(ae, a0)]
+    sv = mp.lu_solve(J, mp.matrix(da))
+    s_ = [-sv[i] for i in range(M)]
+    w = [mp.mpf(0)] * M
+    c2 = 0
+    if plant_from:
+        pl = json.load(open(plant_from))
+        c2 = mp.mpf(pl["plant_c2"])
+    def fact(t):
+        t = mp.mpf(t)
+        g = [a + t * x + t * t * y for a, x, y in zip(ah, s_, w)]
+        R, a_t, hist = solve_ah(seg, mh, g, delta, node, dm, dD, t, aK, J, tol, c2)
+        return R, a_t, hist
+    out = {}
+    # the predictor's quadratic term from the level CURV_T1
+    Rp, ap, hp_ = fact(CURV_T1)
+    Rm, am, hm_ = fact(-CURV_T1)
+    t1 = mp.mpf(CURV_T1)
+    w = [(x + y - 2 * a) / (2 * t1 * t1) for x, y, a in zip(ap, am, ah)]
+    out["t1_newton"] = [hp_, hm_]
+    Qf = {}
+    for t in CURV_PAIR:
+        Rp, _, hp_ = fact(t)
+        Rm, _, hm_ = fact(-t)
+        Qf[t] = second_diff(Rp, Rm, R0, t, rows)
+        out[f"fact_newton_{t:g}"] = [hp_, hm_]
+        if t == CURV_PAIR[0]:
+            d1 = [(Rp[i] - Rm[i]) / (2 * mp.mpf(t)) for i in rows]
+        print(f"  {name} fact t {t:g}: |Q| {qmax(Qf[t]):.3e}, Newton |F| {hp_[-1]:.1e}/{hm_[-1]:.1e} in "
+              f"{len(hp_)}/{len(hm_)} passes, {time.time() - t0:.0f} s", flush=True)
+    sc_f = scales(Qf[CURV_PAIR[0]], Qf[CURV_PAIR[1]])
+    rec.update(Q_fact=qmax(Qf[CURV_PAIR[0]]), Q_fact_19=qmax(Qf[CURV_PAIR[1]]), scale_fact=sc_f,
+               d1_fact=qmax(d1), newton=out)
+    if plant_from:
+        Qb = [mp.mpf(v) for v in pl["Q_fact_vec"]]
+        pred = [2 * c2 * mp.mpf(v) for v in pl["d1_fact_vec"]]
+        got = vsub(Qf[CURV_PAIR[0]], Qb)
+        err = float(amax(vsub(got, pred)) / amax(pred))
+        ok = err <= 0.01
+        rec.update(cmd="curvplant", plant_c2=str(c2), planted=float(amax(pred)), recovered_err=err, ok=ok)
+        print(f"curvplant {os.path.basename(path)} D {seg.D_str[:12]} along {name}: planted |2 c dR/dD| "
+              f"{float(amax(pred)):.3e}, recovered to {err:.2e} relative: {'PASS' if ok else 'FAIL'} (bar 1e-2), "
+              f"{time.time() - t0:.0f} s", flush=True)
+        return rec, ok
+    # Q_old at fixed a_h over the pairs
+    olds = []
+    for ta, tb in CURV_PAIRS_OLD:
+        Qs = []
+        for t in (ta, tb):
+            Rp, _ = old_at(seg, mh, ah, delta, node, dm, dD, t)
+            Rm, _ = old_at(seg, mh, ah, delta, node, dm, dD, -t)
+            Qs.append(second_diff(Rp, Rm, R0, t, rows))
+        sc = scales(Qs[0], Qs[1])
+        olds.append(dict(pair=[ta, tb], Q=qmax(Qs[0]), Q_b=qmax(Qs[1]), scale=sc, ok=sc <= 0.1))
+        print(f"  {name} old pair {ta:g}/{tb:g}: |Q| {qmax(Qs[0]):.3e} / {qmax(Qs[1]):.3e}, t^2 check {sc:.2e} "
+              f"({'in range' if sc <= 0.1 else 'out of range'}), {time.time() - t0:.0f} s", flush=True)
+    use = next((o for o in olds if o["ok"]), None)
+    rec.update(old_pairs=olds)
+    if use is None or sc_f > 0.1:
+        verdict = "not resolved"
+        ratio = None
+    else:
+        ratio = rec["Q_fact"] / use["Q"]
+        verdict = "gate 1 (<= 1e-10)" if ratio <= 1e-10 else ("gate 2 (>= 1e-2)" if ratio >= 1e-2 else "gate 3 (between)")
+    rec.update(Q_old=use["Q"] if use else None, Q_old_pair=use["pair"] if use else None, ratio=ratio, verdict=verdict,
+               Q_fact_vec=[str(v) for v in Qf[CURV_PAIR[0]]], d1_fact_vec=[str(v) for v in d1],
+               plant_c2=str(mp.mpf("1e-10") * mp.mpf(use["Q"]) / (2 * amax(d1))) if use else None)
+    print(f"curv {os.path.basename(path)} D {seg.D_str[:12]} along {name}: Q_fact {rec['Q_fact']:.3e} (t^2 check "
+          f"{sc_f:.2e}), Q_old {use['Q'] if use else float('nan'):.3e} at the pair {use['pair'] if use else None}; ratio "
+          f"{ratio if ratio is None else f'{ratio:.3e}'}: {verdict}; {time.time() - t0:.0f} s", flush=True)
+    return rec, True
+
+
+def cmd_curvx(path, prec, refpath, t, cache448):
+    """the cross-check of 5.2: the stage-1 fixed point (exact 1/k, gamma by a's sum, Anderson from the reference) at
+    the base with Delta moved by t (t = 0 for the base), its rows written for curvxq"""
+    RECIP_DD[0] = False
+    mp.mp.prec = prec
+    meta, z = load_state(path)
+    seg = seg_of(meta)
+    mh, _, delta, node = horizon_data(meta, z)
+    M = seg.M
+    aK = node[2 * M:3 * M]
+    with open(refpath) as fh:
+        d = json.load(fh)
+    B0 = from_y(seg, [mp.mpf(v) for v in d["y"]])
+    g0 = [mp.mpf(v) for v in d.get("gamma_values", d.get("gamma"))]
+    t = mp.mpf(t)
+    pr = lambda r: print(f"  sweep {r['sweep']:2d}: |g(y)-y| {r['fp_res']:.2e}, {r['t']} s", flush=True)  # noqa: E731
+    r = fixed_point(seg, mh, aK, seg.omega(delta + t), node, B0=B0, gam0=g0, accel="anderson", mem=5, maxit=40,
+                    tol=mp.mpf("1e-72"), log=pr)
+    rec = dict(cmd="curvx", state=os.path.basename(path), D=seg.D_str, prec=prec, t=str(t), recip="exact",
+               fp_res=r["hist"][-1]["fp_res"], sweeps=r["sweeps"], rows=[str(v) for v in r["rows"]])
+    print(f"curvx {os.path.basename(path)} t {float(t):g}: {r['sweeps']} sweeps, |g(y)-y| {r['hist'][-1]['fp_res']:.2e}",
+          flush=True)
+    return rec, r["hist"][-1]["fp_res"] <= 1e-70
+
+
+def cmd_curvxq(paths, t, curv_D):
+    """Q_fact from the three fixed points of curvx (t, -t, 0) against method A's Q_fact along D (5.2's cross-check)"""
+    mp.mp.prec = max(json.load(open(q))["prec"] for q in paths) + 32
+    recs = [json.load(open(q)) for q in paths]
+    by = {mp.mpf(r["t"]): [mp.mpf(v) for v in r["rows"]] for r in recs}
+    t = mp.mpf(t)
+    M = len(by[t]) // 4
+    rows = list(range(0, 2 * M)) + list(range(3 * M, 4 * M))
+    Q = second_diff(by[t], by[-t], by[mp.mpf(0)], t, rows)
+    cv = json.load(open(curv_D))
+    QA = [mp.mpf(v) for v in cv["Q_fact_vec"]]
+    noise = max(float(r["fp_res"]) for r in recs) * 1e3 / float(t) ** 2
+    diff = float(amax(vsub(Q, QA)) / max(amax(Q), amax(QA)))
+    ok = diff <= 0.01 or (qmax(Q) <= noise and qmax(QA) <= noise)
+    print(f"curvxq: fixed point |Q_fact| {qmax(Q):.3e}, method A {qmax(QA):.3e}, relative difference {diff:.2e} "
+          f"(noise of the fixed point about {noise:.1e}): {'PASS' if ok else 'FAIL'}", flush=True)
+    return dict(cmd="curvxq", Q_fp=qmax(Q), Q_A=qmax(QA), diff=diff, noise=noise, ok=ok), ok
+
+
 # ------------------------------------------------------------------ planted truth
 def planted(mutate=""):
     """the small planted problem: n = 100, M = 8, K = 40 (below Re s, about n/2, so the generic data hold no transient),
@@ -1030,6 +1290,14 @@ def main(argv):
                            opt.get("accel", "plain"), opt.get("ref"), opt.get("ref_start", "slaved"))
     elif cmd == "p1":
         rec, ok = cmd_p1(args[1], prec, mutate, mode, mem, maxit, opt.get("ref"), float(opt.get("move", 0)))
+    elif cmd == "curvjac":
+        rec, ok = cmd_curvjac(args[1], prec, opt["cache"])
+    elif cmd == "curv":
+        rec, ok = cmd_curv(args[1], prec, opt["cache"], opt.get("move", "D"), opt.get("plant"))
+    elif cmd == "curvx":
+        rec, ok = cmd_curvx(args[1], prec, opt["ref"], opt.get("t", "0"), opt.get("cache"))
+    elif cmd == "curvxq":
+        rec, ok = cmd_curvxq(args[1:4], opt["t"], opt["curv"])
     elif cmd == "loop":
         rec, ok = cmd_loop(args[1], prec, int(opt.get("its", 5)), opt.get("h", "1e-100"),
                            [int(x) for x in opt.get("orders", "60,100,125").split(",")])
