@@ -19,7 +19,10 @@ Anal. 49 (2011) 1715), which removes such a few-mode divergence at M 128 but not
 I997-mac-sonic/real/real_attempt2_jac_hp_aa8.log). --jac wood (any M): hp's LU, with its band rows replaced by the warped
 band's own T (forward differences) through the Woodbury identity: J0 W = R for W = J0^-1 R (R the band rows' unit
 vectors; Solver.lu_solve_many), so J^-1 F = y - W (T W)^-1 (T y - F_band) with y = J0^-1 F, and hp's own band rows are
-never needed. At M 128 it gives the same steps as --jac band.
+never needed. At M 128 it gives the same steps as --jac band. --band_jac FILE.npy: the band's Jacobian T is loaded from
+FILE when it exists (it depends only on the start state, phi and the plan), and saved there otherwise. --replan 1 (the
+default): at each D hp's Taylor plan outside the band is made again from that D's start (a plan made at another D can
+be past its stability limit for a perturbed state, the failure of LOW_D.md section 17).
 
     python3 hybrid.py OUT.jsonl --state S.npz [--history A.npz,B.npz] --Ds 3.045,3.044 [--band 0.01,0.02]
         [--warp none|test|design|FILE.npy] [--jac band|hp|wood] [--aa_m m] [--A 1.5e-3] [--eps0 2e-3] [--kappa 1.0] [--tol 1e-12] [--it_max 40]
@@ -85,6 +88,26 @@ class Hybrid:
         self.rows = slice(4 * M * self.ib, 4 * M * (self.ib + 1))
         self.pts = None
         self.last = {}
+
+    def replan(self, zp, tol=1e-30, hmax=0.05):
+        """hp's Taylor plan of every segment but the band, from the state zp at this D (Solver.plan plans each segment
+        from its first node's state; the band's is planned from s_B put at x_A, which keeps clear of x = c, and then
+        replaced by the short plan, since its rows are replaced)"""
+        M = self.M
+        zm = np.array(zp, float)
+        oA, oB = 2 * M + 4 * M * self.ia, 2 * M + 4 * M * self.ib
+        zm[oA:oA + 4 * M] = zm[oB:oB + 4 * M]
+        segs = [list(q) for q in self.s.plan(zm, np.zeros_like(zm), tol, hmax)]
+        segs[self.ia] = self.segs[self.ia]
+        self.s.set_segs(segs)
+        self.segs = segs
+        return sum(len(q) - 1 for i, q in enumerate(segs) if i != self.ia)
+
+    def blocks(self, F):
+        """max |F| per residual block (index = node; the last is the horizon block) and the phase row"""
+        B = 4 * self.M
+        nb = (len(F) - 1) // B
+        return [float(np.max(np.abs(F[i * B:(i + 1) * B]))) for i in range(nb)] + [float(abs(F[-1]))]
 
     def band_rows(self, z):
         M = self.M
@@ -173,6 +196,8 @@ def main():
     ap.add_argument("--jac", default="band", choices=["band", "hp", "wood"])
     ap.add_argument("--chunk", type=int, default=0)
     ap.add_argument("--aa_m", type=int, default=0)
+    ap.add_argument("--replan", type=int, default=1)
+    ap.add_argument("--band_jac", default="")
     ap.add_argument("--time_cap", type=float, default=6 * 3600)
     ap.add_argument("--allow_unraw", action="store_true")
     a = ap.parse_args()
@@ -254,8 +279,14 @@ def main():
         z0 = zh + zl
         hy0.band_rows(z0)
         tb = time.time()
-        G = hy0.band_jacobian(z0, chunk=a.chunk)
-        log(f"  band Jacobian: {time.time() - tb:.0f}s ({hy0.last})")
+        if a.band_jac and os.path.exists(a.band_jac):
+            G = np.load(a.band_jac)
+            log(f"  band Jacobian loaded from {a.band_jac} ({hy0.last})")
+        else:
+            G = hy0.band_jacobian(z0, chunk=a.chunk)
+            log(f"  band Jacobian: {time.time() - tb:.0f}s ({hy0.last})")
+            if a.band_jac:
+                np.save(a.band_jac, G)
         L = s0.size
         r0 = hy0.rows.start
         oA = 2 * M + 4 * M * hy0.ia
@@ -319,6 +350,10 @@ def main():
         zp = near[0][1].copy() if near[0][0] == D else lagrange([h[0] for h in near], [h[1] for h in near], D)
         zh_, zl_ = zp.copy(), np.zeros_like(zp)
         hy = Hybrid(D, M, nodes, kt, kc, ks, segs, band, phi, a.threads, a.kappa, a.mutate)
+        if a.replan:
+            tp = time.time()
+            nst = hy.replan(zp)
+            log(f"  D {D}: hp's plan outside the band from the start state: {nst} steps ({time.time() - tp:.0f}s)")
         hist_F, conv, it = [], False, 0
         err = None
         try:
@@ -327,7 +362,9 @@ def main():
                 Fh, Fl = hy.residual(zh_, zl_)
                 nF = float(np.abs(Fh).max())
                 if not np.isfinite(nF):
-                    raise FloatingPointError("residual not finite")
+                    bl = hy.blocks(Fh)
+                    raise FloatingPointError("residual not finite; per block (node index, last = horizon, then phase): "
+                                             + " ".join(f"{v:.1e}" for v in bl))
                 xh, xl = solve(Fh, Fl)
                 g = np.asarray(xh) + np.asarray(xl)               # the chord step -J0^-1 F
                 step = g
