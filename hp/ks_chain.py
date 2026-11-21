@@ -11,14 +11,16 @@ line through them (about D/2 + 1.6). A leg from D0 to D1 = D0 + --leg runs at
 so the series is summed past about twice its exponent everywhere in the leg. At ks 130 the series is cut below that
 from about D 150 on, and the cut grows to e^-30 of the matching determinant at D 225 (notes/FACTORED_HORIZON.md 4.2).
 
-Each leg is one anm_run.py with the given flags plus --ks K --keep_plan 0 --D_max D1, into OUT/leg<i>_D<D0>_ks<K>.
---keep_plan 0 re-plans the base for the new order, and the base is polished at that order before the first step.
+Each leg is one anm_run.py with the given flags plus --ks K --keep_plan P --D_max D1, into OUT/leg<i>_D<D0>_ks<K>.
+--keep_plan 0 (P, the default) re-plans the base for the new order, and the base is polished at that order before the first step.
+A restart at the state's own order takes --keep_plan 1 with --base_polish 0 in the anm_run flags, so the leg continues the stored plan
+and base unchanged (#1060).
 The driver stops when a leg exits non-zero, when a leg moves D by less than --min_progress (0.05), or at --D_stop.
 With --ks_retry R a leg that moved D by less than --min_progress is first run again at ks + 1 up to ks + R.
 It resumes from the highest-D state of its legs when started again with the same OUT. Every leg is recorded in
 OUT/ks_chain.jsonl.
 
-    python3 ks_chain.py RAW OUT --state STATE --D_stop 400 [--leg 10] [--mult 1.95] [--pad 10] [--dry] \
+    python3 ks_chain.py RAW OUT --state STATE --D_stop 400 [--leg 10] [--mult 1.95] [--pad 10] [--keep_plan 0] [--dry] \
         -- <anm_run flags>
 
 STATE is relative to RAW, as for anm_run.py; the anm_run flags include --steps. --dry prints the schedule and the first
@@ -73,7 +75,7 @@ def main():
     if "--" in argv:
         i = argv.index("--")
         argv, extra = argv[:i], argv[i + 1:]
-    opt = dict(state=None, D_stop=400.0, leg=10.0, mult=1.95, pad=10, min_progress=0.05, ks_retry=0, dry=False,
+    opt = dict(state=None, D_stop=400.0, leg=10.0, mult=1.95, pad=10, min_progress=0.05, ks_retry=0, keep_plan=0, dry=False,
                py=sys.executable, anm=os.path.join(HERE, "anm_run.py"))
     pos = []
     it = iter(argv)
@@ -118,7 +120,7 @@ def main():
             K = K0 + tryk
             leg = os.path.join(out, f"leg{i:02d}_D{D0:.4f}_ks{K}")
             cmd = [opt["py"], "-u", opt["anm"], raw, leg, "--state", st] + extra + \
-                  ["--ks", str(K), "--keep_plan", "0", "--D_max", repr(D1)]
+                  ["--ks", str(K), "--keep_plan", str(opt["keep_plan"]), "--D_max", repr(D1)]
             print(f"leg {i}: D {D0:.4f} -> {D1:.4f} at ks {K} from {st}" + (f" (retry {tryk})" if tryk else ""),
                   flush=True)
             if opt["dry"]:
