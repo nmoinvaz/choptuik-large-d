@@ -20,6 +20,7 @@ status words are AGENTS.md's.
 | the mass mode's gain before and after | x_K^−(n−1) e^(F²(1−x_K²)/n + O(n⁻²)) before; 1 after, for every n and x_K | checked symbolically (S2, S5) |
 | the share of the fast mode's shadow that ks = 130 keeps | ln f = −41.05 at D 237.13 and −63.05 at D 253.80 (μ = 1); f = 1 to 1% from ks ≈ 1.9 Re s | numerical evidence (M3) |
 | does the factored segment's inner solve reach quad-double in 5 sweeps | no: 29 to 32 from the slaved value and 21 from a warm start at D 242.36; at D 73, 31 from a warm start, and the sweeps diverge from the slaved value | numerical evidence (5.1) |
+| does holding a_K remove the G-sized part of the horizon rows' curvature | yes, along the three moves tested at D 73.0 and D 242.36: Q_fact / Q_old is 1.3×10⁻¹⁹ to 2.7×10⁻¹⁶ and 4.5×10⁻⁶⁴ to 5.1×10⁻⁶⁰ | numerical evidence (5.2) |
 
 The linear model reproduces three measurements with no fitted parameter (M4):
 
@@ -34,7 +35,8 @@ The order of work this suggests:
    truncation, the chain runs at ks ≈ 1.9 Re s.
 2. The mass mode factored at the last node (section 3), for the strong side: the ε·G floors, the re-seed's polish and
    the corrector's quadratic jump. It needs an inner solve on the horizon segment. Stage 1 of section 5 measured it at
-   21 to 32 sweeps of the old pass (5.1), so this route is not recommended with that solve.
+   21 to 32 sweeps of the old pass (5.1), so this route is not recommended with that solve. Holding a_K removes the
+   horizon rows' G-sized curvature (5.2), so a one-off factored raise is worth building.
 
 ## 1. The two exponents in the horizon segment
 
@@ -524,8 +526,9 @@ which couples all β_k. The τ points couple only through ωD in the p and m row
 - **A, forward elimination with β₀ (that is, a_h) as the M border unknowns.** This is shooting on the old discrete
   problem, about 3 old passes per evaluation with a chord M × M Jacobian. B is carried forward from β₀, so ε·G returns
   in the values. Its inner Newton on a_h works only inside the pole basin, δ_max(u₀) ≈ 2×10⁻³⁷ at D 241.96
-  ([HORIZON_RADIUS.md](HORIZON_RADIUS.md) 3). A raise-sized move of 10⁻¹⁴ in m_h or Δ shifts the slaved a_h by about
-  10⁻¹⁷ (an estimate), so A cannot follow it alone. That is the re-seed's problem.
+  ([HORIZON_RADIUS.md](HORIZON_RADIUS.md) 3). That is the solution's basin: at ks 130 the series hides the pole, and
+  at D 242.36 A converged from a_h off by 1.6×10⁻³⁴ (the result below). A raise-sized move of 10⁻¹⁴ in m_h or Δ
+  shifts the slaved a_h by about 10⁻¹⁷ (an estimate), so A cannot follow it alone. That is the re-seed's problem.
 - **B, Olver's backward elimination of β with the causal blocks folded in.** Its Schur complement is lower Hessenberg
   with dense M × M blocks, and dense below the diagonal, because the forward response is not local in k: moving y by
   10⁻³⁰ at order 60 moves p at order 130 by 2.1×10⁻⁹ at D 242.36 (`loop`, 5.1). Forming it takes (K + 1) M = 4224
@@ -548,8 +551,8 @@ along a weak-type move loses its G-sized part when a_K is held instead of a_h.
   D 73 along Δ at t = ±10⁻²⁰ (warm from 5.1's references, 288 bits). The two Q_fact must agree to 1%, or both lie
   below their own noise.
 - **The base.** Both maps use an exact 1/k, so that A and the fixed point solve one discrete problem. With an exact 1/k
-  the stored a_h misses the node's a by 8.4×10⁻⁷ at D 242.36 (5.1). So a_h is first re-solved by A until a's sum at u₀
-  equals the node's a, and that is the base for both maps.
+  the rows at the stored a_h miss by up to 8.4×10⁻⁷ at D 242.36 (5.1), the a row by 4.2×10⁻⁷. So a_h is first
+  re-solved by A until a's sum at u₀ equals the node's a, and that is the base for both maps.
 - **The predictor.** A's predictor is linear in t at ±10⁻²⁵, and its quadratic term is taken from those two solves.
 - **Precision.** 448 bits for the old series and A. The noise is about 2^−448·G·t⁻² per Q entry, 4×10⁻⁵⁹ at D 242.36
   for t = 10⁻²⁰.
@@ -568,6 +571,58 @@ along a weak-type move loses its G-sized part when a_K is held instead of a_h.
   - Mine: Q_old may leave that range before 10⁻²⁰, since a fixed a_h then lies outside the pole basin. It is also read
     at the pairs 10⁻³⁰/10⁻²⁹, 10⁻⁴⁰/10⁻³⁹ and 10⁻⁵⁰/10⁻⁴⁹, and taken from the largest pair that scales. With no such
     pair, that direction is reported as not resolved.
+
+**Result: gate 1.** Every ratio is below 10⁻¹⁰, along all three moves at both states. Holding a_K instead of a_h
+removes the G-sized part of the horizon rows' curvature, so a narrow stage 2 is worth building. At D 242.36 the
+verdict rests on the amended plant and the t² checks, not on a plant at the gate level (below). The ratios are
+quotients of each Q's largest entry, and each Q holds to the digits shown (its t² check):
+
+| state | move | Q_fact | Q_old | Q_fact / Q_old | Q_fact's t² check | Q_old's t² check at 10⁻²⁰ |
+|---|---|---|---|---|---|---|
+| D 73.0 | Δ | 3.34×10⁻² | 1.23×10¹⁴ | 2.7×10⁻¹⁶ | 7.8×10⁻³⁹ | 4.9×10⁻²⁴ |
+| D 73.0 | m, cos θ | 1.18 | 9.16×10¹⁸ | 1.3×10⁻¹⁹ | 3.6×10⁻³⁸ | 2.7×10⁻¹⁹ |
+| D 73.0 | m, cos 3θ | 2.10 | 5.04×10¹⁸ | 4.2×10⁻¹⁹ | 4.5×10⁻³⁸ | 1.9×10⁻¹⁹ |
+| D 242.36 | Δ | 5.43×10⁻³ | 1.07×10⁵⁷ | 5.1×10⁻⁶⁰ | 1.9×10⁻³⁶ | 3.2×10⁻¹² |
+| D 242.36 | m, cos θ | 1.07 | 2.35×10⁶³ | 4.5×10⁻⁶⁴ | 3.9×10⁻²⁴ | 5.5×10⁻⁶ |
+| D 242.36 | m, cos 3θ | 1.21 | 2.26×10⁶³ | 5.4×10⁻⁶⁴ | 2.2×10⁻²⁴ | 4.2×10⁻⁶ |
+
+- **Q_fact is of order one at both states**, between 5×10⁻³ and 2.1. Q_old grows by 43 to 45 orders of magnitude from
+  D 73.0 to D 242.36, while G grows by 26.
+- **Q_old scales as t² at all four pairs** at both states, so it is read at 10⁻²⁰. My fallback to the smaller pairs
+  was not needed.
+- **The base.** a's row at the stored a_h with an exact 1/k is 2.3×10⁻³⁰ at D 73.0 and 4.2×10⁻⁷ at D 242.36. A brings
+  it to 1.7×10⁻¹²⁴ in 5 passes and to 1.3×10⁻⁹⁰ in 8 (the cap), moving a_h by 3.1×10⁻⁴¹ and 3.5×10⁻⁴⁴ relative. J's
+  diagonal lies within 5% of G at both states (6.97–7.28×10¹⁰ and 1.180–1.197×10³⁷), and its largest off-diagonal
+  entry is 3.6×10⁻³ and 1.9×10⁻⁴ of G.
+- **A's Newton.** At D 73.0 it reaches a's row at 10⁻¹²² to 10⁻¹²⁴ in 5 or 6 passes. At D 242.36 it stops at the cap
+  of 8 passes: a's row is 9×10⁻⁸⁰ to 3.5×10⁻⁷⁷ along Δ and 1.2×10⁻⁶⁸ to 1.1×10⁻⁶² along the two m moves. There the chord
+  gains a steady 12 digits per pass at every t, which I read as J's own error (inferred: J is a finite difference at
+  relative step 10⁻⁵⁰). The residual enters Q_fact as about |F|/t², and Q_fact's t² check bounds it at 3.9×10⁻²⁴
+  relative.
+- **A converged from outside the solution's pole basin.** At D 242.36 the predictor's first miss of a(u₀) is 0.13 and
+  1.3 along Δ (t = 10⁻²⁰, 10⁻¹⁹) and 191 to 1964 along the two m moves. It grows linearly in t, since the predictor's
+  linear term carries J's error. A miss of 1964 is a_h off by about 1964/G = 1.6×10⁻³⁴, 800 times δ_max(0.3) ≈
+  2×10⁻³⁷. The series truncated at 130 hides that pole until about D 249 ([HORIZON_RADIUS.md](HORIZON_RADIUS.md)), so
+  this says nothing about A's basin at the raise's ks 315 near D 260.
+- **The planted control, as fixed above, passes at D 73.0 and fails at D 242.36.** At D 73.0, c = 3.2×10⁵ plants
+  1.23×10⁴ in Q_fact, and it is recovered to 2.7×10⁻³⁵. At D 242.36 the gate-1 level needs c = 1.65×10⁴⁹, which
+  moves Δ by c t² = 1.7×10⁹ at t = 10⁻²⁰. A's first solve then overflows (|F| = 7×10⁹⁵ at the predictor's level
+  t = 10⁻²⁵, then infinite). No quadratic plant through the move can reach 10⁻¹⁰ Q_old ≈ 10⁴⁷ there and stay inside
+  the map's domain, so this failure is the control's design, not the measure.
+- **The amended plant at D 242.36 (amended after the data, with the coordinator's agreement).** c = 10¹⁶, so that c t
+  ≤ 10⁻³ at t = 10⁻¹⁹, plants 6.5×10¹³ in Q_fact, and it is recovered to 8.4×10⁻²⁵. So Q_fact at D 242.36 recovers a
+  planted curvature 1.2×10¹⁶ times its own reading to 1%. It does not test the measure at the gate level. At D 242.36
+  the gate decision rests on that sensitivity and on the t² checks, not on a plant at the gate level.
+- **The cross-check.** The stage-1 fixed point at 288 bits gives Q_fact = 5.433×10⁻³ along Δ at D 242.36, method A's
+  value to 1.3×10⁻²⁹ relative. Its noise is about 2.7×10⁻³⁰ (10³ times the fixed-point residual, over t²), and it
+  took 22, 22 and 15 sweeps at t = 10⁻²⁰, −10⁻²⁰ and 0. At D 73.0 it gives 3.340×10⁻², method A's value to
+  3.5×10⁻²⁹, in 33, 33 and 24 sweeps. The two share the p, m and c recursion of `series` and the state's loading. They
+  differ in a (the old recursion from a_h, against B_sl + γχ̂ and Miller's power) and in the solve (Newton on a_h,
+  against Anderson's sweeps).
+- **The controls that must fail do** (D 73.0, along Δ, each exit 1). `--mutate=r0` shifts R(0)'s p, m and c rows by
+  10⁻⁴⁰. Q_fact then reads 2.03 at 10⁻²⁰ and 5.3×10⁻² at 10⁻¹⁹, its t² check 0.97, so the move is not resolved. Q_old's
+  check fires at the three smaller pairs (0.99) and holds at 10⁻²⁰. `--mutate=plant1` plants the term at +t only, and
+  the recovery misses by 0.50.
 
 **Limits.**
 - The prototype's two-node layout is not the chain's. So the test reads the mechanism, not dh170's 3.2×10⁵¹ itself.
@@ -642,6 +697,37 @@ python3 factored_horizon.py loop $RAW/I461-win2/crawlJ/anm_pin3_D242.3642.npz --
 One process each. The reference takes about ten minutes, a gain or P1 run three to nine, a check ten seconds. The
 D 73 runs take `--ref_start old` for the reference, as the slaved start diverges there. The logs and records of the
 runs quoted in 5.1 are for `I1035-mac/` of the raw-data repository.
+
+The curvature test of 5.2 runs the same way, with `OUT=$RAW/I1035-<machine>/stage1b`,
+`S73=$RAW/T81/conv_pin5_D73.0000_D73.000000.npz`, `S242=$RAW/I461-win2/crawlJ/anm_pin3_D242.3642.npz` and 5.1's
+288-bit references (stored as `I1035-mac/ref_D73_288.json` and `ref_D242_288.json`). curvjac goes first, since it
+writes the cache the others read:
+
+```
+python3 factored_horizon.py curvjac $S73 --prec 448 --cache $OUT/cache_D73.json      # re-based to 1.73e-124
+python3 factored_horizon.py curv $S73 --prec 448 --cache $OUT/cache_D73.json --move D --out $OUT/curv_D73_D.json
+                                                       # ratio 2.710e-16, gate 1; --move m1: 1.289e-19; m3: 4.163e-19
+python3 factored_horizon.py curvjac $S242 --prec 448 --cache $OUT/cache_D242.json    # re-based to 1.27e-90
+python3 factored_horizon.py curv $S242 --prec 448 --cache $OUT/cache_D242.json --move D --out $OUT/curv_D242_D.json
+                                                       # ratio 5.091e-60, gate 1; --move m1: 4.543e-64; m3: 5.364e-64
+python3 factored_horizon.py curv $S73 --prec 448 --cache $OUT/cache_D73.json --move D --plant $OUT/curv_D73_D.json
+                                                       # PASS, recovered to 2.73e-35
+python3 factored_horizon.py curv $S242 --prec 448 --cache $OUT/cache_D242.json --move D --plant $OUT/curv_D242_D.json
+                                                       # FAIL, exit 1 (A overflows at c = 1.65e49)
+python3 factored_horizon.py curv $S242 --prec 448 --cache $OUT/cache_D242.json --move D --plant $OUT/curv_D242_D.json --plant_c 1e16
+                                                       # PASS, recovered to 8.41e-25 (amended after the data)
+python3 factored_horizon.py curv $S73 --prec 448 --cache $OUT/cache_D73.json --move D --mutate=r0
+                                                       # not resolved, exit 1 (Q_fact's t^2 check 0.974)
+python3 factored_horizon.py curv $S73 --prec 448 --cache $OUT/cache_D73.json --move D --plant $OUT/curv_D73_D.json --mutate=plant1
+                                                       # FAIL, exit 1 (recovered to 0.50)
+python3 factored_horizon.py curvx $S242 --prec 288 --ref $RAW/I1035-mac/ref_D242_288.json --t 1e-20 --out $OUT/curvx_D242_1e-20.json
+                                                       # and --t -1e-20, --t 0: 22, 22 and 15 sweeps
+python3 factored_horizon.py curvxq $OUT/curvx_D242_1e-20.json $OUT/curvx_D242_-1e-20.json $OUT/curvx_D242_0.json --t 1e-20 --curv $OUT/curv_D242_D.json
+                                                       # PASS, relative difference 1.31e-29
+```
+
+The last two lines with `D73`, `$S73` and `ref_D73_288.json` give the cross-check at D 73.0: PASS, relative
+difference 3.48e-29. One process each. On the Mac a curv run took 3 to 12 minutes, a curvjac 3 to 8 and a curvx 3 to 5.
 
 ## 8. Prior art used
 
