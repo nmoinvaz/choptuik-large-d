@@ -17,6 +17,7 @@ The re-solves are for a Linux runner (section 3). Status words are AGENTS.md's.
 | the same at D 251.88 | no value: the flag-on polish stops at its start, whose projection fails; without that bound its first Newton step is 4.56×10⁻² and no trial is accepted | dh610's release build (3.3, 3.4) |
 | the same at D 246.44 and 249.47 | no value: both flag-on polishes stop at their start, whose projection fails from a miss of 3.29×10⁻⁶ and 9.02×10⁻⁶ (growing about 1.4 times per unit D, 2.02×10⁻⁵ at 251.88); so D 241.96's change is the last measured one | dh610's release build (3.5) |
 | where the flag-on polish's basin ends | between D 241.96 and 242.86: at the four bases D 242.86–245.56 the flag-on start misses by 1.00×10⁻⁶ to 2.45×10⁻⁶ and stops; lifting the bound at D 246.44 and 249.47 does not converge either | dh610's release build (3.6) |
+| the same at D 242.21 and 242.46 (flag-off states between the edges, polished with the flag on) | +3.443409×10⁻¹³ (0.91% of 3.8×10⁻¹¹) and +2.798345×10⁻¹³ (0.82% of 3.4×10⁻¹¹), each converged in 5 steps to 4.5×10⁻⁹³ and 2.2×10⁻⁹²; with D 241.96 the change stays near 3×10⁻¹³, under 1% of the quoted errors | dh610's release build (3.6, job 5) |
 | does the first-order response predict Δ's change at large D | no: at D 241.96 it gives 11.5 times the measured change, and its `prow` control 5.1 times unknown 0's own; suspected cause, untested: second-order terms along the weak directions | numerical evidence, Mac release-dev build on dh610's bases (3.3) |
 
 ## 1. The flag
@@ -465,6 +466,14 @@ The misses rise about 1.37 times per unit D, as 3.5's did, and the first, at D 2
 as predicted. So the basin's edge is between D 241.96 and 242.86, and the measured change stays +3.290002×10⁻¹³ at D
 241.96 alone. Not shown: whether the unbounded polish converges at D 242.86, where the miss is smallest (dh610's
 recommended task).
+
+**Job 4 and job 5** (dh610, PR #1054 comments 7053991012 and 7054633400, raw `I1054-dh610/` 0068b60f and 3a509542).
+The unbounded polish at D 242.86 does not converge either. A flag-on continuation from the D 241.96 base (job 4, two
+steps of 0.25 with crawlJ's Newton flags) failed at once: its base polish went from 6.8×10⁻⁵¹ to 1.6×10⁻²⁴ and its
+first step did not converge, while the flag-off continuation took both steps. But polishing job 4's two flag-off
+states with the flag on and 3.5's flags (job 5: the strong chord, the natural test, the pred re-seed start) converged
+at both, giving +3.443409×10⁻¹³ at D 242.2102 and +2.798345×10⁻¹³ at D 242.4602. Job 4 and job 5 differ in their
+Newton flags and their inputs, so job 4's failure is not yet traced to either; the likelier cause is its flags.
 
 ## 4. Discrepancies (reported, not fixed)
 
