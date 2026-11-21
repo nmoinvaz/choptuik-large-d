@@ -235,8 +235,8 @@ end. The counts are j − 6 and j − 5, and the log-convexity maxima are t₃t_
 
 Every number below is printed by a script of `solver/proof/review_p6/` (mpmath 1.3.0, sympy 1.14.0, the venv-314 of
 the Mac) and is an mpmath.iv upper bound rounded up, or a lower bound rounded down, unless it is marked as a value.
-The logs are in folder I1062-mac of the raw-data repository. ω = 2π·160000/263023 (= 2π/1.64389375) is built as an
-interval.
+The logs are in folder I1062-mac of the raw-data repository (commit 3042bbb3). ω = 2π·160000/263023 (= 2π/1.64389375)
+is built as an interval.
 
 ### 5.1 The model against amp_flint (PC1)
 
@@ -279,7 +279,7 @@ mpmath.iv (80 bits), stopped when the largest box bound is within 0.5% of the be
 | ν + 2 | ν + 2 | 1 | 1.0493 | 1.0443 | 1.1775 | 1.0320 | 148 |
 | ν + 2 | −1 | 2 | 2.5837 | 2.5714 | 2.6323 | 2.5528 | 164 |
 
-PC4 holds for all seven: L ≤ the certificate's value, and here also U ≤ it. The certificate's 48 × 48 grid is 1.9% to
+PC4 holds for all seven: L ≤ the certificate's value, and here also U ≤ it. The certificate's 48 × 48 grid is 0.8% to
 18% above my U.
 
 ### 5.3 The interior (PC5)
@@ -331,7 +331,7 @@ C′_μ = Σ_λ S_λ w_λ + Cr P_μ, the certificate's assembly with the review'
 | ν + 2 | 8.9279×10⁵ | 5.7816×10⁵ | 4.7661×10⁶ | yes |
 
 **So claim T holds, by an independent certificate, with constants 5 to 12 times smaller.** The interior dominates
-every C′ except through P for μ = ν + 2, where P ≈ e^{πω} carries the constant.
+every C′. For μ = ν + 2 the weight P ≈ e^{πω} multiplies it and sets the size.
 
 ### 5.6 The head (PC6, PC7, PC8)
 
@@ -352,7 +352,7 @@ PC6 holds at all 18 entries. B7, coded from its statement, lies above every head
 worst ratios are 0.023525 (μ = ν − 2), 0.023885 (ν) and 8×10⁻⁶ (ν + 2), each at ν = 3, as in §11.4. The sum of B7 over
 the head is at most 0.0279, 0.0322 and 0.0287 of G at odd ν = 3 to 41.
 
-| μ | sup_{ν≤99} e^{−0.736ν}H (at ν = 3) | e^{−0.736·101} G(101) | certificate Λ^head | certificate G(101) term |
+| μ | sup_{ν≤99} e^{−0.736ν}H (at ν = 3) | e^{−0.736·101} G(101) | certificate Λ^head | certificate e^{−0.736·101} G(101) |
 |---|---|---|---|---|
 | ν − 2 | 0.011012426 | 1.535×10⁻²⁶ | **0.011012** | 1.53×10⁻²⁶ |
 | ν | 0.058817977 | 3.069×10⁻²⁶ | 0.058818 | 3.07×10⁻²⁶ |
@@ -365,12 +365,12 @@ PC8 fails at one entry. The certificate's Λ^head_{ν−2} = 0.011012 is below t
 
 With the review's C′ and H, sup over odd ν of e^{−0.736ν}(H + C′ν/(j₀ − 1)) is at most 0.18959, 0.41788 and 32715 in
 B4 mode, and 0.098526, 0.25652 and 21188 in the tight mode, each at ν = 3. Beyond ν = 99 it is at most 1.54×10⁻²⁶,
-3.07×10⁻²⁶ and 2.52×10⁻²¹. The certificate's 1.0534, 2.1427 and 1.7463×10⁵ are valid and 5 to 11 times larger,
-because its tail constants are.
+3.07×10⁻²⁶ and 2.52×10⁻²¹. The certificate's 1.0534, 2.1427 and 1.7463×10⁵ are true, by these smaller bounds, and 5
+to 11 times larger, because its tail constants are.
 
 ### 5.8 The constants against the exact increments (PC9)
 
-`tailcheck.py` computes |D_j| from the review's Darboux form in mpmath at 192 bits, for odd ν = 3 to 21, each μ and
+`tailcheck.py` computes |ΔR_j/K_ν| from the review's Darboux form in mpmath at 192 bits, for odd ν = 3 to 21, each μ and
 j₀ ≤ j < 1000. It compares them with C ν/j² for three sets of constants. There is no violation:
 
 | μ | worst ratio, review B4 | worst ratio, review tight | worst ratio, certificate | at (ν, j) |
@@ -380,7 +380,7 @@ j₀ ≤ j < 1000. It compares them with C ν/j² for three sets of constants. T
 | ν + 2 | 0.140 | 0.216 | 0.0262 | (3, 999) |
 
 The certificate's own §10.3 gives 1.3×10⁻⁵, 1.8×10⁻² and 2.7×10⁻² to j = 1600. For μ = ν and ν + 2 the ratio rises
-toward |c₂|/(νC) at large j, which is why the worst is at the last j. Its limit lies below 1 because S_λ ≤ C. With
+toward |c₂|/(νC) at large j, which is why the worst is at the last j. That limit is at most S_λ/C, below 1. With
 three times the bound planted at five or six j per run, all 90 runs fail, with 57 violations in each block of ten,
 and the script exits 1.
 
@@ -403,9 +403,8 @@ and the script exits 1.
 **M7 did not fire, and why.** A₀ multiplies only B7's convolution part, not the de-mixing and ψ part D_j. With A₀/100,
 B7 still bounds every head term at ν = 3 to 21, and D_j carries most of it. At ν = 3, j = 0, μ = ν − 2,
 D₀ = 2(1/(8ω) + 1/(4ω)) = 0.196, against |ΔR₀/K| = 0.0858 (model.darboux). So A₀/100 is not a planted error at all:
-B7 stays true. That is a fact about B7's slack, not a fault
-in it. M7′, which divides all of B7, takes its place, and M7 stays in `controls.py` as a record with the expected
-exit 0. No threshold was changed.
+B7 stays true. That is a fact about B7's slack, not a fault in it. M7′, which divides all of B7, takes its place, and
+M7 stays in `controls.py` as a record with the expected exit 0. No threshold was changed.
 
 ## 7. What is proved, and what rests on (H1) and (H2)
 
@@ -413,7 +412,8 @@ exit 0. No threshold was changed.
 ω = 2π/1.64389375. For odd ν ≥ 3 and μ ∈ {ν − 2, ν, ν + 2}, let D_j be the coefficient of p in ΔR_j/K_ν, the increment
 of the order-3 normalised multiplier sequence of harmonic ν. Its order-1 inputs are −i T^1, +i T^{−1} and p T^μ. Then:
 
-- for every j ≥ max(2ν, 10), |D_j| ≤ C_μ ν/j², with the certificate's C_μ and also with the review's C′_μ of §5.5;
+- for every j ≥ max(2ν, 10), |D_j| ≤ C_μ ν/j², with the review's C′_μ of §5.5. Hence the bound also holds with the
+  quoted C_μ, although the certificate by itself proves 28.4492, 56.874 and 4.76611×10⁶ (finding 1);
 - for every odd ν ≥ 3, Σ_{j<j₀} |D_j| ≤ Λ e^{0.736ν}, with Λ = 0.011013, 0.058818 and 3.3073;
 - hence Σ_{j≥0} |D_j| ≤ e^{0.736ν} times the constants of §5.7.
 
@@ -428,7 +428,7 @@ input ε T^μ added at order |μ| of an untuned expansion.
   e^{(6)} ∋ d^{(3)} d^{(3)} and then g^{(6)} ∗ s^{(1)}. The forcing also has the nested lapse terms g^{(2)} ∗ e^{(2)} of
   `pass_even`. P6_route3.md lists this as "orders beyond one A² step".
 - Any ω but this one (§10.5 item 4).
-- A bound on the head that is independent of ν beyond ν = 99. The closed form G grows like ν² log² ν. The
+- A bound on the head that is independent of ν beyond ν = 99. The closed form G grows like ν² log ν. The
   certificate proves H ≤ Λ e^{0.736ν}, which is the form (★) allows. "The head does not grow with ν" is numerical
   evidence, and it is labelled so.
 - (★) itself. B_tail_M7.md §8.3 explains why the lowest order does not settle it.
@@ -510,8 +510,9 @@ Numbered by severity: wrong, then unproved, unclear and minor.
 **Unclear**
 
 3. **The evidence for (H2) at first tuned orders is two cases.** route3_tuned.py's ν = 3 row (order 3) has no tuned
-   input: its only inputs are the order-1 background, the h3 case of §1. The tuned inputs appear at ν = 5 and 7 only,
-   plus the four later orders. The window test cannot see a factor log j, which §10.4 says.
+   input: its only inputs are the order-1 background, the h3 case of §1. Of the four later orders, (ν, order) = (1, 3)
+   has none either. So tuned inputs enter at ν = 5 and 7 and at (1, 5), (3, 5) and (5, 7). The window test cannot see
+   a factor log j, which §10.4 says.
 4. **The link from the three perturbations to (★) is not stated.** The μ = ν + 2 constant is 4.77×10⁶ (5.8×10⁵
    here). It is almost all the untuned weight P ≈ e^{πω}, which §10.5 says the tuned problem removes. The note does not
    say which μ (★)'s coupling needs. So it is not clear whether the certified constant that carries P is the one that
@@ -522,7 +523,7 @@ Numbered by severity: wrong, then unproved, unclear and minor.
 5. **The interior grouping is 6.3 times looser than the termwise sum it bounds** (§5.3). The direct sum gives
    C_μ ≤ 4.874, 9.800 and 8.928×10⁵ with B4's per-term bounds, and 2.389, 5.396 and 5.782×10⁵ with exact prefactors. It
    makes the whole-sum constants 0.190, 0.418 and 3.27×10⁴ (B4) instead of 1.0534, 2.1427 and 1.7463×10⁵.
-6. **The explicit sups' grid is 1.9% to 18% above the sup** (§5.2). This is valid, and the note's "within 20%" says
+6. **The explicit sups' grid is 0.8% to 18% above the sup** (§5.2). This is valid, and the note's "within 20%" says
    so.
 7. **B6's decrease above ν = 99.** route3_bound.py's `W_sup` docstring argues through ν q^{νω/4 − 1}. At ν = 101 that
    is about q^{−1/2} ≈ 2 times the quoted tail ν q^M = 1.2×10⁻⁵⁵. The quoted tail is the sup over odd ν ≥ 101 by a
@@ -542,8 +543,9 @@ Numbered by severity: wrong, then unproved, unclear and minor.
 ## 10. Reproduce
 
 From `solver/proof/review_p6/`, with the Mac's venv-314 (`/Users/nathan/venv-314/bin/python`: mpmath 1.3.0, sympy
-1.14.0, python-flint 0.9.0 for amp_flint.py only). Each command runs one process. Set OUT to a task folder for the
-JSON files, for example `OUT=../../../../choptuik-large-d-raw/I1062-mac`.
+1.14.0, python-flint 0.9.0 for amp_flint.py only). Each command runs one process. Set OUT to a folder for the JSON
+files. The logs of record are in the raw-data repository, `git clone https://github.com/nmoinvaz/choptuik-large-d-raw
+../choptuik-large-d-raw` from the checkout's root, folder I1062-mac.
 
 ```
 python3 ampcheck.py                          # 5.1, PC1: the model against amp_flint.py; PASS, exit 0 (~10 s)
