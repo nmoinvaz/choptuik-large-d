@@ -39,7 +39,7 @@ Commands, from hp/ (STATE an .npz of the chain, read with numpy; parts zh, zl, z
     python3 factored_horizon.py loop STATE [--prec 512] [--its 5] [--h 1e-100] [--orders 60,100,125]
     python3 factored_horizon.py curvjac STATE --prec 448 --cache CACHE.json
     python3 factored_horizon.py curv STATE --prec 448 --cache CACHE.json --move D|m1|m3 [--plant CURV_D.json]
-        [--mutate=r0|plant1]
+        [--plant_c C] [--mutate=r0|plant1]
     python3 factored_horizon.py curvx STATE --prec 288 --ref REF.json --t 0|1e-20|-1e-20
     python3 factored_horizon.py curvxq X_t.json X_minus_t.json X_0.json --t 1e-20 --curv CURV_D.json
 --out FILE.json writes the command's record. Exit 1 when a check fails.
@@ -88,7 +88,8 @@ curvjac, curv, curvx, curvxq: the curvature test of 5.2 (stage 1b). With an exac
 with a_h re-solved so that a's sum at u0 equals the node's a (curvjac, which also caches the M x M Jacobian of a(u0) in
 a_h). curv reads Q = [R(t) + R(-t) - 2 R(0)] / t^2 over the p, m and c rows along one move, Q_old at fixed a_h over
 CURV_PAIRS_OLD and Q_fact at fixed a_K (method A: a_h re-solved per t) at CURV_PAIR, with the t^2 checks, the ratio and
-its gate; with --plant (a curv record along D) it adds c t^2 to Delta and checks the planted term's recovery to 1%.
+its gate; with --plant (a curv record along D) it adds c t^2 to Delta and checks the planted term's recovery to 1%,
+c from the record (the gate-1 level) or --plant_c.
 Exit 1 when Q_fact or every pair of Q_old fails its t^2 check, or the plant is not recovered. Controls that must fail:
 --mutate=r0 shifts R(0)'s p, m and c rows by 1e-40, so Q gains 2e-40 / t^2 and Q_fact's t^2 check fires;
 --mutate=plant1 with --plant plants the term at +t only, so half of it is recovered.
@@ -992,7 +993,7 @@ def curv_base(path, prec, cache):
     return seg, mh, ah, delta, node, J, aK
 
 
-def cmd_curv(path, prec, cache, name, plant_from=None, mutate=""):
+def cmd_curv(path, prec, cache, name, plant_from=None, mutate="", plant_c=None):
     """the curvature test along one move (5.2): Q_old at fixed a_h over the pairs of CURV_PAIRS_OLD, Q_fact at fixed a_K
     by method A at CURV_PAIR, the t^2 checks and the ratio; with plant_from (a curv record along D), the planted
     quadratic term instead"""
@@ -1005,7 +1006,8 @@ def cmd_curv(path, prec, cache, name, plant_from=None, mutate=""):
     R0, a0 = old_at(seg, mh, ah, delta, node, dm, dD, 0)
     if mutate == "r0":
         R0 = [v + mp.mpf(MUT_R0) if i in rows else v for i, v in enumerate(R0)]
-    rec = dict(cmd="curv", state=os.path.basename(path), D=seg.D_str, prec=prec, move=name, recip="exact", mutate=mutate,
+    rec = dict(cmd="curv", state=os.path.basename(path), D=seg.D_str, prec=prec, move=name, recip="exact",
+               mutate=mutate,
                base_F=float(amax(vsub(a0, aK))))
     # the predictor: a_h(t) = a_h + t s + t^2 w, s from the derivative of a(u0) along the move at fixed a_h
     eta = mp.mpf("1e-45")
@@ -1017,7 +1019,7 @@ def cmd_curv(path, prec, cache, name, plant_from=None, mutate=""):
     c2 = 0
     if plant_from:
         pl = json.load(open(plant_from))
-        c2 = mp.mpf(pl["plant_c2"])
+        c2 = mp.mpf(plant_c) if plant_c else mp.mpf(pl["plant_c2"])
     def fact(t):
         t = mp.mpf(t)
         g = [a + t * x + t * t * y for a, x, y in zip(ah, s_, w)]
@@ -1050,7 +1052,8 @@ def cmd_curv(path, prec, cache, name, plant_from=None, mutate=""):
         got = vsub(Qf[CURV_PAIR[0]], Qb)
         err = float(amax(vsub(got, pred)) / amax(pred))
         ok = err <= 0.01
-        rec.update(cmd="curvplant", plant_c2=str(c2), planted=float(amax(pred)), recovered_err=err, ok=ok)
+        rec.update(cmd="curvplant", plant_c2=str(c2), plant_c2_gate=pl["plant_c2"], planted=float(amax(pred)),
+                   recovered_err=err, ok=ok)
         print(f"curvplant {os.path.basename(path)} D {seg.D_str[:12]} along {name}: planted |2 c dR/dD| "
               f"{float(amax(pred)):.3e}, recovered to {err:.2e} relative: {'PASS' if ok else 'FAIL'} (bar 1e-2), "
               f"{time.time() - t0:.0f} s", flush=True)
@@ -1301,7 +1304,8 @@ def main(argv):
     elif cmd == "curvjac":
         rec, ok = cmd_curvjac(args[1], prec, opt["cache"])
     elif cmd == "curv":
-        rec, ok = cmd_curv(args[1], prec, opt["cache"], opt.get("move", "D"), opt.get("plant"), mutate)
+        rec, ok = cmd_curv(args[1], prec, opt["cache"], opt.get("move", "D"), opt.get("plant"), mutate,
+                           opt.get("plant_c"))
     elif cmd == "curvx":
         rec, ok = cmd_curvx(args[1], prec, opt["ref"], opt.get("t", "0"), opt.get("cache"))
     elif cmd == "curvxq":
