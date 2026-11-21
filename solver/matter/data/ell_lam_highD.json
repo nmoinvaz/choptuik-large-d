@@ -356,7 +356,18 @@
    "signtested": true,
    "method": "float64",
    "note": null,
-   "p4_gap": null
+   "p4_gap": null,
+   "lam_hybrid": 2.4960783095120362,
+   "kc_hybrid": 55,
+   "lam_err_hybrid": 0.0003250791804201292,
+   "has_err_hybrid": true,
+   "err_hybrid_from": "float64 k_c 47",
+   "kcs_hybrid": {
+    "55": 2.4960783095120362
+   },
+   "source_hybrid": "I1025-win/p4/ell_p4_hybrid_1025_w.jsonl",
+   "record_hybrid": "l1kc55Fb1025.jsonl",
+   "signtested_hybrid": true
   },
   {
    "D": 15.0,
@@ -379,7 +390,19 @@
    "signtested": true,
    "method": "float64",
    "note": null,
-   "p4_gap": null
+   "p4_gap": null,
+   "lam_hybrid": 2.419766460294663,
+   "kc_hybrid": 63,
+   "lam_err_hybrid": 0.0006375171747525776,
+   "has_err_hybrid": true,
+   "err_hybrid_from": "hybrid k_c 55",
+   "kcs_hybrid": {
+    "55": 2.4204039774694155,
+    "63": 2.419766460294663
+   },
+   "source_hybrid": "I1025-mac/out/ell_p4_hybrid_1025.jsonl",
+   "record_hybrid": "l1kc63Fy1025.jsonl",
+   "signtested_hybrid": true
   },
   {
    "D": 15.5,
@@ -402,7 +425,19 @@
    "signtested": true,
    "method": "float64",
    "note": null,
-   "p4_gap": null
+   "p4_gap": null,
+   "lam_hybrid": 2.3361355728260387,
+   "kc_hybrid": 63,
+   "lam_err_hybrid": 0.0004415715941643583,
+   "has_err_hybrid": true,
+   "err_hybrid_from": "hybrid k_c 55",
+   "kcs_hybrid": {
+    "55": 2.336577144420203,
+    "63": 2.3361355728260387
+   },
+   "source_hybrid": "I1025-win/p4/ell_p4_hybrid_1025_w.jsonl",
+   "record_hybrid": "l1kc63Fz1025.jsonl",
+   "signtested_hybrid": true
   },
   {
    "D": 16.0,
@@ -425,7 +460,19 @@
    "signtested": true,
    "method": "float64",
    "note": null,
-   "p4_gap": null
+   "p4_gap": null,
+   "lam_hybrid": 2.245181879868231,
+   "kc_hybrid": 63,
+   "lam_err_hybrid": 0.0011390702515479134,
+   "has_err_hybrid": true,
+   "err_hybrid_from": "hybrid k_c 55",
+   "kcs_hybrid": {
+    "55": 2.244042809616683,
+    "63": 2.245181879868231
+   },
+   "source_hybrid": "I1025-mac/out/ell_p4_hybrid_1025.jsonl",
+   "record_hybrid": "l1kc63Fm1025.jsonl",
+   "signtested_hybrid": true
   },
   {
    "D": 16.25,
@@ -448,7 +495,18 @@
    "signtested": true,
    "method": "float64",
    "note": null,
-   "p4_gap": null
+   "p4_gap": null,
+   "lam_hybrid": 2.1942261296899557,
+   "kc_hybrid": 55,
+   "lam_err_hybrid": 0.0005783061821578173,
+   "has_err_hybrid": true,
+   "err_hybrid_from": "float64 k_c 47",
+   "kcs_hybrid": {
+    "55": 2.1942261296899557
+   },
+   "source_hybrid": "I1025-mac/out/ell_p4_hybrid_1025.jsonl",
+   "record_hybrid": "l1kc55Fu1025.jsonl",
+   "signtested_hybrid": true
   },
   {
    "D": 16.5,
@@ -473,7 +531,18 @@
    "signtested": true,
    "method": "float64",
    "note": "the re-search's same-k_c LM pass moved Delta by -3.63e-7 from winb's saved state (Delta_src 1.0117774685 to Delta 1.0117771055 in the record), so the root is on a slightly different state than winb's; win2b's observation, not tested (raw I1025-win2b README). float64 until P4's hybrid re-root (win2b, amendment 7) lands",
-   "p4_gap": null
+   "p4_gap": null,
+   "lam_hybrid": 2.1466599631271923,
+   "kc_hybrid": 63,
+   "lam_err_hybrid": 0.00585831404469106,
+   "has_err_hybrid": true,
+   "err_hybrid_from": "float64 k_c 55",
+   "kcs_hybrid": {
+    "63": 2.1466599631271923
+   },
+   "source_hybrid": "I1025-mac/out/ell_p4_hybrid_1025.jsonl",
+   "record_hybrid": "l1kc63Fw1025b.jsonl",
+   "signtested_hybrid": true
   },
   {
    "D": 16.75,
@@ -492,7 +561,19 @@
    "signtested": true,
    "method": "float64",
    "note": "P4's hybrid re-root on this record's state is 2.0967005853, -1.293e-02 from the float64 record (raw I1025-mac/out/ell_p4_hybrid_1025.jsonl); the float64 value stays quoted until P4's rows are in",
-   "p4_gap": -0.012934141553060385
+   "p4_gap": -0.012934141553060385,
+   "lam_hybrid": 2.0939569958424604,
+   "kc_hybrid": 63,
+   "lam_err_hybrid": 0.0027435894658789373,
+   "has_err_hybrid": true,
+   "err_hybrid_from": "hybrid k_c 47",
+   "kcs_hybrid": {
+    "47": 2.0967005853083394,
+    "63": 2.0939569958424604
+   },
+   "source_hybrid": "I1025-mac/out/ell_p4_hybrid_1025.jsonl",
+   "record_hybrid": "l1kc63Fv1025.jsonl",
+   "signtested_hybrid": false
   },
   {
    "D": 17.0,
@@ -515,7 +596,18 @@
    "signtested": true,
    "method": "float64",
    "note": "P4's hybrid re-root on this record's state is 2.0399399392, +1.339e-02 from the float64 record (raw I1025-mac/out/ell_p4_hybrid_1025.jsonl). Its system check was read under P4 amendment 5, written after the row started: |F| 2.2770621748e-10 against the record's 2.2759514360e-10, 4.9e-4 relative, equal steps (2744); the old rule (1e-6) would have failed it. The float64 value stays quoted until P4's rows are in",
-   "p4_gap": 0.013393441809182782
+   "p4_gap": 0.013393441809182782,
+   "lam_hybrid": 2.0399399391851416,
+   "kc_hybrid": 63,
+   "lam_err_hybrid": 0.014221250170522559,
+   "has_err_hybrid": true,
+   "err_hybrid_from": "float64 k_c 55",
+   "kcs_hybrid": {
+    "63": 2.0399399391851416
+   },
+   "source_hybrid": "I1025-mac/out/ell_p4_hybrid_1025.jsonl",
+   "record_hybrid": "l1kc63Fw1025.jsonl",
+   "signtested_hybrid": true
   }
  ],
  "note": "built by ell_delta.py collect"

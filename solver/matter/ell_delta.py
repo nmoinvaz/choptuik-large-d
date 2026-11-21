@@ -47,6 +47,7 @@ import sys
 import numpy as np
 
 HERE = os.path.dirname(os.path.abspath(__file__))
+P4_AMEND5 = {("l1kc63Fw1025.jsonl", 17.0)}           # P4 rows whose system check is read under P4 amendment 5 (p4_criteria.log)
 MUT = next((a.split("=", 1)[1] for a in sys.argv if a.startswith("--mutate=")), "")
 
 
@@ -123,6 +124,13 @@ def table(fn):
     print("| D | n | λ₁ | λ₁ from | k_c | signtest | k_c bar: change from the next lower k_c | ψ-constraint | λ₀ (interp. error) | "
           "δ = λ₁ − λ₀ | δ − δ(∞) | n δ | n δ(∞) |")
     print("|---|---|---|---|---|---|---|---|---|---|---|---|---|")
+    hyb = "--hybrid" in sys.argv                    # P4's hybrid roots and hybrid k_c spreads wherever a row has one
+    if hyb:
+        rows = [dict(r, lam=r["lam_hybrid"], kc=r["kc_hybrid"], lam_err=r["lam_err_hybrid"], has_err=r["has_err_hybrid"],
+                     constraint=r.get("kcs_constraint", {}).get(str(r["kc_hybrid"])), signtested=r["signtested_hybrid"],
+                     method="hybrid" + ("" if (r["err_hybrid_from"] or "hybrid").startswith("hybrid") else
+                                        f", spread to {r['err_hybrid_from']}"), note=None, p4_gap=None, source=r["source_hybrid"],
+                     f64=(r["lam"], r["kc"])) if r.get("lam_hybrid") is not None else r for r in rows]
     for r in sorted(rows, key=lambda q: q["D"]):
         D, l1 = r["D"], r["lam"]
         l0, e0 = lam0_at(D, Ds, L)
@@ -132,7 +140,8 @@ def table(fn):
         bar = (("OK" if r["lam_err"] <= 1e-6 else "BAD") + f" ({r['lam_err']:.1e})") if r.get("has_err", True) else \
             "single k_c (not in crossing or slopes)"
         con = r.get("constraint")
-        sgt = "passed" if r.get("signtested") else "no signtest yet"
+        sgt = ("record passed" if r.get("signtested") else "record not signtested") if r.get("f64") else \
+            "passed" if r.get("signtested") else "no signtest yet"
         how = r.get("method", "float64") + (f", P4 gap {r['p4_gap']:+.2e}" if r.get("p4_gap") is not None else "") + \
             (" (note)" if r.get("note") else "")
         print(f"| {D:g} | {n:g} | {l1:.7f} | {how} | {r.get('kc', '')} | {sgt} | {bar} | {con:.1e} | {l0:.7f} ({e0:.1e}) | {d:.6f} | "
@@ -142,6 +151,12 @@ def table(fn):
     for r in sorted(rows, key=lambda q: q["D"]):
         if r.get("note"):
             print(f"\nnote, D {r['D']:g} (k_c {r.get('kc', '')}, {r.get('source', '')}): {r['note']}")
+    if hyb:
+        hr = [r for r in sorted(rows, key=lambda q: q["D"]) if r.get("f64")]
+        print("\nλ₁ is P4's hybrid root (float64 blocks 0-11, dd horizon block) where one passes P4's rule, and the k_c spread is "
+              "between the two highest hybrid k_c, except where marked 'spread to float64'; the other rows are float64. "
+              "'record passed' means the float64 record on that state passed its signtest. Hybrid minus the float64 row it "
+              "replaces: " + ", ".join(f"D {r['D']:g} {r['lam'] - r['f64'][0]:+.2e} (k_c {r['kc']} against {r['f64'][1]})" for r in hr))
     gaps = [(r["D"], r["p4_gap"]) for r in sorted(rows, key=lambda q: q["D"]) if r.get("p4_gap") is not None]
     if gaps:
         print("\nthe k_c bar and the spreads below are float64 k_c spreads. P4's hybrid re-roots differ from the float64 records by "
@@ -292,17 +307,42 @@ def collect(raw):
     stset = {(e["source"], round(e["D"], 6)) for e in json.load(open(stf))["signtested"]} if os.path.exists(stf) else set()
     ntf = os.path.join(HERE, "data", "ell_lam_notes.json")   # remarks printed beside a quoted row
     notes = {(e["source"], round(e["D"], 6)): e for e in json.load(open(ntf))["notes"]} if os.path.exists(ntf) else {}
+    # P4's hybrid re-roots (float64 blocks 0-11, dd block 12) of records on their own states (raw I1025-mac/p4_criteria.log), each
+    # taken only if it passes P4's rule; the first file wins for a record re-rooted on several machines (the cross-check row)
+    hyb = {}
+    for f in [os.path.join(raw, "I1025-mac", "out", "ell_p4_hybrid_1025.jsonl")] + \
+            [os.path.join(raw, m_, "p4", "ell_p4_hybrid_1025_w.jsonl") for m_ in ("I1025-win", "I1025-win2b", "I1025-dh170")]:
+        if not os.path.exists(f):
+            continue
+        for line in open(f):
+            r = json.loads(line)
+            if (r["mode"] == "hybrid" and r["lam"] is not None and (r["record_system"] or (r["record"], r["D"]) in P4_AMEND5)
+                    and r["n_signchanges_grid"] == 1 and r["n_changes_all"] == 1 and r["noise_robust"] and (r["bracket_width"] or 1) <= 1e-7):
+                hyb.setdefault(round(r["D"], 6), {}).setdefault(r["kc"], (r["lam"], os.path.relpath(f, raw), r["record"]))
     pts = []
     for D in sorted(by):
         ks = sorted(by[D])
         top = ks[-1]
         err = abs(by[D][top][0] - by[D][ks[-2]][0]) if len(ks) > 1 else None
+        h, hp = hyb.get(D, {}), {}
+        if h:                                        # the hybrid row: its top k_c, and the spread to the next lower hybrid k_c
+            hk = sorted(h); ht = hk[-1]              # (or, with one hybrid k_c, to the next lower float64 one, marked)
+            lower = [k for k in ks if k < ht]
+            he, hf = ((abs(h[ht][0] - h[hk[-2]][0]), f"hybrid k_c {hk[-2]}") if len(hk) > 1 else
+                      (abs(h[ht][0] - by[D][lower[-1]][0]), f"float64 k_c {lower[-1]}") if lower else (None, None))
+            hp = dict(lam_hybrid=h[ht][0], kc_hybrid=ht, lam_err_hybrid=he if he is not None else 0.0, has_err_hybrid=he is not None,
+                      err_hybrid_from=hf, kcs_hybrid={str(k): h[k][0] for k in hk}, source_hybrid=h[ht][1], record_hybrid=h[ht][2],
+                      signtested_hybrid=any(e[0].endswith("/" + h[ht][2]) and e[1] == D for e in stset))
         pts.append(dict(D=D, lam=by[D][top][0], kc=top, lam_err=err if err is not None else 0.0, has_err=err is not None,
                         kcs={str(k): by[D][k][0] for k in ks}, kcs_constraint={str(k): by[D][k][2] for k in ks},
                         source=by[D][top][1], constraint=by[D][top][2], signtested=(by[D][top][1], D) in stset,
                         method="float64", note=notes.get((by[D][top][1], D), {}).get("note"),   # ell_refine's float64 roots
-                        p4_gap=notes.get((by[D][top][1], D), {}).get("p4_gap")))   # P4's hybrid minus this record
-        print(f"D {D:g}: k_c {ks}, lambda {by[D][top][0]:.10f}" + (f", change from k_c {ks[-2]} {err:.1e}" if err is not None else ""))
+                        p4_gap=notes.get((by[D][top][1], D), {}).get("p4_gap"), **hp))   # P4's hybrid minus this record
+        print(f"D {D:g}: k_c {ks}, lambda {by[D][top][0]:.10f}" + (f", change from k_c {ks[-2]} {err:.1e}" if err is not None else "")
+              + (f"; hybrid k_c {sorted(h)}, lambda {hp['lam_hybrid']:.10f}" + (f", change from {hp['err_hybrid_from']} "
+                 f"{hp['lam_err_hybrid']:.1e}" if hp["has_err_hybrid"] else "") if h else ""))
+    for D in sorted(set(hyb) - set(by)):
+        print(f"hybrid rows at D {D:g} with no float64 row collected (not in the table): {sorted(hyb[D])}")
     json.dump(dict(points=pts, note="built by ell_delta.py collect"), open(os.path.join(HERE, "data", "ell_lam_highD.json"), "w"), indent=1)
     return True
 
