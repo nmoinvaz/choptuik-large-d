@@ -235,7 +235,7 @@ def main():
     iv.prec = 120
     W = W_iv()
     t0 = time.time()
-    T = Tseq(J1 + 2, W)
+    T = Tseq(max(J1 + 2, 2 * 99 + 2), W)                    # W_bound needs r_m for m < j0(99) = 198
     print(f"t_n, G_i to {J1 + 2} [{time.time() - t0:.0f}s]; t_1 <= {model.up(T.t[1], 8)}, w in [{model.dn(W, 12)}, {model.up(W, 12)}]", flush=True)
     ok = True
     m_ok, top, mstar = checks_monotone(T, W)

@@ -5,7 +5,9 @@
               at nu = 101, evaluated here from its statement. About 10 min.
   --check     B7 (from its statement) against |dR_j/K_nu| at every head term, odd nu = 3..21 (PC7); and the sum of B7
               over the head against G, odd nu = 3..41.
-  --mutate=a0 M7: A0 / 100 in B7; --check then fails, exit 1.
+  --mutate=a0 M7 as fixed in the protocol, A0 / 100 in B7. It does not fire: B7's de-mixing and psi part alone stays
+              above every head term (worst ratio 0.49), so --check still passes. Kept as a record.
+  --mutate=b7 M7', the whole of B7 / 100; --check then fails, exit 1.
 
   --json PATH writes the certified numbers.
 """
@@ -45,7 +47,7 @@ def H_iv(nu, mu, prec=200):
 class B7:
     """the bound of B7 from its statement (notes/P6_route3.md 11.2), in mpmath.iv"""
 
-    def __init__(self, nu, mu, Psup=False, a0_scale=1):
+    def __init__(self, nu, mu, Psup=False, a0_scale=1, b7_scale=1):
         iv.prec = 200
         C, w = model.ctx('iv', 200)
         self.nu, self.mu, self.w = nu, mu, w
@@ -53,6 +55,7 @@ class B7:
         self.r = [iv.sqrt(((m + iv.mpf(1) / 2) ** 2 + w4) * ((m + 1) ** 2 + w4)) / (m + 1) for m in range(4 * nu + 30)]
         t1 = self.r[0]
         self.A0 = (2 + t1) ** 2 / 8 * a0_scale
+        self.b7_scale = b7_scale
         k = mu - nu
         self.N, self.n = {-2: (3, 1), 0: (6, 2), 2: (3, 1)}[k]
         if k == 2:
@@ -92,7 +95,7 @@ class B7:
             cj = iv.sqrt((2 * j + 2) ** 2 + (nu * w) ** 2) / (4 * (j + 1))
             v += cj * (self.n * self.Sigma(j, self.mu) + (self.N - self.n) * self.Sigma(j, 1)) / (self.r[j - 1] * self.r[j])
         Dj = self.Ddemix + self.h2 * (1 / cabs(self.a + j) + 1 / cabs(self.b + j))
-        return self.P * self.A0 * v + Dj
+        return (self.P * self.A0 * v + Dj) * self.b7_scale
 
     def G(self):
         """the closed form of 11.2, with P <= P_sup for mu = nu + 2 (this object built with Psup=True)"""
@@ -134,7 +137,7 @@ def certify(out):
     return True
 
 
-def check(a0_scale):
+def check(a0_scale, b7_scale=1):
     t0 = time.time()
     ok = True
     for k in (-2, 0, 2):
@@ -143,7 +146,7 @@ def check(a0_scale):
             mu = nu + k
             C, w = model.ctx('iv', 200)
             D = model.darboux(nu, mu, j0_of(nu), C, w)
-            B = B7(nu, mu, a0_scale=a0_scale)
+            B = B7(nu, mu, a0_scale=a0_scale, b7_scale=b7_scale)
             for jj, z in enumerate(D):
                 a = cabs(z)
                 b = B.term(jj)
@@ -174,9 +177,10 @@ def main():
         if a.startswith('--json='):
             out = a.split('=', 1)[1]
     a0 = mp.mpf(1) / 100 if '--mutate=a0' in sys.argv else 1
+    b7 = mp.mpf(1) / 100 if '--mutate=b7' in sys.argv else 1
     ok = True
     if '--check' in sys.argv:
-        ok &= check(a0)
+        ok &= check(a0, b7)
     if '--certify' in sys.argv:
         ok &= certify(out)
     sys.exit(0 if ok else 1)
