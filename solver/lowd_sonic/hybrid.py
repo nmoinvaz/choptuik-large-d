@@ -20,9 +20,13 @@ I997-mac-sonic/real/real_attempt2_jac_hp_aa8.log). --jac wood (any M): hp's LU, 
 band's own T (forward differences) through the Woodbury identity: J0 W = R for W = J0^-1 R (R the band rows' unit
 vectors; Solver.lu_solve_many), so J^-1 F = y - W (T W)^-1 (T y - F_band) with y = J0^-1 F, and hp's own band rows are
 never needed. At M 128 it gives the same steps as --jac band. --band_jac FILE.npy: the band's Jacobian T is loaded from
-FILE when it exists (it depends only on the start state, phi and the plan), and saved there otherwise. --replan 1 (the
-default): at each D hp's Taylor plan outside the band is made again from that D's start (a plan made at another D can
-be past its stability limit for a perturbed state, the failure of LOW_D.md section 17).
+FILE when it exists (it depends only on the start state, phi and the plan), and saved there otherwise. --replan 1: at each D
+hp's Taylor plan outside the band is made again from that D's start, by Solver.plan with s_B put at x_A. It is off by
+default: Solver.plan is not local to a segment (the moved s_A changed the steps elsewhere, 1088 outside the band against
+925), and with that plan the chord step at D 3.045 left hp's rows at 1.3e-8 and then diverged (raw
+I997-mac-sonic/real/real_attempt4_replan.log). --split S, --split_near S2: every step of the start state's plan outside
+the band split S times, and S2 times in the band's two neighbouring segments (a plan made at one D can be past its
+stability limit at a lower D for a perturbed state, the failure of LOW_D.md section 17).
 
     python3 hybrid.py OUT.jsonl --state S.npz [--history A.npz,B.npz] --Ds 3.045,3.044 [--band 0.01,0.02]
         [--warp none|test|design|FILE.npy] [--jac band|hp|wood] [--aa_m m] [--A 1.5e-3] [--eps0 2e-3] [--kappa 1.0] [--tol 1e-12] [--it_max 40]
@@ -99,6 +103,19 @@ class Hybrid:
         zm[oA:oA + 4 * M] = zm[oB:oB + 4 * M]
         segs = [list(q) for q in self.s.plan(zm, np.zeros_like(zm), tol, hmax)]
         segs[self.ia] = self.segs[self.ia]
+        self.s.set_segs(segs)
+        self.segs = segs
+        return sum(len(q) - 1 for i, q in enumerate(segs) if i != self.ia)
+
+    def split(self, s_all, s_near):
+        """every step of hp's plan outside the band split s_all times, and s_near times in the band's two neighbours"""
+        segs = []
+        for i, q in enumerate(self.segs):
+            k = 1 if i == self.ia else (s_near if i in (self.ia - 1, self.ib) else s_all)
+            out = [q[0]]
+            for x0, x1 in zip(q[:-1], q[1:]):
+                out += [x0 + (x1 - x0) * j / k for j in range(1, k)] + [x1]
+            segs.append(out)
         self.s.set_segs(segs)
         self.segs = segs
         return sum(len(q) - 1 for i, q in enumerate(segs) if i != self.ia)
@@ -196,7 +213,9 @@ def main():
     ap.add_argument("--jac", default="band", choices=["band", "hp", "wood"])
     ap.add_argument("--chunk", type=int, default=0)
     ap.add_argument("--aa_m", type=int, default=0)
-    ap.add_argument("--replan", type=int, default=1)
+    ap.add_argument("--replan", type=int, default=0)
+    ap.add_argument("--split", type=int, default=1)
+    ap.add_argument("--split_near", type=int, default=1)
     ap.add_argument("--band_jac", default="")
     ap.add_argument("--time_cap", type=float, default=6 * 3600)
     ap.add_argument("--allow_unraw", action="store_true")
@@ -354,6 +373,9 @@ def main():
             tp = time.time()
             nst = hy.replan(zp)
             log(f"  D {D}: hp's plan outside the band from the start state: {nst} steps ({time.time() - tp:.0f}s)")
+        if a.split > 1 or a.split_near > 1:
+            nst = hy.split(a.split, max(a.split, a.split_near))
+            log(f"  D {D}: hp's plan outside the band split {a.split} times ({a.split_near} next to the band): {nst} steps")
         hist_F, conv, it = [], False, 0
         err = None
         try:
