@@ -738,4 +738,4 @@ round-to-nearest `.str()`, so 0.011012 fell below the Λ^head_{ν−2} it bounds
 tail constants 28.449 and 4.7661×10⁶, below their certified upper ends. Every printed bound is now its upper end rounded
 up (`outward.py`, with a self-test and the control `--mutate=nearest`, which must fail), and `C_TAIL` holds the printed
 28.4492, 56.8735 and 4.76611×10⁶. The constants of §10.2 and §11.3 are those of the rerun (raw I1062-mac, folder
-`outward/`). No conclusion changes.
+`outward/`, dfdfc984). No conclusion changes.
