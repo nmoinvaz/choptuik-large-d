@@ -11,11 +11,12 @@ converges to the zero of the residual it is given whatever the LU, only its rate
 
     python3 hybrid.py OUT.jsonl --state S.npz [--history A.npz,B.npz] --Ds 3.045,3.044 [--band 0.01,0.02]
         [--warp none|test|design|FILE.npy] [--A 1.5e-3] [--eps0 2e-3] [--kappa 1.0] [--tol 1e-12] [--it_max 40]
-        [--threads 4] [--drop_nodes x1,x2] [--save DIR] [--expect D:VALUE:TOL,...] [--mutate none|nowarp]
+        [--threads 4] [--drop_nodes x1,x2] [--add_nodes x1,x2] [--save DIR] [--expect D:VALUE:TOL,...] [--mutate none|nowarp]
         [--time_cap SECONDS] [--allow_unraw]
 
---Ds: the D values in order; each is predicted by Lagrange extrapolation through the converged states so far (the
-start state, --history states at the same M and nodes, older first, then the solutions of this run). --warp: none
+--Ds: the D values in order; each starts from the Lagrange extrapolation through the (at most) four states nearest in D
+among the start state, the --history states (same M and nodes; renoded with the start when --drop_nodes or --add_nodes
+is given) and the solutions of this run, or from the state itself when one is at that D. --warp: none
 (phi = 0, hp's own curves), test (phi = A (sin(2 theta + 0.3) + 0.3 cos(4 theta - 1.1)), an arbitrary warp for the
 planted checks), design (from the start state's unwarped band at its D: omega b phi_theta = softplus(eps0 - g*) minus its
 mean, g* the smallest c - x over the band at each theta; band.design_phi), or a saved phi. --expect D:VALUE:TOL: exit 1
@@ -94,6 +95,49 @@ class Hybrid:
         Fl[self.rows] = 0.0
         return Fh, Fl
 
+    def band_jacobian(self, z, eps=1e-7, chunk=None):
+        """d(Phi_warp(s_A))/d(s_A half-grid unknowns, Delta) by forward differences on the band's plan, in batches of
+        chunk columns: (4M, 4M + 1)"""
+        M = self.M
+        sA = node_full(z, M, self.ia)
+        base = half_rows(sA)
+        D = z[-1]
+        hD = eps * max(1.0, abs(D))
+        h = eps * np.maximum(1.0, np.abs(base))
+        ncol = 4 * M + 1
+        chunk = chunk or ncol
+        G = np.zeros((4 * M, ncol))
+        end0, _, _ = self.band.run(sA, 2 * np.pi / D, self.pts)
+        r0 = half_rows(end0)
+        odd = np.array([True, True, False, False])
+        for c0 in range(0, ncol, chunk):
+            cols = list(range(c0, min(ncol, c0 + chunk)))
+            S = np.repeat(sA[None], len(cols), axis=0)
+            om = np.full((len(cols), 1), 2 * np.pi / D)
+            for b, j in enumerate(cols):
+                if j == 4 * M:
+                    om[b, 0] = 2 * np.pi / (D + hD)
+                    continue
+                f, k = divmod(j, M)
+                S[b, f, k] += h[j]
+                S[b, f, k + M] += -h[j] if odd[f] else h[j]
+            end, _, _ = self.band.run(S, om, self.pts)
+            for b, j in enumerate(cols):
+                G[:, j] = (half_rows(end[b]) - r0) / (hD if j == 4 * M else h[j])
+        return G
+
+    def assemble(self, J, G):
+        """J with the band rows replaced: G on s_A's columns and Delta's, -I on s_B's, 0 elsewhere"""
+        M = self.M
+        r = self.rows
+        J[r, :] = 0.0
+        oA = 2 * M + 4 * M * self.ia
+        oB = 2 * M + 4 * M * self.ib
+        J[r, oA:oA + 4 * M] = G[:, :4 * M]
+        J[r, -1] = G[:, 4 * M]
+        J[r, oB:oB + 4 * M] -= np.eye(4 * M)
+        return J
+
 
 def main():
     ap = argparse.ArgumentParser()
@@ -110,9 +154,12 @@ def main():
     ap.add_argument("--it_max", type=int, default=40)
     ap.add_argument("--threads", type=int, default=4)
     ap.add_argument("--drop_nodes", default="")
+    ap.add_argument("--add_nodes", default="")
     ap.add_argument("--save", default="")
     ap.add_argument("--expect", default="")
     ap.add_argument("--mutate", default="none")
+    ap.add_argument("--jac", default="band", choices=["band", "hp"])
+    ap.add_argument("--chunk", type=int, default=0)
     ap.add_argument("--time_cap", type=float, default=6 * 3600)
     ap.add_argument("--allow_unraw", action="store_true")
     a = ap.parse_args()
@@ -139,16 +186,24 @@ def main():
     if segs is None:
         segs = s0.plan(zh, zl, 1e-30, 0.05)
     s0.set_segs(segs)
-    if a.drop_nodes:
-        drop = [float(v) for v in a.drop_nodes.split(",")]
-        new = [x for x in nodes if x not in drop]
+    if a.drop_nodes or a.add_nodes:
+        drop = [float(v) for v in a.drop_nodes.split(",") if v]
+        add = [float(v) for v in a.add_nodes.split(",") if v]
+        new = sorted(set(x for x in nodes if x not in drop) | set(add))
         zh, zl = renode(s0, zh, zl, nodes, new, M)
-        hist = []          # older states are on the old nodes
+        hist2 = []
+        for (Dh, zv), f in zip(hist, [h for h in a.history.split(",") if h]):
+            hh, hl, hm = load(f)
+            sh = make_solver(Dh, M, nodes=nodes, kt=kt, kc=kc, ks=ks, threads=a.threads)
+            sh.set_segs(hm.get("segs") or sh.plan(hh, hl, 1e-30, 0.05))
+            rh, rl = renode(sh, hh, hl, nodes, new, M)
+            hist2.append((Dh, np.asarray(rh) + np.asarray(rl)))
+        hist = hist2
         nodes = new
         s0 = make_solver(D0, M, nodes=nodes, kt=kt, kc=kc, ks=ks, threads=a.threads)
         segs = s0.plan(zh, zl, 1e-30, 0.05)
         s0.set_segs(segs)
-        log(f"renoded to {len(nodes)} nodes; plan steps {sum(len(q) - 1 for q in segs)}")
+        log(f"renoded to {len(nodes)} nodes {nodes}; plan steps {sum(len(q) - 1 for q in segs)}")
     F0 = np.asarray(s0.residual(zh, zl)[0])
     log(f"start D {D0} M {M} K {len(nodes)} L {s0.size}: hp |F| {np.abs(F0).max():.3e}, Delta {zh[-1] + zl[-1]:.16f}")
     N = 2 * M
@@ -172,9 +227,30 @@ def main():
     if a.save:
         os.makedirs(a.save, exist_ok=True)
         np.save(os.path.join(a.save, "phi.npy"), phi)
-    log(f"Jacobian at D {D0} (hp's f64 Jacobian with its own plan, LU kept for the chord steps)")
     tj = time.time()
-    s0.newton_mixed(zh, zl)
+    if a.jac == "hp":
+        log(f"Jacobian at D {D0}: hp's f64 Jacobian with its own plan, LU kept for the chord steps")
+        s0.newton_mixed(zh, zl)
+        solve = lambda Fh, Fl: tuple(np.asarray(v) for v in s0.lu_solve(-Fh, -Fl))
+    else:
+        import scipy.linalg as sla
+        log(f"Jacobian at D {D0}: hp's f64 Jacobian, its band rows replaced by the warped band's (forward differences)")
+        hy0 = Hybrid(D0, M, nodes, kt, kc, ks, segs, band, phi, a.threads, a.kappa, a.mutate)
+        s0 = None
+        J = np.asarray(hy0.s.jacobian_f64(zh, zl))
+        log(f"  hp Jacobian (short band plan): {time.time() - tj:.0f}s, {J.nbytes / 1e9:.2f} GB")
+        hy0.band_rows(zh + zl)
+        tb = time.time()
+        G = hy0.band_jacobian(zh + zl, chunk=a.chunk)
+        log(f"  band Jacobian: {time.time() - tb:.0f}s ({hy0.last})")
+        J = hy0.assemble(J, G)
+        del G
+        tl = time.time()
+        LU = sla.lu_factor(J.T, overwrite_a=True, check_finite=False)     # J.T is Fortran-ordered: factored in place
+        del J
+        dU = np.abs(np.diag(LU[0]))
+        log(f"  LU: {time.time() - tl:.0f}s, |u_kk| {dU.min():.3e}..{dU.max():.3e}")
+        solve = lambda Fh, Fl: (-sla.lu_solve(LU, Fh, trans=1, check_finite=False), np.zeros_like(Fh))
     log(f"  Jacobian and LU: {time.time() - tj:.0f}s")
     expects = {}
     for e in [e for e in a.expect.split(",") if e]:
@@ -188,12 +264,11 @@ def main():
             ok_all = False
             break
         td = time.time()
-        Hd = [h[0] for h in hist[-4:]]
-        zp = lagrange(Hd, [h[1] for h in hist[-4:]], D) if D not in Hd else dict(hist)[D].copy()
+        near = sorted(hist, key=lambda h: abs(h[0] - D))[:4]
+        zp = near[0][1].copy() if near[0][0] == D else lagrange([h[0] for h in near], [h[1] for h in near], D)
         zh_, zl_ = zp.copy(), np.zeros_like(zp)
         hy = Hybrid(D, M, nodes, kt, kc, ks, segs, band, phi, a.threads, a.kappa, a.mutate)
         hist_F, conv, it = [], False, 0
-        D_prev = zh_[-1]
         err = None
         try:
             for it in range(a.it_max):
@@ -201,7 +276,7 @@ def main():
                 nF = float(np.abs(Fh).max())
                 if not np.isfinite(nF):
                     raise FloatingPointError("residual not finite")
-                xh, xl = s0.lu_solve(-Fh, -Fl)
+                xh, xl = solve(Fh, Fl)
                 zh_, zl_ = dd_add(zh_, zl_, np.asarray(xh), np.asarray(xl))
                 zh_, zl_ = np.asarray(zh_), np.asarray(zl_)
                 dD = float(np.asarray(xh)[-1])
