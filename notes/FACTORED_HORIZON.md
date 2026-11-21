@@ -722,7 +722,8 @@ polish solves the raise's system.
 - **The pass rule is the chain's own.** The coordinator changed it on 2026-11-21, before any raise ran. The first rule
   was 10⁻⁶⁰, part 4's gates. dh170's control showed that hp's own polish cannot reach that at this D: its polish of the
   ks 293 state on its own plan stalls at max|F| 1.13×10⁻²⁶ under part 4's gates (#1064 comment 7068724073, raw
-  cc8a38ec). Stage 3 passes when two things hold:
+  cc8a38ec). Every 10⁻⁶⁰ gate run at D ≥ 256 (#1064 parts 4 to 6 and the D 256.1776 control) had `--tol_od 1e-60`, and
+  so the coupling of `proj_o_bar` to it (section 6, item 12). Stage 3 passes when two things hold:
   - hp's polish of the raised ks 315 state, under leg 14's own arguments (`--tol_od 2e-34 --od_floor_delta 1e-30`, the
     chain's acceptance), reports converged: its start line says the polish was skipped, or its last octo-double Newton
     line says converged and the base is saved (`factored_raise.py polishgate`);
@@ -733,10 +734,11 @@ polish solves the raise's system.
 - **The controls that must fail** are `--mutate=old` and `--mutate=linear` under the same rule. A raise that does not
   converge writes no state and fails. Leg 11's raise at D 260.8483 failed the same way.
 - **Reported:** Δ(315) − Δ(293), as exact sums at the same D. dh170's linear estimate is −1.0×10⁻¹⁴.
-- **Discrepancy, reported and not explained.** At ks 293 on its own plan, the state's pinned residual is 1.5×10⁻⁴¹
-  through `near_null.py` (dh170, #1064). anm_run.py's polish of the same state starts at 3.88×10⁻²⁵. The difference
-  lies in the held rows, which dh170 did not test. The raise pins the state's own coefficients from all eight parts, as
-  `near_null.py` and `octo_corrector.pinned_o` do. Its log line at order 293 tells which of the two systems it shares.
+- **Discrepancy, reported and not explained** (section 6, item 12). At ks 293 on its own plan, the state's pinned
+  residual is 1.5×10⁻⁴¹ through `near_null.py` (dh170, #1064). anm_run.py's polish of the same state starts at
+  3.88×10⁻²⁵ under part 6's flags and at 1.59×10⁻⁴¹ under the chain's. The raise pins the state's own coefficients
+  from all eight parts, as `near_null.py` and `octo_corrector.pinned_o` do. Its log line at order 293 gives its own
+  value.
 
 **Stage 3b: D 262.7908, run only if stage 3 passes, under the same rule.** xfchecks' locate sees the real pole near
 D 265.078 only from D 262.1011 on (#1064). So a raise at D 262.0099 tests the raise but cannot give the order reading.
@@ -831,8 +833,14 @@ control ends when no trial is accepted, after about 11 trials. This is an estima
    cause is not known. A guess is that the builds that made the first three formed the frozen rows differently.
 
 12. **The ks 293 state's residual at D 262.0099 under two codes.** On its own plan the pinned residual is
-   1.5×10⁻⁴¹ through `near_null.py` and 3.88×10⁻²⁵ as anm_run.py's polish start, a difference in the held rows that
-   was not tested (#1064 comment 7068724073). The cause is not known (5.3).
+   1.5×10⁻⁴¹ through `near_null.py` and 3.88×10⁻²⁵ as anm_run.py's polish start (#1064 comment 7068724073).
+   - **The flags cause it, not the build** (dh170, #1064 comment 7069663903, raw 14693940). On the 268a6b2d build,
+     with the same state and plan, part 6's flags give the start line 3.88×10⁻²⁵ and the chain's give 1.59×10⁻⁴¹.
+   - **dh170's reading, not yet tested.** anm_run.py sets `proj_o_bar` to `--tol_od` when it is not given. With
+     `--tol_od 1e-60` the octo-double start projection is refused (part 4 logged `u0o_refused 3`), and the start is
+     then not the octo-double one.
+   - dh170 is testing it with part 6's command plus `--proj_o_bar 2e-34`, which also shows whether hp's polish reaches
+     10⁻⁶⁰ at D 262. That result is pending here.
 
 ## 7. Commands
 
