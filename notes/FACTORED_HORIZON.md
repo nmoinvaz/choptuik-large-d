@@ -677,7 +677,10 @@ polish solves the raise's system.
   - The state writer reads a stored state back exactly.
   - The comparison accepts a planted 10⁻⁶⁵ and refuses a planted 10⁻⁵⁵ against a bar of 10⁻⁶⁰.
   - Both stage-3 gates run on eleven planted logs, and each broken one fails.
-- **`factored_horizon.py raisecheck`** at D 262.0099, ks 315, with hp's 1/k, 512 bits. RAISECHECK
+- **`factored_horizon.py raisecheck`** at D 262.0099, ks 315, with hp's 1/k, 512 bits. It solves the rung from the
+  stored data, then follows Δ moves of 10⁻¹⁶, 10⁻¹⁵ and 10⁻¹⁴ from the linear and the second-order predictors. It passes
+  when the second-order start converges at 10⁻¹⁴ and the t² term holds to 10%. It runs with `--rows a` (method A) and
+  `--rows ma` (ElimO's rung). RAISECHECK
 
 **Stage 2: the planted truth at D 237.7132, where the old raise works.**
 - **Start.** `I1064-dh610/ho2_D237.7132/ks307/base_pin3_D237.7132.npz` (blob 861c79ff): ks 307, max|F| 3.5×10⁻⁸⁶.
