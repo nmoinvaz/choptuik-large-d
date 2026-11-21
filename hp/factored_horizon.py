@@ -881,6 +881,7 @@ CURV_PAIRS_OLD = ((1e-20, 1e-19), (1e-30, 1e-29), (1e-40, 1e-39), (1e-50, 1e-49)
 CURV_PAIR = (1e-20, 1e-19)
 CURV_T1 = 1e-25                                    # the level that fixes the predictor's quadratic term
 MUT_R0 = "1e-40"                                   # --mutate=r0: the shift of R(0)'s p, m and c rows
+CURVX_BAR = 1e-70                                  # curvx's convergence bar on |g(y) - y|
 PMC = None                                         # row indices of p, m and c (set per segment)
 
 
@@ -1109,7 +1110,7 @@ def cmd_curvx(path, prec, refpath, t, cache448):
                fp_res=r["hist"][-1]["fp_res"], sweeps=r["sweeps"], rows=[str(v) for v in r["rows"]])
     print(f"curvx {os.path.basename(path)} t {float(t):g}: {r['sweeps']} sweeps, |g(y)-y| {r['hist'][-1]['fp_res']:.2e}",
           flush=True)
-    return rec, r["hist"][-1]["fp_res"] <= 1e-70
+    return rec, r["hist"][-1]["fp_res"] <= CURVX_BAR
 
 
 def cmd_curvxq(paths, t, curv_D):
@@ -1123,12 +1124,16 @@ def cmd_curvxq(paths, t, curv_D):
     Q = second_diff(by[t], by[-t], by[mp.mpf(0)], t, rows)
     cv = json.load(open(curv_D))
     QA = [mp.mpf(v) for v in cv["Q_fact_vec"]]
+    conv = all(float(r["fp_res"]) <= CURVX_BAR for r in recs)      # a curvx that missed its bar fails here too
     noise = max(float(r["fp_res"]) for r in recs) * 1e3 / float(t) ** 2
+    noise_A = max(h[-1] for h in cv["newton"][f"fact_newton_{float(t):g}"]) * 1e3 / float(t) ** 2   # A's last |F|
     diff = float(amax(vsub(Q, QA)) / max(amax(Q), amax(QA)))
-    ok = diff <= 0.01 or (qmax(Q) <= noise and qmax(QA) <= noise)
+    ok = conv and (diff <= 0.01 or (qmax(Q) <= noise and qmax(QA) <= noise_A))
     print(f"curvxq: fixed point |Q_fact| {qmax(Q):.3e}, method A {qmax(QA):.3e}, relative difference {diff:.2e} "
-          f"(noise of the fixed point about {noise:.1e}): {'PASS' if ok else 'FAIL'}", flush=True)
-    return dict(cmd="curvxq", Q_fp=qmax(Q), Q_A=qmax(QA), diff=diff, noise=noise, ok=ok), ok
+          f"(noise about {noise:.1e} and {noise_A:.1e}; fixed points {'converged' if conv else 'NOT converged'}): "
+          f"{'PASS' if ok else 'FAIL'}", flush=True)
+    return dict(cmd="curvxq", Q_fp=qmax(Q), Q_A=qmax(QA), diff=diff, noise=noise, noise_A=noise_A, converged=conv,
+                ok=ok), ok
 
 
 # ------------------------------------------------------------------ planted truth
