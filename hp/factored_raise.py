@@ -19,7 +19,7 @@ or when its max |F| <= tol.
         [--halvings 10] [--stages 16] [--plan stored|new] [--rung a|ma] [--proj_bar 1e-60] [--ref REF.npz --bar 1e-60]
         [--mutate=old|linear|order] [--allow_unraw]
     python3 factored_raise.py selftest [STATE.npz] [--mutate=nopred|old|linear|gate]
-    python3 factored_raise.py polishgate POLISH.log POLISH_OUTDIR
+    python3 factored_raise.py polishgate POLISH.log POLISH_OUTDIR [--bar 1e-60]
     python3 factored_raise.py stepgate STEP.log STEP_OUTDIR
 
 STATE and REF are paths inside RAW (the raw-data repository); OUTDIR must be a task folder of it (hp/raw_out.py).
@@ -45,10 +45,10 @@ flipped must each fail. --mutate=nopred runs the main case without the second-or
 fail. It also checks the state writer on a stored state (read back exactly), the comparison on planted copies, and
 the two gates on planted logs (--mutate=gate adds a case that must pass and cannot).
 
-polishgate is stage 3's pass rule for anm_run.py's polish of the raised state (5.3): (a) its start line reads
-octo-double max|F| <= 1e-60 with the polish skipped, or (b) its last octo-double Newton line says converged with max|F|
-<= 1e-60 and the base is saved (part 4's gate903d and gate973). stepgate is the chain step's: anm_run.py --steps 1 wrote
-its jet_pin file and saved an accepted step's state, and did not stop. Each exits 1 when it fails.
+polishgate is stage 3's pass rule for anm_run.py's polish of a state at its order (5.3), by the chain's own rules:
+(a) its start line says the polish was skipped, or (b) its last octo-double Newton line says converged and the base is
+saved. --bar 1e-60 adds part 4's bound to both (gate903d and gate973). stepgate is the chain step's: anm_run.py
+--steps 1 wrote its jet_pin file and saved an accepted step's state, and did not stop. Each exits 1 when it fails.
 """
 import glob
 import json
@@ -511,6 +511,13 @@ def run(argv):
           f"mode {mode}, rung {opt['rung']}, tol {tol:g}, projection bar {proj_bar:g}, threads {opt['threads']}",
           flush=True)
     sy = Chain(meta, z8, ks, int(opt["threads"]), opt["plan"], proj_bar, opt["rung"])
+    if int(meta.get("ks", 130)) != ks:
+        # information: the state's residual at its own order on this system (stored plan, its own held values), which
+        # #1064 read as 1.5e-41 through near_null.py and 3.88e-25 as anm_run.py's polish start at D 262.0099
+        own = Chain(meta, z8, int(meta.get("ks", 130)), int(opt["threads"]), opt["plan"], proj_bar, opt["rung"])
+        print(f"the state at its own order {meta.get('ks')} on this system: pinned octo-double max|F| "
+              f"{own.norm(own.residual(z8)):.3e}; at order {ks}: {sy.norm(sy.residual(z8)):.3e}", flush=True)
+        del own
     z, hist, conv, why = raise_newton(sy, z8, tol, it_max=int(opt["it_max"]), halvings=int(opt["halvings"]),
                                       stages=int(opt["stages"]), mode=mode)
     kf = meta.get("kfreeze")
@@ -653,20 +660,23 @@ class Model:
 GATE_F = 1e-60                                     # part 4's tolerance (#1064)
 
 
-def polishgate(log, outdir):
-    """stage 3's pass rule for anm_run.py's polish of the raised state at its order (5.3): (a) its start line reads
-    octo-double max|F| <= 1e-60 with the polish skipped, or (b) its last octo-double Newton line says converged with
-    max|F| <= 1e-60 and a base was saved in outdir (part 4's gate903d and gate973). Returns (ok, reason)."""
+def polishgate(log, outdir, bar=None):
+    """the pass rule for anm_run.py's polish of a state at its order (5.3). The chain's rule (bar None, stage 3 since
+    the coordinator's change of 2026-11-21): (a) the start line says the polish was skipped (the state already within
+    the run's own --tol_od), or (b) the last octo-double Newton line says converged, by the run's own tolerance or its
+    floor rule, and a base was saved in outdir. With bar (part 4's 1e-60): the same, each with max|F| <= bar (gate903d
+    and gate973). Returns (ok, reason)."""
     t = open(log, errors="replace").read()
     m = re.search(r"octo-double max\|F\| ([0-9.eE+-]+|nan|inf) <= --tol_od \S+: base polish skipped", t)
-    if m and float(m.group(1)) <= GATE_F:
+    if m and (bar is None or float(m.group(1)) <= bar):
         return True, f"(a) the start line: octo-double max|F| {m.group(1)}, polish skipped"
     lines = re.findall(r"octo-double Newton: (\d+) steps, max\|F\| ([0-9.eE+-]+|nan|inf), (not converged|converged)", t)
     base = glob.glob(os.path.join(outdir, "base_pin*_D*.npz"))
     if not lines:
-        return False, "no octo-double Newton line and no skipped polish at or below 1e-60"
+        tail = "" if bar is None else f" at or below {bar:g}"
+        return False, "no octo-double Newton line and no skipped polish" + tail
     n, F, c = lines[-1]
-    ok = c == "converged" and float(F) <= GATE_F and bool(base)
+    ok = c == "converged" and (bar is None or float(F) <= bar) and bool(base)
     return ok, f"(b) the last octo-double Newton line: {n} steps, max|F| {F}, {c}; base saved {bool(base)}"
 
 
@@ -689,16 +699,21 @@ def gate_selftest():
     import tempfile
     out = []
     good_b = "      octo-double Newton: 1 steps, max|F| 2.7e-86, converged; double-double |F| 1e+08\n"
-    cases = [("polish (a) 1e-62", "polish", "base: double-double |F| 1e-21 <= --tol 1e-20, octo-double max|F| 1.0e-62 "
-              "<= --tol_od 1e-60: base polish skipped\n", [], True),
-             ("polish (a) 5e-60", "polish", "base: double-double |F| 1e-21 <= --tol 1e-20, octo-double max|F| 5.0e-60 "
-              "<= --tol_od 1e-59: base polish skipped\n", [], False),
-             ("polish (b)", "polish", good_b, ["base_pin3_D262.0099.npz"], True),
-             ("polish (b) no base", "polish", good_b, [], False),
-             ("polish (b) not converged", "polish", good_b.replace(", converged", ", not converged"),
+    skip = "base: double-double |F| 1e-21 <= --tol 1e-20, octo-double max|F| {} <= --tol_od {}: base polish skipped\n"
+    cases = [("part 4 (a) 1e-62", "part4", skip.format("1.0e-62", "1e-60"), [], True),
+             ("part 4 (a) 5e-60", "part4", skip.format("5.0e-60", "1e-59"), [], False),
+             ("part 4 (b)", "part4", good_b, ["base_pin3_D262.0099.npz"], True),
+             ("part 4 (b) no base", "part4", good_b, [], False),
+             ("part 4 (b) not converged", "part4", good_b.replace(", converged", ", not converged"),
               ["base_pin3_D262.0099.npz"], False),
-             ("polish (b) 2e-34", "polish", good_b.replace("2.7e-86", "2.0e-34"), ["base_pin3_D262.0099.npz"], False),
-             ("polish empty", "polish", "", ["base_pin3_D262.0099.npz"], False)]
+             ("part 4 (b) 2e-34", "part4", good_b.replace("2.7e-86", "2.0e-34"), ["base_pin3_D262.0099.npz"], False),
+             ("part 4 empty", "part4", "", ["base_pin3_D262.0099.npz"], False),
+             ("chain (a) 1e-35", "chain", skip.format("1.0e-35", "2e-34"), [], True),
+             ("chain (b) 2.5e-34", "chain", good_b.replace("2.7e-86", "2.5e-34"), ["base_pin3_D262.0099.npz"], True),
+             ("chain (b) no base", "chain", good_b, [], False),
+             ("chain (b) not converged", "chain", good_b.replace(", converged", ", not converged"),
+              ["base_pin3_D262.0099.npz"], False),
+             ("chain empty", "chain", "", ["base_pin3_D262.0099.npz"], False)]
     step_ok = ("step 0: the series saved as /x/jet_pin3_D262.0099.npz (8 parts, 400 s)\n"
                "    a 0.092 -> D 262.10: predicted |F| 1e-20, od 3 steps -> 1e-35 (tol 2e-34), Delta 1.6 ...\n"
                "      Delta of the saved state, its eight parts summed exactly: 1.6830910901545985\ndone\n")
@@ -715,7 +730,8 @@ def gate_selftest():
                 fh.write(text)
             for f in files:
                 open(os.path.join(d, f), "w").close()
-            ok, why = (polishgate if kind == "polish" else stepgate)(lp, d)
+            ok, why = (polishgate(lp, d, GATE_F) if kind == "part4" else polishgate(lp, d) if kind == "chain"
+                       else stepgate(lp, d))
         out.append((f"gate {name}", ok == want))
         print(f"  gate, {name}: {'pass' if ok else 'fail'} ({why}); expected {'pass' if want else 'fail'}: "
               f"{'ok' if ok == want else 'WRONG'}", flush=True)
@@ -786,8 +802,9 @@ def selftest(argv):
 def main(argv):
     if argv and argv[0] == "selftest":
         return selftest(argv[1:])
-    if argv and argv[0] in ("polishgate", "stepgate") and len(argv) == 3:
-        ok, why = (polishgate if argv[0] == "polishgate" else stepgate)(argv[1], argv[2])
+    if argv and argv[0] in ("polishgate", "stepgate") and len(argv) in (3, 5):
+        bar = float(argv[4]) if len(argv) == 5 and argv[3] == "--bar" else None
+        ok, why = polishgate(argv[1], argv[2], bar) if argv[0] == "polishgate" else stepgate(argv[1], argv[2])
         print(f"{argv[0]} {argv[1]}: {'PASS' if ok else 'FAIL'}: {why}", flush=True)
         return 0 if ok else 1
     return run(argv)
