@@ -52,6 +52,7 @@ saved. --bar 1e-60 adds part 4's bound to both (gate903d and gate973). stepgate 
 """
 import glob
 import json
+import math
 import os
 import re
 import subprocess
@@ -463,11 +464,22 @@ def compare(parts_a, parts_b, bar):
     if len(parts_a[0]) != len(parts_b[0]) or not len(parts_a[0]):
         return dict(max=float("inf"), at=-1, delta=float("nan"), ok=False,
                     why=f"lengths {len(parts_a[0])} and {len(parts_b[0])}")
+    if not all(np.all(np.isfinite(np.asarray(p))) for p in list(parts_a) + list(parts_b)):
+        return dict(max=float("inf"), at=-1, delta=float("nan"), ok=False, why="an entry is not finite")
     with mp.workdps(200):
         a, b = exact_entries(parts_a), exact_entries(parts_b)
         d = [abs(x - y) for x, y in zip(a, b)]
         i = max(range(len(d)), key=lambda k: d[k])
         return dict(max=float(d[i]), at=i, delta=float(a[-1] - b[-1]), ok=bool(d[i] <= bar))
+
+
+def ref_verdict(z, meta_out, zr, mr, ks, bar):
+    """the comparison with a reference: every entry within bar (compare), the same plan, and the reference at the
+    raise's order. Returns (good, compare's record, same_plan, same_ks)."""
+    same_plan = mr.get("segs") == meta_out.get("segs")
+    same_ks = int(mr.get("ks", -1)) == int(ks)
+    c = compare(list(z), list(zr), bar)
+    return bool(c["ok"] and same_plan and same_ks), c, same_plan, same_ks
 
 
 def run(argv):
@@ -551,14 +563,11 @@ def run(argv):
     ok = conv
     if opt["ref"]:
         zr, mr = load_parts(os.path.join(raw, opt["ref"]))
-        same_plan = mr.get("segs") == meta_out.get("segs")
-        c = compare(list(z), zr, float(opt["bar"]))
+        good, c, same_plan, same_ks = ref_verdict(z, meta_out, zr, mr, ks, float(opt["bar"]))
         with mp.workdps(60):
             dref = float(exact_entries(zr, 60)[-1] - d0)
-        same_ks = int(mr.get("ks", -1)) == ks
         rec["compare"] = dict(ref=opt["ref"], ref_ks=mr.get("ks"), same_ks=same_ks, same_plan=same_plan,
                               bar=float(opt["bar"]), dDelta_ref=dref, **c)
-        good = c["ok"] and same_plan and same_ks
         print(f"against {opt['ref']} (ks {mr.get('ks')}{'' if same_ks else f', NOT the raise order {ks}'}, plan "
               f"{'the same' if same_plan else 'DIFFERENT'}): largest entry difference {c['max']:.3e} at entry "
               f"{c['at']}{' (' + c['why'] + ')' if 'why' in c else ''}, Delta {c['delta']:+.3e}; the raise moved Delta "
@@ -683,7 +692,7 @@ def polishgate(log, outdir, bar=None):
     and gate973). Returns (ok, reason)."""
     t = open(log, errors="replace").read()
     m = re.search(r"octo-double max\|F\| ([0-9.eE+-]+|nan|inf) <= --tol_od \S+: base polish skipped", t)
-    if m and (bar is None or float(m.group(1)) <= bar):
+    if m and math.isfinite(float(m.group(1))) and (bar is None or float(m.group(1)) <= bar):
         return True, f"(a) the start line: octo-double max|F| {m.group(1)}, polish skipped"
     lines = re.findall(r"octo-double Newton: (\d+) steps, max\|F\| ([0-9.eE+-]+|nan|inf), (not converged|converged)", t)
     base = glob.glob(os.path.join(outdir, "base_pin*_D*.npz"))
@@ -691,7 +700,7 @@ def polishgate(log, outdir, bar=None):
         tail = "" if bar is None else f" at or below {bar:g}"
         return False, "no octo-double Newton line and no skipped polish" + tail
     n, F, c = lines[-1]
-    ok = c == "converged" and (bar is None or float(F) <= bar) and bool(base)
+    ok = c == "converged" and math.isfinite(float(F)) and (bar is None or float(F) <= bar) and bool(base)
     return ok, f"(b) the last octo-double Newton line: {n} steps, max|F| {F}, {c}; base saved {bool(base)}"
 
 
@@ -728,7 +737,9 @@ def gate_selftest():
              ("chain (b) no base", "chain", good_b, [], False),
              ("chain (b) not converged", "chain", good_b.replace(", converged", ", not converged"),
               ["base_pin3_D262.0099.npz"], False),
-             ("chain empty", "chain", "", ["base_pin3_D262.0099.npz"], False)]
+             ("chain empty", "chain", "", ["base_pin3_D262.0099.npz"], False),
+             ("chain (a) nan", "chain", skip.format("nan", "2e-34"), [], False),
+             ("chain (b) nan", "chain", good_b.replace("2.7e-86", "nan"), ["base_pin3_D262.0099.npz"], False)]
     step_ok = ("step 0: the series saved as /x/jet_pin3_D262.0099.npz (8 parts, 400 s)\n"
                "    a 0.092 -> D 262.10: predicted |F| 1e-20, od 3 steps -> 1e-35 (tol 2e-34), Delta 1.6 ...\n"
                "      Delta of the saved state, its eight parts summed exactly: 1.6830910901545985\ndone\n")
@@ -799,6 +810,18 @@ def selftest(argv):
         res.append(("comparison of unequal lengths", not c["ok"]))
         print(f"  comparison of unequal lengths: {'refused' if not c['ok'] else 'ACCEPTED'} ({c.get('why')}): "
               f"{'ok' if not c['ok'] else 'WRONG'}", flush=True)
+        nanp = [p.copy() for p in parts]
+        nanp[0][-1] = float("nan")
+        c = compare(parts, nanp, 1e-60)
+        res.append(("comparison with a NaN entry", not c["ok"]))
+        print(f"  comparison with a NaN entry: {'refused' if not c['ok'] else 'ACCEPTED'} ({c.get('why')}): "
+              f"{'ok' if not c['ok'] else 'WRONG'}", flush=True)
+        for rks, want in ((meta_out["ks"], True), (meta_out["ks"] - 1, False)):
+            good, c, sp_, sk_ = ref_verdict(parts, meta_out, parts, dict(meta_out, ks=rks), meta_out["ks"], 1e-60)
+            res.append((f"reference of order {rks}", good == want))
+            print(f"  a reference of order {rks} against the raise's {meta_out['ks']}: {'PASS' if good else 'FAIL'} "
+                  f"(same order {sk_}); expected {'PASS' if want else 'FAIL'}: {'ok' if good == want else 'WRONG'}",
+                  flush=True)
         for amt, want in ((1e-65, True), (1e-55, False)):
             cp = [p.copy() for p in parts]
             cp[7][5] = cp[7][5] + amt
