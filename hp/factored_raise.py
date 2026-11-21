@@ -2,21 +2,25 @@
 """The factored raise of the horizon order (notes/FACTORED_HORIZON.md 5.3, #1035 stage 2).
 
 A chain state converged at one horizon order is taken to a higher order ks by Newton's method on the pinned system
-(octo-double, the kernel's exact Jacobian and LU, as anm_run.py's base polish), with each trial point's horizon data
-(m_h, a_h) projected onto the rung: the m and a rows of the horizon block, solved for those 2M data with the last node
-held (reseed.Reseeder.refine_o, ElimO's octo-double projection). That projection is the change of variables of
-section 3, with m_K and a_K in place of m_h and a_h, so the trial's residual carries no G-sized second-order term. The
-corrector's own projection starts from the trial's own data, the linear step's, which miss the rung by that term, about
-1e30 at D 262.0099 (#1064); here it starts from a predictor of second order in the step: h + lam dh + lam^2 w, with w =
--J_r^-1 q2, q2 the rung rows' second difference along the step (at tau and tau/4, which must agree to 10%) and J_r the
-rung block. When the projection from there fails, the step is split into 2, 4, ... stages, each started from the last
-stage's projected data plus the predictor's increment. A trial is accepted by Deuflhard's natural test (the simplified
-correction through the LU at the iterate, at most (1 - lam/4) times the step), or when its max |F| <= tol.
+(octo-double, the kernel's exact Jacobian and LU, as anm_run.py's base polish), with each trial point's a_h projected
+by method A: the a rows of the horizon block solved for a_h, with the last node's a held and the rest of the trial
+(m_h included) the step's. That is section 3's change of variables, a_K in place of a_h, under which the horizon rows'
+curvature loses its G-sized part (5.2: by 1e-60 to 1e-64 at D 242.36), so the trial carries no G-sized second-order
+term. The corrector's own projection (ElimO, --rung ma here) solves the m and a rows for m_h and a_h from the trial's
+own data, the linear step's, which miss by that term, about 1e30 at D 262.0099 (#1064); its Newton also moves m_h
+linearly, which meets the same curvature. Here the projection starts from a predictor of second order in the step:
+a_h + lam da_h + lam^2 w, with w = -J_a^-1 q2, q2 the a rows' second difference along the step (at tau and tau/4,
+which must agree to 10%) and J_a their block in a_h. When the projection from there fails, the step is split into 2,
+4, ... stages, each started from the last stage's projected data plus the predictor's increment. A trial is accepted by
+Deuflhard's natural test (the simplified correction through the LU at the iterate, at most (1 - lam/4) times the step),
+or when its max |F| <= tol.
 
     python3 factored_raise.py RAW OUTDIR --state STATE.npz --ks 315 [--threads 10] [--tol 1e-80] [--it_max 12]
-        [--halvings 10] [--stages 16] [--plan stored|new] [--ref REF.npz --bar 1e-60] [--mutate=old|linear|order]
-        [--allow_unraw]
-    python3 factored_raise.py selftest [--mutate=nopred|old|linear]
+        [--halvings 10] [--stages 16] [--plan stored|new] [--rung a|ma] [--proj_bar 1e-60] [--ref REF.npz --bar 1e-60]
+        [--mutate=old|linear|order] [--allow_unraw]
+    python3 factored_raise.py selftest [STATE.npz] [--mutate=nopred|old|linear|gate]
+    python3 factored_raise.py polishgate POLISH.log POLISH_OUTDIR
+    python3 factored_raise.py stepgate STEP.log STEP_OUTDIR
 
 STATE and REF are paths inside RAW (the raw-data repository); OUTDIR must be a task folder of it (hp/raw_out.py).
 The run prints the kernel it uses and probes the methods it needs. --plan stored (the default) keeps the state's own
@@ -27,16 +31,24 @@ raise; a run that does not converge writes OUTDIR/lastiter_pin<k>_D<D>.npz inste
 reference state of the same plan and order, entry by entry (exact sums of the eight parts): it passes when every
 difference is at most --bar. Exit 1 when the raise does not converge to --tol, or when the comparison fails.
 
+--proj_bar is the projection's acceptance: its a rows must end at or below it (they end at their floor).
+
 Mutations (each a control): old, no projection (the old map, the corrector without ElimO); linear, the projection
-from the trial's own data (the corrector's ElimO), with no stages; order, the raise to ks - 1 while --ref is of ks,
-which the comparison must refuse.
+from the trial's own data, with no stages (with --rung ma, the corrector's ElimO); order, the raise to ks - 1 while
+--ref is of ks, which the comparison must refuse.
 
 selftest needs no kernel: a three-unknown model of the chain with a mass-mode gain G = 1e30 in its rung row and in its
 c row, a weak direction (sigma 1e-6) and a pole in the rung at a miss of 1e3. Raising it moves the weak unknown by
 1e-10, so the linear step misses the rung by 1e10. The factored raise must converge and match the model's solution to
 1e-80, and the old map, the linear projection, the projection with the second-order term left out, and with its sign
 flipped must each fail. --mutate=nopred runs the main case without the second-order term, and the selftest must then
-fail. It also checks the state writer on a stored state (read back exactly) and the comparison on planted copies.
+fail. It also checks the state writer on a stored state (read back exactly), the comparison on planted copies, and
+the two gates on planted logs (--mutate=gate adds a case that must pass and cannot).
+
+polishgate is stage 3's pass rule for anm_run.py's polish of the raised state (5.3): (a) its start line reads
+octo-double max|F| <= 1e-60 with the polish skipped, or (b) its last octo-double Newton line says converged with max|F|
+<= 1e-60 and the base is saved (part 4's gate903d and gate973). stepgate is the chain step's: anm_run.py --steps 1 wrote
+its jet_pin file and saved an accepted step's state, and did not stop. Each exits 1 when it fails.
 """
 import glob
 import json
@@ -51,6 +63,7 @@ import numpy as np
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
+PROJ_MAX = 12                                      # project_a's corrections at most
 TAUS = ((2.0 ** -10, 2.0 ** -12), (2.0 ** -20, 2.0 ** -22), (2.0 ** -30, 2.0 ** -32))   # the second difference's pairs
 T2_BAR = 0.1                                       # the predictor's t^2 check between tau and tau/4
 
@@ -241,11 +254,14 @@ def probe_kernel():
 
 class Chain:
     """the pinned chain at order ks on the kernel: octo-double residual, Newton step and LU (octo_corrector.PinnedO,
-    held values the state's own from all eight parts, anm_run.py --held_o 1), the rung of the projection
-    (reseed.Reseeder: rows 'ma', octo-double refine_o with stop, as anm_run.py --reseed 2 --reseed_q 1 --reseed_o 3
-    --reseed_start pred --proj_start pred --reseed_o_stop 1 --reseed_qd_bar 1e-13 builds it)"""
+    held values the state's own from all eight parts, anm_run.py --held_o 1), and the rung of the projection on the
+    two-node layout of reseed.Reseeder (built as anm_run.py --reseed 2 --reseed_q 1 --reseed_o 3 --reseed_start pred
+    --proj_start pred --reseed_o_stop 1 --reseed_qd_bar 1e-13 builds it). rung 'a' (the default) is method A: the a
+    rows of the horizon block for a_h, with the node's a held and m_h the step's; its Newton is project_a. rung 'ma' is
+    the chain's ElimO rung, the m and a rows for m_h and a_h (octo_corrector.project_o): its own Newton moves m_h
+    linearly, so it meets the curvature it is meant to remove (5.3)."""
 
-    def __init__(self, meta, z8, ks, threads, plan, proj_bar):
+    def __init__(self, meta, z8, ks, threads, plan, proj_bar, rung="a"):
         from octo_corrector import D_of, pinned_o
         from reseed import Reseeder, offsets
         self.meta = dict(meta, ks=int(ks))
@@ -264,14 +280,21 @@ class Chain:
                                                segs=self.segs)
         self.M, self.K = int(meta["M"]), len(meta["nodes"])
         self.off = offsets(self.M, self.K)
-        self.hs = slice(self.off["mh"], self.off["mh"] + 2 * self.M)
+        self.rung_mode = rung
+        M, a = self.M, offsets(self.M, 2)
+        if rung == "a":
+            self.hs = slice(self.off["ah"], self.off["ah"] + M)
+            self.rrows, self.rcols = np.r_[8 * M + 2 * M:8 * M + 3 * M], np.r_[a["ah"]:a["ah"] + M]
+        else:
+            self.hs = slice(self.off["mh"], self.off["mh"] + 2 * M)
+            self.rrows, self.rcols = np.r_[8 * M + M:8 * M + 3 * M], np.r_[a["mh"]:a["mh"] + 2 * M]
         self.rs = Reseeder(dict(M=self.M, nodes=list(meta["nodes"]), kt=meta.get("kt", 36), kc=meta.get("kc", 146),
                                 ks=int(ks)), D_of(meta), threads=threads, horizon_alpha=0, qd=True, od=3,
                            qd_start="pred", qd_bar=1e-13, proj_start="pred", od_stop=True, exact_recip=0)
         self.proj_bar = proj_bar
         self._lu = None
 
-    # vectors: eight-part tuples of float64 arrays; horizon data: eight parts of length 2M
+    # vectors: eight-part tuples of float64 arrays; horizon data: eight parts of the rung's columns (M or 2M)
     def axpy(self, a, x, y):
         from multidouble import od_axpy
         from octo_corrector import o8
@@ -335,33 +358,75 @@ class Chain:
         return out
 
     def rung(self, z8):
+        """the rung rows at z8 (eight parts), from the blocks that hold them (reseed.res_rows)"""
         from reseed import res_rows
         s = self.rs.rung_solver(self.rs.us[-1])
-        return tuple(np.ascontiguousarray(np.asarray(p))
-                     for p in res_rows(s, self._two_node(z8), self.rs.rung_rows()))
+        return tuple(np.ascontiguousarray(np.asarray(p)) for p in res_rows(s, self._two_node(z8), self.rrows))
 
-    def rung_solve(self, z8, r):
-        """J_r^-1 r: the rung block (m and a rows, m_h and a_h columns) of the quad-double Jacobian at z8's
-        quad-double rounding, factored once per point (QDLu)"""
+    def _block_lu(self, v4):
         from multidouble import QDLu
         from reseed import jac_block
-        key = tuple(float(np.asarray(z8[0])[i]) for i in (0, self.off["mh"], self.off["mh"] + self.M, -1))
+        s = self.rs.rung_solver(self.rs.us[-1])
+        blk = [np.ascontiguousarray(np.array(b)) for b in jac_block(s, v4, self.rrows, self.rcols)]
+        return QDLu(*blk)
+
+    def rung_solve(self, z8, r):
+        """J_r^-1 r: the rung block of the quad-double Jacobian at z8's leading four parts, factored once per point"""
+        key = tuple(float(np.asarray(z8[0])[i]) for i in (0, self.hs.start, self.hs.stop - 1, -1))
         if self._lu is None or self._lu[0] != key:
-            s = self.rs.rung_solver(self.rs.us[-1])
-            a = self.rs.aoff
-            cols = np.r_[a["mh"]:a["mh"] + 2 * self.M]
-            blk = [np.ascontiguousarray(np.array(b)) for b in jac_block(s, self._two_node(z8, 4), self.rs.rung_rows(),
-                                                                        cols)]
-            self._lu = (key, QDLu(*blk))
+            self._lu = (key, self._block_lu(self._two_node(z8, 4)))
         x = self._lu[1].solve(*[np.ascontiguousarray(p) for p in r[:4]])
-        zero = np.zeros(2 * self.M)
+        zero = np.zeros(len(self.rrows))
         return tuple(np.ascontiguousarray(np.asarray(p)) for p in x) + (zero, zero, zero, zero)
 
     def project(self, z8):
-        from octo_corrector import project_o
-        zo, ho, end, ok = project_o(self.rs, z8, self.proj_bar)
+        if self.rung_mode == "ma":
+            from octo_corrector import project_o
+            zo, ho, end, ok = project_o(self.rs, z8, self.proj_bar)
+        else:
+            zo, ho, end, ok = self.project_a(z8)
         line = f"rung max|R| {' -> '.join(f'{x:.2e}' for x in ho)} ({end})"
         return zo, bool(ok), dict(hist=[float(x) for x in ho], end=end, line=line)
+
+    def project_a(self, z8):
+        """method A in octo-double: Newton on a_h for the a rows of the horizon block, the rest of z8 held, as
+        Reseeder.refine_o does for its rung: the residual from all eight parts, each correction through a QDLu of the
+        block at the point's leading four parts, factored again when a correction gains less than OD_REFACTOR, and
+        ended at the floor (|R| <= OD_FLOOR, or a correction from a fresh LU that does not halve |R|), when not finite,
+        or after PROJ_MAX corrections. Returns (z', hist, end, ok): ok when |R| ends finite and at most proj_bar."""
+        from multidouble import od_axpy
+        from reseed import OD_FLOOR, OD_REFACTOR, OD_STALL
+        v = [np.array(p) for p in self._two_node(z8)]
+        cols = self.rcols
+        d = [np.ascontiguousarray(p[cols]) for p in v]
+        zero = np.zeros(len(cols))
+        hist, lu, fresh, end = [], None, False, "cap"
+        for k in range(PROJ_MAX + 1):
+            for q in range(8):
+                v[q][cols] = d[q]
+            R = self.rung(self.set_h(z8, d))
+            hist.append(float(np.max(np.abs(np.asarray(R[0]) + np.asarray(R[1])))))
+            if not np.isfinite(hist[-1]):
+                end = "nonfinite"
+                break
+            if hist[-1] <= OD_FLOOR or (fresh and hist[-1] > OD_STALL * hist[-2]):
+                end = "floor"
+                break
+            if k == PROJ_MAX:
+                break
+            try:
+                if lu is None or hist[-1] > OD_REFACTOR * hist[-2]:
+                    lu, fresh = self._block_lu([np.ascontiguousarray(p) for p in v[:4]]), True
+                else:
+                    fresh = False
+                x = [np.ascontiguousarray(np.asarray(p)) for p in lu.solve(*[-np.asarray(r) for r in R[:4]])]
+            except ValueError:
+                end = "error"
+                break
+            d = [np.ascontiguousarray(np.asarray(p)) for p in od_axpy(1.0, *x, *([zero] * 4), *d)]
+        zo = self.set_h(z8, d) if end != "nonfinite" else tuple(z8)
+        ok = bool(np.isfinite(hist[-1]) and hist[-1] <= self.proj_bar and end in ("floor", "cap"))
+        return zo, hist, end, ok
 
 
 def save_state(path, z8, meta):
@@ -399,7 +464,7 @@ def run(argv):
     allow = pop_allow(argv)
     args = [a for a in argv if not a.startswith("--")]
     opt = dict(state=None, ks=None, threads="10", tol="1e-80", it_max="12", halvings="10", stages="16", plan="stored",
-               ref=None, bar="1e-60", mutate="", proj_bar=None)
+               ref=None, bar="1e-60", mutate="", proj_bar="1e-60", rung="a")
     for a in argv:
         if a.startswith("--"):
             k, _, v = a[2:].partition("=")
@@ -423,6 +488,8 @@ def run(argv):
         raise SystemExit(f"--mutate={opt['mutate']}: old, linear or order")
     if opt["plan"] not in ("stored", "new"):
         raise SystemExit("--plan stored or new")
+    if opt["rung"] not in ("a", "ma"):
+        raise SystemExit("--rung a or ma")
     os.makedirs(out, exist_ok=True)
     require_raw(os.path.join(out, "raise.json"), allow=allow)
     t_start = time.time()
@@ -437,12 +504,13 @@ def run(argv):
     z8 = tuple(np.ascontiguousarray(p) for p in z8)
     ks = int(opt["ks"]) - (1 if opt["mutate"] == "order" else 0)
     tol = float(opt["tol"])
-    proj_bar = float(opt["proj_bar"]) if opt["proj_bar"] else tol
+    proj_bar = float(opt["proj_bar"])
     mode = {"": "factored", "old": "old", "linear": "linear", "order": "factored"}[opt["mutate"]]
     print(f"state {opt['state']}: D {meta.get('D_str', meta['D'])}, ks {meta.get('ks')} -> {ks}"
           f"{' (--mutate=order: ks - 1)' if opt['mutate'] == 'order' else ''}, M {meta['M']}, plan {opt['plan']}; "
-          f"mode {mode}, tol {tol:g}, projection bar {proj_bar:g}, threads {opt['threads']}", flush=True)
-    sy = Chain(meta, z8, ks, int(opt["threads"]), opt["plan"], proj_bar)
+          f"mode {mode}, rung {opt['rung']}, tol {tol:g}, projection bar {proj_bar:g}, threads {opt['threads']}",
+          flush=True)
+    sy = Chain(meta, z8, ks, int(opt["threads"]), opt["plan"], proj_bar, opt["rung"])
     z, hist, conv, why = raise_newton(sy, z8, tol, it_max=int(opt["it_max"]), halvings=int(opt["halvings"]),
                                       stages=int(opt["stages"]), mode=mode)
     kf = meta.get("kfreeze")
@@ -450,10 +518,12 @@ def run(argv):
     with mp.workdps(60):
         d0, d1 = exact_entries(z8, 60)[-1], exact_entries(z, 60)[-1]
         dDelta = float(d1 - d0)
-    rec = dict(cmd="factored_raise", argv=argv, state=opt["state"], ks_from=meta.get("ks"), ks=ks, mode=mode, tol=tol,
+    rec = dict(cmd="factored_raise", argv=argv, state=opt["state"], ks_from=meta.get("ks"), ks=ks, mode=mode,
+               rung=opt["rung"], tol=tol,
                converged=conv, why=why, hist=hist, dDelta=dDelta, kernel=kinfo, seconds=round(time.time() - t_start))
     meta_out = dict(meta, ks=ks, segs=sy.segs, source=opt["state"], parts=8,
-                    factored_raise=dict(converged=conv, max_F=[h["F"] for h in hist], tol=tol, mode=mode, why=why,
+                    factored_raise=dict(converged=conv, max_F=[h["F"] for h in hist], tol=tol, mode=mode,
+                                        rung=opt["rung"], why=why,
                                         script=kinfo["script_head"]))
     save_state(os.path.join(out, name), z, meta_out)
     print(f"raise {'converged' if conv else 'NOT converged'} ({why}) after {len(hist)} line(s), last max|F| "
@@ -579,6 +649,79 @@ class Model:
         return z, ok, dict(hist=hist, line=f"rung |r| {hist[0]:.2e} -> {hist[-1]:.2e} in {len(hist) - 1}")
 
 
+# ------------------------------------------------------------------ the gates of stages 3 and 3b (5.3)
+GATE_F = 1e-60                                     # part 4's tolerance (#1064)
+
+
+def polishgate(log, outdir):
+    """stage 3's pass rule for anm_run.py's polish of the raised state at its order (5.3): (a) its start line reads
+    octo-double max|F| <= 1e-60 with the polish skipped, or (b) its last octo-double Newton line says converged with
+    max|F| <= 1e-60 and a base was saved in outdir (part 4's gate903d and gate973). Returns (ok, reason)."""
+    t = open(log, errors="replace").read()
+    m = re.search(r"octo-double max\|F\| ([0-9.eE+-]+|nan|inf) <= --tol_od \S+: base polish skipped", t)
+    if m and float(m.group(1)) <= GATE_F:
+        return True, f"(a) the start line: octo-double max|F| {m.group(1)}, polish skipped"
+    lines = re.findall(r"octo-double Newton: (\d+) steps, max\|F\| ([0-9.eE+-]+|nan|inf), (not converged|converged)", t)
+    base = glob.glob(os.path.join(outdir, "base_pin*_D*.npz"))
+    if not lines:
+        return False, "no octo-double Newton line and no skipped polish at or below 1e-60"
+    n, F, c = lines[-1]
+    ok = c == "converged" and float(F) <= GATE_F and bool(base)
+    return ok, f"(b) the last octo-double Newton line: {n} steps, max|F| {F}, {c}; base saved {bool(base)}"
+
+
+def stepgate(log, outdir):
+    """stage 3's chain step (5.3): anm_run.py --steps 1 from the polished base wrote its jet_pin file, accepted a step
+    by the chain's own rules (an anm_pin state saved, its Delta line printed) and did not stop. Returns (ok, reason)."""
+    t = open(log, errors="replace").read()
+    jl = re.search(r"step 0: the series saved as (\S+jet_pin\d+_D[0-9.]+\.npz)", t)
+    jet = bool(jl) and os.path.exists(os.path.join(outdir, os.path.basename(jl.group(1))))
+    saved = "Delta of the saved state, its eight parts summed exactly" in t
+    st = glob.glob(os.path.join(outdir, "anm_pin*_D*.npz"))
+    stopped = bool(re.search(r"^stopped:", t, re.M))
+    ok = jet and saved and bool(st) and not stopped
+    return ok, (f"jet {'written' if jet else 'MISSING'}, step {'accepted and saved' if saved and st else 'NOT saved'}"
+                f"{', stopped' if stopped else ''}")
+
+
+def gate_selftest():
+    """the gates on planted logs and folders: each broken case must fail"""
+    import tempfile
+    out = []
+    good_b = "      octo-double Newton: 1 steps, max|F| 2.7e-86, converged; double-double |F| 1e+08\n"
+    cases = [("polish (a) 1e-62", "polish", "base: double-double |F| 1e-21 <= --tol 1e-20, octo-double max|F| 1.0e-62 "
+              "<= --tol_od 1e-60: base polish skipped\n", [], True),
+             ("polish (a) 5e-60", "polish", "base: double-double |F| 1e-21 <= --tol 1e-20, octo-double max|F| 5.0e-60 "
+              "<= --tol_od 1e-59: base polish skipped\n", [], False),
+             ("polish (b)", "polish", good_b, ["base_pin3_D262.0099.npz"], True),
+             ("polish (b) no base", "polish", good_b, [], False),
+             ("polish (b) not converged", "polish", good_b.replace(", converged", ", not converged"),
+              ["base_pin3_D262.0099.npz"], False),
+             ("polish (b) 2e-34", "polish", good_b.replace("2.7e-86", "2.0e-34"), ["base_pin3_D262.0099.npz"], False),
+             ("polish empty", "polish", "", ["base_pin3_D262.0099.npz"], False)]
+    step_ok = ("step 0: the series saved as /x/jet_pin3_D262.0099.npz (8 parts, 400 s)\n"
+               "    a 0.092 -> D 262.10: predicted |F| 1e-20, od 3 steps -> 1e-35 (tol 2e-34), Delta 1.6 ...\n"
+               "      Delta of the saved state, its eight parts summed exactly: 1.6830910901545985\ndone\n")
+    cases += [("step", "step", step_ok, ["jet_pin3_D262.0099.npz", "anm_pin3_D262.1021.npz"], True),
+              ("step no jet", "step", step_ok, ["anm_pin3_D262.1021.npz"], False),
+              ("step stopped", "step", step_ok.replace("done", "stopped: no convergence after eight attempts"),
+               ["jet_pin3_D262.0099.npz", "anm_pin3_D262.1021.npz"], False),
+              ("step not saved", "step", step_ok.replace("      Delta of the saved state", "      Delta of a"),
+               ["jet_pin3_D262.0099.npz"], False)]
+    for name, kind, text, files, want in cases:
+        with tempfile.TemporaryDirectory() as d:
+            lp = os.path.join(d, "run.log")
+            with open(lp, "w") as fh:
+                fh.write(text)
+            for f in files:
+                open(os.path.join(d, f), "w").close()
+            ok, why = (polishgate if kind == "polish" else stepgate)(lp, d)
+        out.append((f"gate {name}", ok == want))
+        print(f"  gate, {name}: {'pass' if ok else 'fail'} ({why}); expected {'pass' if want else 'fail'}: "
+              f"{'ok' if ok == want else 'WRONG'}", flush=True)
+    return out
+
+
 def selftest(argv):
     mutate = next((a.split("=", 1)[1] for a in argv if a.startswith("--mutate=")), "")
     mp.mp.dps = 120
@@ -631,6 +774,9 @@ def selftest(argv):
     else:
         print("  no stored state found for the writer's check (give one: selftest STATE.npz)", flush=True)
         res.append(("state writer", False))
+    res += gate_selftest()
+    if mutate == "gate":                    # the control: a broken expectation must fail the selftest
+        res.append(("gate control (--mutate=gate)", polishgate(os.devnull, os.path.dirname(os.devnull))[0]))
     fails = [n for n, ok in res if not ok]
     print(f"selftest{' --mutate=' + mutate if mutate else ''}: {len(res) - len(fails)} of {len(res)} pass"
           + (f"; FAIL: {', '.join(fails)}" if fails else ""), flush=True)
@@ -640,6 +786,10 @@ def selftest(argv):
 def main(argv):
     if argv and argv[0] == "selftest":
         return selftest(argv[1:])
+    if argv and argv[0] in ("polishgate", "stepgate") and len(argv) == 3:
+        ok, why = (polishgate if argv[0] == "polishgate" else stepgate)(argv[1], argv[2])
+        print(f"{argv[0]} {argv[1]}: {'PASS' if ok else 'FAIL'}: {why}", flush=True)
+        return 0 if ok else 1
     return run(argv)
 
 

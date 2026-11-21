@@ -42,7 +42,7 @@ Commands, from hp/ (STATE an .npz of the chain, read with numpy; parts zh, zl, z
         [--plant_c C] [--mutate=r0|plant1]
     python3 factored_horizon.py curvx STATE --prec 288 --ref REF.json --t 0|1e-20|-1e-20
     python3 factored_horizon.py curvxq X_t.json X_minus_t.json X_0.json --t 1e-20 --curv CURV_D.json
-    python3 factored_horizon.py raisecheck STATE --ks 315 --prec 512 --cache CACHE.json [--mutate=linear]
+    python3 factored_horizon.py raisecheck STATE --ks 315 --prec 512 --cache CACHE.json [--rows a|ma] [--mutate=linear]
 --out FILE.json writes the command's record. Exit 1 when a check fails.
 
 selftest, planted truth on a small problem (n = 100, M = 8, K = 40, x_K = 0.7, a_h the slaved value moved by
@@ -96,11 +96,12 @@ Exit 1 when Q_fact or every pair of Q_old fails its t^2 check, or the plant is n
 --mutate=plant1 with --plant plants the term at +t only, so half of it is recovered.
 curvx and curvxq repeat Q_fact along D with the stage-1 fixed point, the cross-check.
 
-raisecheck: 5.3's Mac-side check of the factored raise's projection. At order --ks with hp's 1/k, the rung of the
-chain's projection (the m and a rows for m_h and a_h, the node held) is solved from the stored data, then along Delta
-moves of 1e-16, 1e-15 and 1e-14 from the linear predictor (the corrector's own start) and from the second-order one
-(factored_raise.py's, its t^2 term from a second difference at tau 1e-20 and 1e-19). It passes when the second-order
-start converges at 1e-14 and the t^2 term holds to 10%; --mutate=linear judges the linear start instead.
+raisecheck: 5.3's Mac-side check of the factored raise's projection. At order --ks with hp's 1/k, the rung is solved
+from the stored data, then along Delta moves of 1e-16, 1e-15 and 1e-14 from the linear predictor (the corrector's own
+start) and from the second-order one (factored_raise.py's, its t^2 term from a second difference at tau 1e-20 and
+1e-19). --rows a (the default) is method A, the a rows for a_h with m_h fixed (factored_raise.py's projection); ma is
+the chain's ElimO rung, the m and a rows for m_h and a_h. It passes when the second-order start converges at 1e-14
+and the t^2 term holds to 10%; --mutate=linear judges the linear start instead.
 
 loop: the sweep map at a converged state (gamma by B's sum): B* = 1/a^2 from the old series, |g(B*) - B*|, gamma*,
 the power iteration of the linearized map from a random perturbation of size --h, and the forward pass's response in
@@ -1150,21 +1151,28 @@ RAISE_TAUS = (1e-20, 1e-19)                        # the second difference that 
 RAISE_ETA = "1e-60"                                # the finite-difference step of the rung's Jacobian, relative
 
 
-def rung_F(seg, mh, ah, delta, node):
-    """the rung of the chain's projection (reseed.py, rows 'ma'): the m and a rows of the horizon block, the old series
-    at u0 minus the node's m and a, for the horizon data (m_h, a_h) at Delta"""
+def rung_F(seg, mh, ah, delta, node, rows="ma"):
+    """the rung of a projection: rows 'ma', the m and a rows of the horizon block (reseed.py's, the chain's ElimO), or
+    'a', the a rows alone (method A, factored_raise.py's); the old series at u0 minus the node. Returns (the rung
+    rows, all 4M rows)"""
     s = series(seg, mh, seg.omega(delta), a0=ah)
     R, _ = rows_old(seg, s, node)
-    return R[seg.M:3 * seg.M], R
-
-
-def rung_newton(seg, h, delta, node, J, tol, maxit=10):
-    """chord Newton on the 2M horizon data h = (m_h, a_h) for the rung at Delta with the fixed Jacobian J; ends at tol,
-    when a pass gains less than tenfold, or after maxit passes. Returns (h, |F| history, full rows at the end)"""
     M = seg.M
+    return (R[M:3 * M] if rows == "ma" else R[2 * M:3 * M]), R
+
+
+def rung_split(seg, h, mh_fixed, rows):
+    """(m_h, a_h) from the rung's unknowns h: both for rows 'ma', a_h alone (m_h fixed) for rows 'a'"""
+    M = seg.M
+    return (h[:M], h[M:]) if rows == "ma" else (mh_fixed, h)
+
+
+def rung_newton(seg, h, mh_fixed, delta, node, J, tol, rows, maxit=10):
+    """chord Newton on the rung's unknowns h at Delta with the fixed Jacobian J; ends at tol, when a pass gains less
+    than tenfold, or after maxit passes. Returns (h, |F| history, all rows at the end)"""
     hist = []
     for _ in range(maxit):
-        F, R = rung_F(seg, h[:M], h[M:], delta, node)
+        F, R = rung_F(seg, *rung_split(seg, h, mh_fixed, rows), delta, node, rows)
         hist.append(float(amax(F)))
         if hist[-1] <= tol or (len(hist) > 1 and hist[-1] > 0.1 * hist[-2]) or len(hist) == maxit:
             break
@@ -1173,12 +1181,14 @@ def rung_newton(seg, h, delta, node, J, tol, maxit=10):
     return h, hist, R
 
 
-def cmd_raisecheck(path, prec, ks, cache, mutate=""):
-    """5.3's Mac-side check: at the state's own Delta and node, the rung (the m and a rows for m_h and a_h, the node
-    held) at order ks with hp's 1/k, solved from the stored data (the start projection), then along Delta moves of
-    RAISE_MOVES from the linear predictor (the corrector's own start, ElimO's) and from the second-order one
-    (factored_raise.py's). Passes when the second-order start converges at the largest move; mutate 'linear' judges
-    the linear start instead (the control, expected to fail there)."""
+def cmd_raisecheck(path, prec, ks, cache, mutate="", rows="a"):
+    """5.3's Mac-side check: at the state's own Delta and node, the rung at order ks with hp's 1/k, solved from the
+    stored data (the start projection), then along Delta moves of RAISE_MOVES from the linear predictor (the
+    corrector's own start) and from the second-order one (factored_raise.py's). rows 'a': method A (the a rows for
+    a_h, m_h fixed), factored_raise.py's projection; 'ma': the chain's (the m and a rows for m_h and a_h). Passes when
+    the second-order start converges at the largest move; mutate 'linear' judges the linear start instead (the
+    control, expected to fail there). The Jacobian's columns are cached by index (m_h 0..M-1, a_h M..2M-1, each
+    holding all 2M rung rows), so 'a' forms the a_h columns and 'ma' adds the m_h ones."""
     RECIP_DD[0] = True
     mp.mp.prec = prec
     meta, z = load_state(path)
@@ -1187,64 +1197,77 @@ def cmd_raisecheck(path, prec, ks, cache, mutate=""):
     M = seg.M
     tol = mp.mpf(2) ** (-prec + 40) * seg.G
     t0 = time.time()
-    h0 = list(mh) + list(ah)
-    F0, R0 = rung_F(seg, mh, ah, delta, node)
-    rec = dict(cmd="raisecheck", state=os.path.basename(path), D=seg.D_str, prec=prec, ks=ks, recip="dd",
-               G=float(seg.G),
-               stored=dict(p=float(amax(R0[:M])), m=float(amax(R0[M:2 * M])), a=float(amax(R0[2 * M:3 * M])),
-                           c=float(amax(R0[3 * M:]))), mutate=mutate)
+    F0, R0 = rung_F(seg, mh, ah, delta, node, "ma")
+    rec = dict(cmd="raisecheck", state=os.path.basename(path), D=seg.D_str, prec=prec, ks=ks, recip="dd", rows=rows,
+               G=float(seg.G), stored=dict(p=float(amax(R0[:M])), m=float(amax(R0[M:2 * M])),
+                                           a=float(amax(R0[2 * M:3 * M])), c=float(amax(R0[3 * M:]))), mutate=mutate)
     print(f"raisecheck {os.path.basename(path)} D {seg.D_str[:12]} ks {ks} (state's {meta.get('ks')}), {prec} bits, "
-          f"hp's 1/k: stored data's rows m {rec['stored']['m']:.3e}, a {rec['stored']['a']:.3e}, "
-          f"c {rec['stored']['c']:.3e}"
-          f" (p all harmonics {rec['stored']['p']:.3e}); G {float(seg.G):.3e}", flush=True)
-    # the rung's Jacobian in (m_h, a_h), by forward differences, cached
+          f"hp's 1/k, rung rows {rows}: stored data's rows m {rec['stored']['m']:.3e}, a {rec['stored']['a']:.3e}, "
+          f"c {rec['stored']['c']:.3e} (p all harmonics {rec['stored']['p']:.3e}); G {float(seg.G):.3e}", flush=True)
+    # the Jacobian of the 2M rung rows ('ma') in (m_h, a_h), column by column, cached
+    cols = {}
     if cache and os.path.exists(cache):
         with open(cache) as fh:
             c = json.load(fh)
-        J = mp.matrix([[mp.mpf(v) for v in row] for row in c["J"]])
-        print(f"  Jacobian from {cache}", flush=True)
-    else:
-        eta = mp.mpf(RAISE_ETA)
-        J = mp.matrix(2 * M, 2 * M)
-        for j in range(2 * M):
-            hj = list(h0)
-            e = eta * max(abs(hj[j]), mp.mpf(1))
-            hj[j] += e
-            Fj, _ = rung_F(seg, hj[:M], hj[M:], delta, node)
-            for i in range(2 * M):
-                J[i, j] = (Fj[i] - F0[i]) / e
-            if (j + 1) % 8 == 0:
-                print(f"  column {j + 1}/{2 * M}, {time.time() - t0:.0f} s", flush=True)
+        if int(c.get("ks", ks)) != ks or int(c.get("prec", prec)) != prec:
+            raise SystemExit(f"{cache}: ks {c.get('ks')} / prec {c.get('prec')}, not {ks} / {prec}")
+        cols = {int(k): [mp.mpf(v) for v in col] for k, col in c["cols"].items()}
+    need = list(range(M, 2 * M)) if rows == "a" else list(range(2 * M))
+    eta = mp.mpf(RAISE_ETA)
+    h0 = list(mh) + list(ah)
+    for n, j in enumerate([j for j in need if j not in cols]):
+        hj = list(h0)
+        e = eta * max(abs(hj[j]), mp.mpf(1))
+        hj[j] += e
+        Fj, _ = rung_F(seg, hj[:M], hj[M:], delta, node, "ma")
+        cols[j] = [(x - y) / e for x, y in zip(Fj, F0)]
         if cache:
             with open(cache, "w") as fh:
-                json.dump(dict(J=[[str(J[i, j]) for j in range(2 * M)] for i in range(2 * M)], prec=prec, ks=ks), fh)
-    dg = [abs(J[i, i]) for i in range(2 * M)]
-    rec["J_diag"] = dict(m=[float(min(dg[:M])), float(max(dg[:M]))], a=[float(min(dg[M:])), float(max(dg[M:]))])
+                json.dump(dict(ks=ks, prec=prec, cols={str(k): [str(v) for v in col] for k, col in cols.items()}), fh)
+        if (n + 1) % 8 == 0:
+            print(f"  column {j + 1} of the rung's 2M, {time.time() - t0:.0f} s", flush=True)
+    if rows == "a":
+        J = mp.matrix(M, M)
+        for jj in range(M):
+            for i in range(M):
+                J[i, jj] = cols[M + jj][M + i]
+        hstart, mfix = list(ah), list(mh)
+    else:
+        J = mp.matrix(2 * M, 2 * M)
+        for jj in range(2 * M):
+            for i in range(2 * M):
+                J[i, jj] = cols[jj][i]
+        hstart, mfix = h0, None
+    n_u = len(hstart)
+    dg = [abs(J[i, i]) for i in range(n_u)]
+    rec["J_diag"] = [float(min(dg)), float(max(dg))]
     # the start projection: the stored data re-solved at order ks
-    hb, hist_b, Rb = rung_newton(seg, h0, delta, node, J, tol)
-    rec["start"] = dict(hist=hist_b, c=float(amax(Rb[3 * M:])), p=float(amax(Rb[:M])),
-                        moved=float(amax(vsub(hb, h0))))
-    print(f"  start projection at ks {ks}: |F| {' -> '.join(f'{x:.2e}' for x in hist_b)}; then c rows "
-          f"{rec['start']['c']:.3e}, data moved by {rec['start']['moved']:.3e}; {time.time() - t0:.0f} s", flush=True)
+    hb, hist_b, Rb = rung_newton(seg, hstart, mfix, delta, node, J, tol, rows)
+    rec["start"] = dict(hist=hist_b, m=float(amax(Rb[M:2 * M])), c=float(amax(Rb[3 * M:])),
+                        moved=float(amax(vsub(hb, hstart))))
+    print(f"  start projection at ks {ks}: |F| {' -> '.join(f'{x:.2e}' for x in hist_b)}; then rows m "
+          f"{rec['start']['m']:.3e}, c {rec['start']['c']:.3e}; data moved by {rec['start']['moved']:.3e}; "
+          f"{time.time() - t0:.0f} s", flush=True)
     if hist_b[-1] > tol:
-        print("  FAIL: the start projection did not converge", flush=True)
+        rec.update(ok=False, seconds=round(time.time() - t0))
+        print(f"raisecheck: the start projection did not converge: FAIL; {rec['seconds']} s", flush=True)
         return rec, False
     # the predictor: s = -J^-1 dF/dDelta (forward difference at the base), w from the second difference along (s, 1)
-    eta = mp.mpf("1e-45")
-    Fe, _ = rung_F(seg, hb[:M], hb[M:], delta + eta, node)
-    Fb, _ = rung_F(seg, hb[:M], hb[M:], delta, node)
-    sv = mp.lu_solve(J, mp.matrix([(x - y) / eta for x, y in zip(Fe, Fb)]))
-    s_ = [-sv[i] for i in range(2 * M)]
+    sp_ = lambda h: rung_split(seg, h, mfix, rows)  # noqa: E731
+    eta_d = mp.mpf("1e-45")
+    Fe, _ = rung_F(seg, *sp_(hb), delta + eta_d, node, rows)
+    Fb, _ = rung_F(seg, *sp_(hb), delta, node, rows)
+    sv = mp.lu_solve(J, mp.matrix([(x - y) / eta_d for x, y in zip(Fe, Fb)]))
+    s_ = [-sv[i] for i in range(n_u)]
     ws = {}
     for tau in RAISE_TAUS:
         tau = mp.mpf(tau)
-        Fp, _ = rung_F(seg, *(lambda v: (v[:M], v[M:]))([x + tau * y for x, y in zip(hb, s_)]), delta + tau, node)
-        Fm, _ = rung_F(seg, *(lambda v: (v[:M], v[M:]))([x - tau * y for x, y in zip(hb, s_)]), delta - tau, node)
+        Fp, _ = rung_F(seg, *sp_([x + tau * y for x, y in zip(hb, s_)]), delta + tau, node, rows)
+        Fm, _ = rung_F(seg, *sp_([x - tau * y for x, y in zip(hb, s_)]), delta - tau, node, rows)
         q2 = [(a + b - 2 * c) / (2 * tau * tau) for a, b, c in zip(Fp, Fm, Fb)]
         wv = mp.lu_solve(J, mp.matrix(q2))
-        ws[float(tau)] = [-wv[i] for i in range(2 * M)]
-    w = ws[RAISE_TAUS[0]]
-    w2 = ws[RAISE_TAUS[1]]
+        ws[float(tau)] = [-wv[i] for i in range(n_u)]
+    w, w2 = ws[RAISE_TAUS[0]], ws[RAISE_TAUS[1]]
     sc = float(amax(vsub(w, w2)) / amax(w))
     rec["predictor"] = dict(s=float(amax(s_)), w=float(amax(w)), t2_check=sc)
     print(f"  predictor: |s| {float(amax(s_)):.3e}, |w| {float(amax(w)):.3e} (t^2 check {sc:.2e} between tau "
@@ -1255,9 +1278,11 @@ def cmd_raisecheck(path, prec, ks, cache, mutate=""):
         out = dict(t=t)
         for name, g in (("linear", [x + tm * y for x, y in zip(hb, s_)]),
                         ("second", [x + tm * y + tm * tm * v for x, y, v in zip(hb, s_, w)])):
-            h, hist, _ = rung_newton(seg, g, delta + tm, node, J, tol)
+            h, hist, Rt = rung_newton(seg, g, mfix, delta + tm, node, J, tol, rows)
             ok = bool(hist[-1] <= tol)
             out[name] = dict(hist=hist, converged=ok, passes=len(hist))
+            if ok:
+                out[name]["rows_after"] = dict(m=float(amax(Rt[M:2 * M])), c=float(amax(Rt[3 * M:])))
             if name == "second" and ok:
                 d3 = vsub(h, g)
                 out["third"] = dict(miss=float(amax(d3)), per_t3=float(amax(d3) / tm ** 3))
@@ -1265,7 +1290,8 @@ def cmd_raisecheck(path, prec, ks, cache, mutate=""):
                   f"({'converged' if ok else 'NOT converged'}); {time.time() - t0:.0f} s", flush=True)
         if "third" in out:
             print(f"    the second-order start missed the solution by {out['third']['miss']:.3e} "
-                  f"({out['third']['per_t3']:.3e} t^3)", flush=True)
+                  f"({out['third']['per_t3']:.3e} t^3); the m and c rows there "
+                  f"{out['second']['rows_after']['m']:.3e}, {out['second']['rows_after']['c']:.3e}", flush=True)
         rec["moves"].append(out)
     judged = "linear" if mutate == "linear" else "second"
     ok = bool(rec["moves"][-1][judged]["converged"]) and sc <= 0.1
@@ -1457,7 +1483,7 @@ def main(argv):
     elif cmd == "curvxq":
         rec, ok = cmd_curvxq(args[1:4], opt["t"], opt["curv"])
     elif cmd == "raisecheck":
-        rec, ok = cmd_raisecheck(args[1], prec, int(opt["ks"]), opt.get("cache"), mutate)
+        rec, ok = cmd_raisecheck(args[1], prec, int(opt["ks"]), opt.get("cache"), mutate, opt.get("rows", "a"))
     elif cmd == "loop":
         rec, ok = cmd_loop(args[1], prec, int(opt.get("its", 5)), opt.get("h", "1e-100"),
                            [int(x) for x in opt.get("orders", "60,100,125").split(",")])
