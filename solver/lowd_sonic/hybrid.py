@@ -15,10 +15,14 @@ band rows are those of hp's unwarped band; the warped and unwarped band maps dif
 tau grid, and the plain chord step then diverges along them once the warp is large enough (D 3.7, M 128: it converges
 for the test warp at A 1.5e-4 and diverges at 5e-4). --aa_m m > 0 accelerates the chord steps by Anderson mixing of the
 last m steps (the fixed-point map z -> z - J0^-1 F(z); Anderson, J. ACM 12 (1965) 547; Walker and Ni, SIAM J. Numer.
-Anal. 49 (2011) 1715), which removes such a few-mode divergence.
+Anal. 49 (2011) 1715), which removes such a few-mode divergence at M 128 but not at D 3.045, M 320 (raw
+I997-mac-sonic/real/real_attempt2_jac_hp_aa8.log). --jac wood (any M): hp's LU, with its band rows replaced by the warped
+band's own T (forward differences) through the Woodbury identity: J0 W = R for W = J0^-1 R (R the band rows' unit
+vectors; Solver.lu_solve_many), so J^-1 F = y - W (T W)^-1 (T y - F_band) with y = J0^-1 F, and hp's own band rows are
+never needed. At M 128 it gives the same steps as --jac band.
 
     python3 hybrid.py OUT.jsonl --state S.npz [--history A.npz,B.npz] --Ds 3.045,3.044 [--band 0.01,0.02]
-        [--warp none|test|design|FILE.npy] [--A 1.5e-3] [--eps0 2e-3] [--kappa 1.0] [--tol 1e-12] [--it_max 40]
+        [--warp none|test|design|FILE.npy] [--jac band|hp|wood] [--aa_m m] [--A 1.5e-3] [--eps0 2e-3] [--kappa 1.0] [--tol 1e-12] [--it_max 40]
         [--threads 4] [--drop_nodes x1,x2] [--add_nodes x1,x2] [--save DIR] [--expect D:VALUE:TOL,...] [--mutate none|nowarp]
         [--time_cap SECONDS] [--allow_unraw]
 
