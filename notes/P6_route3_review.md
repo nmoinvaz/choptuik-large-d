@@ -170,3 +170,25 @@ plus falling terms). So d ln G/dν ≤ 4/ν and e^{−0.736ν}G decreases for ν
 that the enclosures are rigorous. That is what PC1 and PC6 test.
 
 **The tail consequence.** Σ_{j≥j₀} ν/j² ≤ ν/(j₀ − 1) ≤ ν/(2ν − 1) ≤ 3/5 for ν ≥ 3. Holds.
+
+## 4. The written proofs against the re-derivations
+
+Read after §3 was committed (ddc1844a). P6_route3.md §10.1 and §11.2, and D_entire.md §6.3 for the convolution bound.
+
+| lemma | written proof | against §3 |
+|---|---|---|
+| B1 | the two moduli and the drop of λ²ω²/4 | the same argument |
+| B2 (i), (ii) | the step ratio, the Γ-ratio limit, DLMF §5.4, the sinh inequality | the same argument |
+| B3 | conjugate symmetry of T^{±1}, then B2 and B1 on the perturbation factor | the same argument; "a + b + c < N" is not used, and "P_μ = 1 for μ ≤ ν" should read μ ∈ {ν − 2, ν} (finding 8) |
+| B4 | stated without proof | the triangle inequality, as in §3 |
+| B5 | D_entire.md §6.3's grouping; the convolution bound is cited, not shown | the convolution bound holds (§3); the grouping itself is checked in code (§5.3) |
+| B6 | the hand bound ν q^M and "that bound decreases in ν" | holds; the decrease needs the one-line step argument of §3, which the code's docstring replaces by a weaker one (finding 7) |
+| B7 | steps 1–5: B3, the convolution bound twice, the index sums, B2 | the same argument, step for step |
+| G | the listed inequalities, partial fractions, ψ values | the same inequalities; T₁ = 2 + ln(2j₀ − 1) is slightly larger than needed (2 + ln(2j₀ − 3)) |
+| monotonicity of e^{−0.736ν}G | "every piece ... of the form ν^a L₁L₂", d ln/dν ≤ 4/ν | holds; the step G′/G ≤ max_k G_k′/G_k and L ≥ 1 are implicit (finding 9) |
+
+No step of a written proof fails. The scripts were then read (route3_bound.py's `Cr_sup`, `W_sup`, `sup_box`; route3_head.py's
+`B_term`, `G_closed`, `certify`; route3_cancel.py's `tail`, `order3`, `dr_builder`; route3_tuned.py). `Cr_sup` was checked line
+by line against the grouping it states: every term (Ss at i = 3, 4 ≤ i ≤ j − 3, j − 2, j − 1, j; Sd at i = 3,
+4 ≤ i ≤ j − 2, j − 1, j; the inner far end) bounds its sum for j ≥ 10, with the counts j − 6 and j − 5 and the
+log-convexity maxima t₃t_{j−4} and t₃t_{j−3}.

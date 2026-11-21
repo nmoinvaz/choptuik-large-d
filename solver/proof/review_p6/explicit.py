@@ -324,9 +324,13 @@ def main():
                 continue
             B = Bound(Nt, D, k)
             Ub, Lb, n = sup_box(B, mp.mpf(1) / 3, mp.mpf(1) / 2)
-            res[(k, str(lam))] = (Ub, Lb)
-            print(f"    sup j^2|C|/nu^{d}: U = {mp.nstr(Ub, 6)} (certified), L = {mp.nstr(Lb, 6)} (point), {n} boxes,"
+            res[f"{k}:{lam}"] = {'U': str(Ub), 'L': str(Lb), 'd': d}
+            print(f"    sup j^2|C|/nu^{d}: U <= {model.up(Ub, 5)} (certified), L >= {model.dn(Lb, 5)} (point), {n} boxes,"
                   f" [{time.time() - t0:.0f}s]", flush=True)
+    out = [a.split('=', 1)[1] for a in sys.argv[1:] if a.startswith('--json=')]
+    if out and ok_all:
+        import json
+        json.dump(res, open(out[0], 'w'), indent=1)
     print(f"explicit.py {'PASS' if ok_all else 'FAIL'}")
     sys.exit(0 if ok_all else 1)
 
