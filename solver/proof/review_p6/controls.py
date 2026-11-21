@@ -34,7 +34,11 @@ def main():
     for name, script, args, want in RUNS:
         p = subprocess.run([PY, os.path.join(HERE, script)] + args, capture_output=True, text=True, cwd=HERE)
         got = p.returncode
-        good = (got == 0) if want == 0 else (got != 0)
+        crashed = 'Traceback' in p.stderr or got not in (0, 1)
+        failed_check = any('FAIL' in l for l in p.stdout.splitlines())
+        # a mutation passes only by exit 1 with a printed failed check; a crash or a signal never counts
+        good = (got == 0 and not failed_check) if want == 0 else (got == 1 and failed_check)
+        good = good and not crashed
         ok &= good
         fired = [l.strip() for l in p.stdout.splitlines() if any(k in l for k in ('FAIL', 'UNBOUNDED', ': NO', 'NO'))]
         fired = '; '.join(f[:90] for f in fired[:3]) if want else '-'

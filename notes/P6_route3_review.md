@@ -265,9 +265,10 @@ not cover tuned inputs (§7).
 factors 2(j − q + α_λ), 2(j − q + β_λ), j + 1, ν ∓ 1 and ω. In s = 1/ν and u = ν/j, j²C_λ/ν^d is then a polynomial
 Ñ(s, u) over a product of factors that stay away from zero on the box. That is an exact statement: every monomial
 j^p ν^q of the numerator has p ≤ deg_j D − 2 and the right total degree. It holds for all seven families (PC3; deg_j
-D = 7, deg_j N = 5). Σ_λ C_λ(j) ρ^λ_j equals model.split()'s explicit terms to 3×10⁻⁹⁴ at ν ∈ {3, 5, 9, 21} and
-j ∈ {10, 25, 60, 200} (PC2). The sup of |Ñ|/|D̃| over s ∈ [0, 1/3], u ∈ [0, 1/2] comes from adaptive bisection in
-mpmath.iv (80 bits), stopped when the largest box bound is within 0.5% of the best point value:
+D = 7, deg_j N = 5). Σ_λ C_λ(j) ρ^λ_j equals model.split()'s explicit terms, and those plus model.split()'s
+interior equal model.darboux()'s increment, both to 1.4×10⁻⁹³ at ν ∈ {3, 5, 9, 21} and j ∈ {10, 25, 60, 200}
+(PC2). The sup of |Ñ|/|D̃| over s ∈ [0, 1/3], u ∈ [0, 1/2] comes from adaptive bisection in mpmath.iv (80 bits),
+stopped when the largest box bound is within 0.5% of the best point value:
 
 | μ | family | d | review U (certified) | review L (point value) | certificate | certificate's lower bound | boxes |
 |---|---|---|---|---|---|---|---|
@@ -386,7 +387,9 @@ and the script exits 1.
 
 ## 6. The planted errors
 
-`controls.py` runs each one, and each run is logged separately in I1062-mac:
+`controls.py` runs each one, and each run is logged separately in I1062-mac. A mutation counts as caught only by
+exit 1 with a printed failed check. A traceback or any other exit code fails the control, so a crash cannot pass for
+a caught error:
 
 | id | mutation | check | result | exit |
 |---|---|---|---|---|
@@ -468,7 +471,7 @@ own ν dependence is also not controlled.
 | the split into explicit part and interior, and the assembly C = Σ S w + Cr P | the same definitions (from P6_route3.md §10) | PC2 checks that the split sums to the increment |
 | B3, B4 and B7 | the statements, re-derived in §3 and then used by the review's code | B4 and the ν = 1 equality test check them pointwise; B7 against every head term |
 | the convolution bound and log-convexity | the same fact | proved in §3, checked to n = 2000; the review uses it only above J₁ = 2000 and in B7 |
-| sympy 1.14.0 | both build the C_λ with it | the review's C_λ are checked numerically against model.split() in mpmath (no sympy), to 3×10⁻⁹⁴ |
+| sympy 1.14.0 | both build the C_λ with it | the review's C_λ are checked numerically against model.split() in mpmath (no sympy), to 1.4×10⁻⁹³ |
 | mpmath 1.3.0 | the review's arithmetic; the certificate uses it only in checks | — |
 | not shared | | the interval library (mpmath.iv against arb); the sup method (adaptive bisection against a fixed grid); the interior method (direct termwise sums against grouping); the recursion code; the head's exact sums |
 
