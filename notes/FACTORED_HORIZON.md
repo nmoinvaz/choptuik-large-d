@@ -697,10 +697,26 @@ polish solves the raise's system.
     as τ² between τ = 10⁻²⁰ and 10⁻¹⁹ (t² check 1.0×10²). The linear start misses by 2.7×10⁶⁵, 2.6×10⁷¹ and 2.0×10⁷⁷ at
     t = 10⁻¹⁶, 10⁻¹⁵ and 10⁻¹⁴, as t⁶. The t⁴ and t⁶ terms balance near t ≈ 4×10⁻¹⁹ (an estimate). Neither start
     converges at any of the three moves, and the run exits 1.
-  - **Why this need not decide stage 3 is a hypothesis, made after the data.** The move keeps m_h fixed, so the m rows
-    go off at first order. The raise's step lies near v₁ (Δ share 0.92) and also moves m_h and the nodes. Along v₁,
-    dh170 found the old-map residual exactly quadratic out to t = 10⁻²⁰. Stage 3's own run decides the step direction.
-  - **`--rows ma`:** RAISECHECK_MA
+  - **`--rows ma`: FAIL by this reading, at the start projection.** ElimO's rung, the m and a rows for m_h and a_h,
+    goes 1.67×10⁻³⁰ → 2.22×10⁻³⁰ in its first chord pass, with the data moved by 2.0×10⁻⁵⁷, and it stops. This matches
+    the chain's own refused projection from this state at ks 315 (dh170's probe, `u0o_refused`). Two causes are not
+    separated: the rung itself, and this check's finite-difference Jacobian in the m_h columns (relative step 10⁻⁶⁰).
+  - **The old map along the same moves** (`--oldonly 1`, the stored data held) misses by more, in the table below.
+
+| t | old map, m rows | old map, a rows | method A's linear start, a rows |
+|---|---|---|---|
+| 10⁻¹⁶ | 1.4×10⁷⁵ | 2.0×10⁷² | 2.7×10⁶⁵ |
+| 10⁻¹⁵ | 1.4×10⁸¹ | 2.2×10⁷⁸ | 2.6×10⁷¹ |
+| 10⁻¹⁴ | 8.7×10⁸⁷ | 1.1×10⁸⁵ | 2.0×10⁷⁷ |
+
+**At the raise's step both maps miss by 10⁶⁵ or more.** Both misses grow as t⁶. In the a rows the factored start misses
+by about 10⁷ less than the old map. Neither comes near a usable range at the raise's step of about 10⁻¹⁴. If dh170's
+old-map term, 1.4×10⁴⁹ t² along v₁ out to t = 10⁻²⁰, stayed quadratic, it would give about 10¹⁷ at t = 10⁻¹⁶. Along pure
+Δ the higher orders dominate long before that.
+
+**Why these checks need not decide stage 3 is a hypothesis, made after the data.** The moves keep m_h fixed, so the m
+rows go off at first order. The raise's step lies near v₁ (Δ share 0.92) and also moves m_h and the nodes. Along v₁,
+dh170 found the old-map residual exactly quadratic out to t = 10⁻²⁰. Stage 3's own run decides the step direction.
 
 **Stage 2: the planted truth at D 237.7132, where the old raise works.**
 - **Start.** `I1064-dh610/ho2_D237.7132/ks307/base_pin3_D237.7132.npz` (blob 861c79ff): ks 307, max|F| 3.5×10⁻⁸⁶.
