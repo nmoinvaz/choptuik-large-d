@@ -119,6 +119,11 @@ prefactors equals the sum of the absolute values of the interior terms. Any drop
 - M7 (A₀/100 in B7) did not fire, because B7 with A₀/100 still bounds every head term. M7′, all of B7 divided by
   100, replaces it (§6).
 - interior.py crashed at --J1 below 197, because W needs r_m to m = 197. That was fixed before the controls of record.
+- The bot reviews of #1063 (Greptile, CodeRabbit) found gaps in the review's own code. PC2 did not check the interior.
+  controls.py would have counted a crash as a caught error. Endpoints were converted at the working precision before
+  the outward rounding, which could round an upper end down. The JSON files were not outward-rounded. Quick mode
+  wrote an empty certificate file. The scripts were fixed at 43e2ca8a and every run of §5 and §6 was redone
+  (03:16–03:44 UTC). Every number is the same as in the first run.
 - interior.py's first check of P compared the finite product at L = 3000 with the closed form to 1%. It failed, because
   the product converges like 1 − O(νω²/L). It now checks the closed form against mpmath's Γ ratio, which is the
   identity itself, and that the product lies below it. The error was in my check, not in the certificate.
@@ -235,7 +240,7 @@ end. The counts are j − 6 and j − 5, and the log-convexity maxima are t₃t_
 
 Every number below is printed by a script of `solver/proof/review_p6/` (mpmath 1.3.0, sympy 1.14.0, the venv-314 of
 the Mac) and is an mpmath.iv upper bound rounded up, or a lower bound rounded down, unless it is marked as a value.
-The logs are in folder I1062-mac of the raw-data repository (commit 3042bbb3). ω = 2π·160000/263023 (= 2π/1.64389375)
+The logs are in folder I1062-mac of the raw-data repository (commit cc9c5d51). ω = 2π·160000/263023 (= 2π/1.64389375)
 is built as an interval.
 
 ### 5.1 The model against amp_flint (PC1)
