@@ -853,10 +853,14 @@ def main():
         log(fmt(rhi))
         out.append(rhi)
         if not rhi["closed"]:
-            log("BISECT: no closure at the upper end")
-        rlo = run_L0(repr(lo), d0, domain, at, res=res)
-        log(fmt(rlo))
-        out.append(rlo)
+            log(f"BISECT d0 = {d0}, domain {domain}: no closure at the upper end {hi}")
+            rlo = {"closed": True}
+        else:
+            rlo = run_L0(repr(lo), d0, domain, at, res=res)
+            log(fmt(rlo))
+            out.append(rlo)
+            if rlo["closed"]:
+                log(f"BISECT d0 = {d0}, domain {domain}: closes already at the lower end {lo}")
         while hi - lo > tol and rhi["closed"] and not rlo["closed"]:
             mid = round((lo + hi) / 2, 4)
             r = run_L0(repr(mid), d0, domain, at, res=res)
@@ -866,7 +870,8 @@ def main():
                 hi = mid
             else:
                 lo = mid
-        log(f"BISECT d0 = {d0}, domain {domain}: closes at ln n0 = {hi}, not at {lo}")
+        if rhi["closed"] and not rlo["closed"]:
+            log(f"BISECT d0 = {d0}, domain {domain}: closes at ln n0 = {hi}, not at {lo}")
     else:
         for L0 in OPTS.get("L0", "73.89").split(","):
             r = run_L0(L0, d0, domain, at, res=res)
