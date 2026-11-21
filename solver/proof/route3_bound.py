@@ -36,6 +36,7 @@ from flint import acb, arb, ctx
 
 import route3_cancel as R
 from exact_sigma import ev
+from outward import lo_str, up_str
 
 ctx.prec = 128
 MUT = R.MUT
@@ -206,13 +207,13 @@ def constants(kappa, J0, N=48, quiet=False):
         print("| perturbation | family | sup j^2 |C_lam| / nu^d, certified | lower bound (box centres) | d |")
         print("|---|---|---|---|---|")
         for (pk, lam), (up, lo, deg) in S.items():
-            print(f"| {pk} | {lam} | {up.str(5, radius=False)} | {lo.str(5, radius=False)} | {deg} |")
-        print(f"P = sup P_(nu+2) <= {P.str(6, radius=False)}  (e^(pi w) = {(arb.pi() * W_R).exp().str(6, radius=False)})")
-        print(f"W = sup nu |rho^(+-1)_j0| <= {W.str(4, radius=False)}  (hand tail at nu = 101: {Wtail.str(3, radius=False)})")
+            print(f"| {pk} | {lam} | {up_str(up, 5)} | {lo_str(lo, 5)} | {deg} |")
+        print(f"P = sup P_(nu+2) <= {up_str(P, 6)}  (e^(pi w) = {(arb.pi() * W_R).exp().str(6, radius=False)})")
+        print(f"W = sup nu |rho^(+-1)_j0| <= {up_str(W, 4)}  (hand tail at nu = 101: {up_str(Wtail, 3)})")
         for pk in PERTS:
-            print(f"Cr({pk}) = sup j^2 |r_j| / (nu P |p|) <= {Cr[pk].str(5, radius=False)}  ({NTR[pk]} triples)")
+            print(f"Cr({pk}) = sup j^2 |r_j| / (nu P |p|) <= {up_str(Cr[pk], 5)}  ({NTR[pk]} triples)")
         for pk in PERTS:
-            print(f"C_{pk} = {C[pk].str(6, radius=False)}:  |DR_j/K_nu| <= C_{pk} |p| nu / j^2  for j >= max({kappa} nu, {J0})")
+            print(f"C_{pk} <= {up_str(C[pk], 6)}:  |DR_j/K_nu| <= C_{pk} |p| nu / j^2  for j >= max({kappa} nu, {J0})")
     return C, S, P, W, Cr
 
 

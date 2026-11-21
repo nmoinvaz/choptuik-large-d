@@ -25,10 +25,11 @@ import sys
 from flint import acb, arb, ctx
 
 import route3_cancel as R
+from outward import up_str
 
 MUT = R.MUT
 PERTS = {"m": -2, "0": 0, "p": 2}
-C_TAIL = {"m": 28.449, "0": 56.874, "p": 4.7661e6}           # section 10.2, kappa = 2, J0 = 10
+C_TAIL = {"m": "28.4492", "0": "56.8735", "p": "4.76611e6"}  # section 10.2, kappa = 2, J0 = 10, upper ends rounded up
 SIGMA = 0.736                                                # (star)'s rate, B_tail_M7.md 8.4
 
 
@@ -153,14 +154,14 @@ def scope(numax):
                              Hsig=float(abs(signed).mid()), amax=max(a[:j0]), amaxat=max(range(j0), key=lambda k: a[k]),
                              Mx=sum(mx), Mr=sum(mr)))
             print(f"nu {nu:2d} {pk}: j0 {j0:2d}  |DR_0| {a[0]:.3e}  max_j j^2|DR|/nu {qmax:.3e} at j {qat:2d} "
-                  f"(C_mu {C_TAIL[pk]:.4g}; first tail j's {qtail:.3e})  head sum |.| {Habs:.4e}, signed {rows[-1]['Hsig']:.4e}"
+                  f"(C_mu {float(C_TAIL[pk]):.4g}; first tail j's {qtail:.3e})  head sum |.| {Habs:.4e}, signed {rows[-1]['Hsig']:.4e}"
                   f"  max term {rows[-1]['amax']:.3e} at j {rows[-1]['amaxat']}", flush=True)
     print()
     print("| nu | perturbation | j0 | max j^2|DR_j/K|/(nu|p|), head | at j | / C_mu | head sum of |DR_j/K|/|p| | signed head | "
           "largest term, at j | termwise, exact T | termwise, reduced (B2, B3) | e^(-0.736 nu) x reduced |")
     print("|---|---|---|---|---|---|---|---|---|---|---|---|")
     for r in rows:
-        print(f"| {r['nu']} | {r['pk']} | {r['j0']} | {r['qmax']:.4g} | {r['qat']} | {r['qmax'] / C_TAIL[r['pk']]:.2e} | "
+        print(f"| {r['nu']} | {r['pk']} | {r['j0']} | {r['qmax']:.4g} | {r['qat']} | {r['qmax'] / float(C_TAIL[r['pk']]):.2e} | "
               f"{r['Habs']:.4g} | {r['Hsig']:.4g} | {r['amax']:.3g}, {r['amaxat']} | {r['Mx']:.4g} | {r['Mr']:.4g} | "
               f"{math.exp(-SIGMA * r['nu']) * r['Mr']:.3g} |")
     # growth of the head sum: slopes of log H against log nu and against nu, over nu >= 9
@@ -322,7 +323,7 @@ def certify(nu1=99, prec=512):
     print("|---|---|---|---|")
     for nu in [3, 5, 7, 9, 11, 21, 41, 61, 81, nu1]:
         if nu <= nu1:
-            print(f"| {nu} | " + " | ".join(out[(nu, pk)].str(5, radius=False) for pk in PERTS) + " |")
+            print(f"| {nu} | " + " | ".join(up_str(out[(nu, pk)], 5) for pk in PERTS) + " |")
     print(f"precision used: {sorted({r[4] for r in rows})} bits")
     print("| perturbation | sup e^(-0.736 nu) H, nu <= %d (at nu) | beyond: e^(-0.736 nu) G at nu = %d | Lambda_head | "
           "sup e^(-0.736 nu) (H + C_mu nu/(j0 - 1)), nu <= %d (at nu) |" % (nu1, nb, nu1))
@@ -334,9 +335,9 @@ def certify(nu1=99, prec=512):
                                           + arb(C_TAIL[pk]) * nb / (j0_of(nb) - 1))
         lam_all = max(allw[pk][0], tb.upper())
         res[pk] = (lam_head, lam_all)
-        print(f"| {pk} | {worst[pk][0].str(5, radius=False)} ({worst[pk][1]}) | {beyond[pk].str(3, radius=False)} | "
-              f"{lam_head.str(5, radius=False)} | {allw[pk][0].str(5, radius=False)} ({allw[pk][1]}); beyond "
-              f"{tb.upper().str(3, radius=False)} |")
+        print(f"| {pk} | {up_str(worst[pk][0], 5)} ({worst[pk][1]}) | {up_str(beyond[pk], 3)} | "
+              f"{up_str(lam_head, 5)} | {up_str(allw[pk][0], 5)} ({allw[pk][1]}); beyond "
+              f"{up_str(tb, 3)} |")
     return res
 
 
