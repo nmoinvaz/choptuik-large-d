@@ -714,3 +714,72 @@ python3 p2c_b5_compare.py $RAW > $RAW/logs/compare.log                  # (P3)
 ```
 
 `$RAW/run_c.sh` runs the stage-C set and the K3 variants. The stage-A and stage-B logs are beside them.
+
+## 7. Item 4: Lemma B8(1)'s bootstrap closure, a second implementation
+
+Issue #1061. **Claim under review** (C_selection.md §13.1, B8_constants.md §§0, 7, 8.4): with K = 4, κ = 0.3, κ₁ = 0.6,
+δ = 0.05, the bootstrap P(h) < h of Lemma B8.a closes for ln n₀ ≥ 62 in the gauge c(0) = c^K(0), and for ln n₀ ≥ 73.89
+with the normalization offset |c(0) − c^K(0)|₁ ≤ d₀n^{−K−1}, d₀ = 10⁷. Written 2026-11-21 by Claude (Anthropic) under
+Nathan Moinvaziri's direction, by a fresh agent that had not worked on B8 or read its derivation sessions. Not reviewed.
+
+### 7.1 Protocol, fixed before the run
+
+- **Independence.**
+  - **Read:** B8_constants.md §§0–7 and §8.4 item 1 (the offset), the B8 rows and bullets of C_selection.md §13.1,
+    P2b_review.md §§0–1 and 8, B5_inner.md §5.1's parameter box, and this file's §§1–2 and §6.1 for the format.
+  - **Seen before the run:** B8_constants.md §3's atom table, §5's kernel numbers at ln n₀ = 73.89 (s_* = 0.1875,
+    H_F = 14.04, N_F = 117.5, K_F = 1.763, γ_F = 0.4150), §7.1's table (h and the ratios at ln n₀ = 73.89, 70, 66, 62)
+    and §7.2.
+  - **Not opened** until this review's numbers are committed: `b8_alg.py`, `b8m_bounds.py`, `b8m_scan.py`,
+    `b8m_formal.py`, `b8m_atoms.py`, `b8m_h8.py`, `b8m_identities.py`, their logs, the `review_p2b/` code and
+    `review_p2c/p2c_h8.py`. The box centre and the series' gauge were taken by `grep` (A* = 2.5421480475,
+    w* = 0.7769940136 in `fixed_point.py`).
+- **Shared with the certificate.** The statements: the model and its reduced form (§§1.1–1.2), the description of the
+  order-by-order recursion and its gauge (§2), Lemma W's norms, Lemma R's identities (§4), Lemma K (§5), the map P of
+  Lemma B8.a with its regions and paths (§§1.3, 6), and the offset's P_V + 2|F|₁d₀, P_c + d₀ (§8.4). The settings:
+  K, κ, κ₁, δ, x_F = 20, the box (A, ω/ω∞) ∈ (A*, w*) ± 2×10⁻⁶(1 + i), ω∞ = 2π/1.64389375, d₀ = 10⁷ and, for 𝒟′_n,
+  Z_B = 0.0085.
+- **Method, own** (`solver/proof/review_p2c/p2c_b8_series.py`, `p2c_b8_alg.py`, `p2c_b8_boot.py`; python-flint 0.9.0,
+  FLINT 3.6.0, arb/acb at 256 bits).
+  - **Series and atoms.** My own recursion for Z_k (k ≤ 4), derived from the reduced system, in acb balls over the box.
+    The residuals τ_D, τ_v, τ_b, ρ₄ and the K-only combinations (ρ₂ det C, ρ₃ det C², η̃ det C, ℓ det C²/x², Γ as an
+    exact quotient) are exact polynomials in (ε, x). Lemma F's structural zeros are dropped after a check.
+  - **One set of formulas, two arithmetics.** G₁, W₂, ĝ, q and the derivative bounds of pass 1 are written once. A point
+    arithmetic (acb jets of f, x f′, (x d/dx)²f) checks Lemma R and is the planted truth. A cell arithmetic gives norm
+    bounds uniform in n ≥ n₀: radial cells for N0, N1 and the ray R (a cell [0, 10⁻⁶] with powers of r kept, 24
+    log-spaced cells to 0.05, 160 to 20 with breaks at 1 ∓ δ/2, 1 ∓ 0.01 and 1), and F as one region in (ρ, X). Each
+    bound is affine in h (a product of two remainders folded with h ≤ H_max), so P is built once per n₀.
+  - **Gains.** Lemma K.1–K.3 evaluated per target cell (the arc term α e^{H α} where N_r is not bounded below), and
+    K.3's γ_F on F.
+  - **Closure.** Iterate h ← P(h) from 0 to its fixed point h*; then test P(h) < h strictly in balls at h = h* + t u,
+    (I − J)u = h*, J the Jacobian of P at h*, for t = 10⁻⁴ … 0.3, with h ≤ H_max. Not the certificate's descent.
+- **Pass criteria.**
+  - **(P1) Structure.** Lemma F's dropped coefficients contain 0 over the box and are below 10⁻⁶⁰ at the centre. §3's
+    atom table is compared, not required.
+  - **(P2) Identities.** I1–I4, xV^K′ = ΩS^K and my factorizations of Λ, (A^K)⁻¹ and q, at 6 random complex points
+    (x, n) at the box centre: relative residual below 10⁻⁴⁰.
+  - **(P3) Planted instances.** On 11 cells at ln n₀ = 73.89, with h = (2.4×10⁶, 6.3×10⁶, 6.2×10⁵, 1.7×10⁵), random
+    remainders of norm exactly h·w at sampled points, their derivatives from pass 1's equations: every exact quantity
+    below its bound (ratio < 1).
+  - **(P4) Kernel and gains.** Lemma K.1's margin on the domain's ray on a grid t ∈ [10⁻⁴, 10⁶]. The scalar kernel
+    e^{(n−1)(Φ(x)−Φ(s))} (H′ = 0) integrated along P_x at n = 300 for 6 targets, below the gain formula.
+  - **(P5) Closure search, planted.** An affine map whose spectral radius crosses 1 at L = 58.946: not closed at L − 0.2,
+    closed at L + 0.2.
+  - **(P6) The claim.** Strict closure on 𝒟_n at ln n₀ = 62 with d₀ = 0, and at 73.89 with d₀ = 10⁷. Then the
+    smallest closing ln n₀ by bisection to 0.25, for d₀ = 0 and d₀ = 10⁷, on 𝒟_n and on 𝒟′_n. If either point of the
+    claim does not close here, that is reported as not confirmed by this implementation, and located after the
+    comparison; no setting is changed to make it close.
+  - **(P7) Comparison,** after the commit of (P6): h, s_*, K_F, γ_F at 73.89 and 62 against §§5, 7.1. A ratio outside
+    [1/3, 3] is investigated.
+- **Controls.**
+  - **(K1) Scaled atom.** S₂'s top coefficient × 1.001: (P1) must fail.
+  - **(K2) Dropped term.** ρ₂ without its first term: I1 must fail. x W₂ dropped from the formulas: I2 must fail. In the
+    cell arithmetic only, ρ₂ dropped from N₁, or W₂ dropped: (P3) must fail.
+  - **(K3) Wrong κ.** The decay margin taken as sin 0.4 with the domain at κ = 0.3: the kernel check must fail. κ = 0.02
+    throughout (consistent but too small): no closure at 73.89 (s_* < 0).
+  - **(K4) Sensitivity,** reported, no pass bar: τ_D × 10.
+  - **Found insensitive during development**, recorded here: dropping half of the product rule in every derivative
+    (P3 still passes; the dropped half is small against the bounds' slack), and the gain check under the wrong κ margin
+    (the gain bounds are about 8 times the planted integrals at n = 300).
+- **Output.** Logs and JSON records go to the raw-data repository as `I1061-mac/`. The code and this section stay in the
+  branch.
