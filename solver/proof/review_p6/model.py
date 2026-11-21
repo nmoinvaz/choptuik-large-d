@@ -284,30 +284,61 @@ def interior_abs_terms(nu, mu, j, C=None, w=None, S=None):
 # ---------------------------------------------------------------- outward rounding for quoted numbers
 
 def _endpoint(x, hi):
-    if hasattr(x, 'a'):
-        x = x.b if hi else x.a
-    return mpmath.mpf(x)
+    """the exact endpoint of an iv interval (or the exact value of an mpf or int) as a Fraction"""
+    from fractions import Fraction
+    with mpmath.workprec(4000):                    # wide enough that the conversion is exact
+        if hasattr(x, 'a'):
+            x = x.b if hi else x.a
+        v = mpmath.mpf(x)
+    sign, man, exp, _ = v._mpf_                    # man_exp drops the sign; _mpf_ keeps it
+    if man == 0:
+        return Fraction(0)
+    return (-1 if sign else 1) * Fraction(int(man)) * (Fraction(2) ** int(exp))
+
+
+def _decimal(F, d, upward):
+    """F rounded to d significant digits, up (upward) or down, in exact rational arithmetic, as a string"""
+    import math
+    from fractions import Fraction
+    if F == 0:
+        return '0'
+    sgn = -1 if F < 0 else 1
+    A = abs(F)
+    e = int(math.floor(math.log10(float(A)))) if 1e-300 < float(A) < 1e300 else len(str(A.numerator)) - len(str(A.denominator))
+    while Fraction(10) ** e > A:
+        e -= 1
+    while Fraction(10) ** (e + 1) <= A:
+        e += 1
+    k = d - 1 - e
+    s = A * Fraction(10) ** k
+    up_mag = (sgn > 0) == upward                   # round the magnitude up for an upper end of a positive number
+    r = math.ceil(s) if up_mag else math.floor(s)
+    if r == 10 ** d:                               # carried into the next decade
+        r //= 10
+        k -= 1
+        e += 1
+    digits = str(r)
+    if -6 <= e <= 8:
+        if k <= 0:
+            out = digits + '0' * (-k)
+        else:
+            digits = digits.rjust(k + 1, '0')
+            out = digits[:-k] + '.' + digits[-k:]
+    else:
+        out = digits[0] + ('.' + digits[1:] if len(digits) > 1 else '') + f'e{e}'
+    return ('-' if sgn < 0 else '') + out
 
 
 def up(x, d=5):
-    """the upper end of x rounded up to d significant digits, as a string"""
-    v = _endpoint(x, True)
-    if v == 0:
-        return '0'
-    with mpmath.workprec(400):
-        e = int(mpmath.floor(mpmath.log10(abs(v))))
-        q = mpmath.mpf(10) ** (d - 1 - e)
-        r = mpmath.ceil(v * q) / q
-        return mpmath.nstr(r, d, min_fixed=-6, max_fixed=8)
+    """the upper end of x rounded up to d significant digits, as a string (exact rational arithmetic)"""
+    return _decimal(_endpoint(x, True), d, True)
 
 
 def dn(x, d=5):
-    """the lower end of x rounded down to d significant digits, as a string"""
-    v = _endpoint(x, False)
-    if v == 0:
-        return '0'
-    with mpmath.workprec(400):
-        e = int(mpmath.floor(mpmath.log10(abs(v))))
-        q = mpmath.mpf(10) ** (d - 1 - e)
-        r = mpmath.floor(v * q) / q
-        return mpmath.nstr(r, d, min_fixed=-6, max_fixed=8)
+    """the lower end of x rounded down to d significant digits, as a string (exact rational arithmetic)"""
+    return _decimal(_endpoint(x, False), d, False)
+
+
+def ivjson(x, d=45):
+    """an interval as [lower end rounded down, upper end rounded up], d digits, for JSON"""
+    return [dn(x, d), up(x, d)]

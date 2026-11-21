@@ -16,7 +16,7 @@ Above J1 a log-convexity bound of my own (notes, 5.3) caps both modes.
 Checks: r_m increasing on m >= 1; U_n <= 2 + t_1; the nu = 1 equality test (the majorant with exact prefactors
 equals the sum of the moduli of every interior term, from model.py); B4's prefactor bounds pointwise.
 
-    python3 interior.py                    Cr (both modes), P, W (about 3 min)
+    python3 interior.py [--json=PATH]      Cr (both modes), P, W (about 2 min); PATH gets the upper ends, rounded up
     python3 interior.py --mutate=nuprefac  M3, 3w for (nu + 2)w: the prefactor check fails, exit 1
     python3 interior.py --mutate=dropii    M5, the S^s term i = j dropped: the nu = 1 equality test fails, exit 1
 """
@@ -281,12 +281,13 @@ def main():
     print(f"B4 per triple: max over 10 <= j <= {J1} <= {model.up(b4, 6)} at j = {b4_at}; every j > {J1}: <= {model.up(tb, 3)}")
     cr = max(b4.b, tb)
     print(f"Cr (B4 mode): 3 triples <= {model.up(3 * cr, 6)}, 6 triples <= {model.up(6 * cr, 6)}")
-    res = {'Cr_B4': {'-2': str(3 * cr), '0': str(6 * cr), '2': str(3 * cr)}, 'Cr_tight': {},
-           'P': str(P.b), 'W': str(max(Wb.b, hand.b)), 'W_at': at, 'W_hand101': str(hand.b), 'tail_per_triple': str(tb)}
+    U = lambda x: model.up(x, 45)                          # upper ends, rounded up
+    res = {'Cr_B4': {'-2': U(3 * cr), '0': U(6 * cr), '2': U(3 * cr)}, 'Cr_tight': {},
+           'P': U(P), 'W': U(max(Wb.b, hand.b)), 'W_at': at, 'W_hand101': U(hand), 'tail_per_triple': U(tb)}
     for k in (-2, 0, 2):
         ntr = 6 if k == 0 else 3
         ct = max(tgt[k].b, ntr * tb)
-        res['Cr_tight'][str(k)] = str(ct)
+        res['Cr_tight'][str(k)] = U(ct)
         print(f"Cr (tight), mu = nu{k:+d}: <= {model.up(ct, 6)} (max at j = {tgt_at[k]})")
     out = [a.split('=', 1)[1] for a in sys.argv[1:] if a.startswith('--json=')]
     if out and ok:

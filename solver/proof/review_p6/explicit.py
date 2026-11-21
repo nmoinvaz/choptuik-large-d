@@ -12,7 +12,8 @@ Checks:
   - numeric (PC2, part): sum_lam C_lam(j) rho^lam_j equals model.split()'s explicit terms.
   - the certified sup of |Ntil| / prod |ftil| over s in [0, 1/3], u in [0, 1/2], by adaptive bisection in mpmath.iv.
 
-    python3 explicit.py                 the seven sups (about 10 min)
+    python3 explicit.py [--json=PATH]   the seven sups (about 1 min); PATH gets each sup's ends, rounded outward
+    python3 explicit.py --quick         the exact and numeric checks only (no sups, no file)
     python3 explicit.py --mutate=demix  M1, E x 3/2: the exact check fails, exit 1
 """
 import sys
@@ -302,6 +303,9 @@ def main():
         if a.startswith('--mutate='):
             mutate.add(a.split('=', 1)[1])
     quick = '--quick' in sys.argv
+    if quick and any(a.startswith('--json=') for a in sys.argv):
+        print("--quick computes no sups, so it writes no certificate file: drop --json")
+        sys.exit(2)
     iv.prec = 80
     mp.prec = 320
     ok_all = True
@@ -328,7 +332,7 @@ def main():
                 continue
             B = Bound(Nt, D, k)
             Ub, Lb, n = sup_box(B, mp.mpf(1) / 3, mp.mpf(1) / 2)
-            res[f"{k}:{lam}"] = {'U': str(Ub), 'L': str(Lb), 'd': d}
+            res[f"{k}:{lam}"] = {'U': model.up(Ub, 45), 'L': model.dn(Lb, 45), 'd': d}
             print(f"    sup j^2|C|/nu^{d}: U <= {model.up(Ub, 5)} (certified), L >= {model.dn(Lb, 5)} (point), {n} boxes,"
                   f" [{time.time() - t0:.0f}s]", flush=True)
     out = [a.split('=', 1)[1] for a in sys.argv[1:] if a.startswith('--json=')]
