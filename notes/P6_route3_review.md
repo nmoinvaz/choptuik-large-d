@@ -175,7 +175,7 @@ used below: each single product t_a t_b ≤ U_{a+b} t_{a+b} ≤ (2 + t₁) t_{a+
 **B6.** For j ≥ j₀, |ρ^{±1}_j| ≤ |ρ^{±1}_{j₀}| by B2(i). For ν ≥ 101 and m < M = ⌊νω/4⌋: |a^1_m/a^ν_m|² =
 A·B with A = ((m + ½)² + w)/((m + ½)² + ν²w), B = ((m + 1)² + w)/((m + 1)² + ν²w). Both have numerator ≤ (νω/4 + 1)²
 + w (as m + 1 ≤ M ≤ νω/4) and denominator ≥ ν²w, so each is ≤ q and the product ≤ q². The factors with m ≥ M are ≤ 1.
-So ν|ρ_{j₀}| ≤ ν q^M, since M ≤ νω/4 < 2ν ≤ j₀. q = ¼ + (νω/2 + 1 + w)/(4ν²w) decreases in ν. Going from ν to
+So ν|ρ_{j₀}| ≤ ν q^M, since M ≤ νω/4 < 2ν ≤ j₀. q = ¼ + (νω/2 + 1 + w)/(ν²w) decreases in ν. Going from ν to
 ν + 2 multiplies ν q^M by at most ((ν + 2)/ν) q ≤ (103/101) q < 1 once q < 101/103, since M grows by at least
 ⌊2ω/4⌋ = 1. Holds as stated (the statement's "q < e^{−1}" is more than needed).
 
@@ -437,7 +437,11 @@ input ε T^μ added at order |μ| of an untuned expansion.
 - (★) itself. B_tail_M7.md §8.3 explains why the lowest order does not settle it.
 
 **What rests on (H1).** Under the envelope |X_l[μ]| ≤ X̄_μ |T^μ_l|, B3 holds with X̄_μ for |p|. So the interior bound
-and the whole of B7 (the head needs no cancellation) carry over with that factor, for terms of the one-step form.
+and B7's convolution and de-mixing parts carry over with that factor, for terms of the one-step form. B7's ψ term does
+not. It uses the Kummer difference ψ(α_ν + j + 1) − ψ(α_ν + j) = 1/(α_ν + j), which holds only when the input's
+ratio X_j/T^ν_j is constant. For a general input under (H1), the ψ-weighted term changes by up to about
+X̄_ν(|ψ(α_ν + j + 1)| + |ψ(α_ν + j)|) per step, of order X̄_ν ln j. That would keep the head polynomial in ν, but it is
+not B7. The ψ term is present only for μ = ν. (Credit: CodeRabbit's review of #1063.)
 
 **What rests on (H2), and why it is not enough as stated.** The explicit part uses the exact Kummer form of the
 perturbation twice:
@@ -500,15 +504,15 @@ Numbered by severity: wrong, then unproved, unclear and minor.
 
 **Unproved**
 
-2. **§10.4's conditional extension to tuned inputs does not follow from (H1) and (H2) as stated** (§7). (H1) carries
-   the interior and the head over. But the explicit part's j⁻² rate and its ν-uniform constant come from the
-   perturbation's exact Kummer form. (H2) is qualitative, so it supplies neither, and the constants "recomputed for
-   the families the tuned inputs carry" are not computed. In addition, the real first tuned order of harmonic ν ≥ 7
-   contains terms outside the one-step class: two non-background factors, and nested lapse terms. This matters for
-   route 3's purpose. P6_scope.md §4 stage 3 asks for "the first tuned order of harmonic ν". What is certified is the
-   one-step model with Kummer inputs, and the step from that to the first tuned order is exactly this conditional
-   claim. The Result line "Tuned inputs keep the form, *conditional* on two named hypotheses" should read as a
-   conjecture, or (H2) should be strengthened to the quantitative (H2′) of §7.
+2. **§10.4's conditional extension to tuned inputs does not follow from (H1) and (H2) as stated** (§7). (H1) carries the
+   interior over, and B7 except its ψ term (μ = ν), which needs the Kummer form. But the explicit part's j⁻² rate and
+   its ν-uniform constant also come from the perturbation's exact Kummer form. (H2) is qualitative, so it supplies
+   neither, and the constants "recomputed for the families the tuned inputs carry" are not computed. In addition, the
+   real first tuned order of harmonic ν ≥ 7 contains terms outside the one-step class: two non-background factors, and
+   nested lapse terms. This matters for route 3's purpose. P6_scope.md §4 stage 3 asks for "the first tuned order of
+   harmonic ν". What is certified is the one-step model with Kummer inputs, and the step from that to the first tuned
+   order is exactly this conditional claim. The Result line "Tuned inputs keep the form, *conditional* on two named
+   hypotheses" should read as a conjecture, or (H2) should be strengthened to the quantitative (H2′) of §7.
 
 **Unclear**
 
