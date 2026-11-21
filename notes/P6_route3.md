@@ -388,7 +388,7 @@ interior convolution terms: Ss and Sd at 3 ≤ i ≤ j, and g_{j+1}'s inner term
 **Result.** For odd ν ≥ 3 and j ≥ max(2ν, 10) (*certified*):
 
 ```math
-\Big|\frac{\Delta R_j}{K_\nu}\Big| \le C_\mu\,|p|\,\frac{\nu}{j^2},\qquad C_{\nu-2} = 28.45,\quad C_\nu = 56.87,\quad C_{\nu+2} = 4.77\times10^6 .
+\Big|\frac{\Delta R_j}{K_\nu}\Big| \le C_\mu\,|p|\,\frac{\nu}{j^2},\qquad C_{\nu-2} = 28.45,\quad C_\nu = 56.88,\quad C_{\nu+2} = 4.77\times10^6 .
 ```
 
 - **How it is certified.** The hand lemmas B1–B4 are *proved* (§10.1). The sups are evaluated in ball arithmetic
@@ -399,11 +399,14 @@ interior convolution terms: Ss and Sd at 3 ≤ i ≤ j, and g_{j+1}'s inner term
   4.7×10⁻⁴.
 - **Checked against the exact recursion** at ν = 3 to 21 and j < 1600, with no violation. The worst actual/bound ratios
   are 1.3×10⁻⁵, 1.8×10⁻² and 2.7×10⁻². A planted violation is caught in all 30 runs.
-- **Tuned inputs keep the form,** *conditional* on two named hypotheses, an envelope (H1) and the cancellation (H2). On
-  `amp_flint`'s real tuned sequences at the first tuned orders of harmonics 3, 5 and 7, the increments stay O(j⁻²)
-  (numerical evidence, §10.4). The de-mixing control fails there.
-- **The large-parameter literature was not needed.** The bound uses only B1's elementary inequalities and two Γ
-  identities (DLMF §5.4), so Paris, Temme and Olde Daalhuis were not read for it.
+- **Tuned inputs keep the form: a conjecture.** It does not follow from the envelope (H1) and the cancellation (H2) as
+  stated, since (H2) is qualitative and gives neither the j⁻² rate nor a ν-uniform constant (§10.4; the review
+  [P6_route3_review.md](P6_route3_review.md), finding 2). On `amp_flint`'s real tuned sequences at the first tuned
+  orders of harmonics 5 and 7, the increments stay O(j⁻²) (numerical evidence, §10.4). The de-mixing control fails
+  there.
+- **The large-parameter literature was not needed.** The bound uses only B1's elementary inequalities, two Γ identities
+  (DLMF §5.4), the limit of a Γ ratio (DLMF §5.11) and ψ(x + 1) − ψ(x) = 1/x (DLMF §5.5), so Paris, Temme and Olde
+  Daalhuis were not read for it.
 - **Not covered:** the head j < 2ν of each sum, which (★)'s lowest-order form still needs (§10.5).
 
 ### 10.1 The hand lemmas
@@ -448,13 +451,13 @@ All for real ω and real labels. a^λ_m = (m + α_λ)(m + β_λ)/(m + 1) is the 
 
 | perturbation μ | family λ | sup j²\|C_λ\|/ν^d, certified | lower bound (box centres) | d | weight |
 |---|---|---|---|---|---|
-| ν − 2 | ν − 2 | 0.5638 | 0.4719 | 1 | 1 |
-| ν − 2 | +1 | 0.9229 | 0.9003 | 2 | W |
-| ν | ν | 1.1028 | 0.9944 | 1 | 1 |
-| ν | −1 | 1.0454 | 1.0071 | 2 | W |
-| ν | +1 | 0.9530 | 0.9183 | 2 | W |
-| ν + 2 | ν + 2 | 1.1775 | 1.0320 | 1 | P |
-| ν + 2 | −1 | 2.6323 | 2.5528 | 2 | W |
+| ν − 2 | ν − 2 | 0.56383 | 0.47185 | 1 | 1 |
+| ν − 2 | +1 | 0.92291 | 0.90033 | 2 | W |
+| ν | ν | 1.1028 | 0.99434 | 1 | 1 |
+| ν | −1 | 1.0454 | 1.0070 | 2 | W |
+| ν | +1 | 0.95300 | 0.91829 | 2 | W |
+| ν + 2 | ν + 2 | 1.1776 | 1.0319 | 1 | P |
+| ν + 2 | −1 | 2.6324 | 2.5528 | 2 | W |
 
 The sups are over s = 1/ν ∈ [0, 1/3] and u = ν/j ∈ [0, 1/2], so they hold for every real ν ≥ 3 and j ≥ 2ν. The rational
 function's denominator is evaluated as a product of its factors, each bounded away from zero, and its numerator in
@@ -462,18 +465,18 @@ Horner form. The box-centre values bound the sup from below, and they show the g
 
 | constant | value |
 |---|---|
-| P = sup P_{ν+2} (B2) | ≤ 1.63995×10⁵ (e^{πω} = 1.63995×10⁵) |
-| W = sup ν\|ρ^{±1}_{j₀}\| (B6) | ≤ 4.728×10⁻⁴ (hand tail at ν = 101: 1.2×10⁻⁵⁵) |
+| P = sup P_{ν+2} (B2) | ≤ 1.63996×10⁵ (e^{πω} = 1.63995×10⁵) |
+| W = sup ν\|ρ^{±1}_{j₀}\| (B6) | ≤ 4.729×10⁻⁴ (hand tail at ν = 101: 1.21×10⁻⁵⁵) |
 | Cr, interior (B5), μ = ν ∓ 2 (3 triples) | ≤ 27.885 |
 | Cr, interior, μ = ν (6 triples) | ≤ 55.770 |
-| **C_{ν−2}** | **28.449** |
-| **C_ν** | **56.874** |
-| **C_{ν+2}** | **4.7661×10⁶** |
+| **C_{ν−2}** | **28.4492** |
+| **C_ν** | **56.8735** |
+| **C_{ν+2}** | **4.76611×10⁶** |
 
 C_μ = Σ_λ S_λ w_λ + Cr P_μ. The interior bound dominates. It comes from the crude grouping at J₀ = 10 and shrinks like
 1/J₀, while the near-end and far-end part is of order one. With J₀ = 100 (`--constants --J0=100`) the same bound holds
-for j ≥ max(2ν, 100) with C_{ν−2} = 1.599, C_ν = 3.173 and C_{ν+2} = 3.629×10⁵, the interior parts falling to 1.035 and
-2.070 and W to 4.2×10⁻⁵. The check of §10.3 was run against the J₀ = 10 constants.
+for j ≥ max(2ν, 100) with C_{ν−2} = 1.599, C_ν = 3.174 and C_{ν+2} = 3.629×10⁵, the interior parts falling to 1.036 and
+2.071 and W to 4.3×10⁻⁵. The check of §10.3 was run against the J₀ = 10 constants.
 
 ### 10.3 The check against the exact recursion
 
@@ -506,8 +509,12 @@ of its inputs, and tuned inputs keep them only under hypotheses.
   (H2) says that the full de-mixing by e^{−Π}, at every order, supplies the partner, so that the full expansion's
   normalised multiplier sequence has no O(1/j) increments.
 
-Under (H1) and (H2) the form C ν/j² survives, with C multiplied by X̄_μ and recomputed for the families the tuned
-inputs carry (*conditional* on (H1) and (H2)).
+This does not give the form C ν/j² for tuned inputs (the review, P6_route3_review.md §7 and finding 2). (H1) carries
+the interior bound over, with X̄_μ for |p|. The explicit part's j⁻² rate and its ν-uniform constant come from the
+input's exact Kummer form, and (H2) is qualitative, so it supplies neither. They would follow from a quantitative (H2′):
+the explicit part of the tuned increment is at most C₂ X̄_μ ν/j² for j ≥ j₀, with C₂ independent of ν. (H2′) is open,
+and so is X̄_μ's dependence on ν. The real first tuned order of harmonic ν ≥ 7 also has terms outside the one-step
+class (two non-background factors, nested lapse terms). So the form for tuned inputs is a *conjecture*.
 
 **The test** (`python3 route3_tuned.py 7 800`, about 5 min). It takes `amp_flint.py`'s real expansion to order 7, with
 its tuning, and the exact normalised multiplier sequence R_j of `S_at` for every j ≥ 2, the sequence that `S_at` fits.
@@ -524,11 +531,12 @@ It reports j²|ΔR_j/K_ν|/ν. Fixed before the run: the form holds if the windo
 | 3 | 5 | no | 2.026e-6 | 1.823e-6 | 1.801e-6 | 0.90 | 0.99 | holds |
 | 5 | 7 | no | 1.864e-12 | 1.267e-12 | 1.051e-12 | 0.68 | 0.83 | holds |
 
-So (H2) holds at the first tuned orders of harmonics 3, 5 and 7 and at the four later orders tried (numerical evidence).
-The tuned inputs keep the increments O(j⁻²) times a bounded factor. The small M values for ν = 5 and 7 are the tuned
-amplitudes. The windows do not resolve a log j factor: one of the size D_entire.md §6.6 reports for harmonic 1 at
-order 5 would give about 1.1 per window, inside the bar. **Control:** `--mutate=demix` (E × 3/2 in every target's
-de-mixing) fails every target, with ratios 1.29 to 2.01, and exits 1.
+So (H2) holds at the first tuned orders of harmonics 5 and 7 and at the later orders (1, 5), (3, 5) and (5, 7)
+(numerical evidence). The rows ν = 3 and (1, 3) have no tuned input: their only inputs are the order-1 background. The
+tuned inputs keep the increments O(j⁻²) times a bounded factor. The small M values for ν = 5 and 7 are the tuned
+amplitudes. The windows do not resolve a log j factor: one of the size D_entire.md §6.6 reports for harmonic 1 at order
+5 would give about 1.1 per window, inside the bar. **Control:** `--mutate=demix` (E × 3/2 in every target's de-mixing)
+fails every target, with ratios 1.29 to 2.01, and exits 1.
 
 ### 10.5 What is not covered
 
@@ -563,14 +571,14 @@ multiplier is R₀ + Σ_{j≥0} ΔR_j/K_ν. §10 bounds the sum over j ≥ j₀ 
 **Result.** Let H_μ(ν) = Σ_{j<j₀}|ΔR_j/K_ν|/|p|. For every odd ν ≥ 3 (*certified*)
 
 ```math
-H_\mu(\nu) \le \Lambda^{\rm head}_\mu\,e^{0.736\nu},\qquad \Lambda^{\rm head}_{\nu-2} = 0.011012,\quad \Lambda^{\rm head}_\nu = 0.058818,\quad \Lambda^{\rm head}_{\nu+2} = 3.3073 .
+H_\mu(\nu) \le \Lambda^{\rm head}_\mu\,e^{0.736\nu},\qquad \Lambda^{\rm head}_{\nu-2} = 0.011013,\quad \Lambda^{\rm head}_\nu = 0.058818,\quad \Lambda^{\rm head}_{\nu+2} = 3.3073 .
 ```
 
 - **So the head closes uniformly in ν.** The sup is reached at ν = 3. For ν ≤ 99 H comes from the exact recursion in
-  ball arithmetic. Beyond, a closed form from the hand lemma B7 gives e^{−0.736ν}H ≤ 1.5×10⁻²⁶, 3.1×10⁻²⁶ and 2.5×10⁻²¹
+  ball arithmetic. Beyond, a closed form from the hand lemma B7 gives e^{−0.736ν}H ≤ 1.6×10⁻²⁶, 3.1×10⁻²⁶ and 2.6×10⁻²¹
   (§11.3).
 - **The whole Darboux sum, with §10's tail** (*certified*): sup_ν e^{−0.736ν} Σ_{j≥0}|ΔR_j/K_ν|/|p| ≤ 1.0534, 2.1427 and
-  1.7463×10⁵. The tail's C_μ ν/(j₀ − 1) dominates these, against the head's 0.011012, 0.058818 and 3.3073. The last
+  1.7464×10⁵. The tail's C_μ ν/(j₀ − 1) dominates these, against the head's 0.011013, 0.058818 and 3.3073. The last
   constant carries the untuned weight P ≈ 1.6×10⁵ (§10.5 item 2).
 - **The head does not grow with ν at all** (numerical evidence beyond the certificate, §11.1). H falls from 0.100 to
   0.034 for μ = ν − 2, from 0.535 to 0.406 for μ = ν, and levels off near 15 for μ = ν + 2 over ν = 3 to 99. The tail's
@@ -664,20 +672,20 @@ upper ends of the exact recursion's balls at 512 bits. The relative-radius guard
 | ν | H, μ = ν − 2 | H, μ = ν | H, μ = ν + 2 |
 |---|---|---|---|
 | 3 | 0.10019 | 0.53510 | 30.088 |
-| 5 | 0.065829 | 0.43644 | 7.1812 |
-| 11 | 0.045827 | 0.41776 | 10.690 |
-| 21 | 0.039215 | 0.41116 | 12.761 |
-| 41 | 0.035921 | 0.40770 | 14.103 |
+| 5 | 0.065829 | 0.43644 | 7.1813 |
+| 11 | 0.045827 | 0.41776 | 10.691 |
+| 21 | 0.039216 | 0.41117 | 12.762 |
+| 41 | 0.035921 | 0.40770 | 14.104 |
 | 99 | 0.033976 | 0.40557 | 15.025 |
 
 | perturbation | sup e^{−0.736ν} H, ν ≤ 99 (at ν) | e^{−0.736ν} G at ν = 101 | Λ^head | sup e^{−0.736ν}(H + C_μ ν/(j₀ − 1)) (at ν) |
 |---|---|---|---|---|
-| ν − 2 | 0.011012 (3) | 1.53×10⁻²⁶ | **0.011012** | **1.0534** (3) |
+| ν − 2 | 0.011013 (3) | 1.54×10⁻²⁶ | **0.011013** | **1.0534** (3) |
 | ν | 0.058818 (3) | 3.07×10⁻²⁶ | **0.058818** | **2.1427** (3) |
-| ν + 2 | 3.3073 (3) | 2.52×10⁻²¹ | **3.3073** | **1.7463×10⁵** (3) |
+| ν + 2 | 3.3073 (3) | 2.52×10⁻²¹ | **3.3073** | **1.7464×10⁵** (3) |
 
 The last column uses §10's Σ_{j≥j₀} |ΔR_j/K_ν| ≤ C_μ|p| ν/(j₀ − 1), with the J₀ = 10 constants. Beyond ν = 99 it uses
-the same closed form, and it is at most 1.5×10⁻²⁶, 3.1×10⁻²⁶ and 2.5×10⁻²¹ there.
+the same closed form, and it is at most 1.6×10⁻²⁶, 3.1×10⁻²⁶ and 2.6×10⁻²¹ there.
 
 ### 11.4 The checks
 
@@ -699,8 +707,10 @@ The same limits as §10.5 items 2 to 4 apply:
 - Orders beyond one A² step.
 - The physical ω only.
 
-Tuned inputs (§10.4) enter the head as they enter the tail. Under (H1) the inputs keep an envelope, and B7 holds with
-|p| replaced by X̄_μ. The head needs no cancellation, so (H2) is not used here.
+Under (H1), B7's convolution and de-mixing parts hold with |p| replaced by X̄_μ, but its ψ term (μ = ν) does not. That
+term uses ψ(α_ν + j + 1) − ψ(α_ν + j) = 1/(α_ν + j), which holds only when the input's ratio X_j/T^ν_j is constant
+(the review, §7). The head needs no cancellation, so (H2) is not used, but the head for tuned inputs is not certified
+either.
 
 ### 11.6 Reproduce
 
@@ -718,7 +728,14 @@ python3 route3_head.py --certify                   # 11.3 (~10 min): Lambda_head
 
 **Reproduced on aarch64 (#1030).** All the commands of §10 and §11 ran on rpi5 (python-flint 0.9.0, FLINT 3.6.0):
 14 of 14 exits as listed, the five controls failing. `route3_bound.py --constants` printed 28.4491, 56.8735 and
-4.76610×10⁶ (with `--J0=100`, 1.59898, 3.17310 and 3.62864×10⁵), the values quoted in §10, and the six
+4.76610×10⁶ (with `--J0=100`, 1.59898, 3.17310 and 3.62864×10⁵), rounded to nearest by the code of then, and the six
 `route3_head.py` logs are byte-identical to the Mac's in raw I1015-mac (raw I1030-rpi5, cc9c41c5). §10's own Mac logs
 were not stored. Instead its eight commands ran again on x86 (winb, Windows 11, the same library versions, #1039),
 and every printed line equals rpi5's, timings aside, with the same exits.
+
+**Outward rounding (#1062's review, finding 1).** Both scripts printed certified upper bounds with arb's
+round-to-nearest `.str()`, so 0.011012 fell below the Λ^head_{ν−2} it bounds (0.01101243), and `route3_head.py` used the
+tail constants 28.449 and 4.7661×10⁶, below their certified upper ends. Every printed bound is now its upper end rounded
+up (`outward.py`, with a self-test and the control `--mutate=nearest`, which must fail), and `C_TAIL` holds the printed
+28.4492, 56.8735 and 4.76611×10⁶. The constants of §10.2 and §11.3 are those of the rerun (raw I1062-mac, folder
+`outward/`). No conclusion changes.
