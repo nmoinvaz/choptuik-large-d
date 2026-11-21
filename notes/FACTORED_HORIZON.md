@@ -631,6 +631,131 @@ quotients of each Q's largest entry, and each Q holds to the digits shown (its t
 - The prototype's two-node layout is not the chain's. So the test reads the mechanism, not dh170's 3.2×10⁵¹ itself.
 - A ratio ≤ 10⁻¹⁰ says the horizon rows' curvature drops. Whether the chain's raise then converges is for stage 2.
 
+### 5.3 Stage 2: the factored raise (#1035), design and criteria fixed before any run
+
+**What fails.** From the order-293 states at D 259.46 to 262.79, no raise of the horizon order converged, at any order
+from 294 to 318 (#1064). At D 262.0099 the stored state's residual at ks 315 is 1.67×10⁻³⁰, nearly all in the m rows:
+m 1.671×10⁻³⁰, a 2.8×10⁻³³ and c 3.8×10⁻³³ (`raisecheck` below, at the stored data, equal to dh170's 1.671×10⁻³⁰).
+Newton's first step is 1.4×10⁻¹⁴, Δ's part −1.0×10⁻¹⁴, and its point's residual is 8.6×10²⁹. The horizon rows'
+curvature along the weakest direction is 1.4×10⁴⁹ (dh170). ElimO's projection fails at every trial. It solves the m and
+a rows for (m_h, a_h), starting from the trial's own data, which the linear step leaves off by that curvature's term.
+
+**What is solved, and in which variables.** `hp/factored_raise.py` runs Newton's method on the pinned chain system at
+the new order. That system is the base polish's: the octo-double residual, the kernel's exact Jacobian and LU, and the
+held values taken from the state's eight parts, as with `--held_o 1`.
+- **The projection is method A.** In each trial z + λ dz, a_h alone is re-solved for the a rows of the horizon block.
+  The node's a is held, and m_h, Δ and the nodes keep the step's values. That is section 3's change of variables, a_K
+  in place of a_h, which takes the G-sized part out of the horizon rows' curvature (5.2).
+- **ElimO's rung is kept only for comparison** (`--rung ma`). Its own Newton moves m_h and lets a_h follow linearly,
+  which is the old map along m. Along m the old map's curvature was 2.3×10⁶³ at D 242.36, and the factored one 1.1
+  (5.2).
+- **The predictor.** Method A starts from a_h + λ da_h + λ² w, with w = −J_a⁻¹ q₂. Here q₂ is the a rows' second
+  difference along dz at τ = 2⁻¹⁰ and 2⁻¹², and J_a their block in a_h. The two τ must agree to 10%; if they do not,
+  the pair 2⁻²⁰ and 2⁻²² is tried, then 2⁻³⁰ and 2⁻³². If method A fails from that start, the step is split into 2, 4,
+  ..., 16 stages. Each stage starts from the last stage's result plus the predictor's increment.
+- **Acceptance.** A trial is accepted by Deuflhard's natural test: the simplified correction |J(z)⁻¹ F(z_t)| is at most
+  1 − λ/4 times |dz|, in max norms of the leading parts. It is also accepted when max|F| ≤ tol. λ is halved up to 10
+  times, and the raise takes at most 12 Newton steps.
+- **Tolerances.** The raise stops at max|F| ≤ 10⁻⁸⁰; dh170's ks 315 base at D 237.7132 reached 2.7×10⁻⁸⁶. Method A
+  runs each a-row solve to its floor and accepts it at 10⁻⁶⁰ or below.
+- **Plan.** The state's own (`--plan stored`).
+
+**The written state.** The raise writes `OUTDIR/raise_pin3_D<D>.npz` in the chain's eight-part layout
+(`octo_corrector.save_o`: zh, zl, z2 to z7, and the meta as JSON). The meta is the state's, with ks, segs (the plan
+used), source and parts updated and a `factored_raise` record added. anm_run.py loads it with `--state` (a path in the
+raw-data repository) and `--ks 315 --keep_plan 1`. The order then no longer changes, so the stored plan is kept, and the
+polish solves the raise's system.
+
+**What the script rests on: kernel-free checks on the Mac.**
+- **`factored_raise.py selftest`**: 19 of 19 pass, and `--mutate=nopred`, `old`, `linear` and `gate` each make it
+  exit 1.
+  - A model with three unknowns: a weak one (σ 10⁻⁶), a node value and a horizon datum. G = 10³⁰ sits in the rung row
+    and in the c row, and the rung has a pole at a miss of 10³. Its raise moves the weak unknown by 10⁻¹⁰, so the
+    linear step misses the rung by 10¹⁰.
+  - The factored raise converges to 2.7×10⁻¹⁰⁷ from the model's solution. The old map, the projection from the
+    linear step, the projection without the second-order term, and the one with that term's sign flipped each fail.
+  - The state writer reads a stored state back exactly.
+  - The comparison accepts a planted 10⁻⁶⁵ and refuses a planted 10⁻⁵⁵ against a bar of 10⁻⁶⁰.
+  - Both stage-3 gates run on eleven planted logs, and each broken one fails.
+- **`factored_horizon.py raisecheck`** at D 262.0099, ks 315, with hp's 1/k, 512 bits. RAISECHECK
+
+**Stage 2: the planted truth at D 237.7132, where the old raise works.**
+- **Start.** `I1064-dh610/ho2_D237.7132/ks307/base_pin3_D237.7132.npz` (blob 861c79ff): ks 307, max|F| 3.5×10⁻⁸⁶.
+- **Reference.** `I1064-dh170/p315/ks315/base_pin3_D237.7132.npz` (blob 0f4858ee), dh170's ks 315 base: max|F|
+  2.66×10⁻⁸⁶, Δ(315) − Δ(307) = +4.679×10⁻²⁷. Both files store the same plan (21 steps).
+- **Bar: every entry within 10⁻⁶⁰ of the reference**, as exact sums of the eight parts. Both states' last Newton
+  corrections are below 2×10⁻⁹⁰ (dh170's was 1.82×10⁻⁹⁰). So the bar leaves 30 orders for the raise's own convergence
+  and lies 33 orders below the raise's effect on Δ.
+- **Pass:** the raise converges to 10⁻⁸⁰ and meets the bar.
+- **The control that must fail is `--mutate=order`**: the raise to ks 314, compared with the ks 315 reference.
+- **`--mutate=old` and `--mutate=linear` are information here.** hp's own corrector raised 307 to 315 at this state in 4
+  steps (dh170, part 4), and that corrector is the old map with ElimO. So both are expected to converge here.
+- If the planted run fails, or the order control passes, stage 3 does not run.
+
+**Stage 3: the real case at D 262.0099.**
+- **Start.** `I966-dh370/ks_chain3b/leg14_D261.1415_ks293/anm_pin3_D262.0099.npz` (blob eb34f3c8), ks 293.
+- **The raise passes** when it converges to 10⁻⁸⁰. It then writes the raised state.
+- **Controls:** `--mutate=old` and `--mutate=linear` must each fail (exit 1), as every raise of #1064 failed here.
+- **The polish** is hp's own at ks 315 with part 4's flags. The pass rule was fixed with the coordinator on 2026-11-21,
+  before any raise ran. It passes on either reading, both read by `factored_raise.py polishgate`:
+  - (a) anm_run.py's start line reads octo-double max|F| ≤ 10⁻⁶⁰, with the polish skipped;
+  - (b) its last octo-double Newton line says converged at max|F| ≤ 10⁻⁶⁰ and the base is saved, as gate903d and
+    gate973 read it.
+- **Then one chain step at ks 315** from the polish's saved base (the raised state under (a)), with leg 14's arguments
+  and `--keep_plan 1 --steps 1`. It must be accepted by the chain's own rules and write its jet_pin3 file, which
+  `factored_raise.py stepgate` checks. The step is required for two reasons. A raised state that hp cannot step from is
+  of no use to the chain. And reading (a) alone shares hp's residual with the raise.
+- **Reported:** Δ(315) − Δ(293), as exact sums at the same D. dh170's linear estimate is −1.0×10⁻¹⁴.
+
+**Stage 3b: D 262.7908, run only if stage 3 passes.** xfchecks' locate sees the real pole near D 265.078 only from
+D 262.1011 on (#1064). So a raise at D 262.0099 tests the raise but cannot give the order reading. Stage 3b repeats the
+raise, the polish and the step from `I966-dh370/ks_chain3b/leg14_D261.1415_ks293/anm_pin3_D262.7908.npz` (blob
+d15cb96c). There dh610's ks 293 jets exist for comparison: `I1064-dh610/front_D262.7908/jet_a_ks293_keepplan1.npz`
+(blob 53296b91, the state's plan) and `jet_b_ks293_replan.npz` (blob a8d73dc0).
+
+**Commands.** These run on dh170 or dh610, from `hp/` of a clean checkout of main that includes this script, in a venv
+whose hpkernel was built from main. `RAW` is the raw-data clone, and `OUT=$RAW/I1035-<machine>/stage2` is made first,
+with its README. Run one process at a time, at nice 10 with 10 threads, and check each input's blob first
+(`git hash-object --no-filters`).
+
+```
+P0=I1064-dh610/ho2_D237.7132/ks307/base_pin3_D237.7132.npz            # blob 861c79ff
+PR=I1064-dh170/p315/ks315/base_pin3_D237.7132.npz                     # blob 0f4858ee
+S3=I966-dh370/ks_chain3b/leg14_D261.1415_ks293/anm_pin3_D262.0099.npz # blob eb34f3c8
+python3 factored_raise.py selftest $RAW/$P0                            # 19 of 19 pass, exit 0
+python3 factored_raise.py selftest $RAW/$P0 --mutate=nopred            # exit 1
+# stage 2
+nice -n 10 python3 -u factored_raise.py $RAW $OUT/planted --state $P0 --ks 315 --threads 10 --ref $PR --bar 1e-60 > $OUT/planted.log 2>&1              # PASS, exit 0
+nice -n 10 python3 -u factored_raise.py $RAW $OUT/planted_order --state $P0 --ks 315 --threads 10 --ref $PR --bar 1e-60 --mutate=order > $OUT/planted_order.log 2>&1   # FAIL, exit 1
+nice -n 10 python3 -u factored_raise.py $RAW $OUT/planted_old --state $P0 --ks 315 --threads 10 --ref $PR --bar 1e-60 --mutate=old > $OUT/planted_old.log 2>&1        # information
+nice -n 10 python3 -u factored_raise.py $RAW $OUT/planted_linear --state $P0 --ks 315 --threads 10 --ref $PR --bar 1e-60 --mutate=linear > $OUT/planted_linear.log 2>&1  # information
+# stage 3
+nice -n 10 python3 -u factored_raise.py $RAW $OUT/real --state $S3 --ks 315 --threads 10 > $OUT/real.log 2>&1                   # converged, exit 0
+nice -n 10 python3 -u factored_raise.py $RAW $OUT/real_old --state $S3 --ks 315 --threads 10 --mutate=old > $OUT/real_old.log 2>&1         # exit 1
+nice -n 10 python3 -u factored_raise.py $RAW $OUT/real_linear --state $S3 --ks 315 --threads 10 --mutate=linear > $OUT/real_linear.log 2>&1  # exit 1
+L14="--kfreeze 3 --held_fit data/held_fit.json --N 31 --eps 1e-14 --h_max 2 --threads 10 --corrector od --qd_it 40 --lam_stall 0.04 --od_junk 0 --jet_o 1 --reseed 2 --reseed_q 1 --held_o 1 --reseed_o 3 --save_pred 1 --od_accept own --save_jet 1 --od_strong 4 --reseed_start pred --a_rule reseed --a_scale 0.000715 --jet_tangent_from 1 --series_split 1 --a_rise 1 --proj_start pred --reseed_o_stop 1 --proj_o 1 --reseed_o_bar 1e-17 --reseed_qd_bar 1e-13 --D_max 271.1415"
+nice -n 10 python3 -u anm_run.py $RAW $OUT/polish315 --state I1035-<machine>/stage2/real/raise_pin3_D262.0099.npz $L14 --tol_od 1e-60 --od_floor_delta 0 --steps 0 --ks 315 --keep_plan 1 --save_base 1 > $OUT/polish315.log 2>&1
+python3 factored_raise.py polishgate $OUT/polish315.log $OUT/polish315 # PASS, exit 0
+B=I1035-<machine>/stage2/polish315/base_pin3_D262.0099.npz            # under reading (a): the raised state
+nice -n 10 python3 -u anm_run.py $RAW $OUT/step315 --state $B $L14 --tol_od 2e-34 --od_floor_delta 1e-30 --steps 1 --ks 315 --keep_plan 1 > $OUT/step315.log 2>&1
+python3 factored_raise.py stepgate $OUT/step315.log $OUT/step315       # PASS, exit 0
+python3 exact_recip_check.py delta $RAW/$S3 $RAW/$B --out $OUT/delta_315_vs_293.json   # Delta(315) - Delta(293)
+```
+
+Stage 3b uses the same lines with `S3b=I966-dh370/ks_chain3b/leg14_D261.1415_ks293/anm_pin3_D262.7908.npz` (blob
+d15cb96c), with `real3b`, `polish315_3b` and `step315_3b` in place of `real`, `polish315` and `step315`, and
+`D262.7908` in the file names.
+- `L14` is leg 14's line (`I966-dh370/ks_chain3b_s_dry.log`, line 17) without its own `--steps`, `--ks`, `--keep_plan`,
+  `--tol_od` and `--od_floor_delta`.
+- The polish takes part 4's `--tol_od 1e-60 --od_floor_delta 0`, and the step takes the chain's own `2e-34` and
+  `1e-30`.
+- `--reseed_o_bar 1e-17` acts only on a step's attempts (the coordinator's statement in #1064, not tested).
+- The jet of the step at D 262.7908 is the one to compare with dh610's two ks 293 jets.
+
+**Cost.** Each Newton step forms the octo-double Jacobian and LU, 230 to 400 s at 4 threads in #1064. Each trial adds
+the a-row solves of method A, one residual and one solve. A raise of about five steps should take 30 to 60 minutes. A
+control ends when no trial is accepted, after about 11 trials. This is an estimate.
+
 ## 6. Discrepancies (reported, not fixed)
 
 1. **The issue's premise.** G = 0.7^−(D−3) is the mass mode's gain, not the fast mode's, as #491's first comment says.
