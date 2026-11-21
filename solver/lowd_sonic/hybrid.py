@@ -25,8 +25,11 @@ hp's Taylor plan outside the band is made again from that D's start, by Solver.p
 default: Solver.plan is not local to a segment (the moved s_A changed the steps elsewhere, 1088 outside the band against
 925), and with that plan the chord step at D 3.045 left hp's rows at 1.3e-8 and then diverged (raw
 I997-mac-sonic/real/real_attempt4_replan.log). --split S, --split_near S2: every step of the start state's plan outside
-the band split S times, and S2 times in the band's two neighbouring segments (a plan made at one D can be past its
-stability limit at a lower D for a perturbed state, the failure of LOW_D.md section 17).
+the band split S times, and S2 times in the band's two neighbouring segments, before the Jacobian is formed, so that
+the Jacobian and the residuals share one plan. The stored plan of hp's D 3.045 state is not converged for the hybrid
+solution in its last two segments (0.95 and 0.975: 9.6e-14 and 4.2e-11 with steps split 2 or 4 times, against 2.1e-14
+on the stored plan), and a chord step on split plans with a Jacobian on the stored plan diverged (raw
+I997-mac-sonic/real/real_attempt5_split_after.log).
 
     python3 hybrid.py OUT.jsonl --state S.npz [--history A.npz,B.npz] --Ds 3.045,3.044 [--band 0.01,0.02]
         [--warp none|test|design|FILE.npy] [--jac band|hp|wood] [--aa_m m] [--A 1.5e-3] [--eps0 2e-3] [--kappa 1.0] [--tol 1e-12] [--it_max 40]
@@ -73,6 +76,19 @@ def lagrange(Ds, zs, D):
     return out
 
 
+def split_segs(segs, ia, s_all, s_near):
+    """hp's plan with every step outside segment ia (the band) split s_all times, and s_near times in segments ia - 1
+    and ia + 1"""
+    out_all = []
+    for i, q in enumerate(segs):
+        k = 1 if i == ia else (s_near if i in (ia - 1, ia + 1) else s_all)
+        out = [q[0]]
+        for x0, x1 in zip(q[:-1], q[1:]):
+            out += [x0 + (x1 - x0) * j / k for j in range(1, k)] + [x1]
+        out_all.append(out)
+    return out_all
+
+
 class Hybrid:
     def __init__(self, D, M, nodes, kt, kc, ks, segs, band, phi, threads, kappa, mutate="none", full_band_plan=False):
         from hpkernel.driver import make_solver
@@ -109,16 +125,9 @@ class Hybrid:
 
     def split(self, s_all, s_near):
         """every step of hp's plan outside the band split s_all times, and s_near times in the band's two neighbours"""
-        segs = []
-        for i, q in enumerate(self.segs):
-            k = 1 if i == self.ia else (s_near if i in (self.ia - 1, self.ib) else s_all)
-            out = [q[0]]
-            for x0, x1 in zip(q[:-1], q[1:]):
-                out += [x0 + (x1 - x0) * j / k for j in range(1, k)] + [x1]
-            segs.append(out)
-        self.s.set_segs(segs)
-        self.segs = segs
-        return sum(len(q) - 1 for i, q in enumerate(segs) if i != self.ia)
+        self.segs = split_segs(self.segs, self.ia, s_all, s_near)
+        self.s.set_segs(self.segs)
+        return sum(len(q) - 1 for i, q in enumerate(self.segs) if i != self.ia)
 
     def blocks(self, F):
         """max |F| per residual block (index = node; the last is the horizon block) and the phase row"""
@@ -261,6 +270,11 @@ def main():
         segs = s0.plan(zh, zl, 1e-30, 0.05)
         s0.set_segs(segs)
         log(f"renoded to {len(nodes)} nodes {nodes}; plan steps {sum(len(q) - 1 for q in segs)}")
+    if a.split > 1 or a.split_near > 1:
+        segs = split_segs(segs, nodes.index(band[0]), a.split, max(a.split, a.split_near))
+        s0.set_segs(segs)
+        log(f"plan outside the band split {a.split} times ({a.split_near} next to the band): "
+            f"{sum(len(q) - 1 for q in segs)} steps with the band's own")
     F0 = np.asarray(s0.residual(zh, zl)[0])
     log(f"start D {D0} M {M} K {len(nodes)} L {s0.size}: hp |F| {np.abs(F0).max():.3e}, Delta {zh[-1] + zl[-1]:.16f}")
     N = 2 * M
@@ -373,9 +387,6 @@ def main():
             tp = time.time()
             nst = hy.replan(zp)
             log(f"  D {D}: hp's plan outside the band from the start state: {nst} steps ({time.time() - tp:.0f}s)")
-        if a.split > 1 or a.split_near > 1:
-            nst = hy.split(a.split, max(a.split, a.split_near))
-            log(f"  D {D}: hp's plan outside the band split {a.split} times ({a.split_near} next to the band): {nst} steps")
         hist_F, conv, it = [], False, 0
         err = None
         try:
