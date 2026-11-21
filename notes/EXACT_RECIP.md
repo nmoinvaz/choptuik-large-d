@@ -18,6 +18,7 @@ The re-solves are for a Linux runner (section 3). Status words are AGENTS.md's.
 | the same at D 246.44 and 249.47 | no value: both flag-on polishes stop at their start, whose projection fails from a miss of 3.29×10⁻⁶ and 9.02×10⁻⁶ (growing about 1.4 times per unit D, 2.02×10⁻⁵ at 251.88); so D 241.96's change is the last measured one | dh610's release build (3.5) |
 | where the flag-on polish's basin ends | between D 241.96 and 242.86: at the four bases D 242.86–245.56 the flag-on start misses by 1.00×10⁻⁶ to 2.45×10⁻⁶ and stops; lifting the bound at D 246.44 and 249.47 does not converge either | dh610's release build (3.6) |
 | the same at D 242.21 and 242.46 (flag-off states between the edges, polished with the flag on) | +3.443409×10⁻¹³ (0.91% of 3.8×10⁻¹¹) and +2.798345×10⁻¹³ (0.82% of 3.4×10⁻¹¹), each converged in 5 steps to 4.5×10⁻⁹³ and 2.2×10⁻⁹²; with D 241.96 the change stays near 3×10⁻¹³, under 1% of the quoted errors | dh610's release build (3.6, job 5) |
+| the same along a flag-on continuation from D 241.96, four steps of 0.25 | converges at every step; +3.443409×10⁻¹³, +2.798345×10⁻¹³, +8.833605×10⁻¹⁴ and −2.824433×10⁻¹³ at D 242.21, 242.46, 242.71 and 242.96, 0.26% to 0.91% of the nearest quoted errors; the change turns sign between the last two, cause unknown | numerical evidence, dh610's release build (3.6, job 6) |
 | does the first-order response predict Δ's change at large D | no: at D 241.96 it gives 11.5 times the measured change, and its `prow` control 5.1 times unknown 0's own; suspected cause, untested: second-order terms along the weak directions | numerical evidence, Mac release-dev build on dh610's bases (3.3) |
 
 ## 1. The flag
@@ -474,6 +475,28 @@ first step did not converge, while the flag-off continuation took both steps. Bu
 states with the flag on and 3.5's flags (job 5: the strong chord, the natural test, the pred re-seed start) converged
 at both, giving +3.443409×10⁻¹³ at D 242.2102 and +2.798345×10⁻¹³ at D 242.4602. Job 4 and job 5 differ in their
 Newton flags and their inputs, so job 4's failure is not yet traced to either; the likelier cause is its flags.
+
+**Job 6** (dh610, #1043 comment 7056299042, raw `I1054-dh610/` 1d5d0222). Two continuations from the D 241.96 base,
+flag off and flag on, with 3.5's Newton flags, took four steps of 0.25 to D 242.96, each accepted at its first attempt.
+The flag-on base polish converged in 4 steps to 1.2×10⁻⁹³, where job 4's stopped at 1.6×10⁻²⁴. Job 6 changed `--N`,
+`--qd_it`, `--lam_stall` and the four Newton flags together, so it does not say which of them made the difference.
+
+| D | Δ(on) − Δ(off) | nearest row, quoted error | share |
+|---|---|---|---|
+| 242.2102 | +3.443409×10⁻¹³ | D 241.9602, 3.8×10⁻¹¹ | 0.91% |
+| 242.4602 | +2.798345×10⁻¹³ | D 242.7053, 3.4×10⁻¹¹ | 0.82% |
+| 242.7102 | +8.833605×10⁻¹⁴ | D 242.7053, 3.4×10⁻¹¹ | 0.26% |
+| 242.9602 | −2.824433×10⁻¹³ | D 242.7053, 3.4×10⁻¹¹ | 0.83% |
+
+At D 242.21 and 242.46 the flag-on states equal job 5's polishes to 1.4×10⁻⁶¹ and 1.8×10⁻⁷², and the flag-off states
+equal job 4's to 3.6×10⁻⁶⁴ and 2.2×10⁻⁵⁴ (bound 10⁻³⁰; the control, flag off against flag on, reads 3.4×10⁻¹³). These
+checks share the code, the build and the equations, so they test the path, not the equations. The change is not a
+constant offset: it falls to 8.8×10⁻¹⁴ at D 242.71 and turns negative at D 242.96. Its cause is unknown. The D 242.96
+share uses a row 0.255 away in D. Over D 241.96 to 242.96 the change stays under 1% of the quoted errors.
+
+Not run: dh610's two follow-ups, a bounded flag-on polish of job 6's flag-off states at D 242.71 and 242.96, and two
+more steps to D 243.46 to follow the sign. #1043's answer does not depend on them: wherever the change was measured,
+the exact 1/k moves Δ by less than 1% of the quoted error.
 
 ## 4. Discrepancies (reported, not fixed)
 
