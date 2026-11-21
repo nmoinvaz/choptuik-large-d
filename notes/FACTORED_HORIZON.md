@@ -731,6 +731,27 @@ dh170 found the old-map residual exactly quadratic out to t = 10⁻²⁰. Stage 
   steps (dh170, part 4), and that corrector is the old map with ElimO. So both are expected to converge here.
 - If the planted run fails, or the order control passes, stage 3 does not run.
 
+**Stage 2's result: PASS** (dh610, 2026-11-21, raw `I1035-dh610/stage2_planted/`, the script at bae00edf, venv-i1058's
+kernel). The selftest passes 19 of 19 there, and `--mutate=nopred` exits 1.
+
+| run | exit | Newton lines | last max\|F\| | Δ moved | largest entry difference from dh170's base | reading |
+|---|---|---|---|---|---|---|
+| planted | 0 | 4 | 5.8×10⁻⁸⁷ | +4.678695×10⁻²⁷ | 4.4×10⁻⁹⁰ | PASS (bar 10⁻⁶⁰), the same plan |
+| `--mutate=order` (ks 314) | 1 | 4 | 4.2×10⁻⁸⁶ | +4.617503×10⁻²⁷ | 6.1×10⁻²⁹ (Δ) | FAIL, as it must, by the comparison |
+| `--mutate=old` | 1 | 8 | 2.5×10⁻¹³ | +1.52×10⁻²⁶ | 1.1×10⁻²⁶ | not converged: no trial accepted, θ up to 5×10¹⁷ |
+| `--mutate=linear` | 0 | 3 | 4.4×10⁻⁸⁷ | +4.678695×10⁻²⁷ | 3.2×10⁻⁹⁰ | PASS |
+
+- The raise reproduces dh170's ks 315 base entry by entry to 4.4×10⁻⁹⁰, and Δ to 2.5×10⁻⁹³. Its step 0 is the whole
+  raise: |dz| 4.679×10⁻²⁷, then max|F| 2.2×10⁻⁵⁵, 3.0×10⁻⁸⁰ and 5.8×10⁻⁸⁷.
+- A Mac-side check of the written state (raw blob f96723d0) agrees. The meta has ks 315 and the start's plan. The
+  comparison, now `ref_verdict`, gives 4.4×10⁻⁹⁰ against dh170's base, the same order and the same plan.
+- **`--mutate=old` failed here, against the expectation above** (reported, not fixed). That expectation took hp's own
+  corrector, which raised this state, for the old map. But hp's corrector has ElimO's projection, and `--mutate=old`
+  has none. The old map without any projection does not raise at D 237.7132. The projection from the trial's own data
+  (`linear`) does.
+- At the last step of the planted run and of the order control, the predictor's τ pairs disagreed (t² check 5.7) at
+  |dz| 10⁻⁹⁰, the noise level. In bae00edf that w was used, flagged. From 70a8a406 on, such a w is not used.
+
 **Stage 3: the real case at D 262.0099.**
 - **Start.** `I966-dh370/ks_chain3b/leg14_D261.1415_ks293/anm_pin3_D262.0099.npz` (blob eb34f3c8), ks 293.
 - **The raise passes** when it converges to 10⁻⁵⁰. It then writes the raised state. Its log also prints the state's
