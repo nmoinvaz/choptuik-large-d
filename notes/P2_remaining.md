@@ -783,3 +783,79 @@ Nathan Moinvaziri's direction, by a fresh agent that had not worked on B8 or rea
     (the gain bounds are about 8 times the planted integrals at n = 300).
 - **Output.** Logs and JSON records go to the raw-data repository as `I1061-mac/`. The code and this section stay in the
   branch.
+
+### 7.2 Results (own numbers, committed before the comparison)
+
+Logs and JSON records are in the raw-data repository, `I1061-mac/` (`run_i1061.sh`, `run_i1061b.sh`,
+`run_i1061c.sh`), run 2026-11-21 02:37–04:33 UTC with the code at 302a7197. Each n₀ takes one to four builds of
+379 cells at 33–41 s each.
+
+**The claim is confirmed: P(h) < h closes at ln n₀ = 62 with d₀ = 0, and at ln n₀ = 73.89 with d₀ = 10⁷, on 𝒟_n.**
+Every component of P(h) is below h as balls (upper end of P(h) below the lower end of h), with h ≤ H_max.
+
+| ln n₀ | d₀ | closes | h = (h_V, h_S, h_β, h_c) | ρ(J) at h* | s_* | K_F | γ_F |
+|---|---|---|---|---|---|---|---|
+| 62 | 0 | yes | (6.58e6, 1.77e7, 1.06e6, 3.21e5) | 0.880 | 0.1636 | 2.033 | 0.5479 |
+| 73.89 | 0 | yes | (1.62e6, 4.37e6, 4.38e5, 1.12e5) | 0.647 | 0.1875 | 1.763 | 0.4151 |
+| 73.89 | 10⁷ | yes | (1.02e8, 1.38e8, 1.18e7, 1.27e7) | 0.686 | 0.1875 | 1.763 | 0.4151 |
+| 62 | 10⁷ | no: no fixed point below 10¹¹ | | | | | |
+
+In every closing run both maxima, of P_S and of P_β, are attained on F. Doubling the cells (n0c = 48, n1c = 320)
+changes no printed digit of h at 62 (d₀ = 0) or at 73.89 (d₀ = 10⁷) (`fine_*.log`).
+
+**Smallest closing ln n₀** (bisection; "not at" is the largest tested ln n₀ that did not close):
+
+| d₀ | domain | closes at | not at | ρ_max at the two ends | how it fails below |
+|---|---|---|---|---|---|
+| 0 | 𝒟_n | 59.9375 | 59.75 | 0.010478, 0.010511 | ρ(J) → 1 (0.961 at 59.9375) |
+| 10⁷ | 𝒟_n | 70.4375 | 70.25 | 0.008916, 0.008940 | no self-consistent H_max; ρ(J) = 0.763 at 70.4375 |
+| 0 | 𝒟′_n | ≤ 54 | | 0.0085 at every n₀ | |
+| 10⁷ | 𝒟′_n | ≤ 56 | | 0.0085 at every n₀ | |
+
+- On 𝒟_n the ln n₀ dependence enters through ρ_max(n₀) = (1 + R′_{n₀})²/n₀ alone. The N0 and N1 cells contribute
+  terms of relative size ε₀ ≤ e^{−54}, and F depends on n₀ only through ρ_max and n₀/(n₀ − 1).
+- **On 𝒟′_n (|x|² ≤ Z_B n, Z_B = 0.0085), ρ_max is fixed, and the closure gives the same h at ln n₀ = 54, 62 and
+  73.89, with and without the offset.** So on 𝒟′_n neither 62 nor 73.89 is a threshold of the bootstrap. The
+  bracket's lower ends were not low enough; where the closure stops on 𝒟′_n is in §7.2.1.
+- **The offset threshold 73.89 is not sharp.** With d₀ = 10⁷ the closure holds on 𝒟_n down to ln n₀ = 70.4375. The
+  certificate ran the offset only at 73.89 (B5(1)'s threshold), so this is consistent with the claim.
+
+**Checks** (§7.1's criteria):
+
+| check | bar | result |
+|---|---|---|
+| (P1) structural zeros, centre / box | below 10⁻⁶⁰ / contain 0 | largest 1.14×10⁻⁶⁹ (τ_v) / all contain 0: PASS |
+| (P1) §3's atom table | compared | reproduced to its digits: V 5.084, 48.3, 526, 6.0e3; S 15.9, 254, 4.0e3, 5.8e4; β 12.9, 254, 3.3e3, 4.9e4; c − 1 12.9, 177, 2.1e3, 2.5e4; Γ 9.69, 191, 2.8e3, 3.8e4; τ_D, τ_b 9.3e5, 7.9e5; τ_v, ρ₄ 1.3e6, 9.3e5 |
+| (P2) Lemma R and factorizations | below 10⁻⁴⁰ | largest 9.6×10⁻⁶⁴ (I3): PASS |
+| (P3) planted instances, 11 cells | below 1 | largest just below 1, the R_c integrand on the cell [0, 10⁻⁶]: PASS |
+| (P4) Lemma K.1's margin on the ray | ≤ 0 | −9.1×10⁻¹³ (the margin is tight as t → ∞): PASS |
+| (P4) scalar kernel integral / gain, n = 300 | below 1 | largest 0.106: PASS |
+| (P5) planted closure search, threshold 58.946 | open at −0.2, closed at +0.2 | as required: PASS |
+
+The (P3) ratio is tight by construction: the R_c integrand is dominated by |[c^K R̂_β]| ≈ |R̂_β|, and the instance
+takes |R̂_β| = h_β w exactly.
+
+**Controls:**
+
+| control | required | result |
+|---|---|---|
+| K1: S₂'s top coefficient × 1.001 | (P1) fails | τ_D's dropped coefficients no longer contain 0 (0.232 at the centre): exit 1 |
+| K2: ρ₂ without its first term | I1 fails | I1 relative residual 0.51: exit 1 |
+| K2: x W₂ dropped from the formulas | I2 fails | I2 residual 19.9: exit 1 |
+| K2: ρ₂ dropped in the cell arithmetic only | (P3) fails | exact/bound up to 1.2×10²⁹: exit 1 |
+| K2: W₂ dropped in the cell arithmetic only | (P3) fails | exact/bound up to 398: exit 1 |
+| K3: decay margin sin 0.4, domain κ = 0.3 | kernel check fails | margin +0.094: exit 1 |
+| K3: κ = 0.02 throughout | no closure at 73.89 | s_* = −0.083: not closed, exit 2 |
+| K4: τ_D × 10 at 62 (no bar) | reported | still closes, h = (5.03e7, 1.36e8, 6.11e6, 2.03e6), ρ(J) = 0.916 |
+
+K4 shows that the forcing's size moves h, not the closure. ρ(J) depends on the forcing only through the folded
+quadratic terms. So a wrong atom is caught by (P1), not by the closure. The two insensitive checks recorded in the
+protocol behave as recorded: half of the product rule dropped leaves (P3) at its value, and the gain check under the
+wrong margin gives 0.119.
+
+**The search driver was changed once, after the first bisection** (069f22c0; the first driver's logs are in
+`I1061-mac/first_driver/`). The first bisection gave 60.125. At 59.9375 its fixed point lay just under H_max, so the
+test point h* + t u left the range where the bounds hold and was rejected. The driver now rebuilds the bounds until
+h* ≤ H_max ≤ 1.2 h*, and tests only points with h ≤ H_max. It also has a polyhedral fallback: P is a maximum of
+affine maps, so {h : P(h) < h} is a linear feasibility problem. No run above needed the fallback. The bounds, the
+cells and the pass criteria did not change. Every certificate point is verified in balls whichever way it was found.
