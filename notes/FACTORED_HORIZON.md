@@ -728,6 +728,7 @@ python3 factored_horizon.py curvxq $OUT/curvx_D242_1e-20.json $OUT/curvx_D242_-1
 
 The last two lines with `D73`, `$S73` and `ref_D73_288.json` give the cross-check at D 73.0: PASS, relative
 difference 3.48e-29. One process each. On the Mac a curv run took 3 to 12 minutes, a curvjac 3 to 8 and a curvx 3 to 5.
+The logs and records of 5.2's runs are in `I1035-mac/stage1b/` of the raw-data repository, at df0fea4e.
 
 ## 8. Prior art used
 
