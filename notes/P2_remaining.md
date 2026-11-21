@@ -763,8 +763,8 @@ Nathan Moinvaziri's direction, by a fresh agent that had not worked on B8 or rea
     below its bound (ratio < 1).
   - **(P4) Kernel and gains.** Lemma K.1's margin on the domain's ray on a grid t ∈ [10⁻⁴, 10⁶]. The scalar kernel
     e^{(n−1)(Φ(x)−Φ(s))} (H′ = 0) integrated along P_x at n = 300 for 6 targets, below the gain formula.
-  - **(P5) Closure search, planted.** An affine map whose spectral radius crosses 1 at L = 58.946: not closed at L − 0.2,
-    closed at L + 0.2.
+  - **(P5) Closure search, planted.** An affine map whose spectral radius crosses 1 at L = 58.946: not closed at
+    L − 0.2, closed at L + 0.2.
   - **(P6) The claim.** Strict closure on 𝒟_n at ln n₀ = 62 with d₀ = 0, and at 73.89 with d₀ = 10⁷. Then the
     smallest closing ln n₀ by bisection to 0.25, for d₀ = 0 and d₀ = 10⁷, on 𝒟_n and on 𝒟′_n. If either point of the
     claim does not close here, that is reported as not confirmed by this implementation, and located after the
@@ -809,14 +809,19 @@ changes no printed digit of h at 62 (d₀ = 0) or at 73.89 (d₀ = 10⁷) (`fine
 |---|---|---|---|---|---|
 | 0 | 𝒟_n | 59.9375 | 59.75 | 0.010478, 0.010511 | ρ(J) → 1 (0.961 at 59.9375) |
 | 10⁷ | 𝒟_n | 70.4375 | 70.25 | 0.008916, 0.008940 | no self-consistent H_max; ρ(J) = 0.763 at 70.4375 |
-| 0 | 𝒟′_n | ≤ 54 | | 0.0085 at every n₀ | |
-| 10⁷ | 𝒟′_n | ≤ 56 | | 0.0085 at every n₀ | |
+| 0 | 𝒟′_n | ≤ 11 (the bracket's end) | | 0.00927 at 11 | |
+| 10⁷ | 𝒟′_n | 12.4062 | 12.0546 | 0.008877 at 12.4062 | no self-consistent H_max; ρ(J) = 0.754 at 12.4062 |
 
 - On 𝒟_n the ln n₀ dependence enters through ρ_max(n₀) = (1 + R′_{n₀})²/n₀ alone. The N0 and N1 cells contribute
   terms of relative size ε₀ ≤ e^{−54}, and F depends on n₀ only through ρ_max and n₀/(n₀ − 1).
-- **On 𝒟′_n (|x|² ≤ Z_B n, Z_B = 0.0085), ρ_max is fixed, and the closure gives the same h at ln n₀ = 54, 62 and
-  73.89, with and without the offset.** So on 𝒟′_n neither 62 nor 73.89 is a threshold of the bootstrap. The
-  bracket's lower ends were not low enough; where the closure stops on 𝒟′_n is in §7.2.1.
+- **On 𝒟′_n (|x|² ≤ Z_B n, Z_B = 0.0085) neither 62 nor 73.89 is a threshold of the bootstrap.** There
+  ρ_max = (1 + (Z_B n₀)^{1/2})²/n₀ stays near 0.0085, and the closure gives the same h at ln n₀ = 54, 62 and 73.89,
+  with and without the offset. A second pair of bisections (`run_i1061c.sh`) went down to ln n₀ = 11, below which F
+  is empty ((Z_B n)^{1/2} < x_F for ln n < 10.8). Without the offset the closure holds at 11, with h = (2.59e6, 6.98e6,
+  5.61e5, 1.53e5). With d₀ = 10⁷ it holds down to 12.4062, where ρ_max has risen to 0.008877.
+- **So the closure is a function of ρ_max alone**, to the resolution of these bisections. Without the offset it
+  holds at ρ_max = 0.010478 and fails at 0.010511 (𝒟_n). With d₀ = 10⁷ it holds at 0.008916 (𝒟_n) and 0.008877
+  (𝒟′_n), and fails at 0.008940 (𝒟_n) and 0.008951 (𝒟′_n, ln n₀ = 12.0546).
 - **The offset threshold 73.89 is not sharp.** With d₀ = 10⁷ the closure holds on 𝒟_n down to ln n₀ = 70.4375. The
   certificate ran the offset only at 73.89 (B5(1)'s threshold), so this is consistent with the claim.
 
@@ -859,3 +864,97 @@ test point h* + t u left the range where the bounds hold and was rejected. The d
 h* ≤ H_max ≤ 1.2 h*, and tests only points with h ≤ H_max. It also has a polyhedral fallback: P is a maximum of
 affine maps, so {h : P(h) < h} is a linear feasibility problem. No run above needed the fallback. The bounds, the
 cells and the pass criteria did not change. Every certificate point is verified in balls whichever way it was found.
+
+### 7.3 The comparison with the certificate
+
+Opened after 700cd8c9: `b8m_bounds.py`, `b8_alg.py`, `b8m_scan.py`, the scan logs `b8m_scan_K4_box.log`,
+`b8m_scan_K4_d0_1e7.log`, `b8m_scan_K4_d0.log`, `b8m_scan_K4_fixedZ.log` and `b8m_atoms_K4.log`.
+
+**Fixed points of P** (the certificate's `b_fixed` and mine), and the certified h (the certificate's `hyp`):
+
+| ln n₀ | d₀ | | V | S | β | c |
+|---|---|---|---|---|---|---|
+| 62 | 0 | fixed point, here / certificate | 1.016 | 1.016 | 1.056 | 0.986 |
+| 62 | 0 | certified h, certificate / here | 7.16e6 / 6.58e6 | 1.91e7 / 1.77e7 | 1.09e6 / 1.06e6 | 3.57e5 / 3.21e5 |
+| 73.89 | 0 | fixed point, here / certificate | 0.747 | 0.747 | 0.717 | 0.739 |
+| 73.89 | 0 | certified h, certificate / here | 2.41e6 / 1.62e6 | 6.27e6 / 4.37e6 | 6.17e5 / 4.38e5 | 1.67e5 / 1.12e5 |
+| 73.89 | 10⁷ | fixed point, here / certificate | 1.110 | 1.246 | 1.112 | 1.019 |
+| 73.89 | 10⁷ | certified h, certificate / here | 9.71e7 / 1.02e8 | 1.20e8 / 1.38e8 | 1.13e7 / 1.18e7 | 1.28e7 / 1.27e7 |
+
+Every ratio lies in [0.72, 1.25], inside (P7)'s [1/3, 3]. The kernel constants agree to 3–4 digits:
+
+| ln n₀ | | s_* | H_F | N_F | K_F | γ_F |
+|---|---|---|---|---|---|---|
+| 62 | certificate | 0.16364 | 14.390 | 98.57 | 2.0327 | 0.54769 |
+| 62 | here | 0.16360 | 14.393 | 98.57 | 2.0334 | 0.54790 |
+| 73.89 | certificate | 0.18751 | 14.044 | 117.48 | 1.7630 | 0.41504 |
+| 73.89 | here | 0.18749 | 14.047 | 117.48 | 1.7634 | 0.41514 |
+
+Mine is larger by 2×10⁻⁴ in H_F because my F majorant bounds |x|^m by X^m, dropping θ^m. The thresholds agree:
+the certificate closes at 62 and fails at 58 ("c lower bound"), and mine closes at 59.9375 and not at 59.75. Its
+`fixedZ` run (ρ_max = 0.0085 at ln n₀ = 90) gives the 73.89 values to five digits, which is §7.2's observation that
+the closure depends on ρ_max only.
+
+**Where the two differ, located by reading the certificate's code:**
+- *One box per region against radial cells.* The certificate bounds N0, N1, R and F each as one box. On N1 that box
+  takes X²/|x² − 1| ≤ 230 (`ell["N1"]`) and on R ≤ 2√2. Its β forcing on N1 is then 5.1×10⁵ (`gl_N1`) and pins P_β at
+  6.10×10⁵ for ln n₀ = 73.89, 70 and 66 (B8_constants.md §7.2). On my cells N1's β forcing is below F's, and both
+  maxima sit on F. This is the 25–30 % at 73.89. At 62 F dominates in both, and the fixed points agree to 6 %.
+- *Products of norms against exact cancellations.* The certificate bounds Λ G₁ as ‖(D^K)⁻¹‖‖A^K‖‖(A^K)⁻¹‖|N₁|,
+  q(ΛG₁ + xW₂) as ‖q‖ times that, ρ₂ and ρ₃ term by term, and keeps (n − 1)δD S and δD D⁻¹ A₀ S apart. I use
+  Λ G₁ = (D^K)⁻¹N₁, q(ΛG₁ + xW₂) = ℓ̂(I + e)⁻¹[N₁ + (I − δD D⁻¹)N₂]/(n − 1), ρ₂ det C and ρ₃ det C² as exact
+  polynomials, and −(n − 1)x²δD D⁻¹S. These matter on N0 and near the light cone, not on F.
+- *The weight w₁ on F.* My cells carry w = θρ^{K+1} exactly and bound w₁ = w/θ by w/θ_F, a factor 21/20 on the R_V
+  and R_c terms. The certificate keeps θ in its monomials. With the offset, h_V and h_c are large and this factor
+  shows. A diagnostic run with w₁ ≤ w on F (unsound, `diag_thF.py`) gives h* = (9.76e7, 1.26e8, 1.09e7, 1.25e7). That
+  is about 40 % of the gap in h_S; the rest was not traced.
+- *The far sup.* The certificate takes, per monomial, the smaller of X_lo^a n₀^e and X_lo^{a+2e}ρ_max^{−e}, using
+  n ≥ n₀ at small X. Mine uses the (X, ρ) box only.
+- *The closure test.* The certificate descends from 1.1 times its fixed point by h ← 1.01 P(h). Mine tests
+  h* + t u with (I − J)u = h*, with H_max self-consistent.
+
+**What is shared.** The statements listed in §7.1, the settings, the box centre and ω∞, d₀ and Z_B, and the ball
+library (python-flint 0.9.0 on FLINT 3.6.0). No code is shared: the series, the atoms, the bound arithmetic, the
+gains, the identities' check and the closure search are this review's own.
+
+### 7.4 Discrepancies and observations (reported, not fixed)
+
+1. **The threshold 62 belongs to 𝒟_n, not to 𝒟′_n.** Item 4's row in §1 and issue #1061 state the closure "on
+   𝒟′_n, closing for ln n₀ ≥ 62". On 𝒟′_n (fixed Z_B = 0.0085) the bootstrap closes far lower: at ln n₀ = 11 here
+   without the offset, and from 12.41 with d₀ = 10⁷. The value 62 is the threshold on 𝒟_n, whose radius
+   (κ₁n/(cos κ ln n))^{1/2} gives ρ_max ≈ κ₁/(cos κ ln n₀) > Z_B for ln n₀ < 73.89. The certificate's own `fixedZ` run
+   shows the same. C_selection.md §13.1's row (n ≥ e^{62}; with the offset, n ≥ e^{73.89}) is correct but
+   conservative. No proved statement changes.
+2. **The offset threshold 73.89 is not sharp.** With d₀ = 10⁷ the closure holds on 𝒟_n down to ln n₀ = 70.4375
+   here. The certificate ran the offset only at 73.89, which is all B5(1) needs.
+3. **§3's atom table omits V's ε⁴ entry** (7.04×10⁴). The certificate's atoms carry it (its x V′ at ε⁴ is
+   1.727×10⁵, as mine); `b8m_atoms_K4.log` prints four entries per row, and the table copied them.
+4. **B8_constants.md §7.2's "P_β is almost all forcing on N1"** describes the certificate's N1 box, not the
+   problem. On finer cells the N1 forcing falls below F's.
+5. **The scaled-atom control works through the structure check only.** τ_D × 10 still closes at 62 (§7.2, K4). A
+   check that a wrong atom moves the closure would not fire; Lemma F's structural zeros do.
+
+### 7.5 Reproduce
+
+From `solver/proof/review_p2c/`, with the raw-data repository cloned beside this checkout:
+
+```
+RAW=../../../../choptuik-large-d-raw/I1061-mac
+python3 p2c_b8_series.py --centre                      # (P1), STRUCTURE PASS, exit 0
+python3 p2c_b8_series.py --centre --mutate=atom        # K1, STRUCTURE FAIL, exit 1
+python3 p2c_b8_boot.py --check=identities              # (P2), largest residual 9.6e-64, exit 0
+python3 p2c_b8_boot.py --check=identities --mutate=drop_rho2   # K2, I1 0.51, exit 1
+python3 p2c_b8_boot.py --check=instances --L0=73.89    # (P3), exit 0 (about 4 s)
+python3 p2c_b8_boot.py --check=instances --L0=73.89 --mutate=bound_W2   # K2, 398, exit 1
+python3 p2c_b8_boot.py --check=kernel --mutate=kappa   # K3, margin +0.094, exit 1
+python3 p2c_b8_boot.py --L0=62                         # closes, h = (6.58e6, 1.77e7, 1.06e6, 3.21e5) (about 80 s)
+python3 p2c_b8_boot.py --L0=73.89 --d0=1e7             # closes, h = (1.02e8, 1.38e8, 1.18e7, 1.27e7)
+python3 p2c_b8_boot.py --bisect=56,62                  # closes at 59.9375, not at 59.75 (about 25 min)
+RAW=$RAW bash $RAW/run_i1061.sh; RAW=$RAW bash $RAW/run_i1061b.sh; RAW=$RAW bash $RAW/run_i1061c.sh   # everything
+```
+
+`run_i1061.sh` was stopped after its `run_L62_d1e7` step; `run_i1061b.sh` runs the steps after it, with the offset
+brackets corrected. Times are on an M-series Mac at nice 10.
+
+**Not done.** This review's code has not itself been reviewed. (H8)'s conversion was item 3 (§5) and is not redone.
+The bootstrap was run only for M = 1, K = 4, κ = 0.3, κ₁ = 0.6, δ = 0.05 and x_F = 20.
