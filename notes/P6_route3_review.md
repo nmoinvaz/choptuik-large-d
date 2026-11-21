@@ -48,7 +48,7 @@ different arithmetic from python-flint's arb). Every script exits non-zero when 
 - `explicit.py`: my own sympy derivation of the explicit coefficients C_λ(j) (near end i = 1, 2 of both convolutions,
   far end i = j + 1 at l = 0 and l = j, de-mixing, ψ), the symbolic O(1/j) check, and a certified sup of j²|C_λ|/ν^d
   over s = 1/ν ∈ [0, 1/3], u = ν/j ∈ [0, 1/2] by adaptive bisection in mpmath.iv. This is a different route from a
-  fixed grid: boxes are split until the upper bound is within 2% of the best point value.
+  fixed grid: boxes are split until the upper bound is within 0.5% of the best point value.
 - `interior.py`: the interior bound by direct summation of the termwise majorant (B3 with B4's prefactors, or with the
   exact label prefactors) for 10 ≤ j ≤ J₁ = 2000, and my own log-convexity bound above J₁. This is a different route
   from the grouping of D_entire.md §6.3. It also certifies P = sup P_{ν+2} and W = sup ν|ρ^{±1}_{j₀}|.
