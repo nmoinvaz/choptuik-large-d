@@ -534,9 +534,12 @@ which couples all β_k. The τ points couple only through ωD in the p and m row
   10⁻³⁰ at order 60 moves p at order 130 by 2.1×10⁻⁹ at D 242.36 (`loop`, 5.1). Forming it takes (K + 1) M = 4224
   tangent passes, and its elimination about K²M³/2 ≈ 3×10⁸ multiply-adds.
 - **C, Newton–Krylov preconditioned by B's Olver solve.** Its operator is one minus the sweep map's linearization.
-  GMRES on it equals Anderson mixing, which took 21–32 sweeps (5.1).
+  On a linear problem, Anderson mixing without truncation is essentially GMRES (Walker and Ni 2011), and Anderson
+  took 21–32 sweeps (5.1), 30 with memory 20 at D 242.36. So each Newton step would take about as many Krylov steps,
+  each a tangent pass at a sweep's cost. That is inferred from the equivalence, not measured.
 
-So B and C miss the gate by orders of magnitude, and A keeps ε·G and the pole basin. B is not coded.
+So B misses the gate by orders of magnitude, and C by about tenfold if that inference holds. A keeps ε·G and the pole
+basin. B is not coded.
 
 **The curvature test (criteria fixed before any run).** The test asks whether the horizon rows' second derivative
 along a weak-type move loses its G-sized part when a_K is held instead of a_h.
@@ -739,5 +742,8 @@ The logs and records of 5.2's runs are in `I1035-mac/stage1b/` of the raw-data r
 - [LIT_REVIEW.md](LIT_REVIEW.md) C3 and Q1, the WKB entries: nΦ as the fast mode's WKB exponent (Q1), and the
   Stokes reading of Propositions 3–4, in which the selection is the coefficient of that mode (C3).
 - Deuflhard (1974), LIT_REVIEW.md F4: the natural level function ‖J⁻¹F‖, invariant under the rows' scaling.
+- D. G. Anderson, J. ACM 12, 547 (1965), and H. F. Walker and P. Ni, SIAM J. Numer. Anal. 49, 1715 (2011): Anderson
+  mixing (type II) in 5.1's sweeps, and its essential equivalence to GMRES on linear problems when not truncated
+  (5.2's C).
 - Miller (1952), Olver (1967) and Gautschi (1997), [LIT_REVIEW.md](LIT_REVIEW.md) B1–B8 (addendum of #733): backward
   recurrence for the minimal solution, and its boundary-value form with b_(K+1) = 0 (B4, B7).

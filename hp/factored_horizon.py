@@ -1078,14 +1078,15 @@ def cmd_curv(path, prec, cache, name, plant_from=None, mutate="", plant_c=None):
         ratio = None
     else:
         ratio = rec["Q_fact"] / use["Q"]
-        verdict = "gate 1 (<= 1e-10)" if ratio <= 1e-10 else ("gate 2 (>= 1e-2)" if ratio >= 1e-2 else "gate 3 (between)")
+        verdict = ("gate 1 (<= 1e-10)" if ratio <= 1e-10 else
+                   ("gate 2 (>= 1e-2)" if ratio >= 1e-2 else "gate 3 (between: not resolved)"))
     rec.update(Q_old=use["Q"] if use else None, Q_old_pair=use["pair"] if use else None, ratio=ratio, verdict=verdict,
                Q_fact_vec=[str(v) for v in Qf[CURV_PAIR[0]]], d1_fact_vec=[str(v) for v in d1],
                plant_c2=str(mp.mpf("1e-10") * mp.mpf(use["Q"]) / (2 * amax(d1))) if use else None)
     print(f"curv {os.path.basename(path)} D {seg.D_str[:12]} along {name}: Q_fact {rec['Q_fact']:.3e} (t^2 check "
           f"{sc_f:.2e}), Q_old {use['Q'] if use else float('nan'):.3e} at the pair {use['pair'] if use else None}; ratio "
           f"{ratio if ratio is None else f'{ratio:.3e}'}: {verdict}; {time.time() - t0:.0f} s", flush=True)
-    return rec, verdict != "not resolved"
+    return rec, verdict.startswith(("gate 1", "gate 2"))     # gate 3 is reported as not resolved (5.2)
 
 
 def cmd_curvx(path, prec, refpath, t, cache448):
