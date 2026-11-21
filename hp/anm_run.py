@@ -16,7 +16,7 @@ formulation of hp/pinning.py; their coefficients are zero).
         [--qd_it 12] [--qd_w 0] [--refine 1] [--probe 0 --probe_c C] [--plan_tol 1e-32] [--fix1 0] [--F_pred_max 0]
         [--horizon_alpha 0] [--fix1_qlu 0] [--jet_q 0] [--reseed 0] [--pred_q 0] [--reseed_q 0] [--save_pred 0]
         [--jet_o 0] [--jet_by_order 1] [--jet_tangent_from 0] [--series_split 0] [--od_tangents 2] [--corrector od --tol_od 1e-40] [--base_adopt 0] [--base_polish 1] [--keep_plan 1] [--plan_auto 0 --plan_w 20] [--held_fit FILE]
-        [--held_o 0] [--reseed_o 0] [--reseed_qd_bar 1e-24] [--proj_start u0] [--reseed_o_stop 0] [--proj_o 0 --proj_o_bar 0] [--reseed_o_bar 0] [--a0 0] [--a_grow 2] [--a_hold 0] [--lam_stall 0] [--od_floor_delta 0] [--od_broyden 0] [--od_times 0] [--save_base 0] [--save_jet 0] [--held_from STATE]
+        [--held_o 0] [--reseed_o 0] [--reseed_qd_bar 1e-24] [--proj_start u0] [--reseed_o_stop 0] [--proj_o 0 --proj_o_bar 0] [--reseed_o_bar 0] [--reseed_base 0] [--a0 0] [--a_grow 2] [--a_hold 0] [--lam_stall 0] [--od_floor_delta 0] [--od_broyden 0] [--od_times 0] [--save_base 0] [--save_jet 0] [--held_from STATE]
         [--exact_recip 0] [--od_start_F 1e-6]
         [--arclength 0 --guard 0.05 --D_min 0 --arc_sign 1 --border 1 --turns_max 2 --arc_dhold 1e-12 --arc_jet FILE]
         [--a_rule step|reseed --a_scale 1 --a_drop 10 --a_rise 3.16]
@@ -181,6 +181,10 @@ are refused with --arclength, whose corrector (hp/arclength.py) builds its own r
 ends with its rung max |R| above B, and halves the step as a refused corrector does. Near the D 260.85 crossing the two
 attempts refused after their full corrector (1.6 to 2 h each) had ended their refinement at 4.3e-14 and 1.8e-5, and
 every accepted attempt at 1.5e-21 or below (#966, legs 12 and 13).
+--reseed_base 1 (with --reseed, and --reseed_o K under --corrector od) re-seeds the base's horizon data at the run's --ks
+before the base polish, as each prediction's are, so a raise of the horizon order starts the polish from horizon data of
+the new order. From D 261.0721 and 261.6229 every raise (ks 294 to 318) started its polish at max |F| 1.3e-11 to
+1.2e-8 and none converged (#1064).
 --ks K sums the horizon series to order K instead of the state's own ks (130 on the chain), and saves it with the
 states (#696). The unknowns are the same, so a state converged at one ks starts at another with |F| of about the
 series' terms between the two orders. A changed ks plans the base again (a stored plan stalled the polish), so its
@@ -512,6 +516,7 @@ def main():
     # by the octo-double refinement alone first, accepted at or below --proj_o_bar (0: --tol_od)
     opt.update(proj_start="u0", reseed_o_stop=0, proj_o=0, proj_o_bar=0.0)
     opt.update(reseed_o_bar=0.0)        # --reseed_o_bar B: skip the corrector when the refinement ends above B
+    opt.update(reseed_base=0)           # --reseed_base 1: the base's horizon data re-seeded at --ks before its polish
     # --arclength 1: the pseudo-arclength continuation of hp/arclength.py from this base (#842), oriented by --arc_sign
     # (the sign of D's change), no base where the unit tangent's |t_D| < --guard, stopping below --D_min (0: never) or
     # after the step that holds the --turns_max-th turn (2: the mirror's own turn);
@@ -843,8 +848,25 @@ def main():
                                       qd_start=opt["reseed_start"], qd_bar=opt["reseed_qd_bar"],
                                       proj_start=opt["proj_start"], od_stop=bool(opt["reseed_o_stop"]),
                                       exact_recip=opt["exact_recip"])
-            zh_p, zl_p, F0_p, _, conv_p, _ = correct(sp, zh, zl, opt["tol"],
-                                                     z8_start=load_o(os.path.join(raw, opt["state"]))[0])
+            z8_base = load_o(os.path.join(raw, opt["state"]))[0]
+            if opt["reseed_base"] and opt["reseed"]:
+                # --reseed_base 1: the horizon data of the run's order from the base's own last node, before the polish
+                rs_b = Reseeder(dict(M=M, nodes=nodes, kt=kt, kc=kc, ks=ks), D, threads=opt["threads"],
+                                horizon_alpha=opt["horizon_alpha"], qd=bool(opt["reseed_q"]), od=opt["reseed_o"],
+                                qd_start=opt["reseed_start"], qd_bar=opt["reseed_qd_bar"], proj_start=opt["proj_start"],
+                                od_stop=bool(opt["reseed_o_stop"]), exact_recip=opt["exact_recip"])
+                zr_b, rsd_b = rs_b.reseed(z4_base)
+                if rsd_b["ok"]:
+                    z8_base = with_horizon(z8_base, zr_b, rs_b)
+                    zh, zl = np.asarray(zr_b[0]), np.asarray(zr_b[1])
+                    Fr = omax(PinnedO(sp.s, sp.ch, sp.cl, c8=sp.c8).residual_o(z8_base))
+                    print(f"base re-seeded at ks {ks} (--reseed_base 1), {rsd_b['seconds']} s: octo-double max|F| {Fr:.1e}"
+                          + (", refinement rung max|R| " + " -> ".join(f"{r:.2e}" for r in rs_b.last_o)
+                             if getattr(rs_b, "last_o", None) else ""), flush=True)
+                else:
+                    print(f"base re-seed at ks {ks} FAILED ({rsd_b['seconds']} s): the polish starts from the stored data",
+                          flush=True)
+            zh_p, zl_p, F0_p, _, conv_p, _ = correct(sp, zh, zl, opt["tol"], z8_start=z8_base)
             elim["rs"] = None
             Fs = last_q.get("od_F")
             if conv_p or Fs is None or Fs[1] < Fs[0] or opt["base_adopt"]:
