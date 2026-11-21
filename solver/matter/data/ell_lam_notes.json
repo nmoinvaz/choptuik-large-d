@@ -1,22 +1,24 @@
 {
- "note": "remarks that ell_delta.py table prints beside a quoted row (#1025); p4_gap is P4's hybrid re-root minus the float64 record",
- "notes": [
-  {
-   "source": "I1025-win2b/out/l1kc71Fw1025c.jsonl",
-   "D": 16.5,
-   "note": "the re-search's same-k_c LM pass moved Delta by -3.63e-7 from winb's saved state (Delta_src 1.0117774685 to Delta 1.0117771055 in the record), so the root is on a slightly different state than winb's; win2b's observation, not tested (raw I1025-win2b README). float64 until P4's hybrid re-root (win2b, amendment 7) lands"
-  },
-  {
-   "source": "I1025-mac/out/l1kc47Fq1025.jsonl",
-   "D": 16.75,
-   "p4_gap": -0.012934141553060385,
-   "note": "P4's hybrid re-root on this record's state is 2.0967005853, -1.293e-02 from the float64 record (raw I1025-mac/out/ell_p4_hybrid_1025.jsonl); the float64 value stays quoted until P4's rows are in"
-  },
-  {
-   "source": "I1025-win/out/l1kc63Fw1025.jsonl",
-   "D": 17.0,
-   "p4_gap": 0.013393441809182782,
-   "note": "P4's hybrid re-root on this record's state is 2.0399399392, +1.339e-02 from the float64 record (raw I1025-mac/out/ell_p4_hybrid_1025.jsonl). Its system check was read under P4 amendment 5, written after the row started: |F| 2.2770621748e-10 against the record's 2.2759514360e-10, 4.9e-4 relative, equal steps (2744); the old rule (1e-6) would have failed it. The float64 value stays quoted until P4's rows are in"
-  }
- ]
+  "note": "remarks that ell_delta.py table prints beside a quoted row (#1025); p4_gap is P4's hybrid re-root minus the float64 record",
+  "notes": [
+    {
+      "source": "I1025-win2b/out/l1kc71Fw1025c.jsonl",
+      "D": 16.5,
+      "note": "the re-search's same-k_c LM pass moved Delta by -3.63e-7 from winb's saved state (Delta_src 1.0117774685 to Delta 1.0117771055 in the record), so the root is on a slightly different state than winb's; win2b's observation, not tested (raw I1025-win2b README). float64 until P4's hybrid re-root (win2b, amendment 7) lands",
+      "note_hybrid": "the re-search's same-k_c LM pass moved Delta by -3.63e-7 from winb's saved state (Delta_src 1.0117774685 to Delta 1.0117771055 in the record), so this root (float64 and hybrid) is on a slightly different state than winb's; win2b's observation, not tested (raw I1025-win2b README)"
+    },
+    {
+      "source": "I1025-mac/out/l1kc47Fq1025.jsonl",
+      "D": 16.75,
+      "p4_gap": -0.012934141553060385,
+      "note": "P4's hybrid re-root on this record's state is 2.0967005853, -1.293e-02 from the float64 record (raw I1025-mac/out/ell_p4_hybrid_1025.jsonl); the float64 value stays quoted until P4's rows are in"
+    },
+    {
+      "source": "I1025-win/out/l1kc63Fw1025.jsonl",
+      "D": 17.0,
+      "p4_gap": 0.013393441809182782,
+      "note": "P4's hybrid re-root on this record's state is 2.0399399392, +1.339e-02 from the float64 record (raw I1025-mac/out/ell_p4_hybrid_1025.jsonl). Its system check was read under P4 amendment 5, written after the row started: |F| 2.2770621748e-10 against the record's 2.2759514360e-10, 4.9e-4 relative, equal steps (2744); the old rule (1e-6) would have failed it. The float64 value stays quoted until P4's rows are in",
+      "note_hybrid": "the P4 re-root's system check was read under P4 amendment 5, written after the row started: |F| 2.2770621748e-10 against the record's 2.2759514360e-10, 4.9e-4 relative, equal steps (2744); the old rule (1e-6) would have failed it"
+    }
+  ]
 }

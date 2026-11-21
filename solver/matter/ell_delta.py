@@ -5,8 +5,9 @@ ELL.md 7's windows (#1025).
     python3 ell_delta.py planted       the window code on synthetic delta(n) = c + a/n + b/n^2 + e/n^3 with known c
     python3 ell_delta.py planted --mutate=window    a window off by one point: the exactness checks must fail
     python3 ell_delta.py collect RAWDIR   data/ell_lam_highD.json from the k_c runs: per D the highest k_c's lambda and,
-                                       as lam_err, its change from the next lower k_c (RAWDIR: a checkout of
-                                       choptuik-large-d-raw with I660-mac, I810-mac and I1025-mac)
+                                       as lam_err, its change from the next lower k_c, and the same from P4's hybrid
+                                       re-roots (RAWDIR: a checkout of choptuik-large-d-raw with I660-mac, I810-mac and
+                                       the I1025 folders)
     python3 ell_delta.py calib         the same windows on the scalar's own lambda_0(D), whose limit is exactly 2
                                        (GAMMA.md 5), at integer D 5 .. 20 (lambda_0 interpolated as below): how far
                                        the windows are from their limit at these n for a real sequence of this kind
@@ -16,7 +17,9 @@ ELL.md 7's windows (#1025).
     python3 ell_delta.py fold --planted   the same code on a synthetic fold (D* 16.37): D*, Delta* and lambda* to 1e-9;
                                        --mutate=sigma fits sigma instead of sigma^2 and must miss D* (exit 1)
     python3 ell_delta.py table [FILE]  delta, n delta and the windows from the l = 1 points in FILE
-                                       (default data/ell_lam_highD.json)
+                                       (default data/ell_lam_highD.json): P4's hybrid roots and hybrid k_c spreads where
+                                       they exist (D 14.5 to 17), float64 elsewhere, with the float64 values beside them
+    python3 ell_delta.py table --f64   the same from the float64 roots alone (the table before P4)
     python3 ell_delta.py steep [FILE]  the k_c test of lambda_1's steepening past D 15: the move from k_c 47 to 55 at
                                        each D against the steepening S(D), lambda_47 minus its line through D 14.5, 15;
                                        resolution if |move| > |S| at some D (bar fixed before the k_c 55 runs)
@@ -40,6 +43,7 @@ lambda_0(D) is not stored at the l = 1 points' D. It is interpolated in x = 1/n 
 stored points (solver/data/scan_ne6_lowD_kc39_rk2.jsonl, then gamma_rust.jsonl). The cubic minus the quadratic through
 the three nearest points is quoted as the interpolation error. ell_fit.py interpolated linearly in D.
 """
+import glob
 import json
 import os
 import sys
@@ -121,16 +125,24 @@ def table(fn):
     nn, dd, ee, DD, hh = [], [], [], [], []
     print(f"delta(inf) = lambda_inf(l = 1) - lambda_0(inf) = {l1inf:.6f} - 2 = {dinf:+.6f} (#994, M = 3; "
           f"lambda_0(inf) = 2, GAMMA.md 5)\n")
-    print("| D | n | λ₁ | λ₁ from | k_c | signtest | k_c bar: change from the next lower k_c | ψ-constraint | λ₀ (interp. error) | "
-          "δ = λ₁ − λ₀ | δ − δ(∞) | n δ | n δ(∞) |")
-    print("|---|---|---|---|---|---|---|---|---|---|---|---|---|")
-    hyb = "--hybrid" in sys.argv                    # P4's hybrid roots and hybrid k_c spreads wherever a row has one
-    if hyb:
+    f64m = "--f64" in sys.argv                       # the float64 table (ell_refine's roots), as quoted before P4 was in
+    if f64m:
+        print("| D | n | λ₁ | λ₁ from | k_c | signtest | k_c bar: change from the next lower k_c | ψ-constraint | λ₀ (interp. error) | "
+              "δ = λ₁ − λ₀ | δ − δ(∞) | n δ | n δ(∞) |")
+        print("|---|---|---|---|---|---|---|---|---|---|---|---|---|")
+    else:                                            # P4's hybrid roots and hybrid k_c spreads wherever a row has one
         rows = [dict(r, lam=r["lam_hybrid"], kc=r["kc_hybrid"], lam_err=r["lam_err_hybrid"], has_err=r["has_err_hybrid"],
-                     constraint=r.get("kcs_constraint", {}).get(str(r["kc_hybrid"])), signtested=r["signtested_hybrid"],
-                     method="hybrid" + ("" if (r["err_hybrid_from"] or "hybrid").startswith("hybrid") else
-                                        f", spread to {r['err_hybrid_from']}"), note=None, p4_gap=None, source=r["source_hybrid"],
-                     f64=(r["lam"], r["kc"])) if r.get("lam_hybrid") is not None else r for r in rows]
+                     constraint=r["constraint_hybrid"], signtested=r["signtested_hybrid"], note=r["note_hybrid"],
+                     method="hybrid" if (r["err_hybrid_from"] or "hybrid").startswith("hybrid") else
+                     f"hybrid; spread to {r['err_hybrid_from']}",
+                     source=f"{r['record_hybrid'].removesuffix('.jsonl')}, P4 {r['source_hybrid'].split('/')[0]}",
+                     f64=(r["lam"], r["kc"], r["lam_err"] if r.get("has_err", True) else None))
+                if r.get("lam_hybrid") is not None else dict(r, method="float64", source=r["source"].split("/")[-1].removesuffix(".jsonl"))
+                for r in rows]
+        print("| D | n | λ₁ | from | k_c | source (record, P4 file's folder) | k_c bar: change from the next lower k_c | λ₁ minus its "
+              "record's float64 root | float64 table: λ₁ (k_c; spread) | the record's signtest | ψ-constraint | λ₀ (interp. error) | "
+              "δ = λ₁ − λ₀ | n δ |")
+        print("|---|---|---|---|---|---|---|---|---|---|---|---|---|---|")
     for r in sorted(rows, key=lambda q: q["D"]):
         D, l1 = r["D"], r["lam"]
         l0, e0 = lam0_at(D, Ds, L)
@@ -140,24 +152,43 @@ def table(fn):
         bar = (("OK" if r["lam_err"] <= 1e-6 else "BAD") + f" ({r['lam_err']:.1e})") if r.get("has_err", True) else \
             "single k_c (not in crossing or slopes)"
         con = r.get("constraint")
-        sgt = ("record passed" if r.get("signtested") else "record not signtested") if r.get("f64") else \
-            "passed" if r.get("signtested") else "no signtest yet"
-        how = r.get("method", "float64") + (f", P4 gap {r['p4_gap']:+.2e}" if r.get("p4_gap") is not None else "") + \
-            (" (note)" if r.get("note") else "")
-        print(f"| {D:g} | {n:g} | {l1:.7f} | {how} | {r.get('kc', '')} | {sgt} | {bar} | {con:.1e} | {l0:.7f} ({e0:.1e}) | {d:.6f} | "
-              f"{d - dinf:+.6f} | {n * d:.4f} | {n * dinf:.4f} |" if con is not None else
-              f"| {D:g} | {n:g} | {l1:.7f} | {how} | {r.get('kc', '')} | {sgt} | {bar} | | {l0:.7f} ({e0:.1e}) | {d:.6f} | "
-              f"{d - dinf:+.6f} | {n * d:.4f} | {n * dinf:.4f} |")
+        cs = f"{con:.1e}" if con is not None else ""
+        if f64m:
+            sgt = "passed" if r.get("signtested") else "no signtest yet"
+            how = r.get("method", "float64") + (f", P4 gap {r['p4_gap']:+.2e}" if r.get("p4_gap") is not None else "") + \
+                (" (note)" if r.get("note") else "")
+            print(f"| {D:g} | {n:g} | {l1:.7f} | {how} | {r.get('kc', '')} | {sgt} | {bar} | {cs} | {l0:.7f} ({e0:.1e}) | {d:.6f} | "
+                  f"{d - dinf:+.6f} | {n * d:.4f} | {n * dinf:.4f} |")
+            continue
+        sgt = "passed" if r.get("signtested") else "none"
+        sp = bar
+        f6 = r.get("f64")
+        mr = f"{r['minus_record_hybrid']:+.2e}" if f6 else ""
+        ft = (f"{f6[0]:.7f} ({f6[1]}; " + (f"{f6[2]:.1e})" if f6[2] is not None else "single k_c)")) if f6 else "same"
+        print(f"| {D:g} | {n:g} | {l1:.7f} | {r['method']}{' (note)' if r.get('note') else ''} | {r.get('kc', '')} | {r['source']} | {sp} | "
+              f"{mr} | {ft} | {sgt} | {cs} | {l0:.7f} ({e0:.1e}) | {d:.6f} | {n * d:.4f} |")
     for r in sorted(rows, key=lambda q: q["D"]):
         if r.get("note"):
             print(f"\nnote, D {r['D']:g} (k_c {r.get('kc', '')}, {r.get('source', '')}): {r['note']}")
-    if hyb:
+    if not f64m:
         hr = [r for r in sorted(rows, key=lambda q: q["D"]) if r.get("f64")]
-        print("\nλ₁ is P4's hybrid root (float64 blocks 0-11, dd horizon block) where one passes P4's rule, and the k_c spread is "
-              "between the two highest hybrid k_c, except where marked 'spread to float64'; the other rows are float64. "
-              "'record passed' means the float64 record on that state passed its signtest. Hybrid minus the float64 row it "
-              "replaces: " + ", ".join(f"D {r['D']:g} {r['lam'] - r['f64'][0]:+.2e} (k_c {r['kc']} against {r['f64'][1]})" for r in hr))
-    gaps = [(r["D"], r["p4_gap"]) for r in sorted(rows, key=lambda q: q["D"]) if r.get("p4_gap") is not None]
+        print(f"\nλ₁ is P4's hybrid root (float64 blocks 0-11, double-double horizon block) on each record's own state, at D "
+              f"{hr[0]['D']:g} to {hr[-1]['D']:g}, where every root passed P4's rule (raw I1025-mac/p4_criteria.log); the other rows "
+              "are float64. The k_c spread is between the two highest hybrid k_c, except where marked 'spread to float64'. "
+              "'the record's signtest' is the float64 signtest at lam -/+ 0.02 of the record whose state the root is on.")
+        print("\nhybrid δ by k_c (P4 roots; where k_c 55 and 63 both exist, δ(63) − δ(55)):")
+        ks = sorted({int(k) for r in hr for k in r["kcs_hybrid"]})
+        print("| D | " + " | ".join(f"δ at k_c {k}" for k in ks) + " | δ(63) − δ(55) |")
+        print("|---|" + "---|" * (len(ks) + 1))
+        for r in hr:
+            l0 = lam0_at(r["D"], Ds, L)[0]; kh = r["kcs_hybrid"]
+            dk = f"{kh['63'] - kh['55']:+.2e}" if "55" in kh and "63" in kh else ""
+            print(f"| {r['D']:g} | " + " | ".join(f"{kh[str(k)] - l0:+.6f}" if str(k) in kh else "" for k in ks) + f" | {dk} |")
+        for k in ("55", "63"):
+            pk = [(r["D"], r["kcs_hybrid"][k] - lam0_at(r["D"], Ds, L)[0]) for r in hr if k in r["kcs_hybrid"]]
+            print(f"slopes of the hybrid δ at k_c {k}: " + ", ".join(f"D {a[0]:g}-{b[0]:g} {(b[1] - a[1]) / (b[0] - a[0]):+.4f}"
+                                                                     for a, b in zip(pk, pk[1:])))
+    gaps = [(r["D"], r["p4_gap"]) for r in sorted(rows, key=lambda q: q["D"]) if r.get("p4_gap") is not None] if f64m else []
     if gaps:
         print("\nthe k_c bar and the spreads below are float64 k_c spreads. P4's hybrid re-roots differ from the float64 records by "
               + ", ".join(f"{g:+.2e} at D {D:g}" for D, g in gaps) + ", which the float64 spreads do not cover")
@@ -318,7 +349,15 @@ def collect(raw):
             r = json.loads(line)
             if (r["mode"] == "hybrid" and r["lam"] is not None and (r["record_system"] or (r["record"], r["D"]) in P4_AMEND5)
                     and r["n_signchanges_grid"] == 1 and r["n_changes_all"] == 1 and r["noise_robust"] and (r["bracket_width"] or 1) <= 1e-7):
-                hyb.setdefault(round(r["D"], 6), {}).setdefault(r["kc"], (r["lam"], os.path.relpath(f, raw), r["record"]))
+                hyb.setdefault(round(r["D"], 6), {}).setdefault(r["kc"], (r["lam"], os.path.relpath(f, raw), r["record"], r["minus_record"]))
+    rpath = {os.path.basename(f): f for f in srcs if os.path.exists(f)}   # a hybrid row's own record file, for its constraint
+    for f in glob.glob(os.path.join(raw, "I1025-*", "out", "l1kc*.jsonl")):
+        rpath.setdefault(os.path.basename(f), f)
+
+    def rec_at(name, D):
+        f = rpath.get(name)
+        rs = [json.loads(q) for q in open(f) if json.loads(q).get("D") == D and json.loads(q).get("lam")] if f else []
+        return (os.path.relpath(f, raw), rs[-1]) if rs else (None, {})
     pts = []
     for D in sorted(by):
         ks = sorted(by[D])
@@ -330,9 +369,12 @@ def collect(raw):
             lower = [k for k in ks if k < ht]
             he, hf = ((abs(h[ht][0] - h[hk[-2]][0]), f"hybrid k_c {hk[-2]}") if len(hk) > 1 else
                       (abs(h[ht][0] - by[D][lower[-1]][0]), f"float64 k_c {lower[-1]}") if lower else (None, None))
+            rp, rr = rec_at(h[ht][2], D)
             hp = dict(lam_hybrid=h[ht][0], kc_hybrid=ht, lam_err_hybrid=he if he is not None else 0.0, has_err_hybrid=he is not None,
                       err_hybrid_from=hf, kcs_hybrid={str(k): h[k][0] for k in hk}, source_hybrid=h[ht][1], record_hybrid=h[ht][2],
-                      signtested_hybrid=any(e[0].endswith("/" + h[ht][2]) and e[1] == D for e in stset))
+                      record_hybrid_path=rp, minus_record_hybrid=h[ht][3], constraint_hybrid=rr.get("constraint"),
+                      signtested_hybrid=(rp, D) in stset,
+                      note_hybrid=next((e.get("note_hybrid") for (src, d), e in notes.items() if src == rp and d == D), None))
         pts.append(dict(D=D, lam=by[D][top][0], kc=top, lam_err=err if err is not None else 0.0, has_err=err is not None,
                         kcs={str(k): by[D][k][0] for k in ks}, kcs_constraint={str(k): by[D][k][2] for k in ks},
                         source=by[D][top][1], constraint=by[D][top][2], signtested=(by[D][top][1], D) in stset,
