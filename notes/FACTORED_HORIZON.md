@@ -510,6 +510,65 @@ per evaluation, which costs more than the whole horizon block. Stage 2 as design
 reach past D ≈ 295 rests on the other routes, the truncation of section 4 or a 16-part type. Two predictions of 3.6 are
 untested here, the factored rows' floor of ε·O(1) and the larger basin (P2, P4).
 
+### 5.2 Stage 1b: no direct solve, and the curvature test (#1035)
+
+**Why.** The order raise of #1064 fails from every ks 293 state near D 259–262. There the stored state's residual at
+ks 315 is 1.7×10⁻³⁰, but Newton's step lies along a strong direction whose residual grows as 3.2×10⁵¹ per step²
+(dh170, #1064). That is 3.6's quadratic jump, which the mass mode's factoring is predicted to remove. Section 2 rules
+out any effect on the weak σ, so this bears on the raise and the floors only.
+
+**No direct solve meets the cost gate (design, not run).** Stage 1b was to replace 5.1's sweeps by one Newton solve of
+the factored segment over all orders, at most 2 old passes per converged solve. Over all orders the system has
+5(K + 1) M ≈ 21 000 unknowns (p, m, c, C and β). Every block is causal in k (lower block-triangular) except B's datum,
+which couples all β_k. The τ points couple only through ωD in the p and m rows. Three exact solves exist:
+- **A, forward elimination with β₀ (that is, a_h) as the M border unknowns.** This is shooting on the old discrete
+  problem, about 3 old passes per evaluation with a chord M × M Jacobian. B is carried forward from β₀, so ε·G returns
+  in the values. Its inner Newton on a_h works only inside the pole basin, δ_max(u₀) ≈ 2×10⁻³⁷ at D 241.96
+  ([HORIZON_RADIUS.md](HORIZON_RADIUS.md) 3). A raise-sized move of 10⁻¹⁴ in m_h or Δ shifts the slaved a_h by about
+  10⁻¹⁷ (an estimate), so A cannot follow it alone. That is the re-seed's problem.
+- **B, Olver's backward elimination of β with the causal blocks folded in.** Its Schur complement is lower Hessenberg
+  with dense M × M blocks, and dense below the diagonal, because the forward response is not local in k: moving y by
+  10⁻³⁰ at order 60 moves p at order 130 by 2.1×10⁻⁹ at D 242.36 (`loop`, 5.1). Forming it takes (K + 1) M = 4224
+  tangent passes, and its elimination about K²M³/2 ≈ 3×10⁸ multiply-adds.
+- **C, Newton–Krylov preconditioned by B's Olver solve.** Its operator is one minus the sweep map's linearization.
+  GMRES on it equals Anderson mixing, which took 21–32 sweeps (5.1).
+
+So B and C miss the gate by orders of magnitude, and A keeps ε·G and the pole basin. B is not coded.
+
+**The curvature test (criteria fixed before any run).** The test asks whether the horizon rows' second derivative
+along a weak-type move loses its G-sized part when a_K is held instead of a_h.
+- **Moves.** Three directions at D 73.0 and D 242.36 (5.1's states): Δ alone (δΔ = 1), and m_h along harmonics 1 and 3
+  (δm_h = cos θ_j and cos 3θ_j on the half grid).
+- **The measure.** Q(t) = [R(t) + R(−t) − 2R(0)] / t², with R the p, m and c rows of the horizon block (the series at
+  u₀ minus the node). Q_old holds a_h fixed, and Q_fact holds a_K fixed (the a row, a_K − a(node), is then constant).
+  Each is read as its largest entry.
+- **The factored evaluator.** R_fact(t) is the old series at the a_h that keeps a's sum at u₀ equal to a_K. That is
+  method A, which 3.3 and P1 (5.1) show equals the factored segment. Here a_h is found by Newton with the M × M
+  Jacobian of a(u₀) in a_h, from a predictor quadratic in t. A cross-check runs the stage-1 fixed point at D 242.36 and
+  D 73 along Δ at t = ±10⁻²⁰ (warm from 5.1's references, 288 bits). The two Q_fact must agree to 1%, or both lie
+  below their own noise.
+- **Precision.** 448 bits for the old series and A. The noise is about 2^−448·G·t⁻² per Q entry, 4×10⁻⁵⁹ at D 242.36
+  for t = 10⁻²⁰.
+
+**Gates** (the coordinator's, 2026-11-21):
+1. Q_fact / Q_old ≤ 10⁻¹⁰ along every direction at both states: a narrow stage 2, a one-off factored raise, is worth
+   building.
+2. A ratio ≥ 10⁻² along any direction: the factoring does not help the raise.
+3. A ratio in between is reported as not resolved.
+
+**Controls that must fire.**
+- **A planted quadratic term is recovered to 1%.** Δ(t) = Δ + t + c t² adds 2c ∂R/∂Δ to Q_fact along Δ. c is set so
+  the term's largest entry is 10⁻¹⁰ Q_old, the gate-1 level.
+- **The second differences scale as t².** Q at t = 10⁻²⁰ and 10⁻¹⁹ must agree to 10% of the larger, else that
+  direction's Q is not in its quadratic range there.
+  - Mine: Q_old may leave that range before 10⁻²⁰, since a fixed a_h then lies outside the pole basin. It is also read
+    at the pairs 10⁻³⁰/10⁻²⁹, 10⁻⁴⁰/10⁻³⁹ and 10⁻⁵⁰/10⁻⁴⁹, and taken from the largest pair that scales. With no such
+    pair, that direction is reported as not resolved.
+
+**Limits.**
+- The prototype's two-node layout is not the chain's. So the test reads the mechanism, not dh170's 3.2×10⁵¹ itself.
+- A ratio ≤ 10⁻¹⁰ says the horizon rows' curvature drops. Whether the chain's raise then converges is for stage 2.
+
 ## 6. Discrepancies (reported, not fixed)
 
 1. **The issue's premise.** G = 0.7^−(D−3) is the mass mode's gain, not the fast mode's, as #491's first comment says.
