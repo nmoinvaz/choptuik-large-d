@@ -105,7 +105,12 @@ D. Two forms:
   Numer. Anal. 49 (2011) 1715). The warped and unwarped band maps differ in the harmonics near the top of the τ grid
   (they agree to rounding once those are resolved, P1), and a plain chord step with hp's band rows diverges along them
   once the warp is large: at D 3.7, M 128 it converges for the test warp at A 1.5×10⁻⁴ and diverges at 5×10⁻⁴ and
-  1.5×10⁻³. With Anderson mixing it converges at both (11 and 14 steps).
+  1.5×10⁻³. With Anderson mixing it converges at both (11 and 14 steps). At D 3.045, M 320 it does not: |F| stayed
+  between 1.8×10⁻⁸ and 7.2×10⁻⁸ for 10 steps, then grew to 3×10¹¹ in 34 (raw `real/real_attempt2_jac_hp_aa8.log`).
+- `--jac wood` (any M): hp's LU with the band rows replaced by the warped band's own, T, through the Woodbury identity.
+  With W = J0⁻¹R (R the unit vectors of the band rows, 4M solves by `Solver.lu_solve_many`), J0 W = R, so the band rows
+  of J0 are never needed: J⁻¹F = y − W (T W)⁻¹ (T y − F_band), y = J0⁻¹F. At D 3.7, M 128 it takes the same steps as
+  `--jac band` (|F| 1.8×10⁻⁹, then 4.8×10⁻¹⁵), and its control fails the same way (raw `planted/wood_p2*.log`).
 
 ## 3. Planted truth
 
