@@ -25,8 +25,8 @@ def _sig(fr, n, toward_plus):
         return "0"
     neg = fr < 0
     a = -fr if neg else fr
-    k = math.floor(math.log10(float(a)))
-    while Fraction(10) ** k > a:                             # exact leading-digit exponent, 10^k <= a < 10^(k+1)
+    k = len(str(a.numerator)) - len(str(a.denominator))     # within 1 of the exponent, no float range limit
+    while Fraction(10) ** k > a:                           # exact leading-digit exponent, 10^k <= a < 10^(k+1)
         k -= 1
     while Fraction(10) ** (k + 1) <= a:
         k += 1
@@ -62,7 +62,8 @@ def _selftest():
              (arb("-2.5"), 2, "-2.5", "-2.5"), (arb("-2.51"), 2, "-2.5", "-2.6"), (arb("3.3072783"), 5, "3.3073", "3.3072"),
              (arb("0.000012345678"), 3, "1.24e-5", "1.23e-5"), (arb("1.2e-55"), 2, "1.3e-55", "1.1e-55"),
              (arb("163995.2"), 6, "163996", "163995"), (arb(100), 3, "100", "100"),
-             (arb("0.000123456"), 3, "0.000124", "0.000123")]
+             (arb("0.000123456"), 3, "0.000124", "0.000123"), (arb("1.5e-400"), 2, "1.6e-400", "1.4e-400"),
+             (arb("2.5e400"), 2, "2.6e+400", "2.4e+400")]
     nearest_mut = "--mutate=nearest" in sys.argv                 # control: arb's round-to-nearest must fail the test
     bad = 0
     for x, n, want_up, want_lo in cases:
