@@ -9,6 +9,14 @@ from band.py, in f64. The solve is a chord iteration with one LU: hp's f64 Jacob
 (Solver.newton_mixed, with hp's own plan, so the start must lie above the closing), used at every D. A chord step
 converges to the zero of the residual it is given whatever the LU, only its rate depends on the LU.
 
+--jac band (M <= 128, hp's dense Jacobian path): hp's f64 Jacobian with the band rows replaced by the warped band's own,
+by forward differences, factored by LAPACK. --jac hp (any M): hp's own f64 Jacobian and LU (Solver.newton_mixed), whose
+band rows are those of hp's unwarped band; the warped and unwarped band maps differ in the harmonics near the top of the
+tau grid, and the plain chord step then diverges along them once the warp is large enough (D 3.7, M 128: it converges
+for the test warp at A 1.5e-4 and diverges at 5e-4). --aa_m m > 0 accelerates the chord steps by Anderson mixing of the
+last m steps (the fixed-point map z -> z - J0^-1 F(z); Anderson, J. ACM 12 (1965) 547; Walker and Ni, SIAM J. Numer.
+Anal. 49 (2011) 1715), which removes such a few-mode divergence.
+
     python3 hybrid.py OUT.jsonl --state S.npz [--history A.npz,B.npz] --Ds 3.045,3.044 [--band 0.01,0.02]
         [--warp none|test|design|FILE.npy] [--A 1.5e-3] [--eps0 2e-3] [--kappa 1.0] [--tol 1e-12] [--it_max 40]
         [--threads 4] [--drop_nodes x1,x2] [--add_nodes x1,x2] [--save DIR] [--expect D:VALUE:TOL,...] [--mutate none|nowarp]
@@ -160,6 +168,7 @@ def main():
     ap.add_argument("--mutate", default="none")
     ap.add_argument("--jac", default="band", choices=["band", "hp"])
     ap.add_argument("--chunk", type=int, default=0)
+    ap.add_argument("--aa_m", type=int, default=0)
     ap.add_argument("--time_cap", type=float, default=6 * 3600)
     ap.add_argument("--allow_unraw", action="store_true")
     a = ap.parse_args()
@@ -271,22 +280,35 @@ def main():
         hist_F, conv, it = [], False, 0
         err = None
         try:
+            Zs, Gs = [], []
             for it in range(a.it_max):
                 Fh, Fl = hy.residual(zh_, zl_)
                 nF = float(np.abs(Fh).max())
                 if not np.isfinite(nF):
                     raise FloatingPointError("residual not finite")
                 xh, xl = solve(Fh, Fl)
-                zh_, zl_ = dd_add(zh_, zl_, np.asarray(xh), np.asarray(xl))
+                g = np.asarray(xh) + np.asarray(xl)               # the chord step -J0^-1 F
+                step = g
+                if a.aa_m > 0:
+                    Zs.append((zh_.copy(), zl_.copy()))
+                    Gs.append(g)
+                    Zs, Gs = Zs[-(a.aa_m + 1):], Gs[-(a.aa_m + 1):]
+                    if len(Gs) > 1:
+                        dG = np.stack([Gs[i + 1] - Gs[i] for i in range(len(Gs) - 1)], axis=1)
+                        dZ = np.stack([(Zs[i + 1][0] - Zs[i][0]) + (Zs[i + 1][1] - Zs[i][1])
+                                       for i in range(len(Zs) - 1)], axis=1)
+                        gam = np.linalg.lstsq(dG, g, rcond=None)[0]
+                        step = g - (dZ + dG) @ gam
+                zh_, zl_ = dd_add(zh_, zl_, step, np.zeros_like(step))
                 zh_, zl_ = np.asarray(zh_), np.asarray(zl_)
-                dD = float(np.asarray(xh)[-1])
+                dD = float(step[-1])
                 hist_F.append((nF, dD))
                 log(f"  D {D} it {it}: |F| {nF:.3e} (band rows {np.abs(Fh[hy.rows]).max():.3e}), dDelta {dD:+.3e}, "
                     f"band {hy.last}")
                 if nF < a.tol and abs(dD) < a.tol:
                     conv = True
                     break
-                if it >= 6 and nF > 0.7 * hist_F[-4][0] and nF > 1e3 * a.tol:
+                if a.aa_m == 0 and it >= 6 and nF > 0.7 * hist_F[-4][0] and nF > 1e3 * a.tol:
                     log("  chord stalled")
                     break
         except (FloatingPointError, RuntimeError) as e:
@@ -295,7 +317,7 @@ def main():
         Delta = float(zh_[-1] + zl_[-1])
         rec = dict(D=D, M=M, nodes=nodes, band=band, warp=a.warp, eps0=a.eps0, A=a.A, kappa=a.kappa, mutate=a.mutate,
                    converged=conv, its=it + 1, Delta=Delta, Delta_hi=float(zh_[-1]), Delta_lo=float(zl_[-1]),
-                   F_hist=hist_F, error=err, seconds=round(time.time() - td, 1), D_start=D0,
+                   F_hist=hist_F, error=err, jac=a.jac, aa_m=a.aa_m, seconds=round(time.time() - td, 1), D_start=D0,
                    predictor_Delta=float(zp[-1]), max_phi=float(np.abs(phi).max()), hpkernel=hpkernel.__file__,
                    **hy.last)
         if D in expects:
