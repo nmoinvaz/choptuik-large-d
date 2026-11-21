@@ -1184,7 +1184,8 @@ def rung_newton(seg, h, mh_fixed, delta, node, J, tol, rows, maxit=10):
     for _ in range(maxit):
         F, R = rung_F(seg, *rung_split(seg, h, mh_fixed, rows), delta, node, rows)
         hist.append(float(amax(F)))
-        if hist[-1] <= tol or (len(hist) > 1 and hist[-1] > 0.1 * hist[-2]) or len(hist) == maxit:
+        if (not math.isfinite(hist[-1]) or hist[-1] <= tol or (len(hist) > 1 and hist[-1] > 0.1 * hist[-2])
+                or len(hist) == maxit):
             break
         st = mp.lu_solve(J, mp.matrix(F))
         h = [x - st[i] for i, x in enumerate(h)]
@@ -1207,7 +1208,7 @@ def cmd_raisecheck(path, prec, ks, cache, mutate="", rows="a"):
     corrector's own start) and from the second-order one (factored_raise.py's). rows 'a': method A (the a rows for
     a_h, m_h fixed), factored_raise.py's projection; 'ma': the chain's (the m and a rows for m_h and a_h). Passes when
     the second-order start converges at the largest move; mutate 'linear' judges the linear start instead (the
-    control, expected to fail there). The Jacobian's columns are cached by index (m_h 0..M-1, a_h M..2M-1, each
+    control, expected to fail there). At each move it also prints the old map's miss, the rung with the data held. The Jacobian's columns are cached by index (m_h 0..M-1, a_h M..2M-1, each
     holding all 2M rung rows), so 'a' forms the a_h columns and 'ma' adds the m_h ones. The cache records ks, the
     precision and the state's identity (raise_state_id), and a cache of other data is refused."""
     RECIP_DD[0] = True
@@ -1301,6 +1302,11 @@ def cmd_raisecheck(path, prec, ks, cache, mutate="", rows="a"):
     for t in RAISE_MOVES:
         tm = mp.mpf(t)
         out = dict(t=t)
+        # the old map: the rung at Delta + t with the data held (no response to the move), for comparison
+        Fo, _ = rung_F(seg, *sp_(hb), delta + tm, node, rows)
+        out["old"] = dict(F=float(amax(Fo)))
+        print(f"  Delta + {t:g}, old map (the data held): |F| {out['old']['F']:.2e}; {time.time() - t0:.0f} s",
+              flush=True)
         for name, g in (("linear", [x + tm * y for x, y in zip(hb, s_)]),
                         ("second", [x + tm * y + tm * tm * v for x, y, v in zip(hb, s_, w)])):
             h, hist, Rt = rung_newton(seg, g, mfix, delta + tm, node, J, tol, rows)
