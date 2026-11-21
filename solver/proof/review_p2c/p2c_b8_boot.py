@@ -881,7 +881,11 @@ def main():
         with open(OPTS["json"], "w") as fh:
             json.dump(out, fh, indent=1, default=str)
     log(f"# {time.time() - t0:.0f} s")
-    sys.exit(0 if all(r["closed"] for r in out[:1]) else 2)
+    if "bisect" in OPTS:
+        ok = out[0]["closed"]                     # trial points below the threshold fail by design
+    else:
+        ok = all(r["closed"] for r in out)
+    sys.exit(0 if ok else 2)
 
 
 def fmt(r):
