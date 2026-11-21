@@ -16,7 +16,7 @@ formulation of hp/pinning.py; their coefficients are zero).
         [--qd_it 12] [--qd_w 0] [--refine 1] [--probe 0 --probe_c C] [--plan_tol 1e-32] [--fix1 0] [--F_pred_max 0]
         [--horizon_alpha 0] [--fix1_qlu 0] [--jet_q 0] [--reseed 0] [--pred_q 0] [--reseed_q 0] [--save_pred 0]
         [--jet_o 0] [--jet_by_order 1] [--jet_tangent_from 0] [--series_split 0] [--od_tangents 2] [--corrector od --tol_od 1e-40] [--base_adopt 0] [--base_polish 1] [--keep_plan 1] [--held_fit FILE]
-        [--held_o 0] [--reseed_o 0] [--reseed_qd_bar 1e-24] [--proj_start u0] [--reseed_o_stop 0] [--proj_o 0 --proj_o_bar 0] [--a0 0] [--a_grow 2] [--a_hold 0] [--lam_stall 0] [--od_floor_delta 0] [--save_base 0] [--save_jet 0] [--held_from STATE]
+        [--held_o 0] [--reseed_o 0] [--reseed_qd_bar 1e-24] [--proj_start u0] [--reseed_o_stop 0] [--proj_o 0 --proj_o_bar 0] [--reseed_o_bar 0] [--a0 0] [--a_grow 2] [--a_hold 0] [--lam_stall 0] [--od_floor_delta 0] [--save_base 0] [--save_jet 0] [--held_from STATE]
         [--arclength 0 --guard 0.05 --D_min 0 --arc_sign 1 --border 1 --turns_max 2 --arc_dhold 1e-12 --arc_jet FILE]
         [--a_rule step|reseed --a_scale 1 --a_drop 10 --a_rise 3.16]
 
@@ -160,6 +160,10 @@ factored LU does not halve the rung's |R|. --proj_o 1 (with --corrector od, --re
 each point by those corrections alone from its own eight parts, counted 'u0o', and runs the quad-double projection
 only when they end above --proj_o_bar (0, the default: --tol_od) or by their step cap ('u0o_refused'). The three
 are refused with --arclength, whose corrector (hp/arclength.py) builds its own re-seeder without them.
+--reseed_o_bar B (with --reseed_o K, 0 the default: off) skips the corrector of an attempt whose octo-double refinement
+ends with its rung max |R| above B, and halves the step as a refused corrector does. Near the D 260.85 crossing the two
+attempts refused after their full corrector (1.6 to 2 h each) had ended their refinement at 4.3e-14 and 1.8e-5, and
+every accepted attempt at 1.5e-21 or below (#966, legs 12 and 13).
 --ks K sums the horizon series to order K instead of the state's own ks (130 on the chain), and saves it with the
 states (#696). The unknowns are the same, so a state converged at one ks starts at another with |F| of about the
 series' terms between the two orders. A changed ks plans the base again (a stored plan stalled the polish), so its
@@ -452,6 +456,7 @@ def main():
     # --reseed_o_stop 1, the octo-double corrections end at their floor (Reseeder od_stop); --proj_o 1, ElimO projects
     # by the octo-double refinement alone first, accepted at or below --proj_o_bar (0: --tol_od)
     opt.update(proj_start="u0", reseed_o_stop=0, proj_o=0, proj_o_bar=0.0)
+    opt.update(reseed_o_bar=0.0)        # --reseed_o_bar B: skip the corrector when the refinement ends above B
     # --arclength 1: the pseudo-arclength continuation of hp/arclength.py from this base (#842), oriented by --arc_sign
     # (the sign of D's change), no base where the unit tangent's |t_D| < --guard, stopping below --D_min (0: never) or
     # after the step that holds the --turns_max-th turn (2: the mirror's own turn);
@@ -1109,9 +1114,17 @@ def main():
                 screens.append((a, Fp))
                 print(f"    a {a:.4f}: predicted |F| {Fp:.2e} above {opt['F_pred_max']:.1e}, not corrected", flush=True)
                 a *= max(0.25, 0.9 * (opt["F_pred_max"] / Fp) ** 0.5)
+            # --reseed_o_bar: a refinement that ends above the bar foretells a corrector that does not converge
+            last_o = getattr(rs_n, "last_o", None) if opt["reseed"] and rsd is not None and rsd["ok"] else None
+            refine_end = last_o[-1] if last_o else None             # set by with_horizon this attempt
+            refine_refused = bool(opt["reseed_o_bar"]) and refine_end is not None and refine_end > opt["reseed_o_bar"]
             t1 = time.time()
             tol = tol_at(Dn)
-            if np.isfinite(Fp):
+            if refine_refused:
+                print(f"    a {a:.4f}: refinement ended at rung max|R| {refine_end:.2e}, above --reseed_o_bar "
+                      f"{opt['reseed_o_bar']:.0e}: not corrected", flush=True)
+                ch, cl, Fc, nsteps, accepted, dcorr = ph, pl, float("nan"), 0, False, 0.0
+            elif np.isfinite(Fp):
                 ch, cl, Fc, nsteps, accepted, dcorr = correct(spn, ph, pl, tol, pred4, z8_start=pred8)
             else:
                 ch, cl, Fc, nsteps, accepted, dcorr = ph, pl, float("nan"), 0, False, 0.0
@@ -1119,7 +1132,8 @@ def main():
             fd = float(formula_delta(float(Dn)))
             att = dict(attempt=attempt, a=a, D=float(Dn), D_str=str(Dn), F_pred=Fp, F_final=Fc, tol=tol, steps=nsteps, accepted=accepted, t_corr=t_corr,
                        Delta=float(ch[-1] + cl[-1]), dDelta_formula=float(ch[-1] + cl[-1]) - fd, dDelta_corr=dcorr,
-                       moved=float(dd_norm(*dd_add(ch, cl, -ph, -pl))), screens=screens, reseed=rsd)
+                       moved=float(dd_norm(*dd_add(ch, cl, -ph, -pl))), screens=screens, reseed=rsd,
+                       refine_refused=refine_refused)
             if rule is not None:
                 att.update(rule_err=rule.err(a), rule_level=rule.level(a))     # the a_h error estimated at a, and over the line
             rec.setdefault("attempts", []).append(att)
