@@ -690,7 +690,17 @@ polish solves the raise's system.
 - **`factored_horizon.py raisecheck`** at D 262.0099, ks 315, with hp's 1/k, 512 bits. It solves the rung from the
   stored data, then follows Δ moves of 10⁻¹⁶, 10⁻¹⁵ and 10⁻¹⁴ from the linear and the second-order predictors. It passes
   when the second-order start converges at 10⁻¹⁴ and the t² term holds to 10%. It runs with `--rows a` (method A) and
-  `--rows ma` (ElimO's rung). RAISECHECK
+  `--rows ma` (ElimO's rung).
+  - **`--rows a`: FAIL by this reading.** The start projection converges: the a rows go 2.84×10⁻³³ → 3.5×10⁻¹⁰⁴ in 7
+    chord passes, a_h moves by 1.5×10⁻⁷³, and the m rows end at 1.93×10⁻³⁰ and the c rows at 1.5×10⁻³³. Along Δ, with
+    m_h fixed, the a rows on the linear path a_h + t s (|s| 8.9×10⁻⁷) have no t² term: their second difference grows
+    as τ² between τ = 10⁻²⁰ and 10⁻¹⁹ (t² check 1.0×10²). The linear start misses by 2.7×10⁶⁵, 2.6×10⁷¹ and 2.0×10⁷⁷ at
+    t = 10⁻¹⁶, 10⁻¹⁵ and 10⁻¹⁴, as t⁶. The t⁴ and t⁶ terms balance near t ≈ 4×10⁻¹⁹ (an estimate). Neither start
+    converges at any of the three moves, and the run exits 1.
+  - **Why this need not decide stage 3 is a hypothesis, made after the data.** The move keeps m_h fixed, so the m rows
+    go off at first order. The raise's step lies near v₁ (Δ share 0.92) and also moves m_h and the nodes. Along v₁,
+    dh170 found the old-map residual exactly quadratic out to t = 10⁻²⁰. Stage 3's own run decides the step direction.
+  - **`--rows ma`:** RAISECHECK_MA
 
 **Stage 2: the planted truth at D 237.7132, where the old raise works.**
 - **Start.** `I1064-dh610/ho2_D237.7132/ks307/base_pin3_D237.7132.npz` (blob 861c79ff): ks 307, max|F| 3.5×10⁻⁸⁶.
