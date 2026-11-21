@@ -19,13 +19,15 @@ with R_p, R_m the right-hand sides above. The marching is singular only where g_
 is tangent to a characteristic, so a phi with omega b phi_theta > x - c wherever c - x is small keeps it regular through
 a valley of c - x and through a patch where c < x. A curve of constant x is the case phi = 0. Changing the curves on
 which one marches is the device of Gundlach's tau-dependent radial coordinate zeta = ln x - xi_0(tau) (PRD 55, 695 (1997)),
-used here to keep the curves off the characteristics instead of to place the light cone.
+used there to place the self-similarity horizon on zeta = 0 (his Sec. II.3), and here to keep the curves off the
+characteristics.
 
 Fields are on the full grid of N = 2M points theta_j = 2 pi j / N (hp keeps the half grid, the first M points). The
-integrator is the explicit eighth-order Runge-Kutta method of Dormand and Prince (DOP853's eighth-order weights; Prince
-and Dormand, J. Comput. Appl. Math. 7 (1981) 67, doi:10.1016/0771-050X(81)90010-3; coefficients from scipy) with fixed
-steps from a plan. --mutate nowarp drops omega h_theta from g_p and g_m (the warped curves treated as curves of constant
-x), the control that must fail.
+integrator is the explicit Runge-Kutta method of order 8(5,3) of Dormand and Prince, DOP853 (Hairer, Norsett and
+Wanner, Solving Ordinary Differential Equations I: Nonstiff Problems, Springer, Sec. II, the reference scipy names; its
+edition not checked), its eighth-order weights only, with the coefficients from scipy and fixed steps from a plan.
+--mutate nowarp drops omega h_theta from g_p and g_m (the warped curves treated as curves of constant x), the control
+that must fail.
 """
 import numpy as np
 from scipy.integrate._ivp import dop853_coefficients as _dop
