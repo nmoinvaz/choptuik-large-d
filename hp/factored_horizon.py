@@ -43,6 +43,7 @@ Commands, from hp/ (STATE an .npz of the chain, read with numpy; parts zh, zl, z
     python3 factored_horizon.py curvx STATE --prec 288 --ref REF.json --t 0|1e-20|-1e-20
     python3 factored_horizon.py curvxq X_t.json X_minus_t.json X_0.json --t 1e-20 --curv CURV_D.json
     python3 factored_horizon.py raisecheck STATE --ks 315 --prec 512 --cache CACHE.json [--rows a|ma] [--mutate=linear]
+    python3 factored_horizon.py raisecheck STATE --ks 315 --prec 512 --oldonly 1
 --out FILE.json writes the command's record. Exit 1 when a check fails.
 
 selftest, planted truth on a small problem (n = 100, M = 8, K = 40, x_K = 0.7, a_h the slaved value moved by
@@ -101,7 +102,8 @@ from the stored data, then along Delta moves of 1e-16, 1e-15 and 1e-14 from the 
 start) and from the second-order one (factored_raise.py's, its t^2 term from a second difference at tau 1e-20 and
 1e-19). --rows a (the default) is method A, the a rows for a_h with m_h fixed (factored_raise.py's projection); ma is
 the chain's ElimO rung, the m and a rows for m_h and a_h. It passes when the second-order start converges at 1e-14
-and the t^2 term holds to 10%; --mutate=linear judges the linear start instead.
+and the t^2 term holds to 10%; --mutate=linear judges the linear start instead. --oldonly 1 prints the old map's miss
+alone along the same moves (the stored data held, the m and a rows), and checks nothing.
 
 loop: the sweep map at a converged state (gamma by B's sum): B* = 1/a^2 from the old series, |g(B*) - B*|, gamma*,
 the power iteration of the linearized map from a random perturbation of size --h, and the forward pass's response in
@@ -1202,6 +1204,26 @@ def raise_state_id(meta, z):
     return hashlib.sha256(key.encode()).hexdigest()[:16]
 
 
+def cmd_raisecheck_old(path, prec, ks):
+    """raisecheck --oldonly 1: the old map's miss along the same Delta moves, the stored data held (no Jacobian): the
+    largest m row and a row of the horizon block at Delta + t, beside the stored data's at Delta"""
+    RECIP_DD[0] = True
+    mp.mp.prec = prec
+    meta, z = load_state(path)
+    seg = seg_of(meta, ks=ks)
+    mh, ah, delta, node = horizon_data(meta, z)
+    M = seg.M
+    t0 = time.time()
+    rec = dict(cmd="raisecheck_old", state=os.path.basename(path), D=seg.D_str, prec=prec, ks=ks, moves=[])
+    for t in (0,) + RAISE_MOVES:
+        _, R = rung_F(seg, mh, ah, delta + mp.mpf(t), node, "ma")
+        m_, a_ = float(amax(R[M:2 * M])), float(amax(R[2 * M:3 * M]))
+        rec["moves"].append(dict(t=t, m=m_, a=a_))
+        print(f"  old map at Delta + {t:g} (the stored data held): m rows {m_:.3e}, a rows {a_:.3e}; "
+              f"{time.time() - t0:.0f} s", flush=True)
+    return rec, True
+
+
 def cmd_raisecheck(path, prec, ks, cache, mutate="", rows="a"):
     """5.3's Mac-side check: at the state's own Delta and node, the rung at order ks with hp's 1/k, solved from the
     stored data (the start projection), then along Delta moves of RAISE_MOVES from the linear predictor (the
@@ -1514,7 +1536,10 @@ def main(argv):
     elif cmd == "curvxq":
         rec, ok = cmd_curvxq(args[1:4], opt["t"], opt["curv"])
     elif cmd == "raisecheck":
-        rec, ok = cmd_raisecheck(args[1], prec, int(opt["ks"]), opt.get("cache"), mutate, opt.get("rows", "a"))
+        if opt.get("oldonly") == "1":
+            rec, ok = cmd_raisecheck_old(args[1], prec, int(opt["ks"]))
+        else:
+            rec, ok = cmd_raisecheck(args[1], prec, int(opt["ks"]), opt.get("cache"), mutate, opt.get("rows", "a"))
     elif cmd == "loop":
         rec, ok = cmd_loop(args[1], prec, int(opt.get("its", 5)), opt.get("h", "1e-100"),
                            [int(x) for x in opt.get("orders", "60,100,125").split(",")])
