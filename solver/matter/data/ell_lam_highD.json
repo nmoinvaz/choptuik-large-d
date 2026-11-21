@@ -602,7 +602,7 @@
    "record_hybrid_path": "I1025-win/out/l1kc63Fv1025.jsonl",
    "minus_record_hybrid": 0.010469992119299665,
    "constraint_hybrid": 0.00010276654207616206,
-   "signtested_hybrid": false,
+   "signtested_hybrid": true,
    "note_hybrid": null
   },
   {
