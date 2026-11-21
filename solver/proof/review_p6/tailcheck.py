@@ -10,7 +10,7 @@ Numerical evidence for the certificate, not part of it.
 import sys
 import json
 import time
-from mpmath import mp
+from mpmath import mp, iv
 import model
 
 
@@ -61,7 +61,7 @@ def main():
     t0 = time.time()
     ok = True
     for mode in ('B4', 'tight', 'cert'):
-        cons_m = {int(k): mp.mpf(v) for k, v in cons['C_' + mode].items()}
+        cons_m = {int(k): mp.mpf(model.up(iv.mpf(v), 30)) for k, v in cons['C_' + mode].items()}
         for k in (-2, 0, 2):
             worst, wat = mp.mpf(0), None
             nviol = 0

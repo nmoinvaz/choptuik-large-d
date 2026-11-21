@@ -14,6 +14,28 @@ Order of work, as the issue sets it:
    every certified number), before reading the five scripts in detail (§5).
 4. Compare the constants, name the shared machinery, and say what rests on (H1) and (H2) (§6–§8).
 
+## Verdict
+
+- **The tail bound of #990 holds.** An independent certificate (mpmath.iv, a direct termwise interior sum, an adaptive
+  sup) gives |ΔR_j/K_ν| ≤ C′_μ |p| ν/j² for odd ν ≥ 3 and j ≥ max(2ν, 10), with C′_μ = 4.874, 9.800 and 8.928×10⁵.
+  Those are 5.8, 5.8 and 5.3 times below the certificate's 28.449, 56.874 and 4.7661×10⁶, so the certificate's claim
+  is implied. With exact prefactors the constants are 2.389, 5.396 and 5.782×10⁵ (§5.5).
+- **The head of #1015 holds, with one quoted constant too small.** The review's enclosures of H_μ(ν) agree with §11.3
+  at every quoted digit. But Λ^head_{ν−2} = 0.011012 lies below the sup it bounds, 0.01101243 at ν = 3, so it must
+  read 0.011013. The cause is rounding to nearest where outward rounding is needed (finding 1). Λ^head_ν = 0.058818 and
+  Λ^head_{ν+2} = 3.3073 are valid.
+- **Every hand lemma holds as stated.** B1–B4, B6, B7, the closed form G and its monotonicity were re-derived from
+  their statements before the proofs were read, and no step of the written proofs fails (§3, §4). The convolution
+  bound that B5 and B7 cite is proved here in one line.
+- **The model is a true sub-problem of amp_flint.** It equals amp_flint's own late-order sequence, linear in a Kummer
+  input, to 2.5×10⁻³⁷ (§5.1).
+- **The extension to tuned inputs is not proved.** It does not follow from (H1) and (H2) as stated (finding 2, §7).
+  So what is certified is the one-step model with Kummer inputs, and not yet the first tuned order that route 3 is
+  for.
+- Ten findings: one wrong (finding 1, a rounding of 4×10⁻⁵ that changes no conclusion), one unproved, two unclear, six
+  minor (§9). Every planted error makes the re-implementation fail, except M7, which did not fire for a reason that
+  was found and recorded. M7′ replaces it (§6).
+
 ## 1. The claims, and the theorem they serve
 
 **The theorem served.** (★) of [proof/B_tail_M7.md](../proof/B_tail_M7.md) §8.4 is a *conjecture*: the coupling of the
@@ -84,6 +106,22 @@ different arithmetic from python-flint's arb). Every script exits non-zero when 
 
 The ν = 1 equality test: at ν = 1 with the background alone, every |T| equals t, so the termwise majorant with exact
 prefactors equals the sum of the absolute values of the interior terms. Any dropped or double-counted term breaks it.
+
+**Deviations from the protocol, as they happened.**
+
+- PC1 was set as an injection at order 1 with p = 2⁻⁸⁰. That cannot work. `S_at` de-mixes the order-k′ sequence only
+  over labels |μ| ≤ k′ (its `range(-min(H, kp), ...)`), so an order-1 input of label μ ≥ 3 is never seen there. The
+  run of record injects at the input's natural order |μ| and reads at |μ| + 2, which is how harmonics enter amp_flint.
+  It uses ε = 2⁻⁶⁰, because the difference y(+ε) − y(−ε) costs about 60 of mpmath's 266 bits. The bar did not change.
+- The first ampcheck run failed for a reason in my own harness: `Amp(jlo=0)` falls back to jlo = (2J)//5. It was
+  fixed by setting `A.jlo = 0` after construction.
+- The sup tolerance of explicit.py was tightened from 2% to 0.5% before the run of record.
+- M7 (A₀/100 in B7) did not fire, because B7 with A₀/100 still bounds every head term. M7′, all of B7 divided by
+  100, replaces it (§6).
+- interior.py crashed at --J1 below 197, because W needs r_m to m = 197. That was fixed before the controls of record.
+- interior.py's first check of P compared the finite product at L = 3000 with the closed form to 1%. It failed, because
+  the product converges like 1 − O(νω²/L). It now checks the closed form against mpmath's Γ ratio, which is the
+  identity itself, and that the product lies below it. The error was in my check, not in the certificate.
 
 ## 3. Re-derivations from the statements
 
@@ -187,8 +225,335 @@ Read after §3 was committed (ddc1844a). P6_route3.md §10.1 and §11.2, and D_e
 | G | the listed inequalities, partial fractions, ψ values | the same inequalities; T₁ = 2 + ln(2j₀ − 1) is slightly larger than needed (2 + ln(2j₀ − 3)) |
 | monotonicity of e^{−0.736ν}G | "every piece ... of the form ν^a L₁L₂", d ln/dν ≤ 4/ν | holds; the step G′/G ≤ max_k G_k′/G_k and L ≥ 1 are implicit (finding 9) |
 
-No step of a written proof fails. The scripts were then read (route3_bound.py's `Cr_sup`, `W_sup`, `sup_box`; route3_head.py's
-`B_term`, `G_closed`, `certify`; route3_cancel.py's `tail`, `order3`, `dr_builder`; route3_tuned.py). `Cr_sup` was checked line
-by line against the grouping it states: every term (Ss at i = 3, 4 ≤ i ≤ j − 3, j − 2, j − 1, j; Sd at i = 3,
-4 ≤ i ≤ j − 2, j − 1, j; the inner far end) bounds its sum for j ≥ 10, with the counts j − 6 and j − 5 and the
-log-convexity maxima t₃t_{j−4} and t₃t_{j−3}.
+No step of a written proof fails. The scripts were then read: route3_bound.py's `Cr_sup`, `W_sup` and `sup_box`;
+route3_head.py's `B_term`, `G_closed` and `certify`; route3_cancel.py's `tail`, `order3` and `dr_builder`; and
+route3_tuned.py. `Cr_sup` was checked line by line against the grouping it states. Every term bounds its sum for
+j ≥ 10: Ss at i = 3, 4 ≤ i ≤ j − 3, j − 2, j − 1 and j; Sd at i = 3, 4 ≤ i ≤ j − 2, j − 1 and j; and the inner far
+end. The counts are j − 6 and j − 5, and the log-convexity maxima are t₃t_{j−4} and t₃t_{j−3}.
+
+## 5. The re-implementation and its constants
+
+Every number below is printed by a script of `solver/proof/review_p6/` (mpmath 1.3.0, sympy 1.14.0, the venv-314 of
+the Mac) and is an mpmath.iv upper bound rounded up, or a lower bound rounded down, unless it is marked as a value.
+The logs are in folder I1062-mac of the raw-data repository. ω = 2π·160000/263023 (= 2π/1.64389375) is built as an
+interval.
+
+### 5.1 The model against amp_flint (PC1)
+
+`ampcheck.py` runs `amp_flint.Amp` untuned. It injects the Kummer input ε T^μ at its natural order |μ| through
+`add_linear` and reads `S_at`'s own late-order sequence at order |μ| + 2, with mpmath.qr_solve replaced so as to capture
+it. The part linear in ε is (y(+ε) − y(−ε))/(2ε) with ε = 2⁻⁶⁰. Against it, model.py's literal form (amp_flint's passes
+over labels, with p as a dual number, and ψ, Γ) and its Darboux form over triples agree:
+
+| ν | μ | injected at order | read at order | worst relative difference, j ≤ 40 |
+|---|---|---|---|---|
+| 3 | 1 | 1 | 3 | 2.5×10⁻³⁷ |
+| 3 | 3 | 3 | 5 | 1.4×10⁻⁶⁵ |
+| 3 | 5 | 5 | 7 | 1.0×10⁻⁶⁷ |
+| 5 | 3 | 3 | 5 | 4.8×10⁻⁶⁶ |
+| 5 | 5 | 5 | 7 | 3.9×10⁻⁶⁷ |
+| 5 | 7 | 7 | 9 | 1.5×10⁻⁶⁹ |
+
+At ν = 3, μ = 1 the perturbation shares the background's label, and the ε³ term limits the agreement to ε² ≈ 10⁻³⁶.
+**So the one-step model is exactly the part of amp_flint's expansion that is linear in a Kummer input of label μ,
+read two orders above it.** That makes the model a sub-problem of the real recursion, not a separate one. It does
+not cover tuned inputs (§7).
+
+### 5.2 The explicit part (PC2, PC3, PC4)
+
+`explicit.py` builds the C_λ from model.py's definitions with sympy Polys over ℚ(i), on a common denominator of the
+factors 2(j − q + α_λ), 2(j − q + β_λ), j + 1, ν ∓ 1 and ω. In s = 1/ν and u = ν/j, j²C_λ/ν^d is then a polynomial
+Ñ(s, u) over a product of factors that stay away from zero on the box. That is an exact statement: every monomial
+j^p ν^q of the numerator has p ≤ deg_j D − 2 and the right total degree. It holds for all seven families (PC3; deg_j
+D = 7, deg_j N = 5). Σ_λ C_λ(j) ρ^λ_j equals model.split()'s explicit terms to 3×10⁻⁹⁴ at ν ∈ {3, 5, 9, 21} and
+j ∈ {10, 25, 60, 200} (PC2). The sup of |Ñ|/|D̃| over s ∈ [0, 1/3], u ∈ [0, 1/2] comes from adaptive bisection in
+mpmath.iv (80 bits), stopped when the largest box bound is within 0.5% of the best point value:
+
+| μ | family | d | review U (certified) | review L (point value) | certificate | certificate's lower bound | boxes |
+|---|---|---|---|---|---|---|---|
+| ν − 2 | ν − 2 | 1 | 0.47868 | 0.47652 | 0.5638 | 0.4719 | 632 |
+| ν − 2 | +1 | 2 | 0.91519 | 0.91066 | 0.9229 | 0.9003 | 140 |
+| ν | ν | 1 | 1.0094 | 1.0044 | 1.1028 | 0.9944 | 368 |
+| ν | −1 | 2 | 1.0152 | 1.0101 | 1.0454 | 1.0071 | 272 |
+| ν | +1 | 2 | 0.9233 | 0.9187 | 0.9530 | 0.9183 | 3220 |
+| ν + 2 | ν + 2 | 1 | 1.0493 | 1.0443 | 1.1775 | 1.0320 | 148 |
+| ν + 2 | −1 | 2 | 2.5837 | 2.5714 | 2.6323 | 2.5528 | 164 |
+
+PC4 holds for all seven: L ≤ the certificate's value, and here also U ≤ it. The certificate's 48 × 48 grid is 1.9% to
+18% above my U.
+
+### 5.3 The interior (PC5)
+
+`interior.py` evaluates the termwise majorant of the interior, after B3, by direct summation for 10 ≤ j ≤ J₁ = 2000:
+
+```math
+c\sum_{i=3}^{j}\hat G_i X_{j-i}\frac{t_{j-i}}{t_{j+1}}+\sum_{i=3}^{j}\hat G_i\frac{t_{j+1-i}}{t_{j+1}}+\frac{1}{8(j+1)}\sum_{l=1}^{j-1}\frac{t_lt_{j-l}}{t_{j+1}},\qquad \hat G_i=\frac{1}{8i}\sum_{l<i}t_lt_{i-1-l},
+```
+
+per triple, with c and X_l the prefactor bounds. In B4 mode (c from B4 with κ = 2, X_l = 2l + 1 + (ν + 2)ω) it is
+A_j + νB_j, and j²(A_j + νB_j)/ν ≤ j²(A_j/3 + B_j). In the tight mode, c = ½ + νω/(4(j + 1)), X_l = 2l + 1 + |μ|ω for
+the perturbation outside and |2l + 1 ± iω| for a background label outside, with the sup over ν ∈ [3, j/2] on 24
+ν-intervals. Above J₁ my own bound applies, with Ĝ_i ≤ (2 + t₁)t_{i−1}/(8i). The ends i = j, j − 1 are taken exactly.
+The rest uses t_{i−1}t_{j−i} ≤ t₂t_{j−3} and t_{i−1}t_{j+1−i} ≤ t₂t_{j−2} (log-convexity), and t_{j−k}/t_{j+1} ≤
+Π_{q≤k}(j − q + ½)⁻¹. All are evaluated with x = 1/j ∈ [0, 1/2001] and ln j/j ≤ ln 2001/2001.
+
+| quantity | review | certificate |
+|---|---|---|
+| r_m increasing on 1 ≤ m ≤ 8 (checked), above ω²/2 − 1 ≤ 6.3044 (proved) | yes | yes (to m = 9) |
+| max_{n≤2000} U_n/(2 + t₁) | 0.7773 | not printed |
+| B4 mode, per triple, max over 10 ≤ j ≤ 2000 (at j = 10) | 1.4649 | 9.295 (27.885/3) |
+| B4 mode, per triple, every j > 2000 | 0.0458 | |
+| Cr, μ = ν ∓ 2 (3 triples), B4 mode | 4.3947 | 27.885 |
+| Cr, μ = ν (6 triples), B4 mode | 8.7894 | 55.770 |
+| Cr, tight mode, μ = ν − 2, ν, ν + 2 | 1.9094, 4.3856, 2.4762 | |
+
+PC5 holds: the direct sum with B4's per-term bounds is 6.3 times below the certificate's grouping of the same terms.
+The grouping is loose, not wrong. The ν = 1 equality test passes to 1.6×10⁻³⁶: at ν = 1 the majorant with exact
+prefactors equals the sum of the moduli of every interior term computed by model.py from complex T's.
+
+### 5.4 The weights
+
+| quantity | review | certificate |
+|---|---|---|
+| P = sup P_{ν+2} ≤ e^{πω} | 163995.5 | 1.63995×10⁵ |
+| P_{ν+2}'s closed form against mpmath's Γ ratio, ν = 3, 5, 9, 41 | 1.9×10⁻⁹⁵ relative | checked (`--lemmas`) |
+| W, odd ν ≤ 99 (at ν = 3) | 4.7282×10⁻⁴ | 4.728×10⁻⁴ |
+| hand bound ν q^M at ν = 101 (q ≤ 0.2554, M = 96) | 1.21×10⁻⁵⁵ | 1.2×10⁻⁵⁵ |
+
+### 5.5 The tail constants
+
+C′_μ = Σ_λ S_λ w_λ + Cr P_μ, the certificate's assembly with the review's parts (`constants.py`):
+
+| μ | review, B4 mode | review, tight mode | certificate | implied |
+|---|---|---|---|---|
+| ν − 2 | 4.8738 | 2.3885 | 28.449 | yes |
+| ν | 9.7996 | 5.3958 | 56.874 | yes |
+| ν + 2 | 8.9279×10⁵ | 5.7816×10⁵ | 4.7661×10⁶ | yes |
+
+**So claim T holds, by an independent certificate, with constants 5 to 12 times smaller.** The interior dominates
+every C′ except through P for μ = ν + 2, where P ≈ e^{πω} carries the constant.
+
+### 5.6 The head (PC6, PC7, PC8)
+
+`head.py --certify` sums the upper ends of |ΔR_j/K_ν| over j < j₀ from model.darboux() in mpmath.iv at 200 bits. The
+largest relative radius is 9×10⁻¹² (ν = 99, μ = ν − 2), from rectangular complex products, and harmless at the digits
+quoted. Each cell gives my enclosure; the certificate's §11.3 value follows the slash:
+
+| ν | H, μ = ν − 2 | H, μ = ν | H, μ = ν + 2 |
+|---|---|---|---|
+| 3 | [0.10018557, 0.10018558] / 0.10019 | [0.53509672, 0.53509673] / 0.53510 | [30.087974, 30.087975] / 30.088 |
+| 5 | [0.065828953, 0.065828954] / 0.065829 | [0.43643742, 0.43643743] / 0.43644 | [7.1812233, 7.1812234] / 7.1812 |
+| 11 | [0.045826518, 0.045826519] / 0.045827 | [0.417755, 0.41775501] / 0.41776 | [10.690416, 10.690417] / 10.690 |
+| 21 | [0.039215188, 0.039215189] / 0.039215 | [0.41116362, 0.41116363] / 0.41116 | [12.761465, 12.761466] / 12.761 |
+| 41 | [0.035920864, 0.035920865] / 0.035921 | [0.40769583, 0.40769584] / 0.40770 | [14.103416, 14.103417] / 14.103 |
+| 99 | [0.033975676, 0.033975677] / 0.033976 | [0.40556992, 0.40556993] / 0.40557 | [15.024773, 15.024774] / 15.025 |
+
+PC6 holds at all 18 entries. B7, coded from its statement, lies above every head term at odd ν = 3 to 21 (PC7). The
+worst ratios are 0.023525 (μ = ν − 2), 0.023885 (ν) and 8×10⁻⁶ (ν + 2), each at ν = 3, as in §11.4. The sum of B7 over
+the head is at most 0.0279, 0.0322 and 0.0287 of G at odd ν = 3 to 41.
+
+| μ | sup_{ν≤99} e^{−0.736ν}H (at ν = 3) | e^{−0.736·101} G(101) | certificate Λ^head | certificate G(101) term |
+|---|---|---|---|---|
+| ν − 2 | 0.011012426 | 1.535×10⁻²⁶ | **0.011012** | 1.53×10⁻²⁶ |
+| ν | 0.058817977 | 3.069×10⁻²⁶ | 0.058818 | 3.07×10⁻²⁶ |
+| ν + 2 | 3.3072783 | 2.517×10⁻²¹ | 3.3073 | 2.52×10⁻²¹ |
+
+PC8 fails at one entry. The certificate's Λ^head_{ν−2} = 0.011012 is below the sup it is meant to bound
+(finding 1). The other two Λ are valid upper bounds, at their last digit.
+
+### 5.7 The whole sum
+
+With the review's C′ and H, sup over odd ν of e^{−0.736ν}(H + C′ν/(j₀ − 1)) is at most 0.18959, 0.41788 and 32715 in
+B4 mode, and 0.098526, 0.25652 and 21188 in the tight mode, each at ν = 3. Beyond ν = 99 it is at most 1.54×10⁻²⁶,
+3.07×10⁻²⁶ and 2.52×10⁻²¹. The certificate's 1.0534, 2.1427 and 1.7463×10⁵ are valid and 5 to 11 times larger,
+because its tail constants are.
+
+### 5.8 The constants against the exact increments (PC9)
+
+`tailcheck.py` computes |D_j| from the review's Darboux form in mpmath at 192 bits, for odd ν = 3 to 21, each μ and
+j₀ ≤ j < 1000. It compares them with C ν/j² for three sets of constants. There is no violation:
+
+| μ | worst ratio, review B4 | worst ratio, review tight | worst ratio, certificate | at (ν, j) |
+|---|---|---|---|---|
+| ν − 2 | 7.8×10⁻⁵ | 1.6×10⁻⁴ | 1.34×10⁻⁵ | (21, 42) |
+| ν | 0.103 | 0.186 | 0.0176 | (3, 999) |
+| ν + 2 | 0.140 | 0.216 | 0.0262 | (3, 999) |
+
+The certificate's own §10.3 gives 1.3×10⁻⁵, 1.8×10⁻² and 2.7×10⁻² to j = 1600. For μ = ν and ν + 2 the ratio rises
+toward |c₂|/(νC) at large j, which is why the worst is at the last j. Its limit lies below 1 because S_λ ≤ C. With
+three times the bound planted at five or six j per run, all 90 runs fail, with 57 violations in each block of ten,
+and the script exits 1.
+
+## 6. The planted errors
+
+`controls.py` runs each one, and each run is logged separately in I1062-mac:
+
+| id | mutation | check | result | exit |
+|---|---|---|---|---|
+| M1 | E × 3/2 in the explicit part | PC3 | six of seven families unbounded (deg_j N = 6 against deg_j D = 7; the ψ family is unaffected), and PC2 off by 14.2, 4.9×10⁻⁴ and 2.64 | 1 |
+| M2 | far-end l = j term dropped | PC2 | off by 0.234, 0.140 and 0.0695 (μ = ν − 2, ν, ν + 2) | 1 |
+| M3 | 3ω for (ν + 2)ω in B4 | prefactor check | fails | 1 |
+| M4 | g₂ × 1.01 | PC2 | off by 0.021, 0.0074 and 0.0037 | 1 |
+| M5 | S^s term i = j dropped from the majorant | ν = 1 equality test | off by 0.074 | 1 |
+| M6 | one ordered lapse pair dropped from the model | PC1 | off by 3.35 | 1 |
+| M7 | A₀/100 in B7 | PC7 | **did not fire**: worst ratio 0.372, 0.488 and 4.9×10⁻⁴, no violation | 0 |
+| M7′ | all of B7 divided by 100 | PC7 | worst ratio 2.353, 2.389 and 8.4×10⁻⁴, violations | 1 |
+| plant | three times C′ν/j² at five or six j per run | PC9 | 57 violations in each block of ten runs | 1 |
+
+**M7 did not fire, and why.** A₀ multiplies only B7's convolution part, not the de-mixing and ψ part D_j. With A₀/100,
+B7 still bounds every head term at ν = 3 to 21, and D_j carries most of it. At ν = 3, j = 0, μ = ν − 2,
+D₀ = 2(1/(8ω) + 1/(4ω)) = 0.196, against |ΔR₀/K| = 0.0858 (model.darboux). So A₀/100 is not a planted error at all:
+B7 stays true. That is a fact about B7's slack, not a fault
+in it. M7′, which divides all of B7, takes its place, and M7 stays in `controls.py` as a record with the expected
+exit 0. No threshold was changed.
+
+## 7. What is proved, and what rests on (H1) and (H2)
+
+**What the code and the lemmas prove** (*certified*, both by the certificate and, independently, by this review). Fix
+ω = 2π/1.64389375. For odd ν ≥ 3 and μ ∈ {ν − 2, ν, ν + 2}, let D_j be the coefficient of p in ΔR_j/K_ν, the increment
+of the order-3 normalised multiplier sequence of harmonic ν. Its order-1 inputs are −i T^1, +i T^{−1} and p T^μ. Then:
+
+- for every j ≥ max(2ν, 10), |D_j| ≤ C_μ ν/j², with the certificate's C_μ and also with the review's C′_μ of §5.5;
+- for every odd ν ≥ 3, Σ_{j<j₀} |D_j| ≤ Λ e^{0.736ν}, with Λ = 0.011013, 0.058818 and 3.3073;
+- hence Σ_{j≥0} |D_j| ≤ e^{0.736ν} times the constants of §5.7.
+
+By §5.1, D_j is exactly the part of amp_flint's own late-order sequence at order |μ| + 2 that is linear in a Kummer
+input ε T^μ added at order |μ| of an untuned expansion.
+
+**What it does not prove.**
+
+- Anything for tuned or forced inputs, whose late orders are not Kummer sequences (below).
+- Terms outside the one-step class at the orders that matter. At harmonic ν's first tuned order the forcing also has
+  products with two non-background factors, for example labels (3, 3, 1) at ν = 7. amp_flint forms that one through
+  e^{(6)} ∋ d^{(3)} d^{(3)} and then g^{(6)} ∗ s^{(1)}. The forcing also has the nested lapse terms g^{(2)} ∗ e^{(2)} of
+  `pass_even`. P6_route3.md lists this as "orders beyond one A² step".
+- Any ω but this one (§10.5 item 4).
+- A bound on the head that is independent of ν beyond ν = 99. The closed form G grows like ν² log² ν. The
+  certificate proves H ≤ Λ e^{0.736ν}, which is the form (★) allows. "The head does not grow with ν" is numerical
+  evidence, and it is labelled so.
+- (★) itself. B_tail_M7.md §8.3 explains why the lowest order does not settle it.
+
+**What rests on (H1).** Under the envelope |X_l[μ]| ≤ X̄_μ |T^μ_l|, B3 holds with X̄_μ for |p|. So the interior bound
+and the whole of B7 (the head needs no cancellation) carry over with that factor, for terms of the one-step form.
+
+**What rests on (H2), and why it is not enough as stated.** The explicit part uses the exact Kummer form of the
+perturbation twice:
+
+- to write T^μ_{j−k}/T^ν_{j+1} as ρ^μ_j times a rational function, from which the S_λ are computed;
+- for the O(1/j) cancellation.
+
+For a tuned input, the near-end terms X_{j−1}/T^ν_{j+1}, X_{j−2}/T^ν_{j+1} and X_j/T^ν_{j+1} are each of order X̄/j
+under (H1). (H2) says only that the full multiplier sequence has no O(1/j) increments. It gives neither the j⁻² rate
+nor a constant independent of ν for what is left. So "under (H1) and (H2) the form C ν/j² survives, with C multiplied
+by X̄_μ and recomputed" does not follow (finding 2). It would follow from a quantitative (H2′): the explicit part of
+the tuned increment is at most C₂ X̄_μ ν/j² for j ≥ j₀, with C₂ independent of ν. That is the open content. X̄_μ's
+own ν dependence is also not controlled.
+
+**Assumed facts**, each named:
+
+- |Γ(½ + iy)|² = π/cosh πy and |Γ(1 + iy)|² = πy/sinh πy (DLMF §5.4), for B2(ii);
+- |Γ(L + α + iω)/Γ(L + α)| → 1 as L → ∞, for B2(ii)'s limit (DLMF §5.11). Not in §10's list of what the bound uses;
+- ψ(x + 1) − ψ(x) = 1/x, for the Darboux form's ψ difference (DLMF §5.5). Not in that list either;
+- ψ(2) = 1 − γ, ψ(½) = −γ − 2 ln 2 and ψ(3/2) = 2 − γ − 2 ln 2, for S_a and S_b (DLMF §5.4);
+- the correctness of the interval libraries (arb in FLINT 3.6.0 through python-flint 0.9.0 for the certificate,
+  mpmath 1.3.0's iv for the review) and of sympy 1.14.0's polynomial arithmetic over ℚ(i), which both use;
+- amp_flint.py as the definition of the problem.
+
+## 8. What the review shares with the code under test
+
+| item | shared | how far it was checked here |
+|---|---|---|
+| the model's definition | both read it from amp_flint.py (`pass_even`, `pass_odd`, `S_at`) | the review's model is checked against amp_flint itself, run as a black box (§5.1); route3_cancel.py was not used |
+| ω | the same decimal 1.64389375 | — |
+| the split into explicit part and interior, and the assembly C = Σ S w + Cr P | the same definitions (from P6_route3.md §10) | PC2 checks that the split sums to the increment |
+| B3, B4 and B7 | the statements, re-derived in §3 and then used by the review's code | B4 and the ν = 1 equality test check them pointwise; B7 against every head term |
+| the convolution bound and log-convexity | the same fact | proved in §3, checked to n = 2000; the review uses it only above J₁ = 2000 and in B7 |
+| sympy 1.14.0 | both build the C_λ with it | the review's C_λ are checked numerically against model.split() in mpmath (no sympy), to 3×10⁻⁹⁴ |
+| mpmath 1.3.0 | the review's arithmetic; the certificate uses it only in checks | — |
+| not shared | | the interval library (mpmath.iv against arb); the sup method (adaptive bisection against a fixed grid); the interior method (direct termwise sums against grouping); the recursion code; the head's exact sums |
+
+The review's author wrote all of `review_p6/` in one session. The re-derivations were committed before the proofs
+were read (§4). model.py, ampcheck.py, explicit.py, interior.py and head.py were written and run before the five
+scripts were read in detail. constants.py, tailcheck.py and controls.py, which assemble and check, came after.
+
+## 9. Findings
+
+Numbered by severity: wrong, then unproved, unclear and minor.
+
+**Wrong**
+
+1. **Λ^head_{ν−2} = 0.011012 is not an upper bound.** At ν = 3, H_{ν−2}(3) ≥ 0.10018557 (review, mpmath.iv; §11.3's
+   own table gives 0.10019). But 0.011012 e^{0.736·3} = 0.10018171. So "H_μ(ν) ≤ Λ^head_μ e^{0.736ν}" fails at ν = 3 for
+   μ = ν − 2, by 3.9×10⁻⁵ relative. The sup is 0.01101243, so the value should read 0.011013. The cause is the
+   printing. route3_head.py and route3_bound.py print certified upper bounds with arb's `.str(n, radius=False)`, which
+   rounds to nearest. AGENTS.md asks for outward rounding. Λ^head_ν = 0.058818 and Λ^head_{ν+2} = 3.3073 are valid, at
+   their last digit (sups 0.058817977 and 3.3072783). The same printing gives C_μ, S_λ, Cr, W, P and G(101).
+   route3_bound.py's own upper ends are C_{ν−2} ≤ 28.4491411, C_ν ≤ 56.8734956 and C_{ν+2} ≤ 4766104.06 (printed to
+   12 digits by the review). So two of the quoted constants, 28.449 and 4.7661×10⁶, are below what the certificate
+   proves. route3_head.py hard-codes those two values (`C_TAIL`), and its whole-sum bound for μ = ν + 2 evaluates to
+   1.74634×10⁵, against the quoted 1.7463×10⁵. Those constants lie far above the true sups (§5.5, §5.7), so the
+   statements stay true by this review's certificate, but the certificate does not prove them as printed. The
+   error changes no conclusion.
+
+**Unproved**
+
+2. **§10.4's conditional extension to tuned inputs does not follow from (H1) and (H2) as stated** (§7). (H1) carries
+   the interior and the head over. But the explicit part's j⁻² rate and its ν-uniform constant come from the
+   perturbation's exact Kummer form. (H2) is qualitative, so it supplies neither, and the constants "recomputed for
+   the families the tuned inputs carry" are not computed. In addition, the real first tuned order of harmonic ν ≥ 7
+   contains terms outside the one-step class: two non-background factors, and nested lapse terms. This matters for
+   route 3's purpose. P6_scope.md §4 stage 3 asks for "the first tuned order of harmonic ν". What is certified is the
+   one-step model with Kummer inputs, and the step from that to the first tuned order is exactly this conditional
+   claim. The Result line "Tuned inputs keep the form, *conditional* on two named hypotheses" should read as a
+   conjecture, or (H2) should be strengthened to the quantitative (H2′) of §7.
+
+**Unclear**
+
+3. **The evidence for (H2) at first tuned orders is two cases.** route3_tuned.py's ν = 3 row (order 3) has no tuned
+   input: its only inputs are the order-1 background, the h3 case of §1. The tuned inputs appear at ν = 5 and 7 only,
+   plus the four later orders. The window test cannot see a factor log j, which §10.4 says.
+4. **The link from the three perturbations to (★) is not stated.** The μ = ν + 2 constant is 4.77×10⁶ (5.8×10⁵
+   here). It is almost all the untuned weight P ≈ e^{πω}, which §10.5 says the tuned problem removes. The note does not
+   say which μ (★)'s coupling needs. So it is not clear whether the certified constant that carries P is the one that
+   matters.
+
+**Minor**
+
+5. **The interior grouping is 6.3 times looser than the termwise sum it bounds** (§5.3). The direct sum gives
+   C_μ ≤ 4.874, 9.800 and 8.928×10⁵ with B4's per-term bounds, and 2.389, 5.396 and 5.782×10⁵ with exact prefactors. It
+   makes the whole-sum constants 0.190, 0.418 and 3.27×10⁴ (B4) instead of 1.0534, 2.1427 and 1.7463×10⁵.
+6. **The explicit sups' grid is 1.9% to 18% above the sup** (§5.2). This is valid, and the note's "within 20%" says
+   so.
+7. **B6's decrease above ν = 99.** route3_bound.py's `W_sup` docstring argues through ν q^{νω/4 − 1}. At ν = 101 that
+   is about q^{−1/2} ≈ 2 times the quoted tail ν q^M = 1.2×10⁻⁵⁵. The quoted tail is the sup over odd ν ≥ 101 by a
+   one-line step argument: M grows by at least 1 per step, q decreases, and (103/101) q < 1 (§3). It is harmless
+   against W = 4.7×10⁻⁴.
+8. **B3's wording.** "P_μ = 1 for μ ≤ ν" should read μ ∈ {ν − 2, ν}. The condition a + b + c < N is not used; only
+   a ≤ N is.
+9. **Implicit steps.** Two steps are left unwritten:
+   - the convolution bound Σ_l t_l t_{n−l} ≤ (2 + t₁) t_n (B5, B7) is cited to D_entire.md §6.3, where it is stated
+     without its line, U_n ≤ 2 + t₁(n − 1)/r_{n−1} (§3);
+   - G's monotonicity uses G′/G ≤ max_k G_k′/G_k and that each logarithm is at least 1.
+   Both hold.
+10. **The list of facts the bound uses is incomplete.** §10 says it uses "only B1's elementary inequalities and two Γ
+    identities (DLMF §5.4)". B2(ii) also uses the limit of a Γ ratio (DLMF §5.11), and the Darboux form uses
+    ψ(x + 1) − ψ(x) = 1/x (§7).
+
+## 10. Reproduce
+
+From `solver/proof/review_p6/`, with the Mac's venv-314 (`/Users/nathan/venv-314/bin/python`: mpmath 1.3.0, sympy
+1.14.0, python-flint 0.9.0 for amp_flint.py only). Each command runs one process. Set OUT to a task folder for the
+JSON files, for example `OUT=../../../../choptuik-large-d-raw/I1062-mac`.
+
+```
+python3 ampcheck.py                          # 5.1, PC1: the model against amp_flint.py; PASS, exit 0 (~10 s)
+python3 explicit.py --json=$OUT/explicit.json   # 5.2: the seven sups; PASS (~20 s)
+python3 interior.py --json=$OUT/interior.json   # 5.3, 5.4: Cr, P, W; PASS (~90 s)
+python3 head.py --certify --json=$OUT/head.json # 5.6: H for odd nu = 3..99, G(101), Lambda_head (~8 min)
+python3 head.py --check                      # 5.6, PC7: B7 against every head term, nu = 3..21; PASS (~15 s)
+python3 constants.py $OUT/explicit.json $OUT/interior.json $OUT/head.json $OUT/constants.json   # 5.5, 5.7
+python3 tailcheck.py $OUT/constants.json 1000   # 5.8, PC9: no violation (~12 min); PASS
+python3 tailcheck.py $OUT/constants.json 200 --mutate=plant   # control: FAIL, exit 1
+python3 head.py --check --mutate=b7          # M7': FAIL, exit 1; --mutate=a0 (M7) passes, as recorded in 6
+python3 controls.py                          # 6: every control as expected (~3 min); PASS
+```
