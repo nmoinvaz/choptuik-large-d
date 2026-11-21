@@ -21,6 +21,7 @@ status words are AGENTS.md's.
 | the share of the fast mode's shadow that ks = 130 keeps | ln f = −41.05 at D 237.13 and −63.05 at D 253.80 (μ = 1); f = 1 to 1% from ks ≈ 1.9 Re s | numerical evidence (M3) |
 | does the factored segment's inner solve reach quad-double in 5 sweeps | no: 29 to 32 from the slaved value and 21 from a warm start at D 242.36; at D 73, 31 from a warm start, and the sweeps diverge from the slaved value | numerical evidence (5.1) |
 | does holding a_K remove the G-sized part of the horizon rows' curvature | yes at the state, along the three moves tested at D 73.0 and D 242.36: Q_fact / Q_old is 1.3×10⁻¹⁹ to 2.7×10⁻¹⁶ and 4.5×10⁻⁶⁴ to 5.1×10⁻⁶⁰, measured at t ≤ 10⁻¹⁹. It says nothing about steps of the raise's size (about 10⁻¹⁴): at D 262.0099, ks 315, the factored map's higher orders (t⁶) dominate past about t = 4×10⁻¹⁹ along Δ with m_h fixed (5.3) | numerical evidence (5.2, 5.3) |
+| does the factored raise reproduce a known raise | yes at D 237.7132, ks 307 → 315: dh170's ks 315 base to 4.4×10⁻⁹⁰ per entry, Δ to 2.5×10⁻⁹³; the order control fails as it must. At D 262.0099 it is stage 3's run | numerical evidence (5.3) |
 
 The linear model reproduces three measurements with no fitted parameter (M4):
 
