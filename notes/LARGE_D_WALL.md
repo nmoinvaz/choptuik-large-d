@@ -529,6 +529,17 @@ come from the D 260.85 crossing, the order-130 fold at 259.903 does not appear a
 the chain's series stays at least 0.973 near D 262.08, against steps of 0.11 to 0.13 (numerical evidence; whether P1 is
 a pole or a branch point, and whether it moves with the order, is not read).
 
+**A real singularity of the order-293 system near D 265.078 lies on the chain's path (#966, #1064).** The located real
+pole holds within 0.0001 over the bases from 262.4705 on (raw `I966-mac-sing/`, xfchecks). Past D 263.425, where it
+becomes nearer than P1, the root test leaves |D − P1| and settles onto 265.078 − D. Its excess goes +7.74% at 263.4862,
++5.90% at 263.5312, +3.27% at 263.5762 and +1.75% at 263.5987. That meets the reading fixed before those bases: two
+consecutive counted bases within 5%, with a scale control that must read "not there" (#966). It does not belong to the
+plan: a re-planned ks 293 jet at D 262.7908 moves the real pole and P1 by 0 (#1064, comment 7069054406). Whether it
+belongs to the truncation at ks 293 is not tested. No method here raises the order at the front: hp's own raise fails at
+D 262.0099 with the projection bar fixed, and so does the factored raise (FACTORED_HORIZON 5.3, #1035). Its type is not
+resolved at N 31: the ratio and Dlog estimators and the conformal map all fail their plants (#966). All of this is
+numerical evidence. The chain pauses at D 263.5987, 1.48 short of it (#903).
+
 ### The refusals are the corrector's
 
 The corrector's first Newton move is the prediction's error to first order. At the accepted steps it equals the
