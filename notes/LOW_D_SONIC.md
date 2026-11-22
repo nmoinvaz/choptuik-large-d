@@ -4,7 +4,24 @@ Subagent of the coordinator on the Mac, 2026-11-21. Code in [`solver/lowd_sonic/
 folder `I997-mac-sonic/` of the raw-data repository. Status words as in AGENTS.md; every number here is *numerical
 evidence* unless marked.
 
-RESULTS_PLACEHOLDER
+## Verdicts
+
+| item | result | bar | verdict |
+|---|---|---|---|
+| Stage 0 (i), the Vienna code and data | their gauge and marching are hp's; their own D 3.046 fields show the valley (min f − x 1.640×10⁻⁴ at x 0.0146); no solution below 3.046 | — | the closing exists there (BAD as a route) |
+| Stage 0 (ii), RT (`solver/rt/`) | constant-ξ curves timelike by construction, no interior sonic point | — | passes the desk check; the code does not reach low D as it stands (WATCH) |
+| Stage 0 (iii), warped marching curves in hp's gauge | singular only where the curves touch a characteristic, which a warp avoids | — | passes, prototyped (OK) |
+| P1–P3 planted truth and their controls | warped equations = hp to 10⁻¹⁴; Δ = hp's to 0 (D 3.7) and 2.8×10⁻¹¹ (D 4); the `nowarp` controls fail (2×10⁻², −3.7×10⁻⁴, −3.3×10⁻⁵) | 10⁻¹³; 2×10⁻⁹ | OK |
+| R1, D 3.045 at M 320 | Δ 2.4464747275327916, 6.66×10⁻¹¹ from hp's M 384 | 10⁻⁸ | OK |
+| R2 at M 320, one LU for all D | chord stalls at 3.04375 near \|F\| 10⁻⁸ (Δ there 8.8×10⁻¹¹ from hp's M 384 but not converged) | converge at D ≤ 3.043 | BAD (not reached) |
+| R2 at M 128, a Jacobian at every D | converged at all ten D from 3.045 to 3.040, six of them below the closing, with the patch c < x crossed (min c − x down to −1.79×10⁻⁴) and min g_p ≥ 9.9×10⁻⁴ | converge at D ≤ 3.043 with min(c − x) < 0 | OK at M 128 only (WATCH: one M, and not the pre-registered protocol) |
+
+**The sonic closing is a wall of hp's marching curves, not of the family** (*numerical evidence*, at M 128): marched on
+warped curves, the same equations in the same gauge converge through it, Δ and its first two D-derivatives run smoothly
+across it (Δ″ from −109 to −121 between 3.0435 and 3.040), and the band's smallest c − x falls linearly through zero
+at D 3.043125, where hp's own M 320 and M 384 gaps close (3.043120 and 3.043122, LOW_D.md §17). Below it the solution
+has a closed patch where c < x near x 0.0143, crossed by the warped curves with g_p ≥ 9.9×10⁻⁴.
+
 
 ## Pass criteria, written before the runs (2026-11-21 18:55 UTC)
 
@@ -166,7 +183,45 @@ M 320 value. The band's smallest g_p is 1.48×10⁻³ and its smallest c − x 1
 harmonics differ from hp's at 10⁻⁸. The run of record splits every step outside the band twice (four times next to the
 band) before the Jacobian is formed.
 
-REAL_RESULT_PLACEHOLDER
+**Attempt 6, the run of record at M 320** (`real_attempt6_split_before.log`): R1 again (the same Δ to the last digit),
+and then at 3.04375, from hp's own state there, the chord steps with the 3.045 matrix take |F| from 3.0×10⁻⁸ to
+1.4×10⁻⁸ in one step and no further: 60 steps end at 8.0×10⁻⁷, mostly in hp's rows. Δ sits at 2.4364591133606,
+8.8×10⁻¹¹ from hp's M 384 value, but the point is not converged by the rule (|F| < 10⁻¹²). The matrix of one D does not
+serve the next: at D 3.7 → 3.69 (M 128) the same chord stalls at 2.6×10⁻⁷, and with the matrix formed again every
+second step it converges in six (raw `planted/rejac_test*.log`). At M 320 a new matrix needs hp's Jacobian at that D,
+which hp forms only with its own band, and below the closing hp's band meets x = c. hp's dense Jacobian, whose band
+rows can come from a two-step plan and be replaced, exists only for M ≤ 128. **R2 at M 320 is not reached.**
+
+**R2 at M 128, a Jacobian at every D** (raw `real128/`; `run128.sh`, then `run128_cont.sh`, table by `summary.py` in
+`m128_summary.txt`). The same start resampled to M 128 (its M 128 residual 7.5×10⁻³), the warp designed from it,
+`--jac band --rejac 1 --rejac_it 2` (hp's dense Jacobian with the band rows replaced, formed at the start of every D and
+again every second step). The first run stopped at 3.042: its predictor mixed in hp's M 320 states resampled to M 128,
+which are not M 128 solutions, and started 3.042 at |F| 0.2. The second continued from its own 3.0425 solution with its
+own states as history:
+
+| D | Δ (M 128) | Δ′ | Δ″ | min (c − x) on the band | min g_p | steps |
+|---|---|---|---|---|---|---|
+| 3.0450 | 2.4465094332380315 | | | 1.060×10⁻⁴ | 1.48×10⁻³ | 5 |
+| 3.0440 | 2.4385141556245529 | 7.9953 | | 4.959×10⁻⁵ | 1.39×10⁻³ | 5 |
+| 3.0435 | 2.4344757651442626 | 8.0768 | −108.7 | 2.130×10⁻⁵ | 1.34×10⁻³ | 5 |
+| 3.0430 | 2.4304096915090661 | 8.1321 | −110.7 | −7.065×10⁻⁶ | 1.29×10⁻³ | 9 |
+| 3.0425 | 2.4263155363021420 | 8.1883 | −112.3 | −3.549×10⁻⁵ | 1.24×10⁻³ | 8 |
+| 3.0420 | 2.4221928913861719 | 8.2453 | −114.0 | −6.400×10⁻⁵ | 1.19×10⁻³ | 4 |
+| 3.0415 | 2.4180413385065349 | 8.3031 | −115.6 | −9.257×10⁻⁵ | 1.14×10⁻³ | 4 |
+| 3.0410 | 2.4138604487521556 | 8.3618 | −117.3 | −1.212×10⁻⁴ | 1.09×10⁻³ | 4 |
+| 3.0405 | 2.4096497822742040 | 8.4213 | −119.1 | −1.500×10⁻⁴ | 1.04×10⁻³ | 4 |
+| 3.0400 | 2.4054088881805598 | 8.4818 | −120.9 | −1.788×10⁻⁴ | 9.88×10⁻⁴ | 4 |
+
+Each converged to |F| < 10⁻¹² with the last Δ step below 10⁻¹². Δ′ is the backward difference and Δ″ the three-point
+second difference; Δ″ from the double-double values is −111 at 3.0436 (DIRECTION_REVIEW.md §2.6), here −108.7 to −110.7
+around it. min (c − x) is the smallest over the band's step points on the warped curves; it crosses zero at D 3.043125
+(the line through 3.0435 and 3.043), and its slope, 0.0567 to 0.0576 per unit D, is that of hp's gaps above the closing
+(0.0555 between 3.0475 and 3.045, LOW_D.md §17). Below 3.043 c < x on a closed patch of the band, and min g_p, the
+warped curves' distance from the p characteristics, stays at 9.9×10⁻⁴ or more. M 128 is a coarse grid here: its Δ at
+3.045 is 3.47×10⁻⁵ above M 320's, so these Δ are not values of record, only the continuation is. Its gap, 1.0598×10⁻⁴
+at 3.045, is within 2×10⁻⁸ of M 320's.
+
+CONTROL_PLACEHOLDER
 
 ## 5. What it means for hp, and what is proposed
 
