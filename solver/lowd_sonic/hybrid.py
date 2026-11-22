@@ -19,7 +19,11 @@ Anal. 49 (2011) 1715), which removes such a few-mode divergence at M 128 but not
 I997-mac-sonic/real/real_attempt2_jac_hp_aa8.log). --jac wood (any M): hp's LU, with its band rows replaced by the warped
 band's own T (forward differences) through the Woodbury identity: J0 W = R for W = J0^-1 R (R the band rows' unit
 vectors; Solver.lu_solve_many), so J^-1 F = y - W (T W)^-1 (T y - F_band) with y = J0^-1 F, and hp's own band rows are
-never needed. At M 128 it gives the same steps as --jac band. --band_jac FILE.npy: the band's Jacobian T is loaded from
+never needed. At M 128 it gives the same steps as --jac band. --rejac 1 (with --jac band): the
+Jacobian is formed again at the start of every D after the first (hp's dense Jacobian, whose band rows come from a
+two-step plan and are replaced, so it exists below the closing too). --resample M2: the start and history states are
+resampled to M2 (hpkernel.driver.resample_z) before anything else. --rejac_it N (with --jac band): the
+Jacobian is formed again at every N-th iteration within a D (N = 1 is Newton's method). --band_jac FILE.npy: the band's Jacobian T is loaded from
 FILE when it exists (it depends only on the start state, phi and the plan), and saved there otherwise. --replan 1: at each D
 hp's Taylor plan outside the band is made again from that D's start, by Solver.plan with s_B put at x_A. It is off by
 default: Solver.plan is not local to a segment (the moved s_A changed the steps elsewhere, 1088 outside the band against
@@ -200,6 +204,29 @@ class Hybrid:
         return J
 
 
+def dense_band_solver(hy, zh, zl, chunk, log):
+    """hp's dense f64 Jacobian of hy's solver at z (M <= 128), its band rows replaced by the warped band's (forward
+    differences on the band's plan, made here from z), factored by LAPACK; returns solve(Fh, Fl) -> (-J^-1 F, 0)"""
+    import scipy.linalg as sla
+    tj = time.time()
+    J = np.asarray(hy.s.jacobian_f64(zh, zl))
+    log(f"  hp Jacobian (short band plan): {time.time() - tj:.0f}s, {J.nbytes / 1e9:.2f} GB")
+    hy.band_rows(zh + zl)
+    tb = time.time()
+    G = hy.band_jacobian(zh + zl, chunk=chunk)
+    log(f"  band Jacobian: {time.time() - tb:.0f}s ({hy.last})")
+    J = hy.assemble(J, G)
+    del G
+    if not np.all(np.isfinite(J)):
+        raise FloatingPointError("Jacobian not finite outside the band rows")
+    tl = time.time()
+    LU = sla.lu_factor(J.T, overwrite_a=True, check_finite=False)     # J.T is Fortran-ordered: factored in place
+    del J
+    dU = np.abs(np.diag(LU[0]))
+    log(f"  LU: {time.time() - tl:.0f}s, |u_kk| {dU.min():.3e}..{dU.max():.3e}")
+    return lambda Fh, Fl: (-sla.lu_solve(LU, Fh, trans=1, check_finite=False), np.zeros_like(Fh))
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("out")
@@ -226,6 +253,9 @@ def main():
     ap.add_argument("--split", type=int, default=1)
     ap.add_argument("--split_near", type=int, default=1)
     ap.add_argument("--band_jac", default="")
+    ap.add_argument("--rejac", type=int, default=0)
+    ap.add_argument("--rejac_it", type=int, default=0)
+    ap.add_argument("--resample", type=int, default=0)
     ap.add_argument("--time_cap", type=float, default=6 * 3600)
     ap.add_argument("--allow_unraw", action="store_true")
     a = ap.parse_args()
@@ -275,6 +305,15 @@ def main():
         s0.set_segs(segs)
         log(f"plan outside the band split {a.split} times ({a.split_near} next to the band): "
             f"{sum(len(q) - 1 for q in segs)} steps with the band's own")
+    if a.resample and a.resample != M:
+        from hpkernel.driver import resample_z
+        K = len(nodes)
+        zh, zl = resample_z(zh + zl, M, a.resample, K)
+        hist = [(Dh, resample_z(zv, M, a.resample, K)[0]) for Dh, zv in hist]
+        M = a.resample
+        s0 = make_solver(D0, M, nodes=nodes, kt=kt, kc=kc, ks=ks, threads=a.threads)
+        s0.set_segs(segs)
+        log(f"resampled the start and history states to M {M} (trigonometric interpolation, hpkernel.driver.resample_z)")
     F0 = np.asarray(s0.residual(zh, zl)[0])
     log(f"start D {D0} M {M} K {len(nodes)} L {s0.size}: hp |F| {np.abs(F0).max():.3e}, Delta {zh[-1] + zl[-1]:.16f}")
     N = 2 * M
@@ -348,24 +387,10 @@ def main():
             c = sla.lu_solve(LU_TW, T(y) - (Fh[hy0.rows] + Fl[hy0.rows]), check_finite=False)
             return -(y - W @ c), np.zeros_like(y)
     else:
-        import scipy.linalg as sla
         log(f"Jacobian at D {D0}: hp's f64 Jacobian, its band rows replaced by the warped band's (forward differences)")
         hy0 = Hybrid(D0, M, nodes, kt, kc, ks, segs, band, phi, a.threads, a.kappa, a.mutate)
         s0 = None
-        J = np.asarray(hy0.s.jacobian_f64(zh, zl))
-        log(f"  hp Jacobian (short band plan): {time.time() - tj:.0f}s, {J.nbytes / 1e9:.2f} GB")
-        hy0.band_rows(zh + zl)
-        tb = time.time()
-        G = hy0.band_jacobian(zh + zl, chunk=a.chunk)
-        log(f"  band Jacobian: {time.time() - tb:.0f}s ({hy0.last})")
-        J = hy0.assemble(J, G)
-        del G
-        tl = time.time()
-        LU = sla.lu_factor(J.T, overwrite_a=True, check_finite=False)     # J.T is Fortran-ordered: factored in place
-        del J
-        dU = np.abs(np.diag(LU[0]))
-        log(f"  LU: {time.time() - tl:.0f}s, |u_kk| {dU.min():.3e}..{dU.max():.3e}")
-        solve = lambda Fh, Fl: (-sla.lu_solve(LU, Fh, trans=1, check_finite=False), np.zeros_like(Fh))
+        solve = dense_band_solver(hy0, zh, zl, a.chunk, log)
     log(f"  Jacobian and LU: {time.time() - tj:.0f}s")
     expects = {}
     for e in [e for e in a.expect.split(",") if e]:
@@ -390,8 +415,15 @@ def main():
         hist_F, conv, it = [], False, 0
         err = None
         try:
+            if a.jac == "band" and a.rejac and D != D0:
+                log(f"  D {D}: Jacobian at the start of this D")
+                solve = dense_band_solver(hy, zh_, zl_, a.chunk, log)
             Zs, Gs = [], []
             for it in range(a.it_max):
+                if a.jac == "band" and a.rejac_it and it > 0 and it % a.rejac_it == 0:
+                    log(f"  D {D}: Jacobian again at iteration {it}")
+                    solve = dense_band_solver(hy, zh_, zl_, a.chunk, log)
+                    Zs, Gs = [], []
                 Fh, Fl = hy.residual(zh_, zl_)
                 nF = float(np.abs(Fh).max())
                 if not np.isfinite(nF):
@@ -420,7 +452,7 @@ def main():
                 if nF < a.tol and abs(dD) < a.tol:
                     conv = True
                     break
-                if a.aa_m == 0 and it >= 6 and nF > 0.7 * hist_F[-4][0] and nF > 1e3 * a.tol:
+                if a.aa_m == 0 and not a.rejac_it and it >= 6 and nF > 0.7 * hist_F[-4][0] and nF > 1e3 * a.tol:
                     log("  chord stalled")
                     break
         except (FloatingPointError, RuntimeError) as e:
