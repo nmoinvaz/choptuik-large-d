@@ -64,19 +64,41 @@ def matches(q, v):
     return (d >= 0) == (q >= 0) and abs(d) < ulp * Decimal("1.000000001") and abs(v) >= abs(q)
 
 
+IM = r"([+-]) (\d+\.?\d*(?:[eE][-+]?\d+)?)j"
+
+
+def printed(text):
+    """The output without the runner's own header lines ($ cd ..., the date, threads and load are not results)."""
+    return "\n".join(ln for ln in text.split("\n") if not ln.startswith(("$ cd ", "[stopped by pid", "[cannot start")))
+
+
 def output_numbers(text):
+    """Every number in the output; 'a - bj' gives a and -b."""
     out = []
-    for m in NUM.finditer(text.replace("−", "-")):
+    for m in re.finditer(IM + "|" + NUM.pattern, printed(text).replace("−", "-")):
+        s = m.group(1) + m.group(2) if m.group(1) else m.group(0)
         try:
-            out.append(Decimal(m.group(0)))
+            out.append(Decimal(s))
         except InvalidOperation:
             pass
     return out
 
 
-def check_quote(tokens, mode, text):
-    """-> (ok, [(token, found, best digits agreeing)])."""
+def nearest(q, pool):
+    """The printed value closest to q in relative terms, as text."""
+    c = [v for v in pool if v != 0 and q != 0 and (v < 0) == (q < 0) and v.adjusted() == q.adjusted()]
+    if not c:
+        return "-"
+    v = min(c, key=lambda v: abs((v - q) / q))
+    return format(v, ".6g")
+
+
+def check_quote(tokens, mode, text, xf=None):
+    """-> (ok, [(token, found, best digits agreeing, the printed value that agrees or is nearest)]).
+    xf maps each printed number to the quantity the README quotes (a sign, a percent)."""
     pool = output_numbers(text)
+    if xf:
+        pool = [xf(v) for v in pool]
     res = []
     ok = True
     for t in tokens:
@@ -84,15 +106,17 @@ def check_quote(tokens, mode, text):
         if mode == "eq":
             hit = any(matches(q, v) for v in pool)
             best = max([agree_digits(q, v) for v in pool] or [0])
+            show = next((format(v, ".6g") for v in pool if matches(q, v)), None) if hit else None
         elif mode == "le":  # a printed value below the quoted bound and within three decades of it
             hit = any(q / 1000 <= v <= q * Decimal("1.000000001") for v in pool if q > 0)
             best = 0
+            show = None
         elif mode == "info":
-            hit, best = True, 0
+            hit, best, show = True, 0, None
         else:
             raise ValueError(mode)
         ok = ok and hit
-        res.append((t, hit, best))
+        res.append((t, hit, best, show or nearest(q, pool)))
     return ok, res
 
 
@@ -107,8 +131,8 @@ class Q:
     """Quoted numbers of one row. rx: regex over the README (re.S) whose groups are the tokens.
     row: (after-regex, first-cell-regex, [column indices]): the table row after that anchor."""
 
-    def __init__(self, label, rx=None, row=None, mode="eq", tok=None):
-        self.label, self.rx, self.row, self.mode, self.tok = label, rx, row, mode, tok
+    def __init__(self, label, rx=None, row=None, mode="eq", tok=None, xf=None):
+        self.label, self.rx, self.row, self.mode, self.tok, self.xf = label, rx, row, mode, tok, xf
 
     def tokens(self, text):
         if self.rx:
@@ -137,11 +161,14 @@ class Q:
 
 class Row:
     def __init__(self, id, span, argv, cwd=".", files=(), q=(), est=1, note="", skip=None, pre=None, regen=(),
-                 post=None, need=None, alias=(), expect_rc=0):
+                 post=None, need=None, alias=(), expect_rc=0, fix=None, before=None):
         self.id, self.span, self.argv, self.cwd = id, span, argv, cwd
         self.files, self.q, self.est, self.note = list(files), list(q), est, note
         self.skip, self.pre, self.regen, self.post, self.expect_rc = skip, pre, list(regen), post, expect_rc
         self.need, self.alias = need, list(alias)  # need: argv of the import-only check run with an existing build
+        # fix: dict(argv, cwd, note, patch=(file, old, new)): the same command with what it lacks, rerun when the quoted one fails
+        # before: argv run first, in the same tree and directory (--verify checks the file the rebuild just wrote)
+        self.fix, self.before = fix, before
 
 
 ROWS = []
@@ -217,11 +244,14 @@ row("plot_delta", "cd solver/data && python3 ../plot_delta.py --raw ../../../cho
     py("../plot_delta.py", "--raw", "../../../choptuik-large-d-raw"), cwd="solver/data", est=2,
     files=["solver/delta.svg"], regen=["solver/delta.svg"])
 row("formula_refit", "python3 ../formula_all.py --refit", py("../formula_all.py", "--refit"), cwd="solver/data", est=2,
-    note="README: the coefficients move by up to 0.7% and the values by 1e-9 (fitted range), 1e-7 (D = 80) in another environment")
+    note="README: the coefficients move by up to 0.7% and the values by 1e-9 (fitted range), 1e-7 (D = 80) in another environment",
+    fix=dict(argv=py("../formula_all.py", "--refit"), cwd="solver/data", patch=("solver/formula_all.py", '    c, rec = coefficients()\n    print("stored', '    c, rec = coefficients()\n    pd, qd, pg, qg = c["a"], c["b"], c["e"], c["f"]\n    print("stored'), note="main() uses pd, qd, pg, qg that only refit_distance() defines: one line added to a scratch copy, so that the table and the values print"))
 row("formula_all", "solver/formula_all.py", py("../formula_all.py"), cwd="solver/data", est=2, files=["solver/data/formula_coefficients.json"],
     q=[Q("D = 4", rx=r"formula gives Δ = ([\d.]+) and γ = ([\d.]+),")],
-    note="README gives the path from the root; the script reads data/ and runs from solver/data")
-row("rational_fit", "solver/rational_fit.py", py("solver/rational_fit.py"), est=2)
+    note="README gives the path from the root; the script reads data/ and runs from solver/data",
+    fix=dict(argv=py("../formula_all.py"), cwd="solver/data", patch=("solver/formula_all.py", '    c, rec = coefficients()\n    print("stored', '    c, rec = coefficients()\n    pd, qd, pg, qg = c["a"], c["b"], c["e"], c["f"]\n    print("stored'), note="main() uses pd, qd, pg, qg that only refit_distance() defines: one line added to a scratch copy, so that the table and the values print"))
+row("rational_fit", "solver/rational_fit.py", py("solver/rational_fit.py"), est=2,
+    fix=dict(argv=py("../rational_fit.py"), cwd="solver/data", note="the script opens scan_down_kc47.jsonl from the working directory, which is solver/data"))
 row("formula_cut_fit", "hp/formula_cut_fit.py", py("hp/formula_cut_fit.py"), est=3, files=["hp/data/formula_cut.json"],
     q=[Q("limit", rx=r"give Δ∞ = ([\d.]+)\. It is a", )])
 row("formula_cut", "hp/formula_cut.py", py("hp/formula_cut.py"), est=2)
@@ -233,13 +263,15 @@ row("export_delta_all", "cd hp && python3 export_delta_all.py ../../choptuik-lar
     py("export_delta_all.py", "../../choptuik-large-d-raw"), cwd="hp", est=3, files=["hp/data/delta_all.csv"],
     regen=["hp/data/delta_all.csv"], alias=["hp/export_delta_all.py"])
 row("export_delta_all_verify", "--verify", py("export_delta_all.py", "../../choptuik-large-d-raw", "--verify"), cwd="hp", est=3,
-    note="README: --verify checks every row against its source")
+    note="README: --verify checks every row against its source",
+    before=py("export_delta_all.py", "../../choptuik-large-d-raw"))
 row("plot_lowD_values", "hp/plot_lowD_values.py", py("hp/plot_lowD_values.py"), est=2, files=["hp/lowD_values.svg"], regen=["hp/lowD_values.svg"])
 row("lowD_formula", "hp/lowD_formula.py", py("hp/lowD_formula.py"), est=2,
     q=[Q("delta poly", rx=r"\\Delta \\approx ([\d.]+) \+ ([\d.]+)\\,s \+ ([\d.]+)\\,s\^2 - ([\d.]+)\\,s\^3 \+ ([\d.]+)\\,s\^4 - ([\d.]+)\\,s\^5 \+ ([\d.]+)\\,s\^6 - ([\d.]+)\\,s\^7 \+ ([\d.]+)\\,s\^8",
          tok=lambda g: [g[0], g[1], g[2], "-" + g[3], g[4], "-" + g[5], g[6], "-" + g[7], g[8]]),
        Q("gamma poly", rx=r"\\gamma \\approx ([\d.]+) \+ ([\d.]+)\\,s \+ ([\d.]+)\\,s\^2 - ([\d.]+)\\,s\^3 \+ ([\d.]+)\\,s\^4 - ([\d.]+)\\,s\^5 \+ ([\d.]+)\\,s\^6",
-         tok=lambda g: [g[0], g[1], g[2], "-" + g[3], g[4], "-" + g[5], g[6]])])
+         tok=lambda g: [g[0], g[1], g[2], "-" + g[3], g[4], "-" + g[5], g[6]])],
+    fix=dict(argv=py("lowD_formula.py", "{ECC}"), cwd="hp", needs="ecc", note="the usage line in the script's docstring; the clone of their repository is read as data"))
 row("plot_lowD_limits", "hp/plot_lowD_limits.py", py("hp/plot_lowD_limits.py"), est=2, files=["hp/lowD_limits.svg", "hp/data/published_lowD_limits.json"], regen=["hp/lowD_limits.svg"])
 row("plot_lowD_logslope", "hp/plot_lowD_logslope.py", py("hp/plot_lowD_logslope.py"), est=2, files=["hp/lowD_logslope.svg"], regen=["hp/lowD_logslope.svg"])
 row("lowD_logslope", "hp/lowD_logslope.py", py("hp/lowD_logslope.py"), est=2,
@@ -252,27 +284,33 @@ row("gamma_compare", "cd hp && python3 gamma_compare.py data/gamma_dd.jsonl data
     q=[Q("lambda-2 by powers", rx=r"On D ≥ 30 it is\s+([\d.]+×10⁻⁴), ([\d.]+×10⁻⁵), ([\d.]+×10⁻⁵), ([\d.]+×10⁻⁶) and \(([\d.]+) ± ([\d.]+)\)×10⁻⁶",
          tok=lambda g: g[:4] + [g[4] + "×10⁻⁶", g[5] + "×10⁻⁶"]),
        Q("lambda series", rx=r"λ = 2 \+ ([\d.]+)/n − ([\d.]+)/n² \+ … \(γ = 1/2 −\s*([\d.]+)/n")])
-row("plot_extrapolation", "solver/plot_extrapolation.py", py("solver/plot_extrapolation.py"), est=2, files=["solver/extrapolation.svg"], regen=["solver/extrapolation.svg"])
+row("plot_extrapolation", "solver/plot_extrapolation.py", py("solver/plot_extrapolation.py"), est=2, files=["solver/extrapolation.svg"], regen=["solver/extrapolation.svg"],
+    fix=dict(argv=py("../plot_extrapolation.py"), cwd="solver/data", note="the script opens scan_down_kc47.jsonl from the working directory, which is solver/data"))
 row("values_table", "cd hp && python3 values_table.py", py("values_table.py"), cwd="hp", est=2,
     q=[trow(r"### Values", r"4", [1, 2], "D = 4"), trow(r"### Values", r"70", [2], "gamma(70)"),
        trow(r"### Values", r"100", [2], "gamma(100)"), trow(r"### Values", r"1000", [2], "gamma(1000)")])
 row("track_c", "hp/track_c.py", py("hp/track_c.py"), est=3,
     q=[Q("series", rx=r"([\d.]+)\s+± ([\d.]+)×10⁻¹¹ at D = 250, ([\d.]+) ± ([\d.]+)×10⁻¹⁰ at 300 and ([\d.]+) ± ([\d.]+)×10⁻¹⁰ at 400",
          tok=lambda g: [g[0], g[1] + "×10⁻¹¹", g[2], g[3] + "×10⁻¹⁰", g[4], g[5] + "×10⁻¹⁰"]),
-       Q("limit", rx=r"Its limit,\s+([\d.]+) ± ([\d.]+)×10⁻⁹", tok=lambda g: [g[0], g[1] + "×10⁻⁹"])])
-row("track_c_fold", "hp/track_c_fold.py", py("hp/track_c_fold.py"), est=3, files=["hp/data/fold_259.csv"])
+       Q("limit", rx=r"Its limit,\s+([\d.]+) ± ([\d.]+)×10⁻⁹", tok=lambda g: [g[0], g[1] + "×10⁻⁹"])],
+    fix=dict(argv=py("track_c.py", "real"), cwd="hp", note="the usage line in the script's docstring"))
+row("track_c_fold", "hp/track_c_fold.py", py("hp/track_c_fold.py"), est=3, files=["hp/data/fold_259.csv"],
+    fix=dict(argv=py("track_c_fold.py", "run"), cwd="hp", note="the usage line in the script's docstring"))
 row("plot_physics", "solver/plot_physics.py", py("solver/plot_physics.py"), est=1, files=["solver/physics.svg"], regen=["solver/physics.svg"])
 row("modecount_test", "hp/modecount_test.py", py("hp/modecount_test.py"), est=3)
 row("dd_D5", "hp/compare/dd_D5.py", py("hp/compare/dd_D5.py"), est=3, files=["hp/compare/dd_D5.log"],
     q=[Q("D = 5", rx=r"\(([\d.]+),\s+([\d.]+)\), which agree with each other", tok=lambda g: g)])
 row("data_all", "solver/data_all.py", py("solver/data_all.py"), est=2,
-    q=[Q("D = 5 f64", rx=r"\(([\d.]+) ± 7×10⁻¹¹, the size of that extrapolation step")])
+    q=[Q("D = 5 f64", rx=r"\(([\d.]+) ± 7×10⁻¹¹, the size of that extrapolation step")],
+    fix=dict(argv=py("../data_all.py"), cwd="solver/data", note="the script opens scan_down_kc47.jsonl from the working directory, which is solver/data"))
 row("cmp_ecker", "hp/compare/cmp_ecker.py", py("hp/compare/cmp_ecker.py"), est=1,
     note="needs a clone of github.com/EckerChristian/CriticalSpacetimeCrystal as data (not run as code)",
-    q=[Q("moves", rx=r"moving by −([\d.]+×10⁻⁴) between 256 and 512 modes")])
+    q=[Q("moves", rx=r"moving by −([\d.]+×10⁻⁴) between 256 and 512 modes")],
+    fix=dict(argv=py("cmp_ecker.py", "{ECC}"), cwd="hp/compare", needs="ecc", note="the usage line in the script's docstring; the clone of their repository is read as data"))
 row("identity_check", "I200-mac/identity_check.py", py("../choptuik-large-d-raw/I200-mac/identity_check.py"), est=2,
     files=["../choptuik-large-d-raw/I200-mac/identity_check.py"])
-row("plot_solver_limits", "hp/plot_solver_limits.py", py("hp/plot_solver_limits.py"), est=2, files=["hp/solver_limits.svg", "hp/data/delta_all.csv"], regen=["hp/solver_limits.svg"])
+row("plot_solver_limits", "hp/plot_solver_limits.py", py("hp/plot_solver_limits.py"), est=2, files=["hp/solver_limits.svg", "hp/data/delta_all.csv"], regen=["hp/solver_limits.svg"],
+    fix=dict(argv=py("plot_solver_limits.py", "../../choptuik-large-d-raw"), cwd="hp", note="the usage line in the script's docstring"))
 row("rv2_noise", "hp/review/rv2_noise.py", py("hp/review/rv2_noise.py"), est=2,
     q=[Q("rms", rx=r"\| ([\d.]+×10⁻¹⁸) rms from the cloud points' interpolant")])
 
@@ -293,15 +331,25 @@ row("dd_fits_1e9", "hp/dd_fits_mp.py 10 1e9 --clean --dmax=60.1", py("hp/dd_fits
     q=[Q("limits", rx=r"Their limits run from ([\d.]+) to ([\d.]+) on 10 ≤ D ≤\s+60\.1")])
 row("dinf_budget", "hp/dinf_budget.py", py("hp/dinf_budget.py"), est=3,
     q=[Q("range", rx=r"ranges over ([\d.]+)–([\d.]+) \(`hp/dinf_budget\.py`\), centred on ([\d.]+)\.")])
-row("planted_dinf", "hp/planted_dinf.py", py("hp/planted_dinf.py"), est=3, files=["hp/data/planted_dinf.log"])
+def planted_dinf_claims(out):
+    """README: the known limit inside the reported range in all six, and a pre-set criterion (the junk) failed in every case."""
+    out = out.split("$ cd ")[-1]  # the last run: a failing first run from the root is followed by one from hp/
+    n_in, n_junk = out.count("inside range True"), out.count("junk caught False")
+    return n_in == 6 and n_junk == 6, f"inside range True in {n_in} of 6, junk caught False in {n_junk} of 6 (README: all six; every case)"
+
+
+row("planted_dinf", "hp/planted_dinf.py", py("hp/planted_dinf.py"), est=3, files=["hp/data/planted_dinf.log"], expect_rc=1,
+    post=planted_dinf_claims, note="README: one of the pre-set criteria failed in every case, so exit 1 is expected",
+    q=[Q("centre", rx=r"centre sits\s+([\d.]+)–([\d.]+)×10⁻⁸ above it", tok=lambda g: [g[0] + "×10⁻⁸", g[1] + "×10⁻⁸"])])
 row("rv2_planted", "hp/review/rv2_planted.py", py("hp/review/rv2_planted.py"), est=3,
-    q=[Q("offset", rx=r"finds the same offset, ([\d.]+)×10⁻⁸", )])
+    q=[Q("offset", rx=r"finds the same offset, ([\d.]+)×10⁻⁸", tok=lambda g: [g[0] + "×10⁻⁸"])])
 
 # --- large D: the checks of the propositions
 row("largeD_scaling", "hp/largeD_scaling.py", py("hp/largeD_scaling.py"), est=2)
 row("largeD_F", "hp/largeD_F.py", py("hp/largeD_F.py"), est=2,
     q=[trow(r"\| D \| first harmonic of F", str(d), [1, 2, 3, 4, 5], f"D = {d}") for d in (20, 30, 40, 50, 60)])
-row("plot_echo", "hp/plot_echo.py", py("hp/plot_echo.py"), est=2, files=["hp/data/echo_shapes.csv", "hp/echo_shapes.svg"], regen=["hp/echo_shapes.svg", "hp/data/echo_shapes.csv"])
+row("plot_echo", "hp/plot_echo.py", py("hp/plot_echo.py"), est=2, files=["hp/data/echo_shapes.csv", "hp/echo_shapes.svg"], regen=["hp/echo_shapes.svg", "hp/data/echo_shapes.csv"],
+    fix=dict(argv=py("plot_echo.py", "../../choptuik-large-d-raw"), cwd="hp", note="the usage line in the script's docstring"))
 row("states_module", "hp/states.py", py("hp/states.py"), skip="a module the profile scripts import (where the states are read from), not a command; the README quotes no invocation",
     files=["hp/data/states"])
 row("plot_wave_family", "hp/plot_wave_family.py", py("hp/plot_wave_family.py"), est=2, files=["hp/wave_family.svg"], regen=["hp/wave_family.svg"])
@@ -326,26 +374,36 @@ row("largeD_dingle_K", "solver/largeD_dingle_K.py", py("solver/largeD_dingle_K.p
 row("largeD_linear_poles", "solver/largeD_linear_poles.py", py("solver/largeD_linear_poles.py"), est=2)
 row("largeD_linear_poisson", "solver/largeD_linear_poisson.py", py("solver/largeD_linear_poisson.py"), est=2)
 row("euler_late", "solver/largeD_prop4/", py("solver/largeD_prop4/euler_late.py"), est=2,
-    alias=["euler_late.py"], q=[Q("deviation", rx=r"extrapolates to \(−([\d.]+) − ([\d.]+)i\)×10⁻³ over k = 100–122", tok=lambda g: ["-" + g[0] + "×10⁻³", "-" + g[1] + "×10⁻³"])])
-row("kcheck", "kcheck.py", py("solver/largeD_prop4/kcheck.py"), est=2, q=[Q("1 + c/k", rx=r"equals K to 1 \+ ([\d.]+)/k")])
+    alias=["euler_late.py"])
+def kcheck_c(out):
+    """1 + c/k: c = (printed ratio - 1) k at k = 1e6, at x = 0.5, 0.8, 0.9."""
+    cs = [(Decimal(m.group(1)) - 1) * 10**6 for m in re.finditer(r"at k = 1e6: \((1\.\d+) [-+]", out)]
+    ok = len(cs) == 3 and all(matches(Decimal("3.65"), c) for c in cs)
+    return ok, "1 + c/k: c = " + ", ".join(format(c, ".4g") for c in cs) + " (README 3.65)"
+
+
+row("kcheck", "kcheck.py", py("solver/largeD_prop4/kcheck.py"), est=2, post=kcheck_c,
+    q=[Q("deviation c0", rx=r"extrapolates to \(−([\d.]+) − ([\d.]+)i\)×10⁻³ over k = 100–122", tok=lambda g: ["-" + g[0] + "×10⁻³", "-" + g[1] + "×10⁻³"])])
 row("switch2", "switch2.py", py("solver/largeD_prop4/switch2.py"), est=2, q=[Q("singulant", rx=r"singulant is (−[\d.]+)i → −iπ", tok=lambda g: [g[0]])])
 row("largeD_linear_truncation", "solver/largeD_linear_truncation.py", py("solver/largeD_linear_truncation.py"), est=2,
     q=[Q("x = 0.9", rx=r"the smallest difference is (4×10⁻⁴⁰) against \$`\\lvert C\\rvert\\times\\text\{branch\} = (\d+)\\times10\^\{(-\d+)\}`\$, and at x = 0\.8,\s+n = 40 it is (10⁻²³) against (2×10⁻⁷)",
          tok=lambda g: [g[0], g[1] + "e" + g[2], g[3], g[4]])])
 row("largeD_stokes_C", "solver/largeD_stokes_C.py", py("solver/largeD_stokes_C.py"), est=2,
-    q=[Q("ratios", rx=r"ratio of the two sides is ([\d.]+) at n = 10⁵ for μ = 1 \(([\d.]+) for μ = 3\)"),
-       Q("n(ratio-1)", rx=r"\\to ([\d.]+) - ([\d.]+)i`\$, of the size of \$`\\lvert s\^2\\rvert = ([\d.]+)`", tok=lambda g: [g[0], "-" + g[1], g[2]])])
+    q=[Q("ratios", rx=r"ratio of the two sides is ([\d.]+) at n = 10⁵ for μ = 1 \(([\d.]+) for μ = 3\)", xf=lambda v: -v),
+       Q("n(ratio-1)", rx=r"\\to ([\d.]+) - ([\d.]+)i`\$, of the size of", tok=lambda g: [g[0], "-" + g[1]], xf=lambda v: -v),
+       Q("|s^2| (derived, not printed)", rx=r"\\lvert s\^2\\rvert = ([\d.]+)`", mode="info")])
 row("largeD_inner", "solver/largeD_inner.py", py("solver/largeD_inner.py"), est=2)
 row("hier_schur", "hier.py --schur", py("solver/inner_stokes/hier.py", "--schur"), est=3,
     note="the README quotes the flag, not an M")
 row("largeD_Fratios", "hp/largeD_Fratios.py", py("hp/largeD_Fratios.py"), est=2,
     q=[Q("ratios", rx=r"F_3/F_1\\rvert \\to ([\d.]+)`\$–([\d.]+) and \$`\\lvert F_5/F_1\\rvert \\to ([\d.]+)`\$–([\d.]+) \(degree 1: ([\d.]+),\s+([\d.]+)\)", tok=lambda g: g)])
-row("amp_series", "amp_series.py", py("solver/inner_amp/amp_series.py"), est=2, q=[Q("agreement", rx=r"to (2)–(4)×10⁻¹⁶ at orders 0–3", tok=lambda g: [g[0] + "×10⁻¹⁶", g[1] + "×10⁻¹⁶"], mode="le")])
+row("amp_series", "amp_series.py", py("solver/inner_amp/amp_series.py"), est=2, q=[Q("agreement", rx=r"to (2)–(4)×10⁻¹⁶ at orders 0–3", tok=lambda g: [g[0] + "×10⁻¹⁶", g[1] + "×10⁻¹⁶"])])
 row("amp_flint_par", "solver/inner_amp/amp_flint_par.py --fit phys", py("solver/inner_amp/amp_flint_par.py", "--fit", "phys"), est=1,
     files=["solver/inner_amp/data/sigF_w1.0000_K15_J750_phys.json", "solver/inner_amp/data/sigF_w1.0000_K15_J1000_phys.json"],
     note="python-flint at 640 bits; AGENTS.md: hours per omega, with positional omega, K, J, bits")
 row("zero_selection", "zero_selection.py", py("solver/inner_amp/zero_selection.py"), est=2)
-row("arg_crossing", "arg_crossing.py", py("solver/inner_amp/arg_crossing.py"), est=2)
+row("arg_crossing", "arg_crossing.py", py("solver/inner_amp/arg_crossing.py"), est=2,
+    fix=dict(argv=py("arg_crossing.py", "scan13b"), cwd="solver/inner_amp", note="the usage line in the script's docstring"))
 row("amp_flint", "amp_flint.py", py("solver/inner_amp/amp_flint.py"), est=3, skip="named as the legacy basis; no invocation or number quoted, and it is the serial reference (AGENTS.md: hours)")
 row("harm_pred", "harm_pred.py", py("solver/inner_amp/harm_pred.py"), est=2,
     q=[Q("tracks", rx=r"\(([\d.]+), ([\d.]+), ([\d.]+), ([\d.]+), ([\d.]+) against ([\d.]+), ([\d.]+), ([\d.]+), ([\d.]+), ([\d.]+); `harm_pred\.py`")])
@@ -354,10 +412,18 @@ row("plot_spectrum", "solver/plot_spectrum.py", py("solver/plot_spectrum.py"), e
 row("expand_pert", "solver/inner_pert/expand_pert.py", py("solver/inner_pert/expand_pert.py"), est=2, alias=["expand_pert.py"])
 row("heat_form", "solver/inner_pert/heat_form.py", py("solver/inner_pert/heat_form.py"), est=1)
 row("rw_map", "solver/inner_pert/rw_map.py", py("solver/inner_pert/rw_map.py"), est=1)
-row("pert_check", "pert_check.py", py("solver/inner_pert/pert_check.py"), est=2, q=[Q("residual", rx=r"\(`pert_check\.py`, to (6×10⁻³⁰)\)", mode="le")])
-row("pert_check2", "pert_check2.py", py("solver/inner_pert/pert_check2.py"), est=2, q=[Q("residual", rx=r"\(`pert_check2\.py`, with gravity, to (10⁻¹⁷⁷)\)", mode="le")])
-row("pert_check3", "solver/inner_pert/pert_check3.py 45 11", py("solver/inner_pert/pert_check3.py", "45", "11"), est=2,
-    q=[Q("relative", rx=r"coefficients to (10⁻¹⁸⁰) relative", mode="le"), Q("misses", rx=r"misses by ([\d.]+)% already at\s+the third order")])
+row("pert_check", "pert_check.py", py("solver/inner_pert/pert_check.py"), est=2, q=[Q("residual", rx=r"\(`pert_check\.py`, to (6×10⁻³⁰)\)")])
+row("pert_check2", "pert_check2.py", py("solver/inner_pert/pert_check2.py"), est=2, q=[Q("residual", rx=r"\(`pert_check2\.py`, with gravity, to (10⁻¹⁷⁷)\)")])
+def pert3_worst(out):
+    """README: every harmonic to 10^-180 relative, through j = 11: the worst printed deviation, and how many of the 11 round to it."""
+    dev = [Decimal(m.group(1)) for m in re.finditer(r"max relative deviation (\S+)", out)]
+    worst = max(dev)
+    n = sum(1 for d in dev if matches(Decimal("1E-180"), d))
+    return matches(Decimal("1E-180"), worst), f"worst deviation {format(worst, '.2g')} against 10^-180 (j = 1: {format(dev[0], '.2g')}; {n} of {len(dev)} j round to 10^-180)"
+
+
+row("pert_check3", "solver/inner_pert/pert_check3.py 45 11", py("solver/inner_pert/pert_check3.py", "45", "11"), est=2, post=pert3_worst,
+    q=[Q("misses", rx=r"misses by ([\d.]+)% already at\s+the third order", xf=lambda v: v * 100)])
 row("plot_first_order", "solver/plot_first_order.py", py("solver/plot_first_order.py"), est=2, files=["solver/first_order.svg"], regen=["solver/first_order.svg"])
 row("eeg20", "solver/eeg20/", py("solver/eeg20/eeg20.py"), est=2,
     q=[Q("ratio", rx=r"\(ω²F''\+3ω F'\)/\(3ω F'\) is ([\d.]+)–([\d.]+) at D = 12–60", tok=lambda g: g)])
@@ -372,7 +438,8 @@ row("plot_matter", "solver/plot_matter.py", py("solver/plot_matter.py"), est=2, 
 row("singularity_type", "hp/singularity_type.py planted", py("hp/singularity_type.py", "planted"), est=2,
     q=[Q("sqrt exponent", rx=r"(returns an isolated planted square root)", tok=lambda g: ["0.5"])])
 row("horizon_toy", "hp/horizon_toy.py", py("hp/horizon_toy.py"), est=2)
-row("plot_dropoffs", "hp/plot_dropoffs.py", py("hp/plot_dropoffs.py"), est=2, files=["hp/large_d_dropoffs.svg"], regen=["hp/large_d_dropoffs.svg"])
+row("plot_dropoffs", "hp/plot_dropoffs.py", py("hp/plot_dropoffs.py"), est=2, files=["hp/large_d_dropoffs.svg"], regen=["hp/large_d_dropoffs.svg"],
+    fix=dict(argv=py("plot_dropoffs.py", "../../choptuik-large-d-raw/T76"), cwd="hp", note="the usage line in the script's docstring"))
 row("plot_gamma", "solver/plot_gamma.py", py("solver/plot_gamma.py"), est=2, files=["solver/gamma.svg"], regen=["solver/gamma.svg"])
 row("plot_modecount", "hp/plot_modecount.py", py("hp/plot_modecount.py"), est=2, files=["hp/modecount.svg"], regen=["hp/modecount.svg"])
 row("fast_eigenvalues", "solver/proof/fast_eigenvalues.py", py("solver/proof/fast_eigenvalues.py"), est=1)
@@ -508,6 +575,73 @@ def git_changes(ctx):
     return [ln for ln in out.split("\n") if ln.strip() and ".i349_run_tree" not in ln]
 
 
+def subst(ctx, argv):
+    return [x.replace("{ECC}", str(ctx.tree.parent / "ecc")).replace("{RAW}", str(ctx.tree.parent / "choptuik-large-d-raw")) for x in argv]
+
+
+def score_output(r, readme, out):
+    """The quoted numbers and the row's own check against what was printed -> (reasons, quotes, post message)."""
+    reasons, q_res, post = [], [], None
+    for q in r.q:
+        toks = q.tokens(readme)
+        if toks is None:
+            q_res.append((q.label, None, [], False))
+            reasons.append(f"quote locator lost: {q.label}")
+            continue
+        ok, det = check_quote(toks, q.mode, out, q.xf)
+        q_res.append((q.label, q.mode, det, ok))
+        if not ok:
+            bad = [f"{t} (nearest printed {s}, {b} digits agree)" for t, h, b, s in det if not h]
+            reasons.append(f"{q.label}: not printed: " + "; ".join(bad))
+    if r.post:
+        ok, post = r.post(out)
+        if not ok:
+            reasons.append(post)
+    return reasons, q_res, post
+
+
+def judge(r, res, readme, out):
+    """rc, files and output -> verdict and reason of one run of the quoted command."""
+    reasons = []
+    if res["rc"] != r.expect_rc:
+        reasons.append(f"exit {res['rc']}")
+    miss = [f for f, ok in res.get("files", []) if not ok]
+    if miss:
+        reasons.append("missing: " + ", ".join(miss))
+    rs, res["quotes"], post = score_output(r, readme, out)
+    reasons += rs
+    if post:
+        res["post"] = post
+    res["tail"] = printed(out).strip().split("\n")[-3:]
+    res["verdict"] = "FAIL" if reasons else "OK"
+    res["reason"] = "; ".join(reasons)
+    return res
+
+
+def run_fix(ctx, r, readme, log):
+    """The quoted command failed: run it again with what it lacks (arguments, directory) and score the same quotes."""
+    f = r.fix
+    if f.get("needs") and not (ctx.tree.parent / f["needs"]).exists():
+        return dict(note=f["note"], argv=f["argv"], cwd=f.get("cwd", "."), verdict="NOT RUN", reason=f"needs {f['needs']} beside the checkout")
+    tree_clean(ctx)
+    if f.get("patch"):
+        fn, old, new = f["patch"]
+        t = (ctx.tree / fn).read_text()
+        assert t.count(old) == 1, f"patch target not unique in {fn}"
+        (ctx.tree / fn).write_text(t.replace(old, new))
+    log2 = log.with_name(log.stem + ".fix.log")
+    log2.write_bytes(b"")
+    m = run_command(ctx, subst(ctx, f["argv"]), ctx.tree / f.get("cwd", "."), log2, ctx.limit)
+    out = log2.read_text(errors="replace")
+    res = dict(argv=f["argv"], cwd=f.get("cwd", "."), note=f["note"], patch=bool(f.get("patch")), **m)
+    res["files"] = [(x, (ctx.tree / x).exists()) for x in r.files]
+    res["written"] = git_changes(ctx)[:12]
+    tree_clean(ctx)
+    if m["timeout"]:
+        return {**res, "verdict": "NOT RUN", "reason": f"not finished in {ctx.limit // 60} min (stopped by pid {m['pid']})"}
+    return judge(r, res, readme, out)
+
+
 def execute(ctx, r, readme):
     """One row -> a result dict."""
     res = dict(id=r.id, span=r.span, est=r.est, explicit=bool(re.search(r"\s", r.span)))
@@ -535,7 +669,12 @@ def execute(ctx, r, readme):
     tree_clean(ctx)
     adapted = None
     wd = ctx.tree / cwd
+    m0 = None
+    if r.before and not ctx.pass2:
+        m0 = run_command(ctx, subst(ctx, r.before), wd, log, ctx.limit)
     m = run_command(ctx, argv, wd, log, ctx.limit)
+    if m0:
+        m = {**m, "wall": m["wall"] + m0["wall"], "cpu": m["cpu"] + m0["cpu"], "rss": max(m["rss"], m0["rss"])}
     out = log.read_text(errors="replace")
     # a path-written command that fails once from the root runs from the script's own directory
     if (m["rc"] != r.expect_rc and not m["timeout"] and cwd == "." and len(argv) > 1 and "/" in argv[1]
@@ -557,40 +696,44 @@ def execute(ctx, r, readme):
     res["written"] = [c for c in changes][:12]
     res["files"] = [(f, (ctx.tree / f).exists()) for f in r.files]
     tree_clean(ctx)
-    reasons = []
     if m["timeout"]:
         return {**res, "verdict": "NOT RUN", "reason": f"not finished in {ctx.limit // 60} min (stopped by pid {m['pid']}); {r.note}".strip("; "),
                 "tail": out.strip().split("\n")[-3:]}
     if not ctx.pass2 and re.search(r"No module named '?(hpkernel|rustkernel)", out) and m["rc"] != 0:
         return {**res, "verdict": "NOT RUN", "reason": "needs a build (hpkernel or rustkernel): second pass", "deferred": True,
                 "tail": out.strip().split("\n")[-3:]}
-    if m["rc"] != r.expect_rc:
-        reasons.append(f"exit {m['rc']}")
-    miss = [f for f, ok in res["files"] if not ok]
-    if miss:
-        reasons.append("missing: " + ", ".join(miss))
-    q_res = []
-    for q in r.q:
-        toks = q.tokens(readme)
-        if toks is None:
-            q_res.append((q.label, None, [], False))
-            reasons.append(f"quote locator lost: {q.label}")
-            continue
-        ok, det = check_quote(toks, q.mode, out)
-        q_res.append((q.label, q.mode, det, ok))
-        if not ok:
-            bad = [f"{t} ({b} digits agree)" for t, h, b in det if not h]
-            reasons.append(f"{q.label}: not printed: " + "; ".join(bad))
-    res["quotes"] = q_res
-    if r.post:
-        ok, msg = r.post(out)
-        res["post"] = msg
-        if not ok:
-            reasons.append(msg)
-    res["tail"] = out.strip().split("\n")[-3:]
-    res["verdict"] = "FAIL" if reasons else "OK"
-    res["reason"] = "; ".join(reasons)
+    judge(r, res, readme, out)
+    if res["verdict"] == "FAIL" and r.fix and not ctx.pass2:
+        res["fix"] = run_fix(ctx, r, readme, log)
     return res
+
+
+def rescore(ctx, readme, d):
+    """Score the saved logs again with the current rows and number rules (a changed checker, not a rerun)."""
+    resf = d / "results.jsonl"
+    first = d / "results.first.jsonl"
+    if not first.exists():
+        shutil.copy(resf, first)
+    byid = {r.id: r for r in ROWS}
+    out_rows, changed = [], []
+    for l in first.read_text().split("\n"):
+        if not l.strip():
+            continue
+        x = json.loads(l)
+        r = byid.get(x["id"])
+        log = d / "logs" / f"{x['id']}.log"
+        if r is None or x["verdict"] not in ("OK", "FAIL") or x.get("rc") is None or not log.exists() or "files" not in x or r.pre:
+            out_rows.append(x)
+            continue
+        before = x["verdict"]
+        x["files"] = [tuple(f) for f in x["files"]]
+        y = judge(r, dict(x), readme, log.read_text(errors="replace"))
+        if y["verdict"] != before:
+            changed.append((x["id"], before, y["verdict"]))
+        out_rows.append(y)
+    resf.write_text("".join(json.dumps(x, ensure_ascii=False, default=str) + "\n" for x in out_rows))
+    (d / "table.md").write_text(table(out_rows) + "\n")
+    print("rescored; verdicts changed:", changed)
 
 
 def select(rows, args):
@@ -611,6 +754,8 @@ def main():
     ap.add_argument("--only")
     ap.add_argument("--skip")
     ap.add_argument("--pass2", metavar="RESULTS.jsonl", help="run the rows the first pass deferred for a missing build, and the import-only checks, with --python of an existing build")
+    ap.add_argument("--rescore", metavar="PASSDIR", help="score the saved logs of a pass again with the current rows (no rerun)")
+    ap.add_argument("--redo", help="rows to run again into --out: their old results are kept in results.first.jsonl")
     ap.add_argument("--limit", type=int, default=1800)
     ap.add_argument("--cap", type=float, default=10.0)
     ap.add_argument("--fast", action="store_true", help="only rows with est 1")
@@ -630,6 +775,8 @@ def main():
     ctx.out.mkdir(parents=True, exist_ok=True)
     if args.control:
         return cmd_control(ctx, readme, args)
+    if args.rescore:
+        return rescore(ctx, readme, Path(args.rescore).resolve())
     return cmd_run(ctx, rows, readme, args)
 
 
@@ -687,8 +834,8 @@ def cmd_coverage(readme, args):
         print(f"  line {i}: {t}")
 
 
-def fmt_quotes(res):
-    qs = res.get("quotes") or []
+def fmt_quotes(res, qs=None, short=False):
+    qs = res.get("quotes") if qs is None else qs
     if not qs:
         return "none quoted"
     parts = []
@@ -696,8 +843,12 @@ def fmt_quotes(res):
         if mode is None:
             parts.append(f"{label}: locator lost")
             continue
-        n = sum(1 for _, h, _ in det if h)
-        parts.append(f"{label}: {n}/{len(det)}" + ("" if ok else " MISMATCH"))
+        if mode == "info":
+            parts.append(f"{label}: not checked")
+            continue
+        n = sum(1 for d in det if d[1])
+        pairs = ", ".join(f"{d[0]}={d[3]}" if d[1] else f"{d[0]}<>{d[3]}" for d in det)
+        parts.append(f"{label}: {n}/{len(det)}" + ("" if ok else " MISMATCH") + ("" if short or len(det) > 4 else f" ({pairs})"))
     return "; ".join(parts)
 
 
@@ -711,6 +862,9 @@ def table(results):
         v = r["verdict"] + (f": {r['reason']}" if r.get("reason") and r["verdict"] != "OK" else "")
         if r["verdict"] == "OK" and r.get("adapted"):
             v += f" ({r['adapted']})"
+        fx = r.get("fix")
+        if fx:
+            v += f" || adapted `{' '.join(fx['argv'])}` ({fx.get('cwd', '.')}/): " + (f"exit {fx['rc']}, {fmt_quotes(fx, short=True)}, {fx['verdict']}" if "rc" in fx else fx["verdict"] + ": " + fx["reason"])
         lines.append(f"| {r['id']} | {r.get('line')} | {cmd} | {r.get('rc', '')} | {files} | {fmt_quotes(r)} | {wall} | {v} |")
     return "\n".join(lines)
 
@@ -732,6 +886,13 @@ def cmd_run(ctx, rows, readme, args):
     rows = sorted(rows, key=lambda r: r.est)
     resf = ctx.out / "results.jsonl"
     done = set()
+    if args.redo and resf.exists():
+        gone = set(args.redo.split(","))
+        keep = [l for l in resf.read_text().split("\n") if l.strip() and json.loads(l)["id"] not in gone]
+        if not (ctx.out / "results.first.jsonl").exists():
+            shutil.copy(resf, ctx.out / "results.first.jsonl")
+        resf.write_text("".join(l + "\n" for l in keep))
+        rows = [r for r in rows if r.id in gone]
     if resf.exists():
         done = {json.loads(l)["id"] for l in resf.read_text().split("\n") if l.strip()}
     if args.pass2:
