@@ -272,8 +272,8 @@ def sym_step(x, M, xi1):
         c = f2.get(nu, 0)
         f2v += [-2 * c.imag, 2 * c.real]
     f2v = np.array(f2v) / (-2 * f2[1].imag)
-    return dict(lam1_sym=lam1, lam_mismatch=mism, sv_S2=sv.tolist(), f2=f2v.tolist(), Je=Je.tolist(), Jel=Jel.tolist(),
-                JW=JW.tolist(), ell2=ell2.tolist(), nullvec_S2=(fv / fv[0]).tolist())
+    return dict(lam1_sym=lam1, lam_mismatch=mism, sv_S2=sv.tolist(), f2=f2v.tolist(), Je_sym=Je.tolist(),
+                Jel_sym=Jel.tolist(), JW=JW.tolist(), ell2=ell2.tolist(), nullvec_S2=(fv / fv[0]).tolist())
 
 
 def main():
