@@ -8,6 +8,9 @@ expectation, and the row must flag.
 
   reproduce_readme.py --list                  every row with README line, directory, command, files, quoted numbers
   reproduce_readme.py --coverage              every code span of the README is a row or a listed non-command
+  reproduce_readme.py --links                 relative links, anchors, footnotes and images of the README resolve
+  reproduce_readme.py --merge PASS1 [PASS2]   the table of both passes (a row run in the second pass, with an existing
+                                              build, replaces its first-pass row) and the counts
   reproduce_readme.py --control               the controls: a changed number, a hidden file and a failing command
                                               each flag exactly their own row (fast rows only)
   reproduce_readme.py --tree DIR --out DIR    run all rows, one at a time, in DIR (a throwaway checkout: after each
@@ -765,6 +768,8 @@ def main():
     ap.add_argument("--list", action="store_true")
     ap.add_argument("--coverage", action="store_true")
     ap.add_argument("--control", action="store_true")
+    ap.add_argument("--links", action="store_true")
+    ap.add_argument("--merge", nargs="+", metavar="PASSDIR")
     ap.add_argument("--readme", default=str(HERE / "README.md"))
     ap.add_argument("--tree", default=str(HERE))
     ap.add_argument("--out", default="reproduce_out")
@@ -786,6 +791,10 @@ def main():
         return cmd_list(rows, readme, args)
     if args.coverage:
         return cmd_coverage(readme, args)
+    if args.links:
+        return cmd_links(readme, args)
+    if args.merge:
+        return cmd_merge(args)
     ctx = Ctx()
     ctx.tree, ctx.out, ctx.python = Path(args.tree).resolve(), Path(args.out).resolve(), os.path.abspath(args.python)
     ctx.marker = (ctx.tree / ".i349_run_tree").exists()
@@ -799,6 +808,78 @@ def main():
 
 
 # --------------------------------------------------------------------------------------------------------------
+def slug(h):
+    """GitHub's heading anchor: rendered text, lower case, punctuation but - and _ dropped, spaces to -."""
+    h = re.sub(r"\[([^\]]*)\]\([^)]*\)", r"\1", h)
+    h = re.sub(r"[`*$]", "", h).strip().lower()
+    h = re.sub(r"[^\w\- ]", "", h, flags=re.U)
+    return h.replace(" ", "-")
+
+
+def anchors_of(text):
+    seen, out = {}, set()
+    for ln in strip_code(text).split("\n"):
+        m = re.match(r"#{1,6}\s+(.*?)\s*#*\s*$", ln)
+        if m:
+            sl = slug(m.group(1))
+            n = seen.get(sl, 0)
+            seen[sl] = n + 1
+            out.add(sl if n == 0 else f"{sl}-{n}")
+    for m in re.finditer(r'<(?:a|h\d)[^>]*\b(?:id|name)="([^"]+)"', text):
+        out.add(m.group(1))
+    return out
+
+
+def strip_code(text):
+    text = re.sub(r"^(```|~~~).*?^\1[^\n]*$", "", text, flags=re.S | re.M)
+    return text
+
+
+def cmd_links(readme, args):
+    """Every relative link and image of the README resolves to a file (and an anchor that exists), every footnote
+    reference has a definition and every definition a reference. External links are counted, not fetched."""
+    root = Path(args.readme).resolve().parent
+    body = strip_code(readme)
+    body = re.sub(r"`[^`\n]*`", "", body)
+    links = re.findall(r"(!?)\[(?:[^\[\]]|\[[^\]]*\])*\]\(([^)\s]+)(?:\s+\"[^\"]*\")?\)", body)
+    links += [("", m) for m in re.findall(r'<a\s[^>]*href="([^"]+)"', body)] + [("!", m) for m in re.findall(r'<img\s[^>]*src="([^"]+)"', body)]
+    mine = anchors_of(readme)
+    bad, ext, rel, anc, imgs, cache = [], 0, 0, 0, 0, {}
+    for bang, tgt in links:
+        if re.match(r"(https?:|mailto:)", tgt):
+            ext += 1
+            continue
+        path, _, frag = tgt.partition("#")
+        if bang:
+            imgs += 1
+        if not path:
+            anc += 1
+            if frag not in mine:
+                bad.append(f"#{frag}: no such heading in README.md")
+            continue
+        rel += 1
+        f = (root / path.split("?")[0]).resolve()
+        if not f.exists():
+            bad.append(f"{tgt}: {path} does not exist")
+        elif frag:
+            anc += 1
+            if f.suffix == ".md":
+                cache.setdefault(f, anchors_of(f.read_text(encoding="utf-8", errors="replace")))
+                if frag not in cache[f]:
+                    bad.append(f"{tgt}: no such heading in {path}")
+    refs = set(re.findall(r"\[\^(\w+)\](?!:)", body))
+    defs = set(re.findall(r"^\[\^(\w+)\]:", readme, flags=re.M))
+    for k in sorted(refs - defs, key=lambda x: (len(x), x)):
+        bad.append(f"footnote [^{k}] is referenced and not defined")
+    for k in sorted(defs - refs, key=lambda x: (len(x), x)):
+        bad.append(f"footnote [^{k}] is defined and not referenced")
+    print(f"{ext} external links (not fetched), {rel} relative links ({imgs} images), {anc} anchors checked, {len(defs)} footnote definitions, {len(refs)} footnotes referenced")
+    for b in bad:
+        print("BROKEN:", b)
+    print(f"{len(bad)} broken")
+    return 0 if not bad else 1
+
+
 def cmd_list(rows, readme, args):
     out = []
     for r in rows:
@@ -871,7 +952,7 @@ def fmt_quotes(res, qs=None, short=False):
 
 
 def table(results):
-    lines = ["| id | README | command (dir) | exit | files | number printed vs quoted | wall | verdict |", "|---|---|---|---|---|---|---|---|"]
+    lines = ["| id | README | command (dir) | exit | files | number printed vs quoted | wall | cpu | rss | verdict |", "|---|---|---|---|---|---|---|---|---|---|"]
     for r in results:
         fl = r.get("files") or []
         files = "all %d exist" % len(fl) if fl and all(ok for _, ok in fl) else ("none named" if not fl else "MISSING " + ",".join(f for f, ok in fl if not ok))
@@ -883,8 +964,35 @@ def table(results):
         fx = r.get("fix")
         if fx:
             v += f" || adapted `{' '.join(fx['argv'])}` ({fx.get('cwd', '.')}/): " + (f"exit {fx['rc']}, {fmt_quotes(fx, short=True)}, {fx['verdict']}" if "rc" in fx else fx["verdict"] + ": " + fx["reason"])
-        lines.append(f"| {r['id']} | {r.get('line')} | {cmd} | {r.get('rc', '')} | {files} | {fmt_quotes(r)} | {wall} | {v} |")
+        cpu = f"{r['cpu']:.0f} s" if r.get("cpu") is not None else ""
+        rss = f"{r['rss']:.0f} MB" if r.get("rss") is not None else ""
+        if r.get("existing_build"):
+            v += " (existing build)"
+        lines.append(f"| {r['id']} | {r.get('line')} | {cmd} | {r.get('rc', '')} | {files} | {fmt_quotes(r)} | {wall} | {cpu} | {rss} | {v} |")
     return "\n".join(lines)
+
+
+def merged(dirs):
+    rows = {}
+    for n, d in enumerate(dirs):
+        for l in (Path(d) / "results.jsonl").read_text().split("\n"):
+            if l.strip():
+                x = json.loads(l)
+                if n == 0 or x["id"] in rows:
+                    rows[x["id"]] = x
+    return list(rows.values())
+
+
+def cmd_merge(args):
+    rows = merged(args.merge)
+    cnt = {}
+    for r in rows:
+        cnt[r["verdict"]] = cnt.get(r["verdict"], 0) + 1
+    print(table(rows))
+    print()
+    print("rows:", len(rows), cnt, "cpu %.0f s, wall %.0f s, largest rss %.0f MB" % (
+        sum(r.get("cpu") or 0 for r in rows), sum(r.get("wall") or 0 for r in rows), max(r.get("rss") or 0 for r in rows)))
+    return 0
 
 
 def files_named_result(ctx, readme):
