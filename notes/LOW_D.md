@@ -199,6 +199,13 @@ are, as far as we can check, the only values; with their 256 -> 512 changes they
 3.3 and 1e-3 at 3.15, and they need 1024 modes below 3.2. Sec. 6.2 and Appendices C, D of their paper could not be read
 (the fetched text ends in Sec. 6).
 
+Correction (#1073, raw `I1073-rpi5/` d481a3a3, rpi5's `report1073.py`): the 256 -> 512 change overstates the error of
+their 512-mode Δ below D 3.2. There it agrees with our double-double values (`hp/data/delta_all.csv`) to 3e-9 at D
+3.0475 to 3.175, and differs by +2.5e-6 at D 3.2, a step whose cause is not known. Their Fortran data hold 128, 256 and
+512 modes only, with γ (`gam.out`) at 512 alone; 1024-mode Δ exists only in their C++ data, at D 3.046 to 3.096, with
+no γ. Their γ starts at D 3.1, with a gap from 3.14 to 3.2. Over D 3.1 to 4, Δ/(2γ) from their data rises at every step,
+4.61 at D 4 to 6.91 at D 3.1 (48 of 48 pairs): there γ falls faster than Δ. Below D 3.1 their data say nothing about γ.
+
 ## 6. What should happen as D -> 3
 
 - **At n = 1 the equations decouple** (`python3 solver/lowD_n1_check.py`, solver/data/lowD_n1_check.log): in
