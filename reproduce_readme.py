@@ -516,10 +516,11 @@ def execute(ctx, r, readme):
         res.update(verdict="FAIL", reason="STALE: the span is not in the README")
         return res
     argv, cwd = r.argv, r.cwd
-    if ctx.need_mode:
-        if not r.need:
-            return {**res, "verdict": "NOT RUN", "reason": "pass 2: no build needed or checked"}
-        argv, cwd = r.need, "."
+    if ctx.pass2:
+        if r.need:
+            argv, cwd = r.need, "."
+        elif r.skip:
+            return {**res, "verdict": "NOT RUN", "reason": r.skip}
         res["existing_build"] = ctx.python
     elif r.pre:
         return {**res, "verdict": "OK", "rc": r.pre["rc"], "wall": r.pre["wall"], "reason": r.pre["note"],
@@ -528,7 +529,7 @@ def execute(ctx, r, readme):
         return {**res, "verdict": "NOT RUN", "reason": r.skip}
     if time.time() - ctx.t0 > ctx.cap * 3600:
         return {**res, "verdict": "NOT RUN", "reason": f"{ctx.cap} h cap of the pass reached"}
-    log = ctx.out / "logs" / f"{r.id}{'.build' if ctx.need_mode else ''}.log"
+    log = ctx.out / "logs" / f"{r.id}.log"
     log.parent.mkdir(parents=True, exist_ok=True)
     log.write_bytes(b"")
     tree_clean(ctx)
@@ -538,7 +539,7 @@ def execute(ctx, r, readme):
     out = log.read_text(errors="replace")
     # a path-written command that fails once from the root runs from the script's own directory
     if (m["rc"] != r.expect_rc and not m["timeout"] and cwd == "." and len(argv) > 1 and "/" in argv[1]
-            and argv[1].endswith((".py", ".sh")) and not argv[1].startswith("..") and not ctx.need_mode):
+            and argv[1].endswith((".py", ".sh")) and not argv[1].startswith("..") and not ctx.pass2):
         d, b = os.path.split(argv[1])
         if (ctx.tree / d / b).exists():
             adapted = f"from the root: exit {m['rc']}; rerun from {d}/"
@@ -560,7 +561,7 @@ def execute(ctx, r, readme):
     if m["timeout"]:
         return {**res, "verdict": "NOT RUN", "reason": f"not finished in {ctx.limit // 60} min (stopped by pid {m['pid']}); {r.note}".strip("; "),
                 "tail": out.strip().split("\n")[-3:]}
-    if not ctx.need_mode and re.search(r"No module named '?(hpkernel|rustkernel)", out) and m["rc"] != 0:
+    if not ctx.pass2 and re.search(r"No module named '?(hpkernel|rustkernel)", out) and m["rc"] != 0:
         return {**res, "verdict": "NOT RUN", "reason": "needs a build (hpkernel or rustkernel): second pass", "deferred": True,
                 "tail": out.strip().split("\n")[-3:]}
     if m["rc"] != r.expect_rc:
@@ -577,7 +578,7 @@ def execute(ctx, r, readme):
             continue
         ok, det = check_quote(toks, q.mode, out)
         q_res.append((q.label, q.mode, det, ok))
-        if not ok and not (ctx.need_mode):
+        if not ok:
             bad = [f"{t} ({b} digits agree)" for t, h, b in det if not h]
             reasons.append(f"{q.label}: not printed: " + "; ".join(bad))
     res["quotes"] = q_res
@@ -609,7 +610,7 @@ def main():
     ap.add_argument("--python", default=sys.executable)
     ap.add_argument("--only")
     ap.add_argument("--skip")
-    ap.add_argument("--needs", choices=["build"])
+    ap.add_argument("--pass2", metavar="RESULTS.jsonl", help="run the rows the first pass deferred for a missing build, and the import-only checks, with --python of an existing build")
     ap.add_argument("--limit", type=int, default=1800)
     ap.add_argument("--cap", type=float, default=10.0)
     ap.add_argument("--fast", action="store_true", help="only rows with est 1")
@@ -625,7 +626,7 @@ def main():
     ctx = Ctx()
     ctx.tree, ctx.out, ctx.python = Path(args.tree).resolve(), Path(args.out).resolve(), os.path.abspath(args.python)
     ctx.marker = (ctx.tree / ".i349_run_tree").exists()
-    ctx.limit, ctx.cap, ctx.need_mode, ctx.t0 = args.limit, args.cap, args.needs == "build", time.time()
+    ctx.limit, ctx.cap, ctx.pass2, ctx.t0 = args.limit, args.cap, bool(args.pass2), time.time()
     ctx.out.mkdir(parents=True, exist_ok=True)
     if args.control:
         return cmd_control(ctx, readme, args)
@@ -714,16 +715,36 @@ def table(results):
     return "\n".join(lines)
 
 
+def files_named_result(ctx, readme):
+    raw = ctx.tree.parent / "choptuik-large-d-raw"
+    names = sorted({t for _, t in named_files(readme)})
+    ok, elsewhere, missing, pattern = [], [], [], []
+    for t in names:
+        st = find_file(ctx.tree, t, raw)
+        (ok if st == "ok" else pattern if st == "pattern" else missing if st is None else elsewhere).append((t, st))
+    reason = f"{len(names)} file names in code spans: {len(ok)} exist as written, {len(elsewhere)} found elsewhere in the repository or the raw clone, {len(pattern)} patterns, {len(missing)} not found"
+    detail = "; ".join(f"{t} -> {st}" for t, st in elsewhere) + ("; NOT FOUND: " + ", ".join(t for t, _ in missing) if missing else "")
+    return dict(id="files_named", span="every file name in a code span", line=None, est=1, explicit=False, rc=0, wall=0.0,
+                verdict="FAIL" if missing else "OK", reason=reason + (" | " + detail if detail else ""), files=[], quotes=[])
+
+
 def cmd_run(ctx, rows, readme, args):
     rows = sorted(rows, key=lambda r: r.est)
-    resf = ctx.out / ("results_build.jsonl" if ctx.need_mode else "results.jsonl")
+    resf = ctx.out / "results.jsonl"
     done = set()
     if resf.exists():
         done = {json.loads(l)["id"] for l in resf.read_text().split("\n") if l.strip()}
+    if args.pass2:
+        prev = [json.loads(l) for l in Path(args.pass2).read_text().split("\n") if l.strip()]
+        ids = {p["id"] for p in prev if p.get("deferred")} | {r.id for r in ROWS if r.need}
+        rows = [r for r in rows if r.id in ids]
+    elif "files_named" not in done:
+        res = files_named_result(ctx, readme)
+        with open(resf, "a") as f:
+            f.write(json.dumps(res, ensure_ascii=False) + "\n")
+        print("files_named:", res["verdict"], res["reason"][:200], flush=True)
     for r in rows:
         if r.id in done:
-            continue
-        if ctx.need_mode and not r.need:
             continue
         print(f"[{time.strftime('%F %T', time.gmtime())}] {r.id} ...", flush=True)
         res = execute(ctx, r, readme)
@@ -731,7 +752,7 @@ def cmd_run(ctx, rows, readme, args):
             f.write(json.dumps(res, ensure_ascii=False, default=str) + "\n")
         print(f"    {res['verdict']}  {res.get('reason', '')[:160]}  ({res.get('wall', 0):.0f} s)", flush=True)
     results = [json.loads(l) for l in resf.read_text().split("\n") if l.strip()]
-    (ctx.out / ("table_build.md" if ctx.need_mode else "table.md")).write_text(table(results) + "\n")
+    (ctx.out / "table.md").write_text(table(results) + "\n")
     cnt = {}
     for r in results:
         cnt[r["verdict"]] = cnt.get(r["verdict"], 0) + 1
@@ -750,7 +771,6 @@ def cmd_control(ctx, readme, args):
         "command changed": ("python3 lowD_max.py`)", "python3 lowD_maxx.py`)", ["lowD_max"]),
         "number planted in a second row": ("| 1000 | 1.65424086 | 0.499250 |", "| 1000 | 1.65424086 | 0.499251 |", ["values_table"]),
     }
-    ctx.need_mode = False
     texts = {"real README": readme}
     lines = []
     for name, (a, b, _) in plants.items():
