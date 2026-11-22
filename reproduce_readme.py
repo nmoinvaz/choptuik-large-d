@@ -623,7 +623,7 @@ def main():
     if args.coverage:
         return cmd_coverage(readme, args)
     ctx = Ctx()
-    ctx.tree, ctx.out, ctx.python = Path(args.tree).resolve(), Path(args.out).resolve(), args.python
+    ctx.tree, ctx.out, ctx.python = Path(args.tree).resolve(), Path(args.out).resolve(), os.path.abspath(args.python)
     ctx.marker = (ctx.tree / ".i349_run_tree").exists()
     ctx.limit, ctx.cap, ctx.need_mode, ctx.t0 = args.limit, args.cap, args.needs == "build", time.time()
     ctx.out.mkdir(parents=True, exist_ok=True)
@@ -739,45 +739,47 @@ def cmd_run(ctx, rows, readme, args):
 
 
 def cmd_control(ctx, readme, args):
-    """A changed README number, a hidden-looking file and a failing command each flag exactly their own row."""
-    fast = ["lowD_max", "gamma_compare", "values_table", "heat_form", "rw_map", "plot_light_cone"]
+    """Controls. A changed README number, a changed README command, a failing command and a named file that is
+    missing each flag their own row and no other: the rows run on the real README, then on copies of it."""
+    fast = ["lowD_max", "values_table", "heat_form", "rw_map", "plot_light_cone"]
     base_rows = [r for r in ROWS if r.id in fast]
-    synthetic = [Row("ctl_exit", "ctl", ["false"], est=1), Row("ctl_file", "ctl", ["true"], files=["hp/no_such_file.csv"], est=1),
-                 Row("ctl_ok", "ctl", ["true"], est=1)]
-    plant_from, plant_to = "| 3.755725 | 3.46677169 |", "| 3.755725 | 3.46677179 |"
-    assert readme.count(plant_from) == 1, "the plant target is not unique in this README"
-    mutated = readme.replace(plant_from, plant_to)
-    scratch = ctx.out / "README.planted.md"
-    scratch.write_text(mutated, encoding="utf-8")
+    synthetic = [Row("ctl_exit", "ctl", ["false"]), Row("ctl_file", "ctl", ["true"], files=["hp/no_such_file.csv"]),
+                 Row("ctl_ok", "ctl", ["true"])]
+    plants = {
+        "number planted": ("| 3.755725 | 3.46677169 |", "| 3.755725 | 3.46677179 |", ["lowD_max"]),
+        "command changed": ("python3 lowD_max.py`)", "python3 lowD_maxx.py`)", ["lowD_max"]),
+        "number planted in a second row": ("| 1000 | 1.65424086 | 0.499250 |", "| 1000 | 1.65424086 | 0.499251 |", ["values_table"]),
+    }
     ctx.need_mode = False
-    lines = [f"plant: `{plant_from}` -> `{plant_to}` in {scratch} (the real README is not touched)", ""]
-    ok_all = True
+    texts = {"real README": readme}
+    lines = []
+    for name, (a, b, _) in plants.items():
+        assert readme.count(a) == 1, f"the plant target of '{name}' is not unique in this README"
+        texts[name] = readme.replace(a, b)
+        (ctx.out / f"README.{name.replace(' ', '_')}.md").write_text(texts[name], encoding="utf-8")
+        lines.append(f"plant '{name}': `{a}` -> `{b}`")
     out = {}
-    for name, text in (("real README", readme), ("planted README", mutated)):
+    for name, text in texts.items():
         out[name] = {}
-        for r in base_rows + [Row(s.id, "ctl", s.argv, files=s.files) for s in synthetic]:
-            rr = r
-            if r.id.startswith("ctl"):
-                text_in = text + "\nctl"
-                res = execute(ctx, rr, text_in)
-            else:
-                res = execute(ctx, rr, text)
+        for r in base_rows + synthetic:
+            res = execute(ctx, r, text + "\nctl" if r.id.startswith("ctl") else text)
             out[name][r.id] = res["verdict"] + (": " + res.get("reason", "") if res.get("reason") else "")
-    lines.append("| row | real README | planted README | flagged by the plant |")
-    lines.append("|---|---|---|---|")
+    names = list(texts)
+    lines += ["", "| row | " + " | ".join(names) + " |", "|---" * (len(names) + 1) + "|"]
     for rid in out["real README"]:
-        a, b = out["real README"][rid], out["planted README"][rid]
-        lines.append(f"| {rid} | {a} | {b} | {'YES' if a != b else ''} |")
-    flagged = [rid for rid in out["real README"] if out["real README"][rid] != out["planted README"][rid]]
-    expect = ["lowD_max"]
-    synth_ok = (out["real README"]["ctl_exit"].startswith("FAIL") and out["real README"]["ctl_file"].startswith("FAIL")
-                and out["real README"]["ctl_ok"].startswith("OK") and out["real README"]["lowD_max"].startswith("OK"))
-    verdict = flagged == expect and synth_ok
-    lines += ["", f"flagged by the plant: {flagged} (expected {expect}); synthetic exit and file rows flag, the control row passes: {synth_ok}",
-              f"CONTROL {'PASSED' if verdict else 'FAILED'}"]
+        lines.append(f"| {rid} | " + " | ".join(out[n][rid] for n in names) + " |")
+    ok = out["real README"]["ctl_exit"].startswith("FAIL") and out["real README"]["ctl_file"].startswith("FAIL") \
+        and out["real README"]["ctl_ok"].startswith("OK") and out["real README"]["lowD_max"].startswith("OK")
+    lines.append("")
+    lines.append(f"synthetic rows: ctl_exit and ctl_file flag, ctl_ok passes: {ok}")
+    for name, (_, _, expect) in plants.items():
+        flagged = [rid for rid in out["real README"] if out[name][rid] != out["real README"][rid]]
+        lines.append(f"plant '{name}': flagged {flagged}, expected {expect}: {flagged == expect}")
+        ok = ok and flagged == expect
+    lines.append(f"CONTROL {'PASSED' if ok else 'FAILED'}")
     (ctx.out / "control.md").write_text("\n".join(lines) + "\n")
     print("\n".join(lines))
-    return 0 if verdict else 1
+    return 0 if ok else 1
 
 
 if __name__ == "__main__":
