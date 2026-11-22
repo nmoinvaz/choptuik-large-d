@@ -93,12 +93,14 @@ def nearest(q, pool):
     return format(v, ".6g")
 
 
-def check_quote(tokens, mode, text, xf=None):
+def check_quote(tokens, mode, text, xf=None, extra=None):
     """-> (ok, [(token, found, best digits agreeing, the printed value that agrees or is nearest)]).
     xf maps each printed number to the quantity the README quotes (a sign, a percent)."""
     pool = output_numbers(text)
     if xf:
         pool = [xf(v) for v in pool]
+    if extra:
+        pool = pool + extra(printed(text))
     res = []
     ok = True
     for t in tokens:
@@ -131,8 +133,9 @@ class Q:
     """Quoted numbers of one row. rx: regex over the README (re.S) whose groups are the tokens.
     row: (after-regex, first-cell-regex, [column indices]): the table row after that anchor."""
 
-    def __init__(self, label, rx=None, row=None, mode="eq", tok=None, xf=None):
-        self.label, self.rx, self.row, self.mode, self.tok, self.xf = label, rx, row, mode, tok, xf
+    def __init__(self, label, rx=None, row=None, mode="eq", tok=None, xf=None, extra=None):
+        # xf: maps each printed number to the quoted quantity; extra: text -> values derived from printed ones
+        self.label, self.rx, self.row, self.mode, self.tok, self.xf, self.extra = label, rx, row, mode, tok, xf, extra
 
     def tokens(self, text):
         if self.rx:
@@ -283,7 +286,10 @@ row("gamma_compare", "cd hp && python3 gamma_compare.py data/gamma_dd.jsonl data
     files=["hp/data/gamma_dd.jsonl", "hp/data/local/gamma_dd.jsonl"],
     q=[Q("lambda-2 by powers", rx=r"On D ≥ 30 it is\s+([\d.]+×10⁻⁴), ([\d.]+×10⁻⁵), ([\d.]+×10⁻⁵), ([\d.]+×10⁻⁶) and \(([\d.]+) ± ([\d.]+)\)×10⁻⁶",
          tok=lambda g: g[:4] + [g[4] + "×10⁻⁶", g[5] + "×10⁻⁶"]),
-       Q("lambda series", rx=r"λ = 2 \+ ([\d.]+)/n − ([\d.]+)/n² \+ … \(γ = 1/2 −\s*([\d.]+)/n")])
+       Q("lambda a1", rx=r"λ = 2 \+ ([\d.]+)/n − [\d.]+/n²", tok=lambda g: g),
+       Q("gamma a1 = lambda a1 / 4 (derived)", rx=r"\(γ = 1/2 −\s*([\d.]+)/n",
+         extra=lambda t: [Decimal(a) / 4 for a in re.findall(r"a1 = ([\d.]+)\)", t)]),
+       Q("lambda a2 (not printed by this script)", rx=r"λ = 2 \+ [\d.]+/n − ([\d.]+)/n²", mode="info")])
 row("plot_extrapolation", "solver/plot_extrapolation.py", py("solver/plot_extrapolation.py"), est=2, files=["solver/extrapolation.svg"], regen=["solver/extrapolation.svg"],
     fix=dict(argv=py("../plot_extrapolation.py"), cwd="solver/data", note="the script opens scan_down_kc47.jsonl from the working directory, which is solver/data"))
 row("values_table", "cd hp && python3 values_table.py", py("values_table.py"), cwd="hp", est=2,
@@ -305,7 +311,8 @@ row("data_all", "solver/data_all.py", py("solver/data_all.py"), est=2,
     fix=dict(argv=py("../data_all.py"), cwd="solver/data", note="the script opens scan_down_kc47.jsonl from the working directory, which is solver/data"))
 row("cmp_ecker", "hp/compare/cmp_ecker.py", py("hp/compare/cmp_ecker.py"), est=1,
     note="needs a clone of github.com/EckerChristian/CriticalSpacetimeCrystal as data (not run as code)",
-    q=[Q("moves", rx=r"moving by −([\d.]+×10⁻⁴) between 256 and 512 modes")],
+    q=[Q("moves", rx=r"moving by −([\d.]+×10⁻⁴) between 256 and 512 modes", tok=lambda g: ["-" + g[0]]),
+       Q("offset", rx=r"from (2\.7×10⁻⁷) at D = 4 to (5×10⁻⁴) at D = 5\.5")],
     fix=dict(argv=py("cmp_ecker.py", "{ECC}"), cwd="hp/compare", needs="ecc", note="the usage line in the script's docstring; the clone of their repository is read as data"))
 row("identity_check", "I200-mac/identity_check.py", py("../choptuik-large-d-raw/I200-mac/identity_check.py"), est=2,
     files=["../choptuik-large-d-raw/I200-mac/identity_check.py"])
@@ -352,7 +359,8 @@ row("plot_echo", "hp/plot_echo.py", py("hp/plot_echo.py"), est=2, files=["hp/dat
     fix=dict(argv=py("plot_echo.py", "../../choptuik-large-d-raw"), cwd="hp", note="the usage line in the script's docstring"))
 row("states_module", "hp/states.py", py("hp/states.py"), skip="a module the profile scripts import (where the states are read from), not a command; the README quotes no invocation",
     files=["hp/data/states"])
-row("plot_wave_family", "hp/plot_wave_family.py", py("hp/plot_wave_family.py"), est=2, files=["hp/wave_family.svg"], regen=["hp/wave_family.svg"])
+row("plot_wave_family", "hp/plot_wave_family.py", py("hp/plot_wave_family.py"), est=2, files=["hp/wave_family.svg"], regen=["hp/wave_family.svg"],
+    fix=dict(argv=py("plot_wave_family.py", "../../choptuik-large-d-raw"), cwd="hp", note="the usage line in the script's docstring"))
 row("largeD_expand", "largeD_expand.py 4", py("solver/largeD_expand.py", "4"), est=2,
     alias=["solver/largeD_expand.py"])
 row("largeD_formal_check", "solver/largeD_formal_check.py", py("solver/largeD_formal_check.py"), est=2)
@@ -395,8 +403,14 @@ row("largeD_stokes_C", "solver/largeD_stokes_C.py", py("solver/largeD_stokes_C.p
 row("largeD_inner", "solver/largeD_inner.py", py("solver/largeD_inner.py"), est=2)
 row("hier_schur", "hier.py --schur", py("solver/inner_stokes/hier.py", "--schur"), est=3,
     note="the README quotes the flag, not an M")
+def f5_over_f1(t):
+    a = re.search(r"\|F3/F1\| -> ([\d.]+), ([\d.]+), ([\d.]+)", t)
+    b = re.search(r"\|F5/F3\| -> ([\d.]+), ([\d.]+), ([\d.]+)", t)
+    return [Decimal(x) * Decimal(y) for x, y in zip(a.groups(), b.groups())] if a and b else []
+
+
 row("largeD_Fratios", "hp/largeD_Fratios.py", py("hp/largeD_Fratios.py"), est=2,
-    q=[Q("ratios", rx=r"F_3/F_1\\rvert \\to ([\d.]+)`\$–([\d.]+) and \$`\\lvert F_5/F_1\\rvert \\to ([\d.]+)`\$–([\d.]+) \(degree 1: ([\d.]+),\s+([\d.]+)\)", tok=lambda g: g)])
+    q=[Q("ratios (|F5/F1| derived as |F3/F1||F5/F3|)", extra=f5_over_f1, rx=r"F_3/F_1\\rvert \\to ([\d.]+)`\$–([\d.]+) and \$`\\lvert F_5/F_1\\rvert \\to ([\d.]+)`\$–([\d.]+) \(degree 1: ([\d.]+),\s+([\d.]+)\)", tok=lambda g: g)])
 row("amp_series", "amp_series.py", py("solver/inner_amp/amp_series.py"), est=2, q=[Q("agreement", rx=r"to (2)–(4)×10⁻¹⁶ at orders 0–3", tok=lambda g: [g[0] + "×10⁻¹⁶", g[1] + "×10⁻¹⁶"])])
 row("amp_flint_par", "solver/inner_amp/amp_flint_par.py --fit phys", py("solver/inner_amp/amp_flint_par.py", "--fit", "phys"), est=1,
     files=["solver/inner_amp/data/sigF_w1.0000_K15_J750_phys.json", "solver/inner_amp/data/sigF_w1.0000_K15_J1000_phys.json"],
@@ -428,7 +442,8 @@ row("plot_first_order", "solver/plot_first_order.py", py("solver/plot_first_orde
 row("eeg20", "solver/eeg20/", py("solver/eeg20/eeg20.py"), est=2,
     q=[Q("ratio", rx=r"\(ω²F''\+3ω F'\)/\(3ω F'\) is ([\d.]+)–([\d.]+) at D = 12–60", tok=lambda g: g)])
 row("tilt", "solver/eeg20/", py("solver/eeg20/tilt.py"), est=2,
-    q=[Q("tilt", rx=r"Measured over predicted at x = 1 is ([\d.]+), ([\d.]+), ([\d.]+), ([\d.]+) at D = 20,")])
+    q=[Q("measured/predicted at x = 1 (derived)", rx=r"Measured over predicted at x = 1 is ([\d.]+), ([\d.]+), ([\d.]+), ([\d.]+) at D = 20,",
+         extra=lambda t: [Decimal(a) / Decimal(b) for a, b in re.findall(r"x 1\.00: (-?[\d.]+) \(pred (-?[\d.]+)\)", t)])])
 row("maxc", "solver/eeg20/", py("solver/eeg20/maxc.py"), est=2, q=[Q("ratio", rx=r"The ratio rises from ([\d.]+)\s+to ([\d.]+) from D = 20 to 60")])
 for f in ["struct_common", "struct_css", "struct_eqs", "struct_inner", "struct_outer", "struct_symmetry"]:
     p = f"solver/matter/{f}.py"
@@ -588,7 +603,7 @@ def score_output(r, readme, out):
             q_res.append((q.label, None, [], False))
             reasons.append(f"quote locator lost: {q.label}")
             continue
-        ok, det = check_quote(toks, q.mode, out, q.xf)
+        ok, det = check_quote(toks, q.mode, out, q.xf, q.extra)
         q_res.append((q.label, q.mode, det, ok))
         if not ok:
             bad = [f"{t} (nearest printed {s}, {b} digits agree)" for t, h, b, s in det if not h]
@@ -702,8 +717,11 @@ def execute(ctx, r, readme):
     if not ctx.pass2 and re.search(r"No module named '?(hpkernel|rustkernel)", out) and m["rc"] != 0:
         return {**res, "verdict": "NOT RUN", "reason": "needs a build (hpkernel or rustkernel): second pass", "deferred": True,
                 "tail": out.strip().split("\n")[-3:]}
+    if ctx.pass2 and re.search(r"No module named '?rustkernel", out) and m["rc"] != 0:
+        return {**res, "verdict": "NOT RUN", "reason": "no existing build on this machine has rustkernel (the 5 venvs under ~/Source tried)",
+                "tail": out.strip().split("\n")[-3:]}
     judge(r, res, readme, out)
-    if res["verdict"] == "FAIL" and r.fix and not ctx.pass2:
+    if res["verdict"] == "FAIL" and r.fix and not r.need:
         res["fix"] = run_fix(ctx, r, readme, log)
     return res
 
