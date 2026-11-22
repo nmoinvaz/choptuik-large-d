@@ -665,18 +665,26 @@ between M = 3 and M = 5 and from the gauge dependence, is about 2% for Δ₂ and
 
 ## 8. Discrepancies
 
-Reported, not fixed:
+Reported, and not fixed unless the item says so:
 
 1. **EEG's printed NNLO** (arXiv:2611.07007v1, (S45), (S46), (S48)–(S51)) violates their own (S39) at ε^{5/2} and
    disagrees with Proposition 1; the correction is in §1. Their NLO is right.
-2. **The stored first-order λ data of the one-shot runs** (`solver/inner_pert/data/first_order_M1_xi0.2.json`,
-   `first_order_M3_xi0.2.json`, `first_order_M3_xi0.175.json`): the arrays `ell`, `Jen`, `Jel` do not belong
-   together. $`-\ell\cdot J_{en}/\ell\cdot J_{el}`$ from them is −0.033, −0.0004, −0.0007 against the stored `lam1`
-   7.757, 3.080, 3.080, and `ell @ Jel` is 172, 5.1×10⁸, 5.1×10⁸ against `ellJel` −65257 (M = 3). The `lam1` values
-   themselves are right: the second-order jets reproduce them ($`\ell\cdot J_{p1}`$ ≈ 0, §4), with the denominator
-   taken from the model's own d/dλ direction. A first run of `second_order_run.py` that took the denominator from
-   `ell @ Jel` gave λ₂ = 0.6 and 0.006 (posted on the issue as preliminary); the gauge-0 run exposed it, and it was
-   replaced (logs `second_order_run_M1.log`, `second_order_run_M3.log` keep it).
+2. **The one-shot runs' stored first-order λ data** (`solver/inner_pert/data/first_order_M1_xi0.2.json`,
+   `first_order_M3_xi0.2.json`, `first_order_M3_xi0.175.json`), fixed in #385. In the earlier files the arrays `ell`,
+   `Jen`, `Jel` did not belong together: $`-\ell\cdot J_{en}/\ell\cdot J_{el}`$ from them was −0.033, −0.0004,
+   −0.0007 against the stored `lam1` 7.757, 3.080, 3.080. The cause was in `first_order_run.py`, whose symmetry route
+   stored its own `Je` and `Jel` under the direct route's keys. They are now `Je_sym` and `Jel_sym`, and the three
+   files were made again from scratch (win2, raw `I385-win2/` 4012123e). `first_order_check.py` passes on the new
+   files and fails on the earlier ones, and each of its three mutations fails. x, ω₁, λ* and λ₁ reproduce to
+   7.2×10⁻⁸ relative, so the `lam1` values were right throughout, as the second-order jets had shown
+   ($`\ell\cdot J_{p1}`$ ≈ 0, §4), with the denominator taken from the model's own d/dλ direction.
+   - One value changed. At M = 1 the symmetry-route number `lam1_sym` is 1.6852 and `lam_mismatch` −0.12932, against
+     1.5948 and −0.12748 in the earlier file. That file lacks `jac_sv` and `rtol`, so an earlier version of the
+     script wrote it; the cause of the change was not traced. At M = 3 both reproduce to 4×10⁻⁸. Neither M = 1
+     number is quoted elsewhere.
+   - A first run of `second_order_run.py` that took the denominator from `ell @ Jel` gave λ₂ = 0.6 and 0.006 (posted
+     on the issue as preliminary); the gauge-0 run exposed it, and it was replaced (logs `second_order_run_M1.log`,
+     `second_order_run_M3.log` keep it).
 3. **The λ₂ fit's planted test failed** (P4, §5); the fitted λ₂ is an estimator range with an uncertainty of about 0.1
    read from the planted misses.
 4. **Not a discrepancy, a data change:** the first-order Δ₁ fit used 819 points, today's file gives 1159 (D to 67.8).
