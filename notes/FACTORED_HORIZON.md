@@ -780,6 +780,17 @@ kernel). The selftest passes 19 of 19 there, and `--mutate=nopred` exits 1.
   confirmed). The raise pins the state's own coefficients from all eight parts, as `near_null.py` and
   `octo_corrector.pinned_o` do. Its log line at order 293 gives its own value.
 
+**Stage 3's result: it does not pass** (dh610, 2026-11-22, raw `I1035-dh610/stage2/` b780eef8; #1035).
+- The control passed: the ks 293 polish and one chain step at D 262.0099, under leg 14's arguments.
+- The factored raise (`real`) did not converge: exit 1 after 6665 s and 11 trials. The projection failed at every staging
+  up to 16. Its first step had max|F| 4.21×10⁻³⁰ and |dz| 9.96×10⁻¹⁵, and the predictor's t² check failed at every τ
+  pair (0.94, 0.94, 0.31 against 0.1), so the step went without its t² term.
+- `real_old` and `real_linear` exited 1, as they must. polish315, step315 and the Δ comparison were not run, and stage
+  3b was not run.
+- hp's own raise at the same base with `--proj_o_bar 2e-34` also fails: its first step lands at max|F| 2.88×10¹¹
+  (#1064 part 10, comment 7070198738). So no method here raises the horizon order at the chain's front, and the order
+  test of the real singularity near D 265.078 cannot be made with them (#1035, comment 7071685669).
+
 **Stage 3b: D 262.7908, run only if stage 3 passes, under the same rule.** xfchecks' locate sees the real pole near
 D 265.078 only from D 262.1011 on (#1064). So a raise at D 262.0099 tests the raise but cannot give the order reading.
 - Stage 3b repeats the control, the raise, the polish and the step from
