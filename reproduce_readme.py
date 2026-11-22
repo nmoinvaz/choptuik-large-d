@@ -238,6 +238,12 @@ row("reproduce_sh", "./reproduce.sh", ["./reproduce.sh"], est=3, post=count_chec
     note="README: about 6 minutes on a busy 2-core machine, 2-3 on an idle laptop")
 row("reproduce_sh_full", "--full", ["./reproduce.sh", "--full"], est=3, post=count_checks(15),
     note="README: --full adds the Proposition 4 check")
+row("reproduce_sh_hp", "./reproduce.sh", ["./reproduce.sh"], est=3, post=count_checks(14), need=["./reproduce.sh"],
+    skip="needs an existing hpkernel build: second pass (the checks on saved solutions)",
+    note="README: its 14 checks, with hpkernel built")
+row("reproduce_sh_full_hp", "--full", ["./reproduce.sh", "--full"], est=3, post=count_checks(15), need=["./reproduce.sh", "--full"],
+    skip="needs an existing hpkernel build: second pass (the checks on saved solutions)",
+    note="README: --full adds the Proposition 4 check")
 row("check_numbers", "check_numbers.py", py("check_numbers.py"), est=3,
     note="README: ties more than 800 quoted numbers to their source files")
 row("check_numbers_selftest", "check_numbers.py", py("check_numbers.py", "--selftest"), est=2,
@@ -711,6 +717,10 @@ def execute(ctx, r, readme):
     for f in r.regen:
         d = subprocess.run(["git", "-C", str(ctx.tree), "diff", "--numstat", "--", f], capture_output=True, text=True).stdout.strip()
         res["regen"].append((f, "identical" if not d else "differs: " + " ".join(d.split()[:2]) + " lines +/-"))
+        if d:  # the difference itself, for the raw folder
+            dd = ctx.out / "diffs"
+            dd.mkdir(exist_ok=True)
+            (dd / f"{r.id}.{Path(f).name}.diff").write_text(subprocess.run(["git", "-C", str(ctx.tree), "diff", "--", f], capture_output=True, text=True).stdout)
     res["written"] = [c for c in changes][:12]
     res["files"] = [(f, (ctx.tree / f).exists()) for f in r.files]
     tree_clean(ctx)
@@ -770,6 +780,7 @@ def main():
     ap.add_argument("--control", action="store_true")
     ap.add_argument("--links", action="store_true")
     ap.add_argument("--merge", nargs="+", metavar="PASSDIR")
+    ap.add_argument("--compact", action="store_true", help="with --merge: tables by README section, as notes/REPRODUCTION.md has them")
     ap.add_argument("--readme", default=str(HERE / "README.md"))
     ap.add_argument("--tree", default=str(HERE))
     ap.add_argument("--out", default="reproduce_out")
@@ -961,6 +972,11 @@ def table(results):
         v = r["verdict"] + (f": {r['reason']}" if r.get("reason") and r["verdict"] != "OK" else "")
         if r["verdict"] == "OK" and r.get("adapted"):
             v += f" ({r['adapted']})"
+        diff = [f"{f} {s}" for f, s in r.get("regen") or [] if s != "identical"]
+        if diff:
+            v += "; regenerated, not as committed: " + ", ".join(diff)
+        if r.get("composite_log"):
+            v += f" [{r['adapted']}]"
         fx = r.get("fix")
         if fx:
             v += f" || adapted `{' '.join(fx['argv'])}` ({fx.get('cwd', '.')}/): " + (f"exit {fx['rc']}, {fmt_quotes(fx, short=True)}, {fx['verdict']}" if "rc" in fx else fx["verdict"] + ": " + fx["reason"])
@@ -978,13 +994,61 @@ def merged(dirs):
         for l in (Path(d) / "results.jsonl").read_text().split("\n"):
             if l.strip():
                 x = json.loads(l)
-                if n == 0 or x["id"] in rows:
-                    rows[x["id"]] = x
+                rows[x["id"]] = x
     return list(rows.values())
+
+
+def heading_at(lines, n):
+    for i in range(min(n, len(lines)) - 1, -1, -1):
+        if lines[i].startswith("## "):
+            return lines[i][3:].strip()
+    return "Before the first heading"
+
+
+def compact(rows, readme):
+    """The merged results as tables by README section: what notes/REPRODUCTION.md lists under 'Commands checked'."""
+    lines = readme.split("\n")
+    groups = {}
+    for r in rows:
+        ln = r.get("line")
+        groups.setdefault((0, "Whole README") if not ln else (ln, heading_at(lines, ln)), []).append(r)
+    by_head = {}
+    for (ln, h), rs in sorted(groups.items()):
+        by_head.setdefault(h, []).extend(sorted(rs, key=lambda r: r.get("line") or 0))
+    out = []
+    for h, rs in by_head.items():
+        out += [f"### {h}", "", "| id | command | from | exit | files | number printed vs quoted | wall | verdict |", "|---|---|---|---|---|---|---|---|"]
+        for r in rs:
+            fl = r.get("files") or []
+            files = "none named" if not fl else ("all exist" if all(ok for _, ok in fl) else "MISSING " + ",".join(f for f, ok in fl if not ok))
+            v = r["verdict"]
+            if r.get("reason") and v != "OK":
+                v += ": " + (r["reason"][:140] + ("..." if len(r["reason"]) > 140 else ""))
+            diff = [f for f, s in r.get("regen") or [] if s != "identical"]
+            if diff:
+                v += "; the regenerated file differs from the committed one: " + ", ".join(diff)
+            if r.get("post") and r["post"] not in v:
+                v += f" [{r['post']}]"
+            if r.get("composite_log"):
+                v += " [composite log, see Prioritised fixes]"
+            fx = r.get("fix")
+            if fx:
+                v += f". Adapted `{' '.join(fx['argv']).replace('{ECC}', '../ecc')}` from {fx.get('cwd', '.')}/: " + (fx["verdict"] if "rc" not in fx else f"exit {fx['rc']}, {fx['verdict']}") \
+                     + (" (one-line patch in a scratch copy)" if fx.get("patch") else "")
+            if r.get("existing_build"):
+                v += " (existing build)"
+            wall = f"{r['wall']:.0f} s" if r.get("wall") is not None else ""
+            cwd = r.get("cwd_run") or r.get("cwd") or "."
+            out.append(f"| {r['id']} | `{r['span'].replace('|', '/')}` | {cwd} | {r.get('rc', '')} | {files} | {fmt_quotes(r, short=True)} | {wall} | {v.replace('|', '/')} |")
+        out.append("")
+    return "\n".join(out)
 
 
 def cmd_merge(args):
     rows = merged(args.merge)
+    if args.compact:
+        print(compact(rows, Path(args.readme).read_text(encoding="utf-8")))
+        return 0
     cnt = {}
     for r in rows:
         cnt[r["verdict"]] = cnt.get(r["verdict"], 0) + 1
@@ -1023,7 +1087,7 @@ def cmd_run(ctx, rows, readme, args):
         done = {json.loads(l)["id"] for l in resf.read_text().split("\n") if l.strip()}
     if args.pass2:
         prev = [json.loads(l) for l in Path(args.pass2).read_text().split("\n") if l.strip()]
-        ids = {p["id"] for p in prev if p.get("deferred")} | {r.id for r in ROWS if r.need}
+        ids = {p["id"] for p in prev if p.get("deferred")} | {r.id for r in ROWS if r.need}  # --only narrows the rows chosen
         rows = [r for r in rows if r.id in ids]
     elif "files_named" not in done:
         res = files_named_result(ctx, readme)
