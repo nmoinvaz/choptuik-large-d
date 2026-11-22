@@ -201,7 +201,10 @@ are, as far as we can check, the only values; with their 256 -> 512 changes they
 
 Correction (#1073, raw `I1073-rpi5/` d481a3a3, rpi5's `report1073.py`): the 256 -> 512 change overstates the error of
 their 512-mode Δ below D 3.2. There it agrees with our double-double values (`hp/data/delta_all.csv`) to 3e-9 at D
-3.0475 to 3.175, and differs by +2.5e-6 at D 3.2, a step whose cause is not known. Their Fortran data hold 128, 256 and
+3.0475 to 3.175, and differs by +2.5e-6 at D 3.2. The step is theirs (#1074, raw `I1074-rpi5/` fdcdaaf6): their
+512-mode runs change settings between D 3.18 and 3.2 (xleft 1e-4 to 1e-3, nleft/nright 7500/6500 to 4000/4000, xmid
+0.04 to 0.1, eps 1e-6 to 1e-8), the difference then decays smoothly (3.6e-7 at 3.25 to 3.5e-9 at 3.4), and our 3.2 is
+converged in M like its neighbours (M 160 to 192: -2.4e-11). Their Fortran data hold 128, 256 and
 512 modes only, with γ (`gam.out`) at 512 alone; 1024-mode Δ exists only in their C++ data, at D 3.046 to 3.096, with
 no γ. Their γ starts at D 3.1, with a gap from 3.14 to 3.2. Over D 3.1 to 4, Δ/(2γ) from their data rises at every step,
 4.61 at D 4 to 6.91 at D 3.1 (48 of 48 pairs): there γ falls faster than Δ. Below D 3.1 their data say nothing about γ.
