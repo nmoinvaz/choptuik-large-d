@@ -45,7 +45,9 @@ among the start state, the --history states (same M and nodes; renoded with the 
 is given) and the solutions of this run, or from the state itself when one is at that D. --warp: none
 (phi = 0, hp's own curves), test (phi = A (sin(2 theta + 0.3) + 0.3 cos(4 theta - 1.1)), an arbitrary warp for the
 planted checks), design (from the start state's unwarped band at its D: omega b phi_theta = softplus(eps0 - g*) minus its
-mean, g* the smallest c - x over the band at each theta; band.design_phi), or a saved phi. --expect D:VALUE:TOL: exit 1
+mean, g* the smallest c - x over the band at each theta; band.design_phi), redesign:OLD.npy (the same from the start
+state's band marched on the curves of a saved warp, for a start below the closing, where hp's curves meet x = c), or a
+saved phi. --expect D:VALUE:TOL: exit 1
 unless the solve at D converged with |Delta - VALUE| <= TOL. --mutate nowarp: band.py's control (the warped curves
 treated as curves of constant x). Exit 1 if a D does not converge, or an --expect fails.
 
@@ -332,6 +334,17 @@ def main():
         phi, g = design_phi([(band[0], sA)] + prof, om0, a.eps0, kmax=M // 2)
         log(f"warp designed at D {D0}: unwarped band {len(pts) - 1} steps, g* min {g.min():.4e}, max|phi| "
             f"{np.abs(phi).max():.3e}")
+    elif a.warp.startswith("redesign:"):
+        phi0 = np.load(a.warp.split(":", 1)[1])
+        bd = Band(D0, N, Warp(band[0], band[1], phi0))
+        z = zh + zl
+        sA = node_full(z, M, nodes.index(band[0]))
+        prof = []
+        pts, end, gp, gm = bd.plan(sA, om0, kappa=a.kappa, record=prof)
+        prof = [(bd.warp.at(zz)[0], st) for zz, st in prof]
+        phi, g = design_phi([(band[0], sA)] + prof, om0, a.eps0, kmax=M // 2)
+        log(f"warp redesigned at D {D0} on the old warp's curves: {len(pts) - 1} steps, smallest c - x {g.min():.4e}, "
+            f"old max|phi| {np.abs(phi0).max():.3e}, new {np.abs(phi).max():.3e}")
     else:
         phi = np.load(a.warp)
     if a.save:
