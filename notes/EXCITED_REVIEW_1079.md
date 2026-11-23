@@ -25,9 +25,13 @@ mutation table (finding 21).
 ## Verdict
 
 **Confirmed, with three corrections to the record and eight gaps.** No error was found in the claim itself. At both
-zeros the Krawczyk step passes and (H0)–(H3) hold, each tied to the same centre and the same box by a check that can
-fail. Two corrections concern the margin gap between machines (findings 16 and 17), and one a section number (21).
-The gaps are in the options, in what the files record, in two controls and in the theorem's wording.
+zeros the stored Krawczyk certificates pass and (H0)–(H3) hold, each tied to the same centre and the same box by a
+check that can fail. Two corrections concern the margin gap between machines (findings 16 and 17), and one a section
+number (21). The gaps are in the options, in what the files record, in two controls and in the theorem's wording.
+
+The gap that matters most is finding 18. At the second zero the box run passes the test on the three machines that
+ran it and fails in most runs where the frames of the Lohner sets are moved by one unit in the last place. The stored
+files are proofs. A rerun on a fourth machine may well fail on its own bound, and that would not be an error.
 
 | statement of #1079, or question put to the review | after the review | findings |
 |---|---|---|
@@ -40,6 +44,7 @@ The gaps are in the options, in what the files record, in two controls and in th
 | (H3), ρ₆ₐ = 0.01365 and 0.01259 | confirmed from the stored enclosure. The `coords` mutation is not caught there | 11 |
 | the quoted numbers | 89 of 89 entries agree with the raw files | 12 |
 | the Linux margins are smaller because the box run's columns widen from last-digit differences in the start data | not supported. The frames of the Lohner sets carry it, two Macs differ as much, and the start data play no part | 16, 17 |
+| the certificates are reproduced on Linux | the stored files pass on three machines. The box run itself is not reproducible at the second zero: most runs with the frames moved by one unit in the last place fail the test | 18 |
 
 ## Findings
 
@@ -57,7 +62,7 @@ rests on less than stated) or **confirmed**.
 | 7 | confirmed | (H0) is valid as run. The lemma holds for any r₀ at which its computation succeeds, and the path starts at that r₀. A separate call proves step (i) over p̂ ± 10⁻⁹ and its Cauchy box with the certificate's N | §2.2 |
 | 8 | confirmed | (H1): lemma S(3), the old sector lemma and the flat estimate hold over p̂ ± 10⁻⁶ at both centres | §2.3 |
 | 9 | confirmed | (H2): each covering has 183 certified discs at its own centre, its check passes and fails with a tile dropped, X_c's hull lies in X_b and X_b in X₆ | §2.4 |
-| 10 | gap | `c1check`, cited as a control of (H2), does not pass its own mutation at h = 10⁻¹¹: with the derivative columns dropped, the points moved in ω/ω∞ stay inside at rows 1 and 6 | §2.4 |
+| 10 | gap | `c1check`, cited as a control of (H2), does not pass its own mutation at h = 10⁻¹¹: with the derivative columns dropped, the points moved in ω/ω∞ stay inside at rows 1 and 6. Run by the review at h = 10⁻⁹, the control passes and its mutation fires, at both centres | §2.4 |
 | 11 | confirmed | (H3): ρ₆ₐ follows from the stored backward enclosure, and the lemma 6a input is the export of the cited box. The `coords` mutation gives ρ₆ₐ = 0.28 and 0.17, below 1 | §2.5 |
 | 12 | confirmed | Every number quoted in the result comments that I entered (89) is in the raw files | §3 |
 | 13 | confirmed | The four Lean files regenerate byte for byte from the raw box and point files | §4 |
@@ -65,7 +70,7 @@ rests on less than stated) or **confirmed**.
 | 15 | gap | The #1077 review harness (`regen_check.sh`, `reproduce.py`, `Axioms.lean`, `Mutations.lean`) was not extended to the new instances. At the second zero a transposed YJ still passes `check` | §4 |
 | 16 | error | The stated cause of the margin gap is not supported. Last-digit changes of the start data leave the margins unchanged. A 1-ulp change of the frames Q moves them by as much as the machines differ, and this Mac differs from macm3 as much as dh610 does | §5 |
 | 17 | error | "Their radius is 1.8× (first zero) and 8.5× (second) wider on Linux" names the variational columns. Those ratios are of the largest radius of Y·Dg̃(X). The columns' radii are 0.98× and 1.66× | §5 |
-| 18 | gap | The margins are not a property of the zero and the box. A rerun elsewhere can land anywhere in the range seen, and its `controls` can report C6 as unexpected | §5 |
+| 18 | gap | The pass of a rerun is a draw. With the frames moved by 1 ulp the first zero's box run passes in 6 of 6 runs (A margin 0.26 to 0.68), and the second zero's in 1 of 6. The stored files are valid proofs, but "reproduced on Linux" shows one more passing draw, not a reproducible run. The margins belong to the stored files, not to the zero and the box | §5 |
 | 19 | gap | Theorem A(M)'s hypotheses are written with the fundamental zero's sets (x̂ ± 10⁻⁶, p̂ ± 1.1×10⁻⁹). At the excited zeros they hold with each zero's own centre and covering. The text needs that reading stated | §2.6 |
 | 20 | gap | `lemma6_sector_M.py --json` and `lemma6_jump_M.py --json` do not record the centre given by `--x`. The default-order point files that comment 7104591124 cites are not in the raw repository | §3 |
 | 21 | error | Theorem A(M) is §6 of A_lemmas_M.md, not §8 (`certify_M.py` line 90 and the issue's comments) | above |
@@ -255,6 +260,11 @@ parameters at every row). So at this box the control cannot see a missing ω/ω�
 control, not a step of the proof: the discs are certified on the rigorous sets. A tolerance proportional to h would
 restore it, or a C¹ ray run at h = 10⁻⁹ for the control alone, as the M = 5 covering (h = 10⁻¹⁸) did.
 
+The review ran that control (`review_1079/c1_control.sh`: `ray --c1 --h=1e-9` at each centre, about a minute, then
+`c1check` and `c1check --mutate=nov`). At both zeros the planted truth is True and the mutation is True (every moved
+point falls outside), with set radii 3.5×10⁻⁸ and 2.5×10⁻⁸ at |u| = 27. So the C¹ columns at the excited centres pass
+a control that can fail. This run is not part of the covering of record.
+
 ### 2.5 (H3): lemma 6a (finding 11)
 
 - The lemma 6a input is the export of the cited box: `certify_M.export_6a` run here on the box file gives the stored
@@ -386,9 +396,9 @@ What this shows:
   in their last digits, as between the machines, and leaves all four margins unchanged to the three digits printed.
   The start radii are 10⁻⁷² in the values and 10⁻¹⁷ in the columns, against a state radius of 10⁻¹³.
 - **The frames.** `validated_int.qr_pivot` takes Q from numpy's float QR of the propagated frame, with the columns
-  sorted by norm. Moving every entry of every Q by 1 ulp moves the weakest margin of the second zero from 0.398 to
-  0.943. The runs print the same radii, to the digits printed, along the ray and most of the arc. They part near the
-  end of the arc and on the real leg, where the derivative radius grows a thousandfold.
+  sorted by norm times weight. Moving every entry of every Q by 1 ulp moves the margins as far as the machines differ,
+  in both directions. The runs print the same radii, to the digits printed, along the ray and most of the arc. They
+  part near the end of the arc and on the real leg, where the derivative radius grows a thousandfold.
 - **Deterministic on one machine.** The unperturbed run repeated gives the same margins.
 - **The columns are not what widens** (finding 17). In dh610's `compare_json.txt` the largest radius of the box
   Jacobian's columns is 9.26×10⁻⁵ against macm3's 9.46×10⁻⁵ at the first zero (0.98×) and 1.05×10⁻⁴ against 6.33×10⁻⁵
@@ -397,16 +407,26 @@ What this shows:
   differs is the shape of the Lohner sets, the frame QV and the box qV, to which the product (Yℓ)QV is sensitive
   because Yℓ cancels the leakage to five or six digits.
 
-Does it matter for the claim? No, in one respect, and yes in another.
+**At the second zero the test fails for most of the perturbed runs** (finding 18). The largest radius of Y·Dg̃(X) is
+0.03 in macm3's file, 0.27 in dh610's, 0.35 on this Mac, and 0.7 to 1.1 in the failing runs: the last bits of the
+frames decide whether the enclosure of the Jacobian is tight enough. At the first zero every run passes.
 
-- The stored files are proofs wherever they are loaded. macm3's files give macm3's margins on dh610 and on this Mac,
-  and dh610's files give dh610's margins on this Mac (+0.468, +0.619, +0.997, +0.998 and +0.711, +0.528, +0.981,
-  +0.992; `recheck` exit 0 and its mutation exit 1). So the cross-load passes three ways, and the rule of #111 is met.
-- But the margin is not a number that belongs to the zero and the box (finding 18). It is one draw from a range that
-  a last bit selects. Every draw seen passes. A rerun on another machine "passes on its own bound" only if its draw
-  does, and its `controls` exit 1 whenever the A margin falls below 0.5 (C6, as with dh610's file of the first zero).
-  The text should quote the margins as "of the stored file". The 1% bar of the Linux task was not one a second machine
-  could be expected to meet.
+PERTURB_PROSE
+
+Does it matter for the claim?
+
+- **Not for the theorem.** The stored files are proofs wherever they are loaded, and a failed run is an enclosure
+  that is too wide, not a counterexample. macm3's files give macm3's margins on dh610 and on this Mac, and dh610's
+  files give dh610's margins on this Mac (+0.468, +0.619, +0.997, +0.998 and +0.711, +0.528, +0.981, +0.992;
+  `recheck` exit 0 and its mutation exit 1). So the cross-load passes three ways. The Lean instances pin macm3's files
+  by their sha256.
+- **It does for "reproduced".** AGENTS.md's rule (#111) is that a rerun passes when its own bound passes. At the
+  second zero a rerun's pass is a draw. Three machines drew a pass. A fourth can fail without anything being wrong,
+  and then the rule would report a failed reproduction. What the Linux rerun shows is that the stored files load and
+  pass elsewhere and that one more draw passed. It does not show that the box run is reproducible.
+- The margin is not a number that belongs to the zero and the box. The text should quote the margins as "of the
+  stored file". A `controls` run exits 1 whenever the A margin falls below 0.5 (C6, as with dh610's file of the first
+  zero). The 1% bar of the Linux task was not one a second machine could be expected to meet.
 
 The box file alone is a certificate as well: `krawczyk --box` without `--point` gives the same margins to three
 digits at both zeros, and that is the test `certify_M_recheck.py` mirrors.
