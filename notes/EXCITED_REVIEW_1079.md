@@ -10,14 +10,14 @@ What was reviewed:
 - branch `feat/certify-excited` (1addcada, 89553c6b, c40fbc77): the options of `certify_M.py`,
   `lemma6_sector_M.py --x`, `theorem_A_sets_M.py --cert --ray`;
 - branch `feat/lean-excited` (18550de1): the Lean instances `M3exc1`, `M3exc2` and their controls;
-- the runs in the raw-data repository, `I1079-macm3/` (macOS) and `I1079-dh610/` (Linux), at raw 143d4d5b and
-  bab3a952;
+- the runs in the raw-data repository, `I1079-macm3/` (macOS; `levers/`, `h2/`) and `I1079-dh610/` (Linux), at raw
+  143d4d5b and bab3a952, unchanged since;
 - the result comments of #1079, which I read before starting. The checks below share no script with the runners'
   chains, except where a line says that a stored command was rerun.
 
 The review's scripts are in `solver/proof/review_1079/`. Its own runs are raw output, in `I1079-mac-review/` of the
-raw-data repository. Machine: Apple arm64, macOS 27.0.1, Python 3.13.15, python-flint 0.9.0, FLINT 3.6.0, numpy 2.5.4
-on Accelerate.
+raw-data repository (raw 0e9175ee). Machine: Apple arm64, macOS 27.0.1, Python 3.13.15, python-flint 0.9.0,
+FLINT 3.6.0, numpy 2.5.4 on Accelerate.
 
 Theorem A(M) is §6 of A_lemmas_M.md. The issue's comments and `certify_M.py` line 90 cite it as §8, which is the
 mutation table (finding 21).
