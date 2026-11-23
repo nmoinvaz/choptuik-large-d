@@ -29,8 +29,8 @@ SOLVER_DIR = os.environ.get("DSS_SOLVER_DIR") or (
     _TREE_SOLVER if os.path.isdir(_TREE_SOLVER) else "/home/claude/dss-residual-kernel/solver")
 NODES_OLD = [0.02, 0.05, 0.1, 0.16, 0.23, 0.3, 0.4, 0.5, 0.6, 0.7]
 # the kernel's dense n x n paths (jacobian, newton, lm_steps, mode_det, ...) stop at this M; above it only
-# Solver.newton_mixed runs, in block storage (python.rs DENSE_M_MAX, notes/HIGH_M.md)
-DENSE_M_MAX = 128
+# Solver.newton_mixed runs, in block storage (python.rs dense_m_max, notes/HIGH_M.md); HP_DENSE_M_MAX raises it in both
+DENSE_M_MAX = int(os.environ.get("HP_DENSE_M_MAX", "128"))
 
 
 # ------------------------------------------------------------------ grid
