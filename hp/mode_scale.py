@@ -1,6 +1,6 @@
 """#1078: is det M(lam)'s sign at low D unresolved because of scale, or because M is near singular?
 
-    python3 mode_scale.py OUT.jsonl STATE.npz LAM [LAM ...] [--threads=6] [--hmax=0.05] [--mutate=noscale]
+    python3 mode_scale.py OUT.jsonl STATE.npz LAM [LAM ...] [--threads=6] [--hmax=0.05] [--mutate=noscale] [--small=K]
     python3 mode_scale.py selftest
 
 At D 3.044375 the double-double LU of the mode matrix has pivots from 1e-4 to 4e32, a ratio below double-double's
@@ -11,7 +11,9 @@ partial pivoting. Each lambda writes: the pivot range of the unscaled and of the
 sign and ln|det| (corrected by the scalings' exact logarithms), and kernel mode_det's sign and ln|det| beside them.
 If the scaled pivot ratio is far above 1e-16, the scaled sign is resolved; a pivot ratio that stays small after
 scaling means M itself is near singular there. --mutate=noscale skips the scaling (the control: its pivot range must
-equal the unscaled one). The selftest plants a badly scaled matrix with a known determinant."""
+equal the unscaled one). The selftest plants a badly scaled matrix with a known determinant. --small=K adds the K
+smallest |pivots| of the scaled float64 LU with their unknown (column) indices: where M's near-null direction sits
+(#1078: the smallest double-double pivot does not depend on the shooting plan)."""
 import json
 import math
 import os
@@ -46,16 +48,21 @@ def ruiz(A, iters=40):
     return r, c
 
 
-def logdet_lu(A):
-    """sign, ln|det| and the pivot range of a float64 LU with partial pivoting"""
+def logdet_lu(A, small=0):
+    """sign, ln|det| and the pivot range of a float64 LU with partial pivoting (row interchanges only, so pivot k
+    belongs to unknown k); with small = K also the K smallest |pivots| as (unknown index, value)"""
     lu, piv = lu_factor(A, check_finite=False)
     d = np.diag(lu)
     sign = np.prod(np.sign(d)) * (-1) ** int(np.sum(piv != np.arange(len(piv))))
     ad = np.abs(d)
-    return float(sign), float(np.sum(np.log(ad))), float(ad.min()), float(ad.max())
+    out = (float(sign), float(np.sum(np.log(ad))), float(ad.min()), float(ad.max()))
+    if small:
+        k = np.argsort(ad)[:small]
+        out += ([[int(i), float(d[i])] for i in k],)
+    return out
 
 
-def scaled_det(Mh, Ml, noscale=False):
+def scaled_det(Mh, Ml, noscale=False, small=0):
     A = Mh + Ml
     s0, l0, p0min, p0max = logdet_lu(A)
     if noscale:
@@ -63,10 +70,14 @@ def scaled_det(Mh, Ml, noscale=False):
     else:
         r, c = ruiz(A)
     S = A * np.exp2(r)[:, None] * np.exp2(c)[None, :]                    # exact: powers of two
-    s1, l1, p1min, p1max = logdet_lu(S)
+    r1 = logdet_lu(S, small)
+    s1, l1, p1min, p1max = r1[:4]
     l1 -= (r.sum() + c.sum()) * math.log(2.0)                             # ln|det M| = ln|det S| - ln det of the scalings
-    return dict(sign=s1, ln=l1, pmin=p1min, pmax=p1max, ratio=p1min / p1max, sign_unscaled=s0, ln_unscaled=l0,
-                pmin_unscaled=p0min, pmax_unscaled=p0max, ratio_unscaled=p0min / p0max)
+    out = dict(sign=s1, ln=l1, pmin=p1min, pmax=p1max, ratio=p1min / p1max, sign_unscaled=s0, ln_unscaled=l0,
+               pmin_unscaled=p0min, pmax_unscaled=p0max, ratio_unscaled=p0min / p0max)
+    if small:
+        out["small"] = r1[4]
+    return out
 
 
 def selftest():
@@ -107,7 +118,7 @@ def main():
     for lam in lams:
         t = time.time()
         Mh, Ml = s.mode_matrix(zh, zl, lam, 0.0)
-        d = scaled_det(np.asarray(Mh), np.asarray(Ml), noscale=o.get("mutate") == "noscale")
+        d = scaled_det(np.asarray(Mh), np.asarray(Ml), noscale=o.get("mutate") == "noscale", small=int(o.get("small", 0)))
         sg, la, pmin, pmax = s.mode_det(zh, zl, lam, 0.0)
         row = dict(D=D, M=M, lam=lam, n=int(np.asarray(Mh).shape[0]), **d, kernel_sign=float(sg), kernel_ln=float(la),
                    kernel_pmin=float(pmin), kernel_pmax=float(pmax), state=os.path.basename(state), map=grid,
