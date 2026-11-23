@@ -26,6 +26,16 @@ For M = 3 and 5 the enclosures are those of the preconditioned products Y g(0) a
 `Yg` and `YJ` are the products with the file's Y is part of `EnclOK`, and the exporter asserts it exactly
 (`DSS/NonVacuous.lean` proves det Y ≠ 0 and that each instance's hypotheses can be met).
 
+The excited M = 3 zeros (#1079) have instances `M3exc1` and `M3exc2` (with `Wide` controls and non-vacuity in
+`DSS/NonVacuous.lean`), from the box and point runs in the raw-data repository. Their `EnclOK` rests on `certify_M.py`
+at `CERTIFY_M_NTAY=28 CERTIFY_M_NJAC=16` (branch `feat/certify-excited`). From the repository root, with the raw-data
+repository cloned beside it (`git clone https://github.com/nmoinvaz/choptuik-large-d-raw ../choptuik-large-d-raw`):
+
+    D=../choptuik-large-d-raw/I1079-macm3/levers/data
+    python3 lean/tools/export_krawczyk.py certM $D/A_M_box_M3x1E2_h1e-12_w1e-13.json M3exc1 lean/DSS/M3exc1.lean \
+        --point=$D/A_M_point_M3x1E2.json --proof=solver/proof --label="raw I1079-macm3/levers/data (choptuik-large-d-raw 143d4d5b)"
+    # M3exc2: A_M_box_M3x2E2_h1e-12_w1e-12.json and A_M_point_M3x2E2.json; the controls with --widen=1000000
+
 Checks (the independent review of #1077, `notes/LEAN_REVIEW_1077.md`), from the repository root unless stated:
 
     cd lean && python3 review/reproduce.py all            # each instance from its source by two routes; PASS
