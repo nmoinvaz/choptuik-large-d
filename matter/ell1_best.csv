@@ -22,7 +22,7 @@ D,lambda1,err,err_kind,kc,build,Delta,source
 19.375,1.434463411,0.002911405978,k_c step 79->87,87,macos,1.076792606,I1025-macm3/kc87_d19375/scan;I1025-macm3/kc87_d19375low/scan @ 660e6fa0
 19.5,1.398814905,0.003169322362,build spread at k_c 87,95,linux,1.079835251,I1025-dh610/kc95_d195/scan @ 660e6fa0
 19.75,1.32607717,0.005147708189,state spread at k_c 87 (linux),95,linux,1.086000056,I1025-dh610/kc95_d1975/scan @ 660e6fa0
-20,1.247484039,0.001758325169,build spread at k_c 79,87,windows,1.092254283,I1025-win2/kc87_d20 @ 660e6fa0
-20.25,1.166951725,0.002385614648,build spread at k_c 79,87,linux,1.098603431,I1025-dh610/kc87_d2025/scan @ 660e6fa0
+20,1.247484039,0.0026,regrid reproducibility (half the D 19.75 state span),87,windows,1.092254283,I1025-win2/kc87_d20 @ 660e6fa0
+20.25,1.166951725,0.0026,regrid reproducibility (half the D 19.75 state span),87,linux,1.098603431,I1025-dh610/kc87_d2025/scan @ 660e6fa0
 20.5,1.087573961,0.01235209453,estimator half-range,79,linux,1.105055446,I1025-dh170/kc79_d205;I1025-dh170/kc79_d205/scan @ 660e6fa0
-20.75,0.9897787016,0.0007198969,estimator half-range,79,macos,1.111605143,I1025-macm3/kc79_d2075/scan @ 660e6fa0
+20.75,0.9897787016,0.0026,regrid reproducibility (half the D 19.75 state span),79,macos,1.111605143,I1025-macm3/kc79_d2075/scan @ 660e6fa0

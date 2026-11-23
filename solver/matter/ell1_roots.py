@@ -14,8 +14,8 @@ RAWDIR is a checkout (or an extract) of choptuik-large-d-raw at --commit. Two so
 A root's kind (lambda_1, lambda_1_superseded, discretization) comes from KINDS, the coordinator's rulings by position (D, k_c, a value
 within 0.002); every other root is `unidentified`. BEST has one row per D with a lambda_1 root: lambda_1 at the
 highest k_c (Linux first), and err the largest of the k_c step on one build, the spread between builds at one k_c,
-the spread between states of one build at one k_c (re-converged, other thread counts), and the estimator half-range,
-named in err_kind."""
+the spread between states of one build at one k_c (re-converged, other thread counts), the estimator half-range, and
+from D 19.5 on a floor of 0.0026 for one regrid's reproducibility, named in err_kind."""
 import csv
 import glob
 import json
@@ -30,6 +30,9 @@ BUILD = {"dh170": "linux", "dh370": "linux", "dh610": "linux", "rpi5": "linux-ar
          "win": "windows", "win2": "windows", "win2b": "windows", "win2c": "windows"}
 SKIP = ("plant", "control", "mutat", "killed", "selftest")
 NEED = ("D", "kc", "lam", "sign", "ln", "noise_robust", "f64_sign", "state")
+# past D 19.5 one regrid fixes lambda_1 only to about this much: half the span 0.0051 of four states equally converged
+# at the |F| floor at D 19.75, k_c 87 (re-convergence, 6 and 8 threads; raw I1025-dh610 reconv_d1975, repro_d1975)
+REPRO_FROM, REPRO = 19.5, 0.0026
 OTHER = defaultdict(int)
 
 
@@ -178,6 +181,8 @@ def best_rows(rows):
                     errs[f"state spread at k_c {kc} ({b})"] = max(vb.values()) - min(vb.values())
         if top["range_lo"] is not None:
             errs["estimator half-range"] = (top["range_hi"] - top["range_lo"]) / 2
+        if D >= REPRO_FROM:                         # one regrid's reproducibility at the |F| floor (#1025, 10:15 UTC)
+            errs["regrid reproducibility (half the D 19.75 state span)"] = REPRO
         ek = max(errs, key=errs.get) if errs else "none: one k_c and one build"
         out.append(dict(D=D, lambda1=top["root"], err=errs.get(ek), err_kind=ek, kc=kmax, build=top["build"],
                         Delta=top["Delta"], source=f"{top['raw_folder']} @ {top['raw_commit']}"))
