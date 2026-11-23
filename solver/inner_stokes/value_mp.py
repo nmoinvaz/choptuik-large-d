@@ -10,6 +10,8 @@ the |dF_3| neighbour test is applied by the recount's merge, not here).
     python3 value_mp.py point A WF F3RE F3IM [--r1=0.17] [--dps=34] [--dps2=42] [--order=40] [--order2=50] [--iters=8]
     python3 value_mp.py check1 CACHE.jsonl [--n=3] [...]   check 1 of #1076 on the n best-valued float64 points
     python3 value_mp.py check2 CACHE.jsonl [--n=1]         check 2: R_1 at (34, 40, margin 12) against (42, 50, 14)
+    python3 value_mp.py batch CACHE ROWS --points "A,w;A,w" [--procs=N]   value the points, write every row to ROWS,
+        append the valued ones to CACHE (as argcount reads it: later records of a key win)
 """
 import json
 import os
@@ -75,10 +77,16 @@ def value_point(A, wf, f3re, f3im, r1="0.17", dps=34, dps2=42, p=40, p2=50, iter
     sig = max(dR + dr1, mp.mpf(10) ** (-(dps - 6)) * abs(R2))
     ok = abs(R2) >= 10 * sig and info2["ymax"] <= 100
     return dict(A=float(A), wf=float(wf), re=float(mp.re(R2)), im=float(mp.im(R2)), sig=float(sig),
+                info=float(max(abs(r32[0]), abs(r32[1]))),
                 R_over_sig=float(abs(R2) / sig), valued=bool(ok), dR=float(dR), dr1=float(dr1),
                 r3=[float(r32[0]), float(r32[1])], F3re=float(v2[1] / 2), F3im=float(-v2[0] / 2),
                 ymax=float(info2["ymax"]), r1=float(r1), mp_dps=[dps, dps2], order=[p, p2], calls=[n1, n2],
                 steps=int(info2["steps"]), terr=float(info2["terr"]), seconds=round(time.time() - t0, 1), fu="mp")
+
+
+def _batch_one(a):
+    (A, wf, f3re, f3im), kw = a
+    return value_point(A, wf, f3re, f3im, **kw)
 
 
 def main():
@@ -110,6 +118,35 @@ def main():
                   f"{'PASS' if ok else 'FAIL'}", flush=True)
         print(f"check 1: {'PASS' if ok_all else 'FAIL'}", flush=True)
         return 0 if ok_all else 1
+    if args and args[0] == "batch":
+        cache, rows = args[1], args[2]
+        recs = {}
+        for line in open(cache):
+            r = json.loads(line)
+            recs[(round(r["A"], 12), round(r["wf"], 12))] = r
+        pts = [tuple(float(t) for t in q.split(",")) for q in opts.get("points", "").split(";") if q]
+        jobs = []
+        for A, wf in pts:
+            r = recs.get((round(A, 12), round(wf, 12)))
+            if r is None or r.get("F3re") is None or not all(map(lambda t: isinstance(t, float) and t == t, (r["F3re"], r["F3im"]))):
+                with open(rows, "a") as fh:
+                    fh.write(json.dumps(dict(A=A, wf=wf, skipped="no float64 F_3 to start from", fu="mp")) + "\n")
+                continue
+            jobs.append((repr(r["A"]), repr(r["wf"]), repr(r["F3re"]), repr(r["F3im"])))
+        procs = int(opts.get("procs", 1))
+        fn = _batch_one
+        it = map(fn, [(j, kw) for j in jobs]) if procs <= 1 else __import__("multiprocessing").get_context("spawn").Pool(procs).imap_unordered(fn, [(j, kw) for j in jobs])
+        nval = 0
+        for row in it:
+            with open(rows, "a") as fh:
+                fh.write(json.dumps(row) + "\n")
+            if row.get("valued"):
+                nval += 1
+                with open(cache, "a") as fh:
+                    fh.write(json.dumps({k: row[k] for k in ("A", "wf", "re", "im", "info", "r1", "F3re", "F3im", "ymax", "sig", "fu", "mp_dps")}) + "\n")
+            print(f"({row['A']}, {row['wf']}): |R|/sigma_mp {row['R_over_sig']:.3g}, valued {row['valued']}, {row['seconds']} s", flush=True)
+        print(f"valued {nval} of {len(jobs)} points (skipped {len(pts) - len(jobs)}); rows in {rows}", flush=True)
+        return 0
     if args and args[0] == "check2":
         recs = [json.loads(l) for l in open(args[1]) if l.strip()]
         good = [r for r in recs if r.get("sig") and r.get("re") is not None and abs(complex(r["re"], r["im"])) >= 1e3 * r["sig"]

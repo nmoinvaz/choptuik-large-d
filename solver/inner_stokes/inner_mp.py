@@ -22,7 +22,7 @@ import mpmath as mp
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 ARC_DT = 0.02
-MUTATE = set()          # controls: "conv" drops [C S] from D's equation, "series" keeps half the start series' optimal terms
+MUTATE = set()          # controls: "conv" drops [C S] from D's equation, "series" keeps only 8 terms of the start series
 
 
 def W0():
@@ -111,8 +111,8 @@ class InnerMP:
             if j > 10 and mags[-1] > 10 * min(mags):
                 break
         jt = min(range(1, len(mags)), key=lambda t: mags[t])
-        if "series" in MUTATE:                   # the control: half the terms the optimal truncation keeps
-            jt = max(jt // 2, 2)
+        if "series" in MUTATE:                   # the control: only 8 terms (half the terms change Y by 3e-34 only)
+            jt = min(jt, 8)
         Dd = self.scal(xi0, self.add(*D[:jt]))
         Sg = self.scal(q, self.add(*S[:jt]))
         Cc = self.add(*G[:jt])
