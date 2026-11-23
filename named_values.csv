@@ -1,0 +1,21 @@
+quantity,model,D,params,lo,hi,status,source
+zero_A,inner M=1,inf,Theorem A(M = 1),2.54214804761338,2.54214804761975,certified,solver/proof/certify_M.py THM_A1 (proof/A_certify.md)
+zero_wf,inner M=1,inf,Theorem A(M = 1),0.776994013607438,0.776994013612010,certified,solver/proof/certify_M.py THM_A1 (proof/A_certify.md)
+zero_A,inner M=3,inf,Theorem A(M = 3),2.72647588563032,2.72647588563144,certified,solver/proof/logs/A_M_krawczyk_M3_1e-10.log
+zero_wf,inner M=3,inf,Theorem A(M = 3),1.01560309485743,1.01560309485804,certified,solver/proof/logs/A_M_krawczyk_M3_1e-10.log
+zero_B3,inner M=3,inf,Theorem A(M = 3),0.144419478469924,0.144419478470230,certified,solver/proof/logs/A_M_krawczyk_M3_1e-10.log
+zero_C3,inner M=3,inf,Theorem A(M = 3),0.0110874258881079,0.0110874258881255,certified,solver/proof/logs/A_M_krawczyk_M3_1e-10.log
+zero_A,inner M=5,inf,Theorem A(M = 5),2.71857918921137,2.71857918921211,certified,solver/proof/logs/A_M2_krawczyk_M5_1e-10.log
+zero_wf,inner M=5,inf,Theorem A(M = 5),0.999228403206394,0.999228403206742,certified,solver/proof/logs/A_M2_krawczyk_M5_1e-10.log
+zero_B3,inner M=5,inf,Theorem A(M = 5),0.149203574911347,0.149203574911548,certified,solver/proof/logs/A_M2_krawczyk_M5_1e-10.log
+zero_C3,inner M=5,inf,Theorem A(M = 5),0.0147190524902411,0.0147190524902616,certified,solver/proof/logs/A_M2_krawczyk_M5_1e-10.log
+zero_B5,inner M=5,inf,Theorem A(M = 5),0.00840534690575134,0.00840534690577198,certified,solver/proof/logs/A_M2_krawczyk_M5_1e-10.log
+zero_C5,inner M=5,inf,Theorem A(M = 5),0.00147034518158975,0.00147034518159341,certified,solver/proof/logs/A_M2_krawczyk_M5_1e-10.log
+zero_A,inner M=3,inf,excited zero 1 (#1021 box),3.446218246366727,3.446218246366727,numerical evidence,raw I1021-macm3/zero1_mp @ c31b5d24 (zero_mp.py; orientation +1)
+zero_wf,inner M=3,inf,excited zero 1 (#1021 box),0.347606965217407,0.347606965217407,numerical evidence,raw I1021-macm3/zero1_mp @ c31b5d24 (zero_mp.py; orientation +1)
+zero_B3,inner M=3,inf,excited zero 1 (#1021 box),0.8054175863852927,0.8054175863852927,numerical evidence,raw I1079-macm3 @ 2667043d (value_mp.py point)
+zero_C3,inner M=3,inf,excited zero 1 (#1021 box),0.011780043848505818,0.011780043848505818,numerical evidence,raw I1079-macm3 @ 2667043d (value_mp.py point)
+zero_A,inner M=3,inf,excited zero 2 (#1021 box),3.526473056695715,3.526473056695715,numerical evidence,raw I1021-macm3/zero2_mp @ 6f58d566 (zero_mp.py; orientation +1)
+zero_wf,inner M=3,inf,excited zero 2 (#1021 box),0.211497981391215,0.211497981391215,numerical evidence,raw I1021-macm3/zero2_mp @ 6f58d566 (zero_mp.py; orientation +1)
+zero_B3,inner M=3,inf,excited zero 2 (#1021 box),0.9765085451976188,0.9765085451976188,numerical evidence,raw I1079-macm3 @ 2667043d (value_mp.py point)
+zero_C3,inner M=3,inf,excited zero 2 (#1021 box),-0.0017633195225818952,-0.0017633195225818952,numerical evidence,raw I1079-macm3 @ 2667043d (value_mp.py point)
