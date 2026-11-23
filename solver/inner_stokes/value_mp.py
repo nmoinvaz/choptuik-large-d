@@ -9,6 +9,7 @@ the |dF_3| neighbour test is applied by the recount's merge, not here).
 
     python3 value_mp.py point A WF F3RE F3IM [--r1=0.17] [--dps=34] [--dps2=42] [--order=40] [--order2=50] [--iters=8]
     python3 value_mp.py check1 CACHE.jsonl [--n=3] [...]   check 1 of #1076 on the n best-valued float64 points
+    python3 value_mp.py check2 CACHE.jsonl [--n=1]         check 2: R_1 at (34, 40, margin 12) against (42, 50, 14)
 """
 import json
 import os
@@ -22,7 +23,7 @@ sys.path.insert(0, HERE)
 import inner_mp as IM  # noqa: E402
 
 
-def solve(A, wf, v0, r1, dps, p, iters=8, hrel="1e-12"):
+def solve(A, wf, v0, r1, dps, p, iters=8, hrel="1e-12", margin=12):
     """Newton on r_3 = 0 at precision dps; returns (R_1, r_3, v, J1, J3, info, calls)"""
     mp.mp.dps = dps
     v = [mp.mpf(v0[0]), mp.mpf(v0[1])]
@@ -31,7 +32,7 @@ def solve(A, wf, v0, r1, dps, p, iters=8, hrel="1e-12"):
     def res(vv):
         nonlocal calls
         calls += 1
-        return IM.residual_demixed([A, wf, vv[0], vv[1]], 3, r1, p=p)
+        return IM.residual_demixed([A, wf, vv[0], vv[1]], 3, r1, p=p, margin=margin)
 
     r, info = res(v)
     J1 = J3 = None
@@ -108,6 +109,24 @@ def main():
                   f"(<= 1e-9); sigma_mp {row['sig']:.2e}, |R|/sigma_mp {row['R_over_sig']:.2e}, {row['seconds']} s: "
                   f"{'PASS' if ok else 'FAIL'}", flush=True)
         print(f"check 1: {'PASS' if ok_all else 'FAIL'}", flush=True)
+        return 0 if ok_all else 1
+    if args and args[0] == "check2":
+        recs = [json.loads(l) for l in open(args[1]) if l.strip()]
+        good = [r for r in recs if r.get("sig") and r.get("re") is not None and abs(complex(r["re"], r["im"])) >= 1e3 * r["sig"]
+                and abs(r.get("r1", 0.17) - float(kw["r1"])) < 1e-12]
+        good.sort(key=lambda r: -abs(complex(r["re"], r["im"])) / r["sig"])
+        ok_all = True
+        for r in good[: int(opts.get("n", 1))]:
+            v0 = [-2 * mp.mpf(str(r["F3im"])), 2 * mp.mpf(str(r["F3re"]))]
+            Ra, _, va, *_ = solve(str(r["A"]), str(r["wf"]), v0, kw["r1"], 34, 40, kw["iters"], margin=12)
+            Rb, _, vb, *_ = solve(str(r["A"]), str(r["wf"]), [str(va[0]), str(va[1])], kw["r1"], 42, 50, kw["iters"], margin=14)
+            mp.mp.dps = 42
+            rel = abs(Rb - Ra) / abs(Rb)
+            ok = rel <= mp.mpf("1e-25")
+            ok_all &= ok
+            print(f"({r['A']}, {r['wf']}): R_1 at (dps 34, order 40, margin 12) and (42, 50, 14) differ by "
+                  f"{mp.nstr(rel, 3)} relative (<= 1e-25): {'PASS' if ok else 'FAIL'}", flush=True)
+        print(f"check 2: {'PASS' if ok_all else 'FAIL'}", flush=True)
         return 0 if ok_all else 1
     print(__doc__)
     return 2
