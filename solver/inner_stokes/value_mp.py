@@ -26,11 +26,13 @@ sys.path.insert(0, HERE)
 import inner_mp as IM  # noqa: E402
 
 
-def solve(A, wf, v0, r1, dps, p, iters=8, hrel="1e-12", margin=12, J=None, chord="1e-4", M=3):
+def solve(A, wf, v0, r1, dps, p, iters=8, hrel="1e-12", margin=12, J=None, chord="1e-4", M=3, damp=0):
     """Newton on r_3 = ... = r_M = 0 for v = (B_3, C_3, ..., B_M, C_M) at precision dps, with chord steps
     (Shamanskii): the Jacobian (central differences, 2(M - 1) calls) is refreshed only after a step whose contraction
     max|r'|/max|r| exceeds `chord`, or after a step that fails; J = (J1, J3) starts from a given Jacobian (the second
-    precision reuses the first's). chord=None is plain Newton. Returns (R_1, (r_3, ..., r_M), v, J1, J3, info, calls)"""
+    precision reuses the first's). chord=None is plain Newton. damp=k halves a step that fails with a fresh Jacobian up
+    to k times (Armijo-free backtracking on max|r|); damp=0 (M = 3's default) stops there instead.
+    Returns (R_1, (r_3, ..., r_M), v, J1, J3, info, calls)"""
     mp.mp.dps = dps
     n = M - 1                                   # unknowns, and rows r_3 .. r_M (real and imaginary parts)
     v = [mp.mpf(x) for x in v0]
@@ -70,6 +72,15 @@ def solve(A, wf, v0, r1, dps, p, iters=8, hrel="1e-12", margin=12, J=None, chord
         vn = [v[k] + dv[k] for k in range(n)]
         rn, infon = res(vn)
         n0, n1 = max(abs(x) for x in r[2:]), max(abs(x) for x in rn[2:])
+        if n1 >= n0 and fresh and damp:
+            t = mp.mpf(1)
+            for _ in range(damp):          # backtrack along the fresh Newton step
+                t /= 2
+                vn = [v[k] + t * dv[k] for k in range(n)]
+                rn, infon = res(vn)
+                n1 = max(abs(x) for x in rn[2:])
+                if n1 < n0:
+                    break
         if n1 >= n0:
             if fresh:
                 break                      # no progress with a fresh Jacobian
@@ -88,14 +99,15 @@ def value_point(A, wf, f3re, f3im, r1="0.17", dps=34, dps2=42, p=40, p2=50, iter
     return value_v(A, wf, [-2 * mp.mpf(f3im), 2 * mp.mpf(f3re)], 3, r1, dps, dps2, p, p2, iters, chord)
 
 
-def value_v(A, wf, v0, M=3, r1="0.17", dps=34, dps2=42, p=40, p2=50, iters=12, chord="1e-4"):
+def value_v(A, wf, v0, M=3, r1="0.17", dps=34, dps2=42, p=40, p2=50, iters=12, chord="1e-4", damp=None):
     """R_1 at (A, w_f) with the harmonics v = (B_3, C_3, ..., B_M, C_M) solved from v0 at two precisions"""
     t0 = time.time()
     mp.mp.dps = dps
     v0 = [mp.mpf(x) for x in v0]
-    R, r3, v, J1, J3, info, n1 = solve(A, wf, v0, r1, dps, p, iters, chord=chord, M=M)
+    damp = (0 if M == 3 else 8) if damp is None else damp       # M = 3 keeps #1076's undamped solve
+    R, r3, v, J1, J3, info, n1 = solve(A, wf, v0, r1, dps, p, iters, chord=chord, M=M, damp=damp)
     R2, r32, v2, _, _, info2, n2 = solve(A, wf, [str(x) for x in v], r1, dps2, p2, iters,
-                                         J=None if chord is None else (J1, J3), chord=chord, M=M)
+                                         J=None if chord is None else (J1, J3), chord=chord, M=M, damp=damp)
     mp.mp.dps = dps2
     dR = abs(R2 - R)
     if J1 is not None and J3 is not None:
@@ -135,9 +147,10 @@ def main():
         A, wf, f3re, f3im = args[1:5]
         print(json.dumps(value_point(A, wf, f3re, f3im, **kw)), flush=True)
         return 0
-    if args and args[0] == "pointv":                # pointv A WF --M=5 --v=B3,C3,B5,C5 (#1080)
+    if args and args[0] == "pointv":                # pointv A WF --M=5 --v=B3,C3,B5,C5 [--damp=K] (#1080)
         M = int(opts.get("M", "3"))
-        print(json.dumps(value_v(args[1], args[2], opts["v"].split(","), M, **kw)), flush=True)
+        dmp = int(opts["damp"]) if "damp" in opts else None
+        print(json.dumps(value_v(args[1], args[2], opts["v"].split(","), M, damp=dmp, **kw)), flush=True)
         return 0
     if args and args[0] == "check1":
         recs = [json.loads(l) for l in open(args[1]) if l.strip()]
