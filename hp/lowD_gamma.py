@@ -5,6 +5,7 @@ solver/data/scan_lowD3_kc47.jsonl, and the README value at D = 4) instead of the
 below D = 4. The guess only places the bracket; the root is located by sign changes of det M(lam).
 
     python3 lowD_gamma.py OUT.jsonl STATE.npz [STATE.npz ...] [--threads=2] [--polish=N] [--lam0=L] [--xtol=1e-11]
+                          [--hmax=0.05]   (the step plan's largest step; with --polish the state re-converges on it)
         [--mutate_map=gp|phase_gp]
     python3 lowD_gamma.py --selftest UNIFORM.npz [MAPPED.npz] [--threads=2] [--break]
 
@@ -148,7 +149,8 @@ def main():
         D, M = meta["D"], meta["M"]
         t0 = time.time()
         s, grid = build_solver(D, M, meta, threads, mutate=opts.get("mutate_map"))
-        s.set_segs(s.plan(zh, zl, 1e-32, 0.05))
+        hmax = float(opts.get("hmax", 0.05))           # the plan's largest step; --polish re-converges on it
+        s.set_segs(s.plan(zh, zl, 1e-32, hmax))
         if "polish" in opts:
             zh, zl, _ = newton_solve(s, zh, zl, tol=1e-29, it_max=int(opts["polish"]), verbose=True)
         fh, fl = s.residual(zh, zl)
@@ -157,7 +159,7 @@ def main():
         log(f"{os.path.basename(f)}: D {D} M {M} |F| {F:.1e}, guess lam {lam0:.6f}")
         lam, nch, nev = find_lam(s, zh, zl, lam0, log, xtol=float(opts.get("xtol", 1e-11)))
         rec = dict(D=D, M=M, F=F, lam=lam, gamma=(1 / lam if lam else None), lam_guess=lam0, n_signchanges=nch,
-                   n_det=nev, state=os.path.basename(f), map=grid, mutate_map=opts.get("mutate_map"),
+                   n_det=nev, state=os.path.basename(f), map=grid, mutate_map=opts.get("mutate_map"), hmax=hmax,
                    seconds=round(time.time() - t0, 1))
         log(json.dumps(rec))
         with open(out, "a") as fh_:
