@@ -75,7 +75,9 @@ THM_A1 = {"A": ("2.54214804761338", "2.54214804761975"), "wf": ("0.7769940136074
 
 R0 = {1: "0.1", 3: "0.0741", 5: "0.0622"}
 ARG = {1: "3pi/8", 3: "5pi/16", 5: "5pi/16"}
-NTAY, NJAC = 20, 12          # Taylor orders of the trajectory and of the step Jacobian (M >= 3); M = 1 uses 24, 24
+# Taylor orders of the trajectory and of the step Jacobian (M >= 3); M = 1 uses 24, 24. CERTIFY_M_NTAY / _NJAC set others
+# (#1079: the excited zeros' radius on the real leg); unset, the certificates of record are unchanged
+NTAY, NJAC = int(os.environ.get("CERTIFY_M_NTAY", "20")), int(os.environ.get("CERTIFY_M_NJAC", "12"))
 FPM_DIR = os.environ.get("CERTIFY_M_FPM_DIR")   # where fixed_point_M.py lives, if not next to this file
 
 
@@ -85,7 +87,8 @@ def path_for(M):
     M-harmonic start-value lemma has small Cauchy bounds (fixed_point_M.py's table), then the same lower path: ray to
     0.2, arc at 0.2, real axis to 0.3."""
     phi0 = (3 if M == 1 else arb(5) / 2) * arb.pi() / 8
-    return (R0[M], phi0, "0.2", "0.3")
+    xi1 = "0.3" if M == 1 else os.environ.get("CERTIFY_M_XI1", "0.3")   # #1079: 0.2 drops the real leg (A_lemmas_M §8: any
+    return (R0[M], phi0, "0.2", xi1)                                    # xi1 >= rho_arc, with lemma 6a at that xi1)
 
 
 def orders(M):
