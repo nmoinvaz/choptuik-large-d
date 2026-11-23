@@ -572,6 +572,64 @@ fn dense_m_max() -> usize {
     *V.get_or_init(|| std::env::var("HP_DENSE_M_MAX").ok().and_then(|v| v.parse().ok()).unwrap_or(128))
 }
 
+/// mode_det equilibrates M(lam) before its double-double LU when the environment sets HP_MODE_EQUIL=1 (read once);
+/// unset, mode_det is unchanged bit for bit
+fn mode_equil() -> bool {
+    static V: std::sync::OnceLock<bool> = std::sync::OnceLock::new();
+    *V.get_or_init(|| std::env::var("HP_MODE_EQUIL").map(|v| v == "1").unwrap_or(false))
+}
+
+/// Ruiz equilibration by powers of two of an n x n column-major double-double matrix (hi, lo; leading dimension ld),
+/// in place: rows and columns are scaled until every row and column max of |hi| is about 1. Powers of two are exact
+/// in floating point, so the scaled matrix is exactly diag(2^r) M diag(2^c), det M has the scaled matrix's sign, and
+/// ln|det M| = ln|det S| - (sum r + sum c) ln 2. Returns sum r + sum c. At low D the mode matrix's pivots span
+/// 1e-4..4e32, below double-double's unit roundoff; equilibrated they span about 1e-20 (#1078).
+fn equilibrate_pow2(n: usize, ld: usize, mh: &mut [f64], ml: &mut [f64]) -> i64 {
+    let mut total: i64 = 0;
+    let exp_of = |m: f64| -> i32 { if m > 0.0 && m.is_finite() { -(m.sqrt().log2().round() as i32) } else { 0 } };
+    for _ in 0..40 {
+        let mut rm = vec![0.0f64; n];
+        for c in 0..n {
+            for r in 0..n {
+                let v = mh[c * ld + r].abs();
+                if v > rm[r] {
+                    rm[r] = v;
+                }
+            }
+        }
+        let dr: Vec<i32> = rm.iter().map(|&m| exp_of(m)).collect();
+        for c in 0..n {
+            for r in 0..n {
+                if dr[r] != 0 {
+                    let f = 2f64.powi(dr[r]);
+                    mh[c * ld + r] *= f;
+                    ml[c * ld + r] *= f;
+                }
+            }
+        }
+        let mut dc = vec![0i32; n];
+        for c in 0..n {
+            let mut m = 0.0f64;
+            for r in 0..n {
+                m = m.max(mh[c * ld + r].abs());
+            }
+            dc[c] = exp_of(m);
+            if dc[c] != 0 {
+                let f = 2f64.powi(dc[c]);
+                for r in 0..n {
+                    mh[c * ld + r] *= f;
+                    ml[c * ld + r] *= f;
+                }
+            }
+        }
+        total += dr.iter().map(|&x| x as i64).sum::<i64>() + dc.iter().map(|&x| x as i64).sum::<i64>();
+        if dr.iter().all(|&x| x == 0) && dc.iter().all(|&x| x == 0) {
+            break;
+        }
+    }
+    total
+}
+
 fn slice<'a>(a: &'a PyReadonlyArray1<f64>, name: &str) -> PyResult<&'a [f64]> {
     a.as_slice().map_err(|_| PyValueError::new_err(format!("{name} must be contiguous")))
 }
@@ -1539,11 +1597,12 @@ impl Solver {
         let r = py
             .detach(|| {
                 pool.install(|| -> Result<_, String> {
-                    let (mh, ml, ld) = api.mode_matrix(h, l, lam)?;
+                    let (mut mh, mut ml, ld) = api.mode_matrix(h, l, lam)?;
+                    let shift = if mode_equil() { equilibrate_pow2(n, ld, &mut mh, &mut ml) } else { 0 };
                     let lu = DDLu::factor(n, ld, mh, ml, true)?;
                     let (s, la) = lu.logdet();
-                    let (pmin, pmax) = lu.pivot_range();
-                    Ok((s, la, pmin, pmax))
+                    let (pmin, pmax) = lu.pivot_range();     // with HP_MODE_EQUIL: the equilibrated matrix's pivots
+                    Ok((s, la - (shift as f64) * std::f64::consts::LN_2, pmin, pmax))
                 })
             })
             .map_err(PyValueError::new_err)?;
