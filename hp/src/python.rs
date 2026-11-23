@@ -564,9 +564,13 @@ impl Lu {
 }
 
 /// The largest M for which the dense n x n paths (jacobian, jacobian_f64, newton, newton_mixed with block=False,
-/// lm_steps, mode_matrix, mode_det, lu_factor) run. Above it the dense double-double Jacobian would take 1.3 GB or
-/// more (M = 160, 13 nodes: n = 8961), and only newton_mixed in block storage is available.
-const DENSE_M_MAX: usize = 128;
+/// lm_steps, mode_matrix, mode_det, lu_factor) run: 128 unless the environment sets HP_DENSE_M_MAX (read once).
+/// Above it the dense double-double Jacobian takes 1.3 GB or more (M = 160, 13 nodes: n = 8961), and by default only
+/// newton_mixed in block storage is available.
+fn dense_m_max() -> usize {
+    static V: std::sync::OnceLock<usize> = std::sync::OnceLock::new();
+    *V.get_or_init(|| std::env::var("HP_DENSE_M_MAX").ok().and_then(|v| v.parse().ok()).unwrap_or(128))
+}
 
 fn slice<'a>(a: &'a PyReadonlyArray1<f64>, name: &str) -> PyResult<&'a [f64]> {
     a.as_slice().map_err(|_| PyValueError::new_err(format!("{name} must be contiguous")))
@@ -663,9 +667,10 @@ impl OctoLast {
 
 impl Solver {
     fn dense_ok(&self, what: &str) -> PyResult<()> {
-        if self.api.m() > DENSE_M_MAX {
+        if self.api.m() > dense_m_max() {
             return Err(PyValueError::new_err(format!(
-                "{what}: the dense n x n path is limited to M <= {DENSE_M_MAX} (memory); at M = {} use newton_mixed (block storage)",
+                "{what}: the dense n x n path is limited to M <= {} (memory; HP_DENSE_M_MAX raises it); at M = {} use newton_mixed (block storage)",
+                dense_m_max(),
                 self.api.m()
             )));
         }
@@ -1010,7 +1015,7 @@ impl Solver {
             "dd" => false,
             _ => return Err(PyValueError::new_err("lu must be \"f64\" or \"dd\"")),
         };
-        let block = block.unwrap_or(self.api.m() > DENSE_M_MAX);
+        let block = block.unwrap_or(self.api.m() > dense_m_max());
         if block && !lu_f64 {
             return Err(PyValueError::new_err("block storage factors in f64 only (lu=\"f64\")"));
         }
