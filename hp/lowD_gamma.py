@@ -6,6 +6,7 @@ below D = 4. The guess only places the bracket; the root is located by sign chan
 
     python3 lowD_gamma.py OUT.jsonl STATE.npz [STATE.npz ...] [--threads=2] [--polish=N] [--lam0=L] [--xtol=1e-11]
                           [--hmax=0.05]   (the step plan's largest step; with --polish the state re-converges on it)
+                          [--scan=LO,HI,N]   det M(lam)'s sign and ln|det| at N points of [LO, HI], written to OUT; no root
         [--mutate_map=gp|phase_gp]
     python3 lowD_gamma.py --selftest UNIFORM.npz [MAPPED.npz] [--threads=2] [--break]
 
@@ -157,6 +158,19 @@ def main():
         F = float(np.abs(np.asarray(fh) + np.asarray(fl)).max())
         lam0 = float(opts["lam0"]) if "lam0" in opts else lam_guess(D)
         log(f"{os.path.basename(f)}: D {D} M {M} |F| {F:.1e}, guess lam {lam0:.6f}")
+        if "scan" in opts:                          # --scan=LO,HI,N: det M(lam)'s sign and ln|det| on a grid, no root
+            lo, hi, n = opts["scan"].split(",")
+            lo, hi, n = float(lo), float(hi), int(n)
+            for k in range(n):
+                lam = lo + (hi - lo) * k / (n - 1)
+                t = time.time()
+                sg, la, pmin, pmax = s.mode_det(zh, zl, lam, 0.0)
+                row = dict(D=D, M=M, F=F, lam=lam, sign=float(sg), ln=float(la), pmin=float(pmin), pmax=float(pmax),
+                           hmax=hmax, state=os.path.basename(f), map=grid, sec=round(time.time() - t, 1), scan=True)
+                with open(out, "a") as fh:
+                    fh.write(json.dumps(row) + "\n")
+                log(f"    scan lam {lam:.12f}: sign {sg:+.0f} ln|det| {la:.6f} pivots {pmin:.2e}..{pmax:.2e} ({row['sec']} s)")
+            continue
         lam, nch, nev = find_lam(s, zh, zl, lam0, log, xtol=float(opts.get("xtol", 1e-11)))
         rec = dict(D=D, M=M, F=F, lam=lam, gamma=(1 / lam if lam else None), lam_guess=lam0, n_signchanges=nch,
                    n_det=nev, state=os.path.basename(f), map=grid, mutate_map=opts.get("mutate_map"), hmax=hmax,
