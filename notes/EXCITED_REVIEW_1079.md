@@ -30,8 +30,9 @@ check that can fail. Two corrections concern the margin gap between machines (fi
 number (21). The gaps are in the options, in what the files record, in two controls and in the theorem's wording.
 
 The gap that matters most is finding 18. At the second zero the box run passes the test on the three machines that
-ran it and fails in most runs where the frames of the Lohner sets are moved by one unit in the last place. The stored
-files are proofs. A rerun on a fourth machine may well fail on its own bound, and that would not be an error.
+ran it, and it fails in 6 of 9 runs in which the frames of the Lohner sets, or the input of their QR, are moved by
+one unit in the last place. The stored files are proofs. A rerun on a fourth machine may fail on its own bound, and
+that would not be an error in the certificate.
 
 | statement of #1079, or question put to the review | after the review | findings |
 |---|---|---|
@@ -42,9 +43,9 @@ files are proofs. A rerun on a fourth machine may well fail on its own bound, an
 | (H1), lemma S and lemma 6b₀ over p̂ ± 10⁻⁶ | confirmed, rerun here | 8 |
 | (H2), 183 discs over p̂ ± 10⁻¹¹ and the inclusion | confirmed. One cited control, `c1check`, does not pass its own mutation at this box | 9, 10 |
 | (H3), ρ₆ₐ = 0.01365 and 0.01259 | confirmed from the stored enclosure. The `coords` mutation is not caught there | 11 |
-| the quoted numbers | 89 of 89 entries agree with the raw files | 12 |
+| the quoted numbers | 95 of 95 entries agree with the raw files | 12 |
 | the Linux margins are smaller because the box run's columns widen from last-digit differences in the start data | not supported. The frames of the Lohner sets carry it, two Macs differ as much, and the start data play no part | 16, 17 |
-| the certificates are reproduced on Linux | the stored files pass on three machines. The box run itself is not reproducible at the second zero: most runs with the frames moved by one unit in the last place fail the test | 18 |
+| the certificates are reproduced on Linux | the stored files pass on three machines. The box run itself is not reproducible at the second zero: 6 of 9 runs with a last-bit change of the frames fail the test | 18 |
 
 ## Findings
 
@@ -64,13 +65,13 @@ rests on less than stated) or **confirmed**.
 | 9 | confirmed | (H2): each covering has 183 certified discs at its own centre, its check passes and fails with a tile dropped, X_c's hull lies in X_b and X_b in X₆ | §2.4 |
 | 10 | gap | `c1check`, cited as a control of (H2), does not pass its own mutation at h = 10⁻¹¹: with the derivative columns dropped, the points moved in ω/ω∞ stay inside at rows 1 and 6. Run by the review at h = 10⁻⁹, the control passes and its mutation fires, at both centres | §2.4 |
 | 11 | confirmed | (H3): ρ₆ₐ follows from the stored backward enclosure, and the lemma 6a input is the export of the cited box. The `coords` mutation gives ρ₆ₐ = 0.28 and 0.17, below 1 | §2.5 |
-| 12 | confirmed | Every number quoted in the result comments that I entered (89) is in the raw files | §3 |
+| 12 | confirmed | Every number quoted in the result comments that I entered (95) is in the raw files | §3 |
 | 13 | confirmed | The four Lean files regenerate byte for byte from the raw box and point files | §4 |
 | 14 | confirmed | The Lean project builds. The widened controls are decided false. The ten new theorems use propext, Classical.choice and Quot.sound only | §4 |
 | 15 | gap | The #1077 review harness (`regen_check.sh`, `reproduce.py`, `Axioms.lean`, `Mutations.lean`) was not extended to the new instances. At the second zero a transposed YJ still passes `check` | §4 |
 | 16 | error | The stated cause of the margin gap is not supported. Last-digit changes of the start data leave the margins unchanged. A 1-ulp change of the frames Q moves them by as much as the machines differ, and this Mac differs from macm3 as much as dh610 does | §5 |
 | 17 | error | "Their radius is 1.8× (first zero) and 8.5× (second) wider on Linux" names the variational columns. Those ratios are of the largest radius of Y·Dg̃(X). The columns' radii are 0.98× and 1.66× | §5 |
-| 18 | gap | The pass of a rerun is a draw. With the frames moved by 1 ulp the first zero's box run passes in 6 of 6 runs (A margin 0.26 to 0.68), and the second zero's in 1 of 6. The stored files are valid proofs, but "reproduced on Linux" shows one more passing draw, not a reproducible run. The margins belong to the stored files, not to the zero and the box | §5 |
+| 18 | gap | The pass of a rerun is a draw. The first zero's box run passes in 6 of 6 runs with the frames moved by 1 ulp (A margin 0.26 to 0.68). The second zero's passes in 1 of 6, and in 2 of 3 with the QR's input moved by 1 ulp. The stored files are valid proofs, but "reproduced on Linux" shows one more passing draw, not a reproducible run. The margins belong to the stored files, not to the zero and the box. A higher Jacobian order and a tie-independent pivot order do not change it | §5 |
 | 19 | gap | Theorem A(M)'s hypotheses are written with the fundamental zero's sets (x̂ ± 10⁻⁶, p̂ ± 1.1×10⁻⁹). At the excited zeros they hold with each zero's own centre and covering. The text needs that reading stated | §2.6 |
 | 20 | gap | `lemma6_sector_M.py --json` and `lemma6_jump_M.py --json` do not record the centre given by `--x`. The default-order point files that comment 7104591124 cites are not in the raw repository | §3 |
 | 21 | error | Theorem A(M) is §6 of A_lemmas_M.md, not §8 (`certify_M.py` line 90 and the issue's comments) | above |
@@ -295,14 +296,15 @@ M = 3 disc certificates have not had an independent review.
 ## 3. The quoted numbers (check 3, findings 12, 20)
 
 ```
-python3 review_1079/check_quoted.py RAW              # CHECK QUOTED: 89 of 89 entries agree: PASS
+python3 review_1079/check_quoted.py RAW              # CHECK QUOTED: 95 of 95 entries agree: PASS
 python3 review_1079/check_quoted.py RAW --selftest   # every entry's mutation fires: PASS
 ```
 
 The entries are the margins of the four passing boxes, the controls' verdicts and the values quoted for C5 to C8, the
 recheck and its mutation, the zero enclosures, the radii of g(p̂) at the default orders and at E1, E2, E3, η, the
 contractions and Λ of (H1) with its mutation, ρ₆ₐ with its two mutations, the disc counts, the gluing counts, the
-inclusion's slack and selftest, and dh610's margins, controls, cross-load, ρ₆ₐ, check and slack. Each mutation changes
+inclusion's slack and selftest, and dh610's margins, controls, cross-load, ρ₆ₐ, lemma S, disc counts, sign mutation,
+check and slack. Each mutation changes
 the last digit of the expected value, and each is then reported as not found.
 
 Two things are missing from the record (finding 20):
@@ -354,7 +356,9 @@ widen on the real leg from last-digit float64 differences in the start data betw
 The test (`review_1079/perturb_box.py`, written into `I1079-mac-review/README.md` before the runs): the box run of each
 zero on this Mac at 28/16, from macm3's refine file, with one last-bit perturbation planted, then
 `krawczyk --box=<this run> --point=<macm3's point file>`. Each run is as rigorous as an unperturbed one: Q is any
-invertible float matrix used exactly, and the Perron weights are any positive numbers.
+invertible float matrix used exactly, and the Perron weights are any positive numbers. The perturbations: the start
+lemma's Perron weights, the entries of every frame Q, or the entries of the matrix handed to the QR, each multiplied
+by 1 ± 2⁻⁵² with seeded random signs.
 
 <!-- perturb table -->
 First zero, box (h, w) = (1e-12, 1e-13):
@@ -365,9 +369,14 @@ First zero, box (h, w) = (1e-12, 1e-13):
 | dh610, stored | yes | +0.468, +0.619, +0.997, +0.998 |
 | this Mac, unchanged code | yes | +0.610, +0.721, +0.998, +0.998 |
 | this Mac, frames Q moved by 1 ulp, seed 1 | yes | +0.624, +0.731, +0.998, +0.998 |
+| this Mac, frames Q moved by 1 ulp, seed 2 | yes | +0.405, +0.571, +0.997, +0.998 |
+| this Mac, frames Q moved by 1 ulp, seed 3 | yes | +0.261, +0.475, +0.997, +0.998 |
+| this Mac, frames Q moved by 1 ulp, seed 4 | yes | +0.472, +0.616, +0.997, +0.998 |
+| this Mac, frames Q moved by 1 ulp, seed 5 | yes | +0.683, +0.775, +0.998, +0.998 |
 | this Mac, frames Q moved by 1 ulp, seed 1079 | yes | +0.453, +0.608, +0.997, +0.998 |
 
-5 box files, 5 pass; A margin from +0.453 to +0.702, ω/ω∞ margin from +0.608 to +0.758; smallest margin of any coordinate +0.453.
+9 box runs (the repeat not counted), 9 pass; A margin from +0.261 to +0.702, ω/ω∞ margin from +0.475 to +0.775;
+smallest margin of any coordinate +0.261. By kind: stored or unchanged: 3 of 3 pass; frames Q moved: 6 of 6 pass.
 
 Second zero, box (h, w) = (1e-12, 1e-12):
 
@@ -375,13 +384,34 @@ Second zero, box (h, w) = (1e-12, 1e-12):
 |---|---|---|
 | macm3, stored | yes | +0.943, +0.945, +0.988, +0.995 |
 | dh610, stored | yes | +0.711, +0.528, +0.981, +0.992 |
-| this Mac, unchanged code | yes | +0.632, +0.398, +0.983, +0.993 |
 | this Mac, unchanged code, repeated | yes | +0.632, +0.398, +0.983, +0.993 |
+| this Mac, unchanged code | yes | +0.632, +0.398, +0.983, +0.993 |
 | this Mac, start lemma's weights moved by 1 ulp | yes | +0.632, +0.398, +0.983, +0.993 |
 | this Mac, start lemma's weights moved by 4096 ulp | yes | +0.632, +0.398, +0.983, +0.993 |
+| this Mac, frames Q moved by 1 ulp, seed 1 | **no** | +0.251, -0.247, +0.980, +0.992 |
+| this Mac, frames Q moved by 1 ulp, seed 2 | **no** | +0.373, -0.076, +0.976, +0.992 |
+| this Mac, frames Q moved by 1 ulp, seed 3 | **no** | +0.158, -0.395, +0.979, +0.993 |
+| this Mac, frames Q moved by 1 ulp, seed 4 | **no** | -0.079, -0.841, +0.974, +0.991 |
+| this Mac, frames Q moved by 1 ulp, seed 5 | **no** | -0.080, -0.841, +0.974, +0.991 |
 | this Mac, frames Q moved by 1 ulp, seed 1079 | yes | +0.942, +0.943, +0.987, +0.995 |
+| this Mac, QR's input moved by 1 ulp, seed 1 | yes | +0.881, +0.846, +0.985, +0.995 |
+| this Mac, QR's input moved by 1 ulp, seed 2 | yes | +0.631, +0.392, +0.986, +0.994 |
+| this Mac, QR's input moved by 1 ulp, seed 3 | **no** | +0.127, -0.448, +0.979, +0.993 |
 
-7 box files, 7 pass; A margin from +0.632 to +0.943, ω/ω∞ margin from +0.398 to +0.945; smallest margin of any coordinate +0.398.
+Runs at other settings (not counted below):
+
+| box run | passes | margins (A, ω/ω∞, B₃, C₃) |
+|---|---|---|
+| this Mac, unchanged code, with the tie counter (no change to the run) | yes | +0.632, +0.398, +0.983, +0.993 |
+| this Mac, unchanged code, with the trial pivot order (rounded weights, ties by index) | yes | +0.635, +0.400, +0.983, +0.993 |
+| this Mac, frames Q moved by 1 ulp, seed 1, with the trial pivot order (rounded weights, ties by index) | **no** | +0.284, -0.196, +0.980, +0.992 |
+| this Mac, frames Q moved by 1 ulp, seed 4, at CERTIFY_M_NJAC = 28 | **no** | -0.079, -0.841, +0.974, +0.991 |
+| this Mac, frames Q moved by 1 ulp, seed 4, with the trial pivot order (rounded weights, ties by index) | **no** | -0.086, -0.853, +0.974, +0.991 |
+| this Mac, QR's input moved by 1 ulp, seed 1, with the trial pivot order (rounded weights, ties by index) | yes | +0.881, +0.847, +0.985, +0.995 |
+
+14 box runs (the repeat not counted), 8 pass; A margin from -0.080 to +0.943, ω/ω∞ margin from -0.841 to +0.945;
+smallest margin of any coordinate -0.841. By kind: stored or unchanged: 3 of 3 pass; start weights moved: 2 of 2 pass;
+frames Q moved: 1 of 6 pass; QR's input moved: 2 of 3 pass.
 
 <!-- end perturb table -->
 
@@ -408,10 +438,26 @@ What this shows:
   because Yℓ cancels the leakage to five or six digits.
 
 **At the second zero the test fails for most of the perturbed runs** (finding 18). The largest radius of Y·Dg̃(X) is
-0.03 in macm3's file, 0.27 in dh610's, 0.35 on this Mac, and 0.7 to 1.1 in the failing runs: the last bits of the
-frames decide whether the enclosure of the Jacobian is tight enough. At the first zero every run passes.
+0.03 in macm3's file, 0.27 in dh610's, 0.35 on this Mac, and 0.6 to 1.1 in the failing runs: the last bits of the
+frames decide whether the enclosure of the Jacobian is tight enough. At the first zero every run passes, with that
+radius between 0.23 and 0.56.
 
-PERTURB_PROSE
+How often a run passes depends on what is moved. With the input of the QR moved by 1 ulp, Q stays LAPACK's own
+output for a matrix one rounding away, which is the kind of difference two machines have: 2 of 3 runs pass. With
+Q's entries moved by 1 ulp: 1 of 6. Unperturbed, on three machines: 3 of 3. The samples are small. They do not give a
+pass rate for a fresh machine, and they do show that it is not near 1.
+
+Three things were tried on the failing runs, and none is a remedy (the table's last block):
+
+- **The order of the step Jacobian.** The seed-4 run at `CERTIFY_M_NJAC=28` has the margins of the run at 16.
+- **Ties in the pivot order.** `qr_pivot` sorts the columns by weight with numpy's `argsort`, which is not stable. In
+  an unperturbed run of the second zero, 827 of the 2352 calls sort two weights that agree to a relative 10⁻¹², and in
+  710 of them the two are exactly equal (`REVIEW_TIES=1`). That looked like the mechanism. It is not, or not alone: a
+  pivot order that does not depend on last bits (weights rounded to 6 digits, ties by column index, `REVIEW_STABLE=1`)
+  leaves the two failing runs failing, with almost the same margins.
+- **The start data**, as above.
+
+So the sensitivity sits in the last bits of the frames themselves, on the real leg, and I do not have its mechanism.
 
 Does it matter for the claim?
 
@@ -456,6 +502,13 @@ Code (for the branch's author; the review changed no file under review):
 6. `certify_M.py` line 90: "A_lemmas_M §6".
 7. `lean/review/`: the two instances in `regen_check.sh`, `reproduce.py`, `Axioms.lean`, `Mutations.lean`.
 
+Record:
+
+8. Cite the stored box and point files, by sha256, as the certificates, and the Linux run as a second passing run
+   with a cross-load. For this certificate a rerun that fails its own bound at the second zero is not a failed
+   reproduction when the stored files cross-load (#111's rule needs that reading here).
+9. Correct the two statements of the closing comment (findings 16, 17) where the notes take them over.
+
 Text, for A_lemmas_M.md §6–§7 (proposed, not applied: agents do not edit `proof/`):
 
 > Let x̂ be a centre: the double-precision zero of §2.4, or the centre p̂ of another certificate. […] (H1) X_c ⊂ X₆ =
@@ -465,12 +518,15 @@ Text, for A_lemmas_M.md §6–§7 (proposed, not applied: agents do not edit `pr
 > **The two excited zeros at M = 3** (#1079). Centres p̂ = (3.446218246366727…, 0.347606965217407…) and
 > (3.526473056695715…, 0.211497981391215…). With `CERTIFY_M_NTAY=28 CERTIFY_M_NJAC=16` the Krawczyk test passes on
 > the boxes (h, w) = (10⁻¹², 10⁻¹³) and (10⁻¹², 10⁻¹²). The margins of the stored files are +0.702, +0.758, +0.997,
-> +0.998 and +0.943, +0.945, +0.988, +0.995. They are properties of those files: reruns on two other machines and with
-> the Lohner frames moved by one unit in the last place gave A margins between RANGE_A1 and RANGE_A2, every one
-> passing. (H0) by the certificates' own start-data calls and by a second call over p̂ ± 10⁻⁹ (N = 95 and 94,
-> contraction 0.38 and 0.39); (H1) lemma S 0.6961 and 0.6782, old sector lemma 0.6839 and 0.7008 over p̂ ± 10⁻⁶;
-> (H2) 183 discs over p̂ ± 10⁻¹¹, the hull of X_c inside with slack 8.36×10⁻¹² and 8.28×10⁻¹²; (H3) ρ₆ₐ = 0.01365 and
-> 0.01259. Status: *certified*, assuming Braaksma's theorem, with the trusted code as at the fundamental zero.
+> +0.998 and +0.943, +0.945, +0.988, +0.995. They are properties of those files, which are the certificates (sha256
+> 5a736fd2… and 2a5c4d32… for the box runs). The box run is sensitive to the last bits of its Lohner frames: at the
+> first zero every rerun passed (three machines, and six runs with the frames moved by one unit in the last place),
+> and at the second zero three machines passed and most of the runs with the frames moved did not
+> (notes/EXCITED_REVIEW_1079.md §5). (H0) by the certificates' own start-data calls and by a second call over
+> p̂ ± 10⁻⁹ (N = 95 and 94, contraction 0.38 and 0.39); (H1) lemma S 0.6961 and 0.6782, old sector lemma 0.6839 and
+> 0.7008 over p̂ ± 10⁻⁶; (H2) 183 discs over p̂ ± 10⁻¹¹, the hull of X_c inside with slack 8.36×10⁻¹² and 8.28×10⁻¹²;
+> (H3) ρ₆ₐ = 0.01365 and 0.01259. Status: *certified*, assuming Braaksma's theorem, with the trusted code as at the
+> fundamental zero.
 
 ## 8. Reproduce
 
@@ -487,8 +543,17 @@ D=$RAW/I1079-macm3/levers/data
 python3 review_1079/h0_recheck.py $D/A_M_box_M3x1E2_h1e-12_w1e-13.json     # H0 SECOND LOOK: PASS
 python3 review_1079/h0_recheck.py $D/A_M_box_M3x2E2_h1e-12_w1e-12.json     # PASS
 bash review_1079/light_checks.sh $RAW                       # writes $RAW/I1079-mac-review/light_steps.txt
-bash review_1079/run_perturb.sh $RAW x2 qr 1079             # one box run, about 4 minutes
+bash review_1079/c1_control.sh $RAW                         # the C^1 control at h = 1e-9, about 2 minutes
+bash review_1079/run_perturb.sh $RAW x2 qr 1079             # one box run, about 4 minutes; passes
+bash review_1079/run_perturb.sh $RAW x2 qr 4                # fails the test: margins -0.079, -0.841, +0.974, +0.991
+bash review_1079/run_perturb.sh $RAW x2 qrin 3              # the QR's input moved: fails
+REVIEW_TIES=1 bash review_1079/run_perturb.sh $RAW x2 none 3   # counts the ties of the pivot order
+python3 review_1079/perturb_table.py $RAW                   # the table of section 5
 ```
+
+`run_perturb.sh` refuses to overwrite a box file of the same tag, so a rerun needs another seed or an empty
+`$RAW/I1079-mac-review/out/`. The margins of a perturbed run are those of this machine's LAPACK and numpy with that
+seed. Another machine draws others.
 
 The scripts that write (`light_checks.sh`, `run_perturb.sh`) write into `$RAW/I1079-mac-review/`. Lean: copy
 `review_1079/Exc1079.lean` and `Exc1079MustFail.lean` to `lean/review/` of a checkout of `feat/lean-excited`, then
