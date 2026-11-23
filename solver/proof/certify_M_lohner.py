@@ -145,6 +145,7 @@ class LohnerM(VI.Lohner):
         nd = s.nd
         phic = [VI.evalpoly(Yc[i], hh, N) + hN1 * VI.coef(Yr[i], N + 1) for i in range(nd)] + self.c[nd:]
         NJ = self.NJ or N
+        assert NJ <= N, "the step Jacobian's order exceeds the trajectory's (review of #1079, finding 2)"
         _, ctxX = taylor_Y(s, leg, acb(t0), X, NJ)
         Vk = taylor_V(s, ctxX, NJ)
         ctrJ = truncate_ctx(ctr, NJ + 2) if NJ < N else ctr

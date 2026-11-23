@@ -180,7 +180,8 @@ def main():
     print(f"ALL CHECKS PASS (M = {M}): {allok}")
     if "json" in opts:
         with open(opts["json"], "w") as fh:
-            json.dump({"M": M, "rp": rp, "box": box, "k": k, "N": S["N"], "lip_S": S["lip"].str(10),
+            json.dump(({"x": list(FPM.ZEROS[M])} if "x" in opts else {}) |
+                      {"M": M, "rp": rp, "box": box, "k": k, "N": S["N"], "lip_S": S["lip"].str(10),
                        "rho_S": S["rho"].str(10), "F_S": S["F"].str(10), "ok_S": S["ok"], "a_eff": S["a_eff"].str(10),
                        "wts_S": S["wts"], "lip_old": O["lip"].str(10), "ok_old": O["ok"], "Z": Z,
                        "Lambda_plain": Rr["lam"].str(10), "Lambda_diag": Rd["lam"].str(10), "wts_R_plain": Rr["wts"],

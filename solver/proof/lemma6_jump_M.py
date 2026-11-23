@@ -262,6 +262,8 @@ def main():
            "rho6a": rho6a.str(10), "ok": ok, "steps": steps, "sec": sec, "H_max": hmax, "Gslow_inv_max": gsi,
            "mutate": mutate}
     if "json" in opts:
+        if "x" in opts:                             # the centre of a run at another zero (review of #1079, finding 20)
+            out["x"] = list(FPM.ZEROS[M])
         with open(opts["json"], "w") as fh:
             json.dump(out, fh, indent=1)
     if mutate == "swap":

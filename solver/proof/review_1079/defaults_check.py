@@ -23,10 +23,15 @@ import tempfile
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 PROOF = os.path.dirname(HERE)
-FILES = ["certify_M.py", "lemma6_sector_M.py", "theorem_A_sets_M.py"]
-EXPECT = {"certify_M.py": ["(NTAY, NJAC)", "path_for"],
+FILES = ("certify_M.py", "lemma6_sector_M.py", "theorem_A_sets_M.py")
+# the files whose code is compared unit by unit; certify_M_lohner.py (an assert, NJ <= N) and lemma6_jump_M.py (the
+# centre in its JSON) changed after the review too and are only required to differ
+OTHER_CHANGED = ("certify_M_lohner.py", "lemma6_jump_M.py")
+EXPECT = {"certify_M.py": ["(NTAY, NJAC)", "ORDERS_SET", "box_run", "krawczyk_test", "path_for", "point_run"],
           "lemma6_sector_M.py": ["main"],
           "theorem_A_sets_M.py": ["check", "main", "selftest", "verdict"]}
+# the coordinator's fixes after the review (findings 2, 3, 5, 20) added ORDERS_SET (with the NJAC > NTAY refusal),
+# box_run and point_run (the orders recorded when set) and krawczyk_test (paths and orders compared)
 OPTS = ("CERTIFY_M_NTAY", "CERTIFY_M_NJAC", "CERTIFY_M_XI1")
 DUMP = r"""
 import json, sys
@@ -106,7 +111,7 @@ def main():
         if not os.path.exists(here) or open(here).read() != src:
             changed.append(nm)
     print(f"base {base}: {len(names)} entries in solver/proof; python files that differ in the worktree: {changed}")
-    ok &= sorted(changed) == sorted(FILES)
+    ok &= sorted(changed) == sorted(FILES + OTHER_CHANGED)
     for nm in FILES:
         a = units(open(os.path.join(tmp, nm)).read())
         b = units(open(os.path.join(PROOF, nm)).read())
