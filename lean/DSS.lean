@@ -5,3 +5,5 @@ import DSS.M1capdWide
 import DSS.M1arb
 import DSS.M1arbWide
 import DSS.KrawczykN
+import DSS.M3cert
+import DSS.M3certWide

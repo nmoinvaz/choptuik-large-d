@@ -215,3 +215,137 @@ theorem krawczykN_of_check [NeZero n] (d : DataN n) (hc : d.check = true) (f : V
   exact sub_eq_zero.mp (norm_eq_zero.mp hn)
 
 end DSS.Krawczyk
+
+/-! ## Boxes with unequal half-widths -/
+
+namespace DSS.Krawczyk
+
+variable {n : ℕ}
+
+/-- A test on the box x̂ + Π [-w_i, w_i], with enclosures of Y g(x̂) and Y Dg over the box, in its own coordinates. -/
+structure BoxData (n : ℕ) where
+  xhat : Fin n → ℚ
+  w : Fin n → ℚ
+  Yg : Fin n → I
+  YJ : Fin n → Fin n → I
+  Y : Fin n → Fin n → ℚ
+
+namespace BoxData
+
+variable (b : BoxData n)
+
+def center : Vn n := fun i => (b.xhat i : ℝ)
+def box : Set (Vn n) := {x | ∀ i, |x i - b.xhat i| ≤ b.w i}
+def Yr : Mn n := Matrix.of fun i j => (b.Y i j : ℝ)
+def Wm : Mn n := Matrix.diagonal fun i => (b.w i : ℝ)
+
+/-- The same test on the unit box, u = W⁻¹ (x - x̂): every entry rescaled by an exact ratio. -/
+def unit : DataN n where
+  Yg i := (b.Yg i).smul (1 / b.w i)
+  YJ i j := (b.YJ i j).smul (b.w j / b.w i)
+  Y i j := b.Y i j / b.w i
+
+def check : Bool := decide (∀ i, 0 < b.w i) && b.unit.check
+
+def EnclOK (g : Vn n → Vn n) (Dg : Vn n → Mn n) : Prop :=
+  (∀ i, (b.Yg i).mem ((b.Yr *ᵥ g b.center) i)) ∧ ∀ x ∈ b.box, ∀ i j, (b.YJ i j).mem ((b.Yr * Dg x) i j)
+
+/-- The affine map u ↦ x̂ + W u. -/
+def toBox (u : Vn n) : Vn n := b.center + b.Wm *ᵥ u
+
+lemma toBox_apply (u : Vn n) (i : Fin n) : b.toBox u i = b.xhat i + b.w i * u i := by
+  simp [toBox, center, Wm, Matrix.mulVec_diagonal]
+
+end BoxData
+
+/-- Krawczyk's test on a box with half-widths w_i, from enclosures in the box's coordinates. -/
+theorem krawczyk_box [NeZero n] (b : BoxData n) (hc : b.check = true) (g : Vn n → Vn n) (Dg : Vn n → Mn n)
+    (hg : ∀ x ∈ b.box, HasFDerivWithinAt g (LinearMap.toContinuousLinearMap (Matrix.toLin' (Dg x))) b.box x)
+    (hE : b.EnclOK g Dg) :
+    (∃! x, x ∈ b.box ∧ g x = 0) ∧ ∀ x ∈ b.box, g x = 0 → (Dg x).det ≠ 0 := by
+  simp only [BoxData.check, Bool.and_eq_true, decide_eq_true_eq] at hc
+  obtain ⟨hw, hcu⟩ := hc
+  have hwr : ∀ i, (0 : ℝ) < b.w i := fun i => by exact_mod_cast hw i
+  obtain ⟨hgx, hJ⟩ := hE
+  -- the unit ball is the preimage of the box
+  have hmem : ∀ u, u ∈ closedBall (0 : Vn n) 1 ↔ b.toBox u ∈ b.box := by
+    intro u
+    simp only [mem_closedBall, dist_zero_right, BoxData.box, Set.mem_ofPred_eq, BoxData.toBox_apply,
+      add_sub_cancel_left, abs_mul, abs_of_pos (hwr _)]
+    rw [pi_norm_le_iff_of_nonneg zero_le_one]
+    refine forall_congr' fun i => ?_
+    rw [Real.norm_eq_abs]
+    constructor
+    · intro h; nlinarith [hwr i]
+    · intro h; by_contra hcon; push Not at hcon; nlinarith [hwr i]
+  have hsurj : ∀ x ∈ b.box, ∃ u ∈ closedBall (0 : Vn n) 1, b.toBox u = x := by
+    intro x hx
+    refine ⟨fun i => (x i - b.xhat i) / b.w i, ?_, ?_⟩
+    · rw [hmem]
+      have : b.toBox (fun i => (x i - b.xhat i) / b.w i) = x := by
+        funext i; rw [BoxData.toBox_apply]; field_simp [(hwr i).ne']; ring
+      rw [this]; exact hx
+    · funext i; rw [BoxData.toBox_apply]; field_simp [(hwr i).ne']; ring
+  have hinj : Function.Injective b.toBox := by
+    intro u v h
+    funext i
+    have := congrFun h i
+    rw [BoxData.toBox_apply, BoxData.toBox_apply] at this
+    have h1 : (b.w i : ℝ) * u i = b.w i * v i := by linarith
+    exact (mul_right_inj' (hwr i).ne').mp h1
+  -- f(u) = g(x̂ + W u), Df(u) = Dg(x̂ + W u) W
+  set f : Vn n → Vn n := fun u => g (b.toBox u)
+  set Df : Vn n → Mn n := fun u => Dg (b.toBox u) * b.Wm
+  have hf : ∀ u ∈ closedBall (0 : Vn n) 1,
+      HasFDerivWithinAt f (LinearMap.toContinuousLinearMap (Matrix.toLin' (Df u))) (closedBall 0 1) u := by
+    intro u hu
+    have hA : HasFDerivAt b.toBox (LinearMap.toContinuousLinearMap (Matrix.toLin' b.Wm)) u := by
+      have := (LinearMap.toContinuousLinearMap (Matrix.toLin' b.Wm)).hasFDerivAt (x := u)
+      have h2 := this.const_add b.center
+      convert h2 using 1
+      funext x
+      simp [BoxData.toBox, Matrix.toLin'_apply]
+    have hmaps : MapsTo b.toBox (closedBall 0 1) b.box := fun v hv => (hmem v).mp hv
+    have := (hg _ ((hmem u).mp hu)).comp u hA.hasFDerivWithinAt hmaps
+    have hD : LinearMap.toContinuousLinearMap (Matrix.toLin' (Df u)) =
+        (LinearMap.toContinuousLinearMap (Matrix.toLin' (Dg (b.toBox u)))).comp
+          (LinearMap.toContinuousLinearMap (Matrix.toLin' b.Wm)) := by
+      ext v i
+      simp [Df, Matrix.toLin'_apply, Matrix.mulVec_mulVec]
+    rw [hD]
+    exact this
+  have hEu : b.unit.EnclOK f Df := by
+    constructor
+    · intro i
+      have e : (b.unit.Yr *ᵥ f 0) i = ((1 / b.w i : ℚ) : ℝ) * (b.Yr *ᵥ g b.center) i := by
+        have h0 : b.toBox 0 = b.center := by simp [BoxData.toBox]
+        simp only [f, h0, DataN.Yr, BoxData.unit, BoxData.Yr, Matrix.mulVec, dotProduct, Matrix.of_apply,
+          Finset.mul_sum]
+        refine Finset.sum_congr rfl fun k _ => ?_
+        push_cast; ring
+      rw [e]
+      exact I.mem_smul _ (hgx i)
+    · intro u hu i j
+      have e : (b.unit.Yr * Df u) i j = ((b.w j / b.w i : ℚ) : ℝ) * (b.Yr * Dg (b.toBox u)) i j := by
+        show (b.unit.Yr * (Dg (b.toBox u) * Matrix.diagonal fun i => (b.w i : ℝ))) i j = _
+        rw [← Matrix.mul_assoc, Matrix.mul_diagonal]
+        simp only [Matrix.mul_apply, DataN.Yr, BoxData.unit, BoxData.Yr, Matrix.of_apply, Finset.mul_sum,
+          Finset.sum_mul]
+        refine Finset.sum_congr rfl fun k _ => ?_
+        push_cast
+        field_simp [(hwr i).ne']
+        try ring
+      rw [e]
+      exact I.mem_smul _ (hJ _ ((hmem u).mp hu) i j)
+  obtain ⟨⟨u, ⟨hu, hfu⟩, huniq⟩, hdet⟩ := krawczykN_of_check b.unit hcu f Df hf hEu
+  refine ⟨⟨b.toBox u, ⟨(hmem u).mp hu, hfu⟩, ?_⟩, ?_⟩
+  · rintro x ⟨hx, hgx0⟩
+    obtain ⟨v, hv, rfl⟩ := hsurj x hx
+    exact congrArg b.toBox (huniq v ⟨hv, hgx0⟩)
+  · intro x hx hgx0
+    obtain ⟨v, hv, rfl⟩ := hsurj x hx
+    have := hdet v hv hgx0
+    simp only [Df, Matrix.det_mul] at this
+    exact left_ne_zero_of_mul this
+
+end DSS.Krawczyk
