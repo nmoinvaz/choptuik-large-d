@@ -439,6 +439,12 @@ def run_box_arb(key, mut=None):
         D0 = arb_mat(CM.apply_var(ell, varb))
         Yb = arb_mat([[arb(D0[i, j].mid()) for j in range(m)] for i in range(m)]).inv()
         Y = [[arb(Yb[i, j].mid()) for j in range(m)] for i in range(m)]
+        # this Y must give krawczyk_test's products back, midpoint and radius bit for bit
+        Yl = arb_mat(Y) * ell
+        Yg2, YJ2 = CM.apply_set(Yl, c, Q, q), CM.apply_var(Yl, varb)
+        eq = lambda a, b: a.mid().man_exp() == b.mid().man_exp() and a.rad().man_exp() == b.rad().man_exp()
+        if not all(eq(Yg2[i], Yg[i]) and all(eq(YJ2[i][j], YJ[i][j]) for j in range(m)) for i in range(m)):
+            bad.append("Y recomputed does not give krawczyk_test's Y g and Y Dgt back")
         own = f"ok={res['ok']}, relative margins {[round(r, 3) for r in res['rel_margins']]}"
     else:
         import certify_M2 as C2M
