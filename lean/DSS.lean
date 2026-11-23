@@ -4,3 +4,4 @@ import DSS.M1capd
 import DSS.M1capdWide
 import DSS.M1arb
 import DSS.M1arbWide
+import DSS.KrawczykN
