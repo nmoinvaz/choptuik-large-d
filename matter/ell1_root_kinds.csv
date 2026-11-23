@@ -84,3 +84,4 @@ D,kc,build,value,kind,reason
 20.25,79,linux,1.167526,lambda_1,by position: Linux's k_c 79 root near Windows' 1.165140 (dh610 f7cbf67d)
 20.25,79,linux,1.199763,discretization,by position: Linux's k_c 79 root near Windows' 1.203492; absent at k_c 87 on Windows
 19.0,87,,1.538986,lambda_1,by position: the k_c-stable root (k_c 79 1.539658: -0.0007) (winb kc87_d19)
+20.25,87,linux,1.166952,lambda_1,by position: the only k_c 87 root in 1.14-1.22 on Linux; +0.0017 from Windows' 1.165265 (dh610 10ddc4be)
