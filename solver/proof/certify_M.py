@@ -78,6 +78,9 @@ ARG = {1: "3pi/8", 3: "5pi/16", 5: "5pi/16"}
 # Taylor orders of the trajectory and of the step Jacobian (M >= 3); M = 1 uses 24, 24. CERTIFY_M_NTAY / _NJAC set others
 # (#1079: the excited zeros' radius on the real leg); unset, the certificates of record are unchanged
 NTAY, NJAC = int(os.environ.get("CERTIFY_M_NTAY", "20")), int(os.environ.get("CERTIFY_M_NJAC", "12"))
+if NJAC > NTAY:     # the step Jacobian's remainder reads the trajectory's Taylor context to order NJ + 1 (review of #1079, 2)
+    raise SystemExit(f"CERTIFY_M_NJAC {NJAC} > CERTIFY_M_NTAY {NTAY}: refused")
+ORDERS_SET = "CERTIFY_M_NTAY" in os.environ or "CERTIFY_M_NJAC" in os.environ   # then the run files record them
 FPM_DIR = os.environ.get("CERTIFY_M_FPM_DIR")   # where fixed_point_M.py lives, if not next to this file
 
 
@@ -87,8 +90,10 @@ def path_for(M):
     M-harmonic start-value lemma has small Cauchy bounds (fixed_point_M.py's table), then the same lower path: ray to
     0.2, arc at 0.2, real axis to 0.3."""
     phi0 = (3 if M == 1 else arb(5) / 2) * arb.pi() / 8
-    xi1 = "0.3" if M == 1 else os.environ.get("CERTIFY_M_XI1", "0.3")   # #1079: 0.2 drops the real leg (A_lemmas_M §8: any
-    return (R0[M], phi0, "0.2", xi1)                                    # xi1 >= rho_arc, with lemma 6a at that xi1)
+    xi1 = "0.3" if M == 1 else os.environ.get("CERTIFY_M_XI1", "0.3")   # #1079: 0.2 drops the real leg (A_lemmas_M §6: any
+    if float(xi1) < 0.2:                                                # xi1 >= rho_arc, with lemma 6a at that xi1)
+        raise SystemExit(f"CERTIFY_M_XI1 {xi1} below the arc radius 0.2: refused")
+    return (R0[M], phi0, "0.2", xi1)
 
 
 def orders(M):
@@ -246,6 +251,8 @@ def point_run(M, pstr, out=None, log=None, verbose=False):
     steps, _ = CL.integrate(lo, path, verbose=verbose, log=log)
     res = {"kind": "point", "M": M, "p": list(pstr), "path": [path[0], ARG[M], path[2], path[3]], "start": info,
            "steps": steps, "sec": time.time() - t0, "prec": PREC, "sets": CL.dump_lohner(lo)}
+    if ORDERS_SET:
+        res["orders"] = list(orders(M))
     g, Dg = g_Dg(s, lo.c, lo.Q, lo.q, lo.var)
     res["g"] = [CL.s_arb(x) for x in g]
     res["Dg"] = [[CL.s_arb(x) for x in row] for row in Dg]
@@ -337,6 +344,8 @@ def box_run(M, pstr, Cm, h, ws, out=None, log=None, verbose=False, max_steps=Non
     res = {"kind": "box", "M": M, "p": list(pstr), "h": h, "w": list(ws), "C": [[CL.s_arb(x) for x in r] for r in Cm],
            "path": [path[0], ARG[M], path[2], path[3]], "start": info, "steps": steps, "sec": time.time() - t0,
            "prec": PREC, "sets": CL.dump_lohner(lo)}
+    if ORDERS_SET:
+        res["orders"] = list(orders(M))
     if out:
         with open(out, "w") as fh:
             json.dump(res, fh)
@@ -353,6 +362,9 @@ def krawczyk_test(bx, pt=None, mutate=None, theta=None, verbose=True, sub=None):
     enclosure in p-coordinates."""
     if pt is not None:
         assert pt["p"] == bx["p"] and pt["M"] == bx["M"]
+        # the same path and Taylor orders (absent "orders": the defaults of the code that wrote the file; #1079 review, 3)
+        assert pt["path"] == bx["path"], "point and box runs on different paths"
+        assert pt.get("orders") == bx.get("orders"), "point and box runs at different Taylor orders"
     M = bx["M"]
     m = M + 1
     ctx.prec = KPREC

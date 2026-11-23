@@ -79,6 +79,7 @@ def check(M, raw, mutate=None, quiet=False, cert=None, ray_path=None):
             ray = json.load(fh)
     else:
         ray = SL.load(rn["ray"], raw)
+    label = cert or CERT[M]                     # printed as given, or as main prints it (review of #1079, finding 5)
     cert = cert or os.path.join(HERE, CERT[M])
     with open(cert) as fh:
         bx = json.load(fh)
@@ -97,7 +98,7 @@ def check(M, raw, mutate=None, quiet=False, cert=None, ray_path=None):
     say(f"M = {M}" + (f", MUTATION {mutate}" if mutate else ""))
     say(f"X_b, the covering's ball [{ray_path or rn['ray']}]: centre c = ray.json's x, radius {ray['h']} as arb rounds it up: "
         f"{ray['h']} + {fl(rb - arb(ray['h'])):.3e}")
-    say(f"    c against the certificate's p^ [{cert}]: |p^ - c| = " + ", ".join(f"{names[i]} {off[i]:.2e}"
+    say(f"    c against the certificate's p^ [{label}]: |p^ - c| = " + ", ".join(f"{names[i]} {off[i]:.2e}"
                                                                                   for i in range(m)))
     if M == 3:
         ce = SC.cert_data(bx)
