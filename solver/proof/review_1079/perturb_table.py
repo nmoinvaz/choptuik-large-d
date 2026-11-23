@@ -22,8 +22,36 @@ def first(path):
     return m.group(1) == "True", [float(v) for v in m.group(2).split(",")]
 
 
+def compact(raw):
+    """one table, the two outer margins only: rows = box files, columns = the two zeros"""
+    cells, order = {}, []
+    for z, tag in ZERO.items():
+        fs = [("macm3, stored", os.path.join(raw, "I1079-macm3/levers/logs", f"A_M_krawczyk_pt_{tag}.log")),
+              ("dh610, stored", os.path.join(raw, "I1079-dh610/out/logs", f"A_M_krawczyk_pt_{tag}.log"))]
+        for f in sorted(glob.glob(os.path.join(raw, "I1079-mac-review/logs", f"A_M_krawczyk_pt_{tag}_*.log"))):
+            m = re.search(tag + r"_(none|qr|perron)_s(\d+)(?:_u(\d+))?\.log$", f)
+            what, seed, ulps = m.group(1), m.group(2), m.group(3) or "1"
+            if what == "none" and seed != "1079":
+                continue
+            name = {"none": "this Mac, unchanged code", "qr": f"this Mac, frames Q moved by 1 ulp, seed {seed}",
+                    "perron": f"this Mac, start weights moved by {ulps} ulp"}[what]
+            fs.append((name, f))
+        for name, f in fs:
+            ok, mg = first(f)
+            if name not in order:
+                order.append(name)
+            cells[(name, z)] = f"{mg[0]:+.3f}, {mg[1]:+.3f}" + ("" if ok else " **fails**")
+    key = lambda n: (0 if "stored" in n else 1 if "unchanged" in n else 2 if "start" in n else 3,  # noqa: E731
+                     int(re.search(r"(\d+)$", n).group(1)) if re.search(r"seed (\d+)$", n) else 0)
+    print("| box file | first zero | second zero |\n|---|---|---|")
+    for name in sorted(order, key=key):
+        print(f"| {name} | {cells.get((name, 'x1'), '')} | {cells.get((name, 'x2'), '')} |")
+
+
 def main():
     raw = sys.argv[1]
+    if "--compact" in sys.argv:
+        return compact(raw)
     for z, tag in ZERO.items():
         rows = [("macm3, stored", os.path.join(raw, "I1079-macm3/levers/logs", f"A_M_krawczyk_pt_{tag}.log")),
                 ("dh610, stored", os.path.join(raw, "I1079-dh610/out/logs", f"A_M_krawczyk_pt_{tag}.log"))]

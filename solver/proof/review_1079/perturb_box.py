@@ -9,6 +9,9 @@ qr      every entry of the float matrix Q returned by validated_int.qr_pivot mul
 perron  every Perron weight of fixed_point_M.perron multiplied by 1 +- 2^-52. Any positive weights are allowed, so the
         start data stay valid; only their radii move in the last digits
 REVIEW_ULPS (default 1) scales the perturbation: the factor is 1 +- n 2^-52.
+REVIEW_TIES=1 (with any mode) counts, over the calls of qr_pivot, those whose pivot order rests on a near tie: two
+        consecutive sorted column weights (norm times weight) within a relative 1e-12, among columns whose weight
+        is above 1e-200. It prints the counts and the smallest gap seen.
 The run is rigorous in every mode. What is measured is how far the Krawczyk margins move.
 """
 import os
@@ -45,11 +48,33 @@ elif WHAT == "perron":
         return [float(v) * (1.0 + (int(RNG.integers(0, 2)) * 2 - 1) * EPS) for v in w]
     FPM.perron = perron
 
+TIES = {"calls": 0, "tied": 0, "min_gap": 1.0, "exact": 0}
+if os.environ.get("REVIEW_TIES"):
+    _qr0 = VI.qr_pivot
+
+    def qr_ties(Am, wts=None):
+        nrm = np.linalg.norm(Am, axis=0)
+        if wts is not None:
+            nrm = nrm * (np.asarray(wts) + 1e-300)
+        v = np.sort(nrm)[::-1]
+        v = v[v > 1e-200]
+        TIES["calls"] += 1
+        if len(v) > 1:
+            gap = float(np.min((v[:-1] - v[1:]) / v[:-1]))
+            TIES["min_gap"] = min(TIES["min_gap"], gap)
+            TIES["tied"] += gap < 1e-12
+            TIES["exact"] += gap == 0.0
+        return _qr0(Am, wts)
+    VI.qr_pivot = qr_ties
+
 if __name__ == "__main__":
     import flint
     print(f"review_1079/perturb_box.py: REVIEW_PERTURB={WHAT}, seed {os.environ.get('REVIEW_SEED', '1079')}, relative size {EPS:.3e}; "
           f"python-flint {flint.__version__}, FLINT {flint.__FLINT_VERSION__}, numpy {np.__version__}; "
           f"NTAY, NJAC = {CM.NTAY}, {CM.NJAC}; path {[str(x) for x in CM.path_for(3)]}", flush=True)
     rc = CM.main()
+    if os.environ.get("REVIEW_TIES"):
+        print(f"pivot order: {TIES['calls']} calls of qr_pivot, {TIES['tied']} with two column weights within a relative "
+              f"1e-12 ({TIES['exact']} exactly equal); smallest relative gap {TIES['min_gap']:.3e}", flush=True)
     print(f"perturbed calls: qr_pivot {COUNT['qr']}, perron {COUNT['perron']}", flush=True)
     sys.exit(rc)
