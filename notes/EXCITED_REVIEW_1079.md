@@ -29,11 +29,11 @@ zeros the Krawczyk step passes and (H0)–(H3) hold, each tied to the same centr
 fail. Two corrections concern the margin gap between machines (findings 16 and 17), and one a section number (21).
 The gaps are in the options, in what the files record, in two controls and in the theorem's wording.
 
-| statement of #1079 | after the review | findings |
+| statement of #1079, or question put to the review | after the review | findings |
 |---|---|---|
 | the options leave main's stored results unchanged when unset | confirmed. One printed line of `theorem_A_sets_M.py` changes | 1, 5 |
-| the options cannot give a wrong result | not so: `CERTIFY_M_NJAC` above `CERTIFY_M_NTAY` + 1 is wrong without an error. The runs at 20/12 and 28/16 are sound | 2 |
-| the Krawczyk step passes at both zeros | confirmed: rerun here, cross-loaded both ways, decided by Lean | 6, 13, 14, 15 |
+| can an option give a wrong result silently? | yes: `CERTIFY_M_NJAC` above `CERTIFY_M_NTAY` + 1 gives a wrong enclosure without an error. The runs at 20/12 and 28/16 are sound | 2, 3 |
+| the Krawczyk step passes at both zeros | confirmed: the box runs rerun here, the stored files cross-loaded on a third machine, the last step decided by Lean | 6, 13, 14, 15 |
 | (H0), with r₀ = 0.0741 at every centre | valid as run, and proved a second time by a separate call | 7 |
 | (H1), lemma S and lemma 6b₀ over p̂ ± 10⁻⁶ | confirmed, rerun here | 8 |
 | (H2), 183 discs over p̂ ± 10⁻¹¹ and the inclusion | confirmed. One cited control, `c1check`, does not pass its own mutation at this box | 9, 10 |
@@ -251,8 +251,9 @@ inflated by a fixed 10⁻¹¹ for the double-precision error. Its mutation drops
 moved point must fall outside. At the fundamental zero h is 1.1×10⁻⁹. Here h = 10⁻¹¹ equals the inflation, and the
 points moved in ω/ω∞ stay inside at rows 1 and 6 (they fall outside at rows 9 and 11, and in the other three
 parameters at every row). So at this box the control cannot see a missing ω/ω∞ column at the outer rows
-(finding 10). It is a control, not a step of the proof: the discs are certified on the rigorous sets. A tolerance
-proportional to h, or the check at the 1.1×10⁻⁹ box, would restore it.
+(finding 10). At the fundamental zero the same mutation gives True (`lemmas_M_runs/c1check_M3_cert_nov.log`). It is a
+control, not a step of the proof: the discs are certified on the rigorous sets. A tolerance proportional to h would
+restore it, or a C¹ ray run at h = 10⁻⁹ for the control alone, as the M = 5 covering (h = 10⁻¹⁸) did.
 
 ### 2.5 (H3): lemma 6a (finding 11)
 
