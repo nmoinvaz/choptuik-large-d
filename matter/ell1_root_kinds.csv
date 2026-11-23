@@ -86,3 +86,4 @@ D,kc,build,value,kind,reason
 19.0,87,,1.538986,lambda_1,by position: the k_c-stable root (k_c 79 1.539658: -0.0007) (winb kc87_d19)
 20.25,87,linux,1.166952,lambda_1,by position: the only k_c 87 root in 1.14-1.22 on Linux; +0.0017 from Windows' 1.165265 (dh610 10ddc4be)
 20.5,79,linux,1.087574,lambda_1,by position: the only robust change in 1.00-1.24 at k_c 79 on Linux; on lambda_1's line from D 20.25 (dh170 249571b8)
+20.75,79,,0.989779,lambda_1,"by position: the only robust change in 0.95-1.07 at k_c 79 (macOS evaluation of win2's state, macm3 660e6fa0)"
