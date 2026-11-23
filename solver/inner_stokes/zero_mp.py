@@ -7,7 +7,8 @@ R_1 at each point is value_mp.value_point (34 and 42 digits, chord steps), start
 cache record and then from the previous point's tuned F_3. The Jacobian is central differences in A and w_f (4 points,
 run in parallel with the centre); a step is dx = -J^-1 R. It stops when |R| < 10^3 sigma_mp, when |dx| < 1e-13, or after
 --iters steps. Each iteration writes a row: A, w_f, R, sigma_mp, |R|/sigma_mp, J, the orientation sign(det J) (the
-argument principle's +1 or -1), dx. A zero is reported as located when the last |R| is below 10^3 sigma_mp."""
+argument principle's +1 or -1), dx. A zero is reported as located when the last |R| is below 10^3 sigma_mp, or when the
+next step is below the float64 coordinate grid (1e-13) and |R| is what that step would remove (within 10x)."""
 import json
 import math
 import sys
@@ -92,8 +93,15 @@ def main():
     t0 = time.time()
     rows = newton(A0, wf0, f3, _value, iters, hA, hw, int(o.get("procs", 5)), out)
     last = rows[-1]
-    located = last["R_over_sig"] < 1e3
-    print(f"{'located' if located else 'NOT located'}: A {last['A']:.15f} wf {last['wf']:.15f}, |R|/sigma_mp "
+    J = np.array(last["J"])
+    step = max(abs(last["dA"]), abs(last["dwf"]))
+    lin = float(np.linalg.norm(J @ np.array([last["dA"], last["dwf"]])))    # the |R| the unapplied step would remove
+    R = math.hypot(last["re"], last["im"])
+    # located: |R| below 1e3 sigma_mp, or the next step below the float64 coordinate grid (1e-13) with |R| what that
+    # step removes (within a factor 10): near a zero one ulp of A moves R by about |dR/dA| 4e-16, above 1e3 sigma_mp
+    located = last["R_over_sig"] < 1e3 or (step < 1e-13 and R <= 10 * max(lin, 1e-300))
+    print(f"{'located' if located else 'NOT located'}: A {last['A']:.15f} wf {last['wf']:.15f} (unapplied step "
+          f"{last['dA']:+.2e}, {last['dwf']:+.2e}), |R| {R:.3e} against the step's {lin:.3e}, |R|/sigma_mp "
           f"{last['R_over_sig']:.2e}, orientation {last['orientation']:+d}; {time.time() - t0:.0f} s", flush=True)
     return 0 if located else 1
 
