@@ -73,3 +73,4 @@ D,kc,build,value,kind,reason
 19.375,87,,1.370705,discretization,by position: a root that moves with k_c while lambda_1 does not (coordinator's reading on #1025)
 19.75,87,,1.276162,discretization,by position: a root that moves with k_c while lambda_1 does not (coordinator's reading on #1025)
 19.75,95,,1.326077,lambda_1,by position: the k_c-stable root on lambda_1's line (coordinator's reading on #1025; Linux k_c 79/87/95 within 0.001)
+20.0,87,,1.247484,lambda_1,by position: the k_c-stable root on lambda_1's line (coordinator's reading on #1025; Windows k_c 79/87 within 0.001)
