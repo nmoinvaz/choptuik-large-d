@@ -30,6 +30,9 @@ only (2) is checked, for the hull of the run's arb ball (the Krawczyk test on th
 
     python3 theorem_A_sets_M.py --M=5 --raw=../../../choptuik-large-d-raw     (ray.json and the 6a input are raw output)
     python3 theorem_A_sets_M.py --M=3
+    python3 theorem_A_sets_M.py --M=3 --cert=BOX.json --ray=RUNS/ray.json [--selftest]
+        another M = 3 certificate (its box JSON) against another covering (lemma6b1_cover_M.py --x= --tag=; its
+        ray.json): the excited zeros of #1079
     python3 theorem_A_sets_M.py --M=5 --raw=.. --mutate=decimal|old|centre|kbox|six_a
         decimal  X_b's radius replaced by the exact decimal 1e-18: a null mutation, the check must still HOLD
         old      the X_c of #871, outer half-width 1e-18, with X_b's decimal radius: (2) must fail, by |p^ - c|
@@ -64,14 +67,20 @@ def fl(x):
     return float(arb(x).mid())
 
 
-def check(M, raw, mutate=None, quiet=False):
+def check(M, raw, mutate=None, quiet=False, cert=None, ray_path=None):
     ctx.prec = PREC
     m = M + 1
     names = SL.pnames(M)
     say = (lambda *a: None) if quiet else print
     rn = SL.RUNS[M]
-    ray = SL.load(rn["ray"], raw)
-    with open(os.path.join(HERE, CERT[M])) as fh:
+    assert M == 3 or not (cert or ray_path), "--cert and --ray are for M = 3"
+    if ray_path:
+        with open(ray_path) as fh:
+            ray = json.load(fh)
+    else:
+        ray = SL.load(rn["ray"], raw)
+    cert = cert or os.path.join(HERE, CERT[M])
+    with open(cert) as fh:
         bx = json.load(fh)
     fails = []
     # X_b: centre and radius as lemma6b1_cover_M builds them
@@ -86,9 +95,9 @@ def check(M, raw, mutate=None, quiet=False):
     off = [fl(abs(p[i] - c[i])) for i in range(m)]
     io = max(range(m), key=lambda i: off[i])
     say(f"M = {M}" + (f", MUTATION {mutate}" if mutate else ""))
-    say(f"X_b, the covering's ball [{rn['ray']}]: centre c = ray.json's x, radius {ray['h']} as arb rounds it up: "
+    say(f"X_b, the covering's ball [{ray_path or rn['ray']}]: centre c = ray.json's x, radius {ray['h']} as arb rounds it up: "
         f"{ray['h']} + {fl(rb - arb(ray['h'])):.3e}")
-    say(f"    c against the certificate's p^ [{CERT[M]}]: |p^ - c| = " + ", ".join(f"{names[i]} {off[i]:.2e}"
+    say(f"    c against the certificate's p^ [{cert}]: |p^ - c| = " + ", ".join(f"{names[i]} {off[i]:.2e}"
                                                                                   for i in range(m)))
     if M == 3:
         ce = SC.cert_data(bx)
@@ -158,18 +167,18 @@ def check(M, raw, mutate=None, quiet=False):
     return not fails, fails
 
 
-def verdict(M, raw, mutate=None, quiet=False):
-    ok, fails = check(M, raw, mutate, quiet)
+def verdict(M, raw, mutate=None, quiet=False, cert=None, ray_path=None):
+    ok, fails = check(M, raw, mutate, quiet, cert, ray_path)
     print(f"THEOREM A SETS (M = {M}, mutation {mutate}): " + ("HOLD" if ok else "FAIL: " + "; ".join(fails)))
     return ok
 
 
-def selftest(M, raw):
+def selftest(M, raw, cert=None, ray_path=None):
     res = []
     cases = [(None, True)] + ([(mu, True) for mu in MUST_HOLD] + [(mu, False) for mu in MUTATIONS] if M == 5
                               else [("centre", False)])
     for mut, want in cases:
-        ok = verdict(M, raw, mut, quiet=True)
+        ok = verdict(M, raw, mut, quiet=True, cert=cert, ray_path=ray_path)
         res.append(ok == want)
         print(f"  mutation {mut}: holds {ok} (must be {want}): {'ok' if ok == want else 'WRONG'}")
     print(f"SELFTEST (M = {M}): {'PASS' if all(res) else 'FAIL'}")
@@ -181,9 +190,10 @@ def main():
     M = int(opts.get("M", "5"))
     raw = opts.get("raw")
     print(f"python-flint {flint.__version__}, FLINT {flint.__FLINT_VERSION__}, {PREC} bits")
+    cert, ray_path = opts.get("cert"), opts.get("ray")
     if "selftest" in opts:
-        sys.exit(0 if selftest(M, raw) else 1)
-    sys.exit(0 if verdict(M, raw, opts.get("mutate")) else 1)
+        sys.exit(0 if selftest(M, raw, cert, ray_path) else 1)
+    sys.exit(0 if verdict(M, raw, opts.get("mutate"), cert=cert, ray_path=ray_path) else 1)
 
 
 if __name__ == "__main__":
