@@ -244,7 +244,7 @@ a research project of its own (row 18 above). The realistic plan is the split ab
 5 decided by the kernel and their controls decided false; every theorem uses only propext, Classical.choice and
 Quot.sound. At M = 3 and 5 the hypotheses are enclosures of the products Y g and Y Dg formed in arb, so they are part of
 `EnclOK`. An independent review (notes/LEAN_REVIEW_1077.md) found no error and its checks are in `lean/review/`. The
-Palomar layout and comparator are not set up. The sketches below are kept as written.
+Palomar layout and comparator are not set up. The excited M = 3 zeros (#1079, A_lemmas_M.md §7.1) have instances `M3exc1` and `M3exc2`, decided the same way. The sketches below are kept as written.
 
 **Step 0, a warm-up (hours).** Set up one Lake project in the Palomar layout: `Challenge.lean`, `Solution.lean`,
 `comparator.json`, `lean-toolchain` pinned to formal-math's `v4.33.1`. Prove row 1 in it. This exercises the whole

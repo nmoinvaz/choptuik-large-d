@@ -901,8 +901,8 @@ outside while the centre stays inside, so the control discriminates. The centre 
 
 ## 6. Theorem A(M), conditional on the point certificate
 
-Let x̂ be the double-precision zero (§2.4), X_c the box of the point certificate, and ξ₁ and ρ_arc its matching radius
-and arc radius. Assume the certificate passes along a path of the kind used in §11.2: the start ray at an angle
+Let x̂ be a centre: the double-precision zero (§2.4), or the centre p̂ of another certificate (the excited zeros of
+§7.1). Let X_c be the box of the point certificate, and ξ₁ and ρ_arc its matching radius and arc radius. Assume the certificate passes along a path of the kind used in §11.2: the start ray at an angle
 θ ∈ [3π/8 − 0.2, 3π/8] from a radius r₀ ≤ 0.1, that ray out to ρ_arc ≤ 0.2, the arc |ξ| = ρ_arc to the real axis, and
 then (if ξ₁ > ρ_arc) the real axis to ξ₁.
 
@@ -913,9 +913,9 @@ x ↦ (J^path_{D,μ}(ξ₁; x))_{μ = 1, 3, …, M} has exactly one zero in X_c 
   truncation N, on a set that contains its start sets: its centre p̂, the hull of its run box, and the Cauchy box of
   each (`start_cover_M2.py`);
 - (H1) X_c ⊂ X₆ = x̂ ± 10⁻⁶, the box over which lemma S(M), and with it lemma 6b₀(M), is proved (§3.3,
-  `lemma6_sector_M.py --box=1e-6`);
-- (H2) X_c ⊂ X_b, the box of a complete 6b₁ covering (`lemma6b1_cover_M.py check`), whose own run proves its start set
-  by the old sector lemma: at M = 3, X_b = p̂ ± 1.1×10⁻⁹ (§5.3), certified; at M = 5, X_b is the ball of radius
+  `lemma6_sector_M.py --box=1e-6`, with `--x` for another centre);
+- (H2) X_c ⊂ X_b, the box of a complete 6b₁ covering run at its own centre (`lemma6b1_cover_M.py check`, with `--x`
+  for another centre), whose own run proves its start set by the old sector lemma: at M = 3, X_b = p̂ ± 1.1×10⁻⁹ (§5.3), certified; at M = 5, X_b is the ball of radius
   10⁻¹⁸ + 2.19×10⁻²⁷ around p̂ cut at 39 decimals (§7, `theorem_A_sets_M.py`);
 - (H3) lemma 6a(M) holds with B₁ the certificate's state box at ξ₁ over X_c, or over a box that contains X_c
   (`lemma6_jump_M.py --box=`). Its run proves
@@ -1049,6 +1049,38 @@ its truncation N = 132 and contain its four start sets, with slacks of 1.07×10�
 
 At M = 3 the same script checks the hull of the certificate's box against X_b = c ± 1.1×10⁻⁹: inside, with slack
 9.997×10⁻¹⁰.
+
+### 7.1 The two excited zeros at M = 3 (#1079)
+
+Besides the fundamental zero, the M = 3 multiplier has two zeros in #1021's box, located in extended precision
+(`zero_mp.py`, #1076). The hypotheses of §6 hold at both, so Theorem A(3) holds at each: in its box the three-harmonic
+selection condition holds at exactly one point, and the zero is simple. Assuming Braaksma's theorem, as at the
+fundamental zero, the status is *certified*. The trusted code is the fundamental zero's, with `certify_M.py` at
+`CERTIFY_M_NTAY=28 CERTIFY_M_NJAC=16` (higher Taylor orders; the defaults leave every other result unchanged).
+
+| | first zero | second zero |
+|---|---|---|
+| centre p̂ (A, ω/ω∞) | 3.446218246366727…, 0.347606965217407… | 3.526473056695715…, 0.211497981391215… |
+| box (h, w) | (10⁻¹², 10⁻¹³) | (10⁻¹², 10⁻¹²) |
+| Krawczyk margins of the stored files | +0.702, +0.758, +0.997, +0.998 | +0.943, +0.945, +0.988, +0.995 |
+| (H0) start data, a second call over p̂ ± 10⁻⁹ | N = 95, contraction 0.38 | N = 94, contraction 0.39 |
+| (H1) lemma S; old sector lemma, over p̂ ± 10⁻⁶ | 0.6961; 0.6839 | 0.6782; 0.7008 |
+| (H2) 6b₁ covering over p̂ ± 10⁻¹¹ | 183 discs, X_c's hull inside with slack 8.36×10⁻¹² | 183 discs, slack 8.28×10⁻¹² |
+| (H3) ρ₆ₐ | 0.01365 | 0.01259 |
+
+**The certificates are the stored files.** The box and point runs are raw `I1079-macm3/levers/data/`:
+- first zero: `A_M_box_M3x1E2_h1e-12_w1e-13.json` (sha256 5a736fd2…) and `A_M_point_M3x1E2.json` (8d7337a8…);
+- second zero: `A_M_box_M3x2E2_h1e-12_w1e-12.json` (2a5c4d32…) and `A_M_point_M3x2E2.json` (1f1241c4…).
+
+They pass where they are loaded (macOS and Linux). The margins belong to those files, not to the zero and the box. The
+box run depends on the last bits of its Lohner frames. At the first zero every rerun passed: three machines, and six
+runs with the frames moved by one unit in the last place. At the second zero three machines passed, but most runs with
+the frames moved did not. So a rerun that fails its own bound there is not a failed reproduction while the stored
+files cross-load (#111's rule read this way). The review is notes/EXCITED_REVIEW_1079.md, with its checks in
+`solver/proof/review_1079/`; the Linux rerun is raw `I1079-dh610/`.
+
+Whether these zeros persist as M grows is not settled (#1080). The three earlier M = 3 candidates of #1020 did not
+(#1026, #1027).
 
 ## 8. Mutation table
 
