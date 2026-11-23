@@ -2,7 +2,7 @@
 """#1078: a low-D state moved to another state's layout (its nodes and its tau map), then re-converged there.
 
     python3 layout_swap.py IN.npz OUT.npz --like OTHER.npz [--threads 4] [--polish 12] [--hmax 0.05] [--tol 1e-20]
-        [--part nodes|map|both] [--allow_unraw]
+        [--part nodes|map|both] [--ntol 1e-27] [--allow_unraw]
 
 At D 3.044375 (21 nodes to x 0.975, tau map s0 1.9635, L 0.4) the mode matrix's horizon block is singular to working
 accuracy, while at D 3.15 (17 nodes to x 0.9, map s0 1.8326, L 0.7) it is well conditioned (dh370, #1078). Moving
@@ -45,6 +45,7 @@ def main():
     ap.add_argument("--polish", type=int, default=12)
     ap.add_argument("--hmax", type=float, default=0.05)
     ap.add_argument("--tol", type=float, default=1e-20)
+    ap.add_argument("--ntol", type=float, default=1e-27)   # Newton's stop: above the dd floor (3e-29 at D 3.15, #1078)
     ap.add_argument("--part", choices=("nodes", "map", "both"), default="both")
     ap.add_argument(FLAG, action="store_true", help=HELP)
     a = ap.parse_args()
@@ -73,7 +74,7 @@ def main():
     s.set_segs(s.plan(zh, zl, 1e-32, a.hmax))
     F_moved = fmax(s, zh, zl)
     if a.polish > 0:
-        zh, zl, _ = newton_solve(s, zh, zl, tol=1e-29, it_max=a.polish, verbose=True)
+        zh, zl, _ = newton_solve(s, zh, zl, tol=a.ntol, it_max=a.polish, verbose=True)
     F_out, delta_out = fmax(s, zh, zl), float(zh[-1] + zl[-1])
     save(a.out, zh, zl, meta_new)
     rec = dict(inp=os.path.basename(a.inp), like=os.path.basename(a.like), part=a.part, D=D, M=M, n=len(zh) - 1,
