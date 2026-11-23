@@ -25,8 +25,11 @@ sys.path.insert(0, HERE)
 import inner_mp as IM  # noqa: E402
 
 
-def solve(A, wf, v0, r1, dps, p, iters=8, hrel="1e-12", margin=12):
-    """Newton on r_3 = 0 at precision dps; returns (R_1, r_3, v, J1, J3, info, calls)"""
+def solve(A, wf, v0, r1, dps, p, iters=8, hrel="1e-12", margin=12, J=None, chord="1e-4"):
+    """Newton on r_3 = 0 at precision dps, with chord steps (Shamanskii): the Jacobian (central differences, 4 calls)
+    is refreshed only after a step whose contraction |r_3'|/|r_3| exceeds `chord`, or after a step that fails; J =
+    (J1, J3) starts from a given Jacobian (the second precision reuses the first's). chord=None is plain Newton.
+    Returns (R_1, r_3, v, J1, J3, info, calls)"""
     mp.mp.dps = dps
     v = [mp.mpf(v0[0]), mp.mpf(v0[1])]
     calls = 0
@@ -36,36 +39,54 @@ def solve(A, wf, v0, r1, dps, p, iters=8, hrel="1e-12", margin=12):
         calls += 1
         return IM.residual_demixed([A, wf, vv[0], vv[1]], 3, r1, p=p, margin=margin)
 
-    r, info = res(v)
-    J1 = J3 = None
-    for _ in range(iters):
-        hs = mp.mpf(hrel) * max(abs(v[0]), abs(v[1]), mp.mpf("1e-3"))
+    def jac(vv):
+        hs = mp.mpf(hrel) * max(abs(vv[0]), abs(vv[1]), mp.mpf("1e-3"))
         cols = []
         for k in range(2):
-            vp, vm = list(v), list(v)
+            vp, vm = list(vv), list(vv)
             vp[k] += hs
             vm[k] -= hs
             rp, _ = res(vp)
             rm, _ = res(vm)
             cols.append([(rp[i] - rm[i]) / (2 * hs) for i in range(4)])
-        J1 = mp.matrix([[cols[0][0], cols[1][0]], [cols[0][1], cols[1][1]]])
-        J3 = mp.matrix([[cols[0][2], cols[1][2]], [cols[0][3], cols[1][3]]])
+        return (mp.matrix([[cols[0][0], cols[1][0]], [cols[0][1], cols[1][1]]]),
+                mp.matrix([[cols[0][2], cols[1][2]], [cols[0][3], cols[1][3]]]))
+
+    r, info = res(v)
+    J1, J3 = J if J is not None else (None, None)
+    stale = J is None
+    fresh = False
+    tol = mp.mpf(10) ** (-(dps - 6))
+    for _ in range(iters):
+        if max(abs(r[2]), abs(r[3])) < tol:
+            break
+        if stale:
+            J1, J3 = jac(v)
+            stale, fresh = False, True
         dv = mp.lu_solve(J3, mp.matrix([-r[2], -r[3]]))
         vn = [v[0] + dv[0], v[1] + dv[1]]
         rn, infon = res(vn)
-        if max(abs(rn[2]), abs(rn[3])) >= max(abs(r[2]), abs(r[3])):
-            break
+        n0, n1 = max(abs(r[2]), abs(r[3])), max(abs(rn[2]), abs(rn[3]))
+        if n1 >= n0:
+            if fresh:
+                break                      # no progress with a fresh Jacobian
+            stale = True                   # a stale Jacobian failed: refresh and retry from v
+            continue
         v, r, info = vn, rn, infon
-        if max(abs(r[2]), abs(r[3])) < mp.mpf(10) ** (-(dps - 6)):
-            break
+        fresh = False
+        if chord is None or n1 > mp.mpf(chord) * n0:
+            stale = True
+    if J3 is None:
+        J1, J3 = jac(v)
     return mp.mpc(r[0], r[1]), (r[2], r[3]), v, J1, J3, info, calls
 
 
-def value_point(A, wf, f3re, f3im, r1="0.17", dps=34, dps2=42, p=40, p2=50, iters=8):
+def value_point(A, wf, f3re, f3im, r1="0.17", dps=34, dps2=42, p=40, p2=50, iters=12, chord="1e-4"):
     t0 = time.time()
     v0 = [-2 * mp.mpf(f3im), 2 * mp.mpf(f3re)]
-    R, r3, v, J1, J3, info, n1 = solve(A, wf, v0, r1, dps, p, iters)
-    R2, r32, v2, _, _, info2, n2 = solve(A, wf, [str(v[0]), str(v[1])], r1, dps2, p2, iters)
+    R, r3, v, J1, J3, info, n1 = solve(A, wf, v0, r1, dps, p, iters, chord=chord)
+    R2, r32, v2, _, _, info2, n2 = solve(A, wf, [str(v[0]), str(v[1])], r1, dps2, p2, iters,
+                                         J=None if chord is None else (J1, J3), chord=chord)
     mp.mp.dps = dps2
     dR = abs(R2 - R)
     if J1 is not None and J3 is not None:
