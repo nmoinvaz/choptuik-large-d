@@ -7,6 +7,7 @@ Reads the first line of each `certify_M.py krawczyk` log: macm3's and dh610's ow
 and the review's (`I1079-mac-review/logs/A_M_krawczyk_pt_*`: the rerun box with macm3's point file).
 """
 import glob
+import textwrap
 import os
 import re
 import sys
@@ -14,6 +15,12 @@ import sys
 PAT = re.compile(r"K\(X\) in int X: (True|False); relative margins ([-+0-9., ]+)")
 ZERO = {"x1": "M3x1E2_h1e-12_w1e-13", "x2": "M3x2E2_h1e-12_w1e-12"}
 WHAT = {"none": "unchanged code", "qr": "frames Q", "qrin": "QR's input", "perron": "start lemma's weights"}
+
+
+def _k(f):
+    """order of the rows: by kind of change, then by seed as a number"""
+    m = re.search(r"_(none|perron|qr|qrin)_s(\d+)", os.path.basename(f))
+    return (["none", "perron", "qr", "qrin"].index(m.group(1)), int(m.group(2)), f)
 
 
 def first(path):
@@ -28,7 +35,7 @@ def compact(raw):
     for z, tag in ZERO.items():
         fs = [("macm3, stored", os.path.join(raw, "I1079-macm3/levers/logs", f"A_M_krawczyk_pt_{tag}.log")),
               ("dh610, stored", os.path.join(raw, "I1079-dh610/out/logs", f"A_M_krawczyk_pt_{tag}.log"))]
-        for f in sorted(glob.glob(os.path.join(raw, "I1079-mac-review/logs", f"A_M_krawczyk_pt_{tag}_*.log"))):
+        for f in sorted(glob.glob(os.path.join(raw, "I1079-mac-review/logs", f"A_M_krawczyk_pt_{tag}_*.log")), key=_k):
             m = re.search(tag + r"_(none|qr|qrin|perron)_s(\d+)(?:_u(\d+))?\.log$", f)
             if m is None:                      # runs at other settings (_nj, _ties) are listed apart
                 continue
@@ -58,7 +65,7 @@ def main():
     for z, tag in ZERO.items():
         rows = [("macm3, stored", os.path.join(raw, "I1079-macm3/levers/logs", f"A_M_krawczyk_pt_{tag}.log")),
                 ("dh610, stored", os.path.join(raw, "I1079-dh610/out/logs", f"A_M_krawczyk_pt_{tag}.log"))]
-        for f in sorted(glob.glob(os.path.join(raw, "I1079-mac-review/logs", f"A_M_krawczyk_pt_{tag}_*.log"))):
+        for f in sorted(glob.glob(os.path.join(raw, "I1079-mac-review/logs", f"A_M_krawczyk_pt_{tag}_*.log")), key=_k):
             m = re.search(tag + r"_(none|qr|qrin|perron)_s(\d+)(?:_u(\d+))?\.log$", f)
             if m is None:                      # runs at other settings (_nj, _ties) are listed apart
                 continue
@@ -79,10 +86,27 @@ def main():
             print(f"| {name} | {'yes' if ok else '**no**'} | " + ", ".join(f"{v:+.3f}" for v in mg) + " |")
         a = [mg[0] for _, mg in lo]
         w = [mg[1] for _, mg in lo]
-        print(f"\n{len(lo)} box files, {sum(1 for ok, _ in lo if ok)} pass; A margin from {min(a):+.3f} to {max(a):+.3f}, "
-              f"ω/ω∞ margin from {min(w):+.3f} to {max(w):+.3f}; smallest margin of any coordinate "
-              f"{min(min(mg) for _, mg in lo):+.3f}. By kind: "
-              + "; ".join(f"{k}: {sum(v)} of {len(v)} pass" for k, v in kinds.items()) + ".")
+        others = []
+        for f in sorted(glob.glob(os.path.join(raw, "I1079-mac-review/logs", f"A_M_krawczyk_pt_{tag}_*.log")), key=_k):
+            m = re.search(tag + r"_(none|qr|qrin|perron)_s(\d+)_(nj\d+|ties|stable)\.log$", f)
+            if m:
+                what, seed, var = m.groups()
+                var = {"ties": "with the tie counter (no change to the run)",
+                       "stable": "with the trial pivot order (rounded weights, ties by index)"}.get(
+                           var, f"at CERTIFY_M_NJAC = {var[2:]}")
+                others.append(("this Mac, " + WHAT[what] + ("" if what == "none" else f" moved by 1 ulp, seed {seed}")
+                               + ", " + var, f))
+        if others:
+            print("\nRuns at other settings (not counted below):\n\n| box run | passes | margins (A, ω/ω∞, B₃, C₃) |\n|---|---|---|")
+            for name, f in others:
+                ok, mg = first(f)
+                print(f"| {name} | {'yes' if ok else '**no**'} | " + ", ".join(f"{v:+.3f}" for v in mg) + " |")
+        n_rep = sum(1 for name, _ in rows if "repeated" in name)
+        line = (f"{len(lo) - n_rep} box runs (the repeat not counted), {sum(sum(v) for v in kinds.values())} pass; A "
+                f"margin from {min(a):+.3f} to {max(a):+.3f}, ω/ω∞ margin from {min(w):+.3f} to {max(w):+.3f}; smallest "
+                f"margin of any coordinate {min(min(mg) for _, mg in lo):+.3f}. By kind: "
+                + "; ".join(f"{k}: {sum(v)} of {len(v)} pass" for k, v in kinds.items()) + ".")
+        print("\n" + textwrap.fill(line, 118))
 
 
 if __name__ == "__main__":
