@@ -93,3 +93,4 @@ D,kc,build,value,kind,reason
 20.5,79,linux,1.077743,lambda_1,"by position: the only robust change in 1.060-1.090 on a 0.005 grid, dh170's k_c 79 state (dh610 6b99c854)"
 20.8125,79,,0.969068,lambda_1,"by position: the only robust change in 0.92-1.02 on the k_c 79 leg's state (macOS evaluation, macm3 2e6197e2)"
 20.84375,79,linux,0.958120,lambda_1,by position: the only robust change in 0.945-0.975 on the k_c 79 leg's state (dh610 379990dc)
+20.875,79,linux,0.947951,lambda_1,"by position: the only robust change in 0.930-0.960 on the k_c 79 leg's state (dh610, D20.875)"
