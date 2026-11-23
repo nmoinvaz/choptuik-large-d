@@ -16,7 +16,7 @@ Rigorous (python-flint arb/acb). Statements and proofs: proof/A_lemmas_M.md, sec
      or with the label terms in the principal part (the real axis is a ray: |(t/z)^{s_mu}| = 1, and (t/z)^{3/2} <=
      (Z/z)^{3/2} shifts n by 3/2), a_r = 1/2 - (k + 3/2) Z ("diag").
 
-    python3 lemma6_sector_M.py --M=3 [--rp=0.06] [--k=30] [--box=1e-6] [--Z=...] [--json=f.json]
+    python3 lemma6_sector_M.py --M=3 [--rp=0.06] [--k=30] [--box=1e-6] [--Z=...] [--json=f.json] [--x=A,wf,B3,C3,...]
         lemma S, the old sector lemma and the flat estimate at the hier.py zero (or over the real box x +- box)
     python3 lemma6_sector_M.py --M=3 --scan        lemma S over a grid of (rp, k): where the contraction closes
     python3 lemma6_sector_M.py --M=3 --mutate=series   one coefficient of the top harmonic's series off by a relative
@@ -153,6 +153,9 @@ def scan(M, box="0"):
 def main():
     opts = {a.split("=", 1)[0][2:]: (a.split("=", 1)[1] if "=" in a else "1") for a in sys.argv[1:] if a.startswith("--")}
     M = int(opts.get("M", "3"))
+    if "x" in opts:                                 # --x=A,wf,B3,C3,...: the box centre, decimal strings (as
+        FPM.ZEROS[M] = opts["x"].split(",")         # lemma6_jump_M.py's --x; #1079, the excited M = 3 zeros)
+        print(f"centre x = {FPM.ZEROS[M]} (--x)", flush=True)
     box = opts.get("box", "0")
     if "scan" in opts:
         res = scan(M, box)
