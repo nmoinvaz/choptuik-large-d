@@ -54,7 +54,7 @@ rests on less than stated) or **confirmed**.
 
 | # | mark | finding | where |
 |---|---|---|---|
-| 1 | confirmed | With the options unset, `path_for`, `orders`, R0, ARG and the precisions equal main's for M = 1, 3, 5, and the only code that differs from main is the option lines | §1.1 |
+| 1 | confirmed | With the options unset, `path_for`, `orders`, R0, ARG and the precisions equal main's for M = 1, 3, 5. The code that differs from main is the option handling alone: one constant line and `path_for` in `certify_M.py`, `main` in `lemma6_sector_M.py`, four functions of `theorem_A_sets_M.py` | §1.1 |
 | 2 | gap | `CERTIFY_M_NJAC` ≥ `CERTIFY_M_NTAY` + 2 gives a wrong remainder of the step Jacobian, with no error. `CERTIFY_M_NTAY=10` alone does it, since NJAC stays 12 | §1.2 |
 | 3 | gap | The box and point files do not record the Taylor orders. `krawczyk --point` compares p and M of the two files and not their paths, so a point run at ξ₁ = 0.2 would be accepted with a box run at 0.3. `CERTIFY_M_XI1` below 0.2 is not refused | §1.3 |
 | 4 | confirmed | The options also reach the M = 5 certificate (`certify_M2.py` takes `CM.orders` and `CM.path_for`). Unset, nothing changes there | §1.1 |
