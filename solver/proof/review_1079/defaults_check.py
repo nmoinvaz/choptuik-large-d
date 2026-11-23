@@ -24,7 +24,7 @@ import tempfile
 HERE = os.path.dirname(os.path.abspath(__file__))
 PROOF = os.path.dirname(HERE)
 FILES = ["certify_M.py", "lemma6_sector_M.py", "theorem_A_sets_M.py"]
-EXPECT = {"certify_M.py": ["NTAY, NJAC", "path_for"],
+EXPECT = {"certify_M.py": ["(NTAY, NJAC)", "path_for"],
           "lemma6_sector_M.py": ["main"],
           "theorem_A_sets_M.py": ["check", "main", "selftest", "verdict"]}
 OPTS = ("CERTIFY_M_NTAY", "CERTIFY_M_NJAC", "CERTIFY_M_XI1")
@@ -91,14 +91,15 @@ def main():
     base = opts.get("base", "origin/main")
     ok = True
     tmp = tempfile.mkdtemp(prefix="defaults_check_")
-    names = subprocess.run(["git", "ls-tree", "--name-only", f"{base}:solver/proof"], capture_output=True, text=True,
-                           check=True, cwd=PROOF).stdout.split()
+    root = os.path.dirname(os.path.dirname(PROOF))            # the repository root: ls-tree filters by the cwd's prefix
+    names = subprocess.run(["git", "ls-tree", "--name-only", f"{base}:solver/proof/"], capture_output=True, text=True,
+                           check=True, cwd=root).stdout.split()
     changed = []
     for nm in names:
         if not nm.endswith(".py"):
             continue
         src = subprocess.run(["git", "show", f"{base}:solver/proof/{nm}"], capture_output=True, text=True, check=True,
-                             cwd=PROOF).stdout
+                             cwd=root).stdout
         with open(os.path.join(tmp, nm), "w") as fh:
             fh.write(src)
         here = os.path.join(PROOF, nm)
