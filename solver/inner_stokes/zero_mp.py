@@ -1,6 +1,6 @@
 """#1076: a zero of the M = 3 multiplier R_1(A, w_f) located by Newton in (A, w_f) on its extended-precision values.
 
-    python zero_mp.py A0 WF0 CACHE OUT.jsonl [--r1=0.17] [--procs=5] [--iters=5] [--hA=1e-7] [--hw=1e-8]
+    python zero_mp.py A0 WF0 CACHE OUT.jsonl [--r1=0.17] [--procs=5] [--iters=5] [--hA=1e-7] [--hw=1e-8] [--f3=RE,IM]
     python zero_mp.py selftest [--mutate=sign]      a planted analytic map through the same Newton; exit 0 iff it lands
 
 R_1 at each point is value_mp.value_point (34 and 42 digits, chord steps), started from the F_3 of the nearest valued
@@ -80,6 +80,12 @@ def main():
         print(__doc__)
         return 2
     A0, wf0, cache, out = float(args[0]), float(args[1]), args[2], args[3]
+    if "f3" in o:                                   # --f3=RE,IM: an explicit start (a point outside the cache's box)
+        f3 = tuple(float(t) for t in o["f3"].split(","))
+        print(f"start ({A0}, {wf0}); F_3 given {f3}", flush=True)
+        t0 = time.time()
+        rows = newton(A0, wf0, f3, _value, iters, hA, hw, int(o.get("procs", 5)), out)
+        return report(rows, t0)
     best, bd = None, 1e300
     for line in open(cache):
         r = json.loads(line)
@@ -92,6 +98,10 @@ def main():
           flush=True)
     t0 = time.time()
     rows = newton(A0, wf0, f3, _value, iters, hA, hw, int(o.get("procs", 5)), out)
+    return report(rows, t0)
+
+
+def report(rows, t0):
     last = rows[-1]
     J = np.array(last["J"])
     step = max(abs(last["dA"]), abs(last["dwf"]))
