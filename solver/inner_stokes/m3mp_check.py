@@ -1,35 +1,50 @@
-"""#1076: argcount's --m3mp on two cached points without value (one guard-blocked, one not tuned below 1e-8)."""
-import json, math, os, shutil, sys
-sys.path.insert(0, "/Users/nathan/Source/choptuik-inner-mp/solver/inner_stokes")
-import argcount as ac
+"""#1076: argcount's --m3mp on two cached points without value, one blocked by the 10 sigma guard and one with S_3 not
+tuned below 1e-8, from fu022mp's pass-2 cache (raw I1021-macm3/fu022mp/m3/points_M3_r0.17.jsonl at efed06f1).
+
+    python m3mp_check.py CACHE [--procs=2]       exit 0 when both checks pass (about 25 min on the Mac)
+
+1. Without --m3mp both points stay without value and the cache is unchanged.
+2. With --m3mp at least one gets a value, the rows are cached with fu = mp, and on reloading the cache neither point is
+   wanted again and the same points have values. Works on copies of CACHE in a fresh temporary folder."""
+import math
+import os
+import shutil
+import sys
+import tempfile
+
+HERE = os.path.dirname(os.path.abspath(__file__))
+sys.path.insert(0, HERE)
+import argcount as ac  # noqa: E402
+
+P = [(3.3185956, 0.2250978975), (3.2248456, 1.08154321)]
 
 
 def main():
-    T = os.path.dirname(os.path.abspath(__file__))
-    src = os.path.join(T, "cache_pass2.jsonl")
-    P = [(3.3185956, 0.2250978975), (3.2248456, 1.08154321)]
-    ok = True
-    c0 = os.path.join(T, "c_off.jsonl"); shutil.copy(src, c0)
+    src = sys.argv[1]
+    procs = int(next((a.split("=", 1)[1] for a in sys.argv if a.startswith("--procs=")), "2"))
+    T = tempfile.mkdtemp(prefix="m3mp_check_")
+    n_src = sum(1 for _ in open(src))
+    c0 = os.path.join(T, "off.jsonl")
+    shutil.copy(src, c0)
     F0 = ac.Multiplier(3, c0, 1, r1=0.17, m3fix=True)
     F0.raw(P)
     off = [F0.vals[F0.key(p)] for p in P]
-    n0 = sum(1 for _ in open(c0))
-    ok &= all(not math.isfinite(abs(v)) for v in off) and n0 == sum(1 for _ in open(src))
-    print(f"without --m3mp: values {off}, cache lines unchanged: {n0 == sum(1 for _ in open(src))}")
-    c1 = os.path.join(T, "c_on.jsonl"); shutil.copy(src, c1)
-    F1 = ac.Multiplier(3, c1, 2, r1=0.17, m3fix=True, m3mp=True)
-    print("wanted:", [F1.mp_wanted(F1.key(p)) for p in P])
+    ok1 = all(not math.isfinite(abs(v)) for v in off) and sum(1 for _ in open(c0)) == n_src
+    print(f"1. without --m3mp: values {off}, cache unchanged: {sum(1 for _ in open(c0)) == n_src}: {'PASS' if ok1 else 'FAIL'}")
+    c1 = os.path.join(T, "on.jsonl")
+    shutil.copy(src, c1)
+    F1 = ac.Multiplier(3, c1, procs, r1=0.17, m3fix=True, m3mp=True)
+    wanted = [F1.mp_wanted(F1.key(p)) for p in P]
     F1.raw(P)
     on = [F1.vals[F1.key(p)] for p in P]
-    print(f"with --m3mp: values {on}")
     F2 = ac.Multiplier(3, c1, 1, r1=0.17, m3fix=True, m3mp=True)
     again = [F2.mp_wanted(F2.key(p)) for p in P]
-    same = all((math.isfinite(abs(F2.vals[F2.key(p)])) == math.isfinite(abs(v))) for p, v in zip(P, on))
-    print(f"reloaded: wanted again {again}, the same values valued: {same}")
-    ok &= any(math.isfinite(abs(v)) for v in on) and not any(again) and same
-    print("m3mp test:", "PASS" if ok else "FAIL")
-
-    return 0 if ok else 1
+    same = all(math.isfinite(abs(F2.vals[F2.key(p)])) == math.isfinite(abs(v)) for p, v in zip(P, on))
+    ok2 = all(wanted) and any(math.isfinite(abs(v)) for v in on) and not any(again) and same
+    print(f"2. with --m3mp: wanted {wanted}, values {on}; reloaded: wanted again {again}, same points valued {same}: "
+          f"{'PASS' if ok2 else 'FAIL'}")
+    print(f"m3mp check: {'PASS' if ok1 and ok2 else 'FAIL'} (work folder {T})")
+    return 0 if ok1 and ok2 else 1
 
 
 if __name__ == "__main__":
