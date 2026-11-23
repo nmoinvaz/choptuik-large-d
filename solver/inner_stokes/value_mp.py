@@ -4,13 +4,13 @@ the 10 sigma guard blocks at its rounding floor.
 For a point (A, w_f) with its float64 record's F_3, v = (B_3, C_3) = (-2 Im F_3, 2 Re F_3) starts a Newton solve of
 r_3 = 0 in mpmath (central differences at 1e-12 |v| for the Jacobian); then R_1 = r[:2], and the same at a second
 precision. sigma_mp = |R_1(dps) - R_1(dps2)| + |J_1 J_3^-1| |r_3| (the residual r_3 left in R_1, as argcount's dr1),
-with a floor of 10^-(dps - 6) |R_1|. A value is valid when |R_1| >= 10 sigma_mp and max|Y| <= 100 (fu_value's tests;
-the |dF_3| neighbour test is applied by the recount's merge, not here).
+with a floor of 10^-(dps - 6) |R_1|. A value is valid when |R_1| >= 10 sigma_mp, max|Y| <= 100 (fu_value's tests) and
+|r_3| < 1e-8 (argcount's valued3 reads it as `info`); the |dF_3| neighbour test is applied by the recount's merge.
 
     python3 value_mp.py point A WF F3RE F3IM [--r1=0.17] [--dps=34] [--dps2=42] [--order=40] [--order2=50] [--iters=8]
     python3 value_mp.py check1 CACHE.jsonl [--n=3] [...]   check 1 of #1076 on the n best-valued float64 points
     python3 value_mp.py check2 CACHE.jsonl [--n=1]         check 2: R_1 at (34, 40, margin 12) against (42, 50, 14)
-    python3 value_mp.py batch CACHE ROWS --points "A,w;A,w" [--procs=N]   value the points, write every row to ROWS,
+    python3 value_mp.py batch CACHE ROWS --points="A,w;A,w" [--procs=N]   value the points, write every row to ROWS,
         append the valued ones to CACHE (as argcount reads it: later records of a key win)
 """
 import json
@@ -75,9 +75,10 @@ def value_point(A, wf, f3re, f3im, r1="0.17", dps=34, dps2=42, p=40, p2=50, iter
     else:
         dr1 = mp.inf
     sig = max(dR + dr1, mp.mpf(10) ** (-(dps - 6)) * abs(R2))
-    ok = abs(R2) >= 10 * sig and info2["ymax"] <= 100
+    r3n2 = max(abs(r32[0]), abs(r32[1]))
+    ok = abs(R2) >= 10 * sig and info2["ymax"] <= 100 and r3n2 < mp.mpf("1e-8")   # argcount valued3: info < 1e-8
     return dict(A=float(A), wf=float(wf), re=float(mp.re(R2)), im=float(mp.im(R2)), sig=float(sig),
-                info=float(max(abs(r32[0]), abs(r32[1]))),
+                info=float(r3n2),
                 R_over_sig=float(abs(R2) / sig), valued=bool(ok), dR=float(dR), dr1=float(dr1),
                 r3=[float(r32[0]), float(r32[1])], F3re=float(v2[1] / 2), F3im=float(-v2[0] / 2),
                 ymax=float(info2["ymax"]), r1=float(r1), mp_dps=[dps, dps2], order=[p, p2], calls=[n1, n2],
@@ -125,6 +126,9 @@ def main():
             r = json.loads(line)
             recs[(round(r["A"], 12), round(r["wf"], 12))] = r
         pts = [tuple(float(t) for t in q.split(",")) for q in opts.get("points", "").split(";") if q]
+        if any(len(q) != 2 for q in pts) or len(args) != 3:
+            print("batch takes CACHE ROWS --points=\"A,w;A,w\"", file=sys.stderr)
+            return 2
         jobs = []
         for A, wf in pts:
             r = recs.get((round(A, 12), round(wf, 12)))
