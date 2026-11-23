@@ -2,6 +2,8 @@ import DSS.M1capd
 import DSS.M1arb
 import DSS.M3cert
 import DSS.M5cert
+import DSS.M3exc1
+import DSS.M3exc2
 
 /-!
 Review of #1077 (notes/LEAN_REVIEW_1077.md): the hypotheses of the four instances can be met. Run from `lean/`:
@@ -100,5 +102,19 @@ theorem M5cert_nonvacuous : ∃ (g : Vn 6 → Vn 6) (Dg : Vn 6 → Mn 6),
       M5cert.EnclOK g Dg :=
   exists_mapN M5cert M5cert_detY (by decide +kernel) (by decide +kernel)
 
+
+theorem M3exc1_detY : (Matrix.of M3exc1.Y).det ≠ 0 := by decide +kernel
+
+theorem M3exc1_nonvacuous : ∃ (g : Vn 4 → Vn 4) (Dg : Vn 4 → Mn 4),
+    (∀ x ∈ M3exc1.box, HasFDerivWithinAt g (LinearMap.toContinuousLinearMap (Matrix.toLin' (Dg x))) M3exc1.box x) ∧
+      M3exc1.EnclOK g Dg :=
+  exists_mapN M3exc1 M3exc1_detY (by decide +kernel) (by decide +kernel)
+
+theorem M3exc2_detY : (Matrix.of M3exc2.Y).det ≠ 0 := by decide +kernel
+
+theorem M3exc2_nonvacuous : ∃ (g : Vn 4 → Vn 4) (Dg : Vn 4 → Mn 4),
+    (∀ x ∈ M3exc2.box, HasFDerivWithinAt g (LinearMap.toContinuousLinearMap (Matrix.toLin' (Dg x))) M3exc2.box x) ∧
+      M3exc2.EnclOK g Dg :=
+  exists_mapN M3exc2 M3exc2_detY (by decide +kernel) (by decide +kernel)
 
 end DSS.Krawczyk
