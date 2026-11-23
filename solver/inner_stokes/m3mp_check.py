@@ -4,6 +4,7 @@ tuned below 1e-8, from fu022mp's pass-2 cache (raw I1021-macm3/fu022mp/m3/points
     python m3mp_check.py CACHE [--procs=2]       exit 0 when both checks pass (about 25 min on the Mac)
 
 1. Without --m3mp both points stay without value and the cache is unchanged.
+The points are numpy floats, as argcount's walk passes them (a plain repr of one is not a number string under numpy 2).
 2. With --m3mp at least one gets a value, the rows are cached with fu = mp, and on reloading the cache neither point is
    wanted again and the same points have values. Works on copies of CACHE in a fresh temporary folder."""
 import math
@@ -16,7 +17,10 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, HERE)
 import argcount as ac  # noqa: E402
 
-P = [(3.3185956, 0.2250978975), (3.2248456, 1.08154321)]
+import numpy as np  # noqa: E402
+
+P = [(np.float64(3.3185956), np.float64(0.2250978975)), (np.float64(3.2248456), np.float64(1.08154321))]   # as the walk
+                                                                                                     # passes them
 
 
 def main():

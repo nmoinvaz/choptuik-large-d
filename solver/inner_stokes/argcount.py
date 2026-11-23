@@ -352,11 +352,11 @@ class Multiplier:
         """value_mp.value_point (chord steps, 34 and 42 digits) at guard-blocked points; every row is cached with
         fu = "mp" (so a point is tried once), and stored: a valued row passes the guard on its own sigma_mp"""
         import value_mp as VM
-        kw = dict(r1=repr(self.r1))
+        kw = dict(r1=repr(float(self.r1)))
         args = []
-        for p in pts:
+        for p in pts:                               # float(): under numpy 2, repr of a numpy float reads np.float64(...)
             r = self.extra[self.key(p)]
-            args.append(((repr(p[0]), repr(p[1]), repr(r["F3re"]), repr(r["F3im"])), kw))
+            args.append(((repr(float(p[0])), repr(float(p[1])), repr(float(r["F3re"])), repr(float(r["F3im"]))), kw))
         if self.procs > 1:
             if self.pool is None:
                 import multiprocessing as mp_
