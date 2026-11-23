@@ -1,17 +1,20 @@
 #!/usr/bin/env python3
 """certify_M.py with one last-bit perturbation planted (review of #1079, check 5: the macOS/Linux margin gap).
 
-    REVIEW_PERTURB=none|qr|perron [REVIEW_SEED=k] [REVIEW_ULPS=n] python3 review_1079/perturb_box.py <certify_M.py arguments>
+    REVIEW_PERTURB=none|qr|qrin|perron [REVIEW_SEED=k] [REVIEW_ULPS=n] python3 review_1079/perturb_box.py <certify_M.py arguments>
 
 none    certify_M.main() unchanged: the control, which must reproduce the stored run of the same platform
 qr      every entry of the float matrix Q returned by validated_int.qr_pivot multiplied by 1 +- 2^-52 (random signs,
         seeded). Q is any invertible float matrix used exactly, so the run stays a valid enclosure
+qrin    every entry of the float matrix handed to numpy's QR multiplied by 1 +- 2^-52, so that Q is LAPACK's own
+        output for a matrix one rounding away (orthogonal to rounding, as on any machine)
 perron  every Perron weight of fixed_point_M.perron multiplied by 1 +- 2^-52. Any positive weights are allowed, so the
         start data stay valid; only their radii move in the last digits
 REVIEW_ULPS (default 1) scales the perturbation: the factor is 1 +- n 2^-52.
 REVIEW_TIES=1 (with any mode) counts, over the calls of qr_pivot, those whose pivot order rests on a near tie: two
         consecutive sorted column weights (norm times weight) within a relative 1e-12, among columns whose weight
         is above 1e-200. It prints the counts and the smallest gap seen.
+REVIEW_STABLE=1 replaces the pivot order of qr_pivot by one that does not depend on last bits (a trial remedy).
 The run is rigorous in every mode. What is measured is how far the Krawczyk margins move.
 """
 import os
@@ -29,7 +32,21 @@ WHAT = os.environ.get("REVIEW_PERTURB", "none")
 RNG = np.random.default_rng(int(os.environ.get("REVIEW_SEED", "1079")))
 EPS = int(os.environ.get("REVIEW_ULPS", "1")) * 2.0 ** -52
 COUNT = {"qr": 0, "perron": 0}
-assert WHAT in ("none", "qr", "perron"), WHAT
+assert WHAT in ("none", "qr", "qrin", "perron"), WHAT
+
+if os.environ.get("REVIEW_STABLE"):
+    # a trial remedy, not the code of record: the pivot order by the column weights rounded to 6 significant digits,
+    # ties broken by the column index. Any order gives a valid Q; this one does not depend on the last bits of the
+    # weights or on the sort's treatment of equal keys. Installed first, so that the perturbations act on top of it.
+    def qr_stable(Am, wts=None):
+        nrm = np.linalg.norm(Am, axis=0)
+        if wts is not None:
+            nrm = nrm * (np.asarray(wts) + 1e-300)
+        key = np.array([float(f"{v:.5e}") for v in nrm])
+        order = np.lexsort((np.arange(len(key)), -key))
+        Q, _R = np.linalg.qr(Am[:, order])
+        return Q
+    VI.qr_pivot = qr_stable
 
 if WHAT == "qr":
     _qr = VI.qr_pivot
@@ -38,6 +55,13 @@ if WHAT == "qr":
         Q = _qr(Am, wts)
         COUNT["qr"] += 1
         return Q * (1.0 + (RNG.integers(0, 2, Q.shape) * 2 - 1) * EPS)
+    VI.qr_pivot = qr_pivot
+elif WHAT == "qrin":
+    _qr = VI.qr_pivot
+
+    def qr_pivot(Am, wts=None):
+        COUNT["qr"] += 1
+        return _qr(Am * (1.0 + (RNG.integers(0, 2, Am.shape) * 2 - 1) * EPS), wts)
     VI.qr_pivot = qr_pivot
 elif WHAT == "perron":
     _perron = FPM.perron
@@ -71,7 +95,7 @@ if __name__ == "__main__":
     import flint
     print(f"review_1079/perturb_box.py: REVIEW_PERTURB={WHAT}, seed {os.environ.get('REVIEW_SEED', '1079')}, relative size {EPS:.3e}; "
           f"python-flint {flint.__version__}, FLINT {flint.__FLINT_VERSION__}, numpy {np.__version__}; "
-          f"NTAY, NJAC = {CM.NTAY}, {CM.NJAC}; path {[str(x) for x in CM.path_for(3)]}", flush=True)
+          f"NTAY, NJAC = {CM.NTAY}, {CM.NJAC}; stable pivot order {bool(os.environ.get('REVIEW_STABLE'))}; path {[str(x) for x in CM.path_for(3)]}", flush=True)
     rc = CM.main()
     if os.environ.get("REVIEW_TIES"):
         print(f"pivot order: {TIES['calls']} calls of qr_pivot, {TIES['tied']} with two column weights within a relative "

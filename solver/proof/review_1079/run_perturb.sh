@@ -3,7 +3,10 @@
 # test with macm3's point file.
 # usage: bash run_perturb.sh RAW ZERO WHAT [SEED [ULPS]]    from solver/proof
 #   RAW   the raw-data clone (reads I1079-macm3/levers/data, writes I1079-mac-review/)
-#   ZERO  x1 (box h 1e-12, w 1e-13) or x2 (h 1e-12, w 1e-12);  WHAT none | qr | perron
+#   ZERO  x1 (box h 1e-12, w 1e-13) or x2 (h 1e-12, w 1e-12);  WHAT none | qr | qrin | perron
+#   environment: REVIEW_NJAC=n another order of the step Jacobian (default 16; the tag gains _nj<n>);
+#                REVIEW_TIES=1 counts near ties of the pivot order (the tag gains _ties);
+#                REVIEW_STABLE=1 a pivot order with rounded weights and ties by index (a trial; the tag gains _stable)
 {
 RAW=$1; Z=$2; WHAT=$3; SEED=${4:-1079}; ULPS=${5:-1}
 PY=${PY:-/Users/nathan/Source/choptuik-large-d/.venv/bin/python}
@@ -17,7 +20,10 @@ esac
 T=${Z}E2
 TAG=M3${T}_h1e-12_w${W}_${WHAT}_s${SEED}
 [ "$ULPS" = 1 ] || TAG=${TAG}_u${ULPS}
-export CERTIFY_M_NTAY=28 CERTIFY_M_NJAC=16 OMP_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 MKL_NUM_THREADS=1 VECLIB_MAXIMUM_THREADS=1
+[ -z "$REVIEW_NJAC" ] || TAG=${TAG}_nj${REVIEW_NJAC}
+[ -z "$REVIEW_TIES" ] || TAG=${TAG}_ties
+[ -z "$REVIEW_STABLE" ] || TAG=${TAG}_stable
+export CERTIFY_M_NTAY=28 CERTIFY_M_NJAC=${REVIEW_NJAC:-16} OMP_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 MKL_NUM_THREADS=1 VECLIB_MAXIMUM_THREADS=1
 unset CERTIFY_M_XI1
 export REVIEW_PERTURB=$WHAT REVIEW_SEED=$SEED REVIEW_ULPS=$ULPS
 mkdir -p "$OUT/out" "$OUT/logs"
