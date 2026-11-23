@@ -2,6 +2,8 @@
 
     python zero_mp.py A0 WF0 CACHE OUT.jsonl [--r1=0.17] [--procs=5] [--iters=5] [--hA=1e-7] [--hw=1e-8] [--f3=RE,IM]
     python zero_mp.py selftest [--mutate=sign]      a planted analytic map through the same Newton; exit 0 iff it lands
+    python zero_mp.py A0 WF0 - OUT.jsonl --M=5 --v0=B3,C3,B5,C5 [...]   M harmonics (#1080): the harmonics v of the
+        inner solve (value_mp.value_v) start from v0 and then from the previous point's solved v; no cache
 
 R_1 at each point is value_mp.value_point (34 and 42 digits, chord steps), started from the F_3 of the nearest valued
 cache record and then from the previous point's tuned F_3. The Jacobian is central differences in A and w_f (4 points,
@@ -27,6 +29,14 @@ def _value(args):
                 F3=(row["F3re"], row["F3im"]), info=row["info"], sec=row["seconds"])
 
 
+def _value_v(args):
+    import value_mp as VM
+    (A, wf, v), r1, M = args
+    row = VM.value_v(repr(A), repr(wf), list(v), M, r1=r1)
+    return dict(A=A, wf=wf, R=complex(row["re"], row["im"]), sig=row["sig"], ok=row["valued"],
+                F3=tuple(row["v"]), info=row["info"], sec=row["seconds"])
+
+
 def _planted(args):
     (A, wf, f3re, f3im), r1 = args
     a0, w0 = 3.5265381234, 0.2114823456             # the planted zero
@@ -34,14 +44,18 @@ def _planted(args):
     return dict(A=A, wf=wf, R=R, sig=1e-18, ok=True, F3=(f3re, f3im), info=0.0, sec=0.0)
 
 
-def newton(A, wf, f3, fn, iters, hA, hw, procs, out=None):
+def newton(A, wf, f3, fn, iters, hA, hw, procs, out=None, M=3):
+    """f3 is F_3 = (re, im) at M = 3, and the harmonics v = (B_3, C_3, ..., B_M, C_M) (strings) with fn = _value_v"""
     import multiprocessing as mp_
-    pool = mp_.get_context("spawn").Pool(procs) if procs > 1 and fn is _value else None
+    pool = mp_.get_context("spawn").Pool(procs) if procs > 1 and fn in (_value, _value_v) else None
     run = (lambda xs: list(pool.map(fn, xs))) if pool else (lambda xs: list(map(fn, xs)))
     rows = []
     for it in range(iters + 1):
         pts = [(A, wf), (A + hA, wf), (A - hA, wf), (A, wf + hw), (A, wf - hw)]
-        res = run([((a, w, f3[0], f3[1]), "0.17") for a, w in pts])
+        if fn is _value_v:
+            res = run([((a, w, tuple(f3)), "0.17", M) for a, w in pts])
+        else:
+            res = run([((a, w, f3[0], f3[1]), "0.17") for a, w in pts])
         c = res[0]
         dRA = (res[1]["R"] - res[2]["R"]) / (2 * hA)
         dRw = (res[3]["R"] - res[4]["R"]) / (2 * hw)
@@ -80,6 +94,14 @@ def main():
         print(__doc__)
         return 2
     A0, wf0, cache, out = float(args[0]), float(args[1]), args[2], args[3]
+    if "M" in o and int(o["M"]) > 3:                 # M harmonics from --v0 (#1080)
+        M = int(o["M"])
+        v0 = o["v0"].split(",")
+        assert len(v0) == M - 1, "--v0 needs B_3, C_3, ..., B_M, C_M"
+        print(f"start ({A0}, {wf0}); M = {M}, v0 = {v0}", flush=True)
+        t0 = time.time()
+        rows = newton(A0, wf0, v0, _value_v, iters, hA, hw, int(o.get("procs", 5)), out, M=M)
+        return report(rows, t0)
     if "f3" in o:                                   # --f3=RE,IM: an explicit start (a point outside the cache's box)
         f3 = tuple(float(t) for t in o["f3"].split(","))
         print(f"start ({A0}, {wf0}); F_3 given {f3}", flush=True)

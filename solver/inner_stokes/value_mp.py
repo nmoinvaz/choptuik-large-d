@@ -8,6 +8,7 @@ with a floor of 10^-(dps - 6) |R_1|. A value is valid when |R_1| >= 10 sigma_mp,
 |r_3| < 1e-8 (argcount's valued3 reads it as `info`); the |dF_3| neighbour test is applied by the recount's merge.
 
     python3 value_mp.py point A WF F3RE F3IM [--r1=0.17] [--dps=34] [--dps2=42] [--order=40] [--order2=50] [--iters=8]
+    python3 value_mp.py pointv A WF --M=5 --v=B3,C3,B5,C5 [same options]   M harmonics: v solved from the given start
     python3 value_mp.py check1 CACHE.jsonl [--n=3] [...]   check 1 of #1076 on the n best-valued float64 points
     python3 value_mp.py check2 CACHE.jsonl [--n=1]         check 2: R_1 at (34, 40, margin 12) against (42, 50, 14)
     python3 value_mp.py batch CACHE ROWS --points="A,w;A,w" [--procs=N]   value the points, write every row to ROWS,
@@ -25,32 +26,34 @@ sys.path.insert(0, HERE)
 import inner_mp as IM  # noqa: E402
 
 
-def solve(A, wf, v0, r1, dps, p, iters=8, hrel="1e-12", margin=12, J=None, chord="1e-4"):
-    """Newton on r_3 = 0 at precision dps, with chord steps (Shamanskii): the Jacobian (central differences, 4 calls)
-    is refreshed only after a step whose contraction |r_3'|/|r_3| exceeds `chord`, or after a step that fails; J =
-    (J1, J3) starts from a given Jacobian (the second precision reuses the first's). chord=None is plain Newton.
-    Returns (R_1, r_3, v, J1, J3, info, calls)"""
+def solve(A, wf, v0, r1, dps, p, iters=8, hrel="1e-12", margin=12, J=None, chord="1e-4", M=3):
+    """Newton on r_3 = ... = r_M = 0 for v = (B_3, C_3, ..., B_M, C_M) at precision dps, with chord steps
+    (Shamanskii): the Jacobian (central differences, 2(M - 1) calls) is refreshed only after a step whose contraction
+    max|r'|/max|r| exceeds `chord`, or after a step that fails; J = (J1, J3) starts from a given Jacobian (the second
+    precision reuses the first's). chord=None is plain Newton. Returns (R_1, (r_3, ..., r_M), v, J1, J3, info, calls)"""
     mp.mp.dps = dps
-    v = [mp.mpf(v0[0]), mp.mpf(v0[1])]
+    n = M - 1                                   # unknowns, and rows r_3 .. r_M (real and imaginary parts)
+    v = [mp.mpf(x) for x in v0]
+    assert len(v) == n
     calls = 0
 
     def res(vv):
         nonlocal calls
         calls += 1
-        return IM.residual_demixed([A, wf, vv[0], vv[1]], 3, r1, p=p, margin=margin)
+        return IM.residual_demixed([A, wf] + list(vv), M, r1, p=p, margin=margin)
 
     def jac(vv):
-        hs = mp.mpf(hrel) * max(abs(vv[0]), abs(vv[1]), mp.mpf("1e-3"))
+        hs = mp.mpf(hrel) * max(max(abs(x) for x in vv), mp.mpf("1e-3"))
         cols = []
-        for k in range(2):
+        for k in range(n):
             vp, vm = list(vv), list(vv)
             vp[k] += hs
             vm[k] -= hs
             rp, _ = res(vp)
             rm, _ = res(vm)
-            cols.append([(rp[i] - rm[i]) / (2 * hs) for i in range(4)])
-        return (mp.matrix([[cols[0][0], cols[1][0]], [cols[0][1], cols[1][1]]]),
-                mp.matrix([[cols[0][2], cols[1][2]], [cols[0][3], cols[1][3]]]))
+            cols.append([(rp[i] - rm[i]) / (2 * hs) for i in range(2 + n)])
+        return (mp.matrix([[cols[k][i] for k in range(n)] for i in range(2)]),
+                mp.matrix([[cols[k][2 + i] for k in range(n)] for i in range(n)]))
 
     r, info = res(v)
     J1, J3 = J if J is not None else (None, None)
@@ -58,15 +61,15 @@ def solve(A, wf, v0, r1, dps, p, iters=8, hrel="1e-12", margin=12, J=None, chord
     fresh = False
     tol = mp.mpf(10) ** (-(dps - 6))
     for _ in range(iters):
-        if max(abs(r[2]), abs(r[3])) < tol:
+        if max(abs(x) for x in r[2:]) < tol:
             break
         if stale:
             J1, J3 = jac(v)
             stale, fresh = False, True
-        dv = mp.lu_solve(J3, mp.matrix([-r[2], -r[3]]))
-        vn = [v[0] + dv[0], v[1] + dv[1]]
+        dv = mp.lu_solve(J3, mp.matrix([-x for x in r[2:]]))
+        vn = [v[k] + dv[k] for k in range(n)]
         rn, infon = res(vn)
-        n0, n1 = max(abs(r[2]), abs(r[3])), max(abs(rn[2]), abs(rn[3]))
+        n0, n1 = max(abs(x) for x in r[2:]), max(abs(x) for x in rn[2:])
         if n1 >= n0:
             if fresh:
                 break                      # no progress with a fresh Jacobian
@@ -78,32 +81,41 @@ def solve(A, wf, v0, r1, dps, p, iters=8, hrel="1e-12", margin=12, J=None, chord
             stale = True
     if J3 is None:
         J1, J3 = jac(v)
-    return mp.mpc(r[0], r[1]), (r[2], r[3]), v, J1, J3, info, calls
+    return mp.mpc(r[0], r[1]), tuple(r[2:]), v, J1, J3, info, calls
 
 
 def value_point(A, wf, f3re, f3im, r1="0.17", dps=34, dps2=42, p=40, p2=50, iters=12, chord="1e-4"):
+    return value_v(A, wf, [-2 * mp.mpf(f3im), 2 * mp.mpf(f3re)], 3, r1, dps, dps2, p, p2, iters, chord)
+
+
+def value_v(A, wf, v0, M=3, r1="0.17", dps=34, dps2=42, p=40, p2=50, iters=12, chord="1e-4"):
+    """R_1 at (A, w_f) with the harmonics v = (B_3, C_3, ..., B_M, C_M) solved from v0 at two precisions"""
     t0 = time.time()
-    v0 = [-2 * mp.mpf(f3im), 2 * mp.mpf(f3re)]
-    R, r3, v, J1, J3, info, n1 = solve(A, wf, v0, r1, dps, p, iters, chord=chord)
-    R2, r32, v2, _, _, info2, n2 = solve(A, wf, [str(v[0]), str(v[1])], r1, dps2, p2, iters,
-                                         J=None if chord is None else (J1, J3), chord=chord)
+    mp.mp.dps = dps
+    v0 = [mp.mpf(x) for x in v0]
+    R, r3, v, J1, J3, info, n1 = solve(A, wf, v0, r1, dps, p, iters, chord=chord, M=M)
+    R2, r32, v2, _, _, info2, n2 = solve(A, wf, [str(x) for x in v], r1, dps2, p2, iters,
+                                         J=None if chord is None else (J1, J3), chord=chord, M=M)
     mp.mp.dps = dps2
     dR = abs(R2 - R)
     if J1 is not None and J3 is not None:
         G = J1 * mp.inverse(J3)
-        r3n = max(abs(r3[0]), abs(r3[1]))
-        dr1 = max(abs(G[0, 0]) + abs(G[0, 1]), abs(G[1, 0]) + abs(G[1, 1])) * r3n
+        r3n = max(abs(x) for x in r3)
+        dr1 = max(sum(abs(G[i, k]) for k in range(M - 1)) for i in range(2)) * r3n
     else:
         dr1 = mp.inf
     sig = max(dR + dr1, mp.mpf(10) ** (-(dps - 6)) * abs(R2))
-    r3n2 = max(abs(r32[0]), abs(r32[1]))
+    r3n2 = max(abs(x) for x in r32)
     ok = abs(R2) >= 10 * sig and info2["ymax"] <= 100 and r3n2 < mp.mpf("1e-8")   # argcount valued3: info < 1e-8
-    return dict(A=float(A), wf=float(wf), re=float(mp.re(R2)), im=float(mp.im(R2)), sig=float(sig),
-                info=float(r3n2),
-                R_over_sig=float(abs(R2) / sig), valued=bool(ok), dR=float(dR), dr1=float(dr1),
-                r3=[float(r32[0]), float(r32[1])], F3re=float(v2[1] / 2), F3im=float(-v2[0] / 2),
-                ymax=float(info2["ymax"]), r1=float(r1), mp_dps=[dps, dps2], order=[p, p2], calls=[n1, n2],
-                steps=int(info2["steps"]), terr=float(info2["terr"]), seconds=round(time.time() - t0, 1), fu="mp")
+    out = dict(A=float(A), wf=float(wf), re=float(mp.re(R2)), im=float(mp.im(R2)), sig=float(sig),
+               info=float(r3n2),
+               R_over_sig=float(abs(R2) / sig), valued=bool(ok), dR=float(dR), dr1=float(dr1),
+               r3=[float(r32[0]), float(r32[1])], F3re=float(v2[1] / 2), F3im=float(-v2[0] / 2),
+               ymax=float(info2["ymax"]), r1=float(r1), mp_dps=[dps, dps2], order=[p, p2], calls=[n1, n2],
+               steps=int(info2["steps"]), terr=float(info2["terr"]), seconds=round(time.time() - t0, 1), fu="mp")
+    if M > 3:                                   # the higher harmonics' residuals and the solved v, as strings
+        out.update(M=M, r_rest=[float(x) for x in r32], v=[mp.nstr(x, dps2) for x in v2])
+    return out
 
 
 def _batch_one(a):
@@ -122,6 +134,10 @@ def main():
     if args and args[0] == "point":
         A, wf, f3re, f3im = args[1:5]
         print(json.dumps(value_point(A, wf, f3re, f3im, **kw)), flush=True)
+        return 0
+    if args and args[0] == "pointv":                # pointv A WF --M=5 --v=B3,C3,B5,C5 (#1080)
+        M = int(opts.get("M", "3"))
+        print(json.dumps(value_v(args[1], args[2], opts["v"].split(","), M, **kw)), flush=True)
         return 0
     if args and args[0] == "check1":
         recs = [json.loads(l) for l in open(args[1]) if l.strip()]
