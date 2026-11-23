@@ -51,7 +51,7 @@ def newton(A, wf, f3, fn, iters, hA, hw, procs, out=None):
         dx = -np.linalg.solve(J, np.array([c["R"].real, c["R"].imag]))
         row = dict(it=it, A=A, wf=wf, re=c["R"].real, im=c["R"].imag, sig=c["sig"], R_over_sig=abs(c["R"]) / c["sig"],
                    valued=[r["ok"] for r in res], J=J.tolist(), orientation=int(np.sign(np.linalg.det(J))),
-                   dA=float(dx[0]), dwf=float(dx[1]), sec=[r["sec"] for r in res])
+                   dA=float(dx[0]), dwf=float(dx[1]), sec=[r["sec"] for r in res], F3=list(c["F3"]))
         rows.append(row)
         if out:
             with open(out, "a") as fh:
