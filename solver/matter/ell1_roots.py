@@ -5,15 +5,17 @@
     python3 ell1_roots.py selftest [--mutate=shift|robust]     exit 0 only if every planted case reads as written
 
 RAWDIR is a checkout (or an extract) of choptuik-large-d-raw at --commit. Two sources:
-- hybrid sign scans (d18_hybsign.py rows, every `scan*.jsonl` under I1025-*/, planted and control folders left out):
+- hybrid sign scans (d18_hybsign.py rows: every jsonl under I1025-*/ whose rows carry its fields; planted, control
+  and copied folders (in/, refcheck/, ref_*) left out):
   grouped by the machine folder that evaluated them and the state they evaluated; repeats must agree in sign; each
   sign change between adjacent points is a root, located as d185_scan_read.changes does (the det-linear estimate,
   and the range of it with the quadratic and cubic fits), robust when both points are noise-robust;
 - ell_refine.py records with a `lam` (brentq on the float64 det, up to D 17.5): one root each, method `brentq`.
-A root's kind (lambda_1, discretization) comes from KINDS, the coordinator's rulings by position (D, k_c, a value
+A root's kind (lambda_1, lambda_1_superseded, discretization) comes from KINDS, the coordinator's rulings by position (D, k_c, a value
 within 0.002); every other root is `unidentified`. BEST has one row per D with a lambda_1 root: lambda_1 at the
 highest k_c (Linux first), and err the largest of the k_c step on one build, the spread between builds at one k_c,
-and the estimator half-range, named in err_kind."""
+the spread between states of one build at one k_c (re-converged, other thread counts), and the estimator half-range,
+named in err_kind."""
 import csv
 import glob
 import json
@@ -62,9 +64,10 @@ def machine_of(path, raw):
 def scan_groups(raw):
     groups = defaultdict(list)
     files = defaultdict(set)
-    for f in sorted(glob.glob(os.path.join(raw, "I1025-*", "**", "*scan*.jsonl"), recursive=True)):
+    for f in sorted(glob.glob(os.path.join(raw, "I1025-*", "**", "*.jsonl"), recursive=True)):
         rel = os.path.relpath(f, raw)
-        if any(s in rel.lower() for s in SKIP) or "/in/" in "/" + rel:   # in/: another machine's rows copied as input
+        if (any(s in rel.lower() for s in SKIP) or "/in/" in "/" + rel or "/refcheck/" in rel
+                or os.path.basename(f).startswith("ref_")):   # another machine's rows copied as input or reference
             continue
         for line in open(f):
             if line.strip():
@@ -169,6 +172,10 @@ def best_rows(rows):
             v = [r["root"] for r in R if r["kc"] == kc]
             if len({r["build"] for r in R if r["kc"] == kc}) > 1:
                 errs[f"build spread at k_c {kc}"] = max(v) - min(v)
+            for b in {r["build"] for r in R if r["kc"] == kc}:          # states of one build at one k_c (re-convergence,
+                vb = {r["state"]: r["root"] for r in R if r["kc"] == kc and r["build"] == b}   # threads, machines)
+                if len(vb) > 1:
+                    errs[f"state spread at k_c {kc} ({b})"] = max(vb.values()) - min(vb.values())
         if top["range_lo"] is not None:
             errs["estimator half-range"] = (top["range_hi"] - top["range_lo"]) / 2
         ek = max(errs, key=errs.get) if errs else "none: one k_c and one build"
