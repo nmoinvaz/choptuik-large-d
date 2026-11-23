@@ -9,3 +9,4 @@ import DSS.M3cert
 import DSS.M3certWide
 import DSS.M5cert
 import DSS.M5certWide
+import DSS.NonVacuous

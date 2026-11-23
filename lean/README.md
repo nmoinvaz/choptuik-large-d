@@ -19,3 +19,18 @@ The candidates are listed in [../proof/FORMAL.md](../proof/FORMAL.md) §3; the t
 Each instance proves: every C¹ map whose enclosures are the saved ones has exactly one zero in the box, and its
 Jacobian is invertible there. That the enclosures belong to the selection map (`EnclOK`) is the validated integration
 (arb, CAPD) outside Lean. `tools/export_krawczyk.py` writes the instances from the saved runs as exact rationals.
+
+For M = 3 and 5 the enclosures are those of the preconditioned products Y g(0) and Y Dg over the chart box, formed by
+`certify_M.py` and `certify_M2.py` in arb (at M = 5 with the second-order chart of A_M2.md), so that step is part of
+`EnclOK` too. Lean checks the final row test and proves that it implies the conclusion. `check` does not read Y; that
+`Yg` and `YJ` are the products with the file's Y is part of `EnclOK`, and the exporter asserts it exactly
+(`DSS/NonVacuous.lean` proves det Y ≠ 0 and that each instance's hypotheses can be met).
+
+Checks (the independent review of #1077, `notes/LEAN_REVIEW_1077.md`), from the repository root unless stated:
+
+    cd lean && python3 review/reproduce.py all            # each instance from its source by two routes; PASS
+    cd lean && python3 review/reproduce.py controls       # 23 mutations of Y, YJ, J, g, w: all fire
+    bash lean/review/regen_check.sh WORKDIR [PYTHON]       # the exporter regenerates the 8 files byte for byte
+    cd lean/review && python3 planted.py WORKDIR          # a planted affine map through the capd path
+    cd lean && lake env lean review/Mutations.lean        # 22 mutated instances decided by the kernel (exit 0)
+    cd lean && lake env lean review/MustFail.lean         # must fail

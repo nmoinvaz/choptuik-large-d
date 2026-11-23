@@ -239,6 +239,13 @@ a research project of its own (row 18 above). The realistic plan is the split ab
 
 ## 5. Recommended first target
 
+**Done (#1077, Lean and Mathlib v4.34.1).** Rows 1, 17 and 24 are proved in `lean/` (`DSS/InnerConstant.lean`,
+`DSS/Krawczyk.lean`, `DSS/KrawczykN.lean`), with the instances of Theorem A at M = 1 (CAPD's and arb's enclosures), 3 and
+5 decided by the kernel and their controls decided false; every theorem uses only propext, Classical.choice and
+Quot.sound. At M = 3 and 5 the hypotheses are enclosures of the products Y g and Y Dg formed in arb, so they are part of
+`EnclOK`. An independent review (notes/LEAN_REVIEW_1077.md) found no error and its checks are in `lean/review/`. The
+Palomar layout and comparator are not set up. The sketches below are kept as written.
+
 **Step 0, a warm-up (hours).** Set up one Lake project in the Palomar layout: `Challenge.lean`, `Solution.lean`,
 `comparator.json`, `lean-toolchain` pinned to formal-math's `v4.33.1`. Prove row 1 in it. This exercises the whole
 pipeline (Mathlib cache, Comparator, `#print axioms`, CI) on a statement with no risk.

@@ -366,6 +366,12 @@ is exponentially smaller than the lateral solutions; §5.1 converts them into ab
 `krawczyk.py` implements step (iv) as an interval-Newton test. One test gives existence, uniqueness and simplicity of
 the zero.
 
+Step (iv) is also checked in Lean 4 (`lean/DSS/Krawczyk.lean`, `M1capd.lean` and `M1arb.lean`, #1077; Lean and Mathlib
+v4.34.1, independently reviewed in notes/LEAN_REVIEW_1077.md): for every map on the box, differentiable there, whose
+value at x̂ and Jacobian over the box lie in the saved enclosures (CAPD's and arb's), Lean's kernel proves exactly one
+zero in the box with an invertible Jacobian, using only propext, Classical.choice and Quot.sound. That the enclosures
+hold for the selection map (`EnclOK`) is steps (i)–(iii), outside Lean.
+
 **The map.** Let x = (A, ω/ω∞) ∈ ℝ² with box centre x̂, and define
 
 ```math
