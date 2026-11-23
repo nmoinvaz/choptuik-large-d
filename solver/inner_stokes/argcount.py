@@ -311,8 +311,9 @@ def _indexed(job):
 
 class Multiplier:
     def __init__(self, M, cache, procs, plant=None, mutate=None, r1=0.2, ymax=1e2, m3fix=False, retry=False,
-                 bounds=None):
+                 bounds=None, m3mp=False):
         self.M, self.procs, self.plant, self.mutate = M, procs, plant, mutate
+        self.m3mp = m3mp and M == 3
         self.r1, self.ymax, self.m3fix, self.bounds = r1, ymax, m3fix, bounds
         self.vals, self.extra = {}, {}
         self.cache = cache
@@ -336,15 +337,62 @@ class Multiplier:
     def key(p):
         return (round(p[0], 12), round(p[1], 12))
 
+    def mp_wanted(self, k):
+        """--m3mp (#1076): a point the walk needs that has no value in float64 (blocked by the 10 sigma guard, or S_3 not
+        tuned below 1e-8), whose record has a finite F_3 to start from and max|Y| within ymax, and that has not been
+        tried in extended precision; value_mp's own tests decide whether it gets a value"""
+        r = self.extra.get(k)
+        if not self.m3mp or r is None or r.get("fu") == "mp" or np.isfinite(self.vals.get(k, np.nan)):
+            return False
+        ym = r.get("ymax", float("nan"))
+        return (math.isfinite(r.get("F3re", float("nan"))) and math.isfinite(r.get("F3im", float("nan")))
+                and (not math.isfinite(ym) or ym <= self.ymax))
+
+    def mp_batch(self, pts):
+        """value_mp.value_point (chord steps, 34 and 42 digits) at guard-blocked points; every row is cached with
+        fu = "mp" (so a point is tried once), and stored: a valued row passes the guard on its own sigma_mp"""
+        import value_mp as VM
+        kw = dict(r1=repr(self.r1))
+        args = []
+        for p in pts:
+            r = self.extra[self.key(p)]
+            args.append(((repr(p[0]), repr(p[1]), repr(r["F3re"]), repr(r["F3im"])), kw))
+        if self.procs > 1:
+            if self.pool is None:
+                import multiprocessing as mp_
+                self.pool = mp_.get_context("spawn").Pool(self.procs)
+            it = self.pool.imap_unordered(VM._batch_one, args)
+        else:
+            it = map(VM._batch_one, args)
+        with open(self.cache, "a") as fh:
+            for row in it:
+                k = self.key((row["A"], row["wf"]))
+                rec = {f: row[f] for f in ("re", "im", "info", "F3re", "F3im", "ymax", "sig", "fu", "mp_dps", "valued")}
+                rec = dict(A=k[0], wf=k[1], r1=self.r1, **rec)
+                if not rec["info"] < 1e-8:                # not tuned: no value, as the float64 records keep it
+                    rec["re"] = rec["im"] = float("nan")
+                fh.write(json.dumps(rec) + "\n")
+                fh.flush()
+                self.store(k, rec)
+                print(f"  point A {k[0]:.7f} wf {k[1]:.8f}: extended precision, |R|/sigma_mp {row['R_over_sig']:.3g}, "
+                      f"{'valued' if row['valued'] else 'NOT valued'}, {row['seconds']:.0f} s", flush=True)
+
     def raw(self, pts):
-        """the multiplier at the points not yet cached"""
-        todo, seen = [], set()
+        """the multiplier at the points not yet cached (and, with --m3mp, at the guard-blocked ones in extended
+        precision)"""
+        todo, seen, mptodo = [], set(), []
         for p in pts:                               # each new point once
             k = self.key(p)
-            if k not in self.vals and k not in seen:
-                seen.add(k)
+            if k in seen:
+                continue
+            seen.add(k)
+            if k not in self.vals:
                 todo.append(p)
+            elif self.mp_wanted(k):
+                mptodo.append(p)
         if not todo:
+            if mptodo:
+                self.mp_batch(mptodo)
             return
         if self.M == 1:
             fn, args = f_M1, [(p, self.r1) for p in todo]
@@ -378,6 +426,9 @@ class Multiplier:
                 recs[i] = rec
         for p, rec in zip(todo, recs):              # stored in batch order, so the seeds do not depend on the
             self.store(self.key(p), rec)            # order in which the points returned
+        mptodo += [p for p in todo if self.mp_wanted(self.key(p))]
+        if mptodo:
+            self.mp_batch(mptodo)
 
     def note(self, r):
         """a record in words: the value, or why there is none"""
@@ -826,6 +877,8 @@ def main():
     ap.add_argument("--m3fix", action="store_true",
                     help="M = 3: continuation in xi1 where the inner solve leaves |r_3| >= 1e-8 (#1021)")
     ap.add_argument("--retry", action="store_true", help="M = 3: compute again the cached points without value")
+    ap.add_argument("--m3mp", action="store_true", help="M = 3: value the points the 10 sigma guard alone blocks in "
+                    "extended precision (value_mp.py, #1076)")
     ap.add_argument("--m3maxrhs", type=float, default=2.4e6,
                     help="M = 3: right-hand-side calls per integration (DOP853: 12 a step) past which the point is "
                          "recorded without value, with the cause; 0 for none (#1021)")
@@ -854,7 +907,8 @@ def main():
     if starts != [0.25, 0.2]:
         bounds["starts"] = starts
     bounds = bounds or None
-    F = Multiplier(a.M, cache, a.procs, plant, r1=a.r1, ymax=a.ymax, m3fix=a.m3fix, retry=a.retry, bounds=bounds)
+    F = Multiplier(a.M, cache, a.procs, plant, r1=a.r1, ymax=a.ymax, m3fix=a.m3fix, retry=a.retry, bounds=bounds,
+                   m3mp=a.m3mp)
     if a.M == 3:
         # seed the continuation at the known M = 3 zero's tuned F_3
         F.extra[(-1.0, -1.0)] = dict(F3re=float(((2.7264758856 / 2j) * (0.0532 + 0.0041j)).real),
