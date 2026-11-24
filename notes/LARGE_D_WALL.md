@@ -514,8 +514,12 @@ kept plan's series put D* at 259.9032 to 259.9036 by both estimators, with expon
 
 **The fold belongs to the order-130 system (#1008, #966).** ks_chain3b, at horizon order 293 on the same layout,
 continued in D through D 259.903 to D 261.27 (50 states, raw `I966-dh370/`), which continuation in D cannot do across a
-fold. Its Δ stays on track C's series to 10⁻⁷ where #603's order-130 rows bend away by up to 0.049 near D 259.9. So the
-square-root point at 259.903 is the order-130 truncation's (numerical evidence). The order-135 arclength run meant to
+fold. Its Δ stays within 10⁻⁷ of the series to about D 259.9, where #603's order-130 rows bend away by up to 0.049. So
+the square-root point at 259.903 is the order-130 truncation's (numerical evidence). Past it the order-293 chain's Δ
+leaves the series too: measured against the 1/D fit on D ≤ 61, it departs by +2.7×10⁻⁷ at D 260.93 and −1.07×10⁻⁶ at
+262.57. The departure oscillates with a period of about 4.35 in D and grows about e^0.51 per unit D from D 254 on
+(notes/LARGE_D_BASICS.md, #1086). This corrects the earlier "stays on track C's series to 10⁻⁷", which held only up to
+about 259.9. The order-135 arclength run meant to
 read the fold's shift directly (#1008, macm3b; raw `I1008-macm3/`) stopped at D 259.5750 by its stall rule before its
 tangent turned (t_D 0.99999562): every attempt's first correction stayed near 10⁻¹⁴ whatever the step, a gain of
 3.4×10²¹ on a predicted |F| at its floor of about 10⁻³⁵.
