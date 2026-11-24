@@ -11,7 +11,7 @@ hpkernel build of 2026-11-08). The criteria on main's build are a Linux runner's
 | where the sign of det M(λ) is lost at D 3.044375 | in the transfer across the sonic valley, segment 0.01 → 0.02 (min c − x 7.26×10⁻⁵), which stretches p perturbations by e^{13λ} to e^{21λ}; the horizon columns only receive the deficit, being eliminated last | numerical evidence (section 2) |
 | can a reformulation of the horizon block fix it | no: any exact algebra on M's entries returns the determinant of those entries, which #1078 showed to be the noise | follows from comment 7120204793's quad-double LU |
 | the remedy | the matched determinant D_m: the kernel's `match_node` at the valley's inner node, every segment past it integrated inward; no kernel change | design (section 3) |
-| D_out = D_m ∏_{b>m} det Φ_b, with det Φ_b = exp(∫ tr A) > 0 | proved for exact inverse transfers; holds for the kernel's discrete blocks to about 10⁻⁶ in ln\|det\| at D 3.15 | proved (section 3); numerical evidence (section 6) |
+| D_out = D_m ∏_{b>m} det Φ_b, with det Φ_b = exp(∫ tr A) > 0 | proved for exact inverse transfers; at D 3.15 the λ-change of ln\|D_out\| − ln\|D_m\| equals that of the kernel's discrete outward blocks to 6.5×10⁻¹² | proved (section 3); numerical evidence (section 6) |
 | criterion 1, the four λ | PASS on the Mac build: all four −1, ln\|D_m\| = 605.35172667508 to …52266, on a line to 4.4×10⁻¹³ (bound 10⁻⁶), pivot ratio 5.2×10⁻⁸ (bound 10⁻²⁰) | numerical evidence; main's build to confirm |
 | criterion 2, D 3.15 | D_m's root 4.397786345516482 on the Mac against #1072's D_out root 4.397786345516483 on dh370: 1×10⁻¹⁵ apart (bound 10⁻⁸); the D_out half on one build not run | numerical evidence; the full check is a Linux run |
 | criterion 3, planted | the kernel plant is a Linux run (about 16 mode matrices); the toy plant passes, with its control failing | numerical evidence (toy only) |
@@ -111,21 +111,28 @@ grid, mapped or not. So
 I_m = \sum_{b>m} \sum_j \int_b \Big[ \frac{1}{c_j - x} - \frac{1}{x + c_j} \Big] dx .
 ```
 
-On the Mac, I_6 = 585.2 at D 3.044375, from the table's integrals. The discrete maps are not exact inverses. Ψ_b Φ_b =
-I + O(the integration's error, about 10⁻²⁶ here: the stored state's inward residual at node 6 is 1.0×10⁻²⁶, against
-1.8×10⁻²⁹ outward). So the identity holds to that order, and D_m and D_out have the same zeros and the same sign at
-every real λ to that accuracy.
+On the Mac, I_6 = 585.2 at D 3.044375, from the table's integrals.
+
+The kernel's inward maps are inverses of the outward ones only to the integration's accuracy. The stored state's
+inward residual at node 6 is 1.0×10⁻²⁶, against 1.8×10⁻²⁹ outward. On the background's plan the outer segments are
+not converged for the perturbations (section 6). Measured at D 3.15 (section 6): between λ 4.3 and 4.5 the change of
+ln|D_out| − ln|D_m| equals that of Σ_{b>m} ln det Φ_b, from the outward blocks, to 6.5×10⁻¹². The inward blocks' own
+log-determinants sum to 1.16 less, so they are not the outward ones' inverses. Their difference lies in directions that
+D_m does not see; I read these as the outward-growing p directions, which the regular horizon solutions do not excite
+(an interpretation, not checked). The two roots agree to 1×10⁻¹⁵.
 
 **Which quantity carries the root, and which factor is the near-null one.** D_m(λ) carries the roots. It is an Evans
-function matched at x_m. The positive factor ∏ det Φ_b = e^{λ I_m + const} carries the exponential growth of
-ln|D_out|: about 600 per unit λ, so ln|det| ≈ 3600 at λ 5.14. Inside it, the valley's ratio of growing to non-growing
+function matched at x_m. The positive factor ∏ det Φ_b = e^{λ I_m + const} carries most of
+ln|D_out|'s growth: 585 per unit λ at D 3.044375, against D_m's 162 (section 6), so ln|D_m| = 605 at λ 5.14 where
+ln|D_out| ≈ 3600. Inside it, the valley's ratio of growing to non-growing
 directions, e^{−λT} with T ≈ 13 to 21, is the λ-dependent near-null direction that the outward LU meets. D_m never
 forms it. That factor never vanishes, so dropping it changes no sign.
 
-**Limits.** For λ below the valley's κ (the λ-independent part of the p rate, about 0.6 there), p perturbations decay
-outward through the valley, and the inward transfer would grow. The outward layout is the right one there. γ's roots
-(λ ≈ 4 to 5.2 for 3.04 < D < 3.15) lie far above. As the gap closes (D → 3.0431), T grows like the gap^(−1/2). The
-outward determinant then loses more digits, about 13 per unit λ at D 3.044375. The matched one does not.
+**Limits.** For λ below the valley's κ (the λ-independent part of the p rate there, of order 1; not measured), p
+perturbations decay outward through the valley, and the inward transfer would grow. The outward layout is the right one
+there. γ's roots (λ ≈ 4 to 5.2 for 3.04 < D < 3.15) lie far above. As the gap closes (D → 3.0431), T grows like the
+gap^(−1/2). The outward determinant then loses more, a factor of about e^{13} per unit λ at D 3.044375. The matched one
+does not.
 
 **An alternative, not recommended.** Splitting the valley segment by k extra nodes, all outward, leaves the
 determinant unchanged (the chain rule for the same steps). It divides the stretch per transfer to e^{λT/k}, at 4M
@@ -248,22 +255,24 @@ plans:
 The entries are ln det Φ_b(4.3) − ln det Φ_b(4.5) minus the integral's (4.3 − 4.5) I_b. The hmax 0.05 and 0.001 columns
 are `mode_matched.py blocks`; the hmax 0.005 column is the raw folder's `explore6.py`. On the coarse plan, the four
 outer segments' changes sum to −0.385895. That is the criterion's whole discrepancy (−78.807976 + 78.422082 =
-−0.385894). So D_out = D_m ∏ det Φ_b holds for the discrete maps to about 10⁻⁶ in ln|det|, while the discrete outer
-transfers depart from the ODE's determinant until hmax 0.001. Segment 16's largest singular value at λ 4.3 is 6.07×10³
-at hmax 0.05, 1.13×10³ at hmax 0.005 and 1.62×10² at 0.001.
+−0.385894). So D_out = D_m ∏ det Φ_b holds for the discrete outward maps (to 6.5×10⁻¹² in that change), while the
+discrete outer transfers depart from the ODE's determinant until hmax 0.001. Segment 16's largest singular value at λ
+4.3 is 6.07×10³ at hmax 0.05, 1.13×10³ at hmax 0.005 and 1.62×10² at 0.001.
 
 The plan is built from the background's Taylor coefficients, and these steps under-resolve the perturbations there.
 ln|D_out(4.3)| is 1974.537 at hmax 0.05, 1962.459 at 0.005 and 1958.389 at 0.001. **This bears on #1078's question
 "is it the step plan?".** The mode determinant at hmax 0.05 is not converged in the outer segments, at D 3.15 too.
-Whether its root moves at the 10⁻⁸ level is not yet measured. Criterion 4 is to be run again on a plan with
+Whether its root moves at the 10⁻⁸ level is not yet measured. There is a hint that it does not: the departure sits in
+the positive factor ∏ det Φ_b, and D_m, which crosses the same outer segments inward on its own plan, has D_out's root
+to 1×10⁻¹⁵. Criterion 4 is to be run again on a plan with
 hmax 0.001, and criterion 2 there too if it fails at hmax 0.05. These reruns are diagnostics; the criteria as written
 stay failed or passed as they ran.
 
 ## 7. Raw records
 
-The Mac's runs are in the raw-data repository's folder `I1083-mac/` (its README lists each file with the command that
-wrote it). The exploration scripts there (`explore*.py`) import `hp/mode_matched.py`. Their per-segment tables are
-also produced by `mode_matched.py blocks`, whose records are in the same folder.
+The Mac's runs are in the raw-data repository's folder `I1083-mac/` at 2d7c990c (its README lists each file with the
+command that wrote it). The exploration scripts there (`explore*.py`) import `hp/mode_matched.py`. Their per-segment
+tables are also produced by `mode_matched.py blocks`, whose records are in the same folder.
 
 ## 8. For the coordinator
 
