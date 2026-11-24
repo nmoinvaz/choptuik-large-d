@@ -112,3 +112,5 @@ D,kc,build,value,kind,reason
 21.09375,79,linux,0.881686,lambda_1,by position: the only robust change in 0.865-0.895 on the restarted k_c 79 leap's state (dh610)
 21.3125,71,windows,0.800114,lambda_1_scout,k_c 71 scout (winb kc71_d213125): the only robust change in 0.785-0.815; prediction 0.802 +- 0.01
 21.28125,71,linux,0.810978,lambda_1_scout,k_c 71 scout (dh170 kc71_d2128125): the only robust change in 0.795-0.825; prediction 0.8117 +- 0.01
+21.375,71,windows,0.778223,lambda_1_scout,k_c 71 scout (winb kc71_d21375): the only robust change in 0.765-0.795; prediction 0.779 +- 0.01
+21.125,79,linux,0.872088,lambda_1,by position: the only robust change in 0.855-0.885 on the restarted k_c 79 leap's state (dh610 af583d2b)
