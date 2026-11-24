@@ -13,7 +13,7 @@ RAWDIR is a checkout (or an extract) of choptuik-large-d-raw at --commit. Two so
 - ell_refine.py records with a `lam` (brentq on the float64 det, up to D 17.5): one root each, method `brentq`.
 A root's kind (lambda_1, lambda_1_superseded, discretization, lambda_1_scout: a lower-k_c reading ahead of the resolved track, kept out of BEST) comes from KINDS, the coordinator's rulings by position (D, k_c, a value
 within 0.002); every other root is `unidentified`. BEST has one row per D with a lambda_1 root: lambda_1 at the
-highest k_c (Linux first), and err the largest of the k_c step on one build, the spread between builds at one k_c,
+highest k_c (Linux first), and err the largest of the k_c step on one build (across builds when that build has no lower k_c), the spread between builds at one k_c,
 the spread between states of one build at one k_c (re-converged, other thread counts), the estimator half-range, and
 from D 19.5 on a floor of 0.0026 for one regrid's reproducibility, named in err_kind."""
 import csv
@@ -171,6 +171,12 @@ def best_rows(rows):
         if same:
             nxt = max(same, key=lambda r: r["kc"])
             errs[f"k_c step {nxt['kc']}->{kmax}"] = abs(top["root"] - nxt["root"])
+        else:                                       # no lower k_c on this build: the nearest lower k_c of any build
+            lower = [r for r in R if r["kc"] < kmax]
+            if lower:
+                kn = max(r["kc"] for r in lower)
+                v = [r["root"] for r in lower if r["kc"] == kn]
+                errs[f"k_c step {kn}->{kmax} (across builds)"] = max(abs(top["root"] - x) for x in v)
         for kc in {r["kc"] for r in R}:
             v = [r["root"] for r in R if r["kc"] == kc]
             if len({r["build"] for r in R if r["kc"] == kc}) > 1:
