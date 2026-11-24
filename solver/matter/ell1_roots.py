@@ -232,6 +232,9 @@ def main():
     raw = args[0]
     kinds = load_kinds(o.get("kinds"))
     rows = rows_from(raw, o.get("commit", ""), kinds)
+    if not rows:                                # an empty or wrong raw directory: write nothing (2026-11-24, ece00134)
+        print(f"no roots found under {raw}: nothing written")
+        return 1
     write(o.get("out", "ell1_roots.csv"), rows, COLS)
     best = best_rows(rows)
     write(o.get("best", "ell1_best.csv"), best, BCOLS)
