@@ -144,3 +144,32 @@ evaluated on the state's plan `Solver.plan(z, 1e-32, 0.05)`, as `hp/lowD_gamma.p
    integral of section 3 over the segments past m, computed from the background alone, to within 10⁻⁶ of that change.
 
 The control of criterion 1 is the same command on the outward layout (`--match=out`), which must fail it.
+
+## 5. The prototype and its runs
+
+`hp/mode_matched.py` uses only the kernel's existing bindings: `Solver(..., match_node)`, `plan`, `residual`,
+`integrate`, `mode_det` and `mode_matrix`. No kernel function is needed. It picks m from the background: the valley
+segment is the one with the largest max_j T_j, and m is its inner node (node 6 at D 3.044375). Its subcommands are
+listed in its docstring; the verdict subcommands exit 1 on FAIL.
+
+**Commands for a Linux runner** (a checkout of this branch, hp/ as the working directory, the raw-data clone at `$R`,
+the output folder `$O = $R/I1083-<machine>/` made first with its README):
+
+```bash
+S1=$R/I1072-dh370/states3/tmap_tmap_tmap_lowDhm_x0.000157-0.975_D3.0444_M384_L0.4_M160_s1.9635_L0.4_M128_s1.9635_L0.4_M96_s1.9635.npz
+S2=$R/I1072-dh370/states2/tmap_tmap_lowDhm_x0.000625-0.9_D3.1500_M160_L0.7_M128_s1.8326_L0.7_M96_s1.8326.npz
+python3 mode_matched.py toy                                                   # planted toy, seconds: PASS
+python3 mode_matched.py toy --mutate=shift                                    # its control: must FAIL (exit 1)
+python3 mode_matched.py valley $S1 --threads=6                                # m = 6 (x 0.01)
+python3 mode_matched.py four $O/four.jsonl $S1 --threads=6                    # criterion 1: 4 dets
+python3 mode_matched.py four $O/four_out.jsonl $S1 --threads=6 --match=out    # its control: must FAIL (exit 1)
+python3 mode_matched.py d315 $O/d315.jsonl $S2 --threads=6                    # criterion 2
+python3 mode_matched.py identity $O/identity_D3.15.jsonl $S2 4.3 4.5 --threads=6     # criterion 4
+python3 mode_matched.py identity $O/identity_D3.0444.jsonl $S1 1.0 1.1 --threads=6   # criterion 4
+python3 mode_matched.py planted $O/planted.jsonl $S1 --threads=6              # criterion 3
+python3 mode_matched.py planted $O/planted_shift.jsonl $S1 --threads=6 --mutate=shift      # must FAIL (exit 1)
+python3 mode_matched.py planted $O/planted_outward.jsonl $S1 --threads=6 --mutate=outward  # exit 0: the control fired
+```
+
+Then, if criteria 1 to 4 pass, γ at D 3.044375 from D_m: `python3 mode_matched.py root $O/root.jsonl $S1
+--threads=6 --lam0=5.14082 --xtol=1e-11`, and the sign scan of #1078 again on D_m (`det` over 5.14060–5.14100).
