@@ -98,3 +98,4 @@ D,kc,build,value,kind,reason
 19.0,87,,1.414554,discretization,"by position: D 19's lower root (1.296 at k_c 71, 1.4109 at 79, 1.4145 at 87 on both builds) is absent from 1.395-1.435 at k_c 95 on Linux (dh610) and Windows (winb), while lambda_1 stays within 0.0003; the rule fixed before the k_c 95 scans: absent = discretization (#1025, 2026-11-23); a pair in 1.435-1.530 is not excluded"
 19.0,95,linux,1.540058,lambda_1,by position: the only change in 1.395-1.545 at k_c 95 on Linux (dh610 d19_k95); k_c 87 1.539751: +0.0003
 20.9375,79,linux,0.928441,lambda_1,by position: the only robust change in 0.910-0.940 on the restarted k_c 79 leap's state (dh610 a9f39ae0)
+20.96875,79,linux,0.918970,lambda_1,by position: the only robust change in 0.905-0.935 on the restarted k_c 79 leap's state (dh610 0f09b99d)
