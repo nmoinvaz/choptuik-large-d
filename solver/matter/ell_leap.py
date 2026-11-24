@@ -34,7 +34,7 @@ import numpy as np
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, HERE)
-from dss_ell import DSSEll, NODES_STD, lm  # noqa: E402
+from dss_ell import DSSEll, NODES_STD, lm, svd_robust  # noqa: E402
 
 ap = argparse.ArgumentParser()
 ap.add_argument("tag"); ap.add_argument("l", type=int); ap.add_argument("kc", type=int)
@@ -73,7 +73,7 @@ while D < a.D_end - 1e-9:
                lam_gauge=S.gauge_lambda(z), h=h, seconds=round(time.time() - t0))
     ok = nF < a.fmax and con <= a.cmax
     if a.fold and ok:
-        U, sv, Vt = np.linalg.svd(J, full_matrices=False)
+        U, sv, Vt = svd_robust(J)           # gesvd when Accelerate's gesdd does not converge on a finite J (D 22.0, #1025)
         tz, tD = z - zB, Dn - DB
         nt = np.linalg.norm(tz)
         Fn = S.dF_dn(z)
@@ -90,7 +90,8 @@ while D < a.D_end - 1e-9:
         reg = np.nonzero(sv > 1e-12 * sv[0])[0]
         last = reg[-4:][::-1]
         rec.update(n_null=int(len(sv) - len(reg)), sv_reg_small=sv[last].tolist(),
-                   cos_t_reg=[float(abs(tz @ Vt[i]) / nt) for i in last])
+                   cos_t_reg=[float(abs(tz @ Vt[i]) / nt) for i in last],
+                   delta_reg=[float(abs(Vt[i][-1])) for i in last])   # |Delta component|: the period mode (#1085)
     print(json.dumps(rec), flush=True)
     if not ok:
         if a.fold and h / 2 >= a.hmin:
