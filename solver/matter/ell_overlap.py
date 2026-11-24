@@ -41,6 +41,10 @@ usage: python ell_overlap.py run REC.jsonl STATE.npy D LAM_R LO HI --mode I [--w
   at most 10 times it. Also the full M(0) against J[:n, :n] entry by entry. (Added after R1 missed its first bar, 1e-12,
   at k_c 87, D 21.125: 7.8e-11; the bar 10 x floor was written before the floor was measured.) --mutate=r1 scales J's
   first column by 1 + 1e-6, and floor must exit 1.
+       python ell_overlap.py diag REC.jsonl STATE.npy D LAM_R --mode I [--out F.jsonl]
+  diag: |M(lam) x| along lam for J's four smallest regular right singular vectors, for v1 and for v1's part on J's
+  directions with sigma >= 100 sigma_m (the positive control, which must be V-shaped at lambda_1; exit 1 if not).
+  Added after run's wrong-lambda controls came out above 0.3 at k_c 87, D 21.125, to find the cause.
   --mode I: the falling mode's index in the record's sv_reg_small (0 = the smallest regular value).
   run exits 0 when R1-R4, E1 and E2 pass and J's four smallest regular values match the record's (relative 1e-3), 1 if
   not; the reading is printed and recorded, not exit-coded. planted runs a synthetic pencil M(lam) = A - lam B (n 120:
@@ -409,7 +413,7 @@ def write(path, rec):
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("cmd", choices=["run", "planted", "refit", "floor"])
+    ap.add_argument("cmd", choices=["run", "planted", "refit", "floor", "diag"])
     ap.add_argument("args", nargs="*")
     ap.add_argument("--mode", type=int, default=1)
     ap.add_argument("--wrong", default="-0.05,0.05")
@@ -445,7 +449,7 @@ def main():
         log("planted: " + ("PASS" if ok else "FAIL"))
         sys.exit(0 if ok else 1)
     recf, st, D = a.args[0], a.args[1], float(a.args[2])
-    lam_r, lo, hi = (float(v) for v in a.args[3:6]) if a.cmd == "run" else (None, None, None)
+    lam_r, lo, hi = (float(v) for v in a.args[3:6]) if a.cmd == "run" else (float(a.args[3]) if a.cmd == "diag" else None, None, None)
     from dss_ell import DSSEll, NODES_STD
     rec = [json.loads(l) for l in open(recf) if json.loads(l).get("D") == D][-1]
     z = np.load(st)
@@ -459,6 +463,42 @@ def main():
         f"{rec['steps']}): {'the record system' if same else 'NOT the record system'}; state {os.path.basename(st)}")
     if not same:
         sys.exit(3)
+    if a.cmd == "diag":
+        # the cause of run's high wrong-lambda controls (#1085): r(lam) = |M(lam) x| along lam for J's four smallest
+        # regular right singular vectors (spectral parts), for v1 and for v1's part on J's directions with
+        # sigma >= 100 sigma_m (the lambda_1 mode without its arbitrary weak and null admixture; the positive control,
+        # which must be V-shaped at lambda_1). Written before it ran: an eigenmode at lambda_1 has r(lambda_1) <= 0.1 r(0);
+        # a lambda-independent weak direction keeps max r / min r <= 3 over the lams.
+        P = EllProblem(S, z)
+        n = P.n
+        J = P.J()
+        _, s, Vt = np.linalg.svd(J, full_matrices=False)
+        reg = np.nonzero(s > CUT * s[0])[0]
+        small = reg[-4:][::-1]
+        mu, _, v1, _, _ = pencil_vec(P, lam_r)
+        lam1 = lam_r + mu
+        c = Vt @ np.concatenate([v1, [0.0]])
+        big = s >= 100 * s[small[a.mode]]
+        vb = Vt[big].T @ c[big]
+        log(f"pencil: lambda_1 {lam1:.6f}; v1's weight on J's sigma >= 100 sigma_m: {np.sum(c[big] ** 2):.3e}, on "
+            f"m0-m3: {np.sum(c[small] ** 2):.3e}, on the null space: {np.sum(c[s <= CUT * s[0]] ** 2):.3e}")
+        vecs = {f"m{i}": Vt[small[i], :n] for i in range(4)}
+        vecs.update(v1=v1, v1_big=vb[:n])
+        lams = [0.0, 0.25, 0.5, lam1 - 0.05, lam1, lam1 + 0.05, 1.2]
+        rows = {}
+        for name, x in vecs.items():
+            x = unit(x)
+            r = [float(np.linalg.norm(P.Mapply(l, x))) for l in lams]
+            kind = ("eigenmode at lambda_1" if r[4] <= 0.1 * r[0] else
+                    "lambda-independent" if max(r) <= 3 * min(r) else "neither")
+            rows[name] = dict(r=r, kind=kind)
+            log(f"  {name:6s} |M(lam) x| at lam {', '.join(f'{l:.4f}' for l in lams)}: {', '.join(f'{v:.2e}' for v in r)} -> {kind}")
+        ok = rows["v1_big"]["kind"] == "eigenmode at lambda_1"
+        log(f"positive control (v1_big V-shaped at lambda_1): {'OK' if ok else 'BAD'}; m{a.mode} (the falling mode) reads "
+            f"'{rows[f'm{a.mode}']['kind']}'; J's four smallest regular values {', '.join(f'{v:.4e}' for v in s[small])}")
+        write(a.out, dict(cmd="diag", D=D, kc=rec["kc"], state=os.path.basename(st), lam1=lam1, lams=lams, rows=rows,
+                          sv_reg_small=s[small].tolist(), ok=ok, peak_rss_gb=rss_gb()))
+        sys.exit(0 if ok else 1)
     if a.cmd == "floor":
         # R1's rounding floor: the same matvec M(0) x with the complex step h scaled by 3 (exact in exact arithmetic,
         # other rounding), on run's three random x; and the full M(0) against J[:n, :n] entry by entry
