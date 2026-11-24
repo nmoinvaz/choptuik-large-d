@@ -1,7 +1,22 @@
 # The mode determinant near D 3: where its sign is lost, and a matched determinant (#1083)
 
-Status: design and pass criteria written before the prototype's checks; prototype `hp/mode_matched.py` in progress.
-Branch `wip/mode-horizon-1083`. This note starts from #1078's measurements (dh370). The status words are AGENTS.md's.
+Status: design done; prototype `hp/mode_matched.py` on branch `wip/mode-horizon-1083`, checked on the Mac (its
+hpkernel build of 2026-11-08). The criteria on main's build are a Linux runner's (section 5). This note starts from
+#1078's measurements (dh370). The status words are AGENTS.md's.
+
+## Verdicts
+
+| question | answer | status |
+|---|---|---|
+| where the sign of det M(λ) is lost at D 3.044375 | in the transfer across the sonic valley, segment 0.01 → 0.02 (min c − x 7.26×10⁻⁵), which stretches p perturbations by e^{13λ} to e^{21λ}; the horizon columns only receive the deficit, being eliminated last | numerical evidence (section 2) |
+| can a reformulation of the horizon block fix it | no: any exact algebra on M's entries returns the determinant of those entries, which #1078 showed to be the noise | follows from comment 7120204793's quad-double LU |
+| the remedy | the matched determinant D_m: the kernel's `match_node` at the valley's inner node, every segment past it integrated inward; no kernel change | design (section 3) |
+| D_out = D_m ∏_{b>m} det Φ_b, with det Φ_b = exp(∫ tr A) > 0 | proved for exact inverse transfers; holds for the kernel's discrete blocks to about 10⁻⁶ in ln\|det\| at D 3.15 | proved (section 3); numerical evidence (section 6) |
+| criterion 1, the four λ | PASS on the Mac build: all four −1, ln\|D_m\| = 605.35172667508 to …52266, on a line to 4.4×10⁻¹³ (bound 10⁻⁶), pivot ratio 5.2×10⁻⁸ (bound 10⁻²⁰) | numerical evidence; main's build to confirm |
+| criterion 2, D 3.15 | D_m's root 4.397786345516482 on the Mac against #1072's D_out root 4.397786345516483 on dh370: 1×10⁻¹⁵ apart (bound 10⁻⁸); the D_out half on one build not run | numerical evidence; the full check is a Linux run |
+| criterion 3, planted | the kernel plant is a Linux run (about 16 mode matrices); the toy plant passes, with its control failing | numerical evidence (toy only) |
+| criterion 4, the identity against Liouville | FAIL as written at D 3.15 (4.9×10⁻³ against 10⁻⁶); the cause is the hmax 0.05 plan's outer segments (x ≥ 0.5), whose discrete blocks depart from exp(∫ tr A) until hmax 0.001 | numerical evidence (section 6) |
+| is the mode matrix converged on the background's plan | no, in the outer segments: ln\|D_out(4.3)\| at D 3.15 is 1974.537, 1962.459 and 1958.389 at hmax 0.05, 0.005 and 0.001; whether the root moves is not measured | numerical evidence (section 6); bears on #1078 |
 
 Throughout, n = D − 2, x is the self-similar radius with the horizon at x = 1, and u = 1 − x. M is the number of τ
 points on the half grid (M′ 96 here). K is the number of nodes, and the state is the one stored as raw blob 6a0f83d2
@@ -187,12 +202,24 @@ main's build (section 5).
 |---|---|---|---|
 | 1.0 | −1 | −64.123250972 | 1.17×10⁻⁴..5.71 |
 | 3.0 | −1 | 260.126141749 | 1.18×10⁻⁴..20.2 |
+| 5.1408197887857 | −1 | 605.3517266750824 | 1.19×10⁻⁴..2.27×10³ |
 | 5.140819788786 | −1 | 605.3517266751303 | 1.19×10⁻⁴..2.27×10³ |
 | 5.1408197887863025 | −1 | 605.3517266751795 | 1.19×10⁻⁴..2.27×10³ |
+| 5.1408197887866 | −1 | 605.3517266752266 | 1.19×10⁻⁴..2.27×10³ |
 
-Between the last two λ (3.03×10⁻¹³ apart), ln|D_m| moves by 4.92×10⁻¹¹: a slope of 162.5 per unit λ. The secant
-from λ 1 to 3 is 162.1. There the present determinant, in quad-double from the same double-double entries, went
-from (+, 3604.297374) to (−, 3601.178104). This is the middle pair of criterion 1, not the criterion itself.
+Across the four λ (9×10⁻¹³), ln|D_m| rises by 1.44×10⁻¹⁰, with slopes 159.9, 162.5 and 158.2 between neighbours
+(the last digits of ln|D_m| near 605 are 1.1×10⁻¹³ apart). The secant from λ 1 to 3 is 162.1. There the present
+determinant, in quad-double from the same double-double entries, read (+, 3600.328311), (+, 3604.297374),
+(−, 3601.178104) and (+, 3596.436366). Criterion 1's line test gives a residual of 4.4×10⁻¹³ of max |f_i| (bound
+10⁻⁶), with pivot ratio 5.2×10⁻⁸ (bound 10⁻²⁰): **PASS on the Mac build**. So no root of D_m lies among the four λ: #1072's root there was a sign flip of noise.
+
+**Criterion 2, half of it.** At D 3.15 (state 9e683a14, hmax 0.05 plan), the valley rule picks m = 5 (x 0.02,
+the segment 0.02 → 0.05 with max_j T_j 2.9). `mode_matched.py root --lam0=4.397684106690` finds D_m's root at
+λ = 4.397786345516482 in 10 determinants, with one sign change in its first bracket. #1072 found D_out's root on
+dh370 on the same plan at 4.397786345516483 (raw `I1072-dh370/gamma_L07_M96.log`), also with one sign change. The
+roots differ by 1×10⁻¹⁵, against the bound 10⁻⁸. D_m's pivots stay at 3.85×10⁻⁴..51 (1.68×10⁻⁶ at the λ nearest the
+root), against D_out's 3.85×10⁻⁴..1.55×10³. The roots come from two builds, so the full criterion is the Linux
+`d315` run.
 
 **The planted toy** (`mode_matched.py toy`, no kernel, float64): four fields, a valley that stretches field 0 by
 e^{(λ − 0.6) T}, T = 10.1, and a root planted at λ* = 5 along the centre solutions' non-growing combination,
