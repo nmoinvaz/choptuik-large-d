@@ -468,7 +468,8 @@ def toy_T(P):
 
 def toy_case(lam_star, mutate=None, gap=2e-3):
     """the toy's parameters and its horizon block H(lam) = H0 + (lam - lam*) H1, with H0's first column the centre
-    solutions' combination at lam* computed at 60 digits, so that the exact Evans matrix is singular at lam*"""
+    solutions' non-growing combination at lam* computed at 60 digits, so that the exact Evans matrix is singular at
+    lam* along a direction the outward transfer forms only by cancellation"""
     import mpmath as mp
     rng = np.random.default_rng(1083)
     P = dict(gap=gap, beta=40.0, xv=0.45, kappa=0.6, C=0.1 * rng.standard_normal((4, 4)),
@@ -479,7 +480,11 @@ def toy_case(lam_star, mutate=None, gap=2e-3):
         Y = mp.matrix(P["C0"].tolist())
         for F in out:
             Y = F * Y
-        v = Y[:, 0] + Y[:, 1] / 2
+        # the centre solutions' combination that does not grow across the valley (Y's smallest right singular
+        # vector), as a mode's eigenfunction does: regular at both ends, so free of the outward-growing direction
+        _, _, V = mp.svd_r(Y)
+        w = V[V.rows - 1, :].T
+        v = Y * w
         v = v / mp.norm(v)
     H0 = np.column_stack([np.array([float(t) for t in v]), rng.standard_normal(4)])
     H1 = rng.standard_normal((4, 2))
