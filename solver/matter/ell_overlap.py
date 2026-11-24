@@ -382,7 +382,15 @@ def refit(records, reads, start_D, start_index, ranges):
     loc = [(rows[k][0], rows[k + 1][0], float(np.log(rows[k + 1][1] / rows[k][1]) / np.log(rows[k + 1][2] / rows[k][2])))
            for k in range(len(rows) - 1)]
     print("  local exponents d ln sigma / d ln lambda_1: " + ", ".join(f"{a:g}-{b:g} {e:.2f}" for a, b, e in loc))
-    return dict(rows=rows, fits=out, local=loc)
+    # extrapolations, not results: lambda_1 = 0 from the last two readings (line) and the last three (parabola)
+    Ds, ls = np.array(sorted(lam)), np.array([lam[D] for D in sorted(lam)])
+    zl = float(Ds[-1] - ls[-1] * (Ds[-1] - Ds[-2]) / (ls[-1] - ls[-2]))
+    q = np.polyfit(Ds[-3:], ls[-3:], 2)
+    zq = [float(r.real) for r in np.roots(q) if abs(r.imag) < 1e-12 and r.real > Ds[-1]]
+    zq = min(zq) if zq else None
+    print(f"  lambda_1 = 0 extrapolated (not a result): line through D {Ds[-2]:g}, {Ds[-1]:g}: D {zl:.3f}; parabola through "
+          f"the last three: D {zq:.3f}" if zq else f"  lambda_1 = 0 extrapolated: line D {zl:.3f}; parabola: no zero past the data")
+    return dict(rows=rows, fits=out, local=loc, zero_line=zl, zero_parabola=zq)
 
 
 def write(path, rec):
