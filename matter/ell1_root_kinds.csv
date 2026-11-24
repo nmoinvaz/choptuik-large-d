@@ -128,3 +128,7 @@ D,kc,build,value,kind,reason
 21.28125,79,linux,0.820178,lambda_1,by position: the only robust change in 0.805-0.835 on the tag g k_c 79 leap's state (dh610 49d0b536)
 21.125,95,linux,0.881040,lambda_1,by position: the only robust change in 0.865-0.895 on dh170's k_c 95 regrid of dh370's k_c 87 state (dh170 30befd98)
 21.3125,87,macos,0.814277,lambda_1,by position: the only robust change in 0.805-0.825 on macm3's own k_c 87 leg state (kc87_leg2)
+21,95,windows,0.913510,lambda_1,by position: the only robust change in 0.900-0.925 on winb's k_c 95 regrid of the k_c 87 state at D 21.0 (winb kc95_d21)
+21.375,87,macos,0.791593,lambda_1,by position: the only robust change in 0.780-0.800 on macm3's own k_c 87 leg state (kc87_leg2)
+21.5,87,macos,0.744479,lambda_1,by position: the only robust change in 0.735-0.755 on macm3's own k_c 87 leg state (kc87_leg2)
+21.3125,79,linux,0.809549,lambda_1,by position: the only robust change in 0.795-0.825 on the tag g k_c 79 leap's state (dh610 4a03b3d3)
