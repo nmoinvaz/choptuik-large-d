@@ -19,7 +19,7 @@ rayon = "1.10"
 # the multiple-shooting engine (crates.io; github.com/nmoinvaz/multishoot): layout, residual, exact Jacobians, jets, jvp, mode
 # matrix, f64 and staircase Jacobians; hp supplies the equations (model.rs). Its feature `mutate` gives the staircase
 # controls of hp/highm_check.py and the half-parts state controls of the quad- and octo-double checks.
-multishoot = { version = "=4.1.0", features = ["mutate"] }  # 3.3.0: JetSession::tangent_from (PR #46); 4.0.0: plan_segments_auto, Broyden in fast, family, sub-blocks; 4.1.0: multidouble 5.1.0 and multisolver 0.2.2
+multishoot = { git = "https://github.com/nmoinvaz/multishoot", rev = "dceec04451bc9280f991f0fadc043a265c32594d", features = ["mutate"] }  # #1082: mode_matrix_real (branch feat/mode-matrix-real, 4.1.0 + one commit) until its release; 3.3.0: JetSession::tangent_from (PR #46); 4.0.0: plan_segments_auto, Broyden in fast, family, sub-blocks; 4.1.0: multidouble 5.1.0 and multisolver 0.2.2
 # the solvers of F(z) = 0 over multishoot's layout (crates.io; github.com/nmoinvaz/multisolver): Newton's step and loop,
 # chord, GMRES-refined Newton, Levenberg-Marquardt, ANM series, predictors, weak subspaces, the winding count
 multisolver = "=0.2.2"  # 0.2.0: quasi (Broyden), dd or f64 Newton matrices, arclength, deflation; 0.2.1: deflation through the problem's own factors; 0.2.2: multidouble 5.1.0

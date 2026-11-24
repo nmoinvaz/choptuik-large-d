@@ -1224,11 +1224,20 @@ impl HPrep {
     }
 }
 
+/// the control of the quad-double mode matrix's checks (Ctx::mutate, mode_tests): the refined horizon solves of
+/// quad- and octo-double tangents with the residual of the unshifted system (omega D in place of omega D + lambda),
+/// while their preconditioner lus_t keeps the rate
+pub const MODE_MUT_QD_UNSHIFTED: u8 = 42;
+
 /// (omega D + diag kappa) f = r with the LU at the values; for tangents the derivative of the system:
 /// A_t f_d = r_d - omega_d D f_v - kappa_d f_v, with A_t = A + lambda (`HPrep::lus_t`; the same LU at rate zero).
 fn psolve<T: Lane, const B: usize>(ctx: &Ctx<B>, prep: &HPrep, kk: usize, kappa: &Fl<T, B>, rhs: &Fl<T, B>, omega: T) -> Fl<T, B> {
     let lu = &prep.lus[kk];
     let lu_t = if prep.lus_t.is_empty() { lu } else { &prep.lus_t[kk] };
+    // the refinement residual's d/dtau, its tangent shifted by a real rate as the Taylor steps' (multishoot's
+    // Rate::shift on Qu and Ou lanes), so that the refined tangent solves A_t; at rate zero omega D f, bit for bit
+    let rate = if ctx.mutate == MODE_MUT_QD_UNSHIFTED { Rate::ZERO } else { prep.rate };
+    let dt = |f: &Fl<T, B>| rate.shift(f, ctx.d.apply(f).mul_t(omega));
     if T::NJ > 0 && T::VAL_OD {
         // an octo-double jet (multidouble 4.0.0's OJet): as the quad-double jet below, the right-hand side of order k
         // in octo-double and each order's solve refined to octo-double, with twice the steps
@@ -1255,7 +1264,7 @@ fn psolve<T: Lane, const B: usize>(ctx: &Ctx<B>, prep: &HPrep, kk: usize, kappa:
             QD_MUT_REFINE4 => 8,
             _ => OD_REFINE + T::TANGENT as usize,
         };
-        return lu.solve_lanes_refine_t(lu_t, rhs, steps, |f| *rhs - (ctx.d.apply(f).mul_t(omega) + *kappa * *f));
+        return lu.solve_lanes_refine_t(lu_t, rhs, steps, |f| *rhs - (dt(f) + *kappa * *f));
     }
     if T::NJ > 0 && T::VAL_QD {
         // a quad-double jet: order by order as below, the right-hand side of order k in quad-double and each order's
@@ -1280,13 +1289,14 @@ fn psolve<T: Lane, const B: usize>(ctx: &Ctx<B>, prep: &HPrep, kk: usize, kappa:
         // and kappa from the quad-double a_h and Delta), its residual formed in the lane's precision (iterative
         // refinement with the residual in higher precision: Moler, J. ACM 14 (1967) 316, doi:10.1145/321386.321394),
         // value and tangent together (multidouble's solve_lanes_refine_t: a tangent lane's residual is that of the
-        // differentiated system, solved with lu_t).
+        // differentiated system, solved with lu_t). At a mode matrix's real rate that system's d/dtau carries the
+        // rate (dt), and lu_t is the LU of A + lambda.
         let steps = match ctx.mutate {
             QD_MUT_NOREFINE => 0,
             QD_MUT_REFINE4 => 4,
             _ => QD_REFINE + T::TANGENT as usize,
         };
-        return lu.solve_lanes_refine_t(lu_t, rhs, steps, |f| *rhs - (ctx.d.apply(f).mul_t(omega) + *kappa * *f));
+        return lu.solve_lanes_refine_t(lu_t, rhs, steps, |f| *rhs - (dt(f) + *kappa * *f));
     }
     if T::NJ > 0 {
         // a jet: order by order with the LU at the values, the tangent branch below continued past order 1,
@@ -2235,6 +2245,14 @@ pub fn mode_matrix<const B: usize>(ctx: &Ctx<B>, zh: &[f64], zl: &[f64], lam: DD
     let l = re.pop().expect("two parts");
     let h = re.pop().expect("two parts");
     Ok((h, l, ld))
+}
+
+/// The mode matrix M(lam) at a real growth rate lam in the precision P (multishoot's `mode_matrix_real`) at the state z
+/// in PARTS parts: the tangents, the Taylor steps and the horizon solves in P (psolve refines the shifted solves to P
+/// with the LUs of A + lam), Delta held fixed. (PARTS column-major part arrays with leading dimension ld_for(L-1), ld).
+/// At `Double` it is `mode_matrix`'s, bit for bit.
+pub fn mode_matrix_in<P: Precision<Native>, const B: usize>(ctx: &Ctx<B>, z: &[&[f64]], lam: DD, par: bool) -> Result<(Vec<Vec<f64>>, usize), String> {
+    ctx.shooting_in::<P>().mode_matrix_real::<P>(z, lam, par)
 }
 
 /// A solver context read from a file written by hp/dump_ctx.py (Rust benches and data-driven tests).

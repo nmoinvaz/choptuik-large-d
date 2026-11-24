@@ -72,6 +72,8 @@ trait Api: Send + Sync {
     fn jacobian_q(&mut self, z: [&[f64]; 4], mutate: u8) -> Result<(Q4, usize), String>;
     /// model::newton_in at `Quad`
     fn newton_q(&mut self, z: [&[f64]; 4], mutate: u8) -> Result<Step<Quad>, String>;
+    /// model::mode_matrix_in at `Quad`: the mode matrix at the real rate lam, (four parts, ld), n = L - 1
+    fn mode_matrix_q(&mut self, z: [&[f64]; 4], lam: DD, mutate: u8) -> Result<(Q4, usize), String>;
     /// model::residual_jet: the residual's coefficients 0..nout-1 on the jet state zs with the dimension n + h as the
     /// jet variable; the jet lanes are instantiated at every M of make_ctx's list and for N = 8, 16, 32 coefficients
     fn residual_jet(&mut self, zs: &[(&[f64], &[f64])], nout: usize, mutate: u8) -> Result<Vec<(Vec<f64>, Vec<f64>)>, String>;
@@ -228,6 +230,32 @@ macro_rules! qd_sizes {
         } else {
             Err("the quad-double solver is built for M = 32 and 48 only".to_string())
         }
+    }};
+}
+
+/// f on the context as Ctx<b> for the first b of the list it is, with Ctx::mutate set for the call; err for any other
+macro_rules! ctx_in {
+    ($me:ident, $mutate:expr, |$c:ident| $body:expr, $err:expr, []) => {
+        Err($err.to_string())
+    };
+    ($me:ident, $mutate:expr, |$c:ident| $body:expr, $err:expr, [$b0:literal $(, $bb:literal)*]) => {
+        if let Some($c) = $me.downcast_mut::<Ctx<$b0>>() {
+            $c.mutate = $mutate;
+            let r = $body;
+            $c.mutate = 0;
+            r
+        } else {
+            ctx_in!($me, $mutate, |$c| $body, $err, [$($bb),*])
+        }
+    };
+}
+
+/// f on the context as Ctx<4>, Ctx<6>, Ctx<12> or Ctx<16> (M = 32, 48, 96, 128: the quad-double sizes and the low-D
+/// runs' M up to the dense limit), with Ctx::mutate set for the call: the quad-double mode matrix (#1082)
+macro_rules! qd_mode_sizes {
+    ($me:expr, $mutate:expr, |$c:ident| $body:expr) => {{
+        let me: &mut dyn std::any::Any = $me;
+        ctx_in!(me, $mutate, |$c| $body, "the quad-double mode matrix is built for M = 32, 48, 96 and 128 only", [4, 6, 12, 16])
     }};
 }
 
@@ -401,6 +429,9 @@ impl<const B: usize> Api for Ctx<B> {
     }
     fn newton_q(&mut self, z: [&[f64]; 4], mutate: u8) -> Result<Step<Quad>, String> {
         qd_sizes!(self, mutate, |c| model::newton_in::<Quad, _>(c, &z, true))
+    }
+    fn mode_matrix_q(&mut self, z: [&[f64]; 4], lam: DD, mutate: u8) -> Result<(Q4, usize), String> {
+        qd_mode_sizes!(self, mutate, |c| model::mode_matrix_in::<Quad, _>(c, &z, lam, true).map(|(c, ld)| (c.try_into().expect("four parts"), ld)))
     }
     fn residual_jet(&mut self, zs: &[(&[f64], &[f64])], nout: usize, mutate: u8) -> Result<Vec<(Vec<f64>, Vec<f64>)>, String> {
         self.mutate = mutate;
@@ -1526,6 +1557,32 @@ impl Solver {
             a
         };
         Ok((to2(mh).into_pyarray(py), to2(ml).into_pyarray(py)))
+    }
+
+    /// Mode matrix M(lam) at a real rate in quad-double (model::mode_matrix_in at `Quad`, multishoot's mode_matrix_real)
+    /// at the state z0 + z1 + z2 + z3 (a double-double state: z2 = z3 = 0): the tangents, the Taylor steps and the
+    /// horizon solves in quad-double, Delta fixed, no phase row. Four (L-1, L-1) arrays, its parts. M = 32, 48, 96 and
+    /// 128 only; mutate: Ctx::mutate for the call (model::MODE_MUT_QD_UNSHIFTED, QD_MUT_NOREFINE, QD_MUT_REFINE4).
+    #[pyo3(signature = (z0, z1, z2, z3, lam_hi, lam_lo=0.0, mutate=0))]
+    #[allow(clippy::too_many_arguments)]
+    fn mode_matrix_q<'py>(
+        &mut self,
+        py: Python<'py>,
+        z0: PyReadonlyArray1<'py, f64>,
+        z1: PyReadonlyArray1<'py, f64>,
+        z2: PyReadonlyArray1<'py, f64>,
+        z3: PyReadonlyArray1<'py, f64>,
+        lam_hi: f64,
+        lam_lo: f64,
+        mutate: u8,
+    ) -> PyResult<Vec<Bound<'py, PyArray2<f64>>>> {
+        self.dense_ok("mode_matrix_q")?;
+        let z = parts4([&z0, &z1, &z2, &z3], self.api.len())?;
+        let (api, pool) = (&mut self.api, &self.pool);
+        let n = api.len() - 1;
+        let lam = DD::new(lam_hi, lam_lo);
+        let (c, ld) = py.detach(|| pool.install(|| api.mode_matrix_q(z, lam, mutate))).map_err(PyValueError::new_err)?;
+        Ok(c.iter().map(|p| Array2::from_shape_fn((n, n), |(i, j)| p[j * ld + i]).into_pyarray(py)).collect())
     }
 
     /// det M(lam) by double-double LU: (sign, ln|det|, min |u_kk|, max |u_kk|). Its sign changes at the growth rate of
