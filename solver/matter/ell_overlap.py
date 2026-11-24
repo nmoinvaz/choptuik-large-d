@@ -380,11 +380,16 @@ def refit(records, reads, start_D, start_index, ranges):
             i = m.index(i) if i in m else None
             if i is None:
                 break
-        track[r["D"]] = (r["sv_reg_small"][i], i, r["n_null"])
+        track[r["D"]] = (r["sv_reg_small"][i], i, r["n_null"], r.get("dDelta_dF"))
         prev = r
+    # dDelta_dF = |J^-T e_Delta| = sqrt(sum_i (delta_i / sigma_i)^2), delta_i the Delta component of J's right singular
+    # vector i; sigma x dDelta_dF stays near |delta_m| at every point if the falling mode carries it (#1085)
+    print("  D, sigma of the tracked mode, lambda_1, the record's dDelta_dF, sigma x dDelta_dF (all points of the records):")
+    for D in sorted(track):
+        s, i, nn, dd = track[D]
+        print(f"  D {D:<9g} sigma {s:.4e} (sv_reg_small[{i}], n_null {nn})  lambda_1 "
+              + (f"{lam[D]:.6f}" if D in lam else "   -    ") + (f"  dDelta_dF {dd:.4e}  product {s * dd:.4f}" if dd else ""))
     rows = [(D, track[D][0], lam[D], track[D][1]) for D in sorted(track) if D in lam]
-    for D, s, l, i in rows:
-        print(f"  D {D:<9g} sigma {s:.4e} (sv_reg_small[{i}])  lambda_1 {l:.6f}")
     out = []
     for lo, hi in ranges:
         sel = [(s, l) for D, s, l, _ in rows if lo - 1e-12 <= D <= hi + 1e-12]
@@ -408,7 +413,8 @@ def refit(records, reads, start_D, start_index, ranges):
     zq = min(zq) if zq else None
     print(f"  lambda_1 = 0 extrapolated (not a result): line through D {Ds[-2]:g}, {Ds[-1]:g}: D {zl:.3f}; parabola through "
           f"the last three: D {zq:.3f}" if zq else f"  lambda_1 = 0 extrapolated: line D {zl:.3f}; parabola: no zero past the data")
-    return dict(rows=rows, fits=out, local=loc, zero_line=zl, zero_parabola=zq)
+    return dict(rows=rows, fits=out, local=loc, zero_line=zl, zero_parabola=zq,
+                dDelta_dF={str(D): track[D][3] for D in sorted(track)}, sigma={str(D): track[D][0] for D in sorted(track)})
 
 
 def write(path, rec):
