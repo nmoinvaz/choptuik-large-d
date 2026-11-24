@@ -39,7 +39,8 @@ usage: python ell_overlap.py run REC.jsonl STATE.npy D LAM_R LO HI --mode I [--w
        python ell_overlap.py floor REC.jsonl STATE.npy D [--out F.jsonl]
   floor: R1's rounding floor (run's three random x, M(0) x with the complex step 1e-20 against 3e-20); exit 0 when R1 is
   at most 10 times it. Also the full M(0) against J[:n, :n] entry by entry. (Added after R1 missed its first bar, 1e-12,
-  at k_c 87, D 21.125: 7.8e-11; the bar 10 x floor was written before the floor was measured.)
+  at k_c 87, D 21.125: 7.8e-11; the bar 10 x floor was written before the floor was measured.) --mutate=r1 scales J's
+  first column by 1 + 1e-6, and floor must exit 1.
   --mode I: the falling mode's index in the record's sv_reg_small (0 = the smallest regular value).
   run exits 0 when R1-R4, E1 and E2 pass and J's four smallest regular values match the record's (relative 1e-3), 1 if
   not; the reading is printed and recorded, not exit-coded. planted runs a synthetic pencil M(lam) = A - lam B (n 120:
@@ -135,7 +136,10 @@ class EllProblem:
 
     def J(self):
         with np.errstate(all="ignore"):
-            return self.S.jacobian(self.z)[1]
+            J = self.S.jacobian(self.z)[1]
+        if "r1" in MUT:
+            J[:, 0] *= 1 + 1e-6
+        return J
 
     def t(self):
         return translation(self.S, self.z, power=2 if "trans" in MUT else 1)
