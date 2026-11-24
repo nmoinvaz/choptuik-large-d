@@ -498,6 +498,12 @@ def main():
             log(f"  J mode m{i}: sigma {s[g]:.4e}, Delta component {Vt[g, n]:+.3e}, |x| {np.linalg.norm(x):.4f}, "
                 f"|cos(x, t)| {abs(x @ t) / np.linalg.norm(x) / np.linalg.norm(t):.3e}, |M(0) x| / |x| "
                 f"{np.linalg.norm(J[:n, :n] @ x) / np.linalg.norm(x):.3e}, |b| |Delta comp| / |x| {np.linalg.norm(b) * abs(Vt[g, n]) / np.linalg.norm(x):.3e}")
+        rc = s > len(s) * np.finfo(float).eps * s[0]                # lstsq's cutoff, as ell_leap.py's dDelta_dF
+        dd = float(np.sqrt(np.sum((Vt[rc, n] / s[rc]) ** 2)))
+        gm = small[a.mode]
+        log(f"  |J^-T e_Delta| = sqrt(sum (delta_i / sigma_i)^2) over sigma > n eps sigma_max: {dd:.4e} (record dDelta_dF "
+            f"{rec.get('dDelta_dF', float('nan')):.4e}); the falling mode's |delta| / sigma {abs(Vt[gm, n]) / s[gm]:.4e}, "
+            f"its share of the square {(Vt[gm, n] / s[gm] / dd) ** 2:.4f}")
         mu, _, v1, _, _ = pencil_vec(P, lam_r)
         lam1 = lam_r + mu
 
