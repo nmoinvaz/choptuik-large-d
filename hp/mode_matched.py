@@ -39,8 +39,9 @@ Subcommands:
            minus its value at lam* (a zero column at lam*, so an exact root); the root search returns lam* within
            1e-9. Controls: --mutate=shift subtracts the column at lam* + 1e-6 (the search must then miss lam* by more
            than 1e-9); --mutate=outward plants on the outward layout and reads the signs at lam* -+ 1e-3 ... 1e-6 (one
-           clean change there is the control's failure). The LU is multidouble's quad-double qd_logdet after power-of-two
-           equilibration (hp/mode_qd.py) when the package has it, else the equilibrated float64 LU (hp/mode_scale.py).
+           clean change there is the control's failure). `--lu=dd|qd|f64`: multidouble's double-double LU (dd_logdet,
+           as the kernel's mode_det; the default where the package has it), its quad-double LU after power-of-two
+           equilibration (hp/mode_qd.py), or the equilibrated float64 LU (hp/mode_scale.py, the fallback).
   identity criterion 4: at two lam where both are resolved, sign(D_out) = sign(D_m), and the change of
            ln|D_out| - ln|D_m| between them equals (lam1 - lam2) sum_(b > m) sum_j int [1/(c_j - x) - 1/(x + c_j)] dx,
            Liouville's formula for the lam part of ln det Phi_b, to 1e-6 of that change
@@ -60,6 +61,10 @@ sys.path.insert(0, HERE)
 
 FOUR = [5.1408197887857, 5.140819788786, 5.1408197887863025, 5.1408197887866]
 D315_LAM0 = 4.397684106690
+
+
+def say(msg):
+    print(msg, flush=True)
 
 
 def opts_args(argv):
@@ -91,10 +96,11 @@ def residual_max(s, zh, zl):
     return float(np.abs(np.asarray(fh) + np.asarray(fl)).max())
 
 
-def trace_integrals(s, zh, zl, meta, segs, sub=2, log=print):
+def trace_integrals(s, zh, zl, meta, segs, sub=2, log=None):
     """per outward segment b (1..K-1): (b, x0, x1, sum_j Tp, max_j Tp, argmax, sum_j Tm, max_j Tm), with
     Tp_j = int dx / (c_j - x) and Tm_j = int dx / (x + c_j) along the background, by Simpson's rule on `sub` (even)
     equal parts of each step of the plan; each point integrated from the step's start (one Taylor step)"""
+    log = log or say
     M, K = meta["M"], len(meta["nodes"])
     sub = max(2, sub + (sub % 2))
     w = np.ones(sub + 1)
@@ -135,8 +141,9 @@ def valley_node(rows):
 class Case:
     """a state with its outward and matched solvers, each on its own plan"""
 
-    def __init__(self, path, o, log=print, need=("out", "m")):
+    def __init__(self, path, o, log=None, need=("out", "m")):
         from hpkernel.driver import load
+        log = log or say
         self.path, self.log = path, log
         self.zh, self.zl, self.meta = load(path)
         self.threads = int(o.get("threads", 6))
@@ -271,8 +278,13 @@ def cmd_d315(args, o):
 
 
 def logdet_matrix(Mh, Ml, lu):
-    """sign and ln|det| of a double-double matrix (hi, lo): quad-double LU (mode_qd.qd_det) or the equilibrated
-    float64 LU (mode_scale.scaled_det)"""
+    """sign, ln|det|, min and max |u_kk| of a double-double matrix (hi, lo): multidouble's double-double LU with
+    partial pivoting (dd_logdet, the kernel mode_det's DDLu), its quad-double LU after power-of-two equilibration
+    (mode_qd.qd_det), or the equilibrated float64 LU (mode_scale.scaled_det)"""
+    if lu == "dd":
+        import multidouble
+        sg, la, pmin, pmax = multidouble.dd_logdet(np.ascontiguousarray(Mh), np.ascontiguousarray(Ml), par=True)
+        return float(sg), float(la), float(pmin), float(pmax)
     if lu == "qd":
         import mode_qd
         d = mode_qd.qd_det(Mh, Ml)
@@ -282,13 +294,10 @@ def logdet_matrix(Mh, Ml, lu):
     return d["sign"], d["ln"], d["pmin"], d["pmax"]
 
 
-def has_qd():
-    try:
-        import mode_qd
-        mode_qd._qd_logdet()
-        return True
-    except Exception:
-        return False
+def default_lu():
+    """dd when this multidouble has dd_logdet (5.1.0, the commit hp/pyproject.toml pins), else f64"""
+    import multidouble
+    return "dd" if hasattr(multidouble, "dd_logdet") else "f64"
 
 
 def cmd_planted(args, o):
@@ -298,9 +307,10 @@ def cmd_planted(args, o):
     w = writer(out)
     mut = o.get("mutate")
     lam_star = float(o.get("lam_star", 5.0))
-    lu = o.get("lu", "qd" if has_qd() else "f64")
+    lu = o.get("lu", default_lu())
     if lu == "f64":
-        print("planted: no quad-double logdet in this multidouble; the equilibrated float64 LU is used", flush=True)
+        print("planted: no dd_logdet in this multidouble (older than 5.1.0); the equilibrated float64 LU is used",
+              flush=True)
     c = Case(path, o, need=("out", "m"))
     s = c.out if mut == "outward" else c.mat
     M, K = c.M, c.K
@@ -321,8 +331,8 @@ def cmd_planted(args, o):
         if lam not in cache:
             t = time.time()
             Mh, Ml = s.mode_matrix(c.zh, c.zl, float(lam), 0.0)
-            Mh, Ml = np.array(Mh), np.array(Ml)
-            ch, cl = dd_add(Mh[:, jcol], Ml[:, jcol], -vh, -vl)
+            Mh, Ml = np.asarray(Mh), np.asarray(Ml)                 # the kernel's own arrays, changed in place
+            ch, cl = dd_add(np.ascontiguousarray(Mh[:, jcol]), np.ascontiguousarray(Ml[:, jcol]), -vh, -vl)
             Mh[:, jcol], Ml[:, jcol] = ch, cl
             sg, la, pmin, pmax = logdet_matrix(Mh, Ml, lu)
             cache[lam] = (sg, la)
@@ -386,6 +396,138 @@ def cmd_identity(args, o):
     return 0 if ok else 1
 
 
+def toy_A(x, lam, P):
+    """the toy's coefficient matrix at x: field 0 has the valley's rate (lam - kappa) / (gap + beta (x - xv)^2), field 1
+    decays at lam / 2, fields 2 and 3 are lam-independent, and a fixed coupling C ties them"""
+    q = 1.0 / (P["gap"] + P["beta"] * (x - P["xv"]) ** 2)
+    return np.diag([(lam - P["kappa"]) * q, -0.5 * lam, 0.3, -0.2]) + P["C"]
+
+
+def toy_transfers(lam, P, prec):
+    """per segment b = 1..K-1, the transfer over it (outward) and its inverse integrated inward, as products of
+    exponentials of A at the steps' midpoints: float64 (prec None, scipy's expm) or mpmath at prec digits (the truth)"""
+    import mpmath as mp
+    from scipy.linalg import expm
+    out, inw = [], []
+    for b in range(1, len(P["nodes"])):
+        xs = np.linspace(P["nodes"][b - 1], P["nodes"][b], P["steps"][b - 1] + 1)
+        if prec is None:
+            F, G = np.eye(4), np.eye(4)
+            for k in range(len(xs) - 1):
+                h, xm = xs[k + 1] - xs[k], 0.5 * (xs[k] + xs[k + 1])
+                A = toy_A(xm, lam, P)
+                F = expm(A * h) @ F
+                G = G @ expm(-A * h)
+            out.append(F)
+            inw.append(G)
+        else:
+            with mp.workdps(prec):
+                F = mp.eye(4)
+                for k in range(len(xs) - 1):
+                    h, xm = mp.mpf(xs[k + 1]) - mp.mpf(xs[k]), (mp.mpf(xs[k]) + mp.mpf(xs[k + 1])) / 2
+                    A = mp.matrix(toy_A(float(xm), 0.0, P).tolist())
+                    q = 1 / (mp.mpf(P["gap"]) + mp.mpf(P["beta"]) * (xm - mp.mpf(P["xv"])) ** 2)
+                    A[0, 0] = (mp.mpf(lam) - mp.mpf(P["kappa"])) * q + mp.mpf(P["C"][0, 0])
+                    A[1, 1] = -mp.mpf(lam) / 2 + mp.mpf(P["C"][1, 1])
+                    F = mp.expm(A * h) * F
+                out.append(F)
+                inw.append(None)
+    return out, inw
+
+
+def toy_matrix(lam, P, m, H, prec=None):
+    """the toy's multiple-shooting matrix with segments past node m inward (m = K - 1: all outward), centre block C0
+    (4 x 2) and horizon block H (4 x 2), float64"""
+    K = len(P["nodes"])
+    n = 4 * (K + 1)
+    out, inw = toy_transfers(lam, P, None)
+    A = np.zeros((n, n))
+    c0 = lambda i: 2 + 4 * i
+    A[0:4, 0:2] = P["C0"]
+    A[0:4, c0(0):c0(0) + 4] = -np.eye(4)
+    for b in range(1, K):
+        r = slice(4 * b, 4 * b + 4)
+        if b <= m:
+            A[r, c0(b - 1):c0(b - 1) + 4] = out[b - 1]
+            A[r, c0(b):c0(b) + 4] = -np.eye(4)
+        else:
+            A[r, c0(b):c0(b) + 4] = inw[b - 1]
+            A[r, c0(b - 1):c0(b - 1) + 4] = -np.eye(4)
+    A[4 * K:4 * K + 4, c0(K - 1):c0(K - 1) + 4] = -np.eye(4)
+    A[4 * K:4 * K + 4, c0(K):c0(K) + 2] = H
+    return A
+
+
+def toy_T(P):
+    """the valley segment's int dx / (gap + beta (x - xv)^2)"""
+    s = math.sqrt(P["gap"] * P["beta"])
+    a, b = P["nodes"][2] - P["xv"], P["nodes"][3] - P["xv"]
+    k = math.sqrt(P["beta"] / P["gap"])
+    return (math.atan(b * k) - math.atan(a * k)) / s
+
+
+def toy_case(lam_star, mutate=None, gap=2e-3):
+    """the toy's parameters and its horizon block H(lam) = H0 + (lam - lam*) H1, with H0's first column the centre
+    solutions' combination at lam* computed at 60 digits, so that the exact Evans matrix is singular at lam*"""
+    import mpmath as mp
+    rng = np.random.default_rng(1083)
+    P = dict(gap=gap, beta=40.0, xv=0.45, kappa=0.6, C=0.1 * rng.standard_normal((4, 4)),
+             nodes=[0.0, 0.2, 0.4, 0.5, 0.7, 1.0], steps=[40, 40, 400, 40, 60], C0=rng.standard_normal((4, 2)))
+    lp = lam_star + (1e-6 if mutate == "shift" else 0.0)
+    out, _ = toy_transfers(lp, P, 60)
+    with mp.workdps(60):
+        Y = mp.matrix(P["C0"].tolist())
+        for F in out:
+            Y = F * Y
+        v = Y[:, 0] + Y[:, 1] / 2
+        v = v / mp.norm(v)
+    H0 = np.column_stack([np.array([float(t) for t in v]), rng.standard_normal(4)])
+    H1 = rng.standard_normal((4, 2))
+    return P, (lambda lam: H0 + (lam - lam_star) * H1)
+
+
+def cmd_toy(args, o):
+    """the planted toy (no kernel): a four-field linear system with a valley and a root planted at lam* = 5;
+    outward and matched determinants in float64, roots by brentq. The valley stretches field 0 by exp((lam - 0.6) T),
+    T = toy_T (10.1 at gap 2e-3: e^44 at lam*, past float64's 1/eps; 1.35 at gap 0.05)"""
+    from scipy.optimize import brentq
+    lam_star = 5.0
+    mut = o.get("mutate")
+    P, H = toy_case(lam_star, mutate=mut, gap=float(o.get("gap", 2e-3)))
+    K = len(P["nodes"])
+    m = 2                                          # the valley segment 3 (0.4 -> 0.5) runs inward from node 3 to 2
+
+    def det(lam, mm):
+        s, l = np.linalg.slogdet(toy_matrix(lam, P, mm, H(lam)))
+        return s, l
+
+    def root(mm):
+        for w in (1e-4, 1e-3, 1e-2):
+            a, b = lam_star - w, lam_star + w
+            (sa, la), (sb, lb) = det(a, mm), det(b, mm)
+            if sa != sb:
+                ref = 0.5 * (la + lb)
+                return brentq(lambda l: det(l, mm)[0] * math.exp(det(l, mm)[1] - ref), a, b, xtol=1e-14, rtol=1e-15)
+        return None
+
+    rm, ro = root(m), root(K - 1)
+    em = abs(rm - lam_star) if rm is not None else None
+    eo = abs(ro - lam_star) if ro is not None else None
+    # the identity at a lam where both are resolved: ln|D_out| - ln|D_m| = sum_(b>m) ln det Phi_b, Liouville
+    lam1 = 1.0
+    out, _ = toy_transfers(lam1, P, None)
+    liou = sum(np.linalg.slogdet(out[b - 1])[1] for b in range(m + 1, K))
+    so, lo = det(lam1, K - 1)
+    sm, lm = det(lam1, m)
+    ident = abs((lo - lm) - liou)
+    ok = em is not None and em <= 1e-9 and ident <= 1e-8 and so == sm
+    print(f"toy (gap {P['gap']}, T {toy_T(P):.2f}{', mutate ' + mut if mut else ''}): "
+          f"matched root {rm!r} (|err| {em}), outward root {ro!r} (|err| {eo}); identity at lam 1: signs "
+          f"{so:+.0f} {sm:+.0f}, ln|D_out| - ln|D_m| - sum ln det Phi_b = {ident:.1e}: {'PASS' if ok else 'FAIL'}",
+          flush=True)
+    return 0 if ok else 1
+
+
 def main():
     from raw_out import pop_allow, require_raw
     argv = sys.argv[1:]
@@ -395,10 +537,10 @@ def main():
         print(__doc__)
         return 2
     cmd, rest = args[0], args[1:]
-    if cmd != "valley":
+    if cmd not in ("valley", "toy"):
         require_raw(rest[0], allow=allow)
     fn = dict(valley=cmd_valley, det=cmd_det, root=cmd_root, four=cmd_four, d315=cmd_d315, planted=cmd_planted,
-              identity=cmd_identity).get(cmd)
+              identity=cmd_identity, toy=cmd_toy).get(cmd)
     if fn is None:
         print(__doc__)
         return 2
