@@ -13,6 +13,10 @@ with a floor of 10^-(dps - 6) |R_1|. A value is valid when |R_1| >= 10 sigma_mp,
     python3 value_mp.py check2 CACHE.jsonl [--n=1]         check 2: R_1 at (34, 40, margin 12) against (42, 50, 14)
     python3 value_mp.py batch CACHE ROWS --points="A,w;A,w" [--procs=N]   value the points, write every row to ROWS,
         append the valued ones to CACHE (as argcount reads it: later records of a key win)
+
+At its rounding floor the Newton solve skips a Jacobian refresh that cannot change the next step's v, in the solves
+whose Jacobian is not used afterwards (#1084: solve()'s floor and keep_J); --floor=0 or VALUE_MP_FLOOR=0 runs it as
+before, call for call.
 """
 import json
 import os
@@ -26,25 +30,59 @@ sys.path.insert(0, HERE)
 import inner_mp as IM  # noqa: E402
 
 PROGRESS = os.environ.get("VALUE_MP_PROGRESS") == "1"
+FLOOR = os.environ.get("VALUE_MP_FLOOR", "1") != "0"     # VALUE_MP_FLOOR=0 (or --floor=0): the solve before #1084
+# #1084: a refresh is skipped when the fresh Jacobian's step is predicted to round to the stale one's v, i.e. when
+# |J^-1| |dJ| |dv| <= FLOOR_TAU ulps of v. dJ: central-difference noise, FLOOR_NOISE max|r| / h per entry (max|r| at
+# the Jacobian's base point, h its step), and drift, FLOOR_DRIFT |J| max_k |v_k - vJ_k| / |v_k|
+FLOOR_TAU = "0.01"
+FLOOR_NOISE = 16
+FLOOR_DRIFT = 10
 
 
-def solve(A, wf, v0, r1, dps, p, iters=8, hrel="1e-12", margin=12, J=None, chord="1e-4", M=3, damp=0):
+def _nrm(B):
+    """the infinity norm of an mp.matrix"""
+    return max(sum(abs(B[i, k]) for k in range(B.cols)) for i in range(B.rows))
+
+
+def _shift_ulps(J3, base, v, dv):
+    """the predicted max_k |dv'_k - dv_k| / ulp(v_k) between this Jacobian's step dv and a fresh one's dv' at v"""
+    nJ, hJ, vJ = base
+    drift = max(abs(a - b) / abs(a) if a else mp.inf for a, b in zip(v, vJ))
+    dJ = J3.rows * FLOOR_NOISE * nJ / hJ + FLOOR_DRIFT * _nrm(J3) * drift
+    ddv = _nrm(mp.inverse(J3)) * dJ * max(abs(x) for x in dv)
+    return max(ddv / mp.ldexp(mp.mpf(1), mp.mag(x) - mp.mp.prec) if x else mp.inf for x in v)
+
+
+def solve(A, wf, v0, r1, dps, p, iters=8, hrel="1e-12", margin=12, J=None, chord="1e-4", M=3, damp=0, floor=None,
+          keep_J=True, trace=None):
     """Newton on r_3 = ... = r_M = 0 for v = (B_3, C_3, ..., B_M, C_M) at precision dps, with chord steps
     (Shamanskii): the Jacobian (central differences, 2(M - 1) calls) is refreshed only after a step whose contraction
     max|r'|/max|r| exceeds `chord`, or after a step that fails; J = (J1, J3) starts from a given Jacobian (the second
-    precision reuses the first's). chord=None is plain Newton. damp=k halves a step that fails with a fresh Jacobian up
-    to k times (Armijo-free backtracking on max|r|) while max|r| > 1e-12; damp=0 (M = 3's default) stops there instead.
-    Returns (R_1, (r_3, ..., r_M), v, J1, J3, info, calls)"""
+    precision reuses the first's; a third element, the base returned here, lets the floor test below use it).
+    chord=None is plain Newton. damp=k halves a step that fails with a fresh Jacobian up to k times (Armijo-free
+    backtracking on max|r|) while max|r| > 1e-12; damp=0 (M = 3's default) stops there instead.
+    floor (#1084; None reads VALUE_MP_FLOOR): with keep_J=False (the caller does not use the returned J), a due refresh
+    is skipped when _shift_ulps predicts that the fresh Jacobian's step rounds to the stale one's v (at the rounding
+    floor, with a Jacobian formed there); the stale step then stands for the fresh one, and its failure ends the solve.
+    A step repeated to the bit (a failed step retried after a refresh) costs no call. floor=False is the solve before
+    #1084, call for call. trace: a list that gets ("jac", max|r|, shift or None) per refresh and ("skip", max|r|,
+    shift) per skipped one (shift: _shift_ulps, where tested).
+    Returns (R_1, (r_3, ..., r_M), v, J1, J3, info, calls, base): base = (max|r|, h, v) at J's base point"""
     mp.mp.dps = dps
     n = M - 1                                   # unknowns, and rows r_3 .. r_M (real and imaginary parts)
     v = [mp.mpf(x) for x in v0]
     assert len(v) == n
     calls = 0
+    floor = FLOOR if floor is None else floor
+    failed = None                               # (vn, rn, info) of the last failed step: its repeat costs no call
+    tau = mp.mpf(FLOOR_TAU)
 
     t0 = time.time()
 
     def res(vv):
         nonlocal calls
+        if failed is not None and all(a == b for a, b in zip(vv, failed[0])):
+            return failed[1], failed[2]         # the same v to the bit: the same residual (a pure function of v)
         calls += 1
         out = IM.residual_demixed([A, wf] + list(vv), M, r1, p=p, margin=margin)
         if PROGRESS:                            # VALUE_MP_PROGRESS=1: one stderr line per residual call (#1080)
@@ -52,7 +90,8 @@ def solve(A, wf, v0, r1, dps, p, iters=8, hrel="1e-12", margin=12, J=None, chord
                   f"{time.time() - t0:.0f} s", file=sys.stderr, flush=True)
         return out
 
-    def jac(vv):
+    def jac(vv, nv, s=None):
+        nonlocal base
         hs = mp.mpf(hrel) * max(max(abs(x) for x in vv), mp.mpf("1e-3"))
         cols = []
         for k in range(n):
@@ -62,24 +101,40 @@ def solve(A, wf, v0, r1, dps, p, iters=8, hrel="1e-12", margin=12, J=None, chord
             rp, _ = res(vp)
             rm, _ = res(vm)
             cols.append([(rp[i] - rm[i]) / (2 * hs) for i in range(2 + n)])
+        base = (nv, hs, list(vv))
+        if trace is not None:
+            trace.append(("jac", nv, s))           # s: the predicted shift that ruled out a skip, if one was tested
         return (mp.matrix([[cols[k][i] for k in range(n)] for i in range(2)]),
                 mp.matrix([[cols[k][2 + i] for k in range(n)] for i in range(n)]))
 
     r, info = res(v)
-    J1, J3 = J if J is not None else (None, None)
+    J1, J3 = J[:2] if J is not None else (None, None)
+    base = J[2] if J is not None and len(J) > 2 else None
     stale = J is None
     fresh = False
     tol = mp.mpf(10) ** (-(dps - 6))
     for _ in range(iters):
-        if max(abs(x) for x in r[2:]) < tol:
+        n0 = max(abs(x) for x in r[2:])
+        if n0 < tol:
             break
+        dv, s = None, None
+        if stale and floor and not keep_J and base is not None:
+            dv = mp.lu_solve(J3, mp.matrix([-x for x in r[2:]]))
+            s = _shift_ulps(J3, base, v, dv)
+            if s <= tau:                       # a fresh Jacobian's step rounds to this one's v: no refresh
+                stale, fresh = False, True
+                if trace is not None:
+                    trace.append(("skip", n0, s))
+            else:
+                dv = None
         if stale:
-            J1, J3 = jac(v)
+            J1, J3 = jac(v, n0, s)
             stale, fresh = False, True
-        dv = mp.lu_solve(J3, mp.matrix([-x for x in r[2:]]))
+        if dv is None:
+            dv = mp.lu_solve(J3, mp.matrix([-x for x in r[2:]]))
         vn = [v[k] + dv[k] for k in range(n)]
         rn, infon = res(vn)
-        n0, n1 = max(abs(x) for x in r[2:]), max(abs(x) for x in rn[2:])
+        n1 = max(abs(x) for x in rn[2:])
         if n1 >= n0 and fresh and damp and n0 > mp.mpf("1e-12"):
             t = mp.mpf(1)                  # far from the solution only: at the floor a failed step ends the solve
             for _ in range(damp):          # backtrack along the fresh Newton step
@@ -93,37 +148,43 @@ def solve(A, wf, v0, r1, dps, p, iters=8, hrel="1e-12", margin=12, J=None, chord
             if fresh:
                 break                      # no progress with a fresh Jacobian
             stale = True                   # a stale Jacobian failed: refresh and retry from v
+            if floor:
+                failed = (vn, rn, infon)
             continue
         v, r, info = vn, rn, infon
         fresh = False
         if chord is None or n1 > mp.mpf(chord) * n0:
             stale = True
     if J3 is None:
-        J1, J3 = jac(v)
-    return mp.mpc(r[0], r[1]), tuple(r[2:]), v, J1, J3, info, calls
+        J1, J3 = jac(v, max(abs(x) for x in r[2:]))
+    return mp.mpc(r[0], r[1]), tuple(r[2:]), v, J1, J3, info, calls, base
 
 
-def value_point(A, wf, f3re, f3im, r1="0.17", dps=34, dps2=42, p=40, p2=50, iters=12, chord="1e-4"):
-    return value_v(A, wf, [-2 * mp.mpf(f3im), 2 * mp.mpf(f3re)], 3, r1, dps, dps2, p, p2, iters, chord)
+def value_point(A, wf, f3re, f3im, r1="0.17", dps=34, dps2=42, p=40, p2=50, iters=12, chord="1e-4", floor=None):
+    return value_v(A, wf, [-2 * mp.mpf(f3im), 2 * mp.mpf(f3re)], 3, r1, dps, dps2, p, p2, iters, chord, floor=floor)
 
 
 def value_v(A, wf, v0, M=3, r1="0.17", dps=34, dps2=42, p=40, p2=50, iters=12, chord="1e-4", damp=None, J=None,
-            single=False, want_J=False):
+            single=False, want_J=False, floor=None):
     """R_1 at (A, w_f) with the harmonics v = (B_3, C_3, ..., B_M, C_M) solved from v0 at two precisions. J = (J1, J3)
     as nested lists of decimal strings starts the chord iteration from a given Jacobian (a walk's offset points take
     the centre's); single=True skips the second precision (sig is then the r-residual term and the floor only);
-    want_J=True returns the Jacobian used, as strings, in out["J"] (not JSON-written by the CLI)."""
+    want_J=True returns the Jacobian used, as strings, in out["J"] (not JSON-written by the CLI). floor: solve()'s
+    stop at the rounding floor (#1084), in the solves whose Jacobian is not used afterwards: the second precision's,
+    and single=True's without want_J (whose sig then takes dr1 from the Jacobian the chord steps used)."""
     t0 = time.time()
     mp.mp.dps = dps
     v0 = [mp.mpf(x) for x in v0]
     damp = (0 if M == 3 else 8) if damp is None else damp       # M = 3 keeps #1076's undamped solve
     Jm = None if J is None else tuple(mp.matrix([[mp.mpf(x) for x in row] for row in B]) for B in J)
-    R, r3, v, J1, J3, info, n1 = solve(A, wf, v0, r1, dps, p, iters, chord=chord, M=M, damp=damp, J=Jm)
+    R, r3, v, J1, J3, info, n1, base = solve(A, wf, v0, r1, dps, p, iters, chord=chord, M=M, damp=damp, J=Jm,
+                                             floor=floor, keep_J=want_J or not single)
     if single:
         R2, r32, v2, info2, n2 = R, r3, v, info, 0
     else:
-        R2, r32, v2, _, _, info2, n2 = solve(A, wf, [str(x) for x in v], r1, dps2, p2, iters,
-                                             J=None if chord is None else (J1, J3), chord=chord, M=M, damp=damp)
+        R2, r32, v2, _, _, info2, n2, _ = solve(A, wf, [str(x) for x in v], r1, dps2, p2, iters,
+                                                J=None if chord is None else (J1, J3, base), chord=chord, M=M,
+                                                damp=damp, floor=floor, keep_J=False)
     mp.mp.dps = dps2
     dR = abs(R2 - R)
     if J1 is not None and J3 is not None:
@@ -161,6 +222,8 @@ def main():
             IM.MUTATE.add(m_)
     kw = dict(r1=opts.get("r1", "0.17"), dps=int(opts.get("dps", 34)), dps2=int(opts.get("dps2", 42)),
               p=int(opts.get("order", 40)), p2=int(opts.get("order2", 50)), iters=int(opts.get("iters", 8)))
+    if "floor" in opts:                             # --floor=0: the solve before #1084 (as VALUE_MP_FLOOR=0)
+        kw["floor"] = opts["floor"] != "0"
     if args and args[0] == "point":
         A, wf, f3re, f3im = args[1:5]
         print(json.dumps(value_point(A, wf, f3re, f3im, **kw)), flush=True)
