@@ -34,7 +34,9 @@ repository cloned beside it (`git clone https://github.com/nmoinvaz/choptuik-lar
     D=../choptuik-large-d-raw/I1079-macm3/levers/data
     python3 lean/tools/export_krawczyk.py certM $D/A_M_box_M3x1E2_h1e-12_w1e-13.json M3exc1 lean/DSS/M3exc1.lean \
         --point=$D/A_M_point_M3x1E2.json --proof=solver/proof --label="raw I1079-macm3/levers/data (choptuik-large-d-raw 143d4d5b)"
-    # M3exc2: A_M_box_M3x2E2_h1e-12_w1e-12.json and A_M_point_M3x2E2.json; the controls with --widen=1000000
+    # M3exc2: raw I1081-dh610/record_c/A_M_box_M3x2E2_h1e-13_w1e-13.json and its A_M_point_M3x2E2.json (label
+    # "raw I1081-dh610/record_c (choptuik-large-d-raw b4b2b018)"), the certificate of record (#1081); the controls
+    # with --widen=1000000
 
 Checks (the independent review of #1077, `notes/LEAN_REVIEW_1077.md`), from the repository root unless stated:
 
