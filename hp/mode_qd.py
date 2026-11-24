@@ -30,9 +30,19 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, HERE)
 
 
+def _qd_logdet():
+    """multidouble's quad-double log-determinant with its control argument: the Rust binding _md.qd_logdet takes
+    control, while the Python wrapper of the pinned 8c4360ac (multidouble 5.1.0) does not forward it (dh370, #1078)"""
+    import multidouble
+    md = getattr(multidouble, "_md", None)
+    if md is not None and hasattr(md, "qd_logdet"):
+        return md.qd_logdet
+    return multidouble.qd_logdet
+
+
 def qd_det(Mh, Ml, equil=True, control="none", par=True):
-    from multidouble import qd_logdet
     from mode_scale import ruiz
+    qd_logdet = _qd_logdet()
     Mh, Ml = np.asarray(Mh, float), np.asarray(Ml, float)
     if equil:
         r, c = ruiz(Mh + Ml)
