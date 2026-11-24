@@ -36,6 +36,10 @@ usage: python ell_overlap.py run REC.jsonl STATE.npy D LAM_R LO HI --mode I [--w
        python ell_overlap.py refit --records A.jsonl,B.jsonl --reads D1=read1.txt,... --start D:I --ranges lo:hi,...
   refit: the falling mode's sigma, followed from sv_reg_small[I] at D by mode_tracker.py's identity rule (the change of
   n_null), against lambda_1 from the readings' last "robust change" line; ln sigma = ln A + p ln lambda_1 per range.
+       python ell_overlap.py floor REC.jsonl STATE.npy D [--out F.jsonl]
+  floor: R1's rounding floor (run's three random x, M(0) x with the complex step 1e-20 against 3e-20); exit 0 when R1 is
+  at most 10 times it. Also the full M(0) against J[:n, :n] entry by entry. (Added after R1 missed its first bar, 1e-12,
+  at k_c 87, D 21.125: 7.8e-11; the bar 10 x floor was written before the floor was measured.)
   --mode I: the falling mode's index in the record's sv_reg_small (0 = the smallest regular value).
   run exits 0 when R1-R4, E1 and E2 pass and J's four smallest regular values match the record's (relative 1e-3), 1 if
   not; the reading is printed and recorded, not exit-coded. planted runs a synthetic pencil M(lam) = A - lam B (n 120:
@@ -401,7 +405,7 @@ def write(path, rec):
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("cmd", choices=["run", "planted", "refit"])
+    ap.add_argument("cmd", choices=["run", "planted", "refit", "floor"])
     ap.add_argument("args", nargs="*")
     ap.add_argument("--mode", type=int, default=1)
     ap.add_argument("--wrong", default="-0.05,0.05")
@@ -436,7 +440,8 @@ def main():
             write(a.out, dict(case=name, slope=slope, want=want, mutate=MUT, **{k: v for k, v in r.items()}))
         log("planted: " + ("PASS" if ok else "FAIL"))
         sys.exit(0 if ok else 1)
-    recf, st, D, lam_r, lo, hi = a.args[0], a.args[1], float(a.args[2]), float(a.args[3]), float(a.args[4]), float(a.args[5])
+    recf, st, D = a.args[0], a.args[1], float(a.args[2])
+    lam_r, lo, hi = (float(v) for v in a.args[3:6]) if a.cmd == "run" else (None, None, None)
     from dss_ell import DSSEll, NODES_STD
     rec = [json.loads(l) for l in open(recf) if json.loads(l).get("D") == D][-1]
     z = np.load(st)
@@ -450,6 +455,26 @@ def main():
         f"{rec['steps']}): {'the record system' if same else 'NOT the record system'}; state {os.path.basename(st)}")
     if not same:
         sys.exit(3)
+    if a.cmd == "floor":
+        # R1's rounding floor: the same matvec M(0) x with the complex step h scaled by 3 (exact in exact arithmetic,
+        # other rounding), on run's three random x; and the full M(0) against J[:n, :n] entry by entry
+        P = EllProblem(S, z)
+        x = np.random.default_rng(7).standard_normal((3, P.n))
+        h3 = lambda v: mode_apply(S, z, 0.0, v, h=3e-20)
+        with np.errstate(all="ignore"):
+            fl = max(float(np.linalg.norm(P.Mapply(0.0, xi) - h3(xi)) / np.linalg.norm(P.Mapply(0.0, xi))) for xi in x)
+        J = P.J()
+        r1 = max(float(np.linalg.norm(P.Mapply(0.0, xi) - J[:P.n, :P.n] @ xi) / np.linalg.norm(J[:P.n, :P.n] @ xi)) for xi in x)
+        M0 = P.Mfull(0.0)
+        dif = M0 - J[:P.n, :P.n]
+        full = dict(max_abs=float(np.max(np.abs(dif))), max_J=float(np.max(np.abs(J))),
+                    frob=float(np.linalg.norm(dif) / np.linalg.norm(J[:P.n, :P.n])), bitwise=bool(not np.any(dif)))
+        ok = r1 <= 10 * fl
+        log(f"floor: |M(0)x (h 1e-20) - M(0)x (h 3e-20)| / |M(0)x| {fl:.2e}; R1 {r1:.2e}; R1 <= 10 x floor: "
+            f"{'OK' if ok else 'BAD'}. Full M(0) - J[:n,:n]: max |diff| {full['max_abs']:.2e} (max |J| {full['max_J']:.3g}), "
+            f"Frobenius relative {full['frob']:.2e}, bitwise equal {full['bitwise']}; peak RSS {rss_gb():.2f} GB")
+        write(a.out, dict(cmd="floor", D=D, kc=rec["kc"], state=os.path.basename(st), floor=fl, R1=r1, ok=ok, **full))
+        sys.exit(0 if ok else 1)
     r = analyze(EllProblem(S, z), lam_r, lo, hi, a.mode, wrong=wrong, rec_sv=rec["sv_reg_small"])
     r.update(D=D, kc=rec["kc"], state=os.path.basename(st), record=os.path.basename(recf), F=F, mutate=MUT,
              sv_reg_small_rec=rec["sv_reg_small"], seconds=round(time.time() - T0))
