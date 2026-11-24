@@ -1061,22 +1061,26 @@ fundamental zero, the status is *certified*. The trusted code is the fundamental
 | | first zero | second zero |
 |---|---|---|
 | centre p̂ (A, ω/ω∞) | 3.446218246366727…, 0.347606965217407… | 3.526473056695715…, 0.211497981391215… |
-| box (h, w) | (10⁻¹², 10⁻¹³) | (10⁻¹², 10⁻¹²) |
-| Krawczyk margins of the stored files | +0.702, +0.758, +0.997, +0.998 | +0.943, +0.945, +0.988, +0.995 |
+| box (h, w) | (10⁻¹², 10⁻¹³) | (10⁻¹³, 10⁻¹³) |
+| Krawczyk margins of the stored files | +0.702, +0.758, +0.997, +0.998 | +0.971, +0.953, +0.998, +0.999 |
 | (H0) start data, a second call over p̂ ± 10⁻⁹ | N = 95, contraction 0.38 | N = 94, contraction 0.39 |
 | (H1) lemma S; old sector lemma, over p̂ ± 10⁻⁶ | 0.6961; 0.6839 | 0.6782; 0.7008 |
-| (H2) 6b₁ covering over p̂ ± 10⁻¹¹ | 183 discs, X_c's hull inside with slack 8.36×10⁻¹² | 183 discs, slack 8.28×10⁻¹² |
+| (H2) 6b₁ covering over p̂ ± 10⁻¹¹ | 183 discs, X_c's hull inside with slack 8.36×10⁻¹² | 183 discs, slack 9.83×10⁻¹² |
 | (H3) ρ₆ₐ | 0.01365 | 0.01259 |
 
-**The certificates are the stored files.** The box and point runs are raw `I1079-macm3/levers/data/`:
-- first zero: `A_M_box_M3x1E2_h1e-12_w1e-13.json` (sha256 5a736fd2…) and `A_M_point_M3x1E2.json` (8d7337a8…);
-- second zero: `A_M_box_M3x2E2_h1e-12_w1e-12.json` (2a5c4d32…) and `A_M_point_M3x2E2.json` (1f1241c4…).
+**The certificates are the stored files.** They are the box and point runs:
+- first zero: raw `I1079-macm3/levers/data/`, `A_M_box_M3x1E2_h1e-12_w1e-13.json` (sha256 5a736fd2…) and
+  `A_M_point_M3x1E2.json` (8d7337a8…);
+- second zero: raw `I1081-dh610/record_c/`, `A_M_box_M3x2E2_h1e-13_w1e-13.json` (7cd7c809…) and
+  `A_M_point_M3x2E2.json` (f060ecff…).
 
-They pass where they are loaded (macOS and Linux). The margins belong to those files, not to the zero and the box. The
-box run depends on the last bits of its Lohner frames. At the first zero every rerun passed: three machines, and six
-runs with the frames moved by one unit in the last place. At the second zero three machines passed, but most runs with
-the frames moved did not. So a rerun that fails its own bound there is not a failed reproduction while the stored
-files cross-load (#111's rule read this way). The review is notes/EXCITED_REVIEW_1079.md, with its checks in
+They pass where they are loaded (Linux and macOS). Each box run depends on the last bits of its Lohner frames, the
+float64 matrices Q, and not on the working precision: at 384 bits the margins equal those at 256 to the printed digits
+(#1081). At the first zero every rerun passed: three machines, and six runs with the frames moved by one unit in the
+last place. The second zero's first certificate, on the box (10⁻¹², 10⁻¹²), passed on three machines but in only 2 of
+6 runs with the frames moved (smallest margin −0.774). Its certificate of record, on (10⁻¹³, 10⁻¹³), passes in 6 of 6
+such runs with every margin above +0.82. So its reruns reproduce it, and its zero enclosure is narrower: A in
+[3.52647305669571, 3.52647305669572], ω/ω∞ in [0.211497981391210, 0.211497981391221]. The review is notes/EXCITED_REVIEW_1079.md, with its checks in
 `solver/proof/review_1079/`; the Linux rerun is raw `I1079-dh610/`.
 
 Whether these zeros persist as M grows is not settled (#1080). The three earlier M = 3 candidates of #1020 did not
