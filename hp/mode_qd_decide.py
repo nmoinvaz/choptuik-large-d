@@ -81,7 +81,7 @@ def read_rows(path):
         return [json.loads(line) for line in fh if line.strip()]
 
 
-def show(name, rows, chk, log):
+def show(name, chk, log):
     log(f"{name}: lam, sign, ln|det| (fit sign, ln|det|; |dev|)")
     for l, s, la, (ps, pl), d in zip(chk["lam"], chk["sign"], chk["ln"], chk["pred"], chk["dev"]):
         log(f"  {l!r:20} {s:+.0f} {la:.9f}   fit {ps:+.0f} {pl:.9f}   {d:.2e}")
@@ -102,7 +102,7 @@ def verdict(outdir, lams, log=print):
             continue
         last = {r["lam"]: r for r in rows}                     # a rerun's row replaces an earlier one
         chk = linear_check([(l, last[l]["sign"], last[l]["ln"]) for l in lams])
-        show(f"{e} entries" + (" (the control)" if e == "dd" else ""), rows, chk, log)
+        show(f"{e} entries" + (" (the control)" if e == "dd" else ""), chk, log)
         out[e] = chk
     qd_ok = out.get("qd") is not None and out["qd"]["ok"]
     dd_jag = out.get("dd") is not None and not out["dd"]["ok"]
