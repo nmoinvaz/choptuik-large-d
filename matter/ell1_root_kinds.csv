@@ -108,3 +108,4 @@ D,kc,build,value,kind,reason
 21.03125,79,linux,0.900194,lambda_1,by position: the only robust change in 0.885-0.915 on the restarted k_c 79 leap's state (dh610 ac165ec6)
 21.21875,71,linux,0.832037,lambda_1_scout,k_c 71 scout (dh170 kc71_scout step 2): the only robust change in 0.820-0.850; 0.0026 from the k_c 79 trend shifted by -0.0077
 21.0625,79,linux,0.891249,lambda_1,by position: the only robust change in 0.875-0.905 on the restarted k_c 79 leap's state (dh610 6499f7d5)
+21.0,87,linux,0.911685,lambda_1,"by position: the only robust change in 0.895-0.925 at k_c 87 (dh610 kc87_d21); k_c 79 0.909538: +0.0021, within the regrid floor 0.0026"
