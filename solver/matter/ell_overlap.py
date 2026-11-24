@@ -45,6 +45,11 @@ usage: python ell_overlap.py run REC.jsonl STATE.npy D LAM_R LO HI --mode I [--w
   diag: |M(lam) x| along lam for J's four smallest regular right singular vectors, for v1 and for v1's part on J's
   directions with sigma >= 100 sigma_m (the positive control, which must be V-shaped at lambda_1; exit 1 if not).
   Added after run's wrong-lambda controls came out above 0.3 at k_c 87, D 21.125, to find the cause.
+       python ell_overlap.py geom REC.jsonl STATE.npy D LAM_R --mode I [--out F.jsonl]
+  geom: J's four weak modes' Delta components and M(0) images; v1 without M(lambda_1)'s own null space (v1c, checked
+  V-shaped; exit 1 if not); the lambda_1 mode's J vector with its Delta component, w* = (P_e v1c, delta*), its O* and
+  rho*, and the same from M(lambda_1 - 0.05)'s smallest regular vector; and s(lam), the smallest singular value of M(lam)
+  on span{x_m0..x_m3, t}. Added after diag's positive control failed: J's null vectors carry Delta components.
   --mode I: the falling mode's index in the record's sv_reg_small (0 = the smallest regular value).
   run exits 0 when R1-R4, E1 and E2 pass and J's four smallest regular values match the record's (relative 1e-3), 1 if
   not; the reading is printed and recorded, not exit-coded. planted runs a synthetic pencil M(lam) = A - lam B (n 120:
@@ -413,7 +418,7 @@ def write(path, rec):
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("cmd", choices=["run", "planted", "refit", "floor", "diag"])
+    ap.add_argument("cmd", choices=["run", "planted", "refit", "floor", "diag", "geom"])
     ap.add_argument("args", nargs="*")
     ap.add_argument("--mode", type=int, default=1)
     ap.add_argument("--wrong", default="-0.05,0.05")
@@ -449,7 +454,7 @@ def main():
         log("planted: " + ("PASS" if ok else "FAIL"))
         sys.exit(0 if ok else 1)
     recf, st, D = a.args[0], a.args[1], float(a.args[2])
-    lam_r, lo, hi = (float(v) for v in a.args[3:6]) if a.cmd == "run" else (float(a.args[3]) if a.cmd == "diag" else None, None, None)
+    lam_r, lo, hi = (float(v) for v in a.args[3:6]) if a.cmd == "run" else (float(a.args[3]) if a.cmd in ("diag", "geom") else None, None, None)
     from dss_ell import DSSEll, NODES_STD
     rec = [json.loads(l) for l in open(recf) if json.loads(l).get("D") == D][-1]
     z = np.load(st)
@@ -463,6 +468,79 @@ def main():
         f"{rec['steps']}): {'the record system' if same else 'NOT the record system'}; state {os.path.basename(st)}")
     if not same:
         sys.exit(3)
+    if a.cmd == "geom":
+        # after diag's positive control failed (#1085): J's null vectors carry Delta components, so J's null space is not
+        # M's. Here M's own null space (sigma(M(lambda_1)) <= 1e-12 sigma_max) is removed from v1, and the J vector of the
+        # lambda_1 mode gets the Delta component the bordered structure needs: w* = (P_e v1c, delta*), delta* minimising
+        # |M(0) P_e v1c + b delta|. Written before it ran: H gives O* = |c_m| / sqrt(1 - w_Jnull) >= 0.9 and
+        # rho* = |J w*| <= 3 sigma_m; the same construction from M(lambda_1 - 0.05)'s smallest regular vector <= 0.3.
+        # Also s(lam) = sigma_min(M(lam) Q), Q an orthonormal basis of span{x_m0..x_m3, t}: H gives a dip at lambda_1,
+        # s(lambda_1) <= 0.1 min(s(lambda_1 -+ 0.05)).
+        P = EllProblem(S, z)
+        n = P.n
+        t = P.t()
+        J = P.J()
+        b = J[:n, n].copy()
+        _, s, Vt = np.linalg.svd(J, full_matrices=False)
+        reg = np.nonzero(s > CUT * s[0])[0]
+        small = reg[-4:][::-1]
+        Jnull = s <= CUT * s[0]
+        sm = s[small[a.mode]]
+        for i, g in enumerate(small):
+            x = Vt[g, :n]
+            log(f"  J mode m{i}: sigma {s[g]:.4e}, Delta component {Vt[g, n]:+.3e}, |x| {np.linalg.norm(x):.4f}, "
+                f"|cos(x, t)| {abs(x @ t) / np.linalg.norm(x) / np.linalg.norm(t):.3e}, |M(0) x| / |x| "
+                f"{np.linalg.norm(J[:n, :n] @ x) / np.linalg.norm(x):.3e}, |b| |Delta comp| / |x| {np.linalg.norm(b) * abs(Vt[g, n]) / np.linalg.norm(x):.3e}")
+        mu, _, v1, _, _ = pencil_vec(P, lam_r)
+        lam1 = lam_r + mu
+
+        def mjunk(lam):
+            _, sw, Vw = sl.svd(P.Mfull(lam), full_matrices=False, overwrite_a=True, check_finite=False)
+            nj = sw <= CUT * sw[0]
+            return sw, Vw[nj].copy(), Vw[np.nonzero(~nj)[0][-1]].copy()
+        sw1, N1, _ = mjunk(lam1)
+        wj = float(np.sum((N1 @ v1) ** 2))
+        v1c = unit(v1 - N1.T @ (N1 @ v1))
+        V = [float(np.linalg.norm(P.Mapply(lam1 + d, v1c))) for d in (-0.005, 0.0, 0.005)]
+        log(f"lambda_1 {lam1:.6f}; M(lambda_1)'s null space: {N1.shape[0]} vectors; v1's weight on it {wj:.4f}; "
+            f"v1c = v1 without it: |M(lam) v1c| at lambda_1 -0.005, 0, +0.005: {V[0]:.3e}, {V[1]:.3e}, {V[2]:.3e} "
+            f"({'V-shaped' if V[1] <= 0.05 * min(V[0], V[2]) else 'NOT V-shaped'})")
+
+        def jvec(v, tag):
+            pe = v - (v[P.ep] / t[P.ep]) * t
+            Mp = J[:n, :n] @ pe
+            dl = -float(b @ Mp) / float(b @ b)
+            w = unit(np.concatenate([pe, [dl]]))
+            c = Vt @ w
+            wn = float(np.sum(c[Jnull] ** 2))
+            O = [float(abs(c[g]) / np.sqrt(max(1e-300, 1 - wn))) for g in small]
+            rho = float(np.linalg.norm(J @ w))
+            far = float(np.sum(c[s >= 100 * sm] ** 2) / max(1e-300, 1 - wn))
+            log(f"  {tag}: delta* {dl:+.3e}; O* on m0-m3 {', '.join(f'{o:.3f}' for o in O)}; weight on J's null space "
+                f"{wn:.3f}; W_far {far:.3e}; rho* {rho:.3e}, rho* / sigma_m {rho / sm:.3g}")
+            return dict(delta=dl, O=O, w_Jnull=wn, W_far=far, rho=rho, rho_ratio=rho / sm)
+        res = dict(lam1=lam1, w_Mnull=wj, V=V, n_Mnull=int(N1.shape[0]))
+        res["v1c"] = jvec(v1c, "lambda_1 mode, v1c")
+        _, _, yw = mjunk(lam1 - 0.05)
+        res["wrong"] = jvec(unit(yw), f"control: M({lam1 - 0.05:.4f})'s smallest regular vector")
+        X = np.stack([unit(Vt[g, :n]) for g in small] + [unit(t)], axis=1)
+        Q = np.linalg.qr(X)[0]
+        lams = [0.0, lam1 - 0.05, lam1 - 0.005, lam1, lam1 + 0.005, lam1 + 0.05]
+        sub = []
+        for l in lams:
+            MQ = np.stack([P.Mapply(l, Q[:, k]) for k in range(Q.shape[1])], axis=1)
+            sv_, Wv = np.linalg.svd(MQ, full_matrices=False)[1:]
+            coef = np.abs(np.linalg.lstsq(X, Q @ Wv[-1], rcond=None)[0])
+            coef = coef / np.linalg.norm(coef)
+            sub.append(dict(lam=l, s=float(sv_[-1]), coef=coef.tolist()))
+            log(f"  s({l:.4f}) = sigma_min(M Q) over span(x_m0..x_m3, t): {sv_[-1]:.3e}; minimiser's |coefficients| on "
+                f"m0, m1, m2, m3, t (unit vectors): {', '.join(f'{v:.3f}' for v in coef)}")
+        dip = sub[3]["s"] <= 0.1 * min(sub[1]["s"], sub[5]["s"])
+        res.update(subspace=sub, dip=dip)
+        log(f"reading: O* on m{a.mode} {res['v1c']['O'][a.mode]:.3f} (control {res['wrong']['O'][a.mode]:.3f}), rho* / sigma_m "
+            f"{res['v1c']['rho_ratio']:.3g}; dip of s at lambda_1: {dip}; peak RSS {rss_gb():.2f} GB")
+        write(a.out, dict(cmd="geom", D=D, kc=rec["kc"], state=os.path.basename(st), sv_reg_small=s[small].tolist(), **res))
+        sys.exit(0 if V[1] <= 0.05 * min(V[0], V[2]) else 1)
     if a.cmd == "diag":
         # the cause of run's high wrong-lambda controls (#1085): r(lam) = |M(lam) x| along lam for J's four smallest
         # regular right singular vectors (spectral parts), for v1 and for v1's part on J's directions with
