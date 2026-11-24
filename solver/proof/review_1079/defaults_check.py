@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 """Review of #1079, check 1: with the options unset, does feat/certify-excited run what main runs?
 
-    python3 review_1079/defaults_check.py [--base=origin/main] [--mutate=env]      from solver/proof
+    python3 review_1079/defaults_check.py [--base=b6d0f587] [--mutate=env]         from solver/proof
+        (the base: main before the options entered it; origin/main was the base while they were on a branch)
     python3 review_1079/defaults_check.py pathmix BOX.json POINT.json               the point/box path test
 
 Part 1 (static). For each of the three files the branch changes, the base version is read with `git show`, and the
@@ -27,12 +28,12 @@ FILES = ("certify_M.py", "lemma6_sector_M.py", "theorem_A_sets_M.py")
 # the files whose code is compared unit by unit; certify_M_lohner.py (an assert, NJ <= N) and lemma6_jump_M.py (the
 # centre in its JSON) changed after the review too and are only required to differ
 OTHER_CHANGED = ("certify_M_lohner.py", "lemma6_jump_M.py")
-EXPECT = {"certify_M.py": ["(NTAY, NJAC)", "ORDERS_SET", "box_run", "krawczyk_test", "path_for", "point_run"],
+EXPECT = {"certify_M.py": ["(NTAY, NJAC)", "ORDERS_SET", "PREC", "box_run", "krawczyk_test", "path_for", "point_run"],
           "lemma6_sector_M.py": ["main"],
           "theorem_A_sets_M.py": ["check", "main", "selftest", "verdict"]}
 # the coordinator's fixes after the review (findings 2, 3, 5, 20) added ORDERS_SET (with the NJAC > NTAY refusal),
 # box_run and point_run (the orders recorded when set) and krawczyk_test (paths and orders compared)
-OPTS = ("CERTIFY_M_NTAY", "CERTIFY_M_NJAC", "CERTIFY_M_XI1")
+OPTS = ("CERTIFY_M_NTAY", "CERTIFY_M_NJAC", "CERTIFY_M_XI1", "CERTIFY_M_PREC")
 DUMP = r"""
 import json, sys
 sys.path.insert(0, sys.argv[1])
@@ -93,7 +94,7 @@ def main():
     opts = {a.split("=", 1)[0][2:]: (a.split("=", 1)[1] if "=" in a else "1") for a in sys.argv[1:] if a.startswith("--")}
     if args and args[0] == "pathmix":
         return pathmix(args[1], args[2])
-    base = opts.get("base", "origin/main")
+    base = opts.get("base", "b6d0f587")
     ok = True
     tmp = tempfile.mkdtemp(prefix="defaults_check_")
     root = os.path.dirname(os.path.dirname(PROOF))            # the repository root: ls-tree filters by the cwd's prefix

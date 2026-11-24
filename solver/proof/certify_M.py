@@ -46,7 +46,8 @@ import certify_M_lohner as CL  # noqa: E402
 
 DATA = os.path.join(HERE, "data")
 LOGS = os.path.join(HERE, "logs")
-PREC = 256                 # integration
+PREC = int(os.environ.get("CERTIFY_M_PREC", "256"))   # integration; CERTIFY_M_PREC for #1081 (the second excited
+                                                     # zero's rerun sensitivity); the run files record it
 KPREC = 768                # Krawczyk assembly (Y and the products with the Lohner sets)
 
 # numerical zeros (double precision) used as starting points: M = 1 Theorem A(M = 1)'s centre; M = 3 nested/hier
