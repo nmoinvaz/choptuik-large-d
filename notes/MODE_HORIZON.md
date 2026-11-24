@@ -239,17 +239,18 @@ plans:
 | segments | hmax 0.05 (292 steps) | hmax 0.005 (346 steps) | hmax 0.001 (1012 steps) |
 |---|---|---|---|
 | 1–11 (x ≤ 0.4) | ≤ 1.6×10⁻⁹ | ≤ 1.6×10⁻⁹ | ≤ 2.2×10⁻¹⁰ |
-| 12 (0.4 → 0.5) | 3.5×10⁻⁷ | 1.6×10⁻¹² | 1.2×10⁻¹³ |
-| 13 (0.5 → 0.6) | −3.3×10⁻³ | 3.5×10⁻¹² | −1.2×10⁻¹⁴ |
-| 14 (0.6 → 0.7) | −0.104 | 1.0×10⁻¹¹ | −3.5×10⁻¹³ |
-| 15 (0.7 → 0.8) | −0.113 | 4.3×10⁻⁷ | −4.1×10⁻¹³ |
-| 16 (0.8 → 0.9) | −0.166 | −0.0999 | 2.6×10⁻¹² |
+| 12 (0.4 → 0.5) | 3.5×10⁻⁷ | 1.6×10⁻¹² | 6.3×10⁻¹⁴ |
+| 13 (0.5 → 0.6) | −3.3×10⁻³ | 3.5×10⁻¹² | 1.7×10⁻¹⁴ |
+| 14 (0.6 → 0.7) | −0.104 | 1.0×10⁻¹¹ | 7.5×10⁻¹⁴ |
+| 15 (0.7 → 0.8) | −0.113 | 4.3×10⁻⁷ | 4.1×10⁻¹⁴ |
+| 16 (0.8 → 0.9) | −0.166 | −0.0999 | 2.3×10⁻¹² |
 
-The entries are the change of ln det Φ_b from λ 4.5 to 4.3 minus the integral's. On the coarse plan, the four outer
-segments' changes sum to −0.385895. That is the criterion's whole discrepancy (−78.807976 + 78.422082 = −0.385894). So
-D_out = D_m ∏ det Φ_b holds for the discrete maps to about 10⁻⁶ in ln|det|, while the discrete outer transfers depart
-from the ODE's determinant until hmax 0.001. Segment 16's largest singular value at λ 4.3 is 6.07×10³ at hmax 0.05,
-1.13×10³ at hmax 0.005 and 1.62×10² at 0.001.
+The entries are ln det Φ_b(4.3) − ln det Φ_b(4.5) minus the integral's (4.3 − 4.5) I_b. The hmax 0.05 and 0.001 columns
+are `mode_matched.py blocks`; the hmax 0.005 column is the raw folder's `explore6.py`. On the coarse plan, the four
+outer segments' changes sum to −0.385895. That is the criterion's whole discrepancy (−78.807976 + 78.422082 =
+−0.385894). So D_out = D_m ∏ det Φ_b holds for the discrete maps to about 10⁻⁶ in ln|det|, while the discrete outer
+transfers depart from the ODE's determinant until hmax 0.001. Segment 16's largest singular value at λ 4.3 is 6.07×10³
+at hmax 0.05, 1.13×10³ at hmax 0.005 and 1.62×10² at 0.001.
 
 The plan is built from the background's Taylor coefficients, and these steps under-resolve the perturbations there.
 ln|D_out(4.3)| is 1974.537 at hmax 0.05, 1962.459 at 0.005 and 1958.389 at 0.001. **This bears on #1078's question
