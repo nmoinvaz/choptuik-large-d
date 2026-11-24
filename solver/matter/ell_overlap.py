@@ -499,13 +499,16 @@ def main():
             _, sw, Vw = sl.svd(P.Mfull(lam), full_matrices=False, overwrite_a=True, check_finite=False)
             nj = sw <= CUT * sw[0]
             return sw, Vw[nj].copy(), Vw[np.nonzero(~nj)[0][-1]].copy()
-        sw1, N1, _ = mjunk(lam1)
+        # M's junk from M(lambda_1 - 0.05): at lambda_1 itself the lambda_1 mode is among M's null vectors (its sigma is
+        # 1.7e-12 there; the first geom run removed it with the junk, 41f9194e, #1085)
+        sww, N1, yw = mjunk(lam1 - 0.05)
         wj = float(np.sum((N1 @ v1) ** 2))
         v1c = unit(v1 - N1.T @ (N1 @ v1))
         V = [float(np.linalg.norm(P.Mapply(lam1 + d, v1c))) for d in (-0.005, 0.0, 0.005)]
-        log(f"lambda_1 {lam1:.6f}; M(lambda_1)'s null space: {N1.shape[0]} vectors; v1's weight on it {wj:.4f}; "
+        log(f"lambda_1 {lam1:.6f}; M({lam1 - 0.05:.4f})'s null space: {N1.shape[0]} vectors; v1's weight on it {wj:.6f}; "
             f"v1c = v1 without it: |M(lam) v1c| at lambda_1 -0.005, 0, +0.005: {V[0]:.3e}, {V[1]:.3e}, {V[2]:.3e} "
-            f"({'V-shaped' if V[1] <= 0.05 * min(V[0], V[2]) else 'NOT V-shaped'})")
+            f"({'V-shaped' if V[1] <= 0.05 * min(V[0], V[2]) else 'NOT V-shaped'}); |M(0) v1c| "
+            f"{np.linalg.norm(P.Mapply(0.0, v1c)):.3e}")
 
         def jvec(v, tag):
             pe = v - (v[P.ep] / t[P.ep]) * t
@@ -521,8 +524,8 @@ def main():
                 f"{wn:.3f}; W_far {far:.3e}; rho* {rho:.3e}, rho* / sigma_m {rho / sm:.3g}")
             return dict(delta=dl, O=O, w_Jnull=wn, W_far=far, rho=rho, rho_ratio=rho / sm)
         res = dict(lam1=lam1, w_Mnull=wj, V=V, n_Mnull=int(N1.shape[0]))
+        res["v1"] = jvec(v1, "lambda_1 mode, v1 as computed")
         res["v1c"] = jvec(v1c, "lambda_1 mode, v1c")
-        _, _, yw = mjunk(lam1 - 0.05)
         res["wrong"] = jvec(unit(yw), f"control: M({lam1 - 0.05:.4f})'s smallest regular vector")
         X = np.stack([unit(Vt[g, :n]) for g in small] + [unit(t)], axis=1)
         Q = np.linalg.qr(X)[0]
