@@ -53,8 +53,8 @@ rate λ with the coefficient 1/(c − x). Near D 3 the state's c − x has a nar
 the Mac, along the plan, min over τ of c − x is 7.26×10⁻⁵ at x 0.01444 (τ point 10) in the segment 0.01 → 0.02, which
 takes 675 of the plan's 1269 steps. On the D 3.15 state (blob 9e683a14) the smallest c − x is 5.0×10⁻³, at x 0.0254.
 
-**The growth across it.** For a p perturbation at the τ point j, the λ term alone gives a growth of exp(λ T_j) across
-a segment, with T_j = ∫ dx / (c_j − x). `mode_matched.py valley` evaluates these integrals from the background (Simpson's
+**The growth across it.** For a p perturbation at the τ point j, the λ term alone gives a growth of exp(λ T_j) across a
+segment, with T_j = ∫ dx / (c_j − x). `mode_matched.py valley` evaluates these integrals from the background (Simpson's
 rule on the plan's steps):
 
 | segment | x | steps | max over j of T_j | Σ_j T_j | Σ_j ∫ dx/(x + c_j) |
@@ -207,11 +207,12 @@ main's build (section 5).
 | 5.1408197887863025 | −1 | 605.3517266751795 | 1.19×10⁻⁴..2.27×10³ |
 | 5.1408197887866 | −1 | 605.3517266752266 | 1.19×10⁻⁴..2.27×10³ |
 
-Across the four λ (9×10⁻¹³), ln|D_m| rises by 1.44×10⁻¹⁰, with slopes 159.9, 162.5 and 158.2 between neighbours
-(the last digits of ln|D_m| near 605 are 1.1×10⁻¹³ apart). The secant from λ 1 to 3 is 162.1. There the present
-determinant, in quad-double from the same double-double entries, read (+, 3600.328311), (+, 3604.297374),
-(−, 3601.178104) and (+, 3596.436366). Criterion 1's line test gives a residual of 4.4×10⁻¹³ of max |f_i| (bound
-10⁻⁶), with pivot ratio 5.2×10⁻⁸ (bound 10⁻²⁰): **PASS on the Mac build**. So no root of D_m lies among the four λ: #1072's root there was a sign flip of noise.
+Across the four λ (9×10⁻¹³), ln|D_m| rises by 1.44×10⁻¹⁰, with slopes 159.9, 162.5 and 158.2 between neighbours (the
+last digits of ln|D_m| near 605 are 1.1×10⁻¹³ apart). The secant from λ 1 to 3 is 162.1. There the present determinant,
+in quad-double from the same double-double entries, read (+, 3600.328311), (+, 3604.297374), (−, 3601.178104) and (+,
+3596.436366). Criterion 1's line test gives a residual of 4.4×10⁻¹³ of max |f_i| (bound 10⁻⁶), with pivot ratio 5.2×10⁻⁸
+(bound 10⁻²⁰): **PASS on the Mac build**. So no root of D_m lies among the four λ: #1072's root there was a sign flip of
+noise.
 
 **Criterion 2, half of it.** At D 3.15 (state 9e683a14, hmax 0.05 plan), the valley rule picks m = 5 (x 0.02,
 the segment 0.02 → 0.05 with max_j T_j 2.9). `mode_matched.py root --lam0=4.397684106690` finds D_m's root at
@@ -254,6 +255,58 @@ ln|D_out(4.3)| is 1974.537 at hmax 0.05, 1962.459 at 0.005 and 1958.389 at 0.001
 Whether its root moves at the 10⁻⁸ level is not yet measured. Criterion 4 is to be run again on a plan with
 hmax 0.001, and criterion 2 there too if it fails at hmax 0.05. These reruns are diagnostics; the criteria as written
 stay failed or passed as they ran.
+
+## 7. Raw records
+
+The Mac's runs are in the raw-data repository's folder `I1083-mac/` (its README lists each file with the command that
+wrote it). The exploration scripts there (`explore*.py`) import `hp/mode_matched.py`. Their per-segment tables are
+also produced by `mode_matched.py blocks`, whose records are in the same folder.
+
+## 8. For the coordinator
+
+**Recommended design:** the matched determinant D_m, with `match_node` at the sonic valley's inner node. It is
+candidate (b), a transfer from the horizon inward, in the kernel's own multiple-shooting form. It needs no kernel
+change and no extra precision. It never forms the valley's stretch, which grows like gap^(−1/2) as D → 3.0431, while
+quad-double entries (#1082) only move the outward determinant's limit from λT ≈ 74 to about 147. Candidate (a), the
+analytic elimination of the horizon block, does not help (section 2).
+
+Decisions:
+
+1. **Run section 5's commands on main's build** (Linux), criteria 1 to 3 and their controls. On dh370 a determinant
+   at D 3.044375, M′ 96 is about 8 minutes, so `four` and its control take about 35 minutes each, `d315` about an
+   hour, and each `planted` run 2–3 hours.
+2. **The plan.** The mode matrix on the background's plan is not converged in the outer segments (section 6). The
+   check is `root --both --hmax=0.001` at D 3.15 against hmax 0.05: whether γ's root moves by more than 10⁻⁸. If it
+   does, mode determinants need hmax ≤ 0.001 (or a plan made from the perturbations' series), at a cost of about 3.5
+   times the steps at D 3.15. Criterion 4 can then be rerun on that plan (`identity ... --hmax=0.001`).
+3. **γ at D 3.044375.** After 1 and 2, `lowD_gamma.py` takes the matched layout (the diff below), and #1078's scan
+   over 5.14060–5.14100 is repeated on D_m. D_m is −1 and smooth at all four λ of comment 7120204793, so its root
+   is elsewhere.
+4. **#1082** (the quad-double mode matrix) is not needed for this sign if criteria 1 to 3 pass on main's build.
+5. **The premise of #1083's title** is corrected here: the horizon block is not formed by cancellation. The horizon
+   columns receive the valley's deficit because they are eliminated last.
+
+The diff for `hp/lowD_gamma.py` (not applied: this branch writes only the note and the prototype):
+
+```diff
+-def build_solver(D, M, meta, threads, mutate=None):
++def build_solver(D, M, meta, threads, mutate=None, match_node=None):
+@@
+-        return make_solver(D, M, **solver_kw(meta, threads)), None
++        return make_solver(D, M, match_node=match_node, **solver_kw(meta, threads)), None
+@@
+-    return tau_map.make_solver_mapped(D, M, s0, L, mutate=mutate, **solver_kw(meta, threads)), [s0, L]
++    return tau_map.make_solver_mapped(D, M, s0, L, mutate=mutate, match_node=match_node,
++                                      **solver_kw(meta, threads)), [s0, L]
+@@ def main():
+         s.set_segs(s.plan(zh, zl, 1e-32, hmax))
++        if opts.get("match") == "valley":            # #1083: segments past the sonic valley integrated inward
++            import mode_matched
++            m, _ = mode_matched.valley_node(mode_matched.trace_integrals(s, zh, zl, meta, s.get_segs()))
++            s, grid = build_solver(D, M, meta, threads, mutate=opts.get("mutate_map"), match_node=m)
++            s.set_segs(s.plan(zh, zl, 1e-32, hmax))
+         if "polish" in opts:
+```
 
 ## References
 
