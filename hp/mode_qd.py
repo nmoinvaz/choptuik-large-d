@@ -1,9 +1,17 @@
 #!/usr/bin/env python3
 """#1078: det M(lam) by a quad-double LU of the double-double mode matrix, equilibrated by powers of two.
+#1082: --entries=qd forms the entries themselves in quad-double (Solver.mode_matrix_q).
 
     python3 mode_qd.py OUT.jsonl STATE.npz LAM [LAM ...] [--threads=6] [--hmax=0.05] [--control=none|update_dd]
-                       [--noequil]
+                       [--noequil] [--entries=dd|qd] [--allow_unraw]
     python3 mode_qd.py selftest
+
+--entries=dd (the default) factors Solver.mode_matrix's double-double entries (hi, lo); --entries=qd factors the four
+parts of Solver.mode_matrix_q (multishoot's mode_matrix_real at Quad: the tangents, the Taylor steps and the refined
+horizon solves in quad-double, at the double-double state). At D 3.044375 the double-double entries' rounding, over
+1269 Taylor steps, flips the determinant's sign every 3e-13 in lam (#1078 comment 7120204793); quad-double entries
+carry no such rounding. Solver.mode_matrix_q is built for M = 32, 48, 96 and 128. The output must lie in a task
+folder of the raw-data repository (hp/raw_out.py) unless --allow_unraw.
 
 At D 3.044375 (M' 96) the smallest pivot of the equilibrated double-double LU falls like exp(-15 lam): 2.5e-2 at
 lam 1, 9.5e-14 at 3, 4.4e-29 at 5.14 (dh370), below the double-double LU's rounding floor (n u max|a|, about 1e-27),
@@ -19,7 +27,10 @@ A = [[B, b], [c^T, d]] of order 40 whose Schur complement is +-1e-45 (the sign c
 double-double updates gets it wrong), with full-mantissa entries and the reference det from mpmath at 200 digits. The
 quad-double LU, plain and equilibrated, must give the sign and ln|det| within 1e-6; with update_dd it must not (the
 control). An earlier planted matrix of few-bit dyadic entries could not make the control fire (dh370): every
-trailing update was exact in double-double."""
+trailing update was exact in double-double. A second planted matrix has quad-double entries in four parts (order 40,
+Schur complement +-1e-45 against entries of order one): the factorization of all four parts must give the sign and
+ln|det| of mpmath's determinant of the parts' exact sums within 1e-6, and the same matrix cut to its first two parts
+(the double-double entries) must not (the control: the lower parts reach the LU)."""
 import json
 import math
 import os
@@ -42,18 +53,22 @@ def _qd_logdet():
     return multidouble.qd_logdet
 
 
-def qd_det(Mh, Ml, equil=True, control="none", par=True):
+def qd_det(parts, equil=True, control="none", par=True):
+    """(sign, ln|det|, pivot range, ...) of the matrix whose entries are the sums of its 2 (double-double) or 4
+    (quad-double) part arrays, by multidouble's qd_logdet after Ruiz equilibration of the leading parts"""
     from mode_scale import ruiz
     qd_logdet = _qd_logdet()
-    Mh, Ml = np.asarray(Mh, float), np.asarray(Ml, float)
+    parts = [np.asarray(p, float) for p in parts]
+    if len(parts) not in (2, 4):
+        raise ValueError(f"qd_det: 2 or 4 part arrays, not {len(parts)}")
     if equil:
-        r, c = ruiz(Mh + Ml)
+        r, c = ruiz(parts[0] + parts[1])
     else:
-        r, c = np.zeros(Mh.shape[0]), np.zeros(Mh.shape[1])
-    f = np.exp2(r)[:, None] * np.exp2(c)[None, :]                      # powers of two: exact on both parts
-    z = np.zeros_like(Mh)
-    sg, la, pmin, pmax = qd_logdet(np.ascontiguousarray(Mh * f), np.ascontiguousarray(Ml * f), z, z, par=par,
-                                   control=control)
+        r, c = np.zeros(parts[0].shape[0]), np.zeros(parts[0].shape[1])
+    f = np.exp2(r)[:, None] * np.exp2(c)[None, :]                      # powers of two: exact on every part
+    z = np.zeros_like(parts[0])
+    q = [np.ascontiguousarray(p * f) for p in parts] + [z] * (4 - len(parts))
+    sg, la, pmin, pmax = qd_logdet(q[0], q[1], q[2], q[3], par=par, control=control)
     shift = float(r.sum() + c.sum())
     return dict(sign=float(sg), ln=float(la) - shift * math.log(2.0), pmin=float(pmin), pmax=float(pmax),
                 ratio=float(pmin) / float(pmax), shift=shift, equil=bool(equil), control=control)
@@ -101,17 +116,96 @@ def planted(n=40, tau=1e-45, seed=5):
     raise AssertionError("the double-double updates' sign follows tau here")
 
 
+def qd_split(x):
+    """the four f64 parts of the mpmath number x by successive rounding: a normalized quad-double expansion"""
+    import mpmath as mp
+    out = []
+    for _ in range(4):
+        p = float(x)
+        out.append(p)
+        x = x - mp.mpf(p)
+    return out
+
+
+def planted_q(n=40, tau=1e-45, seed=7):
+    """an n x n matrix of quad-double entries in four part arrays, [[B, b], [c^T, d]], with B, b, c random to all four
+    parts and d chosen so that the Schur complement d - c^T B^-1 b is tau to about 1e-64; returns the parts and
+    mpmath's (sign, ln|det|) of the parts' exact sums"""
+    import mpmath as mp
+    rng = np.random.default_rng(seed)
+    with mp.workdps(DPS):
+        def rand_q():
+            a = rng.standard_normal(4)
+            return qd_split(mp.mpf(a[0]) * (1 + mp.mpf(a[1]) * mp.mpf(2) ** -53 + mp.mpf(a[2]) * mp.mpf(2) ** -106
+                                            + mp.mpf(a[3]) * mp.mpf(2) ** -159))
+        P = np.zeros((4, n, n))
+        for i in range(n):
+            for j in range(n):
+                if (i, j) != (n - 1, n - 1):
+                    P[:, i, j] = rand_q()
+        exact = lambda i, j: mp.fsum(mp.mpf(float(P[q, i, j])) for q in range(4))
+        m = n - 1
+        B = mp.matrix([[exact(i, j) for j in range(m)] for i in range(m)])
+        b = mp.matrix([exact(i, m) for i in range(m)])
+        y = mp.lu_solve(B, b)
+        t = mp.fsum(exact(m, k) * y[k] for k in range(m))
+        P[:, m, m] = qd_split(t + tau)
+        A = mp.matrix([[exact(i, j) for j in range(n)] for i in range(n)])
+        dt = mp.det(A)
+        return [P[q] for q in range(4)], ((1.0 if dt > 0 else -1.0), float(mp.log(abs(dt))))
+
+
 def selftest():
     A, (s0, l0) = planted()
     z = np.zeros_like(A)
     agrees = lambda d: d["sign"] == s0 and abs(d["ln"] - l0) <= 1e-6
-    q, qe = qd_det(A, z, equil=False), qd_det(A, z, equil=True)
-    c = qd_det(A, z, equil=False, control="update_dd")
+    q, qe = qd_det([A, z], equil=False), qd_det([A, z], equil=True)
+    c = qd_det([A, z], equil=False, control="update_dd")
     ok1, ok3, ok2 = agrees(q), agrees(qe), not agrees(c)
     print(f"selftest: planted det (mpmath, {DPS} digits) sign {s0:+.0f} ln {l0:.9f}; qd {q['sign']:+.0f} {q['ln']:.9f} "
           f"({'PASS' if ok1 else 'FAIL'}); qd equilibrated {qe['sign']:+.0f} {qe['ln']:.9f} ({'PASS' if ok3 else 'FAIL'}); "
           f"control update_dd {c['sign']:+.0f} {c['ln']:.9f} ({'fires' if ok2 else 'DOES NOT FIRE'})")
-    return 0 if ok1 and ok2 and ok3 else 1
+    P, (s1, l1) = planted_q()
+    agrees_q = lambda d: d["sign"] == s1 and abs(d["ln"] - l1) <= 1e-6
+    f, fe, fc = qd_det(P, equil=False), qd_det(P, equil=True), qd_det(P[:2], equil=True)
+    ok4, ok5, ok6 = agrees_q(f), agrees_q(fe), not agrees_q(fc)
+    print(f"selftest: four-part planted det sign {s1:+.0f} ln {l1:.9f}; qd {f['sign']:+.0f} {f['ln']:.9f} "
+          f"({'PASS' if ok4 else 'FAIL'}); equilibrated {fe['sign']:+.0f} {fe['ln']:.9f} ({'PASS' if ok5 else 'FAIL'}); "
+          f"control, first two parts {fc['sign']:+.0f} {fc['ln']:.9f} ({'fires' if ok6 else 'DOES NOT FIRE'})")
+    return 0 if ok1 and ok2 and ok3 and ok4 and ok5 and ok6 else 1
+
+
+def det_rows(out, state, lams, entries="dd", threads=6, hmax=0.05, equil=True, control="none", log=print):
+    """det M(lam) at each lam with the entries of `entries` (dd: Solver.mode_matrix; qd: Solver.mode_matrix_q at the
+    state's double-double parts), each row appended to out (jsonl) as it is made; returns the rows"""
+    if entries not in ("dd", "qd"):
+        raise ValueError(f"entries must be dd or qd, not {entries}")
+    import lowD_gamma as LG
+    from hpkernel.driver import load
+    zh, zl, meta = load(state)
+    D, M = meta["D"], meta["M"]
+    s, grid = LG.build_solver(D, M, meta, int(threads))
+    s.set_segs(s.plan(zh, zl, 1e-32, float(hmax)))
+    zero = np.zeros_like(zh)
+    rows = []
+    for lam in lams:
+        t = time.time()
+        if entries == "qd":
+            parts = s.mode_matrix_q(zh, zl, zero, zero, lam, 0.0)
+        else:
+            parts = s.mode_matrix(zh, zl, lam, 0.0)
+        t_m = time.time() - t
+        d = qd_det(parts, equil=equil, control=control)
+        del parts
+        row = dict(D=D, M=M, lam=lam, entries=entries, n=int(len(zh) - 1), **d, state=os.path.basename(state),
+                   map=grid, hmax=float(hmax), threads=int(threads), sec_matrix=round(t_m, 1),
+                   sec=round(time.time() - t, 1))
+        with open(out, "a") as fh:
+            fh.write(json.dumps(row) + "\n")
+        log(f"lam {lam!r}: {entries} entries, qd LU sign {d['sign']:+.0f} ln|det| {d['ln']:.9f} pivots "
+            f"{d['pmin']:.2e}..{d['pmax']:.2e} (control {d['control']}; matrix {row['sec_matrix']} s, all {row['sec']} s)")
+        rows.append(row)
+    return rows
 
 
 def main():
@@ -122,23 +216,12 @@ def main():
     if len(args) < 3:
         print(__doc__)
         return 2
-    import lowD_gamma as LG
-    from hpkernel.driver import load
+    from raw_out import require_raw
     out, state = args[0], args[1]
-    zh, zl, meta = load(state)
-    D, M = meta["D"], meta["M"]
-    s, grid = LG.build_solver(D, M, meta, int(o.get("threads", 6)))
-    s.set_segs(s.plan(zh, zl, 1e-32, float(o.get("hmax", 0.05))))
-    for lam in [float(x) for x in args[2:]]:
-        t = time.time()
-        Mh, Ml = s.mode_matrix(zh, zl, lam, 0.0)
-        d = qd_det(Mh, Ml, equil="noequil" not in o, control=o.get("control", "none"))
-        row = dict(D=D, M=M, lam=lam, n=int(np.asarray(Mh).shape[0]), **d, state=os.path.basename(state), map=grid,
-                   hmax=float(o.get("hmax", 0.05)), sec=round(time.time() - t, 1))
-        with open(out, "a") as fh:
-            fh.write(json.dumps(row) + "\n")
-        print(f"lam {lam!r}: qd sign {d['sign']:+.0f} ln|det| {d['ln']:.9f} pivots {d['pmin']:.2e}..{d['pmax']:.2e} "
-              f"(control {d['control']}, {row['sec']} s)", flush=True)
+    require_raw(out)
+    det_rows(out, state, [float(x) for x in args[2:]], entries=o.get("entries", "dd"), threads=o.get("threads", 6),
+             hmax=o.get("hmax", 0.05), equil="noequil" not in o, control=o.get("control", "none"),
+             log=lambda s: print(s, flush=True))
     return 0
 
 
