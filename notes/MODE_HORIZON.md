@@ -201,6 +201,33 @@ computed at 60 digits. The matched root is 5 − 2.7×10⁻¹⁵; the outward ro
 valley (`--gap=0.05`, T = 1.35) both roots are within 1.1×10⁻¹⁴ of λ*, so the outward failure is the valley's.
 The identity of section 3 holds there to 6×10⁻¹⁵ in ln|det|.
 
+**Criterion 4 fails at D 3.15 as written, and the cause is the plan, not the identity.** On the state's plan
+(hmax 0.05, 292 steps), at λ 4.3 and 4.5 the signs of D_out and D_m agree, −1 and +1 (the root 4.3978 lies between).
+But ln|D_out| − ln|D_m| changes by −78.807976 while the Liouville integral over the inward segments gives −78.422082,
+a relative difference of 4.9×10⁻³ against the bound 10⁻⁶. To find the cause, I compared each outward block Φ_b
+(float64 log-determinant of the mode matrix's block) with that segment's trace integral, on three plans:
+
+| segments | hmax 0.05 (292 steps) | hmax 0.005 (346 steps) | hmax 0.001 (1012 steps) |
+|---|---|---|---|
+| 1–12 (x ≤ 0.5) | ≤ 2×10⁻⁹ | ≤ 2×10⁻⁹ | ≤ 2.2×10⁻¹⁰ |
+| 13 (0.5 → 0.6) | −3.3×10⁻³ | 3.5×10⁻¹² | −1.2×10⁻¹⁴ |
+| 14 (0.6 → 0.7) | −0.104 | 1.0×10⁻¹¹ | −3.5×10⁻¹³ |
+| 15 (0.7 → 0.8) | −0.113 | 4.3×10⁻⁷ | −4.1×10⁻¹³ |
+| 16 (0.8 → 0.9) | −0.166 | −0.0999 | 2.6×10⁻¹² |
+
+The entries are the change of ln det Φ_b from λ 4.5 to 4.3 minus the integral's. On the coarse plan, the four outer
+segments' changes sum to −0.385895. That is the criterion's whole discrepancy (−78.807976 + 78.422082 = −0.385894).
+So D_out = D_m ∏ det Φ_b holds for the discrete maps to about 10⁻⁶ in ln|det|, while the discrete outer transfers
+depart from the ODE's determinant until hmax 0.001. Segment 16's largest singular value at λ 4.3 is 1.13×10³ at
+hmax 0.005 and 1.62×10² at 0.001.
+
+The plan is built from the background's Taylor coefficients, and these steps under-resolve the perturbations there.
+ln|D_out(4.3)| is 1974.537 at hmax 0.05, 1962.459 at 0.005 and 1958.389 at 0.001. **This bears on #1078's question
+"is it the step plan?".** The mode determinant at hmax 0.05 is not converged in the outer segments, at D 3.15 too.
+Whether its root moves at the 10⁻⁸ level is not yet measured. Criterion 4 is to be run again on a plan with
+hmax 0.001, and criterion 2 there too if it fails at hmax 0.05. These reruns are diagnostics; the criteria as written
+stay failed or passed as they ran.
+
 ## References
 
 - R. M. M. Mattheij, "Decoupling and stability of algorithms for boundary value problems", SIAM Rev. 27 (1985)
