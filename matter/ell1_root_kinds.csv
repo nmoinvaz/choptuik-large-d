@@ -132,3 +132,5 @@ D,kc,build,value,kind,reason
 21.375,87,macos,0.791593,lambda_1,by position: the only robust change in 0.780-0.800 on macm3's own k_c 87 leg state (kc87_leg2)
 21.5,87,macos,0.744479,lambda_1,by position: the only robust change in 0.735-0.755 on macm3's own k_c 87 leg state (kc87_leg2)
 21.3125,79,linux,0.809549,lambda_1,by position: the only robust change in 0.795-0.825 on the tag g k_c 79 leap's state (dh610 4a03b3d3)
+21.34375,79,linux,0.798768,lambda_1,by position: the only robust change in 0.785-0.815 on the tag g k_c 79 leap's state (dh610 57e67040)
+21.34375,79,linux,0.798701,lambda_1,by position: the only robust change in 0.785-0.815 on the far scout's (tag i) k_c 79 state, the second path to this D (dh610 4e5d1aca)
