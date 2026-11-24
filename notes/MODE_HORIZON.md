@@ -174,6 +174,33 @@ python3 mode_matched.py planted $O/planted_outward.jsonl $S1 --threads=6 --mutat
 Then, if criteria 1 to 4 pass, γ at D 3.044375 from D_m: `python3 mode_matched.py root $O/root.jsonl $S1
 --threads=6 --lam0=5.14082 --xtol=1e-11`, and the sign scan of #1078 again on D_m (`det` over 5.14060–5.14100).
 
+## 6. Results on the Mac (hpkernel build of 2026-11-08)
+
+These ran on the shared Mac at 2 threads, one M′ 96 mode matrix at D 3.044375 taking about 15 minutes. The numbers
+below are from that build, not from main's (multishoot 4.1.0); the criteria themselves are for a Linux runner on
+main's build (section 5).
+
+**The matched determinant is smooth where the outward one is noise.** D 3.044375, state 6a0f83d2, m = 6
+(`mode_matched.py det --match=6`, raw records in section 7):
+
+| λ | sign | ln\|D_m\| | pivots min..max (double-double LU) |
+|---|---|---|---|
+| 1.0 | −1 | −64.123250972 | 1.17×10⁻⁴..5.71 |
+| 3.0 | −1 | 260.126141749 | 1.18×10⁻⁴..20.2 |
+| 5.140819788786 | −1 | 605.3517266751303 | 1.19×10⁻⁴..2.27×10³ |
+| 5.1408197887863025 | −1 | 605.3517266751795 | 1.19×10⁻⁴..2.27×10³ |
+
+Between the last two λ (3.03×10⁻¹³ apart), ln|D_m| moves by 4.92×10⁻¹¹: a slope of 162.5 per unit λ. The secant
+from λ 1 to 3 is 162.1. There the present determinant, in quad-double from the same double-double entries, went
+from (+, 3604.297374) to (−, 3601.178104). This is the middle pair of criterion 1, not the criterion itself.
+
+**The planted toy** (`mode_matched.py toy`, no kernel, float64): four fields, a valley that stretches field 0 by
+e^{(λ − 0.6) T}, T = 10.1, and a root planted at λ* = 5 along the centre solutions' non-growing combination,
+computed at 60 digits. The matched root is 5 − 2.7×10⁻¹⁵; the outward root is off by 4.7×10⁻³. The control
+`--mutate=shift` (the plant at λ* + 10⁻⁶) moves the matched root by 1.0×10⁻⁶ and fails, as it must. Without the
+valley (`--gap=0.05`, T = 1.35) both roots are within 1.1×10⁻¹⁴ of λ*, so the outward failure is the valley's.
+The identity of section 3 holds there to 6×10⁻¹⁵ in ln|det|.
+
 ## References
 
 - R. M. M. Mattheij, "Decoupling and stability of algorithms for boundary value problems", SIAM Rev. 27 (1985)
