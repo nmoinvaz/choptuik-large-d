@@ -31,10 +31,11 @@ def _value(args):
 
 def _value_v(args):
     import value_mp as VM
-    (A, wf, v), r1, M = args
-    row = VM.value_v(repr(A), repr(wf), list(v), M, r1=r1)
+    (A, wf, v), r1, M = args[:3]
+    kw = args[3] if len(args) > 3 else {}
+    row = VM.value_v(repr(A), repr(wf), list(v), M, r1=r1, **kw)
     return dict(A=A, wf=wf, R=complex(row["re"], row["im"]), sig=row["sig"], ok=row["valued"],
-                F3=tuple(row["v"]), info=row["info"], sec=row["seconds"])
+                F3=tuple(row["v"]), info=row["info"], sec=row["seconds"], J=row.get("J"))
 
 
 def _planted(args):
@@ -44,7 +45,7 @@ def _planted(args):
     return dict(A=A, wf=wf, R=R, sig=1e-18, ok=True, F3=(f3re, f3im), info=0.0, sec=0.0)
 
 
-def newton(A, wf, f3, fn, iters, hA, hw, procs, out=None, M=3):
+def newton(A, wf, f3, fn, iters, hA, hw, procs, out=None, M=3, J0=None):
     """f3 is F_3 = (re, im) at M = 3, and the harmonics v = (B_3, C_3, ..., B_M, C_M) (strings) with fn = _value_v"""
     import multiprocessing as mp_
     pool = mp_.get_context("spawn").Pool(procs) if procs > 1 and fn in (_value, _value_v) else None
@@ -53,7 +54,11 @@ def newton(A, wf, f3, fn, iters, hA, hw, procs, out=None, M=3):
     for it in range(iters + 1):
         pts = [(A, wf), (A + hA, wf), (A - hA, wf), (A, wf + hw), (A, wf - hw)]
         if fn is _value_v:
-            res = run([((a, w, tuple(f3)), "0.17", M) for a, w in pts])
+            # the centre first, at both precisions, from the last centre's Jacobian; then the offsets from the centre's
+            # solved harmonics and Jacobian, at one precision (they only form the outer Jacobian's differences)
+            c0 = fn(((A, wf, tuple(f3)), "0.17", M, dict(J=J0, want_J=True)))
+            J0 = c0["J"]
+            res = [c0] + run([((a, w, tuple(c0["F3"])), "0.17", M, dict(J=J0, single=True)) for a, w in pts[1:]])
         else:
             res = run([((a, w, f3[0], f3[1]), "0.17") for a, w in pts])
         c = res[0]
@@ -66,6 +71,8 @@ def newton(A, wf, f3, fn, iters, hA, hw, procs, out=None, M=3):
         row = dict(it=it, A=A, wf=wf, re=c["R"].real, im=c["R"].imag, sig=c["sig"], R_over_sig=abs(c["R"]) / c["sig"],
                    valued=[r["ok"] for r in res], J=J.tolist(), orientation=int(np.sign(np.linalg.det(J))),
                    dA=float(dx[0]), dwf=float(dx[1]), sec=[r["sec"] for r in res], F3=list(c["F3"]))
+        if fn is _value_v:
+            row["J_inner"] = c.get("J")                 # the centre's inner Jacobian: --j0 restarts a walk from it
         rows.append(row)
         if out:
             with open(out, "a") as fh:
@@ -98,9 +105,12 @@ def main():
         M = int(o["M"])
         v0 = o["v0"].split(",")
         assert len(v0) == M - 1, "--v0 needs B_3, C_3, ..., B_M, C_M"
-        print(f"start ({A0}, {wf0}); M = {M}, v0 = {v0}", flush=True)
+        J0 = None
+        if "j0" in o:                               # --j0=ROWS.jsonl: the last row's J_inner (restart of a walk)
+            J0 = [json.loads(line) for line in open(o["j0"]) if line.strip()][-1].get("J_inner")
+        print(f"start ({A0}, {wf0}); M = {M}, v0 = {v0}, inner Jacobian {'given' if J0 else 'fresh'}", flush=True)
         t0 = time.time()
-        rows = newton(A0, wf0, v0, _value_v, iters, hA, hw, int(o.get("procs", 5)), out, M=M)
+        rows = newton(A0, wf0, v0, _value_v, iters, hA, hw, int(o.get("procs", 5)), out, M=M, J0=J0)
         return report(rows, t0)
     if "f3" in o:                                   # --f3=RE,IM: an explicit start (a point outside the cache's box)
         f3 = tuple(float(t) for t in o["f3"].split(","))

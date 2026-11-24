@@ -31,7 +31,7 @@ def solve(A, wf, v0, r1, dps, p, iters=8, hrel="1e-12", margin=12, J=None, chord
     (Shamanskii): the Jacobian (central differences, 2(M - 1) calls) is refreshed only after a step whose contraction
     max|r'|/max|r| exceeds `chord`, or after a step that fails; J = (J1, J3) starts from a given Jacobian (the second
     precision reuses the first's). chord=None is plain Newton. damp=k halves a step that fails with a fresh Jacobian up
-    to k times (Armijo-free backtracking on max|r|); damp=0 (M = 3's default) stops there instead.
+    to k times (Armijo-free backtracking on max|r|) while max|r| > 1e-12; damp=0 (M = 3's default) stops there instead.
     Returns (R_1, (r_3, ..., r_M), v, J1, J3, info, calls)"""
     mp.mp.dps = dps
     n = M - 1                                   # unknowns, and rows r_3 .. r_M (real and imaginary parts)
@@ -72,8 +72,8 @@ def solve(A, wf, v0, r1, dps, p, iters=8, hrel="1e-12", margin=12, J=None, chord
         vn = [v[k] + dv[k] for k in range(n)]
         rn, infon = res(vn)
         n0, n1 = max(abs(x) for x in r[2:]), max(abs(x) for x in rn[2:])
-        if n1 >= n0 and fresh and damp:
-            t = mp.mpf(1)
+        if n1 >= n0 and fresh and damp and n0 > mp.mpf("1e-12"):
+            t = mp.mpf(1)                  # far from the solution only: at the floor a failed step ends the solve
             for _ in range(damp):          # backtrack along the fresh Newton step
                 t /= 2
                 vn = [v[k] + t * dv[k] for k in range(n)]
@@ -99,15 +99,23 @@ def value_point(A, wf, f3re, f3im, r1="0.17", dps=34, dps2=42, p=40, p2=50, iter
     return value_v(A, wf, [-2 * mp.mpf(f3im), 2 * mp.mpf(f3re)], 3, r1, dps, dps2, p, p2, iters, chord)
 
 
-def value_v(A, wf, v0, M=3, r1="0.17", dps=34, dps2=42, p=40, p2=50, iters=12, chord="1e-4", damp=None):
-    """R_1 at (A, w_f) with the harmonics v = (B_3, C_3, ..., B_M, C_M) solved from v0 at two precisions"""
+def value_v(A, wf, v0, M=3, r1="0.17", dps=34, dps2=42, p=40, p2=50, iters=12, chord="1e-4", damp=None, J=None,
+            single=False, want_J=False):
+    """R_1 at (A, w_f) with the harmonics v = (B_3, C_3, ..., B_M, C_M) solved from v0 at two precisions. J = (J1, J3)
+    as nested lists of decimal strings starts the chord iteration from a given Jacobian (a walk's offset points take
+    the centre's); single=True skips the second precision (sig is then the r-residual term and the floor only);
+    want_J=True returns the Jacobian used, as strings, in out["J"] (not JSON-written by the CLI)."""
     t0 = time.time()
     mp.mp.dps = dps
     v0 = [mp.mpf(x) for x in v0]
     damp = (0 if M == 3 else 8) if damp is None else damp       # M = 3 keeps #1076's undamped solve
-    R, r3, v, J1, J3, info, n1 = solve(A, wf, v0, r1, dps, p, iters, chord=chord, M=M, damp=damp)
-    R2, r32, v2, _, _, info2, n2 = solve(A, wf, [str(x) for x in v], r1, dps2, p2, iters,
-                                         J=None if chord is None else (J1, J3), chord=chord, M=M, damp=damp)
+    Jm = None if J is None else tuple(mp.matrix([[mp.mpf(x) for x in row] for row in B]) for B in J)
+    R, r3, v, J1, J3, info, n1 = solve(A, wf, v0, r1, dps, p, iters, chord=chord, M=M, damp=damp, J=Jm)
+    if single:
+        R2, r32, v2, info2, n2 = R, r3, v, info, 0
+    else:
+        R2, r32, v2, _, _, info2, n2 = solve(A, wf, [str(x) for x in v], r1, dps2, p2, iters,
+                                             J=None if chord is None else (J1, J3), chord=chord, M=M, damp=damp)
     mp.mp.dps = dps2
     dR = abs(R2 - R)
     if J1 is not None and J3 is not None:
@@ -126,7 +134,9 @@ def value_v(A, wf, v0, M=3, r1="0.17", dps=34, dps2=42, p=40, p2=50, iters=12, c
                ymax=float(info2["ymax"]), r1=float(r1), mp_dps=[dps, dps2], order=[p, p2], calls=[n1, n2],
                steps=int(info2["steps"]), terr=float(info2["terr"]), seconds=round(time.time() - t0, 1), fu="mp")
     if M > 3:                                   # the higher harmonics' residuals and the solved v, as strings
-        out.update(M=M, r_rest=[float(x) for x in r32], v=[mp.nstr(x, dps2) for x in v2])
+        out.update(M=M, r_rest=[float(x) for x in r32], v=[mp.nstr(x, dps2) for x in v2], single=bool(single))
+    if want_J and J1 is not None:
+        out["J"] = tuple([[mp.nstr(B[i, k], dps) for k in range(B.cols)] for i in range(B.rows)] for B in (J1, J3))
     return out
 
 
