@@ -99,3 +99,4 @@ D,kc,build,value,kind,reason
 19.0,95,linux,1.540058,lambda_1,by position: the only change in 1.395-1.545 at k_c 95 on Linux (dh610 d19_k95); k_c 87 1.539751: +0.0003
 20.9375,79,linux,0.928441,lambda_1,by position: the only robust change in 0.910-0.940 on the restarted k_c 79 leap's state (dh610 a9f39ae0)
 20.96875,79,linux,0.918970,lambda_1,by position: the only robust change in 0.905-0.935 on the restarted k_c 79 leap's state (dh610 0f09b99d)
+20.90625,87,linux,0.938363,lambda_1,by position: the only robust change in 0.925-0.955 at k_c 87 (dh170 a2d42e42); k_c 79 0.938234: +0.00013
