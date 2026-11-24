@@ -191,9 +191,12 @@ python3 mode_matched.py identity $O/identity_D3.0444.jsonl $S1 1.0 1.1 --threads
 python3 mode_matched.py planted $O/planted.jsonl $S1 --threads=6              # criterion 3
 python3 mode_matched.py planted $O/planted_shift.jsonl $S1 --threads=6 --mutate=shift      # must FAIL (exit 1)
 python3 mode_matched.py planted $O/planted_outward.jsonl $S1 --threads=6 --mutate=outward  # exit 0: the control fired
+# the plan (section 6): the root at D 3.15 on hmax 0.001 against 0.05, both layouts; criterion 4 on that plan
+python3 mode_matched.py root $O/root_D3.15_h0.001.jsonl $S2 --both --hmax=0.001 --lam0=4.3977863455 --threads=6
+python3 mode_matched.py identity $O/identity_D3.15_h0.001.jsonl $S2 4.3 4.5 --hmax=0.001 --threads=6
 ```
 
-Then, if criteria 1 to 4 pass, γ at D 3.044375 from D_m: `python3 mode_matched.py root $O/root.jsonl $S1
+Then, if criteria 1 to 3 pass, γ at D 3.044375 from D_m: `python3 mode_matched.py root $O/root.jsonl $S1
 --threads=6 --lam0=5.14082 --xtol=1e-11`, and the sign scan of #1078 again on D_m (`det` over 5.14060–5.14100).
 
 ## 6. Results on the Mac (hpkernel build of 2026-11-08)
