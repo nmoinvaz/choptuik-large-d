@@ -9,6 +9,8 @@ integrated inward (notes/MODE_HORIZON.md).
     python3 mode_matched.py d315 OUT.jsonl STATE.npz [--lam0=4.397684106690]  (pass criterion 2)
     python3 mode_matched.py planted OUT.jsonl STATE.npz [--lam_star=5.0] [--mutate=shift|outward]  (criterion 3)
     python3 mode_matched.py identity OUT.jsonl STATE.npz LAM1 LAM2 [--sub=8]  (pass criterion 4)
+    python3 mode_matched.py blocks OUT.jsonl STATE.npz LAM1 LAM2 [--hmax=0.05] [--match=valley]  (per segment)
+    python3 mode_matched.py toy [--gap=2e-3] [--mutate=shift]                 (the planted toy, no kernel)
     common options: [--threads=6] [--hmax=0.05] [--allow_unraw]
 
 M(lam) is the multiple-shooting mode matrix (Solver.mode_matrix): the centre data, the K node states and the horizon
@@ -396,6 +398,50 @@ def cmd_identity(args, o):
     return 0 if ok else 1
 
 
+def cmd_blocks(args, o):
+    """per outward segment, the change of ln|det Phi_b| between two lam (float64 slogdet of the mode matrix's blocks)
+    against Liouville's lam part of the trace integral, on the plan with --hmax; with --match also the inward blocks"""
+    out, path, l1, l2 = args[0], args[1], float(args[2]), float(args[3])
+    w = writer(out)
+    o = dict(o)
+    o.setdefault("sub", "8")
+    o.setdefault("match", "out")
+    c = Case(path, o, need=("out", "m") if o["match"] != "out" else ("out",))
+    rows = c.rows or trace_integrals(c.out, c.zh, c.zl, c.meta, c.segs_out, int(o["sub"]), c.log)
+    M, K, n4 = c.M, c.K, 4 * c.M
+    col = lambda i: 2 * M + n4 * i
+    lds = {}
+    for lam in (l1, l2):
+        for tag, s in (("out", c.out), ("m", c.mat)):
+            if s is None:
+                continue
+            t = time.time()
+            Mh, Ml = s.mode_matrix(c.zh, c.zl, lam, 0.0)
+            A = np.asarray(Mh) + np.asarray(Ml)
+            del Mh, Ml
+            per = []
+            for b in range(1, K):
+                j0 = col(b) if (tag == "m" and b > c.m) else col(b - 1)   # an inward row reads node b
+                T = A[b * n4:(b + 1) * n4, j0:j0 + n4]
+                sv = np.linalg.svd(T, compute_uv=False)
+                per.append((float(np.sum(np.log(sv))), float(sv.max()), float(sv.min())))
+            sg, ld = np.linalg.slogdet(A)
+            lds[(tag, lam)] = per
+            c.log(f"    {tag} lam {lam}: full float64 sign {sg:+.0f} ln|det| {ld:.9f} ({time.time() - t:.0f} s)")
+            del A
+    for b in range(1, K):
+        I = rows[b - 1]["Tp_sum"] - rows[b - 1]["Tm_sum"]
+        d = lds[("out", l1)][b - 1][0] - lds[("out", l2)][b - 1][0]
+        row = dict(kind="block", **c.info(), b=b, steps=len(c.segs_out[b - 1]) - 1, lam=[l1, l2],
+                   liouville=I * (l1 - l2), dln_out=d, diff=d - I * (l1 - l2), sv_out=lds[("out", l1)][b - 1][1:])
+        if c.mat is not None and b > c.m:
+            row["dln_in"] = -(lds[("m", l1)][b - 1][0] - lds[("m", l2)][b - 1][0])
+        w(row)
+        c.log(f"  seg {b:2d} {row['steps']:4d} steps: Liouville {row['liouville']:.9f}, ln det Phi_b {d:.9f}, "
+              f"difference {row['diff']:+.2e}; sv {row['sv_out'][0]:.2e}..{row['sv_out'][1]:.2e}")
+    return 0
+
+
 def toy_A(x, lam, P):
     """the toy's coefficient matrix at x: field 0 has the valley's rate (lam - kappa) / (gap + beta (x - xv)^2), field 1
     decays at lam / 2, fields 2 and 3 are lam-independent, and a fixed coupling C ties them"""
@@ -545,7 +591,7 @@ def main():
     if cmd not in ("valley", "toy"):
         require_raw(rest[0], allow=allow)
     fn = dict(valley=cmd_valley, det=cmd_det, root=cmd_root, four=cmd_four, d315=cmd_d315, planted=cmd_planted,
-              identity=cmd_identity, toy=cmd_toy).get(cmd)
+              identity=cmd_identity, toy=cmd_toy, blocks=cmd_blocks).get(cmd)
     if fn is None:
         print(__doc__)
         return 2
