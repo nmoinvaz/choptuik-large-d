@@ -608,7 +608,7 @@ def main():
         full = dict(max_abs=float(np.max(np.abs(dif))), max_J=float(np.max(np.abs(J))),
                     frob=float(np.linalg.norm(dif) / np.linalg.norm(J[:P.n, :P.n])), bitwise=bool(not np.any(dif)))
         ok = r1 <= 10 * fl and full["frob"] <= 1e-14        # the 10 x floor bar alone missed --mutate=r1 (#1085)
-        log(f"floor: |M(0)x (h 1e-20) - M(0)x (h 3e-20)| / |M(0)x| {fl:.2e}; R1 {r1:.2e}; R1 <= 10 x floor: "
+        log(f"floor: |M(0)x (h 1e-20) - M(0)x (h 3e-20)| / |M(0)x| {fl:.2e}; R1 {r1:.2e}; R1 <= 10 x floor and Frobenius <= 1e-14: "
             f"{'OK' if ok else 'BAD'}. Full M(0) - J[:n,:n]: max |diff| {full['max_abs']:.2e} (max |J| {full['max_J']:.3g}), "
             f"Frobenius relative {full['frob']:.2e}, bitwise equal {full['bitwise']}; peak RSS {rss_gb():.2f} GB")
         write(a.out, dict(cmd="floor", D=D, kc=rec["kc"], state=os.path.basename(st), floor=fl, R1=r1, ok=ok, **full))
