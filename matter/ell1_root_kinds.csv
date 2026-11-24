@@ -106,3 +106,5 @@ D,kc,build,value,kind,reason
 21.125,71,windows,0.862215,lambda_1_scout,k_c 71 scout (winb kc71_d21125); with the k_c 71 -> 79 step of D 21.0 it sits 0.002 from the k_c 79 trend
 21.25,71,windows,0.821699,lambda_1_scout,k_c 71 scout (winb kc71_d2125): the only robust change in 0.810-0.840; prediction 0.827 +- 0.01
 21.03125,79,linux,0.900194,lambda_1,by position: the only robust change in 0.885-0.915 on the restarted k_c 79 leap's state (dh610 ac165ec6)
+21.21875,71,linux,0.832037,lambda_1_scout,k_c 71 scout (dh170 kc71_scout step 2): the only robust change in 0.820-0.850; 0.0026 from the k_c 79 trend shifted by -0.0077
+21.0625,79,linux,0.891249,lambda_1,by position: the only robust change in 0.875-0.905 on the restarted k_c 79 leap's state (dh610 6499f7d5)
