@@ -173,3 +173,16 @@ python3 mode_matched.py planted $O/planted_outward.jsonl $S1 --threads=6 --mutat
 
 Then, if criteria 1 to 4 pass, γ at D 3.044375 from D_m: `python3 mode_matched.py root $O/root.jsonl $S1
 --threads=6 --lam0=5.14082 --xtol=1e-11`, and the sign scan of #1078 again on D_m (`det` over 5.14060–5.14100).
+
+## References
+
+- R. M. M. Mattheij, "Decoupling and stability of algorithms for boundary value problems", SIAM Rev. 27 (1985)
+  1–44, doi:10.1137/1027001: multiple shooting and the other stable methods owe their stability to decoupling the
+  growing and decaying modes along the solution's dichotomy. Section 3's choice of the matching point is that rule.
+  Checked against SIAM's and TU Eindhoven's records.
+- J. Humpherys and K. Zumbrun, "An efficient shooting algorithm for Evans function calculations in large systems",
+  Physica D (2006), doi:10.1016/j.physd.2006.07.003, arXiv:math/0508020: Evans functions of large systems by
+  shooting from both ends to a matching point, with continuous orthogonalization. Checked against arXiv (title,
+  authors, related DOI); the volume and pages are not checked. The term "Evans function" is from J. W. Evans's
+  nerve-axon papers (Indiana Univ. Math. J., 1972–1975) *(unverified)*.
+- Liouville's formula for the determinant of a fundamental matrix, det Φ = exp(∫ tr A): a textbook result.
