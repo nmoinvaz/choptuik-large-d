@@ -134,3 +134,10 @@ D,kc,build,value,kind,reason
 21.3125,79,linux,0.809549,lambda_1,by position: the only robust change in 0.795-0.825 on the tag g k_c 79 leap's state (dh610 4a03b3d3)
 21.34375,79,linux,0.798768,lambda_1,by position: the only robust change in 0.785-0.815 on the tag g k_c 79 leap's state (dh610 57e67040)
 21.34375,79,linux,0.798701,lambda_1,by position: the only robust change in 0.785-0.815 on the far scout's (tag i) k_c 79 state, the second path to this D (dh610 4e5d1aca)
+21.375,79,linux,0.787758,lambda_1,by position: the only robust change in 0.775-0.805 on the tag g k_c 79 leap's state (dh610 1c1f1203)
+21.40625,79,linux,0.776450,lambda_1,by position: the only robust change in 0.760-0.790 on the tag g k_c 79 leap's state (dh610 59c2779e)
+21.40625,79,linux,0.776319,lambda_1,by position: the only robust change in 0.760-0.790 on the far scout's (tag i) k_c 79 state, the second path to this D (dh610 ecdc851f)
+21.4375,79,linux,0.764724,lambda_1,by position: the only robust change in 0.750-0.780 on the tag g k_c 79 leap's last state
+21.625,87,macos,0.696157,lambda_1,by position: the only robust change on macm3's own k_c 87 leg state (kc87_leg2)
+21.75,87,macos,0.646846,lambda_1,by position: the only robust change on macm3's own k_c 87 leg state (kc87_leg2)
+21.875,87,macos,0.596477,lambda_1,by position: the only robust change on macm3's own k_c 87 leg state (kc87_leg2 part b)
