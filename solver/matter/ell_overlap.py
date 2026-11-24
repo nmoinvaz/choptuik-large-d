@@ -33,6 +33,9 @@ A. Ruhe, Algorithms for the nonlinear eigenvalue problem, SIAM J. Numer. Anal. 1
 
 usage: python ell_overlap.py run REC.jsonl STATE.npy D LAM_R LO HI --mode I [--wrong=-0.05,0.05] [--out F.jsonl]
        python ell_overlap.py planted [--out F.jsonl]
+       python ell_overlap.py refit --records A.jsonl,B.jsonl --reads D1=read1.txt,... --start D:I --ranges lo:hi,...
+  refit: the falling mode's sigma, followed from sv_reg_small[I] at D by mode_tracker.py's identity rule (the change of
+  n_null), against lambda_1 from the readings' last "robust change" line; ln sigma = ln A + p ln lambda_1 per range.
   --mode I: the falling mode's index in the record's sv_reg_small (0 = the smallest regular value).
   run exits 0 when R1-R4, E1 and E2 pass and J's four smallest regular values match the record's (relative 1e-3), 1 if
   not; the reading is printed and recorded, not exit-coded. planted runs a synthetic pencil M(lam) = A - lam B (n 120:
@@ -332,6 +335,56 @@ def analyze(P, lam_r, lo, hi, mode, wrong=(-0.05, 0.05), rec_sv=None, verbose=Tr
     return out
 
 
+def link(nold, nnew):
+    """mode_tracker.py's identity rule: old index of each of the 4 new sv_reg_small entries (None = new)"""
+    dn = nnew - nold
+    return {0: [0, 1, 2, 3], -1: [None, 0, 1, 2], 1: [1, 2, 3, None]}.get(dn, [None] * 4)
+
+
+def refit(records, reads, start_D, start_index, ranges):
+    """sigma of the tracked falling mode against lambda_1: ln sigma = ln A + p ln lambda_1 by least squares"""
+    recs = []
+    for f in records:
+        recs += [json.loads(l) for l in open(f) if l.strip()]
+    recs = sorted({r["D"]: r for r in recs}.values(), key=lambda r: r["D"])
+    lam = {}
+    for D, path in reads:
+        line = [l for l in open(path) if "robust change (" in l][-1]
+        lam[D] = float(line.split("det-linear")[1].split(",")[0])
+    track, i, prev = {}, None, None
+    for r in recs:
+        if r["D"] < start_D - 1e-12:
+            continue
+        if prev is None:
+            i = start_index
+        else:
+            m = link(prev["n_null"], r["n_null"])
+            i = m.index(i) if i in m else None
+            if i is None:
+                break
+        track[r["D"]] = (r["sv_reg_small"][i], i, r["n_null"])
+        prev = r
+    rows = [(D, track[D][0], lam[D], track[D][1]) for D in sorted(track) if D in lam]
+    for D, s, l, i in rows:
+        print(f"  D {D:<9g} sigma {s:.4e} (sv_reg_small[{i}])  lambda_1 {l:.6f}")
+    out = []
+    for lo, hi in ranges:
+        sel = [(s, l) for D, s, l, _ in rows if lo - 1e-12 <= D <= hi + 1e-12]
+        if len(sel) < 3:
+            continue
+        y, x = np.log([s for s, _ in sel]), np.log([l for _, l in sel])
+        p, lnA = np.polyfit(x, y, 1)
+        res = y - (lnA + p * x)
+        rms = float(np.sqrt(np.mean(res ** 2)))
+        out.append(dict(lo=lo, hi=hi, n=len(sel), p=float(p), A=float(np.exp(lnA)), rms=rms))
+        print(f"  D {lo:g}-{hi:g}, {len(sel)} points: sigma = {np.exp(lnA):.4e} lambda_1^{p:.3f}, rms {100 * rms:.2f}% "
+              f"(max |residual| {100 * np.max(np.abs(res)):.2f}%)")
+    loc = [(rows[k][0], rows[k + 1][0], float(np.log(rows[k + 1][1] / rows[k][1]) / np.log(rows[k + 1][2] / rows[k][2])))
+           for k in range(len(rows) - 1)]
+    print("  local exponents d ln sigma / d ln lambda_1: " + ", ".join(f"{a:g}-{b:g} {e:.2f}" for a, b, e in loc))
+    return dict(rows=rows, fits=out, local=loc)
+
+
 def write(path, rec):
     if path:
         with open(path, "a") as f:
@@ -340,14 +393,23 @@ def write(path, rec):
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("cmd", choices=["run", "planted"])
+    ap.add_argument("cmd", choices=["run", "planted", "refit"])
     ap.add_argument("args", nargs="*")
     ap.add_argument("--mode", type=int, default=1)
     ap.add_argument("--wrong", default="-0.05,0.05")
     ap.add_argument("--out", default="")
     ap.add_argument("--mutate", default="")
+    ap.add_argument("--records", default=""); ap.add_argument("--reads", default="")
+    ap.add_argument("--start", default=""); ap.add_argument("--ranges", default="")
     a = ap.parse_args()
     wrong = [float(w) for w in a.wrong.split(",") if w]
+    if a.cmd == "refit":
+        reads = [(float(x.split("=", 1)[0]), x.split("=", 1)[1]) for x in a.reads.split(",") if x]
+        sD, si = a.start.split(":")
+        ranges = [tuple(float(v) for v in r.split(":")) for r in a.ranges.split(",") if r]
+        r = refit(a.records.split(","), reads, float(sD), int(si), ranges)
+        write(a.out, dict(cmd="refit", records=[os.path.basename(f) for f in a.records.split(",")], **r))
+        sys.exit(0)
     if a.cmd == "planted":
         ok = True
         cases = (("P1", 1e-10, None, "consistent with H"), ("P2", 1.0, None, "refuted"),
