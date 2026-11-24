@@ -102,3 +102,5 @@ D,kc,build,value,kind,reason
 20.90625,87,linux,0.938363,lambda_1,by position: the only robust change in 0.925-0.955 at k_c 87 (dh170 a2d42e42); k_c 79 0.938234: +0.00013
 21.0,79,linux,0.909538,lambda_1,by position: the only robust change in 0.895-0.925 on the restarted k_c 79 leap's state (dh610)
 19.0,95,windows,1.540245,lambda_1,by position: the only change in 1.395-1.550 at k_c 95 on Windows (winb f2bcf20e); its orientation flips with the lower root's absence; Linux 1.540058
+21.0,71,linux,0.901815,lambda_1_scout,k_c 71 calibration (dh170 kc71_scout): k_c 71 - k_c 79 = -0.0077 at D 21.0 (-0.0031 at D 19)
+21.125,71,windows,0.862215,lambda_1_scout,k_c 71 scout (winb kc71_d21125); with the k_c 71 -> 79 step of D 21.0 it sits 0.002 from the k_c 79 trend
