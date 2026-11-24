@@ -309,6 +309,9 @@ def _indexed(job):
     return i, r, time.process_time() - c
 
 
+MP_KEY_FROM_ROW = False     # True: key extended-precision rows from their own floats (the pre-fix keying; a control)
+
+
 class Multiplier:
     def __init__(self, M, cache, procs, plant=None, mutate=None, r1=0.2, ymax=1e2, m3fix=False, retry=False,
                  bounds=None, m3mp=False):
@@ -354,8 +357,11 @@ class Multiplier:
         import value_mp as VM
         kw = dict(r1=repr(float(self.r1)))
         args = []
-        for p in pts:                               # float(): under numpy 2, repr of a numpy float reads np.float64(...)
+        back = {}                                   # a row's (A, wf) -> the key the walk asked for: at a decimal tie
+        for p in pts:                               # round() of a numpy float and of a Python float differ (dh610, #1076)
             r = self.extra[self.key(p)]
+            back[(float(p[0]), float(p[1]))] = self.key(p)
+            # float(): under numpy 2, repr of a numpy float reads np.float64(...)
             args.append(((repr(float(p[0])), repr(float(p[1])), repr(float(r["F3re"])), repr(float(r["F3im"]))), kw))
         if self.procs > 1:
             if self.pool is None:
@@ -366,7 +372,10 @@ class Multiplier:
             it = map(VM._batch_one, args)
         with open(self.cache, "a") as fh:
             for row in it:
-                k = self.key((row["A"], row["wf"]))
+                if MP_KEY_FROM_ROW:                       # the control (argcount_tie_check.py --mutate=pykey): the old keying
+                    k = self.key((row["A"], row["wf"]))
+                else:                                     # value_point returns float() of the repr: the same pair, exactly
+                    k = back[(row["A"], row["wf"])]
                 rec = {f: row[f] for f in ("re", "im", "info", "F3re", "F3im", "ymax", "sig", "fu", "mp_dps", "valued")}
                 rec = dict(A=k[0], wf=k[1], r1=self.r1, **rec)
                 if not rec["info"] < 1e-8:                # not tuned: no value, as the float64 records keep it
