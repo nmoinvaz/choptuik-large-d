@@ -14,10 +14,12 @@ corrects ln|det| by the scalings' exact logarithm. --control=update_dd does the 
 (the control: it must reproduce the double-double jag). Each lambda writes sign, ln|det|, the qd pivot range, and the
 scalings' shift; the kernel's mode_det is not called (run it separately to compare).
 
-selftest: a planted n = 48 matrix A = L U, unit lower L and upper U with dyadic entries, one diagonal entry of U
-2^-140 (below double-double's floor), so det A = prod U_kk exactly. A is held in two exact parts, hi = L U0 (U with
-that entry zero) and lo = L E (E the 2^-140 entry alone), since in one double the tiny part would round away. The
-quad-double LU must give det's sign and ln|det| to 1e-12; with update_dd it must not (the control)."""
+selftest: multidouble's planted case (python/tests/test_logdet.py at the pinned commit): a float64 matrix
+A = [[B, b], [c^T, d]] of order 40 whose Schur complement is +-1e-45 (the sign chosen so that the quad-double LU with
+double-double updates gets it wrong), with full-mantissa entries and the reference det from mpmath at 200 digits. The
+quad-double LU, plain and equilibrated, must give the sign and ln|det| within 1e-6; with update_dd it must not (the
+control). An earlier planted matrix of few-bit dyadic entries could not make the control fire (dh370): every
+trailing update was exact in double-double."""
 import json
 import math
 import os
@@ -57,35 +59,58 @@ def qd_det(Mh, Ml, equil=True, control="none", par=True):
                 ratio=float(pmin) / float(pmax), shift=shift, equil=bool(equil), control=control)
 
 
-def planted(n=48, seed=3, tiny=-140):
+DPS = 200
+
+
+def near_singular(n, tau, seed):
+    """multidouble's test matrix: B, b, c random; the last three entries of c chosen in mpmath to cancel c^T B^-1 b to
+    about 2^-53 each; d = fl(t + tau). Returns A and its Schur complement s exactly (det A = s det B)"""
+    import mpmath as mp
     rng = np.random.default_rng(seed)
-    L = np.tril(rng.integers(-8, 9, (n, n)) / 16.0, -1) + np.eye(n)       # unit lower, entries k/16
-    U0 = np.triu(rng.integers(-8, 9, (n, n)) / 16.0, 1)
-    d = rng.integers(1, 8, n) * np.where(rng.random(n) < 0.5, -1.0, 1.0)  # diagonal: small integers
-    k = n // 2
-    dk = 2.0 ** tiny                                                      # one pivot below double-double's floor
-    d0 = d.copy()
-    d0[k] = 0.0
-    U0 += np.diag(d0)
-    E = np.zeros((n, n))
-    E[k, k] = dk
-    hi, lo = L @ U0, L @ E                                                # both exact: dyadics of few bits
-    d[k] = dk
-    return hi, lo, float(np.prod(np.sign(d))), float(np.sum(np.log(np.abs(d))))
+    m = n - 1
+    B, b, c = rng.standard_normal((m, m)), rng.standard_normal(m), rng.standard_normal(m)
+    c[m - 3:] = 0.0
+    with mp.workdps(DPS):
+        y = mp.lu_solve(mp.matrix(B.tolist()), mp.matrix(b.tolist()))
+        t = mp.fsum(mp.mpf(c[k]) * y[k] for k in range(m))
+        for k in range(m - 3, m):
+            c[k] = float(-t / y[k])
+            t += mp.mpf(c[k]) * y[k]
+        d = float(t + tau)
+        sc = mp.mpf(d) - t
+    return np.block([[B, b[:, None]], [c[None, :], np.array([[d]])]]), sc
+
+
+def mp_logdet(A):
+    import mpmath as mp
+    with mp.workdps(DPS):
+        dt = mp.det(mp.matrix([[mp.mpf(float(v)) for v in row] for row in A]))
+        return (1.0 if dt > 0 else -1.0), float(mp.log(abs(dt)))
+
+
+def planted(n=40, tau=1e-45, seed=5):
+    """near_singular's matrix with Schur complement +tau or -tau, whichever gives det A the sign opposite to the one the
+    quad-double LU with double-double updates finds (as multidouble's test, with its update_dd control as 'wrong')"""
+    qd = _qd_logdet()
+    for t in (tau, -tau):
+        A, _ = near_singular(n, t, seed)
+        z = np.zeros_like(A)
+        ref = mp_logdet(A)
+        if qd(A, z, z, z, False, "update_dd")[0] != ref[0]:
+            return A, ref
+    raise AssertionError("the double-double updates' sign follows tau here")
 
 
 def selftest():
-    hi, lo, s0, l0 = planted()
-    q = qd_det(hi, lo, equil=False)
-    ok1 = q["sign"] == s0 and abs(q["ln"] - l0) < 1e-12
-    c = qd_det(hi, lo, equil=False, control="update_dd")
-    ok2 = not (c["sign"] == s0 and abs(c["ln"] - l0) < 1e-6)
-    qe = qd_det(hi, lo, equil=True)
-    ok3 = qe["sign"] == s0 and abs(qe["ln"] - l0) < 1e-12
-    print(f"selftest: planted det sign {s0:+.0f} ln {l0:.12f}; qd {q['sign']:+.0f} {q['ln']:.12f} "
-          f"({'PASS' if ok1 else 'FAIL'}); qd equilibrated {qe['sign']:+.0f} {qe['ln']:.12f} "
-          f"({'PASS' if ok3 else 'FAIL'}); control update_dd {c['sign']:+.0f} {c['ln']:.12f} "
-          f"({'fires' if ok2 else 'DOES NOT FIRE'})")
+    A, (s0, l0) = planted()
+    z = np.zeros_like(A)
+    agrees = lambda d: d["sign"] == s0 and abs(d["ln"] - l0) <= 1e-6
+    q, qe = qd_det(A, z, equil=False), qd_det(A, z, equil=True)
+    c = qd_det(A, z, equil=False, control="update_dd")
+    ok1, ok3, ok2 = agrees(q), agrees(qe), not agrees(c)
+    print(f"selftest: planted det (mpmath, {DPS} digits) sign {s0:+.0f} ln {l0:.9f}; qd {q['sign']:+.0f} {q['ln']:.9f} "
+          f"({'PASS' if ok1 else 'FAIL'}); qd equilibrated {qe['sign']:+.0f} {qe['ln']:.9f} ({'PASS' if ok3 else 'FAIL'}); "
+          f"control update_dd {c['sign']:+.0f} {c['ln']:.9f} ({'fires' if ok2 else 'DOES NOT FIRE'})")
     return 0 if ok1 and ok2 and ok3 else 1
 
 
