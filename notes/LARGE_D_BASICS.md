@@ -6,7 +6,7 @@ notes/RT_FORMULATION.md, notes/QUAD_DOUBLE.md §12–13 and issues #91, #731, #9
 
 Scripts are in [`solver/basics/`](../solver/basics/); `bash solver/basics/run_all.sh OUT STATES` reruns every check with
 its control (the clone step for STATES is in the script's header). Raw logs: folder `I1086-mac/` of the raw-data
-repository. Status words as in AGENTS.md. Every number below comes from a log in `I1086-mac/` or from a file named
+repository (0bb5ea71b). Status words as in AGENTS.md. Every number below comes from a log in `I1086-mac/` or from a file named
 beside it.
 
 ## 0. Verdicts
