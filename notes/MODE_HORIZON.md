@@ -182,7 +182,8 @@ Then, if criteria 1 to 4 pass, γ at D 3.044375 from D_m: `python3 mode_matched.
   Checked against SIAM's and TU Eindhoven's records.
 - J. Humpherys and K. Zumbrun, "An efficient shooting algorithm for Evans function calculations in large systems",
   Physica D (2006), doi:10.1016/j.physd.2006.07.003, arXiv:math/0508020: Evans functions of large systems by
-  shooting from both ends to a matching point, with continuous orthogonalization. Checked against arXiv (title,
-  authors, related DOI); the volume and pages are not checked. The term "Evans function" is from J. W. Evans's
+  shooting, with a polar-coordinate form of continuous orthogonalization that keeps the function analytic in its
+  parameter (from the arXiv abstract; the paper itself not read here). Checked against arXiv (title, authors, related
+  DOI); the volume and pages are not checked. The term "Evans function" is from J. W. Evans's
   nerve-axon papers (Indiana Univ. Math. J., 1972–1975) *(unverified)*.
 - Liouville's formula for the determinant of a fundamental matrix, det Φ = exp(∫ tr A): a textbook result.
