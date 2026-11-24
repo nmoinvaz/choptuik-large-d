@@ -25,6 +25,8 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, HERE)
 import inner_mp as IM  # noqa: E402
 
+PROGRESS = os.environ.get("VALUE_MP_PROGRESS") == "1"
+
 
 def solve(A, wf, v0, r1, dps, p, iters=8, hrel="1e-12", margin=12, J=None, chord="1e-4", M=3, damp=0):
     """Newton on r_3 = ... = r_M = 0 for v = (B_3, C_3, ..., B_M, C_M) at precision dps, with chord steps
@@ -39,10 +41,16 @@ def solve(A, wf, v0, r1, dps, p, iters=8, hrel="1e-12", margin=12, J=None, chord
     assert len(v) == n
     calls = 0
 
+    t0 = time.time()
+
     def res(vv):
         nonlocal calls
         calls += 1
-        return IM.residual_demixed([A, wf] + list(vv), M, r1, p=p, margin=margin)
+        out = IM.residual_demixed([A, wf] + list(vv), M, r1, p=p, margin=margin)
+        if PROGRESS:                            # VALUE_MP_PROGRESS=1: one stderr line per residual call (#1080)
+            print(f"  solve dps {dps}: call {calls}, max|r| {mp.nstr(max(abs(x) for x in out[0][2:]), 3)}, "
+                  f"{time.time() - t0:.0f} s", file=sys.stderr, flush=True)
+        return out
 
     def jac(vv):
         hs = mp.mpf(hrel) * max(max(abs(x) for x in vv), mp.mpf("1e-3"))
