@@ -2,7 +2,7 @@
 
     python3 ell1_roots.py RAWDIR --commit=HASH [--out=matter/ell1_roots.csv] [--best=matter/ell1_best.csv]
                           [--kinds=matter/ell1_root_kinds.csv]
-    python3 ell1_roots.py selftest [--mutate=shift|robust]     exit 0 only if every planted case reads as written
+    python3 ell1_roots.py selftest [--mutate=shift|robust|neighbour]     exit 0 only if every planted case reads as written
 
 RAWDIR is a checkout (or an extract) of choptuik-large-d-raw at --commit. Two sources:
 - hybrid sign scans (d18_hybsign.py rows: every jsonl under I1025-*/ whose rows carry its fields; planted, control
@@ -176,10 +176,29 @@ def kc_steps(lam1):
     return out
 
 
+def kc_steps_into(lam1):
+    """{(D, kc'): |root(kc') - root(kc)|} for each D with lambda_1 at two k_c, kc' the upper and kc the next below"""
+    out = {}
+    for D in {r["D"] for r in lam1}:
+        R = [r for r in lam1 if r["D"] == D]
+        kcs = sorted({r["kc"] for r in R})
+        for lo, hi in zip(kcs, kcs[1:]):
+            out[(D, hi)] = max(abs(x["root"] - y["root"]) for x in R if x["kc"] == lo for y in R if y["kc"] == hi)
+    return out
+
+
+def nearest_step(steps, D, kc):
+    """the step stored at (D2, kc) for the D2 nearest D within NEIGHBOUR_DD (the larger on a tie), or None"""
+    near = sorted((abs(D2 - D), D2, v) for (D2, kc2), v in steps.items() if kc2 == kc and abs(D2 - D) <= NEIGHBOUR_DD + 1e-12)
+    if not near or MUT == "neighbour":
+        return None
+    return near[0][1], max(x[2] for x in near if x[0] <= near[0][0] + 1e-12)
+
+
 def best_rows(rows):
     out = []
     lam1 = [r for r in rows if r["kind"] == "lambda_1" and r["robust"]]
-    steps = kc_steps(lam1)
+    steps, into = kc_steps(lam1), kc_steps_into(lam1)
     for D in sorted({r["D"] for r in lam1}):
         R = [r for r in lam1 if r["D"] == D]
         kmax = max(r["kc"] for r in R)
@@ -195,6 +214,8 @@ def best_rows(rows):
                 kn = max(r["kc"] for r in lower)
                 v = [r["root"] for r in lower if r["kc"] == kn]
                 errs[f"k_c step {kn}->{kmax} (across builds)"] = max(abs(top["root"] - x) for x in v)
+            elif (hit := nearest_step(into, D, kmax)) is not None:     # no lower k_c at this D: the step into kmax
+                errs[f"k_c step into {kmax} at the nearest D ({hit[0]})"] = hit[1]   # measured nearby (#1025)
         for kc in {r["kc"] for r in R}:
             v = [r["root"] for r in R if r["kc"] == kc]
             if len({r["build"] for r in R if r["kc"] == kc}) > 1:
@@ -207,14 +228,9 @@ def best_rows(rows):
             errs["estimator half-range"] = (top["range_hi"] - top["range_lo"]) / 2
         if D >= REPRO_FROM:                         # one regrid's reproducibility at the |F| floor (#1025, 10:15 UTC)
             errs["regrid reproducibility (half the D 19.75 state span)"] = REPRO
-        if (D, kmax) not in steps:                  # the next k_c not run at this D: the step measured nearby (#1025:
-            near = [(abs(D2 - D), D2, v) for (D2, kc2), v in steps.items()   # 79 -> 87 grows past D 21)
-                    if kc2 == kmax and abs(D2 - D) <= NEIGHBOUR_DD]
-            if near:
-                near.sort()
-                d0 = near[0][0]
-                v = max(x[2] for x in near if x[0] <= d0 + 1e-12)
-                errs[f"k_c step {kmax}->next at the nearest D ({near[0][1]})"] = v
+        if (D, kmax) not in steps and (hit := nearest_step(steps, D, kmax)) is not None:
+            errs[f"k_c step {kmax}->next at the nearest D ({hit[0]})"] = hit[1]   # the next k_c not run at this D: the
+                                                                                 # step measured nearby (#1025)
         ek = max(errs, key=errs.get) if errs else "none: one k_c and one build"
         out.append(dict(D=D, lambda1=top["root"], err=errs.get(ek), err_kind=ek, kc=kmax, build=top["build"],
                         Delta=top["Delta"], source=f"{top['raw_folder']} @ {top['raw_commit']}"))
@@ -249,6 +265,12 @@ def selftest():
     ok.append(len(c) == 2 and all(abs(x["lin"] - t) < 5e-4 for x, t in zip(c, (a1, a2))))
     c = changes(rows(g, lambda l: (l - a1) * (l - a2) * 40, nr=(1.495,)))   # a non-robust endpoint
     ok.append(len(c) == 2 and not c[0]["robust"] and c[1]["robust"])
+    def lr(D, kc, root):                                 # a planted lambda_1 row for best_rows
+        return dict(kind="lambda_1", robust=True, D=D, kc=kc, build="linux", eval_machine="m", root=root, state=f"s{D}",
+                    range_lo=None, range_hi=None, Delta=1.0, raw_folder="planted", raw_commit="0")
+    B = {r["D"]: r for r in best_rows([lr(1.0, 79, 0.9), lr(1.0, 87, 0.905), lr(1.05, 87, 0.89), lr(1.1, 79, 0.88)])}
+    ok.append(B[1.05]["err_kind"] == "k_c step into 87 at the nearest D (1.0)" and abs(B[1.05]["err"] - 0.005) < 1e-12
+              and B[1.1]["err_kind"] == "k_c step 79->next at the nearest D (1.0)" and abs(B[1.1]["err"] - 0.005) < 1e-12)
     print(f"selftest: {sum(ok)} of {len(ok)} planted cases read as written")
     return 0 if all(ok) else 1
 
