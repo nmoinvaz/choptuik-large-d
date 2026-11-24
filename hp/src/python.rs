@@ -250,12 +250,13 @@ macro_rules! ctx_in {
     };
 }
 
-/// f on the context as Ctx<4>, Ctx<6>, Ctx<12> or Ctx<16> (M = 32, 48, 96, 128: the quad-double sizes and the low-D
-/// runs' M up to the dense limit), with Ctx::mutate set for the call: the quad-double mode matrix (#1082)
+/// f on the context as Ctx<4>, Ctx<6> or Ctx<12> (M = 32, 48, 96: the quad-double sizes and #1078's low-D M' 96), with
+/// Ctx::mutate set for the call: the quad-double mode matrix (#1082). M = 128 is left out to bound the release build's
+/// memory (each size compiles the equations in quad-double); add 16 here when a run needs it.
 macro_rules! qd_mode_sizes {
     ($me:expr, $mutate:expr, |$c:ident| $body:expr) => {{
         let me: &mut dyn std::any::Any = $me;
-        ctx_in!(me, $mutate, |$c| $body, "the quad-double mode matrix is built for M = 32, 48, 96 and 128 only", [4, 6, 12, 16])
+        ctx_in!(me, $mutate, |$c| $body, "the quad-double mode matrix is built for M = 32, 48 and 96 only", [4, 6, 12])
     }};
 }
 
