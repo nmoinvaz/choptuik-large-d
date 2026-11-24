@@ -13,7 +13,8 @@ RAWDIR is a checkout (or an extract) of choptuik-large-d-raw at --commit. Two so
 - ell_refine.py records with a `lam` (brentq on the float64 det, up to D 17.5): one root each, method `brentq`.
 A root's kind (lambda_1, lambda_1_superseded, discretization, lambda_1_scout: a lower-k_c reading ahead of the resolved track, kept out of BEST) comes from KINDS, the coordinator's rulings by position (D, k_c, a value
 within 0.002); every other root is `unidentified`. BEST has one row per D with a lambda_1 root: lambda_1 at the
-highest k_c (Linux first), and err the largest of the k_c step on one build (across builds when that build has no lower k_c), the spread between builds at one k_c,
+highest k_c (Linux first), and err the largest of the k_c step on one build (across builds when that build has no lower k_c),
+where the next k_c was not run at that D the step from its k_c to the next measured at the nearest D within 0.1, the spread between builds at one k_c,
 the spread between states of one build at one k_c (re-converged, other thread counts), the estimator half-range, and
 from D 19.5 on a floor of 0.0026 for one regrid's reproducibility, named in err_kind."""
 import csv
@@ -159,9 +160,26 @@ def rows_from(raw, commit, kinds):
     return rows
 
 
+NEIGHBOUR_DD = 0.1      # how far in D a measured k_c step to the next k_c is carried to a row that lacks it
+
+
+def kc_steps(lam1):
+    """{(D, kc): |root(kc') - root(kc)|} for each D with lambda_1 at two k_c, kc the lower and kc' the next above"""
+    out = {}
+    for D in {r["D"] for r in lam1}:
+        R = [r for r in lam1 if r["D"] == D]
+        kcs = sorted({r["kc"] for r in R})
+        for lo, hi in zip(kcs, kcs[1:]):
+            a = [r["root"] for r in R if r["kc"] == lo]
+            b = [r["root"] for r in R if r["kc"] == hi]
+            out[(D, lo)] = max(abs(x - y) for x in a for y in b)
+    return out
+
+
 def best_rows(rows):
     out = []
     lam1 = [r for r in rows if r["kind"] == "lambda_1" and r["robust"]]
+    steps = kc_steps(lam1)
     for D in sorted({r["D"] for r in lam1}):
         R = [r for r in lam1 if r["D"] == D]
         kmax = max(r["kc"] for r in R)
@@ -189,6 +207,14 @@ def best_rows(rows):
             errs["estimator half-range"] = (top["range_hi"] - top["range_lo"]) / 2
         if D >= REPRO_FROM:                         # one regrid's reproducibility at the |F| floor (#1025, 10:15 UTC)
             errs["regrid reproducibility (half the D 19.75 state span)"] = REPRO
+        if (D, kmax) not in steps:                  # the next k_c not run at this D: the step measured nearby (#1025:
+            near = [(abs(D2 - D), D2, v) for (D2, kc2), v in steps.items()   # 79 -> 87 grows past D 21)
+                    if kc2 == kmax and abs(D2 - D) <= NEIGHBOUR_DD]
+            if near:
+                near.sort()
+                d0 = near[0][0]
+                v = max(x[2] for x in near if x[0] <= d0 + 1e-12)
+                errs[f"k_c step {kmax}->next at the nearest D ({near[0][1]})"] = v
         ek = max(errs, key=errs.get) if errs else "none: one k_c and one build"
         out.append(dict(D=D, lambda1=top["root"], err=errs.get(ek), err_kind=ek, kc=kmax, build=top["build"],
                         Delta=top["Delta"], source=f"{top['raw_folder']} @ {top['raw_commit']}"))
