@@ -38,7 +38,8 @@ usage: python ell_overlap.py run REC.jsonl STATE.npy D LAM_R LO HI --mode I [--w
   n_null), against lambda_1 from the readings' last "robust change" line; ln sigma = ln A + p ln lambda_1 per range.
        python ell_overlap.py floor REC.jsonl STATE.npy D [--out F.jsonl]
   floor: R1's rounding floor (run's three random x, M(0) x with the complex step 1e-20 against 3e-20); exit 0 when R1 is
-  at most 10 times it. Also the full M(0) against J[:n, :n] entry by entry. (Added after R1 missed its first bar, 1e-12,
+  at most 10 times it and the full M(0) equals J[:n, :n] to Frobenius 1e-14 (it is bitwise equal at k_c 87, D 21.125;
+  the 10 x floor bar alone did not catch --mutate=r1). (Added after R1 missed its first bar, 1e-12,
   at k_c 87, D 21.125: 7.8e-11; the bar 10 x floor was written before the floor was measured.) --mutate=r1 scales J's
   first column by 1 + 1e-6, and floor must exit 1.
        python ell_overlap.py diag REC.jsonl STATE.npy D LAM_R --mode I [--out F.jsonl]
@@ -591,7 +592,7 @@ def main():
         dif = M0 - J[:P.n, :P.n]
         full = dict(max_abs=float(np.max(np.abs(dif))), max_J=float(np.max(np.abs(J))),
                     frob=float(np.linalg.norm(dif) / np.linalg.norm(J[:P.n, :P.n])), bitwise=bool(not np.any(dif)))
-        ok = r1 <= 10 * fl
+        ok = r1 <= 10 * fl and full["frob"] <= 1e-14        # the 10 x floor bar alone missed --mutate=r1 (#1085)
         log(f"floor: |M(0)x (h 1e-20) - M(0)x (h 3e-20)| / |M(0)x| {fl:.2e}; R1 {r1:.2e}; R1 <= 10 x floor: "
             f"{'OK' if ok else 'BAD'}. Full M(0) - J[:n,:n]: max |diff| {full['max_abs']:.2e} (max |J| {full['max_J']:.3g}), "
             f"Frobenius relative {full['frob']:.2e}, bitwise equal {full['bitwise']}; peak RSS {rss_gb():.2f} GB")
