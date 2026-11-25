@@ -15,7 +15,8 @@ derivative of a perturbation as D f + lambda f (dss.py).
     omega D + kappa_0 + lambda for all members (the first-order part of each member's solve, which is all the complex
     step's imaginary part keeps; DSSEll.solve_periodic factors one complex matrix per member).
 
-    python ell_fastm.py check STUB.jsonl STATE.npy D LAM [--blocks=0,1,12] [--mutate=nolam] [--out=F.json]
+    python ell_fastm.py check STUB.jsonl STATE.npy D LAM [--blocks=0,1,12] [--basis=coef|grid] [--mutate=nolam]
+                              [--out=F.json]
         M_fast against DSSEll.mode_matrix block by block (max |difference| / max |block| <= 1e-10) and slogdet (the same
         sign, ln|det| within 1e-8), with both timings; exit 0 only if every compared block and the determinant pass.
         --blocks limits both builds to those blocks (the determinant is then not compared). --mutate=nolam drops lambda
@@ -43,13 +44,12 @@ MUTATE = next((a.split("=", 1)[1] for a in sys.argv if a.startswith("--mutate=")
 
 
 # ---------------------------------------------------------------- the linearised right side
-def rhs_lin(S, x, s, ds, om, lam, scale=None):
-    """DSSEll.rhs at the base state s (5, 1, N) and its derivative applied to the tangents ds (5, nf, N), both truncated
-    and times scale (the integrate_u / integrate_log factor) when scale is not None. om is the real omega; lam enters
-    the tangents' tau derivatives (D f + lam f)."""
+def _base(S, x, s, om, lam):
+    """DSSEll.rhs at the base state s (5, 1, N), before its truncation, and the (1, N) coefficients of its derivative:
+    d(field_x) = sum over the inputs of coef * d(input), plus coef_D * D_unit d(p) (or d(m)); lam enters the tangents'
+    tau derivatives (D f + lam f)"""
     p, m, a, c, q = s
     n, L = S.n, S.L
-    N = s.shape[-1]
     a2 = a * a
     qq = q * q
     g = a2 * qq
@@ -67,7 +67,6 @@ def rhs_lin(S, x, s, ds, om, lam, scale=None):
     px = (-Dp + cx * p - c * p / x + pc - lt) * ip
     mx = (-Dmm - cx * m + c * m / x - pc + lt) * im
     base = np.stack([px, mx, ax, cx, qx])
-    # tangent coefficients: d(field_x) = sum over inputs of coef * d(input), plus coef_D * D_unit d(p or m)
     wA = (2 * (n - 1) * a - 4 * L * a * qq) / x                   # dW = wA dA + wQ dQ
     wQ = -4 * L * a2 * q / x
     cxA, cxQ = c * wA, c * wQ                                     # dc_x = W dC + cxA dA + cxQ dQ
@@ -77,29 +76,35 @@ def rhs_lin(S, x, s, ds, om, lam, scale=None):
     pcC, pcPM = n * (p + m) / (2 * x), n * c / (2 * x)
     ltC, ltA, ltQ = L * a2 * q / x, 2 * L * c * a * q / x, L * c * a2 / x
     lt_ = 0.0 if MUTATE == "nolam" else lam
-    pxP = (-lt_ + cx - c / x + pcPM) * ip
-    pxM = pcPM * ip
-    pxA = (cxA * p - ltA) * ip
-    pxC = (W * p - p / x + pcC - ltC + px) * ip
-    pxQ = (cxQ * p - ltQ) * ip
-    pxD = -om * ip
-    mxM = (-lt_ - cx + c / x - pcPM) * im
-    mxP = -pcPM * im
-    mxA = (-cxA * m + ltA) * im
-    mxC = (-W * m + m / x - pcC + ltC - mx) * im
-    mxQ = (-cxQ * m + ltQ) * im
-    mxD = -om * im
     if MUTATE == "coef":
         axP = axP * (1 + 1e-6)
-    P, M, A, C, Q = ds
+    cf = dict(pP=(-lt_ + cx - c / x + pcPM) * ip, pM=pcPM * ip, pA=(cxA * p - ltA) * ip,
+              pC=(W * p - p / x + pcC - ltC + px) * ip, pQ=(cxQ * p - ltQ) * ip, pD=-om * ip,
+              mM=(-lt_ - cx + c / x - pcPM) * im, mP=-pcPM * im, mA=(-cxA * m + ltA) * im,
+              mC=(-W * m + m / x - pcC + ltC - mx) * im, mQ=(-cxQ * m + ltQ) * im, mD=-om * im,
+              aA=axA, aP=axP, aM=axM, aQ=axQ, cC=W, cA=cxA, cQ=cxQ, hx=hx)
+    return base, cf
+
+
+def _tan(cf, P, M, A, C, Q, DP, DM):
+    """the five tangent right sides on the grid (before truncation)"""
+    return (cf["pP"] * P + cf["pM"] * M + cf["pA"] * A + cf["pC"] * C + cf["pQ"] * Q + cf["pD"] * DP,
+            cf["mP"] * P + cf["mM"] * M + cf["mA"] * A + cf["mC"] * C + cf["mQ"] * Q + cf["mD"] * DM,
+            cf["aA"] * A + cf["aP"] * P + cf["aM"] * M + cf["aQ"] * Q,
+            cf["cC"] * C + cf["cA"] * A + cf["cQ"] * Q,
+            cf["hx"] * (P + M))
+
+
+def rhs_lin(S, x, s, ds, om, lam, scale=None):
+    """DSSEll.rhs at the base state s (5, 1, N) and its derivative applied to grid tangents ds (5, nf, N), both truncated
+    (DSSEll.trunc) and times scale (the integrate_u / integrate_log factor) when scale is not None"""
+    base, cf = _base(S, x, s, om, lam)
+    N = s.shape[-1]
     nf = ds.shape[1]
     DPM = (ds[:2].reshape(2 * nf, N) @ S._Dm).reshape(2, nf, N)
     out = np.empty_like(ds)
-    out[0] = pxP * P + pxM * M + pxA * A + pxC * C + pxQ * Q + pxD * DPM[0]
-    out[1] = mxP * P + mxM * M + mxA * A + mxC * C + mxQ * Q + mxD * DPM[1]
-    out[2] = axA * A + axP * P + axM * M + axQ * Q
-    out[3] = W * C + cxA * A + cxQ * Q
-    out[4] = hx * (P + M)
+    for f, v in enumerate(_tan(cf, *ds, DPM[0], DPM[1])):
+        out[f] = v
     base = S.trunc(base)
     dk = (out.reshape(5 * nf, N) @ S._Tm).reshape(5, nf, N)
     if scale is not None:
@@ -108,14 +113,52 @@ def rhs_lin(S, x, s, ds, om, lam, scale=None):
     return base, dk
 
 
-def _rk4(S, s, ds, y0, h, steps, xmap, om, lam):
+class CoefOps:
+    """the tau maps for tangents carried as parity-restricted Fourier coefficients (nf, blk), the block layout"""
+
+    def __init__(self, S):
+        no, ne = S.n_odd, S.n_even
+        self.cut = np.cumsum([0, no, no, ne, ne, no])
+        self.Bo, self.Be = S._B["odd"], S._B["even"]
+        self.BBo = np.ascontiguousarray(np.concatenate([self.Bo, self.Bo @ S._Dm], axis=1))   # values, d/dtau
+        self.So, self.Se = S._S["odd"], S._S["even"]
+
+
+def rhs_lin_coef(S, x, s, dc, om, lam, scale, ops):
+    """rhs_lin with the tangents as coefficients dc (nf, blk): grid values by DSSEll.phys's matrices, the right sides back
+    by DSSEll.spec's (the parity-restricted projection, which equals DSSEll.trunc on fields of the right parity)"""
+    base, cf = _base(S, x, s, om, lam)
+    N = S.N
+    k = ops.cut
+    PP = dc[:, k[0]:k[1]] @ ops.BBo
+    MM = dc[:, k[1]:k[2]] @ ops.BBo
+    A = dc[:, k[2]:k[3]] @ ops.Be
+    C = dc[:, k[3]:k[4]] @ ops.Be
+    Q = dc[:, k[4]:k[5]] @ ops.Bo
+    tp, tm, ta, tc, tq = _tan(cf, PP[:, :N], MM[:, :N], A, C, Q, PP[:, N:], MM[:, N:])
+    out = np.empty_like(dc)
+    out[:, k[0]:k[1]] = tp @ ops.So
+    out[:, k[1]:k[2]] = tm @ ops.So
+    out[:, k[2]:k[3]] = ta @ ops.Se
+    out[:, k[3]:k[4]] = tc @ ops.Se
+    out[:, k[4]:k[5]] = tq @ ops.So
+    base = S.trunc(base)
+    if scale is not None:
+        base = scale * base
+        out = scale * out
+    return base, out
+
+
+def _rk4(S, s, ds, y0, h, steps, xmap, om, lam, ops=None):
     """RK4 in y (as dss.DSS.integrate, DSSEll.integrate_u, DSSEll.integrate_log) on the base and its tangents;
-    xmap(y) = (x, scale)"""
+    xmap(y) = (x, scale); ops: CoefOps for coefficient tangents, None for grid tangents"""
     y = y0
 
     def f(y, s, ds):
         x, sc = xmap(y)
-        return rhs_lin(S, x, s, ds, om, lam, sc)
+        if ops is None:
+            return rhs_lin(S, x, s, ds, om, lam, sc)
+        return rhs_lin_coef(S, x, s, ds, om, lam, sc, ops)
     for _ in range(steps):
         k1, d1 = f(y, s, ds)
         k2, d2 = f(y + h / 2, s + h / 2 * k1, ds + h / 2 * d1)
@@ -127,21 +170,22 @@ def _rk4(S, s, ds, y0, h, steps, xmap, om, lam):
     return s, ds
 
 
-def seg_lin(S, s, ds, xa, xb, om, lam):
+def seg_lin(S, s, ds, xa, xb, om, lam, ops=None):
     """DSSEll.seg on base and tangents (frozen step counts required)"""
     k = S._steps(xa, xb)
     if k is None:
         raise ValueError("ell_fastm needs frozen RK step counts (S.freeze_from)")
     if min(xa, xb) >= 0.4:
         ya, yb = np.log(1 - xa), np.log(1 - xb)
-        return _rk4(S, s, ds, ya, (yb - ya) / k, k, lambda y: (1 - np.exp(y), -np.exp(y)), om, lam)
-    return _rk4(S, s, ds, xa, (xb - xa) / k, k, lambda y: (y, None), om, lam)
+        return _rk4(S, s, ds, ya, (yb - ya) / k, k, lambda y: (1 - np.exp(y), -np.exp(y)), om, lam, ops)
+    return _rk4(S, s, ds, xa, (xb - xa) / k, k, lambda y: (y, None), om, lam, ops)
 
 
-def log_lin(S, s, ds, xa, xb, om, lam):
+def log_lin(S, s, ds, xa, xb, om, lam, ops=None):
     """DSSEll.integrate_log on base and tangents"""
     k = S.steps_map["log"]
-    return _rk4(S, s, ds, np.log(xa), (np.log(xb) - np.log(xa)) / k, k, lambda y: (np.exp(y), np.exp(y)), om, lam)
+    return _rk4(S, s, ds, np.log(xa), (np.log(xb) - np.log(xa)) / k, k, lambda y: (np.exp(y), np.exp(y)), om, lam,
+                ops)
 
 
 # ---------------------------------------------------------------- series by complex step
@@ -201,24 +245,29 @@ def node_start(S, X):
     return s, ds
 
 
-def block_lin(S, b, X, om, lam):
-    """block b's end state and its (5, nf, N) tangents"""
+def block_lin(S, b, X, om, lam, basis="coef"):
+    """block b's end state and its tangents: (nf, blk) coefficients (basis coef) or (5, nf, N) grid values (basis grid)"""
     K = len(S.nodes)
-    if b == 0:
-        s, ds = series_cs(S, 0, X, om, lam)
-        return log_lin(S, s, ds, S.x0, S.nodes[0], om, lam)
-    if b < K:
-        s, ds = node_start(S, X)
-        return seg_lin(S, s, ds, S.nodes[b - 1], S.nodes[b], om, lam)
-    s, ds = series_cs(S, b, X, om, lam)
-    if S.long:
-        return s, ds
-    return seg_lin(S, s, ds, 1 - S.u0, S.nodes[-1], om, lam)
+    ops = CoefOps(S) if basis == "coef" else None
+    if b == 0 or b == K:
+        s, ds = series_cs(S, b, X, om, lam)
+        if ops is not None:
+            ds = S.tospec(ds)
+        if b == 0:
+            return log_lin(S, s, ds, S.x0, S.nodes[0], om, lam, ops)
+        if S.long:
+            return s, ds
+        return seg_lin(S, s, ds, 1 - S.u0, S.nodes[-1], om, lam, ops)
+    s, ds = node_start(S, X)
+    if ops is not None:
+        ds = np.eye(len(X))
+    return seg_lin(S, s, ds, S.nodes[b - 1], S.nodes[b], om, lam, ops)
 
 
-def mode_matrix_fast(S, z, lam, only=None, log=None):
+def mode_matrix_fast(S, z, lam, only=None, log=None, basis="coef"):
     """DSSEll.mode_matrix(z, lam) (float64, Delta fixed) by the variational map; only: block indices to build (the others
-    are left zero, as ell_ddm.DDEll.mode_matrix's only=)"""
+    are left zero, as ell_ddm.DDEll.mode_matrix's only=); basis: the tangents as coefficients (coef) or grid values
+    (grid)"""
     sizes, K, L = S.layout()
     nv = L - 1
     Mm = np.zeros((nv, nv))
@@ -231,8 +280,8 @@ def mode_matrix_fast(S, z, lam, only=None, log=None):
         if only is not None and b not in only:
             continue
         t0 = time.time()
-        _, ds = block_lin(S, b, z[c0:c0 + nf], om, lam)
-        R = S.tospec(ds)
+        _, ds = block_lin(S, b, z[c0:c0 + nf], om, lam, basis)
+        R = ds if basis == "coef" else S.tospec(ds)
         r0 = b * blk
         Mm[r0:r0 + blk, c0:c0 + nf] = R.T
         t0_ = node0 + blk * tgt
@@ -323,15 +372,17 @@ def checkcmd(argv):
     opts = dict(a[2:].split("=", 1) for a in argv if a.startswith("--") and "=" in a)
     recf, st, D, lam = args[0], args[1], float(args[2]), float(args[3])
     only = [int(v) for v in opts["blocks"].split(",")] if "blocks" in opts else None
+    basis = opts.get("basis", "coef")
     S, z, rec, same, msg = load_system(recf, st, D)
     print(msg, flush=True)
     if not same:
         sys.exit(3)
-    print(f"N {S.N}, n_odd {S.n_odd}, n_even {S.n_even}, blocks {only or 'all'}, lambda {lam!r}, mutate {MUTATE or 'none'}",
+    print(f"N {S.N}, n_odd {S.n_odd}, n_even {S.n_even}, blocks {only or 'all'}, lambda {lam!r}, tangents {basis}, "
+          f"mutate {MUTATE or 'none'}",
           flush=True)
     with np.errstate(all="ignore"):
         t0 = time.time()
-        Mf = mode_matrix_fast(S, z, lam, only=only, log=lambda s: print("fast" + s, flush=True))
+        Mf = mode_matrix_fast(S, z, lam, only=only, log=lambda s: print("fast" + s, flush=True), basis=basis)
         tf = time.time() - t0
         t0 = time.time()
         Mc = mode_matrix_cs(S, z, lam, only=only, log=lambda s: print("cs  " + s, flush=True))
@@ -340,7 +391,7 @@ def checkcmd(argv):
     ok, res = compare(S, Mf, Mc, only)
     print(f"check: {'PASS' if ok else 'FAIL'}", flush=True)
     if "out" in opts:
-        open(opts["out"], "w").write(json.dumps(dict(D=D, kc=rec["kc"], lam=lam, only=only, mutate=MUTATE, t_fast=tf,
+        open(opts["out"], "w").write(json.dumps(dict(D=D, kc=rec["kc"], lam=lam, only=only, mutate=MUTATE, basis=basis, t_fast=tf,
                                                      t_cs=tc, ok=bool(ok), **res)) + "\n")
     sys.exit(0 if ok else 1)
 
@@ -402,14 +453,28 @@ def selftest():
     ok &= g
     print(f"rhs_lin: base against DSSEll.rhs {e0:.2e} (<= 1e-13), tangents against a central difference {e1:.2e} (<= 1e-7) "
           f"{'ok' if g else 'FAIL'}", flush=True)
-    # 2. the whole matrix at two lambda
+    # 1b. coefficient tangents against the grid ones on parity-respecting tangents
+    blk = 3 * S.n_odd + 2 * S.n_even
+    dc = rng.standard_normal((3, blk)) * 0.1
+    ops = CoefOps(S)
+    k = ops.cut
+    dsg = np.stack([S.phys(dc[:, k[f]:k[f + 1]], PAR[f]) for f in range(5)])
+    _, dkg = rhs_lin(S, x, s, dsg, om, lam)
+    _, dkc = rhs_lin_coef(S, x, s, dc, om, lam, None, ops)
+    e2 = float(np.max(np.abs(S.tospec(dkg) - dkc)) / np.max(np.abs(dkc)))
+    g = e2 <= 1e-13
+    ok &= g
+    print(f"rhs_lin_coef against rhs_lin on parity-respecting tangents {e2:.2e} (<= 1e-13) {'ok' if g else 'FAIL'}",
+          flush=True)
+    # 2. the whole matrix at two lambda, both tangent bases
     for lam in (0.0, 0.9):
         with np.errstate(all="ignore"):
-            Mf = mode_matrix_fast(S, z, lam)
             Mc = mode_matrix_cs(S, z, lam)
-        print(f"M at lambda {lam}:", flush=True)
-        g, _ = compare(S, Mf, Mc)
-        ok &= g
+            for basis in ("coef", "grid"):
+                Mf = mode_matrix_fast(S, z, lam, basis=basis)
+                print(f"M at lambda {lam}, {basis} tangents:", flush=True)
+                g, _ = compare(S, Mf, Mc)
+                ok &= g
     print(f"selftest (mutate {MUTATE or 'none'}): {'PASS' if ok else 'FAIL'}", flush=True)
     sys.exit(0 if ok else 1)
 
