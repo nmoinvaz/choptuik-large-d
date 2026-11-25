@@ -15,7 +15,7 @@ derivative of a perturbation as D f + lambda f (dss.py).
     omega D + kappa_0 + lambda for all members (the first-order part of each member's solve, which is all the complex
     step's imaginary part keeps; DSSEll.solve_periodic factors one complex matrix per member).
 
-    python ell_fastm.py check STUB.jsonl STATE.npy D LAM [--blocks=0,1,12] [--basis=coef|grid] [--mutate=nolam]
+    python ell_fastm.py check STUB.jsonl STATE.npy D LAM [--blocks=0,1,12] [--basis=coef|jac|grid] [--mutate=nolam]
                               [--out=F.json]
         M_fast against DSSEll.mode_matrix block by block (max |difference| / max |block| <= 1e-10) and slogdet (the same
         sign, ln|det| within 1e-8), with both timings; exit 0 only if every compared block and the determinant pass.
@@ -122,6 +122,12 @@ class CoefOps:
         self.Bo, self.Be = S._B["odd"], S._B["even"]
         self.BBo = np.ascontiguousarray(np.concatenate([self.Bo, self.Bo @ S._Dm], axis=1))   # values, d/dtau
         self.So, self.Se = S._S["odd"], S._S["even"]
+        self.BDo = self.Bo @ S._Dm
+        self.Bg = (self.Bo, self.Bo, self.Be, self.Be, self.Bo)
+        self.Sf = (self.So, self.So, self.Se, self.Se, self.So)
+        self.Y = np.empty((self.cut[-1], S.N))
+        self.Jf = [np.empty((self.cut[-1], self.cut[f + 1] - self.cut[f])) for f in range(5)]
+        self.jac = False
 
 
 def rhs_lin_coef(S, x, s, dc, om, lam, scale, ops):
@@ -149,6 +155,40 @@ def rhs_lin_coef(S, x, s, dc, om, lam, scale, ops):
     return base, out
 
 
+# per output field: (input field, coefficient key) and the d/dtau term's (input field, key); fields p, m, a, c, psi = 0..4
+_TERMS = ((((0, "pP"), (1, "pM"), (2, "pA"), (3, "pC"), (4, "pQ")), (0, "pD")),
+          (((0, "mP"), (1, "mM"), (2, "mA"), (3, "mC"), (4, "mQ")), (1, "mD")),
+          (((2, "aA"), (0, "aP"), (1, "aM"), (4, "aQ")), None),
+          (((3, "cC"), (2, "cA"), (4, "cQ")), None),
+          (((0, "hx"), (1, "hx")), None))
+
+
+def rhs_lin_jac(S, x, s, dc, om, lam, scale, ops):
+    """rhs_lin_coef by the stage's linearised map as a (blk, blk) matrix J acting on coefficient rows (dk = dc @ J):
+    the (g -> f) block of J is (B_g * coef_fg) @ S_f, so the products with the base state's coefficients are formed on the
+    n_g rows of B_g instead of on the nf tangent rows"""
+    base, cf = _base(S, x, s, om, lam)
+    k = ops.cut
+    blk = k[-1]
+    J = np.empty((blk, blk))
+    Y = ops.Y
+    for f, (terms, dterm) in enumerate(_TERMS):
+        Y[:] = 0.0
+        for g, key in terms:
+            np.multiply(ops.Bg[g], cf[key], out=Y[k[g]:k[g + 1]])
+        if dterm is not None:
+            g, key = dterm
+            Y[k[g]:k[g + 1]] += ops.BDo * cf[key]
+        np.matmul(Y, ops.Sf[f], out=ops.Jf[f])
+        J[:, k[f]:k[f + 1]] = ops.Jf[f]
+    base = S.trunc(base)
+    out = dc @ J
+    if scale is not None:
+        base = scale * base
+        out = scale * out
+    return base, out
+
+
 def _rk4(S, s, ds, y0, h, steps, xmap, om, lam, ops=None):
     """RK4 in y (as dss.DSS.integrate, DSSEll.integrate_u, DSSEll.integrate_log) on the base and its tangents;
     xmap(y) = (x, scale); ops: CoefOps for coefficient tangents, None for grid tangents"""
@@ -158,6 +198,8 @@ def _rk4(S, s, ds, y0, h, steps, xmap, om, lam, ops=None):
         x, sc = xmap(y)
         if ops is None:
             return rhs_lin(S, x, s, ds, om, lam, sc)
+        if ops.jac:
+            return rhs_lin_jac(S, x, s, ds, om, lam, sc, ops)
         return rhs_lin_coef(S, x, s, ds, om, lam, sc, ops)
     for _ in range(steps):
         k1, d1 = f(y, s, ds)
@@ -206,9 +248,10 @@ def _solve_periodic_cs(S, kappa, rhs, omega, h):
     return out
 
 
-def series_cs(S, b, X, om, lam, h=1e-20):
+def series_cs(S, b, X, om, lam, h=1e-20, one_lu=True):
     """block 0 or block 12's starting state at x0 or 1 - u0 (truncated, as _centre_to_node0 / _ssh_to_last before their
-    integration) and its tangents, by a complex step through the series"""
+    integration) and its tangents, by a complex step through the series; one_lu=False keeps DSSEll.solve_periodic (one
+    complex LU per member) in the horizon series"""
     no, ne = S.n_odd, S.n_even
     nf = len(X)
     Xc = np.repeat(X[None, :], nf + 1, axis=0).astype(complex)
@@ -220,12 +263,14 @@ def series_cs(S, b, X, om, lam, h=1e-20):
             Sx = S.centre_series(S.phys(Xc[:, :no], "odd"), S.phys(Xc[:, no:], "even"), omb)
             xe = S.x0
         else:
-            S.solve_periodic = lambda kappa, rhs, omega, bg=None: _solve_periodic_cs(S, kappa, rhs, omega, h)
+            if one_lu:
+                S.solve_periodic = lambda kappa, rhs, omega, bg=None: _solve_periodic_cs(S, kappa, rhs, omega, h)
             try:
                 Sx = S.ssh_series(S.phys(Xc[:, :no], "odd"), S.phys(Xc[:, no:no + ne], "even"),
                                   S.phys(Xc[:, no + ne:], "odd"), omb)
             finally:
-                del S.solve_periodic
+                if one_lu:
+                    del S.solve_periodic
             xe = S.u0
         st = S.trunc(np.stack([S.eval_series(S_, xe) for S_ in Sx]))
     finally:
@@ -246,9 +291,12 @@ def node_start(S, X):
 
 
 def block_lin(S, b, X, om, lam, basis="coef"):
-    """block b's end state and its tangents: (nf, blk) coefficients (basis coef) or (5, nf, N) grid values (basis grid)"""
+    """block b's end state and its tangents: (nf, blk) coefficients (basis coef, or jac: the same with each stage's map
+    formed as a matrix) or (5, nf, N) grid values (basis grid)"""
     K = len(S.nodes)
-    ops = CoefOps(S) if basis == "coef" else None
+    ops = CoefOps(S) if basis in ("coef", "jac") else None
+    if basis == "jac":
+        ops.jac = True
     if b == 0 or b == K:
         s, ds = series_cs(S, b, X, om, lam)
         if ops is not None:
@@ -281,7 +329,7 @@ def mode_matrix_fast(S, z, lam, only=None, log=None, basis="coef"):
             continue
         t0 = time.time()
         _, ds = block_lin(S, b, z[c0:c0 + nf], om, lam, basis)
-        R = ds if basis == "coef" else S.tospec(ds)
+        R = S.tospec(ds) if basis == "grid" else ds
         r0 = b * blk
         Mm[r0:r0 + blk, c0:c0 + nf] = R.T
         t0_ = node0 + blk * tgt
@@ -461,16 +509,18 @@ def selftest():
     dsg = np.stack([S.phys(dc[:, k[f]:k[f + 1]], PAR[f]) for f in range(5)])
     _, dkg = rhs_lin(S, x, s, dsg, om, lam)
     _, dkc = rhs_lin_coef(S, x, s, dc, om, lam, None, ops)
+    _, dkj = rhs_lin_jac(S, x, s, dc, om, lam, None, ops)
     e2 = float(np.max(np.abs(S.tospec(dkg) - dkc)) / np.max(np.abs(dkc)))
-    g = e2 <= 1e-13
+    e3 = float(np.max(np.abs(dkj - dkc)) / np.max(np.abs(dkc)))
+    g = e2 <= 1e-13 and e3 <= 1e-13
     ok &= g
-    print(f"rhs_lin_coef against rhs_lin on parity-respecting tangents {e2:.2e} (<= 1e-13) {'ok' if g else 'FAIL'}",
-          flush=True)
+    print(f"rhs_lin_coef against rhs_lin on parity-respecting tangents {e2:.2e}, rhs_lin_jac against rhs_lin_coef {e3:.2e} "
+          f"(<= 1e-13) {'ok' if g else 'FAIL'}", flush=True)
     # 2. the whole matrix at two lambda, both tangent bases
     for lam in (0.0, 0.9):
         with np.errstate(all="ignore"):
             Mc = mode_matrix_cs(S, z, lam)
-            for basis in ("coef", "grid"):
+            for basis in ("coef", "jac", "grid"):
                 Mf = mode_matrix_fast(S, z, lam, basis=basis)
                 print(f"M at lambda {lam}, {basis} tangents:", flush=True)
                 g, _ = compare(S, Mf, Mc)
