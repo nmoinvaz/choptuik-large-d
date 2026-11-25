@@ -195,7 +195,10 @@ against Track C at the same D (`diag/trackc_at.json`):
 | 400 | 6 | 1 | 757 | 7.0e-14 | 1.67323887255 | +3.58e-03 | 2.3e-10 | 8.4e-15 | 8.8e+12 | 5.6e+01 | 2.7e+16 | 211 |
 | 450 | 6 | 8 | 824 | 4.4e-11 | 1.6714732384 | +nan | nan | 1.0e-11 | 1.7e+10 | 3.5e+00 |  | 121 |
 | 500 | 6 | 8 | 890 | 9.9e-14 | 1.66700386426 | +2.47e-03 | 3.4e-10 | 1.4e-14 | 1.5e+13 | 6.1e+00 |  | 191 |
-| 600 | 6 | 8 | 1020 | 9.2e-14 | 1.66287514701 | +1.77e-03 | 4.5e-10 | 7.5e-15 | 5.0e+13 | 3.5e+00 |  | 192 |
+| 600 | 6 | 8 | 1020 | 8.1e-14 | 1.66287327803 | +1.77e-03 | 4.5e-10 | 1.5e-16 | 1.6e+15 | 3.5e+00 |  | 221 |
+| 624 | 6 | 8 | 1051 | 6.6e-14 | 1.66284118249 | +nan | nan | 6.7e-15 | 3.1e+13 | 6.6e+00 |  | 354 |
+| 636.73 | 6 | 8 | 1067 | 3.9e-09 | 1.65258986038 | +nan | nan | 1.3e-10 | 7.2e+08 | 4.5e+00 |  | 169 |
+| 650 | 6 | 8 | 1084 | 1.1e-07 | 1.66558191808 | +nan | nan | 2.9e-09 | 3.3e+07 | 6.3e+00 |  | 153 |
 <!-- end f64 table -->
 
 **The float64 error at the solutions themselves** (`diag/f64_vs_dd.log`; the horizon sums at x* in float64 against
@@ -222,12 +225,22 @@ From D 500 on even the affine double-double sum is garbage: its max\|U(x*)\| is 
 
 **Double-double, M ≥ 8.** The dd form (`mobius_sdd.py`) solves Track B's D-100 M-10 point to max|F| = 2.6e-24, with
 Δ_M10(100) = 1.7450282484478268, which is Track C + 1.76e-6 (`dd_M10_cont_try*/`). Moving off it failed, in D and in M:
-- In D: from D 100 to 102–110 at M 10.
-- In M: from M 6 to M 8 at D 200.
-- The failure is in the weak directions (σ down to 5e-15 at the seeds, 4e-21 at the D-100 solution). The split Newton
-  of `lsnewton.py` found no step that lowers the weak residual, with either difference step. This is Track B's second
-  blocker (#1088, "the weak directions' basin"), not the horizon's. hp's form S avoids it by holding harmonics 5–13
-  (Track A's D 300). The M sequence that would pin Δ to 1e-8 is therefore not computed here.
+
+| attempt | result | log |
+|---|---|---|
+| M 10, D 100 → 102–110, Track B's split Newton (difference step 1e-3 \|g\|/σ_min) | its step leaves the linear range; the reduced Jacobian is garbage | `dd_M10_cont_try2/`, `_try3/` |
+| the same with difference step 1e-9 | a weak step of 3.5e-3 lowers \|g\| but raises max\|F\| to 2.2e-8 | `dd_M10_cont_try4/` |
+| M 6 → M 8 at D 200 | no step along the weak directions | `dd_Mcont/` |
+| hold h5, h7 at D 200, M 8, then release (Track A's method) | every pairing of dropped rows tried gives a held system worse conditioned than the full one at this start (row-scaled 2.3e6 to 5.9e8, against 3.6e5) | `release/`, `diag/pairing_test_D200_M8.log` |
+| plain damped Newton, M 8, D 200, from M 6 | after one step to 9.4e-9, only λ ≈ 5e-4 lowers \|F\|; Δ creeps by 1.5e-6 per step | `diag/newton_M8_D200_a.log` |
+
+What the last row shows is the obstacle. M 8's Δ at D 200 lies about 4e-3 from M 6's, which is M 6's τ-truncation error. That distance lies along the direction that harmonic 7's selection grips weakly (σ_min 1.2e-10 after the first step), far outside Newton's basin there, about σ_min²/curvature. Track A's held harmonics start from a fitted guess (the chain's held fit), so its Δ starts close and each release moves it little. A start from M 6 resampled has harmonic 7 at zero. a = 1 and a = 8 give identical Newton histories here, as they must: the residual is the same function of the unknowns in any horizon variable.
+
+So Δ to 1e-8 needs:
+- the high harmonics started from a fit (the chain's, or the closed form's F, K₁, K₂ of SECOND_ORDER §1.2);
+- a precision above double-double for M ≥ 12.
+
+That is hp's machinery (Track A, P0), which with the Moebius horizon no longer has D as its limit. It is not done here.
 
 ## 5. Cost against D
 
@@ -277,11 +290,22 @@ here (§7).
 - **Δ to 1e-10.** That needs the M sequence to M ≈ 14–16 (each two harmonics cut the τ-truncation error by about 50,
   Track B's M 6–10 at D 100) and the precision for the harmonic ladder's weak directions at that M (double-double to
   about M 12, quad-double beyond). Not limited by D.
-- **The hp port.** hp's form S (P0, `wip/large-d-form-s`) sums its horizon series in u = 1 − x. Whether u loses digits
-  the same way is not measured; the test is `noise_variable.py`'s on hp's series. If it does, the Moebius map is a
-  change of the series' coefficient functions only.
+- **The hp port.** hp's form S (P0, `wip/large-d-form-s`) sums its horizon series in u = 1 − x, and Track A measured
+  that it loses digits: amplification 78 at D 400 and about 4e14 at D 1000 (#1088). Track A is porting the Moebius
+  variable into hp's form-S horizon series. Three things carry over:
+  - a grown with n;
+  - products with z (or with x, in a map of x) by their exact recurrence;
+  - multidouble's lanes have double's exponent range, so the exponent-range constraint of §3 holds in octo-double too.
+- **Δ at M ≥ 12** in hp, with the weak harmonics held at a fitted guess and released one at a time (Track A's method),
+  now that the horizon does not limit D (§4).
 
 ## 8. Discrepancies
+
+- **A retracted inference.** In #1088 (comment 7152680300) I inferred that hp's u = 1 − x should not lose digits,
+  because x* sits nearer the SSH than the centre in u. Track A's measurement (78 at D 400, about 4e14 at D 1000) shows
+  that it does; the inference was wrong and was corrected there (7153606604). The band-split test of §3 shows why the
+  geometric argument is not enough: the loss sits in the resonance's band, whose growth depends on more than the
+  ratio of distances.
 
 - **Track B's double-double horizon rounds a constant to float64.** `solver/factored/fseries_sdd.py` forms
   c[k + 1] = (c[k] (2k) − G[k]) × (lam/(2(k + 1))), where lam/(2(k + 1)) is a float64 quotient. At its D-100 M-8
