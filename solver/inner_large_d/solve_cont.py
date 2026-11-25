@@ -76,7 +76,10 @@ def say(s):
 
 say("# %s  M %d  a %g  kb %d  tol %.1e  start %s (D %g, M %d)" % (time.strftime("%Y-%m-%d %H:%M UTC", time.gmtime()),
                                                                   M, a, kb, tol, os.path.basename(start), D0, M0))
-for D in Ds:
+queue = list(Ds)
+refine = {}
+while queue:
+    D = queue.pop(0)
     t0 = time.time()
     if len(hist) >= 2:
         (Da, sa), (Db, sb) = hist[-2], hist[-1]
@@ -143,5 +146,13 @@ for D in Ds:
     if rec["maxF"] < 1e-11:
         hist.append((D, scaled(y, D)))
     else:
-        say("not converged at D %g; stop" % D)
-        break
+        Dl = hist[-1][0] if hist else D0
+        key = round(D, 6)
+        refine[key] = refine.get(key, 0) + 1
+        if refine[key] > 4 or not hist:
+            say("not converged at D %g after %d refinements; stop" % (D, refine[key] - 1))
+            break
+        Dm = 2 + 1 / (0.5 * (1 / (Dl - 2) + 1 / (D - 2)))
+        Dm = round(Dm, 2)
+        say("not converged at D %g; inserting D %g (midpoint in 1/n)" % (D, Dm))
+        queue = [Dm, D] + queue
