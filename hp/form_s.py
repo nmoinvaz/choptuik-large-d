@@ -1073,7 +1073,7 @@ def cmd_release_ls(argv):
     argv = list(argv)
     allow = pop_allow(argv)
     pos, o = opts(argv, dict(harm="5", outer="6", tol="1e-40", tol_h="1e-38", it_in="6", halvings="6", threads="2",
-                             tries="6", jac="auto"))
+                             tries="6", jac="auto", tc="", commit=""))
     path, outdir = pos[0], pos[1]
     os.makedirs(outdir, exist_ok=True)
     log = os.path.join(outdir, "release_ls.jsonl")
@@ -1089,7 +1089,8 @@ def cmd_release_ls(argv):
     # double-double's floor); the Jacobian in double-double with the Moebius horizon, quad-double with u
     if o["jac"] == "auto":
         o["jac"] = "dd" if kw["mob"] else "qd"
-    print(f"release_ls from {os.path.basename(path)}: D {float(D):.6g}, Delta {delta_digits(z8, 40)}", flush=True)
+    delta0 = delta_digits(z8, 40)
+    print(f"release_ls from {os.path.basename(path)}: D {float(D):.6g}, Delta {delta0}", flush=True)
     for k in [int(x) for x in o["harm"].split(",")]:
         held_in = list(range(k, 14, 2))
         held_tg = list(range(k + 2, 14, 2))
@@ -1142,7 +1143,27 @@ def cmd_release_ls(argv):
                   flush=True)
             if not acc:
                 break
-        save_o(os.path.join(outdir, f"release_ls_h{k}_D{float(D):.4f}.npz"), z8, dict(meta, kfreeze=k, held=held_tg))
+        out = os.path.join(outdir, f"release_ls_h{k}_D{float(D):.4f}.npz")
+        save_o(out, z8, dict(meta, kfreeze=k, held=held_tg))
+        if k == 13 and rec.get("done"):
+            # the full system (harmonics 1-13 free): its direct_s.jsonl record, the end state's check in quad-double
+            # and the held -> full change of Delta (#1088's tables)
+            import jump
+            m13 = dict(meta, kfreeze=13, held=[])
+            F4 = s_tg.residual_s([np.ascontiguousarray(z8[q]) for q in range(4)])
+            Fc = float(np.abs(np.asarray(F4[0]) + np.asarray(F4[1])).max())
+            with mp.workdps(60):
+                dD = float(mp.mpf(delta_digits(z8, 40)) - mp.mpf(delta0))
+            sd = jump.series_delta(meta["D_str"]) or jump.series_delta(str(int(round(float(D)))))
+            tc = (dict(value=mp.nstr(sd[0], 16), err=sd[1], source="delta_all.csv series") if sd is not None else
+                  dict(value=o["tc"].split(":")[0], err=float(o["tc"].split(":")[1]), source="given") if o["tc"] else None)
+            hc = ham_check(z8, m13, threads=int(o["threads"]))
+            drec = direct_line(z8, m13, out, "full", rec.get("F"), "od", Fc, "qd", held_to_full=dD,
+                               ham={str(b): r for b, r in hc.items()}, tc=tc, commit=o["commit"],
+                               extra=dict(released_from=os.path.basename(path), jac=o["jac"]))
+            with open(os.path.join(outdir, "direct_s.jsonl"), "a") as fh:
+                fh.write(json.dumps(drec) + "\n")
+            print(f"  the full system: quad-double check max |F| {Fc:.2e}; held -> full dDelta {dD:+.3e}", flush=True)
     return 0
 
 
