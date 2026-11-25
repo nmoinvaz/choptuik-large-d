@@ -545,12 +545,13 @@ def cmd_jump(argv):
     segs = [list(map(float, g)) for g in segs]
     s = make_solver_s(Dt, M, nodes, segs=segs, **kw)
     z8 = [a_to_s([zA], M, K)[0]] + [np.zeros(s.size_s) for _ in range(7)]
-    if o["delta"] == "series":
-        sd = jump.series_delta(o["D"])
+    if o["delta"] != "fit":
+        # Track C's series row of delta_all.csv, or a value given as a number (Track C's at a D without a row)
+        sd = jump.series_delta(o["D"]) if o["delta"] == "series" else (mp.mpf(o["delta"]), 0.0)
         if sd is None:
             raise SystemExit(f"no series row at D {o['D']} in delta_all.csv")
         with mp.workdps(60):
-            v = sd[0]
+            v = mp.mpf(sd[0])
             for q in range(8):
                 f = float(v)
                 z8[q][-1] = f
