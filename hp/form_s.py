@@ -193,6 +193,33 @@ def ham_check(z8, meta, threads=2, dps=40, swap=False):
     return res
 
 
+def git_blob(path):
+    """the git blob id of a file's bytes (git hash-object --no-filters)"""
+    import hashlib
+    data = open(path, "rb").read()
+    return hashlib.sha1(b"blob %d\0" % len(data) + data).hexdigest()
+
+
+def direct_line(z8, meta, path, system, F_solve, solve_prec, F_check, check_prec, bound=None, held_to_full=None,
+                disc=None, ham=None, tc=None, commit="", extra=None):
+    """one record of a converged direct solve for the tables (#1088's direct_s.jsonl): what was solved, Delta in eight
+    parts, both residuals with their precisions, the bound, the discretization tails, Track C's value and +- at D, the
+    state file's name and git blob, the code commit, the machine and the time"""
+    import socket
+    mob = float(meta.get("hmob", 0.0) or 0.0)
+    rec = dict(D_str=meta["D_str"], form="S", system=system, M=int(meta["M"]), K=len(meta["nodes"]),
+               nodes=list(meta["nodes"]), kc=int(meta["kc"]), ks=int(meta["ks"]), kt=int(meta.get("kt", 36)),
+               taylor_steps=sum(len(g) - 1 for g in meta["segs"]), horizon=f"mob a={mob:g}" if mob else "u",
+               Delta_parts=[float(np.asarray(q)[-1]) for q in z8], F_solve=F_solve, F_solve_precision=solve_prec,
+               F_check=F_check, F_check_precision=check_prec, delta_bound_first_order=bound, held_to_full_dDelta=held_to_full,
+               disc=disc, hamiltonian_check=ham, trackC=tc, state=os.path.basename(path), state_blob=git_blob(path),
+               commit=commit or os.environ.get("HP_COMMIT", ""), machine=socket.gethostname(),
+               utc=time.strftime("%Y-%m-%d %H:%M:%S", time.gmtime()))
+    if extra:
+        rec.update(extra)
+    return rec
+
+
 def top_harmonics(z8, M, K):
     """the largest |coefficient| of the top harmonics of each field of a form-S state (odd fields p1, p, m, m_h:
     harmonics 29 and 31; even fields c0, c: 30 and 32), absolute and relative to the field's largest |value|, from
@@ -722,7 +749,7 @@ def cmd_jump(argv):
                              ks="sigma", kc="146", threads="2", delta="series", tol="1e-40", it_max="16", halvings="8",
                              mutate="none", junk="0", tol_dz="1e-45", ls="0", outer="8", held="0", mob="0",
                              states_s="", jac="auto", delta_tol="1e-15", jscale="1", ham="1", segs_from="", held_from="",
-                             res="auto", check="auto", disc="auto"))
+                             res="auto", check="auto", disc="auto", tc="", commit=""))
     mob = float(o["mob"])
     # with the Moebius horizon a double-double Jacobian and residual suffice for the held solve (then one octo-double
     # residual checks it); with u the quad-double Jacobian and the octo-double residual
@@ -898,6 +925,19 @@ def cmd_jump(argv):
             fh.write(json.dumps(dict(ham_check={str(b): r for b, r in hc.items()}, ham_worst=worst)) + "\n")
     out = os.path.join(outdir, f"jump_s_D{float(Dt):.4f}.npz")
     save_o(out, z8, meta)
+    if conv:
+        sd = jump.series_delta(o["D"])
+        tc = dict(value=mp.nstr(sd[0], 16), err=sd[1], source="delta_all.csv series") if sd is not None else (
+            dict(value=o["tc"].split(":")[0], err=float(o["tc"].split(":")[1]), source="given") if o["tc"] else None)
+        last = recs[-1] if recs else {}
+        rec = direct_line(z8, meta, out, "held" if int(o["held"]) else ("full" if kf == 13 else f"kfreeze {kf}"),
+                          last.get("F_new"), o["res"] if o["jac"] != "od" else "od", meta["F"], o["check"],
+                          bound=meta.get("delta_bound_first_order"), disc=meta.get("disc"),
+                          ham=meta.get("ham_check"), tc=tc, commit=o["commit"],
+                          extra=dict(full_dDelta_first_order=meta.get("full_dDelta_first_order"),
+                                     newton_steps=len(recs), jac=o["jac"], held=meta.get("held")))
+        with open(os.path.join(outdir, "direct_s.jsonl"), "a") as fh:
+            fh.write(json.dumps(rec) + "\n")
     Dl = delta_digits(z8, 40)
     print(f"  {'converged' if conv else 'NOT converged'}; Delta {Dl}; saved {out}", flush=True)
     sd = jump.series_delta(o["D"])
