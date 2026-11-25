@@ -26,7 +26,9 @@ use crate::field::FieldSolve;
 use crate::field::{cs, cs_range, cs_w, horner, DMat, Fl};
 use crate::lane::Lane;
 use crate::linalg::{ld_for, DDLu};
-use crate::model::{delta_of, dim, horizon_lus, kfreeze_of, mul_recip, omega_of, psolve, recip_int, series_scale, Ctx, HPrep};
+use crate::model::{delta_of, dim, horizon_lus, kfreeze_of, mul_recip, omega_of, psolve, recip_int, recip_lane, recip_lane_parts, series_scale, Ctx, HPrep};
+use crate::qd::QD;
+use multidouble::od::OD;
 use crate::qv::QV;
 use multidouble::dual::Param;
 use multidouble::native::OV;
@@ -437,11 +439,55 @@ pub fn horizon_series_s<T: Lane, const B: usize>(ctx: &Ctx<B>, de: &DMat<B>, pre
     [pp, mm, cc]
 }
 
-/// sum_{j=0..k} s_j y_{k-j}, s a scalar series
-fn cvs<T: Lane, const B: usize>(s: &[T::P], y: &[Fl<T, B>], k: usize) -> Fl<T, B> {
+/// A constant of the Moebius series in the lane's own precision: its octo-double parts, applied as `mul_recip` applies
+/// 1/k (the f64 and double-double lanes the leading pair, the quad- and octo-double lanes their own rounding, a jet
+/// coefficient by coefficient). The series' constants (t_l, 1/(1 + a), h, e, z's coefficients) are not exact in
+/// double-double, so a lane's double-double parameters (`Lane::P`) would cap them at 1e-32.
+#[derive(Clone, Copy)]
+struct Cst([f64; 8]);
+
+impl Cst {
+    fn of(v: OD) -> Self {
+        Cst(v.x)
+    }
+    fn mul<T: Lane, const B: usize>(&self, x: Fl<T, B>) -> Fl<T, B> {
+        let r = &self.0;
+        let np = recip_lane_parts::<T>();
+        if np <= 2 {
+            return x.muls(DD { hi: r[0], lo: r[1] });
+        }
+        if T::NJ == 0 {
+            return x.mul_t(recip_lane::<T>(r));
+        }
+        let mut y = x;
+        if T::VAL_OD {
+            let c = OV::splat(OD { x: *r });
+            for (yb, xb) in y.0.iter_mut().zip(&x.0) {
+                for i in 0..T::NJ {
+                    yb.set_coef_od(i, xb.coef_od(i) * c);
+                }
+            }
+        } else {
+            let c = QV::splat(QD { x: [r[0], r[1], r[2], r[3]] });
+            for (yb, xb) in y.0.iter_mut().zip(&x.0) {
+                for i in 0..T::NJ {
+                    yb.set_coef_qd(i, xb.coef_qd(i) * c);
+                }
+            }
+        }
+        y
+    }
+    /// x plus the constant
+    fn add<T: Lane, const B: usize>(&self, x: Fl<T, B>) -> Fl<T, B> {
+        x + Fl::<T, B>([recip_lane::<T>(&self.0); B])
+    }
+}
+
+/// sum_{j=0..k} s_j y_{k-j}, s a series of constants
+fn cvs<T: Lane, const B: usize>(s: &[Cst], y: &[Fl<T, B>], k: usize) -> Fl<T, B> {
     let mut acc = Fl::<T, B>::zero();
     for j in (0..=k).rev() {
-        acc = acc + y[k - j].mulp(s[j]);
+        acc = acc + s[j].mul(y[k - j]);
     }
     acc
 }
@@ -459,7 +505,8 @@ fn cvs<T: Lane, const B: usize>(s: &[T::P], y: &[Fl<T, B>], k: usize) -> Fl<T, B
 /// Order k of A + B fixes P_k = U_k + V_k through omega D + (k + 1)(1 - G_0) - n/2, the u series' operator at order k
 /// (c1 = -G_0), so `prep.h`'s LUs and `psolve` serve; order k of A fixes Q_(k+1) = U_(k+1) - V_(k+1); q_k needs only
 /// Q_k; X's solves are `prep.lu_h`'s. Data Q_0 = 2 m_h, c_0 = 1. Returns p = (U + x_l V)/2, m = (U - x_l V)/2 and c at
-/// x_l, the sums of orders 0..=ks.
+/// x_l, the sums of orders 0..=ks. The series' constants are formed in octo-double and applied in the lane's precision
+/// (`Cst`).
 pub fn horizon_mob<T: Lane, const B: usize>(ctx: &Ctx<B>, de: &DMat<B>, prep: &SPrep, m0: &Fl<T, B>, omega: T) -> [Fl<T, B>; 3] {
     let rate = Rate::ZERO;
     let lu_h = prep.lu_h.as_ref().expect("form S: the horizon's slaving LU");
@@ -467,38 +514,58 @@ pub fn horizon_mob<T: Lane, const B: usize>(ctx: &Ctx<B>, de: &DMat<B>, prep: &S
     let n1 = dim::<T, B>(ctx) - one_p;
     let nh1 = dim::<T, B>(ctx).mul_f(0.5) - one_p;
     let xl = *ctx.nodes.last().expect("form S: nodes");
-    let zl = T::P::from_f64(xl) * T::P::from_f64(xl);
-    let ap = T::P::from_f64(ctx.hmob);
+    let o1 = OD::ONE;
+    let xo = OD::from_f64(xl);
+    let zl = xo * xo;
+    let ao = OD::from_f64(ctx.hmob);
     // t at x_l, the unit of tau
-    let ts = (one_p - zl) / (one_p + ap * zl);
-    let io = one_p / ts;
-    let ia1 = one_p / (one_p + ap);
-    let hh = [ia1, (ap - one_p) * ia1 * ts, -(ap * ia1 * ts * ts)];
-    let ee = [ia1, (ia1 * ts).mul_f(-2.0), ia1 * ts * ts];
+    let tso = (o1 - zl) / (o1 + ao * zl);
+    let ioo = o1 / tso;
+    let ia1o = o1 / (o1 + ao);
+    let ts = Cst::of(tso);
+    let hh = [Cst::of(ia1o), Cst::of((ao - o1) * ia1o * tso), Cst::of(-(ao * ia1o * tso * tso))];
+    let hneg = [Cst::of(-ia1o), Cst::of(-((ao - o1) * ia1o * tso)), Cst::of(ao * ia1o * tso * tso)];
+    let eneg = [Cst::of(-ia1o), Cst::of(OD::from_f64(2.0) * ia1o * tso), Cst::of(-(ia1o * tso * tso))];
+    let two_h0 = Cst::of(OD::from_f64(2.0) * ia1o);
+    let mts2 = Cst::of(-(tso * OD::from_f64(0.5)));
+    let io = Cst::of(ioo);
+    let two_io = Cst::of(OD::from_f64(2.0) * ioo);
+    let m2io = Cst::of(-(OD::from_f64(2.0) * ioo));
+    // 1/(2 io h_0) = (1 + a) t_l / 2
+    let iq = Cst::of((o1 + ao) * tso * OD::from_f64(0.5));
+    let ap = T::P::from_f64(ctx.hmob);
     let ks = ctx.ks;
     let len = ks + 3;
     // z(tau): 1, -(1 + a) t_l, then times -a t_l per order (FS_MUT_MOBIUS: a's sign flipped here only). A product zW
     // comes from (1 + a t_l tau) zW = (1 - t_l tau) W, zW_k = W_k - t_l W_(k-1) - a t_l zW_(k-1) (t2v's, #1090): O(1)
     // per order where the Cauchy sum with z's coefficients (FS_ZCAUCHY) is O(k)
-    let am = if ctx.mutate == FS_MUT_MOBIUS { -ap } else { ap };
+    let amo = if ctx.mutate == FS_MUT_MOBIUS { -ao } else { ao };
     let zcauchy = ctx.mutate == FS_ZCAUCHY;
-    let rz = if ctx.mutate == FS_MUT_ZREC { (am * ts) * (one_p + T::P::from_f64(2f64.powi(-60))) } else { am * ts };
+    let rzo = if ctx.mutate == FS_MUT_ZREC { (amo * tso) * (o1 + OD::from_f64(2f64.powi(-60))) } else { amo * tso };
+    let rz = Cst::of(rzo);
     // the order-k coefficient of z W from W_k, W_(k-1) and z W's order k - 1
     let zrec = |w: &Vec<Fl<T, B>>, zw: &Vec<Fl<T, B>>, k: usize| -> Fl<T, B> {
         if k == 0 {
             w[0]
         } else {
-            (w[k] - w[k - 1].mulp(ts)) - zw[k - 1].mulp(rz)
+            (w[k] - ts.mul(w[k - 1])) - rz.mul(zw[k - 1])
         }
     };
-    let mut zs = vec![one_p; len];
-    if len > 1 {
-        zs[1] = -((one_p + am) * ts);
-        let r = -(am * ts);
-        for j in 2..len {
-            zs[j] = zs[j - 1] * r;
+    let zs: Vec<Cst> = if zcauchy {
+        let mut v = vec![Cst::of(o1); len];
+        if len > 1 {
+            let mut zj = -((o1 + amo) * tso);
+            v[1] = Cst::of(zj);
+            let r = -(amo * tso);
+            for item in v.iter_mut().take(len).skip(2) {
+                zj = zj * r;
+                *item = Cst::of(zj);
+            }
         }
-    }
+        v
+    } else {
+        Vec::new()
+    };
     let z = Fl::<T, B>::zero();
     let one = Fl::<T, B>::splat(DD::ONE);
     let mut uu = vec![z; len];
@@ -521,9 +588,6 @@ pub fn horizon_mob<T: Lane, const B: usize>(ctx: &Ctx<B>, de: &DMat<B>, prep: &S
     qn[0] = m0.mulf(2.0);
     let mut kap = z;
     let mut ib0 = z;
-    let two_io = io.mul_f(2.0);
-    // 1/(2 io h_0) = (1 + a) t_l / 2
-    let iq = (one_p + ap) * ts.mul_f(0.5);
     for k in 0..=ks {
         let kf = k as f64;
         uu[k] = qn[k].mul_pwr2(0.5);
@@ -542,31 +606,32 @@ pub fn horizon_mob<T: Lane, const B: usize>(ctx: &Ctx<B>, de: &DMat<B>, prep: &S
         }
         let gs = if k >= 1 { cs(&cc, &xx, k).mulp(-n1) - cs_range(&gg, &xx, k, 0, k - 1) } else { cs(&cc, &xx, k).mulp(-n1) };
         gg[k] = gs * ib0;
-        let mut s = gg[k].mulp(ts.mul_f(-0.5));
+        let mut s = mts2.mul(gg[k]);
         for i in 1..=k.min(2) {
-            s = s - cc[k - i + 1].mulp(hh[i].mul_f((k - i + 1) as f64));
+            s = s - hh[i].mul(cc[k - i + 1]).mulf((k - i + 1) as f64);
         }
         cc[k + 1] = mul_recip(ctx, s.mulp(one_p + ap), k + 1);
-        let mut hc = cc[k].mulp(hh[0]);
+        let mut hc = hh[0].mul(cc[k]);
         if k >= 1 {
-            hc = hc + cc[k - 1].mulp(hh[1]);
+            hc = hc + hh[1].mul(cc[k - 1]);
         }
         if k >= 2 {
-            hc = hc + cc[k - 2].mulp(hh[2]);
+            hc = hc + hh[2].mul(cc[k - 2]);
         }
-        hcm[k] = if k <= 2 { hc.addp(-hh[k]) } else { hc };
-        hce[k] = if k <= 2 { hc.addp(-ee[k]) } else { hc };
+        hcm[k] = if k <= 2 { hneg[k].add(hc) } else { hc };
+        hce[k] = if k <= 2 { eneg[k].add(hc) } else { hc };
         let deriv = if k >= 1 {
             du[k - 1] = uu[k].mulf(kf);
             dv[k - 1] = vv[k].mulf(kf);
-            (cs_range(&hcm, &du, k, 1, k) + cs_range(&hce, &dv, k, 1, k)).mulp(two_io)
+            two_io.mul(cs_range(&hcm, &du, k, 1, k) + cs_range(&hce, &dv, k, 1, k))
         } else {
             z
         };
         let zvk = if zcauchy { cvs(&zs, &vv, k) } else { zrec(&vv, &zv, k) };
         let r = ((((deriv + crate::model::dtau(ctx, &(uu[k] + zvk), omega, &rate)) - cs(&gg, &uu, k)) - cs(&gg, &vv, k)) + zvk)
             - cs(&cc, &uu, k).mulp(n1);
-        let kappa = ((cc[1].mulp(hh[0].mul_f(2.0)).addp(hh[1] - ee[1])).mulp(io.mul_f(kf)) - gg[0]).addp(-nh1);
+        // (k + 1)(1 - G_0) - n/2 as io k (2 h_0 c_1 + h_1 - e_1) - G_0 - (n/2 - 1), h_1 - e_1 = t_l
+        let kappa = (io.mul(ts.add(two_h0.mul(cc[1]))).mulf(kf) - gg[0]).addp(-nh1);
         let pk = psolve(ctx, &prep.h, k, &kappa, &(-r), omega).mul_pwr2(0.5);
         uu[k] = uu[k] + pk;
         vv[k] = vv[k] + pk;
@@ -585,10 +650,10 @@ pub fn horizon_mob<T: Lane, const B: usize>(ctx: &Ctx<B>, de: &DMat<B>, prep: &S
         let mut ak = z;
         for i in 0..=k.min(2) {
             let mm = k - i;
-            ak = ak + (du[mm] - cs(&cc, &dv, mm)).mulp(hh[i]);
+            ak = ak + hh[i].mul(du[mm] - cs(&cc, &dv, mm));
         }
-        let ak = (ak.mulp(-two_io) + crate::model::dtau(ctx, &uu[k], omega, &rate)) - cs(&gg, &vv, k);
-        qn[k + 1] = mul_recip(ctx, ak.mulp(iq), k + 1);
+        let ak = (m2io.mul(ak) + crate::model::dtau(ctx, &uu[k], omega, &rate)) - cs(&gg, &vv, k);
+        qn[k + 1] = mul_recip(ctx, iq.mul(ak), k + 1);
     }
     let (mut us, mut vs, mut csum) = (z, z, z);
     for k in (0..=ks).rev() {
