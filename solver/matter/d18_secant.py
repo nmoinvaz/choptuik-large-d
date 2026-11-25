@@ -22,9 +22,12 @@ the evaluation count and seconds.
 
 usage (venv-1025dd):
   d18_secant.py run STUB.jsonl STATE.npy D LO HI OUT.jsonl [--tol=1e-6] [--maxev=12] [--mm=fast|cs] [--dln=0.1]
-                [--basis=jac|coef|grid] [--b12=fast|ddm] [--pin=STATEBLOB,STUBBLOB] [--ends=SCAN.jsonl]
+                [--basis=jac|coef|grid] [--b12=fast|ddm] [--eps=1e-15] [--pin=STATEBLOB,STUBBLOB]
+                [--ends=SCAN.jsonl]
       --mm=cs --b12=ddm is d18_hybsign.py's evaluation exactly (DSSEll.mode_matrix, ell_ddm's block 12); the defaults
       are ell_fastm.mode_matrix_fast (basis jac) and ell_fastdd's block 12 (the same double-double block to 4e-29);
+      --eps: the noise test's relative amplitude (d18_hybsign.py's 1e-15); the root's float64 floor from blocks 0-11
+      is larger than that test sees (SPEED_ELL1.md), and 1e-12 makes the robustness test conservative;
       --pin: refuse (exit 3) unless the state's and the stub's git blobs (hash-object --no-filters) start with these;
       --ends: take the two ends' records from a d18_hybsign scan file of the same state instead of evaluating them
       (their dln is unknown, so their robustness is d18_hybsign's test).
@@ -69,10 +72,11 @@ SEEDS = (100, 101)
 
 
 # ---------------------------------------------------------------- one hybrid evaluation (matrix -> record)
-def hybrid_eval(H, Hl, mask, dln_max):
-    """d18_hybsign.py's sign, ln|det| and 1e-15 noise test of the hybrid matrix (H, Hl), with the noise members' ln|det|"""
+def hybrid_eval(H, Hl, mask, dln_max, eps=1e-15):
+    """d18_hybsign.py's sign, ln|det| and noise test (relative amplitude eps, 1e-15 there) of the hybrid matrix (H, Hl),
+    with the noise members' ln|det|"""
     s, ld = md.dd_logdet(H, Hl, True)[:2]
-    nz = [md.dd_logdet(H + 1e-15 * np.random.default_rng(sd).standard_normal(H.shape) * mask * H, Hl, True)[:2]
+    nz = [md.dd_logdet(H + eps * np.random.default_rng(sd).standard_normal(H.shape) * mask * H, Hl, True)[:2]
           for sd in SEEDS]
     nsg = [float(v[0]) for v in nz]
     nln = [float(v[1]) for v in nz]
@@ -87,8 +91,9 @@ def hybrid_eval(H, Hl, mask, dln_max):
 class RealEval:
     """d18_hybsign.py's hybrid matrix of a stub record's state (the record system checked by the caller)"""
 
-    def __init__(self, S, z, rec, st, mm, dln_max, basis="jac", b12="fast"):
+    def __init__(self, S, z, rec, st, mm, dln_max, basis="jac", b12="fast", eps=1e-15):
         import ell_ddm
+        self.eps = eps
         self.S, self.z, self.rec, self.st, self.mm, self.dln_max, self.basis = S, z, rec, st, mm, dln_max, basis
         self.E = ell_ddm.DDEll(S)
         self.b12 = b12
@@ -119,7 +124,7 @@ class RealEval:
         H[self.sl] = Md.h[self.sl]
         Hl[self.sl] = Md.l[self.sl]
         t2 = time.time()
-        r = hybrid_eval(H, Hl, self.mask, self.dln_max)
+        r = hybrid_eval(H, Hl, self.mask, self.dln_max, self.eps)
         r = dict(D=self.rec["D"], kc=self.rec["kc"], lam=lam, **r, f64_sign=float(sf), f64_ln=float(lf),
                  state=os.path.basename(self.st), mm=self.mm if self.mm == "cs" else f"fast-{self.basis}", b12=self.b12,
                  sec=round(time.time() - t0),
@@ -319,6 +324,7 @@ def runcmd(argv):
     dln_max = float(opts.get("dln", 0.1))
     basis = opts.get("basis", "jac")
     b12 = opts.get("b12", "fast")
+    eps = float(opts.get("eps", 1e-15))
     if mm not in ("fast", "cs"):
         print(f"--mm={mm}: fast or cs")
         sys.exit(2)
@@ -337,7 +343,7 @@ def runcmd(argv):
     if not same:
         sys.exit(3)
     print(f"bracket ({lo!r}, {hi!r}), tol {tol}, maxev {maxev}, mode matrix {mm} ({basis}), block 12 {b12}, "
-          f"dln <= {dln_max}, "
+          f"noise {eps:g}, dln <= {dln_max}, "
           f"{os.path.basename(st)}", flush=True)
     ends = None
     if "ends" in opts:
@@ -353,7 +359,7 @@ def runcmd(argv):
             w.update(dln=None, robust=bool(w["noise_robust"]))
             return w
         ends = (pick(lo), pick(hi))
-    E = RealEval(S, z, rec, st, mm, dln_max, basis, b12)
+    E = RealEval(S, z, rec, st, mm, dln_max, basis, b12, eps)
 
     def out(r):
         print(f"  lam {r['lam']!r} ({r['role']}): hybrid {r['sign']:+.0f} ln|det| {r['ln']:.10f}, noise {r['noise']} "
@@ -361,7 +367,7 @@ def runcmd(argv):
               f"{r['f64_sign']:+.0f} {r['f64_ln']:.10f} ({r.get('sec')} s {r.get('sec_parts', '')})", flush=True)
         open(outf, "a").write(json.dumps(r) + "\n")
     fin, recs = refine(E, lo, hi, tol, maxev, out, ends)
-    fin.update(D=D, kc=rec["kc"], state=os.path.basename(st), mm=mm, dln_max=dln_max)
+    fin.update(D=D, kc=rec["kc"], state=os.path.basename(st), mm=mm, b12=b12, dln_max=dln_max, eps=eps)
     open(outf, "a").write(json.dumps(fin) + "\n")
     print(f"root: status {fin['status']} ({fin['why'] or '-'}), bracket [{fin['bracket'][0]!r}, {fin['bracket'][1]!r}] "
           f"width {fin['width']:.3e}, signs {fin['signs']}, det-linear {fin['lam_lin']!r}, Brent {fin['lam_brent']!r}, "

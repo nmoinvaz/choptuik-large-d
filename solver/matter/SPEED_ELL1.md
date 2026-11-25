@@ -50,7 +50,91 @@ Each evaluation is `d18_hybsign.py`'s, with the same dd_logdet sign and the same
 - Output: one record per evaluation, then a `root` record with the bracket, its width and signs, and the det-linear
   root inside it.
 
-(measurements and checks follow)
+## Measured speed-ups
+
+All on the Mac (Apple M5), one BLAS thread and one rayon thread per process, nice 10, beside other users' jobs (load
+11 to 62 on 10 cores). Each ratio comes from one process timing both codes one after the other, since timings in
+separate processes moved by 2x with the load.
+
+| k_c, D, lambda | quantity | old | new | ratio |
+|---|---|---|---|---|
+| 55, 18.125, 1.775 | float64 M, all 13 blocks | 73.8 s (complex step) | 13.2 s (`jac`) | 5.6 |
+| 55, 18.125, 1.775 | double-double block 12 | 254.1 s (`ell_ddm`) | 148.6 s (`ell_fastdd`) | 1.7 |
+| 103, 22.125, 0.4875 | float64 blocks 1 and 12 | 138.3 s | 51.0 s (`coef`) | 2.7 |
+| 103, 22.125, 0.4875 | double-double stage (one RK4 stage of block 12) | 487 ms | 291 ms | 1.7 |
+| 103, 22.125, 0.4875 | float64 M, all 13 blocks | K103CS | K103FAST | K103R |
+| 103, 22.125, 0.4875 | double-double block 12 | DD103OLD | DD103NEW | DD103R |
+
+`jac` beats `coef` by 2x at k_c 55 (blocks 3 and 11: 3.5 s against 7.3 s). The horizon series alone took 139 s by
+complex step at k_c 103, most of it the per-member complex LUs, which the one-LU solve removes.
+
+The double-double block 12 dominates an evaluation once the float64 matrix is fast. One full evaluation of the hybrid
+sign (fast M, `ell_fastdd` block 12, the three `dd_logdet`) took 563 s and 1316 s at k_c 103 (two loads), of which block
+12 took 505 s and 1163 s and the three `dd_logdet` 21 s and 8 s.
+
+The larger gain is in the number of evaluations. Both refinements below went from the scan's 0.01 bracket to a bracket
+under 1e-6 in 6 evaluations, the two ends included. Bisection needs 14 interior points for the same width (16 with the
+ends), and a grid at that spacing is out of reach.
+
+## Checks
+
+| check | result | its control |
+|---|---|---|
+| `ell_fastm.py selftest` (k_c 15 state): `rhs_lin` against a central difference of `DSSEll.rhs` | 8.0e-9 (bar 1e-7) | `--mutate=nolam`: 8.6e-4, exit 1 |
+| same: `coef` against `grid` tangents, `jac` against `coef` | 2.2e-16, 4.5e-16 (bar 1e-13) | |
+| same: M_fast against the complex step, every block, three bases, lambda 0 and 0.9 | at most 3.3e-15 per block, ln within 8.5e-14 | `--mutate=coef` (one coefficient times 1 + 1e-6): 1.7e-9, exit 1 |
+| `ell_fastm.py check`, k_c 31, D 10.5, lambda 2.87 (`grid`) | blocks 0-11 at most 2.1e-14, block 12 1.1e-12, ln within 2.7e-10: PASS | `--mutate=nolam`: block 11 1.03, ln off by 98.5, exit 1 |
+| same, `jac` | blocks 0-11 at most 2.0e-14, block 12 1.1e-12, ln within 2.8e-10, 4.8x faster: PASS | |
+| `ell_fastm.py check`, k_c 55, D 18.125, lambda 1.775 (`jac`) | blocks 0-11 at most 9.9e-15; block 12 1.3e-10 and the float64 sign differ: FAIL | |
+| `ell_fastm.py check`, k_c 103, D 22.125, lambda 0.4875 | K103CHECK | |
+| `ell_fastdd.py selftest`: d/dtau basis rows; block 12 against `ell_ddm`, lambda 0 and 0.9 | 4.6e-31; 4.1e-29, 2.6e-29 (bar 1e-20) | `nolam`: 1.3e-1; `jround`: 1.2e-17; both exit 1 |
+| `ell_fastdd.py check`, k_c 55, lambda 1.775, with the hybrid | 8.0e-27; hybrid ln|det| equal to all digits: PASS | |
+| `ell_fastdd.py check`, k_c 103, lambda 0.4875 | DD103CHECK | |
+| `d18_secant.py selftest`, planted cases C1-C4 | all as written | `half`, `norobust`, `nosigncheck`: exit 1 each |
+| `d18_hybsign.py` (blob e089207a) rerun here on the k_c 55 state at 1.77 | ln|det| -1617.4278109138, the scan record to all printed digits | |
+
+The k_c 55 check fails as written, on block 12 and the float64 determinant only. The float64 block 12 is wrong by
+1.5e-10 in both codes (against `ell_ddm`'s double-double block: 1.52e-10 fast, 1.56e-10 complex step, at 1.77). Two
+such blocks differ by as much again, and the float64 determinant's sign follows that error. This is the hybrid's
+reason for a double-double block 12, which neither code's float64 block enters. The bar of 1e-10 holds at k_c 31 and
+fails from k_c 55 up (2.2e-9 at k_c 103).
+
+### Where block 12's float64 error comes from (k_c 55, lambda 1.77 and 1.78)
+
+The horizon series in float64 matches the double-double series to 1.5e-14 (either LU). Feeding the double-double series
+into the float64 variational RK leaves the block wrong by 1.44e-10, with the wrong hybrid sign at 1.78. So the error is
+the float64 RK of the horizon segment (1 - u0 = 0.96 to 0.9), and only a double-double integration fixes it.
+
+A mixed variant, J formed in float64 from the double-double coefficients and applied to double-double tangents, failed
+its bars set before the run: block 6.5e-15 (bar 1e-15) and hybrid ln|det| off by 3.3e-3 (bar 1e-6). It was dropped;
+commit c8e7ee9f holds it.
+
+## Real refinements and the float64 floor of the root
+
+k_c 55, D 18.125, bracket (1.77, 1.78) from the Mac scan `I1025-mac/d18/d18125k55_scan_1025.jsonl` (state blob
+88ccda5c, stub 0fb77df8; the reader's det-linear root 1.772947, estimator range [1.772947, 1.773343]):
+
+| evaluation | root (det-linear in the final bracket) | final bracket | evaluations | wall |
+|---|---|---|---|---|
+| `--mm=cs --b12=ddm` (`d18_hybsign.py`'s) | 1.7732997423 | [1.7732990863, 1.7732999430] | 6 | 2378 s |
+| fast M, `ell_ddm` block 12 | 1.7733011670 | [1.7733011508, 1.7733016508] | 6 | 1057 s |
+
+Both roots lie in the reader's estimator range, 3.5e-4 above the grid's det-linear estimate. They differ by 1.4e-6,
+and their brackets are disjoint. The two codes' float64 blocks 0-11 agree to 1e-14 per block, but near the root that
+moves ln|det| by 2.7e-4 to 4.6e-4. Every evaluation passed the 1e-15 noise test (dln at most 0.068), so that test does
+not see this floor; its random perturbations move ln|det| about 500 times less than the systematic difference.
+
+So the hybrid determinant fixes this root only to about 1.4e-6 at k_c 55. At k_c 103, D 22.125, the fast ends against
+dh610's scan records differ by 2.7e-5 (0.485) and 1.5e-3 (0.490) in ln|det| with equal signs, which puts the floor near
+1.5e-7. A tolerance of 1e-5 is safe at both. `--eps=1e-12` makes the noise test conservative; for the k_c step of the
+root (1e-3 to 7e-3 between k_c 95 and 103) neither matters.
+
+## Not done
+
+- The k_c 103 refinement itself: only its two ends (0.485, 0.490) ran here, as the timing estimate (1879 s for both).
+  Their signs equal dh610's scan, and the det-linear root 0.4898964 matches the scan reader's 0.489896.
+- A faster double-double block 12 than 1.7x: it needs fewer Ozaki products per stage than the 15 of `ell_ddm.Op`, at
+  double-double accuracy, since the float64 shortcuts above fail.
 
 ## How a runner uses them
 
