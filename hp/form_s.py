@@ -7,7 +7,7 @@ so the unknowns are p1, c0 | node i: p, m, c | m_h | Delta (3M(K+1) + 1; form A'
     python3 form_s.py cond STATE.npz [...] [--kfreeze 13] [--w 10] [--w2 4] [--iters 6] [--forms A,S] [--segs state|plan]
     python3 form_s.py jump OUTDIR --D 250 --states 'GLOB,...' [--Dmin 226 --Dmax 245.64 --deg 3 --kfreeze 13
         --plan_tol 1e-40 --ks sigma|auto|N --tol 1e-40 --it_max 16 --halvings 8 --threads 2 --delta series --mutate none|step
-        --junk 0 --tol_dz 1e-45 --ls 0 --outer 8]
+        --junk 0 --tol_dz 1e-45 --ls 0 --outer 8 --held 0]
 
 jump: the rescaled guess of jump.py (p, m, p1, m_h times sqrt(n), c0 and c as (v - 1) n, fitted in 1/n; Delta from
 Track C's series), in form S, so with no a and no horizon re-seed; then Newton in octo-double on form S (newton_s),
@@ -495,7 +495,7 @@ def cmd_jump(argv):
     allow = pop_allow(argv)
     pos, o = opts(argv, dict(D="250", states="", Dmin="0", Dmax="1e9", deg="3", kfreeze="13", plan_tol="1e-40", hmax="0.05",
                              ks="sigma", kc="146", threads="2", delta="series", tol="1e-40", it_max="16", halvings="8",
-                             mutate="none", junk="0", tol_dz="1e-45", ls="0", outer="8"))
+                             mutate="none", junk="0", tol_dz="1e-45", ls="0", outer="8", held="0"))
     outdir = pos[0]
     os.makedirs(outdir, exist_ok=True)
     log = os.path.join(outdir, "jump_s.jsonl")
@@ -565,6 +565,13 @@ def cmd_jump(argv):
                                  states=len(rows), D_range=[float(Ds[0]), float(Ds[-1])], tol=float(o["tol"]),
                                  mutate=o["mutate"], threads=int(o["threads"]),
                                  utc=time.strftime("%Y-%m-%d %H:%M:%S", time.gmtime()))) + "\n")
+    s_full = s
+    if int(o["held"]):
+        # p1's harmonics 5-13 held at the guess's own values (form S's PinnedO), the rest solved
+        sh = make_solver_s(Dt, M, nodes, segs=segs, **dict(kw, kfreeze=3))
+        s = HeldS(sh, M, K, held_field(z8, M))
+        meta.update(held="5-13 at the guess's values", kfreeze=3)
+        print("  p1's harmonics 5-13 held at the guess's values (kfreeze 3 with the held offset)", flush=True)
     if int(o["ls"]):
         z8, conv, recs = ls_solve(s, z8, int(o["junk"]), int(o["outer"]), int(o["it_max"]), int(o["halvings"]),
                                   float(o["tol_dz"]), log)
@@ -573,6 +580,22 @@ def cmd_jump(argv):
                                     junk_w=int(o["junk"]), tol_dz=float(o["tol_dz"]))
     F = s.residual_s(list(z8))
     meta.update(solved=bool(conv), F=float(np.abs(np.asarray(F[0]) + np.asarray(F[1])).max()))
+    if int(o["held"]):
+        # the full system's (kfreeze 13) first-order Delta correction at the held solution: -e_Delta^T J^-1 F
+        Ff = s_full.residual_s(list(z8))
+        s_full.newton_s(list(z8))
+        L = s_full.size_s
+        eD = np.zeros(L)
+        eD[-1] = 1.0
+        g = np.asarray(s_full.olu_solve([eD] + [np.zeros(L)] * 7, True)[0])
+        Fv = np.asarray(Ff[0]) + np.asarray(Ff[1])
+        dD1 = float(-(g @ Fv))
+        meta.update(full_F=float(np.abs(Fv).max()), full_dDelta_first_order=dD1)
+        print(f"  the full system (kfreeze 13) at the held solution: max |F| {np.abs(Fv).max():.3e}, first-order "
+              f"dDelta {dD1:+.3e} (Delta's gain sum |dDelta/dF| {np.abs(g).sum():.2e})", flush=True)
+        with open(log, "a") as fh:
+            fh.write(json.dumps(dict(full_F=float(np.abs(Fv).max()), full_dDelta_first_order=dD1,
+                                     gain=float(np.abs(g).sum()))) + "\n")
     out = os.path.join(outdir, f"jump_s_D{float(Dt):.4f}.npz")
     save_o(out, z8, meta)
     Dl = delta_digits(z8, 40)
@@ -582,6 +605,60 @@ def cmd_jump(argv):
         with mp.workdps(60):
             print(f"  Delta - Track C {mp.nstr(mp.mpf(Dl) - sd[0], 6)} (Track C's +- {sd[1]:.2e})", flush=True)
     return 0 if conv else 1
+
+
+def held_field(z8, M, ks=(5, 7, 9, 11, 13)):
+    """the held field: p1's harmonics ks of the eight-part z8, from all its parts at 160 digits, as eight parts on the
+    half grid (pinning.band_coeffs, band_field)"""
+    from pinning import band_coeffs, band_field
+    co = band_coeffs(np.asarray(z8[0])[:M], np.asarray(z8[1])[:M], M, list(ks), exact=True,
+                     rest=[np.asarray(p)[:M] for p in z8[2:]])
+    return band_field(co, list(ks), M, parts=8)
+
+
+class HeldS:
+    """form S with p1's harmonics 5-13 held (pinning.PinnedO's offset on the form-S methods): the solver has kfreeze 3,
+    whose horizon block's p rows read P_low (mismatch) + P_high p1; the offset c (the held field h in those rows, eight
+    parts) makes them P_low (mismatch) + P_high p1 - h, so p1's harmonics 5-13 are held at h and 15 and up at zero.
+    F - c in the residual, dz + J^-1 c in the step (the LU newton_s kept)."""
+
+    def __init__(self, s, M, K, h8):
+        from octo_corrector import o8
+        self.s = s
+        L = s.size_s
+        r0 = K * 3 * M
+        c8 = [np.zeros(L) for _ in range(8)]
+        for q in range(8):
+            c8[q][r0:r0 + M] = np.asarray(h8[q])
+        self.c8 = o8(c8)
+
+    @property
+    def size_s(self):
+        return self.s.size_s
+
+    def olu_solve(self, b, transpose=False):
+        return self.s.olu_solve(b, transpose)
+
+    def _minus_c(self, F):
+        from multidouble import od_axpy
+        from octo_corrector import o8
+        if len(F) == 8:
+            return list(o8(od_axpy(-1.0, *self.c8, *o8(F))))
+        return list(dd_add(np.asarray(F[0]), np.asarray(F[1]), -self.c8[0], -self.c8[1]))
+
+    def residual_s(self, z, mutate=0):
+        return self._minus_c(self.s.residual_s(z, mutate))
+
+    def newton_s(self, z, mutate=0):
+        from multidouble import od_axpy
+        from octo_corrector import o8
+        d, F, pmin, pmax = self.s.newton_s(z, mutate)
+        if len(z) == 8:
+            x = o8(self.s.olu_solve(list(self.c8), False))
+            d = list(o8(od_axpy(1.0, *x, *o8(d))))
+        else:
+            raise ValueError("HeldS: the held step needs eight parts (the octo-double LU)")
+        return d, self._minus_c(F), pmin, pmax
 
 
 def main():
