@@ -6,6 +6,8 @@ past x_c it hides it (the fine mesh's drift); at x_c neither.
 
     python3 form_s_lastnode.py ratio OUTDIR --D 2828.4271247461903 --states_s S1,S2,S3 --xl 0.700,0.703,0.705,0.70677,0.709
     python3 form_s_lastnode.py solve OUTDIR --D 2420 --states_s S1,S2,S3 --xl xc    (xc: 1/sqrt 2 - 0.79/n)
+    python3 form_s_lastnode.py guess OUTDIR --D 10000 --states_s ... --xl xc --mob 25   (saves the guess state)
+    python3 form_s_lastnode.py solvestate OUTDIR --state GUESS.npz                     (solves a saved guess)
 
 ratio: the held system's guess residual per block at each x_l and the horizon block over the largest other block (the
 basin measure). solve: held Newton at one x_l (the double-double Jacobian, the octo-double residual, Delta's first-order
@@ -106,7 +108,7 @@ def main(argv):
     allow = pop_allow(argv)
     pos, o = opts(argv, dict(D="2828.4271247461903", states_s="", xl="xc", deg="2", mob="8", ks="auto", kc="250",
                              threads="2", sub="4", plan_tol="1e-40", hmax="0.05", delta="fit", tc="", it_max="10",
-                             halvings="8", delta_tol="1e-15", commit="", ham="1", tol="1e-300", parts="8", res="dd"))
+                             halvings="8", delta_tol="1e-15", commit="", ham="1", tol="1e-300", parts="8", res="dd", state=""))
     outdir = pos[0]
     os.makedirs(outdir, exist_ok=True)
     log = os.path.join(outdir, f"lastnode_{cmd}.jsonl")
@@ -130,7 +132,28 @@ def main(argv):
         return 0
     xl = xls[0]
     t_all = time.time()
-    Dt, rows, z8, sh, meta = setup(o, xl, thr)
+    if cmd == "solvestate":
+        # a guess saved by "guess" (this machine need not have path_s): its nodes, plan and held values
+        from octo_corrector import load_o
+        z8, meta = load_o(o["state"])
+        with mp.workdps(60):
+            Dt = mp.mpf(meta["D_str"])
+        kw = dict(kt=int(meta["kt"]), kc=int(meta["kc"]), ks=int(meta["ks"]), threads=thr, segs=meta["segs"],
+                  mob=float(meta["hmob"]))
+        s = make_solver_s(Dt, M, list(meta["nodes"]), kfreeze=3, **kw)
+        sh = HeldS(s, M, 5, held_field(z8, M))
+        xl = float(meta["nodes"][4])
+    else:
+        Dt, rows, z8, sh, meta = setup(o, xl, thr)
+    if cmd == "guess":
+        F = sh.residual_s([np.ascontiguousarray(p) for p in z8[:2]])
+        b = blocks_s(F, M, 5)
+        out = os.path.join(outdir, f"guess_D{float(Dt):.4f}.npz")
+        save_o(out, z8, dict(meta, guess_blocks=b))
+        print(f"D {float(Dt):g}, x_l {xl:.6f} (ks {meta['ks']}, {sum(len(g) - 1 for g in meta['segs'])} Taylor steps): the "
+              f"guess's max |F| per block (double-double) " + " ".join(f"{v:.1e}" for v in b)
+              + f"; horizon / largest other {b[5] / max(b[:5]):.3e}; saved {out} ({time.time() - t_all:.0f} s)", flush=True)
+        return 0
     F = sh.residual_s([np.ascontiguousarray(p) for p in z8])
     b = blocks_s(F, M, 5)
     print(f"D {float(Dt):g}, x_l {xl:.6f} (ks {meta['ks']}): the guess's max |F| per block " + " ".join(f"{v:.1e}" for v in b)
