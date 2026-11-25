@@ -48,6 +48,9 @@ def main():
     chi, k, c = best
     print(f"broken line + step: best knot {k:.0f}, chi2/dof {chi / (len(D) - 4):.3f}, slope before {c[1]:.3e}, "
           f"after {c[1] + c[2]:.3e}, step {c[3]:.3e}")
+    c1 = np.polyfit(D, d, 1)
+    print(f"linear fit: zero at D {-c1[1] / c1[0]:.1f}; extrapolated (no mechanism) to D 400, 2000, 10000: "
+          + ", ".join(f"{np.polyval(c1, x):.2e}" for x in (400, 2000, 10000)))
     for lo, hi in ((60, 100), (100, 140), (140, 170), (170, 200)):
         m = (D >= lo) & (D <= hi)
         cw = np.polyfit(D[m], d[m], 1)

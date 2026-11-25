@@ -36,6 +36,11 @@ print(f"sigma_R - n/2 at D = inf: N0/2 - 1 = {N0_ours / 2 - 1:.3f}; ks >= sigma_
 for D in (263.6, 400, 2000, 10000):
     n = D - 2
     print(f"  D {D:>7}: sigma_R ~ {n / 2 - 1 + N0_ours / 2:.1f}, horizon order ks ~ {math.ceil(n / 2 + N0_ours / 2 + 6)}")
+# The closed-form seed (notes/SECOND_ORDER.md 1.2): relative rms of Omega 2.81e-4 at D 200, falling like eps^3.02,
+# eps = 1/(D - 1). An extrapolation of a measured law, not a bound.
+R200, p = 2.81e-4, 3.02
+for D in (245.64, 263.6, 400, 2000, 10000):
+    print(f"  closed-form seed, Omega rms at D {D:>7}: {R200 * (199 / (D - 1)) ** p:.2e} (eps^{p} law from D 200)")
 ok = abs(N0_ours - N0_eeg) < 2e-3
 print("N0 check " + ("agrees" if ok else "DISAGREES") + (" (mutated)" if mutate else ""))
 sys.exit(0 if ok else 1)
