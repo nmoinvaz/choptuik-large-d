@@ -45,7 +45,7 @@ sys.path.insert(0, HERE)
 import mpmath as mp  # noqa: E402
 import numpy as np  # noqa: E402
 from hpkernel.driver import make_solver  # noqa: E402
-from multidouble import QDLu, od_axpy  # noqa: E402
+from multidouble import ODLu, QDLu, od_axpy  # noqa: E402
 from octo_corrector import delta_digits, load_o, o8, omax, save_o  # noqa: E402
 from raw_out import pop_allow, require_raw  # noqa: E402
 from reseed import Reseeder, jac_block, res_rows  # noqa: E402
@@ -120,12 +120,59 @@ def series_delta(D, path=os.path.join(HERE, "data", "delta_all.csv")):
     return None
 
 
+# ------------------------------------------------------------------ a_h from the momentum constraint
+_DM = {}
+
+
+def _dmat_full(N, dps):
+    """d/dtheta on the full grid of N points over 2 pi (trigonometric interpolation), mpmath"""
+    key = (N, dps)
+    if key not in _DM:
+        with mp.workdps(dps):
+            D = mp.matrix(N, N)
+            for j in range(N):
+                for k in range(N):
+                    if j != k:
+                        D[j, k] = mp.mpf(0.5) * (-1) ** (j - k) * mp.cot((j - k) * mp.pi / N)
+            _DM[key] = D
+    return _DM[key]
+
+
+def slave_ah(z8, M, K, D, dps=160):
+    """a_h from m_h by the momentum constraint at the SSH, x = c = 1 (notes/LIT_GAPS_DSS.md 2, form S of Gundlach 1997
+    Eq. (19) in D dimensions): (omega d/dtheta - (n - 1) - q)(B - 1) = q with q = 2 m_h^2 and B = 1/a_h^2, solved on the
+    full grid of 2M points in mpmath at dps digits from all eight parts of m_h and Delta. Data with a_h so slaved carry
+    no momentum violation at the SSH, which form A's horizon series would turn into the mass mode x^-(n-1). Returns
+    a_h's eight parts on the half grid."""
+    o = 2 * M + 4 * M * K
+    with mp.workdps(dps):
+        n = mp.mpf(D) - 2
+        mh = [mp.fsum(mp.mpf(float(np.asarray(p)[o + j])) for p in z8) for j in range(M)]
+        Dl = mp.fsum(mp.mpf(float(np.asarray(p)[-1])) for p in z8)
+        om = 2 * mp.pi / Dl
+        full = mh + [-v for v in mh]
+        N = 2 * M
+        q = [2 * v * v for v in full]
+        Dm = _dmat_full(N, dps)
+        L = om * Dm
+        for j in range(N):
+            L[j, j] -= (n - 1) + q[j]
+        b = mp.lu_solve(L, mp.matrix(q))
+        ah = [1 / mp.sqrt(1 + b[j]) for j in range(M)]
+        out = [np.zeros(M) for _ in range(8)]
+        for j, v in enumerate(ah):
+            for qq in range(8):
+                out[qq][j] = float(v)
+                v -= mp.mpf(out[qq][j])
+    return out
+
+
 # ------------------------------------------------------------------ the octo-double ladder
 class OLadder:
     """the re-seed of the horizon data on rungs spaced in the mass mode's gain (the module docstring)"""
 
     def __init__(self, meta, D, threads=2, rung_dec=12.0, first_dec=3.0, plan_tol=1e-32, hmax=0.05, it_max=12,
-                 floor=1e-80, conv_tol=1e-26, verbose=False):
+                 floor=1e-80, conv_tol=1e-26, lu="o", verbose=False):
         self.rs = Reseeder(meta, D, threads=threads, levels=0, rows="ma", plan_tol=plan_tol, hmax=hmax)
         self.M, self.K = self.rs.M, self.rs.K
         n = float(D) - 2.0
@@ -142,6 +189,11 @@ class OLadder:
         # a rung converges when its |R| ends at or below conv_tol: the u0 rung's quad-double block LU stops near 2e-29
         # at D 245.6 (I1088-mac-a/probes/ladtest3.log), the inner rungs' far below
         self.conv_tol = conv_tol
+        # lu: the rung block's LU, "o" octo-double (jacobian_sub at eight parts, ODLu) or "q" quad-double (four parts,
+        # QDLu). The block's columns all carry gains near 1e44-1e47 at D 245.6 while the regular family's directions
+        # move the node by O(1), so a quad-double LU leaves errors of about 1e-17 of a step in the amplified
+        # directions (I1088-mac-a/probes)
+        self.lu = lu
         self.last = None
 
     def targets(self, z8):
@@ -199,12 +251,18 @@ class OLadder:
             if nR <= self.floor:
                 break
             if lu is None:
-                lu = QDLu(*[np.ascontiguousarray(b) for b in jac_block(s, put(d, 4), rows, cols)])
+                if self.lu == "o":
+                    lu = ODLu(*[np.ascontiguousarray(b) for b in jac_block(s, put(d, 8), rows, cols)])
+                else:
+                    lu = QDLu(*[np.ascontiguousarray(b) for b in jac_block(s, put(d, 4), rows, cols)])
                 fresh = True
-            x = [np.ascontiguousarray(np.asarray(p)) for p in lu.solve(*[-r for r in R[:4]])]
+            if self.lu == "o":
+                x = [np.ascontiguousarray(np.asarray(p)) for p in lu.solve(*[-r for r in R])]
+            else:
+                x = [np.ascontiguousarray(np.asarray(p)) for p in lu.solve(*[-r for r in R[:4]])] + [zero] * 4
             lam, acc = 1.0, False
             for _ in range(10):
-                dn = [np.ascontiguousarray(np.asarray(p)) for p in od_axpy(lam, *x, *([zero] * 4), *d)]
+                dn = [np.ascontiguousarray(np.asarray(p)) for p in od_axpy(lam, *x, *d)]
                 Rn, nn = res(dn)
                 if np.isfinite(nn) and nn < nR:
                     acc = True
@@ -294,7 +352,8 @@ def opts(argv, defaults):
 # ------------------------------------------------------------------ guess
 def cmd_guess(argv):
     pos, o = opts(argv, dict(D="250", states="", Dmin="0", Dmax="1e9", deg="3", kfreeze="13", plan_tol="1e-40",
-                             hmax="0.05", ks="auto", kc="146", threads="2", delta="series", rung_dec="12"))
+                             hmax="0.05", ks="auto", kc="146", threads="2", delta="series", rung_dec="12",
+                             reseed="1", slave="0"))
     out = pos[0]
     require_raw(out)
     paths = sorted(set(p for g in o["states"].split(",") for p in glob.glob(g)))
@@ -351,15 +410,24 @@ def cmd_guess(argv):
     meta["segs"] = [list(map(float, g)) for g in segs]
     print(f"  plan at {o['plan_tol']}: {sum(len(g) - 1 for g in segs)} Taylor steps", flush=True)
     s.set_segs(segs)
+    if int(o["slave"]):
+        ah = slave_ah(z8, M, K, Dt)
+        for q in range(8):
+            z8[q][groups(M, K)["ah"]] = ah[q]
+        print("  a_h slaved to m_h by the momentum constraint at the SSH", flush=True)
     F = s.residual_o(list(o8(z8)))
-    print(f"  max |F| before the re-seed {omax(F):.3e}", flush=True)
-    lad = OLadder(meta, Dt, threads=int(o["threads"]), rung_dec=float(o["rung_dec"]), verbose=True)
-    print(f"  ladder: {len(lad.us)} rungs, log10 G {', '.join(f'{d:.1f}' for d in lad.decs)}", flush=True)
-    zp, info = lad.project(z8)
-    F = s.residual_o(list(zp))
     Fv = np.asarray(F[0]) + np.asarray(F[1])
-    print(f"  re-seed {'ok' if info['ok'] else 'FAILED'} in {info['s']} s; max |F| {omax(F):.3e}; per block "
+    print(f"  max |F| before the re-seed {omax(F):.3e}; per block "
           + " ".join(f"{np.abs(Fv[b * 4 * M:(b + 1) * 4 * M]).max():.1e}" for b in range(K + 1)), flush=True)
+    zp, info = o8(z8), dict(ok=None, skipped=True)
+    if int(o["reseed"]):
+        lad = OLadder(meta, Dt, threads=int(o["threads"]), rung_dec=float(o["rung_dec"]), verbose=True)
+        print(f"  ladder: {len(lad.us)} rungs, log10 G {', '.join(f'{d:.1f}' for d in lad.decs)}", flush=True)
+        zp, info = lad.project(z8)
+        F = s.residual_o(list(zp))
+        Fv = np.asarray(F[0]) + np.asarray(F[1])
+        print(f"  re-seed {'ok' if info['ok'] else 'FAILED'} in {info['s']} s; max |F| {omax(F):.3e}; per block "
+              + " ".join(f"{np.abs(Fv[b * 4 * M:(b + 1) * 4 * M]).max():.1e}" for b in range(K + 1)), flush=True)
     meta["guess_F"] = omax(F)
     meta["reseed"] = info
     save_o(out, zp, meta)
