@@ -164,3 +164,4 @@ D,kc,build,value,kind,reason
 22.25,95,linux,0.434264,lambda_1,"branch F: dh610's k_c 95 state; win2's low scan of it has no root in 0.02-0.40"
 22.3125,95,macos,0.41931,lambda_1,"branch F: the only robust change in -0.10..0.50 on macm3's k_c 95 state"
 22.5,95,windows,0.339034,lambda_1,"branch F: the only robust change in -0.10..0.50 on win2's k_c 95 state"
+21.125,111,linux,0.868491,lambda_1,"by position: the only robust change in 0.840-0.910 on dh170's k_c 111 state; k_c step -0.0159 after +0.0034 (95->103): not converged in k_c"
