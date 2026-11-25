@@ -75,11 +75,10 @@ known from their entries in the log. Every number and quotation is listed with i
 I began the chat with general questions, such as \prompt{Are you able to make new discoveries about physics?}, and then
 asked \prompt{Could it be done if I asked you to do it}. Claude offered three projects in general relativity that one
 machine could handle, a black-hole renderer, orbits in curved spacetime, and toy numerical relativity, the collapse of a
-scalar field that reproduces Choptuik's result. I picked the last, \prompt{Do a toy numerical relativity.} From 177 runs the
+scalar field that reproduces Choptuik's result. I picked the last, \prompt{Do a toy numerical relativity.} The
 simulation reproduced Choptuik's mass scaling, with exponents of 0.377 and 0.378 for two pulse shapes against the
 accepted 0.374, and an echo period $\Delta \approx 3.30$ against 3.445, limited by a fixed grid that resolved about one
-echo. I remarked \prompt{It is interesting that you focused on black holes when I was willing to accept any visual
-simulation of reality} and steered to two side projects, a solar system and a gravity sandbox.
+echo.
 
 Then I asked \prompt{Any new math we can draw from this?} Claude answered that everything so far had reproduced known
 results and listed three directions, recommending the first, a proof that a known three-body orbit exists. I chose
@@ -89,17 +88,16 @@ run. The check changed the target, since a 2026 paper had already computed $\Del
 than a simulation. At 63 Fourier modes it gave $\Delta = 3.4454523972$ in four dimensions, nine digits from the best
 published value, $3.445452402$, and the scan in $D$ began.
 
-I set the target, a formula, and kept pushing toward it, with \prompt{Yes continue to find the formula you are doing great
-don't give up. It exists}, \prompt{Could it be a sum?}, \prompt{What if it is a combination of a small sum and large sum?} and
-\prompt{Where is the formula?} Claude turned each suggested form into a fit tested on dimensions it had not seen, as when
-a fit to $D \le 8$ predicted the computed values out to $D = 10.1$ to within $2\times10^{-5}$, a habit that later became
-the held-out and planted-truth tests. When the scan stalled near $D = 9.3$, Claude said it would look into it later, and I
-wrote \prompt{Continue searching}. The diagnosis that followed turned the stall into a finding. The condition that selects
-$\Delta$ weakens exponentially with $D$, since the competing solutions behave like $(1-x)^s$ near the horizon with $s$
-growing like $0.6\,(D-2)$. So no plain series in $1/D$ can fix $\Delta$, an idea that became Proposition 1 of the later
-work, and double precision could fix $\Delta$ only to about $10^{-4}$ near $D = 10$. The fitted formulas themselves did
-not last. The first one for $\Delta$ fell like $(D-2)^{-1/4}$, while the later data give a finite limit,
-$\Delta_\infty = 1.643893746$~\cite{physics}.
+I set the target, a formula, and kept pushing toward it, with \prompt{Yes continue to find the formula you are doing
+great don't give up. It exists}, \prompt{Could it be a sum?}, \prompt{What if it is a combination of a small sum and
+large sum?} and \prompt{Where is the formula?} Claude turned each suggested form into a fit tested on dimensions it had
+not seen, as when a fit to $D \le 8$ predicted the computed values out to $D = 10.1$ to within $2\times10^{-5}$, a habit
+that later became the held-out and planted-truth tests. When the scan stalled near $D = 9.3$, Claude said it would look
+into it later, and I wrote \prompt{Continue searching}. The diagnosis that followed turned the stall into a finding. The
+condition that selects $\Delta$ weakens exponentially with $D$. So no plain series in $1/D$ can fix $\Delta$, an idea
+that became Proposition 1 of the later work, and double precision could fix $\Delta$ only to about $10^{-4}$ near $D =
+10$. The fitted formulas themselves did not last. The first one for $\Delta$ fell like $(D-2)^{-1/4}$, while the later
+data give a finite limit, $\Delta_\infty = 1.643893746$~\cite{physics}.
 
 A formula needed many precise points, and I pushed on speed, with \prompt{can we speed up the runtime by using SIMD?},
 \prompt{Does it make sense to rewrite in Rust?} and \prompt{With a subagent make a purpose-built Rust build and measure
@@ -226,11 +224,10 @@ the hourly status.
 for its handover to its memory, clears its context and sends the next task whole.
 \end{itemize}
 
-\emph{Accounts and credentials.} The work runs on two Claude accounts. A runner's status line shows its account's use of
-the weekly limit. At 90\% new runners go to the other account, and running ones move at their next task boundary by
-resuming their own conversation, so that no context is lost. When both accounts are near the limit, I decide. Machine
-login and administrator passwords live in a 1Password vault kept for automation. The coordinator reads them through a
-service account without printing them, to log in to a machine over SSH or to restart its network link when it drops off.
+\emph{Accounts and credentials.} The work runs on two Claude accounts. At 90\% of an account's weekly limit new runners
+go to the other account, and running ones move at their next task boundary by resuming their own conversation, so that
+no context is lost. Machine logins live in a 1Password vault kept for automation, which the coordinator reads through a
+service account without printing them.
 
 \emph{The repositories as the record.} Everything the work depends on lives in git repositories (Fig.~\ref{fig:arch}).
 \begin{itemize}
@@ -242,8 +239,7 @@ the agents themselves, or that assess other authors' papers, go to a private rep
 \file{INDEX.md}. No result may live only on a machine's disk, and \file{raw\_check.py} and the writers' path check
 enforce it, because the records of 757 early points that never left the cloud machine's disk were lost.
 \item \emph{Worktrees and branches.} Each session and subagent writes in its own worktree and backs up to a
-\file{wip/} branch, and only the coordinator merges into main, by rebase. The raw-data repository was force-pushed once,
-at my word, to make its history linear; that changed every hash, and \file{HASH\_MAP.csv} maps the old ones.
+\file{wip/} branch, and only the coordinator merges into main, by rebase.
 \item \emph{Traceability.} Notes and tables cite raw folders by commit. \file{delta\_all.csv} names each row's source and
 state and is re-verified against them, with controls that must fail, and \file{check\_numbers.py} ties each quoted number
 to a file. A claim can be followed back to the run that produced it, and any machine can rebuild the tables from clones
@@ -285,21 +281,19 @@ one commit per message, which a watcher on each runner polled every minute. With
 channel went through a pinned issue, Claude Code's Remote Control, a Discord server with one bot per machine, one file
 per message in a private repository, and a message stream. Each was dropped for a concrete fault: a commit per message on
 main, Remote Control stopping when the account changed, and bots that never woke one another. \file{hc} replaced them
-all. The tasks moved from numbered log entries, T1 to T135, to GitHub issues, and 163 open tasks were renumbered.
+all, and the tasks moved from numbered log entries, T1 to T135, to GitHub issues.
 
 \section{Rules of evidence}
 \label{sec:evidence}
 
-I required that every check have a control that can fail, that discrepancies be reported rather than quietly fixed,
-and that thresholds never be loosened to pass, and the cloud session's handoff recorded these as my standing rules.
-AGENTS.md writes them out, partly following the verification protocols of BootLoops~\cite{BootLoops}.
+I required from the start that every check have a control that can fail, that discrepancies be reported rather than
+quietly fixed, and that thresholds never be loosened to pass. AGENTS.md writes out the full set, partly following the
+verification protocols of BootLoops~\cite{BootLoops}.
 \begin{itemize}
-\item Every check must be able to fail. Each is broken once on purpose, and the broken version stays runnable
-(Table~\ref{tab:checks}).
+\item Each check is broken once on purpose, and the broken version stays runnable (Table~\ref{tab:checks}).
 \item Planted truth comes before real data.
 \item Every error bar says what it is.
 \item Independent checks share none of the machinery under test.
-\item Discrepancies are reported, not quietly fixed, and thresholds are not loosened to pass.
 \item Every quoted number is tied to a file by \file{check\_numbers.py}.
 \end{itemize}
 
@@ -550,7 +544,8 @@ flat as $D$ grows was being measured when this was written.
 that it was mostly its own to catch: I had given the right signal twice, with the push to 400 and the call to stop, and
 it had answered the second with a pause and more repairs, not with a new method. It proposed giving each goal a date or a
 rate and reporting the time to the goal at the current rate in the hourly status, since $D = 400$ was 23 days away ``and
-no table showed that number''.
+no table showed that number''. It added that asking what was wrong had invited the next diagnostic, and that asking what
+would get there ten times faster would have forced a new method.
 
 \section{Limitations and lessons}
 \label{sec:limits}
@@ -563,7 +558,7 @@ and the runners' transcripts stayed on their machines, so pushes of mine in thos
 relays them. The per-point records of 757 early points are lost.
 
 \emph{The classification is mine.} The kinds overlap, and another reader would draw the lines elsewhere. The counts say
-which pushes were common, not which mattered most.
+which pushes were common, not which mattered most, and they cover the first three weeks only.
 
 \emph{The error bars are of several kinds.} Differences between runs measure the path dependence of the held harmonics,
 about $10^{-20}$, and the stall rule, $10^{-18}$ to $10^{-17}$. Neither includes the bias of the held harmonics, $10^{-8}$
@@ -590,11 +585,9 @@ project's notes.
 
 I am the author of this work and of this paper. Claude, Anthropic's model, used through Claude Code, was the tool. It
 produced the code, the computations and the notes, as a coordinating session, runner sessions and subagents under my
-direction. This paper was drafted by a Claude subagent from the chat where the project began, the files and the
-transcripts named in \file{paper/ai/SOURCES.md}, and revised at my request after I read the earlier drafts. Its
-sections on the work after the first three weeks were written by the coordinator from a subagent's survey of the
-transcripts of that period. Its numbers
-come from files and from commands run on them. The references were checked against publisher, catalogue or repository
+direction. Claude sessions drafted this paper from the chat where the project began, the files and the transcripts
+named in \file{paper/ai/SOURCES.md}, and revised it at my request after I read each draft. Its numbers come from files
+and from commands run on them. The references were checked against publisher, catalogue or repository
 records, and the one that could be checked only against a citing record is marked. No human expert has reviewed it.
 Corrections are welcome.
 

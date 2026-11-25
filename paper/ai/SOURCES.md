@@ -53,9 +53,8 @@ Every number, date and quotation in the paper, with the file or command it comes
 | "Could it be done if I asked you to do it" | prompt 3, 23:40 |
 | three options: black-hole renderer, orbits in curved spacetime, toy numerical relativity (scalar collapse reproducing Choptuik) | reply to prompt 3 ("Realistic options in this workspace") |
 | "Do a toy numerical reality." | prompt 4, 23:42 (it continues "How will you be able to save your work?") |
-| 177 runs; 0.377 and 0.378 against 0.374; Δ ≈ 3.30 against 3.445; fixed grid, about one echo | reply after prompt 4 |
-| "It is interesting that you focused on black holes when I was willing to accept any visual simulation of reality" | prompt 5, 2026-10-18 00:31 |
-| solar system and gravity sandbox | prompts 6 and 8 |
+| 0.377 and 0.378 against 0.374; Δ ≈ 3.30 against 3.445; fixed grid, about one echo | reply after prompt 4 |
+| side projects (a solar system, a gravity sandbox) | prompts 6 and 8 |
 | "Any new math we can draw from this?" | prompt 10, 16:42 |
 | three directions, the first recommended (a proof that a known three-body orbit exists) | reply to prompt 10 ("The first option is the one with a real chance ...") |
 | "Explain the collapse numbers" | prompt 11, 16:43 |
@@ -89,13 +88,13 @@ Every number, date and quotation in the paper, with the file or command it comes
 | chose and added machines | "there is a new runner named win2, give it tasks"; "ok i made available a new laptop macm3" (`tx:43f19197`) |
 | T1 to T135 | comms 2026-10-19 01:08 PDT cloud; comms 2026-11-06 18:26 cloud to win |
 | the lower-model rule | `tx:43f19197` queued prompt 2026-10-26 16:07 |
-| Table I hardware | AGENTS.md; first line of `comms.txt`; comms 2026-11-06 08:10 win; comms 2026-11-01 18:06 win2; comms 2026-11-06 05:08 win2; comms 2026-11-06 14:36 macm3; handoff in `tx:43f19197` |
-| Table I entries 293, 318 (199 + 119), 221, 134, 8 | Commands |
+| the machines' hardware in the first three weeks | AGENTS.md; first line of `comms.txt`; comms 2026-11-06 08:10 win; comms 2026-11-01 18:06 win2; comms 2026-11-06 05:08 win2; comms 2026-11-06 14:36 macm3; handoff in `tx:43f19197` |
+| messages by sender, 293, 318 (199 + 119), 221, 134, 8 (Appendix C) | Commands |
 | main repository contents | repository tree; `hp/data/delta_all.csv` |
 | every message a commit | Commands (954 entry commits); AGENTS.md "Coordination" |
 | raw repository rules | AGENTS.md "Raw output"; `hp/raw_out.py`; `raw_check.py` |
 | 757 points' records lost | `tx:43f19197` 2026-10-26 21:18:52; comms 2026-10-26 21:45 cloud to win, mac; AGENTS.md "Raw output" |
-| worktrees, wip branches, coordinator merges, raw repository never force-pushed | AGENTS.md "Working as an agent" |
+| worktrees, wip branches, coordinator merges | AGENTS.md "Working as an agent" |
 | delta_all.csv source and state columns; --verify with controls | `hp/data/delta_all.csv` header; `notes/QUAD_DOUBLE.md` 13.25 |
 | update_delta.py rebuilds every table | `hp/update_delta.py` docstring *(main)* |
 | 29 context summaries; one change of machine | `tx:43f19197`; comms 2026-10-26 15:56 mac |
@@ -115,7 +114,7 @@ Every number, date and quotation in the paper, with the file or command it comes
 |---|---|
 | my standing rules | handoff note in `tx:43f19197` 2026-10-26 15:53 ("Standing rules from the author") |
 | BootLoops protocols | `notes/BOOTLOOPS.md`; `notes/REF_CHECK.md` line 3 |
-| Table II | `notes/QUAD_DOUBLE.md` 13.25, 13.26, 13.27; `notes/OCTO_DOUBLE.md` 3, 5.4 *(main)*; `notes/LOW_D.md` 16 |
+| the table of checks | `notes/QUAD_DOUBLE.md` 13.25, 13.26, 13.27; `notes/OCTO_DOUBLE.md` 3, 5.4 *(main)*; `notes/LOW_D.md` 16 |
 | runners caught wrong commands, wrong expectations, a short hang rule | comms 2026-10-31 04:21 win; 2026-11-04 07:29 and 08:18; 2026-11-05 18:55; 2026-11-06 14:57 macm3; 2026-11-06 16:20 macm3 |
 | a relayed instruction did not count | comms 2026-11-06 04:27 cloud to win; 04:35 win; 05:31 win |
 | standing instruction on subagents | the author's global Claude Code instructions (CLAUDE.md, "Subagents") |
@@ -233,7 +232,7 @@ Days from 2026-10-19 00:00 UTC.
 | NIH 2023 | grants.nih.gov notice NOT-OD-23-149, opened: title as cited, released 23 June 2023; it states that uploading or sharing content or original concepts from an application to online generative AI tools "violates the NIH peer review confidentiality and integrity requirements" |
 | repositories | `git ls-remote` and `gh api` of choptuik-large-d, choptuik-large-d-raw and multidouble |
 
-## The 145 prompts counted in Table III
+## The 145 prompts counted in the table of kinds
 
 Kinds: P persistence, R reframing, W asking why, A raising the scale, N acting now, M resources, X my own tools and
 projects, S standards and process rules, C correcting Claude, U asking to understand. "chat" rows are from `chat:`
@@ -412,18 +411,17 @@ prompt list.
 | D = 3.04315 | `hp/data/delta_all.csv` first row (`data/delta_dd.csv:lowD-M384`) |
 | D = 263.6, paused 22 November | memory `fleet-takeover-2026-11-22.md`; #903 comment of 2026-11-22 03:01 (base D 263.5987) |
 | four hours per unit of D; 23 days to D 400 | the coordinator's table before `tx:afb99455:71497` |
-| tasks to GitHub; issues as tasks; 163 renumbered | `tx:43f19197:70983`, `:72874`; `tx:11bcbd25:622`, `:1197`, `:1287`; notes/ISSUE_NUMBERS.md |
+| tasks to GitHub; issues as tasks | `tx:43f19197:70983`, `:72874`; `tx:11bcbd25:622`, `:1197`, `:1287`; notes/ISSUE_NUMBERS.md |
 | "the nice thing about having it public, ..." | `tx:9fac6212:784` |
 | the channel's history and the reasons | memory `coordination-issue.md`, `discord-runner-channel.md`, `agent-msg-protocol.md`; `tx:43f19197:73425`, `:73873`; `tx:0c8fc979:6`; `tx:c88d10f3:223`; `gh api repos/nmoinvaz/agent-comms` |
 | herdr-core: run, read, send, keys, wait, exec | `hc --help` (0.1.21); `hc templates`; the coordinator skill |
 | handover, clear, next task | `tx:afb99455:25233`; memory `clear-runners-between-tasks.md` |
-| models and effort (Table IV) | the `message.model` and `effort` fields of each transcript's assistant records; `hc templates` (`--model sonnet --effort xhigh`); runner status lines read with `hc read` on 2026-11-25; scratchpad `launch_win2_sub.sh` (`--effort high`); memory `coordination-issue.md` (win2, Opus 4.8, 2026-11-08) |
+| the table of models and effort | the `message.model` and `effort` fields of each transcript's assistant records; `hc templates` (`--model sonnet --effort xhigh`); runner status lines read with `hc read` on 2026-11-25; scratchpad `launch_win2_sub.sh` (`--effort high`); memory `coordination-issue.md` (win2, Opus 4.8, 2026-11-08) |
 | 191 subagent sessions with a recorded model: 174 Opus 5.5 xhigh, 13 Fable 5.2 high, 4 Haiku | `<session>/subagents/*.jsonl` since 2026-11-06, first assistant record |
 | reviewer sessions in place of the review bot; every bot's comments read | `tx:6d6cbe24:21499`, `:26685`; memory `check-all-bot-reviews.md` |
 | two accounts, the 90% rule, the moves of 19 and 22 November | the coordinator skill; `tx:afb99455:42018`; `tx:0726f216:15645`, `:16167` |
 | the 1Password vault for automation | the coordinator skill; `tx:0726f216:20992`, `:23694` |
 | two or three coordinator sessions from 21 November | memory `coordinator-split-2026-11-21.md` |
-| the raw-data repository's history made linear on 10 November | `tx:12451890:405`; AGENTS.md "Raw output"; HASH_MAP.csv |
 | rebase merges since 10 November | `tx:12451890:1011` |
 | the table of machines | `hc machine ls`; `hc exec --on <m>` (nproc, free); memory `win2-runner.md`, `macm3-runner.md`, `dh370-runner.md`, `dh610-runner.md`, `rpi5-runner.md`; `tx:afb99455:23733` |
 | the order the machines joined | first `comms.txt` entry of each sender at 07eff89: local (the Windows laptop) 2026-10-19 01:00 PDT, cloud 01:08 PDT (the chat's container came first, Section II), mac 2026-10-24, win2 2026-11-01, macm3 2026-11-06; the memory files above: dh370 and dh610 2026-11-12, rpi5 2026-11-15 to 23, dh170 2026-11-16 |
@@ -453,7 +451,7 @@ prompt list.
 | the momentum constraint; the symbolic check | #1089 slice 3 (comment 7149028797); `solver/lit_gaps_dss/mc_check.py` on `wip/lit-gaps-dss`, rerun 2026-11-25 with its `--mutate=flux` control |
 | the prototype converged at D = 100 in double-double | #1088, Track B's milestone comment 7149908836 |
 | Gundlach (1997), journal reference and DOI | https://arxiv.org/abs/gr-qc/9604019 (Journal-ref, DOI fields), read 2026-11-25 |
-| the coordinator's answer on what I could have done; "and no table showed that number" | the reply to `tx:0726f216:44434` |
+| the coordinator's answer on what I could have done: the signal given twice, "and no table showed that number", the ten-times-faster question | the reply to `tx:0726f216:44434` (line 44500, 2026-11-25 00:08 UTC) |
 
 Of the 25 direction-changing prompts of the period, six are quoted in the paper: those that changed the direction most.
 Two others are left out entirely: one whose basis it does not state, and one personal.
