@@ -12,21 +12,16 @@ and applied to the tangents as one Ozaki product dc @ J (ell_ddm.Op). In exact a
 of B_g instead of the nf tangent rows. The coefficients are those of ell_fastm._base (lambda in the tangents' tau
 derivative), in double-double.
 
-    python ell_fastdd.py check STUB.jsonl STATE.npy D LAM [--mixed=1] [--mutate=nolam|jround|x2] [--hybrid=1]
+    python ell_fastdd.py check STUB.jsonl STATE.npy D LAM [--mutate=nolam|jround] [--hybrid=1]
         block 12 against DDEll.mode_matrix(only=[12]): max |difference| / max |block| <= 1e-20 (float64 rounding of this
         block is about 1e-10, ell_fastm), with both timings; --hybrid=1 also compares the hybrid determinant (float64
         blocks 0-11 by ell_fastm, this block 12 against ell_ddm's): the same dd_logdet sign and ln|det| within 1e-8.
         Exit 0 only if every comparison passes. Controls: --mutate=nolam (lambda dropped from the tangent coefficients)
         and --mutate=jround (each stage's J rounded to float64) must fail.
-        --mixed=1: J formed in float64 and applied to the double-double tangents by dd_times_f64 (9 float64 products
-        instead of 15 per stage and none for J's own double-double products), with the bars 1e-15 on the block and 1e-6
-        on the hybrid ln|det|; its control --mutate=x2 (the product at float64 accuracy) must fail. That control needs a
-        real state (k_c 55 or more): on the k_c 15 selftest state float64 itself is accurate to about 1e-16 here.
     python ell_fastdd.py selftest [--mutate=nolam|jround]
         on a k_c 15 state (ell_fastm._toy_state): the d/dtau basis rows against DDEll's Dspec + phys (1e-28), and block 12
-        against DDEll's at lambda 0 and 0.9 (1e-20; the mixed variant 1e-15). Exit 0 only if every comparison passes."""
+        against DDEll's at lambda 0 and 0.9 (1e-20). Exit 0 only if every comparison passes."""
 import json
-import math
 import os
 import sys
 import time
@@ -59,44 +54,12 @@ def _rows(X):
     return [DT(dd.R(X.h[i:i + 1].copy(), X.l[i:i + 1].copy())) for i in range(X.h.shape[0])]
 
 
-def _slices_n(h, l, axis, n, ns):
-    """ell_ddm._slices with ns slices (the leading ns of its exact split)"""
-    rho = math.ceil((53 + math.log2(max(n, 2))) / 2)
-    rh, rl = h.copy(), l.copy()
-    out = []
-    for _ in range(ns):
-        mx = np.max(np.abs(rh), axis=axis, keepdims=True)
-        tau = np.where(mx > 0, np.ceil(np.log2(np.where(mx > 0, mx, 1.0))), 0.0)
-        sig = 0.75 * np.exp2(rho + tau)
-        s = (rh + sig) - sig
-        out.append(s)
-        rh = rh - s
-        rh, rl = dd.two_sum(rh, rl)
-    return out
-
-
-def dd_times_f64(X, W):
-    """X (dd.R, (m, n)) @ W (float64, (n, k)) by Ozaki's splitting: 4 slices of X, 3 of W, the products of slice levels
-    0-3 (9 products; level 0 and 1 exact and summed in double-double, levels 2-3 summed in float64). The neglected levels
-    are below 2^-66 of the largest term (W's fourth slice) and 2^-88 (X's fifth)."""
-    n = W.shape[0]
-    xs = _slices_n(X.h, X.l, -1, n, 4)
-    ws = _slices_n(W, np.zeros_like(W), -2, n, 3)
-    acc = dd.R(xs[0] @ ws[0])
-    s, e = dd.two_sum(xs[0] @ ws[1], xs[1] @ ws[0])
-    acc = dd.add(acc, dd.R(s, e))
-    rest = xs[0] @ ws[2] + xs[1] @ ws[1] + xs[2] @ ws[0] + xs[1] @ ws[2] + xs[2] @ ws[1] + xs[3] @ ws[0]
-    return dd.add_d(acc, rest)
-
-
 class DDJac:
-    """block 12 of DDEll E by double-double stage matrices; mixed=True forms each J in float64 from the double-double
-    coefficients and applies it to the double-double tangents by dd_times_f64"""
+    """block 12 of DDEll E by double-double stage matrices"""
 
-    def __init__(self, E, mixed=False):
+    def __init__(self, E):
         S = E.S
         self.E, self.S = E, S
-        self.mixed = mixed
         no, ne = S.n_odd, S.n_even
         self.cut = np.cumsum([0, no, no, ne, ne, no])
         Bo, Be = E.B["odd"].W, E.B["even"].W
@@ -150,22 +113,6 @@ class DDJac:
         k = self.cut
         blk = k[-1]
         N = S.N
-        if self.mixed:
-            J = np.empty((blk, blk))
-            for par, fs in (("odd", (0, 1, 4)), ("even", (2, 3))):
-                Y = np.zeros((len(fs), blk, N))
-                for i, f in enumerate(fs):
-                    terms, dterm = _TERMS[f]
-                    for gi, key in terms:
-                        Y[i, k[gi]:k[gi + 1]] = self.Bg[gi].h * cf[key].v.h
-                        if dterm is not None and dterm[0] == gi:
-                            Y[i, k[gi]:k[gi + 1]] += self.BDo.h * cf[dterm[1]].v.h
-                Jp = Y @ E.Sp[par].W.h
-                for i, f in enumerate(fs):
-                    J[:, k[f]:k[f + 1]] = Jp[i]
-            if MUTATE == "x2":                                   # control: the product at float64 accuracy
-                return base, dd.R(dc.h @ J + dc.l @ J)
-            return base, dd_times_f64(dc, J)
         Jh = np.empty((blk, blk))
         Jl = np.empty((blk, blk))
         for par, fs in (("odd", (0, 1, 4)), ("even", (2, 3))):        # outputs of one parity: one Ozaki product
@@ -284,18 +231,15 @@ def selftest():
     ok &= g
     print(f"d/dtau basis rows against DDEll's Dspec + phys: {e:.2e} (<= 1e-28) {'ok' if g else 'FAIL'}", flush=True)
     sl = block_slice(S)
-    Jm = DDJac(E, mixed=True)
     for lam in (0.0, 0.9):
         with np.errstate(all="ignore"):
             A = Jc.mode_matrix(z, lam)
-            Am = Jm.mode_matrix(z, lam)
             B = E.mode_matrix(z, lam, only=[12])
         r = rel_dd(A, B, sl)
-        rm = rel_dd(Am, B, sl)
-        g = r <= 1e-20 and rm <= 1e-15
+        g = r <= 1e-20
         ok &= g
-        print(f"block 12 at lambda {lam}: max |fast - DDEll| / max |DDEll| = {r:.2e} (<= 1e-20), mixed {rm:.2e} (<= 1e-15) "
-              f"{'ok' if g else 'FAIL'}", flush=True)
+        print(f"block 12 at lambda {lam}: max |fast - DDEll| / max |DDEll| = {r:.2e} (<= 1e-20) {'ok' if g else 'FAIL'}",
+              flush=True)
     print(f"selftest (mutate {MUTATE or 'none'}): {'PASS' if ok else 'FAIL'}", flush=True)
     sys.exit(0 if ok else 1)
 
@@ -311,9 +255,7 @@ def checkcmd(argv):
     if not same:
         sys.exit(3)
     E = ell_ddm.DDEll(S)
-    mixed = opts.get("mixed") == "1"
-    bar, hbar = (1e-15, 1e-6) if mixed else (1e-20, 1e-8)
-    Jc = DDJac(E, mixed)
+    Jc = DDJac(E)
     with np.errstate(all="ignore"):
         t0 = time.time()
         A = Jc.mode_matrix(z, lam)
@@ -323,11 +265,10 @@ def checkcmd(argv):
         tb = time.time() - t0
     sl = block_slice(S)
     r = rel_dd(A, B, sl)
-    ok = r <= bar
-    print(f"block 12 at lambda {lam!r} ({'mixed' if mixed else 'double-double'} J, mutate {MUTATE or 'none'}): "
-          f"max |fast - DDEll| / max |DDEll| = {r:.3e} (<= {bar:g}) "
+    ok = r <= 1e-20
+    print(f"block 12 at lambda {lam!r} (mutate {MUTATE or 'none'}): max |fast - DDEll| / max |DDEll| = {r:.3e} (<= 1e-20) "
           f"{'ok' if ok else 'FAIL'}; times: fast {ta:.1f} s, DDEll {tb:.1f} s, ratio {tb / ta:.2f}", flush=True)
-    res = dict(D=D, kc=rec["kc"], lam=lam, mutate=MUTATE, mixed=mixed, rel=r, t_fast=ta, t_ddell=tb)
+    res = dict(D=D, kc=rec["kc"], lam=lam, mutate=MUTATE, rel=r, t_fast=ta, t_ddell=tb)
     if opts.get("hybrid") == "1":
         with np.errstate(all="ignore"):
             Mf = ell_fastm.mode_matrix_fast(S, z, lam)
@@ -337,10 +278,10 @@ def checkcmd(argv):
             H[sl] = X.h[sl]
             Hl[sl] = X.l[sl]
             out.append(md.dd_logdet(H, Hl, True)[:2])
-        g = out[0][0] == out[1][0] and abs(out[0][1] - out[1][1]) <= hbar
+        g = out[0][0] == out[1][0] and abs(out[0][1] - out[1][1]) <= 1e-8
         ok &= g
         print(f"hybrid: with this block 12 {out[0][0]:+.0f} {out[0][1]:.12f}, with DDEll's {out[1][0]:+.0f} {out[1][1]:.12f}, "
-              f"|d ln| {abs(out[0][1] - out[1][1]):.2e} (<= {hbar:g}) {'ok' if g else 'FAIL'}", flush=True)
+              f"|d ln| {abs(out[0][1] - out[1][1]):.2e} (<= 1e-8) {'ok' if g else 'FAIL'}", flush=True)
         res.update(hyb=[[float(v) for v in o] for o in out])
     if "out" in opts:
         open(opts["out"], "w").write(json.dumps(dict(res, ok=bool(ok))) + "\n")
