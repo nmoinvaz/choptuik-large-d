@@ -10,6 +10,10 @@ the branch is nearly a polynomial of degree N, so the discrete system has a near
 the polynomial space excludes it. The real near-null vector is a centre-regular solution whose horizon component has
 its own weight (notes/LARGE_D_BASICS.md 3.4), so this is a model of one factor, not of the Jacobian.
 
+Superseded as an argument about the grip by free_field_cheb.py: the bare branch's representability is not what sets the
+grip. The centre-regular free wave is a degree-N polynomial up to n^-(N+1), so a degree-N basis sees the horizon
+condition only at that level, with no recovery once sigma passes N. The table below stays as a record of the model.
+
 Usage: python3 cheb_branch_tail.py [--N=80] [--mutate=formula]
   The control compares a_k from the formula with a quadrature of (2/pi) int_0^pi (1 - cos t)^sigma cos(k t) dt at
   sigma 7.3 and 41.7; they must agree to 1e-25 of the integrand's maximum 2^sigma. --mutate=formula drops the (-1)^k, which must fail it (exit 1).
