@@ -4,9 +4,9 @@ against this branch's double-double recurrence (mobius_sdd.py), at large D (#108
 Written before any run (2026-11-25). Inputs at each D: M = 32 collocation points; m_h = Q0/2 of this branch's float64
 M-6 solution at D 646 (I1090-mac/f64_M6_cont3/sol_D646_M6_a8.json) resampled to M = 32 and rescaled by sqrt(644/n);
 Delta from Track C at D (I1090-mac/diag/trackc_at.json); the last node x_l = 0.7; ks = form_s.ks_mob(D) = ceil(1.5 n) + 20
-in both codes; a = 8 for D <= 3200 and n/400 beyond (the rule of notes/LARGE_D_INNER.md §3). hp is evaluated with one
-node at x_l whose state is zero, so its horizon block (the series at x_l minus the last node) is its sum S = (p, m, c) at
-x_l. Both codes take the same float64 m_h and Delta. hp in octo-double (8 parts in, the result summed in mpmath), this
+in both codes; a = 8 for D <= 3200 and n/400 beyond (the rule of notes/LARGE_D_INNER.md §3). hp is evaluated with its
+last node at x_l and that node's state zero, so its horizon block (the series at x_l minus the last node) is its sum S = (p, m, c) at
+x_l (hp needs two nodes: 0.65 and x_l, both with zero state). Both codes take the same float64 m_h and Delta. hp in octo-double (8 parts in, the result summed in mpmath), this
 branch in double-double, both with every Cauchy product in full (kb = None here; hp has no banding).
 
 Checks and pass bars:
@@ -25,6 +25,7 @@ Checks and pass bars:
 Usage (PYTHONPATH must hold hp's form-S build, and FORMS_HP the worktree's hp/ with form_s.py):
     python3 hp_mob_check.py SOL.json TRACKC.json --Ds=1000,2000 [--parts=8] [--threads=2] [--gain=1]
                             [--a_fixed=8] [--mutate=zseries|hp52]
+  --a_fixed: hp's a only (this branch keeps the rule's a), for the information rows
 """
 import json
 import os
@@ -65,25 +66,26 @@ def hp_sum(D, a, mh, Dl, mutate=0):
     """hp's horizon sum at x_l in octo-double: one node at x_l with zero state, the horizon block of residual_s"""
     with mp.workdps(60):
         Dt = mp.mpf(repr(D))
-    s = make_solver_s(Dt, M, [XL], kt=36, kc=200, ks=ks_mob(D), threads=threads, mob=a)
-    L = 3 * M * 2 + 1
+    K = 2  # hp needs two nodes; the second is x_l, and its state is zero, so the horizon block is the sum at x_l
+    s = make_solver_s(Dt, M, [XL - 0.05, XL], kt=36, kc=200, ks=ks_mob(D), threads=threads, mob=a)
+    L = 3 * M * (K + 1) + 1
     z = np.zeros(L)
-    z[:M] = 0.0  # p1 (the centre block is not used)
-    z[M:2 * M] = 1.0  # c0
-    o = 2 * M + 3 * M  # m_h after p1, c0 and node 0's p, m, c
+    z[M:2 * M] = 1.0  # c0 (p1 = 0; the centre and segment blocks are not used)
+    o = 2 * M + 3 * M * K  # m_h after p1, c0 and the nodes' p, m, c
     z[o:o + M] = mh
     z[-1] = Dl
     zp = [np.ascontiguousarray(z)] + [np.zeros(L) for _ in range(parts - 1)]
     F = s.residual_s(zp, mutate)
-    Fm = [sum(mp.mpf(float(F[p][i])) for p in range(len(F))) for i in range(3 * M, 6 * M)]
+    Fm = [sum(mp.mpf(float(F[p][i])) for p in range(len(F))) for i in range(3 * M * K, 3 * M * (K + 1))]
     return Fm
 
 
 def dd_sum(D, a, mh, Dl, zmut=None):
     """this branch's sum at x_l in double-double (kb None), as p = (U + x V)/2, m = (U - x V)/2, c"""
-    f = msd.FormSDD(D, M, a=a, ks=ks_mob(D), kb=None, zK=XL * XL)
+    zK = mp.mpf(XL) * mp.mpf(XL)  # x_l^2 of the float64 x_l, exactly, as hp forms it in the lane's precision
+    f = msd.FormSDD(D, M, a=a, ks=ks_mob(D), kb=None, zK=zK)
     if zmut is not None:
-        g = msd.FormSDD(D, M, a=zmut, ks=ks_mob(D), kb=None, zK=XL * XL)
+        g = msd.FormSDD(D, M, a=zmut, ks=ks_mob(D), kb=None, zK=zK)
         f.ts_dd, f.ats_dd = f.ts_dd, g.ats_dd * f.ts_dd / g.ts_dd  # z's series (via a t*) at zmut, h and e at a
     Q0 = DD(2.0 * mh)
     om = (f.pi * 2.0) / DD(np.array(Dl))
@@ -113,18 +115,26 @@ ok = True
 print("hp_mob_check: M %d, x_l %g, parts %d, start %s (D %g), mutate %r" % (M, XL, parts, os.path.basename(fn), D0, mut))
 for D in Ds:
     n = D - 2
-    a = a_fixed if a_fixed is not None else (8.0 if D <= 3200 else n / 400.0)
+    a = 8.0 if D <= 3200 else n / 400.0  # the rule (notes/LARGE_D_INNER.md §3)
+    a_hp = a_fixed if a_fixed is not None else a  # --a_fixed moves hp's a only (the information rows)
     mh = mh0 * np.sqrt((D0 - 2) / n)
     Dl = float(tc["%g" % D]["Delta"])
     t0 = time.time()
-    Shp = hp_sum(D, a, mh, Dl, 52 if mut == "hp52" else 0)
+    Shp = hp_sum(D, a_hp, mh, Dl, 52 if mut == "hp52" else 0)
     t_hp = time.time() - t0
     t0 = time.time()
     Sdd = dd_sum(D, a, mh, Dl, zmut=1.25 * a if mut == "zseries" else None)
     t_dd = time.time() - t0
     c1 = rel(Shp, Sdd)
-    line = "D %g n %g a %g ks %d: |S| %.4e; C1 hp od vs dd %.2e (%s); hp %.0f s, dd %.0f s" % (
-        D, n, a, ks_mob(D), float(max(abs(v) for v in Sdd)), c1, "PASS" if c1 <= 1e-24 else "FAIL", t_hp, t_dd)
+    per = []
+    for nm, sl in (("p", slice(0, M)), ("m", slice(M, 2 * M)), ("c", slice(2 * M, 3 * M))):
+        A, B_ = Shp[sl], Sdd[sl]
+        sc = max(abs(v) for v in B_) if nm != "c" else mp.mpf(1)
+        per.append("%s %.1e (|%s| %.2e)" % (nm, float(max(abs(x - y) for x, y in zip(A, B_)) / sc), nm,
+                                           float(max(abs(v) for v in B_)) if nm != "c" else float(max(abs(v - 1) for v in B_))))
+    print("   per field, relative to its size (c: to 1): " + ", ".join(per), flush=True)
+    line = "D %g n %g a %g (hp %g) ks %d: |S| %.4e; C1 hp od vs dd %.2e (%s); hp %.0f s, dd %.0f s" % (
+        D, n, a, a_hp, ks_mob(D), float(max(abs(v) for v in Sdd)), c1, "PASS" if c1 <= 1e-24 else "FAIL", t_hp, t_dd)
     if mut:
         line += "  [control %s: must FAIL C1 by more than 1e-10: %s]" % (mut, "fired" if c1 > 1e-10 else "DID NOT FIRE")
         ok &= c1 > 1e-10
