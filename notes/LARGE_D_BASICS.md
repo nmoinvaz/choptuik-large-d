@@ -311,8 +311,10 @@ harmonic; we hold 5–13.
 Our chain (held harmonics) stays within the two fits' spread to D 200, while EEG's six-digit values sit above by up to
 4.8×10⁻⁶ (4.8 units of their last digit, at D 198). The fit shares our solver but not the held fit, so this is numerical
 evidence that the gap is EEG's, and that the held fit costs Δ less than about 2×10⁻¹⁰ up to D 200. EEG claim all
-displayed digits for D > 28. **Discrepancy reported, not explained.** Their fixed Chebyshev degree (§6.1) is the
-candidate. The test is theirs to run.
+displayed digits for D > 28. **Discrepancy reported, not explained.** The fixed Chebyshev degree (§6.1) was the candidate, but #1089
+(notes/LIT_GAPS_EEG.md on wip/lit-gaps-eeg) finds no step near D 157: the excess grows linearly from D 68.1 at
+3.3×10⁻⁸ per unit D, the best step-fit knot is D 104 with a step of 1.8×10⁻⁷, and a planted 10⁻⁶ step at D 157
+is recovered at D 155. So the cause is open.
 
 ### 6.3 Our chain past D 245 against the D ≤ 61 series
 
