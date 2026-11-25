@@ -613,8 +613,13 @@ def newton_o_s(s, z8, tol, it_max, halvings, log=None, mutate="none", verbose=Tr
         lam, acc, trials = 1.0, False, []
         for _ in range(halvings + 1):
             zt = o8(od_axpy(sign * lam, *d, *z8))
-            Ft = s.residual_s(list(zt))
-            nt = float(np.abs(np.asarray(Ft[0]) + np.asarray(Ft[1])).max())
+            try:
+                Ft = resid(zt)
+                nt = float(np.abs(np.asarray(Ft[0]) + np.asarray(Ft[1])).max())
+            except BaseException as e:  # a trial whose slaving or horizon LU fails (hp panics on a NaN pivot)
+                if isinstance(e, KeyboardInterrupt):
+                    raise
+                Ft, nt = None, float("inf")
             tr = dict(lam=lam, F=nt)
             if np.isfinite(nt) and nt < nF:
                 acc = True
