@@ -5,6 +5,7 @@ so the unknowns are p1, c0 | node i: p, m, c | m_h | Delta (3M(K+1) + 1; form A'
     python3 form_s.py check STATE.npz [STATE.npz ...] [--kfreeze none|13] [--plan_tol 1e-32] [--it_max 12]
         [--tol 1e-28] [--threads 2] [--mutate none|flux]
     python3 form_s.py cond STATE.npz [...] [--kfreeze 13] [--w 10] [--w2 4] [--iters 6] [--forms A,S] [--segs state|plan]
+        [--ks state|N]
     python3 form_s.py jump OUTDIR --D 250 --states 'GLOB,...' [--Dmin 226 --Dmax 245.64 --deg 3 --kfreeze 13
         --plan_tol 1e-40 --ks sigma|auto|N --tol 1e-40 --it_max 16 --halvings 8 --threads 2 --delta series --mutate none|step
         --junk 0 --tol_dz 1e-45 --ls 0 --outer 8 --held 0]
@@ -287,7 +288,7 @@ def cmd_cond(argv):
     from octo_corrector import load_o, o8
     from pinning import band_coeffs
     pos, o = opts(argv, dict(kfreeze="13", plan_tol="1e-32", threads="2", w="10", w2="4", iters="6", forms="A,S",
-                             segs="state"))
+                             segs="state", ks="state"))
     for path in pos:
         z8, meta = load_o(path)
         M, nodes = int(meta["M"]), list(meta["nodes"])
@@ -295,7 +296,8 @@ def cmd_cond(argv):
         with mp.workdps(60):
             D = mp.mpf(meta.get("D_str", repr(meta["D"])))
         kf = None if o["kfreeze"] == "none" else int(o["kfreeze"])
-        kw = dict(kt=meta.get("kt", 36), kc=meta.get("kc", 40), ks=meta.get("ks", 120), threads=int(o["threads"]), kfreeze=kf)
+        ks_c = meta.get("ks", 120) if o["ks"] == "state" else int(o["ks"])
+        kw = dict(kt=meta.get("kt", 36), kc=meta.get("kc", 40), ks=ks_c, threads=int(o["threads"]), kfreeze=kf)
         sa = make_solver(D, M, nodes=nodes, **kw)
         segs = meta["segs"] if (o["segs"] == "state" and meta.get("segs")) else sa.plan(z8[0], z8[1], float(o["plan_tol"]), 0.05)
         sa.set_segs(segs)
