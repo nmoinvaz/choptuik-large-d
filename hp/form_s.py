@@ -6,7 +6,8 @@ so the unknowns are p1, c0 | node i: p, m, c | m_h | Delta (3M(K+1) + 1; form A'
         [--tol 1e-28] [--threads 2] [--mutate none|flux]
     python3 form_s.py cond STATE.npz [...] [--kfreeze 13] [--w 10] [--w2 4] [--iters 6] [--forms A,S] [--segs state|plan]
     python3 form_s.py jump OUTDIR --D 250 --states 'GLOB,...' [--Dmin 226 --Dmax 245.64 --deg 3 --kfreeze 13
-        --plan_tol 1e-40 --ks sigma|auto|N --tol 1e-40 --it_max 16 --halvings 8 --threads 2 --delta series --mutate none|step]
+        --plan_tol 1e-40 --ks sigma|auto|N --tol 1e-40 --it_max 16 --halvings 8 --threads 2 --delta series --mutate none|step
+        --junk 0 --tol_dz 1e-45]
 
 jump: the rescaled guess of jump.py (p, m, p1, m_h times sqrt(n), c0 and c as (v - 1) n, fitted in 1/n; Delta from
 Track C's series), in form S, so with no a and no horizon re-seed; then Newton in octo-double on form S (newton_s),
@@ -322,36 +323,90 @@ def cmd_cond(argv):
     return 0
 
 
-def newton_o_s(s, z8, tol, it_max, halvings, log=None, mutate="none", verbose=True, info=None):
+def junk_basis(s, L, w, iters=6, delta_max=1e-2):
+    """the w weakest right singular directions of the last newton_s LU whose Delta component is below delta_max
+    (weakest(), f64), orthonormal, with their sigmas and those of the weak ones kept"""
+    zero = np.zeros(L)
+
+    def solve(v, tr):
+        return np.asarray(s.olu_solve([np.ascontiguousarray(v)] + [zero] * 7, tr)[0])
+    ws = weakest(solve, L, w, iters, 0)
+    junk = [(sg, x) for sg, x in ws if abs(x[-1]) < delta_max]
+    kept = [(sg, x) for sg, x in ws if abs(x[-1]) >= delta_max]
+    V = np.linalg.qr(np.column_stack([x for _, x in junk]))[0] if junk else np.zeros((L, 0))
+    return V, [sg for sg, _ in junk], [sg for sg, _ in kept]
+
+
+def newton_o_s(s, z8, tol, it_max, halvings, log=None, mutate="none", verbose=True, info=None, junk_w=0, tol_dz=1e-45):
     """Newton in octo-double on form S from the eight-part z8: newton_s's step, halved while max |F| does not fall;
-    one record per step to log (jsonl); returns (z8, converged, records)"""
+    one record per step to log (jsonl); returns (z8, converged, records). junk_w > 0: the step's components along the
+    weakest junk_w right singular directions with no Delta content (junk_basis, formed at each LU) are removed, so
+    those coordinates stay where they are; a trial is then accepted when its max |F| or its own projected correction
+    falls, and the iteration ends converged when the projected correction is below tol_dz (the residual left is the
+    frozen directions')."""
     from multidouble import od_axpy
     from octo_corrector import delta_digits, o8
     z8 = o8(z8)
+    L = len(z8[0])
     F = s.residual_s(list(z8))
     nF = float(np.abs(np.asarray(F[0]) + np.asarray(F[1])).max())
     recs = []
     if verbose:
         print(f"  start: max |F| {nF:.3e}, Delta {delta_digits(z8, 40)}", flush=True)
     conv = nF <= tol
+    zero8 = np.zeros(L)
+
+    def proj(d, V):
+        if V is None or V.shape[1] == 0:
+            return d
+        c = V @ (V.T @ (np.asarray(d[0]) + np.asarray(d[1])))
+        return o8(od_axpy(-1.0, np.ascontiguousarray(c), *([zero8] * 7), *o8(d)))
+    st = None
     for it in range(it_max):
         if conv:
             break
         t0 = time.time()
-        d, _, pmin, pmax = s.newton_s(list(z8))
-        d = o8(d)
+        if st is None:
+            d, _, pmin, pmax = s.newton_s(list(z8))
+            V, sj, sk = junk_basis(s, L, junk_w) if junk_w else (None, [], [])
+            if junk_w and verbose:
+                print(f"    {V.shape[1]} junk directions frozen (sigma {min(sj) if sj else 0:.1e}..{max(sj) if sj else 0:.1e}), "
+                      f"weak ones with Delta content kept: {', '.join(f'{x:.1e}' for x in sk)}", flush=True)
+            d = proj(o8(d), V)
+        else:
+            d, pmin, pmax, V = st
+        st = None
         t_lu = time.time() - t0
         sign = -1.0 if mutate == "step" else 1.0
         dz = float(np.abs(np.asarray(d[0])).max())
         dD = float(np.asarray(d[0])[-1])
+        if junk_w and dz < tol_dz:
+            conv = True
+            recs.append(dict(it=it, F=nF, dz=dz, junk_floor=True))
+            if verbose:
+                print(f"  it {it}: projected correction {dz:.2e} below {tol_dz:.0e}: converged at the frozen directions' "
+                      f"residual |F| {nF:.2e}", flush=True)
+            break
         lam, acc, trials = 1.0, False, []
         for _ in range(halvings + 1):
             zt = o8(od_axpy(sign * lam, *d, *z8))
             Ft = s.residual_s(list(zt))
             nt = float(np.abs(np.asarray(Ft[0]) + np.asarray(Ft[1])).max())
-            trials.append(dict(lam=lam, F=nt))
+            tr = dict(lam=lam, F=nt)
             if np.isfinite(nt) and nt < nF:
                 acc = True
+            elif junk_w and np.isfinite(nt):
+                # the frozen directions' residual need not fall: judge the trial by its own projected correction
+                dt, _, pt0, pt1 = s.newton_s(list(zt))
+                Vt, _, _ = junk_basis(s, L, junk_w)
+                dtp = proj(o8(dt), Vt)
+                dzt = float(np.abs(np.asarray(dtp[0])).max())
+                tr["dz_own"] = dzt
+                if dzt < dz:
+                    acc = True
+                    st = (dtp, pt0, pt1, Vt)
+            trials.append(tr)
+            if acc:
                 break
             lam *= 0.5
         rec = dict(it=it, F=nF, dz=dz, dDelta=dD, pmin=pmin, pmax=pmax, lu_s=round(t_lu, 1), trials=trials, accepted=acc,
@@ -379,7 +434,7 @@ def cmd_jump(argv):
     from raw_out import require_raw
     pos, o = opts(argv, dict(D="250", states="", Dmin="0", Dmax="1e9", deg="3", kfreeze="13", plan_tol="1e-40", hmax="0.05",
                              ks="sigma", kc="146", threads="2", delta="series", tol="1e-40", it_max="16", halvings="8",
-                             mutate="none"))
+                             mutate="none", junk="0", tol_dz="1e-45"))
     outdir = pos[0]
     os.makedirs(outdir, exist_ok=True)
     log = os.path.join(outdir, "jump_s.jsonl")
@@ -449,7 +504,8 @@ def cmd_jump(argv):
                                  states=len(rows), D_range=[float(Ds[0]), float(Ds[-1])], tol=float(o["tol"]),
                                  mutate=o["mutate"], threads=int(o["threads"]),
                                  utc=time.strftime("%Y-%m-%d %H:%M:%S", time.gmtime()))) + "\n")
-    z8, conv, recs = newton_o_s(s, z8, float(o["tol"]), int(o["it_max"]), int(o["halvings"]), log, o["mutate"])
+    z8, conv, recs = newton_o_s(s, z8, float(o["tol"]), int(o["it_max"]), int(o["halvings"]), log, o["mutate"],
+                                junk_w=int(o["junk"]), tol_dz=float(o["tol_dz"]))
     F = s.residual_s(list(z8))
     meta.update(solved=bool(conv), F=float(np.abs(np.asarray(F[0]) + np.asarray(F[1])).max()))
     out = os.path.join(outdir, f"jump_s_D{float(Dt):.4f}.npz")
