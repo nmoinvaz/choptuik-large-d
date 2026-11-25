@@ -22,7 +22,7 @@ the evaluation count and seconds.
 
 usage (venv-1025dd):
   d18_secant.py run STUB.jsonl STATE.npy D LO HI OUT.jsonl [--tol=1e-6] [--maxev=12] [--mm=fast|cs] [--dln=0.1]
-                [--basis=jac|coef|grid] [--b12=fast|ddm] [--pin=STATEBLOB,STUBBLOB] [--ends=SCAN.jsonl]
+                [--basis=jac|coef|grid] [--b12=fast|mixed|ddm] [--pin=STATEBLOB,STUBBLOB] [--ends=SCAN.jsonl]
       --mm=cs --b12=ddm is d18_hybsign.py's evaluation exactly (DSSEll.mode_matrix, ell_ddm's block 12); the defaults
       are ell_fastm.mode_matrix_fast (basis jac) and ell_fastdd's block 12 (the same double-double block to 4e-29);
       --pin: refuse (exit 3) unless the state's and the stub's git blobs (hash-object --no-filters) start with these;
@@ -92,9 +92,9 @@ class RealEval:
         self.S, self.z, self.rec, self.st, self.mm, self.dln_max, self.basis = S, z, rec, st, mm, dln_max, basis
         self.E = ell_ddm.DDEll(S)
         self.b12 = b12
-        if b12 == "fast":
+        if b12 in ("fast", "mixed"):
             from ell_fastdd import DDJac
-            self.J = DDJac(self.E)
+            self.J = DDJac(self.E, mixed=b12 == "mixed")
         blocks, offs = S._block_list()
         blk = 3 * S.n_odd + 2 * S.n_even
         c0, nf, fun, tgt = blocks[12]
@@ -115,7 +115,7 @@ class RealEval:
         t1 = time.time()
         sf, lf = np.linalg.slogdet(Mf)
         H, Hl = Mf.copy(), np.zeros_like(Mf)
-        Md = self.J.mode_matrix(self.z, lam) if self.b12 == "fast" else self.E.mode_matrix(self.z, lam, only=[12])
+        Md = self.E.mode_matrix(self.z, lam, only=[12]) if self.b12 == "ddm" else self.J.mode_matrix(self.z, lam)
         H[self.sl] = Md.h[self.sl]
         Hl[self.sl] = Md.l[self.sl]
         t2 = time.time()
@@ -319,6 +319,9 @@ def runcmd(argv):
     dln_max = float(opts.get("dln", 0.1))
     basis = opts.get("basis", "jac")
     b12 = opts.get("b12", "fast")
+    if b12 not in ("fast", "mixed", "ddm"):
+        print(f"--b12={b12}: fast, mixed or ddm")
+        sys.exit(2)
     if mm not in ("fast", "cs"):
         print(f"--mm={mm}: fast or cs")
         sys.exit(2)
