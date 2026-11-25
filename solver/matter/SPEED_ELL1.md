@@ -1,6 +1,8 @@
 # SPEED_ELL1: faster l = 1 root readings for #1025
 
-Three tools on branch `wip/ell1-speed`, all in `solver/matter/`. They need the venv with multidouble's `dd_logdet`
+Three tools on branch `wip/ell1-speed`, all in `solver/matter/`. The runs behind the numbers below are in the
+raw-data repository, folder `I1025-mac/speed_ell1/`, on its branch `wip/i1025-mac-speed` (commit 9f0b2dc6, one commit on
+main's 083e16ec, not yet in main). They need the venv with multidouble's `dd_logdet`
 (`venv-1025dd` on the Mac; `venv-314`'s multidouble lacks it). Nothing in `dss_ell.py`, `ell_ddm.py` or `ddnp.py`
 changed, so the runners' pins of those files still hold.
 
