@@ -658,7 +658,7 @@ def cmd_jump(argv):
     pos, o = opts(argv, dict(D="250", states="", Dmin="0", Dmax="1e9", deg="3", kfreeze="13", plan_tol="1e-40", hmax="0.05",
                              ks="sigma", kc="146", threads="2", delta="series", tol="1e-40", it_max="16", halvings="8",
                              mutate="none", junk="0", tol_dz="1e-45", ls="0", outer="8", held="0", mob="0",
-                             states_s="", jac="qd", delta_tol="1e-15", jscale="1", ham="1"))
+                             states_s="", jac="qd", delta_tol="1e-15", jscale="1", ham="1", segs_from=""))
     mob = float(o["mob"])
     outdir = pos[0]
     os.makedirs(outdir, exist_ok=True)
@@ -715,7 +715,12 @@ def cmd_jump(argv):
     kw = dict(kt=int(m0.get("kt", 36)), kc=int(o["kc"]), ks=ks, threads=int(o["threads"]), kfreeze=kf)
     sa = make_solver(Dt, M, nodes=nodes, **kw)
     zero = np.zeros(len(zA))
-    segs = sa.plan(np.ascontiguousarray(zA), zero, float(o["plan_tol"]), float(o["hmax"]))
+    if o["segs_from"]:
+        # another state's Taylor steps (a control that must solve the same discretized system as that state)
+        segs = load_o(o["segs_from"])[1]["segs"]
+        print(f"  Taylor steps from {o['segs_from']}", flush=True)
+    else:
+        segs = sa.plan(np.ascontiguousarray(zA), zero, float(o["plan_tol"]), float(o["hmax"]))
     segs = [list(map(float, g)) for g in segs]
     s = make_solver_s(Dt, M, nodes, segs=segs, mob=mob, **kw)
     z8 = [np.ascontiguousarray(zS)] + [np.zeros(s.size_s) for _ in range(7)]
