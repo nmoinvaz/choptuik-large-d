@@ -61,9 +61,9 @@ The project began in a chat on claude.ai (Sec.~\ref{sec:origin}). Over the follo
 sessions running in Claude Code~\cite{ClaudeCode} on up to eight machines, and Claude wrote the code to my direction.
 The lowest converged point is $D = 3.04315$. The large-$D$ chain reached $D = 263.6$ and was paused on 22 November, when
 it cost about four hours per unit of $D$. In its first three weeks the work stuck at 31 points (Sec.~\ref{sec:moved} and
-Appendix~\ref{app:stuck}). Sections~\ref{sec:setup2} to~\ref{sec:after} follow the setup and the work to 25 November.
+Appendix~\ref{app:stuck}). Sections~\ref{sec:libs} and~\ref{sec:after} follow the work to 25 November.
 
-The sources are the chat where the project began~\cite{chat}, the coordination log \file{comms.txt}, the git history, the
+The sources are the chat where the project began~\cite{chat}, the coordination log of the first three weeks, the git history, the
 notes in \file{notes/}, the raw-data repository~\cite{raw} and the transcripts of the Claude Code sessions on the
 coordinator machine, and from 7 November the repository's issues and the runner sessions, read over SSH. The other
 machines' side in the first three weeks is known from their entries in the log. Every number, quotation and date is
@@ -75,7 +75,7 @@ listed with its source in \file{paper/ai/SOURCES.md}.
 I began the chat with general questions, such as \prompt{Are you able to make new discoveries about physics?}, and then
 asked \prompt{Could it be done if I asked you to do it}. Claude offered three projects in general relativity that one
 machine could handle, a black-hole renderer, orbits in curved spacetime, and toy numerical relativity, the collapse of a
-scalar field that reproduces Choptuik's result. I picked the last, \prompt{Do a toy numerical reality.} From 177 runs the
+scalar field that reproduces Choptuik's result. I picked the last, \prompt{Do a toy numerical relativity.} From 177 runs the
 simulation reproduced Choptuik's mass scaling, with exponents of 0.377 and 0.378 for two pulse shapes against the
 accepted 0.374, and an echo period $\Delta \approx 3.30$ against 3.445, limited by a fixed grid that resolved about one
 echo. I remarked \prompt{It is interesting that you focused on black holes when I was willing to accept any visual
@@ -90,7 +90,7 @@ than a simulation. At 63 Fourier modes it gave $\Delta = 3.4454523972$ in four d
 published value, $3.445452402$, and the scan in $D$ began.
 
 I set the target, a formula, and kept pushing toward it, with \prompt{Yes continue to find the formula you are doing great
-don't give up. It exists}, \prompt{Could it be a sum?}, \prompt{What if is a combination of a small sum and large sum?} and
+don't give up. It exists}, \prompt{Could it be a sum?}, \prompt{What if it is a combination of a small sum and large sum?} and
 \prompt{Where is the formula?} Claude turned each suggested form into a fit tested on dimensions it had not seen, as when
 a fit to $D \le 8$ predicted the computed values out to $D = 10.1$ to within $2\times10^{-5}$, a habit that later became
 the held-out and planted-truth tests. When the scan stalled near $D = 9.3$, Claude said it would look into it later, and I
@@ -102,12 +102,12 @@ not last. The first one for $\Delta$ fell like $(D-2)^{-1/4}$, while the later d
 $\Delta_\infty = 1.643893746$~\cite{physics}.
 
 A formula needed many precise points, and I pushed on speed, with \prompt{can we speed up the runtime by using SIMD?},
-\prompt{Does it make sense to rewrite in Rust?} and \prompt{With a subagent make a purpose build Rust build and measure
+\prompt{Does it make sense to rewrite in Rust?} and \prompt{With a subagent make a purpose-built Rust build and measure
 speed.}, the first subagent of the project. Then I decided to leave the chat. I put what it had produced into a repository
 of my own, whose first commit is ``Import the DSS residual kernel'', asked \prompt{How can I switch you to my local
 machine?} and linked the chat to my laptop, \prompt{You are now local on my computer. It has AVX512 too which is nice.
 Continue our work.} When the scans used a fifth of the processor, I asked for more processes and threads. Within hours I
-had a cloud session and the laptop exchanging entries in \file{comms.txt}, and the setup of the next section grew from
+had a cloud session and the laptop exchanging messages through a log file in the repository, and the setup of the next section grew from
 that pair.
 
 \section{The setup}
@@ -116,34 +116,57 @@ that pair.
 \emph{Roles.}
 \begin{itemize}
 \item \emph{Me.} I set the goals and the standards of evidence and chose among the options the coordinator put to me, by
-prompts and by answering its multiple-choice questions. I chose the machines and when to add them, merged and released
-the arithmetic library \file{multidouble}~\cite{multidouble}, and woke, plugged in and set up machines.
-\item \emph{The coordinator}, one Claude Code session at a time until 21 November, first on a cloud machine and then on
-the Mac, wrote the
-code I asked for in its own worktrees, merged results, kept the notes, queued numbered tasks, T1 to T135, and reported to
-me every hour.
-\item \emph{The runners}, one session per other machine, ran their tasks, posted results and pushed raw output. They did
-not edit code, by my rule, \prompt{make a note that the other machines are running a lower model than you are, so it is
-best for you to write any code and not them.} The lower model was Sonnet; the models of each role are in
-Table~\ref{tab:models}.
-\item \emph{Subagents} were sessions the coordinator started at my request for one bounded task, each returning a single
+prompts and by answering its multiple-choice questions. I chose the machines and when to add them, released the libraries
+the work produced (Sec.~\ref{sec:libs}), and woke, plugged in and set up machines.
+\item \emph{The coordinator}, a Claude Code session on the Mac, writes the code I ask for in its own worktrees, merges
+results, keeps the notes, writes the tasks as GitHub issues and reports to me every hour. From 21 November two or three
+coordinators ran at once, each with its own runners.
+\item \emph{The runners}, one session per other machine, run their tasks, post results on the issues and push raw output.
+They do not edit code, by my rule, \prompt{make a note that the other machines are running a lower model than you are, so
+it is best for you to write any code and not them.}
+\item \emph{Subagents} are sessions the coordinator starts at my request for one bounded task, each returning a single
 report.
 \end{itemize}
 
+\emph{Models.} Each role runs its own model (Table~\ref{tab:models}). The runners run Sonnet 5.5 at the highest effort
+setting, xhigh. The coordinator and nearly all subagents run Opus 5.5 at xhigh, and independent reviewers run Fable 5.2
+at high effort.
+
 \begin{table}[h]
-\caption{The machines, by their names in \file{comms.txt}, with the entries each posted (headers counted at commit
-07eff89). The laptop posted as \file{local} at first.}
+\caption{The model and effort setting of each role, from the model and effort fields that each session's transcript
+records, the runners' launch commands and their status lines.}
+\label{tab:models}
+\small
+\begin{tabular}{L{4.2cm}L{4.6cm}L{6.9cm}}
+\toprule
+role & model, effort & when\\
+\midrule
+runners on the other machines & Sonnet 5.5, xhigh & throughout; win2 ran Opus 4.8 by its own settings on 8 November\\
+coordinator on the Mac & Opus 5.5, xhigh & from 11 November; Fable 5.1 from 27 October to 4 November, Fable 5.2 on 10--11 November\\
+subagents on the Mac & Opus 5.5, xhigh & 174 of 191 sessions since 6 November\\
+reviewers & Fable 5.2, high & 13 sessions\\
+two code sessions on win2 & Opus 5.5, high & 24 November, for tasks that needed code on that machine\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{table}[h]
+\caption{The machines, by their names in \file{hc}, with their runners.}
 \label{tab:machines}
 \small
-\begin{tabular}{L{1.4cm}L{5.4cm}L{7.4cm}r}
+\begin{tabular}{L{2.8cm}L{1.6cm}L{5.4cm}L{5.9cm}}
 \toprule
-name & machine & role & entries\\
+machine & runner & hardware & role, since\\
 \midrule
-\file{cloud} & cloud container, 2 cores, 6.27 GB & coordinator at first; afterwards the coordinator's name on the Mac & 293\\
-\file{win} & Windows laptop, 4 cores and 8 threads, 31.8 GB & runner from the start: low $D$, builds, second paths & 318\\
-\file{mac} & Mac, Apple M5, 10 cores & runner, then coordinator & 221\\
-\file{win2} & Windows desktop, 20 cores, 95.6 GB & runner in the last week: the large-$D$ chain, low-$D$ legs & 134\\
-\file{macm3} & Mac laptop, Apple M3, 8 cores, 24 GB & runner on the last day: a second path past $D = 193.77$ & 8\\
+the Mac & --- & Apple M5, 10 cores & runner, then coordinators and subagents\\
+desktop-pc & win2 & Core Ultra 7 265K, 20 threads, 95.6 GB & heavy runs, from 1 November\\
+surface-laptop-4 & win & 4 cores, 8 threads, 31.8 GB & runner from the start, at below-normal priority\\
+macbook-air-m3 & macm3 & Apple M3, 6 threads for the work & runner from 6 November\\
+dh370-fedora & dh370 & i7-8700, 12 threads, 31 GB, Fedora & the large-$D$ chain to its pause, from 12 November\\
+dh610-fedora & dh610 & i7-12700, 20 threads, 62 GB, Fedora & from 12 November\\
+dh170-fedora & dh170 & i7-7700, 8 threads, 31 GB, Fedora & from 16 November\\
+rpi5-ubuntu & rpi5 & Raspberry Pi 5, 4 cores, 8 GB & certificate reruns on another architecture, 15--23 November\\
+cloud container & --- & 2 cores, 6.27 GB & the first coordinator, to 26 October\\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -152,83 +175,95 @@ name & machine & role & entries\\
 \centering
 \begin{tikzpicture}[
   box/.style={draw, rounded corners=2pt, align=center, font=\footnotesize, inner sep=4pt, fill=white},
+  rbox/.style={draw, rounded corners=2pt, align=center, font=\footnotesize, inner sep=3pt, fill=white, minimum width=2.1cm},
   hub/.style={draw, thick, rounded corners=2pt, align=center, font=\footnotesize, inner sep=5pt, fill=blue!6},
   lab/.style={font=\scriptsize, align=center, fill=white, inner sep=1pt},
-  arr/.style={-{Stealth[length=2mm]}, thick},
-  darr/.style={-{Stealth[length=2mm]}, thick, dashed}]
-\node[box, fill=orange!12] (me) at (0,5.2) {\textbf{Nathan}\\goals, standards, decisions};
-\node[box] (coord) at (0,3.1) {\textbf{Coordinator} (Mac)\\writes the code, merges, writes notes,\\queues tasks, hourly status};
-\node[box, dashed] (cloud) at (-5.6,3.1) {\textbf{cloud}\\coordinator\\at first};
-\node[box] (sub) at (5.6,3.1) {\textbf{Subagents}\\reviews, searches, builds\\worktrees, \texttt{wip/} branches};
-\node[hub, minimum width=12.5cm] (main) at (0,0.9) {GitHub \texttt{choptuik-large-d}: \texttt{main}, \texttt{notes/}, \texttt{comms.txt} (append only)};
-\node[box] (win) at (-5.2,-1.3) {\textbf{win}\\Windows laptop};
-\node[box] (win2) at (-1.75,-1.3) {\textbf{win2}\\Windows desktop};
-\node[box] (m3) at (1.75,-1.3) {\textbf{macm3}\\Mac laptop};
-\node[box, dashed] (macr) at (5.2,-1.3) {\textbf{mac} runner};
-\node[hub, minimum width=12.5cm, fill=green!6] (raw) at (0,-3.4) {GitHub \texttt{choptuik-large-d-raw}: one folder per task and machine, \texttt{INDEX.md}};
+  arr/.style={-{Stealth[length=2mm]}, thick}]
+\node[box, fill=orange!12] (me) at (0,6.0) {\textbf{Nathan}\\goals, standards, decisions};
+\node[box, fill=yellow!10] (libs) at (5.6,6.0) {\textbf{crates.io}\\\texttt{multidouble}, \texttt{multishoot},\\\texttt{multisolver}};
+\node[box] (coord) at (0,4.0) {\textbf{Coordinator} (Mac, Opus, xhigh)\\writes the code, merges, keeps notes,\\writes issues, hourly status};
+\node[box] (sub) at (5.6,4.0) {\textbf{Subagents} (Mac)\\reviews, searches, builds\\worktrees, \texttt{wip/} branches};
+\node[box, fill=gray!8] (vault) at (-5.6,4.0) {\textbf{1Password vault}\\machine logins};
+\node[hub, minimum width=14.2cm] (hc) at (0,2.0) {\texttt{hc} (herdr-core) over SSH: \texttt{run}, \texttt{read}, \texttt{send}, \texttt{keys}, \texttt{wait}, \texttt{exec}};
+\foreach \n/\x/\m in {r1/-6.25/win2, r2/-3.75/win, r3/-1.25/macm3, r4/1.25/dh370, r5/3.75/dh610, r6/6.25/dh170} {
+  \node[rbox] (\n) at (\x,0) {\textbf{\m}\\Sonnet, xhigh};
+}
+\node[hub, minimum width=14.2cm, fill=green!6] (gh) at (0,-2.1) {GitHub \texttt{choptuik-large-d}: code, \texttt{notes/}, papers, issues as tasks\\
+\texttt{choptuik-large-d-raw}: raw output, one folder per task and machine};
 \draw[arr] ([xshift=-6mm]me.south) -- node[lab, left=1pt] {prompts,\\answers} ([xshift=-6mm]coord.north);
 \draw[arr] ([xshift=6mm]coord.north) -- node[lab, right=1pt] {status tables,\\questions} ([xshift=6mm]me.south);
-\draw[darr] (cloud.east) -- node[lab, above] {handoff} (coord.west);
+\draw[arr] (me.east) -- node[lab, above] {releases} (libs.west);
+\draw[arr] (sub.north) -- node[lab, right=1pt] {pull requests} (libs.south);
 \draw[arr] ([yshift=2mm]coord.east) -- node[lab, above] {brief} ([yshift=2mm]sub.west);
 \draw[arr] ([yshift=-2mm]sub.west) -- node[lab, below] {one report} ([yshift=-2mm]coord.east);
-\draw[arr] ([xshift=-8mm]coord.south) -- node[lab, left=1pt] {code, merges, notes,\\``cloud to $\langle$runner$\rangle$'' entries} ([xshift=-8mm]main.north);
-\draw[arr] ([xshift=8mm]main.north) -- node[lab, right=1pt] {runner posts,\\read hourly} ([xshift=8mm]coord.south);
-\foreach \r in {win, win2, m3, macr} {
-  \draw[arr] ([xshift=-3mm]main.south -| \r.north) -- ([xshift=-3mm]\r.north);
-  \draw[arr] ([xshift=3mm]\r.north) -- ([xshift=3mm]main.south -| \r.north);
-  \draw[arr] (\r.south) -- (raw.north -| \r.south);
+\draw[arr] (vault.east) -- node[lab, above] {credentials} (coord.west);
+\draw[arr] ([xshift=-8mm]coord.south) -- node[lab, left=1pt] {tasks, keys} ([xshift=-8mm]hc.north);
+\draw[arr] ([xshift=8mm]hc.north) -- node[lab, right=1pt] {reports, screens} ([xshift=8mm]coord.south);
+\foreach \n in {r1, r2, r3, r4, r5, r6} {
+  \draw[arr] ([xshift=-3mm]hc.south -| \n.north) -- ([xshift=-3mm]\n.north);
+  \draw[arr] ([xshift=3mm]\n.north) -- ([xshift=3mm]hc.south -| \n.north);
+  \draw[arr] (\n.south) -- (gh.north -| \n.south);
 }
-\node[lab, anchor=east] at ([xshift=-1mm]win.west |- 0,-2.35) {raw output};
-\draw[arr] (sub.south) -- node[lab, right=1pt, pos=0.55] {branches} (sub.south |- main.north);
+\node[lab, anchor=east] at ([xshift=-1mm]r1.west |- 0,-1.05) {posts,\\raw output};
+\draw[arr] (coord.south west) -- ++(-0.6,-0.4) -| node[lab, pos=0.75, left=1pt] {code, merges,\\notes, issues} ([xshift=-7.35cm]gh.north);
 \end{tikzpicture}
-\caption{The participants and how they were connected in the first three weeks. I spoke only to the coordinator, and
-the coordinator spoke to the runners only through \file{comms.txt} (to 8 November; Sec.~\ref{sec:setup2}). Each runner's watcher wakes it when an entry addressed to it arrives (down arrows),
-its posts carry its processor and memory use (up arrows), and its raw output goes to the raw-data repository. Dashed boxes
-are sessions that ended.}
+\caption{The participants and how they are connected. I speak only to the coordinator. The coordinator starts, reads, types
+to and waits on the runners' sessions through \file{hc}, which reaches each machine over SSH, and reads machine logins
+from a password vault. Runners post on the issues and push raw output. Subagents propose changes to the libraries by pull
+request, and I release them.}
 \label{fig:arch}
 \end{figure}
 
-\emph{The repositories as the record.} Everything the work depends on lives in two git repositories (Fig.~\ref{fig:arch}).
+\emph{Sessions.} Every runner is a Claude Code session started and driven with herdr-core (\file{hc}), which keeps
+terminals alive on each machine and reaches them over SSH (Fig.~\ref{fig:arch}).
 \begin{itemize}
-\item \emph{The main repository} holds the code, the notes, the papers, the derived tables such as
-\file{hp/data/delta\_all.csv}, and \file{comms.txt}, the only channel between sessions. Every message is a commit, so the
-log is ordered, timestamped, append-only, addressed by its header, and survives any restart of a session or a machine. A
-writer pulls, appends, commits only that file and pushes.
+\item \file{hc run} starts a session on another machine with the runner rules as its first message.
+\item \file{hc read} shows its screen, \file{hc send} and \file{hc keys} type into it, and \file{hc wait} returns when it
+stops.
+\item \file{hc exec} runs a command on a machine, which is how the coordinator reads each machine's load and memory for
+the hourly status.
+\item Runner reports arrive in the coordinator's terminal as tagged messages. Between tasks the coordinator asks a runner
+for its handover to its memory, clears its context and sends the next task whole.
+\end{itemize}
+
+\emph{Accounts and credentials.} The work runs on two Claude accounts. A runner's status line shows its account's use of
+the weekly limit. At 90\% new runners go to the other account, and running ones move at their next task boundary by
+resuming their own conversation, so that no context is lost. When both accounts are near the limit, I decide. Machine
+login and administrator passwords live in a 1Password vault kept for automation. The coordinator reads them through a
+service account without printing them, to log in to a machine over SSH or to restart its network link when it drops off.
+
+\emph{The repositories as the record.} Everything the work depends on lives in git repositories (Fig.~\ref{fig:arch}).
+\begin{itemize}
+\item \emph{The main repository} holds the code, the notes, the papers and the derived tables such as
+\file{hp/data/delta\_all.csv}. Its issues are the tasks. By 25 November there were 839, numbered to \#1089. Tasks about
+the agents themselves, or that assess other authors' papers, go to a private repository. Results stay public, since
+\prompt{the nice thing about having it public, is that anybody can review the results}.
 \item \emph{The raw-data repository} holds every run's output, one folder per task and machine with a README, indexed by
 \file{INDEX.md}. No result may live only on a machine's disk, and \file{raw\_check.py} and the writers' path check
 enforce it, because the records of 757 early points that never left the cloud machine's disk were lost.
 \item \emph{Worktrees and branches.} Each session and subagent writes in its own worktree and backs up to a
-\file{wip/} branch, and only the coordinator merges into main, by plain merges until 10 November and by rebase since. The
-raw-data repository was force-pushed once, on 10 November at my word, to make its history linear; that changed every
-hash, and \file{HASH\_MAP.csv} maps the old ones.
+\file{wip/} branch, and only the coordinator merges into main, by rebase. The raw-data repository was force-pushed once,
+at my word, to make its history linear; that changed every hash, and \file{HASH\_MAP.csv} maps the old ones.
 \item \emph{Traceability.} Notes and tables cite raw folders by commit. \file{delta\_all.csv} names each row's source and
 state and is re-verified against them, with controls that must fail, and \file{check\_numbers.py} ties each quoted number
 to a file. A claim can be followed back to the run that produced it, and any machine can rebuild the tables from clones
 with one command, \file{update\_delta.py}.
 \item \emph{Restarts and sleep.} A session that dies or a laptop that sleeps loses nothing that was pushed. Runners resume
-from the last pushed state, and the coordinator carried on across 29 context summaries and one change of machine from the
-log and the repositories.
+from the last pushed state, and the coordinator carried on across many context summaries and one change of machine from
+the issues and the repositories.
 \item \emph{Authorship and priority.} I keep the work in public repositories under my account, so every result, decision
 and message has a public, timestamped commit. Anyone can check the timeline, and it protects the work against being
 presented later as anyone else's, the provider of the model that did the computing included. Recent reporting describes
 researchers' fears that ideas typed into chatbots could feed future systems~\cite{Metz2026}, and NIH treats putting an
 application's content into online AI tools as a breach of confidentiality~\cite{NIH2023}. Public also means that nothing
 private goes in.
-\item \emph{The costs} are a pull before every write, merge conflicts on \file{INDEX.md} when two runners push at once,
-and a watcher that treats entries already present in a fresh clone as handled, so a new runner needs one bootstrap
-prompt.
 \end{itemize}
 
-\emph{Protocol.}
-\begin{itemize}
-\item \emph{Watchers.} A runner waits with \file{comms\_watch.py}, which fetches every 60 s and exits when an entry
-addressed to it arrives, waking the session at no cost while it waits.
-\item \emph{Status.} A recurring prompt asked the coordinator for a status every hour, which I shaped into one table row
-per runner and task, with the problem it serves and an ETA in hours.
-\end{itemize}
+\emph{Status.} A recurring prompt asks the coordinator for a status every hour, which I shaped into a table of goals and
+a table of runners, each row with the problem it serves and an ETA in hours.
 
-\emph{Tasks.} Each task entry states the following, here with examples from the entry that sent the octo-double chain to
-the desktop.
+\emph{Tasks.} Each task states the following, here with examples from the task that sent the octo-double chain to the
+desktop.
 \begin{itemize}
 \item \emph{Commands}, exact and from a stated folder, such as \file{anm\_run.py \dots\ --h\_max 1.0 --D\_max 200 --jet\_o 1}.
 \item \emph{Threads and priority}, such as ``below normal, 18 threads''.
@@ -236,7 +271,7 @@ the desktop.
 less, or after 10 h.''
 \item \emph{What to post}, such as the series time, the accepted step, the re-seed, the corrector's steps, max $|F|$ and
 $\Delta$ after the first two steps, then hourly, with processor and memory use.
-\item \emph{What to push}, such as ``Push T129-win2/ at each post.''
+\item \emph{What to push}, such as the task's raw folder at each post.
 \item \emph{Rules to apply without waiting}, such as ``if the log gains no line for 20 minutes while one core is busy, take
 one py-spy dump, kill the tree, restart from the last state with h\_max halved (0.25, then 0.125), and post. Do not wait
 for me.''
@@ -244,6 +279,14 @@ for me.''
 Long runs start with a pilot of the hardest case. A new value counts once another run, usually on another machine,
 reaches the same $D$, and on the large-$D$ chain 18 such runs give the error column of 66 rows. A runner that sees a
 mismatch reports it and does not fix it.
+
+\emph{How the setup got here.} For the first three weeks the sessions spoke through a log file in the main repository,
+one commit per message, which a watcher on each runner polled every minute. It took its last message on 8 November. In
+the next six days the channel went through a pinned issue, Claude Code's Remote Control, a Discord server with one bot per
+machine, one file per message in a private repository, and a message stream. Each was dropped for a concrete fault: a
+commit per message on main, Remote Control stopping when the account changed, and bots that never woke one another.
+\file{hc} replaced them all on 14 November. The tasks moved from numbered log entries, T1 to T135, to GitHub issues on 7
+to 10 November, and 163 open tasks were renumbered.
 
 \section{Rules of evidence}
 \label{sec:evidence}
@@ -342,11 +385,11 @@ list, with each prompt's kind, is in \file{SOURCES.md}.}
 kind & $n$ & examples & what it typically did\\
 \midrule
 standards and process rules & 25 & \prompt{from now on all agents should store the raw output in git somewhere different.}; \prompt{make sure to add precision tests for the quad-double solver.} & a rule in AGENTS.md or the status format\\
-resources & 17 & \prompt{there is a new runner named win2, give it tasks}; \prompt{i can spool up another mac M3 laptop if you think it will help make the total work faster.} & machines, runners, subagents, capacity\\
+resources & 17 & \prompt{there is a new runner named win2, give it tasks}; \prompt{I can spool up another Mac M3 laptop if you think it will help make the total work faster.} & machines, runners, subagents, capacity\\
 reframing & 16 & \prompt{Could it be a sum?}; \prompt{we can map where these walls are and skip them} & a form or route to test, sometimes rejected\\
 asking why & 15 & \prompt{then how to get to even 100? is there something wrong with our solver?}; \prompt{Why is large D calc on wormhole so much faster?} & a diagnosis or a measurement\\
 my own tools and projects & 15 & \prompt{Does it make sense to rewrite in Rust?}; \prompt{could the residual qd stuff go inside multidouble?} & the Rust kernel, \file{multidouble} releases\\
-correcting Claude & 15 & \prompt{the win machine is not doing anything?}; \prompt{i thought the purpose of the qd solver was to get in the larger D +70 range.} & an idle machine, a drift or a wrong number caught\\
+correcting Claude & 15 & \prompt{the win machine is not doing anything?}; \prompt{I thought the purpose of the qd solver was to get in the larger D +70 range.} & an idle machine, a drift or a wrong number caught\\
 persistence & 13 & \prompt{Yes continue to find the formula you are doing great don't give up. It exists}; \prompt{we need to keep going above 150} & a stalled thread kept alive\\
 raising the scale & 12 & \prompt{just jump to 100}; \prompt{we can push past D=200 and go as large as we can} & a limit removed, a decisive experiment\\
 asking to understand & 11 & \prompt{explain it as if a software developer wanted to know}; \prompt{What does collocation mean, what is the theory?} & explanations, figures, an algorithm document\\
@@ -361,7 +404,7 @@ suggested that convergence was getting harder \prompt{because maybe there is a r
 failed steps sat at whole values of the horizon exponent and found that they did not. When I asked whether the number
 $\Delta$ was approaching meant something, it listed constants within the error bar, and the later data excluded them.
 
-\emph{Asking why} produced the measurements behind the walls. After \prompt{so i mean it is failing at those weak points,
+\emph{Asking why} produced the measurements behind the walls. After \prompt{so I mean it is failing at those weak points,
 because the accuracy gets worse, so there must be a mathematical reason why}, the coordinator traced both the failures and
 the loss of accuracy to the weakest singular value of the Jacobian, which falls as $D$ rises, and built a stall detector
 that I had asked for. Its runs showed $u\kappa$, the unit roundoff times the condition number, crossing 1 just before the
@@ -425,100 +468,12 @@ Most of the rules in AGENTS.md trace to a stuck point.
 \end{itemize}
 My prompts set the direction and the pace, and the rules made the results checkable at that pace.
 
-\section{The setup since 7 November}
-\label{sec:setup2}
-
-The setup of Sec.~\ref{sec:setup} carried the first three weeks. From 7 November it changed in five ways.
-
-\emph{Tasks became issues.} I moved the tasks to GitHub on 7 November, \prompt{Let's use GitHub projects to manage
-everything}, and on 10 November the issues themselves became the tasks, without a project board, and 163 open tasks were
-renumbered. A task is an issue with a machine label, exact commands, stop conditions and acceptance checks that can fail.
-By 25 November there were 839 issues, numbered to \#1089. Tasks about the agents themselves, or that assess other authors'
-papers, go to a private repository, \file{agent-comms}. Results stay public, since \prompt{the nice thing about having it
-public, is that anybody can review the results}.
-
-\emph{The channel moved, then the sessions.} \file{comms.txt} took its last entries on 8 November. In the next six days
-the channel went through a pinned issue, Claude Code's Remote Control, a Discord server with one bot per machine, one file
-per message in \file{agent-comms}, and a message stream. Each was dropped for a concrete fault: a commit per message on
-main, Remote Control stopping when the account changed, and bots that never woke one another. Since 14 November every
-runner is a Claude Code session started and driven with herdr-core (\file{hc}), which keeps terminals alive on each
-machine and reaches them over SSH.
-\begin{itemize}
-\item \file{hc run} starts a session on another machine with the runner rules as its first message.
-\item \file{hc read} shows its screen, \file{hc send} and \file{hc keys} type into it, and \file{hc wait} returns when it
-stops.
-\item \file{hc exec} runs a command on a machine, which is how the coordinator reads each machine's load and memory for the
-hourly status.
-\end{itemize}
-Runner reports arrive in the coordinator's terminal as tagged messages. I set the rule \prompt{do not give out any new
-tasks to agents that are not running through hc/herdr}. Between tasks the coordinator asks a runner for its handover to
-its memory, clears its context and sends the next task whole.
-
-\emph{Models and accounts.} Each role ran its own model (Table~\ref{tab:models}).
-\begin{itemize}
-\item The runners ran Sonnet 5.5 at the highest effort setting, xhigh, by their launch command and my rule, \prompt{other
-machines will use a lesser model sonnet}.
-\item The coordinator ran Opus 5.5 at xhigh from 11 November. Before that it ran Fable 5.1 from 27 October to 4 November
-and Fable 5.2 on 10 and 11 November.
-\item Of the 191 subagent sessions since 6 November that record their model, 174 ran Opus 5.5 at xhigh. Thirteen ran
-Fable 5.2 at high effort as independent reviewers, which I asked for after a review bot's rate limit, and four ran Haiku.
-\item The work ran on two Claude accounts. A runner's status line shows its account's use of the weekly limit. At 90\%
-new runners go to the other account, and running ones move at their next task boundary by resuming their own
-conversation, so that no context is lost. When both accounts are near the limit, I decide. Runners moved between the
-accounts on 19 and 22 November.
-\end{itemize}
-
-\emph{Credentials.} Machine login and administrator passwords live in a 1Password vault kept for automation. The
-coordinator reads them through a service account without printing them, to log in to a machine over SSH or to restart
-its network link when it drops off, \prompt{use 1password automation vaulet to ssh in then}.
-
-\emph{More machines, more coordinators.} By 25 November the fleet had eight machines (Table~\ref{tab:fleet}). From 21
-November two or three coordinator sessions ran at once, each with its own runners.
-
-\begin{table}[h]
-\caption{The model and effort setting of each role, from the model and effort fields that each session's transcript
-records, the runners' launch commands and their status lines.}
-\label{tab:models}
-\small
-\begin{tabular}{L{4.2cm}L{4.6cm}L{6.9cm}}
-\toprule
-role & model, effort & when\\
-\midrule
-runners on the other machines & Sonnet 5.5, xhigh & throughout; win2 ran Opus 4.8 by its own settings on 8 November\\
-coordinator on the Mac & Opus 5.5, xhigh & from 11 November; Fable 5.1 from 27 October to 4 November, Fable 5.2 on 10--11 November\\
-subagents on the Mac & Opus 5.5, xhigh & 174 of 191 sessions since 6 November\\
-reviewers & Fable 5.2, high & 13 sessions\\
-two code sessions on win2 & Opus 5.5, high & 24 November, for tasks that needed code on that machine\\
-\bottomrule
-\end{tabular}
-\end{table}
-
-\begin{table}[h]
-\caption{The machines on 25 November, by their names in \file{hc}, with their runners.}
-\label{tab:fleet}
-\small
-\begin{tabular}{L{2.8cm}L{1.6cm}L{5.4cm}L{5.9cm}}
-\toprule
-machine & runner & hardware & role, since\\
-\midrule
-the Mac & --- & Apple M5, 10 cores & coordinators and subagents\\
-desktop-pc & win2 & Core Ultra 7 265K, 20 threads, 95.6 GB & heavy runs, from 1 November\\
-surface-laptop-4 & win & 4 cores, 8 threads, 31.8 GB & runner from the start, at below-normal priority\\
-macbook-air-m3 & macm3 & Apple M3, 6 threads for the work & runner from 6 November\\
-dh370-fedora & dh370 & i7-8700, 12 threads, 31 GB, Fedora & the large-$D$ chain to its pause, from 12 November\\
-dh610-fedora & dh610 & i7-12700, 20 threads, 62 GB, Fedora & from 12 November\\
-dh170-fedora & dh170 & i7-7700, 8 threads, 31 GB, Fedora & from 16 November\\
-rpi5-ubuntu & rpi5 & Raspberry Pi 5, 4 cores, 8 GB & certificate reruns on another architecture, 15--23 November\\
-\bottomrule
-\end{tabular}
-\end{table}
-
 \section{Three libraries made along the way}
 \label{sec:libs}
 
-Three parts of the solver became libraries of their own, each public and released on crates.io (Table~\ref{tab:libs}):
-\file{multidouble}~\cite{multidouble}, the arithmetic; \file{multishoot}~\cite{multishoot}, the multiple-shooting engine;
-and \file{multisolver}~\cite{multisolver}, the solvers on that engine.
+Three parts of the solver became libraries of their own (Table~\ref{tab:libs}). Each is public and released on
+crates.io: the arithmetic as \file{multidouble}~\cite{multidouble}, the multiple-shooting engine as
+\file{multishoot}~\cite{multishoot}, and the solvers on that engine as \file{multisolver}~\cite{multisolver}.
 
 \begin{table}[h]
 \caption{The three libraries on 25 November.}
@@ -544,8 +499,8 @@ request, released as 1.8.0 on 28 October and checked bit for bit against the bui
 November. I named it, a subagent set up the repository, and it was public and on crates.io the same day. The solver's
 kernel was rebuilt on it, and its files do not mention this project. Its 4.2.0 of 24 November forms the mode matrix at a
 real growth rate in any precision, which settled the low-$D$ question of Sec.~\ref{sec:after}.
-\item \emph{\file{multisolver}.} \prompt{can any of our solver code go inside multishoot?} on 14 November, then
-\prompt{should we break out multishoot into a multisolver crate?} on 15 November.
+\item \emph{\file{multisolver}.} The standard solvers moved into \file{multishoot} on 14 November and out into a crate
+of their own the next day.
 \item \emph{The release rule.} A change to the arithmetic, the engine or the solvers goes into its library and a release
 first. Then the version in the solver is raised, and its bit-identity checks are rerun against a build of the previous
 version, each with a control that must fail. The checks flagged a difference in how $\Delta$ was read during the move to
@@ -553,61 +508,52 @@ version, each with a control that must fail. The checks flagged a difference in 
 \item \emph{What the rule missed.} An octo-double renormalization error in 3.0.0 to 4.8.0, which lost about 93 bits on
 inputs with a gap or zero parts, was found by a subagent's review, not by the checks. It was fixed in 4.8.2, and the
 chain's stored states were bit-identical under the old and the fixed version.
-\item \emph{Reviews.} A review bot allowed about one review an hour across the account. I replaced it with
-\prompt{an indepedent fable 5.5 model on high effort} and had every bot's comments read after \prompt{for some reason you
-are not looking at the other bot's comments.} The coordinator merges these libraries' pull requests once their checks and
-every finding are answered, and the releases are mine.
-\item \emph{New mathematics.} After \prompt{we need to do the real new-math opportunity, length five and up which is open.}
-and \prompt{why are u writing up a bug as if a significant paper? nobody would care. we only care about new math in the
-paper.}, \file{multidouble} gained a paper of its own on error bounds for quad-double style arithmetic on expansions of any
+\item \emph{Reviews.} A review bot allowed about one review an hour across the account, so independent reviewer
+sessions at high effort took its place, and every bot's comments are read. The coordinator merges these libraries' pull
+requests once their checks and every finding are answered, and the releases are mine.
+\item \emph{New mathematics.} After \prompt{we need to do the real new-math opportunity, length five and up which is open.},
+\file{multidouble} gained a paper of its own on error bounds for quad-double style arithmetic on expansions of any
 length, with elementary functions whose error bounds are proved. A referee narrowed its novelty claim to the quad-double
 style algorithms. Three fixes went upstream to the QD library, and all were merged.
 \item \emph{Speed.} On 18 November seven speed items went to subagents as pull requests in the libraries and the solver.
-The chain's step did not get faster, \prompt{what did we do all that speed up work for then?}, since most were measured as
-losses for that step and the gains that held had come the week before.
+The chain's step did not get faster, since most were measured as losses for that step and the gains that held had come
+the week before.
 \end{itemize}
 
 \section{After 7 November: from a chain in $D$ to a new formulation}
 \label{sec:after}
 
-The prompts of mine that changed the direction after 7 November are listed with their outcomes in
-Appendix~\ref{app:stuck2}. Four turns stand out.
+The prompts of mine that changed the direction most after 7 November are listed with their outcomes in
+Appendix~\ref{app:stuck2}.
 
-\emph{The push to 400.} \prompt{Keep going to 400} on 7 November made the large-$D$ chain the priority, after
-\prompt{our goal should be to get more digits instead of just D = 200 or D = 400.} and \prompt{have a subagent search for
-better way to hold the harmonics.}, which found the held harmonics' bias, $-5.0\times10^{-8}$ in $\Delta$ at $D = 79.77$,
-and removed it with a fit in $1/(D-2)$ of the full solutions. The chain climbed to $D = 263.6$ by 22 November. On the way
-the fold of its discrete system at $D = 259.9$ disappeared when the horizon series' order was tied to $D$, after
-\prompt{let's try factor G out, first and also affine at the same time, then after that the split off}.
+\emph{The push to 400.} \prompt{Keep going to 400} on 7 November made the large-$D$ chain the priority. The chain climbed
+to $D = 263.6$ by 22 November. On the way a subagent found and removed the held harmonics' bias, $-5.0\times10^{-8}$ in
+$\Delta$ at $D = 79.77$, and a fold of the discrete system at $D = 259.9$ disappeared when the horizon series' order was
+tied to $D$.
 
-\emph{The pause.} \prompt{should we rethink trying to go past the large d wall at 250? maybe we need to look at it from a
-different angle or ingest new info?} on 14 November gave three tracks, among them a series in $1/(D-2)$ fitted below
-$D = 245$ that gives $\Delta$ to $D = 400$. An independent review of the direction, which I asked for on 19 November with
-\prompt{start another new subagent to check to see we are headed in the right direction, we want: discoveries.}, counted
-185 of the 450 issues closed in the preceding week as the chain, recommended stopping it, and named blind spots that became
-new tasks. The chain stopped two days later, after \prompt{this sounds like it is just an artifact of our method again}
-and \prompt{we should stop doing our calculations at large d until we can find a better method dont you think?}, when a
-unit of $D$ cost four hours and $D = 400$ was 23 days away.
+\emph{The pause.} On 19 November I asked for \prompt{another new subagent to check to see we are headed in the right
+direction, we want: discoveries.} It counted 185 of the 450 issues closed in the preceding week as the chain, recommended
+stopping it, and named blind spots that became the $\ell = 1$ and $\ell = 2$ work. The chain stopped two days later, after
+\prompt{we should stop doing our calculations at large d until we can find a better method don't you think?}, when a unit
+of $D$ cost four hours and $D = 400$ was 23 days away.
 
-\emph{Low $D$ by another method.} \prompt{lets figure out a new way to keep going on low D.} on 22 November led to a
-remapped grid and a first growth rate below $D = 3.15$. Two later tasks showed that its sign test near $D = 3.044$ had
-read noise: a reformulated determinant and a determinant from quad-double entries agree, and the true root is elsewhere.
-
-\emph{Back to basics.} On 24 and 25 November I asked to \prompt{re-evaluate the underlying math assumptions to see if we
-missed anything}, \prompt{like go back to basics if you have to}. A subagent derived the large-$D$ problem before reading
+\emph{Back to basics.} On 24 November I asked \prompt{Can you re-evaluate the underlying math assumptions to see if we
+missed anything?}, \prompt{like go back to basics if you have to}. A subagent derived the large-$D$ problem before reading
 the project's large-$D$ notes. It found nothing in the continuum near the chain's last singularity, at $D \approx 265$,
-and a chain whose $\Delta$ left the smooth curve from $D \approx 254$, so the limits belonged to the discrete system. I
-then wrote \prompt{i think you mau habe already lost the plot. it was ro discover a path foreward to 400, or 2000 etc. at
-these speeds it is unobtainable} and \prompt{we need to prioritze this quest}. The coordinator answered that the mistake
-was treating large $D$ as a continuation problem, and set up solves at each target $D$ directly. The first direct solve
-in the old formulation failed at once: its horizon data had a gain of $10^{44}$ to $10^{47}$ at $D = 245.6$. I asked for
-\prompt{new subagents to look to see any gaps in any of the published papers to see if we can get there way faster}.
-One of three found that the solver's mass mode, the source of the digits that grow with $D$, is a violation of the
-momentum constraint that the formulation never imposes. Gundlach's construction of the critical solution sets the metric
-from that constraint and has no such mode~\cite{Gundlach1997}. A symbolic check confirms both identities, and a prototype
-in that form converged at $D = 100$ in double-double arithmetic. Whether its conditioning stays flat as $D$ grows was being
-measured when this was written. When I wrote \prompt{perhaps you don't understand the problem, if you are saying it is not
-possible to get that large of a D with newer methods.}, the answer was that it should be possible, and why we could not.
+and a chain whose $\Delta$ left the smooth curve from $D \approx 254$, so the limits belonged to the discrete system.
+
+\emph{The reframing.} On 25 November I wrote \prompt{I think you may have already lost the plot. It was to discover a path
+forward to 400, or 2000 etc. At these speeds it is unobtainable} and \prompt{we need to prioritize this quest}. The
+coordinator answered that the mistake was treating large $D$ as a continuation problem, and set up solves at each target
+$D$ directly. The first direct solve in the old formulation failed at once: its horizon data had a gain of $10^{44}$ to
+$10^{47}$ at $D = 245.6$.
+
+\emph{The literature.} I then asked for \prompt{new subagents to look to see any gaps in any of the published papers to see
+if we can get there way faster}. One of three found that the solver's mass mode, the source of the digits that grow with
+$D$, is a violation of the momentum constraint that the formulation never imposes. Gundlach's construction of the critical
+solution sets the metric from that constraint and has no such mode~\cite{Gundlach1997}. A symbolic check confirms both
+identities, and a prototype in that form converged at $D = 100$ in double-double arithmetic. Whether its conditioning stays
+flat as $D$ grows was being measured when this was written.
 
 \emph{What I could have done.} I asked the coordinator what I could have done to make it see this sooner. It answered
 that it was mostly its own to catch: it had answered the right signals of 7 and 21 November with repairs, not with a new
@@ -628,8 +574,8 @@ quantity & value\\
 \midrule
 chat on claude.ai & 62 prompts, a few on side projects\\
 period of the repository & 19 October 2026 to 6 November 2026; 19 days\\
-commits on main & 2227, of which 954 are entries of \file{comms.txt}\\
-entries in \file{comms.txt} & 974: coordinator 293, Windows laptop 318, Mac 221, Windows desktop 134, macm3 8\\
+commits on main & 2227, of which 954 are messages between sessions\\
+messages between sessions & 974: coordinator 293, Windows laptop 318, Mac 221, Windows desktop 134, macm3 8\\
 tasks; raw-data repository & T1 to T135; 124 folders, 548 commits\\
 values of $\Delta$ in \file{hp/data/delta\_all.csv} & 2445 rows, from $D = 3.04375$ to 203.27\\
 coordinator session on the Mac & 334 prompts, 308 hourly status prompts, 29 context summaries, 30 subagent launches\\
@@ -713,7 +659,7 @@ other entries name the coordinator's diagnosis or another session. Sources for e
 5 & 19 Oct & one minute per step on two cores & \prompt{can we speed up the runtime by using SIMD?}; a subagent & Rust kernel with SIMD, double-double residual & kernel in Rust, driver in Python\\
 6 & 19 Oct & convergence harder with $D$ & \prompt{\dots maybe there is a repeating sum?} & resonance tested and rejected & hypotheses tested openly\\
 7 & 19 Oct & residual floor at $D = 28$ & \prompt{Do we need quad-double?} & floor traced to one weak harmonic & solver and precision limits told apart\\
-8 & 19 Oct & weak directions set $\Delta$ above $D = 23$; stalls at 27 to 31 & Claude's diagnosis; a test on the laptop & weak-direction solve, damped steps, double-double & two machines, \file{comms.txt}, tasks\\
+8 & 19 Oct & weak directions set $\Delta$ above $D = 23$; stalls at 27 to 31 & Claude's diagnosis; a test on the laptop & weak-direction solve, damped steps, double-double & two machines, a message log, tasks\\
 9 & 20 Oct & double-double climb stops at 60.96 & Claude's diagnosis & harmonics 9 to 13 held on their trend & pinning\\
 10 & 20--21 Oct & double solver fails below $D = 3.6$ & Claude's diagnosis & double-double at high $M$, nodes moved & series tails recorded with each value\\
 11 & 21 Oct & gaps in a certificate, an error bar and quoted numbers & an outside protocol (BootLoops) & mutation controls, planted truth, \file{check\_numbers.py} & the rules of evidence\\
@@ -744,8 +690,8 @@ other entries name the coordinator's diagnosis or another session. Sources for e
 \section{The turning points after 7 November}
 \label{app:stuck2}
 
-Prompts of mine that changed the direction after 7 November, with what followed. Each is quoted from the transcripts of
-the coordinator sessions, and its source is in \file{SOURCES.md}.
+The prompts of mine that changed the direction most after 7 November, with what followed. Each is quoted from the
+transcripts of the coordinator sessions, with spelling corrected, and its source is in \file{SOURCES.md}.
 
 \begin{center}
 \scriptsize
@@ -754,18 +700,12 @@ the coordinator sessions, and its source is in \file{SOURCES.md}.
 \toprule
 & when & prompt & what followed & what changed\\
 \midrule
-32 & 6--7 Nov & \prompt{have a subagent search for better way to hold the harmonics.}; \prompt{our goal should be to get more digits instead of just D = 200 or D = 400.} & the held harmonics' bias found and removed by a fit in $1/(D-2)$ & digits ranked above reach\\
-33 & 7 Nov & \prompt{Keep going to 400} & the chain to $D = 263.6$ & the large-$D$ chain first\\
-34 & 11 Nov & \prompt{if the chain's weakest diection sits near the horizon series and is amplified by an equations, can't we use that information to always compensate for that?}; \prompt{let's try factor G out \dots} & the horizon factored; its series' order tied to $D$ & the fold at 259.9 gone at order 293\\
-35 & 14 Nov & \prompt{should we rethink trying to go past the large d wall at 250? \dots}; \prompt{\dots don't stop investing in improving the corrector.} & three tracks: the series' tail kept, a series to $D = 400$, the literature & a value at $D = 400$ from the series\\
-36 & 18 Nov & \prompt{create 2 subagents to investigate areas in our algorithms we can do speed gains \dots} & seven speed items as pull requests & most measured as losses for the chain's step\\
-37 & 19 Nov & \prompt{start a new subagent on fable to look at new ways we can find a formula for D using quadratic base equations \dots} & 11 constants fit $D = 4$ to 245.64 within $1.8\times10^{-9}$ & a better formula, no new structure\\
-38 & 19 Nov & \prompt{start another new subagent to check to see we are headed in the right direction, we want: discoveries. \dots} & an independent direction review & the $\ell = 1$ and $\ell = 2$ work\\
-39 & 21 Nov & \prompt{this sounds like it is just an artifact of our method again}; \prompt{we should stop doing our calculations at large d until we can find a better method dont you think?} & the chain paused at $D = 263.6$ & low $D$ and $\ell = 1$ first\\
-40 & 22 Nov & \prompt{\dots lets figure out a new way to keep going on low D.} & a remapped grid; then its root near $D = 3.044$ found to be noise & two independent determinants\\
-41 & 24 Nov & \prompt{Can you re-evaluate the underlying math assumptions to see if we missed anything?}; \prompt{\dots like go back to basics if you have to.} & a from-scratch derivation & the chain's limits its own\\
-42 & 25 Nov & \prompt{i think you mau habe already lost the plot. \dots at these speeds it is unobtainable}; \prompt{we need to prioritze this quest} & direct solves at each target $D$ & continuation in $D$ dropped\\
-43 & 25 Nov & \prompt{i want you to use new subagents to look to see any gaps in any of the published papers \dots look at formulas, maths, missing gaps and connevtions} & three literature subagents & the momentum constraint imposed\\
+32 & 7 Nov & \prompt{Keep going to 400} & the chain to $D = 263.6$ & the large-$D$ chain first\\
+33 & 19 Nov & \prompt{start another new subagent to check to see we are headed in the right direction, we want: discoveries.} & an independent direction review & the $\ell = 1$ and $\ell = 2$ work\\
+34 & 21 Nov & \prompt{we should stop doing our calculations at large d until we can find a better method don't you think?} & the chain paused at $D = 263.6$ & low $D$ and $\ell = 1$ first\\
+35 & 24 Nov & \prompt{Can you re-evaluate the underlying math assumptions to see if we missed anything?}; \prompt{\dots like go back to basics if you have to.} & a from-scratch derivation & the chain's limits its own\\
+36 & 25 Nov & \prompt{I think you may have already lost the plot. \dots At these speeds it is unobtainable}; \prompt{we need to prioritize this quest} & direct solves at each target $D$ & continuation in $D$ dropped\\
+37 & 25 Nov & \prompt{I want you to use new subagents to look to see any gaps in any of the published papers \dots look at formulas, maths, missing gaps and connections} & three literature subagents & the momentum constraint imposed\\
 \bottomrule
 \end{tabular}
 \end{center}
