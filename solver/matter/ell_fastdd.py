@@ -44,6 +44,16 @@ _TERMS = ((((0, "pP"), (1, "pM"), (2, "pA"), (3, "pC"), (4, "pQ")), (0, "pD")),
           (((0, "hx"), (1, "hx")), None))
 
 
+def _stack(rows):
+    """dd.R rows (1, n) -> one (len, n) dd.R"""
+    return dd.R(np.concatenate([r.h for r in rows]), np.concatenate([r.l for r in rows]))
+
+
+def _rows(X):
+    """a (k, n) dd.R -> k value-only dual numbers of shape (1, n)"""
+    return [DT(dd.R(X.h[i:i + 1].copy(), X.l[i:i + 1].copy())) for i in range(X.h.shape[0])]
+
+
 class DDJac:
     """block 12 of DDEll E by double-double stage matrices"""
 
@@ -60,15 +70,15 @@ class DDJac:
         bot = dd.mul_d(dd.R(-Bo.h[:mo], -Bo.l[:mo]), k)
         self.BDo = dd.R(np.concatenate([top.h, bot.h]), np.concatenate([top.l, bot.l]))
         self.Bg = (Bo, Bo, Be, Be, Bo)
-        self.Sf = (E.Sp["odd"], E.Sp["odd"], E.Sp["even"], E.Sp["even"], E.Sp["odd"])
 
     def stage(self, x, s, dc, lam):
         """the base right side (DDEll.rhs on values, as a list of DT) and the tangents' right side dc @ J (dd.R)"""
         E, S = self.E, self.S
         n, L = S.n, S.L
-        p, m, a, c, q = (E.phys(s[f], E.PAR[f]) for f in range(5))
-        Dp = E.phys(E.Dspec(s[0], "odd"), "odd")
-        Dmm = E.phys(E.Dspec(s[1], "odd"), "odd")
+        # DDEll.rhs's tau maps on the values, rows of one parity stacked into one Ozaki product each
+        p, m, q, Dp, Dmm = _rows(E.B["odd"].rmul(_stack([s[0].v, s[1].v, s[4].v, E.Dspec(s[0], "odd").v,
+                                                          E.Dspec(s[1], "odd").v])))
+        a, c = _rows(E.B["even"].rmul(_stack([s[2].v, s[3].v])))
         a2 = a * a
         g = a2 * q * q
         cx = c * ((n - 1) * (a2 - 1.0) - (2 * L) * g) / x
@@ -78,7 +88,9 @@ class DDJac:
         lt = L * c * a2 * q / x
         px = (-Dp + cx * p - c * p / x + pc - lt) / (x - c)
         mx = (-Dmm - cx * m + c * m / x - pc + lt) / (x + c)
-        base = [E.spec(px, "odd"), E.spec(mx, "odd"), E.spec(ax, "even"), E.spec(cx, "even"), E.spec(qx, "odd")]
+        bp, bm, bq = _rows(E.Sp["odd"].rmul(_stack([px.v, mx.v, qx.v])))
+        ba, bc = _rows(E.Sp["even"].rmul(_stack([ax.v, cx.v])))
+        base = [bp, bm, ba, bc, bq]
         # the linearisation's coefficients (ell_fastm._base, in double-double)
         qq = q * q
         W = ((n - 1) * (a2 - 1.0) - (2 * L) * g) / x
@@ -103,19 +115,21 @@ class DDJac:
         N = S.N
         Jh = np.empty((blk, blk))
         Jl = np.empty((blk, blk))
-        for f, (terms, dterm) in enumerate(_TERMS):
-            Yh = np.zeros((blk, N))
-            Yl = np.zeros((blk, N))
-            for gi, key in terms:
-                Bg = self.Bg[gi]
-                y = dd.mul(Bg, cf[key].v)
-                if dterm is not None and dterm[0] == gi:
-                    y = dd.add(y, dd.mul(self.BDo, cf[dterm[1]].v))
-                Yh[k[gi]:k[gi + 1]] = y.h
-                Yl[k[gi]:k[gi + 1]] = y.l
-            Jf = self.Sf[f].rmul(dd.R(Yh, Yl))
-            Jh[:, k[f]:k[f + 1]] = Jf.h
-            Jl[:, k[f]:k[f + 1]] = Jf.l
+        for par, fs in (("odd", (0, 1, 4)), ("even", (2, 3))):        # outputs of one parity: one Ozaki product
+            Yh = np.zeros((len(fs), blk, N))
+            Yl = np.zeros((len(fs), blk, N))
+            for i, f in enumerate(fs):
+                terms, dterm = _TERMS[f]
+                for gi, key in terms:
+                    y = dd.mul(self.Bg[gi], cf[key].v)
+                    if dterm is not None and dterm[0] == gi:
+                        y = dd.add(y, dd.mul(self.BDo, cf[dterm[1]].v))
+                    Yh[i, k[gi]:k[gi + 1]] = y.h
+                    Yl[i, k[gi]:k[gi + 1]] = y.l
+            Jp = E.Sp[par].rmul(dd.R(Yh, Yl))
+            for i, f in enumerate(fs):
+                Jh[:, k[f]:k[f + 1]] = Jp.h[i]
+                Jl[:, k[f]:k[f + 1]] = Jp.l[i]
         if MUTATE == "jround":
             Jl[:] = 0.0
         return base, Op(dd.R(Jh, Jl)).rmul(dc)

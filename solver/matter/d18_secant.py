@@ -3,7 +3,8 @@
 method on the signed hybrid determinant.
 
 Each evaluation is d18_hybsign.py's: M(lambda) in float64 (blocks 0-11; ell_fastm.mode_matrix_fast by default, or
-DSSEll.mode_matrix with --mm=cs), block 12 replaced by its double-double version (ell_ddm.DDEll, only=[12]), the sign and
+DSSEll.mode_matrix with --mm=cs), block 12 replaced by its double-double version (ell_fastdd by default, or
+ell_ddm.DDEll's with --b12=ddm), the sign and
 ln|det| of multidouble's dd_logdet, and the noise test at 1e-15 on blocks 0-11 with the seeds 100 and 101; the plain
 float64 slogdet beside it. Each record adds the noise members' ln|det| and dln, the largest |ln|det_noise| - ln|det||.
 An evaluation is robust when both noise signs equal its sign (d18_hybsign's test) and dln <= --dln (default 0.1, a
@@ -21,7 +22,9 @@ the evaluation count and seconds.
 
 usage (venv-1025dd):
   d18_secant.py run STUB.jsonl STATE.npy D LO HI OUT.jsonl [--tol=1e-6] [--maxev=12] [--mm=fast|cs] [--dln=0.1]
-                [--basis=jac|coef|grid] [--pin=STATEBLOB,STUBBLOB] [--ends=SCAN.jsonl]
+                [--basis=jac|coef|grid] [--b12=fast|ddm] [--pin=STATEBLOB,STUBBLOB] [--ends=SCAN.jsonl]
+      --mm=cs --b12=ddm is d18_hybsign.py's evaluation exactly (DSSEll.mode_matrix, ell_ddm's block 12); the defaults
+      are ell_fastm.mode_matrix_fast (basis jac) and ell_fastdd's block 12 (the same double-double block to 4e-29);
       --pin: refuse (exit 3) unless the state's and the stub's git blobs (hash-object --no-filters) start with these;
       --ends: take the two ends' records from a d18_hybsign scan file of the same state instead of evaluating them
       (their dln is unknown, so their robustness is d18_hybsign's test).
@@ -84,10 +87,14 @@ def hybrid_eval(H, Hl, mask, dln_max):
 class RealEval:
     """d18_hybsign.py's hybrid matrix of a stub record's state (the record system checked by the caller)"""
 
-    def __init__(self, S, z, rec, st, mm, dln_max, basis="jac"):
+    def __init__(self, S, z, rec, st, mm, dln_max, basis="jac", b12="fast"):
         import ell_ddm
         self.S, self.z, self.rec, self.st, self.mm, self.dln_max, self.basis = S, z, rec, st, mm, dln_max, basis
         self.E = ell_ddm.DDEll(S)
+        self.b12 = b12
+        if b12 == "fast":
+            from ell_fastdd import DDJac
+            self.J = DDJac(self.E)
         blocks, offs = S._block_list()
         blk = 3 * S.n_odd + 2 * S.n_even
         c0, nf, fun, tgt = blocks[12]
@@ -108,13 +115,13 @@ class RealEval:
         t1 = time.time()
         sf, lf = np.linalg.slogdet(Mf)
         H, Hl = Mf.copy(), np.zeros_like(Mf)
-        Md = self.E.mode_matrix(self.z, lam, only=[12])
+        Md = self.J.mode_matrix(self.z, lam) if self.b12 == "fast" else self.E.mode_matrix(self.z, lam, only=[12])
         H[self.sl] = Md.h[self.sl]
         Hl[self.sl] = Md.l[self.sl]
         t2 = time.time()
         r = hybrid_eval(H, Hl, self.mask, self.dln_max)
         r = dict(D=self.rec["D"], kc=self.rec["kc"], lam=lam, **r, f64_sign=float(sf), f64_ln=float(lf),
-                 state=os.path.basename(self.st), mm=self.mm if self.mm == "cs" else f"fast-{self.basis}",
+                 state=os.path.basename(self.st), mm=self.mm if self.mm == "cs" else f"fast-{self.basis}", b12=self.b12,
                  sec=round(time.time() - t0),
                  sec_parts=[round(t1 - t0), round(t2 - t1), round(time.time() - t2)])
         return r
@@ -311,6 +318,7 @@ def runcmd(argv):
     mm = opts.get("mm", "fast")
     dln_max = float(opts.get("dln", 0.1))
     basis = opts.get("basis", "jac")
+    b12 = opts.get("b12", "fast")
     if mm not in ("fast", "cs"):
         print(f"--mm={mm}: fast or cs")
         sys.exit(2)
@@ -328,7 +336,8 @@ def runcmd(argv):
     print(msg, flush=True)
     if not same:
         sys.exit(3)
-    print(f"bracket ({lo!r}, {hi!r}), tol {tol}, maxev {maxev}, mode matrix {mm} ({basis}), dln <= {dln_max}, "
+    print(f"bracket ({lo!r}, {hi!r}), tol {tol}, maxev {maxev}, mode matrix {mm} ({basis}), block 12 {b12}, "
+          f"dln <= {dln_max}, "
           f"{os.path.basename(st)}", flush=True)
     ends = None
     if "ends" in opts:
@@ -344,7 +353,7 @@ def runcmd(argv):
             w.update(dln=None, robust=bool(w["noise_robust"]))
             return w
         ends = (pick(lo), pick(hi))
-    E = RealEval(S, z, rec, st, mm, dln_max, basis)
+    E = RealEval(S, z, rec, st, mm, dln_max, basis, b12)
 
     def out(r):
         print(f"  lam {r['lam']!r} ({r['role']}): hybrid {r['sign']:+.0f} ln|det| {r['ln']:.10f}, noise {r['noise']} "
