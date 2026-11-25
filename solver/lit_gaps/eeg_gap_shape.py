@@ -48,6 +48,11 @@ def main():
     chi, k, c = best
     print(f"broken line + step: best knot {k:.0f}, chi2/dof {chi / (len(D) - 4):.3f}, slope before {c[1]:.3e}, "
           f"after {c[1] + c[2]:.3e}, step {c[3]:.3e}")
+    over = d > 5e-7  # more than half a unit of the sixth decimal
+    first = next(D[i] for i in range(len(D)) if over[i:].all())
+    k = int(np.argmax(d))
+    print(f"every row from D {first:g} on exceeds half a unit (smallest there {d[D >= first].min():.2e}); "
+          f"largest {d[k]:.2e} at D {D[k]:g}")
     c1 = np.polyfit(D, d, 1)
     print(f"linear fit: zero at D {-c1[1] / c1[0]:.1f}; extrapolated (no mechanism) to D 400, 2000, 10000: "
           + ", ".join(f"{np.polyval(c1, x):.2e}" for x in (400, 2000, 10000)))
