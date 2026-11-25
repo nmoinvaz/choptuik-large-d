@@ -6,7 +6,8 @@ the exact forward-mode Jacobian. Recorded per D (one JSON with hi and lo parts):
 scaled singular values and the grip |e_Delta^T J^-1| (unit rows) at the solution, the series tails and the times.
 
 Usage: python3 solve_dd_cont.py START.json --M=10 --Ds=100,110,... --out=DIR [--a=1] [--kb=150] [--tau=1e-8]
-                                [--outer=6] [--rounds=2] [--tol=1e-27] [--ks_extra=0]
+                                [--outer=6] [--rounds=2] [--tol=1e-27] [--ks_extra=0] [--pre=newton|ls]
+                                [--pre_iters=4]
   START.json: a form-S json with hi/lo parts (Track B's Sdd_D100_M10.json, or a file written here).
 """
 import json
@@ -83,24 +84,37 @@ while queue:
         y = DD(unscaled(hist[-1][1], D))
     else:
         y = DD(yh, yl) if abs(D - D0) < 1e-12 else DD(unscaled(scaled(yh + yl, D0), D))
-    # float64 pre-solve, only when the seed is not already at the float64 floor
+    # float64 pre-solve, only when the seed is not already at the float64 floor: damped Newton steps that are kept only
+    # when they lower max|F|, then (--pre=ls) the float64 split Newton; at M >= 10 the weakest directions lie below
+    # float64, so the split Newton there is optional and guarded
     g = ms.FormS(D, M, a=a, kb=kb, ks=ks)
     with np.errstate(all="ignore"):
-        F64 = g.residual(y.f())
-        r64 = float(np.max(np.abs(F64)))
+        y64 = y.f()
+        r64 = float(np.max(np.abs(g.residual(y64))))
         if r64 > 1e-12 and np.isfinite(r64):
-            y64 = y.f()
-            for it in range(3):
-                J64 = g.jacobian(y64)
-                dy = np.linalg.lstsq(J64, -g.residual(y64), rcond=None)[0]
-                lam = 1.0
-                for _ in range(8):
-                    if np.max(np.abs(g.residual(y64 + lam * dy))) < np.max(np.abs(g.residual(y64))):
+            for it in range(int(opts.get("pre_iters", 4))):
+                try:
+                    F64 = g.residual(y64)
+                    dy = np.linalg.lstsq(g.jacobian(y64), -F64, rcond=None)[0]
+                except np.linalg.LinAlgError:
+                    break
+                lam, done = 1.0, False
+                for _ in range(10):
+                    Ft = g.residual(y64 + lam * dy)
+                    if np.all(np.isfinite(Ft)) and np.max(np.abs(Ft)) < np.max(np.abs(F64)):
+                        y64, done = y64 + lam * dy, True
                         break
                     lam *= 0.5
-                y64 = y64 + lam * dy
-            y64, r64 = ls_solve64(g.residual, y64, g.jacobian(y64), tau=1e-6, tol=1e-15, log=lambda s: None)
-            y = DD(y64)
+                if not done:
+                    break
+            if opts.get("pre", "newton") == "ls":
+                try:
+                    y64, _ = ls_solve64(g.residual, y64, g.jacobian(y64), tau=1e-6, tol=1e-15, log=lambda s: None)
+                except np.linalg.LinAlgError:
+                    pass
+            r64n = float(np.max(np.abs(g.residual(y64))))
+            if np.isfinite(r64n) and r64n < r64:
+                y, r64 = DD(y64), r64n
     say("D %.2f: float64 pre-solve max|F| %.2e Delta %.12f (%.0f s)" % (D, r64, y.f()[3 * M], time.time() - t0))
     f = msd.FormSDD(D, M, a=a, kb=kb, ks=ks)
     lsh = []

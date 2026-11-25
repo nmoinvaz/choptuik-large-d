@@ -53,6 +53,9 @@ def ls_solve(residual, y0, J, tau=1e-6, outer=10, inner=8, tol=1e-15, log=print,
             bj[j] += hb
             aj, Fj = inner_solve(bj, a.copy())
             Jg[:, j] = (Uw.T @ Fj - g) / hb
+        if not (np.all(np.isfinite(Jg)) and np.all(np.isfinite(g))):
+            log("    LS outer %d: non-finite reduced Jacobian; kept the best point" % it)
+            break
         db = np.linalg.lstsq(Jg, -g, rcond=None)[0]
         lam = 1.0
         for _ in range(10):
@@ -62,6 +65,9 @@ def ls_solve(residual, y0, J, tau=1e-6, outer=10, inner=8, tol=1e-15, log=print,
             if np.max(np.abs(gn)) < np.max(np.abs(g)):
                 break
             lam *= 0.5
+        if not np.all(np.isfinite(Fn)):
+            log("    LS outer %d: no finite step along the weak directions; kept the best point" % it)
+            break
         a, b, F, g = an, bn, Fn, gn
         mf = float(np.max(np.abs(F * r)))
         log("    LS outer %d: max|F| %.2e |g| %.2e |db| %.1e lambda %g" % (it, mf, np.max(np.abs(g)), np.max(np.abs(db)), lam))
