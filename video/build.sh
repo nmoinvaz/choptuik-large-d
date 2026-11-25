@@ -15,7 +15,7 @@ case "$Q" in
 esac
 [ -x .venv/bin/manim ] || { uv venv -q --python 3.13 .venv && uv pip install -q --python .venv/bin/python manim pymupdf; }
 export PATH="$PWD/tools:$PWD/.venv/bin:$PATH"
-ALL=$(python -c "import re; print(' '.join(re.findall(r'^class (S\d\d_\w+)', open('quest_large_d.py').read(), re.M)))")
+ALL=$(python -c "import re; print(' '.join(re.findall(r'^class (S\d\d[a-z]?_\w+)', open('quest_large_d.py').read(), re.M)))")
 SCENES="${*:-$ALL}"
 for s in $SCENES; do
   nice -n 10 manim render -v CRITICAL --progress_bar none -r "$RES" --fps "$FPS" --media_dir media -o "$s" quest_large_d.py "$s"

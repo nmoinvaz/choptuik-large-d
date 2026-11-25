@@ -25,7 +25,7 @@ config.background_color = "#0d1117"
 
 BLUE_, GOLD_, RED_, GREEN_, GREY_, ORANGE_, PURPLE_ = "#58C4DD", "#FFD866", "#FF6B6B", "#7CE38B", "#8B949E", "#F78C6C", "#C792EA"
 DEL4 = 3.4454                                   # Delta at D = 4, to four decimals (hp/data/delta_all.csv)
-SCENES = ["S00_Title", "S01_Echo", "S02_Question", "S03_Root", "S04_Walk", "S05_FirstWall", "S06_Amplifier",
+SCENES = ["S00_Title", "S01_Echo", "S02_Question", "S03a_Dot", "S03b_Numbers", "S03c_Join", "S03d_Newton", "S04_Walk", "S05_FirstWall", "S06_Amplifier",
           "S07_Basin", "S08_Taylor", "S09_FiveWalls", "S10_Climb", "S11_Basics", "S12_Outro"]
 
 
@@ -55,6 +55,24 @@ def grip(D_near):
         if float(r["D"]) == D0:
             out[int(r["harmonic"])] = min(out.get(int(r["harmonic"]), 1.0), float(r["sigma_exact"]))
     return D0, out
+
+
+def harmonics(D_near):
+    """The centre field's odd harmonics at the stored solution nearest D_near: D and {k: (cos, sin)}."""
+    rows = list(csv.DictReader(open(ROOT / "video/harmonics.csv")))
+    D0 = min({float(r["D"]) for r in rows}, key=lambda d: abs(d - D_near))
+    return D0, {int(r["k"]): (float(r["cos"]), float(r["sin"])) for r in rows if float(r["D"]) == D0}
+
+
+def wave_of(co, th, ks=None):
+    """The wave at echo phase th from the harmonics ks (all of them by default)."""
+    return sum(a * math.cos(k * th) + b * math.sin(k * th) for k, (a, b) in co.items() if ks is None or k in ks)
+
+
+def sci(v):
+    """A number as LaTeX with two digits: 3.8\\times10^{-4}."""
+    e = math.floor(math.log10(abs(v)))
+    return f"{v / 10 ** e:.1f}" + r"\times10^{" + str(e) + "}"
 
 
 def log10G(D):
@@ -215,85 +233,246 @@ class S02_Question(Film):
         self.play(FadeOut(VGroup(ax, xl, yl, curve, d4, l4, q, arrow, self.cap)), run_time=0.7)
 
 
-class S03_Root(Film):
-    stage = r"3 \quad A solution is a root"
+CUTS = [0.0, 0.3, 0.4, 0.5, 0.6, 0.7, 1.0]     # the centre, the five nodes of the large-D chain, the horizon
+OFFS = [0.26, -0.2, 0.22, -0.17, 0.15, -0.24]   # a sketch's mismatches, one per piece
+PCOL = [BLUE_, GREEN_, GREEN_, GREEN_, GREEN_, ORANGE_]
+
+
+def profile(v):
+    """A smooth curve standing for one field along x (a sketch)."""
+    return 0.5 * math.sin(2.6 * v + 0.4) + 0.22 * math.cos(7.0 * v)
+
+
+def piece(line, i, e, lift=1.0):
+    """Piece i of the solution along x, off by e times its mismatch. The horizon's piece runs inward."""
+    a, b = CUTS[i], CUTS[i + 1]
+    ks = range(41) if i < 5 else range(40, -1, -1)
+    P = [line.n2p(a + (b - a) * k / 40) + UP * (lift + profile(a + (b - a) * k / 40) + e * OFFS[i]) for k in ks]
+    return VMobject(color=PCOL[i], stroke_width=4).set_points_as_corners(P)
+
+
+def gaps(line, e, lift=1.0):
+    """The mismatch at each node: where the piece that arrives and the piece that leaves disagree."""
+    out = VGroup()
+    for i in range(5):
+        v = CUTS[i + 1]
+        y0, y1 = lift + profile(v) + e * OFFS[i], lift + profile(v) + e * OFFS[i + 1]
+        out.add(Line(line.n2p(v) + UP * y0, line.n2p(v) + UP * y1, color=RED_, stroke_width=6))
+    return out
+
+
+def x_line(y=-1.9):
+    """The x axis from the centre to the horizon, with the five nodes."""
+    line = NumberLine(x_range=[0, 1, 0.1], length=10.0, color=GREY_, include_ticks=False).shift(y * UP)
+    ends = VGroup(Tex(r"the centre, $x = 0$", font_size=24, color=BLUE_).next_to(line.n2p(0), DOWN, buff=0.15),
+                  Tex(r"the horizon, $x = 1$", font_size=24, color=ORANGE_).next_to(line.n2p(1), DOWN, buff=0.15))
+    ticks = VGroup(*[Line(line.n2p(v) + 0.1 * DOWN, line.n2p(v) + 0.1 * UP, color=WHITE, stroke_width=2) for v in CUTS[1:6]])
+    nl = Tex("the five nodes", font_size=22, color=GREY_).next_to(line.n2p(0.5), DOWN, buff=0.15)
+    return line, VGroup(ends, ticks, nl)
+
+
+def low_axes():
+    """Delta against D at low D, where single points can be told apart."""
+    ax = Axes(x_range=[2, 14, 2], y_range=[2.2, 3.6, 0.2], x_length=9.6, y_length=4.2, tips=False,
+              axis_config={"color": GREY_, "stroke_width": 2, "include_numbers": True, "font_size": 22},
+              y_axis_config={"decimal_number_config": {"num_decimal_places": 1}}).shift(0.5 * UP)
+    xl = Tex("spacetime dimensions $D$", font_size=26, color=GREY_).next_to(ax.x_axis, DOWN, buff=0.3)
+    yl = MathTex(r"\Delta", font_size=36, color=GREY_).next_to(ax.y_axis, UP, buff=0.1)
+    return ax, VGroup(xl, yl)
+
+
+class S03a_Dot(Film):
+    stage = r"3 \quad One dot, one solve"
 
     def construct(self):
-        # the unknown vector, to scale: 64 centre numbers, five nodes of 128, 64 horizon numbers, Delta
-        W, x, blocks, labels = 11.0, 0.0, VGroup(), VGroup()
+        pts = delta_points()
+        ax, lab = low_axes()
+        at = lambda D: min(pts, key=lambda q: abs(q[0] - D))
+        curve = VMobject(color=BLUE_, stroke_width=3, stroke_opacity=0.35).set_points_as_corners(
+            [ax.c2p(*q) for q in pts if 3.9 <= q[0] <= 13.0])
+        dots = VGroup(*[Dot(ax.c2p(*at(D)), color=BLUE_, radius=0.07) for D in range(4, 14)])
+        self.play(Create(ax), FadeIn(lab), Create(curve), run_time=1.2)
+        self.play(LaggedStart(*[FadeIn(d, scale=2.5) for d in dots], lag_ratio=0.18), run_time=2.0)
+        self.say(r"Every dot on this curve is one computation: at that $D$, find the echoing solution, and read off its period $\Delta$.")
+        D6 = at(6.0)
+        pick = Dot(ax.c2p(*D6), color=GOLD_, radius=0.11)
+        guide = VGroup(DashedLine(ax.c2p(D6[0], 2.2), ax.c2p(*D6), color=GOLD_, stroke_width=2),
+                       DashedLine(ax.c2p(2, D6[1]), ax.c2p(*D6), color=GOLD_, stroke_width=2))
+        tag = Tex(f"$D = 6$: \\quad $\\Delta = {D6[1]:.4f}$", font_size=30, color=GOLD_).next_to(pick, UR, buff=0.2)
+        self.play(FadeIn(pick, scale=2), Create(guide), FadeIn(tag), run_time=0.9)
+        self.wait(1.4)
+        self.say(r"The quest to large $D$ is a long line of such solves, each harder than the last. Here is what one solve is.")
+        self.play(FadeOut(VGroup(ax, lab, curve, dots, pick, guide, tag, self.cap)), run_time=0.7)
+
+
+class S03b_Numbers(Film):
+    stage = r"4 \quad The solution, written as numbers"
+
+    def construct(self):
+        # where things are: rays of constant x fanning down from the collapse
+        C, T, Wd = [-6.0, 2.5, 0.0], 4.3, 3.7
+        foot = lambda v: [C[0] + v * Wd, C[1] - T, 0.0]
+        centre = Line(foot(0), C, color=BLUE_, stroke_width=4)
+        cone = Line(foot(1), C, color=ORANGE_, stroke_width=4)
+        rays = VGroup(*[Line(foot(v), C, color=GREY_, stroke_width=1.5) for v in CUTS[1:6]])
+        star = Dot(C, color=RED_, radius=0.09)
+        sl = Tex("the collapse", font_size=24, color=RED_).next_to(star, RIGHT, buff=0.15)
+        tl = Tex(r"time $\uparrow$", font_size=22, color=GREY_).next_to(centre, LEFT, buff=0.12)
+        rl = Tex(r"distance from the centre $\rightarrow$", font_size=22, color=GREY_).move_to([C[0] + 2.3, C[1] - T - 0.75, 0])
+        c0 = Tex(r"$x = 0$", font_size=26, color=BLUE_).next_to(foot(0), DOWN, buff=0.12)
+        c1 = Tex(r"$x = 1$", font_size=26, color=ORANGE_).next_to(foot(1), DOWN, buff=0.12)
+        sk = Tex("sketch", font_size=20, color=GREY_).move_to([C[0] + 3.3, C[1] - 0.1, 0])
+        self.play(Create(centre), FadeIn(star), FadeIn(sl), FadeIn(tl), FadeIn(rl), FadeIn(sk), run_time=1.0)
+        self.say(r"First, where things are. Label a position by $x$: its distance from the centre, divided by the time left before the collapse.", hold=0.4)
+        self.play(LaggedStart(*[Create(r) for r in rays], lag_ratio=0.15), FadeIn(c0), run_time=1.6)
+        self.wait(2.6)
+        hz = Tex("the horizon", font_size=26, color=ORANGE_).next_to(cone.get_center(), RIGHT, buff=0.25)
+        self.play(Create(cone), FadeIn(c1), FadeIn(hz), run_time=1.0)
+        self.say(r"$x = 0$ is the centre. $x = 1$ is the path of light that reaches the centre exactly at the collapse. We call that edge the horizon.")
+
+        # what lives there: waves that repeat with every echo (the real wave at the centre, D = 38)
+        D38, co = harmonics(38.0)
+        top = 1.25 * max(abs(wave_of(co, 2 * math.pi * k / 200)) for k in range(200))
+        wax = Axes(x_range=[0, 4 * math.pi, 2 * math.pi], y_range=[-top, top, top], x_length=5.4, y_length=1.9, tips=False,
+                   axis_config={"color": GREY_, "stroke_width": 1.5, "include_ticks": False}).move_to([3.5, 1.85, 0])
+        wave = wax.plot(lambda t: wave_of(co, t), x_range=[0, 4 * math.pi, 0.02], color=GOLD_, stroke_width=3.5)
+        wl = Tex(f"the scalar wave at the centre over two echoes, at $D = {D38:.0f}$", font_size=22, color=GREY_).next_to(wax, UP, buff=0.08)
+        br = BraceBetweenPoints(wax.c2p(0, -top), wax.c2p(2 * math.pi, -top), direction=DOWN, color=GREY_)
+        bl = Tex(r"one echo, $\Delta$", font_size=22, color=GREY_).next_to(br, DOWN, buff=0.05)
+        self.play(Create(wax), FadeIn(wl), Create(wave), FadeIn(br), FadeIn(bl), run_time=1.6)
+        self.say(r"At every $x$ the solution repeats with each echo. Each field there is a wave with period $\Delta$.")
+        chips = VGroup(Tex(r"$p,\ m$: the scalar wave, heading out and in along light rays", font_size=24, color=BLUE_),
+                       Tex(r"$a,\ c$: the curved spacetime it travels through", font_size=24, color=PURPLE_))
+        chips.arrange(DOWN, buff=0.15, aligned_edge=LEFT).move_to([3.4, -0.55, 0])
+        self.play(FadeIn(chips, shift=0.15 * UP), run_time=0.6)
+        self.say(r"There are four fields: two for the scalar wave, and two for the spacetime it bends.")
+        # a wave as a few numbers: its harmonics, each on its own scale
+        self.play(FadeOut(chips), FadeOut(br), FadeOut(bl), run_time=0.4)
+        minis = VGroup()
+        for k in (1, 3, 5):
+            size = math.hypot(*co[k])
+            m = Axes(x_range=[0, 2 * math.pi, math.pi], y_range=[-1.3, 1.3, 1], x_length=1.6, y_length=1.0, tips=False,
+                     axis_config={"color": GREY_, "stroke_width": 1, "include_ticks": False})
+            c = m.plot(lambda t, k=k, size=size: wave_of(co, t, ks=(k,)) / size, x_range=[0, 2 * math.pi, 0.02],
+                       color=GOLD_, stroke_width=2.5)
+            minis.add(VGroup(m, c, Tex(f"harmonic {k}\\\\size {size:.2g}", font_size=20, color=GREY_).next_to(m, DOWN, buff=0.05)))
+        minis.arrange(RIGHT, buff=0.3).move_to([3.5, -0.85, 0])
+        plus = Tex(r"$=$ \quad a sum of pure tones, each drawn on its own scale:", font_size=22, color=GREY_).next_to(minis, UP, buff=0.1).align_to(minis, LEFT)
+        self.play(FadeIn(plus), LaggedStart(*[FadeIn(m, shift=0.2 * DOWN) for m in minis], lag_ratio=0.3), run_time=1.6)
+        self.say(r"A repeating wave is a sum of pure tones, its harmonics. Harmonic $k$ fits $k$ times into one echo, and each is about ten times smaller than the last.")
+        self.say(r"So a wave need not be stored point by point. The sizes of its harmonics are enough: 32 numbers per wave.")
+        self.play(FadeOut(VGroup(centre, cone, rays, star, sl, tl, rl, c0, c1, sk, hz, wax, wave, wl, minis, plus)), run_time=0.6)
+
+        # the list z, to scale: 64 centre numbers, five nodes of 128, 64 horizon numbers, Delta
+        W, x, blocks = 11.0, 0.0, VGroup()
         unit = W / 769.0
         parts = [("centre", 64, BLUE_)] + [("node", 128, GREY_)] * 5 + [("horizon", 64, ORANGE_), ("Delta", 6, GOLD_)]
         for name, n, col in parts:
-            r = Rectangle(width=n * unit, height=0.55, stroke_color=WHITE, stroke_width=1.5, fill_color=col,
+            r = Rectangle(width=n * unit, height=0.7, stroke_color=WHITE, stroke_width=1.5, fill_color=col,
                           fill_opacity=0.55 if name != "node" else 0.18)
-            r.move_to([x + n * unit / 2 - W / 2, 2.35, 0])
+            r.move_to([x + n * unit / 2 - W / 2, 0.9, 0])
             if name == "node":
-                for j, c in enumerate([BLUE_, GREEN_, PURPLE_, ORANGE_]):
-                    sub = Rectangle(width=n * unit / 4, height=0.55, stroke_width=0.8, stroke_color=WHITE, fill_color=c,
+                for j, c in enumerate([BLUE_, BLUE_, PURPLE_, PURPLE_]):
+                    sub = Rectangle(width=n * unit / 4, height=0.7, stroke_width=0.8, stroke_color=WHITE, fill_color=c,
                                     fill_opacity=0.35)
                     sub.move_to(r.get_left() + RIGHT * (j + 0.5) * n * unit / 4)
+                    sub.add(MathTex("pmac"[j], font_size=24).move_to(sub))
                     r.add(sub)
             blocks.add(r)
             x += n * unit
-        labels.add(Tex("centre", font_size=24, color=BLUE_).next_to(blocks[0], DOWN, buff=0.12),
-                   Tex("five nodes, four fields each: $p,\\ m,\\ a,\\ c$", font_size=24).next_to(blocks[3], DOWN, buff=0.12),
-                   Tex("horizon", font_size=24, color=ORANGE_).next_to(blocks[6], DOWN, buff=0.12),
-                   MathTex(r"\Delta", font_size=30, color=GOLD_).next_to(blocks[7], UP, buff=0.1))
-        zl = MathTex(r"z", font_size=44).next_to(blocks, LEFT, buff=0.25)
-        nz = Tex("769 numbers", font_size=26, color=GREY_).next_to(blocks, UP, buff=0.12).shift(3.5 * LEFT)
-        self.say(r"Pack the fields over one echo, and $\Delta$ itself, into a single vector $z$.", hold=0.4)
-        self.play(LaggedStart(*[FadeIn(b, shift=0.2 * DOWN) for b in blocks], lag_ratio=0.12), FadeIn(zl), run_time=1.8)
-        self.play(FadeIn(labels), FadeIn(nz), run_time=0.8)
-        self.wait(1.8)
+        zl = MathTex(r"z", font_size=54).next_to(blocks, LEFT, buff=0.3)
+        mid = Tex(r"five nodes $\times$ four fields $\times$ 32 numbers", font_size=24).next_to(blocks[3], DOWN, buff=0.15)
+        lc = Tex(r"centre data:\\the numbers that start\\the solution at $x = 0$", font_size=22, color=BLUE_).next_to(blocks[0], UP, buff=0.2).align_to(blocks[0], LEFT)
+        lh = Tex(r"horizon data:\\the numbers that start\\it at $x = 1$", font_size=22, color=ORANGE_).next_to(blocks[6], UP, buff=0.2).align_to(blocks[6], RIGHT)
+        ld = Tex(r"$\Delta$ itself", font_size=24, color=GOLD_).next_to(blocks[7], DOWN, buff=0.15).align_to(blocks[7], RIGHT)
+        self.play(LaggedStart(*[FadeIn(b, shift=0.2 * DOWN) for b in blocks[1:6]], lag_ratio=0.12), FadeIn(mid), run_time=1.6)
+        self.say(r"Store those 32 numbers for each of the four fields, on five rays between the centre and the horizon: the nodes.")
+        self.play(FadeIn(blocks[0]), FadeIn(blocks[6]), FadeIn(blocks[7]), FadeIn(lc), FadeIn(lh), FadeIn(ld), run_time=0.9)
+        self.say(r"Add a few numbers for each end, and the period $\Delta$ itself.")
+        tot = Tex("769 numbers", font_size=40, color=GOLD_).move_to([0, -1.2, 0])
+        self.play(FadeIn(zl), FadeIn(tot, shift=0.2 * UP), run_time=0.7)
+        self.say(r"That list of 769 numbers is $z$. One $z$ is one candidate: a whole echoing solution, and its period.")
+        self.play(FadeOut(VGroup(blocks, zl, mid, lc, lh, ld, tot, self.cap)), run_time=0.7)
 
-        # the residual along x: series from both ends, Taylor steps between the nodes, mismatches at the nodes
-        line = NumberLine(x_range=[0, 1, 0.1], length=10.0, color=GREY_, include_ticks=False).shift(1.55 * DOWN)
-        ends = VGroup(Tex("centre", font_size=24, color=GREY_).next_to(line.n2p(0), DOWN, buff=0.15),
-                      Tex("past light cone", font_size=24, color=GREY_).next_to(line.n2p(1), DOWN, buff=0.15))
-        nodes = [0.3, 0.4, 0.5, 0.6, 0.7]
-        ticks = VGroup(*[Line(line.n2p(v) + 0.1 * DOWN, line.n2p(v) + 0.1 * UP, color=WHITE, stroke_width=2) for v in nodes])
+
+class S03c_Join(Film):
+    stage = r"5 \quad Do the pieces join?"
+
+    def construct(self):
+        line, deco = x_line()
+        eq = MathTex(r"x\,(x - c)\,\frac{\partial p}{\partial x} \;=\; \cdots", font_size=44).move_to([0, 2.55, 0])
+        self.play(Create(line), FadeIn(deco), run_time=0.9)
+        self.say(r"Is a given $z$ a solution? Einstein's equations, with the wave equation, say how every field changes from one $x$ to the next.", hold=0.4)
+        self.play(Write(eq), run_time=1.2)
+        self.wait(3.0)
+        P = [piece(line, i, 1.0) for i in range(6)]
+        tl = Tex("Taylor steps", font_size=24, color=GREEN_).next_to(line.n2p(0.5), UP, buff=0.18)
+        self.say(r"So the numbers at one node predict the numbers at the next. That prediction is a Taylor step:", hold=0.3)
+        self.play(LaggedStart(*[Create(P[i]) for i in (1, 2, 3, 4)], lag_ratio=0.6), FadeIn(tl), run_time=2.6)
+        self.say(r"a polynomial of high order that follows the equations across the gap between two nodes.")
+        self.say(r"At the two ends this fails, because the equation divides by zero: $x = 0$ at the centre, and $x - c = 0$ at the horizon.", hold=0.4)
+        self.play(eq[0][0].animate.set_color(BLUE_), eq[0][1:6].animate.set_color(ORANGE_), run_time=0.6)
+        self.play(Indicate(eq[0][0], color=BLUE_), Indicate(eq[0][1:6], color=ORANGE_), run_time=1.2)
+        self.wait(3.2)
+        cl = Tex("series from the centre", font_size=24, color=BLUE_).next_to(line.n2p(0.15), UP, buff=0.18)
+        hl = Tex("series from the horizon", font_size=24, color=ORANGE_).next_to(line.n2p(0.85), UP, buff=0.18)
+        self.say(r"So near each end the solution is written as a power series that is smooth there, started by that end's own numbers in $z$.", hold=0.4)
+        self.play(Create(P[0]), FadeIn(cl), run_time=1.3)
+        self.play(Create(P[5]), FadeIn(hl), run_time=1.3)
+        self.wait(2.6)
+        g = gaps(line, 1.0)
+        self.say(r"Where two pieces meet, they should agree. For a guessed $z$ they do not.", hold=0.4)
+        self.play(LaggedStart(*[GrowFromCenter(s) for s in g], lag_ratio=0.2), run_time=1.4)
+        self.wait(1.6)
+        F = MathTex(r"F(z)", font_size=44, color=RED_)
+        Ft = Tex("= all the gaps, one for each number in $z$", font_size=28, color=RED_).next_to(F, RIGHT, buff=0.25)
+        VGroup(F, Ft).move_to([0, 2.55, 0])
+        self.play(FadeOut(eq), run_time=0.4)
+        self.play(FadeIn(F), FadeIn(Ft), run_time=0.6)
+        self.say(r"Those gaps are the residual $F(z)$. Only the true fields, with the true $\Delta$, close every one of them.")
+        root = MathTex(r"F(z) = 0", font_size=56, color=GOLD_).move_to([0, 2.55, 0])
+        self.play(FadeOut(F), FadeOut(Ft), FadeIn(root, scale=1.2), run_time=0.7)
+        self.say(r"That is what a solve is: find the $z$ with $F(z) = 0$. A solution is a root.")
+        self.play(FadeOut(VGroup(line, deco, tl, cl, hl, g, root, self.cap, *P)), run_time=0.7)
+
+
+class S03d_Newton(Film):
+    stage = r"6 \quad Newton's method"
+
+    def construct(self):
+        line, deco = x_line()
         e = ValueTracker(1.0)
-        cuts = [0.0] + nodes + [1.0]
-        offs = [0.26, -0.2, 0.22, -0.17, 0.15, -0.24]
-
-        def g(v):
-            return 0.55 * math.sin(2.6 * v + 0.4) + 0.25 * math.cos(7.0 * v)
-
-        def pieces():
-            out = VGroup()
-            for i in range(6):
-                a, b = cuts[i], cuts[i + 1]
-                P = [line.n2p(a + (b - a) * k / 40) + UP * (0.95 + g(a + (b - a) * k / 40) + e.get_value() * offs[i])
-                     for k in range(41)]
-                out.add(VMobject(color=[BLUE_, GREEN_, GREEN_, GREEN_, GREEN_, ORANGE_][i], stroke_width=4).set_points_as_corners(P))
-            return out
-
-        shot = always_redraw(pieces)
-        how = VGroup(Tex(r"series from the centre $\rightarrow$", font_size=22, color=BLUE_).next_to(line.n2p(0.15), UP, buff=0.16),
-                     Tex(r"Taylor steps $\rightarrow$", font_size=22, color=GREEN_).next_to(line.n2p(0.5), UP, buff=0.16),
-                     Tex(r"$\leftarrow$ series from the horizon", font_size=22, color=ORANGE_).next_to(line.n2p(0.85), UP, buff=0.16))
-        self.say(r"Integrate the field equations in pieces: out from the centre, node to node, and in from the horizon.", hold=0.4)
-        self.play(Create(line), FadeIn(ends), FadeIn(ticks), run_time=0.8)
-        self.play(FadeIn(shot), FadeIn(how), run_time=1.2)
-        self.wait(2.4)
-        eqs = VGroup(MathTex(r"F(z) = 0", font_size=44), MathTex(r"J\,dz = -F(z)", font_size=44, color=GOLD_))
-        eqs.arrange(RIGHT, buff=1.0).move_to([0, 0.75, 0])
-        self.say(r"Where the pieces fail to join is the residual $F(z)$. A solution is a root: $F(z) = 0$.", hold=0.4)
-        self.play(Write(eqs[0]), run_time=1.0)
-        self.wait(2.2)
-        res = Tex(r"$|F| = 10^{-2}$", font_size=34, color=RED_).next_to(eqs, RIGHT, buff=0.9)
-        self.say(r"Newton's method steps toward the root. Each step solves one linear system with the Jacobian $J$.", hold=0.4)
-        self.play(Write(eqs[1]), FadeIn(res), run_time=1.0)
+        shot = always_redraw(lambda: VGroup(*[piece(line, i, e.get_value()) for i in range(6)]))
+        gp = always_redraw(lambda: gaps(line, e.get_value()))
+        eq = MathTex(r"J\,dz = -F(z)", font_size=52, color=GOLD_).move_to([-2.2, 2.55, 0])
+        res = Tex(r"largest gap: $10^{-2}$", font_size=34, color=RED_).move_to([3.4, 2.55, 0])
+        self.add(line, deco, shot, gp)
+        self.wait(0.4)
+        self.say(r"Newton's method closes the gaps. It measures how each gap responds to each number in $z$: a table $J$, the Jacobian.", hold=0.4)
+        self.play(Write(eq), FadeIn(res), run_time=1.2)
+        self.wait(3.0)
+        self.say(r"One linear solve with $J$ gives the change $dz$ that should cancel every gap at once. Apply it, and repeat.", hold=0.4)
         for scale, expo in [(0.35, 4), (0.06, 8), (0.0, 16), (0.0, 32)]:
-            new = Tex(r"$|F| = 10^{-" + str(expo) + r"}$", font_size=34, color=RED_ if expo < 16 else GREEN_).move_to(res)
-            self.play(e.animate.set_value(scale), Transform(res, new), run_time=0.9)
-            self.wait(0.35)
-        self.say(r"Near the root the error squares at every step, as long as the first guess is close enough.")
-        self.play(FadeOut(VGroup(blocks, labels, zl, nz, line, ends, ticks, shot, how, eqs, res, self.cap)), run_time=0.7)
+            new = Tex(r"largest gap: $10^{-" + str(expo) + r"}$", font_size=34, color=RED_ if expo < 16 else GREEN_).move_to(res)
+            self.play(e.animate.set_value(scale), Transform(res, new), run_time=1.0)
+            self.wait(0.5)
+        self.say(r"Each round roughly squares the error. But only if the first guess was already close: remember that.")
+        self.play(FadeOut(VGroup(line, deco, shot, gp, eq, res)), run_time=0.5)
+        pts = delta_points()
+        ax, lab = low_axes()
+        at = lambda D: min(pts, key=lambda q: abs(q[0] - D))
+        curve = VMobject(color=BLUE_, stroke_width=3, stroke_opacity=0.35).set_points_as_corners(
+            [ax.c2p(*q) for q in pts if 3.9 <= q[0] <= 13.0])
+        dots = VGroup(*[Dot(ax.c2p(*at(D)), color=BLUE_, radius=0.07) for D in (4, 5)])
+        new = Dot(ax.c2p(*at(6.0)), color=GOLD_, radius=0.11)
+        self.play(FadeIn(VGroup(ax, lab, curve, dots)), run_time=0.6)
+        self.play(FadeIn(new, scale=3), Flash(new, color=GOLD_), run_time=0.8)
+        self.say(r"The gaps are closed. That is one dot on the curve: its $\Delta$ is the last number in $z$. Now for the next $D$.")
+        self.play(FadeOut(VGroup(ax, lab, curve, dots, new, self.cap)), run_time=0.7)
 
 
 class S04_Walk(Film):
-    stage = r"4 \quad Walking in $D$"
+    stage = r"7 \quad Walking in $D$"
 
     def construct(self):
         pts = [p for p in delta_points() if 3.9 <= p[0] <= 60.97]
@@ -338,7 +517,7 @@ class S04_Walk(Film):
 
 
 class S05_FirstWall(Film):
-    stage = r"5 \quad The first wall: weak harmonics"
+    stage = r"8 \quad The first wall: weak harmonics"
 
     def construct(self):
         pts = frontier_points()
@@ -348,7 +527,42 @@ class S05_FirstWall(Film):
         self.play(Create(c1), run_time=1.6)
         w = Tex("60.96", font_size=26, color=RED_).next_to(ax.c2p(3.0, 61), UP, buff=0.1)
         self.play(FadeIn(w), run_time=0.4)
-        self.say(r"Why here? The solution is a wave over one echo: a sum of odd harmonics, each far smaller than the last.")
+        self.say(r"Why here? The answer is in the harmonics: the pure tones that add up to the wave over one echo.")
+        chart = VGroup(ax, lab, c1, w)
+        self.play(FadeOut(chart), run_time=0.5)
+        Dw, co = harmonics(60.96)
+        top = 1.25 * max(abs(wave_of(co, 2 * math.pi * k / 200)) for k in range(200))
+        wax = Axes(x_range=[0, 2 * math.pi, math.pi], y_range=[-top, top, top], x_length=6.0, y_length=3.2, tips=False,
+                   axis_config={"color": GREY_, "stroke_width": 2, "include_ticks": False}).move_to([-3.5, 0.5, 0])
+        wl = Tex(f"the scalar wave at the centre over one echo, at $D = {Dw:.2f}$", font_size=24, color=GREY_).next_to(wax, UP, buff=0.1)
+        target = wax.plot(lambda t: wave_of(co, t), x_range=[0, 2 * math.pi, 0.01], color=GREY_, stroke_width=7, stroke_opacity=0.45)
+        self.play(Create(wax), FadeIn(wl), Create(target), run_time=1.4)
+        self.say(r"This is the real wave at the wall. Build it up one harmonic at a time.", hold=0.4)
+        part = wax.plot(lambda t: wave_of(co, t, ks=(1,)), x_range=[0, 2 * math.pi, 0.01], color=GOLD_, stroke_width=3.5)
+        pl = Tex("harmonic 1 alone", font_size=28, color=GOLD_).next_to(wax, DOWN, buff=0.1)
+        self.play(Create(part), FadeIn(pl), run_time=1.2)
+        self.wait(1.6)
+        for ks, text in [((1, 3), "harmonics 1 and 3"), ((1, 3, 5), "harmonics 1, 3 and 5")]:
+            new = wax.plot(lambda t, ks=ks: wave_of(co, t, ks=ks), x_range=[0, 2 * math.pi, 0.01], color=GOLD_, stroke_width=3.5)
+            self.play(Transform(part, new), Transform(pl, Tex(text, font_size=28, color=GOLD_).move_to(pl)), run_time=1.0)
+            self.wait(1.3)
+        self.say(r"Harmonic $k$ fits $k$ times into the echo. After three of them the sum already lies on the wave.")
+        sizes = VGroup()
+        for k in sorted(co):
+            size = math.hypot(*co[k])
+            bar = Rectangle(width=0.42 * (7.0 + math.log10(size)), height=0.3, stroke_width=0, fill_color=GOLD_, fill_opacity=0.8)
+            sizes.add(VGroup(Tex(f"harmonic {k}", font_size=24), bar, MathTex(sci(size), font_size=26, color=GOLD_)).arrange(RIGHT, buff=0.2))
+        sizes.arrange(DOWN, buff=0.16, aligned_edge=LEFT)
+        for row in sizes:
+            row[1].align_to(sizes[-1][1], LEFT)
+            row[2].next_to(row[1], RIGHT, buff=0.15)
+        sh = Tex("the size of each harmonic", font_size=24, color=GREY_)
+        VGroup(sh, sizes).arrange(DOWN, buff=0.25).move_to([3.5, 0.45, 0])
+        self.play(FadeIn(sh), LaggedStart(*[FadeIn(r, shift=0.2 * RIGHT) for r in sizes], lag_ratio=0.2), run_time=2.2)
+        self.say(r"Each harmonic is about ten times smaller than the one before. Harmonic 13 is two millionths of harmonic 1.")
+        self.say(r"The solver must still get every one of them right. And the small ones are the hard ones.")
+        self.play(FadeOut(VGroup(wax, wl, target, part, pl, sh, sizes)), run_time=0.5)
+        self.play(FadeIn(chart), run_time=0.5)
         D0, sig = grip(79.77)
         hs = sorted(sig)
         panel = VGroup()
@@ -370,7 +584,7 @@ class S05_FirstWall(Film):
         self.play(LaggedStart(*[FadeIn(r, shift=0.2 * RIGHT) for r in panel], lag_ratio=0.25), run_time=2.0)
         self.say(r"The equations barely pin the higher harmonics down. Their grip falls by decades per harmonic, and with $D$.")
         self.say(f"At $D = {D0:.1f}$ a full Newton step would move harmonic 13 by 0.44. Its true size is 0.00000037.")
-        self.say(r"Roundoff times the condition number reached 1 just before the stall. Newton was stepping on noise.")
+        self.say(r"Rounding error, multiplied by how sensitive the solve is to it, reached 1 just before the stall. Newton was stepping on noise.")
         self.play(FadeOut(VGroup(back, box)), run_time=0.5)
         fix = Tex(r"hold the weak harmonics on their smooth trend in $D$, solve for everything else", font_size=28, color=GREEN_)
         fix.move_to(ax.c2p(19, 235))
@@ -383,11 +597,11 @@ class S05_FirstWall(Film):
 
 
 class S06_Amplifier(Film):
-    stage = r"6 \quad The amplifier"
+    stage = r"9 \quad The amplifier"
 
     def construct(self):
         f = MathTex(r"G \approx 0.7^{-(D-3)}", font_size=60, color=ORANGE_).move_to([-3.3, 2.2, 0])
-        self.say(r"One mode of the equations amplifies any error in the horizon's data by a factor $G$.", hold=0.4)
+        self.say(r"One mode of the equations amplifies any error in the horizon data, the numbers that start the horizon's series, by a factor $G$.", hold=0.4)
         self.play(Write(f), run_time=1.2)
         D = ValueTracker(10.0)
         Dl = Tex("$D =$", font_size=44)
@@ -443,7 +657,7 @@ class S06_Amplifier(Film):
 
 
 class S07_Basin(Film):
-    stage = r"7 \quad A week at 78"
+    stage = r"10 \quad A week at 78"
 
     def construct(self):
         pts = frontier_points()
@@ -481,13 +695,14 @@ class S07_Basin(Film):
 
 
 class S08_Taylor(Film):
-    stage = r"8 \quad Taylor continuation in $D$"
+    stage = r"11 \quad Taylor continuation in $D$"
 
     def construct(self):
         f = MathTex(r"z(D_0 + h) = z_0 + z_1 h + z_2 h^2 + \cdots + z_{24} h^{24}", font_size=44).move_to([0, 2.55, 0])
-        self.say(r"Found in the literature, the asymptotic numerical method (Cochelin, 1994): carry the whole solution as a Taylor series in $D$.", hold=0.4)
+        self.say(r"Found in the literature, the asymptotic numerical method (Cochelin, 1994): expand the whole solution $z$ as a Taylor series in $D$.", hold=0.4)
         self.play(Write(f), run_time=1.8)
-        self.wait(1.0)
+        self.wait(2.4)
+        self.say(r"It is the Taylor step again, this time across dimensions instead of across $x$.")
         ax = Axes(x_range=[0, 2.0, 0.5], y_range=[0.2, 1.3, 0.5], x_length=9.6, y_length=3.3, tips=False,
                   axis_config={"color": GREY_, "stroke_width": 2, "include_ticks": False}).shift(0.25 * DOWN)
         xl = Tex(r"$D_0$", font_size=26, color=GOLD_).next_to(ax.c2p(0, 0.2), DOWN, buff=0.12)
@@ -529,7 +744,7 @@ class S08_Taylor(Film):
 
 
 class S09_FiveWalls(Film):
-    stage = r"9 \quad Five walls in one day"
+    stage = r"12 \quad Five walls in one day"
 
     def construct(self):
         pts = frontier_points()
@@ -571,7 +786,7 @@ class S09_FiveWalls(Film):
 
 
 class S10_Climb(Film):
-    stage = r"10 \quad The slow climb"
+    stage = r"13 \quad The slow climb"
 
     def construct(self):
         pts = frontier_points()
@@ -602,7 +817,7 @@ class S10_Climb(Film):
         self.say(r"At 259.9 the chain met a fold: its own discrete equations turned back. It sat there for four days.")
         c3 = self.front(ax, pts, 28.3, 34.2)
         self.play(Create(c3), run_time=3.0, rate_func=linear)
-        self.say(r"Tying the order of the horizon's series to $D$ removed the fold. The chain reached 263.6.")
+        self.say(r"Tying the number of terms in the horizon's series to $D$ removed the fold. The chain reached 263.6.")
         self.play(FadeOut(VGroup(fold_ax, br, fl, fx, q)), run_time=0.4)
         rate = VGroup(Tex("4 hours for each unit of $D$", font_size=34, color=RED_),
                       Tex("$D = 400$: 23 days away", font_size=34, color=RED_)).arrange(DOWN, buff=0.2).move_to(ax.c2p(11, 215))
@@ -616,7 +831,7 @@ class S10_Climb(Film):
 
 
 class S11_Basics(Film):
-    stage = r"11 \quad Back to basics"
+    stage = r"14 \quad Back to basics"
 
     def construct(self):
         q = self.quote("go back to basics if you have to")
@@ -648,10 +863,12 @@ class S11_Basics(Film):
         m1 = Tex("the mass mode", font_size=34, color=ORANGE_).move_to([0, 1.2, 0])
         m2 = Tex("= a violation of the momentum constraint,", font_size=34).next_to(m1, DOWN, buff=0.25)
         m3 = Tex("which our equations never imposed", font_size=34).next_to(m2, DOWN, buff=0.2)
+        m4 = Tex(r"the momentum constraint: one of Einstein's equations. It ties how the\\metric function $a$ changes in time to the wave's flow of energy.",
+                 font_size=24, color=GREY_).next_to(m3, DOWN, buff=0.45)
         self.play(FadeIn(m1), run_time=0.5)
-        self.play(FadeIn(m2), FadeIn(m3), run_time=0.7)
+        self.play(FadeIn(m2), FadeIn(m3), FadeIn(m4), run_time=0.7)
         self.say(r"Our equations left that constraint free, and the solver spent its digits holding the free mode down.")
-        self.play(FadeOut(VGroup(m1, m2, m3)), run_time=0.4)
+        self.play(FadeOut(VGroup(m1, m2, m3, m4)), run_time=0.4)
         # the unknowns lose a field
         names, cols = ["p", "m", "a", "c"], [BLUE_, GREEN_, PURPLE_, ORANGE_]
         cells = VGroup()
