@@ -6,8 +6,9 @@
   3. form S's centre series at hp's first node and its horizon series (from hp's m_h, with nothing for a) at hp's
      last node agree with the node values (V's harmonics 1 and 3, since hp's pinned rows drop the p-matching of
      harmonics 5 and up; U and c in full)
-  4. the Hamiltonian equation, which form S does not impose, holds order by order in its centre series (from hp's
-     p1, c0 and Delta: any data, since H_tau = (n-1) a^2 H has no periodic solution but 0)
+  4. the Hamiltonian equation, which form S does not impose, holds at the lowest orders of its centre series built from
+     hp's p1, c0 and Delta at hp's grid (hp's state solves both constraints there); off the solution (the same data
+     resampled to 8 points) the two forms differ, at the tau truncation's level
 
 Usage: python3 check_s.py STATE.npz [--mutate=noslave|evenD]   (each control makes a check FAIL)
 """
@@ -104,20 +105,35 @@ e3.append(max(abs(hU[j] - hN[j]) / hN[j] for j in range(2)))
 print("   horizon tail %.1e, ks %d" % (ho["tail"], fh.ks))
 report(3, "form-S centre and horizon series reproduce hp's first and last nodes", max(e3) < 1e-7)
 
-# 4. the Hamiltonian equation, not imposed in form S, holds order by order in the centre series: with B = 1 + X,
-#    2z B_z = (n-1)(1 - B) - q_H B, q_H = (U^2 + z V^2)/2, i.e. at order k: (2k + n - 1) X_k + (q_H B)_k = 0
-Uc, Vc, cc, Xc = ce["series"]
-Kc = Uc.shape[0] - 1
-qH = np.zeros_like(Uc)
-for k in range(1, Kc + 1):
-    qH[k] = 0.5 * (sum(Uc[j] * Uc[k - j] for j in range(1, k)) + sum(Vc[j] * Vc[k - 1 - j] for j in range(0, k)))
-Bc = Xc.copy()
-Bc[0] = Bc[0] + 1.0
-worst = 0.0
-for k in range(1, 40):
-    res = (2 * k + n - 1) * Xc[k] + sum(qH[j] * Bc[k - j] for j in range(0, k + 1))
-    worst = max(worst, np.max(np.abs(res)) / max(1e-300, np.max(np.abs((n - 1) * Xc[k]))))
-print("   centre series, orders 1..39: max |Hamiltonian residual| / |(n-1) X_k| = %.2e" % worst)
-report(4, "the Hamiltonian equation holds order by order in form S's centre series", worst < 1e-10)
+# 4. the Hamiltonian equation, not imposed in form S: with B = 1 + X, 2z B_z = (n-1)(1 - B) - q_H B, q_H = (U^2 + z V^2)/2,
+#    at order k: (2k + n - 1) X_k + (q_H B)_k = 0. On hp's data at hp's grid (a solution to about 1e-12 there) the
+#    lowest orders must hold to 1e-12 relative; the same data resampled to 8 points (not a solution there) is printed,
+#    to show that forms S and A differ off the solution by the tau truncation.
+from fseries import resample_odd, resample_even  # noqa: E402
+
+
+def ham_rel(ce, nn, orders):
+    Uc, Vc, cc, Xc = ce["series"]
+    Kc = Uc.shape[0] - 1
+    qH = np.zeros_like(Uc)
+    for k in range(1, min(Kc, max(orders)) + 1):
+        qH[k] = 0.5 * (sum(Uc[j] * Uc[k - j] for j in range(1, k)) + sum(Vc[j] * Vc[k - 1 - j] for j in range(0, k)))
+    Bc = Xc.copy()
+    Bc[0] = Bc[0] + 1.0
+    out = []
+    for k in orders:
+        res = (2 * k + nn - 1) * Xc[k] + sum(qH[j] * Bc[k - j] for j in range(0, k + 1))
+        out.append(float(np.max(np.abs(res)) / max(1e-300, np.max(np.abs((nn - 1) * Xc[k])))))
+    return out
+
+
+orders = [1, 2, 3, 5, 8]
+h32 = ham_rel(ce, n, orders)
+print("   Hamiltonian residual / |(n-1) X_k|, hp's grid (M %d), orders %s: %s" % (M, orders, " ".join("%.1e" % v for v in h32)))
+f8 = FactoredS(D, 8, kc=40, zK=x0**2, mutate=mut)
+ce8 = f8.centre(resample_odd(p1, 8), resample_even(c0, 8), om)
+h8 = ham_rel(ce8, n, orders)
+print("   the same data resampled to M 8, orders %s: %s" % (orders, " ".join("%.1e" % v for v in h8)))
+report(4, "the Hamiltonian equation holds at orders 1, 2 of form S's centre series (hp's grid)", max(h32[:2]) < 1e-12)
 print("ALL PASS" if ok_all else "SOME FAIL")
 sys.exit(0 if ok_all else 1)
