@@ -103,13 +103,16 @@ while queue:
                 break
             J = f.jacobian(y)
             dy = np.linalg.lstsq(J, -F, rcond=None)[0]
-            lam = 1.0
+            lam, ok = 1.0, False
             for _ in range(8):
                 yn = y + lam * dy
                 Fn = f.residual(yn)
                 if np.all(np.isfinite(Fn)) and np.max(np.abs(Fn)) < max(np.max(np.abs(F)), 1e-300) * (1 - 0.1 * lam):
+                    ok = True
                     break
                 lam *= 0.5
+            if not ok:
+                break
             y, F = yn, Fn
             r = float(np.max(np.abs(F)))
             hstory.append(r)
@@ -120,15 +123,36 @@ while queue:
     r, y = best
     if r > tol and np.isfinite(r) and r < 1e-3:
         J = f.jacobian(y)
-        y, r = ls_solve(f.residual, y, J, tau=float(opts.get("tau", 1e-6)), tol=tol, log=say)
+        try:
+            yl, rl = ls_solve(f.residual, y, J, tau=float(opts.get("tau", 1e-6)), tol=tol, log=say)
+            if np.isfinite(rl) and rl < r:
+                y, r = yl, rl
+        except np.linalg.LinAlgError:
+            say("    LS: linear algebra failed; kept the Newton point")
         hstory.append(float(r))
-    F = f.residual(y)
-    J = f.jacobian(y)
-    rn = np.linalg.norm(J, axis=1)
-    Jr = J / rn[:, None]
-    cn = np.linalg.norm(Jr, axis=0)
-    sv = np.linalg.svd(Jr / cn[None, :], compute_uv=False)
-    grip = float(np.linalg.norm(np.linalg.solve(Jr.T, np.eye(len(y))[3 * M])))
+    with np.errstate(all="ignore"):
+        F = f.residual(y)
+        J = f.jacobian(y)
+    try:
+        if not (np.all(np.isfinite(F)) and np.all(np.isfinite(J))):
+            raise np.linalg.LinAlgError("non-finite residual or Jacobian")
+        rn = np.linalg.norm(J, axis=1)
+        Jr = J / rn[:, None]
+        cn = np.linalg.norm(Jr, axis=0)
+        sv = np.linalg.svd(Jr / cn[None, :], compute_uv=False)
+        grip = float(np.linalg.norm(np.linalg.solve(Jr.T, np.eye(len(y))[3 * M])))
+    except np.linalg.LinAlgError as ex:
+        say("D %.2f: no finite solution (%s)" % (D, ex))
+        Dl = hist[-1][0] if hist else D0
+        key = round(D, 6)
+        refine[key] = refine.get(key, 0) + 1
+        if refine[key] > 4 or not hist:
+            say("not converged at D %g after %d refinements; stop" % (D, refine[key] - 1))
+            break
+        Dm = round(2 + 1 / (0.5 * (1 / (Dl - 2) + 1 / (D - 2))), 2)
+        say("not converged at D %g; inserting D %g (midpoint in 1/n)" % (D, Dm))
+        queue = [Dm, D] + queue
+        continue
     amp1 = noise_amp(f, y)
     amp0 = None
     if D in noise0:
