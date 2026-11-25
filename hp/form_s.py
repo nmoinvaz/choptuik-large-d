@@ -490,14 +490,16 @@ def cmd_jump(argv):
     import glob
     import jump
     from octo_corrector import delta_digits, load_o, o8, save_o
-    from raw_out import require_raw
+    from raw_out import pop_allow, require_raw
+    argv = list(argv)
+    allow = pop_allow(argv)
     pos, o = opts(argv, dict(D="250", states="", Dmin="0", Dmax="1e9", deg="3", kfreeze="13", plan_tol="1e-40", hmax="0.05",
                              ks="sigma", kc="146", threads="2", delta="series", tol="1e-40", it_max="16", halvings="8",
                              mutate="none", junk="0", tol_dz="1e-45", ls="0", outer="8"))
     outdir = pos[0]
     os.makedirs(outdir, exist_ok=True)
     log = os.path.join(outdir, "jump_s.jsonl")
-    require_raw(log)
+    require_raw(log, allow=allow)
     paths = sorted(set(p for g in o["states"].split(",") for p in glob.glob(g)))
     rows = []
     for p in paths:
