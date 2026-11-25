@@ -387,3 +387,72 @@ prompt list.
 | 11-06 14:23 | 43f19197 | M | i am thinking of shutting down the other mac claude instance besides you, because you can just run subagents now. |
 | 11-06 14:25 | 43f19197 | M | i can spool up another mac M3 laptop if you think it will help make the total work faster. |
 | 11-06 16:49 | 43f19197 | U | what is "harmonic" wrt our work? |
+
+## Update of 25 November: sections VI to VIII, Appendix B, Tables IV to VI and the later rows of the records
+
+- **Transcripts after 2026-11-06 18:29 UTC:** `tx:` as above. The coordinator sessions are `tx:43f19197` (to
+  2026-11-10 02:09), `tx:11bcbd25` (2026-11-10 to 13), `tx:afb99455` (2026-11-14 to 22) and `tx:0726f216` (2026-11-22 to
+  25). The library session is `tx:6d6cbe24` (2026-11-14 to 19), and the channel and tracker sessions of 2026-11-10 and 11
+  are `tx:0c8fc979`, `tx:8b0d2238`, `tx:c88d10f3`, `tx:9fac6212` and `tx:12451890`. A record copied into a resumed
+  transcript is counted once, under the transcript that started first.
+- **Filter:** as for `tx:43f19197`, plus drops of runner messages (`<hc ...>` tags, pasted runner reports), watcher
+  alerts and typed shell commands. The extraction script has a selftest with a mutation control per rule.
+- **Runner sessions on the other machines:** read only, with `hc exec`. 86 prompts were typed there by me, all setup or
+  routine, none quoted.
+- **Excluded prompts:** as above, and also prompts that name a research group, report another group's work or reach,
+  are about a terminal app or my other projects, or are personal. They are counted, not quoted (72).
+
+| item | source |
+|---|---|
+| 1058 prompts in 14 sessions, 25 changing the direction, 86 in runner sessions, 187 subagent launches | the extraction over the transcripts (2026-11-25 02:26); Agent `tool_use` blocks after 2026-11-06 18:30 |
+| 4082 commits on main | `git rev-list --count origin/main` at a42fd6c8 |
+| 869 raw-data folders, 4289 commits | `git -C raw show origin/main:INDEX.md \| grep -c '^\| \['`; `git -C raw rev-list --count origin/main` at b6c344480 |
+| 2512 rows; computed rows end at 259.899; 16 series rows 250 to 400 | `hp/data/delta_all.csv` at a42fd6c8, kind column |
+| 839 issues, to #1089 | `gh issue list --state all --limit 2000 --json number -q length` |
+| D = 3.04315 | `hp/data/delta_all.csv` first row (`data/delta_dd.csv:lowD-M384`) |
+| D = 263.6, paused 22 November | memory `fleet-takeover-2026-11-22.md`; #903 comment of 2026-11-22 03:01 (base D 263.5987) |
+| four hours per unit of D; 23 days to D 400 | the coordinator's table before `tx:afb99455:71497` |
+| tasks to GitHub; issues as tasks; 163 renumbered | `tx:43f19197:70983`, `:72874`; `tx:11bcbd25:622`, `:1197`, `:1287`; notes/ISSUE_NUMBERS.md |
+| "the nice thing about having it public, ..." | `tx:9fac6212:784` |
+| the channel's history and the reasons | memory `coordination-issue.md`, `discord-runner-channel.md`, `agent-msg-protocol.md`; `tx:43f19197:73425`, `:73873`; `tx:0c8fc979:6`; `tx:c88d10f3:223`; `gh api repos/nmoinvaz/agent-comms` |
+| herdr-core: run, read, send, keys, wait, exec | `hc --help` (0.1.21); `hc templates`; the coordinator skill |
+| "do not give out any new tasks to agents that are not running through hc/herdr" | `tx:afb99455:629` |
+| handover, clear, next task | `tx:afb99455:25233`; memory `clear-runners-between-tasks.md` |
+| models and effort (Table IV) | the `message.model` and `effort` fields of each transcript's assistant records; `hc templates` (`--model sonnet --effort xhigh`); runner status lines read with `hc read` on 2026-11-25; scratchpad `launch_win2_sub.sh` (`--effort high`); memory `coordination-issue.md` (win2, Opus 4.8, 2026-11-08) |
+| "other machines will use a lesser model sonnet" | `tx:afb99455:82` |
+| 191 subagent sessions with a recorded model: 174 Opus 5.5 xhigh, 13 Fable 5.2 high, 4 Haiku | `<session>/subagents/*.jsonl` since 2026-11-06, first assistant record |
+| "an indepedent fable 5.5 model on high effort"; "for some reason you are not looking at the other bot's comments." | `tx:6d6cbe24:21499`; `:26685` |
+| two accounts, the 90% rule, the moves of 19 and 22 November | the coordinator skill; `tx:afb99455:42018`; `tx:0726f216:15645`, `:16167` |
+| the 1Password vault for automation; "use 1password automation vaulet to ssh in then" | the coordinator skill; `tx:0726f216:20992`; `tx:0726f216:23694` |
+| two or three coordinator sessions from 21 November | memory `coordinator-split-2026-11-21.md` |
+| the raw-data repository's history made linear on 10 November | `tx:12451890:405`; AGENTS.md "Raw output"; HASH_MAP.csv |
+| rebase merges since 10 November | `tx:12451890:1011` |
+| Table V, the machines | `hc machine ls`; `hc exec --on <m>` (nproc, free); memory `win2-runner.md`, `macm3-runner.md`, `dh370-runner.md`, `dh610-runner.md`, `rpi5-runner.md`; `tx:afb99455:23733` |
+| Table VI and Section VII, the libraries | `gh api repos/nmoinvaz/<repo>`; `gh release list -R nmoinvaz/<repo>`; commits on main by `gh api -i "repos/nmoinvaz/<repo>/commits?per_page=1"`; `gh pr list -R nmoinvaz/<repo> --state merged --limit 1000`; descriptions from the repositories |
+| multidouble 1.0.0 and 1.8.0, bit for bit | commits 93402cf8, 649ec63e; memory `multidouble-1-8-move.md`; `hp/data/multidouble/*_1.8.0.log` |
+| "could the residual qd stuff go inside multidouble?" | the list of prompts above (2026-10-27 05:50) |
+| multishoot: "can we move any of the things we built into a separate rust library?"; named; public; crates.io | `tx:11bcbd25:8601`, `:9271`, `:9383`, `:9972`, `:14418`; memory `multishoot-repo.md`; #523 |
+| multisolver: "can any of our solver code go inside multishoot?"; "should we break out multishoot into a multisolver crate?" | `tx:6d6cbe24:5`, `:6251`; commit 001bf8e4 |
+| multishoot 4.2.0 and the low-D question | `gh release view 4.2.0 -R nmoinvaz/multishoot`; #1082 closing comment |
+| the release rule; what it flagged | AGENTS.md "Double-double solver"; the reply after `tx:11bcbd25:19366` (e295b49); notes/HIGH_M.md 9.5, 9.7 |
+| the renormalization error, about 93 bits, fixed in 4.8.2, states bit-identical | memory `multidouble-od-renorm-bug.md`; commit d7b59668 |
+| review bot rate | memory `coderabbit-review-cap.md` |
+| "we need to do the real new-math opportunity, ..."; "why are u writing up a bug ..." | `tx:6d6cbe24:14028`; `:14087` |
+| the multidouble paper; the referee's narrowing | multidouble `paper/expansion-error-bounds.tex`; memory `paper-new-math-only.md`, `multidouble-elementary-functions.md` |
+| three fixes upstream to QD, merged | `gh pr list -R BL-highprecision/QD --author nmoinvaz --state all` (#25, #26, #27) |
+| the speed items; "what did we do all that speed up work for then?" | memory `speed-campaign.md`; `tx:afb99455:32187`, `:63005` and its reply |
+| Appendix B, rows 32 to 43, and Section VIII's quotations | `tx:43f19197:64347`, `:64431`, `:68519`; `tx:11bcbd25:9745`, `:9788`; `tx:afb99455:7929`, `:8110`, `:32187`, `:39319`, `:39368`, `:70286`, `:71497`; `tx:0726f216:21717`, `:43046`, `:43087`, `:44341`, `:44365`, `:44525`, `:45892` |
+| the held harmonics' bias, −5.0×10⁻⁸ at D = 79.77, and its fit | the reply after `tx:43f19197:64600`; commit 1a5868d |
+| the fold at 259.9 gone at order 293 | #1008 |
+| 11 constants within 1.8×10⁻⁹ from D = 4 to 245.64 | notes/QUADRATIC_FORMULA.md |
+| 185 of 450 issues; the review's recommendations | notes/DIRECTION_REVIEW.md, Summary |
+| the low-D root near 3.044 was noise | #1082 and #1083 closing comments |
+| the from-scratch derivation; nothing near D ≈ 265; departure from D ≈ 254 | #1086; notes/LARGE_D_BASICS.md |
+| the coordinator's answer to "lost the plot" | the reply after `tx:0726f216:44365` |
+| the direct solve's horizon gain, 10⁴⁴ to 10⁴⁷ at D = 245.6 | #1088, Track A's first-milestone comment (2026-11-25 00:51) |
+| the momentum constraint; the symbolic check | #1089 slice 3 (comment 7149028797); `solver/lit_gaps_dss/mc_check.py` on `wip/lit-gaps-dss`, rerun 2026-11-25 with its `--mutate=flux` control |
+| the prototype converged at D = 100 in double-double | #1088, Track B's milestone comment 7149908836 |
+| Gundlach (1997), journal reference and DOI | https://arxiv.org/abs/gr-qc/9604019 (Journal-ref, DOI fields), read 2026-11-25 |
+| the coordinator's answer on what I could have done; "and no table showed that number" | the reply to `tx:0726f216:44434` |
+
+Two direction-changing prompts of the period are not quoted: one whose basis it does not state, and one personal.

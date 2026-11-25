@@ -33,14 +33,14 @@ period}
 
 \begin{abstract}
 I directed a numerical research computation, the echo period $\Delta(D)$ of Choptuik's critical solution in $D$ spacetime
-dimensions, from $D = 3.04375$ up past $D = 200$, with Claude, Anthropic's model, running in Claude Code on several
-machines. A coordinating Claude session wrote the code for the tasks I set, runner sessions on the other machines ran them
-and reported through an append-only file, and subagents took the reviews, searches and builds I asked for. The work stuck
-at 31 points. For each I give what stalled, what moved it and what that changed in the way of working. Twenty were moved
-first by a prompt of mine, eight by Claude's own diagnosis and three by another session or an outside protocol. I sort
-the 145 prompts of mine that changed the course of the work into ten kinds, from persistence and reframing to asking
-why, raising the scale, cutting delay, adding resources, bringing in my own tools, setting rules, correcting Claude and
-asking to understand, and I state the limits of the approach.
+dimensions, from $D = 3.04315$ to $D = 263.6$, with Claude, Anthropic's model, running in Claude Code on up to eight
+machines. A coordinating Claude session wrote the code for the tasks I set, runner sessions on the other machines ran
+them, and subagents took the reviews, searches and builds I asked for. In its first three weeks the work stuck at 31
+points. For each I give what stalled, what moved it and what that changed in the way of working. Twenty were moved first
+by a prompt of mine, eight by Claude's own diagnosis and three by another session or an outside protocol. I sort the 145
+prompts of mine that changed the course of the work into ten kinds. I then follow the setup and the work to 25 November:
+sessions started and driven over SSH, two accounts, three libraries split out of the solver, and the prompts that turned
+a stalled continuation in $D$ into a search for a better formulation. I state the limits of the approach.
 \end{abstract}
 
 \maketitle
@@ -57,14 +57,16 @@ mass mode amplifies errors at the horizon by a gain $G \approx 0.7^{-(D-3)}$, so
 $D$ grows, from double-double~\cite{Dekker1971} (about 32 digits) through quad-double~\cite{HidaLiBailey2001} (about 64)
 to octo-double (about 127). At low $D$ one point costs 4 to 10 hours.
 
-The project began in a chat on claude.ai (Sec.~\ref{sec:origin}). Over the following three weeks I directed Claude
-sessions running in Claude Code~\cite{ClaudeCode} on five machines, and Claude wrote the code to my direction. The lowest
-converged point is $D = 3.04375$, and the large-$D$ chain passed $D = 200$ and was still climbing at the time of
-writing. The work stuck at 31 points (Sec.~\ref{sec:moved} and Appendix~\ref{app:stuck}).
+The project began in a chat on claude.ai (Sec.~\ref{sec:origin}). Over the following five weeks I directed Claude
+sessions running in Claude Code~\cite{ClaudeCode} on up to eight machines, and Claude wrote the code to my direction.
+The lowest converged point is $D = 3.04315$. The large-$D$ chain reached $D = 263.6$ and was paused on 22 November, when
+it cost about four hours per unit of $D$. In its first three weeks the work stuck at 31 points (Sec.~\ref{sec:moved} and
+Appendix~\ref{app:stuck}). Sections~\ref{sec:setup2} to~\ref{sec:after} follow the setup and the work to 25 November.
 
 The sources are the chat where the project began~\cite{chat}, the coordination log \file{comms.txt}, the git history, the
 notes in \file{notes/}, the raw-data repository~\cite{raw} and the transcripts of the Claude Code sessions on the
-coordinator machine. The other machines' side is known from their entries in the log. Every number, quotation and date is
+coordinator machine, and from 7 November the repository's issues and the runner sessions, read over SSH. The other
+machines' side in the first three weeks is known from their entries in the log. Every number, quotation and date is
 listed with its source in \file{paper/ai/SOURCES.md}.
 
 \section{How it began}
@@ -116,12 +118,14 @@ that pair.
 \item \emph{Me.} I set the goals and the standards of evidence and chose among the options the coordinator put to me, by
 prompts and by answering its multiple-choice questions. I chose the machines and when to add them, merged and released
 the arithmetic library \file{multidouble}~\cite{multidouble}, and woke, plugged in and set up machines.
-\item \emph{The coordinator}, one Claude Code session at a time, first on a cloud machine and then on the Mac, wrote the
+\item \emph{The coordinator}, one Claude Code session at a time until 21 November, first on a cloud machine and then on
+the Mac, wrote the
 code I asked for in its own worktrees, merged results, kept the notes, queued numbered tasks, T1 to T135, and reported to
 me every hour.
 \item \emph{The runners}, one session per other machine, ran their tasks, posted results and pushed raw output. They did
 not edit code, by my rule, \prompt{make a note that the other machines are running a lower model than you are, so it is
-best for you to write any code and not them.}
+best for you to write any code and not them.} The lower model was Sonnet; the models of each role are in
+Table~\ref{tab:models}.
 \item \emph{Subagents} were sessions the coordinator started at my request for one bounded task, each returning a single
 report.
 \end{itemize}
@@ -177,8 +181,8 @@ name & machine & role & entries\\
 \node[lab, anchor=east] at ([xshift=-1mm]win.west |- 0,-2.35) {raw output};
 \draw[arr] (sub.south) -- node[lab, right=1pt, pos=0.55] {branches} (sub.south |- main.north);
 \end{tikzpicture}
-\caption{The participants and how they were connected. I spoke only to the coordinator, and the coordinator spoke to the
-runners only through \file{comms.txt}. Each runner's watcher wakes it when an entry addressed to it arrives (down arrows),
+\caption{The participants and how they were connected in the first three weeks. I spoke only to the coordinator, and
+the coordinator spoke to the runners only through \file{comms.txt} (to 8 November; Sec.~\ref{sec:setup2}). Each runner's watcher wakes it when an entry addressed to it arrives (down arrows),
 its posts carry its processor and memory use (up arrows), and its raw output goes to the raw-data repository. Dashed boxes
 are sessions that ended.}
 \label{fig:arch}
@@ -194,8 +198,9 @@ writer pulls, appends, commits only that file and pushes.
 \file{INDEX.md}. No result may live only on a machine's disk, and \file{raw\_check.py} and the writers' path check
 enforce it, because the records of 757 early points that never left the cloud machine's disk were lost.
 \item \emph{Worktrees and branches.} Each session and subagent writes in its own worktree and backs up to a
-\file{wip/} branch, and only the coordinator merges into main, by plain merges. The raw-data repository is never
-force-pushed.
+\file{wip/} branch, and only the coordinator merges into main, by plain merges until 10 November and by rebase since. The
+raw-data repository was force-pushed once, on 10 November at my word, to make its history linear; that changed every
+hash, and \file{HASH\_MAP.csv} maps the old ones.
 \item \emph{Traceability.} Notes and tables cite raw folders by commit. \file{delta\_all.csv} names each row's source and
 state and is re-verified against them, with controls that must fail, and \file{check\_numbers.py} ties each quoted number
 to a file. A claim can be followed back to the run that produced it, and any machine can rebuild the tables from clones
@@ -420,11 +425,201 @@ Most of the rules in AGENTS.md trace to a stuck point.
 \end{itemize}
 My prompts set the direction and the pace, and the rules made the results checkable at that pace.
 
+\section{The setup since 7 November}
+\label{sec:setup2}
+
+The setup of Sec.~\ref{sec:setup} carried the first three weeks. From 7 November it changed in five ways.
+
+\emph{Tasks became issues.} I moved the tasks to GitHub on 7 November, \prompt{Let's use GitHub projects to manage
+everything}, and on 10 November the issues themselves became the tasks, without a project board, and 163 open tasks were
+renumbered. A task is an issue with a machine label, exact commands, stop conditions and acceptance checks that can fail.
+By 25 November there were 839 issues, numbered to \#1089. Tasks about the agents themselves, or that assess other authors'
+papers, go to a private repository, \file{agent-comms}. Results stay public, since \prompt{the nice thing about having it
+public, is that anybody can review the results}.
+
+\emph{The channel moved, then the sessions.} \file{comms.txt} took its last entries on 8 November. In the next six days
+the channel went through a pinned issue, Claude Code's Remote Control, a Discord server with one bot per machine, one file
+per message in \file{agent-comms}, and a message stream. Each was dropped for a concrete fault: a commit per message on
+main, Remote Control stopping when the account changed, and bots that never woke one another. Since 14 November every
+runner is a Claude Code session started and driven with herdr-core (\file{hc}), which keeps terminals alive on each
+machine and reaches them over SSH.
+\begin{itemize}
+\item \file{hc run} starts a session on another machine with the runner rules as its first message.
+\item \file{hc read} shows its screen, \file{hc send} and \file{hc keys} type into it, and \file{hc wait} returns when it
+stops.
+\item \file{hc exec} runs a command on a machine, which is how the coordinator reads each machine's load and memory for the
+hourly status.
+\end{itemize}
+Runner reports arrive in the coordinator's terminal as tagged messages. I set the rule \prompt{do not give out any new
+tasks to agents that are not running through hc/herdr}. Between tasks the coordinator asks a runner for its handover to
+its memory, clears its context and sends the next task whole.
+
+\emph{Models and accounts.} Each role ran its own model (Table~\ref{tab:models}).
+\begin{itemize}
+\item The runners ran Sonnet 5.5 at the highest effort setting, xhigh, by their launch command and my rule, \prompt{other
+machines will use a lesser model sonnet}.
+\item The coordinator ran Opus 5.5 at xhigh from 11 November. Before that it ran Fable 5.1 from 27 October to 4 November
+and Fable 5.2 on 10 and 11 November.
+\item Of the 191 subagent sessions since 6 November that record their model, 174 ran Opus 5.5 at xhigh. Thirteen ran
+Fable 5.2 at high effort as independent reviewers, which I asked for after a review bot's rate limit, and four ran Haiku.
+\item The work ran on two Claude accounts. A runner's status line shows its account's use of the weekly limit. At 90\%
+new runners go to the other account, and running ones move at their next task boundary by resuming their own
+conversation, so that no context is lost. When both accounts are near the limit, I decide. Runners moved between the
+accounts on 19 and 22 November.
+\end{itemize}
+
+\emph{Credentials.} Machine login and administrator passwords live in a 1Password vault kept for automation. The
+coordinator reads them through a service account without printing them, to log in to a machine over SSH or to restart
+its network link when it drops off, \prompt{use 1password automation vaulet to ssh in then}.
+
+\emph{More machines, more coordinators.} By 25 November the fleet had eight machines (Table~\ref{tab:fleet}). From 21
+November two or three coordinator sessions ran at once, each with its own runners.
+
+\begin{table}[h]
+\caption{The model and effort setting of each role, from the model and effort fields that each session's transcript
+records, the runners' launch commands and their status lines.}
+\label{tab:models}
+\small
+\begin{tabular}{L{4.2cm}L{4.6cm}L{6.9cm}}
+\toprule
+role & model, effort & when\\
+\midrule
+runners on the other machines & Sonnet 5.5, xhigh & throughout; win2 ran Opus 4.8 by its own settings on 8 November\\
+coordinator on the Mac & Opus 5.5, xhigh & from 11 November; Fable 5.1 from 27 October to 4 November, Fable 5.2 on 10--11 November\\
+subagents on the Mac & Opus 5.5, xhigh & 174 of 191 sessions since 6 November\\
+reviewers & Fable 5.2, high & 13 sessions\\
+two code sessions on win2 & Opus 5.5, high & 24 November, for tasks that needed code on that machine\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{table}[h]
+\caption{The machines on 25 November, by their names in \file{hc}, with their runners.}
+\label{tab:fleet}
+\small
+\begin{tabular}{L{2.8cm}L{1.6cm}L{5.4cm}L{5.9cm}}
+\toprule
+machine & runner & hardware & role, since\\
+\midrule
+the Mac & --- & Apple M5, 10 cores & coordinators and subagents\\
+desktop-pc & win2 & Core Ultra 7 265K, 20 threads, 95.6 GB & heavy runs, from 1 November\\
+surface-laptop-4 & win & 4 cores, 8 threads, 31.8 GB & runner from the start, at below-normal priority\\
+macbook-air-m3 & macm3 & Apple M3, 6 threads for the work & runner from 6 November\\
+dh370-fedora & dh370 & i7-8700, 12 threads, 31 GB, Fedora & the large-$D$ chain to its pause, from 12 November\\
+dh610-fedora & dh610 & i7-12700, 20 threads, 62 GB, Fedora & from 12 November\\
+dh170-fedora & dh170 & i7-7700, 8 threads, 31 GB, Fedora & from 16 November\\
+rpi5-ubuntu & rpi5 & Raspberry Pi 5, 4 cores, 8 GB & certificate reruns on another architecture, 15--23 November\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\section{Three libraries made along the way}
+\label{sec:libs}
+
+Three parts of the solver became libraries of their own, each public and released on crates.io (Table~\ref{tab:libs}):
+\file{multidouble}~\cite{multidouble}, the arithmetic; \file{multishoot}~\cite{multishoot}, the multiple-shooting engine;
+and \file{multisolver}~\cite{multisolver}, the solvers on that engine.
+
+\begin{table}[h]
+\caption{The three libraries on 25 November.}
+\label{tab:libs}
+\small
+\begin{tabular}{L{4.0cm}L{3.7cm}L{3.7cm}L{3.7cm}}
+\toprule
+& \file{multidouble} & \file{multishoot} & \file{multisolver}\\
+\midrule
+what it holds & double-, quad- and octo-double arithmetic, 8-lane SIMD with bit-identical results, dual numbers, LU solves, a Python package & residual, Taylor-jet steps, exact Jacobians by dual numbers, series in a parameter, the mode matrix & damped Newton, chord, GMRES-refined Newton, Levenberg--Marquardt, the asymptotic numerical method, weak subspaces, a zero count\\
+created & 23 October & 11 November & 15 November\\
+releases; current version & 33; 5.1.0 & 14; 4.2.0 & 5; 0.2.2\\
+commits on main; pull requests merged & 550; 150 & 177; 63 & 28; 16\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{itemize}
+\item \emph{\file{multidouble}.} The arithmetic left the solver first, on 23 October, and its 1.0.0 gave the same bits as
+the solver's own code. After \prompt{could the residual qd stuff go inside multidouble?} the rest moved in by one pull
+request, released as 1.8.0 on 28 October and checked bit for bit against the build before it. Octo-double came in 3.0.0.
+\item \emph{\file{multishoot}.} \prompt{can we move any of the things we built into a separate rust library?} on 11
+November. I named it, a subagent set up the repository, and it was public and on crates.io the same day. The solver's
+kernel was rebuilt on it, and its files do not mention this project. Its 4.2.0 of 24 November forms the mode matrix at a
+real growth rate in any precision, which settled the low-$D$ question of Sec.~\ref{sec:after}.
+\item \emph{\file{multisolver}.} \prompt{can any of our solver code go inside multishoot?} on 14 November, then
+\prompt{should we break out multishoot into a multisolver crate?} on 15 November.
+\item \emph{The release rule.} A change to the arithmetic, the engine or the solvers goes into its library and a release
+first. Then the version in the solver is raised, and its bit-identity checks are rerun against a build of the previous
+version, each with a control that must fail. The checks flagged a difference in how $\Delta$ was read during the move to
+\file{multishoot}, and a difference of the platforms' \file{pow} that stored plans now avoid.
+\item \emph{What the rule missed.} An octo-double renormalization error in 3.0.0 to 4.8.0, which lost about 93 bits on
+inputs with a gap or zero parts, was found by a subagent's review, not by the checks. It was fixed in 4.8.2, and the
+chain's stored states were bit-identical under the old and the fixed version.
+\item \emph{Reviews.} A review bot allowed about one review an hour across the account. I replaced it with
+\prompt{an indepedent fable 5.5 model on high effort} and had every bot's comments read after \prompt{for some reason you
+are not looking at the other bot's comments.} The coordinator merges these libraries' pull requests once their checks and
+every finding are answered, and the releases are mine.
+\item \emph{New mathematics.} After \prompt{we need to do the real new-math opportunity, length five and up which is open.}
+and \prompt{why are u writing up a bug as if a significant paper? nobody would care. we only care about new math in the
+paper.}, \file{multidouble} gained a paper of its own on error bounds for quad-double style arithmetic on expansions of any
+length, with elementary functions whose error bounds are proved. A referee narrowed its novelty claim to the quad-double
+style algorithms. Three fixes went upstream to the QD library, and all were merged.
+\item \emph{Speed.} On 18 November seven speed items went to subagents as pull requests in the libraries and the solver.
+The chain's step did not get faster, \prompt{what did we do all that speed up work for then?}, since most were measured as
+losses for that step and the gains that held had come the week before.
+\end{itemize}
+
+\section{After 7 November: from a chain in $D$ to a new formulation}
+\label{sec:after}
+
+The prompts of mine that changed the direction after 7 November are listed with their outcomes in
+Appendix~\ref{app:stuck2}. Four turns stand out.
+
+\emph{The push to 400.} \prompt{Keep going to 400} on 7 November made the large-$D$ chain the priority, after
+\prompt{our goal should be to get more digits instead of just D = 200 or D = 400.} and \prompt{have a subagent search for
+better way to hold the harmonics.}, which found the held harmonics' bias, $-5.0\times10^{-8}$ in $\Delta$ at $D = 79.77$,
+and removed it with a fit in $1/(D-2)$ of the full solutions. The chain climbed to $D = 263.6$ by 22 November. On the way
+the fold of its discrete system at $D = 259.9$ disappeared when the horizon series' order was tied to $D$, after
+\prompt{let's try factor G out, first and also affine at the same time, then after that the split off}.
+
+\emph{The pause.} \prompt{should we rethink trying to go past the large d wall at 250? maybe we need to look at it from a
+different angle or ingest new info?} on 14 November gave three tracks, among them a series in $1/(D-2)$ fitted below
+$D = 245$ that gives $\Delta$ to $D = 400$. An independent review of the direction, which I asked for on 19 November with
+\prompt{start another new subagent to check to see we are headed in the right direction, we want: discoveries.}, counted
+185 of the 450 issues closed in the preceding week as the chain, recommended stopping it, and named blind spots that became
+new tasks. The chain stopped two days later, after \prompt{this sounds like it is just an artifact of our method again}
+and \prompt{we should stop doing our calculations at large d until we can find a better method dont you think?}, when a
+unit of $D$ cost four hours and $D = 400$ was 23 days away.
+
+\emph{Low $D$ by another method.} \prompt{lets figure out a new way to keep going on low D.} on 22 November led to a
+remapped grid and a first growth rate below $D = 3.15$. Two later tasks showed that its sign test near $D = 3.044$ had
+read noise: a reformulated determinant and a determinant from quad-double entries agree, and the true root is elsewhere.
+
+\emph{Back to basics.} On 24 and 25 November I asked to \prompt{re-evaluate the underlying math assumptions to see if we
+missed anything}, \prompt{like go back to basics if you have to}. A subagent derived the large-$D$ problem before reading
+the project's large-$D$ notes. It found nothing in the continuum near the chain's last singularity, at $D \approx 265$,
+and a chain whose $\Delta$ left the smooth curve from $D \approx 254$, so the limits belonged to the discrete system. I
+then wrote \prompt{i think you mau habe already lost the plot. it was ro discover a path foreward to 400, or 2000 etc. at
+these speeds it is unobtainable} and \prompt{we need to prioritze this quest}. The coordinator answered that the mistake
+was treating large $D$ as a continuation problem, and set up solves at each target $D$ directly. The first direct solve
+in the old formulation failed at once: its horizon data had a gain of $10^{44}$ to $10^{47}$ at $D = 245.6$. I asked for
+\prompt{new subagents to look to see any gaps in any of the published papers to see if we can get there way faster}.
+One of three found that the solver's mass mode, the source of the digits that grow with $D$, is a violation of the
+momentum constraint that the formulation never imposes. Gundlach's construction of the critical solution sets the metric
+from that constraint and has no such mode~\cite{Gundlach1997}. A symbolic check confirms both identities, and a prototype
+in that form converged at $D = 100$ in double-double arithmetic. Whether its conditioning stays flat as $D$ grows was being
+measured when this was written. When I wrote \prompt{perhaps you don't understand the problem, if you are saying it is not
+possible to get that large of a D with newer methods.}, the answer was that it should be possible, and why we could not.
+
+\emph{What I could have done.} I asked the coordinator what I could have done to make it see this sooner. It answered
+that it was mostly its own to catch: it had answered the right signals of 7 and 21 November with repairs, not with a new
+method. It proposed giving each goal a date or a rate and reporting the time to the goal at the current rate in the hourly
+status, since $D = 400$ was 23 days away ``and no table showed that number''.
+
 \section{The records}
 \label{sec:numbers}
 
 \begin{table}[h]
-\caption{The records, at commit 07eff89 of the code repository and 8b9db42 of the raw-data repository.}
+\caption{The records, at commit 07eff89 of the code repository and 8b9db42 of the raw-data repository, and the later
+counts at commit a42fd6c8 and raw-data commit b6c344480 (25 November).}
 \label{tab:numbers}
 \small
 \begin{tabular}{L{5.2cm}L{10.6cm}}
@@ -438,6 +633,11 @@ entries in \file{comms.txt} & 974: coordinator 293, Windows laptop 318, Mac 221,
 tasks; raw-data repository & T1 to T135; 124 folders, 548 commits\\
 values of $\Delta$ in \file{hp/data/delta\_all.csv} & 2445 rows, from $D = 3.04375$ to 203.27\\
 coordinator session on the Mac & 334 prompts, 308 hourly status prompts, 29 context summaries, 30 subagent launches\\
+\midrule
+25 November & 4082 commits on main; 869 raw-data folders, 4289 commits; 2512 rows of $\Delta$, of which the computed
+ones end at $D = 259.899$ and 16 from $D = 250$ to 400 are the series; 839 issues\\
+prompts of mine, 6 to 25 November & 1058 in 14 sessions on the Mac, 25 of them changing the direction; 86 typed into runner
+sessions, all setup or routine; 187 subagent launches\\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -468,6 +668,11 @@ to $10^{-7}$ at $D = 79$ to 86, which the README states separately.
 \item Write the stop rule and the pass criteria before the run, and keep the control runnable.
 \item Save every input a failure depends on, and give every new value a second path on another machine.
 \item Keep everything in the repositories, where it is public, timestamped and recoverable.
+\item Report the time to each goal at the current rate, not only each task's ETA. When it passes about a week, change
+the method rather than repair it.
+\item When a method has stalled for days, ask for a review that derives the problem from the start before it reads the
+project's notes.
+\item Send subagents through the published literature for gaps, formulas and connections, not only for prior results.
 \end{itemize}
 
 \section{How this work was done}
@@ -476,7 +681,9 @@ to $10^{-7}$ at $D = 79$ to 86, which the README states separately.
 I am the author of this work and of this paper. Claude, Anthropic's model, used through Claude Code, was the tool. It
 produced the code, the computations and the notes, as a coordinating session, runner sessions and subagents under my
 direction. This paper was drafted by a Claude subagent from the chat where the project began, the files and the
-transcripts named in \file{paper/ai/SOURCES.md}, and revised at my request after I read the earlier drafts. Its numbers
+transcripts named in \file{paper/ai/SOURCES.md}, and revised at my request after I read the earlier drafts. Its
+sections on the work after 7 November were written by the coordinator from a subagent's survey of the transcripts of
+that period. Its numbers
 come from files and from commands run on them. The references were checked against publisher, catalogue or repository
 records, and the one that could be checked only against a citing record is marked. No human expert has reviewed it.
 Corrections are welcome.
@@ -534,6 +741,35 @@ other entries name the coordinator's diagnosis or another session. Sources for e
 \end{tabular}
 \end{center}
 
+\section{The turning points after 7 November}
+\label{app:stuck2}
+
+Prompts of mine that changed the direction after 7 November, with what followed. Each is quoted from the transcripts of
+the coordinator sessions, and its source is in \file{SOURCES.md}.
+
+\begin{center}
+\scriptsize
+\setlength{\tabcolsep}{3.5pt}
+\begin{tabular}{rL{1.05cm}L{5.6cm}L{4.4cm}L{4.0cm}}
+\toprule
+& when & prompt & what followed & what changed\\
+\midrule
+32 & 6--7 Nov & \prompt{have a subagent search for better way to hold the harmonics.}; \prompt{our goal should be to get more digits instead of just D = 200 or D = 400.} & the held harmonics' bias found and removed by a fit in $1/(D-2)$ & digits ranked above reach\\
+33 & 7 Nov & \prompt{Keep going to 400} & the chain to $D = 263.6$ & the large-$D$ chain first\\
+34 & 11 Nov & \prompt{if the chain's weakest diection sits near the horizon series and is amplified by an equations, can't we use that information to always compensate for that?}; \prompt{let's try factor G out \dots} & the horizon factored; its series' order tied to $D$ & the fold at 259.9 gone at order 293\\
+35 & 14 Nov & \prompt{should we rethink trying to go past the large d wall at 250? \dots}; \prompt{\dots don't stop investing in improving the corrector.} & three tracks: the series' tail kept, a series to $D = 400$, the literature & a value at $D = 400$ from the series\\
+36 & 18 Nov & \prompt{create 2 subagents to investigate areas in our algorithms we can do speed gains \dots} & seven speed items as pull requests & most measured as losses for the chain's step\\
+37 & 19 Nov & \prompt{start a new subagent on fable to look at new ways we can find a formula for D using quadratic base equations \dots} & 11 constants fit $D = 4$ to 245.64 within $1.8\times10^{-9}$ & a better formula, no new structure\\
+38 & 19 Nov & \prompt{start another new subagent to check to see we are headed in the right direction, we want: discoveries. \dots} & an independent direction review & the $\ell = 1$ and $\ell = 2$ work\\
+39 & 21 Nov & \prompt{this sounds like it is just an artifact of our method again}; \prompt{we should stop doing our calculations at large d until we can find a better method dont you think?} & the chain paused at $D = 263.6$ & low $D$ and $\ell = 1$ first\\
+40 & 22 Nov & \prompt{\dots lets figure out a new way to keep going on low D.} & a remapped grid; then its root near $D = 3.044$ found to be noise & two independent determinants\\
+41 & 24 Nov & \prompt{Can you re-evaluate the underlying math assumptions to see if we missed anything?}; \prompt{\dots like go back to basics if you have to.} & a from-scratch derivation & the chain's limits its own\\
+42 & 25 Nov & \prompt{i think you mau habe already lost the plot. \dots at these speeds it is unobtainable}; \prompt{we need to prioritze this quest} & direct solves at each target $D$ & continuation in $D$ dropped\\
+43 & 25 Nov & \prompt{i want you to use new subagents to look to see any gaps in any of the published papers \dots look at formulas, maths, missing gaps and connevtions} & three literature subagents & the momentum constraint imposed\\
+\bottomrule
+\end{tabular}
+\end{center}
+
 
 \begin{thebibliography}{99}
 \bibitem{Choptuik1993} M. W. Choptuik, ``Universality and scaling in gravitational collapse of a massless scalar field'',
@@ -553,6 +789,10 @@ arithmetic'', in \emph{Proc.\ 15th IEEE Symposium on Computer Arithmetic (ARITH-
 \bibitem{chat} N. Moinvaziri, the chat on claude.ai where the project began, 17--19 October 2026 (UTC), unpublished.
 \bibitem{raw} N. Moinvaziri, \file{choptuik-large-d-raw}, \url{https://github.com/nmoinvaz/choptuik-large-d-raw} (2026).
 \bibitem{multidouble} N. Moinvaziri, \file{multidouble}, \url{https://github.com/nmoinvaz/multidouble}.
+\bibitem{multishoot} N. Moinvaziri, \file{multishoot}, \url{https://github.com/nmoinvaz/multishoot}.
+\bibitem{multisolver} N. Moinvaziri, \file{multisolver}, \url{https://github.com/nmoinvaz/multisolver}.
+\bibitem{Gundlach1997} C. Gundlach, ``Understanding critical collapse of a scalar field'', Phys.\ Rev.\ D \textbf{55},
+695 (1997), doi:10.1103/PhysRevD.55.695, arXiv:gr-qc/9604019.
 \bibitem{BootLoops} M. D. Schwartz, BootLoops, \url{https://github.com/BootLoops-ai/bootloops} (read at commit e16ba28
 on 21 October 2026).
 \bibitem{Metz2026} C. Metz, ``Could your chatbot be stealing ideas from you? It's a thorny question'', The New York
