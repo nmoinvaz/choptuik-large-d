@@ -594,13 +594,13 @@ def cmd_jump(argv):
     os.makedirs(outdir, exist_ok=True)
     log = os.path.join(outdir, "jump_s.jsonl")
     require_raw(log, allow=allow)
-    # form A states (--states) and form S states (--states_s), fitted together in form S's layout
+    # form A states (--states, D in Dmin .. Dmax) and form S states (--states_s, all), fitted together in form S's layout
     rows = []
     for key, form in (("states", "A"), ("states_s", "S")):
         paths = sorted(set(p for g in o[key].split(",") if g for p in glob.glob(g)))
         for p in paths:
             z, m = load_o(p)
-            if float(o["Dmin"]) <= m["D"] <= float(o["Dmax"]):
+            if form == "S" or float(o["Dmin"]) <= m["D"] <= float(o["Dmax"]):
                 rows.append((m["D"], z, m, form))
     rows.sort(key=lambda r: r[0])
     m0 = rows[-1][2]
