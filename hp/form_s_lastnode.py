@@ -138,6 +138,8 @@ def main(argv):
         z8, meta = load_o(o["state"])
         with mp.workdps(60):
             Dt = mp.mpf(meta["D_str"])
+        if o["ks"] != "auto":
+            meta["ks"] = int(o["ks"])
         kw = dict(kt=int(meta["kt"]), kc=int(meta["kc"]), ks=int(meta["ks"]), threads=thr, segs=meta["segs"],
                   mob=float(meta["hmob"]))
         s = make_solver_s(Dt, M, list(meta["nodes"]), kfreeze=3, **kw)
