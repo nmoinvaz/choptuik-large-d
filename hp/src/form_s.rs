@@ -369,6 +369,10 @@ pub fn horizon_series_s<T: Lane, const B: usize>(ctx: &Ctx<B>, de: &DMat<B>, pre
             _ => c[i],
         }
     };
+    // ww and zc are the scaled coefficients of x (x - c) and x (x + c) (model::horizon_series's); wr and zr those of
+    // x - c and x + c alone, for q
+    let mut wr = vec![z; len];
+    let mut zr = vec![z; len];
     ww[0] = wfun(&cc, 0);
     zc[0] = zfun(&cc, 0);
     let izc0 = one / zc[0];
@@ -376,9 +380,11 @@ pub fn horizon_series_s<T: Lane, const B: usize>(ctx: &Ctx<B>, de: &DMat<B>, pre
     let mut last = ks;
     for kk in 0..=ks {
         let kf = kk as f64;
-        // x q = (x - c) p^2 + (x + c) m^2, x = 1 - u: q_kk = s_kk + sigma q_(kk-1) in the scaled variable; w_0 = 0, so
-        // p^2 enters to order kk - 1
-        let s = cs(&ww, &p2, kk) + cs(&zc, &m2, kk);
+        // x q = (x - c) p^2 + (x + c) m^2, x = 1 - u: q_kk = s_kk + sigma q_(kk-1) in the scaled variable; (x - c)_0 = 0,
+        // so p^2 enters to order kk - 1
+        wr[kk] = wfun(&cc, kk);
+        zr[kk] = zfun(&cc, kk);
+        let s = cs(&wr, &p2, kk) + cs(&zr, &m2, kk);
         qs[kk] = if kk > 0 { s + qs[kk - 1].mul_pwr2(sig) } else { s };
         if kk == 0 {
             kap = (-qs[0]).addp(-n1);
