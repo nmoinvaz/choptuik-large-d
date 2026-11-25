@@ -664,9 +664,64 @@ class HeldS:
         return d, self._minus_c(F), pmin, pmax
 
 
+def cmd_release(argv):
+    """Release held harmonics step by step from a converged form-S state (form_s.py jump's jump_s_D*.npz): for each
+    kfreeze K in --steps (e.g. 5,7,9,11,13), p1's harmonics above K up to 13 held at the state's values and those up to
+    K solved (K 13: the full system), Newton from the last stage's solution; prints and logs each stage's Delta and the
+    first-order dDelta of the full system at it."""
+    from octo_corrector import delta_digits, load_o, save_o
+    from raw_out import pop_allow, require_raw
+    argv = list(argv)
+    allow = pop_allow(argv)
+    pos, o = opts(argv, dict(steps="5,7,9,11,13", tol="1e-40", it_max="8", halvings="8", threads="2"))
+    path, outdir = pos[0], pos[1]
+    os.makedirs(outdir, exist_ok=True)
+    log = os.path.join(outdir, "release.jsonl")
+    require_raw(log, allow=allow)
+    z8, meta = load_o(path)
+    M, nodes = int(meta["M"]), list(meta["nodes"])
+    K = len(nodes)
+    with mp.workdps(60):
+        D = mp.mpf(meta["D_str"])
+    kw = dict(kt=meta.get("kt", 36), kc=meta["kc"], ks=meta["ks"], threads=int(o["threads"]))
+    s_full = make_solver_s(D, M, nodes, segs=meta["segs"], kfreeze=13, **kw)
+    print(f"release from {os.path.basename(path)}: D {float(D):.6g}, ks {meta['ks']}, kc {meta['kc']}, "
+          f"{sum(len(g) - 1 for g in meta['segs'])} Taylor steps; Delta {delta_digits(z8, 40)}", flush=True)
+    for kf in [int(x) for x in o["steps"].split(",")]:
+        t0 = time.time()
+        held = [k for k in range(kf + 2, 14, 2)]
+        sk = make_solver_s(D, M, nodes, segs=meta["segs"], kfreeze=kf, **kw)
+        s = HeldS(sk, M, K, held_field(z8, M, held)) if held else sk
+        print(f"  kfreeze {kf}: harmonics {held if held else 'none'} held, {kf} and below solved", flush=True)
+        z8n, conv, recs = newton_o_s(s, z8, float(o["tol"]), int(o["it_max"]), int(o["halvings"]), log)
+        Ff = s_full.residual_s(list(z8n))
+        s_full.newton_s(list(z8n))
+        L = s_full.size_s
+        eD = np.zeros(L)
+        eD[-1] = 1.0
+        g = np.asarray(s_full.olu_solve([eD] + [np.zeros(L)] * 7, True)[0])
+        Fv = np.asarray(Ff[0]) + np.asarray(Ff[1])
+        dD1 = float(-(g @ Fv))
+        with mp.workdps(60):
+            moved = mp.mpf(delta_digits(z8n, 40)) - mp.mpf(delta_digits(z8, 40))
+        rec = dict(kfreeze=kf, held=held, converged=bool(conv), steps=len(recs), Delta=delta_digits(z8n, 40),
+                   moved=float(moved), full_F=float(np.abs(Fv).max()), full_dDelta_first_order=dD1,
+                   s=round(time.time() - t0, 1), utc=time.strftime("%Y-%m-%d %H:%M:%S", time.gmtime()))
+        with open(log, "a") as fh:
+            fh.write(json.dumps(rec) + "\n")
+        print(f"  kfreeze {kf}: {'converged' if conv else 'NOT converged'} in {len(recs)} steps, Delta {rec['Delta']} "
+              f"(moved {float(moved):+.3e}); the full system there: max |F| {rec['full_F']:.2e}, first-order dDelta "
+              f"{dD1:+.3e}; {rec['s']} s", flush=True)
+        if not conv:
+            break
+        z8 = z8n
+        save_o(os.path.join(outdir, f"release_k{kf}_D{float(D):.4f}.npz"), z8, dict(meta, kfreeze=kf, held=held))
+    return 0
+
+
 def main():
     cmd = sys.argv[1]
-    return dict(check=cmd_check, cond=cmd_cond, jump=cmd_jump, planted=cmd_planted)[cmd](sys.argv[2:])
+    return dict(check=cmd_check, cond=cmd_cond, jump=cmd_jump, planted=cmd_planted, release=cmd_release)[cmd](sys.argv[2:])
 
 
 if __name__ == "__main__":
