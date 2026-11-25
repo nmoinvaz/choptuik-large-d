@@ -759,7 +759,7 @@ def cmd_jump(argv):
         else:
             s = HeldS(sh, M, K, held_field(z8, M))
             meta.update(held="5-13 at the guess's values", kfreeze=3)
-        print("  p1's harmonics 5-13 held at the guess's values (kfreeze 3 with the held offset)", flush=True)
+        print(f"  p1's harmonics {meta['held']} (kfreeze 3 with the held offset)", flush=True)
     if int(o["ls"]):
         z8, conv, recs = ls_solve(s, z8, int(o["junk"]), int(o["outer"]), int(o["it_max"]), int(o["halvings"]),
                                   float(o["tol_dz"]), log)
