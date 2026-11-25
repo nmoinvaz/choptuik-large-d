@@ -98,6 +98,8 @@ pub struct Ctx<const B: usize> {
     /// The planted change of hp/exact_recip_check.py: k > 0 multiplies the horizon series' 1/k by 1 + 2^-106 at that k
     /// alone (`recip_value`); 0, the default, none
     pub recip_planted: usize,
+    /// folded even-sector d/dtheta (M x M), for form S's slaving of B = 1/a^2 (`form_s`); None until set
+    pub de: Option<DMat<B>>,
 }
 
 /// `Ctx::series_split`: the middle terms of the horizon series' Cauchy sums formed ahead of each jet order, in
@@ -407,7 +409,7 @@ pub(crate) fn mul_recip<T: Lane, const B: usize>(ctx: &Ctx<B>, x: Fl<T, B>, k: u
 /// d/dtau = omega D, its tangents shifted by the growth rate of a mode-matrix evaluation (multishoot's `Rate::shift`:
 /// perturbations ~ exp(lambda tau) gain lambda times themselves; values are unaffected; zero rate: unchanged)
 #[inline(always)]
-fn dtau<T: Lane, const B: usize>(ctx: &Ctx<B>, x: &Fl<T, B>, omega: T, rate: &Rate) -> Fl<T, B> {
+pub(crate) fn dtau<T: Lane, const B: usize>(ctx: &Ctx<B>, x: &Fl<T, B>, omega: T, rate: &Rate) -> Fl<T, B> {
     if T::TAN_F64 && ctx.mutate == 1 {
         return Fl::zero();
     }
@@ -417,7 +419,7 @@ fn dtau<T: Lane, const B: usize>(ctx: &Ctx<B>, x: &Fl<T, B>, omega: T, rate: &Ra
 /// omega = 2 pi / Delta in the lane, from the global Delta (with the f64 lanes' control ctx.mutate 2, scaled by
 /// 1 + 1e-9)
 #[inline(always)]
-fn omega_of<T: Lane, const B: usize>(ctx: &Ctx<B>, delta: T) -> T {
+pub(crate) fn omega_of<T: Lane, const B: usize>(ctx: &Ctx<B>, delta: T) -> T {
     let omega = T::splat(DD::TWO_PI) / delta;
     if T::TAN_F64 && ctx.mutate == 2 {
         omega.mulf(1.0 + 1e-9)
@@ -1226,7 +1228,7 @@ impl HPrep {
 
 /// (omega D + diag kappa) f = r with the LU at the values; for tangents the derivative of the system:
 /// A_t f_d = r_d - omega_d D f_v - kappa_d f_v, with A_t = A + lambda (`HPrep::lus_t`; the same LU at rate zero).
-fn psolve<T: Lane, const B: usize>(ctx: &Ctx<B>, prep: &HPrep, kk: usize, kappa: &Fl<T, B>, rhs: &Fl<T, B>, omega: T) -> Fl<T, B> {
+pub(crate) fn psolve<T: Lane, const B: usize>(ctx: &Ctx<B>, prep: &HPrep, kk: usize, kappa: &Fl<T, B>, rhs: &Fl<T, B>, omega: T) -> Fl<T, B> {
     let lu = &prep.lus[kk];
     let lu_t = if prep.lus_t.is_empty() { lu } else { &prep.lus_t[kk] };
     if T::NJ > 0 && T::VAL_OD {

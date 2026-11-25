@@ -43,3 +43,10 @@ strip = false
 inherits = "release"
 lto = "thin"
 codegen-units = 16
+
+# Mac working builds of form S (#1088): opt-level 1, no debug info; faster to compile, slower to run than release-dev.
+[profile.dev-o1]
+inherits = "dev"
+opt-level = 1
+debug = false
+incremental = true

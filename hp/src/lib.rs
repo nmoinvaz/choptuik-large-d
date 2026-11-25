@@ -22,6 +22,7 @@
 //! equations.
 pub mod fastmul;
 pub mod field;
+pub mod form_s;
 pub mod jac_sub;
 pub mod lane;
 pub mod model;

@@ -110,6 +110,45 @@ trait Api: Send + Sync {
     /// jac_sub::residual_sub_in in the precision of z's part count (2 Double, 4 Quad, 8 Octo): F[rows] as z's number
     /// of part arrays; mutate: Ctx::mutate for this call
     fn residual_sub(&mut self, z: &[&[f64]], rows: &[usize], mutate: u8) -> Result<Vec<Vec<f64>>, String>;
+    /// form S (form_s.rs): the folded even-sector d/dtheta of B's slaving, row-major (M, M) hi / lo
+    fn set_dmat_even(&mut self, hi: &[f64], lo: &[f64]);
+    /// form S's length 3M(K + 1) + 1
+    fn len_s(&self) -> usize;
+    /// form S's residual in the precision of z's part count (2 Double, 4 Quad, 8 Octo), as that many part arrays
+    fn residual_s(&mut self, z: &[&[f64]], mutate: u8) -> Result<Vec<Vec<f64>>, String>;
+    /// form S's exact Jacobian in z's precision: its part arrays, column-major with leading dimension ld, and ld;
+    /// tangents: the octo-double columns per evaluation (1 or 2)
+    fn jacobian_s(&mut self, z: &[&[f64]], mutate: u8, tangents: usize) -> Result<(Vec<Vec<f64>>, usize), String>;
+    /// form S's Newton step in z's precision: dz's parts, F's parts, the LU's pivot range, and the LU when z has eight
+    /// parts (for olu_solve)
+    #[allow(clippy::type_complexity)]
+    fn newton_s(&mut self, z: &[&[f64]], mutate: u8, tangents: usize) -> Result<(Vec<Vec<f64>>, Vec<Vec<f64>>, (f64, f64), Option<ODLu>), String>;
+}
+
+/// f on the context as Ctx<4> (M = 32), with Ctx::mutate set for the call: form S is instantiated for this size only
+macro_rules! fs_sizes {
+    ($me:expr, $mutate:expr, |$c:ident| $body:expr) => {{
+        let me: &mut dyn std::any::Any = $me;
+        if let Some($c) = me.downcast_mut::<Ctx<4>>() {
+            $c.mutate = $mutate;
+            let r = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| $body));
+            $c.mutate = 0;
+            r.unwrap_or_else(|p| std::panic::resume_unwind(p))
+        } else {
+            Err("form S is built for M = 32 only".to_string())
+        }
+    }};
+}
+
+/// a residual's scalars as part arrays (two, four or eight)
+fn dd_part_vecs(f: &[DD]) -> Vec<Vec<f64>> {
+    vec![f.iter().map(|v| v.hi).collect(), f.iter().map(|v| v.lo).collect()]
+}
+fn qd_part_vecs(f: &[QD]) -> Vec<Vec<f64>> {
+    (0..4).map(|q| f.iter().map(|x| x.x[q]).collect()).collect()
+}
+fn od_part_vecs(f: &[OD]) -> Vec<Vec<f64>> {
+    (0..8).map(|q| f.iter().map(|x| x.x[q]).collect()).collect()
 }
 
 /// series_o's control of the series moved by its tangents (Ctx::mutate): multishoot's `Control::JetTangentKeep`, the
@@ -514,6 +553,42 @@ impl<const B: usize> Api for Ctx<B> {
             n => Err(format!("residual_sub: z must be 2, 4 or 8 part arrays, not {n}")),
         }
     }
+    fn set_dmat_even(&mut self, hi: &[f64], lo: &[f64]) {
+        self.de = Some(DMat::<B>::from_rows(hi, lo));
+    }
+    fn len_s(&self) -> usize {
+        Ctx::<B>::len_s(self)
+    }
+    fn residual_s(&mut self, z: &[&[f64]], mutate: u8) -> Result<Vec<Vec<f64>>, String> {
+        use crate::form_s::residual_s_in;
+        fs_sizes!(self, mutate, |c| match z.len() {
+            2 => residual_s_in::<Double, 4>(c, z, true).map(|f| dd_part_vecs(&f)),
+            4 => residual_s_in::<Quad, 4>(c, z, true).map(|f| qd_part_vecs(&f)),
+            8 => residual_s_in::<Octo, 4>(c, z, true).map(|f| od_part_vecs(&f)),
+            n => Err(format!("residual_s: z must be 2, 4 or 8 part arrays, not {n}")),
+        })
+    }
+    fn jacobian_s(&mut self, z: &[&[f64]], mutate: u8, tangents: usize) -> Result<(Vec<Vec<f64>>, usize), String> {
+        use crate::form_s::{jacobian_s_in, jacobian_s_o};
+        fs_sizes!(self, mutate, |c| match z.len() {
+            2 => jacobian_s_in::<Double, 4>(c, z, true),
+            4 => jacobian_s_in::<Quad, 4>(c, z, true),
+            8 => jacobian_s_o::<4>(c, z, true, tangents),
+            n => Err(format!("jacobian_s: z must be 2, 4 or 8 part arrays, not {n}")),
+        })
+    }
+    fn newton_s(&mut self, z: &[&[f64]], mutate: u8, tangents: usize) -> Result<(Vec<Vec<f64>>, Vec<Vec<f64>>, (f64, f64), Option<ODLu>), String> {
+        use crate::form_s::{newton_s_in, newton_s_o};
+        fs_sizes!(self, mutate, |c| match z.len() {
+            2 => newton_s_in::<Double, 4>(c, z, true).map(|st| (st.dz, dd_part_vecs(&st.f), st.lu.pivot_range(), None)),
+            4 => newton_s_in::<Quad, 4>(c, z, true).map(|st| (st.dz, qd_part_vecs(&st.f), st.lu.pivot_range(), None)),
+            8 => newton_s_o::<4>(c, z, true, tangents).map(|st| {
+                let pr = st.lu.pivot_range();
+                (st.dz, od_part_vecs(&st.f), pr, Some(st.lu))
+            }),
+            n => Err(format!("newton_s: z must be 2, 4 or 8 part arrays, not {n}")),
+        })
+    }
 }
 
 impl<const B: usize> Ctx<B> {
@@ -723,6 +798,7 @@ macro_rules! make_ctx {
                 series_split: 0,
                 exact_recip: 0,
                 recip_planted: 0,
+                de: None,
             }) as Box<dyn Api>, )*
             _ => return Err(PyValueError::new_err("M must be one of 8, 16, 32, 40, 48, 64, 80, 96, 128, 160, 192, 256, 320, 384, 512")),
         }
@@ -1438,6 +1514,82 @@ impl Solver {
         let (api, pool) = (&mut self.api, &self.pool);
         let out = py.detach(|| pool.install(|| api.series_o(z0, n, &mut solve, mutate, split, tangent_from))).map_err(PyValueError::new_err)?;
         Ok(out.into_iter().map(|z| arr8(py, z)).collect())
+    }
+
+    /// Form S (hp/src/form_s.rs): sets the folded even-sector d/dtheta (M x M, row-major hi / lo; driver.dmat_even)
+    /// that the slaving of B = 1/a^2 uses. M = 32 only for form S's entry points.
+    fn set_dmat_even(&mut self, dmat_hi: PyReadonlyArray2<f64>, dmat_lo: PyReadonlyArray2<f64>) -> PyResult<()> {
+        let m = self.api.m();
+        let dh = dmat_hi.as_slice().map_err(|_| PyValueError::new_err("dmat_hi must be C-contiguous"))?;
+        let dl = dmat_lo.as_slice().map_err(|_| PyValueError::new_err("dmat_lo must be C-contiguous"))?;
+        if dh.len() != m * m || dl.len() != m * m {
+            return Err(PyValueError::new_err("dmat must be (M, M)"));
+        }
+        self.api.set_dmat_even(dh, dl);
+        self.olu = None;
+        Ok(())
+    }
+
+    /// form S's length 3M(K + 1) + 1: p1, c0 | node i: p, m, c | m_h | Delta
+    #[getter]
+    fn size_s(&self) -> usize {
+        self.api.len_s()
+    }
+
+    /// form S's residual at z (2, 4 or 8 part arrays of length size_s: double-, quad- or octo-double), as that many
+    /// part arrays
+    #[pyo3(signature = (z, mutate=0))]
+    fn residual_s<'py>(&mut self, py: Python<'py>, z: Vec<PyReadonlyArray1<'py, f64>>, mutate: u8) -> PyResult<Vec<A1<'py>>> {
+        let n = self.api.len_s();
+        let zs: Vec<&[f64]> = z.iter().map(|a| slice(a, "z")).collect::<PyResult<_>>()?;
+        if zs.iter().any(|p| p.len() != n) {
+            return Err(PyValueError::new_err(format!("each part must have length {n}")));
+        }
+        let (api, pool) = (&mut self.api, &self.pool);
+        let f = py.detach(|| pool.install(|| api.residual_s(&zs, mutate))).map_err(PyValueError::new_err)?;
+        Ok(f.into_iter().map(|v| arr(py, v)).collect())
+    }
+
+    /// form S's exact Jacobian at z (2, 4 or 8 part arrays), as that many (L, L) arrays; tangents: the octo-double
+    /// columns per evaluation, 1 or 2 (the solver's set_octo_tangents, capped at 2, when not given)
+    #[pyo3(signature = (z, mutate=0, tangents=None))]
+    fn jacobian_s<'py>(&mut self, py: Python<'py>, z: Vec<PyReadonlyArray1<'py, f64>>, mutate: u8, tangents: Option<usize>) -> PyResult<Vec<Bound<'py, PyArray2<f64>>>> {
+        let tangents = tangents.unwrap_or(self.octo_tangents.min(2));
+        let n = self.api.len_s();
+        let zs: Vec<&[f64]> = z.iter().map(|a| slice(a, "z")).collect::<PyResult<_>>()?;
+        if zs.iter().any(|p| p.len() != n) {
+            return Err(PyValueError::new_err(format!("each part must have length {n}")));
+        }
+        let (api, pool) = (&mut self.api, &self.pool);
+        let (c, ld) = py.detach(|| pool.install(|| api.jacobian_s(&zs, mutate, tangents))).map_err(PyValueError::new_err)?;
+        Ok(c.iter().map(|p| Array2::from_shape_fn((n, n), |(i, j)| p[j * ld + i]).into_pyarray(py)).collect())
+    }
+
+    /// One Newton step of form S at z (2, 4 or 8 part arrays): (dz's parts, F's parts, min |u_kk|, max |u_kk|). With
+    /// eight parts the octo-double LU is kept for olu_solve (in form S's length).
+    #[pyo3(signature = (z, mutate=0, tangents=None))]
+    #[allow(clippy::type_complexity)]
+    fn newton_s<'py>(
+        &mut self,
+        py: Python<'py>,
+        z: Vec<PyReadonlyArray1<'py, f64>>,
+        mutate: u8,
+        tangents: Option<usize>,
+    ) -> PyResult<(Vec<A1<'py>>, Vec<A1<'py>>, f64, f64)> {
+        let tangents = tangents.unwrap_or(self.octo_tangents.min(2));
+        let n = self.api.len_s();
+        let zs: Vec<&[f64]> = z.iter().map(|a| slice(a, "z")).collect::<PyResult<_>>()?;
+        if zs.iter().any(|p| p.len() != n) {
+            return Err(PyValueError::new_err(format!("each part must have length {n}")));
+        }
+        let (api, pool) = (&mut self.api, &self.pool);
+        let (dz, f, (pmin, pmax), lu) = py.detach(|| pool.install(|| api.newton_s(&zs, mutate, tangents))).map_err(PyValueError::new_err)?;
+        if let Some(lu) = lu {
+            let bits: Vec<u64> = zs.iter().flat_map(|p| p.iter().map(|x| x.to_bits())).collect();
+            let fo: O8 = std::array::from_fn(|q| f[q].clone());
+            self.olu = Some(OctoLast { lu, z: bits, mutate, tangents, f: fo, jac: None });
+        }
+        Ok((dz.into_iter().map(|v| arr(py, v)).collect(), f.into_iter().map(|v| arr(py, v)).collect(), pmin, pmax))
     }
 
     /// x with J x = b (J^T x = b with transpose) by the octo-double LU of the last newton_o; b a sequence of eight part
