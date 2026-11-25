@@ -719,9 +719,88 @@ def cmd_release(argv):
     return 0
 
 
+def cmd_release_ls(argv):
+    """Release p1's harmonic k by an outer Newton on its two coefficients over inner held solves (a Lyapunov-Schmidt
+    split in explicit coordinates): the target system has harmonics up to k free and k+2..13 held; the inner one holds k
+    too. Each outer step takes the target system's Newton step at the current state, reads its harmonic-k part (a_k,
+    b_k), moves the inner system's held value of harmonic k by it (halved while the target residual does not fall),
+    solves the inner system again from the current state (well conditioned), and repeats. Stops when the harmonic-k part
+    of the step is below --tol_h or the target residual is at most --tol."""
+    from octo_corrector import delta_digits, load_o, save_o
+    from pinning import band_coeffs, band_field
+    from raw_out import pop_allow, require_raw
+    argv = list(argv)
+    allow = pop_allow(argv)
+    pos, o = opts(argv, dict(harm="5", outer="6", tol="1e-40", tol_h="1e-38", it_in="6", halvings="6", threads="2",
+                             tries="6"))
+    path, outdir = pos[0], pos[1]
+    os.makedirs(outdir, exist_ok=True)
+    log = os.path.join(outdir, "release_ls.jsonl")
+    require_raw(log, allow=allow)
+    z8, meta = load_o(path)
+    M, nodes = int(meta["M"]), list(meta["nodes"])
+    K = len(nodes)
+    with mp.workdps(60):
+        D = mp.mpf(meta["D_str"])
+    kw = dict(kt=meta.get("kt", 36), kc=meta["kc"], ks=meta["ks"], threads=int(o["threads"]), segs=meta["segs"])
+    print(f"release_ls from {os.path.basename(path)}: D {float(D):.6g}, Delta {delta_digits(z8, 40)}", flush=True)
+    for k in [int(x) for x in o["harm"].split(",")]:
+        held_in = list(range(k, 14, 2))
+        held_tg = list(range(k + 2, 14, 2))
+        s_in0 = make_solver_s(D, M, nodes, kfreeze=k - 2, **kw)
+        s_tg0 = make_solver_s(D, M, nodes, kfreeze=k, **kw)
+        co = band_coeffs(np.asarray(z8[0])[:M], np.asarray(z8[1])[:M], M, held_in, exact=True,
+                         rest=[np.asarray(p)[:M] for p in z8[2:]])
+        s_tg = HeldS(s_tg0, M, K, band_field(co[1:], held_tg, M, parts=8)) if held_tg else s_tg0
+        for outer in range(int(o["outer"])):
+            t0 = time.time()
+            F = s_tg.residual_s(list(z8))
+            nr = float(np.abs(np.asarray(F[0]) + np.asarray(F[1])).max())
+            d, _, pmin, pmax = s_tg.newton_s(list(z8))
+            dk = band_coeffs(np.asarray(d[0])[:M], np.asarray(d[1])[:M], M, [k], exact=True,
+                             rest=[np.asarray(p)[:M] for p in d[2:]])[0]
+            ndk = float(max(abs(dk[0]), abs(dk[1])))
+            rec = dict(harm=k, outer=outer, F=nr, dh=ndk, dDelta_full=float(np.asarray(d[0])[-1]), pmin=pmin, pmax=pmax)
+            if ndk < float(o["tol_h"]) or nr <= float(o["tol"]):
+                rec.update(done=True)
+                with open(log, "a") as fh:
+                    fh.write(json.dumps(rec) + "\n")
+                print(f"  h{k} outer {outer}: target |F| {nr:.2e}, harmonic-{k} step {ndk:.2e}: released", flush=True)
+                break
+            lam, acc, trials = 1.0, False, []
+            for _ in range(int(o["tries"])):
+                with mp.workdps(60):
+                    co_t = [(co[0][0] + lam * dk[0], co[0][1] + lam * dk[1])] + list(co[1:])
+                s_in = HeldS(s_in0, M, K, band_field(co_t, held_in, M, parts=8))
+                zt, conv, recs = newton_o_s(s_in, z8, float(o["tol"]), int(o["it_in"]), int(o["halvings"]), None,
+                                            verbose=False)
+                Ft = s_tg.residual_s(list(zt))
+                nt = float(np.abs(np.asarray(Ft[0]) + np.asarray(Ft[1])).max())
+                trials.append(dict(lam=lam, inner_conv=bool(conv), inner_steps=len(recs), F=nt))
+                if conv and nt < nr:
+                    acc = True
+                    break
+                lam *= 0.5
+            if acc:
+                z8, co = zt, co_t
+            rec.update(trials=trials, accepted=acc, lam=lam if acc else 0.0, F_new=nt if acc else nr,
+                       Delta=delta_digits(z8, 40), s=round(time.time() - t0, 1),
+                       utc=time.strftime("%Y-%m-%d %H:%M:%S", time.gmtime()))
+            with open(log, "a") as fh:
+                fh.write(json.dumps(rec) + "\n")
+            print(f"  h{k} outer {outer}: target |F| {nr:.2e} -> {rec['F_new']:.2e}, harmonic-{k} step {ndk:.2e} "
+                  f"(full step's dDelta {rec['dDelta_full']:+.2e}), lam {rec['lam']:g}, Delta {rec['Delta']} ({rec['s']} s)",
+                  flush=True)
+            if not acc:
+                break
+        save_o(os.path.join(outdir, f"release_ls_h{k}_D{float(D):.4f}.npz"), z8, dict(meta, kfreeze=k, held=held_tg))
+    return 0
+
+
 def main():
     cmd = sys.argv[1]
-    return dict(check=cmd_check, cond=cmd_cond, jump=cmd_jump, planted=cmd_planted, release=cmd_release)[cmd](sys.argv[2:])
+    return dict(check=cmd_check, cond=cmd_cond, jump=cmd_jump, planted=cmd_planted, release=cmd_release,
+                release_ls=cmd_release_ls)[cmd](sys.argv[2:])
 
 
 if __name__ == "__main__":
