@@ -216,90 +216,127 @@ class S01a_Wave(Film):
     stage = r"1 \quad A wave falls inward"
 
     def construct(self):
-        O = [-2.3, 0.45, 0.0]
-        centre = Dot(O, color=WHITE, radius=0.07)
-        cl = Tex("the centre", font_size=26, color=GREY_).next_to(centre, DOWN, buff=0.15)
-        guides = VGroup(*[Circle(radius=r, color=GREY_, stroke_width=1, stroke_opacity=0.25).move_to(O) for r in (0.9, 1.8, 2.7)])
-        view = Tex("space, seen from above (a sketch)", font_size=22, color=GREY_).to_corner(UR, buff=0.35)
-        R = ValueTracker(2.7)
+        O, R0, base, H, q = [-2.4, 1.55, 0.0], 1.45, -1.25, 0.5, 0.5       # the view from above, and the side view under it
+        g = lambda v: math.exp(-0.5 * v * v)
+        xs = [-1.8 + 3.6 * k / 360 for k in range(361)]
 
-        def make_ring():
-            return always_redraw(lambda: VGroup(
-                Circle(radius=max(R.get_value(), 0.02), color=BLUE_, stroke_width=14, stroke_opacity=0.25).move_to(O),
-                Circle(radius=max(R.get_value(), 0.02), color=BLUE_, stroke_width=5).move_to(O)))
+        def ring(r, col, op):
+            return Circle(radius=max(r, 0.02), color=col, stroke_width=5, stroke_opacity=op).move_to(O)
 
-        def case(text, col):
-            return Tex(text, font_size=34, color=col).move_to([3.9, 2.0, 0])
+        def humps(r, col, w, h, op):
+            """the wave's height along a line through the centre: the ring cut twice, at -r and +r"""
+            P = [[O[0] + x, base + h * (g((x - r) / w) + g((x + r) / w)), 0] for x in xs]
+            return VMobject(color=col, stroke_width=4, stroke_opacity=op).set_points_as_corners(P)
 
-        self.play(FadeIn(centre), FadeIn(cl), FadeIn(guides), FadeIn(view), run_time=0.8)
-        ring = make_ring()
-        self.play(FadeIn(ring), run_time=0.6)
-        self.say(r"Start with the physics. A ball-shaped wave of energy falls inward on its own centre, from every side at once.", hold=0.3)
-        self.play(R.animate.set_value(1.7), run_time=2.0, rate_func=linear)
-        self.wait(1.6)
+        def links(sh):
+            """thin lines from the ring's two edges down to the two humps"""
+            if not sh or sh[0][1] == GREY_ or not 0.1 < sh[0][0] < 1.75:
+                return VGroup()
+            return VGroup(*[DashedLine([O[0] + sg * sh[0][0], O[1], 0], [O[0] + sg * sh[0][0], base, 0], color=GREY_, stroke_width=1.5,
+                                       stroke_opacity=0.6, dash_length=0.06) for sg in (-1, 1)])
+
+        state = {"f": lambda: []}                       # the shells now: (radius, colour, width, height, opacity), the main one first
+        top = always_redraw(lambda: VGroup(*[ring(r, c, op) for r, c, w, h, op in reversed(state["f"]())]))
+        side = always_redraw(lambda: VGroup(*[humps(r, c, w, h, op) for r, c, w, h, op in reversed(state["f"]())]))
+        lk = always_redraw(lambda: links(state["f"]()))
+        centre = Dot(O, color=WHITE, radius=0.06)
+        guides = VGroup(*[Circle(radius=r, color=GREY_, stroke_width=1, stroke_opacity=0.25).move_to(O) for r in (0.5, 1.0, 1.45)])
+        axis = Line([O[0] - 1.8, base, 0], [O[0] + 1.8, base, 0], color=GREY_, stroke_width=1.5)
+        mid = DashedLine([O[0], O[1], 0], [O[0], base - 0.08, 0], color=WHITE, stroke_width=1, stroke_opacity=0.35, dash_length=0.05)
+        cl = Tex("the centre", font_size=22, color=GREY_).next_to([O[0], base, 0], DOWN, buff=0.12)
+        va = Tex(r"space, seen\\from above", font_size=22, color=GREY_).move_to([-5.75, O[1], 0])
+        vs = Tex(r"the same wave\\from the side:\\its height on a line\\through the centre", font_size=22, color=GREY_).move_to([-5.75, base + 0.45, 0])
+        sk = Tex("(a sketch)", font_size=18, color=GREY_).next_to(va, DOWN, buff=0.1)
+        case = lambda text, col: Tex(text, font_size=34, color=col).move_to([3.5, 2.5, 0])
+        legend = VGroup(Tex("falling in", font_size=24, color=BLUE_), Tex("heading out", font_size=24, color=GOLD_),
+                        Tex("escaping", font_size=24, color=GREY_)).arrange(DOWN, buff=0.12, aligned_edge=LEFT).move_to([3.5, 1.45, 0])
+        u = ValueTracker(0.0)
+
+        def weak():
+            v = u.get_value()
+            if v < 0.45:
+                return [(R0 * (1 - v / 0.45), BLUE_, 0.2, H, 1.0)]
+            r = 2.1 * (v - 0.45) / 0.55
+            return [(r, GOLD_, 0.2, H, max(0.0, min(1.0, (2.0 - r) / 0.5)))]
+
+        def strong():
+            r = R0 - (R0 - 0.3) * u.get_value()
+            return [(r, BLUE_, 0.2, H * (1 + 0.6 * u.get_value()), 1.0)]
+
+        self.play(FadeIn(VGroup(centre, guides, va, sk)), run_time=0.8)
+        state["f"] = weak
+        self.add(top)
+        self.say(r"Start with the physics. A ball-shaped wave of energy falls inward on its own centre, from every side at once. Here it is seen from above.", hold=0.3)
+        self.play(u.animate.set_value(0.1), run_time=1.4, rate_func=linear)
+        self.play(Create(axis), Create(mid), FadeIn(cl), FadeIn(vs), run_time=0.8)
+        self.add(side, lk)
+        self.say(r"Below it, the same wave seen from the side: its height along a line through the centre. The ring is cut twice, so it shows as two humps, one on each side, closing in.", hold=0.3)
+        self.play(u.animate.set_value(0.2), run_time=1.6, rate_func=linear)
         # weak: through the centre and out again
         lab = case("a weak wave", GREEN_)
-        self.play(FadeIn(lab), run_time=0.4)
+        self.play(FadeIn(lab), FadeIn(legend[0]), FadeIn(legend[1]), run_time=0.4)
         self.say(r"A weak wave passes through the centre and flies back out. Nothing is left behind.", hold=0.2)
-        self.play(R.animate.set_value(0.03), run_time=1.8, rate_func=linear)
-        self.play(R.animate.set_value(3.2), run_time=2.2, rate_func=linear)
-        ring.clear_updaters()
-        self.play(FadeOut(ring), FadeOut(lab), run_time=0.6)
+        self.play(u.animate.set_value(1.0), run_time=5.0, rate_func=linear)
+        self.play(FadeOut(lab), run_time=0.4)
         # strong: a black hole
-        R.set_value(2.7)
-        ring, lab = make_ring(), case("a strong wave", RED_)
-        self.play(FadeIn(ring), FadeIn(lab), run_time=0.5)
+        u.set_value(0.0)
+        state["f"] = strong
+        lab = case("a strong wave", RED_)
+        self.play(FadeIn(lab), run_time=0.5)
         self.say(r"A strong wave is trapped by its own gravity. It leaves a black hole at the centre.", hold=0.2)
-        self.play(R.animate.set_value(0.55), run_time=2.0, rate_func=linear)
-        hole = Circle(radius=0.55, color=GOLD_, stroke_width=3, fill_color=BLACK, fill_opacity=1.0).move_to(O)
-        ring.clear_updaters()
-        self.play(GrowFromCenter(hole), FadeOut(ring), FadeOut(cl), run_time=0.8)
+        self.play(u.animate.set_value(1.0), run_time=2.6, rate_func=linear)
+        hole = Circle(radius=0.3, color=GOLD_, stroke_width=3, fill_color=BLACK, fill_opacity=1.0).move_to(O)
+        pit = Rectangle(width=0.6, height=1.15, color=GOLD_, stroke_width=3, fill_color=BLACK, fill_opacity=1.0).move_to([O[0], base + 0.575, 0])
+        hl = Tex("a black hole", font_size=22, color=GOLD_).next_to(pit, RIGHT, buff=0.15)
+        state["f"] = lambda: []
+        self.play(GrowFromCenter(hole), GrowFromCenter(pit), FadeIn(hl), run_time=0.8)
         self.wait(2.0)
-        self.play(FadeOut(hole), FadeOut(lab), FadeIn(cl), run_time=0.6)
+        self.play(FadeOut(VGroup(hole, pit, hl, lab)), run_time=0.6)
         # tuned between: in, through the centre, part escapes, the rest falls back in, smaller each round
+        r_k = [R0 * q ** k for k in range(9)]
+        T_k = [0.0]
+        for k in range(8):
+            T_k.append(T_k[-1] + 1.5 * r_k[k])            # a round: fall to the centre, then out to the next round's start
+        tt = ValueTracker(0.0)
+
+        def tuned():
+            t, out = tt.get_value(), []
+            k = max(i for i in range(9) if T_k[i] <= t)
+            if k < 8:
+                sdt, w = t - T_k[k], max(0.2 * q ** k, 0.03)
+                out.append((r_k[k] - sdt, BLUE_, w, H, 1.0) if sdt < r_k[k] else (sdt - r_k[k], GOLD_, w, H, 1.0))
+            for j in range(8):                             # the part that escaped at the end of round j
+                r = r_k[j + 1] + (t - T_k[j + 1])
+                if t >= T_k[j + 1] and r < 1.9:
+                    out.append((r, GREY_, max(0.2 * q ** j, 0.03), 0.5 * H, max(0.0, 1.0 - (r - r_k[j + 1]) / 1.3)))
+            return out
+
+        state["f"] = tuned
         lab = case("tuned exactly between", GOLD_)
-        legend = VGroup(Tex("falling in", font_size=24, color=BLUE_), Tex("heading out", font_size=24, color=GOLD_),
-                        Tex("escaping", font_size=24, color=GREY_)).arrange(DOWN, buff=0.12, aligned_edge=LEFT).move_to([3.9, 0.9, 0])
-        self.play(FadeIn(lab), run_time=0.4)
-        self.say(r"Tune the strength exactly between the two, and the wave does neither.", hold=1.2)
-        self.play(FadeIn(legend), run_time=0.4)
-        q, r_in = 0.5, 2.4
-        inn = Circle(radius=r_in, color=BLUE_, stroke_width=5).move_to(O)
-        self.play(FadeIn(inn), run_time=0.4)
-        for k in range(6):
-            d = max(1.5 * q ** k, 0.14)
-            if k == 0:
-                self.say(r"It falls in, passes through the centre, and heads back out. Part of it escapes for good.", hold=0.2)
-            if k == 1:
-                self.say(r"The rest is pulled back by its own gravity and falls in again, smaller and faster. And again. And again.", hold=0.2)
-            self.play(inn.animate.scale(0.03 / r_in, about_point=O), run_time=d, rate_func=linear)
-            out = Circle(radius=0.03, color=GOLD_, stroke_width=5).move_to(O)
-            self.remove(inn)
-            self.add(out)
-            self.play(out.animate.scale(0.5 * r_in / 0.03, about_point=O), run_time=0.6 * d, rate_func=linear)
-            gone = Circle(radius=0.5 * r_in, color=GREY_, stroke_width=4).move_to(O)
-            self.add(gone)
-            r_in *= q
-            inn = Circle(radius=r_in, color=BLUE_, stroke_width=5).move_to(O)
-            self.remove(out)
-            self.add(inn)
-            self.play(gone.animate.scale(3.0 / (r_in / q * 0.5), about_point=O).set_stroke(opacity=0.0), run_time=max(0.7 * d, 0.2), rate_func=linear)
-            self.remove(gone)
-        self.remove(inn)
-        ring = VGroup()
+        self.play(FadeIn(lab), FadeIn(legend[2]), run_time=0.4)
+        self.say(r"Tune the strength exactly between the two, and the wave does neither.")
+        self.say(r"It falls in, passes through the centre, and heads back out. Part of it escapes for good.", hold=0.2)
+        self.play(tt.animate.set_value(T_k[1]), run_time=4.5, rate_func=linear)
+        self.say(r"The rest is pulled back by its own gravity and falls in again, smaller and faster. And again. And again.", hold=0.2)
+        self.play(tt.animate.set_value(T_k[-1] + 0.6), run_time=6.0, rate_func=linear)
+        self.say(r"Look at the side view as it plays again: each round, the humps come back just as tall, only narrower. Every round is a copy of the one before, shrunk.", hold=0.3)
+        tt.set_value(0.0)
+        self.play(tt.animate.set_value(T_k[-1] + 0.6), run_time=9.0, rate_func=linear)
+        state["f"] = lambda: []
         star = Dot(O, color=RED_, radius=0.1)
-        self.play(FadeOut(ring), FadeOut(centre), FadeIn(star, scale=3), Flash(star, color=RED_, flash_radius=0.5), run_time=0.8)
-        sl = Tex("the collapse", font_size=28, color=RED_).next_to(star, UP, buff=0.15)
-        self.play(FadeIn(sl), FadeOut(cl), run_time=0.4)
+        spot = Dot([O[0], base, 0], color=RED_, radius=0.1)
+        self.play(FadeOut(centre), FadeIn(star, scale=3), FadeIn(spot, scale=3), Flash(star, color=RED_, flash_radius=0.5), run_time=0.8)
+        sl = Tex("the collapse", font_size=26, color=RED_).next_to(star, UP, buff=0.15)
+        self.play(FadeIn(sl), run_time=0.4)
         self.say(r"That repeating is the echoing. The rounds pile up at the centre at one single instant. That instant, at that point, is the collapse.")
         words = VGroup(Tex(r"the centre: the middle point\\the wave falls toward", font_size=28, tex_environment="flushleft"),
                        Tex(r"the collapse: the instant the\\echoes pile up there", font_size=28, color=RED_, tex_environment="flushleft"))
-        words.arrange(DOWN, buff=0.4, aligned_edge=LEFT).move_to([3.9, -1.0, 0])
+        words.arrange(DOWN, buff=0.4, aligned_edge=LEFT).move_to([3.5, -0.1, 0])
         self.play(FadeIn(words, shift=0.2 * UP), run_time=0.6)
-        fn = self.foot("M. W. Choptuik, Phys. Rev. Lett. 70, 9 (1993)", at=[3.9, -2.2, 0])
+        fn = self.foot("M. W. Choptuik, Phys. Rev. Lett. 70, 9 (1993)", at=[3.5, -1.55, 0])
         self.play(FadeIn(fn), run_time=0.3)
         self.say(r"Choptuik found this in 1993, and that every echo is the last one shrunk by the same factor. The whole film is about that factor.")
-        self.play(FadeOut(VGroup(guides, view, star, sl, lab, legend, words, fn, self.cap)), run_time=0.7)
+        self.play(FadeOut(VGroup(guides, axis, mid, cl, va, vs, sk, star, spot, sl, lab, legend, words, fn, self.cap)), run_time=0.7)
 
 
 class S01b_Echo(Film):
