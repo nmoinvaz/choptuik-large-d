@@ -47,6 +47,14 @@ pub const FS_MUT_FLUX: u8 = 51;
 /// z = (1 - t)/(1 - a t), the sign of the denominator's a flipped while h and e keep the right one
 pub const FS_MUT_MOBIUS: u8 = 52;
 
+/// `Ctx::mutate`, the control of the Moebius series' products with z (`horizon_mob`): the two-term recurrence's
+/// coefficient a t_l multiplied by 1 + 2^-60
+pub const FS_MUT_ZREC: u8 = 53;
+
+/// `Ctx::mutate`: the Moebius series' products with z as full Cauchy sums with z's coefficients, O(ks^2) (the reference
+/// the two-term recurrence is checked against), instead of the recurrence
+pub const FS_ZCAUCHY: u8 = 54;
+
 /// refinement steps of a slaving solve: as model's QD_REFINE (2) and OD_REFINE (4), one more on a tangent lane
 const QD_REFINE_S: usize = 2;
 const OD_REFINE_S: usize = 4;
@@ -469,8 +477,20 @@ pub fn horizon_mob<T: Lane, const B: usize>(ctx: &Ctx<B>, de: &DMat<B>, prep: &S
     let ee = [ia1, (ia1 * ts).mul_f(-2.0), ia1 * ts * ts];
     let ks = ctx.ks;
     let len = ks + 3;
-    // z(tau): 1, -(1 + a) t_l, then times -a t_l per order (FS_MUT_MOBIUS: a's sign flipped here only)
+    // z(tau): 1, -(1 + a) t_l, then times -a t_l per order (FS_MUT_MOBIUS: a's sign flipped here only). A product zW
+    // comes from (1 + a t_l tau) zW = (1 - t_l tau) W, zW_k = W_k - t_l W_(k-1) - a t_l zW_(k-1) (t2v's, #1090): O(1)
+    // per order where the Cauchy sum with z's coefficients (FS_ZCAUCHY) is O(k)
     let am = if ctx.mutate == FS_MUT_MOBIUS { -ap } else { ap };
+    let zcauchy = ctx.mutate == FS_ZCAUCHY;
+    let rz = if ctx.mutate == FS_MUT_ZREC { (am * ts) * (one_p + T::P::from_f64(2f64.powi(-60))) } else { am * ts };
+    // the order-k coefficient of z W from W_k, W_(k-1) and z W's order k - 1
+    let zrec = |w: &Vec<Fl<T, B>>, zw: &Vec<Fl<T, B>>, k: usize| -> Fl<T, B> {
+        if k == 0 {
+            w[0]
+        } else {
+            (w[k] - w[k - 1].mulp(ts)) - zw[k - 1].mulp(rz)
+        }
+    };
     let mut zs = vec![one_p; len];
     if len > 1 {
         zs[1] = -((one_p + am) * ts);
@@ -494,6 +514,9 @@ pub fn horizon_mob<T: Lane, const B: usize>(ctx: &Ctx<B>, de: &DMat<B>, prep: &S
     let mut uvc = vec![z; len];
     let mut hcm = vec![z; len];
     let mut hce = vec![z; len];
+    // z VV and z V, each order's final value (after P_k)
+    let mut zvvc = vec![z; len];
+    let mut zv = vec![z; len];
     cc[0] = one;
     qn[0] = m0.mulf(2.0);
     let mut kap = z;
@@ -507,7 +530,8 @@ pub fn horizon_mob<T: Lane, const B: usize>(ctx: &Ctx<B>, de: &DMat<B>, prep: &S
         vv[k] = -uu[k];
         vvc[k] = cs(&vv, &vv, k);
         uvc[k] = cs(&uu, &vv, k);
-        q[k] = (cs(&uu, &uu, k) + cvs(&zs, &vvc, k)).mul_pwr2(0.5) - cs(&cc, &uvc, k);
+        let zvv = if zcauchy { cvs(&zs, &vvc, k) } else { zrec(&vvc, &zvvc, k) };
+        q[k] = (cs(&uu, &uu, k) + zvv).mul_pwr2(0.5) - cs(&cc, &uvc, k);
         if k == 0 {
             kap = (-q[0]).addp(-n1);
             xx[0] = ssolve(de, lu_h, &kap, &q[0], omega);
@@ -539,7 +563,7 @@ pub fn horizon_mob<T: Lane, const B: usize>(ctx: &Ctx<B>, de: &DMat<B>, prep: &S
         } else {
             z
         };
-        let zvk = cvs(&zs, &vv, k);
+        let zvk = if zcauchy { cvs(&zs, &vv, k) } else { zrec(&vv, &zv, k) };
         let r = ((((deriv + crate::model::dtau(ctx, &(uu[k] + zvk), omega, &rate)) - cs(&gg, &uu, k)) - cs(&gg, &vv, k)) + zvk)
             - cs(&cc, &uu, k).mulp(n1);
         let kappa = ((cc[1].mulp(hh[0].mul_f(2.0)).addp(hh[1] - ee[1])).mulp(io.mul_f(kf)) - gg[0]).addp(-nh1);
@@ -552,6 +576,10 @@ pub fn horizon_mob<T: Lane, const B: usize>(ctx: &Ctx<B>, de: &DMat<B>, prep: &S
         }
         vvc[k] = cs(&vv, &vv, k);
         uvc[k] = cs(&uu, &vv, k);
+        if !zcauchy {
+            zvvc[k] = zrec(&vvc, &zvvc, k);
+            zv[k] = zrec(&vv, &zv, k);
+        }
         du[k] = z;
         dv[k] = z;
         let mut ak = z;
