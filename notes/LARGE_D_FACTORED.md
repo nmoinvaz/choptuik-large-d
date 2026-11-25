@@ -145,8 +145,8 @@ reaches max|F| = 5.5e-10 in 10 iterations (`S64_D100_M8.log`), then solve_dd.py 
 - Result: max|F| = 1.9e-22 and Δ_M8(100) = 1.7449155179348. The table's 1.7450264844326 is 1.1e-4 higher, the τ
   truncation at harmonic 7. The scaled singular values at the solution run from 1.9 down to
   5.17e-10, 5.15e-10 (harmonic 3), 1.37e-13, 1.36e-13 (harmonic 5) and 2.58e-17, 2.14e-17 (harmonic 7). That is the
-  ladder of the free field's grips (LARGE_D_BASICS §3.4: at n ≈ 98 about 2e-8, 2.5e-12 and 1e-15 for j = 3, 5, 7),
-  each about 20–40 times smaller. The grip on Δ is |e_Δᵀ J⁻¹| = 5.3e10 with unit rows.
+  ladder of the free field's grips (LARGE_D_BASICS §3.4, n = 120: 1.43e-8, 9.56e-13 and 1.45e-16 for j = 3, 5, 7),
+  each 6–30 times smaller. The grip on Δ is |e_Δᵀ J⁻¹| = 5.3e10 with unit rows.
 - Rounding: every series coefficient U_k, V_k multiplied by (1 + ηr) moves the residual by 0.77η (horizon) and 0.04η
   (centre) (`s_noise_D100.log`). The control, absolute noise of U(1)'s size at every horizon order, moves it by 1.0e18η
   (`s_noise_D100_mutate_rough.log`): the scalar's horizon map has the 2^(n/2)-type gain, but at a solution the
