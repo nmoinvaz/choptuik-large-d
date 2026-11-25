@@ -46,7 +46,10 @@ def sources(globs, D_target, xl, sub, thr):
         zi = inner_z(z, m)  # p1, c0, nodes 0-4, m_h, Delta
         v = np.asarray(zi[0]) + np.asarray(zi[1])
         n4 = v[2 * M + 3 * M * 4:2 * M + 3 * M * 5]
-        nx = n4 if abs(xl - 0.7) < 1e-15 else outer_values(Dm, z, m, [xl], sub, thr)[0]
+        x4 = float(m["nodes"][4])
+        if xl < x4 - 1e-15:
+            raise SystemExit(f"x_l {xl} lies inside the source's fifth node {x4}: the path runs outward only")
+        nx = n4 if abs(xl - x4) < 1e-15 else outer_values(Dm, z, m, [xl], sub, thr)[0]
         head = np.concatenate([v[:2 * M + 3 * M * 4], nx, v[2 * M + 3 * M * 5:]])
         rows.append((float(m["D"]), head, m))
     rows.sort(key=lambda r: r[0])

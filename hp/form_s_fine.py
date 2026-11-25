@@ -75,9 +75,10 @@ def inner_z(z8, meta):
 
 
 def outer_values(D, z8, meta, xs, sub, threads):
-    """a state's solution at the points xs (past 0.7) by Taylor steps from its node 0.7: (len(xs), 3M), float64"""
+    """a state's solution at the points xs (past its fifth node, 0.7 or x_c) by Taylor steps from that node: (len(xs),
+    3M), float64"""
     s = inner_solver(D, meta, threads, float(meta.get("hmob", 0.0) or 0.0))
-    pts, rec = substeps(0.7, xs, sub)
+    pts, rec = substeps(float(meta["nodes"][4]), xs, sub)
     zi = inner_z(z8, meta)
     P = s.path_s([np.ascontiguousarray(p) for p in zi[:4]], pts, rec)
     return np.asarray(P[0]) + np.asarray(P[1])
