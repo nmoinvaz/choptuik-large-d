@@ -97,8 +97,13 @@ def newton_dd(s, z, tol=1e-28, it_max=12, halvings=8, verbose=True, mutate=0):
         for _ in range(halvings + 1):
             th, tl = dd_add(zh, zl, lam * dh, lam * dl)
             th, tl = np.ascontiguousarray(th), np.ascontiguousarray(tl)
-            Ft = s.residual_s([th, tl], mutate)
-            nt = float(np.abs(np.asarray(Ft[0]) + np.asarray(Ft[1])).max())
+            try:
+                Ft = s.residual_s([th, tl], mutate)
+                nt = float(np.abs(np.asarray(Ft[0]) + np.asarray(Ft[1])).max())
+            except BaseException as e:          # a trial whose slaving LU is not finite (pyo3's PanicException)
+                if isinstance(e, KeyboardInterrupt):
+                    raise
+                nt = float("nan")
             if np.isfinite(nt) and nt < nF:
                 acc = True
                 break
@@ -192,8 +197,8 @@ def cmd_check(argv):
 
 
 def cmd_planted(argv):
-    """a converged form-S state (form_s.py check --out) with every unknown but Delta moved by rel (relative, random
-    signs, sizes 0.5-1, seed), solved again by newton_dd. Pass: converged and Delta within --pass of the state's.
+    """a converged form-S state (form_s.py check --out) with every unknown but Delta moved by rel (relative, smooth in
+    tau, a random sign per field block, seed), solved again by newton_dd. Pass: converged and Delta within --pass of the state's.
     --mutate step (each Newton step taken with its sign flipped) must fail."""
     from octo_corrector import load_o
     pos, o = opts(argv, dict(rel="1e-8", seed="1", tol="1e-28", it_max="12", threads="2", mutate="none", **{"pass": "1e-26"}))
@@ -202,13 +207,17 @@ def cmd_planted(argv):
         z8, meta = load_o(path)
         M, nodes = int(meta["M"]), list(meta["nodes"])
         with mp.workdps(60):
-            D = mp.mpf(meta["D_str"])
+            D = mp.mpf(meta.get("D_str", repr(meta["D"])))
         s = make_solver_s(D, M, nodes, kt=meta.get("kt", 36), kc=meta.get("kc", 40), ks=meta.get("ks", 120),
                           threads=int(o["threads"]), kfreeze=meta.get("kfreeze"), segs=meta["segs"])
         zh, zl = np.array(z8[0]), np.array(z8[1])
+        # a smooth relative move: each field block times rel (1 + cos(2 theta) / 2) with a random sign per block (pi-periodic,
+        # so that odd fields stay odd and even ones even); a move with
+        # every harmonic would also move p1's highest harmonics, which the full system barely fixes (its junk floor)
         rng = np.random.default_rng(int(o["seed"]))
-        r = float(o["rel"]) * rng.uniform(0.5, 1, len(zh)) * rng.choice([-1, 1], len(zh))
-        r[-1] = 0.0
+        th = np.pi * np.arange(M) / M
+        nb = (len(zh) - 1) // M
+        r = np.concatenate([float(o["rel"]) * rng.choice([-1, 1]) * (1 + 0.5 * np.cos(2 * th)) for _ in range(nb)] + [np.zeros(1)])
         ph, pl = dd_add(zh, zl, zh * r, np.zeros(len(zh)))
         if o["mutate"] == "step":
             zt, conv, hist = newton_dd_flip(s, (ph, pl), float(o["tol"]), int(o["it_max"]))
