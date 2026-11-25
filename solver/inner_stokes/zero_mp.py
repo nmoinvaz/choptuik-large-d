@@ -45,7 +45,7 @@ def _planted(args):
     return dict(A=A, wf=wf, R=R, sig=1e-18, ok=True, F3=(f3re, f3im), info=0.0, sec=0.0)
 
 
-def newton(A, wf, f3, fn, iters, hA, hw, procs, out=None, M=3, J0=None):
+def newton(A, wf, f3, fn, iters, hA, hw, procs, out=None, M=3, J0=None, r1="0.17"):
     """f3 is F_3 = (re, im) at M = 3, and the harmonics v = (B_3, C_3, ..., B_M, C_M) (strings) with fn = _value_v"""
     import multiprocessing as mp_
     pool = mp_.get_context("spawn").Pool(procs) if procs > 1 and fn in (_value, _value_v) else None
@@ -56,11 +56,11 @@ def newton(A, wf, f3, fn, iters, hA, hw, procs, out=None, M=3, J0=None):
         if fn is _value_v:
             # the centre first, at both precisions, from the last centre's Jacobian; then the offsets from the centre's
             # solved harmonics and Jacobian, at one precision (they only form the outer Jacobian's differences)
-            c0 = fn(((A, wf, tuple(f3)), "0.17", M, dict(J=J0, want_J=True)))
+            c0 = fn(((A, wf, tuple(f3)), r1, M, dict(J=J0, want_J=True)))
             J0 = c0["J"]
-            res = [c0] + run([((a, w, tuple(c0["F3"])), "0.17", M, dict(J=J0, single=True)) for a, w in pts[1:]])
+            res = [c0] + run([((a, w, tuple(c0["F3"])), r1, M, dict(J=J0, single=True)) for a, w in pts[1:]])
         else:
-            res = run([((a, w, f3[0], f3[1]), "0.17") for a, w in pts])
+            res = run([((a, w, f3[0], f3[1]), r1) for a, w in pts])
         c = res[0]
         dRA = (res[1]["R"] - res[2]["R"]) / (2 * hA)
         dRw = (res[3]["R"] - res[4]["R"]) / (2 * hw)
@@ -110,13 +110,13 @@ def main():
             J0 = [json.loads(line) for line in open(o["j0"]) if line.strip()][-1].get("J_inner")
         print(f"start ({A0}, {wf0}); M = {M}, v0 = {v0}, inner Jacobian {'given' if J0 else 'fresh'}", flush=True)
         t0 = time.time()
-        rows = newton(A0, wf0, v0, _value_v, iters, hA, hw, int(o.get("procs", 5)), out, M=M, J0=J0)
+        rows = newton(A0, wf0, v0, _value_v, iters, hA, hw, int(o.get("procs", 5)), out, M=M, J0=J0, r1=o.get("r1", "0.17"))
         return report(rows, t0)
     if "f3" in o:                                   # --f3=RE,IM: an explicit start (a point outside the cache's box)
         f3 = tuple(float(t) for t in o["f3"].split(","))
         print(f"start ({A0}, {wf0}); F_3 given {f3}", flush=True)
         t0 = time.time()
-        rows = newton(A0, wf0, f3, _value, iters, hA, hw, int(o.get("procs", 5)), out)
+        rows = newton(A0, wf0, f3, _value, iters, hA, hw, int(o.get("procs", 5)), out, r1=o.get("r1", "0.17"))
         return report(rows, t0)
     best, bd = None, 1e300
     for line in open(cache):
@@ -129,7 +129,7 @@ def main():
     print(f"start ({A0}, {wf0}); F_3 from the cache record at ({best['A']}, {best['wf']}), distance {math.sqrt(bd):.2e}",
           flush=True)
     t0 = time.time()
-    rows = newton(A0, wf0, f3, _value, iters, hA, hw, int(o.get("procs", 5)), out)
+    rows = newton(A0, wf0, f3, _value, iters, hA, hw, int(o.get("procs", 5)), out, r1=o.get("r1", "0.17"))
     return report(rows, t0)
 
 
