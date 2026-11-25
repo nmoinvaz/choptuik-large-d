@@ -26,6 +26,7 @@ Usage (PYTHONPATH must hold hp's form-S build, and FORMS_HP the worktree's hp/ w
     python3 hp_mob_check.py SOL.json TRACKC.json --Ds=1000,2000 [--parts=8] [--threads=2] [--gain=1]
                             [--a_fixed=8] [--mutate=zseries|hp52]
   --a_fixed: hp's a only (this branch keeps the rule's a), for the information rows
+  --hp_inv=1: also hp's sums at a and 1.25 a (information)
 """
 import json
 import os
@@ -159,6 +160,9 @@ for D in Ds:
     else:
         ok &= c1 <= 1e-24
     print(line, flush=True)
+    if "hp_inv" in opts:  # information: hp's own invariance in a (its sums at a and at 1.25 a)
+        Shp2 = hp_sum(D, 1.25 * a_hp, mh, Dl)
+        print("   hp at a and 1.25 a: %.2e" % rel(Shp2, Shp), flush=True)
     if not mut and want_gain:
         Sdd2 = dd_sum(D, 1.25 * a, mh, Dl)
         c3 = rel(Sdd2, Sdd)
