@@ -197,7 +197,7 @@ def cmd_jump(argv):
     allow = pop_allow(argv)
     pos, o = opts(argv, dict(D="2828", states_s="", deg="2", mob="8", x_end="0.95", c="4", ks="150", sub="4",
                              kc="250", threads="2", plan_tol="1e-40", hmax="0.05", delta="fit", tc="", it_max="10",
-                             halvings="8", delta_tol="1e-15", jscale="1", commit="", ham="1", res="od"))
+                             halvings="8", delta_tol="1e-15", jscale="1", commit="", ham="1", res="od", held_from=""))
     outdir = pos[0]
     os.makedirs(outdir, exist_ok=True)
     log = os.path.join(outdir, "fine.jsonl")
@@ -269,7 +269,8 @@ def cmd_jump(argv):
           flush=True)
     kw = dict(kt=int(m0.get("kt", 36)), kc=int(o["kc"]), ks=int(o["ks"]), threads=thr, segs=segs, mob=float(o["mob"]))
     s = make_solver_s(Dt, M, nodes, kfreeze=3, **kw)
-    h8 = held_field(z8, M)
+    # p1's harmonics 5-13 held at the guess's values, or at another state's (a control on the same held system)
+    h8 = held_field(load_o(o["held_from"])[0], M) if o["held_from"] else held_field(z8, M)
     sh = HeldS(s, M, K, h8)
     F = sh.residual_s([np.ascontiguousarray(z8[0]), np.ascontiguousarray(z8[1])])
     b = blocks_s(F, M, K)
@@ -280,7 +281,8 @@ def cmd_jump(argv):
           f"{b[K] / max(b[0], seg_max):.2e}", flush=True)
     meta = dict(D=float(Dt), D_str=mp.nstr(Dt, 50), M=M, nodes=nodes, kt=kw["kt"], kc=kw["kc"], ks=kw["ks"], kfreeze=3,
                 form="S", hmob=float(o["mob"]), parts=8, segs=segs, plan_tol=float(o["plan_tol"]), deg=deg,
-                held="5-13 at the guess's values", source="form_s_fine.py jump", mesh=dict(x0=0.7, x_end=float(o["x_end"]),
+                held=f"5-13 at {os.path.basename(o['held_from'])}'s values" if o["held_from"] else "5-13 at the guess's values",
+                source="form_s_fine.py jump", mesh=dict(x0=0.7, x_end=float(o["x_end"]),
                                                                                          c=float(o["c"]), sub=sub))
     with open(log, "a") as fh:
         fh.write(json.dumps(dict(start="guess", D_str=meta["D_str"], K=K, L=L, blocks_max=[float(x) for x in b],
