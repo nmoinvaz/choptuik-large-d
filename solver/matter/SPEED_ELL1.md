@@ -62,7 +62,7 @@ separate processes moved by 2x with the load.
 | 55, 18.125, 1.775 | double-double block 12 | 254.1 s (`ell_ddm`) | 148.6 s (`ell_fastdd`) | 1.7 |
 | 103, 22.125, 0.4875 | float64 blocks 1 and 12 | 138.3 s | 51.0 s (`coef`) | 2.7 |
 | 103, 22.125, 0.4875 | double-double stage (one RK4 stage of block 12) | 487 ms | 291 ms | 1.7 |
-| 103, 22.125, 0.4875 | float64 M, all 13 blocks | K103CS | K103FAST | K103R |
+| 103, 22.125, 0.4875 | float64 M, all 13 blocks | 958.9 s | 129.9 s (`jac`) | 7.4 |
 | 103, 22.125, 0.4875 | double-double block 12 | DD103OLD | DD103NEW | DD103R |
 
 `jac` beats `coef` by 2x at k_c 55 (blocks 3 and 11: 3.5 s against 7.3 s). The horizon series alone took 139 s by
@@ -86,7 +86,7 @@ ends), and a grid at that spacing is out of reach.
 | `ell_fastm.py check`, k_c 31, D 10.5, lambda 2.87 (`grid`) | blocks 0-11 at most 2.1e-14, block 12 1.1e-12, ln within 2.7e-10: PASS | `--mutate=nolam`: block 11 1.03, ln off by 98.5, exit 1 |
 | same, `jac` | blocks 0-11 at most 2.0e-14, block 12 1.1e-12, ln within 2.8e-10, 4.8x faster: PASS | |
 | `ell_fastm.py check`, k_c 55, D 18.125, lambda 1.775 (`jac`) | blocks 0-11 at most 9.9e-15; block 12 1.3e-10 and the float64 sign differ: FAIL | |
-| `ell_fastm.py check`, k_c 103, D 22.125, lambda 0.4875 | K103CHECK | |
+| `ell_fastm.py check`, k_c 103, D 22.125, lambda 0.4875 | blocks 0-11 at most 4.4e-15; block 12 2.2e-9, float64 ln|det| off by 0.34 (same sign): FAIL | |
 | `ell_fastdd.py selftest`: d/dtau basis rows; block 12 against `ell_ddm`, lambda 0 and 0.9 | 4.6e-31; 4.1e-29, 2.6e-29 (bar 1e-20) | `nolam`: 1.3e-1; `jround`: 1.2e-17; both exit 1 |
 | `ell_fastdd.py check`, k_c 55, lambda 1.775, with the hybrid | 8.0e-27; hybrid ln|det| equal to all digits: PASS | |
 | `ell_fastdd.py check`, k_c 103, lambda 0.4875 | DD103CHECK | |
@@ -119,15 +119,17 @@ k_c 55, D 18.125, bracket (1.77, 1.78) from the Mac scan `I1025-mac/d18/d18125k5
 | `--mm=cs --b12=ddm` (`d18_hybsign.py`'s) | 1.7732997423 | [1.7732990863, 1.7732999430] | 6 | 2378 s |
 | fast M, `ell_ddm` block 12 | 1.7733011670 | [1.7733011508, 1.7733016508] | 6 | 1057 s |
 
-Both roots lie in the reader's estimator range, 3.5e-4 above the grid's det-linear estimate. They differ by 1.4e-6,
-and their brackets are disjoint. The two codes' float64 blocks 0-11 agree to 1e-14 per block, but near the root that
-moves ln|det| by 2.7e-4 to 4.6e-4. Every evaluation passed the 1e-15 noise test (dln at most 0.068), so that test does
-not see this floor; its random perturbations move ln|det| about 500 times less than the systematic difference.
+Both roots lie in the reader's estimator range, 3.5e-4 above the grid's det-linear estimate. **They differ by
+1.4e-6, and their brackets are disjoint.** The two codes' float64 blocks 0-11 agree to 1e-14 per block, yet that moves
+the hybrid ln|det| by 4.5e-4 at 1.77 and 2.7e-4 at 1.78 (signs equal). Every evaluation passed the 1e-15 noise test
+(dln at most 0.068). Its random perturbations moved ln|det| by 7.2e-7 and 2.5e-7 at the same ends, 600 to 1100 times
+less than the systematic difference, so that test does not see this floor.
 
-So the hybrid determinant fixes this root only to about 1.4e-6 at k_c 55. At k_c 103, D 22.125, the fast ends against
-dh610's scan records differ by 2.7e-5 (0.485) and 1.5e-3 (0.490) in ln|det| with equal signs, which puts the floor near
-1.5e-7. A tolerance of 1e-5 is safe at both. `--eps=1e-12` makes the noise test conservative; for the k_c step of the
-root (1e-3 to 7e-3 between k_c 95 and 103) neither matters.
+So the hybrid determinant fixes this root only to about 1.4e-6 at k_c 55. At k_c 103, D 22.125, the fast ends on the
+Mac against dh610's scan records (complex step, Linux) differ by 2.7e-5 (0.485) and 1.5e-3 (0.490) in ln|det|, with
+equal signs. A shift of ln|det| by d at distance r from a simple root moves it by about d r, which puts the floor there
+near 1.5e-7. A tolerance of 1e-5 is safe at both. `--eps=1e-12` makes the noise test conservative. For the k_c step of
+the root (1e-3 to 7e-3 between k_c 95 and 103) neither matters.
 
 ## Not done
 
@@ -160,9 +162,28 @@ refuses another state, a state whose residual does not reproduce the record, or 
 ```bash
 RAYON_NUM_THREADS=1 OMP_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 nice -n 10 $PY -u d18_secant.py run \
     <raw>/<folder>/in/<stub>.jsonl <raw>/<folder>/in/<state>.npy <D> <LO> <HI> <raw>/<folder>/secant/secant.jsonl \
-    --tol=1e-6 --maxev=10 --pin=<state blob>,<stub blob> > <raw>/<folder>/secant/secant.log 2>&1
+    --tol=1e-5 --maxev=10 --pin=<state blob>,<stub blob> > <raw>/<folder>/secant/secant.log 2>&1
 ```
+
+`--tol=1e-5` stays above the float64 floor of the root measured below (1.4e-6 at k_c 55).
 
 Exit 0 means the bracket reached the tolerance, and exit 4 means it stopped earlier with a valid bracket. Either way
 the last line of the jsonl is the `root` record. Adding `--ends=<scan jsonl>` reuses the scan's two end records and
 saves two evaluations, but those ends then carry only `d18_hybsign.py`'s robustness test.
+
+## First real use: k_c 103 at D 22.875
+
+When winb's k_c 103 scan at D 22.875 lands, take its robust sign change (LO, HI) and its state and stub from the
+scan folder's `in/`, pinned by blob as the scan pinned them. Then, in the worktree above:
+
+```bash
+F=<raw clone>/<winb's folder of the D 22.875 k_c 103 scan>
+mkdir -p $F/secant
+RAYON_NUM_THREADS=1 OMP_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 nice -n 10 $PY -u d18_secant.py run \
+    $F/in/<stub>.jsonl $F/in/<state>.npy 22.875 <LO> <HI> $F/secant/secant_kc103_d22875.jsonl \
+    --tol=1e-5 --maxev=10 --pin=<state blob>,<stub blob> > $F/secant/secant_kc103_d22875.log 2>&1; echo "exit $?"
+```
+
+Expect about 6 evaluations. On the Mac one evaluation at k_c 103 took 9 to 22 min (the float64 M 0.6 to 2.4 min,
+block 12 8 to 19 min, the three `dd_logdet` under 0.5 min), so about 1 to 2.5 h for the refinement on one process. The
+records' `sec_parts` give the split per evaluation on the runner's machine.
