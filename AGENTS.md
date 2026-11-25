@@ -211,3 +211,10 @@ Conventions for the Claude sessions (cloud and local) that run computations here
 - **Times** come from a clock (`date -u '+%Y-%m-%d %H:%M'`), not guessed.
 - **Long jobs start with a pilot:** a short run of the hardest case, with a stop condition, before an overnight run
   (the T30 pilot stopped a sweep that would have failed after hours).
+- **Every Newton-type run stops at its floor:** a step that cuts max|F| by less than 10× ends the run, which logs the
+  floor and the bound it reached and hands over to the next precision, or to the checks if the bound is met. A target
+  the arithmetic cannot reach (a Δ bound below the residual floor times Δ's gain) is not a stop rule. When a note or
+  an analysis says a precision is needed past some D, that precision is part of the run's configuration, not an option
+  (the D 10⁴ solve of #1088 spent two 67-min steps at the double-double floor, 2026-11-25).
+- **Read a long run's log at each step you predicted,** yourself. A runner's or a subagent's silence means nothing:
+  most report only when their run ends.
