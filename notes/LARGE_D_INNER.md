@@ -177,6 +177,8 @@ the float64 split Newton of `lsnewton64.py`), a = 1 to D 400 and a = 8 from D 40
 against Track C at the same D (`diag/trackc_at.json`):
 
 <!-- f64 table: solver/inner_large_d/tabulate.py, regenerated -->
+**`f64_M6_cont/` (20 records)**
+
 | D | M | a | ks | max\|F\| | Δ | Δ − Track C | Track C's E | σ_min (scaled) | grip | noise, Moebius | noise, affine | s |
 |---|---|---|---|---|---|---|---|---|---|---|---|---|
 | 100 | 6 | 1 | 316 | 5.2e-14 | 1.74872893839 | +3.70e-03 | 8.4e-13 | 1.6e-13 | 2.4e+11 | 8.2e+00 | 2.3e+01 | 108 |
@@ -184,7 +186,7 @@ against Track C at the same D (`diag/trackc_at.json`):
 | 125 | 6 | 1 | 358 | 5.2e-12 | 1.72926763689 | +4.07e-03 | 4.8e-12 | 6.4e-14 | 6.4e+11 | 3.6e+00 |  | 202 |
 | 150 | 6 | 1 | 398 | 3.9e-12 | 1.71607436594 | +4.21e-03 | 1.3e-11 | 1.0e-14 | 4.8e+12 | 6.3e+00 | 2.8e+03 | 140 |
 | 175 | 6 | 1 | 437 | 3.5e-12 | 1.70661436727 | +4.32e-03 | 2.6e-11 | 3.0e-14 | 1.7e+12 | 4.6e+00 |  | 458 |
-| 186.66 | 6 | 1 | 454 | 2.9e-12 | 1.70296278021 | +nan | nan | 3.1e-14 | 1.6e+12 | 6.4e+00 |  | 94 |
+| 186.66 | 6 | 1 | 454 | 2.9e-12 | 1.70296278021 | +4.27e-03 | 3.3e-11 | 3.1e-14 | 1.6e+12 | 6.4e+00 |  | 94 |
 | 200 | 6 | 1 | 474 | 5.9e-12 | 1.69925028995 | +4.16e-03 | 4.2e-11 | 2.9e-13 | 1.9e+11 | 2.7e+00 | 4.5e+09 | 98 |
 | 225 | 6 | 1 | 512 | 7.0e-11 | 1.69317125687 | +3.71e-03 | 6.1e-11 | 2.5e-12 | 9.8e+09 | 7.2e+00 |  | 122 |
 | 245.64 | 6 | 1 | 542 | 7.1e-13 | 1.68964912352 | +3.97e-03 | 7.8e-11 | 2.2e-14 | 2.8e+12 | 5.2e+00 | 2.9e+15 | 146 |
@@ -193,13 +195,35 @@ against Track C at the same D (`diag/trackc_at.json`):
 | 350 | 6 | 1 | 689 | 6.0e-14 | 1.67697951943 | +3.67e-03 | 1.8e-10 | 5.5e-16 | 1.9e+14 | 3.5e+01 |  | 173 |
 | 400 | 6 | 8 | 757 | 6.2e-14 | 1.67323717561 | +3.58e-03 | 2.3e-10 | 6.2e-15 | 2.1e+13 | 3.4e+00 |  | 184 |
 | 400 | 6 | 1 | 757 | 7.0e-14 | 1.67323887255 | +3.58e-03 | 2.3e-10 | 8.4e-15 | 8.8e+12 | 5.6e+01 | 2.7e+16 | 211 |
-| 450 | 6 | 8 | 824 | 4.4e-11 | 1.6714732384 | +nan | nan | 1.0e-11 | 1.7e+10 | 3.5e+00 |  | 121 |
+| 450 | 6 | 8 | 824 | 4.4e-11 | 1.6714732384 | +4.66e-03 | 2.9e-10 | 1.0e-11 | 1.7e+10 | 3.5e+00 |  | 121 |
 | 500 | 6 | 8 | 890 | 9.9e-14 | 1.66700386426 | +2.47e-03 | 3.4e-10 | 1.4e-14 | 1.5e+13 | 6.1e+00 |  | 191 |
 | 600 | 6 | 8 | 1020 | 8.1e-14 | 1.66287327803 | +1.77e-03 | 4.5e-10 | 1.5e-16 | 1.6e+15 | 3.5e+00 |  | 221 |
-| 624 | 6 | 8 | 1051 | 6.6e-14 | 1.66284118249 | +nan | nan | 6.7e-15 | 3.1e+13 | 6.6e+00 |  | 354 |
-| 636.73 | 6 | 8 | 1067 | 3.9e-09 | 1.65258986038 | +nan | nan | 1.3e-10 | 7.2e+08 | 4.5e+00 |  | 169 |
-| 650 | 6 | 8 | 1084 | 1.1e-07 | 1.66558191808 | +nan | nan | 2.9e-09 | 3.3e+07 | 6.3e+00 |  | 153 |
+| 624 | 6 | 8 | 1051 | 6.6e-14 | 1.66284118249 | +2.39e-03 | 4.7e-10 | 6.7e-15 | 3.1e+13 | 6.6e+00 |  | 354 |
+| 636.73 | 6 | 8 | 1067 | 3.9e-09 | 1.65258986038 | -7.53e-03 | 4.9e-10 | 1.3e-10 | 7.2e+08 | 4.5e+00 |  | 169 |
+| 650 | 6 | 8 | 1084 | 1.1e-07 | 1.66558191808 | +5.79e-03 | 5.0e-10 | 2.9e-09 | 3.3e+07 | 6.3e+00 |  | 153 |
+
+**`f64_M6_cont2/` (4 records)**
+
+| D | M | a | ks | max\|F\| | Δ | Δ − Track C | Track C's E | σ_min (scaled) | grip | noise, Moebius | noise, affine | s |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| 624 | 6 | 8 | 1051 | 8.2e-14 | 1.66284118249 | +2.39e-03 | 4.7e-10 | 3.1e-13 | 5.1e+11 | 6.6e+00 |  | 308 |
+| 632 | 6 | 8 | 1061 | 7.3e-14 | 1.66252139716 | +2.28e-03 | 4.8e-10 | 2.0e-14 | 1.6e+13 | 3.5e+00 |  | 328 |
+| 640 | 6 | 8 | 1071 | 7.5e-14 | 1.66202416442 | +1.99e-03 | 4.9e-10 | 2.4e-14 | 1.4e+13 | 3.4e+00 |  | 298 |
+| 650 | 6 | 8 | 1084 | 4.8e-10 | 1.66491572558 | +5.13e-03 | 5.0e-10 | 3.0e-13 | 4.2e+10 | 6.3e+00 |  | 343 |
+
+**`f64_M6_cont3/` (0 records)**
+
+| D | M | a | ks | max\|F\| | Δ | Δ − Track C | Track C's E | σ_min (scaled) | grip | noise, Moebius | noise, affine | s |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|
 <!-- end f64 table -->
+
+Every attempt is a row. A row whose max\|F\| is above its run's acceptance is a failed attempt after which the driver
+inserted a midpoint in 1/n. The acceptances were 1e-11 to D 186.66, then 1e-9 in `f64_M6_cont/` and `f64_M6_cont2/`, and
+1e-10 in `f64_M6_cont3/`.
+
+D 650 in `f64_M6_cont2/` passed 1e-9 but is off the branch: Δ − Track C is +5.1e-3 there, against +2.0e-3 at D 640. It
+is a point of small residual in a weak valley, so `f64_M6_cont3/` restarts from D 640. It also rejects any solve whose Δ
+moves more than 1e-4 from its seed's extrapolated Δ.
 
 **The float64 error at the solutions themselves** (`diag/f64_vs_dd.log`; the horizon sums at x* in float64 against
 double-double, the larger of U, V and c):
@@ -216,12 +240,13 @@ From D 500 on even the affine double-double sum is garbage: its max\|U(x*)\| is 
 **What the table shows.**
 - The residual reaches the float64 floor of this solver, 1e-13 to 1e-11, at every D. The noise amplification at a = 8
   stays at 3.4–6.1. These are the layout's numerics, and they do not grow with D.
-- σ_min and the grip are the harmonic ladder of the M-6 truncation: 1e-13 to 1e-15 and 1e11 to 1e14, from D 100 to
-  600. At M 6 in float64 they leave Δ pinned only to about 1e-6, the change of Δ at D 400 between the a = 1 and a = 8
-  solves. They are the problem's conditioning in its harmonics and the same in any layout at x* (§6).
-- Δ − Track C is M 6's τ-truncation error: +3.7e-3 at D 100, at most +4.3e-3 near D 175, +1.8e-3 at D 600. It is a
-  smooth function of D. For comparison only, the D = ∞ inner problem's M = 5 truncation is +1.27e-3 (SECOND_ORDER.md
-  §4). Its M-harmonic truncation is a different one, so this is not a check.
+- σ_min and the grip are the harmonic ladder of the M-6 truncation: 1e-13 to 1e-16 and 1e11 to 1e15, from D 100 to
+  640. These are the problem's conditioning in its harmonics, the same in any layout at x* (§6). At M 6 in float64
+  they leave Δ pinned to about 1e-6 at D 400 (the a = 1 and a = 8 solves differ by 1.7e-6), and only to about 3e-4 at
+  D 600–640, where Δ − Track C scatters as +1.77e-3, +2.39e-3, +2.28e-3, +1.99e-3.
+- Δ − Track C is M 6's τ-truncation error: +3.7e-3 at D 100, at most +4.3e-3 near D 175, about +2e-3 at D 600–640.
+  For comparison only, the D = ∞ inner problem's M = 5 truncation is +1.27e-3 (SECOND_ORDER.md §4). Its M-harmonic
+  truncation is a different one, so this is not a check.
 
 **Double-double, M ≥ 8.** The dd form (`mobius_sdd.py`) solves Track B's D-100 M-10 point to max|F| = 2.6e-24, with
 Δ_M10(100) = 1.7450282484478268, which is Track C + 1.76e-6 (`dd_M10_cont_try*/`). Moving off it failed, in D and in M:

@@ -19,7 +19,7 @@ for d in args[1:]:
     for fn in glob.glob(os.path.join(d, "sol_*.json")) + glob.glob(os.path.join(d, "sdd_*.json")):
         recs.append(json.load(open(fn)))
     recs.sort(key=lambda r: r["D"])
-    print("# %s (%d records)" % (d, len(recs)))
+    print("%s`%s/` (%d records)%s" % ("\n**" if md else "# ", os.path.basename(os.path.normpath(d)), len(recs), "**\n" if md else ""))
     if md:
         print("| D | M | a | ks | max\\|F\\| | Δ | Δ − Track C | Track C's E | σ_min (scaled) | grip | noise, Moebius | noise, affine | s |")
         print("|---|---|---|---|---|---|---|---|---|---|---|---|---|")
