@@ -108,8 +108,8 @@ k* = 46, entering through G, and its growth with n (table below) is of this kind
 | 98 | 46 | 2.70e+15 | 1.69 |
 
 The discrepancy is the differences' own error (about 2e-6) up to n = 60; above it grows with slope 0.135 per unit n,
-against log10(2)/2 = 0.1505 for ε·2^(n/2) (PASS within 30%; numerical evidence). So form A with the datum factored (FACTORED_HORIZON §3, or the anchor here) still needs about
-0.15n digits for the a direction. This is the same rate as hp's 0.155n (LARGE_D_BASICS §4, there attributed to G at
+against log10(2)/2 = 0.1505 for ε·2^(n/2) (PASS within 30%; numerical evidence). So form A with the datum factored
+(FACTORED_HORIZON §3, or the anchor here) still needs about 0.15n digits for the a direction. This is the same rate as hp's 0.155n (LARGE_D_BASICS §4, there attributed to G at
 0.7, (n − 1) log10(1/0.7)); at x* the two are one number, 2^(n/2) = (1/x*)^n. A layout that sweeps β forward from a_h
 (hp's horizon block, `A_h` in `cond_table.py`) has σ_max between 1.8e74 and 2.4e115 at D 60–100 in float64, at form
 S's states (`cond_M6.log`).
