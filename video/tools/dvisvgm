@@ -1,0 +1,13 @@
+#!/usr/bin/env python3
+"""Stands in for `dvisvgm --pdf`: the PDF's first page as an SVG with its glyphs as paths (PyMuPDF)."""
+import sys
+
+import pymupdf
+
+out = src = None
+for a in sys.argv[1:]:
+    if a.startswith("--output="):
+        out = a[len("--output="):]
+    elif not a.startswith("-"):
+        src = a
+open(out, "w").write(pymupdf.open(src)[0].get_svg_image(text_as_path=True))

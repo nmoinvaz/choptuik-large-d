@@ -1,0 +1,14 @@
+#!/bin/bash
+# Stands in for pdflatex on a machine with tectonic only: compiles Manim's file into its output directory.
+{
+dir=.
+for a in "$@"; do
+  case "$a" in
+    -output-directory=*) dir="${a#-output-directory=}" ;;
+    -*) ;;
+    *) file="$a" ;;
+  esac
+done
+exec tectonic -X compile "$file" --outdir "$dir" >/dev/null 2>"$dir/tectonic.err"
+exit
+}

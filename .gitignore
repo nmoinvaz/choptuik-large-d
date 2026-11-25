@@ -10,3 +10,5 @@ __pycache__/
 *.stackdump
 /.claude/*
 !/.claude/settings.json
+/video/media/
+/video/dist/
