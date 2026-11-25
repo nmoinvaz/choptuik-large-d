@@ -50,3 +50,5 @@ inherits = "dev"
 opt-level = 1
 debug = false
 incremental = true
+# unstripped: macOS 27's dyld refuses the stripped extension ("mis-aligned LINKEDIT string pool"), as for release
+strip = false
