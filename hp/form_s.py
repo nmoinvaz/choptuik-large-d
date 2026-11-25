@@ -522,16 +522,18 @@ def base_solver(s):
     return s, mu
 
 
-def qj_step(s, z8, F, gain=False, jscale=1.0):
+def qj_step(s, z8, F, gain=False, jscale=1.0, parts=4):
     """the Newton step -J^-1 F with J form S's quad-double Jacobian at z8's leading four parts (jacobian_s at 4 parts)
     and F the octo-double residual's leading two parts, solved by multidouble's dd_solve (LU with partial pivoting in
     double-double); eight parts, the last six zero. At D 300 it converges as the octo-double Newton to 3e-44 in three
     steps at about 1/5 of its cost (the coordinator's mixed2.py, I1088-dh370/mixed2/). gain: also Delta's gain
     sum |J^-T e_Delta| from the same J (Delta's first-order error is at most gain max |F|); returns (step, gain) then.
-    jscale multiplies J for the step only (the control: 1.01 turns Newton linear)."""
+    jscale multiplies J for the step only (the control: 1.01 turns Newton linear). parts 2: the double-double Jacobian
+    instead (with the Moebius horizon it converges step for step as the quad-double one at D 300, the coordinator's run
+    4 in I1088-dh370-mixed2/)."""
     from multidouble import dd_solve
     base, mu = base_solver(s)
-    J = base.jacobian_s([np.ascontiguousarray(z8[q]) for q in range(4)], mu)
+    J = base.jacobian_s([np.ascontiguousarray(z8[q]) for q in range(parts)], mu)
     Jh, Jl = np.asarray(J[0]), np.asarray(J[1])
     dh, dl = dd_solve(np.ascontiguousarray(Jh * jscale), np.ascontiguousarray(Jl * jscale),
                       np.ascontiguousarray(-np.asarray(F[0])), np.ascontiguousarray(-np.asarray(F[1])))
@@ -546,12 +548,13 @@ def qj_step(s, z8, F, gain=False, jscale=1.0):
 
 
 def newton_o_s(s, z8, tol, it_max, halvings, log=None, mutate="none", verbose=True, info=None, junk_w=0, tol_dz=1e-45,
-               delta_max=1e-2, jac="od", delta_tol=0.0, jscale=1.0):
+               delta_max=1e-2, jac="od", delta_tol=0.0, jscale=1.0, res="od"):
     """Newton in octo-double on form S from the eight-part z8: newton_s's step (jac "od") or qj_step's (jac "qd": the
     quad-double Jacobian, a double-double solve, the octo-double residual), halved while max |F| does not fall;
     delta_tol > 0 (jac "qd"): converged also when Delta's first-order error bound, gain max |F| with gain = sum
     |J^-T e_Delta| from the step's Jacobian, is at most delta_tol (tol stays a floor); each record carries gain and
-    gain |F|. jscale scales the step's J (the control);
+    gain |F|. jscale scales the step's J (the control); jac "dd": qj_step with the double-double Jacobian; res "dd":
+    the residual in double-double (the state's leading two parts), whose floor is near 1e-29;
     one record per step to log (jsonl); returns (z8, converged, records). junk_w > 0: the step's components along the
     weakest junk_w right singular directions with no Delta content (junk_basis, formed at each LU) are removed, so
     those coordinates stay where they are; a trial is then accepted when its max |F| or its own projected correction
@@ -561,7 +564,10 @@ def newton_o_s(s, z8, tol, it_max, halvings, log=None, mutate="none", verbose=Tr
     from octo_corrector import delta_digits, o8
     z8 = o8(z8)
     L = len(z8[0])
-    F = s.residual_s(list(z8))
+
+    def resid(z):
+        return s.residual_s(list(z) if res == "od" else [np.ascontiguousarray(z[0]), np.ascontiguousarray(z[1])])
+    F = resid(z8)
     nF = float(np.abs(np.asarray(F[0]) + np.asarray(F[1])).max())
     recs = []
     if verbose:
@@ -580,8 +586,8 @@ def newton_o_s(s, z8, tol, it_max, halvings, log=None, mutate="none", verbose=Tr
         if conv:
             break
         t0 = time.time()
-        if st is None and jac == "qd":
-            d, gain = qj_step(s, z8, F, gain=True, jscale=jscale)
+        if st is None and jac in ("qd", "dd"):
+            d, gain = qj_step(s, z8, F, gain=True, jscale=jscale, parts=4 if jac == "qd" else 2)
             pmin, pmax, V = float("nan"), float("nan"), None
         elif st is None:
             d, _, pmin, pmax = s.newton_s(list(z8))
@@ -630,8 +636,8 @@ def newton_o_s(s, z8, tol, it_max, halvings, log=None, mutate="none", verbose=Tr
                    s=round(time.time() - t0, 1))
         if acc:
             z8, nF, F = zt, nt, Ft
-            conv = nF <= tol or (jac == "qd" and delta_tol > 0 and gain * nF <= delta_tol)
-        if jac == "qd":
+            conv = nF <= tol or (jac != "od" and delta_tol > 0 and gain * nF <= delta_tol)
+        if jac != "od":
             rec.update(gain=gain, bound=gain * nF)
         rec.update(F_new=nF, Delta=delta_digits(z8, 40), utc=time.strftime("%Y-%m-%d %H:%M:%S", time.gmtime()))
         recs.append(rec)
@@ -639,7 +645,7 @@ def newton_o_s(s, z8, tol, it_max, halvings, log=None, mutate="none", verbose=Tr
             with open(log, "a") as fh:
                 fh.write(json.dumps(rec) + "\n")
         if verbose:
-            tail = (f"Delta's gain {gain:.2e}, gain |F| {gain * nF:.2e}" if jac == "qd" else
+            tail = (f"Delta's gain {gain:.2e}, gain |F| {gain * nF:.2e}" if jac != "od" else
                     f"pivots {pmin:.1e}..{pmax:.1e}")
             print(f"  it {it}: |F| {rec['F']:.3e} -> {nF:.3e}, |dz| {dz:.2e}, dDelta {dD:+.3e}, lam {lam if acc else 0:g}, "
                   f"{tail}, {rec['s']} s (J and solves {t_lu:.0f} s), Delta {rec['Delta']}", flush=True)
@@ -658,8 +664,15 @@ def cmd_jump(argv):
     pos, o = opts(argv, dict(D="250", states="", Dmin="0", Dmax="1e9", deg="3", kfreeze="13", plan_tol="1e-40", hmax="0.05",
                              ks="sigma", kc="146", threads="2", delta="series", tol="1e-40", it_max="16", halvings="8",
                              mutate="none", junk="0", tol_dz="1e-45", ls="0", outer="8", held="0", mob="0",
-                             states_s="", jac="qd", delta_tol="1e-15", jscale="1", ham="1", segs_from="", held_from=""))
+                             states_s="", jac="auto", delta_tol="1e-15", jscale="1", ham="1", segs_from="", held_from="",
+                             res="auto"))
     mob = float(o["mob"])
+    # with the Moebius horizon a double-double Jacobian and residual suffice for the held solve (then one octo-double
+    # residual checks it); with u the quad-double Jacobian and the octo-double residual
+    if o["jac"] == "auto":
+        o["jac"] = "dd" if mob else "qd"
+    if o["res"] == "auto":
+        o["res"] = "dd" if mob else "od"
     outdir = pos[0]
     os.makedirs(outdir, exist_ok=True)
     log = os.path.join(outdir, "jump_s.jsonl")
@@ -766,7 +779,7 @@ def cmd_jump(argv):
     else:
         z8, conv, recs = newton_o_s(s, z8, float(o["tol"]), int(o["it_max"]), int(o["halvings"]), log, o["mutate"],
                                     junk_w=int(o["junk"]), tol_dz=float(o["tol_dz"]), jac=o["jac"],
-                                    delta_tol=float(o["delta_tol"]), jscale=float(o["jscale"]))
+                                    delta_tol=float(o["delta_tol"]), jscale=float(o["jscale"]), res=o["res"])
     F = s.residual_s(list(z8))
     meta.update(solved=bool(conv), F=float(np.abs(np.asarray(F[0]) + np.asarray(F[1])).max()))
     gains = [r["gain"] for r in recs if "gain" in r]
@@ -785,9 +798,9 @@ def cmd_jump(argv):
         L = s_full.size_s
         eD = np.zeros(L)
         eD[-1] = 1.0
-        if o["jac"] == "qd":
+        if o["jac"] in ("qd", "dd"):
             from multidouble import dd_solve
-            J = s_full.jacobian_s([np.ascontiguousarray(z8[q]) for q in range(4)])
+            J = s_full.jacobian_s([np.ascontiguousarray(z8[q]) for q in range(4 if o["jac"] == "qd" else 2)])
             g = np.asarray(dd_solve(np.ascontiguousarray(np.asarray(J[0]).T), np.ascontiguousarray(np.asarray(J[1]).T),
                                     eD, np.zeros(L))[0])
         else:
@@ -943,7 +956,7 @@ def cmd_release_ls(argv):
     argv = list(argv)
     allow = pop_allow(argv)
     pos, o = opts(argv, dict(harm="5", outer="6", tol="1e-40", tol_h="1e-38", it_in="6", halvings="6", threads="2",
-                             tries="6", jac="qd"))
+                             tries="6", jac="auto"))
     path, outdir = pos[0], pos[1]
     os.makedirs(outdir, exist_ok=True)
     log = os.path.join(outdir, "release_ls.jsonl")
@@ -955,6 +968,10 @@ def cmd_release_ls(argv):
         D = mp.mpf(meta["D_str"])
     kw = dict(kt=meta.get("kt", 36), kc=meta["kc"], ks=meta["ks"], threads=int(o["threads"]), segs=meta["segs"],
               mob=meta.get("hmob", 0.0))
+    # releases keep the octo-double residual (the full system's gain, 5e19 at D 300, needs max |F| near 1e-32, below
+    # double-double's floor); the Jacobian in double-double with the Moebius horizon, quad-double with u
+    if o["jac"] == "auto":
+        o["jac"] = "dd" if kw["mob"] else "qd"
     print(f"release_ls from {os.path.basename(path)}: D {float(D):.6g}, Delta {delta_digits(z8, 40)}", flush=True)
     for k in [int(x) for x in o["harm"].split(",")]:
         held_in = list(range(k, 14, 2))
@@ -968,8 +985,8 @@ def cmd_release_ls(argv):
             t0 = time.time()
             F = s_tg.residual_s(list(z8))
             nr = float(np.abs(np.asarray(F[0]) + np.asarray(F[1])).max())
-            if o["jac"] == "qd":
-                d, pmin, pmax = qj_step(s_tg, z8, F), float("nan"), float("nan")
+            if o["jac"] in ("qd", "dd"):
+                d, pmin, pmax = qj_step(s_tg, z8, F, parts=4 if o["jac"] == "qd" else 2), float("nan"), float("nan")
             else:
                 d, _, pmin, pmax = s_tg.newton_s(list(z8))
             dk = band_coeffs(np.asarray(d[0])[:M], np.asarray(d[1])[:M], M, [k], exact=True,
