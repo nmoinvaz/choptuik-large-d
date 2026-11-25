@@ -193,6 +193,58 @@ def ham_check(z8, meta, threads=2, dps=40, swap=False):
     return res
 
 
+def top_harmonics(z8, M, K):
+    """the largest |coefficient| of the top harmonics of each field of a form-S state (odd fields p1, p, m, m_h:
+    harmonics 29 and 31; even fields c0, c: 30 and 32), absolute and relative to the field's largest |value|, from
+    all eight parts at 50 digits"""
+    out = {}
+    with mp.workdps(50):
+        th = [mp.pi * j / M for j in range(M)]
+        for nm, sl in groups_s(M, K).items():
+            f = [sum(mp.mpf(float(np.asarray(q)[i])) for q in z8) for i in range(sl.start, sl.stop)]
+            odd = nm in ("p1", "mh") or nm[-1] in "pm"
+            hs = (29, 31) if odd else (30, 32)
+            top = max(abs(sum(f[j] * mp.expj(-h * th[j]) for j in range(M)) / M) for h in hs)
+            out[nm] = (float(top), float(top / max(abs(v) for v in f)))
+    return out
+
+
+def disc_report(z8, meta, kw, mob, held, F0, gain):
+    """Delta's discretization at a converged form-S state (#1088): the top harmonics (top_harmonics), and the change of
+    the solved system's quad-double residual when the centre series runs to kc + 20, the horizon series to ks + 200,
+    and every Taylor step is halved; gain times each change bounds its first-order effect on Delta. Bars, written before
+    the numbers: every relative top harmonic and every change at most 1e-25."""
+    from multidouble import qd_axpy
+    M, nodes = int(meta["M"]), list(meta["nodes"])
+    K = len(nodes)
+    with mp.workdps(60):
+        D = mp.mpf(meta["D_str"])
+    th = top_harmonics(z8, M, K)
+    worst = max(th.items(), key=lambda kv: kv[1][1])
+    rep = dict(top_harmonic_rel_max=worst[1][1], top_harmonic_field=worst[0],
+               top_harmonics={k: v[1] for k, v in th.items()})
+    z4 = [np.ascontiguousarray(z8[q]) for q in range(4)]
+    F4 = [np.ascontiguousarray(np.asarray(f)) for f in F0[:4]]
+    segs = meta["segs"]
+    fine = [[g[0]] + [v for a, b in zip(g[:-1], g[1:]) for v in (0.5 * (a + b), b)] for g in segs]
+    for nm, kc, ks, sg in (("kc+20", kw["kc"] + 20, meta["ks"], segs), ("ks+200", kw["kc"], meta["ks"] + 200, segs),
+                           ("steps halved", kw["kc"], meta["ks"], fine)):
+        t0 = time.time()
+        sv = make_solver_s(D, M, nodes, segs=sg, mob=mob, **dict(kw, kc=kc, ks=ks))
+        sv = HeldS(sv, M, K, held) if held is not None else sv
+        Fv = sv.residual_s(z4)
+        dF = float(np.abs(np.asarray(qd_axpy(-1.0, *F4, *[np.ascontiguousarray(np.asarray(f)) for f in Fv])[0])).max())
+        rep[nm] = dict(dF=dF, dDelta_bound=gain * dF, s=round(time.time() - t0, 1))
+    over = ([f"theta (M {M}): top harmonic {rep['top_harmonic_rel_max']:.1e}"] if rep["top_harmonic_rel_max"] > 1e-25
+            else []) + [f"{k}: {rep[k]['dF']:.1e}" for k in ("kc+20", "ks+200", "steps halved") if rep[k]["dF"] > 1e-25]
+    rep["over_bar"] = over
+    rep["verdict"] = "negligible" if not over else "over the 1e-25 bar: " + ", ".join(over)
+    print(f"  discretization (bars 1e-25): top harmonic {rep['top_harmonic_rel_max']:.1e} relative ({worst[0]}); "
+          + "; ".join(f"{k}: |dF| {rep[k]['dF']:.1e}, gain |dF| {rep[k]['dDelta_bound']:.1e}"
+                      for k in ("kc+20", "ks+200", "steps halved")) + f": {rep['verdict']}", flush=True)
+    return rep
+
+
 def blocks_s(F, M, K):
     """max |F| per block of form S's rows (centre, segments, horizon; then the phase row)"""
     v = np.asarray(F[0]) + np.asarray(F[1])
@@ -670,7 +722,7 @@ def cmd_jump(argv):
                              ks="sigma", kc="146", threads="2", delta="series", tol="1e-40", it_max="16", halvings="8",
                              mutate="none", junk="0", tol_dz="1e-45", ls="0", outer="8", held="0", mob="0",
                              states_s="", jac="auto", delta_tol="1e-15", jscale="1", ham="1", segs_from="", held_from="",
-                             res="auto"))
+                             res="auto", check="auto", disc="auto"))
     mob = float(o["mob"])
     # with the Moebius horizon a double-double Jacobian and residual suffice for the held solve (then one octo-double
     # residual checks it); with u the quad-double Jacobian and the octo-double residual
@@ -678,6 +730,12 @@ def cmd_jump(argv):
         o["jac"] = "dd" if mob else "qd"
     if o["res"] == "auto":
         o["res"] = "dd" if mob else "od"
+    # the end state's check: one residual in other arithmetic than the solve's (quad-double after a double-double
+    # solve); the discretization report with the Moebius horizon
+    if o["check"] == "auto":
+        o["check"] = "qd" if o["res"] == "dd" else "od"
+    if o["disc"] == "auto":
+        o["disc"] = "1" if mob else "0"
     outdir = pos[0]
     os.makedirs(outdir, exist_ok=True)
     log = os.path.join(outdir, "jump_s.jsonl")
@@ -772,10 +830,12 @@ def cmd_jump(argv):
         if o["held_from"]:
             # another state's harmonics 5-13 (a control that must solve the same held system as that state: the held
             # Delta moves with the held values, 3.8e-18 at D 300 for a guess fitted in another layout)
-            s = HeldS(sh, M, K, held_field(load_o(o["held_from"])[0], M))
+            h8 = held_field(load_o(o["held_from"])[0], M)
+            s = HeldS(sh, M, K, h8)
             meta.update(held=f"5-13 at {os.path.basename(o['held_from'])}'s values", kfreeze=3)
         else:
-            s = HeldS(sh, M, K, held_field(z8, M))
+            h8 = held_field(z8, M)
+            s = HeldS(sh, M, K, h8)
             meta.update(held="5-13 at the guess's values", kfreeze=3)
         print(f"  p1's harmonics {meta['held']} (kfreeze 3 with the held offset)", flush=True)
     if int(o["ls"]):
@@ -785,14 +845,15 @@ def cmd_jump(argv):
         z8, conv, recs = newton_o_s(s, z8, float(o["tol"]), int(o["it_max"]), int(o["halvings"]), log, o["mutate"],
                                     junk_w=int(o["junk"]), tol_dz=float(o["tol_dz"]), jac=o["jac"],
                                     delta_tol=float(o["delta_tol"]), jscale=float(o["jscale"]), res=o["res"])
-    F = s.residual_s(list(z8))
-    meta.update(solved=bool(conv), F=float(np.abs(np.asarray(F[0]) + np.asarray(F[1])).max()))
+    npc = 4 if o["check"] == "qd" else 8
+    F = s.residual_s([np.ascontiguousarray(z8[q]) for q in range(npc)])
+    meta.update(solved=bool(conv), F=float(np.abs(np.asarray(F[0]) + np.asarray(F[1])).max()), check=o["check"])
     gains = [r["gain"] for r in recs if "gain" in r]
     if gains:
         # the verifier: Delta's first-order error bound from the end state's octo-double residual and the last step's
         # gain (a first-order bound, not an enclosure)
         meta.update(delta_gain=gains[-1], delta_bound_first_order=gains[-1] * meta["F"])
-        print(f"  end state: octo-double max |F| {meta['F']:.3e}; Delta's first-order bound gain |F| "
+        print(f"  end state: {o['check']} max |F| {meta['F']:.3e}; Delta's first-order bound gain |F| "
               f"{meta['delta_bound_first_order']:.2e} (gain {gains[-1]:.2e}, the last step's Jacobian)", flush=True)
         with open(log, "a") as fh:
             fh.write(json.dumps(dict(end_F=meta["F"], delta_gain=gains[-1],
@@ -819,6 +880,13 @@ def cmd_jump(argv):
         with open(log, "a") as fh:
             fh.write(json.dumps(dict(full_F=float(np.abs(Fv).max()), full_dDelta_first_order=dD1,
                                      gain=float(np.abs(g).sum()))) + "\n")
+    if int(o["disc"]):
+        held = h8 if int(o["held"]) else None
+        dsc = disc_report(z8, meta, dict(kw, kfreeze=3 if held is not None else kf), mob, held, F,
+                          gains[-1] if gains else float("nan"))
+        meta.update(disc=dsc)
+        with open(log, "a") as fh:
+            fh.write(json.dumps(dict(disc=dsc)) + "\n")
     if int(o["ham"]):
         hc = ham_check(z8, meta, threads=int(o["threads"]))
         worst = max(max(r.values()) for r in hc.values())
@@ -876,6 +944,10 @@ class HeldS:
         from octo_corrector import o8
         if len(F) == 8:
             return list(o8(od_axpy(-1.0, *self.c8, *o8(F))))
+        if len(F) == 4:
+            from multidouble import qd_axpy
+            return list(qd_axpy(-1.0, *[np.ascontiguousarray(c) for c in self.c8[:4]],
+                                *[np.ascontiguousarray(np.asarray(f)) for f in F]))
         return list(dd_add(np.asarray(F[0]), np.asarray(F[1]), -self.c8[0], -self.c8[1]))
 
     def residual_s(self, z, mutate=0):
