@@ -10,7 +10,7 @@ Status words as in AGENTS.md. Every number below comes from a log in `I1090-mac/
 |---|---|---|
 | Does form S need about 0.06n more digits at fixed precision, from the scalar mode's shadow? (#1090's premise) | **No.** The loss is a forward-recurrence instability of Track B's horizon variable, affine in z; a Moebius variable removes it. At the float64 solutions, the float64 error of the horizon sum at x* is 1e-14 to 2.5e-14 from D 100 to 600 with a = 8, against 5e-6 at D 200 and 1e24 at D 400 in the affine variable (§4) | numerical evidence |
 | Where does the affine variable lose its digits? | from the low orders on: the critical solution's horizon series is the minimal solution of its recurrence, and the resonance at σ_R injects the rounding into the shadow. At D 200 the float64 relative error passes 1 at order 35 of σ_R ≈ 102 (§2) | numerical evidence |
-| Which Moebius variable? | t = (1 − z)/(1 + a z) with a = 6–8. a = 1 removes most of the loss but leaves a growth of about 10^(0.011n) in the resonance's band; a ≥ 16 brings z = ∞ near x* (§3) | numerical evidence, D 200–600 |
+| Which Moebius variable? | t = (1 − z)/(1 + a z) with a = max(8, n/400), and products with z by their exact two-term recurrence. a = 1 leaves a growth of about 10^(0.011n) in the resonance's band and underflows at large D; a fixed a = 8 runs out of exponent range near D 10⁴. With the rule the rounding amplification stays at 3.5–120 from D 1000 to 10⁴ (§3) | numerical evidence |
 | The inner problem at x ~ √n with the Stokes constant as an unknown | not the place for the selection. At finite n it lies beyond the SSH: through x = 1 it costs 2^(n/2), around it e^(πkω) per harmonic (BEYOND_LIGHT_CONE §3, §7). The selection stays at x*, where the shadow comes out of the stable series with no extra unknown (§6) | argued from measured weights |
 | Cost against D | linear: ks ≈ n + 14√n + 80 orders, banded; one float64 residual 0.07 s at D 100, 3.6 s at D 10⁴ (§5) | measured |
 | Conditioning against D | the harmonic ladder of the selection, which no layout at x* changes: σ_min 1e-13 to 1e-15 at M 6 from D 100 to 600 (§4) | numerical evidence |
@@ -138,8 +138,36 @@ near x* and the series' tail grows:
 - At a = 6–8 it is about 1e-3 at both D, and the total amplification, set by the low orders, is 3.3–3.6.
 - The residual of the same solution is the same for every a (5.91e-12 at D 200, 7.04e-14 at D 400, a = 1 and 8),
   as it must be.
-- The float64 continuation runs at a = 8 from D 400 on. Whether a must grow with n beyond that is what its per-D
-  noise test at a = 1, 8 and 32 measures (§4).
+- The float64 continuation runs at a = 8 from D 400 on.
+
+**Two constraints at larger D** (`diag/seed_test*.log`, seeds rescaled from the D-624 solution, Δ from Track C):
+
+1. **Products with z must not be banded.** z = (1 − t)/(1 + at) has coefficients that fall only like (a/(2 + a))ʲ,
+   0.8ʲ at a = 8. So the banded convolution (kb = 150) drops terms of about 1e-15 at every order, and that error grew
+   to garbage at D ≥ 5000. The series now forms zW from (1 + a t*τ)(zW) = (1 − t*τ)W, that is
+   zW_k = W_k − t* W_{k−1} − a t* zW_{k−1}, exact and stable for a t* < 1. The checks of §3 pass unchanged
+   (`check_mobius_v2.log`: 2.3e-14; `check_mobius_dd_v2.log`: 9.6e-31).
+2. **The coefficients must stay inside the floating exponent range.** The critical solution's coefficients fall like
+   \|τ_∞\|⁻ᵏ = ((2 + a)/a)⁻ᵏ, where τ_∞ is the image of z = ∞, until the shadow rises from σ_R ≈ n/2.
+   - At a = 8 and D 10⁴ they reach 6e-296 near order 3000. The shadow then grows from underflow-damaged values,
+     and max\|U(x*)\| comes out as 3.4e109.
+   - At a = 1 they underflow to zero before σ_R. The shadow is then computed as exactly zero, so the selection
+     signal is lost, even though the sum looks right.
+   - So a must grow with n. With a = max(8, n/400), (1 + 2/a)^(n/2) ≈ e^(n/a) stays below e^400 ≈ 1e174 (1e155 at
+     n = 3200 with a = 8), inside float64's 1e±308.
+
+With that rule:
+
+| D | 1000 | 2000 | 3200 | 5000 | 6500 | 8000 | 10000 |
+|---|---|---|---|---|---|---|---|
+| a | 8 | 8 | 8 | 12.5 | 16.2 | 20.0 | 25.0 |
+| ks | 1520 | 2703 | 4069 | 6067 | 7706 | 9330 | 11477 |
+| noise amplification | 3.5 | 16 | 120 | 14 | 7.4 | 13 | 22 |
+| float64 error against dd | 5.8e-14 | 5.1e-14 | | 2.7e-13 | | | |
+
+(`diag/seed_test_rule.log`.) The amplification stays within two decades from D 1000 to 10⁴; D 3200, at the rule's
+lower edge a = 8, is the largest, so n/300 may be the better constant. In the affine variable the same quantity is
+1e15 already at D 245.
 
 ## 4. Solutions against D
 

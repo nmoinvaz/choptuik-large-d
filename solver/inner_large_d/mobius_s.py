@@ -167,7 +167,8 @@ class FormS:
         dt = np.result_type(Q0, om)
         K = ks + 3
         Z = lambda: np.zeros((K, M), dt)  # noqa: E731
-        U, V, X, G, c, q, dU, dV, Qn, VVc, UVc, hc = (Z() for _ in range(12))
+        U, V, X, G, c, q, dU, dV, Qn, VVc, UVc, hc, zV, zVV = (Z() for _ in range(14))
+        ats = self.a * self.ts  # (1 + a t* tau) zW = (1 - t* tau) W: zW_k = W_k - t* W_{k-1} - a t* zW_{k-1}
         c[0] = 1.0
         Qn[0] = Q0
         Do, Dt = self.Do, self.Dt
@@ -179,7 +180,8 @@ class FormS:
             UVk = self.cv(U, V, k)
             VVc[k] = VVk
             UVc[k] = UVk
-            q[k] = 0.5 * (self.cv(U, U, k) + self.cvs(zs, VVc, k)) - self.cv(c, UVc, k)
+            zVV[k] = VVc[k] - (self.ts * VVc[k - 1] + ats * zVV[k - 1] if k >= 1 else 0.0)
+            q[k] = 0.5 * (self.cv(U, U, k) + zVV[k]) - self.cv(c, UVc, k)
             rhs = q[k] + (self.cv(q, X, k, 1, k) if k >= 1 else 0.0 * q[k])
             X[k] = np.linalg.solve(Ax, rhs)
             G[k] = (-(n - 1) * self.cv(c, X, k) - (self.cv(G, X, k, 0, k - 1) if k >= 1 else 0.0)) / (1.0 + X[0])
@@ -197,7 +199,7 @@ class FormS:
                 deriv = 2.0 * io * (np.einsum("jm,jm->m", hc1, dU[m]) + np.einsum("jm,jm->m", hce, dV[m]))
             else:
                 deriv = 0.0 * Q0
-            zVk = self.cvs(zs, V, k)
+            zVk = V[k] - (self.ts * V[k - 1] + ats * zV[k - 1] if k >= 1 else 0.0)
             r = (deriv + om * ((U[k] + zVk) @ Dt) - self.cv(G, U, k) - self.cv(G, V, k) + zVk
                  - (n - 1) * self.cv(c, U, k))
             Lk = om * Do + np.diag(io * k * (2 * h[0] * c[1] + h[1] - e[1]) - G[0] - (n / 2 - 1))
@@ -215,6 +217,8 @@ class FormS:
                 dV[k - 1] = k * V[k]
             VVc[k] = self.cv(V, V, k)
             UVc[k] = self.cv(U, V, k)
+            zV[k] = V[k] - (self.ts * V[k - 1] + ats * zV[k - 1] if k >= 1 else 0.0)
+            zVV[k] = VVc[k] - (self.ts * VVc[k - 1] + ats * zVV[k - 1] if k >= 1 else 0.0)
             dU[k] = 0.0
             dV[k] = 0.0
             Ak = 0.0 * Q0

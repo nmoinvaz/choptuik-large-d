@@ -57,6 +57,8 @@ class FormSDD:
             self.h = [_dd(v) for v in h]
             self.e = [_dd(v) for v in e]
             self.ts = float(ts)
+            self.ts_dd = _dd(ts)
+            self.ats_dd = _dd(a * ts)
 
     def J(self, k, lo, hi):
         if hi < lo:
@@ -114,7 +116,8 @@ class FormSDD:
         h, e, io = self.h, self.e, self.io_dd
         K = ks + 3
         Z = lambda: d.zeros_like_kind((K, M), self.dual)  # noqa: E731
-        U, V, X, G, c, q, dU, dV, Qn, VVc, UVc, hc = (Z() for _ in range(12))
+        U, V, X, G, c, q, dU, dV, Qn, VVc, UVc, hc, zV, zVV = (Z() for _ in range(14))
+        ts, ats = self.ts_dd, self.ats_dd
         c[0] = 1.0
         Qn[0] = Q0
         Ax = self.De * om - d.diag(Q0 * Q0 * 0.5 + (n - 1))
@@ -124,7 +127,8 @@ class FormSDD:
             V[k] = Qn[k] * (-0.5)
             VVc[k] = self.cv(V, V, k)
             UVc[k] = self.cv(U, V, k)
-            q[k] = (self.cv(U, U, k) + self.cv(self.ZS, VVc, k)) * 0.5 - self.cv(c, UVc, k)
+            zVV[k] = VVc[k] - (VVc[k - 1] * ts + zVV[k - 1] * ats) if k >= 1 else VVc[k]
+            q[k] = (self.cv(U, U, k) + zVV[k]) * 0.5 - self.cv(c, UVc, k)
             rhs = q[k] + self.cv(q, X, k, 1, k) if k >= 1 else q[k]
             X[k] = d.solve(Ax, rhs)
             num = self.cv(c, X, k) * (-(n - 1))
@@ -149,7 +153,7 @@ class FormSDD:
                 deriv = (d.dot0(hcm - self.H[k - m], dU[m]) + d.dot0(hcm - self.E[k - m], dV[m])) * (io * 2.0)
             else:
                 deriv = None
-            zVk = self.cv(self.ZS, V, k)
+            zVk = V[k] - (V[k - 1] * ts + zV[k - 1] * ats) if k >= 1 else V[k]
             r = (om * d.matvec(self.Do, U[k] + zVk) - self.cv(G, U, k) - self.cv(G, V, k) + zVk
                  - self.cv(c, U, k) * (n - 1))
             if deriv is not None:
@@ -164,6 +168,8 @@ class FormSDD:
                 dV[k - 1] = V[k] * float(k)
             VVc[k] = self.cv(V, V, k)
             UVc[k] = self.cv(U, V, k)
+            zV[k] = V[k] - (V[k - 1] * ts + zV[k - 1] * ats) if k >= 1 else V[k]
+            zVV[k] = VVc[k] - (VVc[k - 1] * ts + zVV[k - 1] * ats) if k >= 1 else VVc[k]
             dU[k] = 0.0
             dV[k] = 0.0
             Ak = None
