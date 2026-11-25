@@ -572,24 +572,22 @@ class S03b_Cone(Film):
 
         self.play(FadeIn(VGroup(dotc, vl, saxis, smid, dl)), Create(centre), Create(base), FadeIn(VGroup(tl, rl, ml)), run_time=1.2)
         self.add(nowline, nowl)
-        self.say(r"Go back to one collapse and look closer. On the left are the two views from before: space seen from above, and the same wave seen from the side.")
-        self.say(r"On the right is something new: a map, with distance from the centre across and time upward. The white line on the map marks the moment shown on the left.")
+        self.say(r"Go back to one collapse. On the left are the two views from before. On the right is something new: a map, with distance from the centre across and time upward. The white line marks the moment shown on the left.")
         A = shell(2.9, BLUE_)
         self.add(A)
         self.say(r"A shell of the wave falls inward. It moves at the speed of light, and nothing moves faster. On the map, that is a diagonal.", hold=0.3)
         self.play(t.animate.set_value(2.9), run_time=3.6, rate_func=linear)
         self.play(Flash(dotc, color=BLUE_, flash_radius=0.3), Indicate(centre, color=BLUE_), run_time=0.8)
         cl = Tex("the centre", font_size=22, color=BLUE_).next_to(P(0, 0), DOWN, buff=0.1)
-        self.play(FadeIn(cl), run_time=0.3)
-        self.say(r"The centre is the wave's middle point. It stays put, so on the map it is the upright line at the left.")
         star = Dot(C, color=RED_, radius=0.1)
         sl = Tex("the collapse", font_size=24, color=RED_).next_to(star, UP, buff=0.1)
         hit = always_redraw(lambda: VGroup(Dot(O, color=RED_, radius=0.1), Tex("the collapse", font_size=22, color=RED_).next_to(O, UP, buff=0.15),
                                            Dot([O[0], yb, 0], color=RED_, radius=0.1)) if now() > T - 0.02 else VGroup())
         self.add(hit)
+        self.play(FadeIn(cl), run_time=0.3)
         self.play(t.animate.set_value(T), run_time=1.6, rate_func=linear)
         self.play(FadeIn(star, scale=3), FadeIn(sl), Flash(dotc, color=RED_, flash_radius=0.4), run_time=0.8)
-        self.say(r"The collapse is the instant the rounds of echoing pile up at the centre. On the map it is one point: the top of that line.")
+        self.say(r"The centre stays put, so on the map it is the upright line at the left. The collapse is one point on it: the top of that line.")
         # which shells can take part?
         self.say(r"Now rewind and ask: which parts of the wave can still take part in the collapse?", hold=0.2)
         self.play(t.animate.set_value(0.0), run_time=1.2)
@@ -602,12 +600,12 @@ class S03b_Cone(Film):
         self.play(t.animate.set_value(0.0), FadeOut(A), run_time=1.2)
         Cs = shell(5.4, PURPLE_)
         self.add(Cs)
-        self.say(r"A shell that starts farther out is still on its way when the collapse happens.", hold=0.2)
+        self.say(r"A shell that starts farther out, in purple, shows why. It is still on its way when the collapse happens. It comes too late to matter, and so does everything else out there.", hold=0.2)
         self.play(t.animate.set_value(T), run_time=4.2, rate_func=linear)
         late = VGroup(Tex("too late", font_size=24, color=PURPLE_).next_to(P(5.4 - T, T), DOWN, buff=0.2).shift(0.5 * RIGHT),
                       Tex("too late", font_size=22, color=PURPLE_).move_to([O[0], O[1] - K * (5.4 - T) - 0.3, 0]))
         self.play(FadeIn(late), run_time=0.4)
-        self.say(r"It comes too late to matter. And since nothing outruns the wave, nothing else from out there can matter either.")
+        self.settle()
         # the horizon: the closing edge of what can still matter
         self.play(FadeOut(late), FadeOut(Cs), t.animate.set_value(0.0), run_time=1.2)
         inside_map = Polygon(P(0, 0), P(T, 0), C, stroke_width=0, fill_color=ORANGE_, fill_opacity=0.16)
@@ -626,16 +624,53 @@ class S03b_Cone(Film):
         hv = Tex("the horizon", font_size=22, color=ORANGE_).move_to([O[0], O[1] + K * T + 0.2, 0])
         self.add(inside_view)
         self.play(FadeIn(inside_map), FadeIn(hz), FadeIn(hv), run_time=0.7)
-        self.say(r"So at every moment there is an edge: a sphere around the centre, closing in at the speed of light. From the side it is two walls closing on the centre. Only what lies inside can still affect the collapse.", hold=0.3)
+        self.say(r"So at every moment there is an edge: a sphere around the centre, closing in at the speed of light. From the side it is two walls closing on the centre.", hold=0.3)
         self.play(FadeOut(hv), t.animate.set_value(0.72 * T), run_time=4.0, rate_func=linear)
         self.wait(1.0)
-        self.say(r"That closing edge is the horizon, also called the light cone of the collapse. On the map it is the sloping line. It is not a black hole's horizon.")
-        # the band between a falling shell and the horizon, and why it is not the whole problem
+        self.say(r"Only what lies inside that edge can still affect the collapse, so the inside is all the solver has to find.")
+        self.say(r"The edge is called the horizon, or the light cone of the collapse. On the map it is the sloping line. It is not a black hole's horizon.")
+        # x: how far out, as a fraction of the way to the horizon
         self.play(t.animate.set_value(0.0), run_time=1.2)
-        r0 = 1.4
+        rays = VGroup(*[Line(P(v * T, 0), C, color=GREY_, stroke_width=1.5) for v in CUTS[1:6]])
+        marks = always_redraw(lambda: VGroup(
+            *[Circle(radius=K * v * (T - now()), color=GREY_, stroke_width=1.5).move_to(O) for v in CUTS[1:6]],
+            *[Line([O[0] + sg * K * v * (T - now()), yb - 0.1, 0], [O[0] + sg * K * v * (T - now()), yb + 0.1, 0], color=WHITE, stroke_width=2)
+              for v in CUTS[1:6] for sg in (-1, 1)]) if T - now() > 0.2 else VGroup())
+        ruler = always_redraw(lambda: VGroup(Line(P(0, now()), P(T - now(), now()), color=WHITE, stroke_width=3),
+                                             *[Line(P(v * (T - now()), now() - 0.09), P(v * (T - now()), now() + 0.09), color=WHITE, stroke_width=2.5)
+                                               for v in [0.0] + CUTS[1:6] + [1.0]]))
+        x0 = Tex(r"$x = 0$", font_size=24, color=BLUE_).next_to(cl, DOWN, buff=0.04)
+        x1 = Tex(r"$x = 1$", font_size=24, color=ORANGE_).next_to(P(T, 0), DOWN, buff=0.1)
+        xh = Tex(r"$x = 0.5$", font_size=22, color=GREY_).next_to(P(0.5 * T, 0), DOWN, buff=0.1)
+        self.play(LaggedStart(*[Create(r) for r in rays], lag_ratio=0.1), FadeIn(marks), FadeIn(ruler), FadeIn(VGroup(x0, x1, xh)), run_time=1.4)
+        self.say(r"Inside the horizon, say where a point is by how far out it is, as a fraction: $x = 0$ at the centre, $x = 1$ on the horizon, $x = 0.5$ halfway.")
+        self.say(r"As the horizon closes in, those marks close in with it.", hold=0.2)
+        self.play(t.animate.set_value(0.8 * T), run_time=5.0, rate_func=linear)
+        self.wait(0.6)
+        # the outer half, x from 0.5 to 1, and why the solver cannot work there alone
+        self.settle()
+        self.play(t.animate.set_value(0.0), run_time=1.2)
+        op = ValueTracker(0.0)                           # how strongly the outer half is tinted
+        half = Polygon(P(0.5 * T, 0), P(T, 0), C, stroke_width=0, fill_color=BLUE_, fill_opacity=0.5)
+        halfl = Tex(r"the outer half:\\$x$ from 0.5 to 1", font_size=22, color=BLUE_).move_to(P(5.3, 1.0))
+        halfl.add_background_rectangle(color=config.background_color, opacity=1.0, buff=0.08)     # the "now" line passes behind it
+
+        def outer():
+            r = K * (T - now())
+            if T - now() <= 0.05 or op.get_value() < 0.01:
+                return VGroup()
+            return VGroup(Annulus(inner_radius=0.5 * r, outer_radius=r, color=BLUE_, fill_opacity=0.5 * op.get_value(), stroke_width=0).move_to(O),
+                          *[Rectangle(width=0.5 * r, height=0.95, stroke_width=0, fill_color=BLUE_, fill_opacity=0.5 * op.get_value()).move_to(
+                              [O[0] + sg * 0.75 * r, yb + 0.475, 0]) for sg in (-1, 1)])
+
+        outer_view = always_redraw(outer)
+        self.add(outer_view)
+        self.play(FadeIn(half), FadeIn(halfl), op.animate.set_value(1.0), run_time=0.6)
+        self.say(r"Now look at the outer half, from $x = 0.5$ to $x = 1$, in blue in all three views: a ring from above, two gaps from the side, a wedge on the map. Could the solver work there alone?")
+        r0, turn = 0.6 * T, 0.3 / 1.3                    # the shell starts in the outer half; each round turns back at x = 0.3
         legs, turns, tt, L = [(0.0, r0, r0, 0.0, BLUE_)], [], r0, T - r0                # (from time, to time, from r, to r)
         for _ in range(7):
-            s_ = 0.22 * L                                # each round turns back at the same x, 0.22 / 0.78
+            s_ = turn * L
             legs += [(tt, tt + s_, 0.0, s_, GOLD_), (tt + s_, tt + 2 * s_, s_, 0.0, BLUE_)]
             turns.append((tt + s_, s_))
             tt, L = tt + 2 * s_, L - 2 * s_
@@ -665,57 +700,29 @@ class S03b_Cone(Film):
             return g
 
         zig = always_redraw(zigzag)
-        zr = always_redraw(lambda: VGroup(*[Circle(radius=K * r, color=c_, stroke_width=3, stroke_opacity=op).move_to(O) for r, c_, op, w in escaped()],
+        zr = always_redraw(lambda: VGroup(*[Circle(radius=K * r, color=c_, stroke_width=3, stroke_opacity=op_).move_to(O) for r, c_, op_, w in escaped()],
                                           Circle(radius=max(K * r_at(now())[0], 0.03), color=r_at(now())[1], stroke_width=5).move_to(O),
                                           humps(escaped() + [(r_at(now())[0], r_at(now())[1], 1.0, width(now()))])))
         zk = VGroup(Tex("falling in", font_size=22, color=BLUE_), Tex("heading out", font_size=22, color=GOLD_),
                     Tex("escaping", font_size=22, color=GREY_), Tex("(a sketch)", font_size=18, color=GREY_))
-        zk.arrange(DOWN, buff=0.08, aligned_edge=LEFT).move_to(P(5.9, 2.6))
+        zk.arrange(DOWN, buff=0.08, aligned_edge=LEFT).move_to(P(5.3, 2.6))
+        zk = VGroup(BackgroundRectangle(zk, color=config.background_color, fill_opacity=1.0, buff=0.08), zk)
+        self.play(half.animate.set_fill(opacity=0.18), op.animate.set_value(0.36), FadeIn(zk), run_time=0.5)
         self.add(zig, zr)
-        tp = 0.2 * r0                                                                     # a moment early in the fall
-        self.play(t.animate.set_value(tp), run_time=1.0, rate_func=linear)
-        band = Polygon(P(r0, 0), P(T, 0), P(T - r0, r0), P(0, r0), stroke_width=0, fill_color=BLUE_, fill_opacity=0.5)
-        bandl = Tex(r"the band between a falling\\shell and the horizon", font_size=22, color=BLUE_).move_to(P(5.7, 1.0))
-        ann = Annulus(inner_radius=K * (r0 - tp), outer_radius=K * (T - tp), color=BLUE_, fill_opacity=0.5, stroke_width=0).move_to(O)
-        gap = VGroup(*[Rectangle(width=K * (T - r0), height=0.95, stroke_width=0, fill_color=BLUE_, fill_opacity=0.5).move_to(
-            [O[0] + sg * K * (r0 - tp + (T - r0) / 2), yb + 0.475, 0]) for sg in (-1, 1)])
-        cut = Line(P(r0 - tp, tp), P(T - tp, tp), color=WHITE, stroke_width=7)
-        self.play(FadeIn(band), FadeIn(bandl), FadeIn(ann), FadeIn(gap), FadeIn(cut), run_time=0.6)
-        self.say(r"Look at the band between a falling shell and the horizon, in blue in all three views: a ring-shaped region from above, two gaps from the side, and a slanted strip on the map.")
-        self.say(r"The thick white line is the band at this moment. It holds the wave that is still on its way in. Is that band all the solver needs?")
-        self.play(band.animate.set_fill(opacity=0.15), FadeOut(bandl), FadeOut(ann), FadeOut(gap), FadeOut(cut), FadeIn(zk), run_time=0.5)
-        self.say(r"No, because a shell is not finished when it reaches the centre. It passes through and heads back out. Part escapes across the horizon, and what gravity turns back falls in again.", hold=0.3)
-        self.play(t.animate.set_value(0.985 * T), run_time=9.0, rate_func=linear)
+        self.say(r"No. Follow a shell that starts there. It does not stay: it falls out of the outer half, through the inner half, to the centre.", hold=0.3)
+        self.play(t.animate.set_value(r0), run_time=4.5, rate_func=linear)
+        self.say(r"It passes through and heads back out. Part escapes across the horizon, through the outer half again, and what gravity turns back falls in again.", hold=0.3)
+        self.play(t.animate.set_value(0.985 * T), run_time=8.0, rate_func=linear)
         self.wait(0.6)
         self.say(r"That zig-zag is the echoing, drawn on the map: round after round, each smaller, right up to the collapse. From the side, the humps shuttle between the centre and the closing walls, and the grey ones slip out.")
-        self.say(r"So everything in the band ends up at the centre, and comes back out across the whole inside. The solver needs all of it, from the centre to the horizon.")
-        zig.clear_updaters()
-        zr.clear_updaters()
-        self.play(FadeOut(VGroup(zig, zr, zk, band)), run_time=0.5)
-        # x: how far out, as a fraction of the way to the horizon
-        self.play(t.animate.set_value(0.0), run_time=1.2)
-        rays = VGroup(*[Line(P(v * T, 0), C, color=GREY_, stroke_width=1.5) for v in CUTS[1:6]])
-        marks = always_redraw(lambda: VGroup(
-            *[Circle(radius=K * v * (T - now()), color=GREY_, stroke_width=1.5).move_to(O) for v in CUTS[1:6]],
-            *[Line([O[0] + sg * K * v * (T - now()), yb - 0.1, 0], [O[0] + sg * K * v * (T - now()), yb + 0.1, 0], color=WHITE, stroke_width=2)
-              for v in CUTS[1:6] for sg in (-1, 1)]) if T - now() > 0.2 else VGroup())
-        ruler = always_redraw(lambda: VGroup(Line(P(0, now()), P(T - now(), now()), color=WHITE, stroke_width=3),
-                                             *[Line(P(v * (T - now()), now() - 0.09), P(v * (T - now()), now() + 0.09), color=WHITE, stroke_width=2.5)
-                                               for v in [0.0] + CUTS[1:6] + [1.0]]))
-        x0 = Tex(r"$x = 0$", font_size=24, color=BLUE_).next_to(cl, DOWN, buff=0.04)
-        x1 = Tex(r"$x = 1$", font_size=24, color=ORANGE_).next_to(P(T, 0), DOWN, buff=0.1)
-        xh = Tex(r"$x = 0.5$", font_size=22, color=GREY_).next_to(P(0.5 * T, 0), DOWN, buff=0.1)
-        self.play(LaggedStart(*[Create(r) for r in rays], lag_ratio=0.1), FadeIn(marks), FadeIn(ruler), FadeIn(VGroup(x0, x1, xh)), run_time=1.4)
-        self.say(r"Inside the horizon, say where a point is by how far out it is, as a fraction: $x = 0$ at the centre, $x = 1$ on the horizon, $x = 0.5$ halfway.")
-        self.say(r"As the horizon closes in, those marks close in with it.", hold=0.2)
-        self.play(t.animate.set_value(0.8 * T), run_time=5.0, rate_func=linear)
-        self.say(r"Each round of echoing is the last one, shrunk. In $x$ the shrinking is taken out, so every echo looks the same.")
+        self.say(r"Each round turns back on the same mark. In $x$ the shrinking is taken out, so every echo looks the same.")
+        self.say(r"So no part of the inside stands alone: the wave in the outer half now is in the inner half a moment later.")
+        self.say(r"The solver needs all of it, from $x = 0$ to $x = 1$. Those two ends, the centre and the horizon, are where the solution will be pinned down.")
         self.say(r"Keep the horizon in mind. At large $D$, nearly every wall ahead begins at that edge.")
-        self.say(r"So the solver works in $x$, between the centre at 0 and the horizon at 1.")
-        for m in (nowline, nowl, B, hit, inside_view, marks, ruler):
+        for m in (nowline, nowl, B, hit, inside_view, marks, ruler, zig, zr, outer_view):
             m.clear_updaters()
         self.play(FadeOut(VGroup(dotc, dl, vl, saxis, smid, centre, base, tl, rl, ml, cl, star, sl, B, hit, inside_map, inside_view, hz, rays, marks, ruler,
-                                 x0, x1, xh, nowline, nowl, self.cap)), run_time=0.7)
+                                 x0, x1, xh, nowline, nowl, zig, zr, zk, half, halfl, outer_view, self.cap)), run_time=0.7)
 
 
 class S03c_Numbers(Film):
@@ -758,22 +765,33 @@ class S03c_Numbers(Film):
         RW, RH, RC = 4.6, 2.4, [3.3, 0.95, 0.0]
         vs, fs = [0.0] + CUTS[1:6] + [1.0], [0.0, 0.5, 1.0]
         tf = lambda f: T - left(2) * (left(4) / left(2)) ** f              # the time at fraction f of this echo
-        gmap = VGroup(*[Line(pt(v, tf(0)), pt(v, tf(1)), color=WHITE, stroke_width=2) for v in vs],
-                      *[Line(pt(0, tf(f)), pt(1, tf(f)), color=WHITE, stroke_width=2) for f in fs])
+        mid = lambda f: (tf(f) - tf(0)) / (tf(1) - tf(0))                # where fraction f of the echo sits while time is still plain time
         corner = [RC[0] - RW / 2, RC[1] - RH / 2, 0.0]
-        gbox = VGroup(*[Line([corner[0] + v * RW, corner[1], 0], [corner[0] + v * RW, corner[1] + RH, 0], color=WHITE, stroke_width=2) for v in vs],
-                      *[Line([corner[0], corner[1] + f * RH, 0], [corner[0] + RW, corner[1] + f * RH, 0], color=WHITE, stroke_width=2) for f in fs])
-        lo = Rectangle(width=RW, height=RH / 2, stroke_width=0, fill_color=GOLD_, fill_opacity=0.45).move_to([RC[0], RC[1] - RH / 4, 0])
-        hi = Rectangle(width=RW, height=RH / 2, stroke_width=0, fill_color=BLUE_, fill_opacity=0.45).move_to([RC[0], RC[1] + RH / 4, 0])
+
+        def grid(xy):
+            """the patch's lines, placed by xy(v, f): the centre's edge in blue and the horizon's in orange"""
+            return VGroup(*[Line(xy(v, 0), xy(v, 1), color=WHITE, stroke_width=2) for v in vs[1:-1]],
+                          *[Line(xy(0, f), xy(1, f), color=WHITE, stroke_width=2) for f in fs],
+                          Line(xy(0, 0), xy(0, 1), color=BLUE_, stroke_width=5), Line(xy(1, 0), xy(1, 1), color=ORANGE_, stroke_width=5))
+
+        box = lambda f0, f1, h, col: Polygon(*[[corner[0] + v * RW, corner[1] + h(f) * RH, 0] for v, f in ((0, f0), (1, f0), (1, f1), (0, f1))],
+                                             stroke_width=0, fill_color=col, fill_opacity=0.45)
+        gmap = grid(lambda v, f: pt(v, tf(f)))
+        gbox = grid(lambda v, f: [corner[0] + v * RW, corner[1] + mid(f) * RH, 0])                # x across, time still plain
+        gfin = grid(lambda v, f: [corner[0] + v * RW, corner[1] + f * RH, 0])                     # and the time within the echo upward
+        lo, hi = box(0, 0.5, mid, GOLD_), box(0.5, 1, mid, BLUE_)
         self.play(Create(gmap), run_time=1.0)
         self.say(r"Take one echo: a crest and a trough. On the map it is a slanted, shrinking patch.", hold=1.6)
-        self.say(r"Redraw that patch with $x$ across and the time within the echo upward. The same patch becomes a plain rectangle.", hold=0.4)
-        self.play(ReplacementTransform(gmap.copy(), gbox), ReplacementTransform(bands[2].copy(), lo), ReplacementTransform(bands[3].copy(), hi), run_time=2.4)
+        self.say(r"Its right edge slopes because it is the horizon, closing in. But the horizon is $x = 1$ at every moment. So put $x$ across in place of distance, and the sloping edge stands upright.", hold=0.4)
+        self.play(ReplacementTransform(gmap.copy(), gbox), ReplacementTransform(bands[2].copy(), lo), ReplacementTransform(bands[3].copy(), hi), run_time=3.0)
         xa = VGroup(Tex(r"$x = 0$", font_size=24, color=BLUE_).next_to([corner[0], corner[1], 0], DOWN, buff=0.1),
                     Tex(r"$x = 1$", font_size=24, color=ORANGE_).next_to([corner[0] + RW, corner[1], 0], DOWN, buff=0.1),
                     Tex(r"position $x \rightarrow$", font_size=22, color=GREY_).next_to([RC[0], corner[1], 0], DOWN, buff=0.1))
         ya = Tex(r"time within\\one echo $\uparrow$", font_size=22, color=GREY_).next_to([corner[0], RC[1], 0], LEFT, buff=0.15)
-        self.play(FadeIn(xa), FadeIn(ya), run_time=0.6)
+        self.play(FadeIn(xa), run_time=0.6)
+        self.say(r"Then put the time within the echo upward, counted in logarithmic time. The squeezed upper half grows as tall as the lower, and the patch is a plain rectangle.", hold=0.4)
+        self.play(Transform(gbox, gfin), Transform(lo, box(0, 0.5, lambda f: f, GOLD_)), Transform(hi, box(0.5, 1, lambda f: f, BLUE_)), run_time=2.0)
+        self.play(FadeIn(ya), run_time=0.6)
         self.wait(2.0)
         # 3. an image
         cells = strip_cells(RC, RW, RH, co)
@@ -807,7 +825,8 @@ class S03c_Numbers(Film):
                         Tex(r"$a,\ c$: the curved spacetime it travels through", font_size=22, color=PURPLE_))
         fields.arrange(DOWN, buff=0.12, aligned_edge=LEFT).next_to(frame, DOWN, buff=0.65)
         self.play(FadeIn(layers), FadeIn(ltags), FadeIn(fields), FadeOut(key), run_time=0.8)
-        self.say(r"One image is not enough. Four quantities, called fields, are needed: two for the wave, its parts heading out and in, and two for the spacetime it bends. So a solution is four such images, like layers.")
+        self.say(r"One image is not enough. Einstein's equations, with the wave equation, are written in four quantities, called fields, and the solve needs all four.")
+        self.say(r"$p$ and $m$ are the wave, its parts heading out and in. $a$ and $c$ are the spacetime it bends. So a solution is four such images, like layers.")
         # 6. the computer keeps five columns of each
         ncol, nrow = 28, 16
         node_i = [int(v * ncol) for v in CUTS[1:6]]
