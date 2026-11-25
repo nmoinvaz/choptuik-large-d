@@ -201,7 +201,7 @@ Days from 2026-10-19 00:00 UTC.
 | 30 | other session | comms 2026-11-06 10:40, 11:20, 11:23, 13:34 |
 | 31 | prompt | `tx:43f19197` 2026-11-06 13:28, 13:30; comms 2026-11-06 13:34; `notes/OCTO_DOUBLE.md` 5–6 *(main)* |
 
-## Table IV, the records
+## Appendix C, the records in numbers (first column)
 
 | item | source |
 |---|---|
@@ -388,7 +388,7 @@ prompt list.
 | 11-06 14:25 | 43f19197 | M | i can spool up another mac M3 laptop if you think it will help make the total work faster. |
 | 11-06 16:49 | 43f19197 | U | what is "harmonic" wrt our work? |
 
-## Update of 25 November: sections VI to VIII, Appendix B, Tables IV to VI and the later rows of the records
+## Update of 25 November: the later setup, the libraries, the later turning points (Appendix B) and the second column of the records
 
 - **Transcripts after 2026-11-06 18:29 UTC:** `tx:` as above. The coordinator sessions are `tx:43f19197` (to
   2026-11-10 02:09), `tx:11bcbd25` (2026-11-10 to 13), `tx:afb99455` (2026-11-14 to 22) and `tx:0726f216` (2026-11-22 to
@@ -429,12 +429,11 @@ prompt list.
 | the order the machines joined | first `comms.txt` entry of each sender at 07eff89: local (the Windows laptop) 2026-10-19 01:00 PDT, cloud 01:08 PDT (the chat's container came first, Section II), mac 2026-10-24, win2 2026-11-01, macm3 2026-11-06; the memory files above: dh370 and dh610 2026-11-12, rpi5 2026-11-15 to 23, dh170 2026-11-16 |
 | the records' two commits, 19 and 37 days after the first | `git log -1 --format=%aI` of be8f07d (2026-10-19 03:53 UTC), 07eff89 (2026-11-06 18:26 UTC) and a42fd6c8 (2026-11-25 00:42 UTC) |
 | "Later that day" between the back-to-basics and lost-the-plot prompts | `tx:0726f216:43046` (2026-11-24 20:07 UTC) and `:44341` (2026-11-25 00:03 UTC) |
-| Table VI and Section VII, the libraries | `gh api repos/nmoinvaz/<repo>`; `gh release list -R nmoinvaz/<repo>`; commits on main by `gh api -i "repos/nmoinvaz/<repo>/commits?per_page=1"`; `gh pr list -R nmoinvaz/<repo> --state merged --limit 1000`; descriptions from the repositories |
-| multidouble 1.0.0 and 1.8.0, bit for bit | commits 93402cf8, 649ec63e; memory `multidouble-1-8-move.md`; `hp/data/multidouble/*_1.8.0.log` |
+| the table of libraries: releases, pull requests merged, what each holds | `gh release list -R nmoinvaz/<repo>`; `gh pr list -R nmoinvaz/<repo> --state merged --limit 1000`; descriptions from the repositories |
+| the arithmetic left the solver first; the rest moved into multidouble | commits 93402cf8, 649ec63e; memory `multidouble-1-8-move.md`; `hp/data/multidouble/*_1.8.0.log` |
 | "could the residual qd stuff go inside multidouble?" | the list of prompts above (2026-10-27 05:50) |
 | multishoot: "can we move any of the things we built into a separate rust library?"; named; public; crates.io | `tx:11bcbd25:8601`, `:9271`, `:9383`, `:9972`, `:14418`; memory `multishoot-repo.md`; #523 |
-| multisolver: the solvers into multishoot on 14 November, into their own crate on 15 November | `tx:6d6cbe24:5`, `:969`, `:6251`; commit 001bf8e4 |
-| multishoot 4.2.0 and the low-D question | `gh release view 4.2.0 -R nmoinvaz/multishoot`; #1082 closing comment |
+| multisolver: the solvers into multishoot, then into their own crate | `tx:6d6cbe24:5`, `:969`, `:6251`; commit 001bf8e4 |
 | the release rule; what it flagged | AGENTS.md "Double-double solver"; the reply after `tx:11bcbd25:19366` (e295b49); notes/HIGH_M.md 9.5, 9.7 |
 | the renormalization error, about 93 bits, fixed in 4.8.2, states bit-identical | memory `multidouble-od-renorm-bug.md`; commit d7b59668 |
 | review bot rate | memory `coderabbit-review-cap.md` |

@@ -66,8 +66,8 @@ Appendix~\ref{app:stuck}). Six later turning points took it from that chain to a
 
 The sources are the chat where the project began~\cite{chat}, the coordination log of the first three weeks, the git
 history, the notes in \file{notes/}, the raw-data repository~\cite{raw}, the repository's issues and the transcripts of
-the Claude Code sessions. The other machines' side in the first three weeks is known from their entries in the log.
-Every number and quotation is listed with its source in \file{paper/ai/SOURCES.md}.
+the Claude Code sessions, counted in Appendix~\ref{app:numbers}. The other machines' side in the first three weeks is
+known from their entries in the log. Every number and quotation is listed with its source in \file{paper/ai/SOURCES.md}.
 
 \section{How it began}
 \label{sec:origin}
@@ -470,51 +470,46 @@ My prompts set the direction and the pace, and the rules made the results checka
 \section{Three libraries made along the way}
 \label{sec:libs}
 
-Three parts of the solver became libraries of their own (Table~\ref{tab:libs}). Each is public and released on
-crates.io: the arithmetic as \file{multidouble}~\cite{multidouble}, the multiple-shooting engine as
-\file{multishoot}~\cite{multishoot}, and the solvers on that engine as \file{multisolver}~\cite{multisolver}.
+Three parts of the solver became public libraries on crates.io (Table~\ref{tab:libs}): the arithmetic as
+\file{multidouble}~\cite{multidouble}, the multiple-shooting engine as \file{multishoot}~\cite{multishoot}, and the
+solvers on that engine as \file{multisolver}~\cite{multisolver}. The arithmetic left the solver first. After
+\prompt{could the residual qd stuff go inside multidouble?} the rest of the solver's arithmetic moved into it, and after
+\prompt{can we move any of the things we built into a separate rust library?} the engine became \file{multishoot},
+public the same day. The solvers followed into a crate of their own.
 
 \begin{table}[h]
 \caption{The three libraries.}
 \label{tab:libs}
 \small
-\begin{tabular}{L{4.0cm}L{3.7cm}L{3.7cm}L{3.7cm}}
+\begin{tabular}{L{2.2cm}L{9.2cm}L{1.5cm}L{2.4cm}}
 \toprule
-& \file{multidouble} & \file{multishoot} & \file{multisolver}\\
+library & what it holds & releases & pull requests merged\\
 \midrule
-what it holds & double-, quad- and octo-double arithmetic, 8-lane SIMD with bit-identical results, dual numbers, LU solves, a Python package & residual, Taylor-jet steps, exact Jacobians by dual numbers, series in a parameter, the mode matrix & damped Newton, chord, GMRES-refined Newton, Levenberg--Marquardt, the asymptotic numerical method, weak subspaces, a zero count\\
-releases; current version & 33; 5.1.0 & 14; 4.2.0 & 5; 0.2.2\\
-commits on main; pull requests merged & 550; 150 & 177; 63 & 28; 16\\
+\file{multidouble} & double-, quad- and octo-double arithmetic, 8-lane SIMD with bit-identical results, dual numbers, LU solves, a Python package & 33 & 150\\
+\file{multishoot} & residual, Taylor-jet steps, exact Jacobians by dual numbers, series in a parameter, the mode matrix & 14 & 63\\
+\file{multisolver} & damped Newton, chord, GMRES-refined Newton, Levenberg--Marquardt, the asymptotic numerical method, weak subspaces, a zero count & 5 & 16\\
 \bottomrule
 \end{tabular}
 \end{table}
 
 \begin{itemize}
-\item \emph{\file{multidouble}.} The arithmetic left the solver first, and its 1.0.0 gave the same bits as the solver's
-own code. After \prompt{could the residual qd stuff go inside multidouble?} the rest moved in by one pull request,
-released as 1.8.0 and checked bit for bit against the build before it. Octo-double came in 3.0.0.
-\item \emph{\file{multishoot}.} After \prompt{can we move any of the things we built into a separate rust library?} I
-named it, a subagent set up the repository, and it was public and on crates.io the same day. The solver's kernel was
-rebuilt on it, and its files do not mention this project.
-\item \emph{\file{multisolver}.} The standard solvers moved into \file{multishoot} and, the next day, out into a crate
-of their own.
 \item \emph{The release rule.} A change to the arithmetic, the engine or the solvers goes into its library and a release
 first. Then the version in the solver is raised, and its bit-identity checks are rerun against a build of the previous
 version, each with a control that must fail. The checks flagged a difference in how $\Delta$ was read during the move to
 \file{multishoot}, and a difference of the platforms' \file{pow} that stored plans now avoid.
-\item \emph{What the rule missed.} An octo-double renormalization error in 3.0.0 to 4.8.0, which lost about 93 bits on
-inputs with a gap or zero parts, was found by a subagent's review, not by the checks. It was fixed in 4.8.2, and the
-chain's stored states were bit-identical under the old and the fixed version.
+\item \emph{What the rule missed.} An octo-double renormalization error, which lost about 93 bits on inputs with a gap or
+zero parts, was found by a subagent's review, not by the checks. The chain's stored states were bit-identical under the
+old and the fixed version.
 \item \emph{Reviews.} A review bot allowed about one review an hour across the account, so independent reviewer
-sessions at high effort took its place, and every bot's comments are read. The coordinator merges these libraries' pull
-requests once their checks and every finding are answered, and the releases are mine.
+sessions at high effort took its place. The coordinator merges these libraries' pull requests once their checks and
+every finding are answered, and the releases are mine.
 \item \emph{New mathematics.} After \prompt{we need to do the real new-math opportunity, length five and up which is open.},
 \file{multidouble} gained a paper of its own on error bounds for quad-double style arithmetic on expansions of any
-length, with elementary functions whose error bounds are proved. A referee narrowed its novelty claim to the quad-double
-style algorithms. Three fixes went upstream to the QD library, and all were merged.
-\item \emph{Speed.} Seven speed items went to subagents as pull requests in the libraries and the solver.
-The chain's step did not get faster, since most were measured as losses for that step and the gains that held had come
-the week before.
+length. A referee narrowed its novelty claim to the quad-double style algorithms. Three fixes went upstream to the QD
+library, and all were merged.
+\item \emph{Speed.} Seven speed items went to subagents as pull requests in the libraries and the solver. The chain's
+step did not get faster, since most were measured as losses for that step and the gains that held had come the week
+before.
 \end{itemize}
 
 \section{From a chain in $D$ to a new formulation}
@@ -556,34 +551,6 @@ that it was mostly its own to catch: I had given the right signal twice, with th
 it had answered the second with a pause and more repairs, not with a new method. It proposed giving each goal a date or a
 rate and reporting the time to the goal at the current rate in the hourly status, since $D = 400$ was 23 days away ``and
 no table showed that number''.
-
-\section{The records}
-\label{sec:numbers}
-
-\begin{table}[h]
-\caption{The records at two commits. The first block is at 07eff89 of the code repository and 8b9db42 of the raw-data
-repository, 19 days after the first commit of 19 October 2026, and the second at a42fd6c8 and b6c344480, 37 days after
-it.}
-\label{tab:numbers}
-\small
-\begin{tabular}{L{5.2cm}L{10.6cm}}
-\toprule
-quantity & value\\
-\midrule
-chat on claude.ai & 62 prompts, a few on side projects\\
-commits on main & 2227, of which 954 are messages between sessions\\
-messages between sessions & 974: coordinator 293, Windows laptop 318, Mac 221, Windows desktop 134, macm3 8\\
-tasks; raw-data repository & T1 to T135; 124 folders, 548 commits\\
-values of $\Delta$ in \file{hp/data/delta\_all.csv} & 2445 rows, from $D = 3.04375$ to 203.27\\
-coordinator session on the Mac & 334 prompts, 308 hourly status prompts, 29 context summaries, 30 subagent launches\\
-\midrule
-repositories at the second commit & 4082 commits on main; 869 raw-data folders, 4289 commits; 2512 rows of $\Delta$, of
-which the computed ones end at $D = 259.899$ and 16 from $D = 250$ to 400 are the series; 839 issues\\
-prompts of mine between the two & 1058 in 14 sessions on the Mac, 25 of them changing the direction; 86 typed into runner
-sessions, all setup or routine; 187 subagent launches\\
-\bottomrule
-\end{tabular}
-\end{table}
 
 \section{Limitations and lessons}
 \label{sec:limits}
@@ -703,6 +670,31 @@ transcripts of the coordinator sessions, with spelling corrected, and its source
 35 & 24 Nov & \prompt{Can you re-evaluate the underlying math assumptions to see if we missed anything?}; \prompt{\dots like go back to basics if you have to.} & a from-scratch derivation & the chain's limits its own\\
 36 & 25 Nov & \prompt{I think you may have already lost the plot. \dots At these speeds it is unobtainable}; \prompt{we need to prioritize this quest} & direct solves at each target $D$ & continuation in $D$ dropped\\
 37 & 25 Nov & \prompt{I want you to use new subagents to look to see any gaps in any of the published papers \dots look at formulas, maths, missing gaps and connections} & three literature subagents & the momentum constraint imposed\\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\section{The records in numbers}
+\label{app:numbers}
+
+The first column is at commit 07eff89 of the code repository and 8b9db42 of the raw-data repository, 19 days after the
+first commit, of 19 October 2026. The second is at a42fd6c8 and b6c344480, 37 days after it, and its counts of prompts
+and launches are those between the two.
+
+\begin{center}
+\small
+\begin{tabular}{L{4.0cm}L{5.7cm}L{5.9cm}}
+\toprule
+quantity & at 19 days & at 37 days\\
+\midrule
+commits on main & 2227, of which 954 are messages between sessions & 4082\\
+tasks & T1 to T135 & 839 issues\\
+raw-data repository & 124 folders, 548 commits & 869 folders, 4289 commits\\
+values of $\Delta$ in \file{hp/data/delta\_all.csv} & 2445 rows, from $D = 3.04375$ to 203.27 & 2512 rows, of which the computed ones end at $D = 259.899$ and 16 from $D = 250$ to 400 are the series\\
+prompts of mine & 62 in the chat, a few on side projects; 334 in the coordinator session, beside 308 hourly status prompts & a further 1058 in 14 sessions on the Mac, 25 of them changing the direction; 86 typed into runner sessions, all setup or routine\\
+subagent launches & 30 & a further 187\\
+messages between sessions in the log & 974: coordinator 293, Windows laptop 318, Mac 221, Windows desktop 134, macm3 8 & ---\\
+context summaries of the coordinator session & 29 & ---\\
 \bottomrule
 \end{tabular}
 \end{center}
