@@ -51,14 +51,25 @@ def dmat_even(M, dps=40):
     return hi.reshape(M, M), lo.reshape(M, M)
 
 
-def make_solver_s(D, M, nodes, kt=36, kc=40, ks=120, threads=0, kfreeze=None, segs=None):
-    """make_solver with the even-sector d/dtheta set, for the form-S entry points (residual_s, jacobian_s, newton_s)"""
+def make_solver_s(D, M, nodes, kt=36, kc=40, ks=120, threads=0, kfreeze=None, segs=None, mob=0.0):
+    """make_solver with the even-sector d/dtheta set, for the form-S entry points (residual_s, jacobian_s, newton_s);
+    mob > 0: the horizon series in the Moebius variable t = (1 - z)/(1 + mob z) (Solver.set_horizon_mobius, #1090)"""
     s = make_solver(D, M, nodes=nodes, kt=kt, kc=kc, ks=ks, threads=threads, kfreeze=kfreeze)
     if segs:
         s.set_segs(segs)
     dh, dl = dmat_even(M)
     s.set_dmat_even(np.ascontiguousarray(dh), np.ascontiguousarray(dl))
+    if mob:
+        if not hasattr(s, "set_horizon_mobius"):
+            raise SystemExit("this hpkernel has no set_horizon_mobius (form_s.rs's Moebius horizon); rebuild hp")
+        s.set_horizon_mobius(float(mob))
     return s
+
+
+def ks_mob(D):
+    """the Moebius horizon series' order: 1.5 n + 20 (t2v's float64 coefficients at a = 6-8 fall below 1e-50 by order
+    1.3-1.4 n at D 400 and the D 1000 guess's tail is 1e-61 at 1.52 n; I1088-mac-a/form_s/mobius_gain.py)"""
+    return int(np.ceil(1.5 * (float(D) - 2.0))) + 20
 
 
 def a_to_s(parts, M, K):
@@ -497,7 +508,8 @@ def cmd_jump(argv):
     allow = pop_allow(argv)
     pos, o = opts(argv, dict(D="250", states="", Dmin="0", Dmax="1e9", deg="3", kfreeze="13", plan_tol="1e-40", hmax="0.05",
                              ks="sigma", kc="146", threads="2", delta="series", tol="1e-40", it_max="16", halvings="8",
-                             mutate="none", junk="0", tol_dz="1e-45", ls="0", outer="8", held="0"))
+                             mutate="none", junk="0", tol_dz="1e-45", ls="0", outer="8", held="0", mob="0"))
+    mob = float(o["mob"])
     outdir = pos[0]
     os.makedirs(outdir, exist_ok=True)
     log = os.path.join(outdir, "jump_s.jsonl")
@@ -527,7 +539,10 @@ def cmd_jump(argv):
     spread = np.abs(jump.unscale(y1, float(Dt), M, K) - zA)
     print(f"guess at D {o['D']} from {len(rows)} states, D {Ds[0]:.4f} .. {Ds[-1]:.4f}, degree {deg} in 1/n; degree "
           f"{deg - 1} differs by {spread[:-1].max():.2e} (unknowns), {spread[-1]:.2e} (Delta)", flush=True)
-    if o["ks"] == "auto":
+    if mob and o["ks"] in ("auto", "sigma"):
+        ks = ks_mob(float(Dt))
+        print(f"  ks {ks} (the Moebius series' rule 1.5 n + 20, a = {mob:g})", flush=True)
+    elif o["ks"] == "auto":
         ah = zA[jump.groups(M, K)["ah"]]
         ks, ks_s, ks_m = jump.ks_rule(float(Dt), gbar=(float(Dt) - 3.0) * float(np.mean(ah * ah - 1.0)))
         print(f"  ks {ks} (sigma rule {ks_s}, form A's mass-mode tail rule {ks_m})", flush=True)
@@ -543,7 +558,7 @@ def cmd_jump(argv):
     zero = np.zeros(len(zA))
     segs = sa.plan(np.ascontiguousarray(zA), zero, float(o["plan_tol"]), float(o["hmax"]))
     segs = [list(map(float, g)) for g in segs]
-    s = make_solver_s(Dt, M, nodes, segs=segs, **kw)
+    s = make_solver_s(Dt, M, nodes, segs=segs, mob=mob, **kw)
     z8 = [a_to_s([zA], M, K)[0]] + [np.zeros(s.size_s) for _ in range(7)]
     if o["delta"] != "fit":
         # Track C's series row of delta_all.csv, or a value given as a number (Track C's at a D without a row)
@@ -557,7 +572,7 @@ def cmd_jump(argv):
                 z8[q][-1] = f
                 v -= mp.mpf(f)
         print(f"  Delta from Track C's series: {mp.nstr(sd[0], 16)} +- {sd[1]:.2e}; the fit's {zA[-1]:.12f}", flush=True)
-    meta = dict(D=float(Dt), D_str=mp.nstr(Dt, 50), M=M, nodes=nodes, kt=kw["kt"], kc=kw["kc"], ks=ks, kfreeze=kf, form="S",
+    meta = dict(D=float(Dt), D_str=mp.nstr(Dt, 50), M=M, nodes=nodes, kt=kw["kt"], kc=kw["kc"], ks=ks, kfreeze=kf, form="S", hmob=mob,
                 parts=8, segs=segs, plan_tol=float(o["plan_tol"]), deg=deg, states=[r[2].get("source", "") for r in rows][:0],
                 source="form_s.py jump")
     F = s.residual_s(list(o8(z8)))
@@ -571,7 +586,7 @@ def cmd_jump(argv):
     s_full = s
     if int(o["held"]):
         # p1's harmonics 5-13 held at the guess's own values (form S's PinnedO), the rest solved
-        sh = make_solver_s(Dt, M, nodes, segs=segs, **dict(kw, kfreeze=3))
+        sh = make_solver_s(Dt, M, nodes, segs=segs, mob=mob, **dict(kw, kfreeze=3))
         s = HeldS(sh, M, K, held_field(z8, M))
         meta.update(held="5-13 at the guess's values", kfreeze=3)
         print("  p1's harmonics 5-13 held at the guess's values (kfreeze 3 with the held offset)", flush=True)
@@ -742,7 +757,8 @@ def cmd_release_ls(argv):
     K = len(nodes)
     with mp.workdps(60):
         D = mp.mpf(meta["D_str"])
-    kw = dict(kt=meta.get("kt", 36), kc=meta["kc"], ks=meta["ks"], threads=int(o["threads"]), segs=meta["segs"])
+    kw = dict(kt=meta.get("kt", 36), kc=meta["kc"], ks=meta["ks"], threads=int(o["threads"]), segs=meta["segs"],
+              mob=meta.get("hmob", 0.0))
     print(f"release_ls from {os.path.basename(path)}: D {float(D):.6g}, Delta {delta_digits(z8, 40)}", flush=True)
     for k in [int(x) for x in o["harm"].split(",")]:
         held_in = list(range(k, 14, 2))
@@ -797,10 +813,91 @@ def cmd_release_ls(argv):
     return 0
 
 
+def cmd_mobcheck(argv):
+    """The Moebius horizon against the u one at a held state solved with u (#1088's written checks for the port): the
+    held system's max |F| per block at the state with the horizon in u (the state's ks) and in the Moebius variable
+    (--mob, ks_mob(D) unless --ks), and with the control (mutate 52, z(t) from the wrong map); then held Newton with the
+    Moebius horizon from the state, whose Delta must agree with the state's within the residual's grip (pass:
+    |Delta_t - Delta_u| <= --tol_delta, 1e-20), while the control's Newton must not (its Delta moves by more)."""
+    from octo_corrector import delta_digits, load_o, save_o
+    from raw_out import pop_allow, require_raw
+    argv = list(argv)
+    allow = pop_allow(argv)
+    pos, o = opts(argv, dict(mob="8", ks="0", threads="2", tol="1e-40", it_max="4", halvings="6", tol_delta="1e-20",
+                             control="1", newton="1"))
+    path, outdir = pos[0], pos[1]
+    os.makedirs(outdir, exist_ok=True)
+    log = os.path.join(outdir, "mobcheck.jsonl")
+    require_raw(log, allow=allow)
+    z8, meta = load_o(path)
+    M, nodes = int(meta["M"]), list(meta["nodes"])
+    K = len(nodes)
+    with mp.workdps(60):
+        D = mp.mpf(meta["D_str"])
+    mob = float(o["mob"])
+    ks_t = int(o["ks"]) or ks_mob(float(D))
+    kw = dict(kt=meta.get("kt", 36), kc=meta["kc"], threads=int(o["threads"]), segs=meta["segs"], kfreeze=3)
+    h8 = held_field(z8, M)
+    su = HeldS(make_solver_s(D, M, nodes, ks=meta["ks"], **kw), M, K, h8)
+    st = HeldS(make_solver_s(D, M, nodes, ks=ks_t, mob=mob, **kw), M, K, h8)
+    Du = delta_digits(z8, 40)
+    print(f"mobcheck at {os.path.basename(path)}: D {float(D):.6g}, Delta {Du}; u ks {meta['ks']}, Moebius a {mob:g} "
+          f"ks {ks_t}", flush=True)
+    rec = dict(D_str=meta["D_str"], mob=mob, ks_u=meta["ks"], ks_t=ks_t, Delta_u=Du)
+    for nm, sv, mu in (("u", su, 0), ("Moebius", st, 0), ("control", st, FS_MUT_MOBIUS_PY)):
+        t0 = time.time()
+        F = sv.residual_s(list(z8), mu)
+        b = blocks_s(F, M, K)
+        rec[f"blocks_{nm}"] = b
+        print(f"  {nm}: max |F| per block " + " ".join(f"{v:.2e}" for v in b) + f" ({time.time() - t0:.0f} s)",
+              flush=True)
+    runs = [("Moebius", st)] + ([("control", MutS(st, FS_MUT_MOBIUS_PY))] if int(o["control"]) else [])
+    runs = runs if int(o["newton"]) else []
+    for nm, sv in runs:
+        t0 = time.time()
+        zt, conv, recs = newton_o_s(sv, z8, float(o["tol"]), int(o["it_max"]), int(o["halvings"]), None, verbose=True)
+        Dt_ = delta_digits(zt, 40)
+        with mp.workdps(60):
+            dD = float(mp.mpf(Dt_) - mp.mpf(Du))
+        ok = bool(conv) and abs(dD) <= float(o["tol_delta"])
+        rec[f"newton_{nm}"] = dict(converged=bool(conv), steps=len(recs), Delta=Dt_, dDelta=dD, s=round(time.time() - t0, 1),
+                                   F=[r.get("F") for r in recs])
+        print(f"  Newton with the {nm} horizon: {'converged' if conv else 'NOT converged'} in {len(recs)} steps, "
+              f"Delta {Dt_}, Delta_t - Delta_u {dD:+.3e}: {'PASS' if ok else 'FAIL'} against {o['tol_delta']} "
+              f"({time.time() - t0:.0f} s)", flush=True)
+        if nm == "Moebius":
+            save_o(os.path.join(outdir, f"mob_D{float(D):.4f}.npz"), zt,
+                   dict(meta, ks=ks_t, hmob=mob, source="form_s.py mobcheck", held="5-13 at the state's values"))
+    rec["utc"] = time.strftime("%Y-%m-%d %H:%M:%S", time.gmtime())
+    with open(log, "a") as fh:
+        fh.write(json.dumps(rec) + "\n")
+    return 0
+
+
+FS_MUT_MOBIUS_PY = 52  # form_s.rs FS_MUT_MOBIUS
+
+
+class MutS:
+    """a form-S solver (or HeldS) whose residual_s and newton_s always run with one Ctx::mutate code"""
+
+    def __init__(self, s, mutate):
+        self.s, self.mu = s, mutate
+
+    @property
+    def size_s(self):
+        return self.s.size_s
+
+    def residual_s(self, z, mutate=0):
+        return self.s.residual_s(z, self.mu)
+
+    def newton_s(self, z, mutate=0):
+        return self.s.newton_s(z, self.mu)
+
+
 def main():
     cmd = sys.argv[1]
     return dict(check=cmd_check, cond=cmd_cond, jump=cmd_jump, planted=cmd_planted, release=cmd_release,
-                release_ls=cmd_release_ls)[cmd](sys.argv[2:])
+                release_ls=cmd_release_ls, mobcheck=cmd_mobcheck)[cmd](sys.argv[2:])
 
 
 if __name__ == "__main__":
