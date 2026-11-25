@@ -156,7 +156,7 @@ def main(argv):
               f"guess's max |F| per block (double-double) " + " ".join(f"{v:.1e}" for v in b)
               + f"; horizon / largest other {b[5] / max(b[:5]):.3e}; saved {out} ({time.time() - t_all:.0f} s)", flush=True)
         return 0
-    F = sh.residual_s([np.ascontiguousarray(p) for p in z8])
+    F = sh.residual_s([np.ascontiguousarray(p) for p in z8[:2]])  # the guess's blocks in double-double (octo-double: the serial horizon at ks 1.3 n costs hours at D 10^4)
     b = blocks_s(F, M, 5)
     print(f"D {float(Dt):g}, x_l {xl:.6f} (ks {meta['ks']}): the guess's max |F| per block " + " ".join(f"{v:.1e}" for v in b)
           + f"; horizon / largest other {b[5] / max(b[:5]):.3e}", flush=True)
