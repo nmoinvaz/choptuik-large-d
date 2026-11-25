@@ -425,7 +425,10 @@ prompt list.
 | two or three coordinator sessions from 21 November | memory `coordinator-split-2026-11-21.md` |
 | the raw-data repository's history made linear on 10 November | `tx:12451890:405`; AGENTS.md "Raw output"; HASH_MAP.csv |
 | rebase merges since 10 November | `tx:12451890:1011` |
-| Table V, the machines | `hc machine ls`; `hc exec --on <m>` (nproc, free); memory `win2-runner.md`, `macm3-runner.md`, `dh370-runner.md`, `dh610-runner.md`, `rpi5-runner.md`; `tx:afb99455:23733` |
+| the table of machines | `hc machine ls`; `hc exec --on <m>` (nproc, free); memory `win2-runner.md`, `macm3-runner.md`, `dh370-runner.md`, `dh610-runner.md`, `rpi5-runner.md`; `tx:afb99455:23733` |
+| the order the machines joined | first `comms.txt` entry of each sender at 07eff89: local (the Windows laptop) 2026-10-19 01:00 PDT, cloud 01:08 PDT (the chat's container came first, Section II), mac 2026-10-24, win2 2026-11-01, macm3 2026-11-06; the memory files above: dh370 and dh610 2026-11-12, rpi5 2026-11-15 to 23, dh170 2026-11-16 |
+| the records' two commits, 19 and 37 days after the first | `git log -1 --format=%aI` of be8f07d (2026-10-19 03:53 UTC), 07eff89 (2026-11-06 18:26 UTC) and a42fd6c8 (2026-11-25 00:42 UTC) |
+| "Later that day" between the back-to-basics and lost-the-plot prompts | `tx:0726f216:43046` (2026-11-24 20:07 UTC) and `:44341` (2026-11-25 00:03 UTC) |
 | Table VI and Section VII, the libraries | `gh api repos/nmoinvaz/<repo>`; `gh release list -R nmoinvaz/<repo>`; commits on main by `gh api -i "repos/nmoinvaz/<repo>/commits?per_page=1"`; `gh pr list -R nmoinvaz/<repo> --state merged --limit 1000`; descriptions from the repositories |
 | multidouble 1.0.0 and 1.8.0, bit for bit | commits 93402cf8, 649ec63e; memory `multidouble-1-8-move.md`; `hp/data/multidouble/*_1.8.0.log` |
 | "could the residual qd stuff go inside multidouble?" | the list of prompts above (2026-10-27 05:50) |
