@@ -28,6 +28,7 @@ Usage (PYTHONPATH must hold hp's form-S build, and FORMS_HP the worktree's hp/ w
   --a_fixed: hp's a only (this branch keeps the rule's a), for the information rows
   --hp_inv=1: also hp's sums at a and 1.25 a (information)
   --guess=FILE: m_h from make_guess.py's Track A guess at each D instead of the rescaled M-6 solution
+  --state=NPZ: m_h and Delta from a converged form-S state at that D (one D per run)
 """
 import json
 import os
@@ -138,9 +139,18 @@ for D in Ds:
     a = 8.0 if D <= 3200 else n / 400.0  # the rule (notes/LARGE_D_INNER.md §3)
     a_hp = a_fixed if a_fixed is not None else a  # --a_fixed moves hp's a only (the information rows)
     mh = mh0 * np.sqrt((D0 - 2) / n)
+    Dl = float(tc["%g" % D]["Delta"]) if "%g" % D in tc else None
     if "guess" in opts:  # Track A's form-S guess at D (make_guess.py), m_h only; Delta stays Track C's
         mh = np.array(json.load(open(opts["guess"]))["guess"]["%g" % D]["mh"])
-    Dl = float(tc["%g" % D]["Delta"])
+    if "state" in opts:  # a converged form-S state (octo_corrector.save_o, form S's layout): its m_h and Delta
+        from octo_corrector import load_o
+        from form_s import groups_s
+        zs, meta = load_o(opts["state"])
+        if abs(float(meta["D"]) - D) > 1e-9 or int(meta["M"]) != M:
+            raise SystemExit("--state is at D %s, M %s, not D %g, M %d" % (meta["D"], meta["M"], D, M))
+        K = len(meta["nodes"])
+        mh = np.asarray(zs[0])[groups_s(M, K)["mh"]]  # the leading part; both codes take the same float64 m_h
+        Dl = float(np.asarray(zs[0])[-1])
     t0 = time.time()
     Shp = hp_sum(D, a_hp, mh, Dl, 52 if mut == "hp52" else 0)
     t_hp = time.time() - t0

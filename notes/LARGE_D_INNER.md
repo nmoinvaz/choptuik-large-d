@@ -412,5 +412,8 @@ checks and bars of `hp_mob_check.py` were committed before the runs (4dfefe69); 
 - hp has both corrections of §3 in effect:
   - its z products are full Cauchy sums, exact at O(ks²) cost;
   - a is the caller's, and 8 is the rule's value up to D 3200.
-- The D 5000 rows with Track A's guess and the D 10⁴ rows, including hp at a = 8, were still running when P1 stopped
-  (`hp_mob/g_*.log`).
+- The D 5000 rows with Track A's guess and the D 10⁴ rows were dropped on the coordinator's word: with m_h far from a
+  solution they cannot pass or fail hp, and they cost hours at O(ks²). The check is to be rerun from Track A's
+  converged states with `hp_mob_check.py --state=NPZ`:
+  - D 2000 (`I1088-dh610`, j2000m);
+  - later D 5000 and 10⁴, after Track A's port of the z recurrence.
