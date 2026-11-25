@@ -341,24 +341,34 @@ coordinator's own diagnosis and three by another session or an outside protocol.
 \begin{figure}[t]
 \centering
 \begin{tikzpicture}
-\begin{axis}[width=\textwidth, height=6.0cm, xmin=0, xmax=19, ymin=30, ymax=215,
+\begin{axis}[width=\textwidth, height=7.0cm, xmin=0, xmax=35.5, ymin=30, ymax=285,
   xlabel={days from 19 October 2026}, ylabel={highest $D$ reached at large $D$},
-  xtick={0,2,...,18}, ytick={50,75,...,200}, grid=major, grid style={gray!25},
+  xtick={0,5,...,35}, ytick={50,100,...,250}, grid=major, grid style={gray!25},
   tick label style={font=\footnotesize}, label style={font=\small}]
 \addplot[const plot, thick, blue!70!black, mark=*, mark size=1.2pt] coordinates {
  (0.30,40.0) (1.32,60.96) (6.20,67.77) (8.04,70.98) (8.24,73.27) (8.73,78.10) (16.06,79.27) (16.93,86.53)
  (17.14,96.12) (17.33,127.12) (18.00,146.56) (18.12,152.93) (18.21,162.31) (18.34,175.27) (18.42,188.02)
  (18.56,193.77) (18.67,200.27) (18.78,206.77)};
-\node[font=\scriptsize, align=left, anchor=west] at (axis cs:1.5,52) {60.96: weak harmonics held on a trend};
-\node[font=\scriptsize, align=left, anchor=west] at (axis cs:3.2,90) {67.77: Newton's basin, pinned runs};
-\node[font=\scriptsize, align=left, anchor=west] at (axis cs:9.0,64) {73.3, 78.1: quad-double, node layouts,\\the horizon series' radius};
-\node[font=\scriptsize, align=left, anchor=west] at (axis cs:9.6,104) {79: Taylor continuation in $D$,\\quad-double corrector and jets};
-\node[font=\scriptsize, align=left, anchor=east] at (axis cs:17.9,175) {152.9 to 193.8:\\five walls in one day};
+\addplot[const plot, thick, blue!70!black] table[col sep=comma, x=day, y=D] {frontier.csv};
+\node[font=\scriptsize, align=left, anchor=west] at (axis cs:1.6,47) {60.96: weak harmonics held on a trend};
+\node[font=\scriptsize, align=left, anchor=west] at (axis cs:1.6,97) {67.77: Newton's basin,\\pinned runs};
+\node[font=\scriptsize, align=left, anchor=south west] at (axis cs:4.2,126) {73.3, 78.1: quad-double, node layouts,\\the horizon series' radius};
+\node[font=\scriptsize, align=left, anchor=west] at (axis cs:19.3,88) {79: Taylor continuation in $D$,\\quad-double corrector and jets};
+\node[font=\scriptsize, align=left, anchor=east] at (axis cs:17.7,176) {152.9 to 193.8:\\five walls in one day};
+\node[font=\scriptsize, anchor=north] at (axis cs:21.0,212) {215.0};
+\node[font=\scriptsize, anchor=north] at (axis cs:24.3,238) {242.6};
+\node[font=\scriptsize, align=left, anchor=north east] at (axis cs:35.2,196) {259.9: a fold of the discrete system,\\passed with the horizon series'\\order tied to $D$};
+\node[font=\scriptsize, anchor=south east] at (axis cs:35.3,266) {263.6: paused};
+\draw[gray, thin] (axis cs:9.6,126) -- (axis cs:8.6,81);
+\draw[gray, thin] (axis cs:30.4,196) -- (axis cs:30.4,257);
+\draw[gray, thin] (axis cs:19.3,88) -- (axis cs:16.3,80.5);
 \end{axis}
 \end{tikzpicture}
-\caption{The highest $D$ reached at large $D$ in the first three weeks, from the runners' posts and the notes, with the
-walls named by what passed them. The flat stretch from day 9 to day 16 is the search for a formulation past 78 (Appendix~\ref{app:stuck},
-rows 17 and 19 to 21).}
+\caption{The highest $D$ reached at large $D$. To day 19 the points are the runners' posts and the notes, with the walls
+named by what passed them, and the flat stretch from day 9 to day 16 is the search for a formulation past 78
+(Appendix~\ref{app:stuck}, rows 17 and 19 to 21). After day 19 the curve is the highest converged state pushed to the
+raw-data repository (\file{paper/ai/frontier.py}). Its flat stretches are at $D = 215.0$, 242.6 and 259.9, and the chain
+was paused at 263.6 (Sec.~\ref{sec:after}).}
 \label{fig:frontier}
 \end{figure}
 

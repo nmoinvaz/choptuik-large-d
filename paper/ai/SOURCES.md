@@ -164,6 +164,17 @@ Days from 2026-10-19 00:00 UTC.
 | 18.00 | 146.56 | `tx:43f19197` status 2026-11-06 00:19 (T113 at 146.56) |
 | 18.12 to 18.78 | 152.93, 162.31, 175.27, 188.02, 193.77, 200.27, 206.77 | win2 entries of 2026-11-06 at 02:53, 05:08, 08:04, 10:40 (log stopped 10:03), 13:20, 16:04, 18:47 *(main)* |
 
+After day 18.78 the curve is `paper/ai/frontier.csv`, written by `python3 paper/ai/frontier.py RAWDIR --ref b6c344480`
+(RAWDIR a clone of the raw-data repository). It has one row per push that raised the highest converged state
+(`anm_pin<k>_D<D>.npz`, saved by `hp/anm_run.py` only after its corrector converged), timed by the author time of the
+raw-data commit that added the state, so late by up to the interval between two pushes. `--selftest` runs it on a
+planted history, and `--selftest --mutate=pred` counts the predictions too, which must fail.
+
+| item | source |
+|---|---|
+| 146 rows; the last, D 263.5987 at day 34.117 | `frontier.csv`; the #903 comment of 2026-11-22 03:01 gives the same base D |
+| flat stretches at 215.0, 242.6 and 259.9 | `frontier.csv`: 215.0 from day 19.4 to 22.6, 242.4 to 242.6 from 23.2 to 25.1, 259.9 from 28.2 to 32.6 |
+
 ## Appendix A, the stuck points
 
 | row | moved first by | sources |
