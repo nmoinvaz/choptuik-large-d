@@ -1,4 +1,9 @@
-"""Form S on a fine mesh toward the horizon (#1088): nodes from x 0.7 outward with 1 - x geometric, ratio 1 - c/n (the
+"""NOT VALID FOR DELTA (#1088): the fine mesh does not impose the selection. The SSH's non-analytic mode decays by about
+e^-2 per segment toward 0.95, so the series there cannot exclude it; its amplitude is a near-null direction (Delta's
+gain 1e19) and Delta drifts with the guess's error along it (+6.7e-9 at D 2200, +4.6e-8 at D 2828). Its records carry
+valid false. The tools (path_s, the sparse Jacobian) remain useful.
+
+Form S on a fine mesh toward the horizon (#1088): nodes from x 0.7 outward with 1 - x geometric, ratio 1 - c/n (the
 SSH's (1 - x)^(n/2) mode changes by about e^(c/2) per segment), to x_end (0.95) where the Moebius horizon series converges
 in about 100 terms; the Jacobian assembled block by block (Solver.jacobian_sub_s) in sparse storage and factored by
 SuperLU, so the cost is linear in the node count. At x_l = 0.7 the series' sensitivity to m_h grows like 10^(0.0087 n)
@@ -315,7 +320,9 @@ def cmd_jump(argv):
     if conv:
         rec = direct_line(z8, meta, out, "held", recs[-1]["F_new"], o["res"], Fc, "qd", bound=gain * Fc, ham=meta.get("ham_check"),
                           tc=tc, commit=o["commit"], extra=dict(jac="f64 sparse (SuperLU)", newton_steps=len(recs),
-                                                                mesh=meta["mesh"], fine=True))
+                                                                mesh=meta["mesh"], fine=True, method="fine", valid=False,
+                                                                invalid_reason="the fine mesh does not impose the "
+                                                                "selection (#1088)"))
         with open(os.path.join(outdir, "direct_s.jsonl"), "a") as fh:
             fh.write(json.dumps(rec) + "\n")
     return 0 if conv else 1
