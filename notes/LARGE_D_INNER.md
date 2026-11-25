@@ -116,6 +116,30 @@ precision; written first, kept as the independent check).
 a = 0 and a = 1 are different recurrences for the same function, so their agreement checks the derivation, not only
 the code.
 
+**The choice of a** (`diag/noise_at_solution_a.log`, `diag/noise_at_solution_bigA.log`, at the float64 M-6
+solutions of §4). Relative noise put only on the orders σ_R/2 ≤ k < 1.5σ_R, where the resonance injects into the
+shadow, shows that a = 1 still leaves a slow growth there; a larger a lowers it, until z = ∞ (at τ = −(2 + a)/a) comes
+near x* and the series' tail grows:
+
+| a | D 200 | 263.6 | 300 | 350 | 400 | tail at ks, D 200 / 400 |
+|---|---|---|---|---|---|---|
+| 1 | 0.46 | 2.7 | 15 | 32 | 55 | |
+| 2 | 9.1e-3 | 3.4e-2 | 0.22 | 0.77 | 1.9 | |
+| 3 | 5.0e-4 | 1.8e-3 | 5.3e-3 | 3.4e-2 | 0.13 | |
+| 4 | 5.0e-4 | 7.4e-4 | 1.8e-3 | 2.2e-3 | 9.2e-3 | |
+| 6 | 1.0e-3 | | | | 2.0e-3 | |
+| 8 | 2.0e-3 | | | | 6.5e-4 | 7.6e-50 / 5.4e-77 |
+| 16 | 7.3e-3 | | | | 1.3e-3 | 4.3e-28 / 4.1e-42 |
+| 32 | 9.9e-2 | | | | 1.3e-2 | 2.7e-16 / 3.0e-23 |
+
+- For fixed a ≤ 3 the injection channel grows about 10^(0.011n) from D 200 to 400. That is far below the affine
+  variable's growth, but it is not flat.
+- At a = 6–8 it is about 1e-3 at both D, and the total amplification, set by the low orders, is 3.3–3.6.
+- The residual of the same solution is the same for every a (5.91e-12 at D 200, 7.04e-14 at D 400, a = 1 and 8),
+  as it must be.
+- The float64 continuation runs at a = 8 from D 400 on. Whether a must grow with n beyond that is what its per-D
+  noise test at a = 1, 8 and 32 measures (§4).
+
 ## 6. The inner problem at x ~ √n, and why the selection stays at x*
 
 #1090 proposed the finite-n inner problem in x = ξ√n, where the fast mode is O(1) (nΦ = 1/(2ξ²) + 1/(4nξ⁴) + O(n⁻²),

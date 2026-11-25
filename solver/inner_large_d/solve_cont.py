@@ -7,7 +7,7 @@ norm), the grip |e_Delta^T J^-1| with unit rows, the series tails, and the ampli
 horizon sum (a = 1, and a = 0 where --noise0 lists the D).
 
 Usage: python3 solve_cont.py START.json --M=6 --Ds=100,150,... --out=DIR [--a=1] [--tol=5e-15] [--iters=12]
-                             [--noise0=100,150,200] [--kb=150] [--accept=1e-11] [--mutate=a0]
+                             [--noise0=100,150,200] [--kb=150] [--accept=1e-11] [--noise_as=1,8,32] [--mutate=a0]
   --mutate=a0 solves with a = 0 (Track B's variable): the control, which must lose the solution as D grows.
 """
 import json
@@ -31,6 +31,7 @@ tol = float(opts.get("tol", 5e-15))
 iters = int(opts.get("iters", 3))
 kb = int(opts.get("kb", 150))
 noise0 = [float(v) for v in opts.get("noise0", "").split(",") if v]
+noise_as = [float(v) for v in opts.get("noise_as", "").split(",") if v]  # extra Moebius parameters for the noise test, every D
 accept = float(opts.get("accept", 1e-11))  # max|F| at which a D counts as solved and seeds the next
 os.makedirs(out, exist_ok=True)
 
@@ -134,16 +135,21 @@ while queue:
         g0 = ms.FormS(D, M, a=0.0, kb=kb)
         with np.errstate(all="ignore"):
             amp0 = noise_amp(g0, y)
+    amp_as = {}
+    for aa in noise_as:
+        ga = ms.FormS(D, M, a=aa, kb=kb)
+        with np.errstate(all="ignore"):
+            amp_as["%g" % aa] = noise_amp(ga, y)
     ce, ho = f.last
     rec = dict(D=D, n=D - 2, M=M, a=a, ks=f.ks, kc=f.kc, kb=kb, maxF=float(np.max(np.abs(F))), Delta=float(y[3 * M]),
                newton=hstory, sv_min=[float(v) for v in sv[-6:]], sv_max=float(sv[0]), grip=grip, noise_amp=amp1,
-               noise_amp_a0=amp0, tail_h=float(ho["tail"]), tail_c=float(ce["tail"]),
+               noise_amp_a0=amp0, noise_amp_as=amp_as, tail_h=float(ho["tail"]), tail_c=float(ce["tail"]),
                p1_harm=[float(v) for v in ms.harmonics_odd(y[:M])], seconds=time.time() - t0,
                p1=list(y[:M]), c0=list(y[M:2 * M]), Q0=list(y[2 * M:3 * M]))
     json.dump(rec, open(os.path.join(out, "sol_D%g_M%d_a%g.json" % (D, M, a)), "w"), indent=1)
     say("D %8.2f  max|F| %.2e  Delta %.12f  steps %d  sv_min %.1e  grip %.1e  noise %.1e%s  tails %.0e/%.0e  ks %d  %.0f s"
         % (D, rec["maxF"], rec["Delta"], len(hstory) - 1, sv[-1], grip, amp1,
-           "" if amp0 is None else " (a=0: %.1e)" % amp0, rec["tail_h"], rec["tail_c"], f.ks, rec["seconds"]))
+           ("" if amp0 is None else " (a=0: %.1e)" % amp0) + "".join(" (a=%s: %.1e)" % kv for kv in amp_as.items()), rec["tail_h"], rec["tail_c"], f.ks, rec["seconds"]))
     if rec["maxF"] < accept:
         hist.append((D, scaled(y, D)))
     else:

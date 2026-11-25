@@ -92,8 +92,11 @@ class FormS:
         h[0], h[1], h[2] = 1 / (1 + a), (a - 1) / (1 + a) * ts, -a / (1 + a) * ts ** 2
         e[0], e[1], e[2] = 1 / (1 + a), -2 / (1 + a) * ts, 1 / (1 + a) * ts ** 2
         zs[0] = 1.0
-        for j in range(1, K):
-            zs[j] = -(1 + a) * (-a) ** (j - 1) * ts ** j
+        if a == 0:
+            zs[1] = -ts
+        else:
+            for j in range(1, K):
+                zs[j] = (1 + a) / a * (-a * ts) ** j  # = -(1 + a)(-a)^(j-1) t*^j, without overflow
         self.h, self.e, self.zs = h, e, zs
         self.noise = None  # (names, eta, rng): relative noise on stored arrays after each horizon order (a test)
         self.mutate = ""
