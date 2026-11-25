@@ -74,10 +74,10 @@ float64 products (2.5e9 multiply-adds per stage against `ell_ddm`'s 1.8e9) than 
 0.79x in one process while the load fell from 12 to 4, 1.7x per stage in another. So `d18_secant.py` keeps `ell_ddm`'s
 block 12 by default.
 
-The double-double block 12 dominates an evaluation once the float64 matrix is fast. At k_c 103 the old evaluation costs
-about 959 + 749 s and the new one 130 + 749 s in the same conditions, 1.9x. One full evaluation of the hybrid
-sign (fast M, `ell_fastdd` block 12, the three `dd_logdet`) took 563 s and 1316 s at k_c 103 (two loads), of which block
-12 took 505 s and 1163 s and the three `dd_logdet` 21 s and 8 s.
+The double-double block 12 dominates an evaluation once the float64 matrix is fast. Combining the two k_c 103 checks, the old
+evaluation's matrices cost about 959 + 749 s and the new one's 130 + 749 s, 1.9x. One full evaluation with `ell_fastdd`'s block
+12 took 563 s and 1316 s at k_c 103 (two loads), of which block 12 took 505 s and 1163 s and the three `dd_logdet` 21 s
+and 8 s.
 
 The larger gain is in the number of evaluations. Both refinements below went from the scan's 0.01 bracket to a bracket
 under 1e-6 in 6 evaluations, the two ends included. Bisection needs 14 interior points for the same width (16 with the
@@ -191,6 +191,7 @@ RAYON_NUM_THREADS=1 OMP_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 nice -n 10 $PY -u d
     --tol=1e-5 --maxev=10 --pin=<state blob>,<stub blob> > $F/secant/secant_kc103_d22875.log 2>&1; echo "exit $?"
 ```
 
-Expect about 6 evaluations. On the Mac one evaluation at k_c 103 took 9 to 22 min (the float64 M 0.6 to 2.4 min,
-block 12 8 to 19 min, the three `dd_logdet` under 0.5 min), so about 1 to 2.5 h for the refinement on one process. The
+Expect about 6 evaluations. On the Mac one evaluation at k_c 103 costs 15 to 25 min (the float64 M 0.6 to 2.4 min,
+`ell_ddm`'s block 12 12 to 19 min, the three `dd_logdet` under 0.5 min), so about 1.5 to 2.5 h for the refinement on
+one process. The
 records' `sec_parts` give the split per evaluation on the runner's machine.
