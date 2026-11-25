@@ -2,7 +2,8 @@
 
 Track B of #1088. Written by a subagent on the Mac, 2026-11-25, under Nathan Moinvaziri's direction; not reviewed.
 Code: [`solver/factored/`](../solver/factored/); `bash solver/factored/run_track_b.sh OUT STATES` reruns every check
-and solve (the clone step for STATES is in its header). Raw logs: folder `I1088-mac/` of the raw-data repository.
+and solve (the clone step for STATES is in its header). Raw logs: folder `I1088-mac/` of the raw-data repository
+(cf57507c).
 Status words as in AGENTS.md. Every number below is from a log in `I1088-mac/` named beside it.
 
 ## 0. Verdicts
@@ -16,7 +17,8 @@ Status words as in AGENTS.md. Every number below is from a log in `I1088-mac/` n
 | Form S at a solution | D 100, M 8, double-double: max\|F\| 1.9e-22; scaled singular values 1.9 down to the three selection pairs of harmonics 3, 5, 7: 5.2e-10, 1.4e-13, 2.6e-17/2.1e-17; rounding of every series coefficient moves the residual by 0.77 per unit (section 5.1) | numerical evidence |
 | Is a fixed precision enough for every D? | **no, not in this formulation.** Off the solution the scalar mode's shadow carries the same 2^(n/2) from horizon order σ_R to x*: at a jump's seed the float64 and double-double horizon sums differ by 2e-14 at D 100, 1e-10 at 175, 4e-6 at 200 and 2.5 at 245, and the double-double sum itself reaches 2e16 times U(1) at D 400 (section 5.2) | numerical evidence (seed_precision.log) |
 | Jumps in D (Track A's question, in this layout) | none converged: 100 → 150 and 100 → 105 at M 8, and D 200, 245, 263 from hp's states at M 6. The weak directions' basin is about σ_min²/curvature, and a seed's shadow grows like 2^(n/2) (section 5.3) | numerical evidence |
-| The conditioning of form S at fixed M against D | **not measured**: no second converged D at M 8 (section 5.3) | |
+| The conditioning of form S at fixed M against D | **not measured**: no second converged D at M 8 or 10 (D 200 at M 10 reached max\|F\| 2.8e-13 with its weak residual stuck at 4e-14; section 5.3) | |
+| Δ against the table at D 100 | converges in M: +3.7e-3 (M 6), −1.1e-4 (M 8), +1.8e-6 (M 10) (section 5.1) | numerical evidence |
 | What still grows with D | the horizon series' length ks ∝ n (the selection sits at orders about n/2 to n); with the banded recurrence the cost is O(ks·kb·M), 3.0 s for one double-double residual at D 1000 (section 6) | proved by hand (the count of orders), numerical evidence (cost.log) |
 
 ## 1. Where the fast components sit
@@ -86,6 +88,13 @@ Unknowns: p₁, c₀, Q₀ on M points of the half τ grid θ_j = πj/M, and Δ 
 
 ## 3. Form A: the mass mode at the order of the scalar's largest gain
 
+**The gain** (proved by hand for the free field). The horizon-regular solution is Gauss's series in w, with terms
+t_k = (α)_k(β)_k/((γ)_k k!) w^k and γ = s + 2 − n/2 (LARGE_D_BASICS §3.4). A unit change of its s-coefficient at
+order N = −Re γ ≈ n/2 propagates to every higher order with the series' own ratio, so the sum at s = 1 changes by
+about Σ_(k≥N) C(k, N) λ^(k−N) = (1 − λ)^(−N−1), divided by |γ + N| = |s| = jω at the resonance. At λ = 1/2 that is
+2^(N+1)/(jω) ≈ 2^(n/2)/ω. At n = 98 this is 1.6e14 for j = 1; `anchor_noise.log` measures 2.7e15 for a β coefficient at
+k* = 46, entering through G, and its growth with n (table below) is of this kind.
+
 `anchor_noise.py` (log `anchor_noise.log`, M = 4, float64, the D 100 state rescaled to each D):
 
 | n | k* | gain of one s-coefficient of β at k* on U(x*) | a-datum column, complex step against differences |
@@ -114,7 +123,11 @@ S's states (`cond_M6.log`).
   x = 0.7 (`check_s_D245.log`). Reported, not explained: a reading (inferred) is that hp's pinned state is not
   horizon-analytic in its high harmonics, so the series carries a large shadow, and the shadow's square a second one at
   twice the order, beyond ks.
-- The Hamiltonian equation, which form S does not impose: see check 4 of `check_s.py` (log).
+- The Hamiltonian equation, which form S does not impose. Form S's centre series built from hp's D-100 data on hp's
+  grid satisfies it to 2.5e-15 and 4.6e-14 (relative) at orders 1 and 2, then 1.1e-11, 2.2e-8 and 7.3e-6 at orders 3,
+  5 and 8 (`check_s_D100.log`). The growth is that of hp's pinned high harmonics in the z-series (inferred). The same
+  data cut to 8 points violate it by 7.7e-5 already at order 1. So forms S and A agree on the solution and differ off it
+  by the τ truncation; their τ-truncated solutions are different discrete problems. The control `noslave` FAILs.
 
 ## 5. Newton, the conditioning, and Δ
 
@@ -123,9 +136,9 @@ S's states (`cond_M6.log`).
 Form S, M = 8, from hp's D-100 state cut to 8 points: fsolve.py's float64 Newton (complex-step Jacobian, backtracking)
 reaches max|F| = 5.5e-10 in 10 iterations (`S64_D100_M8.log`), then solve_dd.py in double-double (`Sdd_D100_M8.log`):
 
-- The Jacobian is exact: forward-mode dual numbers in double-double (`ddnp.Dual`). It agrees with the float64 complex
-  step to 6e-10 column by column. Central differences are useless here: along some directions the residual's third
-  derivative is large enough to spoil any step size.
+- The Jacobian is exact: forward-mode dual numbers in double-double (`ddnp.Dual`). At the D-100 solution it agrees
+  with central differences in double-double to 1.2e-18 (h = 1.5e-11 relative) and 5.8e-16 (h = 1.5e-8). The float64
+  complex step is limited to 4.2e-10 by float64 rounding (`jac_check.log`).
 - Plain Newton's step overshoots along the weak directions, so the weak directions are split off (`lsnewton.py`, a
   Lyapunov–Schmidt reduction). The strong rows are solved by a damped chord iteration. The reduced residual
   g(b) = U_wᵀ F, with r = 6 weak coordinates, is solved by Newton with a difference Jacobian.
@@ -139,8 +152,21 @@ reaches max|F| = 5.5e-10 in 10 iterations (`S64_D100_M8.log`), then solve_dd.py 
   (`s_noise_D100_mutate_rough.log`): the scalar's horizon map has the 2^(n/2)-type gain, but at a solution the
   coefficients near order σ_R are tiny and nothing is amplified.
 - M = 6 in float64 at D 100: max|F| 8.7e-14 and Δ_M6 = 1.7487024, 3.7e-3 above the table. The scaled σ_min is 1.6e-13,
-  the harmonic-5 pair (`cond_M6.log`). So Δ_M − Δ is +3.7e-3 at M 6 and −1.1e-4 at M 8 (numerical evidence of τ
-  convergence; M 10 in `Sdd_D100_M10.log` if it ran).
+  the harmonic-5 pair (`cond_M6.log`).
+- M = 10 in double-double at D 100, from hp's state cut to 10 points (`S64_D100_M10.log`, `Sdd_D100_M10.log`):
+  max|F| = 1.6e-27, Δ_M10 = 1.7450282484478, 1.8e-6 above the table. The scaled singular values at the bottom are
+  7.41e-14, 7.40e-14 (harmonic 5), 2.07e-17, 2.03e-17 (harmonic 7) and 5.46e-21, 4.20e-21 (harmonic 9). The scaled
+  condition number is 5.8e20 and the grip on Δ is 1.3e11.
+
+| M (top harmonic) | Δ_M(100) | Δ_M − table | smallest scaled σ (pair) |
+|---|---|---|---|
+| 6 (5), float64 | 1.7487024 | +3.7e-3 | 1.6e-13 |
+| 8 (7), dd | 1.7449155179 | −1.1e-4 | 2.1e-17 |
+| 10 (9), dd | 1.7450282484 | +1.8e-6 | 4.2e-21 |
+
+Δ converges toward the table as M grows, alternating, with the gap shrinking 30–60 times per two harmonics
+(numerical evidence). Each further pair of harmonics costs about 3.9 decades of the smallest σ. The free field's
+asymptotic ladder gives e^(−πω) = 10^(−4.9) per two harmonics at ω = 2π/1.745 (LARGE_D_BASICS §3.4).
 
 ### 5.2 Off the solution: the shadow's gain
 
@@ -160,9 +186,11 @@ n₀/n, Δ from the 1/D fit), the seed of a jump. It sums its horizon series at 
 | 400 | 1.8e7 | 2.2e16 |
 
 The horizon coefficients of such a seed have a trough near order σ_R and then the shadow's rise, by about 2^(n/2), to
-its peak near order n. At D 400 the coefficients are 1e-40 at order 199 and 2e19 at order 398 (`cost.py`'s seeds;
-`cost.log` shows the sums). Rounding at the trough is amplified the same way. So evaluating the residual at a seed
-needs digits growing with D: float64 fails past D ≈ 200, double-double past about 250–300. At D 400 the double-double
+its peak near order n (the float64 profiles printed in `seed_precision.log`). Rounding at the trough is amplified the
+same way. So evaluating the residual at a seed
+needs digits growing with D: float64 fails past D ≈ 200, double-double past about 250–300. At the M-10 solution of
+D 100 the two precisions already differ by 1.8e-12 (`seed_precision_M10.log`, which FAILs its 1e-12 criterion), against
+2.0e-14 at M 8. At D 400 the double-double
 sum is 2e16, either the seed's true shadow or still rounding; a quad-double sum would tell (not done). This is the
 remaining exponential of form S. It is the rough-perturbation gain of section 3, the same 2^(n/2) = (1/x*)^n, now
 acting through the scalar field itself rather than through the mass mode. At a solution it is dormant (5.1).
@@ -178,6 +206,11 @@ acting through the scalar field itself rather than through the mass mode. At a s
 - From hp's states at M 6 (`S64_D200_M6.log`, `S64_D245_M6.log`, `S64_D263_M6.log`): at D 200 Newton stalls at
   max|F| = 2.6e-7; at D 245 and 263 it diverges, Δ to 1.29 and 1.23. hp's states are pinned (harmonics 15 and up zero,
   5–13 held), so their 6-point cuts are seeds, not solutions, and 5.2 applies.
+- From hp's D-200 state at M 10, the cut that converged at D 100 (`S64_D200_M10.log`, `Sdd_D200_M10.log`): float64
+  Newton reaches 1.1e-8 at iteration 3 and wanders back to 5.2e-7. The split Newton in double-double brings max|F| to
+  2.8e-13 in two rounds, but the weak residual only falls from 5.1e-14 to 4.4e-14 over five steps. There are 8 weak
+  directions, singular values 1.4e-9 to 5.9e-11 at that point, and the steps accepted are 1/32 of Newton's. It was
+  stopped after 30 minutes, not converged.
 
 Reading (inferred): a jump needs its seed's weak coordinates (the high harmonics' data) right to about
 σ_min²/curvature, and its shadow below 2^(−n/2) of the trough. Neither a rescaled solution nor a pinned state is that
@@ -199,8 +232,8 @@ is consistent with this.
    grips, about e^(−πjω/2) at j = 15, ask for about 45 digits: quad-double, not available in multidouble's Python
    package.
 4. **Cost.** ks = n + 14√n + 80. The banded recurrence (`fseries_sdd.py`, `jset`; kb = 150) keeps only the products
-   with one factor in the slow part. At the D-100 solution it equals the full recurrence exactly, residual and Jacobian
-   column alike (`cost.log`, and the comparison in `fseries_sdd.py`'s test). One double-double residual then takes
+   with one factor in the slow part. At the D-100 solution it equals the full recurrence, residual and Δ column alike
+   (`cost.log` in float64, `jac_check.log` in double-double; the control kb = 10 FAILs). One double-double residual takes
    0.55 s (D 100), 1.00 (245), 1.13 (400) and 2.98 s (D 1000); an exact Jacobian is 3M + 1 = 25 of them, times about
    2.5 (`cost.log`). At the rescaled seeds the banded and full sums differ (1.2e-7 at D 245), as they should: the
    dropped products are the seed's shadow squared. cost.py's PASS criterion, written for solutions, FAILs there.

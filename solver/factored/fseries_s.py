@@ -77,6 +77,8 @@ class FactoredS(Factored):
             W[k] = cauchy(U, V, k, 1, k)  # U_0 = 0, so V_k is not needed
             cW = cauchy(c, W, k, 0, k - 1)
             qs[k] = 0.5 * (cauchy(U, U, k, 1, k - 1) + cauchy(V, V, k - 1, 0, k - 1)) - cW
+            if self.mutate == "noslave":
+                qs[k] = 0.0 * qs[k]
             rhs = qs[k] + cauchy(qs, X, k, 1, k)
             X[k] = self.xsolve(om, qs[0], rhs)
             beta[k] = -(n - 1) * X[k]
