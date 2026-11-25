@@ -28,8 +28,11 @@ def load_start(start, M):
         y4 = np.concatenate([y[:3 * M], np.zeros(M), y[3 * M:]])
         return y4, meta["D"]
     js = json.load(open(start))
-    y4 = np.concatenate([resample_odd(np.array(js["p1"]), M), resample_even(np.array(js["c0"]), M),
-                         resample_odd(np.array(js["Q0"]), M), np.zeros(M), [js["Delta"]]])
+    if js["M"] == M:  # no resampling round trip (it costs the last bits, which the double-double parts need)
+        y4 = np.concatenate([js["p1"], js["c0"], js["Q0"], np.zeros(M), [js["Delta"]]])
+    else:
+        y4 = np.concatenate([resample_odd(np.array(js["p1"]), M), resample_even(np.array(js["c0"]), M),
+                             resample_odd(np.array(js["Q0"]), M), np.zeros(M), [js["Delta"]]])
     if js["M"] == M and "anchor" in js:
         y4[3 * M:4 * M] = js["anchor"]
     return y4, js["D"]
@@ -67,8 +70,11 @@ class FormS:
         return J
 
 
-def solve(D, M, y, kc=160, ks=None, iters=8, mutate="", log=print, zK=0.5, form="A"):
-    fz = Factored(D, M, kc=kc, ks=ks, zK=zK, mutate=mutate) if form == "A" else FormS(D, M, kc=kc, ks=ks, zK=zK, mutate=mutate)
+def solve(D, M, y, kc=160, ks=None, iters=8, mutate="", log=print, zK=0.5, form="A", kb=None):
+    if form == "A":
+        fz = Factored(D, M, kc=kc, ks=ks, zK=zK, mutate=mutate)
+    else:
+        fz = FormS(D, M, kc=kc, ks=ks, zK=zK, mutate=mutate, kb=kb)
     t0 = time.time()
     hist = []
     for it in range(iters + 1):

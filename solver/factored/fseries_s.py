@@ -32,11 +32,27 @@ def dmat_even(M):
 
 
 class FactoredS(Factored):
-    def __init__(self, D, M, **kw):
+    def __init__(self, D, M, kb=None, **kw):
         super().__init__(D, M, **kw)
+        self.kb = kb
         self.De = dmat_even(M)
         if self.mutate == "evenD":
             self.De = 0.5 * self.De
+
+    def jset(self, k, lo, hi):
+        """The kept j in [lo, hi] of A_j B_{k-j}: all, or with self.kb set those with j <= lo + kb or k - j <= kb
+        (fseries_sdd.py, jset)"""
+        if self.kb is None or hi - lo + 1 <= 2 * self.kb + 2:
+            return np.arange(lo, hi + 1)
+        a = np.arange(lo, min(hi, lo + self.kb) + 1)
+        b = np.arange(max(lo, k - self.kb), hi + 1)
+        return np.unique(np.concatenate([a, b]))
+
+    def pair(self, A, B, k, lo, hi):
+        if hi < lo:
+            return 0.0 * A[0]
+        J = self.jset(k, lo, hi)
+        return np.einsum("jm,jm->m", A[J], B[k - J])
 
     def xsolve(self, om, qs0, rhs):
         n = self.n
@@ -117,43 +133,44 @@ class FactoredS(Factored):
         V2[0] = V[0] * V[0]
         W[0] = U[0] * V[0]
         for k in range(1, ks + 1):
-            jj = np.arange(1, k + 1)[:, None]
-            Ur = U[k - 1::-1]
-            Vr = V[k - 1::-1]
-            DUr = DU[k - 1::-1]
-            DVr = DV[k - 1::-1]
-            fk = f[1:k + 1] * (k - jj)
+            J = self.jset(k, 1, k)
+            jj = J[:, None]
+            Ur = U[k - J]
+            Vr = V[k - J]
+            DUr = DU[k - J]
+            DVr = DV[k - J]
+            fk = f[J] * (k - jj)
             # provisional G_k = 0 (it cancels from S1 - S2)
-            cGk0 = cauchy(c, G, k, 1, k)  # sum_{j>=1} c_j G_{k-j}
+            cGk0 = self.pair(c, G, k, 1, k)  # sum_{j>=1} c_j G_{k-j}
             Hk0 = cGk0 + (n - 1) * c2[k]
             cGc = cG.copy() if False else None  # noqa: F841
             cG[k] = cGk0
             H[k] = Hk0
             G[k] = 0.0
-            r1 = (-2 * np.einsum("jm,jm->m", fk, Vr) + om * np.einsum("jm,jm->m", c[1:k + 1], DUr)
-                  - lam * om * DV[k - 1] - np.einsum("jm,jm->m", cG[1:k + 1], Vr) - lam * V[k - 1]
-                  - np.einsum("jm,jm->m", G[1:k + 1] + (n - 1) * c[1:k + 1], Ur))
-            cz = c[1:k + 1] - lam * c[0:k]
-            cgz = (c[1:k + 1] - G[1:k + 1]) - lam * (c[0:k] - G[0:k])
+            r1 = (-2 * np.einsum("jm,jm->m", fk, Vr) + om * np.einsum("jm,jm->m", c[J], DUr)
+                  - lam * om * DV[k - 1] - np.einsum("jm,jm->m", cG[J], Vr) - lam * V[k - 1]
+                  - np.einsum("jm,jm->m", G[J] + (n - 1) * c[J], Ur))
+            cz = c[J] - lam * c[J - 1]
+            cgz = (c[J] - G[J]) - lam * (c[J - 1] - G[J - 1])
             r2 = (-2 * np.einsum("jm,jm->m", fk, Ur) - lam * om * DU[k - 1] + om * np.einsum("jm,jm->m", cz, DVr)
-                  + np.einsum("jm,jm->m", cgz, Vr) - np.einsum("jm,jm->m", H[1:k + 1], Ur))
+                  + np.einsum("jm,jm->m", cgz, Vr) - np.einsum("jm,jm->m", H[J], Ur))
             Qk = (r1 - r2) / (2 * k * (1 - g))
             # q_S at order k: Q_0 Q_k plus the terms without U_k, V_k
-            U2p = cauchy(U, U, k, 1, k - 1)
-            V2p = cauchy(V, V, k, 1, k - 1)
-            Wp = cauchy(U, V, k, 1, k - 1)
-            cWlow = cauchy(c, W, k, 1, k)
+            U2p = self.pair(U, U, k, 1, k - 1)
+            V2p = self.pair(V, V, k, 1, k - 1)
+            Wp = self.pair(U, V, k, 1, k - 1)
+            cWlow = self.pair(c, W, k, 1, k)
             qs[k] = Q0 * Qk + 0.5 * (U2p + V2p - lam * V2[k - 1]) - Wp - cWlow
             if self.mutate == "noslave":
                 qs[k] = 0.0 * qs[k]
-            rhs = qs[k] + cauchy(qs, X, k, 1, k)
+            rhs = qs[k] + self.pair(qs, X, k, 1, k)
             X[k] = self.xsolve(om, qs[0], rhs)
             beta[k] = -(n - 1) * X[k]
-            G[k] = (cauchy(c, beta, k, 0, k) - cauchy(X, G, k, 1, k)) / B0
+            G[k] = (self.pair(c, beta, k, 0, k) - self.pair(X, G, k, 1, k)) / B0
             cG[k] = cGk0 + G[k]
             H[k] = cG[k] + (n - 1) * c2[k]
             c[k + 1] = lam * (2 * k * c[k] - G[k]) / (2 * (k + 1))
-            c2[k + 1] = cauchy(c, c, k + 1, 0, k + 1)
+            c2[k + 1] = self.pair(c, c, k + 1, 0, k + 1)
             e = -c2[k + 1]
             f[k] = (e - lam * eprev) / lam
             eprev = e
@@ -165,13 +182,18 @@ class FactoredS(Factored):
             U[k] = (Pk + Qk) / 2
             V[k] = (Pk - Qk) / 2
             if self.noise and self.noise_where in ("both", "horizon"):
-                U[k] = U[k] * (1 + self.noise * self.rng.standard_normal(M))
-                V[k] = V[k] * (1 + self.noise * self.rng.standard_normal(M))
+                if getattr(self, "noise_abs", False):
+                    # absolute noise of the size of the order-0 term: a rough perturbation at every order
+                    U[k] = U[k] + self.noise * np.max(np.abs(U[0])) * self.rng.standard_normal(M)
+                    V[k] = V[k] + self.noise * np.max(np.abs(V[0])) * self.rng.standard_normal(M)
+                else:
+                    U[k] = U[k] * (1 + self.noise * self.rng.standard_normal(M))
+                    V[k] = V[k] * (1 + self.noise * self.rng.standard_normal(M))
             DU[k] = U[k] @ self.Dt
             DV[k] = V[k] @ self.Dt
-            U2[k] = cauchy(U, U, k, 0, k)
-            V2[k] = cauchy(V, V, k, 0, k)
-            W[k] = cauchy(U, V, k, 0, k)
+            U2[k] = self.pair(U, U, k, 0, k)
+            V2[k] = self.pair(V, V, k, 0, k)
+            W[k] = self.pair(U, V, k, 0, k)
         out = {"U": U.sum(0), "V": V.sum(0), "c": c[:ks + 1].sum(0), "beta": beta.sum(0),
                "series": (U, V, c[:ks + 1], X)}
         out["tail"] = max(np.max(np.abs(Y[-1].real)) for Y in (U, V, c[:ks + 1], X))

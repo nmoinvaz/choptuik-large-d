@@ -57,6 +57,14 @@ def ls_solve(residual, y0, J, tau=1e-8, outer=8, inner=6, log=print, tol=1e-30, 
         return Fs, float(np.linalg.norm(Fs.h)) if np.all(np.isfinite(Fs.h)) else np.inf
 
     def inner_solve(a, b):
+        try:
+            return _inner_solve(a, b)
+        except (ValueError, FloatingPointError, OverflowError):
+            Fbad = d.zeros((len(r),))
+            Fbad.h[:] = np.inf
+            return a, Fbad
+
+    def _inner_solve(a, b):
         with np.errstate(all="ignore"):
             F = residual(y_dd(a, b))
         Fs, ns = strong_norm(F)
@@ -65,9 +73,12 @@ def ls_solve(residual, y0, J, tau=1e-8, outer=8, inner=6, log=print, tol=1e-30, 
             lam = 1.0
             for _ in range(20):
                 at = a - da * lam
-                with np.errstate(all="ignore"):
-                    Ft = residual(y_dd(at, b))
-                Fst, nst = strong_norm(Ft)
+                try:
+                    with np.errstate(all="ignore"):
+                        Ft = residual(y_dd(at, b))
+                    Fst, nst = strong_norm(Ft)
+                except (ValueError, FloatingPointError, OverflowError):
+                    nst = np.inf
                 if nst < ns or nst == 0.0:
                     break
                 lam *= 0.5
@@ -94,23 +105,32 @@ def ls_solve(residual, y0, J, tau=1e-8, outer=8, inner=6, log=print, tol=1e-30, 
         # difference Jacobian of g(b)
         h = hb if hb is not None else max(1e-14, 1e-3 * ng / max(S[weak].min(), 1e-300))
         G = np.zeros((nw, nw))
+        db = np.full(nw, np.nan)
         for j in range(nw):
             bj = b.copy()
             bj[j] = bj[j] + h
             aj, Fj = inner_solve(a.copy(), bj)
             gj = d.matvec(DD(Uw.T), Fj / DD(r))
             G[:, j] = ((gj - g) * (1.0 / h)).f()
-        db = -np.linalg.solve(G, g.f())
+        if np.all(np.isfinite(G)):
+            db = -np.linalg.solve(G, g.f())
         # backtracking on |g|
         lam = 1.0
-        for _ in range(10):
-            bt = b + DD(lam * db)
-            at, Ft = inner_solve(a.copy(), bt)
-            gt = d.matvec(DD(Uw.T), Ft / DD(r))
-            if float(np.max(np.abs(gt.h))) < (1 - 1e-4 * lam) * ng:
-                break
-            lam *= 0.5
-        a, b, F, g = at, bt, Ft, gt
+        accepted = False
+        if np.all(np.isfinite(db)):
+            for _ in range(14):
+                bt = b + DD(lam * db)
+                at, Ft = inner_solve(a.copy(), bt)
+                gt = d.matvec(DD(Uw.T), Ft / DD(r))
+                ngt = float(np.max(np.abs(gt.h)))
+                if np.isfinite(ngt) and np.all(np.isfinite(Ft.h)) and ngt < (1 - 1e-4 * lam) * ng:
+                    accepted = True
+                    break
+                lam *= 0.5
+        if accepted:
+            a, b, F, g = at, bt, Ft, gt
+        else:
+            log("    no step along the weak directions reduces |g|; kept the point")
         log("    db %.3e lambda %.3g, reduced Jacobian sv %s" % (float(np.max(np.abs(db))), lam,
                                                                 " ".join("%.2e" % v for v in np.linalg.svd(G, compute_uv=False))))
     return y_dd(a, b), F, hist, S

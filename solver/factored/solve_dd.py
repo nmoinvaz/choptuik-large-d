@@ -5,8 +5,9 @@ Newton with the complex-step Jacobian (cheap, puts the strong directions at floa
 Jacobian and its scaled SVD (mpmath, 40 digits); (4) lsnewton.ls_solve in dd. Written: a json with the dd unknowns,
 Delta, the residual history and the scaled singular values.
 
-Usage: python3 solve_dd.py --D=100 --M=8 --start=STATE [--Delta=...] [--f64iters=12] [--outer=6] [--tau=1e-8]
-                           [--ks=...] [--out=FILE.json] [--mutate=sigma]
+Usage: python3 solve_dd.py --D=100 --M=8 --start=STATE [--Delta=...] [--f64iters=12] [--outer=6] [--rounds=1]
+                           [--tau=1e-8] [--tol=1e-26] [--ks=...] [--kb=...] [--out=FILE.json] [--mutate=sigma]
+  --rounds: the dd Jacobian is formed again and the split Newton restarted up to this many times
 """
 import json
 import sys
@@ -26,6 +27,7 @@ D = float(opts["D"])
 M = int(opts.get("M", 8))
 ks = int(opts["ks"]) if "ks" in opts else None
 mut = opts.get("mutate", "")
+kb = int(opts["kb"]) if "kb" in opts else None  # the banded horizon recurrence (fseries_sdd.py, jset)
 log = lambda s: print(s, flush=True)  # noqa: E731
 t0 = time.time()
 y, D0 = load_y(opts["start"], M, D)
@@ -37,16 +39,21 @@ log("solve_dd: D %.6f M %d start %s (D0 %.6f) Delta0 %.12f" % (D, M, opts["start
 f64 = np.concatenate([y.h[:3 * M], np.zeros(M), y.h[3 * M:]])
 with np.errstate(all="ignore"):
     f64, J64, fz, hist64, secs = solve(D, M, f64, ks=ks, iters=int(opts.get("f64iters", 12)), mutate=mut,
-                                       log=lambda s: log("  f64 " + s), form="S")
+                                       log=lambda s: log("  f64 " + s), form="S", kb=kb)
 sv64, svs64, grip64 = conditioning(J64, M, "S")
 log("f64: max|F| %.3e Delta %.15f scaled cond %.3e (%.0f s)" % (hist64[-1]["maxF"], f64[4 * M], svs64[0] / svs64[-1], time.time() - t0))
 y = DD(np.concatenate([f64[:3 * M], f64[4 * M:]]))
 
 # (3)-(4) dd
-f = FactoredSDD(D, M, ks=ks, mutate=mut)
-J = f.jacobian(y)
-log("dd Jacobian (%.0f s)" % (time.time() - t0))
-y, F, hist, S = ls_solve(f.residual, y, J, tau=float(opts.get("tau", 1e-8)), outer=int(opts.get("outer", 6)), log=log)
+f = FactoredSDD(D, M, ks=ks, mutate=mut, kb=kb)
+hist = []
+for rnd in range(int(opts.get("rounds", 1))):
+    J = f.jacobian(y)
+    log("dd Jacobian, round %d (%.0f s)" % (rnd, time.time() - t0))
+    y, F, h1, S = ls_solve(f.residual, y, J, tau=float(opts.get("tau", 1e-8)), outer=int(opts.get("outer", 6)), log=log)
+    hist += h1
+    if float(np.max(np.abs(F.h))) < float(opts.get("tol", 1e-26)):
+        break
 nF = float(np.max(np.abs(F.h)))
 # the Jacobian at the solution, for the conditioning
 J = f.jacobian(y)
@@ -61,7 +68,7 @@ log("dd: max|F| %.3e Delta %.16f (+%.2e) ; scaled sv max %.3e min %.3e cond %.3e
     nF, float(y.h[3 * M]), float(y.l[3 * M]), Ssol[0], Ssol[-1], Ssol[0] / Ssol[-1],
     " ".join("%.2e" % v for v in Ssol[-6:]), grip, time.time() - t0))
 if "out" in opts:
-    js = {"D": D, "M": M, "kc": f.kc, "ks": f.ks, "form": "S-dd", "p1": list(y.h[0:M]), "c0": list(y.h[M:2 * M]),
+    js = {"D": D, "M": M, "kc": f.kc, "ks": f.ks, "kb": kb, "form": "S-dd", "p1": list(y.h[0:M]), "c0": list(y.h[M:2 * M]),
           "Q0": list(y.h[2 * M:3 * M]), "Delta": float(y.h[3 * M]), "p1_lo": list(y.l[0:M]), "c0_lo": list(y.l[M:2 * M]),
           "Q0_lo": list(y.l[2 * M:3 * M]), "Delta_lo": float(y.l[3 * M]), "maxF": nF, "ls_hist": hist,
           "sv_scaled": list(map(float, Ssol)), "grip": grip, "f64_maxF": hist64[-1]["maxF"], "f64_Delta": float(f64[4 * M]),

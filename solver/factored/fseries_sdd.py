@@ -23,7 +23,7 @@ def _col(x):
 
 
 class FactoredSDD:
-    def __init__(self, D, M, kc=160, ks=None, zK=0.5, mutate=""):
+    def __init__(self, D, M, kc=160, ks=None, zK=0.5, mutate="", kb=None):
         self.Dd = float(D)
         self.n = self.Dd - 2.0
         n = self.n
@@ -39,9 +39,27 @@ class FactoredSDD:
         self.mutate = mutate
         self.stats = {}
         self.dual = False
+        self.kb = kb
 
     def mv(self, A, x):
         return d.matvec(A, x)
+
+    def jset(self, k, lo, hi):
+        """Indices j in [lo, hi] of the products A_j B_{k-j} kept: all of them, or with self.kb set (the banded
+        recurrence) those with j <= lo + kb or k - j <= kb, where one factor is in the slow part. The pairs dropped have
+        both factors past order kb: the shadow's square, zero at a solution together with its first derivative."""
+        if self.kb is None or hi - lo + 1 <= 2 * self.kb + 2:
+            return np.arange(lo, hi + 1)
+        a = np.arange(lo, min(hi, lo + self.kb) + 1)
+        b = np.arange(max(lo, k - self.kb), hi + 1)
+        return np.unique(np.concatenate([a, b]))
+
+    def pair(self, A, B, k, lo, hi):
+        """sum over the kept j in [lo, hi] of A_j B_{k-j}"""
+        if hi < lo:
+            return d.zeros((self.M,))
+        J = self.jset(k, lo, hi)
+        return d.dot0(A[J], B[k - J])
 
     def xsolve(self, om, qs0, rhs):
         A = self.De * om - d.diag(qs0 + (self.n - 1))
@@ -111,36 +129,38 @@ class FactoredSDD:
         W[0] = U[0] * V[0]
         one_g = 1.0 - g
         for k in range(1, ks + 1):
-            jj = np.arange(1, k + 1)[:, None].astype(float)
-            Ur = U[k - 1::-1]
-            Vr = V[k - 1::-1]
-            DUr = DU[k - 1::-1]
-            DVr = DV[k - 1::-1]
-            fk = f[1:k + 1] * (k - jj)
-            cGk0 = d.cauchy(c, G, k, 1, k)
+            J = self.jset(k, 1, k)  # the pairs (j, k - j) kept: all, or the two bands of the banded recurrence
+            jj = J[:, None].astype(float)
+            Ur = U[k - J]
+            Vr = V[k - J]
+            DUr = DU[k - J]
+            DVr = DV[k - J]
+            fk = f[J] * (k - jj)
+            cJ = c[J]
+            cGk0 = self.pair(c, G, k, 1, k)
             cG[k] = cGk0
             H[k] = cGk0 + c2[k] * (n - 1)
             G[k] = 0.0
-            r1 = (d.dot0(fk, Vr) * (-2.0) + om * d.dot0(c[1:k + 1], DUr) - om * DV[k - 1] * lam
-                  - d.dot0(cG[1:k + 1], Vr) - V[k - 1] * lam - d.dot0(G[1:k + 1] + c[1:k + 1] * (n - 1), Ur))
-            cz = c[1:k + 1] - c[0:k] * lam
-            cgz = (c[1:k + 1] - G[1:k + 1]) - (c[0:k] - G[0:k]) * lam
+            r1 = (d.dot0(fk, Vr) * (-2.0) + om * d.dot0(cJ, DUr) - om * DV[k - 1] * lam
+                  - d.dot0(cG[J], Vr) - V[k - 1] * lam - d.dot0(G[J] + cJ * (n - 1), Ur))
+            cz = cJ - c[J - 1] * lam
+            cgz = (cJ - G[J]) - (c[J - 1] - G[J - 1]) * lam
             r2 = (d.dot0(fk, Ur) * (-2.0) - om * DU[k - 1] * lam + om * d.dot0(cz, DVr) + d.dot0(cgz, Vr)
-                  - d.dot0(H[1:k + 1], Ur))
+                  - d.dot0(H[J], Ur))
             Qk = (r1 - r2) / (one_g * (2.0 * k))
-            U2p = d.cauchy(U, U, k, 1, k - 1)
-            V2p = d.cauchy(V, V, k, 1, k - 1)
-            Wp = d.cauchy(U, V, k, 1, k - 1)
-            cWlow = d.cauchy(c, W, k, 1, k)
+            U2p = self.pair(U, U, k, 1, k - 1)
+            V2p = self.pair(V, V, k, 1, k - 1)
+            Wp = self.pair(U, V, k, 1, k - 1)
+            cWlow = self.pair(c, W, k, 1, k)
             qs[k] = Q0 * Qk + (U2p + V2p - V2[k - 1] * lam) * 0.5 - Wp - cWlow
-            rhs = qs[k] + d.cauchy(qs, X, k, 1, k)
+            rhs = qs[k] + self.pair(qs, X, k, 1, k)
             X[k] = self.xsolve(om, qs[0], rhs)
             beta[k] = X[k] * (-(n - 1))
-            G[k] = (d.cauchy(c, beta, k, 0, k) - d.cauchy(X, G, k, 1, k)) / B0
+            G[k] = (self.pair(c, beta, k, 0, k) - self.pair(X, G, k, 1, k)) / B0
             cG[k] = cGk0 + G[k]
             H[k] = cG[k] + c2[k] * (n - 1)
             c[k + 1] = (c[k] * (2.0 * k) - G[k]) * (lam / (2 * (k + 1)))
-            c2[k + 1] = d.cauchy(c, c, k + 1, 0, k + 1)
+            c2[k + 1] = self.pair(c, c, k + 1, 0, k + 1)
             e = -c2[k + 1]
             f[k] = (e - eprev * lam) * (1.0 / lam)
             eprev = e
@@ -153,8 +173,8 @@ class FactoredSDD:
             V[k] = (Pk - Qk) * 0.5
             DU[k] = self.mv(self.Do, U[k])
             DV[k] = self.mv(self.Do, V[k])
-            V2[k] = d.cauchy(V, V, k, 0, k)
-            W[k] = d.cauchy(U, V, k, 0, k)
+            V2[k] = self.pair(V, V, k, 0, k)
+            W[k] = self.pair(U, V, k, 0, k)
         out = {"U": d.sum0(U), "V": d.sum0(V), "c": d.sum0(c[:ks + 1]), "X": d.sum0(X), "X0": X[0]}
         out["tail"] = max(float(np.max(np.abs(Y.h[-1]))) for Y in (U, V, c[:ks + 1], X))
         return out
