@@ -103,7 +103,7 @@ def main(argv):
     allow = pop_allow(argv)
     pos, o = opts(argv, dict(D="2828.4271247461903", states_s="", xl="xc", deg="2", mob="8", ks="auto", kc="250",
                              threads="2", sub="4", plan_tol="1e-40", hmax="0.05", delta="fit", tc="", it_max="10",
-                             halvings="8", delta_tol="1e-15", commit="", ham="1", tol="1e-300", parts="8"))
+                             halvings="8", delta_tol="1e-15", commit="", ham="1", tol="1e-300", parts="8", res="dd"))
     outdir = pos[0]
     os.makedirs(outdir, exist_ok=True)
     log = os.path.join(outdir, f"lastnode_{cmd}.jsonl")
@@ -132,7 +132,7 @@ def main(argv):
     b = blocks_s(F, M, 5)
     print(f"D {float(Dt):g}, x_l {xl:.6f} (ks {meta['ks']}): the guess's max |F| per block " + " ".join(f"{v:.1e}" for v in b)
           + f"; horizon / largest other {b[5] / max(b[:5]):.3e}", flush=True)
-    z8, conv, recs = newton_o_s(sh, z8, float(o["tol"]), int(o["it_max"]), int(o["halvings"]), log, jac="dd", res="od",
+    z8, conv, recs = newton_o_s(sh, z8, float(o["tol"]), int(o["it_max"]), int(o["halvings"]), log, jac="dd", res=o["res"],
                                 delta_tol=float(o["delta_tol"]))
     F4 = sh.residual_s([np.ascontiguousarray(z8[q]) for q in range(4)])
     Fc = float(np.abs(np.asarray(F4[0]) + np.asarray(F4[1])).max())
@@ -155,7 +155,7 @@ def main(argv):
         with mp.workdps(60):
             print(f"  Delta - reference {mp.nstr(mp.mpf(Dl) - mp.mpf(tc['value']), 6)} (+- {tc['err']:.2e})", flush=True)
     if conv:
-        rec = direct_line(z8, meta, out, "held", recs[-1].get("F_new"), "od", Fc, "qd", bound=gain * Fc,
+        rec = direct_line(z8, meta, out, "held", recs[-1].get("F_new"), o["res"], Fc, "qd", bound=gain * Fc,
                           ham=meta.get("ham_check"), tc=tc, commit=o["commit"],
                           extra=dict(method="lastnode at x_c", valid=True, xl=xl, newton_steps=len(recs),
                                      jac="dd"))
