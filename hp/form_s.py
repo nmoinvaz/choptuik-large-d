@@ -1167,6 +1167,109 @@ def cmd_release_ls(argv):
     return 0
 
 
+def cmd_relayout(argv):
+    """A form-S state on more nodes toward the horizon (#1088): the Moebius horizon series summed at x_l = 0.7 is
+    exponentially sensitive to m_h at large n (a gain from m_h of 1.9e5 at the D 2000 solution and 2.6e23 at the D 2828
+    guess in float64, against 0.08-0.11 at x 0.8-0.95, whose coefficients fall below 1e-70 by order 98-206; raw
+    I1088-mac-a/form_s/gain_x.log). Each added node x gets the series' sum there (hp's octo-double horizon, read as the
+    horizon block of a residual whose last node is x and holds zeros), the Taylor steps are planned for the new nodes, and
+    --solve 1 re-solves the held system at the same D on the new nodes (the lean defaults) and records it.
+
+        form_s.py relayout STATE.npz OUTDIR --add 0.8,0.9 --ks 200 [--solve 1]
+    """
+    from octo_corrector import delta_digits, load_o, o8, save_o
+    from raw_out import pop_allow, require_raw
+    argv = list(argv)
+    allow = pop_allow(argv)
+    pos, o = opts(argv, dict(add="0.8,0.9", ks="200", threads="2", plan_tol="1e-40", hmax="0.05", solve="1",
+                             it_max="8", halvings="8", delta_tol="1e-15", commit=""))
+    path, outdir = pos[0], pos[1]
+    os.makedirs(outdir, exist_ok=True)
+    log = os.path.join(outdir, "relayout.jsonl")
+    require_raw(log, allow=allow)
+    z8, meta = load_o(path)
+    M, nodes = int(meta["M"]), list(meta["nodes"])
+    K = len(nodes)
+    mob = float(meta.get("hmob", 0.0) or 0.0)
+    if not mob:
+        raise SystemExit("relayout needs a state solved with the Moebius horizon")
+    with mp.workdps(60):
+        D = mp.mpf(meta["D_str"])
+    add = [float(x) for x in o["add"].split(",")]
+    ks = int(o["ks"])
+    kw = dict(kt=int(meta.get("kt", 36)), kc=int(meta["kc"]), threads=int(o["threads"]))
+    L0 = len(z8[0])
+    head = 2 * M + 3 * M * K
+    new_nodes = list(nodes)
+    extra = []  # eight-part values (p, m, c) at each added node
+    t0 = time.time()
+    for x in add:
+        tmp_nodes = new_nodes + [x]
+        Kt = len(tmp_nodes)
+        zt = []
+        for q in range(8):
+            v = np.asarray(z8[q])
+            parts = [v[:head]] + [e[q] for e in extra] + [np.zeros(3 * M), v[head:head + M], v[-1:]]
+            zt.append(np.ascontiguousarray(np.concatenate(parts)))
+        # the new segment's Taylor steps planned outward from its source node (the planner reads only that node)
+        zA_t = s_to_a(np.asarray(zt[0]) + np.asarray(zt[1]), float(D), M, Kt, tmp_nodes)
+        sa_t = make_solver(D, M, nodes=tmp_nodes, kt=kw["kt"], kc=kw["kc"], ks=ks, threads=kw["threads"])
+        segs = [list(map(float, g)) for g in sa_t.plan(np.ascontiguousarray(zA_t), np.zeros(len(zA_t)),
+                                                         float(o["plan_tol"]), float(o["hmax"]))]
+        sv = make_solver_s(D, M, tmp_nodes, ks=ks, segs=segs, mob=mob, **kw)
+        F = sv.residual_s(zt)
+        r0 = Kt * 3 * M
+        extra.append([np.ascontiguousarray(np.asarray(F[q])[r0:r0 + 3 * M]) for q in range(8)])
+        new_nodes = tmp_nodes
+        print(f"  node {x}: the horizon series' sum there, max |p| {np.abs(np.asarray(F[0])[r0:r0 + M]).max():.4e}",
+              flush=True)
+    Kn = len(new_nodes)
+    zn = []
+    for q in range(8):
+        v = np.asarray(z8[q])
+        zn.append(np.ascontiguousarray(np.concatenate([v[:head]] + [e[q] for e in extra] + [v[head:head + M], v[-1:]])))
+    zn = o8(zn)
+    zs = np.asarray(zn[0]) + np.asarray(zn[1])
+    zA = s_to_a(zs, float(D), M, Kn, new_nodes)
+    sa = make_solver(D, M, nodes=new_nodes, kt=kw["kt"], kc=kw["kc"], ks=ks, threads=kw["threads"])
+    segs = sa.plan(np.ascontiguousarray(zA), np.zeros(len(zA)), float(o["plan_tol"]), float(o["hmax"]))
+    segs = [list(map(float, g)) for g in segs]
+    mn = dict(meta, nodes=new_nodes, segs=segs, ks=ks, source="form_s.py relayout", relayout_from=os.path.basename(path))
+    h8 = held_field(z8, M)
+    sh = HeldS(make_solver_s(D, M, new_nodes, ks=ks, segs=segs, mob=mob, kfreeze=3, **kw), M, Kn, h8)
+    F = sh.residual_s([np.ascontiguousarray(zn[q]) for q in range(4)])
+    b = blocks_s(F, M, Kn)
+    print(f"relayout of {os.path.basename(path)} to nodes {new_nodes} (ks {ks}, {sum(len(g) - 1 for g in segs)} Taylor "
+          f"steps): the held residual's max |F| per block " + " ".join(f"{x:.1e}" for x in b)
+          + f" ({time.time() - t0:.0f} s)", flush=True)
+    out = os.path.join(outdir, f"relayout_D{float(D):.4f}.npz")
+    save_o(out, zn, mn)
+    rec = dict(state=os.path.basename(path), nodes=new_nodes, ks=ks, blocks=b, utc=time.strftime("%Y-%m-%d %H:%M:%S", time.gmtime()))
+    if int(o["solve"]):
+        zt, conv, recs = newton_o_s(sh, zn, 1e-300, int(o["it_max"]), int(o["halvings"]), None, jac="dd", res="dd",
+                                    delta_tol=float(o["delta_tol"]))
+        F4 = sh.residual_s([np.ascontiguousarray(zt[q]) for q in range(4)])
+        Fc = float(np.abs(np.asarray(F4[0]) + np.asarray(F4[1])).max())
+        with mp.workdps(60):
+            dD = float(mp.mpf(delta_digits(zt, 40)) - mp.mpf(delta_digits(z8, 40)))
+        gains = [r["gain"] for r in recs if "gain" in r]
+        mn.update(solved=bool(conv), F=Fc, check="qd", delta_gain=gains[-1] if gains else None)
+        out = os.path.join(outdir, f"relayout_solved_D{float(D):.4f}.npz")
+        save_o(out, zt, mn)
+        print(f"  re-solved on the new nodes: {'converged' if conv else 'NOT converged'} in {len(recs)} steps, quad-double "
+              f"check max |F| {Fc:.2e}, Delta {delta_digits(zt, 40)} ({dD:+.2e} from the old layout's)", flush=True)
+        rec.update(converged=bool(conv), steps=len(recs), F_check=Fc, dDelta=dD)
+        if conv:
+            drec = direct_line(zt, mn, out, "held", recs[-1].get("F_new") if recs else None, "dd", Fc, "qd",
+                               bound=(gains[-1] * Fc if gains else None), commit=o["commit"],
+                               extra=dict(relayout_from=os.path.basename(path), layout_dDelta=dD))
+            with open(os.path.join(outdir, "direct_s.jsonl"), "a") as fh:
+                fh.write(json.dumps(drec) + "\n")
+    with open(log, "a") as fh:
+        fh.write(json.dumps(rec) + "\n")
+    return 0
+
+
 def cmd_mobcheck(argv):
     """The Moebius horizon against the u one at a held state solved with u (#1088's written checks for the port): the
     held system's max |F| per block at the state with the horizon in u (the state's ks) and in the Moebius variable
@@ -1252,7 +1355,7 @@ class MutS:
 def main():
     cmd = sys.argv[1]
     return dict(check=cmd_check, cond=cmd_cond, jump=cmd_jump, planted=cmd_planted, release=cmd_release,
-                release_ls=cmd_release_ls, mobcheck=cmd_mobcheck)[cmd](sys.argv[2:])
+                release_ls=cmd_release_ls, mobcheck=cmd_mobcheck, relayout=cmd_relayout)[cmd](sys.argv[2:])
 
 
 if __name__ == "__main__":
