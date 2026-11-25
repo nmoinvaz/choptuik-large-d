@@ -13,6 +13,7 @@ fall for S0. First the slaved a_h is compared with the stored one (it must agree
 Usage, from the repository root:  python3 solver/lit_gaps_dss/pole_mc.py STATE.npz [...]
 """
 import json
+import math
 import os
 import sys
 
@@ -93,6 +94,7 @@ def main():
         sig = s.series_scale(1)
         print(f"{'delta':>7} {'R_A':>7} {'R_S':>7} {'R_S0':>7}   {'E_A':>8} {'E_S':>8} {'E_S0':>8}"
               "   (R: ratio-test radius; E: the data's momentum residual at the SSH)", flush=True)
+        rows = []
         for delta in DELTAS:
             Rs, Es = [], []
             for mode in ("A", "S", "S0"):
@@ -116,8 +118,25 @@ def main():
                 Rs.append(R)
             print(f"{delta:7.0e} " + " ".join(f"{r if r else float('nan'):7.3f}" for r in Rs) + "   "
                   + " ".join(f"{float(e):8.1e}" for e in Es), flush=True)
+            rows.append((delta, Rs, [float(e) for e in Es]))
             print(json.dumps(dict(state=os.path.basename(path), D=D, delta=delta, R_A=Rs[0], R_S=Rs[1], R_S0=Rs[2],
                                   E_A=float(Es[0]), E_S=float(Es[1]), E_S0=float(Es[2]))), file=sys.stderr, flush=True)
+        for e, ra, rs0 in interp_check(rows):
+            print(f"  S0 at E {e:.1e}: R_A read at that E {ra:.3f}, R_S0 {rs0:.3f}", flush=True)
+
+
+def interp_check(rows):
+    """R_A read at S0's residual (linear in log E between A's points) against the measured R_S0."""
+    a = sorted((math.log(r[2][0]), r[1][0]) for r in rows if r[1][0] is not None)
+    out = []
+    for delta, Rs, Es in rows:
+        if delta == 0 or Rs[2] is None:
+            continue
+        le = math.log(Es[2])
+        for (x0, y0), (x1, y1) in zip(a, a[1:]):
+            if x0 <= le <= x1:
+                out.append((Es[2], y0 + (y1 - y0) * (le - x0) / (x1 - x0), Rs[2]))
+    return out
 
 
 if __name__ == "__main__":
