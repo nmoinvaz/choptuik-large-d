@@ -174,9 +174,97 @@ def cmd_check(argv):
     return 0
 
 
+def weakest(solve, L, w, iters, w2, seed=0):
+    """the w weakest right singular values of J from solve(v, transpose) = J^-1 v or J^-T v (leading part): subspace
+    iteration on (J^T J)^-1 with Rayleigh-Ritz, then w2 more on the complement of those the f64 Rayleigh-Ritz resolves
+    (eigenvalues above 1e-12 of the largest), deflated. Returns [(sigma, vector)], weakest first."""
+    rng = np.random.default_rng(seed)
+
+    def apply(v):
+        return solve(solve(v, True), False)
+
+    def rr(V, Vd=None):
+        W = np.column_stack([apply(V[:, j]) for j in range(V.shape[1])])
+        if Vd is not None:
+            W = W - Vd @ (Vd.T @ W)
+        H = V.T @ W
+        ev, U = np.linalg.eigh((H + H.T) / 2)
+        return ev, V @ U
+
+    V = np.linalg.qr(rng.standard_normal((L, w)))[0]
+    for _ in range(iters):
+        V = np.linalg.qr(np.column_stack([apply(V[:, j]) for j in range(w)]))[0]
+    ev, X = rr(V)
+    keep = ev > 1e-12 * ev.max()
+    out = [(1 / np.sqrt(e), X[:, j]) for j, e in enumerate(ev) if keep[j]]
+    if w2:
+        Vd = np.linalg.qr(X[:, keep])[0]
+        V2 = np.linalg.qr(rng.standard_normal((L, w2)))[0]
+        for _ in range(iters + 2):
+            V2 = V2 - Vd @ (Vd.T @ V2)
+            V2 = np.column_stack([apply(V2[:, j]) for j in range(w2)])
+            V2 = np.linalg.qr(V2 - Vd @ (Vd.T @ V2))[0]
+        ev2, X2 = rr(V2, Vd)
+        out += [(1 / np.sqrt(e), X2[:, j]) for j, e in enumerate(ev2) if e > 0]
+    out.sort(key=lambda t: t[0])
+    return out
+
+
+def cmd_cond(argv):
+    """the conditioning of form A and form S at the same state, layout, orders and plan (module docstring)"""
+    from octo_corrector import load_o, o8
+    from pinning import band_coeffs
+    pos, o = opts(argv, dict(kfreeze="13", plan_tol="1e-32", threads="2", w="10", w2="4", iters="6", forms="A,S",
+                             segs="state"))
+    for path in pos:
+        z8, meta = load_o(path)
+        M, nodes = int(meta["M"]), list(meta["nodes"])
+        K = len(nodes)
+        with mp.workdps(60):
+            D = mp.mpf(meta.get("D_str", repr(meta["D"])))
+        kf = None if o["kfreeze"] == "none" else int(o["kfreeze"])
+        kw = dict(kt=meta.get("kt", 36), kc=meta.get("kc", 40), ks=meta.get("ks", 120), threads=int(o["threads"]), kfreeze=kf)
+        sa = make_solver(D, M, nodes=nodes, **kw)
+        segs = meta["segs"] if (o["segs"] == "state" and meta.get("segs")) else sa.plan(z8[0], z8[1], float(o["plan_tol"]), 0.05)
+        sa.set_segs(segs)
+        print(f"{os.path.basename(path)}: D {float(D):.6g}, M {M}, K {K}, kt {kw['kt']}, kc {kw['kc']}, ks {kw['ks']}, "
+              f"kfreeze {kf}, {sum(len(g) - 1 for g in segs)} Taylor steps", flush=True)
+        for form in o["forms"].split(","):
+            t0 = time.time()
+            if form == "A":
+                s, z, L = sa, o8(z8), sa.size
+                d, Fh, Fl, pmin, pmax = s.newton_o(list(z))
+                Fv = np.asarray(Fh) + np.asarray(Fl)
+            else:
+                s = make_solver_s(D, M, nodes, segs=segs, **kw)
+                z, L = a_to_s(list(z8), M, K), s.size_s
+                d, F, pmin, pmax = s.newton_s(z)
+                Fv = np.asarray(F[0]) + np.asarray(F[1])
+            t_lu = time.time() - t0
+            zero = np.zeros(L)
+
+            def solve(v, tr, s=s):
+                return np.asarray(s.olu_solve([np.ascontiguousarray(v)] + [zero] * 7, tr)[0])
+            eD = np.zeros(L)
+            eD[-1] = 1.0
+            g = solve(eD, True)
+            ws = weakest(solve, L, int(o["w"]), int(o["iters"]), int(o["w2"]))
+            print(f"  form {form}: L {L}, octo-double LU {t_lu:.0f} s, max|F| {np.abs(Fv).max():.2e}, pivots {pmin:.3e} .. "
+                  f"{pmax:.3e} (ratio {pmax / pmin:.2e}); Delta's gain sum|dDelta/dF| {np.abs(g).sum():.3e} "
+                  f"(max {np.abs(g).max():.2e}); first-order dDelta {-(g @ Fv):.3e}", flush=True)
+            for sig, x in ws[:int(o["w"]) + int(o["w2"])]:
+                co = band_coeffs(x[:M], np.zeros(M), M, list(range(1, 32, 2)))
+                amps = [abs(a) + abs(b) for a, b in co]
+                k = 2 * int(np.argmax(amps)) + 1
+                hz = x[2 * M + (4 if form == "A" else 3) * M * K:-1]
+                print(f"    sigma {sig:.3e}  |Delta comp| {abs(x[-1]):.2e}  p1 part {np.linalg.norm(x[:M]):.2e} "
+                      f"(harmonic {k})  horizon data {np.linalg.norm(hz):.2e}", flush=True)
+    return 0
+
+
 def main():
     cmd = sys.argv[1]
-    return dict(check=cmd_check)[cmd](sys.argv[2:])
+    return dict(check=cmd_check, cond=cmd_cond)[cmd](sys.argv[2:])
 
 
 if __name__ == "__main__":
