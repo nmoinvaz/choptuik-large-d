@@ -211,10 +211,21 @@ against Track C at the same D (`diag/trackc_at.json`):
 | 640 | 6 | 8 | 1071 | 7.5e-14 | 1.66202416442 | +1.99e-03 | 4.9e-10 | 2.4e-14 | 1.4e+13 | 3.4e+00 |  | 298 |
 | 650 | 6 | 8 | 1084 | 4.8e-10 | 1.66491572558 | +5.13e-03 | 5.0e-10 | 3.0e-13 | 4.2e+10 | 6.3e+00 |  | 343 |
 
-**`f64_M6_cont3/` (0 records)**
+**`f64_M6_cont3/` (3 records)**
 
 | D | M | a | ks | max\|F\| | Δ | Δ − Track C | Track C's E | σ_min (scaled) | grip | noise, Moebius | noise, affine | s |
 |---|---|---|---|---|---|---|---|---|---|---|---|---|
+| 640 | 6 | 8 | 1071 | 6.7e-14 | 1.66201800008 | +1.98e-03 | 4.9e-10 | 5.0e-15 | 5.6e+13 | 3.5e+00 |  | 348 |
+| 646 | 6 | 8 | 1079 | 7.1e-14 | 1.66201367551 | +2.13e-03 | 5.0e-10 | 3.5e-14 | 7.7e+12 | 3.5e+00 |  | 361 |
+| 652 | 6 | 8 | 1086 | 1.7e-10 | 1.6609189278 | +1.18e-03 | 5.0e-10 | 5.6e-12 | 3.2e+10 | 3.5e+00 |  | 346 |
+
+**`f64_M6_cont4/` (3 records)**
+
+| D | M | a | ks | max\|F\| | Δ | Δ − Track C | Track C's E | σ_min (scaled) | grip | noise, Moebius | noise, affine | s |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| 646 | 6 | 8 | 1079 | 6.6e-14 | 1.66199937859 | +2.11e-03 | 5.0e-10 | 7.5e-15 | 2.8e+13 | 3.5e+00 |  | 206 |
+| 660 | 6 | 8 | 1097 | 1.5e-11 | 1.67652832979 | +1.70e-02 | 5.1e-10 | 2.7e-12 | 3.4e+10 | 5.5e+00 |  | 255 |
+| 680 | 6 | 8 | 1122 | 9.8e-07 | 1.69619961867 | +nan | nan | 8.5e-09 | 7.6e+07 | 3.7e+00 |  | 48 |
 <!-- end f64 table -->
 
 Every attempt is a row. A row whose max\|F\| is above its run's acceptance is a failed attempt after which the driver
@@ -222,8 +233,14 @@ inserted a midpoint in 1/n. The acceptances were 1e-11 to D 186.66, then 1e-9 in
 1e-10 in `f64_M6_cont3/`.
 
 D 650 in `f64_M6_cont2/` passed 1e-9 but is off the branch: Δ − Track C is +5.1e-3 there, against +2.0e-3 at D 640. It
-is a point of small residual in a weak valley, so `f64_M6_cont3/` restarts from D 640. It also rejects any solve whose Δ
+is a point of small residual in a weak valley, so `f64_M6_cont3/` restarts from D 640, refusing any solve whose Δ
 moves more than 1e-4 from its seed's extrapolated Δ.
+- That refused D 652, whose Δ moved 1.1e-3.
+- `f64_M6_cont4/` from D 646 allowed 5e-3. It took D 660 with Δ = 1.6765, Track C + 1.7e-2, because the check needs two
+  points, and its next seed (D 680) failed.
+
+So float64 at M 6 has no well-defined branch past D ≈ 650: there the residual floor (1e-11 to 1e-13) is reached in a
+valley along which Δ moves by 1e-2. The float64 M-6 solutions on the branch end at D 646.
 
 **The float64 error at the solutions themselves** (`diag/f64_vs_dd.log`; the horizon sums at x* in float64 against
 double-double, the larger of U, V and c):
