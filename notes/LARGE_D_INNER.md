@@ -110,7 +110,7 @@ precision; written first, kept as the independent check).
 | check | result | threshold | control |
 |---|---|---|---|
 | float64, a = 0 and a = 1, against Track B's sums at x* at its D-100 solution (`check_mobius.log`) | 2.1e-14, 2.2e-14 relative | 1e-13 | a wrong h₁ (`--mutate=Lk`): 5.6e-3, FAIL (`check_mobius_mutate_Lk.log`) |
-| double-double, a = 1, against the mpmath reference at 40 digits (`check_mobius_dd.log`) | 9.4e-31 relative | 1e-29 | |
+| double-double, a = 1, against the mpmath reference at 40 digits (`check_mobius_dd.log`; after the exact z products `check_mobius_dd_v2.log`) | 9.4e-31, 9.6e-31 relative | 1e-29 | t* moved by 1e-20 relative (`--mutate=ts`): 5.3e-21, FAIL (`check_mobius_dd_mutate_ts.log`) |
 | forward-mode dd Jacobian against the float64 complex-step one | 1.0e-15 relative | 1e-12 | |
 | noise amplification below 1e3 at every D, Moebius (`noise_variable.log`) | 83 at most | 1e3 | the affine variable (`--mutate=affine`): 1.2e15, FAIL |
 
@@ -332,6 +332,14 @@ python3 noise_variable.py $R/I1088-mac/Sdd_D100_M8.json --Ds=100,150,200,245,300
 python3 affine_orders.py $R/I1088-mac/Sdd_D100_M8.json --Ds=100,200,245
 python3 solve_cont.py $R/I1088-mac/Sdd_D100_M8.json --M=6 --Ds=100,110,125,... --out=DIR --noise0=100,150,200,245.64,300,400
 python3 solve_dd_cont.py $R/I1088-mac/Sdd_D100_M10.json --M=10 --Ds=100,110,125,... --out=DIR
+python3 noise_at_solution.py SOL1.json SOL2.json --as=1,2,3,4 --bands=all,mid          # the band split of §3
+python3 f64_vs_dd.py SOL1.json ... --as=0,1,8                                         # §4's float64 errors
+python3 seed_test.py SOL.json TRACKC.json --Ds=1000,...,10000 --as=8 --a_rule=400 --Ddd=1000,2000,5000
+python3 cost_vs_D.py $R/I1088-mac/Sdd_D100_M8.json --M=6                              # §5
+python3 pairing_test.py SOL.json --D=200 --M=8 --hold=5,7                             # §4's held systems
+(from hp/) python3 ../solver/inner_large_d/trackc_at.py OUT.json D1,D2,...            # Track C at the run D
+python3 tabulate.py TRACKC.json DIR --md                                              # §4's table
 ```
+SOL.json are the `sol_*.json` records of `I1090-mac/f64_M6_cont/`; TRACKC.json is `I1090-mac/diag/trackc_at.json`.
 
 The exact commands of the runs, with their D lists, are in `I1090-mac/README.md`.

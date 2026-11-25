@@ -3,7 +3,8 @@ form-S solution: horizon sums at x* within 1e-29 of the reference, the residual 
 (it solves Track B's dd problem, whose c recurrence rounds lam/(2(k+1)) to float64: printed for information), and the
 forward-mode Jacobian within 1e-12 of the float64 complex-step one. Exit status 1 on failure.
 
-Usage: python3 check_mobius_dd.py FACTORED_DIR SOL.json [--kb=150]
+Usage: python3 check_mobius_dd.py FACTORED_DIR SOL.json [--kb=150] [--mutate=ts]
+  --mutate=ts: t* of the dd series moved by 1e-20 relative (z's recurrence and the Moebius coefficients): must FAIL.
 """
 import json
 import sys
@@ -34,6 +35,8 @@ ref = FactoredSDD(D, M, kb=kb)
 om = (ref.pi * 2.0) / y[3 * M]
 hr = ref.horizon(y[2 * M:3 * M], om)
 f = mobius_sdd.FormSDD(D, M, a=1, ks=ref.ks, kb=kb)
+if opts.get("mutate") == "ts":
+    f.ts_dd = f.ts_dd + f.ts_dd * 1e-20  # in double-double: 1 + 1e-20 is 1 in float64
 ho = f.horizon(y[2 * M:3 * M], om)
 dh = max(float(np.max(np.abs((ho[k] - hr[k]).f()))) / float(np.max(np.abs(hr[k].f()))) for k in ("U", "V", "c"))
 mp.mp.dps = 40
