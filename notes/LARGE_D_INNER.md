@@ -9,7 +9,7 @@ Status words as in AGENTS.md. Every number below comes from a log in `I1090-mac/
 | question | answer | status |
 |---|---|---|
 | Does form S need about 0.06n more digits at fixed precision, from the scalar mode's shadow? (#1090's premise) | **No.** The loss is a forward-recurrence instability of the affine horizon variable, which a Moebius variable removes (§2–§3) | numerical evidence, D 100–400 at seeds (§3), and at solutions (§4) |
-| Where does the affine variable lose its digits? | at low orders already: the critical solution's horizon series is the minimal solution of its recurrence, and rounding grows at about 2.2 per order relative to it until σ_R, where the resonance injects it into the shadow (§2) | numerical evidence |
+| Where does the affine variable lose its digits? | at low orders already: the critical solution's horizon series is the minimal solution of its recurrence; at D 200 the float64 relative error passes 1 at order 35 of σ_R ≈ 102, and the resonance at σ_R injects it into the shadow (§2) | numerical evidence |
 | The inner problem at x ~ √n with the Stokes constant as an unknown, at finite n | not the place to impose the selection; the selection is read at x* (§6) | argued from measured weights (BEYOND_LIGHT_CONE §7) |
 | Cost against D | the horizon order still grows like n (ks ≈ n + 14√n + 80), banded: linear in n | measured (§5) |
 | Conditioning against D | set by the harmonic ladder of the selection, which the layout does not change (§4) | numerical evidence |
@@ -43,9 +43,22 @@ like 2⁻ᵏ in units where x* is at 1, while the critical solution's decay much
 the (n/2)c(p + m) term). At the order σ_R ≈ n/2 + 2.7 the near-resonance of the SSH exponent injects whatever is there
 into the shadow, whose sum at x* is O(1).
 
-Per order, float64 against double-double, at Track B's D-200 seed (`affine_orders.log`): the relative error of U_k is
-already [AFFINE ORDERS TABLE]. The shadow is then computed with the wrong amplitude, and the error of the sum at x*
-grows with D.
+Per order, float64 against double-double, at Track B's D-200 seed (`diag/affine_orders.log`; σ_R ≈ 101.7; |U_k| in
+units where x* is at 1, so the term at x* is the coefficient):
+
+| k | 7 | 21 | 35 | 49 | 77 | 98 | 118 | 166 | 214 |
+|---|---|---|---|---|---|---|---|---|---|
+| affine: \|U_k\| | 3.8e-10 | 1.4e-21 | 3.7e-31 | 7.0e-38 | 1.4e-42 | 1.1e-38 | 3.6e-24 | 2.2e-12 | 4.6e-11 |
+| affine: float64 error, relative | 6.0e-11 | 3.1e-5 | 2.4 | 3.8e2 | 2.8e-2 | 0.21 | 16 | 29 | 17 |
+| Moebius: \|U_k\| | 3.7e-6 | 3.9e-13 | 8.7e-20 | 7.7e-26 | 4.4e-30 | 1.8e-26 | 1.4e-14 | 2.6e-11 | 1.0e-18 |
+| Moebius: float64 error, relative | 1.4e-14 | 4.4e-14 | 5.8e-13 | 2.6e-11 | 3.6e-11 | 2.5e-12 | 1.1e-11 | 1.3e-11 | 9.3e-12 |
+
+- In the affine variable the relative error passes 1 at order 35, a third of the way to σ_R.
+- The shadow (orders 118 to 214, where the coefficients grow again) then comes out 16 to 29 times its true size, and
+  the sum at x* is off by 1.2e-5 relative at D 200 and by a factor 30 at D 245.
+- In the Moebius variable no coefficient is worse than 6e-11 relative, and the sum at x* is right to 2.0e-14 at D 200
+  and 1.2e-14 at D 245.
+- At D 100 (the solution itself) both sums are right to 1.4e-14 and 1.2e-14.
 
 Relative noise η put on any stored array of the recurrence (U, V, X, G, c, q) after every order is amplified in the sum
 at x* by the same factor, about 10^(0.05–0.13 n) between D 100 and 245 (scratch diagnostic on Track B's code, logged
@@ -154,3 +167,21 @@ here (§7).
 - **Track B's M-6 Δ at D 100** is 1.7487024 (float64), this note's 1.748728938 (float64, Moebius): 2.6e-5 apart. At
   M 6 the grip on Δ is 2.4e11 with unit rows, so a float64 residual of 5e-14 leaves Δ uncertain to about 1e-5 in the
   worst case; the two are consistent with that, and neither pins Δ at M 6.
+
+## 9. Commands
+
+From `solver/inner_large_d/`, with the raw-data repository cloned beside the checkout
+(`git clone https://github.com/nmoinvaz/choptuik-large-d-raw ../choptuik-large-d-raw`), so that
+`R=../../../choptuik-large-d-raw`, and Track B's `solver/factored/` checked out from `wip/large-d-factored` into a
+directory `FACT` (for the two checks that compare with it):
+
+```
+python3 check_mobius.py FACT $R/I1088-mac/Sdd_D100_M8.json                    # exit 0; --mutate=Lk: exit 1
+python3 check_mobius_dd.py FACT $R/I1088-mac/Sdd_D100_M8.json --kb=150        # exit 0 (about 2 min)
+python3 noise_variable.py $R/I1088-mac/Sdd_D100_M8.json --Ds=100,150,200,245,300,400   # exit 0; --mutate=affine: exit 1
+python3 affine_orders.py $R/I1088-mac/Sdd_D100_M8.json --Ds=100,200,245
+python3 solve_cont.py $R/I1088-mac/Sdd_D100_M8.json --M=6 --Ds=100,110,125,... --out=DIR --noise0=100,150,200,245.64,300,400
+python3 solve_dd_cont.py $R/I1088-mac/Sdd_D100_M10.json --M=10 --Ds=100,110,125,... --out=DIR
+```
+
+The exact commands of the runs, with their D lists, are in `I1090-mac/README.md`.
