@@ -3,7 +3,8 @@
 refitted with #1088's form-S direct solves added, so that Δ at D 2828-10^4 and Δ∞ come from a short extrapolation.
 
 Direct points: every `direct_s.jsonl` record under the raw folders given (I1088-*), one per D: the full system where
-there is one, else the held system with the lowest check residual. Sigma, written before any fit is read:
+there is one, else the held system with the lowest check residual. Records with "valid": false or "method": "fine" are
+skipped (the fine mesh converged to a wrong Delta, #1088). Sigma, written before any fit is read:
 - full system: 1e-13 (Δ's discretization 2e-17 relative and its residual bound are far below; 1e-13 keeps the dd
   points' own weight dominant at low D);
 - held system: max(|full_dDelta_first_order|, 1e-11), the first-order held bias as a bar. At D 300 that estimate
@@ -47,6 +48,8 @@ def direct_points(folders):
                 if not line.strip():
                     continue
                 r = json.loads(line)
+                if r.get("valid") is False or r.get("method") == "fine":
+                    continue                       # fine-mesh records: converged to a wrong Delta (#1088), never data
                 D = round(float(r["D_str"]), 6)
                 full = r["system"] == "full"
                 parts = r.get("Delta_parts") or r.get("Delta")
