@@ -100,6 +100,9 @@ pub struct Ctx<const B: usize> {
     pub recip_planted: usize,
     /// folded even-sector d/dtheta (M x M), for form S's slaving of B = 1/a^2 (`form_s`); None until set
     pub de: Option<DMat<B>>,
+    /// form S's horizon variable: 0, the default, u = 1 - x (`form_s::horizon_series_s`); a > 0 the Moebius variable
+    /// t = (1 - z)/(1 + a z), z = x^2 (`form_s::horizon_mob`)
+    pub hmob: f64,
 }
 
 /// `Ctx::series_split`: the middle terms of the horizon series' Cauchy sums formed ahead of each jet order, in

@@ -43,6 +43,10 @@ const NAUX_S: usize = 10;
 /// --mutate=flux, notes/LIT_GAPS_DSS.md 2); the horizon series is left as it is
 pub const FS_MUT_FLUX: u8 = 51;
 
+/// `Ctx::mutate`, the control of the Moebius horizon series (`horizon_mob`): z(t)'s coefficients from a wrong map,
+/// z = (1 - t)/(1 - a t), the sign of the denominator's a flipped while h and e keep the right one
+pub const FS_MUT_MOBIUS: u8 = 52;
+
 /// refinement steps of a slaving solve: as model's QD_REFINE (2) and OD_REFINE (4), one more on a tangent lane
 const QD_REFINE_S: usize = 2;
 const OD_REFINE_S: usize = 4;
@@ -425,6 +429,149 @@ pub fn horizon_series_s<T: Lane, const B: usize>(ctx: &Ctx<B>, de: &DMat<B>, pre
     [pp, mm, cc]
 }
 
+/// sum_{j=0..k} s_j y_{k-j}, s a scalar series
+fn cvs<T: Lane, const B: usize>(s: &[T::P], y: &[Fl<T, B>], k: usize) -> Fl<T, B> {
+    let mut acc = Fl::<T, B>::zero();
+    for j in (0..=k).rev() {
+        acc = acc + y[k - j].mulp(s[j]);
+    }
+    acc
+}
+
+/// Form S's horizon series in the Moebius variable t = (1 - z)/(1 + a z), z = x^2, a = ctx.hmob, scaled as tau =
+/// t/t_l so that the last node x_l is at tau = 1 (#1090; solver/inner_large_d/mobius_s.py's FormS.horizon, whose
+/// variable keeps the centre far from x_l, so the critical solution's series is no longer a minimal solution of its
+/// recurrence). Fields U = p + m, V = (p - m)/x, X = B - 1, G = 2z c_z, with z d/dz = -h d/dt, h = (1 - t)(1 + at)/(1 + a),
+/// z^2 d/dz = -e d/dt, e = (1 - t)^2/(1 + a):
+///
+///   A + B = 2h(c - 1) U_t + 2(hc - e) V_t + omega (U + zV)_th - G (U + V) + zV - (n - 1) c U = 0
+///   A     = -2h (U_t - c V_t) + omega U_th - G V = 0,      c_t = -G/(2h),      G (1 + X) = -(n - 1) c X,
+///   (omega D_e - (n - 1) - q) X = q,      q = (U^2 + z V^2)/2 - c U V.
+///
+/// Order k of A + B fixes P_k = U_k + V_k through omega D + (k + 1)(1 - G_0) - n/2, the u series' operator at order k
+/// (c1 = -G_0), so `prep.h`'s LUs and `psolve` serve; order k of A fixes Q_(k+1) = U_(k+1) - V_(k+1); q_k needs only
+/// Q_k; X's solves are `prep.lu_h`'s. Data Q_0 = 2 m_h, c_0 = 1. Returns p = (U + x_l V)/2, m = (U - x_l V)/2 and c at
+/// x_l, the sums of orders 0..=ks.
+pub fn horizon_mob<T: Lane, const B: usize>(ctx: &Ctx<B>, de: &DMat<B>, prep: &SPrep, m0: &Fl<T, B>, omega: T) -> [Fl<T, B>; 3] {
+    let rate = Rate::ZERO;
+    let lu_h = prep.lu_h.as_ref().expect("form S: the horizon's slaving LU");
+    let one_p = T::P::one();
+    let n1 = dim::<T, B>(ctx) - one_p;
+    let nh1 = dim::<T, B>(ctx).mul_f(0.5) - one_p;
+    let xl = *ctx.nodes.last().expect("form S: nodes");
+    let zl = T::P::from_f64(xl) * T::P::from_f64(xl);
+    let ap = T::P::from_f64(ctx.hmob);
+    // t at x_l, the unit of tau
+    let ts = (one_p - zl) / (one_p + ap * zl);
+    let io = one_p / ts;
+    let ia1 = one_p / (one_p + ap);
+    let hh = [ia1, (ap - one_p) * ia1 * ts, -(ap * ia1 * ts * ts)];
+    let ee = [ia1, (ia1 * ts).mul_f(-2.0), ia1 * ts * ts];
+    let ks = ctx.ks;
+    let len = ks + 3;
+    // z(tau): 1, -(1 + a) t_l, then times -a t_l per order (FS_MUT_MOBIUS: a's sign flipped here only)
+    let am = if ctx.mutate == FS_MUT_MOBIUS { -ap } else { ap };
+    let mut zs = vec![one_p; len];
+    if len > 1 {
+        zs[1] = -((one_p + am) * ts);
+        let r = -(am * ts);
+        for j in 2..len {
+            zs[j] = zs[j - 1] * r;
+        }
+    }
+    let z = Fl::<T, B>::zero();
+    let one = Fl::<T, B>::splat(DD::ONE);
+    let mut uu = vec![z; len];
+    let mut vv = vec![z; len];
+    let mut xx = vec![z; len];
+    let mut gg = vec![z; len];
+    let mut cc = vec![z; len];
+    let mut q = vec![z; len];
+    let mut du = vec![z; len];
+    let mut dv = vec![z; len];
+    let mut qn = vec![z; len];
+    let mut vvc = vec![z; len];
+    let mut uvc = vec![z; len];
+    let mut hcm = vec![z; len];
+    let mut hce = vec![z; len];
+    cc[0] = one;
+    qn[0] = m0.mulf(2.0);
+    let mut kap = z;
+    let mut ib0 = z;
+    let two_io = io.mul_f(2.0);
+    // 1/(2 io h_0) = (1 + a) t_l / 2
+    let iq = (one_p + ap) * ts.mul_f(0.5);
+    for k in 0..=ks {
+        let kf = k as f64;
+        uu[k] = qn[k].mul_pwr2(0.5);
+        vv[k] = -uu[k];
+        vvc[k] = cs(&vv, &vv, k);
+        uvc[k] = cs(&uu, &vv, k);
+        q[k] = (cs(&uu, &uu, k) + cvs(&zs, &vvc, k)).mul_pwr2(0.5) - cs(&cc, &uvc, k);
+        if k == 0 {
+            kap = (-q[0]).addp(-n1);
+            xx[0] = ssolve(de, lu_h, &kap, &q[0], omega);
+            ib0 = one / (one + xx[0]);
+        } else {
+            let rhs = q[k] + cs_range(&q, &xx, k, 1, k);
+            xx[k] = ssolve(de, lu_h, &kap, &rhs, omega);
+        }
+        let gs = if k >= 1 { cs(&cc, &xx, k).mulp(-n1) - cs_range(&gg, &xx, k, 0, k - 1) } else { cs(&cc, &xx, k).mulp(-n1) };
+        gg[k] = gs * ib0;
+        let mut s = gg[k].mulp(ts.mul_f(-0.5));
+        for i in 1..=k.min(2) {
+            s = s - cc[k - i + 1].mulp(hh[i].mul_f((k - i + 1) as f64));
+        }
+        cc[k + 1] = mul_recip(ctx, s.mulp(one_p + ap), k + 1);
+        let mut hc = cc[k].mulp(hh[0]);
+        if k >= 1 {
+            hc = hc + cc[k - 1].mulp(hh[1]);
+        }
+        if k >= 2 {
+            hc = hc + cc[k - 2].mulp(hh[2]);
+        }
+        hcm[k] = if k <= 2 { hc.addp(-hh[k]) } else { hc };
+        hce[k] = if k <= 2 { hc.addp(-ee[k]) } else { hc };
+        let deriv = if k >= 1 {
+            du[k - 1] = uu[k].mulf(kf);
+            dv[k - 1] = vv[k].mulf(kf);
+            (cs_range(&hcm, &du, k, 1, k) + cs_range(&hce, &dv, k, 1, k)).mulp(two_io)
+        } else {
+            z
+        };
+        let zvk = cvs(&zs, &vv, k);
+        let r = ((((deriv + crate::model::dtau(ctx, &(uu[k] + zvk), omega, &rate)) - cs(&gg, &uu, k)) - cs(&gg, &vv, k)) + zvk)
+            - cs(&cc, &uu, k).mulp(n1);
+        let kappa = ((cc[1].mulp(hh[0].mul_f(2.0)).addp(hh[1] - ee[1])).mulp(io.mul_f(kf)) - gg[0]).addp(-nh1);
+        let pk = psolve(ctx, &prep.h, k, &kappa, &(-r), omega).mul_pwr2(0.5);
+        uu[k] = uu[k] + pk;
+        vv[k] = vv[k] + pk;
+        if k >= 1 {
+            du[k - 1] = uu[k].mulf(kf);
+            dv[k - 1] = vv[k].mulf(kf);
+        }
+        vvc[k] = cs(&vv, &vv, k);
+        uvc[k] = cs(&uu, &vv, k);
+        du[k] = z;
+        dv[k] = z;
+        let mut ak = z;
+        for i in 0..=k.min(2) {
+            let mm = k - i;
+            ak = ak + (du[mm] - cs(&cc, &dv, mm)).mulp(hh[i]);
+        }
+        let ak = (ak.mulp(-two_io) + crate::model::dtau(ctx, &uu[k], omega, &rate)) - cs(&gg, &vv, k);
+        qn[k + 1] = mul_recip(ctx, ak.mulp(iq), k + 1);
+    }
+    let (mut us, mut vs, mut csum) = (z, z, z);
+    for k in (0..=ks).rev() {
+        us = us + uu[k];
+        vs = vs + vv[k];
+        csum = csum + cc[k];
+    }
+    let xv = vs.mulf(xl);
+    [(us + xv).mul_pwr2(0.5), (us - xv).mul_pwr2(0.5), csum]
+}
+
 /// The preparation of one form-S evaluation: the horizon LUs of `model::horizon_lus` at a_h = B_0^-1/2, B_0 slaved
 /// from the state's double-double m_h, and the slaving LUs at the horizon and the centre
 #[derive(Default)]
@@ -514,6 +661,10 @@ impl<const B: usize> Equations<B> for DssS<'_, B> {
 
     fn right_state<T: Lane>(&self, _x: f64, data: &[Fl<T, B>], g: &[T], prep: &SPrep) -> multishoot::State<T, B> {
         let ctx = self.0;
+        if ctx.hmob > 0.0 {
+            let [p, m, c] = horizon_mob(ctx, self.de(), prep, &data[0], omega_of(ctx, g[0]));
+            return vec![p, m, c];
+        }
         let s = horizon_series_s(ctx, self.de(), prep, &data[0], omega_of(ctx, g[0]));
         let u = ctx.u0().mul_pwr2(1.0 / series_scale(ctx.u0().hi));
         vec![horner(&s[0], u), horner(&s[1], u), horner(&s[2], u)]

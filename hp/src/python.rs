@@ -112,6 +112,8 @@ trait Api: Send + Sync {
     fn residual_sub(&mut self, z: &[&[f64]], rows: &[usize], mutate: u8) -> Result<Vec<Vec<f64>>, String>;
     /// form S (form_s.rs): the folded even-sector d/dtheta of B's slaving, row-major (M, M) hi / lo
     fn set_dmat_even(&mut self, hi: &[f64], lo: &[f64]);
+    /// form S's horizon variable (Ctx::hmob): 0 u = 1 - x, a > 0 the Moebius t = (1 - z)/(1 + a z)
+    fn set_horizon_mobius(&mut self, a: f64);
     /// form S's length 3M(K + 1) + 1
     fn len_s(&self) -> usize;
     /// form S's residual in the precision of z's part count (2 Double, 4 Quad, 8 Octo), as that many part arrays
@@ -556,6 +558,9 @@ impl<const B: usize> Api for Ctx<B> {
     fn set_dmat_even(&mut self, hi: &[f64], lo: &[f64]) {
         self.de = Some(DMat::<B>::from_rows(hi, lo));
     }
+    fn set_horizon_mobius(&mut self, a: f64) {
+        self.hmob = a;
+    }
     fn len_s(&self) -> usize {
         Ctx::<B>::len_s(self)
     }
@@ -799,6 +804,7 @@ macro_rules! make_ctx {
                 exact_recip: 0,
                 recip_planted: 0,
                 de: None,
+                hmob: 0.0,
             }) as Box<dyn Api>, )*
             _ => return Err(PyValueError::new_err("M must be one of 8, 16, 32, 40, 48, 64, 80, 96, 128, 160, 192, 256, 320, 384, 512")),
         }
@@ -1526,6 +1532,18 @@ impl Solver {
             return Err(PyValueError::new_err("dmat must be (M, M)"));
         }
         self.api.set_dmat_even(dh, dl);
+        self.olu = None;
+        Ok(())
+    }
+
+    /// Form S's horizon series variable: 0 (the default) u = 1 - x; a > 0 the Moebius variable t = (1 - z)/(1 + a z),
+    /// z = x^2, scaled so that the last node is at 1 (form_s::horizon_mob; #1090's, a = 6-8 there). Its order k
+    /// runs to ks, so ks follows the variable (about 1.5 n for a tail below 1e-50).
+    fn set_horizon_mobius(&mut self, a: f64) -> PyResult<()> {
+        if !(a >= 0.0 && a.is_finite()) {
+            return Err(PyValueError::new_err("a must be finite and >= 0"));
+        }
+        self.api.set_horizon_mobius(a);
         self.olu = None;
         Ok(())
     }
