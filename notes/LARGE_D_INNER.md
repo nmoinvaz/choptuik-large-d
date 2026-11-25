@@ -389,3 +389,28 @@ python3 tabulate.py TRACKC.json DIR --md                                        
 SOL.json are the `sol_*.json` records of `I1090-mac/f64_M6_cont/`; TRACKC.json is `I1090-mac/diag/trackc_at.json`.
 
 The exact commands of the runs, with their D lists, are in `I1090-mac/README.md`.
+
+## 10. Independent check of hp's Moebius horizon
+
+hp's port (`hp/src/form_s.rs` `horizon_mob`, `wip/large-d-form-s` f53e6077) against `mobius_sdd.py`. Both evaluate the
+horizon sum at x_l = 0.7 from the same float64 m_h and Δ, with M = 32, ks = ⌈1.5n⌉ + 20 and a = max(8, n/400). The
+checks and bars of `hp_mob_check.py` were committed before the runs (4dfefe69); the logs are in `hp_mob/`.
+
+| D | m_h from | max\|S\| | hp − mine | gain from m_h, hp / mine | mine at a and 1.25a | verdict |
+|---|---|---|---|---|---|---|
+| 1000 | Track A's jump guess | 1.0 | 7.9e-31 | 0.55643 / 0.55643 | 1.9e-30 | PASS |
+| 1000 | the D-646 solution rescaled | 1.0 | 1.9e-28 | 0.54604 / 0.54604 | 1.2e-28 | PASS |
+| 2000 | Track A's jump guess | 40.7 | 9.3e-20 | 2.164e5 / 2.165e5 | 8.8e-20 | FAIL (bars) |
+| 2000 | rescaled | 7.5e3 | 3.2e-20 | 3.836e5 / 3.834e5 | 3.1e-20 | FAIL (bars) |
+| 5000 | rescaled | 1.0e53 | 3.3e-14 | | | FAIL (bars) |
+
+- At D 1000 hp's octo-double agrees with my double-double at my dd's floor.
+- From D 2000 the inputs on hand are far from a solution: horizon sums of 41 to 1e53 where a solution's is about 0.06.
+  There my dd is consistent only to its C3 value. hp's own sums at a = 8 and 10 agree to 3.0e-25 (D 2000, rescaled),
+  so the failures are the inputs' and my dd's, not hp's.
+- Both controls fire: hp's mutate 52 misses by 11, and my z series at 1.25a by 1.0.
+- hp has both corrections of §3 in effect:
+  - its z products are full Cauchy sums, exact at O(ks²) cost;
+  - a is the caller's, and 8 is the rule's value up to D 3200.
+- The D 5000 rows with Track A's guess and the D 10⁴ rows, including hp at a = 8, were still running when P1 stopped
+  (`hp_mob/g_*.log`).
