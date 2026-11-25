@@ -434,7 +434,11 @@ for l in open('hp/data/gamma_dd.jsonl'):
 reviews only); Clark–Pimentel's appendices on matching (C, D); arXiv:2107.14566 Secs. 4–10; the membrane papers beyond
 the first 100k characters of arXiv:1504.06613; the charged and AdS membrane literature. No paper on the large-dimension
 limit of self-similar blow-up in other equations (wave maps, Yang–Mills, harmonic map heat flow) was found by the
-searches. Biernat and Bizoń's higher-dimensional work (arXiv:1409.8214, 1608.07707) treats fixed d.
+searches. Biernat and Bizoń's higher-dimensional work (arXiv:1409.8214, 1608.07707) treats fixed d, per the search
+results. A search for a large-D treatment of a homothetic or self-similarity horizon ("large D limit homothetic horizon
+self-similar spacetime membrane effective theory null surface not event horizon") returned only the black-hole EFT
+papers above. arXiv:1504.06489 and arXiv:2512.14186 place the effective membrane at the outer edge of the near zone, not
+at the horizon, per the search summary.
 
 **Discrepancies (reported, not fixed).**
 - Clark–Pimentel's agreement sentence after (1.5) compares a mass exponent with a length exponent (§4.1).
