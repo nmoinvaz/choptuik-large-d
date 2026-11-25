@@ -243,7 +243,10 @@ From D 500 on even the affine double-double sum is garbage: its max\|U(x*)\| is 
 - σ_min and the grip are the harmonic ladder of the M-6 truncation: 1e-13 to 1e-16 and 1e11 to 1e15, from D 100 to
   640. These are the problem's conditioning in its harmonics, the same in any layout at x* (§6). At M 6 in float64
   they leave Δ pinned to about 1e-6 at D 400 (the a = 1 and a = 8 solves differ by 1.7e-6), and only to about 3e-4 at
-  D 600–640, where Δ − Track C scatters as +1.77e-3, +2.39e-3, +2.28e-3, +1.99e-3.
+  D 600–640, where Δ − Track C scatters as +1.77e-3, +2.39e-3, +2.28e-3, +1.99e-3. Beyond D 640 the float64 solve
+  hardly moves Δ from its seed (4e-6 from D 640 to 646, while Track C falls by 1.3e-4), since grip × residual is
+  about 0.5 there. So past D 600 this continuation shows that a float64 solution exists and that the horizon's
+  numerics stay flat; it does not give Δ.
 - Δ − Track C is M 6's τ-truncation error: +3.7e-3 at D 100, at most +4.3e-3 near D 175, about +2e-3 at D 600–640.
   For comparison only, the D = ∞ inner problem's M = 5 truncation is +1.27e-3 (SECOND_ORDER.md §4). Its M-harmonic
   truncation is a different one, so this is not a check.
