@@ -143,6 +143,11 @@ def newton_sparse(sh, s, z8, K, tol_delta, it_max, halvings, log=None, jscale=1.
         g = spl.splu(J.tocsc(), permc_spec="COLAMD").solve(eD, trans="T") if jscale != 1.0 else lu.solve(eD, trans="T")
         gain = float(np.abs(g).sum())
         tl = time.time() - t1
+        cond = None
+        if it == 0:
+            # a 1-norm condition estimate of J (Hager-Higham, scipy's onenormest of J^-1 with the LU)
+            Ji = spl.LinearOperator((L, L), matvec=lu.solve, rmatvec=lambda x: lu.solve(x, trans="T"), dtype=float)
+            cond = float(spl.onenormest(J) * spl.onenormest(Ji))
         lam, acc, trials = 1.0, False, []
         for _ in range(halvings + 1):
             zt = o8(od_axpy(lam, np.ascontiguousarray(dz), *([zero] * 7), *z8))
@@ -158,7 +163,7 @@ def newton_sparse(sh, s, z8, K, tol_delta, it_max, halvings, log=None, jscale=1.
                 acc = True
                 break
             lam *= 0.5
-        rec = dict(it=it, F=nF, dz=float(np.abs(dz).max()), dDelta=float(dz[-1]), gain=gain, nnz=int(J.nnz),
+        rec = dict(it=it, F=nF, dz=float(np.abs(dz).max()), dDelta=float(dz[-1]), gain=gain, nnz=int(J.nnz), cond1=cond,
                    jac_s=round(tj, 1), lu_s=round(tl, 1), trials=trials, accepted=acc, s=round(time.time() - t0, 1))
         if acc:
             z8, F, nF = zt, Ft, nt
@@ -171,7 +176,8 @@ def newton_sparse(sh, s, z8, K, tol_delta, it_max, halvings, log=None, jscale=1.
         if verbose:
             print(f"  it {it}: |F| {rec['F']:.3e} -> {nF:.3e}, |dz| {rec['dz']:.2e}, dDelta {rec['dDelta']:+.3e}, "
                   f"lam {lam if acc else 0:g}, Delta's gain {gain:.2e}, gain |F| {gain * nF:.2e}, nnz {J.nnz}, "
-                  f"{rec['s']} s (J {tj:.0f} s, LU {tl:.0f} s), Delta {rec['Delta']}", flush=True)
+                  + (f"cond_1 {cond:.2e}, " if cond else "")
+                  + f"{rec['s']} s (J {tj:.0f} s, LU {tl:.0f} s), Delta {rec['Delta']}", flush=True)
         if not acc:
             break
         if gain * nF <= tol_delta:
