@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
-"""The quest to large D: a silent film that explains the large-D calculation through the evolution of the solver.
+"""The quest to large D: a film that explains the large-D calculation through the evolution of the solver, with
+captions and a voice that reads them.
 
     video/build.sh [l|m|h]        # every scene, joined into video/dist/quest_large_d.mp4 (l: 480p15, h: 1080p30)
 
@@ -10,7 +11,8 @@ paper/ai/main.tex. Curves marked "sketch" on screen are illustrations, not data.
 
 Manim Community (The Manim Community Developers, https://www.manim.community), after 3Blue1Brown's manim. The formulas
 are compiled by tectonic through the stand-ins in video/tools (this Manim's multi-part MathTex needs dvisvgm, so every
-formula here is one string).
+formula here is one string). The voice is voice.py's: say() starts a caption's line as the caption appears, and keeps
+the caption until the line has been spoken.
 """
 import csv
 import math
@@ -19,6 +21,8 @@ import re
 from pathlib import Path
 
 from manim import *
+
+import voice
 
 ROOT = Path(__file__).resolve().parent.parent
 config.tex_template = TexTemplate(tex_compiler="pdflatex", output_format=".pdf")
@@ -131,6 +135,7 @@ CAP_LONG.add_to_preamble(r"\setlength{\textwidth}{436pt}\setlength{\linewidth}{4
 CPS = float(os.environ.get("QUEST_CPS", "12"))    # characters a second a caption is given to be read, after a second to find it
 LEAD = 0.5                                        # the share of a caption's reading time given before its animation starts
 WATCHING = 0.4                                    # a second of animation counts this much toward reading
+LINES = os.environ.get("QUEST_LINES") == "1"      # only collect the voice's lines (build.sh s): no sound is made
 
 
 class Film(Scene):
@@ -139,15 +144,36 @@ class Film(Scene):
     def setup(self):
         self.cap = None
         self.owed = 0.0                           # reading time the caption on screen is still owed
+        self.lines = []                           # the voice's lines: when each starts, its words, its length
+        self.quiet_at = 0.0                       # the scene time at which the voice has finished its line
         if self.stage:
             self.add(Tex(self.stage, font_size=26, color=GREY_).to_corner(UL, buff=0.35))
 
+    def settle(self):
+        """Wait until the caption's reading time is spent and the voice has finished its line."""
+        need, self.owed = max(self.owed, self.quiet_at - self.renderer.time), 0.0
+        if need > 0.05:
+            self.wait(need)
+
+    def speak(self, words):
+        """Start the voice on a line, once its last line is over. A caption's line is started by say()."""
+        self.settle()
+        seconds = 0.0 if LINES or voice.VOICE == "off" else voice.clip(words)[1]
+        self.lines.append({"t": round(self.renderer.time, 4), "say": words, "dur": round(seconds, 3)})
+        if seconds:
+            self.quiet_at = self.renderer.time + seconds + voice.GAP
+
+    def tear_down(self):
+        self.settle()                             # a scene never ends in the middle of a line
+        folder = "lines" if LINES else f"{config.pixel_height}p{round(config.frame_rate)}"
+        voice.record(Path(config.media_dir) / "voice" / folder, type(self).__name__, self.renderer.time, config.frame_rate, self.lines)
+        super().tear_down()
+
     def play(self, *args, **kwargs):
-        """Scene.play, with the caption's reading time kept: a caption is never taken away before its time is up."""
+        """Scene.play, with the caption's time kept: a caption is never taken away before it has been read and spoken."""
         leaving = self.cap is not None and any(isinstance(a, FadeOut) and self.cap in a.mobject.get_family() for a in args)
-        if leaving and self.owed > 0.05:
-            owed, self.owed = self.owed, 0.0
-            self.wait(owed)
+        if leaving:
+            self.settle()
         t0 = self.renderer.time
         super().play(*args, **kwargs)
         if self.cap is not None:
@@ -155,17 +181,17 @@ class Film(Scene):
             self.owed -= (self.renderer.time - t0) * (1.0 if still else WATCHING)
 
     def say(self, text, hold=None, color=WHITE):
-        """A caption at the foot of the frame. It is owed a second plus its length at CPS: all of it now, or with hold
-        given, at least LEAD of it now and the rest (an animation's time counting WATCHING) before it is replaced."""
+        """A caption at the foot of the frame, read aloud. It is owed a second plus its length at CPS: all of it now, or
+        with hold given, at least LEAD of it now and the rest (an animation's time counting WATCHING) before it is
+        replaced. It also stays until the voice has finished it."""
         n = len(re.sub(r"\\[a-zA-Z]+|[${}^_\\]", "", text))
         new = Tex(text, font_size=34, color=color, tex_template=CAP) if n <= 200 else Tex(text, font_size=30, color=color, tex_template=CAP_LONG)
         if new.width > 13.3:
             new.scale_to_fit_width(13.3)
         new.to_edge(DOWN, buff=0.35)
-        if self.cap is None:
-            self.play(FadeIn(new, shift=0.15 * UP), run_time=0.5)
-        else:
-            self.play(FadeOut(self.cap), FadeIn(new, shift=0.15 * UP), run_time=0.5)
+        self.speak(voice.spoken(text))            # waits out the last caption first
+        old, self.cap = self.cap, None
+        self.play(FadeIn(new, shift=0.15 * UP), *([] if old is None else [FadeOut(old)]), run_time=0.5)
         self.cap = new
         self.owed = 1.0 + n / CPS
         self.wait(self.owed if hold is None else max(hold, LEAD * self.owed))
@@ -210,9 +236,11 @@ class S00_Title(Film):
         VGroup(title, sub).arrange(DOWN, buff=0.45).shift(0.5 * UP)
         cred.to_edge(DOWN, buff=0.9)
         self.play(Create(wave), run_time=2.5)
+        self.speak("The quest to large D. Choptuik's echo period at large D, explained through the evolution of our solver.")
         self.play(Write(title), run_time=1.6)
         self.play(FadeIn(sub, shift=0.2 * UP), FadeIn(cred, shift=0.2 * UP), run_time=1.0)
         self.wait(3.2)
+        self.settle()
         self.play(FadeOut(VGroup(wave, title, sub, cred)), run_time=0.8)
 
 
@@ -1626,7 +1654,7 @@ class S12_Outro(Film):
         end = VGroup(Tex("code, data and every number's source:", font_size=30, color=GREY_),
                      Tex("github.com/nmoinvaz/choptuik-large-d", font_size=40),
                      Tex(r"Nathan Moinvaziri \quad $\cdot$ \quad x.com/nmnvzr \quad $\cdot$ \quad made with Claude Fable 5.2", font_size=26, color=GREY_),
-                     Tex("animated with Manim", font_size=22, color=GREY_))
+                     Tex(r"animated with Manim \quad $\cdot$ \quad voice: Kokoro, a synthetic voice", font_size=22, color=GREY_))
         end.arrange(DOWN, buff=0.35)
         self.play(FadeOut(VGroup(ax, xl, yl, curve, n, arrow, goal, self.cap)), run_time=0.7)
         self.play(FadeIn(end, shift=0.2 * UP), run_time=0.8)
