@@ -7,7 +7,7 @@ norm), the grip |e_Delta^T J^-1| with unit rows, the series tails, and the ampli
 horizon sum (a = 1, and a = 0 where --noise0 lists the D).
 
 Usage: python3 solve_cont.py START.json --M=6 --Ds=100,150,... --out=DIR [--a=1] [--tol=5e-15] [--iters=12]
-                             [--noise0=100,150,200] [--kb=150] [--mutate=a0]
+                             [--noise0=100,150,200] [--kb=150] [--accept=1e-11] [--mutate=a0]
   --mutate=a0 solves with a = 0 (Track B's variable): the control, which must lose the solution as D grows.
 """
 import json
@@ -31,6 +31,7 @@ tol = float(opts.get("tol", 5e-15))
 iters = int(opts.get("iters", 3))
 kb = int(opts.get("kb", 150))
 noise0 = [float(v) for v in opts.get("noise0", "").split(",") if v]
+accept = float(opts.get("accept", 1e-11))  # max|F| at which a D counts as solved and seeds the next
 os.makedirs(out, exist_ok=True)
 
 js = json.load(open(start))
@@ -143,7 +144,7 @@ while queue:
     say("D %8.2f  max|F| %.2e  Delta %.12f  steps %d  sv_min %.1e  grip %.1e  noise %.1e%s  tails %.0e/%.0e  ks %d  %.0f s"
         % (D, rec["maxF"], rec["Delta"], len(hstory) - 1, sv[-1], grip, amp1,
            "" if amp0 is None else " (a=0: %.1e)" % amp0, rec["tail_h"], rec["tail_c"], f.ks, rec["seconds"]))
-    if rec["maxF"] < 1e-11:
+    if rec["maxF"] < accept:
         hist.append((D, scaled(y, D)))
     else:
         Dl = hist[-1][0] if hist else D0

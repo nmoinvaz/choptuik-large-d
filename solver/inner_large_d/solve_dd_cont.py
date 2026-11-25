@@ -7,7 +7,9 @@ scaled singular values and the grip |e_Delta^T J^-1| (unit rows) at the solution
 
 Usage: python3 solve_dd_cont.py START.json --M=10 --Ds=100,110,... --out=DIR [--a=1] [--kb=150] [--tau=1e-8]
                                 [--outer=6] [--rounds=2] [--tol=1e-27] [--ks_extra=0] [--pre=newton|ls]
-                                [--pre_iters=4]
+                                [--pre_iters=4] [--hb=H]
+  --hb: the difference step of the weak directions in scaled coordinates (default Track B's 1e-3 |g|/sigma_min, which
+  leaves the linear range when the seed's weak residual is large against sigma_min)
   START.json: a form-S json with hi/lo parts (Track B's Sdd_D100_M10.json, or a file written here).
 """
 import json
@@ -123,7 +125,8 @@ while queue:
         if float(np.max(np.abs(F.f()))) < tol:
             break
         J = f.jacobian(y)
-        y, F, h1, S = ls_solve(f.residual, y, J, tau=tau, outer=int(opts.get("outer", 6)), log=lambda s: say("    " + s), tol=tol)
+        y, F, h1, S = ls_solve(f.residual, y, J, tau=tau, outer=int(opts.get("outer", 6)), log=lambda s: say("    " + s), tol=tol,
+                               hb=float(opts["hb"]) if "hb" in opts else None)
         lsh += h1
     nF = float(np.max(np.abs(F.f())))
     J = f.jacobian(y)
