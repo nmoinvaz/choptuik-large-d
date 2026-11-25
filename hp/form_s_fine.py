@@ -113,7 +113,7 @@ def sparse_jacobian(s, z, K, L):
     return sp.csc_matrix((np.concatenate(vals), (np.concatenate(rows_i), np.concatenate(cols_i))), shape=(L, L))
 
 
-def newton_sparse(sh, s, z8, K, tol_delta, it_max, halvings, log=None, jscale=1.0, verbose=True):
+def newton_sparse(sh, s, z8, K, tol_delta, it_max, halvings, log=None, jscale=1.0, verbose=True, res="dd"):
     """held Newton on the fine mesh: the residual of sh in double-double, the Jacobian of s (sparse_jacobian) in float64
     factored by SuperLU, the step halved while max |F| does not fall; stopped when Delta's first-order bound gain |F|
     (gain = sum |J^-T e_Delta|) is at most tol_delta"""
@@ -123,8 +123,10 @@ def newton_sparse(sh, s, z8, K, tol_delta, it_max, halvings, log=None, jscale=1.
     L = len(z8[0])
     zero = np.zeros(L)
 
+    npart = 8 if res == "od" else 2
+
     def resid(z):
-        F = sh.residual_s([np.ascontiguousarray(z[0]), np.ascontiguousarray(z[1])])
+        F = sh.residual_s([np.ascontiguousarray(z[q]) for q in range(npart)])
         return np.asarray(F[0]) + np.asarray(F[1])
     F = resid(z8)
     nF = float(np.abs(F).max())
@@ -195,7 +197,7 @@ def cmd_jump(argv):
     allow = pop_allow(argv)
     pos, o = opts(argv, dict(D="2828", states_s="", deg="2", mob="8", x_end="0.95", c="4", ks="150", sub="4",
                              kc="250", threads="2", plan_tol="1e-40", hmax="0.05", delta="fit", tc="", it_max="10",
-                             halvings="8", delta_tol="1e-15", jscale="1", commit="", ham="1"))
+                             halvings="8", delta_tol="1e-15", jscale="1", commit="", ham="1", res="od"))
     outdir = pos[0]
     os.makedirs(outdir, exist_ok=True)
     log = os.path.join(outdir, "fine.jsonl")
@@ -284,7 +286,7 @@ def cmd_jump(argv):
         fh.write(json.dumps(dict(start="guess", D_str=meta["D_str"], K=K, L=L, blocks_max=[float(x) for x in b],
                                  states=[r[0] for r in rows], utc=time.strftime("%Y-%m-%d %H:%M:%S", time.gmtime()))) + "\n")
     z8, conv, recs = newton_sparse(sh, s, z8, K, float(o["delta_tol"]), int(o["it_max"]), int(o["halvings"]), log,
-                                   jscale=float(o["jscale"]))
+                                   jscale=float(o["jscale"]), res=o["res"])
     F4 = sh.residual_s([np.ascontiguousarray(z8[q]) for q in range(4)])
     Fc = float(np.abs(np.asarray(F4[0]) + np.asarray(F4[1])).max())
     gain = recs[-1]["gain"] if recs else float("nan")
@@ -309,7 +311,7 @@ def cmd_jump(argv):
         with mp.workdps(60):
             print(f"  Delta - Track C {mp.nstr(mp.mpf(Dl) - mp.mpf(tc['value']), 6)} (+- {tc['err']:.2e})", flush=True)
     if conv:
-        rec = direct_line(z8, meta, out, "held", recs[-1]["F_new"], "dd", Fc, "qd", bound=gain * Fc, ham=meta.get("ham_check"),
+        rec = direct_line(z8, meta, out, "held", recs[-1]["F_new"], o["res"], Fc, "qd", bound=gain * Fc, ham=meta.get("ham_check"),
                           tc=tc, commit=o["commit"], extra=dict(jac="f64 sparse (SuperLU)", newton_steps=len(recs),
                                                                 mesh=meta["mesh"], fine=True))
         with open(os.path.join(outdir, "direct_s.jsonl"), "a") as fh:
