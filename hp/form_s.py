@@ -461,9 +461,32 @@ def ls_solve(s, z8, w, outer_it, inner_it, halvings, tol_dz, log=None, verbose=T
     return z8, conv, outs
 
 
+def base_solver(s):
+    """the hpkernel solver under HeldS and MutS wrappers, and the wrappers' mutate code"""
+    mu = getattr(s, "mu", 0)
+    while hasattr(s, "s"):
+        s = s.s
+    return s, mu
+
+
+def qj_step(s, z8, F):
+    """the Newton step -J^-1 F with J form S's quad-double Jacobian at z8's leading four parts (jacobian_s at 4 parts)
+    and F the octo-double residual's leading two parts, solved by multidouble's dd_solve (LU with partial pivoting in
+    double-double); eight parts, the last six zero. At D 300 it converges as the octo-double Newton to 3e-44 in three
+    steps at about 1/5 of its cost (the coordinator's mixed2.py, I1088-dh370/mixed2/)."""
+    from multidouble import dd_solve
+    base, mu = base_solver(s)
+    J = base.jacobian_s([np.ascontiguousarray(z8[q]) for q in range(4)], mu)
+    dh, dl = dd_solve(np.ascontiguousarray(J[0]), np.ascontiguousarray(J[1]),
+                      np.ascontiguousarray(-np.asarray(F[0])), np.ascontiguousarray(-np.asarray(F[1])))
+    L = len(z8[0])
+    return [np.asarray(dh), np.asarray(dl)] + [np.zeros(L) for _ in range(6)]
+
+
 def newton_o_s(s, z8, tol, it_max, halvings, log=None, mutate="none", verbose=True, info=None, junk_w=0, tol_dz=1e-45,
-               delta_max=1e-2):
-    """Newton in octo-double on form S from the eight-part z8: newton_s's step, halved while max |F| does not fall;
+               delta_max=1e-2, jac="od"):
+    """Newton in octo-double on form S from the eight-part z8: newton_s's step (jac "od") or qj_step's (jac "qd": the
+    quad-double Jacobian, a double-double solve, the octo-double residual), halved while max |F| does not fall;
     one record per step to log (jsonl); returns (z8, converged, records). junk_w > 0: the step's components along the
     weakest junk_w right singular directions with no Delta content (junk_basis, formed at each LU) are removed, so
     those coordinates stay where they are; a trial is then accepted when its max |F| or its own projected correction
@@ -491,7 +514,10 @@ def newton_o_s(s, z8, tol, it_max, halvings, log=None, mutate="none", verbose=Tr
         if conv:
             break
         t0 = time.time()
-        if st is None:
+        if st is None and jac == "qd":
+            d, pmin, pmax = qj_step(s, z8, F), float("nan"), float("nan")
+            V = None
+        elif st is None:
             d, _, pmin, pmax = s.newton_s(list(z8))
             V, sj, sk = junk_basis(s, L, junk_w, delta_max=delta_max) if junk_w else (None, [], [])
             if junk_w and verbose:
@@ -537,7 +563,7 @@ def newton_o_s(s, z8, tol, it_max, halvings, log=None, mutate="none", verbose=Tr
         rec = dict(it=it, F=nF, dz=dz, dDelta=dD, pmin=pmin, pmax=pmax, lu_s=round(t_lu, 1), trials=trials, accepted=acc,
                    s=round(time.time() - t0, 1))
         if acc:
-            z8, nF = zt, nt
+            z8, nF, F = zt, nt, Ft
             conv = nF <= tol
         rec.update(F_new=nF, Delta=delta_digits(z8, 40), utc=time.strftime("%Y-%m-%d %H:%M:%S", time.gmtime()))
         recs.append(rec)
@@ -562,7 +588,7 @@ def cmd_jump(argv):
     pos, o = opts(argv, dict(D="250", states="", Dmin="0", Dmax="1e9", deg="3", kfreeze="13", plan_tol="1e-40", hmax="0.05",
                              ks="sigma", kc="146", threads="2", delta="series", tol="1e-40", it_max="16", halvings="8",
                              mutate="none", junk="0", tol_dz="1e-45", ls="0", outer="8", held="0", mob="0",
-                             states_s=""))
+                             states_s="", jac="qd"))
     mob = float(o["mob"])
     outdir = pos[0]
     os.makedirs(outdir, exist_ok=True)
@@ -658,17 +684,23 @@ def cmd_jump(argv):
                                   float(o["tol_dz"]), log)
     else:
         z8, conv, recs = newton_o_s(s, z8, float(o["tol"]), int(o["it_max"]), int(o["halvings"]), log, o["mutate"],
-                                    junk_w=int(o["junk"]), tol_dz=float(o["tol_dz"]))
+                                    junk_w=int(o["junk"]), tol_dz=float(o["tol_dz"]), jac=o["jac"])
     F = s.residual_s(list(z8))
     meta.update(solved=bool(conv), F=float(np.abs(np.asarray(F[0]) + np.asarray(F[1])).max()))
     if int(o["held"]):
         # the full system's (kfreeze 13) first-order Delta correction at the held solution: -e_Delta^T J^-1 F
         Ff = s_full.residual_s(list(z8))
-        s_full.newton_s(list(z8))
         L = s_full.size_s
         eD = np.zeros(L)
         eD[-1] = 1.0
-        g = np.asarray(s_full.olu_solve([eD] + [np.zeros(L)] * 7, True)[0])
+        if o["jac"] == "qd":
+            from multidouble import dd_solve
+            J = s_full.jacobian_s([np.ascontiguousarray(z8[q]) for q in range(4)])
+            g = np.asarray(dd_solve(np.ascontiguousarray(np.asarray(J[0]).T), np.ascontiguousarray(np.asarray(J[1]).T),
+                                    eD, np.zeros(L))[0])
+        else:
+            s_full.newton_s(list(z8))
+            g = np.asarray(s_full.olu_solve([eD] + [np.zeros(L)] * 7, True)[0])
         Fv = np.asarray(Ff[0]) + np.asarray(Ff[1])
         dD1 = float(-(g @ Fv))
         meta.update(full_F=float(np.abs(Fv).max()), full_dDelta_first_order=dD1)
@@ -810,7 +842,7 @@ def cmd_release_ls(argv):
     argv = list(argv)
     allow = pop_allow(argv)
     pos, o = opts(argv, dict(harm="5", outer="6", tol="1e-40", tol_h="1e-38", it_in="6", halvings="6", threads="2",
-                             tries="6"))
+                             tries="6", jac="qd"))
     path, outdir = pos[0], pos[1]
     os.makedirs(outdir, exist_ok=True)
     log = os.path.join(outdir, "release_ls.jsonl")
@@ -835,7 +867,10 @@ def cmd_release_ls(argv):
             t0 = time.time()
             F = s_tg.residual_s(list(z8))
             nr = float(np.abs(np.asarray(F[0]) + np.asarray(F[1])).max())
-            d, _, pmin, pmax = s_tg.newton_s(list(z8))
+            if o["jac"] == "qd":
+                d, pmin, pmax = qj_step(s_tg, z8, F), float("nan"), float("nan")
+            else:
+                d, _, pmin, pmax = s_tg.newton_s(list(z8))
             dk = band_coeffs(np.asarray(d[0])[:M], np.asarray(d[1])[:M], M, [k], exact=True,
                              rest=[np.asarray(p)[:M] for p in d[2:]])[0]
             ndk = float(max(abs(dk[0]), abs(dk[1])))
@@ -852,7 +887,7 @@ def cmd_release_ls(argv):
                     co_t = [(co[0][0] + lam * dk[0], co[0][1] + lam * dk[1])] + list(co[1:])
                 s_in = HeldS(s_in0, M, K, band_field(co_t, held_in, M, parts=8))
                 zt, conv, recs = newton_o_s(s_in, z8, float(o["tol"]), int(o["it_in"]), int(o["halvings"]), None,
-                                            verbose=False)
+                                            verbose=False, jac=o["jac"])
                 Ft = s_tg.residual_s(list(zt))
                 nt = float(np.abs(np.asarray(Ft[0]) + np.asarray(Ft[1])).max())
                 trials.append(dict(lam=lam, inner_conv=bool(conv), inner_steps=len(recs), F=nt))
@@ -887,7 +922,7 @@ def cmd_mobcheck(argv):
     argv = list(argv)
     allow = pop_allow(argv)
     pos, o = opts(argv, dict(mob="8", ks="0", threads="2", tol="1e-40", it_max="4", halvings="6", tol_delta="1e-20",
-                             control="1", newton="1"))
+                             control="1", newton="1", jac="qd"))
     path, outdir = pos[0], pos[1]
     os.makedirs(outdir, exist_ok=True)
     log = os.path.join(outdir, "mobcheck.jsonl")
@@ -918,7 +953,8 @@ def cmd_mobcheck(argv):
     runs = runs if int(o["newton"]) else []
     for nm, sv in runs:
         t0 = time.time()
-        zt, conv, recs = newton_o_s(sv, z8, float(o["tol"]), int(o["it_max"]), int(o["halvings"]), None, verbose=True)
+        zt, conv, recs = newton_o_s(sv, z8, float(o["tol"]), int(o["it_max"]), int(o["halvings"]), None, verbose=True,
+                                    jac=o["jac"])
         Dt_ = delta_digits(zt, 40)
         with mp.workdps(60):
             dD = float(mp.mpf(Dt_) - mp.mpf(Du))
