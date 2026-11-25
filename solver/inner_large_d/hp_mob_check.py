@@ -27,6 +27,7 @@ Usage (PYTHONPATH must hold hp's form-S build, and FORMS_HP the worktree's hp/ w
                             [--a_fixed=8] [--mutate=zseries|hp52]
   --a_fixed: hp's a only (this branch keeps the rule's a), for the information rows
   --hp_inv=1: also hp's sums at a and 1.25 a (information)
+  --guess=FILE: m_h from make_guess.py's Track A guess at each D instead of the rescaled M-6 solution
 """
 import json
 import os
@@ -137,6 +138,8 @@ for D in Ds:
     a = 8.0 if D <= 3200 else n / 400.0  # the rule (notes/LARGE_D_INNER.md §3)
     a_hp = a_fixed if a_fixed is not None else a  # --a_fixed moves hp's a only (the information rows)
     mh = mh0 * np.sqrt((D0 - 2) / n)
+    if "guess" in opts:  # Track A's form-S guess at D (make_guess.py), m_h only; Delta stays Track C's
+        mh = np.array(json.load(open(opts["guess"]))["guess"]["%g" % D]["mh"])
     Dl = float(tc["%g" % D]["Delta"])
     t0 = time.time()
     Shp = hp_sum(D, a_hp, mh, Dl, 52 if mut == "hp52" else 0)
