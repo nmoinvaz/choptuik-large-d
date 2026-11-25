@@ -19,6 +19,7 @@ import numpy as np
 
 sys.path.insert(0, __file__.rsplit("/", 1)[0])
 from fseries import Factored, from_hp_state, harmonics_odd, resample_even, resample_odd  # noqa: E402
+from fseries_s import FactoredS  # noqa: E402
 
 
 def load_start(start, M):
@@ -34,8 +35,40 @@ def load_start(start, M):
     return y4, js["D"]
 
 
-def solve(D, M, y, kc=160, ks=None, iters=8, mutate="", log=print, zK=0.5):
-    fz = Factored(D, M, kc=kc, ks=ks, zK=zK, mutate=mutate)
+class FormS:
+    """FactoredS in the 4M+1 layout of form A (the anchor entries kept at zero, their rows the identity), so that
+    the driver, the conditioning and the output files are shared; conditioning() drops them."""
+
+    def __init__(self, D, M, **kw):
+        self.f = FactoredS(D, M, **kw)
+        self.M = M
+        self.ks = self.f.ks
+        self.kc = self.f.kc
+        self.stats = {"sweeps": 0, "beta_dif": 0.0}
+
+    def _y3(self, y):
+        M = self.M
+        return np.concatenate([y[:3 * M], y[4 * M:]])
+
+    def residual4(self, y):
+        M = self.M
+        R = self.f.residual(self._y3(y))
+        self.last = self.f.last
+        return np.concatenate([R[:3 * M], y[3 * M:4 * M], R[3 * M:]])
+
+    def jacobian4(self, y):
+        M = self.M
+        J3 = self.f.jacobian(self._y3(y))
+        L = 4 * M + 1
+        J = np.zeros((L, L))
+        idx = list(range(3 * M)) + [4 * M]
+        J[np.ix_(list(range(3 * M)) + [4 * M], idx)] = J3
+        J[3 * M:4 * M, 3 * M:4 * M] = np.eye(M)
+        return J
+
+
+def solve(D, M, y, kc=160, ks=None, iters=8, mutate="", log=print, zK=0.5, form="A"):
+    fz = Factored(D, M, kc=kc, ks=ks, zK=zK, mutate=mutate) if form == "A" else FormS(D, M, kc=kc, ks=ks, zK=zK, mutate=mutate)
     t0 = time.time()
     hist = []
     for it in range(iters + 1):
@@ -49,8 +82,19 @@ def solve(D, M, y, kc=160, ks=None, iters=8, mutate="", log=print, zK=0.5):
             break
         J = fz.jacobian4(y)
         dy = np.linalg.solve(J, -F)
-        y = y + dy
-        log("   step max|dy| %.3e dDelta %.3e" % (np.max(np.abs(dy)), dy[4 * M]))
+        # backtracking on the row-scaled residual (the weak directions are strongly curved: a full step can overshoot)
+        rs = np.linalg.norm(J, axis=1)
+        r0 = np.linalg.norm(F / rs)
+        alpha = 1.0
+        for _ in range(16):
+            with np.errstate(all="ignore"):
+                Ft = fz.residual4(y + alpha * dy)
+            rt = np.linalg.norm(Ft / rs)
+            if np.isfinite(rt) and rt < (1 - 1e-4 * alpha) * r0:
+                break
+            alpha *= 0.5
+        y = y + alpha * dy
+        log("   step max|dy| %.3e dDelta %.3e alpha %.3g" % (np.max(np.abs(dy)), dy[4 * M], alpha))
         if abs(dy[4 * M]) < 1e-15 and np.max(np.abs(dy)) < 1e-14 and it > 0:
             F = fz.residual4(y)
             nf = np.max(np.abs(F))
@@ -61,7 +105,13 @@ def solve(D, M, y, kc=160, ks=None, iters=8, mutate="", log=print, zK=0.5):
     return y, J, fz, hist, time.time() - t0
 
 
-def conditioning(J, M):
+def conditioning(J, M, form="A"):
+    if form == "S":
+        keep = list(range(3 * M)) + [4 * M]
+        J = J[np.ix_(keep, keep)]
+        M4 = 3 * M
+    else:
+        M4 = 4 * M
     sv = np.linalg.svd(J, compute_uv=False)
     r = np.linalg.norm(J, axis=1)
     Js = J / r[:, None]
@@ -71,7 +121,7 @@ def conditioning(J, M):
     # grip: e_Delta^T J^-1 in the scaled rows (unscaled Delta column)
     Jr = J / r[:, None]
     e = np.zeros(J.shape[0])
-    e[4 * M] = 1.0
+    e[M4] = 1.0
     gD = np.linalg.solve(Jr.T, e)
     return sv, svs, float(np.linalg.norm(gD))
 
@@ -94,9 +144,12 @@ if __name__ == "__main__":
     log = lambda s: print(s, flush=True)  # noqa: E731
     fz0 = Factored(D, M, kc=int(opts.get("kc", 160)), ks=int(opts["ks"]) if "ks" in opts else None)
     log("D %.6f n %.4f M %d kc %d ks %d start %s (D0 %.6f)" % (D, n, M, fz0.kc, fz0.ks, opts["start"].rsplit("/", 1)[-1], D0))
+    form = opts.get("form", "A")
+    if form == "S":
+        y[3 * M:4 * M] = 0.0
     y, J, fz, hist, secs = solve(D, M, y, kc=int(opts.get("kc", 160)), ks=int(opts["ks"]) if "ks" in opts else None,
-                                 iters=int(opts.get("iters", 8)), mutate=opts.get("mutate", ""), log=log)
-    sv, svs, grip = conditioning(J, M)
+                                 iters=int(opts.get("iters", 8)), mutate=opts.get("mutate", ""), log=log, form=form)
+    sv, svs, grip = conditioning(J, M, form)
     log("singular values (raw): max %.3e min %.3e cond %.3e" % (sv[0], sv[-1], sv[0] / sv[-1]))
     log("singular values (rows, columns unit): max %.3e min %.3e cond %.3e" % (svs[0], svs[-1], svs[0] / svs[-1]))
     log("  smallest five (scaled): " + " ".join("%.3e" % v for v in svs[-5:]))
@@ -107,5 +160,6 @@ if __name__ == "__main__":
         out = {"D": D, "M": M, "kc": fz.kc, "ks": fz.ks, "p1": list(y[0:M]), "c0": list(y[M:2 * M]),
                "Q0": list(y[2 * M:3 * M]), "anchor": list(y[3 * M:4 * M]), "Delta": float(y[4 * M]), "hist": hist,
                "sv": list(map(float, sv)), "sv_scaled": list(map(float, svs)), "grip": grip,
-               "maxF": hist[-1]["maxF"], "mutate": opts.get("mutate", ""), "start": opts["start"], "seconds": secs}
+               "maxF": hist[-1]["maxF"], "mutate": opts.get("mutate", ""), "start": opts["start"], "seconds": secs,
+               "form": form}
         json.dump(out, open(opts["out"], "w"), indent=1)

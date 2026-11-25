@@ -331,7 +331,7 @@ class Factored:
                 d = 2 * k + (n - 1) + q[0]
                 new[k] = ((n - 1) * q[k] - cauchy(q, beta, k, 1, k) + (2 / lam) * (k + 1) * new[k + 1]) / d
             scale = max(1e-300, np.max(np.abs(new[:kst + 1].real)))
-            dif = np.max(np.abs(new[:kst] - beta[:kst])) / scale
+            dif = np.max(np.abs(new[:kst] - beta[:kst])) / scale if kst > 0 else 0.0
             hist.append(dif)
             beta = new
         U, V, c, q = self.horizon_fields(Q0, om, beta, kst=kst)
