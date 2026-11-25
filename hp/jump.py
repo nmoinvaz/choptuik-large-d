@@ -125,7 +125,7 @@ class OLadder:
     """the re-seed of the horizon data on rungs spaced in the mass mode's gain (the module docstring)"""
 
     def __init__(self, meta, D, threads=2, rung_dec=12.0, first_dec=3.0, plan_tol=1e-32, hmax=0.05, it_max=12,
-                 floor=1e-80, verbose=False):
+                 floor=1e-80, conv_tol=1e-26, verbose=False):
         self.rs = Reseeder(meta, D, threads=threads, levels=0, rows="ma", plan_tol=plan_tol, hmax=hmax)
         self.M, self.K = self.rs.M, self.rs.K
         n = float(D) - 2.0
@@ -139,6 +139,9 @@ class OLadder:
         self.us = [1.0 - 10.0 ** (-dd / (n - 1)) for dd in decs] + [u0]
         self.decs = decs + [g0]
         self.plan_tol, self.hmax, self.it_max, self.floor, self.verbose = plan_tol, hmax, it_max, floor, verbose
+        # a rung converges when its |R| ends at or below conv_tol: the u0 rung's quad-double block LU stops near 2e-29
+        # at D 245.6 (I1088-mac-a/probes/ladtest3.log), the inner rungs' far below
+        self.conv_tol = conv_tol
         self.last = None
 
     def targets(self, z8):
@@ -159,7 +162,8 @@ class OLadder:
         return tg
 
     def rung(self, u, z8, target, d):
-        """Newton on the eight-part data d at rung u against the eight-part target; returns (d, hist, ok)"""
+        """Newton on the eight-part data d at rung u against the eight-part target; returns (d, hist, converged), converged
+        when |R| ends at or below conv_tol"""
         M, a, o = self.M, self.rs.aoff, self.rs.off
         s = self.rs.rung_solver(u)
         rows = self.rs.rung_rows()
@@ -219,10 +223,11 @@ class OLadder:
             if gain > 1e-3 or lam < 1.0:
                 lu = None                       # refactor; otherwise the LU is kept (a chord)
             fresh = False
-        return d, hist, bool(np.isfinite(nR))
+        return d, hist, bool(np.isfinite(nR) and nR <= self.conv_tol)
 
     def project(self, z8):
-        """z8 with its horizon data re-seeded on the ladder from its own data and last node; (z8', info)"""
+        """z8 with its horizon data re-seeded on the ladder from its own data and last node; (z8', info). A rung that does
+        not converge ends the ladder (info ok False), and z8 is returned unchanged."""
         t0 = time.time()
         M, o = self.M, self.rs.off
         sl_ = slice(o["mh"], o["mh"] + 2 * M)
