@@ -4,7 +4,14 @@ so the unknowns are p1, c0 | node i: p, m, c | m_h | Delta (3M(K+1) + 1; form A'
 
     python3 form_s.py check STATE.npz [STATE.npz ...] [--kfreeze none|13] [--plan_tol 1e-32] [--it_max 12]
         [--tol 1e-28] [--threads 2] [--mutate none|flux]
-    python3 form_s.py cond STATE.npz [...] [--kfreeze 13] [--parts 2|8] [--w 8]
+    python3 form_s.py cond STATE.npz [...] [--kfreeze 13] [--w 10] [--w2 4] [--iters 6] [--forms A,S] [--segs state|plan]
+    python3 form_s.py jump OUTDIR --D 250 --states 'GLOB,...' [--Dmin 226 --Dmax 245.64 --deg 3 --kfreeze 13
+        --plan_tol 1e-40 --ks sigma|auto|N --tol 1e-40 --it_max 16 --halvings 8 --threads 2 --delta series --mutate none|step]
+
+jump: the rescaled guess of jump.py (p, m, p1, m_h times sqrt(n), c0 and c as (v - 1) n, fitted in 1/n; Delta from
+Track C's series), in form S, so with no a and no horizon re-seed; then Newton in octo-double on form S (newton_s),
+each step halved while max |F| does not fall. One record per step in OUTDIR/jump_s.jsonl, the state in
+OUTDIR/jump_s_D<D>.npz (octo_corrector.save_o, form S's layout, meta form "S"). --mutate step flips each step's sign.
 
 check: a converged form-A state (double-double) mapped to form S (a and a_h dropped), its form-S residual, then Newton
 in double-double on form S to --tol; prints Delta_S - Delta_A and Delta_S against hp/data/delta_all.csv at the
@@ -262,9 +269,150 @@ def cmd_cond(argv):
     return 0
 
 
+def newton_o_s(s, z8, tol, it_max, halvings, log=None, mutate="none", verbose=True, info=None):
+    """Newton in octo-double on form S from the eight-part z8: newton_s's step, halved while max |F| does not fall;
+    one record per step to log (jsonl); returns (z8, converged, records)"""
+    from multidouble import od_axpy
+    from octo_corrector import delta_digits, o8
+    z8 = o8(z8)
+    F = s.residual_s(list(z8))
+    nF = float(np.abs(np.asarray(F[0]) + np.asarray(F[1])).max())
+    recs = []
+    if verbose:
+        print(f"  start: max |F| {nF:.3e}, Delta {delta_digits(z8, 40)}", flush=True)
+    conv = nF <= tol
+    for it in range(it_max):
+        if conv:
+            break
+        t0 = time.time()
+        d, _, pmin, pmax = s.newton_s(list(z8))
+        d = o8(d)
+        t_lu = time.time() - t0
+        sign = -1.0 if mutate == "step" else 1.0
+        dz = float(np.abs(np.asarray(d[0])).max())
+        dD = float(np.asarray(d[0])[-1])
+        lam, acc, trials = 1.0, False, []
+        for _ in range(halvings + 1):
+            zt = o8(od_axpy(sign * lam, *d, *z8))
+            Ft = s.residual_s(list(zt))
+            nt = float(np.abs(np.asarray(Ft[0]) + np.asarray(Ft[1])).max())
+            trials.append(dict(lam=lam, F=nt))
+            if np.isfinite(nt) and nt < nF:
+                acc = True
+                break
+            lam *= 0.5
+        rec = dict(it=it, F=nF, dz=dz, dDelta=dD, pmin=pmin, pmax=pmax, lu_s=round(t_lu, 1), trials=trials, accepted=acc,
+                   s=round(time.time() - t0, 1))
+        if acc:
+            z8, nF = zt, nt
+            conv = nF <= tol
+        rec.update(F_new=nF, Delta=delta_digits(z8, 40), utc=time.strftime("%Y-%m-%d %H:%M:%S", time.gmtime()))
+        recs.append(rec)
+        if log:
+            with open(log, "a") as fh:
+                fh.write(json.dumps(rec) + "\n")
+        if verbose:
+            print(f"  it {it}: |F| {rec['F']:.3e} -> {nF:.3e}, |dz| {dz:.2e}, dDelta {dD:+.3e}, lam {lam if acc else 0:g}, "
+                  f"pivots {pmin:.1e}..{pmax:.1e}, {rec['s']} s (LU {t_lu:.0f} s), Delta {rec['Delta']}", flush=True)
+        if not acc:
+            break
+    return z8, conv, recs
+
+
+def cmd_jump(argv):
+    import glob
+    import jump
+    from octo_corrector import delta_digits, load_o, o8, save_o
+    from raw_out import require_raw
+    pos, o = opts(argv, dict(D="250", states="", Dmin="0", Dmax="1e9", deg="3", kfreeze="13", plan_tol="1e-40", hmax="0.05",
+                             ks="sigma", kc="146", threads="2", delta="series", tol="1e-40", it_max="16", halvings="8",
+                             mutate="none"))
+    outdir = pos[0]
+    os.makedirs(outdir, exist_ok=True)
+    log = os.path.join(outdir, "jump_s.jsonl")
+    require_raw(log)
+    paths = sorted(set(p for g in o["states"].split(",") for p in glob.glob(g)))
+    rows = []
+    for p in paths:
+        z, m = load_o(p)
+        if float(o["Dmin"]) <= m["D"] <= float(o["Dmax"]):
+            rows.append((m["D"], z, m))
+    rows.sort(key=lambda r: r[0])
+    m0 = rows[-1][2]
+    M, nodes = int(m0["M"]), list(m0["nodes"])
+    K = len(nodes)
+    Ds = np.array([r[0] for r in rows])
+    Y = np.array([jump.scale(sum(np.asarray(p) for p in r[1][:2]), r[0], M, K) for r in rows])
+    with mp.workdps(60):
+        Dt = mp.mpf(o["D"])
+    deg = int(o["deg"])
+    t = 1.0 / (Ds - 2.0)
+    tt = 1.0 / (float(Dt) - 2.0)
+    c = np.polyfit(t, Y, deg)
+    y = np.array([np.polyval(c[:, j], tt) for j in range(Y.shape[1])])
+    c1 = np.polyfit(t, Y, max(deg - 1, 0))
+    y1 = np.array([np.polyval(c1[:, j], tt) for j in range(Y.shape[1])])
+    zA = jump.unscale(y, float(Dt), M, K)
+    spread = np.abs(jump.unscale(y1, float(Dt), M, K) - zA)
+    print(f"guess at D {o['D']} from {len(rows)} states, D {Ds[0]:.4f} .. {Ds[-1]:.4f}, degree {deg} in 1/n; degree "
+          f"{deg - 1} differs by {spread[:-1].max():.2e} (unknowns), {spread[-1]:.2e} (Delta)", flush=True)
+    if o["ks"] == "auto":
+        ah = zA[jump.groups(M, K)["ah"]]
+        ks, ks_s, ks_m = jump.ks_rule(float(Dt), gbar=(float(Dt) - 3.0) * float(np.mean(ah * ah - 1.0)))
+        print(f"  ks {ks} (sigma rule {ks_s}, form A's mass-mode tail rule {ks_m})", flush=True)
+    elif o["ks"] == "sigma":
+        ah = zA[jump.groups(M, K)["ah"]]
+        ks = jump.ks_rule(float(Dt), gbar=(float(Dt) - 3.0) * float(np.mean(ah * ah - 1.0)))[1]
+        print(f"  ks {ks} (the sigma rule)", flush=True)
+    else:
+        ks = int(o["ks"])
+    kf = None if o["kfreeze"] == "none" else int(o["kfreeze"])
+    kw = dict(kt=int(m0.get("kt", 36)), kc=int(o["kc"]), ks=ks, threads=int(o["threads"]), kfreeze=kf)
+    sa = make_solver(Dt, M, nodes=nodes, **kw)
+    zero = np.zeros(len(zA))
+    segs = sa.plan(np.ascontiguousarray(zA), zero, float(o["plan_tol"]), float(o["hmax"]))
+    segs = [list(map(float, g)) for g in segs]
+    s = make_solver_s(Dt, M, nodes, segs=segs, **kw)
+    z8 = [a_to_s([zA], M, K)[0]] + [np.zeros(s.size_s) for _ in range(7)]
+    if o["delta"] == "series":
+        sd = jump.series_delta(o["D"])
+        if sd is None:
+            raise SystemExit(f"no series row at D {o['D']} in delta_all.csv")
+        with mp.workdps(60):
+            v = sd[0]
+            for q in range(8):
+                f = float(v)
+                z8[q][-1] = f
+                v -= mp.mpf(f)
+        print(f"  Delta from Track C's series: {mp.nstr(sd[0], 16)} +- {sd[1]:.2e}; the fit's {zA[-1]:.12f}", flush=True)
+    meta = dict(D=float(Dt), D_str=mp.nstr(Dt, 50), M=M, nodes=nodes, kt=kw["kt"], kc=kw["kc"], ks=ks, kfreeze=kf, form="S",
+                parts=8, segs=segs, plan_tol=float(o["plan_tol"]), deg=deg, states=[r[2].get("source", "") for r in rows][:0],
+                source="form_s.py jump")
+    F = s.residual_s(list(o8(z8)))
+    print(f"  {sum(len(g) - 1 for g in segs)} Taylor steps; the guess's max |F| per block "
+          + " ".join(f"{b:.1e}" for b in blocks_s(F, M, K)), flush=True)
+    with open(log, "a") as fh:
+        fh.write(json.dumps(dict(start="guess", D_str=meta["D_str"], ks=ks, kc=kw["kc"], kfreeze=kf, deg=deg,
+                                 states=len(rows), D_range=[float(Ds[0]), float(Ds[-1])], tol=float(o["tol"]),
+                                 mutate=o["mutate"], threads=int(o["threads"]),
+                                 utc=time.strftime("%Y-%m-%d %H:%M:%S", time.gmtime()))) + "\n")
+    z8, conv, recs = newton_o_s(s, z8, float(o["tol"]), int(o["it_max"]), int(o["halvings"]), log, o["mutate"])
+    F = s.residual_s(list(z8))
+    meta.update(solved=bool(conv), F=float(np.abs(np.asarray(F[0]) + np.asarray(F[1])).max()))
+    out = os.path.join(outdir, f"jump_s_D{float(Dt):.4f}.npz")
+    save_o(out, z8, meta)
+    Dl = delta_digits(z8, 40)
+    print(f"  {'converged' if conv else 'NOT converged'}; Delta {Dl}; saved {out}", flush=True)
+    sd = jump.series_delta(o["D"])
+    if sd is not None:
+        with mp.workdps(60):
+            print(f"  Delta - Track C {mp.nstr(mp.mpf(Dl) - sd[0], 6)} (Track C's +- {sd[1]:.2e})", flush=True)
+    return 0 if conv else 1
+
+
 def main():
     cmd = sys.argv[1]
-    return dict(check=cmd_check, cond=cmd_cond)[cmd](sys.argv[2:])
+    return dict(check=cmd_check, cond=cmd_cond, jump=cmd_jump)[cmd](sys.argv[2:])
 
 
 if __name__ == "__main__":
