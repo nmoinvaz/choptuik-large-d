@@ -141,7 +141,7 @@ def opts(argv, d):
 
 
 def cmd_check(argv):
-    pos, o = opts(argv, dict(kfreeze="none", plan_tol="1e-32", it_max="12", tol="1e-28", threads="2", mutate="none"))
+    pos, o = opts(argv, dict(kfreeze="none", plan_tol="1e-32", it_max="12", tol="1e-28", threads="2", mutate="none", out=""))
     worst = 0.0
     for path in pos:
         zh, zl, meta = load(path)
@@ -178,7 +178,60 @@ def cmd_check(argv):
         print(f"  {'converged' if conv else 'NOT converged'} in {len(hist) - 1} steps: Delta_S {mp.nstr(dS, 20)}, "
               f"Delta_S - Delta_A {mp.nstr(diff, 3)}"
               + (f", - delta_all ({row[2]}, err {row[1]:.1e}) {mp.nstr(dcsv, 3)}" if row else ""), flush=True)
+        if o.get("out") and conv:
+            from octo_corrector import save_o
+            out = os.path.join(o["out"], f"s_D{float(D):.4f}.npz")
+            zero = np.zeros(len(zs[0]))
+            save_o(out, list(zs) + [zero] * 6, dict(meta, form="S", segs=[list(map(float, g)) for g in segs], kfreeze=kf,
+                                                  source=path, parts=2))
+            print(f"  saved {out}", flush=True)
     return 0
+
+
+def cmd_planted(argv):
+    """a converged form-S state (form_s.py check --out) with every unknown but Delta moved by rel (relative, random
+    signs, sizes 0.5-1, seed), solved again by newton_dd. Pass: converged and Delta within --pass of the state's.
+    --mutate step (each Newton step taken with its sign flipped) must fail."""
+    from octo_corrector import load_o
+    pos, o = opts(argv, dict(rel="1e-8", seed="1", tol="1e-28", it_max="12", threads="2", mutate="none", **{"pass": "1e-26"}))
+    ok_all = True
+    for path in pos:
+        z8, meta = load_o(path)
+        M, nodes = int(meta["M"]), list(meta["nodes"])
+        with mp.workdps(60):
+            D = mp.mpf(meta["D_str"])
+        s = make_solver_s(D, M, nodes, kt=meta.get("kt", 36), kc=meta.get("kc", 40), ks=meta.get("ks", 120),
+                          threads=int(o["threads"]), kfreeze=meta.get("kfreeze"), segs=meta["segs"])
+        zh, zl = np.array(z8[0]), np.array(z8[1])
+        rng = np.random.default_rng(int(o["seed"]))
+        r = float(o["rel"]) * rng.uniform(0.5, 1, len(zh)) * rng.choice([-1, 1], len(zh))
+        r[-1] = 0.0
+        ph, pl = dd_add(zh, zl, zh * r, np.zeros(len(zh)))
+        if o["mutate"] == "step":
+            zt, conv, hist = newton_dd_flip(s, (ph, pl), float(o["tol"]), int(o["it_max"]))
+        else:
+            zt, conv, hist = newton_dd(s, (ph, pl), float(o["tol"]), int(o["it_max"]))
+        with mp.workdps(60):
+            d = (mp.mpf(float(zt[0][-1])) + mp.mpf(float(zt[1][-1]))) - (mp.mpf(float(zh[-1])) + mp.mpf(float(zl[-1])))
+        ok = conv and abs(d) <= mp.mpf(o["pass"])
+        ok_all = ok_all and ok
+        print(f"{os.path.basename(path)}: moved by {o['rel']}; {'converged' if conv else 'NOT converged'} in {len(hist) - 1}; "
+              f"Delta - the state's {mp.nstr(d, 3)}: {'PASS' if ok else 'FAIL'}{' (--mutate step)' if o['mutate'] == 'step' else ''}",
+              flush=True)
+    return 0 if ok_all else 1
+
+
+def newton_dd_flip(s, z, tol, it_max):
+    """newton_dd with every step's sign flipped (planted's control)"""
+    zh, zl = (np.ascontiguousarray(np.asarray(p, dtype=float)) for p in z)
+    hist = [dict(it=0)]
+    for it in range(it_max):
+        d, _, _, _ = s.newton_s([zh, zl])
+        th, tl = dd_add(zh, zl, -np.asarray(d[0]), -np.asarray(d[1]))
+        zh, zl = np.ascontiguousarray(th), np.ascontiguousarray(tl)
+        hist.append(dict(it=it + 1))
+    F = s.residual_s([zh, zl])
+    return (zh, zl), float(np.abs(np.asarray(F[0]) + np.asarray(F[1])).max()) <= tol, hist
 
 
 def weakest(solve, L, w, iters, w2, seed=0):
@@ -412,7 +465,7 @@ def cmd_jump(argv):
 
 def main():
     cmd = sys.argv[1]
-    return dict(check=cmd_check, cond=cmd_cond, jump=cmd_jump)[cmd](sys.argv[2:])
+    return dict(check=cmd_check, cond=cmd_cond, jump=cmd_jump, planted=cmd_planted)[cmd](sys.argv[2:])
 
 
 if __name__ == "__main__":
