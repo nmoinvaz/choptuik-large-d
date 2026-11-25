@@ -26,7 +26,7 @@ config.background_color = "#0d1117"
 
 BLUE_, GOLD_, RED_, GREEN_, GREY_, ORANGE_, PURPLE_ = "#58C4DD", "#FFD866", "#FF6B6B", "#7CE38B", "#8B949E", "#F78C6C", "#C792EA"
 DEL4 = 3.4454                                   # Delta at D = 4, to four decimals (hp/data/delta_all.csv)
-SCENES = ["S00_Title", "S01a_Wave", "S01b_Echo", "S02_Question", "S03a_Dot", "S03b_Cone", "S03c_Numbers", "S03d_Join", "S03e_Newton", "S04_Walk", "S05_FirstWall", "S06_Amplifier",
+SCENES = ["S00_Title", "S01a_Wave", "S01b_Echo", "S03a_Dot", "S03b_Cone", "S03c_Numbers", "S03d_Join", "S03e_Newton", "S04_Walk", "S05_FirstWall", "S06_Amplifier",
           "S07_Basin", "S08_Taylor", "S09_FiveWalls", "S10_Climb", "S11_Basics", "S12_Outro"]
 
 
@@ -124,6 +124,10 @@ def stairs(ax, pts, **kw):
     return VMobject(**kw).set_points_as_corners(P)
 
 
+CAP = TexTemplate(tex_compiler="pdflatex", output_format=".pdf")              # captions: lines up to 13 units wide at size 34
+CAP.add_to_preamble(r"\setlength{\textwidth}{385pt}\setlength{\linewidth}{385pt}\setlength{\hsize}{385pt}")
+CAP_LONG = TexTemplate(tex_compiler="pdflatex", output_format=".pdf")         # the same width at size 30, for the longest
+CAP_LONG.add_to_preamble(r"\setlength{\textwidth}{436pt}\setlength{\linewidth}{436pt}\setlength{\hsize}{436pt}")
 CPS = float(os.environ.get("QUEST_CPS", "12"))    # characters a second a caption is given to be read, after a second to find it
 LEAD = 0.5                                        # the share of a caption's reading time given before its animation starts
 WATCHING = 0.4                                    # a second of animation counts this much toward reading
@@ -153,16 +157,16 @@ class Film(Scene):
     def say(self, text, hold=None, color=WHITE):
         """A caption at the foot of the frame. It is owed a second plus its length at CPS: all of it now, or with hold
         given, at least LEAD of it now and the rest (an animation's time counting WATCHING) before it is replaced."""
-        new = Tex(text, font_size=34, color=color)
-        if new.width > 13.0:
-            new.scale_to_fit_width(13.0)
+        n = len(re.sub(r"\\[a-zA-Z]+|[${}^_\\]", "", text))
+        new = Tex(text, font_size=34, color=color, tex_template=CAP) if n <= 200 else Tex(text, font_size=30, color=color, tex_template=CAP_LONG)
+        if new.width > 13.3:
+            new.scale_to_fit_width(13.3)
         new.to_edge(DOWN, buff=0.35)
         if self.cap is None:
             self.play(FadeIn(new, shift=0.15 * UP), run_time=0.5)
         else:
             self.play(FadeOut(self.cap), FadeIn(new, shift=0.15 * UP), run_time=0.5)
         self.cap = new
-        n = len(re.sub(r"\\[a-zA-Z]+|[${}^_\\]", "", text))
         self.owed = 1.0 + n / CPS
         self.wait(self.owed if hold is None else max(hold, LEAD * self.owed))
 
@@ -395,35 +399,6 @@ class S01b_Echo(Film):
         self.play(FadeOut(VGroup(ax2, tau, per, br, bl, self.cap)), run_time=0.7)
 
 
-class S02_Question(Film):
-    stage = r"3 \quad The question"
-
-    def construct(self):
-        pts = delta_points()
-        ax = Axes(x_range=[0, 270, 50], y_range=[1.4, 3.8, 0.4], x_length=10.6, y_length=4.4, tips=False,
-                  axis_config={"color": GREY_, "stroke_width": 2, "include_numbers": True, "font_size": 22},
-                  y_axis_config={"decimal_number_config": {"num_decimal_places": 1}}).shift(0.6 * UP)
-        xl = Tex("spacetime dimensions $D$", font_size=26, color=GREY_).next_to(ax.x_axis, DOWN, buff=0.3)
-        yl = MathTex(r"\Delta", font_size=36, color=GREY_).next_to(ax.y_axis, UP, buff=0.1)
-        low = [p for p in pts if p[0] <= 12.0]
-        curve = VMobject(color=BLUE_, stroke_width=4).set_points_as_corners([ax.c2p(*p) for p in low])
-        d4 = Dot(ax.c2p(4.0, min(pts, key=lambda p: abs(p[0] - 4.0))[1]), color=GOLD_, radius=0.07)
-        l4 = Tex(r"$D = 4$", font_size=26, color=GOLD_).next_to(d4, RIGHT, buff=0.15)
-        self.say(r"All of that was one collapse, in one world. Our world has $D = 4$ dimensions: three of space and one of time.")
-        self.play(Create(ax), FadeIn(xl), FadeIn(yl), run_time=1.0)
-        self.say(r"The same collapse can be worked out for a world with any number of dimensions $D$. Each $D$ has its own echo period $\Delta$.", hold=0.5)
-        self.play(Create(curve), run_time=2.0)
-        self.play(FadeIn(d4, scale=2), FadeIn(l4), run_time=0.6)
-        self.wait(2.6)
-        self.say(r"So this graph is not a picture of a collapse. Each point on it stands for a whole collapse, in a world with that $D$.")
-        q = Tex("?", font_size=120, color=GOLD_).move_to(ax.c2p(150, 2.6))
-        arrow = Arrow(ax.c2p(20, 2.05), ax.c2p(120, 1.85), color=GOLD_, stroke_width=4, buff=0)
-        self.play(GrowArrow(arrow), FadeIn(q, scale=0.6), run_time=1.0)
-        self.say(r"The quest: follow $\Delta(D)$ to the far right, into worlds with hundreds of dimensions.")
-        self.say(r"That takes a solver: a program that finds $\Delta$ for a given $D$. First, what one solve is. Then, how each wall on the way reshaped the solver.")
-        self.play(FadeOut(VGroup(ax, xl, yl, curve, d4, l4, q, arrow, self.cap)), run_time=0.7)
-
-
 CUTS = [0.0, 0.3, 0.4, 0.5, 0.6, 0.7, 1.0]     # the centre, the five nodes of the large-D chain, the horizon
 OFFS = [0.26, -0.2, 0.22, -0.17, 0.15, -0.24]   # a sketch's mismatches, one per piece
 PCOL = [BLUE_, GREEN_, GREEN_, GREEN_, GREEN_, ORANGE_]
@@ -452,14 +427,20 @@ def gaps(line, e, lift=1.0):
     return out
 
 
-def x_line(y=-1.9):
-    """The x axis from the centre to the horizon, with the five nodes."""
+def x_line(y=-1.9, height=2.2, nodes="the five nodes"):
+    """The x axis from the centre to the horizon as the bottom edge of the frame that also holds the image of one echo:
+    the five node columns as upright lines, the centre and the horizon as its coloured sides. Returns the axis and
+    the group (frame, columns, sides, end labels, node label, upright label)."""
     line = NumberLine(x_range=[0, 1, 0.1], length=10.0, color=GREY_, include_ticks=False).shift(y * UP)
+    frame = Rectangle(width=10.0, height=height, color=GREY_, stroke_width=1.5).move_to([0, y + height / 2, 0])
+    cols = VGroup(*[Line(line.n2p(v), line.n2p(v) + height * UP, color=WHITE, stroke_width=1.5, stroke_opacity=0.45) for v in CUTS[1:6]])
+    sides = VGroup(Line(line.n2p(0), line.n2p(0) + height * UP, color=BLUE_, stroke_width=5),
+                   Line(line.n2p(1), line.n2p(1) + height * UP, color=ORANGE_, stroke_width=5))
     ends = VGroup(Tex(r"the centre, $x = 0$", font_size=24, color=BLUE_).next_to(line.n2p(0), DOWN, buff=0.15),
                   Tex(r"the horizon, $x = 1$", font_size=24, color=ORANGE_).next_to(line.n2p(1), DOWN, buff=0.15))
-    ticks = VGroup(*[Line(line.n2p(v) + 0.1 * DOWN, line.n2p(v) + 0.1 * UP, color=WHITE, stroke_width=2) for v in CUTS[1:6]])
-    nl = Tex("the five nodes", font_size=22, color=GREY_).next_to(line.n2p(0.5), DOWN, buff=0.15)
-    return line, VGroup(ends, ticks, nl)
+    nl = Tex(nodes, font_size=22, color=GREY_).next_to(line.n2p(0.5), DOWN, buff=0.15)
+    up = Tex(r"the value of one field $\uparrow$", font_size=20, color=GREY_).next_to(frame.get_corner(UL), UP, buff=0.08).align_to(frame, LEFT)
+    return line, VGroup(frame, cols, sides, ends, nl, up)
 
 
 def low_axes():
@@ -490,36 +471,44 @@ def strip_cells(RC, RW, RH, co, ncol=28, nrow=16):
 
 
 class S03a_Dot(Film):
-    stage = r"4 \quad One dot, one solve"
+    stage = r"3 \quad The question"
 
     def construct(self):
         pts = delta_points()
         ax, lab = low_axes()
         at = lambda D: min(pts, key=lambda q: abs(q[0] - D))
+        D4 = at(4.0)
+        ours = Dot(ax.c2p(*D4), color=GOLD_, radius=0.11)
+        ol = Tex(f"our world: $D = 4$, $\\Delta = {D4[1]:.3f}$", font_size=28, color=GOLD_).next_to(ours, RIGHT, buff=0.2)
+        self.play(Create(ax), FadeIn(lab), run_time=1.0)
+        self.play(FadeIn(ours, scale=2), FadeIn(ol), run_time=0.6)
+        self.say(r"All of that was one collapse, in one world. Our world has $D = 4$ dimensions, three of space and one of time, and its echo period is the one dot on this graph.")
         curve = VMobject(color=BLUE_, stroke_width=3, stroke_opacity=0.35).set_points_as_corners(
             [ax.c2p(*q) for q in pts if 3.9 <= q[0] <= 13.0])
-        dots = VGroup(*[Dot(ax.c2p(*at(D)), color=BLUE_, radius=0.07) for D in range(4, 14)])
-        self.play(Create(ax), FadeIn(lab), Create(curve), run_time=1.2)
-        self.play(LaggedStart(*[FadeIn(d, scale=2.5) for d in dots], lag_ratio=0.18), run_time=2.0)
-        self.say(r"Every dot on this curve is one computation: for a world with that $D$, solve one whole echoing collapse, and read off its period $\Delta$.")
-        D6 = at(6.0)
-        pick = Dot(ax.c2p(*D6), color=GOLD_, radius=0.11)
-        guide = VGroup(DashedLine(ax.c2p(D6[0], 2.2), ax.c2p(*D6), color=GOLD_, stroke_width=2),
-                       DashedLine(ax.c2p(2, D6[1]), ax.c2p(*D6), color=GOLD_, stroke_width=2))
-        tag = Tex(f"$D = 6$: \\quad $\\Delta = {D6[1]:.4f}$", font_size=30, color=GOLD_).next_to(pick, UR, buff=0.2)
-        self.play(FadeIn(pick, scale=2), Create(guide), FadeIn(tag), run_time=0.9)
-        self.wait(1.4)
-        self.say(r"The quest to large $D$ is a long line of such solves, each harder than the last. So what does one solve have to find?")
-        self.play(FadeOut(VGroup(ax, lab, curve, dots, pick, guide, tag, self.cap)), run_time=0.7)
+        dots = VGroup(*[Dot(ax.c2p(*at(D)), color=BLUE_, radius=0.07) for D in range(5, 14)])
+        self.play(Create(curve), LaggedStart(*[FadeIn(d, scale=2.5) for d in dots], lag_ratio=0.18), run_time=2.4)
+        self.say(r"The same collapse can be worked out for a world with any number of dimensions $D$. Each $D$ has its own echo period $\Delta$.")
+        self.say(r"So this graph is not a picture of a collapse. Each dot stands for a whole collapse, in a world with that $D$.")
+        self.say(r"And each dot is one computation, called a solve: for that $D$, find the echoing solution and read off its $\Delta$.")
+        end = at(13.0)
+        arrow = Arrow(ax.c2p(13.3, end[1] - 0.02), ax.c2p(15.2, end[1] - 0.09), color=GOLD_, stroke_width=5, buff=0)
+        far = Tex(r"on to $D = 100,\ 200,\ 400,\ \ldots$", font_size=28, color=GOLD_).next_to(arrow, UP, buff=0.55).align_to([6.8, 0, 0], RIGHT)
+        self.play(GrowArrow(arrow), FadeIn(far), run_time=1.0)
+        self.say(r"The quest: follow $\Delta(D)$ far off the right-hand edge of this graph, into worlds with hundreds of dimensions.")
+        self.say(r"That takes a solver: a program that finds $\Delta$ for a given $D$. First, what one solve has to find. Then, how each wall on the way reshaped the solver.")
+        self.play(FadeOut(VGroup(ax, lab, curve, dots, ours, ol, arrow, far, self.cap)), run_time=0.7)
 
 
 class S03b_Cone(Film):
-    stage = r"5 \quad The map, the horizon and $x$"
+    stage = r"4 \quad The map, the horizon and $x$"
 
     def construct(self):
         C, T = [-0.6, 2.55, 0.0], 4.3
         P = lambda r, tt: [C[0] + r, C[1] - T + tt, 0.0]          # the map: distance r across, time tt upward
-        O, K, W = [-4.55, 0.45, 0.0], 2.0 / T, 7.3                # the view from above: its centre and scale
+        O, K, W = [-4.55, 1.5, 0.0], 1.1 / T, 7.3                 # the view from above: its centre and scale
+        yb, XS, Hs, ws = -1.2, 1.6, 0.5, 0.07                     # the side view under it: baseline, half width, hump height and width
+        xs = [-XS + 2 * XS * k / 480 for k in range(481)]
+        bell = lambda v: math.exp(-0.5 * v * v)
         t = ValueTracker(0.0)
         now = lambda: t.get_value()
         centre = Line(P(0, 0), C, color=BLUE_, stroke_width=4)
@@ -527,23 +516,36 @@ class S03b_Cone(Film):
         tl = Tex(r"time $\uparrow$", font_size=22, color=GREY_).next_to(centre, LEFT, buff=0.1)
         rl = Tex(r"distance from the centre $\rightarrow$", font_size=22, color=GREY_).next_to(base, DOWN, buff=0.42).align_to(base, RIGHT)
         ml = Tex("a map: where, and when", font_size=22, color=GREY_).to_corner(UR, buff=0.35)
-        vl = Tex("space, seen from above", font_size=22, color=GREY_).move_to([O[0], 3.05, 0])
+        vl = Tex("space, seen from above", font_size=22, color=GREY_).move_to([O[0], 3.15, 0])
         dotc = Dot(O, color=WHITE, radius=0.06)
-        dl = Tex("the centre", font_size=22, color=BLUE_).next_to(dotc, DOWN, buff=0.1)
+        saxis = Line([O[0] - XS, yb, 0], [O[0] + XS, yb, 0], color=GREY_, stroke_width=1.5)
+        smid = DashedLine(O, [O[0], yb - 0.08, 0], color=WHITE, stroke_width=1, stroke_opacity=0.35, dash_length=0.05)
+        dl = VGroup(Tex("the centre", font_size=20, color=BLUE_).next_to([O[0], yb, 0], DOWN, buff=0.12),
+                    Tex("side view", font_size=20, color=GREY_).next_to([O[0] - XS + 0.45, yb, 0], DOWN, buff=0.12))
         nowline = always_redraw(lambda: DashedLine(P(0, now()), P(W, now()), color=WHITE, stroke_width=2, stroke_opacity=0.75))
         nowl = always_redraw(lambda: Tex("now", font_size=20).next_to(P(W, now()), UP, buff=0.04).shift(0.3 * LEFT))
 
+        def humps(shells):
+            """the side view of shells (distance from the centre, colour, opacity, width): each a pair of humps"""
+            out = VGroup()
+            for r, col, op, w in shells:
+                pts = [[O[0] + v, yb + Hs * (bell((v - K * r) / w) + bell((v + K * r) / w)), 0] for v in xs]
+                out.add(VMobject(color=col, stroke_width=4, stroke_opacity=op).set_points_as_corners(pts))
+            return out
+
         def shell(r0, col):
-            """a shell of the wave that starts at distance r0: its ring from above, and its track on the map"""
+            """a shell of the wave that starts at distance r0: its ring from above, its humps from the side, its track on the map"""
             ring = always_redraw(lambda: Circle(radius=K * (r0 - now()), color=col, stroke_width=5).move_to(O)
                                  if r0 - now() > 0.03 else VGroup())
+            hump = always_redraw(lambda: humps([(r0 - now(), col, 1.0, ws)]) if r0 - now() > 0.03 else VGroup())
             track = always_redraw(lambda: Line(P(r0, 0), P(r0 - min(now(), r0) - 1e-3, min(now(), r0) + 1e-3), color=col, stroke_width=4))
             head = always_redraw(lambda: Dot(P(r0 - min(now(), r0), min(now(), r0)), color=col, radius=0.08))
-            return VGroup(ring, track, head)
+            return VGroup(ring, hump, track, head)
 
-        self.play(FadeIn(VGroup(dotc, dl, vl)), Create(centre), Create(base), FadeIn(VGroup(tl, rl, ml)), run_time=1.2)
+        self.play(FadeIn(VGroup(dotc, vl, saxis, smid, dl)), Create(centre), Create(base), FadeIn(VGroup(tl, rl, ml)), run_time=1.2)
         self.add(nowline, nowl)
-        self.say(r"Go back to one collapse and look closer, in two views. Left: space, seen from above. Right: a map, with distance from the centre across and time upward. The white line marks the same moment in both.")
+        self.say(r"Go back to one collapse and look closer. On the left are the two views from before: space seen from above, and the same wave seen from the side.")
+        self.say(r"On the right is something new: a map, with distance from the centre across and time upward. The white line on the map marks the moment shown on the left.")
         A = shell(2.9, BLUE_)
         self.add(A)
         self.say(r"A shell of the wave falls inward. It moves at the speed of light, and nothing moves faster. On the map, that is a diagonal.", hold=0.3)
@@ -554,8 +556,8 @@ class S03b_Cone(Film):
         self.say(r"The centre is the wave's middle point. It stays put, so on the map it is the upright line at the left.")
         star = Dot(C, color=RED_, radius=0.1)
         sl = Tex("the collapse", font_size=24, color=RED_).next_to(star, UP, buff=0.1)
-        hit = always_redraw(lambda: VGroup(Dot(O, color=RED_, radius=0.1), Tex("the collapse", font_size=22, color=RED_).next_to(O, UP, buff=0.15))
-                            if now() > T - 0.02 else VGroup())
+        hit = always_redraw(lambda: VGroup(Dot(O, color=RED_, radius=0.1), Tex("the collapse", font_size=22, color=RED_).next_to(O, UP, buff=0.15),
+                                           Dot([O[0], yb, 0], color=RED_, radius=0.1)) if now() > T - 0.02 else VGroup())
         self.add(hit)
         self.play(t.animate.set_value(T), run_time=1.6, rate_func=linear)
         self.play(FadeIn(star, scale=3), FadeIn(sl), Flash(dotc, color=RED_, flash_radius=0.4), run_time=0.8)
@@ -581,13 +583,22 @@ class S03b_Cone(Film):
         # the horizon: the closing edge of what can still matter
         self.play(FadeOut(late), FadeOut(Cs), t.animate.set_value(0.0), run_time=1.2)
         inside_map = Polygon(P(0, 0), P(T, 0), C, stroke_width=0, fill_color=ORANGE_, fill_opacity=0.16)
-        inside_view = always_redraw(lambda: Circle(radius=K * (T - now()), stroke_width=0, fill_color=ORANGE_, fill_opacity=0.16).move_to(O)
-                                    if T - now() > 0.03 else VGroup())
+
+        def inside():
+            r = K * (T - now())
+            if T - now() <= 0.03:
+                return VGroup()
+            return VGroup(Circle(radius=r, stroke_width=0, fill_color=ORANGE_, fill_opacity=0.16).move_to(O),
+                          Rectangle(width=2 * r, height=0.95, stroke_width=0, fill_color=ORANGE_, fill_opacity=0.16).move_to([O[0], yb + 0.475, 0]),
+                          Line([O[0] - r, yb, 0], [O[0] - r, yb + 0.95, 0], color=ORANGE_, stroke_width=3),
+                          Line([O[0] + r, yb, 0], [O[0] + r, yb + 0.95, 0], color=ORANGE_, stroke_width=3))
+
+        inside_view = always_redraw(inside)
         hz = Tex("the horizon", font_size=26, color=ORANGE_).next_to(Line(P(T, 0), C).get_center(), RIGHT, buff=0.3)
-        hv = Tex("the horizon", font_size=22, color=ORANGE_).move_to([O[0], O[1] + K * T + 0.25, 0])
+        hv = Tex("the horizon", font_size=22, color=ORANGE_).move_to([O[0], O[1] + K * T + 0.2, 0])
         self.add(inside_view)
         self.play(FadeIn(inside_map), FadeIn(hz), FadeIn(hv), run_time=0.7)
-        self.say(r"So at every moment there is an edge: a sphere around the centre, closing in at the speed of light. Only what lies inside it can still affect the collapse.", hold=0.3)
+        self.say(r"So at every moment there is an edge: a sphere around the centre, closing in at the speed of light. From the side it is two walls closing on the centre. Only what lies inside can still affect the collapse.", hold=0.3)
         self.play(FadeOut(hv), t.animate.set_value(0.72 * T), run_time=4.0, rate_func=linear)
         self.wait(1.0)
         self.say(r"That closing edge is the horizon, also called the light cone of the collapse. On the map it is the sloping line. It is not a black hole's horizon.")
@@ -600,12 +611,18 @@ class S03b_Cone(Film):
             legs += [(tt, tt + s_, 0.0, s_, GOLD_), (tt + s_, tt + 2 * s_, s_, 0.0, BLUE_)]
             turns.append((tt + s_, s_))
             tt, L = tt + 2 * s_, L - 2 * s_
+        width = lambda time: ws * min(1.0, max((T - time) / (T - r0), 0.3))             # the rounds grow narrower with the time left
 
         def r_at(time):
             for t0, t1, ra, rb, c_ in legs:
                 if t0 <= time <= t1:
                     return ra + (rb - ra) * (time - t0) / (t1 - t0), c_
             return 0.0, BLUE_
+
+        def escaped():
+            """the parts that have escaped by now: (distance, colour, opacity, width)"""
+            return [(se + now() - te, GREY_, 0.6 * max(0.0, 1.0 - (now() - te) / 1.8), width(te)) for te, se in turns
+                    if now() > te and K * (se + now() - te) < XS]
 
         def zigzag():
             g = VGroup()
@@ -620,21 +637,29 @@ class S03b_Cone(Film):
             return g
 
         zig = always_redraw(zigzag)
-        zr = always_redraw(lambda: Circle(radius=max(K * r_at(now())[0], 0.03), color=r_at(now())[1], stroke_width=5).move_to(O))
+        zr = always_redraw(lambda: VGroup(*[Circle(radius=K * r, color=c_, stroke_width=3, stroke_opacity=op).move_to(O) for r, c_, op, w in escaped()],
+                                          Circle(radius=max(K * r_at(now())[0], 0.03), color=r_at(now())[1], stroke_width=5).move_to(O),
+                                          humps(escaped() + [(r_at(now())[0], r_at(now())[1], 1.0, width(now()))])))
         zk = VGroup(Tex("falling in", font_size=22, color=BLUE_), Tex("heading out", font_size=22, color=GOLD_),
                     Tex("escaping", font_size=22, color=GREY_), Tex("(a sketch)", font_size=18, color=GREY_))
         zk.arrange(DOWN, buff=0.08, aligned_edge=LEFT).move_to(P(5.9, 2.6))
         self.add(zig, zr)
-        self.play(t.animate.set_value(r0), run_time=2.6, rate_func=linear)
-        band = Polygon(P(r0, 0), P(T, 0), C, P(0, r0), stroke_width=0, fill_color=BLUE_, fill_opacity=0.3)
-        bandl = Tex(r"the band between a falling\\shell and the horizon", font_size=22, color=BLUE_).move_to(P(5.5, 0.55))
-        self.play(FadeIn(band), FadeIn(bandl), run_time=0.6)
-        self.say(r"Look at the band between a falling shell and the horizon. It holds the wave that is still on its way in. Is that band all the solver needs?")
-        self.play(band.animate.set_fill(opacity=0.12), FadeOut(bandl), FadeIn(zk), run_time=0.5)
+        tp = 0.2 * r0                                                                     # a moment early in the fall
+        self.play(t.animate.set_value(tp), run_time=1.0, rate_func=linear)
+        band = Polygon(P(r0, 0), P(T, 0), P(T - r0, r0), P(0, r0), stroke_width=0, fill_color=BLUE_, fill_opacity=0.5)
+        bandl = Tex(r"the band between a falling\\shell and the horizon", font_size=22, color=BLUE_).move_to(P(5.7, 1.0))
+        ann = Annulus(inner_radius=K * (r0 - tp), outer_radius=K * (T - tp), color=BLUE_, fill_opacity=0.5, stroke_width=0).move_to(O)
+        gap = VGroup(*[Rectangle(width=K * (T - r0), height=0.95, stroke_width=0, fill_color=BLUE_, fill_opacity=0.5).move_to(
+            [O[0] + sg * K * (r0 - tp + (T - r0) / 2), yb + 0.475, 0]) for sg in (-1, 1)])
+        cut = Line(P(r0 - tp, tp), P(T - tp, tp), color=WHITE, stroke_width=7)
+        self.play(FadeIn(band), FadeIn(bandl), FadeIn(ann), FadeIn(gap), FadeIn(cut), run_time=0.6)
+        self.say(r"Look at the band between a falling shell and the horizon, in blue in all three views: a ring-shaped region from above, two gaps from the side, and a slanted strip on the map.")
+        self.say(r"The thick white line is the band at this moment. It holds the wave that is still on its way in. Is that band all the solver needs?")
+        self.play(band.animate.set_fill(opacity=0.15), FadeOut(bandl), FadeOut(ann), FadeOut(gap), FadeOut(cut), FadeIn(zk), run_time=0.5)
         self.say(r"No, because a shell is not finished when it reaches the centre. It passes through and heads back out. Part escapes across the horizon, and what gravity turns back falls in again.", hold=0.3)
-        self.play(t.animate.set_value(0.985 * T), run_time=8.0, rate_func=linear)
+        self.play(t.animate.set_value(0.985 * T), run_time=9.0, rate_func=linear)
         self.wait(0.6)
-        self.say(r"That zig-zag is the echoing, drawn on the map: round after round, each smaller, right up to the collapse.")
+        self.say(r"That zig-zag is the echoing, drawn on the map: round after round, each smaller, right up to the collapse. From the side, the humps shuttle between the centre and the closing walls, and the grey ones slip out.")
         self.say(r"So everything in the band ends up at the centre, and comes back out across the whole inside. The solver needs all of it, from the centre to the horizon.")
         zig.clear_updaters()
         zr.clear_updaters()
@@ -642,8 +667,10 @@ class S03b_Cone(Film):
         # x: how far out, as a fraction of the way to the horizon
         self.play(t.animate.set_value(0.0), run_time=1.2)
         rays = VGroup(*[Line(P(v * T, 0), C, color=GREY_, stroke_width=1.5) for v in CUTS[1:6]])
-        marks = always_redraw(lambda: VGroup(*[Circle(radius=K * v * (T - now()), color=GREY_, stroke_width=1.5).move_to(O)
-                                               for v in CUTS[1:6]]) if T - now() > 0.2 else VGroup())
+        marks = always_redraw(lambda: VGroup(
+            *[Circle(radius=K * v * (T - now()), color=GREY_, stroke_width=1.5).move_to(O) for v in CUTS[1:6]],
+            *[Line([O[0] + sg * K * v * (T - now()), yb - 0.1, 0], [O[0] + sg * K * v * (T - now()), yb + 0.1, 0], color=WHITE, stroke_width=2)
+              for v in CUTS[1:6] for sg in (-1, 1)]) if T - now() > 0.2 else VGroup())
         ruler = always_redraw(lambda: VGroup(Line(P(0, now()), P(T - now(), now()), color=WHITE, stroke_width=3),
                                              *[Line(P(v * (T - now()), now() - 0.09), P(v * (T - now()), now() + 0.09), color=WHITE, stroke_width=2.5)
                                                for v in [0.0] + CUTS[1:6] + [1.0]]))
@@ -659,18 +686,18 @@ class S03b_Cone(Film):
         self.say(r"So the solver works in $x$, between the centre at 0 and the horizon at 1.")
         for m in (nowline, nowl, B, hit, inside_view, marks, ruler):
             m.clear_updaters()
-        self.play(FadeOut(VGroup(dotc, dl, vl, centre, base, tl, rl, ml, cl, star, sl, B, hit, inside_map, inside_view, hz, rays, marks, ruler,
+        self.play(FadeOut(VGroup(dotc, dl, vl, saxis, smid, centre, base, tl, rl, ml, cl, star, sl, B, hit, inside_map, inside_view, hz, rays, marks, ruler,
                                  x0, x1, xh, nowline, nowl, self.cap)), run_time=0.7)
 
 
 class S03c_Numbers(Film):
-    stage = r"6 \quad The solution, written as numbers"
+    stage = r"5 \quad The solution, written as numbers"
 
     def construct(self):
         D38, co = harmonics(38.0)
         top = max(abs(wave_of(co, 2 * math.pi * k / 200)) for k in range(200))
         # 1. what a solution is: every field at every point inside the horizon, echo stacked on echo
-        C, T, Wd = [-6.0, 2.5, 0.0], 4.4, 3.7
+        C, T, Wd = [-4.9, 2.5, 0.0], 4.4, 3.7
         pt = lambda v, t: [C[0] + v * Wd * (1 - t / T), C[1] - T + t, 0.0]
         centre = Line(pt(0, 0), C, color=BLUE_, stroke_width=4)
         cone = Line(pt(1, 0), C, color=ORANGE_, stroke_width=4)
@@ -680,14 +707,25 @@ class S03c_Numbers(Film):
         c1 = Tex(r"the horizon\\$x = 1$", font_size=22, color=ORANGE_).next_to(pt(1, 0), DOWN, buff=0.1)
         sk = Tex("the map (a sketch)", font_size=20, color=GREY_).move_to([C[0] + 3.4, C[1] - 0.1, 0])
         left = lambda k: T * 0.62 ** k                                  # time left at half echo k
-        tk = [T - left(k) for k in range(11)]
+        tk = [T - left(k) for k in range(17)]
         bands = VGroup(*[Polygon(pt(0, tk[k]), pt(1, tk[k]), pt(1, tk[k + 1]), pt(0, tk[k + 1]), stroke_width=0,
-                                 fill_color=GOLD_ if k % 2 == 0 else BLUE_, fill_opacity=0.45) for k in range(10)])
+                                 fill_color=GOLD_ if k % 2 == 0 else BLUE_, fill_opacity=0.45) for k in range(16)])
+        swings = lambda tv: math.log(T / (T - tv)) / math.log(1 / 0.62)          # the swings gone by at time tv
+        xc = C[0] - 0.62
+        chirp = VGroup(*[VMobject(color=GOLD_ if k % 2 == 0 else BLUE_, stroke_width=3.5).set_points_as_corners(
+            [[xc + 0.42 * math.sin(math.pi * swings(tk[k] + (tk[k + 1] - tk[k]) * i / 24)), C[1] - T + tk[k] + (tk[k + 1] - tk[k]) * i / 24, 0]
+             for i in range(25)]) for k in range(16)])
+        beside = VGroup(chirp, DashedLine([xc, C[1] - T, 0], [xc, C[1], 0], color=GREY_, stroke_width=1, dash_length=0.05),
+                        Tex(r"the wave\\at the centre\\over time", font_size=18, color=GREY_).move_to([-6.53, 0.3, 0]))
         themap = VGroup(centre, cone, star, sl, c0, c1, sk)
         self.play(FadeIn(themap), run_time=0.9)
         self.say(r"What must it find there? What the wave is doing at every point inside the horizon, at every moment. That is a solution.", hold=0.4)
         self.play(LaggedStart(*[FadeIn(bd) for bd in bands], lag_ratio=0.25), run_time=3.0)
         self.say(r"On the map, the swings of the wave stack up toward the collapse: crest, trough, crest, each a shrunken copy of the one before.")
+        self.play(FadeIn(beside[1]), FadeIn(beside[2]), Create(chirp), run_time=3.0, rate_func=linear)
+        self.say(r"Beside the map is the wave at the centre, drawn against time: the echo of station 2, turned upright. Each crest lines up with a gold band, and each trough with a blue one.")
+        self.say(r"Only four or five bands can be seen, but there is no end to them. Each is a fixed fraction of the one before, so they crowd toward the collapse and soon are too thin to draw.")
+        self.say(r"The sketch is gentle, too. In our world each echo is 31 times shorter than the last, so drawn to scale only the first would show.")
         # 2. one echo, redrawn with x across and the time within the echo upward
         RW, RH, RC = 4.6, 2.4, [3.3, 0.95, 0.0]
         vs, fs = [0.0] + CUTS[1:6] + [1.0], [0.0, 0.5, 1.0]
@@ -723,7 +761,7 @@ class S03c_Numbers(Film):
         self.play(Create(guide), run_time=0.5)
         self.play(Create(wig), run_time=1.6)
         self.say(r"It is still a wave. Read up any one line: the field rises and falls, one swing per echo.")
-        self.play(FadeOut(themap), FadeOut(bands), FadeOut(gmap), run_time=0.6)
+        self.play(FadeOut(themap), FadeOut(bands), FadeOut(beside), FadeOut(gmap), run_time=0.6)
         wax = Axes(x_range=[0, 2 * math.pi, math.pi], y_range=[-1.25 * top, 1.25 * top, top], x_length=4.6, y_length=1.5, tips=False,
                    axis_config={"color": GREY_, "stroke_width": 1.5, "include_ticks": False}).move_to([-3.9, 1.75, 0])
         wave = wax.plot(lambda t: wave_of(co, t), x_range=[0, 2 * math.pi, 0.02], color=WHITE, stroke_width=3.5)
@@ -817,25 +855,22 @@ class S03c_Numbers(Film):
 
 
 class S03d_Join(Film):
-    stage = r"7 \quad Checking a guess: do the pieces join?"
+    stage = r"6 \quad Checking a guess: do the pieces join?"
 
     def construct(self):
         D38, co = harmonics(38.0)
         # a guess z holds each image only on five columns and at its two edges
-        RW, RH, RC, ncol, nrow = 9.0, 2.2, [0.0, 0.55, 0.0], 45, 12
+        RW, RH, RC, ncol, nrow = 10.0, 2.2, [0.0, 0.55, 0.0], 50, 12
+        line, deco = x_line(y=RC[1] - RH / 2, height=RH, nodes="the five nodes: what $z$ stores")
+        frame, cols, sides, ends, nl, up = deco
         cells = strip_cells(RC, RW, RH, co, ncol=ncol, nrow=nrow)
         col = lambda i: cells[i * nrow:(i + 1) * nrow]
-        node_i = [int(v * ncol) for v in CUTS[1:6]]
-        frame = Rectangle(width=RW, height=RH, color=GREY_, stroke_width=2).move_to(RC)
+        node_i = [round(v * ncol) for v in CUTS[1:6]]
         cells.set_fill(opacity=0.0)
         known = VGroup(*[col(i) for i in node_i])
-        ex = VGroup(Tex(r"the centre, $x = 0$", font_size=22, color=BLUE_).next_to(frame.get_corner(DL), DOWN, buff=0.1).align_to(frame, LEFT),
-                    Tex(r"the horizon, $x = 1$", font_size=22, color=ORANGE_).next_to(frame.get_corner(DR), DOWN, buff=0.1).align_to(frame, RIGHT),
-                    Tex("the five nodes: what $z$ stores", font_size=22).next_to(frame, DOWN, buff=0.1))
-        edges = VGroup(Line(frame.get_corner(DL), frame.get_corner(UL), color=BLUE_, stroke_width=5),
-                       Line(frame.get_corner(DR), frame.get_corner(UR), color=ORANGE_, stroke_width=5))
+        tup = Tex(r"time within one echo $\uparrow$", font_size=20, color=GREY_).move_to(up).align_to(frame, LEFT)
         self.add(cells)
-        self.play(FadeIn(frame), FadeIn(ex), FadeIn(edges), run_time=0.8)
+        self.play(FadeIn(VGroup(line, frame, sides, ends, nl, tup)), run_time=0.8)
         for i in node_i:
             for j, c in enumerate(col(i)):
                 c.set_fill(opacity=min(1.0, 0.12 + 0.95 * abs(((i + 0.5) / ncol) * wave_of(co, 2 * math.pi * (j + 0.5) / nrow) / max(abs(wave_of(co, 2 * math.pi * k / 200)) for k in range(200)))))
@@ -854,7 +889,7 @@ class S03d_Join(Film):
         def arrow(i0, i1, colr, y=None):
             xa_ = RC[0] - RW / 2 + (i0 + 0.5) * RW / ncol
             xb_ = RC[0] - RW / 2 + (i1 + 0.5) * RW / ncol
-            yy = RC[1] + RH / 2 + 0.22 if y is None else y
+            yy = RC[1] + RH / 2 + 0.45 if y is None else y
             return Arrow([xa_, yy, 0], [xb_, yy, 0], color=colr, stroke_width=4, buff=0, max_tip_length_to_length_ratio=0.25)
         a1 = arrow(node_i[0], node_i[1], GREEN_)
         self.say(r"So starting from one column, the equations fill in the image as far as the next column. That filled-in stretch is a piece.", hold=0.4)
@@ -871,11 +906,11 @@ class S03d_Join(Film):
         self.say(r"Do the pieces fit together? To see, look along one row of the image: one field at one moment, drawn against $x$.", hold=0.4)
         self.play(Create(row), run_time=1.0)
         self.wait(1.6)
-        # one row: the six pieces, the stored values, the gaps
-        line, deco = x_line()
+        # one row, in the same frame: the six pieces, the stored values, the gaps
         P = [piece(line, i, 1.0) for i in range(6)]
         dots = VGroup(*[Dot(P[i].get_start(), color=WHITE, radius=0.07) for i in (1, 2, 3, 4)], Dot(P[5].get_end(), color=WHITE, radius=0.07))
-        self.play(FadeOut(VGroup(cells, frame, ex, edges, arrows)), ReplacementTransform(row, line), FadeIn(deco), run_time=1.2)
+        self.play(FadeOut(cells), FadeOut(arrows), FadeOut(tup), FadeOut(row), FadeIn(cols), FadeIn(up), run_time=1.4)
+        self.say(r"Keep the same frame: the centre on the left, the horizon on the right, and the five node columns as upright lines. Only the upward direction changes. It now shows the value of the field along that one row.")
         self.play(FadeIn(dots), run_time=0.5)
         self.say(r"The dots are the values $z$ stores at the five nodes.", hold=1.4)
         tl = Tex("Taylor steps", font_size=24, color=GREEN_).next_to(line.n2p(0.5), UP, buff=0.18)
@@ -910,7 +945,7 @@ class S03d_Join(Film):
 
 
 class S03e_Newton(Film):
-    stage = r"8 \quad Newton's method"
+    stage = r"7 \quad Newton's method"
 
     def construct(self):
         # one unknown: follow the slope down to zero
@@ -1025,7 +1060,7 @@ class S03e_Newton(Film):
 
 
 class S04_Walk(Film):
-    stage = r"9 \quad Walking in $D$"
+    stage = r"8 \quad Walking in $D$"
 
     def construct(self):
         pts = [p for p in delta_points() if 3.9 <= p[0] <= 60.97]
@@ -1070,7 +1105,7 @@ class S04_Walk(Film):
 
 
 class S05_FirstWall(Film):
-    stage = r"10 \quad The first wall: weak harmonics"
+    stage = r"9 \quad The first wall: weak harmonics"
 
     def construct(self):
         pts = frontier_points()
@@ -1152,7 +1187,7 @@ class S05_FirstWall(Film):
 
 
 class S06_Amplifier(Film):
-    stage = r"11 \quad The second wall: an amplifier at the horizon"
+    stage = r"10 \quad The second wall: an amplifier at the horizon"
 
     def construct(self):
         f = MathTex(r"G \approx 0.7^{-(D-3)}", font_size=60, color=ORANGE_).move_to([-3.3, 2.2, 0])
@@ -1224,7 +1259,7 @@ class S06_Amplifier(Film):
 
 
 class S07_Basin(Film):
-    stage = r"12 \quad A week at 78: Newton's basin"
+    stage = r"11 \quad A week at 78: Newton's basin"
 
     def construct(self):
         pts = frontier_points()
@@ -1262,7 +1297,7 @@ class S07_Basin(Film):
 
 
 class S08_Taylor(Film):
-    stage = r"13 \quad Taylor continuation in $D$"
+    stage = r"12 \quad Taylor continuation in $D$"
 
     def construct(self):
         f = MathTex(r"z(D_0 + h) = z_0 + z_1 h + z_2 h^2 + \cdots + z_{24} h^{24}", font_size=44).move_to([0, 2.55, 0])
@@ -1313,7 +1348,7 @@ class S08_Taylor(Film):
 
 
 class S09_FiveWalls(Film):
-    stage = r"14 \quad Five walls in one day"
+    stage = r"13 \quad Five walls in one day"
 
     def construct(self):
         pts = frontier_points()
@@ -1355,7 +1390,7 @@ class S09_FiveWalls(Film):
 
 
 class S10_Climb(Film):
-    stage = r"15 \quad The slow climb"
+    stage = r"14 \quad The slow climb"
 
     def construct(self):
         q = self.quote("Keep going to 400")
@@ -1450,7 +1485,7 @@ class S10_Climb(Film):
 
 
 class S11_Basics(Film):
-    stage = r"16 \quad Back to basics"
+    stage = r"15 \quad Back to basics"
 
     def construct(self):
         q = self.quote("go back to basics if you have to")
@@ -1514,7 +1549,7 @@ class S11_Basics(Film):
         left = Tex("and never looked at this one", font_size=22, color=RED_).next_to(db, RIGHT, buff=0.3)
         self.play(FadeIn(used), run_time=0.4)
         self.play(FadeIn(left), run_time=0.4)
-        self.say(r"Ours used the first. It stepped $a$ along $x$ like the other fields: the pieces of station 7. It never looked at the second.")
+        self.say(r"Ours used the first. It stepped $a$ along $x$ like the other fields: the pieces of station 6. It never looked at the second.")
         self.play(Indicate(ea[1], color=GREEN_), run_time=1.0)
         self.say(r"But the first one alone lets in a stray solution, which acts like a speck of mass at the centre. From the horizon to the last node it grows by exactly $G$. Every rounding error in the horizon data becomes a speck of it.")
         self.play(Indicate(eb[1], color=GOLD_), run_time=1.0)
