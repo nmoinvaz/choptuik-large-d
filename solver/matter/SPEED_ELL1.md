@@ -38,7 +38,8 @@ products with the base coefficients then act on the n_g rows of B_g, not on the 
 ## d18_secant: Brent refinement on the hybrid sign
 
 Each evaluation is `d18_hybsign.py`'s, with the same dd_logdet sign and the same 1e-15 noise test on blocks 0-11
-(seeds 100 and 101). `--mm=cs --b12=ddm` is `d18_hybsign.py`'s evaluation exactly. The defaults use the two tools above.
+(seeds 100 and 101). `--mm=cs` is `d18_hybsign.py`'s evaluation exactly. The default takes the float64 matrix from
+`ell_fastm` and keeps `ell_ddm`'s block 12; `--b12=fast` takes `ell_fastdd`'s, which pays only up to k_c of about 63.
 
 - f(lambda) = sign exp(ln|det| - ref), and Brent's zero finder on it (secant or inverse quadratic steps, bisection as
   the safeguard).
@@ -63,12 +64,18 @@ separate processes moved by 2x with the load.
 | 103, 22.125, 0.4875 | float64 blocks 1 and 12 | 138.3 s | 51.0 s (`coef`) | 2.7 |
 | 103, 22.125, 0.4875 | double-double stage (one RK4 stage of block 12) | 487 ms | 291 ms | 1.7 |
 | 103, 22.125, 0.4875 | float64 M, all 13 blocks | 958.9 s | 129.9 s (`jac`) | 7.4 |
-| 103, 22.125, 0.4875 | double-double block 12 | DD103OLD | DD103NEW | DD103R |
+| 103, 22.125, 0.4875 | double-double block 12 | 749.2 s | 944.2 s (`ell_fastdd`) | 0.79 |
 
 `jac` beats `coef` by 2x at k_c 55 (blocks 3 and 11: 3.5 s against 7.3 s). The horizon series alone took 139 s by
 complex step at k_c 103, most of it the per-member complex LUs, which the one-LU solve removes.
 
-The double-double block 12 dominates an evaluation once the float64 matrix is fast. One full evaluation of the hybrid
+`ell_fastdd` is faster at k_c 55 (1.4x and 1.7x in two runs) but not at k_c 103. There its stage matrices cost more
+float64 products (2.5e9 multiply-adds per stage against `ell_ddm`'s 1.8e9) than its smaller elementwise work saves:
+0.79x in one process while the load fell from 12 to 4, 1.7x per stage in another. So `d18_secant.py` keeps `ell_ddm`'s
+block 12 by default.
+
+The double-double block 12 dominates an evaluation once the float64 matrix is fast. At k_c 103 the old evaluation costs
+about 959 + 749 s and the new one 130 + 749 s in the same conditions, 1.9x. One full evaluation of the hybrid
 sign (fast M, `ell_fastdd` block 12, the three `dd_logdet`) took 563 s and 1316 s at k_c 103 (two loads), of which block
 12 took 505 s and 1163 s and the three `dd_logdet` 21 s and 8 s.
 
@@ -89,7 +96,7 @@ ends), and a grid at that spacing is out of reach.
 | `ell_fastm.py check`, k_c 103, D 22.125, lambda 0.4875 | blocks 0-11 at most 4.4e-15; block 12 2.2e-9, float64 ln|det| off by 0.34 (same sign): FAIL | |
 | `ell_fastdd.py selftest`: d/dtau basis rows; block 12 against `ell_ddm`, lambda 0 and 0.9 | 4.6e-31; 4.1e-29, 2.6e-29 (bar 1e-20) | `nolam`: 1.3e-1; `jround`: 1.2e-17; both exit 1 |
 | `ell_fastdd.py check`, k_c 55, lambda 1.775, with the hybrid | 8.0e-27; hybrid ln|det| equal to all digits: PASS | |
-| `ell_fastdd.py check`, k_c 103, lambda 0.4875 | DD103CHECK | |
+| `ell_fastdd.py check`, k_c 103, lambda 0.4875 | 4.2e-25: PASS | |
 | `d18_secant.py selftest`, planted cases C1-C4 | all as written | `half`, `norobust`, `nosigncheck`: exit 1 each |
 | `d18_hybsign.py` (blob e089207a) rerun here on the k_c 55 state at 1.77 | ln|det| -1617.4278109138, the scan record to all printed digits | |
 

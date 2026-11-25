@@ -3,8 +3,8 @@
 method on the signed hybrid determinant.
 
 Each evaluation is d18_hybsign.py's: M(lambda) in float64 (blocks 0-11; ell_fastm.mode_matrix_fast by default, or
-DSSEll.mode_matrix with --mm=cs), block 12 replaced by its double-double version (ell_fastdd by default, or
-ell_ddm.DDEll's with --b12=ddm), the sign and
+DSSEll.mode_matrix with --mm=cs), block 12 replaced by its double-double version (ell_ddm.DDEll's by default, or
+ell_fastdd's with --b12=fast), the sign and
 ln|det| of multidouble's dd_logdet, and the noise test at 1e-15 on blocks 0-11 with the seeds 100 and 101; the plain
 float64 slogdet beside it. Each record adds the noise members' ln|det| and dln, the largest |ln|det_noise| - ln|det||.
 An evaluation is robust when both noise signs equal its sign (d18_hybsign's test) and dln <= --dln (default 0.1, a
@@ -22,10 +22,11 @@ the evaluation count and seconds.
 
 usage (venv-1025dd):
   d18_secant.py run STUB.jsonl STATE.npy D LO HI OUT.jsonl [--tol=1e-6] [--maxev=12] [--mm=fast|cs] [--dln=0.1]
-                [--basis=jac|coef|grid] [--b12=fast|ddm] [--eps=1e-15] [--pin=STATEBLOB,STUBBLOB]
+                [--basis=jac|coef|grid] [--b12=ddm|fast] [--eps=1e-15] [--pin=STATEBLOB,STUBBLOB]
                 [--ends=SCAN.jsonl]
-      --mm=cs --b12=ddm is d18_hybsign.py's evaluation exactly (DSSEll.mode_matrix, ell_ddm's block 12); the defaults
-      are ell_fastm.mode_matrix_fast (basis jac) and ell_fastdd's block 12 (the same double-double block to 4e-29);
+      --mm=cs is d18_hybsign.py's evaluation exactly (DSSEll.mode_matrix, ell_ddm's block 12); the default float64
+      matrix is ell_fastm.mode_matrix_fast (basis jac). --b12=fast takes ell_fastdd's block 12 (the same double-double
+      block to 4e-25), faster at k_c 55 (1.4 to 1.7x) but not at k_c 103 (0.8x);
       --eps: the noise test's relative amplitude (d18_hybsign.py's 1e-15); the root's float64 floor from blocks 0-11
       is larger than that test sees (SPEED_ELL1.md), and 1e-12 makes the robustness test conservative;
       --pin: refuse (exit 3) unless the state's and the stub's git blobs (hash-object --no-filters) start with these;
@@ -91,7 +92,7 @@ def hybrid_eval(H, Hl, mask, dln_max, eps=1e-15):
 class RealEval:
     """d18_hybsign.py's hybrid matrix of a stub record's state (the record system checked by the caller)"""
 
-    def __init__(self, S, z, rec, st, mm, dln_max, basis="jac", b12="fast", eps=1e-15):
+    def __init__(self, S, z, rec, st, mm, dln_max, basis="jac", b12="ddm", eps=1e-15):
         import ell_ddm
         self.eps = eps
         self.S, self.z, self.rec, self.st, self.mm, self.dln_max, self.basis = S, z, rec, st, mm, dln_max, basis
@@ -323,7 +324,7 @@ def runcmd(argv):
     mm = opts.get("mm", "fast")
     dln_max = float(opts.get("dln", 0.1))
     basis = opts.get("basis", "jac")
-    b12 = opts.get("b12", "fast")
+    b12 = opts.get("b12", "ddm")
     eps = float(opts.get("eps", 1e-15))
     if mm not in ("fast", "cs"):
         print(f"--mm={mm}: fast or cs")
