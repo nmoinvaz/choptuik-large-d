@@ -87,6 +87,59 @@ def a_to_s(parts, M, K):
     return out
 
 
+def groups_s(M, K):
+    """form S's unknowns by group: p1, c0, node i's p, m, c, m_h (Delta, the last, in none)"""
+    g = dict(p1=slice(0, M), c0=slice(M, 2 * M))
+    for i in range(K):
+        b = 2 * M + 3 * M * i
+        for f, nm in enumerate("pmc"):
+            g[f"n{i}{nm}"] = slice(b + f * M, b + (f + 1) * M)
+    o = 2 * M + 3 * M * K
+    g["mh"] = slice(o, o + M)
+    return g
+
+
+def scale_s(z, D, M, K):
+    """jump.scale in form S's layout: p1, p, m, m_h times sqrt(n); c0, c as (v - 1) n; Delta as is"""
+    n = float(D) - 2.0
+    y = np.array(z, dtype=float)
+    for nm, sl in groups_s(M, K).items():
+        y[sl] = y[sl] * np.sqrt(n) if nm in ("p1", "mh") or nm[-1] in "pm" else (y[sl] - 1.0) * n
+    return y
+
+
+def unscale_s(y, D, M, K):
+    n = float(D) - 2.0
+    z = np.array(y, dtype=float)
+    for nm, sl in groups_s(M, K).items():
+        z[sl] = y[sl] / np.sqrt(n) if nm in ("p1", "mh") or nm[-1] in "pm" else 1.0 + y[sl] / n
+    return z
+
+
+def s_to_a(zs, D, M, K, nodes):
+    """form S's vector (float64) to form A's for planning: each node's a and the horizon's a_h from B = 1/a^2 slaved
+    in float64, (omega D_e - (n - 1) - q) (B - 1) = q, q = ((x - c) p^2 + (x + c) m^2)/x, and q = 2 m_h^2 at the
+    horizon"""
+    n1 = float(D) - 3.0
+    om = 2 * np.pi / zs[-1]
+    De = dmat_even(M)[0]
+
+    def a_of(q):
+        X = np.linalg.solve(om * De - np.diag(n1 + q), q)
+        return 1.0 / np.sqrt(1.0 + X)
+    pieces = [zs[:2 * M]]
+    for i in range(K):
+        b = 2 * M + 3 * M * i
+        p, m, c = zs[b:b + M], zs[b + M:b + 2 * M], zs[b + 2 * M:b + 3 * M]
+        x = float(nodes[i])
+        q = ((x - c) * p * p + (x + c) * m * m) / x
+        pieces += [p, m, a_of(q), c]
+    o = 2 * M + 3 * M * K
+    mh = zs[o:o + M]
+    pieces += [mh, a_of(2.0 * mh * mh), zs[-1:]]
+    return np.concatenate(pieces)
+
+
 def blocks_s(F, M, K):
     """max |F| per block of form S's rows (centre, segments, horizon; then the phase row)"""
     v = np.asarray(F[0]) + np.asarray(F[1])
@@ -508,24 +561,33 @@ def cmd_jump(argv):
     allow = pop_allow(argv)
     pos, o = opts(argv, dict(D="250", states="", Dmin="0", Dmax="1e9", deg="3", kfreeze="13", plan_tol="1e-40", hmax="0.05",
                              ks="sigma", kc="146", threads="2", delta="series", tol="1e-40", it_max="16", halvings="8",
-                             mutate="none", junk="0", tol_dz="1e-45", ls="0", outer="8", held="0", mob="0"))
+                             mutate="none", junk="0", tol_dz="1e-45", ls="0", outer="8", held="0", mob="0",
+                             states_s=""))
     mob = float(o["mob"])
     outdir = pos[0]
     os.makedirs(outdir, exist_ok=True)
     log = os.path.join(outdir, "jump_s.jsonl")
     require_raw(log, allow=allow)
-    paths = sorted(set(p for g in o["states"].split(",") for p in glob.glob(g)))
+    # form A states (--states) and form S states (--states_s), fitted together in form S's layout
     rows = []
-    for p in paths:
-        z, m = load_o(p)
-        if float(o["Dmin"]) <= m["D"] <= float(o["Dmax"]):
-            rows.append((m["D"], z, m))
+    for key, form in (("states", "A"), ("states_s", "S")):
+        paths = sorted(set(p for g in o[key].split(",") if g for p in glob.glob(g)))
+        for p in paths:
+            z, m = load_o(p)
+            if float(o["Dmin"]) <= m["D"] <= float(o["Dmax"]):
+                rows.append((m["D"], z, m, form))
     rows.sort(key=lambda r: r[0])
     m0 = rows[-1][2]
     M, nodes = int(m0["M"]), list(m0["nodes"])
     K = len(nodes)
     Ds = np.array([r[0] for r in rows])
-    Y = np.array([jump.scale(sum(np.asarray(p) for p in r[1][:2]), r[0], M, K) for r in rows])
+
+    def as_s(r):
+        v = sum(np.asarray(p) for p in r[1][:2])
+        return a_to_s([v], M, K)[0] if r[3] == "A" else v
+    Y = np.array([scale_s(as_s(r), r[0], M, K) for r in rows])
+    print(f"  states: {sum(r[3] == 'A' for r in rows)} form A, {sum(r[3] == 'S' for r in rows)} form S "
+          f"(D {', '.join(format(r[0], 'g') for r in rows if r[3] == 'S')})", flush=True)
     with mp.workdps(60):
         Dt = mp.mpf(o["D"])
     deg = int(o["deg"])
@@ -535,8 +597,9 @@ def cmd_jump(argv):
     y = np.array([np.polyval(c[:, j], tt) for j in range(Y.shape[1])])
     c1 = np.polyfit(t, Y, max(deg - 1, 0))
     y1 = np.array([np.polyval(c1[:, j], tt) for j in range(Y.shape[1])])
-    zA = jump.unscale(y, float(Dt), M, K)
-    spread = np.abs(jump.unscale(y1, float(Dt), M, K) - zA)
+    zS = unscale_s(y, float(Dt), M, K)
+    spread = np.abs(unscale_s(y1, float(Dt), M, K) - zS)
+    zA = s_to_a(zS, float(Dt), M, K, nodes)
     print(f"guess at D {o['D']} from {len(rows)} states, D {Ds[0]:.4f} .. {Ds[-1]:.4f}, degree {deg} in 1/n; degree "
           f"{deg - 1} differs by {spread[:-1].max():.2e} (unknowns), {spread[-1]:.2e} (Delta)", flush=True)
     if mob and o["ks"] in ("auto", "sigma"):
@@ -559,7 +622,7 @@ def cmd_jump(argv):
     segs = sa.plan(np.ascontiguousarray(zA), zero, float(o["plan_tol"]), float(o["hmax"]))
     segs = [list(map(float, g)) for g in segs]
     s = make_solver_s(Dt, M, nodes, segs=segs, mob=mob, **kw)
-    z8 = [a_to_s([zA], M, K)[0]] + [np.zeros(s.size_s) for _ in range(7)]
+    z8 = [np.ascontiguousarray(zS)] + [np.zeros(s.size_s) for _ in range(7)]
     if o["delta"] != "fit":
         # Track C's series row of delta_all.csv, or a value given as a number (Track C's at a D without a row)
         sd = jump.series_delta(o["D"]) if o["delta"] == "series" else (mp.mpf(o["delta"]), 0.0)
