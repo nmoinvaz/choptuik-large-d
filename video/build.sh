@@ -2,6 +2,7 @@
 # Render the scenes of quest_large_d.py and join them into dist/quest_large_d.mp4.
 #   video/build.sh [l|m|h] [Scene ...]     l: 854x480 at 15 fps (default), m: 1280x720 at 30, h: 1920x1080 at 30
 # Needs uv, tectonic and ffmpeg. The Python environment is made in video/.venv on the first run.
+# QUEST_CPS sets the reading pace of the captions in characters a second (12 by default; a lower number holds them longer).
 {
 set -euo pipefail
 cd "$(dirname "$0")"

@@ -14,6 +14,7 @@ formula here is one string).
 """
 import csv
 import math
+import os
 import re
 from pathlib import Path
 
@@ -91,6 +92,25 @@ def held_fit(name="held_fit"):
     return lambda D: float(c(1.0 / (D - 2.0)))
 
 
+def z_row(y, fields="pmac", horizon=64, W=11.0):
+    """The row z to scale (W for 769 numbers), centred: the centre data, five nodes with a block of 32 numbers per
+    field, the horizon data and Delta. Returns its parts by name and the whole as "all"."""
+    unit, cols = W / 769.0, {"p": BLUE_, "m": BLUE_, "a": PURPLE_, "c": PURPLE_}
+    x = -unit * (64 + 5 * 32 * len(fields) + horizon + 6) / 2
+
+    def block(n, col, op, letter=None):
+        nonlocal x
+        r = Rectangle(width=n * unit, height=0.7, stroke_color=WHITE, stroke_width=1.2, fill_color=col, fill_opacity=op)
+        r.move_to([x + n * unit / 2, y, 0])
+        x += n * unit
+        return VGroup(r, MathTex(letter, font_size=24).move_to(r)) if letter else r
+
+    out = {"centre": block(64, BLUE_, 0.55), "nodes": [{f: block(32, cols[f], 0.35, f) for f in fields} for _ in range(5)],
+           "horizon": block(horizon, ORANGE_, 0.55), "delta": block(6, GOLD_, 0.9)}
+    out["all"] = VGroup(out["centre"], *[b for nd in out["nodes"] for b in nd.values()], out["horizon"], out["delta"])
+    return out
+
+
 def log10G(D):
     """Decades of the horizon's amplification, G = 0.7^-(D-3)."""
     return (D - 3.0) * math.log10(1.0 / 0.7)
@@ -104,16 +124,35 @@ def stairs(ax, pts, **kw):
     return VMobject(**kw).set_points_as_corners(P)
 
 
+CPS = float(os.environ.get("QUEST_CPS", "12"))    # characters a second a caption is given to be read, after a second to find it
+LEAD = 0.5                                        # the share of a caption's reading time given before its animation starts
+WATCHING = 0.4                                    # a second of animation counts this much toward reading
+
+
 class Film(Scene):
     stage = ""
 
     def setup(self):
         self.cap = None
+        self.owed = 0.0                           # reading time the caption on screen is still owed
         if self.stage:
             self.add(Tex(self.stage, font_size=26, color=GREY_).to_corner(UL, buff=0.35))
 
+    def play(self, *args, **kwargs):
+        """Scene.play, with the caption's reading time kept: a caption is never taken away before its time is up."""
+        leaving = self.cap is not None and any(isinstance(a, FadeOut) and self.cap in a.mobject.get_family() for a in args)
+        if leaving and self.owed > 0.05:
+            owed, self.owed = self.owed, 0.0
+            self.wait(owed)
+        t0 = self.renderer.time
+        super().play(*args, **kwargs)
+        if self.cap is not None:
+            still = len(args) == 1 and isinstance(args[0], Wait)
+            self.owed -= (self.renderer.time - t0) * (1.0 if still else WATCHING)
+
     def say(self, text, hold=None, color=WHITE):
-        """A caption at the foot of the frame, held long enough to read."""
+        """A caption at the foot of the frame. It is owed a second plus its length at CPS: all of it now, or with hold
+        given, at least LEAD of it now and the rest (an animation's time counting WATCHING) before it is replaced."""
         new = Tex(text, font_size=34, color=color)
         if new.width > 13.0:
             new.scale_to_fit_width(13.0)
@@ -124,11 +163,13 @@ class Film(Scene):
             self.play(FadeOut(self.cap), FadeIn(new, shift=0.15 * UP), run_time=0.5)
         self.cap = new
         n = len(re.sub(r"\\[a-zA-Z]+|[${}^_\\]", "", text))
-        self.wait(hold if hold is not None else max(1.8, n / 15.0))
+        self.owed = 1.0 + n / CPS
+        self.wait(self.owed if hold is None else max(hold, LEAD * self.owed))
 
     def foot(self, text, at=None):
         """A reference, small and grey: under the station's name unless a place is given."""
-        f = Tex(text, font_size=20, color=GREY_)
+        lines = [text] if isinstance(text, str) else text
+        f = VGroup(*[Tex(t, font_size=20, color=GREY_) for t in lines]).arrange(DOWN, buff=0.06, aligned_edge=LEFT)
         return f.to_corner(UL, buff=0.35).shift(0.42 * DOWN) if at is None else f.move_to(at)
 
     def quote(self, text):
@@ -1092,7 +1133,7 @@ class S06_Amplifier(Film):
         Dn.add_updater(lambda m: m.next_to(Dl, RIGHT, buff=0.2))
         Gn.add_updater(lambda m: m.next_to(Gl, UR, buff=0.02).shift(0.12 * DOWN))
         # digits: a bar of the decades G eats, against what each number type carries
-        base, per = [-5.6, -0.9, 0], 11.2 / 130.0
+        base, per = [-5.6, -0.45, 0], 11.2 / 130.0
         axis = Line(base, [base[0] + 130 * per, base[1], 0], color=GREY_, stroke_width=2)
         types = [("double", 16, GREY_), ("double-double", 32, BLUE_), ("quad-double", 64, GREEN_), ("octo-double", 127, PURPLE_)]
         marks = VGroup()
@@ -1101,7 +1142,7 @@ class S06_Amplifier(Film):
             tick = Line([x, base[1] - 0.12, 0], [x, base[1] + 1.05, 0], color=col, stroke_width=2.5)
             t = Tex(f"{name}\\\\{dig} digits", font_size=22, color=col).next_to(tick, UP, buff=0.08)
             marks.add(VGroup(tick, t))
-        al = Tex("decimal digits", font_size=22, color=GREY_).next_to(axis, DOWN, buff=0.12).align_to(axis, RIGHT)
+        al = Tex("digits", font_size=22, color=GREY_).next_to(axis, RIGHT, buff=0.12)
         eaten = always_redraw(lambda: Rectangle(width=max(0.01, log10G(D.get_value()) * per), height=0.42, stroke_width=0,
                                                  fill_color=ORANGE_, fill_opacity=0.8).move_to(
             [base[0] + log10G(D.get_value()) * per / 2, base[1] + 0.3, 0]))
@@ -1109,28 +1150,40 @@ class S06_Amplifier(Film):
         self.play(FadeIn(VGroup(Dl, Dn, Gl, Gn)), Create(axis), FadeIn(al), run_time=0.8)
         self.play(LaggedStart(*[FadeIn(m, shift=0.15 * UP) for m in marks], lag_ratio=0.2), FadeIn(eaten), FadeIn(el), run_time=1.6)
         self.say(r"An ordinary computer number, a double, holds 16 digits. For more, a number is stored as a sum of 2, 4 or 8 doubles: double-double, quad-double, octo-double.")
-        def flag(Dv, text, col, drop):
-            x = base[0] + log10G(Dv) * per
+        def flag(digits, text, col, drop, side=LEFT):
+            x = base[0] + digits * per
             stem = Line([x, base[1] - 0.05, 0], [x, base[1] - drop, 0], color=col, stroke_width=2)
-            return VGroup(stem, Tex(text, font_size=22, color=col).next_to(stem, DOWN, buff=0.06).align_to(stem, LEFT))
+            return VGroup(stem, Tex(text, font_size=22, color=col).next_to(stem, DOWN, buff=0.06).align_to(stem, side))
 
+        D_at = lambda digits: 3.0 + digits / math.log10(1.0 / 0.7)        # the D at which G has eaten that many digits
         self.say(r"$G$ grows exponentially with $D$, and it eats those digits.", hold=0.3)
         self.play(D.animate.set_value(80), run_time=2.6, rate_func=linear)
-        f1 = flag(80, r"$D \approx 80$: double-double gives out", BLUE_, 1.25)
+        f1 = flag(log10G(80), r"$D \approx 80$: double-double gives out", BLUE_, 1.4)
         self.play(FadeIn(f1, shift=0.1 * DOWN), run_time=0.5)
         self.wait(1.0)
         self.play(D.animate.set_value(131), run_time=1.8, rate_func=linear)
         self.say(r"At $D = 131$ it is already $10^{20}$. Every stage of the solver needs longer numbers as $D$ climbs.", hold=2.2)
         self.play(D.animate.set_value(194), run_time=2.2, rate_func=linear)
-        f2 = flag(194, r"$D \approx 194$: quad-double gives out", GREEN_, 0.75)
+        f2 = flag(log10G(194), r"$D \approx 194$: quad-double gives out", GREEN_, 1.0)
         self.play(FadeIn(f2, shift=0.1 * DOWN), run_time=0.5)
         self.wait(1.0)
         self.play(D.animate.set_value(260), run_time=2.2, rate_func=linear)
         self.wait(0.6)
+        self.say(r"So the walk needed longer numbers the higher it went: double-double to about 80, quad-double to about 194, octo-double beyond.")
+        # how far could octo-double go?
+        self.say(r"How far could octo-double go? Let $D$ run on, until $G$ has eaten all of its 127 digits.", hold=0.3)
+        self.play(D.animate.set_value(D_at(127)), run_time=7.0, rate_func=linear)
+        ft = flag(127, f"$D \\approx {D_at(127):.0f}$: every digit gone", PURPLE_, 1.4, side=RIGHT)
+        self.play(FadeIn(ft, shift=0.1 * DOWN), run_time=0.5)
+        self.say(f"At $D \\approx {D_at(127):.0f}$, $G$ swallows all 127 digits. That is octo-double's ceiling: past it, not one digit of the horizon data survives.")
         Dn.clear_updaters()
         Gn.clear_updaters()
-        self.say(r"So the walk needed longer numbers the higher it went: double-double to about 80, quad-double to about 194, octo-double beyond.")
-        self.play(FadeOut(VGroup(f, Dl, Dn, Gl, Gn, axis, marks, al, eaten, el, f1, f2, self.cap)), run_time=0.7)
+        f3 = flag(63.5, f"$D \\approx {D_at(63.5):.0f}$: the series in $D$ has none left (an estimate)", PURPLE_, 0.6)
+        self.say(r"The working limit is nearer. The solver's series in $D$ is hit twice: its error grows like $\varepsilon G^2$, with $\varepsilon$ the rounding of the arithmetic. So its digits are gone at half the bar.", hold=0.4)
+        self.play(FadeIn(f3, shift=0.1 * DOWN), run_time=0.5)
+        self.say(f"For double-double that half-way point is $D \\approx {D_at(16):.0f}$, and it gave out near 80. For quad-double it is {D_at(32):.0f}, and it gave out near 194. For octo-double it is $D \\approx {D_at(63.5):.0f}$.")
+        self.say(r"So with octo-double numbers, this form of the equations could never get far past 400, however long it ran.")
+        self.play(FadeOut(VGroup(f, Dl, Dn, Gl, Gn, axis, marks, al, eaten, el, f1, f2, f3, ft, self.cap)), run_time=0.7)
 
 
 class S07_Basin(Film):
@@ -1388,71 +1441,93 @@ class S11_Basics(Film):
 
         g = MathTex(r"G \approx 0.7^{-(D-3)}", font_size=56, color=ORANGE_).move_to([0, 2.3, 0])
         self.play(Write(g), run_time=1.0)
-        self.say(r"And the amplifier $G$, the reason for ever longer numbers? Three searches of the published literature were sent out. One came back with what $G$ is.")
-        self.play(g.animate.scale(0.6).move_to([5.2, 3.0, 0]), run_time=0.6)
-        # the four fields and the equations that govern them
-        row = lambda sym, col, text: VGroup(MathTex(sym, font_size=38, color=col), Tex(text, font_size=28)).arrange(RIGHT, buff=0.4)
-        e1 = row(r"p,\ m", BLUE_, "the wave equation: how each part of the wave moves")
-        e2 = row(r"c", PURPLE_, "one of Einstein's equations")
-        e3 = row(r"a", ORANGE_, "two of Einstein's equations:")
-        eqs = VGroup(e1, e2, e3).arrange(DOWN, buff=0.4, aligned_edge=LEFT).move_to([-1.2, 1.55, 0])
-        for r_ in (e2, e3):
-            r_[1].align_to(e1[1], LEFT)
-        ea = Tex(r"along $x$: how $a$ changes with position. Mass curves space.", font_size=26, color=GREEN_)
-        eb = Tex(r"through the echo: how $a$ changes in time. Energy flow changes the mass inside.", font_size=26, color=GOLD_)
-        two = VGroup(ea, eb).arrange(DOWN, buff=0.28, aligned_edge=LEFT).next_to(e3, DOWN, buff=0.3).align_to(e1[1], LEFT)
-        na = Tex("the Hamiltonian constraint", font_size=20, color=GREY_).next_to(ea, DOWN, buff=0.04).align_to(ea, LEFT)
-        nb = Tex("the momentum constraint", font_size=20, color=GREY_).next_to(eb, DOWN, buff=0.04).align_to(eb, LEFT)
-        eb.shift(0.2 * DOWN)
-        nb.shift(0.2 * DOWN)
+        fn = self.foot([r"C. Gundlach, Phys. Rev. D 55, 695 (1997), arXiv:gr-qc/9604019, Eq. (19)",
+                        "our record of the search: issue 1089 of the repository"])
+        self.play(FadeIn(fn), run_time=0.3)
+        self.say(r"And the amplifier $G$, the reason for ever longer numbers? Three searches of the published work on this solution were sent out. One, reading Gundlach's 1997 construction of it, came back with what $G$ is.")
+        self.play(g.animate.scale(0.55).move_to([5.8, 3.35, 0]), run_time=0.6)
+        # which equation governs each field (README, "Large D"; hp/src/model.rs; the last one as in form S)
+        rows = [(r"p,\ m", BLUE_, r"x\,(x-c)\,\partial_x p = -\omega x\,\partial_\theta p + \cdots", "the wave equation (mirrored for $m$)", 2.25),
+                (r"c", PURPLE_, r"x\,\partial_x c = (n-1)\,c\,(a^2-1)", "the slicing condition", 1.55),
+                (r"a", GREEN_, r"2x\,\partial_x a = a\,(p^2+m^2) - (n-1)\,a\,(a^2-1)", "the Hamiltonian constraint", 0.75),
+                (r"a", GOLD_, r"\omega\,\partial_\theta B = \big[(n-1)+q\big]\,B - (n-1), \quad B = 1/a^2", "the momentum constraint", -0.3)]
+        E = []
+        for sym, col, eq, name, y in rows:
+            sy = MathTex(sym, font_size=36, color=col).move_to([-6.2, y, 0])
+            E.append([sy, MathTex(eq, font_size=30).move_to([0, y, 0]).align_to([-5.4, 0, 0], LEFT), Tex(name, font_size=26, color=col)])
+        xr = max(e[1].get_right()[0] for e in E) + 0.45
+        for (sy, eq, nm), (_, _, _, _, y) in zip(E, rows):
+            nm.move_to([0, y, 0]).align_to([xr, 0, 0], LEFT)
+        da = Tex(r"along $x$: how $a$ changes with position. Mass curves space.", font_size=22, color=GREEN_)
+        db = Tex(r"through the echo: how $a$ changes in time. Energy flow changes the mass inside.", font_size=22, color=GOLD_)
+        da.move_to([0, 0.75 - 0.4, 0]).align_to([-5.4, 0, 0], LEFT)
+        db.move_to([0, -0.3 - 0.45, 0]).align_to([-5.4, 0, 0], LEFT)
+        lg = VGroup(Tex(r"$n = D - 2$ \quad $\omega = 2\pi/\Delta$ \quad $\theta$: the time within one echo, as an angle", font_size=20, color=GREY_),
+                    Tex(r"$q = \big((x-c)\,p^2 + (x+c)\,m^2\big)/x$ \quad the last line takes $\partial_x a$ from the line above it", font_size=20, color=GREY_))
+        lg.arrange(DOWN, buff=0.1, aligned_edge=LEFT).move_to([0, -1.45, 0]).align_to([-5.4, 0, 0], LEFT)
+        e1, e2, ea, eb = (VGroup(*e) for e in E)
         self.play(FadeIn(e1), run_time=0.5)
-        self.play(FadeIn(e2), run_time=0.5)
-        self.say(r"Step back to the equations. Einstein's equations are several equations at once. For our four fields: the wave equation moves the two parts of the wave, $p$ and $m$. One of Einstein's equations gives $c$.")
-        self.play(FadeIn(e3), run_time=0.4)
-        self.play(FadeIn(ea), FadeIn(na), run_time=0.5)
-        self.play(FadeIn(eb), FadeIn(nb), run_time=0.5)
-        self.say(r"And two of them give $a$, the field that carries the mass. One says how $a$ changes from one $x$ to the next. The other says how $a$ changes through the echo.")
-        self.say(r"Such equations, which the fields must obey at every moment, are called constraints. For a true solution the two agree, so a solver needs only one of them.")
-        used = Tex("our solver used this one", font_size=22, color=GREEN_).next_to(na, RIGHT, buff=0.4)
-        left = Tex("and never looked at this one", font_size=22, color=RED_).next_to(nb, RIGHT, buff=0.4)
+        self.play(FadeIn(e2), FadeIn(lg[0]), run_time=0.5)
+        self.say(r"Step back to the equations. Einstein's equations are several equations at once. The wave equation moves the two parts of the wave, $p$ and $m$. One of Einstein's equations, the slicing condition, gives $c$.")
+        self.play(FadeIn(ea), FadeIn(da), run_time=0.5)
+        self.play(FadeIn(eb), FadeIn(db), FadeIn(lg[1]), run_time=0.5)
+        self.say(r"And two of them give $a$, the field that carries the mass. The Hamiltonian constraint says how $a$ changes from one $x$ to the next. The momentum constraint says how $a$ changes through the echo.")
+        self.say(r"They are called constraints because the fields must obey them at every moment. For a true solution the two agree, so a solver needs only one of them.")
+        used = Tex("our solver used this one", font_size=22, color=GREEN_).next_to(da, RIGHT, buff=0.4)
+        left = Tex("and never looked at this one", font_size=22, color=RED_).next_to(db, RIGHT, buff=0.3)
         self.play(FadeIn(used), run_time=0.4)
         self.play(FadeIn(left), run_time=0.4)
         self.say(r"Ours used the first. It stepped $a$ along $x$ like the other fields: the pieces of station 7. It never looked at the second.")
-        self.play(Indicate(ea, color=GREEN_), run_time=1.0)
+        self.play(Indicate(ea[1], color=GREEN_), run_time=1.0)
         self.say(r"But the first one alone lets in a stray solution, which acts like a speck of mass at the centre. From the horizon to the last node it grows by exactly $G$. Every rounding error in the horizon data becomes a speck of it.")
-        self.play(Indicate(eb, color=GOLD_), run_time=1.0)
+        self.play(Indicate(eb[1], color=GOLD_), run_time=1.0)
         self.say(r"The second forbids it. A fixed speck of mass does not shrink with the echoes, so it cannot repeat from one echo to the next. We had left out the one equation that rules it out.")
         self.say(r"So the solver spent its digits holding the stray mass down: 40 of them by $D = 260$.")
-        self.play(FadeOut(VGroup(eqs, two, na, nb, used, left)), g.animate.scale(1 / 0.6).move_to([0, 2.3, 0]), run_time=0.6)
-        # the unknowns lose a field
-        names, cols = ["p", "m", "a", "c"], [BLUE_, GREEN_, PURPLE_, ORANGE_]
-        cells = VGroup()
-        for n, c in zip(names, cols):
-            r = Rectangle(width=1.5, height=0.9, stroke_color=WHITE, stroke_width=1.5, fill_color=c, fill_opacity=0.4)
-            r.add(MathTex(n, font_size=40).move_to(r))
-            cells.add(r)
-        cells.arrange(RIGHT, buff=0.0).move_to([0, 0.45, 0])
-        cl = Tex("the fields at each node", font_size=24, color=GREY_).next_to(cells, UP, buff=0.15)
-        self.play(FadeIn(cells), FadeIn(cl), run_time=0.6)
-        fn = self.foot(r"C. Gundlach, Phys. Rev. D 55, 695 (1997), arXiv:gr-qc/9604019, Eq. (19)")
-        self.play(FadeIn(fn), run_time=0.3)
-        self.say(r"Gundlach's 1997 construction of the critical solution does it the other way: it takes $a$ straight from the momentum constraint, at every $x$.", hold=0.5)
-        cross = Cross(cells[2], stroke_color=RED_, stroke_width=6)
-        self.play(Create(cross), run_time=0.5)
-        self.play(FadeOut(cells[2]), FadeOut(cross), cells[3].animate.shift(1.5 * LEFT), run_time=0.8)
+        self.play(FadeOut(VGroup(e1, e2, ea, eb, da, db, lg, used, left)), g.animate.scale(1 / 0.55).move_to([0, 2.3, 0]), run_time=0.6)
+        # z without a
+        A = z_row(0.6)
+        zl = MathTex("z", font_size=50).next_to(A["all"], LEFT, buff=0.3)
+        cnt = Tex("769 numbers", font_size=32, color=GOLD_).next_to(A["all"], DOWN, buff=0.35)
+        zt = VGroup(Tex("centre data", font_size=20, color=BLUE_).next_to(A["centre"], UP, buff=0.1),
+                    Tex("five nodes, four fields each", font_size=20, color=GREY_).next_to(A["all"], UP, buff=0.1),
+                    Tex("horizon data", font_size=20, color=ORANGE_).next_to(A["horizon"], UP, buff=0.1))
+        self.play(FadeIn(A["all"]), FadeIn(zl), FadeIn(cnt), FadeIn(zt), run_time=0.8)
+        self.say(r"Gundlach's 1997 construction of the critical solution does it the other way: it takes $a$ straight from the momentum constraint, at every $x$. Here is $z$, the row of numbers the solver has to find.", hold=0.5)
+        a_blocks = VGroup(*[nd["a"] for nd in A["nodes"]])
+        self.play(*[bk[0].animate.set_fill(RED_, opacity=0.85) for bk in a_blocks], run_time=0.8)
+        self.wait(0.8)
+        S = z_row(0.6, fields="pmc", horizon=32)
+        moves = [FadeOut(a_blocks), ReplacementTransform(A["centre"], S["centre"]), ReplacementTransform(A["horizon"], S["horizon"]),
+                 ReplacementTransform(A["delta"], S["delta"])]
+        moves += [ReplacementTransform(na[k], ns[k]) for na, ns in zip(A["nodes"], S["nodes"]) for k in "pmc"]
+        zt2 = VGroup(Tex("centre data", font_size=20, color=BLUE_).next_to(S["centre"], UP, buff=0.1),
+                     Tex("five nodes, three fields each", font_size=20, color=GREY_).next_to(S["all"], UP, buff=0.1),
+                     Tex("horizon data", font_size=20, color=ORANGE_).next_to(S["horizon"], UP, buff=0.1).shift(0.25 * RIGHT))
+        self.play(*moves, Transform(cnt, Tex("577 numbers", font_size=32, color=GOLD_).move_to(cnt)), Transform(zt, zt2),
+                  zl.animate.next_to(S["all"], LEFT, buff=0.3), run_time=1.8)
+        self.say(r"What does that do to $z$? Each node loses its table for $a$, and the horizon data lose $a$'s half. 769 numbers become 577.")
+        self.say(r"$a$ is not thrown away. Wherever a piece needs it, it is worked out from $p$, $m$ and $c$ by one small solve around the echo. It is no longer something to guess.")
         self.play(g.animate.set_opacity(0.25), run_time=0.6)
         gone = Cross(g, stroke_color=GREEN_, stroke_width=5)
         self.play(Create(gone), run_time=0.5)
-        self.say(r"With $a$ no longer an unknown, the stray mass has nowhere to live, and $G$ has nothing to amplify.")
-        res = VGroup(Tex(r"$D = 300$: one direct solve, 24 minutes", font_size=32, color=GREEN_),
-                     Tex(r"$D = 400$: one direct solve, 20 minutes", font_size=32, color=GREEN_),
-                     Tex(r"first results, issue 1088, not yet reviewed; the weak harmonics still held", font_size=20, color=GREY_))
-        res.arrange(DOWN, buff=0.18).move_to([0, -1.35, 0])
-        self.play(FadeIn(res[0], shift=0.2 * UP), run_time=0.5)
-        self.play(FadeIn(res[1], shift=0.2 * UP), FadeIn(res[2]), run_time=0.5)
-        self.say(r"In the solver, the new form went straight to $D = 300$ and to $D = 400$: one direct solve each. No walk, no chain. The chain had needed four hours for every single unit of $D$.")
-        self.say(r"These are first results. And $D = 1000$ does not work yet: a new wall, once more at the horizon.")
-        self.play(FadeOut(VGroup(g, gone, cells[0], cells[1], cells[3], cl, res, fn, self.cap)), run_time=0.7)
+        self.say(r"And with $a$ no longer guessed, the stray mass has nowhere to live. $G$ has nothing to amplify.")
+        self.play(FadeOut(VGroup(S["all"], zl, cnt, zt)), run_time=0.5)
+        # why it is faster
+        why = VGroup(Tex(r"a guess for $D = 250$ misses by: \quad old form $10^{192}$ \quad new form $10^{-11}$", font_size=28, color=GREEN_),
+                     Tex(r"$D = 300$: one direct solve, 24 minutes \quad $D = 400$: one direct solve, 20 minutes", font_size=28, color=GREEN_),
+                     Tex(r"577 unknowns instead of 769, and no horizon data to recompute", font_size=28, color=GREEN_),
+                     Tex(r"at $D = 300$, quad-double numbers were enough: 4 minutes", font_size=28, color=GREEN_),
+                     Tex(r"first results (issue 1088), not yet reviewed", font_size=20, color=GREY_))
+        why.arrange(DOWN, buff=0.38, aligned_edge=LEFT).move_to([0, 0.1, 0])
+        self.play(FadeIn(why[0], shift=0.2 * UP), FadeIn(why[4]), run_time=0.6)
+        self.say(r"Why is it faster? First, a guess made far away now works. Take $D = 250$, guessed from solutions below 246. In the old form that guess misses by $10^{192}$: the stray mass, blown up by $G$. In the new form it misses by $10^{-11}$.")
+        self.play(FadeIn(why[1], shift=0.2 * UP), run_time=0.6)
+        self.say(r"So Newton can start from far away, and there is no walk: one direct solve for $D = 300$, in 24 minutes, and one for $D = 400$, in 20. The chain had needed four hours for every single unit of $D$.")
+        self.play(FadeIn(why[2], shift=0.2 * UP), FadeIn(why[3], shift=0.2 * UP), run_time=0.6)
+        self.say(r"And each solve is lighter. There are a quarter fewer unknowns, the horizon data need no recomputing, and the numbers can be shorter: at $D = 300$, quad-double was enough for the table $J$, and the solve took 4 minutes.")
+        self.say(r"These are first results, not yet reviewed. The weak harmonics were held as before. Released one at a time at $D = 300$, they moved $\Delta$ by $10^{-11}$.")
+        self.say(r"And $D = 1000$ does not work yet. The horizon's series loses its digits there: the next wall, once more at the horizon. A new variable for that series is being tested.")
+        self.play(FadeOut(VGroup(g, gone, why, fn, self.cap)), run_time=0.7)
 
 
 class S12_Outro(Film):
