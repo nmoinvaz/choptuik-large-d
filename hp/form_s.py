@@ -658,7 +658,7 @@ def cmd_jump(argv):
     pos, o = opts(argv, dict(D="250", states="", Dmin="0", Dmax="1e9", deg="3", kfreeze="13", plan_tol="1e-40", hmax="0.05",
                              ks="sigma", kc="146", threads="2", delta="series", tol="1e-40", it_max="16", halvings="8",
                              mutate="none", junk="0", tol_dz="1e-45", ls="0", outer="8", held="0", mob="0",
-                             states_s="", jac="qd", delta_tol="1e-15", jscale="1", ham="1", segs_from=""))
+                             states_s="", jac="qd", delta_tol="1e-15", jscale="1", ham="1", segs_from="", held_from=""))
     mob = float(o["mob"])
     outdir = pos[0]
     os.makedirs(outdir, exist_ok=True)
@@ -751,8 +751,14 @@ def cmd_jump(argv):
     if int(o["held"]):
         # p1's harmonics 5-13 held at the guess's own values (form S's PinnedO), the rest solved
         sh = make_solver_s(Dt, M, nodes, segs=segs, mob=mob, **dict(kw, kfreeze=3))
-        s = HeldS(sh, M, K, held_field(z8, M))
-        meta.update(held="5-13 at the guess's values", kfreeze=3)
+        if o["held_from"]:
+            # another state's harmonics 5-13 (a control that must solve the same held system as that state: the held
+            # Delta moves with the held values, 3.8e-18 at D 300 for a guess fitted in another layout)
+            s = HeldS(sh, M, K, held_field(load_o(o["held_from"])[0], M))
+            meta.update(held=f"5-13 at {os.path.basename(o['held_from'])}'s values", kfreeze=3)
+        else:
+            s = HeldS(sh, M, K, held_field(z8, M))
+            meta.update(held="5-13 at the guess's values", kfreeze=3)
         print("  p1's harmonics 5-13 held at the guess's values (kfreeze 3 with the held offset)", flush=True)
     if int(o["ls"]):
         z8, conv, recs = ls_solve(s, z8, int(o["junk"]), int(o["outer"]), int(o["it_max"]), int(o["halvings"]),
