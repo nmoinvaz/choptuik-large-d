@@ -34,7 +34,7 @@ import mpmath as mp
 sys.argv = [sys.argv[0], "real"] + sys.argv[1:]           # track_c parses its own args from argv[2:]
 import track_c as T  # noqa: E402
 
-TGT = [2828.4271247461903, 4000.0, 5656.854249492381, 8000.0, 10000.0]
+TGT = T.TARGETS if "targets" in T.args else [2828.4271247461903, 4000.0, 5656.854249492381, 8000.0, 10000.0]
 MUT = T.args.get("mutate")
 
 
