@@ -23,7 +23,7 @@ them contains text addressed to an AI agent.
 | What does the EFT's variable 𝖱 = rⁿ give us? | The mass mode in the variable 𝖱 = x^(n−1), δB = −μ/𝖱 (L4), which is FACTORED_HORIZON §3's exact factoring. It removes the 0.155(n − 1) digits and the mass-mode series tail, nothing else (§2.1, lead 4) | checked by hand (L3) |
 | Δ₂, Δ₃ cheaply? | Δ₂ exists already (SECOND_ORDER, M = 5, 1.8% off). The bottleneck is the harmonic truncation, not the order in 1/n. A Melnikov form of the Stokes constant's derivative, (11.13) of arXiv:2107.14566, gives every order's forcing from one adjoint solution. The amplitude expansion at O(1/n) would give Δ₁ exact in the harmonics (§3, lead 5) | literature; the transfer is a proposal |
 | Uniformity in the number of harmonics (P6)? | The closest rigorous precedent, arXiv:2107.14566 (Klein–Gordon breathers, all harmonics, in ℓ¹), works because harmonic k's exponential rate grows with k, so one harmonic dominates. In ours every harmonic shares one fast singularity and the weights e^(π\|ν\|ω/2) grow. That reduction fails, so (★) stays open (§3.3) | literature against P6_scope |
-| Clark–Pimentel's CSS against our DSS | A different solution (the D-dimensional Roberts family), not the attractor. Their spectrum's upper edge κ = 1/(2ε) = n/2 equals our SSH exponent at leading order. Their sentence that the CSS mass exponent's finite limit agrees with the DSS mixes conventions: the DSS mass exponent is (D − 3)γ = 28.4 at D 61.03, against their 1.97 (§4.1) | read; the edge identification inferred; numbers from hp/data/gamma_dd.jsonl |
+| Clark–Pimentel's CSS against our DSS | A different solution (the D-dimensional Roberts family), not the attractor. Their spectrum is built from vanishing and boundedness only, (4.19); its upper edge κ = 1/(2ε) = n/2 equals our SSH exponent at leading order. Their sentence that the CSS mass exponent's finite limit agrees with the DSS mixes conventions: the DSS mass exponent is (D − 3)γ = 28.4 at D 61.03, against their 1.97 (§4.1) | read; the edge's mechanism a conjecture; numbers from hp/data/gamma_dd.jsonl |
 | Published claims our numbers contradict | Δ → 0 as D → ∞ (arXiv:2601.14358, arXiv:2602.10185, and Bland's thesis's Δ∞ = 5/2, recorded before); Emparan and Herzog's γ ≈ ½(1 − 1/D) (their (10.3)), 2.46×10⁻³ above our γ at D 61.03, with a slope 0.66 of ours; Clark–Pimentel's agreement sentence (§4.3) | numerical evidence |
 | Non-perturbative terms in Δ(1/n) | For black holes they are O(n_EH^−n_EH) ((3.24) of arXiv:2003.11394) or n_EH^(−n_EH/2) (§3.4 of arXiv:1802.08191). For the DSS free field the analogous term does not decay with n: 2e^(−2πjω) sin²(πn/2), 1.3×10⁻¹⁰ for j = 1 (LARGE_D_BASICS §8). That is a floor near 10⁻¹⁰ for a series route if it is inherited, harmless at 10⁻⁸ (§4.4) | literature; inheritance not known |
 | Δ at D 1000, 2000, 10000 | Track C's fits give 1.654240854245 ± 7.8×10⁻¹⁰, 1.649074313886 ± 1.2×10⁻⁹ and 1.644930989934 ± 1.7×10⁻⁹ (lead 1). The ± is a spread over fit choices, conditional on Δ being analytic in 1/n | numerical evidence (conditional) |
@@ -77,14 +77,17 @@ x\,B_x = -(n-1)(B - 1) - B\,(p^2 + m^2) .
 \tag{L3}
 ```
 
-- **The solution has no such term.** On the slow manifold (n − 1)(a² − 1) = Kx²/(1 + Kx²) (LARGE_D_BASICS 3.2), so
-  B − 1 = O(1/n) and smooth on [0, 1]. The stored states have n⟨p₁²⟩ = 3.86–3.89 (3.1). There is no near zone.
-- **The mass mode has it, in the EFT's own variable.** The homogeneous part of (L3)'s linearization is
-  ```math
-  \delta B = -\mu\,x^{-(n-1)} = -\frac{\mu}{\mathsf R_{\rm SSH}}, \qquad \mathsf R_{\rm SSH} = x^{\,n-1},
-  \tag{L4}
-  ```
+- **The solution has no such term.** On the slow manifold (n − 1)(a² − 1) = Kx²/(1 + Kx²) with K = O(1/n)
+  (LARGE_D_BASICS 3.2), so B − 1 = O(n⁻²) and smooth on [0, 1]. The stored states have n⟨p₁²⟩ = 3.86–3.89, and
+  (n − 1)(a² − 1) is 0.003–0.015 on the nodes at D 263.6 (3.1). There is no near zone.
+- **The mass mode has it, in the EFT's own variable.** The homogeneous part of (L3)'s linearization is (L4) below,
   the Tangherlini term with the SSH in the role of r₀. Its "near zone" is the layer u = O(1/n) at the SSH.
+
+```math
+\delta B = -\mu\,x^{-(n-1)} = -\frac{\mu}{\mathsf R_{\rm SSH}}, \qquad \mathsf R_{\rm SSH} = x^{\,n-1}
+\tag{L4}
+```
+
 - **On [0, 1] it grows.** The EFT's far zone, where (r₀/r)^n_EH → 0 and corrections are "exponentially small in 1/n",
   is r > r₀. Our domain 0 ≤ x ≤ 1 is the analogue of r < r₀, the black-hole interior, where (L4) grows by
   0.7^−(n−1) between the SSH and the last node, 0.155(n − 1) digits (LARGE_D_BASICS §4). There is no far zone to match
@@ -101,8 +104,8 @@ F = e^{-n\Phi}, \qquad \Phi = \ln x - \tfrac{1+K}{2}\ln(1 - x^2)
 \tag{L5}
 ```
 
-(LARGE_D_BASICS 3.3) vanishes there faster than any power, as u^σ with σ ≈ n/2 + 2.6. It is O(1) only on the curve
-Re x² = ½ (BEYOND_LIGHT_CONE 2.6).
+(LARGE_D_BASICS 3.3) vanishes there like u^σ, with σ ≈ n/2 + 2.6 on the chain (LARGE_D_BASICS §2). It is O(1) only on
+the curve Re x² = ½ (BEYOND_LIGHT_CONE 2.6).
 
 ### 2.2 Where the large-D structure is uniform: the Rozali–Way region
 
@@ -154,21 +157,23 @@ SECOND_ORDER §3). Uniformity in M is not.
 
 ### 3.2 What the asymptotics literature offers for the orders
 
-- **The derivative of a Stokes constant as a Melnikov integral.** arXiv:2107.14566 (11.13):
-  ```math
-  \frac{d}{d\mu}\,C_{in}(\mu\Delta)\Big|_{\mu=0} = \frac{1}{2\pi i\mu_3}\int_{-\infty}^{\infty}\!\!\int_0^{2\pi}
-  \Delta\big(\phi^0_b(z+s,\tau)\big)\,\xi_3^{+}(z+s,\tau)\,d\tau\,ds ,
-  \tag{L7}
-  ```
-  with ξ₃⁺ an exact solution of the variational equation (11.10). Transferred (a proposal, not checked): ω₁ =
-  −S_{1/n}/∂_ωS (FIRST_ORDER §3) with S_{1/n} = ⟨ξ_adj, N₁[Y∞]⟩, where N₁ is the O(1/n) part of the inner operator
-  (FIRST_ORDER §1) and ξ_adj the adjoint solution with the fast mode's asymptotics. One adjoint solve gives the
-  forcing of every perturbation term and of the gauge data. At second order the first-order solution is needed anyway,
-  so this saves work but does not change what limits Δ₂.
+- **The derivative of a Stokes constant as a Melnikov integral.** arXiv:2107.14566 (11.13), displayed as (L7) below,
+  with ξ₃⁺ an exact solution of the variational equation (11.10).
+
+```math
+\frac{d}{d\mu}\,C_{in}(\mu\Delta)\Big|_{\mu=0} = \frac{1}{2\pi i\mu_3}\int_{-\infty}^{\infty}\!\!\int_0^{2\pi}
+\Delta\big(\phi^0_b(z+s,\tau)\big)\,\xi_3^{+}(z+s,\tau)\,d\tau\,ds
+\tag{L7}
+```
+
+- **Transferred to ours** (a proposal, not checked): ω₁ = −S_{1/n}/∂_ωS (FIRST_ORDER §3) with S_{1/n} = ⟨ξ_adj, N₁[Y∞]⟩,
+  where N₁ is the O(1/n) part of the inner operator (FIRST_ORDER §1) and ξ_adj the adjoint solution with the fast mode's
+  asymptotics. One adjoint solve gives the forcing of every perturbation term and of the gauge data. At second order the
+  first-order solution is needed anyway, so this saves work but does not change what limits Δ₂.
 - **Coefficients from high-precision values.** Gelfreich and Simó (DCDS-B 10, 2008) extract the coefficients of the
   divergent expansion of an exponentially small quantity from its values at high precision, then test Gevrey-1 and
-  locate the Borel singularities. Track C (LARGE_D_WALL, #801) is this method applied to Δ(D) at D ≤ 245. Its 19 fits
-  give no Gevrey test, since their high coefficients are spreads over fit choices.
+  locate the Borel singularities. Track C (LARGE_D_WALL, #801) is a version of this method, applied to Δ(D) at D ≤ 245.
+  Its 19 fits give no Gevrey test, since their high coefficients are spreads over fit choices.
 - **How far large-D series go in gravity.** arXiv:1802.08191 carries a black-string observable to 1/D⁴. The series
   breaks down where n^(−n/2) competes, at k ∼ n/2 ((3.23)). Track C fits Δ with K = 12–20 from D 10 at χ²/dof ≤ 2.7
   and shows no such breakdown at the data's σ (LARGE_D_WALL, Track C).
@@ -176,14 +181,15 @@ SECOND_ORDER §3). Uniformity in M is not.
   equation with a large parameter. Aoki and Tanda give its Voros coefficients and their Borel sums, and the jumps of
   its connection formulas as parameters cross Stokes curves. Those jumps are the non-analytic-in-n terms (§4.4). Koike
   treats simple poles, which the centre and the SSH are in the eikonal (λ = c²/(x(x² − c²)), LARGE_D_BASICS 3.3).
-  So the free field's dependence on n is known in closed, Borel-summed form. Nothing comparable exists for the
-  nonlinear inner problem.
+  So the free field's dependence on n is known in closed, Borel-summed form. The sources read have nothing
+  comparable for the nonlinear inner problem (DINF_ANALYTIC finds no integrable structure).
 
 ### 3.3 Uniformity in the harmonics (P6)
 
 arXiv:2107.14566 proves an exponentially small obstruction for an inner equation with all temporal harmonics, without
 truncation and without Borel summation: invariant manifolds of an ill-posed PDE, a fixed point in ℓ¹, inner domains
-(3.10) and complex matching. Its reduction to one constant needs the harmonics' rates to grow, µ_k = √(k² − 1): the
+(3.10) and complex matching. It makes rigorous the formal argument of Segur and Kruskal (PRL 58 (1987) 747), as its
+abstract says. Its reduction to one constant needs the harmonics' rates to grow, µ_k = √(k² − 1): the
 jump (2.11) is carried by the third harmonic, and the others are exponentially smaller.
 
 In our inner problem every harmonic shares the same fast singularity, at ζ = ½ in the Borel plane (INNER_STOKES.md),
@@ -198,24 +204,31 @@ P6_scope's five routes. It is recorded as a sixth candidate that fails at the sa
 - **Different solutions.** Theirs is the D-dimensional Roberts family, with the critical member q*(ε) (3.8) known in
   closed form. Its CSS-breaking perturbations form a continuum, (4.54), so "this critical exponent is not universal"
   (Sec. 4). Ours has one unstable mode, λ → 2 (Proposition 5).
-- **The continuum's edge is our SSH exponent at leading order (inferred, not checked).** (4.24) with (1.5) gives κ = sup
-  Re k = 1/(2ε) = n/2. For a perturbation e^(λτ) of our setup, LARGE_D_BASICS §2's exponent at the SSH, with ω∂_θ
-  replaced by λ + ω∂_θ (derived here), is σ = (n/2 − 1 + ḡ − λ − ijω)/(1 − ḡ), positive for Re λ below n/2 − 1 + ḡ. They
-  impose decay at one end and boundedness at late x, (4.19). A spectrum built from boundedness admits the non-analytic
-  branch u^σ, and its edge would then sit at Re σ = 0, which is n/2 at leading order, as found. Their background is not
-  ours, so ḡ and the O(1) shift differ. Their footnote 23 allows that matching may restrict it. Analyticity at the SSH
-  is the condition that makes such spectra discrete (Gundlach, gr-qc/9604019, as recorded in LARGE_D_LITERATURE (e)).
-  Test: the CSS-breaking problem of their (4.18) with analyticity imposed at the SSH, at one D. Off the quest's path.
+- **Where they solve, and what they impose.** Their domain is u < 0 < v with u, v = (t ∓ r)/√2 and x = log(−v/u)
+  (2.15). That is r > |t|, outside the past light cone, the side of the SSH where our inner region lies. x → −∞ is the
+  null surface v = 0, where (2.21) sets R → e^(−x/2)/√2, Σ → 0, φ → 0. The perturbations (4.18) are required to vanish
+  there and to stay bounded at late x, (4.19). No analyticity condition is imposed at either end.
+- **The continuum's edge equals our SSH exponent at leading order (a coincidence noted, mechanism conjectured).** (4.24)
+  with (1.5) gives κ = sup Re k = 1/(2ε) = n/2. For a perturbation e^(λτ) of our setup, LARGE_D_BASICS §2's exponent at
+  the SSH, with ω∂_θ replaced by λ + ω∂_θ (derived here), is σ = (n/2 − 1 + ḡ − λ − ijω)/(1 − ḡ), positive for Re λ
+  below n/2 − 1 + ḡ. A spectrum fixed by vanishing or boundedness admits the non-analytic branch u^σ wherever Re σ > 0,
+  and its edge would sit at Re σ = 0, n/2 at leading order. Their background is the Roberts spacetime glued to flat
+  space along v = 0, not ours, so this is a conjecture about their (4.54). Their footnote 23 allows that matching may
+  restrict the spectrum. In the critical-collapse constructions, analyticity at the past light cone is the condition
+  that discretizes such problems (Gundlach, gr-qc/9604019, as recorded in LARGE_D_LITERATURE (e)). Test: their (4.18)
+  with an analyticity condition at v = 0, at one D. Off the quest's path.
 - **Conventions.** After (1.5): "the critical exponent for breaking the self-similarity asymptotes to a finite value in
   infinite dimensions, in alignment with the numerical evidence for the discretely self-similar solution". Their γ is a
   mass exponent, (2.1) and (4.23). The DSS evidence is for the length exponent γ → 1/2. In the mass convention the DSS
   exponent is (D − 3)γ, which grows like (D − 3)/2. From hp/data/gamma_dd.jsonl: 3.189 at D 10, 5.122 at D 14 and
   28.395 at D 61.03, against their 2(D − 3)/(D − 2) = 1.750, 1.833 and 1.966. LIT_REVIEW.md flagged the convention
   (C5 item); this gives the numbers.
-- **Their region B and our inner region.** Region B lives on a timescale O(1/√D) in their self-similar time, and its
-  equation (3.38) maps to the large-D static black-string equation. Our inner region is at x = O(√n), also Rozali and
-  Way's scaling. The sources read do not connect region B with Rozali–Way or with any DSS problem. Their DSS outlook (a
-  hierarchy over partial waves) is what the M-harmonic inner problem is.
+- **Their region B and our inner region.** Region B lives on a timescale x ∼ √(2ε) near the saddle point ((3.10) and
+  the text after it), and its equation (3.38) maps to the large-D static black-string equation. In their variable, our
+  inner region r/(−t) = X ∼ √n sits at x = log((X − 1)/(X + 1)) ≈ −2/X, i.e. |x| ∼ 2/√n, the same order (derived here
+  from (2.15)). Whether region B sits there was not checked: their saddle is approached as x grows, and the appendices
+  on matching were not read. The sources read do not connect region B with Rozali–Way or with any DSS problem. Their
+  DSS outlook, a hierarchy over partial waves, is what the M-harmonic inner problem is.
 
 ### 4.2 Rozali and Way's heat-type equations against our inner problem
 
@@ -276,13 +289,12 @@ large n (arXiv:1802.08191). §4.4 names the one term that could break it, near 1
 at D 300 and 400 (#1088) must land within E. A miss by more than about 3E rejects the premise at that D.
 
 **Lead 2. A D-uniform seed from n-independent problems (an hour of code, seconds of CPU).** The corrected NNLO outer
-expansion (SECOND_ORDER §1), whose largest error against 63 solutions from D 15 to 215 falls like ε⁴ (f, Ω) and
-ε^(7/2) (Π), with the profile p₁√n extrapolated in 1/n from the stored states. Its error falls with D: with
-SECOND_ORDER's ε = 1/(n + 1), ε^(7/2) is 7.9×10⁻¹⁰ at D 400, 2.8×10⁻¹² at D 2000 and 1.0×10⁻¹⁴ at D 10⁴, times
-SECOND_ORDER's constant. A rescaled D-263 state's error is fixed by
-its extrapolation. **Test:** against the stored chain states at D 245–263, held out of the profile fit, the seed's
-error must follow SECOND_ORDER's ε^(7/2) law with its constant. It fails if the error stalls, which would point at the
-held harmonics (LARGE_D_BASICS D1). Then the seed's residual in hp at D 300 and 400.
+expansion (SECOND_ORDER §1), whose largest error against 63 solutions from D 15 to 215 falls like ε⁴ (f, Ω) and ε^(7/2)
+(Π), with the profile p₁√n extrapolated in 1/n from the stored states. Its error falls with D: with SECOND_ORDER's ε =
+1/(n + 1), ε^(7/2) is 7.9×10⁻¹⁰ at D 400, 2.8×10⁻¹² at D 2000 and 1.0×10⁻¹⁴ at D 10⁴, times SECOND_ORDER's constant. A
+rescaled D-263 state's error is fixed by its extrapolation. **Test:** against the stored chain states at D 245–263, held
+out of the profile fit, the seed's error must follow SECOND_ORDER's ε^(7/2) law with its constant. It fails if the error
+stalls, which would point at the held harmonics (LARGE_D_BASICS D1). Then the seed's residual in hp at D 300 and 400.
 
 **Lead 3. The gate: does the grip fall algebraically or exponentially? (LARGE_D_BASICS T1, hours of octo-double).** The
 matched asymptotics read here predict algebraically. The grip on Δ is the inner multiplier's O(1) derivative ∂_ωS
@@ -330,8 +342,9 @@ field's connection coefficient uniformly in n, with its parametric Stokes jumps.
 bounds lead 1's floor near 10⁻¹⁰ only, so it is low priority for 10⁻⁸.
 
 **Lead 8. The complex-path condition (E2) at very large D (a research project).** Its digit cost is flat in n (70–85),
-while (E1)'s grip grows as n^21.7. Relative to D 61, (E1) reaches 10⁷⁰ only near n ≈ 10⁵. So (E2) does not pay below
-that, and its basin δ ≲ e^(−πkω) stays. **Test:** BEYOND_LIGHT_CONE's toy at n 1000 and 4000. Pass for (E2): κ_emp
+while (E1)'s grip grows as n^21.7. Carried from 3.4×10²¹ at D 259.6 as in lead 3, (E1)'s gain reaches 10⁷⁰ at
+n ≈ 4.4×10⁴ and 10⁸⁵ at n ≈ 2.2×10⁵. So (E2) does not pay below D of a few times 10⁴, and its basin δ ≲ e^(−πkω)
+stays. **Test:** BEYOND_LIGHT_CONE's toy at n 1000 and 4000. Pass for (E2): κ_emp
 stays flat. Not recommended for #1088.
 
 ## 6. References checked
@@ -385,7 +398,7 @@ D 10000  Delta 1.644930989933633  E 1.70e-09  h 1.70e-09  s 4.61e-11
 D inf    Delta 1.643893745321115  E 1.85e-09  h 1.85e-09  s 4.86e-11
 ```
 
-Lead 2's ε^(7/2) and lead 3's table (arithmetic on the quoted inputs):
+Lead 2's ε^(7/2), lead 3's table and lead 8's crossover (arithmetic on the quoted inputs):
 
 ```bash
 python3 -c "
@@ -398,6 +411,8 @@ for D in (400, 2000, 10000):
 od = 424 * math.log10(2)
 print('octo-double digits %.1f; exponential law limit with 30 working digits: D %.0f' % (
     od, 259.6 + (od - 30 - g0) * math.log(10) / 0.41))
+for t in (70, 85):
+    print('power-law gain 10^%d at n = %.2g' % (t, 257.6 * 10 ** ((t - g0) / 21.7)))
 "
 ```
 
