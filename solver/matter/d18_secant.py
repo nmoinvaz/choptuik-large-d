@@ -41,9 +41,11 @@ bracket (0.485, 0.490), tol 1e-6.
      wrong signs between r and it): status tol or nonrobust; r in the final bracket; both ends robust with the planted
      sign; every evaluation marked robust has the planted sign.
   C3 wrongly signed bracket (r + 0.001, r + 0.006), clean: refused after the 2 end evaluations.
-  C4 an end inside the noise (C2's matrix, bracket (r - 0.003, r + 2e-6)): refused after the 2 end evaluations.
+  C4 an end inside the noise (C2's matrix, bracket (r - 0.003, r + 2e-6)): refused after the 2 end evaluations, because
+     an end is not robust (this reason was added to C4 after the first run: under norobust the end at r + 2e-6, which
+     carries the spurious sign, made C4 refuse for same-signed ends instead).
   Controls (each must make the selftest exit 1): half (the bracket keeps the wrong end: C1 fails), norobust (every
-  evaluation counts as robust: C2 ends at the spurious root and C4 runs), nosigncheck (same-signed ends accepted: C3
+  evaluation counts as robust: C2 ends at the spurious root, C4 is refused for another reason), nosigncheck (same-signed ends accepted: C3
   runs)."""
 import json
 import math
@@ -285,7 +287,7 @@ def selftest():
     # C4 an end in the noise
     fin, recs = refine(P2, r - 0.003, r + 2e-6, tol)
     show("C4 an end in the noise", fin, recs)
-    c = fin["status"] == "refused" and fin["n_eval"] == 2
+    c = fin["status"] == "refused" and fin["n_eval"] == 2 and fin["why"] == "an end is not robust"
     print(f"  C4 {'as written' if c else 'NOT as written'}", flush=True)
     ok &= c
     print(f"selftest (mutate {MUTATE or 'none'}): {'PASS' if ok else 'FAIL'}", flush=True)
