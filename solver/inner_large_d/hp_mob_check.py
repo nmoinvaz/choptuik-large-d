@@ -62,7 +62,17 @@ from form_s import make_solver_s, ks_mob  # noqa: E402
 mp.mp.dps = 140
 
 
-def hp_sum(D, a, mh, Dl, mutate=0):
+def split_parts(v, parts):
+    """an mpmath number as `parts` non-overlapping doubles (a normalized expansion)"""
+    out = []
+    for _ in range(parts):
+        f = float(v)
+        out.append(f)
+        v = v - f
+    return out
+
+
+def hp_sum(D, a, mh, Dl, mutate=0, dmh=None):
     """hp's horizon sum at x_l in octo-double: one node at x_l with zero state, the horizon block of residual_s"""
     with mp.workdps(60):
         Dt = mp.mpf(repr(D))
@@ -75,19 +85,24 @@ def hp_sum(D, a, mh, Dl, mutate=0):
     z[o:o + M] = mh
     z[-1] = Dl
     zp = [np.ascontiguousarray(z)] + [np.zeros(L) for _ in range(parts - 1)]
+    if dmh is not None:  # m_h + dmh carried in all the parts (a float64 m_h cannot hold a move of 1e-20)
+        for i in range(M):
+            ps = split_parts(mp.mpf(float(mh[i])) + mp.mpf(float(dmh[i])), parts)
+            for p_ in range(parts):
+                zp[p_][o + i] = ps[p_]
     F = s.residual_s(zp, mutate)
     Fm = [sum(mp.mpf(float(F[p][i])) for p in range(len(F))) for i in range(3 * M * K, 3 * M * (K + 1))]
     return Fm
 
 
-def dd_sum(D, a, mh, Dl, zmut=None):
+def dd_sum(D, a, mh, Dl, zmut=None, dmh=None):
     """this branch's sum at x_l in double-double (kb None), as p = (U + x V)/2, m = (U - x V)/2, c"""
     zK = mp.mpf(XL) * mp.mpf(XL)  # x_l^2 of the float64 x_l, exactly, as hp forms it in the lane's precision
     f = msd.FormSDD(D, M, a=a, ks=ks_mob(D), kb=None, zK=zK)
     if zmut is not None:
         g = msd.FormSDD(D, M, a=zmut, ks=ks_mob(D), kb=None, zK=zK)
         f.ts_dd, f.ats_dd = f.ts_dd, g.ats_dd * f.ts_dd / g.ts_dd  # z's series (via a t*) at zmut, h and e at a
-    Q0 = DD(2.0 * mh)
+    Q0 = DD(2.0 * mh) if dmh is None else DD(2.0 * mh) + DD(2.0 * dmh)  # the move added in double-double
     om = (f.pi * 2.0) / DD(np.array(Dl))
     h = f.horizon(Q0, om)
     xl = DD(np.array(XL))
@@ -105,10 +120,13 @@ def rel(A, B):
 
 
 def gain(fun, D, a, mh, Dl, eps):
+    """the largest change of S over eps for m_h moved by eps |m_h| with random signs (default_rng(1)), the move
+    carried in the extra parts, not added to the float64 m_h"""
     dirn = np.abs(mh) * np.random.default_rng(1).choice([-1, 1], M)
     S0 = fun(D, a, mh, Dl)
-    S1 = fun(D, a, mh + eps * dirn, Dl)
-    return float(max(abs(x - y) for x, y in zip(S1, S0)) / eps)
+    S1 = fun(D, a, mh, Dl, dmh=eps * dirn)
+    g = float(max(abs(x - y) for x, y in zip(S1, S0)) / eps)
+    return g
 
 
 ok = True
@@ -147,7 +165,8 @@ for D in Ds:
         g_hp20 = gain(hp_sum, D, a, mh, Dl, 1e-20)
         g_hp10 = gain(hp_sum, D, a, mh, Dl, 1e-10)
         g_dd20 = gain(dd_sum, D, a, mh, Dl, 1e-20)
-        c2 = abs(g_hp20 - g_dd20) / g_dd20 <= 1e-3 and max(g_hp20, g_hp10) / min(g_hp20, g_hp10) <= 2 and g_hp20 < 1e3
+        c2 = (g_dd20 > 0 and min(g_hp20, g_hp10) > 0 and abs(g_hp20 - g_dd20) / g_dd20 <= 1e-3
+              and max(g_hp20, g_hp10) / min(g_hp20, g_hp10) <= 2 and g_hp20 < 1e3)
         print("   C2 gain from m_h: hp %.4e (eps 1e-20), %.4e (eps 1e-10); dd %.4e (eps 1e-20): %s" % (
             g_hp20, g_hp10, g_dd20, "PASS" if c2 else "FAIL"), flush=True)
         print("   C3 dd at a and 1.25 a: %.2e (%s)" % (c3, "PASS" if c3 <= 1e-24 else "FAIL"), flush=True)
