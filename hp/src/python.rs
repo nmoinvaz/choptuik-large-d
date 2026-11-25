@@ -114,6 +114,10 @@ trait Api: Send + Sync {
     fn set_dmat_even(&mut self, hi: &[f64], lo: &[f64]);
     /// form S's horizon variable (Ctx::hmob): 0 u = 1 - x, a > 0 the Moebius t = (1 - z)/(1 + a z)
     fn set_horizon_mobius(&mut self, a: f64);
+    /// form S's state carried from the last node through xs by Taylor steps, recorded at rec (form_s::path_s_in)
+    fn path_s(&mut self, z: &[&[f64]], xs: &[f64], rec: &[usize]) -> Result<Vec<Vec<f64>>, String>;
+    /// form S's J[rows, cols] (form_s::jacobian_sub_s_in), in z's precision
+    fn jacobian_sub_s(&mut self, z: &[&[f64]], rows: &[usize], cols: &[usize], mutate: u8) -> Result<Vec<Vec<f64>>, String>;
     /// form S's length 3M(K + 1) + 1
     fn len_s(&self) -> usize;
     /// form S's residual in the precision of z's part count (2 Double, 4 Quad, 8 Octo), as that many part arrays
@@ -560,6 +564,24 @@ impl<const B: usize> Api for Ctx<B> {
     }
     fn set_horizon_mobius(&mut self, a: f64) {
         self.hmob = a;
+    }
+    fn path_s(&mut self, z: &[&[f64]], xs: &[f64], rec: &[usize]) -> Result<Vec<Vec<f64>>, String> {
+        use crate::form_s::path_s_in;
+        fs_sizes!(self, 0, |c| match z.len() {
+            2 => path_s_in::<Double, 4>(c, z, xs, rec),
+            4 => path_s_in::<Quad, 4>(c, z, xs, rec),
+            8 => path_s_in::<Octo, 4>(c, z, xs, rec),
+            n => Err(format!("path_s: z must be 2, 4 or 8 part arrays, not {n}")),
+        })
+    }
+    fn jacobian_sub_s(&mut self, z: &[&[f64]], rows: &[usize], cols: &[usize], mutate: u8) -> Result<Vec<Vec<f64>>, String> {
+        use crate::form_s::jacobian_sub_s_in;
+        fs_sizes!(self, mutate, |c| match z.len() {
+            2 => jacobian_sub_s_in::<Double, 4>(c, z, rows, cols, true),
+            4 => jacobian_sub_s_in::<Quad, 4>(c, z, rows, cols, true),
+            8 => jacobian_sub_s_in::<Octo, 4>(c, z, rows, cols, true),
+            n => Err(format!("jacobian_sub_s: z must be 2, 4 or 8 part arrays, not {n}")),
+        })
     }
     fn len_s(&self) -> usize {
         Ctx::<B>::len_s(self)
@@ -1534,6 +1556,43 @@ impl Solver {
         self.api.set_dmat_even(dh, dl);
         self.olu = None;
         Ok(())
+    }
+
+    /// form S's state carried by Taylor steps from the last node through the points xs (xs[0] the last node's x, the
+    /// steps the caller's), recorded at the indices rec (increasing): as many (len(rec), 3M) arrays as z has parts
+    /// (2, 4 or 8), rows (p, m, c) on the half grid. M = 32 only.
+    fn path_s<'py>(&mut self, py: Python<'py>, z: Vec<PyReadonlyArray1<'py, f64>>, xs: Vec<f64>, rec: Vec<usize>) -> PyResult<Vec<Bound<'py, PyArray2<f64>>>> {
+        let n = self.api.len_s();
+        let zs: Vec<&[f64]> = z.iter().map(|a| slice(a, "z")).collect::<PyResult<_>>()?;
+        if zs.iter().any(|p| p.len() != n) {
+            return Err(PyValueError::new_err(format!("each part must have length {n}")));
+        }
+        if rec.windows(2).any(|w| w[0] >= w[1]) || rec.iter().any(|&r| r >= xs.len()) {
+            return Err(PyValueError::new_err("rec must be increasing indices into xs"));
+        }
+        let m = self.api.m();
+        let (api, pool) = (&mut self.api, &self.pool);
+        let c = py.detach(|| pool.install(|| api.path_s(&zs, &xs, &rec))).map_err(PyValueError::new_err)?;
+        c.into_iter()
+            .map(|p| Array2::from_shape_vec((rec.len(), 3 * m), p).map(|a| a.into_pyarray(py)).map_err(|e| PyValueError::new_err(e.to_string())))
+            .collect()
+    }
+
+    /// form S's J[rows, cols] at z (2, 4 or 8 part arrays): multishoot's jacobian_sub, only the column tasks whose
+    /// blocks meet rows, with the projected rows (kfreeze); as many (len(rows), len(cols)) arrays as z has parts
+    #[pyo3(signature = (z, rows, cols, mutate=0))]
+    fn jacobian_sub_s<'py>(&mut self, py: Python<'py>, z: Vec<PyReadonlyArray1<'py, f64>>, rows: Vec<usize>, cols: Vec<usize>, mutate: u8) -> PyResult<Vec<Bound<'py, PyArray2<f64>>>> {
+        let n = self.api.len_s();
+        let zs: Vec<&[f64]> = z.iter().map(|a| slice(a, "z")).collect::<PyResult<_>>()?;
+        if zs.iter().any(|p| p.len() != n) {
+            return Err(PyValueError::new_err(format!("each part must have length {n}")));
+        }
+        let (api, pool) = (&mut self.api, &self.pool);
+        let c = py.detach(|| pool.install(|| api.jacobian_sub_s(&zs, &rows, &cols, mutate))).map_err(PyValueError::new_err)?;
+        let (nr, nc) = (rows.len(), cols.len());
+        c.into_iter()
+            .map(|p| Array2::from_shape_vec((nr, nc), p).map(|a| a.into_pyarray(py)).map_err(|e| PyValueError::new_err(e.to_string())))
+            .collect()
     }
 
     /// Form S's horizon series variable: 0 (the default) u = 1 - x; a > 0 the Moebius variable t = (1 - z)/(1 + a z),

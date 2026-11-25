@@ -764,6 +764,51 @@ impl<const B: usize> Equations<B> for DssS<'_, B> {
     }
 }
 
+/// form S's state carried by Taylor steps from the last node through the points xs (xs[0] the last node's x), in P:
+/// (p, m, c) at the points whose index is in rec, as P::PARTS part arrays of rec.len() x 3M values (record-major). The
+/// globals (Delta) and the last node's fields are z's; the steps are xs's consecutive points (the caller's plan).
+pub fn path_s_in<P: Precision<Native>, const B: usize>(ctx: &Ctx<B>, z: &[&[f64]], xs: &[f64], rec: &[usize]) -> Result<Vec<Vec<f64>>, String> {
+    let sh = ctx.shooting_s();
+    sh.check_z::<P>(z)?;
+    let m = Ctx::<B>::M;
+    let o = ctx.off_node_s(ctx.k() - 1);
+    let s0: Vec<Fl<P::V, B>> = (0..3).map(|f| sh.load::<P>(z, o + f * m)).collect();
+    let g: Vec<P::V> = sh.globals::<P>(z).into_iter().map(P::splat).collect();
+    let eq = DssS(ctx);
+    let mut w = Work::<P::V, B>::new(3, NAUX_S, ctx.kt);
+    let mut out: Vec<Vec<f64>> = (0..P::PARTS).map(|_| Vec::with_capacity(rec.len() * 3 * m)).collect();
+    let mut s = s0;
+    let push = |s: &Vec<Fl<P::V, B>>, out: &mut Vec<Vec<f64>>| {
+        for f in s.iter() {
+            for i in 0..m {
+                let v = P::field_get(f, i);
+                for (q, o) in out.iter_mut().enumerate() {
+                    o.push(P::part(v, q));
+                }
+            }
+        }
+    };
+    let mut next = 0;
+    if rec.first() == Some(&0) {
+        push(&s, &mut out);
+        next = 1;
+    }
+    for i in 0..xs.len().saturating_sub(1) {
+        s = multishoot::taylor::taylor_step(&eq, &s, xs[i], xs[i + 1], &g, &mut w);
+        while next < rec.len() && rec[next] == i + 1 {
+            push(&s, &mut out);
+            next += 1;
+        }
+    }
+    Ok(out)
+}
+
+/// form S's J[rows, cols] in P (multishoot's jacobian_sub: only the column tasks whose block meets rows; projected
+/// rows supported), P::PARTS part arrays of rows.len() x cols.len(), row-major
+pub fn jacobian_sub_s_in<P: Precision<Native>, const B: usize>(ctx: &Ctx<B>, z: &[&[f64]], rows: &[usize], cols: &[usize], par: bool) -> Result<Vec<Vec<f64>>, String> {
+    ctx.shooting_s().jacobian_sub::<P>(z, rows, cols, par)
+}
+
 /// form S's residual in P, one scalar per row
 pub fn residual_s_in<P: Precision<Native>, const B: usize>(ctx: &Ctx<B>, z: &[&[f64]], par: bool) -> Result<Vec<P::Scalar>, String> {
     ctx.shooting_s().residual::<P>(z, par)
