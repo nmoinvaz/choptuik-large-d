@@ -103,7 +103,7 @@ def main(argv):
     allow = pop_allow(argv)
     pos, o = opts(argv, dict(D="2828.4271247461903", states_s="", xl="xc", deg="2", mob="8", ks="auto", kc="250",
                              threads="2", sub="4", plan_tol="1e-40", hmax="0.05", delta="fit", tc="", it_max="10",
-                             halvings="8", delta_tol="1e-15", commit="", ham="1", tol="1e-300"))
+                             halvings="8", delta_tol="1e-15", commit="", ham="1", tol="1e-300", parts="8"))
     outdir = pos[0]
     os.makedirs(outdir, exist_ok=True)
     log = os.path.join(outdir, f"lastnode_{cmd}.jsonl")
@@ -114,7 +114,7 @@ def main(argv):
         for xl in xls:
             t0 = time.time()
             Dt, rows, z8, sh, meta = setup(o, xl, thr)
-            F = sh.residual_s([np.ascontiguousarray(p) for p in z8])
+            F = sh.residual_s([np.ascontiguousarray(p) for p in z8[:int(o["parts"])]])
             b = blocks_s(F, M, 5)
             other = max(b[:5])
             r = b[5] / other
