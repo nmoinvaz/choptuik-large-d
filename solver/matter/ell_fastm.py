@@ -340,7 +340,7 @@ def checkcmd(argv):
     ok, res = compare(S, Mf, Mc, only)
     print(f"check: {'PASS' if ok else 'FAIL'}", flush=True)
     if "out" in opts:
-        open(opts["out"], "w").write(json.dumps(dict(D=D, kc=rec["kc"], lam=lam, blocks=only, mutate=MUTATE, t_fast=tf,
+        open(opts["out"], "w").write(json.dumps(dict(D=D, kc=rec["kc"], lam=lam, only=only, mutate=MUTATE, t_fast=tf,
                                                      t_cs=tc, ok=bool(ok), **res)) + "\n")
     sys.exit(0 if ok else 1)
 
