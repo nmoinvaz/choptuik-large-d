@@ -1,0 +1,147 @@
+"""Continuation in D of form S with the Moebius horizon variable (mobius_s.py), in float64 (#1090).
+
+Each D is solved by Newton with the complex-step Jacobian, from a seed extrapolated in 1/n from the previous two
+solutions in the scaled variables p1 sqrt(n), Q0 sqrt(n), (c0 - 1) n and Delta (the first step rescales the start).
+At each solution it records max|F|, Delta, the Newton history, the scaled singular values (rows and columns at unit
+norm), the grip |e_Delta^T J^-1| with unit rows, the series tails, and the amplification of relative noise in the
+horizon sum (a = 1, and a = 0 where --noise0 lists the D).
+
+Usage: python3 solve_cont.py START.json --M=6 --Ds=100,150,... --out=DIR [--a=1] [--tol=5e-15] [--iters=12]
+                             [--noise0=100,150,200] [--kb=150] [--mutate=a0]
+  --mutate=a0 solves with a = 0 (Track B's variable): the control, which must lose the solution as D grows.
+"""
+import json
+import os
+import sys
+import time
+
+import numpy as np
+
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import mobius_s as ms  # noqa: E402
+from lsnewton64 import ls_solve  # noqa: E402
+
+opts = dict(a[2:].split("=", 1) for a in sys.argv[1:] if a.startswith("--") and "=" in a)
+start = [a for a in sys.argv[1:] if not a.startswith("--")][0]
+M = int(opts.get("M", 6))
+Ds = [float(v) for v in opts["Ds"].split(",")]
+out = opts["out"]
+a = 0.0 if opts.get("mutate") == "a0" else float(opts.get("a", 1.0))
+tol = float(opts.get("tol", 5e-15))
+iters = int(opts.get("iters", 3))
+kb = int(opts.get("kb", 150))
+noise0 = [float(v) for v in opts.get("noise0", "").split(",") if v]
+os.makedirs(out, exist_ok=True)
+
+js = json.load(open(start))
+D0, M0 = js["D"], js["M"]
+p1 = np.array(js["p1"]) + np.array(js.get("p1_lo", [0] * M0))
+c0 = np.array(js["c0"]) + np.array(js.get("c0_lo", [0] * M0))
+Q0 = np.array(js["Q0"]) + np.array(js.get("Q0_lo", [0] * M0))
+Dl0 = js["Delta"] + js.get("Delta_lo", 0.0)
+if M0 != M:
+    p1, c0, Q0 = ms.resample_odd(p1, M), ms.resample_even(c0, M), ms.resample_odd(Q0, M)
+
+
+def scaled(y, D):
+    n = D - 2
+    return np.concatenate([y[:M] * np.sqrt(n), (y[M:2 * M] - 1) * n, y[2 * M:3 * M] * np.sqrt(n), [y[3 * M]]])
+
+
+def unscaled(s, D):
+    n = D - 2
+    return np.concatenate([s[:M] / np.sqrt(n), 1 + s[M:2 * M] / n, s[2 * M:3 * M] / np.sqrt(n), [s[3 * M]]])
+
+
+def noise_amp(f, y, eta=1e-13, reps=2):
+    om = 2 * np.pi / y[3 * M]
+    base = f.horizon(y[2 * M:3 * M], om)["U"]
+    f.noise = (["U", "V"], eta, np.random.default_rng(7))
+    d = max(np.max(np.abs(f.horizon(y[2 * M:3 * M], om)["U"] - base)) for _ in range(reps))
+    f.noise = None
+    return float(d / eta / np.max(np.abs(base)))
+
+
+hist = []  # (D, scaled solution)
+y = np.concatenate([p1, c0, Q0, [Dl0]])
+hist_start = (D0, scaled(y, D0))
+log = open(os.path.join(out, "solve_cont.log"), "a")
+
+
+def say(s):
+    print(s, flush=True)
+    log.write(s + "\n")
+    log.flush()
+
+
+say("# %s  M %d  a %g  kb %d  tol %.1e  start %s (D %g, M %d)" % (time.strftime("%Y-%m-%d %H:%M UTC", time.gmtime()),
+                                                                  M, a, kb, tol, os.path.basename(start), D0, M0))
+for D in Ds:
+    t0 = time.time()
+    if len(hist) >= 2:
+        (Da, sa), (Db, sb) = hist[-2], hist[-1]
+        xa, xb, x = 1 / (Da - 2), 1 / (Db - 2), 1 / (D - 2)
+        s = sb + (sb - sa) * (x - xb) / (xb - xa)
+    elif len(hist) == 1:
+        s = hist[-1][1]
+    else:
+        s = hist_start[1]
+    y = unscaled(s, D)
+    f = ms.FormS(D, M, a=a, kb=kb)
+    hstory = []
+    F = f.residual(y)
+    best = (np.max(np.abs(F)), y.copy())
+    hstory.append(float(np.max(np.abs(F))))
+    with np.errstate(all="ignore"):
+        for it in range(iters):
+            if not np.all(np.isfinite(F)):
+                break
+            J = f.jacobian(y)
+            dy = np.linalg.lstsq(J, -F, rcond=None)[0]
+            lam = 1.0
+            for _ in range(8):
+                yn = y + lam * dy
+                Fn = f.residual(yn)
+                if np.all(np.isfinite(Fn)) and np.max(np.abs(Fn)) < max(np.max(np.abs(F)), 1e-300) * (1 - 0.1 * lam):
+                    break
+                lam *= 0.5
+            y, F = yn, Fn
+            r = float(np.max(np.abs(F)))
+            hstory.append(r)
+            if np.isfinite(r) and r < best[0]:
+                best = (r, y.copy())
+            if r < tol or (len(hstory) > 3 and r > 0.5 * hstory[-3] and r < 1e-12):
+                break
+    r, y = best
+    if r > tol and np.isfinite(r) and r < 1e-3:
+        J = f.jacobian(y)
+        y, r = ls_solve(f.residual, y, J, tau=float(opts.get("tau", 1e-6)), tol=tol, log=say)
+        hstory.append(float(r))
+    F = f.residual(y)
+    J = f.jacobian(y)
+    rn = np.linalg.norm(J, axis=1)
+    Jr = J / rn[:, None]
+    cn = np.linalg.norm(Jr, axis=0)
+    sv = np.linalg.svd(Jr / cn[None, :], compute_uv=False)
+    grip = float(np.linalg.norm(np.linalg.solve(Jr.T, np.eye(len(y))[3 * M])))
+    amp1 = noise_amp(f, y)
+    amp0 = None
+    if D in noise0:
+        g0 = ms.FormS(D, M, a=0.0, kb=kb)
+        with np.errstate(all="ignore"):
+            amp0 = noise_amp(g0, y)
+    ce, ho = f.last
+    rec = dict(D=D, n=D - 2, M=M, a=a, ks=f.ks, kc=f.kc, kb=kb, maxF=float(np.max(np.abs(F))), Delta=float(y[3 * M]),
+               newton=hstory, sv_min=[float(v) for v in sv[-6:]], sv_max=float(sv[0]), grip=grip, noise_amp=amp1,
+               noise_amp_a0=amp0, tail_h=float(ho["tail"]), tail_c=float(ce["tail"]),
+               p1_harm=[float(v) for v in ms.harmonics_odd(y[:M])], seconds=time.time() - t0,
+               p1=list(y[:M]), c0=list(y[M:2 * M]), Q0=list(y[2 * M:3 * M]))
+    json.dump(rec, open(os.path.join(out, "sol_D%g_M%d_a%g.json" % (D, M, a)), "w"), indent=1)
+    say("D %8.2f  max|F| %.2e  Delta %.12f  steps %d  sv_min %.1e  grip %.1e  noise %.1e%s  tails %.0e/%.0e  ks %d  %.0f s"
+        % (D, rec["maxF"], rec["Delta"], len(hstory) - 1, sv[-1], grip, amp1,
+           "" if amp0 is None else " (a=0: %.1e)" % amp0, rec["tail_h"], rec["tail_c"], f.ks, rec["seconds"]))
+    if rec["maxF"] < 1e-11:
+        hist.append((D, scaled(y, D)))
+    else:
+        say("not converged at D %g; stop" % D)
+        break
