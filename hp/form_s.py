@@ -140,6 +140,59 @@ def s_to_a(zs, D, M, K, nodes):
     return np.concatenate(pieces)
 
 
+def ham_check(z8, meta, threads=2, dps=40, swap=False):
+    """A code check of a form-S state (#1088): in form S the Hamiltonian constraint obeys H_tau = (n - 1) a^2 H, so
+    periodicity forces H = 0, and form A's a equation (the Hamiltonian constraint integrated in x) must hold along the
+    Taylor steps. a at each node and a_h from B's slaving at `dps` digits (mpmath), the state in double-double as form
+    A's vector, and one double-double evaluation of form A's residual on the state's nodes and segments. Returns the
+    largest |F| of the p, m, a and c rows of each segment block (blocks 1..K-1; the centre and horizon blocks use form
+    A's own series and are not part of the check). swap: the control, q's (x - c) and (x + c) swapped in a's slaving
+    (form_s.rs's FS_MUT_FLUX), whose a rows must be large."""
+    from hpkernel.driver import dd_from_mp
+    M, nodes = int(meta["M"]), list(meta["nodes"])
+    K = len(nodes)
+    L = len(z8[0])
+    with mp.workdps(dps + 20):
+        v = [sum(mp.mpf(float(np.asarray(q)[i])) for q in z8) for i in range(L)]
+        D = mp.mpf(meta["D_str"])
+        n1 = D - 3
+        om = 2 * mp.pi / v[-1]
+        De = dmat_even(M, dps=dps + 20)
+        Dm = mp.matrix(M, M)
+        for i in range(M):
+            for j in range(M):
+                Dm[i, j] = mp.mpf(float(De[0][i, j])) + mp.mpf(float(De[1][i, j]))
+
+        def a_of(q):
+            A = om * Dm
+            for i in range(M):
+                A[i, i] -= n1 + q[i]
+            X = mp.lu_solve(A, mp.matrix(q))
+            return [1 / mp.sqrt(1 + X[i]) for i in range(M)]
+        out = v[:2 * M]
+        for i in range(K):
+            b = 2 * M + 3 * M * i
+            p, m, c = v[b:b + M], v[b + M:b + 2 * M], v[b + 2 * M:b + 3 * M]
+            x = mp.mpf(float(nodes[i]))
+            sg = -1 if swap else 1
+            q = [((x - sg * c[j]) * p[j] ** 2 + (x + sg * c[j]) * m[j] ** 2) / x for j in range(M)]
+            out += p + m + a_of(q) + c
+        o = 2 * M + 3 * M * K
+        mh = v[o:o + M]
+        out += mh + a_of([2 * t * t for t in mh]) + [v[-1]]
+        zh, zl = dd_from_mp(out)
+    sa = make_solver(D, M, nodes=nodes, kt=int(meta.get("kt", 36)), kc=int(meta["kc"]), ks=int(meta["ks"]),
+                     threads=threads)
+    sa.set_segs(meta["segs"])
+    fh, fl = sa.residual(np.ascontiguousarray(zh), np.ascontiguousarray(zl))
+    Fv = np.asarray(fh) + np.asarray(fl)
+    res = {}
+    for b in range(1, K):
+        blk = Fv[b * 4 * M:(b + 1) * 4 * M]
+        res[b] = {f: float(np.abs(blk[j * M:(j + 1) * M]).max()) for j, f in enumerate("pmac")}
+    return res
+
+
 def blocks_s(F, M, K):
     """max |F| per block of form S's rows (centre, segments, horizon; then the phase row)"""
     v = np.asarray(F[0]) + np.asarray(F[1])
@@ -605,7 +658,7 @@ def cmd_jump(argv):
     pos, o = opts(argv, dict(D="250", states="", Dmin="0", Dmax="1e9", deg="3", kfreeze="13", plan_tol="1e-40", hmax="0.05",
                              ks="sigma", kc="146", threads="2", delta="series", tol="1e-40", it_max="16", halvings="8",
                              mutate="none", junk="0", tol_dz="1e-45", ls="0", outer="8", held="0", mob="0",
-                             states_s="", jac="qd", delta_tol="1e-15", jscale="1"))
+                             states_s="", jac="qd", delta_tol="1e-15", jscale="1", ham="1"))
     mob = float(o["mob"])
     outdir = pos[0]
     os.makedirs(outdir, exist_ok=True)
@@ -737,6 +790,15 @@ def cmd_jump(argv):
         with open(log, "a") as fh:
             fh.write(json.dumps(dict(full_F=float(np.abs(Fv).max()), full_dDelta_first_order=dD1,
                                      gain=float(np.abs(g).sum()))) + "\n")
+    if int(o["ham"]):
+        hc = ham_check(z8, meta, threads=int(o["threads"]))
+        worst = max(max(r.values()) for r in hc.values())
+        meta.update(ham_check={str(b): r for b, r in hc.items()})
+        print("  Hamiltonian code check (form A's residual in double-double, a slaved): segment blocks' max |F| "
+              + "; ".join(f"{b}: a {r['a']:.1e}, p/m/c {max(r['p'], r['m'], r['c']):.1e}" for b, r in hc.items()),
+              flush=True)
+        with open(log, "a") as fh:
+            fh.write(json.dumps(dict(ham_check={str(b): r for b, r in hc.items()}, ham_worst=worst)) + "\n")
     out = os.path.join(outdir, f"jump_s_D{float(Dt):.4f}.npz")
     save_o(out, z8, meta)
     Dl = delta_digits(z8, 40)
