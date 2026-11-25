@@ -194,29 +194,48 @@ class S01a_Wave(Film):
         self.play(GrowFromCenter(hole), FadeOut(ring), FadeOut(cl), run_time=0.8)
         self.wait(2.0)
         self.play(FadeOut(hole), FadeOut(lab), FadeIn(cl), run_time=0.6)
-        # tuned between: echoes that pile up at one instant
-        u = ValueTracker(0.0)
-        R.add_updater(lambda m: m.set_value(
-            2.7 * (1 - u.get_value()) * (1 + 0.38 * math.sin(2 * math.pi * math.log(1 / (1 - u.get_value())) / math.log(2.2)))))
-        self.add(R)
-        ring, lab = make_ring(), case("tuned exactly between", GOLD_)
-        self.play(FadeIn(ring), FadeIn(lab), run_time=0.5)
-        self.say(r"Tune the strength exactly between the two, and the wave does neither.", hold=1.6)
-        self.say(r"It echoes: the same motion again and again, each time smaller and faster.", hold=0.2)
-        self.play(u.animate.set_value(0.985), run_time=7.0, rate_func=linear)
-        R.clear_updaters()
-        ring.clear_updaters()
+        # tuned between: in, through the centre, part escapes, the rest falls back in, smaller each round
+        lab = case("tuned exactly between", GOLD_)
+        legend = VGroup(Tex("falling in", font_size=24, color=BLUE_), Tex("heading out", font_size=24, color=GOLD_),
+                        Tex("escaping", font_size=24, color=GREY_)).arrange(DOWN, buff=0.12, aligned_edge=LEFT).move_to([3.9, 0.9, 0])
+        self.play(FadeIn(lab), run_time=0.4)
+        self.say(r"Tune the strength exactly between the two, and the wave does neither.", hold=1.2)
+        self.play(FadeIn(legend), run_time=0.4)
+        q, r_in = 0.5, 2.4
+        inn = Circle(radius=r_in, color=BLUE_, stroke_width=5).move_to(O)
+        self.play(FadeIn(inn), run_time=0.4)
+        for k in range(6):
+            d = max(1.5 * q ** k, 0.14)
+            if k == 0:
+                self.say(r"It falls in, passes through the centre, and heads back out. Part of it escapes for good.", hold=0.2)
+            if k == 1:
+                self.say(r"The rest is pulled back by its own gravity and falls in again, smaller and faster. And again. And again.", hold=0.2)
+            self.play(inn.animate.scale(0.03 / r_in, about_point=O), run_time=d, rate_func=linear)
+            out = Circle(radius=0.03, color=GOLD_, stroke_width=5).move_to(O)
+            self.remove(inn)
+            self.add(out)
+            self.play(out.animate.scale(0.5 * r_in / 0.03, about_point=O), run_time=0.6 * d, rate_func=linear)
+            gone = Circle(radius=0.5 * r_in, color=GREY_, stroke_width=4).move_to(O)
+            self.add(gone)
+            r_in *= q
+            inn = Circle(radius=r_in, color=BLUE_, stroke_width=5).move_to(O)
+            self.remove(out)
+            self.add(inn)
+            self.play(gone.animate.scale(3.0 / (r_in / q * 0.5), about_point=O).set_stroke(opacity=0.0), run_time=max(0.7 * d, 0.2), rate_func=linear)
+            self.remove(gone)
+        self.remove(inn)
+        ring = VGroup()
         star = Dot(O, color=RED_, radius=0.1)
         self.play(FadeOut(ring), FadeOut(centre), FadeIn(star, scale=3), Flash(star, color=RED_, flash_radius=0.5), run_time=0.8)
         sl = Tex("the collapse", font_size=28, color=RED_).next_to(star, UP, buff=0.15)
         self.play(FadeIn(sl), FadeOut(cl), run_time=0.4)
-        self.say(r"All the echoes pile up at the centre at one single instant. That instant, at that point, is the collapse.")
+        self.say(r"That repeating is the echoing. The rounds pile up at the centre at one single instant. That instant, at that point, is the collapse.")
         words = VGroup(Tex(r"the centre: the middle point\\the wave falls toward", font_size=28, tex_environment="flushleft"),
                        Tex(r"the collapse: the instant the\\echoes pile up there", font_size=28, color=RED_, tex_environment="flushleft"))
-        words.arrange(DOWN, buff=0.4, aligned_edge=LEFT).move_to([3.9, 0.2, 0])
+        words.arrange(DOWN, buff=0.4, aligned_edge=LEFT).move_to([3.9, -1.0, 0])
         self.play(FadeIn(words, shift=0.2 * UP), run_time=0.6)
         self.say(r"Choptuik found this in 1993, and that every echo is the last one shrunk by the same factor. The whole film is about that factor.")
-        self.play(FadeOut(VGroup(guides, view, star, sl, lab, words, self.cap)), run_time=0.7)
+        self.play(FadeOut(VGroup(guides, view, star, sl, lab, legend, words, self.cap)), run_time=0.7)
 
 
 class S01b_Echo(Film):
@@ -239,7 +258,7 @@ class S01b_Echo(Film):
 
         curve = wave()
         self.play(Create(ax), FadeIn(tl), run_time=1.0)
-        self.say(r"Now stand at the centre of that tuned wave, and watch the field there as time runs toward the collapse.", hold=0.6)
+        self.say(r"Now stand at the centre of that tuned wave, and record its strength there, the field, as time runs toward the collapse.", hold=0.6)
         self.play(Create(curve), Create(star), FadeIn(sl), run_time=2.6)
         self.say(r"The field echoes. Each echo is a copy of the last, squeezed toward the moment of collapse.")
         live = always_redraw(wave)
@@ -251,7 +270,7 @@ class S01b_Echo(Film):
         VGroup(zoom, num).arrange(RIGHT, buff=0.15).next_to(ax, UP, buff=0.1).shift(3.2 * LEFT)
         num.add_updater(lambda m: m.next_to(zoom, RIGHT, buff=0.15))
         self.play(FadeIn(zoom), FadeIn(num), run_time=0.5)
-        self.say(r"Zoom in on the collapse by a factor $e^{\Delta}$, and the picture repeats.", hold=0.4)
+        self.say(r"Zoom in on the collapse by just the right factor, and the picture repeats exactly.", hold=0.4)
         self.play(s.animate.set_value(DEL4), run_time=4.0, rate_func=smooth)
         self.wait(0.6)
         self.play(s.animate.set_value(2 * DEL4), run_time=3.2, rate_func=smooth)
@@ -268,10 +287,10 @@ class S01b_Echo(Film):
         bl = MathTex(r"\Delta", font_size=44, color=GOLD_).next_to(br, UP, buff=0.1)
         self.play(Create(ax2), FadeIn(tau), run_time=0.8)
         self.play(Create(per), run_time=2.0)
-        self.say(r"In logarithmic time the solution is periodic. Its period is the echo period $\Delta$.", hold=0.5)
+        self.say(r"Measure time by how often the time left has shrunk, logarithmic time, and the echoes come at even intervals. That interval is the echo period, $\Delta$.", hold=0.5)
         self.play(GrowFromCenter(br), FadeIn(bl), run_time=0.8)
         self.wait(2.6)
-        self.say(r"In four dimensions $\Delta \approx 3.445$: every echo is about " + f"{math.exp(DEL4):.0f}" + " times smaller than the last.")
+        self.say(r"The zoom factor is $e^{\Delta}$. In our world $\Delta \approx 3.445$, so every echo is about " + f"{math.exp(DEL4):.0f}" + " times smaller than the last.")
         self.play(FadeOut(VGroup(ax2, tau, per, br, bl, self.cap)), run_time=0.7)
 
 
@@ -300,7 +319,7 @@ class S02_Question(Film):
         arrow = Arrow(ax.c2p(20, 2.05), ax.c2p(120, 1.85), color=GOLD_, stroke_width=4, buff=0)
         self.play(GrowArrow(arrow), FadeIn(q, scale=0.6), run_time=1.0)
         self.say(r"The quest: follow $\Delta(D)$ to the far right, into worlds with hundreds of dimensions.")
-        self.say(r"Every wall on the way taught the solver something. This is the solver, in the order it was shaped.")
+        self.say(r"That takes a solver: a program that finds $\Delta$ for a given $D$. First, what one solve is. Then, how each wall on the way reshaped the solver.")
         self.play(FadeOut(VGroup(ax, xl, yl, curve, d4, l4, q, arrow, self.cap)), run_time=0.7)
 
 
@@ -352,6 +371,23 @@ def low_axes():
     return ax, VGroup(xl, yl)
 
 
+def strip_cells(RC, RW, RH, co, ncol=28, nrow=16):
+    """One field over one echo as an image: x across, the time within the echo upward, gold where the field is positive
+    and blue where it is negative. A sketch built on the real centre wave: p is close to x times p1 at the nodes
+    (hp/plot_wave_family.py, step 4)."""
+    top = max(abs(wave_of(co, 2 * math.pi * k / 200)) for k in range(200))
+    cells = VGroup()
+    for i in range(ncol):
+        xv = (i + 0.5) / ncol
+        for j in range(nrow):
+            val = xv * wave_of(co, 2 * math.pi * (j + 0.5) / nrow) / top
+            cell = Rectangle(width=RW / ncol + 0.01, height=RH / nrow + 0.01, stroke_width=0,
+                             fill_color=interpolate_color(ManimColor(BLUE_), ManimColor(GOLD_), 0.5 + 0.5 * val),
+                             fill_opacity=min(1.0, 0.12 + 0.95 * abs(val)))
+            cells.add(cell.move_to([RC[0] - RW / 2 + xv * RW, RC[1] - RH / 2 + (j + 0.5) * RH / nrow, 0]))
+    return cells
+
+
 class S03a_Dot(Film):
     stage = r"4 \quad One dot, one solve"
 
@@ -372,114 +408,120 @@ class S03a_Dot(Film):
         tag = Tex(f"$D = 6$: \\quad $\\Delta = {D6[1]:.4f}$", font_size=30, color=GOLD_).next_to(pick, UR, buff=0.2)
         self.play(FadeIn(pick, scale=2), Create(guide), FadeIn(tag), run_time=0.9)
         self.wait(1.4)
-        self.say(r"The quest to large $D$ is a long line of such solves, each harder than the last. Here is what one solve is.")
+        self.say(r"The quest to large $D$ is a long line of such solves, each harder than the last. So what does one solve have to find?")
         self.play(FadeOut(VGroup(ax, lab, curve, dots, pick, guide, tag, self.cap)), run_time=0.7)
 
 
 class S03b_Cone(Film):
-    stage = r"5 \quad The centre, the light cone and $x$"
+    stage = r"5 \quad The map, the horizon and $x$"
 
     def construct(self):
-        C, T = [-2.0, 2.6, 0.0], 4.3
-        P = lambda r, t: [C[0] + r, C[1] - T + t, 0.0]          # distance r from the centre, time t from the foot
+        C, T = [-0.6, 2.55, 0.0], 4.3
+        P = lambda r, tt: [C[0] + r, C[1] - T + tt, 0.0]          # the map: distance r across, time tt upward
+        O, K, W = [-4.55, 0.45, 0.0], 2.0 / T, 7.3                # the view from above: its centre and scale
+        t = ValueTracker(0.0)
+        now = lambda: t.get_value()
         centre = Line(P(0, 0), C, color=BLUE_, stroke_width=4)
-        base = Line(P(0, 0), P(8.4, 0), color=GREY_, stroke_width=2)
-        tl = Tex(r"time $\uparrow$", font_size=24, color=GREY_).next_to(centre, LEFT, buff=0.15)
-        rl = Tex(r"distance from the centre $\rightarrow$", font_size=24, color=GREY_).next_to(base, DOWN, buff=0.45).align_to(base, RIGHT)
-        cl = Tex("the centre", font_size=24, color=BLUE_).next_to(P(0, 0), DOWN, buff=0.12)
-        sk = Tex("sketch, drawn as if space were flat", font_size=20, color=GREY_).to_corner(UR, buff=0.35)
-        self.play(Create(centre), Create(base), FadeIn(tl), FadeIn(rl), FadeIn(sk), run_time=1.2)
-        self.say(r"Back to one collapse, in one world. Draw a map of it: how far from the centre, to the right, and when, upward.")
-        # the falling wave, seen from above and on the map at once
-        Oi = [-4.9, 0.9, 0.0]
-        w = ValueTracker(0.002)
-        dotc = Dot(Oi, color=WHITE, radius=0.06)
-        il = Tex("the wave, from above", font_size=22, color=GREY_).move_to([Oi[0], Oi[1] + 1.75, 0])
-        ringi = always_redraw(lambda: Circle(radius=max(1.4 * (1 - w.get_value()), 0.02), color=BLUE_, stroke_width=5).move_to(Oi))
-        f1 = always_redraw(lambda: Line(P(2.8, 0), P(2.8 * (1 - w.get_value()), 2.8 * w.get_value()), color=BLUE_, stroke_width=4))
-        d1 = always_redraw(lambda: Dot(P(2.8 * (1 - w.get_value()), 2.8 * w.get_value()), color=BLUE_, radius=0.09))
-        self.play(FadeIn(dotc), FadeIn(il), FadeIn(ringi), FadeIn(d1), run_time=0.6)
-        self.add(f1)
-        self.say(r"Here is the falling wave on that map. As its ring shrinks, its distance from the centre falls while time moves up.", hold=0.3)
-        self.play(w.animate.set_value(1.0), run_time=3.2, rate_func=linear)
-        ringi.clear_updaters()
-        d1.clear_updaters()
-        f1.clear_updaters()
-        self.wait(1.0)
-        self.play(FadeIn(cl), Indicate(centre, color=BLUE_), Indicate(dotc, color=BLUE_), run_time=1.0)
-        self.say(r"The centre is the middle point of the wave. It never moves, so on the map it is the upright line at the left.")
+        base = Line(P(0, 0), P(W, 0), color=GREY_, stroke_width=2)
+        tl = Tex(r"time $\uparrow$", font_size=22, color=GREY_).next_to(centre, LEFT, buff=0.1)
+        rl = Tex(r"distance from the centre $\rightarrow$", font_size=22, color=GREY_).next_to(base, DOWN, buff=0.42).align_to(base, RIGHT)
+        ml = Tex("a map: where, and when", font_size=22, color=GREY_).to_corner(UR, buff=0.35)
+        vl = Tex("space, seen from above", font_size=22, color=GREY_).move_to([O[0], 3.05, 0])
+        dotc = Dot(O, color=WHITE, radius=0.06)
+        dl = Tex("the centre", font_size=22, color=BLUE_).next_to(dotc, DOWN, buff=0.1)
+        nowline = always_redraw(lambda: DashedLine(P(0, now()), P(W, now()), color=WHITE, stroke_width=2, stroke_opacity=0.75))
+        nowl = always_redraw(lambda: Tex("now", font_size=20).next_to(P(W, now()), UP, buff=0.04).shift(0.3 * LEFT))
+
+        def shell(r0, col):
+            """a shell of the wave that starts at distance r0: its ring from above, and its track on the map"""
+            ring = always_redraw(lambda: Circle(radius=K * (r0 - now()), color=col, stroke_width=5).move_to(O)
+                                 if r0 - now() > 0.03 else VGroup())
+            track = always_redraw(lambda: Line(P(r0, 0), P(r0 - min(now(), r0) - 1e-3, min(now(), r0) + 1e-3), color=col, stroke_width=4))
+            head = always_redraw(lambda: Dot(P(r0 - min(now(), r0), min(now(), r0)), color=col, radius=0.08))
+            return VGroup(ring, track, head)
+
+        self.play(FadeIn(VGroup(dotc, dl, vl)), Create(centre), Create(base), FadeIn(VGroup(tl, rl, ml)), run_time=1.2)
+        self.add(nowline, nowl)
+        self.say(r"Go back to one collapse and look closer, in two views. Left: space, seen from above. Right: a map, with distance from the centre across and time upward. The white line marks the same moment in both.")
+        A = shell(2.9, BLUE_)
+        self.add(A)
+        self.say(r"A shell of the wave falls inward. It moves at the speed of light, and nothing moves faster. On the map, that is a diagonal.", hold=0.3)
+        self.play(t.animate.set_value(2.9), run_time=3.6, rate_func=linear)
+        self.play(Flash(dotc, color=BLUE_, flash_radius=0.3), Indicate(centre, color=BLUE_), run_time=0.8)
+        cl = Tex("the centre", font_size=22, color=BLUE_).next_to(P(0, 0), DOWN, buff=0.1)
+        self.play(FadeIn(cl), run_time=0.3)
+        self.say(r"The centre is the wave's middle point. It stays put, so on the map it is the upright line at the left.")
         star = Dot(C, color=RED_, radius=0.1)
-        sl = Tex("the collapse", font_size=26, color=RED_).next_to(star, UP, buff=0.12)
-        self.play(FadeIn(star, scale=3), FadeIn(sl), run_time=0.7)
-        self.say(r"The collapse is the instant the echoes pile up at the centre: a single point on the map, at the top of that line.")
-        self.play(FadeOut(VGroup(dotc, il, ringi, d1)), f1.animate.set_stroke(opacity=0.35), run_time=0.5)
-        self.say(r"The wave moves at the speed of light, and nothing moves faster. So anything heading inward at full speed follows a diagonal like that one.")
-        edge = Line(P(T, 0), C, color=ORANGE_, stroke_width=5)
-        d2 = Dot(P(T, 0), color=ORANGE_, radius=0.1)
-        self.say(r"One flash of light is timed just right: it arrives at the centre exactly at the collapse.", hold=0.3)
-        self.play(Create(edge), MoveAlongPath(d2, edge), run_time=3.0, rate_func=linear)
-        self.play(Flash(star, color=ORANGE_), FadeOut(d2), run_time=0.6)
-        mirror = DashedLine(P(-T, 0), C, color=ORANGE_, stroke_width=3)
-        rim = Ellipse(width=2 * T, height=0.55, color=ORANGE_, stroke_width=2).move_to(P(0, 0))
-        self.play(Create(mirror), Create(rim), run_time=1.2)
-        self.say(r"Flashes like it close in from every side. Together they form a cone with its tip at the collapse: the light cone.")
-        self.play(FadeOut(mirror), FadeOut(rim), run_time=0.5)
-        # outside the cone: too late
-        when = DashedLine(P(0, T), P(8.4, T), color=GREY_, stroke_width=2)
-        wl = Tex("the moment of collapse", font_size=22, color=GREY_).next_to(when, UP, buff=0.08).align_to(when, RIGHT)
-        E = Dot(P(6.2, 0.7), color=PURPLE_, radius=0.09)
-        el = Tex("something out here", font_size=22, color=PURPLE_).next_to(E, DOWN, buff=0.12)
-        late = Line(P(6.2, 0.7), P(6.2 - (T - 0.7), T), color=PURPLE_, stroke_width=3)
-        d3 = Dot(P(6.2, 0.7), color=PURPLE_, radius=0.09)
-        self.play(Create(when), FadeIn(wl), FadeIn(E, scale=2), FadeIn(el), run_time=0.8)
-        self.say(r"Now take anything outside the cone. Even its light is still on the way when the collapse happens.", hold=0.3)
-        self.play(Create(late), MoveAlongPath(d3, late), run_time=2.4, rate_func=linear)
-        x3 = Cross(Dot(P(6.2 - (T - 0.7), T), radius=0.14), stroke_color=PURPLE_, stroke_width=4)
-        tooL = Tex("too late", font_size=24, color=PURPLE_).next_to(x3, DOWN, buff=0.12).shift(0.45 * RIGHT)
-        self.play(FadeIn(x3), FadeIn(tooL), FadeOut(d3), run_time=0.5)
-        self.wait(1.8)
-        inside = Polygon(P(0, 0), P(T, 0), C, stroke_width=0, fill_color=ORANGE_, fill_opacity=0.14)
-        hz = Tex("the horizon", font_size=28, color=ORANGE_).next_to(edge.get_center(), RIGHT, buff=0.3)
-        self.play(FadeOut(VGroup(E, el, late, x3, tooL)), FadeIn(inside), FadeIn(hz), run_time=0.8)
-        self.say(r"So nothing outside can affect the collapse. All that shapes it lies inside the cone. The cone's edge is called the horizon.")
-        note = Tex("(not the horizon of a black hole)", font_size=22, color=GREY_).next_to(hz, DOWN, buff=0.1).align_to(hz, LEFT)
-        self.play(FadeIn(note), run_time=0.4)
-        self.say(r"The solver therefore works only inside: from the centre out to the horizon.")
-        self.play(FadeOut(VGroup(when, wl, f1, note)), run_time=0.5)
-        # x: a ruler that shrinks with the time left
+        sl = Tex("the collapse", font_size=24, color=RED_).next_to(star, UP, buff=0.1)
+        hit = always_redraw(lambda: VGroup(Dot(O, color=RED_, radius=0.1), Tex("the collapse", font_size=22, color=RED_).next_to(O, UP, buff=0.15))
+                            if now() > T - 0.02 else VGroup())
+        self.add(hit)
+        self.play(t.animate.set_value(T), run_time=1.6, rate_func=linear)
+        self.play(FadeIn(star, scale=3), FadeIn(sl), Flash(dotc, color=RED_, flash_radius=0.4), run_time=0.8)
+        self.say(r"The collapse is the instant the rounds of echoing pile up at the centre. On the map it is one point: the top of that line.")
+        # which shells can take part?
+        self.say(r"Now rewind and ask: which parts of the wave can still take part in the collapse?", hold=0.2)
+        self.play(t.animate.set_value(0.0), run_time=1.2)
+        B = shell(T, ORANGE_)
+        self.add(B)
+        self.wait(0.6)
+        self.play(t.animate.set_value(T), run_time=4.2, rate_func=linear)
+        self.play(Flash(star, color=ORANGE_), Flash(dotc, color=ORANGE_, flash_radius=0.4), run_time=0.7)
+        self.say(r"This shell reaches the centre exactly at the collapse. It is the last one that arrives in time.")
+        self.play(t.animate.set_value(0.0), FadeOut(A), run_time=1.2)
+        Cs = shell(5.4, PURPLE_)
+        self.add(Cs)
+        self.say(r"A shell that starts farther out is still on its way when the collapse happens.", hold=0.2)
+        self.play(t.animate.set_value(T), run_time=4.2, rate_func=linear)
+        late = VGroup(Tex("too late", font_size=24, color=PURPLE_).next_to(P(5.4 - T, T), DOWN, buff=0.2).shift(0.5 * RIGHT),
+                      Tex("too late", font_size=22, color=PURPLE_).move_to([O[0], O[1] - K * (5.4 - T) - 0.3, 0]))
+        self.play(FadeIn(late), run_time=0.4)
+        self.say(r"It comes too late to matter. And since nothing outruns the wave, nothing else from out there can matter either.")
+        # the horizon: the closing edge of what can still matter
+        self.play(FadeOut(late), FadeOut(Cs), t.animate.set_value(0.0), run_time=1.2)
+        inside_map = Polygon(P(0, 0), P(T, 0), C, stroke_width=0, fill_color=ORANGE_, fill_opacity=0.16)
+        inside_view = always_redraw(lambda: Circle(radius=K * (T - now()), stroke_width=0, fill_color=ORANGE_, fill_opacity=0.16).move_to(O)
+                                    if T - now() > 0.03 else VGroup())
+        hz = Tex("the horizon", font_size=26, color=ORANGE_).next_to(Line(P(T, 0), C).get_center(), RIGHT, buff=0.3)
+        hv = Tex("the horizon", font_size=22, color=ORANGE_).move_to([O[0], O[1] + K * T + 0.25, 0])
+        self.add(inside_view)
+        self.play(FadeIn(inside_map), FadeIn(hz), FadeIn(hv), run_time=0.7)
+        self.say(r"So at every moment there is an edge: a sphere around the centre, closing in at the speed of light. Only what lies inside it can still affect the collapse.", hold=0.3)
+        self.play(FadeOut(hv), t.animate.set_value(0.72 * T), run_time=4.0, rate_func=linear)
+        self.wait(1.0)
+        self.say(r"That closing edge is the horizon, also called the light cone of the collapse. On the map it is the sloping line. It is not a black hole's horizon.")
+        self.say(r"The solver works only inside it: from the centre out to the horizon.")
+        # x: how far out, as a fraction of the way to the horizon
+        self.play(t.animate.set_value(0.0), run_time=1.2)
         rays = VGroup(*[Line(P(v * T, 0), C, color=GREY_, stroke_width=1.5) for v in CUTS[1:6]])
-        def ruler(t):
-            left = T - t
-            g = VGroup(Line(P(0, t), P(left, t), color=WHITE, stroke_width=3))
-            for v in [0.0] + CUTS[1:6] + [1.0]:
-                g.add(Line(P(v * left, t - 0.09), P(v * left, t + 0.09), color=WHITE, stroke_width=2.5))
-            return g
-        times = [0.0, T * (1 - 1 / 2.2), T * (1 - 1 / 4.84)]
-        r0 = ruler(times[0])
-        self.say(r"Inside, each echo is the last one, shrunk. So measure position with a ruler that shrinks at the same rate.", hold=0.3)
-        self.play(Create(r0), run_time=0.8)
-        self.play(LaggedStart(*[Create(r) for r in rays], lag_ratio=0.12), run_time=1.2)
-        kept = VGroup(r0.copy().set_stroke(opacity=0.35))
-        self.add(kept)
-        for t in times[1:]:
-            self.play(Transform(r0, ruler(t)), run_time=1.5)
-            kept.add(r0.copy().set_stroke(opacity=0.35))
-            self.add(kept)
-            self.wait(0.5)
-        c0 = Tex(r"$x = 0$", font_size=28, color=BLUE_).next_to(cl, DOWN, buff=0.06)
-        c1 = Tex(r"$x = 1$", font_size=28, color=ORANGE_).next_to(P(T, 0), DOWN, buff=0.12)
-        ch = Tex(r"$x = 0.5$", font_size=24, color=GREY_).next_to(P(0.5 * T, 0), DOWN, buff=0.12)
-        self.play(FadeIn(c0), FadeIn(c1), FadeIn(ch), run_time=0.6)
-        self.say(r"That ruler is $x$: the distance from the centre, divided by the time left. The centre is $x = 0$, and the horizon is $x = 1$.")
-        self.say(r"In $x$, every echo looks the same. Keep the horizon in mind: at large $D$, nearly every wall ahead begins at that edge.")
-        self.play(FadeOut(VGroup(centre, base, tl, rl, cl, sk, star, sl, edge, inside, hz, rays, r0, kept, c0, c1, ch, self.cap)), run_time=0.7)
+        marks = always_redraw(lambda: VGroup(*[Circle(radius=K * v * (T - now()), color=GREY_, stroke_width=1.5).move_to(O)
+                                               for v in CUTS[1:6]]) if T - now() > 0.2 else VGroup())
+        ruler = always_redraw(lambda: VGroup(Line(P(0, now()), P(T - now(), now()), color=WHITE, stroke_width=3),
+                                             *[Line(P(v * (T - now()), now() - 0.09), P(v * (T - now()), now() + 0.09), color=WHITE, stroke_width=2.5)
+                                               for v in [0.0] + CUTS[1:6] + [1.0]]))
+        x0 = Tex(r"$x = 0$", font_size=24, color=BLUE_).next_to(cl, DOWN, buff=0.04)
+        x1 = Tex(r"$x = 1$", font_size=24, color=ORANGE_).next_to(P(T, 0), DOWN, buff=0.1)
+        xh = Tex(r"$x = 0.5$", font_size=22, color=GREY_).next_to(P(0.5 * T, 0), DOWN, buff=0.1)
+        self.play(LaggedStart(*[Create(r) for r in rays], lag_ratio=0.1), FadeIn(marks), FadeIn(ruler), FadeIn(VGroup(x0, x1, xh)), run_time=1.4)
+        self.say(r"Inside the horizon, say where a point is by how far out it is, as a fraction: $x = 0$ at the centre, $x = 1$ on the horizon, $x = 0.5$ halfway.")
+        self.say(r"As the horizon closes in, those marks close in with it.", hold=0.2)
+        self.play(t.animate.set_value(0.8 * T), run_time=5.0, rate_func=linear)
+        self.say(r"Each round of echoing is the last one, shrunk. In $x$ the shrinking is taken out, so every echo looks the same.")
+        self.say(r"Keep the horizon in mind. At large $D$, nearly every wall ahead begins at that edge.")
+        self.say(r"So the solver works in $x$, between the centre at 0 and the horizon at 1.")
+        for m in (nowline, nowl, B, hit, inside_view, marks, ruler):
+            m.clear_updaters()
+        self.play(FadeOut(VGroup(dotc, dl, vl, centre, base, tl, rl, ml, cl, star, sl, B, hit, inside_map, inside_view, hz, rays, marks, ruler,
+                                 x0, x1, xh, nowline, nowl, self.cap)), run_time=0.7)
 
 
 class S03c_Numbers(Film):
     stage = r"6 \quad The solution, written as numbers"
 
     def construct(self):
-        # what a solution is: the wave at every point inside the cone, echo stacked on echo
+        D38, co = harmonics(38.0)
+        top = max(abs(wave_of(co, 2 * math.pi * k / 200)) for k in range(200))
+        # 1. what a solution is: every field at every point inside the horizon, echo stacked on echo
         C, T, Wd = [-6.0, 2.5, 0.0], 4.4, 3.7
         pt = lambda v, t: [C[0] + v * Wd * (1 - t / T), C[1] - T + t, 0.0]
         centre = Line(pt(0, 0), C, color=BLUE_, stroke_width=4)
@@ -488,56 +530,77 @@ class S03c_Numbers(Film):
         sl = Tex("the collapse", font_size=24, color=RED_).next_to(star, RIGHT, buff=0.15)
         c0 = Tex(r"the centre\\$x = 0$", font_size=22, color=BLUE_).next_to(pt(0, 0), DOWN, buff=0.1)
         c1 = Tex(r"the horizon\\$x = 1$", font_size=22, color=ORANGE_).next_to(pt(1, 0), DOWN, buff=0.1)
-        sk = Tex("sketch", font_size=20, color=GREY_).move_to([C[0] + 3.3, C[1] - 0.1, 0])
-        tk = [T * (1 - 0.62 ** k) for k in range(11)]              # half echoes, each 0.62 of the one before
-        band = lambda k: Polygon(pt(0, tk[k]), pt(1, tk[k]), pt(1, tk[k + 1]), pt(0, tk[k + 1]), stroke_width=0,
-                                 fill_color=BLUE_ if k % 2 == 0 else PURPLE_, fill_opacity=0.5)
-        bands = VGroup(*[band(k) for k in range(10)])
-        self.play(FadeIn(VGroup(centre, cone, star, sl, c0, c1, sk)), run_time=0.9)
-        self.say(r"What is a solution? It is what the wave, and the spacetime, are doing at every point inside the cone.", hold=0.4)
+        sk = Tex("the map (a sketch)", font_size=20, color=GREY_).move_to([C[0] + 3.4, C[1] - 0.1, 0])
+        left = lambda k: T * 0.62 ** k                                  # time left at half echo k
+        tk = [T - left(k) for k in range(11)]
+        bands = VGroup(*[Polygon(pt(0, tk[k]), pt(1, tk[k]), pt(1, tk[k + 1]), pt(0, tk[k + 1]), stroke_width=0,
+                                 fill_color=GOLD_ if k % 2 == 0 else BLUE_, fill_opacity=0.45) for k in range(10)])
+        themap = VGroup(centre, cone, star, sl, c0, c1, sk)
+        self.play(FadeIn(themap), run_time=0.9)
+        self.say(r"What must it find there? What the wave is doing at every point inside the horizon, at every moment. That is a solution.", hold=0.4)
         self.play(LaggedStart(*[FadeIn(bd) for bd in bands], lag_ratio=0.25), run_time=3.0)
-        self.say(r"On the map the echoes stack up toward the collapse. Each one is a shrunken copy of the one below it.")
-        # one echo is enough: a strip in x, one echo tall
-        one = Polygon(pt(0, tk[2]), pt(1, tk[2]), pt(1, tk[4]), pt(0, tk[4]), color=GOLD_, stroke_width=4)
-        self.play(Create(one), run_time=0.8)
-        RW, RH, RC = 4.6, 2.4, [3.3, 0.9, 0.0]
-        lo = Rectangle(width=RW, height=RH / 2, stroke_width=0, fill_color=BLUE_, fill_opacity=0.5).move_to([RC[0], RC[1] - RH / 4, 0])
-        hi = Rectangle(width=RW, height=RH / 2, stroke_width=0, fill_color=PURPLE_, fill_opacity=0.5).move_to([RC[0], RC[1] + RH / 4, 0])
-        frame = Rectangle(width=RW, height=RH, color=GOLD_, stroke_width=4).move_to(RC)
-        self.say(r"Measured with the shrinking ruler $x$, every echo is the same picture. So one echo is enough.", hold=0.4)
-        self.play(ReplacementTransform(bands[2].copy(), lo), ReplacementTransform(bands[3].copy(), hi),
-                  ReplacementTransform(one.copy(), frame), run_time=1.8)
-        xa = VGroup(Tex(r"$x = 0$", font_size=24, color=BLUE_).next_to(frame.get_corner(DL), DOWN, buff=0.1),
-                    Tex(r"$x = 1$", font_size=24, color=ORANGE_).next_to(frame.get_corner(DR), DOWN, buff=0.1),
-                    Tex(r"$x \rightarrow$", font_size=24, color=GREY_).next_to(frame, DOWN, buff=0.1))
-        br = Brace(frame, LEFT, color=GOLD_)
-        bl = Tex(r"one echo:\\height $\Delta$", font_size=24, color=GOLD_).next_to(br, LEFT, buff=0.1)
-        self.play(FadeIn(xa), GrowFromCenter(br), FadeIn(bl), run_time=0.8)
-        self.wait(1.6)
-        self.say(r"It is a strip: from the centre to the horizon across, and one echo tall. Its height in logarithmic time is the echo period $\Delta$, not known in advance.")
-        layers = VGroup(*[frame.copy().set_stroke(width=2, opacity=0.45).shift(0.11 * j * UR) for j in (3, 2, 1)])
-        fields = VGroup(Tex(r"$p,\ m$: the scalar wave, heading out and in along light rays", font_size=22, color=BLUE_),
-                        Tex(r"$a,\ c$: the curved spacetime it travels through", font_size=22, color=PURPLE_))
-        fields.arrange(DOWN, buff=0.12, aligned_edge=LEFT).next_to(frame, DOWN, buff=0.6)
-        self.play(FadeIn(layers), FadeIn(fields), run_time=0.8)
-        self.say(r"A solution is four such strips, one for each field: two for the scalar wave, and two for the spacetime it bends.")
-        # a computer holds numbers: sample the strip on five lines, and store each wave by its harmonics
-        nodes = VGroup(*[Line(frame.get_corner(DL) + RIGHT * v * RW, frame.get_corner(UL) + RIGHT * v * RW, color=WHITE, stroke_width=3)
-                         for v in CUTS[1:6]])
-        nl = Tex("the five nodes", font_size=22).next_to(frame, UP, buff=0.42)
-        self.play(FadeOut(fields), LaggedStart(*[Create(n) for n in nodes], lag_ratio=0.15), FadeIn(nl), run_time=1.4)
-        self.say(r"A computer holds numbers, not pictures. So sample each strip on five upright lines between the centre and the horizon: the nodes.")
-        self.play(FadeOut(VGroup(centre, cone, star, sl, c0, c1, sk, bands, one)), run_time=0.6)
-        D38, co = harmonics(38.0)
-        top = 1.25 * max(abs(wave_of(co, 2 * math.pi * k / 200)) for k in range(200))
-        wax = Axes(x_range=[0, 2 * math.pi, math.pi], y_range=[-top, top, top], x_length=4.6, y_length=1.5, tips=False,
+        self.say(r"On the map, the swings of the wave stack up toward the collapse: crest, trough, crest, each a shrunken copy of the one before.")
+        # 2. one echo, redrawn with x across and the time within the echo upward
+        RW, RH, RC = 4.6, 2.4, [3.3, 0.95, 0.0]
+        vs, fs = [0.0] + CUTS[1:6] + [1.0], [0.0, 0.5, 1.0]
+        tf = lambda f: T - left(2) * (left(4) / left(2)) ** f              # the time at fraction f of this echo
+        gmap = VGroup(*[Line(pt(v, tf(0)), pt(v, tf(1)), color=WHITE, stroke_width=2) for v in vs],
+                      *[Line(pt(0, tf(f)), pt(1, tf(f)), color=WHITE, stroke_width=2) for f in fs])
+        corner = [RC[0] - RW / 2, RC[1] - RH / 2, 0.0]
+        gbox = VGroup(*[Line([corner[0] + v * RW, corner[1], 0], [corner[0] + v * RW, corner[1] + RH, 0], color=WHITE, stroke_width=2) for v in vs],
+                      *[Line([corner[0], corner[1] + f * RH, 0], [corner[0] + RW, corner[1] + f * RH, 0], color=WHITE, stroke_width=2) for f in fs])
+        lo = Rectangle(width=RW, height=RH / 2, stroke_width=0, fill_color=GOLD_, fill_opacity=0.45).move_to([RC[0], RC[1] - RH / 4, 0])
+        hi = Rectangle(width=RW, height=RH / 2, stroke_width=0, fill_color=BLUE_, fill_opacity=0.45).move_to([RC[0], RC[1] + RH / 4, 0])
+        self.play(Create(gmap), run_time=1.0)
+        self.say(r"Take one echo: a crest and a trough. On the map it is a slanted, shrinking patch.", hold=1.6)
+        self.say(r"Redraw that patch with $x$ across and the time within the echo upward. The same patch becomes a plain rectangle.", hold=0.4)
+        self.play(ReplacementTransform(gmap.copy(), gbox), ReplacementTransform(bands[2].copy(), lo), ReplacementTransform(bands[3].copy(), hi), run_time=2.4)
+        xa = VGroup(Tex(r"$x = 0$", font_size=24, color=BLUE_).next_to([corner[0], corner[1], 0], DOWN, buff=0.1),
+                    Tex(r"$x = 1$", font_size=24, color=ORANGE_).next_to([corner[0] + RW, corner[1], 0], DOWN, buff=0.1),
+                    Tex(r"position $x \rightarrow$", font_size=22, color=GREY_).next_to([RC[0], corner[1], 0], DOWN, buff=0.1))
+        ya = Tex(r"time within\\one echo $\uparrow$", font_size=22, color=GREY_).next_to([corner[0], RC[1], 0], LEFT, buff=0.15)
+        self.play(FadeIn(xa), FadeIn(ya), run_time=0.6)
+        self.wait(2.0)
+        # 3. an image
+        cells = strip_cells(RC, RW, RH, co)
+        frame = Rectangle(width=RW, height=RH, color=WHITE, stroke_width=2).move_to(RC)
+        key = Tex(r"gold: the field is positive \quad blue: negative", font_size=20, color=GREY_).next_to(frame, UP, buff=0.12)
+        self.play(FadeOut(lo), FadeOut(hi), FadeOut(gbox), FadeIn(cells), FadeIn(frame), FadeIn(key), run_time=1.2)
+        self.say(r"Think of the rectangle as an image. Each pixel is one place and one moment within the echo, and its colour is the strength of the wave there.")
+        # 4. it is still a wave: read up one line
+        xn = corner[0] + 0.5 * RW
+        wig = VMobject(color=WHITE, stroke_width=4).set_points_as_corners(
+            [[xn + 0.42 * wave_of(co, 2 * math.pi * k / 120) / top, corner[1] + RH * k / 120, 0] for k in range(121)])
+        guide = DashedLine([xn, corner[1], 0], [xn, corner[1] + RH, 0], color=WHITE, stroke_width=1.5)
+        self.play(Create(guide), run_time=0.5)
+        self.play(Create(wig), run_time=1.6)
+        self.say(r"It is still a wave. Read up any one line: the field rises and falls, one swing per echo.")
+        self.play(FadeOut(themap), FadeOut(bands), FadeOut(gmap), run_time=0.6)
+        wax = Axes(x_range=[0, 2 * math.pi, math.pi], y_range=[-1.25 * top, 1.25 * top, top], x_length=4.6, y_length=1.5, tips=False,
                    axis_config={"color": GREY_, "stroke_width": 1.5, "include_ticks": False}).move_to([-3.9, 1.75, 0])
-        wave = wax.plot(lambda t: wave_of(co, t), x_range=[0, 2 * math.pi, 0.02], color=GOLD_, stroke_width=3.5)
-        wl = Tex(f"one field along one line, over one echo\\\\(shown: the real wave at the centre, $D = {D38:.0f}$)", font_size=20, color=GREY_).next_to(wax, UP, buff=0.06)
-        link = Arrow(nodes[2].get_center(), wax.get_right() + 0.15 * RIGHT, color=GOLD_, stroke_width=3, buff=0.1, max_tip_length_to_length_ratio=0.06)
-        self.play(nodes[2].animate.set_color(GOLD_), GrowArrow(link), run_time=0.8)
-        self.play(Create(wax), FadeIn(wl), Create(wave), run_time=1.4)
-        self.say(r"Along each line, each field is a single wave over the echo.")
+        wave = wax.plot(lambda t: wave_of(co, t), x_range=[0, 2 * math.pi, 0.02], color=WHITE, stroke_width=3.5)
+        wl = Tex(r"that line, turned on its side: time within one echo $\rightarrow$", font_size=20, color=GREY_).next_to(wax, UP, buff=0.06)
+        self.play(Create(wax), TransformFromCopy(wig, wave), FadeIn(wl), run_time=2.0)
+        br = Brace(wax, DOWN, color=GOLD_)
+        bl = Tex(r"one echo: in logarithmic time, the echo period $\Delta$", font_size=20, color=GOLD_).next_to(br, DOWN, buff=0.05)
+        self.play(GrowFromCenter(br), FadeIn(bl), run_time=0.7)
+        self.say(r"Turned on its side, it is an ordinary wave over one echo. So the height of the rectangle is one echo: the period $\Delta$ we are after.")
+        # 5. four fields, four images
+        layers = VGroup(*[frame.copy().set_stroke(width=2, opacity=0.5).shift(0.11 * j * UR) for j in (3, 2, 1)])
+        fields = VGroup(Tex(r"$p,\ m$: the scalar wave, heading out and in", font_size=22, color=BLUE_),
+                        Tex(r"$a,\ c$: the curved spacetime it travels through", font_size=22, color=PURPLE_))
+        fields.arrange(DOWN, buff=0.12, aligned_edge=LEFT).next_to(frame, DOWN, buff=0.65)
+        self.play(FadeIn(layers), FadeIn(fields), FadeOut(key), run_time=0.8)
+        self.say(r"One image is not enough. Four quantities, called fields, are needed: two for the wave, its parts heading out and in, and two for the spacetime it bends. So a solution is four such images, like layers.")
+        # 6. the computer keeps five columns of each
+        ncol, nrow = 28, 16
+        node_i = [int(v * ncol) for v in CUTS[1:6]]
+        rest = VGroup(*[cells[i * nrow:(i + 1) * nrow] for i in range(ncol) if i not in node_i])
+        nl = Tex("the five nodes", font_size=22).next_to(frame, UP, buff=0.42)
+        self.play(rest.animate.set_fill(opacity=0.05), FadeOut(wig), FadeOut(guide), FadeOut(fields), FadeIn(nl), run_time=1.0)
+        self.say(r"The computer does not keep whole images. Of each one it keeps five columns: five positions between the centre and the horizon, called the nodes.")
+        # 7. a column is a wave, and a wave is 32 numbers
+        self.play(FadeOut(br), FadeOut(bl), run_time=0.3)
         minis = VGroup()
         for k in (1, 3, 5):
             size = math.hypot(*co[k])
@@ -546,15 +609,30 @@ class S03c_Numbers(Film):
             c = m.plot(lambda t, k=k, size=size: wave_of(co, t, ks=(k,)) / size, x_range=[0, 2 * math.pi, 0.02],
                        color=GOLD_, stroke_width=2.5)
             minis.add(VGroup(m, c, Tex(f"harmonic {k}\\\\size {size:.2g}", font_size=20, color=GREY_).next_to(m, DOWN, buff=0.05)))
-        minis.arrange(RIGHT, buff=0.25).move_to([-3.9, -0.7, 0])
+        minis.arrange(RIGHT, buff=0.25).move_to([-3.9, -0.75, 0])
         plus = Tex(r"$=$ a sum of pure tones, each on its own scale:", font_size=20, color=GREY_).next_to(minis, UP, buff=0.1).align_to(minis, LEFT)
         self.play(FadeIn(plus), LaggedStart(*[FadeIn(m, shift=0.2 * DOWN) for m in minis], lag_ratio=0.3), run_time=1.6)
-        self.say(r"A wave is a sum of pure tones, its harmonics: harmonic $k$ swings $k$ times per echo, and each is about ten times smaller than the last.")
-        self.say(r"So a wave is stored as its harmonics: 32 numbers. The smallest of them will be the first wall.")
-        self.say(r"Why only five lines? Because the equations fill in everything between them. That is the next scene.")
-        self.play(FadeOut(VGroup(wax, wave, wl, link, minis, plus, lo, hi, frame, xa, br, bl, layers, nodes, nl)), run_time=0.7)
-
-        # the list z, to scale: 64 centre numbers, five nodes of 128, 64 horizon numbers, Delta
+        self.say(f"Each column is a wave, and a wave is a sum of pure tones, its harmonics. Harmonic $k$ swings $k$ times per echo, and each is about ten times smaller than the last. (This one is the real wave at the centre, at $D = {D38:.0f}$.)")
+        self.say(r"So a column is stored as its harmonics: 32 numbers. The smallest of them will be the first wall.")
+        self.play(FadeOut(VGroup(wax, wave, wl, minis, plus, cells, frame, layers, xa, ya, nl)), run_time=0.7)
+        # 8. each field is a table: 5 nodes across, 32 numbers down
+        def table(col):
+            g, cw, ch = VGroup(), 0.42, 0.22
+            for i in range(5):
+                for j in range(8):
+                    g.add(Rectangle(width=cw, height=ch, stroke_color=WHITE, stroke_width=1, fill_color=interpolate_color(ManimColor(col), ManimColor('#0d1117'), 0.45), fill_opacity=1.0).move_to([i * cw, -j * ch, 0]))
+            return g
+        tabs = VGroup(*[table(c).shift(0.3 * k * UR) for k, c in zip((3, 2, 1, 0), (PURPLE_, PURPLE_, BLUE_, BLUE_))]).move_to([0, 0.95, 0])
+        edge = tabs[0].get_right()[0] + 0.2
+        tags = VGroup(*[MathTex(n, font_size=30, color=c_).move_to([edge, tabs[i].get_top()[1] - 0.12, 0])
+                        for i, n, c_ in zip((3, 2, 1, 0), "pmac", (BLUE_, BLUE_, PURPLE_, PURPLE_))])
+        tb = Brace(tabs[3], LEFT, color=GREY_)
+        tbl = Tex(r"32 numbers\\(8 shown)", font_size=22, color=GREY_).next_to(tb, LEFT, buff=0.1)
+        tt = Tex("5 nodes", font_size=22, color=GREY_).next_to(tabs[3], DOWN, buff=0.12)
+        self.play(LaggedStart(*[FadeIn(tb_, shift=0.15 * DL) for tb_ in tabs], lag_ratio=0.3), FadeIn(tags), run_time=1.8)
+        self.play(GrowFromCenter(tb), FadeIn(tbl), FadeIn(tt), run_time=0.6)
+        self.say(r"So each field is a small table: 5 nodes across, 32 numbers down. Four fields, four tables: an array of $4 \times 5 \times 32$ numbers.")
+        # 9. laid end to end, with the edges and the height: z
         W, x, blocks = 11.0, 0.0, VGroup()
         unit = W / 769.0
         parts = [("centre", 64, BLUE_)] + [("node", 128, GREY_)] * 5 + [("horizon", 64, ORANGE_), ("Delta", 6, GOLD_)]
@@ -572,96 +650,228 @@ class S03c_Numbers(Film):
             blocks.add(r)
             x += n * unit
         zl = MathTex(r"z", font_size=54).next_to(blocks, LEFT, buff=0.3)
-        mid = Tex(r"five nodes $\times$ four fields $\times$ 32 numbers", font_size=24).next_to(blocks[3], DOWN, buff=0.15)
-        lc = Tex(r"centre data:\\the numbers that start\\the strip at $x = 0$", font_size=22, color=BLUE_).next_to(blocks[0], UP, buff=0.2).align_to(blocks[0], LEFT)
-        lh = Tex(r"horizon data:\\the numbers that start\\it at $x = 1$", font_size=22, color=ORANGE_).next_to(blocks[6], UP, buff=0.2).align_to(blocks[6], RIGHT)
-        ld = Tex(r"the height $\Delta$", font_size=24, color=GOLD_).next_to(blocks[7], DOWN, buff=0.15).align_to(blocks[7], RIGHT)
-        self.play(LaggedStart(*[FadeIn(bk, shift=0.2 * DOWN) for bk in blocks[1:6]], lag_ratio=0.12), FadeIn(mid), run_time=1.6)
-        self.say(r"Lay the numbers out in a row: five nodes, four fields at each, 32 numbers for each field.")
+        mid = Tex(r"five nodes $\times$ four fields $\times$ 32 numbers $= 640$", font_size=24).next_to(blocks[3], DOWN, buff=0.15)
+        lc = Tex(r"centre data: 64 numbers\\that start the picture\\at $x = 0$", font_size=22, color=BLUE_).next_to(blocks[0], UP, buff=0.2).align_to(blocks[0], LEFT)
+        lh = Tex(r"horizon data: 64 numbers\\that start it at $x = 1$", font_size=22, color=ORANGE_).next_to(blocks[6], UP, buff=0.2).align_to(blocks[6], RIGHT)
+        ld = Tex(r"the height $\Delta$: 1", font_size=24, color=GOLD_).next_to(blocks[7], DOWN, buff=0.15).align_to(blocks[7], RIGHT)
+        self.play(FadeOut(VGroup(tags, tb, tbl, tt)), ReplacementTransform(tabs, VGroup(*blocks[1:6])), run_time=1.6)
+        self.play(FadeIn(mid), run_time=0.4)
+        self.say(r"Lay the tables end to end, node by node.")
         self.play(FadeIn(blocks[0]), FadeIn(blocks[6]), FadeIn(blocks[7]), FadeIn(lc), FadeIn(lh), FadeIn(ld), run_time=0.9)
-        self.say(r"Add the numbers that start the strip at its two edges, the centre data and the horizon data, and its height $\Delta$.")
-        tot = Tex("769 numbers", font_size=40, color=GOLD_).move_to([0, -1.2, 0])
+        self.say(r"Add the numbers that start the picture at its two edges, the centre data and the horizon data, and its height $\Delta$.")
+        tot = Tex(r"$640 + 64 + 64 + 1 = 769$ numbers", font_size=38, color=GOLD_).move_to([0, -1.2, 0])
         self.play(FadeIn(zl), FadeIn(tot, shift=0.2 * UP), run_time=0.7)
-        self.say(r"That whole row of 769 numbers is called $z$. It is everything the computer knows about one solution.")
-        self.say(r"So from here on, a guess at the solution is a guess at $z$. Solving means adjusting those 769 numbers until the strips obey Einstein's equations.")
+        self.say(r"That row of 769 numbers is called $z$. It is everything the computer knows about one solution.")
+        self.say(r"From here on, a guess at the solution is a guess at $z$. Solving means adjusting those numbers until the four images obey Einstein's equations.")
         self.play(FadeOut(VGroup(blocks, zl, mid, lc, lh, ld, tot, self.cap)), run_time=0.7)
 
 
 class S03d_Join(Film):
-    stage = r"7 \quad Do the pieces join?"
+    stage = r"7 \quad Checking a guess: do the pieces join?"
 
     def construct(self):
-        line, deco = x_line()
-        eq = MathTex(r"x\,(x - c)\,\frac{\partial p}{\partial x} \;=\; \cdots", font_size=44).move_to([0, 2.55, 0])
-        self.play(Create(line), FadeIn(deco), run_time=0.9)
-        self.say(r"How do we tell whether a given $z$ is a solution? Einstein's equations, with the wave equation, say how every field changes from one $x$ to the next.", hold=0.4)
+        D38, co = harmonics(38.0)
+        # a guess z holds each image only on five columns and at its two edges
+        RW, RH, RC, ncol, nrow = 9.0, 2.2, [0.0, 0.55, 0.0], 45, 12
+        cells = strip_cells(RC, RW, RH, co, ncol=ncol, nrow=nrow)
+        col = lambda i: cells[i * nrow:(i + 1) * nrow]
+        node_i = [int(v * ncol) for v in CUTS[1:6]]
+        frame = Rectangle(width=RW, height=RH, color=GREY_, stroke_width=2).move_to(RC)
+        cells.set_fill(opacity=0.0)
+        known = VGroup(*[col(i) for i in node_i])
+        ex = VGroup(Tex(r"the centre, $x = 0$", font_size=22, color=BLUE_).next_to(frame.get_corner(DL), DOWN, buff=0.1).align_to(frame, LEFT),
+                    Tex(r"the horizon, $x = 1$", font_size=22, color=ORANGE_).next_to(frame.get_corner(DR), DOWN, buff=0.1).align_to(frame, RIGHT),
+                    Tex("the five nodes: what $z$ stores", font_size=22).next_to(frame, DOWN, buff=0.1))
+        edges = VGroup(Line(frame.get_corner(DL), frame.get_corner(UL), color=BLUE_, stroke_width=5),
+                       Line(frame.get_corner(DR), frame.get_corner(UR), color=ORANGE_, stroke_width=5))
+        self.add(cells)
+        self.play(FadeIn(frame), FadeIn(ex), FadeIn(edges), run_time=0.8)
+        for i in node_i:
+            for j, c in enumerate(col(i)):
+                c.set_fill(opacity=min(1.0, 0.12 + 0.95 * abs(((i + 0.5) / ncol) * wave_of(co, 2 * math.pi * (j + 0.5) / nrow) / max(abs(wave_of(co, 2 * math.pi * k / 200)) for k in range(200)))))
+        self.play(FadeIn(known), run_time=0.8)
+        self.say(r"How can we tell whether a guess $z$ obeys them? It holds each image only on five columns, and at its two edges. Everything depends on what lies in between.")
+        eq = MathTex(r"x\,(x - c)\,\frac{\partial p}{\partial x} \;=\; \cdots", font_size=40).move_to([0, 2.75, 0])
         self.play(Write(eq), run_time=1.2)
-        self.wait(3.0)
+        self.say(r"Einstein's equations, with the wave equation, say how every field changes from one $x$ to the next.")
+        top = max(abs(wave_of(co, 2 * math.pi * k / 200)) for k in range(200))
+        def lit(i):
+            g = col(i)
+            for j, c in enumerate(g):
+                c.generate_target()
+                c.target.set_fill(opacity=min(1.0, 0.12 + 0.95 * abs(((i + 0.5) / ncol) * wave_of(co, 2 * math.pi * (j + 0.5) / nrow) / top)))
+            return [MoveToTarget(c) for c in g]
+        def arrow(i0, i1, colr, y=None):
+            xa_ = RC[0] - RW / 2 + (i0 + 0.5) * RW / ncol
+            xb_ = RC[0] - RW / 2 + (i1 + 0.5) * RW / ncol
+            yy = RC[1] + RH / 2 + 0.22 if y is None else y
+            return Arrow([xa_, yy, 0], [xb_, yy, 0], color=colr, stroke_width=4, buff=0, max_tip_length_to_length_ratio=0.25)
+        a1 = arrow(node_i[0], node_i[1], GREEN_)
+        self.say(r"So starting from one column, the equations fill in the image as far as the next column. That filled-in stretch is a piece.", hold=0.4)
+        self.play(GrowArrow(a1), LaggedStart(*[AnimationGroup(*lit(i)) for i in range(node_i[0] + 1, node_i[1])], lag_ratio=0.5), run_time=2.2)
+        self.wait(2.6)
+        arrows = VGroup(a1, *[arrow(node_i[k], node_i[k + 1], GREEN_) for k in (1, 2, 3)], arrow(0, node_i[0], BLUE_), arrow(ncol - 1, node_i[4], ORANGE_))
+        self.say(r"Six pieces cover the whole image: one out from the centre, four from node to node, and one in from the horizon.", hold=0.4)
+        self.play(GrowArrow(arrows[4]), LaggedStart(*[AnimationGroup(*lit(i)) for i in range(0, node_i[0])], lag_ratio=0.3), run_time=1.6)
+        for k in (1, 2, 3):
+            self.play(GrowArrow(arrows[k]), LaggedStart(*[AnimationGroup(*lit(i)) for i in range(node_i[k] + 1, node_i[k + 1])], lag_ratio=0.5), run_time=0.9)
+        self.play(GrowArrow(arrows[5]), LaggedStart(*[AnimationGroup(*lit(i)) for i in range(ncol - 1, node_i[4], -1)], lag_ratio=0.3), run_time=1.6)
+        self.wait(1.8)
+        row = Line([RC[0] - RW / 2, RC[1] + 0.25 * RH, 0], [RC[0] + RW / 2, RC[1] + 0.25 * RH, 0], color=WHITE, stroke_width=3)
+        self.say(r"Do the pieces fit together? To see, look along one row of the image: one field at one moment, drawn against $x$.", hold=0.4)
+        self.play(Create(row), run_time=1.0)
+        self.wait(1.6)
+        # one row: the six pieces, the stored values, the gaps
+        line, deco = x_line()
         P = [piece(line, i, 1.0) for i in range(6)]
+        dots = VGroup(*[Dot(P[i].get_start(), color=WHITE, radius=0.07) for i in (1, 2, 3, 4)], Dot(P[5].get_end(), color=WHITE, radius=0.07))
+        self.play(FadeOut(VGroup(cells, frame, ex, edges, arrows)), ReplacementTransform(row, line), FadeIn(deco), run_time=1.2)
+        self.play(FadeIn(dots), run_time=0.5)
+        self.say(r"The dots are the values $z$ stores at the five nodes.", hold=1.4)
         tl = Tex("Taylor steps", font_size=24, color=GREEN_).next_to(line.n2p(0.5), UP, buff=0.18)
-        self.say(r"So the numbers at one node predict the numbers at the next. That prediction is a Taylor step:", hold=0.3)
+        self.say(r"From node to node, a piece is carried by a Taylor step: a polynomial of high order that follows the equations across the gap.", hold=0.4)
         self.play(LaggedStart(*[Create(P[i]) for i in (1, 2, 3, 4)], lag_ratio=0.6), FadeIn(tl), run_time=2.6)
-        self.say(r"a polynomial of high order that follows the equations across the gap between two nodes.")
-        self.say(r"At the two ends this fails: the factor in front becomes zero, and the equation would divide by it.", hold=0.4)
+        self.wait(2.4)
+        self.say(r"At the two ends that fails: the factor in front becomes zero, and the equation would divide by it.", hold=0.4)
         self.play(eq[0][0].animate.set_color(BLUE_), eq[0][1:6].animate.set_color(ORANGE_), run_time=0.6)
         self.play(Indicate(eq[0][0], color=BLUE_), Indicate(eq[0][1:6], color=ORANGE_), run_time=1.2)
         self.wait(2.2)
         self.say(r"$x = 0$ is the centre. And $c$ is the speed of light on our map, so $x - c = 0$ is the horizon: light there runs along the edge, not across it.")
         cl = Tex("series from the centre", font_size=24, color=BLUE_).next_to(line.n2p(0.15), UP, buff=0.18)
         hl = Tex("series from the horizon", font_size=24, color=ORANGE_).next_to(line.n2p(0.85), UP, buff=0.18)
-        self.say(r"So near each end the solution is written as a power series that is smooth there, started by that end's own numbers in $z$: the centre data and the horizon data.", hold=0.4)
+        self.say(r"So at each end the piece is a power series, a long polynomial that is smooth there, started by that end's own numbers in $z$: the centre data and the horizon data.", hold=0.4)
         self.play(Create(P[0]), FadeIn(cl), run_time=1.3)
         self.play(Create(P[5]), FadeIn(hl), run_time=1.3)
         self.wait(2.6)
         g = gaps(line, 1.0)
-        self.say(r"Where two pieces meet, they should agree. For a guessed $z$ they do not.", hold=0.4)
-        self.play(LaggedStart(*[GrowFromCenter(s) for s in g], lag_ratio=0.2), run_time=1.4)
-        self.wait(1.6)
+        self.say(r"Each piece should land exactly on the stored values where it arrives. For a guessed $z$ it misses, and leaves a gap.", hold=0.4)
+        self.play(LaggedStart(*[GrowFromCenter(sg) for sg in g], lag_ratio=0.2), run_time=1.4)
+        self.wait(1.8)
         F = MathTex(r"F(z)", font_size=44, color=RED_)
         Ft = Tex("= all the gaps, one for each number in $z$", font_size=28, color=RED_).next_to(F, RIGHT, buff=0.25)
-        VGroup(F, Ft).move_to([0, 2.55, 0])
+        VGroup(F, Ft).move_to([0, 2.75, 0])
         self.play(FadeOut(eq), run_time=0.4)
         self.play(FadeIn(F), FadeIn(Ft), run_time=0.6)
-        self.say(r"Those gaps are the residual $F(z)$. Only the true fields, with the true $\Delta$, close every one of them.")
-        root = MathTex(r"F(z) = 0", font_size=56, color=GOLD_).move_to([0, 2.55, 0])
+        self.say(r"Those gaps are called the residual, $F(z)$. Only the true fields, with the true $\Delta$, close every one of them.")
+        root = MathTex(r"F(z) = 0", font_size=56, color=GOLD_).move_to([0, 2.75, 0])
         self.play(FadeOut(F), FadeOut(Ft), FadeIn(root, scale=1.2), run_time=0.7)
         self.say(r"That is what a solve is: find the $z$ with $F(z) = 0$. A solution is a root.")
-        self.play(FadeOut(VGroup(line, deco, tl, cl, hl, g, root, self.cap, *P)), run_time=0.7)
+        self.play(FadeOut(VGroup(line, deco, dots, tl, cl, hl, g, root, self.cap, *P)), run_time=0.7)
 
 
 class S03e_Newton(Film):
     stage = r"8 \quad Newton's method"
 
     def construct(self):
+        # one unknown: follow the slope down to zero
+        ax = Axes(x_range=[1.0, 3.25, 0.5], y_range=[-2, 8, 2], x_length=6.4, y_length=4.3, tips=False,
+                  axis_config={"color": GREY_, "stroke_width": 2, "include_numbers": True, "font_size": 20},
+                  x_axis_config={"decimal_number_config": {"num_decimal_places": 1}}).move_to([-3.2, 0.6, 0])
+        f = lambda v: v * v - 2.0
+        curve = ax.plot(f, x_range=[1.0, 3.2, 0.01], color=BLUE_, stroke_width=4)
+        yl = Tex("the miss", font_size=22, color=GREY_).next_to(ax.y_axis, UP, buff=0.08)
+        xl = Tex("the unknown", font_size=22, color=GREY_).next_to(ax.x_axis, RIGHT, buff=0.1)
+        rt = Dot(ax.c2p(math.sqrt(2.0), 0), color=GOLD_, radius=0.08)
+        rl = Tex("the root", font_size=22, color=GOLD_).next_to(rt, UL, buff=0.12)
+        self.play(Create(ax), FadeIn(yl), FadeIn(xl), Create(curve), run_time=1.4)
+        self.play(FadeIn(rt, scale=2), FadeIn(rl), run_time=0.5)
+        self.say(r"How do you find a root? Newton's method. First with a single unknown: we want the point where this curve crosses zero, where the miss is nothing.")
+        xs = [3.0]
+        for _ in range(4):
+            xs.append(xs[-1] - f(xs[-1]) / (2.0 * xs[-1]))
+        head = VGroup(Tex("guess", font_size=26, color=GREY_), Tex("miss", font_size=26, color=GREY_)).arrange(RIGHT, buff=1.5).move_to([3.6, 2.3, 0])
+        rows = VGroup()
+        def add_row(k):
+            v = f(xs[k])
+            miss = f"{v:.2f}" if v >= 1 else f"{v:.4f}" if v >= 1e-3 else f"{v:.7f}"
+            r = VGroup(Tex(f"{xs[k]:.6f}", font_size=28), Tex(miss, font_size=28, color=RED_ if k < 3 else GREEN_))
+            r[0].move_to([head[0].get_center()[0], 1.75 - 0.5 * k, 0])
+            r[1].move_to([head[1].get_center()[0], 1.75 - 0.5 * k, 0])
+            rows.add(r)
+            return r
+        d0 = Dot(ax.c2p(xs[0], f(xs[0])), color=WHITE, radius=0.08)
+        self.play(FadeIn(head), FadeIn(d0, scale=2), FadeIn(add_row(0)), run_time=0.7)
+        self.say(r"Start from a guess. The curve's slope there says how fast the miss changes. Follow that slope straight down to zero: that is the next guess.", hold=0.3)
+        drawn = VGroup(d0)
+        for k in range(4):
+            tan = Line(ax.c2p(xs[k], f(xs[k])), ax.c2p(xs[k + 1], 0), color=GOLD_, stroke_width=3)
+            up = DashedLine(ax.c2p(xs[k + 1], 0), ax.c2p(xs[k + 1], f(xs[k + 1])), color=GREY_, stroke_width=2)
+            dk = Dot(ax.c2p(xs[k + 1], f(xs[k + 1])), color=WHITE, radius=0.08)
+            self.play(Create(tan), run_time=1.2 if k == 0 else 0.7)
+            self.play(Create(up), FadeIn(dk, scale=2), FadeIn(add_row(k + 1)), run_time=0.7 if k == 0 else 0.5)
+            drawn.add(tan, up, dk)
+            if k == 0:
+                self.wait(2.6)
+                self.say(r"Then do it again from there.", hold=0.3)
+        self.say(r"Each round roughly squares the miss: 7, then 1.4, then 0.14, 0.002, 0.0000006. A few rounds give every digit the arithmetic can hold.")
+        self.play(FadeOut(VGroup(ax, yl, xl, curve, rt, rl, drawn, head, rows)), run_time=0.6)
+        # the catch: the slope only knows the curve nearby
+        bx = Axes(x_range=[-2.6, 2.6, 1], y_range=[-1.6, 1.6, 1], x_length=7.4, y_length=3.6, tips=False,
+                  axis_config={"color": GREY_, "stroke_width": 2, "include_numbers": True, "font_size": 20}).move_to([0, 0.75, 0])
+        bcurve = bx.plot(math.atan, x_range=[-2.6, 2.6, 0.01], color=BLUE_, stroke_width=4)
+        brt = Dot(bx.c2p(0, 0), color=GOLD_, radius=0.08)
+        self.play(Create(bx), Create(bcurve), FadeIn(brt), run_time=1.2)
+        self.say(r"But the slope only knows the curve close by. On a curve that flattens out, start too far from the root and the step overshoots.", hold=0.3)
+        ys = [1.5]
+        for _ in range(2):
+            ys.append(ys[-1] - math.atan(ys[-1]) * (1.0 + ys[-1] ** 2))
+        bd = VGroup(Dot(bx.c2p(ys[0], math.atan(ys[0])), color=WHITE, radius=0.08))
+        self.play(FadeIn(bd[0], scale=2), run_time=0.4)
+        for k in range(2):
+            tan = Line(bx.c2p(ys[k], math.atan(ys[k])), bx.c2p(ys[k + 1], 0), color=RED_, stroke_width=3)
+            up = DashedLine(bx.c2p(ys[k + 1], 0), bx.c2p(ys[k + 1], math.atan(ys[k + 1])), color=GREY_, stroke_width=2)
+            dk = Dot(bx.c2p(ys[k + 1], math.atan(ys[k + 1])), color=WHITE, radius=0.08)
+            self.play(Create(tan), run_time=1.1)
+            self.play(Create(up), FadeIn(dk, scale=2), run_time=0.6)
+            bd.add(tan, up, dk)
+        worse = Tex(f"the miss grows: {abs(math.atan(ys[0])):.2f}, {abs(math.atan(ys[1])):.2f}, {abs(math.atan(ys[2])):.2f}", font_size=28, color=RED_).next_to(bx, UP, buff=0.1)
+        self.play(FadeIn(worse), run_time=0.4)
+        self.say(r"The miss gets bigger, not smaller. Newton's method needs a first guess that is already close. Remember that: it becomes a wall.")
+        self.play(FadeOut(VGroup(bx, bcurve, brt, bd, worse)), run_time=0.6)
+        # our problem: 769 unknowns, 769 misses, and a table of slopes
         line, deco = x_line()
         e = ValueTracker(1.0)
         shot = always_redraw(lambda: VGroup(*[piece(line, i, e.get_value()) for i in range(6)]))
         gp = always_redraw(lambda: gaps(line, e.get_value()))
-        eq = MathTex(r"J\,dz = -F(z)", font_size=52, color=GOLD_).move_to([-2.2, 2.55, 0])
-        res = Tex(r"largest gap: $10^{-2}$", font_size=34, color=RED_).move_to([3.4, 2.55, 0])
-        self.add(line, deco, shot, gp)
-        self.wait(0.4)
-        self.say(r"Newton's method closes the gaps. It measures how each gap responds to each number in $z$: a table $J$, the Jacobian.", hold=0.4)
-        self.play(Write(eq), FadeIn(res), run_time=1.2)
-        self.wait(3.0)
-        self.say(r"One linear solve with $J$ gives the change $dz$ that should cancel every gap at once. Apply it, and repeat.", hold=0.4)
+        self.play(FadeIn(VGroup(line, deco)), FadeIn(shot), FadeIn(gp), run_time=0.8)
+        self.say(r"Our problem is the same, with 769 unknowns, the numbers in $z$, and 769 misses, the gaps of $F(z)$. The single slope becomes a table of slopes.")
+        zrow = VGroup(*[Square(side_length=0.26, stroke_color=WHITE, stroke_width=1, fill_color=GREY_, fill_opacity=0.25) for _ in range(16)]).arrange(RIGHT, buff=0.0).move_to([-3.6, 2.75, 0])
+        zl = MathTex("z", font_size=36).next_to(zrow, LEFT, buff=0.15)
+        J = VGroup(*[Square(side_length=0.2, stroke_color=GREY_, stroke_width=0.8, fill_color=GOLD_, fill_opacity=0.0) for _ in range(100)]).arrange_in_grid(rows=10, cols=10, buff=0.0).move_to([3.9, 2.0, 0])
+        Jl = MathTex("J", font_size=40, color=GOLD_).next_to(J, LEFT, buff=0.2)
+        self.play(FadeIn(zrow), FadeIn(zl), FadeIn(J), FadeIn(Jl), run_time=0.7)
+        self.say(r"Nudge one number of $z$, and watch how every gap moves. That fills one column of the table. It is called the Jacobian, $J$.", hold=0.3)
+        import random
+        rnd = random.Random(7)
+        for n, kcol in enumerate((2, 6, 11)):
+            jc = VGroup(*[J[10 * r + (kcol * 10 // 16)] for r in range(10)])
+            self.play(zrow[kcol].animate.set_fill(GOLD_, opacity=0.9), e.animate.set_value(1.0 + 0.12 * (-1) ** n), run_time=0.5)
+            self.play(*[c.animate.set_fill(opacity=rnd.uniform(0.2, 0.95)) for c in jc], e.animate.set_value(1.0), zrow[kcol].animate.set_fill(GREY_, opacity=0.25), run_time=0.7)
+        self.play(*[c.animate.set_fill(opacity=rnd.uniform(0.15, 0.95)) for c in J], run_time=1.0)
+        self.wait(1.2)
+        eq = MathTex(r"J\,dz = -F(z)", font_size=46, color=GOLD_).move_to([-0.2, 2.2, 0])
+        res = Tex(r"largest gap: $10^{-2}$", font_size=30, color=RED_).move_to([-0.2, 1.45, 0])
+        self.play(Write(eq), FadeIn(res), run_time=1.0)
+        self.say(r"With all 769 columns, one linear solve gives the change $dz$ in every number at once that should close every gap. Apply it, and repeat.", hold=0.4)
         for scale, expo in [(0.35, 4), (0.06, 8), (0.0, 16), (0.0, 32)]:
-            new = Tex(r"largest gap: $10^{-" + str(expo) + r"}$", font_size=34, color=RED_ if expo < 16 else GREEN_).move_to(res)
+            new = Tex(r"largest gap: $10^{-" + str(expo) + r"}$", font_size=30, color=RED_ if expo < 16 else GREEN_).move_to(res)
             self.play(e.animate.set_value(scale), Transform(res, new), run_time=1.0)
             self.wait(0.5)
-        self.say(r"Each round roughly squares the error. But only if the first guess was already close: remember that.")
-        self.play(FadeOut(VGroup(line, deco, shot, gp, eq, res)), run_time=0.5)
+        self.say(r"As with one unknown, each round roughly squares the misses, as long as the first guess for $z$ was close.")
+        shot.clear_updaters()
+        gp.clear_updaters()
+        self.play(FadeOut(VGroup(line, deco, shot, gp, eq, res, zrow, zl, J, Jl)), run_time=0.5)
         pts = delta_points()
-        ax, lab = low_axes()
+        ax2, lab = low_axes()
         at = lambda D: min(pts, key=lambda q: abs(q[0] - D))
-        curve = VMobject(color=BLUE_, stroke_width=3, stroke_opacity=0.35).set_points_as_corners(
-            [ax.c2p(*q) for q in pts if 3.9 <= q[0] <= 13.0])
-        dots = VGroup(*[Dot(ax.c2p(*at(D)), color=BLUE_, radius=0.07) for D in (4, 5)])
-        new = Dot(ax.c2p(*at(6.0)), color=GOLD_, radius=0.11)
-        self.play(FadeIn(VGroup(ax, lab, curve, dots)), run_time=0.6)
-        self.play(FadeIn(new, scale=3), Flash(new, color=GOLD_), run_time=0.8)
+        curve2 = VMobject(color=BLUE_, stroke_width=3, stroke_opacity=0.35).set_points_as_corners(
+            [ax2.c2p(*q) for q in pts if 3.9 <= q[0] <= 13.0])
+        dots = VGroup(*[Dot(ax2.c2p(*at(D)), color=BLUE_, radius=0.07) for D in (4, 5)])
+        newd = Dot(ax2.c2p(*at(6.0)), color=GOLD_, radius=0.11)
+        self.play(FadeIn(VGroup(ax2, lab, curve2, dots)), run_time=0.6)
+        self.play(FadeIn(newd, scale=3), Flash(newd, color=GOLD_), run_time=0.8)
         self.say(r"The gaps are closed. That is one dot on the curve: its $\Delta$ is the last number in $z$. Now for the next $D$.")
-        self.play(FadeOut(VGroup(ax, lab, curve, dots, new, self.cap)), run_time=0.7)
+        self.play(FadeOut(VGroup(ax2, lab, curve2, dots, newd, self.cap)), run_time=0.7)
 
 
 class S04_Walk(Film):
@@ -680,7 +890,7 @@ class S04_Walk(Film):
         dot = Dot(ax.c2p(*stops[0]), color=GOLD_, radius=0.08)
         trail = VGroup(Dot(ax.c2p(*stops[0]), color=BLUE_, radius=0.05))
         self.play(FadeIn(dot, scale=2), run_time=0.5)
-        self.say(r"A solved point is the best first guess for its neighbour.", hold=0.3)
+        self.say(r"Newton needs a first guess that is already close. The best one at hand is the solution just found, at a nearby $D$.", hold=0.3)
         for i, (a, b) in enumerate(zip(stops, stops[1:])):
             guess = ax.c2p(b[0], a[1] + (b[1] - a[1]) * 0.55)
             arr = Arrow(ax.c2p(*a), guess, color=GREY_, buff=0.05, stroke_width=3, max_tip_length_to_length_ratio=0.12)
@@ -705,7 +915,7 @@ class S04_Walk(Film):
         Dn.clear_updaters()
         wall = DashedLine(ax.c2p(60.96, 1.6), ax.c2p(60.96, 3.6), color=RED_, stroke_width=4)
         self.play(Create(wall), Flash(dot, color=RED_), run_time=0.7)
-        self.say(r"In double-double arithmetic, about 32 digits, the walk climbed for a day. At $D = 60.96$ it stopped.")
+        self.say(r"With numbers of about 32 digits, the walk climbed for a day. At $D = 60.96$ it stopped: the first wall.")
         self.play(FadeOut(VGroup(ax, xl, yl, dot, path, full, Dl, Dn, wall, self.cap)), run_time=0.7)
 
 
@@ -716,11 +926,13 @@ class S05_FirstWall(Film):
         pts = frontier_points()
         ax, lab = self.frontier_axes()
         self.play(Create(ax), FadeIn(lab), run_time=0.8)
+        self.say(r"From here on, one chart keeps the score: the highest $D$ the solver has reached, against the days of work.", hold=0.4)
         c1 = self.front(ax, pts, 0.0, 4.0)
         self.play(Create(c1), run_time=1.6)
         w = Tex("60.96", font_size=26, color=RED_).next_to(ax.c2p(3.0, 61), UP, buff=0.1)
         self.play(FadeIn(w), run_time=0.4)
-        self.say(r"Why here? The answer is in the harmonics: the pure tones that add up to the wave over one echo.")
+        self.wait(1.6)
+        self.say(r"Why did it stop at 60.96? The answer is in the harmonics: the pure tones that add up to the wave over one echo.")
         chart = VGroup(ax, lab, c1, w)
         self.play(FadeOut(chart), run_time=0.5)
         Dw, co = harmonics(60.96)
@@ -785,16 +997,16 @@ class S05_FirstWall(Film):
         self.say(r"The fix: stop asking the equations for what they cannot give. Hold those harmonics, and solve the rest.", hold=0.5)
         c2 = self.front(ax, pts, 4.0, 8.9)
         self.play(Create(c2), run_time=2.2)
-        self.say(r"Pinned, the walk moved again, to 67.8, 71 and 73.3. Quad-double arithmetic and new node layouts took it to 78.1.")
+        self.say(r"With those harmonics held, the walk moved again, to 67.8, 71 and 73.3. Then it slowed once more, for a reason that sits at the horizon.")
         self.play(FadeOut(VGroup(ax, lab, c1, c2, w, fix, self.cap)), run_time=0.7)
 
 
 class S06_Amplifier(Film):
-    stage = r"11 \quad The amplifier"
+    stage = r"11 \quad The second wall: an amplifier at the horizon"
 
     def construct(self):
         f = MathTex(r"G \approx 0.7^{-(D-3)}", font_size=60, color=ORANGE_).move_to([-3.3, 2.2, 0])
-        self.say(r"One mode of the equations amplifies any error in the horizon data, the numbers that start the horizon's series, by a factor $G$.", hold=0.4)
+        self.say(r"The piece that comes in from the horizon starts from the horizon data. Any error in those numbers is multiplied, on the way to the last node, by a factor $G$.", hold=0.4)
         self.play(Write(f), run_time=1.2)
         D = ValueTracker(10.0)
         Dl = Tex("$D =$", font_size=44)
@@ -824,7 +1036,7 @@ class S06_Amplifier(Film):
         el = Tex("digits lost to $G$", font_size=22, color=ORANGE_).next_to(axis, UP, buff=0.75).align_to(axis, LEFT)
         self.play(FadeIn(VGroup(Dl, Dn, Gl, Gn)), Create(axis), FadeIn(al), run_time=0.8)
         self.play(LaggedStart(*[FadeIn(m, shift=0.15 * UP) for m in marks], lag_ratio=0.2), FadeIn(eaten), FadeIn(el), run_time=1.6)
-        self.say(r"A number is stored as a sum of 1, 2, 4 or 8 ordinary doubles. More parts, more digits.")
+        self.say(r"An ordinary computer number, a double, holds 16 digits. For more, a number is stored as a sum of 2, 4 or 8 doubles: double-double, quad-double, octo-double.")
         def flag(Dv, text, col, drop):
             x = base[0] + log10G(Dv) * per
             stem = Line([x, base[1] - 0.05, 0], [x, base[1] - drop, 0], color=col, stroke_width=2)
@@ -845,12 +1057,12 @@ class S06_Amplifier(Film):
         self.wait(0.6)
         Dn.clear_updaters()
         Gn.clear_updaters()
-        self.say(r"Double-double carried the walk to about 80, quad-double to about 194, octo-double beyond.")
+        self.say(r"So the walk needed longer numbers the higher it went: double-double to about 80, quad-double to about 194, octo-double beyond.")
         self.play(FadeOut(VGroup(f, Dl, Dn, Gl, Gn, axis, marks, al, eaten, el, f1, f2, self.cap)), run_time=0.7)
 
 
 class S07_Basin(Film):
-    stage = r"12 \quad A week at 78"
+    stage = r"12 \quad A week at 78: Newton's basin"
 
     def construct(self):
         pts = frontier_points()
@@ -859,7 +1071,7 @@ class S07_Basin(Film):
         self.add(ax, lab, c1)
         c2 = self.front(ax, pts, 8.9, 16.0)
         self.play(Create(c2), run_time=2.4, rate_func=linear)
-        self.say(r"Then, for a week, nothing passed $D = 78$.")
+        self.say(r"Longer numbers took the walk to 78. Then, for a week, nothing got past it.")
         q = self.quote("just jump to 100")
         self.play(FadeIn(q, shift=0.2 * DOWN), run_time=0.5)
         nl = NumberLine(x_range=[70, 102, 5], length=8.6, color=GREY_, include_numbers=True, font_size=22).move_to(ax.c2p(20.0, 150))
@@ -882,7 +1094,7 @@ class S07_Basin(Film):
         lim = DashedLine(nl.n2p(79.3) + 0.25 * DOWN, nl.n2p(79.3) + 1.0 * UP, color=GOLD_, stroke_width=3)
         ll = Tex("79.3", font_size=24, color=GOLD_).next_to(lim, UP, buff=0.05).shift(0.35 * LEFT)
         self.play(Create(lim), FadeIn(ll), run_time=0.5)
-        self.say(r"None landed past 79.3. The wall was not the step size. It was the basin: how close a guess Newton needs.")
+        self.say(r"None landed past 79.3. The wall was not the size of the step. It was Newton's need for a close first guess: past 78, the region of good guesses, the basin, had become tiny.")
         self.say(r"A longer stride could not help. The prediction itself had to become far more accurate.")
         self.play(FadeOut(VGroup(ax, lab, c1, c2, q, nl, nlab, back, drawn, lim, ll, self.cap)), run_time=0.7)
 
@@ -914,7 +1126,7 @@ class S08_Taylor(Film):
         cur = partial(1)
         ol = Tex("order 1", font_size=28, color=GOLD_).move_to(ax.c2p(1.75, 1.15))
         self.play(Create(cur), FadeIn(ol), run_time=0.9)
-        self.say(r"At a solved base $D_0$, all 24 coefficients come from one factorization of the Jacobian.", hold=0.3)
+        self.say(r"At a solved $D_0$, all 24 coefficients come from the same table $J$ that Newton already uses.", hold=0.3)
         for n in (2, 4, 8, 16, 24):
             self.play(Transform(cur, partial(n)), Transform(ol, Tex(f"order {n}", font_size=28, color=GOLD_).move_to(ol)), run_time=0.75)
             self.wait(0.25)
@@ -924,7 +1136,7 @@ class S08_Taylor(Film):
         land = Dot(ax.c2p(a, 1.0 / (1.0 + 0.8 * a)), color=GREEN_, radius=0.08)
         self.play(Create(step), FadeIn(sl), FadeIn(land, scale=2), run_time=0.8)
         self.say(r"The series itself says how far it can be trusted. Step there, and the guess is good to many digits.")
-        self.say(r"Then recompute the horizon's data at every trial point, so their errors start as small as the arithmetic allows. Newton finishes.")
+        self.say(r"Then recompute the horizon data at every guess Newton tries, so their errors start as small as the arithmetic allows. Newton finishes the job.")
         self.play(FadeOut(VGroup(f, ax, xl, xr, sk, true, base, cur, ol, step, sl, land)), run_time=0.6)
         pts = frontier_points()
         fx, lab = self.frontier_axes()
@@ -932,7 +1144,7 @@ class S08_Taylor(Film):
         self.play(FadeIn(VGroup(fx, lab, c1)), run_time=0.6)
         c2 = self.front(fx, pts, 16.0, 18.05)
         self.play(Create(c2), run_time=2.6)
-        self.say(r"The wall at 78 fell. In two days the chain passed 86, 96, 127 and 146.")
+        self.say(r"The wall at 78 fell. The walk, now a chain of such Taylor steps, passed 86, 96, 127 and 146 in two days.")
         self.play(FadeOut(VGroup(fx, lab, c1, c2, self.cap)), run_time=0.7)
 
 
@@ -994,7 +1206,7 @@ class S10_Climb(Film):
                        Tex("harmonics 15 and up: zero", font_size=24, color=GREY_))
         roles.arrange(DOWN, buff=0.12, aligned_edge=LEFT).move_to(ax.c2p(8.6, 190))
         self.play(FadeIn(roles), run_time=0.6)
-        self.say(r"The solutions form a smooth family in $D$. A fit of the full solutions carries the weak harmonics upward.", hold=0.3)
+        self.say(r"All this time the weak harmonics of the first wall were held, not solved. Their values came from a fit: solutions change smoothly with $D$, so a curve through the fully solved ones was carried upward.", hold=0.3)
         c2 = self.front(ax, pts, 18.9, 28.3)
         self.play(Create(c2), run_time=4.0, rate_func=linear)
         self.say(r"215. Then 242.6. Each flat stretch a wall of its own, each passed in days.")
@@ -1007,7 +1219,7 @@ class S10_Climb(Film):
         fl = Tex("sketch: a fold. The branch turns back.", font_size=20, color=GREY_).next_to(fold_ax, DOWN, buff=0.08)
         fx = Tex("$D$", font_size=20, color=GREY_).next_to(fold_ax.x_axis, RIGHT, buff=0.08)
         self.play(Create(fold_ax), FadeIn(fx), Create(br), FadeIn(fl), run_time=1.6)
-        self.say(r"At 259.9 the chain met a fold: its own discrete equations turned back. It sat there for four days.")
+        self.say(r"At 259.9 the chain met a fold: the path of solutions of the computer's own equations turned back on itself. It sat there for four days.")
         c3 = self.front(ax, pts, 28.3, 34.2)
         self.play(Create(c3), run_time=3.0, rate_func=linear)
         self.say(r"Tying the number of terms in the horizon's series to $D$ removed the fold. The chain reached 263.6.")
@@ -1053,14 +1265,15 @@ class S11_Basics(Film):
         g = MathTex(r"G \approx 0.7^{-(D-3)}", font_size=56, color=ORANGE_).move_to([0, 2.3, 0])
         self.play(Write(g), run_time=1.0)
         self.say(r"And the amplifier $G$, the reason for ever longer numbers? A search of the literature found what it is.")
-        m1 = Tex("the mass mode", font_size=34, color=ORANGE_).move_to([0, 1.2, 0])
+        self.say(r"It is a stray solution: a speck of mass at the centre, which the equation that steps $a$ along $x$ cannot rule out. From the horizon to the last node it grows by exactly $G$.")
+        m1 = Tex("the stray mass (the mass mode)", font_size=34, color=ORANGE_).move_to([0, 1.2, 0])
         m2 = Tex("= a violation of the momentum constraint,", font_size=34).next_to(m1, DOWN, buff=0.25)
         m3 = Tex("which our equations never imposed", font_size=34).next_to(m2, DOWN, buff=0.2)
         m4 = Tex(r"the momentum constraint: one of Einstein's equations. It ties how the\\metric function $a$ changes in time to the wave's flow of energy.",
                  font_size=24, color=GREY_).next_to(m3, DOWN, buff=0.45)
         self.play(FadeIn(m1), run_time=0.5)
         self.play(FadeIn(m2), FadeIn(m3), FadeIn(m4), run_time=0.7)
-        self.say(r"Our equations left that constraint free, and the solver spent its digits holding the free mode down.")
+        self.say(r"Our equations left that constraint out, and the solver spent its digits holding the stray mass down.")
         self.play(FadeOut(VGroup(m1, m2, m3, m4)), run_time=0.4)
         # the unknowns lose a field
         names, cols = ["p", "m", "a", "c"], [BLUE_, GREEN_, PURPLE_, ORANGE_]
@@ -1072,18 +1285,22 @@ class S11_Basics(Film):
         cells.arrange(RIGHT, buff=0.0).move_to([0, 0.45, 0])
         cl = Tex("the fields at each node", font_size=24, color=GREY_).next_to(cells, UP, buff=0.15)
         self.play(FadeIn(cells), FadeIn(cl), run_time=0.6)
-        self.say(r"Gundlach's 1997 construction of the critical solution sets the metric function $a$ from that constraint.", hold=0.5)
+        self.say(r"Gundlach's 1997 construction of the critical solution takes $a$, one of the two spacetime fields, straight from that constraint.", hold=0.5)
         cross = Cross(cells[2], stroke_color=RED_, stroke_width=6)
         self.play(Create(cross), run_time=0.5)
         self.play(FadeOut(cells[2]), FadeOut(cross), cells[3].animate.shift(1.5 * LEFT), run_time=0.8)
         self.play(g.animate.set_opacity(0.25), run_time=0.6)
         gone = Cross(g, stroke_color=GREEN_, stroke_width=5)
         self.play(Create(gone), run_time=0.5)
-        self.say(r"With $a$ no longer an unknown, there is no mass mode, and nothing for $G$ to amplify.")
-        res = Tex(r"a prototype in this form converged at $D = 100$ in double-double arithmetic", font_size=30, color=GREEN_)
-        res.move_to([0, -1.2, 0])
-        self.play(FadeIn(res, shift=0.2 * UP), run_time=0.6)
-        self.say(r"Whether it stays this easy as $D$ grows is being measured now.")
+        self.say(r"With $a$ no longer an unknown, the stray mass has nowhere to live, and $G$ has nothing to amplify.")
+        res = VGroup(Tex(r"$D = 300$: one direct solve, 24 minutes", font_size=32, color=GREEN_),
+                     Tex(r"$D = 400$: one direct solve, 20 minutes", font_size=32, color=GREEN_),
+                     Tex(r"first results, issue 1088, not yet reviewed; the weak harmonics still held", font_size=20, color=GREY_))
+        res.arrange(DOWN, buff=0.18).move_to([0, -1.35, 0])
+        self.play(FadeIn(res[0], shift=0.2 * UP), run_time=0.5)
+        self.play(FadeIn(res[1], shift=0.2 * UP), FadeIn(res[2]), run_time=0.5)
+        self.say(r"In the solver, the new form went straight to $D = 300$ and to $D = 400$: one direct solve each. No walk, no chain. The chain had needed four hours for every single unit of $D$.")
+        self.say(r"These are first results. And $D = 1000$ does not work yet: a new wall, once more at the horizon.")
         self.play(FadeOut(VGroup(g, gone, cells[0], cells[1], cells[3], cl, res, self.cap)), run_time=0.7)
 
 
