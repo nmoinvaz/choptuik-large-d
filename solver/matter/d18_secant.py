@@ -10,8 +10,8 @@ An evaluation is robust when both noise signs equal its sign (d18_hybsign's test
 change of |det| by 10% under the 1e-15 perturbation; --dln=inf is d18_hybsign's test alone).
 
 The refinement: f(lambda) = sign exp(ln|det| - ref), ref the larger end's ln|det|, and Brent's zero finder on it
-(inverse quadratic or secant steps, bisection when they do not shrink the bracket fast enough; Brent 1973, ch. 4, as in
-scipy's brentq). The bracket ends always carry opposite robust signs: the two input ends are evaluated first and the
+(inverse quadratic or secant steps, bisection when they do not shrink the bracket fast enough; R. P. Brent, Algorithms
+for Minimization without Derivatives (Prentice-Hall, 1973), ch. 4 *(unverified)*, in the form of scipy's brentq). The bracket ends always carry opposite robust signs: the two input ends are evaluated first and the
 run is refused (exit 2) unless both are robust with opposite signs; an interior evaluation that is not robust stops the
 run with the bracket it had (status nonrobust). Otherwise the run stops when the bracket is at most --tol wide (status
 tol) or after --maxev evaluations, the two ends included (status maxev).

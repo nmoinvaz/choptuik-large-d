@@ -9,11 +9,19 @@ base stage state. Forward mode of the RK4 step is the RK4 step of the variationa
 the result is the derivative of the same discrete map, equal in exact arithmetic to the complex step's. Unchanged: the
 frozen RK4 step counts, the x grid, the tau operators (DSSEll._Dm, _Tm, phys, spec), and lambda entering every tau
 derivative of a perturbation as D f + lambda f (dss.py).
-  - blocks 1-11 (node to node): tangents start as the coefficient -> grid rows of DSSEll.phys;
+  - tangents are carried as the parity-restricted Fourier coefficients of the block layout (nf, blk), the grid
+    values formed with DSSEll.phys's matrices and the right sides projected back with DSSEll.spec's (equal to
+    DSSEll.trunc on fields of the right parity). basis=jac (the default) forms each stage's linearised map as a
+    (blk, blk) matrix, (B_g * coef_fg) @ S_f per pair of fields, and applies it as one product; basis=coef applies the
+    coefficients to the nf tangent rows on the grid; basis=grid keeps grid tangents with DSSEll's _Dm and _Tm;
+  - blocks 1-11 (node to node): tangents start as the identity on the block's coefficients;
   - block 0 (centre) and block 12 (horizon): the Taylor series and its evaluation keep the complex step, then the
     integration is variational; the horizon series' periodic solves use one real LU of the background operator
     omega D + kappa_0 + lambda for all members (the first-order part of each member's solve, which is all the complex
     step's imaginary part keeps; DSSEll.solve_periodic factors one complex matrix per member).
+The float64 block 12 differs from DSSEll.mode_matrix's by about 1e-9 relative at k_c 103 (2e-15 at k_c 15, 1e-12 at
+k_c 31): both carry the float64 RK error of the horizon segment, about 1.5e-10 against ell_ddm's double-double block at
+k_c 55, which is why the hybrid replaces that block (SPEED_ELL1.md).
 
     python ell_fastm.py check STUB.jsonl STATE.npy D LAM [--blocks=0,1,12] [--basis=coef|jac|grid] [--mutate=nolam]
                               [--out=F.json]
@@ -25,9 +33,9 @@ derivative of a perturbation as D f + lambda f (dss.py).
         a k_c 15 state made here: the linearised right side against a central difference of DSSEll.rhs (1e-7), and
         M_fast against DSSEll.mode_matrix at two lambda (1e-10); --mutate=coef perturbs one tangent coefficient.
         Exit 0 only if every comparison passes.
-References: forward-mode differentiation of a Runge-Kutta step (the variational equation integrated with the same
-scheme), Hairer, Norsett and Wanner, Solving Ordinary Differential Equations I (Springer 1993), section II.14
-(sensitivity of the numerical solution); complex-step derivative, Squire and Trapp, SIAM Rev. 40, 110 (1998)."""
+References: the variational equation integrated with the same Runge-Kutta scheme (forward-mode sensitivities), Hairer,
+Norsett and Wanner, Solving Ordinary Differential Equations I (Springer, 1993) *(unverified)*; the complex-step derivative
+of the reference, Squire and Trapp, SIAM Rev. 40, 110 (1998) *(unverified)*."""
 import json
 import os
 import sys
@@ -290,7 +298,7 @@ def node_start(S, X):
     return s, ds
 
 
-def block_lin(S, b, X, om, lam, basis="coef"):
+def block_lin(S, b, X, om, lam, basis="jac"):
     """block b's end state and its tangents: (nf, blk) coefficients (basis coef, or jac: the same with each stage's map
     formed as a matrix) or (5, nf, N) grid values (basis grid)"""
     K = len(S.nodes)
@@ -312,7 +320,7 @@ def block_lin(S, b, X, om, lam, basis="coef"):
     return seg_lin(S, s, ds, S.nodes[b - 1], S.nodes[b], om, lam, ops)
 
 
-def mode_matrix_fast(S, z, lam, only=None, log=None, basis="coef"):
+def mode_matrix_fast(S, z, lam, only=None, log=None, basis="jac"):
     """DSSEll.mode_matrix(z, lam) (float64, Delta fixed) by the variational map; only: block indices to build (the others
     are left zero, as ell_ddm.DDEll.mode_matrix's only=); basis: the tangents as coefficients (coef) or grid values
     (grid)"""
@@ -420,7 +428,7 @@ def checkcmd(argv):
     opts = dict(a[2:].split("=", 1) for a in argv if a.startswith("--") and "=" in a)
     recf, st, D, lam = args[0], args[1], float(args[2]), float(args[3])
     only = [int(v) for v in opts["blocks"].split(",")] if "blocks" in opts else None
-    basis = opts.get("basis", "coef")
+    basis = opts.get("basis", "jac")
     S, z, rec, same, msg = load_system(recf, st, D)
     print(msg, flush=True)
     if not same:
