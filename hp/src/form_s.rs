@@ -57,6 +57,32 @@ pub const FS_MUT_ZREC: u8 = 53;
 /// the two-term recurrence is checked against), instead of the recurrence
 pub const FS_ZCAUCHY: u8 = 54;
 
+/// `Ctx::mutate`: no change to the arithmetic; `horizon_mob` prints to stderr, per stored series (u, v, c, G, x, q,
+/// q', the derivative and z-product series), the smallest nonzero and the largest |hi part| over every order and lane
+/// with its count of exact zeros and of values that are not finite (#1088's exponent-range check at a = n/400)
+pub const FS_MAGSTATS: u8 = 55;
+
+/// the smallest nonzero and largest |hi part| of a series' lanes, its exact zeros and its values that are not finite
+fn mag_stats<T: Lane, const B: usize>(v: &[Fl<T, B>]) -> (f64, f64, usize, usize) {
+    let (mut lo, mut hi, mut zeros, mut bad) = (f64::INFINITY, 0.0f64, 0usize, 0usize);
+    for f in v {
+        for t in f.0.iter() {
+            for x in t.val().hi.to_array() {
+                let a = x.abs();
+                if !a.is_finite() {
+                    bad += 1;
+                } else if a == 0.0 {
+                    zeros += 1;
+                } else {
+                    lo = lo.min(a);
+                    hi = hi.max(a);
+                }
+            }
+        }
+    }
+    (lo, hi, zeros, bad)
+}
+
 /// refinement steps of a slaving solve: as model's QD_REFINE (2) and OD_REFINE (4), one more on a tangent lane
 const QD_REFINE_S: usize = 2;
 const OD_REFINE_S: usize = 4;
@@ -654,6 +680,14 @@ pub fn horizon_mob<T: Lane, const B: usize>(ctx: &Ctx<B>, de: &DMat<B>, prep: &S
         }
         let ak = (m2io.mul(ak) + crate::model::dtau(ctx, &uu[k], omega, &rate)) - cs(&gg, &vv, k);
         qn[k + 1] = mul_recip(ctx, iq.mul(ak), k + 1);
+    }
+    if ctx.mutate == FS_MAGSTATS {
+        for (name, v) in [("u", &uu), ("v", &vv), ("c", &cc), ("G", &gg), ("x", &xx), ("q", &q), ("qn", &qn),
+                          ("du", &du), ("dv", &dv), ("vv", &vvc), ("uv", &uvc), ("hcm", &hcm), ("hce", &hce),
+                          ("zvv", &zvvc), ("zv", &zv)] {
+            let (lo, hi, zeros, bad) = mag_stats(&v[..=ks]);
+            eprintln!("magstats ks {ks} {name}: min |x| {lo:.3e} max |x| {hi:.3e} zeros {zeros} not finite {bad}");
+        }
     }
     let (mut us, mut vs, mut csum) = (z, z, z);
     for k in (0..=ks).rev() {
