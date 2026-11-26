@@ -1204,8 +1204,11 @@ def cmd_release_ls(argv):
     too. Each outer step takes the target system's Newton step at the current state, reads its harmonic-k part (a_k,
     b_k), moves the inner system's held value of harmonic k by it (halved while the target residual does not fall),
     solves the inner system again from the current state (well conditioned), and repeats. Stops when the harmonic-k part
-    of the step is below --tol_h or the target residual is at most --tol. An inner solve that ends at its floor stop
-    counts as solved. Each accepted outer step's state is saved (release_ls_h<k>_D<D>_step.npz; --harm k from it
+    of the step is below --tol_h, or the target residual is at most --tol and the pending full step's Delta part is at
+    most --ddelta (1e-25): at D 1000 with harmonics past 17 free, a residual of 2e-54 still left a step moving Delta by
+    2.7e-22 along the near-null top harmonics. Below --tol the step is taken while it is accepted at a residual below
+    --tol, and the release ends at a Delta floor (the pending Delta part falling by less than 10x in a step), logged as
+    not released. An inner solve that ends at its floor stop counts as solved. Each accepted outer step's state is saved (release_ls_h<k>_D<D>_step.npz; --harm k from it
     resumes, since the held values are read from the state). --res: the residual's precision (od, or qd)."""
     from octo_corrector import delta_digits, load_o, save_o
     from pinning import band_coeffs, band_field
@@ -1213,7 +1216,8 @@ def cmd_release_ls(argv):
     argv = list(argv)
     allow = pop_allow(argv)
     pos, o = opts(argv, dict(harm="5", outer="6", tol="1e-40", tol_h="1e-38", it_in="6", halvings="6", threads="2",
-                             tries="6", jac="auto", tc="", commit="", res="od", jac_by="", held_delta="", kmax="13"))
+                             tries="6", jac="auto", tc="", commit="", res="od", jac_by="", held_delta="", kmax="13",
+                             ddelta="1e-25"))
     path, outdir = pos[0], pos[1]
     os.makedirs(outdir, exist_ok=True)
     log = os.path.join(outdir, "release_ls.jsonl")
@@ -1259,6 +1263,7 @@ def cmd_release_ls(argv):
                          rest=[np.asarray(p)[:M] for p in z8[2:]])
         s_tg = HeldS(s_tg0, M, K, band_field(co[1:], held_tg, M, parts=8)) if held_tg else s_tg0
         delta_k0 = delta_digits(z8, 40)  # Delta before this harmonic's release (the record's last_release_dDelta)
+        prev_dd = None
         for outer in range(int(o["outer"])):
             t0 = time.time()
             est = step_s.get(jac_by.get(k, o["jac"]))
@@ -1280,12 +1285,26 @@ def cmd_release_ls(argv):
             rec = dict(harm=k, outer=outer, F=nr, dh=ndk, dDelta_full=float(np.asarray(d[0])[-1]), pmin=pmin, pmax=pmax)
             print(f"    h{k} outer {outer}: target |F| {nr:.2e}, harmonic-{k} step {ndk:.2e} ({time.time() - t0:.0f} s)",
                   flush=True)
-            if ndk < float(o["tol_h"]) or nr <= float(o["tol"]):
-                rec.update(done=True)
+            small = nr <= float(o["tol"])
+            add = abs(rec["dDelta_full"])
+            if ndk < float(o["tol_h"]) or (small and add <= float(o["ddelta"])):
+                rec.update(done=True, released_by="harmonic step" if ndk < float(o["tol_h"]) else "residual and dDelta")
                 with open(log, "a") as fh:
                     fh.write(json.dumps(rec) + "\n")
-                print(f"  h{k} outer {outer}: target |F| {nr:.2e}, harmonic-{k} step {ndk:.2e}: released", flush=True)
+                print(f"  h{k} outer {outer}: target |F| {nr:.2e}, harmonic-{k} step {ndk:.2e}, the step's dDelta "
+                      f"{rec['dDelta_full']:+.2e}: released", flush=True)
                 break
+            if small and prev_dd is not None and add * 10.0 > prev_dd:
+                rec.update(done=False, ddelta_floor=add)
+                with open(log, "a") as fh:
+                    fh.write(json.dumps(rec) + "\n")
+                print(f"  h{k}: Delta floor, the pending step's dDelta {rec['dDelta_full']:+.2e} fell by less than 10x "
+                      f"(from {prev_dd:.2e}) at target |F| {nr:.2e}: harmonic {k} not released", flush=True)
+                break
+            if small:
+                print(f"    h{k} outer {outer}: target |F| {nr:.2e} is below --tol, but the step's dDelta "
+                      f"{rec['dDelta_full']:+.2e} is above --ddelta {o['ddelta']}: the step is taken", flush=True)
+                prev_dd = add
             lam, acc, trials = 1.0, False, []
             for _ in range(int(o["tries"])):
                 with mp.workdps(60):
@@ -1305,7 +1324,7 @@ def cmd_release_ls(argv):
                 print(f"    h{k} outer {outer} trial lam {lam:g}: inner {'converged' if conv else 'floor' if floor else 'NOT converged'} "
                       f"in {len(recs)} steps (|F| {trials[-1]['inner_F'] if recs else float('nan'):.2e}), target |F| {nt:.2e} "
                       f"against {nr:.2e} ({time.time() - t0:.0f} s)", flush=True)
-                if (conv or floor) and nt < nr:
+                if (conv or floor) and (nt < nr or (small and nt <= float(o["tol"]))):
                     acc = True
                     break
                 if (floor or not conv) and jk in ("dd", "qd"):
