@@ -123,6 +123,8 @@ LADDERS = {
     "C15": ("D 300-2000, 15 geometric", geom(300, 2000, 15, HAVE)),
     "E": ("D 250-8000, 15 geometric", geom(250, 8000, 15, HAVE + (8000.0,))),
     "E20": ("D 250-8000, 20 geometric", geom(250, 8000, 20, HAVE + (8000.0,))),
+    "E25": ("D 250-8000, 25 geometric", geom(250, 8000, 25, HAVE + (8000.0,))),
+    "J20": ("D 250-16000, 20 geometric", geom(250, 16000, 20, HAVE + (8000.0,))),
     "F15": ("D 500-8000, 15 geometric", geom(500, 8000, 15, HAVE + (8000.0,))),
     "F20": ("D 500-8000, 20 geometric", geom(500, 8000, 20, HAVE + (8000.0,))),
     "G": ("D 1000-8000, 9 geometric", geom(1000, 8000, 9, HAVE + (8000.0,))),
@@ -506,10 +508,13 @@ def cmd_budget():
             for K in Ks:
                 key = (var, 0, K)
                 gain = float(np.linalg.norm(O[key][3]))
-                rows.append(dict(K=K, gain=gain, bias={k: TPs[k][key][0] for k in TRUTHS}))
+                rows.append(dict(K=K, gain=gain, gain1=float(np.sum(np.abs(O[key][3]))),
+                                 bias={k: TPs[k][key][0] for k in TRUTHS}))
             rec[var] = rows
             print("  %-8s K: " % var + "  ".join("%d" % r["K"] for r in rows))
             print("  %-8s gain: " % var + "  ".join("%.0e" % r["gain"] for r in rows))
+            print("  %-8s gain1: " % var + "  ".join("%.0e" % r["gain1"] for r in rows) +
+                  "   (sum of |g_i|: the worst case for errors bounded by sigma of any sign)")
             for k in TRUTHS:
                 print("  %-8s %s |bias|: " % (var, k) + "  ".join("%.0e" % abs(r["bias"][k]) for r in rows))
             for k in TRUTHS:
@@ -747,10 +752,12 @@ def three_point(L, ys, sig, out):
             chi = sum(float(r[i, 0]) ** 2 for i in range(len(L)))
             d_tc = float(v - a(tc))
             d_t1 = float(vt - a(RLIM))
+            d_sub = d_tc - d_t1                       # the fit to real - T1, plus T1's limit, less Track C
             rows.append(dict(var=var, K=K, Delta=v.mid().str(20, radius=False), s=s, chi2=chi, minus_trackC=d_tc,
-                             T1_err=d_t1))
+                             T1_err=d_t1, T1_subtracted_minus_trackC=d_sub))
             print("  %-8s K %d: Delta_inf %s  s %.1e  chi2 %.2g  minus Track C %+.2e;  T1 at the same D: fit - "
-                  "limit %+.2e" % (var, K, v.mid().str(18, radius=False), s, chi, d_tc, d_t1))
+                  "limit %+.2e;  with T1 subtracted, minus Track C %+.2e" % (
+                      var, K, v.mid().str(18, radius=False), s, chi, d_tc, d_t1, d_sub))
     out["three_point"] = rows
 
 
