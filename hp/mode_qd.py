@@ -32,19 +32,9 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, HERE)
 
 
-def _qd_logdet():
-    """multidouble's quad-double log-determinant with its control argument: the Rust binding _md.qd_logdet takes
-    control, while the Python wrapper of the pinned 8c4360ac (multidouble 5.1.0) does not forward it (dh370, #1078)"""
-    import multidouble
-    md = getattr(multidouble, "_md", None)
-    if md is not None and hasattr(md, "qd_logdet"):
-        return md.qd_logdet
-    return multidouble.qd_logdet
-
-
 def qd_det(Mh, Ml, equil=True, control="none", par=True):
     from mode_scale import ruiz
-    qd_logdet = _qd_logdet()
+    from multidouble import qd_logdet
     Mh, Ml = np.asarray(Mh, float), np.asarray(Ml, float)
     if equil:
         r, c = ruiz(Mh + Ml)
@@ -91,12 +81,12 @@ def mp_logdet(A):
 def planted(n=40, tau=1e-45, seed=5):
     """near_singular's matrix with Schur complement +tau or -tau, whichever gives det A the sign opposite to the one the
     quad-double LU with double-double updates finds (as multidouble's test, with its update_dd control as 'wrong')"""
-    qd = _qd_logdet()
+    from multidouble import qd_logdet
     for t in (tau, -tau):
         A, _ = near_singular(n, t, seed)
         z = np.zeros_like(A)
         ref = mp_logdet(A)
-        if qd(A, z, z, z, False, "update_dd")[0] != ref[0]:
+        if qd_logdet(A, z, z, z, control="update_dd")[0] != ref[0]:
             return A, ref
     raise AssertionError("the double-double updates' sign follows tau here")
 
