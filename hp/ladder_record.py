@@ -6,8 +6,10 @@ outer steps, and how it was released); changes_beyond_kstar (the released change
 error terms, each a separate field with a basis that names its kind (bound, estimator, empirical or measured):
   err_resid    bound: first order at kfree k* (--kstar): gain (gainq.py at kfreeze k*, --gain) x that system's |F| at
                harmonic k*'s release (from the logs, or --F_kstar). Past some kfree the gain is so large (6.4e30 at
-               kfree 17, 1.5e47 at kfree 31, D 300, M 32) that gain x |F| bounds nothing, so k* is the last useful one
-  err_tail     estimator: the pending first-order dDelta at release (the steps not taken: each harmonic released after
+               kfree 17, 1.5e47 at kfree 31, D 300, M 32) that gain x |F| bounds nothing, so k* is the last useful one.
+               --kstar_json KSTAR.json (kstar_stage.sh's, when it re-converged the k* system): gain x the re-converged
+               |F| plus |the re-converge's move of Delta|, the bound at release kept as err_resid_before
+  err_tail    estimator: the pending first-order dDelta at release (the steps not taken: each harmonic released after
                its own steps once, each run of harmonics released at once with no step between them once), summed
                in |.|, and the geometric remainder past the last
                released harmonic (from the last two changes c_(k-2), c_k: |c_k| r/(1 - r), r = |c_k/c_(k-2)|; none when
@@ -21,7 +23,8 @@ error terms, each a separate field with a basis that names its kind (bound, esti
   err_sum      err_resid + err_tail + the err_xcheck present + the measured terms; its basis lists the missing checks
 
     python3 hp/ladder_record.py STATE OUT.jsonl LOG.jsonl [LOG.jsonl ...] --start START.npz --kstar K --gain G
-        [--F_kstar F] [--M_ref DELTA] [--xcheck "kind|value|basis;..."] [--info "name|value|basis;..."] [--note TEXT]
+        [--F_kstar F | --kstar_json KSTAR.json] [--M_ref DELTA] [--xcheck "kind|value|basis;..."]
+        [--info "name|value|basis;..."] [--note TEXT]
 
 START is the first log's input state (its Delta is the base of the first harmonic's change). The record also carries the
 fields export_delta_all.py's direct rows read: system "full", Delta_parts, F_check and its precision,
@@ -51,7 +54,7 @@ XCHECKS = ("horizon", "M", "machine")
 
 
 def opts(argv):
-    o = dict(gain="", M_ref="", note="", start="", kstar="", F_kstar="", xcheck="", info="")
+    o = dict(gain="", M_ref="", note="", start="", kstar="", F_kstar="", xcheck="", info="", kstar_json="")
     pos = []
     i = 0
     while i < len(argv):
@@ -136,7 +139,22 @@ def main():
                per_harmonic={f"h{k}": dict(change=float(per.get(k, 0)), released_by=released_by.get(k, "")) for k in ks},
                kstar=kstar, changes_beyond_kstar=float(s_beyond), err_tail=err_tail, err_tail_basis=basis_tail,
                note=o["note"])
-    if o["gain"] and kstar is not None:
+    kj = None
+    if o["kstar_json"]:
+        with open(o["kstar_json"]) as fh:
+            kj = json.load(fh)
+    if kj is not None and kj.get("reconv"):
+        # the k* stage (kstar_stage.sh): the bound at the re-converged k* system plus the re-converge's move of Delta
+        # from the h<k*> state that the later harmonics started from
+        rec.update(err_resid=kj["bound_after"], err_resid_before=kj["bound_before"], F_kstar_before=kj["F_before"],
+                   F_kstar_after=kj["F_after"], kstar_shift=kj["shift"],
+                   err_resid_basis=f"bound, first order: at kfree {kj['kstar']}, gain {kj['gain']:.4e} (kstar_gain.py "
+                                   f"at kfreeze {kj['kstar']}) x the re-converged system's |F| {kj['F_after']:.3e}, "
+                                   f"plus |the re-converge's move of Delta| {abs(kj['shift']):.3e} from the "
+                                   f"h{kj['kstar']} state the later harmonics started from (kstar_stage.sh). At "
+                                   f"h{kj['kstar']}'s release it was gain x |F| {kj['F_before']:.3e} = "
+                                   f"{kj['bound_before']:.3e} (err_resid_before)")
+    elif o["gain"] and kstar is not None:
         Fk = float(o["F_kstar"]) if o["F_kstar"] else F_rel.get(kstar)
         rec.update(err_resid=float(o["gain"]) * float(Fk) if Fk is not None else None,
                    err_resid_basis=f"bound, first order: at kfree {kstar}, gain {o['gain']} (gainq.py at kfreeze "
