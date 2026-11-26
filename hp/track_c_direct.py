@@ -78,7 +78,7 @@ def direct_points(folders):
         tier = 0 if full else 2 if r["system"] == "held" else 1
         key = (tier, r.get("F_check") if r.get("F_check") is not None else r.get("F_solve") or 1.0)
         if D not in best or key < best[D][0]:
-            v = mp.fsum(mp.mpf(repr(float(x))) for x in r["Delta_parts"])
+            v = mp.fsum(mp.mpf(float(x)) for x in r["Delta_parts"])      # each part exactly, as the double it is
             best[D] = (key, (v, s, "direct_full" if full else "direct_held"), src)
     return {D: b[1] for D, b in best.items()}, {D: b[2] for D, b in best.items()}
 
