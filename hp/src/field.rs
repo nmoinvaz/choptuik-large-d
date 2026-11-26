@@ -3,11 +3,11 @@
 //! keep the right parity. d/dtheta of an odd field is the folded spectral matrix (`DMat`).
 //!
 //! The field type and its arithmetic are multidouble's `field` module (this module's code, moved there): `Fl` and its
-//! operations, the Cauchy product coefficients (`cs`, `cs_range`, `cs_w`), `horner`, the constant matrix `DMat` (on
-//! the compile-time backend, multidouble's `native::DMat`) and `FieldSolve`. This crate adds the four-field state, and
-//! the Cauchy products of jet lanes with their B lane vectors summed on separate threads, and the order-k sums of a
-//! series formed one jet order at a time, several independent sums at once with every lane vector on its own task
-//! (`sums_at`).
+//! operations, the Cauchy product coefficients (`cs`, `cs_range`, `cs_w`, here by `cs_par` and its kin, with the B
+//! lane vectors of long jet sums on separate threads, but not on the f64 lanes), `horner`, the constant matrix `DMat`
+//! (on the compile-time backend, multidouble's `native::DMat`) and `FieldSolve`. This crate adds the four-field state
+//! and the order-k sums of a series formed one jet order at a time, several independent sums at once with every lane
+//! vector on its own task (`sums_at`).
 use multidouble::dual::Lane;
 use multidouble::field::{cs_at_splits, cs_lane_at, cs_range_at, cs_w_at, cs_w_lane_at};
 use multidouble::simd::Simd;
@@ -18,59 +18,39 @@ use rayon::prelude::*;
 /// the state at a point: the four fields p, m, a, c
 pub type State<T, const B: usize> = [Fl<T, B>; 4];
 
-/// terms times jet coefficients from which a Cauchy product of jet lanes is split over its lane vectors
-const PAR_MIN: usize = 48;
-
-/// whether the sum of `terms` products of T is split over the B lane vectors: jet lanes (each product a truncated
-/// convolution of NJ coefficients) with enough terms, not the f64 lanes, whose multidouble sums interleave the vectors
+/// the f64 lanes, whose multidouble sums interleave the B vectors' f64 chains: their Cauchy products are not split over
+/// the vectors' threads
 #[inline(always)]
-fn split<T: Lane>(terms: usize) -> bool {
-    T::NJ > 0 && !(T::VAL_F64 || T::TAN_F64) && terms * T::NJ >= PAR_MIN
+fn f64_lane<T: Lane>() -> bool {
+    T::VAL_F64 || T::TAN_F64
 }
 
-/// `sum_{j=lo..=hi} (w(j) x[j]) y[k-j]`, each lane vector's terms in the order j = lo..=hi as multidouble's sums
-/// take them (its in-place lane-vector sums), the B vectors on separate threads
-fn split_sum<T: Lane, const B: usize>(
-    x: &[Fl<T, B>],
-    y: &[Fl<T, B>],
-    k: usize,
-    lo: usize,
-    hi: usize,
-    w: Option<&(dyn Fn(usize) -> f64 + Sync)>,
-) -> Fl<T, B> {
-    let mut out = Fl::<T, B>::zero();
-    out.0.par_iter_mut().enumerate().for_each(|(b, o)| match w {
-        Some(w) => multidouble::field::cs_w_lane_into(o, b, x, y, k, lo, hi, w),
-        None => multidouble::field::cs_lane_into(o, b, x, y, k, lo, hi),
-    });
-    out
-}
-
-/// `sum_{j=0..=k} x[j] y[k-j]` (multidouble's `cs`, bitwise), the accumulator borrowed rather than moved
+/// `sum_{j=0..=k} x[j] y[k-j]` (multidouble's `cs`, bitwise): `cs_par`, the B vectors of a long jet sum on separate
+/// threads, except on the f64 lanes, summed on the calling thread with the accumulator borrowed (`cs_into`)
 #[inline(always)]
 pub fn cs<T: Lane, const B: usize>(x: &[Fl<T, B>], y: &[Fl<T, B>], k: usize) -> Fl<T, B> {
-    if split::<T>(k + 1) {
-        split_sum(x, y, k, 0, k, None)
-    } else {
+    if f64_lane::<T>() {
         let mut out = Fl::<T, B>::zero();
         multidouble::field::cs_into(&mut out, x, y, k);
         out
+    } else {
+        multidouble::field::cs_par(x, y, k)
     }
 }
 
-/// `sum_{j=lo..=hi} x[j] y[k-j]` (multidouble's `cs_range`, bitwise)
+/// `sum_{j=lo..=hi} x[j] y[k-j]` (multidouble's `cs_range`, bitwise), split as `cs`
 #[inline(always)]
 pub fn cs_range<T: Lane, const B: usize>(x: &[Fl<T, B>], y: &[Fl<T, B>], k: usize, lo: usize, hi: usize) -> Fl<T, B> {
-    if hi >= lo && split::<T>(hi - lo + 1) {
-        split_sum(x, y, k, lo, hi, None)
-    } else {
+    if f64_lane::<T>() {
         let mut out = Fl::<T, B>::zero();
         multidouble::field::cs_range_into(&mut out, x, y, k, lo, hi);
         out
+    } else {
+        multidouble::field::cs_range_par(x, y, k, lo, hi)
     }
 }
 
-/// `sum_{j=lo..=hi} (w(j) x[j]) y[k-j]` with exact f64 weights w(j) (multidouble's `cs_w`, bitwise)
+/// `sum_{j=lo..=hi} (w(j) x[j]) y[k-j]` with exact f64 weights w(j) (multidouble's `cs_w`, bitwise), split as `cs`
 #[inline(always)]
 pub fn cs_w<T: Lane, const B: usize>(
     x: &[Fl<T, B>],
@@ -80,12 +60,12 @@ pub fn cs_w<T: Lane, const B: usize>(
     hi: usize,
     w: impl Fn(usize) -> f64 + Sync,
 ) -> Fl<T, B> {
-    if hi >= lo && split::<T>(hi - lo + 1) {
-        split_sum(x, y, k, lo, hi, Some(&w))
-    } else {
+    if f64_lane::<T>() {
         let mut out = Fl::<T, B>::zero();
         multidouble::field::cs_w_into(&mut out, x, y, k, lo, hi, w);
         out
+    } else {
+        multidouble::field::cs_w_par(x, y, k, lo, hi, w)
     }
 }
 
