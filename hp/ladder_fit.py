@@ -19,7 +19,12 @@ The rule (RULE below; chosen on the planted truths alone, before any real point 
 - value: the candidates' median (the lower middle one); h half their range; s the central fit's propagated data error
   (1 sigma, from the inverse normal matrix); E = F max(h, s), F from the planted test of the same ladder (`planted`;
   about 3, the largest of about 1000 calibration cases, so E is close to a 3-sigma bar);
-- no D0: no quote (exit 1).
+- no D0: no quote (exit 1);
+- leave-one-out check: each point with D >= D0 against the rule run without it, z = (y_i - prediction) / sd, the
+  prediction from that run's central fit (var, lev, K), sd^2 = sigma_i^2 + the prediction's propagated variance +
+  (the degree K + 1 prediction less it)^2; |z| > ZLOO (10) is an alarm. Without it a shifted interior point was
+  absorbed by a degree that interpolates it (leverage 1). Planted (raw I1098-mac loocheck): no alarm on T1-T3 in 304
+  quoted cases; a +30 sigma shift at D 1000 reads 17-22.
 
 Planted truths (mpmath, 60 digits; limits exact), each a function of n = D - 2, e = 1/n:
   T1 readme   track_c.readme_formula: rational in e, poles at e -0.0769 and -0.191 (radius 0.077, n -13)
@@ -49,8 +54,10 @@ systematic patterns covered, and the K* the rule picks there.
 Controls (each must fire): shift (D 1000 moved by +30 sigma: no quote, or D 1000 dropped), tight (E / 10: coverage
 fails), lowdeg (KMAX 3: no quote or outside E), var (x = (D-2)^-1.5, in which the truths are not analytic: the same).
 `real`: the full-system records in direct_s.jsonl under the raw folders given (I1088-*), one per D (the lowest check
-residual), sigma = export_delta_all.direct_err's err (its largest recorded term; no floor). Its check: the central
-fit's residuals |fit - data| / sigma <= 3.5 (exit 1 if not); --mutate=shift moves the middle point by +30 sigma.
+residual), sigma = export_delta_all.direct_err's err (its largest recorded term; no floor). Its checks: the central
+fit's residuals |fit - data| / sigma <= 3.5, and the leave-one-out check (exit 1 if either fails); --mutate=shift
+moves the middle point by +30 sigma. `mkreal --ladder=E20 --truth=T1 --sigma=1e-23 --dir=DIR` writes planted records
+in the same format, for a test of `real` through its own reader.
 With fewer than NMIN points it quotes nothing and prints the three-point check: the K = 1 and K = 2 fits in each
 variable, beside the same fits to T1 at the same D, and the real values against Track C's Delta_inf (#1095).
 """
