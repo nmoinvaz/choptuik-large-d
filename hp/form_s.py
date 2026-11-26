@@ -1284,6 +1284,10 @@ def cmd_release_ls(argv):
                 floor = bool(recs and recs[-1].get("floor"))
                 Ft = resid(s_tg, zt)
                 nt = float(np.abs(np.asarray(Ft[0]) + np.asarray(Ft[1])).max())
+                if not conv and not floor and jk == "qq" and recs and recs[-1].get("F_new", np.inf) <= 1e-3 * nr:
+                    # an inner solve whose last step was rejected far below the target residual (M 48's h31 at D 300:
+                    # 1.5e-36 against 4.9e-30) has reached its own floor: the trial is judged by the target residual
+                    floor = True
                 trials.append(dict(lam=lam, inner_conv=bool(conv), inner_floor=floor, inner_steps=len(recs),
                                    inner_F=recs[-1].get("F_new") if recs else None, F=nt))
                 print(f"    h{k} outer {outer} trial lam {lam:g}: inner {'converged' if conv else 'floor' if floor else 'NOT converged'} "
