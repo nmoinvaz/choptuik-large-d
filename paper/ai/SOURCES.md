@@ -599,3 +599,23 @@ subject; `graphs/index.csv` gives each commit and day. The 62 image files of the
 | "Graph delta so far and see if that helps" | `chat:` prompt 28 (page 36 of the chat's printed copy); `solver/delta.svg` committed at b46efb26 after prompt 57, "commit that delta graph and the script needed to create it" |
 | the constants listed when I asked whether the limit meant something | `chat:` prompt 44; `solver/candidates.svg` at f60bfd9e |
 | the gain's walls from 79.27 to 193.77; nineteen days to the constraint | `hp/explain_gain.svg` at 61707a80 (2026-11-06); #1089 slice 3 (2026-11-25) |
+
+### Section II, writing to the authors (update of 26 November)
+
+`og:` is the printed copy of the chat where the project began, saved by Nathan from its share link on 2026-11-25
+(630 pages; not public). It holds 523 prompts: the 62 read on 2026-11-06 (numbered 0 to 61, as above) and 461 more,
+in which the chat went on as the coordinator of the first week. The prompts were read by their typeface (the user's
+text is set apart from the replies) with pdfplumber. The printed copy carries no times, so prompts are named by number
+and page.
+
+| item | source |
+|---|---|
+| the closest work found by the first literature check; the conjecture Δ → 0 | `og:` reply to prompt 11; reply before prompt 110 (page 157), which lists both papers; notes/REF_CHECK.md (EckerEtAl2026, EckerEckerGrumiller2026) |
+| "Also do we have an e-mail for any of these author's? ..." | `og:` prompt 110, page 157 |
+| the authors listed, these four first because the data contradicted their conjecture; the offer to draft | `og:` reply to prompt 110 ("Who would care most: 1. Ecker et al. They conjecture Δ → 0 as D → ∞. Our points contradict that directly"; "I can draft an email to Ecker and Grumiller") |
+| "I feel like we need to add something about your involvement. ..." | `og:` prompt 134, page 190 |
+| the disclosure in the second paragraph: a software engineer, not a physicist; Claude produced the code, computations and write-up; no expert had checked | `og:` reply to prompt 134; README commit a264ac59 (2026-10-20 17:35 UTC), "How this work was done", written with the drafts |
+| "this is false, I never read that."; every first-person statement something I had done | `og:` prompt 135 and its reply, page 192 |
+| "Will I look like I have egg on my face ..." | `og:` prompt 137, page 193 ("turn out", "hallisnation" in the original) |
+| sent in the first week | `og:` prompt 142, page 197 ("E-mail has been sent."), after the drafts of 2026-10-20 |
+| the correspondence is private; the rule on the authors' results | `og:` prompt 383, page 469 ("remember we should not expose the author's results anywhere in what we write to the repo") |

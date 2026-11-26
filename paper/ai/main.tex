@@ -92,7 +92,7 @@ Then I asked \prompt{Any new math we can draw from this?} Claude answered that e
 results and listed three directions, recommending the first, a proof that a known three-body orbit exists. I chose
 another, \prompt{Explain the collapse numbers}. Claude proposed a plan that began with a literature check, and I let it
 run. The check changed the target, since a 2026 paper had already computed $\Delta$ for continuous $D$ between 3.05 and
-5.5 (see~\cite{physics}). The next step of the plan computed the critical solution directly, as a periodic problem rather
+5.5~\cite{EckerEtAl2026}. The next step of the plan computed the critical solution directly, as a periodic problem rather
 than a simulation. At 63 Fourier modes it gave $\Delta = 3.4454523972$ in four dimensions, nine digits from the best
 published value, $3.445452402$, and the scan in $D$ began.
 
@@ -115,6 +115,25 @@ machine?} and linked the chat to my laptop, \prompt{You are now local on my comp
 Continue our work.} When the scans used a fifth of the processor, I asked for more processes and threads. Within hours I
 had a cloud session and the laptop exchanging messages through a log file in the repository, and the setup of the next section grew from
 that pair.
+
+\emph{Writing to the authors.} The chat went on as the first week's coordinator. The literature check of the first day
+had found the closest work, the computation of $\Delta$ for continuous $D$ by Ecker, Ecker, Grumiller and
+Jechtl~\cite{EckerEtAl2026}. Three of them had also conjectured that $\Delta \to 0$ as $D \to \infty$~\cite{EckerEG2026}.
+When our points to $D = 61$ levelled off instead, I asked \prompt{Also do we have an e-mail for any of these authors?
+which one would be interesting in our work? Do we have anything unique in our repo?} Claude listed the authors, put
+these four first because the data contradicted their conjecture, and drafted an email. Two corrections of mine shaped
+it.
+\begin{itemize}
+\item I asked for the truth about who did the work: \prompt{I feel like we need to add something about your involvement.
+But I technically didn't read it, but I orchestrated you to do all this work.} The draft then said in its second
+paragraph that I am a software engineer, not a physicist, that Claude produced the code, the computations and the
+write-up, and that no expert had checked them.
+\item I caught a sentence it had written in my voice, that I had read their papers: \prompt{this is false, I never read
+that.} Claude rewrote the drafts so that every statement in the first person was something I had done.
+\end{itemize}
+Before sending I asked \prompt{Will I look like I have egg on my face if this all turns out to be false or some kind of
+Claude hallucination?} I sent it in the project's first week. The correspondence that followed is private, and my rule
+keeps the authors' results out of the repositories.
 
 \section{The setup}
 \label{sec:setup}
@@ -1071,6 +1090,10 @@ Times, reprinted in The Star, 11 September 2026,
 \bibitem{NIH2023} National Institutes of Health, ``The Use of Generative Artificial Intelligence Technologies is
 Prohibited for the NIH Peer Review Process'', notice NOT-OD-23-149 (2023),
 \url{https://grants.nih.gov/grants/guide/notice-files/NOT-OD-23-149.html}.
+\bibitem{EckerEtAl2026} C. Ecker, F. Ecker, D. Grumiller and T. Jechtl, ``Critical spacetime crystals in continuous
+dimensions'', SciPost Phys.\ \textbf{20}, 176 (2026), doi:10.21468/SciPostPhys.20.6.176, arXiv:2602.10185.
+\bibitem{EckerEG2026} C. Ecker, F. Ecker and D. Grumiller, Phys.\ Rev.\ Lett.\ \textbf{136}, 191401 (2026),
+doi:10.1103/qgl5-5l3t, arXiv:2601.14358.
 \bibitem{Cochelin1994} B. Cochelin, ``A path-following technique via an asymptotic-numerical method'', Comput.\ Struct.\
 \textbf{53}, 1181 (1994) (checked against a citing record only).
 \end{thebibliography}
