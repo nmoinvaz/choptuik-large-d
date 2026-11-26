@@ -86,7 +86,7 @@ q.p::after { content: none; }
 .figures dd small { display: block; font-family: var(--font-body); font-stretch: 100%; font-weight: 400; font-size: 0.92rem; color: var(--muted); margin-top: 0.25rem; line-height: 1.35; }
 
 .echo { margin: 2.4rem 0 0; }
-.echo canvas { display: block; width: 100%; height: 250px; }
+.echo canvas { display: block; width: 100%; height: 290px; }
 .echo-ctl { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.25fr); gap: 1.2rem 2rem; align-items: end; margin-top: 0.8rem; }
 .echo-read { font-family: var(--font-mono); font-size: 0.9rem; line-height: 1.5; min-width: 0; }
 .echo-read .big { font-size: 1.05rem; word-break: break-all; }
@@ -185,7 +185,7 @@ svg .wallline { stroke: var(--accent); stroke-width: 1; opacity: 0.45; }
 .bar .seg:first-child { border-radius: 0; }
 .bar .seg span { position: absolute; inset: 0; display: grid; place-items: center; font-family: var(--font-mono); font-size: 0.7rem; color: var(--surface); font-weight: 600; }
 .bar .tot { font-family: var(--font-mono); font-size: 0.8rem; color: var(--ink); margin-left: 0.5rem; white-space: nowrap; }
-.bar .then { font-family: var(--font-mono); font-size: 0.72rem; color: var(--muted); margin-left: 0.6rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
+.bar .then { grid-column: 2; font-family: var(--font-mono); font-size: 0.72rem; color: var(--muted); margin-top: -0.4rem; min-width: 0; }
 .two { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 2.4rem 3rem; margin-top: 2rem; }
 .two > * { min-width: 0; }
 .finding { margin-top: 2.6rem; border-left: 3px solid var(--accent); padding: 0.2rem 0 0.2rem 1.2rem; max-width: 46rem; display: grid; gap: 0.7rem; }
@@ -264,7 +264,6 @@ footer { padding-block: 2.5rem 3rem; border-top: 1px solid var(--rule); margin-t
   .strip .run, .strip .ends { display: none; }
   .run-note { display: block; }
   .bar { grid-template-columns: 7.5rem minmax(0, 1fr); }
-  .bar .then { display: none; }
   .stackrow { grid-template-columns: minmax(0, 1fr); gap: 0.25rem; }
   .stackrow .name { text-align: left; }
 }
@@ -273,7 +272,7 @@ footer { padding-block: 2.5rem 3rem; border-top: 1px solid var(--rule); margin-t
   .card { padding: 1rem; }
   .card .cols { grid-template-columns: minmax(0, 1fr); }
   .card .idea { grid-template-columns: minmax(0, 1fr); }
-  .echo canvas { height: 210px; }
+  .echo canvas { height: 260px; }
 }
 @media (prefers-reduced-motion: reduce) {
   * { scroll-behavior: auto !important; transition: none !important; animation: none !important; }
@@ -792,10 +791,10 @@ function drawEcho(delta) {
   c.setTransform(dpr, 0, 0, dpr, 0, 0); c.clearRect(0, 0, w, h);
   const ink = css("--ink"), acc = css("--accent"), rule = css("--rule"), muted = css("--muted");
   const mono = getComputedStyle(document.body).getPropertyValue("--font-mono") || "monospace";
-  const xR = w - 30, half = h / 2, A = h * 0.15;
+  const xR = w - 30, half = h * 0.5, A = h * 0.13;
   c.font = `11px ${mono}`;
   // clock time: x = xR (1 - s), the field sin(2π ln s / Δ) with a smooth start
-  const m1 = half * 0.5 + 6, m2 = half + half * 0.5 + 4;
+  const m1 = h * 0.25, m2 = h * 0.7;
   c.strokeStyle = rule; c.lineWidth = 1;
   c.beginPath(); c.moveTo(0, m1); c.lineTo(xR, m1); c.moveTo(0, m2); c.lineTo(w - 4, m2); c.stroke();
   c.strokeStyle = ink; c.lineWidth = 1.6; c.beginPath();
@@ -832,11 +831,11 @@ function drawEcho(delta) {
   c.stroke();
   c.strokeStyle = acc; c.fillStyle = acc; c.lineWidth = 1.5;
   for (let k = 1; k * delta < tauMax; k++) { const x = k * delta * sx; c.beginPath(); c.moveTo(x, m2 + A + 4); c.lineTo(x, m2 + A + 11); c.stroke(); }
-  const x1 = 1 * delta * sx, x2 = 2 * delta * sx, yb = m2 - A - 8;
-  c.beginPath(); c.moveTo(x1, yb + 4); c.lineTo(x1, yb); c.lineTo(x2, yb); c.lineTo(x2, yb + 4); c.stroke();
-  c.fillText("Δ", (x1 + x2) / 2 - 3, yb - 4);
+  const x1 = 1 * delta * sx, x2 = 2 * delta * sx, yb = m2 + A + 15;
+  c.beginPath(); c.moveTo(x1, yb - 4); c.lineTo(x1, yb); c.lineTo(x2, yb); c.lineTo(x2, yb - 4); c.stroke();
+  c.fillText("Δ", (x1 + x2) / 2 - 3, yb + 13);
   c.fillStyle = muted;
-  c.fillText("log time, −ln(t* − t): the same field repeats every Δ", 0, half + 14);
+  c.fillText("log time, −ln(t* − t): the same field repeats every Δ", 0, half + 6);
 }
 
 function drawCurve() {
@@ -959,19 +958,20 @@ const wallDays = {};
 DATA.walls.forEach(w => { (wallDays[Math.floor(w.day)] ||= []).push(w.n); });
 function timeline() {
   const box = document.getElementById("timeline"); box.innerHTML = "";
-  const w = Math.max(760, box.clientWidth), lw = 200, pr = 12, top = 46, rh = 40, gap = 8, n = ROWS.length;
+  const w = Math.max(760, box.clientWidth), lw = 236, pr = 12, top = 52, rh = 40, gap = 8, n = ROWS.length;
   const h = top + n * (rh + gap) + 30;
   const s = sv("svg", { viewBox: `0 0 ${w} ${h}`, height: h, role: "img", "aria-label": "Prompts over time by session component and form, with the walls marked." }, box);
   const X = d => lw + (w - lw - pr) * d / 40;
   for (let d = 0; d <= 40; d += 5) { sv("line", { x1: X(d), x2: X(d), y1: top - 6, y2: h - 26, class: "grid" }, s); tx(s, X(d), h - 10, dateOf(d), { "text-anchor": "middle" }); }
   // walls
   const days = Object.keys(wallDays).map(Number).sort((a, b) => a - b);
-  let tier = 0, lastX = -1e9;
+  const ends = [-1e9, -1e9, -1e9];                 // right end of the last label in each of three tiers
   days.forEach(dd => {
     const x = X(dd + 0.5), ns = wallDays[dd], label = ns.length > 2 ? `${ns[0]}–${ns[ns.length - 1]}` : ns.join(" ");
     sv("line", { x1: x, x2: x, y1: top - 4, y2: top + n * (rh + gap) - gap, class: "wallline" }, s);
-    tier = x - lastX < 34 ? 1 - tier : 0; lastX = x;
-    tx(s, x, tier ? 26 : 12, label, { "text-anchor": "middle", class: "acc" });
+    const hw = label.length * 3.4, t = Math.max(0, ends.findIndex(e => x - hw > e + 5));
+    ends[t] = x + hw;
+    tx(s, x, 10 + t * 13, label, { "text-anchor": "middle", class: "acc" });
   });
   ROWS.forEach((name, r) => {
     const y = top + r * (rh + gap);
@@ -1068,7 +1068,7 @@ function select(n, scroll) {
 
 function lanes() {
   const box = document.getElementById("lanes"); box.innerHTML = "";
-  const w = box.clientWidth, narrow = w < 600, lw = narrow ? 92 : 170, pr = 14, top = 14, lh = narrow ? 60 : 70, h = top + 4 * lh + 34;
+  const w = box.clientWidth, narrow = w < 600, lw = narrow ? 118 : 170, pr = 14, top = 14, lh = narrow ? 60 : 70, h = top + 4 * lh + 34;
   const s = sv("svg", { viewBox: `0 0 ${w} ${h}`, height: h, role: "img", "aria-label": "The forty walls in time by who supplied the idea." }, box);
   const X = d => lw + (w - lw - pr) * d / 39.5, Y = y => top + (3.5 - y) * lh;
   for (let d = 0; d <= 35; d += narrow ? 10 : 5) { sv("line", { x1: X(d), x2: X(d), y1: top, y2: top + 4 * lh, class: "grid" }, s); tx(s, X(d), h - 12, dateOf(d), { "text-anchor": "middle" }); }
@@ -1096,8 +1096,8 @@ function barRow(name, segs, total, then, max) {
   const tr = el("div", { class: "track" });
   segs.forEach(([v, cls, label]) => { if (!v) return; const sg = el("div", { class: "seg " + cls, style: `width:calc(${(v / max) * 100}% - 2px)`, title: label }); if (v / max > 0.07) sg.appendChild(el("span", {}, String(v))); tr.appendChild(sg); });
   tr.appendChild(el("span", { class: "tot" }, String(total)));
-  if (then) tr.appendChild(el("span", { class: "then" }, then));
   row.appendChild(tr);
+  if (then) row.appendChild(el("span", { class: "then" }, then));
   return row;
 }
 (function ideas() {
@@ -1129,7 +1129,7 @@ function barRow(name, segs, total, then, max) {
   const wb = document.getElementById("word-bars");
   [["5 words or fewer", "5 or fewer"], ["6 to 20", "6 to 20"], ["21 to 50", "21 to 50"], ["over 50", "over 50"]].forEach(([lab, key]) => {
     const v = +stat("words", key);
-    const row = barRow(lab, [[v, "", ""]], v, `${Math.round(v / 1593 * 100)}%`, 929);
+    const row = barRow(lab, [[v, "", ""]], `${v} · ${Math.round(v / 1593 * 100)}%`, "", 929);
     row.querySelector(".seg").style.background = "var(--ink)";
     wb.appendChild(row);
   });
