@@ -100,6 +100,32 @@ def setup(o, xl, thr):
     return Dt, rows, z8, sh, meta
 
 
+def full_correction(Dt, meta, z8, thr, jac="dd"):
+    """the full system's (kfreeze 13) first-order Delta correction at a held solution, -e_Delta^T J_full^-1 F_full, as
+    form_s.py jump computes it: F_full in quad-double, J_full in double-double (jac "dd", form_s.py's own), quad-double
+    with a dd solve ("qd") or quad-double solved in quad-double ("qq", QDLu: the dd and qd steps erred by 2-70% along
+    the top harmonics' near-null directions at D 1000-2000, I1088-dh610/rls1000h13, rls2000c); returns (max |F_full|,
+    the correction, sum |J_full^-T e_Delta|, seconds)"""
+    from multidouble import QDLu, dd_solve
+    t0 = time.time()
+    kw = dict(kt=int(meta["kt"]), kc=int(meta["kc"]), ks=int(meta["ks"]), threads=thr, segs=meta["segs"],
+              mob=float(meta["hmob"]))
+    s_full = make_solver_s(Dt, M, list(meta["nodes"]), kfreeze=13, **kw)
+    Ff = s_full.residual_s([np.ascontiguousarray(z8[q]) for q in range(4)])
+    L = s_full.size_s
+    eD = np.zeros(L)
+    eD[-1] = 1.0
+    J = s_full.jacobian_s([np.ascontiguousarray(z8[q]) for q in range(2 if jac == "dd" else 4)])
+    if jac == "qq":
+        g = np.asarray(QDLu(*[np.ascontiguousarray(np.asarray(J[q]).T) for q in range(4)]).solve(
+            eD, np.zeros(L), np.zeros(L), np.zeros(L))[0])
+    else:
+        g = np.asarray(dd_solve(np.ascontiguousarray(np.asarray(J[0]).T), np.ascontiguousarray(np.asarray(J[1]).T),
+                                eD, np.zeros(L))[0])
+    Fv = np.asarray(Ff[0]) + np.asarray(Ff[1])
+    return float(np.abs(Fv).max()), float(-(g @ Fv)), float(np.abs(g).sum()), time.time() - t0
+
+
 def main(argv):
     from octo_corrector import delta_digits, save_o
     from raw_out import pop_allow, require_raw
@@ -109,7 +135,8 @@ def main(argv):
     pos, o = opts(argv, dict(D="2828.4271247461903", states_s="", xl="xc", deg="2", mob="8", ks="auto", kc="250",
                              threads="2", sub="4", plan_tol="1e-40", hmax="0.05", delta="fit", tc="", it_max="10",
                              halvings="8", delta_tol="1e-15", commit="", ham="1", tol="1e-300", parts="8", ladder="dd,qd",
-                             it_hi="2", check="auto", state="", disc="1", chord="1", jfile="", step_est=""))
+                             it_hi="2", check="auto", state="", disc="1", chord="1", jfile="", step_est="", full="1",
+                             full_jac="dd", record="", gain="", write_record="0"))
     outdir = pos[0]
     os.makedirs(outdir, exist_ok=True)
     log = os.path.join(outdir, f"lastnode_{cmd}.jsonl")
@@ -133,6 +160,32 @@ def main(argv):
         return 0
     xl = xls[0]
     t_all = time.time()
+    if cmd == "fullcorr":
+        # the full system's first-order correction at a saved held solution (a backfill for records written before
+        # solvestate computed it): one record per state, the matching direct_s record (--record, by state name) with
+        # full_F, full_dDelta_first_order, full_gain and full_jac added, appended to OUTDIR/direct_s.jsonl
+        from octo_corrector import load_o
+        z8, meta = load_o(o["state"])
+        with mp.workdps(60):
+            Dt = mp.mpf(meta["D_str"])
+        fF, dD1, gF, ts = full_correction(Dt, meta, z8, thr, o["full_jac"])
+        print(f"D {float(Dt):g} (ks {meta['ks']}): the full system (kfreeze 13) at the held solution: max |F| {fF:.3e}, "
+              f"first-order dDelta {dD1:+.3e} (gain {gF:.2e}, {o['full_jac']} Jacobian, {ts:.0f} s)", flush=True)
+        line = dict(state=os.path.basename(o["state"]), D_str=meta["D_str"], full_F=fF, full_dDelta_first_order=dD1,
+                    full_gain=gF, full_jac=o["full_jac"], s=round(ts, 1), commit=o["commit"],
+                    utc=time.strftime("%Y-%m-%d %H:%M:%S", time.gmtime()))
+        with open(log, "a") as fh:
+            fh.write(json.dumps(line) + "\n")
+        if o["record"]:
+            recs_in = [json.loads(x) for x in open(o["record"]) if x.strip()]
+            mine = [r for r in recs_in if r.get("state") == os.path.basename(o["state"]) or r.get("D_str") == meta["D_str"]]
+            if not mine:
+                raise SystemExit(f"no record of {os.path.basename(o['state'])} or D {meta['D_str']} in {o['record']}")
+            rec = dict(mine[-1], full_F=fF, full_dDelta_first_order=dD1, full_gain=gF, full_jac=o["full_jac"],
+                       full_commit=o["commit"], full_utc=line["utc"])
+            with open(os.path.join(outdir, "direct_s.jsonl"), "a") as fh:
+                fh.write(json.dumps(rec) + "\n")
+        return 0
     if cmd in ("solvestate", "checkstate"):
         # a guess saved by "guess" (this machine need not have path_s), or for checkstate a solved state: its nodes,
         # plan and held values
@@ -163,7 +216,8 @@ def main(argv):
         t0 = time.time()
         Fq = sh.residual_s([np.ascontiguousarray(z8[q]) for q in range({"qd": 4, "od": 8}[check])])
         Fc = float(np.abs(np.asarray(Fq[0]) + np.asarray(Fq[1])).max())
-        gain = float(meta.get("delta_gain") or "nan")
+        # Delta's gain: --gain (the solve's last step's, from its log), else the state's
+        gain = float(o["gain"]) if o["gain"] else float(meta.get("delta_gain") or "nan")
         print(f"D {float(Dt):g} (ks {meta['ks']}): {check} check max |F| {Fc:.3e} ({time.time() - t0:.0f} s); Delta's "
               f"first-order bound {gain * Fc:.2e} (gain {gain:.2e})", flush=True)
         dsc = disc(z8, Fq, gain) if int(o["disc"]) else None
@@ -175,6 +229,22 @@ def main(argv):
                                      gain=gain, bound=gain * Fc, disc=dsc,
                                      ham_check={str(k): r for k, r in hc.items()} if hc else None,
                                      utc=time.strftime("%Y-%m-%d %H:%M:%S", time.gmtime()))) + "\n")
+        if int(o["write_record"]) and gain * Fc <= float(o["delta_tol"]):
+            # the solve's direct record, for a run stopped after its last Newton step (its end checks done here,
+            # on another kernel if need be): the solve's residual from the step state (step_F, step_res)
+            tc = None
+            if o["tc"]:
+                tc = dict(value=o["tc"].split(":")[0], err=float(o["tc"].split(":")[1]), source="given")
+            xl = float(meta["nodes"][-1])
+            rec = direct_line(z8, meta, o["state"], "held", meta.get("step_F"), meta.get("step_res", ""), Fc, check,
+                              bound=gain * Fc, disc=dsc, ham={str(k): r for k, r in hc.items()} if hc else None, tc=tc,
+                              commit=o["commit"],
+                              extra=dict(method="lastnode", valid=True, xl=xl,
+                                         L_xl=float((float(Dt) - 2) / 2 * np.log(1 / xl ** 2 - 1)), jac="dd",
+                                         checked_by="checkstate", step_it=meta.get("step_it")))
+            with open(os.path.join(outdir, "direct_s.jsonl"), "a") as fh:
+                fh.write(json.dumps(rec) + "\n")
+            print(f"  record written ({outdir}/direct_s.jsonl): Delta {delta_digits(z8, 40)}", flush=True)
         return 0
     if cmd == "guess":
         F = sh.residual_s([np.ascontiguousarray(p) for p in z8[:2]])
@@ -231,6 +301,11 @@ def main(argv):
         hc = ham_check(z8, meta, threads=thr)
         meta.update(ham_check={str(k): r for k, r in hc.items()})
         print(f"  Hamiltonian code check: a rows up to {max(r['a'] for r in hc.values()):.1e}", flush=True)
+    if int(o["full"]) and conv:
+        fF, dD1, gF, ts = full_correction(Dt, meta, z8, thr, o["full_jac"])
+        meta.update(full_F=fF, full_dDelta_first_order=dD1, full_gain=gF, full_jac=o["full_jac"])
+        print(f"  the full system (kfreeze 13) at the held solution: max |F| {fF:.3e}, first-order dDelta {dD1:+.3e} "
+              f"(gain {gF:.2e}, {o['full_jac']} Jacobian, {ts:.0f} s)", flush=True)
     out = os.path.join(outdir, f"lastnode_D{float(Dt):.4f}.npz")
     save_o(out, z8, meta)
     Dl = delta_digits(z8, 40)
@@ -246,7 +321,8 @@ def main(argv):
                           disc=meta.get("disc"), ham=meta.get("ham_check"), tc=tc, commit=o["commit"],
                           extra=dict(method="lastnode", valid=True, xl=xl,
                                      L_xl=float((float(Dt) - 2) / 2 * np.log(1 / xl ** 2 - 1)), newton_steps=len(recs),
-                                     jac="dd"))
+                                     jac="dd", **{k: meta[k] for k in ("full_F", "full_dDelta_first_order", "full_gain",
+                                                                       "full_jac") if k in meta}))
         with open(os.path.join(outdir, "direct_s.jsonl"), "a") as fh:
             fh.write(json.dumps(rec) + "\n")
     return 0 if conv else 1
