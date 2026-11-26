@@ -863,10 +863,10 @@ def newton_o_s(s, z8, tol, it_max, halvings, log=None, mutate="none", verbose=Tr
         # junk_w > 0: the first step has no earlier correction to compare with
         # a floor is a full step that gains little; a damped step (lam < 1, far from the solution: D 360's inner solve
         # from a guess, I1098-mac-a/cont360) is not one
-        floor = bool(acc and not conv and floor_cut > 0 and np.isfinite(cut) and cut < floor_cut and lam == 1.0
-                     and (dz_prev > 0 or not junk_w) and (junk_w or dz <= floor_dz))
-        # a chord step at the floor or rejected: the kept J is too old, so the next step forms a fresh one
-        reform = bool(stale and not conv and (floor or not acc))
+        slow = bool(acc and floor_cut > 0 and np.isfinite(cut) and cut < floor_cut and lam == 1.0)
+        floor = bool(slow and not conv and (dz_prev > 0 or not junk_w) and (junk_w or dz <= floor_dz))
+        # a chord step that gains little or is rejected: the kept J is too old, so the next step forms a fresh one
+        reform = bool(stale and not conv and (slow or not acc))
         rec.update(res=res, cut=cut, floor=floor and not reform, chord=stale, reform=reform)
         dz_prev = dz
         if log:
@@ -1271,7 +1271,7 @@ def cmd_release_ls(argv):
     allow = pop_allow(argv)
     pos, o = opts(argv, dict(harm="5", outer="6", tol="1e-40", tol_h="1e-38", it_in="6", halvings="6", threads="2",
                              tries="6", jac="auto", tc="", commit="", res="od", jac_by="", held_delta="", kmax="13",
-                             ddelta="1e-25"))
+                             ddelta="1e-25", inner_chord="1"))
     path, outdir = pos[0], pos[1]
     os.makedirs(outdir, exist_ok=True)
     log = os.path.join(outdir, "release_ls.jsonl")
@@ -1313,6 +1313,9 @@ def cmd_release_ls(argv):
         held_tg = list(range(k + 2, kmax + 1, 2))
         s_in0 = make_solver_s(D, M, nodes, kfreeze=k - 2, **kw)
         s_tg0 = make_solver_s(D, M, nodes, kfreeze=k, **kw)
+        # --inner_chord 1: the inner held solves keep their Jacobian (by mode) across steps, trials and outer steps of
+        # this harmonic and take chord steps with it, forming it again when a chord step gains less than 10x
+        jst_in = {}
         co = band_coeffs(np.asarray(z8[0])[:M], np.asarray(z8[1])[:M], M, held_in, exact=True,
                          rest=[np.asarray(p)[:M] for p in z8[2:]])
         s_tg = HeldS(s_tg0, M, K, band_field(co[1:], held_tg, M, parts=8)) if held_tg else s_tg0
@@ -1364,8 +1367,10 @@ def cmd_release_ls(argv):
                 with mp.workdps(60):
                     co_t = [(co[0][0] + lam * dk[0], co[0][1] + lam * dk[1])] + list(co[1:])
                 s_in = HeldS(s_in0, M, K, band_field(co_t, held_in, M, parts=8))
-                zt, conv, recs = newton_o_s(s_in, z8, float(o["tol"]), int(o["it_in"]), int(o["halvings"]), None,
-                                            verbose=False, jac=jk, res=o["res"])
+                ich = o["inner_chord"] == "1" and jk in ("dd", "qd", "qq")
+                zt, conv, recs = newton_o_s(s_in, z8, float(o["tol"]), int(o["it_in"]) + (4 if ich else 0),
+                                            int(o["halvings"]), None, verbose=False, jac=jk, res=o["res"], chord=ich,
+                                            jstore=jst_in.setdefault(jk, {}) if ich else None)
                 floor = bool(recs and recs[-1].get("floor"))
                 Ft = resid(s_tg, zt)
                 nt = float(np.abs(np.asarray(Ft[0]) + np.asarray(Ft[1])).max())
