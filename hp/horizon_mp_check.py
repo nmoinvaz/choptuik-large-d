@@ -18,15 +18,16 @@ import sys
 import numpy as np
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-import hpkernel.driver as drv  # noqa: E402
+
 from mpmath import mp  # noqa: E402
 
 import form_s  # noqa: E402
 from octo_corrector import load_o  # noqa: E402
+from taylor_mp_check import kernel_dmats  # noqa: E402
 
 
 def opts(argv):
-    o = dict(ks_mp="0", mob="8", ks_mob="0", dps="150", bar="1e-40", u_scan="", mob_scan="")
+    o = dict(ks_mp="0", mob="8", ks_mob="0", dps="150", bar="1e-40", u_scan="", mob_scan="", split="0")
     pos = []
     i = 0
     while i < len(argv):
@@ -68,7 +69,7 @@ def kernel_right(z8, meta, mob, ks, dmh=0.0):
     return out, s
 
 
-def mp_horizon(z8, meta, ks_mp, sig, dps):
+def mp_horizon(z8, meta, ks_mp, sig, dps, split=False):
     """horizon_series_s in mpmath: the coefficients of p, m, c in the scaled u to order ks_mp"""
     M, nodes = int(meta["M"]), list(meta["nodes"])
     K = len(nodes)
@@ -76,9 +77,7 @@ def mp_horizon(z8, meta, ks_mp, sig, dps):
         D = mp.mpf(meta["D_str"])
         n = D - 2
         n1, nh = n - 1, n / 2
-        oh, ol = drv.dmat_odd(M)
-        eh, el = form_s.dmat_even(M)
-        vo, ve = mp_of(oh, ol), mp_of(eh, el)
+        vo, ve = kernel_dmats(M)
         Do, De = mp.matrix(M, M), mp.matrix(M, M)
         for i in range(M):
             for j in range(M):
@@ -124,7 +123,13 @@ def mp_horizon(z8, meta, ks_mp, sig, dps):
                 lub = om * De
                 for i in range(M):
                     lub[i, i] += -qs[0][i] - n1
-                x = mp.lu_solve(lub, mp.matrix([-n1] * M))
+                if split:
+                    # horizon_mob's split B_0 = 1 + X, (omega D_e + kappa) X = q_0: equal to the direct solve only
+                    # when D_e 1 = 0, which the double-double D_e meets to its row sums
+                    x = mp.lu_solve(lub, mp.matrix(qs[0]))
+                    x = mp.matrix([1 + x[i] for i in range(M)])
+                else:
+                    x = mp.lu_solve(lub, mp.matrix([-n1] * M))
             else:
                 x = mp.lu_solve(lub, mp.matrix(cs(qs, bb, kk, 1)))
             bb[kk] = [x[i] for i in range(M)]
@@ -182,7 +187,7 @@ def main():
     K = len(meta["nodes"])
     with mp.workdps(dps):
         u = (1 - mp.mpf(float(meta["nodes"][-1]))) / mp.mpf(sig)
-        P, Mm, C = mp_horizon(z8, meta, ks_mp, sig, dps)
+        P, Mm, C = mp_horizon(z8, meta, ks_mp, sig, dps, split=o["split"] == "1")
         ref, ref_ks, tail = [], [], 0
         for F in (P, Mm, C):
             for i in range(M):

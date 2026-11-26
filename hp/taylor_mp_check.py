@@ -8,9 +8,10 @@ written again from their definitions:
     x (x - c) p' = g p - x omega D_o p - c p + (n/2) c (p + m),
     x (x + c) m' = c m - x omega D_o m - g m - (n/2) c (p + m),
 
-as series in h = x - x0 to order kt, summed at x1 - x0. Both use the same double-double d/dtheta matrices (the
-kernel's stored values, read exactly) and omega = dd(2 pi)/Delta, so that the difference is the kernel's arithmetic
-alone; the matrices' own rounding is hp/dmat_perturb.py's term. PASS when the largest difference over the 3M values is
+as series in h = x - x0 to order kt, summed at x1 - x0. Both use the same d/dtheta matrices, the kernel's stored
+values read exactly (hi + lo, plus the f64 remainder c when the solver applies it: form_s.exact_dmat), and
+omega = dd(2 pi)/Delta, so that the difference is the kernel's arithmetic alone; the matrices' own rounding is
+hp/dmat_perturb.py's term. PASS when the largest difference over the 3M values is
 at most --bar (1e-60), and the control, the kernel with double-double reciprocals (HP_EXACT_RECIP=0, the 1/x0 and
 1/(k + 1) of every run before #1098's fix), must exceed --bar_ctl (1e-40).
 
@@ -49,6 +50,25 @@ def mp_of(hi, lo):
     return [mp.mpf(float(a)) + mp.mpf(float(b)) for a, b in zip(np.ravel(hi), np.ravel(lo))]
 
 
+def remainders_applied():
+    """whether make_solver_s gives the solver the d/dtheta remainders (form_s.exact_dmat and Solver.set_dmat_corr)"""
+    from hpkernel._hpkernel import Solver
+    return bool(getattr(form_s, "exact_dmat", lambda: False)()) and hasattr(Solver, "set_dmat_corr")
+
+
+def kernel_dmats(M):
+    """the odd and even d/dtheta exactly as the kernel's quad- and octo-double lanes apply them, as mpf lists
+    (row-major): hi + lo, plus the f64 remainder c when it is applied (remainders_applied)"""
+    oh, ol = drv.dmat_odd(M)
+    eh, el = form_s.dmat_even(M)
+    vo, ve = mp_of(oh, ol), mp_of(eh, el)
+    if remainders_applied():
+        co, ce = form_s.dmat_corr(M)
+        vo = [v + mp.mpf(float(c)) for v, c in zip(vo, np.ravel(co))]
+        ve = [v + mp.mpf(float(c)) for v, c in zip(ve, np.ravel(ce))]
+    return vo, ve
+
+
 def kernel_step(path, h):
     """the kernel's octo-double step from the state's last node to x_l + h: (3M,) mpf values, x_l, x1"""
     z8, meta = load_o(path)
@@ -74,9 +94,7 @@ def mp_step(path, h, dps):
         n1, nh = n - 1, n / 2
         Do = mp.matrix(M, M)
         De = mp.matrix(M, M)
-        oh, ol = drv.dmat_odd(M)
-        eh, el = form_s.dmat_even(M)
-        vo, ve = mp_of(oh, ol), mp_of(eh, el)
+        vo, ve = kernel_dmats(M)
         for i in range(M):
             for j in range(M):
                 Do[i, j] = vo[i * M + j]
@@ -171,6 +189,8 @@ def main():
             big = max(abs(b) for b in ref)
         print(f"HP_EXACT_RECIP={er}: max |kernel - mpmath| {mp.nstr(res[er], 4)} over {len(ref)} values (largest "
               f"|value| {mp.nstr(big, 4)})", flush=True)
+    print(f"the matrices on both sides: {'hi + lo + c (the remainders applied)' if remainders_applied() else 'hi + lo'}",
+          flush=True)
     ok = res["1"] <= float(o["bar"]) and res["0"] > float(o["bar_ctl"])
     print(f"  {'PASS' if ok else 'FAIL'}: lane-precision reciprocals {mp.nstr(res['1'], 3)} (bar {o['bar']}), the "
           f"control {mp.nstr(res['0'], 3)} (must exceed {o['bar_ctl']})", flush=True)
