@@ -1,7 +1,7 @@
 """A build's check of the relaxed horizon sums (#1096, #1098): which hpkernel loads, and Solver.set_horizon_relaxed's effect on one
 quad-double residual at a state with the Moebius horizon (relaxed against term by term within 1e-50, and the control
-mutate 56, which must differ by more than 1e-40). The u = 1 - x horizon (states without hmob, such as D 300's) has no
-relaxed sums.
+mutate 56, which must differ by more than 1e-40), then one Solver at M 64 with one horizon block through form S's
+size dispatch (Ctx<8>). The u = 1 - x horizon (states without hmob, such as D 300's) has no relaxed sums.
 
     PYTHONPATH=<site> python3 relaxed_build_check.py STATE      (from hp/; exit 1 on FAIL)
 """
@@ -41,4 +41,13 @@ ok = d <= 1e-50 and dc > 1e-40
 print(f"D {float(D):g} ks {m['ks']}: qd max|F| {float(max(abs(v) for v in n)):.2e}; |F_relaxed - F_naive| {d:.2e} "
       f"(<= 1e-50), control |F_mut56 - F_naive| {dc:.2e} (> 1e-40); {res['naive'][1]:.1f} s naive, "
       f"{res['relaxed'][1]:.1f} s relaxed: {'PASS' if ok else 'FAIL'}", flush=True)
-sys.exit(0 if ok else 1)
+# form S at M 64 (Ctx<8>): one Solver and one horizon block through the size dispatch, with m_h zero and this Delta
+s64 = make_solver_s(D, 64, list(m["nodes"]), kfreeze=3, kt=int(m["kt"]), kc=int(m["kc"]), ks=200, threads=4,
+                    segs=m["segs"], mob=float(m["hmob"]))
+z = np.zeros(s64.size_s)
+z[-1] = float(np.asarray(z8[0])[-1])
+h = s64.horizon_s([np.ascontiguousarray(z), np.zeros(s64.size_s)])
+ok64 = s64.size_s == 3 * 64 * (len(m["nodes"]) + 1) + 1 and len(h[0]) == 3 * 64 and bool(np.all(np.isfinite(h[0])))
+print(f"M 64: size_s {s64.size_s}, horizon block {len(h[0])} values, finite {bool(np.all(np.isfinite(h[0])))}: "
+      f"{'PASS' if ok64 else 'FAIL'}", flush=True)
+sys.exit(0 if ok and ok64 else 1)
