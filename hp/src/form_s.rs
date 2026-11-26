@@ -88,6 +88,10 @@ fn mag_stats<T: Lane, const B: usize>(v: &[Fl<T, B>]) -> (f64, f64, usize, usize
 /// first square of the product c U left out (multidouble's `series::RELAXED_MUT_DROP`)
 pub const FS_MUT_RELAX_DROP: u8 = 56;
 
+/// `Ctx::mutate`, the control of `horizon_mob`'s split B_0 = 1 + X: the right side q_0 without the - omega D_e 1 term
+/// (the split of fastmul6 and before, exact only when D_e's rows sum to 0)
+pub const FS_MUT_SPLIT: u8 = 57;
+
 /// One Cauchy product x y of the Moebius series: its order-k sums by multidouble's relaxed product (`Relaxed`, when
 /// `Ctx::hrelax` is set and the lane has fast squares) or term by term (`cs_range`, bitwise the sums before)
 struct Prod<T: Lane, const B: usize>(Option<Relaxed<T, B>>);
@@ -714,7 +718,11 @@ pub fn horizon_mob<T: Lane, const B: usize>(ctx: &Ctx<B>, de: &DMat<B>, prep: &S
         q[k] = (puu.sum(&uu, &uu, k, 0, k) + zvv).mul_pwr2(0.5) - pcuv.sum(&cc, &uvc, k, 0, k);
         if k == 0 {
             kap = (-q[0]).addp(-n1);
-            xx[0] = ssolve(de, ctx.dec.as_ref(), lu_h, &kap, &q[0], omega);
+            // B_0 = 1 + X with (omega D_e + kappa) X = q_0 - omega D_e 1, D_e the matrix applied (with its remainder):
+            // its rows sum to its own rounding, not to 0, and without the last term the Moebius values sat 1.7e-60 off
+            // the u series at D 300 (I1098-dh610/mpcheck); FS_MUT_SPLIT leaves the term out again (the control)
+            let rhs0 = if ctx.mutate == FS_MUT_SPLIT { q[0] } else { q[0] - dapply_c(de, ctx.dec.as_ref(), &one).mul_t(omega) };
+            xx[0] = ssolve(de, ctx.dec.as_ref(), lu_h, &kap, &rhs0, omega);
             ib0 = one / (one + xx[0]);
         } else {
             let rhs = q[k] + pqx.sum(&q, &xx, k, 1, k);

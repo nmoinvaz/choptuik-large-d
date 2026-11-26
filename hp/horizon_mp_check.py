@@ -27,7 +27,8 @@ from taylor_mp_check import kernel_dmats  # noqa: E402
 
 
 def opts(argv):
-    o = dict(ks_mp="0", mob="8", ks_mob="0", dps="150", bar="1e-40", u_scan="", mob_scan="", split="0")
+    o = dict(ks_mp="0", mob="8", ks_mob="0", dps="150", bar="1e-40", u_scan="", mob_scan="", split="0", ctl_mutate="",
+             ctl_bar="1e-80")
     pos = []
     i = 0
     while i < len(argv):
@@ -44,7 +45,7 @@ def mp_of(hi, lo):
     return [mp.mpf(float(a)) + mp.mpf(float(b)) for a, b in zip(np.ravel(hi), np.ravel(lo))]
 
 
-def kernel_right(z8, meta, mob, ks, dmh=0.0):
+def kernel_right(z8, meta, mob, ks, dmh=0.0, mutate=0):
     """the kernel's (p, m, c) at x_l from the horizon series (u when mob is 0), octo-double, as mpf (3M,)"""
     with mp.workdps(60):
         D = mp.mpf(meta["D_str"])
@@ -56,7 +57,7 @@ def kernel_right(z8, meta, mob, ks, dmh=0.0):
     if dmh:
         o = 2 * M + 3 * M * K
         z[1][o:o + M] += dmh
-    F = s.residual_s([np.ascontiguousarray(p) for p in z])
+    F = s.residual_s([np.ascontiguousarray(p) for p in z], mutate)
     F = np.array([np.asarray(f) for f in F])
     on = 2 * M + 3 * M * (K - 1)
     out = []
@@ -238,9 +239,18 @@ def main():
         kc_, _ = kernel_right(z8, meta, mob, ks_mob, dmh=1e-30)
         d_c = max(abs((nd + sgn * fh) - b) for (nd, fh), b in zip(kc_, ref))
         print(f"control (m_h + 1e-30 in the kernel only): {mp.nstr(d_c, 4)}", flush=True)
-    ok = d_m <= float(o["bar"]) and d_c > float(o["bar"])
+        d_s = None
+        if o["ctl_mutate"]:
+            # the kernel's own control (form_s.rs FS_MUT_SPLIT, 57: B_0 = 1 + X without the omega (D_e + c) 1 term)
+            ks_, _ = kernel_right(z8, meta, mob, ks_mob, mutate=int(o["ctl_mutate"]))
+            d_s = max(abs((nd + sgn * fh) - b) for (nd, fh), b in zip(ks_, ref))
+            print(f"control (mutate {o['ctl_mutate']}, the old split): {mp.nstr(d_s, 4)} (must exceed {o['ctl_bar']})",
+                  flush=True)
+    ok = d_m <= float(o["bar"]) and d_c > float(o["bar"]) and (d_s is None or d_s > float(o["ctl_bar"]))
     print(f"  {'PASS' if ok else 'FAIL'}: Moebius against mpmath {mp.nstr(d_m, 3)} (bar {o['bar']}), the control "
-          f"{mp.nstr(d_c, 3)} (must exceed it); {K} nodes, x_l {meta['nodes'][-1]}", flush=True)
+          f"{mp.nstr(d_c, 3)} (must exceed it)" + (f", the split control {mp.nstr(d_s, 3)} (must exceed {o['ctl_bar']})"
+                                                     if d_s is not None else "")
+          + f"; {K} nodes, x_l {meta['nodes'][-1]}", flush=True)
     return 0 if ok else 1
 
 
