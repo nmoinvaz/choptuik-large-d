@@ -34,6 +34,7 @@ use multidouble::dual::Param;
 use multidouble::native::OV;
 use multidouble::simd::Native;
 use multidouble::precision::Precision;
+use multidouble::series::{Relaxed, RELAXED_MUT_DROP};
 use multishoot::periodic::Parity;
 use multishoot::{Equations, ExtraRow, Rate, Shooting, Work};
 
@@ -81,6 +82,45 @@ fn mag_stats<T: Lane, const B: usize>(v: &[Fl<T, B>]) -> (f64, f64, usize, usize
         }
     }
     (lo, hi, zeros, bad)
+}
+
+/// `Ctx::mutate`, the control of the relaxed products of the Moebius series (`horizon_mob` with `Ctx::hrelax`): the
+/// first square of the product c U left out (multidouble's `series::RELAXED_MUT_DROP`)
+pub const FS_MUT_RELAX_DROP: u8 = 56;
+
+/// One Cauchy product x y of the Moebius series: its order-k sums by multidouble's relaxed product (`Relaxed`, when
+/// `Ctx::hrelax` is set and the lane has fast squares) or term by term (`cs_range`, bitwise the sums before)
+struct Prod<T: Lane, const B: usize>(Option<Relaxed<T, B>>);
+
+impl<T: Lane, const B: usize> Prod<T, B> {
+    fn new<const BB: usize>(ctx: &Ctx<BB>, len: usize, drop: bool) -> Self {
+        if ctx.hrelax == 0 || T::BLOCK_MIN == 0 {
+            return Prod(None);
+        }
+        let mut r = Relaxed::with_min(len, T::BLOCK_MIN);
+        if drop && ctx.mutate == FS_MUT_RELAX_DROP {
+            r.mutate = RELAXED_MUT_DROP;
+        }
+        Prod(Some(r))
+    }
+    /// sum_(i=lo..=hi) x_i y_(k-i)
+    #[inline(always)]
+    fn sum(&self, x: &[Fl<T, B>], y: &[Fl<T, B>], k: usize, lo: usize, hi: usize) -> Fl<T, B> {
+        match &self.0 {
+            Some(r) => r.sum(x, y, k, lo, hi),
+            None => cs_range(x, y, k, lo, hi),
+        }
+    }
+    /// whether the end of step e forms squares
+    fn forms(&self, e: usize) -> bool {
+        self.0.as_ref().is_some_and(|r| r.squares_at(e))
+    }
+    /// the end of step e: x and y final to order e - 1
+    fn step(&mut self, x: &[Fl<T, B>], y: &[Fl<T, B>], e: usize) {
+        if let Some(r) = &mut self.0 {
+            r.step(x, y, e);
+        }
+    }
 }
 
 /// refinement steps of a slaving solve: as model's QD_REFINE (2) and OD_REFINE (4), one more on a tangent lane
@@ -610,6 +650,20 @@ pub fn horizon_mob<T: Lane, const B: usize>(ctx: &Ctx<B>, de: &DMat<B>, prep: &S
     // z VV and z V, each order's final value (after P_k)
     let mut zvvc = vec![z; len];
     let mut zv = vec![z; len];
+    // the Cauchy products (`Prod`): V V, U V, U U, c (U V), q X, c X, G X, hcm U', hce V', G U, G V, c U, c V'
+    let mut pvv = Prod::<T, B>::new(ctx, len, false);
+    let mut puv = Prod::<T, B>::new(ctx, len, false);
+    let mut puu = Prod::<T, B>::new(ctx, len, false);
+    let mut pcuv = Prod::<T, B>::new(ctx, len, false);
+    let mut pqx = Prod::<T, B>::new(ctx, len, false);
+    let mut pcx = Prod::<T, B>::new(ctx, len, false);
+    let mut pgx = Prod::<T, B>::new(ctx, len, false);
+    let mut phu = Prod::<T, B>::new(ctx, len, false);
+    let mut phv = Prod::<T, B>::new(ctx, len, false);
+    let mut pgu = Prod::<T, B>::new(ctx, len, false);
+    let mut pgv = Prod::<T, B>::new(ctx, len, false);
+    let mut pcu = Prod::<T, B>::new(ctx, len, true);
+    let mut pcv = Prod::<T, B>::new(ctx, len, false);
     cc[0] = one;
     qn[0] = m0.mulf(2.0);
     let mut kap = z;
@@ -618,19 +672,23 @@ pub fn horizon_mob<T: Lane, const B: usize>(ctx: &Ctx<B>, de: &DMat<B>, prep: &S
         let kf = k as f64;
         uu[k] = qn[k].mul_pwr2(0.5);
         vv[k] = -uu[k];
-        vvc[k] = cs(&vv, &vv, k);
-        uvc[k] = cs(&uu, &vv, k);
+        vvc[k] = pvv.sum(&vv, &vv, k, 0, k);
+        uvc[k] = puv.sum(&uu, &vv, k, 0, k);
         let zvv = if zcauchy { cvs(&zs, &vvc, k) } else { zrec(&vvc, &zvvc, k) };
-        q[k] = (cs(&uu, &uu, k) + zvv).mul_pwr2(0.5) - cs(&cc, &uvc, k);
+        q[k] = (puu.sum(&uu, &uu, k, 0, k) + zvv).mul_pwr2(0.5) - pcuv.sum(&cc, &uvc, k, 0, k);
         if k == 0 {
             kap = (-q[0]).addp(-n1);
             xx[0] = ssolve(de, lu_h, &kap, &q[0], omega);
             ib0 = one / (one + xx[0]);
         } else {
-            let rhs = q[k] + cs_range(&q, &xx, k, 1, k);
+            let rhs = q[k] + pqx.sum(&q, &xx, k, 1, k);
             xx[k] = ssolve(de, lu_h, &kap, &rhs, omega);
         }
-        let gs = if k >= 1 { cs(&cc, &xx, k).mulp(-n1) - cs_range(&gg, &xx, k, 0, k - 1) } else { cs(&cc, &xx, k).mulp(-n1) };
+        let gs = if k >= 1 {
+            pcx.sum(&cc, &xx, k, 0, k).mulp(-n1) - pgx.sum(&gg, &xx, k, 0, k - 1)
+        } else {
+            pcx.sum(&cc, &xx, k, 0, k).mulp(-n1)
+        };
         gg[k] = gs * ib0;
         let mut s = mts2.mul(gg[k]);
         for i in 1..=k.min(2) {
@@ -649,13 +707,15 @@ pub fn horizon_mob<T: Lane, const B: usize>(ctx: &Ctx<B>, de: &DMat<B>, prep: &S
         let deriv = if k >= 1 {
             du[k - 1] = uu[k].mulf(kf);
             dv[k - 1] = vv[k].mulf(kf);
-            two_io.mul(cs_range(&hcm, &du, k, 1, k) + cs_range(&hce, &dv, k, 1, k))
+            two_io.mul(phu.sum(&hcm, &du, k, 1, k) + phv.sum(&hce, &dv, k, 1, k))
         } else {
             z
         };
         let zvk = if zcauchy { cvs(&zs, &vv, k) } else { zrec(&vv, &zv, k) };
-        let r = ((((deriv + crate::model::dtau(ctx, &(uu[k] + zvk), omega, &rate)) - cs(&gg, &uu, k)) - cs(&gg, &vv, k)) + zvk)
-            - cs(&cc, &uu, k).mulp(n1);
+        let r = ((((deriv + crate::model::dtau(ctx, &(uu[k] + zvk), omega, &rate)) - pgu.sum(&gg, &uu, k, 0, k))
+            - pgv.sum(&gg, &vv, k, 0, k))
+            + zvk)
+            - pcu.sum(&cc, &uu, k, 0, k).mulp(n1);
         // (k + 1)(1 - G_0) - n/2 as io k (2 h_0 c_1 + h_1 - e_1) - G_0 - (n/2 - 1), h_1 - e_1 = t_l
         let kappa = (io.mul(ts.add(two_h0.mul(cc[1]))).mulf(kf) - gg[0]).addp(-nh1);
         let pk = psolve(ctx, &prep.h, k, &kappa, &(-r), omega).mul_pwr2(0.5);
@@ -665,8 +725,8 @@ pub fn horizon_mob<T: Lane, const B: usize>(ctx: &Ctx<B>, de: &DMat<B>, prep: &S
             du[k - 1] = uu[k].mulf(kf);
             dv[k - 1] = vv[k].mulf(kf);
         }
-        vvc[k] = cs(&vv, &vv, k);
-        uvc[k] = cs(&uu, &vv, k);
+        vvc[k] = pvv.sum(&vv, &vv, k, 0, k);
+        uvc[k] = puv.sum(&uu, &vv, k, 0, k);
         if !zcauchy {
             zvvc[k] = zrec(&vvc, &zvvc, k);
             zv[k] = zrec(&vv, &zv, k);
@@ -676,10 +736,46 @@ pub fn horizon_mob<T: Lane, const B: usize>(ctx: &Ctx<B>, de: &DMat<B>, prep: &S
         let mut ak = z;
         for i in 0..=k.min(2) {
             let mm = k - i;
-            ak = ak + hh[i].mul(du[mm] - cs(&cc, &dv, mm));
+            ak = ak + hh[i].mul(du[mm] - pcv.sum(&cc, &dv, mm, 0, mm));
         }
-        let ak = (m2io.mul(ak) + crate::model::dtau(ctx, &uu[k], omega, &rate)) - cs(&gg, &vv, k);
+        let ak = (m2io.mul(ak) + crate::model::dtau(ctx, &uu[k], omega, &rate)) - pgv.sum(&gg, &vv, k, 0, k);
         qn[k + 1] = mul_recip(ctx, iq.mul(ak), k + 1);
+        // the end of step k: every series final to order k - 1 (U' and V' too); the products' squares on threads
+        if pvv.forms(k) {
+            rayon::scope(|sc| {
+                sc.spawn(|_| pvv.step(&vv, &vv, k));
+                sc.spawn(|_| puv.step(&uu, &vv, k));
+                sc.spawn(|_| puu.step(&uu, &uu, k));
+                sc.spawn(|_| pcuv.step(&cc, &uvc, k));
+                sc.spawn(|_| pqx.step(&q, &xx, k));
+                sc.spawn(|_| pcx.step(&cc, &xx, k));
+                sc.spawn(|_| pgx.step(&gg, &xx, k));
+                sc.spawn(|_| phu.step(&hcm, &du, k));
+                sc.spawn(|_| phv.step(&hce, &dv, k));
+                sc.spawn(|_| pgu.step(&gg, &uu, k));
+                sc.spawn(|_| pgv.step(&gg, &vv, k));
+                sc.spawn(|_| pcu.step(&cc, &uu, k));
+                sc.spawn(|_| pcv.step(&cc, &dv, k));
+            });
+        } else {
+            for (p, x, y) in [
+                (&mut pvv, &vv, &vv),
+                (&mut puv, &uu, &vv),
+                (&mut puu, &uu, &uu),
+                (&mut pcuv, &cc, &uvc),
+                (&mut pqx, &q, &xx),
+                (&mut pcx, &cc, &xx),
+                (&mut pgx, &gg, &xx),
+                (&mut phu, &hcm, &du),
+                (&mut phv, &hce, &dv),
+                (&mut pgu, &gg, &uu),
+                (&mut pgv, &gg, &vv),
+                (&mut pcu, &cc, &uu),
+                (&mut pcv, &cc, &dv),
+            ] {
+                p.step(x, y, k);
+            }
+        }
     }
     if ctx.mutate == FS_MAGSTATS {
         for (name, v) in [("u", &uu), ("v", &vv), ("c", &cc), ("G", &gg), ("x", &xx), ("q", &q), ("qn", &qn),
@@ -832,6 +928,31 @@ pub fn path_s_in<P: Precision<Native>, const B: usize>(ctx: &Ctx<B>, z: &[&[f64]
         while next < rec.len() && rec[next] == i + 1 {
             push(&s, &mut out);
             next += 1;
+        }
+    }
+    Ok(out)
+}
+
+/// form S's horizon series at the last node in P (`DssS::right_state`, p, m and c at x_l from z's m_h and Delta), as
+/// P::PARTS part arrays of 3M values (field-major): the horizon block of the residual without the Taylor steps, for
+/// hp/form_s_relaxed.py's checks and timings
+pub fn horizon_s_in<P: Precision<Native>, const B: usize>(ctx: &Ctx<B>, z: &[&[f64]]) -> Result<Vec<Vec<f64>>, String> {
+    let sh = ctx.shooting_s();
+    sh.check_z::<P>(z)?;
+    let m = Ctx::<B>::M;
+    let mh = sh.load::<P>(z, ctx.off_mh_s());
+    let g: Vec<P::V> = sh.globals::<P>(z).into_iter().map(P::splat).collect();
+    let eq = DssS(ctx);
+    let prep = eq.try_prepare(z[0], z[1])?;
+    let x = *ctx.nodes.last().ok_or("form S: nodes")?;
+    let s = eq.right_state(x, &[mh], &g, &prep);
+    let mut out: Vec<Vec<f64>> = (0..P::PARTS).map(|_| Vec::with_capacity(3 * m)).collect();
+    for f in s.iter() {
+        for i in 0..m {
+            let v = P::field_get(f, i);
+            for (q, o) in out.iter_mut().enumerate() {
+                o.push(P::part(v, q));
+            }
         }
     }
     Ok(out)
