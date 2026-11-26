@@ -193,8 +193,8 @@ def main():
                             "empirical) and measured discretization changes. Missing: " + (", ".join(missing) or "none"))
     with open(out, "a") as fh:
         fh.write(json.dumps(rec) + "\n")
-    print(json.dumps({k: rec.get(k) for k in ("D_str", "Delta", "kstar", "err_resid", "err_tail", "err_xcheck_horizon",
-                                              "err_xcheck_M", "err_xcheck_machine", "err_xcheck_kernel", "err_sum")}), flush=True)
+    keys = ("D_str", "Delta", "kstar", "err_resid", "err_tail") + tuple(f"err_xcheck_{n}" for n in XCHECKS) + ("err_sum",)
+    print(json.dumps({k: rec.get(k) for k in keys}), flush=True)
 
 
 if __name__ == "__main__":
