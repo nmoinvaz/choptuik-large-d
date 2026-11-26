@@ -191,6 +191,12 @@ def newton_sparse(sh, s, z8, K, tol_delta, it_max, halvings, log=None, jscale=1.
         if gain * nF <= tol_delta:
             conv = True
             break
+        if rec["F"] / nF < 10.0:  # floor stop: a step that cuts max |F| by less than 10x ends the run
+            rec["floor"] = True
+            if verbose:
+                print(f"  floor stop ({res} residual): the step cut max |F| by {rec['F'] / nF:.2f}x (< 10x); floor "
+                      f"{nF:.3e}, Delta's first-order bound {gain * nF:.2e}", flush=True)
+            break
     return z8, conv, recs
 
 

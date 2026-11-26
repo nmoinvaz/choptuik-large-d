@@ -627,7 +627,7 @@ def qj_step(s, z8, F, gain=False, jscale=1.0, parts=4):
 
 
 def newton_o_s(s, z8, tol, it_max, halvings, log=None, mutate="none", verbose=True, info=None, junk_w=0, tol_dz=1e-45,
-               delta_max=1e-2, jac="od", delta_tol=0.0, jscale=1.0, res="od"):
+               delta_max=1e-2, jac="od", delta_tol=0.0, jscale=1.0, res="od", floor_cut=10.0, on_step=None):
     """Newton in octo-double on form S from the eight-part z8: newton_s's step (jac "od") or qj_step's (jac "qd": the
     quad-double Jacobian, a double-double solve, the octo-double residual), halved while max |F| does not fall;
     delta_tol > 0 (jac "qd"): converged also when Delta's first-order error bound, gain max |F| with gain = sum
@@ -638,14 +638,18 @@ def newton_o_s(s, z8, tol, it_max, halvings, log=None, mutate="none", verbose=Tr
     weakest junk_w right singular directions with no Delta content (junk_basis, formed at each LU) are removed, so
     those coordinates stay where they are; a trial is then accepted when its max |F| or its own projected correction
     falls, and the iteration ends converged when the projected correction is below tol_dz (the residual left is the
-    frozen directions')."""
+    frozen directions'). res "qd": the residual in quad-double (leading four parts). Floor stop: the iteration ends,
+    not converged, at the first accepted step that cuts max |F| (junk_w > 0: the projected correction) by less than
+    floor_cut, with floor=True and the bound reached in its record (newton_ladder then moves to the next precision);
+    floor_cut 0 turns it off. on_step(z8, rec) runs after each accepted step (the caller's state save)."""
     from multidouble import od_axpy
     from octo_corrector import delta_digits, o8
     z8 = o8(z8)
     L = len(z8[0])
+    npart = {"dd": 2, "qd": 4, "od": 8}[res]
 
     def resid(z):
-        return s.residual_s(list(z) if res == "od" else [np.ascontiguousarray(z[0]), np.ascontiguousarray(z[1])])
+        return s.residual_s([np.ascontiguousarray(z[q]) for q in range(npart)])
     F = resid(z8)
     nF = float(np.abs(np.asarray(F[0]) + np.asarray(F[1])).max())
     recs = []
@@ -661,6 +665,7 @@ def newton_o_s(s, z8, tol, it_max, halvings, log=None, mutate="none", verbose=Tr
         c = V @ (V.T @ (np.asarray(d[0]) + np.asarray(d[1])))
         return o8(od_axpy(-1.0, np.ascontiguousarray(c), *([zero8] * 7), *o8(d)))
     st = None
+    dz_prev = 0.0
     for it in range(it_max):
         if conv:
             break
@@ -728,12 +733,45 @@ def newton_o_s(s, z8, tol, it_max, halvings, log=None, mutate="none", verbose=Tr
         if log:
             with open(log, "a") as fh:
                 fh.write(json.dumps(rec) + "\n")
+        cut = (dz_prev / dz if junk_w else rec["F"] / nF) if acc else float("nan")
+        # junk_w > 0: the first step has no earlier correction to compare with
+        floor = bool(acc and not conv and floor_cut > 0 and np.isfinite(cut) and cut < floor_cut
+                     and (dz_prev > 0 or not junk_w))
+        rec.update(res=res, cut=cut, floor=floor)
+        dz_prev = dz
         if verbose:
             tail = (f"Delta's gain {gain:.2e}, gain |F| {gain * nF:.2e}" if jac != "od" else
                     f"pivots {pmin:.1e}..{pmax:.1e}")
             print(f"  it {it}: |F| {rec['F']:.3e} -> {nF:.3e}, |dz| {dz:.2e}, dDelta {dD:+.3e}, lam {lam if acc else 0:g}, "
                   f"{tail}, {rec['s']} s (J and solves {t_lu:.0f} s), Delta {rec['Delta']}", flush=True)
+        if acc and on_step is not None:
+            on_step(z8, rec)
+        if floor:
+            if verbose:
+                bnd = f", Delta's first-order bound {gain * nF:.2e}" if jac != "od" else ""
+                print(f"  floor stop ({res} residual): the step cut max |F| by {cut:.2f}x (< {floor_cut:g}x); floor "
+                      f"{nF:.3e}{bnd}", flush=True)
+            break
         if not acc:
+            break
+    return z8, conv, recs
+
+
+def newton_ladder(s, z8, tol, ladder, it_max, it_hi, halvings, log=None, verbose=True, delta_tol=0.0, jac="dd",
+                  on_step=None, floor_cut=10.0):
+    """newton_o_s with the residual's precision raised at each floor stop: ladder lists the precisions ("dd", "qd",
+    "od"); the first stage runs up to it_max steps and each later one up to it_hi. The run ends converged (tol or
+    Delta's bound delta_tol met), or not at a floor stop or a rejected step of the last stage, or at a stage's step
+    cap. Returns (z8, converged, records), each record tagged with its stage's res."""
+    recs = []
+    conv = False
+    for i, res in enumerate(ladder):
+        if verbose:
+            print(f"  ladder stage {i}: {res} residual, at most {it_max if i == 0 else it_hi} steps", flush=True)
+        z8, conv, r = newton_o_s(s, z8, tol, it_max if i == 0 else it_hi, halvings, log, verbose=verbose, jac=jac,
+                                 delta_tol=delta_tol, res=res, floor_cut=floor_cut, on_step=on_step)
+        recs += r
+        if conv or not r or not r[-1].get("floor"):
             break
     return z8, conv, recs
 
@@ -749,7 +787,7 @@ def cmd_jump(argv):
                              ks="sigma", kc="146", threads="2", delta="series", tol="1e-40", it_max="16", halvings="8",
                              mutate="none", junk="0", tol_dz="1e-45", ls="0", outer="8", held="0", mob="0",
                              states_s="", jac="auto", delta_tol="1e-15", jscale="1", ham="1", segs_from="", held_from="",
-                             res="auto", check="auto", disc="auto", tc="", commit=""))
+                             res="auto", check="auto", disc="auto", tc="", commit="", it_hi="2"))
     mob = float(o["mob"])
     # with the Moebius horizon a double-double Jacobian and residual suffice for the held solve (then one octo-double
     # residual checks it); with u the quad-double Jacobian and the octo-double residual
@@ -759,7 +797,8 @@ def cmd_jump(argv):
         o["res"] = "dd" if mob else "od"
     # the end state's check: one residual in other arithmetic than the solve's (quad-double after a double-double
     # solve); the discretization report with the Moebius horizon
-    if o["check"] == "auto":
+    check_auto = o["check"] == "auto"
+    if check_auto:
         o["check"] = "qd" if o["res"] == "dd" else "od"
     if o["disc"] == "auto":
         o["disc"] = "1" if mob else "0"
@@ -868,6 +907,13 @@ def cmd_jump(argv):
     if int(o["ls"]):
         z8, conv, recs = ls_solve(s, z8, int(o["junk"]), int(o["outer"]), int(o["it_max"]), int(o["halvings"]),
                                   float(o["tol_dz"]), log)
+    elif o["jac"] != "od" and o["res"] == "dd" and not int(o["junk"]) and o["mutate"] == "none" and float(o["jscale"]) == 1:
+        # a double-double residual's floor stop hands over to the quad-double residual (newton_ladder)
+        z8, conv, recs = newton_ladder(s, z8, float(o["tol"]), ["dd", "qd"], int(o["it_max"]), int(o["it_hi"]),
+                                       int(o["halvings"]), log, jac=o["jac"], delta_tol=float(o["delta_tol"]))
+        o["res"] = recs[-1].get("res", "dd") if recs else "dd"
+        if check_auto:
+            o["check"] = "qd" if o["res"] == "dd" else "od"
     else:
         z8, conv, recs = newton_o_s(s, z8, float(o["tol"]), int(o["it_max"]), int(o["halvings"]), log, o["mutate"],
                                     junk_w=int(o["junk"]), tol_dz=float(o["tol_dz"]), jac=o["jac"],
