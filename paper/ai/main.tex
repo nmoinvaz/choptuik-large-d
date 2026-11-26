@@ -8,6 +8,7 @@
 \usepackage{enumitem}
 \setlist[itemize]{nosep, leftmargin=1.4em, topsep=2pt}
 \usepackage{xurl}
+\usepackage{graphicx}
 \usepackage{tikz}
 \usetikzlibrary{arrows.meta,positioning,calc}
 \usepackage{pgfplots}
@@ -713,6 +714,11 @@ rule and the pause, beside the two forms that did not last.
 formula and the mass mode. For three weeks the mass mode had been read as a property of Einstein's equations and met
 with more digits.
 
+\emph{The graphs.} Eighteen graphs in the repository belong to 14 of the walls (Appendix~\ref{app:graphs}), each shown
+as it was in the commit that added it. Some I asked for at the wall, as \prompt{is it possible to predict where the next
+one will fall and then visualize it?} at the wall near 78 and \prompt{draw for me a visual representation of collocation
+in general.} when collocation failed. The last six walls, passed in two days, left no graph.
+
 \section{One prompt, one session}
 \label{sec:single}
 
@@ -927,6 +933,112 @@ A day later the table of $\Delta$ holds nine rows from direct solves, from $D = 
 $D = 10^4$ is recorded on its issue. The 1582 prompts of Sec.~\ref{sec:census} are counted by other rules than the
 prompts above: over 20 sessions, to 26 November, with setup and writing prompts kept.
 
+
+\section{The graphs at the walls}
+\label{app:graphs}
+
+Each graph is the repository's SVG as it was in the commit that added it, printed by \file{paper/ai/wall\_graphs.py};
+\file{graphs/index.csv} gives each commit. The day counts from 18 October, as in Fig.~\ref{fig:walls}, and the wall's
+number is its row in Appendix~\ref{app:stuck} or~\ref{app:stuck2}. A graph drawn after the next wall began is marked
+``later''.
+
+\newcommand{\wg}[3]{\begin{minipage}[t]{#1}\centering\includegraphics[width=\linewidth]{graphs/#2.pdf}\par
+\vspace{2pt}{\footnotesize #3}\end{minipage}}
+
+\begin{figure}[p]
+\centering
+\wg{0.62\textwidth}{delta}{(a) The echo period in $D$. \file{solver/delta.svg}, day 1.}\\[8pt]
+\wg{0.49\textwidth}{extrapolation}{(b) Beyond the computed range the limit is an assumption.
+\file{solver/extrapolation.svg}, day 1.}\hfill
+\wg{0.49\textwidth}{candidates}{(c) Candidate constants for the limit. \file{solver/candidates.svg}, day 1.}
+\caption{Walls 1 and 2, the toy simulation's period 4\% low and no formula from the first fits. (a) The first scan of
+the periodic solution, with a fitted limit and the first formula, which fell like $(D-2)^{-1/4}$. I had asked
+\prompt{Graph delta so far and see if that helps}. (b) Formulas that all
+fit the computed range and part beyond it. (c) The constants Claude listed when I asked whether the limit meant
+something.}
+\label{fig:g1}
+\end{figure}
+
+\begin{figure}[p]
+\centering
+\wg{0.46\textwidth}{heldout}{(a) Predicting points the fits never saw. \file{hp/heldout.svg}, day 2, later.}\hfill
+\wg{0.50\textwidth}{solve_times}{(b) How long each $D$ took to solve. \file{hp/solve\_times.svg}, day 6, later.}
+\caption{Walls 2 and 5. (a) The held-out test that wall 2 started: fits on part of the range against the points above
+it. (b) The cost of each point, the subject of wall 5's one minute per step on two cores and wall 18's hours per point
+below $D = 4$.}
+\label{fig:g2}
+\end{figure}
+
+\begin{figure}[p]
+\centering
+\wg{0.62\textwidth}{lowD_values}{(a) Below $D = 4$: every value, and the resolution it took. \file{hp/lowD\_values.svg},
+day 5, later.}\\[8pt]
+\wg{0.55\textwidth}{modecount}{(b) Counting the unstable modes. \file{hp/modecount.svg}, day 4.}
+\caption{Walls 10 and 15. (a) The double-double values below $D = 4$, where the double solver had failed. (b) The count
+of growing modes that wall 15 questioned, before a second layout showed the extra modes were artifacts.}
+\label{fig:g3}
+\end{figure}
+
+\begin{figure}[p]
+\centering
+\wg{0.49\textwidth}{newton_stall}{(a) Why the continuation stalls along the weak directions.
+\file{hp/newton\_stall.svg}, day 9, later.}\hfill
+\wg{0.49\textwidth}{stall_kappa}{(b) Where double-double runs out. \file{hp/stall\_kappa.svg}, day 9.}
+\caption{Walls 13 and 16, the chain stopped at 67.77 and the pinned runs at 73.3. (a) One Newton step along a weak
+direction, and the steps in $D$ that collapse at 35.20, 60.96 and 67.75. (b) The unit roundoff times the condition
+number crosses 1 just before the stall at 60.96, and the residual floor is rounding: the case for quad-double.}
+\label{fig:g4}
+\end{figure}
+
+\begin{figure}[p]
+\centering
+\wg{0.49\textwidth}{large_d_walls}{(a) Where the large-$D$ continuations stop. \file{hp/large\_d\_walls.svg}, day 15.}
+\hfill
+\wg{0.49\textwidth}{pole_basin}{(b) Why the horizon series stops. \file{hp/pole\_basin.svg}, day 16.}\\[8pt]
+\wg{0.55\textwidth}{large_d_dropoffs}{(c) The drop-offs of the step and the precision wall behind them.
+\file{hp/large\_d\_dropoffs.svg}, day 16.}
+\caption{Wall 19, the wall at 78. (a) The radius of the horizon series against the matching distance, and the layouts
+that stop at 67.8, 73.3 and 78.1. (b) The radius for data off the solution, and the basin it leaves Newton. (c) Drawn
+when I asked where the next drop-off would fall: where each run's step collapses, and where pinning would run out.}
+\label{fig:g5}
+\end{figure}
+
+\begin{figure}[p]
+\centering
+\wg{0.70\textwidth}{collocation_idea}{(a) Collocation: the equation at a few points, a polynomial between.
+\file{hp/collocation\_idea.svg}, day 16.}\\[8pt]
+\wg{0.52\textwidth}{lowD_logslope}{(b) The local exponent toward $D = 3$. \file{hp/lowD\_logslope.svg}, day 17.}
+\caption{Walls 20 and 22. (a) Drawn when I asked what collocation is, on a toy equation, the day collocation and a hybrid
+failed at large $D$. (b) The low-$D$ stall at 3.04375: the local exponent of $\Delta$, which a power law holds constant
+and the data turn down.}
+\label{fig:g6}
+\end{figure}
+
+\begin{figure}[p]
+\centering
+\wg{0.62\textwidth}{algo_reseed}{(a) The re-seed of the horizon data through the last node.
+\file{hp/algo\_reseed.svg}, day 18, an animation shown at its end.}\\[8pt]
+\wg{0.55\textwidth}{explain_gain}{(b) Why the precision has to grow: the mass-mode gain. \file{hp/explain\_gain.svg},
+day 19.}
+\caption{Walls 23 and 31. (a) After \prompt{have a subagent build the real thing and not a toy.}, the re-seed in the
+solver: each rung's residual in the pilot at $D = 131.06$ and 133.56. (b) The gain $G \approx 0.7^{-(D-3)}$ of the
+mass mode at the last node, with the walls from 79.27 to the quad-double floor at 193.77 on one line. Nineteen days
+later the mode was found to violate a constraint the formulation never imposed.}
+\label{fig:g7}
+\end{figure}
+
+\begin{figure}[p]
+\centering
+\wg{0.49\textwidth}{harmonics_held}{(a) How the chain handles the weak harmonics. \file{hp/harmonics\_held.svg}, day 24.}
+\hfill
+\wg{0.49\textwidth}{solver_limits}{(b) How far each solver reaches in $D$, and what stops it.
+\file{hp/solver\_limits.svg}, day 30.}
+\caption{Walls 32 and 34, the push to 400 and the pause. (a) The harmonics the chain holds on a fit of the solutions
+below $D = 73$, whose bias a subagent found. (b) Each solver's reach and its limit, four days before I paused the chain.}
+\label{fig:g8}
+\end{figure}
+
+\clearpage
 
 \begin{thebibliography}{99}
 \bibitem{Choptuik1993} M. W. Choptuik, ``Universality and scaling in gravitational collapse of a massless scalar field'',

@@ -1,0 +1,19 @@
+wall,file,made,at,name
+1,solver/delta.svg,,,the echo period in D
+2,solver/extrapolation.svg,,,beyond the computed range the limit is an assumption
+2,solver/candidates.svg,,,candidate constants for the limit
+2,hp/heldout.svg,after,,predicting points the fits never saw
+5,hp/solve_times.svg,after,,how long each D took to solve
+10,hp/lowD_values.svg,after,,"below D = 4: every value, and the resolution it took"
+13,hp/newton_stall.svg,after,,why the continuation stalls along the weak directions
+15,hp/modecount.svg,,,counting the unstable modes
+16,hp/stall_kappa.svg,,,where double-double runs out
+19,hp/large_d_walls.svg,,,where the large-D continuations stop
+19,hp/large_d_dropoffs.svg,,,the drop-offs of the step and the precision wall behind them
+19,hp/pole_basin.svg,,,why the horizon series stops
+20,hp/collocation_idea.svg,,,"collocation: the equation at a few points, a polynomial between"
+22,hp/lowD_logslope.svg,,,the local exponent toward D = 3
+23,hp/algo_reseed.svg,,15,the re-seed of the horizon data through the last node
+31,hp/explain_gain.svg,,,why the precision has to grow: the mass-mode gain
+32,hp/harmonics_held.svg,,,how the chain handles the weak harmonics
+34,hp/solver_limits.svg,,,"how far each solver reaches in D, and what stops it"

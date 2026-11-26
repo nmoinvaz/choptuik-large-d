@@ -580,3 +580,22 @@ where the octo-double jets were "waiting for your go"). `walls.py` checks each r
 | item | source |
 |---|---|
 | 177 full evolutions, the amplitude bisected to one part in 10¹⁴ | the page the chat published for the simulation, https://claude.ai/artifact/8CuxDfZQ4ZHDmxSC4eVjeq ("What it found": "about one part in 10 14 apart, then ran 82 more simulations ... That is 177 full general-relativistic evolutions in all"), read 2026-11-26 |
+
+### Appendix D, the graphs at the walls (update of 26 November)
+
+    python3 paper/ai/wall_graphs.py --check       # PASS: every graph exists, its wall is a row of walls.csv, and a graph
+                                                  # drawn after the next wall began is marked; --mutate=late exits 1
+    python3 paper/ai/wall_graphs.py               # prints each graph from the commit that added it to graphs/<name>.pdf
+
+`wall_graphs.csv` pairs each of the 18 graphs with its wall, by the date of the commit that added it (UTC) and its
+subject; `graphs/index.csv` gives each commit and day. The 62 image files of the repository were read for this on
+26 November; the others are print layouts of the same graphs, animation frames, or graphs of walls they do not belong to.
+
+| item | source |
+|---|---|
+| 18 graphs at 14 walls; none at walls 35 to 40 | `wall_graphs.csv`; no image or graph file in any post of #1086, #1088, #1089, #1090, #1095, #1035 or #903 (checked 2026-11-26), and none added on any branch after b7986fb0 (2026-11-17) |
+| "is it possible to predict where the next one will fall and then visualize it?" | the prompt of 2026-11-02 23:27 in the list of 145 above; graph commit 7170ac4b |
+| "draw for me a visual representation of collocation in general." | the prompt of 2026-11-03 18:08 in the list above; graph commit d6449e08 (18:11 UTC) |
+| "Graph delta so far and see if that helps" | `chat:` prompt 28 (page 36 of the chat's printed copy); `solver/delta.svg` committed at b46efb26 after prompt 57, "commit that delta graph and the script needed to create it" |
+| the constants listed when I asked whether the limit meant something | `chat:` prompt 44; `solver/candidates.svg` at f60bfd9e |
+| the gain's walls from 79.27 to 193.77; nineteen days to the constraint | `hp/explain_gain.svg` at 61707a80 (2026-11-06); #1089 slice 3 (2026-11-25) |
