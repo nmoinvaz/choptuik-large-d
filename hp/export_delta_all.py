@@ -133,8 +133,8 @@ precedence where two share a D:
           every part below err is the discrete system's value, not Delta's. err is the largest of the
           record's terms, and err_kind names it: "residual bound" (delta_bound_first_order, gain times |F|),
           "discretization" (the largest first-order dDelta bound of its kc + 20, ks + 200 and halved-step checks),
-          "last release" (|held_to_full_dDelta| of a full solve released from a partial one: the last harmonic's
-          change) and, for a held solve, "held bias, first order" (|full_dDelta_first_order|, the full system's
+          "last release" (a full solve released from a partial one: Delta's change in the last harmonic's accepted
+          outer steps, from the release_ls.jsonl beside the record) and, for a held solve, "held bias, first order" (|full_dDelta_first_order|, the full system's
           first-order correction at the held solution; it exceeded the measured held-to-full change at D 300 and
           1000). A held solve without that term takes another record's at the same D, or else the nearest lower D's
           from D / DIRECT_BORROW up, err_kind "held bias, first order at D <D'>", an estimate carried over; with none,
@@ -713,6 +713,23 @@ def direct_state(src, r):
     return ""
 
 
+def release_change(src):
+    """Delta's change in the last release_ls.py harmonic of a full solve: the sum of dDelta_full over that harmonic's
+    accepted outer steps in the release_ls.jsonl beside the record (None without one). The record's own
+    held_to_full_dDelta is not used: it is the last harmonic's change at D 1000 and the whole held-to-full change at
+    D 2000 (--held_delta), so it is no err."""
+    f = src.rsplit(":", 1)[0]
+    log = os.path.join(os.path.dirname(f if os.path.isabs(f) else os.path.join(RAW, f)), "release_ls.jsonl")
+    if not os.path.exists(log):
+        return None
+    rows = [json.loads(x) for x in open(log) if x.strip()]
+    rows = [x for x in rows if x.get("accepted") and x.get("dDelta_full") is not None]
+    if not rows:
+        return None
+    h = max(x["harm"] for x in rows)
+    return sum(x["dDelta_full"] for x in rows if x["harm"] == h)
+
+
 def direct_err(r, src, recs):
     """(err, err_kind) of a direct record: the largest of its terms (the module's docstring, kind direct)"""
     D = float(r["D_str"])
@@ -723,8 +740,10 @@ def direct_err(r, src, recs):
             if r.get("disc") and isinstance(r["disc"].get(k), dict) and r["disc"][k].get("dDelta_bound") is not None]
     if disc:
         terms.append((max(disc), "discretization"))
-    if r["system"] == "full" and r.get("released_from") and r.get("held_to_full_dDelta") is not None:
-        terms.append((abs(r["held_to_full_dDelta"]), "last release"))
+    if r["system"] == "full" and r.get("released_from"):
+        last = release_change(src)
+        if last is not None:
+            terms.append((abs(last), "last release"))
     if r["system"] == "held":
         own = r.get("full_dDelta_first_order")
         same = [x.get("full_dDelta_first_order") for _, x in recs if abs(float(x["D_str"]) - D) < TOL_D
