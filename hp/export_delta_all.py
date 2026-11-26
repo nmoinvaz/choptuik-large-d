@@ -127,7 +127,10 @@ precedence where two share a D:
   direct  #1088's form-S direct solves at M = 32, one per D, from every direct_s.jsonl under RAWDIR/I1088-* (records
           with "valid": false or "method": "fine" are left out: the fine mesh converged to a wrong Delta). The full
           system is preferred, then a partial release, then the held system (harmonics 5-13 held), and within each the
-          lowest check residual. Delta is the record's eight parts summed exactly, in four. err is the largest of the
+          lowest check residual. Delta is the record's eight parts summed exactly, in four. A part of 0.0 is an exact
+          zero, not a missing value: the stored Delta has as many nonzero parts as the precision of the solve that last
+          moved it gives (eight for an octo-double solve, three to five for double-double and quad-double ones), and
+          every part below err is the discrete system's value, not Delta's. err is the largest of the
           record's terms, and err_kind names it: "residual bound" (delta_bound_first_order, gain times |F|),
           "discretization" (the largest first-order dDelta bound of its kc + 20, ks + 200 and halved-step checks),
           "last release" (|held_to_full_dDelta| of a full solve released from a partial one: the last harmonic's
