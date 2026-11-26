@@ -601,7 +601,7 @@ def base_solver(s):
     return s, mu
 
 
-def qj_step(s, z8, F, gain=False, jscale=1.0, parts=4, jstore=None, reuse=False):
+def qj_step(s, z8, F, gain=False, jscale=1.0, parts=4, jstore=None, reuse=False, solve="dd"):
     """the Newton step -J^-1 F with J form S's quad-double Jacobian at z8's leading four parts (jacobian_s at 4 parts)
     and F the octo-double residual's leading two parts, solved by multidouble's dd_solve (LU with partial pivoting in
     double-double); eight parts, the last six zero. At D 300 it converges as the octo-double Newton to 3e-44 in three
@@ -610,9 +610,30 @@ def qj_step(s, z8, F, gain=False, jscale=1.0, parts=4, jstore=None, reuse=False)
     jscale multiplies J for the step only (the control: 1.01 turns Newton linear). parts 2: the double-double Jacobian
     instead (with the Moebius horizon it converges step for step as the quad-double one at D 300, the coordinator's run
     4 in I1088-dh370-mixed2/). jstore (a dict): each J formed is kept there with its gain (and passed to
-    jstore["save"] when set); reuse: the step takes the kept J instead (a chord step, one residual and one solve)."""
+    jstore["save"] when set); reuse: the step takes the kept J instead (a chord step, one residual and one solve).
+    solve "qd": the quad-double Jacobian factored and solved in quad-double (multidouble's QDLu, kept in jstore["Jq"]),
+    with F's leading four parts: a dd solve's rounding of J (2^-104 times cond J) is what stalled D 2000's h13 inner
+    solves with the quad-double Jacobian (I1088-dh610/rls2000c); four parts of the step, the rest zero."""
     from multidouble import dd_solve
     L = len(z8[0])
+    if solve == "qd":
+        from multidouble import QDLu
+        if reuse and jstore is not None and "Jq" in jstore:
+            lu, gv = jstore["Jq"], jstore["gain"]
+        else:
+            base, mu = base_solver(s)
+            J = base.jacobian_s([np.ascontiguousarray(z8[q]) for q in range(4)], mu)
+            lu = QDLu(*[np.ascontiguousarray(np.asarray(J[q]) * jscale) for q in range(4)])
+            eD = np.zeros(L)
+            eD[-1] = 1.0
+            g = np.asarray(dd_solve(np.ascontiguousarray(np.asarray(J[0]).T), np.ascontiguousarray(np.asarray(J[1]).T),
+                                    eD, np.zeros(L))[0])
+            gv = float(np.abs(g).sum())
+            if jstore is not None:
+                jstore.update(Jq=lu, gain=gv)
+        x = lu.solve(*[np.ascontiguousarray(-np.asarray(F[q])) if q < len(F) else np.zeros(L) for q in range(4)])
+        d = [np.asarray(x[q]) for q in range(4)] + [np.zeros(L) for _ in range(4)]
+        return (d, gv) if gain else d
     if reuse and jstore is not None and "J" in jstore:
         Jh, Jl = jstore["J"]
         gv = jstore["gain"]
@@ -687,17 +708,18 @@ def newton_o_s(s, z8, tol, it_max, halvings, log=None, mutate="none", verbose=Tr
             break
         t0 = time.time()
         stale = False
-        if st is None and jac in ("qd", "dd"):
-            stale = bool(chord and not reform and jstore is not None and "J" in jstore)
+        if st is None and jac in ("qd", "dd", "qq"):
+            stale = bool(chord and not reform and jstore is not None and ("Jq" if jac == "qq" else "J") in jstore)
         if verbose:
             # the step's predicted end: the last step of the same kind (chord or fresh J), else the caller's estimate
             est = (step_s or {}).get("chord" if stale else "fresh")
             print(f"  it {it}{' (chord)' if stale else ''} starts {time.strftime('%H:%M:%S', time.gmtime(t0))} UTC"
                   + (f", predicted end {time.strftime('%H:%M', time.gmtime(t0 + est))} UTC ({est:.0f} s)" if est else ""),
                   flush=True)
-        if st is None and jac in ("qd", "dd"):
-            d, gain = qj_step(s, z8, F, gain=True, jscale=jscale, parts=4 if jac == "qd" else 2, jstore=jstore,
-                              reuse=stale)
+        if st is None and jac in ("qd", "dd", "qq"):
+            # jac "qq": the quad-double Jacobian solved in quad-double
+            d, gain = qj_step(s, z8, F, gain=True, jscale=jscale, parts=2 if jac == "dd" else 4, jstore=jstore,
+                              reuse=stale, solve="qd" if jac == "qq" else "dd")
             reform = False
             pmin, pmax, V = float("nan"), float("nan"), None
         elif st is None:
@@ -1205,8 +1227,9 @@ def cmd_release_ls(argv):
             F = resid(s_tg, z8)
             nr = float(np.abs(np.asarray(F[0]) + np.asarray(F[1])).max())
             jk = jac_by.get(k, o["jac"])
-            if jk in ("qd", "dd"):
-                d, pmin, pmax = qj_step(s_tg, z8, F, parts=4 if jk == "qd" else 2), float("nan"), float("nan")
+            if jk in ("qd", "dd", "qq"):
+                d, pmin, pmax = (qj_step(s_tg, z8, F, parts=2 if jk == "dd" else 4, solve="qd" if jk == "qq" else "dd"),
+                                 float("nan"), float("nan"))
             else:
                 d, _, pmin, pmax = s_tg.newton_s(list(z8))
             dk = band_coeffs(np.asarray(d[0])[:M], np.asarray(d[1])[:M], M, [k], exact=True,
@@ -1252,12 +1275,14 @@ def cmd_release_ls(argv):
             print(f"  h{k} outer {outer}: target |F| {nr:.2e} -> {rec['F_new']:.2e}, harmonic-{k} step {ndk:.2e} "
                   f"(full step's dDelta {rec['dDelta_full']:+.2e}), lam {rec['lam']:g}, Delta {rec['Delta']} ({rec['s']} s)",
                   flush=True)
-            if not acc and jk == "dd" and any(t.get("inner_floor") for t in trials):
-                # the dd Jacobian's inner solves stop at a floor above the target residual (h13 at D 1000, h11 at
-                # D 2000): the harmonic goes on with the quad-double Jacobian, the next precision
-                jac_by[k] = "qd"
-                print(f"  h{k}: the dd-Jacobian inner solve floored above the target residual {nr:.2e}; harmonic {k} "
-                      f"continues with the quad-double Jacobian", flush=True)
+            nxt = {"dd": "qd", "qd": "qq"}.get(jk)
+            if not acc and nxt and any(t.get("inner_floor") for t in trials):
+                # the inner solves stop at a floor above the target residual (dd: h13 at D 1000 and h11 at D 2000; qd,
+                # whose step is solved in double-double: h13 at D 2000): the harmonic goes on with the next precision,
+                # the quad-double Jacobian, then that Jacobian solved in quad-double ("qq")
+                jac_by[k] = nxt
+                print(f"  h{k}: the {jk} inner solve floored above the target residual {nr:.2e}; harmonic {k} continues "
+                      f"with Jacobian mode {nxt}", flush=True)
                 continue
             if not acc:
                 break

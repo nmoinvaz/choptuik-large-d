@@ -38,7 +38,7 @@ class Model:
 
 
 def make_step(stale, formed):
-    def fake_step(s, z8, F, gain=False, jscale=1.0, parts=4, jstore=None, reuse=False):
+    def fake_step(s, z8, F, gain=False, jscale=1.0, parts=4, jstore=None, reuse=False, solve="dd"):
         if reuse and jstore is not None and "J" in jstore:
             scale = jstore["J"]
         else:
