@@ -31,6 +31,7 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, HERE)
 import mpmath as mp  # noqa: E402
 import numpy as np  # noqa: E402
+import hpkernel.driver as _drv  # noqa: E402
 from hpkernel.driver import dd_add, dd_from_mp, load, make_solver  # noqa: E402
 
 
@@ -57,6 +58,40 @@ def exact_recip():
     return os.environ.get("HP_EXACT_RECIP", "1") != "0"
 
 
+def exact_dmat():
+    """whether form S's solvers add the d/dtheta matrices' f64 remainders on the quad- and octo-double lanes
+    (Solver.set_dmat_corr): on unless HP_EXACT_DMAT=0, which keeps the double-double matrices of every run before"""
+    return os.environ.get("HP_EXACT_DMAT", "1") != "0"
+
+
+_DMAT_CORR = {}
+_DMAT_STATE = dict(applied=False, noted=False)
+
+
+def dmat_corr(M, dps=80):
+    """the f64 remainders c = D - (hi + lo) of driver.dmat_odd's and dmat_even's double-double values from dps-digit
+    values, row-major (M, M) each: D + c is good to about 2^-159 where hi + lo is good to 2^-106. The term they remove
+    is about -2e-32 in Delta at D 300 and -1e-24 at D 1000 (hp/dmat_perturb.py, raw I1098-dh610/fix)"""
+    if M not in _DMAT_CORR:
+        oh, ol = _drv.dmat_odd(M)
+        eh, el = dmat_even(M)
+        co, ce = np.zeros((M, M)), np.zeros((M, M))
+        with mp.workdps(dps):
+            N = 2 * M
+            for i in range(M):
+                for j in range(M):
+                    vo = ve = mp.mpf(0)
+                    for jj, sgn in ((j, 1), (j + M, -1)):
+                        if jj != i:
+                            t = mp.mpf(0.5) * (-1) ** (i - jj) * mp.cot((i - jj) * mp.pi / N)
+                            vo += sgn * t
+                            ve += t
+                    co[i, j] = float(vo - mp.mpf(float(oh[i, j])) - mp.mpf(float(ol[i, j])))
+                    ce[i, j] = float(ve - mp.mpf(float(eh[i, j])) - mp.mpf(float(el[i, j])))
+        _DMAT_CORR[M] = (co, ce)
+    return _DMAT_CORR[M]
+
+
 def make_solver_s(D, M, nodes, kt=36, kc=40, ks=120, threads=0, kfreeze=None, segs=None, mob=0.0):
     """make_solver with the even-sector d/dtheta set, for the form-S entry points (residual_s, jacobian_s, newton_s);
     mob > 0: the horizon series in the Moebius variable t = (1 - z)/(1 + mob z) (Solver.set_horizon_mobius, #1090)"""
@@ -70,6 +105,15 @@ def make_solver_s(D, M, nodes, kt=36, kc=40, ks=120, threads=0, kfreeze=None, se
         s.set_segs(segs)
     dh, dl = dmat_even(M)
     s.set_dmat_even(np.ascontiguousarray(dh), np.ascontiguousarray(dl))
+    if exact_dmat():
+        if hasattr(s, "set_dmat_corr"):
+            co, ce = dmat_corr(M)
+            s.set_dmat_corr(np.ascontiguousarray(co), np.ascontiguousarray(ce))
+            _DMAT_STATE["applied"] = True
+        elif not _DMAT_STATE["noted"]:
+            _DMAT_STATE["noted"] = True
+            print("note: HP_EXACT_DMAT is on, but this hpkernel has no set_dmat_corr (#1098): the d/dtheta matrices stay "
+                  "double-double", flush=True)
     if mob:
         if not hasattr(s, "set_horizon_mobius"):
             raise SystemExit("this hpkernel has no set_horizon_mobius (form_s.rs's Moebius horizon); rebuild hp")
@@ -216,7 +260,7 @@ def kernel_info():
     change its horizon arithmetic (HP_HORIZON_RELAXED, #1096's relaxed series products), for each direct record"""
     import hpkernel
     info = dict(file=getattr(hpkernel, "__file__", ""), relaxed=os.environ.get("HP_HORIZON_RELAXED", ""),
-                exact_recip=int(exact_recip()))
+                exact_recip=int(exact_recip()), exact_dmat=int(_DMAT_STATE["applied"]))
     try:
         from importlib.metadata import version
         info["version"] = version("hpkernel")
