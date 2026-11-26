@@ -76,7 +76,7 @@ dependencies = [
 [[package]]
 name = "multidouble"
 version = "5.1.0"
-source = "git+https://github.com/nmoinvaz/multidouble?rev=6b5bcc790c9ff1342240d7e42e206779a25aab37#6b5bcc790c9ff1342240d7e42e206779a25aab37"
+source = "git+https://github.com/nmoinvaz/multidouble?rev=09f1118b1dfa7e40195a44851be14b97ac4dc732#09f1118b1dfa7e40195a44851be14b97ac4dc732"
 dependencies = [
  "rayon",
 ]
