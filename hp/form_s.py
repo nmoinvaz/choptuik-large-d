@@ -1186,7 +1186,7 @@ def cmd_release_ls(argv):
     argv = list(argv)
     allow = pop_allow(argv)
     pos, o = opts(argv, dict(harm="5", outer="6", tol="1e-40", tol_h="1e-38", it_in="6", halvings="6", threads="2",
-                             tries="6", jac="auto", tc="", commit="", res="od", jac_by="", held_delta=""))
+                             tries="6", jac="auto", tc="", commit="", res="od", jac_by="", held_delta="", kmax="13"))
     path, outdir = pos[0], pos[1]
     os.makedirs(outdir, exist_ok=True)
     log = os.path.join(outdir, "release_ls.jsonl")
@@ -1211,6 +1211,9 @@ def cmd_release_ls(argv):
     # held -> full only when the held Delta is known: given (--held_delta), carried in the state, or this run starts at
     # the held system itself (its first harmonic 5); otherwise the record leaves held_to_full_dDelta out
     harms = [int(x) for x in o["harm"].split(",")]
+    kmax = int(o["kmax"])
+    if max(harms) > kmax or kmax > M - 1:
+        raise SystemExit(f"--harm {o['harm']} needs --kmax at least {max(harms)}, and at most M - 1 = {M - 1}")
     meta["held_delta"] = o["held_delta"] or meta.get("held_delta") or (delta0 if harms[0] == 5 else None)
     npart = {"qd": 4, "od": 8}[o["res"]]
     step_s = {}  # the last outer step's seconds by Jacobian mode, for each step's predicted end
@@ -1219,8 +1222,10 @@ def cmd_release_ls(argv):
         return sx.residual_s([np.ascontiguousarray(z[q]) for q in range(npart)])
     print(f"release_ls from {os.path.basename(path)}: D {float(D):.6g}, Delta {delta0}, {o['res']} residual", flush=True)
     for k in harms:
-        held_in = list(range(k, 14, 2))
-        held_tg = list(range(k + 2, 14, 2))
+        # --kmax: the top harmonic released; past 13 the full system of record (kfreeze 13) is itself a truncation,
+        # its p1 harmonics 15 and up held at zero (#1098)
+        held_in = list(range(k, kmax + 1, 2))
+        held_tg = list(range(k + 2, kmax + 1, 2))
         s_in0 = make_solver_s(D, M, nodes, kfreeze=k - 2, **kw)
         s_tg0 = make_solver_s(D, M, nodes, kfreeze=k, **kw)
         co = band_coeffs(np.asarray(z8[0])[:M], np.asarray(z8[1])[:M], M, held_in, exact=True,
@@ -1315,12 +1320,12 @@ def cmd_release_ls(argv):
                 break
         out = os.path.join(outdir, f"release_ls_h{k}_D{float(D):.4f}.npz")
         save_o(out, z8, dict(meta, kfreeze=k, held=held_tg))
-        if k == 13 and rec.get("done"):
+        if k == kmax and rec.get("done"):
             # the full system (harmonics 1-13 free): its direct_s.jsonl record, the end state's check in the other
             # arithmetic (quad-double after an octo-double solve, octo-double after a quad-double one) and the held ->
             # full change of Delta (#1088's tables)
             import jump
-            m13 = dict(meta, kfreeze=13, held=[])
+            m13 = dict(meta, kfreeze=kmax, held=[])
             chk = "od" if o["res"] == "qd" else "qd"
             F4 = s_tg.residual_s([np.ascontiguousarray(z8[q]) for q in range({"qd": 4, "od": 8}[chk])])
             Fc = float(np.abs(np.asarray(F4[0]) + np.asarray(F4[1])).max())
@@ -1334,7 +1339,7 @@ def cmd_release_ls(argv):
             hc = ham_check(z8, m13, threads=int(o["threads"]))
             drec = direct_line(z8, m13, out, "full", rec.get("F"), o["res"], Fc, chk, held_to_full=dD,
                                ham={str(b): r for b, r in hc.items()}, tc=tc, commit=o["commit"],
-                               extra=dict(released_from=os.path.basename(path), jac=o["jac"],
+                               extra=dict(released_from=os.path.basename(path), jac=o["jac"], kfreeze=kmax,
                                           jac_by={str(a): b for a, b in jac_by.items()}, last_release_dDelta=dlast))
             with open(os.path.join(outdir, "direct_s.jsonl"), "a") as fh:
                 fh.write(json.dumps(drec) + "\n")
