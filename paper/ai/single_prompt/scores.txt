@@ -1,0 +1,45 @@
+# Scorer output, recomputed from the trial files. References are files of github.com/nmoinvaz/choptuik-large-d.
+
+$ python3 score.py trials/pilot hp/data/published_delta.csv --want 4,6,7,8
+| D | trial | reference | difference | verdict |
+|---|---|---|---|---|
+| 4 | 3.4454520 | 3.4454524 (MGG2003) | -4.0e-07 | OK |
+| 8 | 2.7117900 | 2.7117900 (EEG2026) | +0.0e+00 | OK |
+wanted 4: OK 4
+reach: every wanted D up to 8 is OK
+use: 84 turns, 2.95 h wall, 35 min of model time, tokens out 207913, cache read 6851138, cache write 282603, in 3385; ended as success
+the CLI's cost figure: $3.90, cost basis unknown (not a price unless the basis is known)
+tools: {'Bash': 77, 'Write': 5}
+network: 0 commands
+verdict: OK
+
+$ python3 score.py trials/pilot hp/data/delta_published_compare.csv --want 6,7,8
+| D | trial | reference | difference | verdict |
+|---|---|---|---|---|
+| 6 | 3.0094830 | 3.0094832 (ours) | -2.2e-07 | OK | published 3.009483, +0.0e+00 |
+| 8 | 2.7117900 | 2.7117901 (ours) | -5.4e-08 | OK | published 2.711790, +0.0e+00 |
+wanted 3: OK 3; within 1e-06 of the published value: 3
+reach: every wanted D up to 8 is OK
+use: 84 turns, 2.95 h wall, 35 min of model time, tokens out 207913, cache read 6851138, cache write 282603, in 3385; ended as success
+the CLI's cost figure: $3.90, cost basis unknown (not a price unless the basis is known)
+tools: {'Bash': 77, 'Write': 5}
+network: 0 commands
+verdict: OK
+
+$ python3 score.py trials/stopped hp/data/delta_published_compare.csv --want 6:11     # stopped by hand, so no use line
+| D | trial | reference | difference | verdict |
+|---|---|---|---|---|
+| 6 | 3.0094830 | 3.0094832 (ours) | -2.2e-07 | OK | published 3.009483, +0.0e+00 |
+| 9 | 2.6068760 | 2.6068741 (ours) | +1.9e-06 | BAD | published 2.606874, +2.0e-06 |
+| 11 | 2.4496290 | 2.4496290 (ours) | -7.6e-09 | OK | published 2.449629, +0.0e+00 |
+wanted 6: OK 5, BAD 1; within 1e-06 of the published value: 5
+reach: every wanted D up to 8 is OK
+use: ? turns, 0.00 h wall, 0 min of model time, tokens out ?, cache read ?, cache write ?, in ?; ended as no result event
+the CLI's cost figure: $nan, cost basis not stated (not a price unless the basis is known)
+tools: {'Bash': 56, 'Write': 13}
+network: 0 commands
+verdict: BAD
+
+$ python3 score.py --selftest | grep selftest:
+selftest: planted trial against one reference, PASS
+selftest: planted trial against two references, PASS

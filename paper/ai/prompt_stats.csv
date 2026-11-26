@@ -1,0 +1,27 @@
+table,row,value
+count,prompts,1582
+count,sessions,20
+count,first day,2026-10-24
+count,last day,2026-11-26
+count,days with a prompt,33
+count,"prompts per day, median",42
+count,"prompts per day, most",140
+count,hours with a prompt,330
+count,"hours with a prompt per day, median",10
+words,median,9.0
+words,5 or fewer,445
+words,6 to 20,925
+words,21 to 50,195
+words,over 50,17
+"form, all prompts",instruction or statement,840
+"form, all prompts","question: why, what or how",221
+"form, all prompts","question: whether, can we, should we",271
+"form, all prompts",go-ahead or choice,201
+"form, all prompts",check-in,49
+"form, course-changing prompts",instruction or statement,79
+"form, course-changing prompts","question: why, what or how",22
+"form, course-changing prompts","question: whether, can we, should we",40
+"form, course-changing prompts",go-ahead or choice,4
+"form, course-changing prompts",check-in,0
+course-changing prompts,count,145
+course-changing prompts,median words,11

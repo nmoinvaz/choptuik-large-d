@@ -33,14 +33,18 @@ period}
 
 \begin{abstract}
 I directed a numerical research computation, the echo period $\Delta(D)$ of Choptuik's critical solution in $D$ spacetime
-dimensions, from $D = 3.04315$ to $D = 263.6$, with Claude, Anthropic's model, running in Claude Code on up to eight
+dimensions, from $D = 3.04315$ to $D = 10^4$, with Claude, Anthropic's model, running in Claude Code on up to eight
 machines. A coordinating Claude session wrote the code for the tasks I set, runner sessions on the other machines ran
 them, and subagents took the reviews, searches and builds I asked for. In its first three weeks the work stuck at 31
 points. For each I give what stalled, what moved it and what that changed in the way of working. Twenty were moved first
 by a prompt of mine, eight by Claude's own diagnosis and three by another session or an outside protocol. I sort the 145
-prompts of mine that changed the course of the work into ten kinds. Six later turning points follow, from my push to
-$D = 400$, through the pause of a continuation in $D$ that cost four hours per unit of $D$, to a formulation that
-imposes a constraint the solver had left out. Three parts of the solver became public libraries on the way.
+prompts of mine that changed the course of the work into ten kinds, and count the 1582 prompts I typed into the
+sessions by form. The median prompt has nine words. Nine later turning points follow, from my push to $D = 400$,
+through the pause of a continuation in $D$ that cost four hours per unit of $D$, to a formulation that imposes a
+constraint the solver had left out. In it, direct solves reached $D = 400$ within five hours of my call for a new
+method and $D = 10^4$ within a day. Three parts of the solver became public libraries on the way. Last, one prompt of 146
+words to a single clean-room session returned $\Delta$ at $D = 4$, 6, 7 and 8, each right to six decimals, in three
+hours.
 \end{abstract}
 
 \maketitle
@@ -61,8 +65,9 @@ The project began in a chat on claude.ai (Sec.~\ref{sec:origin}). Over the follo
 sessions running in Claude Code~\cite{ClaudeCode} on up to eight machines, and Claude wrote the code to my direction.
 The lowest converged point is $D = 3.04315$. The large-$D$ chain reached $D = 263.6$, where I paused it at about four
 hours per unit of $D$. In its first three weeks the work stuck at 31 points (Sec.~\ref{sec:moved} and
-Appendix~\ref{app:stuck}). Six later turning points took it from that chain to a new formulation
-(Sec.~\ref{sec:after}).
+Appendix~\ref{app:stuck}). Nine later turning points took it from that chain to a new formulation, in which direct
+solves reached $D = 10^4$ (Sec.~\ref{sec:after}). One prompt to a single session, with none of this setup, reproduces
+the project's first steps (Sec.~\ref{sec:single}).
 
 The sources are the chat where the project began~\cite{chat}, the coordination log of the first three weeks, the git
 history, the notes in \file{notes/}, the raw-data repository~\cite{raw}, the repository's issues and the transcripts of
@@ -368,7 +373,7 @@ coordinator's own diagnosis and three by another session or an outside protocol.
 named by what passed them, and the flat stretch from day 9 to day 16 is the search for a formulation past 78
 (Appendix~\ref{app:stuck}, rows 17 and 19 to 21). After day 19 the curve is the highest converged state pushed to the
 raw-data repository (\file{paper/ai/frontier.py}). Its flat stretches are at $D = 215.0$, 242.6 and 259.9, and the chain
-was paused at 263.6 (Sec.~\ref{sec:after}).}
+was paused at 263.6. The direct solves that followed, to $D = 10^4$, are not on this curve (Sec.~\ref{sec:after}).}
 \label{fig:frontier}
 \end{figure}
 
@@ -440,6 +445,41 @@ coordinator read its load as oversubscription, and the quad-double solver drifti
 \emph{Asking to understand} left documents behind. Prompts such as \prompt{explain it as if a software developer wanted
 to know} produced animated figures of one continuation step and a plain account of the algorithm in the README, which
 later moved into its own file.
+
+\subsection{The prompts in numbers}
+\label{sec:census}
+
+The 145 are a small part of what I typed. The Claude Code sessions on the coordinator machine, which begin in the
+project's second week, hold 1582 prompts of mine over 33 days (\file{paper/ai/prompt\_stats.py}).
+\begin{itemize}
+\item \emph{Length.} The median prompt has 9 words. 28\% have five words or fewer, and 1\% have more than fifty.
+\item \emph{Attention.} On a median day I typed 42 prompts, spread over 10 of its hours.
+\item \emph{Form.} Fixed rules read each prompt's form from its first sentence (Table~\ref{tab:forms}). A reading of 100
+prompts drawn at random agreed with the rules on 97.
+\end{itemize}
+
+\begin{table}[h]
+\caption{The form of my prompts: all those typed into the sessions on the coordinator machine, and the 145 that changed
+the course of the work (Table~\ref{tab:kinds}), read by the same rules.}
+\label{tab:forms}
+\small
+\begin{tabular}{L{4.6cm}L{6.4cm}rr}
+\toprule
+form & example & all 1582 & the 145\\
+\midrule
+instruction or statement & \prompt{make sure to add precision tests for the quad-double solver.} & 840 (53\%) & 79 (54\%)\\
+question that asks why, what or how & \prompt{what happened to our ghost stuff?} & 221 (14\%) & 22 (15\%)\\
+question that asks whether, or proposes & \prompt{can we speed up the runtime by using SIMD?} & 271 (17\%) & 40 (28\%)\\
+go-ahead, or a choice among options & \prompt{yes do it} & 201 (13\%) & 4 (3\%)\\
+check-in & \prompt{how's it going?} & 49 (3\%) & 0\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+A prompt that changed the course looks like any other. It is as short, a median of 11 words against 9, and as often an
+instruction. Two things set the group apart. Questions that propose, such as \prompt{Could it be a sum?}, are 28\% of it
+against 17\% of all prompts. And go-aheads and check-ins, 16\% of all prompts, keep the work moving and almost never
+turn it. The two groups overlap only in part, since the 145 include the chat and end with the third week.
 
 \subsection{What Claude brought}
 
@@ -519,7 +559,7 @@ before.
 \section{From a chain in $D$ to a new formulation}
 \label{sec:after}
 
-After the three weeks of Sec.~\ref{sec:moved}, six turning points changed the direction of the work
+After the three weeks of Sec.~\ref{sec:moved}, nine turning points changed the direction of the work
 (Appendix~\ref{app:stuck2}).
 
 \emph{The push to 400.} \prompt{Keep going to 400} made the large-$D$ chain the priority, and in two weeks it climbed to
@@ -547,8 +587,24 @@ $10^{47}$ at $D = 245.6$.
 if we can get there way faster}. One of three found that the solver's mass mode, the source of the digits that grow with
 $D$, is a violation of the momentum constraint that the formulation never imposes. Gundlach's construction of the critical
 solution sets the metric from that constraint and has no such mode~\cite{Gundlach1997}. A symbolic check confirms both
-identities, and a prototype in that form converged at $D = 100$ in double-double arithmetic. Whether its conditioning stays
-flat as $D$ grows was being measured when this was written.
+identities, and a prototype in that form converged at $D = 100$ in double-double arithmetic.
+
+\emph{Direct solves.} I had added \prompt{I want this done in 24 hours if possible}. In the new form, one solve at
+$D = 300$ converged four hours after my call for a new method, and $D = 250$ and 400 followed within twenty minutes, each inside
+the error of the series fitted to the chain's points. The chain had put $D = 400$ 23 days away.
+
+\emph{Two more walls.} At $D = 1000$ the solve failed at the horizon. A subagent that I had put on the inner problem,
+with \prompt{Let's start doing the quest route. \dots\ queue up all the blocking bits to the quest route and prioritize
+them.}, traced the remaining need for digits to the variable in which the horizon series was summed. With a M\"obius
+variable in its place, $D = 300$ took 37 seconds in double-double arithmetic against 24 minutes in octo-double, and
+$D = 1000$ and 2000 converged. I wrote \prompt{I want to go to the max D that we can}, and the target became $10^4$. Past
+$D = 2000$ the basin of the jumps shrank exponentially. A fine mesh toward the horizon, of my design, converged to a
+wrong $\Delta$, which the comparison with the series caught. I asked again for a review from the start, \prompt{\dots\
+just like at 260 we need to do a reevaluation. Look at our new wall, research the literature but don't confine yourself
+to just the immediate}, and for a subagent \prompt{to see if we need to invent new math to get us past the wall}. Its
+verdict was that none was needed, since the horizon condition had been imposed at a node where the term that selects
+$\Delta$ is not of order one. With the last node at the fast mode's anti-Stokes point, $D = 2828$ converged, and
+$D = 10^4$ followed within 24 hours of the call for a new method.
 
 \emph{What I could have done.} I asked the coordinator what I could have done to make it see this sooner. It answered
 that it was mostly its own to catch: I had given the right signal twice, with the push to 400 and the call to stop, and
@@ -556,6 +612,71 @@ it had answered the second with a pause and more repairs, not with a new method.
 rate and reporting the time to the goal at the current rate in the hourly status, since $D = 400$ was 23 days away ``and
 no table showed that number''. It added that asking what was wrong had invited the next diagnostic, and that asking what
 would get there ten times faster would have forced a new method.
+
+\emph{In hindsight.} With $D = 1000$ in hand I asked for an analysis of \prompt{whether or not there was a single prompt
+that would have gotten me to close to the solution we have now}. Its answer was partly.
+\begin{itemize}
+\item \emph{The one wrong step was a label.} Early in the third week a literature note had called the solver's mass mode
+physical, a property of Einstein's equations. It was a violation of a constraint the solver never imposed.
+\item \emph{The facts were at hand.} By the analysis, Gundlach's paper was already cited in the repository, the mode's
+cost had been measured, and a check of the momentum constraint existed in another part of the code.
+\item \emph{The prompt.} A prompt asking which equation allows the mode, and how the published constructions set each
+metric field, could have reached the new form about 18 days sooner, by its estimate. The M\"obius variable could not
+have come from that prompt, since its symptom stayed hidden until a solve at $D = 1000$ was tried.
+\end{itemize}
+
+\section{One prompt, one session}
+\label{sec:single}
+
+A researcher to whom I described the setup above asked whether a short recipe for a public tool could reproduce a
+result from scratch, since the setup is costly and cannot be rerun as it was. I had a clean-room trial built to find
+out.
+
+\emph{The trial.}
+\begin{itemize}
+\item One headless Claude Code session, with the model Fable 5.2, runs inside a sandbox. It sees an empty folder and
+Python with numpy, scipy, mpmath and sympy. The harness is \file{trial.sh} in \file{paper/ai/single\_prompt}.
+\item It sees no file of the project, no memory and no instruction file, and it has no web tools. A scorer lists every
+shell command that reaches the network.
+\item A canary run shows what a session can see. A second canary plants an instruction file, which the session must
+report, and it did.
+\item The prompt has 146 words. It names no paper, method, equation or value, and it forbids looking values up or
+quoting them from memory. It begins \prompt{Compute the echoing period $\Delta$ of the Choptuik critical solution in
+D = 4, 6, 7 and 8 spacetime dimensions, each correct to six decimal places.}
+\end{itemize}
+
+\emph{The pilot.} The session returned all four values right to six decimals (Table~\ref{tab:single}), in 2 h 57 min of
+wall time, 35 min of model time, 84 turns and 207,913 output tokens. Its own estimates carry nine or ten decimals and
+differ from this repository's values, which it could not see, by less than $5\times10^{-10}$. None of its 77 shell
+commands reached the network. Its notes give its route: the field equations in Bondi coordinates, checked symbolically,
+a time evolution at $D = 4$ with a bisection of the amplitude for a first guess, a spectral Newton solve with $\Delta$
+as an unknown, continuation in the dimension, and convergence tables. The tool reported no price for this model, so the
+cost is known in tokens only.
+
+\begin{table}[h]
+\caption{The pilot's values of $\Delta$. The uncertainties are the session's own reading of the scatter in its
+convergence tables, not bounds.}
+\label{tab:single}
+\small
+\begin{tabular}{rL{2.6cm}L{3.6cm}L{3.4cm}}
+\toprule
+$D$ & asked for & its best estimate & this repository\\
+\midrule
+4 & 3.445452 & 3.4454524022(2) & 3.44545240223\\
+6 & 3.009483 & 3.009483220(1) & 3.00948322049\\
+7 & 2.842753 & 2.842753206(2) & 2.84275320647\\
+8 & 2.711790 & 2.711790054(5) & 2.71179005444\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\emph{The full table.} The same prompt, widened to every whole $D$ from 6 to 200 with 12 hours allowed, ran for 2 h 11
+min before I stopped it for its token use. It had six values by then, for $D = 6$ to 11, from a coarse grid. Five were
+right to six decimals, and $D = 9$ was off by $1.9\times10^{-6}$. How far one session reaches in $D$ is not measured.
+
+\emph{What it shows.} The opening of this project, from the statement of the problem to nine digits at $D = 4$
+(Sec.~\ref{sec:origin}), fits in one prompt that anyone can rerun. The stuck points of Sec.~\ref{sec:moved} and the
+turning points of Sec.~\ref{sec:after} lie past what the trials reached.
 
 \section{Limitations and lessons}
 \label{sec:limits}
@@ -568,7 +689,12 @@ and the runners' transcripts stayed on their machines, so pushes of mine in thos
 relays them. The per-point records of 757 early points are lost.
 
 \emph{The classification is mine.} The kinds overlap, and another reader would draw the lines elsewhere. The counts say
-which pushes were common, not which mattered most, and they cover the first three weeks only.
+which pushes were common, not which mattered most, and they cover the first three weeks only. The forms of
+Table~\ref{tab:forms} come from rules on a prompt's first words, which misread about 3 in 100.
+
+\emph{The single-prompt trials ran once each.} The model is not deterministic, so the rate of success is unknown. A
+model may also have seen published values in training. The evidence that the session computed its values is its
+working, which is evidence and not proof.
 
 \emph{The error bars are of several kinds.} Differences between runs measure the path dependence of the held harmonics,
 about $10^{-20}$, and the stall rule, $10^{-18}$ to $10^{-17}$. Neither includes the bias of the held harmonics, $10^{-8}$
@@ -588,6 +714,8 @@ the method rather than repair it.
 \item When a method has stalled for days, ask for a review that derives the problem from the start before it reads the
 project's notes.
 \item Send subagents through the published literature for gaps, formulas and connections, not only for prior results.
+\item Before building around a cost that grows, have the agent show which equation allows it.
+\item Ask the literature how it sets the problem up, not only how to pass the wall.
 \end{itemize}
 
 \section{How this work was done}
@@ -673,6 +801,9 @@ transcripts of the coordinator sessions, with spelling corrected, and its source
 35 & 24 Nov & \prompt{Can you re-evaluate the underlying math assumptions to see if we missed anything?}; \prompt{\dots like go back to basics if you have to.} & a from-scratch derivation & the chain's limits its own\\
 36 & 25 Nov & \prompt{I think you may have already lost the plot. \dots At these speeds it is unobtainable}; \prompt{we need to prioritize this quest} & direct solves at each target $D$ & continuation in $D$ dropped\\
 37 & 25 Nov & \prompt{I want you to use new subagents to look to see any gaps in any of the published papers \dots look at formulas, maths, missing gaps and connections} & three literature subagents & the momentum constraint imposed\\
+38 & 25 Nov & \prompt{Let's start doing the quest route. \dots\ queue up all the blocking bits to the quest route and prioritize them.} & direct solves at $D = 250$, 300 and 400; a subagent on the inner problem & a M\"obius variable at the horizon; double-double suffices\\
+39 & 25 Nov & \prompt{I want to go to the max D that we can, what would that be?} & $D = 2000$, then a wall past it & the target $10^4$\\
+40 & 25 Nov & \prompt{\dots\ just like at 260 we need to do a reevaluation. Look at our new wall, research the literature \dots}; \prompt{use a new subagent to see if we need to invent new math to get us past the wall} & no new mathematics needed; $D = 2828$, then $10^4$ & the last node at the fast mode's anti-Stokes point\\
 \bottomrule
 \end{tabular}
 \end{center}
@@ -701,6 +832,10 @@ context summaries of the coordinator session & 29 & ---\\
 \bottomrule
 \end{tabular}
 \end{center}
+
+A day later the table of $\Delta$ holds nine rows from direct solves, from $D = 250$ to 8000, and the solve at
+$D = 10^4$ is recorded on its issue. The 1582 prompts of Sec.~\ref{sec:census} are counted by other rules than the
+prompts above: over 20 sessions, to 26 November, with setup and writing prompts kept.
 
 
 \begin{thebibliography}{99}

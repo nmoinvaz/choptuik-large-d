@@ -470,3 +470,85 @@ Two others are left out entirely: one whose basis it does not state, and one per
 **Spelling.** The paper gives every quotation with its spelling corrected (for example "mau habe" as "may have",
 "prioritze" as "prioritize", "numerical reality" as "numerical relativity"). The transcripts and the lists in this
 file keep the original words.
+
+## Update of 26 November: the prompts in numbers, the direct solves to D = 10⁴, the hindsight analysis, one prompt in one session
+
+Counts are at 4fd73ce9 of the code repository (2026-11-26 05:41 UTC). Issue comments are named by their time (UTC).
+
+### The prompts in numbers (Section V) and Table of forms
+
+    python3 paper/ai/prompt_stats.py TRANSCRIPT_DIR            # writes paper/ai/prompt_stats.csv
+    python3 paper/ai/prompt_stats.py --selftest                # PASS; --mutate=form, drop and dup each exit 1
+
+TRANSCRIPT_DIR is Claude Code's projects folder for this project on the Mac, read on 2026-11-26 after 05:47 UTC. The
+transcripts are private, so the repository holds the script and the counts only.
+
+| item | source |
+|---|---|
+| 1582 prompts, 20 sessions, 33 days with a prompt, 2026-10-24 to 2026-11-26 | `prompt_stats.csv`, table `count` |
+| median 9 words; 445 of 5 words or fewer (28%); 17 over 50 (1%) | `prompt_stats.csv`, table `words` |
+| 42 prompts on a median day; 10 hours with a prompt on a median day (330 such hours in all, UTC days) | `prompt_stats.csv`, table `count` |
+| the forms of all prompts: 840, 221, 271, 201, 49 | `prompt_stats.csv`, table `form, all prompts` |
+| the forms of the 145: 79, 22, 40, 4, 0; median 11 words | `prompt_stats.csv`: the list of 145 above, read by the same `form()` |
+| the five example prompts and "Could it be a sum?" carry the form their row names | `form()` run on each, 2026-11-26 |
+| a reading of 100 agreed on 97 | `--sample 100 --seed 59`, read by the Claude session that wrote the script. The three misses: a go-ahead of 16 words read as an instruction, "Do each wave form in the series follows a particular pattern." read as an instruction, "what is going on?" read as a question, not a check-in |
+| statements are counted with instructions | two earlier readings (seeds 11, 23 and 41, before the last rule change) agreed on 82% to 87% while the rules tried to tell statements from instructions; merged, the last reading gave 97 |
+| the difference from Appendix C's counts | Appendix C: 334 + 1058 = 1392 prompts to 2026-11-25 02:26, by the earlier extraction; this script counts 1488 to that time, over six more sessions (the channel, the tracker, session names, this paper and a film) and with other drop rules |
+| sessions left out as not about this project | `OTHER` in the script: a job search, macOS settings, root certificates, a circuit board, an icon, artwork |
+
+### Section VIII, the direct solves and the two walls (all #1088 unless stated)
+
+| item | source |
+|---|---|
+| the call for a new method | `tx:0726f216` 2026-11-25 00:03:38 ("lost the plot"), as in Appendix B row 36 |
+| "I want this done in 24 hours if possible" | `tx:0726f216` 2026-11-25 00:11:03, the prompt after the one on gaps in the published papers |
+| D = 300 by one direct solve, four hours after | comment 2026-11-25 04:04 |
+| D = 250 and 400, within twenty minutes, inside the series' error | comment 04:22 ("Both PASS against Track C") |
+| 23 days to D = 400 by the chain | as in Section VIII, "The pause" |
+| D = 1000 fails at the horizon | comment 05:00 |
+| "Let's start doing the quest route. ..." | `tx:0726f216` 2026-11-25 03:05:03 (it continues "Do the inner-problem fomulation step in a new subagent on claude-me2.") |
+| the need for digits traced to the horizon variable; the Möbius variable | comments 04:15, 05:16 and 05:27; #1090 |
+| D = 300 in 37 s in double-double against 24 min in octo-double | comment 07:17 |
+| D = 1000 and 2000 converged | comments 08:05 and 10:54 (D 2000 by the stepping stone D 1414) |
+| "I want to go to the max D that we can, what would that be?"; the target 10⁴ | `tx:0726f216` 2026-11-25 09:29:59 and 09:32 |
+| the basin shrinks exponentially past D = 2000 | comment 11:57 |
+| the fine mesh, "Nathan's design"; it converged to a wrong Δ, caught against the series | comments 15:28 and 16:24 |
+| "... just like at 260 we need to do a reevaluation. ..." | `tx:0726f216` 2026-11-25 16:28:17. The quotation starts at the prompt's second sentence |
+| "use a new subagent to see if we need to invent new math to get us past the wall" | `tx:0726f216` 2026-11-25 16:33:56 |
+| the subagent's verdict: no new mathematics, the horizon condition at the wrong node | its report in `tx:0726f216`, 2026-11-25 17:37 |
+| the last node at the fast mode's anti-Stokes point; D = 2828 | comments 17:36 and 18:50 |
+| D = 10⁴ solved directly, within 24 hours of the call | comment 23:53 (23 h 50 min after 00:03); the bar met, bound 3.4e-16, comment 2026-11-26 05:01 |
+| nine direct rows, D = 250 to 8000 | `hp/data/delta_all.csv` at 4fd73ce9, kind `direct` (commit f9f41b1e) |
+| Appendix B rows 38 to 40 | the prompts and comments above |
+
+### Section VIII, in hindsight
+
+| item | source |
+|---|---|
+| the request, with D = 1000 in hand | `tx:0726f216` 2026-11-25 09:11:44; D 1000 converged at 08:05 |
+| the answer "partly"; the wrong label; the facts at hand; 18 days; the Möbius variable not reachable by that prompt | the coordinator's reply in `tx:0726f216`, 2026-11-25 09:28, and the analysis report it names (a read-only subagent's, kept in that session's scratch folder). The 18 days are that agent's estimate, not a measurement |
+| "The wall is physical"; "the Tangherlini term" | commit 8169a730 (2026-11-03), notes/QUAD_DOUBLE.md 13.10 and notes/LARGE_D_LITERATURE.md |
+| Gundlach's paper cited by 20 October | `git log -S"Gundlach" --reverse -- README.md notes` (35ec3efa) |
+| the mode's cost measured; a momentum-constraint check elsewhere in the code | the analysis report only; not rechecked for this update |
+| the two new lessons | the same reply, "Two new lessons" |
+
+### Section IX, one prompt in one session
+
+The trial folders, with the sessions' transcripts, are private. `paper/ai/single_prompt/` holds the two prompts, the
+harness (`trial.sh`), the scorer (`score.py`), its stored output (`scores.txt`), the canary prompt, and each session's
+own `results.csv` and `METHOD.md`. `python3 paper/ai/single_prompt/score.py --selftest` passes, and each of
+`--mutate=value`, `missing`, `net` and `copied` exits 1.
+
+| item | source |
+|---|---|
+| the question that led to it | a message to me, not quoted |
+| the sandbox, the tools, the Python packages | `single_prompt/trial.sh`; `scores.txt` |
+| the canary and the planted instruction file, which fired | the runs on both machines, 2026-11-25 (`control_canary.md`; the planted file is not stored) |
+| 146 words; the opening sentence | `wc -w single_prompt/prompt_pilot.md` |
+| all four values right to six decimals; 2.95 h, 35 min, 84 turns, 207,913 output tokens; 77 shell commands, 0 on the network | `scores.txt`, first block (`use`, `tools` and `network` lines) |
+| the session's best estimates and their uncertainties | `single_prompt/pilot_METHOD.md`, the first table |
+| this repository's values; differences below 5e-10 | `hp/data/delta_all.csv` rows D 4, 6, 7, 8: −2.8e-11, −4.9e-10, −4.7e-10, −4.4e-10 |
+| its route | `single_prompt/pilot_METHOD.md` sections 1 to 4 |
+| no price | `scores.txt`: "cost basis unknown" |
+| the second prompt, 175 words, 12 hours allowed | `single_prompt/prompt_full.md` |
+| stopped after 2 h 11 min; six values, five right, D = 9 off by 1.9e-6 | the trial's start and end files (2026-11-25 21:00:34 and 23:11:34 UTC); `scores.txt`, third block; `stopped_results.csv` |
