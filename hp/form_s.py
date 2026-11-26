@@ -1164,7 +1164,7 @@ def cmd_release_ls(argv):
     argv = list(argv)
     allow = pop_allow(argv)
     pos, o = opts(argv, dict(harm="5", outer="6", tol="1e-40", tol_h="1e-38", it_in="6", halvings="6", threads="2",
-                             tries="6", jac="auto", tc="", commit="", res="od"))
+                             tries="6", jac="auto", tc="", commit="", res="od", jac_by="", held_delta=""))
     path, outdir = pos[0], pos[1]
     os.makedirs(outdir, exist_ok=True)
     log = os.path.join(outdir, "release_ls.jsonl")
@@ -1180,7 +1180,13 @@ def cmd_release_ls(argv):
     # double-double's floor); the Jacobian in double-double with the Moebius horizon, quad-double with u
     if o["jac"] == "auto":
         o["jac"] = "dd" if kw["mob"] else "qd"
+    # --jac_by 13:qd: harmonic 13 with the quad-double Jacobian (at D 1000 the dd one's error in that near-null
+    # direction stalled the inner solves at 6.6e-33, I1088-dh610/rls1000h13)
+    jac_by = {int(a): b for a, b in (x.split(":") for x in o["jac_by"].split(",") if x)}
     delta0 = delta_digits(z8, 40)
+    # the held system's Delta, carried in the saved states, so a release resumed from a step state still reports
+    # held -> full
+    meta["held_delta"] = o["held_delta"] or meta.get("held_delta") or delta0
     npart = {"qd": 4, "od": 8}[o["res"]]
 
     def resid(sx, z):
@@ -1198,8 +1204,9 @@ def cmd_release_ls(argv):
             t0 = time.time()
             F = resid(s_tg, z8)
             nr = float(np.abs(np.asarray(F[0]) + np.asarray(F[1])).max())
-            if o["jac"] in ("qd", "dd"):
-                d, pmin, pmax = qj_step(s_tg, z8, F, parts=4 if o["jac"] == "qd" else 2), float("nan"), float("nan")
+            jk = jac_by.get(k, o["jac"])
+            if jk in ("qd", "dd"):
+                d, pmin, pmax = qj_step(s_tg, z8, F, parts=4 if jk == "qd" else 2), float("nan"), float("nan")
             else:
                 d, _, pmin, pmax = s_tg.newton_s(list(z8))
             dk = band_coeffs(np.asarray(d[0])[:M], np.asarray(d[1])[:M], M, [k], exact=True,
@@ -1220,7 +1227,7 @@ def cmd_release_ls(argv):
                     co_t = [(co[0][0] + lam * dk[0], co[0][1] + lam * dk[1])] + list(co[1:])
                 s_in = HeldS(s_in0, M, K, band_field(co_t, held_in, M, parts=8))
                 zt, conv, recs = newton_o_s(s_in, z8, float(o["tol"]), int(o["it_in"]), int(o["halvings"]), None,
-                                            verbose=False, jac=o["jac"], res=o["res"])
+                                            verbose=False, jac=jk, res=o["res"])
                 floor = bool(recs and recs[-1].get("floor"))
                 Ft = resid(s_tg, zt)
                 nt = float(np.abs(np.asarray(Ft[0]) + np.asarray(Ft[1])).max())
@@ -1259,7 +1266,7 @@ def cmd_release_ls(argv):
             F4 = s_tg.residual_s([np.ascontiguousarray(z8[q]) for q in range({"qd": 4, "od": 8}[chk])])
             Fc = float(np.abs(np.asarray(F4[0]) + np.asarray(F4[1])).max())
             with mp.workdps(60):
-                dD = float(mp.mpf(delta_digits(z8, 40)) - mp.mpf(delta0))
+                dD = float(mp.mpf(delta_digits(z8, 40)) - mp.mpf(meta["held_delta"]))
             sd = jump.series_delta(meta["D_str"]) or jump.series_delta(str(int(round(float(D)))))
             tc = (dict(value=mp.nstr(sd[0], 16), err=sd[1], source="delta_all.csv series") if sd is not None else
                   dict(value=o["tc"].split(":")[0], err=float(o["tc"].split(":")[1]), source="given") if o["tc"] else None)
