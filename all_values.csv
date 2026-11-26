@@ -2517,6 +2517,7 @@ Delta,l0 scalar field,2000.0,,1.6490743133619313,,,5.1e-10,"held bias, first ord
 Delta,l0 scalar field,2828.4271247461903,,1.6475584205626621,,,5.1e-10,"held bias, first order at D 2000",numerical evidence,direct,hp/data/delta_all.csv (I1088-dh370/L2828/direct_s.jsonl:1)
 Delta,l0 scalar field,4000.0,,1.6464857936999521,,,5.1e-10,"held bias, first order at D 2000",numerical evidence,direct,hp/data/delta_all.csv (I1088-mac-a/form_s/L4000q/direct_s.jsonl:1)
 Delta,l0 scalar field,8000.0,,1.6451902117053909,,,5.1e-10,"held bias, first order at D 2000",numerical evidence,direct,hp/data/delta_all.csv (I1088-mm5/L8000/direct_s.jsonl:1)
+Delta,l0 scalar field,20000.0,,1.6444124377844342,,,,held bias not estimated,numerical evidence,direct,hp/data/delta_all.csv (I1088-mm5/L20000/direct_s.jsonl:1)
 gamma,l0 scalar field,3.5,M=96,0.32238557898599024,,,,,numerical evidence,lowD dd (clean),hp/data/delta_dd_lowD.csv (data/lowD_highM/pilot_points.jsonl)
 gamma,l0 scalar field,3.5,M=128,0.3223855827556097,,,,,numerical evidence,lowD dd (clean),hp/data/delta_dd_lowD.csv (data/lowD_dd_local.jsonl)
 gamma,l0 scalar field,3.6,M=96,0.3368409842110796,,,,,numerical evidence,lowD dd (clean),hp/data/delta_dd_lowD.csv (data/lowD_dd_local.jsonl)

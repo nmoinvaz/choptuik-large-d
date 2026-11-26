@@ -2517,3 +2517,4 @@ D,Delta_q0,Delta_q1,Delta_q2,Delta_q3,kind,err,err_kind,source,published_ref,pub
 2828.4271247461903,1.647558420562662,6.332954285357115e-17,-3.319345254918058e-33,1.176016472440566e-49,direct,5.1e-10,"held bias, first order at D 2000",I1088-dh370/L2828/direct_s.jsonl:1,,,,I1088-dh370/L2828/lastnode_D2828.4271.npz
 4000.0,1.6464857936999522,-8.853422552458807e-17,5.041055408672711e-33,0.0,direct,5.1e-10,"held bias, first order at D 2000",I1088-mac-a/form_s/L4000q/direct_s.jsonl:1,,,,I1088-mac-a/form_s/L4000q/lastnode_D4000.0000.npz
 8000.0,1.645190211705391,-8.868764422865178e-17,4.432948063019392e-33,0.0,direct,5.1e-10,"held bias, first order at D 2000",I1088-mm5/L8000/direct_s.jsonl:1,,,,I1088-mm5/L8000/lastnode_D8000.0000.npz
+20000.0,1.6444124377844342,-4.6275701083113376e-17,1.8202511801411127e-33,-1.282927060844254e-49,direct,,held bias not estimated,I1088-mm5/L20000/direct_s.jsonl:1,,,,I1088-mm5/L20000/lastnode_D20000.0000.npz
