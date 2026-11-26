@@ -1349,6 +1349,159 @@ def cmd_release_ls(argv):
     return 0
 
 
+def cmd_release_joint(argv):
+    """Release p1's horizon harmonics k0, k0+2, ..., kmax together (#1098: continuation in D of full states): an
+    outer Newton on all their coefficients over inner held solves, the split of release_ls with every harmonic at
+    once. Target: form S with kfreeze kmax (harmonics up to kmax free, the rest held at zero). Inner: kfreeze k0 - 2
+    with k0..kmax held at the outer values (well conditioned, the double-double Jacobian by default). First the inner
+    system is solved from the state (a guess at a new D included); then each outer step takes the target's Newton step
+    (the quad-double Jacobian solved in quad-double by default, --jac_t qq: the dd and qd steps erred along the
+    near-null top harmonics), moves the held values by lam times its harmonic parts, solves the inner system, and
+    accepts when the target residual falls (lam halved otherwise). Released when the largest harmonic part of the step
+    is below --tol_h or the target residual is at most --tol; an accepted step that cuts the target residual by less
+    than 10x ends the run unconverged (the floor stop). Every accepted state is saved; the full system's record
+    (system "full", kfreeze kmax) is written at the end with the octo-double check and the Hamiltonian check.
+
+        form_s.py release_joint STATE OUTDIR --k0 5 --kmax 25 [--jac_t qq --jac_in dd --res od --tol 1e-48]
+    """
+    from octo_corrector import delta_digits, load_o, save_o
+    from pinning import band_coeffs, band_field
+    from raw_out import pop_allow, require_raw
+    argv = list(argv)
+    allow = pop_allow(argv)
+    pos, o = opts(argv, dict(k0="5", kmax="25", outer="8", tol="1e-48", tol_h="1e-44", tol_in="1e-48", it_in="8",
+                             halvings="6", tries="6", threads="2", jac_t="qq", jac_in="dd", res="od", tc="", commit="",
+                             held_delta="", step_est=""))
+    path, outdir = pos[0], pos[1]
+    os.makedirs(outdir, exist_ok=True)
+    log = os.path.join(outdir, "release_joint.jsonl")
+    require_raw(log, allow=allow)
+    z8, meta = load_o(path)
+    M, nodes = int(meta["M"]), list(meta["nodes"])
+    K = len(nodes)
+    with mp.workdps(60):
+        D = mp.mpf(meta["D_str"])
+    k0, kmax = int(o["k0"]), int(o["kmax"])
+    if kmax > M - 1 or k0 < 5 or k0 % 2 == 0 or kmax % 2 == 0:
+        raise SystemExit(f"--k0 {k0} --kmax {kmax}: odd, 5 <= k0 <= kmax <= M - 1 = {M - 1}")
+    kw = dict(kt=meta.get("kt", 36), kc=meta["kc"], ks=meta["ks"], threads=int(o["threads"]), segs=meta["segs"],
+              mob=meta.get("hmob", 0.0))
+    held = list(range(k0, kmax + 1, 2))
+    npart = {"qd": 4, "od": 8}[o["res"]]
+    jt, ji = o["jac_t"], o["jac_in"]
+    s_in0 = make_solver_s(D, M, nodes, kfreeze=k0 - 2, **kw)
+    s_tg = make_solver_s(D, M, nodes, kfreeze=kmax, **kw)
+
+    def resid(sx, z):
+        return sx.residual_s([np.ascontiguousarray(z[q]) for q in range(npart)])
+
+    def nrm(F):
+        return float(np.abs(np.asarray(F[0]) + np.asarray(F[1])).max())
+
+    def coeffs_of(z):
+        return band_coeffs(np.asarray(z[0])[:M], np.asarray(z[1])[:M], M, held, exact=True,
+                           rest=[np.asarray(p)[:M] for p in z[2:]])
+
+    def inner(z, co):
+        s_in = HeldS(s_in0, M, K, band_field(co, held, M, parts=8))
+        zt, conv, recs = newton_o_s(s_in, z, float(o["tol_in"]), int(o["it_in"]), int(o["halvings"]), None,
+                                    verbose=False, jac=ji, res=o["res"])
+        return zt, conv, bool(recs and recs[-1].get("floor")), recs
+    delta0 = delta_digits(z8, 40)
+    t_all = time.time()
+    print(f"release_joint from {os.path.basename(path)}: D {float(D):.6g}, Delta {delta0}, harmonics {k0}..{kmax}, "
+          f"target Jacobian {jt}, inner {ji}, {o['res']} residual", flush=True)
+    co = coeffs_of(z8)
+    t0 = time.time()
+    z8, conv, floor, recs = inner(z8, co)
+    nr = nrm(resid(s_tg, z8))
+    print(f"  inner solve at the state's held values: {'converged' if conv else 'floor' if floor else 'NOT converged'} "
+          f"in {len(recs)} steps (|F| {recs[-1]['F_new'] if recs else float('nan'):.2e}), target |F| {nr:.2e}, Delta "
+          f"{delta_digits(z8, 40)} ({time.time() - t0:.0f} s)", flush=True)
+    if not (conv or floor):
+        raise SystemExit("the inner held system did not converge from the state")
+    meta["held_delta"] = o["held_delta"] or meta.get("held_delta") or (delta_digits(z8, 40) if k0 == 5 else None)
+    done, rec = False, {}
+    est = float(o["step_est"]) if o["step_est"] else None
+    for outer in range(int(o["outer"])):
+        t0 = time.time()
+        print(f"  outer {outer} starts {time.strftime('%H:%M:%S', time.gmtime(t0))} UTC"
+              + (f", predicted end {time.strftime('%H:%M', time.gmtime(t0 + est))} UTC ({est:.0f} s)" if est else ""),
+              flush=True)
+        F = resid(s_tg, z8)
+        nr = nrm(F)
+        d = qj_step(s_tg, z8, F, parts=2 if jt == "dd" else 4, solve="qd" if jt == "qq" else "dd")
+        dk = band_coeffs(np.asarray(d[0])[:M], np.asarray(d[1])[:M], M, held, exact=True,
+                         rest=[np.asarray(p)[:M] for p in d[2:]])
+        ndk = float(max(max(abs(a), abs(b)) for a, b in dk))
+        rec = dict(outer=outer, F=nr, dh=ndk, dh_by_k={str(k): float(max(abs(a), abs(b))) for k, (a, b) in zip(held, dk)},
+                   dDelta_full=float(np.asarray(d[0])[-1]))
+        print(f"    target |F| {nr:.2e}, largest harmonic step {ndk:.2e} ({time.time() - t0:.0f} s)", flush=True)
+        if ndk < float(o["tol_h"]) or nr <= float(o["tol"]):
+            done = True
+            rec.update(done=True)
+            with open(log, "a") as fh:
+                fh.write(json.dumps(rec) + "\n")
+            print(f"  outer {outer}: released (target |F| {nr:.2e}, harmonic step {ndk:.2e})", flush=True)
+            break
+        lam, acc, trials = 1.0, False, []
+        for _ in range(int(o["tries"])):
+            with mp.workdps(60):
+                co_t = [(a + lam * da, b + lam * db) for (a, b), (da, db) in zip(co, dk)]
+            zt, conv, floor, recs = inner(z8, co_t)
+            nt = nrm(resid(s_tg, zt))
+            trials.append(dict(lam=lam, inner_conv=bool(conv), inner_floor=floor, inner_steps=len(recs), F=nt))
+            print(f"    trial lam {lam:g}: inner {'converged' if conv else 'floor' if floor else 'NOT converged'} in "
+                  f"{len(recs)} steps, target |F| {nt:.2e} against {nr:.2e} ({time.time() - t0:.0f} s)", flush=True)
+            if (conv or floor) and nt < nr:
+                acc = True
+                break
+            lam *= 0.5
+        if acc:
+            z8, co = zt, co_t
+            save_o(os.path.join(outdir, f"release_joint_D{float(D):.4f}_step.npz"), z8,
+                   dict(meta, kfreeze=k0 - 2, held=held, step_outer=outer, step_F=nt))
+        rec.update(trials=trials, accepted=acc, lam=lam if acc else 0.0, F_new=nt if acc else nr,
+                   Delta=delta_digits(z8, 40), s=round(time.time() - t0, 1),
+                   utc=time.strftime("%Y-%m-%d %H:%M:%S", time.gmtime()))
+        est = rec["s"]
+        with open(log, "a") as fh:
+            fh.write(json.dumps(rec) + "\n")
+        print(f"  outer {outer}: target |F| {nr:.2e} -> {rec['F_new']:.2e}, largest harmonic step {ndk:.2e} (full step's "
+              f"dDelta {rec['dDelta_full']:+.2e}), lam {rec['lam']:g}, Delta {rec['Delta']} ({rec['s']} s)", flush=True)
+        if not acc:
+            print("  outer step rejected: not released", flush=True)
+            break
+        if nt * 10.0 > nr and nt > float(o["tol"]):
+            print(f"  outer floor stop: the step cut the target residual by {nr / nt:.2f}x (< 10x): not released",
+                  flush=True)
+            break
+    out = os.path.join(outdir, f"release_joint_D{float(D):.4f}.npz")
+    mk = dict(meta, kfreeze=kmax, held=[])
+    save_o(out, z8, mk)
+    if done:
+        import jump
+        chk = "od" if o["res"] == "qd" else "qd"
+        Fc = nrm(s_tg.residual_s([np.ascontiguousarray(z8[q]) for q in range({"qd": 4, "od": 8}[chk])]))
+        with mp.workdps(60):
+            dD = (float(mp.mpf(delta_digits(z8, 40)) - mp.mpf(meta["held_delta"])) if meta.get("held_delta") else None)
+        sd = jump.series_delta(meta["D_str"]) or jump.series_delta(str(int(round(float(D)))))
+        tc = (dict(value=mp.nstr(sd[0], 16), err=sd[1], source="delta_all.csv series") if sd is not None else
+              dict(value=o["tc"].split(":")[0], err=float(o["tc"].split(":")[1]), source="given") if o["tc"] else None)
+        hc = ham_check(z8, mk, threads=int(o["threads"]))
+        drec = direct_line(z8, mk, out, "full", rec.get("F"), o["res"], Fc, chk, held_to_full=dD,
+                           ham={str(b): r for b, r in hc.items()}, tc=tc, commit=o["commit"],
+                           extra=dict(released_from=os.path.basename(path), method="release_joint", kfreeze=kmax,
+                                      k0=k0, jac_t=jt, jac_in=ji, outer_steps=rec.get("outer", 0),
+                                      last_harmonic_step=rec.get("dh_by_k")))
+        with open(os.path.join(outdir, "direct_s.jsonl"), "a") as fh:
+            fh.write(json.dumps(drec) + "\n")
+        print(f"  the full system (kfreeze {kmax}): {chk} check max |F| {Fc:.2e}; Hamiltonian a rows up to "
+              f"{max(r['a'] for r in hc.values()):.1e}; Delta {delta_digits(z8, 40)}; {time.time() - t_all:.0f} s in all",
+              flush=True)
+    return 0 if done else 1
+
+
 def cmd_relayout(argv):
     """A form-S state on more nodes toward the horizon (#1088): the Moebius horizon series summed at x_l = 0.7 is
     exponentially sensitive to m_h at large n (a gain from m_h of 1.9e5 at the D 2000 solution and 2.6e23 at the D 2828
@@ -1537,7 +1690,8 @@ class MutS:
 def main():
     cmd = sys.argv[1]
     return dict(check=cmd_check, cond=cmd_cond, jump=cmd_jump, planted=cmd_planted, release=cmd_release,
-                release_ls=cmd_release_ls, mobcheck=cmd_mobcheck, relayout=cmd_relayout)[cmd](sys.argv[2:])
+                release_ls=cmd_release_ls, release_joint=cmd_release_joint, mobcheck=cmd_mobcheck,
+                relayout=cmd_relayout)[cmd](sys.argv[2:])
 
 
 if __name__ == "__main__":
