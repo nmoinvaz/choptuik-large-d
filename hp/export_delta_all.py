@@ -4,7 +4,7 @@ chain's frontier, with the kind of computation, an error estimate and what that 
 
     cd hp && python3 export_delta_all.py RAWDIR [--verify] [--mutate=dd|qd|pinned|pinned_qd|gap|neighbours|cross
                                                    |chain_fit|chain|held|frontier|projector|t85|fits|fits_table|half
-                                                   |qd_neighbours|dm_neighbours|one_sided|series|weak_pivot]
+                                                   |qd_neighbours|dm_neighbours|one_sided|direct|series|weak_pivot]
     cd hp && python3 export_delta_all.py RAWDIR --interp_check [--mutate=interp]
     cd hp && python3 export_delta_all.py RAWDIR --lam_screen [--mutate=lam|lam_pred]
 
@@ -124,6 +124,19 @@ precedence where two share a D:
           frontier"). The chain's departure from track C's series there is one smooth term of the pinned M = 32 system
           that grows as p_min falls; WP_K is twice its largest |chain - series| p_min on 246-253.4, and it covers every
           later state to 259.72 out of sample. It is an envelope, an estimate, not a bound.
+  direct  #1088's form-S direct solves at M = 32, one per D, from every direct_s.jsonl under RAWDIR/I1088-* (records
+          with "valid": false or "method": "fine" are left out: the fine mesh converged to a wrong Delta). The full
+          system is preferred, then a partial release, then the held system (harmonics 5-13 held), and within each the
+          lowest check residual. Delta is the record's eight parts summed exactly, in four. err is the largest of the
+          record's terms, and err_kind names it: "residual bound" (delta_bound_first_order, gain times |F|),
+          "discretization" (the largest first-order dDelta bound of its kc + 20, ks + 200 and halved-step checks),
+          "last release" (|held_to_full_dDelta| of a full solve released from a partial one: the last harmonic's
+          change) and, for a held solve, "held bias, first order" (|full_dDelta_first_order|, the full system's
+          first-order correction at the held solution; it exceeded the measured held-to-full change at D 300 and
+          1000). A held solve without that term takes another record's at the same D, or else the nearest lower D's
+          from D / DIRECT_BORROW up, err_kind "held bias, first order at D <D'>", an estimate carried over; with none,
+          err_kind "held bias not estimated" and no err. The angular truncation at M = 32 is not in err, as for the
+          chain rows. state is the record's state file, found by its git blob. Ranks above series only.
   series  track C's 1/n series (#801, #804; hp/track_c.py, notes/LARGE_D_WALL.md "Track C") at D 250 to 400, from
           data/delta_series.csv (track_c.py csv): the median of the accepted fits to the dd, qd and chain_fit rows up
           to D 245.64, in two parts. err is E = max(h, s): err_kind "series fits" where h, half the accepted fits'
@@ -147,7 +160,7 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 OUT = os.path.join(HERE, "data", "delta_all.csv")
 COLS = ["D", "Delta_q0", "Delta_q1", "Delta_q2", "Delta_q3", "kind", "err", "err_kind", "source", "published_ref",
         "published_Delta", "published_diff", "state"]
-RANK = {"qd": 0, "dd": 1, "pinned": 2, "chain_fit": 3, "chain": 4, "series": 5}
+RANK = {"qd": 0, "dd": 1, "pinned": 2, "chain_fit": 3, "chain": 4, "direct": 5, "series": 6}
 HELD = {"chain_fit": "fit", "chain": "trend"}
 # pinned runs whose rows chain_fit replaces inside its span (their layouts' spread, 13.25)
 FIT_REPLACES = ("T85-mac/",)
@@ -188,6 +201,10 @@ WP_CHECK = (253.64, 259.72)
 # past WP_FROM ("chain"), with the fingerprint of the rows it was fitted on
 SERIES = os.path.join(HERE, "data", "delta_series.csv")
 SERIES_DMAX = 245.64
+# #1088's form-S direct solves: the task folders holding direct_s.jsonl, and the farthest lower D (D / DIRECT_BORROW)
+# whose first-order held bias a held solve without its own takes
+DIRECT_DIRS = "I1088-*"
+DIRECT_BORROW = 4.0
 INTERP_N = 6
 # the interpolation's control: leave-one-out at these D, where every chain has a state (173, 174, 190 and 191 beside
 # the half steps 173.5 and 190.5)
@@ -661,6 +678,94 @@ def series_rows():
             for r in series_csv() if r["use"] == "row"]
 
 
+def direct_records():
+    """[(source, record)] of #1088's valid direct solves, source "<file>:<line>" relative to RAW"""
+    out = []
+    for f in sorted(glob.glob(os.path.join(RAW, DIRECT_DIRS, "**", "direct_s.jsonl"), recursive=True)):
+        rel = os.path.relpath(f, RAW).replace(os.sep, "/")
+        for n, line in enumerate(open(f), 1):
+            if not line.strip():
+                continue
+            r = json.loads(line)
+            if r.get("valid") is False or r.get("method") == "fine":
+                continue                                   # the fine mesh's wrong-Delta solves (#1088), never data
+            out.append((f"{rel}:{n}", r))
+    return out
+
+
+def direct_delta(r):
+    """the record's Delta: its eight parts summed exactly, as four"""
+    with mp.workprec(1200):
+        return parts4(mp.fsum(mp.mpf(float(p)) for p in r["Delta_parts"]))
+
+
+def direct_state(src, r):
+    """the record's state file in RAW: the file of its basename under its task folder whose git blob is state_blob"""
+    import hashlib
+    top = src.split("/")[0]
+    for p in sorted(glob.glob(os.path.join(RAW, top, "**", r["state"]), recursive=True)):
+        data = open(p, "rb").read()
+        if hashlib.sha1(b"blob %d\0" % len(data) + data).hexdigest() == r.get("state_blob"):
+            return os.path.relpath(p, RAW).replace(os.sep, "/")
+    return ""
+
+
+def direct_err(r, src, recs):
+    """(err, err_kind) of a direct record: the largest of its terms (the module's docstring, kind direct)"""
+    D = float(r["D_str"])
+    terms = []
+    if r.get("delta_bound_first_order") is not None:
+        terms.append((abs(r["delta_bound_first_order"]), "residual bound"))
+    disc = [r["disc"][k]["dDelta_bound"] for k in ("kc+20", "ks+200", "steps halved")
+            if r.get("disc") and isinstance(r["disc"].get(k), dict) and r["disc"][k].get("dDelta_bound") is not None]
+    if disc:
+        terms.append((max(disc), "discretization"))
+    if r["system"] == "full" and r.get("released_from") and r.get("held_to_full_dDelta") is not None:
+        terms.append((abs(r["held_to_full_dDelta"]), "last release"))
+    if r["system"] == "held":
+        own = r.get("full_dDelta_first_order")
+        same = [x.get("full_dDelta_first_order") for _, x in recs if abs(float(x["D_str"]) - D) < TOL_D
+                and x.get("full_dDelta_first_order") is not None]
+        lower = sorted(((float(x["D_str"]), x["full_dDelta_first_order"]) for _, x in recs
+                        if D / DIRECT_BORROW - TOL_D <= float(x["D_str"]) < D - TOL_D
+                        and x.get("full_dDelta_first_order") is not None), key=lambda t: t[0])
+        if own is not None:
+            terms.append((abs(own), "held bias, first order"))
+        elif same:
+            terms.append((max(abs(v) for v in same), "held bias, first order"))
+        elif lower:
+            Dl = lower[-1][0]
+            terms.append((max(abs(v) for d, v in lower if d == Dl), f"held bias, first order at D {Dl:g}"))
+        else:
+            return "", "held bias not estimated"
+    terms = [(e, k) for e, k in terms if np.isfinite(e)]      # a check that did not run is recorded as NaN
+    if not terms:
+        return "", "none recorded"
+    e, k = max(terms)
+    return f"{e:.1e}", k
+
+
+def direct_rows():
+    """the direct rows of the table, one per D: full, then a partial release, then held, each by the lowest check
+    residual"""
+    recs = direct_records()
+    tier = lambda r: 0 if r["system"] == "full" else 2 if r["system"] == "held" else 1  # noqa: E731
+    best = {}
+    for src, r in recs:
+        k = round(float(r["D_str"]), 9)
+        key = (tier(r), r.get("F_check") if r.get("F_check") is not None else r.get("F_solve") or 1.0)
+        if k not in best or key < best[k][0]:
+            best[k] = (key, src, r)
+    out = []
+    for k in sorted(best):
+        _, src, r = best[k]
+        q = direct_delta(r)
+        err, ek = direct_err(r, src, recs)
+        out.append(dict(D=r["D_str"], Delta_q0=q[0], Delta_q1=q[1], Delta_q2=q[2], Delta_q3=q[3], kind="direct",
+                        err=err, err_kind=ek, source=src, state=direct_state(src, r)))
+    return out
+
+
 def interp_check(var="1/n"):
     """the interpolation's control: at CONTROL_D each comparison fit's chain interpolated from its other states against
     its state there; True when every difference is within CONTROL_TOL"""
@@ -755,7 +860,8 @@ def build():
     chain, fits = chain_rows()
     span = fit_span(chain)
     rows = {}
-    for r in qd_rows() + dd + [r for r in pinned_rows(dmax) if not replaced(r, span)] + chain + series_rows():
+    for r in (qd_rows() + dd + [r for r in pinned_rows(dmax) if not replaced(r, span)] + chain + direct_rows()
+              + series_rows()):
         k = round(float(r["D"]), 9)
         if k not in rows or RANK[r["kind"]] < RANK[rows[k]["kind"]]:
             rows[k] = r
@@ -885,6 +991,7 @@ def verify(rows, mutate=""):
     for r in pinned_rows(max(float(x) for x in dd)):
         pin.setdefault(r["D"], r)
     recs = {}
+    drecs = drows = None
     sc = series_csv()
     ser = {r["D"]: r for r in sc if r["use"] == "row"}
     for r in rows:
@@ -909,6 +1016,19 @@ def verify(rows, mutate=""):
                 bad += 1
                 print(f"DIFFERS: pinned D {r['D']}: err {r['err']} ({r['err_kind']}) from {r['source']} against"
                       f" {w and (w['err'], w['err_kind'], w['source'])}")
+        elif r["kind"] == "direct":
+            if drows is None:
+                drecs = dict(direct_records())
+                drows = {x["D"]: x for x in direct_rows()}
+            s = drecs.get(r["source"])
+            want = direct_delta(s) if s else ["?"] * 4
+            w = drows.get(r["D"])
+            if not s or w is None or (r["err"], r["err_kind"], r["source"], r["state"]) != (
+                    w["err"], w["err_kind"], w["source"], w["state"]) or (r["state"] and direct_state(
+                    r["source"], s) != r["state"]):
+                bad += 1
+                print(f"DIFFERS: direct D {r['D']}: err {r['err']} ({r['err_kind']}) from {r['source']}, state"
+                      f" {r['state']} against {w and (w['err'], w['err_kind'], w['source'], w['state'])}")
         elif r["kind"] == "series":
             s = ser.get(r["D"])
             want = [s["Delta_q0"], s["Delta_q1"], "", ""] if s else ["?"] * 4
@@ -950,7 +1070,8 @@ def verify(rows, mutate=""):
         print(f"DIFFERS: delta_fits.csv D {d}: no chain_fit row has it")
     # the series rows: each of data/delta_series.csv's in the table, fitted on the table's rows up to SERIES_DMAX
     if sc:
-        miss = sorted(set(ser) - {r["D"] for r in rows if r["kind"] == "series"}, key=float)
+        # a series row is left out only where a row of higher rank holds its D (a direct solve)
+        miss = sorted((d for d in ser if not any(abs(float(r["D"]) - float(d)) < TOL_D for r in rows)), key=float)
         if miss:
             bad += len(miss)
             print(f"DIFFERS: {len(miss)} series rows of data/delta_series.csv not in the table: {miss[:3]}")

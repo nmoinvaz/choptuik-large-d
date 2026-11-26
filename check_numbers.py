@@ -2820,11 +2820,12 @@ def proposed_readme():
 @check
 def series_rows():
     """notes/LARGE_D_WALL.md "Track C": its Delta and E at D 250, 300 and 400 are the series rows of
-    hp/data/delta_all.csv (#804; hp/data/delta_series.csv, written by hp/track_c.py csv)"""
+    hp/data/delta_series.csv (#804, written by hp/track_c.py csv; hp/data/delta_all.csv takes a direct solve over them
+    where #1088 has one)"""
     import csv
     import mpmath as mp
-    rows = {float(r["D"]): r for r in csv.DictReader(open(os.path.join(ROOT, "hp/data/delta_all.csv")))
-            if r["kind"] == "series"}
+    rows = {float(r["D"]): dict(r, err=r["E"]) for r in csv.DictReader(open(os.path.join(ROOT, "hp/data/delta_series.csv")))
+            if r["use"] == "row"}
     W = "notes/LARGE_D_WALL.md"
     items = []
     for D, v, e, ue in ((250.0, "1.684955205950", "8.1×10⁻¹¹", 1e-12), (300.0, "1.678171015417", "1.25×10⁻¹⁰", 1e-12),
