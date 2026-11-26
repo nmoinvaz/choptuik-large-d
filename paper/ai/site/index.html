@@ -1,0 +1,1183 @@
+<title>The Forty Walls</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<meta name="description" content="How one engineer directed Claude through a five-week computation of Choptuik's echo period from D = 3.04 to D = 10^4: forty walls, who passed each, and what his prompts carried.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,400..900&family=JetBrains+Mono:wght@400;600&family=Source+Serif+4:ital,opsz,wght@0,8..60,400..700;1,8..60,400&display=swap">
+<style>
+/* Layout: one reading column of about 66 characters, with figure bands that widen to 1180 px; the hero carries a
+   full-width echo of the self-similar solution, drawn from the computed Δ(D). Everything else stays quiet. */
+:root {
+  --ground: #f3f5f8;
+  --surface: #ffffff;
+  --ink: #0c1626;
+  --muted: #556275;
+  --rule: #d3dae3;
+  --faint: #e7ebf1;
+  --accent: #c8285a;
+  --k0: #d6336c; --k1: #2a62d4; --k2: #c98a00; --k3: #11a0a8;
+  --f0: #2a62d4; --f1: #c98a00; --f2: #7c5cc4; --f3: #11a0a8; --f4: #d6336c;
+  --font-display: "Archivo", "Helvetica Neue", Arial, sans-serif;
+  --font-body: "Source Serif 4", Georgia, "Times New Roman", serif;
+  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  --col: 42rem;
+  --wide: 74rem;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --ground: #0b1220; --surface: #111b2c; --ink: #e4e9f1; --muted: #95a2b6; --rule: #27344b; --faint: #172133;
+    --accent: #ee5a88;
+    --k0: #ee5a88; --k1: #4a7aea; --k2: #c98c10; --k3: #20abab;
+    --f0: #4a7aea; --f1: #c98c10; --f2: #9a7cf0; --f3: #20abab; --f4: #ee5a88;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --ground: #0b1220; --surface: #111b2c; --ink: #e4e9f1; --muted: #95a2b6; --rule: #27344b; --faint: #172133;
+  --accent: #ee5a88;
+  --k0: #ee5a88; --k1: #4a7aea; --k2: #c98c10; --k3: #20abab;
+  --f0: #4a7aea; --f1: #c98c10; --f2: #9a7cf0; --f3: #20abab; --f4: #ee5a88;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+body {
+  background: var(--ground); color: var(--ink); font-family: var(--font-body); font-size: 18px; line-height: 1.6;
+  font-optical-sizing: auto; margin: 0;
+}
+.wrap {
+  max-width: var(--wide); margin-inline: auto;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px));
+}
+.col { max-width: var(--col); }
+h1, h2, h3, h4 { font-family: var(--font-display); font-stretch: 112%; line-height: 1.1; text-wrap: balance; margin: 0; }
+h2 { font-size: clamp(1.7rem, 1.2rem + 2vw, 2.5rem); font-weight: 800; letter-spacing: -0.01em; }
+h3 { font-size: 1.2rem; font-weight: 700; }
+h4 { font-size: 0.78rem; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); font-stretch: 100%; }
+p { margin: 0; }
+a { color: inherit; text-decoration-color: var(--accent); text-underline-offset: 0.18em; }
+a:hover { color: var(--accent); }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 2px; }
+code, .mono { font-family: var(--font-mono); font-size: 0.82em; }
+.num { font-variant-numeric: tabular-nums; }
+.label {
+  font-family: var(--font-mono); font-size: 0.72rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted);
+}
+i.m { font-style: italic; }
+q.p { quotes: none; font-family: var(--font-mono); font-size: 0.84em; font-style: normal; color: var(--ink);
+  background: var(--faint); padding: 0.05em 0.35em; border-radius: 2px; box-decoration-break: clone; -webkit-box-decoration-break: clone; }
+q.p::before { content: "› "; color: var(--accent); font-weight: 600; }
+q.p::after { content: none; }
+.k0 { fill: var(--k0); } .k1 { fill: var(--k1); } .k2 { fill: var(--k2); } .k3 { fill: var(--k3); }
+.f0 { fill: var(--f0); } .f1 { fill: var(--f1); } .f2 { fill: var(--f2); } .f3 { fill: var(--f3); } .f4 { fill: var(--f4); }
+.bg-k0 { background: var(--k0); } .bg-k1 { background: var(--k1); } .bg-k2 { background: var(--k2); } .bg-k3 { background: var(--k3); }
+.bg-f0 { background: var(--f0); } .bg-f1 { background: var(--f1); } .bg-f2 { background: var(--f2); } .bg-f3 { background: var(--f3); } .bg-f4 { background: var(--f4); }
+
+/* hero */
+.hero { padding-block: 3.2rem 1.5rem; border-bottom: 1px solid var(--rule); }
+.hero .eyebrow { margin-bottom: 1.1rem; }
+.hero h1 { font-size: clamp(2.3rem, 1.2rem + 5.2vw, 5.1rem); font-weight: 850; font-stretch: 118%; letter-spacing: -0.025em; max-width: 15ch; }
+.hero h1 em { font-style: normal; color: var(--accent); }
+.hero .lede { font-size: 1.2rem; max-width: 40rem; margin-top: 1.3rem; color: var(--ink); }
+.figures { display: grid; grid-template-columns: repeat(auto-fit, minmax(13rem, 1fr)); gap: 0; margin: 2.2rem 0 0; border-top: 1px solid var(--ink); }
+.figures > div { padding: 0.8rem 1rem 0.9rem 0; border-bottom: 1px solid var(--rule); min-width: 0; }
+.figures dt { font-family: var(--font-mono); font-size: 0.72rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
+.figures dd { margin: 0.2rem 0 0; font-family: var(--font-display); font-stretch: 112%; font-weight: 750; font-size: 1.85rem; line-height: 1.1; font-variant-numeric: tabular-nums; }
+.figures dd small { display: block; font-family: var(--font-body); font-stretch: 100%; font-weight: 400; font-size: 0.92rem; color: var(--muted); margin-top: 0.25rem; line-height: 1.35; }
+
+.echo { margin: 2.4rem 0 0; }
+.echo canvas { display: block; width: 100%; height: 250px; }
+.echo-ctl { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.25fr); gap: 1.2rem 2rem; align-items: end; margin-top: 0.8rem; }
+.echo-read { font-family: var(--font-mono); font-size: 0.9rem; line-height: 1.5; min-width: 0; }
+.echo-read .big { font-size: 1.05rem; word-break: break-all; }
+.echo-read .big b { color: var(--accent); font-weight: 600; }
+.echo-read .sub { color: var(--muted); font-size: 0.78rem; }
+.dcurve { min-width: 0; }
+.dcurve svg { display: block; width: 100%; height: 86px; overflow: visible; }
+.dcurve input { width: 100%; margin: 0.3rem 0 0; accent-color: var(--accent); }
+.echo figcaption { margin-top: 0.9rem; font-size: 0.92rem; color: var(--muted); max-width: 46rem; }
+
+.toc { display: flex; flex-wrap: wrap; gap: 0.3rem 1.2rem; padding-block: 1rem; border-bottom: 1px solid var(--rule); font-family: var(--font-mono); font-size: 0.8rem; }
+.toc a { text-decoration: none; color: var(--muted); }
+.toc a:hover { color: var(--accent); }
+
+/* sections */
+section { padding-block: 3.6rem 1rem; }
+section > .wrap > h2 { margin-bottom: 1.1rem; }
+.prose { display: grid; gap: 1rem; max-width: var(--col); }
+.prose + .prose { margin-top: 1rem; }
+.band { margin-top: 2rem; }
+figure { margin: 0; }
+figcaption { font-size: 0.9rem; color: var(--muted); margin-top: 0.6rem; max-width: 52rem; line-height: 1.5; }
+.chart { width: 100%; position: relative; }
+.chart svg { display: block; width: 100%; overflow: visible; }
+.scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+.scroll > .chart { min-width: 760px; }
+svg text { font-family: var(--font-mono); font-size: 11px; fill: var(--muted); }
+svg .ink { fill: var(--ink); }
+svg .acc { fill: var(--accent); }
+svg .grid { stroke: var(--faint); stroke-width: 1; }
+svg .axis { stroke: var(--rule); stroke-width: 1; }
+svg .hair { stroke: var(--rule); stroke-width: 1; }
+svg .wallline { stroke: var(--accent); stroke-width: 1; opacity: 0.45; }
+.legend { display: flex; flex-wrap: wrap; gap: 0.4rem 1rem; font-family: var(--font-mono); font-size: 0.76rem; color: var(--muted); margin-bottom: 0.7rem; }
+.legend .sw { display: inline-block; width: 10px; height: 10px; margin-right: 0.4rem; vertical-align: -1px; border-radius: 1px; }
+.legend button { font: inherit; color: inherit; background: none; border: 1px solid var(--rule); border-radius: 2px; padding: 0.15rem 0.5rem; cursor: pointer; }
+.legend button[aria-pressed="false"] { opacity: 0.45; }
+.legend button:hover { border-color: var(--muted); }
+#tip { position: fixed; z-index: 20; pointer-events: none; max-width: 18rem; background: var(--surface); color: var(--ink);
+  border: 1px solid var(--rule); box-shadow: 0 6px 20px rgb(0 0 0 / 0.12); padding: 0.45rem 0.6rem; font-family: var(--font-mono); font-size: 0.74rem; line-height: 1.45; }
+#tip b { font-weight: 600; }
+
+/* roles */
+.roles { display: grid; grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr)); gap: 0; margin-top: 2rem; border-top: 1px solid var(--ink); }
+.roles > div { padding: 0.9rem 1rem 1rem 0; border-bottom: 1px solid var(--rule); min-width: 0; }
+.roles h3 { font-size: 1.02rem; }
+.roles .mono { color: var(--muted); display: block; margin: 0.15rem 0 0.4rem; font-size: 0.74rem; }
+.roles p { font-size: 0.95rem; line-height: 1.5; }
+
+/* walls */
+.strip { display: grid; grid-template-columns: repeat(40, minmax(0, 1fr)); gap: 3px; margin-top: 1.6rem; }
+.strip button {
+  --k: var(--k1);
+  font-family: var(--font-mono); font-size: 0.72rem; font-variant-numeric: tabular-nums; color: var(--ink); cursor: pointer;
+  background: color-mix(in srgb, var(--k) 14%, var(--surface)); border: 0; border-bottom: 3px solid var(--k);
+  padding: 0.55rem 0 0.35rem; min-width: 0; display: grid; justify-items: center; gap: 0.2rem; border-radius: 0;
+}
+.strip button svg { width: 10px; height: 10px; display: block; }
+.strip button svg * { fill: var(--k); }
+.strip button.phys { background: var(--k); color: var(--surface); }
+.strip button.phys svg * { fill: var(--surface); }
+.strip button[aria-pressed="true"] { outline: 2px solid var(--ink); outline-offset: 1px; position: relative; z-index: 1; }
+.strip button:hover { background: color-mix(in srgb, var(--k) 30%, var(--surface)); }
+.strip button.phys:hover { background: color-mix(in srgb, var(--k) 85%, var(--ink)); }
+.strip .run { grid-column: 7 / 35; grid-row: 2; border-top: 1px solid var(--ink); margin-top: 0.35rem; padding-top: 0.3rem; font-family: var(--font-mono); font-size: 0.72rem; color: var(--ink); text-align: center; position: relative; }
+.strip .run::before, .strip .run::after { content: ""; position: absolute; top: -1px; width: 1px; height: 7px; background: var(--ink); }
+.strip .run::before { left: 0; } .strip .run::after { right: 0; }
+.strip .ends { grid-row: 2; font-family: var(--font-mono); font-size: 0.72rem; color: var(--accent); margin-top: 0.35rem; padding-top: 0.3rem; }
+.run-note { display: none; font-family: var(--font-mono); font-size: 0.76rem; margin-top: 0.6rem; }
+
+.card { margin-top: 1.4rem; background: var(--surface); border-top: 3px solid var(--card-k, var(--k1)); padding: 1.3rem 1.4rem 1.4rem; display: grid; gap: 1.1rem; }
+.card .head { display: flex; flex-wrap: wrap; align-items: baseline; gap: 0.4rem 1.2rem; }
+.card .head h3 { font-size: 1.6rem; font-weight: 800; }
+.card .head .label { color: var(--muted); }
+.card .cols { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 1rem 1.4rem; }
+.card .cols > div { min-width: 0; display: grid; gap: 0.3rem; align-content: start; }
+.card .cols p { font-size: 0.98rem; line-height: 1.5; }
+.card .idea { border-top: 1px solid var(--rule); padding-top: 0.9rem; display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 1rem 1.6rem; align-items: start; }
+.card .idea p { font-size: 1rem; }
+.card .codes { display: flex; flex-wrap: wrap; gap: 0.3rem 1rem; font-family: var(--font-mono); font-size: 0.74rem; color: var(--muted); margin-top: 0.4rem; }
+.card .codes b { color: var(--ink); font-weight: 600; }
+.card .thumbs { display: flex; gap: 0.6rem; flex-wrap: wrap; }
+.card .thumbs button { padding: 0; border: 1px solid var(--rule); background: var(--surface); cursor: zoom-in; width: 9.5rem; display: grid; text-align: left; }
+.card .thumbs img { display: block; width: 100%; height: 6.2rem; object-fit: cover; object-position: top left; }
+.card .thumbs span { font-family: var(--font-mono); font-size: 0.66rem; color: var(--muted); padding: 0.3rem 0.4rem; line-height: 1.3; }
+.card .nav { display: flex; gap: 0.5rem; justify-content: flex-end; }
+.card .nav button { font-family: var(--font-mono); font-size: 0.76rem; color: var(--ink); background: none; border: 1px solid var(--rule); padding: 0.3rem 0.7rem; cursor: pointer; border-radius: 2px; }
+.card .nav button:hover { border-color: var(--muted); }
+
+/* ideas */
+.bars { display: grid; gap: 0.55rem; margin-top: 0.4rem; }
+.bar { display: grid; grid-template-columns: 11rem minmax(0, 1fr); gap: 0.8rem; align-items: center; }
+.bar .name { font-family: var(--font-mono); font-size: 0.8rem; color: var(--ink); text-align: right; }
+.bar .track { display: flex; gap: 2px; align-items: center; min-width: 0; }
+.bar .seg { height: 22px; min-width: 2px; border-radius: 0; position: relative; }
+.bar .seg:first-child { border-radius: 0; }
+.bar .seg span { position: absolute; inset: 0; display: grid; place-items: center; font-family: var(--font-mono); font-size: 0.7rem; color: var(--surface); font-weight: 600; }
+.bar .tot { font-family: var(--font-mono); font-size: 0.8rem; color: var(--ink); margin-left: 0.5rem; white-space: nowrap; }
+.bar .then { font-family: var(--font-mono); font-size: 0.72rem; color: var(--muted); margin-left: 0.6rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
+.two { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 2.4rem 3rem; margin-top: 2rem; }
+.two > * { min-width: 0; }
+.finding { margin-top: 2.6rem; border-left: 3px solid var(--accent); padding: 0.2rem 0 0.2rem 1.2rem; max-width: 46rem; display: grid; gap: 0.7rem; }
+.finding p:first-child { font-family: var(--font-display); font-stretch: 112%; font-weight: 750; font-size: 1.45rem; line-height: 1.25; }
+
+/* prompts */
+.stack { display: flex; gap: 2px; height: 26px; }
+.stack div { min-width: 2px; position: relative; }
+.stack span { position: absolute; inset: 0; display: grid; place-items: center; font-family: var(--font-mono); font-size: 0.68rem; color: var(--surface); font-weight: 600; overflow: hidden; }
+.stackrow { display: grid; grid-template-columns: 13rem minmax(0, 1fr); gap: 0.8rem; align-items: center; margin-top: 0.55rem; }
+.stackrow .name { font-family: var(--font-mono); font-size: 0.78rem; text-align: right; }
+table { border-collapse: collapse; width: 100%; font-size: 0.92rem; }
+th, td { text-align: left; padding: 0.45rem 0.8rem 0.45rem 0; border-bottom: 1px solid var(--rule); vertical-align: top; }
+th { font-family: var(--font-mono); font-size: 0.7rem; letter-spacing: 0.07em; text-transform: uppercase; color: var(--muted); font-weight: 400; border-bottom-color: var(--ink); }
+td.n, th.n { text-align: right; font-variant-numeric: tabular-nums; font-family: var(--font-mono); font-size: 0.82rem; white-space: nowrap; }
+.tablebox { overflow-x: auto; margin-top: 1rem; }
+.minis { display: grid; grid-template-columns: repeat(auto-fit, minmax(10rem, 1fr)); gap: 0; border-top: 1px solid var(--ink); margin-top: 1.6rem; }
+.minis > div { padding: 0.7rem 1rem 0.8rem 0; border-bottom: 1px solid var(--rule); }
+.minis b { display: block; font-family: var(--font-display); font-stretch: 112%; font-size: 1.6rem; font-weight: 750; font-variant-numeric: tabular-nums; line-height: 1.15; }
+.minis span { font-size: 0.88rem; color: var(--muted); line-height: 1.35; display: block; }
+
+/* stories */
+.stories { display: grid; gap: 3.2rem; margin-top: 1.6rem; }
+.story { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 22rem); gap: 1.4rem 3rem; align-items: start; }
+.story .meta { grid-column: 1 / -1; display: flex; gap: 0.4rem 1.2rem; flex-wrap: wrap; align-items: baseline; }
+.story .meta h3 { font-size: 1.5rem; font-weight: 800; }
+.trace { list-style: none; margin: 0; padding: 0; display: grid; gap: 0; }
+.trace li { display: grid; grid-template-columns: 3.4rem minmax(0, 1fr); gap: 0.8rem; padding: 0.55rem 0; border-top: 1px solid var(--rule); }
+.trace li:first-child { border-top: 1px solid var(--ink); }
+.trace .w { font-family: var(--font-mono); font-size: 0.76rem; color: var(--muted); padding-top: 0.2rem; }
+.trace .w b { color: var(--accent); font-weight: 600; display: block; font-size: 0.86rem; }
+.trace p { font-size: 0.98rem; line-height: 1.5; }
+.story figure button { padding: 0; border: 1px solid var(--rule); background: var(--surface); cursor: zoom-in; display: block; width: 100%; }
+.story figure img { display: block; width: 100%; height: auto; }
+
+/* gallery */
+.gallery { display: grid; grid-template-columns: repeat(auto-fill, minmax(15.5rem, 1fr)); gap: 1.6rem 1.2rem; margin-top: 1.6rem; }
+.gallery figure { display: grid; gap: 0.45rem; align-content: start; min-width: 0; }
+.gallery button { padding: 0; border: 1px solid var(--rule); background: var(--surface); cursor: zoom-in; display: block; width: 100%; aspect-ratio: 4 / 3; max-width: 100%; overflow: hidden; }
+.gallery img { display: block; width: 100%; height: 100%; object-fit: contain; }
+.gallery figcaption { margin: 0; font-size: 0.92rem; color: var(--ink); line-height: 1.35; }
+.gallery .where { font-family: var(--font-mono); font-size: 0.68rem; color: var(--muted); display: block; margin-top: 0.2rem; word-break: break-all; }
+.gallery .where b { color: var(--accent); font-weight: 600; }
+dialog { border: 1px solid var(--rule); background: var(--surface); color: var(--ink); padding: 0; max-width: min(96vw, 1200px); width: 96vw; max-height: 94vh; }
+dialog::backdrop { background: rgb(5 10 20 / 0.6); }
+dialog .dhead { display: flex; justify-content: space-between; gap: 1rem; align-items: baseline; padding: 0.7rem 1rem; border-bottom: 1px solid var(--rule); position: sticky; top: 0; background: var(--surface); }
+dialog .dhead p { font-size: 0.95rem; }
+dialog .dhead .mono { color: var(--muted); display: block; font-size: 0.7rem; }
+dialog button.close { font-family: var(--font-mono); font-size: 0.8rem; background: none; border: 1px solid var(--rule); color: var(--ink); padding: 0.3rem 0.7rem; cursor: pointer; border-radius: 2px; }
+dialog img { display: block; width: 100%; height: auto; }
+
+/* trial */
+.terminal { background: var(--surface); border: 1px solid var(--rule); border-top: 3px solid var(--ink); padding: 1rem 1.2rem; font-family: var(--font-mono); font-size: 0.8rem; line-height: 1.6; white-space: pre-wrap; max-width: 46rem; margin-top: 1.2rem; }
+.terminal .who { color: var(--accent); font-weight: 600; }
+.digits td.n { font-size: 0.86rem; }
+.digits .ok { color: var(--accent); font-weight: 600; }
+
+/* end */
+.lessons { list-style: none; margin: 1.2rem 0 0; padding: 0; counter-reset: l; display: grid; gap: 0; max-width: var(--col); }
+.lessons li { padding: 0.55rem 0 0.55rem 2.4rem; border-top: 1px solid var(--rule); position: relative; }
+.lessons li::before { counter-increment: l; content: counter(l); position: absolute; left: 0; top: 0.7rem; font-family: var(--font-mono); font-size: 0.76rem; color: var(--accent); }
+.limits { display: grid; grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr)); gap: 1.4rem 2rem; margin-top: 1.4rem; }
+.limits > div { min-width: 0; display: grid; gap: 0.4rem; align-content: start; }
+.limits p { font-size: 0.98rem; line-height: 1.5; }
+.refs { font-size: 0.86rem; color: var(--muted); display: grid; gap: 0.4rem; max-width: 52rem; margin-top: 1rem; padding-left: 1.4rem; }
+footer { padding-block: 2.5rem 3rem; border-top: 1px solid var(--rule); margin-top: 3rem; font-family: var(--font-mono); font-size: 0.76rem; color: var(--muted); }
+
+@media (max-width: 900px) {
+  .card .cols { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .story { grid-template-columns: minmax(0, 1fr); }
+  .two { grid-template-columns: minmax(0, 1fr); }
+  .echo-ctl { grid-template-columns: minmax(0, 1fr); }
+}
+@media (max-width: 760px) {
+  .strip { grid-template-columns: repeat(10, minmax(0, 1fr)); }
+  .strip .run, .strip .ends { display: none; }
+  .run-note { display: block; }
+  .bar { grid-template-columns: 7.5rem minmax(0, 1fr); }
+  .bar .then { display: none; }
+  .stackrow { grid-template-columns: minmax(0, 1fr); gap: 0.25rem; }
+  .stackrow .name { text-align: left; }
+}
+@media (max-width: 520px) {
+  body { font-size: 17px; }
+  .card { padding: 1rem; }
+  .card .cols { grid-template-columns: minmax(0, 1fr); }
+  .card .idea { grid-template-columns: minmax(0, 1fr); }
+  .echo canvas { height: 210px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  * { scroll-behavior: auto !important; transition: none !important; animation: none !important; }
+}
+</style>
+
+<header class="hero">
+  <div class="wrap">
+    <p class="label eyebrow">choptuik-large-d · 18 October to 25 November 2026</p>
+    <h1>Forty walls between D = 3.04 and D = <em>10⁴</em></h1>
+    <p class="lede">Nathan Moinvaziri, a software engineer and not a physicist, directed Claude through a five-week
+      computation of the echo period of Choptuik's critical collapse in D spacetime dimensions. The work stuck forty
+      times. This page shows what stalled each time, who supplied the idea that moved it, and what his prompts carried.</p>
+    <dl class="figures">
+      <div><dt>dimensions reached</dt><dd>3.04315 to 10⁴<small>the lowest converged point and the last direct solve</small></dd></div>
+      <div><dt>prompts</dt><dd class="num">2116<small>523 in the chat, 1593 in 20 Claude Code sessions, and 86 more typed into runner sessions</small></dd></div>
+      <div><dt>walls</dt><dd class="num">40<small>31 stuck points in the first three weeks, then 9 turning points</small></dd></div>
+      <div><dt>ideas that passed them</dt><dd class="num">22 · 9 · 7 · 2<small>the coordinator, subagents, Nathan, a runner or an outside protocol</small></dd></div>
+    </dl>
+    <figure class="echo" aria-label="The echo of the critical solution">
+      <canvas id="echo" role="img" aria-label="A schematic field that repeats on ever smaller scales, drawn in clock time and in log time with the computed echo period."></canvas>
+      <div class="echo-ctl">
+        <div class="echo-read" aria-live="polite" id="echo-read"></div>
+        <div class="dcurve">
+          <svg id="dcurve" aria-hidden="true"></svg>
+          <label class="label" for="dslider">Move along D</label>
+          <input id="dslider" type="range" min="0" max="1000" step="1" value="0">
+        </div>
+      </div>
+      <figcaption>A schematic field with the computed period. Near the threshold of black-hole formation, the collapse
+        repeats itself on ever smaller scales: each echo is the last one shrunk by e<sup>Δ</sup>. In clock time the
+        echoes crowd toward the moment of collapse, t*. In log time they repeat every Δ. The values of Δ and their
+        digits come from <code>hp/data/delta_all.csv</code>, each to the error its row states.</figcaption>
+    </figure>
+  </div>
+</header>
+
+<nav class="wrap toc" aria-label="Contents">
+  <a href="#problem">The problem</a><a href="#sessions">All sessions</a><a href="#walls">The forty walls</a>
+  <a href="#ideas">Who had the ideas</a><a href="#prompts">The prompts</a><a href="#three">Three walls</a>
+  <a href="#graphs">Graphs at the walls</a><a href="#one-prompt">One prompt</a><a href="#lessons">Lessons</a>
+</nav>
+
+<main>
+<section id="problem">
+  <div class="wrap">
+    <h2>The problem, and how far it got</h2>
+    <div class="prose">
+      <p>Tune the collapse of a massless scalar field to the threshold of black-hole formation, and the evolution
+        approaches a universal solution that repeats itself on ever smaller scales. Each echo is a copy of the last,
+        shrunk by e<sup>Δ</sup>. In four dimensions Δ ≈ 3.4454524. The project computes Δ as a function of the number
+        D of spacetime dimensions.</p>
+      <p>It began in a chat on claude.ai. Nathan asked whether Claude could make discoveries in physics, and picked
+        toy numerical relativity from the three projects it offered. The simulation, 177 full evolutions, reproduced
+        Choptuik's mass scaling, but its Δ ≈ 3.30 fell short of 3.445 on a grid that resolved about one echo. A
+        literature check then changed the target, since a 2026 paper had already computed Δ for continuous D between
+        3.05 and 5.5 (Ecker, Ecker, Grumiller and Jechtl). Computed directly as a periodic problem, the critical
+        solution gave Δ = 3.4454523972 at D = 4, nine digits from the best published value, and the scan in D
+        began.</p>
+      <p>Each point is a periodic boundary-value problem, solved by Newton's method from a prediction made at the last
+        point. At large D the mass mode amplifies errors at the horizon by a gain G ≈ 0.7<sup>−(D−3)</sup>, so the
+        arithmetic had to carry more digits as D grew: double-double (about 32 digits), then quad-double (about 64),
+        then octo-double (about 127). At low D one point costs 4 to 10 hours.</p>
+      <p>The large-D chain climbed for five weeks and was paused at D = 263.6, at about four hours per unit of D. Then
+        a new formulation and direct solves at each target D reached 10<sup>4</sup> within a day.</p>
+    </div>
+    <figure class="band">
+      <div class="legend" id="front-legend"></div>
+      <div class="chart" id="frontier"></div>
+      <figcaption>The highest D reached at large D, on a log scale. To day 19 the points are the runners' posts and
+        the notes. After that, the chain's curve is the highest converged state pushed to the raw-data repository
+        (<code>paper/ai/frontier.csv</code>). The direct solves are placed at the times of their posts on issue #1088.
+        Days count from 18 October 2026.</figcaption>
+    </figure>
+    <div class="roles">
+      <div><h3>Nathan</h3><span class="mono">the author</span><p>Set the goals and the standards of evidence, chose among
+        the options put to him, added machines, and released the libraries the work produced.</p></div>
+      <div><h3>The coordinator</h3><span class="mono">Claude Code on the Mac · Opus 5.5, xhigh</span><p>Wrote the code he
+        asked for, merged results, kept the notes, wrote the tasks as GitHub issues and reported every hour.</p></div>
+      <div><h3>The runners</h3><span class="mono">one per machine · Sonnet 5.5, xhigh</span><p>Ran their tasks on up to
+        eight machines, posted results on the issues and pushed raw output. By his rule they did not edit code.</p></div>
+      <div><h3>Subagents</h3><span class="mono">Opus 5.5, xhigh · reviewers Fable 5.2, high</span><p>Sessions started at
+        his request for one bounded task: reviews, searches, analyses and builds, each returning one report.</p></div>
+    </div>
+  </div>
+</section>
+
+<section id="sessions">
+  <div class="wrap">
+    <h2>All sessions on one timeline</h2>
+    <div class="prose">
+      <p>The project began in a chat on claude.ai, which ran as the coordinator of the first week until the handoff to
+        Claude Code on 26 October at 15:53 UTC. Its 523 prompts kept no times, so it shows as a band. Every Claude Code
+        prompt is a tick, in its session's row, sorted by form. The red lines are the walls.</p>
+    </div>
+    <figure class="band">
+      <div class="legend" id="form-legend" role="group" aria-label="Show prompts by form"></div>
+      <div class="scroll"><div class="chart" id="timeline"></div></div>
+      <figcaption>1593 prompts in 20 Claude Code sessions, one tick each, from <code>paper/ai/prompt_times.csv</code>.
+        Within a row the forms run top to bottom in the legend's order. The buttons show one form at a time. A wall is
+        dated to its day, so its line sits at midday.</figcaption>
+    </figure>
+  </div>
+</section>
+
+<section id="walls">
+  <div class="wrap">
+    <h2>The forty walls</h2>
+    <div class="prose">
+      <p>A wall is a point where the work stalled or turned. For each, the idea that passed it is coded by who supplied
+        it and by kind: physics or mathematics, a numerical method, computing (precision, speed, machines or a
+        software defect), or process. Pick a wall to read it.</p>
+    </div>
+    <div class="legend" id="kind-legend" style="margin-top:1.4rem"></div>
+    <div class="strip" id="strip" role="group" aria-label="The forty walls in order"></div>
+    <p class="run-note">Walls 7 to 34: 28 in a row, none passed by a physical idea.</p>
+    <article class="card" id="card" aria-live="polite"></article>
+    <figure class="band">
+      <div class="chart" id="lanes"></div>
+      <figcaption>The same walls in time, by who supplied the idea (rows) and its kind (color and shape). Walls on the
+        same day in the same row are stacked. From <code>paper/ai/walls.csv</code>, coded once from the paper's
+        appendix rows and their sources.</figcaption>
+    </figure>
+  </div>
+</section>
+
+<section id="ideas">
+  <div class="wrap">
+    <h2>Who supplied the ideas, and what the prompts carried</h2>
+    <div class="two">
+      <figure>
+        <h4>Who supplied the idea, by kind</h4>
+        <div class="bars" id="who-bars" style="margin-top:0.9rem"></div>
+        <figcaption id="kind-tot"></figcaption>
+      </figure>
+      <figure>
+        <h4>What his prompt carried, at the 29 walls a prompt of his moved first</h4>
+        <div class="bars" id="carried-bars" style="margin-top:0.9rem"></div>
+        <figcaption>The other eleven walls were moved first by the coordinator's own diagnosis (8) or by another
+          session or an outside protocol (3). After each bar: who then supplied the idea.</figcaption>
+      </figure>
+    </div>
+    <div class="finding">
+      <p>Physics came only at the two ends.</p>
+      <p>In the chat's first two days Nathan suggested two mathematical forms, a sum and a repeating sum. The fits of
+        the first held for a while, but its formulas did not last, and the second was tested and rejected. The
+        coordinator's one physical idea came on the first day: the condition that selects Δ weakens exponentially in
+        D. The next 28 walls, over five weeks, were all passed by numerical methods, computing or process.</p>
+      <p>The last three physical ideas came from subagents in the final two days: the chain's limits as the discrete
+        system's own, the momentum constraint, and the anti-Stokes point. Each followed a prompt of his asking for an
+        outside look. With them, direct solves went from a stalled chain to D = 10<sup>4</sup> within a day.</p>
+    </div>
+    <div class="prose" style="margin-top:2rem">
+      <p>The coordinator passed most walls, 22 of the 40, 14 of them with a numerical method. Nine of his eleven goals
+        were answered by its ideas, and so were all three of his choices among its options. All six of his requests
+        for an outside look were answered by a subagent. His own ideas were about tools and the work: SIMD and Rust, a
+        new desktop, the jump test, the raw-data rule and the pause, beside the two forms that did not last.</p>
+      <p id="stalled"></p>
+    </div>
+  </div>
+</section>
+
+<section id="prompts">
+  <div class="wrap">
+    <h2>The prompts</h2>
+    <div class="prose">
+      <p>Most prompts were short. A prompt that changed the course looked like any other: about as short and as often
+        an instruction. Questions that propose, such as <q class="p">Could it be a sum?</q>, were more common among
+        them, and go-aheads and check-ins almost never turned the work.</p>
+    </div>
+    <div class="minis">
+      <div><b class="num">9</b><span>words in the median prompt; 11 among the 145 that changed the course</span></div>
+      <div><b class="num">42</b><span>prompts on a median day, spread over 10 of its hours</span></div>
+      <div><b class="num">140</b><span>prompts on the busiest day</span></div>
+      <div><b class="num">33</b><span>days with a prompt in Claude Code, 24 October to 26 November</span></div>
+    </div>
+    <div class="two">
+      <figure>
+        <h4>Length of the 1593 Claude Code prompts</h4>
+        <div class="bars" id="word-bars" style="margin-top:0.9rem"></div>
+      </figure>
+      <figure>
+        <h4>Form</h4>
+        <div class="legend" id="form-legend2" style="margin-top:0.9rem"></div>
+        <div id="form-stacks"></div>
+        <figcaption>Fixed rules read each prompt's form from its first sentence. A reading of 100 Claude Code
+          prompts drawn at random agreed with the rules on 97, and of 50 chat prompts on 45. The 145 come from the
+          chat and the coordinator machine's sessions of the first three weeks.</figcaption>
+      </figure>
+    </div>
+    <div class="two">
+      <figure>
+        <h4>Ten kinds of push among the 145 that changed the course</h4>
+        <div class="tablebox"><table>
+          <thead><tr><th>kind</th><th class="n">n</th><th>what it typically did</th></tr></thead>
+          <tbody>
+            <tr><td>standards and process rules</td><td class="n">25</td><td>a rule in AGENTS.md or the status format</td></tr>
+            <tr><td>resources</td><td class="n">17</td><td>machines, runners, subagents, capacity</td></tr>
+            <tr><td>reframing</td><td class="n">16</td><td>a form or route to test, sometimes rejected</td></tr>
+            <tr><td>asking why</td><td class="n">15</td><td>a diagnosis or a measurement</td></tr>
+            <tr><td>his own tools and projects</td><td class="n">15</td><td>the Rust kernel, <code>multidouble</code> releases</td></tr>
+            <tr><td>correcting Claude</td><td class="n">15</td><td>an idle machine, a drift or a wrong number caught</td></tr>
+            <tr><td>persistence</td><td class="n">13</td><td>a stalled thread kept alive</td></tr>
+            <tr><td>raising the scale</td><td class="n">12</td><td>a limit removed, a decisive experiment</td></tr>
+            <tr><td>asking to understand</td><td class="n">11</td><td>explanations, figures, an algorithm document</td></tr>
+            <tr><td>acting now</td><td class="n">6</td><td>deliberation or a model ended</td></tr>
+          </tbody>
+        </table></div>
+      </figure>
+      <figure>
+        <h4>Where the prompts went</h4>
+        <div class="tablebox"><table id="comp-table">
+          <thead><tr><th>component</th><th class="n">sessions</th><th>dates</th><th class="n">prompts</th></tr></thead>
+          <tbody></tbody>
+        </table></div>
+        <figcaption>From <code>paper/ai/prompt_stats.csv</code>. The 86 prompts typed into runner sessions on other
+          machines were all setup or routine, and are not in the table.</figcaption>
+      </figure>
+    </div>
+  </div>
+</section>
+
+<section id="three">
+  <div class="wrap">
+    <h2>Three walls up close</h2>
+    <div class="prose"><p>One from the first day, one from the middle, and the last run of walls, which took the
+      work from a stalled chain to D = 10<sup>4</sup>.</p></div>
+    <div class="stories">
+      <article class="story">
+        <div class="meta"><h3>The stall near D = 9.3</h3><span class="label">walls 2 to 3 · 18 October · the chat</span></div>
+        <ol class="trace">
+          <li><span class="w"><b>2</b>day 0</span><p>Nathan set the target, a formula, and kept pushing:
+            <q class="p">Yes continue to find the formula you are doing great don't give up. It exists</q>, then
+            <q class="p">Could it be a sum?</q> Claude turned each suggested form into a fit tested on dimensions it had
+            not seen. A fit to D ≤ 8 predicted the computed values out to D = 10.1 within 2×10⁻⁵. That habit later
+            became the held-out and planted-truth tests.</p></li>
+          <li><span class="w"><b>3</b>day 0</span><p>The scan stalled near D = 9.3. Claude said it would look into it
+            later, and he wrote <q class="p">Continue searching</q>.</p></li>
+          <li><span class="w">result</span><p>The diagnosis turned the stall into a finding. The condition that selects Δ
+            weakens exponentially with D, so no plain series in 1/D can fix Δ, and double precision could fix Δ only
+            to about 10⁻⁴ near D = 10. The idea became Proposition 1 of the later work.</p></li>
+          <li><span class="w">later</span><p>The fitted formulas did not last. The first one for Δ fell like
+            (D−2)<sup>−1/4</sup>, while the later data give a finite limit, Δ<sub>∞</sub> = 1.643893746.</p></li>
+        </ol>
+        <figure data-graph="solver/delta.svg"></figure>
+      </article>
+      <article class="story">
+        <div class="meta"><h3>The wall at 78</h3><span class="label">walls 17 to 20 · 27 October to 3 November</span></div>
+        <ol class="trace">
+          <li><span class="w"><b>17</b>day 9</span><p>The horizon block stopped the chain past 73. After
+            <q class="p">continue to D = 200</q> and <q class="p">try to skip past 73 by a larger number.</q>, new node
+            layouts reached 78.1, and Newton's basin was measured. The walls began to read as limits of the
+            formulation, not of the solution.</p></li>
+          <li><span class="w"><b>19</b>day 15</span><p>For a week the frontier sat at 78.1. He wrote
+            <q class="p">just jump to 100</q>. Jumps of every size, from two starts, followed. None landed past 79.3, which
+            put the wall in Newton's basin rather than in the step rule. One cheap experiment settled it.</p></li>
+          <li><span class="w"><b>20</b>day 16</span><p>Collocation and a hybrid failed. After
+            <q class="p">I'm still not certain why we can't get past 78 D</q>, a literature subagent brought back Taylor
+            continuation in D, the asymptotic numerical method (Cochelin 1994). It took the chain from 73.27 to
+            79.27.</p></li>
+          <li><span class="w">changed</span><p>Search the literature before building. The next wall, the
+            double-double wall near 80, fell to a quad-double corrector and jets.</p></li>
+        </ol>
+        <figure data-graph="hp/large_d_dropoffs.svg"></figure>
+      </article>
+      <article class="story">
+        <div class="meta"><h3>The mass mode read as physics</h3><span class="label">walls 31 to 37 · 6 to 25 November</span></div>
+        <ol class="trace">
+          <li><span class="w"><b>31</b>day 19</span><p>Quad-double hit its floor at 193.77. A literature note had
+            called the solver's mass mode physical, a property of Einstein's equations, and for three weeks it was met
+            with more digits: a stall rule with a flag, then an octo-double corrector.</p></li>
+          <li><span class="w"><b>32–34</b>days 20–34</span><p><q class="p">Keep going to 400</q> sent the chain to
+            263.6. A direction review he asked for counted 185 of the 450 issues closed in the preceding week as the
+            chain, and recommended stopping it. Two days later he paused it: a unit of D cost four hours, and
+            D = 400 was 23 days away.</p></li>
+          <li><span class="w"><b>35</b>day 37</span><p><q class="p">Can you re-evaluate the underlying math
+            assumptions to see if we missed anything?</q> A subagent derived the large-D problem before reading the
+            project's notes, and found the chain's limits were the discrete system's own.</p></li>
+          <li><span class="w"><b>36</b>day 38</span><p><q class="p">I think you may have already lost the plot. … At
+            these speeds it is unobtainable</q>. The coordinator answered that the mistake was treating large D as a
+            continuation problem, and set up direct solves at each target D.</p></li>
+          <li><span class="w"><b>37</b>day 38</span><p>He asked for subagents to look for gaps in the published papers.
+            One found that the mass mode is a violation of the momentum constraint, which the formulation never
+            imposed. Gundlach's construction sets the metric from that constraint and has no such mode. A prototype in
+            that form converged at D = 100 in double-double arithmetic.</p></li>
+          <li><span class="w">result</span><p>One solve at D = 300 converged four hours after his call for a new method,
+            and 250 and 400 followed within twenty minutes. Walls 38 to 40 took it on to 1000, 2000, 2828 and
+            10<sup>4</sup>, all within 24 hours of that call.</p></li>
+        </ol>
+        <figure data-graph="hp/explain_gain.svg"></figure>
+      </article>
+    </div>
+    <div class="finding">
+      <p>In hindsight, the one wrong step was a label.</p>
+      <p>With D = 1000 in hand he asked whether a single prompt could have got there sooner. The analysis answered
+        partly. Gundlach's paper was already cited in the repository, and a check of the momentum constraint existed in
+        another part of the code. A prompt asking which equation allows the mode, and how the published constructions
+        set each metric field, could have reached the new form about 18 days sooner, by its estimate. The Möbius
+        variable at the horizon could not have come from that prompt, since its symptom stayed hidden until a solve at
+        D = 1000 was tried.</p>
+    </div>
+  </div>
+</section>
+
+<section id="graphs">
+  <div class="wrap">
+    <h2>The graphs at the walls</h2>
+    <div class="prose"><p>Eighteen graphs in the repository belong to 14 of the walls. Each is shown as it was in the
+      commit that added it, not as it is drawn today. Some he asked for at the wall, such as
+      <q class="p">draw for me a visual representation of collocation in general.</q> when collocation failed. The
+      last six walls, passed in two days, left no graph.</p></div>
+    <div class="gallery" id="gallery"></div>
+  </div>
+</section>
+
+<section id="one-prompt">
+  <div class="wrap">
+    <h2>One prompt, one session</h2>
+    <div class="prose">
+      <p>The setup above is costly and cannot be rerun as it was. Can one prompt to one fresh session reproduce the
+        start? A clean-room trial tested it. One headless Claude Code session, with the model Fable 5.2, ran in a
+        sandbox with an empty folder and Python with numpy, scipy, mpmath and sympy. It had no project files, no
+        memory, no instruction file and no web tools. Canary runs checked what a session can see, and one planted
+        an instruction file, which the session had to report. It did.</p>
+      <p>The prompt has 146 words. It names no paper, method, equation or value, and it forbids looking values up or
+        quoting them from memory.</p>
+    </div>
+    <div class="terminal" id="trial-prompt"><span class="who">nathan ›</span> Compute the echoing period Δ of the Choptuik critical solution in D = 4, 6, 7 and 8 spacetime dimensions, each correct to six decimal places.
+
+The critical solution is the discretely self-similar solution of general relativity with a spherically symmetric, minimally coupled, massless real scalar field that sits at the threshold of black hole formation. Δ is its period in logarithmic time.
+
+Work from first principles in the current directory: derive the equations, write the solver, and test your own results for convergence. Do not look the values up, and do not quote them from memory. Python 3 with numpy, scipy, mpmath and sympy is installed. You have 4 CPU threads.
+
+When you are done, write two files:
+- results.csv, with the header D,Delta and one row for each D;
+- METHOD.md, which says how each value was computed and what its convergence test showed.</div>
+    <div class="two">
+      <figure>
+        <h4>The pilot's values of Δ</h4>
+        <div class="tablebox"><table class="digits">
+          <thead><tr><th class="n">D</th><th class="n">asked for</th><th class="n">its best estimate</th><th class="n">this repository</th></tr></thead>
+          <tbody>
+            <tr><td class="n">4</td><td class="n ok">3.445452</td><td class="n">3.4454524022(2)</td><td class="n">3.44545240223</td></tr>
+            <tr><td class="n">6</td><td class="n ok">3.009483</td><td class="n">3.009483220(1)</td><td class="n">3.00948322049</td></tr>
+            <tr><td class="n">7</td><td class="n ok">2.842753</td><td class="n">2.842753206(2)</td><td class="n">2.84275320647</td></tr>
+            <tr><td class="n">8</td><td class="n ok">2.711790</td><td class="n">2.711790054(5)</td><td class="n">2.71179005444</td></tr>
+          </tbody>
+        </table></div>
+        <figcaption>All four right to six decimals. The uncertainties are the session's own reading of the scatter in
+          its convergence tables, not bounds. Its estimates differ from this repository's values, which it could not
+          see, by less than 5×10⁻¹⁰.</figcaption>
+      </figure>
+      <div class="prose">
+        <div class="minis" style="margin-top:0">
+          <div><b class="num">2 h 57 min</b><span>of wall time; 35 min of model time</span></div>
+          <div><b class="num">84</b><span>turns, and 207,913 output tokens</span></div>
+          <div><b class="num">0 of 77</b><span>shell commands reached the network</span></div>
+        </div>
+        <p>Its notes give its route: the field equations in Bondi coordinates, checked symbolically; a time evolution
+          at D = 4 with a bisection of the amplitude for a first guess; a spectral Newton solve with Δ as an unknown;
+          continuation in the dimension; and convergence tables.</p>
+        <p>The same prompt, widened to every whole D from 6 to 200 with 12 hours allowed, ran for 2 h 11 min before
+          Nathan stopped it for its token use. It had six values by then, for D = 6 to 11, from a coarse grid. Five
+          were right to six decimals, and D = 9 was off by 1.9×10⁻⁶.</p>
+        <p>The opening of the project, from the statement of the problem to nine digits at D = 4, fits in one prompt
+          anyone can rerun. The walls lie past what the trials reached. How far one session reaches in D is not
+          measured.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="lessons">
+  <div class="wrap">
+    <h2>Lessons</h2>
+    <ol class="lessons">
+      <li>Push on the goal, and let the method be argued.</li>
+      <li>Ask why at every wall, and turn the answer into a measurement.</li>
+      <li>Prefer a cheap decisive experiment to a long plan.</li>
+      <li>Build the next tool before it is needed.</li>
+      <li>Write the stop rule and the pass criteria before the run, and keep the control runnable.</li>
+      <li>Report the time to each goal at the current rate. When it passes about a week, change the method rather
+        than repair it.</li>
+      <li>When a method has stalled for days, ask for a review that derives the problem from the start before it reads
+        the project's notes.</li>
+      <li>Before building around a cost that grows, have the agent show which equation allows it.</li>
+      <li>Ask the literature how it sets the problem up, not only how to pass the wall.</li>
+    </ol>
+
+    <h2 style="margin-top:3.4rem">What this does not show</h2>
+    <div class="limits">
+      <div><h4>One coder</h4><p>The forty walls were coded once, by the Claude session that drafted the paper's
+        section, from the appendix rows and their sources. No second coder has repeated it. The kinds overlap, and
+        another reader would draw the lines elsewhere.</p></div>
+      <div><h4>Incomplete records</h4><p>The chat's 523 prompts kept no times, and the kinds of push read only its
+        first 62. The runners' transcripts stayed on their machines. The per-point records of 757 early points were
+        lost.</p></div>
+      <div><h4>One project, one person</h4><p>The counts say which pushes were common, not which mattered most. The
+        form rules misread about 3 prompts in 100.</p></div>
+      <div><h4>One run of each trial</h4><p>The model is not deterministic, so the rate of success is unknown. A model
+        may also have seen published values in training. The session's working is evidence that it computed its
+        values, not proof.</p></div>
+      <div><h4>No expert review</h4><p>No expert has reviewed the work, and Nathan has not checked the mathematics
+        himself. The checks, each with a control that must fail, make the work testable. They do not replace a
+        reviewer.</p></div>
+    </div>
+
+    <h2 style="margin-top:3.4rem">How this was made</h2>
+    <div class="prose" style="margin-top:1.1rem">
+      <p>Nathan Moinvaziri is the author of the work and of this page. Claude, Anthropic's model, used through Claude
+        Code, was the tool. It produced the code, the computations and the notes, as a coordinating session, runner
+        sessions and subagents under his direction. Claude drafted the paper behind this page and this page itself
+        from the chat where the project began, the repository, its issues and the session transcripts, and he read
+        and revised each draft.</p>
+      <p>In the first week Nathan wrote to the authors of the closest published work and asked that the email state
+        plainly how the work was done.</p>
+      <p>Every number here comes from files in <code>paper/ai/</code> of the repository and from
+        <code>hp/data/delta_all.csv</code>; <code>paper/ai/site/build.py</code> reads them into this page.
+        <code>paper/ai/SOURCES.md</code> gives the source of each. Code and data:
+        <a href="https://github.com/nmoinvaz/choptuik-large-d">github.com/nmoinvaz/choptuik-large-d</a> and
+        <a href="https://github.com/nmoinvaz/choptuik-large-d-raw">github.com/nmoinvaz/choptuik-large-d-raw</a>.</p>
+    </div>
+    <h4 style="margin-top:2rem">References</h4>
+    <ol class="refs">
+      <li>M. W. Choptuik, Universality and scaling in gravitational collapse of a massless scalar field, Phys. Rev. Lett. 70, 9 (1993).</li>
+      <li>C. Gundlach, Understanding critical collapse of a scalar field, Phys. Rev. D 55, 695 (1997), arXiv:gr-qc/9604019.</li>
+      <li>C. Ecker, F. Ecker, D. Grumiller and T. Jechtl, Critical spacetime crystals in continuous dimensions, SciPost Phys. 20, 176 (2026), arXiv:2602.10185.</li>
+      <li>B. Cochelin, A path-following technique via an asymptotic-numerical method, Comput. Struct. 53, 1181 (1994).</li>
+      <li>T. J. Dekker, A floating-point technique for extending the available precision, Numer. Math. 18, 224 (1971).</li>
+      <li>Y. Hida, X. S. Li and D. H. Bailey, Algorithms for quad-double precision floating point arithmetic, ARITH-15, 155 (2001).</li>
+      <li>N. Moinvaziri, Choptuik's echo period and critical exponent at large dimension, draft, <code>paper/physics/dss_physics.pdf</code> in the repository.</li>
+      <li>N. Moinvaziri, Directing a multi-machine computation with Claude Code, draft, <code>paper/ai/main.tex</code> in the repository.</li>
+    </ol>
+  </div>
+</section>
+</main>
+
+<footer><div class="wrap">The Forty Walls · Nathan Moinvaziri · November 2026 · built with Claude Code</div></footer>
+
+<div id="tip" hidden></div>
+<dialog id="viewer" aria-label="Graph">
+  <div class="dhead"><p id="viewer-title"></p><button class="close" id="viewer-close" type="button">Close</button></div>
+  <img id="viewer-img" alt="">
+</dialog>
+
+<script id="data" type="application/json">{"walls":[{"n":1,"date":"2026-10-18","day":0.5,"y":1.76,"kind":1,"wall_kind":"solver","moved_first_by":"prompt","push":"choice","idea_from":"coordinator","idea_kind":"numerical","held":"yes","note":"picked one of three directions Claude offered; Claude's plan computed the solution directly as a periodic problem","graphs":[0],"when":"18 Oct","stuck":"toy simulation's <i class=\"m\">Δ<\/i> 4% low, one echo resolved","moved":"<q class=\"p\">Explain the collapse numbers<\/q>","resolution":"literature check; the solution computed directly, 9 digits at D = 4","changed":"reproduce published values first"},{"n":2,"date":"2026-10-18","day":0.5,"y":3.0,"kind":0,"wall_kind":"physics","moved_first_by":"prompt","push":"physics or math","idea_from":"me","idea_kind":"physics or math","held":"partly","note":"the sums Nathan suggested were fitted and tested on unseen D; the formulas did not last","graphs":[1,2,3],"when":"18 Oct","stuck":"no formula from the first fits","moved":"<q class=\"p\">… don't give up. It exists<\/q>; <q class=\"p\">Could it be a sum?<\/q>","resolution":"suggested forms fitted and tested on unseen <i class=\"m\">D<\/i>","changed":"held-out tests"},{"n":3,"date":"2026-10-18","day":0.5,"y":2.0,"kind":0,"wall_kind":"solver","moved_first_by":"prompt","push":"goal","idea_from":"coordinator","idea_kind":"physics or math","held":"yes","note":"<q class=\"p\">Continue searching<\/q>; the diagnosis: the selection weakens exponentially in D, later Proposition 1","graphs":[],"when":"18 Oct","stuck":"scan stalls near D = 9.3","moved":"<q class=\"p\">Continue searching<\/q>, then Claude's diagnosis","resolution":"selection strength falls exponentially with <i class=\"m\">D<\/i>","changed":"no plain 1/D series; more precision"},{"n":4,"date":"2026-10-18","day":0.5,"y":2.24,"kind":1,"wall_kind":"solver","moved_first_by":"coordinator","push":"","idea_from":"coordinator","idea_kind":"numerical","held":"yes","note":"weakly determined directions set aside","graphs":[],"when":"18 Oct","stuck":"solver stalls near D = 6","moved":"Claude's diagnosis","resolution":"weakly determined directions set aside","changed":"the weak directions become a theme"},{"n":5,"date":"2026-10-19","day":1.5,"y":2.88,"kind":2,"wall_kind":"cost","moved_first_by":"prompt","push":"technique or resource","idea_from":"me","idea_kind":"computing","held":"yes","note":"SIMD and Rust; a subagent built the kernel","graphs":[4],"when":"19 Oct","stuck":"one minute per step on two cores","moved":"<q class=\"p\">can we speed up the runtime by using SIMD?<\/q>; a subagent","resolution":"Rust kernel with SIMD, double-double residual","changed":"kernel in Rust, driver in Python"},{"n":6,"date":"2026-10-19","day":1.5,"y":3.12,"kind":0,"wall_kind":"solver","moved_first_by":"prompt","push":"physics or math","idea_from":"me","idea_kind":"physics or math","held":"no","note":"the repeating-sum resonance was tested and rejected","graphs":[],"when":"19 Oct","stuck":"convergence harder with <i class=\"m\">D<\/i>","moved":"<q class=\"p\">… maybe there is a repeating sum?<\/q>","resolution":"resonance tested and rejected","changed":"hypotheses tested openly"},{"n":7,"date":"2026-10-19","day":1.5,"y":1.88,"kind":1,"wall_kind":"arithmetic","moved_first_by":"prompt","push":"technique or resource","idea_from":"coordinator","idea_kind":"numerical","held":"yes","note":"<q class=\"p\">Do we need quad-double?<\/q>; no: the floor was one weak harmonic","graphs":[],"when":"19 Oct","stuck":"residual floor at D = 28","moved":"<q class=\"p\">Do we need quad-double?<\/q>","resolution":"floor traced to one weak harmonic","changed":"solver and precision limits told apart"},{"n":8,"date":"2026-10-19","day":1.5,"y":2.12,"kind":1,"wall_kind":"solver","moved_first_by":"coordinator","push":"","idea_from":"coordinator","idea_kind":"numerical","held":"yes","note":"weak-direction solve and damped steps","graphs":[],"when":"19 Oct","stuck":"weak directions set <i class=\"m\">Δ<\/i> above D = 23; stalls at 27 to 31","moved":"Claude's diagnosis; a test on the laptop","resolution":"weak-direction solve, damped steps, double-double","changed":"two machines, a message log, tasks"},{"n":9,"date":"2026-10-20","day":2.5,"y":1.88,"kind":1,"wall_kind":"solver","moved_first_by":"coordinator","push":"","idea_from":"coordinator","idea_kind":"numerical","held":"yes","note":"harmonics 9 to 13 held on their trend (pinning)","graphs":[],"when":"20 Oct","stuck":"double-double climb stops at 60.96","moved":"Claude's diagnosis","resolution":"harmonics 9 to 13 held on their trend","changed":"pinning"},{"n":10,"date":"2026-10-20","day":2.5,"y":2.12,"kind":2,"wall_kind":"solver","moved_first_by":"coordinator","push":"","idea_from":"coordinator","idea_kind":"computing","held":"yes","note":"double-double at high M","graphs":[5],"when":"20–21 Oct","stuck":"double solver fails below D = 3.6","moved":"Claude's diagnosis","resolution":"double-double at high <i class=\"m\">M<\/i>, nodes moved","changed":"series tails recorded with each value"},{"n":11,"date":"2026-10-21","day":3.5,"y":0.0,"kind":3,"wall_kind":"checks","moved_first_by":"other","push":"","idea_from":"protocol","idea_kind":"process","held":"yes","note":"BootLoops: mutation controls and planted truth","graphs":[],"when":"21 Oct","stuck":"gaps in a certificate, an error bar and quoted numbers","moved":"an outside protocol (BootLoops)","resolution":"mutation controls, planted truth, <code>check_numbers.py<\/code>","changed":"the rules of evidence"},{"n":12,"date":"2026-10-21","day":3.5,"y":1.0,"kind":3,"wall_kind":"checks","moved_first_by":"other","push":"","idea_from":"subagent","idea_kind":"process","held":"yes","note":"an independent review narrowed a certificate's claim","graphs":[],"when":"21 Oct","stuck":"a certificate's claim wider than its proof","moved":"an independent review agent","resolution":"claim narrowed to what the code proves","changed":"reviews by agents that did not write the code"},{"n":13,"date":"2026-10-25","day":7.5,"y":2.0,"kind":1,"wall_kind":"solver","moved_first_by":"prompt","push":"choice","idea_from":"coordinator","idea_kind":"numerical","held":"yes","note":"choices among the coordinator's options; pinned runs","graphs":[6],"when":"25–26 Oct","stuck":"chain stops at 67.77","moved":"Nathan's requests (relayed) and choices among options","resolution":"derivative route measured and closed; pinned runs to 71","changed":"options posed with a recommendation"},{"n":14,"date":"2026-10-26","day":8.5,"y":3.0,"kind":3,"wall_kind":"setup","moved_first_by":"prompt","push":"rule","idea_from":"me","idea_kind":"process","held":"yes","note":"the raw-output rule","graphs":[],"when":"26 Oct","stuck":"records of 757 points lost","moved":"<q class=\"p\">is the data gone or not?<\/q>; <q class=\"p\">from now on all agents should store the raw output in git somewhere different.<\/q>","resolution":"search on both runners; raw-data repository","changed":"the raw-output rule"},{"n":15,"date":"2026-10-26","day":8.5,"y":2.0,"kind":1,"wall_kind":"checks","moved_first_by":"prompt","push":"doubt","idea_from":"coordinator","idea_kind":"numerical","held":"yes","note":"<q class=\"p\">what happened to our ghost stuff?<\/q>; the modes were artifacts of one layout","graphs":[7],"when":"26–27 Oct","stuck":"growing modes at D = 4 against the literature; counts at higher <i class=\"m\">D<\/i> on one layout each","moved":"a second layout; then <q class=\"p\">what happened to our ghost stuff?<\/q>","resolution":"the modes were artifacts; recounts in a second layout","changed":"second-layout checks"},{"n":16,"date":"2026-10-27","day":9.5,"y":1.88,"kind":2,"wall_kind":"arithmetic","moved_first_by":"prompt","push":"goal","idea_from":"coordinator","idea_kind":"computing","held":"yes","note":"<q class=\"p\">stop delaying<\/q>; the quad-double solver was the third of the coordinator's options, which Nathan had chosen","graphs":[8],"when":"27 Oct","stuck":"pinned runs stall at 73.3","moved":"<q class=\"p\">just make the quad-double solver, stop delaying.<\/q>","resolution":"quad-double solver with precision tests","changed":"arithmetic released in <code>multidouble<\/code> first"},{"n":17,"date":"2026-10-27","day":9.5,"y":2.12,"kind":1,"wall_kind":"solver","moved_first_by":"prompt","push":"goal","idea_from":"coordinator","idea_kind":"numerical","held":"yes","note":"node layouts; Newton's basin measured","graphs":[],"when":"27 Oct","stuck":"horizon block stops the chain past 73; layouts reach 78.1","moved":"<q class=\"p\">continue to D = 200<\/q>; <q class=\"p\">try to skip past 73 by a larger number.<\/q>","resolution":"node layouts; Newton's basin measured","changed":"walls read as limits of the formulation"},{"n":18,"date":"2026-10-27","day":9.5,"y":3.0,"kind":2,"wall_kind":"cost","moved_first_by":"prompt","push":"technique or resource","idea_from":"me","idea_kind":"computing","held":"yes","note":"a new desktop took the low-D legs","graphs":[],"when":"27 Oct–2 Nov","stuck":"low-<i class=\"m\">D<\/i> Newton steps of 15044 s on the laptop","moved":"<q class=\"p\">is it technically possible to go lower than 3.05?<\/q>; a new desktop","resolution":"continuation below 3.05, moved to win2","changed":"heavy runs to the always-on machine"},{"n":19,"date":"2026-11-02","day":15.5,"y":3.0,"kind":1,"wall_kind":"solver","moved_first_by":"prompt","push":"goal","idea_from":"me","idea_kind":"numerical","held":"yes","note":"<q class=\"p\">just jump to 100<\/q>: the jump test put the wall in Newton's basin","graphs":[9,10,11],"when":"2 Nov","stuck":"wall at 78","moved":"<q class=\"p\">just jump to 100<\/q>; <q class=\"p\">… is there something wrong with our solver?<\/q>","resolution":"jumps of every size fail past 79.3","changed":"cheap decisive experiments"},{"n":20,"date":"2026-11-03","day":16.5,"y":0.88,"kind":1,"wall_kind":"solver","moved_first_by":"prompt","push":"outside look","idea_from":"subagent literature","idea_kind":"numerical","held":"yes","note":"Taylor continuation in D from the literature","graphs":[12],"when":"3 Nov","stuck":"collocation and a hybrid fail","moved":"<q class=\"p\">I'm still not certain why we can't get past 78 D<\/q>; a literature subagent","resolution":"Taylor continuation in <i class=\"m\">D<\/i> (Cochelin 1994); 73.27 to 79.27","changed":"search the literature before building"},{"n":21,"date":"2026-11-04","day":17.5,"y":2.0,"kind":2,"wall_kind":"arithmetic","moved_first_by":"coordinator","push":"","idea_from":"coordinator","idea_kind":"computing","held":"yes","note":"quad-double corrector and jets","graphs":[],"when":"4 Nov","stuck":"double-double wall near 80","moved":"Claude's measurement; route subagents","resolution":"quad-double corrector and jets","changed":"route subagents in parallel"},{"n":22,"date":"2026-11-03","day":16.5,"y":1.12,"kind":2,"wall_kind":"solver","moved_first_by":"prompt","push":"outside look","idea_from":"subagent","idea_kind":"computing","held":"yes","note":"an analysis subagent found a stale checkpoint","graphs":[13],"when":"3–4 Nov","stuck":"low-<i class=\"m\">D<\/i> stall at 3.04375","moved":"<q class=\"p\">… run a subagent, analyze our current method …<\/q>","resolution":"a stale checkpoint found; 3.04375 converged","changed":"analysis by a session that did not write the code"},{"n":23,"date":"2026-11-05","day":18.5,"y":1.76,"kind":1,"wall_kind":"solver","moved_first_by":"prompt","push":"goal","idea_from":"coordinator","idea_kind":"numerical","held":"yes","note":"<q class=\"p\">build the real thing and not a toy<\/q>: re-seeding moved into the solver","graphs":[14],"when":"5 Nov","stuck":"re-seeding only in a model","moved":"<q class=\"p\">have a subagent build the real thing and not a toy.<\/q>","resolution":"re-seeding and an elimination corrector in the solver","changed":"models move into the code quickly"},{"n":24,"date":"2026-11-05","day":18.5,"y":1.0,"kind":3,"wall_kind":"checks","moved_first_by":"prompt","push":"technique or resource","idea_from":"subagent","idea_kind":"process","held":"yes","note":"<q class=\"p\">the next important thing you think is worthy<\/q>: second implementations from the statements","graphs":[],"when":"5 Nov","stuck":"a theorem's certificate code without second implementations","moved":"<q class=\"p\">create another subagent to do the next important thing you think is worthy<\/q>","resolution":"reimplementation from the statements alone","changed":"independent second implementations"},{"n":25,"date":"2026-11-05","day":18.5,"y":2.0,"kind":1,"wall_kind":"solver","moved_first_by":"coordinator","push":"","idea_from":"coordinator","idea_kind":"numerical","held":"yes","note":"lower predictor order; the planner was a slow LU","graphs":[],"when":"5–6 Nov","stuck":"low-<i class=\"m\">D<\/i> predictor polluted; planner frozen at x = 0.0137","moved":"Claude's diagnosis; <q class=\"p\">can we queue it on a machine that is not busy?<\/q>","resolution":"lower order; probe with planted truth; a slow LU, not stuck","changed":"phase timers"},{"n":26,"date":"2026-11-05","day":18.5,"y":2.24,"kind":2,"wall_kind":"solver","moved_first_by":"coordinator","push":"","idea_from":"coordinator","idea_kind":"computing","held":"yes","note":"polish from all four parts of the state","graphs":[],"when":"5–6 Nov","stuck":"restarts fail near 135","moved":"Claude's diagnosis","resolution":"polish from all four parts of the state","changed":"full states stored and used"},{"n":27,"date":"2026-11-06","day":19.5,"y":1.64,"kind":2,"wall_kind":"solver","moved_first_by":"prompt","push":"goal","idea_from":"coordinator","idea_kind":"computing","held":"yes","note":"<q class=\"p\">keep going above 150<\/q>; a replay found two defects","graphs":[],"when":"6 Nov","stuck":"stall at 152.93","moved":"<q class=\"p\">we need to keep going above 150<\/q>","resolution":"replay of the stored step; two defects fixed","changed":"predictions saved"},{"n":28,"date":"2026-11-06","day":19.5,"y":1.88,"kind":1,"wall_kind":"solver","moved_first_by":"coordinator","push":"","idea_from":"coordinator","idea_kind":"numerical","held":"yes","note":"new polish and a looser divergence guard","graphs":[],"when":"6 Nov","stuck":"stop at 162.31; re-seeds failing on win2","moved":"Claude's diagnosis; a runner's flag","resolution":"hypothesis tested; new polish; looser divergence guard","changed":"comparison on stored inputs"},{"n":29,"date":"2026-11-06","day":19.5,"y":2.12,"kind":2,"wall_kind":"arithmetic","moved_first_by":"prompt","push":"choice","idea_from":"coordinator","idea_kind":"computing","held":"yes","note":"approved the octo-double jets the coordinator had proposed","graphs":[],"when":"6 Nov","stuck":"quad-double series loses digits near 171","moved":"<q class=\"p\">yes add octo-double jets in hp engine, we don't need to run it until it is needed.<\/q> (earlier)","resolution":"two-step pilot, switch to octo-double","changed":"build ahead, pilot, switch"},{"n":30,"date":"2026-11-06","day":19.5,"y":0.0,"kind":2,"wall_kind":"solver","moved_first_by":"other","push":"","idea_from":"runner","idea_kind":"computing","held":"yes","note":"a runner dumped the stack of a hang","graphs":[],"when":"6 Nov","stuck":"hang above 188.02","moved":"a runner held it and dumped the stack","resolution":"fail-fast; armed hang rule","changed":"dump before kill"},{"n":31,"date":"2026-11-06","day":19.5,"y":2.36,"kind":2,"wall_kind":"arithmetic","moved_first_by":"prompt","push":"goal","idea_from":"coordinator","idea_kind":"computing","held":"yes","note":"stall rule with a flag; octo-double corrector","graphs":[15],"when":"6 Nov","stuck":"quad-double floor at 193.77","moved":"<q class=\"p\">we can push past D=200 and go as large as we can<\/q>","resolution":"stall rule with a flag; octo-double corrector","changed":"explicit, flagged acceptance"},{"n":32,"date":"2026-11-07","day":20.5,"y":2.0,"kind":1,"wall_kind":"direction","moved_first_by":"prompt","push":"goal","idea_from":"coordinator","idea_kind":"numerical","held":"yes","note":"<q class=\"p\">Keep going to 400<\/q>: the chain climbed to 263.6","graphs":[16],"when":"7 Nov","stuck":"","moved":"<q class=\"p\">Keep going to 400<\/q>","resolution":"the chain to D = 263.6","changed":"the large-<i class=\"m\">D<\/i> chain first"},{"n":33,"date":"2026-11-19","day":32.5,"y":1.0,"kind":3,"wall_kind":"direction","moved_first_by":"prompt","push":"outside look","idea_from":"subagent","idea_kind":"process","held":"yes","note":"a direction review recommended stopping the chain","graphs":[],"when":"19 Nov","stuck":"","moved":"<q class=\"p\">start another new subagent to check to see we are headed in the right direction, we want: discoveries.<\/q>","resolution":"an independent direction review","changed":"the ℓ = 1 and ℓ = 2 work"},{"n":34,"date":"2026-11-21","day":34.5,"y":3.0,"kind":3,"wall_kind":"cost","moved_first_by":"prompt","push":"doubt","idea_from":"me","idea_kind":"process","held":"yes","note":"<q class=\"p\">we should stop … until we can find a better method<\/q>","graphs":[17],"when":"21 Nov","stuck":"","moved":"<q class=\"p\">we should stop doing our calculations at large d until we can find a better method don't you think?<\/q>","resolution":"the chain paused at D = 263.6","changed":"low <i class=\"m\">D<\/i> and ℓ = 1 first"},{"n":35,"date":"2026-11-24","day":37.5,"y":1.0,"kind":0,"wall_kind":"solver","moved_first_by":"prompt","push":"outside look","idea_from":"subagent","idea_kind":"physics or math","held":"yes","note":"a derivation from scratch: the chain's limits were the discrete system's own","graphs":[],"when":"24 Nov","stuck":"","moved":"<q class=\"p\">Can you re-evaluate the underlying math assumptions to see if we missed anything?<\/q>; <q class=\"p\">… like go back to basics if you have to.<\/q>","resolution":"a from-scratch derivation","changed":"the chain's limits its own"},{"n":36,"date":"2026-11-25","day":38.5,"y":1.88,"kind":1,"wall_kind":"cost","moved_first_by":"prompt","push":"goal","idea_from":"coordinator","idea_kind":"numerical","held":"yes","note":"<q class=\"p\">lost the plot … unobtainable<\/q>: direct solves at each target D","graphs":[],"when":"25 Nov","stuck":"","moved":"<q class=\"p\">I think you may have already lost the plot. … At these speeds it is unobtainable<\/q>; <q class=\"p\">we need to prioritize this quest<\/q>","resolution":"direct solves at each target <i class=\"m\">D<\/i>","changed":"continuation in <i class=\"m\">D<\/i> dropped"},{"n":37,"date":"2026-11-25","day":38.5,"y":0.76,"kind":0,"wall_kind":"physics","moved_first_by":"prompt","push":"outside look","idea_from":"subagent literature","idea_kind":"physics or math","held":"yes","note":"the mass mode is a momentum-constraint violation; Gundlach's construction","graphs":[],"when":"25 Nov","stuck":"","moved":"<q class=\"p\">I want you to use new subagents to look to see any gaps in any of the published papers … look at formulas, maths, missing gaps and connections<\/q>","resolution":"three literature subagents","changed":"the momentum constraint imposed"},{"n":38,"date":"2026-11-25","day":38.5,"y":1.0,"kind":1,"wall_kind":"arithmetic","moved_first_by":"prompt","push":"goal","idea_from":"subagent","idea_kind":"numerical","held":"yes","note":"<q class=\"p\">queue up all the blocking bits<\/q>: a Möbius variable for the horizon series","graphs":[],"when":"25 Nov","stuck":"","moved":"<q class=\"p\">Let's start doing the quest route. … queue up all the blocking bits to the quest route and prioritize them.<\/q>","resolution":"direct solves at D = 250, 300 and 400; a subagent on the inner problem","changed":"a Möbius variable at the horizon; double-double suffices"},{"n":39,"date":"2026-11-25","day":38.5,"y":2.12,"kind":1,"wall_kind":"direction","moved_first_by":"prompt","push":"goal","idea_from":"coordinator","idea_kind":"numerical","held":"yes","note":"<q class=\"p\">the max D that we can<\/q>: D 2000 by a stepping stone; the target 10⁴","graphs":[],"when":"25 Nov","stuck":"","moved":"<q class=\"p\">I want to go to the max D that we can, what would that be?<\/q>","resolution":"D = 2000, then a wall past it","changed":"the target 10⁴"},{"n":40,"date":"2026-11-25","day":38.5,"y":1.24,"kind":0,"wall_kind":"solver","moved_first_by":"prompt","push":"outside look","idea_from":"subagent","idea_kind":"physics or math","held":"yes","note":"the last node at the fast mode's anti-Stokes point; no new mathematics needed","graphs":[],"when":"25 Nov","stuck":"","moved":"<q class=\"p\">… just like at 260 we need to do a reevaluation. Look at our new wall, research the literature …<\/q>; <q class=\"p\">use a new subagent to see if we need to invent new math to get us past the wall<\/q>","resolution":"no new mathematics needed; D = 2828, then 10⁴","changed":"the last node at the fast mode's anti-Stokes point"}],"graphs":[{"wall":1,"file":"solver/delta.svg","src":"graphs/delta.svg","commit":"b46efb26","date":"2026-10-19","day":1,"name":"the echo period in D","later":false},{"wall":2,"file":"solver/extrapolation.svg","src":"graphs/extrapolation.svg","commit":"f486c84a","date":"2026-10-19","day":1,"name":"beyond the computed range the limit is an assumption","later":false},{"wall":2,"file":"solver/candidates.svg","src":"graphs/candidates.svg","commit":"f60bfd9e","date":"2026-10-19","day":1,"name":"candidate constants for the limit","later":false},{"wall":2,"file":"hp/heldout.svg","src":"graphs/heldout.svg","commit":"88c677e7","date":"2026-10-20","day":2,"name":"predicting points the fits never saw","later":true},{"wall":5,"file":"hp/solve_times.svg","src":"graphs/solve_times.svg","commit":"ca89a942","date":"2026-10-24","day":6,"name":"how long each D took to solve","later":true},{"wall":10,"file":"hp/lowD_values.svg","src":"graphs/lowD_values.svg","commit":"f75bf260","date":"2026-10-23","day":5,"name":"below D = 4: every value, and the resolution it took","later":true},{"wall":13,"file":"hp/newton_stall.svg","src":"graphs/newton_stall.svg","commit":"ab4e14ff","date":"2026-10-27","day":9,"name":"why the continuation stalls along the weak directions","later":true},{"wall":15,"file":"hp/modecount.svg","src":"graphs/modecount.svg","commit":"34b7238e","date":"2026-10-22","day":4,"name":"counting the unstable modes","later":false},{"wall":16,"file":"hp/stall_kappa.svg","src":"graphs/stall_kappa.svg","commit":"5353484e","date":"2026-10-27","day":9,"name":"where double-double runs out","later":false},{"wall":19,"file":"hp/large_d_walls.svg","src":"graphs/large_d_walls.svg","commit":"c0ccbf7d","date":"2026-11-02","day":15,"name":"where the large-D continuations stop","later":false},{"wall":19,"file":"hp/large_d_dropoffs.svg","src":"graphs/large_d_dropoffs.svg","commit":"7170ac4b","date":"2026-11-03","day":16,"name":"the drop-offs of the step and the precision wall behind them","later":false},{"wall":19,"file":"hp/pole_basin.svg","src":"graphs/pole_basin.svg","commit":"ebeea9bb","date":"2026-11-03","day":16,"name":"why the horizon series stops","later":false},{"wall":20,"file":"hp/collocation_idea.svg","src":"graphs/collocation_idea.svg","commit":"d6449e08","date":"2026-11-03","day":16,"name":"collocation: the equation at a few points, a polynomial between","later":false},{"wall":22,"file":"hp/lowD_logslope.svg","src":"graphs/lowD_logslope.svg","commit":"c9698f69","date":"2026-11-04","day":17,"name":"the local exponent toward D = 3","later":false},{"wall":23,"file":"hp/algo_reseed.svg","src":"graphs/algo_reseed.svg","commit":"6edb5fe3","date":"2026-11-05","day":18,"name":"the re-seed of the horizon data through the last node","later":false},{"wall":31,"file":"hp/explain_gain.svg","src":"graphs/explain_gain.svg","commit":"61707a80","date":"2026-11-06","day":19,"name":"why the precision has to grow: the mass-mode gain","later":false},{"wall":32,"file":"hp/harmonics_held.svg","src":"graphs/harmonics_held.svg","commit":"35e8a4c3","date":"2026-11-11","day":24,"name":"how the chain handles the weak harmonics","later":false},{"wall":34,"file":"hp/solver_limits.svg","src":"graphs/solver_limits.svg","commit":"b7986fb0","date":"2026-11-17","day":30,"name":"how far each solver reaches in D, and what stops it","later":false}],"prompts":{"day":[6.9553,8.6623,8.6639,8.6707,8.6719,8.8945,8.8975,8.8978,8.9036,8.9038,8.9043,8.9084,9.0405,9.0408,9.0414,9.0425,9.0459,9.0466,9.0499,9.0541,9.055,9.0633,9.0681,9.093,9.0939,9.0998,9.1444,9.1451,9.1465,9.1532,9.2146,9.2247,9.2252,9.2277,9.2286,9.2288,9.2311,9.2415,9.2436,9.2549,9.2563,9.2666,9.28,9.2859,9.289,9.2891,9.3016,9.3019,9.3102,9.3126,9.5833,9.589,9.5891,9.5952,9.5953,9.5957,9.6029,9.6087,9.6089,9.6128,9.616,9.6192,9.6201,9.6567,9.6681,9.6685,9.6698,9.6743,9.6755,9.6758,9.679,9.6923,9.6923,9.6963,9.6984,9.7017,9.7393,9.7521,9.8071,9.8073,9.8082,9.9078,9.9371,9.9381,9.9414,9.9432,9.9722,9.9723,9.973,9.9758,10.0864,10.1136,10.1203,10.1459,10.1478,10.1856,10.3548,10.3551,10.3567,10.3574,10.3579,10.6452,10.6459,10.6464,10.9599,10.9908,11.1384,11.1387,11.2543,11.608,11.609,11.6126,11.6725,12.0696,12.0948,13.0148,13.2157,13.2194,13.6609,14.7527,14.753,14.7533,14.7553,14.8303,14.8304,14.8358,14.8358,15.6457,15.6457,15.9226,15.9318,15.9326,15.9447,15.9617,15.977,15.9775,15.9934,16.0026,16.0117,16.0128,16.0877,16.2445,16.634,16.6399,16.6471,16.7025,16.706,16.71,16.7109,16.7119,16.7138,16.716,16.717,16.7193,16.7205,16.7219,16.7238,16.7246,16.7266,16.733,16.7401,16.7417,16.7429,16.7434,16.7442,16.7488,16.751,16.7546,16.7557,16.7664,16.7902,16.7939,16.8069,16.83,16.8492,16.912,17.0211,17.0287,17.0296,17.0355,17.0368,17.0412,17.042,17.0446,17.0455,17.047,17.0494,17.0505,17.0529,17.0584,17.061,17.0618,17.0623,17.0627,17.0717,17.072,17.0901,17.0925,17.1881,17.1933,17.2038,17.2289,17.229,17.2296,17.2332,17.2333,17.2475,17.2511,17.2517,17.2544,17.2556,17.271,17.6223,17.6335,17.6353,17.6356,17.7225,17.7318,17.7418,17.7734,17.7736,17.7795,17.7827,17.783,17.7846,17.7848,17.789,17.7893,17.7924,17.7966,17.7991,17.8445,17.8623,17.8694,17.8743,17.9034,17.9054,17.9055,17.9093,17.9099,17.911,17.9112,17.9114,17.9122,17.932,17.9365,17.9477,17.9485,17.9488,17.9821,18.0156,18.0639,18.105,18.107,18.1295,18.1315,18.1319,18.1497,18.1502,18.1506,18.1944,18.2087,18.2096,18.236,18.6255,18.6262,18.6277,18.6281,18.6325,18.6333,18.6338,18.6795,18.6818,18.6873,18.689,18.708,18.7089,18.7362,18.7367,18.7435,18.7437,18.7448,18.747,18.7618,18.7699,18.7713,18.7715,18.7742,18.8193,18.8226,18.8241,18.8249,18.8332,18.8348,18.8433,18.8689,18.8791,18.9211,18.9253,18.9341,18.9348,18.9714,18.9755,19.0005,19.0032,19.0055,19.0141,19.0153,19.0158,19.0161,19.0163,19.0198,19.0308,19.0408,19.0445,19.053,19.0541,19.0766,19.0787,19.0804,19.1121,19.1129,19.114,19.1143,19.1146,19.1358,19.185,19.202,19.2271,19.2338,19.5556,19.5564,19.5595,19.5605,19.5612,19.563,19.571,19.5728,19.5735,19.5796,19.5998,19.6007,19.6104,19.6778,19.6993,19.7009,19.7027,19.7039,19.7045,19.7253,19.7678,19.7684,19.7691,19.7695,19.7911,19.7928,19.7961,19.7996,19.8002,19.8053,19.8136,19.8197,19.8201,19.826,19.8281,19.829,19.8295,19.8382,19.8405,19.8776,19.8883,19.8895,19.8987,19.899,19.9002,19.9007,19.9106,19.9419,19.9768,19.9774,19.9787,19.9789,19.9799,19.9808,20.0347,20.1301,20.1342,20.1668,20.167,20.3129,20.654,20.656,20.6582,20.6626,20.6644,20.666,20.6676,20.6728,20.6809,20.8231,20.8259,20.8356,20.8373,20.8374,20.8383,20.8403,20.8451,20.8452,20.8948,20.8948,20.9309,20.9549,20.996,21.0145,21.0146,21.0153,21.0153,21.016,21.0162,21.018,21.0801,21.0962,21.0985,21.0998,21.1008,21.1016,21.1083,21.1092,21.1098,21.1116,21.112,21.1369,21.1372,21.1387,21.1392,21.1408,21.1413,21.1424,21.1551,21.1558,21.1563,21.1573,21.1581,21.1608,21.1614,21.1622,21.1623,21.2082,21.22,21.2207,21.2254,21.2258,21.2272,21.2357,21.2409,21.2411,21.2415,21.2446,21.2472,21.2611,21.2615,21.2668,21.2676,21.2687,21.27,21.2726,21.2734,21.2945,21.2959,21.2969,21.299,21.2994,21.3013,21.3033,21.3057,21.3064,21.3091,21.3139,21.3153,21.3201,21.3286,21.3354,21.5522,21.5528,21.5599,21.56,21.5609,21.5617,21.5625,21.5628,21.5644,21.5655,21.5837,21.6385,21.6389,21.6509,21.6513,21.652,21.6533,21.6754,21.6756,21.6769,21.6912,21.6929,21.6942,21.7292,21.7331,21.7452,21.7475,21.7476,21.7536,21.7864,21.8221,21.8472,21.8684,21.8698,21.8705,21.8719,21.8739,21.8855,21.8883,21.9358,21.9381,21.9386,21.9399,21.94,21.9922,21.9938,21.9943,21.9955,22.0852,22.0856,22.0866,22.0868,22.0878,22.0889,22.091,22.1308,22.1312,22.1317,22.1327,22.1329,22.6486,22.6582,22.6626,22.6734,22.7715,22.9382,22.9389,22.9555,22.9967,23.0072,23.0078,23.0121,23.0133,23.0176,23.0252,23.0262,23.0264,23.0281,23.0295,23.0302,23.0312,23.0325,23.0398,23.0437,23.0451,23.0452,23.0454,23.0455,23.0475,23.0525,23.0529,23.0623,23.0643,23.0857,23.0898,23.0905,23.0906,23.0911,23.0936,23.0947,23.0973,23.1001,23.1009,23.1017,23.102,23.1035,23.1048,23.1063,23.107,23.1082,23.1105,23.1234,23.1235,23.1238,23.124,23.1244,23.1256,23.1798,23.1809,23.1854,23.1872,23.1877,23.1887,23.1898,23.2368,23.2376,23.2389,23.2394,23.2453,23.2456,23.2497,23.2844,23.2976,23.2995,23.3003,23.3005,23.3007,23.3047,23.305,23.3201,23.3215,23.3278,23.3323,23.3331,23.3333,23.3359,23.3391,23.3406,23.3439,23.3449,23.345,23.3466,23.3493,23.3534,23.3536,23.356,23.359,23.6246,23.6267,23.6288,23.6317,23.6338,23.6341,23.6348,23.6365,23.6452,23.6463,23.6464,23.6469,23.648,23.6486,23.6498,23.6544,23.6799,23.6804,23.682,23.6824,23.6839,23.7079,23.7083,23.7116,23.7276,23.7278,23.7511,23.7513,23.7516,23.7796,23.7797,23.8149,23.818,23.8183,23.823,23.8293,23.8452,23.8554,23.8559,23.8572,23.858,23.8585,23.8618,23.8625,23.8652,23.8662,23.8691,23.8904,23.8908,23.8969,23.9157,23.9181,24.0138,24.0148,24.016,24.0161,24.017,24.0173,24.0308,24.0309,24.0322,24.0326,24.046,24.0481,24.0493,24.0562,24.0567,24.0587,24.059,24.0605,24.0607,24.0614,24.0615,24.0626,24.0629,24.0641,24.0662,24.0706,24.0746,24.0754,24.0759,24.0784,24.0788,24.0795,24.0822,24.084,24.0847,24.085,24.0866,24.0965,24.1016,24.1103,24.1109,24.1203,24.1309,24.1315,24.1326,24.1346,24.1359,24.1464,24.1472,24.1584,24.1859,24.1884,24.1892,24.1895,24.1911,24.1927,24.1937,24.1947,24.2122,24.2126,24.2162,24.2197,24.2221,24.223,24.228,24.231,24.2456,24.263,24.2635,24.2638,24.2674,24.2911,24.2918,24.2941,24.2954,24.2971,24.2996,24.3016,24.3051,24.3055,24.3066,24.308,24.6683,24.7083,24.716,24.729,24.744,24.8288,24.8636,24.8658,24.8683,24.9055,24.9124,24.973,24.9744,24.9745,24.98,24.9801,24.999,24.9999,25.0019,25.0034,25.004,25.0072,25.0075,25.0081,25.0622,25.0716,25.107,25.1074,25.1122,25.1131,25.1142,25.1188,25.1191,25.1211,25.1278,25.1283,25.1318,25.14,25.1522,25.1524,25.2351,25.2356,25.2388,25.2396,25.2584,25.2587,25.2729,25.2738,25.3468,25.3475,25.7151,25.7154,25.8661,25.9052,25.9257,25.9322,25.9323,25.961,25.9798,25.9813,26.0069,26.0087,26.0089,26.0191,26.0412,26.0485,26.0534,26.0556,26.1203,26.1205,26.1207,26.121,26.1566,26.1581,26.1677,26.1691,26.1757,26.1762,26.1768,26.1769,26.1805,26.1809,26.1813,26.1822,26.1828,26.1833,26.184,26.1852,26.1876,26.1883,26.1891,26.1917,26.1925,26.2607,26.2641,26.2654,26.2705,26.2754,26.2763,26.2776,26.291,26.307,26.3095,26.3128,26.3178,26.6829,26.6863,26.6899,26.693,26.7856,26.7971,26.8048,26.8054,26.8118,26.8165,26.8454,26.8983,26.9454,26.9991,27.194,27.1972,27.1974,27.198,27.2001,27.2008,27.201,27.2047,27.2049,27.2115,27.2191,27.2222,27.2884,27.2896,27.2897,27.2918,27.2933,27.2944,27.295,27.2971,27.2982,27.299,27.301,27.3033,27.3035,27.3157,27.3178,27.3195,27.3215,27.3221,27.3238,27.3256,27.3269,27.3291,27.3309,27.3325,27.3342,27.3416,27.3519,27.3678,27.3699,27.3704,27.3711,27.3763,27.3777,27.3791,27.6553,27.6611,27.6707,27.6709,27.6736,27.6749,27.6759,27.6818,27.6821,27.6847,27.6877,27.6881,27.6987,27.7086,27.7119,27.7121,27.7188,27.73,27.7551,27.7573,27.7578,27.7926,27.7967,27.8056,27.8325,27.8334,27.8698,27.8722,27.8754,27.8772,27.8784,27.8799,27.9135,27.9141,27.9401,27.9448,27.9664,28.0536,28.0621,28.0627,28.0706,28.074,28.0745,28.0748,28.0801,28.3051,28.3067,28.3085,28.3086,28.311,28.3112,28.3127,28.3132,28.314,28.3173,28.32,28.3211,28.3357,28.6624,28.6643,28.6657,28.6736,28.6741,28.6749,28.6755,28.6767,28.6832,28.7187,28.7199,28.72,28.7222,28.723,28.7242,28.7378,28.7452,28.8472,28.8482,28.8487,28.8494,28.8499,28.8502,28.8556,28.857,28.8571,28.8592,28.884,28.8848,28.8871,28.9029,28.9065,28.929,28.9328,28.9908,29.1328,29.1331,29.1385,29.1483,29.151,29.1543,29.159,29.1761,29.1779,29.2195,29.2315,29.2321,29.2332,29.2337,29.2551,29.2589,29.26,29.2622,29.2642,29.2645,29.2659,29.2718,29.2727,29.2771,29.2884,29.2915,29.2923,29.3036,29.3041,29.3051,29.3117,29.3127,29.3133,29.3141,29.3192,29.3197,29.3205,29.3381,29.6344,29.6407,29.6419,29.6435,29.6628,29.6729,29.6734,29.6744,29.6752,29.6766,29.6781,29.6786,29.6922,29.6924,29.6944,29.7304,29.7391,29.7392,29.7736,29.8134,29.8142,29.826,29.8647,29.9615,29.9628,29.9636,29.9641,29.9792,30.0101,30.0119,30.0127,30.0158,30.0175,30.0184,30.0206,30.0211,30.0215,30.0219,30.0236,30.0251,30.0258,30.0263,30.0274,30.0382,30.0384,30.0393,30.0406,30.0435,30.0472,30.0513,30.0535,30.0628,30.1563,30.1572,30.1596,30.1634,30.166,30.1663,30.1767,30.1768,30.1773,30.1817,30.1819,30.1862,30.188,30.1887,30.1903,30.1915,30.1925,30.1945,30.1958,30.1978,30.2048,30.2054,30.2068,30.21,30.211,30.2123,30.2195,30.2202,30.2213,30.2245,30.2271,30.2581,30.267,30.2704,30.2709,30.2749,30.2781,30.6571,30.66,30.6615,30.696,30.7084,30.7089,30.7259,30.7274,30.732,30.7329,30.7392,30.7458,30.7666,30.7675,30.7789,30.7815,30.7819,30.7854,30.7866,30.7871,30.7888,30.7981,30.8053,30.8072,30.8137,30.8141,30.8154,30.8226,30.823,30.8267,30.8275,30.8311,30.8448,30.894,30.8942,30.9019,30.9024,30.9076,30.9084,30.9124,30.9388,30.94,30.9445,30.9459,30.9462,30.9483,30.9489,30.9958,31.0018,31.0036,31.0039,31.0198,31.0225,31.0238,31.0268,31.0293,31.0489,31.0502,31.0719,31.0848,31.1216,31.1281,31.1407,31.1605,31.1635,31.1726,31.1786,31.1837,31.1871,31.1931,31.1937,31.2182,31.2388,31.2427,31.2493,31.2585,31.2661,31.2665,31.2742,31.2757,31.2991,31.3041,31.3044,31.6394,31.643,31.651,31.6522,31.6525,31.6537,31.6574,31.6659,31.6669,31.669,31.6695,31.6709,31.6956,31.6987,31.6999,31.7064,31.7782,31.7852,31.8458,31.8697,31.9108,31.9117,31.9121,31.913,31.9165,31.9168,31.9181,31.9184,31.9191,31.9196,31.9334,31.9455,31.9516,31.9664,31.9757,31.9866,31.9873,31.9878,31.9998,32.0017,32.0119,32.0166,32.0254,32.0271,32.0279,32.0295,32.0353,32.036,32.0368,32.0579,32.0587,32.0592,32.0663,32.1065,32.1135,32.1141,32.2576,32.258,32.2595,32.2602,32.2604,32.2605,32.264,32.2752,32.2766,32.6551,32.6683,32.672,32.6891,32.69,32.6911,32.6919,32.6923,32.6933,32.6963,32.7104,32.7121,32.7143,32.8388,32.866,32.8944,33.0079,33.0333,33.0611,33.0622,33.0683,33.0705,33.0708,33.0711,33.1004,33.1031,33.1093,33.1111,33.1169,33.1293,33.1434,33.1449,33.3536,33.383,33.3837,33.3899,33.3928,33.3942,33.3947,33.3994,33.8902,33.9178,33.9643,34.0631,34.0649,34.0658,34.0659,34.069,34.0748,34.0786,34.0801,34.1002,34.1023,34.103,34.1038,34.1072,34.1073,34.2636,34.2678,34.2687,34.2707,34.6927,34.6955,34.6966,34.6971,34.6985,34.6993,34.6998,34.7011,34.7092,34.7215,34.7224,34.7225,34.724,34.7243,34.7267,34.727,34.7274,34.7606,34.7623,34.7666,34.7681,34.769,34.8467,34.8596,35.115,35.1175,35.1181,35.1197,35.1204,35.1214,35.1261,35.2631,35.2632,35.2654,35.2837,35.2889,35.2891,35.2929,35.2958,35.2991,35.2996,35.3042,35.3045,35.3047,35.3066,35.3146,35.3165,35.3168,35.3185,35.3234,35.3266,35.3307,35.333,35.334,35.3445,35.349,35.3491,35.7738,35.7744,35.8651,35.8655,35.8661,35.8674,35.8677,35.8694,35.8726,35.8728,35.875,35.8757,35.9942,35.9955,36.0472,36.0606,36.0613,36.0614,36.0624,36.0626,36.0683,36.1715,36.1825,36.1841,36.2625,36.2682,36.2708,36.2716,36.2719,36.6597,36.6613,36.669,36.9075,36.9139,36.9738,37.1877,37.1884,37.4544,37.4559,37.6713,37.7084,37.7183,37.8335,37.8341,37.8352,37.8368,37.8385,37.8393,37.8411,37.9734,37.9743,38.0025,38.0036,38.005,38.0053,38.0074,38.0077,38.0086,38.0622,38.0852,38.0858,38.0861,38.0875,38.0888,38.1059,38.112,38.1122,38.1206,38.1285,38.1493,38.1527,38.1715,38.1729,38.1858,38.1925,38.1928,38.2127,38.2144,38.2153,38.2163,38.2168,38.2235,38.2316,38.2377,38.2382,38.2386,38.239,38.2405,38.2433,38.273,38.2742,38.2753,38.2766,38.2812,38.2869,38.2905,38.2912,38.2919,38.2926,38.2953,38.3038,38.3122,38.3133,38.3144,38.3237,38.3243,38.3304,38.3326,38.3388,38.3494,38.3831,38.3958,38.397,38.3978,38.6207,38.6219,38.6248,38.6334,38.6345,38.6351,38.6362,38.64,38.6409,38.6863,38.6876,38.6882,38.6888,38.6902,38.7201,38.728,38.7939,38.8457,38.8495,38.8513,38.8703,38.8708,38.9661,38.9794,38.9936,38.9955,38.996,39.0382,39.039,39.0958,39.0995,39.1105,39.1263,39.1271,39.1272,39.2239,39.2248,39.2252,39.2263,39.2277,39.2282,39.2325,39.2415,39.2432,39.2638,39.2656,39.2663,39.2817,39.2858,39.2864,39.2872,39.2888,39.2896,39.3015,39.302],"row":[4,1,4,4,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,4,4,4,4,1,1,1,1,1,2,2,2,2,2,2,1,1,1,1,1,1,1,1,2,2,1,1,1,1,1,1,1,1,4,1,1,1,1,4,1,1,1,4,1,4,4,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,4,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,1,1,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,3,3,3,3,3,3,3,3,3,3,3,3,3,1,3,1,3,1,3,3,3,1,3,3,1,3,3,3,3,3,3,3,3,3,1,1,3,3,3,1,3,1,3,3,3,3,1,1,1,1,1,1,1,1,3,3,3,3,3,3,3,3,1,3,3,3,3,3,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,6,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,6,6,6,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,2,1,1,1,2,2,2,2,2,2,2,2,2,2,2,2,1,1,1,1,1,1,1,1,1,2,2,2,1,1,2,2,2,2,2,1,1,2,2,1,2,2,2,2,2,1,2,2,2,2,2,2,1,2,1,1,2,2,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,2,2,2,1,1,1,1,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,1,1,2,2,1,2,1,1,1,1,1,1,2,2,2,2,2,1,2,2,2,2,2,2,1,1,2,2,2,2,1,1,1,1,1,1,2,2,1,1,2,1,2,2,2,2,2,1,1,2,1,1,1,1,1,1,1,1,2,1,2,1,1,2,1,1,1,2,1,1,1,1,1,1,1,2,1,2,2,1,1,1,1,1,1,1,1,1,1,1,1,1,1,2,1,1,2,2,2,2,2,2,2,2,2,2,2,2,2,1,1,1,1,2,2,2,1,2,1,1,2,1,1,1,1,1,2,2,2,2,1,1,1,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,1,1,2,2,2,2,2,2,2,2,2,2,2,1,1,2,2,2,2,2,2,2,2,2,2,2,2,2,2,1,1,1,2,2,2,2,1,1,2,2,6,2,2,2,2,2,2,2,1,2,2,2,1,2,2,2,1,2,2,1,1,2,2,1,1,2,1,2,2,2,2,2,1,2,2,2,2,2,1,1,2,2,2,2,2,2,2,2,2,2,1,2,2,2,2,2,2,1,1,2,2,2,2,1,1,1,1,1,2,1,2,1,1,1,2,2,2,2,6,6,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,6,6,6,6,6,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,6,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,5,1,5,5,5,5,5,5,5,5,1,5,5,1,5,1,5,5,5,5,5,5,5,1,5,1,1,5,5,5,5,5,1,5,5,5,5,5,5,1,1,5,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,5,5,5,1,1,1,5,5,5,5,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,5,5,5,5,5,5,5,5,1,1,1,5,5],"form":[2,0,3,0,0,2,0,0,0,1,2,3,1,0,0,2,1,2,0,0,0,2,2,3,1,0,1,3,2,2,2,0,0,1,0,2,2,3,2,3,0,3,4,3,0,0,0,0,2,0,1,0,3,0,0,2,2,0,0,0,1,0,0,0,0,0,2,0,0,0,0,0,0,2,0,0,1,0,1,1,0,4,2,1,2,1,0,0,0,0,2,2,3,0,3,3,0,1,1,0,0,2,1,0,4,2,0,2,4,3,1,0,0,4,4,1,4,1,2,3,3,0,0,0,3,3,3,3,3,4,1,0,0,1,3,1,0,2,0,2,4,4,1,2,1,1,2,0,0,0,0,1,0,1,1,2,2,1,0,0,1,2,1,0,2,0,2,1,0,0,3,3,0,3,1,0,0,2,2,2,1,0,3,2,2,0,0,0,1,1,0,0,0,4,0,2,1,1,3,0,0,0,0,0,2,0,2,3,2,0,1,1,3,2,2,0,0,0,0,0,2,0,0,0,2,0,0,0,0,0,0,0,3,2,3,0,2,2,0,0,0,0,0,0,0,2,0,0,0,0,0,2,1,0,0,0,0,0,0,0,0,0,3,4,1,1,0,0,2,0,0,1,0,0,0,0,0,3,4,3,0,3,0,3,0,3,2,2,2,0,2,3,0,0,3,3,0,0,4,0,3,0,0,0,0,0,0,1,0,1,2,0,0,0,0,2,1,0,1,0,1,0,3,0,0,0,0,4,0,3,3,3,0,1,0,0,0,4,2,2,0,0,3,4,1,1,1,2,0,0,0,0,2,0,2,0,0,3,0,0,0,0,0,0,0,2,0,0,0,0,0,0,0,0,0,0,3,3,2,0,3,0,0,0,2,0,1,0,0,0,0,0,2,1,3,2,3,0,0,0,0,0,0,0,3,0,0,0,0,0,2,3,4,3,0,0,0,0,0,1,0,2,0,0,2,0,0,0,1,0,0,1,3,2,2,1,2,0,0,0,0,0,0,3,0,2,0,3,0,0,0,0,0,0,1,0,0,2,1,0,0,0,0,0,0,2,0,1,2,0,1,1,3,3,3,0,2,2,3,3,0,1,0,0,0,1,0,2,0,0,3,2,0,0,0,3,0,3,0,2,2,3,0,0,0,1,0,0,0,0,0,0,2,0,3,0,0,0,0,0,0,0,1,0,1,2,0,0,3,0,0,0,0,0,2,0,0,0,0,0,0,0,4,2,0,1,2,0,1,0,0,0,0,0,2,2,2,1,2,2,1,0,2,1,2,0,0,0,0,0,1,0,2,1,3,3,2,0,0,0,0,1,0,0,4,1,1,1,1,1,0,3,3,1,0,0,2,3,0,3,0,0,0,1,1,0,1,1,1,3,3,0,3,0,0,1,0,0,0,0,0,2,0,0,0,0,0,0,0,0,0,1,1,1,3,0,0,3,0,0,0,1,3,0,4,0,3,0,2,2,1,0,0,2,0,0,0,1,3,0,0,3,0,2,2,0,0,1,3,3,2,3,1,3,2,2,2,1,1,2,2,1,0,3,2,0,0,3,3,2,0,0,0,0,0,0,3,4,1,0,0,0,2,0,0,0,1,1,2,2,1,0,0,1,1,2,0,0,0,2,2,2,1,1,2,2,0,0,0,3,2,0,0,2,0,2,2,3,0,3,4,4,0,1,0,1,1,1,0,0,0,2,0,0,0,1,0,0,0,2,0,0,0,2,0,0,0,0,0,2,2,0,0,1,3,2,3,0,3,1,0,0,0,3,0,3,1,3,2,0,0,2,1,2,1,2,0,0,4,1,0,3,0,1,0,0,0,0,3,1,1,0,0,1,2,4,0,0,1,1,3,0,3,3,0,2,2,0,0,0,0,0,4,1,3,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,0,2,2,0,0,1,0,2,2,2,0,1,0,2,3,1,0,2,0,0,1,3,0,0,0,1,0,0,1,0,0,1,0,0,0,0,2,3,0,3,0,4,2,0,0,0,0,3,0,0,0,0,0,3,2,0,2,2,2,1,2,1,0,3,0,3,2,0,0,1,3,1,3,0,2,0,2,0,0,0,2,2,2,3,0,2,2,0,0,0,0,0,1,2,0,0,0,0,2,1,0,0,0,0,0,0,2,3,3,2,2,0,2,2,0,0,2,3,0,0,0,3,0,0,0,0,3,0,4,0,0,3,0,1,0,0,0,1,2,1,2,0,1,1,3,0,3,1,0,3,0,3,2,3,3,3,0,3,2,0,1,0,0,1,3,0,2,3,0,0,3,1,3,0,1,0,2,3,0,1,4,2,4,3,1,1,0,0,0,1,4,2,0,0,0,2,0,2,0,2,0,0,1,0,1,0,0,0,0,0,3,0,1,0,3,2,0,3,2,4,2,1,0,0,3,2,0,1,4,0,2,0,0,2,3,0,0,0,3,0,3,3,2,3,0,0,0,3,0,0,2,2,3,0,2,1,0,2,0,0,0,0,2,2,1,2,3,3,0,1,0,0,0,0,0,0,0,0,1,0,0,0,0,0,1,1,3,1,0,0,3,2,0,2,1,2,0,2,0,0,2,3,0,0,3,2,0,0,2,2,0,2,0,0,0,0,2,0,0,0,0,2,2,0,2,0,2,4,0,2,3,0,2,1,2,0,2,0,0,0,1,0,3,1,3,2,2,0,1,0,0,1,0,1,1,0,4,0,0,0,2,3,2,0,0,0,0,3,0,0,0,1,0,0,0,0,3,3,0,0,1,3,2,3,0,3,0,0,0,0,4,0,0,2,0,0,0,0,0,2,0,0,0,2,3,2,0,3,0,3,0,0,0,0,0,1,0,2,2,3,0,2,0,3,1,0,0,0,0,0,2,1,3,0,0,0,2,0,0,0,0,0,0,0,2,0,0,0,3,0,0,0,0,0,1,0,4,0,1,1,0,0,0,0,0,0,3,1,0,0,0,3,3,1,1,1,0,0,0,0,2,0,2,3,0,0,4,0,0,0,3,2,3,0,0,3,1,4,2,2,3,0,1,3,0,1,0,1,1,1,0,0,0,0,1,0,0,2,0,0,0,2,0,3,0,0,1,2,2,3,1,3,0,0,2,0,0,2,0,0,2,2,3,2,0,4,0,0,0,0,0,1,0,0,0,0,2,0,0,3,0,2,0,0,0,0,0,0,3,0,1,3,0,0,0,0,2,0,3,0,0,0,0,0,0,0,4,3,4,0,0,0,0,0,2,2,2,0,0,1,2,3,2,0,0,0,0,0,4,4,3,0,3,0,0,0,0,0,1,1,2,0,3,1,1,0,0,3,1,0,0,0,0,0,3,0,0,0,1,0,0,0,0,0,2,0,0,1,2,0,1,2,0,1,2,0,0,0,1,0,1,0,0,0,0,0,3,2,0,0,0,1,0,0,2,2,0,0,2,0,2,0,4,1,0,1,3,0,4,2,0,1,1,1,1,2,3,0,2,0,0,0,0,0,0,4,2,3,3,0,0,0,4,1,0,2,2,0,0,0,2,1,0,2,3,0,2,0,2,1,0,0,0,0,3,0,0,0,2,0,1,0,1]},"stats":[["count","prompts","1593"],["count","sessions","20"],["count","first day","2026-10-24"],["count","last day","2026-11-26"],["count","days with a prompt","33"],["count","prompts per day, median","42"],["count","prompts per day, most","140"],["count","hours with a prompt","332"],["count","hours with a prompt per day, median","10"],["words","median","9"],["words","5 or fewer","447"],["words","6 to 20","929"],["words","21 to 50","199"],["words","over 50","18"],["form, all prompts","instruction or statement","847"],["form, all prompts","question: why, what or how","223"],["form, all prompts","question: whether, can we, should we","272"],["form, all prompts","go-ahead or choice","202"],["form, all prompts","check-in","49"],["form, course-changing prompts","instruction or statement","79"],["form, course-changing prompts","question: why, what or how","22"],["form, course-changing prompts","question: whether, can we, should we","40"],["form, course-changing prompts","go-ahead or choice","4"],["form, course-changing prompts","check-in","0"],["course-changing prompts","count","145"],["course-changing prompts","median words","11"],["component","the chat","523"],["component","coordinator sessions","1182"],["component","the libraries","229"],["component","channel, tracker and housekeeping","107"],["component","the Mac runner","13"],["component","this paper, the film and the one-prompt trial","49"],["component","short sessions","13"],["component sessions","coordinator sessions","4"],["component dates","coordinator sessions","2026-10-26 to 2026-11-26"],["component sessions","the libraries","2"],["component dates","the libraries","2026-10-28 to 2026-11-19"],["component sessions","channel, tracker and housekeeping","5"],["component dates","channel, tracker and housekeeping","2026-11-10 to 2026-11-11"],["component sessions","the Mac runner","2"],["component dates","the Mac runner","2026-10-24 to 2026-11-04"],["component sessions","this paper, the film and the one-prompt trial","1"],["component dates","this paper, the film and the one-prompt trial","2026-11-25 to 2026-11-26"],["component sessions","short sessions","6"],["component dates","short sessions","2026-11-11 to 2026-11-22"],["component","all","2116"],["form, the chat","instruction or statement","259"],["form, the chat","question: why, what or how","101"],["form, the chat","question: whether, can we, should we","103"],["form, the chat","go-ahead or choice","38"],["form, the chat","check-in","22"],["words, the chat","median","10"]],"frontier":[[1.3,40.0],[2.32,60.96],[7.2,67.77],[9.04,70.98],[9.24,73.27],[9.73,78.1],[17.06,79.27],[17.93,86.53],[18.14,96.12],[18.33,127.12],[19.0,146.56],[19.12,152.93],[19.21,162.31],[19.34,175.27],[19.42,188.02],[19.56,193.77],[19.67,200.27],[19.78,206.77],[19.833,208.1496],[19.842,208.6496],[19.876,212.1496],[19.921,214.7746],[19.96,214.8684],[19.997,214.884],[20.379,215.0],[21.081,215.025],[21.114,215.0312],[23.576,215.1312],[23.602,216.1312],[23.636,222.1312],[23.659,226.1312],[23.689,228.1312],[23.717,231.1312],[23.72,231.6312],[23.731,232.6312],[23.808,235.6312],[23.836,238.7562],[24.016,240.1562],[24.157,242.3642],[24.687,242.4834],[24.708,242.5146],[24.724,242.5664],[26.061,242.7053],[26.102,244.6366],[26.144,245.6366],[26.185,247.0429],[26.227,248.6298],[26.269,249.8696],[26.311,250.8381],[26.321,251.3038],[26.346,251.8859],[26.365,252.2497],[26.392,253.0682],[26.436,253.3524],[26.446,253.5301],[26.469,253.6411],[26.519,253.6966],[26.541,253.7139],[26.544,253.7313],[26.58,253.7591],[26.607,253.8043],[26.644,253.8825],[26.682,253.896],[26.712,253.9266],[26.749,254.056],[26.77,254.1222],[26.776,254.2051],[26.795,254.3086],[26.806,254.4381],[26.851,255.055],[26.853,255.3711],[26.888,255.7661],[26.914,256.0131],[26.931,256.26],[26.95,256.5686],[27.002,256.9544],[27.046,257.3462],[27.057,257.4969],[27.088,257.6853],[27.114,257.9208],[27.144,258.068],[27.185,258.2519],[27.227,258.3669],[27.269,258.6005],[27.31,258.7128],[27.352,258.8531],[27.393,258.9957],[27.435,259.119],[27.477,259.2047],[27.518,259.3251],[27.56,259.3931],[27.602,259.4724],[27.643,259.5183],[27.685,259.5702],[27.727,259.6151],[27.768,259.6462],[27.81,259.6779],[27.852,259.7148],[27.893,259.7362],[27.935,259.751],[27.977,259.7603],[28.018,259.7792],[28.06,259.7955],[28.102,259.8068],[28.143,259.8184],[28.185,259.8318],[28.227,259.8396],[28.268,259.845],[28.31,259.8517],[28.352,259.8586],[28.393,259.8645],[28.435,259.8687],[28.477,259.8729],[28.518,259.8765],[28.56,259.8806],[28.602,259.8825],[28.643,259.885],[28.685,259.8875],[28.727,259.8897],[28.768,259.8912],[28.81,259.8927],[28.852,259.894],[28.894,259.8949],[28.935,259.8955],[28.977,259.8962],[29.018,259.8972],[29.06,259.8979],[29.102,259.8986],[29.143,259.8992],[29.18,259.8997],[33.64,260.0073],[33.734,260.8483],[34.07,260.9271],[34.091,261.0721],[34.189,261.1415],[34.224,261.2061],[34.256,261.2697],[34.281,261.3914],[34.312,261.5124],[34.335,261.6229],[34.362,261.6746],[34.401,261.7748],[34.424,261.8239],[34.458,261.9176],[34.484,262.0099],[34.505,262.1011],[34.542,262.192],[34.567,262.2833],[34.591,262.3756],[34.615,262.4705],[34.64,262.5706],[34.665,262.6802],[34.695,262.7908],[34.723,262.8471],[34.749,262.9679],[34.778,263.0929],[34.804,263.2241],[34.829,263.3677],[34.856,263.4439],[34.956,263.4862],[34.984,263.5312],[35.005,263.5762],[35.117,263.5987]],"direct":[[38.1694,300,"300"],[38.1819,250,"250"],[38.1819,400,"400"],[38.3368,1000,"1000"],[38.4542,2000,"2000"],[38.7847,2828,"2828"],[38.9951,10000,"10⁴"]],"delta":[[3.04315,2.431590741783993,"2.4315907418","1.0e-10","dd"],[3.3,3.2672125673881935,"3.267212567","1.9e-10","dd"],[3.65,3.460728636257377,"3.4607286363","4.6e-11","dd"],[4.0,3.4454524022278212,"3.445452402227821318565","1.1e-22","dd"],[4.25,3.3982728528492485,"3.39827285","5.2e-09","dd"],[4.75,3.2811674413953837,"3.281167441","3.0e-10","dd"],[5.25,3.1643092589846264,"3.16430925898","4.0e-12","dd"],[5.5,3.1096825764257474,"3.10968257643","1.7e-12","dd"],[6.0,3.0094832204929745,"3.0094832204930","3.0e-14","dd"],[6.25,2.9638258889662943,"2.963825888966294","6.9e-16","dd"],[6.75,2.880643567706022,"2.880643567706022","1.2e-16","dd"],[7.0,2.842753206466524,"2.8427532064665238","1.8e-17","dd"],[7.25,2.807087745251241,"2.80708774525124103","1.2e-18","dd"],[8.0,2.711790054444401,"2.71179005444440093653","9.5e-21","dd"],[8.75,2.6310830357853563,"2.6310830357853562","1e-16","dd"],[9.5,2.5619258302174432,"2.5619258302174432","1e-16","dd"],[10.25,2.502021987024125,"2.5020219870241250","1e-16","dd"],[11.25,2.4335932250076064,"2.4335932250076064","1e-16","dd"],[12.25,2.3755034939423356,"2.3755034939423357","1e-16","dd"],[13.5,2.3141392237273517,"2.3141392237273518","1e-16","dd"],[14.75,2.2624702831937435,"2.2624702831937435","1e-16","dd"],[16.0,2.2183429983778855,"2.2183429983778854","1e-16","dd"],[17.447596,2.1746387320110574,"2.1746387320110576","1e-16","dd"],[19.112333,2.13206232236939,"2.1320623223693901","1e-16","dd"],[20.858004,2.0942842226315244,"2.0942842226315243","1e-16","dd"],[22.852543,2.057782999662068,"2.0577829996620678","1e-16","dd"],[24.82972,2.0270691941158656,"2.0270691941158656","1e-16","dd"],[27.115417,1.996850330617162,"1.9968503306171621","1e-16","dd"],[29.565438,1.9693850437864342,"1.9693850437864341","1e-16","dd"],[32.288817,1.943510671847591,"1.9435106718475910","1e-16","dd"],[35.203229,1.9200513887778294,"1.92005138877783","2e-15","dd"],[38.489169,1.8976758773747662,"1.89767587737477","2e-15","dd"],[42.04394,1.877244636733814,"1.87724463673381","2e-15","dd"],[45.818029,1.8588858935539894,"1.85888589355399","2e-15","dd"],[50.007491,1.8416311332022643,"1.84163113320226","2e-15","dd"],[54.589835,1.8256844087560338,"1.82568440875603","2e-15","dd"],[59.595265,1.8109751680074135,"1.81097516800741","2e-15","dd"],[65.056118,1.7974292267552197,"1.79742922675522","2e-15","dd"],[70.993992,1.7849960759029444,"1.784996075902945","2.0e-16","pinned"],[77.0,1.7743174875317902,"1.7743174875318","1.3e-14","chain_fit"],[85.0,1.7623779476116577,"1.762377947612","1.5e-13","chain_fit"],[92.0,1.7535935407189518,"1.753593540719","5.0e-13","chain_fit"],[101.0,1.7440488964773944,"1.74404889648","1.3e-12","chain_fit"],[110.0,1.7360338652079803,"1.73603386521","2.6e-12","chain_fit"],[120.0,1.7285112429498757,"1.72851124295","4.2e-12","chain_fit"],[131.0,1.7215392067141613,"1.72153920671","6.0e-12","chain_fit"],[143.0,1.715136424799875,"1.71513642480","9.0e-12","chain_fit"],[156.0,1.7092946107777733,"1.7092946108","1.3e-11","chain_fit"],[170.0,1.70398838964385,"1.7039883896","1.7e-11","chain_fit"],[186.0,1.6988893869284172,"1.6988893869","2.3e-11","chain_fit"],[203.0,1.6943417006254562,"1.6943417006","2.9e-11","chain_fit"],[221.13125,1.6902532928459886,"1.6902532928","3.6e-11","chain_fit"],[241.36419067382812,1.6864086094709576,"1.6864086095","3.8e-11","chain_fit"],[259.89943950473935,1.634469457535223,"1.6345","1.5e+00","chain_fit"],[300.0,1.6781710154008715,"1.6781710154008715","9.2e-17","direct"],[400.0,1.6696580640970562,"1.669658064","8.7e-10","direct"],[1000.0,1.6542408541458917,"1.6542408541459","3.7e-14","direct"],[1414.0,1.651217160021568,"1.651217160","5.3e-10","direct"],[2000.0,1.6490743137452892,"1.6490743137453","2.7e-14","direct"],[2828.42712474619,1.647558420562662,"1.647558421","5.1e-10","direct"],[4000.0,1.6464857936999522,"1.646485794","5.1e-10","direct"],[5656.854249492381,1.6457269665713115,"1.645726967","5.1e-10","direct"],[8000.0,1.645190211705391,"1.645190212","5.1e-10","direct"]]}</script>
+<script>
+(() => {
+const DATA = JSON.parse(document.getElementById("data").textContent);
+const NS = "http://www.w3.org/2000/svg";
+const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
+const DAY0 = Date.UTC(2026, 9, 18);
+const MON = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+const KINDS = ["physics or mathematics", "numerical method", "computing", "process"];
+const KIND_OF = { "physics or math": 0, numerical: 1, computing: 2, process: 3 };
+const FORMS = ["instruction or statement", "question: why, what or how", "question: whether, or proposes", "go-ahead or choice", "check-in"];
+const ROWS = ["the chat", "coordinator sessions", "the libraries", "channel, tracker, housekeeping", "the Mac runner", "paper, film, one-prompt trial", "short sessions"];
+const LANES = ["a runner or protocol", "subagents", "the coordinator", "Nathan"];
+const WHO = { me: "Nathan", coordinator: "the coordinator", subagent: "a subagent", "subagent literature": "a literature subagent", runner: "a runner", protocol: "an outside protocol (BootLoops)" };
+const CARRIED = { goal: "a goal or pressure", "outside look": "a request for an outside look", "technique or resource": "a technique or a resource", choice: "a choice among the coordinator's options", "physics or math": "a physical or mathematical idea", doubt: "a doubt about the method", rule: "a rule" };
+const MOVED = { prompt: "a prompt of Nathan's", coordinator: "the coordinator's own diagnosis", other: "another session or an outside protocol" };
+const STALLED = { solver: "the solver", arithmetic: "the arithmetic", cost: "the cost", checks: "the checks", direction: "no wall: a turning point", physics: "the physics", setup: "the setup" };
+const DKIND = { dd: "double-double", pinned: "pinned run", chain_fit: "large-D chain", qd: "quad-double", direct: "direct solve" };
+
+const el = (tag, attrs = {}, html) => { const e = document.createElement(tag); for (const k in attrs) e.setAttribute(k, attrs[k]); if (html != null) e.innerHTML = html; return e; };
+const sv = (tag, attrs = {}, parent) => { const e = document.createElementNS(NS, tag); for (const k in attrs) e.setAttribute(k, attrs[k]); if (parent) parent.appendChild(e); return e; };
+const tx = (parent, x, y, s, attrs = {}) => { const t = sv("text", { x, y, ...attrs }, parent); t.textContent = s; return t; };
+const css = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const dateOf = day => { const d = new Date(DAY0 + day * 864e5); return `${d.getUTCDate()} ${MON[d.getUTCMonth()]}`; };
+const timeOf = day => { const d = new Date(DAY0 + day * 864e5); return `${dateOf(day)} ${String(d.getUTCHours()).padStart(2, "0")}:${String(d.getUTCMinutes()).padStart(2, "0")} UTC`; };
+const stat = (t, r) => (DATA.stats.find(s => s[0] === t && s[1] === r) || [])[2];
+
+/* tooltip */
+const tip = document.getElementById("tip");
+function showTip(html, ev) {
+  tip.innerHTML = html; tip.hidden = false;
+  const r = tip.getBoundingClientRect(), pad = 14;
+  let x = ev.clientX + pad, y = ev.clientY + pad;
+  if (x + r.width > innerWidth - 8) x = ev.clientX - r.width - pad;
+  if (y + r.height > innerHeight - 8) y = ev.clientY - r.height - pad;
+  tip.style.left = Math.max(8, x) + "px"; tip.style.top = Math.max(8, y) + "px";
+}
+const hideTip = () => { tip.hidden = true; };
+
+/* shapes by kind, as in the paper's figure */
+function shape(parent, k, x, y, r, attrs = {}) {
+  let e;
+  if (k === 0) e = sv("circle", { cx: x, cy: y, r }, parent);
+  else if (k === 1) e = sv("rect", { x: x - r * 0.88, y: y - r * 0.88, width: r * 1.76, height: r * 1.76 }, parent);
+  else if (k === 2) e = sv("path", { d: `M${x},${y - r * 1.15} L${x + r * 1.1},${y + r * 0.8} L${x - r * 1.1},${y + r * 0.8} Z` }, parent);
+  else e = sv("path", { d: `M${x},${y - r * 1.2} L${x + r * 1.05},${y} L${x},${y + r * 1.2} L${x - r * 1.05},${y} Z` }, parent);
+  for (const a in attrs) e.setAttribute(a, attrs[a]);
+  return e;
+}
+function glyph(k) { const s = sv("svg", { viewBox: "-6 -6 12 12", "aria-hidden": "true" }); shape(s, k, 0, 0, 4.6); return s; }
+
+function kindLegend(box) {
+  box.innerHTML = KINDS.map((k, i) => `<span><svg width="11" height="11" viewBox="-6 -6 12 12" style="vertical-align:-1px;margin-right:0.4rem" aria-hidden="true"></svg>${k}</span>`).join("");
+  box.querySelectorAll("svg").forEach((s, i) => shape(s, i, 0, 0, 4.6, { class: "k" + i }));
+}
+
+/* ---------- the echo ---------- */
+const samples = DATA.delta;                 // [D, Δ, digits, err, kind]
+const lgLo = Math.log(samples[0][0]), lgHi = Math.log(samples[samples.length - 1][0]);
+const slider = document.getElementById("dslider");
+const cv = document.getElementById("echo");
+let cur = samples.findIndex(r => r[0] === 4), shown = samples[cur][1], anim = null;
+const posOf = D => (Math.log(D) - lgLo) / (lgHi - lgLo);
+slider.value = Math.round(posOf(samples[cur][0]) * 1000);
+const fmtD = D => Number.isInteger(D) ? String(D) : String(+D.toFixed(4));
+
+function drawEcho(delta) {
+  const w = cv.clientWidth, h = cv.clientHeight, dpr = devicePixelRatio || 1;
+  if (cv.width !== Math.round(w * dpr) || cv.height !== Math.round(h * dpr)) { cv.width = Math.round(w * dpr); cv.height = Math.round(h * dpr); }
+  const c = cv.getContext("2d");
+  c.setTransform(dpr, 0, 0, dpr, 0, 0); c.clearRect(0, 0, w, h);
+  const ink = css("--ink"), acc = css("--accent"), rule = css("--rule"), muted = css("--muted");
+  const mono = getComputedStyle(document.body).getPropertyValue("--font-mono") || "monospace";
+  const xR = w - 30, half = h / 2, A = h * 0.15;
+  c.font = `11px ${mono}`;
+  // clock time: x = xR (1 - s), the field sin(2π ln s / Δ) with a smooth start
+  const m1 = half * 0.5 + 6, m2 = half + half * 0.5 + 4;
+  c.strokeStyle = rule; c.lineWidth = 1;
+  c.beginPath(); c.moveTo(0, m1); c.lineTo(xR, m1); c.moveTo(0, m2); c.lineTo(w - 4, m2); c.stroke();
+  c.strokeStyle = ink; c.lineWidth = 1.6; c.beginPath();
+  const umin = Math.log(0.35 / xR), N = 6000;
+  for (let i = 0; i <= N; i++) {
+    const u = umin * i / N, s = Math.exp(u), x = xR * (1 - s);
+    let e = Math.min(1, (1 - s) / 0.18); e = e * e * (3 - 2 * e);
+    const y = m1 - A * e * Math.sin(2 * Math.PI * u / delta);
+    i ? c.lineTo(x, y) : c.moveTo(x, y);
+  }
+  c.stroke();
+  c.fillStyle = acc; c.strokeStyle = acc; c.lineWidth = 1.5;
+  let lastLab = -1e9;
+  for (let k = 1; k < 40; k++) {
+    const x = xR * (1 - Math.exp(-k * delta));
+    if (xR - x < 1.2) break;
+    c.beginPath(); c.moveTo(x, m1 + A + 4); c.lineTo(x, m1 + A + 11); c.stroke();
+    if (x - lastLab > 26 && xR - x > 14) { c.fillText(String(k), x - 3, m1 + A + 23); lastLab = x; }
+  }
+  c.setLineDash([3, 3]); c.strokeStyle = muted; c.lineWidth = 1;
+  c.beginPath(); c.moveTo(xR, m1 - A - 10); c.lineTo(xR, m1 + A + 10); c.stroke(); c.setLineDash([]);
+  c.fillStyle = ink; c.fillText("t*", xR + 6, m1 + 4);
+  c.fillStyle = muted;
+  c.fillText("clock time: each echo e^Δ shorter, crowding toward the collapse at t*", 0, 12);
+  // log time: τ = −ln(t* − t), period Δ
+  const tauMax = 15.5, sx = (w - 4) / tauMax;
+  c.strokeStyle = ink; c.lineWidth = 1.6; c.beginPath();
+  for (let i = 0; i <= 1600; i++) {
+    const tau = tauMax * i / 1600, x = tau * sx;
+    let e = Math.min(1, tau / 1.2); e = e * e * (3 - 2 * e);
+    const y = m2 + A * e * Math.sin(2 * Math.PI * tau / delta);
+    i ? c.lineTo(x, y) : c.moveTo(x, y);
+  }
+  c.stroke();
+  c.strokeStyle = acc; c.fillStyle = acc; c.lineWidth = 1.5;
+  for (let k = 1; k * delta < tauMax; k++) { const x = k * delta * sx; c.beginPath(); c.moveTo(x, m2 + A + 4); c.lineTo(x, m2 + A + 11); c.stroke(); }
+  const x1 = 1 * delta * sx, x2 = 2 * delta * sx, yb = m2 - A - 8;
+  c.beginPath(); c.moveTo(x1, yb + 4); c.lineTo(x1, yb); c.lineTo(x2, yb); c.lineTo(x2, yb + 4); c.stroke();
+  c.fillText("Δ", (x1 + x2) / 2 - 3, yb - 4);
+  c.fillStyle = muted;
+  c.fillText("log time, −ln(t* − t): the same field repeats every Δ", 0, half + 14);
+}
+
+function drawCurve() {
+  const s = document.getElementById("dcurve"); s.innerHTML = "";
+  const w = s.clientWidth || 400, h = 86, pl = 34, pr = 6, pt = 8, pb = 18;
+  s.setAttribute("viewBox", `0 0 ${w} ${h}`);
+  const yLo = 1.5, yHi = 3.6;
+  const X = D => pl + (w - pl - pr) * posOf(D), Y = v => pt + (h - pt - pb) * (1 - (v - yLo) / (yHi - yLo));
+  for (const v of [2, 3]) { sv("line", { x1: pl, x2: w - pr, y1: Y(v), y2: Y(v), class: "grid" }, s); tx(s, pl - 6, Y(v) + 4, v.toFixed(1), { "text-anchor": "end" }); }
+  tx(s, pl - 6, pt + 4, "Δ", { "text-anchor": "end", class: "ink" });
+  for (const D of [4, 10, 100, 1000]) tx(s, X(D), h - 3, String(D), { "text-anchor": "middle" });
+  sv("path", { d: samples.map((r, i) => `${i ? "L" : "M"}${X(r[0]).toFixed(1)},${Y(r[1]).toFixed(1)}`).join(""), fill: "none", style: "stroke:var(--ink);stroke-width:1.6" }, s);
+  const r = samples[cur];
+  sv("line", { x1: X(r[0]), x2: X(r[0]), y1: pt, y2: h - pb, style: "stroke:var(--accent);stroke-width:1" }, s);
+  sv("circle", { cx: X(r[0]), cy: Y(r[1]), r: 5, style: "fill:var(--accent);stroke:var(--ground);stroke-width:2" }, s);
+}
+
+function readout() {
+  const [D, v, digits, err, kind] = samples[cur];
+  const head = digits.slice(0, 9), tail = digits.slice(9);
+  document.getElementById("echo-read").innerHTML =
+    `<div class="sub">D = <span class="num">${fmtD(D)}</span> · ${DKIND[kind] || kind}</div>` +
+    `<div class="big">Δ = <b>${head}</b>${tail}</div>` +
+    `<div class="sub">stated error ${err} · each echo e<sup>Δ</sup> = ${Math.exp(v).toFixed(2)} times smaller than the last</div>`;
+}
+function setSample(i) {
+  if (i === cur) return;
+  cur = i; readout(); drawCurve();
+  const from = shown, to = samples[i][1];
+  if (reduce) { shown = to; drawEcho(shown); return; }
+  const t0 = performance.now(); cancelAnimationFrame(anim);
+  const step = t => { const a = Math.min(1, (t - t0) / 320), e = a * (2 - a); shown = from + (to - from) * e; drawEcho(shown); if (a < 1) anim = requestAnimationFrame(step); };
+  anim = requestAnimationFrame(step);
+}
+slider.addEventListener("input", () => {
+  const p = slider.value / 1000; let best = 0, bd = 9;
+  samples.forEach((r, i) => { const d = Math.abs(posOf(r[0]) - p); if (d < bd) { bd = d; best = i; } });
+  setSample(best);
+});
+slider.setAttribute("aria-valuetext", "D = 4");
+slider.addEventListener("change", () => slider.setAttribute("aria-valuetext", "D = " + fmtD(samples[cur][0])));
+
+/* ---------- frontier ---------- */
+function frontier() {
+  const box = document.getElementById("frontier"); box.innerHTML = "";
+  const w = box.clientWidth, narrow = w < 560, h = narrow ? 300 : 380, pl = 46, pr = narrow ? 44 : 64, pt = 14, pb = 34;
+  const s = sv("svg", { viewBox: `0 0 ${w} ${h}`, height: h, role: "img", "aria-label": "Highest D reached over time: the chain to 263.6, then direct solves to ten thousand on day 38." }, box);
+  const x0 = 0, x1 = 40, yl = Math.log10(30), yh = Math.log10(14000);
+  const X = d => pl + (w - pl - pr) * (d - x0) / (x1 - x0), Y = D => pt + (h - pt - pb) * (1 - (Math.log10(D) - yl) / (yh - yl));
+  for (const D of [50, 100, 200, 500, 1000, 2000, 5000, 10000]) {
+    sv("line", { x1: pl, x2: w - pr, y1: Y(D), y2: Y(D), class: "grid" }, s);
+    tx(s, pl - 6, Y(D) + 4, D === 10000 ? "10⁴" : String(D), { "text-anchor": "end" });
+  }
+  const step = narrow ? 10 : 5;
+  for (let d = 0; d <= 40; d += step) { sv("line", { x1: X(d), x2: X(d), y1: h - pb, y2: h - pb + 5, class: "axis" }, s); tx(s, X(d), h - pb + 18, `${dateOf(d)}`, { "text-anchor": "middle" }); }
+  sv("line", { x1: pl, x2: w - pr, y1: h - pb, y2: h - pb, class: "axis" }, s);
+  const F = DATA.frontier;
+  let d = `M${X(F[0][0])},${Y(F[0][1])}`;
+  for (let i = 1; i < F.length; i++) d += `H${X(F[i][0])}V${Y(F[i][1])}`;
+  d += `H${X(F[F.length - 1][0])}`;
+  sv("path", { d, fill: "none", style: "stroke:var(--k1);stroke-width:2;stroke-linejoin:round" }, s);
+  F.slice(0, 18).forEach(p => sv("circle", { cx: X(p[0]), cy: Y(p[1]), r: 2.6, style: "fill:var(--k1)" }, s));
+  const last = F[F.length - 1];
+  sv("circle", { cx: X(last[0]), cy: Y(last[1]), r: 4, style: "fill:var(--k1);stroke:var(--ground);stroke-width:2" }, s);
+  // direct solves
+  const Dd = DATA.direct;
+  sv("path", { d: Dd.map((p, i) => `${i ? "L" : "M"}${X(p[0])},${Y(p[1])}`).join(""), fill: "none", style: "stroke:var(--accent);stroke-width:1.2;stroke-dasharray:3 3" }, s);
+  Dd.forEach(p => sv("circle", { cx: X(p[0]), cy: Y(p[1]), r: 4.2, style: "fill:var(--accent);stroke:var(--ground);stroke-width:1.5" }, s));
+  const lab = (x, y, str, cls, anchor = "start") => tx(s, x, y, str, { class: cls, "text-anchor": anchor });
+  lab(X(39.0) + 9, Y(10000) + 4, "10⁴", "acc");
+  lab(X(38.78) + 9, Y(2828) + 4, "2828", "acc");
+  lab(X(38.45) + 9, Y(2000) + 4, "2000", "acc");
+  lab(X(38.34) + 9, Y(1000) + 4, "1000", "acc");
+  lab(X(38.18) + 9, Y(330) + 10, "250–400", "acc");
+  if (!narrow) {
+    lab(X(2.32) + 6, Y(60.96) - 7, "60.96", "");
+    lab(X(13.4), Y(78.1) - 8, "78.1 for a week", "", "middle");
+    lab(X(19.56) - 6, Y(193.77) - 8, "193.77", "", "end");
+    lab(X(35.12) - 2, Y(263.6) - 10, "263.6, paused", "ink", "end");
+    lab(X(37.2), Y(6000), "direct solves,", "acc", "end");
+    lab(X(37.2), Y(6000) + 14, "25 Nov", "acc", "end");
+  } else {
+    lab(X(35.12) - 2, Y(263.6) - 10, "263.6, paused", "ink", "end");
+  }
+  // hover
+  const pts = F.map(p => ({ x: X(p[0]), y: Y(p[1]), html: `<b>chain</b> · D = ${p[1]}<br>${timeOf(p[0] - 0)}` }))
+    .concat(Dd.map(p => ({ x: X(p[0]), y: Y(p[1]), html: `<b>direct solve</b> · D = ${p[2]}<br>posted ${timeOf(p[0])}` })));
+  const hit = sv("rect", { x: pl, y: pt, width: w - pl - pr + 30, height: h - pt - pb, fill: "transparent" }, s);
+  const ring = sv("circle", { r: 7, fill: "none", style: "stroke:var(--ink);stroke-width:1.5", visibility: "hidden" }, s);
+  hit.addEventListener("pointermove", ev => {
+    const r = s.getBoundingClientRect(), mx = ev.clientX - r.left, my = ev.clientY - r.top;
+    let b = null, bd = 1e9; for (const p of pts) { const dd = (p.x - mx) ** 2 + (p.y - my) ** 2 * 0.3; if (dd < bd) { bd = dd; b = p; } }
+    if (b && bd < 3000) { ring.setAttribute("cx", b.x); ring.setAttribute("cy", b.y); ring.setAttribute("visibility", "visible"); showTip(b.html, ev); }
+    else { ring.setAttribute("visibility", "hidden"); hideTip(); }
+  });
+  hit.addEventListener("pointerleave", () => { ring.setAttribute("visibility", "hidden"); hideTip(); });
+}
+document.getElementById("front-legend").innerHTML =
+  `<span><span class="sw bg-k1"></span>large-D chain, highest converged D</span><span><span class="sw" style="background:var(--accent)"></span>direct solves in the new formulation</span>`;
+
+/* ---------- sessions timeline ---------- */
+const formOn = [true, true, true, true, true];
+function formLegend(box, interactive) {
+  box.innerHTML = "";
+  FORMS.forEach((f, i) => {
+    const b = el(interactive ? "button" : "span", interactive ? { type: "button", "aria-pressed": "true" } : {}, `<span class="sw bg-f${i}"></span>${f}`);
+    if (interactive) b.addEventListener("click", () => {
+      const solo = formOn.filter(Boolean).length === 1 && formOn[i];
+      for (let j = 0; j < 5; j++) formOn[j] = solo ? true : j === i;
+      box.querySelectorAll("button").forEach((x, j) => x.setAttribute("aria-pressed", String(formOn[j])));
+      timeline();
+    });
+    box.appendChild(b);
+  });
+}
+const P = DATA.prompts;
+const perDay = {};
+P.day.forEach((d, i) => { const k = P.row[i] + ":" + Math.floor(d); (perDay[k] ||= [0, 0, 0, 0, 0])[P.form[i]]++; });
+const wallDays = {};
+DATA.walls.forEach(w => { (wallDays[Math.floor(w.day)] ||= []).push(w.n); });
+function timeline() {
+  const box = document.getElementById("timeline"); box.innerHTML = "";
+  const w = Math.max(760, box.clientWidth), lw = 200, pr = 12, top = 46, rh = 40, gap = 8, n = ROWS.length;
+  const h = top + n * (rh + gap) + 30;
+  const s = sv("svg", { viewBox: `0 0 ${w} ${h}`, height: h, role: "img", "aria-label": "Prompts over time by session component and form, with the walls marked." }, box);
+  const X = d => lw + (w - lw - pr) * d / 40;
+  for (let d = 0; d <= 40; d += 5) { sv("line", { x1: X(d), x2: X(d), y1: top - 6, y2: h - 26, class: "grid" }, s); tx(s, X(d), h - 10, dateOf(d), { "text-anchor": "middle" }); }
+  // walls
+  const days = Object.keys(wallDays).map(Number).sort((a, b) => a - b);
+  let tier = 0, lastX = -1e9;
+  days.forEach(dd => {
+    const x = X(dd + 0.5), ns = wallDays[dd], label = ns.length > 2 ? `${ns[0]}–${ns[ns.length - 1]}` : ns.join(" ");
+    sv("line", { x1: x, x2: x, y1: top - 4, y2: top + n * (rh + gap) - gap, class: "wallline" }, s);
+    tier = x - lastX < 34 ? 1 - tier : 0; lastX = x;
+    tx(s, x, tier ? 26 : 12, label, { "text-anchor": "middle", class: "acc" });
+  });
+  ROWS.forEach((name, r) => {
+    const y = top + r * (rh + gap);
+    sv("rect", { x: lw, y, width: w - lw - pr, height: rh, style: "fill:var(--surface)" }, s);
+    tx(s, lw - 10, y + rh / 2 - 2, name, { "text-anchor": "end", class: "ink" });
+    const cnt = r === 0 ? stat("component", "the chat") : P.row.filter(v => v === r).length;
+    tx(s, lw - 10, y + rh / 2 + 12, `${cnt} prompts`, { "text-anchor": "end" });
+  });
+  // the chat
+  const y0 = top, chatEnd = 8.66;
+  sv("rect", { x: X(0), y: y0 + 4, width: X(chatEnd) - X(0), height: rh - 8, style: "fill:var(--muted);opacity:0.22" }, s);
+  tx(s, X(0) + 6, y0 + rh / 2 + 4, "the chat on claude.ai, no times kept", { class: "ink" });
+  // ticks
+  const sub = (rh - 4) / 5;
+  const groups = FORMS.map((_, f) => sv("path", { d: "", style: `stroke:var(--f${f});stroke-width:1;opacity:${formOn[f] ? 0.85 : 0.08}` }, s));
+  const ds = FORMS.map(() => []);
+  P.day.forEach((d, i) => {
+    const r = P.row[i], f = P.form[i], y = top + r * (rh + gap) + 2 + f * sub;
+    ds[f].push(`M${X(d).toFixed(1)},${y.toFixed(1)}v${(sub - 1).toFixed(1)}`);
+  });
+  groups.forEach((g, f) => g.setAttribute("d", ds[f].join("")));
+  // hover
+  const hit = sv("rect", { x: lw, y: top, width: w - lw - pr, height: n * (rh + gap), fill: "transparent" }, s);
+  hit.addEventListener("pointermove", ev => {
+    const b = s.getBoundingClientRect(), sc = w / b.width, mx = (ev.clientX - b.left) * sc, my = (ev.clientY - b.top) * sc;
+    const r = Math.floor((my - top) / (rh + gap)), day = Math.floor((mx - lw) / (w - lw - pr) * 40);
+    if (r < 0 || r >= n || day < 0 || day > 40) return hideTip();
+    let html = `<b>${ROWS[r]}</b> · ${dateOf(day)}<br>`;
+    if (r === 0) html += day <= 8 ? "the chat's prompts kept no times" : "the chat ended at the handoff, 26 Oct 15:53 UTC";
+    else {
+      const c = perDay[r + ":" + day];
+      html += c ? FORMS.map((f, i) => c[i] ? `${c[i]} ${f}` : "").filter(Boolean).join("<br>") : "no prompts";
+    }
+    if (wallDays[day]) html += `<br><span style="color:var(--accent)">wall ${wallDays[day].join(", ")}</span>`;
+    showTip(html, ev);
+  });
+  hit.addEventListener("pointerleave", hideTip);
+}
+
+/* ---------- walls ---------- */
+const walls = DATA.walls, graphs = DATA.graphs;
+const strip = document.getElementById("strip");
+walls.forEach(w => {
+  const k = KIND_OF[w.idea_kind];
+  const b = el("button", { type: "button", "aria-pressed": "false", "aria-label": `Wall ${w.n}, ${dateOf(Math.floor(w.day))}, ${KINDS[k]}`, style: `--k:var(--k${k})` });
+  if (k === 0) b.classList.add("phys");
+  b.appendChild(glyph(k)); b.appendChild(el("span", {}, String(w.n)));
+  b.addEventListener("click", () => select(w.n, false));
+  strip.appendChild(b);
+});
+strip.appendChild(el("div", { class: "ends", style: "grid-column:1 / 7" }, "physics at 2, 3, 6"));
+strip.appendChild(el("div", { class: "run" }, "walls 7 to 34: 28 in a row, none passed by a physical idea"));
+strip.appendChild(el("div", { class: "ends", style: "grid-column:35 / 41; text-align:right" }, "physics at 35, 37, 40"));
+kindLegend(document.getElementById("kind-legend"));
+
+let selected = 3;
+function openGraph(i) {
+  const g = graphs[i];
+  document.getElementById("viewer-title").innerHTML = `${cap(g.name)}<span class="mono">wall ${g.wall} · day ${g.day} · ${g.file} at ${g.commit}${g.later ? " · drawn after the next wall began" : ""}</span>`;
+  const img = document.getElementById("viewer-img"); img.src = g.src; img.alt = g.name;
+  const d = document.getElementById("viewer");
+  if (d.showModal) d.showModal(); else d.setAttribute("open", "");
+}
+document.getElementById("viewer-close").addEventListener("click", () => document.getElementById("viewer").close());
+document.getElementById("viewer").addEventListener("click", ev => { if (ev.target.id === "viewer") ev.target.close(); });
+const cap = s => s.charAt(0).toUpperCase() + s.slice(1);
+
+function select(n, scroll) {
+  selected = n;
+  const w = walls[n - 1], k = KIND_OF[w.idea_kind], turning = !w.stuck;
+  strip.querySelectorAll("button").forEach((b, i) => b.setAttribute("aria-pressed", String(i === n - 1)));
+  const card = document.getElementById("card");
+  card.style.setProperty("--card-k", `var(--k${k})`);
+  const thumbs = w.graphs.map(i => `<button type="button" data-g="${i}" aria-label="Open the graph: ${graphs[i].name}"><img src="${graphs[i].src}" alt="" loading="lazy"><span>${graphs[i].name}<br>day ${graphs[i].day}${graphs[i].later ? ", later" : ""}</span></button>`).join("");
+  card.innerHTML = `
+    <div class="head"><h3>Wall ${w.n}</h3><span class="label">${w.when} · day ${Math.floor(w.day)}</span><span class="label">stalled: ${STALLED[w.wall_kind]}</span></div>
+    <div class="cols">
+      <div><h4>${turning ? "A turning point" : "What stuck"}</h4><p>${turning ? "No wall: a new goal or a review of the course." : cap(w.stuck)}</p></div>
+      <div><h4>${turning ? "His prompt" : "Moved by"}</h4><p>${w.moved}</p></div>
+      <div><h4>${turning ? "What followed" : "Resolution"}</h4><p>${cap(w.resolution)}</p></div>
+      <div><h4>What changed</h4><p>${cap(w.changed)}</p></div>
+    </div>
+    <div class="idea">
+      <div><h4>The idea that passed it</h4><p style="margin-top:0.3rem">From <b>${WHO[w.idea_from]}</b>: ${w.note}.</p>
+        <div class="codes"><span>kind <b>${KINDS[k]}</b></span><span>moved first by <b>${MOVED[w.moved_first_by]}</b></span>${w.push ? `<span>the prompt carried <b>${CARRIED[w.push]}</b></span>` : ""}<span>held <b>${w.held}</b></span></div></div>
+      ${thumbs ? `<div class="thumbs">${thumbs}</div>` : ""}
+    </div>
+    <div class="nav"><button type="button" data-step="-1" ${n === 1 ? "disabled" : ""}>← wall ${n - 1 || ""}</button><button type="button" data-step="1" ${n === 40 ? "disabled" : ""}>wall ${n < 40 ? n + 1 : ""} →</button></div>`;
+  card.querySelectorAll("[data-g]").forEach(b => b.addEventListener("click", () => openGraph(+b.dataset.g)));
+  card.querySelectorAll("[data-step]").forEach(b => b.addEventListener("click", () => select(Math.min(40, Math.max(1, n + +b.dataset.step)), false)));
+  lanes();
+  if (scroll) { const r = card.getBoundingClientRect(); if (r.top < 0 || r.top > innerHeight - 120) card.scrollIntoView({ behavior: reduce ? "auto" : "smooth", block: "nearest" }); }
+}
+
+function lanes() {
+  const box = document.getElementById("lanes"); box.innerHTML = "";
+  const w = box.clientWidth, narrow = w < 600, lw = narrow ? 92 : 170, pr = 14, top = 14, lh = narrow ? 60 : 70, h = top + 4 * lh + 34;
+  const s = sv("svg", { viewBox: `0 0 ${w} ${h}`, height: h, role: "img", "aria-label": "The forty walls in time by who supplied the idea." }, box);
+  const X = d => lw + (w - lw - pr) * d / 39.5, Y = y => top + (3.5 - y) * lh;
+  for (let d = 0; d <= 35; d += narrow ? 10 : 5) { sv("line", { x1: X(d), x2: X(d), y1: top, y2: top + 4 * lh, class: "grid" }, s); tx(s, X(d), h - 12, dateOf(d), { "text-anchor": "middle" }); }
+  LANES.forEach((name, i) => {
+    sv("line", { x1: lw, x2: w - pr, y1: Y(i), y2: Y(i), class: "hair" }, s);
+    tx(s, lw - 10, Y(i) + 4, narrow ? ["runner, protocol", "subagents", "coordinator", "Nathan"][i] : name, { "text-anchor": "end", class: "ink" });
+  });
+  const r = narrow ? 5.5 : 6.5;
+  walls.forEach(wl => {
+    const lane = Math.round(wl.y), y = Y(lane + (wl.y - lane) * 1.45), x = X(wl.day);
+    const g = sv("g", { style: "cursor:pointer" }, s);
+    sv("circle", { cx: x, cy: y, r: 12, fill: "transparent" }, g);
+    if (wl.n === selected) sv("circle", { cx: x, cy: y, r: r + 5, fill: "none", style: "stroke:var(--ink);stroke-width:1.5" }, g);
+    shape(g, wl.kind, x, y, r, { class: "k" + wl.kind, style: "stroke:var(--ground);stroke-width:1.5" });
+    g.addEventListener("pointermove", ev => showTip(`<b>wall ${wl.n}</b> · ${wl.when}<br>${KINDS[wl.kind]} · from ${WHO[wl.idea_from]}<br>${wl.stuck || "a turning point"}`, ev));
+    g.addEventListener("pointerleave", hideTip);
+    g.addEventListener("click", () => { hideTip(); select(wl.n, true); });
+  });
+}
+
+/* ---------- ideas ---------- */
+function barRow(name, segs, total, then, max) {
+  const row = el("div", { class: "bar" });
+  row.appendChild(el("div", { class: "name" }, name));
+  const tr = el("div", { class: "track" });
+  segs.forEach(([v, cls, label]) => { if (!v) return; const sg = el("div", { class: "seg " + cls, style: `width:calc(${(v / max) * 100}% - 2px)`, title: label }); if (v / max > 0.07) sg.appendChild(el("span", {}, String(v))); tr.appendChild(sg); });
+  tr.appendChild(el("span", { class: "tot" }, String(total)));
+  if (then) tr.appendChild(el("span", { class: "then" }, then));
+  row.appendChild(tr);
+  return row;
+}
+(function ideas() {
+  const lane = f => f.startsWith("subagent") ? "subagents" : f === "me" ? "Nathan" : f === "coordinator" ? "the coordinator" : "a runner or protocol";
+  const order = ["the coordinator", "subagents", "Nathan", "a runner or protocol"];
+  const box = document.getElementById("who-bars");
+  const leg = el("div", { class: "legend" }); kindLegend(leg); box.appendChild(leg);
+  order.forEach(o => {
+    const c = [0, 1, 2, 3].map(k => walls.filter(w => lane(w.idea_from) === o && KIND_OF[w.idea_kind] === k).length);
+    box.appendChild(barRow(o, c.map((v, k) => [v, "bg-k" + k, KINDS[k]]), c.reduce((a, b) => a + b), "", 22));
+  });
+  const kt = [0, 1, 2, 3].map(k => walls.filter(w => KIND_OF[w.idea_kind] === k).length);
+  document.getElementById("kind-tot").textContent = `All forty: numerical methods ${kt[1]}, computing ${kt[2]}, physics or mathematics ${kt[0]}, process ${kt[3]}. Subagents include the two literature subagents.`;
+  const cb = document.getElementById("carried-bars");
+  const pushed = walls.filter(w => w.moved_first_by === "prompt");
+  const kinds = [...new Set(pushed.map(w => w.push))].map(p => [p, pushed.filter(w => w.push === p)]).sort((a, b) => b[1].length - a[1].length);
+  kinds.forEach(([p, ws]) => {
+    const by = {}; ws.forEach(w => { const l = lane(w.idea_from); by[l] = (by[l] || 0) + 1; });
+    const then = Object.entries(by).sort((a, b) => b[1] - a[1]).map(([l, v]) => `${l} ${v}`).join(", ");
+    cb.appendChild(barRow(CARRIED[p].replace(/^a /, "").replace("request for an ", ""), [[ws.length, "", ""]], ws.length, then + (p === "physics or math" ? ", neither lasting" : ""), 11));
+  });
+  cb.querySelectorAll(".seg").forEach(sg => sg.style.background = "var(--ink)");
+  const sk = {}; walls.forEach(w => sk[w.wall_kind] = (sk[w.wall_kind] || 0) + 1);
+  document.getElementById("stalled").textContent = `What stalled: the solver at ${sk.solver} walls, the arithmetic at ${sk.arithmetic}, the cost at ${sk.cost}, the checks at ${sk.checks}, the physics at ${sk.physics} (the missing formula and the mass mode) and the setup at ${sk.setup}. The other ${sk.direction} were turning points with no wall. For three weeks the mass mode had been read as a property of Einstein's equations and met with more digits.`;
+})();
+
+/* ---------- prompts ---------- */
+(function prompts() {
+  const wb = document.getElementById("word-bars");
+  [["5 words or fewer", "5 or fewer"], ["6 to 20", "6 to 20"], ["21 to 50", "21 to 50"], ["over 50", "over 50"]].forEach(([lab, key]) => {
+    const v = +stat("words", key);
+    const row = barRow(lab, [[v, "", ""]], v, `${Math.round(v / 1593 * 100)}%`, 929);
+    row.querySelector(".seg").style.background = "var(--ink)";
+    wb.appendChild(row);
+  });
+  formLegend(document.getElementById("form-legend2"), false);
+  const fs = document.getElementById("form-stacks");
+  const keys = ["instruction or statement", "question: why, what or how", "question: whether, can we, should we", "go-ahead or choice", "check-in"];
+  [["all 1593 in Claude Code", "form, all prompts"], ["the 145 that changed the course", "form, course-changing prompts"], ["the chat's 523", "form, the chat"]].forEach(([lab, t]) => {
+    const v = keys.map(k => +stat(t, k)), tot = v.reduce((a, b) => a + b);
+    const row = el("div", { class: "stackrow" }); row.appendChild(el("div", { class: "name" }, lab));
+    const st = el("div", { class: "stack" });
+    v.forEach((x, i) => { if (!x) return; const d = el("div", { class: "bg-f" + i, style: `flex:${x} 1 0`, title: `${FORMS[i]}: ${x}` }); const pct = Math.round(x / tot * 100); if (pct >= 8) d.appendChild(el("span", {}, pct + "%")); st.appendChild(d); });
+    row.appendChild(st); fs.appendChild(row);
+  });
+  const tb = document.querySelector("#comp-table tbody");
+  ["the chat", "coordinator sessions", "the libraries", "channel, tracker and housekeeping", "the Mac runner", "this paper, the film and the one-prompt trial", "short sessions"].forEach(k => {
+    const ses = stat("component sessions", k), dates = stat("component dates", k);
+    const fmt = s => s ? s.split(" to ").map(x => { const [y, m, d] = x.split("-"); return `${+d} ${MON[m - 1]}`; }).join(" to ") : "";
+    tb.appendChild(el("tr", {}, `<td>${k}</td><td class="n">${k === "the chat" ? "–" : ses}</td><td>${k === "the chat" ? "the first week, to the handoff on 26 Oct" : fmt(dates)}</td><td class="n">${stat("component", k)}</td>`));
+  });
+  tb.appendChild(el("tr", {}, `<td><b>all</b></td><td class="n">${stat("count", "sessions")} + the chat</td><td></td><td class="n"><b>${stat("component", "all")}</b></td>`));
+})();
+
+/* ---------- gallery and story figures ---------- */
+(function gallery() {
+  const box = document.getElementById("gallery");
+  graphs.forEach((g, i) => {
+    const f = el("figure");
+    const b = el("button", { type: "button", "aria-label": "Open the graph: " + g.name }, `<img src="${g.src}" alt="${g.name}" loading="lazy">`);
+    b.addEventListener("click", () => openGraph(i));
+    f.appendChild(b);
+    f.appendChild(el("figcaption", {}, `${cap(g.name)}<span class="where"><b>wall ${g.wall}</b> · day ${g.day} · ${g.file} at ${g.commit}${g.later ? " · drawn after the next wall began" : ""}</span>`));
+    box.appendChild(f);
+  });
+  document.querySelectorAll(".story figure[data-graph]").forEach(f => {
+    const i = graphs.findIndex(g => g.file === f.dataset.graph), g = graphs[i];
+    const b = el("button", { type: "button", "aria-label": "Open the graph: " + g.name }, `<img src="${g.src}" alt="${g.name}" loading="lazy">`);
+    b.addEventListener("click", () => openGraph(i));
+    f.appendChild(b);
+    f.appendChild(el("figcaption", {}, `${cap(g.name)}. Wall ${g.wall}, day ${g.day}.`));
+  });
+})();
+
+/* ---------- start ---------- */
+formLegend(document.getElementById("form-legend"), true);
+readout(); drawCurve(); drawEcho(shown); frontier(); timeline(); select(3, false);
+let rz = 0, lastW = document.body.clientWidth;
+new ResizeObserver(() => { if (document.body.clientWidth === lastW) return; lastW = document.body.clientWidth; cancelAnimationFrame(rz); rz = requestAnimationFrame(() => { drawEcho(shown); drawCurve(); frontier(); timeline(); lanes(); }); }).observe(document.body);
+matchMedia("(prefers-color-scheme: dark)").addEventListener("change", () => drawEcho(shown));
+new MutationObserver(() => drawEcho(shown)).observe(document.documentElement, { attributes: true, attributeFilter: ["data-theme"] });
+})();
+</script>

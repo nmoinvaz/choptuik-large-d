@@ -1,0 +1,56 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="980" height="370" viewBox="0 0 980 370" font-family="system-ui, sans-serif">
+<style>@media (prefers-color-scheme: dark){[fill="#fcfcfb"]{fill:#201f1d}[stroke="#fcfcfb"]{stroke:#201f1d}[fill="#0b0b0b"]{fill:#e8e6e3}[stroke="#0b0b0b"]{stroke:#e8e6e3}[fill="#52514e"]{fill:#a8a49d}[stroke="#52514e"]{stroke:#a8a49d}[fill="#e7e6e2"]{fill:#343230}[stroke="#e7e6e2"]{stroke:#343230}[fill="#c98500"]{fill:#d69a2d}[stroke="#c98500"]{stroke:#d69a2d}[fill="#eb6834"]{fill:#dd5c26}[stroke="#eb6834"]{stroke:#dd5c26}[fill="#eda100"]{fill:#c08800}[stroke="#eda100"]{stroke:#c08800}[fill="#e87ba4"]{fill:#d1678f}[stroke="#e87ba4"]{stroke:#d1678f}[fill="#4a3aa7"]{fill:#7263cf}[stroke="#4a3aa7"]{stroke:#7263cf}[fill="#a6339a"]{fill:#c257b5}[stroke="#a6339a"]{stroke:#c257b5}[fill="#7a7668"]{fill:#948e82}[stroke="#7a7668"]{stroke:#948e82}}</style>
+<rect width="980" height="370" fill="#fcfcfb"/>
+<text x="16.0" y="22.0" font-size="12" fill="#0b0b0b" text-anchor="start" font-weight="normal">How far each solver reaches in D, and what stops it</text>
+<text x="16.0" y="38.0" font-size="10" fill="#52514e" text-anchor="start" font-weight="normal">rows of hp/data/delta_all.csv by solver and precision; rings mark the measured limits</text>
+<text x="16.0" y="52.0" font-size="10" fill="#52514e" text-anchor="start" font-weight="normal">Inside the octo-double chain, the double-double horizon rows are rounding noise past order ~100 near D 229 (#903).</text>
+<line x1="300.0" y1="78.0" x2="300.0" y2="282.0" stroke="#e7e6e2" stroke-width="1"/>
+<text x="300.0" y="297.0" font-size="11" fill="#52514e" text-anchor="middle" font-weight="normal" font-variant-numeric="tabular-nums">0</text>
+<line x1="446.0" y1="78.0" x2="446.0" y2="282.0" stroke="#e7e6e2" stroke-width="1"/>
+<text x="446.0" y="297.0" font-size="11" fill="#52514e" text-anchor="middle" font-weight="normal" font-variant-numeric="tabular-nums">100</text>
+<line x1="592.0" y1="78.0" x2="592.0" y2="282.0" stroke="#e7e6e2" stroke-width="1"/>
+<text x="592.0" y="297.0" font-size="11" fill="#52514e" text-anchor="middle" font-weight="normal" font-variant-numeric="tabular-nums">200</text>
+<line x1="738.0" y1="78.0" x2="738.0" y2="282.0" stroke="#e7e6e2" stroke-width="1"/>
+<text x="738.0" y="297.0" font-size="11" fill="#52514e" text-anchor="middle" font-weight="normal" font-variant-numeric="tabular-nums">300</text>
+<line x1="884.0" y1="78.0" x2="884.0" y2="282.0" stroke="#e7e6e2" stroke-width="1"/>
+<text x="884.0" y="297.0" font-size="11" fill="#52514e" text-anchor="middle" font-weight="normal" font-variant-numeric="tabular-nums">400</text>
+<line x1="300.0" y1="265.0" x2="884.0" y2="265.0" stroke="#e7e6e2" stroke-width="1"/>
+<text x="294.0" y="269.0" font-size="11" fill="#52514e" text-anchor="end" font-weight="normal" font-variant-numeric="tabular-nums">1/n series fit: an extrapolation, not a solve</text>
+<line x1="300.0" y1="231.0" x2="884.0" y2="231.0" stroke="#e7e6e2" stroke-width="1"/>
+<text x="294.0" y="235.0" font-size="11" fill="#52514e" text-anchor="end" font-weight="normal" font-variant-numeric="tabular-nums">ANM chain, octo-double corrector</text>
+<line x1="300.0" y1="197.0" x2="884.0" y2="197.0" stroke="#e7e6e2" stroke-width="1"/>
+<text x="294.0" y="201.0" font-size="11" fill="#52514e" text-anchor="end" font-weight="normal" font-variant-numeric="tabular-nums">ANM chain, quad-double corrector</text>
+<line x1="300.0" y1="163.0" x2="884.0" y2="163.0" stroke="#e7e6e2" stroke-width="1"/>
+<text x="294.0" y="167.0" font-size="11" fill="#52514e" text-anchor="end" font-weight="normal" font-variant-numeric="tabular-nums">quad-double scan (scan_qd.py)</text>
+<line x1="300.0" y1="129.0" x2="884.0" y2="129.0" stroke="#e7e6e2" stroke-width="1"/>
+<text x="294.0" y="133.0" font-size="11" fill="#52514e" text-anchor="end" font-weight="normal" font-variant-numeric="tabular-nums">double-double, pinned runs</text>
+<line x1="300.0" y1="95.0" x2="884.0" y2="95.0" stroke="#e7e6e2" stroke-width="1"/>
+<text x="294.0" y="99.0" font-size="11" fill="#52514e" text-anchor="end" font-weight="normal" font-variant-numeric="tabular-nums">double-double (hp/, M ≤ 384)</text>
+<line x1="300.0" y1="282.0" x2="884.0" y2="282.0" stroke="#52514e" stroke-width="1"/>
+<line x1="300.0" y1="78.0" x2="300.0" y2="282.0" stroke="#52514e" stroke-width="1"/>
+<text x="592.0" y="316.0" font-size="12" fill="#0b0b0b" text-anchor="middle" font-weight="normal">spacetime dimension D</text>
+<text x="-5.1" y="180.0" font-size="12" fill="#0b0b0b" text-anchor="middle" transform="rotate(-90 -5.1 180.0)">solver</text>
+<rect x="304.4" y="87.00" width="94.5" height="16.00" rx="2" fill="#2a78d6"><title>double-double (hp/, M ≤ 384): 1261 rows, D 3.04335 to 67.7671</title></rect>
+<text x="351.7" y="98.5" font-size="10" fill="#ffffff" text-anchor="middle" font-weight="normal" font-variant-numeric="tabular-nums">3.043 – 67.77</text>
+<rect x="398.9" y="121.00" width="8.0" height="16.00" rx="2" fill="#eb6834"><title>double-double, pinned runs: 883 rows, D 67.7676 to 73.2657</title></rect>
+<rect x="400.0" y="155.00" width="6.6" height="16.00" rx="2" fill="#1baf7a"><title>quad-double scan (scan_qd.py): 7 rows, D 68.5 to 73</title></rect>
+<rect x="408.0" y="189.00" width="205.1" height="16.00" rx="2" fill="#eda100"><title>ANM chain, quad-double corrector: 145 rows, D 74 to 214.5</title></rect>
+<text x="510.6" y="200.5" font-size="10" fill="#0b0b0b" text-anchor="middle" font-weight="normal" font-variant-numeric="tabular-nums">74 – 214.5</text>
+<rect x="613.3" y="223.00" width="66.1" height="16.00" rx="2" fill="#4a3aa7"><title>ANM chain, octo-double corrector: 198 rows, D 214.6 to 259.899</title></rect>
+<text x="646.4" y="234.5" font-size="10" fill="#ffffff" text-anchor="middle" font-weight="normal" font-variant-numeric="tabular-nums">215–260</text>
+<rect x="665.0" y="257.00" width="219.0" height="16.00" rx="2" fill="#7a7668"><title>1/n series fit: an extrapolation, not a solve: 16 rows, D 250 to 400</title></rect>
+<text x="774.5" y="268.5" font-size="10" fill="#ffffff" text-anchor="middle" font-weight="normal" font-variant-numeric="tabular-nums">250 – 400</text>
+<circle cx="304.4" cy="95.0" r="10" fill="none" stroke="#0b0b0b" stroke-width="1.5"/>
+<line x1="314.1" y1="97.5" x2="434.4" y2="129.0" stroke="#0b0b0b" stroke-width="1"/>
+<text x="438.4" y="133.0" font-size="11" fill="#0b0b0b" text-anchor="start" font-weight="bold">sonic closing, D 3.0431</text>
+<circle cx="613.2" cy="214.0" r="10" fill="none" stroke="#0b0b0b" stroke-width="1.5"/>
+<line x1="619.4" y1="206.1" x2="653.2" y2="163.0" stroke="#0b0b0b" stroke-width="1"/>
+<text x="657.2" y="167.0" font-size="11" fill="#0b0b0b" text-anchor="start" font-weight="bold">quad-double floor &gt; 1e-28 at D 214.5</text>
+<circle cx="679.5" cy="231.0" r="10" fill="none" stroke="#0b0b0b" stroke-width="1.5"/>
+<line x1="682.6" y1="221.5" x2="719.5" y2="112.0" stroke="#0b0b0b" stroke-width="1"/>
+<text x="723.5" y="116.0" font-size="11" fill="#0b0b0b" text-anchor="start" font-weight="bold">fold, D* 259.90</text>
+<g opacity="0.35"><line x1="896.0" y1="282.0" x2="954.0" y2="282.0" stroke="#52514e" stroke-width="2"/><polygon points="960.0,282.0 951.0,286.0 951.0,278.0" fill="#52514e"/><text x="928.0" y="275.0" font-size="11" fill="#52514e" text-anchor="middle" transform="rotate(0.0 928.0 282.0)">farther</text></g>
+<text x="16.0" y="358.0" font-size="10" fill="#52514e" text-anchor="start" font-weight="normal">drawn on Apple M5, 32 GB, macOS 27.0.1</text>
+<text x="16.0" y="344.0" font-size="10" fill="#52514e" text-anchor="start" font-weight="normal">hp/data/delta_all.csv, fold_259.csv at 80b944ff  ·  sonic closing: raw I933-win2  ·  chain correctors: T138-win2 logs</text>
+<a href="https://github.com/nmoinvaz/choptuik-large-d"><text x="964" y="358" font-size="10" fill="#52514e" text-anchor="end" text-decoration="underline">github.com/nmoinvaz/choptuik-large-d</text></a>
+</svg>
