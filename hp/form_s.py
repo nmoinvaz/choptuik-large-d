@@ -74,6 +74,15 @@ def make_solver_s(D, M, nodes, kt=36, kc=40, ks=120, threads=0, kfreeze=None, se
         if not hasattr(s, "set_horizon_mobius"):
             raise SystemExit("this hpkernel has no set_horizon_mobius (form_s.rs's Moebius horizon); rebuild hp")
         s.set_horizon_mobius(float(mob))
+    # HP_HORIZON_RELAXED=1: the Moebius series' Cauchy sums as relaxed products, in the residuals and in the Jacobian's
+    # horizon columns (#1096; their bits differ from the term-by-term sums' at the precision's rounding)
+    relaxed = os.environ.get("HP_HORIZON_RELAXED", "0")
+    if relaxed not in ("", "0"):
+        if hasattr(s, "set_horizon_relaxed"):
+            s.set_horizon_relaxed(int(relaxed))
+        else:
+            print("note: HP_HORIZON_RELAXED is set, but this hpkernel has no set_horizon_relaxed (#1096): the horizon "
+                  "series' sums run term by term", flush=True)
     return s
 
 
