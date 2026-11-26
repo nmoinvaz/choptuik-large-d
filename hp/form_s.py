@@ -1277,9 +1277,12 @@ def cmd_release_ls(argv):
                 if (conv or floor) and nt < nr:
                     acc = True
                     break
-                if floor and jk in ("dd", "qd"):
-                    # an inner floor above the target: smaller steps only lower that floor slowly (as lam^4 at D 2000's
-                    # h13), so the harmonic moves to the next Jacobian precision at once (below) instead of halving
+                if (floor or not conv) and jk in ("dd", "qd"):
+                    # an inner solve that stopped above the target, at its floor or at a rejected step (D 1000's h15
+                    # with the qd Jacobian: "not converged in 3 steps" at 1.7e-38 against 1.3e-42): smaller steps only
+                    # lower that level slowly (as lam^4 at D 2000's h13), so the harmonic moves to the next Jacobian
+                    # precision at once (below) instead of halving
+                    trials[-1]["inner_floor"] = True
                     break
                 lam *= 0.5
             if acc:
