@@ -1,21 +1,17 @@
 //! A block of the exact Jacobian from the column tasks that reach it: J[rows, cols] in any precision, bit for bit the
-//! entries of `model::jacobian_in` there. hp/reseed.py's rung block (the horizon block's m and a rows by the 2M
-//! horizon-data columns) then costs the horizon block's columns only, not the centre series' and the segments'.
-use crate::model::{Ctx, Dss};
-use multidouble::field::Fl;
+//! entries of `model::jacobian_in` there, and F[rows] likewise of `model::residual_in`, by multishoot's
+//! `Shooting::jacobian_sub` and `Shooting::residual_sub`. hp/reseed.py's rung block (the horizon block's m and a rows
+//! by the 2M horizon-data columns) then costs the horizon block's columns only, not the centre series' and the
+//! segments'.
+use crate::model::Ctx;
 use multidouble::precision::Precision;
 use multidouble::simd::Native;
-use multishoot::jacobian::Seed;
-use multishoot::{Equations, State};
-use rayon::prelude::*;
-use std::collections::HashMap;
 
 /// J[rows[i], cols[j]] at z in P, as PARTS part arrays of rows.len() x cols.len() entries, row-major, bit for bit the
-/// entries of `jacobian_in::<P>` (multishoot's `Shooting::jacobian`) there. Only the column tasks (`jac_tasks`) whose
-/// block's rows meet `rows` and whose columns meet `cols` are evaluated, by `jac_column` with the globals and the
-/// preparation `jacobian` uses, and each entry is assembled in the order of multishoot's `assemble`: the column's
-/// value (zero where no task writes), the target's -1, then the extra (phase) row's weights. A context with frozen
-/// rows (Ctx::freeze) or a row scaling is refused, since their projection and scaling mix a column's entries.
+/// entries of `jacobian_in::<P>` (multishoot's `Shooting::jacobian`) there: multishoot's `Shooting::jacobian_sub`, which
+/// evaluates only the column tasks whose block's rows meet `rows` and whose columns meet `cols`. A context with frozen
+/// rows (Ctx::freeze) or a row scaling is refused, as before multishoot formed the block: multishoot's version applies
+/// their projection and scaling, but no hp check has compared it with the full Jacobian on such a context.
 pub fn jacobian_sub_in<P: Precision<Native>, const B: usize>(
     ctx: &Ctx<B>,
     z: &[&[f64]],
@@ -25,91 +21,16 @@ pub fn jacobian_sub_in<P: Precision<Native>, const B: usize>(
 ) -> Result<Vec<Vec<f64>>, String> {
     let sh = ctx.shooting_in::<P>();
     sh.check_z::<P>(z)?;
-    if !sh.is_square() {
-        return Err(format!("jacobian_sub: {} rows for {} unknowns", sh.rows(), sh.len()));
-    }
-    if !sh.projected.is_empty() || !sh.row_scale.is_empty() {
+    if sh.is_square() && (!sh.projected.is_empty() || !sh.row_scale.is_empty()) {
         return Err("jacobian_sub: frozen rows (kfreeze) or a row scaling mix a column's entries; use the full Jacobian".into());
     }
-    let l = sh.len();
-    if let Some(&bad) = rows.iter().chain(cols).find(|&&i| i >= l) {
-        return Err(format!("jacobian_sub: index {bad} out of range for {l} unknowns"));
-    }
-    let m = Ctx::<B>::M;
-    let nr_block = <Dss<'static, B> as Equations<B>>::NF * m;
-    let k = sh.k();
-    // the block whose rows hold row r; None for the extra rows
-    let block_of = |r: usize| (0..=k).find(|&b| r >= sh.row_block(b) && r < sh.row_block(b) + nr_block);
-    let tasks = sh.jac_tasks();
-    // (block, column) -> (task, the column's place among the task's columns)
-    let mut owner: HashMap<(usize, usize), (usize, usize)> = HashMap::new();
-    for (ti, &(b, seed)) in tasks.iter().enumerate() {
-        for (jj, c) in sh.seed_columns(b, seed).into_iter().enumerate() {
-            owner.insert((b, c), (ti, jj));
-        }
-    }
-    let rb: Vec<Option<usize>> = rows.iter().map(|&r| block_of(r)).collect();
-    let owner = &owner;
-    let mut need: Vec<usize> = rb
-        .iter()
-        .flatten()
-        .flat_map(|&b| cols.iter().filter_map(move |&c| owner.get(&(b, c)).map(|&(ti, _)| ti)))
-        .collect();
-    need.sort_unstable();
-    need.dedup();
-    let g = sh.globals::<P>(z);
-    // multishoot's `prep` (pub(crate)) is this outside Control::InfalliblePrepare, which hp never sets
-    let prep = sh.eq.try_prepare(z[0], z[1])?;
-    let column = |ti: &usize| sh.jac_column::<P>(z, &g, &prep, tasks[*ti]);
-    let vals: Vec<Vec<P::Scalar>> = if par { need.par_iter().map(column).collect() } else { need.iter().map(column).collect() };
-    let at: HashMap<usize, usize> = need.iter().enumerate().map(|(i, &ti)| (ti, i)).collect();
-    let (nr, nc) = (rows.len(), cols.len());
-    let mut out: Vec<Vec<f64>> = (0..P::PARTS).map(|_| vec![0.0; nr * nc]).collect();
-    let re = sh.row_extra();
-    let mut v = vec![0.0; P::PARTS];
-    let set = |v: &mut [f64], x: P::Scalar| {
-        for (q, vq) in v.iter_mut().enumerate() {
-            *vq = P::part(x, q);
-        }
-    };
-    for (i, &r) in rows.iter().enumerate() {
-        for (j, &c) in cols.iter().enumerate() {
-            v.iter_mut().for_each(|x| *x = 0.0);
-            if let Some(b) = rb[i] {
-                let r0 = sh.row_block(b);
-                let rr = r - r0;
-                if let Some(&(ti, jj)) = owner.get(&(b, c)) {
-                    // a pointwise task's column jj holds point jj of every output field only (multishoot's assemble)
-                    if !matches!(tasks[ti].1, Seed::Points(_)) || rr % m == jj {
-                        set(&mut v, vals[at[&ti]][rr]);
-                    }
-                }
-                if c == sh.block_target(b) + rr {
-                    let s = P::from_raw(&v) + (-P::ONE);
-                    set(&mut v, s);
-                }
-            } else if r >= re && r - re < sh.extra.len() {
-                for &(ci, w) in &sh.extra[r - re].terms {
-                    if ci == c {
-                        let s = P::from_raw(&v) + P::from_dd(w);
-                        set(&mut v, s);
-                    }
-                }
-            }
-            for (q, oq) in out.iter_mut().enumerate() {
-                oq[i * nc + j] = v[q];
-            }
-        }
-    }
-    Ok(out)
+    sh.jacobian_sub::<P>(z, rows, cols, par)
 }
 
 /// F[rows[i]] at z in P, as P::PARTS part arrays of rows.len() entries, bit for bit the entries of `residual_in::<P>`
-/// (multishoot's `Shooting::residual`) there. Only the blocks whose rows meet `rows` are evaluated, each by
-/// `block_state` with the globals and the preparation `residual` uses, and each row is its block's state minus the
-/// target node's field, as `residual` forms it; an extra (phase) row is `extra_row`. hp/reseed.py's rung residual
-/// then skips the centre series (block 0) and the segment (block 1). A context with frozen rows (Ctx::freeze) or a
-/// row scaling is refused, as by `jacobian_sub_in`; multishoot's ShiftRow control, which hp never sets, is not applied.
+/// (multishoot's `Shooting::residual`) there: multishoot's `Shooting::residual_sub`, which evaluates only the blocks
+/// whose rows meet `rows`. hp/reseed.py's rung residual then skips the centre series (block 0) and the segment (block
+/// 1). A context with frozen rows (Ctx::freeze) or a row scaling is refused, as by `jacobian_sub_in`.
 pub fn residual_sub_in<P: Precision<Native>, const B: usize>(
     ctx: &Ctx<B>,
     z: &[&[f64]],
@@ -121,48 +42,7 @@ pub fn residual_sub_in<P: Precision<Native>, const B: usize>(
     if !sh.projected.is_empty() || !sh.row_scale.is_empty() {
         return Err("residual_sub: frozen rows (kfreeze) or a row scaling act on whole rows; use the full residual".into());
     }
-    let nrows = sh.rows();
-    if let Some(&bad) = rows.iter().find(|&&r| r >= nrows) {
-        return Err(format!("residual_sub: row {bad} out of range for {nrows} rows"));
-    }
-    let m = Ctx::<B>::M;
-    let nr_block = <Dss<'static, B> as Equations<B>>::NF * m;
-    let k = sh.k();
-    let block_of = |r: usize| (0..=k).find(|&b| r >= sh.row_block(b) && r < sh.row_block(b) + nr_block);
-    let rb: Vec<Option<usize>> = rows.iter().map(|&r| block_of(r)).collect();
-    let mut need: Vec<usize> = rb.iter().flatten().copied().collect();
-    need.sort_unstable();
-    need.dedup();
-    let mut states = HashMap::new();
-    if !need.is_empty() {
-        let g: Vec<P::V> = sh.globals::<P>(z).into_iter().map(P::splat).collect();
-        // multishoot's `prep` (pub(crate)) is this outside Control::InfalliblePrepare, which hp never sets
-        let prep = sh.eq.try_prepare(z[0], z[1])?;
-        let one = |b: &usize| {
-            let inp: Vec<Fl<P::V, B>> = sh.block_inputs(*b).iter().map(|&o| sh.load::<P>(z, o)).collect();
-            sh.block_state::<P::V>(*b, &inp, &g, &prep)
-        };
-        let st: Vec<State<P::V, B>> = if par { need.par_iter().map(one).collect() } else { need.iter().map(one).collect() };
-        states = need.iter().copied().zip(st).collect();
-    }
-    // each needed (block, field)'s difference from its target, formed once
-    let mut diff: HashMap<(usize, usize), Fl<P::V, B>> = HashMap::new();
-    let re = sh.row_extra();
-    let mut out: Vec<Vec<f64>> = (0..P::PARTS).map(|_| vec![0.0; rows.len()]).collect();
-    for (i, (&r, b)) in rows.iter().zip(&rb).enumerate() {
-        let v = if let Some(b) = *b {
-            let rr = r - sh.row_block(b);
-            let (q, j) = (rr / m, rr % m);
-            let d = diff.entry((b, q)).or_insert_with(|| states[&b][q] - sh.load::<P>(z, sh.block_target(b) + q * m));
-            P::field_get(d, j)
-        } else {
-            sh.extra_row::<P>(z, r - re)
-        };
-        for (q, oq) in out.iter_mut().enumerate() {
-            oq[i] = P::part(v, q);
-        }
-    }
-    Ok(out)
+    sh.residual_sub::<P>(z, rows, par)
 }
 
 #[cfg(test)]
