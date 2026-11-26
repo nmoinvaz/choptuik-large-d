@@ -109,7 +109,7 @@ def main(argv):
     pos, o = opts(argv, dict(D="2828.4271247461903", states_s="", xl="xc", deg="2", mob="8", ks="auto", kc="250",
                              threads="2", sub="4", plan_tol="1e-40", hmax="0.05", delta="fit", tc="", it_max="10",
                              halvings="8", delta_tol="1e-15", commit="", ham="1", tol="1e-300", parts="8", ladder="dd,qd",
-                             it_hi="2", check="auto", state="", disc="1", chord="1", jfile=""))
+                             it_hi="2", check="auto", state="", disc="1", chord="1", jfile="", step_est=""))
     outdir = pos[0]
     os.makedirs(outdir, exist_ok=True)
     log = os.path.join(outdir, f"lastnode_{cmd}.jsonl")
@@ -213,7 +213,9 @@ def main(argv):
               flush=True)
     z8, conv, recs = newton_ladder(sh, z8, float(o["tol"]), ladder, int(o["it_max"]), int(o["it_hi"]),
                                    int(o["halvings"]), log, delta_tol=float(o["delta_tol"]), jac="dd", on_step=on_step,
-                                   chord=bool(int(o["chord"])), jstore=jstore, chord0=bool(o["jfile"]))
+                                   chord=bool(int(o["chord"])), jstore=jstore, chord0=bool(o["jfile"]),
+                                   step_s=dict(zip(("fresh", "chord"), (float(v) for v in o["step_est"].split(",")))
+                                               if o["step_est"] else None))
     res_last = recs[-1].get("res", ladder[0]) if recs else ladder[0]
     check = o["check"] if o["check"] != "auto" else {"dd": "qd", "qd": "od", "od": "od"}[res_last]
     Fq = sh.residual_s([np.ascontiguousarray(z8[q]) for q in range({"qd": 4, "od": 8}[check])])

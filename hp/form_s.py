@@ -636,7 +636,7 @@ def qj_step(s, z8, F, gain=False, jscale=1.0, parts=4, jstore=None, reuse=False)
 
 def newton_o_s(s, z8, tol, it_max, halvings, log=None, mutate="none", verbose=True, info=None, junk_w=0, tol_dz=1e-45,
                delta_max=1e-2, jac="od", delta_tol=0.0, jscale=1.0, res="od", floor_cut=10.0, on_step=None,
-               jstore=None, chord=False):
+               jstore=None, chord=False, step_s=None):
     """Newton in octo-double on form S from the eight-part z8: newton_s's step (jac "od") or qj_step's (jac "qd": the
     quad-double Jacobian, a double-double solve, the octo-double residual), halved while max |F| does not fall;
     delta_tol > 0 (jac "qd"): converged also when Delta's first-order error bound, gain max |F| with gain = sum
@@ -653,10 +653,13 @@ def newton_o_s(s, z8, tol, it_max, halvings, log=None, mutate="none", verbose=Tr
     floor_cut 0 turns it off. on_step(z8, rec) runs after each accepted step (the caller's state save).
     jstore (jac "dd"/"qd"): the Jacobians formed are kept there (qj_step); chord: a step takes the kept one when there
     is one (a chord step: one residual and one solve), and a chord step that cuts max |F| by less than floor_cut, or is
-    rejected, re-forms J for the next step instead of stopping (only a step with a fresh J stops at the floor)."""
+    rejected, re-forms J for the next step instead of stopping (only a step with a fresh J stops at the floor).
+    step_s: {"fresh": s, "chord": s}, each step's start and predicted end are printed from the last step of its kind
+    (the dict is updated, so a ladder's stages share it; the caller may seed it with estimates)."""
     from multidouble import od_axpy
     from octo_corrector import delta_digits, o8
     z8 = o8(z8)
+    step_s = {} if step_s is None else step_s
     L = len(z8[0])
     npart = {"dd": 2, "qd": 4, "od": 8}[res]
 
@@ -686,6 +689,13 @@ def newton_o_s(s, z8, tol, it_max, halvings, log=None, mutate="none", verbose=Tr
         stale = False
         if st is None and jac in ("qd", "dd"):
             stale = bool(chord and not reform and jstore is not None and "J" in jstore)
+        if verbose:
+            # the step's predicted end: the last step of the same kind (chord or fresh J), else the caller's estimate
+            est = (step_s or {}).get("chord" if stale else "fresh")
+            print(f"  it {it}{' (chord)' if stale else ''} starts {time.strftime('%H:%M:%S', time.gmtime(t0))} UTC"
+                  + (f", predicted end {time.strftime('%H:%M', time.gmtime(t0 + est))} UTC ({est:.0f} s)" if est else ""),
+                  flush=True)
+        if st is None and jac in ("qd", "dd"):
             d, gain = qj_step(s, z8, F, gain=True, jscale=jscale, parts=4 if jac == "qd" else 2, jstore=jstore,
                               reuse=stale)
             reform = False
@@ -740,6 +750,7 @@ def newton_o_s(s, z8, tol, it_max, halvings, log=None, mutate="none", verbose=Tr
             lam *= 0.5
         rec = dict(it=it, F=nF, dz=dz, dDelta=dD, pmin=pmin, pmax=pmax, lu_s=round(t_lu, 1), trials=trials, accepted=acc,
                    s=round(time.time() - t0, 1))
+        step_s["chord" if stale else "fresh"] = rec["s"]
         if acc:
             z8, nF, F = zt, nt, Ft
             conv = nF <= tol or (jac != "od" and delta_tol > 0 and gain * nF <= delta_tol)
@@ -783,7 +794,7 @@ def newton_o_s(s, z8, tol, it_max, halvings, log=None, mutate="none", verbose=Tr
 
 
 def newton_ladder(s, z8, tol, ladder, it_max, it_hi, halvings, log=None, verbose=True, delta_tol=0.0, jac="dd",
-                  on_step=None, floor_cut=10.0, chord=True, jstore=None, chord0=False):
+                  on_step=None, floor_cut=10.0, chord=True, jstore=None, chord0=False, step_s=None):
     """newton_o_s with the residual's precision raised when a stage ends unconverged (a floor stop, a rejected step,
     which is the floor's other face, or the stage's step cap): ladder lists the precisions ("dd", "qd", "od"); the
     first stage runs up to it_max steps and each later one up to it_hi. The run ends converged (tol or Delta's bound
@@ -793,6 +804,7 @@ def newton_ladder(s, z8, tol, ladder, it_max, it_hi, halvings, log=None, verbose
     recs = []
     conv = False
     jstore = {} if jstore is None else jstore
+    step_s = {} if step_s is None else step_s
     for i, res in enumerate(ladder):
         ch = bool(chord and (i > 0 or chord0))
         if verbose:
@@ -800,7 +812,7 @@ def newton_ladder(s, z8, tol, ladder, it_max, it_hi, halvings, log=None, verbose
                   f"{', chord steps with the last Jacobian' if ch else ''}", flush=True)
         z8, conv, r = newton_o_s(s, z8, tol, it_max if i == 0 else it_hi, halvings, log, verbose=verbose, jac=jac,
                                  delta_tol=delta_tol, res=res, floor_cut=floor_cut, on_step=on_step, jstore=jstore,
-                                 chord=ch)
+                                 chord=ch, step_s=step_s)
         recs += r
         if conv:
             break
