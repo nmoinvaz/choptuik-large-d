@@ -34,6 +34,13 @@ usage (venv-1025dd):
       (their dln is unknown, so their robustness is d18_hybsign's test).
       exit 0: tol reached; 4: stopped by maxev or a non-robust interior point (the bracket is still valid); 2: refused;
       3: not the record system or a pin differs.
+  d18_secant.py scan STUB.jsonl STATE.npy D LAMS OUT.jsonl [--mm=fast|cs] [--basis=..] [--b12=..] [--eps=1e-15]
+                [--dln=0.1] [--pin=STATEBLOB,STUBBLOB]
+      d18_hybsign.py's scan (LAMS comma-separated) through the same evaluation as run, the fast float64 matrix by
+      default: one record per lambda with d18_hybsign.py's fields (D, kc, lam, sign, ln, noise, noise_robust,
+      f64_sign, f64_ln, state, sec) and run's (noise_ln, dln, robust, mm, b12, sec_parts), role "scan". With --mm=cs a
+      record equals d18_hybsign.py's bit for bit (raw I1025-mac/speed_ell1/runs/scan55). exit 3: not the record
+      system or a pin differs.
   d18_secant.py selftest [--mutate=half|norobust|nosigncheck]
       the planted cases below through the same refinement and the same dd_logdet sign and noise code; exit 0 only if every
       case reads as written.
@@ -314,6 +321,52 @@ def blob(path):
                           check=True).stdout.strip()
 
 
+def setup(argv, nargs):
+    """the positional arguments, the options, the pins and the record system of a run or a scan"""
+    args = [a for a in argv if not a.startswith("--")]
+    opts = dict(a[2:].split("=", 1) for a in argv if a.startswith("--") and "=" in a)
+    if len(args) != nargs:
+        print(__doc__)
+        sys.exit(2)
+    recf, st = os.path.abspath(args[0]), os.path.abspath(args[1])
+    mm = opts.get("mm", "fast")
+    if mm not in ("fast", "cs"):
+        print(f"--mm={mm}: fast or cs")
+        sys.exit(2)
+    if "pin" in opts:
+        pst, prec = opts["pin"].split(",")
+        bst, brec = blob(st), blob(recf)
+        print(f"pins: state {bst} (wanted {pst}), stub {brec} (wanted {prec})", flush=True)
+        if not (bst.startswith(pst) and brec.startswith(prec)):
+            print("a pin differs: refused", flush=True)
+            sys.exit(3)
+    cwd0 = os.getcwd()
+    os.chdir(WTM)
+    from ell_fastm import load_system
+    S, z, rec, same, msg = load_system(recf, st, float(args[2]))
+    print(msg, flush=True)
+    if not same:
+        sys.exit(3)
+    E = RealEval(S, z, rec, st, mm, float(opts.get("dln", 0.1)), opts.get("basis", "jac"), opts.get("b12", "ddm"),
+                 float(opts.get("eps", 1e-15)))
+    return args, opts, cwd0, rec, st, E
+
+
+def scancmd(argv):
+    """d18_hybsign.py's scan through RealEval: one record per lambda, appended as each lands"""
+    args, opts, cwd0, rec, st, E = setup(argv, 5)
+    D, outf = float(args[2]), os.path.abspath(os.path.join(cwd0, args[4]))
+    lams = [float(v) for v in args[3].split(",")]
+    print(f"scan of {len(lams)} lambda, mode matrix {E.mm} ({E.basis}), block 12 {E.b12}, noise {E.eps:g}, "
+          f"{os.path.basename(st)}", flush=True)
+    for lam in lams:
+        r = dict(E(lam), role="scan")
+        print(f"  lam {lam!r}: hybrid {r['sign']:+.0f} ln|det| {r['ln']:.10f} (noise {E.eps:g} on blocks 0-11: "
+              f"{r['noise']}); float64 {r['f64_sign']:+.0f} {r['f64_ln']:.10f} ({r['sec']} s {r['sec_parts']}); "
+              f"dln {r['dln']:.2e}, mode matrix {r['mm']}", flush=True)
+        open(outf, "a").write(json.dumps(r) + "\n")
+
+
 def runcmd(argv):
     args = [a for a in argv if not a.startswith("--")]
     opts = dict(a[2:].split("=", 1) for a in argv if a.startswith("--") and "=" in a)
@@ -380,6 +433,8 @@ if __name__ == "__main__":
     cmd = sys.argv[1] if len(sys.argv) > 1 else ""
     if cmd == "run":
         runcmd(sys.argv[2:])
+    elif cmd == "scan":
+        scancmd(sys.argv[2:])
     elif cmd == "selftest":
         selftest()
     else:
