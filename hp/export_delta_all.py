@@ -139,7 +139,11 @@ precedence where two share a D:
           1000). A held solve without that term takes another record's at the same D, or else the nearest lower D's
           from D / DIRECT_BORROW up, err_kind "held bias, first order at D <D'>", an estimate carried over; with none,
           err_kind "held bias not estimated" and no err. The angular truncation at M = 32 is not in err, as for the
-          chain rows. state is the record's state file, found by its git blob. Ranks above series only.
+          chain rows. state is the record's state file, found by its git blob. #1098's ladder records
+          (RAWDIR/I1098-*/ladder_records, method "ladder", fastmul6 kernel, harmonics released to kmax 23-31) come
+          first at their D and carry their own err_sum: a first-order bound to kfree k*, an estimator for the harmonics
+          past it, and the empirical cross-checks (horizon, M, machine), err_kind "ladder err_sum". Ranks above series
+          only.
   series  track C's 1/n series (#801, #804; hp/track_c.py, notes/LARGE_D_WALL.md "Track C") at D 250 to 400, from
           data/delta_series.csv (track_c.py csv): the median of the accepted fits to the dd, qd and chain_fit rows up
           to D 245.64, in two parts. err is E = max(h, s): err_kind "series fits" where h, half the accepted fits'
@@ -206,7 +210,7 @@ SERIES = os.path.join(HERE, "data", "delta_series.csv")
 SERIES_DMAX = 245.64
 # #1088's form-S direct solves: the task folders holding direct_s.jsonl, and the farthest lower D (D / DIRECT_BORROW)
 # whose first-order held bias a held solve without its own takes
-DIRECT_DIRS = "I1088-*"
+DIRECT_DIRS = ("I1088-*", "I1098-*/ladder_records")
 DIRECT_BORROW = 4.0
 INTERP_N = 6
 # the interpolation's control: leave-one-out at these D, where every chain has a state (173, 174, 190 and 191 beside
@@ -684,7 +688,8 @@ def series_rows():
 def direct_records():
     """[(source, record)] of #1088's valid direct solves, source "<file>:<line>" relative to RAW"""
     out = []
-    for f in sorted(glob.glob(os.path.join(RAW, DIRECT_DIRS, "**", "direct_s.jsonl"), recursive=True)):
+    files = [f for d in DIRECT_DIRS for f in glob.glob(os.path.join(RAW, d, "**", "direct_s.jsonl"), recursive=True)]
+    for f in sorted(set(files)):
         rel = os.path.relpath(f, RAW).replace(os.sep, "/")
         for n, line in enumerate(open(f), 1):
             if not line.strip():
@@ -731,7 +736,11 @@ def release_change(src):
 
 
 def direct_err(r, src, recs):
-    """(err, err_kind) of a direct record: the largest of its terms (the module's docstring, kind direct)"""
+    """(err, err_kind) of a direct record: the largest of its terms (the module's docstring, kind direct); a #1098
+    ladder record (method "ladder") carries its own err_sum, a sum of a first-order bound to kfree k*, an estimator past
+    it and empirical cross-checks, which is taken as it is"""
+    if r.get("method") == "ladder" and r.get("err_sum") is not None:
+        return f"{r['err_sum']:.1e}", "ladder err_sum (bound to k*, estimator past it, cross-checks)"
     D = float(r["D_str"])
     terms = []
     if r.get("delta_bound_first_order") is not None:
@@ -771,7 +780,8 @@ def direct_rows():
     """the direct rows of the table, one per D: full, then a partial release, then held, each by the lowest check
     residual"""
     recs = direct_records()
-    tier = lambda r: 0 if r["system"] == "full" else 2 if r["system"] == "held" else 1  # noqa: E731
+    tier = lambda r: (-1 if r.get("method") == "ladder" else 0 if r["system"] == "full"  # noqa: E731
+                      else 2 if r["system"] == "held" else 1)
     best = {}
     for src, r in recs:
         k = round(float(r["D_str"]), 9)
