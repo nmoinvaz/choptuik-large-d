@@ -114,6 +114,8 @@ trait Api: Send + Sync {
     fn set_dmat_even(&mut self, hi: &[f64], lo: &[f64]);
     /// form S's horizon variable (Ctx::hmob): 0 u = 1 - x, a > 0 the Moebius t = (1 - z)/(1 + a z)
     fn set_horizon_mobius(&mut self, a: f64);
+    /// form S's Moebius horizon series' sums (Ctx::hrelax): 0 term by term, 1 relaxed products
+    fn set_horizon_relaxed(&mut self, mode: u8);
     /// form S's state carried from the last node through xs by Taylor steps, recorded at rec (form_s::path_s_in)
     fn path_s(&mut self, z: &[&[f64]], xs: &[f64], rec: &[usize]) -> Result<Vec<Vec<f64>>, String>;
     /// form S's J[rows, cols] (form_s::jacobian_sub_s_in), in z's precision
@@ -122,6 +124,8 @@ trait Api: Send + Sync {
     fn len_s(&self) -> usize;
     /// form S's residual in the precision of z's part count (2 Double, 4 Quad, 8 Octo), as that many part arrays
     fn residual_s(&mut self, z: &[&[f64]], mutate: u8) -> Result<Vec<Vec<f64>>, String>;
+    /// form S's horizon series at the last node (form_s::horizon_s_in), in z's precision
+    fn horizon_s(&mut self, z: &[&[f64]], mutate: u8) -> Result<Vec<Vec<f64>>, String>;
     /// form S's exact Jacobian in z's precision: its part arrays, column-major with leading dimension ld, and ld;
     /// tangents: the octo-double columns per evaluation (1 or 2)
     fn jacobian_s(&mut self, z: &[&[f64]], mutate: u8, tangents: usize) -> Result<(Vec<Vec<f64>>, usize), String>;
@@ -576,6 +580,9 @@ impl<const B: usize> Api for Ctx<B> {
     fn set_horizon_mobius(&mut self, a: f64) {
         self.hmob = a;
     }
+    fn set_horizon_relaxed(&mut self, mode: u8) {
+        self.hrelax = mode;
+    }
     fn path_s(&mut self, z: &[&[f64]], xs: &[f64], rec: &[usize]) -> Result<Vec<Vec<f64>>, String> {
         use crate::form_s::path_s_in;
         fs_sizes!(self, 0, |c| match z.len() {
@@ -604,6 +611,15 @@ impl<const B: usize> Api for Ctx<B> {
             4 => residual_s_in::<Quad, _>(c, z, true).map(|f| qd_part_vecs(&f)),
             8 => residual_s_in::<Octo, _>(c, z, true).map(|f| od_part_vecs(&f)),
             n => Err(format!("residual_s: z must be 2, 4 or 8 part arrays, not {n}")),
+        })
+    }
+    fn horizon_s(&mut self, z: &[&[f64]], mutate: u8) -> Result<Vec<Vec<f64>>, String> {
+        use crate::form_s::horizon_s_in;
+        fs_sizes!(self, mutate, |c| match z.len() {
+            2 => horizon_s_in::<Double, _>(c, z),
+            4 => horizon_s_in::<Quad, _>(c, z),
+            8 => horizon_s_in::<Octo, _>(c, z),
+            n => Err(format!("horizon_s: z must be 2, 4 or 8 part arrays, not {n}")),
         })
     }
     fn jacobian_s(&mut self, z: &[&[f64]], mutate: u8, tangents: usize) -> Result<(Vec<Vec<f64>>, usize), String> {
@@ -838,6 +854,7 @@ macro_rules! make_ctx {
                 recip_planted: 0,
                 de: None,
                 hmob: 0.0,
+                hrelax: 0,
             }) as Box<dyn Api>, )*
             _ => return Err(PyValueError::new_err("M must be one of 8, 16, 32, 40, 48, 64, 80, 96, 128, 160, 192, 256, 320, 384, 512")),
         }
@@ -1618,6 +1635,19 @@ impl Solver {
         Ok(())
     }
 
+    /// Form S's Moebius horizon series' Cauchy sums (form_s::horizon_mob): 0 (the default) each term by term; 1 as
+    /// relaxed products (multidouble's series::Relaxed: the products of blocks of earlier coefficients exact block
+    /// products, the terms with a recent coefficient direct) on the double-, quad- and octo-double lanes and their
+    /// single-tangent duals, whose results differ from the term-by-term sums' by about the lane's rounding
+    fn set_horizon_relaxed(&mut self, mode: u8) -> PyResult<()> {
+        if mode > 1 {
+            return Err(PyValueError::new_err("mode must be 0 or 1"));
+        }
+        self.api.set_horizon_relaxed(mode);
+        self.olu = None;
+        Ok(())
+    }
+
     /// form S's length 3M(K + 1) + 1: p1, c0 | node i: p, m, c | m_h | Delta
     #[getter]
     fn size_s(&self) -> usize {
@@ -1635,6 +1665,20 @@ impl Solver {
         }
         let (api, pool) = (&mut self.api, &self.pool);
         let f = py.detach(|| pool.install(|| api.residual_s(&zs, mutate))).map_err(PyValueError::new_err)?;
+        Ok(f.into_iter().map(|v| arr(py, v)).collect())
+    }
+
+    /// form S's horizon series at the last node (p, m, c at x_l from z's m_h and Delta; 2, 4 or 8 part arrays of
+    /// length size_s), as that many part arrays of 3M values: the residual's horizon block without the Taylor steps
+    #[pyo3(signature = (z, mutate=0))]
+    fn horizon_s<'py>(&mut self, py: Python<'py>, z: Vec<PyReadonlyArray1<'py, f64>>, mutate: u8) -> PyResult<Vec<A1<'py>>> {
+        let n = self.api.len_s();
+        let zs: Vec<&[f64]> = z.iter().map(|a| slice(a, "z")).collect::<PyResult<_>>()?;
+        if zs.iter().any(|p| p.len() != n) {
+            return Err(PyValueError::new_err(format!("each part must have length {n}")));
+        }
+        let (api, pool) = (&mut self.api, &self.pool);
+        let f = py.detach(|| pool.install(|| api.horizon_s(&zs, mutate))).map_err(PyValueError::new_err)?;
         Ok(f.into_iter().map(|v| arr(py, v)).collect())
     }
 

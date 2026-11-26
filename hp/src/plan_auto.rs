@@ -239,6 +239,7 @@ mod tests {
             recip_planted: 0,
             de: None,
             hmob: 0.0,
+            hrelax: 0,
         };
         let (mut zh, mut zl) = (vec![0.0; ctx.len()], vec![0.0; ctx.len()]);
         for (i, s) in p.states.iter().enumerate() {
