@@ -782,7 +782,9 @@ def newton_o_s(s, z8, tol, it_max, halvings, log=None, mutate="none", verbose=Tr
         recs.append(rec)
         cut = (dz_prev / dz if junk_w else rec["F"] / nF) if acc else float("nan")
         # junk_w > 0: the first step has no earlier correction to compare with
-        floor = bool(acc and not conv and floor_cut > 0 and np.isfinite(cut) and cut < floor_cut
+        # a floor is a full step that gains little; a damped step (lam < 1, far from the solution: D 360's inner solve
+        # from a guess, I1098-mac-a/cont360) is not one
+        floor = bool(acc and not conv and floor_cut > 0 and np.isfinite(cut) and cut < floor_cut and lam == 1.0
                      and (dz_prev > 0 or not junk_w))
         # a chord step at the floor or rejected: the kept J is too old, so the next step forms a fresh one
         reform = bool(stale and not conv and (floor or not acc))
