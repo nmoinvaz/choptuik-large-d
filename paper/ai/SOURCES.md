@@ -552,3 +552,31 @@ own `results.csv` and `METHOD.md`. `python3 paper/ai/single_prompt/score.py --se
 | no price | `scores.txt`: "cost basis unknown" |
 | the second prompt, 175 words, 12 hours allowed | `single_prompt/prompt_full.md` |
 | stopped after 2 h 11 min; six values, five right, D = 9 off by 1.9e-6 | the trial's start and end files (2026-11-25 21:00:34 and 23:11:34 UTC); `scores.txt`, third block; `stopped_results.csv` |
+
+### Section VIII, what passed the forty walls (update of 26 November)
+
+    python3 paper/ai/walls.py                     # prints every count below, writes walls_timeline.csv; exit 0
+    python3 paper/ai/walls.py --selftest          # PASS; --mutate=date and --mutate=count each exit 1
+
+`walls.csv` codes the 40 rows of Appendices A and B, one line each, with a note. The codes are defined in the
+docstring of `walls.py`. They were assigned once, on 26 November, by the Claude session that drafted the section, from
+the appendix rows, the sources listed above for each row, and the exchanges around rows 16 and 29 in `tx:43f19197`
+(2026-10-27 06:43 to 06:52, where I chose the coordinator's third option, the fully quad-double solver; 2026-11-05 22:23,
+where the octo-double jets were "waiting for your go"). `walls.py` checks each row's date against the appendix tables.
+
+| item | source |
+|---|---|
+| 40 walls; moved first by a prompt 29, the coordinator 8, other 3 | `walls.py`, `moved_first_by` |
+| ideas from the coordinator 22, subagents 9 (7 + 2 literature), me 7, a protocol 1, a runner 1 | `walls.py`, `idea_from` |
+| numerical 17, computing 11, physics or mathematics 6, process 6; the table by row | `walls.py`, `idea_kind` and `lane x kind` |
+| what the 29 prompts carried, and who then supplied the idea | `walls.py`, `push_carried` and `push x lane` |
+| the physical ideas at rows 2, 3, 6, 35, 37 and 40; 28 walls in a row without one | `walls.py`, `physics or math` |
+| the two forms that did not last | rows 2 and 6 (`held` partly and no) |
+| the solver stalled at 20 walls, the arithmetic at 6, physics at 2 | `walls.py`, `wall_kind` |
+| three weeks between the label and the fix | commit 8169a730 (2026-11-03) and #1089 slice 3 (2026-11-25) |
+
+### Section II, the first simulation
+
+| item | source |
+|---|---|
+| 177 full evolutions, the amplitude bisected to one part in 10¹⁴ | the page the chat published for the simulation, https://claude.ai/artifact/8CuxDfZQ4ZHDmxSC4eVjeq ("What it found": "about one part in 10 14 apart, then ran 82 more simulations ... That is 177 full general-relativistic evolutions in all"), read 2026-11-26 |

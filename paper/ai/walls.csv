@@ -1,0 +1,41 @@
+row,date,wall_kind,moved_first_by,push_carried,idea_from,idea_kind,held,note
+1,2026-10-18,solver,prompt,choice,coordinator,numerical,yes,picked one of three directions Claude offered; Claude's plan computed the solution directly as a periodic problem
+2,2026-10-18,physics,prompt,physics or math,me,physics or math,partly,the sums I suggested were fitted and tested on unseen D; the formulas did not last
+3,2026-10-18,solver,prompt,goal,coordinator,physics or math,yes,"""Continue searching""; the diagnosis: the selection weakens exponentially in D, later Proposition 1"
+4,2026-10-18,solver,coordinator,,coordinator,numerical,yes,weakly determined directions set aside
+5,2026-10-19,cost,prompt,technique or resource,me,computing,yes,SIMD and Rust; a subagent built the kernel
+6,2026-10-19,solver,prompt,physics or math,me,physics or math,no,the repeating-sum resonance was tested and rejected
+7,2026-10-19,arithmetic,prompt,technique or resource,coordinator,numerical,yes,"""Do we need quad-double?""; no: the floor was one weak harmonic"
+8,2026-10-19,solver,coordinator,,coordinator,numerical,yes,weak-direction solve and damped steps
+9,2026-10-20,solver,coordinator,,coordinator,numerical,yes,harmonics 9 to 13 held on their trend (pinning)
+10,2026-10-20,solver,coordinator,,coordinator,computing,yes,double-double at high M
+11,2026-10-21,checks,other,,protocol,process,yes,BootLoops: mutation controls and planted truth
+12,2026-10-21,checks,other,,subagent,process,yes,an independent review narrowed a certificate's claim
+13,2026-10-25,solver,prompt,choice,coordinator,numerical,yes,choices among the coordinator's options; pinned runs
+14,2026-10-26,setup,prompt,rule,me,process,yes,the raw-output rule
+15,2026-10-26,checks,prompt,doubt,coordinator,numerical,yes,"""what happened to our ghost stuff?""; the modes were artifacts of one layout"
+16,2026-10-27,arithmetic,prompt,goal,coordinator,computing,yes,"""stop delaying""; the quad-double solver was the third of the coordinator's options, which I had chosen"
+17,2026-10-27,solver,prompt,goal,coordinator,numerical,yes,node layouts; Newton's basin measured
+18,2026-10-27,cost,prompt,technique or resource,me,computing,yes,a new desktop took the low-D legs
+19,2026-11-02,solver,prompt,goal,me,numerical,yes,"""just jump to 100"": the jump test put the wall in Newton's basin"
+20,2026-11-03,solver,prompt,outside look,subagent literature,numerical,yes,Taylor continuation in D from the literature
+21,2026-11-04,arithmetic,coordinator,,coordinator,computing,yes,quad-double corrector and jets
+22,2026-11-03,solver,prompt,outside look,subagent,computing,yes,an analysis subagent found a stale checkpoint
+23,2026-11-05,solver,prompt,goal,coordinator,numerical,yes,"""build the real thing and not a toy"": re-seeding moved into the solver"
+24,2026-11-05,checks,prompt,technique or resource,subagent,process,yes,"""the next important thing you think is worthy"": second implementations from the statements"
+25,2026-11-05,solver,coordinator,,coordinator,numerical,yes,lower predictor order; the planner was a slow LU
+26,2026-11-05,solver,coordinator,,coordinator,computing,yes,polish from all four parts of the state
+27,2026-11-06,solver,prompt,goal,coordinator,computing,yes,"""keep going above 150""; a replay found two defects"
+28,2026-11-06,solver,coordinator,,coordinator,numerical,yes,new polish and a looser divergence guard
+29,2026-11-06,arithmetic,prompt,choice,coordinator,computing,yes,approved the octo-double jets the coordinator had proposed
+30,2026-11-06,solver,other,,runner,computing,yes,a runner dumped the stack of a hang
+31,2026-11-06,arithmetic,prompt,goal,coordinator,computing,yes,stall rule with a flag; octo-double corrector
+32,2026-11-07,direction,prompt,goal,coordinator,numerical,yes,"""Keep going to 400"": the chain climbed to 263.6"
+33,2026-11-19,direction,prompt,outside look,subagent,process,yes,a direction review recommended stopping the chain
+34,2026-11-21,cost,prompt,doubt,me,process,yes,"""we should stop ... until we can find a better method"""
+35,2026-11-24,solver,prompt,outside look,subagent,physics or math,yes,a derivation from scratch: the chain's limits were the discrete system's own
+36,2026-11-25,cost,prompt,goal,coordinator,numerical,yes,"""lost the plot ... unobtainable"": direct solves at each target D"
+37,2026-11-25,physics,prompt,outside look,subagent literature,physics or math,yes,the mass mode is a momentum-constraint violation; Gundlach's construction
+38,2026-11-25,arithmetic,prompt,goal,subagent,numerical,yes,"""queue up all the blocking bits"": a Moebius variable for the horizon series"
+39,2026-11-25,direction,prompt,goal,coordinator,numerical,yes,"""the max D that we can"": D 2000 by a stepping stone; the target 10^4"
+40,2026-11-25,solver,prompt,outside look,subagent,physics or math,yes,the last node at the fast mode's anti-Stokes point; no new mathematics needed

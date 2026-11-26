@@ -4,7 +4,7 @@
 # number in the text is listed with its source in SOURCES.md.
 TECTONIC ?= tectonic
 
-claude_workflow.pdf: main.tex frontier.csv
+claude_workflow.pdf: main.tex frontier.csv walls_timeline.csv
 	$(TECTONIC) -X compile main.tex
 	cp main.pdf claude_workflow.pdf
 
