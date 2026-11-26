@@ -1208,13 +1208,17 @@ def cmd_release_ls(argv):
     delta0 = delta_digits(z8, 40)
     # the held system's Delta, carried in the saved states, so a release resumed from a step state still reports
     # held -> full
-    meta["held_delta"] = o["held_delta"] or meta.get("held_delta") or delta0
+    # held -> full only when the held Delta is known: given (--held_delta), carried in the state, or this run starts at
+    # the held system itself (its first harmonic 5); otherwise the record leaves held_to_full_dDelta out
+    harms = [int(x) for x in o["harm"].split(",")]
+    meta["held_delta"] = o["held_delta"] or meta.get("held_delta") or (delta0 if harms[0] == 5 else None)
     npart = {"qd": 4, "od": 8}[o["res"]]
+    step_s = {}  # the last outer step's seconds by Jacobian mode, for each step's predicted end
 
     def resid(sx, z):
         return sx.residual_s([np.ascontiguousarray(z[q]) for q in range(npart)])
     print(f"release_ls from {os.path.basename(path)}: D {float(D):.6g}, Delta {delta0}, {o['res']} residual", flush=True)
-    for k in [int(x) for x in o["harm"].split(",")]:
+    for k in harms:
         held_in = list(range(k, 14, 2))
         held_tg = list(range(k + 2, 14, 2))
         s_in0 = make_solver_s(D, M, nodes, kfreeze=k - 2, **kw)
@@ -1222,8 +1226,14 @@ def cmd_release_ls(argv):
         co = band_coeffs(np.asarray(z8[0])[:M], np.asarray(z8[1])[:M], M, held_in, exact=True,
                          rest=[np.asarray(p)[:M] for p in z8[2:]])
         s_tg = HeldS(s_tg0, M, K, band_field(co[1:], held_tg, M, parts=8)) if held_tg else s_tg0
+        delta_k0 = delta_digits(z8, 40)  # Delta before this harmonic's release (the record's last_release_dDelta)
         for outer in range(int(o["outer"])):
             t0 = time.time()
+            est = step_s.get(jac_by.get(k, o["jac"]))
+            print(f"    h{k} outer {outer} ({jac_by.get(k, o['jac'])} Jacobian) starts "
+                  f"{time.strftime('%H:%M:%S', time.gmtime(t0))} UTC"
+                  + (f", predicted end {time.strftime('%H:%M', time.gmtime(t0 + est))} UTC ({est:.0f} s, the last "
+                     f"{jac_by.get(k, o['jac'])} outer step)" if est else ""), flush=True)
             F = resid(s_tg, z8)
             nr = float(np.abs(np.asarray(F[0]) + np.asarray(F[1])).max())
             jk = jac_by.get(k, o["jac"])
@@ -1262,6 +1272,10 @@ def cmd_release_ls(argv):
                 if (conv or floor) and nt < nr:
                     acc = True
                     break
+                if floor and jk in ("dd", "qd"):
+                    # an inner floor above the target: smaller steps only lower that floor slowly (as lam^4 at D 2000's
+                    # h13), so the harmonic moves to the next Jacobian precision at once (below) instead of halving
+                    break
                 lam *= 0.5
             if acc:
                 z8, co = zt, co_t
@@ -1275,7 +1289,20 @@ def cmd_release_ls(argv):
             print(f"  h{k} outer {outer}: target |F| {nr:.2e} -> {rec['F_new']:.2e}, harmonic-{k} step {ndk:.2e} "
                   f"(full step's dDelta {rec['dDelta_full']:+.2e}), lam {rec['lam']:g}, Delta {rec['Delta']} ({rec['s']} s)",
                   flush=True)
+            step_s[jk] = rec["s"]
             nxt = {"dd": "qd", "qd": "qq"}.get(jk)
+            if acc and nt * 10.0 > nr and not (ndk < float(o["tol_h"]) or nt <= float(o["tol"])):
+                # floor stop of the outer iteration: an accepted step that cuts the target residual by less than 10x
+                # hands the harmonic to the next Jacobian precision, and at qq ends its release (not released)
+                rec_floor = f"cut {nr / nt:.2f}x (< 10x)"
+                if nxt:
+                    jac_by[k] = nxt
+                    print(f"  h{k}: outer floor stop, the step {rec_floor}; harmonic {k} continues with Jacobian mode "
+                          f"{nxt}", flush=True)
+                    continue
+                print(f"  h{k}: outer floor stop at Jacobian mode {jk}, the step {rec_floor}: harmonic {k} not released",
+                      flush=True)
+                break
             if not acc and nxt and any(t.get("inner_floor") for t in trials):
                 # the inner solves stop at a floor above the target residual (dd: h13 at D 1000 and h11 at D 2000; qd,
                 # whose step is solved in double-double: h13 at D 2000): the harmonic goes on with the next precision,
@@ -1298,17 +1325,22 @@ def cmd_release_ls(argv):
             F4 = s_tg.residual_s([np.ascontiguousarray(z8[q]) for q in range({"qd": 4, "od": 8}[chk])])
             Fc = float(np.abs(np.asarray(F4[0]) + np.asarray(F4[1])).max())
             with mp.workdps(60):
-                dD = float(mp.mpf(delta_digits(z8, 40)) - mp.mpf(meta["held_delta"]))
+                dD = (float(mp.mpf(delta_digits(z8, 40)) - mp.mpf(meta["held_delta"])) if meta.get("held_delta")
+                      else None)
+                dlast = float(mp.mpf(delta_digits(z8, 40)) - mp.mpf(delta_k0))
             sd = jump.series_delta(meta["D_str"]) or jump.series_delta(str(int(round(float(D)))))
             tc = (dict(value=mp.nstr(sd[0], 16), err=sd[1], source="delta_all.csv series") if sd is not None else
                   dict(value=o["tc"].split(":")[0], err=float(o["tc"].split(":")[1]), source="given") if o["tc"] else None)
             hc = ham_check(z8, m13, threads=int(o["threads"]))
             drec = direct_line(z8, m13, out, "full", rec.get("F"), o["res"], Fc, chk, held_to_full=dD,
                                ham={str(b): r for b, r in hc.items()}, tc=tc, commit=o["commit"],
-                               extra=dict(released_from=os.path.basename(path), jac=o["jac"]))
+                               extra=dict(released_from=os.path.basename(path), jac=o["jac"],
+                                          jac_by={str(a): b for a, b in jac_by.items()}, last_release_dDelta=dlast))
             with open(os.path.join(outdir, "direct_s.jsonl"), "a") as fh:
                 fh.write(json.dumps(drec) + "\n")
-            print(f"  the full system: {chk} check max |F| {Fc:.2e}; held -> full dDelta {dD:+.3e}", flush=True)
+            print(f"  the full system: {chk} check max |F| {Fc:.2e}; held -> full dDelta "
+                  f"{'unknown (no held Delta)' if dD is None else format(dD, '+.3e')}; h13's change {dlast:+.3e}",
+                  flush=True)
     return 0
 
 
