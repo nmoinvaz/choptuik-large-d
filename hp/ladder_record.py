@@ -7,7 +7,8 @@ error terms, each a separate field with a basis that names its kind (bound, esti
   err_resid    bound: first order at kfree k* (--kstar): gain (gainq.py at kfreeze k*, --gain) x that system's |F| at
                harmonic k*'s release (from the logs, or --F_kstar). Past some kfree the gain is so large (6.4e30 at
                kfree 17, 1.5e47 at kfree 31, D 300, M 32) that gain x |F| bounds nothing, so k* is the last useful one
-  err_tail     estimator: the pending first-order dDelta of every harmonic at its release (the steps not taken), summed
+  err_tail     estimator: the pending first-order dDelta at release (the steps not taken: each harmonic released after
+               its own steps once, each run of harmonics released at once with no step between them once), summed
                in |.|, and the geometric remainder past the last
                released harmonic (from the last two changes c_(k-2), c_k: |c_k| r/(1 - r), r = |c_k/c_(k-2)|; none when
                r >= 1)
@@ -105,9 +106,25 @@ def main():
             rem_basis = f"the changes do not fall from h{kc_[-2]} to h{kc_[-1]}, so no remainder estimate"
     beyond = [k for k in ks if kstar is not None and k > kstar]
     s_beyond = mp.fsum(per.get(k, 0) for k in beyond)
-    err_tail = sum(pend.values()) + (rem or 0.0)
-    basis_tail = (f"estimator: the pending first-order dDelta of every harmonic at its release, summed in |.| "
-                  f"({sum(pend.values()):.2e}, the steps not taken), and {rem_basis}. The released changes "
+    # the steps not taken: each harmonic released after steps of its own has its own pending dDelta; a run of
+    # harmonics released at once, with no step between them, shares one state, and their pending dDeltas are nearly
+    # one term (D 1000's h25-h31 at M 64: +1.12e-27 each), the base residual's first order, so that run counts once
+    terms, run = [], []
+    for k in sorted(pend):
+        if k in per:
+            if run:
+                terms.append(max(run))
+                run = []
+            terms.append(pend[k])
+        else:
+            run.append(pend[k])
+    if run:
+        terms.append(max(run))
+    pend_sum = float(sum(terms))
+    err_tail = pend_sum + (rem or 0.0)
+    basis_tail = (f"estimator: the pending first-order dDelta at release, the steps not taken ({pend_sum:.2e}: each "
+                  f"harmonic released after its own steps once, each run of harmonics released at once with no step "
+                  f"between them once, at its largest), and {rem_basis}. The released changes "
                   f"beyond the bound's kfree {kstar} ({', '.join('h' + str(k) for k in beyond) or 'none'}, "
                   f"{mp.nstr(s_beyond, 6)} in all, changes_beyond_kstar) are measured values with no first-order bound "
                   f"of their own; the err_xcheck fields test them")
