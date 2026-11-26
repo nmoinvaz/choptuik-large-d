@@ -5,12 +5,12 @@ far below the quad-double residual's floor (the jumps' ks+200 |dF| sat at 1.2e-4
 
 --down 1: when the state's ks meets the bar, ks is stepped down instead, while the change from ks - step to ks stays
 at most --bar (the same measure, the change at ks - step's own ks + step), down to --ks_min; the gate is the last ks
-that meets it. At D 4000 (a 9.995) the start ks 6017 read 2.0e-89 against a bar of 1e-70. The control (--down 1): m_h
-moved by --ctl_dmh (1e-40) at the gated ks must change the residual by more than --bar, so a measure that does not
-resolve the bar cannot pass.
+that meets it. At D 4000 (a 9.995) the start ks 6017 read 2.0e-89 against a bar of 1e-70. The control (--down 1):
+m_h[0] (one grid value) moved by --ctl_dmh (1e-40) at the gated ks must change the residual by more than --bar, so a
+measure that does not resolve the bar cannot pass.
 
     python3 hp/ks_gate.py STATE [--bar 1e-64] [--step 200] [--tries 6] [--kfreeze 13] [--threads 4]
-        [--down 1 --ks_min 400 --ctl_dmh 1e-40]
+        [--down 1 --ks_min 400 --ctl_dmh 1e-40] [--ks0 KS: start there instead of at the state's ks]
 """
 import os
 import sys
@@ -25,7 +25,8 @@ from octo_corrector import load_o  # noqa: E402
 
 
 def opts(argv):
-    o = dict(bar="1e-64", step="200", tries="6", kfreeze="13", threads="4", down="0", ks_min="400", ctl_dmh="1e-40")
+    o = dict(bar="1e-64", step="200", tries="6", kfreeze="13", threads="4", down="0", ks_min="400", ctl_dmh="1e-40",
+             ks0="")
     pos = []
     i = 0
     while i < len(argv):
@@ -65,7 +66,9 @@ def down(z8, meta, D, ks, F_ks, step, bar, kf, thr, ks_min, dmh):
     M, K = int(meta["M"]), len(meta["nodes"])
     zc = [np.array(z8[q], dtype=float) for q in range(8)]
     o = 2 * M + 3 * M * K
-    zc[1][o:o + M] += dmh
+    # one grid value only: a shift of all M values is a k = 0 mode, which the kfreeze projection removes (the first
+    # control at D 4000 read 0.0 that way)
+    zc[1][o] += dmh
     dc = change(resid(zc, meta, D, ks, kf, thr), F_ks)
     ok = dc > bar
     print(f"control: m_h + {dmh:g} at ks {ks} changes the residual by {mp.nstr(dc, 3)} (must exceed {bar:g}): "
@@ -79,7 +82,7 @@ def main():
     with mp.workdps(60):
         D = mp.mpf(meta["D_str"])
     step, bar, kf, thr = int(o["step"]), float(o["bar"]), int(o["kfreeze"]), int(o["threads"])
-    ks = int(meta["ks"])
+    ks = int(o["ks0"]) if o["ks0"] else int(meta["ks"])
     mp.dps = 160
     F0 = resid(z8, meta, D, ks, kf, thr)
     for i in range(int(o["tries"])):
