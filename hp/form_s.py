@@ -1252,6 +1252,13 @@ def cmd_release_ls(argv):
             print(f"  h{k} outer {outer}: target |F| {nr:.2e} -> {rec['F_new']:.2e}, harmonic-{k} step {ndk:.2e} "
                   f"(full step's dDelta {rec['dDelta_full']:+.2e}), lam {rec['lam']:g}, Delta {rec['Delta']} ({rec['s']} s)",
                   flush=True)
+            if not acc and jk == "dd" and any(t.get("inner_floor") for t in trials):
+                # the dd Jacobian's inner solves stop at a floor above the target residual (h13 at D 1000, h11 at
+                # D 2000): the harmonic goes on with the quad-double Jacobian, the next precision
+                jac_by[k] = "qd"
+                print(f"  h{k}: the dd-Jacobian inner solve floored above the target residual {nr:.2e}; harmonic {k} "
+                      f"continues with the quad-double Jacobian", flush=True)
+                continue
             if not acc:
                 break
         out = os.path.join(outdir, f"release_ls_h{k}_D{float(D):.4f}.npz")
