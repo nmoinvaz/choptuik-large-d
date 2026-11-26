@@ -2,13 +2,18 @@
 """#1095: Track C's 1/n series (track_c.py: the same variables, degrees, D_min levels, acceptance and estimator)
 refitted with #1088's form-S direct solves added, so that Δ at D 2828-10^4 and Δ∞ come from a short extrapolation.
 
-Direct points: every `direct_s.jsonl` record under the raw folders given (I1088-*), one per D: the full system where
-there is one, else the held system with the lowest check residual. Records with "valid": false or "method": "fine" are
-skipped (the fine mesh converged to a wrong Delta, #1088). Sigma, written before any fit is read:
-- full system: 1e-13 (Δ's discretization 2e-17 relative and its residual bound are far below; 1e-13 keeps the dd
+Direct points: every `direct_s.jsonl` record under the raw folders given (I1088-*), one per D, chosen as
+export_delta_all.py's direct rows are: the full system, then a partial release, then the held system, each by the lowest
+check residual. Records with "valid": false or "method": "fine" are skipped (the fine mesh converged to a wrong Delta,
+#1088). Sigma, written before any fit is read:
+- full system: max(err, 1e-13), err export_delta_all.direct_err's (its largest recorded term; 1e-13 keeps the dd
   points' own weight dominant at low D);
-- held system: max(|full_dDelta_first_order|, 1e-11), the first-order held bias as a bar. At D 300 that estimate
-  (+1.4e-10) exceeded the measured held->full change (-9.7e-12), so it is a conservative bar, not a measured error.
+- held system: max(err, 1e-11), err the first-order held bias, the record's own or carried over from another record
+  at the same D or the nearest lower D (export_delta_all.direct_err). That estimate exceeded the measured held->full
+  change at D 300 (+1.4e-10 against -9.7e-12) and at D 1000 (+5.1e-10 against +2.0e-10), so it is a conservative bar,
+  not a measured error. (Before 2026-11-26 a held record without its own estimate took 1e-11, which understated the
+  held bias at D 2000-8000 by a factor of about 20.)
+- a record with no err (a partial release, or a held solve with no estimate in reach) is not a point; a notice says so.
 
 Planted truth first (`planted`), through the same code: truth = track_c.readme_formula on the real grid with the dd/qd/
 chain points' own Gaussian noise, and at the direct points
@@ -35,32 +40,40 @@ import mpmath as mp
 sys.argv = [sys.argv[0], "real"] + sys.argv[1:]           # track_c parses its own args from argv[2:]
 import track_c as T  # noqa: E402
 
+_dps = mp.mp.dps
+import export_delta_all as X  # noqa: E402  (the direct rows' err rule; its import sets mp.dps, restored below)
+mp.mp.dps = _dps
+
 TGT = T.TARGETS if "targets" in T.args else [2828.4271247461903, 4000.0, 5656.854249492381, 8000.0, 10000.0]
 MUT = T.args.get("mutate")
 
 
 def direct_points(folders):
-    """{D: (Δ mpf, sigma, kind)} of the direct solves: full preferred, else the held record with the lowest F_check"""
-    best = {}
+    """{D: (Δ mpf, sigma, kind)} of the direct solves, and {D: source}"""
+    recs = []
     for fo in folders:
-        for f in glob.glob(os.path.join(fo, "**", "direct_s.jsonl"), recursive=True):
-            for line in open(f):
+        for f in sorted(glob.glob(os.path.join(fo, "**", "direct_s.jsonl"), recursive=True)):
+            for n, line in enumerate(open(f), 1):
                 if not line.strip():
                     continue
                 r = json.loads(line)
                 if r.get("valid") is False or r.get("method") == "fine":
                     continue                       # fine-mesh records: converged to a wrong Delta (#1088), never data
-                D = round(float(r["D_str"]), 6)
-                full = r["system"] == "full"
-                parts = r.get("Delta_parts") or r.get("Delta")
-                v = mp.fsum(mp.mpf(repr(float(x))) for x in parts)
-                if full:
-                    s = 1e-13
-                else:
-                    s = max(abs(float(r.get("full_dDelta_first_order") or 0.0)), 1e-11)
-                key = (0 if full else 1, float(r.get("F_check") or 1.0))
-                if D not in best or key < best[D][0]:
-                    best[D] = (key, (v, s, "direct_full" if full else "direct_held"), f)
+                recs.append((f"{f}:{n}", r))
+    best = {}
+    for src, r in recs:
+        e, ek = X.direct_err(r, src, recs)
+        if not e:
+            print(f"direct: {src} (D {r['D_str']}, {r['system']}) left out: {ek}")
+            continue
+        D = round(float(r["D_str"]), 6)
+        full = r["system"] == "full"
+        s = max(float(e), 1e-13 if full else 1e-11)
+        tier = 0 if full else 2 if r["system"] == "held" else 1
+        key = (tier, r.get("F_check") if r.get("F_check") is not None else r.get("F_solve") or 1.0)
+        if D not in best or key < best[D][0]:
+            v = mp.fsum(mp.mpf(repr(float(x))) for x in r["Delta_parts"])
+            best[D] = (key, (v, s, "direct_full" if full else "direct_held"), src)
     return {D: b[1] for D, b in best.items()}, {D: b[2] for D, b in best.items()}
 
 
