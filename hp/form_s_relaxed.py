@@ -2,7 +2,7 @@
 term-by-term sums, at saved states.
 
     python3 form_s_relaxed.py check OUT STATE [STATE ...] [--parts 2,4,8] [--threads 4]
-    python3 form_s_relaxed.py jaccheck OUT STATE [STATE ...] [--parts 2,4,8] [--threads 4]
+    python3 form_s_relaxed.py jaccheck OUT STATE [STATE ...] [--parts 2,4,8] [--threads 4] [--cols 0,15,31]
     python3 form_s_relaxed.py time OUT STATE [--parts 4,8] [--what horizon,residual,jac] [--threads 4] [--ks KS]
 
 check: the horizon block (Solver.horizon_s: p, m, c at the last node, 3M values) in double-, quad- and
@@ -109,11 +109,12 @@ def check(out, paths, parts, thr):
     return ok
 
 
-def jaccheck(out, paths, parts, thr):
+def jaccheck(out, paths, parts, thr, pick=None):
     """The Jacobian's horizon columns (jacobian_sub_s on the horizon rows and the m_h and Delta columns, the 33 column
     tasks that run the horizon series in Du, Qu or Ou lanes) in double-, quad- and octo-double, relaxed against term
     by term, with the bars of check (amendment included) relative to max |J| of those columns, and the control
-    (mutate 56) that must miss them. One json line per state and precision into OUT/jaccheck.jsonl."""
+    (mutate 56) that must miss them; pick (--cols): only those m_h points' columns and Delta's. One json line per state
+    and precision into OUT/jaccheck.jsonl."""
     mp.mp.dps = 160
     ok = True
     with open(os.path.join(out, "jaccheck.jsonl"), "a") as fh:
@@ -123,6 +124,9 @@ def jaccheck(out, paths, parts, thr):
             K = len(meta["nodes"])
             rows = list(range(K * 3 * M, (K + 1) * 3 * M))
             cols = list(range(2 * M + 3 * M * K, 2 * M + 3 * M * K + M)) + [L - 1]
+            if pick:
+                # --cols: those m_h points' columns and Delta's (each one column task)
+                cols = [2 * M + 3 * M * K + j for j in pick] + [L - 1]
             ref = None
             for p in sorted(parts, reverse=True):
                 zp = [np.ascontiguousarray(z8[q]) for q in range(p)]
@@ -200,7 +204,7 @@ def timing(out, path, parts, what, thr, ks):
 
 def main(argv):
     cmd, out = argv[0], argv[1]
-    pos, o = opts(argv[2:], dict(parts="2,4,8", threads="4", what="horizon,residual,jac", ks=""))
+    pos, o = opts(argv[2:], dict(parts="2,4,8", threads="4", what="horizon,residual,jac", ks="", cols=""))
     os.makedirs(out, exist_ok=True)
     parts = [int(p) for p in o["parts"].split(",")]
     thr = int(o["threads"])
@@ -211,7 +215,7 @@ def main(argv):
         print("check: " + ("PASS" if ok else "FAIL"), flush=True)
         return 0 if ok else 1
     if cmd == "jaccheck":
-        ok = jaccheck(out, pos, parts, thr)
+        ok = jaccheck(out, pos, parts, thr, [int(j) for j in o["cols"].split(",")] if o["cols"] else None)
         print("jaccheck: " + ("PASS" if ok else "FAIL"), flush=True)
         return 0 if ok else 1
     if cmd == "time":
