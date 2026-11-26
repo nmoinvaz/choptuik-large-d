@@ -51,10 +51,21 @@ def dmat_even(M, dps=40):
     return hi.reshape(M, M), lo.reshape(M, M)
 
 
+def exact_recip():
+    """whether form S's solvers use lane-precision reciprocals (Ctx::exact_recip): on unless HP_EXACT_RECIP=0, which
+    gives the double-double ones of every run before #1098's fix"""
+    return os.environ.get("HP_EXACT_RECIP", "1") != "0"
+
+
 def make_solver_s(D, M, nodes, kt=36, kc=40, ks=120, threads=0, kfreeze=None, segs=None, mob=0.0):
     """make_solver with the even-sector d/dtheta set, for the form-S entry points (residual_s, jacobian_s, newton_s);
     mob > 0: the horizon series in the Moebius variable t = (1 - z)/(1 + mob z) (Solver.set_horizon_mobius, #1090)"""
     s = make_solver(D, M, nodes=nodes, kt=kt, kc=kc, ks=ks, threads=threads, kfreeze=kfreeze)
+    if exact_recip():
+        # the series' 1/k, the Taylor steps' 1/x0 and 1/(k+1) and the centre series' reciprocals in the lane's own
+        # precision (Ctx::exact_recip): with double-double ones the octo-double residual's horizon block was off by
+        # 8e-31 at D 300 (u), 4e-35 (Moebius) and 1.1e-31 at D 1000, and the steps' by 1.7e-36 as they moved (#1098)
+        s.set_exact_recip(1, 0)
     if segs:
         s.set_segs(segs)
     dh, dl = dmat_even(M)
@@ -204,7 +215,8 @@ def kernel_info():
     """the hpkernel module this run imported (its file, and its dist-info version when it has one) and the switches that
     change its horizon arithmetic (HP_HORIZON_RELAXED, #1096's relaxed series products), for each direct record"""
     import hpkernel
-    info = dict(file=getattr(hpkernel, "__file__", ""), relaxed=os.environ.get("HP_HORIZON_RELAXED", ""))
+    info = dict(file=getattr(hpkernel, "__file__", ""), relaxed=os.environ.get("HP_HORIZON_RELAXED", ""),
+                exact_recip=int(exact_recip()))
     try:
         from importlib.metadata import version
         info["version"] = version("hpkernel")

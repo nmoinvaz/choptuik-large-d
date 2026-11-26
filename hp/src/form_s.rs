@@ -233,6 +233,11 @@ pub fn taylor_coeffs_s<T: Lane, const B: usize>(ctx: &Ctx<B>, de: &DMat<B>, x0: 
     let nh = dim::<T, B>(ctx).mul_f(0.5);
     let x0d = DD::from_f64(x0);
     let inv_x0 = DD::ONE / x0d;
+    // Ctx::exact_recip: 1/x0 and 1/(k+1) in the lane's precision (Cst, mul_recip). With double-double constants the
+    // step's coefficients carry a 1e-32 rounding that moves with x0, which the near-null top harmonics turn into
+    // about 5e-20 in Delta at D 300 as the steps move (#1098, I1098-dh610/budget300)
+    let exact = ctx.exact_recip == crate::model::RECIP_EXACT;
+    let inv_x0c = Cst::of(OD::ONE / OD::from_f64(x0));
     let x2 = [x0d * x0d, x0d.mul_f(2.0), DD::ONE];
     let one = Fl::<T, B>::splat(DD::ONE);
     let mut iw0 = Fl::<T, B>::zero();
@@ -250,9 +255,9 @@ pub fn taylor_coeffs_s<T: Lane, const B: usize>(ctx: &Ctx<B>, de: &DMat<B>, x0: 
         let mut s = if ctx.mutate == FS_MUT_FLUX { q2[k].muls(x0d) + cd } else { q2[k].muls(x0d) - cd };
         if k > 0 {
             s = s + q2[k - 1];
-            q[k] = (s - q[k - 1]).muls(inv_x0);
+            q[k] = if exact { inv_x0c.mul(s - q[k - 1]) } else { (s - q[k - 1]).muls(inv_x0) };
         } else {
-            q[k] = s.muls(inv_x0);
+            q[k] = if exact { inv_x0c.mul(s) } else { s.muls(inv_x0) };
         }
         if k == 0 {
             kap0 = (-q[0]).addp(-n1);
@@ -278,8 +283,11 @@ pub fn taylor_coeffs_s<T: Lane, const B: usize>(ctx: &Ctx<B>, de: &DMat<B>, x0: 
         let cpm = cp + cm;
         let rp = ((cs(g, p, k) - xp) - cp) + cpm.mulp(nh);
         let rm = ((cm - xm) - cs(g, m, k)) - cpm.mulp(nh);
-        let ik = inv_x0 * recip_int(k + 1);
-        c[k + 1] = (g[k] - c[k].mulf(kf)).muls(ik);
+        c[k + 1] = if exact {
+            mul_recip(ctx, inv_x0c.mul(g[k] - c[k].mulf(kf)), k + 1)
+        } else {
+            (g[k] - c[k].mulf(kf)).muls(inv_x0 * recip_int(k + 1))
+        };
         let mut xc = c[k].muls(x0d);
         if k > 0 {
             xc = xc + c[k - 1];
@@ -301,8 +309,13 @@ pub fn taylor_coeffs_s<T: Lane, const B: usize>(ctx: &Ctx<B>, de: &DMat<B>, x0: 
         } else {
             (Fl::zero(), Fl::zero())
         };
-        p[k + 1] = ((rp - sp) * iw0).muls(ik1);
-        m[k + 1] = ((rm - sm) * iv0).muls(ik1);
+        if exact {
+            p[k + 1] = mul_recip(ctx, (rp - sp) * iw0, k + 1);
+            m[k + 1] = mul_recip(ctx, (rm - sm) * iv0, k + 1);
+        } else {
+            p[k + 1] = ((rp - sp) * iw0).muls(ik1);
+            m[k + 1] = ((rm - sm) * iv0).muls(ik1);
+        }
     }
 }
 
@@ -332,6 +345,10 @@ pub fn centre_series_s<T: Lane, const B: usize>(ctx: &Ctx<B>, de: &DMat<B>, lu_c
     mm[1] = -pp[1];
     let invc = one / cc[0];
     let kap = -(one.mulp(n1));
+    // Ctx::exact_recip: the recursion's 1/((k-1)(k-1+n)) and 1/k in the lane's precision (Cst, mul_recip), as in the
+    // Taylor steps (#1098)
+    let exact = ctx.exact_recip == crate::model::RECIP_EXACT;
+    let n_od = OD::from_dd(ctx.n);
     for k in 2..=kmax {
         let kf = k as f64;
         // p_k, m_k: model::centre_series's (they read c to order k - 1 only, as p_0 = m_0 = 0)
@@ -352,9 +369,16 @@ pub fn centre_series_s<T: Lane, const B: usize>(ctx: &Ctx<B>, de: &DMat<B>, lu_c
         let mu12 = -nh;
         let mu21 = nh;
         let mu22 = T::P::from_f64(kf - 1.0) + nh;
-        let idel = T::P::one() / (-(T::P::from_f64(kf - 1.0) * (T::P::from_f64(kf - 1.0) + n)));
-        pp[k] = ((r4.mulp(mu12) - r3.mulp(mu22)) * invc).mulp(idel);
-        mm[k] = ((r3.mulp(mu21) - r4.mulp(mu11)) * invc).mulp(idel);
+        if exact {
+            let km1 = OD::from_f64(kf - 1.0);
+            let ideld = Cst::of(OD::ONE / (-(km1 * (km1 + n_od))));
+            pp[k] = ideld.mul((r4.mulp(mu12) - r3.mulp(mu22)) * invc);
+            mm[k] = ideld.mul((r3.mulp(mu21) - r4.mulp(mu11)) * invc);
+        } else {
+            let idel = T::P::one() / (-(T::P::from_f64(kf - 1.0) * (T::P::from_f64(kf - 1.0) + n)));
+            pp[k] = ((r4.mulp(mu12) - r3.mulp(mu22)) * invc).mulp(idel);
+            mm[k] = ((r3.mulp(mu21) - r4.mulp(mu11)) * invc).mulp(idel);
+        }
         // q = p^2 + m^2 - c (p^2 - m^2) / x; (p^2 - m^2) / x's scaled coefficient k is that of p^2 - m^2 at k + 1 over sigma
         dmx[k] = (cs(&pp, &pp, k + 1) - cs(&mm, &mm, k + 1)).mul_pwr2(isig);
         let cdx = cs(&cc, &dmx, k);
@@ -362,7 +386,11 @@ pub fn centre_series_s<T: Lane, const B: usize>(ctx: &Ctx<B>, de: &DMat<B>, lu_c
         q[k] = if ctx.mutate == FS_MUT_FLUX { q2k + cdx } else { q2k - cdx };
         bb[k] = ssolve(de, lu_c, &kap, &cs_range(&q, &bb, k, 1, k), omega);
         ia[k] = inv_at(&bb, &ia, k);
-        cc[k] = cs_range(&cc, &ia, k, 0, k - 1).mulp(n1 * T::P::from_dd(recip_int(k)));
+        cc[k] = if exact {
+            mul_recip(ctx, cs_range(&cc, &ia, k, 0, k - 1).mulp(n1), k)
+        } else {
+            cs_range(&cc, &ia, k, 0, k - 1).mulp(n1 * T::P::from_dd(recip_int(k)))
+        };
     }
     pp.truncate(kmax + 1);
     mm.truncate(kmax + 1);
