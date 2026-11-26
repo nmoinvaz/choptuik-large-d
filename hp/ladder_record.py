@@ -14,9 +14,10 @@ error terms, each a separate field with a basis that names its kind (bound, esti
                in |.|, and the geometric remainder past the last
                released harmonic (from the last two changes c_(k-2), c_k: |c_k| r/(1 - r), r = |c_k/c_(k-2)|; none when
                r >= 1)
-  err_xcheck_horizon, err_xcheck_M, err_xcheck_machine
+  err_xcheck_horizon, err_xcheck_M, err_xcheck_machine, err_xcheck_kernel
                empirical: the disagreement of independent computations (u against Moebius, M 32 against 48 or 48
-               against 64, one machine against another), not a bound; null when that check does not exist at the point.
+               against 64, one machine against another, fastmul6 against fastmul7), not a bound; null when that check
+               does not exist at the point.
                --xcheck "horizon|value|basis;M|value|basis;machine|value|basis", or --M_ref DELTA for M's
   err_steps, err_ks, err_kc, err_kt, err_arith
                measured: changes of Delta when the discretization is refined, at D 300 and D 1000 (I1098 raw folders)
@@ -50,7 +51,7 @@ MEASURED = dict(
     err_arith=(1e-30, "measured: the d/dtheta remainders and lane-precision 1/k removed terms of -2.2e-32 (D 300) and "
                       "-1.2e-24 (D 1000); the remainders' own rounding is 1e-16 of those"),
 )
-XCHECKS = ("horizon", "M", "machine")
+XCHECKS = ("horizon", "M", "machine", "kernel")
 
 
 def opts(argv):
@@ -193,7 +194,7 @@ def main():
     with open(out, "a") as fh:
         fh.write(json.dumps(rec) + "\n")
     print(json.dumps({k: rec.get(k) for k in ("D_str", "Delta", "kstar", "err_resid", "err_tail", "err_xcheck_horizon",
-                                              "err_xcheck_M", "err_xcheck_machine", "err_sum")}), flush=True)
+                                              "err_xcheck_M", "err_xcheck_machine", "err_xcheck_kernel", "err_sum")}), flush=True)
 
 
 if __name__ == "__main__":
