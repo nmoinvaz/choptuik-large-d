@@ -1112,14 +1112,16 @@ def cmd_release_ls(argv):
     too. Each outer step takes the target system's Newton step at the current state, reads its harmonic-k part (a_k,
     b_k), moves the inner system's held value of harmonic k by it (halved while the target residual does not fall),
     solves the inner system again from the current state (well conditioned), and repeats. Stops when the harmonic-k part
-    of the step is below --tol_h or the target residual is at most --tol."""
+    of the step is below --tol_h or the target residual is at most --tol. An inner solve that ends at its floor stop
+    counts as solved. Each accepted outer step's state is saved (release_ls_h<k>_D<D>_step.npz; --harm k from it
+    resumes, since the held values are read from the state). --res: the residual's precision (od, or qd)."""
     from octo_corrector import delta_digits, load_o, save_o
     from pinning import band_coeffs, band_field
     from raw_out import pop_allow, require_raw
     argv = list(argv)
     allow = pop_allow(argv)
     pos, o = opts(argv, dict(harm="5", outer="6", tol="1e-40", tol_h="1e-38", it_in="6", halvings="6", threads="2",
-                             tries="6", jac="auto", tc="", commit=""))
+                             tries="6", jac="auto", tc="", commit="", res="od"))
     path, outdir = pos[0], pos[1]
     os.makedirs(outdir, exist_ok=True)
     log = os.path.join(outdir, "release_ls.jsonl")
@@ -1136,7 +1138,11 @@ def cmd_release_ls(argv):
     if o["jac"] == "auto":
         o["jac"] = "dd" if kw["mob"] else "qd"
     delta0 = delta_digits(z8, 40)
-    print(f"release_ls from {os.path.basename(path)}: D {float(D):.6g}, Delta {delta0}", flush=True)
+    npart = {"qd": 4, "od": 8}[o["res"]]
+
+    def resid(sx, z):
+        return sx.residual_s([np.ascontiguousarray(z[q]) for q in range(npart)])
+    print(f"release_ls from {os.path.basename(path)}: D {float(D):.6g}, Delta {delta0}, {o['res']} residual", flush=True)
     for k in [int(x) for x in o["harm"].split(",")]:
         held_in = list(range(k, 14, 2))
         held_tg = list(range(k + 2, 14, 2))
@@ -1147,7 +1153,7 @@ def cmd_release_ls(argv):
         s_tg = HeldS(s_tg0, M, K, band_field(co[1:], held_tg, M, parts=8)) if held_tg else s_tg0
         for outer in range(int(o["outer"])):
             t0 = time.time()
-            F = s_tg.residual_s(list(z8))
+            F = resid(s_tg, z8)
             nr = float(np.abs(np.asarray(F[0]) + np.asarray(F[1])).max())
             if o["jac"] in ("qd", "dd"):
                 d, pmin, pmax = qj_step(s_tg, z8, F, parts=4 if o["jac"] == "qd" else 2), float("nan"), float("nan")
@@ -1169,16 +1175,20 @@ def cmd_release_ls(argv):
                     co_t = [(co[0][0] + lam * dk[0], co[0][1] + lam * dk[1])] + list(co[1:])
                 s_in = HeldS(s_in0, M, K, band_field(co_t, held_in, M, parts=8))
                 zt, conv, recs = newton_o_s(s_in, z8, float(o["tol"]), int(o["it_in"]), int(o["halvings"]), None,
-                                            verbose=False, jac=o["jac"])
-                Ft = s_tg.residual_s(list(zt))
+                                            verbose=False, jac=o["jac"], res=o["res"])
+                floor = bool(recs and recs[-1].get("floor"))
+                Ft = resid(s_tg, zt)
                 nt = float(np.abs(np.asarray(Ft[0]) + np.asarray(Ft[1])).max())
-                trials.append(dict(lam=lam, inner_conv=bool(conv), inner_steps=len(recs), F=nt))
-                if conv and nt < nr:
+                trials.append(dict(lam=lam, inner_conv=bool(conv), inner_floor=floor, inner_steps=len(recs),
+                                   inner_F=recs[-1].get("F_new") if recs else None, F=nt))
+                if (conv or floor) and nt < nr:
                     acc = True
                     break
                 lam *= 0.5
             if acc:
                 z8, co = zt, co_t
+                save_o(os.path.join(outdir, f"release_ls_h{k}_D{float(D):.4f}_step.npz"), z8,
+                       dict(meta, kfreeze=k - 2, held=held_in, step_harm=k, step_outer=outer, step_F=nt))
             rec.update(trials=trials, accepted=acc, lam=lam if acc else 0.0, F_new=nt if acc else nr,
                        Delta=delta_digits(z8, 40), s=round(time.time() - t0, 1),
                        utc=time.strftime("%Y-%m-%d %H:%M:%S", time.gmtime()))
@@ -1204,7 +1214,7 @@ def cmd_release_ls(argv):
             tc = (dict(value=mp.nstr(sd[0], 16), err=sd[1], source="delta_all.csv series") if sd is not None else
                   dict(value=o["tc"].split(":")[0], err=float(o["tc"].split(":")[1]), source="given") if o["tc"] else None)
             hc = ham_check(z8, m13, threads=int(o["threads"]))
-            drec = direct_line(z8, m13, out, "full", rec.get("F"), "od", Fc, "qd", held_to_full=dD,
+            drec = direct_line(z8, m13, out, "full", rec.get("F"), o["res"], Fc, "qd", held_to_full=dD,
                                ham={str(b): r for b, r in hc.items()}, tc=tc, commit=o["commit"],
                                extra=dict(released_from=os.path.basename(path), jac=o["jac"]))
             with open(os.path.join(outdir, "direct_s.jsonl"), "a") as fh:
