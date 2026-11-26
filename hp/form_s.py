@@ -759,10 +759,10 @@ def newton_o_s(s, z8, tol, it_max, halvings, log=None, mutate="none", verbose=Tr
 
 def newton_ladder(s, z8, tol, ladder, it_max, it_hi, halvings, log=None, verbose=True, delta_tol=0.0, jac="dd",
                   on_step=None, floor_cut=10.0):
-    """newton_o_s with the residual's precision raised at each floor stop: ladder lists the precisions ("dd", "qd",
-    "od"); the first stage runs up to it_max steps and each later one up to it_hi. The run ends converged (tol or
-    Delta's bound delta_tol met), or not at a floor stop or a rejected step of the last stage, or at a stage's step
-    cap. Returns (z8, converged, records), each record tagged with its stage's res."""
+    """newton_o_s with the residual's precision raised when a stage ends unconverged (a floor stop, a rejected step,
+    which is the floor's other face, or the stage's step cap): ladder lists the precisions ("dd", "qd", "od"); the
+    first stage runs up to it_max steps and each later one up to it_hi. The run ends converged (tol or Delta's bound
+    delta_tol met) or with its last stage. Returns (z8, converged, records), each record tagged with its stage's res."""
     recs = []
     conv = False
     for i, res in enumerate(ladder):
@@ -771,7 +771,7 @@ def newton_ladder(s, z8, tol, ladder, it_max, it_hi, halvings, log=None, verbose
         z8, conv, r = newton_o_s(s, z8, tol, it_max if i == 0 else it_hi, halvings, log, verbose=verbose, jac=jac,
                                  delta_tol=delta_tol, res=res, floor_cut=floor_cut, on_step=on_step)
         recs += r
-        if conv or not r or not r[-1].get("floor"):
+        if conv:
             break
     return z8, conv, recs
 
