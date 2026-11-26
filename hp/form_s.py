@@ -1207,11 +1207,13 @@ def cmd_release_ls(argv):
         out = os.path.join(outdir, f"release_ls_h{k}_D{float(D):.4f}.npz")
         save_o(out, z8, dict(meta, kfreeze=k, held=held_tg))
         if k == 13 and rec.get("done"):
-            # the full system (harmonics 1-13 free): its direct_s.jsonl record, the end state's check in quad-double
-            # and the held -> full change of Delta (#1088's tables)
+            # the full system (harmonics 1-13 free): its direct_s.jsonl record, the end state's check in the other
+            # arithmetic (quad-double after an octo-double solve, octo-double after a quad-double one) and the held ->
+            # full change of Delta (#1088's tables)
             import jump
             m13 = dict(meta, kfreeze=13, held=[])
-            F4 = s_tg.residual_s([np.ascontiguousarray(z8[q]) for q in range(4)])
+            chk = "od" if o["res"] == "qd" else "qd"
+            F4 = s_tg.residual_s([np.ascontiguousarray(z8[q]) for q in range({"qd": 4, "od": 8}[chk])])
             Fc = float(np.abs(np.asarray(F4[0]) + np.asarray(F4[1])).max())
             with mp.workdps(60):
                 dD = float(mp.mpf(delta_digits(z8, 40)) - mp.mpf(delta0))
@@ -1219,12 +1221,12 @@ def cmd_release_ls(argv):
             tc = (dict(value=mp.nstr(sd[0], 16), err=sd[1], source="delta_all.csv series") if sd is not None else
                   dict(value=o["tc"].split(":")[0], err=float(o["tc"].split(":")[1]), source="given") if o["tc"] else None)
             hc = ham_check(z8, m13, threads=int(o["threads"]))
-            drec = direct_line(z8, m13, out, "full", rec.get("F"), o["res"], Fc, "qd", held_to_full=dD,
+            drec = direct_line(z8, m13, out, "full", rec.get("F"), o["res"], Fc, chk, held_to_full=dD,
                                ham={str(b): r for b, r in hc.items()}, tc=tc, commit=o["commit"],
                                extra=dict(released_from=os.path.basename(path), jac=o["jac"]))
             with open(os.path.join(outdir, "direct_s.jsonl"), "a") as fh:
                 fh.write(json.dumps(drec) + "\n")
-            print(f"  the full system: quad-double check max |F| {Fc:.2e}; held -> full dDelta {dD:+.3e}", flush=True)
+            print(f"  the full system: {chk} check max |F| {Fc:.2e}; held -> full dDelta {dD:+.3e}", flush=True)
     return 0
 
 
