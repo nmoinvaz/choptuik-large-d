@@ -1,6 +1,8 @@
 #!/bin/bash
 # One clean-room trial of a single prompt: a fresh headless Claude Code session that sees only an empty work folder.
 #   trial.sh ID PROMPT_FILE MODEL BUDGET_USD HOURS [CPUS]
+#   SP_TURNS=N trial.sh ...   also stops the session after N agentic turns (claude -p --max-turns); HOURS stays as a
+#                             backstop on the wall clock, so a turn limit is not eaten by a long build
 # Start it from a login shell that exports the account's token (RUN.md). Everything the trial writes stays in trials/ID.
 # The session runs inside bubblewrap: /usr and /etc read-only, its own /home/user, /work and /tmp, its own process
 # list, and none of this machine's /home. So it cannot read a checkout, a memory folder or a CLAUDE.md, and it cannot
@@ -21,6 +23,9 @@ cp "$PROMPT" "$T/prompt.md"
 if [ -n "${SP_PLANT:-}" ]; then cp "$SP_PLANT" "$T/work/CLAUDE.md"; echo "$SP_PLANT" > "$T/planted"; fi
 claude --version > "$T/claude_version"
 echo "$MODEL" > "$T/model"
+echo "${SP_TURNS:-none}" > "$T/max_turns"
+TURNS=()
+if [ -n "${SP_TURNS:-}" ]; then TURNS=(--max-turns "$SP_TURNS"); fi
 python3 -c "import sys; sys.path.insert(0, '$ROOT/pylib'); import numpy, scipy, mpmath, sympy; print('python', sys.version.split()[0], 'numpy', numpy.__version__, 'scipy', scipy.__version__, 'mpmath', mpmath.__version__, 'sympy', sympy.__version__)" > "$T/python_versions"
 TEXT="$(cat "$T/prompt.md")"
 date -u '+%Y-%m-%d %H:%M:%S' > "$T/start_utc"
@@ -36,7 +41,7 @@ set +e
       --chdir /work --setenv HOME /home/user --setenv PATH /usr/bin:/bin --setenv PYTHONPATH /opt/pylib --setenv LANG C.UTF-8 \
       --unshare-pid --unshare-ipc --unshare-uts --hostname trial --die-with-parent \
     /usr/bin/claude -p "$TEXT" --model "$MODEL" --output-format stream-json --verbose \
-      --tools "Bash,Read,Write,Edit,Glob,Grep" --permission-mode auto --max-budget-usd "$BUDGET" --strict-mcp-config
+      --tools "Bash,Read,Write,Edit,Glob,Grep" --permission-mode auto --max-budget-usd "$BUDGET" --strict-mcp-config "${TURNS[@]}"
 ) > "$T/transcript.jsonl" 2> "$T/stderr.log"
 echo $? > "$T/exit_code"
 date -u '+%Y-%m-%d %H:%M:%S' > "$T/end_utc"
