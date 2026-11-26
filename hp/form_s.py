@@ -200,6 +200,19 @@ def git_blob(path):
     return hashlib.sha1(b"blob %d\0" % len(data) + data).hexdigest()
 
 
+def kernel_info():
+    """the hpkernel module this run imported (its file, and its dist-info version when it has one) and the switches that
+    change its horizon arithmetic (HP_HORIZON_RELAXED, #1096's relaxed series products), for each direct record"""
+    import hpkernel
+    info = dict(file=getattr(hpkernel, "__file__", ""), relaxed=os.environ.get("HP_HORIZON_RELAXED", ""))
+    try:
+        from importlib.metadata import version
+        info["version"] = version("hpkernel")
+    except Exception:
+        pass
+    return info
+
+
 def direct_line(z8, meta, path, system, F_solve, solve_prec, F_check, check_prec, bound=None, held_to_full=None,
                 disc=None, ham=None, tc=None, commit="", extra=None):
     """one record of a converged direct solve for the tables (#1088's direct_s.jsonl): what was solved, Delta in eight
@@ -214,7 +227,7 @@ def direct_line(z8, meta, path, system, F_solve, solve_prec, F_check, check_prec
                F_check=F_check, F_check_precision=check_prec, delta_bound_first_order=bound, held_to_full_dDelta=held_to_full,
                disc=disc, hamiltonian_check=ham, trackC=tc, state=os.path.basename(path), state_blob=git_blob(path),
                commit=commit or os.environ.get("HP_COMMIT", ""), machine=socket.gethostname(),
-               utc=time.strftime("%Y-%m-%d %H:%M:%S", time.gmtime()))
+               utc=time.strftime("%Y-%m-%d %H:%M:%S", time.gmtime()), kernel=kernel_info())
     if extra:
         rec.update(extra)
     return rec
