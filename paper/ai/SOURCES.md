@@ -486,8 +486,8 @@ transcripts are private, so the repository holds the script and the counts only.
 | item | source |
 |---|---|
 | 1593 prompts, 20 sessions, 33 days with a prompt, 2026-10-24 to 2026-11-26, counted to 2026-11-26 07:20 UTC (`UNTIL` in the script) | `prompt_stats.csv`, table `count` |
-| median 9 words; 445 of 5 words or fewer (28%); 17 over 50 (1%) | `prompt_stats.csv`, table `words` |
-| 42 prompts on a median day; 10 hours with a prompt on a median day (330 such hours in all, UTC days) | `prompt_stats.csv`, table `count` |
+| median 9 words; 447 of 5 words or fewer (28%); 18 over 50 (1%) | `prompt_stats.csv`, table `words` |
+| 42 prompts on a median day; 10 hours with a prompt on a median day (332 such hours in all, UTC days) | `prompt_stats.csv`, table `count` |
 | the forms of all prompts: 847, 223, 272, 202, 49 | `prompt_stats.csv`, table `form, all prompts` |
 | the forms of the 145: 79, 22, 40, 4, 0; median 11 words | `prompt_stats.csv`: the list of 145 above, read by the same `form()` |
 | the five example prompts and "Could it be a sum?" carry the form their row names | `form()` run on each, 2026-11-26 |
@@ -635,3 +635,11 @@ cutoff was pinned at 2026-11-26 07:20 UTC.
 The outreach passage was cut on 2026-11-26 at Nathan's word ("it is not really significant, only in that i wanted to
 clarify how the work was done which doesn't require quotes") to the request for addresses, the conjecture and the
 disclosure; the rows above for prompts 134, 135 and 137 no longer back any text.
+
+### The web page (update of 26 November)
+
+`paper/ai/site/index.html` is the paper as a web page, published as a private claude.ai Artifact
+(https://claude.ai/artifact/Ruy1pzD9CPSGELy4NvUHHv). `python3 paper/ai/site/build.py` rebuilds its data block from the
+files named above; `--check` exits 1 when the block is stale. Its graphs are the SVGs at the commits of
+`graphs/index.csv`. `hp/data/delta_all.csv` now also holds a direct row at D = 20000 (commit 87e0a86f), after the paper's
+count of nine direct rows; the page leaves it out, as the paper does.
