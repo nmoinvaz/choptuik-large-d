@@ -2271,7 +2271,7 @@ pub(crate) mod ctxfile {
         let l = v[i] as usize;
         let zh = v[i + 1..i + 1 + l].to_vec();
         let zl = v[i + 1 + l..i + 1 + 2 * l].to_vec();
-        let ctx = Ctx::<B> { n, d, phase, nodes, segs, kt, kc, ks, freeze: None, match_node: k - 1, lam: DD::ZERO, mutate: 0, f64_dd: 0, horizon_alpha: 0, series_split: 0, exact_recip: 0, recip_planted: 0 };
+        let ctx = Ctx::<B> { n, d, phase, nodes, segs, kt, kc, ks, freeze: None, match_node: k - 1, lam: DD::ZERO, mutate: 0, f64_dd: 0, horizon_alpha: 0, series_split: 0, exact_recip: 0, recip_planted: 0, de: None, dc: None, dec: None, hmob: 0.0, hrelax: 0 };
         assert_eq!(ctx.len(), l);
         (ctx, zh, zl)
     }
