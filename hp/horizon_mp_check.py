@@ -10,10 +10,19 @@ Reported: the kernel's u sum at the state's ks against mpmath's at the same ks (
 kernel's u and Moebius values against mpmath's converged sum. PASS when the Moebius values agree with mpmath to --bar
 (1e-40); the control moves m_h by 1e-30 in the kernel only, which must exceed --bar.
 
-    python3 hp/horizon_mp_check.py STATE [--ks_mp 0] [--mob 8] [--ks_mob 0] [--dps 150] [--bar 1e-40]
+--mp_mob 1: horizon_mob's recursion in mpmath as well (mp_mobius: the Moebius series at the same a and ks, the kernel's
+matrices read exactly, exact solves), and the comparison of record is the kernel's Moebius sum against it, the
+arithmetic alone (a bar of 1e-100 suits octo-double). The Moebius truncation, mpmath's Moebius sum against the
+converged u sum, is its own line and does not gate. At D 300 (a 8) it is 4.65e-70 at ks 800 and falls to 9.7e-129 at
+ks 1600 (I1098-dh610/fastmul7_build). The controls are then measured against mpmath's Moebius sum. --ctl_mutate 57 is
+the kernel's old B_0 split (form_s.rs FS_MUT_SPLIT), which must exceed --ctl_bar.
+
+    python3 hp/horizon_mp_check.py STATE [--ks_mp 0] [--mob 8] [--ks_mob 0] [--dps 150] [--bar 1e-40] [--mp_mob 1]
+        [--ctl_mutate 57 --ctl_bar 1e-80] [--u_scan KS,...] [--mob_scan A:KS,...]
 """
 import os
 import sys
+import time
 
 import numpy as np
 
@@ -28,7 +37,7 @@ from taylor_mp_check import kernel_dmats  # noqa: E402
 
 def opts(argv):
     o = dict(ks_mp="0", mob="8", ks_mob="0", dps="150", bar="1e-40", u_scan="", mob_scan="", split="0", ctl_mutate="",
-             ctl_bar="1e-80")
+             ctl_bar="1e-80", mp_mob="0")
     pos = []
     i = 0
     while i < len(argv):
@@ -173,6 +182,139 @@ def mp_horizon(z8, meta, ks_mp, sig, dps, split=False):
         return pp[:ks_mp + 1], mm[:ks_mp + 1], cc[:ks_mp + 1]
 
 
+def mp_mobius(z8, meta, ks, a, dps):
+    """horizon_mob in mpmath: form_s.rs's Moebius series in tau = t/t_l, t = (1 - z)/(1 + a z), z = x^2, written again
+    order by order in the kernel's sequence (each Cauchy product with the values the kernel's has at that point), with
+    exact solves of its slaving (omega D_e + kappa) and p (omega D + kappa) systems and the kernel's matrices read
+    exactly; returns (p, m, c) at x_l (tau = 1), the sums of orders 0..=ks, as mpf (3M,)"""
+    M, nodes = int(meta["M"]), list(meta["nodes"])
+    K = len(nodes)
+    with mp.workdps(dps):
+        D = mp.mpf(meta["D_str"])
+        n = D - 2
+        n1, nh1 = n - 1, n / 2 - 1
+        vo, ve = kernel_dmats(M)
+        Do, De = mp.matrix(M, M), mp.matrix(M, M)
+        for i in range(M):
+            for j in range(M):
+                Do[i, j] = vo[i * M + j]
+                De[i, j] = ve[i * M + j]
+        tp = mp.mpf(float(mp.pi * 2))
+        tp += mp.mpf(float(mp.pi * 2 - tp))
+        delta = mp.fsum(mp.mpf(float(z8[q][-1])) for q in range(8))
+        om = tp / delta
+        o = 2 * M + 3 * M * K
+        m0 = [mp.fsum(mp.mpf(float(z8[q][o + i])) for q in range(8)) for i in range(M)]
+        a = mp.mpf(a)
+        xl = mp.mpf(float(nodes[-1]))
+        zl = xl * xl
+        tl = (1 - zl) / (1 + a * zl)
+        ia1 = 1 / (1 + a)
+        hh = [ia1, (a - 1) * ia1 * tl, -a * ia1 * tl * tl]
+        ee = [ia1, -2 * ia1 * tl, ia1 * tl * tl]
+        rz = a * tl
+        zero = [mp.mpf(0)] * M
+
+        def add(x, y):
+            return [p + q for p, q in zip(x, y)]
+
+        def sub(x, y):
+            return [p - q for p, q in zip(x, y)]
+
+        def sc(c, x):
+            return [c * p for p in x]
+
+        def mv(A, x):
+            return [mp.fsum(A[i, j] * x[j] for j in range(M)) for i in range(M)]
+
+        def cs(x, y, k, lo, hi):
+            if hi < lo:
+                return list(zero)
+            return [mp.fsum(x[j][i] * y[k - j][i] for j in range(lo, hi + 1)) for i in range(M)]
+
+        def zrec(w, zw, k):
+            # (1 + a t_l tau) z W = (1 - t_l tau) W, order by order
+            return list(w[0]) if k == 0 else sub(sub(w[k], sc(tl, w[k - 1])), sc(rz, zw[k - 1]))
+
+        L = ks + 3
+        uu, vv, xx, gg, cc, q, du, dv, qn, vvc, uvc, hcm, hce, zvvc, zv = ([list(zero) for _ in range(L)]
+                                                                          for _ in range(15))
+        cc[0] = [mp.mpf(1)] * M
+        qn[0] = [2 * v for v in m0]
+        Ae, ib0 = None, None
+        for k in range(ks + 1):
+            uu[k] = sc(mp.mpf(0.5), qn[k])
+            vv[k] = [-v for v in uu[k]]
+            vvc[k] = cs(vv, vv, k, 0, k)
+            uvc[k] = cs(uu, vv, k, 0, k)
+            zvv = zrec(vvc, zvvc, k)
+            q[k] = sub(sc(mp.mpf(0.5), add(cs(uu, uu, k, 0, k), zvv)), cs(cc, uvc, k, 0, k))
+            if k == 0:
+                kap = [-v - n1 for v in q[0]]
+                Ae = om * De
+                for i in range(M):
+                    Ae[i, i] += kap[i]
+                # B_0 = 1 + X, (omega D_e + kappa) X = q_0 - omega D_e 1 (fastmul7's split, exact for this D_e)
+                rhs = sub(q[0], sc(om, mv(De, [mp.mpf(1)] * M)))
+                x = mp.lu_solve(Ae, mp.matrix(rhs))
+                xx[0] = [x[i] for i in range(M)]
+                ib0 = [1 / (1 + v) for v in xx[0]]
+            else:
+                x = mp.lu_solve(Ae, mp.matrix(add(q[k], cs(q, xx, k, 1, k))))
+                xx[k] = [x[i] for i in range(M)]
+            gs = sc(-n1, cs(cc, xx, k, 0, k))
+            if k >= 1:
+                gs = sub(gs, cs(gg, xx, k, 0, k - 1))
+            gg[k] = [g * b for g, b in zip(gs, ib0)]
+            s = sc(-tl / 2, gg[k])
+            for i in range(1, min(k, 2) + 1):
+                s = sub(s, sc(hh[i] * (k - i + 1), cc[k - i + 1]))
+            cc[k + 1] = sc((1 + a) / (k + 1), s)
+            hc = sc(hh[0], cc[k])
+            if k >= 1:
+                hc = add(hc, sc(hh[1], cc[k - 1]))
+            if k >= 2:
+                hc = add(hc, sc(hh[2], cc[k - 2]))
+            hcm[k] = [v - hh[k] for v in hc] if k <= 2 else hc
+            hce[k] = [v - ee[k] for v in hc] if k <= 2 else list(hc)
+            if k >= 1:
+                du[k - 1] = sc(k, uu[k])
+                dv[k - 1] = sc(k, vv[k])
+                deriv = sc(2 / tl, add(cs(hcm, du, k, 1, k), cs(hce, dv, k, 1, k)))
+            else:
+                deriv = list(zero)
+            zvk = zrec(vv, zv, k)
+            r = add(deriv, sc(om, mv(Do, add(uu[k], zvk))))
+            r = sub(sub(r, cs(gg, uu, k, 0, k)), cs(gg, vv, k, 0, k))
+            r = sub(add(r, zvk), sc(n1, cs(cc, uu, k, 0, k)))
+            kappa = [(tl + 2 * ia1 * cc[1][i]) / tl * k - gg[0][i] - nh1 for i in range(M)]
+            A = om * Do
+            for i in range(M):
+                A[i, i] += kappa[i]
+            x = mp.lu_solve(A, mp.matrix([-v for v in r]))
+            pk = [x[i] / 2 for i in range(M)]
+            uu[k] = add(uu[k], pk)
+            vv[k] = add(vv[k], pk)
+            if k >= 1:
+                du[k - 1] = sc(k, uu[k])
+                dv[k - 1] = sc(k, vv[k])
+            vvc[k] = cs(vv, vv, k, 0, k)
+            uvc[k] = cs(uu, vv, k, 0, k)
+            zvvc[k] = zrec(vvc, zvvc, k)
+            zv[k] = zrec(vv, zv, k)
+            du[k], dv[k] = list(zero), list(zero)
+            ak = list(zero)
+            for i in range(min(k, 2) + 1):
+                mm_ = k - i
+                ak = add(ak, sc(hh[i], sub(du[mm_], cs(cc, dv, mm_, 0, mm_))))
+            ak = sub(add(sc(-2 / tl, ak), sc(om, mv(Do, uu[k]))), cs(gg, vv, k, 0, k))
+            qn[k + 1] = sc((1 + a) * tl / 2 / (k + 1), ak)
+        us = [mp.fsum(uu[k][i] for k in range(ks + 1)) for i in range(M)]
+        vs = [mp.fsum(vv[k][i] for k in range(ks + 1)) for i in range(M)]
+        csum = [mp.fsum(cc[k][i] for k in range(ks + 1)) for i in range(M)]
+        return ([(us[i] + xl * vs[i]) / 2 for i in range(M)] + [(us[i] - xl * vs[i]) / 2 for i in range(M)] + csum)
+
+
 def main():
     pos, o = opts(sys.argv[1:])
     z8, meta = load_o(pos[0])
@@ -236,18 +378,36 @@ def main():
         rows = [max(abs(a - b) for a, b in zip(km[f * M:(f + 1) * M], ref[f * M:(f + 1) * M])) for f in range(3)]
         print(f"kernel Moebius (a {mob:g}, ks {ks_mob}) against mpmath converged: {mp.nstr(d_m, 4)} (p, m, c: "
               f"{', '.join(mp.nstr(r, 3) for r in rows)})", flush=True)
+        # --mp_mob 1: the comparison of record is the kernel's Moebius sum against mpmath's Moebius sum at the same
+        # a and ks (the arithmetic alone); the truncation, mpmath's Moebius sum against the converged u sum, is its own
+        # line. Without it, the comparison is against the converged u sum (arithmetic and truncation together)
+        cmp_ref, what = ref, "mpmath converged"
+        if o["mp_mob"] == "1":
+            t0 = time.time()
+            rmob = mp_mobius(z8, meta, ks_mob, mob, dps)
+            d_tr_m = max(abs(a - b) for a, b in zip(rmob, ref))
+            rows_t = [max(abs(a - b) for a, b in zip(rmob[f * M:(f + 1) * M], ref[f * M:(f + 1) * M]))
+                      for f in range(3)]
+            print(f"mpmath Moebius (a {mob:g}, ks {ks_mob}) against mpmath's converged u sum: {mp.nstr(d_tr_m, 4)} "
+                  f"(p, m, c: {', '.join(mp.nstr(r, 3) for r in rows_t)}; the Moebius truncation, "
+                  f"{time.time() - t0:.0f} s)", flush=True)
+            cmp_ref, what = rmob, f"mpmath Moebius at ks {ks_mob}"
+            d_m = max(abs(a - b) for a, b in zip(km, rmob))
+            rows = [max(abs(a - b) for a, b in zip(km[f * M:(f + 1) * M], rmob[f * M:(f + 1) * M])) for f in range(3)]
+            print(f"kernel Moebius (a {mob:g}, ks {ks_mob}) against {what}: {mp.nstr(d_m, 4)} (p, m, c: "
+                  f"{', '.join(mp.nstr(r, 3) for r in rows)}; the arithmetic)", flush=True)
         kc_, _ = kernel_right(z8, meta, mob, ks_mob, dmh=1e-30)
-        d_c = max(abs((nd + sgn * fh) - b) for (nd, fh), b in zip(kc_, ref))
+        d_c = max(abs((nd + sgn * fh) - b) for (nd, fh), b in zip(kc_, cmp_ref))
         print(f"control (m_h + 1e-30 in the kernel only): {mp.nstr(d_c, 4)}", flush=True)
         d_s = None
         if o["ctl_mutate"]:
             # the kernel's own control (form_s.rs FS_MUT_SPLIT, 57: B_0 = 1 + X without the omega (D_e + c) 1 term)
             ks_, _ = kernel_right(z8, meta, mob, ks_mob, mutate=int(o["ctl_mutate"]))
-            d_s = max(abs((nd + sgn * fh) - b) for (nd, fh), b in zip(ks_, ref))
+            d_s = max(abs((nd + sgn * fh) - b) for (nd, fh), b in zip(ks_, cmp_ref))
             print(f"control (mutate {o['ctl_mutate']}, the old split): {mp.nstr(d_s, 4)} (must exceed {o['ctl_bar']})",
                   flush=True)
     ok = d_m <= float(o["bar"]) and d_c > float(o["bar"]) and (d_s is None or d_s > float(o["ctl_bar"]))
-    print(f"  {'PASS' if ok else 'FAIL'}: Moebius against mpmath {mp.nstr(d_m, 3)} (bar {o['bar']}), the control "
+    print(f"  {'PASS' if ok else 'FAIL'}: Moebius against {what} {mp.nstr(d_m, 3)} (bar {o['bar']}), the control "
           f"{mp.nstr(d_c, 3)} (must exceed it)" + (f", the split control {mp.nstr(d_s, 3)} (must exceed {o['ctl_bar']})"
                                                      if d_s is not None else "")
           + f"; {K} nodes, x_l {meta['nodes'][-1]}", flush=True)
