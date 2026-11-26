@@ -56,4 +56,4 @@ strip = false
 # multidouble's series module (series::mullow, series::Relaxed, Lane::block_mul; #1096) from its pull request's
 # branch until its release; then the version above is bumped and this patch removed
 [patch.crates-io]
-multidouble = { git = "https://github.com/nmoinvaz/multidouble", rev = "a7ef2bcf6f64f70a0f8ba4a5023624ed7153577d" }
+multidouble = { git = "https://github.com/nmoinvaz/multidouble", rev = "6b5bcc790c9ff1342240d7e42e206779a25aab37" }
