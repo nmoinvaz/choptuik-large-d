@@ -25,8 +25,8 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import mpmath as mp  # noqa: E402
 import numpy as np  # noqa: E402
 
-from form_s import (HeldS, blocks_s, direct_line, ham_check, held_field, ks_mob, make_solver_s,  # noqa: E402
-                    newton_ladder, opts, s_to_a, scale_s, unscale_s)
+from form_s import (HeldS, blocks_s, direct_line, disc_report, ham_check, held_field, ks_mob,  # noqa: E402
+                    make_solver_s, newton_ladder, opts, s_to_a, scale_s, unscale_s)
 from form_s_fine import inner_z, outer_values  # noqa: E402
 from hpkernel.driver import make_solver  # noqa: E402
 
@@ -109,7 +109,7 @@ def main(argv):
     pos, o = opts(argv, dict(D="2828.4271247461903", states_s="", xl="xc", deg="2", mob="8", ks="auto", kc="250",
                              threads="2", sub="4", plan_tol="1e-40", hmax="0.05", delta="fit", tc="", it_max="10",
                              halvings="8", delta_tol="1e-15", commit="", ham="1", tol="1e-300", parts="8", ladder="dd,qd",
-                             it_hi="2", check="auto", state=""))
+                             it_hi="2", check="auto", state="", disc="1"))
     outdir = pos[0]
     os.makedirs(outdir, exist_ok=True)
     log = os.path.join(outdir, f"lastnode_{cmd}.jsonl")
@@ -133,8 +133,9 @@ def main(argv):
         return 0
     xl = xls[0]
     t_all = time.time()
-    if cmd == "solvestate":
-        # a guess saved by "guess" (this machine need not have path_s): its nodes, plan and held values
+    if cmd in ("solvestate", "checkstate"):
+        # a guess saved by "guess" (this machine need not have path_s), or for checkstate a solved state: its nodes,
+        # plan and held values
         from octo_corrector import load_o
         z8, meta = load_o(o["state"])
         with mp.workdps(60):
@@ -148,6 +149,33 @@ def main(argv):
         xl = float(meta["nodes"][4])
     else:
         Dt, rows, z8, sh, meta = setup(o, xl, thr)
+    h8 = held_field(z8, M)  # the held field sh holds (HeldS of the start state's own values)
+    kwd = dict(kt=int(meta["kt"]), kc=int(meta["kc"]), ks=int(meta["ks"]), threads=thr, kfreeze=3)
+
+    def disc(z, Fq, gain):
+        # the discretization tails (kc + 20, ks + 200, halved Taylor steps) against the quad-double residual
+        F4 = Fq if len(Fq) == 4 else sh.residual_s([np.ascontiguousarray(z[q]) for q in range(4)])
+        return disc_report(z, meta, kwd, float(meta["hmob"]), h8, F4, gain)
+    if cmd == "checkstate":
+        # the end checks of a saved solve made before they were part of solvestate: the check residual (--check,
+        # auto octo-double), the discretization tails, the Hamiltonian check
+        check = o["check"] if o["check"] != "auto" else "od"
+        t0 = time.time()
+        Fq = sh.residual_s([np.ascontiguousarray(z8[q]) for q in range({"qd": 4, "od": 8}[check])])
+        Fc = float(np.abs(np.asarray(Fq[0]) + np.asarray(Fq[1])).max())
+        gain = float(meta.get("delta_gain") or "nan")
+        print(f"D {float(Dt):g} (ks {meta['ks']}): {check} check max |F| {Fc:.3e} ({time.time() - t0:.0f} s); Delta's "
+              f"first-order bound {gain * Fc:.2e} (gain {gain:.2e})", flush=True)
+        dsc = disc(z8, Fq, gain) if int(o["disc"]) else None
+        hc = ham_check(z8, meta, threads=thr) if int(o["ham"]) else None
+        if hc:
+            print(f"  Hamiltonian code check: a rows up to {max(r['a'] for r in hc.values()):.1e}", flush=True)
+        with open(os.path.join(outdir, "lastnode_checkstate.jsonl"), "a") as fh:
+            fh.write(json.dumps(dict(state=os.path.basename(o["state"]), D_str=meta["D_str"], check=check, F=Fc,
+                                     gain=gain, bound=gain * Fc, disc=dsc,
+                                     ham_check={str(k): r for k, r in hc.items()} if hc else None,
+                                     utc=time.strftime("%Y-%m-%d %H:%M:%S", time.gmtime()))) + "\n")
+        return 0
     if cmd == "guess":
         F = sh.residual_s([np.ascontiguousarray(p) for p in z8[:2]])
         b = blocks_s(F, M, 5)
@@ -180,6 +208,8 @@ def main(argv):
     meta.update(solved=bool(conv), F=Fc, check=check, delta_gain=gain, delta_bound_first_order=gain * Fc,
                 floor_stop=bool(recs and recs[-1].get("floor")))
     print(f"  end state: {check} max |F| {Fc:.3e}; Delta's first-order bound {gain * Fc:.2e} (gain {gain:.2e})", flush=True)
+    if int(o["disc"]):
+        meta.update(disc=disc(z8, Fq, gain))
     if int(o["ham"]):
         hc = ham_check(z8, meta, threads=thr)
         meta.update(ham_check={str(k): r for k, r in hc.items()})
@@ -196,7 +226,7 @@ def main(argv):
             print(f"  Delta - reference {mp.nstr(mp.mpf(Dl) - mp.mpf(tc['value']), 6)} (+- {tc['err']:.2e})", flush=True)
     if conv:
         rec = direct_line(z8, meta, out, "held", recs[-1].get("F_new"), res_last, Fc, check, bound=gain * Fc,
-                          ham=meta.get("ham_check"), tc=tc, commit=o["commit"],
+                          disc=meta.get("disc"), ham=meta.get("ham_check"), tc=tc, commit=o["commit"],
                           extra=dict(method="lastnode at x_c", valid=True, xl=xl, newton_steps=len(recs),
                                      jac="dd"))
         with open(os.path.join(outdir, "direct_s.jsonl"), "a") as fh:
