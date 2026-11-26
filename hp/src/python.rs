@@ -112,6 +112,8 @@ trait Api: Send + Sync {
     fn residual_sub(&mut self, z: &[&[f64]], rows: &[usize], mutate: u8) -> Result<Vec<Vec<f64>>, String>;
     /// form S (form_s.rs): the folded even-sector d/dtheta of B's slaving, row-major (M, M) hi / lo
     fn set_dmat_even(&mut self, hi: &[f64], lo: &[f64]);
+    /// the f64 remainders of the odd and (form S) even d/dtheta, row-major (M, M) (Ctx::dc, Ctx::dec)
+    fn set_dmat_corr(&mut self, odd: &[f64], even: Option<&[f64]>);
     /// form S's horizon variable (Ctx::hmob): 0 u = 1 - x, a > 0 the Moebius t = (1 - z)/(1 + a z)
     fn set_horizon_mobius(&mut self, a: f64);
     /// form S's Moebius horizon series' sums (Ctx::hrelax): 0 term by term, 1 relaxed products
@@ -577,6 +579,11 @@ impl<const B: usize> Api for Ctx<B> {
     fn set_dmat_even(&mut self, hi: &[f64], lo: &[f64]) {
         self.de = Some(DMat::<B>::from_rows(hi, lo));
     }
+    fn set_dmat_corr(&mut self, odd: &[f64], even: Option<&[f64]>) {
+        let zero = vec![0.0; odd.len()];
+        self.dc = Some(DMat::<B>::from_rows(odd, &zero));
+        self.dec = even.map(|e| DMat::<B>::from_rows(e, &zero));
+    }
     fn set_horizon_mobius(&mut self, a: f64) {
         self.hmob = a;
     }
@@ -853,6 +860,8 @@ macro_rules! make_ctx {
                 exact_recip: 0,
                 recip_planted: 0,
                 de: None,
+            dc: None,
+            dec: None,
                 hmob: 0.0,
                 hrelax: 0,
             }) as Box<dyn Api>, )*
@@ -1582,6 +1591,25 @@ impl Solver {
             return Err(PyValueError::new_err("dmat must be (M, M)"));
         }
         self.api.set_dmat_even(dh, dl);
+        self.olu = None;
+        Ok(())
+    }
+
+    /// The f64 remainders c = D - (hi + lo) of the double-double d/dtheta matrices (M x M, row-major; form_s.py's
+    /// dmat_corr, from 80-digit values): the odd one and, for form S, the even one. The quad- and octo-double lanes then
+    /// apply D + c, good to about 2^-159 where the double-double D alone is good to 2^-106 (#1098).
+    #[pyo3(signature = (odd, even=None))]
+    fn set_dmat_corr(&mut self, odd: PyReadonlyArray2<f64>, even: Option<PyReadonlyArray2<f64>>) -> PyResult<()> {
+        let m = self.api.m();
+        let co = odd.as_slice().map_err(|_| PyValueError::new_err("odd must be C-contiguous"))?;
+        let ce = match &even {
+            Some(e) => Some(e.as_slice().map_err(|_| PyValueError::new_err("even must be C-contiguous"))?),
+            None => None,
+        };
+        if co.len() != m * m || ce.is_some_and(|e| e.len() != m * m) {
+            return Err(PyValueError::new_err("the remainders must be (M, M)"));
+        }
+        self.api.set_dmat_corr(co, ce);
         self.olu = None;
         Ok(())
     }

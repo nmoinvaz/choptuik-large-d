@@ -26,7 +26,7 @@ use crate::field::FieldSolve;
 use crate::field::{cs, cs_range, cs_w, horner, DMat, Fl};
 use crate::lane::Lane;
 use crate::linalg::{ld_for, DDLu};
-use crate::model::{delta_of, dim, horizon_lus, kfreeze_of, mul_recip, omega_of, psolve, recip_int, recip_lane, recip_lane_parts, series_scale, Ctx, HPrep};
+use crate::model::{dapply_c, delta_of, dim, horizon_lus, kfreeze_of, mul_recip, omega_of, psolve, recip_int, recip_lane, recip_lane_parts, series_scale, Ctx, HPrep};
 use crate::qd::QD;
 use multidouble::od::OD;
 use crate::qv::QV;
@@ -183,19 +183,19 @@ pub fn slave_lu<const B: usize>(de: &DMat<B>, omega: DD, kappa: &[DD]) -> Result
 /// (omega D_e + diag kappa) f = rhs in the lane, with the LU at the values (`model::psolve`'s branches, on D_e and at
 /// rate zero): refined to the lane's precision on quad- and octo-double lanes, a tangent's system A f_d = r_d -
 /// omega_d D_e f_v - kappa_d f_v, a jet's order by order
-fn ssolve<T: Lane, const B: usize>(de: &DMat<B>, lu: &DDLu, kappa: &Fl<T, B>, rhs: &Fl<T, B>, omega: T) -> Fl<T, B> {
+fn ssolve<T: Lane, const B: usize>(de: &DMat<B>, dec: Option<&DMat<B>>, lu: &DDLu, kappa: &Fl<T, B>, rhs: &Fl<T, B>, omega: T) -> Fl<T, B> {
     if T::NJ > 0 && T::VAL_OD {
         let om: Vec<OV> = (0..T::NJ).map(|j| omega.coef_od(j)).collect();
         let k0 = kappa.coef_od(0);
         return lu.solve_lanes_jet_refine_od(
             rhs,
             slave_refine().1,
-            |j, x, r| (r - de.apply(x).mul_t(om[j])) - kappa.coef_od(j) * *x,
-            |r, x| *r - (de.apply(x).mul_t(om[0]) + k0 * *x),
+            |j, x, r| (r - dapply_c(de, dec, x).mul_t(om[j])) - kappa.coef_od(j) * *x,
+            |r, x| *r - (dapply_c(de, dec, x).mul_t(om[0]) + k0 * *x),
         );
     }
     if T::VAL_OD {
-        return lu.solve_lanes_refine_t(lu, rhs, slave_refine().1 + T::TANGENT as usize, |f| *rhs - (de.apply(f).mul_t(omega) + *kappa * *f));
+        return lu.solve_lanes_refine_t(lu, rhs, slave_refine().1 + T::TANGENT as usize, |f| *rhs - (dapply_c(de, dec, f).mul_t(omega) + *kappa * *f));
     }
     if T::NJ > 0 && T::VAL_QD {
         let om: Vec<QV> = (0..T::NJ).map(|j| omega.coef_qd(j)).collect();
@@ -203,12 +203,12 @@ fn ssolve<T: Lane, const B: usize>(de: &DMat<B>, lu: &DDLu, kappa: &Fl<T, B>, rh
         return lu.solve_lanes_jet_refine(
             rhs,
             slave_refine().0,
-            |j, x, r| (r - de.apply(x).mul_t(om[j])) - kappa.coef_qd(j) * *x,
-            |r, x| *r - (de.apply(x).mul_t(om[0]) + k0 * *x),
+            |j, x, r| (r - dapply_c(de, dec, x).mul_t(om[j])) - kappa.coef_qd(j) * *x,
+            |r, x| *r - (dapply_c(de, dec, x).mul_t(om[0]) + k0 * *x),
         );
     }
     if T::VAL_QD {
-        return lu.solve_lanes_refine_t(lu, rhs, slave_refine().0 + T::TANGENT as usize, |f| *rhs - (de.apply(f).mul_t(omega) + *kappa * *f));
+        return lu.solve_lanes_refine_t(lu, rhs, slave_refine().0 + T::TANGENT as usize, |f| *rhs - (dapply_c(de, dec, f).mul_t(omega) + *kappa * *f));
     }
     if T::NJ > 0 {
         return lu.solve_lanes_jet(rhs, |j, x, r| {
@@ -303,11 +303,11 @@ pub fn taylor_coeffs_s<T: Lane, const B: usize>(ctx: &Ctx<B>, de: &DMat<B>, x0: 
         if k == 0 {
             kap0 = (-q[0]).addp(-n1);
             let lu0 = slave_lu(de, omega.val().lane(0), &vals(&kap0)).expect("form S: the slaving LU of a Taylor step");
-            bb[0] = ssolve(de, &lu0, &kap0, &(-(one.mulp(n1))), omega);
+            bb[0] = ssolve(de, ctx.dec.as_ref(), &lu0, &kap0, &(-(one.mulp(n1))), omega);
             lu = Some(lu0);
         } else {
             let rhs = cs_range(q, bb, k, 1, k);
-            bb[k] = ssolve(de, lu.as_ref().expect("the step's LU"), &kap0, &rhs, omega);
+            bb[k] = ssolve(de, ctx.dec.as_ref(), lu.as_ref().expect("the step's LU"), &kap0, &rhs, omega);
         }
         ia[k] = inv_at(bb, ia, k);
         g[k] = (cs(c, ia, k) - c[k]).mulp(n1);
@@ -425,7 +425,7 @@ pub fn centre_series_s<T: Lane, const B: usize>(ctx: &Ctx<B>, de: &DMat<B>, lu_c
         let cdx = cs(&cc, &dmx, k);
         let q2k = cs(&pp, &pp, k) + cs(&mm, &mm, k);
         q[k] = if ctx.mutate == FS_MUT_FLUX { q2k + cdx } else { q2k - cdx };
-        bb[k] = ssolve(de, lu_c, &kap, &cs_range(&q, &bb, k, 1, k), omega);
+        bb[k] = ssolve(de, ctx.dec.as_ref(), lu_c, &kap, &cs_range(&q, &bb, k, 1, k), omega);
         ia[k] = inv_at(&bb, &ia, k);
         cc[k] = if exact {
             mul_recip(ctx, cs_range(&cc, &ia, k, 0, k - 1).mulp(n1), k)
@@ -504,9 +504,9 @@ pub fn horizon_series_s<T: Lane, const B: usize>(ctx: &Ctx<B>, de: &DMat<B>, pre
         qs[kk] = if kk > 0 { s + qs[kk - 1].mul_pwr2(sig) } else { s };
         if kk == 0 {
             kap = (-qs[0]).addp(-n1);
-            bb[0] = ssolve(de, lu_h, &kap, &(-(one.mulp(n1))), omega);
+            bb[0] = ssolve(de, ctx.dec.as_ref(), lu_h, &kap, &(-(one.mulp(n1))), omega);
         } else {
-            bb[kk] = ssolve(de, lu_h, &kap, &cs_range(&qs, &bb, kk, 1, kk), omega);
+            bb[kk] = ssolve(de, ctx.dec.as_ref(), lu_h, &kap, &cs_range(&qs, &bb, kk, 1, kk), omega);
         }
         ia[kk] = inv_at(&bb, &ia, kk);
         let ca1 = cs(&cc, &ia, kk) - cc[kk];
@@ -714,11 +714,11 @@ pub fn horizon_mob<T: Lane, const B: usize>(ctx: &Ctx<B>, de: &DMat<B>, prep: &S
         q[k] = (puu.sum(&uu, &uu, k, 0, k) + zvv).mul_pwr2(0.5) - pcuv.sum(&cc, &uvc, k, 0, k);
         if k == 0 {
             kap = (-q[0]).addp(-n1);
-            xx[0] = ssolve(de, lu_h, &kap, &q[0], omega);
+            xx[0] = ssolve(de, ctx.dec.as_ref(), lu_h, &kap, &q[0], omega);
             ib0 = one / (one + xx[0]);
         } else {
             let rhs = q[k] + pqx.sum(&q, &xx, k, 1, k);
-            xx[k] = ssolve(de, lu_h, &kap, &rhs, omega);
+            xx[k] = ssolve(de, ctx.dec.as_ref(), lu_h, &kap, &rhs, omega);
         }
         let gs = if k >= 1 {
             pcx.sum(&cc, &xx, k, 0, k).mulp(-n1) - pgx.sum(&gg, &xx, k, 0, k - 1)
