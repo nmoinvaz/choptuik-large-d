@@ -700,17 +700,24 @@ def full_points(folders):
         D = round(float(r["D_str"]), 9)
         key = r.get("F_check") if r.get("F_check") is not None else (r.get("F_solve") or 1.0)
         if D not in best or key < best[D][0]:
-            v = mp.fsum(mp.mpf(repr(float(x))) for x in r["Delta_parts"])
+            v = mp.fsum(mp.mpf(float(x)) for x in r["Delta_parts"])     # exact; mpf(repr(x)) is the decimal, off by up to 1e-17
             best[D] = (key, (v, float(e), src, ek, r["D_str"]))
     return {D: b[1] for D, b in sorted(best.items())}
 
 
-def real_recs(L, ys, sig, ref, O=None):
+def real_recs(L, ys, sig, ref=None, O=None):
+    """the fit records of real data (ys arb, sig floats); d = value - ref as a float, ref (when not given) the value
+    of the highest degree at the lowest level in the first variable, so that d resolves differences far below the
+    data's sigma (a reference of order 1e-2 from the limit would leave d a float resolution of about 1e-18)"""
     w = [arb(1) / arb(s) for s in sig]
     O = O or ladder_ops(L, w)
+    vals = {key: sum((g[i] * ys[j] for i, j in enumerate(idx)), arb(0)) for key, (idx, g, P, gf, Pf) in O.items()}
+    if ref is None:
+        v0 = next(iter(VARS))
+        ref = vals[max((k for k in vals if k[0] == v0 and k[1] == 0), key=lambda k: k[2])]
     recs = {}
     for key, (idx, g, P, gf, Pf) in O.items():
-        val = sum((g[i] * ys[j] for i, j in enumerate(idx)), arb(0))
+        val = vals[key]
         yw = arb_mat([[ys[j] * w[j]] for j in idx])
         r = P * yw
         rr = np.array([float(r[i, 0]) for i in range(len(idx))])
@@ -759,7 +766,6 @@ def cmd_real():
         j = len(L) // 2
         ys[j] = ys[j] + a(mp.mpf(30 * sig[j]))
         print("MUTATION: D %g moved by +30 sigma (%.1e)" % (L[j], 30 * sig[j]))
-    ref = ys[0]
     out = {"points": {pts[d][4]: dict(Delta=mp.nstr(pts[d][0], 20), sigma=pts[d][1], err_kind=pts[d][3],
                                       src=pts[d][2]) for d in L}, "rule": RULE, "F": float(args.get("F", "1"))}
     Fc = out["F"]
@@ -769,7 +775,7 @@ def cmd_real():
         if "out" in args:
             json.dump(out, open(args["out"], "w"), indent=1, default=str)
         sys.exit(1)
-    recs = real_recs(L, ys, sig, ref)
+    recs = real_recs(L, ys, sig)
     est = select(recs, L)
     if est is None:
         print("no D0: no variable has a stable degree at any D_min level; nothing quoted")
@@ -789,7 +795,7 @@ def cmd_real():
         if Di < est["D0"]:
             continue
         yi = ys[:i] + ys[i + 1:]
-        ei = select(real_recs(Li, yi, ri, ref, Oi), Li)
+        ei = select(real_recs(Li, yi, ri, O=Oi), Li)
         if ei is None:
             zs[Di] = None
             continue
