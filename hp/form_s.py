@@ -1163,6 +1163,8 @@ def cmd_release_ls(argv):
                              rest=[np.asarray(p)[:M] for p in d[2:]])[0]
             ndk = float(max(abs(dk[0]), abs(dk[1])))
             rec = dict(harm=k, outer=outer, F=nr, dh=ndk, dDelta_full=float(np.asarray(d[0])[-1]), pmin=pmin, pmax=pmax)
+            print(f"    h{k} outer {outer}: target |F| {nr:.2e}, harmonic-{k} step {ndk:.2e} ({time.time() - t0:.0f} s)",
+                  flush=True)
             if ndk < float(o["tol_h"]) or nr <= float(o["tol"]):
                 rec.update(done=True)
                 with open(log, "a") as fh:
@@ -1181,6 +1183,9 @@ def cmd_release_ls(argv):
                 nt = float(np.abs(np.asarray(Ft[0]) + np.asarray(Ft[1])).max())
                 trials.append(dict(lam=lam, inner_conv=bool(conv), inner_floor=floor, inner_steps=len(recs),
                                    inner_F=recs[-1].get("F_new") if recs else None, F=nt))
+                print(f"    h{k} outer {outer} trial lam {lam:g}: inner {'converged' if conv else 'floor' if floor else 'NOT converged'} "
+                      f"in {len(recs)} steps (|F| {trials[-1]['inner_F'] if recs else float('nan'):.2e}), target |F| {nt:.2e} "
+                      f"against {nr:.2e} ({time.time() - t0:.0f} s)", flush=True)
                 if (conv or floor) and nt < nr:
                     acc = True
                     break
