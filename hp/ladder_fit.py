@@ -184,9 +184,10 @@ def cheb_rows(ts, lo, hi, K):
     return rows
 
 
-def ops(Ds, w, var, K):
+def ops(Ds, w, var, K, Dt=None):
     """weighted least squares of degree K in var on the points Ds with weights w (1/sigma, relative): g (the weights of
-    the value at x = 0 on the data), P (the weighted residual projector, I - H), both arb"""
+    the value at x = 0 on the data), P (the weighted residual projector, I - H), both arb; with Dt also gt, the
+    weights of the fit's value at D = Dt"""
     f = VARS[var]
     ts = [a(f(mp.mpf(d))) for d in Ds]
     lo = min(ts, key=float)
@@ -198,11 +199,16 @@ def ops(Ds, w, var, K):
     H = X * Ni * X.transpose()
     N = len(Ds)
     P = arb_mat([[(1 if i == j else 0) - H[i, j] for j in range(N)] for i in range(N)])
-    return [G[0, i] * w[i] for i in range(N)], P
+    if Dt is None:
+        return [G[0, i] * w[i] for i in range(N)], P
+    rt = arb_mat([cheb_rows([a(f(mp.mpf(Dt)))], lo, hi, K)[0]])
+    Gt = rt * Ni * X.transpose()
+    return [G[0, i] * w[i] for i in range(N)], P, [Gt[0, i] * w[i] for i in range(N)]
 
 
-def ladder_ops(L, w=None):
-    """{(var, lev, K): (idx, g arb list, P arb_mat, g float array, P float array)} for the ladder L (sorted D list)"""
+def ladder_ops(L, w=None, Dt=None, OT=None):
+    """{(var, lev, K): (idx, g arb list, P arb_mat, g float array, P float array)} for the ladder L (sorted D list);
+    with Dt, OT[key] = (gt arb list, gt float array), the weights of each fit's value at D = Dt"""
     w = w or [arb(1)] * len(L)
     out = {}
     for var in VARS:
@@ -211,11 +217,30 @@ def ladder_ops(L, w=None):
             if len(idx) < RULE["NMIN"]:
                 continue
             for K in range(1, min(RULE["KMAX"], len(idx) - 3) + 1):
-                g, P = ops([L[i] for i in idx], [w[i] for i in idx], var, K)
+                if Dt is None:
+                    g, P = ops([L[i] for i in idx], [w[i] for i in idx], var, K)
+                else:
+                    g, P, gt = ops([L[i] for i in idx], [w[i] for i in idx], var, K, Dt)
+                    OT[(var, lev, K)] = (gt, np.array([float(x) for x in gt]))
                 gf = np.array([float(x) for x in g])
                 Pf = np.array([[float(P[i, j]) for j in range(len(idx))] for i in range(len(idx))])
                 out[(var, lev, K)] = (idx, g, P, gf, Pf)
     return out
+
+
+def loo_ops(L, rel):
+    """the leave-one-out check's fits: per point i, the ladder without it, its fits and their weights at D_i"""
+    out = []
+    for i in range(len(L)):
+        Li = L[:i] + L[i + 1:]
+        ri = rel[:i] + rel[i + 1:]
+        OT = {}
+        Oi = ladder_ops(Li, [arb(1) / a(r) for r in ri], Dt=L[i], OT=OT)
+        out.append((i, L[i], Li, ri, Oi, OT))
+    return out
+
+
+ZLOO = 10.0                                            # the leave-one-out check's bar (planted: #1098)
 
 
 # ---- the rule -------------------------------------------------------------------------------------------------------
@@ -305,9 +330,66 @@ def patterns(L, seeds):
     return np.array(zs).T, names
 
 
-def run_planted(O, L, TP, sigma, Z, shift=None, rel=None):
+def recs_from(O, TP, sigma, z, rel):
+    """the fit records of one noise column z (point i's noise sigma rel_i z_i)"""
+    recs = {}
+    for key, (idx, g, P, gf, Pf) in O.items():
+        bias, r0 = TP[key]
+        zz = z[idx]
+        rr = r0 / sigma + Pf @ zz
+        recs[key] = dict(d=bias + sigma * float(gf @ (rel[idx] * zz)), s=sigma * float(np.linalg.norm(gf * rel[idx])),
+                         chi2=float(rr @ rr), dof=len(idx) - key[2] - 1, maxres=float(np.max(np.abs(rr))))
+    return recs
+
+
+def loo_prep(loo, L, kind, rel):
+    """per point i: the truth parts of the fits without it, and per fit t_i less the fit's noiseless value at D_i"""
+    tv = {d: a(truth(kind, d)) for d in L}
+    out = []
+    for i, Di, Li, ri, Oi, OT in loo:
+        TPi = truth_parts(Oi, Li, kind, rel=ri)
+        dev0 = {}
+        for key, (idx, g, P, gf, Pf) in Oi.items():
+            gt = OT[key][0]
+            pred = sum((gt[k] * tv[Li[j]] for k, j in enumerate(idx)), arb(0))
+            dev0[key] = float(tv[Di] - pred)
+        out.append((TPi, dev0))
+    return out
+
+
+def loo_planted(loo, preps, sigma, z, rel, D0):
+    """(z, D): the largest |z_i| over the points with D_i >= D0, z_i = (y_i - prediction) / sd, the prediction the
+    central fit (var, lev, K) of the rule run without point i, sd^2 = sigma_i^2 + the prediction's propagated variance
+    + (the prediction of degree K + 1 less it)^2 (its truncation, as the nested test reads it); (None, None) when no
+    point could be tested"""
+    worst = (None, None)
+    for (i, Di, Li, ri, Oi, OT), (TPi, dev0) in zip(loo, preps):
+        if Di < D0:
+            continue
+        zr = np.delete(z, i)
+        rr_ = np.delete(rel, i)
+        est = select(recs_from(Oi, TPi, sigma, zr, rr_), Li)
+        if est is None:
+            continue
+        key = est["central"]
+        idx = Oi[key][0]
+        gtf = OT[key][1]
+        dev = dev0[key] / sigma + rel[i] * z[i] - float(gtf @ (rr_[idx] * zr[idx]))
+        k1 = (key[0], key[1], key[2] + 1)
+        tr = 0.0
+        if k1 in OT:
+            g1 = OT[k1][1]
+            tr = dev - (dev0[k1] / sigma + rel[i] * z[i] - float(g1 @ (rr_[idx] * zr[idx])))
+        sd = math.sqrt(rel[i] ** 2 + float(np.sum((gtf * rr_[idx]) ** 2)) + tr ** 2)
+        if worst[0] is None or abs(dev / sd) > abs(worst[0]):
+            worst = (dev / sd, Di)
+    return worst
+
+
+def run_planted(O, L, TP, sigma, Z, shift=None, rel=None, loo=None, preps=None):
     """the rule on every column of Z at this sigma (point i's noise sigma rel_i z_i): list of select() results (None
-    where nothing is quoted), with d = value - limit"""
+    where nothing is quoted), with d = value - limit; with loo (loo_ops) and preps (loo_prep), each result also
+    carries the leave-one-out check's largest |z| and its D"""
     S = Z.shape[1]
     rel = np.array(rel or [1.0] * len(L))
     res = []
@@ -315,16 +397,10 @@ def run_planted(O, L, TP, sigma, Z, shift=None, rel=None):
         z = Z[:, k].copy()
         if shift is not None:
             z[shift[0]] += shift[1]
-        recs = {}
-        for key, (idx, g, P, gf, Pf) in O.items():
-            bias, r0 = TP[key]
-            zz = z[idx]
-            rr = r0 / sigma + Pf @ zz
-            dof = len(idx) - key[2] - 1
-            recs[key] = dict(d=bias + sigma * float(gf @ (rel[idx] * zz)),
-                             s=sigma * float(np.linalg.norm(gf * rel[idx])),
-                             chi2=float(rr @ rr), dof=dof, maxres=float(np.max(np.abs(rr))))
-        res.append(select(recs, L))
+        r = select(recs_from(O, TP, sigma, z, rel), L)
+        if r is not None and loo is not None:
+            r["loo"], r["loo_D"] = loo_planted(loo, preps, sigma, z, rel, r["D0"])
+        res.append(r)
     return res
 
 
@@ -451,11 +527,17 @@ def cmd_budget():
 
 
 # ---- controls -------------------------------------------------------------------------------------------------------
+def flagged(r):
+    """the rule's checks on one planted result: no quote, or the leave-one-out check over ZLOO"""
+    return r is None or (r.get("loo") is not None and abs(r["loo"]) > ZLOO)
+
+
 def cmd_controls():
     """on T1 at one ladder and sigma, Gaussian seeds 21-30 (not the calibration seeds 1-20): each control must fire.
-    shift: the D 1000 point moved by +30 sigma; the rule must quote nothing or drop D 1000 (exit 1 if not).
-    tight: E divided by 10; the coverage check must fail in some seed. Informational: the shift size the rule always
-    catches, at D 1000 and at the ladder's lowest point."""
+    shift: the D 1000 point moved by +30 sigma; the rule must quote nothing, drop D 1000, or fail the leave-one-out
+    check (|z| > ZLOO at some point), in every seed (exit 1 if not).
+    tight: E divided by 10; the coverage check must fail in some seed. Informational: the unmutated false alarms, and
+    the shift size the checks catch, at D 1000 and at the ladder's lowest point."""
     lk = args.get("ladder", "A")
     sg = float(args.get("sigma", "1e-22"))
     name, L = LADDERS[lk]
@@ -463,21 +545,28 @@ def cmd_controls():
     out = {}
     O = ladder_ops(L)
     TP = truth_parts(O, L, "T1")
+    loo = loo_ops(L, [1.0] * len(L))
+    preps = loo_prep(loo, L, "T1", [1.0] * len(L))
     Z, names = patterns(L, list(range(21, 31)))
     Z = Z[:, :10]
-    base = run_planted(O, L, TP, sg, Z)
+    base = run_planted(O, L, TP, sg, Z, loo=loo, preps=preps)
     q = [r for r in base if r is not None]
-    print("controls on T1, ladder %s, sigma %.0e, seeds 21-30; F %.2f" % (lk, sg, Fc))
-    print("  unmutated: %d of 10 quoted; |err| / (F E0) max %.2f" % (
-        len(q), max(abs(r["d"]) / (Fc * r["E0"]) for r in q) if q else float("nan")))
-    out["base"] = dict(quoted=len(q), ratio_max=max(abs(r["d"]) / (Fc * r["E0"]) for r in q) if q else None)
+    fa = sum(1 for r in q if flagged(r))
+    print("controls on T1, ladder %s, sigma %.0e, seeds 21-30; F %.2f; leave-one-out bar %.1f" % (lk, sg, Fc, ZLOO))
+    print("  unmutated: %d of 10 quoted; |err| / (F E0) max %.2f; leave-one-out |z| max %.2f (false alarms %d)" % (
+        len(q), max(abs(r["d"]) / (Fc * r["E0"]) for r in q) if q else float("nan"),
+        max((abs(r["loo"]) for r in q if r["loo"] is not None), default=float("nan")), fa))
+    out["base"] = dict(quoted=len(q), ratio_max=max(abs(r["d"]) / (Fc * r["E0"]) for r in q) if q else None,
+                       loo_max=max((abs(r["loo"]) for r in q if r["loo"] is not None), default=None), false_alarms=fa)
     j = L.index(1000.0)
-    sh = run_planted(O, L, TP, sg, Z, shift=(j, 30.0))
-    fired = sum(1 for r in sh if r is None or (r["D0"] > 1000.0))
-    miss = sum(1 for r in sh if r is not None and abs(r["d"]) > Fc * r["E0"])
-    print("  shift (D 1000 by +30 sigma): no quote (or D 1000 dropped) in %d of 10; quoted but |err| > F E in %d" % (
-        fired, miss))
-    out["shift"] = dict(fired=fired, quoted_wrong=miss)
+    sh = run_planted(O, L, TP, sg, Z, shift=(j, 30.0), loo=loo, preps=preps)
+    fired = sum(1 for r in sh if flagged(r) or r["D0"] > 1000.0)
+    miss = sum(1 for r in sh if not flagged(r) and r["D0"] <= 1000.0 and abs(r["d"]) > Fc * r["E0"])
+    print("  shift (D 1000 by +30 sigma): fired (no quote, D 1000 dropped, or leave-one-out) in %d of 10 (%s); "
+          "passed and |err| > F E in %d" % (fired, ", ".join(
+              "none" if r is None else "D0 %g loo %.1f at D %g" % (r["D0"], r["loo"] or 0, r["loo_D"] or 0)
+              for r in sh), miss))
+    out["shift"] = dict(fired=fired, passed_wrong=miss)
     tight = sum(1 for r in q if abs(r["d"]) > 0.1 * Fc * r["E0"])
     print("  tight (E / 10): coverage fails in %d of %d" % (tight, len(q)))
     out["tight"] = dict(fired=tight)
@@ -485,19 +574,59 @@ def cmd_controls():
     for at in (1000.0, L[0]):
         jj = L.index(at)
         for k in (3.0, 5.0, 10.0, 20.0):
-            rs = run_planted(O, L, TP, sg, Z, shift=(jj, k))
+            rs = run_planted(O, L, TP, sg, Z, shift=(jj, k), loo=loo, preps=preps)
             nq = sum(1 for r in rs if r is None)
-            dropped = sum(1 for r in rs if r is not None and r["D0"] > at)
-            wrong = sum(1 for r in rs if r is not None and r["D0"] <= at and abs(r["d"]) > Fc * r["E0"])
-            print("  shift scan: D %g by %+g sigma: no quote %d, point dropped %d, kept and |err| > F E %d (of 10)" % (
-                at, k, nq, dropped, wrong))
-            out["shift_scan"].append(dict(D=at, k=k, no_quote=nq, dropped=dropped, wrong=wrong))
+            lf = sum(1 for r in rs if r is not None and flagged(r))
+            dropped = sum(1 for r in rs if r is not None and not flagged(r) and r["D0"] > at)
+            wrong = sum(1 for r in rs if r is not None and not flagged(r) and r["D0"] <= at
+                        and abs(r["d"]) > Fc * r["E0"])
+            print("  shift scan: D %g by %+g sigma: no quote %d, leave-one-out fires %d, point dropped %d, passed "
+                  "and |err| > F E %d (of 10)" % (at, k, nq, lf, dropped, wrong))
+            out["shift_scan"].append(dict(D=at, k=k, no_quote=nq, loo_fired=lf, dropped=dropped, wrong=wrong))
     ok = fired == 10 and tight > 0
     print("controls in this process (shift, tight): %s; lowdeg and var run as separate processes "
           "(--mutate=lowdeg, --mutate=var)" % ("FIRE" if ok else "DID NOT FIRE"))
     if "out" in args:
         json.dump(out, open(args["out"], "w"), indent=1)
     sys.exit(0 if ok else 1)
+
+
+def cmd_loocheck():
+    """the leave-one-out check on clean planted data (seeds 21-40, every truth): how often it fires (on T1-T3 a false
+    alarm; on T4 and T5 it may see the low points' exponential term), and the coverage of what passes"""
+    lads = args.get("ladders", "A,A20,E20").split(",")
+    sigmas = [float(v) for v in args.get("sigmas", "1e-22,1e-23").split(",")]
+    Fs = dict(kv.split(":") for kv in args.get("Fs", "").split(",") if kv)
+    out = {}
+    for lk in lads:
+        name, L = LADDERS[lk]
+        rel = [1.0] * len(L)
+        Fc = float(Fs.get(lk, "1"))
+        O = ladder_ops(L)
+        loo = loo_ops(L, rel)
+        Z, names = patterns(L, list(range(21, 41)))
+        Z = Z[:, :20]
+        for kind in TRUTHS:
+            TP = truth_parts(O, L, kind)
+            preps = loo_prep(loo, L, kind, rel)
+            for sg in sigmas:
+                rs = run_planted(O, L, TP, sg, Z, loo=loo, preps=preps)
+                q = [r for r in rs if r is not None]
+                fl = [r for r in q if flagged(r)]
+                ps = [r for r in q if not flagged(r)]
+                cov = sum(1 for r in ps if abs(r["d"]) <= Fc * r["E0"])
+                zs = sorted(abs(r["loo"]) for r in q if r["loo"] is not None)
+                rec = dict(quoted=len(q), fired=len(fl), passed=len(ps), covered=cov,
+                           z_med=zs[len(zs) // 2] if zs else None, z_max=zs[-1] if zs else None,
+                           fired_at=sorted(set(r["loo_D"] for r in fl)))
+                out["%s %s %.0e" % (lk, kind, sg)] = rec
+                print("%s %s sigma %.0e: quoted %d of 20; leave-one-out fires %d (at D %s), |z| med %s max %s; "
+                      "passed %d, covered at F %.2f: %d" % (
+                          lk, kind, sg, len(q), len(fl), ",".join("%g" % d for d in rec["fired_at"]) or "-",
+                          "%.2f" % rec["z_med"] if zs else "-", "%.2f" % rec["z_max"] if zs else "-", len(ps), Fc, cov),
+                      flush=True)
+    if "out" in args:
+        json.dump(out, open(args["out"], "w"), indent=1)
 
 
 def cmd_mutated():
@@ -576,9 +705,9 @@ def full_points(folders):
     return {D: b[1] for D, b in sorted(best.items())}
 
 
-def real_recs(L, ys, sig, ref):
+def real_recs(L, ys, sig, ref, O=None):
     w = [arb(1) / arb(s) for s in sig]
-    O = ladder_ops(L, w)
+    O = O or ladder_ops(L, w)
     recs = {}
     for key, (idx, g, P, gf, Pf) in O.items():
         val = sum((g[i] * ys[j] for i, j in enumerate(idx)), arb(0))
@@ -652,14 +781,63 @@ def cmd_real():
         v.mid().str(25, radius=False), E, Fc, est["h"], est["s"], est["D0"], est["central"][0], est["K"],
         len(est["cands"])))
     worst = max(abs(x) / 1.0 for x in cen["resid"])
-    print("  check: central fit's residuals (fit - data)/sigma: %s; max %.2f: %s" % (
+    print("  check 1: central fit's residuals (fit - data)/sigma: %s; max %.2f: %s" % (
         ", ".join("%g: %+.2f" % (L[j], x) for j, x in zip(cen["idx"], cen["resid"])), worst,
         "PASS" if worst <= 3.5 else "FAIL"))
+    zs = {}
+    for i, Di, Li, ri, Oi, OT in loo_ops(L, sig):          # weights 1/sigma_i
+        if Di < est["D0"]:
+            continue
+        yi = ys[:i] + ys[i + 1:]
+        ei = select(real_recs(Li, yi, ri, ref, Oi), Li)
+        if ei is None:
+            zs[Di] = None
+            continue
+        key = ei["central"]
+        idx = Oi[key][0]
+        gt = OT[key][0]
+        pred = sum((gt[k] * yi[j] for k, j in enumerate(idx)), arb(0))
+        k1 = (key[0], key[1], key[2] + 1)
+        tr = 0.0
+        if k1 in OT:
+            tr = float(sum((OT[k1][0][k] * yi[j] for k, j in enumerate(idx)), arb(0)) - pred)
+        sd = math.sqrt(sig[i] ** 2 + sum(float(gt[k]) ** 2 * ri[j] ** 2 for k, j in enumerate(idx)) + tr ** 2)
+        zs[Di] = float(ys[i] - pred) / sd
+    zmax = max((abs(z) for z in zs.values() if z is not None), default=0.0)
+    print("  check 2 (leave-one-out, bar %.1f): each point against the rule run without it, (data - prediction)/sd: "
+          "%s; max %.2f: %s" % (ZLOO, ", ".join("%g: %s" % (d, "-" if z is None else "%+.2f" % z)
+                                                for d, z in sorted(zs.items())), zmax,
+                                "PASS" if zmax <= ZLOO else "FAIL"))
+    ok = worst <= 3.5 and zmax <= ZLOO
     out.update(Delta_inf=v.mid().str(25, radius=False), E=E, h=est["h"], s=est["s"], D0=est["D0"],
-               central=list(est["central"]), cands=[list(c) for c in est["cands"]], check_max_resid=worst)
+               central=list(est["central"]), cands=[list(c) for c in est["cands"]], check_max_resid=worst,
+               check_loo={str(d): z for d, z in zs.items()}, ok=ok)
     if "out" in args:
         json.dump(out, open(args["out"], "w"), indent=1, default=str)
-    sys.exit(0 if worst <= 3.5 else 1)
+    sys.exit(0 if ok else 1)
+
+
+def cmd_mkreal():
+    """planted records in the direct_s.jsonl format, for a test of `real` through its own reader:
+    --ladder=E20 --truth=T1 --sigma=1e-23 --seed=1 --dir=DIR writes DIR/direct_s.jsonl (full system, the noise's sigma
+    as a discretization bound, Delta in eight double parts)"""
+    lk = args.get("ladder", "E20")
+    kind = args.get("truth", "T1")
+    sg = float(args.get("sigma", "1e-23"))
+    rng = random.Random(5000 + int(args.get("seed", "1")))
+    name, L = LADDERS[lk]
+    os.makedirs(args["dir"], exist_ok=True)
+    with open(os.path.join(args["dir"], "direct_s.jsonl"), "w") as fh:
+        for d in L:
+            v = truth(kind, d) + mp.mpf(rng.gauss(0, 1)) * mp.mpf(sg)
+            parts = []
+            for _ in range(8):
+                parts.append(float(v - mp.fsum(mp.mpf(x) for x in parts)))
+            fh.write(json.dumps(dict(D_str=repr(float(d)), system="full", valid=True, Delta_parts=parts,
+                                     F_check=1e-60, disc={"steps halved": {"dDelta_bound": sg}},
+                                     planted=dict(truth=kind, sigma=sg, ladder=lk))) + "\n")
+    print("wrote %d planted %s records (sigma %.0e, ladder %s) to %s; the truth's limit %s" % (
+        len(L), kind, sg, lk, args["dir"], mp.nstr(RLIM, 25)))
 
 
 if __name__ == "__main__":
@@ -674,6 +852,10 @@ if __name__ == "__main__":
         cmd_probe()
     elif cmd == "budget":
         cmd_budget()
+    elif cmd == "loocheck":
+        cmd_loocheck()
+    elif cmd == "mkreal":
+        cmd_mkreal()
     elif cmd == "real":
         cmd_real()
     else:
