@@ -1,22 +1,22 @@
 table,row,value
-count,prompts,1582
+count,prompts,1593
 count,sessions,20
 count,first day,2026-10-24
 count,last day,2026-11-26
 count,days with a prompt,33
 count,"prompts per day, median",42
 count,"prompts per day, most",140
-count,hours with a prompt,330
+count,hours with a prompt,332
 count,"hours with a prompt per day, median",10
-words,median,9.0
-words,5 or fewer,445
-words,6 to 20,925
-words,21 to 50,195
-words,over 50,17
-"form, all prompts",instruction or statement,840
-"form, all prompts","question: why, what or how",221
-"form, all prompts","question: whether, can we, should we",271
-"form, all prompts",go-ahead or choice,201
+words,median,9
+words,5 or fewer,447
+words,6 to 20,929
+words,21 to 50,199
+words,over 50,18
+"form, all prompts",instruction or statement,847
+"form, all prompts","question: why, what or how",223
+"form, all prompts","question: whether, can we, should we",272
+"form, all prompts",go-ahead or choice,202
 "form, all prompts",check-in,49
 "form, course-changing prompts",instruction or statement,79
 "form, course-changing prompts","question: why, what or how",22
@@ -25,3 +25,29 @@ words,over 50,17
 "form, course-changing prompts",check-in,0
 course-changing prompts,count,145
 course-changing prompts,median words,11
+component,the chat,523
+component,coordinator sessions,1182
+component,the libraries,229
+component,"channel, tracker and housekeeping",107
+component,the Mac runner,13
+component,"this paper, the film and the one-prompt trial",49
+component,short sessions,13
+component sessions,coordinator sessions,4
+component dates,coordinator sessions,2026-10-26 to 2026-11-26
+component sessions,the libraries,2
+component dates,the libraries,2026-10-28 to 2026-11-19
+component sessions,"channel, tracker and housekeeping",5
+component dates,"channel, tracker and housekeeping",2026-11-10 to 2026-11-11
+component sessions,the Mac runner,2
+component dates,the Mac runner,2026-10-24 to 2026-11-04
+component sessions,"this paper, the film and the one-prompt trial",1
+component dates,"this paper, the film and the one-prompt trial",2026-11-25 to 2026-11-26
+component sessions,short sessions,6
+component dates,short sessions,2026-11-11 to 2026-11-22
+component,all,2116
+"form, the chat",instruction or statement,259
+"form, the chat","question: why, what or how",101
+"form, the chat","question: whether, can we, should we",103
+"form, the chat",go-ahead or choice,38
+"form, the chat",check-in,22
+"words, the chat",median,10

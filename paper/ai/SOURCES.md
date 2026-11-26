@@ -485,10 +485,10 @@ transcripts are private, so the repository holds the script and the counts only.
 
 | item | source |
 |---|---|
-| 1582 prompts, 20 sessions, 33 days with a prompt, 2026-10-24 to 2026-11-26 | `prompt_stats.csv`, table `count` |
+| 1593 prompts, 20 sessions, 33 days with a prompt, 2026-10-24 to 2026-11-26, counted to 2026-11-26 07:20 UTC (`UNTIL` in the script) | `prompt_stats.csv`, table `count` |
 | median 9 words; 445 of 5 words or fewer (28%); 17 over 50 (1%) | `prompt_stats.csv`, table `words` |
 | 42 prompts on a median day; 10 hours with a prompt on a median day (330 such hours in all, UTC days) | `prompt_stats.csv`, table `count` |
-| the forms of all prompts: 840, 221, 271, 201, 49 | `prompt_stats.csv`, table `form, all prompts` |
+| the forms of all prompts: 847, 223, 272, 202, 49 | `prompt_stats.csv`, table `form, all prompts` |
 | the forms of the 145: 79, 22, 40, 4, 0; median 11 words | `prompt_stats.csv`: the list of 145 above, read by the same `form()` |
 | the five example prompts and "Could it be a sum?" carry the form their row names | `form()` run on each, 2026-11-26 |
 | a reading of 100 agreed on 97 | `--sample 100 --seed 59`, read by the Claude session that wrote the script. The three misses: a go-ahead of 16 words read as an instruction, "Do each wave form in the series follows a particular pattern." read as an instruction, "what is going on?" read as a question, not a check-in |
@@ -619,3 +619,15 @@ and page.
 | "Will I look like I have egg on my face ..." | `og:` prompt 137, page 193 ("turn out", "hallisnation" in the original) |
 | sent in the first week | `og:` prompt 142, page 197 ("E-mail has been sent."), after the drafts of 2026-10-20 |
 | the correspondence is private; the rule on the authors' results | `og:` prompt 383, page 469 ("remember we should not expose the author's results anywhere in what we write to the repo") |
+
+### The census to the first day (update of 26 November)
+
+    uv run --with pdfplumber python3 paper/ai/prompt_stats.py TRANSCRIPT_DIR --chat ~/Source/choptuik-og-history.pdf
+
+adds the chat (`og:`, 523 prompts, median 10 words; forms 259, 101, 103, 38, 22) and the components: the chat 523,
+coordinator sessions 1182 (4 sessions), the libraries 229 (2), channel, tracker and housekeeping 107 (5), the Mac runner
+13 (2), this paper, the film and the one-prompt trial 49 (1), short sessions 13 (6), all 2116; with the 86 prompts typed
+into runner sessions (Appendix C), 2202. It writes `prompt_times.csv` (day from 18 October, component row, form; no
+text) for a figure of all sessions. A reading of 50 chat prompts drawn at random (seed 5) agreed with the rules on 45;
+the misses were two choices and three statements read as other forms. The census numbers moved from 1582 to 1593 when the
+cutoff was pinned at 2026-11-26 07:20 UTC.

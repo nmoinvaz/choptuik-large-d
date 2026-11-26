@@ -3,6 +3,9 @@
     python3 paper/ai/prompt_stats.py TRANSCRIPT_DIR            # writes paper/ai/prompt_stats.csv, prints the tables
     python3 paper/ai/prompt_stats.py TRANSCRIPT_DIR --sample 100 --seed 7   # a random sample with labels, to check by hand
     python3 paper/ai/prompt_stats.py --selftest [--mutate=form|drop|dup]
+    uv run --with pdfplumber python3 paper/ai/prompt_stats.py TRANSCRIPT_DIR --chat ~/Source/choptuik-og-history.pdf
+                        # adds the chat where the project began, read from its printed copy (the user's prompts are
+                        # set in their own typeface); writes prompt_times.csv for the figure of all sessions
 
 TRANSCRIPT_DIR is Claude Code's folder of session transcripts (.jsonl) for this project on the coordinator machine.
 The transcripts are private, so only the counts are stored. A prompt is a `type == "user"` record that is not meta,
@@ -43,6 +46,41 @@ WH0 = re.compile(LEAD + r"(what|why|how|where|which|who|whose)\b", re.I)
 AUX = re.compile(LEAD + r"(is|are|was|were|does|did|can|could|should|would|will|shall|isn'?t|aren'?t|doesn'?t|wouldn'?t|shouldn'?t|couldn'?t|any|"
                  r"do (we|you|i|they|it|any)|don'?t (we|you|they))\b", re.I)
 POINTER = re.compile(r"^(\[Image #\d+\]\s*)+$|^[~/][\w./@+\-]+$|^https?://\S+$")
+# each Claude Code session of the project by the part of the work it served; any other is a short session
+COMPONENT = {**dict.fromkeys(["43f19197", "11bcbd25", "afb99455", "0726f216"], "coordinator sessions"),
+             **dict.fromkeys(["6d6cbe24", "ebec4b64"], "the libraries"),
+             **dict.fromkeys(["0c8fc979", "22958cb5", "c88d10f3", "9fac6212", "12451890"], "channel, tracker and housekeeping"),
+             **dict.fromkeys(["cc3aa2b5", "3bc27918"], "the Mac runner"),
+             "cb202ff5": "this paper, the film and the one-prompt trial"}
+ROWS = ["the chat", "coordinator sessions", "the libraries", "channel, tracker and housekeeping", "the Mac runner",
+        "this paper, the film and the one-prompt trial", "short sessions"]
+UNTIL = "2026-11-26T07:20:00Z"        # the counts stop here, so a rerun gives the same numbers as the paper
+CHAT_END = "2026-10-26T15:53:00Z"      # the handoff to the first Claude Code coordinator (tx:43f19197's first record)
+DAY0 = "2026-10-18"
+
+
+def component(sid):
+    return COMPONENT.get(sid[:8], "short sessions")
+
+
+def chat_prompts(pdf):
+    """The user's prompts in the printed chat: lines set in the prompt typeface, joined while they run on."""
+    import pdfplumber
+    out, cur = [], None
+    for p in pdfplumber.open(pdf).pages:
+        for line in p.extract_text_lines():
+            c = line["chars"][0]
+            if c["fontname"].endswith("Roman-Regular") and c["size"] > 11 and line["x0"] > 100:
+                if cur is not None:
+                    cur.append(line["text"])
+                else:
+                    cur = [line["text"]]
+                    out.append(cur)
+            elif line["top"] > 25:                 # anything but the page header ends a prompt
+                cur = None
+    return [" ".join(x) for x in out]
+
+
 FORMS = ["instruction or statement", "question: why, what or how", "question: whether, can we, should we", "go-ahead or choice", "check-in"]
 
 
@@ -99,6 +137,8 @@ def prompts(lines_by_session, mutate=""):
             if not t or POINTER.search(t) or (key in seen and mutate != "dup"):
                 continue
             seen.add(key)
+            if (e.get("timestamp") or "") >= UNTIL:
+                continue
             kept.append({"session": sid[:8], "t": e.get("timestamp") or "", "text": t})
     return sorted(kept, key=lambda r: r["t"])
 
@@ -114,6 +154,29 @@ def pushes():
         elif on and line.startswith("| ") and not line.startswith(("| when", "|---")):
             c = [x.strip() for x in line.strip("|").split("|", 3)]
             rows.append((c[2], c[3]))
+    return rows
+
+
+def days(t):
+    from datetime import datetime
+    a = datetime.fromisoformat(t.replace("Z", "+00:00"))
+    b = datetime.fromisoformat(DAY0 + "T00:00:00+00:00")
+    return round((a - b).total_seconds() / 86400, 4)
+
+
+def components(P, chat):
+    rows = [("component", "the chat", len(chat))] if chat is not None else []
+    c = Counter(component(p["session"]) for p in P)
+    rows += [("component", k, c[k]) for k in ROWS[1:]]
+    for k in ROWS[1:]:
+        ts = [p["t"][:10] for p in P if component(p["session"]) == k]
+        rows.append(("component sessions", k, len({p["session"] for p in P if component(p["session"]) == k})))
+        rows.append(("component dates", k, f"{min(ts)} to {max(ts)}"))
+    rows.append(("component", "all", sum(r[2] for r in rows if r[0] == "component")))
+    if chat is not None:
+        f = Counter(form(x) for x in chat)
+        rows += [("form, the chat", k, f[k]) for k in FORMS]
+        rows.append(("words, the chat", "median", statistics.median(len(x.split()) for x in chat)))
     return rows
 
 
@@ -158,6 +221,7 @@ def main():
     a.add_argument("dir", nargs="?"); a.add_argument("--out", default=str(HERE / "prompt_stats.csv"))
     a.add_argument("--sample", type=int, default=0); a.add_argument("--seed", type=int, default=7)
     a.add_argument("--selftest", action="store_true"); a.add_argument("--mutate", default="")
+    a.add_argument("--chat", default="")
     a = a.parse_args()
     if a.selftest:
         return selftest(a.mutate)
@@ -166,7 +230,14 @@ def main():
         for p in random.Random(a.seed).sample(P, a.sample):
             print(f"{form(p['text'])[:14]:14} | {p['text'][:140]!r}")
         return 0
-    rows = tables(P, pushes())
+    chat = chat_prompts(a.chat) if a.chat else None
+    rows = tables(P, pushes()) + components(P, chat)
+    if chat is not None:
+        with open(HERE / "prompt_times.csv", "w", newline="") as o:
+            w = csv.writer(o, lineterminator="\n")
+            w.writerow(["day", "row", "form"])
+            for p in P:
+                w.writerow([days(p["t"]), ROWS.index(component(p["session"])), FORMS.index(form(p["text"]))])
     with open(a.out, "w", newline="") as o:
         csv.writer(o, lineterminator="\n").writerows([("table", "row", "value")] + rows)
     for r in rows:
