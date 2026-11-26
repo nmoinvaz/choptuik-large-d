@@ -2350,7 +2350,7 @@ D,Delta_q0,Delta_q1,Delta_q2,Delta_q3,kind,err,err_kind,source,published_ref,pub
 249.0112515449524,1.6851165568503117,9.863940886647133e-17,4.233065285843166e-33,2.6162947625462017e-49,chain_fit,8.1e-09,weak pivot,I603-win2/chain/anm_run.jsonl,,,,I603-win2/chain/anm_pin3_D249.0113.npz
 249.3927212715149,1.6850541586792578,-7.92666964991516e-17,-1.992073796981313e-33,-1.1360357042657394e-49,chain_fit,1.0e-08,weak pivot,I603-win2/chain/anm_run.jsonl,,,,I603-win2/chain/anm_pin3_D249.3927.npz
 249.869558429718,1.6849764243622014,-9.897505970605721e-17,-6.159005151071552e-33,-2.2537735363075555e-50,chain_fit,2.3e-08,weak pivot,I603-win2/chain/anm_run.jsonl,,,,I603-win2/chain/anm_pin3_D249.8696.npz
-250.0,1.6849552059498034,-9.031299415560585e-17,,,series,8.13e-11,series fits,data/delta_series.csv:track_c,,,,
+250.0,1.684955205947076,6.789919179618189e-17,-3.9717538464842794e-33,2.729292935858782e-49,direct,2.4e-10,"held bias, first order",I1088-mac-a/direct_s.jsonl:1,,,,I1088-mac-a/form_s/j250_held/jump_s_D250.0000.npz
 250.16758165359497,1.6849279862851483,4.332267940431903e-17,2.1618752002815384e-33,-1.4373368206899415e-49,chain_fit,4.1e-08,weak pivot,I603-win2/chain/anm_run.jsonl,,,,I603-win2/chain/anm_pin3_D250.1676.npz
 250.46560487747192,1.684879657445179,-5.253988492797038e-17,1.3435762571215589e-33,4.555381447804584e-50,chain_fit,6.6e-08,weak pivot,I603-win2/chain/anm_run.jsonl,,,,I603-win2/chain/anm_pin3_D250.4656.npz
 250.8381339073181,1.684819394839602,-8.21938504095891e-17,3.8497302826408254e-33,1.4432669701444567e-49,chain_fit,1.4e-07,weak pivot,I603-win2/chain/anm_run.jsonl,,,,I603-win2/chain/anm_pin3_D250.8381.npz
@@ -2500,7 +2500,7 @@ D,Delta_q0,Delta_q1,Delta_q2,Delta_q3,kind,err,err_kind,source,published_ref,pub
 270.0,1.6819428539035648,1.7462335560322382e-17,,,series,9.78e-11,series fits,data/delta_series.csv:track_c,,,,
 280.0,1.6805965877064395,8.361002830036428e-17,,,series,1.06e-10,series fits,data/delta_series.csv:track_c,,,,
 290.0,1.679342350218628,9.764375400556087e-17,,,series,1.15e-10,series fits,data/delta_series.csv:track_c,,,,
-300.0,1.67817101541652,5.2352664707132256e-17,,,series,1.25e-10,series fits,data/delta_series.csv:track_c,,,,
+300.0,1.6781710154008715,2.1413019429263074e-17,-1.1509832086612528e-33,1.452134742133616e-50,direct,9.2e-17,discretization,I1088-dh610/direct_s.jsonl:1,,,,I1088-dh610/out/rls300/release_ls_h13_D300.0000.npz
 310.0,1.677074625483758,-4.0366389092280005e-17,,,series,1.35e-10,series fits,data/delta_series.csv:track_c,,,,
 320.0,1.6760462096577147,4.9899872812583575e-17,,,series,1.45e-10,series fits,data/delta_series.csv:track_c,,,,
 330.0,1.6750796357756892,8.973399623624246e-17,,,series,1.55e-10,series fits,data/delta_series.csv:track_c,,,,
@@ -2510,4 +2510,10 @@ D,Delta_q0,Delta_q1,Delta_q2,Delta_q3,kind,err,err_kind,source,published_ref,pub
 370.0,1.6717321631189825,7.162940442977519e-17,,,series,1.98e-10,series fits,data/delta_series.csv:track_c,,,,
 380.0,1.6710046580447704,2.8883897592158424e-17,,,series,2.09e-10,series fits,data/delta_series.csv:track_c,,,,
 390.0,1.6703142122548458,-6.386813953116287e-17,,,series,2.20e-10,series fits,data/delta_series.csv:track_c,,,,
-400.0,1.6696580641106333,-8.416238818944028e-17,,,series,2.31e-10,series fits,data/delta_series.csv:track_c,,,,
+400.0,1.6696580640970562,-9.127306659997882e-17,1.9900535938365398e-33,-1.0558896901160163e-51,direct,8.7e-10,"held bias, first order",I1088-dh610/direct_s.jsonl:2,,,,I1088-dh610/j400_held/jump_s_D400.0000.npz
+1000.0,1.6542408541458917,1.3050991196923786e-17,-4.183773284016303e-34,-1.1692062582216957e-51,direct,3.7e-14,last release,I1088-dh610/rls1000h13q/direct_s.jsonl:1,,,,I1088-dh610/rls1000h13q/release_ls_h13_D1000.0000.npz
+1414.0,1.651217160021568,-6.407591746726792e-17,-3.1885179085712855e-33,0.0,direct,5.3e-10,"held bias, first order",I1088-dh610/direct_s.jsonl:3,,,,I1088-dh610/j1414_held_mob/jump_s_D1414.0000.npz
+2000.0,1.6490743133619312,6.479622620197374e-17,-1.9404113345043843e-33,0.0,direct,5.1e-10,"held bias, first order",I1088-dh610/L2000/direct_s.jsonl:1,,,,I1088-dh610/L2000/lastnode_D2000.0000.npz
+2828.4271247461903,1.647558420562662,6.332954285357115e-17,-3.319345254918058e-33,1.176016472440566e-49,direct,5.1e-10,"held bias, first order at D 2000",I1088-dh370/L2828/direct_s.jsonl:1,,,,I1088-dh370/L2828/lastnode_D2828.4271.npz
+4000.0,1.6464857936999522,-8.853422552458807e-17,5.041055408672711e-33,0.0,direct,5.1e-10,"held bias, first order at D 2000",I1088-mac-a/form_s/L4000q/direct_s.jsonl:1,,,,I1088-mac-a/form_s/L4000q/lastnode_D4000.0000.npz
+8000.0,1.645190211705391,-8.868764422865178e-17,4.432948063019392e-33,0.0,direct,5.1e-10,"held bias, first order at D 2000",I1088-mm5/L8000/direct_s.jsonl:1,,,,I1088-mm5/L8000/lastnode_D8000.0000.npz
