@@ -2516,6 +2516,7 @@ Delta,l0 scalar field,519.0,,1.6637808713883250211498170305,,,9.1e-26,"ladder er
 Delta,l0 scalar field,622.0,,1.660501812395454483693876349,,,1.6e-25,"ladder err_sum (bound to k*, estimator past it, cross-checks)",numerical evidence,direct,hp/data/delta_all.csv (I1098-mac-a/ladder_records/D622/direct_s.jsonl:1)
 Delta,l0 scalar field,747.0,,1.6577326661349667045533645202,,,7.3e-26,"ladder err_sum (bound to k*, estimator past it, cross-checks)",numerical evidence,direct,hp/data/delta_all.csv (I1098-mac-a/ladder_records/D747/direct_s.jsonl:1)
 Delta,l0 scalar field,1000.0,,1.6542408541458916905217557165,,,4.7e-26,"ladder err_sum (bound to k*, estimator past it, cross-checks)",numerical evidence,direct,hp/data/delta_all.csv (I1098-mac-a/ladder_records/D1000/direct_s.jsonl:1)
+Delta,l0 scalar field,1291.0,,1.6519134340245542659018505791,,,7.8e-26,"ladder err_sum (bound to k*, estimator past it, cross-checks)",numerical evidence,direct,hp/data/delta_all.csv (I1098-mac-a/ladder_records/D1291/direct_s.jsonl:1)
 Delta,l0 scalar field,1414.0,,1.6512171600215679,,,5.3e-10,"held bias, first order",numerical evidence,direct,hp/data/delta_all.csv (I1088-dh610/direct_s.jsonl:3)
 Delta,l0 scalar field,2000.0,,1.6490743137452893,,,2.7e-14,last release,numerical evidence,direct,hp/data/delta_all.csv (I1088-dh610/rls2000d/direct_s.jsonl:1)
 Delta,l0 scalar field,2828.4271247461903,,1.6475584205626621,,,5.1e-10,"held bias, first order at D 2000",numerical evidence,direct,hp/data/delta_all.csv (I1088-dh370/L2828/direct_s.jsonl:1)
