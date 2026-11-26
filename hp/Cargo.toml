@@ -52,3 +52,8 @@ debug = false
 incremental = true
 # unstripped: macOS 27's dyld refuses the stripped extension ("mis-aligned LINKEDIT string pool"), as for release
 strip = false
+
+# multidouble's series module (series::mullow, series::Relaxed, Lane::block_mul; #1096) from its pull request's
+# branch until its release; then the version above is bumped and this patch removed
+[patch.crates-io]
+multidouble = { git = "https://github.com/nmoinvaz/multidouble", rev = "a7ef2bcf6f64f70a0f8ba4a5023624ed7153577d" }

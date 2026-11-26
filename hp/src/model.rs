@@ -103,6 +103,10 @@ pub struct Ctx<const B: usize> {
     /// form S's horizon variable: 0, the default, u = 1 - x (`form_s::horizon_series_s`); a > 0 the Moebius variable
     /// t = (1 - z)/(1 + a z), z = x^2 (`form_s::horizon_mob`)
     pub hmob: f64,
+    /// form S's Moebius horizon series' Cauchy sums (`form_s::horizon_mob`): 0, the default, each formed term by term;
+    /// 1, as relaxed products (multidouble's `series::Relaxed`), whose squares of earlier coefficients are exact block
+    /// products, on the lanes that have them (DV, QV, OV and the dual lanes Du, Qu, Ou; the others as by 0)
+    pub hrelax: u8,
 }
 
 /// `Ctx::series_split`: the middle terms of the horizon series' Cauchy sums formed ahead of each jet order, in
