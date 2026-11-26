@@ -631,3 +631,7 @@ into runner sessions (Appendix C), 2202. It writes `prompt_times.csv` (day from 
 text) for a figure of all sessions. A reading of 50 chat prompts drawn at random (seed 5) agreed with the rules on 45;
 the misses were two choices and three statements read as other forms. The census numbers moved from 1582 to 1593 when the
 cutoff was pinned at 2026-11-26 07:20 UTC.
+
+The outreach passage was cut on 2026-11-26 at Nathan's word ("it is not really significant, only in that i wanted to
+clarify how the work was done which doesn't require quotes") to the request for addresses, the conjecture and the
+disclosure; the rows above for prompts 134, 135 and 137 no longer back any text.
