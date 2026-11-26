@@ -131,8 +131,8 @@ trait Api: Send + Sync {
     fn newton_s(&mut self, z: &[&[f64]], mutate: u8, tangents: usize) -> Result<(Vec<Vec<f64>>, Vec<Vec<f64>>, (f64, f64), Option<ODLu>), String>;
 }
 
-/// f on the context as Ctx<4> or Ctx<6> (M = 32 or 48), with Ctx::mutate set for the call: form S is instantiated for
-/// these sizes (48 for #1098's M budget)
+/// f on the context as Ctx<4>, Ctx<6> or Ctx<8> (M = 32, 48 or 64), with Ctx::mutate set for the call: form S is
+/// instantiated for these sizes (48 and 64 for #1098's M budget)
 macro_rules! fs_sizes {
     ($me:expr, $mutate:expr, |$c:ident| $body:expr) => {{
         let me: &mut dyn std::any::Any = $me;
@@ -146,8 +146,13 @@ macro_rules! fs_sizes {
             let r = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| $body));
             $c.mutate = 0;
             r.unwrap_or_else(|p| std::panic::resume_unwind(p))
+        } else if let Some($c) = me.downcast_mut::<Ctx<8>>() {
+            $c.mutate = $mutate;
+            let r = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| $body));
+            $c.mutate = 0;
+            r.unwrap_or_else(|p| std::panic::resume_unwind(p))
         } else {
-            Err("form S is built for M = 32 and 48 only".to_string())
+            Err("form S is built for M = 32, 48 and 64 only".to_string())
         }
     }};
 }
