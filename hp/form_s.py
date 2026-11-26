@@ -601,7 +601,7 @@ def base_solver(s):
     return s, mu
 
 
-def qj_step(s, z8, F, gain=False, jscale=1.0, parts=4):
+def qj_step(s, z8, F, gain=False, jscale=1.0, parts=4, jstore=None, reuse=False):
     """the Newton step -J^-1 F with J form S's quad-double Jacobian at z8's leading four parts (jacobian_s at 4 parts)
     and F the octo-double residual's leading two parts, solved by multidouble's dd_solve (LU with partial pivoting in
     double-double); eight parts, the last six zero. At D 300 it converges as the octo-double Newton to 3e-44 in three
@@ -609,25 +609,34 @@ def qj_step(s, z8, F, gain=False, jscale=1.0, parts=4):
     sum |J^-T e_Delta| from the same J (Delta's first-order error is at most gain max |F|); returns (step, gain) then.
     jscale multiplies J for the step only (the control: 1.01 turns Newton linear). parts 2: the double-double Jacobian
     instead (with the Moebius horizon it converges step for step as the quad-double one at D 300, the coordinator's run
-    4 in I1088-dh370-mixed2/)."""
+    4 in I1088-dh370-mixed2/). jstore (a dict): each J formed is kept there with its gain (and passed to
+    jstore["save"] when set); reuse: the step takes the kept J instead (a chord step, one residual and one solve)."""
     from multidouble import dd_solve
-    base, mu = base_solver(s)
-    J = base.jacobian_s([np.ascontiguousarray(z8[q]) for q in range(parts)], mu)
-    Jh, Jl = np.asarray(J[0]), np.asarray(J[1])
+    L = len(z8[0])
+    if reuse and jstore is not None and "J" in jstore:
+        Jh, Jl = jstore["J"]
+        gv = jstore["gain"]
+    else:
+        base, mu = base_solver(s)
+        J = base.jacobian_s([np.ascontiguousarray(z8[q]) for q in range(parts)], mu)
+        Jh, Jl = np.asarray(J[0]), np.asarray(J[1])
+        eD = np.zeros(L)
+        eD[-1] = 1.0
+        g = np.asarray(dd_solve(np.ascontiguousarray(Jh.T), np.ascontiguousarray(Jl.T), eD, np.zeros(L))[0])
+        gv = float(np.abs(g).sum())
+        if jstore is not None:
+            jstore.update(J=(Jh, Jl), gain=gv)
+            if jstore.get("save"):
+                jstore["save"](Jh, Jl, gv)
     dh, dl = dd_solve(np.ascontiguousarray(Jh * jscale), np.ascontiguousarray(Jl * jscale),
                       np.ascontiguousarray(-np.asarray(F[0])), np.ascontiguousarray(-np.asarray(F[1])))
-    L = len(z8[0])
     d = [np.asarray(dh), np.asarray(dl)] + [np.zeros(L) for _ in range(6)]
-    if not gain:
-        return d
-    eD = np.zeros(L)
-    eD[-1] = 1.0
-    g = np.asarray(dd_solve(np.ascontiguousarray(Jh.T), np.ascontiguousarray(Jl.T), eD, np.zeros(L))[0])
-    return d, float(np.abs(g).sum())
+    return (d, gv) if gain else d
 
 
 def newton_o_s(s, z8, tol, it_max, halvings, log=None, mutate="none", verbose=True, info=None, junk_w=0, tol_dz=1e-45,
-               delta_max=1e-2, jac="od", delta_tol=0.0, jscale=1.0, res="od", floor_cut=10.0, on_step=None):
+               delta_max=1e-2, jac="od", delta_tol=0.0, jscale=1.0, res="od", floor_cut=10.0, on_step=None,
+               jstore=None, chord=False):
     """Newton in octo-double on form S from the eight-part z8: newton_s's step (jac "od") or qj_step's (jac "qd": the
     quad-double Jacobian, a double-double solve, the octo-double residual), halved while max |F| does not fall;
     delta_tol > 0 (jac "qd"): converged also when Delta's first-order error bound, gain max |F| with gain = sum
@@ -641,7 +650,10 @@ def newton_o_s(s, z8, tol, it_max, halvings, log=None, mutate="none", verbose=Tr
     frozen directions'). res "qd": the residual in quad-double (leading four parts). Floor stop: the iteration ends,
     not converged, at the first accepted step that cuts max |F| (junk_w > 0: the projected correction) by less than
     floor_cut, with floor=True and the bound reached in its record (newton_ladder then moves to the next precision);
-    floor_cut 0 turns it off. on_step(z8, rec) runs after each accepted step (the caller's state save)."""
+    floor_cut 0 turns it off. on_step(z8, rec) runs after each accepted step (the caller's state save).
+    jstore (jac "dd"/"qd"): the Jacobians formed are kept there (qj_step); chord: a step takes the kept one when there
+    is one (a chord step: one residual and one solve), and a chord step that cuts max |F| by less than floor_cut, or is
+    rejected, re-forms J for the next step instead of stopping (only a step with a fresh J stops at the floor)."""
     from multidouble import od_axpy
     from octo_corrector import delta_digits, o8
     z8 = o8(z8)
@@ -666,12 +678,17 @@ def newton_o_s(s, z8, tol, it_max, halvings, log=None, mutate="none", verbose=Tr
         return o8(od_axpy(-1.0, np.ascontiguousarray(c), *([zero8] * 7), *o8(d)))
     st = None
     dz_prev = 0.0
+    reform = False
     for it in range(it_max):
         if conv:
             break
         t0 = time.time()
+        stale = False
         if st is None and jac in ("qd", "dd"):
-            d, gain = qj_step(s, z8, F, gain=True, jscale=jscale, parts=4 if jac == "qd" else 2)
+            stale = bool(chord and not reform and jstore is not None and "J" in jstore)
+            d, gain = qj_step(s, z8, F, gain=True, jscale=jscale, parts=4 if jac == "qd" else 2, jstore=jstore,
+                              reuse=stale)
+            reform = False
             pmin, pmax, V = float("nan"), float("nan"), None
         elif st is None:
             d, _, pmin, pmax = s.newton_s(list(z8))
@@ -730,22 +747,30 @@ def newton_o_s(s, z8, tol, it_max, halvings, log=None, mutate="none", verbose=Tr
             rec.update(gain=gain, bound=gain * nF)
         rec.update(F_new=nF, Delta=delta_digits(z8, 40), utc=time.strftime("%Y-%m-%d %H:%M:%S", time.gmtime()))
         recs.append(rec)
-        if log:
-            with open(log, "a") as fh:
-                fh.write(json.dumps(rec) + "\n")
         cut = (dz_prev / dz if junk_w else rec["F"] / nF) if acc else float("nan")
         # junk_w > 0: the first step has no earlier correction to compare with
         floor = bool(acc and not conv and floor_cut > 0 and np.isfinite(cut) and cut < floor_cut
                      and (dz_prev > 0 or not junk_w))
-        rec.update(res=res, cut=cut, floor=floor)
+        # a chord step at the floor or rejected: the kept J is too old, so the next step forms a fresh one
+        reform = bool(stale and not conv and (floor or not acc))
+        rec.update(res=res, cut=cut, floor=floor and not reform, chord=stale, reform=reform)
         dz_prev = dz
+        if log:
+            with open(log, "a") as fh:
+                fh.write(json.dumps(rec) + "\n")
         if verbose:
             tail = (f"Delta's gain {gain:.2e}, gain |F| {gain * nF:.2e}" if jac != "od" else
                     f"pivots {pmin:.1e}..{pmax:.1e}")
-            print(f"  it {it}: |F| {rec['F']:.3e} -> {nF:.3e}, |dz| {dz:.2e}, dDelta {dD:+.3e}, lam {lam if acc else 0:g}, "
-                  f"{tail}, {rec['s']} s (J and solves {t_lu:.0f} s), Delta {rec['Delta']}", flush=True)
+            print(f"  it {it}{' (chord)' if stale else ''}: |F| {rec['F']:.3e} -> {nF:.3e}, |dz| {dz:.2e}, dDelta {dD:+.3e}, "
+                  f"lam {lam if acc else 0:g}, {tail}, {rec['s']} s (J and solves {t_lu:.0f} s), Delta {rec['Delta']}",
+                  flush=True)
         if acc and on_step is not None:
             on_step(z8, rec)
+        if reform:
+            if verbose:
+                print(f"  chord step {'cut max |F| by ' + format(cut, '.2f') + 'x' if acc else 'rejected'}: the next step "
+                      f"forms the Jacobian again", flush=True)
+            continue
         if floor:
             if verbose:
                 bnd = f", Delta's first-order bound {gain * nF:.2e}" if jac != "od" else ""
@@ -758,18 +783,24 @@ def newton_o_s(s, z8, tol, it_max, halvings, log=None, mutate="none", verbose=Tr
 
 
 def newton_ladder(s, z8, tol, ladder, it_max, it_hi, halvings, log=None, verbose=True, delta_tol=0.0, jac="dd",
-                  on_step=None, floor_cut=10.0):
+                  on_step=None, floor_cut=10.0, chord=True, jstore=None, chord0=False):
     """newton_o_s with the residual's precision raised when a stage ends unconverged (a floor stop, a rejected step,
     which is the floor's other face, or the stage's step cap): ladder lists the precisions ("dd", "qd", "od"); the
     first stage runs up to it_max steps and each later one up to it_hi. The run ends converged (tol or Delta's bound
-    delta_tol met) or with its last stage. Returns (z8, converged, records), each record tagged with its stage's res."""
+    delta_tol met) or with its last stage. Returns (z8, converged, records), each record tagged with its stage's res.
+    chord: the stages after the first take chord steps with the last Jacobian formed (jstore, shared by the stages;
+    chord0: the first stage too, for a jstore loaded from a saved J)."""
     recs = []
     conv = False
+    jstore = {} if jstore is None else jstore
     for i, res in enumerate(ladder):
+        ch = bool(chord and (i > 0 or chord0))
         if verbose:
-            print(f"  ladder stage {i}: {res} residual, at most {it_max if i == 0 else it_hi} steps", flush=True)
+            print(f"  ladder stage {i}: {res} residual, at most {it_max if i == 0 else it_hi} steps"
+                  f"{', chord steps with the last Jacobian' if ch else ''}", flush=True)
         z8, conv, r = newton_o_s(s, z8, tol, it_max if i == 0 else it_hi, halvings, log, verbose=verbose, jac=jac,
-                                 delta_tol=delta_tol, res=res, floor_cut=floor_cut, on_step=on_step)
+                                 delta_tol=delta_tol, res=res, floor_cut=floor_cut, on_step=on_step, jstore=jstore,
+                                 chord=ch)
         recs += r
         if conv:
             break

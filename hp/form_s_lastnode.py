@@ -109,7 +109,7 @@ def main(argv):
     pos, o = opts(argv, dict(D="2828.4271247461903", states_s="", xl="xc", deg="2", mob="8", ks="auto", kc="250",
                              threads="2", sub="4", plan_tol="1e-40", hmax="0.05", delta="fit", tc="", it_max="10",
                              halvings="8", delta_tol="1e-15", commit="", ham="1", tol="1e-300", parts="8", ladder="dd,qd",
-                             it_hi="2", check="auto", state="", disc="1"))
+                             it_hi="2", check="auto", state="", disc="1", chord="1", jfile=""))
     outdir = pos[0]
     os.makedirs(outdir, exist_ok=True)
     log = os.path.join(outdir, f"lastnode_{cmd}.jsonl")
@@ -197,8 +197,23 @@ def main(argv):
 
     def on_step(z, rec):
         save_o(step_out, z, dict(meta, step_it=rec["it"], step_res=rec["res"], step_F=rec["F_new"]))
+    j_out = os.path.join(outdir, f"lastnode_D{float(Dt):.4f}_J.npz")
+
+    def save_j(Jh, Jl, g):
+        # each Jacobian formed, for a restart's chord steps (--jfile)
+        np.savez(j_out + ".tmp.npz", Jh=Jh, Jl=Jl, gain=g, ks=int(meta["ks"]))
+        os.replace(j_out + ".tmp.npz", j_out)
+    jstore = dict(save=save_j)
+    if o["jfile"]:
+        with np.load(o["jfile"]) as jf:
+            if int(jf["ks"]) != int(meta["ks"]) or jf["Jh"].shape[0] != len(z8[0]):
+                raise SystemExit(f"--jfile {o['jfile']}: another system (ks {int(jf['ks'])}, size {jf['Jh'].shape[0]})")
+            jstore.update(J=(np.array(jf["Jh"]), np.array(jf["Jl"])), gain=float(jf["gain"]))
+        print(f"  the Jacobian of {os.path.basename(o['jfile'])} kept for chord steps (gain {jstore['gain']:.2e})",
+              flush=True)
     z8, conv, recs = newton_ladder(sh, z8, float(o["tol"]), ladder, int(o["it_max"]), int(o["it_hi"]),
-                                   int(o["halvings"]), log, delta_tol=float(o["delta_tol"]), jac="dd", on_step=on_step)
+                                   int(o["halvings"]), log, delta_tol=float(o["delta_tol"]), jac="dd", on_step=on_step,
+                                   chord=bool(int(o["chord"])), jstore=jstore, chord0=bool(o["jfile"]))
     res_last = recs[-1].get("res", ladder[0]) if recs else ladder[0]
     check = o["check"] if o["check"] != "auto" else {"dd": "qd", "qd": "od", "od": "od"}[res_last]
     Fq = sh.residual_s([np.ascontiguousarray(z8[q]) for q in range({"qd": 4, "od": 8}[check])])
