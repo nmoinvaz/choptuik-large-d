@@ -52,3 +52,8 @@ debug = false
 incremental = true
 # unstripped: macOS 27's dyld refuses the stripped extension ("mis-aligned LINKEDIT string pool"), as for release
 strip = false
+
+# multidouble's recip module (recip::recip_parts, the types' recip_int and from_ratio; #1099) from its pull request
+# nmoinvaz/multidouble#188 until its release; then the version above is bumped and this patch removed
+[patch.crates-io]
+multidouble = { git = "https://github.com/nmoinvaz/multidouble", rev = "862157a3c4d801a2e4108a9f6557dd68b8463c7b" }

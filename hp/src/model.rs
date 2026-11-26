@@ -271,46 +271,10 @@ pub const RECIP_PLANT: f64 = 1.232595164407831e-32;
 /// `mul_recip` forms 1/k from `recip_value`
 pub const RECIP_MUT_ULP: u8 = 41;
 
-/// 2^e, exactly, for e in the normal range
-fn pow2(e: i64) -> f64 {
-    assert!((-1022..=1023).contains(&e), "pow2: 2^{e} is not a normal f64");
-    f64::from_bits(((e + 1023) as u64) << 52)
-}
-
-/// 1/k in eight parts by greedy round-to-nearest, r_0 = RN(1/k) and r_i = RN(1/k - r_0 - ... - r_(i-1)): each part is
-/// rounded once from the exact remainder N / (k 2^E), N an integer with |N| <= k / 2 after the first part. A prefix of
-/// P parts is 1/k rounded to P parts (P = 2: its nearest double-double), the form multidouble's types keep: each part
-/// at most half the ulp of the one before, zeros only at the end.
-pub fn recip_parts(k: u64) -> [f64; 8] {
-    assert!((1..1u64 << 60).contains(&k), "recip_parts: k = {k}");
-    let d = k as u128;
-    let kb = 128 - d.leading_zeros() as i64;
-    let mut out = [0.0; 8];
-    let (mut n, mut neg, mut e) = (1u128, false, 0i64);
-    for r in out.iter_mut() {
-        if n == 0 {
-            break;
-        }
-        // n 2^s / k in [2^52, 2^53): n <= k, so s >= 52 and n 2^s < 2^(kb + 53)
-        let mut s = 52 - ((128 - n.leading_zeros() as i64) - kb);
-        let mut a = n << s;
-        if a / d < 1 << 52 {
-            s += 1;
-            a <<= 1;
-        }
-        let q0 = a / d;
-        let rem = a - q0 * d;
-        let q = q0 + (2 * rem > d || (2 * rem == d && q0 & 1 == 1)) as u128;
-        let m = q as f64 * pow2(-(e + s));
-        *r = if neg { -m } else { m };
-        // the remainder (a - q k) / (k 2^(e + s)), of either sign
-        let rr = a as i128 - (q * d) as i128;
-        neg ^= rr < 0;
-        n = rr.unsigned_abs();
-        e += s;
-    }
-    out
-}
+/// 1/k in eight parts by greedy round-to-nearest, r_0 = RN(1/k) and r_i = RN(1/k - r_0 - ... - r_(i-1)), each part
+/// rounded once from the exact remainder by integer arithmetic: multidouble's `recip::recip_parts`. A prefix of P parts
+/// is 1/k rounded to P parts (P = 2: its nearest double-double), the form multidouble's types keep.
+pub use multidouble::recip::recip_parts;
 
 /// r (1 + 2^-106) exactly, rounded to eight parts by greedy round-to-nearest (multidouble's exact dyadic arithmetic):
 /// the planted 1/k
