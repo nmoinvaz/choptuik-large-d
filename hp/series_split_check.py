@@ -11,7 +11,7 @@ ojet_check.py's d_oa) and |.| the largest entry. Reported: the seconds of each f
 must fail by more than 1e3 (max_k d / threshold > 1e3): the split form without the middle terms' order l = 1
 (series_o's mutate model::SPLIT_MUT_DROP_L1) to order Np. --mutate 31 puts that control in the split form's place for
 the whole check, which must then fail. --split 2 checks the fast form (model::SPLIT_FAST, the middle terms by the
-block-scaled exact products of hp/src/fastmul.rs) in the split form's place, against the same criteria and control.
+block-scaled exact products of multidouble's series module) in the split form's place, against the same criteria and control.
 Exit 1 on failure, 2 for a build without series_o's split (or without split 2 when it is asked for)."""
 import json
 import math

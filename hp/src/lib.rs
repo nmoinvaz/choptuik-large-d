@@ -20,7 +20,6 @@
 //! end of a series for the tangents and the refined horizon solves) and the staircase LU are the multidouble crate's;
 //! the layout, the residual, the Jacobians, the jets and Newton's step are the multishoot crate's; this crate adds the
 //! equations.
-pub mod fastmul;
 pub mod field;
 pub mod form_s;
 pub mod jac_sub;
@@ -65,8 +64,6 @@ mod prec_tests;
 mod split_tests;
 #[cfg(test)]
 mod recip_tests;
-#[cfg(test)]
-mod fastmul_check;
 #[cfg(test)]
 mod cols_tests;
 #[cfg(test)]

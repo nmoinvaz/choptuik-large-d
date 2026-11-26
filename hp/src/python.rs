@@ -1536,7 +1536,7 @@ impl Solver {
     /// (Ctx::series_split; 0, the default, as before; 1, model::SPLIT_MIDDLE, each Cauchy sum's middle terms formed
     /// ahead of the order, in parallel, the same sums in another order, so other bits at most at the octo-double
     /// rounding, hp/series_split_check.py; 2, model::SPLIT_FAST, those middle terms by the block-scaled exact products
-    /// of hp/src/fastmul.rs, other bits at about the octo-double rounding). tangent_from: the orders from it on formed
+    /// of multidouble's series module, other bits at about the octo-double rounding). tangent_from: the orders from it on formed
     /// once and moved by their tangents (multishoot's JetSession::tangent_from; JET_MUT_TANGENT_KEEP = 28 its
     /// control), which agree with the series formed twice to rounding rather than bit for bit; None forms every order
     /// twice. M = 32 only.

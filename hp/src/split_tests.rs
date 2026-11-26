@@ -1,6 +1,6 @@
 //! Tests of the split horizon series (`series_split`, Ctx::series_split = SPLIT_MIDDLE, and with the fast middle
 //! terms SPLIT_FAST) on the synthetic context of qd_residual::synth, through multishoot's JetSession at `Octo` as
-//! Solver.series_o runs it (the fast product itself: fastmul_check).
+//! Solver.series_o runs it (the fast product itself: multidouble's tests/series.rs).
 //!
 //! ```text
 //! cargo test --profile release-dev --lib split_    criteria fixed before the first run (the doc of each test)
