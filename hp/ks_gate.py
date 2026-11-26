@@ -6,7 +6,7 @@ far below the quad-double residual's floor (the jumps' ks+200 |dF| sat at 1.2e-4
 --down 1: when the state's ks meets the bar, ks is stepped down instead, while the change from ks - step to ks stays
 at most --bar (the same measure, the change at ks - step's own ks + step), down to --ks_min; the gate is the last ks
 that meets it. At D 4000 (a 9.995) the start ks 6017 read 2.0e-89 against a bar of 1e-70. The control (--down 1):
-m_h[0] (one grid value) moved by --ctl_dmh (1e-40) at the gated ks must change the residual by more than --bar, so a
+Delta moved by --ctl_dmh (1e-40) at the gated ks must change the residual by more than --bar, so a
 measure that does not resolve the bar cannot pass.
 
     python3 hp/ks_gate.py STATE [--bar 1e-64] [--step 200] [--tries 6] [--kfreeze 13] [--threads 4]
@@ -62,16 +62,13 @@ def down(z8, meta, D, ks, F_ks, step, bar, kf, thr, ks_min, dmh):
         if d > bar:
             break
         ks, F_ks = ks - step, F_lo
-    # the control: m_h moved by dmh at the gated ks (the horizon data, z8 at 2M + 3MK) must move the residual past bar
-    M, K = int(meta["M"]), len(meta["nodes"])
+    # the control: Delta (the state's last unknown) moved by dmh at the gated ks must move the residual past bar. Moving
+    # m_h instead read 0.0 at D 4000's jump state with kfreeze 13, all of it and one grid value alike
     zc = [np.array(z8[q], dtype=float) for q in range(8)]
-    o = 2 * M + 3 * M * K
-    # one grid value only: a shift of all M values is a k = 0 mode, which the kfreeze projection removes (the first
-    # control at D 4000 read 0.0 that way)
-    zc[1][o] += dmh
+    zc[1][-1] += dmh
     dc = change(resid(zc, meta, D, ks, kf, thr), F_ks)
     ok = dc > bar
-    print(f"control: m_h + {dmh:g} at ks {ks} changes the residual by {mp.nstr(dc, 3)} (must exceed {bar:g}): "
+    print(f"control: Delta + {dmh:g} at ks {ks} changes the residual by {mp.nstr(dc, 3)} (must exceed {bar:g}): "
           f"{'fires' if ok else 'FAILS'}", flush=True)
     return ks if ok else None
 
