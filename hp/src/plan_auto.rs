@@ -238,6 +238,8 @@ mod tests {
             exact_recip: 0,
             recip_planted: 0,
             de: None,
+            dc: None,
+            dec: None,
             hmob: 0.0,
         };
         let (mut zh, mut zl) = (vec![0.0; ctx.len()], vec![0.0; ctx.len()]);

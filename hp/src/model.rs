@@ -100,6 +100,12 @@ pub struct Ctx<const B: usize> {
     pub recip_planted: usize,
     /// folded even-sector d/dtheta (M x M), for form S's slaving of B = 1/a^2 (`form_s`); None until set
     pub de: Option<DMat<B>>,
+    /// the f64 remainders c = D - (hi + lo) of d and de, from 80-digit values (Solver.set_dmat_corr; None, the
+    /// default, without): the quad- and octo-double lanes apply D + c (`Ctx::dapp`, `dapply_c`), which cuts the
+    /// double-double matrices' rounding of about 2^-106, a fixed perturbation of the operator that the near-null top
+    /// harmonics amplify into Delta, to about 2^-159 (#1098)
+    pub dc: Option<DMat<B>>,
+    pub dec: Option<DMat<B>>,
     /// form S's horizon variable: 0, the default, u = 1 - x (`form_s::horizon_series_s`); a > 0 the Moebius variable
     /// t = (1 - z)/(1 + a z), z = x^2 (`form_s::horizon_mob`)
     pub hmob: f64,
@@ -416,7 +422,25 @@ pub(crate) fn dtau<T: Lane, const B: usize>(ctx: &Ctx<B>, x: &Fl<T, B>, omega: T
     if T::TAN_F64 && ctx.mutate == 1 {
         return Fl::zero();
     }
-    rate.shift(x, ctx.d.apply(x).mul_t(omega))
+    rate.shift(x, ctx.dapp(x).mul_t(omega))
+}
+
+/// D f in the lane, plus c f on the quad- and octo-double lanes when the remainder c is set (Ctx::dc, Ctx::dec); the
+/// f64 and double-double lanes apply D alone
+#[inline(always)]
+pub(crate) fn dapply_c<T: Lane, const B: usize>(d: &DMat<B>, c: Option<&DMat<B>>, f: &Fl<T, B>) -> Fl<T, B> {
+    match c {
+        Some(c) if T::VAL_QD || T::VAL_OD => d.apply(f) + c.apply(f),
+        _ => d.apply(f),
+    }
+}
+
+impl<const B: usize> Ctx<B> {
+    /// the odd d/dtheta applied in the lane, with its remainder (`dapply_c`)
+    #[inline(always)]
+    pub(crate) fn dapp<T: Lane>(&self, f: &Fl<T, B>) -> Fl<T, B> {
+        dapply_c(&self.d, self.dc.as_ref(), f)
+    }
 }
 
 /// omega = 2 pi / Delta in the lane, from the global Delta (with the f64 lanes' control ctx.mutate 2, scaled by
@@ -920,12 +944,12 @@ const N_AUX_AT: usize = N_AUX + 8;
 /// coefficient of a jet
 pub(crate) fn dapply_at<T: Lane, const B: usize>(ctx: &Ctx<B>, x: &Fl<T, B>, j: usize, out: &mut Fl<T, B>) {
     if T::VAL_OD {
-        let r = ctx.d.apply(&Fl::<OV, B>(std::array::from_fn(|b| x.0[b].coef_od(j))));
+        let r = ctx.dapp(&Fl::<OV, B>(std::array::from_fn(|b| x.0[b].coef_od(j))));
         for b in 0..B {
             out.0[b].set_coef_od(j, r.0[b]);
         }
     } else if T::VAL_QD {
-        let r = ctx.d.apply(&Fl::<QV, B>(std::array::from_fn(|b| x.0[b].coef_qd(j))));
+        let r = ctx.dapp(&Fl::<QV, B>(std::array::from_fn(|b| x.0[b].coef_qd(j))));
         for b in 0..B {
             out.0[b].set_coef_qd(j, r.0[b]);
         }
@@ -1248,8 +1272,8 @@ pub(crate) fn psolve<T: Lane, const B: usize>(ctx: &Ctx<B>, prep: &HPrep, kk: us
         return lu.solve_lanes_jet_refine_od(
             rhs,
             steps,
-            |j, x, r| (r - ctx.d.apply(x).mul_t(om[j])) - kappa.coef_od(j) * *x,
-            |r, x| *r - (ctx.d.apply(x).mul_t(om[0]) + k0 * *x),
+            |j, x, r| (r - ctx.dapp(x).mul_t(om[j])) - kappa.coef_od(j) * *x,
+            |r, x| *r - (ctx.dapp(x).mul_t(om[0]) + k0 * *x),
         );
     }
     if T::VAL_OD {
@@ -1260,7 +1284,7 @@ pub(crate) fn psolve<T: Lane, const B: usize>(ctx: &Ctx<B>, prep: &HPrep, kk: us
             QD_MUT_REFINE4 => 8,
             _ => OD_REFINE + T::TANGENT as usize,
         };
-        return lu.solve_lanes_refine_t(lu_t, rhs, steps, |f| *rhs - (ctx.d.apply(f).mul_t(omega) + *kappa * *f));
+        return lu.solve_lanes_refine_t(lu_t, rhs, steps, |f| *rhs - (ctx.dapp(f).mul_t(omega) + *kappa * *f));
     }
     if T::NJ > 0 && T::VAL_QD {
         // a quad-double jet: order by order as below, the right-hand side of order k in quad-double and each order's
@@ -1276,8 +1300,8 @@ pub(crate) fn psolve<T: Lane, const B: usize>(ctx: &Ctx<B>, prep: &HPrep, kk: us
         return lu.solve_lanes_jet_refine(
             rhs,
             steps,
-            |j, x, r| (r - ctx.d.apply(x).mul_t(om[j])) - kappa.coef_qd(j) * *x,
-            |r, x| *r - (ctx.d.apply(x).mul_t(om[0]) + k0 * *x),
+            |j, x, r| (r - ctx.dapp(x).mul_t(om[j])) - kappa.coef_qd(j) * *x,
+            |r, x| *r - (ctx.dapp(x).mul_t(om[0]) + k0 * *x),
         );
     }
     if T::VAL_QD {
@@ -1291,7 +1315,7 @@ pub(crate) fn psolve<T: Lane, const B: usize>(ctx: &Ctx<B>, prep: &HPrep, kk: us
             QD_MUT_REFINE4 => 4,
             _ => QD_REFINE + T::TANGENT as usize,
         };
-        return lu.solve_lanes_refine_t(lu_t, rhs, steps, |f| *rhs - (ctx.d.apply(f).mul_t(omega) + *kappa * *f));
+        return lu.solve_lanes_refine_t(lu_t, rhs, steps, |f| *rhs - (ctx.dapp(f).mul_t(omega) + *kappa * *f));
     }
     if T::NJ > 0 {
         // a jet: order by order with the LU at the values, the tangent branch below continued past order 1,
@@ -1540,10 +1564,10 @@ pub(crate) fn psolve_at<T: Lane, const B: usize>(
         };
         let mut r = rhs.coef_od(j);
         for i in 1..=j {
-            r = (r - ctx.d.apply(&f.coef_od(j - i)).mul_t(omega.coef_od(i))) - kappa.coef_od(i) * f.coef_od(j - i);
+            r = (r - ctx.dapp(&f.coef_od(j - i)).mul_t(omega.coef_od(i))) - kappa.coef_od(i) * f.coef_od(j - i);
         }
         let (om0, k0) = (omega.coef_od(0), kappa.coef_od(0));
-        let x = lu.solve_lanes_refine(&r, steps, |y| r - (ctx.d.apply(y).mul_t(om0) + k0 * *y));
+        let x = lu.solve_lanes_refine(&r, steps, |y| r - (ctx.dapp(y).mul_t(om0) + k0 * *y));
         f.set_coef_od(j, &x);
     } else if T::VAL_QD {
         let steps = match ctx.mutate {
@@ -1553,10 +1577,10 @@ pub(crate) fn psolve_at<T: Lane, const B: usize>(
         };
         let mut r = rhs.coef_qd(j);
         for i in 1..=j {
-            r = (r - ctx.d.apply(&f.coef_qd(j - i)).mul_t(omega.coef_qd(i))) - kappa.coef_qd(i) * f.coef_qd(j - i);
+            r = (r - ctx.dapp(&f.coef_qd(j - i)).mul_t(omega.coef_qd(i))) - kappa.coef_qd(i) * f.coef_qd(j - i);
         }
         let (om0, k0) = (omega.coef_qd(0), kappa.coef_qd(0));
-        let x = lu.solve_lanes_refine(&r, steps, |y| r - (ctx.d.apply(y).mul_t(om0) + k0 * *y));
+        let x = lu.solve_lanes_refine(&r, steps, |y| r - (ctx.dapp(y).mul_t(om0) + k0 * *y));
         f.set_coef_qd(j, &x);
     } else {
         let mut r = rhs.coef(j);
