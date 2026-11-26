@@ -24,6 +24,12 @@ pass when |fit - truth| <= E at D 10^4 and D inf in P0, P5 and P6 (E = max(h, s)
     cd hp && python3 track_c_direct.py planted RAW/I1088-dh370 RAW/I1088-dh610 RAW/I1088-mac-a [--out=FILE]
     cd hp && python3 track_c_direct.py real RAW/I1088-dh370 ... [--F=x] [--out=FILE]
     --mutate=shift moves the largest-D direct point by 1e-8 in `real`; the check must fire.
+    cd hp && python3 track_c_direct.py forecast RAW/I1088-dh370 ... [--sigmas=1e-13,1e-16,1e-21] [--out=FILE]
+The forecast: how many digits of Delta_inf the same fits and estimator give when the direct points are a ladder of full
+solves (D 1000 to 1e5, LADDER) with per-point error sigma: readme_formula as the truth (a rational function in 1/(D - 2),
+so its 1/n series does not end) on the real dd/qd/chain_fit grid with their own noise, and on the ladder with Gaussian
+noise of sigma. It has no held bias and no model error beyond the series' own, so it bounds what the extrapolation
+can give from below; it is not a forecast of the real fit.
 The check of `real`: every direct point's residual in the central fit at D 10^4, |fit - data| / sigma, is at most 3;
 otherwise the run exits 1 and nothing is quoted. (The first control rule, "fits rejected or the estimate moves by more
 than E", did not fire on the shifted point: one point among 1355 neither fails chi^2/dof nor moves the median fit, while
@@ -116,6 +122,39 @@ def planted(direct, real):
     return F, ok, rows
 
 
+LADDER = [1000.0, 1414.0, 2000.0, 2828.4271247461903, 4000.0, 5656.854249492381, 8000.0, 10000.0, 20000.0, 50000.0,
+          100000.0]
+
+
+def forecast(real, sigmas, at=LADDER):
+    """the planted truth (readme_formula) on the real dd/qd/chain_fit grid with their own noise, and on a ladder of direct
+    points at D `at` with Gaussian noise of each sigma in turn (no held bias): what the same fits and estimator give at D
+    inf, |fit - truth| and E, per sigma"""
+    rng = random.Random(11)
+    tv = T.arb(mp.nstr(T.readme_formula(mp.mpf("1e40")), 70))
+    out = {}
+    for sg in sigmas:
+        data = {}
+        for d, (v, s, k) in real.items():
+            if not k.startswith("direct"):
+                data[d] = (T.readme_formula(mp.mpf(d)) + mp.mpf(rng.gauss(0, s)), s, k)
+        for d in at:
+            data[round(d, 6)] = (T.readme_formula(mp.mpf(d)) + mp.mpf(rng.gauss(0, sg)), sg, "direct_full")
+        fits = T.all_fits(data)
+        D0, used = T.levels(fits)
+        est = T.estimate(fits, "inf")
+        if est is None:
+            print("forecast sigma %.0e: fewer than 5 accepted fits" % sg, flush=True)
+            continue
+        err = abs(float(est["value"] - tv))
+        out["%.0e" % sg] = dict(err=err, E=est["E"], h=est["h"], s=est["s"], n=est["n"], D0=D0,
+                                accepted=sum(f["ok"] for f in fits), fits=len(fits))
+        print("forecast sigma %.0e at %d direct D (%g-%g): D inf |fit - truth| %.2e, E %.2e (h %.2e, s %.2e), %d of %d "
+              "fits accepted, %d used, D0 %s" % (sg, len(at), min(at), max(at), err, est["E"], est["h"], est["s"],
+                                                  sum(f["ok"] for f in fits), len(fits), est["n"], D0), flush=True)
+    return out
+
+
 def real_fit(direct, real, Fc):
     if MUT == "shift":
         Dm = max(direct)
@@ -149,12 +188,18 @@ def real_fit(direct, real, Fc):
 def main():
     cmd = sys.argv[2] if len(sys.argv) > 2 else ""
     folders = [a for a in sys.argv[3:] if not a.startswith("--")]
-    if cmd not in ("planted", "real") or not folders:
+    if cmd not in ("planted", "real", "forecast") or not folders:
         raise SystemExit(__doc__)
     direct, files = direct_points(folders)
     print("direct points: " + ", ".join("D %g %s %s sigma %.1e" % (d, real_k, mp.nstr(v, 17), s)
                                          for d, (v, s, real_k) in sorted(direct.items())), flush=True)
     real = data_with(direct)
+    if cmd == "forecast":
+        sig = [float(v) for v in T.args.get("sigmas", "1e-13,1e-16,1e-21").split(",")]
+        res = dict(forecast=forecast(real, sig))
+        if "out" in T.args:
+            json.dump(res, open(T.args["out"], "w"), indent=1)
+        return
     if cmd == "planted":
         F, ok, rows = planted(direct, real)
         res = dict(F=F, ok=ok, rows=rows)

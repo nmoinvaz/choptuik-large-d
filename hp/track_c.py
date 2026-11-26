@@ -156,7 +156,8 @@ def estimate(fits, D, Fc=1.0):
     D0, acc = levels(fits)
     if len(acc) < 5:                                # an estimate needs at least 5 accepted fits
         return None
-    vals = sorted(((float(f["ev"](D) - arb("1.6")), f) for f in acc), key=lambda t: t[0])  # offset for float resolution
+    ref = acc[0]["ev"](D)                            # an offset near the values keeps the floats' resolution far below h
+    vals = sorted(((float(f["ev"](D) - ref), f) for f in acc), key=lambda t: t[0])
     vs = [v for v, _ in vals]
     med_i = len(vs) // 2
     central = vals[med_i][1]
