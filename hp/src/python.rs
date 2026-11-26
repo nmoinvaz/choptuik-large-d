@@ -131,7 +131,8 @@ trait Api: Send + Sync {
     fn newton_s(&mut self, z: &[&[f64]], mutate: u8, tangents: usize) -> Result<(Vec<Vec<f64>>, Vec<Vec<f64>>, (f64, f64), Option<ODLu>), String>;
 }
 
-/// f on the context as Ctx<4> (M = 32), with Ctx::mutate set for the call: form S is instantiated for this size only
+/// f on the context as Ctx<4> or Ctx<6> (M = 32 or 48), with Ctx::mutate set for the call: form S is instantiated for
+/// these sizes (48 for #1098's M budget)
 macro_rules! fs_sizes {
     ($me:expr, $mutate:expr, |$c:ident| $body:expr) => {{
         let me: &mut dyn std::any::Any = $me;
@@ -140,8 +141,13 @@ macro_rules! fs_sizes {
             let r = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| $body));
             $c.mutate = 0;
             r.unwrap_or_else(|p| std::panic::resume_unwind(p))
+        } else if let Some($c) = me.downcast_mut::<Ctx<6>>() {
+            $c.mutate = $mutate;
+            let r = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| $body));
+            $c.mutate = 0;
+            r.unwrap_or_else(|p| std::panic::resume_unwind(p))
         } else {
-            Err("form S is built for M = 32 only".to_string())
+            Err("form S is built for M = 32 and 48 only".to_string())
         }
     }};
 }
@@ -568,18 +574,18 @@ impl<const B: usize> Api for Ctx<B> {
     fn path_s(&mut self, z: &[&[f64]], xs: &[f64], rec: &[usize]) -> Result<Vec<Vec<f64>>, String> {
         use crate::form_s::path_s_in;
         fs_sizes!(self, 0, |c| match z.len() {
-            2 => path_s_in::<Double, 4>(c, z, xs, rec),
-            4 => path_s_in::<Quad, 4>(c, z, xs, rec),
-            8 => path_s_in::<Octo, 4>(c, z, xs, rec),
+            2 => path_s_in::<Double, _>(c, z, xs, rec),
+            4 => path_s_in::<Quad, _>(c, z, xs, rec),
+            8 => path_s_in::<Octo, _>(c, z, xs, rec),
             n => Err(format!("path_s: z must be 2, 4 or 8 part arrays, not {n}")),
         })
     }
     fn jacobian_sub_s(&mut self, z: &[&[f64]], rows: &[usize], cols: &[usize], mutate: u8) -> Result<Vec<Vec<f64>>, String> {
         use crate::form_s::jacobian_sub_s_in;
         fs_sizes!(self, mutate, |c| match z.len() {
-            2 => jacobian_sub_s_in::<Double, 4>(c, z, rows, cols, true),
-            4 => jacobian_sub_s_in::<Quad, 4>(c, z, rows, cols, true),
-            8 => jacobian_sub_s_in::<Octo, 4>(c, z, rows, cols, true),
+            2 => jacobian_sub_s_in::<Double, _>(c, z, rows, cols, true),
+            4 => jacobian_sub_s_in::<Quad, _>(c, z, rows, cols, true),
+            8 => jacobian_sub_s_in::<Octo, _>(c, z, rows, cols, true),
             n => Err(format!("jacobian_sub_s: z must be 2, 4 or 8 part arrays, not {n}")),
         })
     }
@@ -589,27 +595,27 @@ impl<const B: usize> Api for Ctx<B> {
     fn residual_s(&mut self, z: &[&[f64]], mutate: u8) -> Result<Vec<Vec<f64>>, String> {
         use crate::form_s::residual_s_in;
         fs_sizes!(self, mutate, |c| match z.len() {
-            2 => residual_s_in::<Double, 4>(c, z, true).map(|f| dd_part_vecs(&f)),
-            4 => residual_s_in::<Quad, 4>(c, z, true).map(|f| qd_part_vecs(&f)),
-            8 => residual_s_in::<Octo, 4>(c, z, true).map(|f| od_part_vecs(&f)),
+            2 => residual_s_in::<Double, _>(c, z, true).map(|f| dd_part_vecs(&f)),
+            4 => residual_s_in::<Quad, _>(c, z, true).map(|f| qd_part_vecs(&f)),
+            8 => residual_s_in::<Octo, _>(c, z, true).map(|f| od_part_vecs(&f)),
             n => Err(format!("residual_s: z must be 2, 4 or 8 part arrays, not {n}")),
         })
     }
     fn jacobian_s(&mut self, z: &[&[f64]], mutate: u8, tangents: usize) -> Result<(Vec<Vec<f64>>, usize), String> {
         use crate::form_s::{jacobian_s_in, jacobian_s_o};
         fs_sizes!(self, mutate, |c| match z.len() {
-            2 => jacobian_s_in::<Double, 4>(c, z, true),
-            4 => jacobian_s_in::<Quad, 4>(c, z, true),
-            8 => jacobian_s_o::<4>(c, z, true, tangents),
+            2 => jacobian_s_in::<Double, _>(c, z, true),
+            4 => jacobian_s_in::<Quad, _>(c, z, true),
+            8 => jacobian_s_o::<_>(c, z, true, tangents),
             n => Err(format!("jacobian_s: z must be 2, 4 or 8 part arrays, not {n}")),
         })
     }
     fn newton_s(&mut self, z: &[&[f64]], mutate: u8, tangents: usize) -> Result<(Vec<Vec<f64>>, Vec<Vec<f64>>, (f64, f64), Option<ODLu>), String> {
         use crate::form_s::{newton_s_in, newton_s_o};
         fs_sizes!(self, mutate, |c| match z.len() {
-            2 => newton_s_in::<Double, 4>(c, z, true).map(|st| (st.dz, dd_part_vecs(&st.f), st.lu.pivot_range(), None)),
-            4 => newton_s_in::<Quad, 4>(c, z, true).map(|st| (st.dz, qd_part_vecs(&st.f), st.lu.pivot_range(), None)),
-            8 => newton_s_o::<4>(c, z, true, tangents).map(|st| {
+            2 => newton_s_in::<Double, _>(c, z, true).map(|st| (st.dz, dd_part_vecs(&st.f), st.lu.pivot_range(), None)),
+            4 => newton_s_in::<Quad, _>(c, z, true).map(|st| (st.dz, qd_part_vecs(&st.f), st.lu.pivot_range(), None)),
+            8 => newton_s_o::<_>(c, z, true, tangents).map(|st| {
                 let pr = st.lu.pivot_range();
                 (st.dz, od_part_vecs(&st.f), pr, Some(st.lu))
             }),
