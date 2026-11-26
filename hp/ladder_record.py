@@ -6,9 +6,10 @@ outer steps, and how it was released); and the error terms, each a separate fiel
   err_resid    a first-order bound at kfree k* (--kstar): gain (gainq.py at kfreeze k*, --gain) x that system's |F| at
                harmonic k*'s release (from the logs, or --F_kstar). Past some kfree the gain is so large (1.5e47 at D 300,
                M 32, kfree 31) that gain x |F| bounds nothing, so k* is the last kfree whose bound is useful
-  err_tail     an estimator, beyond k*: the released changes of the harmonics past k* summed in |.|, the last pending
-               first-order dDelta at release, and the geometric remainder past the last released harmonic (from the
-               last two changes c_(k-2), c_k: |c_k| r/(1 - r), r = |c_k/c_(k-2)|; none when r >= 1)
+  err_tail     an estimator: the last pending first-order dDelta at release and the geometric remainder past the last
+               released harmonic (from the last two changes c_(k-2), c_k: |c_k| r/(1 - r), r = |c_k/c_(k-2)|; none when
+               r >= 1). The released changes past k* (changes_beyond_kstar) are measured values with no first-order bound
+               of their own (the gain at kfree 17 is 6.4e30 at D 300, M 32); the err_xcheck fields test them
   err_M        |Delta - Delta at --M_ref| (a measured change), or --err_M with --M_basis
   err_steps, err_ks, err_kc, err_kt, err_arith, err_horizon: measured at D 300 and D 1000 (I1098 raw folders) and given
                as values with their basis; --steps etc. and --err_horizon/--horizon_basis override them
@@ -99,18 +100,20 @@ def main():
         else:
             rem_basis = f"the changes do not fall from h{kc_[-2]} to h{kc_[-1]}: no remainder estimate"
     beyond = [k for k in ks if kstar is not None and k > kstar]
-    s_beyond = float(sum(abs(per.get(k, 0)) for k in beyond))
-    err_tail = s_beyond + abs(pending or 0.0) + (rem or 0.0)
-    basis_tail = (f"an estimator, beyond the bound's kfree {kstar}: the released changes of "
-                  f"{', '.join('h' + str(k) for k in beyond) or 'none'} summed in |.| ({s_beyond:.2e}), the last pending "
-                  f"dDelta at release ({pending}), and {rem_basis}")
+    s_beyond = mp.fsum(per.get(k, 0) for k in beyond)
+    err_tail = abs(pending or 0.0) + (rem or 0.0)
+    basis_tail = (f"an estimator: the last pending dDelta at release ({pending}) and {rem_basis}. The released changes "
+                  f"beyond the bound's kfree {kstar} ({', '.join('h' + str(k) for k in beyond) or 'none'}, "
+                  f"{mp.nstr(s_beyond, 6)} in all) are measured values with no first-order bound of their own; the "
+                  f"err_xcheck fields test them")
     rec = dict(D_str=meta["D_str"], form="S", system="full", method="ladder", M=int(meta["M"]), kfreeze=meta.get("kfreeze"),
                horizon=f"mob a={meta.get('hmob')}" if meta.get("hmob") else "u", ks=int(meta["ks"]), kc=int(meta["kc"]),
                kt=int(meta.get("kt", 36)), taylor_steps=sum(len(g) - 1 for g in meta["segs"]), Delta=delta_digits(z8, 40),
                Delta_parts=[float(z8[q][-1]) for q in range(8)], F_final=F_last, F_check=F_last, F_check_precision="od",
                state=os.path.basename(state), state_blob=git_blob(state),
                per_harmonic={f"h{k}": dict(change=float(per.get(k, 0)), released_by=released_by.get(k, "")) for k in ks},
-               kstar=kstar, err_tail=err_tail, err_tail_basis=basis_tail, note=o["note"])
+               kstar=kstar, changes_beyond_kstar=float(s_beyond), err_tail=err_tail, err_tail_basis=basis_tail,
+               note=o["note"])
     if o["gain"] and kstar is not None:
         Fk = float(o["F_kstar"]) if o["F_kstar"] else F_rel.get(kstar)
         rec.update(err_resid=float(o["gain"]) * float(Fk) if Fk is not None else None,
