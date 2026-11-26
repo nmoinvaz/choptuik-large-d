@@ -19,7 +19,7 @@ error terms, each a separate field with a basis that names its kind (bound, esti
   err_sum      err_resid + err_tail + the err_xcheck present + the measured terms; its basis lists the missing checks
 
     python3 hp/ladder_record.py STATE OUT.jsonl LOG.jsonl [LOG.jsonl ...] --start START.npz --kstar K --gain G
-        [--F_kstar F] [--M_ref DELTA] [--xcheck "kind|value|basis;..."] [--note TEXT]
+        [--F_kstar F] [--M_ref DELTA] [--xcheck "kind|value|basis;..."] [--info "name|value|basis;..."] [--note TEXT]
 
 START is the first log's input state (its Delta is the base of the first harmonic's change). The record also carries the
 fields export_delta_all.py's direct rows read: system "full", Delta_parts, F_check and its precision,
@@ -49,7 +49,7 @@ XCHECKS = ("horizon", "M", "machine")
 
 
 def opts(argv):
-    o = dict(gain="", M_ref="", note="", start="", kstar="", F_kstar="", xcheck="")
+    o = dict(gain="", M_ref="", note="", start="", kstar="", F_kstar="", xcheck="", info="")
     pos = []
     i = 0
     while i < len(argv):
@@ -139,6 +139,12 @@ def main():
     for k, (v, b) in MEASURED.items():
         rec[k] = v
         rec[k + "_basis"] = b
+    # --info "name|value|basis;...": measured values of the point's history that its final Delta does not carry (not
+    # added to err_sum), such as an earlier stage's horizon term
+    for x in [v for v in o["info"].split(";") if v.strip()]:
+        name, val, basis = x.split("|", 2)
+        rec[f"info_{name.strip()}"] = float(val)
+        rec[f"info_{name.strip()}_basis"] = basis.strip()
     names = ("err_resid", "err_tail") + tuple(f"err_xcheck_{n}" for n in XCHECKS) + tuple(MEASURED)
     have = [k for k in names if rec.get(k) is not None]
     missing = [k for k in names if rec.get(k) is None]
