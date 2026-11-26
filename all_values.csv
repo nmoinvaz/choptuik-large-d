@@ -2506,7 +2506,7 @@ Delta,l0 scalar field,320.0,,1.6760462096577147,,,1.45e-10,series fits,numerical
 Delta,l0 scalar field,330.0,,1.6750796357756893,,,1.55e-10,series fits,numerical evidence,series,hp/data/delta_all.csv (data/delta_series.csv:track_c)
 Delta,l0 scalar field,340.0,,1.6741694878344543,,,1.66e-10,series fits,numerical evidence,series,hp/data/delta_all.csv (data/delta_series.csv:track_c)
 Delta,l0 scalar field,350.0,,1.6733109643971145,,,1.77e-10,series fits,numerical evidence,series,hp/data/delta_all.csv (data/delta_series.csv:track_c)
-Delta,l0 scalar field,360.0,,1.672499793793157119891764549,,,1.2e-25,"ladder err_sum (bound to k*, estimator past it, cross-checks)",numerical evidence,direct,hp/data/delta_all.csv (I1098-mac-a/ladder_records/D360/direct_s.jsonl:1)
+Delta,l0 scalar field,360.0,,1.672499793793157119891764549,,,1.7e-25,"ladder err_sum (bound to k*, estimator past it, cross-checks)",numerical evidence,direct,hp/data/delta_all.csv (I1098-mac-a/ladder_records/D360/direct_s.jsonl:1)
 Delta,l0 scalar field,370.0,,1.6717321631189826,,,1.98e-10,series fits,numerical evidence,series,hp/data/delta_all.csv (data/delta_series.csv:track_c)
 Delta,l0 scalar field,380.0,,1.6710046580447704,,,2.09e-10,series fits,numerical evidence,series,hp/data/delta_all.csv (data/delta_series.csv:track_c)
 Delta,l0 scalar field,390.0,,1.6703142122548457,,,2.20e-10,series fits,numerical evidence,series,hp/data/delta_all.csv (data/delta_series.csv:track_c)
