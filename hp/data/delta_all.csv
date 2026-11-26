@@ -2506,7 +2506,7 @@ D,Delta_q0,Delta_q1,Delta_q2,Delta_q3,kind,err,err_kind,source,published_ref,pub
 330.0,1.6750796357756892,8.973399623624246e-17,,,series,1.55e-10,series fits,data/delta_series.csv:track_c,,,,
 340.0,1.6741694878344544,-8.308412969452693e-17,,,series,1.66e-10,series fits,data/delta_series.csv:track_c,,,,
 350.0,1.6733109643971145,2.1145139950454807e-17,,,series,1.77e-10,series fits,data/delta_series.csv:track_c,,,,
-360.0,1.6724997938164976,1.007610779417329e-16,,,series,1.87e-10,series fits,data/delta_series.csv:track_c,,,,
+360.0,1.6724997937931572,-8.010823545080255e-17,3.5639903787110655e-33,3.0570230249731687e-49,direct,1.2e-25,"ladder err_sum (bound to k*, estimator past it, cross-checks)",I1098-mac-a/ladder_records/D360/direct_s.jsonl:1,,,,I1098-mac-a/ladder_records/D360/release_ls_h23_D360.0000.npz
 370.0,1.6717321631189825,7.162940442977519e-17,,,series,1.98e-10,series fits,data/delta_series.csv:track_c,,,,
 380.0,1.6710046580447704,2.8883897592158424e-17,,,series,2.09e-10,series fits,data/delta_series.csv:track_c,,,,
 390.0,1.6703142122548458,-6.386813953116287e-17,,,series,2.20e-10,series fits,data/delta_series.csv:track_c,,,,
