@@ -3,19 +3,25 @@ release logs of its stages (release_ls.jsonl, in the order run) and its final st
 
 Fields: Delta (40 digits) and Delta_parts; per_harmonic (each released harmonic's change, summed over its accepted
 outer steps, and how it was released); and the error terms, each a separate field with its basis:
-  err_tail     the harmonics past kmax: the last two released changes c_(k-2), c_k fitted as a geometric tail,
-               |c_k| r/(1 - r) with r = |c_k/c_(k-2)| (an estimator; r >= 1 is reported as no bound, null), plus the
-               last pending first-order dDelta at release
-  err_resid    gain x the final target residual, when --gain is given (first-order bound)
-  err_M        |Delta - Delta at --M_ref| (a measured change), when --M_ref is given
+  err_resid    a first-order bound at kfree k* (--kstar): gain (gainq.py at kfreeze k*, --gain) x that system's |F| at
+               harmonic k*'s release (from the logs, or --F_kstar). Past some kfree the gain is so large (1.5e47 at D 300,
+               M 32, kfree 31) that gain x |F| bounds nothing, so k* is the last kfree whose bound is useful
+  err_tail     an estimator, beyond k*: the released changes of the harmonics past k* summed in |.|, the last pending
+               first-order dDelta at release, and the geometric remainder past the last released harmonic (from the
+               last two changes c_(k-2), c_k: |c_k| r/(1 - r), r = |c_k/c_(k-2)|; none when r >= 1)
+  err_M        |Delta - Delta at --M_ref| (a measured change), or --err_M with --M_basis
   err_steps, err_ks, err_kc, err_kt, err_arith, err_horizon: measured at D 300 and D 1000 (I1098 raw folders) and given
-               as values with their basis; --steps etc. override them
-  err_sum      the sum of the terms that have values (a conservative total, not a standard deviation)
+               as values with their basis; --steps etc. and --err_horizon/--horizon_basis override them
+  err_xcheck_<name>  cross-checks (--xcheck "name|value|basis;..."), recorded and not added
+  err_sum      the sum of err_resid, err_tail, err_M and the measured terms: it mixes a bound with estimators
 
-    python3 hp/ladder_record.py STATE OUT.jsonl LOG.jsonl [LOG.jsonl ...] --start START.npz [--gain G] [--M_ref DELTA]
-        [--note TEXT]
+    python3 hp/ladder_record.py STATE OUT.jsonl LOG.jsonl [LOG.jsonl ...] --start START.npz [--kstar K --gain G
+        [--F_kstar F]] [--M_ref DELTA | --err_M E --M_basis TEXT] [--err_horizon E --horizon_basis TEXT]
+        [--xcheck "name|value|basis;..."] [--note TEXT]
 
-START is the first log's input state (its Delta is the base of the first harmonic's change).
+START is the first log's input state (its Delta is the base of the first harmonic's change). The record also carries the
+fields export_delta_all.py's direct rows read: system "full", Delta_parts, F_check and its precision,
+delta_bound_first_order (= err_resid), state and state_blob.
 """
 import json
 import os
@@ -24,6 +30,7 @@ import sys
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from mpmath import mp  # noqa: E402
 
+from form_s import git_blob  # noqa: E402
 from octo_corrector import delta_digits, load_o  # noqa: E402
 
 MEASURED = dict(
@@ -38,7 +45,8 @@ MEASURED = dict(
 
 
 def opts(argv):
-    o = dict(gain="", M_ref="", note="", start="")
+    o = dict(gain="", M_ref="", note="", start="", err_M="", M_basis="", err_horizon="", horizon_basis="", kstar="",
+             F_kstar="", xcheck="")
     pos = []
     i = 0
     while i < len(argv):
@@ -62,7 +70,7 @@ def main():
             recs += [json.loads(line) for line in fh if line.strip()]
     per = {}
     prev = mp.mpf(delta_digits(load_o(o["start"])[0], 40)) if o["start"] else None
-    pending, released_by, F_last = None, {}, None
+    pending, released_by, F_last, F_rel = None, {}, None, {}
     for r in recs:
         k = r["harm"]
         if r.get("accepted") and "Delta" in r:
@@ -75,41 +83,68 @@ def main():
             released_by[k] = r.get("released_by", "")
             pending = r.get("dDelta_full")
             F_last = r.get("F", F_last)
-    ks = sorted(per)
-    err_tail = None
-    basis_tail = "no two released harmonics with changes"
-    if len(ks) >= 2:
-        c1, c2 = abs(per[ks[-2]]), abs(per[ks[-1]])
+            F_rel[k] = r.get("F")
+    ks = sorted(set(per) | set(released_by))
+    kstar = int(o["kstar"]) if o["kstar"] else None
+    # the geometric remainder past the last released harmonic, from the last two with changes
+    kc_ = [k for k in ks if k in per]
+    rem, rem_basis = None, "fewer than two released harmonics with changes: no remainder estimate"
+    if len(kc_) >= 2:
+        c1, c2 = abs(per[kc_[-2]]), abs(per[kc_[-1]])
         if c1 > 0 and c2 < c1:
             r = c2 / c1
-            err_tail = float(c2 * r / (1 - r)) + abs(pending or 0.0)
-            basis_tail = f"geometric from h{ks[-2]} ({mp.nstr(per[ks[-2]], 4)}) and h{ks[-1]} ({mp.nstr(per[ks[-1]], 4)}), " \
-                         f"r {mp.nstr(r, 3)}, plus the last pending dDelta {pending}"
+            rem = float(c2 * r / (1 - r))
+            rem_basis = (f"the geometric remainder from h{kc_[-2]} ({mp.nstr(per[kc_[-2]], 4)}) and h{kc_[-1]} "
+                         f"({mp.nstr(per[kc_[-1]], 4)}), r {mp.nstr(r, 3)}: {rem:.2e}")
         else:
-            basis_tail = f"the changes do not fall from h{ks[-2]} to h{ks[-1]}: no tail bound"
-    rec = dict(D_str=meta["D_str"], M=int(meta["M"]), kfreeze=meta.get("kfreeze"), horizon=f"mob a={meta.get('hmob')}"
-               if meta.get("hmob") else "u", ks=int(meta["ks"]), kc=int(meta["kc"]), kt=int(meta.get("kt", 36)),
-               taylor_steps=sum(len(g) - 1 for g in meta["segs"]), Delta=delta_digits(z8, 40),
-               Delta_parts=[float(z8[q][-1]) for q in range(8)], F_final=F_last, state=os.path.basename(state),
-               per_harmonic={f"h{k}": dict(change=float(per[k]), released_by=released_by.get(k, "")) for k in ks},
-               err_tail=err_tail, err_tail_basis=basis_tail, note=o["note"])
-    if o["gain"]:
-        rec.update(err_resid=float(o["gain"]) * float(F_last or 0.0), err_resid_basis=f"gain {o['gain']} x |F| {F_last}")
+            rem_basis = f"the changes do not fall from h{kc_[-2]} to h{kc_[-1]}: no remainder estimate"
+    beyond = [k for k in ks if kstar is not None and k > kstar]
+    s_beyond = float(sum(abs(per.get(k, 0)) for k in beyond))
+    err_tail = s_beyond + abs(pending or 0.0) + (rem or 0.0)
+    basis_tail = (f"an estimator, beyond the bound's kfree {kstar}: the released changes of "
+                  f"{', '.join('h' + str(k) for k in beyond) or 'none'} summed in |.| ({s_beyond:.2e}), the last pending "
+                  f"dDelta at release ({pending}), and {rem_basis}")
+    rec = dict(D_str=meta["D_str"], form="S", system="full", method="ladder", M=int(meta["M"]), kfreeze=meta.get("kfreeze"),
+               horizon=f"mob a={meta.get('hmob')}" if meta.get("hmob") else "u", ks=int(meta["ks"]), kc=int(meta["kc"]),
+               kt=int(meta.get("kt", 36)), taylor_steps=sum(len(g) - 1 for g in meta["segs"]), Delta=delta_digits(z8, 40),
+               Delta_parts=[float(z8[q][-1]) for q in range(8)], F_final=F_last, F_check=F_last, F_check_precision="od",
+               state=os.path.basename(state), state_blob=git_blob(state),
+               per_harmonic={f"h{k}": dict(change=float(per.get(k, 0)), released_by=released_by.get(k, "")) for k in ks},
+               kstar=kstar, err_tail=err_tail, err_tail_basis=basis_tail, note=o["note"])
+    if o["gain"] and kstar is not None:
+        Fk = float(o["F_kstar"]) if o["F_kstar"] else F_rel.get(kstar)
+        rec.update(err_resid=float(o["gain"]) * float(Fk) if Fk is not None else None,
+                   err_resid_basis=f"a first-order bound at kfree {kstar}: gain {o['gain']} (gainq.py at kfreeze {kstar}) "
+                                   f"x that system's |F| {Fk} at h{kstar}'s release")
     else:
-        rec.update(err_resid=None, err_resid_basis="no gain given")
+        rec.update(err_resid=None, err_resid_basis="no gain or kstar given")
+    rec["delta_bound_first_order"] = rec["err_resid"]
     if o["M_ref"]:
         dm = abs(mp.mpf(rec["Delta"]) - mp.mpf(o["M_ref"]))
         rec.update(err_M=float(dm), err_M_basis=f"|Delta - {o['M_ref']}| (the other M)")
+    elif o["err_M"]:
+        rec.update(err_M=float(o["err_M"]), err_M_basis=o["M_basis"])
     else:
         rec.update(err_M=None, err_M_basis="no other M given")
     for k, (v, b) in MEASURED.items():
         rec[k] = float(o[k[4:]]) if o.get(k[4:]) else v
         rec[k + "_basis"] = b
-    terms = [rec[k] for k in ("err_tail", "err_resid", "err_M") + tuple(MEASURED) if rec.get(k) is not None]
-    rec["err_sum"] = float(sum(terms))
+    if o["err_horizon"]:
+        rec.update(err_horizon=float(o["err_horizon"]), err_horizon_basis=o["horizon_basis"])
+    for x in [v for v in o["xcheck"].split(";") if v.strip()]:
+        name, val, basis = x.split("|", 2)
+        rec[f"err_xcheck_{name.strip()}"] = float(val)
+        rec[f"err_xcheck_{name.strip()}_basis"] = basis.strip()
+    names = ("err_resid", "err_tail", "err_M") + tuple(MEASURED)
+    have = [k for k in names if rec.get(k) is not None]
+    rec["err_sum"] = float(sum(rec[k] for k in have))
+    rec["err_sum_basis"] = ("the sum of " + ", ".join(have) + ": it mixes a first-order bound (err_resid) with estimators "
+                            "(err_tail, err_M, err_horizon) and measured discretization changes; the err_xcheck fields "
+                            "are cross-checks, not added")
     with open(out, "a") as fh:
         fh.write(json.dumps(rec) + "\n")
-    print(json.dumps({k: rec[k] for k in ("D_str", "Delta", "err_tail", "err_resid", "err_M", "err_sum")}), flush=True)
+    print(json.dumps({k: rec.get(k) for k in ("D_str", "Delta", "kstar", "err_resid", "err_tail", "err_M", "err_sum")}),
+          flush=True)
 
 
 if __name__ == "__main__":
