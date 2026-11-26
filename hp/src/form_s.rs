@@ -83,9 +83,16 @@ fn mag_stats<T: Lane, const B: usize>(v: &[Fl<T, B>]) -> (f64, f64, usize, usize
     (lo, hi, zeros, bad)
 }
 
-/// refinement steps of a slaving solve: as model's QD_REFINE (2) and OD_REFINE (4), one more on a tangent lane
-const QD_REFINE_S: usize = 2;
-const OD_REFINE_S: usize = 4;
+/// refinement steps of a slaving solve: as model's QD_REFINE (2) and OD_REFINE (4), one more on a tangent lane; the
+/// environment's HP_SLAVE_REFINE_QD and HP_SLAVE_REFINE_OD replace them (#1098's test of the per-expansion-point
+/// refinement floor), read once
+fn slave_refine() -> (usize, usize) {
+    static R: std::sync::OnceLock<(usize, usize)> = std::sync::OnceLock::new();
+    *R.get_or_init(|| {
+        let get = |k: &str, d: usize| std::env::var(k).ok().and_then(|v| v.parse().ok()).unwrap_or(d);
+        (get("HP_SLAVE_REFINE_QD", 2), get("HP_SLAVE_REFINE_OD", 4))
+    })
+}
 
 impl<const B: usize> Ctx<B> {
     /// form S's length 3M(K + 1) + 1
@@ -141,26 +148,26 @@ fn ssolve<T: Lane, const B: usize>(de: &DMat<B>, lu: &DDLu, kappa: &Fl<T, B>, rh
         let k0 = kappa.coef_od(0);
         return lu.solve_lanes_jet_refine_od(
             rhs,
-            OD_REFINE_S,
+            slave_refine().1,
             |j, x, r| (r - de.apply(x).mul_t(om[j])) - kappa.coef_od(j) * *x,
             |r, x| *r - (de.apply(x).mul_t(om[0]) + k0 * *x),
         );
     }
     if T::VAL_OD {
-        return lu.solve_lanes_refine_t(lu, rhs, OD_REFINE_S + T::TANGENT as usize, |f| *rhs - (de.apply(f).mul_t(omega) + *kappa * *f));
+        return lu.solve_lanes_refine_t(lu, rhs, slave_refine().1 + T::TANGENT as usize, |f| *rhs - (de.apply(f).mul_t(omega) + *kappa * *f));
     }
     if T::NJ > 0 && T::VAL_QD {
         let om: Vec<QV> = (0..T::NJ).map(|j| omega.coef_qd(j)).collect();
         let k0 = kappa.coef_qd(0);
         return lu.solve_lanes_jet_refine(
             rhs,
-            QD_REFINE_S,
+            slave_refine().0,
             |j, x, r| (r - de.apply(x).mul_t(om[j])) - kappa.coef_qd(j) * *x,
             |r, x| *r - (de.apply(x).mul_t(om[0]) + k0 * *x),
         );
     }
     if T::VAL_QD {
-        return lu.solve_lanes_refine_t(lu, rhs, QD_REFINE_S + T::TANGENT as usize, |f| *rhs - (de.apply(f).mul_t(omega) + *kappa * *f));
+        return lu.solve_lanes_refine_t(lu, rhs, slave_refine().0 + T::TANGENT as usize, |f| *rhs - (de.apply(f).mul_t(omega) + *kappa * *f));
     }
     if T::NJ > 0 {
         return lu.solve_lanes_jet(rhs, |j, x, r| {
