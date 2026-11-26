@@ -244,7 +244,8 @@ def main(argv):
     if conv:
         rec = direct_line(z8, meta, out, "held", recs[-1].get("F_new"), res_last, Fc, check, bound=gain * Fc,
                           disc=meta.get("disc"), ham=meta.get("ham_check"), tc=tc, commit=o["commit"],
-                          extra=dict(method="lastnode at x_c", valid=True, xl=xl, newton_steps=len(recs),
+                          extra=dict(method="lastnode", valid=True, xl=xl,
+                                     L_xl=float((float(Dt) - 2) / 2 * np.log(1 / xl ** 2 - 1)), newton_steps=len(recs),
                                      jac="dd"))
         with open(os.path.join(outdir, "direct_s.jsonl"), "a") as fh:
             fh.write(json.dumps(rec) + "\n")
