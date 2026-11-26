@@ -25,8 +25,8 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import mpmath as mp  # noqa: E402
 import numpy as np  # noqa: E402
 
-from form_s import (HeldS, blocks_s, direct_line, ham_check, held_field, ks_mob, make_solver_s, newton_o_s,  # noqa: E402
-                    opts, s_to_a, scale_s, unscale_s)
+from form_s import (HeldS, blocks_s, direct_line, ham_check, held_field, ks_mob, make_solver_s,  # noqa: E402
+                    newton_ladder, opts, s_to_a, scale_s, unscale_s)
 from form_s_fine import inner_z, outer_values  # noqa: E402
 from hpkernel.driver import make_solver  # noqa: E402
 
@@ -108,7 +108,8 @@ def main(argv):
     allow = pop_allow(argv)
     pos, o = opts(argv, dict(D="2828.4271247461903", states_s="", xl="xc", deg="2", mob="8", ks="auto", kc="250",
                              threads="2", sub="4", plan_tol="1e-40", hmax="0.05", delta="fit", tc="", it_max="10",
-                             halvings="8", delta_tol="1e-15", commit="", ham="1", tol="1e-300", parts="8", res="dd", state=""))
+                             halvings="8", delta_tol="1e-15", commit="", ham="1", tol="1e-300", parts="8", ladder="dd,qd",
+                             it_hi="2", check="auto", state=""))
     outdir = pos[0]
     os.makedirs(outdir, exist_ok=True)
     log = os.path.join(outdir, f"lastnode_{cmd}.jsonl")
@@ -160,14 +161,25 @@ def main(argv):
     b = blocks_s(F, M, 5)
     print(f"D {float(Dt):g}, x_l {xl:.6f} (ks {meta['ks']}): the guess's max |F| per block " + " ".join(f"{v:.1e}" for v in b)
           + f"; horizon / largest other {b[5] / max(b[:5]):.3e}", flush=True)
-    z8, conv, recs = newton_o_s(sh, z8, float(o["tol"]), int(o["it_max"]), int(o["halvings"]), log, jac="dd", res=o["res"],
-                                delta_tol=float(o["delta_tol"]))
-    F4 = sh.residual_s([np.ascontiguousarray(z8[q]) for q in range(4)])
-    Fc = float(np.abs(np.asarray(F4[0]) + np.asarray(F4[1])).max())
+    ladder = o["ladder"].split(",")
+    if float(Dt) >= 5000 and not set(ladder) & {"qd", "od"}:
+        # the double-double residual's floor (about 5e-21) leaves Delta's bound near 1e-12 past D 5000
+        raise SystemExit("D >= 5000 needs a quad- or octo-double stage in --ladder")
+    step_out = os.path.join(outdir, f"lastnode_D{float(Dt):.4f}_step.npz")
+
+    def on_step(z, rec):
+        save_o(step_out, z, dict(meta, step_it=rec["it"], step_res=rec["res"], step_F=rec["F_new"]))
+    z8, conv, recs = newton_ladder(sh, z8, float(o["tol"]), ladder, int(o["it_max"]), int(o["it_hi"]),
+                                   int(o["halvings"]), log, delta_tol=float(o["delta_tol"]), jac="dd", on_step=on_step)
+    res_last = recs[-1].get("res", ladder[0]) if recs else ladder[0]
+    check = o["check"] if o["check"] != "auto" else {"dd": "qd", "qd": "od", "od": "od"}[res_last]
+    Fq = sh.residual_s([np.ascontiguousarray(z8[q]) for q in range({"qd": 4, "od": 8}[check])])
+    Fc = float(np.abs(np.asarray(Fq[0]) + np.asarray(Fq[1])).max())
     gains = [r["gain"] for r in recs if "gain" in r]
     gain = gains[-1] if gains else float("nan")
-    meta.update(solved=bool(conv), F=Fc, check="qd", delta_gain=gain, delta_bound_first_order=gain * Fc)
-    print(f"  end state: quad-double max |F| {Fc:.3e}; Delta's first-order bound {gain * Fc:.2e} (gain {gain:.2e})", flush=True)
+    meta.update(solved=bool(conv), F=Fc, check=check, delta_gain=gain, delta_bound_first_order=gain * Fc,
+                floor_stop=bool(recs and recs[-1].get("floor")))
+    print(f"  end state: {check} max |F| {Fc:.3e}; Delta's first-order bound {gain * Fc:.2e} (gain {gain:.2e})", flush=True)
     if int(o["ham"]):
         hc = ham_check(z8, meta, threads=thr)
         meta.update(ham_check={str(k): r for k, r in hc.items()})
@@ -183,7 +195,7 @@ def main(argv):
         with mp.workdps(60):
             print(f"  Delta - reference {mp.nstr(mp.mpf(Dl) - mp.mpf(tc['value']), 6)} (+- {tc['err']:.2e})", flush=True)
     if conv:
-        rec = direct_line(z8, meta, out, "held", recs[-1].get("F_new"), o["res"], Fc, "qd", bound=gain * Fc,
+        rec = direct_line(z8, meta, out, "held", recs[-1].get("F_new"), res_last, Fc, check, bound=gain * Fc,
                           ham=meta.get("ham_check"), tc=tc, commit=o["commit"],
                           extra=dict(method="lastnode at x_c", valid=True, xl=xl, newton_steps=len(recs),
                                      jac="dd"))
