@@ -682,7 +682,7 @@ def qj_step(s, z8, F, gain=False, jscale=1.0, parts=4, jstore=None, reuse=False,
 
 def newton_o_s(s, z8, tol, it_max, halvings, log=None, mutate="none", verbose=True, info=None, junk_w=0, tol_dz=1e-45,
                delta_max=1e-2, jac="od", delta_tol=0.0, jscale=1.0, res="od", floor_cut=10.0, on_step=None,
-               jstore=None, chord=False, step_s=None):
+               jstore=None, chord=False, step_s=None, floor_dz=1e-12):
     """Newton in octo-double on form S from the eight-part z8: newton_s's step (jac "od") or qj_step's (jac "qd": the
     quad-double Jacobian, a double-double solve, the octo-double residual), halved while max |F| does not fall;
     delta_tol > 0 (jac "qd"): converged also when Delta's first-order error bound, gain max |F| with gain = sum
@@ -696,7 +696,8 @@ def newton_o_s(s, z8, tol, it_max, halvings, log=None, mutate="none", verbose=Tr
     frozen directions'). res "qd": the residual in quad-double (leading four parts). Floor stop: the iteration ends,
     not converged, at the first accepted step that cuts max |F| (junk_w > 0: the projected correction) by less than
     floor_cut, with floor=True and the bound reached in its record (newton_ladder then moves to the next precision);
-    floor_cut 0 turns it off. on_step(z8, rec) runs after each accepted step (the caller's state save).
+    floor_cut 0 turns it off. A floor's step is also at most floor_dz (1e-12) in max |dz|: D 360's held jump from a
+    1/n guess took a full step of 1e-4 at |F| 5e-9 that cut |F| only 1.25x, far above the double-double floor. on_step(z8, rec) runs after each accepted step (the caller's state save).
     jstore (jac "dd"/"qd"): the Jacobians formed are kept there (qj_step); chord: a step takes the kept one when there
     is one (a chord step: one residual and one solve), and a chord step that cuts max |F| by less than floor_cut, or is
     rejected, re-forms J for the next step instead of stopping (only a step with a fresh J stops at the floor).
@@ -810,7 +811,7 @@ def newton_o_s(s, z8, tol, it_max, halvings, log=None, mutate="none", verbose=Tr
         # a floor is a full step that gains little; a damped step (lam < 1, far from the solution: D 360's inner solve
         # from a guess, I1098-mac-a/cont360) is not one
         floor = bool(acc and not conv and floor_cut > 0 and np.isfinite(cut) and cut < floor_cut and lam == 1.0
-                     and (dz_prev > 0 or not junk_w))
+                     and (dz_prev > 0 or not junk_w) and (junk_w or dz <= floor_dz))
         # a chord step at the floor or rejected: the kept J is too old, so the next step forms a fresh one
         reform = bool(stale and not conv and (floor or not acc))
         rec.update(res=res, cut=cut, floor=floor and not reform, chord=stale, reform=reform)
