@@ -38,6 +38,10 @@ usage (venv-1025dd, from solver/matter):
       U_w^T F and Delta. --save stores the corrected state at that t (and a stub record beside it, F its |F|).
       --refreeze=1: the moved state's RK steps from freeze_from at the record's kappa before the chord steps (so that
       load_system rebuilds the same system from the saved state, which the line reports).
+  i1101_weakdir.py ne REC STATE D OUTDIR [--outer=6]
+      nonlinear elimination toward the discrete zero along the weak pair (fresh J and SVD per outer step, the
+      Gauss-Newton step on the weak pair at fractions 1 to 1/8, re-frozen steps, chord steps on the strong band);
+      stops when an outer step cuts |U_w^T F| by less than 2x; every iterate saved with a stub record.
   i1101_weakdir.py floor JAC.npz SVD.npz REC STATE D
       U_w^T F at the state under one change of the discretisation at a time: every segment's RK steps x2, the horizon
       segment's x2, Ks 45, N + 56, u0 0.035 and 0.045 (horizon steps by freeze_from's rule at that u0).
@@ -551,6 +555,75 @@ def valleycmd(argv):
     return 0
 
 
+def necmd(argv):
+    """nonlinear elimination toward the discrete zero along the weak pair: at each outer step a fresh J and SVD, the
+    Gauss-Newton step on the non-null weak vectors below 1e-8 (that would zero U_w^T F), tried at fractions
+    1, 0.5, 0.25, 0.125, each followed by the RK steps re-frozen at the moved state and chord steps on the strong band;
+    the fraction with the smallest |F| whose strong part converged is taken. Stops when an outer step cuts |U_w^T F| by
+    less than 2x, or after --outer steps; each iterate is saved (OUTDIR/sol_neK_D*.npy and a stub record)."""
+    args, o = pos(argv), opts(argv)
+    recf, st, D, outdir = args[0], args[1], float(args[2]), args[3]
+    os.makedirs(outdir, exist_ok=True)
+    S, z, rec, same, msg = load_system(recf, st, D)
+    print(msg, flush=True)
+    if not same:
+        return 3
+    prev = None
+    for k in range(int(o.get("outer", 6))):
+        t0 = time.time()
+        F, J = S.jacobian(z)
+        U, s, Vt = np.linalg.svd(J)
+        r = s / s[0]
+        wk = np.where((r >= NULL_CUT) & (r < 1e-8))[0]
+        strong = np.where(r >= WEAK_CUT)[0]
+        Us, ss, Vs = U[:, strong], s[strong], Vt[strong]
+        Uw = U[:, wk]
+        rw0 = Uw.T @ F
+        nw0 = float(np.linalg.norm(rw0))
+        dgn = -(Vt[wk].T @ (rw0 / s[wk]))
+        print(f"outer {k}: |F| {np.linalg.norm(F):.4e}, weak pair s/s_max {' '.join(f'{v:.3e}' for v in r[wk])}, "
+              f"|U_w^T F| {nw0:.4e}, Delta {z[-1]:.12f}; Gauss-Newton |dz| {np.linalg.norm(dgn):.3e} dDelta "
+              f"{dgn[-1]:+.4e} ({time.time() - t0:.0f} s for J and SVD)", flush=True)
+        if prev is not None and nw0 > 0.5 * prev:
+            print(f"   stop: the last outer step cut |U_w^T F| by less than 2x ({prev:.3e} -> {nw0:.3e})", flush=True)
+            break
+        prev = nw0
+        best = None
+        for frac in (1.0, 0.5, 0.25, 0.125):
+            zt = z + frac * dgn
+            S.freeze_from(zt, rec["kappa"])
+            hist = []
+            for _ in range(10):
+                Ft = resid(S, zt)
+                if not np.all(np.isfinite(Ft)):
+                    hist.append(np.inf)
+                    break
+                hist.append(float(np.linalg.norm(Ft)))
+                zt = zt - Vs.T @ ((Us.T @ Ft) / ss)
+            Ft = resid(S, zt)
+            nF = float(np.linalg.norm(Ft)) if np.all(np.isfinite(Ft)) else np.inf
+            nw = float(np.linalg.norm(Uw.T @ Ft)) if np.isfinite(nF) else np.inf
+            print(f"   fraction {frac}: chord |F| {' '.join(f'{v:.2e}' for v in hist)} -> {nF:.4e}, |U_w^T F| {nw:.4e}, "
+                  f"Delta {zt[-1]:.12f}, steps {sum(S.steps_map.values())}", flush=True)
+            if np.isfinite(nF) and (best is None or nF < best[0]):
+                best = (nF, zt.copy(), frac, dict(S.steps_map))
+            if np.isfinite(nF) and nF < 0.5 * float(np.linalg.norm(F)):
+                break
+        if best is None or best[0] >= float(np.linalg.norm(F)):
+            print("   stop: no fraction lowers |F|", flush=True)
+            break
+        z = best[1]
+        S.steps_map = best[3]
+        own = dict(S.steps_map) == S.freeze_from(z, rec["kappa"])
+        S.steps_map = best[3]
+        path = os.path.join(outdir, f"sol_ne{k + 1}_D{D:.4f}.npy")
+        np.save(path, z)
+        stub_write(path.replace(".npy", ".jsonl"), S, z, rec, best[0])
+        print(f"   took fraction {best[2]}: |F| {best[0]:.4e}, Delta {z[-1]:.12f}; saved {os.path.basename(path)} "
+              f"({'its own step map' if own else 'its step map re-freezes differently'})", flush=True)
+    return 0
+
+
 def floorcmd(argv):
     args = pos(argv)
     sd = np.load(args[1])
@@ -876,7 +949,7 @@ if __name__ == "__main__":
     cmd = sys.argv[1] if len(sys.argv) > 1 else ""
     f = dict(jac=jaccmd, svd=svdcmd, planted=plantedcmd, report=reportcmd, valley=valleycmd, floor=floorcmd,
              detsens=detsenscmd, locate=locatecmd, segerr=segerrcmd, chord=chordcmd, root=rootcmd,
-             order=ordercmd).get(cmd)
+             order=ordercmd, ne=necmd).get(cmd)
     if f is None:
         print(__doc__)
         sys.exit(2)
