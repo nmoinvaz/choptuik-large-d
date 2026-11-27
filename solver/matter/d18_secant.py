@@ -22,7 +22,7 @@ the evaluation count and seconds.
 
 usage (venv-1025dd):
   d18_secant.py run STUB.jsonl STATE.npy D LO HI OUT.jsonl [--tol=1e-6] [--maxev=12] [--mm=fast|cs] [--dln=0.1]
-                [--basis=jac|coef|grid] [--b12=ddm|fast|rust] [--b12_threads=T] [--eps=1e-15]
+                [--basis=jac|coef|grid] [--b12=ddm|fast|rust] [--b12_threads=T] [--eps=1e-15] [--kappa_mm=K]
                 [--pin=STATEBLOB,STUBBLOB] [--ends=SCAN.jsonl]
       --mm=cs is d18_hybsign.py's evaluation exactly (DSSEll.mode_matrix, ell_ddm's block 12); the default float64
       matrix is ell_fastm.mode_matrix_fast (basis jac). --b12=fast takes ell_fastdd's block 12 (the same double-double
@@ -336,6 +336,19 @@ def blob(path):
                           check=True).stdout.strip()
 
 
+def kappa_mm(S, z, rec, opts):
+    """--kappa_mm=K: after the record-system check, the RK4 steps of every segment frozen again at kappa K
+    (S.freeze_from), so the mode matrix's blocks (float64 and block 12 alike read S.steps_map) are integrated with the
+    steps a solve at kappa K would use, about the same state. The record's kappa gives the record's own steps (the
+    control: bit-identical results)."""
+    if "kappa_mm" not in opts:
+        return
+    k = float(opts["kappa_mm"])
+    st = S.freeze_from(z, k)
+    print(f"kappa_mm {k!r}: the mode matrix on the steps of kappa {k!r}, {sum(st.values())} steps (the record's kappa "
+          f"{rec['kappa']!r}: {rec['steps']}); the state and its record system are unchanged", flush=True)
+
+
 def setup(argv, nargs):
     """the positional arguments, the options, the pins and the record system of a run or a scan"""
     args = [a for a in argv if not a.startswith("--")]
@@ -362,6 +375,7 @@ def setup(argv, nargs):
     print(msg, flush=True)
     if not same:
         sys.exit(3)
+    kappa_mm(S, z, rec, opts)
     E = RealEval(S, z, rec, st, mm, float(opts.get("dln", 0.1)), opts.get("basis", "jac"), opts.get("b12", "ddm"),
                  float(opts.get("eps", 1e-15)), int(opts.get("b12_threads", 0)))
     return args, opts, cwd0, rec, st, E
@@ -411,6 +425,7 @@ def runcmd(argv):
     print(msg, flush=True)
     if not same:
         sys.exit(3)
+    kappa_mm(S, z, rec, opts)
     print(f"bracket ({lo!r}, {hi!r}), tol {tol}, maxev {maxev}, mode matrix {mm} ({basis}), block 12 {b12}, "
           f"noise {eps:g}, dln <= {dln_max}, "
           f"{os.path.basename(st)}", flush=True)
