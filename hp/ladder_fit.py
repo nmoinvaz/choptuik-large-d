@@ -54,8 +54,10 @@ systematic patterns covered, and the K* the rule picks there.
 Controls (each must fire): shift (D 1000 moved by +30 sigma: no quote, or D 1000 dropped), tight (E / 10: coverage
 fails), lowdeg (KMAX 3: no quote or outside E), var (x = (D-2)^-1.5, in which the truths are not analytic: the same).
 `real`: the full-system records in direct_s.jsonl under the raw folders given (I1088-*), one per D (the lowest check
-residual), sigma = export_delta_all.direct_err's err (its largest recorded term; no floor). Its checks: the central
-fit's residuals |fit - data| / sigma <= 3.5, and the leave-one-out check (exit 1 if either fails); --mutate=shift
+residual), sigma = export_delta_all.direct_err's err (for a ladder record its err_sum; main's export_delta_all.py reads
+it, an older one took the residual bound). Its checks: the central fit's residuals |fit - data| / sigma <= 3.5, and the
+leave-one-out check, which must run for every point from D0 up (exit 1 if either fails or any point goes unchecked, as
+at 15 points); --mutate=shift
 moves the middle point by +30 sigma. `mkreal --ladder=E20 --truth=T1 --sigma=1e-23 --dir=DIR` writes planted records
 in the same format, for a test of `real` through its own reader.
 With fewer than NMIN points it quotes nothing and prints the three-point check: the K = 1 and K = 2 fits in each
@@ -824,14 +826,18 @@ def cmd_real():
         sd = math.sqrt(sig[i] ** 2 + sum(float(gt[k]) ** 2 * ri[j] ** 2 for k, j in enumerate(idx)) + tr ** 2)
         zs[Di] = float(ys[i] - pred) / sd
     zmax = max((abs(z) for z in zs.values() if z is not None), default=0.0)
+    # a point whose leave-one-out run quotes nothing (no D0) is not checked: the check passes only when every point
+    # from D0 up was checked, so a ladder too short for it (15 points at K* 11-12) reads NOT RUN, not PASS
+    unrun = [d for d, z in sorted(zs.items()) if z is None]
+    v2 = ("FAIL" if zmax > ZLOO else "PASS") if not unrun else "NOT RUN for %d of %d points (%s)" % (
+        len(unrun), len(zs), ", ".join("%g" % d for d in unrun))
     print("  check 2 (leave-one-out, bar %.1f): each point against the rule run without it, (data - prediction)/sd: "
           "%s; max %.2f: %s" % (ZLOO, ", ".join("%g: %s" % (d, "-" if z is None else "%+.2f" % z)
-                                                for d, z in sorted(zs.items())), zmax,
-                                "PASS" if zmax <= ZLOO else "FAIL"))
-    ok = worst <= 3.5 and zmax <= ZLOO
+                                                for d, z in sorted(zs.items())), zmax, v2))
+    ok = worst <= 3.5 and zmax <= ZLOO and not unrun
     out.update(Delta_inf=v.mid().str(25, radius=False), E=E, h=est["h"], s=est["s"], D0=est["D0"],
                central=list(est["central"]), cands=[list(c) for c in est["cands"]], check_max_resid=worst,
-               check_loo={str(d): z for d, z in zs.items()}, ok=ok)
+               check_loo={str(d): z for d, z in zs.items()}, check_loo_unrun=[str(d) for d in unrun], ok=ok)
     if "out" in args:
         json.dump(out, open(args["out"], "w"), indent=1, default=str)
     sys.exit(0 if ok else 1)

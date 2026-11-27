@@ -9,6 +9,10 @@ over L and over the lowest point, the candidates' median and spread), with x = 1
 
     cd hp && python3 ladder_pade.py [--ladder=A] [--M=2] [--truths=T1,T2,T3] [--sigmas=1e-22,1e-23] [--seeds=21-25]
                                     [--out=FILE]
+    cd hp && python3 ladder_pade.py real LADDER_FOLDER... [--Ms=1,2,3] [--ref=1.6438937451253575]
+The real mode runs the rational rule on the ladder records of the folders given (sigma: each record's err, as
+ladder_fit.py real reads it), for each M. recs_rat stores each value as a float of P(0) - lim, so lim is --ref, a
+value near Delta_inf, and the result is ref + d at mpmath precision (any ref within about 1e-8 gives the same digits).
 Prints per truth, sigma and seed: the polynomial rule's |err| and F E (F from --F, default 1) and the rational rule's;
 and the oracle (the best |err| over L at the lowest level, knowing the truth) for both forms.
 """
@@ -202,5 +206,33 @@ def main():
         json.dump(dict(cases=out, summary=summ), open(args["out"], "w"), indent=1)
 
 
+def real_main():
+    folders = [a for a in sys.argv[3:] if not a.startswith("--")]
+    Ms = [int(v) for v in args.get("Ms", "1,2,3").split(",")]
+    ref = mp.mpf(args.get("ref", "1.6438937451253575"))
+    pts = LF.full_points(folders)
+    L_ = sorted(pts)
+    ys = [pts[d][0] for d in L_]
+    sig = [pts[d][1] for d in L_]
+    print("%d points, D %g to %g; sigma %.1e to %.1e" % (len(L_), L_[0], L_[-1], min(sig), max(sig)))
+    LF.VARS = {VAR: LF.VARS[VAR]}
+    quoted = 0
+    for M in Ms:
+        rr = recs_rat(L_, ys, sig, M, ref)
+        est = LF.select(rr, L_)
+        if est is None:
+            print("[L/%d]: no D0, nothing quoted (%d fits)" % (M, len(rr)))
+            continue
+        quoted += 1
+        print("[L/%d]: Delta_inf %s, h %.2e, s %.2e, D0 %g, central L %d; candidates %s" % (
+            M, mp.nstr(ref + mp.mpf(est["d"]), 25), est["h"], est["s"], est["D0"], est["K"],
+            ", ".join("L %d lev %d: %s" % (c[2], c[1], mp.nstr(ref + mp.mpf(rr[c]["d"]), 25))
+                      for c in sorted(est["cands"]))))
+    sys.exit(0 if quoted else 1)
+
+
 if __name__ == "__main__":
-    main()
+    if len(sys.argv) > 2 and sys.argv[2] == "real":
+        real_main()
+    else:
+        main()
