@@ -187,6 +187,18 @@ impl A {
     pub fn zeros(r: usize, c: usize) -> A {
         A { h: vec![0.0; r * c], l: vec![0.0; r * c], r, c }
     }
+    /// an array whose every entry the caller writes (the kernels below)
+    #[allow(clippy::uninit_vec)]
+    pub fn uninit(r: usize, c: usize) -> A {
+        let n = r * c;
+        let mut h = Vec::with_capacity(n);
+        let mut l = Vec::with_capacity(n);
+        unsafe {
+            h.set_len(n);
+            l.set_len(n);
+        }
+        A { h, l, r, c }
+    }
     pub fn from_h(h: Vec<f64>, r: usize, c: usize) -> A {
         assert_eq!(h.len(), r * c);
         A { l: vec![0.0; r * c], h, r, c }
@@ -387,7 +399,7 @@ pub fn bin<O: Op2>(o: &O, a: &A, b: &A) -> A {
     assert!(a.r == b.r || a.r == 1 || b.r == 1, "bin: rows {} and {}", a.r, b.r);
     let r = a.r.max(b.r);
     let c = a.c;
-    let mut out = A::zeros(r, c);
+    let mut out = A::uninit(r, c);
     let (ab, bb) = (a.r == 1 && r > 1, b.r == 1 && r > 1);
     for_rows(r, c, &mut out.h, &mut out.l, |i0, i1, oh, ol| {
         for i in i0..i1 {
@@ -411,9 +423,90 @@ pub fn bin<O: Op2>(o: &O, a: &A, b: &A) -> A {
 /// o(a) elementwise
 pub fn un<O: Op1>(o: &O, a: &A) -> A {
     let (r, c) = (a.r, a.c);
-    let mut out = A::zeros(r, c);
+    let mut out = A::uninit(r, c);
     for_rows(r, c, &mut out.h, &mut out.l, |i0, i1, oh, ol| {
         row1(o, &a.h[i0 * c..i1 * c], &a.l[i0 * c..i1 * c], oh, ol);
+    });
+    out
+}
+
+/// a double-double operation of four operands, one pass for what ell_ddm does in several (the same operations on
+/// the same values, so the same bits)
+pub trait Op4: Sync {
+    #[allow(clippy::too_many_arguments)]
+    fn f<T: Ln>(&self, ah: T, al: T, bh: T, bl: T, ch: T, cl: T, dh: T, dl: T) -> (T, T);
+}
+
+/// DT.__mul__'s tangent: add(mul(x.v, y.t), mul(x.t, y.v)), operands (x.v, y.t, x.t, y.v)
+pub struct MulT;
+impl Op4 for MulT {
+    #[inline(always)]
+    fn f<T: Ln>(&self, ah: T, al: T, bh: T, bl: T, ch: T, cl: T, dh: T, dl: T) -> (T, T) {
+        let (ph, pl) = mul(ah, al, bh, bl);
+        let (qh, ql) = mul(ch, cl, dh, dl);
+        add(ph, pl, qh, ql)
+    }
+}
+
+/// DT.__truediv__'s tangent: div(sub(x.t, mul(q, y.t)), y.v), operands (x.t, q, y.t, y.v)
+pub struct DivT;
+impl Op4 for DivT {
+    #[inline(always)]
+    fn f<T: Ln>(&self, ah: T, al: T, bh: T, bl: T, ch: T, cl: T, dh: T, dl: T) -> (T, T) {
+        let (ph, pl) = mul(bh, bl, ch, cl);
+        let (th, tl) = add(ah, al, ph.ng(), pl.ng());
+        div(th, tl, dh, dl)
+    }
+}
+
+/// the same without x.t: div(neg(mul(q, y.t)), y.v), operands (unused, q, y.t, y.v)
+pub struct DivT0;
+impl Op4 for DivT0 {
+    #[inline(always)]
+    fn f<T: Ln>(&self, _ah: T, _al: T, bh: T, bl: T, ch: T, cl: T, dh: T, dl: T) -> (T, T) {
+        let (ph, pl) = mul(bh, bl, ch, cl);
+        div(ph.ng(), pl.ng(), dh, dl)
+    }
+}
+
+/// o(a, b, c, d) elementwise; an operand of one row is broadcast over the others' rows
+pub fn quad<O: Op4>(o: &O, a: &A, b: &A, c: &A, d: &A) -> A {
+    let ops = [a, b, c, d];
+    let r = ops.iter().map(|x| x.r).max().unwrap();
+    let cc = a.c;
+    for x in ops {
+        assert!(x.c == cc && (x.r == r || x.r == 1), "quad: shapes");
+    }
+    let bc: Vec<bool> = ops.iter().map(|x| x.r == 1 && r > 1).collect();
+    let mut out = A::uninit(r, cc);
+    for_rows(r, cc, &mut out.h, &mut out.l, |i0, i1, oh, ol| {
+        for i in i0..i1 {
+            let rw = |k: usize| if bc[k] { 0 } else { i * cc };
+            let (ra, rb, rc, rd) = (rw(0), rw(1), rw(2), rw(3));
+            let k0 = (i - i0) * cc;
+            let n8 = cc / 8 * 8;
+            let mut j = 0;
+            while j < n8 {
+                let (h, l) = o.f(
+                    V8::ld(&a.h[ra + j..]),
+                    V8::ld(&a.l[ra + j..]),
+                    V8::ld(&b.h[rb + j..]),
+                    V8::ld(&b.l[rb + j..]),
+                    V8::ld(&c.h[rc + j..]),
+                    V8::ld(&c.l[rc + j..]),
+                    V8::ld(&d.h[rd + j..]),
+                    V8::ld(&d.l[rd + j..]),
+                );
+                h.st(&mut oh[k0 + j..]);
+                l.st(&mut ol[k0 + j..]);
+                j += 8;
+            }
+            for j in n8..cc {
+                let (h, l) = o.f(a.h[ra + j], a.l[ra + j], b.h[rb + j], b.l[rb + j], c.h[rc + j], c.l[rc + j], d.h[rd + j], d.l[rd + j]);
+                oh[k0 + j] = h;
+                ol[k0 + j] = l;
+            }
+        }
     });
     out
 }

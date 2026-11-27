@@ -97,15 +97,16 @@ struct Block12 {
     b: B12,
     dm_h: Vec<f64>,
     pool: Arc<rayon::ThreadPool>,
+    gemm: &'static str,
 }
 
 #[pymethods]
 impl Block12 {
     /// n = S.n, ll = S.L, nn = S.N, kodd = S.kodd, ks = S.Ks, u0 = S.u0; bodd, beven, sodd, seven, dm: the five slices
     /// of DDEll's B["odd"], B["even"], Sp["odd"], Sp["even"], Dm; dm_h: ops["Dm"].h (the native LU's matrix);
-    /// threads: the pool's size (0: all cores); mutate: "", "nolam" or "harm" (the controls)
+    /// threads: the pool's size (0: rayon's default, RAYON_NUM_THREADS or every core); mutate: "", "nolam" or "harm" (the controls)
     #[new]
-    #[pyo3(signature = (n, ll, nn, kodd, ks, u0, bodd, beven, sodd, seven, dm, dm_h, threads=0, mutate=""))]
+    #[pyo3(signature = (n, ll, nn, kodd, ks, u0, bodd, beven, sodd, seven, dm, dm_h, threads=0, mutate="", dgemm=0))]
     #[allow(clippy::too_many_arguments)]
     fn new(
         n: f64,
@@ -122,6 +123,7 @@ impl Block12 {
         dm_h: PyReadonlyArray2<f64>,
         threads: usize,
         mutate: &str,
+        dgemm: usize,
     ) -> PyResult<Self> {
         let mut mu = Mutate::default();
         for w in mutate.split(',').filter(|w| !w.is_empty()) {
@@ -135,7 +137,16 @@ impl Block12 {
         let zo = |axis| if mu.harm { Some((axis, mo)) } else { None };
         let bodd = oz_from(&bodd, zo(0))?;
         let sodd = oz_from(&sodd, zo(1))?;
-        let (beven, seven, dm) = (oz_from(&beven, None)?, oz_from(&seven, None)?, oz_from(&dm, None)?);
+        let (mut beven, mut seven, mut dm) = (oz_from(&beven, None)?, oz_from(&seven, None)?, oz_from(&dm, None)?);
+        let (mut bodd, mut sodd) = (bodd, sodd);
+        if dgemm != 0 {
+            // the address of a Fortran-convention dgemm (scipy.linalg.cython_blas's), alive while scipy is loaded
+            let fd: oz::FDgemm = unsafe { std::mem::transmute::<usize, oz::FDgemm>(dgemm) };
+            for o in [&mut bodd, &mut beven, &mut sodd, &mut seven, &mut dm] {
+                o.fd = Some(fd);
+            }
+        }
+        let gemm = if dgemm != 0 { "dgemm" } else { oz::gemm_name() };
         let (no, ne) = (bodd.n, beven.n);
         if no != 2 * mo || bodd.m != nn || beven.m != nn || sodd.n != nn || sodd.m != no || seven.n != nn || seven.m != ne || dm.n != nn || dm.m != nn {
             return Err(err("operator shapes do not match N, n_odd and n_even".into()));
@@ -144,14 +155,20 @@ impl Block12 {
         if (r, c) != (nn, nn) {
             return Err(err("dm_h must be N x N".into()));
         }
-        let t = if threads == 0 { std::thread::available_parallelism().map(|v| v.get()).unwrap_or(1) } else { threads };
-        let pool = Arc::new(rayon::ThreadPoolBuilder::new().num_threads(t).build().map_err(|e| err(e.to_string()))?);
-        Ok(Block12 { b: B12 { n, ll, nn, no, ne, kodd, ks, u0, bodd, beven, sodd, seven, dm, mutate: mu }, dm_h: dmh, pool })
+        // threads 0: rayon's default (RAYON_NUM_THREADS, else every core)
+        let pool = Arc::new(rayon::ThreadPoolBuilder::new().num_threads(threads).build().map_err(|e| err(e.to_string()))?);
+        Ok(Block12 { b: B12 { n, ll, nn, no, ne, kodd, ks, u0, bodd, beven, sodd, seven, dm, mutate: mu }, dm_h: dmh, pool, gemm })
     }
 
     #[getter]
     fn threads(&self) -> usize {
         self.pool.current_num_threads()
+    }
+
+    /// the Ozaki products' f64 kernel: "dgemm" (the one passed in), "accelerate" or "matrixmultiply"
+    #[getter]
+    fn gemm(&self) -> &'static str {
+        self.gemm
     }
 
     /// DDEll.block(12, x) at om, lam: (tangents hi, lo (nf x blk), value hi, lo (1 x blk)). h, e: the RK4 step in y

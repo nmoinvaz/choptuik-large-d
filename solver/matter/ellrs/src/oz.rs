@@ -21,10 +21,28 @@ mod accel {
     }
 }
 
-/// the f64 product kernel of this build
+/// the f64 product kernel built in
 pub fn gemm_name() -> &'static str {
     if cfg!(all(feature = "accelerate", target_os = "macos")) { "accelerate" } else { "matrixmultiply" }
 }
+
+/// a Fortran-convention dgemm (column-major, arguments by pointer), e.g. scipy.linalg.cython_blas.dgemm: the BLAS
+/// scipy runs on (Accelerate on macOS, OpenBLAS in the Linux and Windows wheels)
+pub type FDgemm = unsafe extern "C" fn(
+    *const u8,
+    *const u8,
+    *const i32,
+    *const i32,
+    *const i32,
+    *const f64,
+    *const f64,
+    *const i32,
+    *const f64,
+    *const i32,
+    *const f64,
+    *mut f64,
+    *const i32,
+);
 
 /// a fixed operator W (n x m), held as ell_ddm.Op's column-scaled slices
 pub struct Oz {
@@ -33,6 +51,8 @@ pub struct Oz {
     /// NSLICE slices, each n x m row-major
     pub sl: Vec<Vec<f64>>,
     rho: i64,
+    /// the f64 products by this dgemm instead of the built-in kernel
+    pub fd: Option<FDgemm>,
 }
 
 /// ell_ddm._slices' rho: slices of ceil((53 + log2 n)/2) bits below their scale
@@ -49,7 +69,7 @@ impl Oz {
         for s in &sl {
             assert_eq!(s.len(), n * m);
         }
-        Oz { n, m, sl, rho: rho_of(n) }
+        Oz { n, m, sl, rho: rho_of(n), fd: None }
     }
 
     /// X @ W for X (r x n)
@@ -106,6 +126,16 @@ impl Oz {
         for s in 0..NSLICE {
             let rows = (NSLICE - s) * r;
             let mut c = vec![0.0; rows * m];
+            if let Some(fd) = self.fd {
+                // C^T (m x rows) = W^T (m x n) X^T (n x rows), all column-major views of the row-major arrays
+                let (mm, nn, kk) = (m as i32, rows as i32, n as i32);
+                unsafe {
+                    fd(b"N".as_ptr(), b"N".as_ptr(), &mm, &nn, &kk, &1.0, self.sl[s].as_ptr(), &mm, xs.as_ptr(), &kk, &0.0,
+                        c.as_mut_ptr(), &mm);
+                }
+                q.push(c);
+                continue;
+            }
             #[cfg(all(feature = "accelerate", target_os = "macos"))]
             unsafe {
                 accel::cblas_dgemm(101, 111, 111, rows as i32, m as i32, n as i32, 1.0, xs.as_ptr(), n as i32,
