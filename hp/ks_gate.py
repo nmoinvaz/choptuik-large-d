@@ -62,10 +62,11 @@ def down(z8, meta, D, ks, F_ks, step, bar, kf, thr, ks_min, dmh):
         if d > bar:
             break
         ks, F_ks = ks - step, F_lo
-    # the control: Delta (the state's last unknown) moved by dmh at the gated ks must move the residual past bar. Moving
-    # m_h instead read 0.0 at D 4000's jump state with kfreeze 13, all of it and one grid value alike
+    # the control: Delta (the state's last unknown) moved by dmh at the gated ks must move the residual past bar. dmh
+    # goes into the third part: added to the second (about 1e-17, its unit in the last place about 1e-33) a 1e-40 is
+    # lost to rounding, which is why the first two controls (m_h, then Delta, both in the second part) read 0.0
     zc = [np.array(z8[q], dtype=float) for q in range(8)]
-    zc[1][-1] += dmh
+    zc[2][-1] += dmh
     dc = change(resid(zc, meta, D, ks, kf, thr), F_ks)
     ok = dc > bar
     print(f"control: Delta + {dmh:g} at ks {ks} changes the residual by {mp.nstr(dc, 3)} (must exceed {bar:g}): "
