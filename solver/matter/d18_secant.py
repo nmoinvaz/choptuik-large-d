@@ -3,8 +3,8 @@
 method on the signed hybrid determinant.
 
 Each evaluation is d18_hybsign.py's: M(lambda) in float64 (blocks 0-11; ell_fastm.mode_matrix_fast by default, or
-DSSEll.mode_matrix with --mm=cs), block 12 replaced by its double-double version (ell_ddm.DDEll's by default, or
-ell_fastdd's with --b12=fast), the sign and
+DSSEll.mode_matrix with --mm=cs), block 12 replaced by its double-double version (ell_ddm.DDEll's by default,
+ell_fastdd's with --b12=fast, or ellrs's with --b12=rust, DDEll's bits in Rust: ell_b12rs.py), the sign and
 ln|det| of multidouble's dd_logdet, and the noise test at 1e-15 on blocks 0-11 with the seeds 100 and 101; the plain
 float64 slogdet beside it. Each record adds the noise members' ln|det| and dln, the largest |ln|det_noise| - ln|det||.
 An evaluation is robust when both noise signs equal its sign (d18_hybsign's test) and dln <= --dln (default 0.1, a
@@ -22,11 +22,14 @@ the evaluation count and seconds.
 
 usage (venv-1025dd):
   d18_secant.py run STUB.jsonl STATE.npy D LO HI OUT.jsonl [--tol=1e-6] [--maxev=12] [--mm=fast|cs] [--dln=0.1]
-                [--basis=jac|coef|grid] [--b12=ddm|fast] [--eps=1e-15] [--pin=STATEBLOB,STUBBLOB]
-                [--ends=SCAN.jsonl]
+                [--basis=jac|coef|grid] [--b12=ddm|fast|rust] [--b12_threads=T] [--eps=1e-15]
+                [--pin=STATEBLOB,STUBBLOB] [--ends=SCAN.jsonl]
       --mm=cs is d18_hybsign.py's evaluation exactly (DSSEll.mode_matrix, ell_ddm's block 12); the default float64
       matrix is ell_fastm.mode_matrix_fast (basis jac). --b12=fast takes ell_fastdd's block 12 (the same double-double
-      block to 4e-25), faster at k_c 55 (1.4 to 1.7x) but not at k_c 103 (0.8x);
+      block to 4e-25), faster at k_c 55 (1.4 to 1.7x) but not at k_c 103 (0.8x); --b12=rust takes ellrs's, DDEll's block
+      bit for bit (ell_b12rs.py; build solver/matter/ellrs first), on --b12_threads threads (default: rayon's default,
+      RAYON_NUM_THREADS or every core); run it with OPENBLAS_NUM_THREADS=1 (VECLIB_MAXIMUM_THREADS=1 on macOS), since
+      each of those threads calls scipy's dgemm;
       --eps: the noise test's relative amplitude (d18_hybsign.py's 1e-15); the root's float64 floor from blocks 0-11
       is larger than that test sees (SPEED_ELL1.md), and 1e-12 makes the robustness test conservative;
       --pin: refuse (exit 3) unless the state's and the stub's git blobs (hash-object --no-filters) start with these;
@@ -99,15 +102,22 @@ def hybrid_eval(H, Hl, mask, dln_max, eps=1e-15):
 class RealEval:
     """d18_hybsign.py's hybrid matrix of a stub record's state (the record system checked by the caller)"""
 
-    def __init__(self, S, z, rec, st, mm, dln_max, basis="jac", b12="ddm", eps=1e-15):
+    def __init__(self, S, z, rec, st, mm, dln_max, basis="jac", b12="ddm", eps=1e-15, b12_threads=0):
         import ell_ddm
         self.eps = eps
         self.S, self.z, self.rec, self.st, self.mm, self.dln_max, self.basis = S, z, rec, st, mm, dln_max, basis
         self.E = ell_ddm.DDEll(S)
         self.b12 = b12
+        if b12 not in ("ddm", "fast", "rust"):
+            raise ValueError(f"--b12={b12}: ddm, fast or rust")
         if b12 == "fast":
             from ell_fastdd import DDJac
             self.J = DDJac(self.E)
+        if b12 == "rust":
+            from ell_b12rs import RsB12
+            self.RS = RsB12(S, self.E, threads=b12_threads)
+            import ellrs
+            print(f"block 12 by ellrs ({ellrs.isa()}, products {self.RS.R.gemm}, {self.RS.R.threads} threads)", flush=True)
         blocks, offs = S._block_list()
         blk = 3 * S.n_odd + 2 * S.n_even
         c0, nf, fun, tgt = blocks[12]
@@ -128,7 +138,12 @@ class RealEval:
         t1 = time.time()
         sf, lf = np.linalg.slogdet(Mf)
         H, Hl = Mf.copy(), np.zeros_like(Mf)
-        Md = self.J.mode_matrix(self.z, lam) if self.b12 == "fast" else self.E.mode_matrix(self.z, lam, only=[12])
+        if self.b12 == "fast":
+            Md = self.J.mode_matrix(self.z, lam)
+        elif self.b12 == "rust":
+            Md = self.RS.mode_matrix(self.z, lam)
+        else:
+            Md = self.E.mode_matrix(self.z, lam, only=[12])
         H[self.sl] = Md.h[self.sl]
         Hl[self.sl] = Md.l[self.sl]
         t2 = time.time()
@@ -348,7 +363,7 @@ def setup(argv, nargs):
     if not same:
         sys.exit(3)
     E = RealEval(S, z, rec, st, mm, float(opts.get("dln", 0.1)), opts.get("basis", "jac"), opts.get("b12", "ddm"),
-                 float(opts.get("eps", 1e-15)))
+                 float(opts.get("eps", 1e-15)), int(opts.get("b12_threads", 0)))
     return args, opts, cwd0, rec, st, E
 
 
@@ -413,7 +428,7 @@ def runcmd(argv):
             w.update(dln=None, robust=bool(w["noise_robust"]))
             return w
         ends = (pick(lo), pick(hi))
-    E = RealEval(S, z, rec, st, mm, dln_max, basis, b12, eps)
+    E = RealEval(S, z, rec, st, mm, dln_max, basis, b12, eps, int(opts.get("b12_threads", 0)))
 
     def out(r):
         print(f"  lam {r['lam']!r} ({r['role']}): hybrid {r['sign']:+.0f} ln|det| {r['ln']:.10f}, noise {r['noise']} "

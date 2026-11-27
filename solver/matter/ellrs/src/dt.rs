@@ -67,12 +67,10 @@ pub fn rsubf(f: f64, x: &DT) -> DT {
 /// x * y: value, then x.v * y.t, then x.t * y.v, summed
 pub fn mul(x: &DT, y: &DT) -> DT {
     let v = bin(&dd::Mul, &x.v, &y.v);
-    let a = y.t.as_ref().map(|t| bin(&dd::Mul, &x.v, t));
-    let b = x.t.as_ref().map(|t| bin(&dd::Mul, t, &y.v));
-    let t = match (a, b) {
-        (Some(a), Some(b)) => Some(bin(&dd::Add, &a, &b)),
-        (Some(a), None) => Some(a),
-        (None, Some(b)) => Some(b),
+    let t = match (&x.t, &y.t) {
+        (Some(xt), Some(yt)) => Some(dd::quad(&dd::MulT, &x.v, yt, xt, &y.v)),
+        (None, Some(yt)) => Some(bin(&dd::Mul, &x.v, yt)),
+        (Some(xt), None) => Some(bin(&dd::Mul, xt, &y.v)),
         (None, None) => None,
     };
     DT { v, t }
@@ -91,15 +89,12 @@ pub fn mulr(x: &DT, h: f64, l: f64) -> DT {
 /// x / y: q = x.v / y.v; tangents (x.t - q y.t) / y.v
 pub fn div(x: &DT, y: &DT) -> DT {
     let q = bin(&dd::Div, &x.v, &y.v);
-    let mut t = x.t.clone();
-    if let Some(yt) = &y.t {
-        let qt = bin(&dd::Mul, &q, yt);
-        t = Some(match t {
-            None => un(&dd::Neg, &qt),
-            Some(xt) => bin(&dd::Sub, &xt, &qt),
-        });
-    }
-    let t = t.map(|t| bin(&dd::Div, &t, &y.v));
+    let t = match (&x.t, &y.t) {
+        (Some(xt), Some(yt)) => Some(dd::quad(&dd::DivT, xt, &q, yt, &y.v)),
+        (None, Some(yt)) => Some(dd::quad(&dd::DivT0, &q, &q, yt, &y.v)),
+        (Some(xt), None) => Some(bin(&dd::Div, xt, &y.v)),
+        (None, None) => None,
+    };
     DT { v: q, t }
 }
 

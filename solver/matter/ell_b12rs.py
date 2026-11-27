@@ -9,17 +9,22 @@ by scipy (lu="scipy", the default, called back from Rust), so that on one machin
 lu="native" factors in Rust instead (partial pivoting in another order: the solves' last f64 bits differ, then the
 double-double refinement).
 
-    python ell_b12rs.py check STUB.jsonl STATE.npy D LAMS [--mutate=nolam|harm] [--lu=scipy|native] [--threads=T]
-                       [--bar=1e-28] [--out=OUT.jsonl]
+    python ell_b12rs.py check STUB.jsonl STATE.npy D LAMS [--mutate=nolam|harm] [--lu=scipy|native] [--threads=T[,T2..]]
+                       [--gemm=scipy|builtin] [--controls=1] [--bar=1e-28] [--out=OUT.jsonl]
         Rust's block 12 against DDEll.mode_matrix(only=[12]) at each lambda of LAMS (comma-separated): the number of
         entries equal bit for bit (hi and lo parts), the largest |difference| / |entry| over the entries (the
         difference formed from both parts), and the largest |difference| / max |block|; both timings, in one process.
         PASS when the per-entry relative difference is at most --bar at every lambda (exit 0, else 1; 3 when the state
-        does not reproduce its stub record). Controls (each must FAIL): --mutate=nolam (Rust's tangents without lambda)
-        and --mutate=harm (the top odd harmonic dropped from Rust's tau operators).
+        does not reproduce its stub record). The bar can be met only bit for bit: an equally valid change of the
+        periodic solves' f64 LU moves DDEll's own block by 2e-14 of some entries (raw I1102-mac/checks). More thread
+        counts (--threads=6,1) each give another Rust block, held to the same bar. Controls (each must FAIL):
+        --mutate=nolam (Rust's tangents without lambda) and --mutate=harm (the top odd harmonic dropped from Rust's tau
+        operators); --controls=1 runs both beside the plain block against the same DDEll block, and then the check
+        passes only if the plain block passes and both controls fail.
     python ell_b12rs.py selftest [--mutate=nolam|harm]
-        on ell_fastm's k_c 15 toy state: each operator's Ozaki product against ell_ddm.Op.rmul (bit for bit), and block
-        12 against DDEll's at lambda 0 and 0.9 (bit for bit, with lu="scipy"). Exit 0 only if every comparison passes.
+        on ell_fastm's k_c 15 toy state: each operator's Ozaki product against ell_ddm.Op.rmul (bit for bit, with scipy's
+        dgemm and the built-in products), and block 12 against DDEll's at lambda 0 and 0.9 (bit for bit, with lu="scipy").
+        Exit 0 only if every comparison passes.
 
 Needs ellrs importable (solver/matter/ellrs/build.sh, or PYTHONPATH at its site folder)."""
 import json
@@ -64,10 +69,25 @@ def scipy_lu(om, Dm_h):
     return factor
 
 
-class RsB12:
-    """block 12 of DDEll E (its operators and slices) in Rust"""
+def scipy_dgemm():
+    """the address of scipy.linalg.cython_blas.dgemm (Fortran convention), the BLAS scipy runs on: Accelerate on
+    macOS, OpenBLAS in the Linux and Windows wheels"""
+    import ctypes
+    from scipy.linalg import cython_blas
+    cap = cython_blas.__pyx_capi__["dgemm"]
+    api = ctypes.pythonapi
+    api.PyCapsule_GetName.restype = ctypes.c_char_p
+    api.PyCapsule_GetName.argtypes = [ctypes.py_object]
+    api.PyCapsule_GetPointer.restype = ctypes.c_void_p
+    api.PyCapsule_GetPointer.argtypes = [ctypes.py_object, ctypes.c_char_p]
+    return int(api.PyCapsule_GetPointer(cap, api.PyCapsule_GetName(cap)))
 
-    def __init__(self, S, E=None, threads=0, mutate=None):
+
+class RsB12:
+    """block 12 of DDEll E (its operators and slices) in Rust; gemm: "scipy" (scipy's BLAS dgemm for the exact f64
+    products of the Ozaki slices) or "builtin" (ellrs's own: matrixmultiply, or Accelerate in a macOS build)"""
+
+    def __init__(self, S, E=None, threads=0, mutate=None, gemm="scipy"):
         import ellrs
         import ell_ddm
         if S.long:
@@ -81,7 +101,8 @@ class RsB12:
         self.R = ellrs.Block12(float(S.n), float(S.L), int(S.N), [float(k) for k in S.kodd], int(S.Ks), float(S.u0),
                                sl(E.B["odd"]), sl(E.B["even"]), sl(E.Sp["odd"]), sl(E.Sp["even"]), sl(E.Dm),
                                np.ascontiguousarray(E.Dm_h), threads=threads,
-                               mutate=MUTATE if mutate is None else mutate)
+                               mutate=MUTATE if mutate is None else mutate,
+                               dgemm=scipy_dgemm() if gemm == "scipy" else 0)
         self.h, self.e = rk_grid(S)
         blocks, offs = S._block_list()
         self.c0, self.nf, _, self.tgt = blocks[-1]
@@ -146,31 +167,45 @@ def checkcmd(argv):
         sys.exit(3)
     t0 = time.time()
     E = ell_ddm.DDEll(S)
-    R = RsB12(S, E, threads=int(opts.get("threads", 0)))
+    gemm = opts.get("gemm", "scipy")
+    thr = [int(v) for v in opts.get("threads", "0").split(",")]
+    Rs = [RsB12(S, E, threads=t, gemm=gemm) for t in thr]
+    ctl = [RsB12(S, E, threads=thr[0], gemm=gemm, mutate=m) for m in ("nolam", "harm")] if opts.get("controls") == "1" \
+        else []
     import ellrs
-    print(f"N {S.N}, n_odd {S.n_odd}, n_even {S.n_even}, horizon steps {len(R.e)}, Ks {S.Ks}, u0 {S.u0}; operators "
-          f"{time.time() - t0:.1f} s; ellrs {ellrs.isa()}, {R.R.threads} threads, lu {lu}, mutate {MUTATE or 'none'}",
+    R = Rs[0]
+    print(f"N {S.N}, n_odd {S.n_odd}, n_even {S.n_even}, nf {R.nf}, horizon steps {len(R.e)}, Ks {S.Ks}, u0 {S.u0}; "
+          f"operators {time.time() - t0:.1f} s; ellrs {ellrs.isa()}, products {R.R.gemm}, threads "
+          f"{[x.R.threads for x in Rs]}, lu {lu}, mutate {MUTATE or 'none'}, controls {'nolam, harm' if ctl else 'none'}",
           flush=True)
     ok = True
     for lam in lams:
         with np.errstate(all="ignore"):
             t0 = time.time()
-            Tr, _ = R.block12(z, lam, lu)
-            tr = time.time() - t0
-            t0 = time.time()
             Tp = block_of(E.mode_matrix(z, lam, only=[12]), S)
             tp = time.time() - t0
-        c = compare(Tr, Tp)
-        good = c["rel_entry"] <= bar
-        ok &= good
-        print(f"lambda {lam!r}: {c['same']} of {c['n']} entries bit for bit; max |d|/|entry| {c['rel_entry']:.3e}, "
-              f"max |d|/max|block| {c['rel_max']:.3e} (bar {bar:g} per entry): {'PASS' if good else 'FAIL'}; "
-              f"Rust {tr:.2f} s, DDEll {tp:.1f} s, ratio {tp / tr:.1f}", flush=True)
-        if "out" in opts:
-            with open(opts["out"], "a") as fo:
-                fo.write(json.dumps(dict(D=D, kc=rec["kc"], lam=lam, state=os.path.basename(st), mutate=MUTATE or None,
-                                         lu=lu, threads=R.R.threads, isa=ellrs.isa(), **c, bar=bar,
-                                         verdict="PASS" if good else "FAIL", sec_rust=tr, sec_ddell=tp)) + "\n")
+            for k, RR in enumerate(Rs + ctl):
+                t0 = time.time()
+                Tr, _ = RR.block12(z, lam, lu)
+                tr = time.time() - t0
+                c = compare(Tr, Tp)
+                good = c["rel_entry"] <= bar
+                role = "control " + ("nolam", "harm")[k - len(Rs)] if k >= len(Rs) else "block"
+                if k >= len(Rs):
+                    ok &= not good
+                    verdict = "FAIL, as a control must" if not good else "PASS: the control did not fire"
+                else:
+                    ok &= good
+                    verdict = "PASS" if good else "FAIL"
+                print(f"lambda {lam!r}, {role} ({RR.R.threads} threads): {c['same']} of {c['n']} entries bit for bit; "
+                      f"max |d|/|entry| {c['rel_entry']:.3e}, max |d|/max|block| {c['rel_max']:.3e} (bar {bar:g} per "
+                      f"entry): {verdict}; Rust {tr:.2f} s, DDEll {tp:.1f} s, ratio {tp / tr:.1f}", flush=True)
+                if "out" in opts:
+                    with open(opts["out"], "a") as fo:
+                        fo.write(json.dumps(dict(D=D, kc=rec["kc"], lam=lam, state=os.path.basename(st), role=role,
+                                                 mutate=MUTATE or None, lu=lu, threads=RR.R.threads, isa=ellrs.isa(),
+                                                 gemm=RR.R.gemm, **c, bar=bar, verdict=verdict, sec_rust=tr,
+                                                 sec_ddell=tp)) + "\n")
     print(f"check: {'PASS' if ok else 'FAIL'}" + (f" [mutate {MUTATE}]" if MUTATE else ""), flush=True)
     sys.exit(0 if ok else 1)
 
@@ -181,6 +216,7 @@ def selftest():
     S, z = ell_fastm._toy_state()
     E = ell_ddm.DDEll(S)
     R = RsB12(S, E)
+    Rb = RsB12(S, E, gemm="builtin")
     ok = True
     g = np.random.default_rng(3)
     for name, op in (("bodd", E.B["odd"]), ("beven", E.B["even"]), ("sodd", E.Sp["odd"]), ("seven", E.Sp["even"]),
@@ -188,11 +224,13 @@ def selftest():
         X = dd.R(g.standard_normal((9, op.n)) * np.exp2(g.integers(-30, 30, (9, 1))))
         X = dd.add(X, dd.R(X.h * 1e-17 * g.standard_normal(X.shape)))
         ref = op.rmul(X)
-        h, l = R.R.ozaki(name, X.h, X.l)
-        c = compare(dd.R(h, l), ref)
-        good = c["same"] == c["n"]
-        ok &= good
-        print(f"Ozaki {name}: {c['same']} of {c['n']} entries bit for bit {'ok' if good else 'FAIL'}", flush=True)
+        for RR in (R, Rb):
+            h, l = RR.R.ozaki(name, X.h, X.l)
+            c = compare(dd.R(h, l), ref)
+            good = c["same"] == c["n"]
+            ok &= good
+            print(f"Ozaki {name} ({RR.R.gemm}): {c['same']} of {c['n']} entries bit for bit {'ok' if good else 'FAIL'}",
+                  flush=True)
     for lam in (0.0, 0.9):
         with np.errstate(all="ignore"):
             Tr, _ = R.block12(z, lam)
