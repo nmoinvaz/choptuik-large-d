@@ -75,6 +75,11 @@ product fuses the cross terms, one rounding fewer than ddnp's, so `DV` itself wo
 The tangent rows never mix in `DDEll`'s arithmetic. The RK4 therefore runs on groups of rows in parallel, each group
 with its own copy of the value row, and the thread count does not change the bits.
 
+Check 2, the scanner (`I1102-mac/scan/compare.log`): `d18_secant.py scan` with `--b12=rust` and with the default give
+every field of the records equal at 1.77, 1.7733 and 1.78 (k_c 55, root 1.7733012) and at 0.89, 0.8946 and 0.9 (k_c 87,
+root 0.8945878): sign, ln|det| to the last bit, the noise members, the float64 sign and ln|det|. Its control,
+`--b12=rust --mutate=nolam`, flips the sign at 1.77 and 1.7733 and moves ln|det| by 130: FAIL.
+
 **The bar is bit for bit.** An equally valid change of the periodic solves' f64 LU (the transposed system) moves
 `DDEll`'s own block by 2.0e-14 of some entries and 5.1e-27 of its largest. The block's entries span 2.8e-15 to 2.4 at
 k_c 31 (raw `I1102-mac/checks/ref_lu_spread_kc31.log`). So no change of rounding meets 1e-28 per entry.
@@ -93,8 +98,18 @@ threads (9.4x) and 105 s on 1 thread (5.2x).
 - On a Mac the f64 products share one matrix unit, so more threads gain little: k_c 55 took 27.2 s on 1 thread and
   13.6 s on 6 (`DDEll` 141 s, same process).
 - On x86 each thread multiplies on its own core.
-- The rest of a stage (Ozaki slicing, level sums, elementwise double-double) costs about as much as the products on
-  the Mac (`I1102-mac/profile/`).
+
+Where a stage goes (`I1102-mac/profile/*_dgemm.log`, ellrs a3dfcc5b, scipy's dgemm on Accelerate, CPU per RK4 stage):
+
+| k_c | threads | one evaluation | per stage | f64 products | slicing | level sums | elementwise | `DDEll.rhs`, Python |
+|---|---|---|---|---|---|---|---|---|
+| 55 | 1 | 24.9 s | 9.6 ms | 3.0 | 1.5 | 0.9 | 4.1 | 28 ms |
+| 87 | 1 | 76.7 s | 25.1 ms | 9.8 | 3.2 | 2.3 | 9.8 | 118 ms |
+| 87 | 6 | 45.3 s | 84.8 ms | 52.4 | 6.2 | 6.8 | 19.5 | 115 ms |
+
+On 6 threads the products' CPU time grows five-fold for the same work: the threads queue for the shared matrix unit.
+A fused per-element grid kernel (dual numbers on V8 lanes, the same bits) ran slower than the array passes, from
+register spills, and was dropped.
 
 ## Measured speed-ups
 
