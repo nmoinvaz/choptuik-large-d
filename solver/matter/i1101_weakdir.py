@@ -45,6 +45,8 @@ usage (venv-1025dd, from solver/matter):
   i1101_weakdir.py ddres SVD.npz REC STATE D
       every block's residual in double-double (ell_ddm.DDEll's blocks, values only) beside the float64 one, and both
       projected on the SVD's bands: whether the weak residual is float64 rounding.
+  i1101_weakdir.py coords SVD.npz BASE.npy NAME=STATE.npy ...
+      the band fractions and weak coordinates V^T (z - z_base) of saved states (any step map; no residual).
   i1101_weakdir.py floor JAC.npz SVD.npz REC STATE D
       U_w^T F at the state under one change of the discretisation at a time: every segment's RK steps x2, the horizon
       segment's x2, Ks 45, N + 56, u0 0.035 and 0.045 (horizon steps by freeze_from's rule at that u0).
@@ -680,6 +682,29 @@ def ddrescmd(argv):
     return 0
 
 
+def coordscmd(argv):
+    """weak and band coordinates V^T (z - z_base) of saved states against a stored SVD (no residual, so states on
+    other step maps are allowed): BASE.npy then NAME=STATE.npy ..."""
+    args = pos(argv)
+    sd = np.load(args[0])
+    s, Vt = sd["s"], sd["Vt"]
+    zb = np.load(args[1])
+    n = len(s)
+    nul, weak, strong = bands_of(s)
+    wk = list(weak[::-1])
+    print(f"weak vectors (from the smallest): {[int(n - 1 - i) for i in wk]}", flush=True)
+    for a in args[2:]:
+        name, f = a.split("=", 1)
+        z = np.load(f)
+        dz = z - zb
+        c = Vt @ dz
+        nz = float(np.linalg.norm(dz))
+        print(f"{name}: |dz| {nz:.4e}, dDelta {dz[-1]:+.4e}; fraction null {np.linalg.norm(c[nul]) / nz:.2e} weak "
+              f"{np.linalg.norm(c[weak]) / nz:.6f} strong {np.linalg.norm(c[strong]) / nz:.2e}; weak coords "
+              f"{' '.join(f'{v:+.4e}' for v in c[wk])}", flush=True)
+    return 0
+
+
 def floorcmd(argv):
     args = pos(argv)
     sd = np.load(args[1])
@@ -1005,7 +1030,7 @@ if __name__ == "__main__":
     cmd = sys.argv[1] if len(sys.argv) > 1 else ""
     f = dict(jac=jaccmd, svd=svdcmd, planted=plantedcmd, report=reportcmd, valley=valleycmd, floor=floorcmd,
              detsens=detsenscmd, locate=locatecmd, segerr=segerrcmd, chord=chordcmd, root=rootcmd,
-             order=ordercmd, ne=necmd, ddres=ddrescmd).get(cmd)
+             order=ordercmd, ne=necmd, ddres=ddrescmd, coords=coordscmd).get(cmd)
     if f is None:
         print(__doc__)
         sys.exit(2)
