@@ -247,7 +247,7 @@ pub fn for_rows<F>(r: usize, c: usize, h: &mut [f64], l: &mut [f64], f: F)
 where
     F: Fn(usize, usize, &mut [f64], &mut [f64]) + Sync,
 {
-    if r * c < PAR_MIN || r < 2 || c == 0 {
+    if r * c < PAR_MIN || r < 2 || c == 0 || crate::prof::seq() {
         f(0, r, h, l);
         return;
     }
