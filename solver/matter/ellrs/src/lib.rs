@@ -6,6 +6,7 @@ pub mod b12;
 pub mod dd;
 pub mod dt;
 pub mod oz;
+pub mod prof;
 
 use b12::{LuFactory, LuSolve, Mutate, NativeLu, B12};
 use dd::A;
@@ -199,6 +200,13 @@ impl Block12 {
         Ok((to_py(py, &out.t, true)?, to_py(py, &out.t, false)?, to_py(py, &out.v, true)?, to_py(py, &out.v, false)?))
     }
 
+    /// the CPU seconds by kind (slice, gemm, combine, lu; wall: the series' wall time, the RK4 chunks' summed wall
+    /// time) and the Ozaki products' f64 multiply-adds, per phase ("series", "rk"), since the last reset
+    #[pyo3(signature = (reset=true))]
+    fn profile(&self, reset: bool) -> std::collections::HashMap<String, f64> {
+        prof::take(reset).into_iter().map(|(p, k, v)| (format!("{}_{k}", ["series", "rk"][p]), v)).collect()
+    }
+
     /// X @ W by the Ozaki product of one operator ("bodd", "beven", "sodd", "seven", "dm"), for the checks against
     /// ell_ddm.Op.rmul
     fn ozaki<'py>(
@@ -230,9 +238,16 @@ fn isa() -> &'static str {
     multidouble::native::V8::ISA
 }
 
+/// the f64 product kernel of the Ozaki products in this build
+#[pyfunction]
+fn gemm() -> &'static str {
+    oz::gemm_name()
+}
+
 #[pymodule]
 fn ellrs(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_class::<Block12>()?;
     m.add_function(wrap_pyfunction!(isa, m)?)?;
+    m.add_function(wrap_pyfunction!(gemm, m)?)?;
     Ok(())
 }

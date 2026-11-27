@@ -17,6 +17,11 @@ matrixmultiply = "0.3.11"
 # the 8-lane f64 vectors (multidouble::native::V8) that carry ddnp.py's double-double algorithms
 multidouble = "=6.0.0"
 
+[features]
+# macOS: the Ozaki products by Accelerate's cblas_dgemm (on the AMX/SME units) instead of matrixmultiply; each product
+# is exact, so the bits do not change
+accelerate = []
+
 [profile.release]
 opt-level = 3
 codegen-units = 1

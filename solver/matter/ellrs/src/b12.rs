@@ -5,6 +5,8 @@
 use crate::dd::{self, bin, hcat, un, A};
 use crate::dt::{self, cs, lin_many, pysum, DT};
 use crate::oz::Oz;
+use crate::prof;
+use std::time::Instant;
 use rayon::prelude::*;
 use std::sync::Arc;
 
@@ -187,8 +189,10 @@ impl<'a> Ev<'a> {
     fn solve(&self, kap: &A, lam: f64, rhs: &A, lu: &dyn LuFactory) -> Result<A, String> {
         let nn = self.b.nn;
         let diag: Vec<f64> = (0..nn).map(|j| kap.h[j] + lam).collect();
+        let t0 = Instant::now();
         let fac = lu.factor(&diag)?;
         let mut f = A::from_h(fac.solve(&rhs.h, rhs.r)?, rhs.r, nn);
+        prof::add_ns(prof::LU, t0);
         for _ in 0..8 {
             let dmf = self.b.dm.rmul(&f);
             let mut af = bin(&dd::Add, &un(&dd::MulD(self.om), &dmf), &bin(&dd::Mul, kap, &f));
@@ -196,7 +200,9 @@ impl<'a> Ev<'a> {
                 af = bin(&dd::Add, &af, &un(&dd::MulD(lam), &f));
             }
             let r = bin(&dd::Sub, rhs, &af);
+            let t0 = Instant::now();
             let df = A::from_h(fac.solve(&r.h, r.r)?, r.r, nn);
+            prof::add_ns(prof::LU, t0);
             f = bin(&dd::Add, &f, &df);
             let mdf = df.maxabs_h();
             if mdf <= 1e-33 * f.maxabs_h().max(1e-300) {
@@ -426,6 +432,8 @@ impl B12 {
         let mut od = lin_many(&self.bodd, &[&ms, &qs]).into_iter();
         let (m0, q0) = (od.next().unwrap(), od.next().unwrap());
         let a0 = lin_many(&self.beven, &[&as_]).pop().unwrap();
+        prof::PHASE.store(0, std::sync::atomic::Ordering::Relaxed);
+        let t0 = Instant::now();
         let sx = ev.ssh_series(m0, a0, q0, lu)?;
         let ev5: Vec<DT> = sx.iter().map(|f| eval_series(f, self.u0)).collect();
         let mut so = lin_many(&self.sodd, &[&ev5[0], &ev5[1], &ev5[4]]).into_iter();
@@ -433,6 +441,8 @@ impl B12 {
         let mut se = lin_many(&self.seven, &[&ev5[2], &ev5[3]]).into_iter();
         let (sa, sc) = (se.next().unwrap(), se.next().unwrap());
         let s = vec![sp, sm, sa, sc, sq];
+        prof::add_ns(prof::WALL, t0);
+        prof::PHASE.store(1, std::sync::atomic::Ordering::Relaxed);
         let s = match rk {
             None => s,
             Some((h, e)) => {
@@ -442,9 +452,14 @@ impl B12 {
                 let parts: Vec<Vec<DT>> = groups
                     .par_iter()
                     .map(|&(i0, i1)| {
+                        let t0 = Instant::now();
+                        prof::SEQ.with(|q| q.set(true));
                         let si: Vec<DT> =
                             s.iter().map(|f| DT { v: f.v.clone(), t: Some(f.t.as_ref().unwrap().rows(i0, i1)) }).collect();
-                        ev.rk4_u(si, h, e)
+                        let o = ev.rk4_u(si, h, e);
+                        prof::SEQ.with(|q| q.set(false));
+                        prof::add_ns(prof::WALL, t0);
+                        o
                     })
                     .collect();
                 (0..5)
