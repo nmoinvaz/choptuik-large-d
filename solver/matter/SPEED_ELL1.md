@@ -11,6 +11,7 @@ changed, so the runners' pins of those files still hold.
 | `ell_fastm.py` | `DSSEll.mode_matrix` (float64, blocks 0-12) | the same M(lambda) by the variational RK4 map |
 | `ell_fastdd.py` | `ell_ddm.DDEll.mode_matrix(only=[12])` | the same double-double block 12 by stage matrices |
 | `d18_secant.py` | a finer grid of `d18_hybsign.py` points | Brent refinement of a bracketed root on the hybrid sign |
+| `ellrs/`, `ell_b12rs.py` | `ell_ddm.DDEll.mode_matrix(only=[12])` | the same block 12 in Rust, bit for bit (#1102, branch `wip/ell1-rust-b12`) |
 
 ## ell_fastm: the float64 mode matrix
 
@@ -52,6 +53,48 @@ Each evaluation is `d18_hybsign.py`'s, with the same dd_logdet sign and the same
   The bracket reaching `--tol` gives exit 0.
 - Output: one record per evaluation, then a `root` record with the bracket, its width and signs, and the det-linear
   root inside it.
+
+## ellrs: the double-double block 12 in Rust (#1102)
+
+`ellrs/` is a pyo3 crate, and `ell_b12rs.py` is its driver. It runs `DDEll.block(12, X)` operation for operation:
+- the parity-restricted Fourier state and the dual-number tangents;
+- ddnp's double-double algorithms, on multidouble's f64 lanes (`multidouble::native::V8`, version 6.0.0);
+- `ell_ddm.Op`'s Ozaki products;
+- the horizon series with its periodic solves;
+- the frozen-step RK4 of the horizon segment.
+
+The driver hands it what `DDEll` computes in Python, so that on one machine the block is `DDEll`'s bit for bit:
+- the tau operators and their Ozaki slices, from a `DDEll`;
+- the RK4 abscissae exp(y), by numpy;
+- the periodic solves' f64 LU, by scipy, called back from Rust (`lu="native"` factors in Rust instead).
+
+The f64 products of the Ozaki slices are exact, so their BLAS does not change the bits. They go to scipy's own dgemm
+(`scipy.linalg.cython_blas`): Accelerate on macOS, OpenBLAS in the Linux and Windows wheels. multidouble's `DV`
+product fuses the cross terms, one rounding fewer than ddnp's, so `DV` itself would not give these bits.
+
+The tangent rows never mix in `DDEll`'s arithmetic. The RK4 therefore runs on groups of rows in parallel, each group
+with its own copy of the value row, and the thread count does not change the bits.
+
+**The bar is bit for bit.** An equally valid change of the periodic solves' f64 LU (the transposed system) moves
+`DDEll`'s own block by 2.0e-14 of some entries and 5.1e-27 of its largest. The block's entries span 2.8e-15 to 2.4 at
+k_c 31 (raw `I1102-mac/checks/ref_lu_spread_kc31.log`). So no change of rounding meets 1e-28 per entry.
+
+| check (raw `I1102-mac/checks/`) | result | its controls (must fail) |
+|---|---|---|
+| `ell_b12rs.py selftest` (k_c 15 toy state): the Ozaki products, block 12 at lambda 0 and 0.9 | bit for bit | `--mutate=nolam` and `--mutate=harm`: exit 1 |
+| `check`, k_c 31, D 10.5, lambda 2.87 (6 and 1 threads) | 15010 of 15010 entries bit for bit | nolam 1.4e3, harm 2.7e3 per entry |
+| `check`, k_c 55, D 18.125, lambda 1.775 | 46426 of 46426 | nolam 1.7e3, harm 7.1e4 |
+| `check`, k_c 87, D 21.0625, lambda 0.895 | 115194 of 115194 | nolam 1.5e4, harm 2.9e5 |
+
+`nolam` drops lambda from Rust's tangents. `harm` drops the top odd harmonic from Rust's tau operators.
+
+One evaluation of the block at k_c 87, in one process, on the Mac (M5, load 14-16): `DDEll` 539 s, ellrs 57 s on 6
+threads (9.4x) and 105 s on 1 thread (5.2x).
+- On a Mac the f64 products share one matrix unit, so more threads gain little: k_c 55 took 27.2 s on 1 thread and
+  13.6 s on 6 (`DDEll` 141 s, same process).
+- On x86 each thread multiplies on its own core.
+- The rest of a stage (Ozaki slicing, level sums, elementwise double-double) costs about as much as the products on
+  the Mac (`I1102-mac/profile/`).
 
 ## Measured speed-ups
 
@@ -179,6 +222,30 @@ RAYON_NUM_THREADS=1 OMP_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 nice -n 10 $PY -u d
 Exit 0 means the bracket reached the tolerance, and exit 4 means it stopped earlier with a valid bracket. Either way
 the last line of the jsonl is the `root` record. Adding `--ends=<scan jsonl>` reuses the scan's two end records and
 saves two evaluations, but those ends then carry only `d18_hybsign.py`'s robustness test.
+
+### Block 12 in Rust (`--b12=rust`, #1102)
+
+On the branch `wip/ell1-rust-b12`, in a worktree as above. The build needs Rust (cargo), maturin in the venv, and
+crates.io on the first build. It takes about a minute. On Windows run it from Git Bash, as `hp/build.sh`.
+
+```bash
+git -C ~/Source/choptuik-large-d fetch origin wip/ell1-rust-b12
+git -C ~/Source/choptuik-large-d worktree add --detach ~/Source/choptuik-ell1-rust origin/wip/ell1-rust-b12
+cd ~/Source/choptuik-ell1-rust/solver/matter
+source <the venv whose multidouble has dd_logdet>/bin/activate   # Scripts/activate on Windows
+pip install maturin                              # if the venv has none
+ellrs/build.sh                                   # installs ellrs into the venv; prints "ellrs <isa> <products>"
+export OPENBLAS_NUM_THREADS=1 VECLIB_MAXIMUM_THREADS=1
+python ell_b12rs.py selftest                     # exit 0
+python ell_b12rs.py selftest --mutate=nolam      # exit 1 (tangents without lambda)
+python ell_b12rs.py selftest --mutate=harm       # exit 1 (the top odd harmonic dropped)
+python ell_b12rs.py check <raw>/I1102-mac/in/l1kc31r1025.jsonl <raw>/I1102-mac/in/sol_l1kc31r1025_D10.5000.npy \
+    10.5 2.87 --threads=4 --controls=1           # exit 0: 15010 of 15010 entries bit for bit, both controls FAIL
+```
+
+The k_c 31 check computes DDEll's block on the runner itself, about a minute, and must print bit for bit there too.
+Then add `--b12=rust --b12_threads=T` to the `d18_secant.py run` and `scan` commands above. Keep
+`OPENBLAS_NUM_THREADS=1`: each of the T threads calls scipy's dgemm. ellrs's own threads ignore it.
 
 ## First real use: k_c 103 at D 22.875
 
