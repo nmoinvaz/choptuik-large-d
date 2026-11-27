@@ -443,6 +443,11 @@ class Quad:
         res = []
         for i in range(N):
             gi = self.g(pts[i]["e"], near=pts[i]["y"] - self.ref)
+            if isinstance(gi, mp.mpc):                                   # the branch is complex at a data point
+                if mp.im(gi) != 0:
+                    res.append(float("inf"))
+                    continue
+                gi = mp.re(gi)
             res.append(float((gi - (pts[i]["y"] - self.ref)) / mp.mpf(pts[i]["sigma"])))
         self.res = res
         self.chi2 = sum(v * v for v in res)

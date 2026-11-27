@@ -289,6 +289,32 @@ def cmd_quadscan():
                   open(args["out"], "w"), indent=1)
 
 
+QUAD_STABLE = 1e-3  # the rule, fixed on the planted truths at D >= 16: a front simple discriminant zero whose spread over
+                    # the accepted forms is below it reads "branch point" (planted poles: 1.6e-3 and up)
+
+
+def cmd_quadsum():
+    """per truth of each quadcalib file: the seeds' median and range of the front simple disc zero, of its spread
+    within a run, and how many runs read "branch point" (spread < QUAD_STABLE)"""
+    for fn in [a for a in sys.argv[2:] if not a.startswith("--")]:
+        d = json.load(open(fn))
+        print("%s: D >= %s%s, %d points" % (fn.split("/")[-1], d["Dmin"],
+                                           " without " + d["drop_runs"] if d["drop_runs"] else "", d["N"]))
+        by = {}
+        for r in d["results"]:
+            by.setdefault(r["truth"], []).append(r)
+        for t, rs in by.items():
+            ok = [r for r in rs if r["n"]]
+            pos = sorted(r["pos"] for r in ok)
+            sp = sorted(r["spread"] for r in ok)
+            nb = sum(1 for r in ok if r["spread"] < QUAD_STABLE and r["n"] >= 3)
+            med = lambda v: v[len(v) // 2] if v else float("nan")               # noqa: E731
+            print("  %-22s %d runs: front simple disc zero e %+.5f (%+.5f..%+.5f), spread %.1e (%.1e..%.1e); "
+                  "read as a branch point: %d of %d" % (t, len(rs), med(pos), pos[0] if pos else 0,
+                                                        pos[-1] if pos else 0, med(sp), sp[0] if sp else 0,
+                                                        sp[-1] if sp else 0, nb, len(rs)))
+
+
 def cmd_quadcalib():
     """quad_front for each truth (--truths) and seed (--seeds), and for the real data, on the same points"""
     kinds = tuple(args.get("kinds", "ladder,qd,dd").split(","))
@@ -458,6 +484,127 @@ def cmd_taylor():
                   open(args["out"], "w"), indent=1)
 
 
+WINDOWS = ((8, 11), (9, 12), (10, 13), (11, 14))
+
+
+def darboux(cs, windows=WINDOWS, quad=False):
+    """Domb-Sykes on Taylor coefficients: r_k = a_k / a_(k-1) fitted as A + B/k (quad: + C/k^2) by least squares over
+    each window of k, giving e0 = 1/A and alpha = -B/A - 1 for a leading term (1 - e/e0)^alpha; one (e0, alpha) per
+    set of coefficients and window. Domb and Sykes, Proc. R. Soc. A 240 (1957) 214."""
+    out = []
+    for c in cs:
+        for k1, k2 in windows:
+            ks = list(range(k1, k2 + 1))
+            rows = [[mp.mpf(1), mp.mpf(1) / k] + ([mp.mpf(1) / k ** 2] if quad else []) for k in ks]
+            rhs = [c[k] / c[k - 1] for k in ks]
+            A = mp.matrix(rows)
+            x = mp.lu_solve(A.T * A, A.T * mp.matrix(rhs))
+            out.append((float(1 / x[0]), float(-x[1] / x[0] - 1), k1, k2))
+    return out
+
+
+def cmd_darboux():
+    """darboux on the Taylor coefficients of every accepted rational fit (accepted_fits) and on each planted truth
+    (--truths, seed 1) through the same path; per truth the median and range of e0 and alpha over the fits and the
+    windows (an estimator spread, not a bound), beside the truth's exact coefficients' reading"""
+    K = 14
+    kinds = tuple(args.get("kinds", "ladder,qd,dd").split(","))
+    base = S.load(sys.argv[2], kinds=kinds, Dmin=float(args.get("Dmin", "16")), thin=THIN,
+                  drop_runs=tuple(r for r in args.get("drop_runs", "").split(",") if r))
+    Ms = [int(v) for v in args.get("Ms", "2,3,4,5,6").split(",")]
+    quad = "quad" in args
+    truths = ["real"] + args.get("truths", "pole,sqrt,cbrt,log,isqrt").split(",")
+    res = []
+    for t in truths:
+        pts = base if t == "real" else S.planted(base, S.truth_spec(t), int(args.get("seed", "1")))
+        fits = accepted_fits(pts, Ms, 2)
+        cs = [f.taylor(K) for _, f in fits]
+        d = darboux(cs, quad=quad)
+        e0 = sorted(x[0] for x in d)
+        al = sorted(x[1] for x in d)
+        med = lambda v: v[len(v) // 2]                                         # noqa: E731
+        ex = ""
+        if t != "real":
+            dx = darboux([mp.taylor(S.truth_spec(t), 0, K)], quad=quad)
+            ex = "; exact coefficients read e0 %+.5f..%+.5f, alpha %+.3f..%+.3f" % (
+                min(x[0] for x in dx), max(x[0] for x in dx), min(x[1] for x in dx), max(x[1] for x in dx))
+        res.append(dict(truth=t, fits=len(fits), e0=[med(e0), e0[0], e0[-1]], alpha=[med(al), al[0], al[-1]]))
+        print("%-22s %2d fits: e0 %+.5f (%+.5f..%+.5f), alpha %+.3f (%+.3f..%+.3f)%s" % (
+            t, len(fits), med(e0), e0[0], e0[-1], med(al), al[0], al[-1], ex), flush=True)
+    if "out" in args:
+        json.dump(dict(Dmin=args.get("Dmin", "16"), quad=quad, windows=WINDOWS, results=res), open(args["out"], "w"),
+                  indent=1)
+
+
+def cmd_matched():
+    """closure test on data-matched truths: for each type (--types), the first accepted divided typed form
+    (P + S R) / Q fitted to the real points with S = u^alpha or log u, u = 1 + e / r at r = --r (the Hermite-Pade
+    position), sizes Lp + Lr + M ascending; for 'rat' the first accepted rational fit with M >= 4 (a pole string).
+    Each fit is then a planted truth of known type that reproduces the real data within sigma; on its planted data
+    (seeds --seeds) the three readings are taken: the Hermite-Pade front zero (quad_front), the front pole's residue
+    ratio (front_summary) and Domb-Sykes on the fits' coefficients (darboux, windows k 7-10 to 9-12). --scale sets the
+    noise in units of sigma (the real low-D rows scatter by about 0.5 sigma_eff)."""
+    base = data()
+    r = mp.mpf(args.get("r", "0.0547"))
+    types = args.get("types", "sqrt,cbrt,log,isqrt,s32,rat").split(",")
+    lo, hi = (int(v) for v in args.get("seeds", "1:3").split(":"))
+    Ms = [2, 3, 4, 5, 6]
+    out = []
+    for t in types:
+        truth = None
+        if t == "rat":
+            for M in (4, 5, 6):
+                for L in range(4, 40):
+                    f = S.Fit(base, L, M, ref=REF)
+                    if accepted(f):
+                        truth, desc = f, "[%d/%d]" % (L, M)
+                        break
+                if truth:
+                    break
+        else:
+            for n in range(8, 26):
+                for M in range(0, 7):
+                    for Lr in range(0, 4):
+                        Lp = n - 2 - Lr - M
+                        if Lp < 1 or truth:
+                            continue
+                        f = S.Fit(base, Lp, M, ref=REF, Lr=Lr, S=sfun(t, r))
+                        if accepted(f):
+                            truth, desc = f, "(%d,%d,%d)" % (Lp, Lr, M)
+                if truth:
+                    break
+        if truth is None:
+            print("%-5s no accepted form" % t, flush=True)
+            out.append(dict(type=t, form=None))
+            continue
+        print("%-5s matched truth %s: chi2 %.1f (dof %d); amplitude R/Q at e0 %s" % (
+            t, desc, truth.chi2, truth.dof, mp.nstr(truth.amp(-r), 4) if t != "rat" else "-"), flush=True)
+        scale = mp.mpf(args.get("scale", "1"))
+        for sd in range(lo, hi + 1):
+            pts = S.planted(base, truth, sd)
+            if scale != 1:                                               # noise at scale times sigma
+                for p in pts:
+                    p["y"] = truth(p["e"]) + (p["y"] - truth(p["e"])) * scale
+            fq = quad_front(quadscan(pts, 4, verbose=False))
+            fs = front_summary(ratscan(pts, Ms, 1, verbose=False))
+            fits = accepted_fits(pts, Ms, 2)
+            d = darboux([f.taylor(14) for _, f in fits], windows=((7, 10), (8, 11), (9, 12)))
+            e0s = sorted(x[0] for x in d)
+            als = sorted(x[1] for x in d)
+            rec = dict(type=t, form=desc, seed=sd, quad=fq.get("pos"), quad_spread=fq.get("spread"),
+                       front=fs.get("pos"), ratio=fs.get("ratio"), drift=fs.get("drift"),
+                       ds_e0=e0s[len(e0s) // 2], ds_alpha=als[len(als) // 2], ds_alpha_range=[als[0], als[-1]])
+            out.append(rec)
+            print("   seed %d: HP zero %s (spread %s); front pole %+.5f, ratio %.3f, drift %+.4f; Domb-Sykes e0 %+.5f, "
+                  "alpha %+.3f (%+.3f..%+.3f)" % (
+                      sd, "%+.5f" % rec["quad"] if rec["quad"] else "none",
+                      "%.1e" % rec["quad_spread"] if rec["quad_spread"] is not None else "-", rec["front"] or 0,
+                      rec["ratio"] or 0, rec["drift"] or 0, rec["ds_e0"], rec["ds_alpha"], als[0], als[-1]),
+                  flush=True)
+    if "out" in args:
+        json.dump(dict(r=float(r), results=out), open(args["out"], "w"), indent=1)
+
+
 def cmd_calib():
     """the front-pole statistics of ratscan for each truth (--truths) and seed (--seeds=LO:HI), noise at --scale times
     sigma, and for the real data, on the same points; one line each, and a JSON table"""
@@ -544,4 +691,5 @@ if __name__ == "__main__":
     {"profile": cmd_profile, "ratscan": cmd_ratscan, "families": cmd_families, "reach": cmd_reach, "quadscan": cmd_quadscan,
      "calib": cmd_calib, "alphaprof": cmd_alphaprof,
      "calsum": cmd_calsum, "taylor": cmd_taylor,
-     "quadcalib": cmd_quadcalib}[sys.argv[1]]()
+     "quadcalib": cmd_quadcalib, "quadsum": cmd_quadsum,
+     "darboux": cmd_darboux, "matched": cmd_matched}[sys.argv[1]]()
