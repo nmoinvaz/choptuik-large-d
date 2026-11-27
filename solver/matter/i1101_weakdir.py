@@ -58,6 +58,10 @@ usage (venv-1025dd, from solver/matter):
       OUT.map.json (the map, |F|, Delta).
   i1101_weakdir.py root STATE LO HI OUT.jsonl [--tol=1e-7] [--maxev=20] [--dln=0.1]
       d18_secant's Brent refinement (RealEval: float64 blocks 0-11, ell_ddm block 12) of a chord state on its own map.
+  i1101_weakdir.py order KAPPA=ROOTS.jsonl ... [--out=F.json] | order selftest [--mutate=kappa]
+      the root's kappa order: the least-squares fit root = r0 + A kappa^p (p on a 0.001 grid in [0.5, 8]) and the p
+      of each three-point ratio, from the det-linear roots of d18_secant's root records; the bars of the README.
+      selftest: planted roots (p 4, 2, 2.5, noise 3e-5) must give p within 0.5; --mutate=kappa reverses the labels.
 """
 import json
 import os
@@ -796,10 +800,83 @@ def rootcmd(argv):
     return {"tol": 0, "maxev": 4, "nonrobust": 4}.get(fin["status"], 2)
 
 
+def order_fit(ks, rs):
+    """least-squares fit r = r0 + A k^p over p in [0.5, 8] (r0, A linear at each p): (p, r0, A, rms); and the p of
+    each three-point ratio (r_i - r_i+1) / (r_i+1 - r_i+2) = (k_i^p - k_i+1^p) / (k_i+1^p - k_i+2^p), by bisection"""
+    ks, rs = np.asarray(ks, float), np.asarray(rs, float)
+    best = None
+    for p in np.arange(0.5, 8.0001, 0.001):
+        A = np.stack([np.ones_like(ks), ks ** p], axis=1)
+        sol, *_ = np.linalg.lstsq(A, rs, rcond=None)
+        rms = float(np.sqrt(np.mean((A @ sol - rs) ** 2)))
+        if best is None or rms < best[3]:
+            best = (float(p), float(sol[0]), float(sol[1]), rms)
+    ratios = []
+    for i in range(len(ks) - 2):
+        a, b, c = ks[i:i + 3]
+        rat = (rs[i] - rs[i + 1]) / (rs[i + 1] - rs[i + 2]) if rs[i + 1] != rs[i + 2] else np.inf
+        g = lambda q: (a ** q - b ** q) / (b ** q - c ** q) - rat  # noqa: E731
+        lo, hi = 0.05, 12.0
+        pq = None
+        if np.isfinite(rat) and g(lo) * g(hi) < 0:
+            for _ in range(200):
+                mid = 0.5 * (lo + hi)
+                lo, hi = (mid, hi) if g(lo) * g(mid) > 0 else (lo, mid)
+            pq = 0.5 * (lo + hi)
+        ratios.append(dict(kappas=[float(a), float(b), float(c)], ratio=float(rat), p=pq))
+    return best, ratios
+
+
+def ordercmd(argv):
+    """the order of the root's kappa error from root records (d18_secant run output, kind root, lam_lin) at several
+    kappa: KAPPA=FILE.jsonl ...; selftest: planted roots with p = 4 and p = 2 (noise 3e-5) must give p within 0.5 of
+    the planted one and the right reading of the bars; --mutate=kappa reverses the kappa labels (must fail)"""
+    args, o = pos(argv), opts(argv)
+    if args and args[0] == "selftest":
+        ok = True
+        rng = np.random.default_rng(3)
+        ks = [0.7, 0.5, 0.35, 0.25]
+        for p0, A0 in ((4.0, 0.02), (2.0, 0.02), (2.5, -0.05)):
+            rs = [2.25 + A0 * k ** p0 + 3e-5 * rng.standard_normal() for k in ks]
+            kk = ks[::-1] if MUTATE == "kappa" else ks
+            (p, r0, A, rms), rat = order_fit(kk, rs)
+            good = abs(p - p0) <= 0.5
+            ok &= good
+            print(f"  planted p {p0} A {A0}: fit p {p:.3f} r0 {r0:.6f} A {A:+.5f} rms {rms:.1e}; ratios "
+                  f"{[None if r['p'] is None else round(r['p'], 2) for r in rat]} {'ok' if good else 'FAIL'}", flush=True)
+        print(f"order selftest {'PASS' if ok else 'FAIL'}{' (mutate=' + MUTATE + ')' if MUTATE else ''}", flush=True)
+        return 0 if ok else 1
+    ks, rs, bs = [], [], []
+    for a in args:
+        k, f = a.split("=", 1)
+        rows = [json.loads(l) for l in open(f) if l.strip()]
+        fin = [r for r in rows if r.get("kind") == "root"][-1]
+        ks.append(float(k))
+        rs.append(float(fin["lam_lin"]))
+        bs.append(fin["bracket"])
+        print(f"kappa {k}: root {fin['lam_lin']:.10f} status {fin['status']} bracket {fin['bracket']} width "
+              f"{fin['width']:.2e} ({os.path.basename(f)})", flush=True)
+    (p, r0, A, rms), rat = order_fit(ks, rs)
+    print(f"fit r = r0 + A kappa^p: p {p:.3f}, r0 {r0:.8f}, A {A:+.6e}, rms {rms:.2e}; error at kappa {ks[0]}: "
+          f"{A * ks[0] ** p:+.4e}", flush=True)
+    for r in rat:
+        print(f"  three-point ratio over kappa {r['kappas']}: {r['ratio']:.4f} -> p "
+              f"{'none' if r['p'] is None else format(r['p'], '.3f')}", flush=True)
+    span = abs(rs[-1] - rs[0])
+    print(f"|root({ks[-1]}) - root({ks[0]})| = {span:.3e}: {'readable' if span >= 3e-3 else 'NOT readable'} "
+          f"(bar 3e-3); reading: {'p >= 3.5: RK4 order' if p >= 3.5 else ('p <= 2.8: reduced order' if p <= 2.8 else 'mixed')}",
+          flush=True)
+    if "out" in o:
+        json.dump(dict(kappas=ks, roots=rs, brackets=bs, p=p, r0=r0, A=A, rms=rms, ratios=rat, span=span),
+                  open(o["out"], "w"), indent=1)
+    return 0
+
+
 if __name__ == "__main__":
     cmd = sys.argv[1] if len(sys.argv) > 1 else ""
     f = dict(jac=jaccmd, svd=svdcmd, planted=plantedcmd, report=reportcmd, valley=valleycmd, floor=floorcmd,
-             detsens=detsenscmd, locate=locatecmd, segerr=segerrcmd, chord=chordcmd, root=rootcmd).get(cmd)
+             detsens=detsenscmd, locate=locatecmd, segerr=segerrcmd, chord=chordcmd, root=rootcmd,
+             order=ordercmd).get(cmd)
     if f is None:
         print(__doc__)
         sys.exit(2)
