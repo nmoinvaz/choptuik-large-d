@@ -224,10 +224,7 @@ def cmd_reach():
                        fits=["[%d/%d]" % k for k, _ in fits], bands=out), open(args["out"], "w"), indent=1)
 
 
-def cmd_quadscan():
-    pts = data()
-    extra = int(args.get("extra", "3"))
-    print("%s: %d points, e to %.4f" % (args.get("truth", "real"), len(pts), float(max(p["e"] for p in pts))))
+def quadscan(pts, extra, verbose=True):
     rows, nacc = [], 0
     for size in range(6, 40):
         for na in range(1, size):
@@ -248,16 +245,72 @@ def cmd_quadscan():
                 az = sorted((z for z in ar if near(z)), key=abs)
                 rows.append(dict(na=na, nb=nb, nc=nc, chi2=q.chi2, dof=q.dof, acc=acc,
                                  disc=[[z.real, z.imag] for z in dz], A=[[z.real, z.imag] for z in az]))
-                print("(%d,%d,%d) chi2 %.4g dof %d %s disc zeros %s | A zeros %s" % (
-                    na, nb, nc, q.chi2, q.dof, "ACC" if acc else "   ",
-                    ", ".join("%+.4f%+.4fi" % (z.real, z.imag) for z in dz),
-                    ", ".join("%+.4f%+.4fi" % (z.real, z.imag) for z in az)), flush=True)
+                if verbose:
+                    print("(%d,%d,%d) chi2 %.4g dof %d %s disc zeros %s | A zeros %s" % (
+                        na, nb, nc, q.chi2, q.dof, "ACC" if acc else "   ",
+                        ", ".join("%+.4f%+.4fi" % (z.real, z.imag) for z in dz),
+                        ", ".join("%+.4f%+.4fi" % (z.real, z.imag) for z in az)), flush=True)
                 nacc += acc
         if nacc > extra:
             break
+    return rows
+
+
+def quad_front(rows, pair=0.01):
+    """per accepted form, the disc zero of least |e| that is real, negative and simple (no other disc zero within
+    `pair` of its |e|: a near-double pair is a pole's signature, not a branch point's); median, spread, count"""
+    fz = []
+    for r in rows:
+        if not r["acc"]:
+            continue
+        zs = [complex(*z) for z in r["disc"]]
+        simple = [z for z in zs if abs(z.imag) < 1e-4 and z.real < 0 and
+                  not any(w is not z and abs(w - z) < pair * abs(z) for w in zs)]
+        if simple:
+            fz.append(min(simple, key=abs).real)
+    nacc = sum(1 for r in rows if r["acc"])
+    if not fz:
+        return dict(n=0, nacc=nacc, text="front simple disc zero: none in %d accepted forms" % nacc)
+    fz.sort()
+    med = fz[len(fz) // 2]
+    return dict(n=len(fz), nacc=nacc, pos=med, spread=fz[-1] - fz[0], all=fz,
+                text="front simple disc zero in %d of %d accepted forms: e %+.5f (spread %.1e)" % (
+                    len(fz), nacc, med, fz[-1] - fz[0]))
+
+
+def cmd_quadscan():
+    pts = data()
+    print("%s: %d points, e to %.4f" % (args.get("truth", "real"), len(pts), float(max(p["e"] for p in pts))))
+    rows = quadscan(pts, int(args.get("extra", "3")))
+    fq = quad_front(rows)
+    print(fq["text"])
     if "out" in args:
-        json.dump(dict(truth=args.get("truth", "real"), seed=args.get("seed"), rows=rows), open(args["out"], "w"),
-                  indent=1)
+        json.dump(dict(truth=args.get("truth", "real"), seed=args.get("seed"), rows=rows, front=fq),
+                  open(args["out"], "w"), indent=1)
+
+
+def cmd_quadcalib():
+    """quad_front for each truth (--truths) and seed (--seeds), and for the real data, on the same points"""
+    kinds = tuple(args.get("kinds", "ladder,qd,dd").split(","))
+    base = S.load(sys.argv[2], kinds=kinds, Dmin=float(args.get("Dmin", "16")), thin=THIN,
+                  drop_runs=tuple(r for r in args.get("drop_runs", "").split(",") if r))
+    lo, hi = (int(v) for v in args.get("seeds", "1:5").split(":"))
+    extra = int(args.get("extra", "4"))
+    truths = args.get("truths", "pole,sqrt,isqrt,cbrt,log,T1").split(",")
+    out = dict(Dmin=args.get("Dmin", "16"), drop_runs=args.get("drop_runs", ""), N=len(base), results=[])
+    print("quadcalib: %d points, e to %.4f" % (len(base), float(max(p["e"] for p in base))), flush=True)
+
+    def one(name, seed, pts):
+        fq = quad_front(quadscan(pts, extra, verbose=False))
+        out["results"].append(dict(truth=name, seed=seed, **{k: v for k, v in fq.items() if k != "text"}))
+        print("  %-22s seed %4s: %s" % (name, seed, fq["text"]), flush=True)
+    one("real", None, base)
+    for t in truths:
+        tr = S.truth_spec(t)
+        for sd in range(lo, hi + 1):
+            one(t, sd, S.planted(base, tr, sd))
+    if "out" in args:
+        json.dump(out, open(args["out"], "w"), indent=1)
 
 
 def ratscan(pts, Ms, extra, verbose=True):
@@ -332,12 +385,20 @@ def cmd_alphaprof():
                        best=best), open(args["out"], "w"), indent=1)
 
 
-POLE_MAX = 0.15     # the rule, fixed on the planted pole truths: front residue relative spread below it reads "pole"
+RATIO_POLE = (0.94, 1.06)  # the rule, fixed on the planted poles: a residue ratio inside reads "simple pole",
+                           # below it "branch point (cut-like)", above it "higher-order pole or essential-like"
+
+
+def classify(ratio):
+    if ratio is None:
+        return "none"
+    return "pole" if RATIO_POLE[0] <= ratio <= RATIO_POLE[1] else ("cut" if ratio < RATIO_POLE[0] else "over")
 
 
 def cmd_calsum():
     """per truth of each calib file: the seeds' median and range of the front pole's e, of its residue's relative
-    spread, and the share read as a simple pole (relative spread < POLE_MAX); the real data's line beside them"""
+    spread, of the residue ratio (drift_stats), and the readings of the ratio rule (classify); the real data's line
+    beside them"""
     for fn in [a for a in sys.argv[2:] if not a.startswith("--")]:
         d = json.load(open(fn))
         print("%s: D >= %s%s, %d points, noise %.2g sigma" % (fn.split("/")[-1], d["Dmin"],
@@ -349,15 +410,23 @@ def cmd_calsum():
         for t, rs in by.items():
             rs = [r for r in rs if r.get("n")]
             if not rs:
-                print("  %-6s no accepted fit" % t)
+                print("  %-22s no accepted fit" % t)
                 continue
+            if "ratio" not in rs[0] and rs[0].get("fits"):
+                for r in rs:
+                    r["ratio"], r["drift"] = drift_stats(r["fits"])
             pos = sorted(r["pos"] for r in rs)
             sp = sorted(r["res_rel_spread"] for r in rs)
-            npole = sum(1 for v in sp if v < POLE_MAX)
-            med = lambda v: v[len(v) // 2]                                     # noqa: E731
-            print("  %-6s %2d runs: front pole e %+.5f (%+.5f..%+.5f), residue spread %.2f (%.2f..%.2f); "
-                  "read as a pole: %d of %d" % (t, len(rs), med(pos), pos[0], pos[-1], med(sp), sp[0], sp[-1],
-                                                npole, len(rs)))
+            ra = sorted(r["ratio"] for r in rs if r.get("ratio") is not None)
+            reads = {}
+            for r in rs:
+                c = classify(r.get("ratio"))
+                reads[c] = reads.get(c, 0) + 1
+            med = lambda v: v[len(v) // 2] if v else float("nan")               # noqa: E731
+            print("  %-22s %2d runs: front e %+.5f (%+.5f..%+.5f); spread %.2f (%.2f..%.2f); ratio %.3f "
+                  "(%.3f..%.3f); reads %s" % (t, len(rs), med(pos), pos[0], pos[-1], med(sp), sp[0], sp[-1],
+                                             med(ra), ra[0] if ra else float("nan"), ra[-1] if ra else float("nan"),
+                                             ", ".join("%s %d" % kv for kv in sorted(reads.items()))))
 
 
 def cmd_taylor():
@@ -422,17 +491,35 @@ def cmd_calib():
         json.dump(out, open(args["out"], "w"), indent=1)
 
 
+DOUBLET = 0.01      # a pole with a zero of the fit within this fraction of |pole| is a doublet, not the front pole
+
+
+def drift_stats(fr):
+    """the residue ratio and the position drift between the accepted fits of the largest and the smallest M (medians
+    over each M's fits): a simple pole keeps its residue as poles are added (ratio near 1); the front pole of a
+    cut's pole string moves toward the branch point and its residue falls (ratio below 1, drift positive)"""
+    Ms = sorted(set(f[1] for f in fr))
+    med = lambda v: sorted(v)[len(v) // 2]                                 # noqa: E731
+    lo = [f for f in fr if f[1] == Ms[0]]
+    hi = [f for f in fr if f[1] == Ms[-1]]
+    if len(Ms) < 2:
+        return None, None
+    return med([abs(f[3]) for f in hi]) / med([abs(f[3]) for f in lo]), med([f[2] for f in hi]) - med(
+        [f[2] for f in lo])
+
+
 def front_summary(rows, rmin=1e-8):
-    """the front pole of each accepted fit: the pole of least |e| on the negative real axis (|Im| < 1e-6) whose
-    residue exceeds rmin in size (smaller ones are Froissart doublets), and the next such pole; their medians and
-    the spreads (max - min) over the accepted fits; the front pole's relative residue spread is the pole/cut
-    statistic (a pole keeps its residue; the front pole of a cut's pole string does not)"""
+    """the front pole of each accepted fit: the pole of least |e| on the negative real axis (|Im| < 1e-6), neither of
+    residue below rmin in size nor with a zero within DOUBLET |pole| (Froissart doublets), and the next such pole;
+    their medians and spreads over the accepted fits. Statistics: the front residue's relative spread (max - min) /
+    |median|, and drift_stats' residue ratio and position drift"""
     fr = []
     for r in rows:
         if not r["acc"]:
             continue
-        neg = sorted((p for p in r["poles"] if abs(p[1]) < 1e-6 and p[0] < 0 and abs(p[2]) > rmin),
-                     key=lambda p: -p[0])
+        zs = [complex(z[0], z[1]) for z in r["zeros"]]
+        neg = sorted((p for p in r["poles"] if abs(p[1]) < 1e-6 and p[0] < 0 and abs(p[2]) > rmin and
+                      not any(abs(z - p[0]) < DOUBLET * abs(p[0]) for z in zs)), key=lambda p: -p[0])
         if neg:
             fr.append((r["L"], r["M"], neg[0][0], neg[0][2], neg[1][0] if len(neg) > 1 else None))
     if not fr:
@@ -442,15 +529,19 @@ def front_summary(rows, rmin=1e-8):
     nxt = sorted(f[4] for f in fr if f[4] is not None)
     med = lambda v: v[len(v) // 2]                                         # noqa: E731
     rs = (res[-1] - res[0]) / abs(med(res))
+    ratio, drift = drift_stats(fr)
     out = dict(n=len(fr), pos=med(pos), pos_spread=pos[-1] - pos[0], res=med(res), res_rel_spread=rs,
-               next=med(nxt) if nxt else None, fits=[list(f) for f in fr])
+               ratio=ratio, drift=drift, next=med(nxt) if nxt else None, fits=[list(f) for f in fr])
     out["text"] = ("front pole over %d accepted fits: e %+.5f (spread %.1e), residue %+.2e (relative spread %.2f); "
-                   "next pole %s" % (len(fr), out["pos"], out["pos_spread"], out["res"], rs,
-                                     "%+.4f" % out["next"] if nxt else "none"))
+                   "residue ratio top/bottom M %s, drift %s; next pole %s" % (
+                       len(fr), out["pos"], out["pos_spread"], out["res"], rs,
+                       "%.3f" % ratio if ratio is not None else "-", "%+.4f" % drift if drift is not None else "-",
+                       "%+.4f" % out["next"] if nxt else "none"))
     return out
 
 
 if __name__ == "__main__":
     {"profile": cmd_profile, "ratscan": cmd_ratscan, "families": cmd_families, "reach": cmd_reach, "quadscan": cmd_quadscan,
      "calib": cmd_calib, "alphaprof": cmd_alphaprof,
-     "calsum": cmd_calsum, "taylor": cmd_taylor}[sys.argv[1]]()
+     "calsum": cmd_calsum, "taylor": cmd_taylor,
+     "quadcalib": cmd_quadcalib}[sys.argv[1]]()
