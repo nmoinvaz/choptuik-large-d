@@ -19,6 +19,11 @@ others by up to 40% of its err, e.g. -8.3e-14 at D 90, so it serves as a check),
 reach: the accepted rational fits on D >= --Dmin (two per M past acceptance, M in --Ms), evaluated at every row of
 every kind down to D 8.25; per D band, the median over the fits of data - fit at the band's worst point, and the
 fits' range there (their spread, an estimator range, not a bound), beside the rows' sigma.
+quadscan: quadratic Hermite-Pade forms A g^2 + B g + C = 0 (sing_core.Quad), degrees (na, nb, nc) with nb = nc in
+na .. na + 3, sizes up to acceptance and --extra past it; per accepted form the zeros of the discriminant
+B^2 - 4 A C (branch points of the physical branch, or of the other) and of A, on and near the negative real axis.
+A square-root branch point reads as a simple zero of the discriminant that recurs across forms; a pole as a zero of A
+with no discriminant zero beside it.
 ratscan: rational fits [L/M], L up to acceptance (chi^2 <= the 0.99 quantile, |residual| <= 4 sigma) and two degrees
 past it, with every pole, its residue and every zero within |e| < 0.4.
 """
@@ -42,7 +47,7 @@ TYPES = {"pole": -1.0, "isqrt": -0.5, "icbrt": -1 / 3, "cbrt": 1 / 3, "sqrt": 0.
 
 
 def sfun(kind, r):
-    a = TYPES[kind]
+    a = TYPES[kind] if isinstance(kind, str) else kind
     if a == "log":
         return lambda e: mp.log(1 + e / r)
     if a == "ulog":
@@ -55,13 +60,12 @@ def data():
     pts = S.load(sys.argv[2], kinds=kinds, Dmin=float(args.get("Dmin", "36")), Dmax=float(args.get("Dmax", "1e9")),
                  thin=THIN, drop_runs=tuple(r for r in args.get("drop_runs", "").split(",") if r))
     if "truth" in args:
-        tr = S.Truth(args["truth"], e0=mp.mpf(args.get("e0", "-0.061")), frac=mp.mpf(args.get("frac", "1")))
-        pts = S.planted(pts, tr, int(args.get("seed", "1")), args.get("pattern", "gauss"))
+        pts = S.planted(pts, S.truth_spec(args["truth"]), int(args.get("seed", "1")), args.get("pattern", "gauss"))
     return pts
 
 
 def accepted(f):
-    return f.ok and f.dof >= 2 and f.chi2 <= CHI2.ppf(0.99, f.dof) and f.maxres <= 4
+    return bool(f.ok and f.dof >= 2 and f.chi2 <= CHI2.ppf(0.99, f.dof) and f.maxres <= 4)
 
 
 def profile_r(pts, Lp, Lr, M, kind, lo=0.03, hi=0.2, ngrid=12, nref=10):
@@ -220,11 +224,43 @@ def cmd_reach():
                        fits=["[%d/%d]" % k for k, _ in fits], bands=out), open(args["out"], "w"), indent=1)
 
 
-def cmd_ratscan():
+def cmd_quadscan():
     pts = data()
-    Ms = [int(v) for v in args.get("Ms", "2,3,4,5,6").split(",")]
-    extra = int(args.get("extra", "2"))
+    extra = int(args.get("extra", "3"))
     print("%s: %d points, e to %.4f" % (args.get("truth", "real"), len(pts), float(max(p["e"] for p in pts))))
+    rows, nacc = [], 0
+    for size in range(6, 40):
+        for na in range(1, size):
+            for d in range(0, 4):
+                nb = nc = na + d
+                if na + 1 + nb + nc + 1 != size:
+                    continue
+                q = S.Quad(pts, na, nb, nc, REF)
+                if not q.ok or q.dof < 2:
+                    continue
+                acc = bool(q.chi2 <= CHI2.ppf(0.99, q.dof) and q.maxres <= 4)
+                if not acc and q.chi2 > 1e3 * q.dof:
+                    continue
+                dr = q.disc_roots() or []
+                ar = q.a_roots() or []
+                near = lambda z: abs(z) < 0.3 and z.real < 0.02                 # noqa: E731
+                dz = sorted((z for z in dr if near(z)), key=abs)
+                az = sorted((z for z in ar if near(z)), key=abs)
+                rows.append(dict(na=na, nb=nb, nc=nc, chi2=q.chi2, dof=q.dof, acc=acc,
+                                 disc=[[z.real, z.imag] for z in dz], A=[[z.real, z.imag] for z in az]))
+                print("(%d,%d,%d) chi2 %.4g dof %d %s disc zeros %s | A zeros %s" % (
+                    na, nb, nc, q.chi2, q.dof, "ACC" if acc else "   ",
+                    ", ".join("%+.4f%+.4fi" % (z.real, z.imag) for z in dz),
+                    ", ".join("%+.4f%+.4fi" % (z.real, z.imag) for z in az)), flush=True)
+                nacc += acc
+        if nacc > extra:
+            break
+    if "out" in args:
+        json.dump(dict(truth=args.get("truth", "real"), seed=args.get("seed"), rows=rows), open(args["out"], "w"),
+                  indent=1)
+
+
+def ratscan(pts, Ms, extra, verbose=True):
     rows = []
     for M in Ms:
         nacc = 0
@@ -243,19 +279,147 @@ def cmd_ratscan():
             rows.append(dict(L=L, M=M, chi2=f.chi2, dof=f.dof, acc=acc, poles=[[p.real, p.imag, c.real, c.imag]
                                                                                for p, c in ps],
                              zeros=[[z.real, z.imag] for z in zs]))
-            print("[%d/%d] chi2 %.4g dof %d %s poles %s | zeros %s" % (
-                L, M, f.chi2, f.dof, "ACC" if acc else "   ", ", ".join(
-                    "%+.5f%+.5fi (%+.1e)" % (p.real, p.imag, c.real) for p, c in ps), ", ".join(
-                    "%+.4f%+.4fi" % (z.real, z.imag) for z in zs)), flush=True)
+            if verbose:
+                print("[%d/%d] chi2 %.4g dof %d %s poles %s | zeros %s" % (
+                    L, M, f.chi2, f.dof, "ACC" if acc else "   ", ", ".join(
+                        "%+.5f%+.5fi (%+.1e)" % (p.real, p.imag, c.real) for p, c in ps), ", ".join(
+                        "%+.4f%+.4fi" % (z.real, z.imag) for z in zs)), flush=True)
             if acc:
                 nacc += 1
             if nacc > extra:
                 break
+    return rows
+
+
+def cmd_ratscan():
+    pts = data()
+    Ms = [int(v) for v in args.get("Ms", "2,3,4,5,6").split(",")]
+    extra = int(args.get("extra", "2"))
+    print("%s: %d points, e to %.4f" % (args.get("truth", "real"), len(pts), float(max(p["e"] for p in pts))))
+    rows = ratscan(pts, Ms, extra)
     summary = front_summary(rows)
     print(summary["text"])
     if "out" in args:
         json.dump(dict(truth=args.get("truth", "real"), seed=args.get("seed"), rows=rows, front=summary),
                   open(args["out"], "w"), indent=1)
+
+
+def cmd_alphaprof():
+    """chi^2 of the divided typed form (P + u^alpha R) / Q at fixed degrees (--deg=Lp,Lr,M), r profiled, over an
+    alpha grid (--alphas, default -2 to 2.5 by 1/8 without 0, 1, 2, where u^alpha is a polynomial) and log u"""
+    pts = data()
+    Lp, Lr, M = (int(v) for v in args.get("deg", "8,2,2").split(","))
+    if "alphas" in args:
+        al = [float(v) for v in args["alphas"].split(",")]
+    else:
+        al = [k / 8 for k in range(-16, 21) if k % 8 != 0 or k < 0]
+    grid = al + ["log"]
+    lo, hi = float(args.get("rlo", "0.03")), float(args.get("rhi", "0.2"))
+    print("%s (seed %s): %d points, e to %.4f; (P + S R)/Q at (%d, %d, %d)" % (
+        args.get("truth", "real"), args.get("seed", "-"), len(pts), float(max(p["e"] for p in pts)), Lp, Lr, M),
+        flush=True)
+    rows = []
+    for a_ in grid:
+        TYPES["_a"] = a_
+        c2, r, f = profile_r(pts, Lp, Lr, M, "_a", lo=lo, hi=hi)
+        rows.append(dict(alpha=a_, chi2=c2, e0=-r, dof=f.dof - 1 if f.ok else None))
+        print("  alpha %6s: chi2 %.4g at e0 %+.5f" % (a_ if a_ == "log" else "%+.3f" % a_, c2, -r), flush=True)
+    fin = [x for x in rows if math.isfinite(x["chi2"])]
+    best = min(fin, key=lambda x: x["chi2"])
+    print("best: alpha %s, chi2 %.4g (dof %s), e0 %+.5f" % (best["alpha"], best["chi2"], best["dof"], best["e0"]))
+    if "out" in args:
+        json.dump(dict(truth=args.get("truth", "real"), seed=args.get("seed"), deg=[Lp, Lr, M], rows=rows,
+                       best=best), open(args["out"], "w"), indent=1)
+
+
+POLE_MAX = 0.15     # the rule, fixed on the planted pole truths: front residue relative spread below it reads "pole"
+
+
+def cmd_calsum():
+    """per truth of each calib file: the seeds' median and range of the front pole's e, of its residue's relative
+    spread, and the share read as a simple pole (relative spread < POLE_MAX); the real data's line beside them"""
+    for fn in [a for a in sys.argv[2:] if not a.startswith("--")]:
+        d = json.load(open(fn))
+        print("%s: D >= %s%s, %d points, noise %.2g sigma" % (fn.split("/")[-1], d["Dmin"],
+                                                             " without " + d["drop_runs"] if d["drop_runs"] else "",
+                                                             d["N"], d["scale"]))
+        by = {}
+        for r in d["results"]:
+            by.setdefault(r["truth"], []).append(r)
+        for t, rs in by.items():
+            rs = [r for r in rs if r.get("n")]
+            if not rs:
+                print("  %-6s no accepted fit" % t)
+                continue
+            pos = sorted(r["pos"] for r in rs)
+            sp = sorted(r["res_rel_spread"] for r in rs)
+            npole = sum(1 for v in sp if v < POLE_MAX)
+            med = lambda v: v[len(v) // 2]                                     # noqa: E731
+            print("  %-6s %2d runs: front pole e %+.5f (%+.5f..%+.5f), residue spread %.2f (%.2f..%.2f); "
+                  "read as a pole: %d of %d" % (t, len(rs), med(pos), pos[0], pos[-1], med(sp), sp[0], sp[-1],
+                                                npole, len(rs)))
+
+
+def cmd_taylor():
+    """the Taylor coefficients a_k (k <= --K) of every accepted rational fit (as reach selects them): median, the fits'
+    range, and the ratios a_k / a_(k-1) (Domb-Sykes); for a planted truth also its exact coefficients"""
+    pts = data()
+    K = int(args.get("K", "16"))
+    fits = accepted_fits(pts, [int(v) for v in args.get("Ms", "2,3,4,5,6").split(",")], int(args.get("extra", "2")))
+    cs = [f.taylor(K) for _, f in fits]
+    exact = None
+    if "truth" in args:
+        exact = mp.taylor(S.Truth(args["truth"], e0=mp.mpf(args.get("e0", "-0.061"))), 0, K)
+    print("%s: %d accepted fits (%s)" % (args.get("truth", "real"), len(fits), ", ".join("[%d/%d]" % k for k, _ in fits)))
+    rows = []
+    for k in range(K + 1):
+        v = sorted(c[k] for c in cs)
+        med = v[len(v) // 2]
+        rat = sorted(c[k] / c[k - 1] for c in cs) if k else None
+        rows.append(dict(k=k, a=mp.nstr(med, 25), range=float(v[-1] - v[0]),
+                         ratio=float(rat[len(rat) // 2]) if rat else None,
+                         ratio_range=float(rat[-1] - rat[0]) if rat else None,
+                         exact=mp.nstr(exact[k], 25) if exact else None))
+        print("  a_%-2d %s (range %.1e, relative %.1e)%s%s" % (
+            k, mp.nstr(med, 18), float(v[-1] - v[0]), float((v[-1] - v[0]) / abs(med)) if med else 0,
+            "; a_k/a_(k-1) %+.4f (range %.1e)" % (rows[-1]["ratio"], rows[-1]["ratio_range"]) if k else "",
+            "; exact %s" % mp.nstr(exact[k], 12) if exact else ""))
+    if "out" in args:
+        json.dump(dict(truth=args.get("truth", "real"), fits=["[%d/%d]" % k for k, _ in fits], rows=rows),
+                  open(args["out"], "w"), indent=1)
+
+
+def cmd_calib():
+    """the front-pole statistics of ratscan for each truth (--truths) and seed (--seeds=LO:HI), noise at --scale times
+    sigma, and for the real data, on the same points; one line each, and a JSON table"""
+    kinds = tuple(args.get("kinds", "ladder,qd,dd").split(","))
+    base = S.load(sys.argv[2], kinds=kinds, Dmin=float(args.get("Dmin", "36")), thin=THIN,
+                  drop_runs=tuple(r for r in args.get("drop_runs", "").split(",") if r))
+    Ms = [int(v) for v in args.get("Ms", "2,3,4,5,6").split(",")]
+    extra = int(args.get("extra", "1"))
+    lo, hi = (int(v) for v in args.get("seeds", "1:10").split(":"))
+    scale = mp.mpf(args.get("scale", "1"))
+    truths = args.get("truths", "pole,pole2,sqrt,isqrt,s32,cbrt,log,ulog,ess,T1").split(",")
+    out = dict(Dmin=args.get("Dmin", "36"), drop_runs=args.get("drop_runs", ""), scale=float(scale), N=len(base),
+               emax=float(max(p["e"] for p in base)), results=[])
+    print("calib: %d points, e to %.4f, noise %s sigma" % (len(base), out["emax"], mp.nstr(scale, 3)), flush=True)
+
+    def one(name, seed, pts):
+        sm = front_summary(ratscan(pts, Ms, extra, verbose=False))
+        rec = dict(truth=name, seed=seed, **{k: v for k, v in sm.items() if k != "text"})
+        out["results"].append(rec)
+        print("  %-5s seed %3s: %s" % (name, seed, sm["text"]), flush=True)
+    one("real", None, base)
+    for t in truths:
+        tr = S.truth_spec(t)
+        for sd in range(lo, hi + 1):
+            pts = S.planted(base, tr, sd)
+            if scale != 1:
+                for p, q in zip(pts, base):
+                    p["y"] = tr(p["e"]) + (p["y"] - tr(p["e"])) * scale
+            one(t, sd, pts)
+    if "out" in args:
+        json.dump(out, open(args["out"], "w"), indent=1)
 
 
 def front_summary(rows, rmin=1e-8):
@@ -287,4 +451,6 @@ def front_summary(rows, rmin=1e-8):
 
 
 if __name__ == "__main__":
-    {"profile": cmd_profile, "ratscan": cmd_ratscan, "families": cmd_families, "reach": cmd_reach}[sys.argv[1]]()
+    {"profile": cmd_profile, "ratscan": cmd_ratscan, "families": cmd_families, "reach": cmd_reach, "quadscan": cmd_quadscan,
+     "calib": cmd_calib, "alphaprof": cmd_alphaprof,
+     "calsum": cmd_calsum, "taylor": cmd_taylor}[sys.argv[1]]()

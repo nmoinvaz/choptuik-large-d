@@ -165,6 +165,27 @@ class Truth:
         return v + self.A * (g - mp.fsum(ck * e ** k for k, ck in enumerate(self.c)))
 
 
+class Sum:
+    """T1 plus the added parts of several Truths (each Truth minus T1)"""
+
+    def __init__(self, parts):
+        self.parts = parts
+
+    def __call__(self, e):
+        return t1(e) + mp.fsum(p(e) - t1(e) for p in self.parts)
+
+
+def truth_spec(spec):
+    """a planted truth from its name: KIND[@E0][*FRAC], or several joined by '+' (T1 plus each added part), e.g.
+    'pole@-0.061+sqrt@-0.07*0.5' (a pole with a square-root branch point behind it)"""
+    parts = []
+    for one in spec.split("+"):
+        one, _, frac = one.partition("*")
+        kind, _, e0 = one.partition("@")
+        parts.append(Truth(kind, e0=mp.mpf(e0) if e0 else E0, frac=mp.mpf(frac) if frac else 1))
+    return parts[0] if len(parts) == 1 else Sum(parts)
+
+
 def planted(pts, truth, seed, pattern="gauss"):
     """the points with y replaced by truth(e) + noise: Gaussian of each sigma (seeded), or a systematic pattern of size
     sigma per kind ('ramp': linear in e from -sigma to +sigma within each kind)"""
@@ -327,6 +348,16 @@ class Fit:
         return (mp.polyval(list(reversed(self._m(self.rr))), t) / mp.polyval(list(reversed(self._m(self.q))), t)
                 if self.Lr >= 0 else mp.mpf(0))
 
+    def taylor(self, K):
+        """the Taylor coefficients a_0..a_K in e of a rational fit, exactly (power-series division of P by Q)"""
+        pm, qm = self._m(self.p), self._m(self.q)
+        c = []
+        for k in range(K + 1):
+            v = (pm[k] if k < len(pm) else 0) - mp.fsum(qm[j] * c[k - j] for j in range(1, min(k, len(qm) - 1) + 1))
+            c.append(v)
+        c[0] += self.ref
+        return [c[k] / self.s ** k for k in range(K + 1)]
+
     def poles(self):
         qm = self._m(self.q)
         if len(qm) < 2:
@@ -465,3 +496,4 @@ class Quad:
             return [complex(t * self.s) for t in mp.polyroots(list(reversed(c)), maxsteps=500, extraprec=500)]
         except mp.libmp.libhyper.NoConvergence:
             return None
+
