@@ -65,7 +65,7 @@ usage (venv-1025dd, from solver/matter):
       the state re-solved on a modified step map (MAP: kappa=K for every segment at K, or seg=I,J:K for those blocks'
       segments at K) by chord steps on the SVD's strong band, keeping the weak and null coordinates; saved with
       OUT.map.json (the map, |F|, Delta).
-  i1101_weakdir.py root STATE LO HI OUT.jsonl [--tol=1e-7] [--maxev=20] [--dln=0.1]
+  i1101_weakdir.py root STATE LO HI OUT.jsonl [--tol=1e-7] [--maxev=20] [--dln=0.1] [--b12=ddm|fast]
       d18_secant's Brent refinement (RealEval: float64 blocks 0-11, ell_ddm block 12) of a chord state on its own map.
   i1101_weakdir.py order KAPPA=ROOTS.jsonl ... [--out=F.json] | order selftest [--mutate=kappa]
       the root's kappa order: the least-squares fit root = r0 + A kappa^p (p on a 0.001 grid in [0.5, 8]) and the p
@@ -938,7 +938,8 @@ def rootcmd(argv):
     if not same:
         return 3
     rec = dict(D=D, kc=meta["kc"], kappa=meta["kappa"], steps=meta["steps"], F=F)
-    E = d18_secant.RealEval(S, z, rec, st, "fast", float(o.get("dln", 0.1)))
+    E = d18_secant.RealEval(S, z, rec, st, "fast", float(o.get("dln", 0.1)), b12=o.get("b12", "ddm"))
+    print(f"block 12 {E.b12}, tol {o.get('tol', 1e-7)}, bracket ({lo!r}, {hi!r})", flush=True)
 
     def out(r):
         print(f"  lam {r['lam']!r} ({r['role']}): hybrid {r['sign']:+.0f} ln|det| {r['ln']:.10f}, noise {r['noise']} "
