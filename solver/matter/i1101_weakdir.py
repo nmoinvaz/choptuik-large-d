@@ -25,7 +25,9 @@ usage (venv-1025dd, from solver/matter):
       odd fields by -i k and must give >= 1e-3), its phase row, and its fraction in each band. A STATE written
       STATE+EPS@INDEX is planted: the state moved by EPS along v[INDEX] (counted from the smallest singular value),
       then its strong part re-solved by 8 chord steps on the stored SVD; its coordinate there must move by EPS and its Gauss-Newton corrected coordinates by at most 1% of EPS
-      (--mutate=sgn adds U^T F / s instead of subtracting it: must fail). Exit 1 if the translation check, its
+      (--mutate=sgn adds U^T F / s instead of subtracting it: must fail). Plants at +EPS and -EPS on one vector form a
+      pair: the linear part of U^T F, half their difference, must equal s EPS to 1% (--mutate=swap takes the other
+      weak vector's s: must fail); added after the single-plant bar failed on the curvature of U^T F (11% at 1e-3). Exit 1 if the translation check, its
       control or the planted check reads wrong. Also the horizon relabelling t -> t (1 + eps h(tau)) for h = 1,
       cos 2 w tau, sin 2 w tau (gauge_generator): J dz outside the horizon block <= 1e-6 s_max |dz| (the control,
       without the -(h - h_tau) c term of dc, >= 1e-3; --mutate=noc applies it to all), its horizon-block residual and
@@ -204,6 +206,7 @@ def gauge_generator(S, z, hk, part="cos", mutate=""):
     cterm = 0.0 if mutate == "noc" else 1.0
     Dt = lambda g: S.D(g[None, :], om)[0]                   # noqa: E731
     parts = []
+    cut = [0.0, 0.0]                                        # node-state energy above k_c (cut by spec) and in all
     q, c0 = f["d"], f["c0"]
     parts.append(S.spec((h * (Dt(q) + S.ell * q))[None, :], "odd")[0])
     parts.append(S.spec((h * Dt(c0) - cterm * (h - ht) * c0)[None, :], "even")[0])
@@ -214,9 +217,13 @@ def gauge_generator(S, z, hk, part="cos", mutate=""):
             if fld == "c":
                 g = g - cterm * (h - ht) * st[j]
             parts.append(S.spec(g[None, :], par)[0])
+            G = np.abs(np.fft.rfft(g)) ** 2
+            cut[0] += float(G[S.kc + 1:].sum())
+            cut[1] += float(G.sum())
     P_, M_, A_, C_, Q_ = S.ssh_series(f["mS"][None, :], f["aS"][None, :], f["qS"][None, :], om)
     for g0, f1, par in ((f["mS"], M_[1][0], "odd"), (f["aS"], A_[1][0], "even"), (f["qS"], Q_[1][0], "odd")):
         parts.append(S.spec((h * (Dt(g0) - f1))[None, :], par)[0])
+    gauge_generator.cut = float(np.sqrt(cut[0] / cut[1]))
     return np.concatenate(parts + [[0.0]])
 
 
@@ -362,10 +369,33 @@ def reportcmd(argv):
         dc = r["c"][j] - base["c"][j]
         dgn = max(abs(a - b) for a, b in zip(r["c_gn"], base["c_gn"]))
         good = abs(dc - r["plant"][0]) <= 1e-9 * abs(r["plant"][0]) + 1e-12 and dgn <= 0.01 * abs(r["plant"][0])
-        pl_ok &= good
+        pl_ok = bool(pl_ok and good)
         print(f"planted {r['name']}: coordinate moved {dc:+.6e} (planted {r['plant'][0]:+.3e}); Gauss-Newton corrected "
               f"coordinates moved by at most {dgn:.3e} (bar 1% of the plant) {'ok' if good else 'FAIL'}", flush=True)
     out["planted_check"] = bool(pl_ok)
+    # antisymmetric pairs of plants (+EPS and -EPS along one vector): the linear part of U_w^T F, which must equal s EPS
+    # on that vector to 1% (the quadratic part cancels); --mutate=swap compares with the other weak vector's s
+    anti_ok = None
+    for r in rows:
+        if r["plant"] is None or r["plant"][0] <= 0:
+            continue
+        m = [q for q in rows if q["plant"] is not None and q["plant"][1] == r["plant"][1] and q["plant"][0] == -r["plant"][0]]
+        if not m:
+            continue
+        q = m[0]
+        j = widx.index(r["plant"][1])
+        sj = s[wk[j]]
+        if MUTATE == "swap":
+            sj = s[wk[j + 1 if j % 2 == 0 else j - 1]]
+        lin = (r["uwF"][j] - q["uwF"][j]) / 2
+        quad = (r["uwF"][j] + q["uwF"][j]) / 2 - next(b for b in rows if b["state"] == r["state"] and b["plant"] is None)["uwF"][j]
+        dev = abs(lin - sj * r["plant"][0]) / (sj * r["plant"][0])
+        good = dev <= 0.01
+        anti_ok = bool(good) if anti_ok is None else bool(anti_ok and good)
+        print(f"planted pair v[{r['plant'][1]}] +-{r['plant'][0]:g}: linear part of U^T F {lin:+.4e} against s eps "
+              f"{sj * r['plant'][0]:+.4e} (deviation {dev:.2e}, bar 1e-2) {'ok' if good else 'FAIL'}; quadratic part "
+              f"{quad:+.3e}", flush=True)
+    out["planted_pair_check"] = anti_ok
     # ---- differences
     diffs = [(f"{nm}-{named[0][0]}", zs[nm] - zb) for nm, _, _ in named[1:]]
     diffs += [(f"{named[i + 1][0]}-{named[i][0]}", zs[named[i + 1][0]] - zs[named[i][0]])
@@ -411,7 +441,7 @@ def reportcmd(argv):
                      strong=float(np.linalg.norm(c[strong]) / ng), c_weak=[float(v / ng) for v in c[wk]])
         out[tag] = rec_g
         want = rel <= 1e-6 if tag == "g" else rel >= 1e-3
-        ok &= want
+        ok = bool(ok and want)
         print(f"tau generator {tag}: |J_mis g|/(s_max |g|) {rel:.3e} ({'ok' if want else 'FAIL'}: "
               f"{'<= 1e-6' if tag == 'g' else '>= 1e-3'}); phase row {Jg[-1]:+.6e} (Re d_1 {zb[0]:+.6e}); "
               f"|J g|/|g| {rec_g['rayleigh']:.3e}; fraction null {rec_g['null']:.2e} weak {rec_g['weak']:.2e} strong "
@@ -428,25 +458,29 @@ def reportcmd(argv):
         hor = float(np.linalg.norm(Jg[12 * blk:-1]) / ng)
         c = Vt @ g
         rec_h = dict(h=f"{part}({hk} w tau)", control=bool(mut), norm=ng, inner_rel=inner, horizon=hor,
+                     cut_above_kc=gauge_generator.cut,
                      rayleigh=float(np.linalg.norm(Jg) / ng), null=float(np.linalg.norm(c[nul]) / ng),
                      weak=float(np.linalg.norm(c[weak]) / ng), strong=float(np.linalg.norm(c[strong]) / ng),
                      c_weak=[float(v / ng) for v in c[wk]])
         out["gauge"].append(rec_h)
         want = inner <= 1e-6 if not mut else inner >= 1e-3
-        gok &= want
+        gok = bool(gok and want)
         print(f"gauge generator h = {part}({hk} w tau){' (control: no -(h - h_tau) c term)' if mut else ''}: blocks 0-11 "
               f"|J g|/(s_max |g|) {inner:.3e} ({'ok' if want else 'FAIL'}: {'>= 1e-3' if mut else '<= 1e-6'}); horizon "
-              f"block |J g|/|g| {hor:.3e}; |J g|/|g| {rec_h['rayleigh']:.3e}; fraction null {rec_h['null']:.2e} weak "
+              f"block |J g|/|g| {hor:.3e}; |J g|/|g| {rec_h['rayleigh']:.3e}; node-state part above k_c (cut) "
+              f"{rec_h['cut_above_kc']:.2e}; fraction null {rec_h['null']:.2e} weak "
               f"{rec_h['weak']:.2e} strong {rec_h['strong']:.4f}; on each weak vector "
               f"{' '.join(f'{v:+.2e}' for v in rec_h['c_weak'])}", flush=True)
     out["gauge_check"] = bool(gok)
-    ok &= gok
+    ok = bool(ok and gok)
     out["translation_check"] = bool(ok)
     print(f"translation and gauge checks {'PASS' if ok else 'FAIL'}, planted check {'PASS' if pl_ok else 'FAIL'}"
           f"{' (mutate=' + MUTATE + ')' if MUTATE else ''}", flush=True)
     if "out" in o:
         json.dump(out, open(o["out"], "w"), indent=1)
-    return 0 if ok and pl_ok else 1
+    if anti_ok is not None:
+        print(f"planted pair check {'PASS' if anti_ok else 'FAIL'}{' (mutate=' + MUTATE + ')' if MUTATE else ''}", flush=True)
+    return 0 if ok and (pl_ok or anti_ok) else 1
 
 
 def stub_write(path_rec, S, z, rec, F):
