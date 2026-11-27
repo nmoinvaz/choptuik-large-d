@@ -5,11 +5,12 @@
     python3 paper/ai/site/build.py --check  # exit 1 if index.html's block differs from what the files give
 
 Reads paper/ai/walls.csv, walls_timeline.csv, prompt_times.csv, prompt_stats.csv, frontier.csv, graphs/index.csv,
-wall_graphs.csv, the appendix tables of main.tex (what stuck, moved by, resolution, what changed) and
-hp/data/delta_all.csv. The graphs beside the page are the SVGs as they were in the commits graphs/index.csv names
+wall_graphs.csv, the appendix tables of main.tex (what stuck, moved by, resolution, what changed), the list of 145
+course-changing prompts in SOURCES.md and hp/data/delta_all.csv. The graphs beside the page are the SVGs as they were in the commits graphs/index.csv names
 (git show <commit>:<file>).
 """
-import csv, json, math, re, sys
+import csv, html, json, math, re, sys
+from datetime import date
 from decimal import Decimal, getcontext
 from pathlib import Path
 
@@ -83,6 +84,26 @@ def appendix(tex):
     return out
 
 
+PUSH_WHERE = {"chat": "the chat", "43f19197": "coordinator", "cc3aa2b5": "Mac runner", "3bc27918": "Mac runner",
+              "ebec4b64": "libraries"}
+
+
+def pushes(src):
+    """The 145 course-changing prompts of SOURCES.md: [day from 18 Oct (UTC), "HH:MM", where, kind letter, text]."""
+    part = src.split("## The 145 prompts counted in the table of kinds", 1)[1].split("\n## ", 1)[0]
+    out = []
+    for line in part.splitlines():
+        m = re.match(r"^\| (\d\d)-(\d\d) (\d\d):(\d\d) \| ([0-9a-z]+) \| ([PRWANMXSCU]) \| (.*) \|$", line)
+        if not m:
+            continue
+        mo, d, hh, mm = (int(m.group(i)) for i in range(1, 5))
+        day = (date(2026, mo, d) - date(2026, 10, 18)).days + (hh * 60 + mm) / 1440
+        out.append([round(day, 4), f"{hh:02d}:{mm:02d}", PUSH_WHERE[m.group(5)], m.group(6),
+                    html.escape(m.group(7), quote=False)])
+    assert len(out) == 145, len(out)
+    return out
+
+
 def delta_str(r):
     """Δ as a decimal string to the digits the row's stated error supports, from its quad-double parts."""
     v = sum(Decimal(r[k]) for k in ("Delta_q0", "Delta_q1", "Delta_q2", "Delta_q3") if r[k])
@@ -142,7 +163,7 @@ def main():
     front += [[round(float(r["day"]) + 1, 3), float(r["D"])] for r in csv.DictReader(open(AI / "frontier.csv"))][1:]
     direct = [[round(DAY_25NOV + (int(t[:2]) + int(t[3:]) / 60) / 24, 4), D, lab] for t, D, lab in DIRECT]
     data = dict(walls=walls, graphs=graphs, prompts=prompts, stats=stats, frontier=front, direct=direct,
-                delta=delta_samples())
+                delta=delta_samples(), pushes=pushes((AI / "SOURCES.md").read_text()))
     blob = json.dumps(data, ensure_ascii=False, separators=(",", ":")).replace("</", "<\\/")
     page = (HERE / "index.html").read_text()
     a, b = '<script id="data" type="application/json">', "</script>"
@@ -155,7 +176,7 @@ def main():
         sys.exit(0 if ok else 1)
     (HERE / "index.html").write_text(new)
     print(f"wrote {len(blob)} bytes of data: {len(walls)} walls, {len(graphs)} graphs, {len(P)} prompts, "
-          f"{len(front)} frontier points, {len(data['delta'])} values of Δ")
+          f"{len(front)} frontier points, {len(data['delta'])} values of Δ, {len(data['pushes'])} course-changing prompts")
 
 
 if __name__ == "__main__":
