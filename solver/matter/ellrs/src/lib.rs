@@ -3,6 +3,7 @@
 //! slices, the RK4 stage abscissae (numpy's exp) and, by default, the f64 LU of the periodic solves (scipy's, called
 //! back), so that on one machine the result is DDEll's bit for bit. solver/matter/ell_b12rs.py is the driver.
 pub mod b12;
+pub mod cell;
 pub mod dd;
 pub mod dt;
 pub mod oz;

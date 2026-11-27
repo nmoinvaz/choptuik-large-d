@@ -3,6 +3,7 @@
 //! of the horizon segment (DDEll.integrate_u) runs on groups of tangent rows in parallel, each group carrying its own
 //! copy of the value row (rows never mix in DDEll's arithmetic, so the groups give the bits of one run).
 use crate::dd::{self, bin, hcat, un, A};
+use crate::cell;
 use crate::dt::{self, cs, lin_many, pysum, DT};
 use crate::oz::Oz;
 use crate::prof;
@@ -374,19 +375,14 @@ impl<'a> Ev<'a> {
     fn rk4_u(&self, s0: Vec<DT>, h: f64, e: &[[f64; 3]]) -> Vec<DT> {
         let (h6h, h6l) = dd::div(h, 0.0, 6.0, 0.0);
         let f = |ee: f64, st: &[DT]| -> Vec<DT> { self.rhs(1.0 - ee, st).iter().map(|r| dt::mulf(r, -ee)).collect() };
-        let axpy = |s: &[DT], k: &[DT], a: f64| -> Vec<DT> { s.iter().zip(k).map(|(si, ki)| dt::add(si, &dt::mulf(ki, a))).collect() };
+        let axpy = |s: &[DT], k: &[DT], a: f64| -> Vec<DT> { s.iter().zip(k).map(|(si, ki)| cell::axpy(si, ki, a)).collect() };
         let mut s = s0;
         for st in e {
             let k1 = f(st[0], &s);
             let k2 = f(st[1], &axpy(&s, &k1, h / 2.0));
             let k3 = f(st[1], &axpy(&s, &k2, h / 2.0));
             let k4 = f(st[2], &axpy(&s, &k3, h));
-            s = (0..5)
-                .map(|i| {
-                    let inc = dt::add(&dt::add(&dt::add(&k1[i], &dt::mulf(&k2[i], 2.0)), &dt::mulf(&k3[i], 2.0)), &k4[i]);
-                    dt::add(&s[i], &dt::mulr(&inc, h6h, h6l))
-                })
-                .collect();
+            s = (0..5).map(|i| cell::rk_update(&s[i], [&k1[i], &k2[i], &k3[i], &k4[i]], h6h, h6l)).collect();
         }
         s
     }
