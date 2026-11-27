@@ -4,7 +4,8 @@ chain's frontier, with the kind of computation, an error estimate and what that 
 
     cd hp && python3 export_delta_all.py RAWDIR [--verify] [--mutate=dd|qd|pinned|pinned_qd|gap|neighbours|cross
                                                    |chain_fit|chain|held|frontier|projector|t85|fits|fits_table|half
-                                                   |qd_neighbours|dm_neighbours|one_sided|direct|series|weak_pivot]
+                                                   |qd_neighbours|dm_neighbours|one_sided|direct|series|weak_pivot
+                                                   |M]
     cd hp && python3 export_delta_all.py RAWDIR --interp_check [--mutate=interp]
     cd hp && python3 export_delta_all.py RAWDIR --lam_screen [--mutate=lam|lam_pred]
 
@@ -21,7 +22,7 @@ and "dM neighbours one-sided" row (the controls of the qd and low-D rules, #764)
 --mutate=half drops the err of the first chain_fit row whose fits are all interpolated below D 191.5 (the half steps'
 control); --mutate=series moves the first series row by one unit (as for a kind); --mutate=weak_pivot halves the err of
 every "weak pivot" row (K halved, #806), which the coverage check must catch, first at D 255.05;
---mutate=held labels the last chain_fit row chain, and
+--mutate=M raises the M of the first row that has one; --mutate=held labels the last chain_fit row chain, and
 --mutate=frontier moves the first chain row below the chain_fit
 frontier (or, when chain_fit replaces every chain row, puts the chain's last row back), --mutate=projector drops the
 first projector err (data/projector_shift.csv's), and --mutate=t85 gives the first
@@ -51,8 +52,10 @@ there lies within its err of it, and every row in WP_CHECK (253.64-259.72, #805'
 Columns: D; Delta in up to four parts, Delta = q0 + q1 + q2 + q3 (each an f64; q2 and q3 are empty where the value is
 double-double); kind; err and err_kind; the source record; published_ref, published_Delta and published_diff, the most
 precise value of data/published_delta.csv at this D (6 decimals), as printed, and this row's Delta minus it (empty
-where none is listed); the state file (relative to RAWDIR, empty where none was stored). The kinds, in order of
-precedence where two share a D:
+where none is listed); the state file (relative to RAWDIR, empty where none was stored); M, the number of harmonics in
+theta of the solve (the state's meta M; for a dd row the M of its run name, lowD-M384; empty where the source does not
+state it, as for the other dd runs and the series fits; --verify checks it against the source and --mutate=M is its
+control). The kinds, in order of precedence where two share a D:
   qd      the full system converged in quad-double (data/delta_qd.csv, export_qd.py). err: where export_qd.py gives
           one, its largest term: the two starts' spread ("starts"), #940's plan change ("plan") or the gap between the
           Nov 5 kernel's solution and today's ("kernel"), each an estimate, not a bound. Otherwise the spread between two
@@ -156,6 +159,7 @@ import csv
 import glob
 import json
 import os
+import re
 import sys
 from collections import defaultdict
 
@@ -166,7 +170,7 @@ mp.mp.dps = 80
 HERE = os.path.dirname(os.path.abspath(__file__))
 OUT = os.path.join(HERE, "data", "delta_all.csv")
 COLS = ["D", "Delta_q0", "Delta_q1", "Delta_q2", "Delta_q3", "kind", "err", "err_kind", "source", "published_ref",
-        "published_Delta", "published_diff", "state"]
+        "published_Delta", "published_diff", "state", "M"]
 RANK = {"qd": 0, "dd": 1, "pinned": 2, "chain_fit": 3, "chain": 4, "direct": 5, "series": 6}
 HELD = {"chain_fit": "fit", "chain": "trend"}
 # pinned runs whose rows chain_fit replaces inside its span (their layouts' spread, 13.25)
@@ -886,6 +890,17 @@ def replaced(r, span):
     return r["source"].startswith(FIT_REPLACES) and span[0] - TOL_D <= D <= span[1] + TOL_D
 
 
+def row_M(r):
+    """the angular resolution M of a row: its state's meta M when the row names a state (qd, pinned, chain_fit, chain,
+    direct), the M of a dd row's run name (lowD-M384), else empty (the other dd runs' sources do not state it, and a
+    series row is a fit)"""
+    if r.get("state"):
+        z = np.load(os.path.join(RAW, r["state"]))
+        return str(json.loads(str(z["meta"])).get("M", ""))
+    m = re.search(r"M(\d+)", r["source"].partition(":")[2]) if r["kind"] == "dd" else None
+    return m.group(1) if m else ""
+
+
 def build():
     dd = dd_rows()
     dmax = max(float(r["D"]) for r in dd)
@@ -902,7 +917,7 @@ def build():
         print(f"series: data/delta_series.csv was fitted on other rows (input {sc[0]['input']}, the table's"
               f" {series_input(rows.values())}); rerun track_c.py csv, then this export", flush=True)
     pub = published()
-    return [{**rows[k], **published_cols(rows[k], pub)} for k in sorted(rows)], fits
+    return [{**rows[k], **published_cols(rows[k], pub), "M": row_M(rows[k])} for k in sorted(rows)], fits
 
 
 def verify(rows, mutate=""):
@@ -999,6 +1014,10 @@ def verify(rows, mutate=""):
         r = [x for x in chain_rows(keep=True, quiet=True)[0] if x["kind"] == "chain"][-1]
         rows.append({**r, **published_cols(r, published())})
         print(f"mutated: the chain row at D {r['D']}, below the frontier, put back")
+    elif mutate == "M":
+        r = next(r for r in rows if r.get("M"))
+        r["M"] = str(int(r["M"]) + 1)
+        print(f"mutated: the M of the {r['kind']} row at D {r['D']}")
     elif mutate and not any(r["kind"] == mutate for r in rows):
         print(f"no {mutate} rows, so nothing to mutate")
         sys.exit(2)
@@ -1133,6 +1152,14 @@ def verify(rows, mutate=""):
     if past:
         print(f"  weak pivot: {ncov} of {len(past)} chain_fit rows past {WP_FROM} within their err of the series;"
               f" largest |chain - series|/err {worst[0]:.3f} at D {worst[1]}")
+    nM = 0
+    for r in rows:
+        want = row_M(r)
+        nM += bool(want)
+        if r.get("M", "") != want:
+            bad += 1
+            print(f"DIFFERS: {r['kind']} D {r['D']}: M {r.get('M', '')!r} against its source's {want!r}")
+    print(f"  M: {nM} of {len(rows)} rows carry it from their source")
     print(f"verify: {len(rows) - bad} of {len(rows)} rows equal their sources, {len(cfits)} rows of delta_fits.csv"
           " rebuilt")
     return bad == 0

@@ -86,7 +86,7 @@ def main():
     ok &= run(["export_delta_all.py", raw, "--verify"])
     for m in ("dd", "qd", "pinned", "pinned_qd", "gap", "neighbours", "cross", "chain_fit", "chain", "held", "frontier",
               "projector", "t85", "fits", "fits_table", "half", "qd_neighbours", "dm_neighbours", "one_sided",
-              "direct", "series", "weak_pivot"):
+              "direct", "series", "weak_pivot", "M"):
         ok &= run(["export_delta_all.py", raw, "--verify", f"--mutate={m}"], expect=1)
     with open(master, "wb") as f:
         f.write(built)
