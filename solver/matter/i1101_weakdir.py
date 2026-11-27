@@ -42,6 +42,9 @@ usage (venv-1025dd, from solver/matter):
       nonlinear elimination toward the discrete zero along the weak pair (fresh J and SVD per outer step, the
       Gauss-Newton step on the weak pair at fractions 1 to 1/8, re-frozen steps, chord steps on the strong band);
       stops when an outer step cuts |U_w^T F| by less than 2x; every iterate saved with a stub record.
+  i1101_weakdir.py ddres SVD.npz REC STATE D
+      every block's residual in double-double (ell_ddm.DDEll's blocks, values only) beside the float64 one, and both
+      projected on the SVD's bands: whether the weak residual is float64 rounding.
   i1101_weakdir.py floor JAC.npz SVD.npz REC STATE D
       U_w^T F at the state under one change of the discretisation at a time: every segment's RK steps x2, the horizon
       segment's x2, Ks 45, N + 56, u0 0.035 and 0.045 (horizon steps by freeze_from's rule at that u0).
@@ -624,6 +627,59 @@ def necmd(argv):
     return 0
 
 
+def ddrescmd(argv):
+    """the residual of every block in double-double (ell_ddm.DDEll's blocks, value only, no tangents) against the float64
+    residual, and both projected on the weak vectors of a stored SVD: is the floor in U_w^T F float64 rounding?"""
+    args, o = pos(argv), opts(argv)
+    sd = np.load(args[0])
+    U, s = sd["U"], sd["s"]
+    recf, st, D = args[1], args[2], float(args[3])
+    S, z, rec, same, msg = load_system(recf, st, D)
+    print(msg, flush=True)
+    if not same:
+        return 3
+    import ell_ddm
+    import ddnp as dd
+    E = ell_ddm.DDEll(S)
+    E.om = 2 * np.pi / z[-1]
+    E.lam = 0.0
+
+    def inputs(X, sizes, pars):
+        out, k = [], 0
+        for sz in sizes:
+            out.append(ell_ddm.DT(dd.R(X[None, k:k + sz].copy()), None))
+            k += sz
+        return out
+    E._inputs = inputs
+    sizes, K, L = S.layout()
+    blocks, offs = S._block_list()
+    blk = 3 * S.n_odd + 2 * S.n_even
+    node0 = offs[2]
+    F64 = resid(S, z)
+    Fdd = np.zeros_like(F64)
+    t0 = time.time()
+    for b, (c0, nf, fun, tgt) in enumerate(blocks):
+        out = E.block(b, z[c0:c0 + nf])
+        h = np.concatenate([x.v.h[0] for x in out])
+        l = np.concatenate([x.v.l[0] for x in out])
+        t0_ = node0 + blk * tgt
+        Fdd[b * blk:(b + 1) * blk] = (h - z[t0_:t0_ + blk]) + l
+        d = float(np.linalg.norm(F64[b * blk:(b + 1) * blk] - Fdd[b * blk:(b + 1) * blk]))
+        print(f"  block {b}: |F64| {np.linalg.norm(F64[b * blk:(b + 1) * blk]):.4e} |Fdd| "
+              f"{np.linalg.norm(Fdd[b * blk:(b + 1) * blk]):.4e} |F64 - Fdd| {d:.3e}", flush=True)
+    Fdd[-1] = F64[-1]
+    r = s / s[0]
+    wk = np.where((r >= NULL_CUT) & (r < WEAK_CUT))[0][::-1]
+    nul = np.where(r < NULL_CUT)[0]
+    strong = np.where(r >= WEAK_CUT)[0]
+    for tag, F in (("float64", F64), ("double-double", Fdd), ("difference", F64 - Fdd)):
+        a = U.T @ F
+        print(f"{tag}: |F| {np.linalg.norm(F):.4e} = null {np.linalg.norm(a[nul]):.3e} + weak {np.linalg.norm(a[wk]):.3e} + "
+              f"strong {np.linalg.norm(a[strong]):.3e}; U_w^T F {' '.join(f'{v:+.4e}' for v in a[wk])}", flush=True)
+    print(f"({time.time() - t0:.0f} s for the double-double blocks)", flush=True)
+    return 0
+
+
 def floorcmd(argv):
     args = pos(argv)
     sd = np.load(args[1])
@@ -949,7 +1005,7 @@ if __name__ == "__main__":
     cmd = sys.argv[1] if len(sys.argv) > 1 else ""
     f = dict(jac=jaccmd, svd=svdcmd, planted=plantedcmd, report=reportcmd, valley=valleycmd, floor=floorcmd,
              detsens=detsenscmd, locate=locatecmd, segerr=segerrcmd, chord=chordcmd, root=rootcmd,
-             order=ordercmd, ne=necmd).get(cmd)
+             order=ordercmd, ne=necmd, ddres=ddrescmd).get(cmd)
     if f is None:
         print(__doc__)
         sys.exit(2)
