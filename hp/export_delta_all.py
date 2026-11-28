@@ -50,12 +50,15 @@ it was fitted on (series_input), and the weak pivot's coverage: past WP_FROM eve
 there lies within its err of it, and every row in WP_CHECK (253.64-259.72, #805's out-of-sample range) has one.
 
 Columns: D; Delta in up to four parts, Delta = q0 + q1 + q2 + q3 (each an f64; q2 and q3 are empty where the value is
-double-double); kind; err and err_kind; the source record; published_ref, published_Delta and published_diff, the most
-precise value of data/published_delta.csv at this D (6 decimals), as printed, and this row's Delta minus it (empty
-where none is listed); the state file (relative to RAWDIR, empty where none was stored); M, the number of harmonics in
-theta of the solve (the state's meta M; for a dd row the M of its run name, lowD-M384; empty where the source does not
-state it, as for the other dd runs and the series fits; --verify checks it against the source and --mutate=M is its
-control). The kinds, in order of precedence where two share a D:
+double-double); M, the number of harmonics in theta of the solve (the state's meta M; for a dd row the M of its run
+name, lowD-M384; empty where the source does not state it, as for the other dd runs and the series fits; --verify checks
+it against the source and --mutate=M is its control); kind; err and err_kind; seconds, the wall-clock time of the solve
+that produced the value, from its source record (row_seconds: one solve from its predecessor in D, not the continuation
+that led there; empty for the cloud dd runs, whose records are lost, for direct rows, whose records state clock times
+only, and for series rows; --verify checks it and --mutate=seconds is its control); the source record; published_ref,
+published_Delta and published_diff, the most precise value of data/published_delta.csv at this D (6 decimals), as
+printed, and this row's Delta minus it (empty where none is listed); the state file (relative to RAWDIR, empty where
+none was stored). The kinds, in order of precedence where two share a D:
   qd      the full system converged in quad-double (data/delta_qd.csv, export_qd.py). err: where export_qd.py gives
           one, its largest term: the two starts' spread ("starts"), #940's plan change ("plan") or the gap between the
           Nov 5 kernel's solution and today's ("kernel"), each an estimate, not a bound. Otherwise the spread between two
@@ -169,8 +172,8 @@ import numpy as np
 mp.mp.dps = 80
 HERE = os.path.dirname(os.path.abspath(__file__))
 OUT = os.path.join(HERE, "data", "delta_all.csv")
-COLS = ["D", "Delta_q0", "Delta_q1", "Delta_q2", "Delta_q3", "kind", "err", "err_kind", "source", "published_ref",
-        "published_Delta", "published_diff", "state", "M"]
+COLS = ["D", "Delta_q0", "Delta_q1", "Delta_q2", "Delta_q3", "M", "kind", "err", "err_kind", "seconds", "source",
+        "published_ref", "published_Delta", "published_diff", "state"]
 RANK = {"qd": 0, "dd": 1, "pinned": 2, "chain_fit": 3, "chain": 4, "direct": 5, "series": 6}
 HELD = {"chain_fit": "fit", "chain": "trend"}
 # pinned runs whose rows chain_fit replaces inside its span (their layouts' spread, 13.25)
@@ -256,9 +259,13 @@ def fmt(x):
     return repr(float(x))
 
 
+DD_SECONDS = {}         # (D, run) -> the solve's seconds in data/delta_dd.csv (export_dd.py)
+
+
 def dd_rows():
     rows = []
     for r in csv.DictReader(open(os.path.join(HERE, "data", "delta_dd.csv"))):
+        DD_SECONDS[(round(float(r["D"]), 6), r["run"])] = r.get("seconds") or ""
         rows.append(dict(D=r["D"], Delta_q0=r["Delta_hi"], Delta_q1=r["Delta_lo"], Delta_q2="", Delta_q3="", kind="dd",
                          err=r["Delta_err"], err_kind=r["err_kind"], source=f"data/delta_dd.csv:{r['run']}", state=""))
     return rows
@@ -901,6 +908,67 @@ def row_M(r):
     return m.group(1) if m else ""
 
 
+_RECS = {}
+
+
+def _recs(f):
+    """the records of a raw jsonl file, read once"""
+    if f not in _RECS:
+        _RECS[f] = records(f)
+    return _RECS[f]
+
+
+def _wall(r):
+    """a record's wall time in seconds, as text with one decimal, or empty"""
+    v = r.get("seconds") if r else None
+    return "" if v is None else f"{float(v):.1f}"
+
+
+def chain_wall(r):
+    """an anm_run.py step's wall time: its series coefficients (t_coef) and every corrector attempt (t_corr, with the
+    attempt's re-seed seconds), or empty when the record states none"""
+    if r.get("t_coef") is None:
+        return ""
+    t = float(r["t_coef"])
+    for a in r.get("attempts") or []:
+        t += float(a.get("t_corr") or 0.0) + float((a.get("reseed") or {}).get("seconds") or 0.0)
+    return f"{t:.1f}"
+
+
+def row_seconds(r):
+    """the wall-clock seconds of the solve that produced a row's value, from its source record: a dd row's from
+    delta_dd.csv (export_dd.py carries its record's seconds; the cloud runs' records are lost); a qd row's from the raw
+    record its source names (file:state); a pinned row's from its pin file's record at that D; a chain_fit or chain
+    row's from its state's anm_run.py step (chain_wall); empty for a direct row (form S's records state clock times,
+    not durations) and a series row (a fit). One solve from its predecessor in D, not the continuation that led there"""
+    k, src = r["kind"], r["source"]
+    if k == "dd":
+        if not DD_SECONDS:                                  # --verify reads delta_dd.csv here, not by dd_rows()
+            for x in csv.DictReader(open(os.path.join(HERE, "data", "delta_dd.csv"))):
+                DD_SECONDS[(round(float(x["D"]), 6), x["run"])] = x.get("seconds") or ""
+        run = src.partition(":")[2]
+        return DD_SECONDS.get((round(float(r["D"]), 6), run), "")
+    if k == "qd":
+        f, _, st = src.partition(":")[2].partition(":")
+        recs = _recs(f)
+        hit = [x for x in recs if st and x.get("state") == st] or ([] if st else recs[-1:])
+        return _wall(hit[-1]) if hit else ""
+    if k == "pinned":
+        f, _, d = src.rpartition(":D")
+        hit = [x for x in _recs(f) if round(x["D"], 6) == round(float(d), 6)]
+        return _wall(hit[-1]) if hit else ""
+    if k in ("chain_fit", "chain") and r.get("state"):
+        d = os.path.dirname(r["state"])
+        m = json.loads(str(np.load(os.path.join(RAW, r["state"]))["meta"]))
+        # the step that produced the state: its accepted attempt reached the state's D (D0 is where the step began)
+        hit = [x for x in _recs(os.path.join(d, "anm_run.jsonl"))
+               if any(a.get("accepted") and (a.get("D_str") == m.get("D_str")
+                                             or round(float(a.get("D", -1)), 9) == round(float(m["D"]), 9))
+                      for a in x.get("attempts") or [])]
+        return chain_wall(hit[-1]) if hit else ""
+    return ""
+
+
 def build():
     dd = dd_rows()
     dmax = max(float(r["D"]) for r in dd)
@@ -917,7 +985,8 @@ def build():
         print(f"series: data/delta_series.csv was fitted on other rows (input {sc[0]['input']}, the table's"
               f" {series_input(rows.values())}); rerun track_c.py csv, then this export", flush=True)
     pub = published()
-    return [{**rows[k], **published_cols(rows[k], pub), "M": row_M(rows[k])} for k in sorted(rows)], fits
+    return [{**rows[k], **published_cols(rows[k], pub), "M": row_M(rows[k]), "seconds": row_seconds(rows[k])}
+            for k in sorted(rows)], fits
 
 
 def verify(rows, mutate=""):
@@ -1018,6 +1087,10 @@ def verify(rows, mutate=""):
         r = next(r for r in rows if r.get("M"))
         r["M"] = str(int(r["M"]) + 1)
         print(f"mutated: the M of the {r['kind']} row at D {r['D']}")
+    elif mutate == "seconds":
+        r = next(r for r in rows if r.get("seconds"))
+        r["seconds"] = f"{float(r['seconds']) + 1.0:.1f}"
+        print(f"mutated: the seconds of the {r['kind']} row at D {r['D']}")
     elif mutate and not any(r["kind"] == mutate for r in rows):
         print(f"no {mutate} rows, so nothing to mutate")
         sys.exit(2)
@@ -1160,6 +1233,14 @@ def verify(rows, mutate=""):
             bad += 1
             print(f"DIFFERS: {r['kind']} D {r['D']}: M {r.get('M', '')!r} against its source's {want!r}")
     print(f"  M: {nM} of {len(rows)} rows carry it from their source")
+    nS = 0
+    for r in rows:
+        want = row_seconds(r)
+        nS += bool(want)
+        if r.get("seconds", "") != want:
+            bad += 1
+            print(f"DIFFERS: {r['kind']} D {r['D']}: seconds {r.get('seconds', '')!r} against its source's {want!r}")
+    print(f"  seconds: {nS} of {len(rows)} rows carry it from their source")
     print(f"verify: {len(rows) - bad} of {len(rows)} rows equal their sources, {len(cfits)} rows of delta_fits.csv"
           " rebuilt")
     return bad == 0
