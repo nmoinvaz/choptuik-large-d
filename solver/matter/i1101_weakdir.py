@@ -47,6 +47,8 @@ usage (venv-1025dd, from solver/matter):
       projected on the SVD's bands: whether the weak residual is float64 rounding.
   i1101_weakdir.py coords SVD.npz BASE.npy NAME=STATE.npy ...
       the band fractions and weak coordinates V^T (z - z_base) of saved states (any step map; no residual).
+  i1101_weakdir.py detline REC_A STATE_A STATE_B D LAM [--ts=0,0.25,...] [--hybrid=T,...]
+      the float64 (and, at --hybrid, the hybrid) determinant of M(LAM) along z_A + t (z_B - z_A) on A's step map.
   i1101_weakdir.py floor JAC.npz SVD.npz REC STATE D
       U_w^T F at the state under one change of the discretisation at a time: every segment's RK steps x2, the horizon
       segment's x2, Ks 45, N + 56, u0 0.035 and 0.045 (horizon steps by freeze_from's rule at that u0).
@@ -705,6 +707,38 @@ def coordscmd(argv):
     return 0
 
 
+def detlinecmd(argv):
+    """the determinant along the segment z(t) = z_A + t (z_B - z_A) between two states of one step map (A's record
+    system): float64 slogdet of mode_matrix_fast at each t of --ts, and the hybrid determinant (d18_secant.RealEval,
+    fast block 12) at each t of --hybrid; is ln|det| smooth in t?"""
+    args, o = pos(argv), opts(argv)
+    recf, sta, stb, D, lam = args[0], args[1], args[2], float(args[3]), float(args[4])
+    S, za, rec, same, msg = load_system(recf, sta, D)
+    print(msg, flush=True)
+    if not same:
+        return 3
+    zb = np.load(stb)
+    from ell_fastm import mode_matrix_fast
+    print(f"|z_B - z_A| {np.linalg.norm(zb - za):.4e}, lambda {lam}", flush=True)
+    for tt in [float(v) for v in o.get("ts", "0,0.25,0.5,0.75,1").split(",")]:
+        z = za + tt * (zb - za)
+        t0 = time.time()
+        with np.errstate(all="ignore"):
+            sg, ld = np.linalg.slogdet(mode_matrix_fast(S, z, lam))
+        print(f"  t {tt:g}: float64 sign {sg:+.0f} ln|det| {ld:.6f}; |F| {np.linalg.norm(resid(S, z)):.4e} "
+              f"({time.time() - t0:.0f} s)", flush=True)
+    if "hybrid" in o:
+        kmm = os.environ.get("D18_DIR", os.path.join(os.path.expanduser("~"), "Source/choptuik-kmm/solver/matter"))
+        sys.path.insert(0, kmm)
+        import d18_secant                                # noqa: E402
+        for tt in [float(v) for v in o["hybrid"].split(",")]:
+            z = za + tt * (zb - za)
+            r = d18_secant.RealEval(S, z, rec, sta, "fast", 0.1, b12="fast")(lam)
+            print(f"  t {tt:g}: hybrid sign {r['sign']:+.0f} ln|det| {r['ln']:.10f} dln {r['dln']:.2e} robust "
+                  f"{r['robust']}; float64 {r['f64_sign']:+.0f} {r['f64_ln']:.6f} ({r['sec']} s)", flush=True)
+    return 0
+
+
 def floorcmd(argv):
     args = pos(argv)
     sd = np.load(args[1])
@@ -1031,7 +1065,7 @@ if __name__ == "__main__":
     cmd = sys.argv[1] if len(sys.argv) > 1 else ""
     f = dict(jac=jaccmd, svd=svdcmd, planted=plantedcmd, report=reportcmd, valley=valleycmd, floor=floorcmd,
              detsens=detsenscmd, locate=locatecmd, segerr=segerrcmd, chord=chordcmd, root=rootcmd,
-             order=ordercmd, ne=necmd, ddres=ddrescmd, coords=coordscmd).get(cmd)
+             order=ordercmd, ne=necmd, ddres=ddrescmd, coords=coordscmd, detline=detlinecmd).get(cmd)
     if f is None:
         print(__doc__)
         sys.exit(2)
