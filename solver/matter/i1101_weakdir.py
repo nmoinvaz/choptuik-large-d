@@ -49,6 +49,8 @@ usage (venv-1025dd, from solver/matter):
       the band fractions and weak coordinates V^T (z - z_base) of saved states (any step map; no residual).
   i1101_weakdir.py detline REC_A STATE_A STATE_B D LAM [--ts=0,0.25,...] [--hybrid=T,...]
       the float64 (and, at --hybrid, the hybrid) determinant of M(LAM) along z_A + t (z_B - z_A) on A's step map.
+  i1101_weakdir.py detparts SVD.npz REC_A STATE_A STATE_B D LAM
+      the hybrid determinant of M(LAM) at z_A, z_A + P_band (z_B - z_A) for the null, weak and strong bands, and z_B.
   i1101_weakdir.py floor JAC.npz SVD.npz REC STATE D
       U_w^T F at the state under one change of the discretisation at a time: every segment's RK steps x2, the horizon
       segment's x2, Ks 45, N + 56, u0 0.035 and 0.045 (horizon steps by freeze_from's rule at that u0).
@@ -739,6 +741,37 @@ def detlinecmd(argv):
     return 0
 
 
+def detpartscmd(argv):
+    """the hybrid determinant at LAM for z_A + P_band (z_B - z_A), band null, weak and strong of a stored SVD (the
+    projection on that band's right vectors), beside z_A and z_B: which band of a state difference moves det M"""
+    args, o = pos(argv), opts(argv)
+    sd = np.load(args[0])
+    s, Vt = sd["s"], sd["Vt"]
+    recf, sta, stb, D, lam = args[1], args[2], args[3], float(args[4]), float(args[5])
+    S, za, rec, same, msg = load_system(recf, sta, D)
+    print(msg, flush=True)
+    if not same:
+        return 3
+    zb = np.load(stb)
+    kmm = os.environ.get("D18_DIR", os.path.join(os.path.expanduser("~"), "Source/choptuik-kmm/solver/matter"))
+    sys.path.insert(0, kmm)
+    import d18_secant                                    # noqa: E402
+    nul, weak, strong = bands_of(s)
+    dz = zb - za
+    c = Vt @ dz
+    cases = [("A", za)]
+    for nm, idx in (("null", nul), ("weak", weak), ("strong", strong)):
+        part = Vt[idx].T @ c[idx]
+        print(f"  part {nm}: |P dz| {np.linalg.norm(part):.3e}", flush=True)
+        cases.append((f"A + P_{nm}", za + part))
+    cases.append(("B", zb))
+    for nm, z in cases:
+        r = d18_secant.RealEval(S, z, rec, sta, "fast", 0.1, b12="fast")(lam)
+        print(f"  {nm}: hybrid sign {r['sign']:+.0f} ln|det| {r['ln']:.10f} dln {r['dln']:.2e} robust {r['robust']}; "
+              f"|F| {np.linalg.norm(resid(S, z)):.4e} ({r['sec']} s)", flush=True)
+    return 0
+
+
 def floorcmd(argv):
     args = pos(argv)
     sd = np.load(args[1])
@@ -1065,7 +1098,8 @@ if __name__ == "__main__":
     cmd = sys.argv[1] if len(sys.argv) > 1 else ""
     f = dict(jac=jaccmd, svd=svdcmd, planted=plantedcmd, report=reportcmd, valley=valleycmd, floor=floorcmd,
              detsens=detsenscmd, locate=locatecmd, segerr=segerrcmd, chord=chordcmd, root=rootcmd,
-             order=ordercmd, ne=necmd, ddres=ddrescmd, coords=coordscmd, detline=detlinecmd).get(cmd)
+             order=ordercmd, ne=necmd, ddres=ddrescmd, coords=coordscmd, detline=detlinecmd,
+             detparts=detpartscmd).get(cmd)
     if f is None:
         print(__doc__)
         sys.exit(2)
