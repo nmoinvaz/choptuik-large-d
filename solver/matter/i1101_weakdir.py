@@ -49,7 +49,7 @@ usage (venv-1025dd, from solver/matter):
       the band fractions and weak coordinates V^T (z - z_base) of saved states (any step map; no residual).
   i1101_weakdir.py detline REC_A STATE_A STATE_B D LAM [--ts=0,0.25,...] [--hybrid=T,...]
       the float64 (and, at --hybrid, the hybrid) determinant of M(LAM) along z_A + t (z_B - z_A) on A's step map.
-  i1101_weakdir.py detparts SVD.npz REC_A STATE_A STATE_B D LAM
+  i1101_weakdir.py detparts SVD.npz REC_A STATE_A STATE_B D LAM [--b12=fast|ddm|rust] [--b12_threads=T]
       the hybrid determinant of M(LAM) at z_A, z_A + P_band (z_B - z_A) for the null, weak and strong bands, and z_B.
   i1101_weakdir.py floor JAC.npz SVD.npz REC STATE D
       U_w^T F at the state under one change of the discretisation at a time: every segment's RK steps x2, the horizon
@@ -766,7 +766,8 @@ def detpartscmd(argv):
         cases.append((f"A + P_{nm}", za + part))
     cases.append(("B", zb))
     for nm, z in cases:
-        r = d18_secant.RealEval(S, z, rec, sta, "fast", 0.1, b12="fast")(lam)
+        r = d18_secant.RealEval(S, z, rec, sta, "fast", 0.1, b12=o.get("b12", "fast"),
+                                b12_threads=int(o.get("b12_threads", 0)))(lam)
         print(f"  {nm}: hybrid sign {r['sign']:+.0f} ln|det| {r['ln']:.10f} dln {r['dln']:.2e} robust {r['robust']}; "
               f"|F| {np.linalg.norm(resid(S, z)):.4e} ({r['sec']} s)", flush=True)
     return 0
