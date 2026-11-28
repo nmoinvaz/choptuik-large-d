@@ -29,10 +29,16 @@ k_c 55, which is why the hybrid replaces that block (SPEED_ELL1.md).
         sign, ln|det| within 1e-8), with both timings; exit 0 only if every compared block and the determinant pass.
         --blocks limits both builds to those blocks (the determinant is then not compared). --mutate=nolam drops lambda
         from the variational map (the series keep it): the check must fail.
-    python ell_fastm.py selftest [--mutate=nolam|coef]
-        a k_c 15 state made here: the linearised right side against a central difference of DSSEll.rhs (1e-7), and
-        M_fast against DSSEll.mode_matrix at two lambda (1e-10); --mutate=coef perturbs one tangent coefficient.
-        Exit 0 only if every comparison passes.
+    python ell_fastm.py jaccheck STUB.jsonl STATE.npy D [--basis=coef|jac|grid] [--mutate=dcol|coef] [--out=F.json]
+        jacobian_fast (the solver's Jacobian: state columns by the variational map, the Delta column by a one-member
+        complex step) against DSSEll.jacobian: the residual equal, per block the state columns within 1e-8 and the
+        Delta column within 1e-12 relative (1e-8 in the horizon block, whose rounding the batch size alone moves by
+        1.3e-12 at k_c 31), the phase row equal; both timings. --mutate=dcol drops the Delta column
+        and --mutate=coef perturbs one tangent coefficient: each must fail.
+    python ell_fastm.py selftest [--mutate=nolam|coef|dcol]
+        a k_c 15 state made here: the linearised right side against a central difference of DSSEll.rhs (1e-7),
+        M_fast against DSSEll.mode_matrix at two lambda (1e-10), and jacobian_fast against DSSEll.jacobian (1e-10 and
+        1e-12); --mutate=coef perturbs one tangent coefficient. Exit 0 only if every comparison passes.
 References: the variational equation integrated with the same Runge-Kutta scheme (forward-mode sensitivities), Hairer,
 Norsett and Wanner, Solving Ordinary Differential Equations I (Springer, 1993) *(unverified)*; the complex-step derivative
 of the reference, Squire and Trapp, SIAM Rev. 40, 110 (1998) *(unverified)*."""
@@ -347,6 +353,57 @@ def mode_matrix_fast(S, z, lam, only=None, log=None, basis="jac"):
     return Mm
 
 
+def jacobian_fast(S, z, basis="jac", h=1e-20, log=None):
+    """DSSEll.jacobian(z): the residual and its exact Jacobian, with the state columns by the variational map. Those
+    columns are mode_matrix_fast(S, z, 0): at lambda 0 DSSEll.mode_matrix differentiates the same block maps at fixed
+    Delta as DSSEll.jacobian's state members, with the same -I on each target node. The Delta column keeps the complex
+    step through omega = 2 pi / (Delta + i h), one batch member per block instead of nf + 1; the phase row is
+    DSSEll.jacobian's."""
+    sizes, K, L = S.layout()
+    F0 = S.residual(z[None, :])[0]
+    J = np.zeros((L, L))
+    J[:L - 1, :L - 1] = mode_matrix_fast(S, z, 0.0, log=log, basis=basis)
+    blocks, offs = S._block_list()
+    blk = 3 * S.n_odd + 2 * S.n_even
+    D = z[-1]
+    for b, (c0, nf, fun, tgt) in enumerate(blocks):
+        X = z[None, c0:c0 + nf].astype(complex)
+        om = np.array([2 * np.pi / (D + 1j * h)])                    # the Delta member alone
+        J[b * blk:(b + 1) * blk, -1] = S.tospec(fun(X, om))[0].imag / h
+    J[-1, len(S.kodd)] = 1.0
+    if MUTATE == "dcol":                                              # control: the Delta column dropped
+        J[:, -1] = 0.0
+    return F0, J
+
+
+def compare_jac(S, Jf, Jc, tol_blk=1e-8, tol_dcol=1e-12, out=print):
+    """per-block max |J_fast - J_cs| / max |J_cs block| over the state columns, the same for the Delta column, and the
+    phase row; returns (ok, rows). The horizon block's Delta column takes tol_blk, as its state columns do: there the
+    batch size alone moves the complex step's own Delta column by 1.3e-12 relative at k_c 31, D 10.5 (1 member against
+    2, the same arithmetic; 1-3e-15 in blocks 0 and 6), the rounding that block amplifies"""
+    blocks, offs = S._block_list()
+    blk = 3 * S.n_odd + 2 * S.n_even
+    ok = True
+    rows = []
+    for b, (c0, nf, fun, tgt) in enumerate(blocks):
+        r = slice(b * blk, (b + 1) * blk)
+        d = float(np.max(np.abs(Jf[r, c0:c0 + nf] - Jc[r, c0:c0 + nf])))
+        sc = float(np.max(np.abs(Jc[r, c0:c0 + nf])))
+        dd = float(np.max(np.abs(Jf[r, -1] - Jc[r, -1])))
+        scd = float(np.max(np.abs(Jc[r, -1])))
+        td = tol_blk if b == len(blocks) - 1 else tol_dcol
+        good = d / sc <= tol_blk and dd / scd <= td
+        ok &= good
+        rows.append(dict(block=b, rel=d / sc, rel_dcol=dd / scd, maxabs=sc, maxabs_dcol=scd))
+        out(f"  block {b:2d}: state columns {d / sc:.3e} (<= {tol_blk:g}), Delta column {dd / scd:.3e} "
+            f"(<= {td:g}) {'ok' if good else 'FAIL'}")
+    rest = float(np.max(np.abs(Jf[-1] - Jc[-1])))
+    good = rest == 0.0
+    ok &= good
+    out(f"  phase row: max |difference| {rest:.1e} {'ok' if good else 'FAIL'}")
+    return ok, rows
+
+
 def mode_matrix_cs(S, z, lam, only=None, h=1e-20, log=None):
     """DSSEll.mode_matrix restricted to the blocks in only (the reference, unchanged code per block)"""
     sizes, K, L = S.layout()
@@ -452,6 +509,36 @@ def checkcmd(argv):
     sys.exit(0 if ok else 1)
 
 
+def jaccheckcmd(argv):
+    args = [a for a in argv if not a.startswith("--")]
+    opts = dict(a[2:].split("=", 1) for a in argv if a.startswith("--") and "=" in a)
+    recf, st, D = args[0], args[1], float(args[2])
+    basis = opts.get("basis", "jac")
+    S, z, rec, same, msg = load_system(recf, st, D)
+    print(msg, flush=True)
+    if not same:
+        sys.exit(3)
+    print(f"N {S.N}, n_odd {S.n_odd}, n_even {S.n_even}, unknowns {S.layout()[2]}, tangents {basis}, "
+          f"mutate {MUTATE or 'none'}", flush=True)
+    with np.errstate(all="ignore"):
+        t0 = time.time()
+        Ff, Jf = jacobian_fast(S, z, basis=basis)
+        tf = time.time() - t0
+        t0 = time.time()
+        Fc, Jc = S.jacobian(z)
+        tc = time.time() - t0
+    print(f"times: fast {tf:.1f} s, complex step {tc:.1f} s, ratio {tc / tf:.2f}", flush=True)
+    okF = bool(np.array_equal(Ff, Fc))
+    print(f"  residual: {'equal' if okF else 'DIFFERS'}", flush=True)
+    ok, rows = compare_jac(S, Jf, Jc)
+    ok &= okF
+    print(f"jaccheck: {'PASS' if ok else 'FAIL'}", flush=True)
+    if "out" in opts:
+        open(opts["out"], "w").write(json.dumps(dict(D=D, kc=rec["kc"], mutate=MUTATE, basis=basis, t_fast=tf, t_cs=tc,
+                                                     ok=bool(ok), blocks=rows)) + "\n")
+    sys.exit(0 if ok else 1)
+
+
 def _toy_state(kc=15, n=4.0):
     """a smooth parity-respecting state (not a solution) on the standard nodes: enough to compare two derivatives of the
     same discrete map"""
@@ -533,6 +620,14 @@ def selftest():
                 print(f"M at lambda {lam}, {basis} tangents:", flush=True)
                 g, _ = compare(S, Mf, Mc)
                 ok &= g
+    # 3. the solver's Jacobian: state columns, the Delta column and the phase row against DSSEll.jacobian
+    with np.errstate(all="ignore"):
+        Fc, Jc = S.jacobian(z)
+        Ff, Jf = jacobian_fast(S, z)
+    print("J (jac tangents):", flush=True)
+    g, _ = compare_jac(S, Jf, Jc, tol_blk=1e-10)
+    g &= bool(np.array_equal(Ff, Fc))
+    ok &= g
     print(f"selftest (mutate {MUTATE or 'none'}): {'PASS' if ok else 'FAIL'}", flush=True)
     sys.exit(0 if ok else 1)
 
@@ -541,6 +636,8 @@ if __name__ == "__main__":
     cmd = sys.argv[1] if len(sys.argv) > 1 else ""
     if cmd == "check":
         checkcmd(sys.argv[2:])
+    elif cmd == "jaccheck":
+        jaccheckcmd(sys.argv[2:])
     elif cmd == "selftest":
         selftest()
     else:
