@@ -4,7 +4,11 @@ For each D: take data/sol_{src}_D{D}.npy (kc_src; waits for it), regrid to kc, r
 save data/sol_{tag}_D{D}.npy, and find the physical growth rate (root of det M(lambda), bracketed around the value
 extrapolated from the previous points, refined by brentq).
 usage: python ell_refine.py src kc_src tag kc l "D1,D2,..." lam0 [--kappa 0.5] [--rk 1] [--no-gamma] [--tol 1e-11]
-Records: data/{tag}.jsonl (with |dDelta/dF|, the norm of the Delta row of J^-1, as ell_march.py records it)."""
+       [--jac cs|fast]
+Records: data/{tag}.jsonl (with |dDelta/dF|, the norm of the Delta row of J^-1, as ell_march.py records it).
+--jac fast: the LM iterations take ell_fastm.jacobian_fast (state columns by the variational RK4 map, checked against
+the complex step by ell_fastm.py jaccheck); |dDelta/dF| keeps DSSEll.jacobian's complex step, and the record says jac
+"fast". The default, cs, is DSSEll.jacobian throughout."""
 import os, sys, json, time, argparse
 import numpy as np
 from scipy.optimize import brentq
@@ -20,7 +24,17 @@ ap.add_argument("--Ks", type=int, default=16); ap.add_argument("--u0", type=floa
 ap.add_argument("--no-gamma", action="store_true"); ap.add_argument("--tol", type=float, default=1e-11)
 ap.add_argument("--wait", type=float, default=7000)
 ap.add_argument("--reg", type=float, default=0.0)
+ap.add_argument("--jac", choices=("cs", "fast"), default="cs")
 a = ap.parse_args()
+if a.jac == "fast":
+    from ell_fastm import jacobian_fast
+
+
+def fastjac(S):
+    """S with its LM Jacobian replaced by ell_fastm.jacobian_fast when --jac fast"""
+    if a.jac == "fast":
+        S.jacobian = lambda zz, h=1e-20: jacobian_fast(S, zz)
+    return S
 out = os.path.join(HERE, "data", f"{a.tag}.jsonl")
 hist = []
 if os.path.exists(out):
@@ -65,15 +79,15 @@ for D in [float(v) for v in a.Ds.split(",")]:
     z0 = np.load(f)
     t0 = time.time()
     mk = lambda kc, z: DSSEll(kc=kc, nodes=NODES_STD, n=D - 2, ell=a.l, Delta_ref=z[-1], Ks=a.Ks, u0=a.u0, rk=a.rk)
-    S = mk(a.kc, z0)
+    S = fastjac(mk(a.kc, z0))
     z = S.regrid_from(z0, mk(a.kc_src, z0)) if a.kc != a.kc_src else z0
     S.freeze_from(z, a.kappa)
     F0 = float(np.linalg.norm(S.residual(z[None, :])[0]))
     z, nF, _ = lm(S, z, tol=a.tol, maxjac=12, verbose=False, prep=lambda zz: S.refreeze(zz, a.kappa),
                   reg=a.reg)
-    S = mk(a.kc, z); steps = S.freeze_from(z, a.kappa)
+    S = fastjac(mk(a.kc, z)); steps = S.freeze_from(z, a.kappa)
     z, nF, _ = lm(S, z, tol=a.tol, maxjac=4, verbose=False, reg=a.reg)
-    _, J = S.jacobian(z)
+    _, J = DSSEll.jacobian(S, z)                                    # the complex step for |dDelta/dF|, either --jac
     eD = np.zeros(len(z)); eD[-1] = 1.0
     try:
         sensD = float(np.linalg.norm(np.linalg.lstsq(J.T, eD, rcond=None)[0]))     # |dDelta/dF|, as in ell_march.py
@@ -84,6 +98,8 @@ for D in [float(v) for v in a.Ds.split(",")]:
     rec = dict(D=D, l=a.l, kc=a.kc, kappa=a.kappa, rk=a.rk, reg=a.reg, u0=a.u0, Ks=a.Ks, src=a.src, Delta=float(z[-1]), Delta_src=float(z0[-1]),
                F=float(nF), F_start=F0, steps=int(sum(steps.values())), constraint=S.constraint(z), dDelta_dF=sensD,
                lam_gauge=S.gauge_lambda(z))
+    if a.jac == "fast":
+        rec["jac"] = "fast"
     np.save(os.path.join(HERE, "data", f"sol_{a.tag}_D{D:.4f}.npy"), z)
     if not a.no_gamma and nF < 1e-8:
         if len(hist) >= 2:
