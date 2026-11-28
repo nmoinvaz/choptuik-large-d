@@ -82,7 +82,8 @@ NEIGHBOURS = export_lowD.neighbour_err(LOWD)     # the rows solved at one M only
 for r in LOWD:
     if r["best"] and round(r["D"], 6) not in rows:
         rec = dict(D=r["D"], Delta=r["Delta_hi"], Delta_lo=r["Delta_lo"], F=r["F"], sens=[r["sens_max"] or float("nan")],
-                   dDelta_est=r["dDelta_est"], err=r["change_from_lower_M"], neighbours=NEIGHBOURS.get(r["D"]))
+                   dDelta_est=r["dDelta_est"], err=r["change_from_lower_M"], neighbours=NEIGHBOURS.get(r["D"]),
+                   seconds=r.get("seconds"))
         rows[round(r["D"], 6)] = (rec, f"lowD-M{r['M']}" + ("" if r["resolved"] else "-unresolved"))
 # T48 above the scans' last point (see the docstring for the rules)
 LAST_SCAN = max(rows)
@@ -130,7 +131,7 @@ if lost and "--allow_drop" not in sys.argv:
              "(--allow_drop writes anyway)")
 with open(out, "w") as fh:
     fh.write("D,Delta_hi,Delta_lo,F,max_dDelta_dF,dDelta_est,run,Delta_err,err_kind,published_ref,published_diff,"
-             "published_match,dDelta_exact\n")
+             "published_match,dDelta_exact,seconds\n")
     for d in sorted(rows):
         r, run = rows[d]
         est = r.get("dDelta_est")
@@ -148,7 +149,8 @@ with open(out, "w") as fh:
             dv = (r["Delta"] - v) + r["Delta_lo"]
             diff, match = format(dv, ".2e"), ("yes" if abs(dv) <= u else "no")
         exact = format(EXACT[d], ".2e") if run == "T48-up70" else ""
+        sec = "" if r.get("seconds") is None else f"{float(r['seconds']):.1f}"       # the solve's wall time, from its record
         fh.write(f"{r['D']!r},{r['Delta']!r},{r['Delta_lo']!r},{r['F']:.3e},{max(r['sens']):.3e},"
-                 f"{'' if est is None else format(est, '.2e')},{run},{err},{kind},{ref},{diff},{match},{exact}\n")
+                 f"{'' if est is None else format(est, '.2e')},{run},{err},{kind},{ref},{diff},{match},{exact},{sec}\n")
 print(f"{len(rows)} points, D = {min(rows):.4f} .. {max(rows):.4f} -> {out}; of them {len(T48_ROWS)} from T48 above "
       f"{LAST_SCAN}")

@@ -133,7 +133,8 @@ def build(raw_root=RAW_ROOT):
         hi, lo = (d[0], d[1]) if isinstance(d, (list, tuple)) else (d, r.get("Delta_lo", 0.0))
         sens = r.get("sens_max", max(r["sens"]) if r.get("sens") else None)
         row = dict(D=key[0], M=key[1], Delta_hi=hi, Delta_lo=lo, F=r.get("F"), tail_c=r.get("tail_c"),
-                   tail_h=r.get("tail_h"), sens_max=sens, dDelta_est=r.get("dDelta_est"), source=r["_src"])
+                   tail_h=r.get("tail_h"), sens_max=sens, dDelta_est=r.get("dDelta_est"), source=r["_src"],
+                   seconds=r.get("seconds"))
         # a clean solve is used over a polluted one at the same (D, M) whatever their |F|; among equals, the smaller |F|
         pol = POLLUTED.get(key + (r["_src"].replace(os.sep, "/"),))
         row["status"] = "polluted: " + pol if pol else "clean"
@@ -192,7 +193,7 @@ def main():
     rows = build(raw_root)
     out = os.path.join(HERE, "data", "delta_dd_lowD.csv")
     cols = ["D", "M", "Delta_hi", "Delta_lo", "F", "tail_c", "tail_h", "change_from_lower_M", "best", "resolved", "gamma",
-            "status", "source"]
+            "status", "source", "seconds"]
     with open(out, "w", newline="") as fh:
         w = csv.writer(fh)
         w.writerow(cols)
