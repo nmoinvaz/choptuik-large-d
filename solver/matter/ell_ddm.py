@@ -13,6 +13,7 @@ far below double rounding. Differences of method, all exact in exact arithmetic:
   - the horizon series' periodic solves are a float64 LU refined with double-double residuals.
 
     python ell_ddm.py selftest [--mutate=slices|ops]
+    python ell_ddm.py det STATE D KC LAMS [--kappa K] [--out F.jsonl] [--noise EPS,...]   (K sets the RK4 steps, 0.7)
     python ell_ddm.py check|sshres|det|root ... [--mutate=lam|hionly]   (lam: tangents without lambda; hionly: every
                                                  double-double result rounded to double, the build's precision control)
         operators against DSSEll's float64 ones (1e-14), the Ozaki product against ddnp.matmul (1e-28 relative), and
@@ -690,11 +691,12 @@ def sshres(argv):
     return 0 if good else 1
 
 
-def _setup(state, D, kc):
+def _setup(state, D, kc, kappa=0.7):
     from dss_ell import DSSEll, NODES_STD
     z = np.load(state)
     S = DSSEll(kc=kc, nodes=NODES_STD, n=D - 2, ell=1, Delta_ref=z[-1], Ks=30, u0=0.04)
-    S.freeze_from(z, 0.7)
+    S.freeze_from(z, kappa)                          # RK4 steps per segment from the stiffness over kappa
+    print(f"  kappa {kappa}: {sum(S.steps_map.values())} RK4 steps", flush=True)
     return S, z
 
 
@@ -750,8 +752,9 @@ def detcmd(argv):
     ap = argparse.ArgumentParser()
     ap.add_argument("state"); ap.add_argument("D", type=float); ap.add_argument("kc", type=int); ap.add_argument("lams")
     ap.add_argument("--out", default=None); ap.add_argument("--noise", default=None)
+    ap.add_argument("--kappa", type=float, default=0.7)
     o = ap.parse_args([a for a in argv if not a.startswith("--mutate=")])
-    S, z = _setup(o.state, o.D, o.kc)
+    S, z = _setup(o.state, o.D, o.kc, o.kappa)
     E = DDEll(S)
     recs = []
     neps = [float(v) for v in o.noise.split(",")] if o.noise else None
@@ -762,7 +765,7 @@ def detcmd(argv):
             r, noise = r
         with np.errstate(all="ignore"):
             sf, lf = np.linalg.slogdet(S.mode_matrix(z, lam))
-        rec = dict(D=o.D, kc=o.kc, lam=lam, mutate=MUTATE or None, dd=r, dd_agree=len({x["sign"] for x in r}) == 1,
+        rec = dict(D=o.D, kc=o.kc, lam=lam, kappa=o.kappa, steps=int(sum(S.steps_map.values())), mutate=MUTATE or None, dd=r, dd_agree=len({x["sign"] for x in r}) == 1,
                    f64_sign=float(sf), f64_ln=float(lf), noise=noise,
                    noise_robust=None if noise is None else all(s == r[0]["sign"] for e in noise for s in e["signs"]))
         print(f"  lambda {lam!r}: dd signs agree {rec['dd_agree']}, dd {r[0]['sign']:+.0f} vs float64 {sf:+.0f}; ln|det| dd "
