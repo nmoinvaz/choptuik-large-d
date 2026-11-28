@@ -52,10 +52,10 @@ there lies within its err of it, and every row in WP_CHECK (253.64-259.72, #805'
 Columns: D; Delta in up to four parts, Delta = q0 + q1 + q2 + q3 (each an f64; q2 and q3 are empty where the value is
 double-double); M, the number of harmonics in theta of the solve (the state's meta M; for a dd row the M of its run
 name, lowD-M384; empty where the source does not state it, as for the other dd runs and the series fits; --verify checks
-it against the source and --mutate=M is its control); kind; err and err_kind; seconds, the wall-clock time of the solve
-that produced the value, from its source record (row_seconds: one solve from its predecessor in D, not the continuation
-that led there; empty for the cloud dd runs, whose records are lost, for direct rows, whose records state clock times
-only, and for series rows; --verify checks it and --mutate=seconds is its control); the source record; published_ref,
+it against the source and --mutate=M is its control); kind; seconds, the wall-clock time of the solve that produced
+the value, from its source record (row_seconds: one solve from its predecessor in D, not the continuation that led
+there; empty for the cloud dd runs, whose records are lost, for direct rows, whose records state clock times only, and
+for series rows; --verify checks it and --mutate=seconds is its control); err and err_kind; the source record; published_ref,
 published_Delta and published_diff, the most precise value of data/published_delta.csv at this D (6 decimals), as
 printed, and this row's Delta minus it (empty where none is listed); the state file (relative to RAWDIR, empty where
 none was stored). The kinds, in order of precedence where two share a D:
@@ -172,7 +172,7 @@ import numpy as np
 mp.mp.dps = 80
 HERE = os.path.dirname(os.path.abspath(__file__))
 OUT = os.path.join(HERE, "data", "delta_all.csv")
-COLS = ["D", "Delta_q0", "Delta_q1", "Delta_q2", "Delta_q3", "M", "kind", "err", "err_kind", "seconds", "source",
+COLS = ["D", "Delta_q0", "Delta_q1", "Delta_q2", "Delta_q3", "M", "kind", "seconds", "err", "err_kind", "source",
         "published_ref", "published_Delta", "published_diff", "state"]
 RANK = {"qd": 0, "dd": 1, "pinned": 2, "chain_fit": 3, "chain": 4, "direct": 5, "series": 6}
 HELD = {"chain_fit": "fit", "chain": "trend"}
